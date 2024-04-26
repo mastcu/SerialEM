@@ -185,6 +185,7 @@ public:
   SetMember(HWND, FocusedWndWhenSavedStatus);
   GetSetMember(BOOL, KeepOneLineFocus);
   GetSetMember(CString, PyIncludePath);
+  GetSetMember(int, NextParamSetForMont);
   bool *GetNoCatchOutput() {return &mNoCatchOutput[0] ; };
   std::vector<std::string> *GetVersionsOfPython() { return &mVersionsOfPython; };
   int GetReadOnlyStart(int macNum) { return mReadOnlyStart[macNum]; };
@@ -474,6 +475,7 @@ protected:
   int mBufForCtfplotGraph;     // Buffer to load into when gotten (-1 not to)
   CString mCtfplotGraphName;   // FIlename to save next ctfplotter graph to
   CString mLastPluginCalled;   // Keep track so it is easier to call again with ":"
+  int mNextParamSetForMont;    // Parameter set to use for next montage opened
 
 public:
   void SetNumCamMacRows(int inVal);

@@ -647,14 +647,21 @@ int CSerialEMDoc::GetMontageParamsAndFile(BOOL frameSet, int xNframes, int yNfra
                                           CString filename)
 {
   // Set up the montage parameters based on record parameters
+  int nextSetNum = 0;
   MontParam *param = mWinApp->GetMontParam();
+  if (mWinApp->mMacroProcessor->DoingMacro()) {
+    nextSetNum = mWinApp->mMacroProcessor->GetNextParamSetForMont();
+    mWinApp->mMacroProcessor->SetNextParamSetForMont(0);
+  }
   if (mBufferManager->CheckAsyncSaving())
     return 1;
   if (mWinApp->mMontageController->DoingMontage() &&
     mWinApp->mMontageController->GetRunningMacro())
     return 1;
-  if (!frameSet)
+  if (!frameSet || nextSetNum)
     LeaveCurrentFile();
+  if (nextSetNum)
+    mWinApp->mMontageController->ChangeParamSetToUse(param, nextSetNum);
   InitMontParamsForDialog(param, frameSet, xNframes, yNframes, filename);
   
   if (filename.IsEmpty() && OpenMontageDialog(false)) {

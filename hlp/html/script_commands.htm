@@ -2519,7 +2519,7 @@
        <TR>
           <TD class="scriptcommand">SetFrameNameFormat #K #S #B</TD>
           <TD>Sets or clears bits in the variable governing the frame file name format, as listed 
-            in 'ReportFrameNameFormat'.&nbsp; Set <b>#K to 1 to keep the change after the script ends, 
+            in 'ReportFrameNameFormat'.&nbsp; Set <b>#K</b> to 1 to keep the change after the script ends, 
               otherwise the original format will be restored.&nbsp; Set <b>#S</b> to 1 to set the bits listed in <b>#B</b>, 
               0 to clear them, or -1 to set the format variable to just what is given in <B>#B</B> (such
                as if restoring a value saved from 'ReportFrameNameFormat').&nbsp; <#B> can be entered as a single hex
@@ -2560,14 +2560,16 @@
              and the new binning, which may or may not work.</TD>
         </TR>
         <TR>
-          <TD class="scriptcommand">ParamSetToUseForMontage #</TD>
-          <TD>Specifies what parameters to use for a montage: 
+          <TD class="scriptcommand">ParamSetToUseForMontage #P [#N]</TD>
+          <TD>Specifies what parameters to use for a montage with <b>#P</b>: 
             <br>1 and -1 will turn on or off the option to use Mont-Map parameters;
             <br /> 2 or -2 will turn on or off the option to use View in Low Dose mode;
             <br />3 or -3 will turn on or off the option to use Search in Low Dose mode; 
-            <br />When one of these is turned on, the other is turned off.&nbsp; In 
-            general, it is best to use this command before opening a montage; and if Low Dose is on and a montage
-            is already open, using +/-2 or +/-3 will generate an error.&nbsp; 
+            <br />When one of these is turned on, the other is turned off.&nbsp; Set the optional <B>#N</B>
+            non-zero to defer changing the parameter until the next montage opened through the current script.&nbsp; In 
+            general, it is best to use this command before opening a montage; and if Low Dose is on and the current
+            file is a montage, using +/-2 or +/-3 will generate an error unless <b>#N</b> is 
+            used.&nbsp; Command added in 4.1, 6-Mar-23; <b>#N</b> added 27-Apr-24.
           </TD>
         </TR>
         <TR>

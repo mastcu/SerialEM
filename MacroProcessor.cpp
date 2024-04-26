@@ -1290,6 +1290,7 @@ void CMacroProcessor::Run(int which)
   mBoxOnScopeType = 0;
   mBoxOnScopeInterval = 0.;
   mNumRuns = 0;
+  mNextParamSetForMont = 0;
   mTestNextMultiShot = 0;
   mAccumShiftX = 0.;
   mAccumShiftY = 0.;

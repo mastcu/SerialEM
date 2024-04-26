@@ -5604,3 +5604,22 @@ int EMmontageController::SetImageShiftTestClip(double adjISX, double adjISY,
   mShiftManager->SetISTimeOut(delayFac * mShiftManager->GetLastISDelay());
   return 0;
 }
+
+// Implements a change in what camera set to use with a value that is + to turn an option
+// on or - to turn it off, 1 for MontMap, 2 for View in LD, 3 for Search in LD
+void EMmontageController::ChangeParamSetToUse(MontParam *montP, int changeType)
+{
+  int index = B3DABS(changeType);
+  if (index == 1)
+    montP->useMontMapParams = changeType > 0;
+  if (index == 2) {
+    montP->useViewInLowDose = changeType > 0;
+    if (montP->useViewInLowDose)
+      montP->useSearchInLowDose = false;
+  }
+  if (index == 3) {
+    montP->useSearchInLowDose = changeType > 0;
+    if (montP->useSearchInLowDose)
+      montP->useViewInLowDose = false;
+  }
+}

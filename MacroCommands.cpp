@@ -12417,22 +12417,14 @@ int CMacCmd::SetMontageParams(void)
 // ParamSetToUseForMontage
 int CMacCmd::ParamSetToUseForMontage(void)
 {
-  int index = B3DABS(mItemInt[1]);
-  if (index > 1 && mWinApp->LowDoseMode() && mWinApp->Montaging())
-    ABORT_LINE("The parameter set to use in Low Dose mode should be selected before a "
-      "montage is opened in line:\n\n")
-    if (index == 1)
-      mMontP->useMontMapParams = mItemInt[1] > 0;
-  if (index == 2) {
-    mMontP->useViewInLowDose = mItemInt[1] > 0;
-    if (mMontP->useViewInLowDose)
-      mMontP->useSearchInLowDose = false;
+  if (!mItemEmpty[2] && mItemInt[2]) {
+    mNextParamSetForMont = mItemInt[1];
+    return 0;
   }
-  if (index == 3) {
-    mMontP->useSearchInLowDose = mItemInt[1] > 0;
-    if (mMontP->useSearchInLowDose)
-      mMontP->useViewInLowDose = false;
-  }
+  if (B3DABS(mItemInt[1]) > 1 && mWinApp->LowDoseMode() && mWinApp->Montaging())
+    ABORT_LINE("The parameter set to use in Low Dose mode cannot be selected\nwhen the "
+      "current file is a montage; add 1 to apply to next montage opened for line:\n\n");
+  mWinApp->mMontageController->ChangeParamSetToUse(mMontP, mItemInt[1]);
   mWinApp->mMontageController->SetNeedBoxSetup(true);
   return 0;
 }

@@ -410,6 +410,7 @@ public:
   int GetCurrentPieceInfo(bool next, int &xPc, int &yPc, int &ixPc, int &iyPc);
   int TestStageError(double ISX, double ISY, double &sterr);
   int SetImageShiftTestClip(double adjISX, double adjISY, float delayFac);
+  void ChangeParamSetToUse(MontParam *montP, int changeType);
 };
 
 #endif // !defined(AFX_EMMONTAGECONTROLLER_H__F50578E7_DA31_4D56_B16C_C01548ED89E2__INCLUDED_)

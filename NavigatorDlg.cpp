@@ -4359,6 +4359,12 @@ int CNavigatorDlg::SetupMontage(CMapDrawItem *item, CMontageSetupDlg *montDlg,
   // Leave the current file before touching the montage parameters
   if (!montDlg)
     mDocWnd->LeaveCurrentFile();
+  if (mWinApp->mMacroProcessor->DoingMacro() && 
+    mWinApp->mMacroProcessor->GetNextParamSetForMont()) {
+    mWinApp->mMontageController->ChangeParamSetToUse(montParam,
+      mWinApp->mMacroProcessor->GetNextParamSetForMont());
+    mWinApp->mMacroProcessor->SetNextParamSetForMont(0);
+  }
 
   // Copy the item so it can be used for camera coords by skip list setup
  	mMontItemCam = new CMapDrawItem;
