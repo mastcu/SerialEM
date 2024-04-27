@@ -145,7 +145,7 @@ public:
   void SaveLastInterSetShift(void);
   void ReviseOrCancelInterSetShifts(void);
   bool MatrixIsAsymmetric(ScaleMat *mat, float symCrit);
-  void CalibrateHighDefocus(void);
+  int CalibrateHighDefocus(bool interactive);
   int CalibrateISatHighDefocus(bool interactive, float curFocus);
   void FinishHighFocusIScal();
 };

@@ -5412,6 +5412,16 @@ int CMacCmd::CalibrateHighFocusIS(void)
   return 0;
 }
 
+// CalibrateHighFocusMag
+int CMacCmd::CalibrateHighFocusMag()
+{
+  if (mWinApp->mShiftCalibrator->CalibrateHighDefocus(false)) {
+    AbortMacro();
+    return 1;
+  }
+  return 0;
+}
+
 // ReportFocusDrift
 int CMacCmd::ReportFocusDrift(void)
 {

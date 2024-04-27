@@ -1957,7 +1957,7 @@ void CShiftCalibrator::ReviseOrCancelInterSetShifts(void)
 /////////////////////////////////////////////////////////////////////////////////
 
 // Run the calibration
-void CShiftCalibrator::CalibrateHighDefocus(void)
+int CShiftCalibrator::CalibrateHighDefocus(bool interactive)
 {
   int aaBufInd = mBufferManager->AutoalignBufferIndex();
   EMimageBuffer *refBuf = mImBufs + aaBufInd;
@@ -1979,7 +1979,7 @@ void CShiftCalibrator::CalibrateHighDefocus(void)
   char aaText = 'A' + (char)aaBufInd;
 
   // Give the instructions if not done in this session
-  if (!mGaveFocusMagMessage) {
+  if (!mGaveFocusMagMessage && interactive) {
     mess.Format("The procedure for this calibration is:\r\n"
       "0. Reset defocus before you start if you want to do that\r\n"
       "1. Take an image within a few microns of 0 defocus (such as a View image with"
@@ -1990,7 +1990,7 @@ void CShiftCalibrator::CalibrateHighDefocus(void)
       " additional defocus.\r\n"
       "4. If there is not an existing calibration at this defocus, then you need to"
       " draw corresponding lines in each image.\r\n"
-      "  a. Find two well-spaced and well-defined points that are visible in both\r\n"
+      "  a. Find two well-spaced and well-defined points that are\r\nvisible in both "
       "images. (Use Insert and Home keys to toggle between the images).\r\n"
       "  b. To draw a line, hold down the Shift key, position the cursor\r\n"
       "     at one point, press the left mouse button,\r\n"
@@ -1998,33 +1998,33 @@ void CShiftCalibrator::CalibrateHighDefocus(void)
       "5. But if there is an existing calibration at this defocus, no lines are"
       " needed.\r\n"
       "6. Start this calibration procedure.\r\n"
-      "7. When it finishes, it will rotate and shift the image in A into alignment\r\n"
+      "7. When it finishes, it will rotate and shift the image in A into\r\nalignment "
       "and toggle between the two images, then ask you if they appeared aligned.\r\n"
-      "8. If the images are not aligned, say No, copy B to A or get a new\r\n"
+      "8. If the images are not aligned, say No, copy B to A or get a\r\nnew "
       "image, and draw new or better lines between corresponding points.", aaText);
     mWinApp->AppendToLog(mess);
     mGaveFocusMagMessage = true;
     if (AfxMessageBox(mess + "\n\nAre you ready to proceed?", MB_QUESTION) == IDNO)
-      return;
+      return 1;
   }
   if (!mImBufs->mImage || !refBuf->mImage || underProbe != refProbe ||
     mImBufs->mMagInd != refBuf->mMagInd) {
-      mess.Format("There needs to be a zero-defocus image in the Autoalign buffer (%c)\n"
+      mess.Format("There needs to be a zero-defocus image in the Autoalign\n buffer (%c)"
         "and an underfocus image at the same magnification in Buffer A", aaText);
       AfxMessageBox(mess, MB_EXCLAME);
-      return;
+      return 1;
   }
   if (!mImBufs->GetDefocus(underFocus) || !mImBufs->GetSpotSize(underSpot) ||
     !mImBufs->GetIntensity(intensity) || !refBuf->GetDefocus(refFocus)) {
       AfxMessageBox("Images do not have enough focus or beam information to proceed");
-      return;
+      return 1;
   }
   focDiff = underFocus - refFocus;
   if (focDiff >= 0) {
     mess.Format("The zero-defocus image needs to be in the Autoalign buffer (%c)\n"
       " and the underfocus image needs to be in buffer A", aaText);
     AfxMessageBox(mess, MB_EXCLAME);
-    return;
+    return 1;
   }
   if (haveLines) {
 
@@ -2033,7 +2033,7 @@ void CShiftCalibrator::CalibrateHighDefocus(void)
     mWinApp->mMainView->GetLineLength(refBuf, refPixels, dummy, refAngle, true);
     if (underPixels < 100 || refPixels < 100) {
       AfxMessageBox("The lines should be at least 100 pixels long", MB_EXCLAME);
-      return;
+      return 1;
     }
     initialScale = refPixels / underPixels;
     initialAngle = UtilGoodAngle(refAngle - underAngle);
@@ -2053,7 +2053,7 @@ void CShiftCalibrator::CalibrateHighDefocus(void)
       AfxMessageBox("There are no calibrations near this defocus;\n"
         "you should draw lines between corresponding points on the two images", 
         MB_EXCLAME);
-      return;
+      return 1;
     }
     initialScale = 1.f / scale;
     initialAngle = -rotation;
@@ -2088,7 +2088,7 @@ void CShiftCalibrator::CalibrateHighDefocus(void)
     mWinApp->mMultiTSTasks->SetCkAlignStep(saveStep);
     mWinApp->mMultiTSTasks->SetCkNumStepCuts(saveStepCuts);
     mWinApp->mMultiTSTasks->SetCkNumAlignSteps(saveNumSteps);
-    return;
+    return 1;
   }
 
   // Then a final scaling search
@@ -2106,7 +2106,7 @@ void CShiftCalibrator::CalibrateHighDefocus(void)
   mWinApp->mMultiTSTasks->SetCkNumAlignSteps(saveNumSteps);
   if (ind) {
     AfxMessageBox("Autoalignment failed in the second scaling search", MB_EXCLAME);
-    return;
+    return 1;
   }
   PrintfToLog("Correlations give final scale %.3f  rotation %.1f", scale, rotation);
   aMat = mSM->StretchCorrectedRotation(mImBufs->mCamera, mImBufs->mMagInd, rotation);
@@ -2136,9 +2136,12 @@ void CShiftCalibrator::CalibrateHighDefocus(void)
   mess = CString("Is this calibration good?  Are the images aligned?\n\n"
     "(If not, copy buffer B to A and try drawing ") + B3DCHOICE(haveLines, 
     "the lines better)", "lines between corresponding points on each image)");
-  if (AfxMessageBox(mess, MB_QUESTION) == IDYES)
+  if (AfxMessageBox(mess, MB_QUESTION) == IDYES) {
     mSM->AddHighFocusMagCal(underSpot, refProbe, intensity, focDiff, 1. / scale,
       -rotation, 0);
+    return 0;
+  }
+  return 1;
 }
 
 // Calibration of image shift at high defocus runs the regular IS cal routine
