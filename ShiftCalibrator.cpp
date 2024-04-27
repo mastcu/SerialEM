@@ -2047,9 +2047,9 @@ int CShiftCalibrator::CalibrateHighDefocus(bool interactive)
 
     // If there are no lines, get nearby cal if any and set up from that with broader
     // search
-    mSM->GetDefocusMagAndRot(underSpot, refProbe, intensity, focDiff, scale,
+    ind = mSM->GetDefocusMagAndRot(underSpot, refProbe, intensity, focDiff, scale,
       rotation, nearFoc, nearC2dist, nearC2Ind, numNearC2);
-    if (fabs((double)nearFoc - focDiff) > 10.) {
+    if (ind < 2 && fabs((double)nearFoc - focDiff) > 10.) {
       AfxMessageBox("There are no calibrations near this defocus;\n"
         "you should draw lines between corresponding points on the two images", 
         MB_EXCLAME);

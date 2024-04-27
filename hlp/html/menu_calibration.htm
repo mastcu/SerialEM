@@ -1837,7 +1837,10 @@ echo NumberOfCameraLengths $firstEnd $secondEnd
         Home keys in the 6-key cluster to toggle between these buffers.</li>
       <li>Draw a line between the two points in each image.&nbsp; To draw a line, hold
         down the Shift key, depress the left mouse button with the cursor over one
-        point, drag the mouse to the other point, and release the mouse button.</li>
+        point, drag the mouse to the other point, and release the mouse button.&nbsp; 
+        The program will insist on drawn lines unless you are within 10 microns of an 
+        existing calibration or there are already calibrations at higher and lower 
+        defocus that it can interpolate between.</li>
       <li>Run this command.&nbsp; The program will show instructions, but only once.&nbsp;
         After you press 'Yes' to proceed, the program will do a search to refine the
         scaling and rotation implied by the two lines.&nbsp; At the end, it will
@@ -1875,7 +1878,9 @@ echo NumberOfCameraLengths $firstEnd $secondEnd
       If you need to redo the calibrations, do them at intensities near those in the
       existing calibrations, and the program will remove each nearby existing
       calibration.&nbsp; There will be a message in the log window when this occurs.&nbsp;
-      Use the List Focus-Mag Cals command described next to determine the intensity
+      The criterion for this removal is set by the property 
+      &#39;HighFocusMinIntensityDiff&#39;, which has a default of 0.2 in underlying intensity 
+      units.&nbsp; Use the List Focus-Mag Cals command described next to determine the intensity
       values to use.</p>
      <P><A name="hid_imagestageshift_high"></A><B>High-Defocus IS command
         (Calibration menu)</B></P>

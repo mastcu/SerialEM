@@ -177,6 +177,7 @@ public:
   GetSetMember(BOOL, BacklashMouseAndISR)
   GetSetMember(int, DisableAutoTrim);
   GetSetMember(float, HitachiStageSpecAngle);
+  GetSetMember(float, C2SpacingForHighFocus);
   GetMember(BOOL, MouseShifting);
   SetMember(float, NextAutoalignLimit);
   GetSetMember(int, UseSquareShiftLimits);
@@ -288,6 +289,7 @@ private:
   bool mAnyAbsRotCal;           // FLag for there being any absolute rotation calibrations
   std::set<int> mCamWithRotFallback;   // Set of cameras with full rotation fallbacks
   std::vector<int> mMagsWithRotFallback[MAX_CAMERAS];
+  float mC2SpacingForHighFocus;
 
 public:
   void PropagateRotations(void);
@@ -305,10 +307,10 @@ public:
   ScaleMat StretchCorrectedRotation(int camera, int magInd, float rotation);
   ScaleMat StretchCorrectedRotation(float rotation);
   ScaleMat UnderlyingStretch(ScaleMat raMat, float &smagMean, double & thetad, float & str, double & alpha);
-  bool GetDefocusMagAndRot(int spot, int probeMode, double intensity, float defocus,
+  int GetDefocusMagAndRot(int spot, int probeMode, double intensity, float defocus,
     float & scale, float & rotation, float &nearestFocus, double nearC2Dist[2], int nearC2ind[2],
     int &numNearC2, int magIndForIS = 0);
-  bool GetDefocusMagAndRot(int spot, int probeMode, double intensity, float defocus,
+  int GetDefocusMagAndRot(int spot, int probeMode, double intensity, float defocus,
     float & scale, float & rotation);
   void AddHighFocusMagCal(int spot, int probeMode, double intensity, float defocus,
     float scale, float rotation, int magIndForIS);
@@ -326,7 +328,7 @@ public:
   ScaleMat FocusAdjustedStageToCamera(int inCamera, int inMagInd, int spot, int probe,
      double intensity, float defocus, bool forIS = false);
   ScaleMat FocusAdjustedStageToCamera(EMimageBuffer *imBuf, bool forIS = false);
-  bool GetScaleAndRotationForFocus(EMimageBuffer * imBuf, float &scale, float &rotation);
+  int GetScaleAndRotationForFocus(EMimageBuffer * imBuf, float &scale, float &rotation);
   ScaleMat FocusAdjustedISToCamera(int inCamera, int inMagInd, int spot, int probe,
     double intensity, float defocus);
   ScaleMat FocusAdjustedISToCamera(EMimageBuffer *imBuf);

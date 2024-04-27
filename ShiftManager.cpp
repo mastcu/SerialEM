@@ -116,6 +116,7 @@ CShiftManager::CShiftManager()
   for (int i = 0; i < 5; i++)
     mInterSetShifts.binning[i] = 0;
   mUseSquareShiftLimits = -1;
+  mC2SpacingForHighFocus = 0.2f;
 }
 
 CShiftManager::~CShiftManager()
@@ -3994,7 +3995,7 @@ bool CShiftManager::ShiftAdjustmentForSet(int conSet, int magInd, float &shiftX,
 
 // Get interpolated values for scaling and rotation at the given conditions from the
 // nearest calibrations.  Returns true if interpolated values are provided
-bool CShiftManager::GetDefocusMagAndRot(int spot, int probeMode, double intensity, 
+int CShiftManager::GetDefocusMagAndRot(int spot, int probeMode, double intensity, 
   float defocus, float &scale, float &rotation, float &nearestFocus,
   double nearC2Dist[2], int nearC2ind[2], int &numNearC2, int magIndForIS)
 {
@@ -4014,7 +4015,7 @@ bool CShiftManager::GetDefocusMagAndRot(int spot, int probeMode, double intensit
   scale = 1.;
   rotation = 0.;
   if (!focusCals->GetSize())
-    return false;
+    return 0;
 
   // See if there are any calibrations in nanoprobe or microprobe
   for (ind = 0; ind < focusCals->GetSize(); ind++) {
@@ -4034,7 +4035,7 @@ bool CShiftManager::GetDefocusMagAndRot(int spot, int probeMode, double intensit
 
   // Otherwise insist on a probe mode match
   if (!((probeMode == 0 && anyMode0) || (probeMode == 1 && anyMode1)))
-    return false;
+    return 0;
 
   // Find the nearest calibration in each direction for focus and intensity
   for (dirFoc = -1; dirFoc <= 1; dirFoc += 2) {
@@ -4131,7 +4132,7 @@ bool CShiftManager::GetDefocusMagAndRot(int spot, int probeMode, double intensit
 
   // Assign or interpolate between focuses
   if (oneFocus[0] > 9000. && oneFocus[1] > 9000.) {
-    return false;
+    return 0;
   } else if (oneFocus[0] > 9000.) {
     rotation = oneRot[1];
     scale = oneScale[1];
@@ -4158,11 +4159,11 @@ bool CShiftManager::GetDefocusMagAndRot(int spot, int probeMode, double intensit
   SEMTrace('c', "For focus %.2f intensity %.5f  %s scale = %.4f rotation = %.2f", defocus,
     intensity, magIndForIS ? " IS" : "stage", scale, rotation);
 
-  return true;
+  return (oneFocus[0] > 9000. || oneFocus[1] > 9000.) ? 1 : 2;
 }
 
 // Version for those who don't care about details
-bool CShiftManager::GetDefocusMagAndRot(int spot, int probeMode, double intensity, 
+int CShiftManager::GetDefocusMagAndRot(int spot, int probeMode, double intensity, 
   float defocus, float &scale, float &rotation)
 {
   double nearC2dist[2];
@@ -4177,7 +4178,7 @@ void CShiftManager::AddHighFocusMagCal(int spot, int probeMode, double intensity
   float defocus, float scale, float rotation, int magIndForIS)
 {
   double focTol = 5.;
-  double distC2tol = 0.2;
+  double distC2tol = mC2SpacingForHighFocus;
   double nearC2dist[2];
   int ind, nearC2Ind[2], numNearC2, numRemove = 0, remove[2], newAp = 0;
   float nearScale, nearRot, nearFoc;
@@ -4187,7 +4188,7 @@ void CShiftManager::AddHighFocusMagCal(int spot, int probeMode, double intensity
       nearRot, nearFoc, nearC2dist, nearC2Ind, numNearC2, magIndForIS);
   cal.crossover = mScope->GetCrossover(spot, probeMode);
   if (cal.crossover <= 0.)
-    distC2tol = 0.05;
+    distC2tol /= 4.f;
 
   // Remove existing one(s) if inverse intensity is close enough
   if (focusCals->GetSize() && fabs((double)defocus - nearFoc) < focTol) {
@@ -4274,8 +4275,9 @@ ScaleMat CShiftManager::FocusAdjustedStageToCamera(EMimageBuffer *imBuf, bool fo
     imBuf->mProbeMode, intensity, defocus, forIS);
 }
 
-// Return scale and rotation values for an image buffer, returns true if any returned
-bool CShiftManager::GetScaleAndRotationForFocus(EMimageBuffer *imBuf, float &scale, 
+// Return scale and rotation values for an image buffer, returns number of focus cals
+// involved if any returned
+int CShiftManager::GetScaleAndRotationForFocus(EMimageBuffer *imBuf, float &scale, 
   float &rotation)
 {
   double intensity;
