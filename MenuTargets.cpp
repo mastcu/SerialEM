@@ -2865,8 +2865,7 @@ void CMenuTargets::OnUpdateTasksSetupVppConditioning(CCmdUI *pCmdUI)
 
 void CMenuTargets::OnEucentricityByFocus()
 {
-  mWinApp->mParticleTasks->EucentricityFromFocus(
-    mWinApp->mParticleTasks->GetZbyGUseViewInLD());
+  mWinApp->mParticleTasks->EucentricityFromFocus(-1);
 }
 
 void CMenuTargets::OnUpdateEucentricityByFocus(CCmdUI *pCmdUI)
