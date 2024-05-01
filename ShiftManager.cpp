@@ -3994,7 +3994,7 @@ bool CShiftManager::ShiftAdjustmentForSet(int conSet, int magInd, float &shiftX,
 ///////////////////////////////////////////////////////////////////////////////
 
 // Get interpolated values for scaling and rotation at the given conditions from the
-// nearest calibrations.  Returns true if interpolated values are provided
+// nearest calibrations.  Returns number  if interpolated values are provided
 int CShiftManager::GetDefocusMagAndRot(int spot, int probeMode, double intensity, 
   float defocus, float &scale, float &rotation, float &nearestFocus,
   double nearC2Dist[2], int nearC2ind[2], int &numNearC2, int magIndForIS)

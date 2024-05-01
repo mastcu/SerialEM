@@ -2369,7 +2369,7 @@ void CMenuTargets::OnUpdateCalibrationAlphaBeamShifts(CCmdUI *pCmdUI)
 
 void CMenuTargets::OnCalibrationHighDefocus()
 {
-  mWinApp->mShiftCalibrator->CalibrateHighDefocus(true);
+  mWinApp->mShiftCalibrator->CalibrateHighDefocus(0, NULL, NULL);
 }
 
 void CMenuTargets::OnCalHighDefocusIS()

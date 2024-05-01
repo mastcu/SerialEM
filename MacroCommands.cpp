@@ -5415,10 +5415,13 @@ int CMacCmd::CalibrateHighFocusIS(void)
 // CalibrateHighFocusMag
 int CMacCmd::CalibrateHighFocusMag()
 {
-  if (mWinApp->mShiftCalibrator->CalibrateHighDefocus(false)) {
+  float scale, rotation;
+  if (mWinApp->mShiftCalibrator->CalibrateHighDefocus(mItemInt[1] != 0 ? 2 : 1, &scale, 
+    &rotation)) {
     AbortMacro();
     return 1;
   }
+  SetRepValsAndVars(2, scale, rotation);
   return 0;
 }
 

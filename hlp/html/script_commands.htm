@@ -4546,10 +4546,13 @@
           </TD>
         </TR>
         <TR>
-          <TD class="scriptcommand">CalibrateHighFocusMag</TD>
+          <TD class="scriptcommand">CalibrateHighFocusMag #C</TD>
           <TD>Runs the <a href="menu_calibration.htm#hid_calibration_high_defocus">High-Defocus Mag Calibration</a>
-            routine and stops the script if the routine returns after anything except the acceptance of
-            the calibration as good.&nbsp; Images must already exist in buffer A and the autoalign
+            routine and asks for confirmation that the calibration is good if <b>#C</b> is 1, or skips
+            the confirmation and just stores the result if <b>#C</b> is 0.&nbsp; The script stops 
+            if an error is encountered or if the calibration is not accepted as good.&nbsp; Sets 
+            <I>reportedValue1</I> and <I>reportedValue2</I> with scale and rotation stored in the 
+            calibration.&nbsp; Images must already exist in buffer A and the autoalign
              buffer.  &nbsp; Command added in 4.2, 27-Apr-24.</TD>
         </TR>
         <TR>

@@ -1957,7 +1957,8 @@ void CShiftCalibrator::ReviseOrCancelInterSetShifts(void)
 /////////////////////////////////////////////////////////////////////////////////
 
 // Run the calibration
-int CShiftCalibrator::CalibrateHighDefocus(bool interactive)
+int CShiftCalibrator::CalibrateHighDefocus(int fromScript, float *outScale,
+  float *outRot)
 {
   int aaBufInd = mBufferManager->AutoalignBufferIndex();
   EMimageBuffer *refBuf = mImBufs + aaBufInd;
@@ -1979,7 +1980,7 @@ int CShiftCalibrator::CalibrateHighDefocus(bool interactive)
   char aaText = 'A' + (char)aaBufInd;
 
   // Give the instructions if not done in this session
-  if (!mGaveFocusMagMessage && interactive) {
+  if (!mGaveFocusMagMessage && !fromScript) {
     mess.Format("The procedure for this calibration is:\r\n"
       "0. Reset defocus before you start if you want to do that\r\n"
       "1. Take an image within a few microns of 0 defocus (such as a View image with"
@@ -2125,7 +2126,7 @@ int CShiftCalibrator::CalibrateHighDefocus(bool interactive)
   mImBufs->mTimeStamp = 0.001 * GetTickCount();
   mImBufs->mCaptured = BUFFER_PROCESSED;
   mWinApp->SetCurrentBuffer(0);
-  for (ind = 0; ind < 7; ind++) {
+  for (ind = 0; ind < fromScript ? 2 : 7; ind++) {
     Sleep(300);
     mWinApp->SetCurrentBuffer(aaBufInd);
     Sleep(300);
@@ -2136,9 +2137,13 @@ int CShiftCalibrator::CalibrateHighDefocus(bool interactive)
   mess = CString("Is this calibration good?  Are the images aligned?\n\n"
     "(If not, copy buffer B to A and try drawing ") + B3DCHOICE(haveLines, 
     "the lines better)", "lines between corresponding points on each image)");
-  if (AfxMessageBox(mess, MB_QUESTION) == IDYES) {
+  if (fromScript > 1 || AfxMessageBox(mess, MB_QUESTION) == IDYES) {
     mSM->AddHighFocusMagCal(underSpot, refProbe, intensity, focDiff, 1. / scale,
       -rotation, 0);
+    if (outScale)
+      *outScale = 1. / scale;
+    if (outRot)
+      *outRot = -rotation;
     return 0;
   }
   return 1;
