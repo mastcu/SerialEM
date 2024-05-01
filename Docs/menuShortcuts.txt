@@ -184,10 +184,10 @@ Tasks:
   Eucentricity:
   A
   B
-  C
   E
   F
   L
+  P
   R
   S
   T

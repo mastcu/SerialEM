@@ -522,7 +522,7 @@ BEGIN
             MENUITEM "Rough Use &Search if in LM",  ID_TASKS_ROUGHUSESEARCHIFINLM
             MENUITEM SEPARATOR
             MENUITEM "&Eucentricity by Focus",      ID_EUCENTRICITY_EUCENTRICITYBYFOCUS
-            MENUITEM "&Calibrate Focus Targets...", ID_EUCENTRICITY_SETUPEUCENTRICITYBYFOCUS
+            MENUITEM "Setu&p Eucentricity by Focus...", ID_EUCENTRICITY_SETUPEUCENTRICITYBYFOCUS
         END
         MENUITEM SEPARATOR
         MENUITEM "&Set intensity\tShift+I",     ID_PROCESS_SETINTENSITY
