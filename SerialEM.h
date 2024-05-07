@@ -610,6 +610,7 @@ public:
   GetSetMember(BOOL, MustUnblankWithScreen);
   GetSetMember(BOOL, RetractOnSTEM);
   GetMember(BOOL, StartingProgram);
+  GetMember(bool, MinimizedStartup);
   GetMember(CString, SysSubpath);
   GetMember(CString, ArgPlugDir);
   GetSetMember(int, NoExceptionHandler);
@@ -671,6 +672,7 @@ public:
   GetSetMember(int, AutoPruneLogLines);
   GetMember(CString, ExePath);
   GetSetMember(CString, NanumFontPath);
+  GetSetMember(BOOL, EnableMultigridDlg);
   unsigned char *GetPaletteColors() {return &mPaletteColors[0][0] ; };
   void SetEnableExternalPython(BOOL inVal);
   std::set<int> *GetIDsToHide() { return &mIDsToHide; };
@@ -915,7 +917,8 @@ private:
   BOOL mMustUnblankWithScreen; // Disable retracting cameras as option
   BOOL mRetractOnSTEM;         // Flag to retract cameras with blanking when entering STEM
   BOOL mStartingProgram;
-  int mNoExceptionHandler;    // Flag to not set up exception handler or not allow MS box
+  bool mMinimizedStartup;      // Flag that it is starting minimized
+  int mNoExceptionHandler;     // Flag to not set up exception handler or not allow MS box
   BOOL mDummyInstance;         // Flag for second dummy instance
   CString mSysSubpath;         // Remainder of command line arguments
   CString mArgPlugDir;         // Plugin directory by command line argument
@@ -991,6 +994,7 @@ private:
   int mNextLogColor;            // Color index for next output to log
   int mNextLogStyle;            // Style for next output to log
   CString mNanumFontPath;       // Path to font that needs removing
+  BOOL mEnableMultigridDlg;     // Temporary
 
 public:
   void UpdateAllEditers(void);

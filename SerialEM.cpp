@@ -770,6 +770,7 @@ CSerialEMApp::CSerialEMApp()
   mMustUnblankWithScreen = false;
   mRetractOnSTEM = false;
   mStartingProgram = true;
+  mMinimizedStartup = false;
   mNoExceptionHandler = 0;
   mDummyInstance = false;
   mNoCameras = false;
@@ -804,6 +805,7 @@ CSerialEMApp::CSerialEMApp()
   mSpecialDebugLevel = 0;
   mNextLogColor = -1;
   mNextLogStyle = -1;
+  mEnableMultigridDlg = false;
   traceMutexHandle = CreateMutex(0, 0, 0);
   sStartTime = GetTickCount();
   mLastIdleScriptTime = sStartTime;
@@ -904,7 +906,7 @@ CSerialEMApp theApp;
 BOOL CSerialEMApp::InitInstance()
 {
   int iSet, iCam, iAct, mag, indSpace, indQuote1, indQuote2;
-  bool anyFrameSavers = false, startMinimized = false;
+  bool anyFrameSavers = false;
   char fullPath[MAX_PATH + 10];
   CameraParameters *camP;
   CString message, dropCameras, settingsFile, str;
@@ -972,7 +974,7 @@ BOOL CSerialEMApp::InitInstance()
           mArgPlugDir = mArgPlugDir.Mid(9);
         }
       } else if (mSysSubpath.Find("/Minimized") == 0) {
-        startMinimized = true;
+        mMinimizedStartup = true;
       } else if (mSysSubpath.Find("/#") == 0) {
       } else
         break;
@@ -1147,8 +1149,8 @@ BOOL CSerialEMApp::InitInstance()
   }
   if (mSystemDPI != 120)
     mDisplayNotTruly120DPI = false;
-  FixInitialPlacements(startMinimized);
-  if (mReopenLog) {
+  FixInitialPlacements(mMinimizedStartup);
+  if (mReopenLog && !mMinimizedStartup) {
     if (mLogWindow) {
       if (mLogPlacement.rcNormalPosition.right != NO_PLACEMENT)
         mLogWindow->SetWindowPlacement(&mLogPlacement);
@@ -1457,9 +1459,11 @@ BOOL CSerialEMApp::InitInstance()
   mDocWnd->SetPointers(mBufferManager, &mBufferWindow);
   mMailer->Initialize();
   mPiezoControl->Initialize();
-  if (mReopenMacroToolbar)
-    mMacroProcessor->OpenMacroToolbar();
-  OpenOrCloseMacroEditors();
+  if (!mMinimizedStartup) {
+    if (mReopenMacroToolbar)
+      mMacroProcessor->OpenMacroToolbar();
+    OpenOrCloseMacroEditors();
+  }
 
   mDocWnd->AppendToProgramLog(true);
   
@@ -1627,14 +1631,14 @@ BOOL CSerialEMApp::InitInstance()
   }
   SetNextLogColorStyle(0, 1);
   AppendToLog("Read settings from: " + mDocWnd->GetOriginalSettingsPath(),
-    LOG_SWALLOW_IF_CLOSED);
+    mMinimizedStartup ? LOG_SWALLOW_IF_CLOSED : LOG_OPEN_IF_CLOSED);
   SetNextLogColorStyle(0, 1);
   AppendToLog("Read properties/calibrations from: " + mDocWnd->GetFullSystemDir(),
-    LOG_SWALLOW_IF_CLOSED);
+    mMinimizedStartup ? LOG_SWALLOW_IF_CLOSED : LOG_OPEN_IF_CLOSED);
   if (mDocWnd->GetReadScriptPack()) {
     SetNextLogColorStyle(0, 1);
     AppendToLog("Read scripts from " + mDocWnd->GetCurScriptPackPath(),
-      LOG_SWALLOW_IF_CLOSED);
+      mMinimizedStartup ? LOG_SWALLOW_IF_CLOSED : LOG_OPEN_IF_CLOSED);
   }
   mDocWnd->ManageReadInCurrentDir();
   std::vector<std::string> *pyVersions = mMacroProcessor->GetVersionsOfPython();
@@ -1642,7 +1646,8 @@ BOOL CSerialEMApp::InitInstance()
   for (iCam = 0; iCam < (int)pyVersions->size(); iCam++)
     message += CString(" ") + (*pyVersions)[iCam].c_str();
   if (!message.IsEmpty())
-    AppendToLog("Paths are defined for Python version(s) " + message);
+    AppendToLog("Paths are defined for Python version(s) " + message, 
+      mMinimizedStartup ? LOG_SWALLOW_IF_CLOSED : LOG_OPEN_IF_CLOSED);
 
   message = mDocWnd->GetTitle();
   for (iAct = 0; iAct < message.GetLength(); iAct++) {
