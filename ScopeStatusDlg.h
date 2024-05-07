@@ -142,6 +142,9 @@ private:
   BOOL mShowIntensityCal;  // Flag to show colored intensity calibration
   BOOL mTEMnanoProbe;   // Flag that nanoprobe is on in TEM
   int mEMmode;          // 0 for TEM, 1 for EFTEM, 2 for STEM, 3 for DIFF
+  bool mShowVacInEMmode;  // Flag to show vacuum for JEOL in EM mode spot
+  bool mEMmodeChanged;  // Flag that mode changed
+
 public:
   CScreenMeter *mScreenMeter;
   CDoseMeter *mDoseMeter;

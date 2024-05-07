@@ -3,6 +3,8 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+5/7/24: Made vacuum status show up in scope panel for JEOL.
+
 4/30/28: Fixed "Use V in LD" parameter used when running Eucentricity by Focus
 from the setup dialog, and renamed the menu item that opens the setup dialog.
 

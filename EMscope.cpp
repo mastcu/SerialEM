@@ -1940,8 +1940,6 @@ void CEMscope::UpdateScreenBeamFocus(int STEMmode, int &screenPos, int &smallScr
 void CEMscope::UpdateGauges(int &vacStatus)
 {
   static int lastVacStatus = -1;
-  //if (!FEIscope)
-    //return;
   if (mVacCount++ >= 1700 / mUpdateInterval ||
     (GetDebugOutput('u') && (mAutosaveCount % 50 == 0))) {
       mVacCount = 0;
@@ -1958,6 +1956,8 @@ void CEMscope::UpdateGauges(int &vacStatus)
             // Get status of one gauge on the list by its index
             mPlugFuncs->GetGaugePressure((LPCTSTR)mGaugeNames[gauge], &gaugeStatus, 
               &gaugePressure);
+            if (JEOLscope && (gaugeStatus == 0 || gaugeStatus == 3))
+              gaugeStatus = 3 - gaugeStatus;
             mLastGaugeStatus = gaugeStatus;
             mLastPressure = gaugePressure;
             statIndex = 0;
@@ -1968,8 +1968,8 @@ void CEMscope::UpdateGauges(int &vacStatus)
               gaugePressure > mYellowThresh[gauge])
               statIndex = 1;
 
-            SEMTrace('V', "Gauge %d, status %d,  pressure %f", gauge, gaugeStatus, 
-              gaugePressure);
+            SEMTrace('V', "Gauge %d, status %d,  pressure %f  SEMstatus %d", gauge, 
+              gaugeStatus, gaugePressure, statIndex);
 
             // Report maximum of all status values
             if (vacStatus < statIndex)

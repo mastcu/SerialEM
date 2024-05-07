@@ -68,6 +68,7 @@ CScopeStatusDlg::CScopeStatusDlg(CWnd* pParent /*=NULL*/)
   mShowIntensityCal = true;
   mTEMnanoProbe = false;
   mEMmode = -1;
+  mEMmodeChanged = false;
   // Made the base bigger to reduce noise at low readings
   mCurrentLogBase = 0.02f;
   mFloatingMeterSmoothed = 0;
@@ -213,7 +214,12 @@ BOOL CScopeStatusDlg::OnInitDialog()
   // Start with status -2 so it doesn't try to evaluate intensities until the real update
   if (mShowIntensityCal)
     m_statSpotLabel.ShowWindow(SW_HIDE);
-  Update(0., 1, 0., 0., 0., 0., 0., 0., true, false, false, false, 0, 1, 0., 0., 0., -1, 
+  mShowVacInEMmode = JEOLscope && !mWinApp->mScope->GetHasNoAlpha() && 
+    mWinApp->mScope->mNumGauges > 0 && 
+    !(mWinApp->mScope->mNumGauges == 1 && mWinApp->mScope->mGaugeNames[0] == "P4");
+  if (mShowVacInEMmode)
+    m_statEMmode.ShowWindow(SW_HIDE);
+  Update(0., 1, 0., 0., 0., 0., 0., 0., true, false, false, false, 0, 1, 0., 0., 0., -1,
     0., 1, -1, -999);
   mIntCalStatus = -1;
     
@@ -271,6 +277,8 @@ void CScopeStatusDlg::Update(double inCurrent, int inMagInd, double inDefocus,
     m_strEMmode = modeNames[EMmode];
     m_statEMmode.SetWindowText(modeNames[EMmode]);
     mEMmode = EMmode;
+    mEMmodeChanged = true;
+    needDraw = true;
   }
   if (mWinApp->GetShowRemoteControl())
     mWinApp->mRemoteControl.GetPendingMagOrSpot(pendingMag, pendingSpot, pendingCamLen);
@@ -632,7 +640,7 @@ void CScopeStatusDlg::OnPaint()
     RGB(255, 0, 255), RGB(212, 208, 200)};
   CPaintDC dc(this); // device context for painting
   DrawSideBorders(dc);
-  if (mVacStatus < 0 && mIntCalStatus < 0) {
+  if (mVacStatus < 0 && mIntCalStatus < 0 && !mShowVacInEMmode) {
     return;
   }
 
@@ -645,11 +653,12 @@ void CScopeStatusDlg::OnPaint()
       DT_SINGLELINE | DT_CENTER | DT_VCENTER);
   }
 
-  if (mVacStatus >= 0) {
-    FillDialogItemRectangle(dc, winRect, &m_statVacuum, border, vacColors[mVacStatus], 
-      dcRect);
+  if (mVacStatus >= 0 || mShowVacInEMmode) {
+    FillDialogItemRectangle(dc, winRect, mShowVacInEMmode ? &m_statEMmode : &m_statVacuum,
+      border, mVacStatus >= 0 ? vacColors[mVacStatus] : RGB(210, 210, 210), dcRect);
     dc.SelectObject(&mMedFont);
-    dc.DrawText("VAC", &dcRect, DT_SINGLELINE | DT_CENTER | DT_VCENTER);
+    dc.DrawText(mShowVacInEMmode ? m_strEMmode : "VAC", &dcRect, 
+      DT_SINGLELINE | DT_CENTER | DT_VCENTER);
   }
 
 }
