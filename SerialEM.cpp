@@ -81,6 +81,7 @@ static char THIS_FILE[] = __FILE__;
 
 #define VERSION_STRING  "SerialEM Version 4.2.0beta"
 #define TAG_STRING      "(Tagged SEM_4-1-10, 4/16/24)"
+#define DEPRECATED_PYTHON  "3.5-64"
 
 // Offsets for static window inside main frame
 #define STATIC_BORDER_TOP      0
@@ -1643,8 +1644,12 @@ BOOL CSerialEMApp::InitInstance()
   mDocWnd->ManageReadInCurrentDir();
   std::vector<std::string> *pyVersions = mMacroProcessor->GetVersionsOfPython();
   message = "";
-  for (iCam = 0; iCam < (int)pyVersions->size(); iCam++)
+  for (iCam = 0; iCam < (int)pyVersions->size(); iCam++) {
     message += CString(" ") + (*pyVersions)[iCam].c_str();
+    if ((*pyVersions)[iCam].find(DEPRECATED_PYTHON) == 0)
+      AppendToLog("WARNING: No module for Python " DEPRECATED_PYTHON " will be included "
+        "in the stable release of SerialEM 4.2");
+  }
   if (!message.IsEmpty())
     AppendToLog("Paths are defined for Python version(s) " + message, 
       mMinimizedStartup ? LOG_SWALLOW_IF_CLOSED : LOG_OPEN_IF_CLOSED);

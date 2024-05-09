@@ -1098,7 +1098,7 @@
       <a href = "https://bio3d.colorado.edu/SerialEM/download.html#PythonModules"> SerialEM download page</a>.&nbsp; 
       If you unpack this anywhere other than the SerialEM directory, the property &#39;PythonModulePath&#39; must be defined with the 
       path to this directory of modules.&nbsp; This package contains modules for 
-      32-bit Python 2.7, 3.4, and 3.5, and 64-bit Python 3.4, 3.5, 3.6, 3.8, 3.9, and 3.11.</p>
+      32-bit Python 2.7, 3.4, and 3.5, and 64-bit Python 3.4, 3.5, 3.6, 3.8, 3.9, 3.11, and 3.12.</p>
     <p>If you have one Python on the system path that is 3.5 or higher, you are all 
       set.&nbsp; If you have multiple Pythons, Python is not on the system path, or 
       the version is 3.4 or 2.7, you must have one or more &#39;PathToPython&#39; property 
@@ -1110,6 +1110,7 @@
 &nbsp;&nbsp;&nbsp;&nbsp; PathToPython 3.8 C:\Program Files\Python38<br />
 &nbsp;&nbsp;&nbsp;&nbsp; PathToPython 3.9 C:\Program Files\Python39<br />
 &nbsp;&nbsp;&nbsp;&nbsp; PathToPython 3.11 C:\Program Files\Python311<br />
+&nbsp;&nbsp;&nbsp;&nbsp; PathToPython 3.12 C:\Program Files\Python312<br />
 &nbsp;&nbsp;&nbsp;&nbsp; PathToPython 2.7 C:\Program Files (x86)\Python27<br />
 &nbsp;&nbsp;&nbsp;&nbsp; PathToPython 3.4-32 C:\Program Files (x86)\Python34<br />
 &nbsp;&nbsp;&nbsp;&nbsp; PathToPython 3.5-32 C:\Program Files (x86)\Python35<br />
@@ -1164,7 +1165,7 @@
         ConnectToSEM(port, IP_address) as the first function call to the module.&nbsp; 
         'Port' is an integer and 'IP_address' is a string.&nbsp; Both arguments are 
         optional, so you can call it with just the port.&nbsp; Values passed through 
-        this function call will override the environmant variables if any. </li>
+        this function call will override the environment variables if any. </li>
       <li>&nbsp;If you change the port, define it in the SerialEM properties file with 
         the entry 'SocketServerPort 8' plus the alternative port.&nbsp; Do not use 48887 or 48889 
         - they are dedicated for running Python scripts from SerialEM.</li>

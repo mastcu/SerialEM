@@ -187,12 +187,20 @@
             parameters.</TD>
         </TR>
         <TR VALIGN="top">
-          <TD class="style1"><A HREF="#hid_navigator_realign_scaling">Try Scaling in Realign</A></TD>
+          <TD class="style1">&nbsp;&nbsp; <A HREF="#hid_navigator_realign_scaling">Try Scaling in Realign</A></TD>
           <TD>Find image scaling in first round of Realign to Item to adjust for shrinkage</TD>
         </TR>
         <TR VALIGN="top">
           <TD class="style1">&nbsp;&nbsp; <A HREF="#hid_options_search">Search + and - Scaling in Realign</A></TD>
           <TD>When finding scaling during  Realign to Item, try scalings above and below 0.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1">&nbsp;&nbsp; <A HREF="#hid_nav_runscriptinmultishotacquire">Run Script in Multi-shot</A></TD>
+          <TD>Run a script instead of taking Record in Multiple Records routine.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1">&nbsp;&nbsp; <A HREF="#hid_nav_setscripttorun">Set Script to Run</A></TD>
+          <TD>Select the script to run in the Multiple Records routine.</TD>
         </TR>
         <TR VALIGN="top">
           <TD class="style1"><A HREF="#hid_transform_pts">Transform Items</A></TD>
@@ -434,6 +442,22 @@
         searching for the best scaling in Realign to Item.&nbsp; This might be useful
         when aligning to a synthesized map or one made on a different microscope with
         somewhat lower magnification.</p>
+        <p><A name="hid_nav_runscriptinmultishotacquire"></A><B>Run Script in Multi-shot
+          (Navigator - Options submenu)</B></p>
+      <p>This command toggles an option to run a script in place of the Record acquisition in
+        the Multiple Records routine.&nbsp; The Multiple Records cannot itself be run 
+        from script, it must be run from Navigator Acquire at Items.&nbsp; There are 
+        probably other restrictions of what the script can do, which will be revealed by 
+        malfunctions and crashes.&nbsp; If you want a Record to occur, you must include 
+        the 'Record' command in the script.</p>
+        <p><A NAME="hid_nav_setscripttorun"></A><B>Set Script to Run
+          (Navigator - Options submenu)</B></p>
+      <p>Use this command to select the script to run instead of taking a Record in the 
+        Multiple Records routine.&nbsp; When you select this command, a dialog will open 
+        with a drop-down list in which you can select the script by its name or number.&nbsp; 
+        It is best to have a (short) name assigned to the script so that if scripts are 
+        rearranged, or a different set is loaded, the program will not run the wrong 
+        script.</p>
       <P><A NAME="hid_corner_montage"></A><B>Setup Corner Montage command (Navigator -
           Montaging &amp; Grids sub-menu)</B></P>
       <P>Use this command to set up a montage to capture the area within the current set
