@@ -3,6 +3,9 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+5/9/24: Added module for Python 3.12 and a warning on startup that 3.5 will be
+removed from the next stable release (In 4.1).
+
 4/30/28: Fixed "Use V in LD" parameter used when running Eucentricity by Focus
 from the setup dialog, and renamed the menu item that opens the setup dialog.
 
