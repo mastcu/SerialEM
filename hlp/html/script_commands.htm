@@ -3474,20 +3474,27 @@
         </TR>
         <TR>
           <TD class="scriptcommand">ReportApertureSize #</TD>
-          <TD>For Thermo/FEI scopes only, reports the size for the aperture whose index is <b>#</b>,
-            which can be 0, 1, or 3 for Condenser 1, 2, or 3, 2 for Objective, or 4 for Selected Area.&nbsp; The
+          <TD>For Thermo/FEI and JEOL scopes, reports the size for the aperture whose index is <b>#</b>. For JEOL,
+              only a position index from 1 to 4 is reported, or 0 if the aperture is retracted.&nbsp; If the
+            property JeolHasExtraApertures is not set, 1 and 2 are the
+            condenser and objective apertures, others are 3:HCA, 4:SAA, 5:ENTA, 6:EDS.&nbsp;
+            If that property is set (e.g., for CryoARM), indexes are 0:CL1, 1:CL2,
+            2:OL(OL Upper), 3:HC(OL Lower), 4:SA, 5:ENT, 6:HX, 7:BF, 8:AUX1,
+             9:AUX2, 10:AUX3, 11:AUX4.&nbsp; For Thermo/FEI scopes, <b>#</b> 
+             can be 0, 1, or 3 for Condenser 1, 2, or 3, 2 for Objective, or 4 for Selected Area.&nbsp; The
             reported value can be: the size in microns; 0 if the aperture is retracted; 1 if it is
             moving or not enabled; or the position of a phase plate plus 1 for the
              objective aperture (e.g., 3 for 'Ph P2', but only if the
-            phase plates are named that way in the combo box).&nbsp; See <a href="setting_up_serialem.htm#apertures">Controlling Apertures on Thermo/FEI Scopes </a> for requirements and restrictions for using this command and 'SetApertureSize'.
-             &nbsp; Command added in 4.1, 7-Feb-23.
+            phase plates are named that way in the combo box).&nbsp; See <a href="setting_up_serialem.htm#apertures">
+                Controlling Apertures on Thermo/FEI Scopes </a> for requirements and restrictions for 
+              using this command and 'SetApertureSize'. &nbsp; Command added in 4.1, 7-Feb-23.
           </TD>
         </TR>
         <TR>
           <TD class="scriptcommand">SetApertureSize #I #S</TD>
-          <TD>For Thermo/FEI scopes running Windows 10 only, attempts to set the size with <B>#S</B>for the aperture whose index 
+          <TD>For JEOL and Thermo/FEI scopes, attempts to set the size (or position index for JEOL) with <B>#S</B>for the aperture whose index 
             is <b>#I</b>, where indexes and other requirements are as described for 'ReportApertureSize'.&nbsp; The
-            value of <B>#S</B> can also be 0 to retract the aperture or 1 to reinsert it without specifying a 
+            value of <B>#S</B> can also be 0 to retract the aperture.&nbsp; For Thermo/FEI, <b>#S</b> can be 1 to reinsert it without specifying a 
             size.&nbsp; For an objective aperture with phase plates, the size can also be 2 to 7 to specify the phase
             plates in position 1 to 6, provided that the phase plates are named like 'Ph Pn' in the combo box.&nbsp; Command added in 4.1, 7-Feb-23.
           </TD>
@@ -3495,12 +3502,7 @@
         <TR>
           <TD class="scriptcommand">RemoveAperture #</TD>
           <TD>Removes the aperture whose index is the given <b>#</b> (JEOL, Hitachi, and Thermo/FEI scopes 
-            as described for 'ReportApertureSize').&nbsp; For JEOL, if the
-            property JeolHasExtraApertures is not set, 1 and 2 are the
-            condenser and objective apertures, others are 3:HCA, 4:SAA, 5:ENTA, 6:EDS.&nbsp;
-            If that property is set (e.g., for CryoARM), indexes are 0:CL1, 1:CL2,
-            2:OL(OL Upper), 3:HC(OL Lower), 4:SA, 5:ENT, 6:HX, 7:BF, 8:AUX1,
-             9:AUX2, 10:AUX3, 11:AUX4.&nbsp;
+            as described for 'ReportApertureSize').&nbsp; 
             The size and position of the aperture will be recorded before it is removed.&nbsp; For Hitachi, only
              the objective aperture can be removed and <b>#</b> must be 2.&nbsp; For Thermo/FEI scopes, valid 
             indexes are 2 for Objective and 4 for Selected Area.</TD>

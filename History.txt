@@ -3,6 +3,9 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+5/10/24: Fixed output from ReportApertureSize on JEOL and updated help to
+include JEOL in this command and SetApertureSize (In 4.1).
+
 5/9/24: Added module for Python 3.12 and a warning on startup that 3.5 will be
 removed from the next stable release (In 4.1).
 
