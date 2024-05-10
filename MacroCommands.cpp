@@ -6849,19 +6849,23 @@ int CMacCmd::RemoveAperture(void)
 // ReportApertureSize
 int CMacCmd::ReportApertureSize(void)
 {
-  int size = mScope->GetApertureSize(mItemInt[1]);
+  int trueSize, size = mScope->GetApertureSize(mItemInt[1]);
   if (size < 0) {
     AbortMacro();
     return 1;
   }
+  if (JEOLscope && size > 0)
+    trueSize = mScope->FindApertureSizeFromIndex(mItemInt[1], size);
+
   if (size < 2 && (!JEOLscope || !size))
     mLogRpt.Format("Aperture %d is %s", mItemInt[1], !size ? "retracted" : "disabled");
-  else if (JEOLscope)
+  else if (JEOLscope && !trueSize) {
     mLogRpt.Format("Aperture %d is in position %d", mItemInt[1], size);
-  else if (size < 8) 
+  } else if (!JEOLscope && size < 8)
     mLogRpt.Format("Aperture %d is phase plate in position %d", mItemInt[1], size - 1);
   else
-    mLogRpt.Format("Size of aperture %d is %d um", mItemInt[1], size);
+    mLogRpt.Format("Size of aperture %d is %d um", mItemInt[1], 
+      JEOLscope ? trueSize : size);
   SetRepValsAndVars(2, size);
   return 0;
 }
@@ -6869,7 +6873,22 @@ int CMacCmd::ReportApertureSize(void)
 // SetApertureSize
 int CMacCmd::SetApertureSize(void)
 {
-  if (!mScope->SetApertureSize(mItemInt[1], mItemInt[2])) {
+  int index, ap = mItemInt[1], size = mItemInt[2];
+  if (size > 0 && JEOLscope) {
+    index = mScope->FindApertureIndexFromSize(ap, size);
+    if (index > 0) {
+      size = index;
+    } else if (!index) {
+      mStrCopy.Format("Size %d is not in the list from the AperturesSizes property for "
+        "aperture %d in line:\n\n", size, ap);
+      ABORT_LINE(mStrCopy);
+    } else if (size > 4) {
+      PrintfToLog("WARNING: There is no ApertureSizes property with a size list for"
+        " aperture %d; \r\n %d is probably an incorrect entry for the position index",
+        ap, size);
+    }
+  }
+  if (!mScope->SetApertureSize(ap, size)) {
     AbortMacro();
     return 1;
   }

@@ -514,6 +514,7 @@ public:
   GetSetMember(int, ScanningMags);
   GetSetMember(BOOL, UseImageBeamTilt);
   GetMember(int, LastMagIndex);
+  std::vector<ShortVec> *GetApertureLists() { return &mApertureSizes; };
   void GetRawImageShift(double &ISX, double &ISY) { ISX = mLastISX; ISY = mLastISY; };
 
   DewarVacParams *GetDewarVacParams() { return &mDewarVacParams; };
@@ -894,6 +895,7 @@ private:
   BOOL mUseFilterInTEMMode;    // Flag that energy filter will be used without EFTEM mode
   int mScanningMags;           // 1 if scanning, set to 0 to stop or -1 to end
   BOOL mUseImageBeamTilt;      // Flag to use image-beam tilt on FEI instead of regular
+  std::vector<ShortVec> mApertureSizes;   // Each vector has aperture index then sizes
   int mAdvancedScriptVersion;  // My internal version number for advanced scripting
   int mPluginVersion;          // Version of plugin or server
 
@@ -1021,6 +1023,8 @@ public:
   void ApertureCleanup(int error);
   int StartApertureThread(const char *descrip);
   bool MovePhasePlateToNextPos();
+  int FindApertureSizeFromIndex(int apInd, int sizeInd);
+  int FindApertureIndexFromSize(int apInd, int size);
   BOOL RunSynchronousThread(int action, int newIndex, int curIndex, const char *routine);
   static UINT SynchronousProc(LPVOID pParam);
   static BOOL SetMagKernel(SynchroThreadData *sytd);

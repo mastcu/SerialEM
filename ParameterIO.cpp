@@ -2849,6 +2849,7 @@ int CParameterIO::ReadProperties(CString strFileName)
   CArray<LensRelaxData, LensRelaxData> *relaxData = scope->GetLensRelaxProgs();
   CString *K2FilterNames = camera->GetK2FilterNames();
   HitachiParams *hitachi = mWinApp->GetHitachiParams();
+  std::vector<ShortVec> *apertureSizes = scope->GetApertureLists();
   RotStretchXform rotXform;
   LensRelaxData relax;
   FloatVec *vec;
@@ -2867,7 +2868,8 @@ int CParameterIO::ReadProperties(CString strFileName)
     "othershiftboundaries", "watchgauge", "mappedtodschannel", "detectorblocks", 
     "mutuallyexcludedetectors", "socketserverip", "socketserveripif64", 
     "socketserverport", "socketserverportif64", "externaltool", "toolcommand", 
-    "toolarguments", "pathtopython", "endifversionbelow", "globalautodocentry"};
+    "toolarguments", "pathtopython", "endifversionbelow", "globalautodocentry",
+    "aperturesizes"};
   std::set<std::string> dupOKgenProps(tmpg, tmpg + sizeof(tmpg) / sizeof(tmpg[0]));
   std::string tmpc[] = {"hotpixels", "rotationandpixel", "detectorname", "channelname",
     "rotationstretchxform", "specialrelativerotation", "binningoffset", "hotcolumns",
@@ -3636,8 +3638,16 @@ int CParameterIO::ReadProperties(CString strFileName)
         }
         mWinApp->mBeamAssessor->SetNumC2Apertures(ind);
 
-      }
-      else if (MatchNoCase("LowestSTEMnonLMmag")) {
+      } else if (MatchNoCase("ApertureSizes")) {
+        ShortVec sizes;
+        for (index = 1; index < MAX_TOKENS; index++) {
+          if (itemEmpty[index])
+            break;
+          sizes.push_back(itemInt[index]);
+        }
+        apertureSizes->push_back(sizes);
+
+      } else if (MatchNoCase("LowestSTEMnonLMmag")) {
         scope->SetLowestSTEMnonLMmag(0, itemInt[1]);
         if (!itemEmpty[2])
           scope->SetLowestSTEMnonLMmag(1, itemInt[2]);

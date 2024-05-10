@@ -3474,8 +3474,9 @@
         </TR>
         <TR>
           <TD class="scriptcommand">ReportApertureSize #</TD>
-          <TD>For Thermo/FEI and JEOL scopes, reports the size for the aperture whose index is <b>#</b>. For JEOL,
-              only a position index from 1 to 4 is reported, or 0 if the aperture is retracted.&nbsp; If the
+          <TD>For Thermo/FEI and JEOL scopes, reports the size for the aperture whose index is <b>#</b>. For JEOL, the value is
+              the size in microns if there is an 'ApertureSizes' property for aperture <b>#</b>, a position index
+               from 1 to 4 if there is no property, or 0 if the aperture is retracted.&nbsp; If the
             property JeolHasExtraApertures is not set, 1 and 2 are the
             condenser and objective apertures, others are 3:HCA, 4:SAA, 5:ENTA, 6:EDS.&nbsp;
             If that property is set (e.g., for CryoARM), indexes are 0:CL1, 1:CL2,
@@ -3492,9 +3493,12 @@
         </TR>
         <TR>
           <TD class="scriptcommand">SetApertureSize #I #S</TD>
-          <TD>For JEOL and Thermo/FEI scopes, attempts to set the size (or position index for JEOL) with <B>#S</B>for the aperture whose index 
-            is <b>#I</b>, where indexes and other requirements are as described for 'ReportApertureSize'.&nbsp; The
-            value of <B>#S</B> can also be 0 to retract the aperture.&nbsp; For Thermo/FEI, <b>#S</b> can be 1 to reinsert it without specifying a 
+          <TD>For JEOL and Thermo/FEI scopes, attempts to set the size with <B>#S</B> for the aperture whose index 
+            is <b>#I</b>, where indexes and other requirements are as described for 'ReportApertureSize'.&nbsp; For JEOL, 
+              the size can be in microns if there is an 'ApertureSizes' property for aperture <b>#I</b>, otherwise
+              it should be a position index from 1 to 4..&nbsp;The
+            value of <B>#S</B> can also be 0 to retract the aperture.&nbsp; For Thermo/FEI, <b>#S</b> can also
+               be 0 to retract it or 1 to reinsert it without specifying a 
             size.&nbsp; For an objective aperture with phase plates, the size can also be 2 to 7 to specify the phase
             plates in position 1 to 6, provided that the phase plates are named like 'Ph Pn' in the combo box.&nbsp; Command added in 4.1, 7-Feb-23.
           </TD>

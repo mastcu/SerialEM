@@ -7435,6 +7435,36 @@ bool CEMscope::MovePhasePlateToNextPos()
   return true;
 }
 
+// Looks up an aperture size for the given aperture from its index, NUMBERED FROM 1
+int CEMscope::FindApertureSizeFromIndex(int apInd, int sizeInd)
+{
+  int ap;
+  for (ap = 0; ap < (int)mApertureSizes.size(); ap++) {
+    if (mApertureSizes[ap][0] == apInd) {
+      if (sizeInd <= 0 || sizeInd >= (int)mApertureSizes[ap].size())
+        return 0;
+      return mApertureSizes[ap][sizeInd];
+    }
+  }
+  return 0;
+}
+
+// Looks up the aperture index, NUMBERED FROM 1, with the given size for a given aperture
+// Returns 0 if there IS a list and the size is not in it, or -1 if there is no list
+int CEMscope::FindApertureIndexFromSize(int apInd, int size)
+{
+  int ap, ind;
+  for (ap = 0; ap < (int)mApertureSizes.size(); ap++) {
+    if (mApertureSizes[ap][0] == apInd) {
+      for (ind = 1; ind < (int)mApertureSizes[ap].size(); ind++)
+        if (mApertureSizes[ap][ind] == size)
+          return ind;
+      return 0;
+    }
+  }
+  return -1;
+}
+
 // Return the current position of the phase plate
 int CEMscope::GetCurrentPhasePlatePos(void)
 {
