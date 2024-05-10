@@ -6517,8 +6517,10 @@ int CMacCmd::ReportApertureSize(void)
     AbortMacro();
     return 1;
   }
-  if (size < 2)
+  if (size < 2 && (!JEOLscope || !size))
     mLogRpt.Format("Aperture %d is %s", mItemInt[1], !size ? "retracted" : "disabled");
+  else if (JEOLscope)
+    mLogRpt.Format("Aperture %d is in position %d", mItemInt[1], size);
   else if (size < 8) 
     mLogRpt.Format("Aperture %d is phase plate in position %d", mItemInt[1], size - 1);
   else
