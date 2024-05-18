@@ -71,7 +71,7 @@ EMmontageController::EMmontageController()
   mMontaging = false;
   mReadingMontage = false;
   mPieceIndex = -1;
-  mRestoringStage = false;
+  mRestoringStage = 0;
   mFocusing = false;
   mShootingFilm = false;
   mLastFailed = false;
@@ -1814,7 +1814,7 @@ int EMmontageController::DoNextPiece(int param)
   }
   mRunningMacro = false;
 
-  if (mRestoringStage)
+  if (mRestoringStage > 0)
     return 0;
 
   if (mUsingMultishot) {
@@ -2783,7 +2783,8 @@ int EMmontageController::SavePiece()
     }
   }
   image->UnLock();
-  
+  cenType = image->getType();
+
   // Save center pieces
   if (mPieceX - 1 >= mCenterIndX1 && mPieceX - 1 <= mCenterIndX2 &&
     mPieceY - 1 >= mCenterIndY1 && mPieceY - 1 <= mCenterIndY2) {
@@ -3199,7 +3200,6 @@ int EMmontageController::SavePiece()
     
     image = mCenterImage[isave];
     image->Lock();
-    cenType = image->getType();
     short int *sShort = (short int *)image->getData();
     unsigned char *byte = (unsigned char *)sShort;
     unsigned short int *uShort = (unsigned short int *)sShort;
@@ -3561,7 +3561,7 @@ void EMmontageController::StopMontage(int error)
     return;
 
   // If already restoring stage, clear it out only if this is a user stop
-  if (mRestoringStage) {
+  if (mRestoringStage > 0) {
     if (!error)
       StageRestoreDone();
     return;
@@ -3585,7 +3585,7 @@ void EMmontageController::StopMontage(int error)
       if (!mMovingStage && !mCamera->CameraBusy() && !mScope->WaitForStageReady(10000))
         StartStageRestore();
       else
-        StageRestoreDone();
+        StageRestoreDone(-1);
     } 
     if (mUsingImageShift) {
       if (mParam->adjustFocus)
@@ -3621,14 +3621,15 @@ void EMmontageController::StartStageRestore(void)
     mScope->SetImageShift(0., 0.);
   mScope->MoveStage(mMoveInfo, false);
   mWinApp->AddIdleTask(CEMscope::TaskStageBusy, TASK_MONTAGE_RESTORE, 0, 120000);
-  mRestoringStage = true;
+  mRestoringStage = 1;
 }
 
 // External/internal call when stage restore is done: now sole place where really done
-void EMmontageController::StageRestoreDone(void)
+void EMmontageController::StageRestoreDone(int restoreVal)
 {
-  SEMTrace('M', "Stage Restore Done");
-  mRestoringStage = false;
+  if (!restoreVal)
+    SEMTrace('M', "Stage Restore Done");
+  mRestoringStage = restoreVal;
   mPieceIndex = -1;
   mMovingStage = false;
   mFocusing = false;
@@ -4124,7 +4125,7 @@ int EMmontageController::GetCurrentPieceInfo(bool next, int &xPc, int &yPc, int 
   int &iyPc)
 {
   int ind = mPieceIndex;
-  if (!DoingMontage())
+  if (mPieceIndex < 0)
     return 1;
   
   if (next)

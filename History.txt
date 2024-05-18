@@ -3,6 +3,17 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+5/18/24: SEM_4-1-11
+5/18/24: Kept many functions disabled during stage restore after a montage
+is stopped (In 4.1).
+
+5/18/24: Fixed Falcon exposure time adjustment for getting expected # frames
+so it does not hang near the maximum exposure time (In 4.1).
+
+5/18/24: The aperture control change for Glacios does not work on Krios, so it
+will not be used even in Windows 10 by default: the environment variable
+FEISEM_APERTURE_BY_SIZE needs to be set to work on Glacios (In 4.1).
+
 5/10/24: Fixed output from ReportApertureSize on JEOL and updated help to
 include JEOL in this command and SetApertureSize (In 4.1).
 
