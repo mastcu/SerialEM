@@ -3,6 +3,9 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+5/18/24: Added entry in Camera Setup dialog to set a tilt offset for STEM
+dynamic focusing.
+
 5/18/24: SEM_4-1-11
 5/18/24: Kept many functions disabled during stage restore after a montage
 is stopped (In 4.1).

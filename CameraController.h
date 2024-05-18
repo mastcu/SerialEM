@@ -621,6 +621,7 @@ public:
   GetSetMember(int, TietzScanCoordRange);
   GetSetMember(BOOL, InvertTietzScan);
   GetSetMember(float, PartialScanThreshExp);
+  GetSetMember(float, DynFocusTiltOffset);
   bool DoingPartialScan() {return mTD.ReturnPartialScan > 0; };
   bool HasCEOSFilter() {return mCEOSFilter != NULL ; }
   BOOL GetSaveInEERformat() { return mCanSaveEERformat > 0 && mSaveInEERformat; };
@@ -1074,6 +1075,7 @@ public:
   BOOL mShowLinearForAlpine;     // Show linear mode in setup dialog for Alpine camera
   BOOL mUseAPI2ForDE;            // Use the API 2 for DE camera connection and all calls
   int mRollBufKeptIndex;         // Last buffer that was redisplayed in RollBuffers
+  float mDynFocusTiltOffset;     // Tilt offset for dynamic focusing
 
 public:
   void SetNonGatanPostActionTime(void);

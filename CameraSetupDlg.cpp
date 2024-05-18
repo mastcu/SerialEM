@@ -72,6 +72,7 @@ IDC_STATAVERAGE, IDC_STAT_LINE1, PANEL_END,
 IDC_BUTUPDATEDOSE, IDC_STATELECDOSE, IDC_STATDOSERATE, IDC_STAT_DOSE_PER_FRAME, PANEL_END,
 IDC_STAT_SCANRATE, IDC_BUT_MAX_SCAN_RATE, IDC_STAT_TIMING_AVAIL,
 IDC_CHECK_DYNFOCUS, IDC_CHECK_LINESYNC, IDC_STAT_PREPIXEL, IDC_EDIT_PREPIXEL,
+IDC_STAT_PREPIX_USEC, IDC_STAT_TILT_OFFSET, IDC_STAT_TILT_DEG, IDC_EDIT_TILT_OFFSET,
 IDC_STATCHANACQ, IDC_STATCHAN1, IDC_STATCHAN2,
 IDC_STATCHAN3, IDC_STATCHAN4, IDC_STATCHAN5, IDC_STATCHAN6, IDC_STATCHAN7, IDC_STATCHAN8,
 IDC_COMBOCHAN1,IDC_COMBOCHAN2, IDC_COMBOCHAN3, IDC_COMBOCHAN4, IDC_COMBOCHAN5, 
@@ -128,6 +129,7 @@ CCameraSetupDlg::CCameraSetupDlg(CWnd* pParent /*=NULL*/)
   , m_bUseCorrDblSamp(FALSE)
   , m_bTakeK3Binned(FALSE)
   , m_iPrepixel(0)
+  , m_fTiltOffset(0)
 {
   //{{AFX_DATA_INIT(CCameraSetupDlg)
   m_iBinning = -1;
@@ -318,6 +320,9 @@ void CCameraSetupDlg::DoDataExchange(CDataExchange* pDX)
   DDX_Control(pDX, IDC_STAT_PREPIXEL, m_statPrepixel);
   DDX_Text(pDX, IDC_EDIT_PREPIXEL, m_iPrepixel);
   DDV_MinMaxInt(pDX, m_iPrepixel, 0, 1000);
+  DDX_Control(pDX, IDC_EDIT_TILT_OFFSET, m_editTiltOffset);
+  DDX_Text(pDX, IDC_EDIT_TILT_OFFSET, m_fTiltOffset);
+	DDV_MinMaxFloat(pDX, m_fTiltOffset, -60., 60.);
 }
 
 
@@ -427,6 +432,7 @@ BEGIN_MESSAGE_MAP(CCameraSetupDlg, CBaseDlg)
   ON_BN_CLICKED(IDC_CHECK_TAKE_K3_BINNED, OnTakeK3Binned)
   ON_BN_CLICKED(IDC_CHECK_HARDWARE_ROI, OnUseHwROI_OvDiff)
   ON_EN_KILLFOCUS(IDC_EDIT_PREPIXEL, OnKillfocusEditPrepixel)
+  ON_EN_KILLFOCUS(IDC_EDIT_TILT_OFFSET, OnKillfocusEditTiltOffset)
   END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -602,6 +608,8 @@ void CCameraSetupDlg::OnButcopycamera()
 void CCameraSetupDlg::OnRcamera() 
 {
   mLastCamera = mCurrentCamera;
+  if (mParam->STEMcamera)
+    mCamera->SetDynFocusTiltOffset(m_fTiltOffset);
   UnloadDialogToConset();
   ManageCamera();
   LoadConsetToDialog();
@@ -650,6 +658,9 @@ void CCameraSetupDlg::OnDynfocus()
 {
   UpdateData(true);
   m_statTimingAvail.EnableWindow(m_bDynFocus);
+  EnableDlgItem(IDC_STAT_TILT_OFFSET, m_bDynFocus);
+  EnableDlgItem(IDC_STAT_TILT_DEG, m_bDynFocus);
+  m_editTiltOffset.EnableWindow(m_bDynFocus);
 }
 
 // Use DE hardware ROI or Oneview Diffraction mode
@@ -836,6 +847,8 @@ void CCameraSetupDlg::OnOK()
   // This gets OnKillfocus called for an edit box if it has focus.
   SetFocus();
   UnloadDialogToConset(); 
+  if (mParam->STEMcamera)
+    mCamera->SetDynFocusTiltOffset(m_fTiltOffset);
   mCamera->SetTakeK3SuperResBinned(m_bTakeK3Binned);
   GetWindowPlacement(&mPlacement);
   CBaseDlg::OnOK();
@@ -990,6 +1003,9 @@ void CCameraSetupDlg::LoadConsetToDialog()
   m_iIntegration = mCurSet->integration;
   if (mTietzType && mParam->STEMcamera)
     m_iPrepixel = mCurSet->numSkipBefore;
+  EnableDlgItem(IDC_STAT_TILT_OFFSET, m_bDynFocus);
+  EnableDlgItem(IDC_STAT_TILT_DEG, m_bDynFocus);
+  m_editTiltOffset.EnableWindow(m_bDynFocus);
   B3DCLAMP(m_iIntegration, 1, mMaxIntegration);
 
   // Initialize dark ref averaging to defaults if out of range
@@ -1697,6 +1713,13 @@ void CCameraSetupDlg::ManageCamera()
   m_butLineSync.EnableWindow(mParam->GatanCam);
   m_statPrepixel.ShowWindow((mParam->STEMcamera && mTietzType) ? SW_SHOW : SW_HIDE);
   m_editPrepixel.ShowWindow((mParam->STEMcamera && mTietzType) ? SW_SHOW : SW_HIDE);
+  ShowDlgItem(IDC_STAT_PREPIX_USEC, mParam->STEMcamera && mTietzType);
+  m_editTiltOffset.ShowWindow(mParam->STEMcamera);
+  ShowDlgItem(IDC_STAT_TILT_OFFSET, mParam->STEMcamera);
+  ShowDlgItem(IDC_STAT_TILT_DEG, mParam->STEMcamera);
+  if (mParam->STEMcamera)
+    m_fTiltOffset = mCamera->GetDynFocusTiltOffset();
+
   maxChan = mCamera->GetMaxChannels(mParam);
   for (i = 0; i < MAX_STEM_CHANNELS; i++) {
     m_butmaxScanRate.EnableWindow(mParam->maxScanRate > 0.);
@@ -2282,6 +2305,11 @@ void CCameraSetupDlg::OnKillfocusEditIntegration()
 }
 
 void CCameraSetupDlg::OnKillfocusEditPrepixel()
+{
+  UpdateData(true);
+}
+
+void CCameraSetupDlg::OnKillfocusEditTiltOffset()
 {
   UpdateData(true);
 }

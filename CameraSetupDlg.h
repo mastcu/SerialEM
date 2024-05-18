@@ -377,6 +377,9 @@ void ManageK2Binning(void);
   CStatic m_statPrepixel;
   int m_iPrepixel;
   afx_msg void OnKillfocusEditPrepixel();
+  CEdit m_editTiltOffset;
+  float m_fTiltOffset;
+  afx_msg void OnKillfocusEditTiltOffset();
 };
 
 //{{AFX_INSERT_LOCATION}}

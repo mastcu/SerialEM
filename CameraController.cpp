@@ -472,6 +472,7 @@ CCameraController::CCameraController()
   mTakeUnbinnedIfSavingEER = true;
   mShowLinearForAlpine = true;
   mUseAPI2ForDE = false;
+  mDynFocusTiltOffset = 0.;
 }
 
 // Clear anything that might be set externally, or was cleared in constructor and cleanup
@@ -11485,7 +11486,8 @@ void CCameraController::SetupDynamicFocus(int numIntervals, double msPerLine,
   // and invert the tangent of the angle if it is 180.  This will adjust both the
   // starting Z and the change in Z during the scan
   double nativeRotation = mParam->imageRotation - (mParam->rotationFlip % 4) * 90.;
-  double tanAng = tan(DTOR * mTiltBefore) * (mParam->invertFocusRamp ? -1. : 1.);
+  double tanAng = tan(DTOR * mTiltBefore + mDynFocusTiltOffset) * 
+    (mParam->invertFocusRamp ? -1. : 1.);
   if (fabs(UtilGoodAngle(nativeRotation)) > 90.)
     tanAng = -tanAng;
   mCenterFocus = mScope->GetDefocus();
