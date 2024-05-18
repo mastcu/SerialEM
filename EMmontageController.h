@@ -69,7 +69,7 @@ class EMmontageController
   ~EMmontageController();
   void Initialize();
   GetMember(BOOL, Montaging)
-  BOOL DoingMontage() {return (mPieceIndex >= 0);};
+  BOOL DoingMontage() {return (mPieceIndex >= 0 || mRestoringStage);};
   int StartMontage(int inTrial, BOOL inReadMont, float cookDwellTime = 0., 
     int cookSkip = 0, bool skipColumn = false, float cookSpeed = 0.);
   int ReadMontage(int inSect = NO_SUPPLIED_SECTION, MontParam *inParam = NULL,
@@ -185,7 +185,7 @@ class EMmontageController
   float mNominalStageY;
   bool mDoStageMoves;             // Replacement for moveStage in param, in case multishot
   BOOL mMovingStage;              // Flag that stage is being moved
-  BOOL mRestoringStage;           // Flag for final stage move at end
+  int mRestoringStage;            // Flag for final stage move at end: 1 doing, -1 will do
   BOOL mFocusing;                 // Flag for focusing after stage move
   float mStageBacklash;           // Basic backlash for moving stage
   bool mImShiftInBlocks;          // Flag that we are image shifting in blocks
@@ -366,7 +366,7 @@ public:
     FloatVec *yStage = NULL, FloatVec *meanVec = NULL, float *zStage = NULL);
   void ReadingDone(void);
   void StartStageRestore(void);
-  void StageRestoreDone(void);
+  void StageRestoreDone(int restoreVal = 0);
   int FindPieceForRealigning(int pieceX, int pieceY);
   int PieceIndexFromXY(int pieceX, int pieceY);
   int RealignToExistingPiece(void);
