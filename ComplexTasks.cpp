@@ -160,6 +160,7 @@ CComplexTasks::CComplexTasks()
   mFEWarnedUseTrial = false;
   mFEUseSearchIfInLM = false;
   mFESizeOrFracForMean = 0.;
+  mFENextCoarseConSet = -1;
   mDebugRoughEucen = false;
   mZMicronsPerDialMark = 3.1f;
   mManualHitachiBacklash = 10.;
@@ -1451,18 +1452,24 @@ void CComplexTasks::FindEucentricity(int coarseFine)
 
 
     // Make a conset for tracking unless another routine did
-    if (!mMagStackInd || mConSetModified[mMagStackInd - 1] != TRACK_CONSET)
+    if ((!mMagStackInd || mConSetModified[mMagStackInd - 1] != TRACK_CONSET) && 
+      !((coarseFine & FIND_EUCENTRICITY_COARSE) && mFENextCoarseConSet >= 0))
       MakeTrackingConSet(conSet, targetSize);
     mFEIterationCount = 0;
     mFEUsersAngle = 0.;
     if (coarseFine & FIND_EUCENTRICITY_COARSE) {
-      LowerMagIfNeeded(mMaxFECoarseMagInd, 0.7f, 0.3f, TRACK_CONSET);
-      if (mFEUseSearchIfInLM && mWinApp->LowDoseMode() &&
-        curMag < mScope->GetLowestMModeMagInd() &&
-        ldp[SEARCH_AREA].magIndex < mScope->GetLowestMModeMagInd()) {
-        mLowMagConSet = SEARCH_CONSET;
-        obeyDelay = mShiftManager->GetPixelSize(
-          mWinApp->GetCurrentCamera(), ldp[SEARCH_AREA].magIndex) < 0.1;
+      if (mFENextCoarseConSet >= 0) {
+        mLowMagConSet = mFENextCoarseConSet;
+        mFENextCoarseConSet = -1;
+      } else {
+        LowerMagIfNeeded(mMaxFECoarseMagInd, 0.7f, 0.3f, TRACK_CONSET);
+        if (mFEUseSearchIfInLM && mWinApp->LowDoseMode() &&
+          curMag < mScope->GetLowestMModeMagInd() &&
+          ldp[SEARCH_AREA].magIndex < mScope->GetLowestMModeMagInd()) {
+          mLowMagConSet = SEARCH_CONSET;
+          obeyDelay = mShiftManager->GetPixelSize(
+            mWinApp->GetCurrentCamera(), ldp[SEARCH_AREA].magIndex) < 0.1;
+        }
       }
       action = FE_COARSE_RESET;
       mFECoarseFine &= ~REFINE_EUCENTRICITY_ALIGN;
@@ -1481,7 +1488,7 @@ void CComplexTasks::FindEucentricity(int coarseFine)
     } else {
       LowerMagIfNeeded(mMaxFEFineMagInd, 0.75f, 0.5f, TRACK_CONSET);
       if (mFEUseTrialInLD && mWinApp->LowDoseMode())
-        mLowMagConSet = 2;
+        mLowMagConSet = TRIAL_CONSET;
       action = FE_FINE_RESET;
     }
   } else {
@@ -1679,7 +1686,8 @@ void CComplexTasks::EucentricityNextTask(int param)
     if (mFEUseCoarseMaxDeltaZ > 0. && fabs(delZ) > mFEUseCoarseMaxDeltaZ) {
       report.Format("Rough eucentricity change of %.1f um exceeds limit of %.0f um;"
         " procedure is ending with no change", delZ, mFEUseCoarseMaxDeltaZ);
-      mWinApp->VerboseAppendToLog(mVerbose, report);
+      mWinApp->AppendToLog(report,
+        mVerbose ? LOG_OPEN_IF_CLOSED : LOG_SWALLOW_IF_CLOSED);
       mFELastCoarseFailed = true;
       StopEucentricity();
       return;
@@ -1708,7 +1716,8 @@ void CComplexTasks::EucentricityNextTask(int param)
     DoubleMoveStage(mFECurrentZ, backlashZ, true, 0., 0., false, action);
     report.Format("Rough eucentricity: changing Z by %.2f to %.2f, %s", delZ,
       mFECurrentZ, action == FE_COARSE_MOVED ? "continuing..." : "finished.");
-    mWinApp->VerboseAppendToLog(mVerbose, report);
+    mWinApp->AppendToLog(report,
+      mVerbose ? LOG_OPEN_IF_CLOSED : LOG_SWALLOW_IF_CLOSED);
     return;
 
   case FE_COARSE_LAST_MOVE:
