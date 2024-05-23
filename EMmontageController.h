@@ -122,6 +122,8 @@ class EMmontageController
   GetSetMember(bool, RunningMacro);
   GetSetMember(BOOL, AllowHQMontInLD);
   GetSetMember(BOOL, NoMontXCorrThread);
+  GetMember(int, PieceIndex);
+  GetMember(int, RestoringStage);
   void SetBaseISXY(double inX, double inY) {mBaseISX = inX; mBaseISY = inY;};
   void SetXcorrFilter(int ind, float r1, float r2, float s1, float s2) {mSloppyRadius1[ind] = r1;
     mRadius2[ind] = r2; mSigma1[ind] = s1; mSigma2[ind] = s2;};

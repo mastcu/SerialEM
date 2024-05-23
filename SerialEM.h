@@ -635,6 +635,7 @@ public:
   GetMember(bool, JustChangingLDarea);
   GetMember(bool, JustDoingSynchro);
   GetMember(bool, JustNavAcquireOpen);
+  GetMember(bool, JustMontRestoringStage);
   GetMember(bool, InUpdateWindows);
   GetMember(BOOL, EnableExternalPython);
   GetMember(bool, HasK2OrK3Camera);
@@ -946,6 +947,7 @@ private:
   bool mJustChangingLDarea;     // Flag that "DOingTasks" was true because of LD change
   bool mJustDoingSynchro;       // Flag that "DoingTasks" true because of synchro thread
   bool mJustNavAcquireOpen;     // Flag that "DoingTasks" true because of nav acquire
+  bool mJustMontRestoringStage; // Flagthat "DoingTasks" true because of stage restore
   bool mInUpdateWindows;        // Flag that update call is from UpdateBufferWindows
   BOOL mEnableExternalPython;   // Flag to open socket for external python
   bool mHasK2OrK3Camera;        // Flag for whether there is K2 or K3
