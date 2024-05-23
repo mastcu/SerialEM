@@ -80,7 +80,7 @@ static char THIS_FILE[] = __FILE__;
 #endif
 
 #define VERSION_STRING  "SerialEM Version 4.2.0beta"
-#define TAG_STRING      "(Tagged SEM_4-1-11, 5/18/24)"
+#define TAG_STRING      "(Tagged SEM_4-1-12, 5/23/24)"
 #define DEPRECATED_PYTHON  "3.5-64"
 
 // Offsets for static window inside main frame
@@ -3578,7 +3578,7 @@ BOOL CSerialEMApp::DoingImagingTasks()
 {
   return (mShiftCalibrator->CalibratingIS() || 
     mShiftCalibrator->CalibratingOffset() || mShiftCalibrator->DoingInterSetShift() ||
-    mMontageController->DoingMontage() ||
+    mMontageController->GetPieceIndex() >= 0 ||
     mFocusManager->DoingFocus() || mFocusManager->DoingSTEMfocus() ||
     mFocusManager->DoingSTEMfocusVsZ() ||
     mComplexTasks->DoingTasks() ||   // Reports on MultiTSTasks too, and ParticleTasks
@@ -3615,7 +3615,9 @@ BOOL CSerialEMApp::DoingTasks()
   mJustDoingSynchro = !trulyBusy && (mScope->DoingSynchroThread() || 
     mBufferManager->DoingSychroThread());
   mJustNavAcquireOpen = !trulyBusy && mNavigator && mNavigator->mNavAcquireDlg;
-  return trulyBusy || mJustChangingLDarea || mJustDoingSynchro || mJustNavAcquireOpen;
+  mJustMontRestoringStage = !trulyBusy && mMontageController->GetRestoringStage();
+  return trulyBusy || mJustChangingLDarea || mJustDoingSynchro || mJustNavAcquireOpen ||
+    mJustMontRestoringStage;
 }
 
 // Register a stop function of form "void stopFunc(int error)" to be called by 

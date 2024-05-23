@@ -3363,7 +3363,7 @@ int EMmontageController::SavePiece()
   // Find out whether to make a map; fake out the task test
   iDirX = mPieceIndex;
   mPieceIndex = -1;
-  doingTasks = mWinApp->DoingTasks();
+  doingTasks = mWinApp->DoingTasks() && !mWinApp->GetJustMontRestoringStage();
   mPieceIndex = iDirX;
 
   if (!mReadingMontage && mParam->makeNewMap && !mWinApp->DoingTiltSeries() &&
