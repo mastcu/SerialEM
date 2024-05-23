@@ -3,6 +3,10 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+5/23/24: SEM_4-1-12
+5/23/24: Fixed making new map and closing file at end of montage, broken in
+4.1.11 (In 4.1).
+
 5/18/24: SEM_4-1-11
 5/18/24: Kept many functions disabled during stage restore after a montage
 is stopped (In 4.1).
