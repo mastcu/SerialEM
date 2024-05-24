@@ -3478,7 +3478,7 @@ int CMacCmd::SetupFullMontage(void)
   if (!mOverwriteOK && CFile::GetStatus((LPCTSTR)mEnteredName, status))
     SUSPEND_NOLINE("setting up a full montage because " + mEnteredName +
       " already exists");
-  if (mNavigator->FullMontage(true, mItemFlt[1], SETUPMONT_FROM_MACRO))
+  if (mNavigator->FullMontage(true, mItemFlt[1], true))
     ABORT_LINE("An error occurred setting up a full montage for line:\n\n");
   mMovedStage = true;
   return 0;
@@ -3506,7 +3506,7 @@ int CMacCmd::SetupPolygonMontage(void)
   if (!mOverwriteOK && CFile::GetStatus((LPCTSTR)mEnteredName, status))
     SUSPEND_NOLINE("setting up a polygon  montage because " + mEnteredName +
       " already exists");
-  if (mNavigator->PolygonMontage(NULL, true, index, mItemFlt[2], SETUPMONT_FROM_MACRO))
+  if (mNavigator->PolygonMontage(NULL, true, index, mItemFlt[2], true))
     ABORT_LINE("An error occurred setting up a polygon montage for line:\n\n");
   mMovedStage = true;
   return 0;
@@ -11382,11 +11382,11 @@ int CMacCmd::GoToImagingState(void)
   int index;
   CString errStr;
   SubstituteLineStripItems(mStrLine, 1, mStrCopy);
-  /*if (!mNavHelper->mStateDlg) {
+  if (!mNavHelper->mStateDlg) {
     errStr = "the state dialog is not open";
     index = -1;
-  } else*/
-    index = CStateDlg::SetStateByNameOrNum(mStrCopy, errStr);
+  } else
+    index = mNavHelper->mStateDlg->SetStateByNameOrNum(mStrCopy, errStr);
   if (index)
     mLogRpt = "Cannot set imaging state; " + errStr;
   SetReportedValues(index);
@@ -11730,14 +11730,14 @@ int CMacCmd::StartNavAcquireAtEnd(void)
 // NavAcqAtEndUseParams
 int CMacCmd::NavAcqAtEndUseParams()
 {
-  NavAcqAction *actions = mNavHelper->GetAcqActions(2);
-  NavAcqParams *params = mWinApp->GetNavAcqParams(2);
-  int *order = mNavHelper->GetAcqActCurrentOrder(2);
-  int which = 0;
+  NavAcqAction *useAct, *actions = mNavHelper->GetAcqActions(2);
+  NavAcqParams *useParam, *params = mWinApp->GetNavAcqParams(2);
+  int *useOrder, *order = mNavHelper->GetAcqActCurrentOrder(2);
+  int ind, which = 0;
   ABORT_NONAV;
   if (mNavigator->GetAcquiring())
     ABORT_NOLINE("You cannot use NavAcqAtEndUseParams when Navigator is acquiring");
-  
+
   if (!mStrItems[1].CompareNoCase("R")) {
     if (mItemEmpty[2])
       ABORT_LINE("You must include a filename with Navigator parameters in line:\n\n");
@@ -11750,7 +11750,14 @@ int CMacCmd::NavAcqAtEndUseParams()
       which = 1;
     else if (mStrItems[1].CompareNoCase("M"))
       ABORT_LINE("Parameter set to use must be M, F, or R in line:\n\n");
-    mNavHelper->CopyAcqParamsAndActionsToTemp(which);
+    useAct = mNavHelper->GetAcqActions(which);
+    useParam = mWinApp->GetNavAcqParams(which);
+    useOrder = mNavHelper->GetAcqActCurrentOrder(which);
+    *params = *useParam;
+    for (ind = 0; ind < mNavHelper->GetNumAcqActions(); ind++) {
+      order[ind] = useOrder[ind];
+      actions[ind] = useAct[ind];
+    }
   }
   mUseTempNavParams = true;
   return 0;
