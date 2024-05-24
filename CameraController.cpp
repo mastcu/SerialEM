@@ -9138,7 +9138,7 @@ bool CCameraController::ProcessFrameTSRefinements(CameraThreadData *td, int step
 }
 
 // Start the external focus ramper for an FEI scope
-int CCameraController::StartFocusRamp(CameraThreadData * td, bool & rampStarted)
+int CCameraController::StartFocusRamp(CameraThreadData *td, bool &rampStarted)
 {
   int chan, retval = 0, useInterval = td->DynFocusInterval;
   try {
@@ -9184,7 +9184,7 @@ int CCameraController::StartFocusRamp(CameraThreadData * td, bool & rampStarted)
 }
 
 // Collect statistics from it and make sure it ended
-void CCameraController::FinishFocusRamp(CameraThreadData * td, bool rampStarted)
+void CCameraController::FinishFocusRamp(CameraThreadData *td, bool rampStarted)
 {
   CString report;
   int chan;
@@ -11544,6 +11544,31 @@ BOOL CCameraController::CreateFocusRamper(void)
     __uuidof(IFocusRamper), (LPVOID *)&mTD.FocusRamper);
   mRamperInstance = SUCCEEDED(hr);
   return SEMTestHResult(hr, "Creating instance of FocusRamper");
+}
+
+// Sets up to use focus ramper for an externally acquired scan
+int CCameraController::ExternalSetupDynFocus(float exposure, int xSize, int ySize,
+  int binning)
+{
+  float flyback = mParam->flyback;
+  double msPerLine;
+  int ind;
+  CString mess;
+  float startupDelay = mParam->startupDelay;
+  mExposure = exposure;
+  mBinning = binning;
+  mTD.DMSizeY = ySize;
+  mTD.DMSizeX = xSize;
+  mMagBefore = mScope->GetMagIndex();
+  mTiltBefore = (float)mScope->GetTiltAngle();
+  if (mParam->FEItype)
+    mWinApp->mCalibTiming->FlybackTimeFromTable(mBinning, mTD.DMSizeX,
+      mMagBefore, exposure, flyback, startupDelay, &mess);
+  ind = DynamicFocusOK(exposure, ySize, flyback, mTD.DynFocusInterval, msPerLine);
+  if (!ind)
+    return 1;
+  SetupDynamicFocus(ind, msPerLine, flyback, startupDelay);
+  return 0;
 }
 
 // Set time for post-exposure actions; set up test blanking if extra beam time negative

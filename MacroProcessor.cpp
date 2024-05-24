@@ -1291,6 +1291,7 @@ void CMacroProcessor::Run(int which)
   mBoxOnScopeInterval = 0.;
   mNumRuns = 0;
   mNextParamSetForMont = 0;
+  mRamperStarted = false;
   mTestNextMultiShot = 0;
   mAccumShiftX = 0.;
   mAccumShiftY = 0.;
@@ -5408,7 +5409,7 @@ int CMacroProcessor::StartNavAvqBusy(void)
   if (mLastCompleted && mWinApp->mNavigator) {
     mWinApp->mNavigator->SetCurAcqParmActions(mUseTempNavParams ? 2 :
       mNavHelper->GetCurAcqParamIndex());
-    mWinApp->mNavigator->AcquireAreas(false, false, mUseTempNavParams);
+    mWinApp->mNavigator->AcquireAreas(0, false, mUseTempNavParams);
   }
   return 0;
 }

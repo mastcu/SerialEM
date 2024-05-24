@@ -6879,13 +6879,15 @@ BOOL CEMscope::CassetteSlotStatus(int slot, int &status, CString &names, int *nu
 }
 
 // Load a cartridge to the stage
-int CEMscope::LoadCartridge(int slot)
+int CEMscope::LoadCartridge(int slot, CString &errStr)
 {
-  int id, oper = LONG_OP_LOAD_CART;
+  int id, err, oper = LONG_OP_LOAD_CART;
   JeolCartridgeData jcd;
   float sinceLast = 0.;
-  if (!sInitialized || (!FEIscope && mJeolHasNitrogenClass < 2))
+  if (!sInitialized || (!FEIscope && mJeolHasNitrogenClass < 2)) {
+    errStr = "Autoloader operations are not supported by this microscope";
     return 3;
+  }
   if (slot <= 0)
     return 4;
   if (FEIscope) {
@@ -6893,35 +6895,54 @@ int CEMscope::LoadCartridge(int slot)
   } else {
     if (!mJeolLoaderInfo.GetSize())
       return 6;
-    if (slot > mJeolLoaderInfo.GetSize())
+    if (slot > mJeolLoaderInfo.GetSize()) {
+      errStr = "Slot number or index is out of range";
       return 4;
+    }
     jcd = mJeolLoaderInfo.GetAt(slot - 1);
-    if (jcd.station == JAL_STATION_STAGE)
+    if (jcd.station == JAL_STATION_STAGE) {
+      errStr = "The cartridge is already in the stage according to the current inventory";
       return 5;
+    }
     sCartridgeToLoad = jcd.id;
     mLoadedCartridge = slot - 1;
     mUnloadedCartridge = FindCartridgeAtStage(id);
   }
-  return (StartLongOperation(&oper, &sinceLast, 1));
+  err = StartLongOperation(&oper, &sinceLast, 1);
+  if (err)
+    errStr = (err == 1) ? "The thread is already busy for a long operation" :
+    "There was an error trying to load a cartridge";
+  return err;
 }
 
 // Unload a cartridge from the stage
-int CEMscope::UnloadCartridge(void)
+int CEMscope::UnloadCartridge(CString &errStr)
 {
-  int oper = LONG_OP_UNLOAD_CART;
+  int err, oper = LONG_OP_UNLOAD_CART;
   float sinceLast = 0.;
   JeolCartridgeData jcd;
-  if (!sInitialized || (!FEIscope && mJeolHasNitrogenClass < 2))
+  if (!sInitialized || (!FEIscope && mJeolHasNitrogenClass < 2)) {
+    errStr = "Autoloader operations are not supported by this microscope";
     return 3;
+  }
   if (JEOLscope) {
-    if (!mJeolLoaderInfo.GetSize())
+    if (!mJeolLoaderInfo.GetSize()) {
+      errStr = "You need to do a cassette inventory; There is no cartridge "
+        "information";
       return 6;
+    }
     mLoadedCartridge = -1;
     mUnloadedCartridge = FindCartridgeAtStage(sCartridgeToLoad);
-    if (mUnloadedCartridge < 0)
+    if (mUnloadedCartridge < 0) {
+      errStr = "There is no cartridge in the stage according to the current inventory";
       return 5;
+    }
   }
-  return (StartLongOperation(&oper, &sinceLast, 1));
+  err = StartLongOperation(&oper, &sinceLast, 1);
+  if (err)
+    errStr = (err == 1) ? "The thread is already busy for a long operation" :
+    "There was an error trying to unload a cartridge";
+  return err;
 }
 
 // Lookup which cartridge is in the stage in the JEOL table
@@ -9761,6 +9782,7 @@ int CEMscope::StartLongOperation(int *operations, float *hoursSinceLast, int num
   short blocksFilter[MAX_LONG_OPERATIONS] = {0, 4, 4, 4, 0, 0, 4, 4, 0, 0, 4};
   mDoingStoppableRefill = 0;
   mChangedLoaderInfo = false;
+  mLongOpErrorToReport = 0;
   if (mJeolHasNitrogenClass > 1) {
     scopeType[LONG_OP_INVENTORY] = 0;
     scopeType[LONG_OP_LOAD_CART] = 0;
@@ -9980,6 +10002,12 @@ UINT CEMscope::LongOperationProc(LPVOID pParam)
         // Fill JEOL stage tank or transfer tank
         if (longOp == LONG_OP_FILL_STAGE || fillTransfer) {
           error = lod->plugFuncs->RefillNitrogen(fillTransfer ? 2 : 1, 1);
+          if (error == 2) {
+            error = lod->plugFuncs->RefillNitrogen(fillTransfer ? 2 : 1, 0);
+            lod->errString = "Timeout ";
+            lod->errString += longOpDescription[longOp];
+            lod->errString += " - stopped the filling";
+          }
         }
 
         if (longOp == LONG_OP_FLASH_FEG) {
@@ -9994,8 +10022,7 @@ UINT CEMscope::LongOperationProc(LPVOID pParam)
             descrip += lod->plugFuncs->GetLastErrorString();
           }
 
-          SEMTestHResult(hr,  _T(descrip), &lod->errString, &error, 
-            true);
+          SEMTestHResult(hr,  _T(descrip), &lod->errString, &error, true);
           retval = 1;
         } else
           lod->finished[ind] = longOp != LONG_OP_REFILL || retval == 0;
@@ -10049,8 +10076,12 @@ int CEMscope::LongOperationBusy(int index)
             mLongOpData[thread].finished[op] = true;
             busy = 0;
         } else {
+          if (longOp == LONG_OP_REFILL && !mLongOpData[thread].errString.IsEmpty()) {
+            mWinApp->AppendToLog("WARNING: " + mLongOpData[thread].errString);
+            mLongOpErrorToReport = 1;
+          }
           if (longOp == LONG_OP_INVENTORY && JEOLscope) {
-              mChangedLoaderInfo = mJeolLoaderInfo.GetSize() ? -1 : 0;
+            mChangedLoaderInfo = mJeolLoaderInfo.GetSize() ? -1 : 0;
           }
 
           // If moved a cartridge, change the table

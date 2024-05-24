@@ -795,6 +795,10 @@ MAC_SAME_FUNC_ARG(PluginDoubleString, 4, 1, Plugin, PLUGINDOUBLESTRING, SSDS)
 MAC_SAME_NAME_ARG(SetDiffractionStigmator, 2, 0, SETDIFFRACTIONSTIGMATOR, DD)
 MAC_SAME_NAME_NOARG(ReportDiffractionStigmator, 0, 0, REPORTDIFFRACTIONSTIGMATOR)
 MAC_SAME_NAME_ARG(CalibrateHighFocusMag, 1, 0, CALIBRATEHIGHFOCUSMAG, I)
+MAC_SAME_NAME_ARG(ReportPercentileStats, 5, 5, REPORTPERCENTILESTATS, SDDDI)
+MAC_SAME_NAME_ARG(SetupDynamicFocus, 4, 4, SETUPDYNAMICFOCUS, DIII)
+MAC_SAME_NAME_ARG(StartFocusRamper, 0, 1, STARTFOCUSRAMPER, iiii)
+MAC_SAME_NAME_NOARG(FinishFocusRamp, 0, 0, FINISHFOCUSRAMP)
 
 // new Python-only commands need to be added to pythonOnlyCmds in ::CMacroProcessor
 // New Not from Python items omit _ARG or _NOARG

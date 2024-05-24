@@ -1718,6 +1718,35 @@
         </TR>
 
         <TR>
+          <TD class="scriptcommand">SetupDynamicFocus #E #X #Y #B</TD>
+          <TD>Sets up dynamic focus to be run through FocusRamper on a Thermo/FEI scope 
+            during an externally run STEM acquisition, with exposure time <b>#E</b>, size of resulting 
+              image <b>#X</b> by <b>#Y</b> pixels, and binning <b>#B</b>.  Sets <i>reportedValue1-4</i>
+            with the parameters to be sent to FocusRamper: initial delay, total time of ramp in msec, 
+            interval between focus steps in msec (based on property 'DynamicFocusInterval'), and 
+            index in the focus ramp table per msec.&nbsp; If no ramp can be set up, sets only <i>reportedValue1</i> to -1.&nbsp; Values can be assigned to variables at end of 
+            command.&nbsp; Command added in 4.2, 24-May-24.
+          </TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">StartFocusRamper [#D] [#T] [#S] [#I]</TD>
+          <TD>Starts the FocusRamper with the parameters determined by 'SetupDynamicFocus', optionally
+            modifiable with entries of <b>#D</b> for initial delay, <b>#T</b> for total time,
+            <b>#S</b> for step interval (all in msec), and <b>#I</b> for index in the focus ramp table
+             per msec.&nbsp; Before returning, this command also sets the starting defocus of the ramp
+             with backlash and a delay set by property 'InitialDynamicFocusDelay'.&nbsp; The FocusRamper object
+            must already have been created by taking at least one STEM image through SerialEM with dynamic
+             focus.&nbsp; Command added in 4.2, 24-May-24.
+          </TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">FinishFocusRamp</TD>
+          <TD>Makes sure the FocusRamper has finished and kills the thread if necesssary after a 3 second
+            timeout, collects statistics that can be output with Debug Output set to 1, and restores focus to
+            the initial value.&nbsp; Command added in 4.2, 24-May-24.</TD>
+        </TR>
+
+        <TR>
           <TD class="scriptcommand">SetRedoMontageXCorrs #</TD>
           <TD>Turns the option in the Camera - Correlation Filter submenu to redo montage 
             cross-correlations instead of using previous ones from the .mdoc file on or off if 
@@ -1857,6 +1886,17 @@
             of quadrant extent to trim off the length of the strip (default 0.1). Output is
             labeled by quadrant number (1 to 4) and 'h' for horizontal strips or 'v' for
             vertical strips.</TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">ReportPercentileStats buf #P #M #R #S</TD>
+          <TD>Computes the intensity values in square patches of size <B>#S</B> pixels in buffer <B>buf</B>
+            at low and high percentile levels given by <b>#P</b> and 100. - <b>#P</b>.&nbsp; Reports the
+            mean values of the low and high percentile intensities, the fraction of midpoints between 
+            those intensities exceeding <b>#M</b>, and the fraction of intensity ranges exceeding <b>#R</b>.
+            &nbsp; For 1% limits and patches of ~50-100 pixels, and values of <B>#M</B> and <B>#R</B> around
+             0.33 and 0.45 of the maximum intensity, these fractions will reflect what fraction of the image
+            is unusably dark.&nbsp; Command added in 4.2, 24-May-24.
+          </TD>
         </TR>
         <TR>
           <TD class="scriptcommand">StageToBufImageMatrix buf #I</TD>
@@ -3342,11 +3382,13 @@
         </TR>
         <TR>
           <TD class="scriptcommand">SetDiffractionStigmator #X #Y</TD>
-          <TD>Sets the diffraction lens (IL on a JEOL) stigmator to the given values (between -1 and 1)</TD>
+          <TD>Sets the diffraction lens (IL on a JEOL) stigmator to the given values (between -1 
+            and 1).&nbsp; Command added in 4.2, 21-Apr-24.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">ReportDiffractionStigmator</TD>
-          <TD>Reports the X and Y values of the diffraction stigmator, between -1 and 1</TD>
+          <TD>Reports the X and Y values of the diffraction stigmator, between -1 and 
+            1.&nbsp; Command added in 4.2, 21-Apr-24.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">SetBeamBlank #</TD>
@@ -3770,7 +3812,8 @@
             refilling on a JEOL is included in the operations, a STOP will just stop all
             filling.&nbsp; In order for time
             intervals to be kept track of between runs of the program, the property
-            IgnoreShortTermCals must not be set.
+            IgnoreShortTermCals must not be set.&nbsp; The command sets <i>reportedValue1</i> with a return code 
+            (currently just 1 if JEOL filling timed out and was stopped) and sets <i>reportedValue2</i> to 0.
             <br />&nbsp;&nbsp;&nbsp;&nbsp; With a JEOL autoloader, the Inventory does three things: fills an internal program array
              with the information about each cartridge, prints a table to the log, and creates a persistent variable 
             <i>autoloaderInfo</i> with the same information in a 2D array.&nbsp; Each line of the 2D array has the

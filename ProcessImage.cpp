@@ -2709,6 +2709,73 @@ double CProcessImage::WholeImageMean(EMimageBuffer *imBuf)
   return retval;
 }
 
+// Compute percentile statistics from image patches
+int CProcessImage::PatchPercentileStats(EMimageBuffer *imBuf, float lowPct, float highPct,
+  float midCrit, float rangeCrit, int patchSize, float &lowMean, float &highMean,
+  float &midAbove, float &rangeAbove, CString &errStr)
+{
+  float lowSum = 0., highSum = 0., lowVal, highVal, totPatch;
+  int numXpatch, numYpatch, delXpatch, delYpatch, ix, iy, xpat, ypat, xStart, yStart;
+  int pixSize, chan;
+  float *patch;
+  int type, nx, ny, numMid = 0, numRange = 0, numPix;
+  KImage *image;
+  if (!imBuf || !imBuf->mImage) {
+    errStr = "Image buffer or image is NULL";
+    return 2;
+  }
+  image = imBuf->mImage;
+  type = image->getMode();
+  if (type == MRC_MODE_RGB) {
+    errStr = "RGB images are not supported";
+    return 3;
+  }
+  dataSizeForMode(type, &pixSize, &chan);
+  image->getSize(nx, ny);
+  numXpatch = (nx + patchSize - 1) / patchSize;
+  numYpatch = (ny + patchSize - 1) / patchSize;
+  delXpatch = (nx - patchSize) / (numXpatch - 1);
+  delYpatch = (ny - patchSize) / (numYpatch - 1);
+  xStart = (nx - (patchSize + (numXpatch - 1) * delXpatch)) / 2;
+  yStart = (ny - (patchSize + (numYpatch - 1) * delYpatch)) / 2;
+  numPix = patchSize * patchSize;
+  if (numXpatch < 2 || numYpatch < 2) {
+    errStr = "The image must be bigger than the patch in each dimension";
+    return 4;
+  }
+  NewArray(patch, float, patchSize * patchSize);
+  if (!patch) {
+    errStr = "Error allocating array for patches";
+    return 1;
+  }
+
+  image->Lock();
+  for (ypat = 0; ypat < numYpatch; ypat++) {
+    iy = yStart + ypat * delYpatch;
+    for (xpat = 0; xpat < numXpatch; xpat++) {
+      ix = xStart + xpat * delXpatch;
+      sliceTaperInPad(image->getData(), type, image->getRowBytes() / pixSize, ix,
+        ix + patchSize - 1, iy, iy + patchSize - 1, patch, patchSize, patchSize,
+        patchSize, 0, 0);
+      lowVal = percentileFloat(B3DNINT(lowPct * numPix / 100.), patch, numPix);
+      highVal = percentileFloat(B3DNINT(highPct * numPix / 100.), patch, numPix);
+      lowSum += lowVal;
+      highSum += highVal;
+      if ((lowVal + highVal) / 2 > midCrit)
+        numMid++;
+      if (highVal - lowVal > rangeCrit)
+        numRange++;
+    }
+  }
+  image->UnLock();
+  totPatch = (float)(numXpatch * numYpatch);
+  lowMean = lowSum / totPatch;
+  highMean = highSum / totPatch;
+  midAbove = (float)numMid / totPatch;
+  rangeAbove = (float)numRange / totPatch;
+  return 0;
+}
+
 void CProcessImage::OnProcessShowcrosscorr() 
 {
   mShiftManager->AutoAlign(0, 0, false, AUTOALIGN_SHOW_CORR);

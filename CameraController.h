@@ -622,6 +622,8 @@ public:
   GetSetMember(BOOL, InvertTietzScan);
   GetSetMember(float, PartialScanThreshExp);
   GetSetMember(float, DynFocusTiltOffset);
+  GetMember(double, CenterFocus);
+  CameraThreadData *GetCamThreadData() { return &mTD; };
   bool DoingPartialScan() {return mTD.ReturnPartialScan > 0; };
   bool HasCEOSFilter() {return mCEOSFilter != NULL ; }
   BOOL GetSaveInEERformat() { return mCanSaveEERformat > 0 && mSaveInEERformat; };
@@ -1129,6 +1131,7 @@ public:
     double &msPerLine);
   void SetupDynamicFocus(int numIntervals, double msPerLine, float flyback, float startup);
   BOOL CreateFocusRamper(void);
+  int ExternalSetupDynFocus(float exposure, int xSize, int ySize, int binning);
   int GetMaxChannels(CameraParameters * param);
   void StopContinuousSTEM(void);
   void TurnOffRepeatFlag(void);

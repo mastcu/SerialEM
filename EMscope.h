@@ -105,6 +105,7 @@ struct JeolCartridgeData {
   short type;
   short rotation;
   CString userName;
+  int status;
 };
 
 #define LONGOP_FLASH_HIGH    1
@@ -342,6 +343,7 @@ public:
   GetSetMember(BOOL, BkgdMovingStage);
   SetMember(BOOL, SkipNextBeamShift);
   GetMember(bool, DoingLongOperation);
+  GetMember(int, LongOpErrorToReport);
   GetSetMember(BOOL, UsePiezoForLDaxis);
   GetSetMember(bool, FocusCameFromView);
   GetSetMember(int, FalconPostMagDelay);
@@ -808,6 +810,7 @@ private:
   int mNeutralIndex;          // Index to neutral values (0 = nonGIF, 1 = GIF)
   BOOL mSkipNextBeamShift;    // Flag to skip shifting beam on next IS change
   bool mDoingLongOperation;   // Flag that any long operation is active
+  int mLongOpErrorToReport;   // A value to set reported value in in script
   BOOL mUsePiezoForLDaxis;    // Flag to use a piezo for low dose axis shift
   bool mFocusCameFromView;    // Flag that focus was reached from View mode
   int mFalconPostMagDelay;    // Timeout interval after mag change for taking Falcon image
@@ -976,8 +979,8 @@ public:
                                      double &defocus, double &objective, float &alpha);
   BOOL CassetteSlotStatus(int slot, int &status, CString &names, int *numSlotsP = NULL);
   int FindCartridgeWithID(int ID, CString &errStr);
-  int LoadCartridge(int slot);
-  int UnloadCartridge(void);
+  int LoadCartridge(int slot, CString &errStr);
+  int UnloadCartridge(CString &errStr);
   int FindCartridgeAtStage(int &id);
   static ScopePluginFuncs *GetPlugFuncs() {return mPlugFuncs;};
   void SetValidXYbacklash(StageMoveInfo * info);

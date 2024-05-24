@@ -358,6 +358,9 @@ int CMacCmd::NextCommand(bool startingOut)
     }
   }
 
+  if (mStartedLongOp)
+    SetReportedValues(mScope->GetLongOpErrorToReport(), 0);
+
   if (mRanGatanScript)
     SetReportedValues(mCamera->GetScriptReturnVal());
 
@@ -3475,7 +3478,7 @@ int CMacCmd::SetupFullMontage(void)
   if (!mOverwriteOK && CFile::GetStatus((LPCTSTR)mEnteredName, status))
     SUSPEND_NOLINE("setting up a full montage because " + mEnteredName +
       " already exists");
-  if (mNavigator->FullMontage(true, mItemFlt[1], true))
+  if (mNavigator->FullMontage(true, mItemFlt[1], SETUPMONT_FROM_MACRO))
     ABORT_LINE("An error occurred setting up a full montage for line:\n\n");
   mMovedStage = true;
   return 0;
@@ -3503,7 +3506,7 @@ int CMacCmd::SetupPolygonMontage(void)
   if (!mOverwriteOK && CFile::GetStatus((LPCTSTR)mEnteredName, status))
     SUSPEND_NOLINE("setting up a polygon  montage because " + mEnteredName +
       " already exists");
-  if (mNavigator->PolygonMontage(NULL, true, index, mItemFlt[2], true))
+  if (mNavigator->PolygonMontage(NULL, true, index, mItemFlt[2], SETUPMONT_FROM_MACRO))
     ABORT_LINE("An error occurred setting up a polygon montage for line:\n\n");
   mMovedStage = true;
   return 0;
@@ -6952,6 +6955,24 @@ int CMacCmd::ReportMeanCounts(void)
   return 0;
 }
 
+// ReportPercentileStats
+int CMacCmd::ReportPercentileStats()
+{
+  CString report;
+  int index;
+  float lowVal, highVal, fracAbove, rangeAbove;
+  if (ConvertBufferLetter(mStrItems[1], 0, true, index, report))
+    ABORT_LINE(report);
+  if (mProcessImage->PatchPercentileStats(&mImBufs[index], mItemFlt[2], 
+    100.f - mItemFlt[2], mItemFlt[3],
+    mItemFlt[4], mItemInt[5], lowVal, highVal, fracAbove, rangeAbove, report))
+    ABORT_LINE(report + " for line:\n\n");
+  mLogRpt.Format("%.1f%%-iles: %g  %g  mid above %.1f: %.3f  range above %.1f: %.3f",
+    mItemFlt[2], lowVal, highVal, mItemFlt[3], fracAbove, mItemFlt[4], rangeAbove);
+  SetRepValsAndVars(6, lowVal, highVal, fracAbove, rangeAbove);
+  return 0;
+}
+
 // ReportFileZsize
 int CMacCmd::ReportFileZsize(void)
 {
@@ -9233,26 +9254,11 @@ int CMacCmd::LoadCartridge(void)
   int index;
 
   if (CMD_IS(LOADCARTRIDGE))
-    index = mScope->LoadCartridge(mItemInt[1]);
+    index = mScope->LoadCartridge(mItemInt[1], mStrCopy);
   else
-    index = mScope->UnloadCartridge();
+    index = mScope->UnloadCartridge(mStrCopy);
   if (index) {
-    if (index == 1)
-      ABORT_LINE("The thread is already busy for a long operation in:\n\n");
-    if (index == 3)
-      ABORT_LINE("Autoloader operations are not supported by this microscope in:\n\n");
-    if (index == 4)
-      ABORT_LINE("Slot number or index is out of range in:\n\n");
-    if (index == 6)
-      ABORT_LINE("You need to do a cassette inventory; There is no cartridge "
-        "information for:\n\n");
-    if (index == 5) {
-      ABORT_LINE((CMD_IS(LOADCARTRIDGE) ? "The cartridge is already in the stage" :
-        "There is no cartridge in the stage") +
-        CString(" according to the current inventory in:\n\n"));
-    } else {
-      ABORT_LINE("There was an error trying to run a long operation with:\n\n");
-    }
+    ABORT_LINE(mStrCopy + " in:\n\n");
   }
   mStartedLongOp = true;
   return 0;
@@ -10353,6 +10359,57 @@ int CMacCmd::ReportCameraName(void)
   return 0;
 }
 
+// SetupDynamicFocus
+int CMacCmd::SetupDynamicFocus()
+{
+  CameraThreadData *td = mCamera->GetCamThreadData();
+  int ind = mCamera->ExternalSetupDynFocus(mItemFlt[1], mItemInt[2], mItemInt[3],
+    mItemInt[4]);
+  if (ind) {
+    mLogRpt = "No dynamic focus was set up with these parameters";
+    SetRepValsAndVars(5, -1.);
+  } else {
+    SetRepValsAndVars(5, td->ScanDelay, td->PostActionTime, td->DynFocusInterval,
+      td->IndexPerMs, MAX_RAMP_STEPS);
+  }
+  return 0;
+}
+
+// StartFocusRamper
+int CMacCmd::StartFocusRamper()
+{
+  CameraThreadData *td = mCamera->GetCamThreadData();
+  if (!mItemEmpty[1])
+    td->ScanDelay = mItemInt[1];
+  if (!mItemEmpty[2])
+    td->PostActionTime = mItemInt[2];
+  if (!mItemEmpty[3])
+    td->DynFocusInterval = mItemInt[3];
+  if (!mItemEmpty[3])
+    td->IndexPerMs = mItemInt[4];
+  double extra = td->FocusBase > mCamera->GetCenterFocus() ? 1. : -1.;
+  mScope->SetDefocus(td->FocusBase + extra);
+  mScope->SetDefocus(td->FocusBase);
+  Sleep(mCamera->GetStartDynFocusDelay());
+  mCamera->StartFocusRamp(td, mRamperStarted);
+  if (!mRamperStarted)
+    mLogRpt = "The focus ramper did not start";
+  return 0;
+}
+
+// FinishFocusRamp
+int CMacCmd::FinishFocusRamp()
+{
+  CameraThreadData *td = mCamera->GetCamThreadData();
+  mCamera->FinishFocusRamp(td, mRamperStarted);
+  if (mRamperStarted) {
+    SEMTrace('1', "Focus interval min %.0f  max %.0f  mean %.1f  Sd %.1f",
+      td->ScanIntMin, td->ScanIntMax, td->ScanIntMean, td->ScanIntSD);
+    mScope->SetDefocus(mCamera->GetCenterFocus());
+  }
+  return 0;
+}
+
 // ReportColumnOrGunValve
 int CMacCmd::ReportColumnOrGunValve(void)
 {
@@ -11325,11 +11382,11 @@ int CMacCmd::GoToImagingState(void)
   int index;
   CString errStr;
   SubstituteLineStripItems(mStrLine, 1, mStrCopy);
-  if (!mNavHelper->mStateDlg) {
+  /*if (!mNavHelper->mStateDlg) {
     errStr = "the state dialog is not open";
     index = -1;
-  } else
-    index = mNavHelper->mStateDlg->SetStateByNameOrNum(mStrCopy, errStr);
+  } else*/
+    index = CStateDlg::SetStateByNameOrNum(mStrCopy, errStr);
   if (index)
     mLogRpt = "Cannot set imaging state; " + errStr;
   SetReportedValues(index);
@@ -11673,10 +11730,10 @@ int CMacCmd::StartNavAcquireAtEnd(void)
 // NavAcqAtEndUseParams
 int CMacCmd::NavAcqAtEndUseParams()
 {
-  NavAcqAction *useAct, *actions = mNavHelper->GetAcqActions(2);
-  NavAcqParams *useParam, *params = mWinApp->GetNavAcqParams(2);
-  int *useOrder, *order = mNavHelper->GetAcqActCurrentOrder(2);
-  int ind, which = 0;
+  NavAcqAction *actions = mNavHelper->GetAcqActions(2);
+  NavAcqParams *params = mWinApp->GetNavAcqParams(2);
+  int *order = mNavHelper->GetAcqActCurrentOrder(2);
+  int which = 0;
   ABORT_NONAV;
   if (mNavigator->GetAcquiring())
     ABORT_NOLINE("You cannot use NavAcqAtEndUseParams when Navigator is acquiring");
@@ -11693,14 +11750,7 @@ int CMacCmd::NavAcqAtEndUseParams()
       which = 1;
     else if (mStrItems[1].CompareNoCase("M"))
       ABORT_LINE("Parameter set to use must be M, F, or R in line:\n\n");
-    useAct = mNavHelper->GetAcqActions(which);
-    useParam = mWinApp->GetNavAcqParams(which);
-    useOrder = mNavHelper->GetAcqActCurrentOrder(which);
-    *params = *useParam;
-    for (ind = 0; ind < mNavHelper->GetNumAcqActions(); ind++) {
-      order[ind] = useOrder[ind];
-      actions[ind] = useAct[ind];
-    }
+    mNavHelper->CopyAcqParamsAndActionsToTemp(which);
   }
   mUseTempNavParams = true;
   return 0;
@@ -12254,9 +12304,9 @@ int CMacCmd::CombineHolesToMulti(void)
 int CMacCmd::UndoHoleCombining(void)
 {
   ABORT_NONAV;
-  if (!mWinApp->mNavHelper->mCombineHoles->OKtoUndoCombine())
+  if (!mNavHelper->mCombineHoles->OKtoUndoCombine())
     ABORT_NOLINE("It is no longer possible to undo the last hole combination");
-  mWinApp->mNavHelper->mCombineHoles->UndoCombination();
+  mNavHelper->mCombineHoles->UndoCombination();
   return 0;
 }
 

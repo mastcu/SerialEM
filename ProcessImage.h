@@ -37,6 +37,8 @@ public:
 // Operations
 public:
   double WholeImageMean(EMimageBuffer *imBuf);
+  int PatchPercentileStats(EMimageBuffer *imBuf, float lowPct, float highPct, float midCrit,
+    float rangeCrit, int patchSize, float &lowVal, float &highVal, float &midAbove, float &rangeAbove, CString &errStr);
   float UnbinnedSpotMeanPerSec(EMimageBuffer *imBuf);
 	void UpdateBWCriterion(EMimageBuffer *imBuf, float &crit, float derate);
 	BOOL ImageTooWeak(EMimageBuffer *imBuf, float crit);

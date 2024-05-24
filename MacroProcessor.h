@@ -476,6 +476,7 @@ protected:
   CString mCtfplotGraphName;   // FIlename to save next ctfplotter graph to
   CString mLastPluginCalled;   // Keep track so it is easier to call again with ":"
   int mNextParamSetForMont;    // Parameter set to use for next montage opened
+  bool mRamperStarted;         // Flag for focus ramper started
 
 public:
   void SetNumCamMacRows(int inVal);
