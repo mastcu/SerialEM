@@ -534,6 +534,7 @@ CEMscope::CEMscope()
   mUseFilterInTEMMode = false;
   mScanningMags = 0;
   mUseImageBeamTilt = false;
+  mScreenRaiseDelay = 0;
   mAdvancedScriptVersion = 0;
   mPluginVersion = 0;
   mPlugFuncs = NULL;
@@ -3628,6 +3629,7 @@ BOOL CEMscope::SetScreenPos(int inPos)
   }
   
   mMoveInfo.axisBits = inPos;
+  mMoveInfo.finishedTick = (inPos == spUp) ? mScreenRaiseDelay : 0;
   mScreenThread = AfxBeginThread(ScreenMoveProc, &mMoveInfo,
     THREAD_PRIORITY_NORMAL, 0, CREATE_SUSPENDED);
   TRACE("ScreenMoveProc thread created with ID 0x%0x\n",mScreenThread->m_nThreadID);
@@ -3735,6 +3737,8 @@ UINT CEMscope::ScreenMoveProc(LPVOID pParam)
   if (FEIscope) {
     info->plugFuncs->EndThreadAccess(1);
   }
+  if (!retval && info->finishedTick > 0)
+    Sleep(info->finishedTick);
   CoUninitialize();
   ScopeMutexRelease("ScreenMoveProc");
   return retval;

@@ -515,6 +515,7 @@ public:
   GetSetMember(int, FeiSTEMprobeModeInLM);
   GetSetMember(int, ScanningMags);
   GetSetMember(BOOL, UseImageBeamTilt);
+  GetSetMember(int, ScreenRaiseDelay);
   GetMember(int, LastMagIndex);
   std::vector<ShortVec> *GetApertureLists() { return &mApertureSizes; };
   void GetRawImageShift(double &ISX, double &ISY) { ISX = mLastISX; ISY = mLastISY; };
@@ -899,6 +900,7 @@ private:
   int mScanningMags;           // 1 if scanning, set to 0 to stop or -1 to end
   BOOL mUseImageBeamTilt;      // Flag to use image-beam tilt on FEI instead of regular
   std::vector<ShortVec> mApertureSizes;   // Each vector has aperture index then sizes
+  int mScreenRaiseDelay;       // Delay time after raising the screen, msec
   int mAdvancedScriptVersion;  // My internal version number for advanced scripting
   int mPluginVersion;          // Version of plugin or server
 

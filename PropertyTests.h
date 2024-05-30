@@ -144,6 +144,7 @@ INT_PROP_TEST("ScopeCanFlashFEG", scope->, ScopeCanFlashFEG)
 INT_PROP_TEST("ScopeHasPhasePlate", scope->, ScopeHasPhasePlate)
 INT_PROP_TEST("SkipNormalizations", scope->, SkipNormalizations)
 BOOL_PROP_TEST("UseImageBeamTilt", scope->, UseImageBeamTilt)
+INT_PROP_TEST("ScreenRaiseDelay", scope->, ScreenRaiseDelay)
 
 #endif
 #ifdef PROP_TEST_SECT2
