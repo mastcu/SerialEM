@@ -5442,7 +5442,9 @@ void CNavigatorDlg::AddGridOfPoints(bool likeLast)
             return;
           }
 
-          if (!label.IsEmpty()) {
+          if (label.IsEmpty()) {
+            labelIter = 0;
+          } else {
             checkLabel = true;
 
             // If it seems to be a negative number, convert to integer and detect if
