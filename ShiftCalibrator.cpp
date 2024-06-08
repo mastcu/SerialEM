@@ -2126,7 +2126,7 @@ int CShiftCalibrator::CalibrateHighDefocus(int fromScript, float *outScale,
   mImBufs->mTimeStamp = 0.001 * GetTickCount();
   mImBufs->mCaptured = BUFFER_PROCESSED;
   mWinApp->SetCurrentBuffer(0);
-  for (ind = 0; ind < fromScript ? 2 : 7; ind++) {
+  for (ind = 0; ind < (fromScript ? 2 : 7); ind++) {
     Sleep(300);
     mWinApp->SetCurrentBuffer(aaBufInd);
     Sleep(300);
