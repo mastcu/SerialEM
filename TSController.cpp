@@ -17,6 +17,7 @@
 #include "TSvariationsDlg.h"
 #include "TSDoseSymDlg.h"
 #include "MultiTSTasks.h"
+#include "MultiGridTasks.h"
 #include "TSExtraFile.h"
 #include "ComplexTasks.h"
 #include "ParticleTasks.h"
@@ -5015,13 +5016,15 @@ int CTSController::TSMessageBox(CString message, UINT type, BOOL terminate, int 
   CMacroProcessor *macProc = mWinApp->mMacroProcessor;
   int tryLevel = macProc->GetTryCatchLevel();
   bool *noCatchMess = macProc->GetNoCatchOutput();
+  bool mgTask = mWinApp->mMultiGridTasks->RunningExternalTask() &&
+    !mWinApp->mMultiGridTasks->GetStartedNavAcquire();
 
   // Intercept error from macros if the flag is set, make sure there is a \r before at
   // least one \n in a row, print message and return
   mLastNoBoxMessage = "";
   if (mWinApp->mCamera->GetNoMessageBoxOnError() < 0 ||
     (macProc->DoingMacro() && (macProc->GetNoMessageBoxOnError() || tryLevel > 0)) || 
-    (!DoingTiltSeries() && mWinApp->mNavHelper->GetNoMessageBoxOnError())) {
+    (!DoingTiltSeries() && mWinApp->mNavHelper->GetNoMessageBoxOnError()) || mgTask) {
     for (int ind = 0; ind < message.GetLength(); ind++) {
       if (message.GetAt(ind) == '\n' && (!ind || (message.GetAt(ind - 1) != '\r' &&
         message.GetAt(ind - 1) != '\n'))) {
@@ -5029,7 +5032,9 @@ int CTSController::TSMessageBox(CString message, UINT type, BOOL terminate, int 
         ind++;
       }
     }
-    if (macProc->DoingMacro() || !mWinApp->mNavHelper->GetNoMessageBoxOnError())
+    if (mgTask) {
+      mWinApp->mMultiGridTasks->ExternalTaskError(message);
+    } else if (macProc->DoingMacro() || !mWinApp->mNavHelper->GetNoMessageBoxOnError())
       valve.Format("\r\nSCRIPT %s WITH THIS MESSAGE:\r\n", (macProc->DoingMacro() &&
       (tryLevel > 0 || macProc->GetRunningScrpLang())) ? "ERROR" : "STOPPING");
     else
