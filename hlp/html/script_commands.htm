@@ -1819,35 +1819,37 @@
             just as the Navigator does when relating magnification-independent stage positions and
             positions in a specific image.&nbsp; The latter would be needed to work with stage positions
             of Navigator items.&nbsp; Image Y is inverted: the origin for the image coordinates is at
-             the top of the image.&nbsp; Command added in 4.1, 16-Jun-23.
+             the top of the image.&nbsp; Values can be assigned to variables at end of command.&nbsp; Command added in 4.1, 16-Jun-23.
           </td>
         </TR>
         <TR>
           <TD class="scriptcommand">BufImageToStageMatrix buf #I</TD>
           <td>Like 'StageToBufImageMatrix', but reports the 6-element transformation from image to stage
-            coordinates.&nbsp; Command added in 4.1, 16-Jun-23.</td>
+            coordinates.&nbsp; Values can be assigned to variables at end of command.&nbsp; Command added in 4.1, 16-Jun-23.</td>
         </TR>
         <TR>
-          <TD class="scriptcommand">StagePosToBufImagePos buf #I #X #Y</TD>
+          <TD class="scriptcommand">BufImagePosToStagePos buf #I #X #Y</TD>
           <td>Reports the stage position (X and Y) corresponding to the position <b>#X</b>, <b>#Y</b>
             in the image in buffer <b>buf</b>.&nbsp; Image coordinates are inverted in Y.&nbsp; Set <b>#I</b>
              0 to consider just the stage coordinates, or non-zero to
             consider microscope image shift when the image was taken, as well as various image shift offsets,
-            just as occurs when drawing navigator points on an image.&nbsp; In either case, if the image
+            .&nbsp; In either case, if the image
             is a stage montage overview, the offsets of pieces are taken into account in computing the position,
             making this result different from what could be computed with the matrix 
-            from 'StageToBufImageMatrix'.&nbsp; Command added in 4.1, 16-Jun-23.
+            from 'StageToBufImageMatrix'.&nbsp; Values can be assigned to variables at end of command.&nbsp; Command added in 4.1, 16-Jun-23.
           </td>
         </TR>
         <TR>
-          <TD class="scriptcommand">BufImagePosToStagePos buf #I #X #Y</TD>
-          <td>Like 'StagePosToBufImagePos', but reports the image position (X and Y) in the image in 
+          <TD class="scriptcommand">StagePosToBufImagePos buf #I #X #Y</TD>
+          <td>Like 'BufImagePosToStagePos', but reports the image position (X and Y) in the image in 
             buffer <b>buf</b> of the stage position <b>#X</b>, <b>#Y</b>.&nbsp; These image coordinates are <I>left-handed</I>; 
-            i.e., Y is inverted.&nbsp; Coordinates account for image shift and montage piece alignments 
-            as in 'StagePosToBufImagePos'.&nbsp; If the image is a montage overview, it also reports the index of 
+            i.e., Y is inverted.&nbsp; If <B>#I</B> is non-zero, coordinates account for image shift and
+             montage piece alignments as in 'BufImagePosToStagePos' and just as occurs when drawing 
+            navigator points on an image.&nbsp; If the image is a montage overview, it also reports the index of 
             the montage position and the position within that piece (X and Y) in <I>right-handed coordinates</I>,
              with 0 in Y at the bottom of each piece (see PieceOn and XYinPC in 
-            <a href="about_formats.htm#navigator">Navigator Files</a>).
+            <a href="about_formats.htm#navigator">Navigator Files</a>).&nbsp; Values can be assigned
+             to variables at end of command.&nbsp; Command added in 4.1, 16-Jun-23.
           </td>
         </TR>
        <TR>
