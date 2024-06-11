@@ -547,6 +547,7 @@ public:
   void OpenMacroEditor(int index);
   bool ConvertBufferLetter(CString strItem, int emptyDefault, bool checkImage, int &bufIndex,
     CString & message, bool fftAllowed = false);
+  void ConvertApertureNameToNum();
   bool CheckCameraBinning(double binDblIn, int &binning, CString &message);
   void SaveControlSet(int index);
   bool CheckAndConvertCameraSet(CString &strItem, int &itemInt, int &index, CString &message);

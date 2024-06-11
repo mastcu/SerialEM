@@ -23,6 +23,15 @@ static int sTopTable[sizeof(sIdTable) / sizeof(int)];
 static int sLeftTable[sizeof(sIdTable) / sizeof(int)];
 static int sHeightTable[sizeof(sIdTable) / sizeof(int)];
 
+int CStateDlg::mSetStateIndex[MAX_SAVED_STATE_IND + 1];
+CArray<StateParams *, StateParams *> *CStateDlg::mStateArray;
+CNavHelper *CStateDlg::mHelper;
+StateParams *CStateDlg::mParam;
+bool CStateDlg::mWarnedSharedParams;
+bool CStateDlg::mWarnedNoMontMap;
+bool CStateDlg::mRemindedToGoTo;
+int CStateDlg::mCamOfSetState;
+
 // CStateDlg dialog
 
 CStateDlg::CStateDlg(CWnd* pParent /*=NULL*/)
@@ -91,7 +100,7 @@ END_MESSAGE_MAP()
 BOOL CStateDlg::OnInitDialog()
 {
   // [LD], camera, mag, spot, C2, defocus, exposure, binning, frame, name
-  int fields[24] = {9,8,18,18,17,16,17,12,28,5,2,2,1,1,1,1,1,1,1,1,1,1,1,1};
+  int fields[24] = {12,8,18,18,17,16,17,12,28,5,2,2,1,1,1,1,1,1,1,1,1,1,1,1};
   int tabs[24], i;
   BOOL states[2] = {true, true};
   CRect clientRect, editRect;
@@ -230,7 +239,8 @@ void CStateDlg::Update(void)
     mWinApp->IsIDinHideSet(IDC_BUT_ADD_MONT_MAP)) ? SW_HIDE : SW_SHOW);
   m_butAddMontMap.EnableWindow(noTasks);
   m_butAddNavItemState.EnableWindow(noTasks && mapItem);
-  m_butDelState.EnableWindow(noTasks && mCurrentItem >= 0);
+  m_butDelState.EnableWindow(noTasks && mCurrentItem >= 0 && 
+    !mWinApp->mNavHelper->mMultiGridDlg);
   m_editName.EnableWindow(noTasks && mCurrentItem >= 0);
   m_butSetImState.EnableWindow(noTasks && noComplex && imOK && type != STATE_MAP_ACQUIRE
     && (type == STATE_NONE || !mParam->lowDose || mCamOfSetState< 0 ||
@@ -242,14 +252,15 @@ void CStateDlg::Update(void)
   m_butForget.EnableWindow(noTasks && noComplex && type != STATE_NONE);
   if (type != STATE_IMAGING)
     DisableUpdateButton();
-  m_butUpdate.EnableWindow(noTasks && noComplex && CurrentMatchesSetState() >= 0 &&
-    ((ldArea == -2 && paramArea < 0) || (ldArea == paramArea)) && imOK && 
-    curCam == mParam->camIndex);
+  m_butUpdate.EnableWindow(noTasks && noComplex && CurrentMatchesSetState() >= 0 && 
+    !mWinApp->mNavHelper->mMultiGridDlg && ((ldArea == -2 && paramArea < 0) || 
+    (ldArea == paramArea)) && imOK && curCam == mParam->camIndex);
   m_listViewer.EnableWindow(noTasks && noComplex && type != STATE_MAP_ACQUIRE);
     
   if (mHelper->GetSavedPriorState(state)) {
     state.name = "";
-    StateToListString(&state, summary, "  ", -1);
+    StateToListString(&state, summary, "  ", -1, mSetStateIndex, MAX_SAVED_STATE_IND + 1,
+      m_bShowNumber);
   } else {
     summary = "None";
   }
@@ -415,44 +426,50 @@ void CStateDlg::OnButSetImState()
   mWinApp->RestoreViewFocus();
   if (!SetCurrentParam())
     return;
-  if (DoSetImState(errStr))
+  if (DoSetImState(mCurrentItem, errStr))
     mWinApp->AppendToLog(errStr);
 }
 
 // Common function that does the work
-int CStateDlg::DoSetImState(CString & errStr)
+int CStateDlg::DoSetImState(int stateNum, CString &errStr)
 {
-  ControlSet *conSet = mWinApp->GetConSets();
-  CString *names = mWinApp->GetModeNames();
+  CSerialEMApp *winApp = (CSerialEMApp *)AfxGetApp();
+  ControlSet *conSet = winApp->GetConSets();
+  CString *names = winApp->GetModeNames();
+  StateParams *param;
+  mHelper = winApp->mNavHelper;
   int type = mHelper->GetTypeOfSavedState();
   int area, setNum, indSave, areaInd, saveTarg = 0;
-  if (mWinApp->LookupActiveCamera(mParam->camIndex) < 0) {
+  mStateArray = mHelper->GetStateArray();
+  param = mStateArray->GetAt(stateNum);
+
+  if (winApp->LookupActiveCamera(param->camIndex) < 0) {
     errStr = "The camera number defined for this state is not an active camera";
     return 5;
   }
-  if (type != STATE_NONE && mParam->lowDose && mCamOfSetState >= 0 &&
-    mParam->camIndex != mCamOfSetState) {
+  if (type != STATE_NONE && param->lowDose && mCamOfSetState >= 0 &&
+    param->camIndex != mCamOfSetState) {
     errStr = "Cannot set a low dose state with a camera different from that"
       " of the first state set";
     return 6;
   }
-  area = mHelper->AreaFromStateLowDoseValue(mParam, &setNum);
+  area = mHelper->AreaFromStateLowDoseValue(param, &setNum);
   PrintfToLog("%s%s parameters set from state # %d  %s %s", area < 0 ? "" : "Low dose ",
-    names[setNum], mCurrentItem + 1, (LPCTSTR)mParam->name, 
-    (area >= 0 && !mRemindedToGoTo) ? " (Press the Go To button in Low Dose to set the "
-    "scope state)" : "");
-  if (area >= 0)
+    names[setNum], stateNum + 1, (LPCTSTR)param->name, 
+    (area >= 0 && !mRemindedToGoTo && !winApp->DoingTasks()) ? 
+    " (Press the Go To button in Low Dose to set the scope state)" : "");
+  if (area >= 0 && !winApp->DoingTasks())
     mRemindedToGoTo = true;
-  if (setNum == SEARCH_CONSET && mWinApp->GetUseViewForSearch())
+  if (setNum == SEARCH_CONSET && winApp->GetUseViewForSearch())
     setNum = VIEW_CONSET;
-  if (setNum == VIEW_CONSET && mWinApp->GetUseViewForSearch() && !mWarnedSharedParams) {
-    mWinApp->AppendToLog("WARNING: Setting this state sets the shared View/Search camera"
+  if (setNum == VIEW_CONSET && winApp->GetUseViewForSearch() && !mWarnedSharedParams) {
+    winApp->AppendToLog("WARNING: Setting this state sets the shared View/Search camera"
       " parameters");
     mWarnedSharedParams = true;
   }
-  if (setNum == MONT_USER_CONSET && mWinApp->GetUseRecordForMontage() && 
+  if (setNum == MONT_USER_CONSET && winApp->GetUseRecordForMontage() && 
     !mWarnedNoMontMap) {
-    mWinApp->AppendToLog("WARNING: Setting this state sets the Mont-map camera"
+    winApp->AppendToLog("WARNING: Setting this state sets the Mont-map camera"
       " parameters, which are not currently in use");
     mWarnedNoMontMap = true;
   }
@@ -460,33 +477,36 @@ int CStateDlg::DoSetImState(CString & errStr)
   // Restore state when leaving low dose mode, which restores LD params, doesn't assert 
   // prior state because calling with the skipScope flag, and end up in R state
   // Do not restore when entering, it is a needless change
-  if (type == STATE_IMAGING && mParam->lowDose == 0 && mWinApp->LowDoseMode())
+  if (type == STATE_IMAGING && param->lowDose == 0 && winApp->LowDoseMode())
     DoRestoreState(true);
 
   conSet += setNum;
 
   // Save the current defocus target or offset if one is set in this state
-  if (mParam->targetDefocus > -9990. || mParam->ldDefocusOffset > -9990.) {
+  if (param->targetDefocus > -9990. || param->ldDefocusOffset > -9990.) {
     if (IS_AREA_VIEW_OR_SEARCH(area))
       saveTarg = area + 1;
-    else if (!mParam->lowDose)
+    else if (!param->lowDose)
       saveTarg = -1;
   }
   mHelper->SaveCurrentState(STATE_IMAGING, B3DCHOICE(area == FOCUS_CONSET ||
-    area == TRIAL_CONSET, area == FOCUS_CONSET ? 1 : 2, 0), mParam->camIndex, saveTarg,
-    mParam->montMapConSet);
-  mHelper->SaveLowDoseAreaForState(area, mParam->camIndex, saveTarg > 0, 
-    mParam->montMapConSet);
-  mHelper->SetStateFromParam(mParam, conSet, setNum);
-  areaInd = mParam->montMapConSet ? MAX_SAVED_STATE_IND : (area + 1);
+    area == TRIAL_CONSET, area == FOCUS_CONSET ? 1 : 2, 0), param->camIndex, saveTarg,
+    param->montMapConSet);
+  mHelper->SaveLowDoseAreaForState(area, param->camIndex, saveTarg > 0, 
+    param->montMapConSet);
+  mHelper->SetStateFromParam(param, conSet, setNum);
+  areaInd = param->montMapConSet ? MAX_SAVED_STATE_IND : (area + 1);
   indSave = mSetStateIndex[areaInd];
-  mSetStateIndex[areaInd] = mCurrentItem;
-  UpdateListString(mCurrentItem);
-  if (indSave >= 0)
-    UpdateListString(indSave);
+  mSetStateIndex[areaInd] = stateNum;
+  if (mHelper->mStateDlg) {
+    mHelper->mStateDlg->UpdateListString(stateNum);
+    if (indSave >= 0)
+      mHelper->mStateDlg->UpdateListString(indSave);
+  }
   if (mCamOfSetState < 0)
-    mCamOfSetState = mParam->camIndex;
-  Update();
+    mCamOfSetState = param->camIndex;
+  if (mHelper->mStateDlg)
+    mHelper->mStateDlg->Update();
   return 0;
 }
 
@@ -566,15 +586,18 @@ void CStateDlg::OnButRestoreState()
 
 void CStateDlg::DoRestoreState(bool skipScope)
 {
-  mWinApp->RestoreViewFocus();
+  if (mHelper->mStateDlg)
+    ((CSerialEMApp *)AfxGetApp())->RestoreViewFocus();
   mCamOfSetState = -1;
   if (mHelper->GetTypeOfSavedState() == STATE_MAP_ACQUIRE)
     mHelper->RestoreFromMapState();
   else {
     mHelper->RestoreSavedState(skipScope);
-    Update();
+    if (mHelper->mStateDlg)
+      mHelper->mStateDlg->Update();
   }
-  DisableUpdateButton();
+  if (mHelper->mStateDlg)
+    mHelper->mStateDlg->DisableUpdateButton();
 }
 
 // Cancel restorability of state
@@ -646,15 +669,9 @@ int CStateDlg::SetStateByNameOrNum(CString name, CString &errStr)
     return 4;
   }
 
-  // Set the current item temporarily, call common routine, restore current item
-  selNum = mCurrentItem;
-  mCurrentItem = selInd;
-  mParam = mStateArray->GetAt(selInd);
-  ind = DoSetImState(errStr);
-  mCurrentItem = selNum;
-  SetCurrentParam();
-  if (mCurrentItem >= 0)
-    m_listViewer.SetCurSel(mCurrentItem);
+  ind = DoSetImState(selInd, errStr);
+  if (mHelper->mStateDlg)
+    mHelper->mStateDlg->SetCurrentParam();
   return ind;
 }
 
@@ -662,24 +679,26 @@ int CStateDlg::SetStateByNameOrNum(CString name, CString &errStr)
 void CStateDlg::StateToListString(int index, CString &string)
 {
   StateParams *state = mStateArray->GetAt(index);
-  StateToListString(state, string, "\t", index);
+  StateToListString(state, string, "\t", index, mSetStateIndex, MAX_SAVED_STATE_IND + 1,
+    m_bShowNumber);
 }
 
 void CStateDlg::StateToListString(StateParams *state, CString &string, const char *sep, 
-  int index)
+  int index, int *setStateIndex, int numSet, BOOL showNumber)
 {
   int magInd = state->lowDose ? state->ldParams.magIndex : state->magIndex;
   int mag, active, spot, probe, ldArea;
-  int *activeList = mWinApp->GetActiveCameraList();
+  CSerialEMApp *winApp = (CSerialEMApp *)AfxGetApp();
+  int *activeList = winApp->GetActiveCameraList();
   double percentC2 = 0., intensity;
-  CString *names = mWinApp->GetModeNames(), intStr;
+  CString *names = winApp->GetModeNames(), intStr;
   CString prbal, magstr, defstr, numName, lds = state->lowDose ? "SL" : "ST";
-  MagTable *magTab = mWinApp->GetMagTable();
-  CameraParameters *camp = mWinApp->GetCamParams() + state->camIndex;
+  MagTable *magTab = winApp->GetMagTable();
+  CameraParameters *camp = winApp->GetCamParams() + state->camIndex;
   bool selected = false;
   defstr = "  " + CString((char)0x97);
   mag = MagForCamera(camp, magInd);
-  active = mWinApp->LookupActiveCamera(state->camIndex) + 1;
+  active = winApp->LookupActiveCamera(state->camIndex) + 1;
   spot = state->lowDose ? state->ldParams.spotSize : state->spotSize;
   if (mag >= 1000000) {
     if (mag % 1000000)
@@ -699,7 +718,7 @@ void CStateDlg::StateToListString(StateParams *state, CString &string, const cha
   if (!camp->STEMcamera) {
     intensity = state->lowDose ? state->ldParams.intensity : state->intensity;
     probe = state->lowDose ? state->ldParams.probeMode : state->probeMode;
-    percentC2 = mWinApp->mScope->GetC2Percent(spot, intensity);
+    percentC2 = winApp->mScope->GetC2Percent(spot, intensity);
     if (percentC2 > 99.)
       intStr.Format("%.0f", percentC2);
     else
@@ -713,23 +732,23 @@ void CStateDlg::StateToListString(StateParams *state, CString &string, const cha
       lds = (char)0x97;
     if (FEIscope)
       prbal = probe ? "uP" : "nP";
-    else if (!mWinApp->mScope->GetHasNoAlpha() && state->beamAlpha >= 0)
+    else if (!winApp->mScope->GetHasNoAlpha() && state->beamAlpha >= 0)
       prbal.Format("a%d", state->beamAlpha + 1);
     if (state->lowDose && state->ldDefocusOffset > -9990.)
       defstr.Format("%d", B3DNINT(state->ldDefocusOffset));
     if (!state->lowDose && state->targetDefocus > -9990.)
       defstr.Format("%.1f", state->targetDefocus);
   }
-  selected = index >= 0 && numberInList(index, mSetStateIndex, MAX_SAVED_STATE_IND + 1,
+  selected = index >= 0 && numberInList(index, setStateIndex, numSet,
     0);
 
-  if (m_bShowNumber && index >= 0)
+  if (showNumber && index >= 0)
     numName.Format("%d: %s", index + 1, (LPCTSTR)state->name);
   else
     numName = state->name;
   string.Format("%s%s%d%s%s%s%d%s%s%s%s%s%s%.2f%s%s%s%.1fx%.1f%s%s%c%s%s", (LPCTSTR)lds,  
     sep, active, sep, (LPCTSTR)magstr, sep, spot, (LPCTSTR)prbal, sep, intStr, sep,
-    (LPCTSTR)defstr, sep, state->exposure, sep, mWinApp->BinningText(state->binning, camp)
+    (LPCTSTR)defstr, sep, state->exposure, sep, winApp->BinningText(state->binning, camp)
     , sep, state->xFrame / 1000., state->yFrame / 1000., state->montMapConSet ? "M" : "", 
     sep, selected ? (char)0x86 : ' ', sep, (LPCTSTR)numName);
 }

@@ -33,18 +33,18 @@ private:
   int mListBorderX, mListBorderY;
   int mNameBorderX;
   int mNameHeight;
-  int mSetStateIndex[MAX_SAVED_STATE_IND + 1];
+  static int mSetStateIndex[MAX_SAVED_STATE_IND + 1];
   BOOL mInitialized;
-  CArray<StateParams *, StateParams *> *mStateArray;
-  CNavHelper *mHelper;
-  StateParams *mParam;
+  static CArray<StateParams *, StateParams *> *mStateArray;
+  static CNavHelper *mHelper;
+  static StateParams *mParam;
   int mNumInPanel[2];
   int mPanelStart[2];
   bool mAdjustingPanels;
-  bool mWarnedSharedParams;
-  bool mWarnedNoMontMap;
-  bool mRemindedToGoTo;
-  int mCamOfSetState;
+  static bool mWarnedSharedParams;
+  static bool mWarnedNoMontMap;
+  static bool mRemindedToGoTo;
+  static int mCamOfSetState;
 
 public:
   CButton m_butAddCurState;
@@ -66,12 +66,12 @@ public:
   afx_msg void OnButAddNavState();
   afx_msg void OnButDelState();
   afx_msg void OnButSetImState();
-  int DoSetImState(CString &errStr);
+  static int DoSetImState(int stateNum, CString &errStr);
   afx_msg void OnButSetMapState();
   afx_msg void OnButRestoreState();
-  void DoRestoreState(bool skipScope);
+  static void DoRestoreState(bool skipScope);
   afx_msg void OnButForgetState();
-  int SetStateByNameOrNum(CString name, CString &errStr);
+  static int SetStateByNameOrNum(CString name, CString &errStr);
   void Update(void);
   void UpdateListString(int index);
   void FillListBox(void);
@@ -82,7 +82,8 @@ public:
   int CurrentMatchesSetState();
   afx_msg void OnButSetSchedState();
   void StateToListString(int index, CString &string);
-  void StateToListString(StateParams *state, CString &string, const char *sep, int index);
+  static void StateToListString(StateParams *state, CString &string, const char *sep, int index,
+    int *setStateIndex, int numSet, BOOL showNumber);
   afx_msg void OnButUpdateState();
   CButton m_butUpdate;
   void DisableUpdateButton(void);
@@ -92,7 +93,7 @@ public:
   CString m_strPriorSummary;
   CButton m_butAddMontMap;
   afx_msg void OnButAddMontMap();
-  SetMember(int, CamOfSetState);
+  static SetMember(int, CamOfSetState);
 
   BOOL m_bShowNumber;
   afx_msg void OnCheckNumber();

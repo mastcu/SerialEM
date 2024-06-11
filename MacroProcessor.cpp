@@ -4377,6 +4377,19 @@ bool CMacroProcessor::ConvertBufferLetter(CString strItem, int emptyDefault,
   return false;
 }
 
+// Convert anything starting with C, O, or S to value for condenser (2), objective,
+// and selected area
+void CMacroProcessor::ConvertApertureNameToNum()
+{
+  char firstLet = mStrItems[1].GetAt(0);
+  if (firstLet == 'c' || firstLet == 'C')
+    mItemInt[1] = 1;
+  if (firstLet == 'o' || firstLet == 'O')
+    mItemInt[1] = 2;
+  if (firstLet == 's' || firstLet == 'S')
+    mItemInt[1] = 4;
+}
+
 // Takes incoming  binning and scales binning
 // for K2, and checks that binning exists.  Returns true with message on error
 bool CMacroProcessor::CheckCameraBinning(double binDblIn, int &binning, CString &message)

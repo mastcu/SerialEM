@@ -4917,11 +4917,11 @@
          <TR>
           <TD class="scriptcommand">GoToImagingState name</TD>
           <TD>Sets an imaging state listed in the table of the <A HREF="hidd_statedlg.htm">Imaging 
-            States dialog</A>, which must be open.&nbsp; The text on the rest of the line, <b>name</b>, 
+            States dialog</A>, which need not be open.&nbsp; The text on the rest of the line, <b>name</b>, 
             can be either the full name of the state, a unique set of starting letters in the name of the state, or
              the number of the state in the table (numbered from 1).&nbsp; The comparison with state names is 
             case-insensitive.&nbsp; If the command fails, a message is printed to the log 
-            and <i>reportedValue1</i> is set to -1 if the state dialog is not open, 1 for no matching name,
+            and <i>reportedValue1</i> is set to 1 for no matching name,
             2 for more than one matching name, 3 for a number out of range, 4 if a map acquire state is already set,
             5 if the camera that the state is defined for is not available, or 6 if it is a Low Dose state and there
             is already a state set with a different camera number.&nbsp; Command added in 4.1, 15-Sept-22.
@@ -5391,10 +5391,10 @@
             difference is less than the <b>#</b> in microns.</TD>
         </TR>
         <TR>
-          <TD class="scriptcommand">ShiftItemsByMicrons #X #Y [#R]</TD>
+          <TD class="scriptcommand">ShiftItemsByMicrons #X #Y [#R] [#M]</TD>
           <TD>Shifts items at the current registration, or at the registration given by the
             optional <b>#R</b>, by the amount in microns in <b>#X</b> and <b>#Y</b>.&nbsp; Each component of the
-            shift must be less than 100 microns.</TD>
+            shift must be less than 100 microns.  Enter 1 for <b>#M</b> (and -1 for <b>#R</b> for the current registration) to have the shift stored in the items just like when running Shift to Marker.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">AlignAndTransformItems #C #R [#L]</TD>
@@ -5924,10 +5924,10 @@
           <TD colspan="2"><A name="other_misc"></A><B>Other Commands</B></TD>
         </TR>
          <TR>
-          <TD class="scriptcommand">OpenDialog name</TD>
+          <TD class="scriptcommand">OpenDialog name [#]</TD>
           <TD>Opens the dialog indicated by the given <b>name</b>, which is case-insensitive and can be abbreviated
-            to 3 letters.&nbsp; Currently the only <b>name</b> is 'Multishot' to open the Multiple Records 
-            dialog.&nbsp; Command added in 4.1, 15-Nov-23.
+            to 3 letters.&nbsp; Currently the <b>name</b> can by 'Multishot' to open the Multiple Records 
+            dialog or 'Multigrid' to up the Multiple Grid Operations dialog; in the latter can enter a non-zero value for <b>#</b> to load the last session file.&nbsp; Command added in 4.1, 15-Nov-23.
           </TD>
         </TR>
          <TR>
@@ -6026,6 +6026,10 @@
             as for &#39;SendEmail&#39;.&nbsp; If the message box occurs during Navigator Acquire at
             Items and the user has selected to send emails there, two emails will be sent,
             thus allowing more specific information from the one specified here.</TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">SetDebugOutput keys</TD>
+          <TD>Set the debug output string with the letters in <b>keys</b>.&nbsp; Command added in 4.2, 11-Jun-24.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">ReportProperty name [var]</TD>

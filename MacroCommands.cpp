@@ -3478,7 +3478,7 @@ int CMacCmd::SetupFullMontage(void)
   if (!mOverwriteOK && CFile::GetStatus((LPCTSTR)mEnteredName, status))
     SUSPEND_NOLINE("setting up a full montage because " + mEnteredName +
       " already exists");
-  if (mNavigator->FullMontage(true, mItemFlt[1], true))
+  if (mNavigator->FullMontage(true, mItemFlt[1], SETUPMONT_FROM_MACRO))
     ABORT_LINE("An error occurred setting up a full montage for line:\n\n");
   mMovedStage = true;
   return 0;
@@ -3506,7 +3506,7 @@ int CMacCmd::SetupPolygonMontage(void)
   if (!mOverwriteOK && CFile::GetStatus((LPCTSTR)mEnteredName, status))
     SUSPEND_NOLINE("setting up a polygon  montage because " + mEnteredName +
       " already exists");
-  if (mNavigator->PolygonMontage(NULL, true, index, mItemFlt[2], true))
+  if (mNavigator->PolygonMontage(NULL, true, index, mItemFlt[2], SETUPMONT_FROM_MACRO))
     ABORT_LINE("An error occurred setting up a polygon montage for line:\n\n");
   mMovedStage = true;
   return 0;
@@ -4693,6 +4693,13 @@ int CMacCmd::SetUserSetting(void)
     mSavedSettingValues.erase(mSavedSettingValues.begin() + index);
     mNewSettingValues.erase(mNewSettingValues.begin() + index);
   }
+  return 0;
+}
+
+// SetDebugOutput
+int CMacCmd::SetDebugOutput()
+{
+  mWinApp->SetDebugOutput(mStrItems[1]);
   return 0;
 }
 
@@ -6833,12 +6840,8 @@ int CMacCmd::SetCameraPLAOffset(void)
 int CMacCmd::RemoveAperture(void)
 {
   int index, index2;
-
+  ConvertApertureNameToNum();
   index = mItemInt[1];
-  if (mStrItems[1] == "CL")
-    index = 1;
-  if (mStrItems[1] == "OL")
-    index = 2;
   if (CMD_IS(REINSERTAPERTURE))
     index2 = mScope->ReInsertAperture(index);
   else
@@ -6852,6 +6855,7 @@ int CMacCmd::RemoveAperture(void)
 // ReportApertureSize
 int CMacCmd::ReportApertureSize(void)
 {
+  ConvertApertureNameToNum();
   int trueSize, size = mScope->GetApertureSize(mItemInt[1]);
   if (size < 0) {
     AbortMacro();
@@ -6876,6 +6880,7 @@ int CMacCmd::ReportApertureSize(void)
 // SetApertureSize
 int CMacCmd::SetApertureSize(void)
 {
+  ConvertApertureNameToNum();
   int index, ap = mItemInt[1], size = mItemInt[2];
   if (size > 0 && JEOLscope) {
     index = mScope->FindApertureIndexFromSize(ap, size);
@@ -11382,11 +11387,7 @@ int CMacCmd::GoToImagingState(void)
   int index;
   CString errStr;
   SubstituteLineStripItems(mStrLine, 1, mStrCopy);
-  if (!mNavHelper->mStateDlg) {
-    errStr = "the state dialog is not open";
-    index = -1;
-  } else
-    index = mNavHelper->mStateDlg->SetStateByNameOrNum(mStrCopy, errStr);
+  index = CStateDlg::SetStateByNameOrNum(mStrCopy, errStr);
   if (index)
     mLogRpt = "Cannot set imaging state; " + errStr;
   SetReportedValues(index);
@@ -11404,9 +11405,16 @@ int CMacCmd::OpenImagingStateDialog(void)
 // OpenDialog
 int CMacCmd::OpenDialog()
 {
-  if (mItem1upper.Find("MUL") == 0)
+  if (mItem1upper.Find("MULTIS") == 0) {
     mNavHelper->OpenMultishotDlg();
-  else
+  } else if (mItem1upper.Find("MULTIG") == 0) {
+    mNavHelper->OpenMultiGrid();
+    if (mItemInt[2]) {
+      if (mWinApp->mMultiGridTasks->LoadSessionFile(true, mStrCopy))
+        ABORT_NOLINE("Loading of previous multi-grid session file gave error: " +
+          mStrCopy);
+    }
+  } else
     ABORT_LINE("\"" + mStrItems[1] + "\" does not match any of the names for dialogs that "
       "can be opened for line:\n\n");
   return 0;
@@ -11730,14 +11738,14 @@ int CMacCmd::StartNavAcquireAtEnd(void)
 // NavAcqAtEndUseParams
 int CMacCmd::NavAcqAtEndUseParams()
 {
-  NavAcqAction *useAct, *actions = mNavHelper->GetAcqActions(2);
-  NavAcqParams *useParam, *params = mWinApp->GetNavAcqParams(2);
-  int *useOrder, *order = mNavHelper->GetAcqActCurrentOrder(2);
-  int ind, which = 0;
+  NavAcqAction *actions = mNavHelper->GetAcqActions(2);
+  NavAcqParams *params = mWinApp->GetNavAcqParams(2);
+  int *order = mNavHelper->GetAcqActCurrentOrder(2);
+  int which = 0;
   ABORT_NONAV;
   if (mNavigator->GetAcquiring())
     ABORT_NOLINE("You cannot use NavAcqAtEndUseParams when Navigator is acquiring");
-
+  
   if (!mStrItems[1].CompareNoCase("R")) {
     if (mItemEmpty[2])
       ABORT_LINE("You must include a filename with Navigator parameters in line:\n\n");
@@ -11750,14 +11758,7 @@ int CMacCmd::NavAcqAtEndUseParams()
       which = 1;
     else if (mStrItems[1].CompareNoCase("M"))
       ABORT_LINE("Parameter set to use must be M, F, or R in line:\n\n");
-    useAct = mNavHelper->GetAcqActions(which);
-    useParam = mWinApp->GetNavAcqParams(which);
-    useOrder = mNavHelper->GetAcqActCurrentOrder(which);
-    *params = *useParam;
-    for (ind = 0; ind < mNavHelper->GetNumAcqActions(); ind++) {
-      order[ind] = useOrder[ind];
-      actions[ind] = useAct[ind];
-    }
+    mNavHelper->CopyAcqParamsAndActionsToTemp(which);
   }
   mUseTempNavParams = true;
   return 0;
@@ -12022,14 +12023,14 @@ int CMacCmd::ShiftItemsByMicrons(void)
   if (fabs(mItemDbl[1]) > 100. || fabs(mItemDbl[2]) > 100.)
     ABORT_LINE("You cannot shift items by more than 100 microns in:\n\n");
   index = mNavigator->GetCurrentRegistration();
-  if (!mItemEmpty[3]) {
+  if (!mItemEmpty[3] && mItemInt[3] >= 0) {
     index = mItemInt[3];
     report.Format("Registration number %d is out of range in:\n\n", index);
     if (index <= 0 || index > MAX_CURRENT_REG)
       ABORT_LINE(report);
   }
   index2 = mNavigator->ShiftItemsAtRegistration(mItemFlt[1], mItemFlt[2],
-    index);
+    index, (!mItemEmpty[4] && mItemInt[4]) ? 1 : 0);
   mLogRpt.Format("%d items at registration %d were shifted by %.2f, %.2f", index2,
     index, mItemDbl[1], mItemDbl[2]);
   mNavigator->SetChanged(true);
