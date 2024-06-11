@@ -1031,6 +1031,14 @@
       highlighting should show up then.</p>
     <p>'sys.exit' can be used if desired instead of serialem.Exit(); it will be 
       intercepted and terminate the script through Exit().</p>
+    <p>On some systems, starting a Python script will often or always give this message in the log:<br />
+      &nbsp;&nbsp;
+      'WARNING: Error 5 occurred assigning python processes to job object'<br />
+      because of some unfathomable difference in Windows permissions on these systems.&nbsp; 
+      The only consequence is that if SerialEM crashes, the Python process will not be 
+      killed and will be left running in the background.&nbsp; This may interfere with 
+      starting a new script, in which case it is necessary to find the process in Task 
+      Manager and kill it.</p>
     <p><em><strong>Calls between script types and embedded python scripts: </strong></em>&nbsp;It is possible to 
       call a Python script from a regular SerialEM script and vice versa.&nbsp; These 
       are the specific rules:</p>
