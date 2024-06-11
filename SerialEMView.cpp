@@ -1328,7 +1328,7 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
       ix = group % MAX_AUTOCONT_GROUPS;
       if (mWinApp->mNavHelper->GetReverseAutocontColors())
         ix = (MAX_AUTOCONT_GROUPS - 1) - ix;
-      CPen polyPen(PS_SOLID, thick1, CMapDrawItem::GetContourColor(ix));
+      CPen polyPen(PS_SOLID, thick2, CMapDrawItem::GetContourColor(ix));
       CPen *pOldPen = cdc.SelectObject(&polyPen);
       for (ix = 0; ix < (int)polyArray->GetSize(); ix++) {
         float delPtX = 0., delPtY = 0.;
