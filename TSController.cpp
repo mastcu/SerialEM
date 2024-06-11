@@ -5086,7 +5086,8 @@ int CTSController::TSMessageBox(CString message, UINT type, BOOL terminate, int 
         retval = tcb.mChoice;
     } else {
       mCallFromThreeChoice = false;
-      retval = ::MessageBox(mWinApp->m_pMainWnd->m_hWnd, (LPCTSTR)message, NULL, type);
+      retval = ::MessageBox(mWinApp->m_pMainWnd->m_hWnd, (LPCTSTR)message, "SerialEM",
+        type);
     }
     if (mMessageBoxCloseValves && mMessageBoxValveTime > 0. && 
       mScope->CloseValvesAfterInterval(-1.) == 0.) {
