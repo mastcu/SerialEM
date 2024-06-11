@@ -511,6 +511,13 @@ bool UtilIsDirectoryUsable(CString &dir, int &error)
   return true;
 }
 
+// Returns true if the file exists, to save having to look up if GetStatus returns true!
+BOOL UtilFileExists(CString filename)
+{
+  CFileStatus status;
+  return CFile::GetStatus(filename, status);
+}
+
 // Append a component to a string with the given separator if the string is not empty
 void UtilAppendWithSeparator(CString &filename, CString toAdd, const char *sep)
 {
