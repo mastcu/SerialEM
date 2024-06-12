@@ -3,6 +3,12 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+6/12/24: Added dialog and procedures for running operations on multiple
+grids.
+
+6/11/24: Add script command to set debug output, allowed aperture commands to
+take words starting with c or o for condenser or objective.
+
 6/8/24: Fixed infinite loop running high defocus mag cal, broken 4/27/24.
 
 6/3/24: Fixed entering "OK for full rectangle" when adding a grid of points.

@@ -150,6 +150,7 @@ CNavAcquireDlg::CNavAcquireDlg(CWnd* pParent /*=NULL*/)
   mSkipMoveEnabled = true;
   mSkipSaveEnabled = true;
   mUseMapHolesEnabled = true;
+  mOpenedFromMultiGrid = false;
 }
 
 CNavAcquireDlg::~CNavAcquireDlg()
@@ -413,7 +414,8 @@ BOOL CNavAcquireDlg::OnInitDialog()
   m_sbcEveryN.SetPos(5000);
   m_sbcCycleDef.SetRange(0, 10000);
   m_sbcCycleDef.SetPos(5000);
-  m_iCurParamSet = mWinApp->mNavHelper->GetCurAcqParamIndex();
+  if (!mOpenedFromMultiGrid)
+    m_iCurParamSet = mWinApp->mNavHelper->GetCurAcqParamIndex();
   mParam = &mAllCurParam[m_iCurParamSet];
   mActions = &mAllActions[m_iCurParamSet][0];
   mCurrentOrder = &mAllOrders[m_iCurParamSet][0];
@@ -436,7 +438,7 @@ BOOL CNavAcquireDlg::OnInitDialog()
   EnableDlgItem(IDC_RACQUISITION, navState != NAV_PAUSED);
   EnableDlgItem(IDC_NA_RETRACT_CAMS, mWinApp->GetAnyRetractableCams());
   EnableDlgItem(IDC_NA_RUN_SCRIPT_AT_END, navState != NAV_PAUSED);
-
+ 
   if (!msParams->xformFromMag || !msParams->adjustingXform.xpx)
     ReplaceWindowText(&m_butUseMapHoles, ", with adjustment", " (no adjustment)");
 
@@ -454,9 +456,16 @@ BOOL CNavAcquireDlg::OnInitDialog()
 
   LoadParamsToDialog();
   ManageOutputFile();
+  if (mOpenedFromMultiGrid) {
+    mIDsToDrop.push_back(IDOK);
+    SetDlgItemText(IDOK, "Close");
+  }
 
   BuildActionSection();
   ManageEnables(true);
+  if (mOpenedFromMultiGrid)
+    DisableItemsForMultiGrid();
+
   SetWindowPos(NULL, 0, 0, mBasicWidth, mSetToHeight, SWP_NOMOVE);
   SetDefID(45678);    // Disable OK from being default button
   return TRUE;
@@ -466,6 +475,10 @@ BOOL CNavAcquireDlg::OnInitDialog()
 void CNavAcquireDlg::OnOK()
 {
   UPDATE_DATA_TRUE;
+
+  // IF CAN'T GET THE OK BUTTON DISABLED
+  if (mOpenedFromMultiGrid)
+    mPostponed = 1;
   mActions[mCurActSelected].everyNitems = m_iEveryNitems;
   mActions[mCurActSelected].minutes = m_iAfterMinutes;
   mActions[mCurActSelected].distance = m_fWhenMoved;
@@ -747,6 +760,11 @@ void CNavAcquireDlg::OnRadioCurParamSet()
 {
   int oldCur = m_iCurParamSet;
   UPDATE_DATA_TRUE;
+  DoSetCurParamSet(oldCur);
+}
+
+void CNavAcquireDlg::DoSetCurParamSet(int oldCur)
+{
   if (CheckActionOrder(mCurrentOrder)) {
     m_iCurParamSet = oldCur;
     UpdateData(false);
@@ -900,8 +918,8 @@ void CNavAcquireDlg::ManageOutputFile(void)
     m_strSavingFate = "NO SAVING: \"Early return\" with 0 frames selected";
   } else if (m_bSkipSaving && acquireType == ACQUIRE_IMAGE_ONLY) {
     m_strSavingFate = "NO SAVING: \"Skip saving\" option selected";
-  } else if (acquireType == ACQUIRE_TAKE_MAP || acquireType == ACQUIRE_IMAGE_ONLY ||
-    multiSaving) {
+  } else if ((acquireType == ACQUIRE_TAKE_MAP || acquireType == ACQUIRE_IMAGE_ONLY ||
+    multiSaving) && !mOpenedFromMultiGrid) {
     if (mNumAcqBeforeFile && mOutputFile.IsEmpty()) {
       m_strSavingFate = "No output file is open for first acquire item!";
       m_strFileSavingInto = "Open a file or Postpone to set one up to open";
@@ -922,7 +940,7 @@ void CNavAcquireDlg::ManageOutputFile(void)
     acquireType) != 0) {
       m_strFileSavingInto = "Relying on script to run Realign or move stage";
   }
-  if (!mAnyAcquirePoints && !mAnyTSpoints) {
+  if (!mAnyAcquirePoints && !mAnyTSpoints && !mOpenedFromMultiGrid) {
     m_strSavingFate = "Nothing will be acquired with this subset";
   }
   UpdateData(false);
@@ -949,8 +967,8 @@ void CNavAcquireDlg::ManageEnables(bool rebuilding)
   bool skipMoveOK = mWinApp->mNavigator->OKtoSkipStageMove(mActions, acquireType) != 0;
   bool useMapEnabled = acquireType == ACQUIRE_MULTISHOT && !msParams->useCustomHoles;
   m_butSetupMultishot.EnableWindow(acquireType == ACQUIRE_MULTISHOT);
-  m_editSubsetStart.EnableWindow(m_bDoSubset);
-  m_editSubsetEnd.EnableWindow(m_bDoSubset);
+  m_editSubsetStart.EnableWindow(m_bDoSubset && !mOpenedFromMultiGrid);
+  m_editSubsetEnd.EnableWindow(m_bDoSubset && !mOpenedFromMultiGrid);
   m_butAcquireTS.EnableWindow(mAnyTSpoints);
   m_butAcquireMap.EnableWindow(mAnyAcquirePoints);
   m_butSaveAsMap.EnableWindow(mAnyAcquirePoints && !m_iAcquireChoice);
@@ -985,10 +1003,10 @@ void CNavAcquireDlg::ManageEnables(bool rebuilding)
   m_butUseMapHoles.EnableWindow(useMapEnabled);
   RebuildIfEnabled(useMapEnabled, mUseMapHolesEnabled, doBuild);
 
-  EnableDlgItem(IDC_STAT_WHICH_CONSET, consetOK);
-  EnableDlgItem(IDC_RMAP_WITH_REC, consetOK);
-  EnableDlgItem(IDC_RMAP_WITH_VIEW, consetOK);
-  EnableDlgItem(IDC_RMAP_WITH_SEARCH, consetOK);
+  EnableDlgItem(IDC_STAT_WHICH_CONSET, consetOK && !mOpenedFromMultiGrid);
+  EnableDlgItem(IDC_RMAP_WITH_REC, consetOK && !mOpenedFromMultiGrid);
+  EnableDlgItem(IDC_RMAP_WITH_VIEW, consetOK && !mOpenedFromMultiGrid);
+  EnableDlgItem(IDC_RMAP_WITH_SEARCH, consetOK && !mOpenedFromMultiGrid);
   RebuildIfEnabled(consetOK, mSetTypeEnabled, doBuild);
 
   m_butRealignScaledMap.EnableWindow(DOING_ACTION(NAACT_REALIGN_ITEM));
@@ -1019,6 +1037,31 @@ void CNavAcquireDlg::RebuildIfEnabled(bool OK, bool & enabled, bool & doBuild)
   if (OK && !enabled)
     doBuild = true;
   enabled = OK;
+}
+
+void CNavAcquireDlg::DisableItemsForMultiGrid()
+{
+  EnableDlgItem(IDC_NA_DO_SUBSET, false);
+  m_iSubsetStart = 1;
+  m_iSubsetEnd = 1;
+  EnableDlgItem(IDC_RMAPPING, false);
+  EnableDlgItem(IDC_RACQUISITION, false);
+  EnableDlgItem(IDOK, false);
+}
+
+void CNavAcquireDlg::HijackByMultiGrid(int paramSet)
+{
+  int oldCur = m_iCurParamSet;
+  mOpenedFromMultiGrid = true;
+  DisableItemsForMultiGrid();
+  m_iCurParamSet = paramSet;
+  SetDlgItemText(IDOK, "Close");
+  if (oldCur != paramSet) {
+    DoSetCurParamSet(oldCur);
+  } else {
+    ManageEnables();
+    ManageOutputFile();
+  }
 }
 
 // For disabling/enabling action buttons when something else happens

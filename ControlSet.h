@@ -379,7 +379,7 @@ struct StateParams {
   float slitWidth;         // slit width
   BOOL zeroLoss;           // Do zero loss, not the energy loss value
   int binning;             // Binning
-  int xFrame;              // Frame size
+  int xFrame;              // Binned frame size
   int yFrame;
   float exposure;          // exposure time, drift, and shuttering values
   float drift;
@@ -517,6 +517,36 @@ struct NavParams {
   float maxLMMontageIS;    // Maximum shift allowed in low mag
   float fitMontWithFullFrames;  // Fit montage with full frames + frac to increase overlap
   int maxReconnectsInAcq;  // maximum number of scope reconnections during acquire
+};
+
+// Multigrid parameters
+struct MultiGridParams {
+  BOOL appendNames;          // Flag to append names to rootname
+  BOOL useSubdirectory;      // Flag to use subdirectories for files
+  BOOL setLMMstate;          // Flag to set a state for LM map
+  int LMMstateType;          // Type of acquisition/state for LM map
+  int LMMstateNum;           // Number of state to be set for LM map
+  CString LMMstateName;      // Name of state to be set
+  BOOL removeObjectiveAp;    // Flag to remove objective aperture for LM imaging
+  BOOL setCondenserAp;       // Flag to change condenser aperture for LM imaging
+  int condenserApSize;       // Condenser size to set
+  int LMMmontType;           // Type of montage to take for LM map
+  int LMMnumXpieces;         // Number of pieces in X if fixed size LM map
+  int LMMnumYpieces;         // Number of pieces in Y
+  BOOL setLMMoverlap;        // Flag to
+  int LMMoverlapPct;         // Percent overlap to use
+  BOOL autocontour;          // Flag to do autocontouring
+  BOOL acquireMMMs;          // Flag to acquire medium mag maps
+  BOOL acquireLMMs;          // Flag to acquire low mag maps
+  int MMMnumXpieces;         // Number of pieces in X and Y if fixed size
+  int MMMnumYpieces;
+  int MMMstateType;          // Type of image/state for MM maps
+  int MMMstateNums[4];       // State numbers to set
+  CString MMMstateNames[4];  // State names to set for MM maps
+  int MMMimageType;          // Single image/polygon mont/fixed mont
+  BOOL runFinalAcq;          // Flag to do final acquistion
+  int finalStateNums[4];     // State numbers for final acquire
+  CString finalStateNames[4]; // State names for final acquire
 };
 
 // Cooker parameters

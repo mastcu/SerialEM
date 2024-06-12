@@ -686,10 +686,7 @@ void CMenuTargets::OnNavigatorClose()
 
 void CMenuTargets::OnUpdateNavigatorClose(CCmdUI* pCmdUI) 
 {
-  pCmdUI->Enable(mNavigator && !mNavigator->GetAcquiring() &&
-    mNavigator->NoDrawing() && !mNavigator->GetLoadingMap() && 
-    !mWinApp->mMultiGridTasks->GetDoingMulGridSeq() && 
-    !mWinApp->mMultiGridTasks->GetDoingMultiGrid());
+  pCmdUI->Enable(mNavigator && mNavigator->OKtoCloseNav());
 }
 
 void CMenuTargets::OnNavigatorAutosave() 
@@ -757,7 +754,7 @@ void CMenuTargets::OnMontageListFilesToOpen()
 
 void CMenuTargets::OnNavigatorAcquire() 
 {
-  mNavigator->AcquireAreas(1, false, false);	
+  mNavigator->AcquireAreas(NAVACQ_SRC_MENU, false, false);
 }
 
 void CMenuTargets::OnUpdateNavigatorAcquire(CCmdUI* pCmdUI) 

@@ -5422,7 +5422,7 @@ int CMacroProcessor::StartNavAvqBusy(void)
   if (mLastCompleted && mWinApp->mNavigator) {
     mWinApp->mNavigator->SetCurAcqParmActions(mUseTempNavParams ? 2 :
       mNavHelper->GetCurAcqParamIndex());
-    mWinApp->mNavigator->AcquireAreas(0, false, mUseTempNavParams);
+    mWinApp->mNavigator->AcquireAreas(NAVACQ_SRC_MACRO, false, mUseTempNavParams);
   }
   return 0;
 }

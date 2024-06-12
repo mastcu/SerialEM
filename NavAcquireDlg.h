@@ -72,6 +72,7 @@ public:
   int mLastNonTStype;
   CString mOutputFile;
   BOOL mIfMontOutput;
+  bool mOpenedFromMultiGrid;
   afx_msg void OnNaAcquiremap();
   void ManagePrimaryLine();
   void ManageMacro(void);
@@ -108,6 +109,8 @@ public:
   afx_msg void OnKillfocusSubsetEnd();
   void ManageEnables(bool rebuilding = false);
   void RebuildIfEnabled(bool OK, bool &enabled, bool &doBuild);
+  void DisableItemsForMultiGrid();
+  void HijackByMultiGrid(int paramSet);
   void ExternalUpdate();
   void ManageForSubset(void);
   void BuildActionSection(bool unhiding = false);
@@ -182,6 +185,7 @@ public:
   BOOL m_bAdjustBTforIS;
   int m_iCurParamSet;
   afx_msg void OnRadioCurParamSet();
+  void DoSetCurParamSet(int oldCur);
   CButton m_butHybridRealign;
   BOOL m_bHybridRealign;
   BOOL m_bRelaxStage;

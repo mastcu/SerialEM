@@ -2272,9 +2272,7 @@
 #define IDC_BUT_MG_SETUP                3312
 #define IDC_STAT_MG_GRID_SETUP          3313
 #define IDC_STAT_DISABLE_TRIM           3314
-#define IDC_BUT_MG_LOW_MAG_MAPS         3393
 #define IDC_CHECK_DISABLE_TRIM          3315
-#define IDC_BUT_MG_MEDIUM_MAG_MAPS      3394
 #define IDC_RADIO_MULGRID_SEL1          3316
 #define IDC_RADIO_MULGRID_SEL2          3317
 #define IDC_RADIO_MULGRID_SEL3          3318
@@ -2289,7 +2287,6 @@
 #define IDC_RADIO_MULGRID_SEL12         3327
 #define IDC_RADIO_MULGRID_SEL13         3328
 #define IDC_RADIO_MULGRID_SEL14         3329
-#define IDC_BUT_MG_FINAL_ACQ            3329
 #define IDC_RADIO_MULGRID_SEL15         3330
 #define IDC_RADIO_MULGRID_SEL16         3331
 #define IDC_RADIO_MULGRID_SEL17         3332
@@ -2305,6 +2302,7 @@
 #define IDC_CHECK_SET_LMM_STATE         3342
 #define IDC_COMBO_LMM_STATE             3343
 #define IDC_CHECK_REMOVE_OBJ            3344
+#define IDC_BUT_MG_FINAL_ACQ            3345
 #define IDC_CHECK_SET_CONDENSER         3346
 #define IDC_EDIT_CONDENSER              3347
 #define IDC_STAT_MG_MICRON              3348
@@ -2337,7 +2335,6 @@
 #define IDC_BUT_SETUP_AUTOCONT2         3375
 #define IDC_BUT_SETUP_MAPPING           3376
 #define IDC_CHECK_GO_ON_TO_ACQ          3377
-#define IDC_COMBO_MMM_STATE4            3377
 #define IDC_COMBO_FINAL_STATE3          3378
 #define IDC_COMBO_FINAL_STATE2          3379
 #define IDC_COMBO_FINAL_STATE1          3380
@@ -2345,7 +2342,6 @@
 #define IDC_BUT_SETUP_FINAL_ACQ         3382
 #define IDC_BUT_START_RUN               3383
 #define IDC_STAT_LOW_MAG_MAPS           3384
-#define IDC_COMBO_FINAL_STATE4          3384
 #define IDC_STAT_FINAL_ACQ              3385
 #define IDC_CHECK_RUN_LMMS              3386
 #define IDC_CHECK_TAKE_MMMS             3387
@@ -2354,6 +2350,34 @@
 #define IDC_STAT_TILT_DEG               3390
 #define IDC_STAT_PREPIX_USEC            3391
 #define IDC_EDIT_TILT_OFFSET            3392
+#define IDC_BUT_MG_LOW_MAG_MAPS         3393
+#define IDC_BUT_MG_MEDIUM_MAG_MAPS      3394
+#define IDC_RFIXED_MONT                 3395
+#define IDC_COMBO_MMM_STATE4            3396
+#define IDC_COMBO_FINAL_STATE4          3397
+#define IDC_STAT_MULGRID_STATUS1        3398
+#define IDC_STAT_MULGRID_STATUS2        3399
+#define IDC_STAT_MULGRID_STATUS3        3400
+#define IDC_STAT_MULGRID_STATUS4        3401
+#define IDC_STAT_MULGRID_STATUS5        3402
+#define IDC_STAT_MULGRID_STATUS6        3403
+#define IDC_STAT_MULGRID_STATUS7        3404
+#define IDC_STAT_MULGRID_STATUS8        3405
+#define IDC_STAT_MULGRID_STATUS9        3406
+#define IDC_STAT_MULGRID_STATUS10       3407
+#define IDC_STAT_MULGRID_STATUS11       3408
+#define IDC_STAT_MULGRID_STATUS12       3409
+#define IDC_STAT_MULGRID_STATUS13       3410
+#define IDC_STAT_MULGRID_STATUS14       3411
+#define IDC_STAT_MULGRID_STATUS15       3412
+#define IDC_STAT_MULGRID_STATUS16       3413
+#define IDC_STAT_MULGRID_STATUS17       3414
+#define IDC_STAT_MULGRID_STATUS18       3415
+#define IDC_STAT_MULGRID_STATUS19       3416
+#define IDC_STAT_MULGRID_STATUS20       3417
+#define IDC_BUT_RUN_UNDONE              3418
+#define IDC_BUT_OPEN_NAV                3419
+#define IDC_BUT_SET_GRID_TYPE           3420
 #define ID_NEW_IMAGE                    32771
 #define IDM_FILE_SAVEOTHER              32772
 #define IDM_FILE_READ                   32773
@@ -2909,6 +2933,9 @@
 #define ID_FILE_LOWWINDOW               33523
 #define ID_LOGWINDOW_USERTFFORMATTOSAVE 33524
 #define ID_MONTAGINGGRIDS_MULTIPLEGRIDOPERATIONS 33525
+#define ID_MONTAGINGGRIDS_READSESSIONFILE 33526
+#define ID_MONTAGINGGRIDS_CLEARSESSION  33527
+#define ID_MONTAGINGGRIDS_IDENTIFYGRIDONSTAGE 33528
 
 // Next default values for new objects
 // 
@@ -2916,8 +2943,8 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        287
-#define _APS_NEXT_COMMAND_VALUE         33526
-#define _APS_NEXT_CONTROL_VALUE         3395
+#define _APS_NEXT_COMMAND_VALUE         33529
+#define _APS_NEXT_CONTROL_VALUE         3421
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif

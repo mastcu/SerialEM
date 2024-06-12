@@ -64,6 +64,22 @@
           <TD class="style1">&nbsp;&nbsp; <A HREF="#hid_navigator_setgridlimits">Set Grid Limits</A></TD>
           <TD>Set limits in X and Y for the full-grid montage.</TD>
         </TR>
+       <TR VALIGN="top">
+          <TD class="style1">&nbsp;&nbsp; <A HREF="#hid_montaginggrids_multiplegridoperations">Multiple Grid Operations</A></TD>
+          <TD>.</TD>
+        </TR>
+       <TR VALIGN="top">
+          <TD class="style1">&nbsp;&nbsp; <A HREF="#hid_montaginggrids_readsessionfile">Read Session File</A></TD>
+          <TD>Read in a file of grids and their properties from a previous session.</TD>
+        </TR>
+       <TR VALIGN="top">
+          <TD class="style1">&nbsp;&nbsp; <A HREF="#hid_montaginggrids_clearsession">Clear Multi-grid Session</A></TD>
+          <TD>Clear out the table of grids and reinitialize Multiple Grid Operations dialog.</TD>
+        </TR>
+       <TR VALIGN="top">
+          <TD class="style1">&nbsp;&nbsp; <A HREF="#hid_montaginggrids_identifygridonstage">Identify Grid on Stage</A></TD>
+          <TD>Specify which grid is actually on the stage.</TD>
+        </TR>
          <TR VALIGN="top">
           <TD class="style1">&nbsp;&nbsp; <A HREF="#hid_montaginggrids_findregulararrayofholes">Find Holes in Regular Array</A></TD>
           <TD>Open dialog to find regularly-spaced circular holes in a support film.</TD>
@@ -531,6 +547,27 @@
         stage limits.&nbsp; If you want access to the full range of motion on a JEOL scope, you
         need to enter or change the &#39;StageLimits&#39; property to be &#39;-1190 1190 -1190 1190&#39;
         (or less extreme values if appropriate).</P>
+     <P><A NAME="hid_montaginggrids_multiplegridoperations"></A><B>Multiple Grid Operations command (Navigator -
+          Montaging &amp; Grids sub-menu)</B></P>
+      <p>Use this command to open the <a href="hidd_multi_grid.htm">Multiple Grid 
+        Operations</a> dialog and control acquisition on multiple grids.</p>
+     <P><A NAME="hid_montaginggrids_readsessionfile"></A><B>Read Session File command (Navigator -
+          Montaging &amp; Grids sub-menu)</B></P>
+      <p>Read in a file saved by the <a href="hidd_multi_grid.htm">Multiple Grid 
+        Operations</a> dialog or multi-grid routine and load the contents into the grid 
+        table in that dialog.&nbsp; Session files are named with the format 
+        &#39;multiGrid_date_#.adoc&#39;.&nbsp; The file chooser will open on the last session 
+        file saved, if any.&nbsp; After a file is read in this way, the session 
+        information will be saved into a file with the same name.</p>
+     <P><A NAME="hid_montaginggrids_clearsession"></A><B>Clear Multi-grid Session command (Navigator -
+          Montaging &amp; Grids sub-menu)</B></P>
+      <p>Use this command to clear out the grid table in the
+        <a href="hidd_multi_grid.htm">Multiple Grid Operations</a> dialog and 
+        re-initialize the session.</p>
+     <P><A NAME="hid_montaginggrids_identifygridonstage"></A><B>Identify Grid on Stage< command (Navigator -
+          Montaging &amp; Grids sub-menu)</B></P>
+      <p>Use this command to specify which grid is actually on the stage, in case the 
+        program has lost track of this information.</p>
       <P><A NAME="hid_montaginggrids_findregulararrayofholes"></A><B>Find Holes in Regular Array command (Navigator
           - Montaging &amp; Grids sub-menu)</B></P>
       <P>Use this command to open the <a href="hidd_hole_finder.htm">Hole Finder</a> dialog, find circular holes in a support film, and make Navigator points from them.  The Navigator must be open to open this dialog.</P>

@@ -251,6 +251,7 @@ public:
   SetMember(int, ExtDrawnOnID);
   GetSetMember(BOOL, SkipMontFitDlgs);
   GetSetMember(int, DoingMultipleFiles);
+  GetSetMember(int, DoingMultiGridFiles);
   GetSetMember(float, HFtargetDiamPix);
   GetSetMember(int, HFretainFFTs);
   GetSetMember(int, HFminNumForTemplate);
@@ -291,6 +292,7 @@ public:
   float GetScaledRealignMaxRot() { return mNavAlignParams.scaledAliMaxRot < 0 ? mScaledAliDfltMaxRot : mNavAlignParams.scaledAliMaxRot; };
   GetSetMember(float, RISkipItemPosMinField);
   GetSetMember(BOOL, ShowStateNumbers);
+  SetMember(CString, FirstMontFilename);
 
   int *GetAcqActDefaultOrder() { return &mAcqActDefaultOrder[0]; };
   int *GetAcqActCurrentOrder(int which) { return &mAcqActCurrentOrder[which][0]; };
@@ -484,7 +486,8 @@ private:
   MiniOffsets mExtOffsets;       // Offset values for aligned montage map
   int mExtTypeOfOffsets;         // Type of offsets loaded there
   BOOL mSkipMontFitDlgs;         // Setting in file properties dialog to skip dialogs
-  int mDoingMultipleFiles;      // Flag to avoid "no longer inherits" messages
+  int mDoingMultipleFiles;       // Flag to avoid "no longer inherits" messages
+  int mDoingMultiGridFiles;      // Flag to avoid dialogs completely, etc. 
   int mOKtoUseHoleVectors;       // Flag that it is OK to use vectors without confirmation
   float mHFtargetDiamPix;        // Hole finder parameters: see holefinder source
   int mHFretainFFTs;
@@ -527,6 +530,7 @@ private:
   float mScaledAliDfltMaxRot;    // Default maximum rotation in search of scaled realign
   float mScaledAliDfltPctChg;    // Default maximum % size change in search of scaled realign
   float mRISkipItemPosMinField;  // Min field for skipping second round if scaled realign
+  CString mFirstMontFilename;
 
 public:
   void PrepareToReimageMap(CMapDrawItem * item, MontParam * param, ControlSet * conSet,
@@ -616,6 +620,7 @@ public:
   int FindNearestItemMatchingText(float stageX, float stageY, CString &text, bool matchNote);
   BOOL GetNoMessageBoxOnError();
   void ListFilesToOpen(void);
+  bool AreAnyFilesSetToOpen() {return mMontParArray->GetSize() > 0 || mTSparamArray->GetSize() > 0 || mFileOptArray->GetSize() > 0;};
   bool NameToOpenUsed(CString name);
   int AlignWithRotation(int buffer, float centerAngle, float angleRange,
     float &rotBest, float &shiftXbest, float &shiftYbest, float scaling = 0., int doPart = 0,
@@ -676,12 +681,13 @@ public:
   WINDOWPLACEMENT *GetMultiCombinerPlacement();
   void OpenComaVsISCal(void);
   WINDOWPLACEMENT *GetComaVsISDlgPlacement();
-  void OpenAutoContouring(void);
+  void OpenAutoContouring(bool fromMulti);
   WINDOWPLACEMENT *GetAutoContDlgPlacement(void);
   void OpenMultiGrid(void);
   WINDOWPLACEMENT *GetMultiGridPlacement(void);
   WINDOWPLACEMENT *GetAcquireDlgPlacement(bool fromDlg);
   void UpdateAcquireDlgForFileChanges();
+  void CopyAcqParamsAndActionsToTemp(int which);
   void SaveLDFocusPosition(int saveIt, float & axisPos, BOOL & rotateAxis, int & axisRotation,
     int & xOffset, int & yOffset, bool traceIt);
   void SetLDFocusPosition(int camIndex, float axisPos, BOOL rotateAxis, int axisRotation, 

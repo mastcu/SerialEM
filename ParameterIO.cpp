@@ -157,6 +157,8 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
   CString strLine, strCopy, unrecognized = "";
   CString strItems[MAX_TOKENS];
   CString message;
+  CString *stateNames;
+  int *stateNums;
   char absPath[_MAX_PATH];
   char *fullp;
   BOOL itemEmpty[MAX_TOKENS];
@@ -208,6 +210,7 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
   CArray<BaseMarkerShift, BaseMarkerShift> *markerShiftArr =
     mWinApp->mNavHelper->GetMarkerShiftArray();
   BaseMarkerShift markerShift;
+  MultiGridParams *mgParams = mWinApp->mMultiGridTasks->GetMultiGridParams();
   CFileStatus status;
   BOOL startingProg = mWinApp->GetStartingProgram();
   int faLastFileIndex = -1, faLastArrayIndex = -1;
@@ -227,6 +230,12 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
   mDocWnd->SetCurScriptPackPath("");
   mWinApp->ClearAllMacros();
   mWinApp->SetSettingsFixedForIACal(false);
+  for (index = 0; index < 4; index++) {
+    mgParams->MMMstateNums[index] = -1;
+    mgParams->MMMstateNames[index] = "";
+    mgParams->finalStateNums[index] = -1;
+    mgParams->finalStateNames[index] = "";
+  }
 
   try {
     // Open the file for reading, verify that it is a settings file
@@ -834,6 +843,50 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
 
       } else if (NAME_IS("VppCondNavText")) {
         StripItems(strLine, 1, vppParams->navText);
+
+      } else if (NAME_IS("MultiGridParams")) {
+        mgParams->appendNames = itemInt[1] != 0;
+        mgParams->useSubdirectory = itemInt[2] != 0;
+        mgParams->setLMMstate = itemInt[3] != 0;
+        mgParams->LMMstateType = itemInt[4];
+        mgParams->removeObjectiveAp = itemInt[5] != 0;
+        mgParams->setCondenserAp = itemInt[6] != 0;
+        mgParams->condenserApSize = itemInt[7];
+        mgParams->LMMmontType = itemInt[8];
+        mgParams->LMMnumXpieces = itemInt[9];
+        mgParams->LMMnumYpieces = itemInt[10];
+        mgParams->setLMMoverlap = itemInt[11] != 0;
+        mgParams->LMMoverlapPct = itemInt[12];
+        mgParams->autocontour = itemInt[13] != 0;
+        mgParams->acquireMMMs = itemInt[14] != 0;
+        mgParams->MMMstateType = itemInt[15];
+        mgParams->MMMimageType = itemInt[16];
+        mgParams->acquireLMMs = itemInt[17] != 0;
+        mgParams->runFinalAcq = itemInt[18] != 0;
+        mgParams->MMMnumXpieces = itemInt[19];
+        mgParams->MMMnumYpieces = itemInt[20];
+
+      } else if (strItems[0].Find("MG") == 0 && (strItems[0].Find("MMMstate") == 2 ||
+        strItems[0].Find("State") == 7)) {
+        stateNames = strItems[0].Find("MMM") == 2 ? &mgParams->MMMstateNames[0] :
+          &mgParams->finalStateNames[0];
+        stateNums = strItems[0].Find("MMM") == 2 ? &mgParams->MMMstateNums[0] :
+          &mgParams->finalStateNums[0];
+        index = atoi((LPCTSTR)strItems[0].Right(1)) - 1;
+        if (index >= 0 && index < 4) {
+          stateNums[index] = itemInt[1];
+          if (!itemEmpty[2])
+            StripItems(strLine, 2, stateNames[index]);
+        }
+      } else if (NAME_IS("MGLMMstate")) {
+        mgParams->LMMstateNum = itemInt[1];
+        if (!itemEmpty[2])
+          StripItems(strLine, 2, mgParams->LMMstateName);
+
+      } else if (NAME_IS("MGSessionFile")) {
+        StripItems(strLine, 1, message);
+        mWinApp->mMultiGridTasks->SetLastSessionFile(message);
+
       } else if (NAME_IS("AutocenterParams")) {
         acParmP = &acParams;
         acParmP->camera = itemInt[1];
@@ -1663,6 +1716,7 @@ void CParameterIO::WriteSettings(CString strFileName)
   DewarVacParams *dewar = mWinApp->mScope->GetDewarVacParams();
   CArray<BaseMarkerShift, BaseMarkerShift> *markerShiftArr =
     mWinApp->mNavHelper->GetMarkerShiftArray();
+  MultiGridParams *mgParams = mWinApp->mMultiGridTasks->GetMultiGridParams();
 
   // Transfer macros from any open editing windows
   for (i = 0; i < MAX_MACROS; i++)
@@ -1674,6 +1728,8 @@ void CParameterIO::WriteSettings(CString strFileName)
     mWinApp->mNavHelper->mHoleFinderDlg->SyncToMasterParams();
   if (mWinApp->mNavHelper->mAutoContouringDlg)
     mWinApp->mNavHelper->mAutoContouringDlg->SyncToMasterParams();
+  if (mWinApp->mNavHelper->mMultiGridDlg)
+    mWinApp->mNavHelper->mMultiGridDlg->SyncToMasterParams();
 
   try {
     // Open the file for writing, 
@@ -1977,6 +2033,35 @@ void CParameterIO::WriteSettings(CString strFileName)
       snapParams->ifScaleSizes ? 1 : 0, snapParams->sizeScaling, snapParams->fileType,
       snapParams->compression, snapParams->jpegQuality, snapParams->skipOverlays);
     mFile->WriteString(oneState);
+    oneState.Format("MultiGridParams %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d"
+      " %d %d %d -999 -999\n", mgParams->appendNames ? 1 : 0,
+      mgParams->useSubdirectory ? 1 : 0, mgParams->setLMMstate ? 1 : 0,
+      mgParams->LMMstateType, mgParams->removeObjectiveAp ? 1 : 0,
+      mgParams->setCondenserAp ? 1 : 0, mgParams->condenserApSize, mgParams->LMMmontType,
+      mgParams->LMMnumXpieces, mgParams->LMMnumYpieces, mgParams->setLMMoverlap ? 1 : 0,
+      mgParams->LMMoverlapPct, mgParams->autocontour ? 1 : 0, 
+      mgParams->acquireMMMs ? 1 : 0,
+      mgParams->MMMstateType, mgParams->MMMimageType, mgParams->acquireLMMs ? 1 : 0,
+      mgParams->runFinalAcq ? 1 : 0, mgParams->MMMnumXpieces, mgParams->MMMnumYpieces);
+    mFile->WriteString(oneState);
+    oneState.Format("MGLMMstate %d %s\n", mgParams->LMMstateNum, 
+      (LPCTSTR)mgParams->LMMstateName);
+    mFile->WriteString(oneState);
+    for (i = 0; i < 4; i++) {
+      if (mgParams->MMMstateNums[i] >= 0) {
+        oneState.Format("MGMMMstate%d %d %s\n", i + 1, mgParams->MMMstateNums[i],
+          (LPCTSTR)mgParams->MMMstateNames[i]);
+        mFile->WriteString(oneState);
+      }
+      if (mgParams->finalStateNums[i] >= 0) {
+        oneState.Format("MGfinalState%d %d %s\n", i + 1, mgParams->finalStateNums[i],
+          (LPCTSTR)mgParams->finalStateNames[i]);
+        mFile->WriteString(oneState);
+      }
+    }
+    oneState = mWinApp->mMultiGridTasks->GetLastSessionFile();
+    if (!oneState.IsEmpty())
+      mFile->WriteString("MGSessionFile " + oneState + "\n");
     if (!navParams->stockFile.IsEmpty()) {
       oneState.Format("NavigatorStockFile %s\n", navParams->stockFile);
       mFile->WriteString(oneState);
@@ -6421,15 +6506,16 @@ void CParameterIO::ReportSpecialOptions(void)
   if (mWinApp->mLowDoseDlg.GetTieFocusTrialPos())
     PrintAnOption(any, "Special option is set to keep Low Dose Trial and Focus at same"
       " position");
-  if (mWinApp->GetStartingProgram() && any)
+  if (mWinApp->GetStartingProgram() && any && !mWinApp->GetMinimizedStartup())
     mWinApp->AppendToLog(" ");
 }
 
 void CParameterIO::PrintAnOption(bool &anyDone, const char * mess)
 {
-  if (mWinApp->GetStartingProgram() && !anyDone)
+  if (mWinApp->GetStartingProgram() && !anyDone && !mWinApp->GetMinimizedStartup())
     mWinApp->AppendToLog(" ");
-  mWinApp->AppendToLog(mess);
+  mWinApp->AppendToLog(mess, mWinApp->GetMinimizedStartup() ? LOG_SWALLOW_IF_CLOSED :
+    LOG_OPEN_IF_CLOSED);
   anyDone = true;
 }
 

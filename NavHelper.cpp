@@ -32,6 +32,7 @@
 #include "TiltSeriesParam.h"
 #include "TSController.h"
 #include "MultiTSTasks.h"
+#include "MultiGridTasks.h"
 #include "HoleFinderDlg.h"
 #include "holefinder.h"
 #include "MultiHoleCombiner.h"
@@ -332,6 +333,7 @@ CNavHelper::CNavHelper(void)
   mRISkipItemPosMinField = 10.;
   mRIJustMoving = false;
   mShowStateNumbers = false;
+  mDoingMultiGridFiles = false;
 }
 
 CNavHelper::~CNavHelper(void)
@@ -435,6 +437,10 @@ void CNavHelper::InitAcqActionFlags(bool opening)
 
 void CNavHelper::UpdateSettings()
 {
+
+  // Don't do this while running, it screws up use of temp params
+  if (mNav && mNav->GetAcquiring())
+    return;
   InitAcqActionFlags(false);
   if (mNav) {
     InitAcqActionFlags(true);
@@ -2106,9 +2112,10 @@ void CNavHelper::RestoreSavedState(bool skipScope)
         // or search and the offset is changing, have to go
         // to Record to avoid changing the position or offset while in the area 
         ifse = area == SEARCH_AREA ? 1 : 0;
-        PrintfToLog("cur shift %f %f  param %f %f", mWinApp->mLowDoseDlg.mViewShiftX[ifse],
+        /*PrintfToLog("cur shift %f %f  param %f %f", 
+        mWinApp->mLowDoseDlg.mViewShiftX[ifse],
           mWinApp->mLowDoseDlg.mViewShiftY[ifse], mSavedStates[ind].ldShiftOffsetX,
-          mSavedStates[ind].ldShiftOffsetY);
+          mSavedStates[ind].ldShiftOffsetY);*/
         if (((area == FOCUS_CONSET || area == TRIAL_CONSET) &&
           (fabs(ldp[area].ISX - mSavedStates[ind].ldParams.ISX) > 1.e-4 ||
             fabs(ldp[area].ISY - mSavedStates[ind].ldParams.ISY) > 1.e-4)) ||
@@ -3655,7 +3662,9 @@ CString CNavHelper::NextAutoFilename(CString inStr, CString oldLabel, CString ne
         else
           format = "";
         extra.Replace(oldLabel, newLabel);
-        inStr = str + "\\" + format + extra;
+        if (str.GetAt(str.GetLength() - 1) != '\\')
+          str += "\\";
+        inStr = str + format + extra;
         return inStr;
       }
     }
@@ -3771,7 +3780,7 @@ int CNavHelper::NewAcquireFile(int itemNum, int listType, ScheduledFile *sched)
   *propIndexp = *montIndexp = *stateIndexp = -1;
 
   // First check for low dose state mismatch for tilt series
-  if (listType == NAVFILE_TS) {
+  if (listType == NAVFILE_TS && !mDoingMultiGridFiles) {
     for (i = itemNum - 1; i >= 0; i--) {
       item2 = mItemArray->GetAt(i);
       if (item2->mTSparamIndex >= 0 && item2->mStateIndex >= 0) {
@@ -3842,11 +3851,17 @@ int CNavHelper::NewAcquireFile(int itemNum, int listType, ScheduledFile *sched)
 
   // If nothing found, need to create file options and filename
   index = SetFileProperties(itemNum, listType, sched, false, 
-    (breakForFit && mSkipMontFitDlgs) || mDoingMultipleFiles > 2);
+    (breakForFit && mSkipMontFitDlgs) || mDoingMultipleFiles > 2 || mDoingMultiGridFiles);
   if (index) {
     *propIndexp = *montIndexp = -1;
     RecomputeArrayRefs();
     return index;
+  }
+
+  // Assign and use up the name from multigrid on the first file
+  if (mDoingMultiGridFiles && !mFirstMontFilename.IsEmpty()) {
+    autoName = mFirstMontFilename;
+    mFirstMontFilename = "";
   }
 
   // If there is a problem with the name, abort the whole thing
@@ -3997,6 +4012,13 @@ int CNavHelper::SetFileProperties(int itemNum, int listType, ScheduledFile *sche
   if (listType == NAVFILE_GROUP) {
     propIndexp = &sched->filePropIndex;
     montIndexp = &sched->montParamIndex;
+  }
+  if (mDoingMultiGridFiles) {
+    montpSrc = mWinApp->mMultiGridTasks->GetMMMmontParam();
+    mLastTypeWasMont = true;
+    mLastMontFitToPoly = true;
+    mSkipMontFitDlgs = true;
+    skipFitDlgs = true;
   }
   if (prevIndex >= 0)
     montpSrc = mMontParArray->GetAt(prevIndex);
@@ -4162,8 +4184,8 @@ int CNavHelper::SetFileProperties(int itemNum, int listType, ScheduledFile *sche
       newFileOpt->typext |= VOLT_XY_MASK;
   }
 
-  if (mDocWnd->FilePropForSaveFile(newFileOpt, B3DCHOICE(skipFitDlgs, -1, 
-    fromFilePropButton ? 1 : 0))) {
+  if (mDocWnd->FilePropForSaveFile(newFileOpt, B3DCHOICE(skipFitDlgs, 
+    mDoingMultiGridFiles ? -2 : -1, fromFilePropButton ? 1 : 0))) {
     if (madeNewOpt)
       delete newFileOpt;
     return -1;
@@ -4271,7 +4293,7 @@ int CNavHelper::SetOrChangeFilename(int itemNum, int listType, ScheduledFile *sc
       continue;
     if (sched2->filename == filename) {
       mNav->CountItemsInGroup(sched2->groupID, label, lastlab, numacq);
-      AfxMessageBox("This filename is already set up for the group\n"
+      SEMMessageBox("This filename is already set up for the group\n"
         "with labels from " + label + " to " + lastlab + "\n\nPick another name.",
         MB_EXCLAME);
       return 2;
@@ -4286,7 +4308,7 @@ int CNavHelper::SetOrChangeFilename(int itemNum, int listType, ScheduledFile *sc
     if (item2->mFilePropIndex >= 0 && item2->mFileToOpen == filename) {
       label.Format("This filename is already set up to be opened for item #%d with"
         " label %s\r\nPick another name.", i, (LPCTSTR)item2->mLabel);
-      AfxMessageBox(label, MB_EXCLAME);
+      SEMMessageBox(label, MB_EXCLAME);
       return 3;
     }
   }
@@ -5851,7 +5873,7 @@ int CNavHelper::AlignWithRotation(int buffer, float centerAngle, float angleRang
       shiftXbest = shiftX;
       shiftYbest = shiftY;
     }
-    SEMTrace('1', "Rotation %.2f  peak  %g  frac %.3f  shift %.1f %.1f", rotation, peak,
+    SEMTrace('a', "Rotation %.2f  peak  %g  frac %.3f  shift %.1f %.1f", rotation, peak,
       fracPix, shiftX, shiftY);
   }
   if (istMax < 0) {
@@ -5900,7 +5922,7 @@ int CNavHelper::AlignWithRotation(int buffer, float centerAngle, float angleRang
           shiftXbest = shiftX;
           shiftYbest = shiftY;
         }
-        SEMTrace('1', "Rotation %.2f  peak  %g  frac %.3f  shift %.1f %.1f", rotation, 
+        SEMTrace('a', "Rotation %.2f  peak  %g  frac %.3f  shift %.1f %.1f", rotation, 
           peak, fracPix, shiftX, shiftY);
       }
     }
@@ -6396,12 +6418,13 @@ WINDOWPLACEMENT * CNavHelper::GetComaVsISDlgPlacement()
   return &mMultiCombinerPlace;
 }
 
-void CNavHelper::OpenAutoContouring(void)
+void CNavHelper::OpenAutoContouring(bool fromMulti)
 {
   if (mAutoContouringDlg->IsOpen()) {
     mAutoContouringDlg->BringWindowToTop();
     return;
   }
+  mAutoContouringDlg->mOpenedFromMultiGrid = fromMulti;
   mAutoContouringDlg->Create(IDD_AUTOCONTOUR);
   mWinApp->SetPlacementFixSize(mAutoContouringDlg, &mAutoContDlgPlace);
   mWinApp->RestoreViewFocus();
@@ -6417,6 +6440,7 @@ WINDOWPLACEMENT *CNavHelper::GetAutoContDlgPlacement(void)
 
 void CNavHelper::OpenMultiGrid(void)
 {
+  CArray<JeolCartridgeData, JeolCartridgeData> *cartInfo = mScope->GetJeolLoaderInfo();
   if (mMultiGridDlg) {
     mMultiGridDlg->BringWindowToTop();
     return;
@@ -6424,6 +6448,14 @@ void CNavHelper::OpenMultiGrid(void)
   mMultiGridDlg = new CMultiGridDlg();
   mMultiGridDlg->Create(IDD_MULTI_GRID);
   mWinApp->SetPlacementFixSize(mMultiGridDlg, &mMultiGridPlace);
+  if (mStateDlg)
+    mStateDlg->Update();
+  if (cartInfo->GetSize()) {
+    mMultiGridDlg->SetNumUsedSlots((int)cartInfo->GetSize());
+    mMultiGridDlg->ReloadTable(1, 1);
+    mMultiGridDlg->UpdateEnables();
+    mMultiGridDlg->NewGridOnStage(-1);
+  }
   mWinApp->RestoreViewFocus();
 }
 
@@ -6446,9 +6478,25 @@ WINDOWPLACEMENT *CNavHelper::GetAcquireDlgPlacement(bool fromDlg)
 // This is called on file changes to update the acquire dialog
 void CNavHelper::UpdateAcquireDlgForFileChanges()
 {
-  if (mNav && mNav->mNavAcquireDlg) {
+  if (mNav && mNav->mNavAcquireDlg && !mNav->GetIgnoreUpdates()) {
     mNav->EvaluateAcquiresForDlg(mNav->mNavAcquireDlg);
     mNav->mNavAcquireDlg->ManageOutputFile();
+  }
+}
+
+// Copy a set of params into temp set for possible modification
+void CNavHelper::CopyAcqParamsAndActionsToTemp(int which)
+{
+  NavAcqAction *useAct, *actions = &mAllAcqActions[2][0];
+  NavAcqParams *useParam, *params = mWinApp->GetNavAcqParams(2);
+  int *useOrder, *order = &mAcqActCurrentOrder[2][0];
+  useAct = &mAllAcqActions[which][0];
+  useParam = mWinApp->GetNavAcqParams(which);
+  useOrder = &mAcqActCurrentOrder[which][0];
+  *params = *useParam;
+  for (int ind = 0; ind < mNumAcqActions; ind++) {
+    order[ind] = useOrder[ind];
+    actions[ind] = useAct[ind];
   }
 }
 

@@ -24,6 +24,8 @@
 #include "ComplexTasks.h"
 #include "ParticleTasks.h"
 #include "MultiTSTasks.h"
+#include "MultiGridTasks.h"
+#include "MultiGridDlg.h"
 #include "MacroProcessor.h"
 #include "MacroEditer.h"
 #include "EMbufferManager.h"
@@ -192,6 +194,7 @@ CNavigatorDlg::CNavigatorDlg(CWnd* pParent /*=NULL*/)
   mRunScriptAfterNextAcq = -1;
   mFRangeIndex = -1;
   mInRangeDelete = false;
+  mIgnoreUpdates = false;
 }
 
 
@@ -426,7 +429,7 @@ void CNavigatorDlg::PostNcDestroy()
 // This override takes care of the closing situation, OnClose is redundant
 void CNavigatorDlg::OnCancel()
 {
-  if (mLoadingMap)
+  if (!OKtoCloseNav())
     return;
   if (AskIfSave("closing window?"))
     return;
@@ -440,6 +443,14 @@ void CNavigatorDlg::OnCancel()
   mWinApp->NavigatorClosing();
 
   DestroyWindow();
+}
+
+// Central place to test for whether it is OK to close the dialog
+bool CNavigatorDlg::OKtoCloseNav()
+{
+  return !(mLoadingMap || mAcquireIndex >= 0 || 
+    mWinApp->mMultiGridTasks->GetDoingMulGridSeq() ||
+    mWinApp->mMultiGridTasks->GetDoingMultiGrid());
 }
 
 // Returns come through here - needed to avoid closing window
@@ -594,6 +605,8 @@ void CNavigatorDlg::Update()
   BOOL propsNameStateOK, multishot = false;
   BOOL grpExists = GetCollapsedGroupLimits(mCurListSel, start, end);
   BOOL recordingHoles = mHelper->mMultiShotDlg &&mHelper->mMultiShotDlg->RecordingHoles();
+  if (mIgnoreUpdates)
+    return;
   if (grpExists) {
     mItem = mItemArray[start];
     for (i = start; i <= end; i++) {
@@ -1977,7 +1990,7 @@ void CNavigatorDlg::ClearRangeKeys()
 }
 
 // Do the new file at item operation over a range of indexes
-void CNavigatorDlg::ToggleNewFileOverRange(int start, int end)
+void CNavigatorDlg::ToggleNewFileOverRange(int start, int end, int forMultiGrid)
 {
   CMapDrawItem *item;
   int ind, numAcq = 0;
@@ -1988,6 +2001,7 @@ void CNavigatorDlg::ToggleNewFileOverRange(int start, int end)
   mFRangeAllOn = true;
   mFRangeStart = start;
   mFRangeEnd = end;
+  mFileRangeForMultiGrid = forMultiGrid;
 
   // See if they are all already on, in which case they will be turned off
   mFRangeNumOff = 0;
@@ -2009,7 +2023,9 @@ void CNavigatorDlg::ToggleNewFileOverRange(int start, int end)
 
   // Offer tailored choices
   if (!mFRangeAllOn) {
-    if (mFRangeAnyPoly) {
+    if (forMultiGrid) {
+      mMinNewFileInterval = -2;
+    } else if (mFRangeAnyPoly) {
       if (!KGetOneInt("Enter -1 or -2 for new file only at polygons; -2 for minimum # of "
         "reusable montage files", "Interval between items at which to set up new files "
         "(1 for file at all acquire items):", mMinNewFileInterval))
@@ -2026,6 +2042,7 @@ void CNavigatorDlg::ToggleNewFileOverRange(int start, int end)
   mFRangeIndex = start;
 
   mHelper->SetDoingMultipleFiles(mFRangeAnyPoly && mMinNewFileInterval < -1 ? 2 : 1);
+  mHelper->SetDoingMultiGridFiles(forMultiGrid);
   mFRangeNumOff = 0;
   CLEAR_RESIZE(mFRangeMontInds, int, 0);
 
@@ -2053,7 +2070,8 @@ void CNavigatorDlg::NewFileRangeNextTask(int synchronous)
   item = mItemArray[ind];
   if (item->mAcquire && item->mFilePropIndex < 0) {
     mFRangeNumOff++;
-    if (mFRangeNumOff >= mFRangeInterval || item->IsPolygon()) {
+    if ((mFRangeNumOff >= mFRangeInterval && !mFileRangeForMultiGrid) || 
+      item->IsPolygon()) {
       mItem = item;
       err = mHelper->NewAcquireFile(ind, NAVFILE_ITEM, NULL);
       if (!err) {
@@ -2110,6 +2128,7 @@ void CNavigatorDlg::NewFileRangeNextTask(int synchronous)
   ManageCurrentControls();
   Redraw();
   mHelper->SetDoingMultipleFiles(0);
+  mHelper->SetDoingMultiGridFiles(0);
 }
 
 // Construct list box string for the given item
@@ -2410,7 +2429,7 @@ int CNavigatorDlg::ShiftItemsAtRegistration(float shiftX, float shiftY, int reg,
 }
 
 // Shift a subset of items matching the mag index and either the cohort ID or the fact
-// that they are not shifts.  Select maps and points/polygons marked on them
+// that they are not shifted.  Select maps and points/polygons marked on them
 int CNavigatorDlg::ShiftCohortOfItems(float shiftX, float shiftY, int reg, 
   int magInd, int cohortID, bool useAll, bool wasShifted, int saveOrRestore)
 {
@@ -2486,6 +2505,12 @@ void CNavigatorDlg::ShiftToMarker(void)
   dlg.mOKtoShift = mHelper->OKtoShiftToMarker();
   dlg.m_iApplyToWhich = mHelper->GetMarkerShiftApplyWhich();
   dlg.m_iSaveType = mHelper->GetMarkerShiftSaveType();
+
+  // If multi-grid is open, set these to the kind of settings needed to save a shift
+  if (mHelper->mMultiGridDlg) {
+    ACCUM_MAX(dlg.m_iApplyToWhich, 1);
+    ACCUM_MAX(dlg.m_iSaveType, 1);
+  }
   if (dlg.mOKtoShift) {
     if (!SetCurrentItem())
       return;
@@ -4171,11 +4196,12 @@ void CNavigatorDlg::PolygonFromCorners(void)
 
 // Setup a montage from a polygon
 int CNavigatorDlg::PolygonMontage(CMontageSetupDlg *montDlg, bool skipSetupDlg, 
-  int itemInd, float overlapFac, bool forMacro)
+  int itemInd, float overlapFac, int source)
 {
 	CMapDrawItem *item, *itmp;
   CString str;
   MontParam *montp;
+  bool forMacro = source == SETUPMONT_FROM_MACRO;
   int err;
   if (!mHelper->GetDoingMultipleFiles())
     mWinApp->RestoreViewFocus();
@@ -4194,7 +4220,7 @@ int CNavigatorDlg::PolygonMontage(CMontageSetupDlg *montDlg, bool skipSetupDlg,
   itmp = new CMapDrawItem;
   for (int i = 0; i < item->mNumPoints; i++)
     itmp->AppendPoint(item->mPtX[i],item->mPtY[i]);
-  err = SetupMontage(itmp, montDlg, skipSetupDlg, overlapFac, forMacro);
+  err = SetupMontage(itmp, montDlg, skipSetupDlg, overlapFac, source);
   if (!err && (fabs(item->mStageX - itmp->mStageX) > 0.005 ||
     fabs(item->mStageY - itmp->mStageY) > 0.005)) {
       if (!mHelper->GetDoingMultipleFiles()) {
@@ -4214,7 +4240,7 @@ int CNavigatorDlg::PolygonMontage(CMontageSetupDlg *montDlg, bool skipSetupDlg,
 }
 
 // Setup a montage for the full area (or user specified area)
-int CNavigatorDlg::FullMontage(bool skipDlg, float overlapFac, bool forMacro)
+int CNavigatorDlg::FullMontage(bool skipDlg, float overlapFac, int source)
 {
   float minX, minY, maxX, maxY, midX, midY, cornerX, cornerY;
   float minCornerX, maxCornerX, minCornerY, maxCornerY, maxOverNominal;
@@ -4224,10 +4250,21 @@ int CNavigatorDlg::FullMontage(bool skipDlg, float overlapFac, bool forMacro)
   float nominalLim = JEOLscope ? 1200.f : 1000.f;
   int err = 0;
   bool inView, inSearch;
+  bool forMacro = source == SETUPMONT_FROM_MACRO;
+  bool forMultigrid = source == SETUPMONT_MG_FULL_GRID;
   MontParam *montp = mWinApp->GetMontParam();
   LowDoseParams *ldp = mWinApp->GetLowDoseParams();
 	CMapDrawItem *itmp = new CMapDrawItem;
+  CMontageSetupDlg montDlg;
   mWinApp->RestoreViewFocus();
+
+  if (forMultigrid) {
+    montp = mWinApp->mMultiGridTasks->GetGridMontParam();
+    if (!skipDlg)
+      montDlg.mParam = *montp;
+    montDlg.mForMultiGridMap = SETUPMONT_MG_FULL_GRID;
+    montDlg.mSizeLocked = false;
+  }
 
   // First get limits based on system defaults
   minX = mScope->GetStageLimit(STAGE_MIN_X);
@@ -4311,9 +4348,12 @@ int CNavigatorDlg::FullMontage(bool skipDlg, float overlapFac, bool forMacro)
   }
 
   mSettingUpFullMont = true;
-  err = SetupMontage(itmp, NULL, skipDlg, overlapFac, forMacro);
+  err = SetupMontage(itmp, (forMultigrid && !skipDlg) ? &montDlg : NULL, skipDlg, 
+    overlapFac, source);
   mSettingUpFullMont = false;
-  if (!err && mWinApp->Montaging()) {
+  if (!err && (mWinApp->Montaging() || forMultigrid)) {
+    if (forMultigrid && !skipDlg)
+      *montp = montDlg.mParam;
     montp->forFullMontage = true;
     montp->fullMontStageX = itmp->mStageX;
     montp->fullMontStageY = itmp->mStageY;
@@ -4324,30 +4364,48 @@ int CNavigatorDlg::FullMontage(bool skipDlg, float overlapFac, bool forMacro)
 
 // Common routine to set up a montage
 int CNavigatorDlg::SetupMontage(CMapDrawItem *item, CMontageSetupDlg *montDlg, 
-  bool skipSetupDlg, float overlapFac, bool forMacro)
+  bool skipSetupDlg, float overlapFac, int source)
 {
   ScaleMat aInv;
-  int i, err;
+  int i, err, binning;
   float extraSizeFactor = 0.05f;   // Fraction to increase size overall
-  float overlapFactor = 0.1f;      // Could come from SEMDoc
   int iCam = mWinApp->GetCurrentCamera();
-  CameraParameters *camParam = mWinApp->GetCamParams() + iCam;
+  CameraParameters *camParam;
+  ControlSet *conSet;
   float askLimitRatio = 0.9f;    // Ask user if Record frame smaller than camera by this
   int magIndex = mScope->GetMagIndex();
   BOOL lowDose = mWinApp->LowDoseMode();
   int trial, numTry = 1, initCons = RECORD_CONSET, useCons;
   LowDoseParams *ldp = mWinApp->GetLowDoseParams();
+  bool forMacro = source == SETUPMONT_FROM_MACRO;
+  bool forMulti = source == SETUPMONT_MG_FULL_GRID || source == SETUPMONT_MG_POLYGON;
   MontParam *montParam = mMontParam;
   CString *modeNames = mWinApp->GetModeNames();
+  CString str;
   float viewPixel, searchPixel = 0.;
   BOOL forceStage = false;
   BOOL useViewSave, useSearchSave;
+  int *activeList = mWinApp->GetActiveCameraList();
 
   if (montDlg) {
     magIndex = montDlg->mParam.magIndex;
     montParam = &montDlg->mParam;
     forceStage = montDlg->mParam.wasFitToPolygon && montDlg->mParam.moveStage;
   }
+  if (forMulti) {
+    if (!montDlg)
+      montParam = B3DCHOICE(source == SETUPMONT_MG_FULL_GRID,
+        mWinApp->mMultiGridTasks->GetGridMontParam(),
+        mWinApp->mMultiGridTasks->GetMMMmontParam());;
+    lowDose = montParam->setupInLowDose;
+    magIndex = montParam->magIndex;
+    iCam = activeList[montParam->cameraIndex];
+    binning = montParam->binning;
+    forceStage = true;
+  }
+  camParam = mWinApp->GetCamParams() + iCam;
+  useViewSave = montParam->useViewInLowDose;
+  useSearchSave = montParam->useSearchInLowDose;
 
   // Check number - it should be OK but just in case
   if (item->mNumPoints < 3) {
@@ -4376,12 +4434,10 @@ int CNavigatorDlg::SetupMontage(CMapDrawItem *item, CMontageSetupDlg *montDlg,
   mMontItem = item;
 
   // If low dose, set up to loop on different areas
-  if (lowDose) {
+  if (lowDose && !forMulti) {
     viewPixel = mShiftManager->GetPixelSize(iCam, ldp[VIEW_CONSET].magIndex);
     if (ldp[SEARCH_AREA].magIndex)
       searchPixel = mShiftManager->GetPixelSize(iCam, ldp[SEARCH_AREA].magIndex);
-    useViewSave = montParam->useViewInLowDose;
-    useSearchSave = montParam->useSearchInLowDose;
     if (!useViewSave && !useSearchSave) {
       numTry = searchPixel > 0 ? 3 : 2;
     } else if ((useViewSave && searchPixel > 0. && searchPixel > viewPixel) ||
@@ -4394,10 +4450,11 @@ int CNavigatorDlg::SetupMontage(CMapDrawItem *item, CMontageSetupDlg *montDlg,
 
   for (trial = 0; trial < numTry; trial++) {
     int consetNum = MontageConSetNum(montParam, false);
-    if (lowDose)
+    if (lowDose && !forMulti)
       magIndex = ldp[MontageLDAreaIndex(montParam)].magIndex;
-    ControlSet *conSet = mWinApp->GetConSets() + consetNum;
-    int binning = conSet->binning;
+    conSet = mWinApp->GetConSets() + consetNum;
+    if (!forMulti)
+      binning = conSet->binning;
 
     // Check for Record area smaller than camera and ask if user wants that limit
     mFrameLimitX = camParam->sizeX;
@@ -4405,7 +4462,7 @@ int CNavigatorDlg::SetupMontage(CMapDrawItem *item, CMontageSetupDlg *montDlg,
     mWinApp->mMontageController->LimitSizesToUsable(camParam, iCam, magIndex, 
       mFrameLimitX, mFrameLimitY, 1);
     if (!skipSetupDlg && (conSet->right - conSet->left < askLimitRatio * mFrameLimitX ||
-      conSet->bottom - conSet->top < askLimitRatio * mFrameLimitY) &&
+      conSet->bottom - conSet->top < askLimitRatio * mFrameLimitY) && !forMulti &&
       AfxMessageBox("The " + modeNames[consetNum] + " area is significantly smaller than "
       "the camera frame size."
       "\n\nDo you want to keep the montage frame size from being bigger than this area?"
@@ -4416,7 +4473,8 @@ int CNavigatorDlg::SetupMontage(CMapDrawItem *item, CMontageSetupDlg *montDlg,
     }
 
     //montParam->minOverlapFactor = overlapFactor;  ??  HUH??
-    if ((err = FitMontageToItem(montParam, binning, magIndex, forceStage, overlapFac))) {
+    if ((err = FitMontageToItem(montParam, binning, magIndex, forceStage, overlapFac, 
+      iCam, lowDose))) {
 
       // If it fails and there are more trials, switch from View to Search or vice-versa,
       // or do search if it is smaller pixel, or do view
@@ -4435,13 +4493,18 @@ int CNavigatorDlg::SetupMontage(CMapDrawItem *item, CMontageSetupDlg *montDlg,
         useCons = montParam->useViewInLowDose ? VIEW_CONSET : SEARCH_CONSET;
         continue;
       }
-
-      AfxMessageBox(err == 2 ? "The amount of overlap between frames required to do a\n"
-        "montage with stage movement is too high (more than half the frame size) at this"
-        " magnification.\nOpen the Montage Setup dialog from the File menu,\nselect"
-        " \"Move stage\", reduce the minimum overlap in microns, press OK, and Cancel in"
-        " the next dialog." : "This area would require more than the\n allowed number"
-        " of montage pieces", MB_EXCLAME);
+      if (forMulti) {
+        str.Format("The magnification of the current or selected state (%d) is too high"
+          " for a full grid montage", MagForCamera(iCam, magIndex));
+        AfxMessageBox(str, MB_EXCLAME);
+      } else {
+        AfxMessageBox(err == 2 ? "The amount of overlap between frames required to do a\n"
+          "montage with stage movement is too high (more than half the frame size) at this"
+          " magnification.\nOpen the Montage Setup dialog from the File menu,\nselect"
+          " \"Move stage\", reduce the minimum overlap in microns, press OK, and Cancel in"
+          " the next dialog." : "This area would require more than the\n allowed number"
+          " of montage pieces", MB_EXCLAME);
+      }
       if (!montDlg)
         mDocWnd->RestoreCurrentFile();
       mMontItem = NULL;
@@ -4459,6 +4522,8 @@ int CNavigatorDlg::SetupMontage(CMapDrawItem *item, CMontageSetupDlg *montDlg,
   // file if it is aborted
   if (montDlg) {
     err = B3DCHOICE(!skipSetupDlg && montDlg->DoModal() != IDOK, 1, 0);
+  } else if (forMulti) {
+    err = 0;
   } else {
     if (forMacro && mWinApp->mMacroProcessor->DoingMacro())
       err = mDocWnd->GetMontageParamsAndFile(true, montParam->xFrame, montParam->yFrame, 
@@ -4486,7 +4551,7 @@ int CNavigatorDlg::SetupMontage(CMapDrawItem *item, CMontageSetupDlg *montDlg,
   aInv = MatInv(mPolyToCamMat);
   item->mStageX = aInv.xpx * mCamCenX + aInv.xpy * mCamCenY;
   item->mStageY = aInv.ypx * mCamCenX + aInv.ypy * mCamCenY;
-  if (!montDlg) {
+  if (!montDlg && !forMulti) {
     SEMTrace('S', "Moving to center of montage %.2f  %.2f", item->mStageX, item->mStageY);
     AdjustAndMoveStage(item->mStageX, item->mStageY, 0., axisXY);
     mWinApp->AddIdleTask(CEMscope::TaskStageBusy, -1, 0, 0);
@@ -4498,7 +4563,7 @@ int CNavigatorDlg::SetupMontage(CMapDrawItem *item, CMontageSetupDlg *montDlg,
 
 // Find the smallest montage framing that covers the region of the polygon
 int CNavigatorDlg::FitMontageToItem(MontParam *montParam, int binning, int magIndex,
-                                    BOOL forceStage, float overlapFac)
+  BOOL forceStage, float overlapFac, int iCam, BOOL lowDose)
 {
   ScaleMat aMat;
   float xMin, xMax, yMin, yMax, xx, yy, pixel, maxIS, tmpov, rotation;
@@ -4510,7 +4575,6 @@ int CNavigatorDlg::FitMontageToItem(MontParam *montParam, int binning, int magIn
     B3DMIN(mFrameLimitX, mFrameLimitY));
   float extraSizeFactor = 0.05f;   // Fraction to increase size overall
   float maxOverlapInc = 1.5f;      // Maximum to increase overlap with restrictied sizes
-  int iCam = mWinApp->GetCurrentCamera();
   CameraParameters *camParam = mWinApp->GetCamParams() + iCam;
   CMapDrawItem *item = mMontItem;
 
@@ -4536,9 +4600,9 @@ int CNavigatorDlg::FitMontageToItem(MontParam *montParam, int binning, int magIn
   }
 
   // Transform item to camera coordinates and save in second item, get min/max
-  if (mWinApp->LowDoseMode() && montParam->useViewInLowDose)
+  if (lowDose && montParam->useViewInLowDose)
     set = VIEW_CONSET;
-  else if (mWinApp->LowDoseMode() && montParam->useSearchInLowDose)
+  else if (lowDose && montParam->useSearchInLowDose)
     set = SEARCH_CONSET;
   PolygonToCameraCoords(item, iCam, magIndex, set, xMin, xMax, yMin, yMax);
 
@@ -8007,6 +8071,25 @@ void CNavigatorDlg::AutoSave()
   }
 }
 
+// Clear out navigator in preparation for new use without closing it
+int CNavigatorDlg::SaveAndClearTable(bool askIfSave)
+{
+  int retval = 0, ans = IDYES;
+  if (mItemArray.GetSize() && mNavFilename.IsEmpty()) {
+    ans = AfxMessageBox("Do you want to save the Navigator entries before loading a "
+      "different file?", MB_YESNOCANCEL | MB_ICONQUESTION);
+    if (ans == IDCANCEL)
+      return -1;
+  }
+  if (ans == IDYES)
+    retval = DoSave(false);
+  mHelper->DeleteArrays();
+  FillListBox(false);
+  mNavFilename = "";
+  SetWindowText("Navigator");
+  return retval;
+}
+
 // Remove an autosave file if one is current; clear out name
 void CNavigatorDlg::RemoveAutosaveFile(void)
 {
@@ -8598,43 +8681,11 @@ int CNavigatorDlg::LoadNavFile(bool checkAutosave, bool mergeFile, CString *inFi
       for (ind1 = 0; ind1 < numParams; ind1++) {
         montParam = new MontParam;
 #include "NavAdocParams.h"
+        FinishMontParamLoad(montParam, ind1, numAdocErr);
 
-        // Initialize unsaved items
-        montParam->settingsUsed = false;
-        montParam->warnedBinChange = false;
-        montParam->warnedMagChange = false;
-        montParam->warnedCamChange = false;
-        montParam->warnedCalOpen = false;
-        montParam->warnedCalAcquire = false;
-        montParam->warnedConSetBin = false;
-        montParam->zMax = 0;
-        montParam->zCurrent = 0;
-        montParam->byteMinScale = 0.;
-        montParam->byteMaxScale = 0.;
+        // Initialize remaining unsaved items
         montParam->minOverlapFactor = masterMont->minOverlapFactor;
         montParam->minMicronsOverlap = masterMont->minMicronsOverlap;
-
-        // Take care of skip list
-        if (montParam->numToSkip > 0) {
-          montParam->skipPieceX.resize(montParam->numToSkip);
-          numToGet = montParam->numToSkip;
-          if (AdocGetIntegerArray("MontParam", ind1, "SkipPieceX", holeSkips, &numToGet,
-            2000)) {
-            numAdocErr++;
-          } else {
-            for (ind2 = 0; ind2 < montParam->numToSkip; ind2++)
-              montParam->skipPieceX[ind2] = (short)holeSkips[ind2];
-          }
-
-          montParam->skipPieceY.resize(montParam->numToSkip);
-          if (AdocGetIntegerArray("MontParam", ind1, "SkipPieceY", holeSkips, &numToGet,
-            2000)) {
-            numAdocErr++;
-          } else {
-            for (ind2 = 0; ind2 < montParam->numToSkip; ind2++)
-              montParam->skipPieceY[ind2] = (short)holeSkips[ind2];
-          }
-        }
 
         FIND_DUP_OR_ADD(mMontParArray, montParam, montp2, newMontParamInds);
       }
@@ -9276,7 +9327,51 @@ int CNavigatorDlg::LoadNavFile(bool checkAutosave, bool mergeFile, CString *inFi
     mHelper->CountAcquireItems(originalSize, mEndingAcquireIndex, numSect, numToGet);
     mInitialNumAcquire += (mAcqParm->acquireType == ACQUIRE_DO_TS ? numToGet : numSect);
   }
+  if (mHelper->mMultiGridDlg)
+    mHelper->mMultiGridDlg->UpdateEnables();
   return returnVal;
+}
+
+// Finish loading a montage param from Nav file or multigrid session file
+void CNavigatorDlg::FinishMontParamLoad(MontParam *montParam, int ind1, int &numAdocErr)
+{
+  int ind2, numToGet;
+  int holeSkips[2000];
+
+  // Initialize unsaved items
+  montParam->settingsUsed = false;
+  montParam->warnedBinChange = false;
+  montParam->warnedMagChange = false;
+  montParam->warnedCamChange = false;
+  montParam->warnedCalOpen = false;
+  montParam->warnedCalAcquire = false;
+  montParam->warnedConSetBin = false;
+  montParam->zMax = 0;
+  montParam->zCurrent = 0;
+  montParam->byteMinScale = 0.;
+  montParam->byteMaxScale = 0.;
+  
+  // Take care of skip list
+  if (montParam->numToSkip > 0) {
+    montParam->skipPieceX.resize(montParam->numToSkip);
+    numToGet = montParam->numToSkip;
+    if (AdocGetIntegerArray("MontParam", ind1, "SkipPieceX", holeSkips, &numToGet,
+      2000)) {
+      numAdocErr++;
+    } else {
+      for (ind2 = 0; ind2 < montParam->numToSkip; ind2++)
+        montParam->skipPieceX[ind2] = (short)holeSkips[ind2];
+    }
+
+    montParam->skipPieceY.resize(montParam->numToSkip);
+    if (AdocGetIntegerArray("MontParam", ind1, "SkipPieceY", holeSkips, &numToGet,
+      2000)) {
+      numAdocErr++;
+    } else {
+      for (ind2 = 0; ind2 < montParam->numToSkip; ind2++)
+        montParam->skipPieceY[ind2] = (short)holeSkips[ind2];
+    }
+  }
 }
 
 // Get the filename for reading or writing
@@ -9337,22 +9432,28 @@ CString CNavigatorDlg::NextTabField(CString inStr, int &index)
 // ACQUIRING SEQUENCE OF MARKED AREAS AND MAKING MAPS / RUNNING MACRO / DOING TILT SERIES
 
 // Initiate Acquisition
-void CNavigatorDlg::AcquireAreas(bool fromMenu, bool dlgClosing, bool useTempParams)
+void CNavigatorDlg::AcquireAreas(int source, bool dlgClosing, bool useTempParams)
 {
   int loop, ind, loopStart, loopEnd, macnum, numNoMap = 0, numAtEdge = 0, acqIndex;
   int groupID = -1;
   BOOL rangeErr = false;
   BOOL runPremacro, runPostmacro;
   bool takingMap, takingImage, doingMultishot;
+  bool fromMenu = source == 1;
+  bool fromMultigrid = source > 1;
+  int mgParamSet = B3DMIN(1, source - 2);
   CString *macros = mWinApp->GetMacros();
   CString mess, mess2;
   CameraParameters *camParams = mWinApp->GetActiveCamParam();
   DriftWaitParams *dwParam = mWinApp->mParticleTasks->GetDriftWaitParams();
   CNavAcquireDlg *dlg;
   if (!dlgClosing && mNavAcquireDlg) {
-    if (fromMenu)
+    if (source) {
       mNavAcquireDlg->BringWindowToTop();
-    else
+      if (fromMultigrid) {
+        mNavAcquireDlg->HijackByMultiGrid(B3DMIN(1, mgParamSet));
+      }
+    } else
       SEMMessageBox("You cannot start Navigator acquisition with the acquire dialog "
         "open");
     return;
@@ -9362,25 +9463,34 @@ void CNavigatorDlg::AcquireAreas(bool fromMenu, bool dlgClosing, bool useTempPar
   if (!dlgClosing) {
     mNavAcquireDlg = new CNavAcquireDlg();
     dlg = mNavAcquireDlg;
-
-    // If postponed, set subset from postponed values; otherwise initialize to no subset
     dlg->mNumArrayItems = (int)mItemArray.GetSize();
-    if (mAcqDlgPostponed && !useTempParams) {
-      dlg->m_iSubsetStart = B3DMIN(mPostponedSubsetStart, dlg->mNumArrayItems);
-      dlg->m_iSubsetEnd = B3DMIN(mPostponedSubsetEnd, dlg->mNumArrayItems);
-      dlg->m_bDoSubset = mPostposedDoSubset;
+
+    if (fromMultigrid && source < NAVACQ_SRC_MG_RUN_MMM) {
+      dlg->m_bDoSubset = false;
+      dlg->mLastNonTStype = mAcqParm->nonTSacquireType;
+      dlg->m_iCurParamSet = mgParamSet;
+      dlg->mOpenedFromMultiGrid = true;
     } else {
-      dlg->m_iSubsetStart = 1;
-      dlg->m_iSubsetEnd = dlg->mNumArrayItems;
+
+      // If postponed, set subset from postponed values; otherwise initialize to no subset
+      if (mAcqDlgPostponed && !useTempParams) {
+        dlg->m_iSubsetStart = B3DMIN(mPostponedSubsetStart, dlg->mNumArrayItems);
+        dlg->m_iSubsetEnd = B3DMIN(mPostponedSubsetEnd, dlg->mNumArrayItems);
+        dlg->m_bDoSubset = mPostposedDoSubset;
+      } else {
+        dlg->m_iSubsetStart = 1;
+        dlg->m_iSubsetEnd = dlg->mNumArrayItems;
+        dlg->m_bDoSubset = false;
+      }
+      dlg->mLastNonTStype = mAcqParm->nonTSacquireType;
+      EvaluateAcquiresForDlg(dlg);
     }
-    dlg->mLastNonTStype = mAcqParm->nonTSacquireType;
-    EvaluateAcquiresForDlg(dlg);
 
 
     // Run the dialog
-    if (fromMenu) {
+    if (source && source < NAVACQ_SRC_MG_RUN_MMM) {
       dlg->AcquireTypeToOptions(mAcqParm->nonTSacquireType);
-      if (dlg->mAnyTSpoints)
+      if (dlg->mAnyTSpoints && !fromMultigrid)
         dlg->AcquireTypeToOptions(ACQUIRE_DO_TS);
       mNavAcquireDlg->Create(IDD_NAVACQUIRE);
       mWinApp->SetPlacementFixSize(mNavAcquireDlg, 
@@ -9391,7 +9501,7 @@ void CNavigatorDlg::AcquireAreas(bool fromMenu, bool dlgClosing, bool useTempPar
       return;
     
     } else {
-      if (!useTempParams)
+      if (!useTempParams || source == NAVACQ_SRC_MG_RUN_ACQ)
         mAcqParm->acquireType = dlg->mAnyTSpoints ? ACQUIRE_DO_TS :
         mAcqParm->nonTSacquireType;
       if (mAcqParm->acquireType != ACQUIRE_DO_TS && !dlg->mAnyAcquirePoints) {
@@ -9404,7 +9514,8 @@ void CNavigatorDlg::AcquireAreas(bool fromMenu, bool dlgClosing, bool useTempPar
 
     // When dialog closing, process results
     dlg = mNavAcquireDlg;
-    if (dlg->mPostponed < 0 || (!dlg->mAnyAcquirePoints && !dlg->mAnyTSpoints)) {
+    if (dlg->mPostponed < 0 || (!dlg->mAnyAcquirePoints && !dlg->mAnyTSpoints &&
+      !dlg->mOpenedFromMultiGrid)) {
       ManageAcquireDlgCleanup(fromMenu, dlgClosing);
       return;
     }
@@ -9416,9 +9527,11 @@ void CNavigatorDlg::AcquireAreas(bool fromMenu, bool dlgClosing, bool useTempPar
     // Postponing: save subset parameters
     mAcqDlgPostponed = dlg->mPostponed > 0;
     if (mAcqDlgPostponed) {
-      mPostponedSubsetStart = dlg->m_iSubsetStart;
-      mPostponedSubsetEnd = dlg->m_iSubsetEnd;
-      mPostposedDoSubset = dlg->m_bDoSubset;
+      if (!dlg->mOpenedFromMultiGrid) {
+        mPostponedSubsetStart = dlg->m_iSubsetStart;
+        mPostponedSubsetEnd = dlg->m_iSubsetEnd;
+        mPostposedDoSubset = dlg->m_bDoSubset;
+      }
       ManageAcquireDlgCleanup(fromMenu, dlgClosing);
       return;
     }
@@ -9442,10 +9555,10 @@ void CNavigatorDlg::AcquireAreas(bool fromMenu, bool dlgClosing, bool useTempPar
   mRetractAtAcqEnd = mWinApp->GetAnyRetractableCams() && mAcqParm->retractCameras;
 
   runPremacro = mAcqParm->runPremacro;
-  if (mAcqParm->acquireType != ACQUIRE_DO_TS && !useTempParams)
+  if (mAcqParm->acquireType != ACQUIRE_DO_TS && (!useTempParams || fromMultigrid))
     runPremacro = mAcqParm->runPremacroNonTS;
   runPostmacro = mAcqParm->runPostmacro;
-  if (mAcqParm->acquireType != ACQUIRE_DO_TS && !useTempParams)
+  if (mAcqParm->acquireType != ACQUIRE_DO_TS && (!useTempParams || fromMultigrid))
     runPostmacro = mAcqParm->runPostmacroNonTS;
   setOrClearFlags(&mAcqActions[NAACT_RUN_PREMACRO].flags, NAA_FLAG_RUN_IT, runPremacro);
   setOrClearFlags(&mAcqActions[NAACT_RUN_POSTMACRO].flags, NAA_FLAG_RUN_IT, runPostmacro);
@@ -9499,10 +9612,10 @@ void CNavigatorDlg::AcquireAreas(bool fromMenu, bool dlgClosing, bool useTempPar
   mDoingEarlyReturn = (takingMap || takingImage) && camParams->K2Type &&
     !mWinApp->Montaging() && mAcqParm->earlyReturn;
   if (takingMap && mDoingEarlyReturn && !mAcqParm->numEarlyFrames) {
-    AfxMessageBox("You must have a non-zero value for the number\n"
-      "of early return frames when acquiring maps", MB_EXCLAME);
-    ManageAcquireDlgCleanup(fromMenu, dlgClosing);
-    return;
+      AfxMessageBox("You must have a non-zero value for the number\n"
+        "of early return frames when acquiring maps", MB_EXCLAME);
+      ManageAcquireDlgCleanup(fromMenu, dlgClosing);
+      return;
   }
   mHelper->UpdateMultishotIfOpen(false);
 
@@ -9513,10 +9626,18 @@ void CNavigatorDlg::AcquireAreas(bool fromMenu, bool dlgClosing, bool useTempPar
   if (dlg->mNumAcqBeforeFile && ((!mWinApp->mStoreMRC && !mSkippingSave && 
     (takingMap || takingImage)) || ((!mWinApp->mStoreMRC || mWinApp->Montaging()) &&
         doingMultishot && mHelper->IsMultishotSaving()))) {
+    loop = 1;
+    if (source == NAVACQ_SRC_MG_RUN_ACQ) {
+      mIgnoreUpdates = true;
+      loop = mWinApp->mMultiGridTasks->OpenFileForFinalAcq();
+      mIgnoreUpdates = false;
+    } else
       AfxMessageBox("There is no open " + CString(doingMultishot ? "single-frame " : "")
         + "image file and\nno file set to open on first acquire item.", MB_EXCLAME);
+    if (loop) {
       ManageAcquireDlgCleanup(fromMenu, dlgClosing);
       return;
+    }
   }
 
   // Now if realigning, make sure there are suitable maps; and check for mismatches
@@ -10493,7 +10614,11 @@ void CNavigatorDlg::AcquireNextTask(int param)
     if (mResetAcquireIndex)
       mAcquireIndex = mStartingAcquireIndex;
     mResetAcquireIndex = false;
+    err = 0;
     if (mAcquireEnded || (err = FindAndSetupNextAcquireArea()) != 0) {
+      if (mAcquireEnded && !err && mWinApp->mMultiGridTasks->GetDoingMulGridSeq() &&
+        !mWinApp->mMultiGridTasks->GetSuspendedMulGrid())
+        mWinApp->mMultiGridTasks->SuspendMulGridSeq();
       if (mAcquireEnded < 0) {
         mAcquireEnded = 0;
         mPausedAcquire = true;
@@ -10561,7 +10686,9 @@ void CNavigatorDlg::AcquireDlgClosing()
     ResumeFromPause();
     mWinApp->SetStatusText(COMPLEX_PANE, "");
   } else
-    AcquireAreas(false, true, false);
+    AcquireAreas(0, true, false);
+  if (mWinApp->mMultiGridTasks->WasStoppedInNavRun())
+    mWinApp->mMultiGridTasks->ResumeMulGridSeq(0);
 }
 
 // Resuming from pause: test for a change in the output file type, change flags
@@ -10610,11 +10737,14 @@ int CNavigatorDlg::EndAcquireWithMessage(void)
       scrp.Format("Running script %d next", mScriptToRunAtEnd + 1);
       mWinApp->AppendToLog(scrp);
     } else {
-      AfxMessageBox(report, MB_EXCLAME);
+      if (!mWinApp->mMultiGridTasks->GetDoingMulGridSeq() && 
+        !mWinApp->mMultiGridTasks->GetSuspendedMulGrid())
+        AfxMessageBox(report, MB_EXCLAME);
       if (mNumAcqFilesLeftOpen) {
         report.Format("%d files were left open for reuse\n\nDo you want to close them?",
           mNumAcqFilesLeftOpen);
-        if (AfxMessageBox(report, MB_QUESTION) == IDYES) {
+        if (mWinApp->mMultiGridTasks->GetDoingMulGridSeq() ||
+          AfxMessageBox(report, MB_QUESTION) == IDYES) {
           for (ind = mDocWnd->GetNumStores() - 1; ind >= 0; ind--) {
             montp = mDocWnd->GetStoreMontParam(ind);
             if (montp && montp->reusability) {

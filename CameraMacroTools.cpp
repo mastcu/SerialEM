@@ -13,6 +13,7 @@
 #include ".\CameraMacroTools.h"
 #include "MacroProcessor.h"
 #include "MainFrm.h"
+#include "MultiGridTasks.h"
 #include "CameraController.h"
 #include "ProcessImage.h"
 #include "MacroEditer.h"
@@ -226,7 +227,10 @@ void CCameraMacroTools::OnButVFTR(UINT nID)
 void CCameraMacroTools::OnButmontage()
 {
   mWinApp->RestoreViewFocus();
-  if (mWinApp->Montaging() && !mWinApp->LowDoseMode())
+  if (mWinApp->mMultiGridTasks->GetDoingMulGridSeq() ||
+    mWinApp->mMultiGridTasks->GetSuspendedMulGrid())
+    mWinApp->mMultiGridTasks->EndMulGridSeq();
+  else if (mWinApp->Montaging() && !mWinApp->LowDoseMode())
     mWinApp->StartMontageOrTrial(false);
   else
     mWinApp->UserRequestedCapture(PREVIEW_CONSET);
@@ -402,9 +406,13 @@ void CCameraMacroTools::OnButmacro2()
   } else if (navState == NAV_SCRIPT_RUNNING || navState == NAV_SCRIPT_STOPPED || 
     navState == NAV_RUNNING_NO_SCRIPT_TS) {
     mWinApp->RestoreViewFocus();
+    if (mWinApp->mMultiGridTasks->GetSuspendedMulGrid())
+      mWinApp->mMultiGridTasks->ResumeMulGridSeq(0);
     mNav->SetAcquireEnded(1);
   } else if (navState == NAV_PAUSED) {
     mWinApp->RestoreViewFocus();
+    if (mWinApp->mMultiGridTasks->GetSuspendedMulGrid())
+      mWinApp->mMultiGridTasks->ResumeMulGridSeq(-1);
     mNav->EndAcquireWithMessage();
   } else {
     DoMacro(mMacroNumber[1]);
@@ -515,9 +523,12 @@ void CCameraMacroTools::OnButend()
     mWinApp->mTSController->EndLoop();
   else if (mDoingCalISO)
     mWinApp->mShiftCalibrator->CalISoffsetDone(false);
-  else if (mMacProcessor->DoingMacro())
+  else if (mMacProcessor->DoingMacro()) {
     mMacProcessor->Stop(false);
-  else if (mWinApp->mMultiTSTasks->GetAssessingRange())
+    if (mNav && mNav->StartedMacro() && mMacProcessor->IsResumable() &&
+      mWinApp->mMultiGridTasks->GetSuspendedMulGrid())
+      mWinApp->mMultiGridTasks->ResumeMulGridSeq(0);
+  } else if (mWinApp->mMultiTSTasks->GetAssessingRange())
     mWinApp->mMultiTSTasks->SetEndTiltRange(true);
   else if (mEnabledSearch)
     mWinApp->UserRequestedCapture(SEARCH_CONSET);
@@ -528,7 +539,7 @@ void CCameraMacroTools::OnButend()
 // The Resume button
 void CCameraMacroTools::OnButresume() 
 {
-  int navState = GetNavigatorState();
+  int err, navState = GetNavigatorState();
   mWinApp->RestoreViewFocus();
   if (mWinApp->NavigatorStartedTS() && !mWinApp->StartedTiltSeries() && 
     mWinApp->mTSController->GetPostponed())
@@ -537,13 +548,19 @@ void CCameraMacroTools::OnButresume()
     mNav->SetAcquireEnded(1);
   else if (mDoingTS)
     mWinApp->mTSController->Resume();
-  else if (navState == NAV_SCRIPT_RUNNING || navState == NAV_RUNNING_NO_SCRIPT_TS)
+  else if (navState == NAV_SCRIPT_RUNNING || navState == NAV_RUNNING_NO_SCRIPT_TS) {
+    if (mWinApp->mMultiGridTasks->GetDoingMulGridSeq())
+      mWinApp->mMultiGridTasks->SuspendMulGridSeq();
     mNav->SetAcquireEnded(-1);
-  else if (navState == NAV_PAUSED) {
+  } else if (navState == NAV_PAUSED) {
     mMacProcessor->SetNonResumable();
-    mNav->ResumeFromPause();
+    err = mNav->ResumeFromPause();
     mWinApp->SetStatusText(COMPLEX_PANE, "");
+    if (!err && mWinApp->mMultiGridTasks->WasStoppedInNavRun())
+      mWinApp->mMultiGridTasks->ResumeMulGridSeq(0);
     Update();
+  } else if (mWinApp->mMultiGridTasks->GetSuspendedMulGrid()) {
+    mWinApp->mMultiGridTasks->UserResumeMulGridSeq();
   } else
     mMacProcessor->Resume();
 }
@@ -584,14 +601,17 @@ void CCameraMacroTools::Update()
   BOOL shotOK = mWinApp->UserAcquireOK();
   BOOL postponed = mNav && mNav->GetStartedTS() && mWinApp->mTSController->GetPostponed();
   BOOL tsResumable = mWinApp->mTSController->IsResumable();
+  bool doingMulGrid = mWinApp->mMultiGridTasks->GetDoingMulGridSeq();
+  bool suspendedMG = mWinApp->mMultiGridTasks->GetSuspendedMulGrid();
   m_butView.EnableWindow(shotOK);
   m_butTrial.EnableWindow(shotOK);
   m_butFocus.EnableWindow(shotOK);
   m_butRecord.EnableWindow(shotOK);
   if (!mWinApp->Montaging())
-    m_butMontage.EnableWindow(shotOK);
+    m_butMontage.EnableWindow(shotOK || doingMulGrid || (idle && suspendedMG));
   else
-    m_butMontage.EnableWindow(idle && !mDoingTS && !postponed && !camBusy);
+    m_butMontage.EnableWindow((idle && ((!mDoingTS && !postponed && !camBusy) || 
+      suspendedMG)) || doingMulGrid);
   
   if (mDoingTS) {
     
@@ -618,7 +638,8 @@ void CCameraMacroTools::Update()
     m_butMacro3.EnableWindow(idle && mMacProcessor->MacroRunnable(mMacroNumber[2]));
     
     m_butResume.EnableWindow(mMacProcessor->IsResumable() || (navState == NAV_PAUSED && 
-      idle) || navState == NAV_SCRIPT_RUNNING || navState == NAV_RUNNING_NO_SCRIPT_TS);
+      idle) || navState == NAV_SCRIPT_RUNNING || navState == NAV_RUNNING_NO_SCRIPT_TS ||
+      mWinApp->mMultiGridTasks->GetSuspendedMulGrid());
   }
 
   // Keep STOP enabled during continuous acquires: the press event gets lost in repeated 
@@ -660,6 +681,8 @@ void CCameraMacroTools::Update()
     SetDlgItemText(IDC_BUTRESUME, "ResumeS");
   else if (navState != NO_NAV_RUNNING)
     SetDlgItemText(IDC_BUTRESUME, "End Nav");
+  else if (mWinApp->mMultiGridTasks->GetSuspendedMulGrid())
+    SetDlgItemText(IDC_BUTRESUME, "ResumeM");
   else
     SetDlgItemText(IDC_BUTRESUME, "Resume");
 
@@ -671,7 +694,10 @@ void CCameraMacroTools::Update()
   else
     SetDlgItemText(IDC_BUTSTOP, "STOP");
     
-  if (!mWinApp->Montaging() || mWinApp->LowDoseMode()) {
+  // Set the Montage/Preview button
+  if (doingMulGrid || suspendedMG)
+    SetDlgItemText(IDC_BUTMONTAGE, doingMulGrid ? "PauseMG" : "End MGrid");
+  else if (!mWinApp->Montaging() || mWinApp->LowDoseMode()) {
     CString *modeNames = mWinApp->GetModeNames();
     SetDlgItemText(IDC_BUTMONTAGE, modeNames[4]);
   } else

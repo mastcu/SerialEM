@@ -7,21 +7,37 @@
 //
 #include "stdafx.h"
 #include "SerialEM.h"
+#include "SerialEMDoc.h"
 #include "SerialEMView.h"
 #include "MultiGridTasks.h"
 #include "ComplexTasks.h"
 #include "EMscope.h"
+#include "StateDlg.h"
 #include "ProcessImage.h"
 #include "ShiftManager.h"
 #include "EMbufferManager.h"
 #include "NavHelper.h"
+#include "HoleFinderDlg.h"
+#include "ParameterIO.h"
 #include "NavigatorDlg.h"
 #include "MultiGridDlg.h"
 #include "CameraController.h"
 #include "EMmontageController.h"
 #include "Shared\b3dutil.h"
+#include "Shared\autodoc.h"
 #include "Utilities\XCorr.h"
+#include "Utilities\KGetOne.h"
 #include <algorithm>
+#include <direct.h>
+
+static const char *sActionNames[] = {"Remove objective aperture", "Set condenser aeprture"
+, "Replace objective aperture", "Move to reference position", "Restore condenser aperture"
+, "Set grid map state", "Unload grid", "Take reference image", "Move to survey position",
+"Take survey image", "Find eucentricity", "Move to center of grid map", "Load grid",
+"Take grid map", "Realign to grid map", "Autocontour grid squares", "Set MMM state",
+"Take MMMs", "Set state for final acquire", "Do final acquisition", "Set up MMM files",
+"Restore state", "Turn Low Dose on", "Turn Low Dose off", "Set Z height", 
+"Check & apply Shift to Marker", "Grid done"};
 
 
 CMultiGridTasks::CMultiGridTasks()
@@ -33,8 +49,44 @@ CMultiGridTasks::CMultiGridTasks()
   mAllowOptional = false;
   mUseCaretToReplace = false;
   mDoingMultiGrid = 0;
+  mDoingMulGridSeq = false;
+  mSuspendedMulGrid = false;
   mRRGcurDirection = -2;
   mRRGMaxRotation = 15.f;
+  mParams.appendNames = false;
+  mParams.useSubdirectory = true;
+  mParams.LMMstateType = 0;
+  mParams.setLMMstate = false;
+  mParams.LMMstateNum = 0;
+  mParams.removeObjectiveAp = false;
+  mParams.setCondenserAp = false;
+  mParams.condenserApSize = 150;
+  mParams.LMMmontType = 0;
+  mParams.LMMnumXpieces = 5;
+  mParams.LMMnumYpieces = 5;
+  mParams.MMMnumXpieces = 2;
+  mParams.MMMnumYpieces = 2;
+  mParams.LMMoverlapPct = 10;
+  mParams.setLMMoverlap = true;
+  mParams.autocontour = false;
+  mParams.MMMstateType = 0;
+  mParams.MMMimageType = 0;
+  mParams.acquireLMMs = true;
+  mParams.acquireMMMs = false;
+  mParams.runFinalAcq = false;
+  for (int i = 0; i < 4; i++) {
+    mParams.MMMstateNums[i] = -1;
+    mParams.finalStateNums[i] = -1;
+  }
+  mPctStatMidCrit = 0.33f;
+  mPctStatRangeCrit = 0.45f;
+  mPctRightAwayFrac = 0.5f;
+  mMinFracOfPiecesUsable = 0.15f;
+  mPctUsableFrac = 0.05f;
+  mAppendNames = false;
+  mStartedLongOp = false;
+  mRestoringOnError = false;
+  InitOrClearSessionValues();
 }
 
 
@@ -49,6 +101,21 @@ void CMultiGridTasks::Initialize()
   mShiftManager = mWinApp->mShiftManager;
   mNavHelper = mWinApp->mNavHelper;
   mCartInfo = mScope->GetJeolLoaderInfo();
+  mStateArray = mNavHelper->GetStateArray();
+}
+
+/*
+ * Clear out non-text items for a new session 
+ */
+void CMultiGridTasks::InitOrClearSessionValues()
+{
+  mInitializedGridMont = false;
+  mInitializedMMMmont = false;
+  mReferenceCounts = 0.;
+  mLMMneedsLowDose = 0;
+  mLMMusedStateNum = -1;
+  mHaveAutoContGroups = false;
+  mLMMmagIndex = 0;
 }
 
 /*
@@ -79,6 +146,61 @@ int CMultiGridTasks::ReplaceBadCharacters(CString &str)
 }
 
 /*
+ * Get the routine in creative ways frm the user name
+ */
+CString CMultiGridTasks::RootnameFromUsername(JeolCartridgeData &jcd)
+{
+  CString str, str2;
+  int ind1, ind2, lenPref = mPrefix.GetLength();
+  int extra = 0, nameLen = jcd.userName.GetLength();
+  bool skipC = false;
+  char last;
+  str = mPrefix;
+
+  // If name is being appended and contains Car and the right grid #,, do not add C#
+  if (mAppendNames && jcd.userName.Find("Car") == 0 && nameLen > 3) {
+    str2 = jcd.userName.Mid(3);
+    if (atoi((LPCTSTR)str2) == jcd.id)
+      skipC = true;
+  }
+  if (!skipC) {
+
+    // If prefix ends with - or _, take into account when seeing if it already has Car or
+    //  grid
+    if (lenPref > 1) {
+      last = str.GetAt(lenPref - 1);
+      if (last == '-' || last == '_')
+        extra = 1;
+    }
+
+    // See if it ends with car or grid and do not add C
+    ind1 = str.Find("Car");
+    ind2 = str.Find("car");
+    ACCUM_MAX(ind1, ind2);
+    if (ind1 >= 0 && (ind1 == lenPref - (3 + extra))) {
+      skipC = true;
+    } else {
+      ind1 = str.Find("Grid");
+      ind2 = str.Find("grid");
+      ACCUM_MAX(ind1, ind2);
+      if (ind1 >= 0 && (ind1 == lenPref - (4 + extra)))
+        skipC = true;
+    }
+
+    // Compose number and whatever preceeds it, if anything; add to prefix
+    if (!skipC)
+      str += "C";
+    str2.Format("%d", jcd.id);
+    str += str2;
+  }
+
+  // Add name
+  if (mAppendNames && !jcd.userName.IsEmpty())
+    str += "_" + jcd.userName;
+  return str;
+}
+
+/*
  * Call to get an inventory
  */
 int CMultiGridTasks::GetInventory()
@@ -93,9 +215,42 @@ int CMultiGridTasks::GetInventory()
   }
   mWinApp->SetStatusText(MEDIUM_PANE, "RUNNING INVENTORY");
   mDoingMultiGrid = MG_INVENTORY;
+  mStartedLongOp = true;
   if (mNavHelper->mMultiGridDlg)
     mNavHelper->mMultiGridDlg->UpdateEnables();
   mWinApp->AddIdleTask(TASK_MULTI_GRID, MG_INVENTORY, 0);
+  return 0;
+}
+
+/*
+ * Call to load or unload a grid, used interactively or from sequence
+ */
+int CMultiGridTasks::LoadOrUnloadGrid(int slot, int taskParam)
+{
+  int err;
+  CString errStr;
+  mStartedLongOp = true;
+  if (mScope->StageBusy()) {
+    SEMTrace('q', "Stage busy before load/unload!!! waiting until done");
+    mScope->WaitForStageReady(15000);
+  }
+  if (slot > 0) {
+    SEMTrace('q', "loading slot/index %d", slot);
+    err = mScope->LoadCartridge(slot, errStr);
+  } else
+    err = mScope->UnloadCartridge(errStr);
+  if (err) {
+    mStartedLongOp = false;
+    SEMMessageBox("Could not " + CString(slot > 0 ? "load" : "unload") + " grid: " +
+      errStr);
+    return err;
+  }
+  mWinApp->SetStatusText(MEDIUM_PANE, slot > 0 ? "LOADING GRID" : "UNLOADING GRID");
+  if (!mDoingMultiGrid) {
+    mDoingMultiGrid = taskParam;
+    mWinApp->UpdateBufferWindows();
+  }
+  mWinApp->AddIdleTask(TASK_MULTI_GRID, taskParam, 300000);
   return 0;
 }
 
@@ -104,12 +259,41 @@ int CMultiGridTasks::GetInventory()
  */
 void CMultiGridTasks::MultiGridNextTask(int param)
 {
-  int ind;
+  int ind, id;
+  JeolCartridgeData jcd;
+  CString str;
   int curInd = B3DMAX(0, mRRGcurDirection);
+  bool forMulGrid = param == MG_RUN_SEQUENCE || param == MG_RESTORING;
 
-  if (!mDoingMultiGrid)
+  // A tricky test for when the relevant operation is already stopped
+  if ((!mDoingMultiGrid && !forMulGrid) || (!mDoingMulGridSeq && forMulGrid))
     return;
+
   switch (param) {
+
+    // Inventory or internal load or unload, just stop
+  case MG_INVENTORY:
+  case MG_SEQ_LOAD:
+    StopMultiGrid();
+    return;
+
+    // After a load, get the cartridge at stage and load the Nav file
+  case MG_USER_LOAD:
+    ind = mScope->FindCartridgeAtStage(id);
+    if (ind >= 0) {
+      jcd = mCartInfo->GetAt(ind);
+      if (jcd.status & MGSTAT_FLAG_LM_MAPPED) {
+        str = FullGridFilePath(-ind - 1, ".nav");
+        if (mWinApp->mNavigator)
+          mWinApp->mNavigator->SaveAndClearTable();
+        mWinApp->mMenuTargets.OpenNavigatorIfClosed();
+        mWinApp->mNavigator->LoadNavFile(false, false, &str);
+      }
+    }
+    StopMultiGrid();
+    return;
+
+    // Realign moved stage
   case MG_RRG_MOVED_STAGE:
     mWinApp->SetStatusText(SIMPLE_PANE, "");
     if (mBigRotation || mRRGcurDirection >= 0) {
@@ -133,30 +317,54 @@ void CMultiGridTasks::MultiGridNextTask(int param)
     mWinApp->AddIdleTask(SEMStageCameraBusy, TASK_MULTI_GRID, MG_RRG_TOOK_IMAGE, 0);
     break;
 
-
+    // Realign took image
   case MG_RRG_TOOK_IMAGE:
     AlignNewReloadImage();
+    break;
+
+    // Action in MulGrid sequence:  do next or ignore if doing restore
+  case MG_RUN_SEQUENCE:
+    if (mRestoringOnError)
+      break;
+    DoNextSequenceAction(0);
+    break;
+
+    // Restoring after stop, return to stop return
+  case MG_RESTORING:
+    StopMulGridSeq();
     break;
   }
 }
 
+/*
+ * Busy function for grid load/unload and realign task
+ */
 int CMultiGridTasks::MultiGridBusy()
 {
-  if (mDoingMultiGrid == MG_INVENTORY)
+  if (mStartedLongOp) 
     return mScope->LongOperationBusy();
   return 0;
 }
 
+/*
+ * Cleanup function
+ */
 void CMultiGridTasks::CleanupMultiGrid(int error)
 {
   if (error == IDLE_TIMEOUT_ERROR)
-    SEMMessageBox(_T("Time out in multiple grid handling routine"));
+    SEMMessageBox(_T("Time out in a multiple grid handling routine"));
   StopMultiGrid();
   mWinApp->ErrorOccurred(error);
 }
 
+/*
+ * Stop routine for grid load/unload and realign task
+ */
 void CMultiGridTasks::StopMultiGrid()
 {
+  if (!mDoingMultiGrid)
+    return;
+
   // Reset things from the reload realign
   if (mDoingMultiGrid == MG_REALIGN_RELOADED) {
     if (mRRGcurStore < 0)
@@ -170,12 +378,215 @@ void CMultiGridTasks::StopMultiGrid()
       mWinApp->mLowDoseDlg.SetLowDoseMode(true);
     mWinApp->SetStatusText(SIMPLE_PANE, "");
   }
-  if (!mDoingMultiGrid)
-    return;
+
   mDoingMultiGrid = 0;
   mWinApp->SetStatusText(MEDIUM_PANE, "");
   mWinApp->UpdateBufferWindows();
 }
+
+/*
+ * Busy routine for multigrid sequence
+ */
+int CMultiGridTasks::MulGridSeqBusy()
+{
+  if (mStartedLongOp)
+    return mScope->LongOperationBusy();
+  if ((mMovedAperture && mScope->GetMovingAperture()) || mDoingMultiGrid ||
+    (mDoingEucentricity && mWinApp->mComplexTasks->DoingEucentricity()) ||
+    (mDoingMontage && mWinApp->mMontageController->DoingMontage()) ||
+    (mAutoContouring && mNavHelper->mAutoContouringDlg->DoingAutoContour()) ||
+    (mSettingUpNavFiles && mWinApp->mNavigator&& mWinApp->mNavigator->DoingNewFileRange())
+    || (mStartedNavAcquire && mWinApp->mNavigator && mWinApp->mNavigator->GetAcquiring()))
+    return 1;
+  return 0;
+}
+
+/*
+ * Error cleanup for multigrid sequence
+ */
+void CMultiGridTasks::CleanupMulGridSeq(int error)
+{
+  if (error == IDLE_TIMEOUT_ERROR)
+    SEMMessageBox(_T("Time out in the multiple grid sequence routine"));
+  StopMulGridSeq();
+  mWinApp->ErrorOccurred(error);
+}
+
+/*
+ * Stop function for multigrid sequence
+ */
+void CMultiGridTasks::StopMulGridSeq()
+{
+  MontParam *montP;
+  HoleFinderParams *hfParam = mNavHelper->GetHoleFinderParams();
+  if (!mDoingMulGridSeq || mWinApp->GetAppExiting())
+    return;
+
+  // restore state and lowdose
+  if (mStateWasSet)
+    RestoreState();
+  if (!BOOL_EQUIV(mWinApp->LowDoseMode(), mSavedLowDose))
+    mWinApp->mLowDoseDlg.SetLowDoseMode(mSavedLowDose);
+  montP = mWinApp->GetMontParam();
+  *montP = mSaveMasterMont;
+  if (mSavedHoleSize || mSavedHoleSpacing) {
+    if (mSavedHoleSize)
+      hfParam->diameter = mSavedHoleSize;
+    if (mSavedHoleSpacing)
+      hfParam->spacing = mSavedHoleSpacing;
+    mSavedHoleSize = mSavedHoleSpacing = 0.;
+    if (mNavHelper->mHoleFinderDlg->IsOpen())
+      mNavHelper->mHoleFinderDlg->UpdateSettings();
+  }
+
+  // Start restoring apertures, loop back in until done
+  if (mReinsertObjAp || mRestoreCondAp) {
+    mMovedAperture = true;
+    mRestoringOnError = true;
+    if (mReinsertObjAp) {
+      mScope->SetApertureSize(OBJECTIVE_APERTURE, mInitialObjApSize);
+      mReinsertObjAp = false;
+    } else if (mRestoreCondAp) {
+      mScope->SetApertureSize(CONDENSER_APERTURE, mInitialCondApSize);
+      mRestoreCondAp = false;
+    }
+    mWinApp->SetStatusText(MEDIUM_PANE, "RESTORING APERTURE");
+    mWinApp->AddIdleTask(TASK_MULGRID_SEQ, MG_RESTORING, 0);
+    return;
+  }
+  CommonMulGridStop(false);
+}
+
+/*
+ * Externally called suspend routine
+ */
+void CMultiGridTasks::SuspendMulGridSeq()
+{
+  if (!mDoingMulGridSeq) 
+    return;
+  CommonMulGridStop(true);
+}
+
+/*
+ * Common routine to set flags and status text and update when stopping/suspending
+ */
+void CMultiGridTasks::CommonMulGridStop(bool suspend)
+{
+  mSuspendedMulGrid = suspend;
+  mDoingMulGridSeq = false;
+  mRestoringOnError = false;
+  mWinApp->SetStatusText(COMPLEX_PANE, suspend ? "MULTIGRID SUSPENDED" : "");
+  mWinApp->SetStatusText(MEDIUM_PANE, "");
+  mWinApp->UpdateBufferWindows();
+}
+
+/*
+ * End simply sets a flag when running, or completes the stop when suspended
+ */
+void CMultiGridTasks::EndMulGridSeq()
+{ 
+  if (mDoingMulGridSeq) {
+    mEndWhenGridDone = true;
+    mWinApp->SetStatusText(COMPLEX_PANE, "PAUSING MULTIGRID");
+  } else if (mSuspendedMulGrid && !mRestoringOnError) {
+    mDoingMulGridSeq = true;
+    mSuspendedMulGrid = false;
+    StopMulGridSeq();
+  }
+}
+
+/*
+ * To resume, restore doing flag, clear suspended flag, and either set a new idle task
+ * when resume is secondary to some other routine restarting, or call next action routine
+ */
+int CMultiGridTasks::ResumeMulGridSeq(int resumeType)
+{
+  if (!mSuspendedMulGrid || mDoingMulGridSeq)
+    return 1;
+  mSuspendedMulGrid = false;
+  mDoingMulGridSeq = true;
+  mStoppedAtGridEnd = false;
+  mEndWhenGridDone = false;
+  if (resumeType <= 0) {
+    if (!resumeType)
+      mSeqIndex--;
+    mDoingMontage = mStoppedInLMMont;
+    mStartedNavAcquire = mStoppedInNavRun;
+    mWinApp->AddIdleTask(TASK_MULGRID_SEQ, MG_RUN_SEQUENCE, 0);
+    return 0;;
+  }
+
+  DoNextSequenceAction(resumeType);
+  return 0;
+}
+
+/*
+ * When the user wants to resume, ask if it should repeat step, do next next, or skip
+ * to next grid and call resume function with the choice
+ */
+void CMultiGridTasks::UserResumeMulGridSeq()
+{
+  CString mess;
+  int resume,answer;
+  if (!mSuspendedMulGrid || mDoingMulGridSeq) {
+    SEMMessageBox("Program error: the multi-grid operation is not resumable");
+    return;
+  }
+  if (mStoppedAtGridEnd) {
+    resume = 1;
+  } else {
+    mess.Format("The last multi-grid operation run was \"%s\"\n"
+      "The next operation will be \"%s\".  Select:\n\n"
+      "\"Redo Last\" to resume by redoing the last operation (which may be inappropriate)"
+      "\n\n\"Do Next\" to start with the next operation\n\n"
+      "\"Skip to Next Grid\" to abandon this grid and go to the next one",
+      sActionNames[mActSequence[B3DMAX(mSeqIndex - 1, 0)]],
+      sActionNames[mActSequence[mSeqIndex]]);
+    answer = SEMThreeChoiceBox(mess, "Redo Last", "Do Next", "Skip to Next Grid", 1);
+    if (answer == IDYES)
+      resume = 1;
+    else if (answer == IDNO)
+      resume = 2;
+    else
+      resume = 3;
+  }
+  ResumeMulGridSeq(resume);
+}
+
+/*
+ * Store the error string from a SEMMessageBox call from any external task
+ */
+void CMultiGridTasks::ExternalTaskError(CString &errStr)
+{
+  mExternalFailedStr = errStr;
+}
+
+/*
+ * The other route for errors is through ErrorOccurred but user STOP comes this way too
+ */
+void CMultiGridTasks::SetExtErrorOccurred(int inVal)
+{
+  if (mWinApp->mCameraMacroTools.GetUserStop() && !inVal)
+    mExtErrorOccurred = 2;   // User stop
+  else if (mExtErrorOccurred < 0)
+    mExtErrorOccurred = 1;   // Other error
+  SEMTrace('q', "Ext error set to %d from inval %d", mExtErrorOccurred, inVal);
+}
+
+/*
+ * Calls SEMMessageBox for error in these routines, without triggering it to be treated as
+ * an external error
+ */
+void CMultiGridTasks::MGActMessageBox(CString &errStr)
+{
+  mInternalError = true;
+  SEMMessageBox(errStr);
+  mInternalError = false;
+}
+
+/////////////////////////////////////////////////////////
+//  REALIGN TO RELOADED GRID
+/////////////////////////////////////////////////////////
 
 /*
  * Start procedure to realign after loading grid
@@ -183,27 +594,31 @@ void CMultiGridTasks::StopMultiGrid()
 int CMultiGridTasks::RealignReloadedGrid(CMapDrawItem *item, float expectedRot, 
   bool moveInZ, float maxRotation, bool transformNav, CString &errStr)
 {
-  CNavigatorDlg *nav = mWinApp->mNavigator;
   ControlSet *conSet = mWinApp->GetConSets() + TRACK_CONSET;
   int numPieces, numFull, ixMin, iyMin, ixMax, iyMax, midX, midY, delX, delY;
-  int minInd[4], bestInd[5], pci, dir, indAng, numAngles = 18, bestAngInd, xTarg, yTarg;
-  int numClose, ind, corn,  err, readBuf, ixpc, iypc, rolls;
+  int minInd[4], bestInd[5], minCenInd[4], pci, dir, indAng, numAngles = 18, bestAngInd;
+  int numClose, ind, corn,  err = 0, readBuf, ixpc, iypc, rolls, xTarg, yTarg;
+  int meanIXcen, meanIYcen, pctlIXcen, pctlIYcen, numPctl, numAbove;
   float useWidth, useHeight, radDist[4], bestDist[4], maxAxis = 0., ang;
   float minDel, cenAngle, delAng, shortAxis, minAng, maxAng, rad, zStage;
-  BOOL saveShift, saveRot;
+  float meanSXcen, meanSYcen, pctlSXcen, pctlSYcen;
+  double wxSum = 0., wySum = 0.;
+  float stageXcen = 0., stageYcen = 0.;
+  bool indIsDup, bestIsDup, usePctls = true;
   IntVec ixVec, iyVec, pieceSavedAt;
-  FloatVec xStage, yStage, meanVec;
+  FloatVec xStage, yStage, meanVec, midFracs, rangeFracs;
   MiniOffsets *mini;
   MontParam *montP = &mRRGmontParam;
   MontParam *masterMont = mWinApp->GetMontParam();
-  float distFrac = 0.75f, meanRatioCrit = 1.5f;
+  float distFrac = 0.75f, meanRatioCrit = 1.5f, pctlRatioCrit = 2.0;
+  mNavigator = mWinApp->mNavigator;
 
   mRRGangleRange = 2.f * maxRotation;
   mRRGtransformNav = transformNav;
   mRRGitem = item;
 
   // Require a montage with autodoc info
-  if (!nav) {
+  if (!mNavigator) {
     errStr = "The Navigator is not open";
     return 1;
   }
@@ -217,24 +632,12 @@ int CMultiGridTasks::RealignReloadedGrid(CMapDrawItem *item, float expectedRot,
   if (!mBigRotation) {
     readBuf = mWinApp->mBufferManager->GetBufToReadInto();
     rolls = mWinApp->mBufferManager->GetShiftsOnAcquire();
-    mMapBuf = nav->FindBufferWithMapID(item->mMapID);
+    mMapBuf = mNavigator->FindBufferWithMapID(item->mMapID);
 
-    // If not or if it is binned a lot, reload it with no binning and alignment in overview
+    // If not or if it is binned a lot, reload it with no binning & alignment in overview
     if (mMapBuf < 0 || mImBufs[mMapBuf].mOverviewBin > 2) {
-      saveRot = item->mRotOnLoad;
-      ind = masterMont->overviewBinning;
-      saveShift = masterMont->shiftInOverview;
-      item->mRotOnLoad = false;
-      masterMont->shiftInOverview = true;
-      masterMont->overviewBinning = 1;
-      err = nav->DoLoadMap(true, item, -1, false);
-      item->mRotOnLoad = saveRot;
-      masterMont->overviewBinning = ind;
-      masterMont->shiftInOverview = saveShift;
-      if (err) {
-        errStr = "Error reloading the grid map";
+      if (ReloadGridMap(item, 1, errStr))
         return 1;
-      }
       mMapBuf = readBuf;
     }
 
@@ -248,7 +651,8 @@ int CMultiGridTasks::RealignReloadedGrid(CMapDrawItem *item, float expectedRot,
   }
 
   // Now access the map file regardless and make sure there is an adoc
-  if (nav->AccessMapFile(item, mRRGstore, mRRGcurStore, montP, useWidth, useHeight)) {
+  if (mNavigator->AccessMapFile(item, mRRGstore, mRRGcurStore, montP, useWidth, 
+    useHeight)) {
     errStr = "Error trying to access map file " + item->mMapFile;
     return 1;
   }
@@ -262,7 +666,7 @@ int CMultiGridTasks::RealignReloadedGrid(CMapDrawItem *item, float expectedRot,
   // Get piece coords and stage coords
   numPieces = mWinApp->mMontageController->ListMontagePieces(mRRGstore, montP,
     item->mMapSection, pieceSavedAt, &ixVec, &iyVec, &xStage, &yStage, &meanVec, 
-    moveInZ ? &zStage : NULL);
+    moveInZ ? &zStage : NULL, &midFracs, &rangeFracs);
   if (!numPieces || !xStage.size()) {
     errStr = "Error getting the montage piece coordinates or stage coordinates from "
       "autodoc";
@@ -271,7 +675,7 @@ int CMultiGridTasks::RealignReloadedGrid(CMapDrawItem *item, float expectedRot,
     return 1;
   }
   mScope->SetLDCenteredShift(0., 0.);
-  if (!nav->BacklashForItem(item, mRRGbacklashX, mRRGbacklashY) && !mBigRotation) {
+  if (!mNavigator->BacklashForItem(item, mRRGbacklashX, mRRGbacklashY) && !mBigRotation) {
     mRRGbacklashX = item->mBacklashX;
     mRRGbacklashY = item->mBacklashY;
   }
@@ -287,6 +691,23 @@ int CMultiGridTasks::RealignReloadedGrid(CMapDrawItem *item, float expectedRot,
   midY = (iyMin + iyMax) / 2;
   mRRGexpectedRot = expectedRot;
 
+  // See if percentiles can be used
+  CentroidsFromMeansAndPctls(ixVec, iyVec, xStage, yStage, meanVec, midFracs,
+    rangeFracs, mPctUsableFrac, meanIXcen, meanIYcen, meanSXcen, meanSYcen, pctlIXcen,
+    pctlIYcen, pctlSXcen, pctlSYcen, numPctl, numAbove);
+  usePctls = numPctl == numPieces;
+  if (usePctls) {
+    midX = pctlIXcen + montP->xFrame / 2;
+    midY = pctlIXcen + montP->yFrame / 2;
+    stageXcen = pctlSXcen;
+    stageYcen = pctlSYcen;
+  } else {
+    midX = meanIXcen + montP->xFrame / 2;
+    midY = meanIXcen + montP->yFrame / 2;
+    stageXcen = meanSXcen;
+    stageYcen = meanSYcen;
+  }
+
   // Scan angles in 4 directions finding farthest piece intersected by ray
   for (indAng = 0; indAng < numAngles; indAng++) {
     for (dir = 0; dir < 4; dir++) {
@@ -294,7 +715,7 @@ int CMultiGridTasks::RealignReloadedGrid(CMapDrawItem *item, float expectedRot,
       minDel = 1.e10f;
       cenAngle = (float)((indAng * 90.) / numAngles + dir * 90.);
       for (pci = 0; pci < numFull; pci++) {
-        if (pieceSavedAt[pci] < 0)
+        if (pieceSavedAt[pci] < 0 || (usePctls && midFracs[pci] < mPctUsableFrac))
           continue;
 
         // Find angles of the 4 corners and their difference from the ray, get the 
@@ -335,7 +756,17 @@ int CMultiGridTasks::RealignReloadedGrid(CMapDrawItem *item, float expectedRot,
     }
   }
 
-  for (dir = 0; dir < 4; dir++) {
+  // Find the pieces closest to stage center pos
+  numClose = 0;
+  for (pci = 0; pci < numFull; pci++) {
+    if (pieceSavedAt[pci] >= 0)
+      MaintainClosestFour(xStage[pci] - stageXcen, yStage[pci] - stageYcen, pci, radDist, 
+        minCenInd, numClose);
+  }
+  bestInd[4] = minCenInd[0];
+
+  // Loop on directions backwards so it is easy to check duplicates
+  for (dir = 3; dir >= 0; dir--) {
     cenAngle = (float)((bestAngInd * 90.) / numAngles + dir * 90.);
     xTarg = (int)(distFrac * bestDist[dir] * cos(DTOR * cenAngle)) + midX;
     yTarg = (int)(distFrac * bestDist[dir] * sin(DTOR * cenAngle)) + midY;
@@ -344,30 +775,40 @@ int CMultiGridTasks::RealignReloadedGrid(CMapDrawItem *item, float expectedRot,
     numClose = 0;
     for (pci = 0; pci < numFull; pci++) {
       if (pieceSavedAt[pci] >= 0)
-        MaintainClosestFour((float)(ixVec[pci] + montP->xFrame / 2 - xTarg), 
-        (float)(iyVec[pci] + montP->yFrame / 2 - yTarg), pci, radDist, minInd, 
+        MaintainClosestFour((float)(ixVec[pci] + montP->xFrame / 2 - xTarg),
+        (float)(iyVec[pci] + montP->yFrame / 2 - yTarg), pci, radDist, minInd,
           numClose);
     }
 
-    // Pick a different one from closest if it is brighter enough
+    // Pick a different one from closest if it is brighter enough or if best one is
+    // a duplicate; but don't pick this one if it is a duplicate
     bestInd[dir] = minInd[0];
-    for (ind = 1; ind < numClose; ind++)
-      if (meanVec[minInd[ind]] > meanVec[bestInd[dir]] * meanRatioCrit)
+    for (ind = 1; ind < numClose; ind++) {
+      bestIsDup = IsDuplicatePiece(bestInd[dir], bestInd, dir + 1, 4);
+      indIsDup = IsDuplicatePiece(minInd[ind], bestInd, dir + 1, 4);
+      if (((!usePctls && meanVec[minInd[ind]] > meanVec[bestInd[dir]] * meanRatioCrit) ||
+        (usePctls && midFracs[minInd[ind]] > midFracs[bestInd[dir]] * pctlRatioCrit) ||
+        bestIsDup) && !indIsDup)
         bestInd[dir] = minInd[ind];
+    }
   }
 
-  // Find the pieces closest to 0,0
-  numClose = 0;
-  for (pci = 0; pci < numFull; pci++) {
-    if (pieceSavedAt[pci] >= 0)
-      MaintainClosestFour(xStage[pci], yStage[pci], pci, radDist, minInd, numClose);
-  }
-
-  // Again pick different one if much brighter
-  bestInd[4] = minInd[0];
+  // Now pick a different center one if much brighter and not a duplicate
   for (ind = 1; ind < numClose; ind++)
-    if (meanVec[minInd[ind]] > meanVec[bestInd[4]] * meanRatioCrit)
-      bestInd[4] = minInd[ind];
+    if ((!usePctls && meanVec[minCenInd[ind]] > meanVec[bestInd[4]] * meanRatioCrit) ||
+      (usePctls && midFracs[minCenInd[ind]] > midFracs[bestInd[4]] * pctlRatioCrit) && 
+      !IsDuplicatePiece(minCenInd[ind], bestInd, 0, 3))
+      bestInd[4] = minCenInd[ind];
+
+  // The fitting equations should work with two unique pieces, make sure there are
+  numClose = 0;
+  for (dir = 0; dir < 5; dir++)
+    if (!IsDuplicatePiece(bestInd[dir], bestInd, dir + 1, 4))
+      numClose++;
+  if (numClose < 2) {
+    errStr = "Only one piece could be found for realigning to";
+    return 1;
+  }
 
   // Get image coordinate of center of this piece if aligning to map
   // Use inverted Y piece number as in OffsetMontImagePos
@@ -391,7 +832,7 @@ int CMultiGridTasks::RealignReloadedGrid(CMapDrawItem *item, float expectedRot,
       mMapCenY = mini->yBase + iypc * mini->yDelta + mini->yFrame / 2 -
       (mini->yFrame - mini->yDelta) / 2;
     mMapCenY += mini->offsetY[bestInd[4]];
-    SEMTrace('N', "Align to pc %d %d (y inv), center coord %d %d", ixpc, iypc, mMapCenX,
+    SEMTrace('q', "Align to pc %d %d (y inv), center coord %d %d", ixpc, iypc, mMapCenX,
       mMapCenY);
   }
 
@@ -430,6 +871,61 @@ int CMultiGridTasks::RealignReloadedGrid(CMapDrawItem *item, float expectedRot,
 }
 
 /*
+ * Use the stage and piece coordinates and mean and percentile fractions to derive
+ * weighted mean stage and piece coordinates, beas on either the means or the percentile
+ * values (mean of the range and midpoint values) that are above fracThresh
+ */
+void CMultiGridTasks::CentroidsFromMeansAndPctls(IntVec &ixVec, IntVec &iyVec,
+  FloatVec &xStage, FloatVec &yStage, FloatVec &meanVec, FloatVec &midFracs,
+  FloatVec &rangeFracs, float fracThresh, int &meanIXcen, int &meanIYcen,
+  float &meanSXcen, float &meanSYcen, int &pctlIXcen, int &pctlIYcen, float &pctlSXcen,
+  float &pctlSYcen, int &numPcts, int &numAbove)
+{
+  float meanSum = 0., fracSum = 0., ixMSum = 0., ixPSum = 0., iyMSum = 0., iyPSum = 0.;
+  float sxMSum = 0., sxPSum = 0., syMSum = 0., syPSum = 0., mean, frac;
+  int ind, numPiece = (int)ixVec.size();
+  numPcts = 0;
+  numAbove = 0;
+
+  // FLAW: should subtract a min, what about STEM?
+  for (ind = 0; ind < numPiece; ind++) {
+    mean = meanVec[ind];
+    meanSum += mean;
+    ixMSum += mean * (float)ixVec[ind];
+    iyMSum += mean * (float)iyVec[ind];
+    sxMSum += mean * xStage[ind];
+    syMSum += mean * yStage[ind];
+
+    // Until something else happens, just collapse these into one value here
+    midFracs[ind] = (midFracs[ind] + rangeFracs[ind]) / 2.f;
+    frac = midFracs[ind];
+    if (frac >= 0.) {
+      numPcts++;
+      if (frac >= fracThresh) {
+        fracSum += frac;
+        numAbove++;
+        ixPSum += frac * (float)ixVec[ind];
+        iyPSum += frac * (float)iyVec[ind];
+        sxPSum += frac * xStage[ind];
+        syPSum += frac * yStage[ind];
+      }
+    }
+  }
+  if (!meanSum)
+    meanSum = 0.001f;
+  meanIXcen = B3DNINT(ixMSum / meanSum);
+  meanIYcen = B3DNINT(iyMSum / meanSum);
+  meanSXcen = sxMSum / meanSum;
+  meanSYcen = syMSum / meanSum;
+  if (numAbove > 0) {
+    pctlIXcen = B3DNINT(ixPSum / fracSum);
+    pctlIYcen = B3DNINT(iyPSum / fracSum);
+    pctlSXcen = sxPSum / fracSum;
+    pctlSYcen = syPSum / fracSum;
+  }
+}
+
+/*
  * Keep a list of the 4 closest pieces to the desired position, delX, delY away
  */
 void CMultiGridTasks::MaintainClosestFour(float delX, float delY, int pci, 
@@ -457,6 +953,18 @@ void CMultiGridTasks::MaintainClosestFour(float delX, float delY, int pci,
   }
 }
 
+/* 
+ * Checks whether a a piece number in  minInd matches one on the list in bestInd within
+ * the specified range of indexes
+ */
+bool CMultiGridTasks::IsDuplicatePiece(int minInd, int bestInd[5], int startInd, int endInd)
+{
+  for (int ind = startInd; ind <= endInd; ind++)
+    if (minInd == bestInd[ind])
+      return true;
+  return false;
+}
+
 /*
  * Compute a transformed coordinate for the target piece based on current rotation angle
  * and start the stage move there
@@ -471,7 +979,7 @@ int CMultiGridTasks::MoveStageToTargetPiece()
   mShiftManager->ApplyScaleMatrix(mRRGrotMat, xSign * mRRGxStages[curInd],
     mRRGyStages[curInd], mMoveInfo.x, mMoveInfo.y);
   mMoveInfo.x *= xSign;
-  SEMTrace('N', "dir %d pc pos %.2f %.2f  transformed %.2f %.2f -> %.2f %.2f", curInd,
+  SEMTrace('q', "dir %d pc pos %.2f %.2f  transformed %.2f %.2f -> %.2f %.2f", curInd,
     mRRGxStages[curInd], mRRGyStages[curInd], mMoveInfo.x, mMoveInfo.y, 
     mMoveInfo.x + mRRGshiftX, mMoveInfo.y + mRRGshiftY);
   mMoveInfo.x += mRRGshiftX;
@@ -533,6 +1041,12 @@ void CMultiGridTasks::AlignNewReloadImage()
       (float)mMapCenY, -0.5f, 0., mRRGangleRange, false, scaleMax, rotBest, 0, mess);
   }
   mImBufs->mImage->getShifts(xShift, yShift);
+  // TEMP
+  if (mScope->GetSimulationMode() && err < 0) {
+    xShift = 0.;
+    yShift = 0.;
+    err = 0;
+  }
   if (err) {
     SEMMessageBox(mess);
     StopMultiGrid();
@@ -551,12 +1065,13 @@ void CMultiGridTasks::AlignNewReloadImage()
   yStage -= mImBufs->mBinning * (bInv.ypx * xShift + bInv.ypy * yShift) / yTiltFac;
   mRRGnewXstage[curInd] = (float)xStage;
   mRRGnewYstage[curInd] = (float)yStage;
-  SEMTrace('N', "dir %d  shift %.1f %.1f   new stage %.2f %.2f stage diff %.2f %.2f",
+  SEMTrace('q', "dir %d  shift %.1f %.1f   new stage %.2f %.2f stage diff %.2f %.2f",
     mRRGcurDirection, xShift, yShift, xStage, yStage, xStage - mMoveInfo.x,
     yStage - mMoveInfo.y);
   if (GetDebugOutput('1') || mRRGcurDirection <= 0) {
     mWinApp->mMainView->DrawImage();
-    for (int ind = 0; ind < (GetDebugOutput('1') ? 3 : 2); ind++) {
+    for (int ind = 0; ind < B3DCHOICE(mScope->GetSimulationMode(), 1, 
+      (GetDebugOutput('1') ? 3 : 2)); ind++) {
       mWinApp->SetCurrentBuffer(1);
       Sleep(300);
       mWinApp->SetCurrentBuffer(0);
@@ -575,18 +1090,18 @@ void CMultiGridTasks::AlignNewReloadImage()
     mShiftManager->ApplyScaleMatrix(mRRGrotMat, xSign * mRRGxStages[0],
       mRRGyStages[0], transX, transY);
     transX *= xSign;
-    SEMTrace('N', "pc pos %.2f %.2f  transformed %.2f %.2f", mRRGxStages[0],
+    SEMTrace('q', "pc pos %.2f %.2f  transformed %.2f %.2f", mRRGxStages[0],
       mRRGyStages[0], transX, transY);
     mRRGshiftX = (float)(xStage - transX);
     mRRGshiftY = (float)(yStage - transY);
-    SEMTrace('N', "shift set to %.2f %.2f", mRRGshiftX, mRRGshiftY);
+    SEMTrace('q', "shift set to %.2f %.2f", mRRGshiftX, mRRGshiftY);
 
   } else if (mRRGcurDirection <= 0) {
 
     // On second shot of center with small rotations, revise the shift
     mRRGshiftX += (float)(xStage - mMoveInfo.x);
     mRRGshiftY += (float)(yStage - mMoveInfo.y);
-    SEMTrace('N', "shift revised to %.2f %.2f", mRRGshiftX, mRRGshiftY);
+    SEMTrace('q', "shift revised to %.2f %.2f", mRRGshiftX, mRRGshiftY);
   }
 
   // Set up to go to next position unless done
@@ -605,18 +1120,18 @@ void CMultiGridTasks::AlignNewReloadImage()
   if (mRRGtransformNav && mWinApp->mNavigator) {
 
     // Find new registration #
-    oldReg = mWinApp->mNavigator->GetCurrentRegistration();
+    oldReg = mNavigator->GetCurrentRegistration();
     newReg = oldReg;
     while (newReg <= MAX_CURRENT_REG) {
       newReg++;
-      if (mWinApp->mNavigator->RegistrationUseType(newReg) == NAVREG_UNUSED)
+      if (mNavigator->RegistrationUseType(newReg) == NAVREG_UNUSED)
         break;
     }
     if (newReg > MAX_CURRENT_REG) {
       newReg = -1;
       while (newReg < oldReg) {
         newReg++;
-        if (mWinApp->mNavigator->RegistrationUseType(newReg) == NAVREG_UNUSED)
+        if (mNavigator->RegistrationUseType(newReg) == NAVREG_UNUSED)
           break;
       }
       if (newReg >= oldReg) {
@@ -624,7 +1139,7 @@ void CMultiGridTasks::AlignNewReloadImage()
           "items to");
       }
     }
-    mWinApp->mNavigator->SetCurrentRegistration(newReg);
+    mNavigator->SetCurrentRegistration(newReg);
 
     // Get the incremental transform to apply if there is a previous one done
     incMat = bMat;
@@ -635,12 +1150,15 @@ void CMultiGridTasks::AlignNewReloadImage()
       xfInvert(mRRGitem->mGridMapXform, oldInvXf, 2);
       xfMult(oldInvXf, newXform, incXform, 2);
       incMat = mShiftManager->IMODxformToScaleMat(incXform, incDxy[0], incDxy[1]);
-      SEMTrace('N', "Incremental xform %.4f %.4f %.4f %.4f  %.1f %.1f", incMat.xpx,
+      SEMTrace('q', "Incremental xform %.4f %.4f %.4f %.4f  %.1f %.1f", incMat.xpx,
         incMat.xpy, incMat.ypx, incMat.ypy, incDxy[0], incDxy[1]);
     }
 
     // Transform items incrementally, and store the new full xform
-    ind = mWinApp->mNavigator->TransformToCurrentReg(oldReg, incMat, incDxy, 0, 0);
+    // Pull off the marker shift beforehand and reapply it
+    UndoOrRedoMarkerShift(false);
+    ind = mNavigator->TransformToCurrentReg(oldReg, incMat, incDxy, 0, 0);
+    UndoOrRedoMarkerShift(true);
     PrintfToLog("%d items transformed to new registration", ind);
 
     if (!mRRGitem->mGridMapXform)
@@ -649,10 +1167,6 @@ void CMultiGridTasks::AlignNewReloadImage()
       mRRGitem->mGridMapXform[ind] = newXform[ind];
   }
 }
-
-/* In case we want to solve for stretch with an amoeba search
-static float *sOrigXstage, *sOrigYstage, *sNewXstage, *sNewYstage;
-static int sSkipInd; */
 
 /*
  * Compute transform from results
@@ -701,7 +1215,7 @@ ScaleMat CMultiGridTasks::FindReloadTransform(float dxyOut[2])
         mShiftManager->ApplyScaleMatrix(usInv, x[i][3], x[i][4], x[i][3], x[i][4]);
       }
       if (skip == 5)
-        SEMTrace('N', "%d %.3f %.3f %.3f %.3f", ind, x[i][0], x[i][1], x[i][3], x[i][4]);
+        SEMTrace('q', "%d %.3f %.3f %.3f %.3f", ind, x[i][0], x[i][1], x[i][3], x[i][4]);
     }
 
     StatCorrel(&x[0][0], XSIZE, 5, MSIZE, &nPairs, sx, &ss[0][0], &ssd[0][0], &d[0][0],
@@ -743,7 +1257,7 @@ ScaleMat CMultiGridTasks::FindReloadTransform(float dxyOut[2])
       leaveOut[skip] = sqrt(devX * devX + devY * devY);
     }
 
-    SEMTrace('N', "skip %d theta %.2f  dev mean %.2f max %.2f leave-out %.2f", skip,
+    SEMTrace('q', "skip %d theta %.2f  dev mean %.2f max %.2f leave-out %.2f", skip,
       theta[skip] / DTOR, devSum[skip] / nPairs, devMax[skip], 
       skip < 5 ? leaveOut[skip] : 0.);
   }
@@ -772,7 +1286,7 @@ ScaleMat CMultiGridTasks::FindReloadTransform(float dxyOut[2])
       ptSDmin = skip;
     }
   }
-  SEMTrace('N', "max min %d  mean min %d  SD min %d leave max %d", ptSumMin, ptMaxMin,
+  SEMTrace('q', "max min %d  mean min %d  SD min %d leave max %d", ptSumMin, ptMaxMin,
     ptSDmin, ptLvoMax);
 
   // They should all match; if so make sure that one has the highest error in
@@ -788,7 +1302,7 @@ ScaleMat CMultiGridTasks::FindReloadTransform(float dxyOut[2])
     sumsToAvgSDdbl(devSum[ptLvoMax], devSumSq[ptLvoMax], 4, 1, &devAvg, &devSD);
     if (ind == 4 && fabs(lvoMax - devAvg) > leaveCrit * devSD)
       use = ptLvoMax;
-    SEMTrace('N', "dev mean %.2f SD %.2f  # SD %.2f  use %d", devAvg, devSD,
+    SEMTrace('q', "dev mean %.2f SD %.2f  # SD %.2f  use %d", devAvg, devSD,
       fabs(lvoMax - devAvg) / devSD, use);
   }
 
@@ -807,6 +1321,2003 @@ ScaleMat CMultiGridTasks::FindReloadTransform(float dxyOut[2])
     theta[use] / DTOR, dxyOut[0], dxyOut[1], devSum[use] / (use < 5 ? 4 : 5));
 
   return aM[use];
+}
+
+/*
+ * Take off or put back the marker shift for every item so transformation is based on
+ * coordinates that apply to the original grid map
+ */
+void CMultiGridTasks::UndoOrRedoMarkerShift(bool redo)
+{
+  MapItemArray *itemArr = mNavigator->GetItemArray();
+  int ind;
+  float shiftX, shiftY;
+  CMapDrawItem *item;
+  for (ind = 0; ind < (int)itemArr->GetSize(); ind++) {
+    item = itemArr->GetAt(ind);
+    if (item->mShiftCohortID && item->mMarkerShiftX > EXTRA_VALUE_TEST) {
+      shiftX = (redo ? 1.f : -1.f) * item->mMarkerShiftX;
+      shiftY = (redo ? 1.f : -1.f) * item->mMarkerShiftY;
+      item->mStageX += shiftX;
+      item->mStageY += shiftY;
+      mNavigator->ShiftItemPoints(item, shiftX, shiftY);
+    }
+  }
+}
+
+/////////////////////////////////////////////////////////
+//  MULTIPLE GRID RUNS
+/////////////////////////////////////////////////////////
+
+/*
+ * Start a series of runs given the parameters
+ */
+int CMultiGridTasks::StartGridRuns(int LMneedsLD, int MMMneedsLD, int finalNeedsLD,
+  bool undoneOnly)
+{
+  int err, grid, ind, apSize = 0, numAcq, numTS, numFail = 0, numDark = 0;
+  float halfx, halfy, size, spacing;
+  ScaleMat cam2st;
+  CFileStatus status;
+  JeolCartridgeData jcd;
+  CString str, directory, fname;
+  NavAcqParams *mapParams = mWinApp->GetNavAcqParams(0);
+  NavAcqParams *finalParams = mWinApp->GetNavAcqParams(1);
+  NavAcqAction *mapActions = mNavHelper->GetAcqActions(0);
+  NavAcqAction *finalActions = mNavHelper->GetAcqActions(1);
+  BaseMarkerShift baseShift;
+  IntVec dlgIndToJcdInd;
+  bool apForLMM = false;
+  bool stateForLMM = false;
+  bool stateForMMM = false;
+  bool stateForAcq = false;
+  bool needForget = false;
+  bool didLMMforGrid = false, didMMMforGrid = false, didAcqForGrid = false;
+  bool lastMMMforGrid = false, lastAcqForGrid = false;
+  bool setupLMMimaging = false;
+  mNavigator = mWinApp->mNavigator;
+
+  mMGdlg = mNavHelper->mMultiGridDlg;
+  dlgIndToJcdInd = mMGdlg->GetDlgIndToJCDindex();
+  mReinsertObjAp = false;
+  mRestoreCondAp = false;
+  mSavedLowDose = mWinApp->LowDoseMode();
+
+  // Get the various setup parameters and lock them in
+  if (!mNamesLocked) {
+    mPrefix = mMGdlg->m_strPrefix;
+    mAppendNames = mParams.appendNames;
+    mUseSubdirs = mParams.useSubdirectory;
+    mWorkingDir = mWinApp->mDocWnd->GetInitialDir();
+    mNamesLocked = true;
+    mMGdlg->UpdateEnables();
+    mMGdlg->UpdateCurrentDir();
+  }
+
+  // Assign these items as what will be used if doing LMMs, otherwise use existing values
+  if (mParams.acquireLMMs) {
+    mLMMneedsLowDose = LMneedsLD;
+    mLMMusedStateNum = mParams.setLMMstate ? mParams.LMMstateNum : -1;
+    mLMMusedStateName = mParams.LMMstateName;
+    mLMMmagIndex = mGridMontParam.magIndex;
+  }
+
+  // Get the grid lists
+  mNumGridsToRun = mMGdlg->GetListOfGridsToRun(mJcdIndsToRun, mSlotNumsToRun);
+  if (!mNumGridsToRun)
+    return 0;
+
+  mActiveCameraList = mWinApp->GetActiveCameraList();
+
+  // Get state of apertures if they are to be changed and error out if bad
+  if (mParams.removeObjectiveAp) {
+    apSize = mScope->GetApertureSize(OBJECTIVE_APERTURE);
+    mInitialObjApSize = apSize;
+
+  }
+  if (apSize >= 0 && mParams.setCondenserAp) {
+    apSize = mScope->GetApertureSize(CONDENSER_APERTURE);
+    mInitialCondApSize = apSize;
+  }
+  if (apSize < 0) {
+    SEMMessageBox("Aperture control appears not to work on this scope");
+    return 1;
+  }
+
+  // Check for dark and failed and make sure they want to proceed with failed
+  for (grid = 0; grid < mNumGridsToRun; grid++) {
+    jcd = mCartInfo->GetAt(mJcdIndsToRun[grid]);
+    if (jcd.status & MGSTAT_FLAG_FAILED)
+      numFail++;
+    if (jcd.status & MGSTAT_FLAG_TOO_DARK)
+      numDark++;
+  }
+  if (numDark) {
+    SEMMessageBox("Grids that were found to be too dark cannot be included because "
+      "they can not be realigned");
+    return 1;
+  }
+  if (numFail) {
+    str.Format("The selected grids include %d grids where something failed "
+      "previously\n\nAre you sure you want to proceed with them?", numFail);
+    if (AfxMessageBox(str, MB_QUESTION) == IDNO)
+      return 1;
+    for (grid = 0; grid < mNumGridsToRun; grid++)
+      ChangeStatusFlag(grid, MGSTAT_FLAG_FAILED, 0);
+  }
+
+  // If starting with MMMs and fitting polygons, check all nav files for files to open
+  if (mParams.acquireMMMs && !mParams.acquireLMMs) {
+    mNavigator->SaveAndClearTable();
+    for (grid = 0; grid < mNumGridsToRun; grid++) {
+      fname = FullGridFilePath(grid, ".nav");
+      jcd = mCartInfo->GetAt(mJcdIndsToRun[grid]);
+      if (mNavigator->LoadNavFile(false, false, &fname)) {
+        str.Format("Error reopening Navigator file for grid # %d:\n %s", jcd.id,
+          (LPCTSTR)fname);
+        SEMMessageBox(str);
+        return 1;
+      }
+      mNavHelper->CountAcquireItems(0, -1, numAcq, numTS);
+      if (!numAcq) {
+        str.Format("There are no items set to Acquire in this Navigator file for "
+          "grid # %d", jcd.id);
+        SEMMessageBox(str);
+        return 1;
+      }
+
+      if (mParams.MMMimageType > 0 && mNavHelper->AreAnyFilesSetToOpen()) {
+        str.Format("There are files set to open in this Navigator file for grid # %d;"
+          " this is not allowed when saving montages", jcd.id);
+        SEMMessageBox(str);
+        return 1;
+      }
+    }
+  }
+
+  // A couple of sanity checks
+  if (mParams.acquireMMMs || mParams.runFinalAcq) {
+    if (MarkerShiftIndexForMag(mLMMmagIndex, baseShift) < 0) {
+      str.Format("To use grid map locations at higher magnification,\n"
+        "you must have a marker shift stored for magnification %d",
+        MagForCamera(mWinApp->GetCurrentCamera(), mLMMmagIndex));
+      SEMMessageBox(str);
+      return 1;
+    }
+  }
+  if (mParams.acquireLMMs && mParams.acquireMMMs && !mParams.autocontour) {
+    SEMMessageBox("To do both grid maps and medium mag maps in the same run,"
+      " you need to select Autocontouring so that there are items to acquire");
+    return 1;
+  }
+  mUsingHoleFinder = mParams.acquireMMMs &&
+    (mapActions[NAACT_HOLE_FINDER].flags & NAA_FLAG_RUN_IT) != 0;
+  if (mParams.acquireMMMs && mParams.runFinalAcq) {
+    if (!mUsingHoleFinder) {
+      SEMMessageBox("To do both medium mag maps and final acquisition in the same run,"
+        " you need to select hole finding as a mapping task");
+      return 1;
+    }
+    if (!mapParams->runHoleCombiner && finalParams->acquireType == ACQUIRE_MULTISHOT &&
+      AfxMessageBox("You selected Multiple Records for final\nacquisition but did not"
+        " set the option to use the hole combiner.\n\nDo you really want to proceed?", 
+        MB_QUESTION) == IDNO)
+      return 1;
+    if (!finalParams->useMapHoleVectors && finalParams->acquireType == ACQUIRE_MULTISHOT
+      && mNumGridsToRun > 1) {
+      AfxMessageBox("You are trying to do Multiple Records on \n"
+        "more than one grid and did not select to use map hole vectors for shifts", 
+        MB_EXCLAME);
+      return 1;
+    }
+  }
+
+  // Make a list of hole sizes/spacings to use
+  mHoleSizes.resize(mNumGridsToRun);
+  mHoleSpacings.resize(mNumGridsToRun);
+  if (mUsingHoleFinder) {
+    if (mNavHelper->mHoleFinderDlg)
+      mNavHelper->mHoleFinderDlg->SyncToMasterParams();
+    for (grid = 0; grid < mNumGridsToRun; grid++) {
+      size = 0.;
+      spacing = 0.;
+      for (ind = 0; ind < mMGdlg->GetNumUsedSlots(); ind++) {
+        jcd = mCartInfo->GetAt(dlgIndToJcdInd[ind]);
+        if (jcd.holeSize)
+          size = jcd.holeSize;
+        if (jcd.holeSpacing)
+          spacing = jcd.holeSpacing;
+        if (dlgIndToJcdInd[ind] == mJcdIndsToRun[grid])
+          break;
+      }
+      mHoleSizes[grid] = size;
+      mHoleSpacings[grid] = spacing;
+    }
+  }
+
+  // Make the directories if they don't exist yet.
+  if (mUseSubdirs) {
+    for (grid = 0; grid < mNumGridsToRun; grid++) {
+      jcd = mCartInfo->GetAt(mJcdIndsToRun[grid]);
+      directory = mWorkingDir + "\\" + RootnameFromUsername(jcd);
+      if (!CFile::GetStatus((LPCTSTR)directory, status)) {
+        if (_mkdir((LPCTSTR)directory)) {
+          err = GetLastError();
+          str.Format("Error (%d) trying to create directory %s", err, (LPCTSTR)directory);
+          SEMMessageBox(str);
+          return 1;
+        }
+      }
+    }
+  }
+
+  // Determine 4 positions around center for eucentricity
+  if (mParams.acquireLMMs) {
+    cam2st = MatInv(mShiftManager->StageToCamera(
+      mActiveCameraList[mGridMontParam.cameraIndex], mGridMontParam.magIndex));
+    halfx = (float)(mGridMontParam.xFrame * mGridMontParam.binning / 2);
+    halfy = (float)(mGridMontParam.yFrame * mGridMontParam.binning / 2);
+    mShiftManager->ApplyScaleMatrix(cam2st, halfx, halfy, mEucenXtrials[0],
+      mEucenYtrials[0]);
+    mShiftManager->ApplyScaleMatrix(cam2st, -halfx, halfy, mEucenXtrials[1],
+      mEucenYtrials[1]);
+    mShiftManager->ApplyScaleMatrix(cam2st, -halfx, -halfy, mEucenXtrials[2],
+      mEucenYtrials[2]);
+    mShiftManager->ApplyScaleMatrix(cam2st, halfx, -halfy, mEucenXtrials[3],
+      mEucenYtrials[3]);
+  }
+
+  mActSequence.clear();
+  for (grid = 0; grid < mNumGridsToRun; grid++) {
+    jcd = mCartInfo->GetAt(mJcdIndsToRun[grid]);
+
+    // Low mag map operations
+    if (mParams.acquireLMMs && (!undoneOnly || (jcd.status & MGSTAT_FLAG_LM_MAPPED) == 0))
+    {
+      if (!setupLMMimaging || lastMMMforGrid || lastAcqForGrid) {
+        AddToSeqForLMimaging(apForLMM, stateForLMM, mLMMneedsLowDose);
+        setupLMMimaging = true;
+      }
+ 
+      // Get reference counts on first grid
+      if (!mReferenceCounts && !grid) {
+        mActSequence.push_back(MGACT_UNLOAD_GRID);
+        mActSequence.push_back(MGACT_REF_MOVE);
+        mActSequence.push_back(MGACT_REF_IMAGE);
+      }
+
+      // Load grid and take up to 4 survey images
+      mActSequence.push_back(MGACT_LOAD_GRID);
+      mActSequence.push_back(MGACT_SURVEY_STAGE_MOVE);
+      mActSequence.push_back(MGACT_SURVEY_IMAGE);
+
+      // The last one will move to best place if needed, after which eucentricity, or not
+      mActSequence.push_back(MGACT_SURVEY_STAGE_MOVE);
+      mActSequence.push_back(MGACT_EUCENTRICITY);
+
+      // Go to center and take montage, allow extra actions if eucentricity failed
+      mActSequence.push_back(MGACT_LMM_CENTER_MOVE);
+      mActSequence.push_back(MGACT_TAKE_LMM);
+      mActSequence.push_back(MGACT_SURVEY_STAGE_MOVE);
+      mActSequence.push_back(MGACT_EUCENTRICITY);
+
+      // Autocontour
+      if (mParams.autocontour)
+        mActSequence.push_back(MGACT_AUTOCONTOUR);
+      didLMMforGrid = true;
+    }
+
+    // For medium mag maps
+    if (mParams.acquireMMMs && (!undoneOnly || (jcd.status & MGSTAT_FLAG_MMM_DONE) == 0))
+    {
+      mActSequence.push_back(MGACT_MARKER_SHIFT);
+
+      // If LMM wasn't just done, set state for LM, load grid, and realign to grid
+      if (!didLMMforGrid) {
+        AddToSeqForLMimaging(apForLMM, stateForLMM, mLMMneedsLowDose);
+        mActSequence.push_back(MGACT_LOAD_GRID);
+        mActSequence.push_back(MGACT_SET_ZHEIGHT);
+        mActSequence.push_back(MGACT_REALIGN_TO_LMM);
+      }
+
+      // Restore from LM imaging if set
+      AddToSeqForRestoreFromLM(apForLMM, stateForLMM);
+
+      // Manage low dose if needed
+      if (MMMneedsLD)
+        mActSequence.push_back(MMMneedsLD > 0 ? MGACT_LOW_DOSE_ON : MGACT_LOW_DOSE_OFF);
+
+      // Set state for MMM
+      if ((mParams.MMMstateNums[0] >= 0 || mParams.MMMstateNums[1] >= 0 ||
+        mParams.MMMstateNums[2] >= 0) && !stateForMMM) {
+        mActSequence.push_back(MGACT_MMM_STATE);
+        stateForMMM = true;
+      }
+
+      // Set up files to open or open files
+      mActSequence.push_back(MGACT_SETUP_MMM_FILES);
+
+      // Acquire
+      mActSequence.push_back(MGACT_TAKE_MMM);
+      didMMMforGrid = true;
+    }
+
+    // For final acquisition
+    if (mParams.runFinalAcq && (!undoneOnly || (jcd.status & MGSTAT_FLAG_ACQ_DONE) == 0))
+    {
+      mActSequence.push_back(MGACT_MARKER_SHIFT);
+
+      // Reload and realign unless it was just done
+      if (!didLMMforGrid && !didMMMforGrid) {
+        AddToSeqForLMimaging(apForLMM, stateForLMM, mLMMneedsLowDose);
+        mActSequence.push_back(MGACT_LOAD_GRID);
+        mActSequence.push_back(MGACT_SET_ZHEIGHT);
+        mActSequence.push_back(MGACT_REALIGN_TO_LMM);
+      } 
+
+      AddToSeqForRestoreFromLM(apForLMM, stateForLMM);
+
+      // Manage low dose if needed
+      if (finalNeedsLD)
+        mActSequence.push_back(finalNeedsLD > 0 ? MGACT_LOW_DOSE_ON : MGACT_LOW_DOSE_OFF);
+      
+      // Set state for final acq
+      if ((mParams.finalStateNums[0] >= 0 || mParams.finalStateNums[1] >= 0 ||
+        mParams.finalStateNums[2] >= 0) && !stateForAcq) {
+        mActSequence.push_back(MGACT_FINAL_STATE);
+        stateForAcq = true;
+      }
+
+      // Acquire
+      mActSequence.push_back(MGACT_FINAL_ACQ);
+      didAcqForGrid = true;
+    }
+
+    // Restore all states
+    if (apForLMM || stateForMMM || stateForAcq)
+      needForget = true;
+    if (mParams.acquireMMMs || mParams.runFinalAcq || grid == mNumGridsToRun - 1)
+      AddToSeqForRestoreFromLM(apForLMM, stateForLMM);
+    if (stateForMMM || stateForAcq)
+      mActSequence.push_back(MGACT_RESTORE_STATE);
+    mActSequence.push_back(MGACT_GRID_DONE);
+    lastMMMforGrid = didMMMforGrid;
+    lastAcqForGrid = didAcqForGrid;
+    didLMMforGrid = false;
+    didMMMforGrid = false;
+    didAcqForGrid = false;
+  }
+
+  if (GetDebugOutput('q')) {
+    for (ind = 0; ind < (int)mActSequence.size(); ind++) {
+      if (mActSequence[ind] < sizeof(sActionNames) / sizeof(char *))
+        PrintfToLog("%d  %d  %s", ind, mActSequence[ind], 
+          sActionNames[mActSequence[ind]]);
+    }
+  }
+
+  if (needForget && mNavHelper->GetTypeOfSavedState() != STATE_NONE) {
+    if (mNavHelper->mStateDlg)
+      mNavHelper->mStateDlg->OnButForgetState();
+    else
+      mNavHelper->ForgetSavedState();
+  }
+
+  // Clear out the navigator and initialize all flags then start
+  mNavigator->SaveAndClearTable();
+  mSeqIndex = -1;
+  mCurrentGrid = 0;
+  mStateWasSet = false;
+  mMovedToFirstTrial = false;
+  mSurveyIndex = 0;
+  mInternalError = false;
+  mStartedLongOp = false;
+  mDoingEucentricity = false;
+  mMovedAperture = false;
+  mAutoContouring = false;
+  mSettingUpNavFiles = false;
+  mStartedNavAcquire = false;
+  mUnloadErrorOK = -1;
+  mRestoringOnError = false;
+  mFailureRetry = 0;
+  mExternalFailedStr = "";
+  mExtErrorOccurred = -1;
+  mSavedHoleSize = 0.;
+  mSavedHoleSpacing = 0.;
+  mSuspendedMulGrid = false;
+  mEndWhenGridDone = false;
+  mStoppedAtGridEnd = false;
+  mSaveMasterMont = *(mWinApp->GetMontParam());
+  mDoingMulGridSeq = true;
+  mWinApp->UpdateBufferWindows();
+  UpdateGridStatusText();
+  MultiGridNextTask(MG_RUN_SEQUENCE);
+  return 0;
+}
+
+// Set low dose, state, and aperture settings for imaging grid map
+void CMultiGridTasks::AddToSeqForLMimaging(bool &apForLMM, bool &stateForLMM, int needsLD)
+{
+  if (needsLD)
+    mActSequence.push_back(needsLD > 0 ? MGACT_LOW_DOSE_ON : MGACT_LOW_DOSE_OFF);
+  if (mParams.setLMMstate && !stateForLMM) {
+    mActSequence.push_back(MGACT_LMM_STATE);
+    stateForLMM = true;
+  }
+
+  // Set aperture for LM imaging
+  if (mParams.removeObjectiveAp && !apForLMM)
+    mActSequence.push_back(MGACT_REMOVE_OBJ_AP);
+  if (mParams.setCondenserAp && !apForLMM)
+    mActSequence.push_back(MGACT_SET_CONDENSER_AP);
+  apForLMM = mParams.removeObjectiveAp || mParams.setCondenserAp;
+
+}
+
+// If aperture was set for LM, set up to restore it
+void CMultiGridTasks::AddToSeqForRestoreFromLM(bool &apForLMM, bool &stateForLMM)
+{
+  if (stateForLMM) {
+    mActSequence.push_back(MGACT_RESTORE_STATE);
+    stateForLMM = false;
+  }
+
+  if (apForLMM) {
+    if (mParams.removeObjectiveAp)
+      mActSequence.push_back(MGACT_REPLACE_OBJ_ACT);
+    if (mParams.setCondenserAp)
+      mActSequence.push_back(MGACT_RESTORE_COND_AP);
+    apForLMM = false;
+  }
+}
+
+/*
+ * DO THE NEXT OPERATION IN THE SEQUENCE AFTER POST_PROCESSING PREVIOUS ONE
+ */
+void CMultiGridTasks::DoNextSequenceAction(int resume)
+{
+  int err, ind, nx, ny, setNum, fileType, timeout = 0, numPieces, meanIXcen, meanIYcen;
+  int pctlIXcen, pctlIYcen, numPctl, numAbove, bestInd, firstInd, lastInd, groupInd;
+  int action, addIdleTask = 1;
+  float lowMean, highMean, zStage, meanSXcen, meanSYcen, pctlSXcen, pctlSYcen;
+  float dist, bestDist, avgFrac;
+  CString errStr, str, label;
+  int *stateNums = &mParams.MMMstateNums[0];
+  StageMoveInfo moveInfo;
+  JeolCartridgeData jcd = mCartInfo->ElementAt(mJcdIndsToRun[B3DMIN(mCurrentGrid,
+    (int)mJcdIndsToRun.size() - 1)]);
+  JeolCartridgeData &jcdEl = mCartInfo->ElementAt(mJcdIndsToRun[B3DMIN(mCurrentGrid,
+    (int)mJcdIndsToRun.size() - 1)]);
+  AutoContourParams *acParam;
+  HoleFinderParams *hfParam;
+  MapItemArray *itemArr;
+  CMapDrawItem *item;
+  BaseMarkerShift baseShift;
+  NavAcqParams *acqParams;
+  FileOptions fileOpt;
+  IntVec ixVec, iyVec, pieceSavedAt;
+  FloatVec xStage, yStage, meanVec, midFracs, rangeFracs;
+  bool skipEucen = false, skipGrid = false, fileAtFirst = false;
+  mNavigator = mWinApp->mNavigator;
+
+  if (!mDoingMulGridSeq)
+    return;
+
+  if (mParams.acquireLMMs)
+    setNum = MontageConSetNum(&mGridMontParam, true);
+
+  // First check for error or stop in the last action
+  if (mSeqIndex >= 0 && !resume) {
+    action = mActSequence[mSeqIndex];
+
+    if (!mExternalFailedStr.IsEmpty() || mExtErrorOccurred >= 0) {
+      SEMTrace('q', "NextAction  ext %d", mExtErrorOccurred);
+      mStoppedInLMMont = mStoppedInNavRun = false;
+      if (mExtErrorOccurred > 1) {
+        mStoppedInLMMont = action == MGACT_TAKE_LMM;
+        mStoppedInNavRun = action == MGACT_TAKE_MMM || action == MGACT_FINAL_ACQ;
+        SuspendMulGridSeq();
+        if (mStoppedInLMMont || mStoppedInNavRun)
+          return;
+        action = -1;
+      }
+      switch (action) {
+
+        // Abandon hope
+      case MGACT_LMM_STATE:
+      case MGACT_UNLOAD_GRID:
+      case MGACT_MMM_STATE:
+      case MGACT_FINAL_STATE:
+      case MGACT_SETUP_MMM_FILES:
+      case MGACT_RESTORE_STATE:
+      case MGACT_LOW_DOSE_ON:
+      case MGACT_LOW_DOSE_OFF:
+        errStr = "Stopping multiple grid operations";
+        if (mExternalFailedStr.IsEmpty())
+          str.Format(" because of an error in the current operation (action %s)",
+            sActionNames[action]);
+        else
+          str = " after this error:\n\n" + mExternalFailedStr;
+        MGActMessageBox(errStr + str);
+        StopMulGridSeq();
+        return;
+
+        // Skip to next grid
+      case MGACT_LOAD_GRID:
+      case MGACT_TAKE_LMM:
+      case MGACT_REALIGN_TO_LMM:
+      case MGACT_AUTOCONTOUR:
+      case MGACT_TAKE_MMM:
+      case MGACT_FINAL_ACQ:
+        errStr.Format("Skipping to next grid and marking grid %d as failed because of ",
+          jcd.id);
+        if (mExternalFailedStr.IsEmpty())
+          str.Format("an error in the current operation (action %s)",
+            sActionNames[action]);
+        else 
+          str = "this error:\n" + mExternalFailedStr;
+        ChangeStatusFlag(mCurrentGrid, MGSTAT_FLAG_FAILED, 1);
+        SaveSessionFileWarnIfError();
+        if (SkipToNextGrid(errStr + str))
+          return;
+        action = -1;
+        break;
+
+        // Retry then give up
+      case MGACT_REMOVE_OBJ_AP:
+      case MGACT_SET_CONDENSER_AP:
+      case MGACT_REPLACE_OBJ_ACT:
+      case MGACT_REF_MOVE:
+      case MGACT_RESTORE_COND_AP:
+      case MGACT_SURVEY_STAGE_MOVE:
+      case MGACT_REF_IMAGE:
+      case MGACT_SURVEY_IMAGE:
+      case MGACT_LMM_CENTER_MOVE:
+      case MGACT_SET_ZHEIGHT:
+        if (mFailureRetry) {
+          errStr = "Stopping multiple grid operations after retrying because of ";
+          if (mExternalFailedStr.IsEmpty())
+            str.Format("an error in the current operation (action %s)",
+              sActionNames[action]);
+          else
+            str = "this error:\n\n" + mExternalFailedStr;
+          MGActMessageBox(errStr + str);
+          StopMulGridSeq();
+          return;
+        }
+        mFailureRetry++;
+        errStr.Format("Retrying the current operation (action %s) because of ",
+          sActionNames[action]);
+        if (mExternalFailedStr.IsEmpty())
+          errStr += "an error";
+        else
+          errStr += "this error:\n" + mExternalFailedStr;
+        SEMAppendToLog(errStr);
+        mSeqIndex--;
+        action = -1;
+        break;
+
+      default:
+        break;
+      }
+    }
+
+    if (resume == 3) {
+      errStr.Format("Skipping further action with grid %d because you selected to resume"
+        " this way", jcd.id);
+      if (SkipToNextGrid(errStr))
+        return;
+    } else if (mSuspendedMulGrid)
+      action = mActSequence[mSeqIndex];
+
+    if (action >= 0)
+      mFailureRetry = 0;
+
+    if (resume)
+      action = -1;
+
+    /*
+     * Do operations required when an action is done
+     */
+    switch (action) {
+
+      // After reference image, record the image mean as the reference counts
+    case MGACT_REF_IMAGE:
+      mReferenceCounts = (float)mWinApp->mProcessImage->WholeImageMean(mImBufs);
+      SEMTrace('q', "Reference counts: %.2f", mReferenceCounts);
+      break;
+
+      // After a survey image for eucentricity
+    case MGACT_SURVEY_IMAGE:
+      mDidEucentricity = false;
+      mImBufs->mImage->getSize(nx, ny);
+      mPctPatchSize = B3DNINT(1.6 * pow((double)nx * ny, 0.25));
+      B3DCLAMP(mPctPatchSize, 50, 100);
+
+      // Get percentile stats, if they are good enough proceed on this position
+      if (mWinApp->mProcessImage->PatchPercentileStats(mImBufs, 1., 99.,
+        mPctStatMidCrit * mReferenceCounts, mPctStatRangeCrit * mReferenceCounts,
+        mPctPatchSize, lowMean, highMean, mPctMidFracs[mSurveyIndex],
+        mPctRangeFracs[mSurveyIndex], errStr)) {
+        str.Format("WARNING: Error finding percentile statistics from survey image "
+          "for grid %d: ", jcd.id);
+        SEMAppendToLog(str + errStr);
+        skipEucen = true;
+      } else {
+        avgFrac = 0.5f * (mPctMidFracs[mSurveyIndex] + mPctRangeFracs[mSurveyIndex]);
+        SEMTrace('q', "Pctl stats at %.2f,%.2f: low %.1f  high %.1f  midFrac %.3f "
+          " rangeFrac %.3f  avg %.3f", mEucenXtrials[mSurveyIndex], 
+          mEucenXtrials[mSurveyIndex], lowMean, highMean, mPctMidFracs[mSurveyIndex],
+          mPctRangeFracs[mSurveyIndex], avgFrac);
+        if (avgFrac >= mPctRightAwayFrac) {
+
+          // In order to do it right here, skip stage move
+          mSeqIndex++;
+        } else if (mSurveyIndex < 3) {
+
+          // Otherwise back 2 to to do next trial
+          mSeqIndex -= 2;
+          mSurveyIndex++;
+        } else {
+
+          // Trials done, find the best of the possibly bad lot
+          mSurveyIndex = 0;
+          for (ind = 1; ind < 4; ind++) {
+            if (mPctMidFracs[mSurveyIndex] + mPctRangeFracs[mSurveyIndex] <
+              mPctMidFracs[ind] + mPctRangeFracs[ind])
+              mSurveyIndex = ind;
+          }
+          SEMTrace('q', "Best one %d, avg frac %.3f", mSurveyIndex, 0.5 *
+            (mPctMidFracs[mSurveyIndex] + mPctRangeFracs[mSurveyIndex]));
+
+          // If no good, skip it; otherwise 
+          if (0.5 * (mPctMidFracs[mSurveyIndex] + mPctRangeFracs[mSurveyIndex]) <
+            mPctUsableFrac) {
+            skipEucen = true;
+          } else {
+            mMovedToFirstTrial = false;
+          }
+        }
+      }
+
+      // Skip over stage move and eucentricity
+      if (skipEucen) {
+        PrintfToLog("Skipping eucentricity before map for grid %d; no sampled areas are"
+          " bright enough", jcd.id);
+        mSeqIndex += 2;
+      }
+
+      break;
+
+      // After eucentricity, see if failed or not
+    case MGACT_EUCENTRICITY:
+      mDoingEucentricity = false;
+      mDidEucentricity = !mWinApp->mComplexTasks->GetFELastCoarseFailed();
+      if (mSurveyIndex == 4) {
+
+        // If this was done after LM map, it's a failure or need to update the Z
+        if (!mDidEucentricity) {
+          errStr.Format("Could not find eucentricity for grid # %d even in a usable "
+            "place; marking it as failed", jcdEl.id);
+          ChangeStatusFlag(mCurrentGrid, MGSTAT_FLAG_FAILED, 1);
+          skipGrid = true;
+        } else if (mNavigator->DoUpdateZ(0, 0)) {
+          errStr.Format("Inexplicable error updating Z for grid # %d;"
+            " marking it as failed", jcdEl.id);
+          ChangeStatusFlag(mCurrentGrid, MGSTAT_FLAG_FAILED, 1);
+          skipGrid = true;
+        } else {
+
+          // Record the Z value to change to upon reload
+          item = mNavigator->FindItemWithMapID(jcdEl.LMmapID);
+          if (!item)
+            item = mNavigator->GetOtherNavItem(0);
+          jcdEl.zStage = item->mStageZ;
+        }
+      }
+      SaveSessionFileWarnIfError();
+      if (skipGrid && SkipToNextGrid(errStr))
+        return;
+
+      break;
+
+      // After the grid montage, make it a map, record Z
+    case MGACT_TAKE_LMM:
+      mDoingMontage = false;
+      mNavigator->NewMap(true, 1);
+      item = mNavigator->GetCurrentItem();
+      ChangeStatusFlag(mCurrentGrid, MGSTAT_FLAG_LM_MAPPED, 1);
+      jcdEl.LMmapID = item->mMapID;
+      numPieces = mWinApp->mMontageController->ListMontagePieces(mWinApp->mStoreMRC,
+        &mGridMontParam, 0, pieceSavedAt, &ixVec, &iyVec, &xStage, &yStage, &meanVec,
+        &zStage, &midFracs, &rangeFracs);
+      jcdEl.zStage = zStage;
+      mWinApp->mDocWnd->DoCloseFile();
+      mNavigator->DoSave(false);
+
+      // Copy to read buffer in case eucentricity has to happen
+      mWinApp->mBufferManager->CopyImageBuffer(1,
+        mWinApp->mBufferManager->GetBufToReadInto(), false);
+      if (!numPieces || !xStage.size()) {
+        ChangeStatusFlag(mCurrentGrid, MGSTAT_FLAG_FAILED, 1);
+        errStr.Format("Error getting piece or stage coordinates from the LM map"
+          "for grid %d; marking it as failed", jcdEl.id);
+        skipGrid = true;
+      } else {
+
+        // Get percentile stats and see if grid has enough usable pieces
+        CentroidsFromMeansAndPctls(ixVec, iyVec, xStage, yStage, meanVec, midFracs,
+          rangeFracs, mPctUsableFrac, meanIXcen, meanIYcen, meanSXcen, meanSYcen, 
+          pctlIXcen, pctlIYcen, pctlSXcen, pctlSYcen, numPctl, numAbove);
+        if (numPctl < 0.75 * numPieces) {
+          ChangeStatusFlag(mCurrentGrid, MGSTAT_FLAG_FAILED, 1);
+          PrintfToLog("Not enough percentile statistics for grid %d to know if"
+            " it is OK; marking it as failed", jcdEl.id);
+          skipGrid = true;
+        } else if (numAbove < mMinFracOfPiecesUsable * numPctl) {
+          ChangeStatusFlag(mCurrentGrid, MGSTAT_FLAG_TOO_DARK, 1);
+          errStr.Format("Only %d of %d pieces are bright enough to be usable for grid %d;"
+            " marking it as too dark", numAbove, numPieces, jcdEl.id);
+          skipGrid = true;
+        }
+      }
+      SaveSessionFileWarnIfError();
+
+      if (skipGrid) {
+        if (SkipToNextGrid(errStr))
+          return;
+
+      } else if (!mDidEucentricity) {
+
+        // If eucentricity not done yet, find best place, close to center if possible
+        bestInd = -1;
+        for (ind = 0; ind < numPieces; ind++) {
+          if (midFracs[ind] > mPctUsableFrac) {
+            dist = B3DMAX(100.f, powf(xStage[ind] * xStage[ind] +
+              yStage[ind] * yStage[ind], 0.5f));
+            if (bestInd < 0 || midFracs[ind] / dist * dist < midFracs[ind] / bestDist) {
+              bestDist = dist * dist;
+              bestInd = ind;
+            }
+          }
+        }
+
+        // Stick that in position 5
+        mSurveyIndex = 4;
+        SEMTrace('q', "Doing eucentricity at %.1f, %.1f", xStage[bestInd], 
+          yStage[bestInd]);
+        mEucenXtrials[4] = xStage[bestInd];
+        mEucenYtrials[4] = yStage[bestInd];
+
+      } else {
+
+        // Skip eucentricity if not needed
+        mSeqIndex += 2;
+      }
+      break;
+
+      // After autocontouring
+    case MGACT_AUTOCONTOUR:
+      mAutoContouring = false;
+
+      // Create polygons
+      if (mNavHelper->mAutoContouringDlg->ExternalCreatePolys(-1., -1., -1., -1., -1.,
+        -1., errStr)) {
+        errStr += "\r\nMarking grid as failed due to this failure in autocontouring";
+        ChangeStatusFlag(mCurrentGrid, MGSTAT_FLAG_FAILED, 1);
+        SaveSessionFileWarnIfError();
+        if (SkipToNextGrid(errStr))
+          return;
+      }
+      itemArr = mNavigator->GetItemArray();
+      for (ind = 1; ind < (int)itemArr->GetSize(); ind++) {
+        item = itemArr->GetAt(ind);
+        if (item->IsPolygon())
+          item->mAcquire = true;
+      }
+
+      // Set them all to acquire
+      mNavigator->FillListBox();
+      mNavigator->SetChanged(true);
+      mNavigator->ManageCurrentControls();
+      mNavigator->Redraw();
+      break;
+
+      // After setting up files for MMM's, clear flag
+    case MGACT_SETUP_MMM_FILES:
+      mSettingUpNavFiles = false;
+      break;
+
+      // After either navigator acquire, close files, save Nav and record status
+    case MGACT_TAKE_MMM:
+    case MGACT_FINAL_ACQ:
+      mStartedNavAcquire = false;
+      mWinApp->mDocWnd->OnCloseAllFiles();
+      mNavigator->DoSave(false);
+      if (mNavigator->GetAcquireEnded())
+        ChangeStatusFlag(mCurrentGrid, mActSequence[mSeqIndex] == MGACT_TAKE_MMM ?
+          MGSTAT_FLAG_MMM_DONE : MGSTAT_FLAG_ACQ_DONE, 1);
+      else
+        ChangeStatusFlag(mCurrentGrid, MGSTAT_FLAG_FAILED, 1);
+      SaveSessionFileWarnIfError();
+      break;
+
+      // After grid load/unload, clear flags
+    case MGACT_LOAD_GRID:
+    case MGACT_UNLOAD_GRID:
+      mStartedLongOp = false;
+      mUnloadErrorOK = 0;
+      mSurveyIndex = 0;
+      break;
+
+    default:
+      break;
+    }
+  }
+  
+  if (resume > 1) {
+    errStr = "";
+    if (SkipToNextGrid(errStr))
+      return;
+  }
+  
+  // Advance sequence index: if playing games with that, set it to one below needed value
+  // Need to back up 1 for resume 1, not increment for resume 2, increment otherwise
+  // including resume with skip to next grid, consistent with other skips
+  if (resume == 1)
+    mSeqIndex--;
+  else if (!resume || resume == 3)
+    mSeqIndex++;
+  mExternalFailedStr = "";
+  mExtErrorOccurred = -1;
+  if (mSeqIndex >= (int)mActSequence.size()) {
+    StopMulGridSeq();
+    return;
+  }
+
+  // Suspend after index incremented, it needs to be dropped 1 to resume
+  if (mSuspendedMulGrid)
+    return;
+
+  // Renew the jcd in case it skipped to next grid; it will need a new jcdEl if it used
+  // below
+  jcd = mCartInfo->ElementAt(mJcdIndsToRun[B3DMIN(mCurrentGrid,
+    (int)mJcdIndsToRun.size() - 1)]);
+  action = mActSequence[mSeqIndex];
+  if (mSeqIndex >= 0 && action < sizeof(sActionNames) / sizeof(char *))
+    SEMTrace('q', "Index %d action %d %s", mSeqIndex, action,
+      sActionNames[action]);
+
+  if (action != MGACT_LOAD_GRID && action != MGACT_UNLOAD_GRID &&
+    mScope->GetColumnValvesOpen() < 1)
+    mScope->SetColumnValvesOpen(true);
+
+  /*
+   * NOW START THE NEXT ACTION
+   */
+  switch (action) {
+
+    // Start removing objective aperture
+  case MGACT_REMOVE_OBJ_AP:
+    mScope->SetApertureSize(OBJECTIVE_APERTURE, 0);
+    mMovedAperture = true;
+    mReinsertObjAp = true;
+    break;
+
+    // Start changing the condenser aperture
+  case MGACT_SET_CONDENSER_AP:
+    mScope->SetApertureSize(CONDENSER_APERTURE, mParams.condenserApSize);
+    mMovedAperture = true;
+    mRestoreCondAp = true;
+    break;
+
+    // Start putting objective aperture back in
+  case MGACT_REPLACE_OBJ_ACT:
+    mScope->SetApertureSize(OBJECTIVE_APERTURE, mInitialObjApSize);
+    mMovedAperture = true;
+    mReinsertObjAp = false;
+    break;
+
+    // Start getting back to original condenser apertaure
+  case MGACT_RESTORE_COND_AP:
+    mScope->SetApertureSize(CONDENSER_APERTURE, mInitialCondApSize);
+    mMovedAperture = true;
+    mRestoreCondAp = false;
+    break;
+
+    // Start unloading grid, allow for error if no grid loaded first time (?)
+  case MGACT_UNLOAD_GRID:
+    if (mUnloadErrorOK < 0)
+      mUnloadErrorOK = 1;
+    LoadOrUnloadGrid(-1, MG_SEQ_LOAD);
+    break;
+
+    // Start loading grid, allow for error if grid is known to be on stage
+  case MGACT_LOAD_GRID:
+    if (jcd.station == JAL_STATION_STAGE)
+      mUnloadErrorOK = 1;
+    LoadOrUnloadGrid(mSlotNumsToRun[mCurrentGrid], MG_SEQ_LOAD);
+    break;
+
+    // Start moving stage to Z height if known
+  case MGACT_SET_ZHEIGHT:
+    if (jcd.zStage < -900.) 
+      break;
+    moveInfo.z = jcd.zStage;
+    moveInfo.axisBits = axisZ;
+    moveInfo.backZ = mWinApp->mComplexTasks->GetFEBacklashZ();
+    mScope->MoveStage(moveInfo, true);
+    timeout = 60000;
+    addIdleTask = 2;
+
+    // Start routine to realign to grid map
+  case MGACT_REALIGN_TO_LMM:
+    if (RealignToGridMap(mJcdIndsToRun[mCurrentGrid], false, errStr)) {
+      errStr += "\r\nMarking grid as failed due to this failure to realign to map";
+      ChangeStatusFlag(mCurrentGrid, MGSTAT_FLAG_FAILED, 1);
+      SaveSessionFileWarnIfError();
+      if (SkipToNextGrid(errStr))
+        return;
+    }
+    break;
+
+    // Turn on low dose if off
+  case MGACT_LOW_DOSE_ON:
+    if (!mWinApp->LowDoseMode())
+      mWinApp->mLowDoseDlg.SetLowDoseMode(true);
+    break;
+
+    // Turn off low dose if on
+  case MGACT_LOW_DOSE_OFF:
+    if (mWinApp->LowDoseMode())
+      mWinApp->mLowDoseDlg.SetLowDoseMode(false);
+    break;
+
+    // Set state(s) for MM mapping
+  case MGACT_LMM_STATE:
+    if (CStateDlg::DoSetImState(mParams.LMMstateNum, errStr)) {
+      SEMMessageBox("Error trying to set LM state: " + errStr);
+      StopMulGridSeq();
+      return;
+    }
+    mStateWasSet = true;
+    break;
+
+    // Set state(s) for final acquire
+  case MGACT_FINAL_STATE:
+    stateNums = &mParams.finalStateNums[0];
+  case MGACT_MMM_STATE:
+    err = 0;
+    for (ind = 0; ind < 4; ind++) {
+      if (stateNums[ind] >= 0) {
+        err = CStateDlg::DoSetImState(stateNums[ind], errStr);
+        if (!err)
+          mStateWasSet = true;
+        else
+          break;
+      }
+    }
+    if (err) {
+      str.Format("Error trying to set state # %d %s\n", stateNums[ind] + 1,
+        action == MGACT_MMM_STATE ? "for medium mag maps:" :
+        "for final acquisition");
+      SEMMessageBox(str + errStr);
+      StopMulGridSeq();
+      return;
+    }
+    break;
+
+    // Restore state
+  case MGACT_RESTORE_STATE:
+    RestoreState();
+    break;
+
+    // Start taking reference or survey image
+  case MGACT_REF_IMAGE:
+  case MGACT_SURVEY_IMAGE:
+    mCamera->InitiateCapture(setNum);
+    addIdleTask = 2;
+    break;
+
+    // Move the stage for ref or survey image, skip move if already there for ref
+  case MGACT_SURVEY_STAGE_MOVE:
+    if (!mSurveyIndex && mMovedToFirstTrial)
+      break;
+  case MGACT_REF_MOVE:
+    moveInfo.x = mEucenXtrials[mSurveyIndex];
+    moveInfo.y = mEucenYtrials[mSurveyIndex];
+    moveInfo.axisBits = axisXY;
+    mScope->MoveStage(moveInfo);
+    timeout = 60000;
+    mMovedToFirstTrial = true;
+    addIdleTask = 2;
+    break;
+
+    // Start eucentricity with the LM mapping parameter set
+  case MGACT_EUCENTRICITY:
+    mWinApp->mComplexTasks->SetFENextCoarseConSet(setNum);
+    mWinApp->mComplexTasks->FindEucentricity(FIND_EUCENTRICITY_COARSE);
+    mDoingEucentricity = true;
+    break;
+
+    // Statr moving to center of montage
+  case MGACT_LMM_CENTER_MOVE:
+    moveInfo.x = mGridMontParam.fullMontStageX;
+    moveInfo.y = mGridMontParam.fullMontStageY;
+    moveInfo.axisBits = axisXY;
+    mScope->MoveStage(moveInfo);
+    timeout = 60000;
+    addIdleTask = 2;
+    break;
+
+    // Start taking Grid map
+  case MGACT_TAKE_LMM:
+
+    // Open new Nav file, i.e. save old, clear out nav, and define new name
+    mNavigator->SaveAndClearTable();
+    str = FullGridFilePath(mCurrentGrid, ".nav");
+    mNavigator->SetCurrentNavFile(str);
+
+    // Prepare to open image file and guarantee an mdoc
+    str = FullGridFilePath(mCurrentGrid, "_LMM_1.");
+    if (OpenNewMontageFile(mGridMontParam, str))
+      return;
+
+    // start it
+    SEMAppendToLog("Opened new file for grid map: " + str);
+    mWinApp->mMontageController->SetPercentileStatParams(mPctPatchSize, 1., 99., 
+      mPctStatMidCrit * mReferenceCounts, mPctStatRangeCrit * mReferenceCounts);
+    mWinApp->mMontageController->StartMontage(0, false);
+    mDoingMontage = true;
+    break;
+
+    // Start autocontouring
+  case MGACT_AUTOCONTOUR:
+    mNavHelper->mAutoContouringDlg->SyncToMasterParams();
+    acParam = mNavHelper->GetAutocontourParams();
+    if (mNavHelper->mAutoContouringDlg->IsOpen())
+      CopyAutoContGroups();
+    if (mHaveAutoContGroups) {
+      mNavHelper->mAutoContouringDlg->ExternalSetGroups(acParam->numGroups, 
+        acParam->groupByMean, mAutoContGroups, MAX_AUTOCONT_GROUPS);
+    }
+    ind = mWinApp->mBufferManager->GetBufToReadInto();
+    mNavHelper->mAutoContouringDlg->AutoContourImage(&mImBufs[ind], 
+      acParam->usePixSize ? acParam->targetPixSizeUm : acParam->targetSizePixels, 
+      acParam->minSize, acParam->maxSize, acParam->useAbsThresh ? 0.f : 
+      acParam->relThreshold, acParam->useAbsThresh ? acParam->absThreshold : 0.f);
+    mAutoContouring = true;
+    break;
+
+    // Shift to marker if necessary
+  case MGACT_MARKER_SHIFT:
+
+    // Take care of hole parameters here
+    if (mHoleSizes[mCurrentGrid] > 0. || mHoleSpacings[mCurrentGrid] > 0.) {
+      hfParam = mNavHelper->GetHoleFinderParams();
+      if (mHoleSizes[mCurrentGrid] > 0) {
+        if (!mSavedHoleSize)
+          mSavedHoleSize = hfParam->diameter;
+        hfParam->diameter = mHoleSizes[mCurrentGrid];
+      }
+      if (mHoleSpacings[mCurrentGrid] > 0) {
+        if (!mSavedHoleSpacing)
+          mSavedHoleSpacing = hfParam->spacing;
+        hfParam->spacing = mHoleSpacings[mCurrentGrid];
+      }
+      if (mNavHelper->mHoleFinderDlg->IsOpen())
+        mNavHelper->mHoleFinderDlg->UpdateSettings();
+    }
+
+    err = OpenNavFileIfNeeded(jcd);
+    if (err > 1)
+      return;
+    if (err)
+      break;
+    item = mNavigator->FindItemWithMapID(jcd.LMmapID);
+    if (!item) {
+      errStr.Format("Skipping grid %d because of failure to find grid map");
+      if (SkipToNextGrid(errStr))
+        return;
+      break;
+    }
+    if (!item->mShiftCohortID || item->mMarkerShiftX < EXTRA_VALUE_TEST) {
+
+      // It wasn't shifted: find shift and do it
+      if (MarkerShiftIndexForMag(item->mMapMagInd, baseShift) < 0) {
+        errStr.Format("Skipping grid %d because no Shift to Marker was done on the "
+          "grid map yet\r\n  and there is no saved shift for magnification %d",
+          MagForCamera(item->mMapCamera, item->mMapMagInd));
+        if (SkipToNextGrid(errStr))
+          return;
+        break;
+      }
+
+      mNavigator->ShiftItemsAtRegistration(baseShift.shiftX, baseShift.shiftY,
+        item->mRegistration, 1);
+      PrintfToLog("Applied marker shift of %.2f, %.2f to Navigator items for grid %d",
+        baseShift.shiftX, baseShift.shiftY, jcd.id);
+    }
+    break;
+
+    // Start setting up MM map file(s)
+  case MGACT_SETUP_MMM_FILES:
+    err = OpenNavFileIfNeeded(jcd);
+    if (err > 1)
+      return;
+    if (err)
+      break;
+    itemArr = mNavigator->GetItemArray();
+
+    // Find out if there is a file at first acquire item
+    firstInd = -1;
+    for (ind = 0; ind < (int)itemArr->GetSize(); ind++) {
+      item = itemArr->GetAt(ind);
+      if (item->mAcquire) {
+        if (firstInd < 0) {
+          firstInd = ind;
+          label = item->mLabel;
+          groupInd = mNavigator->GroupScheduledIndex(item->mGroupID);
+          if (item->mFilePropIndex >= 0 || groupInd >= 0)
+            fileAtFirst = true;
+        }
+        lastInd = ind;
+      }
+    }
+
+    // For polygon montage, start process of setting up files
+    fileOpt = *(mWinApp->mDocWnd->GetFileOpt());
+    if (mParams.MMMimageType == 1) {
+      fileType = fileOpt.separateForMont ? fileOpt.montFileType : fileOpt.fileType;
+      str = FullGridFilePath(mCurrentGrid, "_MMM_" + label);
+      str += fileType == STORE_TYPE_HDF ? ".hdf" : ".mrc";
+      NextAutoFilenameIfNeeded(str);
+      mNavHelper->SetFirstMontFilename(str);
+      mSettingUpNavFiles = true;
+      mNavigator->ToggleNewFileOverRange(firstInd, lastInd, 1);
+    } else if (!fileAtFirst) {
+
+      // Otherwise, open a file if nothing already set up (how could it be?)
+      str = FullGridFilePath(mCurrentGrid, "_MMM_1.");
+      if (mParams.MMMimageType) {
+        if (OpenNewMontageFile(mMMMmontParam, str))
+          return;
+      } else {
+        str += fileOpt.fileType == STORE_TYPE_HDF ? "hdf" : "mrc";
+        NextAutoFilenameIfNeeded(str);
+        if (mWinApp->mDocWnd->DoOpenNewFile(str)) {
+          StopMulGridSeq();
+          return;
+        }
+      }
+      SEMAppendToLog("Opened new file for medium-mag maps: " + str);
+    }
+    break;
+
+    // Start taking a grid map
+  case MGACT_TAKE_MMM:
+    mNavHelper->CopyAcqParamsAndActionsToTemp(0);
+    acqParams = mWinApp->GetNavAcqParams(2);
+    acqParams->noMBoxOnError = true;
+    if (mParams.MMMimageType > 0) {
+      acqParams->acquireType = ACQUIRE_TAKE_MAP;
+
+    } else {
+      acqParams->mapWithViewSearch = 2 - mParams.MMMstateType;
+    }
+    mNavigator->SetCurAcqParmActions(2);
+    mNavigator->AcquireAreas(NAVACQ_SRC_MG_RUN_MMM, false, true);
+    mStartedNavAcquire = true;
+    break;
+
+    // Start final acquisition
+  case MGACT_FINAL_ACQ:
+    err = OpenNavFileIfNeeded(jcd);
+    if (err > 1)
+      return;
+    if (err)
+      break;
+    mNavHelper->CopyAcqParamsAndActionsToTemp(1);
+    acqParams = mWinApp->GetNavAcqParams(2);
+    acqParams->noMBoxOnError = true;
+    mNavigator->SetCurAcqParmActions(2);
+    mOpeningForFinalFailed = false;
+    mNavigator->AcquireAreas(NAVACQ_SRC_MG_RUN_ACQ, false, true);
+    if (mOpeningForFinalFailed) {
+      StopMulGridSeq();
+      return;
+    }
+    mStartedNavAcquire = true;
+    break;
+
+    // Grid done: increment the grid number.  Operations here need to be replicated in the
+    // skip function
+  case MGACT_GRID_DONE:
+    if (mEndWhenGridDone) {
+      if (mCurrentGrid == mNumGridsToRun - 1) {
+        StopMulGridSeq();
+      } else {
+        SuspendMulGridSeq();
+        mStoppedAtGridEnd = true;
+      }
+      return;
+    }
+    mCurrentGrid++;
+    UpdateGridStatusText();
+    break;
+
+  default:
+    break;
+  }
+
+  // Add idle task with specific busy check or generic stage/camera check
+  if (addIdleTask == 1) {
+    mWinApp->AddIdleTask(TASK_MULGRID_SEQ, MG_RUN_SEQUENCE, timeout);
+  } else if (addIdleTask == 2) {
+    mWinApp->AddIdleTask(SEMStageCameraBusy, TASK_MULGRID_SEQ, MG_RUN_SEQUENCE, timeout);
+  }
+}
+
+/*
+ * Skip to a selected action, used only ot skip ot next grid
+ */
+int CMultiGridTasks::SkipToAction(int mgAct)
+{
+  int ind = mSeqIndex;
+  for (; ind < (int)mActSequence.size(); ind++) {
+    if (mActSequence[ind] == mgAct) {
+      mSeqIndex = ind;
+      return 0;
+    }
+  }
+  return 1;
+}
+
+/*
+ * Skip to next grid after printing the errStr in red; stpo if error or end flag set
+ */
+int CMultiGridTasks::SkipToNextGrid(CString &errStr)
+{
+  mWinApp->SetNextLogColorStyle(WARNING_COLOR_IND, 0);
+  SEMAppendToLog(errStr);
+  if (SkipToAction(MGACT_GRID_DONE)) {
+    SEMMessageBox("Program error: could not skip to end of actions for current "
+      "grid");
+    StopMulGridSeq();
+    return 1;
+  }
+  if (mEndWhenGridDone) {
+    StopMulGridSeq();
+    return 1;
+  }
+
+  // Increment the current grid here because the seqindex will always be incremented 
+  // before the case is hit
+  mCurrentGrid++;
+  UpdateGridStatusText();
+  return 0;
+}
+
+/*
+ * Set status text with grid #
+ */
+void CMultiGridTasks::UpdateGridStatusText()
+{
+  if (mCurrentGrid < 0 || mCurrentGrid >= mNumGridsToRun)
+    return;
+  JeolCartridgeData jcd = mCartInfo->GetAt(mJcdIndsToRun[mCurrentGrid]);
+  CString str;
+  str.Format("DOING MULTIGRID %d", jcd.id);
+  mWinApp->SetStatusText(COMPLEX_PANE, str);
+}
+
+/*
+ * Return full path to grid file and rootname, optionall appending a suffic
+ */
+CString CMultiGridTasks::FullGridFilePath(int gridInd, CString suffix)
+{
+  CString str, str2;
+  JeolCartridgeData jcd;
+  int jcdInd;
+  if (gridInd < 0)
+    jcdInd = -(gridInd + 1);
+  else
+    jcdInd = mJcdIndsToRun[gridInd];
+  jcd = mCartInfo->GetAt(jcdInd);
+  str = mWorkingDir;
+  str2 = RootnameFromUsername(jcd);
+  if (mUseSubdirs)
+    str += "\\" + str2;
+  str += "\\" + str2;
+  return str + suffix;
+}
+
+/*
+ * Calls for next autonumbered file if th given file exists
+ */
+void CMultiGridTasks::NextAutoFilenameIfNeeded(CString &str)
+{
+  CFileStatus status;
+  while (CFile::GetStatus(str, status))
+    str = mNavHelper->NextAutoFilename(str);
+}
+
+/*
+ * Opens the montage file for grid map or MM map
+ */
+int CMultiGridTasks::OpenNewMontageFile(MontParam &montP, CString &str)
+{
+  FileOptions fileOpt = *(mWinApp->mDocWnd->GetFileOpt());
+  int fileType = fileOpt.separateForMont ? fileOpt.montFileType : fileOpt.fileType;
+
+  // Prepare to open image file and guarantee an mdoc
+  fileOpt.TIFFallowed = false;
+  if (fileType == STORE_TYPE_HDF) {
+    fileOpt.montageInMdoc = true;
+    str += "hdf";
+  } else {
+    fileOpt.montageInMdoc = false;
+    fileOpt.montUseMdoc = fileOpt.useMdoc = true;
+    fileOpt.typext |= MONTAGE_MASK | VOLT_XY_MASK;
+    fileOpt.fileType = fileOpt.montFileType = STORE_TYPE_MRC;
+    str += "mrc";
+  }
+  montP.zCurrent = 0;
+  montP.zMax = -1;
+  NextAutoFilenameIfNeeded(str);
+
+  // Leave current file (it replaces the mast mont), copy to the master
+  mWinApp->mDocWnd->LeaveCurrentFile();
+  *(mWinApp->GetMontParam()) = montP;
+  mWinApp->mStoreMRC = mWinApp->mDocWnd->OpenNewFileByName(str, &fileOpt);
+  if (!mWinApp->mStoreMRC) {
+    mWinApp->mDocWnd->RestoreCurrentFile();
+    SEMMessageBox("An error occurred attempting to open a new file:\n" + str);
+    StopMulGridSeq();
+    return 1;
+  }
+
+  // set up montaging 
+  mWinApp->SetMontaging(true);
+  mWinApp->mDocWnd->AddCurrentStore();
+  return 0;
+}
+// If Nav discovers that a file is needed
+int CMultiGridTasks::OpenFileForFinalAcq()
+{
+  FileOptions *fileOpt = mWinApp->mDocWnd->GetFileOpt();
+  CString name = FullGridFilePath(mCurrentGrid, "_Final_1.");
+  name += fileOpt->fileType == STORE_TYPE_HDF ? "hdf" : "mrc";
+  NextAutoFilenameIfNeeded(name);
+  if (mWinApp->mDocWnd->DoOpenNewFile(name)) {
+    mOpeningForFinalFailed = true;
+    return 1;
+  }
+  SEMAppendToLog("Opened new file for final data: " + name);
+  return 0;
+}
+
+/*
+ * Finds grid map for given item in catalogue, reloading nav file if necessary,
+ * and starts realign routine which will reload map if needed
+ */
+int CMultiGridTasks::RealignToGridMap(int jcdInd, bool askIfSave, CString &errStr)
+{
+  JeolCartridgeData jcd = mCartInfo->GetAt(jcdInd);
+  CMapDrawItem *item = NULL;
+  CString str;
+  MontParam *masterMont = mWinApp->GetMontParam();
+  int useBin = B3DMIN(2, masterMont->overviewBinning);
+  if (jcd.LMmapID) {
+    item = mNavigator->FindItemWithMapID(jcd.LMmapID);
+
+    // Reopen nav file if can't find it in curren one
+    if (!item) {
+      if (mNavigator->SaveAndClearTable(askIfSave) < 0)
+        return -1;
+      str = FullGridFilePath(-jcdInd - 1, ".nav");
+      if (mNavigator->LoadNavFile(false, false, &str)) {
+        errStr.Format("Error reloading Navigator file for grid # %: %s", jcd.id, 
+          (LPCTSTR)str);
+        return 1;
+      }
+      item = mNavigator->FindItemWithMapID(jcd.LMmapID);
+    }
+  }
+  if (!item) {
+    if (!mNavigator->GetNumberOfItems()) {
+      errStr = "Cannot find grid map entry; the Navigator table is empty";
+        return 1;
+    }
+
+    // Fallback to getting first item!
+    item = mNavigator->GetOtherNavItem(0);
+  }
+  if (RealignReloadedGrid(item, 0., true, mRRGMaxRotation, true, errStr))
+    return 1;
+  return 0;
+}
+
+// Load the map for the given item in way appropriate for realign
+int CMultiGridTasks::ReloadGridMap(CMapDrawItem *item, int useBin, CString &errStr)
+{
+  BOOL saveShift, saveRot;
+  int ind, err;
+  MontParam *masterMont = mWinApp->GetMontParam();
+  saveRot = item->mRotOnLoad;
+  ind = masterMont->overviewBinning;
+  saveShift = masterMont->shiftInOverview;
+  item->mRotOnLoad = false;
+  masterMont->shiftInOverview = true;
+  masterMont->overviewBinning = useBin;
+  err = mNavigator->DoLoadMap(true, item, -1, false);
+  item->mRotOnLoad = saveRot;
+  masterMont->overviewBinning = ind;
+  masterMont->shiftInOverview = saveShift;
+  return err;
+}
+
+// Open nav file for the current grid if it is not the current open file
+int CMultiGridTasks::OpenNavFileIfNeeded(JeolCartridgeData &jcd)
+{
+  CString str = FullGridFilePath(mCurrentGrid, ".nav");
+  CString errStr;
+  
+  if (!str.Compare(mNavigator->GetCurrentNavFile()))
+    return 0;
+  mNavigator->SaveAndClearTable();
+  if (mNavigator->LoadNavFile(false, false, &str)) {
+    errStr.Format("Error reloading Navigator file for grid %d; marking grid as"
+      " failed", jcd.id);
+    ChangeStatusFlag(mCurrentGrid, MGSTAT_FLAG_FAILED, 1);
+    if (SkipToNextGrid(errStr))
+      return 2;
+    return 1;
+  }
+  return 0;
+}
+
+/*
+ * Look for a marker shift at the given mag
+ */
+int CMultiGridTasks::MarkerShiftIndexForMag(int magInd, BaseMarkerShift &baseShift)
+{
+  int ind;
+  CArray<BaseMarkerShift, BaseMarkerShift> *shiftArray =
+    mNavHelper->GetMarkerShiftArray();
+  for (ind = 0; ind < (int)shiftArray->GetSize(); ind++) {
+    baseShift = shiftArray->GetAt(ind);
+    if (baseShift.fromMagInd == magInd)
+      return ind;
+  }
+  return -1;
+}
+
+/*
+ * Restore state an dupdate dialog
+ */
+void CMultiGridTasks::RestoreState()
+{
+  mNavHelper->RestoreSavedState();
+  if (mNavHelper->mStateDlg) {
+    mNavHelper->mStateDlg->Update();
+    mNavHelper->mStateDlg->DisableUpdateButton();
+    mNavHelper->mStateDlg->SetCamOfSetState(-1);
+  }
+  mStateWasSet = false;
+}
+
+/*
+ * Return grid montage param, copying from master the first time if not read in
+ */
+MontParam *CMultiGridTasks::GetGridMontParam()
+{
+  if (!mInitializedGridMont) {
+    mGridMontParam = *(mWinApp->GetMontParam());
+    mWinApp->mDocWnd->InitMontParamsForDialog(&mGridMontParam, false);
+    mInitializedGridMont = true;
+  }
+  return &mGridMontParam;
+}
+
+
+/*
+ * Return MMM montage param, copying from master the first time if not read in
+ */
+MontParam *CMultiGridTasks::GetMMMmontParam()
+{
+  if (!mInitializedMMMmont) {
+    mMMMmontParam = *(mWinApp->GetMontParam());
+    mWinApp->mDocWnd->InitMontParamsForDialog(&mMMMmontParam, false);
+    mInitializedMMMmont = true;
+  }
+  return &mMMMmontParam;
+}
+
+/*
+ * Set or clear a bit in the status flags
+ */
+void CMultiGridTasks::ChangeStatusFlag(int gridInd, b3dUInt32 flag, int state)
+{
+  int jcdInd = mJcdIndsToRun[gridInd];
+  JeolCartridgeData &jcd = mCartInfo->ElementAt(jcdInd);
+  setOrClearFlags((b3dUInt32 *)(&jcd.status), flag, state);
+  if (mNavHelper->mMultiGridDlg)
+    mNavHelper->mMultiGridDlg->SetStatusText(jcdInd);
+}
+
+/* 
+ * Get the autocontourng groups so they can be set properly
+ */
+void CMultiGridTasks::CopyAutoContGroups()
+{
+  int *showGroup = mNavHelper->mAutoContouringDlg->GetShowGroup();
+  for (int ind = 0; ind < MAX_AUTOCONT_GROUPS; ind++)
+    mAutoContGroups[ind] = showGroup[ind];
+  mHaveAutoContGroups = true;
+}
+
+//////////////////////////////////////////////////////////////////
+// SAVING AND READING THE SESSION FILE
+//////////////////////////////////////////////////////////////////
+
+// Names and macros
+#define MGDOC_APPEND "AppendNames"
+#define MGDOC_PREFIX "NamePrefix"
+#define MGDOC_TOPDIR "WorkingDir"
+#define MGDOC_LOCKED "NamesLocked"
+#define MGDOC_SUBDIRS "UseSubDirs"
+#define MGDOC_GRID "Grid"
+#define MGDOC_ID  "ID"
+#define MGDOC_NAME  "Name"
+#define MGDOC_STATION  "Station"
+#define MGDOC_SLOT  "Slot"
+#define MGDOC_TYPE  "Type"
+#define MGDOC_ROTATION  "Rotation"
+#define MGDOC_ZSTAGE  "Zstage"
+#define MGDOC_USERNAME  "UserName"
+#define MGDOC_STATUS  "Status"
+#define MGDOC_REFCOUNT  "ReferenceCounts"
+#define MGDOC_LMMAPID  "LMmapID"
+#define MGDOC_LMMINLD  "LMneedsLD"
+#define MGDOC_LMM_STNUM  "LMMstateNum"
+#define MGDOC_LMM_STNAME  "LMMstateName"
+#define MGDOC_CONT_GROUP  "AutoContGroups"
+#define MGDOC_LMM_MAGIND  "LMMmagIndex"
+#define MGDOC_HOLE_PARAM  "HoleParams"
+
+#define ADOC_PUT(a) err += AdocSet##a;
+#define ADOC_ARG "MontParam",sectInd
+#define NAV_MONT_PARAMS
+#define BOOL_SETT_ASSIGN(a, b) ADOC_PUT(Integer(ADOC_ARG, a, b ? 1 : 0)); 
+#define INT_SETT_ASSIGN(a, b) ADOC_PUT(Integer(ADOC_ARG, a, b));
+#define FLOAT_SETT_ASSIGN(a, b) ADOC_PUT(Float(ADOC_ARG, a, b));
+
+/*
+ * Save session information to current or new file
+ */
+int CMultiGridTasks::SaveSessionFile(CString &errStr)
+{
+  CString date, time, str;
+  int adocInd, grid, mont, sectInd, err = 0;
+  JeolCartridgeData jcd;
+  MontParam *montParam = &mGridMontParam;
+
+  // Get current parameters if names have not been locked
+  if (!mNamesLocked) {
+    if (mNavHelper->mMultiGridDlg)
+      mNavHelper->mMultiGridDlg->SyncToMasterParams();
+    mAppendNames = mParams.appendNames;
+    mUseSubdirs = mParams.useSubdirectory;
+    mWorkingDir = mWinApp->mDocWnd->GetInitialDir();
+  }
+
+  // Make up a unique filename if none
+  if (mSessionFilename.IsEmpty()) {
+    mWinApp->mDocWnd->DateTimeComponents(date, time, false, false);
+    mSessionFilename = mWorkingDir + "\\multiGrid_" + date + "_1.adoc";
+    NextAutoFilenameIfNeeded(mSessionFilename);
+    mBackedUpSessionFile = true;
+  }
+  mWinApp->mDocWnd->ManageBackupFile(mSessionFilename, mBackedUpSessionFile);
+
+  // Get the autodoc
+  if (!AdocAcquireMutex()) {
+    errStr = "Failed to acquire autodoc mutex for saving session file";
+    return 1;
+  }
+  adocInd = AdocNew();
+  if (adocInd < 0) {
+    errStr = "Failed to create new autodoc structure";
+    err = 1;
+  }
+
+  // Save global values
+  if (!err) {
+    if (!mPrefix.IsEmpty())
+      err += AdocSetKeyValue(ADOC_GLOBAL_NAME, 0, MGDOC_PREFIX, (LPCTSTR)mPrefix);
+    err += AdocSetInteger(ADOC_GLOBAL_NAME, 0, MGDOC_APPEND, mAppendNames ? 1 : 0);
+    err += AdocSetInteger(ADOC_GLOBAL_NAME, 0, MGDOC_LOCKED, mNamesLocked ? 1 : 0);
+    err += AdocSetInteger(ADOC_GLOBAL_NAME, 0, MGDOC_SUBDIRS, mUseSubdirs ? 1 : 0);
+    if (mReferenceCounts > 0.)
+      err += AdocSetFloat(ADOC_GLOBAL_NAME, 0, MGDOC_REFCOUNT, mReferenceCounts);
+    if (!mWorkingDir.IsEmpty())
+      err += AdocSetKeyValue(ADOC_GLOBAL_NAME, 0, MGDOC_TOPDIR, (LPCTSTR)mWorkingDir);
+    err += AdocSetInteger(ADOC_GLOBAL_NAME, 0, MGDOC_LMMINLD, mLMMneedsLowDose);
+    if (mLMMusedStateNum >= 0) {
+      err += AdocSetInteger(ADOC_GLOBAL_NAME, 0, MGDOC_LMM_STNUM, mLMMusedStateNum);
+      err += AdocSetKeyValue(ADOC_GLOBAL_NAME, 0, MGDOC_LMM_STNAME,
+        (LPCTSTR)mLMMusedStateName);
+    }
+    if (mHaveAutoContGroups)
+      err += AdocSetIntegerArray(ADOC_GLOBAL_NAME, 0, MGDOC_CONT_GROUP, mAutoContGroups, 
+        MAX_AUTOCONT_GROUPS);
+    if (mLMMmagIndex)
+      err += AdocSetInteger(ADOC_GLOBAL_NAME, 0, MGDOC_LMM_MAGIND, mLMMmagIndex);
+  }
+
+  // Save grid values
+  for (grid = 0; grid < (int)mCartInfo->GetSize() && !err; grid++) {
+    date.Format("%d", grid);
+    sectInd = AdocAddSection(MGDOC_GRID, date);
+    if (sectInd < 0) {
+      errStr = "Error adding autodoc section for grid";
+    } else {
+      jcd = mCartInfo->GetAt(grid);
+      err += AdocSetInteger(MGDOC_GRID, sectInd, MGDOC_ID, jcd.id);
+      err += AdocSetInteger(MGDOC_GRID, sectInd, MGDOC_STATION, jcd.station);
+      err += AdocSetInteger(MGDOC_GRID, sectInd, MGDOC_SLOT, jcd.slot);
+      err += AdocSetInteger(MGDOC_GRID, sectInd, MGDOC_ROTATION, jcd.rotation);
+      err += AdocSetInteger(MGDOC_GRID, sectInd, MGDOC_TYPE, jcd.type);
+      err += AdocSetInteger(MGDOC_GRID, sectInd, MGDOC_STATUS, jcd.status);
+      err += AdocSetFloat(MGDOC_GRID, sectInd, MGDOC_ZSTAGE, jcd.zStage);
+      if (jcd.holeSize || jcd.holeSpacing)
+        err += AdocSetTwoFloats(MGDOC_GRID, sectInd, MGDOC_HOLE_PARAM, jcd.holeSize,
+          jcd.holeSpacing);
+      err += AdocSetKeyValue(MGDOC_GRID, sectInd, MGDOC_NAME, (LPCTSTR)jcd.name);
+      err += AdocSetKeyValue(MGDOC_GRID, sectInd, MGDOC_USERNAME, (LPCTSTR)jcd.userName);
+      if (jcd.LMmapID)
+        err += AdocSetInteger(MGDOC_GRID, sectInd, MGDOC_LMMAPID, jcd.LMmapID);
+      if (err) {
+        errStr = "Errors writing data to a grid section of the autodoc";
+      }
+    }
+  }
+
+  // Save montage params if they have been initialized
+  for (mont = 0; mont < 2 && !err; mont++) {
+    if ((mont ? mInitializedMMMmont : mInitializedGridMont)) {
+      date.Format("%d", mont);
+      sectInd = AdocAddSection("MontParam", date);
+      if (sectInd < 0) {
+        err++;
+        errStr = "Error creating new section for MontParam in session autodoc";
+      } else {
+#include "NavAdocParams.h"
+      }
+      err += AdocSetFloat("MontParam", mont, "MinUmOverlap", 
+        montParam->minMicronsOverlap);
+      err += AdocSetFloat("MontParam", mont, "MinOverlapFac", 
+        montParam->minOverlapFactor);
+      if (err)
+        errStr = "Error writing MontParam section of session autodoc";
+    }
+    montParam = &mMMMmontParam;
+  }
+  if (!err) {
+    err += AdocWrite((LPCTSTR)mSessionFilename);
+    if (err)
+      errStr = "Error writing autodoc to file: " + mSessionFilename;
+  }
+  AdocClear(adocInd);
+  AdocReleaseMutex();
+  return err;
+}
+
+/*
+ * Saves and gives a standard warning if there is an error
+ */
+void CMultiGridTasks::SaveSessionFileWarnIfError()
+{
+  CString errStr;
+  if (SaveSessionFile(errStr))
+    SEMAppendToLog("WARNING: Could not write session file - " + errStr);
+  if (mCurrentGrid >= 0 && mCurrentGrid < (int)mJcdIndsToRun.size() &&
+    mNavHelper->mMultiGridDlg)
+    mNavHelper->mMultiGridDlg->SetStatusText(mJcdIndsToRun[mCurrentGrid]);
+}
+#undef NAV_MONT_PARAMS
+#undef ADOC_ARG
+#undef BOOL_SETT_ASSIGN
+#undef INT_SETT_ASSIGN
+#undef FLOAT_SETT_ASSIGN
+
+/*
+ * Clear out everything that might be read in from a file and other items for fresh start
+ */
+void CMultiGridTasks::ClearSession()
+{
+  mCartInfo->RemoveAll();
+  InitOrClearSessionValues();
+  mPrefix = "";
+  mWorkingDir = "";
+  mNamesLocked = false;
+  mLMMusedStateName = "";
+  mSessionFilename = "";
+  if (mNavHelper->mMultiGridDlg) {
+    mNavHelper->mMultiGridDlg->m_strPrefix = "";
+    mNavHelper->mMultiGridDlg->SetRootname();
+    mNavHelper->mMultiGridDlg->UpdateData(false);
+    mNavHelper->mMultiGridDlg->SetNumUsedSlots(0);
+    mNavHelper->mMultiGridDlg->ReloadTable(0, 0);
+    mNavHelper->mMultiGridDlg->CheckIfAnyUndoneToRun();
+    mNavHelper->mMultiGridDlg->UpdateEnables();
+    mNavHelper->mMultiGridDlg->UpdateSettings();
+    mNavHelper->mMultiGridDlg->UpdateCurrentDir();
+  }
+}
+
+/*
+ * Macros for reading a fie: montage params etc
+ */
+#define ADOC_REQUIRED(a) \
+  retval = a; \
+  if (retval) \
+    err++;
+
+#define ADOC_BOOL_ASSIGN(a)  \
+  if (!retval)  \
+    a = index != 0;
+
+#define INT_SETT_ASSIGN(a, b) ADOC_REQUIRED(AdocGetInteger(SECT_NAME, ind1, a, &b));
+
+#define BOOL_SETT_ASSIGN(a, b) ADOC_REQUIRED(AdocGetInteger(SECT_NAME, ind1, a, &index)); \
+       ADOC_BOOL_ASSIGN(b);
+
+#define FLOAT_SETT_ASSIGN(a, b) ADOC_REQUIRED(AdocGetFloat(SECT_NAME, ind1, a, &b));
+
+#define NAV_MONT_PARAMS
+#define SECT_NAME "MontParam"
+#define SKIP_ADOC_PUTS
+
+#define GET_STRING(scname, scnum, key, var) \
+  retval = AdocGetString(scname, scnum, key, &string);   \
+if (!retval) {    \
+  var = string;   \
+  free(string);   \
+} else if (retval < 0) {  \
+  err++;     \
+}
+
+
+ /*
+ * Reading a session file
+ */
+int CMultiGridTasks::LoadSessionFile(bool useLast, CString &errStr)
+{
+  int adocInd, numSect, grid, err = 0, val, retval, ind1, index = IDOK, stageInd = -1;
+  int stageID = -1;
+  char *string;
+  static char szFilter[] = "Autodoc files (*.adoc)|*.adoc|All files (*.*)|*.*||";
+  JeolCartridgeData jcd;
+  MontParam *montParam;
+  LPCTSTR lpszFileName = NULL;
+  CString filename, direc = mWinApp->mDocWnd->GetInitialDir();
+
+  if (mSessionFilename.IsEmpty())
+    mSessionFilename = mLastSessionFile;
+  if (!useLast || mSessionFilename.IsEmpty()) {
+
+    // Start in the directory of the current file and get name
+    if (mWorkingDir)
+      direc = mWorkingDir;
+    if (!mSessionFilename.IsEmpty()) {
+      UtilSplitPath(mSessionFilename, direc, filename);
+      lpszFileName = mSessionFilename;
+    }
+
+    // Use file dialog directly since it allows filling in previous name
+    MyFileDialog fileDlg(TRUE, ".adoc", lpszFileName, OFN_HIDEREADONLY, szFilter, NULL,
+      !direc.IsEmpty());
+    if (!direc.IsEmpty())
+      fileDlg.mfdTD.lpstrInitialDir = direc;
+    index = fileDlg.DoModal();
+    if (index == IDOK)
+      mSessionFilename = fileDlg.GetPathName();
+  }
+  mWinApp->RestoreViewFocus();
+  if (index != IDOK)
+    return -1;
+
+  // Read in file
+  mBackedUpSessionFile = false;
+  if (!AdocAcquireMutex()) {
+    errStr = "Failed to acquire autodoc mutex";
+    return 1;
+  }
+  adocInd = AdocRead(mSessionFilename);
+  if (adocInd < 0) {
+    errStr = "Error reading session autodoc file";
+    AdocReleaseMutex();
+    return 1;
+  }
+  mLastSessionFile = mSessionFilename;
+
+  // Clear out and process global entries
+  ClearSession();
+  mSessionFilename = mLastSessionFile;
+
+  numSect = AdocGetNumberOfSections(MGDOC_GRID);
+  if (AdocGetInteger(ADOC_GLOBAL_NAME, 0, MGDOC_APPEND, &val))
+    err = 1;
+  mAppendNames = val != 0;
+  val = 0;
+  if (AdocGetInteger(ADOC_GLOBAL_NAME, 0, MGDOC_LOCKED, &val) < 0)
+    err++;
+  mNamesLocked = val != 0;
+  val = 0;
+  if (AdocGetInteger(ADOC_GLOBAL_NAME, 0, MGDOC_SUBDIRS, &val) < 0)
+    err++;
+  mUseSubdirs = val != 0;
+
+  if (AdocGetFloat(ADOC_GLOBAL_NAME, 0, MGDOC_REFCOUNT, &mReferenceCounts) < 0)
+    err++;
+  GET_STRING(ADOC_GLOBAL_NAME, 0, MGDOC_PREFIX, mPrefix);
+  GET_STRING(ADOC_GLOBAL_NAME, 0, MGDOC_TOPDIR, mWorkingDir);
+  if (AdocGetInteger(ADOC_GLOBAL_NAME, 0, MGDOC_LMMINLD, &mLMMneedsLowDose) < 0)
+    err++;
+  if (AdocGetInteger(ADOC_GLOBAL_NAME, 0, MGDOC_LMM_STNUM, &mLMMusedStateNum) < 0)
+    err++;
+  if (AdocGetInteger(ADOC_GLOBAL_NAME, 0, MGDOC_LMM_MAGIND, &mLMMmagIndex) < 0)
+    err++;
+  GET_STRING(ADOC_GLOBAL_NAME, 0, MGDOC_LMM_STNAME, mLMMusedStateName);
+  ind1 = MAX_AUTOCONT_GROUPS;
+  
+  val = AdocGetIntegerArray(ADOC_GLOBAL_NAME, 0, MGDOC_CONT_GROUP, mAutoContGroups, &ind1,
+    MAX_AUTOCONT_GROUPS);
+  if (val < 0)
+    err++;
+  mHaveAutoContGroups = val == 0;
+
+  if (err)
+    errStr = "Error reading values from global section of autodoc";
+
+  // Process grid entries
+  for (grid = 0; grid < numSect && !err; grid++) {
+    jcd.Init();
+    if (AdocGetInteger(MGDOC_GRID, grid, MGDOC_ID, &jcd.id))
+      err++;
+    if (AdocGetInteger(MGDOC_GRID, grid, MGDOC_STATION, &jcd.station) < 0)
+      err++;
+    if (AdocGetInteger(MGDOC_GRID, grid, MGDOC_SLOT, &jcd.slot))
+      err++;
+    if (AdocGetInteger(MGDOC_GRID, grid, MGDOC_ROTATION, &jcd.rotation) < 0)
+      err++;
+    if (AdocGetInteger(MGDOC_GRID, grid, MGDOC_TYPE, &jcd.type) < 0)
+      err++;
+    if (AdocGetInteger(MGDOC_GRID, grid, MGDOC_LMMAPID, &jcd.LMmapID) < 0)
+      err++;
+    if (AdocGetInteger(MGDOC_GRID, grid, MGDOC_STATUS, &jcd.status) < 0)
+      err++;
+    if (AdocGetFloat(MGDOC_GRID, grid, MGDOC_ZSTAGE, &jcd.zStage) < 0)
+      err++;
+    if (AdocGetTwoFloats(MGDOC_GRID, grid, MGDOC_HOLE_PARAM, &jcd.holeSize,
+      &jcd.holeSpacing) < 0)
+      err++;
+    GET_STRING(MGDOC_GRID, grid, MGDOC_NAME, jcd.name);
+    GET_STRING(MGDOC_GRID, grid, MGDOC_USERNAME, jcd.userName);
+
+    if (!err && jcd.station == JAL_STATION_STAGE) {
+      stageInd = grid;
+      stageID = jcd.id;
+    }
+    mCartInfo->Add(jcd);
+
+    if (err)
+      errStr = "Error reading values from a grid section of the autodoc";
+  }
+
+  // Get montage params and mark as initialized
+  numSect = AdocGetNumberOfSections(SECT_NAME);
+  for (ind1 = 0; ind1 < numSect && !err; ind1++) {
+    if (AdocGetSectionName(SECT_NAME, ind1, &string) != 0) {
+      err++;
+    } else {
+      if (string[0] == '0') {
+        mInitializedGridMont = true;
+        montParam = &mGridMontParam;
+      } else {
+        mInitializedMMMmont = true;
+        montParam = &mMMMmontParam;
+      }
+      free(string);
+#include "NavAdocParams.h"
+      mWinApp->mNavigator->FinishMontParamLoad(montParam, ind1, err);
+      montParam->warnedConSetBin = true;
+      if (AdocGetFloat(SECT_NAME, ind1, "MinUmOverlap", &montParam->minMicronsOverlap))
+        err++;
+      if (AdocGetFloat(SECT_NAME, ind1, "MinOverlapFac", &montParam->minOverlapFactor))
+        err++;
+      if (err)
+        errStr = "Error reading MontParam section of autodoc";
+    }
+  }
+  AdocClear(adocInd);
+
+  // Adjust dialog and other parameters
+  if (err) {
+    ClearSession();
+  } else {
+    if (mNavHelper->mMultiGridDlg) {
+      mNavHelper->mMultiGridDlg->SetNumUsedSlots((int)mCartInfo->GetSize());
+      mNavHelper->mMultiGridDlg->m_strPrefix = mPrefix;
+      mNavHelper->mMultiGridDlg->SetRootname();
+      mNavHelper->mMultiGridDlg->UpdateData(false);
+      mNavHelper->mMultiGridDlg->ReloadTable(1, 1);
+      mNavHelper->mMultiGridDlg->CheckIfAnyUndoneToRun();
+      mNavHelper->mMultiGridDlg->UpdateCurrentDir();
+    }
+    IdentifyGridOnStage(stageID, stageInd);
+    mParams.appendNames = mAppendNames;
+    mParams.useSubdirectory = mUseSubdirs;
+    if (!mWorkingDir.IsEmpty() && !mNamesLocked) {
+      if (!_chdir((LPCTSTR)mWorkingDir))
+        mWinApp->mDocWnd->SetInitialDirToCurrentDir();
+    }
+
+    if (mNavHelper->mMultiGridDlg) {
+       mNavHelper->mMultiGridDlg->UpdateSettings();
+      mNavHelper->mMultiGridDlg->UpdateEnables();
+    }
+  }
+
+  AdocReleaseMutex();
+  return err;
+}
+#undef ADOC_REQUIRED
+#undef ADOC_BOOL_ASSIGN
+#undef INT_SETT_ASSIGN
+#undef BOOL_SETT_ASSIGN
+#undef FLOAT_SETT_ASSIGN
+#undef SECT_NAME
+#undef NAV_MONT_PARAMS
+#undef SKIP_ADOC_PUTS
+#undef GET_STRING
+
+/*
+ * Function to let the user specify the grid on the stage; the ID and index are of what
+ * is thought to be on the stage if anything
+ */
+void CMultiGridTasks::IdentifyGridOnStage(int stageID, int &stageInd)
+{
+  CString direc;
+  int ind1, newID = stageID;
+  direc.Format("Enter %s of grid on stage or -1 if none:", JEOLscope ? "ID" : "slot #");
+  if (KGetOneInt(direc, newID)) {
+    if (newID != stageID) {
+      if (stageInd >= 0) {
+        JeolCartridgeData &jcdEl = mCartInfo->ElementAt(stageInd);
+        jcdEl.station = JAL_STATION_MAGAZINE;
+      }
+      stageInd = -1;
+      if (newID >= 0) {
+        for (ind1 = 0; ind1 < (int)mCartInfo->GetSize(); ind1++) {
+          JeolCartridgeData &jcdEl = mCartInfo->ElementAt(ind1);
+          if (jcdEl.id == newID) {
+            stageInd = ind1;
+            jcdEl.station = JAL_STATION_STAGE;
+            break;
+          }
+        }
+        if (stageInd < 0)
+          AfxMessageBox("That number is not in the inventory", MB_EXCLAME);
+      }
+    } 
+  }
+  if (mNavHelper->mMultiGridDlg)
+    mNavHelper->mMultiGridDlg->NewGridOnStage(stageInd);
+  mScope->SetSimCartridgeLoaded(newID);
+  mWinApp->RestoreViewFocus();
 }
 
 /*static float RRGfunk(float *y, float *err)

@@ -651,7 +651,11 @@ BEGIN
             MENUITEM "Setup &Polygon Montage",      ID_POLYGON_MONTAGE
             MENUITEM "Setup &Full Montage",         ID_NAVIGATOR_SETUPFULLMONTAGE
             MENUITEM "Set &Grid Limits",            ID_NAVIGATOR_SETGRIDLIMITS
+            MENUITEM SEPARATOR
             MENUITEM "Mult&iple Grid Operations...", ID_MONTAGINGGRIDS_MULTIPLEGRIDOPERATIONS
+            MENUITEM "Read &Session File...",       ID_MONTAGINGGRIDS_READSESSIONFILE
+            MENUITEM "Clear Multi-grid Session",    ID_MONTAGINGGRIDS_CLEARSESSION
+            MENUITEM "Identify Grid on Stage...",   ID_MONTAGINGGRIDS_IDENTIFYGRIDONSTAGE
             MENUITEM SEPARATOR
             MENUITEM "Fi&nd Holes in Regular Grid...", ID_MONTAGINGGRIDS_FINDREGULARARRAYOFHOLES
             MENUITEM "&Add Grid of Points",         ID_NAVIGATOR_ADDGRIDOFPOINTS
@@ -669,7 +673,7 @@ BEGIN
             MENUITEM "Reverse Con&tour Colors",     ID_MONTAGINGGRIDS_REVERSECONTOURCOLORS
             MENUITEM "&Keep Colors for Polygons",   ID_MONTAGINGGRIDS_KEEPCOLORSFORPOLYGONS
             MENUITEM SEPARATOR
-            MENUITEM "Setup &Super Montage",        ID_NAVIGATOR_ALIGNEDSUPERMONTAGE
+            MENUITEM "Setup Super Montage",         ID_NAVIGATOR_ALIGNEDSUPERMONTAGE
             MENUITEM "P&olygon Super Montage",      ID_SUPERMONTAGING_POLYGONSUPERMONTAGE
             MENUITEM "A&dd Circle Polygon",         ID_NAVIGATOR_ADDCIRCLEPOLYGON
             MENUITEM "Pol&ygon from Corners",       ID_NAVIGATOR_POLYGON_FROM_CORNERS
@@ -1293,8 +1297,8 @@ BEGIN
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,190,125,10
     CONTROL         "Do full rectangle; ignore list of pieces to skip",IDC_IGNORESKIPS,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,230,147,10
-    LTEXT           "FITTING TO NAVIGATOR AREA: Change mag",IDC_STATNAVFIT1,9,36,141,8
-    LTEXT           "to adjust number of pieces.  Changing mag,",IDC_STATNAVFIT2,9,45,129,8
+    LTEXT           "FITTING TO NAVIGATOR AREA: Change mag",IDC_STATNAVFIT1,9,36,157,8
+    LTEXT           "to adjust number of pieces.  Changing mag,",IDC_STATNAVFIT2,9,45,157,8
     LTEXT           "binning, overlap, or ""Move stage"" will refit to area",IDC_STATNAVFIT3,9,54,145,8
     LTEXT           "Minimum overlap:",IDC_MINOVLABEL,8,155,54,8
     RTEXT           "99%",IDC_MINOVVALUE,64,155,14,8
@@ -4043,9 +4047,10 @@ STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Multiple Grid Operations"
 FONT 8, "Microsoft Sans Serif", 400, 0, 0x0
 BEGIN
-    DEFPUSHBUTTON   "OK",IDOK,58,499,40,14
-    PUSHBUTTON      "Cancel",IDCANCEL,108,499,40,14
-    LTEXT           "Run   Sel",IDC_STAT_RUN,6,2,33,8
+    LTEXT           "",IDC_STAT_SPACER,99,505,8,8
+    DEFPUSHBUTTON   "OK",IDOK,87,499,32,14
+    PUSHBUTTON      "Cancel",IDCANCEL,122,499,32,14
+    LTEXT           "Run   Sel   Status",IDC_STAT_RUN,6,2,60,8
     LTEXT           "Name",IDC_STAT_NAME,83,2,20,8
     CONTROL         "",IDC_CHECK_MULGRID_RUN1,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,6,12,8,10
     CONTROL         "",IDC_CHECK_MULGRID_RUN2,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,6,25,8,10
@@ -4073,19 +4078,32 @@ BEGIN
     CONTROL         "99999",IDC_RADIO_MULGRID_SEL11,"Button",BS_AUTORADIOBUTTON | BS_CENTER | BS_PUSHLIKE,17,142,22,10
     CONTROL         "99999",IDC_RADIO_MULGRID_SEL12,"Button",BS_AUTORADIOBUTTON | BS_CENTER | BS_PUSHLIKE,17,155,22,10
     CONTROL         "99999",IDC_RADIO_MULGRID_SEL13,"Button",BS_AUTORADIOBUTTON | BS_CENTER | BS_PUSHLIKE,17,168,22,10
-    EDITTEXT        IDC_EDIT_MULGRID_NAME1,42,11,126,12,ES_AUTOHSCROLL
-    EDITTEXT        IDC_EDIT_MULGRID_NAME2,42,24,126,12,ES_AUTOHSCROLL
-    EDITTEXT        IDC_EDIT_MULGRID_NAME3,42,37,126,12,ES_AUTOHSCROLL
-    EDITTEXT        IDC_EDIT_MULGRID_NAME4,42,50,126,12,ES_AUTOHSCROLL
-    EDITTEXT        IDC_EDIT_MULGRID_NAME5,42,63,126,12,ES_AUTOHSCROLL
-    EDITTEXT        IDC_EDIT_MULGRID_NAME6,42,76,126,12,ES_AUTOHSCROLL
-    EDITTEXT        IDC_EDIT_MULGRID_NAME7,42,89,126,12,ES_AUTOHSCROLL
-    EDITTEXT        IDC_EDIT_MULGRID_NAME8,42,102,126,12,ES_AUTOHSCROLL
-    EDITTEXT        IDC_EDIT_MULGRID_NAME9,42,115,126,12,ES_AUTOHSCROLL
-    EDITTEXT        IDC_EDIT_MULGRID_NAME10,42,128,126,12,ES_AUTOHSCROLL
-    EDITTEXT        IDC_EDIT_MULGRID_NAME11,42,141,126,12,ES_AUTOHSCROLL
-    EDITTEXT        IDC_EDIT_MULGRID_NAME12,42,154,126,12,ES_AUTOHSCROLL
-    EDITTEXT        IDC_EDIT_MULGRID_NAME13,42,167,126,12,ES_AUTOHSCROLL | WS_GROUP
+    EDITTEXT        IDC_EDIT_MULGRID_NAME1,55,11,113,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_EDIT_MULGRID_NAME2,55,24,113,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_EDIT_MULGRID_NAME3,55,37,113,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_EDIT_MULGRID_NAME4,55,50,113,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_EDIT_MULGRID_NAME5,55,63,113,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_EDIT_MULGRID_NAME6,55,76,113,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_EDIT_MULGRID_NAME7,55,89,113,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_EDIT_MULGRID_NAME8,55,102,113,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_EDIT_MULGRID_NAME9,55,115,113,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_EDIT_MULGRID_NAME10,55,128,113,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_EDIT_MULGRID_NAME11,55,141,113,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_EDIT_MULGRID_NAME12,55,154,113,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_EDIT_MULGRID_NAME13,55,167,113,12,ES_AUTOHSCROLL | WS_GROUP
+    LTEXT           "  ",IDC_STAT_MULGRID_STATUS1,41,13,12,8
+    LTEXT           "  ",IDC_STAT_MULGRID_STATUS2,41,26,12,8
+    LTEXT           "  ",IDC_STAT_MULGRID_STATUS3,41,39,12,8
+    LTEXT           "  ",IDC_STAT_MULGRID_STATUS4,41,52,12,8
+    LTEXT           "  ",IDC_STAT_MULGRID_STATUS5,41,65,12,8
+    LTEXT           "  ",IDC_STAT_MULGRID_STATUS6,41,78,12,8
+    LTEXT           "  ",IDC_STAT_MULGRID_STATUS7,41,91,12,8
+    LTEXT           "  ",IDC_STAT_MULGRID_STATUS8,41,103,12,8
+    LTEXT           "  ",IDC_STAT_MULGRID_STATUS9,41,117,12,8
+    LTEXT           "  ",IDC_STAT_MULGRID_STATUS10,41,130,12,8
+    LTEXT           "  ",IDC_STAT_MULGRID_STATUS11,41,143,12,8
+    LTEXT           "  ",IDC_STAT_MULGRID_STATUS12,41,156,12,8
+    LTEXT           "  ",IDC_STAT_MULGRID_STATUS13,41,169,12,8
     PUSHBUTTON      "?",IDC_BUTHELP,157,500,11,10
     PUSHBUTTON      "Get Names",IDC_BUT_MG_GET_NAMES,61,206,41,12
     PUSHBUTTON      "Run Inventory",IDC_BUT_MG_INVENTORY,5,206,50,12
@@ -4100,15 +4118,15 @@ BEGIN
     CONTROL         "Use subdirectories",IDC_CHECK_MG_USE_SUBDIRS,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,5,252,73,10
     PUSHBUTTON      "+",IDC_BUT_MG_SETUP,3,195,10,9
     CTEXT           "Grid Setup",IDC_STAT_MG_GRID_SETUP,69,196,39,8
-    PUSHBUTTON      "Load Grid",IDC_BUT_LOAD_GRID,19,181,50,14
-    PUSHBUTTON      "Realign to Grid Map",IDC_BUT_REALIGN_TO_GRID_MAP,81,181,69,14
+    PUSHBUTTON      "Load Grid",IDC_BUT_LOAD_GRID,42,181,36,14
+    PUSHBUTTON      "Realign to Map",IDC_BUT_REALIGN_TO_GRID_MAP,81,181,51,14
     PUSHBUTTON      "+",IDC_BUT_MG_LOW_MAG_MAPS,3,265,10,9
     CONTROL         "LD Search",IDC_RLMM_SEARCH,"Button",BS_AUTORADIOBUTTON | WS_GROUP,20,274,40,10
     CONTROL         "LD View",IDC_RLMM_VIEW,"Button",BS_AUTORADIOBUTTON,64,274,34,10
     CONTROL         "Current or set state",IDC_RLMM_CUR_OR_STATE,"Button",BS_AUTORADIOBUTTON,101,274,65,10
     LTEXT           "Use:",IDC_STAT_USE1,4,274,14,8
     CONTROL         "Set state:",IDC_CHECK_SET_LMM_STATE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,5,286,39,10
-    COMBOBOX        IDC_COMBO_LMM_STATE,44,286,64,30,CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
+    COMBOBOX        IDC_COMBO_LMM_STATE,44,286,70,30,CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
     CONTROL         "Remove objective aperture",IDC_CHECK_REMOVE_OBJ,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,5,299,100,10
     CONTROL         "Set condenser aperture to",IDC_CHECK_SET_CONDENSER,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,5,310,89,10
@@ -4126,28 +4144,29 @@ BEGIN
     LTEXT           "%",IDC_STAT_PERCENT,96,338,8,8
     PUSHBUTTON      "Setup Montage",IDC_BUT_SETUP_LMM_MONT,108,336,55,12
     CONTROL         "Autocontour grid squares",IDC_CHECK_AUTOCONTOUR,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,5,351,96,10
-    PUSHBUTTON      "Setup",IDC_BUT_SETUP_POLYMONT,141,414,27,12
+    PUSHBUTTON      "Setup",IDC_BUT_SETUP_POLYMONT,145,414,23,12
     PUSHBUTTON      "+",IDC_BUT_MG_MEDIUM_MAG_MAPS,3,364,10,9
     CONTROL         "LD Search",IDC_RMMM_SEARCH,"Button",BS_AUTORADIOBUTTON | WS_GROUP,20,375,40,10
     CONTROL         "LD View",IDC_RMMM_VIEW,"Button",BS_AUTORADIOBUTTON,64,375,34,10
     CONTROL         "Current or set state",IDC_RMMM_CUR_OR_STATE,"Button",BS_AUTORADIOBUTTON,101,375,65,10
     LTEXT           "Use:",IDC_STAT_USE2,4,375,16,8
-    COMBOBOX        IDC_COMBO_MMM_STATE1,37,387,64,30,CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
-    COMBOBOX        IDC_COMBO_MMM_STATE2,37,401,64,30,CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
-    COMBOBOX        IDC_COMBO_MMM_STATE3,104,387,64,30,CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
-    LTEXT           "Set states:",IDC_STAT_SET_MMM_STATES,4,395,33,8
-    CONTROL         "Single image",IDC_RSINGLE_IMAGE,"Button",BS_AUTORADIOBUTTON | WS_GROUP,24,415,51,10
-    CONTROL         "Polygon montage",IDC_RPOLYGON_MONT,"Button",BS_AUTORADIOBUTTON,77,415,63,10
-    LTEXT           "Take:",IDC_STAT_MMM_ACQ_TYPE,4,415,17,8
+    COMBOBOX        IDC_COMBO_MMM_STATE1,25,387,70,30,CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
+    COMBOBOX        IDC_COMBO_MMM_STATE2,25,401,70,30,CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
+    COMBOBOX        IDC_COMBO_MMM_STATE3,98,387,70,30,CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "States:",IDC_STAT_SET_MMM_STATES,4,395,21,8
+    CONTROL         "Image",IDC_RSINGLE_IMAGE,"Button",BS_AUTORADIOBUTTON | WS_GROUP,23,415,29,10
+    CONTROL         "Polygon mont",IDC_RPOLYGON_MONT,"Button",BS_AUTORADIOBUTTON,52,415,51,10
+    CONTROL         "nXn mont",IDC_RFIXED_MONT,"Button",BS_AUTORADIOBUTTON,106,415,38,10
+    LTEXT           "Take:",IDC_STAT_MMM_ACQ_TYPE,4,415,19,8
     PUSHBUTTON      "Setup",IDC_BUT_SETUP_AUTOCONT2,101,350,27,12
-    PUSHBUTTON      "Set Mapping Parameters",IDC_BUT_SETUP_MAPPING,41,427,85,14
+    PUSHBUTTON      "Set Mapping Parameters",IDC_BUT_SETUP_MAPPING,43,427,85,14
     PUSHBUTTON      "+",IDC_BUT_MG_FINAL_ACQ,3,445,10,9
-    COMBOBOX        IDC_COMBO_FINAL_STATE3,104,454,64,30,CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
-    COMBOBOX        IDC_COMBO_FINAL_STATE2,37,468,64,30,CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
-    COMBOBOX        IDC_COMBO_FINAL_STATE1,37,454,64,30,CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
-    LTEXT           "Set states:",IDC_STAT_SET_FINAL_STATES,4,462,32,8
-    PUSHBUTTON      "Set Final Acquire Parameters",IDC_BUT_SETUP_FINAL_ACQ,37,481,96,14
-    PUSHBUTTON      "Start Run",IDC_BUT_START_RUN,8,499,40,14
+    COMBOBOX        IDC_COMBO_FINAL_STATE3,98,454,70,30,CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
+    COMBOBOX        IDC_COMBO_FINAL_STATE2,25,468,70,30,CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
+    COMBOBOX        IDC_COMBO_FINAL_STATE1,25,454,70,30,CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "States:",IDC_STAT_SET_FINAL_STATES,4,462,20,8
+    PUSHBUTTON      "Set Final Data Parameters",IDC_BUT_SETUP_FINAL_ACQ,40,481,90,14
+    PUSHBUTTON      "Run All",IDC_BUT_START_RUN,3,499,32,14
     CONTROL         "",IDC_TSS_LINE2,"Static",SS_BLACKFRAME | SS_SUNKEN,2,497,166,1
     CONTROL         "",IDC_TSS_LINE3,"Static",SS_BLACKFRAME | SS_SUNKEN,18,200,49,2
     CONTROL         "",IDC_TSS_LINE4,"Static",SS_BLACKFRAME | SS_SUNKEN,112,200,50,2
@@ -4156,13 +4175,15 @@ BEGIN
     CONTROL         "",IDC_TSS_LINE7,"Static",SS_BLACKFRAME | SS_SUNKEN,18,449,27,2
     CONTROL         "",IDC_TSS_LINE8,"Static",SS_BLACKFRAME | SS_SUNKEN,133,449,29,2
     CONTROL         "",IDC_TSS_LINE10,"Static",SS_BLACKFRAME | SS_SUNKEN,130,268,32,2
-    LTEXT           "",IDC_STAT_SPACER,99,505,8,8
     CONTROL         "Acquire Grid Maps",IDC_CHECK_RUN_LMMS,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,54,264,74,10
     CONTROL         "Acquire Medium Mag Maps",IDC_CHECK_TAKE_MMMS,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,41,363,101,10
     CONTROL         "Run Final Acquisition",IDC_CHECK_RUN_FINAL_ACQ,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,50,444,82,10
     CONTROL         "",IDC_TSS_LINE9,"Static",SS_BLACKFRAME | SS_SUNKEN,18,268,31,2
-    COMBOBOX        IDC_COMBO_MMM_STATE4,104,401,64,30,CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
-    COMBOBOX        IDC_COMBO_FINAL_STATE4,104,468,64,30,CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
+    COMBOBOX        IDC_COMBO_MMM_STATE4,98,401,70,30,CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
+    COMBOBOX        IDC_COMBO_FINAL_STATE4,98,468,70,30,CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
+    PUSHBUTTON      "Run Undone",IDC_BUT_RUN_UNDONE,38,499,46,14
+    PUSHBUTTON      "Open Nav",IDC_BUT_OPEN_NAV,3,181,36,14
+    PUSHBUTTON      "Set Type",IDC_BUT_SET_GRID_TYPE,135,181,33,14
 END
 
 
@@ -6055,6 +6076,16 @@ STRINGTABLE
 BEGIN
     IDC_SET_SEARCH_SHIFT    "Set shift offset for Search from shift of image in A or markers in A and B"
     IDC_NA_RUN_AT_ITEM_Z    "Do not move stage in Z when going to another item location to run a task"
+    IDC_BUT_MG_GET_NAMES    "Fetch names from Autoloader dialog (FEI) or load from JEOL catalogue"
+    IDC_BUT_MG_INVENTORY    "Run a cassette inventory (slow on FEI, quick on JEOL)"
+    IDC_EDIT_MG_PREFIX      "Enter a prefix to grid number and name for use in filenames"
+    IDC_CHECK_MG_APPEND_NAME 
+                            "Append the grid name to rootname used in filenames for a grid"
+    IDC_BUT_MG_RESET_NAMES  "Reset the names to the ones that came from the microscope"
+    IDC_BUT_MG_CLEAR        "Completely remove all the names in the table"
+    IDC_BUT_SET_CURRENT_DIR "Set the program current working directory, which will be used for new files"
+    IDC_CHECK_MG_USE_SUBDIRS 
+                            "Put Navigator, map and all other files in a subdirectory for each grid"
 END
 
 STRINGTABLE
@@ -7542,6 +7573,11 @@ BEGIN
                             "Save log in RTF format to preserve colors and styles"
     ID_MONTAGINGGRIDS_MULTIPLEGRIDOPERATIONS 
                             "Open dialog to run procedures on multiple grids"
+    ID_MONTAGINGGRIDS_READSESSIONFILE "Read file from multi-grid session"
+    ID_MONTAGINGGRIDS_CLEARSESSION 
+                            "Clear out all data about the multi-grid session"
+    ID_MONTAGINGGRIDS_IDENTIFYGRIDONSTAGE 
+                            "Specify which grid is currently loaded"
 END
 
 STRINGTABLE
@@ -7562,12 +7598,105 @@ BEGIN
     IDC_EDIT_MAP_CUTOFF     "Start of low-pass Gaussian falloff (radius2) in reciprocal pixels (0-0.5)"
     IDC_EDIT_MAP_FALLOFF    "Gaussian sigma of falloff (sigma2) in reciprocal pixels (0-0.5)"
     IDC_USE_BEST_SUBSET     "Select biggest subset of holes on diagonals at 1.07 um periodicity"
-    IDC_EDIT_TILT_OFFSET    "Angle added to actual tilt angle to get angle for dynamic focusing"
+    IDC_CHECK_MULGRID_RUN1  "Select this grid to be included in a run"
+    IDC_CHECK_MULGRID_RUN2  "Select this grid to be included in a run"
+    IDC_CHECK_MULGRID_RUN3  "Select this grid to be included in a run"
+    IDC_CHECK_MULGRID_RUN4  "Select this grid to be included in a run"
 END
 
 STRINGTABLE
 BEGIN
+    IDC_EDIT_TILT_OFFSET    "Angle added to actual tilt angle to get angle for dynamic focusing"
+    IDC_BUT_MG_LOW_MAG_MAPS "Open or close the section for low mag grid mapping"
+    IDC_BUT_MG_MEDIUM_MAG_MAPS 
+                            "Open or close section for acquiring medium-mag maps"
+    IDC_RFIXED_MONT         "Acquire medium-mag maps with specific number of montage pieces in X and Y"
+    IDC_COMBO_MMM_STATE4    "Set a state to use in the Mapping Navigator acquisition at medium mag"
+    IDC_COMBO_FINAL_STATE4  "Set a state to use in the final acquisition by Navigator Acquire at Items"
+END
+
+STRINGTABLE
+BEGIN
+    IDC_BUT_MG_SETUP        "Open or close the Grid Setup section"
     IDC_CHECK_DISABLE_TRIM  "Do not trim dark borders in the indicated steps of these two tasks"
+    IDC_RADIO_MULGRID_SEL1  "Select this grid for loading, opening Nav file, or realigning to map"
+    IDC_RADIO_MULGRID_SEL2  "Select this grid for loading, opening Nav file, or realigning to map"
+    IDC_RADIO_MULGRID_SEL3  "Select this grid for loading, opening Nav file, or realigning to map"
+    IDC_RADIO_MULGRID_SEL4  "Select this grid for loading, opening Nav file, or realigning to map"
+END
+
+STRINGTABLE
+BEGIN
+    IDC_EDIT_MULGRID_NAME1  "Edit grid name fetched from scope or fill in a completely new name"
+    IDC_EDIT_MULGRID_NAME2  "Edit grid name fetched from scope or fill in a completely new name"
+END
+
+STRINGTABLE
+BEGIN
+    IDC_EDIT_MULGRID_NAME3  "Edit grid name fetched from scope or fill in a completely new name"
+    IDC_EDIT_MULGRID_NAME4  "Edit grid name fetched from scope or fill in a completely new name"
+END
+
+STRINGTABLE
+BEGIN
+    IDC_BUT_LOAD_GRID       "Load the grid selected with the push buttons"
+    IDC_BUT_REALIGN_TO_GRID_MAP 
+                            "Run the routine to realign the reloaded grid to the grid map"
+    IDC_RLMM_SEARCH         "Take grid map with Search in Low Dose mode"
+    IDC_RLMM_VIEW           "Take grid map with View in Low Dose mode"
+    IDC_RLMM_CUR_OR_STATE   "Take grid map with imaging in current state or in a state to be set"
+    IDC_CHECK_SET_LMM_STATE "Set a state for taking the grid maps"
+    IDC_COMBO_LMM_STATE     "Select the state to use for taking the grid maps"
+END
+
+STRINGTABLE
+BEGIN
+    IDC_CHECK_REMOVE_OBJ    "Remove objective aperture for taking and realigning to grid map"
+    IDC_BUT_MG_FINAL_ACQ    "Open or close section for final acquisition"
+    IDC_CHECK_SET_CONDENSER "Change the condenser to indicated size for taking & realigning to grid map"
+    IDC_EDIT_CONDENSER      "Enter the condenser aperture size to use for grid maps"
+    IDC_RFULL_GRID_MONT     "Set up a full grid montage for the grid maps"
+    IDC_RNUM_MONT_PIECES    "Set up a montage with a specific number of pieces for the grid maps"
+    IDC_EDIT_MONT_XPCS      "Enter number of montage pieces in X for grid map"
+    IDC_EDIT_MONT_NUM_YPCS  "Enter number of montage pieces in Y for grid map"
+    IDC_CHECK_USE_OVERLAP   "Set a specific percent overlap between pieces for the grid montages"
+    IDC_EDIT_OVERLAP        "Enter the percent overlap between pieces for the grid montages"
+    IDC_BUT_SETUP_LMM_MONT  "Check the grid map montage properties in the montage setup dialog"
+END
+
+STRINGTABLE
+BEGIN
+    IDC_CHECK_AUTOCONTOUR   "Autocontour grid squares after obtaining grid maps"
+    IDC_BUT_SETUP_POLYMONT  "Set up montage to be used for medium-mag maps"
+    IDC_COMBO_MMM_STATE1    "Set a state to use in the Mapping Navigator acquisition at medium mag"
+    IDC_RMMM_SEARCH         "Acquire medium-mag maps with Search in Low Dose mode"
+    IDC_RMMM_VIEW           "Acquire medium-mag maps with View in Low Dose mode"
+    IDC_RMMM_CUR_OR_STATE   "Acquire medium-mag maps with the current state or state to be set"
+    IDC_COMBO_MMM_STATE2    "Set a state to use in the Mapping Navigator acquisition at medium mag"
+    IDC_COMBO_MMM_STATE3    "Set a state to use in the Mapping Navigator acquisition at medium mag"
+    IDC_RSINGLE_IMAGE       "Acquire single-frame images for medium-mag maps"
+    IDC_RPOLYGON_MONT       "Acquire polygon montages for medium-mag maps"
+    IDC_BUT_SETUP_AUTOCONT2 "Open Autocontouring Setup dialog"
+END
+
+STRINGTABLE
+BEGIN
+    IDC_BUT_SETUP_MAPPING   "Open Navigator Aqcuire at Items dialog to set up medium-mag mapping"
+    IDC_COMBO_FINAL_STATE3  "Set a state to use in the final acquisition by Navigator Acquire at Items"
+    IDC_COMBO_FINAL_STATE2  "Set a state to use in the final acquisition by Navigator Acquire at Items"
+    IDC_COMBO_FINAL_STATE1  "Set a state to use in the final acquisition by Navigator Acquire at Items"
+    IDC_BUT_SETUP_FINAL_ACQ "Open Navigator Aqcuire at Items dialog to set up final acquisition"
+    IDC_BUT_START_RUN       "Start or resume running selected multiple grids"
+    IDC_CHECK_RUN_LMMS      "Take grid maps from multiple selected grids"
+    IDC_CHECK_TAKE_MMMS     "Take medium-mag  maps from multiple selected grids"
+    IDC_CHECK_RUN_FINAL_ACQ "Run final acquisition from  multiple selected grids"
+END
+
+STRINGTABLE
+BEGIN
+    IDC_BUT_RUN_UNDONE      "Start running multiple grids, doing only steps that are not done yet"
+    IDC_BUT_OPEN_NAV        "Open Navigator file for grid selected by push-buttons"
+    IDC_BUT_SET_GRID_TYPE   "set grid type (hole size and spacing for now) for selected grid"
 END
 
 #endif    // English (United States) resources

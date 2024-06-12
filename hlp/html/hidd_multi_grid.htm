@@ -1,0 +1,368 @@
+<html>
+  <head>
+    <title>Multiple Grid Operations Dialog</title>
+    <meta HTTP-EQUIV="Content-Type" Content="text/html; charset=Windows-1252"/>
+    <style type="text/css"> <!-- BODY { font-family:"Arial" }
+  TD { font-size:16 }
+      .style1
+      {
+        font-size: larger;
+        font-weight: bold;
+      }
+      --></style>
+  </head>
+  <body BGCOLOR="#ffffff" TEXT="#000000">
+    <basefont size="2">
+    <p><a NAME="hidd_multi_grid"></a><span class="style1">Multiple Grid Operations
+        Dialog</span></p>
+    <p>This dialog 
+      provides for acquisition from multiple grids using an autoloader.&nbsp; The 
+      operations can occur in three phases: acquisition of grid maps at low 
+      maginification, acquisition of medium magnification maps using the &#39;Mapping&#39; 
+      parameters of the Navigator Acquire at Items dialog, and acquisition of final 
+      data with the &#39;Final Data&#39; parameters of Acquire at Items.&nbsp; 
+      Navigator files are managed throughout the process.&nbsp; Information about the 
+      grids and some of the parameter settings are saved automatically in a &#39;session&#39; 
+      file in the autodoc format, with extension &#39;.adoc&#39;.&nbsp; The dialog has 
+      controls in different sections that can be closed when not relevant.</p>
+    <p>In principle, the multiple grid capabilities provided here allow all phases to 
+      be done in sequence during one run on a set of grids.&nbsp; The use of imaging 
+      states is crucial to being able to run more than one phase at a time with 
+      predictable results.&nbsp; The dialog thus includes drop-down boxes with all of 
+      the states managed in the Imaging State dialogs.&nbsp; For states with names, 
+      the boxes show the state index, the type of state, a 0 if the camera is not 
+      currently available, the magnification, and the name.&nbsp;&nbsp; The type can 
+      be S, V, R, F, T, or - as in the Imaging States dialog, plus RM for a Low Dose 
+      state or -M for a non-Low Dose state that sets Mont-map parameters.&nbsp; For 
+      states without names, the box shows the index, type, camera number or 0 if not 
+      available, magnification, and spot/probe mode.&nbsp; For grid mapping, only one 
+      state can be selected, one directly related to the camera parameter set to be 
+      used for the montage.&nbsp; For medium magnification mapping and final 
+      acquisition, four states can be selected because up to 5 states can be set in 
+      Low Dose and because one can imagine needing three for doing related tasks plus 
+      the primary acquisition.&nbsp; If a non-Low Dose state is selected, only one 
+      state can be set.&nbsp; The program will reject selections that are inconsistent 
+      or redundant.&nbsp; The controls in the Imaging State dialog for deleting, 
+      updating, or renaming an existing state are disabled while the multi-grid dialog 
+      is open.&nbsp; If you need to change these settings, just close and reopen this 
+      dialog.</p>
+    <p>When a grid is reloaded after mapping, the multi-grid routine must be able to 
+      apply a stored shift from a Shift to Marker to the Navigator items, unless it 
+      sees that such a shift has already been applied.&nbsp; A grid has a different 
+      center point and rotation every time it is reloaded, so whenever a grid is 
+      reloaded for the later phases of operation, it is realigned to the grid map (see 
+      Realign to Map below and the &#39;RealignReloadedGrid&#39; script command).&nbsp; 
+      Navigator points are transformed based on the shift and rotation. To give a 
+      better registration with stage positions at higher magnifications, a one-time 
+      Shift to Marker has to be applied to the grid map and any items already marked 
+      on it.&nbsp; Thus, in general, such a shift needs to be stored before running 
+      the later phases.&nbsp; If the <A href="hidd_shift_to_marker.htm">Shift to Marker</A> 
+      dialog is opened while this dialog is open, its radio buttons will be set 
+      appropriately for storing a shift.&nbsp;&nbsp; The &#39;ShiftItemsByMicrons&#39; script 
+      command can be used instead to apply a shift that will satisfy this requirement.</p>
+    <p><strong><em>Grid Setup and the Grid Table</em></strong></p>
+    <p>The top section of the dialog has a table showing the grids that are in the 
+      autoloader, omitting any empty cartridges.&nbsp; The first column has a set of 
+      checkboxes to select which grids will be included in a multi-grid operation.&nbsp; 
+      The second column is a set of radio pushbuttons for selecting one grid for which 
+      to do one of the operations in the row of buttons below the table.&nbsp; The 
+      pushbuttons are labeled with the slot number for Thermo/FEI scopes or the ID 
+      number for JEOL scopes.&nbsp; The third column, initially empty, contains a 
+      status code showing how far the grid has been processed.&nbsp; The fourth column 
+      has text boxes to allow you to see and edit the names for each grid.&nbsp; The 
+      name of the currently loaded grid will be shown in bold text.</p>
+    <p>&nbsp;</p>
+    <p><em>Grid Setup: </em>the controls in ths section determine where files will be 
+      located and how they will be named. They are disabled and their values are 
+      locked in when the first run is started; the name text boxes are also disabled.&nbsp; 
+      The controls and outputs here are:</p>
+    <p><strong>Run Inventory</strong></p>
+    <p>Use this button to run an inventory of the autoloader contents.&nbsp; An 
+      inventory is needed to determine which slots are occupied.&nbsp; On a JEOL 
+      scope, this is a relatively quick operation that must be run from SerialEM and 
+      populates an internal table of grid information.&nbsp; On a Thermo/FEI scope, it 
+      is a time-consuming operation that provides no information to SerialEM and can 
+      be run just as well with the button in the Autoloader panel of the TEM User 
+      Interface.&nbsp; The inventory can be stopped only from that panel, not by 
+      SerialEM.</p>
+    <p><strong>Get Names</strong></p>
+    <p>Use this button to set up the dialog table with a row for each available grid.&nbsp; 
+      If there is a name in the microscope&#39;s autoloader interface, it will be used; 
+      otherwise the name will be &#39;Car&#39; followed by the slot or ID number.&nbsp; Spaces 
+      are replaced by underscores, and a variety of special characters are replaced by 
+      &#39;@&#39;.&nbsp; The goal is to eliminate not just characters that are illegal in 
+      filenames, but also characters that can cause trouble when using scripting and 
+      shell commands to manipulate filenames.&nbsp; When a name is edited, 
+      unacceptable characters are immediately replaced.&nbsp; Properties could be 
+      added to provide more flexibility (retention of spaces, use of &#39;^&#39; instead of 
+      &#39;@&#39;, or retention of characters that are legal in filenames).&nbsp; 
+</p>
+    <p><em>For Thermo/FEI scopes, it is not possible for SerialEM to determine if 
+      there is a grid on the stage unless SerialEM loaded it.&nbsp; </em>The program 
+      will ask you to enter the slot number of the grid on the stage, or 0 if there is 
+      none.&nbsp; The entry box will default to an unoccupied slot that has a name, or 
+      an unoccupied slot surrounded by filled ones, but only if there is just one such 
+      slot.</p>
+    <p><strong>Reset</strong></p>
+    <p>Use this button to discard your name changes and revert to the names from the 
+      microscope or the default names provided.&nbsp; The program will ask you to 
+      confirm this action if you have edited names.</p>
+    <p><strong>Clear</strong></p>
+    <p>Use this button to clear out all the names, which might be convenient if you 
+      are going to modify all of them. The program will ask you to confirm this action 
+      if you have edited names.</p>
+    <p><strong>Prefix</strong></p>
+    <p>Add an entry to this text box to have the root name for each individual grid 
+      start with the prefix.&nbsp; Again, unacceptable characters will be replaced as 
+      you add them.&nbsp; The prefix can include a preferred way to refer to the 
+      cartridges or grids.&nbsp; Specifically, if the prefix ends with &#39;Car&#39;, &#39;car&#39;, 
+      &#39;Grid&#39; or &#39;grid&#39;, or one of these followed by &#39;_&#39;, then the slot or ID number 
+      will be appended after this without the default &#39;_C&#39;.</p>
+    <p><strong>Append names</strong></p>
+    <p>Select this option to have the names shown in the table added to the root name, 
+      after an underscore.</p>
+    <p><strong>Root name</strong></p>
+    <p>&nbsp;This line shows the form of the root name, with &#39;##&#39; for the slot or ID 
+      number, and &#39;name&#39; for the individual name.</p>
+    <p><strong>Use subdirectories</strong></p>
+    <p>Select this option to have files placed in a subdirectory for each grid, named 
+      by the root name.</p>
+    <p><strong>Current dir</strong></p>
+    <p>Before any runs have been done, this line shows the program&#39;s current working 
+      directory; afterwards, it shows the location where this session&#39;s files are.</p>
+    <p><strong>Set Current Dir</strong></p>
+    <p>Use this button to set the program's current directory, the same as can be done 
+      through the File menu.</p>
+    <p>&nbsp;</p>
+    <p><em>Single Grid Actions: </em>The buttons below the table operate on the grid 
+      selected by the push-buttons in the table.</p>
+    <p><strong>Open Nav</strong></p>
+    <p>Use this button to open the Navigator file for the selected grid.&nbsp; It is 
+      disabled if there is a no Navigator file or if it is already open.&nbsp; If the 
+      current Navigator table has changes, you will be asked whether you want to save 
+      them.</p>
+    <p><strong>Load Grid</strong></p>
+    <p>Use this button to load the selected grid.&nbsp; The program will also load the 
+      Navigator file if it exists.</p>
+    <p><strong>Realign to Map</strong></p>
+    <p>Use this button to run the routine to realign to the grid map for the selected 
+      grid, which is necessary after reloading the grid.&nbsp; The program will 
+      analyze the image intensity information stored in the map file's '.mdoc'&nbsp; 
+      to determine suitable locations for determining the alignment.&nbsp; It will 
+      align to a central position and find the rotation angle that best aligns with 
+      the map.&nbsp; Then it will move to 4 peripheral positions find the shift at 
+      each of those, assuming the rotation found initially.&nbsp; From all of these 
+      alignment positions, it determines a more accurate rotation and shift, and uses 
+      them to transform the Navigator coordinates of the map and any items at the same 
+      registration.</p>
+    <p><strong>Set Type</strong></p>
+    <p>This button is mostly a placeholder.&nbsp; It will allow you to enter a hole 
+      size and spacing for the selected grid, which will be used if hole finding is 
+      done when acquiring medium-mag maps.&nbsp; This might allow you to do grids of 
+      different types in the same run, but not enough parameters are being stored yet 
+      to allow gold and carbon foil grids to be done together except in the grid 
+      mapping phase.&nbsp; Values need not be entered for every grid; they will be 
+      inherited from the top down for the grids in the table, similar to the 
+      inheritance of tilt series parameters or states in the Navigator table.&nbsp; 
+      The values in the Hole Finder dialog will be used for the top-most grids above 
+      the first one where an entry is made.</p>
+    <p>&nbsp;</p>
+    <p><em><strong>Acquire Grid Maps</strong></em></p>
+    <p>This section of the dialog contains parameters for acquiring grid maps; some of 
+      them also apply when realigning to a reloaded grid.&nbsp; Grid maps must be 
+      montages.</p>
+    <p><strong>Use: LD Search&nbsp; -&nbsp; LD View&nbsp; -&nbsp; Current or set state<br />
+      Set state
+       </strong></p>
+    <p>The radio buttons, possibly together with a selected state to be set, determine 
+      what type of image will be used to acquire the montage.&nbsp; <strong>LD Search</strong> 
+      and <strong>LD View</strong> will result in taking the montage in Low Dose mode 
+      with Search or View, respectively.&nbsp; If a state is selected in the drop-down 
+      box, it must be consistent, i.e., it must be a Low Dose S or V state.&nbsp; </p>
+    <p>The situation is more complicated if <strong>Current or set state</strong> is 
+      selected. If <strong>Set state</strong> is also selected, the state picked in 
+      the drop-down box determines the acquisition.&nbsp; If no state is to be set, 
+      then the current settings govern. The rules are: </p>
+    <ul>
+      <li>Setting a Low Dose S, V, R, or RM state will 
+      result in a map taken in the given state with Search, View, Record, 
+        or Mont-map respectively.&nbsp; </li>
+      <li>Setting a non-Low Dose state will make the map be taken outside of 
+      Low Dose with either Mont-map parameters for a '-M' state or Record otherwise.</li>
+      <li>Outside of 
+      Low Dose with no state set, the montage will be taken at the current magnification with Record 
+      parameters, or with Mont-map parameters if 'Use Montage Mapping, not Record 
+        parameters' is set in the Montage Setup dialog.&nbsp; </li>
+      <li>In Low Dose mode with no state set and a currently defined area, it will be taken with Search or View if 
+      currently in one of those areas, or with Record or Mont-map if in another area, 
+        depwnding on whether 'Use Montage Mapping, not Record parameters' is set in the 
+        Montage Setup dialog.&nbsp; </li>
+      <li>In Low Dose mode with no 
+      area is defined yet, it will be taken with Search or View if 'Use Search in Low 
+      Dose mode' or 'Use View in Low Dose mode' are selected in the Montage Setup 
+      dialog, or with Mont-map if 'Use Montage Mapping, not Record parameters' is set in 
+        the Montage Setup dialog; otherwise the program will give an error when trying to set up the 
+      montage.</li>
+    </ul>
+    <p>
+      <strong>Remove objective aperture</strong></p>
+    <p>Select this option to have the objective aperture removed before starting the 
+      grid maps.&nbsp; The aperture will also be removed in later phases if grids are 
+      reloaded and maps have to be realigned to.&nbsp; Apertures are always restored 
+      to their current state at the end of a run.</strong></p>
+    <p>Select this option and fill in a size to have the condenser aperture changed to 
+      the given size before starting grid maps.&nbsp; Again, this size will used when 
+      realigning after reloading a map.&nbsp; For a JEOL with no 'ApertureSizes' 
+      property with actual condenser aperture sizes, this must be a size index between 
+      1 and 4.</p>
+    <p><strong>Montage: Full grid&nbsp; -&nbsp; N x N pieces</strong></p>
+      <p>Use these radio buttons to select whether to do a full grid montage, the same as would be done with the 
+      Navigator - Montaging and Grids - Setup Full Montage menu item, or a montage 
+      with a specified number of pieces in X and Y.&nbsp; In the latter case, fill in 
+      the number of pieces.</p>
+    <p><strong>Use overlap of xx %</strong></p>
+    <p>A smaller than usual overlap factor may be possible with low-magnification 
+      maps.&nbsp; Select the check box and fill in a value to set a specific overlap; 
+      otherwise you would have to change it in the Montage Setup dialog.</p>
+    <p><strong>Setup Montage</strong></p>
+    <p>Press this button to check the montage settings in the Montage Setup dialog.&nbsp; 
+      If you do not do this, the dialog will come up when you go to start the run.&nbsp; 
+      Only a few parameters can actually be modified in the dialog.</p>
+    <p><strong>Autocontour grid squares</strong></p>
+    <p>Select this option to run the routine to autocontour grid squares after 
+      acquiring the grid map, using parameters set in the&nbsp; <A HREF="menu_navigator.htm#hid_montaginggrids_autocontourgridsquares">Autocontour Grid 
+            Squares</A> dialog.</p>
+    <p><strong>Setup</strong></p>
+    <p>Press this button to open the <A HREF="menu_navigator.htm#hid_montaginggrids_autocontourgridsquares">Autocontour Grid 
+            Squares</A> dialog and set parameters.&nbsp; Opened this way, it will 
+      allow the group selections to be adjusted even though no contours exist.</p>
+    <p>&nbsp;</p>
+    <p><strong><em>Acquire Medium Mag Maps</em></strong></p>
+    <p>This section contains some controls governing the acThis section contains some controls governing the acquisition of 
+      medium-magnification maps, although other aspects are controlled through the 
+      Acquire at Items dialog.&nbsp; Select the checkbox to include this phase of 
+      operations in the run.</p>
+    <p><strong>Use: LD Search&nbsp; -&nbsp; LD View&nbsp; -&nbsp; Current or set state</strong>
+      <p>The radio buttons, together with the pre-existing settings in the Montage Setup 
+      dialog and with states to be set, determine what kind of images are used for 
+      these maps.&nbsp; The role of states is less than for grid mapping because 
+      simply selecting a View or Search state does not imply that it should be used 
+      for the maps. Here are the rules:</p>
+    <ul>
+      <li>&nbsp;Search will be used if <strong>LD Search</strong> is selected or if all 
+        of these conditions exist: <strong>Current or set state</strong> is selected, a 
+        Low Dose state is to be set or Low Dose mode is currently on, <strong>Polygon 
+        mont</strong> or <strong>nXn mont </strong>is selected, and 'Use Search 
+        parameters in Low Dose mode' is selected in the Montage Setup dialog.w</strong> is selected or if all of these 
+        conditions exist: <strong>Current or set state</strong> is selected, a Low Dose 
+        state is to be set or Low Dose mode is currently on, <strong>Polygon mont</strong> 
+        or <strong>nXn mont </strong>is selected, and 'Use View parameters in Low Dose 
+        mode' is selected in the Montage Setup dialog.&nbsp; Obviously, it is easier 
+        just set the relevant radio button for the View and Search cases.</li>
+      <li>Mont-map parameters will be used if neither of the above conditions apply, and 
+        if <strong>Current or set state</strong> is selected, <strong>Polygon mont</strong> 
+        or <strong>nXn mont </strong>is selected, and either a Mont-map state is 
+        selected or 'Use Montage Mapping, not Record parameters' is selected in the 
+        Montage Setup dialog.</li>
+      <li>Otherwise, Record will be used.</li>
+    </ul>
+   Otherwise, Record will be used.</li>
+    <p>
+      <strong>Take: Image&nbsp; -&nbsp; Polygon mont&nbsp; -&nbsp; nXn mont</strong></p>
+    <p>
+      Use the buttons to select how the maps will be acquired:</p>
+    <ul>
+      <li>Image will acquire a single image instead of a montage.&nbsp; The kind of 
+        image is determined by the selections just described.</li>
+      <li>Polygon mont will fit a montage to each polygon set for acquisition.&nbsp; 
+        'Reusable' polygon montage files will be used so that multiple maps of 
+        essentially the same size can be saved into the same file, resulting in fewer 
+        files.</li>
+      <li>nXn mont will acquire montages with a fixed number of pieces in X and Y.</li>
+    </ul>
+    <p>
+      <strong>Setup</strong></p>
+    <p>
+      Use this button to check the parameters for polygon montages and set the number 
+      of pieces for fixed montages in the Montage Setup dialog.&nbsp; A polygon 
+      montage is fit to a square of an arbitrary but hopefully representative size, to 
+      give you some idea of how big the actual montages will be.&nbsp;
+    </p>
+    <p>
+      <strong>Set Mapping Parameters</strong></p>
+    <p>Use this button to open the Navigator Acquire at Items dialog and set the 
+      Mapping parameters.&nbsp; Some entries there, such as the type of single image 
+      to take in Low Dose mode, will be disabled because they are controlled by the 
+      multi-grid routine.</p>
+    <p>&nbsp;</p>
+    <p><strong><em>Run Final Acquisition</em></strong></p>
+    <p>Select the checkbox to include final data acquisition in the run.</p>
+    <p><strong>Set states</strong></p>
+    <p>The selected states must be consistent and determine what the parameters are 
+      for images taken through Acquire at Items, but do not affect the behavior of the 
+      multi-grid routine.</p>
+    <p><strong>Set Final Acquire Parameters</strong></p>
+    <p>Use this button to open the Navigator Acquire at Items dialog and set the Final 
+      Data parameters.&nbsp; Here, only a few choices will be disabled.&nbsp;&nbsp; 
+      Any type of main action can be chosen.&nbsp; If you happen to want to take tilt 
+      series on some grids and other acquisition on the rest of the grids, first set 
+      up the other acquisition, then switch the main action to tilt series and set 
+      that up.&nbsp; Leave the dialog with tilt series selected.&nbsp;&nbsp; When 
+      running from the multi-grid routine, the program will automatically switch the 
+      acquisition to tilt series when there are items marked for tilt series and now 
+      marked for Acquire.</p>
+    <p>&nbsp;</p>
+    <p><strong><em>Running the Grids, Errors, Pausing, Stopping</em></strong></p>
+    <p>Press <strong>Run All</strong> to run all the grids whose 'Run' box is checked.&nbsp;
+      <strong>Run Undone</strong> can be used to run only the phases that have not yet 
+      been done on the selected grids. It is enabled only if some, but not all, of the 
+      grids have already succeeded on the first phase selected to be run (e.g., if you 
+      select <strong>Acquire Grid Maps</strong> and <strong>Acquire Medium Mag Maps
+      </strong>and some grids already have grid maps, they will start with medium mag 
+      maps).</p>
+    <p>The status codes will be updated as grids run and are as follows:<br />
+      GM - Grid map is done<br />
+      MM - Medium mag maps are done<br />
+      AQ - Final acquisition is done<br />
+      G-D - Grid map is done but grid is too dark to use<br />
+      DA - Grid was judged too dark to use before taking a grid map (this does not occur with current logic) <br />
+      FL - Something failed making the grid map or trying to set eucentricity<br />
+      G-F - Grid map is done, something failed on a later step<br />
+      M-F - Medium mag maps are done, something failed in final acquisition<br />
+    </p>
+    <p>An error in a task started by the multi-grid routine, except for Acquire at 
+      Items, will result in one of three actions: for some errors, it will go on to 
+      the next grid; for others, it will retry the operation once; for the rest, the 
+      whole run will be stopped.</p>
+    <p>An error in an operation performed by Acquire at Items will be treated as it 
+      usually is, with Acquire at Items either stopping or going on to the next item.&nbsp; 
+      The multi-grid routine will be put into a suspended state.&nbsp; Restarting 
+      Acquire at Items will unsuspend the multi-grid routine so that it can proceed 
+      normally when the acquisition finishes.</p>
+    <p>Pressing the STOP button also suspends the multi-grid routine as well as 
+      stopping whatever operation was occurring.&nbsp; If the grid montage was 
+      stopped, starting a montage will unsuspend the multi-grid routine.</p>
+    <p>While operations are running, the button below <strong>Setup</strong> in the 
+      Camera &amp; Macro Tools panel (usually labeled <strong>Preview</strong> or <strong>
+      Montage)</strong> will be labeled <strong>PauseMG</strong>.&nbsp; Pressing this 
+      button will suspend the multi-grid routine at the end of the current grid.&nbsp; 
+      Whenever no operations are running and this routine is suspended, that button 
+      will be labeled <strong>End MGrid</strong>, and pressing it will terminate the 
+      routine, return the microscope to the initial conditions, and re-enable 
+      everything in the dialog.&nbsp; The usual <strong>Resume</strong> button will be labeled <strong>ResumeM</strong>.&nbsp; 
+      Pressing this after a pause will resume the multi-grid routine on the next grid.</p>
+    <p>Pressing ResumeM after any other kind of stop will bring up a message box 
+      asking whether you want to repeat the last operation in the multi-grid sequence, 
+      go on to the next operation, or skip to the next grid.&nbsp; There are no good 
+      error checks on this choice yet, so for now you will have to exercise some 
+      judgement when doing anything except skipping to the next grid.&nbsp; Running 
+      the grid montage, Acquire at Items, realign to the grid map, and eucentricity 
+      should be safe to redo.&nbsp; Also note that the routine assumes that nothing 
+      has changed on the scope (e.g., states or apertures) that would prevent 
+      operations from continuing successfully.&nbsp; If there is any doubt about this, 
+      it is safest to terminate with <strong>End MGrid</strong>, uncheck the grids 
+      done, and restart the run.</p>
+    <p>&nbsp;</p>
+
+  </body>
+</html>

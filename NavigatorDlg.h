@@ -35,12 +35,20 @@ enum NavRegTypes {NAVREG_UNUSED, NAVREG_REGULAR, NAVREG_IMPORT};
 enum NavNewFileTypes {NAVFILE_ITEM = 0, NAVFILE_GROUP, NAVFILE_TS};
 enum NavArrayTypes {NAVARRAY_FILEOPT, NAVARRAY_MONTPARAM, NAVARRAY_TSPARAM, 
   NAVARRAY_STATE};
+enum NavSourceTypes {
+  NAVACQ_SRC_MACRO = 0, NAVACQ_SRC_MENU, NAVACQ_SRC_MG_SET_MMM,
+  NAVACQ_SRC_MG_SET_ACQ, NAVACQ_SRC_MG_RUN_MMM, NAVACQ_SRC_MG_RUN_ACQ
+};
+
 // DO NOT REARRANGE/RENUMBER
 enum NavExtTypes {NAVEXT_ON_MAP = 0, NAVEXT_ON_ALIMONT, NAVEXT_ON_VSMONT, 
   NAVEXT_ON_PIECE};
 enum NavExtErrors {NEXERR_MULTIPLE_ENTRY = 0, NEXERR_NO_DRAWN_ON, NEXERR_NO_MAP_WITH_ID,
   NEXERR_MAP_NOT_MONT, NEXERR_ACCESS_FILE, EXTERR_NO_PIECE_ON, EXTERR_NO_ALI_COORDS, 
   EXTERR_NO_PC_COORD, EXTERR_NO_MDOC, EXTERR_BAD_MDOC_IND};
+
+enum MontSetupSource { SETUPMONT_FROM_MACRO = 1, SETUPMONT_MG_FULL_GRID, 
+  SETUPMONT_MG_LM_NBYN, SETUPMONT_MG_POLYGON, SETUPMONT_MG_MMM_NBYN };
 
 struct ScheduledFile {
   CString filename;
@@ -69,10 +77,11 @@ public:
   CNavAcquireDlg *mNavAcquireDlg;
   BOOL FittingMontage() {return mMontItem != NULL;};
   int FitMontageToItem(MontParam * montParam, int binning, int magIndex, 
-    BOOL forceStage, float overlapFac = 0.);
+    BOOL forceStage, float overlapFac, int iCam, BOOL lowDose);
 	void SetupSuperMontage(BOOL skewed);
-	int FullMontage(bool skipDlg, float overlapFac, bool forMacro = false);
+	int FullMontage(bool skipDlg, float overlapFac, int source = 0);
   void AutoSave();
+  int SaveAndClearTable(bool askIfSave = false);
 	void MoveListSelection(int direction);
 	void SetupSkipList(MontParam * montParam);
 	int FindAndSetupNextAcquireArea();
@@ -83,7 +92,7 @@ public:
 	void AcquireCleanup(int error);
 	int TaskAcquireBusy();
 	void AcquireNextTask(int param);
-  void AcquireAreas(bool fromMenu, bool dlgClosing, bool useTempParams);
+  void AcquireAreas(int source, bool dlgClosing, bool useTempParams);
   void ManageAcquireDlgCleanup(bool fromMenu, bool dlgClosing);
   void AcquireDlgClosing();
   BOOL AcquireOK(bool tiltSeries = false, int startInd = 0, int endInd = -1);
@@ -91,7 +100,7 @@ public:
   void DeleteItem() {OnDeleteitem();};
 	void CornerMontage();
 	int PolygonMontage(CMontageSetupDlg *montDlg, bool skipSetupDlg, int itemInd = -1, 
-    float overlapFac = 0., bool forMacro = false);
+    float overlapFac = 0., int source = 0);
 	void TransformPts();
   void DoClose() {OnCancel();};
   BOOL GetAcquiring() {return mAcquireIndex >= 0;};
@@ -102,8 +111,9 @@ public:
   BOOL NoDrawing() {return !(mAddingPoints || mAddingPoly || mMovingItem);};
 	int GetItemType();
   int LoadNavFile(bool checkAutosave, bool mergeFile, CString *inFilename = NULL);
+  void FinishMontParamLoad(MontParam *montParam, int ind1, int &numAdocErr);
 	int SetupMontage(CMapDrawItem *item, CMontageSetupDlg *montDlg, bool skipSetupDlg, 
-    float overlapFac = 0., bool forMacro = false);
+    float overlapFac = 0., int source = 0);
 	void XfApply(ScaleMat a, float *dxy, float inX, float inY, float &outX, float &outY);
 	int DoSaveAs();
 	int DoSave(bool autoSave);
@@ -189,7 +199,9 @@ public:
   GetMember(int, ScriptToRunAtEnd);
   GetSetMember(int, NumDoneAcq);
   GetMember(bool, UseTempAcqParams);
+  GetMember(bool, IgnoreUpdates);
   void SetCurAcqParmActions(int which) { mAcqParm = mWinApp->GetNavAcqParams(which); mAcqActions = mHelper->GetAcqActions(which); };
+  bool OKtoCloseNav();
 
   CString GetCurrentNavFile() {return mNavFilename;};
   int GetNumNavItems() {return (int)mItemArray.GetSize();};
@@ -516,6 +528,8 @@ private:
   double mReconnectStartTime;  // Time when reconnect started
   int mListHeaderTop;          // Common top and individual left positions for top labels
   int mListHeaderLefts[9];
+  int mFileRangeForMultiGrid;  // Flag that new file over range is done for multiple grids
+  bool mIgnoreUpdates;         // Flag to prevent update of Nav Acquire when getting file
 
 public:
   BOOL RegistrationChangeOK(void);
@@ -711,7 +725,7 @@ public:
   void ProcessVKey(void);
   int ProcessRangeKey(const char *key, int &shiftIndex, int &start, int &end);
   void ClearRangeKeys();
-  void ToggleNewFileOverRange(int start, int end);
+  void ToggleNewFileOverRange(int start, int end, int forMultiGrid = 0);
   void NewFileRangeNextTask(int param);
   BOOL m_bDrawLabels;
   afx_msg void OnDrawLabels();

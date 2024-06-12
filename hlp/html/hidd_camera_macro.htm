@@ -28,7 +28,11 @@
       parameters.</P>
     <P><B>Preview/Montage</B></P>
     <P>Ordinarily, this button will acquire an image with the Preview parameter set. If 
-      montaging has been started, the button will acquire a montaged image.</P>
+      montaging has been started, the button will acquire a montaged image.&nbsp; When 
+      the <a href="hidd_multi_grid.htm">Multiple Grid Operations</a> routine is 
+      running, the button will be labeled <strong>PauseMG</strong> and will make the routine suspend itself at the end of 
+      the current grid.&nbsp;&nbsp; When that routine is suspended, the button is 
+      labeled <strong>End MGrid</strong> and it will terminate that routine.</P>
     <P><B>Search/End</B></P>
     <P>This button will acquire an image with the Search parameter set when no 
       operations are running. Otherwise, it has several uses for ending an operation in an orderly fashion, and 
@@ -50,7 +54,10 @@
       if it will resume the tilt series, or <b>ResumeS</b> if it will resume the 
       script.&nbsp; When other acquisitions are running from the Navigator, the button 
       (labeled <b>PauseN</b>) will pause the acquisition after the current item, and 
-      it can then be resumed with the same button, labeled <b>ResumeN</b>.</P>
+      it can then be resumed with the same button, labeled <b>ResumeN</b>.&nbsp; If 
+      none or these conditions apply and the Multi Grid Operations routine is 
+      suspended, the button is labeled <strong>ResumeM</strong> and will let you 
+      resume those operations.</P>
     <P><B>STOP/EndNav/End All</B></P>
     <P>This is a general Stop button for image acquisition, autofocus, montaging, 
       scripts, tasks, tilt series, or any other extended sequence of actions. It will 
