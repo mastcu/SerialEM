@@ -17,6 +17,8 @@
 #include "EMmontageController.h"
 #include "NavigatorDlg.h"
 #include "ComplexTasks.h"
+#include "NavHelper.h"
+#include "MultiGridDlg.h"
 
 
 #ifdef _DEBUG
@@ -112,6 +114,7 @@ CMontageSetupDlg::CMontageSetupDlg(CWnd* pParent /*=NULL*/)
   mForceStage = false;
   mNoneFeasible = false;
   mLastRecordMoveStage = -1;
+  mForMultiGridMap = 0;
 }
 
 
@@ -290,9 +293,15 @@ BOOL CMontageSetupDlg::OnInitDialog()
   int ind, i, delta, camPosInds[MAX_DLG_CAMERAS];
   CRect butrect;
   bool needFont, viewOK, recordOK, searchOK;
+  BOOL tmpEnable;
+  BOOL forMultiLMmap = mForMultiGridMap == SETUPMONT_MG_FULL_GRID ||
+    mForMultiGridMap == SETUPMONT_MG_LM_NBYN;
+  BOOL overlapFixed = forMultiLMmap && mWinApp->mNavHelper->mMultiGridDlg &&
+    mWinApp->mNavHelper->mMultiGridDlg->m_bUseMontOverlap;
   CFont *littleFont = mWinApp->GetLittleFont(GetDlgItem(IDC_STATICY1));
   CString *modeName = mWinApp->GetModeNames();
-  mLowDoseMode = mWinApp->LowDoseMode();
+  CString str;
+  mLowDoseMode = mForMultiGridMap ? mParam.setupInLowDose : mWinApp->LowDoseMode();
   mMagTab = mWinApp->GetMagTable();
   mCamParams = mWinApp->GetCamParams();
   mActiveCameraList = mWinApp->GetActiveCameraList();
@@ -313,6 +322,13 @@ BOOL CMontageSetupDlg::OnInitDialog()
     mParam.useMultiShot = false;
   } else if (mParam.useSearchInLowDose) {
     mParam.useMultiShot = false;
+  }
+  if (mForMultiGridMap) {
+    EnableDlgItem(IDC_CHECK_SKIP_OUTSIDE, false);
+    EnableDlgItem(IDC_MOVESTAGE, !forMultiLMmap);
+    EnableDlgItem(IDC_CHECK_CLOSE_WHEN_DONE, false);
+    EnableDlgItem(IDC_CHECKOFFERMAP, false);
+    EnableDlgItem(IDC_CHECK_SKIPCORR, false);
   }
 
   SetupPanelTables(sIdTable, sLeftTable, sTopTable, mNumInPanel, mPanelStart,
@@ -351,7 +367,7 @@ BOOL CMontageSetupDlg::OnInitDialog()
   // If size locked by existing open file, disable size controls and see if it is
   // oK to change the setup between low dose and regular
   mMismatchedModes = (mLowDoseMode ? 1 : 0) != (mParam.setupInLowDose ? 1 : 0);
-  if (mSizeLocked) {
+  if (mSizeLocked || (mForMultiGridMap && mForMultiGridMap != SETUPMONT_MG_MMM_NBYN)) {
 
     // Setup just can't be changed if View is to be used, but otherwise it is always
     // OK going from LD to regular because the mag index just carries over, but if the
@@ -393,10 +409,11 @@ BOOL CMontageSetupDlg::OnInitDialog()
   ReplaceDlgItemText(IDC_CHECK_USE_VIEW_IN_LOWDOSE, "View", modeName[VIEW_CONSET]);
   ReplaceDlgItemText(IDC_CHECK_USE_MONT_MAP_PARAMS, "Record", modeName[RECORD_CONSET]);
   m_butUseViewInLD.EnableWindow(mLowDoseMode && !mSizeLocked && viewOK &&
-    (recordOK || searchOK));
-  m_butUseSearchInLD.EnableWindow(mLowDoseMode && !mSizeLocked && searchOK);
+    (recordOK || searchOK) && !mForMultiGridMap);
+  m_butUseSearchInLD.EnableWindow(mLowDoseMode && !mSizeLocked && searchOK && 
+    !mForMultiGridMap);
   m_butUseMultishot.EnableWindow(mLowDoseMode && !mSizeLocked && recordOK &&
-    !mFittingItem);
+    !mFittingItem && !mForMultiGridMap);
   if (mLowDoseMode && !searchOK)
     mParam.useSearchInLowDose = false;
   if (mLowDoseMode && !recordOK && !mParam.useSearchInLowDose)
@@ -404,22 +421,23 @@ BOOL CMontageSetupDlg::OnInitDialog()
   if (mLowDoseMode && !viewOK)
     mParam.useViewInLowDose = false;
   if (mLowDoseMode && (!recordOK || mFittingItem || mParam.useViewInLowDose || 
-    mParam.useSearchInLowDose))
+    mParam.useSearchInLowDose || mForMultiGridMap))
     mParam.useMultiShot = false;
   m_butUseMontMapParams.EnableWindow(!mWinApp->GetUseRecordForMontage() && !mSizeLocked
     && !(mLowDoseMode && (mParam.useViewInLowDose || mParam.useSearchInLowDose ||
-      mParam.useMultiShot || !recordOK)));
+      mParam.useMultiShot || !recordOK)) && !mForMultiGridMap);
   if (mParam.useMultiShot && mLowDoseMode) {
     mParam.moveStage = false;
     EnableDlgItem(IDC_MOVESTAGE, false);
     EnableDlgItem(IDC_CHECK_SKIP_OUTSIDE, false);
   }
-  m_editXoverlap.EnableWindow(!mSizeLocked && !mFittingItem);
-  m_editYoverlap.EnableWindow(!mSizeLocked && !mFittingItem);
-  m_statOverlap.EnableWindow(!mSizeLocked && !mFittingItem);
-  m_statY3.EnableWindow(!mSizeLocked && !mFittingItem);
+  tmpEnable = !mSizeLocked && !mFittingItem && !overlapFixed;
+  m_editXoverlap.EnableWindow(tmpEnable);
+  m_editYoverlap.EnableWindow(tmpEnable);
+  m_statOverlap.EnableWindow(tmpEnable);
+  m_statY3.EnableWindow(tmpEnable);
   //m_butOfferMap.EnableWindow(mWinApp->mNavigator != NULL);
-  m_butResetOverlaps.EnableWindow(!mFittingItem);
+  m_butResetOverlaps.EnableWindow(!mFittingItem && !overlapFixed);
 
   // Initialize the spin controls
   m_sbcXnFrames.SetRange(1, mMaxPieces);
@@ -440,12 +458,44 @@ BOOL CMontageSetupDlg::OnInitDialog()
   LoadParamData(true);
   ManageSizeFields();
 
-  if (mSizeLocked || mLowDoseMode || mFittingItem || mMismatchedModes) {
+  if (mLowDoseMode || mForMultiGridMap) {
+    if (forMultiLMmap)
+      str = "FITTING TO FULL GRID AREA. ";
+    else if (mForMultiGridMap == SETUPMONT_MG_POLYGON)
+      str.Format("FITTING TO DUMMY %.0f UM AREA. ", mDummyAreaSize);
+    else
+      str = "FITTING TO NAVIGATOR AREA. ";
+    if (mLowDoseMode) {
+      if (!mForMultiGridMap)
+        str += "Change LD area";
+    } else {
+      str += "Change mag";
+    }
+    SetDlgItemText(IDC_STATNAVFIT1, str);
+    if (mForMultiGridMap && mLowDoseMode)
+      str = "";
+    else
+      str = "to adjust number of pieces. ";
+    str += "Changing ";
+    if (!(mForMultiGridMap && mLowDoseMode))
+      str += mLowDoseMode ? "LD area," : "mag,";
+    SetDlgItemText(IDC_STATNAVFIT2, str);
+    str = "binning";
+    if (!overlapFixed)
+      str += CString(forMultiLMmap ? " or" : ",") + " overlap";
+    if (!forMultiLMmap)
+      str += " or \"Move stage\"";
+    str += " will refit to area";
+    SetDlgItemText(IDC_STATNAVFIT3, str);
+  }
+
+  if (mSizeLocked || mLowDoseMode || mFittingItem || mMismatchedModes || 
+    mForMultiGridMap) {
     ManageCameras();
 
     // If the current camera is not feasible but another is, switch to first feasible one
     if (!mLowDoseMode && !mFittingItem && !mCamFeasible[m_iCamera] && 
-      !mNoneFeasible && !mMismatchedModes) {
+      !mNoneFeasible && !mMismatchedModes && !mForMultiGridMap) {
       for (int j = 0; j < mNumCameras; j++) {
         if (mCamFeasible[j]) {
           m_iCamera = j;
@@ -498,7 +548,7 @@ void CMontageSetupDlg::LoadParamData(BOOL setPos)
   m_editSkipOutside.EnableWindow(m_bSkipOutside &&!(mLowDoseMode && mParam.useMultiShot));
   m_iInsideNavItem = mParam.insideNavItem + 1;
   m_bIgnoreSkips = mParam.ignoreSkipList;
-  m_butIgnoreSkips.EnableWindow(mParam.numToSkip > 0);
+  m_butIgnoreSkips.EnableWindow(mParam.numToSkip > 0 && !mForMultiGridMap);
   m_bMakeMap = mParam.makeNewMap;
   m_bCloseWhenDone = mParam.closeFileWhenDone;
   m_bUseContinMode = mParam.useContinuousMode;
@@ -569,7 +619,7 @@ void CMontageSetupDlg::ManageCameras()
     if (mCamFeasible[iCam])
       mNoneFeasible = false;
     radio->EnableWindow(mCamFeasible[iCam] && !mLowDoseMode && !mMismatchedModes
-      && !mFittingItem);
+      && !mFittingItem && !mForMultiGridMap);
   }
 }
 
@@ -577,7 +627,8 @@ void CMontageSetupDlg::ManageCameras()
 void CMontageSetupDlg::ManageSizeFields(void)
 {
   bool useMulti = mLowDoseMode && m_bUseMultishot;
-  BOOL enable = !mSizeLocked && mCamParams[mCurrentCamera].moduloX >= 0 && !useMulti;
+  BOOL enable = !mSizeLocked && mCamParams[mCurrentCamera].moduloX >= 0 && !useMulti &&
+    mForMultiGridMap != SETUPMONT_MG_POLYGON;
   m_statPieceSize.EnableWindow(enable);
   m_statY2.EnableWindow(enable);
   m_editXsize.EnableWindow(enable);
@@ -965,7 +1016,8 @@ void CMontageSetupDlg::UnloadParamData(void)
 void CMontageSetupDlg::UpdateSizes()
 {
   int iTotalX, iTotalY, magIndex;
-  magIndex = mLowDoseMode ? mLdp[mLDsetNum].magIndex : mParam.magIndex;
+  magIndex = (mLowDoseMode && !mForMultiGridMap) ? mLdp[mLDsetNum].magIndex : 
+    mParam.magIndex;
 
   // Output the mag
   m_strMag.Format("%d", MagForCamera(mCurrentCamera, magIndex));
@@ -1264,7 +1316,7 @@ int CMontageSetupDlg::CheckNavigatorFit(int magIndex, int binning, float minOver
     binning = conSet->binning;
   }
   int err = mWinApp->mNavigator->FitMontageToItem(&tmpParam, binning, magIndex, 
-    mForceStage);
+    mForceStage, 0., mCurrentCamera, mLowDoseMode);
   if (!err) {
     mParam = tmpParam;
     if (switchingVinLD)
@@ -1382,14 +1434,19 @@ void CMontageSetupDlg::ManageStageAndGeometry(BOOL reposition)
   BOOL focusOK = mParam.magIndex >= 
     mWinApp->mScope->GetLowestNonLMmag(&mCamParams[mCurrentCamera]);
   BOOL tmpEnable, realignOn = false; //m_bRealign && m_iYnFrames >= MIN_Y_MONT_REALIGN;
+  BOOL forMultiLMmap = mForMultiGridMap == SETUPMONT_MG_FULL_GRID ||
+    mForMultiGridMap == SETUPMONT_MG_LM_NBYN;
 
   states[0] = mNumCameras > 1;
   states[1] = mFittingItem;
   states[3] = bEnable;
-  tmpEnable = !mSizeLocked && m_bMoveStage;
+  tmpEnable = !mSizeLocked && m_bMoveStage && (!forMultiLMmap ||
+    !mWinApp->mNavHelper->mMultiGridDlg || 
+    !mWinApp->mNavHelper->mMultiGridDlg->m_bUseMontOverlap);
   m_statMinOvLabel.EnableWindow(tmpEnable);
   m_statMinOvValue.EnableWindow(tmpEnable);
   m_sbcMinOv.EnableWindow(tmpEnable);
+  tmpEnable = !mSizeLocked && m_bMoveStage && !forMultiLMmap;
   m_statMinAnd.EnableWindow(tmpEnable);
   m_statMinMicron.EnableWindow(tmpEnable);
   m_editMinMicron.EnableWindow(tmpEnable);

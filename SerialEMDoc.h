@@ -296,7 +296,8 @@ public:
   void SetFileOptsForSTEM(void);
   void RestoreFileOptsFromSTEM(void);
   void CopyMasterFileOpts(FileOptions * fileOptp, int fromTo);
-  void MontParamInitFromConSet(MontParam * param, int setNum);
+  void MontParamInitFromConSet(MontParam *param, int setNum, float overlapFrac = 0.);
+  void MontParamInitFromFrame(MontParam *param, int camNum, int xFrame, int yFrame, float overlapFrac);
   CString DateTimeForFrameSaving(void);
   void MakeSerialEMTitle(CString & titleStr, char * fullTitle);
   int OpenNewReplaceCurrent(CString filename, bool useMdoc, int fileType);

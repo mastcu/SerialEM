@@ -34,6 +34,8 @@ public:
 	int mMinOverlap;	// Minimum overlap
   BOOL mConstrainSize;
   BOOL mLowDoseMode;
+  int mForMultiGridMap;
+  float mDummyAreaSize;
 
 // Dialog Data
 	//{{AFX_DATA(CMontageSetupDlg)

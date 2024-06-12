@@ -749,26 +749,38 @@ void CSerialEMDoc::InitMontParamsForDialog(MontParam *param, BOOL frameSet, int 
 
 // Do the part of the initialization that depends on the control set
 // setNum should be the conset number that will be used unless true conset has been synced
-void CSerialEMDoc::MontParamInitFromConSet(MontParam *param, int setNum)
+void CSerialEMDoc::MontParamInitFromConSet(MontParam *param, int setNum, 
+  float overlapFrac)
 {
   int curCam = mWinApp->GetCurrentCamera();
   CameraParameters *camParam = mWinApp->GetCamParams() + curCam;
   ControlSet *cs = mWinApp->GetConSets() + setNum;
-  int top, left, bottom, right;
   param->binning = cs->binning;
   if (CamHasDoubledBinnings(camParam) && cs->binning == 1)
     param->binning = 2;
-  param->xFrame = (cs->right - cs->left) / param->binning;
-  param->yFrame = (cs->bottom - cs->top) / param->binning;
-  mWinApp->mCamera->CenteredSizes(param->xFrame, camParam->sizeX, camParam->moduloX, left,
-    right,param->yFrame, camParam->sizeY, camParam->moduloY, top, bottom, param->binning);
-  int maxSize = param->xFrame > param->yFrame ? param->xFrame : param->yFrame;
-  param->xOverlap = (int)floor(mOverlapFraction * maxSize + 0.5);
-  param->xOverlap += param->xOverlap % 2;
-  param->yOverlap = param->xOverlap;
+  MontParamInitFromFrame(param, curCam, (cs->right - cs->left) / param->binning,
+    (cs->bottom - cs->top) / param->binning, overlapFrac);
 
   // Set up to use stage if appropriate
   param->moveStage = FieldAboveStageMoveThreshold(param, mWinApp->LowDoseMode(), curCam);
+}
+
+// This variant takes the binned frame size and a specified camera and overlap
+void CSerialEMDoc::MontParamInitFromFrame(MontParam *param, int camNum, int xFrame, 
+  int yFrame, float overlapFrac)
+{
+  CameraParameters *camParam = mWinApp->GetCamParams() + camNum;
+  if (!overlapFrac)
+    overlapFrac = (float)mOverlapFraction;
+  int top, left, bottom, right;
+  param->xFrame = xFrame;
+  param->yFrame = yFrame;
+  mWinApp->mCamera->CenteredSizes(param->xFrame, camParam->sizeX, camParam->moduloX, left,
+    right, param->yFrame, camParam->sizeY, camParam->moduloY, top, bottom, param->binning);
+  int maxSize = param->xFrame > param->yFrame ? param->xFrame : param->yFrame;
+  param->xOverlap = (int)floor(overlapFrac * maxSize + 0.5);
+  param->xOverlap += param->xOverlap % 2;
+  param->yOverlap = param->xOverlap;
 }
 
 // Tests whether montage is in LM or if a 2x2 montage will trip the maximum IS message
@@ -1331,7 +1343,7 @@ int CSerialEMDoc::FilePropForSaveFile(FileOptions * fileOptp, int openAnyway)
   // there is an unsigned short buffer
   CFilePropDlg propDlg;
   propDlg.mFileOpt = *fileOptp;
-  propDlg.mShowDlgThisTime = mShowFileDlgOnce || openAnyway > 0;
+  propDlg.mShowDlgThisTime = (mShowFileDlgOnce || openAnyway > 0) && openAnyway > -2;
   propDlg.m_bSkipFileDlg = mSkipFileDlg || openAnyway < 0;
   mShowFileDlgOnce = false;
   propDlg.mAny16Bit = mWinApp->GetAny16BitCameras() && 
@@ -2926,7 +2938,7 @@ void CSerialEMDoc::SetInitialDirToCurrentDir()
 {
   _getcwd(sInitialDir, _MAX_PATH + 1);
   if (mWinApp->mNavHelper->mMultiGridDlg)
-    mWinApp->mNavHelper->mMultiGridDlg->UpdateSettings();
+    mWinApp->mNavHelper->mMultiGridDlg->UpdateCurrentDir();
 }
 
 const char * CSerialEMDoc::GetInitialDir()
