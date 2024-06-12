@@ -7,6 +7,7 @@
 #include "Shared\b3dutil.h"
 #include "NavHelper.h"
 #include "EMscope.h"
+#include "MultiGridDlg.h"
 #include "FocusManager.h"
 #include "NavigatorDlg.h"
 #include "CameraController.h"
@@ -214,6 +215,8 @@ void CStateDlg::Update(void)
   BOOL mapItem = false;
   BOOL schedItem = false, doUpdate = false;
   BOOL imOK = SetCurrentParam() && mWinApp->LookupActiveCamera(mParam->camIndex) >= 0;
+  BOOL mgOK = !mWinApp->mNavHelper->mMultiGridDlg ||
+    mCurrentItem >= mWinApp->mNavHelper->mMultiGridDlg->m_comboLMMstate.GetCount();
   int type = mHelper->GetTypeOfSavedState();
   if (mWinApp->LowDoseMode())
     ldArea = mWinApp->mScope->GetLowDoseArea();
@@ -239,9 +242,8 @@ void CStateDlg::Update(void)
     mWinApp->IsIDinHideSet(IDC_BUT_ADD_MONT_MAP)) ? SW_HIDE : SW_SHOW);
   m_butAddMontMap.EnableWindow(noTasks);
   m_butAddNavItemState.EnableWindow(noTasks && mapItem);
-  m_butDelState.EnableWindow(noTasks && mCurrentItem >= 0 && 
-    !mWinApp->mNavHelper->mMultiGridDlg);
-  m_editName.EnableWindow(noTasks && mCurrentItem >= 0);
+  m_butDelState.EnableWindow(noTasks && mCurrentItem >= 0 && mgOK);
+  m_editName.EnableWindow(noTasks && mCurrentItem >= 0 && mgOK);
   m_butSetImState.EnableWindow(noTasks && noComplex && imOK && type != STATE_MAP_ACQUIRE
     && (type == STATE_NONE || !mParam->lowDose || mCamOfSetState< 0 ||
       mCamOfSetState == mParam->camIndex));
@@ -253,7 +255,7 @@ void CStateDlg::Update(void)
   if (type != STATE_IMAGING)
     DisableUpdateButton();
   m_butUpdate.EnableWindow(noTasks && noComplex && CurrentMatchesSetState() >= 0 && 
-    !mWinApp->mNavHelper->mMultiGridDlg && ((ldArea == -2 && paramArea < 0) || 
+    mgOK && ((ldArea == -2 && paramArea < 0) || 
     (ldArea == paramArea)) && imOK && curCam == mParam->camIndex);
   m_listViewer.EnableWindow(noTasks && noComplex && type != STATE_MAP_ACQUIRE);
     
