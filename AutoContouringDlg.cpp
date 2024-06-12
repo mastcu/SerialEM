@@ -16,6 +16,7 @@
 #include "AutoContouringDlg.h"
 #include "Shared\imodel.h"
 #include "NavHelper.h"
+#include "MultiGridTasks.h"
 #include "NavigatorDlg.h"
 #include "ShiftManager.h"
 #include "Shared\holefinder.h"
@@ -174,11 +175,12 @@ BOOL CAutoContouringDlg::OnInitDialog()
 
   // Output parameters and manage enables
   ParamsToDialog();
-  ManageGroupSelectors(1);
+  if (!mOpenedFromMultiGrid)
+    for (int ind = 0; ind < MAX_AUTOCONT_GROUPS; ind++)
+      mShowGroup[ind] = 1;
+  ManageGroupSelectors(mOpenedFromMultiGrid ? -1 : 1);
   ManageACEnables();
   ManagePostEnables(false);
-  for (int ind = 0; ind < MAX_AUTOCONT_GROUPS; ind++)
-    mShowGroup[ind] = 1;
 
   SetDefID(45678);    // Disable OK from being default button
   return TRUE;
@@ -189,6 +191,8 @@ void CAutoContouringDlg::OnOK()
 {
   DialogToParams();
   *mMasterParams = mParams;
+  if (mOpenedFromMultiGrid)
+    mWinApp->mMultiGridTasks->CopyAutoContGroups();
   OnCancel();
 }
 
@@ -818,8 +822,8 @@ void CAutoContouringDlg::ManageGroupSelectors(int set)
   BOOL busy = mWinApp->DoingTasks() && !mWinApp->GetJustNavAcquireOpen();
   CButton *but;
   for (ind = 0; ind < MAX_AUTOCONT_GROUPS; ind++) {
-    EnableDlgItem(IDC_CHECK_GROUP1 + ind, ind < mNumGroups && mHaveConts && !busy &&
-      mNumInGroup[ind] > 0);
+    EnableDlgItem(IDC_CHECK_GROUP1 + ind, ind < mNumGroups && !busy &&
+      ((mHaveConts && mNumInGroup[ind] > 0) || mOpenedFromMultiGrid));
     if (set) {
       but = (CButton *)GetDlgItem(IDC_CHECK_GROUP1 + ind);
       if (but)

@@ -127,6 +127,7 @@ private:
   std::vector<IntVec> mConvertedInds;
 
 public:
+  bool mOpenedFromMultiGrid;
   int m_iReduceToWhich;
   int m_iThreshType;
   afx_msg void OnRRelativeThresh();
@@ -151,6 +152,7 @@ public:
   int DoCreatePolys(CString &mess);
   afx_msg void OnButUndoPolys();
   int GetSquareStats(float &minMean, float &maxMean, float &medianMean);
+  int *GetShowGroup() {return &mShowGroup[0] ; };
   CString m_strLowerMean;
   CString m_strUpperMean;
   CString m_strMinSize;
