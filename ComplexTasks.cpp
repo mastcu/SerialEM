@@ -1460,7 +1460,6 @@ void CComplexTasks::FindEucentricity(int coarseFine)
     if (coarseFine & FIND_EUCENTRICITY_COARSE) {
       if (mFENextCoarseConSet >= 0) {
         mLowMagConSet = mFENextCoarseConSet;
-        mFENextCoarseConSet = -1;
       } else {
         LowerMagIfNeeded(mMaxFECoarseMagInd, 0.7f, 0.3f, TRACK_CONSET);
         if (mFEUseSearchIfInLM && mWinApp->LowDoseMode() &&
@@ -1501,7 +1500,10 @@ void CComplexTasks::FindEucentricity(int coarseFine)
       (((mSavedMagInd[stackInd] > mMaxFEFineMagInd || mWinApp->LowDoseMode()) &&
       mMaxFEFineMagInd != mMaxFECoarseMagInd) || 
       (mFEUseTrialInLD && mWinApp->LowDoseMode()))) {
-      RestoreMagIfNeeded();
+      if (mFENextCoarseConSet >= 0)
+        mFENextCoarseConSet = -1;
+      else
+        RestoreMagIfNeeded();
       LowerMagIfNeeded(mMaxFEFineMagInd, 0.75f, 0.5f, TRACK_CONSET);
       if (mFEUseTrialInLD && mWinApp->LowDoseMode())
         mLowMagConSet = 2;
@@ -1683,6 +1685,8 @@ void CComplexTasks::EucentricityNextTask(int param)
     // SIGN?
     delZ = (float)(-movedY * (mShiftManager->GetStageInvertsZAxis() ? -1. : 1.) / 
       (sin(DTOR * (mFEInitialAngle + increment)) - sin(DTOR * mFEInitialAngle)));
+    if (mFENextCoarseConSet >= 0 && mScope->GetSimulationMode())
+      B3DCLAMP(delZ, -20.f, 20.f);
     if (mFEUseCoarseMaxDeltaZ > 0. && fabs(delZ) > mFEUseCoarseMaxDeltaZ) {
       report.Format("Rough eucentricity change of %.1f um exceeds limit of %.0f um;"
         " procedure is ending with no change", delZ, mFEUseCoarseMaxDeltaZ);
@@ -1699,7 +1703,8 @@ void CComplexTasks::EucentricityNextTask(int param)
     // If the increment is sufficiently less than the maximum, and also less
     // than the remaining distance to the maximum tilt, then set up to go again
     if (mFECoarseIncrement < 0.75 * mFEMaxIncrement && 
-      mFECoarseIncrement < mFEMaxTilt - mFECurrentAngle)
+      mFECoarseIncrement < mFEMaxTilt - mFECurrentAngle &&
+      !(mFENextCoarseConSet >= 0 && mScope->GetSimulationMode()))
       action = FE_COARSE_MOVED;
 
     if (mHitachiWithoutZ) {
@@ -2028,7 +2033,8 @@ void CComplexTasks::StopEucentricity()
   if (!mTiltingBack) {
 
     // restore mag now but come back after tilt is done to do true end
-    RestoreMagIfNeeded();
+    if (!mFENextCoarseConSet)
+      RestoreMagIfNeeded();
     if (!mScope->WaitForStageReady(10000)) {
       mScope->TiltTo(mFEUsersAngle, mStageXtoRestore, mStageYtoRestore);
       mTiltingBack = 1;
@@ -2038,6 +2044,7 @@ void CComplexTasks::StopEucentricity()
     }
   }
   mDoingEucentricity = false;
+  mFENextCoarseConSet = -1;
   mTiltingBack = 0;
   mStageXtoRestore = mStageYtoRestore = EXTRA_NO_VALUE;
   mCamera->SetRequiredRoll(0);
