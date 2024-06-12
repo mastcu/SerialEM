@@ -37,7 +37,9 @@
 #include "CalibCameraTiming.h"
 #include "CookerSetupDlg.h"
 #include "MultiShotDlg.h"
+#include "MultiGridDlg.h"
 #include "MultiTSTasks.h"
+#include "MultiGridTasks.h"
 #include "ComplexTasks.h"
 #include "ParticleTasks.h"
 #include "DriftWaitSetupDlg.h"
@@ -522,6 +524,12 @@ BEGIN_MESSAGE_MAP(CMenuTargets, CCmdTarget)
     ON_UPDATE_COMMAND_UI(ID_NAV_SETSCRIPTTORUN, OnUpdateNoTasks)
     ON_COMMAND(ID_MONTAGINGGRIDS_MULTIPLEGRIDOPERATIONS, OnMultipleGridOperations)
     ON_UPDATE_COMMAND_UI(ID_MONTAGINGGRIDS_MULTIPLEGRIDOPERATIONS, OnUpdateMultipleGridOperations)
+    ON_COMMAND(ID_MONTAGINGGRIDS_READSESSIONFILE, OnGridsReadSessionfile)
+    ON_UPDATE_COMMAND_UI(ID_MONTAGINGGRIDS_READSESSIONFILE, OnUpdateGridsReadSessionfile)
+    ON_COMMAND(ID_MONTAGINGGRIDS_CLEARSESSION, OnGridsClearSession)
+    ON_UPDATE_COMMAND_UI(ID_MONTAGINGGRIDS_CLEARSESSION, OnUpdateGridsClearSession)
+    ON_COMMAND(ID_MONTAGINGGRIDS_IDENTIFYGRIDONSTAGE, OnIdentifyGridOnStage)
+    ON_UPDATE_COMMAND_UI(ID_MONTAGINGGRIDS_IDENTIFYGRIDONSTAGE, OnUpdateIdentifyGridOnStage)
     END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -679,7 +687,9 @@ void CMenuTargets::OnNavigatorClose()
 void CMenuTargets::OnUpdateNavigatorClose(CCmdUI* pCmdUI) 
 {
   pCmdUI->Enable(mNavigator && !mNavigator->GetAcquiring() &&
-    mNavigator->NoDrawing() && !mNavigator->GetLoadingMap());
+    mNavigator->NoDrawing() && !mNavigator->GetLoadingMap() && 
+    !mWinApp->mMultiGridTasks->GetDoingMulGridSeq() && 
+    !mWinApp->mMultiGridTasks->GetDoingMultiGrid());
 }
 
 void CMenuTargets::OnNavigatorAutosave() 
@@ -747,7 +757,7 @@ void CMenuTargets::OnMontageListFilesToOpen()
 
 void CMenuTargets::OnNavigatorAcquire() 
 {
-  mNavigator->AcquireAreas(true, false, false);	
+  mNavigator->AcquireAreas(1, false, false);	
 }
 
 void CMenuTargets::OnUpdateNavigatorAcquire(CCmdUI* pCmdUI) 
@@ -929,7 +939,7 @@ void CMenuTargets::OnUpdateMontagingGridsFindHoles(CCmdUI *pCmdUI)
 
 void CMenuTargets::OnAutocontourGridSquares()
 {
-  mNavHelper->OpenAutoContouring();
+  mNavHelper->OpenAutoContouring(false);
 }
 
 void CMenuTargets::OnMultipleGridOperations()
@@ -937,10 +947,45 @@ void CMenuTargets::OnMultipleGridOperations()
   mNavHelper->OpenMultiGrid();
 }
 
-// TEMPORARY SPIKE
 void CMenuTargets::OnUpdateMultipleGridOperations(CCmdUI *pCmdUI)
 {
-  pCmdUI->Enable(!mWinApp->DoingTasks() && mWinApp->mNavigator && false);
+  pCmdUI->Enable((!DoingTasks() || mWinApp->GetJustNavAcquireOpen())
+    && mWinApp->mNavigator);
+}
+
+void CMenuTargets::OnGridsReadSessionfile()
+{
+  CString str;
+  if (mWinApp->mMultiGridTasks->LoadSessionFile(false, str) > 0)
+    AfxMessageBox("Could not load multi-grid session file:\n" + str, MB_EXCLAME);
+}
+
+void CMenuTargets::OnUpdateGridsReadSessionfile(CCmdUI *pCmdUI)
+{
+  pCmdUI->Enable(!DoingTasks() && mNavHelper->mMultiGridDlg);
+}
+
+void CMenuTargets::OnGridsClearSession()
+{
+  mWinApp->mMultiGridTasks->ClearSession();
+  mWinApp->mMultiGridTasks->SetSessionFilename("");
+}
+
+void CMenuTargets::OnUpdateGridsClearSession(CCmdUI *pCmdUI)
+{
+  pCmdUI->Enable(!DoingTasks() && mNavHelper->mMultiGridDlg);
+}
+
+void CMenuTargets::OnIdentifyGridOnStage()
+{
+  int stageInd = -1;
+  mWinApp->mMultiGridTasks->IdentifyGridOnStage(-1, stageInd);
+}
+
+void CMenuTargets::OnUpdateIdentifyGridOnStage(CCmdUI *pCmdUI)
+{
+  pCmdUI->Enable(!DoingTasks() && mNavHelper->mMultiGridDlg && 
+    mNavHelper->mMultiGridDlg->GetNumUsedSlots());
 }
 
 void CMenuTargets::OnCombinePointsIntoMultiShots()

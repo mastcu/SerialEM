@@ -806,7 +806,6 @@ CSerialEMApp::CSerialEMApp()
   mSpecialDebugLevel = 0;
   mNextLogColor = -1;
   mNextLogStyle = -1;
-  mEnableMultigridDlg = false;
   traceMutexHandle = CreateMutex(0, 0, 0);
   sStartTime = GetTickCount();
   mLastIdleScriptTime = sStartTime;
@@ -2570,8 +2569,10 @@ BOOL CSerialEMApp::CheckIdleTasks()
       busy = mMacroProcessor->DoingMacro() ? 1 : 0;
     else if (idc->source == TASK_AUTO_CONTOUR)
       busy = mNavHelper->mAutoContouringDlg->AutoContBusy();
-    else if (idc->source == TASK_MULTI_SHOT)
+    else if (idc->source == TASK_MULTI_GRID)
       busy = mMultiGridTasks->MultiGridBusy();
+    else if (idc->source == TASK_MULGRID_SEQ)
+      busy = mMultiGridTasks->MulGridSeqBusy();
     else if (idc->source == TASK_SNAPSHOT_TO_BUF)
       busy = 0;
 
@@ -2723,7 +2724,7 @@ BOOL CSerialEMApp::CheckIdleTasks()
           mMainFrame->DoClose(true);
         else if (idc->source == TASK_AUTO_CONTOUR)
           mNavHelper->mAutoContouringDlg->AutoContDone();
-        else if (idc->source == TASK_MULTI_GRID)
+        else if (idc->source == TASK_MULTI_GRID || idc->source == TASK_MULGRID_SEQ)
           mMultiGridTasks->MultiGridNextTask(idc->param);
         else if (idc->source == TASK_SNAPSHOT_TO_BUF && CSerialEMView::mSnapshotData)
           CSerialEMView::mSnapshotData->view->SnapshotNextTask(idc->param);
@@ -2834,8 +2835,10 @@ BOOL CSerialEMApp::CheckIdleTasks()
           mNavHelper->mHoleFinderDlg->StopScanning();
         else if (idc->source == TASK_AUTO_CONTOUR)
           mNavHelper->mAutoContouringDlg->CleanupAutoCont(busy);
-        else if (idc->source == TASK_MULTI_SHOT)
+        else if (idc->source == TASK_MULTI_GRID)
           mMultiGridTasks->CleanupMultiGrid(busy);
+        else if (idc->source == TASK_MULGRID_SEQ)
+          mMultiGridTasks->CleanupMulGridSeq(busy);
      }
 
       // Delete task from memory and drop index
@@ -3004,6 +3007,8 @@ void CSerialEMApp::ErrorOccurred(int error)
     mNavHelper->mAutoContouringDlg->StopAutoCont();
   if (mMultiGridTasks->GetDoingMultiGrid())
     mMultiGridTasks->StopMultiGrid();
+  if (mMultiGridTasks->GetDoingMulGridSeq())
+    mMultiGridTasks->SetExtErrorOccurred(error);
   if (mPlugStopFunc && mPlugDoingFunc && mPlugDoingFunc())
     mPlugStopFunc(error);
   mCamera->SetPreventUserToggle(0);
@@ -3590,7 +3595,7 @@ BOOL CSerialEMApp::DoingImagingTasks()
     mGainRefMaker->AcquiringGainRef() ||
     mDistortionTasks->DoingStagePairs() ||
     mCalibTiming->Calibrating() ||
-    mCalibTiming->DoingDeadTime() ||
+    mCalibTiming->DoingDeadTime() || mMultiGridTasks->GetDoingMulGridSeq() ||
     (mNavigator && ((mNavigator->GetAcquiring() && !mNavigator->GetStartedTS() && 
     !mNavigator->StartedMacro() && !mNavigator->GetPausedAcquire()) ||
     mNavHelper->GetRealigning() || mMultiGridTasks->GetDoingMultiGrid() ||
@@ -3662,7 +3667,8 @@ BOOL CSerialEMApp::DoingComplexTasks()
 {
   return mMacroProcessor->DoingMacro() || mNavHelper->GetAcquiringDual() ||
     mComplexTasks->DoingComplexTasks() || StartedTiltSeries() || 
-    (mNavigator && mNavigator->GetAcquiring() && !mNavigator->StartedMacro());
+    (mNavigator && mNavigator->GetAcquiring() && !mNavigator->StartedMacro() ||
+      mMultiGridTasks->GetDoingMulGridSeq());
 }
 
 int *CSerialEMApp::GetInitialDlgState()
@@ -4210,6 +4216,8 @@ void CSerialEMApp::NavigatorClosing()
     mNavHelper->mAutoContouringDlg->CloseWindow();
   if (mNavHelper->mMultiCombinerDlg)
     mNavHelper->mMultiCombinerDlg->CloseWindow();
+  if (mNavHelper->mMultiGridDlg)
+    mNavHelper->mMultiGridDlg->CloseWindow();
 }
 
 // Stage move tool

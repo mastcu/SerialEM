@@ -433,6 +433,12 @@ public:
   afx_msg void OnNavSetScriptToRun();
   afx_msg void OnMultipleGridOperations();
   afx_msg void OnUpdateMultipleGridOperations(CCmdUI *pCmdUI);
+  afx_msg void OnGridsReadSessionfile();
+  afx_msg void OnUpdateGridsReadSessionfile(CCmdUI *pCmdUI);
+  afx_msg void OnGridsClearSession();
+  afx_msg void OnUpdateGridsClearSession(CCmdUI *pCmdUI);
+  afx_msg void OnIdentifyGridOnStage();
+  afx_msg void OnUpdateIdentifyGridOnStage(CCmdUI *pCmdUI);
 };
 
 /////////////////////////////////////////////////////////////////////////////

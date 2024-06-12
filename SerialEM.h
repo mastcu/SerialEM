@@ -92,7 +92,7 @@ enum Tasks {TASK_NAVIGATOR_ACQUIRE, TASK_DISTORTION_STAGEPAIR, TASK_CAL_BEAMSHIF
   TASK_CAL_IA_LIMITS, TASK_MACRO_AT_EXIT, TASK_Z_BY_G, TASK_TEMPLATE_ALIGN,
   TASK_DEWARS_VACUUM, TASK_NAV_ACQ_RETRACT, TASK_MONT_MULTISHOT, TASK_AUTO_CONTOUR,
   TASK_SNAPSHOT_TO_BUF, TASK_NAV_FILE_RANGE, TASK_MONT_MACRO, TASK_LD_SHIFT_OFFSET,
-  TASK_MULTI_GRID
+  TASK_MULTI_GRID, TASK_MULGRID_SEQ
 };
 
 enum CalTypes {CAL_DONE_IS = 0, CAL_DONE_STAGE, CAL_DONE_FOCUS, CAL_DONE_BEAM, 
@@ -673,7 +673,6 @@ public:
   GetSetMember(int, AutoPruneLogLines);
   GetMember(CString, ExePath);
   GetSetMember(CString, NanumFontPath);
-  GetSetMember(BOOL, EnableMultigridDlg);
   unsigned char *GetPaletteColors() {return &mPaletteColors[0][0] ; };
   void SetEnableExternalPython(BOOL inVal);
   std::set<int> *GetIDsToHide() { return &mIDsToHide; };
@@ -996,7 +995,6 @@ private:
   int mNextLogColor;            // Color index for next output to log
   int mNextLogStyle;            // Style for next output to log
   CString mNanumFontPath;       // Path to font that needs removing
-  BOOL mEnableMultigridDlg;     // Temporary
 
 public:
   void UpdateAllEditers(void);
