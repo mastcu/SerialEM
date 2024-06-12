@@ -19,6 +19,7 @@
 #include "ShiftManager.h"
 #include "MontageWindow.h"
 #include "LogWindow.h"
+#include "MultiGridTasks.h"
 #include "ParticleTasks.h"
 #include "MacroProcessor.h"
 #include "TSController.h"
@@ -120,6 +121,7 @@ EMmontageController::EMmontageController()
   mAllowHQMontInLD = false;
   mNoMontXCorrThread = false;
   mNoDrawOnRead = false;
+  mNextPctlPatchSize = 0;
 }
 
 EMmontageController::~EMmontageController()
@@ -508,6 +510,8 @@ int EMmontageController::StartMontage(int inTrial, BOOL inReadMont, float cookDw
   mAddMiniOffsetToCenter = definedCenter;
   mMiniOffsets.subsetLoaded = definedCenter;
   mDefocusForCal = 0.;
+  mPctlPatchSize = mNextPctlPatchSize;
+  mNextPctlPatchSize = 0;
 
   mDwellTimeMsec = (int)(1000. * B3DMAX(0., cookDwellTime));
   if (cookDwellTime < 0)
@@ -1717,6 +1721,11 @@ int EMmontageController::StartMontage(int inTrial, BOOL inReadMont, float cookDw
   mDriftRepeatCount = 0;
   mDidBlockIS = 0;
 
+  // If multigrid was doing LM montage and it was stopped, tell it to resume
+  if (!mReadingMontage && !preCooking && !mTrialMontage &&
+    mWinApp->mMultiGridTasks->WasStoppedInLMMont())
+    mWinApp->mMultiGridTasks->ResumeMulGridSeq(0);
+
   // If doing multishot, fetch and set up the parameters
   if (mUsingMultishot) {
     MultiShotParams *masterMSparam = mWinApp->mNavHelper->GetMultiShotParams();;
@@ -2345,7 +2354,7 @@ int EMmontageController::SavePiece()
   KImage *image;
   void *data;
   int type, lower, idir, ixy, i, nVar, upper, nSum, cenType, sectInd, dataSize;
-  float xPeak, yPeak;
+  float xPeak, yPeak, lowMean, highMean, midFrac, rangeFrac;
   CString report;
   ScaleMat camToSpec, specToCam;
   int centerTaper = 12;
@@ -2410,6 +2419,19 @@ int EMmontageController::SavePiece()
 
     // Mark that mag and binning parameters were used
     mParam->settingsUsed = true;
+
+    // Get and store percentile patch statistics if requested; error are non-fatal
+    if (mPctlPatchSize > 0) {
+      if (mWinApp->mProcessImage->PatchPercentileStats(mImBufs, mLowPercentile,
+        mHighPercentile, mPctlMidCrit, mPctlRangeCrit, mPctlPatchSize, lowMean, highMean,
+        midFrac, rangeFrac, report)) {
+        SEMAppendToLog("WARNING: Error getting patch statistics: " + report);
+      } else {
+        ix = StorePercentileStats(mPieceIndex, highMean, midFrac, rangeFrac);
+        if (ix)
+          PrintfToLog("WARNING: Error %d saving patch statistics in mdoc", ix);
+      }
+    }
 
     // Get actual stage X,Y adjusting for image shift; 
     // get stage offset and add to autodoc if they are being used
@@ -3910,7 +3932,8 @@ void EMmontageController::GetCurrentCoords(int &outX, int &outY, int &outZ)
 // if there is an autodoc and xStage, yStage are non-NULL
 int EMmontageController::ListMontagePieces(KImageStore *storeMRC, MontParam *param, 
   int zValue, IntVec &pieceSavedAt, IntVec *ixVec, IntVec *iyVec, FloatVec *xStage,
-  FloatVec *yStage, FloatVec *meanVec, float *zStage)
+  FloatVec *yStage, FloatVec *meanVec, float *zStage, FloatVec *midFrac, 
+  FloatVec *rangeFrac)
 {
   int already, nsec, ind, ix, iy, iz, fullNum = param->xNframes * param->yNframes;
   float amin, amax;
@@ -3945,6 +3968,10 @@ int EMmontageController::ListMontagePieces(KImageStore *storeMRC, MontParam *par
     xStage->resize(fullNum);
     if (meanVec)
       meanVec->resize(fullNum);
+    if (midFrac && rangeFrac) {
+      midFrac->resize(fullNum, -1.);
+      rangeFrac->resize(fullNum, -1.);
+    }
   }
   if (zStage)
     *zStage = EXTRA_NO_VALUE;
@@ -3977,6 +4004,12 @@ int EMmontageController::ListMontagePieces(KImageStore *storeMRC, MontParam *par
         }
         if (zStage && *zStage < EXTRA_VALUE_TEST && AdocGetFloat(names[nameInd], isec, 
           ADOC_STAGEZ, zStage)) {
+          already = 0;
+          break;
+        }
+
+        if (midFrac && rangeFrac && AdocGetThreeFloats(names[nameInd], isec, 
+          ADOC_PCTL_STATS, &amax, &midFrac->at(ind), &rangeFrac->at(ind)) < 0) {
           already = 0;
           break;
         }
@@ -4965,7 +4998,7 @@ int EMmontageController::FindBestShifts(int nvar, float *upperShiftX, float *upp
           ixy = mMaxSDToIxyOfEdge[i];
           inde = edgeUpper[2 * mMaxSDToPieceNum[i] + ixy];
           ifSkipEdge[2 * inde + ixy] = 1;
-          SEMTrace('1', "Skipping edge with SD %f: %d pc %d ixy %d", mTrimmedMaxSDs[i], 
+          SEMTrace('a', "Skipping edge with SD %f: %d pc %d ixy %d", mTrimmedMaxSDs[i], 
             inde, mMaxSDToPieceNum[i], ixy);
         }
       }
@@ -4986,7 +5019,7 @@ int EMmontageController::FindBestShifts(int nvar, float *upperShiftX, float *upp
             // Skip an edge if it is an outlier or if its CCC is very low
             if (!ifSkipEdge[2 * inde + ixy] && ((outlier[numEdge] < 0. && ccc[numEdge] < 
               upperMedRatio * median) || ccc[numEdge] < 0.01 + lowerMedRatio * median)) {
-              SEMTrace('1', "Skipping %d, %d %c edge, outlier %.0f  ccc %.4f  medcrit "
+              SEMTrace('a', "Skipping %d, %d %c edge, outlier %.0f  ccc %.4f  medcrit "
                 "%.4f", lower / mParam->yNframes + 1, lower % mParam->yNframes + 1, 'X'+
                 ixy, outlier[numEdge], ccc[numEdge], 0.01 + lowerMedRatio * median);
               ifSkipEdge[2 * inde + ixy] = 1;
@@ -5228,6 +5261,28 @@ int EMmontageController::StoreAlignedCoordsInAdoc(void)
   if (store->getStoreType() != STORE_TYPE_HDF && 
     AdocWrite((char *)(LPCTSTR)store->getAdocName()) < 0)
     retval = 3;
+  AdocReleaseMutex();
+  return retval;
+}
+
+// Store percentile statistics for multigrid to analyze
+int EMmontageController::StorePercentileStats(int pieceInd, float meanHigh, float midFrac,
+  float rangeFrac)
+{
+  char *names[2] = {ADOC_ZVALUE, ADOC_IMAGE};
+  int nameInd, retval = 0;
+  int adocInd = mWinApp->mStoreMRC->GetAdocIndex();
+  if (adocInd < 0)
+    return -1;
+
+  // Have to finish the I/O or last section won't be there yet
+  if (mBufferManager->CheckAsyncSaving())
+    return 3;
+  if (AdocGetMutexSetCurrent(adocInd) < 0)
+    return 1;
+  nameInd = mWinApp->mStoreMRC->getStoreType() == STORE_TYPE_ADOC ? 1 : 0;
+  retval = AdocSetThreeFloats(names[nameInd], mPieceSavedAt[pieceInd], 
+    ADOC_PCTL_STATS, meanHigh, midFrac, rangeFrac);
   AdocReleaseMutex();
   return retval;
 }

@@ -68,6 +68,7 @@ using namespace AdocDefs;
 #define ADOC_ALPHA "Alpha"
 #define ADOC_FILTER "FilterState"
 #define ADOC_FRAMETS_ST_END "FrameTSStartEndFrames"
+#define ADOC_PCTL_STATS "PercentileStats"
 
 class KStoreADOC :
   public KImageStore

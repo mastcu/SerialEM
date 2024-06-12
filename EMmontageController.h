@@ -125,6 +125,10 @@ class EMmontageController
   GetMember(int, PieceIndex);
   GetSetMember(BOOL, NoDrawOnRead);
   GetMember(int, RestoringStage);
+  void SetPercentileStatParams(int patchSize, float lowPct, float highPct, float midCrit, float rangeCrit) {
+    mNextPctlPatchSize = patchSize, mLowPercentile = lowPct, mHighPercentile = highPct, 
+      mPctlMidCrit = midCrit, mPctlRangeCrit = rangeCrit;
+  };
   void SetBaseISXY(double inX, double inY) {mBaseISX = inX; mBaseISY = inY;};
   void SetXcorrFilter(int ind, float r1, float r2, float s1, float s2) {mSloppyRadius1[ind] = r1;
     mRadius2[ind] = r2; mSigma1[ind] = s1; mSigma2[ind] = s2;};
@@ -359,13 +363,20 @@ class EMmontageController
   BOOL mAllowHQMontInLD;          // Flag to enable HQ options in low dose
   BOOL mNoMontXCorrThread;        // Flag not to do correlations in thread
   int mBlockSizeInX;              // Size of focus blocks in X, needed for IS realign
-  BOOL mNoDrawOnRead;              // Flag not to draw when reading
+  BOOL mNoDrawOnRead;             // Flag not to draw when reading
+  int mNextPctlPatchSize;         // Patch size non-zero to do percentil stats next time
+  int mPctlPatchSize;
+  float mLowPercentile;
+  float mHighPercentile;
+  float mPctlMidCrit;
+  float mPctlRangeCrit;
 
 public:
 	void AdjustShiftInCenter(MontParam *param, float &shiftX, float &shiftY);
   int ListMontagePieces(KImageStore * storeMRC, MontParam * param, int zValue,
     IntVec &pieceSavedAt, IntVec *xVec = NULL, IntVec *yVec = NULL, FloatVec *xStage = NULL,
-    FloatVec *yStage = NULL, FloatVec *meanVec = NULL, float *zStage = NULL);
+    FloatVec *yStage = NULL, FloatVec *meanVec = NULL, float *zStage = NULL, 
+    FloatVec *midFrac = NULL, FloatVec *rangeFrac = NULL);
   void ReadingDone(void);
   void StartStageRestore(void);
   void StageRestoreDone(int restoreVal = 0);
@@ -403,6 +414,7 @@ public:
   void MapParamsToOverview(int sectInd);
   int AccessMontSectInAdoc(KImageStore *store, int secNum);
   int StoreAlignedCoordsInAdoc(void);
+  int StorePercentileStats(int pieceInd, float meanHigh, float midFrac, float rangeFrac);
   void SetMiniOffsetsParams(MiniOffsets & mini, int xNframes, int xFrame, int xDelta, int yNframes, int yFrame, int yDelta);
   void AddRemainingTime(CString &report);
   void BlockSizesForNearSquare(int sizeX, int sizeY, int xOverlap, int yOverlap, int blockSize,
