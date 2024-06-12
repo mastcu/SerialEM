@@ -38,16 +38,18 @@ compilation, copy libctffind-VCOMP.dll from SerialEMLibs or SerialEMLibs/x64
 to the executable directory, and copy hdf5.dll and imodzlib1.dll from the
 appropriate SerialEM distribution.
 
-The build requires Python to run two scripts in Utilities.  This is specified
-in the Pre-Build Event of the project properties and it is currently set to
-access Cygwin Python.  The path can be changed to a specific Python or omitted
-if Python is on the system path.  The commands for generating the files are
-run in the main source directory and are
+The build requires Python to run two scripts in Utilities to generate two
+include files.  This is specified in the Pre-Build Event of the project
+properties and it is currently set to access Cygwin Python and also to run an
+error-checking script.  The path can be changed to a specific Python or
+omitted if Python is on the system path.  The commands for generating the
+files are run in the main source directory and are
 python Utilities/makeSignatures
 python Utilities/makeHideDisable
 If necessary, the two files, DisableHideTable.h and MacroArguments.h can be
 downloaded from the Tools directory on the SerialEM download site; these are
-correct for the current development source, not the stable branch.
+correct for the current development source, not the stable branch.  The third
+script requires IMOD to run but it will just exit if IMOD is not present.
 
 The rest of this file contains a description of the modules in SerialEM.  This
 is unlikely to be up-to-date.  Every .cpp file has a corresponding .h file.

@@ -1,0 +1,371 @@
+#!/usr/bin/python
+#
+# ctrapcheck tries to find some programming errors and over-reliance on logical
+# operator precedence
+# It relies on IMOD and if IMOD_DIR is not defined it silently exits when run to
+# check recent files with the -r option
+#
+# Author: David Mastronarde
+#
+
+progname = 'ctrapcheck'
+prefix = 'ERROR: ' + progname + ' - '
+
+# Find item, if any, that opens or closes a bracket or parentheses around startInd
+def nextClosingItem(line, startInd, direc, opener, closer):
+   if startInd < 0:
+      return -1
+   numOpen = 0
+   closeParen = closer
+   openParen = opener
+   step =1
+   if direc < 0:
+      closeParen = opener
+      openParen = closer
+      step = -1
+   while startInd > 0 and startInd < len(line) - 1:
+      startInd += step
+      if line[startInd] == openParen:
+         numOpen += 1;
+      elif line[startInd] == closeParen:
+         numOpen -= 1;
+      if numOpen < 0:
+         return startInd
+
+   return -1
+
+
+# Find opening or closing parenthesis
+def nextClosingParen(line, startInd, direc):
+   return nextClosingItem(line, startInd, direc, '(', ')')
+
+
+# Find opening or closing bracket
+def nextClosingBracket(line, startInd, direc):
+   return nextClosingItem(line, startInd, direc, '[', ']')
+
+
+# Test if inside []
+def insideBrackets(line, charInd):
+   lastOpen = nextClosingBracket(line, charInd, -1)
+   nextClose = nextClosingBracket(line, charInd, 1)
+   return lastOpen >= 0 and nextClose > 0
+
+
+# Test if inside ()
+def insideParens(line, charInd):
+   lastOpen = nextClosingParen(line, charInd, -1)
+   nextClose = nextClosingParen(line, charInd, 1)
+   return lastOpen >= 0 and nextClose > 0
+
+
+# Test if the position is inside a quote or comment
+def quotedOrInComment(line, charInd):
+   if line.rfind('//', 0, charInd) >= 0:
+      return True
+   comStart = line.rfind('/*', 0, charInd)
+   comEnd = line.rfind('*/', 0, charInd)
+   if comStart >= 0 and comStart > comEnd:
+      return True
+
+   # Count open/close quotes from start of line
+   inQuote = False
+   for ind in range(charInd):
+      if line[ind] == '"':
+         inQuote = not inQuote
+   return inQuote
+
+
+# Find an item in the given direction from the startInd
+def findToken(line, startInd, oper, direction):
+   if direction < 0:
+      return line.rfind(oper, 0, startInd)
+   else:
+      return line.find(oper, startInd)
+
+# Find one operator, excluding ones that are inside parentheses, and brackets if
+# skipBracketed is true
+def findOperator(line, startInd, oper, direction, skipBracketed):
+   ind = findToken(line, startInd, oper, direction)
+   while ind > 0:
+      if (ind > 0 and oper == '>' and line[ind - 1] == '-') or \
+             (oper == '-' and ind < len(line) - 1 and line[ind + 1] == '>') or \
+             (oper == '*' and ind < len(line) - 1 and line[ind + 1] == ')') or \
+             (skipBracketed and insideBrackets(line, ind)) or \
+             quotedOrInComment(line, ind):
+         ind = findToken(line, ind + direction, oper, direction)
+      else:
+
+         # Not in parentheses if no opening to left, or last close is to right of open
+         lastOpen = nextClosingParen(line, ind, -1)
+         if lastOpen < 0:
+            break
+         lastClose = nextClosingParen(line, ind, 1)
+         if lastClose < 0:
+            break
+
+         # If it is inside parens, it should not be skipped if parens include the =
+         if not (lastOpen > startInd or lastClose < startInd):
+            break
+
+         # Skip to next if any
+         ind = findToken(line, ind + direction, oper, direction)
+
+   return ind
+      
+
+# Find the previous eligible operator from the list starting at startInd
+def lastOperator(line, startInd, operators, skipBracketed = False):
+   bestInd = -1
+   for oper in operators:
+      ind = findOperator(line, startInd, oper, -1, skipBracketed)
+      if ind >= 0 and bestInd < ind:
+         bestInd = ind
+   return bestInd
+
+# Find the next eligible operator from the list starting at startInd
+def nextOperator(line, startInd, operators, skipBracketed = False):
+   bestInd = -1
+   for oper in operators:
+      ind = findOperator(line, startInd, oper, 1, skipBracketed)
+      if ind >= 0 and (bestInd < 0 or ind < bestInd):
+         bestInd = ind
+   return bestInd
+
+
+########################
+#  MAIN
+
+# load System Libraries
+import os, sys, os.path, signal, glob
+
+#
+# Setup runtime environment
+noIMOD = False
+if os.getenv('IMOD_DIR') != None:
+   IMOD_DIR = os.environ['IMOD_DIR']
+   if sys.platform == 'cygwin' and sys.version_info[0] > 2:
+      IMOD_DIR = IMOD_DIR.replace('\\', '/')
+      if IMOD_DIR[1] == ':' and IMOD_DIR[2] == '/':
+         IMOD_DIR = '/cygdrive/' + IMOD_DIR[0].lower() + IMOD_DIR[2:]
+   sys.path.insert(0, os.path.join(IMOD_DIR, 'pylib'))
+   from imodpy import *
+   addIMODbinIgnoreSIGHUP()
+else:
+   noIMOD = True
+
+# Process arguments
+lenarg = len(sys.argv)
+argind = 1
+doAmbiguous = False
+recents = 0
+if lenarg < 2:
+   prnstr("Usage: ctrapcheck [-a] [-r #] [files]  : -a for ambiguous, -r for # recent files," +
+   " otherwise files must be entered")
+   sys.exit(0)
+
+badArg = False
+while argind < lenarg:
+   oarg = sys.argv[argind]
+   if oarg == '-a':
+      argind += 1
+      doAmbiguous = True
+   elif oarg == '-r':
+      recents =  int(sys.argv[argind + 1])
+      argind += 2
+   elif oarg.startswith('-'):
+      badArg = False
+      break
+   else:
+      break
+
+# No IMOD is OK if doing recents
+if noIMOD:
+   if recents:
+      sys.exit(0)
+   sys.stdout.write(prefix + " IMOD_DIR is not defined!\n")
+   sys.exit(1)
+
+#
+# load IMOD Libraries and process deferred errors
+from pip import exitError, setExitPrefix
+setExitPrefix(prefix)
+
+if badArg:
+   exitError('Unrecognized argument ' + oarg)
+
+if recents and argind != lenarg:
+   exitError("No filenames should be entered with -r")
+if not recents and argind > lenarg - 1:
+   exitError("At least one file name must be entered")
+
+if recents:
+   allcpp = glob.glob('*.cpp')
+   allcpp += glob.glob('DirectElectron/*.cpp')
+   allcpp += glob.glob('Utilities/*.cpp')
+   allcpp += glob.glob('Image/*.cpp')
+   allcpp.sort(key=os.path.getmtime, reverse=True)
+   argind = 0
+   lenarg = recents
+
+varmatch = re.compile('[a-z][a-z0-9_]*', re.I)
+eqInParMatch = re.compile(r"if.*\(.*[^=!<>']=[^='].*\)")
+eqMatch = re.compile("[^=!<>']=[^=']")
+forMatch = re.compile(r'for *\(')
+comparisons = ('==', '<', '>', '<=', '>=', '!=')
+unaries = ('+=', '-=' '*=', '/=', '|=', '&=', ' =', ', ')
+logicals = ('&&', '||')
+arithmetics = ('+', '*', '/', '-', ' & ', ' | ')
+anyBad = False
+while argind < lenarg:
+   if recents:
+      fname = allcpp[argind]
+   else:
+      fname = sys.argv[argind]
+   argind += 1
+   proglines = readTextFile(fname)
+   inComment = False
+   for lineInd in range(len(proglines)):
+      line = proglines[lineInd]
+      lstrip = line.strip()
+
+      # Skip comments, blank lines, for statements
+      if lstrip == '':
+         continue
+      if lstrip.startswith('/*'):
+         inComment = True
+      if inComment and lstrip.endswith('*/'):
+         inComment = False
+      if inComment or lstrip.startswith('//'):
+         continue
+      skipFor = re.search(forMatch, lstrip)
+
+      # Look for the = inside parentheses
+      if not skipFor and re.search(eqInParMatch, lstrip):
+         eqInd = re.search(eqMatch, line).start()
+         if quotedOrInComment(line, eqInd + 1) or not insideParens(line, eqInd + 1):
+            continue
+         backParen1 = nextClosingParen(line, eqInd, -1)
+         backParen2 = nextClosingParen(line, backParen1, -1)
+         fwdParen1 = nextClosingParen(line, eqInd, 1)
+         fwdParen2 = nextClosingParen(line, fwdParen1, 1)
+         #print 'Parens: ', backParen2, backParen1, eqInd, fwdParen1, fwdParen2
+
+         lastCompare = lastOperator(line, eqInd, comparisons)
+         nextCompare = nextOperator(line, eqInd, comparisons)
+         lastLogical = lastOperator(line, eqInd, logicals)
+         nextLogical = nextOperator(line, eqInd, logicals)
+         #print 'Compares: ', lastCompare, nextCompare, '  Logicals: ', lastLogical, nextLogical
+         bad = False
+         if (nextLogical > 0 and (fwdParen1 < 0 or nextLogical < fwdParen1)) or \
+                (nextCompare > 0 and (fwdParen1 < 0 or nextCompare < fwdParen1)) or \
+                (lastLogical >= 0 and (backParen1 < 0 or lastLogical > backParen1)) or \
+                (lastCompare >= 0 and (backParen1 < 0 or lastCompare > backParen1)):
+
+            # logical or comparison operator on either side INSIDE parentheses is bad
+            bad = True
+         elif fwdParen2 == fwdParen1 + 1 and backParen2 >= 0 and \
+                (backParen2 == backParen1 - 1 or \
+                   (backParen2 == backParen1 - 2 and line[backParen1 - 1] == '!')):
+            
+            # if ((a = b)) and if (!(a = b)) are OK
+            bad = False
+         elif (lastCompare >= 0 and lastCompare > lastLogical and \
+                  lastCompare < backParen1 and backParen2 < lastCompare) or \
+                  (nextCompare > 0 and (nextLogical < 0 or nextCompare < nextLogical) and\
+                      nextCompare > fwdParen1 and \
+                      (fwdParen2 < 0 or nextCompare < fwdParen2)):
+
+            # Comparison operation one either side of the  ( = ) expression is OK
+            bad = False
+         elif (lastLogical > 0 and lastLogical > lastCompare and \
+                  lastLogical > backParen2) or \
+                  (nextLogical > 0 and (nextCompare < 0 or nextLogical < nextCompare) and\
+                      (fwdParen2 < 0 or nextLogical < fwdParen2)):
+
+            # But ... || / && (a = b)  or (a = b) && / || are bad
+            bad = True
+         else:
+
+            # That seemed to cover all the good cases
+            bad = True
+
+         if bad:
+            prnstr(fmtstr('\n{}  line {} may be wrong:\n{}', fname, lineInd + 1,
+                          line.rstrip()))
+            anyBad = True
+
+      # Look for and evaluate ? conditionals, but first pull out the middle clause of a for
+      if skipFor:
+         broken = lstrip.split(';')
+         if len(broken) != 3:
+            continue
+         lstrip = broken[1]
+         
+      if '?' in lstrip:
+         questInd = line.find('?')
+         if quotedOrInComment(line, questInd):
+            continue
+         bad = True
+         ambig = False
+         while questInd > 0:
+            ind = questInd - 1
+            while (ind >= 0 and (line[ind] == ' ' or line[ind] == '\t')):
+               ind -= 1
+            if ind >= 0 and line[ind] == ')':
+               bad = False
+            else:
+               backParen = nextClosingParen(line, questInd, -1)
+               lastCompare = lastOperator(line, questInd, comparisons)
+               lastLogical = lastOperator(line, questInd, logicals)
+               lastArithm = lastOperator(line, questInd, arithmetics, True)
+               lastUnary = lastOperator(line, questInd, unaries)
+               
+               # Sole test for for statements: does the middle clause have any parens
+               if skipFor:
+                  backSemi = lastOperator(line, questInd, [';'])
+                  bad = False
+                  if backSemi > 0 and backParen > 0 and backSemi > backParen:
+                     bad = True
+                     
+               elif backParen >= 0 and lastCompare < backParen and \
+                      lastLogical < backParen and lastArithm < backParen:
+                  bad = False
+               elif lastArithm > max(lastLogical, lastCompare, backParen, lastUnary):
+                  if lastArithm > 0 and line[lastArithm] == '-' and \
+                         (line[lastArithm - 1] == '(' or \
+                             (lastCompare > 0 and lastCompare >= lastArithm - 3) or \
+                             (lastLogical > 0 and lastLogical >= lastArithm - 3)):
+                     bad = False
+                  else:
+                     bad = True
+               elif lastLogical > max(backParen, lastArithm, lastUnary) or \
+                      lastCompare > max(backParen, lastArithm, lastUnary):
+                  bad = False
+                  ambig = True
+               else:
+                  bad = False
+
+            if bad:
+               if skipFor:
+                  prnstr(fmtstr('\n{}  Paren needed to separate comparison from value in line' +\
+                                ' {}:\n{}', fname, lineInd + 1, line.rstrip()))
+               else:
+                  prnstr(fmtstr('\n{}  arithmetic operator has precedence in line {}:\n{}',
+                                fname, lineInd + 1, line.rstrip()))
+               anyBad = True
+               break
+            if doAmbiguous and ambig:
+               prnstr(fmtstr('\n{}  suggest parens in line {}:\n{}', fname, lineInd + 1,
+                             line.rstrip()))
+               break
+            if questInd == len(line) - 1:
+               questInd = -1
+            else:
+               questInd = line.find('?', questInd + 1)
+
+if anyBad:
+   sys.exit(1)
+if not recents:
+   prnstr('CTRAPCHECK PASSED')
+sys.exit(0)

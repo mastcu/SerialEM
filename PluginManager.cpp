@@ -132,7 +132,7 @@ int CPluginManager::LoadPlugins(void)
 #ifdef _WIN64
       if (mess.Find("-32.dll") > 0)
 #else
-      if (mess.Find("-64.dll") > 0)
+      if (mess.Find("-64.dll") > 0 || mess.Find("x64.dll") > 0)
 #endif
       {
         mWinApp->AppendToLog("Skipping file " + mess, action);
