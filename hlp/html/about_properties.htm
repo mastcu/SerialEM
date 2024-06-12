@@ -120,7 +120,8 @@
         <TR VALIGN="top">
           <TD>SimulationMode</TD>
           <TD>Set to 1 or to a desired high voltage value to indicate a microscope/camera simulator 
-            is being used (enables some actions on JEOL and is needed to use an Eagle camera in simulation mode).
+            is being used (enables some actions on JEOL and is needed to use an Eagle camera in simulation mode).&nbsp; Set to -1 or the negative of a desired high voltage value to enable simulation
+            of aperture and autoloader commands on FEI scopes.
              &nbsp;  Do not use this instead of NoScope with a real camera that uses dark references in SerialEM,
              since it also divides dark references by 8 and reduces the variation in gain references by 8.&nbsp; If
             it is set higher than 1, the value will be used instead of reading high voltage from the scope.
@@ -612,6 +613,7 @@
               m to output all SEMMessageBox messages to log<br />
               n&nbsp;for Navigator map transform and other items<BR>
               p for AlignWithScaling and FindBeamCenter output<br />
+              q for multiple grid operations<br />
               r for gain and dark references<BR>
               s for STEM in general<br />
               t for exposure time changes in tasks and for continuous mode timing<BR>

@@ -100,12 +100,30 @@ struct StageThreadData {
 struct JeolCartridgeData {
   int id;
   CString name;
-  short station;
-  short slot;
-  short type;
-  short rotation;
+  int station;
+  int slot;
+  int type;
+  int rotation;
   CString userName;
   int status;
+  float zStage;
+  int LMmapID;
+  float holeSize;
+  float holeSpacing;
+  void Init() {
+    id = 0;
+    slot = 0;
+    rotation = 0;
+    type = 0;
+    zStage = -999.;
+    LMmapID = 0;
+    status = 0;
+    station = JAL_STATION_MAGAZINE;
+    name = "";
+    userName = "";
+    holeSize = 0.;
+    holeSpacing = 0.;
+  }
 };
 
 #define LONGOP_FLASH_HIGH    1
@@ -203,6 +221,7 @@ public:
   void SetJeolPiezoRounding(float inVal);
   float GetJeolStageRounding();
   float GetJeolPiezoRounding();
+  void SetSimCartridgeLoaded(int inVal);
   GetSetMember(int, MagFixISdelay)
     GetSetMember(int, JeolForceMDSmode)
     GetSetMember(int, InitializeJeolDelay)

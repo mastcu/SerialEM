@@ -26,6 +26,8 @@
 #include "RemoteControl.h"
 #include "NavHelper.h"
 #include "MultiShotDlg.h"
+#include "MultiGridDlg.h"
+#include "MultiGridTasks.h"
 #include "ParticleTasks.h"
 #include "ZbyGSetupDlg.h"
 #include "BaseSocket.h"
@@ -118,6 +120,10 @@ static float sStageErrWaitFactor = 9.;      // Wait for this # sec divided by sp
 
 static HANDLE sMagMutexHandle;
 static HANDLE sDataMutexHandle;
+
+// Simulation values
+static int sSimLoadedCartridge = -1;
+static int sSimApertureSize[MAX_APERTURE_NUM + 1] = {0,0,0,0,0,0,0,0,0,0,0, 0};
 
 // Jeol calls for screen pos will all work in terms of spUpJeol, etc
 // The rest of the program will use the standard FEI definitions and JEOL positions are
@@ -6811,8 +6817,8 @@ double CEMscope::GetHTValue()
   double result;
   if (mNoScope)
     return mNoScope;
-  if (mSimulationMode > 1)
-    return mSimulationMode;
+  if (B3DABS(mSimulationMode) > 1)
+    return B3DABS(mSimulationMode);
   if (!sInitialized)
     return -1.;
 
@@ -6829,7 +6835,9 @@ double CEMscope::GetHTValue()
   return result;
 }
 
-// Functions for dealing with FEI or JEOL autoloader
+/*
+ * Functions for dealing with FEI or JEOL autoloader
+ */
 // Get the status of a slot; slots are apparently numbered from 1
 BOOL CEMscope::CassetteSlotStatus(int slot, int &status, CString &names, int *numSlotsPtr)
 {
@@ -6882,7 +6890,7 @@ BOOL CEMscope::CassetteSlotStatus(int slot, int &status, CString &names, int *nu
   return success;
 }
 
-// Load a cartridge to the stage
+// Load a cartridge to the stage: slot # for FEI (from 1) or index + 1 in JEOL catalogue
 int CEMscope::LoadCartridge(int slot, CString &errStr)
 {
   int id, err, oper = LONG_OP_LOAD_CART;
@@ -6896,6 +6904,15 @@ int CEMscope::LoadCartridge(int slot, CString &errStr)
     return 4;
   if (FEIscope) {
     sCartridgeToLoad = slot;
+    mUnloadedCartridge = FindCartridgeAtStage(id);
+    mLoadedCartridge = -1;
+    for (id = 0; id < (int)mJeolLoaderInfo.GetSize(); id++) {
+      jcd = mJeolLoaderInfo.GetAt(id);
+      if (jcd.id == slot) {
+        mLoadedCartridge = id;
+        break;
+      }
+    }
   } else {
     if (!mJeolLoaderInfo.GetSize())
       return 6;
@@ -6929,18 +6946,16 @@ int CEMscope::UnloadCartridge(CString &errStr)
     errStr = "Autoloader operations are not supported by this microscope";
     return 3;
   }
-  if (JEOLscope) {
-    if (!mJeolLoaderInfo.GetSize()) {
-      errStr = "You need to do a cassette inventory; There is no cartridge "
-        "information";
-      return 6;
-    }
-    mLoadedCartridge = -1;
-    mUnloadedCartridge = FindCartridgeAtStage(sCartridgeToLoad);
-    if (mUnloadedCartridge < 0) {
-      errStr = "There is no cartridge in the stage according to the current inventory";
-      return 5;
-    }
+  if (JEOLscope && !mJeolLoaderInfo.GetSize()) {
+    errStr = "You need to do a cassette inventory; There is no cartridge "
+      "information";
+    return 6;
+  }
+  mLoadedCartridge = -1;
+  mUnloadedCartridge = FindCartridgeAtStage(sCartridgeToLoad);
+  if (JEOLscope && mUnloadedCartridge < 0) {
+    errStr = "There is no cartridge in the stage according to the current inventory";
+    return 5;
   }
   err = StartLongOperation(&oper, &sinceLast, 1);
   if (err)
@@ -7291,7 +7306,9 @@ int CEMscope::CheckApertureKind(int kind)
   if (FEIscope) {
     if (!mPlugFuncs->GetApertureSize)
       mFEIhasApertureSupport = 0;
-    if (mFEIhasApertureSupport < 0 && mPlugFuncs->GetApertureSize) {
+    if (mSimulationMode < 0)
+      mFEIhasApertureSupport = 1;
+    else if (mFEIhasApertureSupport < 0 && mPlugFuncs->GetApertureSize) {
       try {
 
         // This function will throw only if there is no automation, so it doesn't matter
@@ -7329,6 +7346,8 @@ int CEMscope::GetApertureSize(int kind)
   int result = -1;
   if (CheckApertureKind(kind) || !mPlugFuncs->GetApertureSize)
     return -1;
+  if (mSimulationMode < 0)
+    return sSimApertureSize[kind];
   ScopeMutexAcquire("GetApertureSize", true);
   try {
     result = mPlugFuncs->GetApertureSize(kind);
@@ -7354,6 +7373,10 @@ bool CEMscope::SetApertureSize(int kind, int size)
 {
   if (CheckApertureKind(kind) || !mPlugFuncs->SetApertureSize)
     return false;
+  if (mSimulationMode < 0) {
+    sSimApertureSize[kind] = size;
+    return true;
+  }
   mApertureTD.actionFlags = APERTURE_SET_SIZE;
   mApertureTD.apIndex = kind;
   mApertureTD.sizeOrIndex = size;
@@ -8321,6 +8344,11 @@ void CEMscope::SetJeolPiezoRounding(float inVal)
 }
 float CEMscope::GetJeolStageRounding() {return sJEOLstageRounding;};
 float CEMscope::GetJeolPiezoRounding() {return sJEOLpiezoRounding;}
+
+void CEMscope::SetSimCartridgeLoaded(int inVal)
+{
+  sSimLoadedCartridge = inVal;
+}
 
 // Central place to change the offset and make sure that scope defocus is changed in 
 // tandem and maintain the currently set offset value
@@ -9934,6 +9962,7 @@ UINT CEMscope::LongOperationProc(LPVOID pParam)
         // Do the cassette inventory
         if (longOp == LONG_OP_INVENTORY) {
           if (JEOLscope) {
+            jcData.Init();
             lod->cartInfo->RemoveAll();
             name = lod->plugFuncs->GetCartridgeInfo(0, &idAtZero, &station, &slot,
               &rotation, &cartType);
@@ -9996,10 +10025,21 @@ UINT CEMscope::LongOperationProc(LPVOID pParam)
               Sleep(5000);
             }
           } else {
-            if (loadCart)
-              lod->plugFuncs->LoadCartridge(sCartridgeToLoad);
-            else
-              lod->plugFuncs->UnloadCartridge();
+            if (SEMGetSimulationMode() < 0) {
+              if ((loadCart && sCartridgeToLoad == sSimLoadedCartridge) ||
+                (!loadCart && sSimLoadedCartridge < 0))
+                throw(_com_error((HRESULT)PLUGIN_FAKE_HRESULT, NULL, true));
+              if (loadCart)
+                sSimLoadedCartridge = sCartridgeToLoad;
+              else
+                sSimLoadedCartridge = -1;
+
+            } else {
+              if (loadCart)
+                lod->plugFuncs->LoadCartridge(sCartridgeToLoad);
+              else
+                lod->plugFuncs->UnloadCartridge();
+            }
           }
         }
 
@@ -10034,7 +10074,11 @@ UINT CEMscope::LongOperationProc(LPVOID pParam)
 
       // Save an error in the error string and retval but continue in loop
       catch (_com_error E) {
-        SEMReportCOMError(E, _T(longOpDescription[longOp]), &lod->errString, true);
+        descrip == ": ";
+        if (lod->plugFuncs->GetLastErrorString && SEMGetSimulationMode() >= 0)
+          descrip += lod->plugFuncs->GetLastErrorString();
+        SEMReportCOMError(E, _T(longOpDescription[longOp] + descrip), &lod->errString,
+          true);
         retval = 1;
       }
     }
@@ -10058,6 +10102,7 @@ int CEMscope::LongOperationBusy(int index)
     "", "", "", "", "", ""};
   JeolCartridgeData jcData;
   bool throwErr = false, didError;
+  CString excuse;
   indStart = B3DCHOICE(index < 0, 0, sLongThreadMap[index]);
   indEnd = B3DCHOICE(index < 0, MAX_LONG_THREADS - 1, sLongThreadMap[index]);
   if (!mDoingLongOperation)
@@ -10089,24 +10134,34 @@ int CEMscope::LongOperationBusy(int index)
           }
 
           // If moved a cartridge, change the table
-          if (JEOLscope && (longOp == LONG_OP_LOAD_CART ||
-            longOp == LONG_OP_UNLOAD_CART)) {
-            if (mLoadedCartridge >= 0) {
-              jcData = mJeolLoaderInfo.GetAt(mLoadedCartridge);
-              jcData.station = JAL_STATION_STAGE;
-              mJeolLoaderInfo.SetAt(mLoadedCartridge, jcData);
+          if (longOp == LONG_OP_LOAD_CART || longOp == LONG_OP_UNLOAD_CART) {
+            if (busy && !mLongOpData[thread].finished[op] &&
+              mWinApp->mMultiGridTasks->GetUnloadErrorOK() > 0)
+              excuse = (longOp == LONG_OP_LOAD_CART) ?
+              " (But cartridge is assumed to be on stage already)" :
+              " (But it is assumed there was no cartridge loaded)";
+            if (!busy || !excuse.IsEmpty()) {
+              if (mUnloadedCartridge >= 0 && mUnloadedCartridge != mLoadedCartridge) {
+                jcData = mJeolLoaderInfo.GetAt(mUnloadedCartridge);
+                jcData.station = JAL_STATION_STORAGE;
+                mJeolLoaderInfo.SetAt(mUnloadedCartridge, jcData);
+              }
+              if (mLoadedCartridge >= 0) {
+                jcData = mJeolLoaderInfo.GetAt(mLoadedCartridge);
+                jcData.station = JAL_STATION_STAGE;
+                mJeolLoaderInfo.SetAt(mLoadedCartridge, jcData);
+              }
+              mChangedLoaderInfo = 1;
+              if (mWinApp->mNavHelper->mMultiGridDlg)
+                mWinApp->mNavHelper->mMultiGridDlg->NewGridOnStage(mLoadedCartridge);
             }
-            if (mUnloadedCartridge >= 0) {
-              jcData = mJeolLoaderInfo.GetAt(mUnloadedCartridge);
-              jcData.station = JAL_STATION_STORAGE;
-              mJeolLoaderInfo.SetAt(mUnloadedCartridge, jcData);
-            }
-            mChangedLoaderInfo = 1;
           }
           didError = busy && (!mLongOpData[thread].finished[op] || thread == 1);
           if (didError || !mWinApp->GetSuppressSomeMessages())
             mWinApp->AppendToLog("Call for " + CString(longOpDescription[longOp]) +
-            B3DCHOICE(didError, " ended with error", " finished successfully"));
+            B3DCHOICE(didError, " ended with error" + excuse, " finished successfully"));
+          if (!excuse.IsEmpty())
+            busy = 0;
         }
 
         // Record time if completed, throw error if not and error not OK
