@@ -136,10 +136,10 @@ void EMstatusWindow::Update()
             (buf->mCaptured > 0 || buf->mCaptured == BUFFER_MONTAGE_PRESCAN) && 
             !mWinApp->mShiftCalibrator->CalibratingIS()) {
             MontParam *param = mWinApp->GetMontParam();
-            int xpc = extra->m_iMontageX / 
-              (param->xFrame - param->xOverlap) + 1;
-            int ypc = extra->m_iMontageY /
-              (param->yFrame - param->yOverlap) + 1;
+            int xpc = param->xFrame ? extra->m_iMontageX / 
+              (param->xFrame - param->xOverlap) + 1 : 1;
+            int ypc = param->xFrame ? extra->m_iMontageY /
+              (param->yFrame - param->yOverlap) + 1 : 1;
             m_sStageText.Format("Piece X: %d  Y: %d  Z: %d",
               xpc, ypc, extra->m_iMontageZ);
           } else if (extra->mStageX > EXTRA_VALUE_TEST)
