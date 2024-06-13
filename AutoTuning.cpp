@@ -2038,7 +2038,7 @@ void CAutoTuning::GetComaVsISVector(int magInd, float extent, int rotation, int 
   int dely[4] = {0, 0, -1, 1};
   ScaleMat aMat = mShiftManager->IStoSpecimen(magInd);
   double ISX = extent / sqrt(aMat.xpx * aMat.xpx + aMat.ypx * aMat.ypx);
-  double ISY = extent / sqrt(aMat.ypx * aMat.ypx + aMat.ypy * aMat.ypy);
+  double ISY = extent / sqrt(aMat.xpy * aMat.xpy + aMat.ypy * aMat.ypy);
   double cosRot = cos(DTOR * rotation);
   double sinRot = sin(DTOR * rotation);
   B3DCLAMP(posIndex, 0, 3);
