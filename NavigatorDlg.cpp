@@ -9312,6 +9312,7 @@ int CNavigatorDlg::LoadNavFile(bool checkAutosave, bool mergeFile, CString *inFi
     returnVal = 1;
   }
   mHelper->CheckForBadParamIndexes();
+  mHelper->RecomputeArrayRefs();
 
   // Set up list box and counters
   SetCurrentRegFromMax();
