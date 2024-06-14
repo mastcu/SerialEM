@@ -540,6 +540,7 @@ public:
   GetSetMember(int, FrameMdocForFalcon);
   GetSetMember(BOOL, SkipK2FrameRotFlip);
   GetSetMember(int, BaseJeolSTEMflags);
+  GetSetMember(int, TietzSTEMflags);
   GetMember(int, RepFlag);
   GetMember(double, LastImageTime);
   GetSetMember(int, WaitingForStacking);
@@ -982,6 +983,7 @@ public:
   float mK2MaxRamStackGB;       // Maximum GB to allow for a RAM stack/grab stack
   float mK2MinFrameForRAM;      // Minimum frame time for using RAM stack
   int mBaseJeolSTEMflags;       // Basic flags to which div by 2 and continuous are added
+  int mTietzSTEMflags;          // Flags shifted by TEITZ_STEM_FLAG_SHIFT to send
   bool mCancelNextContinuous;   // Flag to cancel continuous mode on next shot
   int mSingleContModeUsed;      // Value of mode to use on this shot/used on last shot
   double mTaskFrameWaitStart;   // Start time for when a task waits for frame

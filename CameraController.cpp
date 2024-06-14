@@ -423,6 +423,7 @@ CCameraController::CCameraController()
   mK2MinFrameForRAM = 0.05f;
   mTiltSumBlankFraction = 0.5f;
   mBaseJeolSTEMflags = 0;
+  mTietzSTEMflags = 2;
   mFalconAsyncStacking = true;
   mWaitingForStacking = 0;
   mSingleContModeUsed = SINGLE_FRAME;
@@ -1620,7 +1621,7 @@ void CCameraController::InitializePluginCameras(int &numPlugListed, int *origina
                                                 int numOrig)
 {
   int ind, i, err, num, idum, numGain, flags, ifSTEM, set;
-  double minPixel, rotInc, ddum;
+  double minPixel, rotInc, ddum, pixelInc;
   CString report;
 
   numPlugListed = 0;
@@ -1743,8 +1744,10 @@ void CCameraController::InitializePluginCameras(int &numPlugListed, int *origina
         // previous call being first
         if (!err && mAllParams[i].STEMcamera && mPlugFuncs[i]->GetSTEMProperties) {
           mPlugFuncs[i]->GetSTEMProperties(mAllParams[i].sizeX, mAllParams[i].sizeY,
-            &minPixel, &mAllParams[i].maxPixelTime, &mAllParams[i].pixelTimeIncrement,
+            &minPixel, &mAllParams[i].maxPixelTime, &pixelInc,
             &rotInc, &ddum, &mAllParams[i].maxIntegration, &idum);
+          if (mAllParams[i].pixelTimeIncrement <= 0 && pixelInc > 0.)
+            mAllParams[i].pixelTimeIncrement = pixelInc;
           if (mAllParams[i].minPixelTime <= 0.) {
             if (minPixel > 0)
               mAllParams[i].minPixelTime = (float)minPixel;
@@ -4014,6 +4017,8 @@ void CCameraController::Capture(int inSet, bool retrying)
     mTD.PlugSTEMacquireFlags |= PLUGCAM_PARTIAL_SCAN;
   if (mParam->STEMcamera && mParam->TietzType && mInvertTietzScan)
     mTD.PlugSTEMacquireFlags |= PLUGCAM_INVERT_SCAN;
+  if (mParam->STEMcamera && mParam->TietzType)
+    mTD.PlugSTEMacquireFlags |= (mTietzSTEMflags << TIETZ_STEM_FLAG_SHIFT);
   
   if (mSingleContModeUsed == CONTINUOUS && mNeedShotToInsert < 0) {
     if (mParam->STEMcamera && mParam->GatanCam)
@@ -11287,7 +11292,7 @@ int CCameraController::LockInitializeTietz(BOOL firstTime)
 {
   int nlist = mWinApp->GetActiveCamListSize();
   int i, ind, err, chipX, chipY, idum;
-  double minPixel, rotInc, ddum;
+  double minPixel, rotInc, ddum, pixelInc;
   int numGain, xsize, ysize;
   CString report;
   CameraParameters *camP;
@@ -11315,8 +11320,10 @@ int CCameraController::LockInitializeTietz(BOOL firstTime)
         camP->failedToInitialize = true;
       } else if (camP->STEMcamera) {
         mPlugFuncs[ind]->GetSTEMProperties(camP->sizeX, mTietzScanCoordRange,
-          &minPixel, &camP->maxPixelTime, &camP->pixelTimeIncrement,
+          &minPixel, &camP->maxPixelTime, &pixelInc,
           &rotInc, &ddum, &camP->maxIntegration, &idum);
+        if (camP->pixelTimeIncrement <= 0. && pixelInc > 0)
+            camP->pixelTimeIncrement = pixelInc;
         if (camP->minPixelTime <= 0.) {
           if (minPixel > 0)
             camP->minPixelTime = (float)minPixel;
