@@ -482,6 +482,7 @@ CEMscope::CEMscope()
   mLastMagModeChgTime = -1.;
   mAdjustFocusForProbe = false;
   mNormAllOnMagChange = 0;
+  mGoToRecMagEnteringLD = -1;
   mFirstFocusForProbe = EXTRA_NO_VALUE;
   mPostProbeDelay = 3000;
   mFirstBeamXforProbe = EXTRA_NO_VALUE;
@@ -660,6 +661,8 @@ int CEMscope::Initialize()
       mC2Name = mUseIllumAreaForC2 ? "IA" : "C2";
       mStandardLMFocus = 0.;
       mHasNoAlpha = 1;
+      if (mGoToRecMagEnteringLD < 0)
+        mGoToRecMagEnteringLD = 0;
       if (mBacklashTolerance <= 0.)
         mBacklashTolerance = 0.1f;
       if (mNumSpotSizes <= 0)
@@ -683,6 +686,8 @@ int CEMscope::Initialize()
       mCanControlEFTEM = mUseJeolGIFmodeCalls > 1;
       mC2Name = "C3";
       mStandardLMFocus = -999.;
+      if (mGoToRecMagEnteringLD < 0)
+        mGoToRecMagEnteringLD = 1;
       if (mHasNoAlpha < 0) {
         mHasNoAlpha = 0;
          mNumAlphas = B3DMIN(mNumAlphas, MAX_ALPHAS);
@@ -5403,6 +5408,9 @@ void CEMscope::GotoLowDoseArea(int newArea)
   toSearchOK = toSearch && ldArea->magIndex > 0;
   fromViewOK = fromView && mLdsaParams->magIndex > 0;
   fromSearchOK = fromSearch && mLdsaParams->magIndex > 0;
+  if (oldArea < 0 && ldParams[RECORD_CONSET].magIndex > 0 && (mGoToRecMagEnteringLD > 1 ||
+    (mGoToRecMagEnteringLD == 1 && leavingLowMag)))
+    SetMagIndex(ldParams[RECORD_CONSET].magIndex);
 
   if (GetDebugOutput('L'))
     GetImageShift(curISX, curISY);

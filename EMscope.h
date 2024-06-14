@@ -440,6 +440,7 @@ public:
   GetSetMember(BOOL, AdjustFocusForProbe);
   SetMember(double, FirstFocusForProbe);
   GetSetMember(int, NormAllOnMagChange);
+  GetSetMember(int, GoToRecMagEnteringLD);
   GetSetMember(int, IdleTimeToCloseValves);
   void GetMinMaxBeamShiftSpots(int secondary, int &outMin, int &outMax)
   {
@@ -873,6 +874,7 @@ private:
   BOOL mBlankTransients;      // Flag to blank for mag/spot size changes & normalizations
   double mLastCameraLength;   // Camera length in last update: valid only in diff mode
   int mNormAllOnMagChange;    // Norm all lenses when in LM if 1, or always if 2
+  int mGoToRecMagEnteringLD;  // Set the R mag entering LD if in LM (1) or always (2)
   float mStageRelaxation;     // Default distance to relax stage from backlash
   int mDoingStoppableRefill;  // Sum of bits for refill types
   float mFalcon3ReadoutInterval; // Frame interval for Falcon 3 camera
