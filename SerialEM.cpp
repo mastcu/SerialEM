@@ -479,7 +479,7 @@ CSerialEMApp::CSerialEMApp()
       mCamConSets[i][k].integration = 1;
       mCamConSets[i][k].correctDrift = -1;
     }
-    mCamParams[i].minPixelTime = 0.1f;
+    mCamParams[i].minPixelTime = -0.1f;
     mCamParams[i].maxPixelTime = 0.;
     mCamParams[i].pixelTimeIncrement = 0.;
     mCamParams[i].maxIntegration = 0;

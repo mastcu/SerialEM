@@ -1745,8 +1745,12 @@ void CCameraController::InitializePluginCameras(int &numPlugListed, int *origina
           mPlugFuncs[i]->GetSTEMProperties(mAllParams[i].sizeX, mAllParams[i].sizeY,
             &minPixel, &mAllParams[i].maxPixelTime, &mAllParams[i].pixelTimeIncrement,
             &rotInc, &ddum, &mAllParams[i].maxIntegration, &idum);
-          if (minPixel > 0)
-            mAllParams[i].minPixelTime = (float)minPixel;
+          if (mAllParams[i].minPixelTime <= 0.) {
+            if (minPixel > 0)
+              mAllParams[i].minPixelTime = (float)minPixel;
+            else
+              mAllParams[i].minPixelTime = -mAllParams[i].minPixelTime;
+          }
         }
         mAllParams[i].failedToInitialize = err != 0;
         if (!err)
@@ -11313,8 +11317,12 @@ int CCameraController::LockInitializeTietz(BOOL firstTime)
         mPlugFuncs[ind]->GetSTEMProperties(camP->sizeX, mTietzScanCoordRange,
           &minPixel, &camP->maxPixelTime, &camP->pixelTimeIncrement,
           &rotInc, &ddum, &camP->maxIntegration, &idum);
-        if (minPixel > 0)
-          mAllParams[i].minPixelTime = (float)minPixel;
+        if (camP->minPixelTime <= 0.) {
+          if (minPixel > 0)
+            camP->minPixelTime = (float)minPixel;
+          else
+            camP->minPixelTime = -mAllParams[i].minPixelTime;
+        }
       } else {
         if (camP->LowestGainIndex < 0)
           camP->LowestGainIndex = (camP->TietzType >= MIN_XF416_TYPE) ? 2 : 1;
