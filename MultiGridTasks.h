@@ -108,6 +108,8 @@ public:
   GetSetMember(CString, Prefix);
   GetMember(int, UnloadErrorOK);
   GetMember(bool, StartedNavAcquire);
+  GetSetMember(int, NumMMMstateCombos);
+  GetSetMember(int, NumFinalStateCombos);
   bool WasStoppedInNavRun() { return mStoppedInNavRun && mSuspendedMulGrid; };
   bool WasStoppedInLMMont() { return mStoppedInLMMont && mSuspendedMulGrid; };
   void SetExtErrorOccurred(int inVal);
@@ -227,5 +229,7 @@ private:
   int mAutoContGroups[MAX_AUTOCONT_GROUPS];
   bool mHaveAutoContGroups;      // Flag that groups were saved for autocontouring
   bool mOpeningForFinalFailed;   // Flag that a file was needed and opening it failed
+  int mNumMMMstateCombos;        // Number of combo boxes to show for MMM
+  int mNumFinalStateCombos;      // NUmber of combo boxes to show for final
 };
 

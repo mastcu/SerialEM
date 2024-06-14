@@ -236,9 +236,16 @@ BOOL CMultiGridDlg::OnInitDialog()
   SetupPanelTables(sIdTable, sLeftTable, sTopTable, mNumInPanel, mPanelStart,
     sHeightTable);
   mNumUsedSlots = 0;
+  mNumMMMcombos = mMGTasks->GetNumMMMstateCombos();
+  mNumFinalCombos = mMGTasks->GetNumFinalStateCombos();
+  RepackStatesIfNeeded(mNumMMMcombos, &mParams.MMMstateNums[0],
+    &mParams.MMMstateNames[0]);
+  RepackStatesIfNeeded(mNumFinalCombos, &mParams.finalStateNums[0],
+    &mParams.finalStateNames[0]);
   LoadAllComboBoxes();
   m_strPrefix = mMGTasks->GetPrefix();
-  UpdateSettings();
+  ParamsToDialog();
+  UpdateData(false);
   SetDlgItemText(IDC_BUT_MG_SETUP, mPanelStates[2] ? "-" : "+");
   SetDlgItemText(IDC_BUT_MG_LOW_MAG_MAPS, mPanelStates[4] ? "-" : "+");
   SetDlgItemText(IDC_BUT_MG_MEDIUM_MAG_MAPS, mPanelStates[6] ? "-" : "+");
@@ -424,6 +431,8 @@ void CMultiGridDlg::OnButMgGetNames()
     mNumUsedSlots = (int)mCartInfo->GetSize();
     for (ind = 0; ind < mNumUsedSlots; ind++) {
       JeolCartridgeData &jcdEl = mCartInfo->ElementAt(ind);
+      if (jcdEl.name.IsEmpty())
+        jcdEl.name.Format("Car%d", jcdEl.id);
       str = jcdEl.name;
       mMGTasks->ReplaceBadCharacters(str);
       jcdEl.userName = str;
@@ -823,6 +832,10 @@ void CMultiGridDlg::UpdateCurrentDir()
  */
 void CMultiGridDlg::ManagePanels()
 {
+  UINT MMMcomboIDs[4] = {IDC_COMBO_MMM_STATE1, IDC_COMBO_MMM_STATE2, IDC_COMBO_MMM_STATE3,
+    IDC_COMBO_MMM_STATE4};
+  UINT finalComboIDs[4] = {IDC_COMBO_FINAL_STATE1, IDC_COMBO_FINAL_STATE2,
+    IDC_COMBO_FINAL_STATE3, IDC_COMBO_FINAL_STATE4};
   mIDsToDrop.clear();
   for (int ind = mNumUsedSlots; ind < MAX_DLG_SLOTS; ind++) {
     mIDsToDrop.push_back(IDC_CHECK_MULGRID_RUN1 + ind);
@@ -830,6 +843,8 @@ void CMultiGridDlg::ManagePanels()
     mIDsToDrop.push_back(IDC_EDIT_MULGRID_NAME1 + ind);
     mIDsToDrop.push_back(IDC_STAT_MULGRID_STATUS1 + ind);
   }
+  DropComboBoxes(mNumMMMcombos, &MMMcomboIDs[0], IDC_STAT_SET_MMM_STATES);
+  DropComboBoxes(mNumFinalCombos, &finalComboIDs[0], IDC_STAT_SET_FINAL_STATES);
   AdjustPanels(mPanelStates, sIdTable, sLeftTable, sTopTable, mNumInPanel, mPanelStart, 0,
     sHeightTable);
 }
@@ -937,6 +952,45 @@ void CMultiGridDlg::SetAllComboBoxesFromNameOrNum()
     mParams.finalStateNames[2], 1);
   SetComboBoxFromNameOrNum(m_comboFinalState4, mParams.finalStateNums[3],
     mParams.finalStateNames[3], 1);
+}
+
+/*
+ * Find the highest state used, repack them if this is more than the number of boxes
+ * set by property, and increase that number of boxes if needed
+ */
+void CMultiGridDlg::RepackStatesIfNeeded(int &numBoxes, int *stateNums,
+  CString *stateNames)
+{
+  int ind, highest = 0, out = 0;
+  for (ind = 0; ind < 4; ind++)
+    if (stateNums[ind] >= 0)
+      highest = ind;
+  if (highest >= numBoxes) {
+    for (ind = 0; ind < 4; ind++) {
+      if (stateNums[ind] >= 0) {
+        stateNums[out] = stateNums[ind];
+        stateNames[out++] = stateNames[ind];
+      }
+    }
+    for (ind = out; ind < 4; ind++) {
+      stateNums[ind] = -1;
+      stateNames[ind] = "";
+    }
+    ACCUM_MAX(numBoxes, out);
+  }
+}
+
+/*
+ * Drop the combo boxes above the given number
+ */
+void CMultiGridDlg::DropComboBoxes(int numBoxes, UINT *comboIDs, UINT statID)
+{
+  int ind;
+  for (ind = numBoxes; ind < 4; ind++)
+    mIDsToDrop.push_back(comboIDs[ind]);
+  SetDlgItemText(statID, numBoxes > 1 ? "States:" : "State:");
+  if (!numBoxes)
+    mIDsToDrop.push_back(statID);
 }
 
 /*
@@ -1092,6 +1146,8 @@ void CMultiGridDlg::ProcessMultiStateCombo(CComboBox &combo, int *stateNums,
   bool sameArea = false;
   GetStateFromComboBox(combo, stateNums[index], stateNames[index], 1);
   mWinApp->RestoreViewFocus();
+  if (stateNums[index] < 0)
+    return;
   for (cmb = 0; cmb < 4; cmb++) {
     if (stateNums[cmb] >= 0 && stateNums[cmb] < (int)mStateArray->GetSize()) {
       state = mStateArray->GetAt(stateNums[cmb]);

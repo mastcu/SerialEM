@@ -3,6 +3,14 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+6/14/24: Added property to make it to go through the Record mag before going
+to the first low dose area after turning on low dose.
+
+6/14/24: Added properties to control number of combo boxes shown for states
+in the multiple grid operations dialog.
+
+6/14/24: Added PixelTimeIncrement and TietzSTEMflags properties.
+
 6/14/24: Made MinimumPixelTime property be handled properly and fixed some
 problems with Tietz STEM (In 4.1).
 

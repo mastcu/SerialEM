@@ -976,6 +976,12 @@
             acquisition after switching to film shutter.</TD>
         </TR>
         <TR VALIGN="top">
+          <TD>TietzSTEMflags</TD>
+          <TD>Flags for acquisition with Tietz scan generator: set with the sum of 1 to set ExtCtrl_ExtScan,
+            2 to set ExtCtrl_IntSTEM, and 4 to set ExtCtrl_OCM.  Default is 2.
+        </TD>
+        </TR>
+        <TR VALIGN="top">
           <TD>CameraTimeoutFactor</TD>
           <TD>Factor by which to increase the time allowed for image acquisition before a
             timeout occurs. The default timeout is 5 seconds plus pre-exposure/exposure time
@@ -2426,6 +2432,12 @@
             may set this value, but a property entry overrides it.</TD>
         </TR>
         <TR VALIGN="top">
+          <TD>PixelTimeIncrement</TD>
+          <TD>Set this to the allowed increment in pixel time in microseconds for plugin cameras 
+            (including Tietz).&nbsp; The default is 0, meaning no increment is enforced.&nbsp; The
+             camera may set this value but a property entry overrides it.</TD>
+        </TR>
+       <TR VALIGN="top">
           <TD>AddedFlybackTime</TD>
           <TD>Set to the added flyback time indicated after running the camera timing
             calibration procedure.&nbsp; On Thermo/FEI it will be a large value that depends on the
@@ -3264,6 +3276,13 @@
           <TD>Set to 1 to apply beam tilt changes when going between low dose areas; with
             this enabled, beam tilt changes will be recorded when the user sets up beam
             shift changes, just as for beam shifts.</TD>
+        </TR>
+        <TR>
+          <TD>GoToRecMagEnteringLD</TD>
+          <TD>Set to 1 to pass through the Record magnification before going to the first area 
+            after entering Low Dose mode when starting in low magnification, or 2 to do so 
+            regardless of starting magnification.&nbsp; The default is 1 for JEOL and 0 
+            otherwise.</TD>
         </TR>
         <TR>
           <TD>MagChangeIntensityDelay</TD>
@@ -4297,6 +4316,18 @@
           <TD height="20">GridReloadMaxRotation</TD>
           <TD height="20">The default maximum rotation angle to search in the routine to 
             realign to a reloaded grid (default 15 degrees).</TD>
+        </TR>
+        <TR>
+          <TD height="20">MulGridNumMMMcombos</TD>
+          <TD height="20">The number of combo boxes to show for medium mag map states in the 
+            Multiple Grid Operations dialog, a number between 0 and 4.&nbsp; The default is 
+            2.</TD>
+        </TR>
+        <TR>
+          <TD height="20">MulGridNumFinalCombos</TD>
+          <TD height="20">The number of combo boxes to show for final acquisition states in 
+            the Multiple Grid Operations dialog, a number between 0 and 4.&nbsp; The default 
+            is 4.</TD>
         </TR>
         <TR VALIGN="top">
           <TD>ImportStageToImage</TD>

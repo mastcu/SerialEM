@@ -5009,16 +5009,30 @@ void CSerialEMApp::SetBasicMode(BOOL inVal)
   ManageDialogOptionsHiding();
 
   // Update any other non-model dialog
+  SyncNonModalsToMasterParams();
   if (mNavHelper->mStateDlg)
     mNavHelper->mStateDlg->UpdateHiding();
   if (mNavigator)
     mNavigator->UpdateHiding();
+  if (mNavHelper->mMultiGridDlg)
+    mNavHelper->mMultiGridDlg->ManagePanels();
   mMainFrame->RemoveHiddenItemsFromMenus();
   UpdateBufferWindows();
   UpdateWindowSettings();
   BOOL blanked = mScope->GetBeamBlanked();
   mLowDoseDlg.BlankingUpdate(!blanked);
   mLowDoseDlg.BlankingUpdate(blanked);
+}
+
+// Central place to make sure parameters are unloaded before calling UpdateWindowSettings
+void CSerialEMApp::SyncNonModalsToMasterParams()
+{
+  if (mNavHelper->mHoleFinderDlg)
+    mNavHelper->mHoleFinderDlg->SyncToMasterParams();
+  if (mNavHelper->mAutoContouringDlg)
+    mNavHelper->mAutoContouringDlg->SyncToMasterParams();
+  if (mNavHelper->mMultiGridDlg)
+    mNavHelper->mMultiGridDlg->SyncToMasterParams();
 }
 
 // Show or hide the options sections in control panels AND take care of calling 

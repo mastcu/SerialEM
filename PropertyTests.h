@@ -145,6 +145,7 @@ INT_PROP_TEST("ScopeHasPhasePlate", scope->, ScopeHasPhasePlate)
 INT_PROP_TEST("SkipNormalizations", scope->, SkipNormalizations)
 BOOL_PROP_TEST("UseImageBeamTilt", scope->, UseImageBeamTilt)
 INT_PROP_TEST("ScreenRaiseDelay", scope->, ScreenRaiseDelay)
+INT_PROP_TEST("GoToRecMagEnteringLD", scope->, GoToRecMagEnteringLD)
 
 #endif
 #ifdef PROP_TEST_SECT2
@@ -162,6 +163,7 @@ INT_PROP_TEST("LowerScreenForSTEM", camera->, LowerScreenForSTEM)
 INT_PROP_TEST("InvertBrightField", camera->, InvertBrightField)
 FLOAT_PROP_TEST("ShotTimeToInsertDetector", camera->, InsertDetShotTime)
 INT_PROP_TEST("BaseJeolSTEMflags", camera->, BaseJeolSTEMflags)
+INT_PROP_TEST("TietzSTEMflags", camera->, TietzSTEMflags)
 BOOL_PROP_TEST("MustUnblankWithScreen", mWinApp->, MustUnblankWithScreen)
 INT_PROP_TEST("LowestMicroSTEMmag", scope->, LowestMicroSTEMmag)
 INT_PROP_TEST("FeiSTEMprobeModeInLM", scope->, FeiSTEMprobeModeInLM)
@@ -375,6 +377,9 @@ FLOAT_PROP_TEST("SkipToScaledRealignMinField", navHelper->, RISkipItemPosMinFiel
 FLOAT_PROP_TEST("MultiInHoleStartAngle", mWinApp->mParticleTasks->, MSinHoleStartAngle)
 BOOL_PROP_TEST("AllowWindowWithTools", mWinApp->mExternalTools->, AllowWindow)
 FLOAT_PROP_TEST("GridReloadMaxRotation", mWinApp->mMultiGridTasks->, RRGMaxRotation)
+INT_PROP_TEST("MulGridNumMMMcombos", mWinApp->mMultiGridTasks->, NumMMMstateCombos)
+INT_PROP_TEST("MulGridNumFinalCombos", mWinApp->mMultiGridTasks->, NumFinalStateCombos)
+
 #endif
 #ifdef PROP_TEST_SECT4
 FLOAT_PROP_TEST("TSDefaultStartAngle", tsController->, DefaultStartAngle)
@@ -489,6 +494,7 @@ BOOL_PROP_TEST("InvertFocusRamp", invertFocusRamp)
 BOOL_PROP_TEST("STEMCamera", STEMcamera)
 FLOAT_PROP_TEST("AddedFlybackTime", addedFlyback)
 FLOAT_PROP_TEST("MinimumPixelTime", minPixelTime)
+FLOAT_PROP_TEST("PixelTimeIncrement", pixelTimeIncrement)
 INT_PROP_TEST("NoShutter", noShutter)
 INT_PROP_TEST("OnlyOneShutter", onlyOneShutter)
 INT_PROP_TEST("BeamBlankShutter", beamShutter)

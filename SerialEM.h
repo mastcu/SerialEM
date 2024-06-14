@@ -209,6 +209,7 @@ struct JeolParams;
 #define PLUGCAM_PARTIAL_SCAN  (1 << 22)
 #define PLUGCAM_ABORT_SCAN    (1 << 23)
 #define PLUGCAM_INVERT_SCAN   (1 << 24)
+#define TIETZ_STEM_FLAG_SHIFT     25
 
 // These are copied to FeiScope.h
 #define PLUGFEI_MAKE_CAMERA        2
@@ -1041,6 +1042,7 @@ public:
   double ProgramStartTime(void);
   GetMember(BOOL, BasicMode);
   void SetBasicMode(BOOL inVal);
+  void SyncNonModalsToMasterParams();
   void ManageDialogOptionsHiding(void);
   int LookupToolDlgIndex(int colorInd);
  afx_msg void OnUpdateShowScopeControlPanel(CCmdUI *pCmdUI);

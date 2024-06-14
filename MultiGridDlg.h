@@ -56,6 +56,8 @@ private:
   int mMMMneedsLowDose;       // Whether MMM needs low dose turned off (-1) or on (1)
   int mLMneedsLowDose;        // Whether LMM needs low dose turned off (-1) or on (1)
   bool mEnableRunUndone;      // Flag that Run Undone can be enabled
+  int mNumMMMcombos;          // Number of combo boxes being shown
+  int mNumFinalCombos;
 
 public:
   CString m_strCurrentDir;
@@ -84,6 +86,8 @@ public:
   void ManagePanels();
   void ParamsToDialog();
   void SetAllComboBoxesFromNameOrNum();
+  void RepackStatesIfNeeded(int &numBoxes, int *stateNums, CString *stateNames);
+  void DropComboBoxes(int numBoxes, UINT *comboIDs, UINT statID);
   void SetComboBoxFromNameOrNum(CComboBox &combo, int &num, CString &name, int addForNone);
   int FindUniqueStateFromName(CString &name);
   void DialogToParams();

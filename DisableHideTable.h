@@ -188,4 +188,9 @@ static DisableHideItem sDisableHideList[] =
   {"FrameFileOpts - Frame stack mdoc", 2, 0, IDC_FRAME_STACK_MDOC},
   {"FrameFileOpts - Save unnormalized", 2, 0, IDC_SAVE_UNNORMALIZED},
   {"FrameFileOpts - No rotation/flip", 2, 0, IDC_SKIP_ROTFLIP},
+  // Multiple Grid Operations Dialog
+  {"MultiGridDlg - MMM State 3", 2, 0, IDC_COMBO_MMM_STATE3},
+  {"MultiGridDlg - MMM State 4", 2, 0, IDC_COMBO_MMM_STATE4},
+  {"MultiGridDlg - Final State 3", 2, 0, IDC_COMBO_FINAL_STATE3},
+  {"MultiGridDlg - Final State 4", 2, 0, IDC_COMBO_FINAL_STATE4},
 };

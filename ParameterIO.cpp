@@ -1724,12 +1724,7 @@ void CParameterIO::WriteSettings(CString strFileName)
       mWinApp->mMacroEditer[i]->TransferMacro(true);
   mWinApp->mMacroProcessor->TransferOneLiners(true);
 
-  if (mWinApp->mNavHelper->mHoleFinderDlg)
-    mWinApp->mNavHelper->mHoleFinderDlg->SyncToMasterParams();
-  if (mWinApp->mNavHelper->mAutoContouringDlg)
-    mWinApp->mNavHelper->mAutoContouringDlg->SyncToMasterParams();
-  if (mWinApp->mNavHelper->mMultiGridDlg)
-    mWinApp->mNavHelper->mMultiGridDlg->SyncToMasterParams();
+  mWinApp->SyncNonModalsToMasterParams();
 
   try {
     // Open the file for writing, 

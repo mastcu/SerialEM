@@ -86,6 +86,8 @@ CMultiGridTasks::CMultiGridTasks()
   mAppendNames = false;
   mStartedLongOp = false;
   mRestoringOnError = false;
+  mNumMMMstateCombos = 2;
+  mNumFinalStateCombos = 4;
   InitOrClearSessionValues();
 }
 

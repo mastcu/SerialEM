@@ -60,6 +60,7 @@
       dialog is opened while this dialog is open, its radio buttons will be set 
       appropriately for storing a shift.&nbsp;&nbsp; The &#39;ShiftItemsByMicrons&#39; script 
       command can be used instead to apply a shift that will satisfy this requirement.</p>
+    <p>&nbsp;</p>
     <p><strong><em>Grid Setup and the Grid Table</em></strong></p>
     <p>The top section of the dialog has a table showing the grids that are in the 
       autoloader, omitting any empty cartridges.&nbsp; The first column has a set of 
@@ -242,23 +243,23 @@
       medium-magnification maps, although other aspects are controlled through the 
       Acquire at Items dialog.&nbsp; Select the checkbox to include this phase of 
       operations in the run.</p>
-    <p><strong>Use: LD Search&nbsp; -&nbsp; LD View&nbsp; -&nbsp; Current or set state</strong>
+    <p><strong>Use: LD Search&nbsp; -&nbsp; LD View&nbsp; -&nbsp; Current or set state<br />
+      States
+       </strong></p>
       <p>The radio buttons, together with the pre-existing settings in the Montage Setup 
       dialog and with states to be set, determine what kind of images are used for 
       these maps.&nbsp; The role of states is less than for grid mapping because 
       simply selecting a View or Search state does not imply that it should be used 
-      for the maps. Here are the rules:</p>
+      for the maps. Four drop-down boxes are available for these states but only two are 
+        shown by default; the number shown can be set with the 'MulGridNumMMMcombos' 
+        property.&nbsp; Here are the rules for what parameters are used for these maps:</p>
     <ul>
       <li>&nbsp;Search will be used if <strong>LD Search</strong> is selected or if all 
         of these conditions exist: <strong>Current or set state</strong> is selected, a 
         Low Dose state is to be set or Low Dose mode is currently on, <strong>Polygon 
         mont</strong> or <strong>nXn mont </strong>is selected, and 'Use Search 
-        parameters in Low Dose mode' is selected in the Montage Setup dialog.w</strong> is selected or if all of these 
-        conditions exist: <strong>Current or set state</strong> is selected, a Low Dose 
-        state is to be set or Low Dose mode is currently on, <strong>Polygon mont</strong> 
-        or <strong>nXn mont </strong>is selected, and 'Use View parameters in Low Dose 
-        mode' is selected in the Montage Setup dialog.&nbsp; Obviously, it is easier 
-        just set the relevant radio button for the View and Search cases.</li>
+        parameters in Low Dose mode' is selected in the Montage Setup dialog.&nbsp; Obviously, it is easier 
+        just to set the relevant radio button for the View and Search cases.</li>
       <li>Mont-map parameters will be used if neither of the above conditions apply, and 
         if <strong>Current or set state</strong> is selected, <strong>Polygon mont</strong> 
         or <strong>nXn mont </strong>is selected, and either a Mont-map state is 
@@ -293,14 +294,21 @@
     <p>Use this button to open the Navigator Acquire at Items dialog and set the 
       Mapping parameters.&nbsp; Some entries there, such as the type of single image 
       to take in Low Dose mode, will be disabled because they are controlled by the 
-      multi-grid routine.</p>
+      multi-grid routine.&nbsp; To do Multiple Records from multiple holes, you must 
+      select the option to 'Use map hole vectors for shifts'.&nbsp; Currently, for 
+      this to work well, it will almost certainly require a transformation that was 
+      stored by running 'Step To and Adjust' after using hole vectors in the Multiple 
+      Record Setup dialog, and the transformation will need to be good for the current 
+      conditions.&nbsp; The Acquire at Items dialog will indicate if a transformation 
+      exists.</p>
     <p>&nbsp;</p>
     <p><strong><em>Run Final Acquisition</em></strong></p>
     <p>Select the checkbox to include final data acquisition in the run.</p>
-    <p><strong>Set states</strong></p>
+    <p><strong>States</strong></p>
     <p>The selected states must be consistent and determine what the parameters are 
       for images taken through Acquire at Items, but do not affect the behavior of the 
-      multi-grid routine.</p>
+      multi-grid routine.&nbsp; All four of the available drop-down boxes are shown by 
+      default, but the number can be set with the property 'MulGridNumFinalCombos'.</p>
     <p><strong>Set Final Acquire Parameters</strong></p>
     <p>Use this button to open the Navigator Acquire at Items dialog and set the Final 
       Data parameters.&nbsp; Here, only a few choices will be disabled.&nbsp;&nbsp; 
