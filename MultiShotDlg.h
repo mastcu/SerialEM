@@ -51,6 +51,7 @@ private:
   double mLastDrawTime;
   int mSavedLDForCamera;
   int mAreaSaved;
+  int mStepConsNum;
   float mSavedDefOffset;
   LowDoseParams mSavedLDParams;
 

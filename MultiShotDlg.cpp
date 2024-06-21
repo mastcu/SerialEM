@@ -595,8 +595,10 @@ void CMultiShotDlg::StartRecording(const char *instruct)
       ApplyScaleMatrix(MatInv(focMat), ISX, ISY, ISX, ISY);
     mWinApp->mScope->IncImageShift(ISX, ISY);
     if (params->stepAdjTakeImage && mWinApp->LowDoseMode()) {
-      SEMTrace('1', "Initiate capture area %d", mAreaSaved);
-      mWinApp->mCamera->InitiateCapture(mAreaSaved);
+      mStepConsNum = B3DCHOICE(mAreaSaved == RECORD_CONSET, PREVIEW_CONSET,
+        mAreaSaved == SEARCH_AREA ? SEARCH_CONSET : VIEW_CONSET);
+      SEMTrace('1', "Initiate capture area %d cons %d", mAreaSaved, mStepConsNum);
+      mWinApp->mCamera->InitiateCapture(mStepConsNum);
     }
   }
   ManageEnables();
@@ -899,8 +901,8 @@ void CMultiShotDlg::OnButSaveIs()
   if (mSteppingAdjusting) {
     mWinApp->mScope->IncImageShift(ISX, ISY);
     if (mActiveParams->stepAdjTakeImage && mWinApp->LowDoseMode()) {
-      SEMTrace('1', "Initiate capture area %d", mAreaSaved);
-      mWinApp->mCamera->InitiateCapture(mAreaSaved);
+      SEMTrace('1', "Initiate capture area %d  cons %d", mAreaSaved, mStepConsNum);
+      mWinApp->mCamera->InitiateCapture(mStepConsNum);
     }
   }
 }
