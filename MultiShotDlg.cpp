@@ -528,9 +528,9 @@ void CMultiShotDlg::StartRecording(const char *instruct)
   LowDoseParams *ldp = mWinApp->GetLowDoseParams();
   MultiShotParams *params = mActiveParams;
   CString *modeNames = mWinApp->GetModeNames();
-  int prevMag;
+  int prevMag, origMag;
   ScaleMat focMat;
-  double ISX, ISY;
+  double ISX, ISY, ISXorig, ISYorig;
   mSavedISX.clear();
   mSavedISY.clear();
   mAreaSaved = RECORD_CONSET;
@@ -544,7 +544,7 @@ void CMultiShotDlg::StartRecording(const char *instruct)
 
   // Set up saved area and mag to go to if adjusting
   if (mSteppingAdjusting) {
-    prevMag = mSteppingAdjusting > 1 ? params->customMagIndex :
+    origMag = prevMag = mSteppingAdjusting > 1 ? params->customMagIndex :
       params->holeMagIndex[m_bHexGrid ? 1 : 0];
     if (mWinApp->LowDoseMode()) {
       if (!params->stepAdjLDarea)
@@ -581,14 +581,15 @@ void CMultiShotDlg::StartRecording(const char *instruct)
   }
   if (mSteppingAdjusting == 1) {
     if (m_bHexGrid) {
-      ISX = params->numHexRings * params->hexISXspacing[0];
-      ISY = params->numHexRings * params->hexISYspacing[0];
+      ISXorig = params->numHexRings * params->hexISXspacing[0];
+      ISYorig = params->numHexRings * params->hexISYspacing[0];
     } else {
-      ISX = -((params->numHoles[0] - 1) * params->holeISXspacing[0] +
+      ISXorig = -((params->numHoles[0] - 1) * params->holeISXspacing[0] +
         (params->numHoles[1] - 1) * params->holeISXspacing[1]) / 2.;
-      ISY = -((params->numHoles[0] - 1) * params->holeISYspacing[0] +
+      ISYorig = -((params->numHoles[0] - 1) * params->holeISYspacing[0] +
         (params->numHoles[1] - 1) * params->holeISYspacing[1]) / 2.;
     }
+    mShiftManager->TransferGeneralIS(origMag, ISXorig, ISYorig, prevMag, ISX, ISY);
     focMat = ISfocusAdjustmentForBufOrArea(NULL, mAreaSaved);
     if (focMat.xpx)
       ApplyScaleMatrix(MatInv(focMat), ISX, ISY, ISX, ISY);
@@ -698,7 +699,7 @@ void CMultiShotDlg::OnButIsToPt()
 // Save one image shift, or finish up for regular pattern when there are 4
 void CMultiShotDlg::OnButSaveIs()
 {
-  double ISX, ISY, stageX, stageY, stageZ;
+  double ISX, ISY, ISXorig, ISYorig, stageX, stageY, stageZ;
   float ISlimit = 2.f * mWinApp->mShiftCalibrator->GetCalISOstageLimit();
   float defocus = 0., focusLim = -20.;
   EMimageBuffer *imBufs = mWinApp->GetImBufs();
@@ -707,7 +708,7 @@ void CMultiShotDlg::OnButSaveIs()
   LowDoseParams *ldp = mWinApp->GetLowDoseParams();
   bool canAdjustIS = mShiftManager->GetFocusISCals()->GetSize() > 0 &&
     mShiftManager->GetFocusMagCals()->GetSize() > 0;
-  int dir, area, ind, numSteps[2], size = (int)mSavedISX.size() + 1;
+  int dir, area, ind, origMag, numSteps[2], size = (int)mSavedISX.size() + 1;
   int lastInd, lastDir, magInd, hexInd = m_bHexGrid ? 1 : 0;
   int startInd1[2] = {0, 0}, endInd1[2] = {1, 3}, startInd2[2] = {3, 1}, 
     endInd2[2] = {2, 2};
@@ -718,6 +719,8 @@ void CMultiShotDlg::OnButSaveIs()
     &mActiveParams->holeISYspacing[0];
 
   // First time, record stage position and check for defocus
+  origMag = mSteppingAdjusting > 1 ? mActiveParams->customMagIndex :
+    mActiveParams->holeMagIndex[m_bHexGrid ? 1 : 0];
   area = mWinApp->mScope->GetLowDoseArea();
   if (size == 1) {
     mWinApp->mScope->GetStagePosition(mRecordStageX, mRecordStageY, stageZ);
@@ -759,13 +762,13 @@ void CMultiShotDlg::OnButSaveIs()
   mSavedISX.push_back(ISX);
   mSavedISY.push_back(ISY);
   mWinApp->RestoreViewFocus();
+  magInd = mWinApp->mScope->GetMagIndex();
   if (mRecordingRegular || mSteppingAdjusting == 1) {
     for (dir = 0; dir < 2; dir++)
       numSteps[dir] = B3DMAX(1, mActiveParams->numHoles[dir] - 1);
 
     // Finishing up for regular or hex
     if (size == (m_bHexGrid ? 6 : 4)) {
-      magInd = mWinApp->mScope->GetMagIndex();
 
       // If this is an adjustment from a defined original mag, or the holes have already
       // been adjusted and mags match current transform, get the inverse of original
@@ -835,20 +838,21 @@ void CMultiShotDlg::OnButSaveIs()
         dir = size > 2 ? -1 : 1;
         lastInd = (size - 1) % 3;
         lastDir = size > 3 ? -1 : 1;
-        ISX = mActiveParams->numHexRings * (mActiveParams->hexISXspacing[ind] * dir -
+        ISXorig = mActiveParams->numHexRings * (mActiveParams->hexISXspacing[ind] * dir -
           mActiveParams->hexISXspacing[lastInd] * lastDir);
-        ISY = mActiveParams->numHexRings * (mActiveParams->hexISYspacing[ind] * dir -
+        ISYorig = mActiveParams->numHexRings * (mActiveParams->hexISYspacing[ind] * dir -
           mActiveParams->hexISYspacing[lastInd] * lastDir);
       } else {
         str.Format("Adjust shift for %s %s hole", size == 1 ? "bottom" : "top",
           size == 3 ? "left" : "right");
         ind = size == 2 ? 1 : 0;
         dir = size == 3 ? -1 : 1;
-        ISX = ((mActiveParams->numHoles[ind] - 1) * mActiveParams->holeISXspacing[ind]) *
-          dir;
-        ISY = ((mActiveParams->numHoles[ind] - 1) * mActiveParams->holeISYspacing[ind]) *
-          dir;
+        ISXorig = ((mActiveParams->numHoles[ind] - 1) *
+          mActiveParams->holeISXspacing[ind]) * dir;
+        ISYorig = ((mActiveParams->numHoles[ind] - 1) *
+          mActiveParams->holeISYspacing[ind]) * dir;
       }
+      mShiftManager->TransferGeneralIS(origMag, ISXorig, ISYorig, magInd, ISX, ISY);
       if (canAdjustIS && focMat.xpx)
         ApplyScaleMatrix(MatInv(focMat), ISX, ISY, ISX, ISY);
     } else {
@@ -871,13 +875,16 @@ void CMultiShotDlg::OnButSaveIs()
     if (size == (int)mActiveParams->customHoleX.size()) {
     } else if (size > 1) {
       str.Format("Adjust shift for position # %d in the pattern", size);
-      ISX = mActiveParams->customHoleX[size - 1] - mActiveParams->customHoleX[size - 2];
-      ISY = mActiveParams->customHoleY[size - 1] - mActiveParams->customHoleY[size - 2];
+      ISXorig = mActiveParams->customHoleX[size - 1] - 
+        mActiveParams->customHoleX[size - 2];
+      ISYorig = mActiveParams->customHoleY[size - 1] - 
+        mActiveParams->customHoleY[size - 2];
     } else {
       str = "Adjust shift for first acquire position in the pattern";
-      ISX = mActiveParams->customHoleX[size - 1];
-      ISX = mActiveParams->customHoleY[size - 1];
+      ISXorig = mActiveParams->customHoleX[size - 1];
+      ISXorig = mActiveParams->customHoleY[size - 1];
     }
+    mShiftManager->TransferGeneralIS(origMag, ISXorig, ISYorig, magInd, ISX, ISY);
     if (canAdjustIS && focMat.xpx)
       mShiftManager->ApplyScaleMatrix(MatInv(focMat), ISX, ISY, ISX, ISY);
   } else {
