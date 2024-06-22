@@ -3193,6 +3193,10 @@ void CCameraController::Capture(int inSet, bool retrying)
     ((mParam->canTakeFrames | FRAMES_CAN_BE_ALIGNED) && conSet.alignFrames)))
     conSet.doseFrac = 0;
 
+  if (!mParam->canTakeFrames && (mParam->AMTtype || mParam->OneViewType ||
+    mParam->TietzType || mTD.plugFuncs || (mParam->FEItype && !IS_FALCON2_3_4(mParam))))
+    conSet.doseFrac = 0;
+
   // First turn on the save flag for EVERYBODY if it is supposed to align frames in IMOD
   if (IsConSetSaving(&conSet, inSet, mParam, false)) {
     if (mParam->DE_camType)
