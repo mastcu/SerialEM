@@ -48,6 +48,7 @@
 #include "MultiShotDlg.h"
 #include "MultiGridTasks.h"
 #include "MultiGridDlg.h"
+#include "MGSettingsManagerDlg.h"
 #include "ComaVsISCalDlg.h"
 #include "AutocenSetupDlg.h"
 #include "CalibCameraTiming.h"
@@ -3518,6 +3519,8 @@ void CSerialEMApp::UpdateBufferWindows()
     mScreenShotDialog->UpdateRunnable();
   if (mNavHelper->mMultiGridDlg)
     mNavHelper->mMultiGridDlg->UpdateEnables();
+  if (mNavHelper->mMGSettingsDlg)
+    mNavHelper->mMGSettingsDlg->ManageEnables();
   UpdateAllEditers();
   UpdateMacroButtons();
   mInUpdateWindows = false;
@@ -3573,6 +3576,8 @@ void CSerialEMApp::UpdateWindowSettings()
     mParticleTasks->mZbyGsetupDlg->UpdateSettings();
   if (mNavHelper->mMultiGridDlg)
     mNavHelper->mMultiGridDlg->UpdateSettings();
+  if (mNavHelper->mMGSettingsDlg)
+    mNavHelper->mMGSettingsDlg->UpdateSettings();
 }
 
 
@@ -3615,7 +3620,7 @@ BOOL CSerialEMApp::DoingTasks()
     (mShowRemoteControl && mRemoteControl.GetDoingTask()) ||
     (mNavHelper->mHoleFinderDlg && mNavHelper->mHoleFinderDlg->GetFindingHoles()) ||
     (mPlugDoingFunc && mPlugDoingFunc()) || CSerialEMView::GetTakingSnapshot() ||
-    mScope->GetScanningMags();
+    mScope->GetScanningMags() || mCamera->GetFilterWaiting();
   mJustChangingLDarea = !trulyBusy && mScope->GetChangingLDArea() != 0;
   mJustDoingSynchro = !trulyBusy && (mScope->DoingSynchroThread() || 
     mBufferManager->DoingSychroThread());
@@ -4218,6 +4223,8 @@ void CSerialEMApp::NavigatorClosing()
     mNavHelper->mMultiCombinerDlg->CloseWindow();
   if (mNavHelper->mMultiGridDlg)
     mNavHelper->mMultiGridDlg->CloseWindow();
+  if (mNavHelper->mMGSettingsDlg)
+    mNavHelper->mMGSettingsDlg->CloseWindow();
 }
 
 // Stage move tool

@@ -646,7 +646,8 @@ void CCameraMacroTools::Update()
   // enable/disables 
   stopEnabled = (mWinApp->DoingTasks() && !mWinApp->GetJustChangingLDarea() &&
     !mWinApp->GetJustDoingSynchro() && !mWinApp->GetJustNavAcquireOpen() && 
-    !mWinApp->mScope->DoingSynchroThread() && !(mNav && mNav->DoingNewFileRange())) ||
+    !mWinApp->mScope->DoingSynchroThread() && !(mNav && mNav->DoingNewFileRange()) &&
+    !mWinApp->mCamera->GetFilterWaiting()) ||
     camBusy || mWinApp->mScope->GetMovingStage() || continuous ||
     navState == NAV_TS_STOPPED || navState == NAV_PRE_TS_STOPPED || 
     navState == NAV_SCRIPT_STOPPED;
