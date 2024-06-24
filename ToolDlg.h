@@ -82,6 +82,7 @@ public:
   bool HideOrShowOptions(int showHide);
   virtual void UpdateHiding(void);
   GetMember(int, State);
+  GetMember(CString, BigFontName);
   void SetupPanels(int * idTable, int * leftTable, int * topTable,
     int *heightTable = NULL, int sortStart = 0);
 };
