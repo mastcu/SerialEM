@@ -14,6 +14,7 @@ class CMultiCombinerDlg;
 class CComaVsISCalDlg;
 class CAutoContouringDlg;
 class CMultiGridDlg;
+class CMGSettingsManagerDlg;
 
 #define MULTI_IN_HOLE       0x1
 #define MULTI_HOLES         0x2
@@ -312,6 +313,7 @@ public:
   CComaVsISCalDlg *mComaVsISCalDlg;
   CAutoContouringDlg *mAutoContouringDlg;
   CMultiGridDlg *mMultiGridDlg;
+  CMGSettingsManagerDlg *mMGSettingsDlg;
 
 private:
   CSerialEMApp *mWinApp;
@@ -435,6 +437,7 @@ private:
   WINDOWPLACEMENT mComaVsISDlgPlace;
   WINDOWPLACEMENT mAutoContDlgPlace;
   WINDOWPLACEMENT mMultiGridPlace;
+  WINDOWPLACEMENT mMGSettingsPlace;
   double mRIdefocusOffsetSet;   // Defocus offset set in realign to item
   int mRIalphaSet;              // Alpha value set in realign to item
   int mRIalphaSaved;            // Alpha value that it was before
@@ -685,9 +688,14 @@ public:
   WINDOWPLACEMENT *GetAutoContDlgPlacement(void);
   void OpenMultiGrid(void);
   WINDOWPLACEMENT *GetMultiGridPlacement(void);
+  void OpenMGSettingsDlg(int jcdInd);
+  WINDOWPLACEMENT *GetMGSettingsPlacement(void);
   WINDOWPLACEMENT *GetAcquireDlgPlacement(bool fromDlg);
   void UpdateAcquireDlgForFileChanges();
   void CopyAcqParamsAndActionsToTemp(int which);
+  void CopyAcqParamsAndActionsToTemp(NavAcqAction *useAct, NavAcqParams *useParams, int *useOrder);
+  void CopyAcqParamsAndActions(NavAcqAction *useAct, NavAcqParams *useParams, int *useOrder,
+    NavAcqAction *actions, NavAcqParams *params, int *order);
   void SaveLDFocusPosition(int saveIt, float & axisPos, BOOL & rotateAxis, int & axisRotation,
     int & xOffset, int & yOffset, bool traceIt);
   void SetLDFocusPosition(int camIndex, float axisPos, BOOL rotateAxis, int axisRotation, 

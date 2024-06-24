@@ -33,6 +33,7 @@
 #include "TSController.h"
 #include "MultiTSTasks.h"
 #include "MultiGridTasks.h"
+#include "MGSettingsManagerDlg.h"
 #include "HoleFinderDlg.h"
 #include "holefinder.h"
 #include "MultiHoleCombiner.h"
@@ -166,6 +167,8 @@ CNavHelper::CNavHelper(void)
   mAutoContDlgPlace.rcNormalPosition.right = NO_PLACEMENT;
   mMultiGridDlg = NULL;
   mMultiGridPlace.rcNormalPosition.right = NO_PLACEMENT;
+  mMGSettingsDlg = NULL;
+  mMGSettingsPlace.rcNormalPosition.right = NO_PLACEMENT;
   mComaVsISCalDlg = NULL;
   mRIdefocusOffsetSet = 0.;
   mRIbeamShiftSetX = mRIbeamShiftSetY = 0.;
@@ -1971,7 +1974,8 @@ bool CNavHelper::CanStayInLowDose(CMapDrawItem *item, int xFrame, int yFrame, in
   }
 
   // Now if in low dose, look for matching set
-  if (mWinApp->LowDoseMode() && mapLDconSet >= 0 && mapLDconSet <= SEARCH_CONSET) {
+  if (mWinApp->LowDoseMode() && mapLDconSet >= 0 && mapLDconSet <= SEARCH_CONSET &&
+    mWinApp->GetCurrentCamera() == item->mMapCamera) {
     ldp = mWinApp->GetLowDoseParams() + area;
 
     // Check mag/spot/alpha and filter
@@ -6467,6 +6471,26 @@ WINDOWPLACEMENT *CNavHelper::GetMultiGridPlacement(void)
   return &mMultiGridPlace;
 }
 
+void CNavHelper::OpenMGSettingsDlg(int jcdInd)
+{
+  if (mMGSettingsDlg) {
+    mMGSettingsDlg->BringWindowToTop();
+    return;
+  }
+  mMGSettingsDlg = new CMGSettingsManagerDlg;
+  mMGSettingsDlg->mJcdIndex = jcdInd;
+  mMGSettingsDlg->Create(IDD_MULGRID_SETTINGS);
+  mWinApp->SetPlacementFixSize(mMGSettingsDlg, &mMGSettingsPlace);
+  mWinApp->RestoreViewFocus();
+}
+
+WINDOWPLACEMENT * CNavHelper::GetMGSettingsPlacement(void)
+{
+  if (mMGSettingsDlg)
+    mMGSettingsDlg->GetWindowPlacement(&mMGSettingsPlace);
+  return &mMGSettingsPlace;
+}
+
 WINDOWPLACEMENT *CNavHelper::GetAcquireDlgPlacement(bool fromDlg)
 {
   if (fromDlg && mNav && mNav->mNavAcquireDlg) {
@@ -6487,12 +6511,22 @@ void CNavHelper::UpdateAcquireDlgForFileChanges()
 // Copy a set of params into temp set for possible modification
 void CNavHelper::CopyAcqParamsAndActionsToTemp(int which)
 {
-  NavAcqAction *useAct, *actions = &mAllAcqActions[2][0];
-  NavAcqParams *useParam, *params = mWinApp->GetNavAcqParams(2);
-  int *useOrder, *order = &mAcqActCurrentOrder[2][0];
-  useAct = &mAllAcqActions[which][0];
-  useParam = mWinApp->GetNavAcqParams(which);
-  useOrder = &mAcqActCurrentOrder[which][0];
+  CopyAcqParamsAndActionsToTemp(&mAllAcqActions[which][0], 
+    mWinApp->GetNavAcqParams(which), &mAcqActCurrentOrder[which][0]);
+}
+
+void CNavHelper::CopyAcqParamsAndActionsToTemp(NavAcqAction *useAct, 
+  NavAcqParams *useParam, int *useOrder)
+{
+  NavAcqAction *actions = &mAllAcqActions[2][0];
+  NavAcqParams *params = mWinApp->GetNavAcqParams(2);
+  int *order = &mAcqActCurrentOrder[2][0];
+  CopyAcqParamsAndActions(useAct, useParam, useOrder, actions, params, order);
+}
+
+void CNavHelper::CopyAcqParamsAndActions(NavAcqAction *useAct, NavAcqParams *useParam, 
+  int *useOrder, NavAcqAction *actions, NavAcqParams *params, int *order)
+{
   *params = *useParam;
   for (int ind = 0; ind < mNumAcqActions; ind++) {
     order[ind] = useOrder[ind];
