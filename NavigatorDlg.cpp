@@ -26,6 +26,7 @@
 #include "MultiTSTasks.h"
 #include "MultiGridTasks.h"
 #include "MultiGridDlg.h"
+#include "MGSettingsManagerDlg.h"
 #include "MacroProcessor.h"
 #include "MacroEditer.h"
 #include "EMbufferManager.h"
@@ -6671,8 +6672,9 @@ int CNavigatorDlg::TransformToCurrentReg(int reg, ScaleMat aM, float *dxy, int r
   int curDrawnOn)
 {
   CMapDrawItem *item;
-  int numDone = 0;
-  float xToAdopt = -9999.f;
+  ScaleMat IS2Spec, prod;
+  int dir, numDone = 0;
+  float xToAdopt = -9999.f, transX, transY;
   if (RegistrationUseType(reg) == NAVREG_IMPORT && curDrawnOn > 0) {
     item = FindItemWithMapID(curDrawnOn);
     if (item)
@@ -6685,6 +6687,22 @@ int CNavigatorDlg::TransformToCurrentReg(int reg, ScaleMat aM, float *dxy, int r
       TransformOneItem(item, aM, dxy, reg, mCurrentRegistration);
       item->mOldReg = reg;
       item->mOldImported = item->mImported;
+
+      // If item has hole vectors, transform from IS to specimen, apply this transform,
+      // and transform back to IS
+      if (item->IsMap() && (item->mXHoleISSpacing[0] != 0. ||
+        item->mYHoleISSpacing[0] != 0.)) {
+        IS2Spec = mShiftManager->IStoSpecimen(item->mMapMagInd, item->mMapCamera);
+        if (IS2Spec.xpx) {
+          prod = MatMul(MatMul(IS2Spec, aM), MatInv(IS2Spec));
+          for (dir = 0; dir < 3; dir++) {
+            ApplyScaleMatrix(prod, item->mXHoleISSpacing[dir], item->mYHoleISSpacing[dir],
+              transX, transY);
+            item->mXHoleISSpacing[dir] = transX;
+            item->mYHoleISSpacing[dir] = transY;
+          }
+        }
+      }
 
       // Set the imported flag negative now.  Also, if this was drawn on the imported map,
       // switch the drawn on ID to the map it was registered to
@@ -9381,7 +9399,12 @@ int CNavigatorDlg::GetNavFilename(BOOL openFile, DWORD flags, bool mergeFile)
   CString str, str2;
   static char BASED_CODE szFilter[] = 
     "Navigator files (*.nav)|*.nav|All files (*.*)|*.*||";
-  MyFileDialog fileDlg(openFile, ".nav", NULL, flags, szFilter);
+  if (mHelper->mMultiGridDlg && !openFile && !mNavFilename.IsEmpty()) {
+    UtilSplitPath(mNavFilename, str, str2);
+  }
+  MyFileDialog fileDlg(openFile, ".nav", NULL, flags, szFilter,NULL, !str.IsEmpty());
+  if (!str.IsEmpty())
+    fileDlg.mfdTD.lpstrInitialDir = str;
   int result = fileDlg.DoModal();
   mWinApp->RestoreViewFocus();
   if (result != IDOK)
@@ -9493,6 +9516,10 @@ void CNavigatorDlg::AcquireAreas(int source, bool dlgClosing, bool useTempParams
       dlg->AcquireTypeToOptions(mAcqParm->nonTSacquireType);
       if (dlg->mAnyTSpoints && !fromMultigrid)
         dlg->AcquireTypeToOptions(ACQUIRE_DO_TS);
+      if (fromMultigrid) {
+        dlg->mAnyTSpoints = true;
+        dlg->mAnyAcquirePoints = true;
+      }
       mNavAcquireDlg->Create(IDD_NAVACQUIRE);
       mWinApp->SetPlacementFixSize(mNavAcquireDlg, 
         mHelper->GetAcquireDlgPlacement(false));
@@ -9731,6 +9758,8 @@ void CNavigatorDlg::AcquireAreas(int source, bool dlgClosing, bool useTempParams
 // Function for cleaning up from either dialog closing or working with temporary dialog
 void CNavigatorDlg::ManageAcquireDlgCleanup(bool fromMenu, bool dlgClosing)
 {
+  if (dlgClosing && !fromMenu && mHelper->mMGSettingsDlg)
+    mHelper->mMGSettingsDlg->RestorePreDlgParams(mNavAcquireDlg->mPostponed);
   if (!fromMenu && !dlgClosing)
     delete mNavAcquireDlg;
   mNavAcquireDlg = NULL;
