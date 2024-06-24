@@ -865,6 +865,7 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
         mgParams->runFinalAcq = itemInt[18] != 0;
         mgParams->MMMnumXpieces = itemInt[19];
         mgParams->MMMnumYpieces = itemInt[20];
+        mgParams->framesUnderSession = itemInt[21] > 0;
 
       } else if (strItems[0].Find("MG") == 0 && (strItems[0].Find("MMMstate") == 2 ||
         strItems[0].Find("State") == 7)) {
@@ -2029,7 +2030,7 @@ void CParameterIO::WriteSettings(CString strFileName)
       snapParams->compression, snapParams->jpegQuality, snapParams->skipOverlays);
     mFile->WriteString(oneState);
     oneState.Format("MultiGridParams %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d"
-      " %d %d %d -999 -999\n", mgParams->appendNames ? 1 : 0,
+      " %d %d %d %d -999\n", mgParams->appendNames ? 1 : 0,
       mgParams->useSubdirectory ? 1 : 0, mgParams->setLMMstate ? 1 : 0,
       mgParams->LMMstateType, mgParams->removeObjectiveAp ? 1 : 0,
       mgParams->setCondenserAp ? 1 : 0, mgParams->condenserApSize, mgParams->LMMmontType,
@@ -2037,7 +2038,8 @@ void CParameterIO::WriteSettings(CString strFileName)
       mgParams->LMMoverlapPct, mgParams->autocontour ? 1 : 0, 
       mgParams->acquireMMMs ? 1 : 0,
       mgParams->MMMstateType, mgParams->MMMimageType, mgParams->acquireLMMs ? 1 : 0,
-      mgParams->runFinalAcq ? 1 : 0, mgParams->MMMnumXpieces, mgParams->MMMnumYpieces);
+      mgParams->runFinalAcq ? 1 : 0, mgParams->MMMnumXpieces, mgParams->MMMnumYpieces,
+      mgParams->framesUnderSession ? 1 : 0);
     mFile->WriteString(oneState);
     oneState.Format("MGLMMstate %d %s\n", mgParams->LMMstateNum, 
       (LPCTSTR)mgParams->LMMstateName);
@@ -2719,24 +2721,52 @@ void CParameterIO::WriteNavAcqParams(int which, NavAcqParams *navParams,
 
 // read acquire params from the given file
 int CParameterIO::ReadAcqParamsFromFile(NavAcqParams *navParams, 
-  NavAcqAction *acqActions, int *actOrder, CString & filename)
+  NavAcqAction *acqActions, int *actOrder, CString & filename, CString &errStr)
 {
   CString strLine, strItems[2];
   int err, retval = 0;
+  bool readForMulGrid = navParams == NULL;
+  MGridAcqItemsParams mgParam;
+  CArray<MGridAcqItemsParams, MGridAcqItemsParams> *paramArr =
+    mWinApp->mMultiGridTasks->GetMGAcqItemsParamArray();
+  if (readForMulGrid) {
+    paramArr->RemoveAll();
+    mWinApp->mNavHelper->CopyAcqParamsAndActions(mWinApp->mNavHelper->GetAcqActions(1),
+      mWinApp->GetNavAcqParams(1), mWinApp->mNavHelper->GetAcqActCurrentOrder(1),
+      mgParam.actions, &mgParam.params, mgParam.actOrder);
+  }
+  errStr = "";
+
   try {
     // Open the file for reading, verify that it is a param file
     mFile = new CStdioFile(filename, CFile::modeRead | CFile::shareDenyWrite);
 
-    err = ReadAndParse(strLine, strItems, 2);
-    if (err)
-      retval = 1;
-    else if (CheckForByteOrderMark(strItems[0], "NavAcquireParams", filename,
-      "Navigator acquisition parameters")) {
-      retval = 1;
+    while (!retval) {
+      err = ReadAndParse(strLine, strItems, 2);
+      if (err < 0 && readForMulGrid)
+        break;
+      if (err)
+        retval = 1;
+      else if (!(readForMulGrid && paramArr->GetSize() > 0) &&
+        CheckForByteOrderMark(strItems[0], "NavAcquireParams", filename,
+          "Navigator acquisition parameters")) {
+        retval = 1;
+      }
+      if (!retval) {
+        if (readForMulGrid) {
+          retval = ReadNavAcqParams(&mgParam.params, &mgParam.actions[0],
+            &mgParam.actOrder[0], strLine);
+          if (!retval)
+            paramArr->Add(mgParam);
+          else
+            errStr = strLine + "\r\nUnexpected end of file or other error "
+            "reading Navigator acquire parameters";
+        } else {
+          retval = ReadNavAcqParams(navParams, acqActions, actOrder, strLine);
+          break;
+        }
+      }
     }
-    if (!retval)
-      retval = ReadNavAcqParams(navParams, acqActions, actOrder, strLine);
-
     mFile->Close();
   }
   catch (CFileException *perr) {
@@ -2759,7 +2789,7 @@ void CParameterIO::WriteAcqParamsToFile(NavAcqParams *navParams,
     // Open the file for writing, 
     mFile = new CStdioFile(filename, CFile::modeCreate |
       CFile::modeWrite | CFile::shareDenyWrite);
-    WriteNavAcqParams(0, navParams, acqActions, actOrder, true);
+    WriteNavAcqParams(0, navParams, acqActions, actOrder, false);
   }
   catch (CFileException *perr) {
     perr->Delete();
@@ -2770,6 +2800,35 @@ void CParameterIO::WriteAcqParamsToFile(NavAcqParams *navParams,
     delete mFile;
     mFile = NULL;
   }
+}
+
+// Writes the possibly multiple nav acquire parameters for multi-grid
+int CParameterIO::WriteMulGridAcqParams(CString &filename, CString &errStr)
+{
+  int ind, retval = 0;
+  CArray<MGridAcqItemsParams, MGridAcqItemsParams> *paramArr = 
+    mWinApp->mMultiGridTasks->GetMGAcqItemsParamArray();
+  
+  try {
+    // Open the file for writing, 
+    mFile = new CStdioFile(filename, CFile::modeCreate |
+      CFile::modeWrite | CFile::shareDenyWrite);
+    for (ind = 0; ind < (int)paramArr->GetSize(); ind++) {
+      MGridAcqItemsParams &param = paramArr->ElementAt(ind);
+      WriteNavAcqParams(ind, &param.params, &param.actions[0], &param.actOrder[0], true);
+    }
+  }
+  catch (CFileException *perr) {
+    perr->Delete();
+    errStr = "Error writing Navigator acquisition parameters to file " + filename;
+    retval = 1;
+  }
+
+  if (mFile) {
+    delete mFile;
+    mFile = NULL;
+  }
+  return retval;
 }
 
 // Reads a file to hide or disable items containing either defined strings in the

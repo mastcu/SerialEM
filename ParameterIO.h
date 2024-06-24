@@ -85,8 +85,9 @@ public:
   void WriteMacrosToFile(CString filename, int maxMacros);
   int ReadNavAcqParams(NavAcqParams *navParams, NavAcqAction *mAcqActions, int *actOrder, CString &unrecognized);
   void WriteNavAcqParams(int which, NavAcqParams *navParams, NavAcqAction *mAcqActions, int *actOrder, bool skipNum);
-  int ReadAcqParamsFromFile(NavAcqParams *navParams, NavAcqAction *mAcqActions, int *actOrder, CString &filename);
+  int ReadAcqParamsFromFile(NavAcqParams *navParams, NavAcqAction *mAcqActions, int *actOrder, CString &filename, CString &errStr);
   void WriteAcqParamsToFile(NavAcqParams *navParams, NavAcqAction *mAcqActions, int *actOrder, CString &filename);
+  int WriteMulGridAcqParams(CString &filename, CString &errStr);
   void ReadDisableOrHideFile(CString &filename, std::set<int>  *IDsToHide,
     std::set<int>  *lineHideIDs, std::set<int>  *IDsToDisable, StringSet *stringHides);
   void ReportSpecialOptions(void);
