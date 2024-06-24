@@ -108,8 +108,14 @@ struct JeolCartridgeData {
   int status;
   float zStage;
   int LMmapID;
-  float holeSize;
-  float holeSpacing;
+  CString acqStateNames[4];
+  int acqStateNums[4];
+  int separateState;
+  short multiShotParamIndex;
+  short holeFinderParamIndex;
+  short autoContParamIndex;
+  short generalParamIndex;
+  int finalDataParamIndex;
   void Init() {
     id = 0;
     slot = 0;
@@ -121,8 +127,16 @@ struct JeolCartridgeData {
     station = JAL_STATION_MAGAZINE;
     name = "";
     userName = "";
-    holeSize = 0.;
-    holeSpacing = 0.;
+    separateState = 0;
+    multiShotParamIndex = -1;
+    holeFinderParamIndex = -1;
+    autoContParamIndex = -1;
+    generalParamIndex = -1;
+    finalDataParamIndex = -1;
+    for (int ind = 0; ind < 4; ind++) {
+      acqStateNames[ind] = "";
+      acqStateNums[ind] = -1;
+    }
   }
 };
 
@@ -375,6 +389,7 @@ public:
   GetSetMember(int, HighestLMindexToScan);
   GetSetMember(int, PostProbeDelay);
   GetMember(int, LastNormMagIndex);
+  GetMember(int, PrevNormMagIndex);
   GetSetMember(int, FakeMagIndex);
   GetSetMember(int, FakeScreenPos);
   GetMember(int, PluginVersion);
@@ -859,6 +874,7 @@ private:
   int mHighestLMindexToScan;  // Last index of enabled LM mags, if any are disabled
   int mCheckFreeK2RefCount;   // Counter for checking K2 reference freeing
   int mLastNormMagIndex;      // Mag of last normalization
+  int mPrevNormMagIndex;      // Previous mag before last normalization
   int mPostFocusChgDelay;     // Delay after changing focus
   int mUseJeolGIFmodeCalls;   // 1 to rely on state from calls, 2 to change EFTEM with it
   int mJeolHasNitrogenClass; // Flag to create the nitrogen class

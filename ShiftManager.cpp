@@ -3738,12 +3738,7 @@ UINT CShiftManager::GetGeneralTimeOut(int whichSet)
 {
   // Calculate a tilt timeout for certain defined functions: Record shots, and
   // autofocusing and ???
-  CameraParameters *camP = mWinApp->GetActiveCamParam();
   UINT tiltTimeOut = 0;
-  int normDelay = mNormalizationDelay;
-  if (mLowMagNormDelay > 0 && mScope->GetLastNormMagIndex() > 0 && 
-    mScope->GetLastNormMagIndex() < mScope->GetLowestNonLMmag(camP))
-    normDelay = mLowMagNormDelay;
   if (whichSet != TRACK_CONSET &&
     (whichSet > 2 || mWinApp->mFocusManager->DoingFocus())) {
     tiltTimeOut = AddIntervalToTickTime(mScope->GetLastTiltTime(),
@@ -3754,9 +3749,8 @@ UINT CShiftManager::GetGeneralTimeOut(int whichSet)
     CheckTimeout(tiltTimeOut, "Tilt timeout with min tilt delay");
   }
 
-  // Compute a timeout since last normalization and take max
-  UINT normTimeOut = AddIntervalToTickTime(mScope->GetLastNormalization(), normDelay);
-  CheckTimeout(normTimeOut, "normalization delay");
+  // Get timeout since last normalization and take max
+  UINT normTimeOut = GetNormalizationTimeOut(false);
   if (SEMTickInterval(normTimeOut, tiltTimeOut) < 0)
     normTimeOut = tiltTimeOut;
 
@@ -3771,6 +3765,21 @@ UINT CShiftManager::GetGeneralTimeOut(int whichSet)
   if (SEMTickInterval(normTimeOut, mISTimeOut) > 0)
     mLastTimeoutWasIS = false;
   return (SEMTickInterval(normTimeOut, mISTimeOut) > 0 ? normTimeOut : mISTimeOut);
+}
+
+// Compute a timeout since last normalization
+UINT CShiftManager::GetNormalizationTimeOut(bool leavingLMalso)
+{
+  CameraParameters *camP = mWinApp->GetActiveCamParam();
+  int normDelay = mNormalizationDelay;
+  if (mLowMagNormDelay > 0 && mScope->GetLastNormMagIndex() > 0 &&
+    (mScope->GetLastNormMagIndex() < mScope->GetLowestNonLMmag(camP) || 
+      (leavingLMalso && mScope->GetPrevNormMagIndex() > 0 && 
+        mScope->GetPrevNormMagIndex() < mScope->GetLowestNonLMmag(camP))))
+    normDelay = mLowMagNormDelay;
+  UINT normTimeOut = AddIntervalToTickTime(mScope->GetLastNormalization(), normDelay);
+  CheckTimeout(normTimeOut, "normalization delay");
+  return normTimeOut;
 }
 
 void CShiftManager::ResetAllTimeouts()

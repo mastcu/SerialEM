@@ -133,6 +133,7 @@ public:
   void SetGeneralTimeOut(UINT inTime);
   void SetGeneralTimeOut(UINT inTicks, int interval);
   UINT GetGeneralTimeOut(int whichSet);
+  UINT GetNormalizationTimeOut(bool leavingLMalso);
   float GetLastISDelay();
   void EndMouseShifting(int index);
   void AlignmentShiftToMarker(BOOL forceStage);

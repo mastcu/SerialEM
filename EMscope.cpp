@@ -496,6 +496,7 @@ CEMscope::CEMscope()
   mHitachiSpotBeamWait = 120;
   mHitachiDoesBSforIS = 0;
   mLastNormMagIndex = -1;
+  mPrevNormMagIndex = -1;
   mFakeMagIndex = 1;
   mFakeScreenPos = spUp;
   mUseInvertedMagRange = false;
@@ -4043,6 +4044,7 @@ BOOL CEMscope::SetMagIndex(int inIndex)
     if (!ifSTEM) {
       mLastNormalization = mSynchroTD.lastNormalizationTime;
       mLastNormMagIndex = inIndex;
+      mPrevNormMagIndex = currentIndex;
     } else
       mProbeMode = mSynchroTD.newProbeMode;
 
@@ -4870,6 +4872,7 @@ BOOL CEMscope::NormalizeProjector()
     mMagChanged = false;
     mLastNormalization = GetTickCount();
     mLastNormMagIndex = FastMagIndex();
+    mPrevNormMagIndex = mLastNormMagIndex;
   }
   catch (_com_error E) {
     SEMReportCOMError(E, _T("normalizing projection lenses "));
@@ -6901,7 +6904,7 @@ BOOL CEMscope::CassetteSlotStatus(int slot, int &status, CString &names, int *nu
 // Load a cartridge to the stage: slot # for FEI (from 1) or index + 1 in JEOL catalogue
 int CEMscope::LoadCartridge(int slot, CString &errStr)
 {
-  int id, err, oper = LONG_OP_LOAD_CART;
+  int ind, ID, err, oper = LONG_OP_LOAD_CART;
   JeolCartridgeData jcd;
   float sinceLast = 0.;
   if (!sInitialized || (!FEIscope && mJeolHasNitrogenClass < 2)) {
@@ -6912,12 +6915,12 @@ int CEMscope::LoadCartridge(int slot, CString &errStr)
     return 4;
   if (FEIscope) {
     sCartridgeToLoad = slot;
-    mUnloadedCartridge = FindCartridgeAtStage(id);
+    mUnloadedCartridge = FindCartridgeAtStage(ID);
     mLoadedCartridge = -1;
-    for (id = 0; id < (int)mJeolLoaderInfo.GetSize(); id++) {
-      jcd = mJeolLoaderInfo.GetAt(id);
+    for (ind = 0; ind < (int)mJeolLoaderInfo.GetSize();ind++) {
+      jcd = mJeolLoaderInfo.GetAt(ind);
       if (jcd.id == slot) {
-        mLoadedCartridge = id;
+        mLoadedCartridge = ind;   // A jcd index
         break;
       }
     }
@@ -6934,8 +6937,8 @@ int CEMscope::LoadCartridge(int slot, CString &errStr)
       return 5;
     }
     sCartridgeToLoad = jcd.id;
-    mLoadedCartridge = slot - 1;
-    mUnloadedCartridge = FindCartridgeAtStage(id);
+    mLoadedCartridge = slot - 1;  // A jcd index
+    mUnloadedCartridge = FindCartridgeAtStage(ID);
   }
   err = StartLongOperation(&oper, &sinceLast, 1);
   if (err)
@@ -6972,7 +6975,8 @@ int CEMscope::UnloadCartridge(CString &errStr)
   return err;
 }
 
-// Lookup which cartridge is in the stage in the JEOL table
+// Lookup which cartridge is in the stage in the JEOL table, return the ID (slot # for 
+// FEI), return value index in jcd table
 int CEMscope::FindCartridgeAtStage(int &id)
 {
   int ind;
