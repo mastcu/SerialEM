@@ -406,6 +406,7 @@ void CBaseDlg::SetupPanelTables(int *idTable, int *leftTable, int *topTable,
   GetClientRect(clientRect);
   GetWindowRect(wndRect);
   mBasicWidth = wndRect.Width();
+  mBasicMaxRight = 0;
   iXoffset = (wndRect.Width() - clientRect.Width()) / 2;
   iYoffset = (wndRect.Height() - clientRect.Height()) - iXoffset;
 
@@ -421,6 +422,7 @@ void CBaseDlg::SetupPanelTables(int *idTable, int *leftTable, int *topTable,
         wnd = GetDlgItem(idTable[index]);
         wnd->GetWindowRect(idRect);
         leftTable[index] = idRect.left - wndRect.left - iXoffset;
+        ACCUM_MAX(mBasicMaxRight, leftTable[index] + idRect.Width());
         topTable[index] = idRect.top - wndRect.top - iYoffset;
         if (heightTable)
           heightTable[index] = idRect.Height();
@@ -584,6 +586,7 @@ void CBaseDlg::AdjustPanels(BOOL *states, int *idTable, int *leftTable, int *top
   for (panel = 0; panel < mNumPanels; panel++)
     index += numInPanel[panel];
   positions = BeginDeferWindowPos(index);
+  int maxRight = 0;
   if (!positions)
     return;
 
@@ -673,11 +676,18 @@ void CBaseDlg::AdjustPanels(BOOL *states, int *idTable, int *leftTable, int *top
           if (!width) {
             positions = DeferWindowPos(positions, wnd->m_hWnd, NULL, leftTable[index],
               topPos, 0, 0, SWP_NOZORDER | SWP_NOSIZE | SWP_SHOWWINDOW);
+            if (mSecondColPanel > 0) {
+              wnd->GetClientRect(&tempRect);
+              ACCUM_MAX(maxRight, leftTable[index] + tempRect.Width());
+            }
           } else {
             wnd->GetClientRect(&tempRect);
             width += tempRect.Width();
             positions = DeferWindowPos(positions, wnd->m_hWnd, NULL, leftTable[index],
               topPos, width, tempRect.Height(), SWP_NOZORDER | SWP_SHOWWINDOW);
+            if (mSecondColPanel > 0) {
+              ACCUM_MAX(maxRight, leftTable[index] + width);
+            }
           }
         }
 
@@ -704,6 +714,10 @@ void CBaseDlg::AdjustPanels(BOOL *states, int *idTable, int *leftTable, int *top
                 SWP_NOZORDER | SWP_NOSIZE | SWP_SHOWWINDOW);
                 //wnd->GetWindowText(name);
                 //PrintfToLog("Added %d  %s  at %d %d", mAddItemIDs[addInd], name, mAddItemsLeftPos[addInd], topPos + topDiff + lastDiff);
+                if (mSecondColPanel > 0) {
+                  wnd->GetClientRect(&tempRect);
+                  ACCUM_MAX(maxRight, leftTable[index] + tempRect.Width());
+                }
               }
               topDiff += lastDiff;
 
@@ -744,6 +758,10 @@ void CBaseDlg::AdjustPanels(BOOL *states, int *idTable, int *leftTable, int *top
       positions = DeferWindowPos(positions, wnd->m_hWnd, NULL, savedNextTop[3 * jj], 
         topPos, rect.Width(), mAdjustmentToTopDiff[jj] + savedNextTop[3 * jj + 2] - topPos
         , SWP_NOZORDER | SWP_SHOWWINDOW);
+      if (mSecondColPanel > 0) {
+        wnd->GetClientRect(&tempRect);
+        ACCUM_MAX(maxRight, leftTable[index] + tempRect.Width());
+      }
     }
   }
 
@@ -752,7 +770,8 @@ void CBaseDlg::AdjustPanels(BOOL *states, int *idTable, int *leftTable, int *top
   lastWnd->GetWindowRect(rect);
   GetWindowRect(winRect);
   mSetToHeight = rect.bottom + 8 - winRect.top;
-  SetWindowPos(NULL, 0, 0, mBasicWidth, mSetToHeight, SWP_NOMOVE);
+  SetWindowPos(NULL, 0, 0, (mSecondColPanel > 0 && maxRight < 0.75 * mBasicWidth) ? 
+    maxRight + mBasicWidth - mBasicMaxRight : mBasicWidth, mSetToHeight, SWP_NOMOVE);
 }
 
 // For a given dialog item, determine if it is to be dropped and manage the state of

@@ -70,6 +70,7 @@ protected:
   BOOL mNonModal;
   int mNumPanels;
   int mBasicWidth;
+  int mBasicMaxRight;
   int mIDsToHide[MAX_SKIP_IDS];
   int mNumIDsToHide;
   int mSavedTopPos;
