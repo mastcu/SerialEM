@@ -474,6 +474,8 @@ CCameraController::CCameraController()
   mShowLinearForAlpine = true;
   mUseAPI2ForDE = false;
   mDynFocusTiltOffset = 0.;
+  mFilterObeyNormDelay = false;
+  mFilterWaiting = false;
 }
 
 // Clear anything that might be set externally, or was cleared in constructor and cleanup
@@ -10839,7 +10841,7 @@ int CCameraController::SetupFilter(BOOL acquiring)
   CString setOffsetOn = mNoSpectrumOffset ? 
     "" : "if (IFCGetOffsetOn() == 0)\n   IFCSetOffsetOn(1)\n";
   CString offsetFunc = mNoSpectrumOffset ? "EnergyShift" : "SpectrumOffset";
-  int retval;
+  int retval, trial;
   static float offsetWarned = -100.0;
   CameraParameters *camParam = &mAllParams[mActiveList[filtParam->firstGIFCamera]];
 
@@ -10856,6 +10858,25 @@ int CCameraController::SetupFilter(BOOL acquiring)
   mIgnoreFilterDiffs = false;
   if (mSimulationMode || mNoFilterControl)
     return 0;
+
+  if (mFilterObeyNormDelay) {
+    UINT normTimeout = mShiftManager->GetNormalizationTimeOut(true);
+    SEMTrace('1', "Waiting for timeout before setting filter");
+    if (SEMTickInterval(normTimeout) < 0) {
+      mFilterWaiting = true;
+      if (!mScope->GetChangingLDArea())
+        mWinApp->UpdateBufferWindows();
+      for (trial = 0; trial < 600; trial++) {
+        if (SEMTickInterval(normTimeout) > 0)
+          break;
+        SleepMsg(50);
+      }
+      mFilterWaiting = false;
+      if (!mScope->GetChangingLDArea())
+        mWinApp->UpdateBufferWindows();
+    }
+    SEMTrace('1', "Wait done");
+  }
 
   // FOR JEOL OMEGA FILTER
   if (JEOLscope && mScope->GetHasOmegaFilter() && mScope->GetInitialized()) {
@@ -12735,6 +12756,37 @@ void CCameraController::ComposeFramePathAndName(bool temporary)
     UtilAppendWithSeparator(filename, date, "_");
   }
   mFrameFilename = filename;
+}
+
+// Get the frame saving dir for the given camera
+CString CCameraController::GetCameraFrameFolder(CameraParameters *camParam, 
+  bool &noSubdirs, bool &movable)
+{
+  CString *dirPtr = GetCameraFrameDirPtr(camParam);
+  movable = !(camParam->DE_camType || FCAM_ADVANCED(camParam) || (camParam->GatanCam &&
+    camParam->useSocket && CBaseSocket::ServerIsRemote(GATAN_SOCK_ID)));
+  noSubdirs = (mParam->FEItype == FALCON3_TYPE && !mSubdirsOkInFalcon3Save) ||
+    camParam->DE_camType;
+  return *dirPtr;
+}
+
+// Return a pointer to the dir for frames for the given camera
+CString * CCameraController::GetCameraFrameDirPtr(CameraParameters *camParam)
+{
+  if (camParam->K2Type)
+    return &mDirForK2Frames;
+  if (camParam->DE_camType)
+    return &mDirForDEFrames;
+  if (camParam->FEItype && FCAM_ADVANCED(camParam) && !FCAM_CONTIN_SAVE(camParam))
+    return &mDirForFalconFrames;
+  return &camParam->dirForFrameSaving;
+}
+
+// Set the frame saving dir for the given camera
+void CCameraController::SetCameraFrameFolder(CameraParameters *camParam, CString &str)
+{
+  CString *dirPtr = GetCameraFrameDirPtr(camParam);
+  *dirPtr = str;
 }
 
 // Compose the complete path of a DM reference with the given suffix to replace two

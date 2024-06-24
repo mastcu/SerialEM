@@ -3063,8 +3063,9 @@ void CCameraSetupDlg::OnSetSaveFolder()
     if (KGetOneString("Enter folder on Gatan server for saving frames:", str, 250,
       mCamera->GetNoK2SaveFolderBrowse() ? "" :
       "SELECT (do not type in) folder accessible on Gatan server for saving frames")) {
-      if (!UtilCheckIllegalChars(str, 2, "The folder name"))
-        mCamera->SetDirForK2Frames(str);
+      if (!UtilCheckIllegalChars(str, 2, "The folder name")) {
+        mCamera->SetCameraFrameFolder(mParam, str);
+      }
     }
     FixButtonFocus(m_butSetSaveFolder);
     return;
@@ -3079,10 +3080,7 @@ void CCameraSetupDlg::OnSetSaveFolder()
         "Enter name of subfolder to save frames in, or leave blank for none", str)) {
         if (!UtilCheckIllegalChars(str, 1, "The subfolder name")) {
           if (subdirsOK || str.FindOneOf("/\\") < 0) {
-            if (continSave)
-              mParam->dirForFrameSaving = str;
-            else
-              mCamera->SetDirForFalconFrames(str);
+            mCamera->SetCameraFrameFolder(mParam, str);
           } else
             AfxMessageBox("You can enter only a single folder name without \\ or /");
         }
@@ -3099,12 +3097,7 @@ void CCameraSetupDlg::OnSetSaveFolder()
   CXFolderDialog dlg(str);
   dlg.SetTitle(title);
   if (dlg.DoModal() == IDOK) {
-    if (mParam->K2Type)
-      mCamera->SetDirForK2Frames(dlg.GetPath());
-    else if (mFEItype)
-      mCamera->SetDirForFalconFrames(dlg.GetPath());
-    else
-      mParam->dirForFrameSaving = dlg.GetPath();
+    mCamera->SetCameraFrameFolder(mParam, dlg.GetPath());
   }
   FixButtonFocus(m_butSetSaveFolder);
 }

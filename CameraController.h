@@ -624,6 +624,8 @@ public:
   GetSetMember(float, PartialScanThreshExp);
   GetSetMember(float, DynFocusTiltOffset);
   GetMember(double, CenterFocus);
+  GetSetMember(bool, FilterObeyNormDelay);
+  GetMember(bool, FilterWaiting);
   CameraThreadData *GetCamThreadData() { return &mTD; };
   bool DoingPartialScan() {return mTD.ReturnPartialScan > 0; };
   bool HasCEOSFilter() {return mCEOSFilter != NULL ; }
@@ -1080,6 +1082,8 @@ public:
   BOOL mUseAPI2ForDE;            // Use the API 2 for DE camera connection and all calls
   int mRollBufKeptIndex;         // Last buffer that was redisplayed in RollBuffers
   float mDynFocusTiltOffset;     // Tilt offset for dynamic focusing
+  bool mFilterObeyNormDelay;     // Flag to impose post-norm delay before setting filter
+  bool mFilterWaiting;           // Flag that filter is waiting for delay
 
 public:
   void SetNonGatanPostActionTime(void);
@@ -1193,6 +1197,9 @@ public:
   bool FindNearestBinning(CameraParameters *camParam, int binning, int readMode, int &binInd,
     int &realBin);
   void ComposeFramePathAndName(bool temporary);
+  CString GetCameraFrameFolder(CameraParameters *camParam, bool &noSubdirs, bool &movable);
+  CString *GetCameraFrameDirPtr(CameraParameters *camParam);
+  void SetCameraFrameFolder(CameraParameters *camParam, CString &str);
   int GetPluginVersion(CameraParameters *camP);
   static int StartFocusRamp(CameraThreadData * td, bool & rampStarted);
   static void FinishFocusRamp(CameraThreadData *td, bool rampStarted);
