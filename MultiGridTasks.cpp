@@ -18,6 +18,8 @@
 #include "EMbufferManager.h"
 #include "NavHelper.h"
 #include "HoleFinderDlg.h"
+#include "MultiShotDlg.h"
+#include "AutoContouringDlg.h"
 #include "ParameterIO.h"
 #include "NavigatorDlg.h"
 #include "MultiGridDlg.h"
@@ -30,7 +32,7 @@
 #include <algorithm>
 #include <direct.h>
 
-static const char *sActionNames[] = {"Remove objective aperture", "Set condenser aeprture"
+static const char *sActionNames[] = {"Remove objective aperture", "Set condenser aperture"
 , "Replace objective aperture", "Move to reference position", "Restore condenser aperture"
 , "Set grid map state", "Unload grid", "Take reference image", "Move to survey position",
 "Take survey image", "Find eucentricity", "Move to center of grid map", "Load grid",
@@ -78,6 +80,7 @@ CMultiGridTasks::CMultiGridTasks()
     mParams.MMMstateNums[i] = -1;
     mParams.finalStateNums[i] = -1;
   }
+  mParams.framesUnderSession = false;
   mPctStatMidCrit = 0.33f;
   mPctStatRangeCrit = 0.45f;
   mPctRightAwayFrac = 0.5f;
@@ -88,6 +91,11 @@ CMultiGridTasks::CMultiGridTasks()
   mRestoringOnError = false;
   mNumMMMstateCombos = 2;
   mNumFinalStateCombos = 4;
+  mSavedMultiShot = NULL;
+  mSavedHoleFinder = NULL;
+  mSavedAutoCont = NULL;
+  mSavedGeneralParams = NULL;
+  mCamNumForFrameDir = -1;
   InitOrClearSessionValues();
 }
 
@@ -239,8 +247,11 @@ int CMultiGridTasks::LoadOrUnloadGrid(int slot, int taskParam)
   if (slot > 0) {
     SEMTrace('q', "loading slot/index %d", slot);
     err = mScope->LoadCartridge(slot, errStr);
-  } else
+  } else {
     err = mScope->UnloadCartridge(errStr);
+  }
+  if (JEOLscope && err == 5 && mUnloadErrorOK > 0)
+    err = 0;
   if (err) {
     mStartedLongOp = false;
     SEMMessageBox("Could not " + CString(slot > 0 ? "load" : "unload") + " grid: " +
@@ -421,6 +432,7 @@ void CMultiGridTasks::StopMulGridSeq()
 {
   MontParam *montP;
   HoleFinderParams *hfParam = mNavHelper->GetHoleFinderParams();
+  CameraParameters *camParams = mWinApp->GetCamParams();
   if (!mDoingMulGridSeq || mWinApp->GetAppExiting())
     return;
 
@@ -431,14 +443,10 @@ void CMultiGridTasks::StopMulGridSeq()
     mWinApp->mLowDoseDlg.SetLowDoseMode(mSavedLowDose);
   montP = mWinApp->GetMontParam();
   *montP = mSaveMasterMont;
-  if (mSavedHoleSize || mSavedHoleSpacing) {
-    if (mSavedHoleSize)
-      hfParam->diameter = mSavedHoleSize;
-    if (mSavedHoleSpacing)
-      hfParam->spacing = mSavedHoleSpacing;
-    mSavedHoleSize = mSavedHoleSpacing = 0.;
-    if (mNavHelper->mHoleFinderDlg->IsOpen())
-      mNavHelper->mHoleFinderDlg->UpdateSettings();
+  RestoreImposedParams();
+  if (mCamNumForFrameDir >= 0) {
+    mCamera->SetCameraFrameFolder(&camParams[mCamNumForFrameDir], mSavedDirForFrames);
+    mCamNumForFrameDir = -1;
   }
 
   // Start restoring apertures, loop back in until done
@@ -457,6 +465,33 @@ void CMultiGridTasks::StopMulGridSeq()
     return;
   }
   CommonMulGridStop(false);
+}
+
+/*
+ * Restore saved parameters if ones were imposed
+ */
+void CMultiGridTasks::RestoreImposedParams()
+{
+  if (mSavedMultiShot) {
+    GridToMultiShotSettings(*mSavedMultiShot);
+    delete mSavedMultiShot;
+    mSavedMultiShot = NULL;
+  }
+  if (mSavedHoleFinder) {
+    GridToHoleFinderSettings(*mSavedHoleFinder);
+    delete mSavedHoleFinder;
+    mSavedHoleFinder = NULL;
+  }
+  if (mSavedAutoCont) {
+    GridToAutoContSettings(*mSavedAutoCont);
+    delete mSavedAutoCont;
+    mSavedAutoCont = NULL;
+  }
+  if (mSavedGeneralParams) {
+    GridToGeneralSettings(*mSavedGeneralParams);
+    delete mSavedGeneralParams;
+    mSavedGeneralParams = NULL;
+  }
 }
 
 /*
@@ -846,7 +881,7 @@ int CMultiGridTasks::RealignReloadedGrid(CMapDrawItem *item, float expectedRot,
     mRRGyStages[ind] = yStage[bestInd[dir]];
   }
 
-  mRRGdidSaveState = !mWinApp->LowDoseMode();
+  mRRGdidSaveState = true; //!mWinApp->LowDoseMode();
   if (mRRGdidSaveState) {
     mNavHelper->SetTypeOfSavedState(STATE_NONE);
     mNavHelper->SaveCurrentState(STATE_MAP_ACQUIRE, 0, item->mMapCamera, 0);
@@ -856,6 +891,8 @@ int CMultiGridTasks::RealignReloadedGrid(CMapDrawItem *item, float expectedRot,
   if (!mNavHelper->GetRIstayingInLD())
     mNavHelper->SetMapOffsetsIfAny(item);
   mCamera->SetRequiredRoll(1);
+  if (!mWinApp->LowDoseMode() && mDoingMulGridSeq)
+    mScope->SetFocusToStandardIfLM(item->mMapMagInd);
 
   // For non-big rotation, Set up to to align to map extract, then regular align to 
   // center piece with index 0
@@ -1355,10 +1392,10 @@ void CMultiGridTasks::UndoOrRedoMarkerShift(bool redo)
  * Start a series of runs given the parameters
  */
 int CMultiGridTasks::StartGridRuns(int LMneedsLD, int MMMneedsLD, int finalNeedsLD,
-  bool undoneOnly)
+  int finalCamera, bool undoneOnly)
 {
   int err, grid, ind, apSize = 0, numAcq, numTS, numFail = 0, numDark = 0;
-  float halfx, halfy, size, spacing;
+  float halfx, halfy;
   ScaleMat cam2st;
   CFileStatus status;
   JeolCartridgeData jcd;
@@ -1369,6 +1406,8 @@ int CMultiGridTasks::StartGridRuns(int LMneedsLD, int MMMneedsLD, int finalNeeds
   NavAcqAction *finalActions = mNavHelper->GetAcqActions(1);
   BaseMarkerShift baseShift;
   IntVec dlgIndToJcdInd;
+  CameraParameters *camParams = mWinApp->GetCamParams() + finalCamera;
+  bool noFrameSubs, movable;
   bool apForLMM = false;
   bool stateForLMM = false;
   bool stateForMMM = false;
@@ -1424,6 +1463,20 @@ int CMultiGridTasks::StartGridRuns(int LMneedsLD, int MMMneedsLD, int finalNeeds
   if (apSize < 0) {
     SEMMessageBox("Aperture control appears not to work on this scope");
     return 1;
+  }
+
+  // If not doing LM maps and grid on stage is to be done, rearrange order to do it first
+  if (mMGdlg->GetOnStageDlgIndex() >= 0 && !mParams.acquireLMMs) {
+    ind = dlgIndToJcdInd[mMGdlg->GetOnStageDlgIndex()];
+    for (grid = 0; grid < mNumGridsToRun; grid++) {
+      if (mJcdIndsToRun[grid] == ind) {
+        if (!grid)
+          break;
+        B3DSWAP(mJcdIndsToRun[grid], mJcdIndsToRun[0], err);
+        B3DSWAP(mSlotNumsToRun[grid], mSlotNumsToRun[0], err);
+        break;
+      }
+    }
   }
 
   // Check for dark and failed and make sure they want to proceed with failed
@@ -1500,13 +1553,13 @@ int CMultiGridTasks::StartGridRuns(int LMneedsLD, int MMMneedsLD, int finalNeeds
         " you need to select hole finding as a mapping task");
       return 1;
     }
-    if (!mapParams->runHoleCombiner && finalParams->acquireType == ACQUIRE_MULTISHOT &&
-      AfxMessageBox("You selected Multiple Records for final\nacquisition but did not"
+    if (!mapParams->runHoleCombiner && finalParams->nonTSacquireType == ACQUIRE_MULTISHOT
+      && AfxMessageBox("You selected Multiple Records for final\nacquisition but did not"
         " set the option to use the hole combiner.\n\nDo you really want to proceed?", 
         MB_QUESTION) == IDNO)
       return 1;
-    if (!finalParams->useMapHoleVectors && finalParams->acquireType == ACQUIRE_MULTISHOT
-      && mNumGridsToRun > 1) {
+    if (!finalParams->useMapHoleVectors && 
+      finalParams->nonTSacquireType == ACQUIRE_MULTISHOT && mNumGridsToRun > 1) {
       AfxMessageBox("You are trying to do Multiple Records on \n"
         "more than one grid and did not select to use map hole vectors for shifts", 
         MB_EXCLAME);
@@ -1514,26 +1567,22 @@ int CMultiGridTasks::StartGridRuns(int LMneedsLD, int MMMneedsLD, int finalNeeds
     }
   }
 
-  // Make a list of hole sizes/spacings to use
-  mHoleSizes.resize(mNumGridsToRun);
-  mHoleSpacings.resize(mNumGridsToRun);
-  if (mUsingHoleFinder) {
-    if (mNavHelper->mHoleFinderDlg)
-      mNavHelper->mHoleFinderDlg->SyncToMasterParams();
-    for (grid = 0; grid < mNumGridsToRun; grid++) {
-      size = 0.;
-      spacing = 0.;
-      for (ind = 0; ind < mMGdlg->GetNumUsedSlots(); ind++) {
-        jcd = mCartInfo->GetAt(dlgIndToJcdInd[ind]);
-        if (jcd.holeSize)
-          size = jcd.holeSize;
-        if (jcd.holeSpacing)
-          spacing = jcd.holeSpacing;
-        if (dlgIndToJcdInd[ind] == mJcdIndsToRun[grid])
-          break;
+  // Set flags for parameter swaps needed
+  // Testing nonTSacquireType because regular acquireType is still 0 for read-in
+  // parameters and/or comes through as 0 in what is tested
+  mUsingAutoContour = mParams.acquireLMMs && mParams.autocontour;
+  if (mParams.runFinalAcq) {
+    mUsingMultishot = finalParams->nonTSacquireType == ACQUIRE_MULTISHOT;
+    if (!mUsingMultishot && mMGMShotParamArray.GetSize() > 0) {
+      for (grid = 0; grid < mNumGridsToRun && !mUsingMultishot; grid++) {
+        jcd = mCartInfo->GetAt(mJcdIndsToRun[grid]);
+        if (jcd.finalDataParamIndex >= 0) {
+          MGridAcqItemsParams acqParam =
+            mMGAcqItemsParamArray.GetAt(jcd.finalDataParamIndex);
+          if (acqParam.params.nonTSacquireType == ACQUIRE_MULTISHOT)
+            mUsingMultishot = true;
+        }
       }
-      mHoleSizes[grid] = size;
-      mHoleSpacings[grid] = spacing;
     }
   }
 
@@ -1551,6 +1600,13 @@ int CMultiGridTasks::StartGridRuns(int LMneedsLD, int MMMneedsLD, int finalNeeds
         }
       }
     }
+  }
+
+  // Save directory for frame saving if doing final and camera permits it
+  if (mParams.runFinalAcq && ((camParams->canTakeFrames & 1) ||
+    mCamera->IsDirectDetector(camParams))) {
+    mCamNumForFrameDir = finalCamera;
+    mSavedDirForFrames = mCamera->GetCameraFrameFolder(camParams, noFrameSubs, movable);
   }
 
   // Determine 4 positions around center for eucentricity
@@ -1724,8 +1780,6 @@ int CMultiGridTasks::StartGridRuns(int LMneedsLD, int MMMneedsLD, int finalNeeds
   mFailureRetry = 0;
   mExternalFailedStr = "";
   mExtErrorOccurred = -1;
-  mSavedHoleSize = 0.;
-  mSavedHoleSpacing = 0.;
   mSuspendedMulGrid = false;
   mEndWhenGridDone = false;
   mStoppedAtGridEnd = false;
@@ -1753,7 +1807,6 @@ void CMultiGridTasks::AddToSeqForLMimaging(bool &apForLMM, bool &stateForLMM, in
   if (mParams.setCondenserAp && !apForLMM)
     mActSequence.push_back(MGACT_SET_CONDENSER_AP);
   apForLMM = mParams.removeObjectiveAp || mParams.setCondenserAp;
-
 }
 
 // If aperture was set for LM, set up to restore it
@@ -1791,15 +1844,21 @@ void CMultiGridTasks::DoNextSequenceAction(int resume)
   JeolCartridgeData &jcdEl = mCartInfo->ElementAt(mJcdIndsToRun[B3DMIN(mCurrentGrid,
     (int)mJcdIndsToRun.size() - 1)]);
   AutoContourParams *acParam;
-  HoleFinderParams *hfParam;
   MapItemArray *itemArr;
   CMapDrawItem *item;
   BaseMarkerShift baseShift;
+  MGridHoleFinderParams hfParam;
+  MGridAutoContParams acParm;
+  MGridMultiShotParams msParam;
+  MGridGeneralParams genParam;
+  MGridAcqItemsParams fdParam;
   NavAcqParams *acqParams;
+  CameraParameters *camParams = mWinApp->GetCamParams();
   FileOptions fileOpt;
   IntVec ixVec, iyVec, pieceSavedAt;
   FloatVec xStage, yStage, meanVec, midFracs, rangeFracs;
   bool skipEucen = false, skipGrid = false, fileAtFirst = false;
+  bool movable, noFrameSubs;
   mNavigator = mWinApp->mNavigator;
 
   if (!mDoingMulGridSeq)
@@ -2251,6 +2310,7 @@ void CMultiGridTasks::DoNextSequenceAction(int resume)
     mScope->MoveStage(moveInfo, true);
     timeout = 60000;
     addIdleTask = 2;
+    break;
 
     // Start routine to realign to grid map
   case MGACT_REALIGN_TO_LMM:
@@ -2288,6 +2348,9 @@ void CMultiGridTasks::DoNextSequenceAction(int resume)
     // Set state(s) for final acquire
   case MGACT_FINAL_STATE:
     stateNums = &mParams.finalStateNums[0];
+    if (jcd.acqStateNums[0] >= 0 || jcd.acqStateNums[1] >= 0 || jcd.acqStateNums[2] >= 0
+      || jcd.acqStateNums[3] >= 0)
+      stateNums = &jcd.acqStateNums[0];
   case MGACT_MMM_STATE:
     err = 0;
     for (ind = 0; ind < 4; ind++) {
@@ -2317,6 +2380,8 @@ void CMultiGridTasks::DoNextSequenceAction(int resume)
     // Start taking reference or survey image
   case MGACT_REF_IMAGE:
   case MGACT_SURVEY_IMAGE:
+    if (!mSurveyIndex && !mWinApp->LowDoseMode())
+      mScope->SetFocusToStandardIfLM(mLMMmagIndex);
     mCamera->InitiateCapture(setNum);
     addIdleTask = 2;
     break;
@@ -2342,7 +2407,7 @@ void CMultiGridTasks::DoNextSequenceAction(int resume)
     mDoingEucentricity = true;
     break;
 
-    // Statr moving to center of montage
+    // Start moving to center of montage
   case MGACT_LMM_CENTER_MOVE:
     moveInfo.x = mGridMontParam.fullMontStageX;
     moveInfo.y = mGridMontParam.fullMontStageY;
@@ -2391,24 +2456,49 @@ void CMultiGridTasks::DoNextSequenceAction(int resume)
     mAutoContouring = true;
     break;
 
-    // Shift to marker if necessary
+    // Shift to marker if necessary and grid startup stuff
   case MGACT_MARKER_SHIFT:
 
-    // Take care of hole parameters here
-    if (mHoleSizes[mCurrentGrid] > 0. || mHoleSpacings[mCurrentGrid] > 0.) {
-      hfParam = mNavHelper->GetHoleFinderParams();
-      if (mHoleSizes[mCurrentGrid] > 0) {
-        if (!mSavedHoleSize)
-          mSavedHoleSize = hfParam->diameter;
-        hfParam->diameter = mHoleSizes[mCurrentGrid];
+     // Take care of hole, multishot, autocontour parameters if needed
+    if (mUsingHoleFinder && jcd.holeFinderParamIndex >= 0 &&
+      jcd.holeFinderParamIndex < (int)mMGHoleParamArray.GetSize()) {
+      if (!mSavedHoleFinder) {
+        mSavedHoleFinder = new MGridHoleFinderParams;
+        HoleFinderToGridSettings(*mSavedHoleFinder);
       }
-      if (mHoleSpacings[mCurrentGrid] > 0) {
-        if (!mSavedHoleSpacing)
-          mSavedHoleSpacing = hfParam->spacing;
-        hfParam->spacing = mHoleSpacings[mCurrentGrid];
+      hfParam = mMGHoleParamArray.GetAt(jcd.holeFinderParamIndex);
+      GridToHoleFinderSettings(hfParam);
+    }
+
+    if (mUsingMultishot && jcd.multiShotParamIndex >= 0 &&
+      jcd.multiShotParamIndex < (int)mMGMShotParamArray.GetSize()) {
+      if (!mSavedMultiShot) {
+        mSavedMultiShot = new MGridMultiShotParams;
+        MultiShotToGridSettings(*mSavedMultiShot);
       }
-      if (mNavHelper->mHoleFinderDlg->IsOpen())
-        mNavHelper->mHoleFinderDlg->UpdateSettings();
+      msParam = mMGMShotParamArray.GetAt(jcd.multiShotParamIndex);
+      GridToMultiShotSettings(msParam);
+    }
+
+    if (mUsingAutoContour && jcd.autoContParamIndex >= 0 &&
+      jcd.autoContParamIndex < (int)mMGAutoContParamArray.GetSize()) {
+      if (!mSavedAutoCont) {
+        mSavedAutoCont = new MGridAutoContParams;
+        AutoContToGridSettings(*mSavedAutoCont);
+      }
+      acParm = mMGAutoContParamArray.GetAt(jcd.autoContParamIndex);
+      GridToAutoContSettings(acParm);
+    }
+
+    // Do general params unconditionally
+    if (jcd.generalParamIndex >= 0 && jcd.generalParamIndex <
+      (int)mMGGeneralParamArray.GetSize()) {
+      if (!mSavedGeneralParams) {
+        mSavedGeneralParams = new MGridGeneralParams;
+        GeneralToGridSettings(*mSavedGeneralParams);
+      }
+      genParam = mMGGeneralParamArray.GetAt(jcd.generalParamIndex);
+      GridToGeneralSettings(genParam);
     }
 
     err = OpenNavFileIfNeeded(jcd);
@@ -2503,7 +2593,6 @@ void CMultiGridTasks::DoNextSequenceAction(int resume)
     acqParams->noMBoxOnError = true;
     if (mParams.MMMimageType > 0) {
       acqParams->acquireType = ACQUIRE_TAKE_MAP;
-
     } else {
       acqParams->mapWithViewSearch = 2 - mParams.MMMstateType;
     }
@@ -2519,11 +2608,39 @@ void CMultiGridTasks::DoNextSequenceAction(int resume)
       return;
     if (err)
       break;
-    mNavHelper->CopyAcqParamsAndActionsToTemp(1);
+    if (jcd.finalDataParamIndex >= 0) {
+      if (jcd.finalDataParamIndex >= (int)mMGAcqItemsParamArray.GetSize()) {
+        str.Format("Skipping grid %d because index of Final Data parameters stored for "
+          "it is out of range (%d >= %d)\r\n",
+          jcd.finalDataParamIndex, mMGAcqItemsParamArray.GetSize());
+        SkipToNextGrid(str);
+        break;
+      }
+      fdParam = mMGAcqItemsParamArray.GetAt(jcd.finalDataParamIndex);
+      mNavHelper->CopyAcqParamsAndActionsToTemp(&fdParam.actions[0], &fdParam.params,
+        &fdParam.actOrder[0]);
+    } else
+      mNavHelper->CopyAcqParamsAndActionsToTemp(1);
     acqParams = mWinApp->GetNavAcqParams(2);
     acqParams->noMBoxOnError = true;
     mNavigator->SetCurAcqParmActions(2);
     mOpeningForFinalFailed = false;
+
+    // Take care of frames directory
+    if (mCamNumForFrameDir >= 0) {
+      mCamera->GetCameraFrameFolder(&camParams[mCamNumForFrameDir], noFrameSubs, movable);
+      str = RootnameFromUsername(jcd);
+      if (!noFrameSubs) {
+        if (!movable || !mParams.framesUnderSession)
+          str = mSavedDirForFrames + "\\" + str;
+        else if (mUseSubdirs)
+          str = mWorkingDir + "\\" + str + "\\frames";
+        else
+          str = mWorkingDir + "\\" + str + "_frames";
+      }
+      mCamera->SetCameraFrameFolder(&camParams[mCamNumForFrameDir], str);
+    }
+
     mNavigator->AcquireAreas(NAVACQ_SRC_MG_RUN_ACQ, false, true);
     if (mOpeningForFinalFailed) {
       StopMulGridSeq();
@@ -2546,6 +2663,7 @@ void CMultiGridTasks::DoNextSequenceAction(int resume)
     }
     mCurrentGrid++;
     UpdateGridStatusText();
+    RestoreImposedParams();
     break;
 
   default:
@@ -2597,9 +2715,13 @@ int CMultiGridTasks::SkipToNextGrid(CString &errStr)
   // before the case is hit
   mCurrentGrid++;
   UpdateGridStatusText();
+  RestoreImposedParams();
   return 0;
 }
 
+////////////////////////////////////////////
+//  Support routines
+////////////////////////////////////////////
 /*
  * Set status text with grid #
  */
@@ -2614,7 +2736,7 @@ void CMultiGridTasks::UpdateGridStatusText()
 }
 
 /*
- * Return full path to grid file and rootname, optionall appending a suffic
+ * Return full path to grid file and rootname, optionally appending a suffix
  */
 CString CMultiGridTasks::FullGridFilePath(int gridInd, CString suffix)
 {
@@ -2710,6 +2832,7 @@ int CMultiGridTasks::RealignToGridMap(int jcdInd, bool askIfSave, CString &errSt
   CString str;
   MontParam *masterMont = mWinApp->GetMontParam();
   int useBin = B3DMIN(2, masterMont->overviewBinning);
+  mNavigator = mWinApp->mNavigator;
   if (jcd.LMmapID) {
     item = mNavigator->FindItemWithMapID(jcd.LMmapID);
 
@@ -2849,7 +2972,7 @@ void CMultiGridTasks::ChangeStatusFlag(int gridInd, b3dUInt32 flag, int state)
 }
 
 /* 
- * Get the autocontourng groups so they can be set properly
+ * Get the autocontouring groups so they can be set properly
  */
 void CMultiGridTasks::CopyAutoContGroups()
 {
@@ -2857,6 +2980,159 @@ void CMultiGridTasks::CopyAutoContGroups()
   for (int ind = 0; ind < MAX_AUTOCONT_GROUPS; ind++)
     mAutoContGroups[ind] = showGroup[ind];
   mHaveAutoContGroups = true;
+}
+
+/*
+ * Macro and function for copying grid multishot settings to main settings
+ */
+#define COPY_MEMBER(mem) msParam->mem = B3DNINT(mgParam.values[MS_##mem]);
+void CMultiGridTasks::GridToMultiShotSettings(MGridMultiShotParams &mgParam)
+{
+  MultiShotParams *msParam = mNavHelper->GetMultiShotParams();
+  msParam->numShots[0] = B3DNINT(mgParam.values[MS_numShots0]);
+  msParam->numShots[1] = B3DNINT(mgParam.values[MS_numShots1]);
+  msParam->numHoles[0] = B3DNINT(mgParam.values[MS_numHoles0]);
+  msParam->numHoles[1] = B3DNINT(mgParam.values[MS_numHoles1]);
+  msParam->spokeRad[0] = mgParam.values[MS_spokeRad0];
+  msParam->spokeRad[1] = mgParam.values[MS_spokeRad1];
+  COPY_MEMBER(doSecondRing);
+  COPY_MEMBER(doCenter);
+  COPY_MEMBER(inHoleOrMultiHole);
+  COPY_MEMBER(skipCornersOf3x3);
+  msParam->doHexArray = mgParam.values[MS_numHexRings] != 0;
+  if (msParam->doHexArray)
+    COPY_MEMBER(numHexRings);
+  if (mNavHelper->mMultiShotDlg)
+    mNavHelper->mMultiShotDlg->UpdateSettings();
+}
+#undef COPY_MEMBER
+
+/*
+* Macro and function for copying main multishot settings to grid settings
+*/
+#define COPY_MEMBER(mem) mgParam.values[MS_##mem] = (float)msParam->mem;
+void CMultiGridTasks::MultiShotToGridSettings(MGridMultiShotParams &mgParam)
+{
+  MultiShotParams *msParam = mNavHelper->GetMultiShotParams();
+  mNavHelper->UpdateMultishotIfOpen();
+  mgParam.values[MS_spokeRad0] = msParam->spokeRad[0];
+  mgParam.values[MS_spokeRad1] = msParam->spokeRad[1];
+  mgParam.values[MS_numShots0] = (float)msParam->numShots[0];
+  mgParam.values[MS_numShots1] = (float)msParam->numShots[1];
+  mgParam.values[MS_numHoles0] = (float)msParam->numHoles[0];
+  mgParam.values[MS_numHoles1] = (float)msParam->numHoles[1];
+  COPY_MEMBER(doSecondRing);
+  COPY_MEMBER(doCenter);
+  COPY_MEMBER(inHoleOrMultiHole);
+  COPY_MEMBER(skipCornersOf3x3);
+  mgParam.values[MS_numHexRings] = (float)
+    (msParam->doHexArray ? msParam->numHexRings : 0);
+}
+#undef COPY_MEMBER
+
+/*
+ * Macro and function for copying grid hole finder settings to main settings
+ */
+#define COPY_MEMBER(mem) hfParam->mem = mgParam.values[HF_##mem];
+void CMultiGridTasks::GridToHoleFinderSettings(MGridHoleFinderParams &mgParam)
+{
+  HoleFinderParams *hfParam = mNavHelper->GetHoleFinderParams();
+  hfParam->thresholds = mgParam.thresholds;
+  hfParam->sigmas = mgParam.sigmas;
+  COPY_MEMBER(lowerMeanCutoff);
+  COPY_MEMBER(upperMeanCutoff);
+  COPY_MEMBER(SDcutoff);
+  COPY_MEMBER(blackFracCutoff);
+  COPY_MEMBER(edgeDistCutoff);
+  hfParam->hexagonalArray = mgParam.values[HF_hexagonalArray] != 0;
+  if (hfParam->hexagonalArray) {
+    hfParam->hexSpacing = mgParam.values[HF_spacing];
+    hfParam->hexDiameter = mgParam.values[HF_diameter];
+  } else {
+    COPY_MEMBER(spacing);
+    COPY_MEMBER(diameter);
+  }
+  if (mNavHelper->mHoleFinderDlg->IsOpen())
+    mNavHelper->mHoleFinderDlg->UpdateSettings();
+}
+#undef COPY_MEMBER
+
+/*
+ * Macro and function for copying main hole finder settings to grid settings 
+ */
+#define COPY_MEMBER(mem) mgParam.values[HF_##mem] = hfParam->mem;
+void CMultiGridTasks::HoleFinderToGridSettings(MGridHoleFinderParams &mgParam)
+{
+  HoleFinderParams *hfParam = mNavHelper->GetHoleFinderParams();
+  if (mNavHelper->mHoleFinderDlg->IsOpen())
+    mNavHelper->mHoleFinderDlg->SyncToMasterParams();
+  mgParam.thresholds = hfParam->thresholds;
+  mgParam.sigmas = hfParam->sigmas;
+  COPY_MEMBER(lowerMeanCutoff);
+  COPY_MEMBER(upperMeanCutoff);
+  COPY_MEMBER(SDcutoff);
+  COPY_MEMBER(blackFracCutoff);
+  COPY_MEMBER(edgeDistCutoff);
+  mgParam.values[HF_hexagonalArray] = hfParam->hexagonalArray ? 1.f : 0.f;
+  mgParam.values[HF_spacing] = hfParam->hexagonalArray ? hfParam->hexSpacing : 
+    hfParam->spacing;
+  mgParam.values[HF_diameter] = hfParam->hexagonalArray ? hfParam->hexDiameter :
+    hfParam->diameter;
+}
+#undef COPY_MEMBER
+
+/*
+ * Macro and function for copying grid autocontouring settings to main settings
+ */
+#define COPY_MEMBER(mem) acParam->mem = mgParam.values[AC_##mem];
+void CMultiGridTasks::GridToAutoContSettings(MGridAutoContParams &mgParam)
+{
+  AutoContourParams *acParam = mWinApp->mNavHelper->GetAutocontourParams();
+  COPY_MEMBER(minSize);
+  COPY_MEMBER(maxSize);
+  COPY_MEMBER(relThreshold);
+  COPY_MEMBER(lowerMeanCutoff);
+  COPY_MEMBER(upperMeanCutoff);
+  COPY_MEMBER(borderDistCutoff);
+  if (mNavHelper->mAutoContouringDlg->IsOpen())
+    mNavHelper->mAutoContouringDlg->UpdateSettings();
+}
+#undef COPY_MEMBER
+
+/*
+ * Macro and function for copying main autocontouring settings to grid settings
+ */
+#define COPY_MEMBER(mem) mgParam.values[AC_##mem] = acParam->mem;
+void CMultiGridTasks::AutoContToGridSettings(MGridAutoContParams &mgParam)
+{
+  AutoContourParams *acParam = mWinApp->mNavHelper->GetAutocontourParams();
+  if (mNavHelper->mAutoContouringDlg->IsOpen())
+    mNavHelper->mAutoContouringDlg->SyncToMasterParams();
+  COPY_MEMBER(minSize);
+  COPY_MEMBER(maxSize);
+  COPY_MEMBER(relThreshold);
+  COPY_MEMBER(lowerMeanCutoff);
+  COPY_MEMBER(upperMeanCutoff);
+  COPY_MEMBER(borderDistCutoff);
+}
+#undef COPY_MEMBER
+
+/*
+ * Functions for copying general settings back and forth
+ */
+void CMultiGridTasks::GridToGeneralSettings(MGridGeneralParams &mgParam)
+{
+  mShiftManager->SetDisableAutoTrim(mgParam.values[GP_disableAutoTrim]);
+  mShiftManager->SetErasePeriodicPeaks(mgParam.values[GP_erasePeriodicPeaks]);
+  mNavHelper->SetRIErasePeriodicPeaks(mgParam.values[GP_RIErasePeriodicPeaks]);
+  mWinApp->mAlignFocusWindow.UpdateSettings();
+}
+
+void CMultiGridTasks::GeneralToGridSettings(MGridGeneralParams &mgParam)
+{
+  mgParam.values[GP_disableAutoTrim] = mShiftManager->GetDisableAutoTrim();
+  mgParam.values[GP_erasePeriodicPeaks] = mShiftManager->GetErasePeriodicPeaks();
+  mgParam.values[GP_RIErasePeriodicPeaks] = mNavHelper->GetRIErasePeriodicPeaks();
 }
 
 //////////////////////////////////////////////////////////////////
@@ -2886,7 +3162,18 @@ void CMultiGridTasks::CopyAutoContGroups()
 #define MGDOC_LMM_STNAME  "LMMstateName"
 #define MGDOC_CONT_GROUP  "AutoContGroups"
 #define MGDOC_LMM_MAGIND  "LMMmagIndex"
-#define MGDOC_HOLE_PARAM  "HoleParams"
+#define MGDOC_HOLE_PARAM  "HoleFinderParams"
+#define MGDOC_HOLE_THRESH  "HoleThresholds"
+#define MGDOC_HOLE_FILTER  "HoleFilters"
+#define MGDOC_MS_PARAM  "MultiShotParams"
+#define MGDOC_AC_PARAM  "AutoContourParams"
+#define MGDOC_GEN_PARAM  "GeneralParams"
+#define MGDOC_FINAL_PARAM "FinalDataParamInd"
+#define MGDOC_ACQ_ST_NUM  "AcqStateNum"
+#define MGDOC_ACQ_ST_NAME  "AcqStateName"
+#define MGDOC_SEP_ACQ_ST  "SeparateAcqState"
+
+#define MGNAV_ACQ_SUFFIX "_navAcq.txt"
 
 #define ADOC_PUT(a) err += AdocSet##a;
 #define ADOC_ARG "MontParam",sectInd
@@ -2901,9 +3188,15 @@ void CMultiGridTasks::CopyAutoContGroups()
 int CMultiGridTasks::SaveSessionFile(CString &errStr)
 {
   CString date, time, str;
-  int adocInd, grid, mont, sectInd, err = 0;
+  int adocInd, grid, mont, ind, sectInd, err = 0;
   JeolCartridgeData jcd;
   MontParam *montParam = &mGridMontParam;
+  char keyBuf[32];
+  MGridHoleFinderParams hfParam;
+  MGridAutoContParams acParam;
+  MGridMultiShotParams msParam;
+  MGridGeneralParams genParam;
+  MGridAcqItemsParams acqParams;
 
   // Get current parameters if names have not been locked
   if (!mNamesLocked) {
@@ -2920,8 +3213,19 @@ int CMultiGridTasks::SaveSessionFile(CString &errStr)
     mSessionFilename = mWorkingDir + "\\multiGrid_" + date + "_1.adoc";
     NextAutoFilenameIfNeeded(mSessionFilename);
     mBackedUpSessionFile = true;
+    mBackedUpAcqItemsFile = true;
   }
   mWinApp->mDocWnd->ManageBackupFile(mSessionFilename, mBackedUpSessionFile);
+
+  // Write any items in the final data acquire param array
+  if (mMGAcqItemsParamArray.GetSize() > 0) {
+    UtilSplitExtension(mSessionFilename, str, time);
+    str += MGNAV_ACQ_SUFFIX;
+    if (UtilFileExists(str))
+      mWinApp->mDocWnd->ManageBackupFile(str, mBackedUpAcqItemsFile);
+    if (mWinApp->mParamIO->WriteMulGridAcqParams(str, errStr))
+      return 1;
+  }
 
   // Get the autodoc
   if (!AdocAcquireMutex()) {
@@ -2973,13 +3277,75 @@ int CMultiGridTasks::SaveSessionFile(CString &errStr)
       err += AdocSetInteger(MGDOC_GRID, sectInd, MGDOC_TYPE, jcd.type);
       err += AdocSetInteger(MGDOC_GRID, sectInd, MGDOC_STATUS, jcd.status);
       err += AdocSetFloat(MGDOC_GRID, sectInd, MGDOC_ZSTAGE, jcd.zStage);
-      if (jcd.holeSize || jcd.holeSpacing)
+      /*if (jcd.holeSize || jcd.holeSpacing)
         err += AdocSetTwoFloats(MGDOC_GRID, sectInd, MGDOC_HOLE_PARAM, jcd.holeSize,
-          jcd.holeSpacing);
+          jcd.holeSpacing);*/
       err += AdocSetKeyValue(MGDOC_GRID, sectInd, MGDOC_NAME, (LPCTSTR)jcd.name);
       err += AdocSetKeyValue(MGDOC_GRID, sectInd, MGDOC_USERNAME, (LPCTSTR)jcd.userName);
       if (jcd.LMmapID)
         err += AdocSetInteger(MGDOC_GRID, sectInd, MGDOC_LMMAPID, jcd.LMmapID);
+      if (jcd.finalDataParamIndex >= 0)
+        err += AdocSetInteger(MGDOC_GRID, sectInd, MGDOC_FINAL_PARAM,
+          jcd.finalDataParamIndex);
+
+      // Write states
+      if (jcd.separateState) {
+        err += AdocSetInteger(MGDOC_GRID, sectInd, MGDOC_SEP_ACQ_ST, jcd.separateState);
+        for (ind = 0; ind < 4; ind++) {
+          if (jcd.acqStateNums[ind] >= 0) {
+            snprintf(keyBuf, 31, "%s%d", MGDOC_ACQ_ST_NUM, ind);
+            err += AdocSetInteger(MGDOC_GRID, sectInd, keyBuf, jcd.acqStateNums[ind]);
+          }
+          if (!jcd.acqStateNames[ind].IsEmpty()) {
+            snprintf(keyBuf, 31, "%s%d", MGDOC_ACQ_ST_NAME, ind);
+            err += AdocSetKeyValue(MGDOC_GRID, sectInd, keyBuf,
+              (LPCTSTR)jcd.acqStateNames[ind]);
+          }
+        }
+      }
+
+      // Write hole finder params
+      if (jcd.holeFinderParamIndex >= 0 &&
+        jcd.holeFinderParamIndex < mMGHoleParamArray.GetSize()) {
+        hfParam = mMGHoleParamArray.GetAt(jcd.holeFinderParamIndex);
+        if (AdocSetFloatArray(MGDOC_GRID, sectInd, MGDOC_HOLE_PARAM, hfParam.values,
+          HF_noParam))
+          err++;
+        if (hfParam.thresholds.size() > 0 && AdocSetFloatArray(MGDOC_GRID, sectInd,
+          MGDOC_HOLE_THRESH, &hfParam.thresholds[0],(int) hfParam.thresholds.size()))
+          err++;
+        if (hfParam.sigmas.size() > 0 && AdocSetFloatArray(MGDOC_GRID, sectInd,
+          MGDOC_HOLE_FILTER, &hfParam.sigmas[0], (int)hfParam.sigmas.size()))
+          err++;
+      }
+
+      // Write multishot params
+      if (jcd.multiShotParamIndex >= 0 &&
+        jcd.multiShotParamIndex < mMGMShotParamArray.GetSize()) {
+        msParam = mMGMShotParamArray.GetAt(jcd.multiShotParamIndex);
+        if (AdocSetFloatArray(MGDOC_GRID, sectInd, MGDOC_MS_PARAM, msParam.values,
+          MS_noParam))
+          err++;
+      }
+
+      // Write autocontour params
+      if (jcd.autoContParamIndex >= 0 &&
+        jcd.autoContParamIndex < mMGAutoContParamArray.GetSize()) {
+        acParam = mMGAutoContParamArray.GetAt(jcd.autoContParamIndex);
+        if (AdocSetFloatArray(MGDOC_GRID, sectInd, MGDOC_AC_PARAM, acParam.values,
+          AC_noParam))
+          err++;
+      }
+
+      // Write general params
+      if (jcd.generalParamIndex >= 0 &&
+        jcd.generalParamIndex < mMGGeneralParamArray.GetSize()) {
+        genParam = mMGGeneralParamArray.GetAt(jcd.generalParamIndex);
+        if (AdocSetIntegerArray(MGDOC_GRID, sectInd, MGDOC_GEN_PARAM, genParam.values,
+          GP_noParam))
+          err++;
+      }
+
       if (err) {
         errStr = "Errors writing data to a grid section of the autodoc";
       }
@@ -3037,7 +3403,7 @@ void CMultiGridTasks::SaveSessionFileWarnIfError()
 /*
  * Clear out everything that might be read in from a file and other items for fresh start
  */
-void CMultiGridTasks::ClearSession()
+void CMultiGridTasks::ClearSession(bool keepAcqParams)
 {
   mCartInfo->RemoveAll();
   InitOrClearSessionValues();
@@ -3046,6 +3412,12 @@ void CMultiGridTasks::ClearSession()
   mNamesLocked = false;
   mLMMusedStateName = "";
   mSessionFilename = "";
+  mMGAutoContParamArray.RemoveAll();
+  mMGHoleParamArray.RemoveAll();
+  mMGMShotParamArray.RemoveAll();
+  mMGGeneralParamArray.RemoveAll();
+  if (!keepAcqParams)
+    mMGAcqItemsParamArray.RemoveAll();
   if (mNavHelper->mMultiGridDlg) {
     mNavHelper->mMultiGridDlg->m_strPrefix = "";
     mNavHelper->mMultiGridDlg->SetRootname();
@@ -3098,13 +3470,20 @@ if (!retval) {    \
 int CMultiGridTasks::LoadSessionFile(bool useLast, CString &errStr)
 {
   int adocInd, numSect, grid, err = 0, val, retval, ind1, index = IDOK, stageInd = -1;
-  int stageID = -1;
+  int stageID = -1, acqParamErr = 0;
+  bool haveHF;
   char *string;
   static char szFilter[] = "Autodoc files (*.adoc)|*.adoc|All files (*.*)|*.*||";
+  char keyBuf[32];
   JeolCartridgeData jcd;
   MontParam *montParam;
   LPCTSTR lpszFileName = NULL;
-  CString filename, direc = mWinApp->mDocWnd->GetInitialDir();
+  CString filename, direc = mWinApp->mDocWnd->GetInitialDir(), acqParmName, ext;
+  MGridHoleFinderParams hfParam;
+  MGridAutoContParams acParam;
+  MGridMultiShotParams msParam;
+  MGridGeneralParams genParam;
+  float values[MS_noParam];
 
   if (mSessionFilename.IsEmpty())
     mSessionFilename = mLastSessionFile;
@@ -3131,8 +3510,10 @@ int CMultiGridTasks::LoadSessionFile(bool useLast, CString &errStr)
   if (index != IDOK)
     return -1;
 
-  // Read in file
   mBackedUpSessionFile = false;
+  mBackedUpAcqItemsFile = false;
+
+  // Read in file
   if (!AdocAcquireMutex()) {
     errStr = "Failed to acquire autodoc mutex";
     return 1;
@@ -3148,6 +3529,18 @@ int CMultiGridTasks::LoadSessionFile(bool useLast, CString &errStr)
   // Clear out and process global entries
   ClearSession();
   mSessionFilename = mLastSessionFile;
+
+  // Look for nav acquire params
+  UtilSplitExtension(mSessionFilename, acqParmName, ext);
+  acqParmName += MGNAV_ACQ_SUFFIX;
+  if (UtilFileExists(acqParmName)) {
+    if (mWinApp->mParamIO->ReadAcqParamsFromFile(NULL, NULL, NULL, acqParmName, errStr)) {
+      AdocReleaseMutex();
+      return 1;
+    }
+    if (!errStr.IsEmpty())
+      SEMAppendToLog("WARNING: " + errStr);
+  }
 
   numSect = AdocGetNumberOfSections(MGDOC_GRID);
   if (AdocGetInteger(ADOC_GLOBAL_NAME, 0, MGDOC_APPEND, &val))
@@ -3185,6 +3578,7 @@ int CMultiGridTasks::LoadSessionFile(bool useLast, CString &errStr)
     errStr = "Error reading values from global section of autodoc";
 
   // Process grid entries
+  acqParmName = "";
   for (grid = 0; grid < numSect && !err; grid++) {
     jcd.Init();
     if (AdocGetInteger(MGDOC_GRID, grid, MGDOC_ID, &jcd.id))
@@ -3203,11 +3597,108 @@ int CMultiGridTasks::LoadSessionFile(bool useLast, CString &errStr)
       err++;
     if (AdocGetFloat(MGDOC_GRID, grid, MGDOC_ZSTAGE, &jcd.zStage) < 0)
       err++;
-    if (AdocGetTwoFloats(MGDOC_GRID, grid, MGDOC_HOLE_PARAM, &jcd.holeSize,
-      &jcd.holeSpacing) < 0)
-      err++;
     GET_STRING(MGDOC_GRID, grid, MGDOC_NAME, jcd.name);
     GET_STRING(MGDOC_GRID, grid, MGDOC_USERNAME, jcd.userName);
+    if (AdocGetInteger(MGDOC_GRID, grid, MGDOC_SEP_ACQ_ST, &jcd.separateState) < 0)
+      err++;
+    if (jcd.separateState) {
+      for (ind1 = 0; ind1 < 4; ind1++) {
+        snprintf(keyBuf, 31, "%s%d", MGDOC_ACQ_ST_NUM, ind1);
+        if (AdocGetInteger(MGDOC_GRID, grid, keyBuf, &jcd.acqStateNums[ind1]) < 0)
+          err++;
+        snprintf(keyBuf, 31, "%s%d", MGDOC_ACQ_ST_NAME, ind1);
+        GET_STRING(MGDOC_GRID, grid, keyBuf, jcd.acqStateNames[ind1]);
+      }
+    }
+
+    // Get the final data parameter index and check if out of range
+    val = AdocGetInteger(MGDOC_GRID, grid, MGDOC_FINAL_PARAM, &jcd.finalDataParamIndex);
+    if (val < 0)
+      err++;
+    if (!val && jcd.finalDataParamIndex >= (int)mMGAcqItemsParamArray.GetSize()) {
+      ext.Format("Index of Final Data parameters stored for grid %d is out of range"
+        " (%d >= %d)\r\n  No parameters are now assigned for that grid", jcd.id,
+        jcd.finalDataParamIndex, mMGAcqItemsParamArray.GetSize());
+      if (!acqParmName.IsEmpty())
+        acqParmName += "\r\n";
+      acqParmName += ext;
+      jcd.finalDataParamIndex = -1;
+    }
+
+    // Get hole finder params, thresholds, sigmas
+    HoleFinderToGridSettings(hfParam);
+    haveHF = false;
+    ind1 = 0;
+    val = AdocGetFloatArray(MGDOC_GRID, grid, MGDOC_HOLE_PARAM, hfParam.values, &ind1,
+      HF_noParam);
+    if (val < 0)
+      err++;
+    if (!val)
+      haveHF = true;
+
+    ind1 = 0;
+    val = AdocGetFloatArray(MGDOC_GRID, grid, MGDOC_HOLE_THRESH, values, &ind1, 
+      MS_noParam);
+    if (val < 0)
+      err++;
+    if (!val) {
+      haveHF = true;
+      hfParam.thresholds.resize(ind1);
+      for (val = 0; val < ind1; val++)
+        hfParam.thresholds[val] = values[val];
+    }
+
+    ind1 = 0;
+    val = AdocGetFloatArray(MGDOC_GRID, grid, MGDOC_HOLE_FILTER, values, &ind1,
+      MS_noParam);
+    if (val < 0)
+      err++;
+    if (!val) {
+      haveHF = true;
+      hfParam.sigmas.resize(ind1);
+      for (val = 0; val < ind1; val++)
+        hfParam.sigmas[val] = values[val];
+    }
+    if (haveHF) {
+      jcd.holeFinderParamIndex = (int)mMGHoleParamArray.GetSize();
+      mMGHoleParamArray.Add(hfParam);
+    }
+
+    // Get multishot params
+    MultiShotToGridSettings(msParam);
+    ind1 = 0;
+    val = AdocGetFloatArray(MGDOC_GRID, grid, MGDOC_MS_PARAM, msParam.values, &ind1,
+      MS_noParam);
+    if (val < 0)
+      err++;
+    if (!val) {
+      jcd.multiShotParamIndex = (int)mMGMShotParamArray.GetSize();
+      mMGMShotParamArray.Add(msParam);
+    }
+
+    // Get autocontour params
+    AutoContToGridSettings(acParam);
+    ind1 = 0;
+    val = AdocGetFloatArray(MGDOC_GRID, grid, MGDOC_AC_PARAM, acParam.values, &ind1,
+      AC_noParam);
+    if (val < 0)
+      err++;
+    if (!val) {
+      jcd.autoContParamIndex = (int)mMGAutoContParamArray.GetSize();
+      mMGAutoContParamArray.Add(acParam);
+    }
+
+    // Get general params
+    GeneralToGridSettings(genParam);
+    ind1 = 0;
+    val = AdocGetIntegerArray(MGDOC_GRID, grid, MGDOC_GEN_PARAM, genParam.values, &ind1,
+      GP_noParam);
+    if (val < 0)
+      err++;
+    if (!val) {
+      jcd.generalParamIndex = (int)mMGGeneralParamArray.GetSize();
+      mMGGeneralParamArray.Add(genParam);
+    }
 
     if (!err && jcd.station == JAL_STATION_STAGE) {
       stageInd = grid;
@@ -3249,6 +3740,7 @@ int CMultiGridTasks::LoadSessionFile(bool useLast, CString &errStr)
   // Adjust dialog and other parameters
   if (err) {
     ClearSession();
+    errStr = acqParmName + errStr;
   } else {
     if (mNavHelper->mMultiGridDlg) {
       mNavHelper->mMultiGridDlg->SetNumUsedSlots((int)mCartInfo->GetSize());
@@ -3271,9 +3763,14 @@ int CMultiGridTasks::LoadSessionFile(bool useLast, CString &errStr)
        mNavHelper->mMultiGridDlg->UpdateSettings();
       mNavHelper->mMultiGridDlg->UpdateEnables();
     }
+    if (!acqParmName.IsEmpty()) {
+      errStr = acqParmName;
+      err = -1;
+    }
   }
 
   AdocReleaseMutex();
+
   return err;
 }
 #undef ADOC_REQUIRED

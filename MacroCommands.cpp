@@ -11742,6 +11742,7 @@ int CMacCmd::NavAcqAtEndUseParams()
   NavAcqParams *params = mWinApp->GetNavAcqParams(2);
   int *order = mNavHelper->GetAcqActCurrentOrder(2);
   int which = 0;
+  CString errStr;
   ABORT_NONAV;
   if (mNavigator->GetAcquiring())
     ABORT_NOLINE("You cannot use NavAcqAtEndUseParams when Navigator is acquiring");
@@ -11751,8 +11752,12 @@ int CMacCmd::NavAcqAtEndUseParams()
       ABORT_LINE("You must include a filename with Navigator parameters in line:\n\n");
 
     SubstituteLineStripItems(mStrLine, 2, mStrCopy);
-    if (mParamIO->ReadAcqParamsFromFile(params, actions, order, mStrCopy))
-      ABORT_LINE("Error reading Navigator parameters from file for line:\n\n");
+    if (mParamIO->ReadAcqParamsFromFile(params, actions, order, mStrCopy, errStr)) {
+      mStrCopy = "Error reading Navigator parameters from file";
+      if (!errStr.IsEmpty())
+        mStrCopy += "\n" + errStr + "\n";
+      ABORT_LINE(mStrCopy + " for line:\n\n");
+    }
   } else {
     if (!mStrItems[1].CompareNoCase("F"))
       which = 1;

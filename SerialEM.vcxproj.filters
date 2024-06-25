@@ -539,6 +539,9 @@
     <ClInclude Include="MultiGridTasks.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="MGSettingsManagerDlg.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="res\bitmap1.bmp">
@@ -890,6 +893,9 @@
       <Filter>HTML Help Topics</Filter>
     </None>
     <None Include="hlp\html\hidd_multi_grid.htm">
+      <Filter>HTML Help Topics</Filter>
+    </None>
+    <None Include="hlp\html\hidd_mulgrid_settings.htm">
       <Filter>HTML Help Topics</Filter>
     </None>
   </ItemGroup>
@@ -1315,6 +1321,9 @@
       <Filter>CSource Files</Filter>
     </ClCompile>
     <ClCompile Include="MultiGridTasks.cpp">
+      <Filter>CSource Files</Filter>
+    </ClCompile>
+    <ClCompile Include="MGSettingsManagerDlg.cpp">
       <Filter>CSource Files</Filter>
     </ClCompile>
   </ItemGroup>

@@ -26,6 +26,7 @@
 #include "NavHelper.h"
 #include "HoleFinderDlg.h"
 #include "FalconHelper.h"
+#include "MultiGridDlg.h"
 #include "ProcessImage.h"
 #include "XFolderDialog\XWinVer.h"
 
@@ -493,6 +494,8 @@ void CMainFrame::DoClose(bool afterScript)
   }
 
   mWinApp->SetAppExiting(true);
+  if (mWinApp->mNavHelper->mMultiGridDlg)
+    mWinApp->mNavHelper->mMultiGridDlg->CloseWindow();
   mWinApp->mCamera->CheckAndFreeK2References(true);
   if (!mWinApp->GetNanumFontPath().IsEmpty())
     RemoveFontResourceEx(mWinApp->GetNanumFontPath(), FR_PRIVATE, NULL);

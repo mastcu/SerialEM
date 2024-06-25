@@ -547,6 +547,7 @@ struct MultiGridParams {
   BOOL runFinalAcq;          // Flag to do final acquistion
   int finalStateNums[4];     // State numbers for final acquire
   CString finalStateNames[4]; // State names for final acquire
+  BOOL framesUnderSession;   // Make frame directories under session or grid directories
 };
 
 // Cooker parameters

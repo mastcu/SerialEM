@@ -23,6 +23,7 @@ protected:
   virtual void OnCancel();
   virtual void PostNcDestroy();
   virtual BOOL PreTranslateMessage(MSG* pMsg);
+  virtual void OnPaint();
 
 	DECLARE_MESSAGE_MAP()
 
@@ -33,6 +34,8 @@ private:
   int mNumInPanel[MAX_MULGRID_PANELS];
   CArray<JeolCartridgeData, JeolCartridgeData> *mCartInfo;
   BOOL mPanelStates[MAX_MULGRID_PANELS];
+  CFont mBiggerFont;
+  CFont mBigBoldFont;
   int mNumUsedSlots;       // Number of slots in table
   bool mNamesChanged;      // Flag that names have been changed by user
   int mSelectedGrid;       // Index of grid selected by radio push buttons
@@ -58,6 +61,8 @@ private:
   bool mEnableRunUndone;      // Flag that Run Undone can be enabled
   int mNumMMMcombos;          // Number of combo boxes being shown
   int mNumFinalCombos;
+  int mRightIsOpen;           // Flag that right side is open
+  bool mDropFrameOption;      // flag to drop the option to put frames under session
 
 public:
   CString m_strCurrentDir;
@@ -74,6 +79,7 @@ public:
   afx_msg void OnButSetCurrentDir();
   GetSetMember(int, NumUsedSlots);
   GetMember(IntVec, DlgIndToJCDindex);
+  GetMember(int, OnStageDlgIndex);
   void CloseWindow();
 
   afx_msg void OnEnChangeEditMgPrefix();
@@ -81,16 +87,19 @@ public:
   JeolCartridgeData FindCartDataForDlgIndex(int ind);
   void UpdateEnables();
   void CheckIfAnyUndoneToRun();
+  void ManageFrameDirOption();
   void UpdateSettings();
   void UpdateCurrentDir();
   void ManagePanels();
   void ParamsToDialog();
   void SetAllComboBoxesFromNameOrNum();
+  void SetFinalStateComboBoxes();
   void RepackStatesIfNeeded(int &numBoxes, int *stateNums, CString *stateNames);
   void DropComboBoxes(int numBoxes, UINT *comboIDs, UINT statID);
   void SetComboBoxFromNameOrNum(CComboBox &combo, int &num, CString &name, int addForNone);
   int FindUniqueStateFromName(CString &name);
   void DialogToParams();
+  void GetFinalStateFomCombos(int *stateNums, CString *stateNames, int skipInd);
   void SyncToMasterParams();
   void GetStateFromComboBox(CComboBox &combo, int &num, CString &name, int addForNone);
   int GetListOfGridsToRun(ShortVec &jcdInds, ShortVec &slotNums);
@@ -144,8 +153,10 @@ public:
   afx_msg void OnSelendokComboFinalState2();
   afx_msg void OnSelendokComboFinalState3();
   afx_msg void OnSelendokComboFinalState4();
+  void ProcessFinalStateCombo(CComboBox &combo, int index);
   void ProcessMultiStateCombo(CComboBox &combo, int *stateNums, CString *stateNames,
-    int index);
+    int index, int gridID);
+  void HandlePerGridStateChange();
   CComboBox m_comboFinalState3;
   CComboBox m_comboFinalState2;
   CComboBox m_comboFinalState1;
@@ -187,4 +198,12 @@ public:
   afx_msg void OnButOpenNav();
   CString NavFileIfExistsAndNotLoaded();
   afx_msg void OnButSetGridType();
+  CButton m_butCloseRight;
+  afx_msg void OnButCloseRight();
+  afx_msg void OnCheckSetFinalByGrid();
+  BOOL m_bSetFinalByGrid;
+  afx_msg void OnButRevertToGlobal();
+  BOOL m_bFramesUnderSession;
+  afx_msg void OnCheckFramesUnderSession();
+  afx_msg void OnCheckMgUseSubdirs();
 };

@@ -1,5 +1,11 @@
-// NavAcquireDlg.cpp : implementation file
+// NavAcquireDlg.cpp : Sets parameters for Navigator Acquire at Items
 //
+// Copyright (C) 2024 by the Regents of the University of
+// Colorado.  See Copyright.txt for full notice of copyright and limitations.
+//
+// Author: David Mastronarde
+//
+//////////////////////////////////////////////////////////////////////
 
 #include "stdafx.h"
 #include "SerialEM.h"
@@ -453,6 +459,8 @@ BOOL CNavAcquireDlg::OnInitDialog()
     }
     mAllCurParam[which] = *mMasterParam;
   }
+  if (mOpenedFromMultiGrid && !m_iCurParamSet)
+    AcquireTypeToOptions(ACQUIRE_TAKE_MAP);
 
   LoadParamsToDialog();
   ManageOutputFile();
@@ -612,7 +620,14 @@ void CNavAcquireDlg::OnReadParams()
   CString cPathname, filename, direc = mWinApp->mDocWnd->GetCurrentSettingsDir();
   if (mWinApp->mDocWnd->GetTextFileName(true, true, cPathname, &filename, &direc))
     return;
-  mWinApp->mParamIO->ReadAcqParamsFromFile(mParam, mActions, mCurrentOrder, cPathname);
+  if (mWinApp->mParamIO->ReadAcqParamsFromFile(mParam, mActions, mCurrentOrder, cPathname,
+    direc)) {
+    filename = "WARNING: Error reading Navigator Acquire parameters file";
+    if (!direc.IsEmpty())
+      filename += "\n" + direc;
+    AfxMessageBox(filename);
+  }
+
   if (!mAnyTSpoints && mAnyAcquirePoints)
     AcquireTypeToOptions(mParam->nonTSacquireType);
   if (mAnyTSpoints && !mAnyAcquirePoints)
@@ -966,14 +981,17 @@ void CNavAcquireDlg::ManageEnables(bool rebuilding)
     mActions[NAACT_ALIGN_TEMPLATE].everyNitems == 1;
   bool skipMoveOK = mWinApp->mNavigator->OKtoSkipStageMove(mActions, acquireType) != 0;
   bool useMapEnabled = acquireType == ACQUIRE_MULTISHOT && !msParams->useCustomHoles;
+  bool mulGridForMapping = mOpenedFromMultiGrid && !m_iCurParamSet;
+  bool mulGridForFinal = mOpenedFromMultiGrid && m_iCurParamSet;
   m_butSetupMultishot.EnableWindow(acquireType == ACQUIRE_MULTISHOT);
   m_editSubsetStart.EnableWindow(m_bDoSubset && !mOpenedFromMultiGrid);
   m_editSubsetEnd.EnableWindow(m_bDoSubset && !mOpenedFromMultiGrid);
-  m_butAcquireTS.EnableWindow(mAnyTSpoints);
-  m_butAcquireMap.EnableWindow(mAnyAcquirePoints);
-  m_butSaveAsMap.EnableWindow(mAnyAcquirePoints && !m_iAcquireChoice);
-  m_butDoMultishot.EnableWindow(mAnyAcquirePoints);
-  m_butRunMacro.EnableWindow(mAnyAcquirePoints);
+  m_butAcquireTS.EnableWindow(mAnyTSpoints && !mulGridForMapping);
+  m_butAcquireMap.EnableWindow(mAnyAcquirePoints && !mulGridForMapping);
+  m_butSaveAsMap.EnableWindow(mAnyAcquirePoints && !m_iAcquireChoice && 
+    !mulGridForMapping);
+  m_butDoMultishot.EnableWindow(mAnyAcquirePoints && !mulGridForMapping);
+  m_butRunMacro.EnableWindow(mAnyAcquirePoints && !mulGridForMapping);
   m_butSkipInitialMove.EnableWindow(skipMoveOK);
   RebuildIfEnabled(skipMoveOK, mSkipMoveEnabled, doBuild);
 
@@ -1003,10 +1021,12 @@ void CNavAcquireDlg::ManageEnables(bool rebuilding)
   m_butUseMapHoles.EnableWindow(useMapEnabled);
   RebuildIfEnabled(useMapEnabled, mUseMapHolesEnabled, doBuild);
 
-  EnableDlgItem(IDC_STAT_WHICH_CONSET, consetOK && !mOpenedFromMultiGrid);
-  EnableDlgItem(IDC_RMAP_WITH_REC, consetOK && !mOpenedFromMultiGrid);
-  EnableDlgItem(IDC_RMAP_WITH_VIEW, consetOK && !mOpenedFromMultiGrid);
-  EnableDlgItem(IDC_RMAP_WITH_SEARCH, consetOK && !mOpenedFromMultiGrid);
+  EnableDlgItem(IDC_STAT_WHICH_CONSET, (consetOK && !mulGridForMapping) || 
+    mulGridForFinal);
+  EnableDlgItem(IDC_RMAP_WITH_REC, (consetOK && !mulGridForMapping) || mulGridForFinal);
+  EnableDlgItem(IDC_RMAP_WITH_VIEW, (consetOK && !mulGridForMapping) || mulGridForFinal);
+  EnableDlgItem(IDC_RMAP_WITH_SEARCH, (consetOK && !mulGridForMapping) || 
+    mulGridForFinal);
   RebuildIfEnabled(consetOK, mSetTypeEnabled, doBuild);
 
   m_butRealignScaledMap.EnableWindow(DOING_ACTION(NAACT_REALIGN_ITEM));

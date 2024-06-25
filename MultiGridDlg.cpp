@@ -1,4 +1,9 @@
-// CMultiGridDlg.cpp : implementation file
+// CMultiGridDlg.cpp : Dialog for controlling multiple grid operations
+//
+// Copyright (C) 2024 by the Regents of the University of
+// Colorado.  See Copyright.txt for full notice of copyright and limitations.
+//
+// Author: David Mastronarde
 //
 
 #include "stdafx.h"
@@ -7,9 +12,11 @@
 #include "EMscope.h"
 #include "MultiGridTasks.h"
 #include "MultiGridDlg.h"
+#include "MGSettingsManagerDlg.h"
 #include "NavigatorDlg.h"
 #include "MontageSetupDlg.h"
 #include "StateDlg.h"
+#include "CameraController.h"
 #include "NavHelper.h"
 #include "Shared\b3dutil.h"
 #include "Utilities\KGetOne.h"
@@ -37,12 +44,12 @@ static int sIdTable[] = {IDC_STAT_RUN, IDC_STAT_NAME,
   IDC_STAT_MULGRID_STATUS4, IDC_STAT_MULGRID_STATUS9, IDC_STAT_MULGRID_STATUS13,
   IDC_STAT_MULGRID_STATUS5,
   IDC_BUT_REALIGN_TO_GRID_MAP, IDC_BUT_OPEN_NAV, IDC_BUT_SET_GRID_TYPE, PANEL_END,
-  IDC_BUT_MG_SETUP, IDC_STAT_MG_GRID_SETUP, IDC_TSS_LINE3, IDC_TSS_LINE4, PANEL_END,
+  IDC_BUT_MG_SETUP, IDC_STAT_MG_GRID_SETUP, IDC_TSS_LINE4, PANEL_END,
   IDC_BUT_MG_GET_NAMES, IDC_BUT_MG_INVENTORY, IDC_STAT_MG_PREFIX,
   IDC_EDIT_MG_PREFIX, IDC_CHECK_MG_APPEND_NAME,
   IDC_BUT_MG_RESET_NAMES, IDC_BUT_MG_CLEAR, IDC_STAT_MG_ROOTNAME,
   IDC_STAT_MG_CURRENT_DIR, IDC_BUT_SET_CURRENT_DIR, IDC_CHECK_MG_USE_SUBDIRS, PANEL_END,
-  IDC_BUT_MG_LOW_MAG_MAPS, IDC_CHECK_RUN_LMMS, IDC_TSS_LINE9, IDC_TSS_LINE10, PANEL_END,
+  IDC_BUT_MG_LOW_MAG_MAPS, IDC_CHECK_RUN_LMMS, IDC_TSS_LINE10, PANEL_END,
   IDC_RLMM_SEARCH, IDC_STAT_USE1, IDC_RLMM_VIEW, IDC_RLMM_CUR_OR_STATE,
   IDC_CHECK_SET_LMM_STATE, IDC_COMBO_LMM_STATE, IDC_CHECK_REMOVE_OBJ,
   IDC_CHECK_SET_CONDENSER, IDC_EDIT_CONDENSER, IDC_STAT_MG_MICRON, IDC_RFULL_GRID_MONT,
@@ -50,16 +57,18 @@ static int sIdTable[] = {IDC_STAT_RUN, IDC_STAT_NAME,
   IDC_EDIT_MONT_NUM_YPCS, IDC_STAT_MONT_PCS, IDC_CHECK_USE_OVERLAP, IDC_EDIT_OVERLAP,
   IDC_STAT_PERCENT, IDC_BUT_SETUP_LMM_MONT, IDC_CHECK_AUTOCONTOUR,
   IDC_BUT_SETUP_AUTOCONT2, PANEL_END,
-  IDC_BUT_MG_MEDIUM_MAG_MAPS, IDC_CHECK_TAKE_MMMS, IDC_TSS_LINE5, IDC_TSS_LINE6, PANEL_END,
+  IDC_BUT_MG_MEDIUM_MAG_MAPS, IDC_CHECK_TAKE_MMMS, IDC_TSS_LINE6, PANEL_END,
   IDC_BUT_SETUP_POLYMONT, IDC_RMMM_SEARCH, IDC_STAT_USE2, IDC_RMMM_VIEW,
   IDC_RMMM_CUR_OR_STATE, IDC_COMBO_MMM_STATE1, IDC_COMBO_MMM_STATE2, IDC_COMBO_MMM_STATE3,
   IDC_STAT_SET_MMM_STATES, IDC_STAT_MMM_ACQ_TYPE, IDC_RSINGLE_IMAGE, IDC_RPOLYGON_MONT,
   IDC_BUT_SETUP_MAPPING,  IDC_COMBO_MMM_STATE4, IDC_RFIXED_MONT, PANEL_END,
-  IDC_BUT_MG_FINAL_ACQ, IDC_CHECK_RUN_FINAL_ACQ, IDC_TSS_LINE7, IDC_TSS_LINE8, PANEL_END,
+  IDC_BUT_MG_FINAL_ACQ, IDC_CHECK_RUN_FINAL_ACQ, IDC_TSS_LINE8, PANEL_END,
   IDC_COMBO_FINAL_STATE3, IDC_COMBO_FINAL_STATE2, IDC_COMBO_FINAL_STATE1,
-  IDC_COMBO_FINAL_STATE4, IDC_STAT_SET_FINAL_STATES, IDC_BUT_SETUP_FINAL_ACQ,  PANEL_END,
+  IDC_COMBO_FINAL_STATE4, IDC_STAT_SET_FINAL_STATES, IDC_BUT_SETUP_FINAL_ACQ, 
+  IDC_CHECK_SET_FINAL_BY_GRID, IDC_BUT_REVERT_TO_GLOBAL, IDC_CHECK_FRAMES_UNDER_SESSION,
+  PANEL_END,
   IDC_BUT_START_RUN, IDC_TSS_LINE2, IDCANCEL, IDOK, IDC_BUTHELP, IDC_STAT_SPACER,
-  IDC_BUT_RUN_UNDONE, PANEL_END, TABLE_END};
+  IDC_BUT_RUN_UNDONE, IDC_BUT_CLOSE_RIGHT, PANEL_END, TABLE_END};
 
 static int sTopTable[sizeof(sIdTable) / sizeof(int)];
 static int sLeftTable[sizeof(sIdTable) / sizeof(int)];
@@ -70,7 +79,7 @@ static int sHeightTable[sizeof(sIdTable) / sizeof(int)];
 
 
 CMultiGridDlg::CMultiGridDlg(CWnd* pParent /*=NULL*/)
-	: CBaseDlg(IDD_MULTI_GRID, pParent)
+  : CBaseDlg(IDD_MULTI_GRID, pParent)
   , m_strCurrentDir(_T(""))
   , m_strRootname(_T(""))
   , m_bAppendNames(FALSE)
@@ -90,6 +99,7 @@ CMultiGridDlg::CMultiGridDlg(CWnd* pParent /*=NULL*/)
   , m_bTakeLMMs(FALSE)
   , m_bTakeMMMs(FALSE)
   , m_bRunFinalAcq(FALSE)
+  , m_bSetFinalByGrid(FALSE)
 {
   mNonModal = true;
   for (int ind = 0; ind < MAX_MULGRID_PANELS; ind++)
@@ -105,6 +115,7 @@ CMultiGridDlg::CMultiGridDlg(CWnd* pParent /*=NULL*/)
   mMMMmontWasSetup = 0;
   mLMneedsLowDose = 0;
   mMMMneedsLowDose = 0;
+  mRightIsOpen = -1;
 }
 
 CMultiGridDlg::~CMultiGridDlg()
@@ -124,15 +135,14 @@ void CMultiGridDlg::DoDataExchange(CDataExchange* pDX)
   DDX_Control(pDX, IDC_COMBO_LMM_STATE, m_comboLMMstate);
   DDX_Check(pDX, IDC_CHECK_SET_CONDENSER, m_bSetCondenser);
   DDX_Check(pDX, IDC_CHECK_REMOVE_OBJ, m_bRemoveObjective);
-  DDX_Control(pDX, IDC_EDIT_CONDENSER, m_editCondenser);
-  DDX_Text(pDX, IDC_EDIT_CONDENSER, m_iCondenserSize);
-  DDV_MinMaxInt(pDX, m_iCondenserSize, 1, 250);
+  DDX_MM_INT(pDX, IDC_EDIT_CONDENSER, m_iCondenserSize, 1, 250,
+    "condenser size to switch to");
   DDX_Check(pDX, IDC_CHECK_USE_OVERLAP, m_bUseMontOverlap);
-  DDX_Text(pDX, IDC_EDIT_OVERLAP, m_iMontOverlap);
-  DDV_MinMaxInt(pDX, m_iMontOverlap, 3, 30);
-  DDX_Text(pDX, IDC_EDIT_MONT_XPCS, m_iXpieces);
-  DDV_MinMaxInt(pDX, m_iXpieces, 1, 30);
-  DDX_Text(pDX, IDC_EDIT_MONT_NUM_YPCS, m_iYpieces);
+  DDX_MM_INT(pDX, IDC_EDIT_OVERLAP, m_iMontOverlap, 3, 30, "montage overlap");
+  DDX_MM_INT(pDX, IDC_EDIT_MONT_XPCS, m_iXpieces, 1, 30,
+    "number of montages pieces in X");
+  DDX_MM_INT(pDX, IDC_EDIT_MONT_NUM_YPCS, m_iYpieces, 1, 30,
+    "number of montages pieces in Y");
   DDX_Radio(pDX, IDC_RFULL_GRID_MONT, m_iLMMmontType);
   DDX_Control(pDX, IDC_COMBO_MMM_STATE1, m_comboMMMstate1);
   DDX_Control(pDX, IDC_COMBO_MMM_STATE2, m_comboMMMstate2);
@@ -155,6 +165,9 @@ void CMultiGridDlg::DoDataExchange(CDataExchange* pDX)
   DDX_Control(pDX, IDC_COMBO_MMM_STATE4, m_comboMMMstate4);
   DDX_Control(pDX, IDC_COMBO_FINAL_STATE4, m_comboFinalState4);
   DDX_Control(pDX, IDC_STAT_MG_CURRENT_DIR, m_statCurrentDir);
+  DDX_Control(pDX, IDC_BUT_CLOSE_RIGHT, m_butCloseRight);
+  DDX_Check(pDX, IDC_CHECK_SET_FINAL_BY_GRID, m_bSetFinalByGrid);
+  DDX_Check(pDX, IDC_CHECK_FRAMES_UNDER_SESSION, m_bFramesUnderSession);
 }
 
 
@@ -168,7 +181,7 @@ BEGIN_MESSAGE_MAP(CMultiGridDlg, CBaseDlg)
   ON_EN_CHANGE(IDC_EDIT_MG_PREFIX, OnEnChangeEditMgPrefix)
   ON_BN_CLICKED(IDC_BUT_MG_SETUP, OnButMgSetup)
   ON_CONTROL_RANGE(EN_KILLFOCUS, IDC_EDIT_MULGRID_NAME1, IDC_EDIT_MULGRID_NAME13,
-    &OnEnKillfocusEditName)
+    OnEnKillfocusEditName)
   ON_COMMAND_RANGE(IDC_RADIO_MULGRID_SEL1, IDC_RADIO_MULGRID_SEL13, OnRadioMulgridSelect)
   ON_BN_CLICKED(IDC_BUT_LOAD_GRID, OnButLoadGrid)
   ON_BN_CLICKED(IDC_BUT_REALIGN_TO_GRID_MAP, OnButRealignToGridMap)
@@ -216,6 +229,12 @@ BEGIN_MESSAGE_MAP(CMultiGridDlg, CBaseDlg)
   ON_BN_CLICKED(IDC_BUT_RUN_UNDONE, OnButRunUndone)
   ON_BN_CLICKED(IDC_BUT_OPEN_NAV, OnButOpenNav)
   ON_BN_CLICKED(IDC_BUT_SET_GRID_TYPE, OnButSetGridType)
+  ON_WM_PAINT()
+  ON_BN_CLICKED(IDC_BUT_CLOSE_RIGHT, OnButCloseRight)
+  ON_BN_CLICKED(IDC_CHECK_SET_FINAL_BY_GRID, OnCheckSetFinalByGrid)
+  ON_BN_CLICKED(IDC_BUT_REVERT_TO_GLOBAL, OnButRevertToGlobal)
+  ON_BN_CLICKED(IDC_CHECK_FRAMES_UNDER_SESSION, OnCheckFramesUnderSession)
+  ON_BN_CLICKED(IDC_CHECK_MG_USE_SUBDIRS, OnCheckMgUseSubdirs)
 END_MESSAGE_MAP()
 
 
@@ -227,12 +246,28 @@ BOOL CMultiGridDlg::OnInitDialog()
 {
   CBaseDlg::OnInitDialog();
   CString names;
+  CRect rect;
+  int *activeList = mWinApp->GetActiveCameraList();
+  int cam;
+  bool noSubdirs, movable;
+  CameraParameters *camParams = mWinApp->GetCamParams();
   mMGTasks = mWinApp->mMultiGridTasks;
   mMasterParams = mMGTasks->GetMultiGridParams();
   mParams = *mMasterParams;
   mScope = mWinApp->mScope;
   mCartInfo = mWinApp->mScope->GetJeolLoaderInfo();
   mStateArray = mWinApp->mNavHelper->GetStateArray();
+  m_butTakeLMMs.GetWindowRect(&rect);
+  mBiggerFont.CreateFont(B3DNINT(0.75 * rect.Height()), 0, 0, 0, FW_MEDIUM,
+    0, 0, 0, DEFAULT_CHARSET, OUT_CHARACTER_PRECIS,
+    CLIP_CHARACTER_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH |
+    FF_DONTCARE, mWinApp->mScopeStatus.GetBigFontName());
+  mBigBoldFont.CreateFont(B3DNINT(0.75 * rect.Height()), 0, 0, 0, FW_BOLD,
+    0, 0, 0, DEFAULT_CHARSET, OUT_CHARACTER_PRECIS,
+    CLIP_CHARACTER_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH |
+    FF_DONTCARE, mWinApp->mScopeStatus.GetBigFontName());
+  m_butCloseRight.SetFont(mWinApp->GetLittleFont(&m_butCloseRight));
+  mSecondColPanel = 3;
   SetupPanelTables(sIdTable, sLeftTable, sTopTable, mNumInPanel, mPanelStart,
     sHeightTable);
   mNumUsedSlots = 0;
@@ -244,20 +279,33 @@ BOOL CMultiGridDlg::OnInitDialog()
     &mParams.finalStateNames[0]);
   LoadAllComboBoxes();
   m_strPrefix = mMGTasks->GetPrefix();
+
+  // Determine if any frame-saving camera has movable frame directory, otherwise drop
+  mDropFrameOption = true;
+  for (cam = 0; cam < mWinApp->GetNumActiveCameras(); cam++) {
+    if (mWinApp->mCamera->IsDirectDetector(&camParams[activeList[cam]])) {
+      mWinApp->mCamera->GetCameraFrameFolder(&camParams[activeList[cam]], noSubdirs,
+        movable);
+      if (movable) {
+        mDropFrameOption = false;
+        break;
+      }
+    }
+  }
   ParamsToDialog();
   UpdateData(false);
+  mPanelStates[4] = mParams.acquireLMMs;
+  mPanelStates[6] = mParams.acquireMMMs;
+  mPanelStates[8] = mParams.runFinalAcq;
   SetDlgItemText(IDC_BUT_MG_SETUP, mPanelStates[2] ? "-" : "+");
   SetDlgItemText(IDC_BUT_MG_LOW_MAG_MAPS, mPanelStates[4] ? "-" : "+");
   SetDlgItemText(IDC_BUT_MG_MEDIUM_MAG_MAPS, mPanelStates[6] ? "-" : "+");
   SetDlgItemText(IDC_BUT_MG_FINAL_ACQ, mPanelStates[8] ? "-" : "+");
   mBoldFont = mWinApp->GetBoldFont(&m_statMgSetup);
-  m_butTakeLMMs.SetFont(mBoldFont);
-  m_butTakeMMMs.SetFont(mBoldFont);
-  m_statMgSetup.SetFont(mBoldFont);
-  m_butRunFinalAcq.SetFont(mBoldFont);
-  mPanelStates[4] = mParams.acquireLMMs;
-  mPanelStates[6] = mParams.acquireMMMs;
-  mPanelStates[8] = mParams.runFinalAcq;
+  m_statMgSetup.SetFont(&mBiggerFont);
+  m_butTakeLMMs.SetFont(mParams.acquireLMMs ? &mBigBoldFont : &mBiggerFont);
+  m_butTakeMMMs.SetFont(mParams.acquireMMMs ? &mBigBoldFont : &mBiggerFont);
+  m_butRunFinalAcq.SetFont(mParams.runFinalAcq ? &mBigBoldFont : &mBiggerFont);
   ManagePanels();
   EnableDlgItem(IDC_BUT_LOAD_GRID, false);
   EnableDlgItem(IDC_BUT_OPEN_NAV, false);
@@ -273,9 +321,12 @@ BOOL CMultiGridDlg::OnInitDialog()
 
 void CMultiGridDlg::OnOK()
 {
+  CString errStr;
   SyncToMasterParams();
   if (!mMGTasks->GetNamesLocked())
     mMGTasks->SetPrefix(m_strPrefix);
+  if (mNumUsedSlots)
+    mMGTasks->SaveSessionFile(errStr);
   OnCancel();
 }
 
@@ -283,9 +334,6 @@ void CMultiGridDlg::OnOK()
 // right here
 void CMultiGridDlg::OnCancel()
 {
-  CString errStr;
-  if (mNumUsedSlots)
-    mMGTasks->SaveSessionFile(errStr);
   mWinApp->mNavHelper->GetMultiGridPlacement();
   mWinApp->mNavHelper->mMultiGridDlg = NULL;
   if (mWinApp->mNavHelper->mStateDlg)
@@ -299,9 +347,10 @@ void CMultiGridDlg::PostNcDestroy()
   CDialog::PostNcDestroy();
 }
 
+// This is called on external close like exiting, so make sure settings saved
 void CMultiGridDlg::CloseWindow()
 {
-  OnCancel();
+  OnOK();
 }
 
 BOOL CMultiGridDlg::PreTranslateMessage(MSG* pMsg)
@@ -311,7 +360,15 @@ BOOL CMultiGridDlg::PreTranslateMessage(MSG* pMsg)
   return CDialog::PreTranslateMessage(pMsg);
 }
 
-// Tried to have an OnPaint to draw outline of selection button for grid on stage - failed
+void CMultiGridDlg::OnPaint()
+{
+  if (mOnStageDlgIndex >= 0) {
+    CWnd *wnd = GetDlgItem(IDC_EDIT_MULGRID_NAME1 + mOnStageDlgIndex);
+    CPaintDC dc(this);
+    DrawButtonOutline(dc, wnd, 2, RGB(0, 255, 0), -2);
+  }
+  CBaseDlg::OnPaint();
+}
 
 /*
  * MESSAGES AND ROUTINES FOR GRID SETUP
@@ -503,6 +560,10 @@ void CMultiGridDlg::ReloadTable(int resetOrClear, int checkRuns)
       SetStatusText(ind);
     }
   }
+
+  // open the right side the first time ames are gotten
+  if (mRightIsOpen < 0 && mNumUsedSlots > 0)
+    mRightIsOpen = 1;
   ManagePanels();
   mNamesChanged = false;
 }
@@ -531,6 +592,14 @@ void CMultiGridDlg::OnButMgClearNames()
     "away your name changes\n\nAre you sure you want to do this?", MB_QUESTION) == IDYES))
     ReloadTable(2, 0);
   mWinApp->RestoreViewFocus();
+}
+
+// Option to use subdirs: change name of frame option
+void CMultiGridDlg::OnCheckMgUseSubdirs()
+{
+  mWinApp->RestoreViewFocus();
+  UPDATE_DATA_TRUE;
+  ManageFrameDirOption();
 }
 
 // Button to set the working directory
@@ -586,19 +655,20 @@ JeolCartridgeData CMultiGridDlg::FindCartDataForDlgIndex(int ind)
 int CMultiGridDlg::GetListOfGridsToRun(ShortVec &jcdInds, ShortVec &slotNums)
 {
   JeolCartridgeData jcd;
-  int ind, loop;
+  int ind, loop, jcdInd;
   jcdInds.clear();
   slotNums.clear();
   for (loop = 0; loop < mNumUsedSlots; loop++) {
     ind = FEIscope ? mNumUsedSlots - (loop + 1) : loop;
     CButton *button = (CButton *)GetDlgItem(IDC_CHECK_MULGRID_RUN1 + ind);
     if (button && button->GetCheck() && ind < (int)mDlgIndToJCDindex.size()) {
-      jcdInds.push_back(mDlgIndToJCDindex[ind]);
+      jcdInd = mDlgIndToJCDindex[ind];
+      jcdInds.push_back(jcdInd);
       if (FEIscope) {
-        jcd = mCartInfo->GetAt(mDlgIndToJCDindex[ind]);
+        jcd = mCartInfo->GetAt(jcdInd);
         slotNums.push_back(jcd.slot);
       } else {
-        slotNums.push_back(ind + 1);
+        slotNums.push_back(jcdInd + 1);
       }
     }
   }
@@ -623,7 +693,7 @@ void CMultiGridDlg::SetRootname()
     gridLen = prefLen - (4 + pound);
   }
 
-  // Allow for Car/car and Grid/grid with ot without a - or _
+  // Allow for Car/car and Grid/grid with or without a - or _
   if (prefLen < 3 || !(m_strPrefix.Find("Car") == carLen ||
     m_strPrefix.Find("car") == carLen || m_strPrefix.Find("Grid") == gridLen ||
     m_strPrefix.Find("grid") == gridLen)) {
@@ -649,16 +719,21 @@ void CMultiGridDlg::SetStatusText(int jcdInd)
   JeolCartridgeData jcd = mCartInfo->GetAt(jcdInd);
   for (int dlin = 0; dlin < mNumUsedSlots; dlin++) {
     if (mDlgIndToJCDindex[dlin] == jcdInd) {
+      str += jcd.separateState ? 'S' : (const char)0x97;
+      str += (jcd.multiShotParamIndex >= 0 || jcd.holeFinderParamIndex >= 0 ||
+        jcd.autoContParamIndex >= 0 || jcd.generalParamIndex >= 0 || 
+        jcd.finalDataParamIndex >= 0) ? 'P' : (const char)0x97;
+      str += ":";
       if (jcd.status & MGSTAT_FLAG_TOO_DARK)
-        str = (jcd.status & MGSTAT_FLAG_LM_MAPPED) ? "G-D" : "DA";
+        str += (jcd.status & MGSTAT_FLAG_LM_MAPPED) ? "G-D" : "DA";
       else if (jcd.status & MGSTAT_FLAG_ACQ_DONE)
-        str = "AQ";
+        str += "AQ";
       else if (jcd.status & MGSTAT_FLAG_MMM_DONE)
-        str = (jcd.status & MGSTAT_FLAG_FAILED) ? "M-F" : "MM";
+        str += (jcd.status & MGSTAT_FLAG_FAILED) ? "M-F" : "MM";
       else if (jcd.status & MGSTAT_FLAG_LM_MAPPED)
-        str = (jcd.status & MGSTAT_FLAG_FAILED) ? "G-F" : "GR";
+        str += (jcd.status & MGSTAT_FLAG_FAILED) ? "G-F" : "GR";
       else if (jcd.status & MGSTAT_FLAG_FAILED)
-        str = "FL";
+        str += "FL";
 
       SetDlgItemText(IDC_STAT_MULGRID_STATUS1 + dlin, str);
       return;
@@ -703,6 +778,7 @@ void CMultiGridDlg::NewGridOnStage(int jcdInd)
       break;
     }
   }
+  Invalidate();
 }
 
 /*
@@ -729,6 +805,8 @@ void CMultiGridDlg::UpdateEnables()
   BOOL justTasks = mWinApp->DoingTasks();
   bool suspended = mMGTasks->GetSuspendedMulGrid();
   BOOL tasks = justTasks || suspended;
+  bool acqStatesEnabled = !tasks && (mSelectedGrid >= 0 || !m_bSetFinalByGrid) && 
+    mNumUsedSlots > 0;
   CString filename;
   EnableDlgItem(IDC_BUT_MG_GET_NAMES, (FEIscope || mCartInfo->GetSize() > 0) && !tasks &&
     !locked);
@@ -770,6 +848,13 @@ void CMultiGridDlg::UpdateEnables()
     EnableDlgItem(IDC_RADIO_MULGRID_SEL1 + ind, !tasks);
     EnableDlgItem(IDC_CHECK_MULGRID_RUN1 + ind, !tasks);
   }
+  EnableDlgItem(IDC_COMBO_FINAL_STATE1, acqStatesEnabled);
+  EnableDlgItem(IDC_COMBO_FINAL_STATE2, acqStatesEnabled);
+  EnableDlgItem(IDC_COMBO_FINAL_STATE3, acqStatesEnabled);
+  EnableDlgItem(IDC_COMBO_FINAL_STATE4, acqStatesEnabled);
+  EnableDlgItem(IDC_CHECK_SET_FINAL_BY_GRID, !tasks && mNumUsedSlots > 0);
+  EnableDlgItem(IDC_BUT_REVERT_TO_GLOBAL, 
+    !tasks && mSelectedGrid >= 0 && m_bSetFinalByGrid && mNumUsedSlots > 0);
 }
 
 /*
@@ -798,6 +883,14 @@ void CMultiGridDlg::CheckIfAnyUndoneToRun()
   }
 }
 
+// Get the name of the frame location option set right
+void CMultiGridDlg::ManageFrameDirOption()
+{
+  SetDlgItemText(IDC_CHECK_FRAMES_UNDER_SESSION, m_bUseSubdirs ?
+    "Make frame directories under grid directories" :
+    "Make frame directories under session directory");
+}
+
 // Copy in master params and move them to dialog
 void CMultiGridDlg::UpdateSettings()
 {
@@ -817,12 +910,13 @@ void CMultiGridDlg::UpdateCurrentDir()
   CString file = mMGTasks->GetNamesLocked() ?
     mMGTasks->GetWorkingDir() : mWinApp->mDocWnd->GetInitialDir();
   int maxWidth;
+  CString current = mMGTasks->GetNamesLocked() ? "Session" : "Current";
   m_statCurrentDir.GetClientRect(rect);
   maxWidth = 18 * rect.Width() / 20;
-  m_strCurrentDir = "Current dir: " + file;
+  m_strCurrentDir = current + " dir: " + file;
   while ((pDC->GetTextExtent(m_strCurrentDir)).cx > maxWidth && file.GetLength() > 5) {
     file = file.Mid(1);
-    m_strCurrentDir = "Current dir: ..." + file;
+    m_strCurrentDir = current + " dir: ..." + file;
   }
   UpdateData(false);
 }
@@ -832,10 +926,18 @@ void CMultiGridDlg::UpdateCurrentDir()
  */
 void CMultiGridDlg::ManagePanels()
 {
+  BOOL states[MAX_MULGRID_PANELS];
+  int ind;
   UINT MMMcomboIDs[4] = {IDC_COMBO_MMM_STATE1, IDC_COMBO_MMM_STATE2, IDC_COMBO_MMM_STATE3,
     IDC_COMBO_MMM_STATE4};
   UINT finalComboIDs[4] = {IDC_COMBO_FINAL_STATE1, IDC_COMBO_FINAL_STATE2,
     IDC_COMBO_FINAL_STATE3, IDC_COMBO_FINAL_STATE4};
+  for (ind = 0; ind < MAX_MULGRID_PANELS; ind++)
+    states[ind] = mPanelStates[ind];
+  if (mRightIsOpen <= 0)
+    for (ind = 3; ind < 9; ind++)
+      states[ind] = false;
+  SetDlgItemText(IDC_BUT_CLOSE_RIGHT, mRightIsOpen ? "Close Right" : "Open Right");
   mIDsToDrop.clear();
   for (int ind = mNumUsedSlots; ind < MAX_DLG_SLOTS; ind++) {
     mIDsToDrop.push_back(IDC_CHECK_MULGRID_RUN1 + ind);
@@ -845,7 +947,9 @@ void CMultiGridDlg::ManagePanels()
   }
   DropComboBoxes(mNumMMMcombos, &MMMcomboIDs[0], IDC_STAT_SET_MMM_STATES);
   DropComboBoxes(mNumFinalCombos, &finalComboIDs[0], IDC_STAT_SET_FINAL_STATES);
-  AdjustPanels(mPanelStates, sIdTable, sLeftTable, sTopTable, mNumInPanel, mPanelStart, 0,
+  if (mDropFrameOption)
+    mIDsToDrop.push_back(IDC_CHECK_FRAMES_UNDER_SESSION);
+  AdjustPanels(states, sIdTable, sLeftTable, sTopTable, mNumInPanel, mPanelStart, 0,
     sHeightTable);
 }
 
@@ -854,8 +958,9 @@ void CMultiGridDlg::ManagePanels()
  */
 void CMultiGridDlg::ParamsToDialog()
 {
-  m_bAppendNames = mParams.appendNames;
-  m_bUseSubdirs = mParams.useSubdirectory;
+  BOOL locked = mMGTasks->GetNamesLocked();
+  m_bAppendNames = locked ? mMGTasks->GetAppendNames() : mParams.appendNames;
+  m_bUseSubdirs = locked ? mMGTasks->GetUseSubdirs() : mParams.useSubdirectory;
   m_bSetLMMstate = mParams.setLMMstate;
   m_iLMMacquireType = mParams.LMMstateType;
   m_bRemoveObjective = mParams.removeObjectiveAp;
@@ -871,7 +976,10 @@ void CMultiGridDlg::ParamsToDialog()
   m_bTakeLMMs = mParams.acquireLMMs;
   m_bTakeMMMs = mParams.acquireMMMs;
   m_bRunFinalAcq = mParams.runFinalAcq;
+  m_iSingleVsPolyMont = mParams.MMMimageType;
+  m_bFramesUnderSession = mParams.framesUnderSession;
   SetAllComboBoxesFromNameOrNum();
+  ManageFrameDirOption();
   UpdateData(false);
 }
 
@@ -881,8 +989,10 @@ void CMultiGridDlg::ParamsToDialog()
 void CMultiGridDlg::DialogToParams()
 {
   UPDATE_DATA_TRUE;
-  mParams.appendNames = m_bAppendNames;
-  mParams.useSubdirectory = m_bUseSubdirs;
+  if (!mMGTasks->GetNamesLocked()) {
+    mParams.appendNames = m_bAppendNames;
+    mParams.useSubdirectory = m_bUseSubdirs;
+  }
   mParams.setLMMstate = m_bSetLMMstate;
   mParams.LMMstateType = m_iLMMacquireType;
   GetStateFromComboBox(m_comboLMMstate, mParams.LMMstateNum, mParams.LMMstateName, 0);
@@ -899,20 +1009,35 @@ void CMultiGridDlg::DialogToParams()
   mParams.acquireLMMs = m_bTakeLMMs;
   mParams.acquireMMMs = m_bTakeMMMs;
   mParams.runFinalAcq = m_bRunFinalAcq;
+  mParams.MMMimageType = m_iSingleVsPolyMont;
+  mParams.framesUnderSession = m_bFramesUnderSession;
   GetStateFromComboBox(m_comboMMMstate1, mParams.MMMstateNums[0],
     mParams.MMMstateNames[0], 1);
   GetStateFromComboBox(m_comboMMMstate2, mParams.MMMstateNums[1],
     mParams.MMMstateNames[1], 1);
   GetStateFromComboBox(m_comboMMMstate3, mParams.MMMstateNums[2],
     mParams.MMMstateNames[2], 1);
-  mParams.MMMimageType = m_iSingleVsPolyMont;
-  GetStateFromComboBox(m_comboFinalState1, mParams.finalStateNums[0],
-    mParams.finalStateNames[0], 1);
-  GetStateFromComboBox(m_comboFinalState2, mParams.finalStateNums[1],
-    mParams.finalStateNames[1], 1);
-  GetStateFromComboBox(m_comboFinalState3, mParams.finalStateNums[2],
-    mParams.finalStateNames[2], 1);
+  GetStateFromComboBox(m_comboMMMstate4, mParams.MMMstateNums[3],
+    mParams.MMMstateNames[3], 1);
+  if (!m_bSetFinalByGrid) {
+    GetFinalStateFomCombos(&mParams.finalStateNums[0], &mParams.finalStateNames[0], -1);
+  }
+}
 
+/*
+ * Get final states from combo boxes into param or grid jcd arrays
+ */
+void CMultiGridDlg::GetFinalStateFomCombos(int *stateNums, CString *stateNames, 
+  int skipInd)
+{
+  if (skipInd != 0)
+    GetStateFromComboBox(m_comboFinalState1, stateNums[0], stateNames[0], 1);
+  if (skipInd != 1)
+    GetStateFromComboBox(m_comboFinalState2, stateNums[1], stateNames[1], 1);
+  if (skipInd != 2)
+    GetStateFromComboBox(m_comboFinalState3, stateNums[2], stateNames[2], 1);
+  if (skipInd != 3)
+    GetStateFromComboBox(m_comboFinalState4, stateNums[3], stateNames[3], 1);
 }
 
 /*
@@ -943,15 +1068,35 @@ void CMultiGridDlg::SetAllComboBoxesFromNameOrNum()
     mParams.MMMstateNames[2], 1);
   SetComboBoxFromNameOrNum(m_comboMMMstate4, mParams.MMMstateNums[3],
     mParams.MMMstateNames[3], 1);
-  m_iSingleVsPolyMont = mParams.MMMimageType;
-  SetComboBoxFromNameOrNum(m_comboFinalState1, mParams.finalStateNums[0],
-    mParams.finalStateNames[0], 1);
-  SetComboBoxFromNameOrNum(m_comboFinalState2, mParams.finalStateNums[1],
-    mParams.finalStateNames[1], 1);
-  SetComboBoxFromNameOrNum(m_comboFinalState3, mParams.finalStateNums[2],
-    mParams.finalStateNames[2], 1);
-  SetComboBoxFromNameOrNum(m_comboFinalState4, mParams.finalStateNums[3],
-    mParams.finalStateNames[3], 1);
+  SetFinalStateComboBoxes();
+}
+
+/*
+ * Sets the selection for final acq boxes which can come from individual grids
+ */
+void CMultiGridDlg::SetFinalStateComboBoxes()
+{
+  int *stateNums = &mParams.finalStateNums[0];
+  int numCombos = mNumFinalCombos;
+  CString *stateNames = &mParams.finalStateNames[0];
+  if (m_bSetFinalByGrid && mSelectedGrid >= 0) {
+    JeolCartridgeData &jcdEl = mCartInfo->ElementAt(mDlgIndToJCDindex[mSelectedGrid]);
+    if (jcdEl.separateState) {
+      stateNums = &jcdEl.acqStateNums[0];
+      stateNames = &jcdEl.acqStateNames[0];
+    }
+    RepackStatesIfNeeded(mNumFinalCombos, stateNums, stateNames);
+    if (numCombos < mNumFinalCombos)
+      ManagePanels();
+  }
+  SetComboBoxFromNameOrNum(m_comboFinalState1, stateNums[0],
+    stateNames[0], 1);
+  SetComboBoxFromNameOrNum(m_comboFinalState2, stateNums[1],
+    stateNames[1], 1);
+  SetComboBoxFromNameOrNum(m_comboFinalState3, stateNums[2],
+    stateNames[2], 1);
+  SetComboBoxFromNameOrNum(m_comboFinalState4, stateNums[3],
+    stateNames[3], 1);
 }
 
 /*
@@ -1138,16 +1283,19 @@ void CMultiGridDlg::LoadAllComboBoxes()
 * illegal situation and revert if it does
 */
 void CMultiGridDlg::ProcessMultiStateCombo(CComboBox &combo, int *stateNums,
-  CString *stateNames, int index)
+  CString *stateNames, int index, int gridID)
 {
   StateParams *state, *othState;
   int cmb, oth, numLD = 0, numNon = 0, camera = -1, prevNum = stateNums[index];
   CString prevName = stateNames[index];
+  CString gridPref;
   bool sameArea = false;
   GetStateFromComboBox(combo, stateNums[index], stateNames[index], 1);
   mWinApp->RestoreViewFocus();
   if (stateNums[index] < 0)
     return;
+  if (gridID > 0)
+    gridPref.Format("For grid # %d: ", gridID);
   for (cmb = 0; cmb < 4; cmb++) {
     if (stateNums[cmb] >= 0 && stateNums[cmb] < (int)mStateArray->GetSize()) {
       state = mStateArray->GetAt(stateNums[cmb]);
@@ -1174,18 +1322,41 @@ void CMultiGridDlg::ProcessMultiStateCombo(CComboBox &combo, int *stateNums,
     sameArea))
     return;
   if (numNon > 1)
-    AfxMessageBox("Only one non-Low Dose state can be selected", MB_EXCLAME);
+    AfxMessageBox(gridPref + "Only one non-Low Dose state can be selected", MB_EXCLAME);
   else if (numNon && numLD)
-    AfxMessageBox("You cannot select both Low Dose and non-Low Dose states", MB_EXCLAME);
+    AfxMessageBox(gridPref + "You cannot select both Low Dose and non-Low Dose states",
+      MB_EXCLAME);
   else if (sameArea)
-    AfxMessageBox("You cannot select more than one state in the same Low Dose area",
-      MB_EXCLAME);
+    AfxMessageBox(gridPref + "You cannot select more than one state in the same Low Dose"
+      " area", MB_EXCLAME);
   else
-    AfxMessageBox("All selected states for one phase must be for the same camera",
-      MB_EXCLAME);
+    AfxMessageBox(gridPref + "All selected states for one phase must be for the same "
+      "camera", MB_EXCLAME);
   stateNames[index] = prevName;
   stateNums[index] = prevNum;
   SetComboBoxFromNameOrNum(combo, stateNums[index], stateNames[index], 1);
+}
+
+/*
+ * Set either the combo boxes or separate state flag for grid when show grid states is on
+ */
+void CMultiGridDlg::HandlePerGridStateChange()
+{
+  if (mSelectedGrid >= 0) {
+    JeolCartridgeData &jcdEl = mCartInfo->ElementAt(mDlgIndToJCDindex[mSelectedGrid]);
+
+    // If it already has states, set the combo boxes from them
+    if (jcdEl.separateState) {
+      SetFinalStateComboBoxes();
+    } else {
+
+      // Otherwise set from current values in combos
+      jcdEl.separateState = 1;
+      GetFinalStateFomCombos(&jcdEl.acqStateNums[0], &jcdEl.acqStateNames[0], -1);
+      SetStatusText(mDlgIndToJCDindex[mSelectedGrid]);
+    }
+  }
+  UpdateEnables();
 }
 
 /*
@@ -1195,47 +1366,56 @@ void CMultiGridDlg::ProcessMultiStateCombo(CComboBox &combo, int *stateNums,
 // Open-close setup section
 void CMultiGridDlg::OnButMgSetup()
 {
-  mWinApp->RestoreViewFocus();
   mPanelStates[2] = !mPanelStates[2];
   SetDlgItemText(IDC_BUT_MG_SETUP, mPanelStates[2] ? "-" : "+");
   ManagePanels();
+  mWinApp->RestoreViewFocus();
 }
 
 // Open/close low mag map section
 void CMultiGridDlg::OnButMgLowMagMaps()
 {
-  mWinApp->RestoreViewFocus();
   mPanelStates[4] = !mPanelStates[4];
   SetDlgItemText(IDC_BUT_MG_LOW_MAG_MAPS, mPanelStates[4] ? "-" : "+");
   ManagePanels();
+  mWinApp->RestoreViewFocus();
 }
 
 // Open/close medium mag map section
 void CMultiGridDlg::OnButMgMediumMagMaps()
 {
-  mWinApp->RestoreViewFocus();
   mPanelStates[6] = !mPanelStates[6];
   SetDlgItemText(IDC_BUT_MG_MEDIUM_MAG_MAPS, mPanelStates[6] ? "-" : "+");
   ManagePanels();
+  mWinApp->RestoreViewFocus();
 }
 
 // open/close final acquisition section
 void CMultiGridDlg::OnButMgFinalAcq()
 {
-  mWinApp->RestoreViewFocus();
   mPanelStates[8] = !mPanelStates[8];
   SetDlgItemText(IDC_BUT_MG_FINAL_ACQ, mPanelStates[8] ? "-" : "+");
   ManagePanels();
+  mWinApp->RestoreViewFocus();
+}
+
+// Button to open or close right side
+void CMultiGridDlg::OnButCloseRight()
+{
+  mRightIsOpen = mRightIsOpen > 0 ? 0 : 1;
+  ManagePanels();
+  mWinApp->RestoreViewFocus();
 }
 
 // The actual checkbox for running grid maps
 void CMultiGridDlg::OnCheckRunLmms()
 {
   UPDATE_DATA_TRUE;
-  mWinApp->RestoreViewFocus();
   mPanelStates[4] = m_bTakeLMMs;
   SetDlgItemText(IDC_BUT_MG_LOW_MAG_MAPS, mPanelStates[4] ? "-" : "+");
+  m_butTakeLMMs.SetFont(m_bTakeLMMs ? &mBigBoldFont : &mBiggerFont);
   ManagePanels();
+  mWinApp->RestoreViewFocus();
   CheckIfAnyUndoneToRun();
   UpdateEnables();
 }
@@ -1244,10 +1424,11 @@ void CMultiGridDlg::OnCheckRunLmms()
 void CMultiGridDlg::OnCheckTakeMmms()
 {
   UPDATE_DATA_TRUE;
-  mWinApp->RestoreViewFocus();
   mPanelStates[6] = m_bTakeMMMs;
   SetDlgItemText(IDC_BUT_MG_MEDIUM_MAG_MAPS, mPanelStates[6] ? "-" : "+");
+  m_butTakeMMMs.SetFont(m_bTakeMMMs ? &mBigBoldFont : &mBiggerFont);
   ManagePanels();
+  mWinApp->RestoreViewFocus();
   CheckIfAnyUndoneToRun();
   UpdateEnables();
 }
@@ -1256,10 +1437,11 @@ void CMultiGridDlg::OnCheckTakeMmms()
 void CMultiGridDlg::OnCheckRunFinalAcq()
 {
   UPDATE_DATA_TRUE;
-  mWinApp->RestoreViewFocus();
   mPanelStates[8] = m_bRunFinalAcq;
   SetDlgItemText(IDC_BUT_MG_FINAL_ACQ, mPanelStates[8] ? "-" : "+");
+  m_butRunFinalAcq.SetFont(m_bRunFinalAcq ? &mBigBoldFont : &mBiggerFont);
   ManagePanels();
+  mWinApp->RestoreViewFocus();
   CheckIfAnyUndoneToRun();
   UpdateEnables();
 }
@@ -1284,7 +1466,6 @@ void CMultiGridDlg::OnRadioMulgridSelect(UINT nID)
   CButton *button;
   JeolCartridgeData jcd;
   CString filename;
-  mWinApp->RestoreViewFocus();
   jcd.slot = -1;
   button = (CButton *)GetDlgItem(nID);
 
@@ -1299,6 +1480,10 @@ void CMultiGridDlg::OnRadioMulgridSelect(UINT nID)
     mSelectedGrid = nID - IDC_RADIO_MULGRID_SEL1;
     jcd = FindCartDataForDlgIndex(mSelectedGrid);
   }
+  if (m_bSetFinalByGrid)
+    HandlePerGridStateChange();
+  else
+    EnableDlgItem(IDC_BUT_REVERT_TO_GLOBAL, false);
 
   // See if it is grid on stage and set load, open and realign buttons
   mSelGridOnStage = jcd.slot >= 0 && jcd.station == JAL_STATION_STAGE;
@@ -1308,6 +1493,11 @@ void CMultiGridDlg::OnRadioMulgridSelect(UINT nID)
   filename = NavFileIfExistsAndNotLoaded();
   EnableDlgItem(IDC_BUT_OPEN_NAV, !filename.IsEmpty());
   EnableDlgItem(IDC_BUT_SET_GRID_TYPE, jcd.slot >= 0);
+  if (mWinApp->mNavHelper->mMGSettingsDlg)
+    mWinApp->mNavHelper->mMGSettingsDlg->SetJcdIndex(mSelectedGrid < 0 ? -1 :
+      mDlgIndToJCDindex[mSelectedGrid]);
+  m_statCurrentDir.SetFocus();
+  mWinApp->RestoreViewFocus();
 }
 
 // A checkbox for running a grid is pressed
@@ -1347,8 +1537,11 @@ void CMultiGridDlg::OnButLoadGrid()
 {
   JeolCartridgeData jcd;
   mWinApp->RestoreViewFocus();
-  jcd = FindCartDataForDlgIndex(mSelectedGrid);
-  mMGTasks->LoadOrUnloadGrid(jcd.id, MG_USER_LOAD);
+  if (mSelectedGrid < 0)
+    return;
+  int jcdInd = mDlgIndToJCDindex[mSelectedGrid];
+  jcd = mCartInfo->GetAt(jcdInd);
+  mMGTasks->LoadOrUnloadGrid(FEIscope ? jcd.slot : jcdInd + 1, MG_USER_LOAD);
 }
 
 // Realign to the grid map
@@ -1360,28 +1553,13 @@ void CMultiGridDlg::OnButRealignToGridMap()
     AfxMessageBox("Failed to realign to grid map: " + errStr);
 }
 
-// Set some individual grid processing parameters (hah!)
+// Set some individual grid processing parameters
 void CMultiGridDlg::OnButSetGridType()
 {
-  JeolCartridgeData &jcd = mCartInfo->ElementAt(mDlgIndToJCDindex[mSelectedGrid]);
-  float val = jcd.holeSize;
   mWinApp->RestoreViewFocus();
-  if (!KGetOneFloat("Hole entries will be inherited by grids lower in the table",
-    "Hole size in microns:", val, 2))
+  if (mSelectedGrid < 0)
     return;
-  if (val < 0.1 || val > 5.) {
-    AfxMessageBox("Size must be between 0.1 and 5 microns", MB_EXCLAME);
-    return;
-  }
-  jcd.holeSize = val;
-  val = jcd.holeSpacing;
-  if (!KGetOneFloat("Separation between hole centers in microns: ", val, 2))
-    return;
-  if (val < 0.5 || val > 10.) {
-    AfxMessageBox("Spacing must be between 0.5 and 10 microns", MB_EXCLAME);
-    return;
-  }
-  jcd.holeSpacing = val;
+  mWinApp->mNavHelper->OpenMGSettingsDlg(mDlgIndToJCDindex[mSelectedGrid]);
 }
 
 // Radio buttons for what to use for imaging LMM
@@ -1429,6 +1607,8 @@ void CMultiGridDlg::OnButSetupLmmMont()
   DoSetupLMMmont(false);
   mWinApp->RestoreViewFocus();
 }
+
+// Button to use specific overlap
 void CMultiGridDlg::OnCheckUseOverlap()
 {
   UPDATE_DATA_TRUE;
@@ -1476,54 +1656,110 @@ void CMultiGridDlg::OnSelendokComboLmmState()
 void CMultiGridDlg::OnSelendokComboMmmState1()
 {
   ProcessMultiStateCombo(m_comboMMMstate1, mParams.MMMstateNums,
-    mParams.MMMstateNames, 0);
+    mParams.MMMstateNames, 0, -1);
 }
 
 
 void CMultiGridDlg::OnSelendokComboMmmState2()
 {
   ProcessMultiStateCombo(m_comboMMMstate2, mParams.MMMstateNums,
-    mParams.MMMstateNames, 1);
+    mParams.MMMstateNames, 1, -1);
 }
 
 
 void CMultiGridDlg::OnSelendokComboMmmState3()
 {
   ProcessMultiStateCombo(m_comboMMMstate3, mParams.MMMstateNums,
-    mParams.MMMstateNames, 2);
+    mParams.MMMstateNames, 2, -1);
 }
 
 void CMultiGridDlg::OnSelendokComboMmmState4()
 {
   ProcessMultiStateCombo(m_comboMMMstate4, mParams.MMMstateNums,
-    mParams.MMMstateNames, 3);
+    mParams.MMMstateNames, 3, -1);
 }
 
 // New state selected in final acquire combo boxes
 void CMultiGridDlg::OnSelendokComboFinalState1()
 {
-  ProcessMultiStateCombo(m_comboFinalState1, mParams.finalStateNums,
-    mParams.finalStateNames, 0);
+  ProcessFinalStateCombo(m_comboFinalState1, 0);
 }
 
 
 void CMultiGridDlg::OnSelendokComboFinalState2()
 {
-  ProcessMultiStateCombo(m_comboFinalState2, mParams.finalStateNums,
-    mParams.finalStateNames, 1);
+  ProcessFinalStateCombo(m_comboFinalState2, 1);
 }
 
 
 void CMultiGridDlg::OnSelendokComboFinalState3()
 {
-  ProcessMultiStateCombo(m_comboFinalState3, mParams.finalStateNums,
-    mParams.finalStateNames, 2);
+  ProcessFinalStateCombo(m_comboFinalState3, 2);
 }
 
 void CMultiGridDlg::OnSelendokComboFinalState4()
 {
-  ProcessMultiStateCombo(m_comboFinalState4, mParams.finalStateNums,
-    mParams.finalStateNames, 3);
+  ProcessFinalStateCombo(m_comboFinalState4, 3);
+}
+
+/*
+ * For a final state combo box change, need to set arrays for global or per grid values
+ */
+void CMultiGridDlg::ProcessFinalStateCombo(CComboBox &combo, int index)
+{
+  int *stateNums = mParams.finalStateNums;
+  CString *stateNames = mParams.finalStateNames;
+  JeolCartridgeData &jcdEl = mCartInfo->ElementAt(
+    mDlgIndToJCDindex[B3DMAX(0, mSelectedGrid)]);
+  int gridID = -1;
+  if (mSelectedGrid >= 0 && m_bSetFinalByGrid) {
+    stateNums = jcdEl.acqStateNums;
+    stateNames = jcdEl.acqStateNames;
+
+    // If separate state was not on before, turn it on, get all the states but this one
+    // from the other combos, and take this (previous) state from global params
+    // This should happen only after a a revert
+    if (!jcdEl.separateState) {
+      jcdEl.separateState = 1;
+      GetFinalStateFomCombos(stateNums, stateNames, index);
+      jcdEl.acqStateNums[index] = mParams.finalStateNums[index];
+      jcdEl.acqStateNames[index] = mParams.finalStateNames[index];
+      SetStatusText(mDlgIndToJCDindex[mSelectedGrid]);
+    }
+  }
+  ProcessMultiStateCombo(combo, stateNums, stateNames, index, gridID);
+}
+
+// Check box to set state grid by grid
+void CMultiGridDlg::OnCheckSetFinalByGrid()
+{
+  UPDATE_DATA_TRUE;
+  HandlePerGridStateChange();
+  mWinApp->RestoreViewFocus();
+}
+
+// Button to revert state of current grid to global
+void CMultiGridDlg::OnButRevertToGlobal()
+{
+  mWinApp->RestoreViewFocus();
+  if (mSelectedGrid < 0)
+    return;
+  JeolCartridgeData &jcdEl = mCartInfo->ElementAt(mDlgIndToJCDindex[mSelectedGrid]);
+  jcdEl.separateState = 0;
+  for (int ind = 0; ind < 4; ind++) {
+    jcdEl.acqStateNums[ind] = 0;
+    jcdEl.acqStateNames[ind] = "";
+  }
+  SetFinalStateComboBoxes();
+  SetStatusText(mDlgIndToJCDindex[mSelectedGrid]);
+  EnableDlgItem(IDC_BUT_REVERT_TO_GLOBAL, false);
+}
+
+// Check for frame dir under session/grid dir
+void CMultiGridDlg::OnCheckFramesUnderSession()
+{
+  UpdateData(true);
+  mWinApp->RestoreViewFocus();
 }
 
 // Button to open nav acquire for final acquisition params
@@ -2152,5 +2388,5 @@ void CMultiGridDlg::DoStartRun(bool undoneOnly)
       finalNeedsLowDose = 0;
   }
   mMGTasks->StartGridRuns(mLMneedsLowDose, mMMMneedsLowDose, finalNeedsLowDose,
-    undoneOnly);
+    stateCamera < 0 ? mWinApp->GetCurrentCamera() : stateCamera, undoneOnly);
 }

@@ -12,8 +12,8 @@ enum MultiGridActions {
   MGACT_SURVEY_STAGE_MOVE, MGACT_SURVEY_IMAGE, MGACT_EUCENTRICITY, MGACT_LMM_CENTER_MOVE,
   MGACT_LOAD_GRID, MGACT_TAKE_LMM, MGACT_REALIGN_TO_LMM, MGACT_AUTOCONTOUR,
   MGACT_MMM_STATE, MGACT_TAKE_MMM, MGACT_FINAL_STATE, MGACT_FINAL_ACQ, 
-  MGACT_SETUP_MMM_FILES, MGACT_RESTORE_STATE, MGACT_LOW_DOSE_ON, 
-  MGACT_LOW_DOSE_OFF, MGACT_SET_ZHEIGHT, MGACT_MARKER_SHIFT, MGACT_GRID_DONE
+  MGACT_SETUP_MMM_FILES, MGACT_RESTORE_STATE, MGACT_LOW_DOSE_ON, MGACT_LOW_DOSE_OFF,
+  MGACT_SET_ZHEIGHT, MGACT_MARKER_SHIFT, MGACT_GRID_DONE
 };
 #define OBJECTIVE_APERTURE 2
 #define CONDENSER_APERTURE 1
@@ -27,6 +27,47 @@ enum MultiGridActions {
 #define MGSTAT_FLAG_ACQ_DONE   0x10
 
 class CMultiGridDlg;
+
+// Structures for saving per-grid parameters and enums for indexing the simple arrays
+enum MShotIndexes {
+  MS_spokeRad0, MS_spokeRad1, MS_numShots0, MS_numShots1, MS_numHoles0,
+  MS_numHoles1, MS_doSecondRing, MS_doCenter, MS_inHoleOrMultiHole, MS_numHexRings,
+  MS_skipCornersOf3x3, MS_noParam
+};
+struct MGridMultiShotParams
+{
+  float values[MS_noParam];
+};
+
+enum HoleIndexes { HF_spacing, HF_diameter, HF_lowerMeanCutoff, HF_upperMeanCutoff, 
+  HF_SDcutoff, HF_blackFracCutoff, HF_edgeDistCutoff, HF_hexagonalArray, HF_noParam };
+struct MGridHoleFinderParams
+{
+  FloatVec sigmas;        // Set of sigmas to try
+  FloatVec thresholds;    // Set of median iterations to try
+  float values[HF_noParam];
+};
+
+enum AutoContIndexes {AC_minSize, AC_maxSize, AC_relThreshold, AC_lowerMeanCutoff, 
+  AC_upperMeanCutoff, AC_borderDistCutoff, AC_noParam };
+struct MGridAutoContParams
+{
+  float values[AC_noParam];
+};
+
+enum GenParamIndexes {GP_disableAutoTrim, GP_erasePeriodicPeaks, GP_RIErasePeriodicPeaks,
+  GP_noParam};
+struct MGridGeneralParams
+{
+  int values[GP_noParam];
+};
+
+struct MGridAcqItemsParams
+{
+  NavAcqAction actions[NAA_MAX_ACTIONS];
+  NavAcqParams params;
+  int actOrder[NAA_MAX_ACTIONS + 1];
+};
 
 class CMultiGridTasks
 {
@@ -49,6 +90,7 @@ public:
   int MulGridSeqBusy();
   void CleanupMulGridSeq(int error);
   void StopMulGridSeq();
+  void RestoreImposedParams();
   void SuspendMulGridSeq();
   void CommonMulGridStop(bool suspend);
   void EndMulGridSeq();
@@ -69,7 +111,8 @@ public:
   void AlignNewReloadImage();
   ScaleMat FindReloadTransform(float dxyOut[2]);
   void UndoOrRedoMarkerShift(bool redo);
-  int StartGridRuns(int LMneedsLD, int MMMneedsLD, int finalNeedsLD, bool undoneOnly);
+  int StartGridRuns(int LMneedsLD, int MMMneedsLD, int finalNeedsLD, int finalCamera,
+    bool undoneOnly);
   void AddToSeqForLMimaging(bool &apForLMM, bool &stateForLMM, int needsLD);
   void AddToSeqForRestoreFromLM(bool &apForLMM, bool &stateForLMM);
   void DoNextSequenceAction(int resume);
@@ -94,9 +137,17 @@ public:
   MontParam *GetMMMmontParam();
   void ChangeStatusFlag(int gridInd, b3dUInt32 flag, int state);
   void CopyAutoContGroups();
+  void GridToMultiShotSettings(MGridMultiShotParams &mgParam);
+  void MultiShotToGridSettings(MGridMultiShotParams &mgParam);
+  void GridToHoleFinderSettings(MGridHoleFinderParams &mgParam);
+  void HoleFinderToGridSettings(MGridHoleFinderParams &mgParam);
+  void GridToAutoContSettings(MGridAutoContParams &mgParam);
+  void AutoContToGridSettings(MGridAutoContParams &mgParam);
+  void GridToGeneralSettings(MGridGeneralParams &mgParam);
+  void GeneralToGridSettings(MGridGeneralParams &mgParam);
   int SaveSessionFile(CString &errStr);
   void SaveSessionFileWarnIfError();
-  void ClearSession();
+  void ClearSession(bool keepAcqParams = false);
   int LoadSessionFile(bool useLast, CString &errStr);
   void IdentifyGridOnStage(int stageID, int &stageInd);
   GetSetMember(float, PctStatMidCrit);
@@ -110,12 +161,18 @@ public:
   GetMember(bool, StartedNavAcquire);
   GetSetMember(int, NumMMMstateCombos);
   GetSetMember(int, NumFinalStateCombos);
+  GetMember(BOOL, AppendNames);
+  GetMember(BOOL, UseSubdirs);
   bool WasStoppedInNavRun() { return mStoppedInNavRun && mSuspendedMulGrid; };
   bool WasStoppedInLMMont() { return mStoppedInLMMont && mSuspendedMulGrid; };
   void SetExtErrorOccurred(int inVal);
   bool RunningExternalTask() { return mDoingMulGridSeq && !mInternalError; };
   int *GetAutoContGroups() { return mHaveAutoContGroups ? &mAutoContGroups[0] : NULL; };
-
+  CArray<MGridMultiShotParams, MGridMultiShotParams> *GetMGMShotParamArray() {return &mMGMShotParamArray ; };
+  CArray<MGridHoleFinderParams, MGridHoleFinderParams> *GetMGHoleParamArray() { return &mMGHoleParamArray; };
+  CArray<MGridAutoContParams, MGridAutoContParams> *GetMGAutoContParamArray() { return &mMGAutoContParamArray; };
+  CArray<MGridGeneralParams, MGridGeneralParams> *GetMGGeneralParams() { return &mMGGeneralParamArray; };
+  CArray<MGridAcqItemsParams, MGridAcqItemsParams> *GetMGAcqItemsParamArray() { return &mMGAcqItemsParamArray; };
 private:
   CSerialEMApp *mWinApp;
   EMimageBuffer *mImBufs;
@@ -139,6 +196,11 @@ private:
   bool mStoppedInLMMont;      // Flag that stopping/suspend was in the LM montage
   CArray<JeolCartridgeData, JeolCartridgeData> *mCartInfo;
   CArray<StateParams *, StateParams *> *mStateArray;
+  CArray<MGridMultiShotParams, MGridMultiShotParams> mMGMShotParamArray;
+  CArray<MGridHoleFinderParams, MGridHoleFinderParams> mMGHoleParamArray;
+  CArray<MGridAutoContParams, MGridAutoContParams> mMGAutoContParamArray;
+  CArray<MGridGeneralParams, MGridGeneralParams> mMGGeneralParamArray;
+  CArray<MGridAcqItemsParams, MGridAcqItemsParams> mMGAcqItemsParamArray;
   MultiGridParams mParams;    // THE master parameters
   MontParam mGridMontParam;   // Managed copy of montage params for grid mont
   MontParam mMMMmontParam;    // Managed copy of montage params for MMM
@@ -146,8 +208,13 @@ private:
   BOOL mInitializedGridMont;  // Flag that LM mont params were initialized by copy or read
   BOOL mInitializedMMMmont;   // Flag that MM mont params were initialized by copy or read
   BOOL mSavedLowDose;         // Saved state of low dose at start
-  float mSavedHoleSize;       // Hole size saved
-  float mSavedHoleSpacing;    // Hole spacing saved
+  MGridMultiShotParams *mSavedMultiShot;
+  MGridHoleFinderParams *mSavedHoleFinder;
+  MGridAutoContParams *mSavedAutoCont;
+  MGridGeneralParams *mSavedGeneralParams;
+  CString mSavedDirForFrames; // User's dir for frame saving with final acquire camera
+  int mCamNumForFrameDir;     // Camera for which that was saved
+
   bool mStartedLongOp;        // Flags for actions that were started
   bool mMovedAperture;
   bool mDoingEucentricity;
@@ -188,9 +255,9 @@ private:
   bool mRestoreCondAp;           // Flag that condenser aperture needs to be reinserted
   ShortVec mJcdIndsToRun;        // cartridge info indexes of grids to run
   ShortVec mSlotNumsToRun;       // Slot number of cart info +1 of ones to run
-  FloatVec mHoleSizes;           // Hole sizes to impose
-  FloatVec mHoleSpacings;        // Hole spacings to impose
-  bool mUsingHoleFinder;         // Flag that hole finder is goin to be used
+  bool mUsingHoleFinder;         // Flag that hole finder is going to be used
+  bool mUsingAutoContour;        // Flag that autocontouring will be done
+  bool mUsingMultishot;          // Flag that multishot is going to be used
   int mNumGridsToRun;            // Number of grids to run
   ShortVec mActSequence;         // Sequence of actions for all grids
   int mSeqIndex;                 // Index in the action sequence
@@ -219,6 +286,7 @@ private:
   CString mSessionFilename;      // Current session filename
   CString mLastSessionFile;      // Name of last session file, for browsing or script load
   BOOL mBackedUpSessionFile;     // Flag tht file was backed up
+  BOOL mBackedUpAcqItemsFile;    // Flag file with per-grid acquire parameters backed up
   bool mNamesLocked;             // Flag htat all those things were locked in for session
   int mLMMmagIndex;              // Mag index being used for LMM
   int mUnloadErrorOK;            // Flag that load/unload may give error because unneeded

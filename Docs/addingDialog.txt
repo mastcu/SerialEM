@@ -73,3 +73,4 @@ need to use BaseDlg MinMaxInt and MinMaxFloat functions with the ID of the
 field and a descriptor text.
   MinMaxFloat(IDC_EDIT_ACS_BEAM_SHIFT, m_fBeamShift, -10.f, 10.f,
     "Beam shift for centering");
+Or better yet, replace the preceding DDX_Text too with DDX_MM_INT or DDX_MMF_LOAT

@@ -15,16 +15,18 @@
     <basefont size="2">
     <p><a NAME="hidd_multi_grid"></a><span class="style1">Multiple Grid Operations
         Dialog</span></p>
-    <p>This dialog 
-      provides for acquisition from multiple grids using an autoloader.&nbsp; The 
-      operations can occur in three phases: acquisition of grid maps at low 
-      maginification, acquisition of medium magnification maps using the &#39;Mapping&#39; 
+    <p>This dialog provides for acquisition from multiple grids using an autoloader.&nbsp; 
+      The operations can occur in three phases: acquisition of grid maps at low 
+      maginification, acquisition of medium magnification maps using the 'Mapping' 
       parameters of the Navigator Acquire at Items dialog, and acquisition of final 
-      data with the &#39;Final Data&#39; parameters of Acquire at Items.&nbsp; 
-      Navigator files are managed throughout the process.&nbsp; Information about the 
-      grids and some of the parameter settings are saved automatically in a &#39;session&#39; 
-      file in the autodoc format, with extension &#39;.adoc&#39;.&nbsp; The dialog has 
-      controls in different sections that can be closed when not relevant.</p>
+      data with the 'Final Data' parameters of Acquire at Items.&nbsp; Navigator files 
+      are managed throughout the process.&nbsp; Information about the grids and some 
+      of the parameter settings are saved automatically in a 'session' file in the 
+      autodoc format, with a name of the form 'multiGrid_date_#.adoc', saved into the 
+      top working directory for all the files from the runs.&nbsp; The dialog has 
+      controls in different sections that can be closed when not relevant, and a
+      <strong>Close Right</strong> button at the bottom that can be used to show just the grid 
+      table and none of the sections on the right.</p>
     <p>In principle, the multiple grid capabilities provided here allow all phases to 
       be done in sequence during one run on a set of grids.&nbsp; The use of imaging 
       states is crucial to being able to run more than one phase at a time with 
@@ -60,6 +62,14 @@
       dialog is opened while this dialog is open, its radio buttons will be set 
       appropriately for storing a shift.&nbsp;&nbsp; The &#39;ShiftItemsByMicrons&#39; script 
       command can be used instead to apply a shift that will satisfy this requirement.</p>
+    <p>If you are doing Multiple Records from multiple holes during final data 
+      acquisition, there is another situation where a pre-existing transformation is 
+      important.&nbsp; In this case, the hole vectors stored with a map after hole 
+      finding are used to set the current image shift vectors for points on that map.&nbsp; 
+      They are also transformed automatically to work at the Record magnification if 
+      an appropriate transformation has been saved from the &#39;Step To and Adjust IS&#39; 
+      procedure in the <a href="hidd_multi_shot_setup.htm">Multiple Record Setup 
+      dialog</a>.</p>
     <p>&nbsp;</p>
     <p><strong><em>Grid Setup and the Grid Table</em></strong></p>
     <p>The top section of the dialog has a table showing the grids that are in the 
@@ -68,7 +78,8 @@
       The second column is a set of radio pushbuttons for selecting one grid for which 
       to do one of the operations in the row of buttons below the table.&nbsp; The 
       pushbuttons are labeled with the slot number for Thermo/FEI scopes or the ID 
-      number for JEOL scopes.&nbsp; The third column, initially empty, contains a 
+      number for JEOL scopes.&nbsp; The third column, contains indicators of whether 
+      the grid has separate states or parameter settings and a 
       status code showing how far the grid has been processed.&nbsp; The fourth column 
       has text boxes to allow you to see and edit the names for each grid.&nbsp; The 
       name of the currently loaded grid will be shown in bold text.</p>
@@ -82,7 +93,7 @@
       inventory is needed to determine which slots are occupied.&nbsp; On a JEOL 
       scope, this is a relatively quick operation that must be run from SerialEM and 
       populates an internal table of grid information.&nbsp; On a Thermo/FEI scope, it 
-      is a time-consuming operation that provides no information to SerialEM and can 
+      is a time-consuming operation that need not be run from SerialEM and can 
       be run just as well with the button in the Autoloader panel of the TEM User 
       Interface.&nbsp; The inventory can be stopped only from that panel, not by 
       SerialEM.</p>
@@ -128,9 +139,9 @@
     <p><strong>Use subdirectories</strong></p>
     <p>Select this option to have files placed in a subdirectory for each grid, named 
       by the root name.</p>
-    <p><strong>Current dir</strong></p>
+    <p><strong>Current dir/Session dir</strong></p>
     <p>Before any runs have been done, this line shows the program&#39;s current working 
-      directory; afterwards, it shows the location where this session&#39;s files are.</p>
+      directory; afterwards, it is labeled &#39;Session dir&#39; and shows the location where this session&#39;s files are.</p>
     <p><strong>Set Current Dir</strong></p>
     <p>Use this button to set the program's current directory, the same as can be done 
       through the File menu.</p>
@@ -156,17 +167,17 @@
       alignment positions, it determines a more accurate rotation and shift, and uses 
       them to transform the Navigator coordinates of the map and any items at the same 
       registration.</p>
-    <p><strong>Set Type</strong></p>
-    <p>This button is mostly a placeholder.&nbsp; It will allow you to enter a hole 
-      size and spacing for the selected grid, which will be used if hole finding is 
-      done when acquiring medium-mag maps.&nbsp; This might allow you to do grids of 
-      different types in the same run, but not enough parameters are being stored yet 
-      to allow gold and carbon foil grids to be done together except in the grid 
-      mapping phase.&nbsp; Values need not be entered for every grid; they will be 
-      inherited from the top down for the grids in the table, similar to the 
-      inheritance of tilt series parameters or states in the Navigator table.&nbsp; 
-      The values in the Hole Finder dialog will be used for the top-most grids above 
-      the first one where an entry is made.</p>
+    <p><strong>Set Params</strong></p>
+    <p>Press this button to open the <a href="hidd_mulgrid_settings.htm">Multiple Grid Settings Manager</a> and store some 
+      separate settings for the currently selected grid.&nbsp; Up to 5 kinds of 
+      settings can be stored: for final data acquisition, autocontouring, hole 
+      finding, multiple records, and some general settings that would typically be 
+      different for gold grids.&nbsp; The Navigator acquisition parameters are stored 
+      in a separate file, named as the root name of the session file plus 
+      &#39;_navAcq.txt&#39;.&nbsp; Other parameters are stored as arrays of values within the 
+      grid sections of the session autodoc file.&nbsp; When a grid has any one of 
+      these kinds of parameters stored, the second character of the status indicator 
+      will be 'P' instead of '&mdash;'.</p>
     <p>&nbsp;</p>
     <p><em><strong>Acquire Grid Maps</strong></em></p>
     <p>This section of the dialog contains parameters for acquiring grid maps; some of 
@@ -309,7 +320,49 @@
       for images taken through Acquire at Items, but do not affect the behavior of the 
       multi-grid routine.&nbsp; All four of the available drop-down boxes are shown by 
       default, but the number can be set with the property 'MulGridNumFinalCombos'.</p>
-    <p><strong>Set Final Acquire Parameters</strong></p>
+    <p><strong>Set &amp; show states for each grid</strong></p>
+    <p>Select this option if you want to use different states for some of the grids.&nbsp; 
+      When the option is first turned on, the current set of states will be assigned 
+      to the currently selected grid, if any.&nbsp; While it is on, changing the state 
+      selections will change the set of states for the selected grid only.&nbsp; When 
+      a different grid is selected, its set of states will be shown if it already has 
+      some defined; otherwise the currently shown set of states will be assigned to 
+      that grid.&nbsp; Thus, the easiest way to give a set of grids the same set of 
+      separate states is:</p>
+    <ul>
+      <li>Select one of the grids out of that set</li>
+      <li>Turn on the option</li>
+      <li>Change to the desired states</li>
+      <li>Select each other grid in the set, in turn</li>
+      <li>Turn off the option</li>
+    </ul>
+    <p>
+      The first character in the status column will be &#39;S&#39; instead of &#39;&mdash;&#39; 
+      when a grid has separate states.&nbsp; Any grid without a separate state will 
+      have the global set of states (if any); i.e., there is no inheritance from one 
+      grid to the next.</p>
+    <p>
+      If you just want to check what the states are without changing anything, turn on 
+      the option with no grid selected, select each grid with an 'S' status, and then 
+      turn off the option.</p>
+    <p><strong>Revert to Global</strong></p>
+    <p>Use this button to remove the separate states for the selected grid.&nbsp; </p>
+    <p><strong>Make frame directories under session directory/grid directories</strong></p>
+    <p>If camera frames are saved during final acquisition, they will be placed in a 
+      separate subdirectory for each grid.&nbsp; This option will be present if there 
+      is any camera available that can save frames in arbitrary locations (e.g., not 
+      for Falcon or DE cameras); select it if you are taking frames with such a camera 
+      and want the frames to be saved in subdirectories under the session or grid 
+      directories.&nbsp;&nbsp; When the option is selected, and the actual camera 
+      being used allows it, frames will be saved in a directory named &#39;frames&#39; under 
+      the grid directory if <strong>Use subdirectories</strong> 
+      is chosen, or in a directory &#39;gridRootName_frames&#39; under the session directory 
+      if not.&nbsp;&nbsp; Otherwise, frames will be saved in a directory 
+      &#39;gridRootName&#39; under the currently defined frame folder for the camera if the 
+      camera allows that, or the frame folder will simply be defined as &#39;gridRootName&#39; 
+      in a case where directories are allowed only directly under the frame storage 
+      location.</p>
+    <p><strong>Set Final Data Parameters</strong></p>
     <p>Use this button to open the Navigator Acquire at Items dialog and set the Final 
       Data parameters.&nbsp; Here, only a few choices will be disabled.&nbsp;&nbsp; 
       Any type of main action can be chosen.&nbsp; If you happen to want to take tilt 

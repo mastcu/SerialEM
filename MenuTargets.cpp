@@ -953,8 +953,11 @@ void CMenuTargets::OnUpdateMultipleGridOperations(CCmdUI *pCmdUI)
 void CMenuTargets::OnGridsReadSessionfile()
 {
   CString str;
-  if (mWinApp->mMultiGridTasks->LoadSessionFile(false, str) > 0)
+  int err = mWinApp->mMultiGridTasks->LoadSessionFile(false, str);
+  if (err > 0)
     AfxMessageBox("Could not load multi-grid session file:\n" + str, MB_EXCLAME);
+  if (err < 0 && !str.IsEmpty())
+    AfxMessageBox("Errors when loading the multi-grid session file:\n" + str, MB_EXCLAME);
 }
 
 void CMenuTargets::OnUpdateGridsReadSessionfile(CCmdUI *pCmdUI)
