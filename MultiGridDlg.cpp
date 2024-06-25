@@ -292,6 +292,10 @@ BOOL CMultiGridDlg::OnInitDialog()
       }
     }
   }
+  mSingleGridMode = !mScope->GetScopeHasAutoloader();
+  if (mSingleGridMode) {
+    mParams.appendNames = false;
+  }
   ParamsToDialog();
   UpdateData(false);
   mPanelStates[4] = mParams.acquireLMMs;
@@ -310,6 +314,9 @@ BOOL CMultiGridDlg::OnInitDialog()
   EnableDlgItem(IDC_BUT_LOAD_GRID, false);
   EnableDlgItem(IDC_BUT_OPEN_NAV, false);
   EnableDlgItem(IDC_BUT_REALIGN_TO_GRID_MAP, false);
+  if (mSingleGridMode) {
+    InitForSingleGrid();
+  }
   CheckIfAnyUndoneToRun();
   UpdateEnables();
   UpdateCurrentDir();
@@ -694,17 +701,19 @@ void CMultiGridDlg::SetRootname()
   }
 
   // Allow for Car/car and Grid/grid with or without a - or _
-  if (prefLen < 3 || !(m_strPrefix.Find("Car") == carLen ||
+  if ((prefLen < 3 || !(m_strPrefix.Find("Car") == carLen ||
     m_strPrefix.Find("car") == carLen || m_strPrefix.Find("Grid") == gridLen ||
-    m_strPrefix.Find("grid") == gridLen)) {
+    m_strPrefix.Find("grid") == gridLen)) && !mSingleGridMode) {
     if (m_strPrefix.IsEmpty())
       m_strRootname = "C";
     else
       m_strRootname += "_C";
   }
-  if (JEOLscope)
+  if (!mSingleGridMode) {
+    if (JEOLscope)
+      m_strRootname += "##";
     m_strRootname += "##";
-  m_strRootname += "##";
+  }
   if (m_bAppendNames)
     m_strRootname += "_name";
   UpdateData(false);
@@ -782,6 +791,27 @@ void CMultiGridDlg::NewGridOnStage(int jcdInd)
 }
 
 /*
+ * Set up for a single grid: add the dummy item to catalogue, make it selected & on stage
+ */
+void CMultiGridDlg::InitForSingleGrid()
+{
+  JeolCartridgeData jcd;
+  mNumUsedSlots = 1;
+  jcd.Init();
+  jcd.name = jcd.userName = "TheOneGrid";
+  jcd.id = jcd.slot = 1;
+  jcd.station = JAL_STATION_STAGE;
+  mCartInfo->RemoveAll();
+  mCartInfo->Add(jcd);
+  CButton *button = (CButton *)GetDlgItem(IDC_RADIO_MULGRID_SEL1);
+  if (button)
+    button->SetCheck(BST_CHECKED);
+  mSelectedGrid = 0;
+  ReloadTable(1, 1);
+  NewGridOnStage(0);
+}
+
+/*
  * UPDATING, TRANSFERRING PARAMETERS
  */
 
@@ -826,7 +856,7 @@ void CMultiGridDlg::UpdateEnables()
   if (mNumUsedSlots > 0 && !tasks && mSelectedGrid >= 0 && mSelGridOnStage) {
     jcd = FindCartDataForDlgIndex(mSelectedGrid);
     EnableDlgItem(IDC_BUT_REALIGN_TO_GRID_MAP, 
-      jcd.slot >= 0 && (jcd.status &MGSTAT_FLAG_LM_MAPPED));
+      jcd.slot >= 0 && (jcd.status & MGSTAT_FLAG_LM_MAPPED));
   } else
     EnableDlgItem(IDC_BUT_REALIGN_TO_GRID_MAP, false);
   EnableDlgItem(IDC_COMBO_LMM_STATE, m_bSetLMMstate && !tasks);
@@ -836,7 +866,8 @@ void CMultiGridDlg::UpdateEnables()
   EnableDlgItem(IDC_BUT_SETUP_AUTOCONT2, m_bAutocontour && !tasks);
   EnableDlgItem(IDC_BUT_SETUP_POLYMONT, m_iSingleVsPolyMont > 0 && !tasks);
   EnableDlgItem(IDC_BUT_START_RUN, ((m_bTakeLMMs || m_bTakeMMMs || m_bRunFinalAcq) &&
-    !tasks && GetListOfGridsToRun(dlgInds, slotNums) > 0) || (suspended && !justTasks));
+    !tasks && GetListOfGridsToRun(dlgInds, slotNums) > 0 && 
+    (!mSingleGridMode || !m_strPrefix.IsEmpty())) || (suspended && !justTasks));
   SetDlgItemText(IDC_BUT_START_RUN, suspended ? "End Run" : "Start Run");
   SetDlgItemText(IDC_BUT_RUN_UNDONE, suspended ? "Resume Run" : "Run Undone");
   EnableDlgItem(IDC_BUT_RUN_UNDONE, (mEnableRunUndone || suspended) && !justTasks);
@@ -844,8 +875,8 @@ void CMultiGridDlg::UpdateEnables()
   for (ind = 0; ind < sizeof(noTaskList) / sizeof(int); ind++)
     EnableDlgItem(noTaskList[ind], !tasks);
   for (ind = 0; ind < mNumUsedSlots; ind++) {
-    EnableDlgItem(IDC_EDIT_MULGRID_NAME1 + ind, !tasks && !locked);
-    EnableDlgItem(IDC_RADIO_MULGRID_SEL1 + ind, !tasks);
+    EnableDlgItem(IDC_EDIT_MULGRID_NAME1 + ind, !tasks && !locked && !mSingleGridMode);
+    EnableDlgItem(IDC_RADIO_MULGRID_SEL1 + ind, !tasks && !mSingleGridMode);
     EnableDlgItem(IDC_CHECK_MULGRID_RUN1 + ind, !tasks);
   }
   EnableDlgItem(IDC_COMBO_FINAL_STATE1, acqStatesEnabled);
@@ -928,6 +959,9 @@ void CMultiGridDlg::ManagePanels()
 {
   BOOL states[MAX_MULGRID_PANELS];
   int ind;
+  UINT singleDrops[] = {IDC_BUT_SET_GRID_TYPE, IDC_BUT_LOAD_GRID, IDC_BUT_MG_INVENTORY,
+    IDC_BUT_MG_GET_NAMES, IDC_CHECK_MG_APPEND_NAME, IDC_BUT_MG_RESET_NAMES,
+    IDC_BUT_MG_CLEAR, IDC_CHECK_SET_FINAL_BY_GRID, IDC_BUT_REVERT_TO_GLOBAL};
   UINT MMMcomboIDs[4] = {IDC_COMBO_MMM_STATE1, IDC_COMBO_MMM_STATE2, IDC_COMBO_MMM_STATE3,
     IDC_COMBO_MMM_STATE4};
   UINT finalComboIDs[4] = {IDC_COMBO_FINAL_STATE1, IDC_COMBO_FINAL_STATE2,
@@ -937,7 +971,7 @@ void CMultiGridDlg::ManagePanels()
   if (mRightIsOpen <= 0)
     for (ind = 3; ind < 9; ind++)
       states[ind] = false;
-  SetDlgItemText(IDC_BUT_CLOSE_RIGHT, mRightIsOpen ? "Close Right" : "Open Right");
+  SetDlgItemText(IDC_BUT_CLOSE_RIGHT, mRightIsOpen > 0 ? "Close Right" : "Open Right");
   mIDsToDrop.clear();
   for (int ind = mNumUsedSlots; ind < MAX_DLG_SLOTS; ind++) {
     mIDsToDrop.push_back(IDC_CHECK_MULGRID_RUN1 + ind);
@@ -949,6 +983,10 @@ void CMultiGridDlg::ManagePanels()
   DropComboBoxes(mNumFinalCombos, &finalComboIDs[0], IDC_STAT_SET_FINAL_STATES);
   if (mDropFrameOption)
     mIDsToDrop.push_back(IDC_CHECK_FRAMES_UNDER_SESSION);
+  if (mSingleGridMode) {
+    for (ind = 0; ind < sizeof(singleDrops) / sizeof(UINT); ind++)
+      mIDsToDrop.push_back(singleDrops[ind]);
+  }
   AdjustPanels(states, sIdTable, sLeftTable, sTopTable, mNumInPanel, mPanelStart, 0,
     sHeightTable);
 }

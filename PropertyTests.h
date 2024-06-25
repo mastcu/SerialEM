@@ -146,6 +146,7 @@ INT_PROP_TEST("ScopeHasPhasePlate", scope->, ScopeHasPhasePlate)
 INT_PROP_TEST("SkipNormalizations", scope->, SkipNormalizations)
 BOOL_PROP_TEST("UseImageBeamTilt", scope->, UseImageBeamTilt)
 INT_PROP_TEST("ScreenRaiseDelay", scope->, ScreenRaiseDelay)
+INT_PROP_TEST("ScopeHasAutoloader", scope->, ScopeHasAutoloader)
 INT_PROP_TEST("GoToRecMagEnteringLD", scope->, GoToRecMagEnteringLD)
 
 #endif

@@ -386,6 +386,9 @@ BOOL CNavigatorDlg::OnInitDialog()
   FillListBox();
   mNewItemNum = (int)mItemArray.GetSize() + 1;
   UpdateHiding();
+  UtilModifyMenuItem("Navigator", ID_MONTAGINGGRIDS_MULTIPLEGRIDOPERATIONS,
+    mScope->GetScopeHasAutoloader() ? "Mult&iple Grid Operations..." :
+    "Mult&iple Operations on Grid...");
 
 	return TRUE;  // return TRUE unless you set the focus to a control
 	              // EXCEPTION: OCX Property Pages should return FALSE

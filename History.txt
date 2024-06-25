@@ -3,6 +3,9 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+6/25/24: Added property to enable using the multiple grid operations with one
+grid and no autoloader, fixed some more problems.
+
 6/24/24: Many changes and fixes in the multiple grid operations dialog,
 including ability to set states and various parameters by grid for final data
 acquisition, and another dialog to manage that.

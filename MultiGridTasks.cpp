@@ -112,6 +112,7 @@ void CMultiGridTasks::Initialize()
   mNavHelper = mWinApp->mNavHelper;
   mCartInfo = mScope->GetJeolLoaderInfo();
   mStateArray = mNavHelper->GetStateArray();
+  mSingleGridMode = !mScope->GetScopeHasAutoloader();
 }
 
 /*
@@ -126,6 +127,7 @@ void CMultiGridTasks::InitOrClearSessionValues()
   mLMMusedStateNum = -1;
   mHaveAutoContGroups = false;
   mLMMmagIndex = 0;
+  mNamesLocked = false;
 }
 
 /*
@@ -163,7 +165,7 @@ CString CMultiGridTasks::RootnameFromUsername(JeolCartridgeData &jcd)
   CString str, str2;
   int ind1, ind2, lenPref = mPrefix.GetLength();
   int extra = 0, nameLen = jcd.userName.GetLength();
-  bool skipC = false;
+  bool skipC = !mScope->GetScopeHasAutoloader();
   char last;
   str = mPrefix;
 
@@ -575,11 +577,13 @@ void CMultiGridTasks::UserResumeMulGridSeq()
     mess.Format("The last multi-grid operation run was \"%s\"\n"
       "The next operation will be \"%s\".  Select:\n\n"
       "\"Redo Last\" to resume by redoing the last operation (which may be inappropriate)"
-      "\n\n\"Do Next\" to start with the next operation\n\n"
-      "\"Skip to Next Grid\" to abandon this grid and go to the next one",
+      "\n\n\"Do Next\" to start with the next operation",
       sActionNames[mActSequence[B3DMAX(mSeqIndex - 1, 0)]],
       sActionNames[mActSequence[mSeqIndex]]);
-    answer = SEMThreeChoiceBox(mess, "Redo Last", "Do Next", "Skip to Next Grid", 1);
+    if (!mSingleGridMode)
+      mess += "\n\n\"Skip to Next Grid\" to abandon this grid and go to the next one";
+    answer = SEMThreeChoiceBox(mess, "Redo Last", "Do Next", 
+      mSingleGridMode ? "" : "Skip to Next Grid", 1);
     if (answer == IDYES)
       resume = 1;
     else if (answer == IDNO)
@@ -1417,6 +1421,7 @@ int CMultiGridTasks::StartGridRuns(int LMneedsLD, int MMMneedsLD, int finalNeeds
   bool lastMMMforGrid = false, lastAcqForGrid = false;
   bool setupLMMimaging = false;
   mNavigator = mWinApp->mNavigator;
+  mSingleGridMode = !mScope->GetScopeHasAutoloader();
 
   mMGdlg = mNavHelper->mMultiGridDlg;
   dlgIndToJcdInd = mMGdlg->GetDlgIndToJCDindex();
@@ -1463,6 +1468,12 @@ int CMultiGridTasks::StartGridRuns(int LMneedsLD, int MMMneedsLD, int finalNeeds
   if (apSize < 0) {
     SEMMessageBox("Aperture control appears not to work on this scope");
     return 1;
+  }
+
+  if (mSingleGridMode && !mReferenceCounts && mParams.acquireLMMs) {
+    if (!KGetOneFloat("Enter the reference counts in a low mag mapping image with no beam"
+      , mReferenceCounts, 0) || !mReferenceCounts)
+      return 1;
   }
 
   // If not doing LM maps and grid on stage is to be done, rearrange order to do it first
@@ -1638,14 +1649,15 @@ int CMultiGridTasks::StartGridRuns(int LMneedsLD, int MMMneedsLD, int finalNeeds
       }
  
       // Get reference counts on first grid
-      if (!mReferenceCounts && !grid) {
+      if (!mReferenceCounts && !grid && !mSingleGridMode) {
         mActSequence.push_back(MGACT_UNLOAD_GRID);
         mActSequence.push_back(MGACT_REF_MOVE);
         mActSequence.push_back(MGACT_REF_IMAGE);
       }
 
       // Load grid and take up to 4 survey images
-      mActSequence.push_back(MGACT_LOAD_GRID);
+      if (!mSingleGridMode)
+        mActSequence.push_back(MGACT_LOAD_GRID);
       mActSequence.push_back(MGACT_SURVEY_STAGE_MOVE);
       mActSequence.push_back(MGACT_SURVEY_IMAGE);
 
@@ -1671,7 +1683,7 @@ int CMultiGridTasks::StartGridRuns(int LMneedsLD, int MMMneedsLD, int finalNeeds
       mActSequence.push_back(MGACT_MARKER_SHIFT);
 
       // If LMM wasn't just done, set state for LM, load grid, and realign to grid
-      if (!didLMMforGrid) {
+      if (!didLMMforGrid && !mSingleGridMode) {
         AddToSeqForLMimaging(apForLMM, stateForLMM, mLMMneedsLowDose);
         mActSequence.push_back(MGACT_LOAD_GRID);
         mActSequence.push_back(MGACT_SET_ZHEIGHT);
@@ -1706,7 +1718,7 @@ int CMultiGridTasks::StartGridRuns(int LMneedsLD, int MMMneedsLD, int finalNeeds
       mActSequence.push_back(MGACT_MARKER_SHIFT);
 
       // Reload and realign unless it was just done
-      if (!didLMMforGrid && !didMMMforGrid) {
+      if (!didLMMforGrid && !didMMMforGrid && !mSingleGridMode) {
         AddToSeqForLMimaging(apForLMM, stateForLMM, mLMMneedsLowDose);
         mActSequence.push_back(MGACT_LOAD_GRID);
         mActSequence.push_back(MGACT_SET_ZHEIGHT);
@@ -2508,7 +2520,7 @@ void CMultiGridTasks::DoNextSequenceAction(int resume)
       break;
     item = mNavigator->FindItemWithMapID(jcd.LMmapID);
     if (!item) {
-      errStr.Format("Skipping grid %d because of failure to find grid map");
+      errStr.Format("Skipping grid %d because of failure to find grid map", jcd.id);
       if (SkipToNextGrid(errStr))
         return;
       break;
@@ -2518,7 +2530,7 @@ void CMultiGridTasks::DoNextSequenceAction(int resume)
       // It wasn't shifted: find shift and do it
       if (MarkerShiftIndexForMag(item->mMapMagInd, baseShift) < 0) {
         errStr.Format("Skipping grid %d because no Shift to Marker was done on the "
-          "grid map yet\r\n  and there is no saved shift for magnification %d",
+          "grid map yet\r\n  and there is no saved shift for magnification %d", jcd.id,
           MagForCamera(item->mMapCamera, item->mMapMagInd));
         if (SkipToNextGrid(errStr))
           return;
@@ -3422,8 +3434,12 @@ void CMultiGridTasks::ClearSession(bool keepAcqParams)
     mNavHelper->mMultiGridDlg->m_strPrefix = "";
     mNavHelper->mMultiGridDlg->SetRootname();
     mNavHelper->mMultiGridDlg->UpdateData(false);
-    mNavHelper->mMultiGridDlg->SetNumUsedSlots(0);
-    mNavHelper->mMultiGridDlg->ReloadTable(0, 0);
+    if (!mScope->GetScopeHasAutoloader()) {
+      mNavHelper->mMultiGridDlg->InitForSingleGrid();
+    } else {
+      mNavHelper->mMultiGridDlg->SetNumUsedSlots(0);
+      mNavHelper->mMultiGridDlg->ReloadTable(0, 0);
+    }
     mNavHelper->mMultiGridDlg->CheckIfAnyUndoneToRun();
     mNavHelper->mMultiGridDlg->UpdateEnables();
     mNavHelper->mMultiGridDlg->UpdateSettings();
@@ -3576,6 +3592,9 @@ int CMultiGridTasks::LoadSessionFile(bool useLast, CString &errStr)
 
   if (err)
     errStr = "Error reading values from global section of autodoc";
+  
+  if (!mScope->GetScopeHasAutoloader())
+    mCartInfo->RemoveAll();
 
   // Process grid entries
   acqParmName = "";
@@ -3791,6 +3810,10 @@ void CMultiGridTasks::IdentifyGridOnStage(int stageID, int &stageInd)
 {
   CString direc;
   int ind1, newID = stageID;
+  if (!mScope->GetScopeHasAutoloader()) {
+    stageInd = 0;
+    return;
+  }
   direc.Format("Enter %s of grid on stage or -1 if none:", JEOLscope ? "ID" : "slot #");
   if (KGetOneInt(direc, newID)) {
     if (newID != stageID) {

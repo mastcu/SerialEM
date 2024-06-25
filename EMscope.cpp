@@ -543,6 +543,7 @@ CEMscope::CEMscope()
   mScanningMags = 0;
   mUseImageBeamTilt = false;
   mScreenRaiseDelay = 0;
+  mScopeHasAutoloader = 1;
   mAdvancedScriptVersion = 0;
   mPluginVersion = 0;
   mPlugFuncs = NULL;

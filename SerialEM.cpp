@@ -1717,7 +1717,10 @@ BOOL CSerialEMApp::InitInstance()
 
   mExternalTools->AddMenuItems();
   mMainFrame->RemoveHiddenItemsFromMenus();
-  
+  UtilModifyMenuItem("Navigator", ID_MONTAGINGGRIDS_MULTIPLEGRIDOPERATIONS,
+    mScope->GetScopeHasAutoloader() ? "Mult&iple Grid Operations..." :
+    "Mult&iple Operations on Grid...");
+
   mStartingProgram = false;
   DoResizeMain();
   SetTitleFile("");

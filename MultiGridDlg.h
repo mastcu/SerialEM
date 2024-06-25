@@ -63,6 +63,7 @@ private:
   int mNumFinalCombos;
   int mRightIsOpen;           // Flag that right side is open
   bool mDropFrameOption;      // flag to drop the option to put frames under session
+  bool mSingleGridMode;       // Flag for no autoloader
 
 public:
   CString m_strCurrentDir;
@@ -172,6 +173,7 @@ public:
   void LoadStatesInComboBox(CComboBox &combo, bool addNone);
   void LoadAllComboBoxes();
   void NewGridOnStage(int jcdInd);
+  void InitForSingleGrid();
   void SetStatusText(int jcdInd);
   BOOL m_bSetLMMstate;
   BOOL m_bAutocontour;

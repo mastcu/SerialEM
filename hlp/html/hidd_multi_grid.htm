@@ -68,8 +68,27 @@
       finding are used to set the current image shift vectors for points on that map.&nbsp; 
       They are also transformed automatically to work at the Record magnification if 
       an appropriate transformation has been saved from the &#39;Step To and Adjust IS&#39; 
-      procedure in the <a href="hidd_multi_shot_setup.htm">Multiple Record Setup 
-      dialog</a>.</p>
+      procedure in the <a href="hidd_multi_shot_setup.htm">Multiple Record Setup</a> dialog.</p>
+    <p><em>Managing operations on a single grid with no autoloader:</em> This dialog may also be useful for managing the workflow when 
+      there is just one manually loaded grid.&nbsp; When the property 
+      'ScopeHasAutoloader 0' is present, the menu entry appears as 'Multiple 
+      Operations on Grid', the dialog is simplified to eliminate irrelevant controls, 
+      and autoloader-related operations are omitted from the sequence of steps in each 
+      phase.&nbsp; File names are based only on the <strong>Prefix</strong> entry, so 
+      the name entry in the table is irrelevant.&nbsp; Controls for setting states and 
+      parameters for individual grids are omitted.&nbsp; There are two special 
+      requirements:</p>
+    <ul>
+      <li>Before running the first step, the grid map, you need to have an estimate of 
+        the number of counts in a blank image (beam only) taken with the same parameters 
+        and conditions as for the montage images (i.e., same exposure, binning, 
+        magnification, and beam conditions).&nbsp; It does not need to be very accurate; 
+        an underestimate is better than an overestimate.</li>
+      <li>When a run is started with medium-mag mapping or final acquisition using an 
+        existing grid map, the step for realigning to that map is skipped.&nbsp; If you 
+        do remove and reinsert a grid, you would need to use the <strong>Realign to Map</strong> 
+        button before running operations.</li>
+    </ul>
     <p>&nbsp;</p>
     <p><strong><em>Grid Setup and the Grid Table</em></strong></p>
     <p>The top section of the dialog has a table showing the grids that are in the 

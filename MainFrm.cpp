@@ -464,6 +464,8 @@ void CMainFrame::DoClose(bool afterScript)
         mWinApp->mExternalTools->CloseAllGraphs();
     }
 
+    if (mWinApp->mNavHelper->mMultiGridDlg)
+      mWinApp->mNavHelper->mMultiGridDlg->CloseWindow();
     if (mWinApp->mDocWnd->SaveSettingsOnExit() ||
       (!mWinApp->GetExitWithUnsavedLog() &&
         mWinApp->mLogWindow && mWinApp->mLogWindow->AskIfSave("exiting?")) ||
@@ -494,8 +496,6 @@ void CMainFrame::DoClose(bool afterScript)
   }
 
   mWinApp->SetAppExiting(true);
-  if (mWinApp->mNavHelper->mMultiGridDlg)
-    mWinApp->mNavHelper->mMultiGridDlg->CloseWindow();
   mWinApp->mCamera->CheckAndFreeK2References(true);
   if (!mWinApp->GetNanumFontPath().IsEmpty())
     RemoveFontResourceEx(mWinApp->GetNanumFontPath(), FR_PRIVATE, NULL);

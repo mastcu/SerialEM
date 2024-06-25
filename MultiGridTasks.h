@@ -184,6 +184,7 @@ private:
   StageMoveInfo mMoveInfo;
   CMultiGridDlg *mMGdlg;
   float mRRGMaxRotation;      // Property for default maximum rotation
+  bool mSingleGridMode;       // Flag for no autoloader
   bool mAllowOptional;        // Flag to allow the optional characters, bad in shells
   bool mReplaceSpaces;        // Flag to replace spaces
   bool mUseCaretToReplace;    // Flag t use caret insetad of @ when replacing spaces
