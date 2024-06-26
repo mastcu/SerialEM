@@ -1592,6 +1592,8 @@ void CHoleFinderDlg::ScanningNextTask(int param)
     }
   }
   SetExclusionsAndDraw();
+  if (mParams.useHexDiagonals)
+    SetNavMapHoleVectors();
 }
 
 void CHoleFinderDlg::SetExclusionsAndDraw()
