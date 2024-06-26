@@ -101,6 +101,7 @@ int CMultiHoleCombiner::CombineItems(int boundType, BOOL turnOffOutside, int inX
   float fDTOR = (float)DTOR;
   float fullSd, fullBestSd, ptX, ptY, hxHex[3], hyHex[3];
   float minCenDist, cenDist, boxDx, boxDy, cenStageX, cenStageY;
+  float stXaxis, stYaxis, diffSign, axisDiff;
   bool crossPattern, leftOK, rightOK, upOK, downOK, handled, useCenStage;
   int *mapVals;
   float gridXvecs[3], gridYvecs[3], restore[6] = {1., 0.5f, 0., sqrtf(3.f) / 2.f, 0., 0.};
@@ -314,6 +315,16 @@ int CMultiHoleCombiner::CombineItems(int boundType, BOOL turnOffOutside, int inX
     if (mUseImageCoords)
       gridStMat = MatMul(gridMat, mBITSmat);
 
+    // Determine if stage to camera has a handedness inversion and set sign for angle diff
+    stXaxis = atan2f(s2c.ypx, s2c.xpx) / (float)DTOR;
+    stYaxis = atan2f(s2c.ypy, s2c.xpy) / (float)DTOR;
+    axisDiff = (float)UtilGoodAngle(stYaxis - stXaxis);
+    if (axisDiff > 180.)
+      axisDiff -= 360.f;
+    if (axisDiff < -180.)
+      axisDiff += 360.f;
+    diffSign = axisDiff > 0. ? 1.f : -1.f;
+
     is2st = MatInv(MatMul(s2c, MatInv(is2cam)));
     for (ind = 0; ind < 3; ind++) {
       mWinApp->mShiftManager->TransferGeneralIS(msParams->holeMagIndex[1],
@@ -346,8 +357,8 @@ int CMultiHoleCombiner::CombineItems(int boundType, BOOL turnOffOutside, int inX
     holeDist1 = sqrtf(holeMat.xpx * holeMat.xpx + holeMat.ypx * holeMat.ypx);
     holeAng2 = (float)(atan2f(holeMat.ypy, holeMat.xpy) / DTOR);
     holeDist2 = sqrtf(holeMat.xpy * holeMat.xpy + holeMat.ypy * holeMat.ypy);
-    angDiff1 = (float)UtilGoodAngle(gridAng1 - holeAng1);
-    angDiff2 = (float)UtilGoodAngle(gridAng2 - holeAng2);
+    angDiff1 = diffSign * (float)UtilGoodAngle(holeAng1 - gridAng1);
+    angDiff2 = diffSign * (float)UtilGoodAngle(holeAng2 - gridAng2);
     if (angDiff1 < -30.)
       angDiff1 += 360.;
     if (angDiff1 >= 330.)
@@ -552,6 +563,7 @@ int CMultiHoleCombiner::CombineItems(int boundType, BOOL turnOffOutside, int inX
         }
       }
     }
+    mDebug = 0;
 
     // Try hexes centered so that the center point is at all possible positions, and
     // try rows pitched above and below X axis
