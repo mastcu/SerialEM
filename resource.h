@@ -2433,6 +2433,10 @@
 #define IDC_STAT_GRID4                  3461
 #define IDC_CHECK_FRAMES_UNDER_SESSION  3462
 #define IDC_CHECK1                      3463
+#define IDC_STAT_GLOBAL_AC              3464
+#define IDC_STAT_GLOBAL_HF              3465
+#define IDC_STAT_GLOBAL_MS              3466
+#define IDC_STAT_GLOBAL_GEN             3467
 #define ID_NEW_IMAGE                    32771
 #define IDM_FILE_SAVEOTHER              32772
 #define IDM_FILE_READ                   32773
@@ -2999,7 +3003,7 @@
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        289
 #define _APS_NEXT_COMMAND_VALUE         33529
-#define _APS_NEXT_CONTROL_VALUE         3464
+#define _APS_NEXT_CONTROL_VALUE         3468
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif

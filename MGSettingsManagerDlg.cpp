@@ -230,10 +230,8 @@ void CMGSettingsManagerDlg::OnButRevert##brev##()  \
 }
 
 // Macro for function when grid settings are applied to current settings
-// Maked saved parameter structure for current ones if not done yet, then set parameters
+// Make saved parameter structure for current ones if not done yet, then set parameters
 #define APPLY_GRID(typ, dex, brev) \
-void CMGSettingsManagerDlg::OnButApply##brev##()  \
-{  \
   mWinApp->RestoreViewFocus();  \
   if (!mSaved##typ##Params) {  \
     mSaved##typ##Params = new MGrid##typ##Params;  \
@@ -241,16 +239,14 @@ void CMGSettingsManagerDlg::OnButApply##brev##()  \
   }   \
   JeolCartridgeData jcd = mCartInfo->GetAt(mJcdIndex);  \
   MGrid##typ##Params param;   \
-  if (jcd.dex < 0) { \
-    ManageEnables();  \
-    return;  \
+  if (jcd.dex >= 0) { \
+    param = mMG##typ##ParamArray->GetAt(jcd.dex);   \
+    mMGTasks->GridTo##typ##Settings(param);  \
+    UpdateData(false);  \
   } \
-  param = mMG##typ##ParamArray->GetAt(jcd.dex);   \
-  mMGTasks->GridTo##typ##Settings(param);  \
   Update##typ##Current();  \
-  UpdateData(false);  \
-  EnableDlgItem(IDC_BUT_RESTORE_CUR##brev, true);  \
-}
+  ManageEnables();
+
 
 // Macro for function to restore current parameters to saved ones
 #define RESTORE_CURRENT(typ, brev) \
@@ -268,19 +264,41 @@ void CMGSettingsManagerDlg::OnButRestoreCur##brev##()  \
 }
 
 // Convenience macro for all four actions and the actual macro entries
-#define ON_FOUR_BUTTONS(typ, dex, brev) \
+#define ON_THREE_BUTTONS(typ, dex, brev) \
   GRID_USE(typ, dex, brev);  \
-  APPLY_GRID(typ, dex, brev);  \
   REMOVE_ADJUST(typ, dex, brev);  \
   RESTORE_CURRENT(typ, brev);
 
-ON_FOUR_BUTTONS(AutoCont, autoContParamIndex, AC);
+void CMGSettingsManagerDlg::OnButApplyAC()
+{ 
+  APPLY_GRID(AutoCont, autoContParamIndex, AC);
+  mNavHelper->OpenAutoContouring(true);
+}
 
-ON_FOUR_BUTTONS(HoleFinder, holeFinderParamIndex, HF);
+ON_THREE_BUTTONS(AutoCont, autoContParamIndex, AC);
 
-ON_FOUR_BUTTONS(MultiShot, multiShotParamIndex, MS);
+void CMGSettingsManagerDlg::OnButApplyHF()
+{
+  APPLY_GRID(HoleFinder, holeFinderParamIndex, HF);
+  mNavHelper->OpenHoleFinder();
+}
 
-ON_FOUR_BUTTONS(General, generalParamIndex, GEN);
+ON_THREE_BUTTONS(HoleFinder, holeFinderParamIndex, HF);
+
+void CMGSettingsManagerDlg::OnButApplyMS()
+{
+  APPLY_GRID(MultiShot, multiShotParamIndex, MS);
+  mNavHelper->OpenMultishotDlg();
+}
+
+ON_THREE_BUTTONS(MultiShot, multiShotParamIndex, MS);
+
+void CMGSettingsManagerDlg::OnButApplyGEN()
+{
+  APPLY_GRID(General, generalParamIndex, GEN);
+}
+
+ON_THREE_BUTTONS(General, generalParamIndex, GEN);
 
 /*
  *  Corresponding functions (not quite) for Final data parameters 
@@ -387,9 +405,11 @@ void CMGSettingsManagerDlg::RestorePreDlgParams(int postponed)
   EnableDlgItem(IDC_BUT_APPLY_##brev, !tasks && (gridIsSet || \
     (!gridIsSet && mSaved##typ##Params == NULL)));  \
   SetDlgItemText(IDC_BUT_APPLY_##brev, gridIsSet ? \
-    "Apply Grid as Current" : "Save Current Settings"); \
+    "Apply Grid Settings to Global" : "Save Global for Restoring"); \
   EnableDlgItem(IDC_BUT_REVERT_##brev, !tasks && gridIsSet);  \
-  EnableDlgItem(IDC_BUT_RESTORE_CUR##brev, !tasks && mSaved##typ##Params != NULL);
+  EnableDlgItem(IDC_BUT_RESTORE_CUR##brev, !tasks && mSaved##typ##Params != NULL);  \
+  SetDlgItemText(IDC_STAT_GLOBAL_##brev, mSaved##typ##Params != NULL ? \
+    "Saved global:" : "Global:");
 
 // take care of all enables for all buttons
 void CMGSettingsManagerDlg::ManageEnables()
@@ -432,10 +452,11 @@ void CMGSettingsManagerDlg::Update##typ##Current()  \
 {   \
   MGrid##typ##Params param;   \
   mMGTasks->##typ##ToGridSettings(param);  \
-  Format##typ##Settings(param, m_str##typ##Current);  \
+  Format##typ##Settings(mSaved##typ##Params != NULL ? *mSaved##typ##Params : param,  \
+    m_str##typ##Current);  \
 }
 
-// Implement the statndard functions for the 4 typical sets
+// Implement the standard functions for the 4 typical sets
 UPDATE_GRID_CURRENT(AutoCont, autoContParamIndex);
 UPDATE_GRID_CURRENT(HoleFinder, holeFinderParamIndex);
 UPDATE_GRID_CURRENT(MultiShot, multiShotParamIndex);
@@ -493,7 +514,7 @@ void CMGSettingsManagerDlg::FormatMultiShotSettings(MGridMultiShotParams &param,
 {
   CString line, one;
   float *vals = param.values;
-  int doCen = B3DNINT(vals[MS_doCenter]);
+  int nxHoles, nyHoles, doCen = B3DNINT(vals[MS_doCenter]);
   str = "Within hole: one";
   if (B3DNINT(vals[MS_inHoleOrMultiHole]) & MULTI_IN_HOLE) {
     str.Format("Within hole: %d @ %.2f um, %scenter%s, ", B3DNINT(vals[MS_numShots0]),
@@ -506,12 +527,14 @@ void CMGSettingsManagerDlg::FormatMultiShotSettings(MGridMultiShotParams &param,
     str += one;
   }
   if (B3DNINT(vals[MS_inHoleOrMultiHole]) & MULTI_HOLES) {
+    nxHoles = B3DNINT(vals[MS_numHoles0]);
+    nyHoles = B3DNINT(vals[MS_numHoles1]);
     if (B3DNINT(vals[MS_numHexRings]))
       one.Format("Multi-hole: %d rings of hex pattern", B3DNINT(vals[MS_numHexRings]));
     else
-      one.Format("Multi-hole: %d by %d %s pattern", B3DNINT(vals[MS_numHoles0]),
-        B3DNINT(vals[MS_numHoles1]), B3DNINT(vals[MS_skipCornersOf3x3]) ?
-        "cross" : "rectangle");
+      one.Format("Multi-hole: %d by %d %s pattern", nxHoles, nyHoles,
+        (B3DNINT(vals[MS_skipCornersOf3x3]) && 
+        nxHoles == 3 && nyHoles == 3 )? "cross" : "rectangle");
     str += one;
   } else
     str += "NO multiple holes";
