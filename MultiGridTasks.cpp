@@ -885,6 +885,9 @@ int CMultiGridTasks::RealignReloadedGrid(CMapDrawItem *item, float expectedRot,
     mRRGyStages[ind] = yStage[bestInd[dir]];
   }
 
+  if (mScope->GetColumnValvesOpen() < 1)
+    mScope->SetColumnValvesOpen(true);
+
   mRRGdidSaveState = true; //!mWinApp->LowDoseMode();
   if (mRRGdidSaveState) {
     mNavHelper->SetTypeOfSavedState(STATE_NONE);
@@ -1476,8 +1479,10 @@ int CMultiGridTasks::StartGridRuns(int LMneedsLD, int MMMneedsLD, int finalNeeds
       return 1;
   }
 
-  // If not doing LM maps and grid on stage is to be done, rearrange order to do it first
-  if (mMGdlg->GetOnStageDlgIndex() >= 0 && !mParams.acquireLMMs) {
+  // If not doing LM maps or reference counts exist and grid on stage is to be done, 
+  // rearrange order to do it first
+  if (mMGdlg->GetOnStageDlgIndex() >= 0 && 
+    (!mParams.acquireLMMs || mReferenceCounts > 0.)) {
     ind = dlgIndToJcdInd[mMGdlg->GetOnStageDlgIndex()];
     for (grid = 0; grid < mNumGridsToRun; grid++) {
       if (mJcdIndsToRun[grid] == ind) {
@@ -1510,6 +1515,23 @@ int CMultiGridTasks::StartGridRuns(int LMneedsLD, int MMMneedsLD, int finalNeeds
       return 1;
     for (grid = 0; grid < mNumGridsToRun; grid++)
       ChangeStatusFlag(grid, MGSTAT_FLAG_FAILED, 0);
+  }
+
+  // Make sure there are groups if autocontouring
+  if (mParams.acquireLMMs && mParams.autocontour && !mHaveAutoContGroups) {
+    mNavHelper->mAutoContouringDlg->SyncToMasterParams();
+    if (mNavHelper->mAutoContouringDlg->IsOpen())
+      CopyAutoContGroups();
+    err = 0;
+    if (mHaveAutoContGroups)
+      for (ind = 0; ind < MAX_AUTOCONT_GROUPS; ind++)
+        err += mAutoContGroups[ind];
+    if (!err) {
+      SEMMessageBox("You have selected to do autocontouring but have\nnot yet selected"
+        " any contour groups to be converted to polygons.\n\nUse the Setup button"
+        " to open the Autocontouring dialog for selecting groups");
+      return 1;
+    }
   }
 
   // If starting with MMMs and fitting polygons, check all nav files for files to open

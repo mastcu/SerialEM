@@ -8057,6 +8057,9 @@ int CNavigatorDlg::AskIfSave(CString reason)
   if (!mChanged && mParam->autosaveFile.IsEmpty())
     return 0;
 
+  if (mChanged && !mNavFilename.IsEmpty() && mWinApp->mDocWnd->GetAutoSaveNav())
+    return DoSave(false);
+
   UINT action = MessageBox("Save Navigator entries before " + reason, NULL, 
     MB_YESNOCANCEL | MB_ICONQUESTION);
   if (action == IDCANCEL)

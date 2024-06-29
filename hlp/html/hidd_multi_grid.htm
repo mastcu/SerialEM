@@ -48,6 +48,15 @@
       updating, or renaming an existing state are disabled while the multi-grid dialog 
       is open.&nbsp; If you need to change these settings, just close and reopen this 
       dialog.</p>
+    <p>The first time that the procedure is run on a set of grids, the routine needs 
+      to collect an image similar to those which will be taken for the grid map, but 
+      with an unobstructed beam.&nbsp; This is necessary to allow proper evaluation of 
+      whether a grid is too dark overall, and to pick optimal locations for finding 
+      eucentricity and for realigning to the grid map.&nbsp; Thus, it has to unload a 
+      grid on the stage, take this image, and load the first grid.&nbsp; When starting 
+      the procedure on later phases, or doing more grid maps after the reference 
+      counts have been measured, the routine will always start with the grid on the 
+      stage.</p>
     <p>When a grid is reloaded after mapping, the multi-grid routine must be able to 
       apply a stored shift from a Shift to Marker to the Navigator items, unless it 
       sees that such a shift has already been applied.&nbsp; A grid has a different 
@@ -262,11 +271,17 @@
     <p><strong>Autocontour grid squares</strong></p>
     <p>Select this option to run the routine to autocontour grid squares after 
       acquiring the grid map, using parameters set in the&nbsp; <A HREF="menu_navigator.htm#hid_montaginggrids_autocontourgridsquares">Autocontour Grid 
-            Squares</A> dialog.</p>
+            Squares</A> dialog.&nbsp; </p>
     <p><strong>Setup</strong></p>
     <p>Press this button to open the <A HREF="menu_navigator.htm#hid_montaginggrids_autocontourgridsquares">Autocontour Grid 
             Squares</A> dialog and set parameters.&nbsp; Opened this way, it will 
-      allow the group selections to be adjusted even though no contours exist.</p>
+      allow the group selections to be adjusted even though no contours exist.&nbsp; 
+      You must select the set of groups to be converted to contours before starting 
+      the first run, unless you have used the autocontouring and selected groups 
+      previously in this run of the program and the Autocontouring dialog is still 
+      open.&nbsp; The group selection is stored in the session file, so groups will 
+      already be defined if you start another run to take maps on other grids in the 
+      set.</p>
     <p>&nbsp;</p>
     <p><strong><em>Acquire Medium Mag Maps</em></strong></p>
     <p>This section contains some controls governing the acThis section contains some controls governing the acquisition of 
