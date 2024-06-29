@@ -1859,6 +1859,7 @@ void CNavigatorDlg::ProcessTKey(void)
       UpdateListString(ind);
     }
   }
+  SetChanged(true);
   ManageCurrentControls();
   Redraw();
   if (needFocusArea)
@@ -1891,6 +1892,7 @@ void CNavigatorDlg::ProcessNKey(void)
   if (ProcessRangeKey("N again for new files", mShiftNIndex, start, end))
     return;
   ToggleNewFileOverRange(start, end);
+  SetChanged(true);
 }
 
 // Toggle drawing
@@ -1905,6 +1907,7 @@ void CNavigatorDlg::ProcessVKey(void)
     item->mDraw = !item->mDraw;
     UpdateListString(ind);
   }
+  SetChanged(true);
   ManageCurrentControls();
   Redraw();
 }
