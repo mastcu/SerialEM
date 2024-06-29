@@ -3,6 +3,9 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+6/29/24: Marked Navigator table as changed after setting up files or tilt
+series with Shift N or Shift T (In 4.1).
+
 6/26/24: SEM_4-1-13
 6/26/24: Fixed hole combining with hex grids, which was broken for scopes with
 images having no handedness inversion on 12/9/23.  Also made initial IS
