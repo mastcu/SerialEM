@@ -2322,6 +2322,7 @@ void CMultiGridTasks::DoNextSequenceAction(int resume)
 
     // Start unloading grid, allow for error if no grid loaded first time (?)
   case MGACT_UNLOAD_GRID:
+    SEMAppendToLog("Removing loaded grid to take blank reference image");
     if (mUnloadErrorOK < 0)
       mUnloadErrorOK = 1;
     LoadOrUnloadGrid(-1, MG_SEQ_LOAD);
