@@ -3,6 +3,9 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+6/30/24: Made Hole Finder give priority to polygons drawn on map being
+analyzed (In 4.1).
+
 6/29/24: More fixes to multiple grid acquisition, and major rearrangements and
 renaming in the Multiple Grid Settings Manager dialog.
 
