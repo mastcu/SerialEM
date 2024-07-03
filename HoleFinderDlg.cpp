@@ -865,7 +865,7 @@ int CHoleFinderDlg::DoFindHoles(EMimageBuffer *imBuf)
   MontParam *masterMont = mWinApp->GetMontParam();
   KImage *image;
   CMapDrawItem *item;
-  int reloadBinning, overBinSave, readBuf, err, numScans, ind, nav;
+  int reloadBinning, overBinSave, readBuf, err, numScans, ind, nav, minDrawnID = 0, bufID;
   int numMedians, numOnIm, sigStart, sigEnd, iterStart, iterEnd;
   float useWidth, useHeight, ptX, ptY, delX, delY, bufStageX, bufStageY, useDiameter;
   float autocorSpacing, testSpacing, vectors[6], autocorCrit = 0.14f;
@@ -1120,6 +1120,7 @@ int CHoleFinderDlg::DoFindHoles(EMimageBuffer *imBuf)
   if (mParams.useBoundary) {
     itemArray = mNav->GetItemArray();
     mNav->BufferStageToImage(imBuf, aMat, delX, delY);
+    bufID = imBuf->mMapID;
     for (nav = 0; nav < (int)itemArray->GetSize(); nav++) {
       item = itemArray->GetAt(nav);
 
@@ -1141,11 +1142,15 @@ int CHoleFinderDlg::DoFindHoles(EMimageBuffer *imBuf)
             break;
         }
 
-        // If enough are on image, get the area, and if it is the biggest such, take it
+        // If enough are on image, get the area, and if it is the smallest such, take it
+        // But give preference to polygon drawn on map
         if ((float)numOnIm / item->mNumPoints >= minFracPtsOnImage) {
           area = mNav->ContourArea(item->mPtX, item->mPtY, item->mNumPoints);
-          if (area < minArea) {
+          if (minDrawnID != bufID && item->mDrawnOnMapID == bufID || 
+            (area < minArea && (!bufID || 
+              !(minDrawnID == bufID && item->mDrawnOnMapID != bufID)))) {
             minArea = area;
+            minDrawnID = item->mDrawnOnMapID;
             mXboundary = xBoundTemp;
             mYboundary = yBoundTemp;
             mBoundPolyID = item->mMapID;
