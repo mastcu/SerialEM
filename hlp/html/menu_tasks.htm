@@ -41,15 +41,20 @@
         </TR>
         <TR VALIGN="top">
           <TD class="auto-style1">&nbsp;&nbsp;&nbsp;&nbsp; <A HREF="#hid_tasks_settiltaxisoffset">Set Tilt Axis Offset</A></TD>
-          <TD>Set offset to center image shift on tilt axis</TD>
+          <TD>Set offset to center image shift on tilt axis.</TD>
+        </TR>
+
+        <TR VALIGN="top">
+          <TD class="auto-style1">&nbsp;&nbsp;&nbsp;&nbsp; <A HREF="#hid_eucentricity_setoffsetautomatically">Set Axis Offset Automatically from Fine</A></TD>
+          <TD>Set tilt axis offset automatically with total lateral offset after Fine Eucentricity./TD>
         </TR>
         <TR VALIGN="top">
           <TD class="auto-style1">&nbsp;&nbsp;&nbsp;&nbsp; <A HREF="#hid_tasks_trial_in_ld_refine">Use Trial in LD Refine</A></TD>
-          <TD>Use Trial area in Low Dose mode for Refine Eucentricity</TD>
+          <TD>Use Trial area in Low Dose mode for Refine Eucentricity.</TD>
         </TR>
         <TR VALIGN="top">
           <TD class="auto-style1">&nbsp;&nbsp;&nbsp;&nbsp; <A HREF="#hid_tasks_roughusesearchifinlm">Rough Use Search if in LM</A></TD>
-          <TD>Use Search area in Low Dose mode for Rough Eucentricity if it is in LM and the scope is in LM</TD>
+          <TD>Use Search area in Low Dose mode for Rough Eucentricity if it is in LM and the scope is in LM.</TD>
         </TR>
         <TR VALIGN="top">
           <TD class="auto-style1">&nbsp;&nbsp;&nbsp;&nbsp; <A HREF="#hid_eucentricity_eucentricitybyfocus">Eucentricity by Focus</A></TD>
@@ -66,7 +71,7 @@
         </TR>
         <TR VALIGN="top">
           <TD class="auto-style1"><a href="#hid_tasks_set_dose_rate">Set Dose Rate</a></TD>
-          <TD>Set beam intensity for a desired dose rate in electrons/physical pixel/sec</TD>
+          <TD>Set beam intensity for a desired dose rate in electrons/physical pixel/sec.</TD>
         </TR>
        <TR vAlign="top">
           <TD class="style4"><A href="#hid_calibration_electrondose">Electron Dose</A></TD>
@@ -90,7 +95,7 @@
         </TR>
         <TR VALIGN="top">
           <TD class="auto-style1"><A HREF="#hid_tasks_setupautocenter">Setup Autocenter</A></TD>
-          <TD>Opens dialog to set up beam for autocentering</TD>
+          <TD>Opens dialog to set up beam for autocentering.</TD>
         </TR>
         <TR VALIGN="top">
           <TD class="auto-style1"><A HREF="#hid_tasks_walkup">Walk Up</A></TD>
@@ -106,29 +111,29 @@
         </TR>
         <TR VALIGN="top">
           <TD class="auto-style1"><A HREF="#hid_tasks_setincrements">Set Increments</A></TD>
-          <TD>Set minimum and maximum tilt increment for Walkup</TD>
+          <TD>Set minimum and maximum tilt increment for Walkup.</TD>
         </TR>
         <TR VALIGN="top">
           <TD class="auto-style1"><A HREF="#hid_tasks_setupcooker">Setup Cooker</A></TD>
-          <TD>Opens dialog to set conditions for pre-exposing specimen prior to tilt series</TD>
+          <TD>Opens dialog to set conditions for pre-exposing specimen prior to tilt series.</TD>
         </TR>
         <TR VALIGN="top">
           <TD class="auto-style1"><A HREF="#hid_tasks_cookspecimen">Cook Specimen</A></TD>
-          <TD>Pre-exposes specimen for desired dose or time</TD>
+          <TD>Pre-exposes specimen for desired dose or time.</TD>
         </TR>
         <TR VALIGN="top">
           <TD class="auto-style1"><A HREF="#hid_tasks_assessanglerange">Assess Angle Range</A></TD>
-          <TD>Opens dialog to acquire small series of images at high tilt</TD>
+          <TD>Opens dialog to acquire small series of images at high tilt.</TD>
         </TR>
           <TR VALIGN="top">
           <TD class="auto-style1"><A HREF="#hid_tasks_assess_interset_shifts">Assess Interset
             Shifts</A></TD>
-          <TD>Measure shifts between Record and other acquisition types in STEM mode</TD>
+          <TD>Measure shifts between Record and other acquisition types in STEM mode.</TD>
         </TR>
         <TR VALIGN="top">
           <TD class="auto-style1"><A HREF="#hid_tasks_revise_cancel">Revise/Cancel Shifts</A></TD>
           <TD>Adjust the shift for the image in A relative to Record or disable use of
-            interset shifts</TD>
+            interset shifts.</TD>
         </TR>
       <TR VALIGN="top">
           <TD class="auto-style1"><A HREF="#hid_reset_realign">Reset IS &amp; Realign</A></TD>
@@ -294,6 +299,13 @@
         offset (or just the current offset, if Refine Eucentricity has not been run.) A
         tilt axis offset has an effect only if you have selected 'Center image shift on
         tilt axis' in the Image Alignment and Focus control panel.</P>
+      <p><A NAME="#hid_eucentricity_setoffsetautomatically"></A><B>Set Axis Offset Automatically 
+        from Fine command (Tasks- Eucentricity submenu)</B></P>
+      <P> This command toggles an option to have the tilt axis offset set automatically 
+        to the total lateral offset determined from running the fine eucentricity 
+        procedure.&nbsp; It will use the same number that appears in the entry box when 
+        using the preceding command.</P>
+      <p></p>
       <P><A NAME="hid_tasks_trial_in_ld_refine"></A><B>Use Trial in LD Refine command (Tasks
           - Eucentricity submenu)</B></P>
       <P>Use this command to select whether the Trial area rather than the View or 

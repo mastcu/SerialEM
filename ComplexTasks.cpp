@@ -92,6 +92,8 @@ BEGIN_MESSAGE_MAP(CComplexTasks, CCmdTarget)
   ON_UPDATE_COMMAND_UI(ID_TASKS_USE_VIEW_IN_LOWDOSE, OnUpdateTasksUseViewInLowdose)
   ON_COMMAND(ID_TASKS_ROUGHUSESEARCHIFINLM, OnRoughUseSearchIfInLM)
   ON_UPDATE_COMMAND_UI(ID_TASKS_ROUGHUSESEARCHIFINLM, OnUpdateRoughUseSearchIfInLM)
+  ON_COMMAND(ID_EUCENTRICITY_SETOFFSETAUTOMATICALLY, OnEucentricitySetoffsetAutomatically)
+  ON_UPDATE_COMMAND_UI(ID_EUCENTRICITY_SETOFFSETAUTOMATICALLY, OnUpdateEucentricitySetOffsetAutomatically)
 END_MESSAGE_MAP()
 
 
@@ -156,6 +158,7 @@ CComplexTasks::CComplexTasks()
   mFEIterationLimit = 3;
   mFEMaxFineIS = 2.;
   mLastAxisOffset = -999.;
+  mAutoSetAxisOffset = false;
   mFEUseTrialInLD = false;
   mFEWarnedUseTrial = false;
   mFEUseSearchIfInLM = false;
@@ -403,11 +406,21 @@ void CComplexTasks::OnRoughUseSearchIfInLM()
   mFEUseSearchIfInLM = !mFEUseSearchIfInLM;
 }
 
-
 void CComplexTasks::OnUpdateRoughUseSearchIfInLM(CCmdUI *pCmdUI)
 {
   pCmdUI->Enable();
   pCmdUI->SetCheck(mFEUseSearchIfInLM ? 1 : 0);
+}
+
+void CComplexTasks::OnEucentricitySetoffsetAutomatically()
+{
+  mAutoSetAxisOffset = !mAutoSetAxisOffset;
+}
+
+void CComplexTasks::OnUpdateEucentricitySetOffsetAutomatically(CCmdUI *pCmdUI)
+{
+  pCmdUI->Enable(!mWinApp->DoingTasks());
+  pCmdUI->SetCheck(mAutoSetAxisOffset ? 1 : 0);
 }
 
 // ComplexTasks will report in on tasks from MultiTSTasks and ParticleTasks too!
@@ -1907,6 +1920,10 @@ void CComplexTasks::EucentricityNextTask(int param)
       report.Format("Refining eucentricity: changing Z by %.2f microns and restarting",
         -delZ);
       mWinApp->AppendToLog(report, action);
+    }
+    if (!mRepeatFine && mAutoSetAxisOffset) {
+      PrintfToLog("Tilt axis offset has now been set to %.2f microns", mLastAxisOffset);
+      mScope->SetTiltAxisOffset(mLastAxisOffset);
     }
     if (mHitachiWithoutZ) {
       ReportManualZChange(delZ, "Refine");

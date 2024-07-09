@@ -99,6 +99,7 @@ class CComplexTasks : public CCmdTarget
   GetSetMember(float, LDShiftOffsetResetISThresh);
   GetSetMember(float, LDShiftOffsetIterThresh);
   SetMember(int, FENextCoarseConSet);
+  GetSetMember(BOOL, AutoSetAxisOffset);
   void GetBacklashDelta(float &deltaX, float &deltaY) {deltaX = mBASPDeltaX; deltaY = mBASPDeltaY;};
 
   float GetTiltBacklash() {return mRTThreshold;};
@@ -299,6 +300,7 @@ class CComplexTasks : public CCmdTarget
   int mFENextCoarseConSet;        // Use control set on next coarse in current conditions
   float mCumMovedX;
   float mLastAxisOffset;          // Axis offset in last run of fine eucentricity
+  BOOL mAutoSetAxisOffset;        // Flag to set offset with lateral shift automatically
   BOOL mFEUseTrialInLD;           // Flag to use trial in low dose for fine eucentricity
   BOOL mFEWarnedUseTrial;         // Flag that they were warned
   BOOL mFEUseSearchIfInLM;        // Flag to use Search for rough eucentricity if in LM
@@ -325,6 +327,8 @@ public:
   void ReportManualZChange(float delZ, const char *roughFine);
   afx_msg void OnRoughUseSearchIfInLM();
   afx_msg void OnUpdateRoughUseSearchIfInLM(CCmdUI *pCmdUI);
+  afx_msg void OnEucentricitySetoffsetAutomatically();
+  afx_msg void OnUpdateEucentricitySetOffsetAutomatically(CCmdUI *pCmdUI);
 };
 
 #endif // !defined(AFX_COMPLEXTASKS_H__83D1F77E_0AB8_47A4_B1C7_C4C29586A770__INCLUDED_)

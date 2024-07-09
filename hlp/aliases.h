@@ -337,6 +337,7 @@ hid_eucentricity_fine						= SerialEM.chm::/html\menu_tasks.htm#hid_eucentricity
 hid_eucentricity_both						= SerialEM.chm::/html\menu_tasks.htm#hid_eucentricity_both
 hid_eucentricity_eucentricitybyfocus = SerialEM.chm::/html\menu_tasks.htm#hid_eucentricity_eucentricitybyfocus
 hid_eucentricity_setupeucentricitybyfocus = SerialEM.chm::/html\menu_tasks.htm#hid_eucentricity_setupeucentricitybyfocus
+hid_eucentricity_setoffsetautomatically = SerialEM.chm::/html\menu_tasks.htm#hid_eucentricity_setoffsetautomatically
 hid_tasks_finerealign						= SerialEM.chm::/html\menu_tasks.htm#hid_tasks_finerealign
 hid_tasks_settiltaxisoffset			= SerialEM.chm::/html\menu_tasks.htm#hid_tasks_settiltaxisoffset
 hid_tasks_trial_in_ld_refine		= SerialEM.chm::/html\menu_tasks.htm#hid_tasks_trial_in_ld_refine
