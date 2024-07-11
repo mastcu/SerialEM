@@ -604,14 +604,21 @@ double CPluginManager::ExecuteCommand(CString strLine, int *itemInt, double *ite
 }
 
 // Return the camera function array for a plugin
-CamPluginFuncs *CPluginManager::GetCameraFuncs(CString name, int &flags)
+CamPluginFuncs *CPluginManager::GetCameraFuncs(CString name, int &flags, int numOfSame)
 {
   PluginData *plugin;
+  int numFound = 0;
   for (int plug = 0; plug < mPlugins.GetSize(); plug++) {
     plugin = mPlugins[plug];
     flags = plugin->flags;
-    if ((plugin->flags & PLUGFLAG_CAMERA) && name == plugin->shortName)
-      return plugin->camFuncs;
+    if ((plugin->flags & PLUGFLAG_CAMERA) && name == plugin->shortName) {
+      if (numOfSame > 0) {
+        numFound++;
+        if (numFound == numOfSame)
+          return plugin->camFuncs;
+      } else
+        return plugin->camFuncs;
+    }
   }
   return NULL;
 }

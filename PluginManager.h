@@ -246,7 +246,7 @@ public:
     CString &report, double &outD1, double &outD2, double &outD3, int &numOut, 
     CString &retString, int &err, CString *strItems = NULL);
   void ListCalls(void);
-  CamPluginFuncs *GetCameraFuncs(CString name, int &flags);
+  CamPluginFuncs *GetCameraFuncs(CString name, int &flags, int numOfSame);
   CString GetScopePluginName();
   void ReleasePlugins(void);
   ScopePluginFuncs *GetScopeFuncs() {return &mScopeFuncs;};

@@ -238,6 +238,16 @@ int CBaseSocket::LookupTypeID(int typeID)
   return -1;
 }
 
+// Returns 1 if an ID has already been assigned to a socket, -1 if no IP entered for it,
+// or 0 if it is assignable
+int CBaseSocket::IsTypeIDassigned(int typeID)
+{
+  int indID = LookupTypeID(typeID);
+  if (indID < 0 || !mIPaddrByID[indID])
+    return -1;
+  return (mIdIndexToSockIndMap[indID] < 0 ? 0 : 1);
+}
+
 void CBaseSocket::CloseBeforeNextUse(int typeID)
 {
   int idInd = LookupTypeID(typeID);

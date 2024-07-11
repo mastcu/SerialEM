@@ -9,6 +9,7 @@
 #define TIETZ_SOCK_ID    5
 #define HITACHI_SOCK_ID  6
 #define FEI2ND_SOCK_ID   6
+#define JEOL2ND_SOCK_ID  6
 #define RUN_PYTH_SOCK_ID 7
 #define EXT_PYTH_SOCK_ID 8
 // Note that SavvyScan was given 9!
@@ -97,6 +98,7 @@ public:
   static unsigned short GetServerPort(int typeID, unsigned short dfltPort);
   static void GetServerIP(int typeID, std::string &serverIP);
   static int LookupTypeID(int typeID);
+  static int IsTypeIDassigned(int typeID);
   void Release() {};   // Needed to keep macros happy
   static void CloseBeforeNextUse(int typeID);
   static bool ServerIsRemote(int typeID);

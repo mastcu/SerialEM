@@ -1294,7 +1294,7 @@ int CCameraController::InitializeTietz(int whichCameras, int *originalList, int 
   // Create an instance just once, even if later lock fails
   if (!mTietzInstances) {
 
-    funcs = mWinApp->mPluginManager->GetCameraFuncs("TietzPlugin", flags);
+    funcs = mWinApp->mPluginManager->GetCameraFuncs("TietzPlugin", flags, 0);
     if (!funcs) {
       AfxMessageBox("The TietzPlugin was not loaded; no Tietz camera will be available",
         MB_EXCLAME);
@@ -1622,9 +1622,10 @@ void CCameraController::InitializeDirectElectron(int *originalList, int numOrig)
 void CCameraController::InitializePluginCameras(int &numPlugListed, int *originalList, 
                                                 int numOrig)
 {
-  int ind, i, err, num, idum, numGain, flags, ifSTEM, set;
+  int ind, i, err, num, idum, numGain, flags, ifSTEM, set, plugNum;
   double minPixel, rotInc, ddum, pixelInc;
-  CString report;
+  char last;
+  CString report, useName;
 
   numPlugListed = 0;
   for (ifSTEM = 1; ifSTEM >= 0; ifSTEM--) {
@@ -1634,8 +1635,17 @@ void CCameraController::InitializePluginCameras(int &numPlugListed, int *origina
       if (!BOOL_EQUIV(mAllParams[i].STEMcamera, ifSTEM))
         continue;
       if (!mAllParams[i].pluginName.IsEmpty()) {
-        mPlugFuncs[i] = mWinApp->mPluginManager->GetCameraFuncs
-        (mAllParams[i].pluginName, flags);
+        plugNum = 0;
+        useName = mAllParams[i].pluginName;
+        idum = useName.GetLength();
+        if (useName.ReverseFind('#') == idum) {
+          last = useName.GetAt(idum - 1);
+          if (last >= '0' && last <= '9') {
+            plugNum = last - '0';
+            useName = useName.Left(idum - 2);
+          }
+        }
+        mPlugFuncs[i] = mWinApp->mPluginManager->GetCameraFuncs(useName, flags, plugNum);
         if (!mPlugFuncs[i]) {
           AfxMessageBox("The camera plugin named " + mAllParams[i].pluginName +
             " did not load so that camera will be unavailable", MB_EXCLAME);
