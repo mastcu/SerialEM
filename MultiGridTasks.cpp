@@ -55,6 +55,7 @@ CMultiGridTasks::CMultiGridTasks()
   mSuspendedMulGrid = false;
   mRRGcurDirection = -2;
   mRRGMaxRotation = 15.f;
+  mRRGmaxCenShift = 50.;
   mParams.appendNames = false;
   mParams.useSubdirectory = true;
   mParams.LMMstateType = 0;
@@ -128,6 +129,7 @@ void CMultiGridTasks::InitOrClearSessionValues()
   mHaveAutoContGroups = false;
   mLMMmagIndex = 0;
   mNamesLocked = false;
+  mLoadedGridIsAligned = 0;
 }
 
 /*
@@ -885,6 +887,10 @@ int CMultiGridTasks::RealignReloadedGrid(CMapDrawItem *item, float expectedRot,
     mRRGyStages[ind] = yStage[bestInd[dir]];
   }
 
+  // Compute actual max shift given center position and max rotation
+  mRRGmaxInitShift = mRRGmaxCenShift + sinf(mRRGMaxRotation * (float)DTOR) * 
+    sqrtf(mRRGxStages[0] * mRRGxStages[0] + mRRGyStages[0] * mRRGyStages[0]);
+
   if (mScope->GetColumnValvesOpen() < 1)
     mScope->SetColumnValvesOpen(true);
 
@@ -906,6 +912,7 @@ int CMultiGridTasks::RealignReloadedGrid(CMapDrawItem *item, float expectedRot,
   mRRGshiftX = mRRGshiftY = 0.;
   mRRGcurDirection = mBigRotation ? 0 : -1;
   mDoingMultiGrid = MG_REALIGN_RELOADED;
+  mLoadedGridIsAligned = 0;
   if (MoveStageToTargetPiece()) {
     StopMultiGrid();
     return 1;
@@ -1084,7 +1091,8 @@ void CMultiGridTasks::AlignNewReloadImage()
         NULL, NULL, false);
   } else {
     err = mWinApp->mProcessImage->AlignBetweenMagnifications(mMapBuf, (float)mMapCenX,
-      (float)mMapCenY, -0.5f, 0., mRRGangleRange, false, scaleMax, rotBest, 0, mess);
+      (float)mMapCenY, mRRGmaxInitShift, 0., mRRGangleRange, false, scaleMax, rotBest, 
+      0, mess);
   }
   mImBufs->mImage->getShifts(xShift, yShift);
   // TEMP
@@ -1211,6 +1219,7 @@ void CMultiGridTasks::AlignNewReloadImage()
       mRRGitem->mGridMapXform = new float[6];
     for (ind = 0; ind < 6; ind++)
       mRRGitem->mGridMapXform[ind] = newXform[ind];
+    mLoadedGridIsAligned = 1;
   }
 }
 
@@ -1422,7 +1431,7 @@ int CMultiGridTasks::StartGridRuns(int LMneedsLD, int MMMneedsLD, int finalNeeds
   bool needForget = false;
   bool didLMMforGrid = false, didMMMforGrid = false, didAcqForGrid = false;
   bool lastMMMforGrid = false, lastAcqForGrid = false;
-  bool setupLMMimaging = false;
+  bool setupLMMimaging = false, skipRealign = false;
   mNavigator = mWinApp->mNavigator;
   mSingleGridMode = !mScope->GetScopeHasAutoloader();
 
@@ -1481,7 +1490,7 @@ int CMultiGridTasks::StartGridRuns(int LMneedsLD, int MMMneedsLD, int finalNeeds
 
   // If not doing LM maps or reference counts exist and grid on stage is to be done, 
   // rearrange order to do it first
-  if (mMGdlg->GetOnStageDlgIndex() >= 0 && 
+  if (mMGdlg->GetOnStageDlgIndex() >= 0 &&
     (!mParams.acquireLMMs || mReferenceCounts > 0.)) {
     ind = dlgIndToJcdInd[mMGdlg->GetOnStageDlgIndex()];
     for (grid = 0; grid < mNumGridsToRun; grid++) {
@@ -1493,6 +1502,21 @@ int CMultiGridTasks::StartGridRuns(int LMneedsLD, int MMMneedsLD, int finalNeeds
         break;
       }
     }
+
+    // Make sure grid is aligned if it might be, and set to skip realign if it is
+    if (ind == mJcdIndsToRun[0] && mLoadedGridIsAligned < 0) {
+      jcd = mCartInfo->GetAt(ind);
+      str.Format("Is the grid on the stage, # %d, still aligned to the grid"
+        " map or has it been disturbed since it was aligned?   Press:\n\n"
+        "\"Aligned\" if it is still aligned\n"
+        "\"Disturbed\" if the realign to grid map routine needs to be run", jcd.id);
+
+      if (SEMThreeChoiceBox(str, "Aligned", "Disturbed", "") == IDYES)
+        mLoadedGridIsAligned = 1;
+      else
+        mLoadedGridIsAligned = 0;
+    }
+    skipRealign = ind == mJcdIndsToRun[0] && mLoadedGridIsAligned > 0;
   }
 
   // Check for dark and failed and make sure they want to proceed with failed
@@ -1705,7 +1729,7 @@ int CMultiGridTasks::StartGridRuns(int LMneedsLD, int MMMneedsLD, int finalNeeds
       mActSequence.push_back(MGACT_MARKER_SHIFT);
 
       // If LMM wasn't just done, set state for LM, load grid, and realign to grid
-      if (!didLMMforGrid && !mSingleGridMode) {
+      if (!didLMMforGrid && !mSingleGridMode && !skipRealign) {
         AddToSeqForLMimaging(apForLMM, stateForLMM, mLMMneedsLowDose);
         mActSequence.push_back(MGACT_LOAD_GRID);
         mActSequence.push_back(MGACT_SET_ZHEIGHT);
@@ -1740,7 +1764,7 @@ int CMultiGridTasks::StartGridRuns(int LMneedsLD, int MMMneedsLD, int finalNeeds
       mActSequence.push_back(MGACT_MARKER_SHIFT);
 
       // Reload and realign unless it was just done
-      if (!didLMMforGrid && !didMMMforGrid && !mSingleGridMode) {
+      if (!didLMMforGrid && !didMMMforGrid && !mSingleGridMode && !skipRealign) {
         AddToSeqForLMimaging(apForLMM, stateForLMM, mLMMneedsLowDose);
         mActSequence.push_back(MGACT_LOAD_GRID);
         mActSequence.push_back(MGACT_SET_ZHEIGHT);
@@ -2129,6 +2153,7 @@ void CMultiGridTasks::DoNextSequenceAction(int resume)
       jcdEl.zStage = zStage;
       mWinApp->mDocWnd->DoCloseFile();
       mNavigator->DoSave(false);
+      mLoadedGridIsAligned = true;
 
       // Copy to read buffer in case eucentricity has to happen
       mWinApp->mBufferManager->CopyImageBuffer(1,
@@ -3207,6 +3232,7 @@ void CMultiGridTasks::GeneralToGridSettings(MGridGeneralParams &mgParam)
 #define MGDOC_ACQ_ST_NUM  "AcqStateNum"
 #define MGDOC_ACQ_ST_NAME  "AcqStateName"
 #define MGDOC_SEP_ACQ_ST  "SeparateAcqState"
+#define MGDOC_IS_ALIGNED  "LoadedIsAligned"
 
 #define MGNAV_ACQ_SUFFIX "_navAcq.txt"
 
@@ -3290,6 +3316,7 @@ int CMultiGridTasks::SaveSessionFile(CString &errStr)
       err += AdocSetKeyValue(ADOC_GLOBAL_NAME, 0, MGDOC_LMM_STNAME,
         (LPCTSTR)mLMMusedStateName);
     }
+    err += AdocSetInteger(ADOC_GLOBAL_NAME, 0, MGDOC_IS_ALIGNED, mLoadedGridIsAligned);
     if (mHaveAutoContGroups)
       err += AdocSetIntegerArray(ADOC_GLOBAL_NAME, 0, MGDOC_CONT_GROUP, mAutoContGroups, 
         MAX_AUTOCONT_GROUPS);
@@ -3312,9 +3339,6 @@ int CMultiGridTasks::SaveSessionFile(CString &errStr)
       err += AdocSetInteger(MGDOC_GRID, sectInd, MGDOC_TYPE, jcd.type);
       err += AdocSetInteger(MGDOC_GRID, sectInd, MGDOC_STATUS, jcd.status);
       err += AdocSetFloat(MGDOC_GRID, sectInd, MGDOC_ZSTAGE, jcd.zStage);
-      /*if (jcd.holeSize || jcd.holeSpacing)
-        err += AdocSetTwoFloats(MGDOC_GRID, sectInd, MGDOC_HOLE_PARAM, jcd.holeSize,
-          jcd.holeSpacing);*/
       err += AdocSetKeyValue(MGDOC_GRID, sectInd, MGDOC_NAME, (LPCTSTR)jcd.name);
       err += AdocSetKeyValue(MGDOC_GRID, sectInd, MGDOC_USERNAME, (LPCTSTR)jcd.userName);
       if (jcd.LMmapID)
@@ -3471,7 +3495,7 @@ void CMultiGridTasks::ClearSession(bool keepAcqParams)
 }
 
 /*
- * Macros for reading a fie: montage params etc
+ * Macros for reading a file: montage params etc
  */
 #define ADOC_REQUIRED(a) \
   retval = a; \
@@ -3523,6 +3547,7 @@ int CMultiGridTasks::LoadSessionFile(bool useLast, CString &errStr)
   MGridMultiShotParams msParam;
   MGridGeneralParams genParam;
   float values[MS_noParam];
+  int isAligned = 0;
 
   if (mSessionFilename.IsEmpty())
     mSessionFilename = mLastSessionFile;
@@ -3603,6 +3628,8 @@ int CMultiGridTasks::LoadSessionFile(bool useLast, CString &errStr)
   if (AdocGetInteger(ADOC_GLOBAL_NAME, 0, MGDOC_LMM_STNUM, &mLMMusedStateNum) < 0)
     err++;
   if (AdocGetInteger(ADOC_GLOBAL_NAME, 0, MGDOC_LMM_MAGIND, &mLMMmagIndex) < 0)
+    err++;
+  if (AdocGetInteger(ADOC_GLOBAL_NAME, 0, MGDOC_IS_ALIGNED, &isAligned) < 0)
     err++;
   GET_STRING(ADOC_GLOBAL_NAME, 0, MGDOC_LMM_STNAME, mLMMusedStateName);
   ind1 = MAX_AUTOCONT_GROUPS;
@@ -3794,6 +3821,8 @@ int CMultiGridTasks::LoadSessionFile(bool useLast, CString &errStr)
       mNavHelper->mMultiGridDlg->UpdateCurrentDir();
     }
     IdentifyGridOnStage(stageID, stageInd);
+    if (stageInd >= 0)
+      mLoadedGridIsAligned = isAligned ? -1 : 0;
     mParams.appendNames = mAppendNames;
     mParams.useSubdirectory = mUseSubdirs;
     if (!mWorkingDir.IsEmpty() && !mNamesLocked) {

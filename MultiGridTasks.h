@@ -163,6 +163,8 @@ public:
   GetSetMember(int, NumFinalStateCombos);
   GetMember(BOOL, AppendNames);
   GetMember(BOOL, UseSubdirs);
+  SetMember(int, LoadedGridIsAligned);
+  GetSetMember(float, RRGmaxCenShift);
   bool WasStoppedInNavRun() { return mStoppedInNavRun && mSuspendedMulGrid; };
   bool WasStoppedInLMMont() { return mStoppedInLMMont && mSuspendedMulGrid; };
   void SetExtErrorOccurred(int inVal);
@@ -246,9 +248,12 @@ private:
   float mRRGbacklashX;           // Backlash to use, from map
   float mRRGbacklashY;
   float mRRGmapZvalue;           // Z to move to from the montage adoc
+  float mRRGmaxCenShift;         // Maximum allowed shift at center of grid
+  float mRRGmaxInitShift;        // Actual shift allowed in initial correlation
   bool mBigRotation;             // Flag if a big rotation is expected
   int mMapBuf;                   // Buffer the map is in
   int mMapCenX, mMapCenY;        // Center coordinate of center piece in loaded map
+  int mLoadedGridIsAligned;      // 1 if it is aligned, 0 if not, -1 if it should be asked
 
   int mInitialObjApSize;         // Initial size of objective aperture
   int mInitialCondApSize;        // Initial size of condenser aperture

@@ -381,6 +381,7 @@ BOOL_PROP_TEST("AllowWindowWithTools", mWinApp->mExternalTools->, AllowWindow)
 FLOAT_PROP_TEST("GridReloadMaxRotation", mWinApp->mMultiGridTasks->, RRGMaxRotation)
 INT_PROP_TEST("MulGridNumMMMcombos", mWinApp->mMultiGridTasks->, NumMMMstateCombos)
 INT_PROP_TEST("MulGridNumFinalCombos", mWinApp->mMultiGridTasks->, NumFinalStateCombos)
+FLOAT_PROP_TEST("GridReloadMaxCenShift", mWinApp->mMultiGridTasks->, RRGmaxCenShift)
 
 #endif
 #ifdef PROP_TEST_SECT4

@@ -523,6 +523,7 @@ BEGIN
             MENUITEM "Refine && Re&align",          ID_TASKS_FINEREALIGN
             MENUITEM SEPARATOR
             MENUITEM "Set &Tilt Axis Offset",       ID_TASKS_SETTILTAXISOFFSET
+            MENUITEM "Set &Offset Automatically after Fine", ID_EUCENTRICITY_SETOFFSETAUTOMATICALLY
             MENUITEM "Use Trial in &LD Refine",     ID_TASKS_TRIAL_IN_LD_REFINE
             MENUITEM "Rough Use &Search if in LM",  ID_TASKS_ROUGHUSESEARCHIFINLM
             MENUITEM SEPARATOR
@@ -7657,6 +7658,8 @@ BEGIN
                             "Clear out all data about the multi-grid session"
     ID_MONTAGINGGRIDS_IDENTIFYGRIDONSTAGE 
                             "Specify which grid is currently loaded"
+    ID_EUCENTRICITY_SETOFFSETAUTOMATICALLY 
+                            "Set tilt axis offset automatically with value from Fine Eucentricity"
 END
 
 STRINGTABLE

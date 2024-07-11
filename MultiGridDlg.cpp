@@ -771,8 +771,10 @@ void CMultiGridDlg::NewGridOnStage(int jcdInd)
     edit->Invalidate();
     mOnStageDlgIndex = -1;
   }
-  if (jcdInd < 0)
+  if (jcdInd < 0) {
+    mMGTasks->SetLoadedGridIsAligned(0);
     return;
+  }
   for (ind = 0; ind < mNumUsedSlots; ind++) {
     if (mDlgIndToJCDindex[ind] == jcdInd) {
       edit = (CEdit *)GetDlgItem(IDC_EDIT_MULGRID_NAME1 + ind);
@@ -783,6 +785,8 @@ void CMultiGridDlg::NewGridOnStage(int jcdInd)
       mOnStageDlgIndex = ind;
       jcd = mCartInfo->GetAt(jcdInd);
       mSelGridOnStage = jcd.station == JAL_STATION_STAGE;
+      if (ind != oldInd)
+        mMGTasks->SetLoadedGridIsAligned(0);
       UpdateEnables();
       break;
     }

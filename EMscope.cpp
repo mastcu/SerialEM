@@ -10167,6 +10167,7 @@ int CEMscope::LongOperationBusy(int index)
               mChangedLoaderInfo = 1;
               if (mWinApp->mNavHelper->mMultiGridDlg)
                 mWinApp->mNavHelper->mMultiGridDlg->NewGridOnStage(mLoadedCartridge);
+              mWinApp->mMultiGridTasks->SetLoadedGridIsAligned(0);
             }
           }
           didError = busy && (!mLongOpData[thread].finished[op] || thread == 1);

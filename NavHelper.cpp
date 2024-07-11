@@ -6460,6 +6460,7 @@ void CNavHelper::OpenMultiGrid(void)
     mMultiGridDlg->UpdateEnables();
     mMultiGridDlg->NewGridOnStage(-1);
   }
+  mWinApp->mMultiGridTasks->SetLoadedGridIsAligned(0);
   mWinApp->RestoreViewFocus();
 }
 
