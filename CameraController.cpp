@@ -1638,7 +1638,7 @@ void CCameraController::InitializePluginCameras(int &numPlugListed, int *origina
         plugNum = 0;
         useName = mAllParams[i].pluginName;
         idum = useName.GetLength();
-        if (useName.ReverseFind('#') == idum) {
+        if (useName.ReverseFind('#') == idum - 2) {
           last = useName.GetAt(idum - 1);
           if (last >= '0' && last <= '9') {
             plugNum = last - '0';
