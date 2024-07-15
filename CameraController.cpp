@@ -1638,7 +1638,7 @@ void CCameraController::InitializePluginCameras(int &numPlugListed, int *origina
         plugNum = 0;
         useName = mAllParams[i].pluginName;
         idum = useName.GetLength();
-        if (useName.ReverseFind('#') == idum - 2) {
+        if (useName.ReverseFind('#') == idum) {
           last = useName.GetAt(idum - 1);
           if (last >= '0' && last <= '9') {
             plugNum = last - '0';
@@ -1647,8 +1647,13 @@ void CCameraController::InitializePluginCameras(int &numPlugListed, int *origina
         }
         mPlugFuncs[i] = mWinApp->mPluginManager->GetCameraFuncs(useName, flags, plugNum);
         if (!mPlugFuncs[i]) {
-          AfxMessageBox("The camera plugin named " + mAllParams[i].pluginName +
-            " did not load so that camera will be unavailable", MB_EXCLAME);
+          if (plugNum)
+            AfxMessageBox("Not enough plugins with the plugin name " + useName +
+              " were loaded, so the camera with property PluginName " + 
+              mAllParams[i].pluginName + " will be unavailable", MB_EXCLAME);
+          else
+            AfxMessageBox("The camera plugin with plugin name " + mAllParams[i].pluginName
+              + " did not load, so that camera will be unavailable", MB_EXCLAME);
           err = 1;
         } else {
           num = mPlugFuncs[i]->GetNumberOfCameras();

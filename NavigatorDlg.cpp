@@ -8048,6 +8048,8 @@ int CNavigatorDlg::DoSaveAs()
   RemoveAutosaveFile();
   mPreCombineBackedUp = false;
   SavePreCombineFile();
+  if (mHelper->mMultiGridDlg)
+    mHelper->mMultiGridDlg->UpdateEnables();
   return 0;
 }
 

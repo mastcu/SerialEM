@@ -2429,8 +2429,13 @@ void CParameterIO::WriteSettings(CString strFileName)
     mFile = NULL;
   }
 
-  WriteMacrosToFile(mDocWnd->GetCurScriptPackPath(), 
-    MAX_MACROS + MAX_ONE_LINE_SCRIPTS);
+  oneState = mDocWnd->GetCurScriptPackPath();
+  if (oneState.IsEmpty()) {
+    UtilSplitExtension(strFileName, oneState, macCopy);
+    oneState += "-scripts.txt";
+    mDocWnd->SetCurScriptPackPath(oneState);
+  }
+  WriteMacrosToFile(oneState, MAX_MACROS + MAX_ONE_LINE_SCRIPTS);
 
 }
 #undef INT_SETT_GETSET

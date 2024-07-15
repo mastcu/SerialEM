@@ -1637,6 +1637,29 @@
       On Windows 7 or above, the first time that you start this server, you need to run it
       as Administrator to guarantee that various JEOL DLLs can be copied to the folder where
       the server is located.
+      <p><b><i>To run a second JEOL camera on a different computer through JEOL-SEMCamServer:</i></b></p>
+      <p>Running two cameras is possible with the following setup:</p>
+      <ul>
+        <li>Both cameras must be connected through the server interface, even if one is on the SerialEM computer.</li>
+        <li>There must be two copies of the JeolCamPlugin.dll present in the SerialEM 
+          folder.&nbsp; Simply make a copy and name it JeolCam2Plugin.dll.</li>
+        <li>The properties for the camera connected first should have the usual entry 
+          'PluginName JeolCamPlugin' and the properties for the camera connected second 
+          should have 'PluginName JeolCamPlugin#2'.&nbsp; Cameras are connected in order 
+          based on their position in the ActiveCameraList; however, STEM is connected 
+          before any cameras.&nbsp; If you have STEM, its PluginName should be 
+          JeolCamPlugin, and the camera on that computer (if any) should also have that 
+          name and be listed first in the ActiveCameraList.</li>
+        <li>The property entries would be <br />
+&nbsp;&nbsp;&nbsp; SocketServerIP 4 ip_address_of_first_camera_PC<br />
+&nbsp;&nbsp;&nbsp; SocketServerPort 4 48896<br />
+&nbsp;&nbsp;&nbsp; SocketServerIP 6 ip_address_of_second_camera_PC <br/>
+&nbsp;&nbsp;&nbsp; SocketServerPort 6 48898<br />
+          </li>
+        <li>The environment variable&nbsp; JEOL_SEM_SERVER_PORT must be set to 48896 on 
+          the second computer.</li>
+        <li>JOEL-SEMCamServer is started on both computers, then SerialEM is started.</li>
+      </ul>
        <p>
         <a name="RemoteTietz"><i><b>For accessing a Tietz camera remotely</b></i></a>,
         copy the file Tietz-SEMServer.exe to the Tietz camera computer.&nbsp; Put it in
