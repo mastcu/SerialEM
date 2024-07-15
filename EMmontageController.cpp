@@ -1905,7 +1905,8 @@ int EMmontageController::DoNextPiece(int param)
         // then start the stage move and return
         if (mImShiftInBlocks)
           mScope->SetImageShift(mBaseISX, mBaseISY);
-        ComputeMoveToPiece(mPieceIndex, mFocusInBlocks, iDelX, iDelY, adjISX, adjISY);
+        ComputeMoveToPiece(mPieceIndex, mFocusInBlocks || mImShiftInBlocks, iDelX, iDelY,
+          adjISX, adjISY);
         mScope->MoveStage(mMoveInfo, mImShiftInBlocks);
         SEMTrace('S', "DoNextPiece moving stage to %.3f %.3f for %s block",
           mMoveInfo.x, mMoveInfo.y, mImShiftInBlocks ? "image shift" : "focus");
