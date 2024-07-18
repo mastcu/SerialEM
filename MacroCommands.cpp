@@ -3239,6 +3239,8 @@ int CMacCmd::OpenNewFile(void)
     mWinApp->mDocWnd->LeaveCurrentFile();
     mMontP->xNframes = ix0;
     mMontP->yNframes = iy0;
+    mMontP->numToSkip = 0;
+    mMontP->fitToPolygonID = 0;
     setNum = MontageConSetNum(mMontP, false);
     xFrame = mMontP->xFrame;
 
