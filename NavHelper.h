@@ -294,6 +294,7 @@ public:
   GetSetMember(float, RISkipItemPosMinField);
   GetSetMember(BOOL, ShowStateNumbers);
   SetMember(CString, FirstMontFilename);
+  GetMember(bool, OpenedMultiGrid);
 
   int *GetAcqActDefaultOrder() { return &mAcqActDefaultOrder[0]; };
   int *GetAcqActCurrentOrder(int which) { return &mAcqActCurrentOrder[which][0]; };
@@ -438,6 +439,7 @@ private:
   WINDOWPLACEMENT mAutoContDlgPlace;
   WINDOWPLACEMENT mMultiGridPlace;
   WINDOWPLACEMENT mMGSettingsPlace;
+  bool mOpenedMultiGrid;              // Flag that it was ever open
   double mRIdefocusOffsetSet;   // Defocus offset set in realign to item
   int mRIalphaSet;              // Alpha value set in realign to item
   int mRIalphaSaved;            // Alpha value that it was before

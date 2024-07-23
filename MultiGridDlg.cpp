@@ -508,6 +508,7 @@ void CMultiGridDlg::OnButMgGetNames()
     NewGridOnStage(onStage);
   CheckIfAnyUndoneToRun();
   UpdateEnables();
+  mMGTasks->SetAdocChanged(true);
   mWinApp->RestoreViewFocus();
 }
 
@@ -527,7 +528,7 @@ void CMultiGridDlg::ReloadTable(int resetOrClear, int checkRuns)
   // Get vector of IDs or inverse FEI IDs and order them
   for (slot = 0; slot < mNumUsedSlots; slot++) {
     order.push_back(slot);
-    jcd = mCartInfo->ElementAt(slot);
+    jcd = mCartInfo->GetAt(slot);
     idVec.push_back((float)jcd.id);
   }
   if (mNumUsedSlots)
@@ -537,17 +538,17 @@ void CMultiGridDlg::ReloadTable(int resetOrClear, int checkRuns)
   mDlgIndToJCDindex.clear();
   for (slot = 0; slot < mNumUsedSlots; slot++) {
     ind = order[JEOLscope ? slot : (mNumUsedSlots - 1) - slot];
-    jcd = mCartInfo->ElementAt(ind);
+    JeolCartridgeData &jcdEl = mCartInfo->ElementAt(ind);
     mDlgIndToJCDindex.push_back(ind);
 
-    str.Format("%d", ind >= 0 ? jcd.id : mNumUsedSlots - slot);
+    str.Format("%d", ind >= 0 ? jcdEl.id : mNumUsedSlots - slot);
     SetDlgItemText(IDC_RADIO_MULGRID_SEL1 + slot, str);
     EnableDlgItem(IDC_CHECK_MULGRID_RUN1 + slot, ind >= 0);
     EnableDlgItem(IDC_EDIT_MULGRID_NAME1 + slot, ind >= 0);
     if (checkRuns) {
       button = (CButton *)GetDlgItem(IDC_CHECK_MULGRID_RUN1 + slot);
       if (button)
-        button->SetCheck((checkRuns > 0 && !(jcd.status & MGSTAT_FLAG_TOO_DARK)) ? 1 : 0);
+        button->SetCheck((checkRuns > 0 && !(jcdEl.status & MGSTAT_FLAG_TOO_DARK)) ? 1 : 0);
     }
 
     if (ind < 0) {
@@ -558,12 +559,13 @@ void CMultiGridDlg::ReloadTable(int resetOrClear, int checkRuns)
         if (resetOrClear > 1)
           str = "";
         else {
-          str = jcd.name;
+          str = jcdEl.name;
           mMGTasks->ReplaceBadCharacters(str);
         }
-        jcd.userName = str;
+        jcdEl.userName = str;
+        mMGTasks->SetAdocChanged(true);
       }
-      SetDlgItemText(IDC_EDIT_MULGRID_NAME1 + slot, jcd.userName);
+      SetDlgItemText(IDC_EDIT_MULGRID_NAME1 + slot, jcdEl.userName);
       SetStatusText(ind);
     }
   }
@@ -640,6 +642,7 @@ void CMultiGridDlg::OnEnKillfocusEditName(UINT nID)
     JeolCartridgeData &jcdEl = FindCartDataForDlgIndex(ind);
     if (str.Compare(jcdEl.userName)) {
       mNamesChanged = true;
+      mMGTasks->SetAdocChanged(true);
       jcdEl.userName = str;
     }
   }
@@ -1164,6 +1167,7 @@ void CMultiGridDlg::RepackStatesIfNeeded(int &numBoxes, int *stateNums,
       stateNames[ind] = "";
     }
     ACCUM_MAX(numBoxes, out);
+    mMGTasks->SetAdocChanged(true);
   }
 }
 
@@ -1396,6 +1400,7 @@ void CMultiGridDlg::HandlePerGridStateChange()
       jcdEl.separateState = 1;
       GetFinalStateFomCombos(&jcdEl.acqStateNums[0], &jcdEl.acqStateNames[0], -1);
       SetStatusText(mDlgIndToJCDindex[mSelectedGrid]);
+      mMGTasks->SetAdocChanged(true);
     }
   }
   UpdateEnables();
@@ -1770,6 +1775,7 @@ void CMultiGridDlg::ProcessFinalStateCombo(CComboBox &combo, int index)
     }
   }
   ProcessMultiStateCombo(combo, stateNums, stateNames, index, gridID);
+  mMGTasks->SetAdocChanged(true);
 }
 
 // Check box to set state grid by grid
@@ -1795,6 +1801,7 @@ void CMultiGridDlg::OnButRevertToGlobal()
   SetFinalStateComboBoxes();
   SetStatusText(mDlgIndToJCDindex[mSelectedGrid]);
   EnableDlgItem(IDC_BUT_REVERT_TO_GLOBAL, false);
+  mMGTasks->SetAdocChanged(true);
 }
 
 // Check for frame dir under session/grid dir

@@ -2245,6 +2245,8 @@ void CSerialEMView::SetZoom(double inZoom)
 void CSerialEMView::NewZoom()
 {
   double effZoom;
+  if (!mImBufs[mImBufIndex].mImage)
+    return;
   DrawImage();
   if (mImBufs[mImBufIndex].mImageScale)
     mWinApp->mImageLevel.NewZoom(mZoom);

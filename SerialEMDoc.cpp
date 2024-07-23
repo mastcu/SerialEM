@@ -43,6 +43,7 @@
 #include "NavHelper.h"
 #include "MultiShotDlg.h"
 #include "MultiGridDlg.h"
+#include "MultiGridTasks.h"
 #include "MainFrm.h"
 #include "StateDlg.h"
 #include "DummyDlg.h"
@@ -2653,6 +2654,9 @@ int CSerialEMDoc::AppendToLogBook(CString inString, CString title)
 // Periodically save navigator, log, and settings, if user selected; save short term cal
 void CSerialEMDoc::AutoSaveFiles()
 {
+  CArray<JeolCartridgeData, JeolCartridgeData> *cartInfo = 
+    mWinApp->mScope->GetJeolLoaderInfo();
+  CString str;
   BOOL saveAuto = mWinApp->GetSaveAutosaveLog();
   if (mWinApp->mNavigator && mAutoSaveNav)
     mWinApp->mNavigator->AutoSave();
@@ -2667,6 +2671,10 @@ void CSerialEMDoc::AutoSaveFiles()
       mWinApp->mLogWindow->UpdateSaveFile(saveAuto);
   }
   SaveShortTermCal();
+  if (mWinApp->mNavHelper->GetOpenedMultiGrid() && 
+    mWinApp->mMultiGridTasks->GetAdocChanged() && cartInfo->GetSize() > 0) {
+    mWinApp->mMultiGridTasks->SaveSessionFile(str);
+  }
 }
 
 

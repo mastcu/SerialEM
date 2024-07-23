@@ -337,6 +337,7 @@ CNavHelper::CNavHelper(void)
   mRIJustMoving = false;
   mShowStateNumbers = false;
   mDoingMultiGridFiles = false;
+  mOpenedMultiGrid = false;
 }
 
 CNavHelper::~CNavHelper(void)
@@ -6461,6 +6462,7 @@ void CNavHelper::OpenMultiGrid(void)
     mMultiGridDlg->NewGridOnStage(-1);
   }
   mWinApp->mMultiGridTasks->SetLoadedGridIsAligned(0);
+  mOpenedMultiGrid = true;
   mWinApp->RestoreViewFocus();
 }
 

@@ -165,6 +165,7 @@ public:
   GetMember(BOOL, UseSubdirs);
   SetMember(int, LoadedGridIsAligned);
   GetSetMember(float, RRGmaxCenShift);
+  GetSetMember(bool, AdocChanged);
   bool WasStoppedInNavRun() { return mStoppedInNavRun && mSuspendedMulGrid; };
   bool WasStoppedInLMMont() { return mStoppedInLMMont && mSuspendedMulGrid; };
   void SetExtErrorOccurred(int inVal);
@@ -217,6 +218,7 @@ private:
   MGridGeneralParams *mSavedGeneralParams;
   CString mSavedDirForFrames; // User's dir for frame saving with final acquire camera
   int mCamNumForFrameDir;     // Camera for which that was saved
+  bool mAdocChanged;          // Flag that .adoc/ cartinfo was changed
 
   bool mStartedLongOp;        // Flags for actions that were started
   bool mMovedAperture;

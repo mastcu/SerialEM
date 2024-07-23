@@ -98,6 +98,7 @@ CMultiGridTasks::CMultiGridTasks()
   mSavedGeneralParams = NULL;
   mCamNumForFrameDir = -1;
   InitOrClearSessionValues();
+  mAdocChanged = false;
 }
 
 
@@ -573,6 +574,13 @@ void CMultiGridTasks::UserResumeMulGridSeq()
     SEMMessageBox("Program error: the multi-grid operation is not resumable");
     return;
   }
+  if (mCurrentGrid < 0 || mCurrentGrid >= (int)mCartInfo->GetSize()) {
+    mess.Format("Cannot resume; the current grid number is no longer\nvalid (value %d, "
+      "table size %d)\n\nPlease report the steps leading to this problem to the "
+      "developers", mCurrentGrid, mCartInfo->GetSize());
+    SEMMessageBox(mess);
+    return;
+  }
   if (mStoppedAtGridEnd) {
     resume = 1;
   } else {
@@ -640,7 +648,7 @@ int CMultiGridTasks::RealignReloadedGrid(CMapDrawItem *item, float expectedRot,
   ControlSet *conSet = mWinApp->GetConSets() + TRACK_CONSET;
   int numPieces, numFull, ixMin, iyMin, ixMax, iyMax, midX, midY, delX, delY;
   int minInd[4], bestInd[5], minCenInd[4], pci, dir, indAng, numAngles = 18, bestAngInd;
-  int numClose, ind, corn,  err = 0, readBuf, ixpc, iypc, rolls, xTarg, yTarg;
+  int numClose, ind, corn,  err = 0, readBuf, ixpc, iypc, rolls, xTarg, yTarg, binning;
   int meanIXcen, meanIYcen, pctlIXcen, pctlIYcen, numPctl, numAbove;
   float useWidth, useHeight, radDist[4], bestDist[4], maxAxis = 0., ang;
   float minDel, cenAngle, delAng, shortAxis, minAng, maxAng, rad, zStage;
@@ -650,7 +658,7 @@ int CMultiGridTasks::RealignReloadedGrid(CMapDrawItem *item, float expectedRot,
   bool indIsDup, bestIsDup, usePctls = true;
   IntVec ixVec, iyVec, pieceSavedAt;
   FloatVec xStage, yStage, meanVec, midFracs, rangeFracs;
-  MiniOffsets *mini;
+  MiniOffsets *mini, myMini;
   MontParam *montP = &mRRGmontParam;
   MontParam *masterMont = mWinApp->GetMontParam();
   float distFrac = 0.75f, meanRatioCrit = 1.5f, pctlRatioCrit = 2.0;
@@ -859,6 +867,14 @@ int CMultiGridTasks::RealignReloadedGrid(CMapDrawItem *item, float expectedRot,
     ixpc = bestInd[4] / montP->yNframes;
     iypc = (montP->yNframes - 1) - (bestInd[4] % montP->yNframes);
     mini = mImBufs[mMapBuf].mMiniOffsets;
+    if (!mini) {
+      binning = mImBufs[mMapBuf].mOverviewBin;
+      mini = &myMini;
+      mWinApp->mMontageController->SetMiniOffsetsParams(myMini, montP->xNframes,
+        montP->xFrame / binning, (montP->xFrame - montP->xOverlap) / binning,
+        montP->yNframes, montP->yFrame / binning, 
+        (montP->yFrame - montP->yOverlap) / binning);
+    }
     if (!ixpc)
       mMapCenX = mini->xFrame / 2;
     else if (ixpc == mini->xNframes - 1)
@@ -866,7 +882,6 @@ int CMultiGridTasks::RealignReloadedGrid(CMapDrawItem *item, float expectedRot,
     else
       mMapCenX = mini->xBase + ixpc * mini->xDelta + mini->xFrame / 2 -
       (mini->xFrame - mini->xDelta) / 2;
-    mMapCenX += mini->offsetX[bestInd[4]];
     if (!iypc)
       mMapCenY = mini->yFrame / 2;
     else if (iypc == mini->yNframes - 1)
@@ -874,7 +889,11 @@ int CMultiGridTasks::RealignReloadedGrid(CMapDrawItem *item, float expectedRot,
     else
       mMapCenY = mini->yBase + iypc * mini->yDelta + mini->yFrame / 2 -
       (mini->yFrame - mini->yDelta) / 2;
-    mMapCenY += mini->offsetY[bestInd[4]];
+    if (mini->offsetX.size() > 0 && (int)mini->offsetX.size() >= bestInd[4] &&
+      mini->offsetX[bestInd[4]] != MINI_NO_PIECE) {
+      mMapCenX += mini->offsetX[bestInd[4]];
+      mMapCenY += mini->offsetY[bestInd[4]];
+    }
     SEMTrace('q', "Align to pc %d %d (y inv), center coord %d %d", ixpc, iypc, mMapCenX,
       mMapCenY);
   }
@@ -2132,6 +2151,7 @@ void CMultiGridTasks::DoNextSequenceAction(int resume)
           if (!item)
             item = mNavigator->GetOtherNavItem(0);
           jcdEl.zStage = item->mStageZ;
+          mAdocChanged = true;
         }
       }
       SaveSessionFileWarnIfError();
@@ -2154,6 +2174,7 @@ void CMultiGridTasks::DoNextSequenceAction(int resume)
       mWinApp->mDocWnd->DoCloseFile();
       mNavigator->DoSave(false);
       mLoadedGridIsAligned = true;
+      mAdocChanged = true;
 
       // Copy to read buffer in case eucentricity has to happen
       mWinApp->mBufferManager->CopyImageBuffer(1,
@@ -3029,6 +3050,7 @@ void CMultiGridTasks::ChangeStatusFlag(int gridInd, b3dUInt32 flag, int state)
   setOrClearFlags((b3dUInt32 *)(&jcd.status), flag, state);
   if (mNavHelper->mMultiGridDlg)
     mNavHelper->mMultiGridDlg->SetStatusText(jcdInd);
+  mAdocChanged = true;
 }
 
 /* 
@@ -3438,6 +3460,8 @@ int CMultiGridTasks::SaveSessionFile(CString &errStr)
   }
   AdocClear(adocInd);
   AdocReleaseMutex();
+  if (!err)
+    mAdocChanged = false;
   return err;
 }
 
@@ -3492,6 +3516,7 @@ void CMultiGridTasks::ClearSession(bool keepAcqParams)
     mNavHelper->mMultiGridDlg->UpdateSettings();
     mNavHelper->mMultiGridDlg->UpdateCurrentDir();
   }
+  mAdocChanged = false;
 }
 
 /*
@@ -3679,6 +3704,14 @@ int CMultiGridTasks::LoadSessionFile(bool useLast, CString &errStr)
         GET_STRING(MGDOC_GRID, grid, keyBuf, jcd.acqStateNames[ind1]);
       }
     }
+    if (jcd.LMmapID && !(jcd.status & MGSTAT_FLAG_LM_MAPPED)) {
+      jcd.status |= MGSTAT_FLAG_LM_MAPPED;
+      ext.Format("Grid %d had an LMmapID entry but the status entry did not\r\n"
+        "have the LM mapped flag set; the flag is now being set", jcd.id);
+      if (!acqParmName.IsEmpty())
+        acqParmName += "\r\n";
+      acqParmName += ext;
+    }
 
     // Get the final data parameter index and check if out of range
     val = AdocGetInteger(MGDOC_GRID, grid, MGDOC_FINAL_PARAM, &jcd.finalDataParamIndex);
@@ -3841,6 +3874,7 @@ int CMultiGridTasks::LoadSessionFile(bool useLast, CString &errStr)
   }
 
   AdocReleaseMutex();
+  mAdocChanged = false;
 
   return err;
 }
@@ -3886,7 +3920,8 @@ void CMultiGridTasks::IdentifyGridOnStage(int stageID, int &stageInd)
         if (stageInd < 0)
           AfxMessageBox("That number is not in the inventory", MB_EXCLAME);
       }
-    } 
+      mAdocChanged = true;
+    }
   }
   if (mNavHelper->mMultiGridDlg)
     mNavHelper->mMultiGridDlg->NewGridOnStage(stageInd);

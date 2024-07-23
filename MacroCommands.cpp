@@ -11414,8 +11414,8 @@ int CMacCmd::OpenDialog()
     mNavHelper->OpenMultiGrid();
     if (mItemInt[2]) {
       if (mWinApp->mMultiGridTasks->LoadSessionFile(true, mStrCopy))
-        ABORT_NOLINE("Loading of previous multi-grid session file gave error: " +
-          mStrCopy);
+        ABORT_NOLINE("Loading of previous multi-grid session file gave error or "
+          "warning:\r\n" + mStrCopy);
     }
   } else
     ABORT_LINE("\"" + mStrItems[1] + "\" does not match any of the names for dialogs that "
