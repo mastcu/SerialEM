@@ -889,7 +889,7 @@ int CMultiGridTasks::RealignReloadedGrid(CMapDrawItem *item, float expectedRot,
     else
       mMapCenY = mini->yBase + iypc * mini->yDelta + mini->yFrame / 2 -
       (mini->yFrame - mini->yDelta) / 2;
-    if (mini->offsetX.size() > 0 && (int)mini->offsetX.size() >= bestInd[4] &&
+    if ((int)mini->offsetX.size() > bestInd[4] &&
       mini->offsetX[bestInd[4]] != MINI_NO_PIECE) {
       mMapCenX += mini->offsetX[bestInd[4]];
       mMapCenY += mini->offsetY[bestInd[4]];
