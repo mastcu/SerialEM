@@ -196,6 +196,7 @@ CNavigatorDlg::CNavigatorDlg(CWnd* pParent /*=NULL*/)
   mFRangeIndex = -1;
   mInRangeDelete = false;
   mIgnoreUpdates = false;
+  mCurrentItem = -1;
 }
 
 
@@ -9346,7 +9347,7 @@ int CNavigatorDlg::LoadNavFile(bool checkAutosave, bool mergeFile, CString *inFi
   // Set up list box and counters
   SetCurrentRegFromMax();
   SetRegPtNum(GetFreeRegPtNum(mCurrentRegistration, 0));
-  mCurrentItem = B3DMIN(mCurrentItem, (int)mItemArray.GetSize() - 1);
+  mCurrentItem = B3DMIN(B3DMAX(0, mCurrentItem), (int)mItemArray.GetSize() - 1);
   if (m_bCollapseGroups)
     MakeListMappings();
   FillListBox(false, mergeFile);
