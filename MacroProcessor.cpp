@@ -5199,6 +5199,7 @@ UINT CMacroProcessor::RunScriptLangProc(LPVOID pParam)
       free(cmdLine);
       return 1;
     }
+    free(cmdLine);
     mScrpLangData.exitStatus = 0;
 
     // Close handle to the child process primary thread, keep the other handle
