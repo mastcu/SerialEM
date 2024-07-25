@@ -254,8 +254,8 @@ void CImageLevelDlg::OnKillfocusBW()
 void CImageLevelDlg::SetEditBoxes()
 {
   float sampleDiff = B3DMAX(1.f, mSampleMax - mSampleMin);
-  m_strBlack.Format("%.5g", mBlackLevel);
-  m_strWhite.Format("%.5g", mWhiteLevel);
+  m_strBlack.Format(fabs(mBlackLevel) > 99999. ? "%.0f" : "%.5g", mBlackLevel);
+  m_strWhite.Format(fabs(mWhiteLevel) > 99999. ? "%.0f" : "%.5g", mWhiteLevel);
   mBlackSlider = B3DNINT(255. * (mBlackLevel - mSampleMin) / sampleDiff);
   B3DCLAMP(mBlackSlider, 0, 255);
   mWhiteSlider = B3DNINT(255. * (mWhiteLevel - mSampleMin) / sampleDiff);
@@ -278,15 +278,20 @@ void CImageLevelDlg::ProcessEditBoxes()
 
 void CImageLevelDlg::ProcessNewBlackWhite(void)
 {
-  B3DCLAMP(mBlackLevel, -32768.f, 65535.f);
-  B3DCLAMP(mWhiteLevel, -32768.f, 65535.f);
+  EMimageBuffer *imBuf = NULL;
+  if (mWinApp->mActiveView)
+    imBuf = mWinApp->mActiveView->GetActiveImBuf();
+  if (imBuf && imBuf->mImage && imBuf->mImage->getType() == kFLOAT) {
+    B3DCLAMP(mBlackLevel, -999999.f, 9999999.f);
+    B3DCLAMP(mWhiteLevel, -999999.f, 9999999.f);
+  } else {
+    B3DCLAMP(mBlackLevel, -32768.f, 65535.f);
+    B3DCLAMP(mWhiteLevel, -32768.f, 65535.f);
+  }
   SetEditBoxes();
-  if (mWinApp->mActiveView) {
-    EMimageBuffer *imBuf = mWinApp->mActiveView->GetActiveImBuf();
-    if (imBuf->mImageScale) {
-      imBuf->mImageScale->SetMinMax(mBlackLevel, mWhiteLevel);
-      mWinApp->mActiveView->DrawImage();
-    }
+  if (imBuf && imBuf->mImageScale) {
+    imBuf->mImageScale->SetMinMax(mBlackLevel, mWhiteLevel);
+    mWinApp->mActiveView->DrawImage();
   }
 }
 

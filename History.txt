@@ -3,6 +3,10 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+7/25/24: Fixed behavior of image display panel with values > 100000 (In 4.1).
+
+7/25/24: Fixed memory leak of command line running Python script (In 4.1).
+
 7/16/24: Made OpenNewMontage clear out list of pieces to skip (In 4.1).
 
 7/15/24: SEM_4-1-14
