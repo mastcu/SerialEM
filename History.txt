@@ -3,6 +3,10 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+7/24/24: Improved error message when multi-hole combiner can't assign a
+point to a multi-shot item, turned off acquire for such points, and made it
+use the best point when multiple points are near the same grid position.
+
 7/23/24: Fixed crash aligning to grid map already loaded without pieces
 aligned and fixed probable source of crash resuming multigrid; added autosave
 of multigrid session file when there are unsaved changes.

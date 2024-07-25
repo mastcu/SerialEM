@@ -51,6 +51,7 @@ private:
   MapItemArray mPreCombineHoles;    // All items that have been cleared out
   IntVec mIDsForUndo;             // IDs of the multi-shot items added
   IntVec mIndexesForUndo;         // Their indexes: for rapid checking, can be changed
+  IntVec mOrphanIDsToUndo;        // ID's of items turned off because not assigned
   std::set<int> mSetOfUndoIDs;    // A set so they can be looked up easily
   std::set<int> mGroupIDsInPoly;  // The group ID's of items in polygon
   std::set<int> mIDsOutsidePoly;  // IDs of ones turned off

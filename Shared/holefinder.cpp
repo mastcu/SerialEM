@@ -3044,16 +3044,17 @@ void HoleFinder::dumpPoints(const char *filename, FloatVec &xCenters, FloatVec &
 
 void HoleFinder::assignGridPositions
 (FloatVec &xCenters, FloatVec &yCenters, ShortVec &gridX, ShortVec &gridY, 
- float &avgAngle, float &avgLen, int hexGrid)
+ float &avgAngle, float &avgLen, int hexGrid, std::set<int> *worsePoints)
 {
   FloatVec xrot, yrot;
   ShortVec xPrelim, yPrelim;
   IntVec indPrelim, crossInd;
   std::queue<int> neighQueue;
+  std::set<int> worsePointSet;
   int ix, iy, ixCen, iyCen, jnd, xdim, ydim, ind, numPoints = (int)xCenters.size();
   int cenInd, indMin, idx, idy, delMin, indXbase, indYbase, numDir;
   float rcos, rsin, xmin, xmax, ymin, ymax, dist, minDist;
-  float xcen, ycen, xbase, ybase;
+  float xcen, ycen, xbase, ybase, prevErr, newErr;
   float stretch[6], restore[6], rotMat[6], transMat[6];
   if (hexGrid < 0)
     hexGrid = mHexGrid;
@@ -3141,6 +3142,8 @@ void HoleFinder::assignGridPositions
   while (neighQueue.size() > 0) {
     cenInd = neighQueue.front();
     neighQueue.pop();
+    if (worsePointSet.count(cenInd) > 0)
+      continue;
     ixCen = gridX[cenInd];
     iyCen = gridY[cenInd];
     xcen = xrot[cenInd];
@@ -3157,6 +3160,24 @@ void HoleFinder::assignGridPositions
           idx = B3DNINT((xrot[ind] - xcen) / avgLen);
           idy = B3DNINT((yrot[ind] - ycen) / avgLen);
           if (idx >= -1 && idx <= 1 && idy >= -1 && idy <= 1) {
+
+            // If spot is already assigned to, compute the error from perfect spacing for
+            // previous point and new one
+            jnd = crossInd[ixCen + idx + xdim * (iyCen + idy)];
+            if (jnd >= 0) {
+              newErr = powf(avgLen * (float)idx - (xrot[ind] - xcen), 2.f) +
+                powf(avgLen * (float)idy - (yrot[ind] - ycen), 2.f);
+              prevErr = powf(avgLen * (float)idx - (xrot[jnd] - xcen), 2.f) +
+                powf(avgLen * (float)idy - (yrot[jnd] - ycen), 2.f);
+
+              // Previous better: skip new one and add it to set;
+              // otherwise set up to ignore previous one and add new one to queue
+              if (prevErr < newErr) {
+                worsePointSet.insert(ind);
+                continue;
+              }
+              worsePointSet.insert(jnd);
+            }
 
             // Assign and add to queue
             ASSIGN_ADD_TO_QUEUE(ind, ixCen + idx, iyCen + idy);
@@ -3220,6 +3241,8 @@ void HoleFinder::assignGridPositions
     gridX[ind] -= idx;
     gridY[ind] -= idy;
   }
+  if (worsePoints)
+    *worsePoints = worsePointSet;
 }
 
 /*

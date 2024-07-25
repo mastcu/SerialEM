@@ -84,6 +84,7 @@ int CMultiHoleCombiner::CombineItems(int boundType, BOOL turnOffOutside, int inX
   KImage *image;
   FloatVec xCenters, yCenters, peakVals, xCenAlt, yCenAlt, peakAlt, xMissing, yMissing;
   IntVec navInds, altInds, boxAssigns, ixSkip, iySkip;
+  std::set<int> worsePoints;
   ShortVec gridX, gridY;
   MultiShotParams *msParams = mWinApp->mNavHelper->GetMultiShotParams();
   MultiShotParams msParamsCopy = *msParams;
@@ -452,7 +453,7 @@ int CMultiHoleCombiner::CombineItems(int boundType, BOOL turnOffOutside, int inX
 
   // Now get grid positions
   mFindHoles->assignGridPositions(xCenters, yCenters, gridX, gridY, avgAngle, spacing, 
-    hexGrid);
+    hexGrid, &worsePoints);
   if (mDebug)
     mWinApp->mMacroProcessor->SetNonMacroDeferLog(true);
   /*for (ind = 0; ind < numPoints; ind++) {
@@ -485,7 +486,8 @@ int CMultiHoleCombiner::CombineItems(int boundType, BOOL turnOffOutside, int inX
   for (ind = 0; ind < mNxGrid * mNyGrid; ind++)
     mapVals[ind] = -1;
   for (ind = 0; ind < numPoints; ind++)
-    mGrid[gridY[ind]][gridX[ind]] = ind;
+    if (!worsePoints.count(ind))
+      mGrid[gridY[ind]][gridX[ind]] = ind;
 
   boxAssigns.resize(numPoints, -1);
   ClearSavedItemArray(false, true);
@@ -493,6 +495,7 @@ int CMultiHoleCombiner::CombineItems(int boundType, BOOL turnOffOutside, int inX
   mSetOfUndoIDs.clear();
   mIndexesForUndo.clear();
   mIDsOutsidePoly.clear();
+  mOrphanIDsToUndo.clear();
 
   if (hexGrid) {
 
@@ -1200,10 +1203,18 @@ int CMultiHoleCombiner::CombineItems(int boundType, BOOL turnOffOutside, int inX
           }
         }
       }
-      PrintfToLog("Program error: item # %d (%s) at grid %d %d not assigned to a "
-        "multi-shot item", navInds[ind] + 1, item ? item->mLabel : "", ix, iy);
+      if (bx)
+        PrintfToLog("Program error: item # %d (%s) at grid %d %d not assigned to a "
+          "multi-shot item; turning off Acquire", navInds[ind] + 1,
+          item ? item->mLabel : "", ix, iy);
+      else
+        PrintfToLog("Item # %d (%s) could not be assigned a grid position; turning off "
+          "Acquire", navInds[ind] + 1, item ? item->mLabel : "");
+      if (item->mMapID)
+        mOrphanIDsToUndo.push_back(item->mMapID);
+      item->mAcquire = false;
       navInds.erase(navInds.begin() + ind);
-    }
+    } 
   }
   if (mDebug) {
     mWinApp->mMacroProcessor->SetNonMacroDeferLog(false);
@@ -1321,10 +1332,16 @@ void CMultiHoleCombiner::UndoCombination(void)
       item->mAcquire = true;
     }
   }
+  for (jnd = 0; jnd < (int)mOrphanIDsToUndo.size(); jnd++) {
+    item = mNav->FindItemWithMapID(mOrphanIDsToUndo[jnd], false);
+    if (item)
+      item->mAcquire = true;
+  }
   mIDsForUndo.clear();
   mSetOfUndoIDs.clear();
   mIndexesForUndo.clear();
   mIDsOutsidePoly.clear();
+  mOrphanIDsToUndo.clear();
   mNav->FinishMultipleDeletion();
 }
 

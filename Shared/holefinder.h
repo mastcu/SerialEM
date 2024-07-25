@@ -7,6 +7,7 @@
 #define HOLEFINDER_H
 #include <vector>
 #include <queue>
+#include <set>
 
 typedef std::vector<float> FloatVec;
 typedef std::vector<int> IntVec;
@@ -104,7 +105,8 @@ class HoleFinder {
      float pcToPcSameFrac, float pcToFullSameFrac, float substOverlapDistFrac, 
      float usePieceEdgeDistFrac, float addOverlapFrac);
   void assignGridPositions(FloatVec &xCenters, FloatVec &yCenters, ShortVec &gridX,
-                           ShortVec &gridY, float &avgAngle, float &avgLen, int hexGrid = -1);
+                           ShortVec &gridY, float &avgAngle, float &avgLen, int hexGrid = -1,
+                           std::set<int> *worsePoints = NULL);
   void getGridVectors(float *gridX, float *gridYdX, float &avgAngle, float &avgLen, int hexGrid);
   
  private:
