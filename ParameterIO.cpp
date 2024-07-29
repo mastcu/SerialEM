@@ -2991,11 +2991,13 @@ int CParameterIO::ReadProperties(CString strFileName)
   CArray<MontLimits, MontLimits> *montLimits = 
     mWinApp->mMontageController->GetMontageLimits();
   CArray<LensRelaxData, LensRelaxData> *relaxData = scope->GetLensRelaxProgs();
+  CArray<FreeLensSequence, FreeLensSequence> *FLCsequences = scope->GetFLCSequences();
   CString *K2FilterNames = camera->GetK2FilterNames();
   HitachiParams *hitachi = mWinApp->GetHitachiParams();
   std::vector<ShortVec> *apertureSizes = scope->GetApertureLists();
   RotStretchXform rotXform;
   LensRelaxData relax;
+  FreeLensSequence FLCseq;
   FloatVec *vec;
   unsigned char *palette = mWinApp->GetPaletteColors();
   short lensNormMap[] = {nmSpotsize, nmCondenser, pnmObjective, pnmProjector, nmAll,
@@ -3959,7 +3961,7 @@ int CParameterIO::ReadProperties(CString strFileName)
       } else if (MatchNoCase("JeolLensRelaxProgram")) {
         ind = sizeof(lensNormMap) / sizeof(short);
         if (itemInt[1] < 1 || itemInt[1] > ind) {
-          message.Format("Index value (%d) must be between 1 and %d for in property "
+          message.Format("Index value (%d) must be between 1 and %d in property "
             "line:\n", itemInt[1], ind);
           AfxMessageBox(message + strLine, MB_EXCLAME);
         } else {
@@ -3980,6 +3982,29 @@ int CParameterIO::ReadProperties(CString strFileName)
             AfxMessageBox(message);
           }
           relaxData->Add(relax);
+        }
+
+      } else if (MatchNoCase("JeolLowDoseFLCSeries")) {
+        if (itemInt[1] < 0 || itemInt[1] > SEARCH_AREA) {
+          message.Format("Low dose area value (%d) must be between 0 and 4 in property "
+            "line:\n", itemInt[1]);
+          AfxMessageBox(message + strLine, MB_EXCLAME);
+        } else {
+          FLCseq.ldArea = (short)itemInt[1];
+          FLCseq.numLens = 0;
+          for (ind = 0; ind < MAX_FLC_FOR_AREA; ind++) {
+            if (itemEmpty[2 * ind + 3])
+              break;
+            FLCseq.lens[FLCseq.numLens] = (short)itemInt[2 * ind + 2];
+            FLCseq.lens[FLCseq.numLens++] = (short)itemFlt[2 * ind + 3];
+          }
+          if (!itemEmpty[2 * ind + 3]) {
+            message.Format("More that %d lenses were entered in property line:\n%s\n\n"
+              "Request that developers make the array size larger",
+              MAX_FLC_FOR_AREA, (LPCTSTR)strLine);
+            AfxMessageBox(message);
+          }
+          FLCsequences->Add(FLCseq);
         }
 
       } else if (MatchNoCase("ImageDetectorIDs")) {

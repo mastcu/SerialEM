@@ -53,6 +53,7 @@ static char THIS_FILE[]=__FILE__;
 #define FE_FINE_ALIGNSHOT1  9
 #define FE_FINE_ALIGNTILT  10
 #define FE_FINE_ALIGNSHOT2 11
+#define FE_COARSE_RESTORE_Z  12
 enum {TASM_FIRST_SHOT, TASM_TILTED, TASM_SECOND_SHOT};
 enum {BASP_FIRST_SHOT, BASP_MOVED, BASP_SECOND_SHOT};
 enum { LDSO_RESET_SHIFT, LDSO_HIGHER_MAG, LDSO_FIRST_LOWER, LDSO_SECOND_LOWER };
@@ -153,6 +154,7 @@ CComplexTasks::CComplexTasks()
   mFEMaxIncrementChange = 3.;
   mFEReplaceRefFracField = 0.05f;
   mFEUseCoarseMaxDeltaZ = 0.;
+  mFECoarseAbsoluteMaxZ = 0.;
   mMaxFEFineAngle = 24.;
   mMaxFEFineInterval = 8.;
   mFEIterationLimit = 3;
@@ -1484,6 +1486,7 @@ void CComplexTasks::FindEucentricity(int coarseFine)
         }
       }
       action = FE_COARSE_RESET;
+      mFEOriginalZ = EXTRA_NO_VALUE;
       mFECoarseFine &= ~REFINE_EUCENTRICITY_ALIGN;
       mFECurRefShiftX = 0.;
       mFECurRefShiftY = 0.;
@@ -1591,6 +1594,8 @@ void CComplexTasks::EucentricityNextTask(int param)
     // Do the setup on coarse finding: set up angles and increments and
     // do a double stage move
     mScope->GetStagePosition(stageX, stageY, mFECurrentZ);
+    if (mFEOriginalZ < EXTRA_VALUE_TEST)
+      mFEOriginalZ = mFECurrentZ;
     backlashTilt = mFEInitialIncrement > 0. ? -mRTThreshold : mRTThreshold;
     mFECoarseIncrement = mFEInitialIncrement;
     mFEReferenceAngle = mFEInitialAngle;
@@ -1602,6 +1607,10 @@ void CComplexTasks::EucentricityNextTask(int param)
         true, FE_COARSE_MOVED);
     return;
     
+  case FE_COARSE_RESTORE_Z:
+    StopEucentricity();
+    return;
+
   case FE_COARSE_MOVED:
 
     // A movement is done, need a picture
@@ -1700,13 +1709,23 @@ void CComplexTasks::EucentricityNextTask(int param)
       (sin(DTOR * (mFEInitialAngle + increment)) - sin(DTOR * mFEInitialAngle)));
     if (mFENextCoarseConSet >= 0 && mScope->GetSimulationMode())
       B3DCLAMP(delZ, -20.f, 20.f);
-    if (mFEUseCoarseMaxDeltaZ > 0. && fabs(delZ) > mFEUseCoarseMaxDeltaZ) {
+    report = "";
+    if (mFEUseCoarseMaxDeltaZ > 0. && fabs(delZ) > mFEUseCoarseMaxDeltaZ)
       report.Format("Rough eucentricity change of %.1f um exceeds limit of %.0f um;"
         " procedure is ending with no change", delZ, mFEUseCoarseMaxDeltaZ);
-      mWinApp->AppendToLog(report,
-        mVerbose ? LOG_OPEN_IF_CLOSED : LOG_SWALLOW_IF_CLOSED);
+    else if (!mHitachiWithoutZ && mFECoarseAbsoluteMaxZ > 0 &&
+      fabs(mFECurrentZ + delZ) > mFECoarseAbsoluteMaxZ)
+      report.Format("Rough eucentricity change of %.1f um would make Z exceed absolute "
+        "limit of %.0f um;\r\n  procedure is ending with no change", delZ,
+        mFECoarseAbsoluteMaxZ);
+    if (!report.IsEmpty()) {
+      mWinApp->AppendToLog(report, mVerbose ? LOG_OPEN_IF_CLOSED : LOG_SWALLOW_IF_CLOSED);
       mFELastCoarseFailed = true;
-      StopEucentricity();
+      if (fabs(mFECurrentZ - mFEOriginalZ) > 0.1 && !mHitachiWithoutZ)
+        DoubleMoveStage(mFEOriginalZ, mFEBacklashZ, true, 0., 0., false, 
+          FE_COARSE_RESTORE_Z);
+      else
+        StopEucentricity();
       return;
     }
     action = FE_COARSE_LAST_MOVE;

@@ -74,6 +74,7 @@ class CComplexTasks : public CCmdTarget
   GetSetMember(float, FETargetShift)
   GetSetMember(float, FEMaxIncrementChange);
   SetMember(float, FENextCoarseMaxDeltaZ);
+  GetSetMember(float, FECoarseAbsoluteMaxZ);
   GetMember(bool, FELastCoarseFailed);
   GetSetMember(int, FEIterationLimit)
   GetSetMember(double, FEMaxFineIS)
@@ -266,6 +267,7 @@ class CComplexTasks : public CCmdTarget
   float mFEBacklashZ;             // Amount to overshoot Z changes
   double mFEInitialAngle;
   double mFECurrentZ;
+  double mFEOriginalZ;
   double mFECurrentAngle;
   double mFEReferenceAngle;
   double mFECoarseIncrement;
@@ -280,6 +282,7 @@ class CComplexTasks : public CCmdTarget
   float mFEReplaceRefFracField;   // Fraction of field shift at which to replace reference
   float mFENextCoarseMaxDeltaZ;   // Externally set limit for next rough eucentricity
   float mFEUseCoarseMaxDeltaZ;    // Limit to use on this run
+  float mFECoarseAbsoluteMaxZ;    // Absolute limit to Z positions
   bool mFELastCoarseFailed;       // Flag that it failed
   int mFECoarseFine;              // Saved flags from external call
   int mFEFineIndex;               // index to current angle
