@@ -2773,6 +2773,7 @@ int CProcessImage::PatchPercentileStats(EMimageBuffer *imBuf, float lowPct, floa
   highMean = highSum / totPatch;
   midAbove = (float)numMid / totPatch;
   rangeAbove = (float)numRange / totPatch;
+  delete[] patch;
   return 0;
 }
 
