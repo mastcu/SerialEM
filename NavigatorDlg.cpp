@@ -3537,12 +3537,16 @@ CMapDrawItem *CNavigatorDlg::AddPointMarkedOnBuffer(EMimageBuffer *imBuf, float 
                                                     float stageY, int groupID)
 { 
   CMapDrawItem *item;
+  SEMTrace('1', "add point %f %f %d", stageX, stageY, groupID);
   item = MakeNewItem(groupID);
   item->mStageX = stageX;
   item->mStageY = stageY;
-
+  SEMTrace('1', "item %p", item);
   SetupItemMarkedOnBuffer(imBuf, item);
+  SEMTrace('1', "setup with Z %f  IDs %d %d", item->mStageZ, item->mMapID, 
+    item->mDrawnOnMapID);
   item->AppendPoint(stageX, stageY);
+  SEMTrace('1', "appended");
   return item;
 }
 
