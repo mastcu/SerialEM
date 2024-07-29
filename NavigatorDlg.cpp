@@ -2040,7 +2040,7 @@ void CNavigatorDlg::NewFileRangeNextTask(int synchronous)
       if (!err) {
         UpdateListString(ind);
         mFRangeNumOff = 0;
-        if (item->IsPolygon() && mMinNewFileInterval < -1) {
+        if (item->IsPolygon() && mMinNewFileInterval < -1 && item->mMontParamIndex >= 0) {
           mHelper->SetDoingMultipleFiles(3);
           mFRangeMontInds.push_back(item->mMontParamIndex);
         }
@@ -2072,7 +2072,7 @@ void CNavigatorDlg::NewFileRangeNextTask(int synchronous)
   }
 
   // Fix any table entries that had to change to open if needed
-  if (mFRangeAnyPoly && mMinNewFileInterval < -1) {
+  if (mFRangeAnyPoly && mMinNewFileInterval < -1 && mFRangeMontInds.size()) {
     mHelper->ModifyMontsForReusability(mFRangeMontInds);
     for (ind = mFRangeStart; ind <= mFRangeEnd; ind++) {
       item = mItemArray[ind];
