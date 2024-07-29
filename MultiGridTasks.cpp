@@ -99,6 +99,7 @@ CMultiGridTasks::CMultiGridTasks()
   mCamNumForFrameDir = -1;
   InitOrClearSessionValues();
   mAdocChanged = false;
+  mSkipGridRealign = false;
 }
 
 
@@ -1451,6 +1452,8 @@ int CMultiGridTasks::StartGridRuns(int LMneedsLD, int MMMneedsLD, int finalNeeds
   bool didLMMforGrid = false, didMMMforGrid = false, didAcqForGrid = false;
   bool lastMMMforGrid = false, lastAcqForGrid = false;
   bool setupLMMimaging = false, skipRealign = false;
+  mSkipEucentricity = mWinApp->mComplexTasks->GetFEMaxTilt() >
+    mScope->GetMaxTiltAngle() + 1.;
   mNavigator = mWinApp->mNavigator;
   mSingleGridMode = !mScope->GetScopeHasAutoloader();
 
@@ -1523,7 +1526,8 @@ int CMultiGridTasks::StartGridRuns(int LMneedsLD, int MMMneedsLD, int finalNeeds
     }
 
     // Make sure grid is aligned if it might be, and set to skip realign if it is
-    if (ind == mJcdIndsToRun[0] && mLoadedGridIsAligned < 0) {
+    if (ind == mJcdIndsToRun[0] && mLoadedGridIsAligned < 0 && !mSkipGridRealign &&
+      (mParams.acquireMMMs || mParams.runFinalAcq)) {
       jcd = mCartInfo->GetAt(ind);
       str.Format("Is the grid on the stage, # %d, still aligned to the grid"
         " map or has it been disturbed since it was aligned?   Press:\n\n"
@@ -1686,7 +1690,7 @@ int CMultiGridTasks::StartGridRuns(int LMneedsLD, int MMMneedsLD, int finalNeeds
   }
 
   // Determine 4 positions around center for eucentricity
-  if (mParams.acquireLMMs) {
+  if (mParams.acquireLMMs && !mSkipEucentricity) {
     cam2st = MatInv(mShiftManager->StageToCamera(
       mActiveCameraList[mGridMontParam.cameraIndex], mGridMontParam.magIndex));
     halfx = (float)(mGridMontParam.xFrame * mGridMontParam.binning / 2);
@@ -1723,18 +1727,22 @@ int CMultiGridTasks::StartGridRuns(int LMneedsLD, int MMMneedsLD, int finalNeeds
       // Load grid and take up to 4 survey images
       if (!mSingleGridMode)
         mActSequence.push_back(MGACT_LOAD_GRID);
-      mActSequence.push_back(MGACT_SURVEY_STAGE_MOVE);
-      mActSequence.push_back(MGACT_SURVEY_IMAGE);
+      if (!mSkipEucentricity) {
+        mActSequence.push_back(MGACT_SURVEY_STAGE_MOVE);
+        mActSequence.push_back(MGACT_SURVEY_IMAGE);
 
-      // The last one will move to best place if needed, after which eucentricity, or not
-      mActSequence.push_back(MGACT_SURVEY_STAGE_MOVE);
-      mActSequence.push_back(MGACT_EUCENTRICITY);
+        // Last one will move to best place if needed, after which eucentricity, or not
+        mActSequence.push_back(MGACT_SURVEY_STAGE_MOVE);
+        mActSequence.push_back(MGACT_EUCENTRICITY);
+      }
 
       // Go to center and take montage, allow extra actions if eucentricity failed
       mActSequence.push_back(MGACT_LMM_CENTER_MOVE);
       mActSequence.push_back(MGACT_TAKE_LMM);
-      mActSequence.push_back(MGACT_SURVEY_STAGE_MOVE);
-      mActSequence.push_back(MGACT_EUCENTRICITY);
+      if (!mSkipEucentricity) {
+        mActSequence.push_back(MGACT_SURVEY_STAGE_MOVE);
+        mActSequence.push_back(MGACT_EUCENTRICITY);
+      }
 
       // Autocontour
       if (mParams.autocontour)
@@ -1752,7 +1760,8 @@ int CMultiGridTasks::StartGridRuns(int LMneedsLD, int MMMneedsLD, int finalNeeds
         AddToSeqForLMimaging(apForLMM, stateForLMM, mLMMneedsLowDose);
         mActSequence.push_back(MGACT_LOAD_GRID);
         mActSequence.push_back(MGACT_SET_ZHEIGHT);
-        mActSequence.push_back(MGACT_REALIGN_TO_LMM);
+        if (!mSkipGridRealign)
+          mActSequence.push_back(MGACT_REALIGN_TO_LMM);
       }
 
       // Restore from LM imaging if set
@@ -1787,7 +1796,8 @@ int CMultiGridTasks::StartGridRuns(int LMneedsLD, int MMMneedsLD, int finalNeeds
         AddToSeqForLMimaging(apForLMM, stateForLMM, mLMMneedsLowDose);
         mActSequence.push_back(MGACT_LOAD_GRID);
         mActSequence.push_back(MGACT_SET_ZHEIGHT);
-        mActSequence.push_back(MGACT_REALIGN_TO_LMM);
+        if (!mSkipGridRealign)
+          mActSequence.push_back(MGACT_REALIGN_TO_LMM);
       } 
 
       AddToSeqForRestoreFromLM(apForLMM, stateForLMM);
@@ -1860,6 +1870,7 @@ int CMultiGridTasks::StartGridRuns(int LMneedsLD, int MMMneedsLD, int finalNeeds
   mSuspendedMulGrid = false;
   mEndWhenGridDone = false;
   mStoppedAtGridEnd = false;
+  mPctPatchSize = -1;
   mSaveMasterMont = *(mWinApp->GetMontParam());
   mDoingMulGridSeq = true;
   mWinApp->UpdateBufferWindows();
@@ -2208,7 +2219,7 @@ void CMultiGridTasks::DoNextSequenceAction(int resume)
         if (SkipToNextGrid(errStr))
           return;
 
-      } else if (!mDidEucentricity) {
+      } else if (!mDidEucentricity && !mSkipEucentricity) {
 
         // If eucentricity not done yet, find best place, close to center if possible
         bestInd = -1;
@@ -2230,7 +2241,7 @@ void CMultiGridTasks::DoNextSequenceAction(int resume)
         mEucenXtrials[4] = xStage[bestInd];
         mEucenYtrials[4] = yStage[bestInd];
 
-      } else {
+      } else if (!mSkipEucentricity) {
 
         // Skip eucentricity if not needed
         mSeqIndex += 2;
@@ -2513,6 +2524,11 @@ void CMultiGridTasks::DoNextSequenceAction(int resume)
 
     // start it
     SEMAppendToLog("Opened new file for grid map: " + str);
+    if (mPctPatchSize < 0) {
+      mPctPatchSize = B3DNINT(1.6 * pow((double)mGridMontParam.xFrame * 
+        mGridMontParam.yFrame, 0.25));
+      B3DCLAMP(mPctPatchSize, 50, 100);
+    }
     mWinApp->mMontageController->SetPercentileStatParams(mPctPatchSize, 1., 99., 
       mPctStatMidCrit * mReferenceCounts, mPctStatRangeCrit * mReferenceCounts);
     mWinApp->mMontageController->StartMontage(0, false);
@@ -3299,6 +3315,7 @@ int CMultiGridTasks::SaveSessionFile(CString &errStr)
     mBackedUpAcqItemsFile = true;
   }
   mWinApp->mDocWnd->ManageBackupFile(mSessionFilename, mBackedUpSessionFile);
+  UpdateDialogForSessionFile();
 
   // Write any items in the final data acquire param array
   if (mMGAcqItemsParamArray.GetSize() > 0) {
@@ -3577,7 +3594,7 @@ int CMultiGridTasks::LoadSessionFile(bool useLast, CString &errStr)
   if (mSessionFilename.IsEmpty())
     mSessionFilename = mLastSessionFile;
   if (!useLast || mSessionFilename.IsEmpty()) {
-
+                                    
     // Start in the directory of the current file and get name
     if (mWorkingDir)
       direc = mWorkingDir;
@@ -3601,6 +3618,7 @@ int CMultiGridTasks::LoadSessionFile(bool useLast, CString &errStr)
 
   mBackedUpSessionFile = false;
   mBackedUpAcqItemsFile = false;
+  UpdateDialogForSessionFile();
 
   // Read in file
   if (!AdocAcquireMutex()) {
@@ -3878,6 +3896,17 @@ int CMultiGridTasks::LoadSessionFile(bool useLast, CString &errStr)
 
   return err;
 }
+
+// Maintain the filename on the dialog title bar
+void CMultiGridTasks::UpdateDialogForSessionFile()
+{
+  CString direc, filename;
+  if (!mNavHelper->mMultiGridDlg)
+    return;
+  UtilSplitPath(mSessionFilename, direc, filename);
+  mNavHelper->mMultiGridDlg->SetWindowText("Multiple Grid Operations: " + filename);
+}
+
 #undef ADOC_REQUIRED
 #undef ADOC_BOOL_ASSIGN
 #undef INT_SETT_ASSIGN

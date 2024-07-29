@@ -148,6 +148,7 @@ BOOL_PROP_TEST("UseImageBeamTilt", scope->, UseImageBeamTilt)
 INT_PROP_TEST("ScreenRaiseDelay", scope->, ScreenRaiseDelay)
 INT_PROP_TEST("ScopeHasAutoloader", scope->, ScopeHasAutoloader)
 INT_PROP_TEST("GoToRecMagEnteringLD", scope->, GoToRecMagEnteringLD)
+INT_PROP_TEST("LowDoseFreeLensDelay", scope->, LDFreeLensDelay)
 
 #endif
 #ifdef PROP_TEST_SECT2
@@ -341,6 +342,7 @@ DBL_PROP_TEST("EucentricityCoarseInitialAngle", complexTasks->, FEInitialAngle)
 DBL_PROP_TEST("EucentricityCoarseInitialIncrement", complexTasks->, FEInitialIncrement)
 DBL_PROP_TEST("EucentricityResetISThreshold", complexTasks->, FEResetISThreshold)
 DBL_PROP_TEST("EucentricityCoarseMaxTilt", complexTasks->, FEMaxTilt)
+FLOAT_PROP_TEST("CoarseEucenAbsoluteMaxZ", complexTasks->, FECoarseAbsoluteMaxZ)
 DBL_PROP_TEST("EucentricityCoarseMaxIncrement", complexTasks->, FEMaxIncrement)
 FLOAT_PROP_TEST("EucentricityCoarseTargetShift", complexTasks->, FETargetShift)
 FLOAT_PROP_TEST("EucentricityCoarseMaxIncrementChange", complexTasks->, FEMaxIncrementChange)
@@ -382,6 +384,7 @@ FLOAT_PROP_TEST("GridReloadMaxRotation", mWinApp->mMultiGridTasks->, RRGMaxRotat
 INT_PROP_TEST("MulGridNumMMMcombos", mWinApp->mMultiGridTasks->, NumMMMstateCombos)
 INT_PROP_TEST("MulGridNumFinalCombos", mWinApp->mMultiGridTasks->, NumFinalStateCombos)
 FLOAT_PROP_TEST("GridReloadMaxCenShift", mWinApp->mMultiGridTasks->, RRGmaxCenShift)
+BOOL_PROP_TEST("MulGridSkipRealign", mWinApp->mMultiGridTasks->, SkipGridRealign)
 
 #endif
 #ifdef PROP_TEST_SECT4

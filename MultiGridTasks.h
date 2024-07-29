@@ -149,6 +149,7 @@ public:
   void SaveSessionFileWarnIfError();
   void ClearSession(bool keepAcqParams = false);
   int LoadSessionFile(bool useLast, CString &errStr);
+  void UpdateDialogForSessionFile();
   void IdentifyGridOnStage(int stageID, int &stageInd);
   GetSetMember(float, PctStatMidCrit);
   GetSetMember(float, PctStatRangeCrit);
@@ -166,6 +167,7 @@ public:
   SetMember(int, LoadedGridIsAligned);
   GetSetMember(float, RRGmaxCenShift);
   GetSetMember(bool, AdocChanged);
+  GetSetMember(BOOL, SkipGridRealign);
   bool WasStoppedInNavRun() { return mStoppedInNavRun && mSuspendedMulGrid; };
   bool WasStoppedInLMMont() { return mStoppedInLMMont && mSuspendedMulGrid; };
   void SetExtErrorOccurred(int inVal);
@@ -307,5 +309,7 @@ private:
   bool mOpeningForFinalFailed;   // Flag that a file was needed and opening it failed
   int mNumMMMstateCombos;        // Number of combo boxes to show for MMM
   int mNumFinalStateCombos;      // NUmber of combo boxes to show for final
+  bool mSkipEucentricity;        // Flag to skip rough eucentricty for low-tilt stage
+  BOOL mSkipGridRealign;         // Property to skip realign after reload
 };
 

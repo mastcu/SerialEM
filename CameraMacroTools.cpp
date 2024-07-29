@@ -596,7 +596,8 @@ void CCameraMacroTools::Update()
     camBusy = mWinApp->mCamera->CameraBusy();
     continuous = mWinApp->mCamera->DoingContinuousAcquire();
   }
-  BOOL idle = (!mWinApp->DoingTasks() || mWinApp->GetJustNavAcquireOpen()) && 
+  BOOL noTasks = !mWinApp->DoingTasks();
+  BOOL idle = (noTasks || mWinApp->GetJustNavAcquireOpen()) && 
     !(mNav && mNav->StartedMacro());
   BOOL shotOK = mWinApp->UserAcquireOK();
   BOOL postponed = mNav && mNav->GetStartedTS() && mWinApp->mTSController->GetPostponed();
@@ -636,10 +637,9 @@ void CCameraMacroTools::Update()
       navState == NAV_RUNNING_NO_SCRIPT_TS || navState == NAV_PAUSED);
     SetOneMacroLabel(1, IDC_BUTMACRO2);
     m_butMacro3.EnableWindow(idle && mMacProcessor->MacroRunnable(mMacroNumber[2]));
-    
-    m_butResume.EnableWindow(mMacProcessor->IsResumable() || (navState == NAV_PAUSED && 
+    m_butResume.EnableWindow((noTasks && mMacProcessor->IsResumable()) || (navState == NAV_PAUSED && 
       idle) || navState == NAV_SCRIPT_RUNNING || navState == NAV_RUNNING_NO_SCRIPT_TS ||
-      mWinApp->mMultiGridTasks->GetSuspendedMulGrid());
+      (noTasks && mWinApp->mMultiGridTasks->GetSuspendedMulGrid()));
   }
 
   // Keep STOP enabled during continuous acquires: the press event gets lost in repeated 
