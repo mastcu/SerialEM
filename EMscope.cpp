@@ -544,6 +544,7 @@ CEMscope::CEMscope()
   mUseImageBeamTilt = false;
   mScreenRaiseDelay = 0;
   mScopeHasAutoloader = 1;
+  mLDFreeLensDelay = 0;
   mAdvancedScriptVersion = 0;
   mPluginVersion = 0;
   mPlugFuncs = NULL;
@@ -5292,6 +5293,7 @@ void CEMscope::SetLowDoseMode(BOOL inVal, BOOL hidingOffState)
     if (hidingOffState && screenPos == spDown)
       BlankBeam(true, "SetLowDoseMode");
     GotoLowDoseArea(3);
+    RestoreFromFreeLens(3, -1);
     if (!hidingOffState && !NeedBeamBlanking(GetScreenPos(), FastSTEMmode()))
       BlankBeam(false, "SetLowDoseMode");
     mLowDoseSetArea = -1;
@@ -5437,6 +5439,9 @@ void CEMscope::GotoLowDoseArea(int newArea)
   if (mWinApp->mLowDoseDlg.SameAsFocusArea(newArea) && 
     !mWinApp->mLowDoseDlg.SameAsFocusArea(oldArea))
     mFocusCameFromView = fromView;
+
+  // Undo free lens changes before anything else
+  RestoreFromFreeLens(oldArea, newArea);
 
   // If normalizing beam, do it unless going to View or Search.
   // Do it differently depending on the property
@@ -5718,6 +5723,9 @@ void CEMscope::GotoLowDoseArea(int newArea)
       centeredISY, newISX, newISY);
   }
 
+  // Set Free lens after all changes
+  SetFreeLensForArea(newArea);
+
   if (GetDebugOutput('L')) {
     GetImageShift(newISX, newISY);
     if (oldArea != newArea)
@@ -5725,7 +5733,8 @@ void CEMscope::GotoLowDoseArea(int newArea)
         , oldArea, newArea, curISX, curISY, delISX, delISY, newISX, newISY);
   }
   if (GetDebugOutput('l')) {
-    SEMTrace('l', "GotoLowDoseArea: focus at end %.2f update count %d\r\n", GetDefocus(), mAutosaveCount);
+    SEMTrace('l', "GotoLowDoseArea: focus at end %.2f update count %d\r\n", GetDefocus(),
+      mAutosaveCount);
     if (GetDebugOutput('b') && !STEMmode) {
       GetBeamShift(curISX, curISY);
       GetBeamTilt(curISX, curISY);
@@ -5889,6 +5898,72 @@ void CEMscope::DoISforLowDoseArea(int inArea, int curMag, double &delISX, double
         mLDChangeCumulBeamX, mLDChangeCumulBeamY);
     }
   }
+}
+
+// Restore lenses set with FLC when leaving oldArea, except ones to be set in newArea,
+// which can be -1 to restore all
+void CEMscope::RestoreFromFreeLens(int oldArea, int newArea)
+{
+  FreeLensSequence seq, newSeq;
+  int ind, jnd, lens;
+  bool haveNew = false, retain;
+  if (oldArea < 0 || !JEOLscope || !mFLCSequences.GetSize())
+    return;
+
+  // If there is a new area, get its sequence if any
+  if (newArea >= 0) {
+    for (ind = 0; ind < (int)mFLCSequences.GetSize(); ind++) {
+      newSeq = mFLCSequences.GetAt(ind);
+      if (newSeq.ldArea == newArea) {
+        haveNew = true;
+        break;
+      }
+    }
+  }
+
+  // Get sequence for old area if any
+  for (ind = 0; ind < (int)mFLCSequences.GetSize(); ind++) {
+    seq = mFLCSequences.GetAt(ind);
+    if (seq.ldArea == oldArea) {
+
+      // Loop on lenses, see if retaining it for new area
+      for (lens = 0; lens < seq.numLens; lens++) {
+        retain = false;
+        if (haveNew) {
+          for (jnd = 0; jnd < newSeq.numLens; jnd++) {
+            if (newSeq.lens[jnd] == seq.lens[ind]) {
+              retain = true;
+              break;
+            }
+          }
+        }
+
+        // If not, turn off FLC
+        if (!retain)
+          SetFreeLensControl(seq.lens[ind], 0);
+      }
+    }
+  }
+}
+
+// Set one or more lenses with free lens control when entering a low dose area
+void CEMscope::SetFreeLensForArea(int newArea)
+{
+  int ind, lens;
+  FreeLensSequence seq;
+  if (!JEOLscope || !mFLCSequences.GetSize())
+    return;
+  for (ind = 0; ind < (int)mFLCSequences.GetSize(); ind++) {
+    seq = mFLCSequences.GetAt(ind);
+    if (seq.ldArea == newArea) {
+      for (lens = 0; lens < seq.numLens; lens++)
+        SetLensWithFLC(seq.lens[ind], seq.value[ind], false);
+      if (mLDFreeLensDelay > 0)
+        Sleep(mLDFreeLensDelay);
+      break;
+    }
+  }
+  return;
 }
 
 // Change alpha from old to new if it is different and change beam shift and tilt if

@@ -3015,7 +3015,7 @@ int CParameterIO::ReadProperties(CString strFileName)
     "mutuallyexcludedetectors", "socketserverip", "socketserveripif64", 
     "socketserverport", "socketserverportif64", "externaltool", "toolcommand", 
     "toolarguments", "pathtopython", "endifversionbelow", "globalautodocentry",
-    "aperturesizes"};
+    "aperturesizes", "jeollowdoseflcseries"};
   std::set<std::string> dupOKgenProps(tmpg, tmpg + sizeof(tmpg) / sizeof(tmpg[0]));
   std::string tmpc[] = {"hotpixels", "rotationandpixel", "detectorname", "channelname",
     "rotationstretchxform", "specialrelativerotation", "binningoffset", "hotcolumns",

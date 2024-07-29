@@ -27,6 +27,7 @@ struct ScopePluginFuncs;
 #define MAX_ALPHAS  10
 #define MAX_APERTURE_NUM 11
 #define MAX_GAUGE_WATCH 6
+#define MAX_FLC_FOR_AREA 4
 enum {CAL_NTRL_FIND = 0, CAL_NTRL_RESTORE, CAL_NTRL_FOCUS};
 
 #define pnmProjector 11
@@ -198,6 +199,13 @@ struct ApertureThreadData {
   CString description;
 };
 
+struct FreeLensSequence {
+  short ldArea;
+  short numLens;
+  short lens[MAX_FLC_FOR_AREA];
+  float value[MAX_FLC_FOR_AREA];
+};
+
 // Globals for scope identity
 extern bool JEOLscope, LikeFEIscope, HitachiScope;
 extern bool FEIscope;
@@ -298,6 +306,7 @@ public:
   CArray<ChannelSet, ChannelSet> *GetBlockedChannels() { return &mBlockedChannels; };
   CArray<LensRelaxData, LensRelaxData> *GetLensRelaxProgs() { return &mLensRelaxProgs; };
   CArray<JeolCartridgeData, JeolCartridgeData> *GetJeolLoaderInfo() {return &mJeolLoaderInfo;};
+  CArray<FreeLensSequence, FreeLensSequence> *GetFLCSequences() { return &mFLCSequences; };
   static void TaskScreenError(int error);
   static int TaskScreenBusy();
   void StageCleanup(int error);
@@ -312,6 +321,8 @@ public:
   GetMember(int, LowDoseDownArea);
   void GotoLowDoseArea(int inArea);
   void DoISforLowDoseArea(int inArea, int curMag, double &delISX, double &delISY, bool registerMagIS);
+  void RestoreFromFreeLens(int oldArea, int newArea);
+  void SetFreeLensForArea(int newArea);
   int GetLowDoseArea() { return mLowDoseSetArea; };
   void KillUpdateTimer();
   double GetReversalTilt();
@@ -552,6 +563,7 @@ public:
   GetSetMember(BOOL, UseImageBeamTilt);
   GetSetMember(int, ScreenRaiseDelay);
   GetSetMember(int, ScopeHasAutoloader);
+  GetSetMember(int, LDFreeLensDelay);
   GetMember(int, LastMagIndex);
   std::vector<ShortVec> *GetApertureLists() { return &mApertureSizes; };
   void GetRawImageShift(double &ISX, double &ISY) { ISX = mLastISX; ISY = mLastISY; };
@@ -811,6 +823,7 @@ private:
   CArray<ChannelSet, ChannelSet> mBlockedChannels;
   CArray<LensRelaxData, LensRelaxData> mLensRelaxProgs;
   CArray<JeolCartridgeData, JeolCartridgeData> mJeolLoaderInfo;
+  CArray<FreeLensSequence, FreeLensSequence> mFLCSequences;
   BOOL mUsePLforIS;           // Flag to use PL when initialize scope
   BOOL mUseCLA2forSTEM;       // Flag to use CLA2 for JEOL STEM
   bool mXYbacklashValid;      // Flag that backlash values are still valid for a position
@@ -940,6 +953,7 @@ private:
   BOOL mUseImageBeamTilt;      // Flag to use image-beam tilt on FEI instead of regular
   std::vector<ShortVec> mApertureSizes;   // Each vector has aperture index then sizes
   int mScreenRaiseDelay;       // Delay time after raising the screen, msec
+  int mLDFreeLensDelay;        // Delay time after setting FLC for an area, msec
   int mAdvancedScriptVersion;  // My internal version number for advanced scripting
   int mPluginVersion;          // Version of plugin or server
 
