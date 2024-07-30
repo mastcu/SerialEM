@@ -3746,6 +3746,11 @@
             next in the coarse eucentricity task (default 3).</TD>
         </TR>
         <TR VALIGN="top">
+          <TD>CoarseEucenAbsoluteMaxZ </TD>
+          <TD>Maximum Z value that is allowed in either the positive or negative direction 
+            for the coarse eucentricity task (default 0).</TD>
+        </TR>
+        <TR VALIGN="top">
           <TD>DebugRoughEucentricity</TD>
           <TD>Set to 1 to have each image pair being correlated copied to buffers C, D, etc 
             during coarse eucentricity task.</TD>
@@ -4347,6 +4352,11 @@
             the Multiple Grid Operations dialog, a number between 0 and 4.&nbsp; The default 
             is 4.</TD>
         </TR>
+        <TR>
+          <TD height="20">MulGridSkipRealign</TD>
+          <TD height="20">Set to 1 if the autoloader is so accurate that the multigrid 
+            operations can skip the routine to realign to a reloaded grid.</TD>
+        </TR>
         <TR VALIGN="top">
           <TD>ImportStageToImage</TD>
           <TD>Stage to image transformation for images imported as maps. Enter 4 numbers and
@@ -4660,6 +4670,17 @@
           <TD>RelaxLensesSequentially</TD>
           <TD>Set to 1 to have a sequence of changes specified with 'JeolLensRelaxProgram'
              done completely for one lens at a time, instead of interleaving the changes.&nbsp;</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>JeolLowDoseFLCSeries</TD>
+          <TD>A sequence of lens values to set with free lens control upon entering a low 
+            dose area.&nbsp; Follow with the low dose camera set index (0 for regular 
+            camera, 1 for EFTEM, 2 for STEM), the number of the low dose area (0 to 4 for V, 
+            F, T, R, S) then with up to four pairs of numbers, each consisting of a lens 
+            number as described for JeolLensRelaxProgram, and a value between 0 and 1.&nbsp; 
+            The values will be set after all other regular low dose area changes.&nbsp; When 
+            leaving an area wih free lens changes set, the program will turn off FLC for any 
+            lens not included in a series for the area being entered. </TD>
         </TR>
         <TR VALIGN="top">
           <TD>NumberOfAlphas</TD>

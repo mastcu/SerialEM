@@ -44,7 +44,8 @@
       Low Dose and because one can imagine needing three for doing related tasks plus 
       the primary acquisition.&nbsp; If a non-Low Dose state is selected, only one 
       state can be set.&nbsp; The program will reject selections that are inconsistent 
-      or redundant.&nbsp; The controls in the Imaging State dialog for deleting, 
+      or redundant, such as selecting a non-Low Dose state when acquiring with View or 
+      Search.&nbsp; The controls in the Imaging State dialog for deleting, 
       updating, or renaming an existing state are disabled while the multi-grid dialog 
       is open.&nbsp; If you need to change these settings, just close and reopen this 
       dialog.</p>
@@ -57,6 +58,14 @@
       the procedure on later phases, or doing more grid maps after the reference 
       counts have been measured, the routine will always start with the grid on the 
       stage.</p>
+    <p>Before taking a grid map, the program will initially examine up to four 
+      candidate locations for running the coarse eucentricity to find a place that is 
+      not too dark.&nbsp; If a suitable position is found, it runs the rough 
+      eucentricity routine so that the map will be taken at the eucentric height.&nbsp; 
+      Otherwise, it will defer this operation until the map is done, using information 
+      gathered during the montage to pick a good location near the center if possible.&nbsp; 
+      If the property MaximumTiltAngle is set to less than 8 degrees, the progam will 
+      skip doing eucentricity.</p>
     <p>When a grid is reloaded after mapping, the multi-grid routine must be able to 
       apply a stored shift from a Shift to Marker to the Navigator items, unless it 
       sees that such a shift has already been applied.&nbsp; A grid has a different 
