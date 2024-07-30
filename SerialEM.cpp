@@ -4630,15 +4630,22 @@ void CSerialEMApp::CopyCameraToCurrentLDP()
 // Namely either the master set or the camera-specific set
 LowDoseParams *CSerialEMApp::GetLDParamsForCamera(int camNum)
 {
-  int camInd, cur = mEFTEMMode ? 1 : 0;
+  int camInd = GetLDSetIndexForCamera(camNum);
+  int cur = mEFTEMMode ? 1 : 0;
   if (mSTEMMode)
     cur = 2;
-  camInd = mCamParams[camNum].GIF ? 1 : 0;
-  if (mCamParams[camNum].STEMcamera)
-    camInd = 2;
   if (camInd == cur)
     return mLowDoseParams;
   return &mCamLowDoseParams[camInd][0];
+}
+
+// Return the index of the low dose parameter set for the given camera
+int CSerialEMApp::GetLDSetIndexForCamera(int camNum)
+{
+  int camInd = mCamParams[camNum].GIF ? 1 : 0;
+  if (mCamParams[camNum].STEMcamera)
+    camInd = 2;
+  return camInd;
 }
 
 // Provide a message if filter alignment is being used from old session

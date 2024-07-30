@@ -3986,19 +3986,24 @@ int CParameterIO::ReadProperties(CString strFileName)
 
       } else if (MatchNoCase("JeolLowDoseFLCSeries")) {
         if (itemInt[1] < 0 || itemInt[1] > SEARCH_AREA) {
-          message.Format("Low dose area value (%d) must be between 0 and 4 in property "
+          message.Format("Low dose set index (%d) must be between 0 and 2 in property "
             "line:\n", itemInt[1]);
           AfxMessageBox(message + strLine, MB_EXCLAME);
+        } else if (itemInt[2] < 0 || itemInt[2] > SEARCH_AREA) {
+          message.Format("Low dose area value (%d) must be between 0 and 4 in property "
+            "line:\n", itemInt[2]);
+          AfxMessageBox(message + strLine, MB_EXCLAME);
         } else {
-          FLCseq.ldArea = (short)itemInt[1];
+          FLCseq.setIndex = (short)itemInt[1];
+          FLCseq.ldArea = (short)itemInt[2];
           FLCseq.numLens = 0;
           for (ind = 0; ind < MAX_FLC_FOR_AREA; ind++) {
-            if (itemEmpty[2 * ind + 3])
+            if (itemEmpty[2 * ind + 4])
               break;
-            FLCseq.lens[FLCseq.numLens] = (short)itemInt[2 * ind + 2];
-            FLCseq.lens[FLCseq.numLens++] = (short)itemFlt[2 * ind + 3];
+            FLCseq.lens[FLCseq.numLens] = (short)itemInt[2 * ind + 3];
+            FLCseq.value[FLCseq.numLens++] = itemFlt[2 * ind + 4];
           }
-          if (!itemEmpty[2 * ind + 3]) {
+          if (!itemEmpty[2 * ind + 4]) {
             message.Format("More that %d lenses were entered in property line:\n%s\n\n"
               "Request that developers make the array size larger",
               MAX_FLC_FOR_AREA, (LPCTSTR)strLine);

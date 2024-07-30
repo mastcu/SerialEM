@@ -200,6 +200,7 @@ struct ApertureThreadData {
 };
 
 struct FreeLensSequence {
+  short setIndex;
   short ldArea;
   short numLens;
   short lens[MAX_FLC_FOR_AREA];

@@ -480,6 +480,7 @@ public:
   GetMember(BOOL, Any16BitCameras);
   void CopyCameraToCurrentLDP();
   LowDoseParams *GetLDParamsForCamera(int camNUm);
+  int GetLDSetIndexForCamera(int camNum);
   void CopyCurrentToCameraLDP();
   BOOL CheckIdleTasks();
   FilterParams *GetFilterParams() { return &mFilterParams; };

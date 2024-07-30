@@ -5905,16 +5905,17 @@ void CEMscope::DoISforLowDoseArea(int inArea, int curMag, double &delISX, double
 void CEMscope::RestoreFromFreeLens(int oldArea, int newArea)
 {
   FreeLensSequence seq, newSeq;
-  int ind, jnd, lens;
+  int ind, jnd, lens, setIndex;
   bool haveNew = false, retain;
   if (oldArea < 0 || !JEOLscope || !mFLCSequences.GetSize())
     return;
+  setIndex = mWinApp->GetLDSetIndexForCamera(mWinApp->GetCurrentCamera());
 
   // If there is a new area, get its sequence if any
   if (newArea >= 0) {
     for (ind = 0; ind < (int)mFLCSequences.GetSize(); ind++) {
       newSeq = mFLCSequences.GetAt(ind);
-      if (newSeq.ldArea == newArea) {
+      if (newSeq.ldArea == newArea && newSeq.setIndex == setIndex) {
         haveNew = true;
         break;
       }
@@ -5924,14 +5925,14 @@ void CEMscope::RestoreFromFreeLens(int oldArea, int newArea)
   // Get sequence for old area if any
   for (ind = 0; ind < (int)mFLCSequences.GetSize(); ind++) {
     seq = mFLCSequences.GetAt(ind);
-    if (seq.ldArea == oldArea) {
+    if (seq.ldArea == oldArea && seq.setIndex == setIndex) {
 
       // Loop on lenses, see if retaining it for new area
       for (lens = 0; lens < seq.numLens; lens++) {
         retain = false;
         if (haveNew) {
           for (jnd = 0; jnd < newSeq.numLens; jnd++) {
-            if (newSeq.lens[jnd] == seq.lens[ind]) {
+            if (newSeq.lens[jnd] == seq.lens[lens]) {
               retain = true;
               break;
             }
@@ -5940,7 +5941,7 @@ void CEMscope::RestoreFromFreeLens(int oldArea, int newArea)
 
         // If not, turn off FLC
         if (!retain)
-          SetFreeLensControl(seq.lens[ind], 0);
+          SetFreeLensControl(seq.lens[lens], 0);
       }
     }
   }
@@ -5949,15 +5950,17 @@ void CEMscope::RestoreFromFreeLens(int oldArea, int newArea)
 // Set one or more lenses with free lens control when entering a low dose area
 void CEMscope::SetFreeLensForArea(int newArea)
 {
-  int ind, lens;
+  int ind, lens, setIndex;
   FreeLensSequence seq;
   if (!JEOLscope || !mFLCSequences.GetSize())
     return;
+  setIndex = mWinApp->GetLDSetIndexForCamera(mWinApp->GetCurrentCamera());
+
   for (ind = 0; ind < (int)mFLCSequences.GetSize(); ind++) {
     seq = mFLCSequences.GetAt(ind);
-    if (seq.ldArea == newArea) {
+    if (seq.ldArea == newArea && seq.setIndex == setIndex) {
       for (lens = 0; lens < seq.numLens; lens++)
-        SetLensWithFLC(seq.lens[ind], seq.value[ind], false);
+        SetLensWithFLC(seq.lens[lens], seq.value[lens], false);
       if (mLDFreeLensDelay > 0)
         Sleep(mLDFreeLensDelay);
       break;
