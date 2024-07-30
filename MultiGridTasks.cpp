@@ -1757,7 +1757,8 @@ int CMultiGridTasks::StartGridRuns(int LMneedsLD, int MMMneedsLD, int finalNeeds
 
       // If LMM wasn't just done, set state for LM, load grid, and realign to grid
       if (!didLMMforGrid && !mSingleGridMode && !skipRealign) {
-        AddToSeqForLMimaging(apForLMM, stateForLMM, mLMMneedsLowDose);
+        if (!mSkipGridRealign)
+          AddToSeqForLMimaging(apForLMM, stateForLMM, mLMMneedsLowDose);
         mActSequence.push_back(MGACT_LOAD_GRID);
         mActSequence.push_back(MGACT_SET_ZHEIGHT);
         if (!mSkipGridRealign)
@@ -1793,7 +1794,8 @@ int CMultiGridTasks::StartGridRuns(int LMneedsLD, int MMMneedsLD, int finalNeeds
 
       // Reload and realign unless it was just done
       if (!didLMMforGrid && !didMMMforGrid && !mSingleGridMode && !skipRealign) {
-        AddToSeqForLMimaging(apForLMM, stateForLMM, mLMMneedsLowDose);
+        if (!mSkipGridRealign)
+          AddToSeqForLMimaging(apForLMM, stateForLMM, mLMMneedsLowDose);
         mActSequence.push_back(MGACT_LOAD_GRID);
         mActSequence.push_back(MGACT_SET_ZHEIGHT);
         if (!mSkipGridRealign)
@@ -1831,6 +1833,7 @@ int CMultiGridTasks::StartGridRuns(int LMneedsLD, int MMMneedsLD, int finalNeeds
     didLMMforGrid = false;
     didMMMforGrid = false;
     didAcqForGrid = false;
+    skipRealign = false;
   }
 
   if (GetDebugOutput('q')) {

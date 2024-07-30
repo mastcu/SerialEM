@@ -3,6 +3,9 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+7/30/24: Fixed loading of following grids when realign is skipped for first
+grid because it is already aligned.
+
 7/29/24: Added a property to skip the realign routine after loading a grid in
 multiple grid operations, made it skip eucentricity if the maximum tilt angle
 is under 10.
