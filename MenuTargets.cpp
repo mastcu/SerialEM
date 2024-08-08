@@ -530,6 +530,8 @@ BEGIN_MESSAGE_MAP(CMenuTargets, CCmdTarget)
     ON_UPDATE_COMMAND_UI(ID_MONTAGINGGRIDS_CLEARSESSION, OnUpdateGridsClearSession)
     ON_COMMAND(ID_MONTAGINGGRIDS_IDENTIFYGRIDONSTAGE, OnIdentifyGridOnStage)
     ON_UPDATE_COMMAND_UI(ID_MONTAGINGGRIDS_IDENTIFYGRIDONSTAGE, OnUpdateIdentifyGridOnStage)
+    ON_UPDATE_COMMAND_UI(ID_MONTAGINGGRIDS_LOADALLGRIDMAPS, OnUpdateLoadAllGridMaps)
+    ON_COMMAND(ID_MONTAGINGGRIDS_LOADALLGRIDMAPS, OnLoadAllGridMaps)
     END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -946,13 +948,16 @@ void CMenuTargets::OnMultipleGridOperations()
 
 void CMenuTargets::OnUpdateMultipleGridOperations(CCmdUI *pCmdUI)
 {
-  pCmdUI->Enable((!DoingTasks() || mWinApp->GetJustNavAcquireOpen())
+  pCmdUI->Enable((!DoingTasks() || mWinApp->GetJustNavAcquireOpen() || 
+    mWinApp->mMultiGridTasks->GetDoingMulGridSeq())
     && mWinApp->mNavigator);
 }
 
 void CMenuTargets::OnGridsReadSessionfile()
 {
   CString str;
+  if (!mWinApp->mNavHelper->mMultiGridDlg)
+    mNavHelper->OpenMultiGrid();
   int err = mWinApp->mMultiGridTasks->LoadSessionFile(false, str);
   if (err > 0)
     AfxMessageBox("Could not load multi-grid session file:\n" + str, MB_EXCLAME);
@@ -962,7 +967,7 @@ void CMenuTargets::OnGridsReadSessionfile()
 
 void CMenuTargets::OnUpdateGridsReadSessionfile(CCmdUI *pCmdUI)
 {
-  pCmdUI->Enable(!DoingTasks() && mNavHelper->mMultiGridDlg);
+  pCmdUI->Enable(!DoingTasks() && mWinApp->mNavigator);
 }
 
 void CMenuTargets::OnGridsClearSession()
@@ -973,7 +978,7 @@ void CMenuTargets::OnGridsClearSession()
 
 void CMenuTargets::OnUpdateGridsClearSession(CCmdUI *pCmdUI)
 {
-  pCmdUI->Enable(!DoingTasks() && mNavHelper->mMultiGridDlg);
+  pCmdUI->Enable(!DoingTasks());
 }
 
 void CMenuTargets::OnIdentifyGridOnStage()
@@ -986,6 +991,18 @@ void CMenuTargets::OnUpdateIdentifyGridOnStage(CCmdUI *pCmdUI)
 {
   pCmdUI->Enable(!DoingTasks() && mNavHelper->mMultiGridDlg && 
     mNavHelper->mMultiGridDlg->GetNumUsedSlots());
+}
+
+void CMenuTargets::OnLoadAllGridMaps()
+{
+  CString errStr;
+  if (mWinApp->mMultiGridTasks->LoadAllGridMaps(-1, errStr))
+    AfxMessageBox(errStr, MB_EXCLAME);
+}
+
+void CMenuTargets::OnUpdateLoadAllGridMaps(CCmdUI *pCmdUI)
+{
+  pCmdUI->Enable(!DoingTasks() && mWinApp->mNavigator);
 }
 
 void CMenuTargets::OnCombinePointsIntoMultiShots()
@@ -2064,14 +2081,17 @@ void CMenuTargets::OnCameraSetscanning()
 
 void CMenuTargets::OnCameraDebugmode() 
 {
-  mCamera->SetDebugMode(!mCamera->GetDebugMode());
+  mWinApp->AdjustKeysForCameraDebug(!GetDebugOutput('Z'));
+  SEMAppendToLog("The Camera menu entry Set Debug Mode is being phased out; set Debug "
+    "Output to Z instead");
+  mCamera->SetDebugMode(GetDebugOutput('Z'));
 }
 
 void CMenuTargets::OnUpdateCameraDebugmode(CCmdUI* pCmdUI) 
 {
   BOOL bEnable = !DoingTasks() && !mCamera->CameraBusy();
   pCmdUI->Enable(bEnable);
-  pCmdUI->SetCheck(mCamera->GetDebugMode() ? 1 : 0);
+  pCmdUI->SetCheck(GetDebugOutput('Z') ? 1 : 0);
 }
 
 void CMenuTargets::OnCameraDivideby2() 

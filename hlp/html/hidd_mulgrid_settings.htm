@@ -15,13 +15,16 @@
     <basefont size="2">
     <p><a NAME="hidd_mulgrid_settings"></a><span class="style1">Multiple Grid Settings Manager
         Dialog</span></p>
-    <p>This dialog lets you store separate settings for individual grids in five 
+    <p>This dialog lets you store separate settings for individual grids in six 
       different categories.&nbsp; The first category consists of a few general program 
       settings that would typically differ between gold and carbon grids.&nbsp; The 
       next three categories are for autocontouring, hole finding, and multiple Record 
-      acquisition; in each of these, a subset of parameters are stored. &nbsp;Each section 
+      acquisition; in each of these, a subset of parameters are stored. &nbsp;The 
+      fifth section lets
+      you set different Low Dose Focus area positions, including center offsets if a 
+      subarea is to be acquiring for Focus. &nbsp;Each section 
       for the top 
-      four categories has two summary lines.&nbsp; One is labeled either &#39;Global&#39;, showing the 
+      five categories has two summary lines.&nbsp; One is labeled either &#39;Global&#39;, showing the 
       current settings, or &#39;Saved global&#39;, showing the global settings before they 
       were modified for individual grids.&nbsp; The other summary is labeled &#39;<strong>Grid</strong>&#39; and shows the stored 
       settings for the current grid in the <a href="hidd_multi_grid.htm">Multiple Grid 
@@ -33,20 +36,21 @@
       selected grid can be changed in the <a href="hidd_multi_grid.htm">Multiple Grid 
       Operations</a> dialog and this dialog will respond 
       appropriately.</p>
-    <p>Unlike iUnlike in the Navigator dialog, there is no inheritance of modified parameters 
+    <p>Unlike in the Navigator dialog, there is no inheritance of modified parameters 
       from one item to the next; separate settings must be stored for each grid 
       needing them.</p>
-    <p><strong>Top Four Parameter Categories</strong></p>
-    <p>Setting parameters for the these categories is bit odd because this 
-      dialog does not have control over the other dialogs involved in those settings.&nbsp; 
+    <p><strong>Top Five Parameter Categories</strong></p>
+    <p>Setting parameters for these categories is bit odd because this 
+      dialog does not have control over the other dialogs or procedures involved in those settings.&nbsp; 
       Here, the procedure to set parameters for a grid when none are stored yet is:</p>
     <ol>
       <li>Press <strong>Save Global for Restoring</strong> so that you can modify settings 
         and then easily return to the global ones.&nbsp; If there is a dialog for those 
         settings, it will be opened or brough to the foreground.</li>
-      <li>Change settings in the appropriate dialog, menu item, or control panel.&nbsp; 
+      <li>Change settings in the appropriate dialog, menu item, or control panel, or define a new Focus
+        area position by clicking in a View image.&nbsp; 
         When 
-        you make changes in those dialogs, they do not need be closed afterwards.</li>
+        you make changes in the respective dialogs, they do not need be closed afterwards.</li>
       <li>Press <strong>Set for Grid</strong> to save the settings for that 
         grid.</li>
       <li>To apply the same settings to other grids, select each other grid in turn in 

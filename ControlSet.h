@@ -517,6 +517,7 @@ struct NavParams {
   float maxLMMontageIS;    // Maximum shift allowed in low mag
   float fitMontWithFullFrames;  // Fit montage with full frames + frac to increase overlap
   int maxReconnectsInAcq;  // maximum number of scope reconnections during acquire
+  int minPtsForCombineInPMM;  // Min points needed for combining in ProcessMultipleMaps
 };
 
 // Multigrid parameters

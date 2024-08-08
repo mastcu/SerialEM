@@ -3,6 +3,32 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+8/7/24: Fixed setting states after first grid in multigrid routine and fixed
+problem with loading of grid being skipped.
+
+8/7/24: In multigrid dialog, added way to set order for running grids with
+multigrid routine; added ability to add a small note for each grid after maps
+are made; made Ctrl-click on selection button load Navigator file too; added
++/- button to open/close whole multigrid dialog.
+
+8/7/24: Fixed reported value from ReportOpenImageFile command.
+
+8/7/24: Made it possible to set different Focus area positions for differebt
+grids in multi-grid routine.
+
+8/7/24: Added script command and interactive way to run hole finding and
+combining on a range of maps in the Navigator table.
+
+8/7/24: Added script command and menu item to load all grid maps from a
+multigrid session or from a single Navigator file.
+
+8/7/24: Added script command to go to marker point.
+
+8/7/24: Fixed crash from using LongOperation un as first autoloader call.
+
+8/7/24: Made multigrid keep track of frame numbers used for each grid and
+restart each one where it left if a grid is acquired from again.
+
 8/7/24: Restored adjustment of ZLP offset when Align ZLP in DM is detected,
 broken when debug output added in Feb 2013 (In 4.1).
 

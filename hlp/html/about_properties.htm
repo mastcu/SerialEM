@@ -598,6 +598,7 @@
               V for vacuum gauge status output<br />
               W for Winkler LD axis position bug/autoloader/preventing DE retraction on exit/more output from TestNextMultiShot<br />
               X for EMSIS and DECTRIS cameras<BR>
+              Z for general camera debug mode<br>
               a for alignment correlation coefficients and peak erasing details; GPU frame alignment choices/memory usage<br />
               b for beam shift<BR>
               c for calibration and scale matrix derivation<BR>
@@ -966,8 +967,10 @@
         <TR VALIGN="top">
           <TD>StartCameraInDebugMode</TD>
           <TD>1 to turn on debug mode as soon as the connection to the camera is
-            initialized. This will print all communication with the camera plugin to the DM
-            Results window and also provide some verbose output to the SerialEM Log Window.</TD>
+            initialized. This will print all communication with the SEMCCD camera plugin to the DM
+            Output window and also provide some verbose output to the SerialEM Log Window.&nbsp; This
+            command is now equivalent to adding Z to DebugOutput.
+          </TD>
         </TR>
         <TR VALIGN="top">
           <TD>TietzFilmShutterSwitchTime</TD>

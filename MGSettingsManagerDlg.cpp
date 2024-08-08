@@ -29,14 +29,18 @@ CMGSettingsManagerDlg::CMGSettingsManagerDlg(CWnd* pParent /*=NULL*/)
   , m_strMultiShotGrid(_T(""))
   , m_strGeneralCurrent(_T(""))
   , m_strGeneralGrid(_T(""))
+  , m_strFocusPosCurrent(_T(""))
+  , m_strFocusPosGrid(_T(""))
 {
   mNonModal = true;
   mSavedMultiShotParams = NULL;
   mSavedHoleFinderParams = NULL;
   mSavedAutoContParams = NULL;
   mSavedGeneralParams = NULL;
+  mSavedFocusPosParams = NULL;
   mSavedAcqItemsParam = NULL;
   mNavHelper = mWinApp->mNavHelper;
+  mDidSavePreDlgParams = false;
 }
 
 // Clean up saved parameter structures
@@ -46,6 +50,7 @@ CMGSettingsManagerDlg::~CMGSettingsManagerDlg()
   delete mSavedHoleFinderParams;
   delete mSavedAutoContParams;
   delete mSavedGeneralParams;
+  delete mSavedFocusPosParams;
   delete mSavedAcqItemsParam;
 }
 
@@ -61,14 +66,18 @@ void CMGSettingsManagerDlg::DoDataExchange(CDataExchange* pDX)
   DDX_Text(pDX, IDC_STAT_MSSET_GRID, m_strMultiShotGrid);
   DDX_Text(pDX, IDC_STAT_GENSET_CURRENT, m_strGeneralCurrent);
   DDX_Text(pDX, IDC_STAT_GENSET_GRID, m_strGeneralGrid);
+  DDX_Text(pDX, IDC_STAT_FPSET_CURRENT, m_strFocusPosCurrent);
+  DDX_Text(pDX, IDC_STAT_FPSET_GRID, m_strFocusPosGrid);
   DDX_Control(pDX, IDC_STAT_HF_TITLE, m_statHFtitle);
   DDX_Control(pDX, IDC_STAT_MS_TITLE, m_statMStitle);
+  DDX_Control(pDX, IDC_STAT_FP_TITLE, m_statFPtitle);
   DDX_Control(pDX, IDC_STAT_FINAL_TITLE, m_statFinalTitle);
   DDX_Control(pDX, IDC_STAT_GEN_TITLE, m_statGenTitle);
   DDX_Control(pDX, IDC_STAT_GRID1, m_statGrid1);
   DDX_Control(pDX, IDC_STAT_GRID2, m_statGrid2);
   DDX_Control(pDX, IDC_STAT_GRID3, m_statGrid3);
   DDX_Control(pDX, IDC_STAT_GRID4, m_statGrid4);
+  DDX_Control(pDX, IDC_STAT_GRID5, m_statGrid5);
   DDX_Control(pDX, IDC_STAT_ACQ_ITEMS, m_statAcqItems);
 }
 
@@ -86,10 +95,14 @@ BEGIN_MESSAGE_MAP(CMGSettingsManagerDlg, CBaseDlg)
   ON_BN_CLICKED(IDC_BUT_GRIDUSE_GEN, OnButGriduseGEN)
   ON_BN_CLICKED(IDC_BUT_APPLY_GEN, OnButApplyGEN)
   ON_BN_CLICKED(IDC_BUT_RESTORE_CURGEN, OnButRestoreCurGEN)
+  ON_BN_CLICKED(IDC_BUT_GRIDUSE_FP, OnButGriduseFP)
+  ON_BN_CLICKED(IDC_BUT_APPLY_FP, OnButApplyFP)
+  ON_BN_CLICKED(IDC_BUT_RESTORE_CURFP, OnButRestoreCurFP)
   ON_BN_CLICKED(IDC_BUT_REVERT_AC, OnButRevertAC)
   ON_BN_CLICKED(IDC_BUT_REVERT_HF, OnButRevertHF)
   ON_BN_CLICKED(IDC_BUT_REVERT_MS, OnButRevertMS)
   ON_BN_CLICKED(IDC_BUT_REVERT_GEN, OnButRevertGEN)
+  ON_BN_CLICKED(IDC_BUT_REVERT_FP, OnButRevertFP)
   ON_BN_CLICKED(IDC_BUT_REVERT_FINAL, OnButRevertFINAL)
   ON_BN_CLICKED(IDC_BUT_SET_VIEW_FINAL, OnButSetViewFinal)
   ON_BN_CLICKED(IDC_BUT_APPLY_AC, OnButApplyFinal)
@@ -106,6 +119,7 @@ BOOL CMGSettingsManagerDlg::OnInitDialog()
   mMGMultiShotParamArray = mMGTasks->GetMGMShotParamArray();
   mMGHoleFinderParamArray = mMGTasks->GetMGHoleParamArray();
   mMGGeneralParamArray = mMGTasks->GetMGGeneralParams();
+  mMGFocusPosParamArray = mMGTasks->GetMGFocusPosParams();
   mMGAcqItemsParamArray = mMGTasks->GetMGAcqItemsParamArray();
   mMGAutoContParamArray = mMGTasks->GetMGAutoContParamArray();
   CFont *boldFont = mWinApp->GetBoldFont(&m_statACtitle);
@@ -113,11 +127,13 @@ BOOL CMGSettingsManagerDlg::OnInitDialog()
   m_statHFtitle.SetFont(boldFont);
   m_statMStitle.SetFont(boldFont);
   m_statGenTitle.SetFont(boldFont);
+  m_statFPtitle.SetFont(boldFont);
   m_statFinalTitle.SetFont(boldFont);
   m_statGrid1.SetFont(boldFont);
   m_statGrid2.SetFont(boldFont);
   m_statGrid3.SetFont(boldFont);
   m_statGrid4.SetFont(boldFont);
+  m_statGrid5.SetFont(boldFont);
   m_statAcqItems.SetFont(boldFont);
   SetJcdIndex(mJcdIndex);
   UpdateSettings();
@@ -171,6 +187,7 @@ void CMGSettingsManagerDlg::SetJcdIndex(int jcdInd)
   UpdateHoleFinderGrid();
   UpdateMultiShotGrid();
   UpdateGeneralGrid();
+  UpdateFocusPosGrid();
   UpdateAcqItemsGrid();
   UpdateData(false);
 }
@@ -182,6 +199,7 @@ void CMGSettingsManagerDlg::UpdateSettings()
   UpdateHoleFinderCurrent();
   UpdateMultiShotCurrent();
   UpdateGeneralCurrent();
+  UpdateFocusPosCurrent();
   UpdateData(false);
 }
 
@@ -299,6 +317,13 @@ void CMGSettingsManagerDlg::OnButApplyGEN()
 }
 
 ON_THREE_BUTTONS(General, generalParamIndex, GEN);
+
+void CMGSettingsManagerDlg::OnButApplyFP()
+{
+  APPLY_GRID(FocusPos, focusPosParamIndex, FP);
+}
+
+ON_THREE_BUTTONS(FocusPos, focusPosParamIndex, FP);
 
 /*
  *  Corresponding functions (not quite) for Final data parameters 
@@ -423,6 +448,7 @@ void CMGSettingsManagerDlg::ManageEnables()
   ENABLE_FOUR_BUTS(HoleFinder, holeFinderParamIndex, HF);
   ENABLE_FOUR_BUTS(MultiShot, multiShotParamIndex, MS);
   ENABLE_FOUR_BUTS(General, generalParamIndex, GEN);
+  ENABLE_FOUR_BUTS(FocusPos, focusPosParamIndex, FP);
   EnableDlgItem(IDC_BUT_SET_VIEW_FINAL, !tasks && mJcdIndex >= 0);
   EnableDlgItem(IDC_BUT_APPLY_FINAL, !tasks && mJcdIndex >= 0 && 
     jcd.finalDataParamIndex >= 0);
@@ -461,6 +487,7 @@ UPDATE_GRID_CURRENT(AutoCont, autoContParamIndex);
 UPDATE_GRID_CURRENT(HoleFinder, holeFinderParamIndex);
 UPDATE_GRID_CURRENT(MultiShot, multiShotParamIndex);
 UPDATE_GRID_CURRENT(General, generalParamIndex);
+UPDATE_GRID_CURRENT(FocusPos, focusPosParamIndex);
 
 // Simple update for final data settings
 void CMGSettingsManagerDlg::UpdateAcqItemsGrid()
@@ -552,6 +579,16 @@ void CMGSettingsManagerDlg::FormatGeneralSettings(MGridGeneralParams &param,
     (disable & NOTRIM_REALIGN_ITEM) >> 4,
     param.values[GP_RIErasePeriodicPeaks] ? "ON" : "OFF",
     param.values[GP_erasePeriodicPeaks] ? "ON" : "OFF");
+}
+
+// Format summary of focus position
+void CMGSettingsManagerDlg::FormatFocusPosSettings(MGridFocusPosParams &param, 
+  CString &str)
+{
+  float *vals = param.values;
+  str.Format("Position %.2f um, rotation %.0f deg, image offset %.0f, %.0f",
+    vals[FP_focusAxisPos], vals[FP_rotateAxis] ? vals[FP_axisRotation] : 0,
+    vals[FP_focusXoffset], vals[FP_focusYoffset]);
 }
 
 // Simple function to print a floating value or "none"

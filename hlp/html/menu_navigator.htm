@@ -41,11 +41,13 @@
         </TR>
        <TR VALIGN="top">
           <TD class="style1">&nbsp;&nbsp; <A HREF="#hid_montaginggrids_multiplegridoperations">Multiple Grid Operations</A></TD>
-          <TD>.</TD>
+          <TD>Open the Multiple Grid Operations dialog.</TD>
         </TR>
        <TR VALIGN="top">
-          <TD class="style1">&nbsp;&nbsp; <A HREF="#hid_montaginggrids_readsessionfile">Read Session File</A></TD>
-          <TD>Read in a file of grids and their properties from a previous session.</TD>
+          <TD class="style1">&nbsp;&nbsp; <A HREF="#hid_montaginggrids_readsessionfile">
+            Reopen Multi-grid Session</A></TD>
+          <TD>Read in a file of grids and their properties from a previous session, opening 
+            the Multiple Grid Operations dialog if closed.</TD>
         </TR>
        <TR VALIGN="top">
           <TD class="style1">&nbsp;&nbsp; <A HREF="#hid_montaginggrids_clearsession">Clear Multi-grid Session</A></TD>
@@ -54,6 +56,11 @@
        <TR VALIGN="top">
           <TD class="style1">&nbsp;&nbsp; <A HREF="#hid_montaginggrids_identifygridonstage">Identify Grid on Stage</A></TD>
           <TD>Specify which grid is actually on the stage.</TD>
+        </TR>
+       <TR VALIGN="top">
+          <TD class="style1">&nbsp;&nbsp; <A HREF="#hid_montaginggrids_loadallgridmaps">Load All Grid Maps</A> </TD>
+          <TD>Load all the grid maps available in a session; if none available or no session, load 
+            apparent grid maps from current Navigator table.</TD>
         </TR>
          <TR VALIGN="top">
           <TD class="style1">&nbsp;&nbsp; <A HREF="#hid_montaginggrids_findregulararrayofholes">Find Holes in Regular Array</A></TD>
@@ -388,10 +395,11 @@
         property &#39;ScopeHasAutoloader&#39; is set to 0, this menu item appears as <strong>
         Multiple Operations on Grid</strong> and the dialog is modified to work 
         appropriately when doing the same operations on a single grid.</p>
-     <P><A NAME="hid_montaginggrids_readsessionfile"></A><B>Read Session File command (Navigator -
+     <P><A NAME="hid_montaginggrids_readsessionfile"></A><B>Reopen Multi-grid Session command (Navigator -
           Montaging &amp; Grids sub-menu)</B></P>
       <p>Read in a file saved by the <a href="hidd_multi_grid.htm">Multiple Grid 
-        Operations</a> dialog or multi-grid routine and load the contents into the grid 
+        Operations</a> dialog or multi-grid routine, open the dialog if it is not open 
+        yet, and load the contents into the grid 
         table in that dialog.&nbsp; Session files are named with the format 
         &#39;multiGrid_date_#.adoc&#39;.&nbsp; The file chooser will open on the last session 
         file saved, if any.&nbsp; After a file is read in this way, the session 
@@ -401,11 +409,31 @@
       <p>Use this command to clear out the grid table in the
         <a href="hidd_multi_grid.htm">Multiple Grid Operations</a> dialog and 
         re-initialize the session.</p>
-     <P><A NAME="hid_montaginggrids_identifygridonstage"></A><B>Identify Grid on Stage< command (Navigator -
+     <P><A NAME="hid_montaginggrids_identifygridonstage"></A><B>Identify Grid on Stage command (Navigator -
           Montaging &amp; Grids sub-menu)</B></P>
       <p>Use this command to specify which grid is actually on the stage, in case the 
         program has lost track of this information.</p>
-      <P><A NAME="hid_montaginggrids_findregulararrayofholes"></A><B>Find Holes in Regular Array command (Navigator
+      <P><A NAME="hid_montaginggrids_loadallgridmaps"></A><B>Load All Grid Maps command (Navigator -
+          Montaging &amp; Grids sub-menu)</B></P>  
+      <p>Use this command to load all grid maps that have been acquired in a session 
+        with the <a href="hidd_multi_grid.htm">Multiple Grid 
+        Operations</a> dialog, or to load all apparent grid maps from the currently open 
+        Navigator file when there is either no multiple grid session or no grid maps 
+        available in a session.&nbsp; The command is thus useful for a different style 
+        of working, where multiple grid maps are all in one file at different 
+        registrations.&nbsp; In this case, the program looks for the lowest 
+        magnification at which maps were obtained, in LM only, and loads as many maps 
+        taken at that magnification as possible.&nbsp; In either case, it will load the 
+        maps in buffers past the read buffer if possible, and thus ordinarily past the 
+        rolling buffers, but they may start in lower buffers if necessary to fit all the 
+        maps. If this does not fit your needs, the script command 'LoadAllGridMaps' 
+        allows you to specify the starting buffer to load into.&nbsp; Once all these 
+        maps are loaded, it is tempting to add points to any one of them, but this would 
+        often result in points in the wrong Navigator file.&nbsp; As long as the <a href="hidd_multi_grid.htm">Multiple Grid 
+        Operations</a> dialog is open, the program will prevent adding points to a map 
+        that is not in the table for the open Navigator file.&nbsp; When you try to do 
+        so, it will print a warning up to 5 times in the log.</p>
+          <P><A NAME="hid_montaginggrids_findregulararrayofholes"></A><B>Find Holes in Regular Array command (Navigator
           - Montaging &amp; Grids sub-menu)</B></P>
       <P>Use this command to open the <a href="hidd_hole_finder.htm">Hole Finder</a> dialog, find circular holes in a support film, and make Navigator points from them.  The Navigator must be open to open this dialog.</P>
       <P><A NAME="hid_navigator_addgridofpoints"></A><B>Add Grid of Points command (Navigator

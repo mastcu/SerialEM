@@ -2283,6 +2283,7 @@
 #define IDC_BUT_MG_SETUP                3312
 #define IDC_STAT_MG_GRID_SETUP          3313
 #define IDC_STAT_DISABLE_TRIM           3314
+#define IDC_BUT_CLOSE_ALL               3314
 #define IDC_CHECK_DISABLE_TRIM          3315
 #define IDC_RADIO_MULGRID_SEL1          3316
 #define IDC_RADIO_MULGRID_SEL2          3317
@@ -2432,11 +2433,26 @@
 #define IDC_STAT_GRID3                  3460
 #define IDC_STAT_GRID4                  3461
 #define IDC_CHECK_FRAMES_UNDER_SESSION  3462
+#define IDC_BUT_GRIDUSE_FP              3462
 #define IDC_CHECK1                      3463
+#define IDC_BUT_APPLY_FP                3463
+#define IDC_CHECK_TOGGLE_ALL            3463
 #define IDC_STAT_GLOBAL_AC              3464
 #define IDC_STAT_GLOBAL_HF              3465
 #define IDC_STAT_GLOBAL_MS              3466
 #define IDC_STAT_GLOBAL_GEN             3467
+#define IDC_BUT_RESTORE_CURFP           3468
+#define IDC_BUT_SET_ORDER               3468
+#define IDC_BUT_REVERT_AC2              3469
+#define IDC_BUT_REVERT_FP               3469
+#define IDC_BUT_RESET_ORDER             3469
+#define IDC_STAT_FP_TITLE               3470
+#define IDC_STAT_NOTE                   3470
+#define IDC_STAT_GLOBAL_FP              3471
+#define IDC_EDIT_GRID_NOTE              3471
+#define IDC_STAT_GRID5                  3472
+#define IDC_STAT_FPSET_CURRENT          3473
+#define IDC_STAT_FPSET_GRID             3474
 #define ID_NEW_IMAGE                    32771
 #define IDM_FILE_SAVEOTHER              32772
 #define IDM_FILE_READ                   32773
@@ -2996,6 +3012,7 @@
 #define ID_MONTAGINGGRIDS_CLEARSESSION  33527
 #define ID_MONTAGINGGRIDS_IDENTIFYGRIDONSTAGE 33528
 #define ID_EUCENTRICITY_SETOFFSETAUTOMATICALLY 33529
+#define ID_MONTAGINGGRIDS_LOADALLGRIDMAPS 33530
 
 // Next default values for new objects
 // 
@@ -3003,8 +3020,8 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        289
-#define _APS_NEXT_COMMAND_VALUE         33530
-#define _APS_NEXT_CONTROL_VALUE         3468
+#define _APS_NEXT_COMMAND_VALUE         33531
+#define _APS_NEXT_CONTROL_VALUE         3472
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif

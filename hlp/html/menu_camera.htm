@@ -211,8 +211,8 @@
         </TR>
         <TR VALIGN="top">
           <TD class="auto-style1"><A HREF="#hid_camera_debugmode">Debug Mode</A></TD>
-          <TD>Outputs debugging information to Log Window and Digital Micrograph Results 
-            window.</TD>
+          <TD>Outputs debugging information to Log Window and turns on debug mode in some 
+            camera plugins.</TD>
         </TR>
       </TABLE>
       <BR>
@@ -585,12 +585,19 @@
         not be needed for simulation if DigitalMicrograph is started with Ctrl and 
         Shift held down to activate the Faux camera.</P>
       <P><A NAME="hid_camera_debugmode"></A><B>Debug Mode command (Camera menu)</B></P>
-      <P>This command is used to toggle debug mode, in which the SerialEMCCD plugin will 
-        chronicle its transactions in the DigitalMicrograph Results window. The camera 
+      <P>This command can still be used to toggle debug mode, although it is now 
+        equivalent to adding the key letter Z to the debug output set in the Calibration 
+        menu and by the DebugOutput property on startup, and this menu item may be 
+        eliminated.&nbsp; The original use of this item was to make the SerialEMCCD 
+        plugin 
+        chronicle its transactions in the DigitalMicrograph Output window, but it can 
+        also be used to turn on debug output in some camera plugins or their server 
+        windows, such as Tietz. The camera 
         controller in SerialEM will also output some timing information in the Log 
-        Window. After turning on this mode, you can debug problems with taking a 
-        picture with the following procedure:</P>
-      <P style="Z-INDEX: 0">Be sure that the Results window is open in DigitalMicrograph.</P>
+        Window. </P>
+    <P>After turning on this mode, you can debug problems with taking a 
+        picture from DigitalMicrograph with the following procedure:</P>
+      <P style="Z-INDEX: 0">Be sure that the Output window is open in DigitalMicrograph.</P>
       <P style="Z-INDEX: 0">Try to take an image of the kind that makes&nbsp;an error 
         occur.
       </P>

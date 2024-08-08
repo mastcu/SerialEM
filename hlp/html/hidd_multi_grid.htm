@@ -26,7 +26,8 @@
       top working directory for all the files from the runs.&nbsp; The dialog has 
       controls in different sections that can be closed when not relevant, and a
       <strong>Close Right</strong> button at the bottom that can be used to show just the grid 
-      table and none of the sections on the right.</p>
+      table and none of the sections on the right.&nbsp; The +/- button at the upper 
+      left can be used to close up or reopen the whole dialog area.</p>
     <p>In principle, the multiple grid capabilities provided here allow all phases to 
       be done in sequence during one run on a set of grids.&nbsp; The use of imaging 
       states is crucial to being able to run more than one phase at a time with 
@@ -111,7 +112,9 @@
     <p><strong><em>Grid Setup and the Grid Table</em></strong></p>
     <p>The top section of the dialog has a table showing the grids that are in the 
       autoloader, omitting any empty cartridges.&nbsp; The first column has a set of 
-      checkboxes to select which grids will be included in a multi-grid operation.&nbsp; 
+      checkboxes to select which grids will be included in a multi-grid operation, 
+      labeled by the order in which they would be run with the current selection of 
+      options.&nbsp; 
       The second column is a set of radio pushbuttons for selecting one grid for which 
       to do one of the operations in the row of buttons below the table.&nbsp; The 
       pushbuttons are labeled with the slot number for Thermo/FEI scopes or the ID 
@@ -183,7 +186,30 @@
     <p>Use this button to set the program's current directory, the same as can be done 
       through the File menu.</p>
     <p>&nbsp;</p>
-    <p><em>Single Grid Actions: </em>The buttons below the table operate on the grid 
+    <p><em>Grid Actions: </em></p>
+    <p>The first row of controls consists of:</p>
+    <p>Unlabeled Toggle All checkbox</p>
+    <p>Turning this checkbox on or off will turn the Run checkboxs on or off for all 
+      grids.</p>
+    <p><strong>Set Order</strong></p>
+    <p>Use this button to set a custom order for running the grids.&nbsp; After 
+      pressing the button, press the selection push-button for each grid in turn until 
+      the order numbers afterthe checkboxes are the way you want them.&nbsp; Press the 
+      button again if you are done before pressing all the selection buttons; the 
+      button will reset automatically if you do select every grid in turn.&nbsp; 
+      Another way to set order is to&nbsp; astart with all grids turned off, or only 
+      the first one turned on.&nbsp; Press the button and turn on the checkbox for 
+      each grid in order.</p>
+    <p><strong>Reset</strong></p>
+    <p>Use this button to discard the custom run order amd return to the order defined 
+      by current option settings.&nbsp; This button is enabled only when there is a 
+      custom order set.</p>
+    <p><strong>Note</strong></p>
+    <p>This edit box is enabled after the first run, when the names can no longer be 
+      edited.&nbsp; It allows you to add a note for the grid selected by the 
+      push-buttons in the table.&nbsp; The note will appear after the grid name in the 
+      edit box for that grid.</p>
+    <p>The second row of buttons below the table operate on the grid 
       selected by the push-buttons in the table.</p>
     <p><strong>Open Nav</strong></p>
     <p>Use this button to open the Navigator file for the selected grid.&nbsp; It is 
@@ -405,6 +431,11 @@
       camera allows that, or the frame folder will simply be defined as &#39;gridRootName&#39; 
       in a case where directories are allowed only directly under the frame storage 
       location.</p>
+    <p>With regard to saving frames, the program will keep track of a sequential 
+      number separately for each grid.&nbsp; If acquisition is run again on a grid, 
+      the numbering will pick up where it left off.&nbsp; Also note that if the base 
+      name is used in frame stack or folder names, it will have the name of the grid 
+      added to it.</p>
     <p><strong>Set Final Data Parameters</strong></p>
     <p>Use this button to open the Navigator Acquire at Items dialog and set the Final 
       Data parameters.&nbsp; Here, only a few choices will be disabled.&nbsp;&nbsp; 

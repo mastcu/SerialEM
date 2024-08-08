@@ -23,13 +23,13 @@
 
 #define MAX_DLG_SLOTS 13
 
-static int sIdTable[] = {IDC_STAT_RUN, IDC_STAT_NAME,
+static int sIdTable[] = {IDC_STAT_RUN, IDC_STAT_NAME, IDC_BUT_CLOSE_ALL, PANEL_END,
   IDC_CHECK_MULGRID_RUN1, IDC_CHECK_MULGRID_RUN2, IDC_CHECK_MULGRID_RUN3,
   IDC_CHECK_MULGRID_RUN4, IDC_CHECK_MULGRID_RUN5, IDC_CHECK_MULGRID_RUN6,
   IDC_CHECK_MULGRID_RUN7, IDC_CHECK_MULGRID_RUN8, IDC_CHECK_MULGRID_RUN9,
   IDC_CHECK_MULGRID_RUN10, IDC_CHECK_MULGRID_RUN11, IDC_CHECK_MULGRID_RUN12,
   IDC_CHECK_MULGRID_RUN13, IDC_RADIO_MULGRID_SEL1, IDC_RADIO_MULGRID_SEL2, 
-  IDC_RADIO_MULGRID_SEL3,
+  IDC_RADIO_MULGRID_SEL3, IDC_STAT_NOTE, IDC_EDIT_GRID_NOTE,
   IDC_RADIO_MULGRID_SEL4, IDC_RADIO_MULGRID_SEL5, IDC_RADIO_MULGRID_SEL6,
   IDC_RADIO_MULGRID_SEL7, IDC_RADIO_MULGRID_SEL8, IDC_RADIO_MULGRID_SEL9,
   IDC_RADIO_MULGRID_SEL10, IDC_RADIO_MULGRID_SEL11, IDC_RADIO_MULGRID_SEL12,
@@ -42,7 +42,8 @@ static int sIdTable[] = {IDC_STAT_RUN, IDC_STAT_NAME,
   IDC_STAT_MULGRID_STATUS2, IDC_STAT_MULGRID_STATUS7, IDC_STAT_MULGRID_STATUS11,
   IDC_STAT_MULGRID_STATUS3, IDC_STAT_MULGRID_STATUS8, IDC_STAT_MULGRID_STATUS12,
   IDC_STAT_MULGRID_STATUS4, IDC_STAT_MULGRID_STATUS9, IDC_STAT_MULGRID_STATUS13,
-  IDC_STAT_MULGRID_STATUS5,
+  IDC_STAT_MULGRID_STATUS5, IDC_CHECK_TOGGLE_ALL, IDC_STAT_NOTE, IDC_EDIT_GRID_NOTE,
+  IDC_BUT_SET_ORDER, IDC_BUT_RESET_ORDER,
   IDC_BUT_REALIGN_TO_GRID_MAP, IDC_BUT_OPEN_NAV, IDC_BUT_SET_GRID_TYPE, PANEL_END,
   IDC_BUT_MG_SETUP, IDC_STAT_MG_GRID_SETUP, IDC_TSS_LINE4, PANEL_END,
   IDC_BUT_MG_GET_NAMES, IDC_BUT_MG_INVENTORY, IDC_STAT_MG_PREFIX,
@@ -100,6 +101,8 @@ CMultiGridDlg::CMultiGridDlg(CWnd* pParent /*=NULL*/)
   , m_bTakeMMMs(FALSE)
   , m_bRunFinalAcq(FALSE)
   , m_bSetFinalByGrid(FALSE)
+  , m_bToggleAll(FALSE)
+  , m_strNote(_T(""))
 {
   mNonModal = true;
   for (int ind = 0; ind < MAX_MULGRID_PANELS; ind++)
@@ -116,6 +119,8 @@ CMultiGridDlg::CMultiGridDlg(CWnd* pParent /*=NULL*/)
   mLMneedsLowDose = 0;
   mMMMneedsLowDose = 0;
   mRightIsOpen = -1;
+  mClosedAll = false;
+  mSettingOrder = false;
 }
 
 CMultiGridDlg::~CMultiGridDlg()
@@ -168,6 +173,8 @@ void CMultiGridDlg::DoDataExchange(CDataExchange* pDX)
   DDX_Control(pDX, IDC_BUT_CLOSE_RIGHT, m_butCloseRight);
   DDX_Check(pDX, IDC_CHECK_SET_FINAL_BY_GRID, m_bSetFinalByGrid);
   DDX_Check(pDX, IDC_CHECK_FRAMES_UNDER_SESSION, m_bFramesUnderSession);
+  DDX_Check(pDX, IDC_CHECK_TOGGLE_ALL, m_bToggleAll);
+  DDX_Text(pDX, IDC_EDIT_GRID_NOTE, m_strNote);
 }
 
 
@@ -235,6 +242,11 @@ BEGIN_MESSAGE_MAP(CMultiGridDlg, CBaseDlg)
   ON_BN_CLICKED(IDC_BUT_REVERT_TO_GLOBAL, OnButRevertToGlobal)
   ON_BN_CLICKED(IDC_CHECK_FRAMES_UNDER_SESSION, OnCheckFramesUnderSession)
   ON_BN_CLICKED(IDC_CHECK_MG_USE_SUBDIRS, OnCheckMgUseSubdirs)
+  ON_BN_CLICKED(IDC_BUT_CLOSE_ALL, &CMultiGridDlg::OnButCloseAll)
+  ON_BN_CLICKED(IDC_CHECK_TOGGLE_ALL, &CMultiGridDlg::OnCheckToggleAll)
+  ON_EN_KILLFOCUS(IDC_EDIT_GRID_NOTE, &CMultiGridDlg::OnEnKillfocusEditGridNote)
+  ON_BN_CLICKED(IDC_BUT_SET_ORDER, &CMultiGridDlg::OnButSetOrder)
+  ON_BN_CLICKED(IDC_BUT_RESET_ORDER, &CMultiGridDlg::OnButResetOrder)
 END_MESSAGE_MAP()
 
 
@@ -253,6 +265,8 @@ BOOL CMultiGridDlg::OnInitDialog()
   CameraParameters *camParams = mWinApp->GetCamParams();
   mMGTasks = mWinApp->mMultiGridTasks;
   mMasterParams = mMGTasks->GetMultiGridParams();
+  mMGTasks->SetUseCustomOrder(false);
+  mCustomRunDlgInds = mMGTasks->GetCustomRunDlgInds();
   mParams = *mMasterParams;
   mScope = mWinApp->mScope;
   mCartInfo = mWinApp->mScope->GetJeolLoaderInfo();
@@ -267,7 +281,7 @@ BOOL CMultiGridDlg::OnInitDialog()
     CLIP_CHARACTER_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH |
     FF_DONTCARE, mWinApp->mScopeStatus.GetBigFontName());
   m_butCloseRight.SetFont(mWinApp->GetLittleFont(&m_butCloseRight));
-  mSecondColPanel = 3;
+  mSecondColPanel = 4;
   SetupPanelTables(sIdTable, sLeftTable, sTopTable, mNumInPanel, mPanelStart,
     sHeightTable);
   mNumUsedSlots = 0;
@@ -283,7 +297,8 @@ BOOL CMultiGridDlg::OnInitDialog()
   // Determine if any frame-saving camera has movable frame directory, otherwise drop
   mDropFrameOption = true;
   for (cam = 0; cam < mWinApp->GetNumActiveCameras(); cam++) {
-    if (mWinApp->mCamera->IsDirectDetector(&camParams[activeList[cam]])) {
+    if (mWinApp->mCamera->IsDirectDetector(&camParams[activeList[cam]]) || 
+      (camParams[activeList[cam]].canTakeFrames & 1)) {
       mWinApp->mCamera->GetCameraFrameFolder(&camParams[activeList[cam]], noSubdirs,
         movable);
       if (movable) {
@@ -298,13 +313,13 @@ BOOL CMultiGridDlg::OnInitDialog()
   }
   ParamsToDialog();
   UpdateData(false);
-  mPanelStates[4] = mParams.acquireLMMs;
-  mPanelStates[6] = mParams.acquireMMMs;
-  mPanelStates[8] = mParams.runFinalAcq;
-  SetDlgItemText(IDC_BUT_MG_SETUP, mPanelStates[2] ? "-" : "+");
-  SetDlgItemText(IDC_BUT_MG_LOW_MAG_MAPS, mPanelStates[4] ? "-" : "+");
-  SetDlgItemText(IDC_BUT_MG_MEDIUM_MAG_MAPS, mPanelStates[6] ? "-" : "+");
-  SetDlgItemText(IDC_BUT_MG_FINAL_ACQ, mPanelStates[8] ? "-" : "+");
+  mPanelStates[5] = mParams.acquireLMMs;
+  mPanelStates[7] = mParams.acquireMMMs;
+  mPanelStates[9] = mParams.runFinalAcq;
+  SetDlgItemText(IDC_BUT_MG_SETUP, mPanelStates[3] ? "-" : "+");
+  SetDlgItemText(IDC_BUT_MG_LOW_MAG_MAPS, mPanelStates[5] ? "-" : "+");
+  SetDlgItemText(IDC_BUT_MG_MEDIUM_MAG_MAPS, mPanelStates[7] ? "-" : "+");
+  SetDlgItemText(IDC_BUT_MG_FINAL_ACQ, mPanelStates[9] ? "-" : "+");
   mBoldFont = mWinApp->GetBoldFont(&m_statMgSetup);
   m_statMgSetup.SetFont(&mBiggerFont);
   m_butTakeLMMs.SetFont(mParams.acquireLMMs ? &mBigBoldFont : &mBiggerFont);
@@ -547,8 +562,14 @@ void CMultiGridDlg::ReloadTable(int resetOrClear, int checkRuns)
     EnableDlgItem(IDC_EDIT_MULGRID_NAME1 + slot, ind >= 0);
     if (checkRuns) {
       button = (CButton *)GetDlgItem(IDC_CHECK_MULGRID_RUN1 + slot);
-      if (button)
-        button->SetCheck((checkRuns > 0 && !(jcdEl.status & MGSTAT_FLAG_TOO_DARK)) ? 1 : 0);
+      if (button) {
+        if (checkRuns > 1 && mMGTasks->GetUseCustomOrder())
+          button->SetCheck(LookupRunOrder(*mCustomRunDlgInds, slot) >= 0 ?
+            BST_CHECKED : BST_UNCHECKED);
+        else
+          button->SetCheck((checkRuns > 0 && !(jcdEl.status & MGSTAT_FLAG_TOO_DARK)) ?
+            BST_CHECKED : BST_UNCHECKED);
+      }
     }
 
     if (ind < 0) {
@@ -565,7 +586,8 @@ void CMultiGridDlg::ReloadTable(int resetOrClear, int checkRuns)
         jcdEl.userName = str;
         mMGTasks->SetAdocChanged(true);
       }
-      SetDlgItemText(IDC_EDIT_MULGRID_NAME1 + slot, jcdEl.userName);
+      SetDlgItemText(IDC_EDIT_MULGRID_NAME1 + slot, UserNameWithNote(jcdEl.userName, 
+        jcdEl.note));
       SetStatusText(ind);
     }
   }
@@ -573,8 +595,21 @@ void CMultiGridDlg::ReloadTable(int resetOrClear, int checkRuns)
   // open the right side the first time ames are gotten
   if (mRightIsOpen < 0 && mNumUsedSlots > 0)
     mRightIsOpen = 1;
+  m_bToggleAll = true;
   ManagePanels();
+  DisplayRunOrder();
   mNamesChanged = false;
+}
+
+// Return the user name, with option note appended
+CString CMultiGridDlg::UserNameWithNote(CString &userName, CString &note)
+{
+  CString str = userName;
+  if (!note.IsEmpty()) {
+    str = (str + " ") + (const char)0x97;
+    str += " " + note;
+  }
+  return str;
 }
 
 // Button to start inventory
@@ -660,29 +695,88 @@ JeolCartridgeData CMultiGridDlg::FindCartDataForDlgIndex(int ind)
 
 /*
  * Return lists of the jcd indexes and slot #s (FEI) or index + 1 in JEOL catalogue ready
- * for use in loading grid
+ * for use in loading grid, for custom or default order
  */
 int CMultiGridDlg::GetListOfGridsToRun(ShortVec &jcdInds, ShortVec &slotNums)
 {
   JeolCartridgeData jcd;
-  int ind, loop, jcdInd;
+  int ind, jcdInd;
+  IntVec dlgInds;
   jcdInds.clear();
   slotNums.clear();
-  for (loop = 0; loop < mNumUsedSlots; loop++) {
-    ind = FEIscope ? mNumUsedSlots - (loop + 1) : loop;
-    CButton *button = (CButton *)GetDlgItem(IDC_CHECK_MULGRID_RUN1 + ind);
-    if (button && button->GetCheck() && ind < (int)mDlgIndToJCDindex.size()) {
-      jcdInd = mDlgIndToJCDindex[ind];
-      jcdInds.push_back(jcdInd);
-      if (FEIscope) {
-        jcd = mCartInfo->GetAt(jcdInd);
-        slotNums.push_back(jcd.slot);
-      } else {
-        slotNums.push_back(jcdInd + 1);
-      }
+  if (mMGTasks->GetUseCustomOrder())
+    dlgInds = *mCustomRunDlgInds;
+  else
+    DefaultRunDlgIndexes(dlgInds);
+  for (ind = 0; ind < (int)dlgInds.size(); ind++) {
+    jcdInd = mDlgIndToJCDindex[dlgInds[ind]];
+    jcdInds.push_back(jcdInd);
+    if (FEIscope) {
+      jcd = mCartInfo->GetAt(jcdInd);
+      slotNums.push_back(jcd.slot);
+    } else {
+      slotNums.push_back(jcdInd + 1);
     }
   }
   return (int)jcdInds.size();
+}
+
+/*
+ * Return ordered dialog indexes for the default order, accounting for grid on stage
+ */
+void CMultiGridDlg::DefaultRunDlgIndexes(IntVec &dlgInds)
+{
+  int loop, ind, indOnStage = -1;
+  short tmp;
+  CButton *button;
+  dlgInds.clear();
+  for (loop = 0; loop < mNumUsedSlots; loop++) {
+    ind = FEIscope ? mNumUsedSlots - (loop + 1) : loop;
+    button = (CButton *)GetDlgItem(IDC_CHECK_MULGRID_RUN1 + ind);
+    if (button && button->GetCheck() && ind < (int)mDlgIndToJCDindex.size()) {
+      if (mOnStageDlgIndex == ind)
+        indOnStage = (int)dlgInds.size();
+      dlgInds.push_back(ind);
+    }
+  }
+  if (mMGTasks->GetReferenceCounts() != 0. && indOnStage > 0) {
+    tmp = dlgInds[indOnStage];
+    for (ind = indOnStage; ind > 0; ind--)
+      dlgInds[ind] = dlgInds[ind - 1];
+
+    dlgInds[0] = tmp;
+  }
+}
+/*
+ * Set the run checkbox labels with the order numbers for ones to be run
+ */
+void CMultiGridDlg::DisplayRunOrder() 
+{
+  IntVec dlgInds;
+  int ind, run;
+  CString str;
+  if (mMGTasks->GetUseCustomOrder())
+    dlgInds = *mCustomRunDlgInds;
+  else
+    DefaultRunDlgIndexes(dlgInds);
+  for (ind = 0; ind < mNumUsedSlots; ind++) {
+    run = LookupRunOrder(dlgInds, ind) + 1;
+    str = "";
+    if (run > 0)
+      str.Format("%d", run);
+    SetDlgItemText(IDC_CHECK_MULGRID_RUN1 + ind, str);
+  }
+}
+
+/*
+ * Look up a dialog index in the given run list and return its index there, or -1
+ */
+int CMultiGridDlg::LookupRunOrder(IntVec &runDlgInds, int dlgInd)
+{
+  for (int ind = 0; ind < (int)runDlgInds.size(); ind++)
+    if (runDlgInds[ind] == dlgInd)
+      return ind;
+  return -1;
 }
 
 /*
@@ -734,7 +828,8 @@ void CMultiGridDlg::SetStatusText(int jcdInd)
       str += jcd.separateState ? 'S' : (const char)0x97;
       str += (jcd.multiShotParamIndex >= 0 || jcd.holeFinderParamIndex >= 0 ||
         jcd.autoContParamIndex >= 0 || jcd.generalParamIndex >= 0 || 
-        jcd.finalDataParamIndex >= 0) ? 'P' : (const char)0x97;
+        jcd.focusPosParamIndex >= 0 || jcd.finalDataParamIndex >= 0) ?
+        'P' : (const char)0x97;
       str += ":";
       if (jcd.status & MGSTAT_FLAG_TOO_DARK)
         str += (jcd.status & MGSTAT_FLAG_LM_MAPPED) ? "G-D" : "DA";
@@ -769,9 +864,10 @@ void CMultiGridDlg::NewGridOnStage(int jcdInd)
   // didn't seem to work, coloring outside the button didn't seem to work
   if (mOnStageDlgIndex >= 0) {
     edit = (CEdit *)GetDlgItem(IDC_EDIT_MULGRID_NAME1 + mOnStageDlgIndex);
-    if (edit)
+    if (edit) {
       edit->SetFont(m_statMgPrefix.GetFont());
-    edit->Invalidate();
+      edit->Invalidate();
+    }
     mOnStageDlgIndex = -1;
   }
   if (jcdInd < 0) {
@@ -794,6 +890,7 @@ void CMultiGridDlg::NewGridOnStage(int jcdInd)
       break;
     }
   }
+  DisplayRunOrder();
   Invalidate();
 }
 
@@ -854,6 +951,11 @@ void CMultiGridDlg::UpdateEnables()
   EnableDlgItem(IDC_CHECK_MG_USE_SUBDIRS, !tasks && !locked);
   EnableDlgItem(IDC_CHECK_MG_APPEND_NAME, !tasks && !locked);
   EnableDlgItem(IDC_EDIT_MG_PREFIX, !tasks && !locked);
+  EnableDlgItem(IDC_CHECK_TOGGLE_ALL, mNumUsedSlots > 0 && !tasks && !mSettingOrder);
+  EnableDlgItem(IDC_BUT_SET_ORDER, mNumUsedSlots > 0 && !tasks);
+  EnableDlgItem(IDC_BUT_RESET_ORDER, mNumUsedSlots > 0 && !tasks && mMGTasks->GetUseCustomOrder());
+  EnableDlgItem(IDC_EDIT_GRID_NOTE, mNumUsedSlots > 0 && !justTasks && locked && 
+    mSelectedGrid >= 0);
   EnableDlgItem(IDC_BUT_LOAD_GRID, mNumUsedSlots > 0 && !tasks && mSelectedGrid >= 0 &&
     !mSelGridOnStage);
   if (!tasks)
@@ -968,7 +1070,9 @@ void CMultiGridDlg::ManagePanels()
   int ind;
   UINT singleDrops[] = {IDC_BUT_SET_GRID_TYPE, IDC_BUT_LOAD_GRID, IDC_BUT_MG_INVENTORY,
     IDC_BUT_MG_GET_NAMES, IDC_CHECK_MG_APPEND_NAME, IDC_BUT_MG_RESET_NAMES,
-    IDC_BUT_MG_CLEAR, IDC_CHECK_SET_FINAL_BY_GRID, IDC_BUT_REVERT_TO_GLOBAL};
+    IDC_BUT_MG_CLEAR, IDC_CHECK_SET_FINAL_BY_GRID, IDC_BUT_REVERT_TO_GLOBAL, 
+    IDC_CHECK_TOGGLE_ALL, IDC_BUT_RESET_ORDER, IDC_BUT_SET_ORDER, IDC_STAT_NOTE,
+  IDC_EDIT_GRID_NOTE};
   UINT MMMcomboIDs[4] = {IDC_COMBO_MMM_STATE1, IDC_COMBO_MMM_STATE2, IDC_COMBO_MMM_STATE3,
     IDC_COMBO_MMM_STATE4};
   UINT finalComboIDs[4] = {IDC_COMBO_FINAL_STATE1, IDC_COMBO_FINAL_STATE2,
@@ -976,7 +1080,7 @@ void CMultiGridDlg::ManagePanels()
   for (ind = 0; ind < MAX_MULGRID_PANELS; ind++)
     states[ind] = mPanelStates[ind];
   if (mRightIsOpen <= 0)
-    for (ind = 3; ind < 9; ind++)
+    for (ind = 4; ind < 10; ind++)
       states[ind] = false;
   SetDlgItemText(IDC_BUT_CLOSE_RIGHT, mRightIsOpen > 0 ? "Close Right" : "Open Right");
   mIDsToDrop.clear();
@@ -1413,8 +1517,8 @@ void CMultiGridDlg::HandlePerGridStateChange()
 // Open-close setup section
 void CMultiGridDlg::OnButMgSetup()
 {
-  mPanelStates[2] = !mPanelStates[2];
-  SetDlgItemText(IDC_BUT_MG_SETUP, mPanelStates[2] ? "-" : "+");
+  mPanelStates[3] = !mPanelStates[3];
+  SetDlgItemText(IDC_BUT_MG_SETUP, mPanelStates[3] ? "-" : "+");
   ManagePanels();
   mWinApp->RestoreViewFocus();
 }
@@ -1422,8 +1526,8 @@ void CMultiGridDlg::OnButMgSetup()
 // Open/close low mag map section
 void CMultiGridDlg::OnButMgLowMagMaps()
 {
-  mPanelStates[4] = !mPanelStates[4];
-  SetDlgItemText(IDC_BUT_MG_LOW_MAG_MAPS, mPanelStates[4] ? "-" : "+");
+  mPanelStates[5] = !mPanelStates[5];
+  SetDlgItemText(IDC_BUT_MG_LOW_MAG_MAPS, mPanelStates[5] ? "-" : "+");
   ManagePanels();
   mWinApp->RestoreViewFocus();
 }
@@ -1431,8 +1535,8 @@ void CMultiGridDlg::OnButMgLowMagMaps()
 // Open/close medium mag map section
 void CMultiGridDlg::OnButMgMediumMagMaps()
 {
-  mPanelStates[6] = !mPanelStates[6];
-  SetDlgItemText(IDC_BUT_MG_MEDIUM_MAG_MAPS, mPanelStates[6] ? "-" : "+");
+  mPanelStates[7] = !mPanelStates[7];
+  SetDlgItemText(IDC_BUT_MG_MEDIUM_MAG_MAPS, mPanelStates[7] ? "-" : "+");
   ManagePanels();
   mWinApp->RestoreViewFocus();
 }
@@ -1440,8 +1544,8 @@ void CMultiGridDlg::OnButMgMediumMagMaps()
 // open/close final acquisition section
 void CMultiGridDlg::OnButMgFinalAcq()
 {
-  mPanelStates[8] = !mPanelStates[8];
-  SetDlgItemText(IDC_BUT_MG_FINAL_ACQ, mPanelStates[8] ? "-" : "+");
+  mPanelStates[9] = !mPanelStates[9];
+  SetDlgItemText(IDC_BUT_MG_FINAL_ACQ, mPanelStates[9] ? "-" : "+");
   ManagePanels();
   mWinApp->RestoreViewFocus();
 }
@@ -1450,6 +1554,24 @@ void CMultiGridDlg::OnButMgFinalAcq()
 void CMultiGridDlg::OnButCloseRight()
 {
   mRightIsOpen = mRightIsOpen > 0 ? 0 : 1;
+  ManagePanels();
+  mWinApp->RestoreViewFocus();
+}
+
+// Close everything, or reopen to saved state
+void CMultiGridDlg::OnButCloseAll()
+{
+  int ind;
+  SetDlgItemText(IDC_BUT_CLOSE_ALL, mClosedAll ? "+" : "-");
+  for (ind = 1; ind < MAX_MULGRID_PANELS; ind++) {
+    if (mClosedAll) {
+      mPanelStates[ind] = mSavedPanelStates[ind];
+    } else {
+      mSavedPanelStates[ind] = mPanelStates[ind];
+      mPanelStates[ind] = false;
+    }
+  }
+  mClosedAll = !mClosedAll;
   ManagePanels();
   mWinApp->RestoreViewFocus();
 }
@@ -1513,6 +1635,7 @@ void CMultiGridDlg::OnRadioMulgridSelect(UINT nID)
   CButton *button;
   JeolCartridgeData jcd;
   CString filename;
+  int runInd, numAdd;
   jcd.slot = -1;
   button = (CButton *)GetDlgItem(nID);
 
@@ -1526,11 +1649,30 @@ void CMultiGridDlg::OnRadioMulgridSelect(UINT nID)
       button->SetCheck(BST_CHECKED);
     mSelectedGrid = nID - IDC_RADIO_MULGRID_SEL1;
     jcd = FindCartDataForDlgIndex(mSelectedGrid);
+    if (mSettingOrder) {
+      runInd = LookupRunOrder(*mCustomRunDlgInds, mSelectedGrid);
+      if (runInd >= 0) {
+        VEC_REMOVE_AT((*mCustomRunDlgInds), runInd);
+        mWasAddedToOrder[mSelectedGrid] = 0;
+        numAdd = GetNumAddedToOrder();
+        mCustomRunDlgInds->insert(mCustomRunDlgInds->begin() + numAdd, mSelectedGrid);
+        mWasAddedToOrder[mSelectedGrid] = 1;
+        if (numAdd + 1 == (int)mCustomRunDlgInds->size())
+          OnButSetOrder();
+      }
+      DisplayRunOrder();
+    }
   }
   if (m_bSetFinalByGrid)
     HandlePerGridStateChange();
   else
     EnableDlgItem(IDC_BUT_REVERT_TO_GLOBAL, false);
+  if (mSelectedGrid < 0)
+    m_strNote = "";
+  else
+    m_strNote = jcd.note;
+  EnableDlgItem(IDC_EDIT_GRID_NOTE, mMGTasks->GetNamesLocked() && mSelectedGrid >= 0);
+  UpdateData(false);
 
   // See if it is grid on stage and set load, open and realign buttons
   mSelGridOnStage = jcd.slot >= 0 && jcd.station == JAL_STATION_STAGE;
@@ -1543,6 +1685,10 @@ void CMultiGridDlg::OnRadioMulgridSelect(UINT nID)
   if (mWinApp->mNavHelper->mMGSettingsDlg)
     mWinApp->mNavHelper->mMGSettingsDlg->SetJcdIndex(mSelectedGrid < 0 ? -1 :
       mDlgIndToJCDindex[mSelectedGrid]);
+  if (filename && GetAsyncKeyState(VK_CONTROL) / 2 != 0) {
+    mWinApp->mNavigator->LoadNavFile(false, false, &filename);
+    UpdateEnables();
+  }
   m_statCurrentDir.SetFocus();
   mWinApp->RestoreViewFocus();
 }
@@ -1550,10 +1696,115 @@ void CMultiGridDlg::OnRadioMulgridSelect(UINT nID)
 // A checkbox for running a grid is pressed
 void CMultiGridDlg::OnCheckMulgridRun(UINT nID)
 {
+  int numAdded, runInd, dlgInd = nID - IDC_CHECK_MULGRID_RUN1;
   UPDATE_DATA_TRUE;
+  if (mMGTasks->GetUseCustomOrder()) {
+    CButton *button = (CButton *)GetDlgItem(nID);
+    if (button) {
+      if (button->GetCheck() == BST_CHECKED) {
+
+        // Checking button: insert it in custom list if setting, or add to end
+        if (mSettingOrder) {
+          numAdded = GetNumAddedToOrder();
+          mCustomRunDlgInds->insert(mCustomRunDlgInds->begin() + numAdded, dlgInd);
+          mWasAddedToOrder[dlgInd] = 1;
+        } else {
+          mCustomRunDlgInds->push_back(dlgInd);
+        }
+
+      } else {
+
+        // Unchecking: find in list and remove
+        runInd = LookupRunOrder(*mCustomRunDlgInds, dlgInd);
+        if (runInd >= 0)
+          VEC_REMOVE_AT((*mCustomRunDlgInds), runInd);
+        if (mSettingOrder)
+          mWasAddedToOrder[dlgInd] = 0;
+      }
+    }
+  }
   CheckIfAnyUndoneToRun();
   UpdateEnables();
+  DisplayRunOrder();
   mWinApp->RestoreViewFocus();
+}
+
+// Toggle all run checkboxes on or off
+void CMultiGridDlg::OnCheckToggleAll()
+{
+  CButton *button;
+  int loop, ind;
+  UPDATE_DATA_TRUE;
+  for (loop = 0; loop < mNumUsedSlots; loop++) {
+    ind = FEIscope ? mNumUsedSlots - (loop + 1) : loop;
+    button = (CButton *)GetDlgItem(IDC_CHECK_MULGRID_RUN1 + ind);
+    if (button) {
+      if (m_bToggleAll && mMGTasks->GetUseCustomOrder() &&
+        LookupRunOrder(*mCustomRunDlgInds, ind) < 0)
+        mCustomRunDlgInds->push_back(ind);
+      button->SetCheck(m_bToggleAll ? BST_CHECKED : BST_UNCHECKED);
+    }
+  }
+  if (!m_bToggleAll)
+    mCustomRunDlgInds->clear();
+  CheckIfAnyUndoneToRun();
+  UpdateEnables();
+  DisplayRunOrder();
+  mWinApp->RestoreViewFocus();
+}
+
+// Start procedure to set order, or end it
+void CMultiGridDlg::OnButSetOrder()
+{
+  mSettingOrder = !mSettingOrder;
+  SetDlgItemText(IDC_BUT_SET_ORDER, mSettingOrder ? "Stop Setting" : "Set Order");
+  if (mSettingOrder) {
+    if (!mMGTasks->GetUseCustomOrder()) {
+      mMGTasks->SetUseCustomOrder(true);
+      DefaultRunDlgIndexes(*mCustomRunDlgInds);
+    }
+    CLEAR_RESIZE(mWasAddedToOrder, short, mNumUsedSlots);
+  }
+  UpdateEnables();
+  mWinApp->RestoreViewFocus();
+}
+
+// Reset custom order
+void CMultiGridDlg::OnButResetOrder()
+{
+  if (mSettingOrder)
+    OnButSetOrder();
+  mMGTasks->SetUseCustomOrder(false);
+  DisplayRunOrder();
+  UpdateEnables();
+  mWinApp->RestoreViewFocus();
+}
+
+// Count the nunber of grids added to the order list
+int CMultiGridDlg::GetNumAddedToOrder()
+{
+  int num = 0, ind;
+  if (!mSettingOrder)
+    return (int)mCustomRunDlgInds->size();
+  for (ind = 0; ind < mNumUsedSlots; ind++)
+    if (mWasAddedToOrder[ind])
+      num++;
+  return num;
+}
+
+// The note has lost focus, process the change
+void CMultiGridDlg::OnEnKillfocusEditGridNote()
+{
+  UPDATE_DATA_TRUE;
+  mWinApp->RestoreViewFocus();
+  if (mSelectedGrid < 0)
+    return;
+  int jcdInd = mDlgIndToJCDindex[mSelectedGrid];
+  JeolCartridgeData &jcdEl = mCartInfo->ElementAt(jcdInd);
+  jcdEl.note = m_strNote;
+  mMGTasks->SetAdocChanged(true);
+  SetDlgItemText(IDC_EDIT_MULGRID_NAME1 + mSelectedGrid, UserNameWithNote(jcdEl.userName,
+    m_strNote));
 }
 
 // Open navigator file

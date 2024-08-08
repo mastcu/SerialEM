@@ -280,5 +280,34 @@
       points in it.&nbsp; To bring back the display of the hole positions, delete that 
       group of points in the table by using the 'Collapse groups' option in the 
       <a href="hidd_navigator.htm">Navigator Dialog</a>.</p>
+    <p>&nbsp;</p>
+    <p><em><strong><A name="multimap"</A>Finding Holes in Multiple Maps</strong></em></p>
+    <p>After filtering parameters, selections, and conversion options have been set on 
+      a map, you can process a range of maps in the Navigator table automatically with 
+      those settings.&nbsp; This can be done either with the &#39;FindMultiMapHoles&#39; 
+      script command or by using Shift H at the two ends of the range in the table, 
+      similar to the other range operations like setting acquire with Shift A.&nbsp; 
+      When you use Shift H, the program will open an entry box where you specify 
+      whether you want to combine the resulting points for acquiring Multiple Records, 
+      using the current settings for Multiple Records and for combining.&nbsp; Enter 
+      zero not to, or the minimum number of points to try to combine.&nbsp; The script 
+      command takes the starting and ending table index in the range, plus this 
+      minimum number.&nbsp; When the number of points are below this minimum, the 
+      combine is skipped and Acquire is turned off for the points.&nbsp; Here are 
+      other points to be aware of:</p>
+    <ul>
+      <li>The routine will only do maps at one magnification.&nbsp; If the maps in the 
+        range have various magnifications, it finds the most numerous magnification and 
+        processes only those maps.&nbsp; If you actually have more than one 
+        magnification and the same parameters work, just run the routine again to do the
+        other magnification.</li>
+      <li>The routine will do all maps that do not have stored hole vectors.&nbsp; It 
+        will do a map with hole vectors if there are no points marked for acquisition on 
+        it.&nbsp; </li>
+      <li>Before running the multihole combine routine, the program will assign the 
+        vectors from finding holes to image shift vectors for the Multiple Records, 
+        which should guarantee that vectors correspond well enough for combining, but 
+        could be problematic if there are few points being combined.</li>
+    </ul>
 </body>
 </html>

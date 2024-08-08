@@ -452,6 +452,7 @@ hid_montaginggrids_multiplegridoperations = SerialEM.chm::/html\menu_navigator.h
 hid_montaginggrids_readsessionfile = SerialEM.chm::/html\menu_navigator.htm#hid_montaginggrids_readsessionfile
 hid_montaginggrids_clearsession = SerialEM.chm::/html\menu_navigator.htm#hid_montaginggrids_clearsession
 hid_montaginggrids_identifygridonstage = SerialEM.chm::/html\menu_navigator.htm#hid_montaginggrids_identifygridonstage
+hid_montaginggrids_loadallgridmaps = SerialEM.chm::/html\menu_navigator.htm#hid_montaginggrids_loadallgridmaps
 hid_options_setmulti            = SerialEM.chm::/html\menu_navigator.htm#hid_options_setmulti
 hid_options_showmulti           = SerialEM.chm::/html\menu_navigator.htm#hid_options_showmulti
 hid_navigator_addcirclepolygon	= SerialEM.chm::/html\menu_navigator.htm#hid_navigator_addcirclepolygon

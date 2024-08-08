@@ -439,6 +439,8 @@ public:
   afx_msg void OnUpdateGridsClearSession(CCmdUI *pCmdUI);
   afx_msg void OnIdentifyGridOnStage();
   afx_msg void OnUpdateIdentifyGridOnStage(CCmdUI *pCmdUI);
+  afx_msg void OnUpdateLoadAllGridMaps(CCmdUI *pCmdUI);
+  afx_msg void OnLoadAllGridMaps();
 };
 
 /////////////////////////////////////////////////////////////////////////////

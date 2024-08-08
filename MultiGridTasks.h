@@ -1,6 +1,7 @@
 #pragma once
 #include "EMscope.h"
 #include "AutoContouringDlg.h"
+#include <map>
 
 enum { MG_INVENTORY = 1, MG_LOW_MAG_MAP, MG_REALIGN_RELOADED, MG_RRG_MOVED_STAGE, 
   MG_RRG_TOOK_IMAGE, MG_LOAD_CART, MG_UNLOAD_CART, MG_USER_LOAD, MG_RUN_SEQUENCE,
@@ -13,7 +14,7 @@ enum MultiGridActions {
   MGACT_LOAD_GRID, MGACT_TAKE_LMM, MGACT_REALIGN_TO_LMM, MGACT_AUTOCONTOUR,
   MGACT_MMM_STATE, MGACT_TAKE_MMM, MGACT_FINAL_STATE, MGACT_FINAL_ACQ, 
   MGACT_SETUP_MMM_FILES, MGACT_RESTORE_STATE, MGACT_LOW_DOSE_ON, MGACT_LOW_DOSE_OFF,
-  MGACT_SET_ZHEIGHT, MGACT_MARKER_SHIFT, MGACT_GRID_DONE
+  MGACT_SET_ZHEIGHT, MGACT_MARKER_SHIFT, MGACT_FOCUS_POS, MGACT_GRID_DONE
 };
 #define OBJECTIVE_APERTURE 2
 #define CONDENSER_APERTURE 1
@@ -43,9 +44,9 @@ enum HoleIndexes { HF_spacing, HF_diameter, HF_lowerMeanCutoff, HF_upperMeanCuto
   HF_SDcutoff, HF_blackFracCutoff, HF_edgeDistCutoff, HF_hexagonalArray, HF_noParam };
 struct MGridHoleFinderParams
 {
-  FloatVec sigmas;        // Set of sigmas to try
-  FloatVec thresholds;    // Set of median iterations to try
-  float values[HF_noParam];
+  FloatVec sigmas;        // Set of sigmas and median iterations to try
+  FloatVec thresholds;    // Set of thresholds to try
+  float values[HF_noParam];   // The rest of the parameters
 };
 
 enum AutoContIndexes {AC_minSize, AC_maxSize, AC_relThreshold, AC_lowerMeanCutoff, 
@@ -56,10 +57,10 @@ struct MGridAutoContParams
 };
 
 enum GenParamIndexes {GP_disableAutoTrim, GP_erasePeriodicPeaks, GP_RIErasePeriodicPeaks,
-  GP_noParam};
+  GEN_noParam};
 struct MGridGeneralParams
 {
-  int values[GP_noParam];
+  int values[GEN_noParam];
 };
 
 struct MGridAcqItemsParams
@@ -67,6 +68,13 @@ struct MGridAcqItemsParams
   NavAcqAction actions[NAA_MAX_ACTIONS];
   NavAcqParams params;
   int actOrder[NAA_MAX_ACTIONS + 1];
+};
+
+enum FocusPosParamIndexes { FP_focusAxisPos, FP_rotateAxis, FP_axisRotation,
+  FP_focusXoffset, FP_focusYoffset, FP_noParam };
+struct MGridFocusPosParams
+{
+  float values[FP_noParam];
 };
 
 class CMultiGridTasks
@@ -145,6 +153,10 @@ public:
   void AutoContToGridSettings(MGridAutoContParams &mgParam);
   void GridToGeneralSettings(MGridGeneralParams &mgParam);
   void GeneralToGridSettings(MGridGeneralParams &mgParam);
+  void GridToFocusPosSettings(MGridFocusPosParams &mgParam);
+  void FocusPosToGridSettings(MGridFocusPosParams &mgParam);
+  int LoadAllGridMaps(int startBuf, CString &errStr);
+  bool GetGridMapLabel(int mapID, CString &value);
   int SaveSessionFile(CString &errStr);
   void SaveSessionFileWarnIfError();
   void ClearSession(bool keepAcqParams = false);
@@ -168,6 +180,9 @@ public:
   GetSetMember(float, RRGmaxCenShift);
   GetSetMember(bool, AdocChanged);
   GetSetMember(BOOL, SkipGridRealign);
+  GetMember(float, ReferenceCounts);
+  GetSetMember(bool, UseCustomOrder);
+  IntVec *GetCustomRunDlgInds() {return &mCustomRunDlgInds ; };
   bool WasStoppedInNavRun() { return mStoppedInNavRun && mSuspendedMulGrid; };
   bool WasStoppedInLMMont() { return mStoppedInLMMont && mSuspendedMulGrid; };
   void SetExtErrorOccurred(int inVal);
@@ -177,6 +192,7 @@ public:
   CArray<MGridHoleFinderParams, MGridHoleFinderParams> *GetMGHoleParamArray() { return &mMGHoleParamArray; };
   CArray<MGridAutoContParams, MGridAutoContParams> *GetMGAutoContParamArray() { return &mMGAutoContParamArray; };
   CArray<MGridGeneralParams, MGridGeneralParams> *GetMGGeneralParams() { return &mMGGeneralParamArray; };
+  CArray<MGridFocusPosParams, MGridFocusPosParams> *GetMGFocusPosParams() { return &mMGFocusPosParamArray; };
   CArray<MGridAcqItemsParams, MGridAcqItemsParams> *GetMGAcqItemsParamArray() { return &mMGAcqItemsParamArray; };
 private:
   CSerialEMApp *mWinApp;
@@ -206,6 +222,7 @@ private:
   CArray<MGridHoleFinderParams, MGridHoleFinderParams> mMGHoleParamArray;
   CArray<MGridAutoContParams, MGridAutoContParams> mMGAutoContParamArray;
   CArray<MGridGeneralParams, MGridGeneralParams> mMGGeneralParamArray;
+  CArray<MGridFocusPosParams, MGridFocusPosParams> mMGFocusPosParamArray;
   CArray<MGridAcqItemsParams, MGridAcqItemsParams> mMGAcqItemsParamArray;
   MultiGridParams mParams;    // THE master parameters
   MontParam mGridMontParam;   // Managed copy of montage params for grid mont
@@ -218,9 +235,19 @@ private:
   MGridHoleFinderParams *mSavedHoleFinder;
   MGridAutoContParams *mSavedAutoCont;
   MGridGeneralParams *mSavedGeneralParams;
+  MGridFocusPosParams *mSavedFocusPos;
   CString mSavedDirForFrames; // User's dir for frame saving with final acquire camera
   int mCamNumForFrameDir;     // Camera for which that was saved
+  CString mSavedFrameBaseName;
+  CString mSavedNumberedFolder;
+  CString mSavedNumberedPrefix;
+  int mSavedLastFrameNum;
+  int mLastSetFrameNum;
+  int mCamNumForFocus;
   bool mAdocChanged;          // Flag that .adoc/ cartinfo was changed
+  IntVec mCustomRunDlgInds;
+  bool mUseCustomOrder;       // Flag that user has set custom order
+  std::map<int, std::string> mMultiLoadLabelMap;
 
   bool mStartedLongOp;        // Flags for actions that were started
   bool mMovedAperture;
@@ -228,7 +255,7 @@ private:
   bool mDoingMontage;
   bool mAutoContouring;
   bool mRestoringOnError;     // Flag tht it is doing the aperture restore (generally on error)
-  bool mSettingUpNavFiles;    // Flag that it is settup up polygon montages files
+  bool mSettingUpNavFiles;    // Flag that it is setting up polygon montages files
   bool mStartedNavAcquire;    // Flag that Nav acquire was started
   bool mInternalError;        // Flag to prevent reentrancy on message box errors here
   int *mActiveCameraList;

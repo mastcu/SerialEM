@@ -39,7 +39,7 @@ static const char *sActionNames[] = {"Remove objective aperture", "Set condenser
 "Take grid map", "Realign to grid map", "Autocontour grid squares", "Set MMM state",
 "Take MMMs", "Set state for final acquire", "Do final acquisition", "Set up MMM files",
 "Restore state", "Turn Low Dose on", "Turn Low Dose off", "Set Z height", 
-"Check & apply Shift to Marker", "Grid done"};
+"Check & apply Shift to Marker", "Set Focus area position", "Grid done"};
 
 
 CMultiGridTasks::CMultiGridTasks()
@@ -96,10 +96,13 @@ CMultiGridTasks::CMultiGridTasks()
   mSavedHoleFinder = NULL;
   mSavedAutoCont = NULL;
   mSavedGeneralParams = NULL;
+  mSavedFocusPos = NULL;
   mCamNumForFrameDir = -1;
   InitOrClearSessionValues();
   mAdocChanged = false;
   mSkipGridRealign = false;
+  mRRGstore = NULL;
+  mRRGdidSaveState = false;
 }
 
 
@@ -387,7 +390,7 @@ void CMultiGridTasks::StopMultiGrid()
   // Reset things from the reload realign
   if (mDoingMultiGrid == MG_REALIGN_RELOADED) {
     if (mRRGcurStore < 0)
-      delete mRRGstore;
+      B3DDELETE(mRRGstore);
     mCamera->SetRequiredRoll(0);
     mNavHelper->RestoreLowDoseConset();
     mNavHelper->RestoreMapOffsets();
@@ -395,6 +398,7 @@ void CMultiGridTasks::StopMultiGrid()
       mNavHelper->RestoreFromMapState();
     else if (!mNavHelper->GetRIstayingInLD() && mWinApp->mLowDoseDlg.m_bLowDoseMode ? 1 : 0)
       mWinApp->mLowDoseDlg.SetLowDoseMode(true);
+    mRRGdidSaveState = false;
     mWinApp->SetStatusText(SIMPLE_PANE, "");
   }
 
@@ -438,7 +442,6 @@ void CMultiGridTasks::StopMulGridSeq()
 {
   MontParam *montP;
   HoleFinderParams *hfParam = mNavHelper->GetHoleFinderParams();
-  CameraParameters *camParams = mWinApp->GetCamParams();
   if (!mDoingMulGridSeq || mWinApp->GetAppExiting())
     return;
 
@@ -450,10 +453,7 @@ void CMultiGridTasks::StopMulGridSeq()
   montP = mWinApp->GetMontParam();
   *montP = mSaveMasterMont;
   RestoreImposedParams();
-  if (mCamNumForFrameDir >= 0) {
-    mCamera->SetCameraFrameFolder(&camParams[mCamNumForFrameDir], mSavedDirForFrames);
-    mCamNumForFrameDir = -1;
-  }
+  mCamNumForFrameDir = -1;
 
   // Start restoring apertures, loop back in until done
   if (mReinsertObjAp || mRestoreCondAp) {
@@ -473,30 +473,40 @@ void CMultiGridTasks::StopMulGridSeq()
   CommonMulGridStop(false);
 }
 
+#define RESTORE_PARAMS(grName, svName) \
+  if (mSaved##svName) {   \
+    GridTo##grName##Settings(*mSaved##svName);  \
+    delete mSaved##svName;   \
+    mSaved##svName = NULL;   \
+  }
+
 /*
  * Restore saved parameters if ones were imposed
  */
 void CMultiGridTasks::RestoreImposedParams()
 {
-  if (mSavedMultiShot) {
-    GridToMultiShotSettings(*mSavedMultiShot);
-    delete mSavedMultiShot;
-    mSavedMultiShot = NULL;
-  }
-  if (mSavedHoleFinder) {
-    GridToHoleFinderSettings(*mSavedHoleFinder);
-    delete mSavedHoleFinder;
-    mSavedHoleFinder = NULL;
-  }
-  if (mSavedAutoCont) {
-    GridToAutoContSettings(*mSavedAutoCont);
-    delete mSavedAutoCont;
-    mSavedAutoCont = NULL;
-  }
-  if (mSavedGeneralParams) {
-    GridToGeneralSettings(*mSavedGeneralParams);
-    delete mSavedGeneralParams;
-    mSavedGeneralParams = NULL;
+  CameraParameters *camParams = mWinApp->GetCamParams();
+  RESTORE_PARAMS(MultiShot, MultiShot);
+  RESTORE_PARAMS(HoleFinder, HoleFinder);
+  RESTORE_PARAMS(AutoCont, AutoCont);
+  RESTORE_PARAMS(General, GeneralParams);
+  RESTORE_PARAMS(FocusPos, FocusPos);
+
+  // Restore camera settings if saved: this can happen multiple times
+  if (mCamNumForFrameDir >= 0) {
+    mCamera->SetCameraFrameFolder(&camParams[mCamNumForFrameDir], mSavedDirForFrames);
+    if (!mSavedFrameBaseName.IsEmpty())
+      mCamera->SetFrameBaseName(mSavedFrameBaseName);
+    if (mLastSetFrameNum > -2 && mLastSetFrameNum != mCamera->GetLastUsedFrameNumber() &&
+      mCurrentGrid >= 0 && mCurrentGrid < mCartInfo->GetSize()) {
+      JeolCartridgeData &jcdEl = mCartInfo->ElementAt(mCurrentGrid);
+      jcdEl.lastFrameNumber = mCamera->GetLastUsedFrameNumber();
+      mAdocChanged = true;
+    }
+    mLastSetFrameNum = -2;
+    mCamera->SetLastUsedFrameNumber(mSavedLastFrameNum);
+    mCamera->SetNumberedFramePrefix(mSavedNumberedPrefix);
+    mCamera->SetNumberedFrameFolder(mSavedNumberedFolder);
   }
 }
 
@@ -711,7 +721,7 @@ int CMultiGridTasks::RealignReloadedGrid(CMapDrawItem *item, float expectedRot,
   if (mRRGstore->GetAdocIndex() < 0) {
     errStr = "The map has no autodoc information (in .mdoc, .idoc, or .hdf file)";
     if (mRRGcurStore < 0)
-      delete mRRGstore;
+      B3DDELETE(mRRGstore);
     return 1;
   }
 
@@ -723,7 +733,7 @@ int CMultiGridTasks::RealignReloadedGrid(CMapDrawItem *item, float expectedRot,
     errStr = "Error getting the montage piece coordinates or stage coordinates from "
       "autodoc";
     if (mRRGcurStore < 0)
-      delete mRRGstore;
+      B3DDELETE(mRRGstore);
     return 1;
   }
   mScope->SetLDCenteredShift(0., 0.);
@@ -1510,22 +1520,12 @@ int CMultiGridTasks::StartGridRuns(int LMneedsLD, int MMMneedsLD, int finalNeeds
       return 1;
   }
 
-  // If not doing LM maps or reference counts exist and grid on stage is to be done, 
-  // rearrange order to do it first
+  // If not doing LM maps or reference counts exist and grid on stage is to be done first, 
+  // make sure grid is aligned if it might be, and set to skip realign if it is
   if (mMGdlg->GetOnStageDlgIndex() >= 0 &&
     (!mParams.acquireLMMs || mReferenceCounts > 0.)) {
     ind = dlgIndToJcdInd[mMGdlg->GetOnStageDlgIndex()];
-    for (grid = 0; grid < mNumGridsToRun; grid++) {
-      if (mJcdIndsToRun[grid] == ind) {
-        if (!grid)
-          break;
-        B3DSWAP(mJcdIndsToRun[grid], mJcdIndsToRun[0], err);
-        B3DSWAP(mSlotNumsToRun[grid], mSlotNumsToRun[0], err);
-        break;
-      }
-    }
-
-    // Make sure grid is aligned if it might be, and set to skip realign if it is
+    
     if (ind == mJcdIndsToRun[0] && mLoadedGridIsAligned < 0 && !mSkipGridRealign &&
       (mParams.acquireMMMs || mParams.runFinalAcq)) {
       jcd = mCartInfo->GetAt(ind);
@@ -1687,6 +1687,10 @@ int CMultiGridTasks::StartGridRuns(int LMneedsLD, int MMMneedsLD, int finalNeeds
     mCamera->IsDirectDetector(camParams))) {
     mCamNumForFrameDir = finalCamera;
     mSavedDirForFrames = mCamera->GetCameraFrameFolder(camParams, noFrameSubs, movable);
+    mSavedLastFrameNum = mCamera->GetLastUsedFrameNumber();
+    mSavedFrameBaseName = mCamera->GetFrameBaseName();
+    mSavedNumberedFolder = mCamera->GetNumberedFrameFolder();
+    mSavedNumberedPrefix = mCamera->GetNumberedFramePrefix();
   }
 
   // Determine 4 positions around center for eucentricity
@@ -1774,7 +1778,7 @@ int CMultiGridTasks::StartGridRuns(int LMneedsLD, int MMMneedsLD, int finalNeeds
 
       // Set state for MMM
       if ((mParams.MMMstateNums[0] >= 0 || mParams.MMMstateNums[1] >= 0 ||
-        mParams.MMMstateNums[2] >= 0) && !stateForMMM) {
+        mParams.MMMstateNums[2] >= 0 || mParams.MMMstateNums[3] >= 0) && !stateForMMM) {
         mActSequence.push_back(MGACT_MMM_STATE);
         stateForMMM = true;
       }
@@ -1810,10 +1814,15 @@ int CMultiGridTasks::StartGridRuns(int LMneedsLD, int MMMneedsLD, int finalNeeds
       
       // Set state for final acq
       if ((mParams.finalStateNums[0] >= 0 || mParams.finalStateNums[1] >= 0 ||
-        mParams.finalStateNums[2] >= 0) && !stateForAcq) {
+        mParams.finalStateNums[2] >= 0 || mParams.finalStateNums[3] >= 0) && 
+        !stateForAcq) {
         mActSequence.push_back(MGACT_FINAL_STATE);
         stateForAcq = true;
       }
+
+      // Set Focus position
+      if (jcd.focusPosParamIndex >= 0)
+        mActSequence.push_back(MGACT_FOCUS_POS);
 
       // Acquire
       mActSequence.push_back(MGACT_FINAL_ACQ);
@@ -1827,6 +1836,7 @@ int CMultiGridTasks::StartGridRuns(int LMneedsLD, int MMMneedsLD, int finalNeeds
       AddToSeqForRestoreFromLM(apForLMM, stateForLMM);
     if (stateForMMM || stateForAcq)
       mActSequence.push_back(MGACT_RESTORE_STATE);
+    stateForMMM = stateForAcq = false;
     mActSequence.push_back(MGACT_GRID_DONE);
     lastMMMforGrid = didMMMforGrid;
     lastAcqForGrid = didAcqForGrid;
@@ -1943,6 +1953,7 @@ void CMultiGridTasks::DoNextSequenceAction(int resume)
   MGridMultiShotParams msParam;
   MGridGeneralParams genParam;
   MGridAcqItemsParams fdParam;
+  MGridFocusPosParams fpParam;
   NavAcqParams *acqParams;
   CameraParameters *camParams = mWinApp->GetCamParams();
   FileOptions fileOpt;
@@ -1980,6 +1991,7 @@ void CMultiGridTasks::DoNextSequenceAction(int resume)
       case MGACT_UNLOAD_GRID:
       case MGACT_MMM_STATE:
       case MGACT_FINAL_STATE:
+      case MGACT_FOCUS_POS:
       case MGACT_SETUP_MMM_FILES:
       case MGACT_RESTORE_STATE:
       case MGACT_LOW_DOSE_ON:
@@ -2446,7 +2458,7 @@ void CMultiGridTasks::DoNextSequenceAction(int resume)
     if (jcd.acqStateNums[0] >= 0 || jcd.acqStateNums[1] >= 0 || jcd.acqStateNums[2] >= 0
       || jcd.acqStateNums[3] >= 0)
       stateNums = &jcd.acqStateNums[0];
-  case MGACT_MMM_STATE:
+  case MGACT_MMM_STATE:   // Fall through to states for MMM
     err = 0;
     for (ind = 0; ind < 4; ind++) {
       if (stateNums[ind] >= 0) {
@@ -2464,6 +2476,14 @@ void CMultiGridTasks::DoNextSequenceAction(int resume)
       SEMMessageBox(str + errStr);
       StopMulGridSeq();
       return;
+    }
+    break;
+
+  case MGACT_FOCUS_POS:
+    if (jcd.focusPosParamIndex >= 0 && jcd.focusPosParamIndex <
+      (int)mMGFocusPosParamArray.GetSize()) {
+      fpParam = mMGFocusPosParamArray.GetAt(jcd.focusPosParamIndex);
+      GridToFocusPosSettings(fpParam);
     }
     break;
 
@@ -2601,6 +2621,13 @@ void CMultiGridTasks::DoNextSequenceAction(int resume)
       GridToGeneralSettings(genParam);
     }
 
+    // Just save focus position here, set it after state
+    if (jcd.focusPosParamIndex >= 0 && jcd.focusPosParamIndex <
+      (int)mMGFocusPosParamArray.GetSize() && !mSavedFocusPos) {
+      mSavedFocusPos = new MGridFocusPosParams;
+      FocusPosToGridSettings(*mSavedFocusPos);
+    }
+
     err = OpenNavFileIfNeeded(jcd);
     if (err > 1)
       return;
@@ -2727,6 +2754,7 @@ void CMultiGridTasks::DoNextSequenceAction(int resume)
     mOpeningForFinalFailed = false;
 
     // Take care of frames directory
+    mLastSetFrameNum = -2;
     if (mCamNumForFrameDir >= 0) {
       mCamera->GetCameraFrameFolder(&camParams[mCamNumForFrameDir], noFrameSubs, movable);
       str = RootnameFromUsername(jcd);
@@ -2739,6 +2767,16 @@ void CMultiGridTasks::DoNextSequenceAction(int resume)
           str = mWorkingDir + "\\" + str + "_frames";
       }
       mCamera->SetCameraFrameFolder(&camParams[mCamNumForFrameDir], str);
+      if (!mSavedFrameBaseName.IsEmpty()) {
+        str = mSavedFrameBaseName + "_" + jcd.userName;
+        mCamera->SetFrameBaseName(str);
+      }
+      mLastSetFrameNum = mCamera->GetLastUsedFrameNumber();
+      if (jcd.lastFrameNumber >= 0) {
+        mLastSetFrameNum = jcd.lastFrameNumber;
+        mCamera->SetKeepLastUsedFrameNum(true);
+        mCamera->SetLastUsedFrameNumber(jcd.lastFrameNumber);
+      }
     }
 
     mNavigator->AcquireAreas(NAVACQ_SRC_MG_RUN_ACQ, false, true);
@@ -2761,9 +2799,9 @@ void CMultiGridTasks::DoNextSequenceAction(int resume)
       }
       return;
     }
-    mCurrentGrid++;
     UpdateGridStatusText();
     RestoreImposedParams();
+    mCurrentGrid++;
     break;
 
   default:
@@ -2813,9 +2851,9 @@ int CMultiGridTasks::SkipToNextGrid(CString &errStr)
 
   // Increment the current grid here because the seqindex will always be incremented 
   // before the case is hit
-  mCurrentGrid++;
   UpdateGridStatusText();
   RestoreImposedParams();
+  mCurrentGrid++;
   return 0;
 }
 
@@ -3019,7 +3057,7 @@ int CMultiGridTasks::MarkerShiftIndexForMag(int magInd, BaseMarkerShift &baseShi
 }
 
 /*
- * Restore state an dupdate dialog
+ * Restore state and update dialog
  */
 void CMultiGridTasks::RestoreState()
 {
@@ -3236,6 +3274,165 @@ void CMultiGridTasks::GeneralToGridSettings(MGridGeneralParams &mgParam)
   mgParam.values[GP_RIErasePeriodicPeaks] = mNavHelper->GetRIErasePeriodicPeaks();
 }
 
+/*
+* Functions for copying focus position back and forth
+*/
+void CMultiGridTasks::GridToFocusPosSettings(MGridFocusPosParams &fpParam)
+{
+  mNavHelper->SetLDFocusPosition(mWinApp->GetCurrentCamera(),
+    fpParam.values[FP_focusAxisPos], B3DNINT(fpParam.values[FP_rotateAxis]),
+    B3DNINT(fpParam.values[FP_axisRotation]), B3DNINT(fpParam.values[FP_focusXoffset]),
+    B3DNINT(fpParam.values[FP_focusYoffset]), "grid settings", false);
+}
+
+void CMultiGridTasks::FocusPosToGridSettings(MGridFocusPosParams &fpParam)
+{
+  int rotateAxis, axisRot, xOffset, yOffset;
+  mNavHelper->SaveLDFocusPosition(1, fpParam.values[FP_focusAxisPos], rotateAxis, axisRot,
+    xOffset, yOffset, BOOL_EQUIV(GetDebugOutput('q'), true));
+  fpParam.values[FP_rotateAxis] = (float)rotateAxis;
+  fpParam.values[FP_axisRotation] = (float)axisRot;
+  fpParam.values[FP_focusXoffset] = (float)xOffset;
+  fpParam.values[FP_focusYoffset] = (float)yOffset;
+}
+
+/*
+ * Loads all of the grid maps from the session, or if there is no session or no LM maps
+ * done yet, tries to load them from the current nav file, with startBuf as preferred
+ * starting buffer if possible, or -1 to start past the read buffer
+ */
+int CMultiGridTasks::LoadAllGridMaps(int startBuf, CString &errStr)
+{
+  int ind, jcdInd, numMaps = 0, numLoaded = 0, lowestMag = 999, saveRolls;
+  float pixel, biggestMap, size;
+  float minGridMapSize = 400.;
+  IntVec mapOrJcdInds;
+  CString str;
+  std::string sstr;
+  JeolCartridgeData jcd;
+  MapItemArray *itemArray;
+  CMapDrawItem *item;
+  int maxLoad = MAX_BUFFERS - 2;
+  mNavigator = mWinApp->mNavigator;
+
+  // If there is grid info AND there has been any mapping, count up maps from flags/IDs
+  if (mCartInfo->GetSize() && mLMMmagIndex > 0) {
+    if (!mNavigator)
+      mWinApp->mMenuTargets.OpenNavigatorIfClosed();
+    mNavigator = mWinApp->mNavigator;
+    for (jcdInd = 0; jcdInd < (int)mCartInfo->GetSize(); jcdInd++) {
+      jcd = mCartInfo->GetAt(jcdInd);
+      if ((jcd.status & MGSTAT_FLAG_LM_MAPPED) && jcd.LMmapID > 0) {
+        numMaps++;
+        mapOrJcdInds.push_back(jcdInd);
+      }
+    }
+    if (!numMaps) {
+      errStr = "No grids in the session are marked as having a grid map";
+      return 2;
+    }
+
+  } else {
+
+    // Otherwise require nav open, look for the lowest mag maps
+    if (!mNavigator) {
+      errStr = "The Navigator must be open to look for multiple maps in a Navigator "
+        "table";
+      return 1;
+    }
+    itemArray = mNavigator->GetItemArray();
+    for (ind = 0; ind < (int)itemArray->GetSize(); ind++) {
+      item = itemArray->GetAt(ind);
+      if (item->IsMap()) {
+        if (item->mMapMagInd < lowestMag) {
+          lowestMag = item->mMapMagInd;
+          biggestMap = 0.;
+          numMaps = 0;
+          mapOrJcdInds.clear();
+        }
+
+        // At the lowest mag, keep track of biggest size
+        if (item->mMapMagInd == lowestMag) {
+          pixel = (float)(mShiftManager->GetPixelSize(item->mMapCamera, lowestMag) *
+            item->mMapBinning);
+          size = (float)(pixel * (item->mMapWidth + item->mMapHeight) / 2.);
+          ACCUM_MAX(biggestMap, size);
+          numMaps++;
+          mapOrJcdInds.push_back(ind);
+        }
+      }
+    }
+    if (!numMaps) {
+      errStr = "No maps were found in the Navigator table";
+      return 2;
+    }
+    if (lowestMag >= mScope->GetLowestNonLMmag() || biggestMap < minGridMapSize) {
+      errStr = "No LM maps covering a large enough area were found in the Navigator "
+        "table";
+      return 3;
+    }
+  }
+
+  // Set up where it loads and make sure rolling doesn't occur there while loading
+  if (startBuf < 0)
+    startBuf = mWinApp->mBufferManager->GetBufToReadInto() + 1;
+  ACCUM_MIN(numMaps, maxLoad);
+  B3DCLAMP(startBuf, 2, maxLoad - numMaps);
+  saveRolls = mWinApp->mBufferManager->GetShiftsOnAcquire();
+  mWinApp->mBufferManager->SetShiftsOnAcquire(B3DMIN(saveRolls, startBuf - 1));
+  mMultiLoadLabelMap.clear();
+
+  // Loop on maps to load
+  for (jcdInd = 0; jcdInd < (int)mapOrJcdInds.size(); jcdInd++) {
+    if (mCartInfo->GetSize() && mLMMmagIndex > 0) {
+
+      // For session map, need to load nav, find map
+      jcd = mCartInfo->GetAt(jcdInd);
+      str = FullGridFilePath(-jcdInd - 1, ".nav");
+      if (mNavigator->LoadNavFile(false, false, &str)) {
+        SEMAppendToLog("Error loading Navigator file " + str);
+        continue;
+      }
+
+      item = mNavigator->FindItemWithMapID(jcd.LMmapID);
+      if (!item) {
+        PrintfToLog("Could not find map with ID %d in file %s", item->mMapID,
+          (LPCTSTR)str);
+        continue;
+      }
+    } else {
+
+      // Otherwise get the item
+      item = itemArray->GetAt(jcdInd);
+    }
+
+    // Load and report
+    if (mNavigator->DoLoadMap(true, item, startBuf + numLoaded, false)) {
+      PrintfToLog("Error loading map with label %s from file %s", (LPCTSTR)item->mLabel,
+        (LPCTSTR)str);
+      continue;
+    }
+    sstr = (LPCTSTR)(item->mLabel + "  -  " + item->mNote);
+    mMultiLoadLabelMap.insert(std::pair<int, std::string>(item->mMapID, sstr));
+    PrintfToLog("%c: %s  -  %s", (char)('A' + startBuf + numLoaded), 
+      (LPCTSTR)item->mLabel, (LPCTSTR)item->mNote);
+    numLoaded++;
+  }
+  mWinApp->SetCurrentBuffer(startBuf);
+  mWinApp->mBufferManager->SetShiftsOnAcquire(saveRolls);
+  return 0;
+}
+
+bool CMultiGridTasks::GetGridMapLabel(int mapID, CString &value)
+{
+  std::map<int, std::string>::iterator iter;
+  if (!mMultiLoadLabelMap.count(mapID))
+    return false;
+  iter = mMultiLoadLabelMap.find(mapID);
+  value = iter->second.c_str();
+  return !value.IsEmpty();
+}
+
 //////////////////////////////////////////////////////////////////
 // SAVING AND READING THE SESSION FILE
 //////////////////////////////////////////////////////////////////
@@ -3274,6 +3471,10 @@ void CMultiGridTasks::GeneralToGridSettings(MGridGeneralParams &mgParam)
 #define MGDOC_ACQ_ST_NAME  "AcqStateName"
 #define MGDOC_SEP_ACQ_ST  "SeparateAcqState"
 #define MGDOC_IS_ALIGNED  "LoadedIsAligned"
+#define MGDOC_FRAME_NUM   "LastFrameNumber"
+#define MGDOC_FP_PARAM  "FocusPosParams"
+#define MGDOC_NOTE "Note"
+#define MGDOC_ORDER "RunOrder"
 
 #define MGNAV_ACQ_SUFFIX "_navAcq.txt"
 
@@ -3283,6 +3484,15 @@ void CMultiGridTasks::GeneralToGridSettings(MGridGeneralParams &mgParam)
 #define BOOL_SETT_ASSIGN(a, b) ADOC_PUT(Integer(ADOC_ARG, a, b ? 1 : 0)); 
 #define INT_SETT_ASSIGN(a, b) ADOC_PUT(Integer(ADOC_ARG, a, b));
 #define FLOAT_SETT_ASSIGN(a, b) ADOC_PUT(Float(ADOC_ARG, a, b));
+
+#define WRITE_GRID_PARAMS(namel, arr, BREV, brev, typ) \
+     if (jcd.namel##ParamIndex >= 0 &&   \
+      jcd.namel##ParamIndex < mMG##arr##ParamArray.GetSize()) {    \
+       brev##Param = mMG##arr##ParamArray.GetAt(jcd.namel##ParamIndex);    \
+       if (AdocSet##typ##Array(MGDOC_GRID, sectInd, MGDOC_##BREV##_PARAM,  \
+         brev##Param.values, BREV##_noParam))  \
+         err++;   \
+     }
 
 /*
  * Save session information to current or new file
@@ -3299,6 +3509,7 @@ int CMultiGridTasks::SaveSessionFile(CString &errStr)
   MGridMultiShotParams msParam;
   MGridGeneralParams genParam;
   MGridAcqItemsParams acqParams;
+  MGridFocusPosParams fpParam;
 
   // Get current parameters if names have not been locked
   if (!mNamesLocked) {
@@ -3364,6 +3575,9 @@ int CMultiGridTasks::SaveSessionFile(CString &errStr)
         MAX_AUTOCONT_GROUPS);
     if (mLMMmagIndex)
       err += AdocSetInteger(ADOC_GLOBAL_NAME, 0, MGDOC_LMM_MAGIND, mLMMmagIndex);
+    if (mUseCustomOrder)
+      err += AdocSetIntegerArray(ADOC_GLOBAL_NAME, 0, MGDOC_ORDER, &mCustomRunDlgInds[0],
+        (int)mCustomRunDlgInds.size());
   }
 
   // Save grid values
@@ -3383,11 +3597,14 @@ int CMultiGridTasks::SaveSessionFile(CString &errStr)
       err += AdocSetFloat(MGDOC_GRID, sectInd, MGDOC_ZSTAGE, jcd.zStage);
       err += AdocSetKeyValue(MGDOC_GRID, sectInd, MGDOC_NAME, (LPCTSTR)jcd.name);
       err += AdocSetKeyValue(MGDOC_GRID, sectInd, MGDOC_USERNAME, (LPCTSTR)jcd.userName);
+      err += AdocSetKeyValue(MGDOC_GRID, sectInd, MGDOC_NOTE, (LPCTSTR)jcd.note);
       if (jcd.LMmapID)
         err += AdocSetInteger(MGDOC_GRID, sectInd, MGDOC_LMMAPID, jcd.LMmapID);
       if (jcd.finalDataParamIndex >= 0)
         err += AdocSetInteger(MGDOC_GRID, sectInd, MGDOC_FINAL_PARAM,
           jcd.finalDataParamIndex);
+      if (jcd.lastFrameNumber >= 0)
+        err += AdocSetInteger(MGDOC_GRID, sectInd, MGDOC_FRAME_NUM, jcd.lastFrameNumber);
 
       // Write states
       if (jcd.separateState) {
@@ -3420,33 +3637,12 @@ int CMultiGridTasks::SaveSessionFile(CString &errStr)
           err++;
       }
 
-      // Write multishot params
-      if (jcd.multiShotParamIndex >= 0 &&
-        jcd.multiShotParamIndex < mMGMShotParamArray.GetSize()) {
-        msParam = mMGMShotParamArray.GetAt(jcd.multiShotParamIndex);
-        if (AdocSetFloatArray(MGDOC_GRID, sectInd, MGDOC_MS_PARAM, msParam.values,
-          MS_noParam))
-          err++;
-      }
-
-      // Write autocontour params
-      if (jcd.autoContParamIndex >= 0 &&
-        jcd.autoContParamIndex < mMGAutoContParamArray.GetSize()) {
-        acParam = mMGAutoContParamArray.GetAt(jcd.autoContParamIndex);
-        if (AdocSetFloatArray(MGDOC_GRID, sectInd, MGDOC_AC_PARAM, acParam.values,
-          AC_noParam))
-          err++;
-      }
-
-      // Write general params
-      if (jcd.generalParamIndex >= 0 &&
-        jcd.generalParamIndex < mMGGeneralParamArray.GetSize()) {
-        genParam = mMGGeneralParamArray.GetAt(jcd.generalParamIndex);
-        if (AdocSetIntegerArray(MGDOC_GRID, sectInd, MGDOC_GEN_PARAM, genParam.values,
-          GP_noParam))
-          err++;
-      }
-
+      // Get multishot, autocontour, general, focusPos params
+      WRITE_GRID_PARAMS(multiShot, MShot, MS, ms, Float);
+      WRITE_GRID_PARAMS(autoCont, AutoCont, AC, ac, Float);
+      WRITE_GRID_PARAMS(general, General, GEN, gen, Integer);
+      WRITE_GRID_PARAMS(focusPos, FocusPos, FP, fp, Float);
+      
       if (err) {
         errStr = "Errors writing data to a grid section of the autodoc";
       }
@@ -3513,12 +3709,14 @@ void CMultiGridTasks::ClearSession(bool keepAcqParams)
   mPrefix = "";
   mWorkingDir = "";
   mNamesLocked = false;
+  mUseCustomOrder = false;
   mLMMusedStateName = "";
   mSessionFilename = "";
   mMGAutoContParamArray.RemoveAll();
   mMGHoleParamArray.RemoveAll();
   mMGMShotParamArray.RemoveAll();
   mMGGeneralParamArray.RemoveAll();
+  mMGFocusPosParamArray.RemoveAll();
   if (!keepAcqParams)
     mMGAcqItemsParamArray.RemoveAll();
   if (mNavHelper->mMultiGridDlg) {
@@ -3553,7 +3751,7 @@ void CMultiGridTasks::ClearSession(bool keepAcqParams)
 
 #define INT_SETT_ASSIGN(a, b) ADOC_REQUIRED(AdocGetInteger(SECT_NAME, ind1, a, &b));
 
-#define BOOL_SETT_ASSIGN(a, b) ADOC_REQUIRED(AdocGetInteger(SECT_NAME, ind1, a, &index)); \
+#define BOOL_SETT_ASSIGN(a, b) ADOC_REQUIRED(AdocGetInteger(SECT_NAME, ind1, a, &index));\
        ADOC_BOOL_ASSIGN(b);
 
 #define FLOAT_SETT_ASSIGN(a, b) ADOC_REQUIRED(AdocGetFloat(SECT_NAME, ind1, a, &b));
@@ -3571,6 +3769,17 @@ if (!retval) {    \
   err++;     \
 }
 
+#define GET_GRID_PARAMS(NameC, namel, arr, BREV, brev, typ) \
+    NameC##ToGridSettings(brev##Param);   \
+    ind1 = 0;   \
+    val = AdocGet##typ##Array(MGDOC_GRID, grid, MGDOC_##BREV##_PARAM, brev##Param.values,\
+      &ind1, BREV##_noParam);  \
+    if (val < 0)   \
+      err++;   \
+    if (!val) {   \
+      jcd.namel##ParamIndex = (int)mMG##arr##ParamArray.GetSize();   \
+      mMG##arr##ParamArray.Add(brev##Param);   \
+    }
 
  /*
  * Reading a session file
@@ -3591,7 +3800,10 @@ int CMultiGridTasks::LoadSessionFile(bool useLast, CString &errStr)
   MGridAutoContParams acParam;
   MGridMultiShotParams msParam;
   MGridGeneralParams genParam;
+  MGridFocusPosParams fpParam;
   float values[MS_noParam];
+  ShortVec inRunList;
+  int intVals[50];
   int isAligned = 0;
 
   if (mSessionFilename.IsEmpty())
@@ -3686,6 +3898,22 @@ int CMultiGridTasks::LoadSessionFile(bool useLast, CString &errStr)
     err++;
   mHaveAutoContGroups = val == 0;
 
+  ind1 = 0;
+  val = AdocGetIntegerArray(ADOC_GLOBAL_NAME, 0, MGDOC_ORDER, intVals, &ind1, 50);
+  if (val < 0)
+    err++;
+  if (val == 0) {
+    mUseCustomOrder = true;
+    mCustomRunDlgInds.clear();
+    inRunList.resize(numSect);
+    for (val = 0; val < ind1; val++) {
+      if (intVals[val] >= 0 && intVals[val] < numSect && !inRunList[intVals[val]]) {
+        mCustomRunDlgInds.push_back(intVals[val]);
+        inRunList[intVals[val]] = 1;
+      }
+    }
+  }
+
   if (err)
     errStr = "Error reading values from global section of autodoc";
   
@@ -3714,7 +3942,12 @@ int CMultiGridTasks::LoadSessionFile(bool useLast, CString &errStr)
       err++;
     GET_STRING(MGDOC_GRID, grid, MGDOC_NAME, jcd.name);
     GET_STRING(MGDOC_GRID, grid, MGDOC_USERNAME, jcd.userName);
+    GET_STRING(MGDOC_GRID, grid, MGDOC_NOTE, jcd.note);
+    if (AdocGetInteger(MGDOC_GRID, grid, MGDOC_STATUS, &jcd.status) < 0)
+      err++;
     if (AdocGetInteger(MGDOC_GRID, grid, MGDOC_SEP_ACQ_ST, &jcd.separateState) < 0)
+      err++;
+    if (AdocGetInteger(MGDOC_GRID, grid, MGDOC_FRAME_NUM, &jcd.lastFrameNumber) < 0)
       err++;
     if (jcd.separateState) {
       for (ind1 = 0; ind1 < 4; ind1++) {
@@ -3787,41 +4020,11 @@ int CMultiGridTasks::LoadSessionFile(bool useLast, CString &errStr)
       mMGHoleParamArray.Add(hfParam);
     }
 
-    // Get multishot params
-    MultiShotToGridSettings(msParam);
-    ind1 = 0;
-    val = AdocGetFloatArray(MGDOC_GRID, grid, MGDOC_MS_PARAM, msParam.values, &ind1,
-      MS_noParam);
-    if (val < 0)
-      err++;
-    if (!val) {
-      jcd.multiShotParamIndex = (int)mMGMShotParamArray.GetSize();
-      mMGMShotParamArray.Add(msParam);
-    }
-
-    // Get autocontour params
-    AutoContToGridSettings(acParam);
-    ind1 = 0;
-    val = AdocGetFloatArray(MGDOC_GRID, grid, MGDOC_AC_PARAM, acParam.values, &ind1,
-      AC_noParam);
-    if (val < 0)
-      err++;
-    if (!val) {
-      jcd.autoContParamIndex = (int)mMGAutoContParamArray.GetSize();
-      mMGAutoContParamArray.Add(acParam);
-    }
-
-    // Get general params
-    GeneralToGridSettings(genParam);
-    ind1 = 0;
-    val = AdocGetIntegerArray(MGDOC_GRID, grid, MGDOC_GEN_PARAM, genParam.values, &ind1,
-      GP_noParam);
-    if (val < 0)
-      err++;
-    if (!val) {
-      jcd.generalParamIndex = (int)mMGGeneralParamArray.GetSize();
-      mMGGeneralParamArray.Add(genParam);
-    }
+    // Get multishot, autocontour, general, focusPos params
+    GET_GRID_PARAMS(MultiShot, multiShot, MShot, MS, ms, Float);
+    GET_GRID_PARAMS(AutoCont, autoCont, AutoCont, AC, ac, Float);
+    GET_GRID_PARAMS(General, general, General, GEN, gen, Integer);
+    GET_GRID_PARAMS(FocusPos, focusPos, FocusPos, FP, fp, Float);
 
     if (!err && jcd.station == JAL_STATION_STAGE) {
       stageInd = grid;
@@ -3870,7 +4073,7 @@ int CMultiGridTasks::LoadSessionFile(bool useLast, CString &errStr)
       mNavHelper->mMultiGridDlg->m_strPrefix = mPrefix;
       mNavHelper->mMultiGridDlg->SetRootname();
       mNavHelper->mMultiGridDlg->UpdateData(false);
-      mNavHelper->mMultiGridDlg->ReloadTable(1, 1);
+      mNavHelper->mMultiGridDlg->ReloadTable(1, 1 + (mUseCustomOrder ? 1 : 0));
       mNavHelper->mMultiGridDlg->CheckIfAnyUndoneToRun();
       mNavHelper->mMultiGridDlg->UpdateCurrentDir();
     }

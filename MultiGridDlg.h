@@ -1,7 +1,7 @@
 #pragma once
 #include "afxwin.h"
 
-#define MAX_MULGRID_PANELS 10
+#define MAX_MULGRID_PANELS 11
 // CMultiGridDlg dialog
 
 class CMultiGridDlg : public CBaseDlg
@@ -62,8 +62,14 @@ private:
   int mNumMMMcombos;          // Number of combo boxes being shown
   int mNumFinalCombos;
   int mRightIsOpen;           // Flag that right side is open
+  bool mClosedAll;
+  BOOL mSavedPanelStates[MAX_MULGRID_PANELS];
   bool mDropFrameOption;      // flag to drop the option to put frames under session
   bool mSingleGridMode;       // Flag for no autoloader
+  bool mSettingOrder;          // Flag that order is being set
+  IntVec *mCustomRunDlgInds;
+  ShortVec mWasAddedToOrder;
+
 
 public:
   CString m_strCurrentDir;
@@ -104,8 +110,12 @@ public:
   void SyncToMasterParams();
   void GetStateFromComboBox(CComboBox &combo, int &num, CString &name, int addForNone);
   int GetListOfGridsToRun(ShortVec &jcdInds, ShortVec &slotNums);
+  void DefaultRunDlgIndexes(IntVec &dlgInds);
+  void DisplayRunOrder();
+  int LookupRunOrder(IntVec &runDlgInds, int dlgInd);
   void SetRootname();
   void ReloadTable(int resetOrClear, int checkRuns);
+  CString UserNameWithNote(CString &userName, CString &note);
   afx_msg void OnButMgSetup();
   afx_msg void OnRadioMulgridSelect(UINT nID);
   afx_msg void OnButLoadGrid();
@@ -208,4 +218,12 @@ public:
   BOOL m_bFramesUnderSession;
   afx_msg void OnCheckFramesUnderSession();
   afx_msg void OnCheckMgUseSubdirs();
+  afx_msg void OnButCloseAll();
+  afx_msg void OnCheckToggleAll();
+  BOOL m_bToggleAll;
+  CString m_strNote;
+  afx_msg void OnEnKillfocusEditGridNote();
+  afx_msg void OnButSetOrder();
+  afx_msg void OnButResetOrder();
+  int GetNumAddedToOrder();
 };
