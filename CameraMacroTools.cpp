@@ -226,11 +226,15 @@ void CCameraMacroTools::OnButVFTR(UINT nID)
 
 void CCameraMacroTools::OnButmontage()
 {
+  int navState = GetNavigatorState();
   mWinApp->RestoreViewFocus();
   if (mWinApp->mMultiGridTasks->GetDoingMulGridSeq() ||
-    mWinApp->mMultiGridTasks->GetSuspendedMulGrid())
+    mWinApp->mMultiGridTasks->GetSuspendedMulGrid()) {
+    if (navState == NAV_SCRIPT_RUNNING || navState == NAV_SCRIPT_STOPPED ||
+      navState == NAV_RUNNING_NO_SCRIPT_TS)
+      mNav->SetAcquireEnded(1);
     mWinApp->mMultiGridTasks->EndMulGridSeq();
-  else if (mWinApp->Montaging() && !mWinApp->LowDoseMode())
+  } else if (mWinApp->Montaging() && !mWinApp->LowDoseMode())
     mWinApp->StartMontageOrTrial(false);
   else
     mWinApp->UserRequestedCapture(PREVIEW_CONSET);
