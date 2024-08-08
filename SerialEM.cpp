@@ -685,6 +685,7 @@ CSerialEMApp::CSerialEMApp()
   mNavParams.maxLMMontageIS = 35.f;
   mNavParams.fitMontWithFullFrames = 0.;
   mNavParams.maxReconnectsInAcq = 0;
+  mNavParams.minPtsForCombineInPMM = 10;
 
   mCookParams.intensity = -1.;
   mCookParams.magIndex = -1;
@@ -807,6 +808,7 @@ CSerialEMApp::CSerialEMApp()
   mSpecialDebugLevel = 0;
   mNextLogColor = -1;
   mNextLogStyle = -1;
+  mStartCameraInDebug = false;
   traceMutexHandle = CreateMutex(0, 0, 0);
   sStartTime = GetTickCount();
   mLastIdleScriptTime = sStartTime;
@@ -1161,6 +1163,12 @@ BOOL CSerialEMApp::InitInstance()
   }
   SEMTrace('1', "Detected system DPI of %d, using DPI %d%s", mag, mSystemDPI,
     mDisplayNotTruly120DPI ? " but not scaling for 120" : "");
+
+  if (mStartCameraInDebug) {
+    AdjustKeysForCameraDebug(true);
+    mCamera->SetDebugMode(true);
+    SEMAppendToLog("\"StartCameraInDebugMode\" is obsolete: use DebugOutput Z instead");
+  }
 
   // Set constants based on DPI if not supplied by user
   if (!mToolTitleHeight) {
@@ -2577,6 +2585,8 @@ BOOL CSerialEMApp::CheckIdleTasks()
       busy = mMultiGridTasks->MultiGridBusy();
     else if (idc->source == TASK_MULGRID_SEQ)
       busy = mMultiGridTasks->MulGridSeqBusy();
+    else if (idc->source == TASK_MULTI_MAP_HOLES)
+      busy = mNavHelper->mHoleFinderDlg->MultiMapBusy();
     else if (idc->source == TASK_SNAPSHOT_TO_BUF)
       busy = 0;
 
@@ -2724,6 +2734,8 @@ BOOL CSerialEMApp::CheckIdleTasks()
           mGainRefMaker->AcquiringRefNextTask(idc->param);
         else if (idc->source == TASK_FIND_HOLES)
           mNavHelper->mHoleFinderDlg->ScanningNextTask(idc->param);
+        else if (idc->source == TASK_MULTI_MAP_HOLES)
+          mNavHelper->mHoleFinderDlg->MultiMapNextTask(idc->param);
         else if (idc->source == TASK_MACRO_AT_EXIT)
           mMainFrame->DoClose(true);
         else if (idc->source == TASK_AUTO_CONTOUR)
@@ -2837,6 +2849,8 @@ BOOL CSerialEMApp::CheckIdleTasks()
           mScope->ApertureCleanup(busy);
         else if (idc->source == TASK_FIND_HOLES)
           mNavHelper->mHoleFinderDlg->StopScanning();
+        else if (idc->source == TASK_MULTI_MAP_HOLES)
+          mNavHelper->mHoleFinderDlg->StopMultiMap();
         else if (idc->source == TASK_AUTO_CONTOUR)
           mNavHelper->mAutoContouringDlg->CleanupAutoCont(busy);
         else if (idc->source == TASK_MULTI_GRID)
@@ -2988,6 +3002,8 @@ void CSerialEMApp::ErrorOccurred(int error)
     mStageMoveTool->StopNextAcquire();
   if (mNavHelper->mHoleFinderDlg->GetFindingHoles())
     mNavHelper->mHoleFinderDlg->StopScanning();
+  if (mNavHelper->mHoleFinderDlg->DoingMultiMapHoles())
+    mNavHelper->mHoleFinderDlg->StopMultiMap();
   if (mCamera->GetWaitingForStacking())
     mCamera->SetWaitingForStacking(-1);
   mCamera->StopFrameTSTilting();
@@ -3403,7 +3419,19 @@ void VarArgToCString(CString &str, char *fmt, va_list args)
 
 void CSerialEMApp::SetDebugOutput(CString keys)
 {
+  bool hasZ = keys.Find('Z') >= 0;
+  if (!mStartingProgram || !BOOL_EQUIV(debugOutput.Find('Z') >= 0, hasZ))
+    mCamera->SetDebugMode(hasZ);
   debugOutput = keys;
+}
+
+void CSerialEMApp::AdjustKeysForCameraDebug(BOOL debugMode)
+{
+  bool hasKey = debugOutput.Find('Z') >= 0;
+  if (debugMode && !hasKey)
+    debugOutput += "Z";
+  else if (!debugMode && hasKey)
+    debugOutput.Remove('Z');
 }
 
 BOOL GetDebugOutput(char key)
@@ -3623,7 +3651,8 @@ BOOL CSerialEMApp::DoingTasks()
     (mShowRemoteControl && mRemoteControl.GetDoingTask()) ||
     (mNavHelper->mHoleFinderDlg && mNavHelper->mHoleFinderDlg->GetFindingHoles()) ||
     (mPlugDoingFunc && mPlugDoingFunc()) || CSerialEMView::GetTakingSnapshot() ||
-    mScope->GetScanningMags() || mCamera->GetFilterWaiting();
+    mScope->GetScanningMags() || mCamera->GetFilterWaiting() || 
+    mNavHelper->mHoleFinderDlg->DoingMultiMapHoles();
   mJustChangingLDarea = !trulyBusy && mScope->GetChangingLDArea() != 0;
   mJustDoingSynchro = !trulyBusy && (mScope->DoingSynchroThread() || 
     mBufferManager->DoingSychroThread());

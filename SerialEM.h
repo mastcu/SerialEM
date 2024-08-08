@@ -92,7 +92,7 @@ enum Tasks {TASK_NAVIGATOR_ACQUIRE, TASK_DISTORTION_STAGEPAIR, TASK_CAL_BEAMSHIF
   TASK_CAL_IA_LIMITS, TASK_MACRO_AT_EXIT, TASK_Z_BY_G, TASK_TEMPLATE_ALIGN,
   TASK_DEWARS_VACUUM, TASK_NAV_ACQ_RETRACT, TASK_MONT_MULTISHOT, TASK_AUTO_CONTOUR,
   TASK_SNAPSHOT_TO_BUF, TASK_NAV_FILE_RANGE, TASK_MONT_MACRO, TASK_LD_SHIFT_OFFSET,
-  TASK_MULTI_GRID, TASK_MULGRID_SEQ
+  TASK_MULTI_GRID, TASK_MULGRID_SEQ, TASK_MULTI_MAP_HOLES
 };
 
 enum CalTypes {CAL_DONE_IS = 0, CAL_DONE_STAGE, CAL_DONE_FOCUS, CAL_DONE_BEAM, 
@@ -301,6 +301,7 @@ typedef bool (*PlugDoingFunc)(void);
 
 #define VECTOR_MIN(vec) *std::min_element(vec.begin(), vec.end())
 #define VECTOR_MAX(vec) *std::max_element(vec.begin(), vec.end())
+#define VEC_REMOVE_AT(vec, ind) vec.erase(vec.begin() + ind);
 
 #define IS_SET_VIEW_OR_SEARCH(a) (a == VIEW_CONSET || a == SEARCH_CONSET)
 #define IS_AREA_VIEW_OR_SEARCH(a) (a == VIEW_CONSET || a == SEARCH_AREA)
@@ -472,6 +473,7 @@ public:
   int GetAdministratorMode() { return mAdministratorMode; };
   GetMember(BOOL, Administrator);
   void SetDebugOutput(CString keys);
+  void AdjustKeysForCameraDebug(BOOL debugMode);
   BOOL ScopeHasFilter() { return mScopeHasFilter; };
   BOOL ScopeHasSTEM() { return mScopeHasSTEM; };
   void NavigatorClosing();
@@ -675,6 +677,7 @@ public:
   GetSetMember(int, AutoPruneLogLines);
   GetMember(CString, ExePath);
   GetSetMember(CString, NanumFontPath);
+  SetMember(BOOL, StartCameraInDebug);
   unsigned char *GetPaletteColors() {return &mPaletteColors[0][0] ; };
   void SetEnableExternalPython(BOOL inVal);
   std::set<int> *GetIDsToHide() { return &mIDsToHide; };
@@ -997,6 +1000,7 @@ private:
   int mNextLogColor;            // Color index for next output to log
   int mNextLogStyle;            // Style for next output to log
   CString mNanumFontPath;       // Path to font that needs removing
+  BOOL mStartCameraInDebug;     // Flag to transition to Z debug output
 
 public:
   void UpdateAllEditers(void);
