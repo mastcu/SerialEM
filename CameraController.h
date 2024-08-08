@@ -460,7 +460,6 @@ public:
   void ShowReference(int type);
   int DeleteReferences(int type, bool onlyDMRefs);
   int AddRefToArray(DarkRef *newRef);
-  GetMember(BOOL, DebugMode);
   void SetDebugMode(BOOL inVal);
   BOOL GetInitialized();
   int SetupFilter(BOOL acquiring = false);
@@ -626,6 +625,7 @@ public:
   GetMember(double, CenterFocus);
   GetSetMember(bool, FilterObeyNormDelay);
   GetMember(bool, FilterWaiting);
+  SetMember(bool, KeepLastUsedFrameNum);
   CameraThreadData *GetCamThreadData() { return &mTD; };
   bool DoingPartialScan() {return mTD.ReturnPartialScan > 0; };
   bool HasCEOSFilter() {return mCEOSFilter != NULL ; }
@@ -790,7 +790,6 @@ public:
   double mStageZbefore;
   int mRequiredRoll;            // override to standard buffer roll requested by tasks
   BOOL mObeyTiltDelay;          // flag to enforce delay after tilt
-  BOOL mDebugMode;
   int mGIFBiggestAperture;      // Number of aperture for imaging
   BOOL mCOMBusy;                // flag that there is a camera connection active
   UINT_PTR mFilterUpdateID;     // ID of timer for filter updates
@@ -1009,6 +1008,7 @@ public:
   CString mNumberedFrameFolder; // Last folder used when numbering
   int mLastFrameNumberStart;    // The starting number last time frame was saved
   int mLastUsedFrameNumber;     // The number actually used last time
+  bool mKeepLastUsedFrameNum;   // Flag that it was externally set, don't reset it
   int mDigitsForNumberedFrame;  // Number of digits for sequential numbers
   CString mNewFunctionCalled;   // Description of new function being called in plugin
   int mK2GainRefTimeStamp[2][2]; // Time when a K2 gain reference last used; -1 not loaded

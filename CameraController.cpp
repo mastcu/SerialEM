@@ -215,7 +215,6 @@ CCameraController::CCameraController()
   //mExtraBeamTime = 0.25f; // Amount of extra unblanked time
   mRequiredRoll = 0;
   mObeyTiltDelay = false;
-  mDebugMode = false;
   mDivideBy2 = -1;    // -1 means not set by user settings, so property can have effect
   mExtraDivideBy2 = 0;
   mAcquireFloatImages = false;
@@ -476,6 +475,7 @@ CCameraController::CCameraController()
   mDynFocusTiltOffset = 0.;
   mFilterObeyNormDelay = false;
   mFilterWaiting = false;
+  mKeepLastUsedFrameNum = false;
 }
 
 // Clear anything that might be set externally, or was cleared in constructor and cleanup
@@ -977,7 +977,7 @@ void CCameraController::InitializeDMcameras(int DMind, int *numDMListed,
       long canSelectShutter, canSetSettling, openShutterWorks;
       mPluginVersion[DMind] = 0;
       MainCallDMIndCamera(DMind, GetNumberOfCameras(&allnum));
-      MainCallDMIndCamera(DMind, SetDebugMode(mDebugMode));
+      MainCallDMIndCamera(DMind, SetDebugMode(GetDebugOutput('Z')));
 
       // Get the plugin version first
       if (DMind != AMT_IND) {
@@ -1792,14 +1792,10 @@ static VOID CALLBACK FilterUpdateProc(HWND hwnd, UINT uMsg, UINT_PTR idEvent,
 // Parameter-setting routines
 ///////////////////////////////////////////////////////////////////////
 
-// Set the debug mode for output to Results window (Gatan) or turn on DE debug mode
+// Set the debug mode for output to Results window (Gatan) or turn on for plugin cameras
 void CCameraController::SetDebugMode(BOOL inVal)
 {
   // Do not initialize the camera from this call, which could be from reading properties
-  mDebugMode = inVal;
-
-	if (mDEInitialized && mTD.DE_camType == LC1100_4k) 
-		mTD.DE_Cam->setDebugMode();
 
   if ((mPlugInitialized || mTietzInitialized) && mTD.plugFuncs && 
     mTD.plugFuncs->SetDebugMode)
@@ -1811,7 +1807,7 @@ void CCameraController::SetDebugMode(BOOL inVal)
     return;
   for (int DMind = 0; DMind < 3; DMind++)
     if (mDMInitialized[DMind])
-      MainCallDMIndCamera(DMind, SetDebugMode(mDebugMode));
+      MainCallDMIndCamera(DMind, SetDebugMode(inVal));
   ReleaseCamera(CREATE_FOR_ANY);
 }
 
@@ -3520,9 +3516,6 @@ void CCameraController::Capture(int inSet, bool retrying)
   if (ReturningFloatImages(mParam))
     mTD.ImageType = kFLOAT;
 
-  /*logmess.Format("Thread data divide by 2: %d", mTD.DivideBy2);
-  if (mDebugMode)
-    mWinApp->AppendToLog(logmess, LOG_OPEN_IF_CLOSED); */
   mTD.Corrections = mParam->corrections;
   mTD.PreDarkBinning = 0;
   mTD.LowestMModeMag = mScope->GetLowestMModeMagInd();
@@ -3920,11 +3913,8 @@ void CCameraController::Capture(int inSet, bool retrying)
       mLastShotUsedCDS = (mTD.K2ParamFlags & K3_USE_CORR_DBL_SAMP) ? 1 : 0;
     }
 
-    if (mDebugMode) {
-      logmess.Format("K2 timeout %d  readmode %d  dosefrac %d  align %d", 
-        mTD.cameraTimeout, conSet.K2ReadMode, mTD.DoseFrac?1:0, mTD.AlignFrames?1:0);
-      mWinApp->AppendToLog(logmess, LOG_OPEN_IF_CLOSED);
-    }
+    SEMTrace('Z', "K2 timeout %d  readmode %d  dosefrac %d  align %d",
+      mTD.cameraTimeout, conSet.K2ReadMode, mTD.DoseFrac ? 1 : 0, mTD.AlignFrames ? 1 :0);
   }
 
   // For Falcon saving, allow ~8 MB/sec, data are saved as 4 byte ints
@@ -4141,12 +4131,7 @@ void CCameraController::Capture(int inSet, bool retrying)
       B3DCHOICE(bEnsureDark && !mSimulationMode, 0.f, mParam->postBlankerDelay));
   
   if (bEnsureDark && !mSimulationMode) {
-    CString message;
-    if (mDebugMode) {
-      message.Format("%.3f start getting dark, %u elapsed", 
-        SEMSecondsSinceStart(), GetTickCount() - mStartTime);
-      mWinApp->AppendToLog(message, LOG_OPEN_IF_CLOSED);
-    }
+    SEMTrace('Z', "start getting dark, %u elapsed", GetTickCount() - mStartTime);
 
     // Set flag and start thread for ensuring dark
     mEnsuringDark = true;
@@ -4432,11 +4417,7 @@ int CCameraController::CapManageInsertTempK2Saving(const ControlSet &conSet, int
           // Either we are going to insert it or it already is, so set block flag
           mAllParams[mWinApp->GetCurrentCamera()].canBlock = true;
 
-          if (mDebugMode) {
-            CString message;
-            message.Format("%.3f start asking if inserted", SEMSecondsSinceStart());
-            mWinApp->AppendToLog(message, LOG_OPEN_IF_CLOSED);
-          }
+          SEMTrace('Z', "start asking if inserted");
 
           // If it is not inserted, set flag and thread parameters
           inserted = 1;
@@ -5207,7 +5188,7 @@ int CCameraController::CapSetLDAreaFilterSettling(int inSet)
       mWinApp->AppendToLog(logmess, LOG_OPEN_IF_CLOSED);
       mShiftManager->ResetAllTimeouts();
       mShiftManager->SetGeneralTimeOut(tickCount, ISdelay);
-    } else if (mDebugMode)
+    } else if (GetDebugOutput('Z'))
       mWinApp->AppendToLog(logmess, LOG_OPEN_IF_CLOSED);
     mSettling = inSet;
     mWinApp->AddIdleTask(ThreadBusy, ScreenOrInsertDone,
@@ -5661,13 +5642,9 @@ void CCameraController::CapSetupShutteringTiming(ControlSet & conSet, int inSet,
 
     // No need to set ensure dark flag, it is set if processed image below
 
-    if (mDebugMode) {
-      logmess.Format("shutter mode %d  shutter time %d  settling %f  posttime %d"
-        "  beam on %d",
-        mTD.ShutterMode, mTD.ShutterTime, mTD.DMsettling, mTD.PostActionTime,
-        mCameraWithBeamOn);
-      mWinApp->AppendToLog(logmess, LOG_OPEN_IF_CLOSED);
-    }
+    SEMTrace('Z', "shutter mode %d  shutter time %d  settling %f  posttime %d  "
+      "beam on %d", mTD.ShutterMode, mTD.ShutterTime, mTD.DMsettling, mTD.PostActionTime,
+      mCameraWithBeamOn);
   } else if (mParam->AMTtype) {
 
     // AMT camera shuttering
@@ -7681,7 +7658,7 @@ void CCameraController::StartAcquire()
       ref = mTD.DarkToGet;
       mWinApp->mProcessImage->RemoveXRays(mParam, ref->Array, mTD.ImageType, ref->Binning,
         ref->Top, ref->Left, ref->Bottom, ref->Right, darkCrit,
-        mParam->darkXRayNumSDCrit, mParam->darkXRayBothCrit, mDebugMode);
+        mParam->darkXRayNumSDCrit, mParam->darkXRayBothCrit, GetDebugOutput('Z'));
       arrSize = ref->SizeX * ref->SizeY;
       sdata = (short *)ref->Array;
 
@@ -7763,11 +7740,7 @@ void CCameraController::StartAcquire()
       // If there are more to get, start thread and return
       if (moreDarkRefs || redoBadRef) {
         StartEnsureThread(mTD.cameraTimeout);
-        if (mDebugMode) {
-          message.Format("%.3f getting next dark ref, %u elapsed", SEMSecondsSinceStart(),
-            ticks - mStartTime);
-          mWinApp->AppendToLog(message, LOG_OPEN_IF_CLOSED);
-        }
+        SEMTrace('Z', "getting next dark ref, %u elapsed", ticks - mStartTime);
         return;
 
         // Or, If this is the last dark reference of series, put average back in array
@@ -7796,11 +7769,7 @@ void CCameraController::StartAcquire()
   }
 
   ticks = mLastAcquireStartTime = GetTickCount();
-  if (mDebugMode) {
-    message.Format("%.3f start acquiring, %u elapsed", SEMSecondsSinceStart(),
-      ticks - mStartTime);
-    mWinApp->AppendToLog(message, LOG_OPEN_IF_CLOSED);
-  }
+  SEMTrace('Z', "start acquiring, %u elapsed", ticks - mStartTime);
 
   // Assign images the original IS if a shift is retained to avoid confusing TSC
   if (mShiftedISforSTEM) {
@@ -9558,12 +9527,8 @@ void CCameraController::DisplayNewImage(BOOL acquired)
         mScope->SetValidXYbacklash(&mTD.MoveInfo);
       }
 
-      if (mDebugMode) {
-        ticks = GetTickCount();
-        message.Format("%.3f got image, %u elapsed", SEMSecondsSinceStart(),
-          ticks - mStartTime);
-        mWinApp->AppendToLog(message, LOG_OPEN_IF_CLOSED);
-      }
+      ticks = GetTickCount();
+      SEMTrace('Z', "got image, %u elapsed", ticks - mStartTime);
       //if (mParam->STEMcamera && !mParam->FEItype && !mTD.ContinuousSTEM)
        // mShiftManager->SetGeneralTimeOut(GetTickCount(), -450);
     }
@@ -9931,11 +9896,9 @@ void CCameraController::DisplayNewImage(BOOL acquired)
               }
           }
       }
-      if (mDebugMode) {
+      if (GetDebugOutput('Z')) {
         ticks = GetTickCount();
-        message.Format("%.3f processed, %u elapsed", SEMSecondsSinceStart(),
-          ticks - mStartTime);
-        mWinApp->AppendToLog(message, LOG_OPEN_IF_CLOSED);
+        SEMTrace('Z', "processed, %u elapsed", ticks - mStartTime);
       }
     }
 
@@ -10700,7 +10663,7 @@ void CCameraController::ProcessImageOrFrame(short *array, int imageType, int pro
     if (removeXrays)
       mWinApp->mProcessImage->RemoveXRays(param, array, imageType,
         binning, top, left, bottom, right, param->imageXRayAbsCrit,
-        param->imageXRayNumSDCrit, param->imageXRayBothCrit, mDebugMode);
+        param->imageXRayNumSDCrit, param->imageXRayBothCrit, GetDebugOutput('Z'));
 
   } else
     SEMMessageBox("The image is not the expected size so\nit has not been"
@@ -11039,11 +11002,7 @@ int CCameraController::SetupFilter(BOOL acquiring)
     return -1;
   if (CreateCamera(CREATE_FOR_GIF))
     return -1;
-  if (mDebugMode) {
-    command.Format("SetupFilter %.2f, slit %d", 0.001 * (GetTickCount() % 3600000),
-      filtParam->slitIn);
-    mWinApp->AppendToLog(command, LOG_OPEN_IF_CLOSED);
-  }
+  SEMTrace('Z', "SetupFilter slit %d", filtParam->slitIn);
 
   // Exit with error if not in imaging mode
   command.Format("if (IFCGetFilterMode() == 0)\n"
@@ -11187,7 +11146,7 @@ int CCameraController::CheckFilterSettings()
       return 2;
     }
     try {
-      if (mDebugMode) {
+      if (GetDebugOutput('Z')) {
         MainCallDMIndCamera(sGIFisSocket, SetDebugMode(false));
       }
       if (!mNoSpectrumOffset) {
@@ -11199,7 +11158,7 @@ int CCameraController::CheckFilterSettings()
       width = EasyRunScript(command, 0, sGIFisSocket);
       command = "Number shift = IFCGetEnergyShift()\nExit(shift)";
       eShift = EasyRunScript(command, 0, sGIFisSocket);
-      if (mDebugMode) {
+      if (GetDebugOutput('Z')) {
         MainCallDMIndCamera(sGIFisSocket, SetDebugMode(true));
       }
       states = (int)floor(width / 1000. + 0.1);
@@ -11231,11 +11190,9 @@ int CCameraController::CheckFilterSettings()
         mShiftTimeIndex %= MAX_ESHIFT_TIMES;
         timeDiff = 0.001 * curTime - 0.001 * eShiftTimes[(mShiftTimeIndex +
           MAX_ESHIFT_TIMES - mNumZLPAlignChanges) % MAX_ESHIFT_TIMES];
-        if (mDebugMode) {
-          report.Format("Energy shift change to %.1f at %.3f, %d-change time %.3f",
-            eShift, 0.001 * (curTime % 3600000), mNumZLPAlignChanges, timeDiff);
-          mWinApp->AppendToLog(report, LOG_OPEN_IF_CLOSED);
-        }
+        SEMTrace('Z', "Energy shift change to %.1f at %.3f, %d-change time %.3f",
+          eShift, 0.001 * (curTime % 3600000), mNumZLPAlignChanges, timeDiff);
+
         if (timeDiff > 0. && timeDiff <= mMinZLPAlignInterval)
           mWinApp->mFilterControl.AdjustForZLPAlign();
       }
@@ -11261,20 +11218,14 @@ int CCameraController::CheckFilterSettings()
 
   if (changed && !timingOut) {
     mWinApp->mFilterControl.UpdateSettings();
-    if (mDebugMode) {
-      report.Format("Settings changed %.2f", 0.001 * (curTime % 3600000));
-      mWinApp->AppendToLog(report, LOG_OPEN_IF_CLOSED);
-    }
+    SEMTrace('Z', "Settings changed");
   }
   
 
   // The first time back from spectroscopy, reassert the filter params for slit etc
   if (!retval && imageMode && (mWasSpectroscopy || (timingOut && changed))) {
     SetupFilter();
-    if (mDebugMode) {
-      report.Format("Reasserting settings %.2f", 0.001 * (curTime % 3600000));
-      mWinApp->AppendToLog(report, LOG_OPEN_IF_CLOSED);
-    }
+    SEMTrace('Z', "Reasserting settings");
   }
   if (mWasSpectroscopy && imageMode)
     mBackToImagingTime = curTime;
@@ -11422,8 +11373,7 @@ int CCameraController::SwitchTeitzToBeamShutter(int cam)
     return 1;
   }
   mCameraWithBeamOn = 0;
-  if (mDebugMode)
-    mWinApp->AppendToLog("Closed film shutter of last Tietz camera");
+  SEMTrace('Z', "Closed film shutter of last Tietz camera");
   return 0;
 }
 
@@ -11518,11 +11468,8 @@ void CCameraController::SetupBeamScan(ControlSet *conSetp)
   if (mStageQueued || mISQueued || mBeamTiltQueued || mMagQueued || mAstigQueued || 
     mDefocusQueued)
     mTD.PostActionTime = (int)(1000. * mParam->extraBeamTime);
-  if (mDebugMode) {
-    message.Format("Start Y %.3f  Total Y %.3f  Delay %d  Total Time %.1f  Exposure %.3f"
-      , specY, totalY, mTD.ScanDelay, mTD.ScanTime, mExposure);
-    mWinApp->AppendToLog(message, LOG_OPEN_IF_CLOSED);
-  }
+  SEMTrace('Z', "Start Y %.3f  Total Y %.3f  Delay %d  Total Time %.1f  Exposure %.3f"
+    , specY, totalY, mTD.ScanDelay, mTD.ScanTime, mExposure);
 }
 
 // Set up parameters for doing dynamic focus
@@ -12733,12 +12680,13 @@ void CCameraController::ComposeFramePathAndName(bool temporary)
   // For temporary names (files to be deleted), leave off the number and add both 
   // date and time below
   if ((mFrameNameFormat & FRAME_FILE_NUMBER) && !temporary) {
-    if (mLastUsedFrameNumber < mFrameNumberStart || mNumberedFrameFolder != mFrameFolder
-      || mNumberedFramePrefix != filename)
+    if (!mKeepLastUsedFrameNum && (mLastUsedFrameNumber < mFrameNumberStart || 
+      mNumberedFrameFolder != mFrameFolder || mNumberedFramePrefix != filename))
       mLastUsedFrameNumber = mFrameNumberStart - 1;
     mNumberedFrameFolder = mFrameFolder;
     mNumberedFramePrefix = filename;
     mLastUsedFrameNumber++;
+    mKeepLastUsedFrameNum = false;
     date.Format(numFormat, mLastUsedFrameNumber);
     UtilAppendWithSeparator(filename, date, "_");
     mLastFrameNumberStart = mFrameNumberStart;
