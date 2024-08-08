@@ -290,7 +290,6 @@ protected:
 	afx_msg void OnCheckAcquire();
   afx_msg void OnDblclkListviewer();
   afx_msg void OnSetFocusListviewer();
-  afx_msg void OnGotoMarker();
 	afx_msg void OnDrawNone();
   afx_msg void OnCheckrotate();
 	//}}AFX_MSG
@@ -402,6 +401,7 @@ private:
   int mShiftTIndex;        // Starting index for doing shift T
   int mShiftNIndex;        // Starting index for doing shift N
   int mShiftVIndex;        // Starting index for doing shift V
+  int mShiftHIndex;        // Starting index for doing shift H
   int mRangeGroupEnd;      // Ending index of range if group
   bool mInRangeDelete;     // Flag that Delete is being called from range deletion
   int mFRangeNumOff;       // Variables needed to run new files in range as task
@@ -530,8 +530,10 @@ private:
   int mListHeaderLefts[9];
   int mFileRangeForMultiGrid;  // Flag that new file over range is done for multiple grids
   bool mIgnoreUpdates;         // Flag to prevent update of Nav Acquire when getting file
+  int mNumWrongMapWarnings;    // # of warnings given when nav table not right for map
 
 public:
+  afx_msg void OnGotoMarker();
   BOOL RegistrationChangeOK(void);
   int ChangeItemRegistration(void);
   int ChangeItemRegistration(int index, int newReg, CString &str);
@@ -690,7 +692,7 @@ public:
     ShortVec &groupNums, int *groupShown, int numGroups, int &firstID, int &lastID, IntVec &indsInPoly);
   void UndoAutocontPolyAddition(MapItemArray &polyArray, int numRemove, IntVec &indsInPoly);
   void RefillAfterAutocontPolys();
-  bool OKtoAddMarkerPoint(bool justAdd);
+  bool OKtoAddMarkerPoint(bool justAdd, bool fromMacro = false);
   void UpdateAddMarker(void);
   bool RawStageIsRevisable(bool fastStage);
   bool MovingMapItem(void);
@@ -706,6 +708,7 @@ public:
     CMapDrawItem *poly, int layoutType);
   int FindBufferWithMontMap(int mapID);
   int FindBufferWithMapID(int mapID);
+  int CheckIfMapIsInMultigridNav(int mapID);
   CButton m_butEditMode;
   BOOL m_bEditMode;
   afx_msg void OnEditMode();
@@ -723,6 +726,7 @@ public:
   void ProcessTKey(void);
   void ProcessNKey(void);
   void ProcessVKey(void);
+  void ProcessHKey(void);
   int ProcessRangeKey(const char *key, int &shiftIndex, int &start, int &end);
   void ClearRangeKeys();
   void ToggleNewFileOverRange(int start, int end, int forMultiGrid = 0);

@@ -22,6 +22,7 @@
 #include "AutoContouringDlg.h"
 #include "NavHelper.h"
 #include "MultiShotDlg.h"
+#include "MultiHoleCombiner.h"
 #include "Shared\holefinder.h"
 #include "ParameterIO.h"
 #include "NavigatorDlg.h"
@@ -85,6 +86,7 @@ CHoleFinderDlg::CHoleFinderDlg(CWnd* pParent /*=NULL*/)
     mGridStageXVecs[ind] = 0.;
     mGridStageYVecs[ind] = 0.;
   }
+  mPMMminPtsForSkipIfIS = 1;
 }
 
 CHoleFinderDlg::~CHoleFinderDlg()
@@ -1903,4 +1905,184 @@ bool CHoleFinderDlg::CheckAndSetNav(const char *message)
   if (!mNav && message)
     SEMMessageBox(CString("The Navigator must be open to ") + message);
   return mNav == NULL; 
+}
+
+/*
+ * Find holes, make points, and optionally combine in a range of maps at one mag index
+ */
+int CHoleFinderDlg::ProcessMultipleMaps(int indStart, int indEnd, int minForCombine)
+{
+  if (CheckAndSetNav("process multiple maps"))
+    return 1;
+  MapItemArray *itemArray = mNav->GetItemArray();
+  int ind, camera, numMaps = 0;
+  int magList[MAX_MAGS + 1], camList[MAX_MAGS + 1];
+  CMapDrawItem *item;
+  IntVec magInds;
+  indEnd = B3DMIN(indEnd, (int)itemArray->GetSize() - 1);
+  for (ind = 0; ind < MAX_MAGS + 1; ind++) {
+    magList[ind] = 0;
+    camList[ind] = 0;
+  }
+
+  // Find qualifying maps and bin their mag indexes
+  for (ind = B3DMAX(0, indStart); ind <= indEnd; ind++) {
+    item = itemArray->GetAt(ind);
+    if (item->IsMap() && item->mMapMagInd > 0 && item->mMapMagInd <= MAX_MAGS &&
+      item->mColor != NAV_SKIP_COLOR &&
+      ((!item->mXHoleISSpacing[0] && !item->mYHoleISSpacing[0]) ||
+        CountAcquirePointsDrawnOnMap(itemArray, item->mMapID) < mPMMminPtsForSkipIfIS)) {
+      magList[item->mMapMagInd]++;
+      camList[item->mMapMagInd] += item->mMapCamera;
+    }
+  }
+
+  // Find the most popular mag index
+  for (ind = 0; ind < MAX_MAGS + 1; ind++) {
+    if (magList[ind] > numMaps) {
+      numMaps = magList[ind];
+      mPMMmagIndex = ind;
+    }
+  }
+  if (!numMaps) {
+    SEMMessageBox("There are no undone maps within the range of items");
+    return 1;
+  }
+  
+  mPMMcurrentInd = indStart;
+  mPMMendInd = indEnd;
+  mPMMcombineMinPts = minForCombine;
+  camera = B3DNINT((float)camList[mPMMmagIndex] / numMaps);
+  B3DCLAMP(camera, 0, MAX_CAMERAS - 1);
+  PrintfToLog("Processing %d maps at magnification %d", numMaps, 
+    MagForCamera(camera, mPMMmagIndex));
+  SyncToMasterParams();
+    
+  mWinApp->UpdateBufferWindows();
+  MultiMapNextTask(0);
+  return 0;
+}
+
+// Count number of points drawn on the given map item
+int CHoleFinderDlg::CountAcquirePointsDrawnOnMap(MapItemArray *itemArray, int mapID)
+{
+  int numPts = 0, ind;
+  CMapDrawItem *item;
+  for (ind = 0; ind < (int)itemArray->GetSize(); ind++) {
+    item = itemArray->GetAt(ind);
+    if (item->mAcquire && item->mDrawnOnMapID == mapID)
+      numPts++;
+  }
+  return numPts;
+}
+
+// Next task means process the next map after finishing last one
+void CHoleFinderDlg::MultiMapNextTask(int param)
+{
+  CMapDrawItem *item;
+  CString str;
+  EMimageBuffer *imBufs = mWinApp->GetImBufs();
+  int ind, numPts, readBuf = mWinApp->mBufferManager->GetBufToReadInto();
+  if (!mPMMmagIndex)
+    return;
+  mNav = mWinApp->mNavigator;
+  if (!mNav) {
+    StopMultiMap();
+    return;
+  }
+  MapItemArray *itemArray = mNav->GetItemArray();
+
+  // Process results of hole finder: make points and combine
+  if (param) {
+    numPts = DoMakeNavPoints(-1, EXTRA_NO_VALUE, EXTRA_NO_VALUE, -1., -1., -1., -1);
+    if (numPts < 0) {
+      StopMultiMap();
+      return;
+    }
+    PrintfToLog("Hole finder made %d Navigator points at holes", numPts);
+    if (mPMMcombineMinPts > 0 && numPts >= mPMMcombineMinPts) {
+
+      // Asign the hole vectors: need the item back for this
+      if (mPMMcurrentInd < 0 || mPMMcurrentInd >= (int)itemArray->GetSize()) {
+        str.Format("Program error: current index (%d) out of range of table size (%d)",
+          mPMMcurrentInd, itemArray->GetSize());
+        SEMMessageBox(str);
+        StopMultiMap();
+        return;
+      }
+      item = itemArray->GetAt(mPMMcurrentInd);
+      mHelper->AssignNavItemHoleVectors(item);
+      
+      // Combine: tell it number to use
+      ind = mHelper->mCombineHoles->CombineItems(-numPts,
+        mHelper->GetMHCturnOffOutsidePoly(), -9, -9);
+      if (ind) {
+        SEMMessageBox("Error trying to combine hole for multiple Records:\n" +
+          CString(mHelper->mCombineHoles->GetErrorMessage(ind)));
+        StopMultiMap();
+        return;
+      }
+    } else if (mPMMcombineMinPts > 0) {
+      SEMAppendToLog("Too few points to combine; turning them off");
+      for (ind = 0; ind < numPts; ind++) {
+        item = itemArray->GetAt(ind + itemArray->GetSize() - numPts);
+        item->mAcquire = false;
+      }
+    }
+    mPMMcurrentInd++;
+  }
+
+  // Loop to look for next map
+  for (; mPMMcurrentInd <= mPMMendInd; mPMMcurrentInd++) {
+    item = itemArray->GetAt(mPMMcurrentInd);
+
+    // Same test as above except for the specific mag
+    if (item->IsMap() && item->mMapMagInd == mPMMmagIndex && 
+      item->mColor != NAV_SKIP_COLOR && 
+      ((!item->mXHoleISSpacing[0] && !item->mYHoleISSpacing[0]) ||
+        CountAcquirePointsDrawnOnMap(itemArray, item->mMapID) < mPMMminPtsForSkipIfIS)) {
+
+      // Load the map
+      if (mNav->DoLoadMap(true, item, readBuf)) {
+        str.Format("Error loading map for item %d (%s)", mPMMcurrentInd + 1,
+          (LPCTSTR)item->mLabel);
+        SEMMessageBox(str);
+        StopMultiMap();
+        return;
+      }
+
+      // Find holes
+      PrintfToLog("Finding holes in map for item %d (%s)", mPMMcurrentInd + 1,
+        (LPCTSTR)item->mLabel);
+      if (DoFindHoles(&imBufs[readBuf])) {
+        StopMultiMap();
+        return;
+      }
+      mWinApp->AddIdleTask(TASK_MULTI_MAP_HOLES, 1, 0);
+      return;
+    }
+  }
+
+  // It came to the end of the range
+  StopMultiMap();
+}
+
+// Busy if hole finder running
+int CHoleFinderDlg::MultiMapBusy()
+{
+  return mFindingHoles ? 1 : 0;
+}
+
+// Stop: just clear mag index
+void CHoleFinderDlg::StopMultiMap()
+{
+  if (!mPMMmagIndex)
+    return;
+  mPMMmagIndex = 0;
+  mWinApp->UpdateBufferWindows();
+}
+
+void CHoleFinderDlg::MultimapCleanup(int error)
+{
+  StopMultiMap();
 }

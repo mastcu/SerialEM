@@ -41,9 +41,16 @@ public:
   void CloseWindow();
   bool IsOpen() { return mIsOpen; };
   bool CheckAndSetNav(const char *message = NULL);
+  int ProcessMultipleMaps(int indStart, int indEnd, int minForCombine);
+  int CountAcquirePointsDrawnOnMap(MapItemArray *itemArray, int mapID);
+  void MultiMapNextTask(int param);
+  int MultiMapBusy();
+  void StopMultiMap();
+  void MultimapCleanup(int error);
   int DoFindHoles(EMimageBuffer *imBuf);
   int DoMakeNavPoints(int layoutType, float lowerMeanCutoff, float upperMeanCutoff,
     float sdCutoff, float blackCutoff, float edgeDistCutoff, int useHexDiagonals);
+  bool DoingMultiMapHoles() {return mPMMmagIndex > 0 ; };
 
 
 // Dialog Data
@@ -131,6 +138,11 @@ private:
   bool mFindingFromDialog;
   bool mSkipAutoCor;
   CFont *mBoldFont;
+  int mPMMcurrentInd;
+  int mPMMendInd;
+  int mPMMmagIndex;
+  int mPMMcombineMinPts;
+  int mPMMminPtsForSkipIfIS;
 
 
 public:

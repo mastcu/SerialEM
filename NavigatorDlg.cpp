@@ -66,8 +66,8 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
-static char *colorNames[] = {"Red", "Grn", "Blu", "Yel", "Mag", "NRI", "Red", "Ora", 
-"Yel", "Grn", "Cya", "Blu", "Vio", "Mag", "SPC", "SPC", "SPC", "SPC"};
+static char *colorNames[] = {"Red", "Grn", "Blu", "Yel", "Mag", "NRI", "SKP", "Red",
+"Ora", "Yel", "Grn", "Cya", "Blu", "Vio", "Mag", "SPC", "SPC", "SPC", "SPC"};
 static char *typeString[] = {"Pt", "Poly", "Map", "Imp", "Anc"};
 
 #define MAX_REGPT_NUM 99
@@ -196,6 +196,7 @@ CNavigatorDlg::CNavigatorDlg(CWnd* pParent /*=NULL*/)
   mFRangeIndex = -1;
   mInRangeDelete = false;
   mIgnoreUpdates = false;
+  mNumWrongMapWarnings = 0;
   mCurrentItem = -1;
 }
 
@@ -1952,6 +1953,18 @@ void CNavigatorDlg::ProcessVKey(void)
   Redraw();
 }
 
+void CNavigatorDlg::ProcessHKey(void)
+{
+  int start, end;
+  if (ProcessRangeKey("H again to find holes in maps", mShiftHIndex, start, end))
+    return;
+  if (!KGetOneInt("Enter 0 not to combine points for Multiple Records",
+    "Otherwise enter minimum # of found holes required to do combining",
+    mParam->minPtsForCombineInPMM))
+    return;
+  mHelper->mHoleFinderDlg->ProcessMultipleMaps(start, end, mParam->minPtsForCombineInPMM);
+}
+
 // Do common actions for selecting a range of contiguous items with collapse off
 int CNavigatorDlg::ProcessRangeKey(const char *key, int &shiftIndex, int &start, int &end)
 {
@@ -2724,14 +2737,15 @@ void CNavigatorDlg::OnAddMarker()
 }
 
 // Function for whether it is OK to add or marker point, or go to one, for that matter
-bool CNavigatorDlg::OKtoAddMarkerPoint(bool justAdd)
+bool CNavigatorDlg::OKtoAddMarkerPoint(bool justAdd, bool fromMacro)
 {
   float delX, delY;
   ScaleMat aMat;
   EMimageBuffer *imBuf = mWinApp->mActiveView->GetActiveImBuf();
   if ((!imBuf->mHasUserPt && justAdd) || (!justAdd && !imBuf->mHasUserPt && 
     !imBuf->mIllegalUserPt) || !BufferStageToImage(imBuf, aMat, delX, delY) ||
-    RegistrationUseType(imBuf->mRegistration) == NAVREG_IMPORT || mWinApp->DoingTasks() ||
+    RegistrationUseType(imBuf->mRegistration) == NAVREG_IMPORT || 
+    (mWinApp->DoingTasks() && !fromMacro) ||
     mAcquireIndex >= 0 || mAddingPoly || mAddingPoints || mMovingItem || mLoadingMap)
     return false;
   return true;
@@ -2765,18 +2779,18 @@ void CNavigatorDlg::OnGotoMarker()
  	EMimageBuffer * imBuf = mWinApp->mActiveView->GetActiveImBuf();
   mWinApp->RestoreViewFocus();
   if (!imBuf->mHasUserPt && !imBuf->mIllegalUserPt) {
-    AfxMessageBox("There is no marker point in the currently active image.\n\n"
+    SEMMessageBox("There is no marker point in the currently active image.\n\n"
       "Click with the left mouse button to place a temporary marker point.",
       MB_EXCLAME);
     return;
   }
   if (!BufferStageToImage(imBuf, aMat, delX, delY)) {
-    AfxMessageBox("The currently active image does not have enough information\n"
+    SEMMessageBox("The currently active image does not have enough information\n"
       "to convert the marker point to a stage coordinate.", MB_EXCLAME);
     return;
   }
   if (RegistrationUseType(imBuf->mRegistration) == NAVREG_IMPORT) {
-    AfxMessageBox("You cannot move to a position on an imported image until it has been"
+    SEMMessageBox("You cannot move to a position on an imported image until it has been"
       "\ntransformed into registration with regular images", MB_EXCLAME);
     return;
   }
@@ -3239,6 +3253,8 @@ BOOL CNavigatorDlg::UserMousePoint(EMimageBuffer *imBuf, float inX, float inY,
     } else if (SetCurrentItem() && mItemArray.GetSize() > mNumberBeforeAdd && 
       mAddingPoints)
       acquire = mItem->mAcquire;
+    if (CheckIfMapIsInMultigridNav(imBuf->mMapID))
+      return false;
     item = AddPointMarkedOnBuffer(imBuf, stageX, stageY, 
       mAddingPoints ? mAddPointID : groupID);
     item->mAcquire = acquire;
@@ -3596,6 +3612,8 @@ int CNavigatorDlg::AddImagePositionOnBuffer(EMimageBuffer *imBuf, float imageX,
   if (!ConvertMousePoint(imBuf, imageX, imageY, stageX, stageY, aInv, delX, delY, 
     xInPiece, yInPiece, pieceIndex))
     return 1;
+  if (CheckIfMapIsInMultigridNav(imBuf->mMapID))
+    return 1;
   item = AddPointMarkedOnBuffer(imBuf, stageX, stageY, groupID);
   item->mPieceDrawnOn = pieceIndex;
   item->mXinPiece = xInPiece;
@@ -3613,6 +3631,8 @@ int CNavigatorDlg::AddPolygonFromImagePositions(EMimageBuffer *imBuf, float *ima
   ScaleMat aInv;
   float delX, delY, stageX, stageY, xInPiece, yInPiece;
   int pieceIndex, ind;
+  if (CheckIfMapIsInMultigridNav(imBuf->mMapID))
+    return 1;
   for (ind = 0; ind < numPts; ind++) {
     if (!ConvertMousePoint(imBuf, imageX[ind], imageY[ind], stageX, stageY, aInv, delX,
       delY, xInPiece, yInPiece, pieceIndex))
@@ -11911,6 +11931,20 @@ int CNavigatorDlg::FindBufferWithMapID(int mapID)
       if (mImBufs[i].mMapID == mapID && mImBufs[i].mImage)
         return i;
   return -1;
+}
+
+// If multigrid is open, make sure the map is in current table before adding point on it
+int CNavigatorDlg::CheckIfMapIsInMultigridNav(int mapID)
+{
+  if (mapID && mHelper->mMultiGridDlg && !FindItemWithMapID(mapID)) {
+    if (mNumWrongMapWarnings++ < 5) {
+      mWinApp->SetNextLogColorStyle(WARNING_COLOR_IND, 1);
+      SEMAppendToLog("You cannot mark points on a map not in table;"
+        " you need to open the Navigator file for this grid");
+    }
+    return 1;
+  }
+  return 0;
 }
 
 // If the selection list has only a single item, return it and optionally return its index

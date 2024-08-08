@@ -182,7 +182,7 @@ int CMultiHoleCombiner::CombineItems(int boundType, BOOL turnOffOutside, int inX
   crossPattern = mNumXholes == 3 && mNumYholes == 3 && msParams->skipCornersOf3x3;
 
   mNav->GetCurrentOrGroupItem(curItem);
-  if (boundType != COMBINE_ON_IMAGE && !curItem)
+  if (boundType != COMBINE_ON_IMAGE && boundType >= 0 && !curItem)
     return ERR_NO_CUR_ITEM;
 
   // Get transformation from IS to stage
@@ -202,8 +202,17 @@ int CMultiHoleCombiner::CombineItems(int boundType, BOOL turnOffOutside, int inX
     return ERR_NO_XFORM;
   st2is = MatMul(s2c, MatInv(is2cam));
 
-  // Find points that are on image
-  if (boundType == COMBINE_ON_IMAGE) {
+  // Negative boundType indicates # of points hole finder just added - test Acquire anyway
+  if (boundType < 0) {
+    for (ind = itemArray->GetSize() + boundType; ind < itemArray->GetSize(); ind++) {
+      item = itemArray->GetAt(ind);
+      if (item->mAcquire && item->IsPoint())
+        AddItemToCenters(xCenters, yCenters, navInds, item, ind, drawnOnID);
+    }
+    boundType = COMBINE_ON_IMAGE;
+  } else if (boundType == COMBINE_ON_IMAGE) {
+
+    // Find points that are on image
     mImBuf = mWinApp->mActiveView->GetActiveImBuf();
     image = mImBuf->mImage;
     if (!image)
