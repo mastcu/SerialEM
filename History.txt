@@ -3,6 +3,9 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+8/7/24: Restored adjustment of ZLP offset when Align ZLP in DM is detected,
+broken when debug output added in Feb 2013 (In 4.1).
+
 7/27/24: Fixed crash setting up range of new file with montage reusability
 selected but then single images selected (In 4.1).
 
