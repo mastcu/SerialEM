@@ -3605,7 +3605,7 @@ int CParameterIO::ReadProperties(CString strFileName)
         if (camera->GetDivideBy2() < 0)
           camera->SetDivideBy2(itemInt[1]);
       } else if (MatchNoCase("StartCameraInDebugMode"))
-        camera->SetDebugMode(itemInt[1] != 0);
+        mWinApp->SetStartCameraInDebug(itemInt[1] != 0);
       else if (MatchNoCase("ExitOnBadScopeStartup"))
         mWinApp->SetExitOnScopeError(itemInt[1] != 0);
 
