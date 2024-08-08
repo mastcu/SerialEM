@@ -10126,9 +10126,10 @@ UINT CEMscope::LongOperationProc(LPVOID pParam)
                 sSimLoadedCartridge = -1;
 
             } else {
-              if (loadCart)
+              if (loadCart) {
+                SEMTrace('W', "Calling to load cartridge %d", sCartridgeToLoad);
                 lod->plugFuncs->LoadCartridge(sCartridgeToLoad);
-              else
+              } else
                 lod->plugFuncs->UnloadCartridge();
             }
           }
