@@ -11234,10 +11234,10 @@ int CCameraController::CheckFilterSettings()
         if (mDebugMode) {
           report.Format("Energy shift change to %.1f at %.3f, %d-change time %.3f",
             eShift, 0.001 * (curTime % 3600000), mNumZLPAlignChanges, timeDiff);
-          if (timeDiff > 0. && timeDiff <= mMinZLPAlignInterval)
-            mWinApp->mFilterControl.AdjustForZLPAlign();
           mWinApp->AppendToLog(report, LOG_OPEN_IF_CLOSED);
         }
+        if (timeDiff > 0. && timeDiff <= mMinZLPAlignInterval)
+          mWinApp->mFilterControl.AdjustForZLPAlign();
       }
 
       // Do not touch energy loss - just let it be asserted by imaging

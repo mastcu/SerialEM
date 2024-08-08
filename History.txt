@@ -3,6 +3,9 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+8/7/24: Restored adjustment of ZLP offset when Align ZLP in DM is detected,
+broken when debug output added in Feb 2013 (In 4.1).
+
 7/30/24: Fixed loading of following grids when realign is skipped for first
 grid because it is already aligned.
 
