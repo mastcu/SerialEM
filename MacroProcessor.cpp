@@ -1153,7 +1153,8 @@ int CMacroProcessor::TaskBusy()
     mWinApp->mParticleTasks->GetDVDoingDewarVac() ||
     mFocusManager->DoingFocus() || mWinApp->mAutoTuning->DoingAutoTune() ||
     mShiftManager->ResettingIS() || mWinApp->mCalibTiming->Calibrating() ||
-    mWinApp->mFilterTasks->RefiningZLP() ||
+    mWinApp->mFilterTasks->RefiningZLP() || 
+    mNavHelper->mHoleFinderDlg->DoingMultiMapHoles() ||
     mNavHelper->mHoleFinderDlg->GetFindingHoles() || mNavHelper->GetRealigning() ||
     (mWinApp->mComplexTasks->DoingTasks() && 
       !mWinApp->mParticleTasks->GetMSRunningMacro()) || 

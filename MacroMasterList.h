@@ -800,6 +800,9 @@ MAC_SAME_NAME_ARG(SetupDynamicFocus, 4, 4, SETUPDYNAMICFOCUS, DIII)
 MAC_SAME_NAME_ARG(StartFocusRamper, 0, 1, STARTFOCUSRAMPER, iiid)
 MAC_SAME_NAME_NOARG(FinishFocusRamp, 0, 0, FINISHFOCUSRAMP)
 MAC_SAME_NAME_ARG(SetDebugOutput, 1, 4, SETDEBUGOUTPUT, S)
+MAC_SAME_NAME_ARG(LoadAllGridMaps, 0, 4, LOADALLGRIDMAPS, s)
+MAC_SAME_NAME_ARG(FindMultiMapHoles, 3, 1, FINDMULTIMAPHOLES, III)
+MAC_SAME_NAME_NOARG(NavGoToMarker, 0, 0, NAVGOTOMARKER)
 
 // new Python-only commands need to be added to pythonOnlyCmds in ::CMacroProcessor
 // New Not from Python items omit _ARG or _NOARG

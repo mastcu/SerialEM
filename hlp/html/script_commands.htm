@@ -4760,6 +4760,12 @@
             to the item whose index in the table is <b>#</b> (numbered from 1)</TD>
         </TR>
         <TR>
+          <TD class="scriptcommand">NavGoToMarker</TD>
+          <TD>Moves the stage to the position of the marker point in the active image.  The Navigator
+             must be open, there must be a marker point, and other conditions required to enable
+             Go To Marker in the Navigator window must be satisfied.&nbsp; Command added in 4.2, 7-Aug-24.</TD>
+        </TR>
+        <TR>
           <TD class="scriptcommand">UpdateItemZ [#]</TD>
           <TD>Assigns current stage Z value to the current Navigator item, or the item that this
             script is being run on, or the item whose index in the table is given by the optional <b>#</b>
@@ -4787,6 +4793,18 @@
             <b>#</b> is negative, loads the item that many items from the end of the table, i.e.,
             -1 loads on the last item.&nbsp; If the optional <b>buf</b> is entered, loads to that
              buffer instead of the read buffer.</TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">LoadAllGridMaps [buf]</TD>
+          <TD>When a session is defined for multiple grid operations and some grid maps have 
+            been obtained, loads all the maps available for the collection of grids, starting 
+            at the buffer given in [buf] if possible, but shifting the range of buffers used 
+            to hold as many maps as possible and to start after rolling buffers if possible.&nbsp; 
+            The default is to start after the read buffer.&nbsp; When there are no grid maps 
+            available or no session open, the program will find all the maps in the current 
+            navigator file at the lowest magnification and load them, as long as they were 
+            taken in LM mode.  See the menu item 
+            <A HREF="menu_navigator.htm#hid_montaginggrids_loadallgridmaps">Load All Grid Maps</A></TD>.&nbsp; Command added in 4.2, 7-Aug-24.
         </TR>
         <TR>
           <TD class="scriptcommand">ReportNavItem</TD>
@@ -5093,6 +5111,14 @@
             or negative number of iterations). If <b>fvar</b> is included with the name of
             an array variable, it is used to set the thresholds (use 'NONE' for <b>fvar</b> to set just the
             thresholds).&nbsp; Command added in 4.1, 30-Jan-23.</TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">FindMultiMapHoles #S #E #C</TD>
+          <TD>Runs a routine to find holes for all maps at one magnification with Navigator table indexes
+            between <b>#S</b> and <b>#E</b> inclusive, and combining the resulting points for Multiple Records 
+            if there are at least <b>#C</b> points, or not combining if <b>#C</b> is 0.&nbsp; 
+            See <A href="hidd_hole_finder.htm#multimap">Finding Holes in Multiple Maps</A></TD> for details.&nbsp;
+          Command added in 4.2, 7-Aug-24.
         </TR>
         <TR>
           <TD class="scriptcommand">ReportLastHoleVectors #</TD>

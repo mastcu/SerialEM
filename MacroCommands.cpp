@@ -3979,8 +3979,8 @@ int CMacCmd::ReportCurrentFilename(void)
     if (mItemInt[1] < 1 || mItemInt[1] >  mDocWnd->GetNumStores())
       ABORT_LINE("Index is out of range in line:\n\n");
     store = mDocWnd->GetStoreMRC(mItemInt[1] - 1);
-    report.Format("Open image file #%d is %s", mItemInt[1], 
-      (LPCTSTR)store->getFilePath());
+    report = store->getFilePath();
+    mStrCopy.Format("Open image file #%d is ", mItemInt[1]);
     optInd = 2;
   }
   else if (truth) {
@@ -10760,6 +10760,18 @@ int CMacCmd::ReportNavItem(void)
   return 0;
 }
 
+// LoadAllGridMaps
+int CMacCmd::LoadAllGridMaps()
+{
+  int bufInd = -1;
+  if (!mItemEmpty[1] && mItemInt[1] >= 0 && 
+    ConvertBufferLetter(mStrItems[1], -1, false, bufInd, mStrCopy))
+    ABORT_LINE(mStrCopy);
+  if (mWinApp->mMultiGridTasks->LoadAllGridMaps(bufInd, mStrCopy))
+    ABORT_LINE(mStrCopy + " for line:\n\n");
+  return 0;
+}
+
 // GetItemPointArray
 int CMacCmd::GetItemPointArray()
 {
@@ -11302,6 +11314,18 @@ int CMacCmd::ReportLastMarkerShift()
       shiftX, shiftY);
     SetRepValsAndVars(1, reg, shiftX, shiftY);
   }
+  return 0;
+}
+
+// NavGoToMarker
+int CMacCmd::NavGoToMarker()
+{
+  ABORT_NONAV;
+  if (!mNavigator->OKtoAddMarkerPoint(false, true))
+    ABORT_LINE("There is either no marker point in the active image or\n"
+      "some other condition for going to it is not satisfied for line:\n\n");
+  mNavigator->OnGotoMarker();
+  mMovedStage = true;
   return 0;
 }
 
@@ -12326,6 +12350,22 @@ int CMacCmd::UndoHoleCombining(void)
   return 0;
 }
 
+// FindMultiMapHoles
+int CMacCmd::FindMultiMapHoles()
+{
+  int numItems;
+  ABORT_NONAV;
+  numItems = mNavigator->GetNumberOfItems();
+  if (mItemInt[1] < 1 || mItemInt[2] > numItems || mItemInt[1] > mItemInt[2])
+    ABORT_LINE("The Navigator indexes are out of range or swapped in line:\n\n");
+  if (mNavHelper->mHoleFinderDlg->ProcessMultipleMaps(mItemInt[1] - 1, mItemInt[2] - 1,
+    mItemInt[3])) {
+    AbortMacro();
+    return 1;
+  }
+  return 0;
+}
+
 // ReportHolesToAcquire
 int CMacCmd::GetItemHolesToAcquire()
 {
@@ -12820,7 +12860,7 @@ int CMacCmd::RunGatanScript(void)
 int CMacCmd::LongOperation(void)
 {
   CString report;
-  int index, index2, ix1, iy1;
+  int index, index2, ix1, iy1, id;
   float backlashX;
 
   ix1 = 0;
@@ -12848,6 +12888,10 @@ int CMacCmd::LongOperation(void)
         if (index2 == LONG_OP_UNLOAD_CART && JEOLscope)
           ABORT_LINE("For JEOL, use UnloadCartridge to unload a cartridge instead"
             " of:\n\n");
+        if (index2 == LONG_OP_UNLOAD_CART) {
+          mScope->SetLoadedCartridge(-1);
+          mScope->SetUnloadedCartridge(mScope->FindCartridgeAtStage(id));
+        }
         if (index2 == LONG_OP_HW_DARK_REF &&
           !mCamera->CanDoK2HardwareDarkRef(mCamParams, report))
           ABORT_LINE(report + " in line:\n\n");
