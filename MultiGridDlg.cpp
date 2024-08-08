@@ -1562,7 +1562,7 @@ void CMultiGridDlg::OnButCloseRight()
 void CMultiGridDlg::OnButCloseAll()
 {
   int ind;
-  SetDlgItemText(IDC_BUT_CLOSE_ALL, mClosedAll ? "+" : "-");
+  SetDlgItemText(IDC_BUT_CLOSE_ALL, mClosedAll ? "-" : "+");
   for (ind = 1; ind < MAX_MULGRID_PANELS; ind++) {
     if (mClosedAll) {
       mPanelStates[ind] = mSavedPanelStates[ind];
@@ -1580,8 +1580,8 @@ void CMultiGridDlg::OnButCloseAll()
 void CMultiGridDlg::OnCheckRunLmms()
 {
   UPDATE_DATA_TRUE;
-  mPanelStates[4] = m_bTakeLMMs;
-  SetDlgItemText(IDC_BUT_MG_LOW_MAG_MAPS, mPanelStates[4] ? "-" : "+");
+  mPanelStates[5] = m_bTakeLMMs;
+  SetDlgItemText(IDC_BUT_MG_LOW_MAG_MAPS, mPanelStates[5] ? "-" : "+");
   m_butTakeLMMs.SetFont(m_bTakeLMMs ? &mBigBoldFont : &mBiggerFont);
   ManagePanels();
   mWinApp->RestoreViewFocus();
@@ -1593,8 +1593,8 @@ void CMultiGridDlg::OnCheckRunLmms()
 void CMultiGridDlg::OnCheckTakeMmms()
 {
   UPDATE_DATA_TRUE;
-  mPanelStates[6] = m_bTakeMMMs;
-  SetDlgItemText(IDC_BUT_MG_MEDIUM_MAG_MAPS, mPanelStates[6] ? "-" : "+");
+  mPanelStates[7] = m_bTakeMMMs;
+  SetDlgItemText(IDC_BUT_MG_MEDIUM_MAG_MAPS, mPanelStates[7] ? "-" : "+");
   m_butTakeMMMs.SetFont(m_bTakeMMMs ? &mBigBoldFont : &mBiggerFont);
   ManagePanels();
   mWinApp->RestoreViewFocus();
@@ -1606,8 +1606,8 @@ void CMultiGridDlg::OnCheckTakeMmms()
 void CMultiGridDlg::OnCheckRunFinalAcq()
 {
   UPDATE_DATA_TRUE;
-  mPanelStates[8] = m_bRunFinalAcq;
-  SetDlgItemText(IDC_BUT_MG_FINAL_ACQ, mPanelStates[8] ? "-" : "+");
+  mPanelStates[9] = m_bRunFinalAcq;
+  SetDlgItemText(IDC_BUT_MG_FINAL_ACQ, mPanelStates[9] ? "-" : "+");
   m_butRunFinalAcq.SetFont(m_bRunFinalAcq ? &mBigBoldFont : &mBiggerFont);
   ManagePanels();
   mWinApp->RestoreViewFocus();

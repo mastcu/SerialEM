@@ -1369,9 +1369,13 @@ int CProcessImage::AlignBetweenMagnifications(int toBufNum, float xcen, float yc
       nyCrop = nyAli + 2 * (int)(maxShiftUm / toPixel);
     }
 
-    // Roll buffers if possible since scaled image will be put in B
-    for (ind = nroll - 1; ind >= 1; ind--)
+    // Roll buffers except A if possible since scaled image will be put in B
+    if (nroll == toBufNum)
+      nroll--;
+    for (ind = nroll; ind > 1; ind--)
       mBufferManager->CopyImageBuffer(ind - 1, ind, false);
+    if (toBufNum < nroll)
+      toBufNum++;
     if (TransformToOtherMag(&mImBufs[toBufNum], mImBufs, 1, errStr, xcen, ycen,
       nxCrop, nyCrop, zoomXform))
       return 1;
