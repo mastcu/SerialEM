@@ -204,6 +204,8 @@ void CComplexTasks::Initialize()
   if (mMinTASMField < 0.)
     mMinTASMField = JEOLscope ? 4.5f : 0.f;
   mHitachiWithoutZ = HitachiScope && !(hParams->flags & HITACHI_HAS_STAGEZ);
+  if (!mFECoarseAbsoluteMaxZ)
+    mFECoarseAbsoluteMaxZ = JEOLscope ? 200.f : 250.f;
 }
 
 // MESSAGE HANDLERS
