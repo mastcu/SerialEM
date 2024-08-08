@@ -3910,7 +3910,7 @@ int CEMscope::GetMagIndex(BOOL forceGet)
         result = LookupSTEMmagFEI(curMag, mProbeMode, minDiff);
         if (minDiff >= 1. && !mScanningMags)
           SEMTrace('1', "WARNING: GetMagIndex did not find exact match to %.0f in STEM"
-          " mag table", curMag);
+          " mag table (closest differs by %f)", curMag, minDiff);
       } else {
 
         // Regular mode
@@ -10232,12 +10232,14 @@ int CEMscope::LongOperationBusy(int index)
               " (But cartridge is assumed to be on stage already)" :
               " (But it is assumed there was no cartridge loaded)";
             if (!busy || !excuse.IsEmpty()) {
-              if (mUnloadedCartridge >= 0 && mUnloadedCartridge != mLoadedCartridge) {
+              if (mUnloadedCartridge >= 0 && mUnloadedCartridge != mLoadedCartridge &&
+                mUnloadedCartridge < (int)mJeolLoaderInfo.GetSize()) {
                 jcData = mJeolLoaderInfo.GetAt(mUnloadedCartridge);
                 jcData.station = JAL_STATION_STORAGE;
                 mJeolLoaderInfo.SetAt(mUnloadedCartridge, jcData);
               }
-              if (mLoadedCartridge >= 0) {
+              if (mLoadedCartridge >= 0 && 
+                mLoadedCartridge < (int)mJeolLoaderInfo.GetSize()) {
                 jcData = mJeolLoaderInfo.GetAt(mLoadedCartridge);
                 jcData.station = JAL_STATION_STAGE;
                 mJeolLoaderInfo.SetAt(mLoadedCartridge, jcData);

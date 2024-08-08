@@ -106,17 +106,20 @@ struct JeolCartridgeData {
   int type;
   int rotation;
   CString userName;
+  CString note;
   int status;
   float zStage;
   int LMmapID;
   CString acqStateNames[4];
   int acqStateNums[4];
   int separateState;
+  int lastFrameNumber;
   short multiShotParamIndex;
   short holeFinderParamIndex;
   short autoContParamIndex;
   short generalParamIndex;
   int finalDataParamIndex;
+  short focusPosParamIndex;
   void Init() {
     id = 0;
     slot = 0;
@@ -128,12 +131,15 @@ struct JeolCartridgeData {
     station = JAL_STATION_MAGAZINE;
     name = "";
     userName = "";
+    note = "";
     separateState = 0;
+    lastFrameNumber = -1;
     multiShotParamIndex = -1;
     holeFinderParamIndex = -1;
     autoContParamIndex = -1;
     generalParamIndex = -1;
     finalDataParamIndex = -1;
+    focusPosParamIndex = -1;
     for (int ind = 0; ind < 4; ind++) {
       acqStateNames[ind] = "";
       acqStateNums[ind] = -1;
@@ -551,8 +557,8 @@ public:
   GetSetMember(int, ScopeCanFlashFEG);
   GetSetMember(int, ScopeHasPhasePlate);
   GetMember(int, ChangedLoaderInfo);
-  GetMember(int, LoadedCartridge);
-  GetMember(int, UnloadedCartridge);
+  GetSetMember(int, LoadedCartridge);
+  GetSetMember(int, UnloadedCartridge);
   GetSetMember(int, FegFlashCounter);
   GetSetMember(int, SkipNormalizations);
   GetSetMember(BOOL, ConstantBrightInNano);
