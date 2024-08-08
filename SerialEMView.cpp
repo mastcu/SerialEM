@@ -35,6 +35,7 @@
 #include "ParticleTasks.h"
 #include "MacroProcessor.h"
 #include "MultiTSTasks.h"
+#include "MultiGridTasks.h"
 #include "RemoteControl.h"
 #include "ExternalTools.h"
 #include "Image\KStoreIMOD.h"
@@ -981,12 +982,13 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
         cdc.SelectObject(useLabelFont);
         cdc.TextOut(scaled5, mWinApp->ScaleValueForDPI(35), "Rolling");
       }
-
+ 
       // Dose rate output for direct detector and channel name for STEM
       bufferOK = !imBuf->IsProcessed() && (imBuf->mCaptured > 0 || imBuf->ImageWasReadIn()
         ||imBuf->mCaptured == BUFFER_CALIBRATION || imBuf->mCaptured == BUFFER_TRACKING ||
         imBuf->mCaptured == BUFFER_MONTAGE_CENTER || imBuf->mCaptured == BUFFER_ANCHOR ||
-        imBuf->mCaptured == BUFFER_MONTAGE_PIECE);
+        imBuf->mCaptured == BUFFER_MONTAGE_PIECE || 
+        (imBuf->mCaptured == BUFFER_MONTAGE_OVERVIEW && imBuf->mMapID));
       if (mMainWindow && imBuf->mCamera >= 0 && scaleCrit > 0 && !mDoingMontSnapshot &&
         (bufferOK || mWinApp->GetNumActiveCameras() > 1)) {
           CameraParameters *camP = mWinApp->GetCamParams() + imBuf->mCamera;
@@ -1010,6 +1012,9 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
             if (extra && !extra->mChannelName.IsEmpty())
               cdc.TextOut(scaled140, scaled10, extra->mChannelName);
           }
+          if (imBuf->mMapID && mWinApp->mMultiGridTasks->GetGridMapLabel(imBuf->mMapID,
+            letString))
+            cdc.TextOut(scaled140, mWinApp->ScaleValueForDPI(35), letString);
 
           // Image black-white and mean if available
           if (imBuf->mImageScale) {
@@ -1072,7 +1077,8 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
 
     // If this is a view image in low dose, draw record and trial/focus areas as long as
     // there won't be one around Nav point
-    bufferOK = (imBuf->mCaptured > 0 || imBuf->ImageWasReadIn()) &&
+    bufferOK = (imBuf->mCaptured > 0 || imBuf->ImageWasReadIn() || 
+      imBuf->mCaptured == BUFFER_MONTAGE_OVERVIEW) &&
       (imBuf->mConSetUsed == VIEW_CONSET || imBuf->mConSetUsed == SEARCH_CONSET) &&
       imBuf->mLowDoseArea && !(skipExtra & 1);
     if (bufferOK && !mDrewLDAreasAtNavPt) {
@@ -3034,6 +3040,8 @@ void CSerialEMView::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
     mWinApp->mNavigator->ProcessNKey();
   } else if (navCanProcess && cChar == 'V' && !mCtrlPressed && mShiftPressed) {
     mWinApp->mNavigator->ProcessVKey();
+  } else if (navCanProcess && cChar == 'H' && !mCtrlPressed && mShiftPressed) {
+    mWinApp->mNavigator->ProcessHKey();
 
   } else if (cChar == 'X' && !mCtrlPressed && mShiftPressed) {
     mWinApp->mImageLevel.ToggleExtraInfo();
