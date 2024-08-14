@@ -2204,7 +2204,7 @@ int CSerialEMApp::GetNewViewProperties(CSerialEMView *inView, int &iBordLeft,
 
 void CSerialEMApp::RestoreViewFocus()
 {
-  if (mActiveView) {
+  if (mActiveView && !mMainFrame->GetClosingProgram()) {
     mInRestoreViewFocus = true;
     mActiveView->SetFocus();
     mInRestoreViewFocus = false;
