@@ -75,6 +75,7 @@ public:
 	virtual int     WriteSection(KImage * inImage, int inSect) {return 1;};
   virtual	void    SetPixelSpacing(float pixel);
   virtual float   GetPixelSpacing() { return mPixelSpacing; };
+  virtual bool    HasPixelSpacing() { return mHasPixelSpacing; };
   virtual void    SetUpdateTimePerSect(float inVal) { mUpdateTimePerSect = inVal; };
   virtual int     AddTitle(const char *inTitle);
   virtual int     CheckMontage(MontParam *inParam) {return 0;}; 

@@ -24,6 +24,10 @@ KStoreIMOD::KStoreIMOD(CString filename)
   mWidth = mIIfile->nx;
   mHeight = mIIfile->ny;
   mDepth = mIIfile->nz;
+  if (mIIfile->xscale != 1. || mIIfile->yscale != 1. || mIIfile->zscale != 1.) {
+    mPixelSpacing = mIIfile->xscale;
+    mHasPixelSpacing = 0;
+  }
   mMeanSum = mIIfile->amean * mDepth;
   mNumWritten = mDepth;
   if (mIIfile->file == IIFILE_HDF) {

@@ -289,7 +289,10 @@ KStoreMRC::KStoreMRC(CFile *inFile)
       Read(mExtra, head->next);
     }
     mHead = head;
-    if (nz)
+    if (head->dx && head->mx > 0) {
+      mPixelSpacing = head->dx / head->mx;
+      mHasPixelSpacing = true;
+    } else if (nz)
       mPixelSpacing = head->dz / nz;
 
     // Now see if there is an mdoc file

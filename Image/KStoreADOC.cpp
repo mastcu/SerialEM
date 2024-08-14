@@ -48,6 +48,8 @@ KStoreADOC::KStoreADOC(CString filename)
           mAdocIndex = -1;
       }
     }
+    if (!AdocGetFloat(ADOC_GLOBAL, 0, ADOC_PIXEL, &mPixelSpacing))
+      mHasPixelSpacing = true;
     AdocReleaseMutex();
   }
   mFileOpt.mode = mMode;

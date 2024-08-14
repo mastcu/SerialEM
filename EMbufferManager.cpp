@@ -884,6 +884,9 @@ int EMbufferManager::ReadFromFile(KImageStore *inStore, int inSect, int inToBuf,
     if (extra->mPixel > 0.)
       toBuf->mPixelSize = extra->mPixel / 10000.f;
   }
+  if (!toBuf->mPixelSize && inStore->HasPixelSpacing())
+    toBuf->mPixelSize = inStore->GetPixelSpacing() / 10000.f;
+
   if (mWinApp->mNavigator)
     toBuf->mRegistration = mWinApp->mNavigator->GetCurrentRegistration();
 

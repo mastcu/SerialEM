@@ -3,6 +3,11 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+8/14/24: Accessed pixel size from file header when reading an image if not
+available from mdoc.
+
+8/14/24: Fixed first use of Shift H in Navigator.
+
 8/14/24: Fixed using Ctrl-A with > 65535 characters in script editor (In 4.1).
 
 8/8/24: Fixed panel control and loss of panels in multigrid dialog.
