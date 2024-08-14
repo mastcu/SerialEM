@@ -325,7 +325,7 @@ BOOL CMacroEditer::PreTranslateMessage(MSG* pMsg)
     ctrlPressed = false;
   if (pMsg->message == WM_KEYUP && pMsg->wParam == 'A' && ctrlPressed && 
     SEMTickInterval(ctrlTime) < expireTime)
-    m_editMacro.SetSel(0xFFFF0000);
+    m_editMacro.SetSel(0, -1);
   if (pMsg->message == WM_KEYDOWN && pMsg->wParam == VK_RETURN && ctrlPressed &&
     SEMTickInterval(ctrlTime) < expireTime && m_butRun.IsWindowEnabled()) {
     OnRunmacro();
