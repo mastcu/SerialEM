@@ -166,6 +166,7 @@ CNavigatorDlg::CNavigatorDlg(CWnd* pParent /*=NULL*/)
   mShiftTIndex = -1;
   mShiftNIndex = -1;
   mShiftVIndex = -1;
+  mShiftHIndex = -1;
   mMinNewFileInterval = 1;
   mNumSavedRegXforms = 0;
   mSuperCoordIndex = -1;
