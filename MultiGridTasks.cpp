@@ -3499,7 +3499,7 @@ bool CMultiGridTasks::GetGridMapLabel(int mapID, CString &value)
  */
 int CMultiGridTasks::SaveSessionFile(CString &errStr)
 {
-  CString date, time, str;
+  CString date, time, str, dir, name;
   int adocInd, grid, mont, ind, sectInd, err = 0;
   JeolCartridgeData jcd;
   MontParam *montParam = &mGridMontParam;
@@ -3527,6 +3527,27 @@ int CMultiGridTasks::SaveSessionFile(CString &errStr)
     NextAutoFilenameIfNeeded(mSessionFilename);
     mBackedUpSessionFile = true;
     mBackedUpAcqItemsFile = true;
+  } else {
+
+    // Otherwise check if it has moved because of new directory being chosen
+    UtilSplitPath(mSessionFilename, dir, name);
+    dir.TrimRight("/\\");
+    mWorkingDir.TrimRight("/\\");
+    if (dir.CompareNoCase(mWorkingDir)) {
+      if (UtilRenameFile(mSessionFilename, mWorkingDir + "\\" + name, &date, true))
+        SEMAppendToLog(date + "; new file will be written in new location");
+
+      // Manage acquire param file too
+      UtilSplitExtension(mSessionFilename, str, time);
+      str += MGNAV_ACQ_SUFFIX;
+      mSessionFilename = mWorkingDir + "\\" + name;
+      if (UtilFileExists(str)) {
+        UtilSplitExtension(mSessionFilename, name, time);
+        name += MGNAV_ACQ_SUFFIX;
+        if (UtilRenameFile(str, name, &date, true))
+          SEMAppendToLog(date + "; new file will be written in new location");
+      }
+    }
   }
   mWinApp->mDocWnd->ManageBackupFile(mSessionFilename, mBackedUpSessionFile);
   UpdateDialogForSessionFile();

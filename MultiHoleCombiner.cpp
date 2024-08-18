@@ -204,7 +204,7 @@ int CMultiHoleCombiner::CombineItems(int boundType, BOOL turnOffOutside, int inX
 
   // Negative boundType indicates # of points hole finder just added - test Acquire anyway
   if (boundType < 0) {
-    for (ind = itemArray->GetSize() + boundType; ind < itemArray->GetSize(); ind++) {
+    for (ind = (int)itemArray->GetSize() + boundType; ind < itemArray->GetSize(); ind++) {
       item = itemArray->GetAt(ind);
       if (item->mAcquire && item->IsPoint())
         AddItemToCenters(xCenters, yCenters, navInds, item, ind, drawnOnID);

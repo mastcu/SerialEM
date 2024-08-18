@@ -3,10 +3,22 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+8/18/24: Added ability to define position of Focus and Trial areas with a line
+drawn anywhere in the image.
+
+8/18/24: Made multigrid routine move the session file to a new directory when
+the current directory is changed before starting any runs.
+
+8/17/24: Made astigmatism and coma routines adjust its assumed focus for small
+focus changes when skipping measuring defocus with beam tilt.
+
+8/17/24: Added script commands for getting and setting View or Search defocus
+offset.
+
 8/14/24: Accessed pixel size from file header when reading an image if not
 available from mdoc.
 
-8/14/24: Fixed first use of Shift H in Navigator.
+8/14/24: Fixed problem with the first use of Shift H in Navigator.
 
 8/14/24: Fixed using Ctrl-A with > 65535 characters in script editor (In 4.1).
 
