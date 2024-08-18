@@ -91,7 +91,7 @@ void CK2SaveOptionDlg::DoDataExchange(CDataExchange* pDX)
   DDX_Control(pDX, IDC_STAT_MUST_EXIST, m_statMustExist);
   DDX_Control(pDX, IDC_STAT_MUST_EXIST2, m_statMustExist2);
   DDX_Text(pDX, IDC_EDIT_START_NUMBER, m_iStartNumber);
-  DDV_MinMaxInt(pDX, m_iStartNumber, 0, 9999);
+  DDV_MinMaxInt(pDX, m_iStartNumber, 0, 99999);
   DDX_Check(pDX, IDC_CHECK_ONLY_ACQUIRE, m_bOnlyWhenAcquire);
   DDX_Check(pDX, IDC_CHECK_TILT_ANGLE, m_bTiltAngle);
   DDX_Control(pDX, IDC_CHECK_ROOT_FOLDER, m_butRootFolder);
