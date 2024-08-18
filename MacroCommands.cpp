@@ -8906,6 +8906,45 @@ int CMacCmd::RevertAutoLDShiftOffset()
   return 0;
 }
 
+// ReportLDDefocusOffset
+int CMacCmd::ReportLDDefocusOffset()
+{
+  int index;
+  if (CheckAndConvertLDAreaLetter(mStrItems[1], 1, index, mStrLine))
+    return 1;
+  if (index != VIEW_CONSET && index != SEARCH_AREA)
+    ABORT_LINE("This command must be followed by V or S for the area:\n\n");
+
+  float offset = mScope->GetLDViewDefocus(index == SEARCH_AREA ? 1 : 0);
+  mLogRpt.Format("Defocus offset of %s area is %.1f microns",
+    mItemInt[1] ? "Search" : "View", offset);
+  SetRepValsAndVars(2, offset);
+  return 0;
+}
+
+// SetLDDefocusOffset
+int CMacCmd::SetLDDefocusOffset()
+{
+  int index, area;
+  float offset = mItemFlt[2];
+  if (CheckAndConvertLDAreaLetter(mStrItems[1], 1, index, mStrLine))
+    return 1;
+  if (index != VIEW_CONSET && index != SEARCH_AREA)
+    ABORT_LINE("This command must be followed by V or S for the area:\n\n");
+  area = index == SEARCH_AREA ? 1 : 0;
+  if (offset < mWinApp->mLowDoseDlg.mMinVSDefocus[area] ||
+    offset > mWinApp->mLowDoseDlg.mMaxVSDefocus[area]) {
+    mStrCopy.Format("%s defocus offset must be between %d and %d for line:\n\n",
+      area ? "Search" : "View", mWinApp->mLowDoseDlg.mMinVSDefocus[area],
+      mWinApp->mLowDoseDlg.mMaxVSDefocus[area]);
+    ABORT_LINE(mStrCopy);
+  }
+  mScope->SetLDViewDefocus(offset, area);
+  mWinApp->mLowDoseDlg.UpdateDefocusOffset();
+    
+  return 0;
+}
+
 // DriftWaitTask
 int CMacCmd::DriftWaitTask(void)
 {
