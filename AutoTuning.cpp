@@ -1091,6 +1091,8 @@ int CAutoTuning::CtfBasedAstigmatismComa(int comaFree, bool calibrate, int actio
   mMaxDefocusForMag = 0.;
   pixel = mShiftManager->GetPixelSize(mWinApp->GetCurrentCamera(), 
     mCtfCal.magInd) * 1000.f * (float)recSet->binning;
+  if (mWinApp->mProcessImage->GetTuneUseCtfplotter())
+    ACCUM_MAX(pixel, mWinApp->mProcessImage->GetMinCtfplotterPixel());
   tryFocus = -mMinCtfBasedDefocus;
   while (tryFocus <= -mMaxCtfBasedDefocus) {
     mWinApp->mProcessImage->DefocusFromPointAndZeros(0., 0, pixel, 0.4f, &radii,tryFocus);
@@ -1157,6 +1159,8 @@ int CAutoTuning::CtfBasedAstigmatismComa(int comaFree, bool calibrate, int actio
     && !needAreaChange && 
     SEMTickInterval(mScope->GetInternalMagTime()) > minMagChangeInterval &&
     SEMTickInterval(mScope->GetUpdateSawMagTime()) > minMagChangeInterval;
+  if (mSkipMeasuringFocus)
+    mLastMeasuredFocus += (float)(curDefocus - mSavedDefocus);
   mSavedDefocus = curDefocus;
   mLastStageX = (float)stageX;
   mLastStageY = (float)stageY;
