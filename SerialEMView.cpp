@@ -2414,14 +2414,27 @@ void CSerialEMView::OnLButtonUp(UINT nFlags, CPoint point)
       // If done drawing a line, output the length to log window
       imBuf = &mImBufs[mImBufIndex];
       if (!imBuf->mDrawUserBox) {
-        GetLineLength(imBuf, shiftX, shiftY, angle);
-        if (shiftY) {
-          pixScale = shiftY >= 1000. ? 0.001f : 1.f;
-          lenstr.Format("Drawn line is %.1f pixels, " + mWinApp->PixelFormat(shiftY, 
-            pixScale) + "   at %.1f degrees", shiftX, shiftY * pixScale, angle);
-        } else
-          lenstr.Format("Drawn line is %.1f pixels    at %.1f degrees", shiftX, angle);
-        mWinApp->AppendToLog(lenstr, LOG_SWALLOW_IF_CLOSED);
+        if (mWinApp->mLowDoseDlg.CanActOnUserPointChange(imBuf, shiftX, shiftY)) {
+          shiftX += imBuf->mLineEndX - imBuf->mUserPtX;
+          shiftY += imBuf->mLineEndY - imBuf->mUserPtY;
+          imBuf->mHasUserPt = true;
+          imBuf->mHasUserLine = false;
+          imBuf->mIllegalUserPt = false;
+          mWinApp->mLowDoseDlg.UserPointChange(shiftX, shiftY, imBuf);
+          imBuf->mUserPtX = shiftX;
+          imBuf->mUserPtY = shiftY;
+          mWinApp->mLowDoseDlg.Update();
+          DrawImage();
+        } else {
+          GetLineLength(imBuf, shiftX, shiftY, angle);
+          if (shiftY) {
+            pixScale = shiftY >= 1000. ? 0.001f : 1.f;
+            lenstr.Format("Drawn line is %.1f pixels, " + mWinApp->PixelFormat(shiftY,
+              pixScale) + "   at %.1f degrees", shiftX, shiftY * pixScale, angle);
+          } else
+            lenstr.Format("Drawn line is %.1f pixels    at %.1f degrees", shiftX, angle);
+          mWinApp->AppendToLog(lenstr, LOG_SWALLOW_IF_CLOSED);
+        }
       }
     } else if (mPanning && mZoom < 0.8 && mWinApp->mBufferManager->GetAntialias()) {
 

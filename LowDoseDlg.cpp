@@ -40,8 +40,6 @@ static char THIS_FILE[] = __FILE__;
 #define MIN_VIEW_DEFOCUS  -400
 #define MIN_SEARCH_DEFOCUS -1999
 #define MAX_SEARCH_DEFOCUS 1999
-static int sMinVSDefocus[2] = {MIN_VIEW_DEFOCUS, MIN_SEARCH_DEFOCUS};
-static int sMaxVSDefocus[2] = {MAX_VIEW_DEFOCUS, MAX_SEARCH_DEFOCUS};
 
 static int sIdTable[] = {IDC_BUTOPEN, IDC_BUTFLOATDOCK, IDC_STATTOPLINE, IDC_BUTHELP,
 PANEL_END,
@@ -122,6 +120,10 @@ CLowDoseDlg::CLowDoseDlg(CWnd* pParent /*=NULL*/)
   mPiezoFullDelay = 20.;
   mFocusPiezoDelayFac = 0.6f;
   mTVPiezoDelayFac = 0.3f;
+  mMinVSDefocus[0] = MIN_VIEW_DEFOCUS;
+  mMinVSDefocus[1] = MIN_SEARCH_DEFOCUS;
+  mMaxVSDefocus[0] = MAX_VIEW_DEFOCUS;
+  mMaxVSDefocus[1] = MAX_SEARCH_DEFOCUS;
 }
 
 
@@ -872,7 +874,7 @@ void CLowDoseDlg::OnDeltaposSpinDefocus(NMHDR *pNMHDR, LRESULT *pResult, int are
   newval = -delta * ((-(curVal - delta * pNMUpDown->iDelta)) / delta);
   mWinApp->RestoreViewFocus();  
   *pResult = 1;
-  if (newval < sMinVSDefocus[area] || newval> sMaxVSDefocus[area])
+  if (newval < mMinVSDefocus[area] || newval> mMaxVSDefocus[area])
     return;
 
   // If in area now, this will change defocus by the change
@@ -1452,8 +1454,8 @@ void CLowDoseDlg::UpdateDefocusOffset()
 {
   for (int area = 0; area < 2; area++) {
     float defocus = mScope->GetLDViewDefocus(area);
-    if (defocus < sMinVSDefocus[area] || defocus > sMaxVSDefocus[area])
-      B3DCLAMP(defocus, sMinVSDefocus[area], sMaxVSDefocus[area]);
+    if (defocus < mMinVSDefocus[area] || defocus > mMaxVSDefocus[area])
+      B3DCLAMP(defocus, mMinVSDefocus[area], mMaxVSDefocus[area]);
     mScope->SetLDViewDefocus(defocus, area ? SEARCH_AREA : VIEW_CONSET);
 
     if (area)
@@ -1931,18 +1933,13 @@ void CLowDoseDlg::UserPointChange(float &ptX, float &ptY, EMimageBuffer *imBuf)
   ScaleMat aMat, aInv;
   float shiftX, shiftY, offsetX, offsetY, xcen, ycen, scale, rotation, specX, specY;
   double newAxis;
-  int nx, ny, conSet;
+  int conSet;
   LowDoseParams *ldArea = &mLDParams[m_iDefineArea];
   StateParams state;
   CMapDrawItem *item;
   bool navArea = mWinApp->mMainView->GetDrewLDAreasAtNavPt();
 
-  if (!mTrulyLowDose || !(m_iDefineArea || navArea) || !UsableDefineImageInAOrView(imBuf))
-    return;
-
-  // Get the focus position that applies here, and a modified camera to specimen matrix
-  mWinApp->mNavHelper->FindFocusPosForCurrentItem(state, !navArea, imBuf->mRegistration);
-  aMat = mShiftManager->SpecimenToCamera(state.camIndex, imBuf->mMagInd);
+  aMat = MatrixAndStateForUserPoint(imBuf, state, xcen, ycen);
   if (!aMat.xpx)
     return;
   mShiftManager->GetScaleAndRotationForFocus(imBuf, scale, rotation);
@@ -1951,11 +1948,6 @@ void CLowDoseDlg::UserPointChange(float &ptX, float &ptY, EMimageBuffer *imBuf)
 
   // Get offset from center of display area and snap it to axis; revise user point
   imBuf->mImage->getShifts(shiftX, shiftY);
-  imBuf->mImage->getSize(nx, ny);
-  xcen = (float)nx / 2.f;
-  ycen = (float)ny / 2.f;
-  if (navArea)
-    mWinApp->mMainView->GetCenterForLDAreas(xcen, ycen);
   offsetX = ptX + shiftX - xcen;
   offsetY = ptY + shiftY - ycen;
   SnapCameraShiftToAxis(imBuf, offsetX, offsetY, IS_SET_VIEW_OR_SEARCH(imBuf->mConSetUsed)
@@ -2008,6 +2000,35 @@ void CLowDoseDlg::UserPointChange(float &ptX, float &ptY, EMimageBuffer *imBuf)
   ApplyNewISifDefineArea();
   ManageAxisPosition();
   SEMTrace('W', "UserPointChange setting axis IS");
+}
+
+ScaleMat CLowDoseDlg::MatrixAndStateForUserPoint(EMimageBuffer *imBuf, StateParams &state,
+  float &xcen, float &ycen)
+{
+  ScaleMat aMat;
+  int nx, ny;
+  bool navArea = mWinApp->mMainView->GetDrewLDAreasAtNavPt();
+
+  aMat.xpx = 0.;
+  if (!mTrulyLowDose || !(m_iDefineArea || navArea) || !UsableDefineImageInAOrView(imBuf))
+    return aMat;
+
+  // Get the focus position that applies here, and a modified camera to specimen matrix
+  mWinApp->mNavHelper->FindFocusPosForCurrentItem(state, !navArea, imBuf->mRegistration);
+  aMat = mShiftManager->SpecimenToCamera(state.camIndex, imBuf->mMagInd);
+  imBuf->mImage->getSize(nx, ny);
+  xcen = (float)nx / 2.f;
+  ycen = (float)ny / 2.f;
+  if (navArea)
+    mWinApp->mMainView->GetCenterForLDAreas(xcen, ycen);
+  return aMat;
+}
+
+bool CLowDoseDlg::CanActOnUserPointChange(EMimageBuffer *imBuf, float &xcen, float &ycen)
+{
+  StateParams state;
+  ScaleMat aMat = MatrixAndStateForUserPoint(imBuf, state, xcen, ycen);
+  return aMat.xpx != 0.;
 }
 
 // Need to keep window from closing and take focus away from edit box

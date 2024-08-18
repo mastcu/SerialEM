@@ -48,6 +48,8 @@ public:
   bool SameAsFocusArea(int inArea);
 	void GetAreaSizes(int &recSize, int &defSize, double &angle);
 	void UserPointChange(float &ptX, float &ptY, EMimageBuffer *imBuf);
+  ScaleMat MatrixAndStateForUserPoint(EMimageBuffer *imBuf, StateParams &state, float &xcen, float &ycen);
+  bool CanActOnUserPointChange(EMimageBuffer *imBuf, float &xcen, float &ycen);
 	void ManageAxisPosition();
 	void SnapCameraShiftToAxis(EMimageBuffer *imBuf, float &shiftX, float &shiftY, bool viewImage,
     int camIndex, BOOL &rotateAxis, int &axisAngle);
@@ -75,6 +77,8 @@ public:
   float mAutoShiftMaxRot;     // User's value of max rotation or < 0 for prop default
   float mAutoViewMaxShift;    // Maximum shift for auto view shift, - for frac of FOV
   float mAutoSearchMaxShift;  // Maximum shift for auto search shift, - for frac of FOV
+  int mMinVSDefocus[2];       // Min values of defocus offset, V & S
+  int mMaxVSDefocus[2];       // Max values of defocus offset, V & S
 
 
 // Dialog Data
