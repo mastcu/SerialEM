@@ -3,6 +3,8 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+8/19/24: Fixed a problem with multigrid keeping track of last frame number.
+
 8/18/24: Added ability to define position of Focus and Trial areas with a line
 drawn anywhere in the image.
 

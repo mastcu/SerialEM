@@ -499,7 +499,7 @@ void CMultiGridTasks::RestoreImposedParams()
       mCamera->SetFrameBaseName(mSavedFrameBaseName);
     if (mLastSetFrameNum > -2 && mLastSetFrameNum != mCamera->GetLastUsedFrameNumber() &&
       mCurrentGrid >= 0 && mCurrentGrid < mCartInfo->GetSize()) {
-      JeolCartridgeData &jcdEl = mCartInfo->ElementAt(mCurrentGrid);
+      JeolCartridgeData &jcdEl = mCartInfo->ElementAt(mJcdIndsToRun[mCurrentGrid]);
       jcdEl.lastFrameNumber = mCamera->GetLastUsedFrameNumber();
       mAdocChanged = true;
     }
@@ -2799,9 +2799,9 @@ void CMultiGridTasks::DoNextSequenceAction(int resume)
       }
       return;
     }
-    UpdateGridStatusText();
     RestoreImposedParams();
     mCurrentGrid++;
+    UpdateGridStatusText();
     break;
 
   default:
@@ -2851,9 +2851,9 @@ int CMultiGridTasks::SkipToNextGrid(CString &errStr)
 
   // Increment the current grid here because the seqindex will always be incremented 
   // before the case is hit
-  UpdateGridStatusText();
   RestoreImposedParams();
   mCurrentGrid++;
+  UpdateGridStatusText();
   return 0;
 }
 
