@@ -5388,10 +5388,14 @@ void CEMscope::GotoLowDoseArea(int newArea)
     mLdsaParams->magIndex > 0)
     SetMagIndex(mLdsaParams->magIndex);
   
-  // If changing area at zero IS, get the current centered shift and reset it
+  // If changing area at zero IS, get the current centered shift and reset it, and
+  // reinitialize the cumulative change, since IS is put back after the cumulative change
   if (changingAtZeroIS) {
     GetLDCenteredShift(centeredISX, centeredISY);
     SetLDCenteredShift(0., 0.);
+    if (JEOLscope && !STEMmode)
+      GetBeamShift(startBeamX, startBeamY);
+    mLDChangeCumulBeamX = mLDChangeCumulBeamY = 0.;
   }
 
   // Set up for this area to be used for shifts when changing mag or alpha
