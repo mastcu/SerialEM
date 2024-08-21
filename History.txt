@@ -3,6 +3,13 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+8/21/22: SEM_4-1-15
+8/21/22: Updated Ctfplotter in package to fix a problem with autotuning and
+work better with astigmatism and coma routines (In 4.1).
+
+8/21/22: Possibly fixed a problem with changing low dose area at zero IS on
+JEOL (In 4.1).
+
 8/19/24: Fixed a problem with multigrid keeping track of last frame number.
 
 8/18/24: Added ability to define position of Focus and Trial areas with a line
