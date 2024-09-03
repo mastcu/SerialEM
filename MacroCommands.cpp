@@ -10868,6 +10868,17 @@ int CMacCmd::ReportItemAcquire(void)
   return 0;
 }
 
+// NextMultiShotUseNavItem
+int CMacCmd::NextMultiShotUseNavItem()
+{
+  int index = mItemEmpty[1] ? 0 : mItemInt[1];
+  CMapDrawItem *navItem = CurrentOrIndexedNavItem(index, mStrLine);
+  if (!navItem)
+    return 1;
+  mWinApp->mParticleTasks->SetNextMSUseNavItem(index);
+  return 0;
+}
+
 // SetSelectedNavItem
 int CMacCmd::SetSelectedNavItem()
 {

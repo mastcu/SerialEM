@@ -68,6 +68,7 @@ public:
   FloatVec *GetZBGFocusScalings() { return &mZBGFocusScalings; };
   SetMember(MultiShotParams *, NextMSParams);
   GetSetMember(BOOL, LastHolesWereAdjusted);
+  SetMember(int, NextMSUseNavItem);
 
 private:
   CSerialEMApp * mWinApp;
@@ -104,6 +105,7 @@ private:
   int mMSCurIndex;                // Index of shot, or -1 for center before; -2 inactive
   int mMSHoleIndex;               // Current hole index if any
   int mMSNumHoles;                // Number of holes to do
+  int mNextMSUseNavItem;          // Index of nav item to use on next multishot
   BOOL mMSDoingHexGrid;           // Flag that it is doing hex array
   BOOL mMSUseHoleDelay;           // Flag to use extra hole delay instead of regular one
   FloatVec mMSHoleISX, mMSHoleISY;  // IS values for all the holes

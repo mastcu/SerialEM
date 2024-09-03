@@ -50,6 +50,7 @@ CParticleTasks::CParticleTasks(void)
   mMSinHoleStartAngle = -900.;
   mMSNumSepFiles = -1;
   mMSHolePatternType = 2;
+  mNextMSUseNavItem = -1;
   mMSsaveToMontage = false;
   mMSRunMacro = false;
   mMSRunningMacro = false;
@@ -236,8 +237,16 @@ int CParticleTasks::StartMultiShot(int numPeripheral, int doCenter, float spokeR
     RESTORE_MSP_RETURN(1);
   }
 
-  if (!mMSsaveToMontage && mWinApp->mNavigator && mWinApp->mNavigator->GetAcquiring()) {
-    if (mWinApp->mNavigator->GetCurrentOrAcquireItem(item) < 0) {
+  if (!mMSsaveToMontage && mWinApp->mNavigator && (mNextMSUseNavItem >= 0 ||
+    mWinApp->mNavigator->GetAcquiring())) {
+    if (!mWinApp->mNavigator->GetAcquiring()) {
+      item = mWinApp->mNavigator->GetOtherNavItem(mNextMSUseNavItem);
+      if (!item) {
+        SEMMessageBox("Index of Navigator item specified for next multishot is out of "
+          "range");
+        RESTORE_MSP_RETURN(1);
+      }
+    } else if (mWinApp->mNavigator->GetCurrentOrAcquireItem(item) < 0) {
       SEMMessageBox("Could not retrieve the Navigator item currently being acquired");
       RESTORE_MSP_RETURN(1);
     }
@@ -249,6 +258,7 @@ int CParticleTasks::StartMultiShot(int numPeripheral, int doCenter, float spokeR
       RESTORE_MSP_RETURN(openingFiles ? -1 : 0);
     }
   }
+  mNextMSUseNavItem = -1;
 
   // Set this after all tests and parameter settings, it determines operation of
   // GetHolePositions which is called from SerialEMView

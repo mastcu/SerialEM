@@ -4337,6 +4337,14 @@
           </TD>
         </TR>
         <TR>
+          <TD class="scriptcommand">NextMultiShotUseNavItem [#]</TD>
+          <TD>Makes the next Multiple Records acquisition use the hole array specification and the list of
+             holes to skip stored in the current Navigator item, or the item indicated by the optional <b>#</b>, which can be 0 for the current item, an 
+            index greater than 0 for the item with that index in the table; or a value less 
+            than 0 to count back from the end of the table, where -1 is the last item.&nbsp; This command has no
+             effect if the Multiple Records are taken by the Navigator during Acquire at Items.&nbsp; Command added in 4.2, 3-Sep-24.</TD>
+        </TR>
+        <TR>
           <TD class="scriptcommand">ReportMultishotParams #</TD>
           <TD>Sets <i>reportedvalues</i> with particular parameters: <br />
             With <b>#</b> set to 1: 1) number of shots in first ring inside hole; 2) -1, 0, or 1 for shot in center;

@@ -3190,7 +3190,7 @@ BEGIN
     PUSHBUTTON      "?",IDC_BUTHELP,110,0,9,7
     PUSHBUTTON      "F",IDC_BUTFLOATDOCK,15,0,9,7
     CTEXT           "Microscope Control",IDC_STATTOPLINE,33,0,64,8
-    RTEXT           "Mag",IDC_STAT_MAG,77,60,15,8
+    RTEXT           "Mag",IDC_STAT_MAG,73,60,19,8
     CONTROL         "",IDC_SPIN_RCMAG,"msctls_updown32",UDS_ARROWKEYS,94,59,14,16
     RTEXT           "Spot",IDC_STAT_SPOT_LABEL,36,25,15,8
     CONTROL         "",IDC_SPIN_RCSPOT,"msctls_updown32",UDS_ARROWKEYS,53,21,11,16

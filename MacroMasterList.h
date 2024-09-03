@@ -805,6 +805,7 @@ MAC_SAME_NAME_ARG(FindMultiMapHoles, 3, 1, FINDMULTIMAPHOLES, III)
 MAC_SAME_NAME_NOARG(NavGoToMarker, 0, 0, NAVGOTOMARKER)
 MAC_SAME_NAME_ARG(ReportLDDefocusOffset, 1, 4, REPORTLDDEFOCUSOFFSET, I)
 MAC_SAME_NAME_ARG(SetLDDefocusOffset, 2, 4, SetLDDEFOCUSOFFSET, ID)
+MAC_SAME_NAME_ARG(NextMultiShotUseNavItem, 0, 4, NEXTMULTISHOTUSENAVITEM, i)
 
 // new Python-only commands need to be added to pythonOnlyCmds in ::CMacroProcessor
 // New Not from Python items omit _ARG or _NOARG
