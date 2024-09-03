@@ -1920,7 +1920,7 @@ void CMultiGridTasks::AddToSeqForRestoreFromLM(bool &apForLMM, bool &stateForLMM
 
   if (apForLMM) {
     if (mParams.removeObjectiveAp)
-      mActSequence.push_back(MGACT_REPLACE_OBJ_ACT);
+      mActSequence.push_back(MGACT_REPLACE_OBJ_AP);
     if (mParams.setCondenserAp)
       mActSequence.push_back(MGACT_RESTORE_COND_AP);
     apForLMM = false;
@@ -2030,7 +2030,7 @@ void CMultiGridTasks::DoNextSequenceAction(int resume)
         // Retry then give up
       case MGACT_REMOVE_OBJ_AP:
       case MGACT_SET_CONDENSER_AP:
-      case MGACT_REPLACE_OBJ_ACT:
+      case MGACT_REPLACE_OBJ_AP:
       case MGACT_REF_MOVE:
       case MGACT_RESTORE_COND_AP:
       case MGACT_SURVEY_STAGE_MOVE:
@@ -2355,7 +2355,9 @@ void CMultiGridTasks::DoNextSequenceAction(int resume)
     SEMTrace('q', "Index %d action %d %s", mSeqIndex, action,
       sActionNames[action]);
 
-  if (action != MGACT_LOAD_GRID && action != MGACT_UNLOAD_GRID &&
+  if (action != MGACT_LOAD_GRID && action != MGACT_UNLOAD_GRID && 
+    action != MGACT_GRID_DONE && action != MGACT_RESTORE_COND_AP && 
+    action != MGACT_RESTORE_STATE && action != MGACT_REPLACE_OBJ_AP &&
     mScope->GetColumnValvesOpen() < 1)
     mScope->SetColumnValvesOpen(true);
 
@@ -2379,7 +2381,7 @@ void CMultiGridTasks::DoNextSequenceAction(int resume)
     break;
 
     // Start putting objective aperture back in
-  case MGACT_REPLACE_OBJ_ACT:
+  case MGACT_REPLACE_OBJ_AP:
     mScope->SetApertureSize(OBJECTIVE_APERTURE, mInitialObjApSize);
     mMovedAperture = true;
     mReinsertObjAp = false;
