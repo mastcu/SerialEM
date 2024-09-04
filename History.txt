@@ -3,6 +3,9 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+9/4/24: Made sure number of frames to skip before exposure is 0 when acquiring
+from Falcon 3 or 4 and zeroed out wild values from settings (In 4.1).
+
 9/3/24: Added script command to make next Multiple Records use hole
 specification stored in a given Navigator item.
 

@@ -341,9 +341,9 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
           else if (NAME_IS("DEsumCount"))
             cs->DEsumCount = itemInt[1];
           else if (NAME_IS("SkipFramesBefore"))
-            cs->numSkipBefore = itemInt[1];
+            cs->numSkipBefore = (itemInt[1] < 0 || itemInt[1] > 10) ? 0 : itemInt[1];
           else if (NAME_IS("SkipFramesAfter"))
-            cs->numSkipAfter = itemInt[1];
+            cs->numSkipAfter = (itemInt[1] < 0 || itemInt[1] > 10) ? 0 : itemInt[1];
           else if (NAME_IS("ReadoutsPerFrame")) {
 
             // Backward-compatibility: read old one entry per frame
