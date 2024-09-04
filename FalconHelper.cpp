@@ -200,7 +200,7 @@ int CFalconHelper::SetupConfigFile(ControlSet &conSet, int consNum, CString loca
   long temp = 1;
   long *readPtr = &temp;
   float frameInterval = mCamera->GetFalconReadoutInterval();
-  int ind, block, numInFracs, numRawFrames = 0;
+  int ind, block, numInFracs, numRawFrames = 0, numSkipBefore;
   bool saveFrames = conSet.saveFrames || (conSet.alignFrames && conSet.useFrameAlign);
   bool eerMode = mCamera->IsSaveInEERMode(camParams, &conSet);
   mDoingAdvancedFrames = FCAM_ADVANCED(camParams) != 0;
@@ -262,11 +262,12 @@ int CFalconHelper::SetupConfigFile(ControlSet &conSet, int consNum, CString loca
     numFrames = numRawFrames;
     mReadouts[0] = numFrames;
   }
+  numSkipBefore = IS_FALCON3_OR_4(camParams) ? 0 : conSet.numSkipBefore;
   if (mDoingAdvancedFrames) {
     ind = -1;
     //if (camParams->FEItype == FALCON2_TYPE)
       //ind = stackingDeferred ? 1 : 0;
-    if (mPlugFuncs->ASIsetupFrames(camParams->eagleIndex, ind, temp, conSet.numSkipBefore,
+    if (mPlugFuncs->ASIsetupFrames(camParams->eagleIndex, ind, temp, numSkipBefore,
       readPtr, (LPCTSTR)directory, (LPCTSTR)filename, 0, 0.)) {
       str.Format("Error setting up for frame saving from %s:\n%s", 
         FCAM_CONTIN_SAVE(camParams) ? "Ceta" : "Falcon",mPlugFuncs->GetLastErrorString());
