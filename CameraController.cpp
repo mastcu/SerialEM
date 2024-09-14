@@ -17,6 +17,7 @@
 #include "EMmontageController.h"
 #include "TSController.h"
 #include "ComplexTasks.h"
+#include "FilterTasks.h"
 #include "ProcessImage.h"
 #include "GainRefMaker.h"
 #include "NavigatorDlg.h"
@@ -11184,7 +11185,9 @@ int CCameraController::CheckFilterSettings()
       }
 
       // If energy shift changed, record time and see if enough changes have happened
-      if (imageMode && fabs(eShift - mLastEnergyShift) > 0.1) {
+      if (imageMode && fabs(eShift - mLastEnergyShift) > 0.1 && 
+        !(mWinApp->mFilterTasks->RefiningZLP() || 
+          mWinApp->mFilterTasks->CalibratingMagShift())) {
         mLastEnergyShift = eShift;
         eShiftTimes[mShiftTimeIndex++] = curTime;
         mShiftTimeIndex %= MAX_ESHIFT_TIMES;
