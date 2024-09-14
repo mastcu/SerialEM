@@ -8376,8 +8376,8 @@ int CMacCmd::WalkUpTo(void)
   if (mItemEmpty[1])
     ABORT_LINE("WalkUpTo must be followed by a target angle in: \n\n");
   delISX = mItemDbl[1];
-  if (delISX < -80. || delISX > 80.)
-    ABORT_LINE("Target angle is too high in: \n\n");
+  if (fabs(delISX) > mScope->GetMaxTiltAngle())
+    ABORT_LINE("Target angle is bigger than the maximum allowed tilt angle: \n\n");
   mWinApp->mComplexTasks->WalkUp((float)delISX, -1, 0);
   return 0;
 }
