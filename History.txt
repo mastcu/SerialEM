@@ -3,6 +3,9 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+9/18/24: Fixed separate zoom for View so changing it doesn't change general
+zoom (In 4.1).
+
 9/15/24: SEM_4-1-16
 9/14/24: Changed tilt limit in Walkup script command to use MaximumTiltAngle
 (In 4.1).

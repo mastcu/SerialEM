@@ -2249,13 +2249,15 @@ void CSerialEMView::NewZoom()
   if (mImBufs[mImBufIndex].mImageScale)
     mWinApp->mImageLevel.NewZoom(mZoom);
   
-  // Set effective zoom unless it is a map or View/Search
+  // Set effective zoom unless it is a map
   if (GetBufferBinning() > 0. && !mImBufs[mImBufIndex].mMapID) {
     effZoom = mZoom / GetBufferBinning();
+
+    // Set separately for View, Search, and general
     if (mImBufs[mImBufIndex].mLowDoseArea &&
       mImBufs[mImBufIndex].mConSetUsed == VIEW_CONSET)
       mViewEffectiveZoom = effZoom;
-    if (mImBufs[mImBufIndex].mLowDoseArea &&
+    else if (mImBufs[mImBufIndex].mLowDoseArea &&
       mImBufs[mImBufIndex].mConSetUsed == SEARCH_CONSET)
       mSearchEffectiveZoom = effZoom;
     else
@@ -3270,7 +3272,8 @@ void CSerialEMView::SetCurrentBuffer(int inIndex)
     mWinApp->UpdateBufferWindows(); 
 }
 
-
+// The effective zoom is the zoom that would make a full-sized unbinned image from the 
+// current camera fill the current window size
 void CSerialEMView::FindEffectiveZoom()
 {
   double critErr = 0.05;  // Criterion error for using a preset zoom
@@ -3336,7 +3339,9 @@ void CSerialEMView::FindEffectiveZoom()
   mImBufs[mImBufIndex].mZoom = mZoom;
 }
 
-
+// Get the binning of the buffer to use when multiplying by effective zoom, which may or
+// may not be based on effective binning, and is adjusted by ratio between original 
+// camera basis size and size of current camera
 float CSerialEMView::GetBufferBinning()
 {
   float bX, bY;
