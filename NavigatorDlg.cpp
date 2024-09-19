@@ -6994,7 +6994,7 @@ int CNavigatorDlg::NewMap(bool unsuitableOK, int addOrReplaceNote, CString *newN
   if (imBuf->mMapID) {
     if (SEMMessageBox("This image already has a map ID identifying it as a map.\n\n"
       "Are you sure you want to create another map from this image?",
-      MB_YESNO, MB_ICONQUESTION) == IDNO)
+      MB_QUESTION) == IDNO)
       return 2;
   }
 
@@ -7038,7 +7038,7 @@ int CNavigatorDlg::NewMap(bool unsuitableOK, int addOrReplaceNote, CString *newN
         "and the magnification, camera selection, and binning in\n"
         "the montage setup are the same as when the image was taken.\n\n"
         "Are you sure you want to create a map from this image?",
-        MB_YESNO | MB_ICONQUESTION) == IDNO)
+        MB_QUESTION) == IDNO)
         return 2;
     }
 
@@ -7071,7 +7071,7 @@ int CNavigatorDlg::NewMap(bool unsuitableOK, int addOrReplaceNote, CString *newN
           "Are you sure you want to create a map from this image?", 
           hasStage ? "" : "stage position, ");
         if (!cropped && !mWinApp->mMacroProcessor->DoingMacro() && 
-          SEMMessageBox(report, MB_YESNO, MB_ICONQUESTION) == IDNO)
+          SEMMessageBox(report, MB_QUESTION) == IDNO)
           return 2;
       } else if (!mBufferManager->IsBufferSavable(imBuf)) {
         
@@ -7084,14 +7084,15 @@ int CNavigatorDlg::NewMap(bool unsuitableOK, int addOrReplaceNote, CString *newN
         return 1;
       } else {
 
-        if (!(mMacroProcessor->DoingMacro() && mHelper->GetAcquiringDual())) {
+        if (!(mMacroProcessor->DoingMacro() && (mHelper->GetAcquiringDual() || 
+          GetAcquiring()))) {
 
           //If it can be saved, and they haven't been asked before, ask about auto save
           if (mDocWnd->GetSaveOnNewMap() < 0) {
             i = SEMMessageBox("This image is not saved yet and can be saved \ninto the "
               "current file.\n\nDo you always want to save images automatically into this"
               " file\nwhenever you press New Map and it is the current file?",
-              MB_YESNO, MB_ICONQUESTION);
+              MB_QUESTION);
             mDocWnd->SetSaveOnNewMap(i == IDNO ? 0 : 1);
           }
 
@@ -7099,7 +7100,7 @@ int CNavigatorDlg::NewMap(bool unsuitableOK, int addOrReplaceNote, CString *newN
           if (!mDocWnd->GetSaveOnNewMap()) {
             if (SEMMessageBox("This image is not saved yet.\n\n"
               "Do you want to save it into the current file?", 
-              MB_YESNO, MB_ICONQUESTION) == IDNO)
+              MB_QUESTION) == IDNO)
               return 2;
           }
         }

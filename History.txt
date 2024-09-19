@@ -3,6 +3,12 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+9/19/24: Fixed question popups in new map routine to properly stop a
+script if encountered with no message box on errors, and bypassed question on
+saving into file if running Acquire at Items (In 4.1).
+
+9/19/24: Fixed status for stage Y axis from JEOL to be 0 if 2 (In 4.1).
+
 9/18/24: Fixed separate zoom for View so changing it doesn't change general
 zoom (In 4.1).
 
