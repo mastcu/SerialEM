@@ -1081,7 +1081,7 @@ UINT CAutoContouringDlg::AutoContProc(LPVOID pParam)
     acd->minSize = 10;
 
   // Get number of threads
-  numThreads = B3DNINT(sqrt(nxRed * nyRed / 50.));
+  numThreads = B3DNINT(sqrt((double)nxRed * nyRed) / 50.);
   B3DCLAMP(numThreads, 1, MAX_AUTO_SLICE_THREADS);
   numThreads = numOMPthreads(numThreads);
 
