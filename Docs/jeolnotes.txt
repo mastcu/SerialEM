@@ -1,3 +1,5 @@
+Tobin's Original note:
+
 5/27/04:  Some notes about the JEOL branch
 
 The JEOL COM is quite picky.  It can't handle overlapped calls (such as from
@@ -37,6 +39,40 @@ directly.  The result is that the GUI is once again quite snappy and functional.
 
 -- Tobin Fricke <tobin@splorg.org> [ http://splorg.org/people/tobin/ ]
 
+MY UPDATE:
+
+1. The mutex is indeed essential.  Routines that need to sleep between testing
+for a status generally release the mutex to allow other things to continue,
+then reclaim it, with this sequence:
+    SEMReleaseScopeMutex("MutexLender");
+    Sleep(waitTime);
+    SEMAcquireScopeMutex("MutexLender", true);
+
+2. After most errors, it will retry up to 9 times, but after timeout errors it
+will retry only 2 times.  At the end of this, the standard wrappers throw a
+COM error with JEOL_FAKE_HRESULT, but JeolWrapNCE does not throw and
+_jeol_result must be tested.  A true COM error would escape this retry loop but
+doesn't happen.
+
+3. Updates became more complicated with the realization that it took 60 ms to
+get a typical value, and up to 3-4 times that for stage items.  (This has
+improved considerably in new scopes but is still inexplicably long).  The updates
+were divided into low and high priority items, and the loop cycle alternates
+between them in such a way as to test high priority ones more frequently, and
+only one item is tested per "updateSleep" period.
+
+When updating by event, the priorities are modified.  All the items that will
+be reported by event become low priority and are tested only rarely (maybe every
+5 sec or so).  The rest of the items are high priority and mostly it cycles
+through them.  Thus, with updates by event, information is saved into the
+JeolState variables by three routes: the update routine, and event (for items
+generating events), or a direct call from EMscope.cpp, which generally updates
+the state variable with whatever new value is gotten or being set.
+
+The state variables are a JeolStateData structure that is freely accessible
+from various modules with variables such as mJeolSD and sJSD.  Access is
+synchronized using a separate mutex managed with  SEMAcquireJeolDataMutex() and
+SEMReleaseJeolDataMutex().
 
 MAGNIFICATION CHANGE AND IS HANDLING
 
