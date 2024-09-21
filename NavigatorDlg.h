@@ -690,6 +690,7 @@ public:
   int ImodObjectToPolygons(EMimageBuffer *imBuf, Iobj *obj, MapItemArray &polyArray);
   void AddAutocontPolygons(MapItemArray &polyArray, ShortVec &excluded,
     ShortVec &groupNums, int *groupShown, int numGroups, int &firstID, int &lastID, IntVec &indsInPoly);
+  void AddSingleAutocontPolygon(MapItemArray &polyArray, int groupID);
   void UndoAutocontPolyAddition(MapItemArray &polyArray, int numRemove, IntVec &indsInPoly);
   void RefillAfterAutocontPolys();
   bool OKtoAddMarkerPoint(bool justAdd, bool fromMacro = false);

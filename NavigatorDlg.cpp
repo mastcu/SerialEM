@@ -589,6 +589,8 @@ void CNavigatorDlg::ManageCurrentControls()
   }
   if (mHelper->mMultiShotDlg)
     mHelper->mMultiShotDlg->ManageEnables();
+  if (mHelper->mAutoContouringDlg->IsOpen())
+    mHelper->mAutoContouringDlg->ManageACEnables();
   Update();
 }
 
@@ -3770,6 +3772,20 @@ void CNavigatorDlg::AddAutocontPolygons(MapItemArray &polyArray,
     }
   }
   mWinApp->AppendToLog(conv);
+  RefillAfterAutocontPolys();
+}
+
+// Just add a single autocont polygon made by clicking
+void CNavigatorDlg::AddSingleAutocontPolygon(MapItemArray &polyArray, int groupID)
+{
+  CMapDrawItem *item = polyArray.GetAt(0);
+  item->mMapID = MakeUniqueID();
+  item->mGroupID = groupID;
+  item->mLabel.Format("%d", mNewItemNum++);
+  item->mRegistration = mCurrentRegistration;
+  item->mOriginalReg = mCurrentRegistration;
+  mItemArray.Add(item);
+  polyArray.SetAt(0, NULL);
   RefillAfterAutocontPolys();
 }
 
@@ -10782,7 +10798,8 @@ int CNavigatorDlg::EndAcquireWithMessage(void)
   CString report, scrp;
   int ind;
   MontParam *montp;
-  bool runScript = mAcquireEnded == 10 && !mPausedAcquire && mScriptToRunAtEnd >= 0;
+  bool runScript = (mAcquireEnded == 10 || mAcquireEnded == 3) && !mPausedAcquire && 
+    mScriptToRunAtEnd >= 0;
   if (mRetractAtAcqEnd) {
     mRetractAtAcqEnd = false;
     mCamera->RetractAllCameras();
@@ -10806,7 +10823,7 @@ int CNavigatorDlg::EndAcquireWithMessage(void)
       mWinApp->AppendToLog(scrp);
     } else {
       if (!mWinApp->mMultiGridTasks->GetDoingMulGridSeq() && 
-        !mWinApp->mMultiGridTasks->GetSuspendedMulGrid())
+        !mWinApp->mMultiGridTasks->GetSuspendedMulGrid() && mAcquireEnded / 2 != 1)
         AfxMessageBox(report, MB_EXCLAME);
       if (mNumAcqFilesLeftOpen) {
         report.Format("%d files were left open for reuse\n\nDo you want to close them?",
