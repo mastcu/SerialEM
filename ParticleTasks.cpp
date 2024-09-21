@@ -51,6 +51,7 @@ CParticleTasks::CParticleTasks(void)
   mMSNumSepFiles = -1;
   mMSHolePatternType = 2;
   mNextMSUseNavItem = -1;
+  mMSminTiltToCompensate = 10.;
   mMSsaveToMontage = false;
   mMSRunMacro = false;
   mMSRunningMacro = false;
@@ -103,7 +104,7 @@ int CParticleTasks::StartMultiShot(int numPeripheral, int doCenter, float spokeR
   int numSecondRing, float spokeRad2, float extraDelay, BOOL saveRec, int ifEarlyReturn, 
   int earlyRetFrames, BOOL adjustBT, int inHoleOrMulti)
 {
-  float pixel, xTiltFac, yTiltFac, minTiltToCompenate = 10.;
+  float pixel, xTiltFac, yTiltFac;
   int nextShot, nextHole, testRun, ind, useXholes, useYholes;
   int numXholes = 0, numYholes = 0;
   double delISX, delISY, transISX, transISY, delBTX, delBTY, angle;
@@ -271,7 +272,7 @@ int CParticleTasks::StartMultiShot(int numPeripheral, int doCenter, float spokeR
 
   // Set up to adjust for defocus if angle is high enough
   angle = mScope->GetTiltAngle();
-  if (fabs(angle) < minTiltToCompenate && !mMSsaveToMontage) {
+  if (fabs(angle) < mMSminTiltToCompensate && !mMSsaveToMontage) {
     mMSDefocusTanFac = 0.;
   } else {
 

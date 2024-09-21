@@ -69,6 +69,7 @@ public:
   SetMember(MultiShotParams *, NextMSParams);
   GetSetMember(BOOL, LastHolesWereAdjusted);
   SetMember(int, NextMSUseNavItem);
+  GetSetMember(float, MSminTiltToCompensate);
 
 private:
   CSerialEMApp * mWinApp;
@@ -135,6 +136,7 @@ private:
   BOOL mMSRunMacro;                // User flag to run the macro
   bool mMSDoStartMacro;            // Runtime flag to do it.
   bool mMSRunningMacro;            // Flag that it is started
+  float mMSminTiltToCompensate;    // Minimum tilt above which it will compensate focus
 
   DriftWaitParams mWDDfltParams;   // Resident parameters
   DriftWaitParams mWDParm;         // Run-time parameters
