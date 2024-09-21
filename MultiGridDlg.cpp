@@ -938,7 +938,7 @@ void CMultiGridDlg::UpdateEnables()
   bool locked = mMGTasks->GetNamesLocked();
   BOOL justTasks = mWinApp->DoingTasks();
   bool suspended = mMGTasks->GetSuspendedMulGrid();
-  BOOL tasks = justTasks || suspended;
+  BOOL tasks = justTasks || suspended || mSettingOrder;
   bool acqStatesEnabled = !tasks && (mSelectedGrid >= 0 || !m_bSetFinalByGrid) && 
     mNumUsedSlots > 0;
   CString filename;
@@ -952,8 +952,9 @@ void CMultiGridDlg::UpdateEnables()
   EnableDlgItem(IDC_CHECK_MG_APPEND_NAME, !tasks && !locked);
   EnableDlgItem(IDC_EDIT_MG_PREFIX, !tasks && !locked);
   EnableDlgItem(IDC_CHECK_TOGGLE_ALL, mNumUsedSlots > 0 && !tasks && !mSettingOrder);
-  EnableDlgItem(IDC_BUT_SET_ORDER, mNumUsedSlots > 0 && !tasks);
-  EnableDlgItem(IDC_BUT_RESET_ORDER, mNumUsedSlots > 0 && !tasks && mMGTasks->GetUseCustomOrder());
+  EnableDlgItem(IDC_BUT_SET_ORDER, mNumUsedSlots > 0 && !justTasks && !suspended);
+  EnableDlgItem(IDC_BUT_RESET_ORDER, mNumUsedSlots > 0 && !justTasks && !suspended &&
+    mMGTasks->GetUseCustomOrder());
   EnableDlgItem(IDC_EDIT_GRID_NOTE, mNumUsedSlots > 0 && !justTasks && locked && 
     mSelectedGrid >= 0);
   EnableDlgItem(IDC_BUT_LOAD_GRID, mNumUsedSlots > 0 && !tasks && mSelectedGrid >= 0 &&
@@ -979,14 +980,16 @@ void CMultiGridDlg::UpdateEnables()
     (!mSingleGridMode || !m_strPrefix.IsEmpty())) || (suspended && !justTasks));
   SetDlgItemText(IDC_BUT_START_RUN, suspended ? "End Run" : "Start Run");
   SetDlgItemText(IDC_BUT_RUN_UNDONE, suspended ? "Resume Run" : "Run Undone");
-  EnableDlgItem(IDC_BUT_RUN_UNDONE, (mEnableRunUndone || suspended) && !justTasks);
+  EnableDlgItem(IDC_BUT_RUN_UNDONE, (mEnableRunUndone || suspended) && !justTasks && 
+    !mSettingOrder);
   EnableDlgItem(IDC_EDIT_OVERLAP, m_bUseMontOverlap && !tasks);
   for (ind = 0; ind < sizeof(noTaskList) / sizeof(int); ind++)
     EnableDlgItem(noTaskList[ind], !tasks);
   for (ind = 0; ind < mNumUsedSlots; ind++) {
     EnableDlgItem(IDC_EDIT_MULGRID_NAME1 + ind, !tasks && !locked && !mSingleGridMode);
-    EnableDlgItem(IDC_RADIO_MULGRID_SEL1 + ind, !tasks && !mSingleGridMode);
-    EnableDlgItem(IDC_CHECK_MULGRID_RUN1 + ind, !tasks);
+    EnableDlgItem(IDC_RADIO_MULGRID_SEL1 + ind, !justTasks && !suspended && 
+      !mSingleGridMode);
+    EnableDlgItem(IDC_CHECK_MULGRID_RUN1 + ind, !justTasks && !suspended);
   }
   EnableDlgItem(IDC_COMBO_FINAL_STATE1, acqStatesEnabled);
   EnableDlgItem(IDC_COMBO_FINAL_STATE2, acqStatesEnabled);
