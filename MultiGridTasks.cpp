@@ -2574,7 +2574,8 @@ void CMultiGridTasks::DoNextSequenceAction(int resume)
     mNavHelper->mAutoContouringDlg->AutoContourImage(&mImBufs[ind], 
       acParam->usePixSize ? acParam->targetPixSizeUm : acParam->targetSizePixels, 
       acParam->minSize, acParam->maxSize, acParam->useAbsThresh ? 0.f : 
-      acParam->relThreshold, acParam->useAbsThresh ? acParam->absThreshold : 0.f);
+      acParam->relThreshold, acParam->useAbsThresh ? acParam->absThreshold : 0.f,
+      false);
     mAutoContouring = true;
     break;
 
@@ -4160,26 +4161,23 @@ void CMultiGridTasks::IdentifyGridOnStage(int stageID, int &stageInd)
   }
   direc.Format("Enter %s of grid on stage or -1 if none:", JEOLscope ? "ID" : "slot #");
   if (KGetOneInt(direc, newID)) {
-    if (newID != stageID) {
-      if (stageInd >= 0) {
-        JeolCartridgeData &jcdEl = mCartInfo->ElementAt(stageInd);
+    stageInd = -1;
+
+    // Make sure at most one grid is on the stage, fix any goofs no matter they happened
+    for (ind1 = 0; ind1 < (int)mCartInfo->GetSize(); ind1++) {
+      JeolCartridgeData &jcdEl = mCartInfo->ElementAt(ind1);
+      if (jcdEl.id == newID) {
+        stageInd = ind1;
+        if (jcdEl.station != JAL_STATION_STAGE)
+          mAdocChanged = true;
+        jcdEl.station = JAL_STATION_STAGE;
+      } else if (jcdEl.station == JAL_STATION_STAGE) {
         jcdEl.station = JAL_STATION_MAGAZINE;
+        mAdocChanged = true;
       }
-      stageInd = -1;
-      if (newID >= 0) {
-        for (ind1 = 0; ind1 < (int)mCartInfo->GetSize(); ind1++) {
-          JeolCartridgeData &jcdEl = mCartInfo->ElementAt(ind1);
-          if (jcdEl.id == newID) {
-            stageInd = ind1;
-            jcdEl.station = JAL_STATION_STAGE;
-            break;
-          }
-        }
-        if (stageInd < 0)
-          AfxMessageBox("That number is not in the inventory", MB_EXCLAME);
-      }
-      mAdocChanged = true;
     }
+    if (stageInd < 0 && newID >= 0)
+      AfxMessageBox("That number is not in the inventory", MB_EXCLAME);
   }
   if (mNavHelper->mMultiGridDlg)
     mNavHelper->mMultiGridDlg->NewGridOnStage(stageInd);
