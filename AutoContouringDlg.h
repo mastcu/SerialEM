@@ -16,6 +16,9 @@ struct AutoContData {
   float interPeakThresh;
   float useThresh;
   float pixel;
+  float singleXcen, singleYcen;
+  float singleSizeFac;
+  CMapDrawItem *polygon;
   bool needReduce;
   bool imIsBytes;
   bool needRefill;
@@ -57,8 +60,11 @@ public:
   void UpdateSettings();
 
   void AutoContourImage(EMimageBuffer *imBuf, float targetSizeOrPix, float minSize, float maxSize,
-    float interPeakThresh, float useThresh);
+    float interPeakThresh, float useThresh, BOOL usePolygon, float xCenter = -1., float yCenter = -1.);
+  CMapDrawItem *EligibleBoundaryPolygon(float pixel, float maxSize);
   static UINT AutoContProc(LPVOID pParam);
+  static void FindSingleSubarea(int nbuf, int subSize, float singleCen, int &nsub, int &subStart, int &subEnd);
+  static void FindPolySubarea(float polyMin, float polyMax, int nbuf, int subSize, int &nsub, int &subStart, int &subEnd);
   int AutoContBusy();
   void AutoContDone();
   void CleanupAutoCont(int error);
@@ -69,6 +75,9 @@ public:
     FloatVec &yBound, float sizeScale, FloatVec &boundDists, bool useBound = false);
   GetMember(bool, AutoContFailed);
   bool DoingAutoContour() { return mDoingAutocont; };
+  bool SinglePolygonMode() { return mIsOpen && m_bMakeOnePoly; };
+  void MakeSinglePolygon(EMimageBuffer *imBuf, float xCenter, float yCenter);
+  void ManageACEnables();
 
 
 // Dialog Data
@@ -90,7 +99,6 @@ protected:
 private:
   void DialogToParams();
   void ParamsToDialog();
-  void ManageACEnables();
   void ManagePostEnables(bool forBusy);
   void ManageGroupSelectors(int set);
   AutoContourParams mParams;
@@ -125,6 +133,8 @@ private:
   IntVec mFirstMapID;
   IntVec mLastMapID;
   std::vector<IntVec> mConvertedInds;
+  int mCurSingleMapID;
+  int mSingleGroupID;
 
 public:
   bool mOpenedFromMultiGrid;
@@ -149,7 +159,7 @@ public:
   int ExternalCreatePolys(float lowerMeanCutoff,
     float upperMeanCutoff, float minSizeCutoff, float SDcutoff, float irregularCutoff,
     float borderDistCutoff, CString &mess);
-  int DoCreatePolys(CString &mess);
+  int DoCreatePolys(CString &mess, bool doAll);
   afx_msg void OnButUndoPolys();
   int GetSquareStats(float &minMean, float &maxMean, float &medianMean);
   int *GetShowGroup() {return &mShowGroup[0] ; };
@@ -197,4 +207,8 @@ public:
   int mNumGroups;
   CString m_strShowGroups;
   CStatic m_statShowGroups;
+  BOOL m_bMakeOnePoly;
+  afx_msg void OnCheckMakeOnePoly();
+  BOOL m_bInsidePolygon;
+  afx_msg void OnCheckInsidePolygon();
 };

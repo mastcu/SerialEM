@@ -3,6 +3,17 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+9/21/24: Added options to autocontouring to make one polygon at a point
+clicked with the mouse and to find contours within a polygon subarea.
+
+9/21/24: Added argument to EndAcquireAtItems to suppress message box at end.
+
+9/21/24: Added property to control minimum tilt angle at which multishot will
+compensate focus for tilt.
+
+9/21/24: Added script commands to open and add images to the secondary stack
+window, and to set the zoom and center position of a buffer.
+
 9/19/24: Fixed question popups in new map routine to properly stop a
 script if encountered with no message box on errors, and bypassed question on
 saving into file if running Acquire at Items (In 4.1).

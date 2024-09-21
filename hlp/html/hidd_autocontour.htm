@@ -56,9 +56,24 @@
       set a specific intensity level for the threshold.</p>
     <p><strong>Range of sizes in microns</strong></p>
     <p>Enter the lower and upper limits for the square size, which will govern which 
-      contours are retained bythe autocontouring operation.&nbsp; These linear sizes 
+      contours are retained by the autocontouring operation.&nbsp; These linear sizes 
       in microns are converted to pixels in the reduced image and squared to provide 
       the limits on the number of pixels in a contoured area.</p>
+    <p><strong>Make single contours by clicking in image</strong></p>
+    <p>When this option is on and the dialog is open, you can add one polygon at a 
+      time by 
+      clicking in an image with the left mouse button inside of a grid square.&nbsp; 
+      The autocontouring routine will extract and analyze a region ~10 times the 
+      maximum square size specified in the dialog, find the one contour that contains 
+      the clicked point, and make a polygon from it.&nbsp; All polygons added this way 
+      will be given a group ID specific to a given map.&nbsp; All of the parameters 
+      above this entry control the autocontouring, and none of the settings below it 
+      are relevant.</p>
+    <p><strong>Find contours only inside current polygon</strong></p>
+    <p>Use this option to find contours within a restricted area defined by drawing a 
+      polygon.&nbsp; The option is enabled only when the current Navigator item is a 
+      polygon at least twice as large as the maximum square size specified in the 
+      dialog.</p>
     <p><strong>Autocontour Image</strong></p>
     <p>Press this button to run the autocontouring.&nbsp; It is multithreaded and can 
       take several to many seconds, depending on the image size, number of contours, 
@@ -85,7 +100,7 @@
     <p>Use this slider or the edit box to set a lower limit on the mean intensity 
       within the grid squares to be displayed.</p>
     <p><strong>Upper mean cutoff</strong></p>
-    <p>Use this slider or the edit box to set an upper limit on the mean intensity 
+    <p>Use this slider or the edit&nbsp;box to set an upper limit on the mean intensity 
       within the grid squares to be displayed.</p>
     <p><strong>Minimum size cutoff</strong></p>
     <p>Use this slider or the edit box to set a lower limit on the size of the grid 
@@ -132,9 +147,10 @@
     <p><strong>Undo</strong></p>
     <p>Use this button to revert the last conversion to polygons.&nbsp; This 
       operation is available only if no additions or deletions from the Navigator 
-      table have been done, and new contours have not been made.&nbsp; Each conversion 
+      table have been done, and new contours have not been made.&nbsp; Adding single 
+      polygons by clicking will disable the ability to undo a previous conversion.&nbsp; Each conversion 
       is kept track of separately, so multiple conversions can be undone, in reverse 
-      order.</p>
+      order.&nbsp; </p>
 
   </body>
 </html>

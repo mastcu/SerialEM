@@ -2433,24 +2433,25 @@
 #define IDC_STAT_GRID3                  3460
 #define IDC_STAT_GRID4                  3461
 #define IDC_CHECK_FRAMES_UNDER_SESSION  3462
-#define IDC_BUT_GRIDUSE_FP              3462
-#define IDC_CHECK1                      3463
+#define IDC_BUT_GRIDUSE_FP              3464
 #define IDC_BUT_APPLY_FP                3463
-#define IDC_CHECK_TOGGLE_ALL            3463
-#define IDC_STAT_GLOBAL_AC              3464
+#define IDC_CHECK_TOGGLE_ALL            3475
+#define IDC_CHECK_MAKE_ONE_POLY         3476
+#define IDC_STAT_GLOBAL_AC              3483
 #define IDC_STAT_GLOBAL_HF              3465
 #define IDC_STAT_GLOBAL_MS              3466
 #define IDC_STAT_GLOBAL_GEN             3467
 #define IDC_BUT_RESTORE_CURFP           3468
-#define IDC_BUT_SET_ORDER               3468
+#define IDC_BUT_SET_ORDER               3477
 #define IDC_BUT_REVERT_AC2              3469
-#define IDC_BUT_REVERT_FP               3469
-#define IDC_BUT_RESET_ORDER             3469
+#define IDC_BUT_REVERT_FP               3478
+#define IDC_BUT_RESET_ORDER             3479
 #define IDC_STAT_FP_TITLE               3470
-#define IDC_STAT_NOTE                   3470
+#define IDC_STAT_NOTE                   3480
 #define IDC_STAT_GLOBAL_FP              3471
-#define IDC_EDIT_GRID_NOTE              3471
+#define IDC_EDIT_GRID_NOTE              3481
 #define IDC_STAT_GRID5                  3472
+#define IDC_CHECK_INSIDE_POLYGON        3482
 #define IDC_STAT_FPSET_CURRENT          3473
 #define IDC_STAT_FPSET_GRID             3474
 #define ID_NEW_IMAGE                    32771
@@ -3021,7 +3022,7 @@
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        289
 #define _APS_NEXT_COMMAND_VALUE         33531
-#define _APS_NEXT_CONTROL_VALUE         3472
+#define _APS_NEXT_CONTROL_VALUE         3484
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif

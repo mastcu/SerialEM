@@ -125,6 +125,7 @@ struct AutoContourParams
   float SDcutoff;         // Cutoff for excluding highly variable squares
   float irregularCutoff;  // Cutoff for excluding based on irregularity
   float borderDistCutoff; // Cutoff for excluding based on distance from border
+  BOOL useCurrentPolygon; // Find contours within the current polygon if any
 };
 
 struct BaseMarkerShift

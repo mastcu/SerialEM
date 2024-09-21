@@ -286,6 +286,7 @@ CNavHelper::CNavHelper(void)
   mAutoContourParams.SDcutoff = EXTRA_NO_VALUE;
   mAutoContourParams.irregularCutoff = 1.;
   mAutoContourParams.borderDistCutoff = 0.;
+  mAutoContourParams.useCurrentPolygon = false;
   float widths[] = {4, 2, 1.5}, increments[] = {3., 1.5, 1.};
   int numCircles[] = {7, 3, 1};
   mHFwidths.insert(mHFwidths.begin(), &widths[0], &widths[3]);

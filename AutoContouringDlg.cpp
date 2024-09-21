@@ -47,6 +47,8 @@ CAutoContouringDlg::CAutoContouringDlg(CWnd* pParent /*=NULL*/)
   , m_fACminSize(2.f)
   , m_fACmaxSize(100.f)
   , m_strShowGroups(_T(""))
+  , m_bMakeOnePoly(FALSE)
+  , m_bInsidePolygon(FALSE)
 {
   mNonModal = true;
   mIsOpen = false;
@@ -54,6 +56,7 @@ CAutoContouringDlg::CAutoContouringDlg(CWnd* pParent /*=NULL*/)
   mFindingFromDialog = false;
   mHaveConts = false;
   mDoingAutocont = false;
+  mCurSingleMapID = 0;
   for (int ind = 0; ind < MAX_AUTOCONT_GROUPS; ind++)
     mShowGroup[ind] = 1;
 }
@@ -117,6 +120,8 @@ void CAutoContouringDlg::DoDataExchange(CDataExchange* pDX)
   DDV_MinMaxInt(pDX, m_intBorderDist, 0, 255);
   DDX_Text(pDX, IDC_STAT_SHOW_GROUPS, m_strShowGroups);
   DDX_Control(pDX, IDC_STAT_SHOW_GROUPS, m_statShowGroups);
+  DDX_Check(pDX, IDC_CHECK_MAKE_ONE_POLY, m_bMakeOnePoly);
+  DDX_Check(pDX, IDC_CHECK_INSIDE_POLYGON, m_bInsidePolygon);
 }
 
 
@@ -144,6 +149,8 @@ BEGIN_MESSAGE_MAP(CAutoContouringDlg, CBaseDlg)
   ON_EN_KILLFOCUS(IDC_EDIT_BORDER_DIST, OnKillfocusEditBorderDist)
   ON_EN_KILLFOCUS(IDC_EDIT_MINSIZE, OnKillfocusEditACMinsize)
   ON_EN_KILLFOCUS(IDC_EDIT_MAXSIZE, OnKillfocusEditACMaxsize)
+  ON_BN_CLICKED(IDC_CHECK_MAKE_ONE_POLY, OnCheckMakeOnePoly)
+  ON_BN_CLICKED(IDC_CHECK_INSIDE_POLYGON, OnCheckInsidePolygon)
 END_MESSAGE_MAP()
 
 
@@ -420,6 +427,20 @@ void CAutoContouringDlg::OnDeltaposSpinNumGroups(NMHDR *pNMHDR, LRESULT *pResult
   mWinApp->RestoreViewFocus();
 }
 
+// Checkbox on making single polygons
+void CAutoContouringDlg::OnCheckMakeOnePoly()
+{
+  UPDATE_DATA_TRUE;
+  mWinApp->RestoreViewFocus();
+}
+
+// Checkbox to constrain with polygon
+void CAutoContouringDlg::OnCheckInsidePolygon()
+{
+  UPDATE_DATA_TRUE;
+  mWinApp->RestoreViewFocus();
+}
+
 // External call to set the groups
 void CAutoContouringDlg::ExternalSetGroups(int numGroups, int which, int *showGroups,
   int numShow)
@@ -459,7 +480,8 @@ void CAutoContouringDlg::OnButMakeContours()
   DialogToParams();
   AutoContourImage(imBuf, mParams.usePixSize ? mParams.targetPixSizeUm :
     mParams.targetSizePixels, mParams.minSize, mParams.maxSize, mParams.useAbsThresh ?
-    0.f : mParams.relThreshold, mParams.useAbsThresh ? mParams.absThreshold : 0.f);
+    0.f : mParams.relThreshold, mParams.useAbsThresh ? mParams.absThreshold : 0.f,
+    mParams.useCurrentPolygon);
   mFindingFromDialog = false;
   ManageAll(false);
 }
@@ -507,7 +529,7 @@ void CAutoContouringDlg::OnButCreatePolys()
 {
   CString mess;
   mWinApp->RestoreViewFocus();
-  if (DoCreatePolys(mess))
+  if (DoCreatePolys(mess, false))
     SEMMessageBox(mess);
 }
 
@@ -538,11 +560,11 @@ int CAutoContouringDlg::ExternalCreatePolys(float lowerMeanCutoff, float upperMe
     borderDistCutoff = mParams.borderDistCutoff;
   SetExclusionsAndGroups(mParams.groupByMean, lowerMeanCutoff, upperMeanCutoff,
     minSizeCutoff, SDcutoff, irregularCutoff, borderDistCutoff);
-  return DoCreatePolys(mess);
+  return DoCreatePolys(mess, false);
 }
 
 // Common function to creat polygons
-int CAutoContouringDlg::DoCreatePolys(CString &mess)
+int CAutoContouringDlg::DoCreatePolys(CString &mess, bool doAll)
 {
   int firstID, lastID, num = 0, numAfter, ind;
   int numBefore = mWinApp->mNavigator->GetNumNavItems();
@@ -550,7 +572,7 @@ int CAutoContouringDlg::DoCreatePolys(CString &mess)
   for (ind = 0; ind < mNumGroups; ind++)
     if (mShowGroup[ind])
       num += mNumInGroup[ind];
-  if (!mHaveConts || !num) {
+  if (!doAll && (!mHaveConts || !num)) {
     mess = "There are no contours to convert" +
       CString(mHaveConts ? " in the selected groups" : "");
     return 1;
@@ -758,6 +780,11 @@ void CAutoContouringDlg::ManageACEnables()
   EnableDlgItem(IDC_EDIT_TO_PIX_SIZE, m_iReduceToWhich);
   EnableDlgItem(IDC_BUT_MAKE_CONTOURS, !mWinApp->DoingTasks());
   EnableDlgItem(IDC_BUT_CLEAR_POLYS, mHaveConts && !mWinApp->DoingTasks());
+  EMimageBuffer *imBuf = mWinApp->GetImBufs() + mWinApp->mMainView->GetImBufIndex();
+  EnableDlgItem(IDC_CHECK_MAKE_ONE_POLY, !mWinApp->DoingTasks());
+  EnableDlgItem(IDC_CHECK_INSIDE_POLYGON, !mWinApp->DoingTasks() &&
+    !mWinApp->GetStartingProgram() &&
+    EligibleBoundaryPolygon(mWinApp->mShiftManager->GetPixelSize(imBuf), m_fACmaxSize));
 }
 
 // Manage dialog items that depend on contours existing
@@ -843,6 +870,7 @@ void CAutoContouringDlg::ParamsToDialog()
   m_fRelThresh = mParams.relThreshold;
   m_fAbsThresh = mParams.absThreshold;
   m_iThreshType = mParams.useAbsThresh;
+  m_bInsidePolygon = mParams.useCurrentPolygon;
   mNumGroups = mParams.numGroups;
   m_strShowGroups.Format("Split into %d", mNumGroups);
   m_iGroupType = mParams.groupByMean;
@@ -925,6 +953,7 @@ void CAutoContouringDlg::DialogToParams()
   mParams.useAbsThresh = m_iThreshType;
   mParams.numGroups = mNumGroups;
   mParams.groupByMean = m_iGroupType;
+  mParams.useCurrentPolygon = m_bInsidePolygon;
 }
 
 
@@ -932,16 +961,19 @@ void CAutoContouringDlg::DialogToParams()
 //
 // Top function to start the process; all the error checking is in the thread
 void CAutoContouringDlg::AutoContourImage(EMimageBuffer *imBuf, float targetSizeOrPix,
-  float minSize, float maxSize, float interPeakThresh, float useThresh)
+  float minSize, float maxSize, float interPeakThresh, float useThresh, BOOL usePolygon, 
+  float xCenter, float yCenter)
 {
   AutoContData *acd = &mAutoContData;
   ScaleMat aMat;
+  CMapDrawItem *item;
   float delX, delY;
+  int pt;
 
   // Except check this now, instead of at the end
   if (!mWinApp->mNavigator->BufferStageToImage(imBuf, aMat, delX, delY)) {
-    SEMMessageBox("Cannot autocontour; the image deoes not enough information to convert"
-      " contours to polygons");
+    SEMMessageBox("Cannot autocontour; the image does not have enough information to "
+      "convert contours to polygons");
     return;
   }
   OnButClearData();
@@ -956,14 +988,30 @@ void CAutoContouringDlg::AutoContourImage(EMimageBuffer *imBuf, float targetSize
   acd->maxSize = maxSize;
   acd->interPeakThresh = interPeakThresh;
   acd->useThresh = useThresh;
+  acd->singleXcen = xCenter;
+  acd->singleYcen = yCenter;
+  acd->singleSizeFac = 10.f;
   acd->tdata = acd->xlist = acd->ylist = NULL;
   acd->fdata = acd->idata = NULL;
   acd->linePtrs = NULL;
   acd->obj = NULL;
+  acd->polygon = NULL;
   acd->errString = "";
   acd->needRefill = acd->imBuf->mCaptured == BUFFER_MONTAGE_OVERVIEW;
   acd->needReduce = false;
   acd->holeFinder = mWinApp->mNavHelper->mFindHoles;
+  if (usePolygon && (xCenter < 0. || yCenter < 0.)) {
+    item = EligibleBoundaryPolygon(acd->pixel, maxSize);
+    if (item) {
+      acd->polygon = item->Duplicate();
+      PrintfToLog("Autocontouring within polygon, item %d (%s)",
+        mWinApp->mNavigator->GetCurrentIndex() + 1, (LPCTSTR)item->mLabel);
+      for (pt = 0; pt < item->mNumPoints; pt++) {
+        mWinApp->mMainView->ExternalStageToImage(imBuf, aMat, delX, delY, item->mPtX[pt],
+          item->mPtY[pt], acd->polygon->mPtX[pt], acd->polygon->mPtY[pt]);
+      }
+    }
+  }
 
   // Start thread
   mAutoContThread = AfxBeginThread(AutoContProc, &mAutoContData,
@@ -975,24 +1023,57 @@ void CAutoContouringDlg::AutoContourImage(EMimageBuffer *imBuf, float targetSize
   mWinApp->SetStatusText(SIMPLE_PANE, "AUTOCONTOURING");
 }
 
+CMapDrawItem *CAutoContouringDlg::EligibleBoundaryPolygon(float pixel, float maxSize)
+{
+  if (!pixel || !mWinApp->mNavigator)
+    return NULL;
+  CMapDrawItem *item = mWinApp->mNavigator->GetCurrentItem();
+  if (item && item->IsPolygon() && sqrtf(mWinApp->mNavigator->ContourArea(
+    item->mPtX, item->mPtY, item->mNumPoints)) > 2. * maxSize / pixel)
+    return item;
+  return NULL;
+}
+
+void CAutoContouringDlg::MakeSinglePolygon(EMimageBuffer *imBuf, float xCenter, 
+  float yCenter)
+{
+  SyncToMasterParams();
+  if (!imBuf->mMapID) {
+    mSingleGroupID = 0;
+  } else if (imBuf->mMapID != mCurSingleMapID) {
+    mCurSingleMapID = imBuf->mMapID;
+    mSingleGroupID = mWinApp->mNavigator->MakeUniqueID();
+  }
+  AutoContourImage(imBuf, mParams.usePixSize ? mParams.targetPixSizeUm :
+    mParams.targetSizePixels, mParams.minSize, mParams.maxSize,
+    mParams.useAbsThresh ? 0.f : mParams.relThreshold,
+    mParams.useAbsThresh ? 0.f : mParams.relThreshold, false, xCenter, yCenter);
+
+}
+
 // The thread process
 UINT CAutoContouringDlg::AutoContProc(LPVOID pParam)
 {
   AutoContData *acd = (AutoContData *)pParam;
   int nxBuf, nyBuf, longest, longix, longiy, idir, err = 0, nxRed, nyRed, dataSize;
-  int numSamples, trim = 8, listSize, ind, ix, iy, numThreads;
+  int numSamples, trim = 8, listSize, ind, ix, iy, numThreads, subSize, nxSub, nySub;
+  int subXstart, subYstart, subXend, subYend, coSingle = -1;
+  Ipoint ptSingle, ll, ur;
   float xOffset = 0., yOffset = 0.;
   KImage *image = acd->imBuf->mImage;
   Ival val;
+  Iobj *objSingle = NULL;
   int coNum, pt;
   Icont *cont;
   bool targetIsPix = acd->targetSizeOrPix < 10.;
+  bool doSingle = acd->singleXcen >= 0 && acd->singleYcen >= 0.;
   int mode = image->getType();
   unsigned char **zoomPtrs;
   float firstVal, lastVal, histDip, peakBelow, peakAbove, sampMin, sampMax, sampMean;
+  float *ptX, *ptY;
   const int maxSamples = 50000, histSize = 1000;
   float samples[maxSamples], bins[histSize], base;
-  float minScale, maxScale, scaleFac;
+  float minScale, maxScale, scaleFac, polyXmin, polyXmax, polyYmin, polyYmax;
   float sqrtBaseFac = 0.05f, sigma = 2.5f;
   Islice slSource;
   float fval, redFac, newFill, fillVal = -1.e30f;
@@ -1040,6 +1121,27 @@ UINT CAutoContouringDlg::AutoContProc(LPVOID pParam)
   }
   acd->needReduce = redFac > 1.25;
 
+  // Find the subarea size and location if doing a single contour
+  subSize = (int)(acd->maxSize * acd->singleSizeFac / acd->pixel);
+  if (doSingle) {
+    FindSingleSubarea(nxBuf, subSize, acd->singleXcen, nxSub, subXstart, subXend);
+    FindSingleSubarea(nyBuf, subSize, acd->singleYcen, nySub, subYstart, subYend);
+    ptSingle.x = acd->singleXcen;
+    ptSingle.y = acd->singleYcen;
+    ptSingle.z = 0.;
+  } else if (acd->polygon) {
+    polyXmin = polyYmin = 1.e30f;
+    polyXmax = polyYmax = -1.e30f;
+    for (ind = 0; ind < acd->polygon->mNumPoints; ind++) {
+      ACCUM_MIN(polyXmin, acd->polygon->mPtX[ind]);
+      ACCUM_MAX(polyXmax, acd->polygon->mPtX[ind]);
+      ACCUM_MIN(polyYmin, acd->polygon->mPtY[ind]);
+      ACCUM_MAX(polyYmax, acd->polygon->mPtY[ind]);
+    }
+    FindPolySubarea(polyXmin, polyXmax, nxBuf, subSize, nxSub, subXstart, subXend);
+    FindPolySubarea(polyYmin, polyYmax, nyBuf, subSize, nySub, subYstart, subYend);
+  }
+
   // Find the fill value and set that refill is needed if there is a long enough stretch
   if (acd->needRefill) {
     sliceFindFillValue(&slSource, &fillVal, &longest, &longix, &longiy, &idir);
@@ -1062,10 +1164,26 @@ UINT CAutoContouringDlg::AutoContProc(LPVOID pParam)
         " %d x %d", redFac, nxRed, nyRed);
       return 1;
     }
+    if (doSingle || acd->polygon) {
+
+      // For single, reduce the subarea and set the full offset
+      nxRed = (int)(nxSub / redFac);
+      nyRed = (int)(nySub / redFac);
+      xOffset = (float)((nxSub - redFac * nxRed) / 2.f + subXstart);
+      yOffset = (float)((nySub - redFac * nyRed) / 2.f + subYstart);
+    }
     if (selectZoomFilter(5, 1. / redFac, &idir)) {
       acd->errString.Format("Error setting filter for reducing by %.1f", redFac);
       return 1;
     }
+  } else if (doSingle || acd->polygon) {
+
+    // Or single with no reduction, set size and offset
+    redFac = 1.;
+    nxRed = nxSub;
+    nyRed = nySub;
+    xOffset = (float)subXstart;
+    yOffset = (float)subYstart;
   } else {
     redFac = 1.;
     nxRed = nxBuf;
@@ -1149,6 +1267,11 @@ UINT CAutoContouringDlg::AutoContProc(LPVOID pParam)
         return 1;
       }
     }
+  } else if (doSingle || acd->polygon) {
+
+    // Or extract unreduced subarea for single point or polygon
+    extractWithBinning(acd->slRefilled->data.b, mode, nxBuf, subXstart, subXend,
+      subYstart, subYend, 1, acd->slReduced->data.b, 0, &ix, &iy);
   }
 
   // Sampling and histogram for threshold
@@ -1212,7 +1335,8 @@ UINT CAutoContouringDlg::AutoContProc(LPVOID pParam)
   if (acd->obj->contsize)
     SquareStatistics(acd, nxRed, nyRed, minScale, maxScale, redFac, 2.25f);
 
-  // Scale the contours back to full image coordinates
+  // Scale the contours back to full image coordinates and find the one around the
+  // clicked point
   for (coNum = 0; coNum < acd->obj->contsize; coNum++) {
     cont = &acd->obj->cont[coNum];
     for (pt = 0; pt < cont->psize; pt++) {
@@ -1220,9 +1344,98 @@ UINT CAutoContouringDlg::AutoContProc(LPVOID pParam)
       cont->pts[pt].y = cont->pts[pt].y * redFac + yOffset;
     }
     imodContourReduce(cont, 0.75);
+    if (doSingle && imodPointInsideCont(cont, &ptSingle))
+      coSingle = coNum;
+  }
+  if (doSingle) {
+    if (coSingle >= 0) {
+
+      // If single contour found, move it to new object and delete the full object
+      objSingle = imodObjectNew();
+      if (objSingle) {
+        cont = &acd->obj->cont[coSingle];
+        err = imodObjectAddContour(objSingle, cont);
+        imodObjectRemoveContour(acd->obj, coSingle);
+        if (err < 0) {
+          imodObjectDelete(objSingle);
+          objSingle = NULL;
+        }
+      }
+    }
+    imodObjectDelete(acd->obj);
+    acd->obj = objSingle;
+  }
+
+  // If polygon, find contours fully inside it
+  if (acd->polygon) {
+    ptX = &acd->polygon->mPtX[0];
+    ptY = &acd->polygon->mPtY[0];
+    listSize = acd->polygon->mNumPoints;
+    for (coNum = acd->obj->contsize - 1; coNum >= 0; coNum--) {
+      cont = &acd->obj->cont[coNum];
+
+      // Get bounding box, if all points inside, it is good
+      imodContourGetBBox(cont, &ll, &ur);
+      if (InsideContour(ptX, ptY, listSize, ll.x, ll.y) &&
+        InsideContour(ptX, ptY, listSize, ll.x, ur.y) &&
+        InsideContour(ptX, ptY, listSize, ur.x, ll.y) &&
+        InsideContour(ptX, ptY, listSize, ur.x, ur.y)) {
+         continue;
+      }
+
+      // Otherwise, test every point, if one is outside, break and remove contour
+      ind = 0;
+      for (pt = 0; pt < cont->psize; pt++) {
+        if (!InsideContour(ptX, ptY, listSize, cont->pts[pt].x, cont->pts[pt].y)) {
+          ind++;
+          break;
+        }
+      }
+      if (ind) {
+
+        // Yes, this is how a contour is deleted.  Have to adjust statistics too
+        acd->obj->contsize--;
+        for (ind = coNum; ind < acd->obj->contsize; ind++)
+          imodContourCopy(&acd->obj->cont[ind + 1], &acd->obj->cont[ind]);
+        VEC_REMOVE_AT(acd->sqrMeans, coNum);
+        VEC_REMOVE_AT(acd->sqrSDs, coNum);
+        VEC_REMOVE_AT(acd->sqrSizes, coNum);
+        VEC_REMOVE_AT(acd->squareness, coNum);
+        VEC_REMOVE_AT(acd->pctBlackPix, coNum);
+        VEC_REMOVE_AT(acd->boundDists, coNum);
+
+      }
+    }
   }
 
   return 0;
+}
+
+// Get start and end coordinates of subarea around single point
+void CAutoContouringDlg::FindSingleSubarea(int nbuf, int subSize, float singleCen, 
+  int &nsub, int &subStart, int &subEnd)
+{
+  int subCen = B3DNINT(singleCen - 0.5);;
+  nsub = B3DMIN(nbuf - 2, subSize);
+  subStart = B3DMAX(1, subCen - nsub / 2);
+  subEnd = B3DMIN(nbuf - 2, subStart + nsub - 1);
+  subStart = subEnd - (nsub - 1);
+}
+
+// Get start and end coordinates of subarea for polygon
+void CAutoContouringDlg::FindPolySubarea(float polyMin, float polyMax, int nbuf, 
+  int subSize, int &nsub, int &subStart, int &subEnd)
+{
+  int pmin = B3DMAX((int)polyMin, 1);
+  int pmax = B3DMIN((int)ceil(polyMax), nbuf - 2);
+  int size = pmax - pmin, extra = 0;
+  subSize = B3DMIN(subSize, nbuf - 2);
+  if (size < subSize)
+    extra = subSize - size;
+  nsub = B3DMIN(nbuf - 2, size + extra);
+  subStart = B3DMAX(1, pmin - extra / 2);
+  subEnd = B3DMIN(nbuf - 2, subStart + nsub - 1);
+  subStart = subEnd - (nsub - 1);
 }
 
 int CAutoContouringDlg::AutoContBusy()
@@ -1233,15 +1446,19 @@ int CAutoContouringDlg::AutoContBusy()
 // Done: convert to polygons
 void CAutoContouringDlg::AutoContDone()
 {
+  CString mess;
   AutoContData *acd = &mAutoContData;
+  bool doSingle = acd->singleXcen >= 0 && acd->singleYcen >= 0.;
   if (!DoingAutoContour())
     return;
-  if (!acd->obj->contsize) {
-    SEMMessageBox("No contours found - is the \"Range of sizes\" too narrow?");
+  if (!acd->obj || !acd->obj->contsize) {
+    SEMMessageBox("No contours found " + CString(doSingle ? "around the point clicked " :
+      "") + "- is the \"Range of sizes\" too narrow?");
     StopAutoCont();
     return;
   }
-  PrintfToLog("Autocontouring found %d contours", acd->obj->contsize);
+  if (!doSingle)
+    PrintfToLog("Autocontouring found %d contours", acd->obj->contsize);
   if (acd->obj->contsize > 1) {
     mStatMinMean = *std::min_element(acd->sqrMeans.begin(), acd->sqrMeans.end());
     mStatMaxMean = *std::max_element(acd->sqrMeans.begin(), acd->sqrMeans.end());
@@ -1276,11 +1493,18 @@ void CAutoContouringDlg::AutoContDone()
     SEMMessageBox("An error occurred converting autocontours to Navigator polygons");
   } else {
     mAutoContFailed = false;
-    mHaveConts = true;
-    if (mIsOpen)
-      ParamsToDialog();
-    ManagePostEnables(false);
-    SetExclusionsAndGroups();
+    if (!doSingle) {
+      mHaveConts = true;
+      if (mIsOpen)
+        ParamsToDialog();
+      ManagePostEnables(false);
+      SetExclusionsAndGroups();
+    } else {
+
+      // Use special routine to bypass groups for single contour
+      mWinApp->mNavigator->AddSingleAutocontPolygon(mPolyArray, mSingleGroupID);
+      mPolyArray.RemoveAll();
+    }
   }
   StopAutoCont();
 }
@@ -1336,6 +1560,8 @@ void CAutoContouringDlg::StopAutoCont()
       sliceFree(acd->slReduced);
     if (!acd->imIsBytes)
       free(acd->idata);
+    delete acd->polygon;
+    acd->polygon = NULL;
   }
   mDoingAutocont = false;
   mWinApp->UpdateBufferWindows();
@@ -1586,4 +1812,3 @@ int CAutoContouringDlg::FindDistancesFromHull(FloatVec &xCenters, FloatVec &yCen
   imodContourDelete(cont);
   return 0;
 }
-

@@ -687,6 +687,8 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
         contParams->SDcutoff = itemFlt[14];
         contParams->irregularCutoff = itemFlt[15];
         contParams->borderDistCutoff = itemFlt[16];
+        if (!itemEmpty[17])
+          contParams->useCurrentPolygon = itemInt[17] != 0;
       } else if (NAME_IS("DriftWaitParams")) {
         dwParams->measureType = B3DMAX(0, B3DMIN(2, itemInt[1]));
         dwParams->driftRate = itemFlt[2];
@@ -1967,13 +1969,14 @@ void CParameterIO::WriteSettings(CString strFileName)
       mWinApp->mNavHelper->GetMHCthreshNumHoles(),
       mWinApp->mNavHelper->GetMHCskipAveragingPos() ? 1 : 0);
     mFile->WriteString(oneState);
-    oneState.Format("AutoContParams %d %f %d %f %f %f %f %d %d %d %f %f %f %f %f %f\n",
+    oneState.Format("AutoContParams %d %f %d %f %f %f %f %d %d %d %f %f %f %f %f %f %d\n",
       contParams->targetSizePixels, contParams->targetPixSizeUm,
       contParams->usePixSize ? 1 : 0, contParams->minSize, contParams->maxSize,
       contParams->relThreshold, contParams->absThreshold, contParams->useAbsThresh ? 1 : 0,
       contParams->numGroups, contParams->groupByMean ? 1 : 0, contParams->lowerMeanCutoff,
       contParams->upperMeanCutoff, contParams->minSizeCutoff, contParams->SDcutoff,
-      contParams->irregularCutoff, contParams->borderDistCutoff);
+      contParams->irregularCutoff, contParams->borderDistCutoff, 
+      contParams->useCurrentPolygon);
     mFile->WriteString(oneState);
     oneState.Format("DriftWaitParams %d %f %d %f %f %d %d %f %d %d %d %f\n", 
       dwParams->measureType, dwParams->driftRate, dwParams->useAngstroms ? 1 :0, 
