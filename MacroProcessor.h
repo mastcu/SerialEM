@@ -186,6 +186,7 @@ public:
   GetSetMember(BOOL, KeepOneLineFocus);
   GetSetMember(CString, PyIncludePath);
   GetSetMember(int, NextParamSetForMont);
+  GetMember(CString, ScriptWindowTitle);
   bool *GetNoCatchOutput() {return &mNoCatchOutput[0] ; };
   std::vector<std::string> *GetVersionsOfPython() { return &mVersionsOfPython; };
   int GetReadOnlyStart(int macNum) { return mReadOnlyStart[macNum]; };
@@ -477,6 +478,7 @@ protected:
   CString mLastPluginCalled;   // Keep track so it is easier to call again with ":"
   int mNextParamSetForMont;    // Parameter set to use for next montage opened
   bool mRamperStarted;         // Flag for focus ramper started
+  CString mScriptWindowTitle;  // Title for window opened by script
 
 public:
   void SetNumCamMacRows(int inVal);

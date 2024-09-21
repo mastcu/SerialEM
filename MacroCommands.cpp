@@ -4722,15 +4722,26 @@ int CMacCmd::Copy(void)
   return 0;
 }
 
-// Show
+// Show, SetBufZoomAndCenter
 int CMacCmd::Show(void)
 {
   CString report;
-  int index;
+  int index, nx, ny, xoff = 0, yoff = 0;
 
   if (ConvertBufferLetter(mStrItems[1], -1, true, index, report))
     ABORT_LINE(report);
   mWinApp->SetCurrentBuffer(index);
+  if (CMD_IS(SHOW))
+    return 0;
+  if (!mItemEmpty[4]) {
+    mImBufs[index].mImage->getSize(nx, ny);
+    if (mItemInt[3] >= 0 && mItemInt[3] <= nx)
+      xoff = (nx / 2) - mItemInt[3];
+    if (mItemInt[4] >= 0 && mItemInt[4] <= ny)
+      yoff =  mItemInt[4] - (ny / 2);
+    mWinApp->mMainView->SetOffsets(xoff, yoff);
+  }
+  mWinApp->mMainView->SetZoom(mItemDbl[2]);
   return 0;
 }
 
@@ -4783,6 +4794,39 @@ int CMacCmd::SetActiveViewByTitle(void)
     }
   }
   SetReportedValues(repval);
+  return 0;
+}
+
+// AddBufToStackWindow
+int CMacCmd::AddBufToStackWindow()
+{
+  int index, angleOrder = 0, nx, ny, maxSize = mItemInt[2];
+  if (ConvertBufferLetter(mStrItems[1], 0, true, index, mStrCopy))
+    ABORT_LINE(mStrCopy);
+  if (maxSize <= 10) {
+    mImBufs[index].mImage->getSize(nx, ny);
+    maxSize = B3DMAX(nx, ny);
+  }
+  if (!mItemEmpty[5]) {
+    angleOrder = mItemInt[5];
+    B3DCLAMP(angleOrder, -1, 1);
+  }
+  mScriptWindowTitle = "Script Stack";
+  if (!mItemEmpty[6])
+    SubstituteLineStripItems(mStrLine, 5, mScriptWindowTitle);
+  index = mBufferManager->AddToStackWindow(index, maxSize, mItemInt[3],
+    mItemEmpty[4] && mItemInt[4] != 0, angleOrder);
+  mScriptWindowTitle = "";
+  if (index)
+    ABORT_NOLINE("Program error: error returned trying to add image to stack window");
+  return 0;
+}
+
+// CloseStackWindow
+int CMacCmd::CloseStackWindow()
+{
+  if (mWinApp->mStackView)
+    mWinApp->mStackView->CloseFrame();
   return 0;
 }
 
@@ -11383,6 +11427,11 @@ int CMacCmd::NavGoToMarker()
 int CMacCmd::EndAcquireAtItems(void)
 {
   ABORT_NONAV;
+  int state = 1;
+  if (mItemInt[1] == 1)
+    state = 2;
+  else if (mItemInt[1] > 1)
+    state = 3;
   if (mNavigator->GetPausedAcquire())
     mNavigator->EndAcquireWithMessage();
   else if (mNavigator->GetAcquiring())
@@ -12461,6 +12510,8 @@ int CMacCmd::AutoContourGridSquares(void)
   float maxSize = (mItemEmpty[6] || mItemFlt[6] < 0) ? param->maxSize : mItemFlt[6];
   float relThresh = param->useAbsThresh ? 0.f : param->relThreshold;
   float absThresh = param->useAbsThresh ? param->absThreshold : 0.f;
+  BOOL usePoly = (mItemEmpty[7] || mItemInt[7] > 0) ?
+    param->useCurrentPolygon : mItemInt[7] > 0;
   if (!mItemEmpty[2] && mItemFlt[2] >= 0)
     target = mItemFlt[2];
   if (!mItemEmpty[3] && mItemFlt[3] >= 0)
@@ -12470,7 +12521,7 @@ int CMacCmd::AutoContourGridSquares(void)
   if (ConvertBufferLetter(mStrItems[1], 0, true, index, mStrCopy))
     ABORT_LINE(mStrCopy);
   mNavHelper->mAutoContouringDlg->AutoContourImage(&mImBufs[index], target, minSize, 
-    maxSize, relThresh, absThresh);
+    maxSize, relThresh, absThresh, usePoly);
   mAutoContouring = true;
   return 0;
 }

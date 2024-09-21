@@ -1792,6 +1792,30 @@
             to 0 if a window is found with that title, 1 if not.</TD>
         </TR>
         <TR>
+          <TD class="scriptcommand">SetBufZoomAndCenter buf #Z [#X #Y]</TD>
+          <TD>Displays the buffer <B>buf</B>, sets its zoom to #Z, and optionally centers the display on 
+            image coordinate <b>#X</b>, <b>#Y</b>, or as close as possible to that point.&nbsp; Enter
+            -1 for <b>#X</b> or <b>#Y</b> to center the image in that dimension.&nbsp; Command added in 4.2, 18-Sep-24.</TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">AddBufToStackWindow buf #M #S [#B] [#O] [title]</TD>
+          <TD>Adds the image in buffer <b>buf</b> to the secondary stack window, opening it if needed.&nbsp; Set
+            <b>#M</b> the the maximum size of the reduced image, or 0 to not reduce the image. Set <b>#S</b> to
+             an arbitrary "section number" that is greater than equal to 0 to have a unique image in the stack 
+            with that number (i.e, an existing image with the same number will be replaced), -1 to simply add
+             the image, or -2 or less to add the image
+            and replace an existing image at index (-<b>#B</b> - 2) in the stack, numbered from 0 (e.g., -3 will
+             replace the image at index 1).&nbsp; Set optional <b>#B</b> non-zero to convert the image
+             to bytes, and <b>#O</b> to 1 or -1 to maintain the stack in order or reverse order
+             by tilt angle.&nbsp; The rest of the text on the line is an optional window title, 
+            replacing the default title 'Script Stack'.&nbsp; Command added in 4.2, 18-Sep-24.
+          </TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">CloseStackWindow</TD>
+          <TD>Closes the stack window if it is open.&nbsp; Command added in 4.2, 18-Sep-24.</TD>
+        </TR>
+        <TR>
           <TD class="scriptcommand">ImageProperties [buf]</TD>
           <TD>Reports size in X and Y, binning, exposure, pixel size, and parameter set
             used&nbsp;for the image in buffer A or in the buffer indicated by <b>buf</b>,
@@ -5184,7 +5208,7 @@
             apply.&nbsp; Command added in 4.1, 18-Oct-23.</TD>
         </TR>
         <TR>
-          <TD class="scriptcommand">AutoContourGridSquares buf [#R] [#H] [#T] [#S] [#L] </TD>
+          <TD class="scriptcommand">AutoContourGridSquares buf [#R] [#H] [#T] [#S] [#L] [#P]</TD>
           <TD>Finds areas above a threshold in the image in [buf] and makes contours around them, then divides them into groups
             that are displayed in different colors, depending on the elimination criteria and settings in the
             <a href="hidd_autocontour.htm">Autocontouring Grid Squares dialog</a>, which need not be open.&nbsp; The 
@@ -5207,6 +5231,7 @@
             to set the minimum area to retain as a polygon.<br />
             &nbsp;&nbsp;&nbsp; <b>#L</b> - Largest size, in microns, for an area; again, the square is 
             used to set the maximum area to retain as a polygon.<br />
+            &nbsp;&nbsp;&nbsp; <b>#P</b> - 1 to contour inside current polygon if any, or 0 not to.<br />
             &nbsp; Command added in 4.1, 16-Nov-22; no longer makes Navigator polygons, 23-Dec-22.
          </TD>
         </TR>
@@ -5568,10 +5593,12 @@
             Navigator must be acquiring at points.</TD>
         </TR>
         <TR>
-          <TD class="scriptcommand">EndAcquireAtItems</TD>
+          <TD class="scriptcommand">EndAcquireAtItems [#]</TD>
           <TD>Stops Navigator acquisition after the current item, equivalent to pressing 'End Nav' in the
              Camera & Script control panel.&nbsp; Acquisition must be either running or 
-            paused.&nbsp;Command added in 4.1, 12-May-23.</TD>
+            paused.&nbsp; Set the optional <b>#</b> to 1 to suppress the popup message about number of items
+            acquire and 2 to also allow running a script set to run at the end, which is otherwise
+             skipped.&nbsp; Command added in 4.1, 12-May-23.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">SkipMoveInNavAcquire [#]</TD>
