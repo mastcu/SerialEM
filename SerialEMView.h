@@ -97,6 +97,7 @@ public:
   SetMember(COLORREF, FlashColor)
   GetMember(bool, DrewLDAreasAtNavPt);
   static GetMember(bool, TakingSnapshot);
+  void SetOffsets(int inX, int inY) { m_iOffsetX = inX, m_iOffsetY = inY; };
   void GetCenterForLDAreas(float &xcen, float &ycen) { xcen = mNavLDAreasXcenter; ycen = mNavLDAreasYcenter; };
   virtual ~CSerialEMView();
   double GetZoom() {return mZoom; };

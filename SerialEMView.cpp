@@ -186,7 +186,9 @@ BOOL CSerialEMView::PreCreateWindow(CREATESTRUCT& cs)
 
     if (type == 2) {
       mImBufArraySize = 1;
-      str = mWinApp->m_strTitle;
+      str = mWinApp->mMacroProcessor->GetScriptWindowTitle();
+      if (str.IsEmpty())
+        str = mWinApp->m_strTitle;
       if (mWinApp->mMultiTSTasks->GetAssessingRange())
         str = "Tilt Range Sample";
       mStackWindow = true;
@@ -256,6 +258,7 @@ void CSerialEMView::OnDestroy()
 
 void CSerialEMView::CloseFrame()
 {
+  mWinApp->mActiveView = mWinApp->mMainView;
   CChildFrame *childFrame = (CChildFrame *)GetParent();
   childFrame->OnClose();
 }
@@ -648,7 +651,8 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
 
   // If this is the first draw, set up the zoom optimally
   // 7/7/03: no longer need to fix main frame window title; set child titles
-  if (mFirstDraw) {
+  if (mFirstDraw && !(mWinApp->GetStartingProgram() && 
+    (!mImBufs || !mImBufs[mImBufIndex].mImage))) {
     FindEffectiveZoom();
     CChildFrame *childFrame = (CChildFrame *)GetParent();
     mFirstDraw = false;
@@ -2251,9 +2255,8 @@ void CSerialEMView::SetZoom(double inZoom)
 void CSerialEMView::NewZoom()
 {
   double effZoom;
-  if (!mImBufs[mImBufIndex].mImage)
-    return;
-  DrawImage();
+  if (mImBufs[mImBufIndex].mImage)
+    DrawImage();
   if (mImBufs[mImBufIndex].mImageScale)
     mWinApp->mImageLevel.NewZoom(mZoom);
   
@@ -2343,6 +2346,12 @@ void CSerialEMView::OnLButtonUp(UINT nFlags, CPoint point)
         crossLen = (float)(2 * mWinApp->ScaleValueForDPI(9) / (mZoom < 1 ? mZoom : 1.));
         mNavUsedLastLButtonUp = mWinApp->mNavHelper->mHoleFinderDlg->MouseSelectPoint(
           imBuf, shiftX, shiftY, crossLen, false);
+      }
+
+      if (legal && mWinApp->mNavHelper->mAutoContouringDlg->SinglePolygonMode() &&
+        mMainWindow && !mWinApp->DoingTasks()) {
+        mWinApp->mNavHelper->mAutoContouringDlg->MakeSinglePolygon(imBuf, shiftX, shiftY);
+        mNavUsedLastLButtonUp = true;
       }
 
       // Navigator gets first crack if it is either a legal point or a valid hit for
@@ -3202,7 +3211,7 @@ void CSerialEMView::ResizeToFit(int iBordLeft, int iBordTop, int iBordRight,
 
 // Report a resize event other than one caused by ResizeToFit or one of the first two
 // right after opening the FFT window
-void CSerialEMView::OnSize(UINT nType, int cx, int cy) 
+void CSerialEMView::OnSize(UINT nType, int cx, int cy)
 {
   CRect rect;
   float xRatio, yRatio;
@@ -3398,7 +3407,8 @@ int CSerialEMView::AddBufferToStack(EMimageBuffer * imBuf, int angleOrder)
 
   // First look for a matching section number
   for (i = 0; i < mImBufNumber; i++) {
-    if (imBuf->mSecNumber >= 0 && imBuf->mSecNumber == mImBufs[i].mSecNumber) {
+    if ((imBuf->mSecNumber >= 0 && imBuf->mSecNumber == mImBufs[i].mSecNumber) ||
+      (imBuf->mSecNumber < -1 && i == -imBuf->mSecNumber - 2)) {
       mImBufs[i].DeleteImage();
       delete mImBufs[i].mPixMap;
       delete mImBufs[i].mFiltPixMap;
