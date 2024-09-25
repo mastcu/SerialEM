@@ -7820,7 +7820,7 @@ BEGIN
     IDC_BUT_RESTORE_CURFP   "Restore the global Focus area position to its value before Save/Apply"
     IDC_BUT_REVERT_FP       "Remove separate stored Focus area position for this grid"
     IDC_CHECK_TOGGLE_ALL    "Turn all grid checkboxes on or off"
-    IDC_CHECK_MAKE_ONE_POLY "Enable making a polygon by clicking inside a grid square"
+    IDC_CHECK_MAKE_ONE_POLY "Enable making a polygon by Ctrl-Shift middle click inside a grid square"
     IDC_BUT_SET_ORDER       "Start or stop setting the order in which to run grids"
     IDC_BUT_RESET_ORDER     "Discard the custom order and use default order for running grids"
     IDC_CHECK_INSIDE_POLYGON

@@ -56,7 +56,9 @@ CAutoContouringDlg::CAutoContouringDlg(CWnd* pParent /*=NULL*/)
   mFindingFromDialog = false;
   mHaveConts = false;
   mDoingAutocont = false;
+  mDidSingleMessage = false;
   mCurSingleMapID = 0;
+  mSingleSizeFac = 6.f;
   for (int ind = 0; ind < MAX_AUTOCONT_GROUPS; ind++)
     mShowGroup[ind] = 1;
 }
@@ -432,6 +434,9 @@ void CAutoContouringDlg::OnCheckMakeOnePoly()
 {
   UPDATE_DATA_TRUE;
   mWinApp->RestoreViewFocus();
+  if (m_bMakeOnePoly && !mDidSingleMessage)
+    SEMAppendToLog("Use Ctrl-Shift and middle mouse button to add polygons");
+  mDidSingleMessage = true;
 }
 
 // Checkbox to constrain with polygon
@@ -783,8 +788,7 @@ void CAutoContouringDlg::ManageACEnables()
   EMimageBuffer *imBuf = mWinApp->GetImBufs() + mWinApp->mMainView->GetImBufIndex();
   EnableDlgItem(IDC_CHECK_MAKE_ONE_POLY, !mWinApp->DoingTasks());
   EnableDlgItem(IDC_CHECK_INSIDE_POLYGON, !mWinApp->DoingTasks() &&
-    !mWinApp->GetStartingProgram() &&
-    EligibleBoundaryPolygon(mWinApp->mShiftManager->GetPixelSize(imBuf), m_fACmaxSize));
+    !mWinApp->GetStartingProgram() && EligibleBoundaryPolygon(m_fACmaxSize));
 }
 
 // Manage dialog items that depend on contours existing
@@ -990,7 +994,7 @@ void CAutoContouringDlg::AutoContourImage(EMimageBuffer *imBuf, float targetSize
   acd->useThresh = useThresh;
   acd->singleXcen = xCenter;
   acd->singleYcen = yCenter;
-  acd->singleSizeFac = 10.f;
+  acd->singleSizeFac = mSingleSizeFac;
   acd->tdata = acd->xlist = acd->ylist = NULL;
   acd->fdata = acd->idata = NULL;
   acd->linePtrs = NULL;
@@ -1001,7 +1005,7 @@ void CAutoContouringDlg::AutoContourImage(EMimageBuffer *imBuf, float targetSize
   acd->needReduce = false;
   acd->holeFinder = mWinApp->mNavHelper->mFindHoles;
   if (usePolygon && (xCenter < 0. || yCenter < 0.)) {
-    item = EligibleBoundaryPolygon(acd->pixel, maxSize);
+    item = EligibleBoundaryPolygon(maxSize);
     if (item) {
       acd->polygon = item->Duplicate();
       PrintfToLog("Autocontouring within polygon, item %d (%s)",
@@ -1023,13 +1027,13 @@ void CAutoContouringDlg::AutoContourImage(EMimageBuffer *imBuf, float targetSize
   mWinApp->SetStatusText(SIMPLE_PANE, "AUTOCONTOURING");
 }
 
-CMapDrawItem *CAutoContouringDlg::EligibleBoundaryPolygon(float pixel, float maxSize)
+CMapDrawItem *CAutoContouringDlg::EligibleBoundaryPolygon(float maxSize)
 {
-  if (!pixel || !mWinApp->mNavigator)
+  if (!mWinApp->mNavigator)
     return NULL;
   CMapDrawItem *item = mWinApp->mNavigator->GetCurrentItem();
   if (item && item->IsPolygon() && sqrtf(mWinApp->mNavigator->ContourArea(
-    item->mPtX, item->mPtY, item->mNumPoints)) > 2. * maxSize / pixel)
+    item->mPtX, item->mPtY, item->mNumPoints)) > 2. * maxSize)
     return item;
   return NULL;
 }
@@ -1037,6 +1041,32 @@ CMapDrawItem *CAutoContouringDlg::EligibleBoundaryPolygon(float pixel, float max
 void CAutoContouringDlg::MakeSinglePolygon(EMimageBuffer *imBuf, float xCenter, 
   float yCenter)
 {
+  ScaleMat aInv;
+  CMapDrawItem *item;
+  MapItemArray *itemArray = mWinApp->mNavigator->GetItemArray();
+  float delX, delY, stageX, stageY, xInPiece, yInPiece;
+  int pieceIndex, ind, registration = mWinApp->mNavigator->GetCurrentRegistration();
+
+  // Test for whether the point is already inside a polygon
+  if (mWinApp->mNavigator->ConvertMousePoint(imBuf, xCenter, yCenter, stageX, stageY,
+    aInv, delX, delY, xInPiece, yInPiece, pieceIndex)) {
+    for (ind = 0; ind < (int)itemArray->GetSize(); ind++) {
+      item = itemArray->GetAt(ind);
+      if (item->mRegistration == registration && (item->mDraw || item->mAcquire) &&
+        item->IsPolygon()) {
+        if (fabs(stageX - item->mStageX) < 3. * mParams.maxSize &&
+          fabs(stageY - item->mStageY) < 3. * mParams.maxSize) {
+          if (sqrtf(mWinApp->mNavigator->ContourArea(item->mPtX, item->mPtY,
+            item->mNumPoints)) < 2. * mParams.maxSize &&
+            InsideContour(item->mPtX, item->mPtY, item->mNumPoints, stageX, stageY)) {
+            SEMMessageBox("You cannot add a polygon around a point that is already inside"
+              " a small polygon");
+            return;
+          }
+        }
+      }
+    }
+  }
   SyncToMasterParams();
   if (!imBuf->mMapID) {
     mSingleGroupID = 0;
@@ -1047,7 +1077,7 @@ void CAutoContouringDlg::MakeSinglePolygon(EMimageBuffer *imBuf, float xCenter,
   AutoContourImage(imBuf, mParams.usePixSize ? mParams.targetPixSizeUm :
     mParams.targetSizePixels, mParams.minSize, mParams.maxSize,
     mParams.useAbsThresh ? 0.f : mParams.relThreshold,
-    mParams.useAbsThresh ? 0.f : mParams.relThreshold, false, xCenter, yCenter);
+    mParams.useAbsThresh ? mParams.absThreshold : 0.f, false, xCenter, yCenter);
 
 }
 
@@ -1452,8 +1482,9 @@ void CAutoContouringDlg::AutoContDone()
   if (!DoingAutoContour())
     return;
   if (!acd->obj || !acd->obj->contsize) {
-    SEMMessageBox("No contours found " + CString(doSingle ? "around the point clicked " :
-      "") + "- is the \"Range of sizes\" too narrow?");
+    SEMMessageBox("No contours found " + CString(doSingle ? "around the point clicked " 
+      "- was the point outside the grid square or" : " - ") + 
+      " is the \"Range of sizes\" too narrow?");
     StopAutoCont();
     return;
   }

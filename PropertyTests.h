@@ -386,6 +386,7 @@ INT_PROP_TEST("MulGridNumMMMcombos", mWinApp->mMultiGridTasks->, NumMMMstateComb
 INT_PROP_TEST("MulGridNumFinalCombos", mWinApp->mMultiGridTasks->, NumFinalStateCombos)
 FLOAT_PROP_TEST("GridReloadMaxCenShift", mWinApp->mMultiGridTasks->, RRGmaxCenShift)
 BOOL_PROP_TEST("MulGridSkipRealign", mWinApp->mMultiGridTasks->, SkipGridRealign)
+FLOAT_PROP_TEST("AutocontSubareaSizeFac", navHelper->mAutoContouringDlg->, SingleSizeFac)
 
 #endif
 #ifdef PROP_TEST_SECT4

@@ -61,7 +61,7 @@ public:
 
   void AutoContourImage(EMimageBuffer *imBuf, float targetSizeOrPix, float minSize, float maxSize,
     float interPeakThresh, float useThresh, BOOL usePolygon, float xCenter = -1., float yCenter = -1.);
-  CMapDrawItem *EligibleBoundaryPolygon(float pixel, float maxSize);
+  CMapDrawItem *EligibleBoundaryPolygon(float maxSize);
   static UINT AutoContProc(LPVOID pParam);
   static void FindSingleSubarea(int nbuf, int subSize, float singleCen, int &nsub, int &subStart, int &subEnd);
   static void FindPolySubarea(float polyMin, float polyMax, int nbuf, int subSize, int &nsub, int &subStart, int &subEnd);
@@ -78,6 +78,7 @@ public:
   bool SinglePolygonMode() { return mIsOpen && m_bMakeOnePoly; };
   void MakeSinglePolygon(EMimageBuffer *imBuf, float xCenter, float yCenter);
   void ManageACEnables();
+  GetSetMember(float, SingleSizeFac);
 
 
 // Dialog Data
@@ -112,6 +113,7 @@ private:
   bool mAutoContFailed;         // Flag cleared at successful completion
   bool mFindingFromDialog;
   bool mDoingAutocont;
+  float mSingleSizeFac;
   float mStatMinSize;
   float mStatMaxSize;
   float mStatMinMean;
@@ -135,6 +137,7 @@ private:
   std::vector<IntVec> mConvertedInds;
   int mCurSingleMapID;
   int mSingleGroupID;
+  bool mDidSingleMessage;
 
 public:
   bool mOpenedFromMultiGrid;

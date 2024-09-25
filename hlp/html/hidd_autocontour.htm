@@ -62,13 +62,15 @@
     <p><strong>Make single contours by clicking in image</strong></p>
     <p>When this option is on and the dialog is open, you can add one polygon at a 
       time by 
-      clicking in an image with the left mouse button inside of a grid square.&nbsp; 
+      holding down the Ctrl and Shift keys and clicking inside of a grid square in an image with the 
+      middle mouse button.&nbsp; 
       The autocontouring routine will extract and analyze a region ~10 times the 
       maximum square size specified in the dialog, find the one contour that contains 
       the clicked point, and make a polygon from it.&nbsp; All polygons added this way 
       will be given a group ID specific to a given map.&nbsp; All of the parameters 
       above this entry control the autocontouring, and none of the settings below it 
-      are relevant.</p>
+      are relevant.&nbsp; No contour will be added if the point is already inside a 
+      relatively small polygon that is set either to be drawn or to be acquired.</p>
     <p><strong>Find contours only inside current polygon</strong></p>
     <p>Use this option to find contours within a restricted area defined by drawing a 
       polygon.&nbsp; The option is enabled only when the current Navigator item is a 

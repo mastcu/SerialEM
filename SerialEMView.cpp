@@ -2348,12 +2348,6 @@ void CSerialEMView::OnLButtonUp(UINT nFlags, CPoint point)
           imBuf, shiftX, shiftY, crossLen, false);
       }
 
-      if (legal && mWinApp->mNavHelper->mAutoContouringDlg->SinglePolygonMode() &&
-        mMainWindow && !mWinApp->DoingTasks()) {
-        mWinApp->mNavHelper->mAutoContouringDlg->MakeSinglePolygon(imBuf, shiftX, shiftY);
-        mNavUsedLastLButtonUp = true;
-      }
-
       // Navigator gets first crack if it is either a legal point or a valid hit for
       // selection
       if (!mNavUsedLastLButtonUp && ((!mDrewLDAreasAtNavPt || (!shiftKey && ctrlKey)) && 
@@ -2672,34 +2666,39 @@ void CSerialEMView::OnMButtonDown(UINT nFlags, CPoint point)
   EMimageBuffer *imBuf;
   CString str;
   CRect rect;
+  BOOL legal, isFFT;
   bool ctrl = GetAsyncKeyState(VK_CONTROL) / 2 != 0;
   bool shifted = GetAsyncKeyState(VK_SHIFT) / 2 != 0;
   if (ctrl && !shifted) {
     SetupZoomAroundPoint(&point);
     ZoomUp();
-  } else if (mImBufs && mImBufs[mImBufIndex].mImage && 
-    ((mWinApp->mNavigator && ((mWinApp->mNavigator->TakingMousePoints() && !shifted) ||
-      (shifted && !ctrl))) || mImBufs[mImBufIndex].mCaptured == BUFFER_FFT ||
-    mImBufs[mImBufIndex].mCaptured == BUFFER_LIVE_FFT)) {
-      imBuf = &mImBufs[mImBufIndex];
-      GetClientRect(&rect);
-      if (ConvertMousePoint(&rect, imBuf->mImage, &point, shiftX, shiftY)) {
-        if (imBuf->mCaptured == BUFFER_FFT || imBuf->mCaptured == BUFFER_LIVE_FFT) {
-          pixel = mShiftManager->GetPixelSize(imBuf);
-          if (pixel) {
-            shiftY = (float)(sqrt(pow(shiftX - imBuf->mImage->getWidth() / 2., 2.) +
-              pow(shiftY - imBuf->mImage->getHeight() / 2., 2.)) / 
-              imBuf->mImage->getWidth());
-            shiftX = 10000.f * pixel / B3DMAX(0.0001f, shiftY);
-            str.Format("Freq. %.3g/A   Period %.1f A", 1. / shiftX, shiftX);
-            mWinApp->SetStatusText(MEDIUM_PANE, str);
-          }
-        } else {
-          mWinApp->mNavigator->UserMousePoint(imBuf, shiftX, shiftY, mPointNearImageCenter
-            , VK_MBUTTON);
-          DrawImage();
+  } else if (mImBufs && mImBufs[mImBufIndex].mImage) {
+    GetClientRect(&rect);
+    imBuf = &mImBufs[mImBufIndex];
+    legal = ConvertMousePoint(&rect, imBuf->mImage, &point, shiftX, shiftY);
+    isFFT = imBuf->mCaptured == BUFFER_FFT || imBuf->mCaptured == BUFFER_LIVE_FFT;
+    if (ctrl && shifted && legal && mMainWindow && 
+      mWinApp->mNavHelper->mAutoContouringDlg->SinglePolygonMode() &&
+      !mWinApp->DoingTasks()) {
+      mWinApp->mNavHelper->mAutoContouringDlg->MakeSinglePolygon(imBuf, shiftX, shiftY);
+    } else if (legal && (isFFT || (mWinApp->mNavigator && 
+      ((mWinApp->mNavigator->TakingMousePoints() && !shifted) || (shifted && !ctrl))))) {
+      if (isFFT) {
+        pixel = mShiftManager->GetPixelSize(imBuf);
+        if (pixel) {
+          shiftY = (float)(sqrt(pow(shiftX - imBuf->mImage->getWidth() / 2., 2.) +
+            pow(shiftY - imBuf->mImage->getHeight() / 2., 2.)) /
+            imBuf->mImage->getWidth());
+          shiftX = 10000.f * pixel / B3DMAX(0.0001f, shiftY);
+          str.Format("Freq. %.3g/A   Period %.1f A", 1. / shiftX, shiftX);
+          mWinApp->SetStatusText(MEDIUM_PANE, str);
         }
+      } else {
+        mWinApp->mNavigator->UserMousePoint(imBuf, shiftX, shiftY, mPointNearImageCenter
+          , VK_MBUTTON);
+        DrawImage();
       }
+    }
   }
 
   CView::OnMButtonDown(nFlags, point);
