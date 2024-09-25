@@ -1244,8 +1244,13 @@ static VOID CALLBACK UpdateProc(
   CSerialEMApp *winApp = (CSerialEMApp *)AfxGetApp();
   winApp->mScope->ScopeUpdate(dwTime);
 }
-  
-#define CHECK_TIME(a) if (reportTime) wallTimes[a] = wallTime() - wallStart;
+
+#define CHECK_TIME(a) if (reportTime) \
+  {newWall = wallTime(); \
+   cumWall += newWall - wallStart;  \
+   wallTimes[a] = newWall - wallStart;  \
+   wallStart = newWall;\
+ }
 
 void CEMscope::ScopeUpdate(DWORD dwTime)
 {
@@ -1267,7 +1272,7 @@ void CEMscope::ScopeUpdate(DWORD dwTime)
   CShiftManager *shiftManager = mWinApp->mShiftManager;
   int lastMag;
   float alpha = -999.;
-  double diffFocus = -999.;
+  double diffFocus = -999., newWall, cumWall = 0.;
   double wallStart, wallTimes[12] = {0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.};
   bool reportTime = GetDebugOutput('u') && (mAutosaveCount % 10 == 0);
   static int firstTime = 1;
@@ -1874,7 +1879,22 @@ void CEMscope::ScopeUpdate(DWORD dwTime)
   else
     ScopeMutexRelease("UpdateProc"); 
   if (reportTime) {
-    PrintfToLog("Update time %.1f msec", 1000. * (wallTime() - wallStart));
+    /*
+    0: stage pos & tilt & readiness
+    1: image shift
+    2: STEM mode if STEM
+    3: beam blank & probe mode
+    4: FEI only: Mag index.  If diff: cam length, cam len index, submode, diff
+    Focus if LD continuous
+    5: Mag index generally
+    6: image shift/mag handling if changed
+    7: Screen pos main and small, intensity/IA, spot size, screen current,
+    defocus, objective strength, alpha
+    8: vacuum (sampled intermittently)
+    9: Updating low dose, maybe blanking
+    10: EFTEM mode, column valve
+    */
+    PrintfToLog("Update time %.1f msec", 1000. * cumWall);
     PrintfToLog("Components %.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f", 
       1000.*wallTimes[0],1000.*wallTimes[1], 1000.*wallTimes[2],1000.*wallTimes[3],
       1000.*wallTimes[4],1000.*wallTimes[5],1000.*wallTimes[6],
@@ -2083,6 +2103,7 @@ void CEMscope::updateEFTEMSpectroscopy(BOOL &EFTEM)
 
   } else { // FEI-like
     int lvalue;
+    double wallStart = wallTime();
     PLUGSCOPE_GET(EFTEMMode, lvalue, 1);
     EFTEM = (lvalue == lpEFTEM);
   }
