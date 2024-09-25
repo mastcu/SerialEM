@@ -9456,7 +9456,7 @@ int CNavigatorDlg::GetNavFilename(BOOL openFile, DWORD flags, bool mergeFile)
   if (mHelper->mMultiGridDlg && !openFile && !mNavFilename.IsEmpty()) {
     UtilSplitPath(mNavFilename, str, str2);
   }
-  MyFileDialog fileDlg(openFile, ".nav", NULL, flags, szFilter,NULL, !str.IsEmpty());
+  MyFileDialog fileDlg(openFile, ".nav", NULL, flags, szFilter,NULL, str.IsEmpty());
   if (!str.IsEmpty())
     fileDlg.mfdTD.lpstrInitialDir = str;
   int result = fileDlg.DoModal();
