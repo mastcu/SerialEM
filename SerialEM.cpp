@@ -3188,6 +3188,27 @@ void DLL_IM_EX SEMSetUtapiConnected(unsigned int flags)
 {
   ((CSerialEMApp *)AfxGetApp())->mScope->SetUtapiConnected(flags);
 }
+
+// For the given set of modes (coming from UTAPI), return the offset in the appropriate
+// mag or camera length table, either 1 or the starting index of a mode
+int DLL_IM_EX SEMGetTableOffsetForMode(int STEM, int EFTEM, int probe, int lowMag, 
+  int diffrac)
+{
+  CEMscope *scope = ((CSerialEMApp *)AfxGetApp())->mScope;
+  if (STEM && !diffrac)
+    return -1;
+  if (STEM) {
+    if (lowMag)
+      return probe ? scope->GetLowestMicroSTEMmag() : 1;
+    else
+      return scope->GetLowestSTEMnonLMmag(probe);
+  } else if (diffrac) {
+    return lowMag ? LAD_INDEX_BASE + 1 : 1;
+  } else {
+    return lowMag ? 1 : scope->GetLowestMModeMagInd(EFTEM);
+  }
+  return -1;
+}
 HitachiParams *SEMGetHitachiParams()
 {
   return &((CSerialEMApp *)AfxGetApp())->mHitachiParams;
@@ -4991,6 +5012,12 @@ int *SEMGetCamLenTable()
 {
   CSerialEMApp *winApp = (CSerialEMApp *)AfxGetApp();
   return winApp->GetCamLenTable();
+}
+
+void DLL_IM_EX SEMNumCameraLengths(int &reg, int &LAD)
+{
+  CEMscope *scope = ((CSerialEMApp *)AfxGetApp())->mScope;
+  scope->GetNumCameraLengths(reg, LAD);
 }
 
 static int sNumFEIChannels = 3;
