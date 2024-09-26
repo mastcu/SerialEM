@@ -10302,7 +10302,7 @@ int CMacCmd::SetFolderForFrames(void)
     (mCamParams->FEItype == FALCON3_TYPE && !mCamera->GetSubdirsOkInFalcon3Save())) {
     if (mStrCopy.FindOneOf("/\\") >= 0)
       ABORT_LINE("Only a single folder can be entered for this camera type in:\n\n");
-  } else {
+  } else if (!(mCamParams->FEItype && FCAM_ADVANCED(mCamParams))) {
     index = mStrCopy.GetAt(0);
     if (!(((index == ' / ' || index == '\\') &&
       (mStrCopy.GetAt(1) == ' / ' || mStrCopy.GetAt(1) == '\\')) ||
