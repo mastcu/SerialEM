@@ -3,6 +3,10 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+9/26/24: SEM_4-1-17
+9/26/24: Fixed montage setup so it opens HQ settings when MontageAllowHQinLD
+property is used (In 4.1).
+
 9/26/24: Fixed SetFolderForFrames for Falcon, broken 7/15. (In 4.1).
 
 9/19/24: Fixed question popups in new map routine to properly stop a
