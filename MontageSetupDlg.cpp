@@ -1430,7 +1430,8 @@ void CMontageSetupDlg::OnDeltaposSpinBlockSize(NMHDR *pNMHDR, LRESULT *pResult)
 void CMontageSetupDlg::ManageStageAndGeometry(BOOL reposition)
 {
   BOOL states[5] = {0, 0, true, 0, true};
-  BOOL bEnable = m_bMoveStage && m_bUseHq && !mLowDoseMode;
+  BOOL hqOK = !mLowDoseMode || mWinApp->mMontageController->GetAllowHQMontInLD();
+  BOOL bEnable = m_bMoveStage && m_bUseHq && hqOK;
   BOOL focusOK = mParam.magIndex >= 
     mWinApp->mScope->GetLowestNonLMmag(&mCamParams[mCurrentCamera]);
   BOOL tmpEnable, realignOn = false; //m_bRealign && m_iYnFrames >= MIN_Y_MONT_REALIGN;
@@ -1455,8 +1456,7 @@ void CMontageSetupDlg::ManageStageAndGeometry(BOOL reposition)
   EnableDlgItem(IDC_STAT_IS_BLOCKPIECES, tmpEnable && m_bImShiftInBlocks);
   EnableDlgItem(IDC_STAT_IS_BLOCK_STARS, tmpEnable && m_bImShiftInBlocks);
 
-  m_butUseHq.EnableWindow(m_bMoveStage && (!mLowDoseMode ||
-    mWinApp->mMontageController->GetAllowHQMontInLD()));
+  m_butUseHq.EnableWindow(m_bMoveStage && hqOK);
   m_butFocusEach.EnableWindow(bEnable && focusOK && 
     !(m_bFocusBlocks || m_bImShiftInBlocks));
   tmpEnable = bEnable && focusOK && (m_bFocusAll || 
