@@ -5891,7 +5891,7 @@ void CEMscope::PositionChangingPartOfIS(double curISX, double curISY,
   GetTiltAxisIS(axisISX, axisISY);
   mShiftToTiltAxis = false;
   GetTiltAxisIS(offsetsX, offsetsY);
-  mShiftToTiltAxis = mShiftToTiltAxis;
+  mShiftToTiltAxis = shiftSave;
   if (mLowDoseMode) {
     area = mChangingLDArea > 0 ? mLDChangeCurArea : mLowDoseSetArea;
     if (IS_AREA_VIEW_OR_SEARCH(area)) {
@@ -9781,7 +9781,7 @@ UINT CEMscope::LongOperationProc(LPVOID pParam)
               &rotation, &cartType);
             if (idAtZero > 0) {
               jcData.id = idAtZero;
-              valid = jcData.name && jcData.name[0] != 0x00;
+              valid = name != NULL;
               jcData.name = valid ? name : "";
               jcData.slot = valid ? slot : 0;
               jcData.station = valid ? station: 0;
