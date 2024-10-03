@@ -3556,16 +3556,11 @@ CMapDrawItem *CNavigatorDlg::AddPointMarkedOnBuffer(EMimageBuffer *imBuf, float 
                                                     float stageY, int groupID)
 { 
   CMapDrawItem *item;
-  SEMTrace('1', "add point %f %f %d", stageX, stageY, groupID);
   item = MakeNewItem(groupID);
   item->mStageX = stageX;
   item->mStageY = stageY;
-  SEMTrace('1', "item %p", item);
   SetupItemMarkedOnBuffer(imBuf, item);
-  SEMTrace('1', "setup with Z %f  IDs %d %d", item->mStageZ, item->mMapID, 
-    item->mDrawnOnMapID);
   item->AppendPoint(stageX, stageY);
-  SEMTrace('1', "appended");
   return item;
 }
 
@@ -8105,7 +8100,8 @@ int CNavigatorDlg::AskIfSave(CString reason)
   if (mChanged && !mNavFilename.IsEmpty() && mWinApp->mDocWnd->GetAutoSaveNav())
     return DoSave(false);
 
-  UINT action = MessageBox("Save Navigator entries before " + reason, NULL, 
+  UINT action = MessageBox("Save Navigator entries before " + reason + 
+    "\r\n(Turn on Autosave in Navigator Options submenu to avoid this message)", NULL, 
     MB_YESNOCANCEL | MB_ICONQUESTION);
   if (action == IDCANCEL)
     return 1;
@@ -9383,7 +9379,7 @@ int CNavigatorDlg::LoadNavFile(bool checkAutosave, bool mergeFile, CString *inFi
     SEMMessageBox(str, MB_EXCLAME);
     returnVal = 1;
   }
-  mHelper->CheckForBadParamIndexes();
+  mHelper->CheckForBadParamIndexes("");
   mHelper->RecomputeArrayRefs();
 
   // Set up list box and counters
@@ -9636,11 +9632,13 @@ void CNavigatorDlg::AcquireAreas(int source, bool dlgClosing, bool useTempParams
   }
   mRetractAtAcqEnd = mWinApp->GetAnyRetractableCams() && mAcqParm->retractCameras;
 
+  mUseTSprePostMacros = mAcqParm->acquireType == ACQUIRE_DO_TS ||
+    (useTempParams && !fromMultigrid);
   runPremacro = mAcqParm->runPremacro;
-  if (mAcqParm->acquireType != ACQUIRE_DO_TS && (!useTempParams || fromMultigrid))
+  if (!mUseTSprePostMacros)
     runPremacro = mAcqParm->runPremacroNonTS;
   runPostmacro = mAcqParm->runPostmacro;
-  if (mAcqParm->acquireType != ACQUIRE_DO_TS && (!useTempParams || fromMultigrid))
+  if (!mUseTSprePostMacros)
     runPostmacro = mAcqParm->runPostmacroNonTS;
   setOrClearFlags(&mAcqActions[NAACT_RUN_PREMACRO].flags, NAA_FLAG_RUN_IT, runPremacro);
   setOrClearFlags(&mAcqActions[NAACT_RUN_POSTMACRO].flags, NAA_FLAG_RUN_IT, runPostmacro);
@@ -9670,10 +9668,10 @@ void CNavigatorDlg::AcquireAreas(int source, bool dlgClosing, bool useTempParams
     for (loop = loopStart; loop < loopEnd; loop++) {
       macnum = -1;
       if (loop == 1 && runPremacro)
-        macnum = ((mAcqParm->acquireType == ACQUIRE_DO_TS || useTempParams) ? 
+        macnum = (mUseTSprePostMacros ?
         mAcqParm->preMacroInd : mAcqParm->preMacroIndNonTS) - 1;
       if (loop == 2 && runPostmacro)
-        macnum = ((mAcqParm->acquireType == ACQUIRE_DO_TS || useTempParams) ? 
+        macnum = (mUseTSprePostMacros ?
           mAcqParm->postMacroInd : mAcqParm->postMacroIndNonTS) - 1;
       if (loop == 0)
         macnum = mAcqParm->macroIndex - 1;
@@ -10585,7 +10583,7 @@ void CNavigatorDlg::AcquireNextTask(int param)
     // Run a pre-macro
   case NAACT_RUN_PREMACRO:
     SEMTrace('n', "Doing %s", stepNames[mAcqSteps[mAcqStepIndex]]);
-    mMacroProcessor->Run((mAcqParm->acquireType == ACQUIRE_DO_TS ?
+    mMacroProcessor->Run((mUseTSprePostMacros ?
       mAcqParm->preMacroInd : mAcqParm->preMacroIndNonTS) - 1);
     break;
 
@@ -10680,7 +10678,7 @@ void CNavigatorDlg::AcquireNextTask(int param)
   // Run a post-macro
   case NAACT_RUN_POSTMACRO:
     SEMTrace('n', "Doing %s", stepNames[mAcqSteps[mAcqStepIndex]]);
-    mMacroProcessor->Run((mAcqParm->acquireType == ACQUIRE_DO_TS ?
+    mMacroProcessor->Run((mUseTSprePostMacros ?
       mAcqParm->postMacroInd : mAcqParm->postMacroIndNonTS) - 1);
     break;
 

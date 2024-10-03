@@ -328,6 +328,7 @@ private:
   CArray<StateParams *, StateParams *> mAcqStateArray;
   NavAcqAction *mAcqActions;
   bool mUseTempAcqParams;
+  bool mUseTSprePostMacros;
   std::vector<int> mListToItem;
   std::vector<int> mItemToList;
   std::set<int> mSetOfIDs;
