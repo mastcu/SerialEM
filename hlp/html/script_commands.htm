@@ -1830,10 +1830,13 @@
         <TR>
           <TD class="scriptcommand">BufImagePosToStagePos buf #I #X #Y</TD>
           <td>Reports the stage position (X and Y) corresponding to the position <b>#X</b>, <b>#Y</b>
-            in the image in buffer <b>buf</b>.&nbsp; Image coordinates are inverted in Y.&nbsp; Set <b>#I</b>
+            in the image in buffer <b>buf</b>.&nbsp; Image coordinates are inverted in Y.&nbsp; If the
+            image is a montage, it also reports the piece the point is in and the coordinates within the piece, 
+            defined the same as the PieceOn and XYinPc entries in a Navigator file; 
+            otherwise -1 is reported for each.&nbsp; Set <b>#I</b>
              0 to consider just the stage coordinates, or non-zero to
-            consider microscope image shift when the image was taken, as well as various image shift offsets,
-            .&nbsp; In either case, if the image
+            consider microscope image shift when the image was taken, as well as various image shift 
+            offsets.&nbsp; In either case, if the image
             is a stage montage overview, the offsets of pieces are taken into account in computing the position,
             making this result different from what could be computed with the matrix 
             from 'StageToBufImageMatrix'.&nbsp; Values can be assigned to variables at end of command.&nbsp; Command added in 4.1, 16-Jun-23.

@@ -3,6 +3,10 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+10/2/24: Fixed getting data from first inventory call to JEOL (In 4.1).
+
+9/30/24: Fixed failure to find autocorrelation peaks at X = 0 (In 4.1).
+
 9/26/24: SEM_4-1-17
 9/26/24: Fixed montage setup so it opens HQ settings when MontageAllowHQinLD
 property is used (In 4.1).
