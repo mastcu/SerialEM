@@ -17,7 +17,7 @@ class CLogWindow : public CBaseDlg
 // Construction
 public:
 	int GetFileName(BOOL oldFile, UINT flags, LPCTSTR offerName);
-	int ReadAndAppend();
+	int ReadAndAppend(CString readFile);
 	int OpenAndWriteFile(UINT flags, int length, int offset);
 	int UpdateSaveFile(BOOL createIfNone, CString stackName = "", BOOL replace = false, 
     BOOL overwrite = false);

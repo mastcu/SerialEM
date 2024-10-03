@@ -589,7 +589,7 @@ int CLogWindow::OpenAndWriteFile(UINT flags, int length, int offset)
 }
 
 // Open an existing file, read it in an place before current log contents
-int CLogWindow::ReadAndAppend()
+int CLogWindow::ReadAndAppend(CString readFile)
 {
   DWORD length;
   CFile *cFile = NULL;
@@ -598,14 +598,20 @@ int CLogWindow::ReadAndAppend()
   int nread;
   UpdateData(true);
   CString oldSave = mSaveFile;
-  CString str;
-  if (GetFileName(TRUE, OFN_HIDEREADONLY, NULL)) {
-    mSaveFile = oldSave;
-    return 1;
+  CString str, dir;
+  if (readFile.IsEmpty()) {
+    if (GetFileName(TRUE, OFN_HIDEREADONLY, NULL)) {
+      mSaveFile = oldSave;
+      return 1;
+    }
+  } else {
+    mSaveFile = readFile;
   }
+
   if (mSaveFile == oldSave)
     return 0;
-  if (mPrunedLength && AfxMessageBox("The log window has already been pruned.\n"
+  if (readFile.IsEmpty() && mPrunedLength && 
+    AfxMessageBox("The log window has already been pruned.\n"
     "The pruned part will not be included in the appended\n"
     "log and will stay in " + (oldSave.IsEmpty() ? mTempPruneName : oldSave) +
     "\n\nAre you sure you want to proceed with Read and Append?", MB_QUESTION) ==
@@ -642,12 +648,12 @@ int CLogWindow::ReadAndAppend()
   catch(CFileException *perr) {
     perr->Delete();
     CString message = "Error reading log from file " + mSaveFile;
-    AfxMessageBox(message, MB_EXCLAME);
+    SEMMessageBox(message, MB_EXCLAME);
     retval = -1;
   }
   catch (CMemoryException *perr) {
     perr->Delete();
-    AfxMessageBox("Memory error trying to read old log", MB_EXCLAME);
+    SEMMessageBox("Memory error trying to read old log", MB_EXCLAME);
     retval = -1;
   }
   if (cFile) {
@@ -664,6 +670,10 @@ int CLogWindow::ReadAndAppend()
     mPrunedLength = 0;
     retval = DoSave();
     mLastStackname = "";
+    if (!readFile.IsEmpty()) {
+      UtilSplitPath(mSaveFile, dir, str);
+      SetWindowText("Log: " + str);
+    }
   }
   return retval;
 }

@@ -4170,7 +4170,7 @@ void CSerialEMApp::OnFileReadappend()
 {
   if (!mLogWindow)
     OnFileOpenlog();
-  mLogWindow->ReadAndAppend();
+  mLogWindow->ReadAndAppend("");
 }
 
 // Toggle continuous save of log
