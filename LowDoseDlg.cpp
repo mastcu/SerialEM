@@ -821,8 +821,8 @@ void CLowDoseDlg::OnResetBeamShift()
     mScope->IncBeamTilt(-mLDParams[area].beamTiltDX, -mLDParams[area].beamTiltDY);
     mLDParams[area].beamTiltDX = 0.;
     mLDParams[area].beamTiltDY = 0.;
-    mWinApp->AppendToLog(CString("Incremental beam tilt for ") + mModeNames[area] +
-      " area reset to 0.,0.");
+    mWinApp->AppendToLog(CString("Incremental beam tilt for ") + 
+      mModeNames[area == SEARCH_AREA ? SEARCH_CONSET : area] + " area reset to 0.,0.");
   }
   // TODO: should it zero dark field tilt beam shift?
   SyncFocusAndTrial(area);
