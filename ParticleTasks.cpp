@@ -1846,16 +1846,10 @@ ZbyGParams * CParticleTasks::GetZbyGCalAndCheck(int useVinLD, int &magInd, int &
 {
   LowDoseParams *ldp = mWinApp->GetLowDoseParams();
   ZbyGParams *zbgParams;
-  ldArea = -1;
-  mZBGUsingView = false;
-  if (mWinApp->LowDoseMode()) {
-    if (useVinLD < 0)
-      mZBGUsingView = mZbyGUseViewInLD;
-    else 
-      mZBGUsingView = useVinLD > 0;
-    ldArea = mZBGUsingView ? VIEW_CONSET : FOCUS_CONSET;
+  ldArea = GetLDAreaForZbyG(mWinApp->LowDoseMode(), useVinLD, mZBGUsingView);
+  if (ldArea >= 0)
     magInd = ldp[ldArea].magIndex;
-  } else
+  else
     magInd = mScope->GetMagIndex();
 
   error = 1;
@@ -1878,7 +1872,20 @@ ZbyGParams * CParticleTasks::GetZbyGCalAndCheck(int useVinLD, int &magInd, int &
   return zbgParams;
 }
 
-// Start a Z hy Z calibration with the given number of iterations, calInd is index if
+// Return the low dose are for Z by G or -1, and whether using view
+int CParticleTasks::GetLDAreaForZbyG(BOOL lowDose, int useVinLD, BOOL &usingView)
+{
+  usingView = false;
+  if (!lowDose)
+    return -1;
+  if (useVinLD < 0)
+    usingView = mZbyGUseViewInLD;
+  else
+    usingView = useVinLD > 0;
+  return usingView ? VIEW_CONSET : FOCUS_CONSET;
+}
+
+// Start a Z by G calibration with the given number of iterations, calInd is index if
 // using a calibration or -1 if using current conditions
 void CParticleTasks::DoZbyGCalibration(ZbyGParams &param, int calInd, int iterations)
 {

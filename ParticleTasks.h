@@ -264,6 +264,7 @@ public:
     int &nearest);
   ZbyGParams *GetZbyGCalAndCheck(int useVinLD, int &magInd, int &ldArea, int &paramInd,
     int &nearest, int &error);
+  int GetLDAreaForZbyG(BOOL lowDose, int useVinLD, BOOL &usingView);
   void DoZbyGCalibration(ZbyGParams &param, int calInd, int iterations);
   void PrepareAutofocusForZbyG(ZbyGParams &param, bool saveAndSetLD);
   int AlignToTemplate(NavAlignParams &aliParams);
