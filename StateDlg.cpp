@@ -621,6 +621,9 @@ int CStateDlg::SetStateByNameOrNum(CString name, CString &errStr)
   bool numOK, twoMatch = false;
   const char *namePtr = (LPCTSTR)name;
   char *endPtr;
+  CSerialEMApp *winApp = (CSerialEMApp *)AfxGetApp();
+  mHelper = winApp->mNavHelper;
+  mStateArray = mHelper->GetStateArray();
 
   // Do case insensitive comparisons, convert to number and detect if there are bad chars
   ucName.MakeUpper();
