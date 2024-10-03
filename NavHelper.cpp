@@ -4887,25 +4887,36 @@ void CNavHelper::StopDualMap(void)
 // Check for problems in the set of items/files/etc to acquire
 int CNavHelper::AssessAcquireProblems(int startInd, int endInd)
 {
+  NavAcqParams *navParam = mWinApp->GetNavAcqParams(GetAcqParamIndexToUse(true));
+  mAcqActions = mAllAcqActions[GetAcqParamIndexToUse(true)];
+  if (AssessAcquireForParams(navParam, mAcqActions, mMultiShotParams, startInd, endInd,
+    ""))
+    return 1;
+  return 0;
+}
+
+#define WILL_DO_ACTION(a) ((acqActions[a].flags & NAA_FLAG_RUN_IT) ? 1 : 0)
+
+int CNavHelper::AssessAcquireForParams(NavAcqParams *navParam, NavAcqAction *acqActions,
+  MultiShotParams &MSparams, int startInd, int endInd, CString prefix)
+{
   ScheduledFile *sched;
   CMapDrawItem *item, *item2;
   MontParam *montp;
   StateParams *state;
   TiltSeriesParam *tsp;
   CString mess, mess2, label;
-  CString *names = mWinApp->GetModeNames();
   int montParInd, stateInd, camMismatch, binMismatch, numNoMap, numAtEdge, err, numClose;
   int *activeList = mWinApp->GetActiveCameraList();
   ControlSet *masterSets = mWinApp->GetCamConSets();
-  NavAcqParams *navParam = mWinApp->GetNavAcqParams(GetAcqParamIndexToUse(true));
-  mAcqActions = mAllAcqActions[GetAcqParamIndexToUse(true)];
   int lastBin[MAX_CAMERAS];
   int cam, bin, i, j, k, ind, stateCam, numBroke, numGroups, curGroup, fileOptInd, setNum;
   int lastMap = -1, curMap, numNoVec = 0, numNoXform = 0, numMaps = 0;
   float delX, delY, critDist, critDistSq;
   double holeDist, dists[3], angle;
   bool seen;
-  BOOL savingMulti = navParam->acquireType == ACQUIRE_MULTISHOT && IsMultishotSaving();
+  BOOL savingMulti = navParam->acquireType == ACQUIRE_MULTISHOT && 
+    IsMultishotSaving(NULL, &MSparams);
   int *seenGroups;
 
   camMismatch = 0;
@@ -4914,26 +4925,29 @@ int CNavHelper::AssessAcquireProblems(int startInd, int endInd)
   for (i = 0; i < MAX_CAMERAS; i++)
     lastBin[i] = -1;
 
+  if (endInd < 0)
+    endInd = (int)mItemArray->GetSize() - 1;
+
   // Check the user actions
   for (ind = 0; ind < mNumAcqActions; ind++) {
-    if (DOING_ACTION(ind) && (mAcqActions[ind].flags &NAA_FLAG_OTHER_SITE)) {
-      if (mAcqActions[ind].labelOrNote.IsEmpty()) {
-        SEMMessageBox("There is no text for the " +
-          CString((mAcqActions[ind].flags & NAA_FLAG_MATCH_NOTE) ? "note" : "label") +
-          " for doing " + mAcqActions[ind].name + " at the nearest matching item");
+    if (WILL_DO_ACTION(ind) && (acqActions[ind].flags &NAA_FLAG_OTHER_SITE)) {
+      if (acqActions[ind].labelOrNote.IsEmpty()) {
+        SEMMessageBox(prefix + "There is no text for the " +
+          CString((acqActions[ind].flags & NAA_FLAG_MATCH_NOTE) ? "note" : "label") +
+          " for doing " + acqActions[ind].name + " at the nearest matching item");
         return 1;
       }
-      if (FindNearestItemMatchingText(0., 0., mAcqActions[ind].labelOrNote,
-        (mAcqActions[ind].flags & NAA_FLAG_MATCH_NOTE) != 0) < 0) {
-        SEMMessageBox("There is no item whose " +
-          CString((mAcqActions[ind].flags & NAA_FLAG_MATCH_NOTE) ? "note" : "label") +
-          " starts with " + mAcqActions[ind].labelOrNote + " for doing " +
-          mAcqActions[ind].name + " at the nearest matching item");
+      if (FindNearestItemMatchingText(0., 0., acqActions[ind].labelOrNote,
+        (acqActions[ind].flags & NAA_FLAG_MATCH_NOTE) != 0) < 0) {
+        SEMMessageBox(prefix + "There is no item whose " +
+          CString((acqActions[ind].flags & NAA_FLAG_MATCH_NOTE) ? "note" : "label") +
+          " starts with " + acqActions[ind].labelOrNote + " for doing " +
+          acqActions[ind].name + " at the nearest matching item");
         return 1;
       }
     }
   }
-  if (DOING_ACTION(NAACT_ALIGN_TEMPLATE)) {
+  if (WILL_DO_ACTION(NAACT_ALIGN_TEMPLATE)) {
     item = mNav->FindItemWithString(mNavAlignParams.templateLabel, false, true);
     if (!item)
       mess = "Cannot find the template map in Navigator table for aligning to template";
@@ -4942,22 +4956,22 @@ int CNavHelper::AssessAcquireProblems(int startInd, int endInd)
     else if (item->mMapMontage)
       mess = "The item matching the label for aligning to template is a montage";
     if (!mess.IsEmpty()) {
-      SEMMessageBox(mess);
+      SEMMessageBox(prefix + mess);
       return 1;
     }
   }
-  if (FEIscope && DOING_ACTION(NAACT_FLASH_FEG) &&
+  if (FEIscope && WILL_DO_ACTION(NAACT_FLASH_FEG) &&
     mScope->GetAdvancedScriptVersion() < ASI_FILTER_FEG_LOAD_TEMP) {
-    SEMMessageBox("The version of advanced scripting has not been identified as high "
-      "enough to support FEG flashing", MB_EXCLAME);
+    SEMMessageBox(prefix + "The version of advanced scripting has not been identified as"
+      " high enough to support FEG flashing", MB_EXCLAME);
     return 1;
   }
 
   // Check that positions are not too close together if doing multishot hex or >= 2x2
-  if (navParam->acquireType == ACQUIRE_MULTISHOT && !mMultiShotParams.useCustomHoles &&
-    (mMultiShotParams.doHexArray || 
-    (mMultiShotParams.numHoles[0] > 1 && mMultiShotParams.numHoles[1] > 1))) {
-    GetMultishotDistAndAngles(&mMultiShotParams, mMultiShotParams.doHexArray, dists, 
+  if (navParam->acquireType == ACQUIRE_MULTISHOT && !MSparams.useCustomHoles &&
+    (MSparams.doHexArray ||
+    (MSparams.numHoles[0] > 1 && MSparams.numHoles[1] > 1))) {
+    GetMultishotDistAndAngles(&MSparams, MSparams.doHexArray, dists,
       holeDist, angle);
     if (holeDist > 0.) {
       numClose = 0;
@@ -4996,17 +5010,17 @@ int CNavHelper::AssessAcquireProblems(int startInd, int endInd)
           " not much more than the hole spacing of %.2f um.\n\n"
           "Was the Multi-hole Combiner not run on some points?\n\n"
           "Press \"Yes - Stop\" to stop and fix the problem\n\n"
-          "Press \"No - Go On\" to ignore this and continue with acquisition", numClose, 
+          "Press \"No - Go On\" to ignore this and continue with acquisition", numClose,
           (LPCTSTR)label, (LPCTSTR)mess2, critDist, holeDist);
-        if (SEMThreeChoiceBox(mess, "Yes - Stop", "No - Go On", "", MB_YESNO, 0, false) ==
-          IDYES)
+        if (SEMThreeChoiceBox(prefix + mess, "Yes - Stop", "No - Go On", "", MB_YESNO, 0,
+          false) == IDYES)
           return 1;
       }
     }
   }
 
   // Check for problems if map holes are to be used 
-  if (navParam->acquireType == ACQUIRE_MULTISHOT && !mMultiShotParams.useCustomHoles &&
+  if (navParam->acquireType == ACQUIRE_MULTISHOT && !MSparams.useCustomHoles &&
     navParam->useMapHoleVectors) {
     numNoMap = 0;
     for (i = startInd; i <= endInd; i++) {
@@ -5023,8 +5037,8 @@ int CNavHelper::AssessAcquireProblems(int startInd, int endInd)
           lastMap = curMap;
           if (item2->mXHoleISSpacing[0] == 0. && item2->mYHoleISSpacing[0] == 0.)
             numNoVec++;
-          else if (mMultiShotParams.xformFromMag && mMultiShotParams.adjustingXform.xpx &&
-            item2->mMapMagInd != mMultiShotParams.xformFromMag)
+          else if (MSparams.xformFromMag && MSparams.adjustingXform.xpx &&
+            item2->mMapMagInd != MSparams.xformFromMag)
             numNoXform++;
         }
       }
@@ -5051,8 +5065,8 @@ int CNavHelper::AssessAcquireProblems(int startInd, int endInd)
       }
       mess += "\nPress \"Yes - Stop\" to stop and address the problems\n\n"
         "Press \"No - Go On\" to ignore this and continue with acquisition";
-      if (SEMThreeChoiceBox(mess, "Yes - Stop", "No - Go On", "", MB_YESNO, 0, false) ==
-        IDYES)
+      if (SEMThreeChoiceBox(prefix + mess, "Yes - Stop", "No - Go On", "", MB_YESNO, 0, 
+        false) == IDYES)
         return 1;
     }
   }
@@ -5060,9 +5074,9 @@ int CNavHelper::AssessAcquireProblems(int startInd, int endInd)
   seenGroups = new int[mItemArray->GetSize()];
   for (i = startInd; i <= endInd; i++) {
     item = mItemArray->GetAt(i);
-    if (item->mRegistration == mNav->GetCurrentRegistration() && 
-      ((item->mAcquire && navParam->acquireType != ACQUIRE_DO_TS) || 
-      (item->mTSparamIndex >=0 && navParam->acquireType == ACQUIRE_DO_TS))) {
+    if (item->mRegistration == mNav->GetCurrentRegistration() &&
+      ((item->mAcquire && navParam->acquireType != ACQUIRE_DO_TS) ||
+      (item->mTSparamIndex >= 0 && navParam->acquireType == ACQUIRE_DO_TS))) {
 
       // Get parameter index for item or group, ignore current group
       montParInd = item->mMontParamIndex;
@@ -5081,14 +5095,14 @@ int CNavHelper::AssessAcquireProblems(int startInd, int endInd)
             "\n(file # %d, %s)\n\nYou should set a different name for the file to open,"
             "\nor close the file (in which case it will be overwritten)", (LPCTSTR)label,
             (LPCTSTR)mess2, k + 1, sched->filename);
-          AfxMessageBox(mess, MB_EXCLAME);
+          AfxMessageBox(prefix + mess, MB_EXCLAME);
           delete[] seenGroups;
           return 1;
         }
 
         // First see if group has been seen before
         seen = false;
-        for (k = 0; k< numGroups; k++) {
+        for (k = 0; k < numGroups; k++) {
           if (item->mGroupID == seenGroups[k]) {
             seen = true;
             break;
@@ -5112,7 +5126,7 @@ int CNavHelper::AssessAcquireProblems(int startInd, int endInd)
               "This will not work when taking Multiple Records.\n"
               "You must set all files to open to be single-frame.",
               (LPCTSTR)label, (LPCTSTR)mess2);
-            AfxMessageBox(mess, MB_EXCLAME);
+            AfxMessageBox(prefix + mess, MB_EXCLAME);
             delete[] seenGroups;
             return 1;
           }
@@ -5125,9 +5139,9 @@ int CNavHelper::AssessAcquireProblems(int startInd, int endInd)
         if (k >= 0) {
           mess.Format("The file set to be opened for item # %d, label %s is already open"
             "\n(file # %d, %s)\n\nYou should set a different name for the file to open,"
-            "\nor close the file (in which case it will be overwritten)", i + 1, 
+            "\nor close the file (in which case it will be overwritten)", i + 1,
             item->mLabel, k + 1, item->mFileToOpen);
-          AfxMessageBox(mess, MB_EXCLAME);
+          AfxMessageBox(prefix + mess, MB_EXCLAME);
           delete[] seenGroups;
           return 1;
         }
@@ -5135,7 +5149,7 @@ int CNavHelper::AssessAcquireProblems(int startInd, int endInd)
           mess.Format("The file set to be opened for item # %d, label %s is set up for"
             " montaging.\n\n" "This will not work when taking Multiple Records.\n"
             "You must set all files to open to be single-frame.", i + 1, item->mLabel);
-          AfxMessageBox(mess, MB_EXCLAME);
+          AfxMessageBox(prefix + mess, MB_EXCLAME);
           delete[] seenGroups;
           return 1;
         }
@@ -5146,62 +5160,65 @@ int CNavHelper::AssessAcquireProblems(int startInd, int endInd)
         curGroup = 0;
 
       // Check that realign to map can work if requested now that file indices are known
-      if (DOING_ACTION(NAACT_REALIGN_ITEM)) {
+      if (WILL_DO_ACTION(NAACT_REALIGN_ITEM)) {
         mNav->SetNextFileIndices(fileOptInd, montParInd);
-        err = FindMapForRealigning(item, navParam->restoreOnRealign || 
+        err = FindMapForRealigning(item, navParam->restoreOnRealign ||
           navParam->acquireType != ACQUIRE_RUN_MACRO);
         if (err == 4)
           numNoMap++;
         if (err == 5)
           numAtEdge++;
-      }
 
-      // Get camera and binning from state first 
-      stateCam = -1;
-      if (stateInd >= 0) {
-        state = mAcqStateArray->GetAt(stateInd);
-        for (j = 0; j < mWinApp->GetNumActiveCameras(); j++) {
-          if (activeList[j] == state->camIndex) {
-            stateCam = j;
-            lastBin[j] = state->binning;
-            break;
+        if (prefix.IsEmpty()) {
+
+          // Get camera and binning from state first 
+          stateCam = -1;
+          if (stateInd >= 0) {
+            state = mAcqStateArray->GetAt(stateInd);
+            for (j = 0; j < mWinApp->GetNumActiveCameras(); j++) {
+              if (activeList[j] == state->camIndex) {
+                stateCam = j;
+                lastBin[j] = state->binning;
+                break;
+              }
+            }
           }
+
+          // Get defined camera and binning from the parameter sets
+          setNum = RECORD_CONSET;
+          if (montParInd >= 0) {
+            montp = mMontParArray->GetAt(montParInd);
+            cam = montp->cameraIndex;
+            bin = montp->binning;
+            setNum = MontageConSetNum(montp, true);
+          } else if (item->mTSparamIndex >= 0) {
+            tsp = mTSparamArray->GetAt(item->mTSparamIndex);
+            cam = tsp->cameraIndex;
+            bin = tsp->binning;
+          } else
+            continue;
+
+          // If the camera does not match the one defined in this item's state, it's mismatch
+          if (stateCam >= 0 && cam != stateCam)
+            camMismatch++;
+
+          // No binning defined by state defined yet: get the binning from the camera conset
+          if (lastBin[cam] < 0)
+            lastBin[cam] = masterSets[activeList[cam] * MAX_CONSETS + setNum].binning;
+
+          // See "Adjust exposure..." in StartMontage for this exception
+          if (lastBin[cam] != bin && !(montParInd >= 0 && mWinApp->LowDoseMode() &&
+            bin > lastBin[cam] && bin <= 2 * lastBin[cam]))
+            binMismatch++;
+
+          // This param binning becomes the binning for next time unless there is a state
+          lastBin[cam] = bin;
+
         }
       }
-
-      // Get defined camera and binning from the parameter sets
-      setNum = RECORD_CONSET;
-      if (montParInd >= 0) {
-        montp = mMontParArray->GetAt(montParInd);
-        cam = montp->cameraIndex;
-        bin = montp->binning;
-        setNum = MontageConSetNum(montp, true);
-      } else if (item->mTSparamIndex >= 0) {
-        tsp = mTSparamArray->GetAt(item->mTSparamIndex);
-        cam = tsp->cameraIndex;
-        bin = tsp->binning;
-      } else
-        continue;
-
-      // If the camera does not match the one defined in this item's state, it's mismatch
-      if (stateCam >= 0 && cam != stateCam)
-        camMismatch++;
-
-      // No binning defined by state defined yet: get the binning from the camera conset
-      if (lastBin[cam] < 0)
-        lastBin[cam] = masterSets[activeList[cam] * MAX_CONSETS + setNum].binning;
-
-      // See "Adjust exposure..." in StartMontage for this exception
-      if (lastBin[cam] != bin && !(montParInd >= 0 && mWinApp->LowDoseMode() && 
-        bin > lastBin[cam] && bin <= 2 * lastBin[cam]))
-        binMismatch++;
-
-      // This param binning becomes the binning for next time unless there is a state
-      lastBin[cam] = bin;
     }
   }
-
-  delete [] seenGroups;
+  delete[] seenGroups;
 
   if (numNoMap || numAtEdge) {
     mess = "You selected 'Realign to Item' but:\n";
@@ -5217,7 +5234,7 @@ int CNavHelper::AssessAcquireProblems(int startInd, int endInd)
     }
     mess += "\nDo you want to proceed anyway and just go to the\n"
       "nominal stage coordinates for those items?";
-    if (AfxMessageBox(mess, MB_YESNO | MB_ICONQUESTION) == IDNO)
+    if (AfxMessageBox(prefix + mess, MB_YESNO | MB_ICONQUESTION) == IDNO)
       return 1;
   }
 
@@ -5226,23 +5243,22 @@ int CNavHelper::AssessAcquireProblems(int startInd, int endInd)
       "with a designated file, so some of the items in that group would be "
       "acquired into the new file.  This happens %d times.\n\nPress:\n"
       "\"Stop && Fix\" to stop and try to fix this,\n\"Go On\" to just go on.", numBroke);
-    if (SEMThreeChoiceBox(mess, "Stop && Fix", "Go On", "", MB_YESNO | MB_ICONQUESTION) ==
+    if (SEMThreeChoiceBox(prefix + mess, "Stop && Fix", "Go On", "", MB_QUESTION) ==
       IDYES)
       return 1;
   }
-
   if (camMismatch || binMismatch) {
     mess = "";
     if (camMismatch)
       mess.Format("There are %d mismatches between the camera specified in the montage "
-      "or tilt series parameters for an item and the camera in the imaging state "
-      "to be set for that item.  This is odd.\n\n", camMismatch);
+        "or tilt series parameters for an item and the camera in the imaging state "
+        "to be set for that item.  This is odd.\n\n", camMismatch);
     if (binMismatch) {
       mess2.Format("The binning specified in the montage or tilt series parameters for "
         "an item differs from the existing binning for the "
         "particular camera and parameter set. "
         "This happens %d times.\nThe exposure time would be changed to compensate, but"
-      " this is probably undesirable\n\n", binMismatch);
+        " this is probably undesirable\n\n", binMismatch);
       mess += mess2;
     }
     mess += "Press:\n\"Stop && Fix\" to stop and fix these problems by resetting state"
@@ -5252,13 +5268,13 @@ int CNavHelper::AssessAcquireProblems(int startInd, int endInd)
       IDYES)
       return 1;
   }
-  if (CheckForBadParamIndexes())
+  if (CheckForBadParamIndexes(prefix))
     return 1;
   return 0;
 }
 
 // Make sure no indexes are out of range, which can crash when indexes are not checked
-int CNavHelper::CheckForBadParamIndexes()
+int CNavHelper::CheckForBadParamIndexes(CString prefix)
 {
   int ind, numBadTS = 0, numBadProp = 0, numBadMont = 0;
   int numTS = (int)mTSparamArray->GetSize();
@@ -5303,7 +5319,7 @@ int CNavHelper::CheckForBadParamIndexes()
   if (!mess.IsEmpty()) {
     mess += "These indexes have all been cleared out";
     mWinApp->AppendToLog(mess);
-    SEMMessageBox(mess);
+    SEMMessageBox(prefix + mess);
   }
   return 0;
 }
@@ -5317,18 +5333,20 @@ int CNavHelper::GetAcqParamIndexToUse(bool starting)
 
 // Test if multishot would save with current params and set allZero if it is because
 // it is set for all empty early returns 
-BOOL CNavHelper::IsMultishotSaving(bool *allZeroER)
+BOOL CNavHelper::IsMultishotSaving(bool *allZeroER, MultiShotParams *params)
 {
+  if (!params)
+    params = &mMultiShotParams;
   if (allZeroER)
     *allZeroER = false;
   UpdateMultishotIfOpen(false);
-  if (mWinApp->GetHasK2OrK3Camera() && mMultiShotParams.doEarlyReturn == 2 &&
-    !mMultiShotParams.numEarlyFrames) {
+  if (mWinApp->GetHasK2OrK3Camera() && params->doEarlyReturn == 2 &&
+    !params->numEarlyFrames) {
     if (allZeroER)
       *allZeroER = true;
     return false;
   }
-  return mMultiShotParams.saveRecord;
+  return params->saveRecord;
 }
 
 void CNavHelper::GetMultishotDistAndAngles(MultiShotParams *params, BOOL hexGrid, 
@@ -6526,6 +6544,12 @@ void CNavHelper::CopyAcqParamsAndActionsToTemp(NavAcqAction *useAct,
   NavAcqParams *params = mWinApp->GetNavAcqParams(2);
   int *order = &mAcqActCurrentOrder[2][0];
   CopyAcqParamsAndActions(useAct, useParam, useOrder, actions, params, order);
+  if (params->acquireType == ACQUIRE_TAKE_MAP && params->skipSaving &&
+    !params->saveAsMapChoice)
+    params->acquireType = ACQUIRE_IMAGE_ONLY;
+  if (params->nonTSacquireType == ACQUIRE_TAKE_MAP && params->skipSaving &&
+    !params->saveAsMapChoice)
+    params->nonTSacquireType = ACQUIRE_IMAGE_ONLY;
 }
 
 void CNavHelper::CopyAcqParamsAndActions(NavAcqAction *useAct, NavAcqParams *useParam, 

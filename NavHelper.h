@@ -618,9 +618,11 @@ public:
   void DualMapCleanup(int error);
   void StopDualMap(void);
   int AssessAcquireProblems(int startInd, int endInd);
-  int CheckForBadParamIndexes();
+  int AssessAcquireForParams(NavAcqParams *navParams, NavAcqAction *acqActions,
+    MultiShotParams &multiShotParams, int startInd, int endInd, CString prefix);
+  int CheckForBadParamIndexes(CString prefix);
   int GetAcqParamIndexToUse(bool starting = false);
-  BOOL IsMultishotSaving(bool *allZeroER = NULL);
+  BOOL IsMultishotSaving(bool *allZeroER = NULL, MultiShotParams *params = NULL);
   void GetMultishotDistAndAngles(MultiShotParams *params, BOOL hexGrid, double dists[3], 
     double &avgDist, double &angle);
   int FindNearestItemMatchingText(float stageX, float stageY, CString &text, bool matchNote);
