@@ -1293,6 +1293,7 @@ void CMacroProcessor::Run(int which)
   mNumRuns = 0;
   mNextParamSetForMont = 0;
   mRamperStarted = false;
+  mBinningForCameraMatrix = 0;
   mTestNextMultiShot = 0;
   mAccumShiftX = 0.;
   mAccumShiftY = 0.;

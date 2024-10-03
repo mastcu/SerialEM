@@ -479,6 +479,7 @@ protected:
   int mNextParamSetForMont;    // Parameter set to use for next montage opened
   bool mRamperStarted;         // Flag for focus ramper started
   CString mScriptWindowTitle;  // Title for window opened by script
+  float mBinningForCameraMatrix; // Adjust camera matrices to this user binning
 
 public:
   void SetNumCamMacRows(int inVal);

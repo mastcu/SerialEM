@@ -6066,6 +6066,13 @@ int CMacCmd::ReportAlignTrimming(void)
   return 0;
 }
 
+// BinningForCameraMatrix
+int CMacCmd::BinningForCameraMatrix()
+{
+  mBinningForCameraMatrix = mItemFlt[1];
+  return 0;
+}
+
 // CameraToISMatrix,  ISToCameraMatrix, CameraToStageMatrix, StageToCameraMatrix,
 // CameraToSpecimenMatrix, SpecimenToCameraMatrix, ISToSpecimenMatrix,
 // SpecimenToISMatrix, ISToStageMatrix, StageToISMatrix,
@@ -6073,9 +6080,11 @@ int CMacCmd::ReportAlignTrimming(void)
 int CMacCmd::CameraToISMatrix(void)
 {
   CString report;
-  BOOL truth;
+  BOOL invert;
   ScaleMat aMat, bInv;
   int index;
+  int adjustBin = 0;
+  float adjustFac;
 
   index = mItemInt[1];
   if (index <= 0)
@@ -6084,33 +6093,37 @@ int CMacCmd::CameraToISMatrix(void)
     ABORT_LINE("There are no scale matrices for diffraction mode for line:\n\n");
   if (index >= MAX_MAGS)
     ABORT_LINE("The mag index is out of range in line:\n\n");
-  truth = false;
+  invert = false;
   switch (mCmdIndex) {
 
   case CME_CAMERATOISMATRIX:
-    truth = true;
+    invert = true;
+    aMat = mShiftManager->IStoGivenCamera(index, mCurrentCam);
   case CME_ISTOCAMERAMATRIX:
     aMat = mShiftManager->IStoGivenCamera(index, mCurrentCam);
+    adjustBin = 1;
     break;
   case CME_CAMERATOSTAGEMATRIX:
-    truth = true;
+    invert = true;
   case CME_STAGETOCAMERAMATRIX:
     aMat = mShiftManager->StageToCamera(mCurrentCam, index);
+    adjustBin = 1;
     break;
 
   case CME_SPECIMENTOCAMERAMATRIX:
-    truth = true;
+    invert = true;
   case CME_CAMERATOSPECIMENMATRIX:
     aMat = mShiftManager->CameraToSpecimen(index);
+    adjustBin = -1;
     break;
 
   case CME_SPECIMENTOISMATRIX:
-    truth = true;
+    invert = true;
   case CME_ISTOSPECIMENMATRIX:
     aMat = aMat = mShiftManager->IStoSpecimen(index, mCurrentCam);
     break;
   case CME_STAGETOISMATRIX:
-    truth = true;
+    invert = true;
   case CME_ISTOSTAGEMATRIX:
     aMat = mShiftManager->IStoGivenCamera(index, mCurrentCam);
     if (aMat.xpx) {
@@ -6122,12 +6135,23 @@ int CMacCmd::CameraToISMatrix(void)
     }
     break;
   case CME_STAGETOSPECIMENMATRIX:
-    truth = true;
+    invert = true;
   case CME_SPECIMENTOSTAGEMATRIX:
     aMat = mShiftManager->SpecimenToStage(1., 1.);
     break;
   }
-  if (truth && aMat.xpx)
+
+  // Adjust to a binning if one was entered
+  if (adjustBin && aMat.xpx && mBinningForCameraMatrix > 0.) {
+    adjustFac = 1.f / (mBinningForCameraMatrix * BinDivisorF(mCamParams));
+    if (adjustBin < 0)
+      adjustFac = 1.f / adjustFac;
+    aMat.xpx *= adjustFac;
+    aMat.xpy *= adjustFac;
+    aMat.ypx *= adjustFac;
+    aMat.ypy *= adjustFac;
+  }
+  if (invert && aMat.xpx)
     aMat = MatInv(aMat);
   report = cmdList[mCmdIndex].mixedCase;
   report.Replace("To", " to ");

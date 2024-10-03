@@ -5868,7 +5868,12 @@
             Yout = Xin * YperX + Yin * YperY <br />
             All commands return a matrix for the current camera where relevant, and all require an entry
              <b>#M</b> for the magnification index, or 0 to use the current
-            index.&nbsp; Variables to assign to can be placed after this entry.
+            index.&nbsp; Variables to assign to can be placed after this entry.&nbsp; All of the matrices 
+            involving the camera apply to unbinned pixels from 
+            the camera unless a binning is provided with the 'BinningForCameraMatrix' command.&nbsp; Specifically,
+             for a K2 or K3, the matrices are in terms of super-resolution pixels and will not give 
+            the correct result when applied to physical pixels (binning 1) or if scaled by the binning 
+            reported for an image; this problem can be avoided with 'BinningForCameraMatrix'.
           </td>
         </TR>
         <TR>
@@ -5919,6 +5924,12 @@
         <TR>
           <TD class="scriptcommand">StageToSpecimenMatrix #M</TD>
           <td>Converts from stage to specimen coordinates.</td>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">BinningForCameraMatrix #</TD>
+          <td>Sets the binning to which one of the 6 matrices involving &#39;camera&#39; will be 
+            scaled, so that the matrix applies to coordinates in an image of that binning.&nbsp; 
+            Enter 0 for <b>#</b> to disable the scaling.&nbsp; Command added in 4.2, 30-Sep-24.</td>
         </TR>
          <TR>
           <TD colspan="2"><A name="process_running"></A><B>Process-Running Commands</B></TD>
