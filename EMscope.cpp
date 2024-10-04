@@ -545,6 +545,7 @@ CEMscope::CEMscope()
   mScreenRaiseDelay = 0;
   mScopeHasAutoloader = 1;
   mLDFreeLensDelay = 0;
+  mSubFromPosChgISX = mSubFromPosChgISY = 0.;
   mAdvancedScriptVersion = 0;
   mPluginVersion = 0;
   mPlugFuncs = NULL;
@@ -1562,10 +1563,12 @@ void CEMscope::ScopeUpdate(DWORD dwTime)
 
       if (JEOLscope) {  
         SEMSetStageTimeout();
+        BOOL crossedLM = BothLMorNotLM(lastMag, mLastSTEMmode != 0, magIndex, 
+          STEMmode != 0);
 
         // First see if need to save the image shift for the old mag for later restore
         if (!changedJeolEFTEM && SaveOrRestoreIS(lastMag, magIndex)) {
-          indOldIS = LookupRingIS(lastMag, changedJeolEFTEM);
+          indOldIS = LookupRingIS(lastMag, changedJeolEFTEM, crossedLM);
           if (indOldIS >= 0) {
             mSavedISX = mJeolSD.ringISX[indOldIS];
             mSavedISY = mJeolSD.ringISY[indOldIS];
@@ -1580,7 +1583,7 @@ void CEMscope::ScopeUpdate(DWORD dwTime)
         if (manageISonMagChg) {
           ISX = mJeolSD.ISX;
           ISY = mJeolSD.ISY;
-          indOldIS = LookupRingIS(lastMag, changedJeolEFTEM);
+          indOldIS = LookupRingIS(lastMag, changedJeolEFTEM, crossedLM);
           // However it is gotten, adjust the IS stored on the ring
           if (indOldIS >= 0) {
             ISX = mJeolSD.ringISX[indOldIS] - (oldTab->neutralISX[oldNeutralInd] + 
@@ -3213,7 +3216,8 @@ BOOL CEMscope::ChangeBeamTilt(double tiltX, double tiltY, BOOL bInc)
       mPlugFuncs->SetImageBeamTilt(tiltX, tiltY);
     else
       mPlugFuncs->SetBeamTilt(tiltX, tiltY);
-    SEMTrace('b', "SetBeamTilt %.3f %.3f", tiltX, tiltY);
+    if (!JEOLscope)
+      SEMTrace('b', "SetBeamTilt %.3f %.3f", tiltX, tiltY);
   }
   catch (_com_error E) {
     SEMReportCOMError(E, _T("setting Beam Tilt "));
@@ -3989,7 +3993,7 @@ BOOL CEMscope::SetMagIndex(int inIndex)
   const char *routine = "SetMagIndex";
   ScaleMat bsmFrom, bsmTo;
   double newPCX, newPCY, delBSX = 0., delBSY = 0.;
-  float posChangingISX, posChangingISY;
+  double posChangingISX, posChangingISY;
 
   if (mNoScope) {
     if (inIndex < 1 || inIndex > MAX_MAGS || !mMagTab[inIndex].mag)
@@ -5380,7 +5384,7 @@ void CEMscope::UnblankAfterTransient(bool needUnblank, const char *routine)
 void CEMscope::GotoLowDoseArea(int newArea)
 {
   double delISX, delISY, beamDelX, beamDelY, startBeamX, startBeamY;
-  double curISX, curISY, newISX, newISY, centeredISX, centeredISY, intensity;
+  double curISX, curISY, newISX, newISY, centeredISX = 0., centeredISY = 0., intensity;
   int curAlpha, curMagInd;
   DWORD magTime;
   LowDoseParams *ldParams = mWinApp->GetLowDoseParams();
@@ -5394,7 +5398,7 @@ void CEMscope::GotoLowDoseArea(int newArea)
   bool toSearch = newArea == SEARCH_AREA;
   bool fromView = mLowDoseSetArea == VIEW_CONSET;
   bool toView = newArea == VIEW_CONSET;
-  bool toViewOK, fromViewOK, toSearchOK, fromSearchOK, removeAddDefocus;
+  bool toViewOK, fromViewOK, toSearchOK, fromSearchOK, removeAddDefocus, adjForFocus;
   bool splitBeamShift, leavingLowMag, enteringLowMag, deferJEOLspot, manage = false;
   bool probeDone = true, changingAtZeroIS, sameIntensity, needCondenserNorm = false;
   BOOL bDebug = GetDebugOutput('b');
@@ -5435,6 +5439,12 @@ void CEMscope::GotoLowDoseArea(int newArea)
   toSearchOK = toSearch && ldArea->magIndex > 0;
   fromViewOK = fromView && mLdsaParams->magIndex > 0;
   fromSearchOK = fromSearch && mLdsaParams->magIndex > 0;
+  adjForFocus = 
+    (((mLowDoseSetArea == VIEW_CONSET || newArea == VIEW_CONSET) && mLDViewDefocus) ||
+    ((mLowDoseSetArea == SEARCH_AREA || newArea == SEARCH_AREA) && mSearchDefocus)) &&
+    mLowDoseSetArea != newArea && mShiftManager->GetFocusISCals()->GetSize() > 0 &&
+    mShiftManager->GetFocusMagCals()->GetSize();
+
   if (oldArea < 0 && ldParams[RECORD_CONSET].magIndex > 0 && (mGoToRecMagEnteringLD > 1 ||
     (mGoToRecMagEnteringLD == 1 && leavingLowMag)))
     SetMagIndex(ldParams[RECORD_CONSET].magIndex);
@@ -5451,6 +5461,7 @@ void CEMscope::GotoLowDoseArea(int newArea)
     GetBeamShift(startBeamX, startBeamY);
   }
   mLDChangeCumulBeamX = mLDChangeCumulBeamY = 0.;
+  mSetAlphaBeamTiltX = EXTRA_NO_VALUE;
 
   // Notify dialog so it can finish setting beam shift
   if (newArea != oldArea)
@@ -5499,8 +5510,9 @@ void CEMscope::GotoLowDoseArea(int newArea)
   
   // If changing area at zero IS, get the current centered shift and reset it, and
   // reinitialize the cumulative change, since IS is put back after the cumulative change
-  if (changingAtZeroIS) {
+  if (changingAtZeroIS || adjForFocus)
     GetLDCenteredShift(centeredISX, centeredISY);
+  if (changingAtZeroIS) {
     SetLDCenteredShift(0., 0.);
     if (JEOLscope && !STEMmode)
       GetBeamShift(startBeamX, startBeamY);
@@ -5532,7 +5544,8 @@ void CEMscope::GotoLowDoseArea(int newArea)
     mLdsaParams->beamAlpha >= 0 && ldArea->beamAlpha > mLdsaParams->beamAlpha));
   if (ISdone)
     DoISforLowDoseArea(newArea, mLdsaParams->magIndex, delISX, delISY, 
-      oldArea >= 0 && mLdsaParams->magIndex == ldArea->magIndex);
+      oldArea >= 0 && mLdsaParams->magIndex == ldArea->magIndex, adjForFocus, 
+      centeredISX, centeredISY);
 
   // If leaving view or search area, set defocus back first
   if (!STEMmode && mLDViewDefocus && fromViewOK && 
@@ -5589,9 +5602,12 @@ void CEMscope::GotoLowDoseArea(int newArea)
   alphaDone = curAlpha >= 0 && ldArea->beamAlpha >= 0. && !STEMmode && 
     ((oldArea >= 0 && (ldArea->magIndex || ldArea->camLenIndex) &&
     ldArea->magIndex < mLdsaParams->magIndex) || enteringLowMag);
+  if (!mHasNoAlpha)
+    GetBeamTilt(mBaseForAlphaBTX, mBaseForAlphaBTY);
   if (alphaDone && !mHasNoAlpha)
-    ChangeAlphaAndBeam(curAlpha, (int)ldArea->beamAlpha);
-  
+    ChangeAlphaAndBeam(curAlpha, (int)ldArea->beamAlpha, 
+      mLdsaParams->magIndex > 0 ? mLdsaParams->magIndex : -1, ldArea->magIndex);
+
   if (ldArea->magIndex)
     SetMagIndex(ldArea->magIndex);
   else if (!ldArea->camLenIndex)
@@ -5624,7 +5640,8 @@ void CEMscope::GotoLowDoseArea(int newArea)
   // For alpha change, need to restore the beam shift to what it was for consistent
   // changes; and if there is a calibrated beam shift change, apply that
   if (ldArea->beamAlpha >= 0. && !STEMmode && !alphaDone && !mHasNoAlpha) {
-    ChangeAlphaAndBeam(curAlpha, (int)ldArea->beamAlpha);
+    ChangeAlphaAndBeam(curAlpha, (int)ldArea->beamAlpha,
+      mLdsaParams->magIndex > 0 ? mLdsaParams->magIndex : -1, ldArea->magIndex);
   } else if (!STEMmode && !alphaDone)
     ldArea->beamAlpha = (float)curAlpha;
 
@@ -5700,7 +5717,8 @@ void CEMscope::GotoLowDoseArea(int newArea)
 
   // Shift image now after potential mag change
   if (!ISdone)
-    DoISforLowDoseArea(newArea, ldArea->magIndex, delISX, delISY, true);
+    DoISforLowDoseArea(newArea, ldArea->magIndex, delISX, delISY, true, adjForFocus,
+      centeredISX, centeredISY);
 
   // Do incremental beam shift if any; but if area is undefined, assume coming from Record
   if (!STEMmode) {
@@ -5714,11 +5732,16 @@ void CEMscope::GotoLowDoseArea(int newArea)
     }
     IncOrAccumulateBeamShift(beamDelX, beamDelY, "Go2LD put on new BS");
 
-    // Do incremental beam tilt changes if enabled
-    if (mLDBeamTiltShifts) {
-      beamDelX = ldArea->beamTiltDX - mLdsaParams->beamTiltDX;
-      beamDelY = ldArea->beamTiltDY - mLdsaParams->beamTiltDY;
-      if (beamDelX || beamDelY)
+    // Do incremental beam tilt changes if enabled or reassert alpha beam tilt
+    if (mLDBeamTiltShifts || mSetAlphaBeamTiltX > EXTRA_VALUE_TEST) {
+      beamDelX = beamDelY = 0.;
+      if (mLDBeamTiltShifts) {
+        beamDelX = ldArea->beamTiltDX - mLdsaParams->beamTiltDX;
+        beamDelY = ldArea->beamTiltDY - mLdsaParams->beamTiltDY;
+      }
+      if (mSetAlphaBeamTiltX > EXTRA_VALUE_TEST)
+        SetBeamTilt(mSetAlphaBeamTiltX + beamDelX, mSetAlphaBeamTiltY + beamDelY);
+      else if (beamDelX || beamDelY)
         IncBeamTilt(beamDelX, beamDelY);
     }
 
@@ -5780,7 +5803,7 @@ void CEMscope::GotoLowDoseArea(int newArea)
 
 // Get change in image shift; set delay; tell low dose dialog to ignore this shift
 void CEMscope::DoISforLowDoseArea(int inArea, int curMag, double &delISX, double &delISY,
-  bool registerMagIS)
+  bool registerMagIS, bool adjForFocus, double cenISX, double cenISY)
 {
   double oldISX, oldISY, useISX = 0., useISY = 0., posChgX = 0., posChgY = 0.;
   double vsXshift, vsYshift, curISX, curISY, adjISX, adjISY, transISX, transISY;
@@ -5791,6 +5814,7 @@ void CEMscope::DoISforLowDoseArea(int inArea, int curMag, double &delISX, double
 
   // IF using piezo for axis shift, do the movement
   delISX = delISY = 0.;
+  mSubFromPosChgISX = mSubFromPosChgISY = 0.;
   if (mUsePiezoForLDaxis) {
     mWinApp->mLowDoseDlg.GoToPiezoPosForLDarea(inArea);
   }
@@ -5818,8 +5842,8 @@ void CEMscope::DoISforLowDoseArea(int inArea, int curMag, double &delISX, double
         mNextLDpolarity * (useISX - vsXshift), mNextLDpolarity * (useISY - vsYshift),
         curMag, posChgX, posChgY);
     }
-    //PrintfToLog("useIS %.3f %.3f  posChg %.3f  %.3f del %.3f %.3f", useISX, useISY, 
-    //posChgX, posChgY, delISX, delISY);
+    /*PrintfToLog("useIS %.3f %.3f  posChg %.3f  %.3f del %.3f %.3f", useISX, useISY, 
+    posChgX, posChgY, delISX, delISY);*/
   }
   if (mLowDoseSetArea >= 0 && (!mLowDoseSetArea || !mUsePiezoForLDaxis)) {
 
@@ -5842,21 +5866,18 @@ void CEMscope::DoISforLowDoseArea(int inArea, int curMag, double &delISX, double
         curMag, oldISX, oldISY);
       posChgX -= oldISX;
       posChgY -= oldISY;
-      //PrintfToLog("oldIS %.3f %.3f  posChg %.3f  %.3f", oldISX, oldISY, posChgX, posChgY);
+      /*PrintfToLog("oldIS %.3f %.3f  posChg %.3f  %.3f del %.3f %.3f", oldISX, oldISY, 
+      posChgX, posChgY, delISX, delISY);*/
     }
   }
   mLDChangeCurArea = inArea;
 
   // If going in or out of View or Search with defocus offset, try to correct an
   // existing image shift for the defocus : need both kinds of calibrations
-  if ((((mLowDoseSetArea == VIEW_CONSET || inArea == VIEW_CONSET) && mLDViewDefocus) ||
-    ((mLowDoseSetArea == SEARCH_AREA || inArea == SEARCH_AREA) && mSearchDefocus)) &&
-    mLowDoseSetArea != inArea && mShiftManager->GetFocusISCals()->GetSize() > 0 &&
-    mShiftManager->GetFocusMagCals()->GetSize()) { 
+  if (adjForFocus) { 
 
-    // Get centered IS to avoid being fooled by offsets, and only do it if it is nonzero
-    GetLDCenteredShift(curISX, curISY);
-    doAdj = fabs(curISX) > 0.01 || fabs(curISY) > 0.01;
+    // Use  centered IS to avoid being fooled by offsets, and only do it if it is nonzero
+    doAdj = fabs(cenISX) > 0.01 || fabs(cenISY) > 0.01;
     if (doAdj && ((mLowDoseSetArea == VIEW_CONSET && mLDViewDefocus) ||
       (mLowDoseSetArea == SEARCH_AREA  && mSearchDefocus))) {
 
@@ -5866,18 +5887,28 @@ void CEMscope::DoISforLowDoseArea(int inArea, int curMag, double &delISX, double
       mShiftManager->GetDefocusMagAndRot(mLdsaParams->spotSize, mLdsaParams->probeMode,
         mLdsaParams->intensity, defocus, scale, rotation);
       sclMat = mShiftManager->MatScaleRotate(mShiftManager->FocusAdjustedISToCamera(
-        mWinApp->GetCurrentCamera(), curMag, mLdsaParams->spotSize,
+        mWinApp->GetCurrentCamera(), mLdsaParams->magIndex, mLdsaParams->spotSize,
         mLdsaParams->probeMode, mLdsaParams->intensity, defocus), 1.f / scale, -rotation);
-      focMat =  MatMul(sclMat, mShiftManager->CameraToIS(curMag));
-      ApplyScaleMatrix(focMat, curISX, curISY, adjISX, adjISY);
+      focMat =  MatMul(sclMat, mShiftManager->CameraToIS(mLdsaParams->magIndex));
+      ApplyScaleMatrix(focMat, cenISX, cenISY, adjISX, adjISY);
+
+      // If the mag has already changed, transfer the adjustment to the new mag
+      if (curMag == ldParams[inArea].magIndex) {
+        mShiftManager->TransferGeneralIS(mLdsaParams->magIndex, adjISX - cenISX, 
+          adjISY - cenISY, ldParams[inArea].magIndex, transISX, transISY);
+       } else {
+        transISX = adjISX - cenISX;
+        transISY = adjISY - cenISY;;
+      }
+      /*PrintfToLog("Leaving V/S, curmag %d cen %.2f %.2f  adj %.2f %.2f, adjust %.4f "
+        "%.4f -> %.4f %.4f", curMag, cenISX, cenISY, adjISX, adjISY, adjISX - cenISX,
+        adjISY - cenISY, transISX, transISY);*/
 
       // Add the change in image shift and set it as the current shift at the starting mag
-      delISX += adjISX - curISX;
-      delISY += adjISY - curISY;
-      /*PrintfToLog("Leaving V/S, cur %.2f %.2f  adj %.2f %.2f, adjust %.2f %.2f", curISX, 
-      curISY, adjISX, adjISY, adjISX - curISX, adjISY - curISY);*/
-      curISX = adjISX;
-      curISY = adjISY;
+      delISX += transISX;;
+      delISY += transISY;
+      cenISX = adjISX;
+      cenISY = adjISY;
     }
     if (doAdj && ((inArea == VIEW_CONSET && mLDViewDefocus) ||
       (inArea == SEARCH_AREA  && mSearchDefocus))) {
@@ -5885,21 +5916,34 @@ void CEMscope::DoISforLowDoseArea(int inArea, int curMag, double &delISX, double
       // Entering either area, transfer the image shift, transform to camera, rotate and
       // scale for defocus, tranform back to IS, again add the change
       defocus = inArea == SEARCH_AREA ? mSearchDefocus : mLDViewDefocus;
-      mShiftManager->TransferGeneralIS(curMag, curISX, curISY, ldParams[inArea].magIndex,
-        transISX, transISY);
-      mShiftManager->GetDefocusMagAndRot(mLdsaParams->spotSize, 
+        mShiftManager->TransferGeneralIS(mLdsaParams->magIndex, cenISX, cenISY, 
+          ldParams[inArea].magIndex, curISX, curISY);
+      mShiftManager->GetDefocusMagAndRot(ldParams[inArea].spotSize,
         ldParams[inArea].probeMode, ldParams[inArea].intensity, defocus, scale, rotation);
       sclMat = mShiftManager->MatScaleRotate(mShiftManager->IStoCamera(
         ldParams[inArea].magIndex), scale, rotation);
       focMat = MatMul(sclMat, MatInv(mShiftManager->FocusAdjustedISToCamera(
         mWinApp->GetCurrentCamera(), ldParams[inArea].magIndex, ldParams[inArea].spotSize,
           ldParams[inArea].probeMode, ldParams[inArea].intensity, defocus)));
-      ApplyScaleMatrix(focMat, transISX, transISY, adjISX, adjISY);
-      /*PrintfToLog("Entering V/S, cur %.2f %.2f  trans %.2f %.2f  adj %.2f %.2f  "
-      "adjust %.2f %.2f", curISX, curISY, 
-        transISX, transISY, adjISX, adjISY, adjISX - transISX, adjISY - transISY);*/
-      delISX += adjISX - transISX;
-      delISY += adjISY - transISY;
+      ApplyScaleMatrix(focMat, curISX, curISY, adjISX, adjISY);
+
+      // If the mag hasn't changed yet, transfer the adjustment to the old mag
+      if (curMag != ldParams[inArea].magIndex) {
+        mShiftManager->TransferGeneralIS(ldParams[inArea].magIndex, adjISX - curISX,
+          adjISY - curISY, mLdsaParams->magIndex, transISX, transISY);
+      } else {
+        transISX = adjISX - curISX;
+        transISY = adjISY - curISY;
+      }
+      /*PrintfToLog("Entering V/S, curmag %d cen %.2f %.2f  trans %.2f %.2f  adj %.2f "
+        "%.2f adjust %.4f %.4f -> %.4f %.4f", curMag, cenISX, cenISY, curISX, curISY,
+        adjISX, adjISY, adjISX - curISX, adjISY - curISY, transISX, transISY);*/
+      delISX += transISX;
+      delISY += transISY;
+
+      // Store as current part of IS that doesn't represent a position change
+      mSubFromPosChgISX = transISX;
+      mSubFromPosChgISY = transISY;
     }
   }
 
@@ -5996,14 +6040,15 @@ void CEMscope::SetFreeLensForArea(int newArea)
 
 // Change alpha from old to new if it is different and change beam shift and tilt if
 // the calibrations exist
-void CEMscope::ChangeAlphaAndBeam(int oldAlpha, int newAlpha)
+void CEMscope::ChangeAlphaAndBeam(int oldAlpha, int newAlpha, int oldMag, int newMag)
 {
   double beamDelX = 0., beamDelY = 0., beamX, beamY;
   double tiltDelX = 0., tiltDelY = 0., tiltX, tiltY;
   ScaleMat bsmOld, bsmNew;
   double curISX, curISY;
-  float posChangingISX, posChangingISY;
+  double posChangingISX, posChangingISY, pcNewISX, pcNewISY, pcOldISX, pcOldISY;
   int magInd;
+  mSetAlphaBeamTiltX = EXTRA_NO_VALUE;
 
   if (oldAlpha < mNumAlphaBeamShifts && newAlpha < mNumAlphaBeamShifts) {
     beamDelX = mAlphaBeamShifts[newAlpha][0] - mAlphaBeamShifts[oldAlpha][0];
@@ -6016,26 +6061,45 @@ void CEMscope::ChangeAlphaAndBeam(int oldAlpha, int newAlpha)
   if (newAlpha != oldAlpha) {
 
     // If beam calibrations differ (and they should), translate the beam shift needed for
-    // position-changing part of IS 
+    // position-changing part of IS, but do it with IS appropriate for each mag if there 
+    // are two
     magInd = FastMagIndex();
-    bsmOld = mShiftManager->GetBeamShiftCal(magInd, oldAlpha);
-    bsmNew = mShiftManager->GetBeamShiftCal(magInd, newAlpha);
-    //PrintfToLog("old %.5g  new %.5g", bsmOld.xpx, bsmNew.xpx);
+    if (oldMag < 0)
+      oldMag = magInd;
+    if (newMag < 0)
+      newMag = magInd;
+    bsmOld = mShiftManager->GetBeamShiftCal(oldMag, oldAlpha);
+    bsmNew = mShiftManager->GetBeamShiftCal(newMag, newAlpha);
     if (bsmOld.xpx != bsmNew.xpx && bsmOld.xpx && bsmNew.xpx) {
       GetImageShift(curISX, curISY);
       PositionChangingPartOfIS(curISX, curISY, posChangingISX, posChangingISY);
-      //PrintfToLog("CAAB: curIS %.3f %.3f poschg IS %.3f %.3f", curISX, curISY, posChangingISX, posChangingISY);
-      beamDelX += bsmNew.xpx * posChangingISX + bsmNew.xpy * posChangingISY -
-        (bsmOld.xpx * posChangingISX + bsmOld.xpy * posChangingISY);
-      beamDelY += bsmNew.ypx * posChangingISX + bsmNew.ypy * posChangingISY -
-        (bsmOld.ypx * posChangingISX + bsmOld.ypy * posChangingISY);
+      pcOldISX = pcNewISX = posChangingISX;
+      pcOldISY = pcNewISY = posChangingISY;
+      if (oldMag != magInd)
+        mShiftManager->TransferGeneralIS(newMag, pcNewISX, pcNewISY, oldMag, pcOldISX,
+          pcOldISY);
+      if (newMag != magInd)
+        mShiftManager->TransferGeneralIS(oldMag, pcOldISX, pcOldISY, newMag, pcNewISX,
+          pcNewISY);
+      beamDelX += bsmNew.xpx * pcNewISX + bsmNew.xpy * pcNewISY -
+        (bsmOld.xpx * pcOldISX + bsmOld.xpy * pcOldISY);
+      beamDelY += bsmNew.ypx * pcNewISX + bsmNew.ypy * pcNewISY -
+        (bsmOld.ypx * pcOldISX + bsmOld.ypy * pcOldISY);
     }
 
     GetBeamShift(beamX, beamY);
-    GetBeamTilt(tiltX, tiltY);
+
+    // Use base beam tilt when changing low dose area, this could be after a mag change
+    // that changed the tilt
+    if (mChangingLDArea) {
+      tiltX = mBaseForAlphaBTX;
+      tiltY = mBaseForAlphaBTY;
+    } else {
+      GetBeamTilt(tiltX, tiltY);
+    }
     if (GetDebugOutput('l') || GetDebugOutput('b'))
-    PrintfToLog("Changing alpha from %d to %d and beam shift %.3f %.3f  to %.3f %.3f",
-      oldAlpha + 1, newAlpha + 1, beamX, beamY, beamX + beamDelX, beamY + beamDelY);
+      PrintfToLog("Changing alpha from %d to %d and beam shift %.3f %.3f  to %.3f %.3f",
+        oldAlpha + 1, newAlpha + 1, beamX, beamY, beamX + beamDelX, beamY + beamDelY);
     SetAlpha(newAlpha);
     if (mChangingLDArea) {
       IncOrAccumulateBeamShift(beamDelX, beamDelY, "ChangeAlpha");
@@ -6043,6 +6107,8 @@ void CEMscope::ChangeAlphaAndBeam(int oldAlpha, int newAlpha)
       SetBeamShift(beamX + beamDelX, beamY + beamDelY);
     }
     SetBeamTilt(tiltX + tiltDelX, tiltY + tiltDelY);
+    mSetAlphaBeamTiltX = tiltX + tiltDelX;
+    mSetAlphaBeamTiltY = tiltY + tiltDelY;
     Sleep(mAlphaChangeDelay);
   }
 }
@@ -6063,9 +6129,10 @@ void CEMscope::SetLowDoseDownArea(int inArea)
 // Compute the component of image shift that represent displacement from axial position
 // rather than being used to keep the axis aligned
 void CEMscope::PositionChangingPartOfIS(double curISX, double curISY,
-  float &posChangingISX, float &posChangingISY)
+  double &posChangingISX, double &posChangingISY)
 {
-  double offsetsX, offsetsY, vsXshift = 0., vsYshift = 0., axisISX, axisISY, vsXtmp, vsYtmp;
+  double offsetsX, offsetsY, vsXshift = 0., vsYshift = 0., axisISX, axisISY;
+  double vsXtmp, vsYtmp;
   int area;
   BOOL shiftSave = mShiftToTiltAxis;
   LowDoseParams *ldParams = mWinApp->GetLowDoseParams();
@@ -6080,10 +6147,14 @@ void CEMscope::PositionChangingPartOfIS(double curISX, double curISY,
       mWinApp->mLowDoseDlg.GetEitherViewShift(vsXtmp, vsYtmp, area);
       mShiftManager->TransferGeneralIS(ldParams[area].magIndex, vsXtmp, vsYtmp,
         mLastMagIndex, vsXshift, vsYshift);
+
+      // Take off the defocus adjustment for image shift if one was made
+      vsXshift += mSubFromPosChgISX;
+      vsYshift += mSubFromPosChgISY;
     }
   }
-  posChangingISX = (float)(curISX + axisISX - offsetsX - vsXshift);
-  posChangingISY = (float)(curISY + axisISY - offsetsY - vsYshift);
+  posChangingISX = curISX + axisISX - offsetsX - vsXshift;
+  posChangingISY = curISY + axisISY - offsetsY - vsYshift;
 }
 
 // Accumulate beam shift changes on JEOL when changing low dose are; otherwise apply it
@@ -8683,6 +8754,7 @@ int CEMscope::WaitForLensRelaxation(int type, double earliestTime)
 {
   double startTime;
   BOOL state, eventTime;
+  const char *names[] = {"mag", "spot", "alpha"};
   if (!JEOLscope || !(type & sJeolRelaxationFlags) || sJeolSD->JeolSTEM)
     return 0;
   startTime = GetTickCount();
@@ -8698,8 +8770,9 @@ int CEMscope::WaitForLensRelaxation(int type, double earliestTime)
     Sleep(50);
   }
   if (!state) {
-    SEMTrace('0', "%.3f: WARNING: Lens relaxation event not detected within %d msec "
-      "timeout, going on", SEMSecondsSinceStart(), sJeolStartRelaxTimeout);
+    SEMTrace('0', "%.3f: WARNING: Lens relaxation event on %s not detected within %d msec"
+      " timeout, going on", SEMSecondsSinceStart(), names[B3DMIN(2, type - 1)], 
+      sJeolStartRelaxTimeout);
     return 1;
   }
   while (SEMTickInterval(startTime) < sJeolEndRelaxTimeout) {
@@ -9267,7 +9340,7 @@ bool CEMscope::MagChgResetsIS(int toInd)
     (mLowestSecondaryMag > 0 && toInd >= mLowestSecondaryMag)));
 }
 
-int CEMscope::LookupRingIS(int lastMag, BOOL changedEFTEM)
+int CEMscope::LookupRingIS(int lastMag, BOOL changedEFTEM, BOOL crossedLM)
 {
   int ind, indNewMag, delay, indOldIS;
   double timeRef, timeDiff;
@@ -9297,6 +9370,8 @@ int CEMscope::LookupRingIS(int lastMag, BOOL changedEFTEM)
     delay = mMagFixISdelay;
     if (changedEFTEM)
       delay += 500;
+    else if (crossedLM)
+      delay += 250;
   } else {
 
     // If update by poll, look back and find the old mag in the list

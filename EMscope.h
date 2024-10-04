@@ -327,7 +327,8 @@ public:
   void SetLowDoseDownArea(int inArea);
   GetMember(int, LowDoseDownArea);
   void GotoLowDoseArea(int inArea);
-  void DoISforLowDoseArea(int inArea, int curMag, double &delISX, double &delISY, bool registerMagIS);
+  void DoISforLowDoseArea(int inArea, int curMag, double &delISX, double &delISY, bool registerMagIS,
+    bool adjForFocus, double cenISX, double cenISY);
   void RestoreFromFreeLens(int oldArea, int newArea);
   void SetFreeLensForArea(int newArea);
   int GetLowDoseArea() { return mLowDoseSetArea; };
@@ -673,6 +674,12 @@ private:
   int mLastLDpolarity;        // Polarity of last low dose area setting
   double mLDChangeCumulBeamX; // Sum of beam shift changes needed when changing low dose
   double mLDChangeCumulBeamY; // area on the JEOL
+  double mSetAlphaBeamTiltX;  // Value of beam tilt set by ChangeAlphaBeamTilts in case a
+  double mSetAlphaBeamTiltY;  // mag change changes it before end of LD routine
+  double mBaseForAlphaBTX;    // Base value of beam tilt to work from in 
+  double mBaseForAlphaBTY;    // ChangeAlphaBeamTilts in case of intervening change
+  double mSubFromPosChgISX;   // Amount to subtract from position-changing image shift
+  double mSubFromPosChgISY;   // i.e., the current adjustment of IS in a defocused area
   int mLDChangeCurArea;       // Area to assume when accounting for beam shift and offsets
   BOOL mSelectedEFTEM;        // flag that we turned on EFTEM lens settings
   int mSelectedSTEM;          // flag that we turned on STEM in scope; -1 while setting
@@ -999,7 +1006,7 @@ public:
   BOOL SaveOrRestoreIS(int saveMag, int otherMag);
   BOOL AssessRestoreIS(int fromInd, int toInd, double &newISX, double &newISY);
   void SaveISifNeeded(int fromInd, int toInd);
-  int LookupRingIS(int lastMag, BOOL changedEFTEM);
+  int LookupRingIS(int lastMag, BOOL changedEFTEM, BOOL crossedLM);
   BOOL SetObjFocus(int step);
   int LookupScriptingCamera(CameraParameters * params, bool refresh,
     int restoreShutter = VALUE_NOT_SET);
@@ -1103,7 +1110,7 @@ public:
   int StartLongOperation(int *operations, float *hoursSinceLast, int numOps);
   int LongOperationBusy(int index = -1);
   int StopLongOperation(bool exiting, int index = -1);
-  void ChangeAlphaAndBeam(int oldAlpha, int newAlpha);
+  void ChangeAlphaAndBeam(int oldAlpha, int newAlpha, int oldMag = -1, int newMag = -1);
   int FastAlpha(void);
   BOOL GetColumnMode(int &mode, int &subMode);
   BOOL GetLensByName(CString &name, double &value);
@@ -1133,7 +1140,7 @@ public:
   int GetCurrentPhasePlatePos(void);
   int GetBeamStopPos();
   bool SetBeamStopPos(int newPos);
-  void PositionChangingPartOfIS(double curISX, double curISY, float &posChangingISX, float &posChangingISY);
+  void PositionChangingPartOfIS(double curISX, double curISY, double &posChangingISX, double &posChangingISY);
   void IncOrAccumulateBeamShift(double beamDelX, double beamDelY, const char *descrip);
   bool HitachiNeedsBSforIS(int &magIndex);
 };
