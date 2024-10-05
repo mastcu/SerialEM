@@ -3184,9 +3184,9 @@ int DLL_IM_EX SEMGetSimulationMode()
 {
   return ((CSerialEMApp *)AfxGetApp())->mScope->GetSimulationMode();
 }
-void DLL_IM_EX SEMSetUtapiConnected(unsigned int flags)
+void DLL_IM_EX SEMSetUtapiConnected(unsigned int flags/*, bool *supportsService*/)
 {
-  ((CSerialEMApp *)AfxGetApp())->mScope->SetUtapiConnected(flags);
+  ((CSerialEMApp *)AfxGetApp())->mScope->SetUtapiConnected(flags, NULL);//supportsService);
 }
 
 // For the given set of modes (coming from UTAPI), return the offset in the appropriate
