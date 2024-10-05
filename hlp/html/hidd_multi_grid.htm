@@ -458,6 +458,20 @@
       select <strong>Acquire Grid Maps</strong> and <strong>Acquire Medium Mag Maps
       </strong>and some grids already have grid maps, they will start with medium mag 
       maps).</p>
+    <p>If you have changed the camera subarea size for one of the parameter sets being 
+      used in a montage to be acquired since the montage was set up, the program will 
+      open the montage setup dialog for the affected montage, and may ask you if you 
+      want to use a subarea instead of the full frame when fitting the montage to an 
+      area.</p>
+    <p>For a run including medium mag mapping or final acquisition, the program will 
+      check the acquisition parameters for feasibility and consistency with the 
+      Navigator file contents to the extent possible.&nbsp; Specifically, for each 
+      grid, it does most of the checks that are done before a regular Acquire at Items 
+      run (such as for the existence of template maps and labeled Navigator locations 
+      at which to perform specific tasks), and if Eucentricity by Focus is to be run, 
+      it verifies that a usable calibration is available.&nbsp; If both medium mag 
+      mapping and final acquisition are being run, only the first stage can be 
+      checked, since the items to be acquired in the second stage do not exist yet.</p>
     <p>The status codes will be updated as grids run and are as follows:<br />
       GM - Grid map is done<br />
       MM - Medium mag maps are done<br />
@@ -489,7 +503,7 @@
       routine, return the microscope to the initial conditions, and re-enable 
       everything in the dialog.&nbsp; The usual <strong>Resume</strong> button will be labeled <strong>ResumeM</strong>.&nbsp; 
       Pressing this after a pause will resume the multi-grid routine on the next grid.</p>
-    <p>Pressing ResumeM after any other kind of stop will bring up a message box 
+    <p>Pressing <strong>ResumeM</strong> after any other kind of stop will bring up a message box 
       asking whether you want to repeat the last operation in the multi-grid sequence, 
       go on to the next operation, or skip to the next grid.&nbsp; There are no good 
       error checks on this choice yet, so for now you will have to exercise some 
@@ -500,6 +514,16 @@
       operations from continuing successfully.&nbsp; If there is any doubt about this, 
       it is safest to terminate with <strong>End MGrid</strong>, uncheck the grids 
       done, and restart the run.</p>
+    <p>Log files are managed by the routine, with a main log that is repeatedly 
+      reopened for top-level information, and a separate log for each Acquire at Items 
+      run.&nbsp; If you save the log to a file before starting a run, that file will 
+      be retained as the main log; otherwise the log will be named based on the 
+      session file name.&nbsp; Log files for each grid are in the subdirectories and 
+      named like the grid-level files, with &#39;_MMM&#39; or &#39;_final&#39; for medium mag or final 
+      runs, respectively.&nbsp; Similarly to other situations where log files are 
+      automatically managed, the first log with a particular name will have no number 
+      attached, and further logs (in later runs) will be numbered with &#39;-1&#39;, -&#39;2&#39;, 
+      etc.</p>
     <p>&nbsp;</p>
 
   </body>

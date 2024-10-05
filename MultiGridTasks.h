@@ -127,8 +127,10 @@ public:
   int SkipToAction(int mgAct);
   int SkipToNextGrid(CString &errStr);
   void UpdateGridStatusText();
+  void OutputGridStartLine();
   CString FullGridFilePath(int gridInd, CString suffix);
   void NextAutoFilenameIfNeeded(CString &str);
+  void CloseMainLogOpenForGrid(const char *suffix);
   int OpenNewMontageFile(MontParam &montP, CString &str);
   int OpenFileForFinalAcq();
   int RealignToGridMap(int jcdInd, bool askIfSave, CString &errStr);
@@ -146,6 +148,7 @@ public:
   void ChangeStatusFlag(int gridInd, b3dUInt32 flag, int state);
   void CopyAutoContGroups();
   void GridToMultiShotSettings(MGridMultiShotParams &mgParam);
+  void GridToMultiShotSettings(MGridMultiShotParams &mgParam, MultiShotParams *msParams);
   void MultiShotToGridSettings(MGridMultiShotParams &mgParam);
   void GridToHoleFinderSettings(MGridHoleFinderParams &mgParam);
   void HoleFinderToGridSettings(MGridHoleFinderParams &mgParam);
@@ -182,6 +185,7 @@ public:
   GetSetMember(BOOL, SkipGridRealign);
   GetMember(float, ReferenceCounts);
   GetSetMember(bool, UseCustomOrder);
+  int *GetMontSetupConsetSizes() { return &mMontSetupConsetSizes[0]; };
   IntVec *GetCustomRunDlgInds() {return &mCustomRunDlgInds ; };
   bool WasStoppedInNavRun() { return mStoppedInNavRun && mSuspendedMulGrid; };
   bool WasStoppedInLMMont() { return mStoppedInLMMont && mSuspendedMulGrid; };
@@ -230,6 +234,7 @@ private:
   MontParam mSaveMasterMont;  // The programs master montage parameters, saved for restore
   BOOL mInitializedGridMont;  // Flag that LM mont params were initialized by copy or read
   BOOL mInitializedMMMmont;   // Flag that MM mont params were initialized by copy or read
+  int mMontSetupConsetSizes[4];   // Frame sizes in conset when LMM or MMM montage set up
   BOOL mSavedLowDose;         // Saved state of low dose at start
   MGridMultiShotParams *mSavedMultiShot;
   MGridHoleFinderParams *mSavedHoleFinder;
@@ -324,7 +329,8 @@ private:
   CString mLastSessionFile;      // Name of last session file, for browsing or script load
   BOOL mBackedUpSessionFile;     // Flag tht file was backed up
   BOOL mBackedUpAcqItemsFile;    // Flag file with per-grid acquire parameters backed up
-  bool mNamesLocked;             // Flag htat all those things were locked in for session
+  bool mNamesLocked;             // Flag that all those things were locked in for session
+  CString mMainLogName;          // Name of main log that is returned to
   int mLMMmagIndex;              // Mag index being used for LMM
   int mUnloadErrorOK;            // Flag that load/unload may give error because unneeded
   int mFailureRetry;             // retry count for failed steps that can be retried

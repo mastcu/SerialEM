@@ -266,6 +266,7 @@ BOOL CMultiGridDlg::OnInitDialog()
   mMGTasks = mWinApp->mMultiGridTasks;
   mMasterParams = mMGTasks->GetMultiGridParams();
   mMGTasks->SetUseCustomOrder(false);
+  mMontSetupSizesXY = mMGTasks->GetMontSetupConsetSizes();
   mCustomRunDlgInds = mMGTasks->GetCustomRunDlgInds();
   mParams = *mMasterParams;
   mScope = mWinApp->mScope;
@@ -2112,8 +2113,8 @@ int CMultiGridDlg::DoSetupLMMmont(bool skipDlg)
 {
   BOOL lowDose = mWinApp->LowDoseMode();
   bool refind = false;
-  int ind, ldArea = -1, stateMag = 0, camera = mWinApp->GetCurrentCamera();
-  int consNum, err;
+  int ind, consNum, ldArea = -1, stateMag = 0, camera = mWinApp->GetCurrentCamera();
+  int err;
   float overlapFrac;
   LowDoseParams *ldp;
   ControlSet *conSet;
@@ -2271,6 +2272,9 @@ int CMultiGridDlg::DoSetupLMMmont(bool skipDlg)
     mGridMontSetupAcqType = m_iLMMacquireType;
     if (mMGTasks->SaveSessionFile(str) > 0)
       AfxMessageBox(str, MB_EXCLAME);
+
+    // Save the image size in the camera parameters
+    SaveMontSetupSize(montP, lowDose, mMontSetupSizesXY[0], mMontSetupSizesXY[1]);
   }
   return err;
 }
@@ -2520,8 +2524,11 @@ int CMultiGridDlg::SetupMMMacquire(bool skipDlg)
 
   // If "skipDlg" is set it is being done for running, so check and return if OK
   if (skipDlg && mMMMsetupOK && mMMMsetupAcqType == m_iMMMacquireType &&
-    mMMMsetupMontType == m_iSingleVsPolyMont && mMMMsetupStateForMont == indForMont)
-    return 0;
+    mMMMsetupMontType == m_iSingleVsPolyMont && mMMMsetupStateForMont == indForMont) {
+    if (!m_iSingleVsPolyMont || MontSetupSizesMatch(montP, useLD, mMontSetupSizesXY[2],
+      mMontSetupSizesXY[3]))
+      return 0;
+  }
   mMMMsetupOK = false;
   if (m_iSingleVsPolyMont > 1)
     skipDlg = false;
@@ -2611,7 +2618,7 @@ int CMultiGridDlg::SetupMMMacquire(bool skipDlg)
           *montP = montDlg.mParam;
           mParams.MMMnumXpieces = montP->xNframes;
           mParams.MMMnumYpieces = montP->yNframes;
-        }
+         }
       }
     }
     mMMMmontWasSetup = !err;
@@ -2623,10 +2630,35 @@ int CMultiGridDlg::SetupMMMacquire(bool skipDlg)
     mMMMsetupAcqType = m_iMMMacquireType;
     mMMMsetupMontType = m_iSingleVsPolyMont;
     mMMMsetupStateForMont = indForMont;
+    if (m_iSingleVsPolyMont) {
+      SaveMontSetupSize(montP, useLD, mMontSetupSizesXY[2], mMontSetupSizesXY[3]);
+    }
     if (mMGTasks->SaveSessionFile(str) > 0)
       AfxMessageBox(str, MB_EXCLAME);
   }
   return err;
+}
+
+// Look up the control set used by the montage and save size in given variables
+void CMultiGridDlg::SaveMontSetupSize(MontParam *montP, BOOL lowDose, int &setupSizeX, 
+  int &setupSizeY)
+{
+  int consNum = MontageConSetNum(montP, true, lowDose ? 1 : 0);
+  ControlSet *conSet = mWinApp->GetCamConSets() + montP->cameraIndex * MAX_CONSETS +
+    consNum;
+  setupSizeX = conSet->right - conSet->left;
+  setupSizeY = conSet->bottom - conSet->top;
+}
+
+// Check current size in control set for whether it matches size in last setup
+bool CMultiGridDlg::MontSetupSizesMatch(MontParam *montP, BOOL lowDose, int setupSizeX, 
+  int setupSizeY)
+{
+  int consNum = MontageConSetNum(montP, true, lowDose ? 1 : 0);
+  ControlSet *conSet = mWinApp->GetCamConSets() + montP->cameraIndex * MAX_CONSETS +
+    consNum;
+  return (setupSizeX == conSet->right - conSet->left && 
+    setupSizeY == conSet->bottom - conSet->top);
 }
 
 /*
@@ -2660,11 +2692,18 @@ void CMultiGridDlg::DoStartRun(bool undoneOnly)
   CComboBox *comboArr[4] = {&m_comboFinalState1, &m_comboFinalState2, &m_comboFinalState3,
     &m_comboFinalState4};
   StateParams *stateArr[4];
+  bool sizesMatch = true;
+  MontParam *montP;
   int stateLowDose[4], stateMagInds[4], numStates, stateCamera;
   mWinApp->RestoreViewFocus();
   DialogToParams();
   *mMasterParams = mParams;
   if (m_bTakeLMMs) {
+    montP = mMGTasks->GetGridMontParam();
+    sizesMatch = MontSetupSizesMatch(montP, montP->setupInLowDose,
+      mMontSetupSizesXY[0], mMontSetupSizesXY[1]);
+    if (!sizesMatch)
+      mGridMontSetupOK = false;
     if (m_iLMMacquireType != mGridMontSetupAcqType || (mGridMontSetAtXpcs == 0 &&
       m_iLMMmontType) || (!m_iLMMmontType && mGridMontSetAtXpcs > 0) || (m_iLMMmontType &&
       (m_iXpieces != mGridMontSetAtXpcs || m_iYpieces != mGridMontSetAtYpcs)) ||
@@ -2672,14 +2711,15 @@ void CMultiGridDlg::DoStartRun(bool undoneOnly)
       mGridMontSetupState != mParams.LMMstateNum)
       mGridMontSetupOK = false;
     if (!mGridMontSetupOK) {
-      if (DoSetupLMMmont(true))
+      if (DoSetupLMMmont(sizesMatch))
         return;
-
     }
   }
 
   if (m_bTakeMMMs) {
-    if (SetupMMMacquire(true))
+    montP = mMGTasks->GetMMMmontParam();
+    if (SetupMMMacquire(MontSetupSizesMatch(montP, 
+      montP->setupInLowDose, mMontSetupSizesXY[2], mMontSetupSizesXY[3])))
       return;
   }
 

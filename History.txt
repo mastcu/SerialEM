@@ -3,6 +3,27 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+10/4/24: Added log file management to multigrid so it makes separate logs for
+each Acquire at Items; made it check for problems in Acquire at Items to the
+extent possible before starting any grids; made it ask about using a subarea
+when fitting montage to polygon; made it go through montage setup
+again before starting run if camera parameter set sizes have changed.
+
+10/4/24: Increased time interval for ignoring new image shift values when
+going between LM and nonLM on JEOL; managed beam tilt changes better across LM
+boundary to stabilize it on return to Record; fixed some problems with
+computing image shift compensation for defocus when going to View or Search
+and accounted for these properly when computing beam shifts.
+
+10/3/24: Added script command to get matrices involving a camera scaled to a
+specified binning.
+
+10/3/24: Fixed choice of script before and after main action when running
+Acquire at Items at script end; also fixed taking an image without making a
+map or saving to work when parameters are set from script or multigrid.
+
+10/3/24: Fixed crash setting imaging state from script if dialog not open.
+
 10/2/24: Fixed getting data from first inventory call to JEOL (In 4.1).
 
 9/30/24: Fixed failure to find autocorrelation peaks at X = 0 (In 4.1).

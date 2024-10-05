@@ -56,6 +56,7 @@ private:
   int mMMMsetupStateForMont;  // State used for MMM montage in last setup
   bool mMMMsetupOK;           // Flag that MMM setup should be OK
   int mMMMmontWasSetup;       // Flag that MMM montage was set up (interactively)
+  int *mMontSetupSizesXY;     // Address of array with sizes in MGTasks
   int mMMMneedsLowDose;       // Whether MMM needs low dose turned off (-1) or on (1)
   int mLMneedsLowDose;        // Whether LMM needs low dose turned off (-1) or on (1)
   bool mEnableRunUndone;      // Flag that Run Undone can be enabled
@@ -180,6 +181,8 @@ public:
   int m_iMMMacquireType;
   afx_msg void OnRmmmSearch();
   int SetupMMMacquire(bool skipDlg);
+  void SaveMontSetupSize(MontParam *montP, BOOL lowDose, int &setupSizeX, int &setupSizeY);
+  bool MontSetupSizesMatch(MontParam *montP, BOOL lowDose, int setupSizeX, int setupSizeY);
   void LoadStatesInComboBox(CComboBox &combo, bool addNone);
   void LoadAllComboBoxes();
   void NewGridOnStage(int jcdInd);

@@ -4493,7 +4493,7 @@ int CNavigatorDlg::SetupMontage(CMapDrawItem *item, CMontageSetupDlg *montDlg,
   useCons = initCons;
 
   for (trial = 0; trial < numTry; trial++) {
-    int consetNum = MontageConSetNum(montParam, false);
+    int consetNum = MontageConSetNum(montParam, false, lowDose ? 1 : 0);
     if (lowDose && !forMulti)
       magIndex = ldp[MontageLDAreaIndex(montParam)].magIndex;
     conSet = mWinApp->GetConSets() + consetNum;
@@ -4506,7 +4506,7 @@ int CNavigatorDlg::SetupMontage(CMapDrawItem *item, CMontageSetupDlg *montDlg,
     mWinApp->mMontageController->LimitSizesToUsable(camParam, iCam, magIndex, 
       mFrameLimitX, mFrameLimitY, 1);
     if (!skipSetupDlg && (conSet->right - conSet->left < askLimitRatio * mFrameLimitX ||
-      conSet->bottom - conSet->top < askLimitRatio * mFrameLimitY) && !forMulti &&
+      conSet->bottom - conSet->top < askLimitRatio * mFrameLimitY) && 
       AfxMessageBox("The " + modeNames[consetNum] + " area is significantly smaller than "
       "the camera frame size."
       "\n\nDo you want to keep the montage frame size from being bigger than this area?"

@@ -13,10 +13,12 @@
 #include "ComplexTasks.h"
 #include "EMscope.h"
 #include "StateDlg.h"
+#include "LogWindow.h"
 #include "ProcessImage.h"
 #include "ShiftManager.h"
 #include "EMbufferManager.h"
 #include "NavHelper.h"
+#include "ParticleTasks.h"
 #include "HoleFinderDlg.h"
 #include "MultiShotDlg.h"
 #include "AutoContouringDlg.h"
@@ -80,6 +82,7 @@ CMultiGridTasks::CMultiGridTasks()
   for (int i = 0; i < 4; i++) {
     mParams.MMMstateNums[i] = -1;
     mParams.finalStateNums[i] = -1;
+    mMontSetupConsetSizes[i] = 0;
   }
   mParams.framesUnderSession = false;
   mPctStatMidCrit = 0.33f;
@@ -1440,7 +1443,8 @@ void CMultiGridTasks::UndoOrRedoMarkerShift(bool redo)
 int CMultiGridTasks::StartGridRuns(int LMneedsLD, int MMMneedsLD, int finalNeedsLD,
   int finalCamera, bool undoneOnly)
 {
-  int err, grid, ind, apSize = 0, numAcq, numTS, numFail = 0, numDark = 0;
+  int err, grid, ind, apSize = 0, numAcq, numTS, acqType, numFail = 0, numDark = 0;
+  int magInd, camera, ldArea;
   float halfx, halfy;
   ScaleMat cam2st;
   CFileStatus status;
@@ -1450,9 +1454,17 @@ int CMultiGridTasks::StartGridRuns(int LMneedsLD, int MMMneedsLD, int finalNeeds
   NavAcqParams *finalParams = mWinApp->GetNavAcqParams(1);
   NavAcqAction *mapActions = mNavHelper->GetAcqActions(0);
   NavAcqAction *finalActions = mNavHelper->GetAcqActions(1);
+  NavAcqParams *testAcqParams;
+  NavAcqAction *testActions;
+  MultiShotParams testMSparams;
   BaseMarkerShift baseShift;
+  ZbyGParams *zbygParam;
+  StateParams *state;
+  int *stateNums;
   IntVec dlgIndToJcdInd;
   CameraParameters *camParams = mWinApp->GetCamParams() + finalCamera;
+  LowDoseParams *ldp = mWinApp->GetLowDoseParams();
+  BOOL LDforZbyG, usingView;
   bool noFrameSubs, movable;
   bool apForLMM = false;
   bool stateForLMM = false;
@@ -1582,7 +1594,7 @@ int CMultiGridTasks::StartGridRuns(int LMneedsLD, int MMMneedsLD, int finalNeeds
   }
 
   // If starting with MMMs and fitting polygons, check all nav files for files to open
-  if (mParams.acquireMMMs && !mParams.acquireLMMs) {
+  if ((mParams.acquireMMMs || mParams.runFinalAcq) && !mParams.acquireLMMs) {
     mNavigator->SaveAndClearTable();
     for (grid = 0; grid < mNumGridsToRun; grid++) {
       fname = FullGridFilePath(grid, ".nav");
@@ -1594,18 +1606,109 @@ int CMultiGridTasks::StartGridRuns(int LMneedsLD, int MMMneedsLD, int finalNeeds
         return 1;
       }
       mNavHelper->CountAcquireItems(0, -1, numAcq, numTS);
-      if (!numAcq) {
-        str.Format("There are no items set to Acquire in this Navigator file for "
-          "grid # %d", jcd.id);
+      if ((mParams.acquireMMMs && !numAcq) ||
+        (!mParams.acquireMMMs && !numAcq && !numTS)) {
+        str.Format("There are no items set for Acquire%s in this Navigator file for "
+          "grid # %d", mParams.acquireMMMs ? "" : " or tilt series", jcd.id);
         SEMMessageBox(str);
         return 1;
       }
 
-      if (mParams.MMMimageType > 0 && mNavHelper->AreAnyFilesSetToOpen()) {
+      if (mParams.acquireMMMs && mParams.MMMimageType > 0 &&
+        mNavHelper->AreAnyFilesSetToOpen()) {
         str.Format("There are files set to open in this Navigator file for grid # %d;"
           " this is not allowed when saving montages", jcd.id);
         SEMMessageBox(str);
         return 1;
+      }
+
+      // Determine nav and multishot settings and run the acquire check
+      testAcqParams = mParams.acquireMMMs ? mapParams : finalParams;
+      testActions = mParams.acquireMMMs ? mapActions : finalActions;
+      if (!mParams.acquireMMMs && jcd.finalDataParamIndex >= 0) {
+        MGridAcqItemsParams acqParam =
+          mMGAcqItemsParamArray.GetAt(jcd.finalDataParamIndex);
+        testAcqParams = &acqParam.params;
+        testActions = acqParam.actions;
+      }
+      acqType = testAcqParams->acquireType;
+      testAcqParams->acquireType = testAcqParams->nonTSacquireType;
+      if (jcd.multiShotParamIndex >= 0) {
+        MGridMultiShotParams mgParam = mMGMShotParamArray.GetAt(jcd.multiShotParamIndex);
+        GridToMultiShotSettings(mgParam, &testMSparams);
+      }
+      str.Format("FOR GRID # %d:\r\n", jcd.id);
+      err = mNavHelper->AssessAcquireForParams(testAcqParams, testActions,
+        (jcd.multiShotParamIndex >= 0) ? testMSparams :
+        *(mNavHelper->GetMultiShotParams()), 0, -1, str);
+      testAcqParams->acquireType = acqType;
+      if (err)
+        return 1;
+
+      // try to assess Z by G cal
+      if ((testActions[NAACT_EUCEN_BY_FOCUS].flags & NAA_FLAG_RUN_IT) != 0) {
+        magInd = mScope->GetMagIndex();
+        camera = mWinApp->GetCurrentCamera();
+        if (mParams.acquireMMMs) {
+          LDforZbyG = MMMneedsLD;
+          stateNums = mParams.MMMstateNums;
+        } else {
+          LDforZbyG = finalNeedsLD;
+          stateNums = mParams.finalStateNums;
+          if (jcd.acqStateNums[0] >= 0 || jcd.acqStateNums[1] >= 0 || jcd.acqStateNums[2] >= 0
+            || jcd.acqStateNums[3] >= 0)
+            stateNums = &jcd.acqStateNums[0];
+        }
+
+        // Check states for different camera or low-dose value
+        state = NULL;
+        for (ind = 0; stateNums && ind < 4; ind++) {
+          if (stateNums[ind] >= 0) {
+            state = mStateArray->GetAt(stateNums[ind]);
+            camera = state->camIndex;
+            if (state->lowDose != 0)
+              LDforZbyG = true;
+          }
+        }
+        ldArea = mWinApp->mParticleTasks->GetLDAreaForZbyG(LDforZbyG, -1, usingView);
+
+        // If in low dose, get mag from currenr area or matching state
+        if (ldArea >= 0) {
+          magInd = ldp[ldArea].magIndex;
+          for (ind = 0; stateNums && ind < 4; ind++) {
+            if (stateNums[ind] >= 0) {
+              state = mStateArray->GetAt(stateNums[ind]);
+              if (mNavHelper->AreaFromStateLowDoseValue(state, &ind) == ldArea) {
+                magInd = state->ldParams.magIndex;
+                break;
+              }
+            }
+          }
+
+          // Outside of low dose, it could come from state
+        } else if (state) {
+          magInd = state->magIndex;
+        }
+        zbygParam = mWinApp->mParticleTasks->FindZbyGCalForMagAndArea(magInd, ldArea,
+          camera, ind, err);
+
+        // Outside of low dose, spot and probe/alpha have to match
+        if (zbygParam && ldArea < 0) {
+          if (zbygParam->spotSize != (state ? state->spotSize : mScope->FastSpotSize()) ||
+            (FEIscope && zbygParam->probeOrAlpha !=
+            (state ? state->probeMode : mScope->GetProbeMode())) ||
+              (JEOLscope && !mScope->GetHasNoAlpha() && zbygParam->probeOrAlpha !=
+            (state ? state->beamAlpha : mScope->FastAlpha())))
+            zbygParam = NULL;
+        }
+
+        if (!zbygParam) {
+          str.Format("Eucentricity by Focus is selected to be run for grid # %d"
+            " but there is no calibration available for the acquisition conditions being"
+            " used", jcd.id);
+          SEMMessageBox(str);
+          return 1;
+        }
       }
     }
   }
@@ -1861,6 +1964,17 @@ int CMultiGridTasks::StartGridRuns(int LMneedsLD, int MMMneedsLD, int finalNeeds
       mNavHelper->ForgetSavedState();
   }
 
+  if (!mWinApp->mLogWindow)
+    mWinApp->AppendToLog(mWinApp->mDocWnd->DateTimeForTitle());
+  if (!mSingleGridMode) {
+    mMainLogName = mWinApp->mLogWindow->GetSaveFile();
+    if (mMainLogName.IsEmpty()) {
+      mMainLogName = mSessionFilename;
+      mWinApp->mLogWindow->UpdateSaveFile(true, mMainLogName);
+      mMainLogName = mWinApp->mLogWindow->GetSaveFile();
+    }
+  }
+
   // Clear out the navigator and initialize all flags then start
   mNavigator->SaveAndClearTable();
   mSeqIndex = -1;
@@ -1887,6 +2001,7 @@ int CMultiGridTasks::StartGridRuns(int LMneedsLD, int MMMneedsLD, int finalNeeds
   mSaveMasterMont = *(mWinApp->GetMontParam());
   mDoingMulGridSeq = true;
   mWinApp->UpdateBufferWindows();
+  OutputGridStartLine();
   UpdateGridStatusText();
   MultiGridNextTask(MG_RUN_SEQUENCE);
   return 0;
@@ -2306,6 +2421,14 @@ void CMultiGridTasks::DoNextSequenceAction(int resume)
           MGSTAT_FLAG_MMM_DONE : MGSTAT_FLAG_ACQ_DONE, 1);
       else
         ChangeStatusFlag(mCurrentGrid, MGSTAT_FLAG_FAILED, 1);
+      str = mWinApp->mLogWindow->GetSaveFile();
+      mWinApp->mLogWindow->DoSave();
+      mWinApp->mLogWindow->CloseLog();
+      mWinApp->AppendToLog(mWinApp->mDocWnd->DateTimeForTitle());
+      PrintfToLog("Navigator Acquire %s for grid # %d", mNavigator->GetAcquireEnded() ?
+        "finished" : "failed", jcd.id);
+      SEMAppendToLog("Log for Acquire is in " + str);
+      mWinApp->mLogWindow->ReadAndAppend(mMainLogName);
       SaveSessionFileWarnIfError();
       break;
 
@@ -2716,7 +2839,7 @@ void CMultiGridTasks::DoNextSequenceAction(int resume)
     }
     break;
 
-    // Start taking a grid map
+    // Start taking medium mag maps
   case MGACT_TAKE_MMM:
     mNavHelper->CopyAcqParamsAndActionsToTemp(0);
     acqParams = mWinApp->GetNavAcqParams(2);
@@ -2727,6 +2850,7 @@ void CMultiGridTasks::DoNextSequenceAction(int resume)
       acqParams->mapWithViewSearch = 2 - mParams.MMMstateType;
     }
     mNavigator->SetCurAcqParmActions(2);
+    CloseMainLogOpenForGrid("_MMM.log");
     mNavigator->AcquireAreas(NAVACQ_SRC_MG_RUN_MMM, false, true);
     mStartedNavAcquire = true;
     break;
@@ -2753,6 +2877,7 @@ void CMultiGridTasks::DoNextSequenceAction(int resume)
       mNavHelper->CopyAcqParamsAndActionsToTemp(1);
     acqParams = mWinApp->GetNavAcqParams(2);
     acqParams->noMBoxOnError = true;
+    CloseMainLogOpenForGrid("_final.log");
     mNavigator->SetCurAcqParmActions(2);
     mOpeningForFinalFailed = false;
 
@@ -2804,6 +2929,7 @@ void CMultiGridTasks::DoNextSequenceAction(int resume)
     }
     RestoreImposedParams();
     mCurrentGrid++;
+    OutputGridStartLine();
     UpdateGridStatusText();
     break;
 
@@ -2856,6 +2982,7 @@ int CMultiGridTasks::SkipToNextGrid(CString &errStr)
   // before the case is hit
   RestoreImposedParams();
   mCurrentGrid++;
+  OutputGridStartLine();
   UpdateGridStatusText();
   return 0;
 }
@@ -2874,6 +3001,19 @@ void CMultiGridTasks::UpdateGridStatusText()
   CString str;
   str.Format("DOING MULTIGRID %d", jcd.id);
   mWinApp->SetStatusText(COMPLEX_PANE, str);
+}
+
+/*
+ * Do standard separator and output when starting a grid
+ */
+void CMultiGridTasks::OutputGridStartLine()
+{
+  if (mCurrentGrid >= mNumGridsToRun)
+    return;
+  JeolCartridgeData jcd = mCartInfo->GetAt(mJcdIndsToRun[mCurrentGrid]);
+  mWinApp->SetNextLogColorStyle(0, 1);
+  PrintfToLog("-----------------------------------------------------------------"
+    "---------------\r\nStarting grid # %d\r\n", jcd.id);
 }
 
 /*
@@ -2905,6 +3045,19 @@ void CMultiGridTasks::NextAutoFilenameIfNeeded(CString &str)
   CFileStatus status;
   while (CFile::GetStatus(str, status))
     str = mNavHelper->NextAutoFilename(str);
+}
+
+/*
+ * Close the main log and open the grid-specific one
+ */
+void CMultiGridTasks::CloseMainLogOpenForGrid(const char *suffix)
+{
+  if (!mSingleGridMode) {
+    mWinApp->mLogWindow->DoSave();
+    mWinApp->mLogWindow->CloseLog();
+    mWinApp->AppendToLog(mWinApp->mDocWnd->DateTimeForTitle());
+    mWinApp->mLogWindow->UpdateSaveFile(true, FullGridFilePath(mCurrentGrid, suffix));
+  }
 }
 
 /*
@@ -3128,9 +3281,9 @@ void CMultiGridTasks::CopyAutoContGroups()
  * Macro and function for copying grid multishot settings to main settings
  */
 #define COPY_MEMBER(mem) msParam->mem = B3DNINT(mgParam.values[MS_##mem]);
-void CMultiGridTasks::GridToMultiShotSettings(MGridMultiShotParams &mgParam)
+void CMultiGridTasks::GridToMultiShotSettings(MGridMultiShotParams &mgParam,
+  MultiShotParams *msParam)
 {
-  MultiShotParams *msParam = mNavHelper->GetMultiShotParams();
   msParam->numShots[0] = B3DNINT(mgParam.values[MS_numShots0]);
   msParam->numShots[1] = B3DNINT(mgParam.values[MS_numShots1]);
   msParam->numHoles[0] = B3DNINT(mgParam.values[MS_numHoles0]);
@@ -3148,6 +3301,12 @@ void CMultiGridTasks::GridToMultiShotSettings(MGridMultiShotParams &mgParam)
     mNavHelper->mMultiShotDlg->UpdateSettings();
 }
 #undef COPY_MEMBER
+
+// Macro-callable version
+void CMultiGridTasks::GridToMultiShotSettings(MGridMultiShotParams &mgParam)
+{
+  GridToMultiShotSettings(mgParam, mNavHelper->GetMultiShotParams());
+}
 
 /*
 * Macro and function for copying main multishot settings to grid settings
@@ -3478,6 +3637,8 @@ bool CMultiGridTasks::GetGridMapLabel(int mapID, CString &value)
 #define MGDOC_FP_PARAM  "FocusPosParams"
 #define MGDOC_NOTE "Note"
 #define MGDOC_ORDER "RunOrder"
+#define MGDOC_LMM_CONSXY "LMMConsetSizes"
+#define MGDOC_MMM_CONSXY "MMMConsetSizes"
 
 #define MGNAV_ACQ_SUFFIX "_navAcq.txt"
 
@@ -3602,6 +3763,12 @@ int CMultiGridTasks::SaveSessionFile(CString &errStr)
     if (mUseCustomOrder)
       err += AdocSetIntegerArray(ADOC_GLOBAL_NAME, 0, MGDOC_ORDER, &mCustomRunDlgInds[0],
         (int)mCustomRunDlgInds.size());
+    if (mInitializedGridMont)
+      err += AdocSetTwoIntegers(ADOC_GLOBAL_NAME, 0, MGDOC_LMM_CONSXY,
+        mMontSetupConsetSizes[0], mMontSetupConsetSizes[1]);
+    if (mInitializedMMMmont)
+      err += AdocSetTwoIntegers(ADOC_GLOBAL_NAME, 0, MGDOC_MMM_CONSXY,
+        mMontSetupConsetSizes[2], mMontSetupConsetSizes[3]);
   }
 
   // Save grid values
@@ -3741,6 +3908,10 @@ void CMultiGridTasks::ClearSession(bool keepAcqParams)
   mMGMShotParamArray.RemoveAll();
   mMGGeneralParamArray.RemoveAll();
   mMGFocusPosParamArray.RemoveAll();
+  for (int i = 0; i < 4; i++)
+    mMontSetupConsetSizes[i] = 0;
+  mInitializedGridMont = false;
+  mInitializedMMMmont = false;
   if (!keepAcqParams)
     mMGAcqItemsParamArray.RemoveAll();
   if (mNavHelper->mMultiGridDlg) {
@@ -3937,6 +4108,12 @@ int CMultiGridTasks::LoadSessionFile(bool useLast, CString &errStr)
       }
     }
   }
+  if (AdocGetTwoIntegers(ADOC_GLOBAL_NAME, 0, MGDOC_LMM_CONSXY,
+    &mMontSetupConsetSizes[0], &mMontSetupConsetSizes[1]) < 0)
+    err++;
+  if (AdocGetTwoIntegers(ADOC_GLOBAL_NAME, 0, MGDOC_MMM_CONSXY,
+    &mMontSetupConsetSizes[1], &mMontSetupConsetSizes[3]) < 0)
+    err++;
 
   if (err)
     errStr = "Error reading values from global section of autodoc";
