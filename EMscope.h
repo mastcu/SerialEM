@@ -564,7 +564,8 @@ public:
   GetSetMember(int, SkipNormalizations);
   GetSetMember(BOOL, ConstantBrightInNano);
   GetSetMember(int, MinInitializeJeolDelay);
-  GetSetMember(unsigned int, UtapiConnected);
+  GetMember(unsigned int, UtapiConnected);
+  void SetUtapiConnected(unsigned int flags, bool *supportsService) { mUtapiConnected = flags; mUtapiSupportsService = supportsService; };
   GetSetMember(BOOL, UseFilterInTEMMode);
   GetSetMember(int, FeiSTEMprobeModeInLM);
   GetSetMember(int, ScanningMags);
@@ -961,7 +962,8 @@ private:
   double mFEGBeamCurrent;      // Last value gotten
   BOOL mConstantBrightInNano;  // Brightness does not change with intensity in nanoprobe
   int mMinInitializeJeolDelay; // So a warning can be issued if it is too low
-  unsigned int mUtapiConnected; // Possible set of flags for capabilities available
+  unsigned int mUtapiConnected; // Just a flag for connection made
+  bool *mUtapiSupportsService;  // Address of array with flags for specific services
   BOOL mUseFilterInTEMMode;    // Flag that energy filter will be used without EFTEM mode
   int mScanningMags;           // 1 if scanning, set to 0 to stop or -1 to end
   BOOL mUseImageBeamTilt;      // Flag to use image-beam tilt on FEI instead of regular

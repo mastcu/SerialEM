@@ -1861,12 +1861,14 @@ void CEMscope::ScopeUpdate(DWORD dwTime)
     if (!mClosedValvesAfterIdle && GetColumnValvesOpen() > 0) {
       mClosedValvesAfterIdle = true;
       SetColumnValvesOpen(false, true);
+      CTime ctdt = CTime::GetCurrentTime();
       if (mNoColumnValve)
-        PrintfToLog("Turned off beam after %d minutes of inactivity",
-          mIdleTimeToCloseValves);
+        PrintfToLog("%02d:%02d:%02d: Turned off beam after %d minutes of inactivity",
+          ctdt.GetHour(), ctdt.GetMinute(), ctdt.GetSecond(), mIdleTimeToCloseValves);
       else
-        PrintfToLog("Closed valve%s after %d minutes of inactivity",
-          JEOLscope ? "" : "s", mIdleTimeToCloseValves);
+        PrintfToLog("%02d:%02d:%02d: Closed valve%s after %d minutes of inactivity",
+          ctdt.GetHour(), ctdt.GetMinute(), ctdt.GetSecond(), JEOLscope ? "" : "s", 
+          mIdleTimeToCloseValves);
     }
     mClosedValvesAfterIdle = true;
   } else {
