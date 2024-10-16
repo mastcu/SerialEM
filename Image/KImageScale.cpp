@@ -101,12 +101,12 @@ void KImageScale::DoRamp(unsigned int *inRamp, int inRampSize)
 
 // Find the image scaling that saturates a fraction of pixels
 void KImageScale::FindPctStretch(KImage *inImage, float pctLo, float pctHi, float fracUse,
-  int FFTbkgdGray, float FFTTruncDiam, bool partialScan)
+  int FFTbkgdGray, float FFTTruncDiam, int partialScan)
 {
   float nSample = 10000.;
   float matt = 0.5f * (1.f - fracUse);
   int ix, iy, nx, ny, type, ixStart, iyStart, nxUse, nyUse, loop, dsize = 1;
-  int maxRing, minRing, nsum, numSame = 0, nyUsable;
+  int maxRing, minRing, nsum, numSame = 0, nyUsable, ixSame = 0, iySame = 0, nxUsable;
   float sample, scaleLo, scaleHi, val, sum, valMax, valSecond, bkgd;
   double ringRad, rad;
   char *theImage;
@@ -122,31 +122,82 @@ void KImageScale::FindPctStretch(KImage *inImage, float pctLo, float pctHi, floa
     inImage->UnLock();
     return;
   }
+  nxUsable = nx;
   nyUsable = ny;
 
-  // If the caller indicates it could be a partial scan, loop from bottom and find first
-  // row with non-fill value
-  if (partialScan) {
-    valSecond = GetImageValue(linePtrs, type, nx, ny, nx / 2, ny - 1);
-    for (iy = ny - 2; iy > 0; iy--) {
-      val = GetImageValue(linePtrs, type, nx, ny, nx / 2, iy);
-      if (val == valSecond || fabs(val - valSecond) < 1.e-6 * valSecond)
-        numSame++;
-      else
-        break;
+  // If the caller indicates it could be a partial scan, loop from one side and find first
+  // place with non-fill value
+  if (partialScan >= 0) {
+    if (partialScan % 4 == 0) {
+
+      // Unrotated: loop from bottom
+      valSecond = GetImageValue(linePtrs, type, nx, ny, nx / 2, ny - 1);
+      for (iy = ny - 2; iy > 0; iy--) {
+        val = GetImageValue(linePtrs, type, nx, ny, nx / 2, iy);
+        if (val == valSecond || fabs(val - valSecond) < 1.e-6 * valSecond)
+          numSame++;
+        else
+          break;
+      }
+      if (numSame > matt * ny && numSame < ny - 4)
+        nyUsable = (ny - numSame);
+    } else if (partialScan % 4 == 2) {
+
+      // 180 degrees rotated: loop from top
+      valSecond = GetImageValue(linePtrs, type, nx, ny, nx / 2, 0);
+      for (iy = 1; iy < ny - 1; iy++) {
+        val = GetImageValue(linePtrs, type, nx, ny, nx / 2, iy);
+        if (val == valSecond || fabs(val - valSecond) < 1.e-6 * valSecond)
+          numSame++;
+        else
+          break;
+      }
+      if (numSame > matt * ny && numSame < ny - 4) {
+        nyUsable = (ny - numSame);
+        iySame = numSame;
+      }
+    } else if (partialScan % 4 == 1) {
+
+      // 90 degrees: loop from right
+      valSecond = GetImageValue(linePtrs, type, nx, ny, nx - 1, ny / 2);
+      for (ix = nx - 2; ix > 0; ix--) {
+        val = GetImageValue(linePtrs, type, nx, ny, ix, ny / 2);
+        if (val == valSecond || fabs(val - valSecond) < 1.e-6 * valSecond)
+          numSame++;
+        else
+          break;
+      }
+      if (numSame > matt * nx && numSame < nx - 4)
+        nxUsable = (nx - numSame);
+
+    } else {
+
+      // 270 degrees: loop from left
+      valSecond = GetImageValue(linePtrs, type, nx, ny, 0, ny / 2);
+      for (ix = 1; ix < nx - 1; ix++) {
+        val = GetImageValue(linePtrs, type, nx, ny, ix, ny / 2);
+        if (val == valSecond || fabs(val - valSecond) < 1.e-6 * valSecond)
+          numSame++;
+        else
+          break;
+      }
+      if (numSame > matt * nx && numSame < nx - 4) {
+        nxUsable = (nx - numSame);
+        ixSame = numSame;
+      }
     }
-    if (numSame > matt * ny && numSame < ny - 4)
-      nyUsable = (ny - numSame);
   }
 
   // Loop twice, first finding the normal sample, then getting a much denser sample to set
   // the limits for the black/white sliders
   for (loop = 0; loop < 2; loop ++) {
-    ixStart = (int)(nx * matt);
-    nxUse = nx - 2 * ixStart;
+    ixStart = (int)(nxUsable * matt);
+    nxUse = nxUsable - 2 * ixStart;
+    ixStart += ixSame;
     iyStart = (int)(nyUsable * matt);
     nyUse = nyUsable - 2 * iyStart;
-    sample = nSample / (fracUse * nx * fracUse * nyUsable);
+    iyStart += iySame;
+    sample = nSample / (fracUse * nxUsable * fracUse * nyUsable);
     if (sample > 1.0)
       sample = 1.0;
     if (percentileStretch(linePtrs, type, nx, ny, sample, ixStart, iyStart, nxUse, nyUse,

@@ -1182,7 +1182,7 @@ int EMbufferManager::AutoalignBasicIndex()
 }
 
 // Create new imageScale if needed then find stretch with standard parameters
-void EMbufferManager::FindScaling(EMimageBuffer * imBuf, bool partialScan)
+void EMbufferManager::FindScaling(EMimageBuffer * imBuf, int partialScan)
 {
   float pctLo, pctHi;
   if (imBuf->mImageScale == NULL)

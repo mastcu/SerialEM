@@ -50,7 +50,7 @@ public:
 	void DoRamp(unsigned int *inRamp, int inRampSize = 256);
 	
 	void FindPctStretch(KImage *inImage, float pctLo, float pctHi, float fracUse, 
-    int FFTbkgdGray = -1, float FFTTruncDiam = 0., bool partialScan = false);
+    int FFTbkgdGray = -1, float FFTTruncDiam = 0., int partialScan = -1);
   float GetImageValue(unsigned char **linePtrs, int type, int nx, int ny, int ix, int iy);
 };
 

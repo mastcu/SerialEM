@@ -113,7 +113,7 @@ public :
 
 public:
   int AddToStackWindow(int bufNum, int binning, int secNum, bool convert, int angleOrder);
-  void FindScaling(EMimageBuffer * imBuf, bool partialScan = false);
+  void FindScaling(EMimageBuffer * imBuf, int partialScan = -1);
   void DeleteOtherStore() {delete mOtherStoreMRC;};
   int StartAsyncSave(KImageStore *store, EMimageBuffer *buf, int section);
   int StartAsyncSave(KImageStore *store, KImage *image, int section, int deleteFlags);
