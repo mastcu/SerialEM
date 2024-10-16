@@ -6865,7 +6865,7 @@ int CMacCmd::GetSTEMBrightContrast(void)
     ABORT_LINE("The currently selected camera must be the FEI STEM for line:\n\n");
   SubstituteLineStripItems(mStrLine, setIt ? 3 : 1, mStrCopy);
   for (index = 0; index < mCamParams->numChannels; index++)
-    if (mStrCopy.CompareNoCase(mCamParams->channelName[index]))
+    if (!mStrCopy.CompareNoCase(mCamParams->channelName[index]))
       break;
   if (index == mCamParams->numChannels)
     ABORT_LINE("There is no detector with this \"ChannelName\" in the SerialEM camera"
