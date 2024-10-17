@@ -110,12 +110,30 @@
             when a function is called that does not exist in the current version.
           </TD>
         </TR>
-        <TR VALIGN="top">
+         <TR VALIGN="top">
+          <TD>SkipAdvancedScripting</TD>
+          <TD>Set to 1 to prevent Thermo/FEI cameras from trying to use the advanced scripting
+            interface and to prevent attempts to use other functionality in advanced scripting.&nbsp; Set
+            to a negative value to send a sum of flags about particular components of advanced scripting to skip,
+            which is necessary if there is no license for them.&nbsp; Flags are:<br />
+            &nbsp;&nbsp;&nbsp; -1 to skip the temperature control component and use the functions in standard scripting<br />
+            &nbsp;&nbsp;&nbsp; -2 to skip the autoloader component and use the functions in standard scripting<br />
+            If AdvancedScripting.dll is installed (Titan 2.9/Talos 1.9) but
+            there is no license for it, the initial connections through this interface work
+            but camera acquisition fails.&nbsp; This property prevents that.</TD>
+        </TR>
+       <TR VALIGN="top">
           <TD>UseUtapiScripting</TD>
           <TD>Set to 1 to try to connect to the new Thermo/FEI UTAPI scripting, either on the local computer or
             at the address used to connect to FEI-SEMserver.exe.&nbsp; For testing, set to 2 to connect to UTAPI without 
             trying to connect to the scope otherwise.
           </TD>
+        </TR>
+       <TR VALIGN="top">
+          <TD>SkipUtapiServices</TD>
+          <TD>Follow with a list of indexes to UTAPI services that should be marked as not 
+            available.&nbsp; The indexes correspond to the values of the enum 
+            'UtapiSupportTypes' in SerialEM.h.</TD>
         </TR>
         <TR VALIGN="top">
           <TD>SimulationMode</TD>
@@ -783,18 +801,6 @@
               default read port for API 2 is 13240 (see DECameraReadPort).&nbsp;&nbsp; If 
               you change this property after connecting to the server, you will probably need 
               to restart the server.</TD>
-        </TR>
-        <TR VALIGN="top">
-          <TD>SkipAdvancedScripting</TD>
-          <TD>Set to 1 to prevent Thermo/FEI cameras from trying to use the advanced scripting
-            interface and to prevent attempts to use other functionality in advanced scripting.&nbsp; Set
-            to a negative value to send a sum of flags about particular components of advanced scripting to skip,
-            which is necessary if there is no license for them.&nbsp; Flags are:<br />
-            &nbsp;&nbsp;&nbsp; -1 to skip the temperature control component and use the functions in standard scripting<br />
-            &nbsp;&nbsp;&nbsp; -2 to skip the autoloader component and use the functions in standard scripting<br />
-            If AdvancedScripting.dll is installed (Titan 2.9/Talos 1.9) but
-            there is no license for it, the initial connections through this interface work
-            but camera acquisition fails.&nbsp; This property prevents that.</TD>
         </TR>
         <TR VALIGN="top">
           <TD>InitialCurrentCamera</TD>

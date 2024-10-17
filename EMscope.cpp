@@ -683,6 +683,7 @@ int CEMscope::Initialize()
         mDewarVacCapabilities = mUseIllumAreaForC2 ? 3 : 0;
       if (!mPlugFuncs->GetApertureSize)
         mFEIhasApertureSupport = 0;
+
     } else if (JEOLscope) {
 
       // JEOL: Also transfer values to structures before initialization
@@ -891,6 +892,11 @@ int CEMscope::Initialize()
   }
   if (FEIscope && mScopeHasPhasePlate < 0)
     mScopeHasPhasePlate = mAdvancedScriptVersion > 0 ? 1 : 0;
+  if (mUtapiConnected) {
+    for (ind = 0; ind < (int)mSkipUtapiServices.size(); ind++)
+      if (mSkipUtapiServices[ind] >= 0 && mSkipUtapiServices[ind] < UTAPI_SUPPORT_END)
+        mUtapiSupportsService[mSkipUtapiServices[ind]] = false;
+  }
 
   // Now set up a lot of things for TEMCON JEOL scope
   if (JEOLscope) {
@@ -9479,7 +9485,8 @@ int CEMscope::LookupScriptingCamera(CameraParameters *params, bool refresh,
         mCamera->SetOtherCamerasInTIA(false);
       if (doMessage) {
         mWinApp->AppendToLog(CString("Connected to ") +
-          B3DCHOICE(params->CamFlags & PLUGFEI_USES_ADVANCED, "Advanced", "Standard") +
+          B3DCHOICE(params->CamFlags & PLUGFEI_USES_ADVANCED, 
+            UtapiSupportsService(UTSUP_CAM_SINGLE) ? "UTAPI" : "Advanced", "Standard") +
           " Scripting interface for FEI camera access" + B3DCHOICE(
           mSkipAdvancedScripting > 0, " because property SkipAdvancedScripting is set!",
             ""));

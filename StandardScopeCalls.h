@@ -255,6 +255,7 @@ SCOPE_SAMENAME(FinishFocRamp, FinishFocusRamp);
 SCOPE_SAMENAME(ShowMB, ShowMessageBox);
 SCOPE_SAMENAME(ScopeGetInt, GetBeamStopper);
 SCOPE_SAMENAME(ScopeSetInt, SetBeamStopper);
-
+SCOPE_SAMENAME(UtapiSTEMimage, UtapiAcquireSTEMimage);
+SCOPE_SAMENAME(ScopeNoArg, UtapiStopContinuous);
 #undef SCOPE_SAMENAME
 #endif                                 

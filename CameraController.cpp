@@ -477,6 +477,8 @@ CCameraController::CCameraController()
   mFilterObeyNormDelay = false;
   mFilterWaiting = false;
   mKeepLastUsedFrameNum = false;
+  for (l = 0; l < MAX_CHANNELS; l++)
+    mTD.PartialArrays[l] = NULL;
 }
 
 // Clear anything that might be set externally, or was cleared in constructor and cleanup
@@ -3499,6 +3501,8 @@ void CCameraController::Capture(int inSet, bool retrying)
     ErrorCleanup(1);
     return;
   }
+
+  mTD.UseUtapi = UsingUtapiForCamera(mParam);
   
   // Convert from coordinates in conset to unbinned coordinates, adjusting as needed
   CapManageCoordinates(conSet, gainXoffset, gainYoffset);
@@ -3550,6 +3554,10 @@ void CCameraController::Capture(int inSet, bool retrying)
   // Pass the native chip size and let plugin adjust for image type
   mTD.fullSizeX = mParam->sizeX / binDiv;
   mTD.fullSizeY = mParam->sizeY / binDiv;
+  if (mTD.UseUtapi && mParam->STEMcamera) {
+    mTD.fullSizeX /= conSet.binning;
+    mTD.fullSizeY /= conSet.binning;
+  }
   mTD.PostMoveStage = mStageQueued;
   mTD.imageReturned = false;
   mTD.GetDeferredSum = 0;
@@ -3821,6 +3829,11 @@ void CCameraController::Capture(int inSet, bool retrying)
         "flags %x", mTD.DivideBy2, mTD.CountScaling, mParam->countsPerElectron, 
         mParam->falconEventScaling, mTD.FEIacquireFlags);
     }
+
+    if ((mParam->CamFlags & PLUGFEI_CAN_DARK_ONLY) &&
+      conSet.processing == DARK_SUBTRACTED) {
+      mTD.FEIacquireFlags |= PLUGFEI_DARK_CORR_ONLY;
+    }
   } else if (IS_FALCON3_OR_4(mParam) && mParam->falcon3ScalePower > -10 &&
     mScope->GetPluginVersion() >= FEI_PLUGIN_SCALES_DUMB_F3) {
       mTD.DivideBy2 = mParam->falcon3ScalePower + SCALE_POWER_OFFSET - mTD.DivideBy2;
@@ -4019,8 +4032,8 @@ void CCameraController::Capture(int inSet, bool retrying)
   mTD.PluginVersion = GetPluginVersion(mParam);
 
   // Set partial scan to 2 the first time to signal that buffers need to be rolled
-  if (mParam->STEMcamera && mParam->TietzType && conSet.exposure >= mPartialScanThreshExp)
-  {
+  if (mParam->STEMcamera && (mParam->TietzType || mTD.UseUtapi) && 
+    conSet.exposure >= mPartialScanThreshExp && mSingleContModeUsed == SINGLE_FRAME) {
     mTD.ReturnPartialScan = (mTD.ReturnPartialScan > 0) ? 1 : 2;
   } else
     mTD.ReturnPartialScan = 0;
@@ -4033,9 +4046,11 @@ void CCameraController::Capture(int inSet, bool retrying)
     mTD.PlugSTEMacquireFlags |= (mTietzSTEMflags << TIETZ_STEM_FLAG_SHIFT);
   
   if (mSingleContModeUsed == CONTINUOUS && mNeedShotToInsert < 0) {
-    if (mParam->STEMcamera && mParam->GatanCam)
+    if (mParam->STEMcamera && (mParam->GatanCam || mTD.UseUtapi)) {
       mTD.ContinuousSTEM = mTD.ContinuousSTEM ? -1 : 1;
-    else {
+      if (mTD.UseUtapi)
+        mTD.PlugSTEMacquireFlags |= PLUGCAM_CONTINUOUS;
+    } else {
       mTD.ContinuousSTEM = 0;
 
       // For continuous mode in the plugin, set all the flags in the processing variable
@@ -5283,10 +5298,13 @@ void CCameraController::CapManageCoordinates(ControlSet & conSet, int &gainXoffs
     else
       operation = mParam->rotationFlip;
   }
+  if (mParam->STEMcamera && mTD.UseUtapi) {
+    operation = mParam->rotationFlip;
+  }
   if (operation) {
-    CorDefUserToRotFlipCCD(operation, mBinning, csizeX, csizeY, tsizeX, tsizeY, tTop, tLeft,
-      tBot, tRight);
-    swapXYinAcquire = operation % 2 ? 1 : 0;
+    CorDefUserToRotFlipCCD(operation, mBinning, csizeX, csizeY, tsizeX, tsizeY, tTop, 
+      tLeft, tBot, tRight);
+    swapXYinAcquire = operation % 2 != 0 && !(mParam->STEMcamera && mTD.UseUtapi);
   }
 
   if (mParam->TietzType && mParam->TietzBlocks) {
@@ -9722,7 +9740,7 @@ void CCameraController::DisplayNewImage(BOOL acquired)
         }
         if (mWinApp->mCalibTiming->Calibrating())
           invertCon = 0;
-        if (operation || invertCon) {
+        if (operation || invertCon) { 
           if (RotateAndReplaceArray(chan, operation, invertCon)) {
             SEMMessageBox("Failed to get memory for processing STEM image", MB_EXCLAME);
             errForCleanup = 1;
@@ -10041,7 +10059,7 @@ void CCameraController::DisplayNewImage(BOOL acquired)
         mImBufs->mImage = image;
         mImBufs->mCaptured = 1;
         mWinApp->mBufferManager->FindScaling(mImBufs, 
-          mParam->STEMcamera && mTD.ReturnPartialScan > 0);
+          (mParam->STEMcamera && mTD.ReturnPartialScan > 0) ? mParam->rotationFlip : -1);
       }
 
       imBuf->mBinning = mBinning;
@@ -10569,7 +10587,10 @@ void CCameraController::DisplayNewImage(BOOL acquired)
   }
 
   if (mTD.ReturnPartialScan > 0 && (errForCleanup || mHalting)) {
-    mTD.plugFuncs->StopContinuous();
+    if (mTD.UseUtapi)
+      StopContinuousSTEM();
+    else
+      mTD.plugFuncs->StopContinuous();
     mTD.PlugSTEMacquireFlags |= PLUGCAM_ABORT_SCAN;
     mTD.plugFuncs->SetAcquireFlags(mTD.PlugSTEMacquireFlags);
     mTD.ReturnPartialScan = 0;
@@ -10604,6 +10625,10 @@ void CCameraController::DisplayNewImage(BOOL acquired)
   if (mTD.ReturnPartialScan > 0) {
     Capture(mLastConSet);
     return;
+  }
+  if (mTD.ReturnPartialScan < 0 && mTD.UseUtapi) {
+    CleanupPartialArrays();
+    mTD.ReturnPartialScan = 0;
   }
   
   // Check for whether to start pending capture
@@ -10764,6 +10789,12 @@ void CCameraController::ErrorCleanup(int error)
   if (mRepFlag >= 0 && !mPreventUserToggle)
     mWinApp->SetStatusText(B3DCHOICE(mWinApp->mProcessImage->GetLiveFFT(), COMPLEX_PANE, 
     MEDIUM_PANE), "");
+}
+
+void CCameraController::CleanupPartialArrays()
+{
+  for (int ind = 0; ind < B3DMIN(mTD.NumChannels, MAX_CHANNELS); ind++)
+    DELETE_ARR(mTD.PartialArrays[ind]);
 }
 
 // Restore any mag change and image shift adjustments done for STEM and clear retain flag
@@ -11601,15 +11632,20 @@ void CCameraController::SetNonGatanPostActionTime(void)
   }
 }
 
-int CCameraController::GetArrayForImage(CameraThreadData * td, size_t & arrSize, int index)
+int CCameraController::GetArrayForImage(CameraThreadData *td, size_t &arrSize, int index)
 {
+  short int *temp;
   arrSize = ((size_t)td->DMSizeX + 4) * (td->DMSizeY + 4) * 
     (td->ImageType == kFLOAT ? 2 : 1);
-  NewArray(td->Array[index], short int, arrSize);
-  if (!td->Array[index]) {
+  NewArray(temp, short int, arrSize);
+  if (!temp) {
     DeferMessage(td, "Failed to get memory for image!");
     return 1;
   }
+  if (index < 0)
+    td->PartialArrays[-(index + 1)] = temp;
+  else
+    td->Array[index] = temp;
   return 0;
 }
 
@@ -11805,7 +11841,7 @@ int CCameraController::AcquireFEIimage(CameraThreadData *td, void *array, int co
 
   if (advanced) {
     SEMTrace('E', "Calling ASIacquireFromcamera %p %d %d %f %d %d %d %d %d %d %d %d %d "
-      "%d %f", array, sizeX, sizeY,  td->Exposure,  messInd, td->Binning, 
+      "%x %f", array, sizeX, sizeY,  td->Exposure,  messInd, td->Binning, 
       td->restrictedSize, td->ImageType, td->DivideBy2, td->eagleIndex, 
       (td->CamFlags & PLUGFEI_CAN_DOSE_FRAC) ? td->SaveFrames : saveFrames,
       td->GatanReadMode, (td->CamFlags & PLUGFEI_CAM_CAN_ALIGN) ? td->AlignFrames : -1,
@@ -11851,13 +11887,13 @@ int CCameraController::AcquireFEIchannels(CameraThreadData * td, int sizeX, int 
   if (JEOLscope)
     return 0;
   CString message;
-  long chan, numAlloc, retval = 0, numAdded = 0, numCopied = 0;
+  long chan, ind, numAlloc, retval = 0, numAdded = 0, numCopied = 0;
   size_t arrSize;
   DWORD ticks = GetTickCount();
   const char *chanNames[MAX_STEM_CHANNELS];
   SEMTrace('E', "Entering AcquireFEIchannels");
 
-  if (td->scopePlugFuncs->BeginThreadAccess(2, 0)) {
+  if (!td->UseUtapi && td->scopePlugFuncs->BeginThreadAccess(2, 0)) {
     DeferMessage(td, "Error creating second instance of microscope object\n"
       " for acquiring image");
     SEMErrorOccurred(1);
@@ -11872,14 +11908,49 @@ int CCameraController::AcquireFEIchannels(CameraThreadData * td, int sizeX, int 
     }
   }
   numAlloc = chan;
+  if (!retval && td->UseUtapi && td->ReturnPartialScan == 2) {
+    for (chan = 0; chan < td->NumChannels; chan++) {
+      if (GetArrayForImage(td, arrSize, -(chan + 1))) {
+        SEMErrorOccurred(1);
+        retval = 1;
+        for (ind = 0; ind < chan; ind++)
+          DELETE_ARR(td->PartialArrays[ind]);
+        break;
+      }
+      memset(td->PartialArrays[chan], 0, arrSize * sizeof(short));
+    }
+  }
+
   if (!retval) {
-    retval = td->scopePlugFuncs->AcquireFEIchannels(&td->Array[0], &chanNames[0], 
-      td->NumChannels, &numCopied, sizeX, sizeY, td->PixelTime, td->STEMrotation * DTOR, 
-      td->Binning, td->restrictedSize, td->ImageType, td->DivideBy2);
+    if (td->UseUtapi) {
+      SEMTrace('E', "%s %d %d %d %d %d %d %d %f %f %d %d %d", chanNames[0],
+        td->NumChannels, td->CallSizeX, td->CallSizeY, td->fullSizeX,
+        td->fullSizeY, td->Top, td->Left, td->PixelTime, td->STEMrotation * DTOR,
+        td->ImageType, td->DivideBy2, td->PlugSTEMacquireFlags);
+      retval = td->scopePlugFuncs->UtapiAcquireSTEMimage(
+        td->ReturnPartialScan ? &td->PartialArrays[0] : &td->Array[0], &chanNames[0],
+        td->NumChannels, &numCopied, td->CallSizeX, td->CallSizeY, td->fullSizeX, 
+        td->fullSizeY, td->Top, td->Left, td->PixelTime, td->STEMrotation * DTOR, 
+        td->ImageType, td->DivideBy2, td->PlugSTEMacquireFlags, 0.);
+      if (td->ReturnPartialScan > 0 && numCopied < 0) {
+        td->ReturnPartialScan = -td->ReturnPartialScan;
+      }
+      numCopied = B3DABS(numCopied);
+      if (numCopied && td->ReturnPartialScan) {
+        for (chan = 0; chan < numCopied; chan++)
+          memcpy(td->Array[chan], td->PartialArrays[chan], 
+            td->CallSizeX * td->CallSizeY * sizeof(short));
+      }
+    } else {
+      retval = td->scopePlugFuncs->AcquireFEIchannels(&td->Array[0], &chanNames[0],
+        td->NumChannels, &numCopied, sizeX, sizeY, td->PixelTime, td->STEMrotation * DTOR,
+        td->Binning, td->restrictedSize, td->ImageType, td->DivideBy2);
+    }
     if (retval)
       DeferMessage(td, CString(td->scopePlugFuncs->GetLastErrorString()));
   }
-  td->scopePlugFuncs->EndThreadAccess(2);
+  if (!td->UseUtapi)
+    td->scopePlugFuncs->EndThreadAccess(2);
 
   // Return value 2 means numCopied is correct
   if (retval && retval != 2)
@@ -12840,6 +12911,21 @@ bool CCameraController::IsSaveInEERMode(CameraParameters *param, BOOL saveFrames
      (!saveFrames && alignFrames && useFramealign == 1));
 }
 
+// Returns true if camera is using Utapi interface, plus adjusts needed parameters
+bool CCameraController::UsingUtapiForCamera(CameraParameters * param)
+{
+  bool useUtapi = false;
+  if (!param->FEItype)
+    return false;
+  if (param->STEMcamera) {
+    useUtapi = mScope->UtapiSupportsService(UTSUP_STEM_RASTER);
+    param->moduloX = useUtapi ? 2 : -1;
+    param->moduloY = useUtapi ? 2 : -1;
+    param->useContinuousMode = useUtapi;
+  }
+  return useUtapi;
+}
+
 // Returns whether we can save an mdoc for the frame stack
 bool CCameraController::CanSaveFrameStackMdoc(CameraParameters * param)
 {
@@ -13064,6 +13150,14 @@ void CCameraController::StopContinuousSTEM(void)
   // DE camera
   if (mParam->DE_camType >= 2) {
     mTD.DE_Cam->SetLiveMode(0);
+    return;
+  }
+
+  if (mTD.UseUtapi && mTD.scopePlugFuncs->UtapiStopContinuous) {
+    mTD.scopePlugFuncs->UtapiStopContinuous();
+    if (mTD.ReturnPartialScan)
+      CleanupPartialArrays();
+    mTD.ReturnPartialScan = 0;
     return;
   }
 

@@ -3088,8 +3088,9 @@ int CParameterIO::ReadProperties(CString strFileName)
           break;
 
       } else if (startCcomment) {
-        while (strLine.Find("*/") < 0 && 
-          (err = ReadAndParse(strLine, strItems, MAX_TOKENS)) == 0) {}
+        while (strLine.Find("*/") < 0 &&
+          (err = ReadAndParse(strLine, strItems, MAX_TOKENS)) == 0) {
+        }
         if (err)
           AfxMessageBox(CString(err < 0 ? "End of file was reached" :
             "A read error occurred") + " looking for */ (the end of a C-style comment) in"
@@ -3747,11 +3748,11 @@ int CParameterIO::ReadProperties(CString strFileName)
         defFileOpt->signToUnsignOpt = itemInt[1];
       else if (MatchNoCase("FileOptionsFileType"))
         defFileOpt->fileType = B3DCHOICE(itemInt[1] > 1, STORE_TYPE_HDF,
-        itemInt[1] != 0 ? STORE_TYPE_ADOC : STORE_TYPE_MRC);
+          itemInt[1] != 0 ? STORE_TYPE_ADOC : STORE_TYPE_MRC);
       else if (MatchNoCase("MontageAutodocOptions")) {
         defFileOpt->separateForMont = itemInt[1] != 0;
         defFileOpt->montUseMdoc = itemInt[1] % 2 != 0;
-        defFileOpt->montFileType = (itemInt[1] / 2) % 2 != 0 ? STORE_TYPE_ADOC : 
+        defFileOpt->montFileType = (itemInt[1] / 2) % 2 != 0 ? STORE_TYPE_ADOC :
           STORE_TYPE_MRC;
         if (itemInt[1] == 8 || itemInt[1] == 9)
           defFileOpt->montFileType = STORE_TYPE_HDF;
@@ -3762,9 +3763,16 @@ int CParameterIO::ReadProperties(CString strFileName)
 
       else if (MatchNoCase("SingleTecnaiObject")) {
       } else if (MatchNoCase("CookerScreenTiltDelay")) {
-      } else if (MatchNoCase("BackgroundSocketToFEI"))
+      } else if (MatchNoCase("BackgroundSocketToFEI")) {
         SetNumFEIChannels(itemInt[1] ? 4 : 3);
-      else if (MatchNoCase("UseTEMScripting")) {
+      } else if (MatchNoCase("SkipUtapiServices")) {
+        ShortVec *skips = mWinApp->mScope->GetSkipUtapiServices();
+        for (index = 1; index < MAX_TOKENS; index++) {
+          if (itemEmpty[index])
+            break;
+          skips->push_back(itemInt[index]);
+        }
+      } else if (MatchNoCase("UseTEMScripting")) {
         scope->SetUseTEMScripting(itemInt[1]);
         //JEOLscope = false;
       } else 

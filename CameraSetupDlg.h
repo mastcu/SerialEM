@@ -220,6 +220,7 @@ private:
   bool mCanAlignFrames;
   bool mCanSaveFrames;
   CFont mBigModeFont;
+  bool mUsingUtapi;
 
 public:
   afx_msg void OnAcquireReopen();

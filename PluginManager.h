@@ -105,6 +105,8 @@ typedef int (*DoFocRamp)(long, long, long, float *, long, double);
 typedef int (*FinishFocRamp)(long, double *, double *, double *, double *);
 typedef int (*ShowMB)(int, const char *, const char *);
 typedef const char *(*CartridgeInfo)(int, int *, int *, int *, int *, int *);
+typedef int(*UtapiSTEMimage)(short **, const char **,
+  int, long *, int, int, int, int, int, int, double, double, long, long, int, double);
 
 #define GET_ONE_INT(a) ScopeGetInt a
 #define GET_ONE_BOOL(a) ScopeGetBool a

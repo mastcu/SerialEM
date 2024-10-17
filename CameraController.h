@@ -127,14 +127,14 @@ enum {K2_SUMMIT = 1, K2_BASE, K3_TYPE};
 #define ONEVIEW_NOT_CLEARVIEW(p) (p->OneViewType && p->OneViewType != CLEARVIEW_TYPE)
 
 #define DEFAULT_FEI_MIN_EXPOSURE 0.011f
-#define FCAM_ADVANCED(a) (a->CamFlags & PLUGFEI_USES_ADVANCED)
-#define FCAM_CAN_COUNT(a) (a->CamFlags & PLUGFEI_CAM_CAN_COUNT)
-#define FCAM_CAN_ALIGN(a) (a->CamFlags & PLUGFEI_CAM_CAN_ALIGN)
-#define FCAM_CONTIN_SAVE(a) ((a)->FEItype == OTHER_FEI_TYPE && (a->CamFlags & PLUGFEI_CAM_CONTIN_SAVE))
-#define IS_FALCON2_3_4(a) (a->FEItype == FALCON2_TYPE || a->FEItype == FALCON3_TYPE || \
-a->FEItype == FALCON4_TYPE)
+#define FCAM_ADVANCED(a) ((a)->CamFlags & PLUGFEI_USES_ADVANCED)
+#define FCAM_CAN_COUNT(a) ((a)->CamFlags & PLUGFEI_CAM_CAN_COUNT)
+#define FCAM_CAN_ALIGN(a) ((a)->CamFlags & PLUGFEI_CAM_CAN_ALIGN)
+#define FCAM_CONTIN_SAVE(a) ((a)->FEItype == OTHER_FEI_TYPE && ((a)->CamFlags & PLUGFEI_CAM_CONTIN_SAVE))
+#define IS_FALCON2_3_4(a) ((a)->FEItype == FALCON2_TYPE || (a)->FEItype == FALCON3_TYPE || \
+(a)->FEItype == FALCON4_TYPE)
 #define IS_FALCON3_OR_4(a) ((a)->FEItype == FALCON3_TYPE || (a)->FEItype == FALCON4_TYPE)
-#define IS_BASIC_FALCON2(a) (a->FEItype == FALCON2_TYPE && !(a->CamFlags & PLUGFEI_USES_ADVANCED))
+#define IS_BASIC_FALCON2(a) ((a)->FEItype == FALCON2_TYPE && !((a)->CamFlags & PLUGFEI_USES_ADVANCED))
 #define PLUGFEI_ALLOWS_ALIGN_HERE 108
 #define PLUGFEI_CAM_SAVES_EER     110
 #define PLUGFEI_FILT_FLASH_LOAD   111
@@ -164,6 +164,7 @@ struct DarkRef {
 struct CameraThreadData {
   SAFEARRAY *psa;
   short int *Array[MAX_CHANNELS];
+  short int *PartialArrays[MAX_CHANNELS];
   int NumChannels;            // Number of channels of data to acquire
   BOOL Simulation;            // Flag for the early simulation mode
   BOOL FauxCamera;            // Using a simulation camera
@@ -285,6 +286,7 @@ struct CameraThreadData {
   double PixelTime;           // Pixel dwell time
   int LineSyncAndFlags;       // Flag to do line sync for Digiscan: now flags
   int integration;            // Integration for JEOL STEM
+  bool UseUtapi;              // Flag to use Utapi call for acquisition
   IFocusRamperPtr FocusRamper; // Pointer to focus ramper for FEI STEM
   float rampTable[MAX_RAMP_STEPS];
   double IndexPerMs;           // Table step per ms
@@ -474,6 +476,7 @@ public:
   void RestartCapture();
   BOOL Settling() { return mSettling >= 0; };
   void ErrorCleanup(int error);
+  void CleanupPartialArrays();
   static int TaskCameraBusy();
   static int TaskGettingFrame();
   void DisplayNewImage(BOOL acquired);
@@ -1224,6 +1227,7 @@ bool IsConSetSaving(const ControlSet *conSet, int setNum, CameraParameters *para
 bool CanWeAlignFalcon(CameraParameters *param, BOOL savingEnabled, bool &canSave, int readMode = -1);
 bool IsSaveInEERMode(CameraParameters *param, const ControlSet *conSet);
 bool IsSaveInEERMode(CameraParameters *param, BOOL saveFrames, BOOL alignFrames, int useFramealign, int readMode);
+bool UsingUtapiForCamera(CameraParameters *param);
 bool CanProcessHere(CameraParameters *param);
 int ReturningFloatImages(CameraParameters *param);
 void FixDirForFalconFrames(CameraParameters * param);

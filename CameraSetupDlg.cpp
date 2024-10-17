@@ -877,7 +877,7 @@ static int binVals[MAX_BINNINGS] = {1, 2, 3, 4, 6, 8};
 void CCameraSetupDlg::LoadConsetToDialog()
 {
   int i, indMin, binning, showProc, lockSet, special, numSel;
-  bool noDark, noGain, alwaysAdjust, noRaw, show, canCopyView;
+  bool noDark, noGain, alwaysAdjust, noRaw, show, canCopyView, noRawButDark;
   int *modeP = mParam->DE_camType ? &m_iDEMode : &m_iK2Mode;
   CButton *radio;
   MontParam *montp = mWinApp->GetMontParam();
@@ -1051,11 +1051,15 @@ void CCameraSetupDlg::LoadConsetToDialog()
     // ManageProcessing, where is varies by set
     m_iProcessing = mCurSet->processing;
     m_bRemXrays_MagAll = mCurSet->removeXrays > 0;
-    noDark = mFEItype || (mPluginType && mCanProcess && !(mCanProcess & DARK_SUBTRACTED));
+    noDark = (mFEItype && !(mParam->CamFlags & PLUGFEI_CAN_DARK_ONLY)) || 
+      (mPluginType && mCanProcess && !(mCanProcess & DARK_SUBTRACTED));
     noRaw = mFEItype && FCAM_ADVANCED(mParam) && mCamera->GetASIgivesGainNormOnly();
-    m_butDarkSubtract.EnableWindow((mParam->processHere || !noDark) && !noRaw);
+    noRawButDark = mFEItype && (mParam->CamFlags & PLUGFEI_CAN_DARK_ONLY) != 0;
+    m_butDarkSubtract.EnableWindow((mParam->processHere || !noDark) &&
+      (!noRaw || noRawButDark));
     m_butUnprocessed.EnableWindow(!noRaw);
-    if ((noDark && !mParam->processHere && m_iProcessing == DARK_SUBTRACTED) || noRaw)
+    if ((noDark && !mParam->processHere && m_iProcessing == DARK_SUBTRACTED) || 
+      (noRaw && !noRawButDark))
       m_iProcessing = mCurSet->processing = GAIN_NORMALIZED;
 
     // Do same for plugin with no gain normalization, demote to DS
@@ -1429,7 +1433,7 @@ void CCameraSetupDlg::ManageCamera()
   int i, j, dir, err, showbox, maxChan, visTop, lastTop, areaHeight = mAreaBaseHeight;
   int canConfig, state;
   BOOL states[NUM_CAMSETUP_PANELS] = {0, true, 0, 0, 0, 0, 0, 0, 0, true};
-  bool twoRowPos;
+  bool twoRowPos, otherSizesNoShutter;
   bool alpine = IS_ALPINE(mParam) && !mCamera->GetShowLinearForAlpine();
   int hideForFalcon[] = {IDC_STAT_FRAME_TIME, IDC_EDIT_FRAME_TIME, IDC_STAT_FRAME_SEC,
     IDC_STAT_K2MODE, IDC_BUT_SETUP_ALIGN, IDC_RLINEAR, IDC_RCOUNTING, IDC_RSUPERRES, 
@@ -1443,9 +1447,11 @@ void CCameraSetupDlg::ManageCamera()
   CRect rect;
   ControlSet *conSets = &mConSets[mActiveCameraList[mCurrentCamera] * MAX_CONSETS];
   CString title = "Camera Parameters   --   " + mParam->name;
+  mUsingUtapi = mCamera->UsingUtapiForCamera(mParam);
   mWeCanAlignFalcon = mCamera->CanWeAlignFalcon(mParam, true, mFalconCanSave); 
+  otherSizesNoShutter = mParam->STEMcamera &&  mUsingUtapi;
   states[0] = mNumCameras > 1;
-  states[2] = !mParam->STEMcamera && 
+  states[2] = (!mParam->STEMcamera || otherSizesNoShutter) && 
     !(IS_FALCON2_3_4(mParam) || FCAM_CONTIN_SAVE(mParam));   // Shutter and other sizes
   states[4] = !mParam->STEMcamera;    // Dose
   states[5] = mParam->STEMcamera;
@@ -1481,9 +1487,11 @@ void CCameraSetupDlg::ManageCamera()
   mCanProcess = 0;
   if (mGatanType)
     mCanProcess = GAIN_NORMALIZED | DARK_SUBTRACTED;
-  else if (mFEItype)
+  else if (mFEItype) {
     mCanProcess = GAIN_NORMALIZED;
-  else if (mAMTtype && mCamera->GetDMversion(2) >= AMT_VERSION_CAN_NORM)
+    if (mParam->CamFlags & PLUGFEI_CAN_DARK_ONLY)
+      mCanProcess |= DARK_SUBTRACTED;
+  } else if (mAMTtype && mCamera->GetDMversion(2) >= AMT_VERSION_CAN_NORM)
     mCanProcess = GAIN_NORMALIZED | DARK_SUBTRACTED;
   else if (mDE_Type >= 2)
     mCanProcess = GAIN_NORMALIZED | DARK_SUBTRACTED;
@@ -1570,11 +1578,12 @@ void CCameraSetupDlg::ManageCamera()
     SetDlgItemText(IDC_RFILMONLY, mParam->shutterLabel2);
   radio = (CButton *)GetDlgItem(IDC_RFILMONLY);
   radio->ShowWindow(!(mParam->onlyOneShutter || mAMTtype || mFEItype || mParam->STEMcamera
-    || mDE_Type || (mPluginType && mNumPlugShutters < 2)) ? SW_SHOW : SW_HIDE);
+    || mDE_Type || (mPluginType && mNumPlugShutters < 2)) && !otherSizesNoShutter ? 
+    SW_SHOW : SW_HIDE);
   radio = (CButton *)GetDlgItem(IDC_RSHUTTERCOMBO);
   radio->ShowWindow(((mParam->GatanCam && !mParam->onlyOneShutter && 
     !mParam->STEMcamera && !mParam->K2Type && !mParam->OneViewType) || 
-    (mPluginType && mNumPlugShutters == 3))? SW_SHOW : SW_HIDE);
+    (mPluginType && mNumPlugShutters == 3) && !otherSizesNoShutter) ? SW_SHOW : SW_HIDE);
   if (mPluginType) {
     if (!mParam->shutterLabel1.IsEmpty())
       SetDlgItemText(IDC_RBEAMONLY, mParam->shutterLabel1);
@@ -1582,6 +1591,13 @@ void CCameraSetupDlg::ManageCamera()
       SetDlgItemText(IDC_RFILMONLY, mParam->shutterLabel2);
     if (mNumPlugShutters > 2)
       SetDlgItemText(IDC_RSHUTTERCOMBO, mParam->shutterLabel3);
+  }
+
+  if (otherSizesNoShutter) {
+    ShowDlgItem(IDC_RBEAMONLY, false);
+    ShowDlgItem(IDC_STATSHUTTER, false);
+    ShowDlgItem(IDC_BUTWIDEHALF, false);
+    ShowDlgItem(IDC_BUTWIDEQUARTER, false);
   }
 
   // Manage lower pane for K2 versus Falcon
