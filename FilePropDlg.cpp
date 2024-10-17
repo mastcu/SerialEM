@@ -1,7 +1,6 @@
 // FilePropDlg.cpp:      To set properties for saving images to files
 //
-// Copyright (C) 2003 by Boulder Laboratory for 3-Dimensional Electron 
-// Microscopy of Cells ("BL3DEMC") and the Regents of the University of
+// Copyright (C) 2003-2024 by the Regents of the University of
 // Colorado.  See Copyright.txt for full notice of copyright and limitations.
 //
 // Author: David Mastronarde
@@ -25,7 +24,7 @@ static char THIS_FILE[] = __FILE__;
   else \
     mFileOpt.typext &= ~(b);
 
-static int compressions[] = {COMPRESS_NONE, COMPRESS_ZIP, COMPRESS_LZW, COMPRESS_JPEG};
+static int sCompressions[] = {COMPRESS_NONE, COMPRESS_ZIP, COMPRESS_LZW, COMPRESS_JPEG};
 
 enum { RADIO_TYPE_MRC = 0, RADIO_TYPE_HDF, RADIO_TYPE_TIFF, RADIO_TYPE_ADOC, 
   RADIO_TYPE_JPEG };
@@ -158,9 +157,9 @@ void CFilePropDlg::OnRfileType()
 
   // Unload the compression appropriately for the previous file type
   if (prevFileType == RADIO_TYPE_HDF)
-    mFileOpt.hdfCompression = compressions[m_iCompress];
+    mFileOpt.hdfCompression = sCompressions[m_iCompress];
   else
-    mFileOpt.compression = compressions[m_iCompress];
+    mFileOpt.compression = sCompressions[m_iCompress];
 
   // Load in the respective one for the new file type
   SetCompressionFromFileOpt();
@@ -191,7 +190,7 @@ void CFilePropDlg::ManageStates()
     m_iFileType == RADIO_TYPE_ADOC;
   BOOL jpegFile = m_iFileType == RADIO_TYPE_JPEG;
   BOOL notFloat = mFileOpt.mode != MRC_MODE_FLOAT;
-  BOOL bEnable = (m_iByteInt == 0 || (tiffFile && compressions[m_iCompress] == 
+  BOOL bEnable = (m_iByteInt == 0 || (tiffFile && sCompressions[m_iCompress] == 
     COMPRESS_JPEG) || jpegFile) && notFloat;
   m_groupTrunc.EnableWindow(bEnable);
   m_statTruncWhite.EnableWindow(bEnable);
@@ -205,7 +204,7 @@ void CFilePropDlg::ManageStates()
   m_butZIPComp.EnableWindow(tiffFile || m_iFileType == RADIO_TYPE_HDF);
   m_butJPEGComp.EnableWindow(tiffFile && notFloat);
 
-  bEnable = (!tiffFile || compressions[m_iCompress] != COMPRESS_JPEG) && !jpegFile &&
+  bEnable = (!tiffFile || sCompressions[m_iCompress] != COMPRESS_JPEG) && !jpegFile &&
     notFloat;
   m_butSaveByte.EnableWindow(bEnable);
   m_butSaveInteger.EnableWindow(bEnable);
@@ -292,7 +291,7 @@ void CFilePropDlg::SetCompressionFromFileOpt()
 {
   m_iCompress = 0;
   for (int i = 0; i < 4; i++)
-    if (mFileOpt.compression == compressions[i])
+    if (mFileOpt.compression == sCompressions[i])
       m_iCompress = i;
   if (m_iFileType == RADIO_TYPE_HDF)
     m_iCompress = mFileOpt.hdfCompression == COMPRESS_ZIP ? 1 : 0;
@@ -341,9 +340,9 @@ void CFilePropDlg::OnOK()
   else
     mFileOpt.fileType = filety;
   if (m_iFileType == RADIO_TYPE_HDF)
-    mFileOpt.hdfCompression = compressions[m_iCompress];
+    mFileOpt.hdfCompression = sCompressions[m_iCompress];
   else
-    mFileOpt.compression = compressions[m_iCompress];
+    mFileOpt.compression = sCompressions[m_iCompress];
   CDialog::OnOK();
 }
 
