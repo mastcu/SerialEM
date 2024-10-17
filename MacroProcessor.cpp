@@ -247,6 +247,8 @@ CMacroProcessor::CMacroProcessor()
   mFocusedWndWhenSavedStatus = NULL;
   mRestoreMacroEditors = true;
   mOneLinePlacement.rcNormalPosition.right = NO_PLACEMENT;
+  mFileOptToRestore = NULL;
+  mOtherFileOptToRestore = NULL;
   mMailSubject = "Message from SerialEM script";
   for (i = 0; i < MAX_MACROS; i++) {
     mStrNum[i].Format("%d", i + 1);
@@ -1394,6 +1396,8 @@ void CMacroProcessor::RunOrResume()
   mBeamTiltYtoRestore[0] = mBeamTiltYtoRestore[1] = EXTRA_NO_VALUE;
   mAstigXtoRestore[0] = mAstigXtoRestore[1] = EXTRA_NO_VALUE;
   mAstigYtoRestore[0] = mAstigYtoRestore[1] = EXTRA_NO_VALUE;
+  B3DDELETE(mFileOptToRestore);
+  B3DDELETE(mOtherFileOptToRestore);
   mCompensatedBTforIS = false;
   mKeyPressed = 0;
   if (mChangedConsets.size() > 0 && mCamWithChangedSets == mWinApp->GetCurrentCamera())
@@ -1637,6 +1641,7 @@ void CMacroProcessor::SuspendMacro(int abort)
 {
   CameraParameters *camParams = mWinApp->GetCamParams();
   int probe, ind;
+  FileOptions *fileOpt;
   bool restoreArea = false;
   float *gridLims = mNavHelper->GetGridLimits();
   mLoopInOnIdle = false;
@@ -1742,7 +1747,8 @@ void CMacroProcessor::SuspendMacro(int abort)
   mScope->SetDoNextFEGFlashHigh(false);
 
   // Restore other things and make it non-resumable as they have no mechanism to resume
-  if (abort || mNumStatesToRestore > 0 || restoreArea) {
+  if (abort || mNumStatesToRestore > 0 || restoreArea || mFileOptToRestore || 
+    mOtherFileOptToRestore) {
     mCurrentMacro = -1;
     mLastAborted = !mLastCompleted;
     if (mNumStatesToRestore) {
@@ -1800,6 +1806,16 @@ void CMacroProcessor::SuspendMacro(int abort)
         for (ind = 0; ind < 4; ind++)
           gridLims[ind] = mGridLimitsToRestore[ind];
       }
+    }
+    if (mFileOptToRestore) {
+      fileOpt = mDocWnd->GetFileOpt();
+      *fileOpt = *mFileOptToRestore;
+      B3DDELETE(mFileOptToRestore);
+    }
+    if (mOtherFileOptToRestore) {
+      fileOpt = mDocWnd->GetOtherFileOpt();
+      *fileOpt = *mOtherFileOptToRestore;
+      B3DDELETE(mOtherFileOptToRestore);
     }
     mSavedSettingNames.clear();
     mSavedSettingValues.clear();

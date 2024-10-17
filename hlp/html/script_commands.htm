@@ -2419,6 +2419,39 @@
             files as MRC or as a TIFF series, but only if the property
             MontageAutodocOptions is set.</TD>
         </TR>
+       <TR>
+          <TD class="scriptcommand">ReportFileOptions #</TD>
+          <TD>Reports the main file options if <b>#</b> is zero and the options used in 
+            Save To Other/Save Single otherwise; the main ones are initialized from properties and the other ones
+            are saved in settings between sessions. &nbsp;The 10 values printed out are listed next in
+             'SetFileOptions'; <I>reportedValues</I> are set from the first 6.&nbsp; Command added in 4.2, 17-Oct-24.</TD>
+        </TR>
+       <TR>
+          <TD class="scriptcommand">SetFileOptions #O #K [#T] [#D] [#U] [#M] [#L] [#H] [TC] [HC] [MT] [MM]</TD>
+          <TD>Sets the main file options if <b>#O</b> is 0 and the file options used for 
+            Save To Other/Save Single otherwise.&nbsp; Options are restored at script end if <b>#K</b> is 0, 
+            kept if it is 1, or restored immediately if it is -1, provided that it was 0 on a previous use of the
+            command.&nbsp; Other entries are ignored if <b>#K</b> is -1.&nbsp; Enter -1 for any optional
+             value to leave it unchanged.&nbsp; These entries, which correspond to the options displayed in 
+            the File Properties dialog, are:<br />
+            <b>#T</b> for file type: 0 for MRC, 2 for TIFF, 3 for numbered TIFFs listed in a '.idoc' 
+            file, 4 for JPEG, 5 for HDF. <br />
+            <b>#D</b> for data mode: 0 for bytes, 1 for signed 16-bit integers, 6 for unsigned 16-bit. <br />
+            <b>#U</b> for treatment of unsigned values when saving as signed: 0 to truncate, 1 to divide by 2,
+             2 to subtract 32768.<br />
+            <b>#M</b> set to 1 to write an '.mdoc' file for an MRC file, 0 not to.<br />
+            <b>#L</b> for percentage of intensity values to truncate to 0 at the low end of the distribution when
+            scaling to bytes.<br />
+            <b>#H</b> for percentage of high intensity values to truncate at 255 when scaling to bytes.<br />
+            <b>#TC</b> for compression type in TIFF files: 1 for none, 5 for LZW, 7 for JPEG, or 8 for ZIP.<br />
+            <b>#HD</b> for compression type in HDF files: 1 for none or 8 for ZIP.<br />
+            <b>#MT</b> for file type for montage files: 0 for MRC, 3 for numbered TIFFs listed in a '.idoc' 
+            file, or 5 for HDF. <br />
+            <b>#MM</b> set to 1 to write an '.mdoc' file for a montaged MRC file, 0 not to.<br />
+            There are error checks or limits applied on individual entries, but no check for conflicting or 
+            irrelevant options, which generally would correspond to grayed out items in the dialog.
+              &nbsp; Command added in 4.2, 17-Oct-24.</TD>
+        </TR>
         <TR>
           <TD class="scriptcommand">OpenNewFile file</TD>
           <TD>Opens a file with the given name, which can contain spaces. The file properties

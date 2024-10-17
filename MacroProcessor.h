@@ -365,6 +365,8 @@ protected:
   int mK3CDSmodeToRestore;  // -1 or value of mode to restore at end
   float mGridLimitsToRestore[4];   // User grid limits to restore at end
   bool mRestoreGridLimits;
+  FileOptions *mFileOptToRestore;   // Main file options to restore at the end
+  FileOptions *mOtherFileOptToRestore;  // Other file options to restore at the end
   int mSavedFrameNameFormat;   // set >=0 if this needs to be restored
   CString mSavedFrameBaseName; // It needs to be restored also if non-empty
   bool mCompensatedBTforIS; // Flag that beam tilt was compensated for an IS change

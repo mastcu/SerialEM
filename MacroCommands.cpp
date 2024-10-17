@@ -3352,6 +3352,104 @@ int CMacCmd::SaveToOtherFile(void)
   return 0;
 }
 
+// ReportFileOptions
+int CMacCmd::ReportFileOptions()
+{
+  FileOptions *opt = mItemInt[1] ? mDocWnd->GetOtherFileOpt() : mDocWnd->GetFileOpt();
+  mLogRpt.Format("%s file options: type %d  mode %d  unsign %d  mdoc %d  %%lo %.2f  "
+    "%%hi %.2f  TIF-comp %d  HDF-comp %d  mont-type %d  mont-mdoc %d", 
+    mItemInt[1] ? "Other" : "Main", opt->fileType, opt->mode,
+    opt->unsignOpt, opt->useMdoc, opt->pctTruncLo, opt->pctTruncHi, opt->compression,
+    opt->hdfCompression, opt->montFileType, opt->montUseMdoc);
+  SetRepValsAndVars(2, opt->fileType, opt->mode, opt->unsignOpt, opt->useMdoc,
+    opt->pctTruncLo, opt->pctTruncHi);
+  return 0;
+}
+
+// SetFileOptions
+int CMacCmd::SetFileOptions()
+{
+  bool other = mItemInt[1] != 0;
+  FileOptions *opt = other ? mDocWnd->GetOtherFileOpt() : mDocWnd->GetFileOpt();
+  FileOptions **rest = other ? &mOtherFileOptToRestore : &mFileOptToRestore;
+
+  if (mItemInt[2] < 0) {
+    if (!(*rest)) {
+      mLogRpt.Format("No saved %s file options to restore", other ? "other" : "main");
+    } else {
+      *opt = *(*rest);
+      B3DDELETE(*rest);
+      mLogRpt.Format("Restored saved %s file options", other ? "other" :
+        "main");
+    }
+    return 0;
+  }
+
+  if (mItemEmpty[3])
+    ABORT_LINE("No file option values are set in line:\n\n");
+
+  // If not keeping and they are not saved yet, create and save
+  if (!mItemInt[2] && !(*rest)) {
+    *rest = new FileOptions;
+    *(*rest) = *opt;
+  }
+
+  // If keeping and they ARE saved, delete them
+  if (mItemInt[2] && (*rest))
+    B3DDELETE(*rest);
+
+  // Do all the checks first
+  if (mItemInt[3] >= 0) {
+    if (other) {
+      if (mItemInt[3] > 5 || mItemInt[3] == 1)
+        ABORT_LINE("Other file type must be 0, 2, 3, 4, or 5 in line:\n\n");
+    } else {
+      if (mItemInt[3] != 0 && mItemInt[3] != 3 && mItemInt[3] != 5)
+        ABORT_LINE("Main file type must be 0, 3, or 5 in line:\n\n");
+    }
+  }
+  if (!mItemEmpty[4] && mItemInt[4] > 1 && mItemInt[4] != 6)
+      ABORT_LINE("Data mode must be 0, 1, or 6 in line:\n\n");
+  if (!mItemEmpty[11] && mItemInt[11] >= 0 && mItemInt[11] != 0 && mItemInt[11] != 3 && 
+    mItemInt[11] != 5)
+      ABORT_LINE("Montage file type must be 0, 3, or 5 in line\n\n:");
+  if (!mItemEmpty[9] && mItemInt[9] != COMPRESS_NONE && mItemInt[9] != COMPRESS_ZIP &&
+    mItemInt[9] != COMPRESS_LZW && mItemInt[9] != COMPRESS_JPEG) {
+    mStrCopy.Format("TIFF compression must be %d, %d, %d, or %d in line:\n\n",
+      COMPRESS_NONE, COMPRESS_LZW, COMPRESS_JPEG, COMPRESS_ZIP);
+    ABORT_LINE(mStrCopy);
+  }
+  if (!mItemEmpty[10] && mItemInt[10] != COMPRESS_NONE && mItemInt[10] != COMPRESS_ZIP) {
+    mStrCopy.Format("HDF compression must be %d or %d in line:\n\n",
+      COMPRESS_NONE, COMPRESS_ZIP);
+    ABORT_LINE(mStrCopy);
+  }
+
+  // Now modify
+  if (mItemInt[3] >= 0)
+    opt->fileType = mItemInt[3];
+  if (!mItemEmpty[4] && mItemInt[4] >= 0)
+    opt->mode = mItemInt[4];
+  if (!mItemEmpty[5] && mItemInt[5] >= 0)
+    opt->unsignOpt = B3DMIN(mItemInt[5], 2);
+  if (!mItemEmpty[6] && mItemInt[6] >= 0)
+    opt->useMdoc = mItemInt[6] != 0;
+  if (!mItemEmpty[7] && mItemFlt[7] >= 0)
+    opt->pctTruncLo = B3DMIN(mItemFlt[7], 20.f);
+  if (!mItemEmpty[8] && mItemFlt[8] >= 0)
+    opt->pctTruncHi = B3DMIN(mItemFlt[8], 20.f);
+  if (!mItemEmpty[9] && mItemInt[9] >= 0)
+    opt->compression = mItemInt[9];
+  if (!mItemEmpty[10] && mItemInt[10] >= 0)
+    opt->hdfCompression = mItemInt[10];
+  if (!mItemEmpty[11] && mItemInt[11] >= 0)
+    opt->montFileType = mItemInt[11];
+  if (!mItemEmpty[12] && mItemInt[12] >= 0)
+    opt->montUseMdoc = mItemInt[12] != 0;
+
+  return 0;
+}
+
 // OpenNewFile, OpenNewMontage, OpenFrameSumFile
 int CMacCmd::OpenNewFile(void)
 {

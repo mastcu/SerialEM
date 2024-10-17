@@ -810,6 +810,8 @@ MAC_SAME_NAME_ARG(AddBufToStackWindow, 3, 4, ADDBUFTOSTACKWINDOW, SIIiis)
 MAC_SAME_NAME_NOARG(CloseStackWindow, 0, 4, CLOSESTACKWINDOW)
 MAC_SAME_FUNC_ARG(SetBufZoomAndCenter, 2, 4, Show, SETBUFZOOMANDCENTER, SDii)
 MAC_SAME_NAME_ARG(BinningForCameraMatrix, 1, 4, BINNINGFORCAMERAMATRIX, D)
+MAC_SAME_NAME_ARG(ReportFileOptions, 1, 4, REPORTFILEOPTIONS, I)
+MAC_SAME_NAME_ARG(SetFileOptions, 2, 4, SETFILEOPTIONS, IIiiiiddiiii)
 
 
 // new Python-only commands need to be added to pythonOnlyCmds in ::CMacroProcessor
