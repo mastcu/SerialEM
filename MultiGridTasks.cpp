@@ -106,6 +106,8 @@ CMultiGridTasks::CMultiGridTasks()
   mSkipGridRealign = false;
   mRRGstore = NULL;
   mRRGdidSaveState = false;
+  mUseCustomOrder = false;
+  mLastNumSlots = 0;
 }
 
 
@@ -3901,6 +3903,7 @@ void CMultiGridTasks::ClearSession(bool keepAcqParams)
   mWorkingDir = "";
   mNamesLocked = false;
   mUseCustomOrder = false;
+  mLastNumSlots = 0;
   mLMMusedStateName = "";
   mSessionFilename = "";
   mMGAutoContParamArray.RemoveAll();

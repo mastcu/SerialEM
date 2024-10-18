@@ -242,11 +242,11 @@ BEGIN_MESSAGE_MAP(CMultiGridDlg, CBaseDlg)
   ON_BN_CLICKED(IDC_BUT_REVERT_TO_GLOBAL, OnButRevertToGlobal)
   ON_BN_CLICKED(IDC_CHECK_FRAMES_UNDER_SESSION, OnCheckFramesUnderSession)
   ON_BN_CLICKED(IDC_CHECK_MG_USE_SUBDIRS, OnCheckMgUseSubdirs)
-  ON_BN_CLICKED(IDC_BUT_CLOSE_ALL, &CMultiGridDlg::OnButCloseAll)
-  ON_BN_CLICKED(IDC_CHECK_TOGGLE_ALL, &CMultiGridDlg::OnCheckToggleAll)
-  ON_EN_KILLFOCUS(IDC_EDIT_GRID_NOTE, &CMultiGridDlg::OnEnKillfocusEditGridNote)
-  ON_BN_CLICKED(IDC_BUT_SET_ORDER, &CMultiGridDlg::OnButSetOrder)
-  ON_BN_CLICKED(IDC_BUT_RESET_ORDER, &CMultiGridDlg::OnButResetOrder)
+  ON_BN_CLICKED(IDC_BUT_CLOSE_ALL, OnButCloseAll)
+  ON_BN_CLICKED(IDC_CHECK_TOGGLE_ALL, OnCheckToggleAll)
+  ON_EN_KILLFOCUS(IDC_EDIT_GRID_NOTE, OnEnKillfocusEditGridNote)
+  ON_BN_CLICKED(IDC_BUT_SET_ORDER, OnButSetOrder)
+  ON_BN_CLICKED(IDC_BUT_RESET_ORDER, OnButResetOrder)
 END_MESSAGE_MAP()
 
 
@@ -265,7 +265,9 @@ BOOL CMultiGridDlg::OnInitDialog()
   CameraParameters *camParams = mWinApp->GetCamParams();
   mMGTasks = mWinApp->mMultiGridTasks;
   mMasterParams = mMGTasks->GetMultiGridParams();
-  mMGTasks->SetUseCustomOrder(false);
+
+  // Leave custom run settings as they were, but clear out this vector until reload
+  mDlgIndToJCDindex.clear();
   mMontSetupSizesXY = mMGTasks->GetMontSetupConsetSizes();
   mCustomRunDlgInds = mMGTasks->GetCustomRunDlgInds();
   mParams = *mMasterParams;
@@ -357,6 +359,9 @@ void CMultiGridDlg::OnOK()
 // right here
 void CMultiGridDlg::OnCancel()
 {
+  IntVec *runInds = mMGTasks->GetLastDfltRunInds();
+  mMGTasks->SetLastNumSlots(mNumUsedSlots);
+  DefaultRunDlgIndexes(*runInds);
   mWinApp->mNavHelper->GetMultiGridPlacement();
   mWinApp->mNavHelper->mMultiGridDlg = NULL;
   if (mWinApp->mNavHelper->mStateDlg)
@@ -540,6 +545,9 @@ void CMultiGridDlg::ReloadTable(int resetOrClear, int checkRuns)
   CString str;
   CButton *button;
   JeolCartridgeData jcd;
+  IntVec *lastRuns = mMGTasks->GetLastDfltRunInds();
+  bool checkLast = checkRuns > 1 && mNumUsedSlots == mMGTasks->GetLastNumSlots() &&
+    mNumUsedSlots >= (int)lastRuns->size();
 
   // Get vector of IDs or inverse FEI IDs and order them
   for (slot = 0; slot < mNumUsedSlots; slot++) {
@@ -566,6 +574,9 @@ void CMultiGridDlg::ReloadTable(int resetOrClear, int checkRuns)
       if (button) {
         if (checkRuns > 1 && mMGTasks->GetUseCustomOrder())
           button->SetCheck(LookupRunOrder(*mCustomRunDlgInds, slot) >= 0 ?
+            BST_CHECKED : BST_UNCHECKED);
+        else if (checkLast)
+          button->SetCheck(LookupRunOrder(*lastRuns, slot) >= 0 ?
             BST_CHECKED : BST_UNCHECKED);
         else
           button->SetCheck((checkRuns > 0 && !(jcdEl.status & MGSTAT_FLAG_TOO_DARK)) ?
@@ -710,13 +721,15 @@ int CMultiGridDlg::GetListOfGridsToRun(ShortVec &jcdInds, ShortVec &slotNums)
   else
     DefaultRunDlgIndexes(dlgInds);
   for (ind = 0; ind < (int)dlgInds.size(); ind++) {
-    jcdInd = mDlgIndToJCDindex[dlgInds[ind]];
-    jcdInds.push_back(jcdInd);
-    if (FEIscope) {
-      jcd = mCartInfo->GetAt(jcdInd);
-      slotNums.push_back(jcd.slot);
-    } else {
-      slotNums.push_back(jcdInd + 1);
+    if (dlgInds[ind] < (int)mDlgIndToJCDindex.size()) {
+      jcdInd = mDlgIndToJCDindex[dlgInds[ind]];
+      jcdInds.push_back(jcdInd);
+      if (FEIscope) {
+        jcd = mCartInfo->GetAt(jcdInd);
+        slotNums.push_back(jcd.slot);
+      } else {
+        slotNums.push_back(jcdInd + 1);
+      }
     }
   }
   return (int)jcdInds.size();

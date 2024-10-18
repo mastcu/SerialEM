@@ -184,6 +184,8 @@ public:
   GetSetMember(bool, AdocChanged);
   GetSetMember(BOOL, SkipGridRealign);
   GetMember(float, ReferenceCounts);
+  IntVec *GetLastDfltRunInds() { return &mLastDfltRunInds; };
+  GetSetMember(int, LastNumSlots);
   GetSetMember(bool, UseCustomOrder);
   int *GetMontSetupConsetSizes() { return &mMontSetupConsetSizes[0]; };
   IntVec *GetCustomRunDlgInds() {return &mCustomRunDlgInds ; };
@@ -252,6 +254,8 @@ private:
   bool mAdocChanged;          // Flag that .adoc/ cartinfo was changed
   IntVec mCustomRunDlgInds;
   bool mUseCustomOrder;       // Flag that user has set custom order
+  IntVec mLastDfltRunInds;    // Default dialog run indexes when dialog was closed
+  int mLastNumSlots;          // And total number of slots then
   std::map<int, std::string> mMultiLoadLabelMap;
 
   bool mStartedLongOp;        // Flags for actions that were started
