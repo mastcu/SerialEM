@@ -1490,6 +1490,7 @@ void CNavigatorDlg::OnButState()
     str.Format("Stored imaging state in a new parameter set for item # %d, label %s",
       mCurrentItem + 1, (LPCTSTR)mItem->mLabel);
     state = mHelper->NewStateParam(true);
+    state->navID = MakeUniqueID();
     *indexp = (int)mAcqStateArray.GetSize() - 1;
   } else
     str.Format("Updated the stored imaging state for item # %d, label %s",
@@ -8200,23 +8201,8 @@ void CNavigatorDlg::SavePreCombineFile(void)
   mItemArray.Append(tempArray);
 }
 
-
-// Finally, routine to write the file
 /*
- * HOW TO ADD ELEMENTS:
- * 1) If it is a map, it goes before Points; if it is not, it goes before Mapfile
- * 2) Increment file version
- * 3) Add entries to title row
- * 4) Add entries to relevant format statement and variable list
- * 5) If the elements are added to a map, add another entry like
- *    if (version > 140)
- *      mapSkip += 1;
- *    AND add the same number of tabs to the nonmap output
- * 6) If it is a map, add the read conditionally to the end of the map section
- *    Otherwise add the read conditionally before the map section
- * 7) When adding future items, add NextTabField(str, index); for each inside the 
- *    conditional for the new version. When using up a future item, still increase the
- *    version number and take away the NextTabField(str, index);
+ * FINALLY, ROUTINE TO WRITE THE FILE AS ADOC OR XML
  */
 void CNavigatorDlg::OpenAndWriteFile(bool autosave)
 {
@@ -8329,6 +8315,28 @@ void CNavigatorDlg::OpenAndWriteFile(bool autosave)
     }
 #undef NAV_FILE_OPTS
 
+    // Save states
+    for (ind = 0; ind < mAcqStateArray.GetSize(); ind++) {
+      StateParams *stateP = mAcqStateArray[ind];
+      str.Format("%d", ind);
+      sectInd = AdocAddSection("StateParam", str);
+      if (sectInd < 0) {
+        adocErr++;
+      } else {
+        mWinApp->mParamIO->WriteStateToString(stateP, str);
+        sub.Format("%d ", stateP->navID);
+        str = sub + str;
+        if (AdocSetKeyValue("StateParam", sectInd, "State", (LPCTSTR)str)) {
+          adocErr++;
+        } else if (stateP->lowDose) {
+          mWinApp->mParamIO->WriteLowDoseToString(&stateP->ldParams, 0, 0, str);
+          str = "0 " + str;
+          if (AdocSetKeyValue("StateParam", sectInd, "LowDose", (LPCTSTR)str))
+            adocErr++;
+        }
+      }
+    }
+
     if (adocErr) {
       str.Format("%d errors occurred setting Navigator data into autodoc structure before"
         " writing it as XML", adocErr);
@@ -8412,6 +8420,29 @@ void CNavigatorDlg::OpenAndWriteFile(bool autosave)
       }
     }
 #undef NAV_FILE_OPTS
+
+    // States
+    for (ind = 0; ind < mAcqStateArray.GetSize(); ind++) {
+      StateParams *stateP = mAcqStateArray[ind];
+      str.Format("%d", ind);
+      fprintf(fp, "\n");
+      sectInd = AdocWriteSectionStart(fp, "StateParam", str);
+      if (sectInd) {
+        adocErr++;
+      } else {
+        mWinApp->mParamIO->WriteStateToString(stateP, str);
+        sub.Format("%d ", stateP->navID);
+        str = sub + str;
+        if (AdocWriteKeyValue(fp, "State", (LPCTSTR)str)) {
+          adocErr++;
+        } else if (stateP->lowDose) {
+          mWinApp->mParamIO->WriteLowDoseToString(&stateP->ldParams, 0, 0, str);
+          str = "0 " + str;
+          if (AdocWriteKeyValue(fp, "LowDose", (LPCTSTR)str))
+            adocErr++;
+        }
+      }
+    }
 
     if (adocErr) {
       str.Format("%d errors occurred writing Navigator data into file", adocErr);
@@ -8521,7 +8552,7 @@ int CNavigatorDlg::LoadNavFile(bool checkAutosave, bool mergeFile, CString *inFi
   std::map<std::string, std::string> filesFoundMap;
   std::map<std::string, std::string>::iterator mapIter;
   std::string stdstr, stdstr2;
-  IntVec newTSparamInds, newMontParamInds, newFileOptInds;
+  IntVec newTSparamInds, newMontParamInds, newFileOptInds, newStateInds;
   const char *externalKeys[4] = {"CoordsInMap", "CoordsInAliMont", "CoordsInAliMontVS",
     "CoordsInPiece"};
   char *adocStr;
@@ -8529,7 +8560,10 @@ int CNavigatorDlg::LoadNavFile(bool checkAutosave, bool mergeFile, CString *inFi
   TiltSeriesParam *tsMasterParam = mWinApp->mTSController->GetTiltSeriesParam();
   FileOptions *fileOpt, *fileo2;
   MontParam *montParam, *montp2, *masterMont = mWinApp->GetMontParam();
+  StateParams *state, *state2;
+  LowDoseParams *ldp;
   CMapDrawItem *item, *prev, *testItem;
+  double vals[60];
   int originalSize = (int)mItemArray.GetSize();
   bool resetAcquireEnd = mAcquireIndex >= 0 && originalSize - 1 <= mEndingAcquireIndex;
   int version = 100;
@@ -8772,6 +8806,99 @@ int CNavigatorDlg::LoadNavFile(bool checkAutosave, bool mergeFile, CString *inFi
 #undef NAV_FILE_OPTS
 #undef SECT_NAME
 
+      // State params
+      numParams = AdocGetNumberOfSections("StateParam");
+      for (ind1 = 0; ind1 < numParams; ind1++) {
+        state = new StateParams;
+        ind2 = 0;
+        ADOC_REQUIRED(AdocGetDoubleArray("StateParam", ind1, "State", vals, &ind2, 60));
+        if (!retval) {
+
+          // The numbering should match ParameterIO, with the navID in the 0 slot here
+          state->navID = B3DNINT(vals[0]);
+          state->lowDose = B3DNINT(vals[1]);
+          state->camIndex = B3DNINT(vals[2]);
+          state->magIndex = B3DNINT(vals[3]);
+          state->spotSize = B3DNINT(vals[4]);
+          state->intensity = vals[5];
+          state->slitIn = B3DNINT(vals[6]) != 0;
+          state->energyLoss = (float)vals[7];
+          state->slitWidth = (float)vals[8];
+          state->zeroLoss = B3DNINT(vals[9]) != 0;
+          state->binning = B3DNINT(vals[10]);
+          state->xFrame = B3DNINT(vals[11]);
+          state->yFrame = B3DNINT(vals[12]);
+          state->exposure = (float)vals[13];
+          state->drift = (float)vals[14];
+          state->shuttering = B3DNINT(vals[15]);
+          state->K2ReadMode = B3DNINT(vals[16]);
+          state->probeMode = B3DNINT(vals[17]);
+          state->frameTime = (float)vals[18];
+          state->doseFrac = B3DNINT(vals[19]);
+          state->saveFrames = B3DNINT(vals[20]);
+          state->processing = B3DNINT(vals[21]);
+          state->alignFrames = B3DNINT(vals[22]);
+          state->useFrameAlign = B3DNINT(vals[23]);
+          state->faParamSetInd = B3DNINT(vals[24]);
+          state->readModeView = B3DNINT(vals[25]);
+          state->readModeFocus = B3DNINT(vals[26]);
+          state->readModeTrial = B3DNINT(vals[27]);
+          state->readModePrev = B3DNINT(vals[28]);
+          state->readModeSrch = B3DNINT(vals[29]);
+          state->readModeMont = B3DNINT(vals[30]);
+          state->focusAxisPos = EXTRA_NO_VALUE;
+          state->beamAlpha = B3DNINT(vals[31]);
+          state->targetDefocus = (float)vals[32];
+          state->ldDefocusOffset = (float)vals[33];
+          state->ldShiftOffsetX = (float)vals[34];
+          state->ldShiftOffsetY = (float)vals[35];
+          state->montMapConSet = B3DNINT(vals[36]) != 0;
+          if (state->lowDose) {
+            ind2 = 0;
+            ADOC_REQUIRED(AdocGetDoubleArray("StateParam", ind1, "LowDose", vals, &ind2,
+              60));
+            if (!retval) {
+              ldp = &state->ldParams;
+
+              // Again, the numbering should make ParameterIO, skipping indexes at 1 and 6
+              ldp->magIndex = B3DNINT(vals[2]);
+              ldp->spotSize = B3DNINT(vals[3]);
+              if (ldp->magIndex < 0) {
+                ldp->magIndex = 0;
+                ldp->camLenIndex = -ldp->magIndex;
+              } else {
+                ldp->camLenIndex = 0;
+              }
+              ldp->intensity = vals[4];
+              ldp->axisPosition = vals[5];
+              if (fabs(ldp->axisPosition) > 100.)
+                ldp->axisPosition = 0.;
+              ldp->slitIn = B3DNINT(vals[7]) != 0;
+              ldp->slitWidth = (float)vals[8];
+              ldp->energyLoss = (float)vals[9];
+              ldp->zeroLoss = B3DNINT(vals[10]) != 0;
+              ldp->beamDelX = vals[11];
+              ldp->beamDelY = vals[12];
+              ldp->beamAlpha = (float)vals[13];
+              ldp->diffFocus = vals[14];
+              ldp->beamTiltDX = vals[15];
+              ldp->beamTiltDY = vals[16];
+              ldp->probeMode = B3DNINT(vals[17]);
+              ldp->darkFieldMode = B3DNINT(vals[18]);
+              ldp->dfTiltX = vals[19];
+              ldp->dfTiltY = vals[20];
+            }
+          }
+          if (retval) {
+            delete state;
+          } else {
+            FIND_DUP_OR_ADD(mAcqStateArray, state, state2, newStateInds);
+          }
+        }
+      }
+
+
+
 #undef INT_SETT_ASSIGN
 #undef BOOL_SETT_ASSIGN
 #undef FLOAT_SETT_ASSIGN
@@ -8926,6 +9053,8 @@ int CNavigatorDlg::LoadNavFile(bool checkAutosave, bool mergeFile, CString *inFi
           &item->mMontParamIndex));
         ADOC_OPTIONAL(AdocGetInteger("Item", sectInd, "FilePropIndex",
           &item->mFilePropIndex));
+        ADOC_OPTIONAL(AdocGetInteger("Item", sectInd, "StateIndex",
+          &item->mStateIndex));
         if (item->mTSparamIndex >= 0 && item->mTSparamIndex < (int)newTSparamInds.size())
           item->mTSparamIndex = newTSparamInds[item->mTSparamIndex];
         if (item->mMontParamIndex >= 0 && item->mMontParamIndex < 
@@ -8934,6 +9063,8 @@ int CNavigatorDlg::LoadNavFile(bool checkAutosave, bool mergeFile, CString *inFi
         if (item->mFilePropIndex >= 0 && item->mFilePropIndex < 
           (int)newFileOptInds.size())
           item->mFilePropIndex = newFileOptInds[item->mFilePropIndex];
+        if (item->mStateIndex >= 0 && item->mStateIndex < (int)newStateInds.size())
+          item->mStateIndex = newStateInds[item->mStateIndex];
 
         if (item->IsMap()) {
           ADOC_REQUIRED(AdocGetString("Item", sectInd, "MapFile", &adocStr));
@@ -9231,7 +9362,7 @@ int CNavigatorDlg::LoadNavFile(bool checkAutosave, bool mergeFile, CString *inFi
 
       if (numAdocErr + numLackRequired + externalErr == 0) {
 
-        // Check that map file is there and corect name
+        // Check that map file is there and correct name
         if (item->IsMap() && !item->mTrimmedName.IsEmpty()) {
 
           // First see if it is in the map of found files, if so just assign name

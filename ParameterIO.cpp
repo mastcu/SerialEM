@@ -1194,6 +1194,8 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
         }
         if (!itemEmpty[36])
           stateP->montMapConSet = itemInt[36] != 0;
+        // ADD NEW ITEMS TO NAV READING
+ 
       } else if (NAME_IS("StateName")) {
         index = itemInt[1];
         if (index < 0 || index >= stateArray->GetSize()) {
@@ -1278,6 +1280,7 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
             ldp->dfTiltX = itemDbl[19];
             ldp->dfTiltY = itemDbl[20];
           }
+          // ADD NEW ITEMS TO NAV READING
         }
 
       } else if (NAME_IS("ImageXrayCriteria")) {
@@ -2230,19 +2233,8 @@ void CParameterIO::WriteSettings(CString strFileName)
     // Save stored states BEFORE low dose params
     for (i = 0; i < stateArray->GetSize(); i++) {
       stateP = stateArray->GetAt(i);
-      oneState.Format("StateParameters %d %d %d %d %f %d %f %f %d %d %d %d %f %f "
-        "%d %d %d %f %d %d %d %d %d %d %d %d %d %d %d %d %d %f %f %f %f %d\n",
-        stateP->lowDose, stateP->camIndex, stateP->magIndex,
-        stateP->spotSize, stateP->intensity, stateP->slitIn ? 1 : 0, stateP->energyLoss,
-        stateP->slitWidth, stateP->zeroLoss ? 1 : 0, stateP->binning, stateP->xFrame,
-        stateP->yFrame, stateP->exposure, stateP->drift, stateP->shuttering,
-        stateP->K2ReadMode, stateP->probeMode, stateP->frameTime, stateP->doseFrac,
-        stateP->saveFrames, stateP->processing, stateP->alignFrames,
-        stateP->useFrameAlign, stateP->faParamSetInd, stateP->readModeView,
-        stateP->readModeFocus, stateP->readModeTrial, stateP->readModePrev,
-        stateP->readModeSrch, stateP->readModeMont, stateP->beamAlpha,
-        stateP->targetDefocus, stateP->ldDefocusOffset, stateP->ldShiftOffsetX,
-        stateP->ldShiftOffsetY, stateP->montMapConSet ? 1 : 0);
+      WriteStateToString(stateP, oneState);
+      oneState = "StateParameters " + oneState + "\n";
       mFile->WriteString(oneState);
       if (!stateP->name.IsEmpty()) {
         oneState.Format("StateName %d %s\n", i, (LPCTSTR)stateP->name);
@@ -2272,17 +2264,8 @@ void CParameterIO::WriteSettings(CString strFileName)
           ldj = 0;
         }
 
-        // Set number or - state # + 1, mag or -cam length, spot, intensity, axis offset, 
-        // 0-2 for regular/GIF/STEM or 0 for state, slit in, slit width, energy loss,
-        // zero loss, beam X offset, beam Y offset, alpha, diffraction focus, beam tilt X,
-        // beam tilt Y, probe mode, dark field, dark field tilt X and Y
-        oneState.Format("LowDoseParameters %d %d %d %f %f %d %d %f %f %d %f %f %f %f %f"
-          " %f %d %d %f %f\n",
-          ldi, (ldp->magIndex ? ldp->magIndex : -ldp->camLenIndex), ldp->spotSize, 
-          ldp->intensity, ldp->axisPosition, ldj, ldp->slitIn ? 1 : 0, ldp->slitWidth, 
-          ldp->energyLoss, ldp->zeroLoss, ldp->beamDelX, ldp->beamDelY, ldp->beamAlpha, 
-          ldp->diffFocus, ldp->beamTiltDX, ldp->beamTiltDY, ldp->probeMode, 
-          ldp->darkFieldMode, ldp->dfTiltX, ldp->dfTiltY);
+        WriteLowDoseToString(ldp, ldi, ldj, oneState);
+        oneState = "LowDoseParameters " + oneState + "\n";
         mFile->WriteString(oneState);
       }
     }
@@ -2541,6 +2524,40 @@ void CParameterIO::WriteMacrosToFile(CString filename, int maxMacros)
     delete mFile;
     mFile = NULL;
   }
+}
+
+// Write low dose parameters to a string without \n for use here and in Navigator
+void CParameterIO::WriteLowDoseToString(LowDoseParams *ldp, int ldi, int ldj, CString &str)
+{
+  // Set number or - state # + 1, mag or -cam length, spot, intensity, axis offset, 
+  // 0-2 for regular/GIF/STEM or 0 for state, slit in, slit width, energy loss,
+  // zero loss, beam X offset, beam Y offset, alpha, diffraction focus, beam tilt X,
+  // beam tilt Y, probe mode, dark field, dark field tilt X and Y
+  str.Format("%d %d %d %f %f %d %d %f %f %d %f %f %f %f %f"
+    " %f %d %d %f %f",
+    ldi, (ldp->magIndex ? ldp->magIndex : -ldp->camLenIndex), ldp->spotSize,
+    ldp->intensity, ldp->axisPosition, ldj, ldp->slitIn ? 1 : 0, ldp->slitWidth,
+    ldp->energyLoss, ldp->zeroLoss, ldp->beamDelX, ldp->beamDelY, ldp->beamAlpha,
+    ldp->diffFocus, ldp->beamTiltDX, ldp->beamTiltDY, ldp->probeMode,
+    ldp->darkFieldMode, ldp->dfTiltX, ldp->dfTiltY);
+}
+
+// Write state parameters to a string without \n for use here and in Navigator
+void CParameterIO::WriteStateToString(StateParams *stateP, CString &str)
+{
+  str.Format("%d %d %d %d %f %d %f %f %d %d %d %d %f %f "
+    "%d %d %d %f %d %d %d %d %d %d %d %d %d %d %d %d %d %f %f %f %f %d",
+    stateP->lowDose, stateP->camIndex, stateP->magIndex,
+    stateP->spotSize, stateP->intensity, stateP->slitIn ? 1 : 0, stateP->energyLoss,
+    stateP->slitWidth, stateP->zeroLoss ? 1 : 0, stateP->binning, stateP->xFrame,
+    stateP->yFrame, stateP->exposure, stateP->drift, stateP->shuttering,
+    stateP->K2ReadMode, stateP->probeMode, stateP->frameTime, stateP->doseFrac,
+    stateP->saveFrames, stateP->processing, stateP->alignFrames,
+    stateP->useFrameAlign, stateP->faParamSetInd, stateP->readModeView,
+    stateP->readModeFocus, stateP->readModeTrial, stateP->readModePrev,
+    stateP->readModeSrch, stateP->readModeMont, stateP->beamAlpha,
+    stateP->targetDefocus, stateP->ldDefocusOffset, stateP->ldShiftOffsetX,
+    stateP->ldShiftOffsetY, stateP->montMapConSet ? 1 : 0);
 }
 
 #define HARD_CODED_FLAGS (NAA_FLAG_HAS_SETUP | NAA_FLAG_ALWAYS_HIDE | \

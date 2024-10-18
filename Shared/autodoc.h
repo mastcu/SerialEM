@@ -15,6 +15,7 @@
 
 #define ADOC_GLOBAL_NAME "PreData"
 #define ADOC_ZVALUE_NAME "ZValue"
+#define ADOC_FRAMESET_NAME "FrameSet"
 
 #ifdef __cplusplus
 extern "C" {
@@ -46,6 +47,8 @@ int AdocLookupByNameValue(const char *typeName, int nameValue);
 int AdocFindInsertIndex(const char *typeName, int nameValue);
 int AdocTransferSection(const char *typeName, int sectInd, int toAdocInd, 
                         const char *newName, int byValue);
+int AdocTransferToNewType(const char *typeName, int sectInd, int toAdocInd,
+                          const char *newType, const char *newName, int byValue);
 int AdocSetKeyValue(const char *collName, int sectInd, const char *key, 
                     const char *value);
 int AdocDeleteKeyValue(const char *collName, int sectInd, const char *key);
@@ -73,6 +76,8 @@ int AdocGetThreeFloats(const char *collName, int sectInd, const char *key, float
                        float *val2, float *val3);
 int AdocGetFloatArray(const char *collName, int sectInd, const char *key, float *array,
                       int *numToGet, int arraySize);
+int AdocGetDoubleArray(const char *typeName, int sectInd, const char *key, double *array,
+                       int *numToGet, int arraySize);
 int AdocSetInteger(const char *typeName, int sectInd, const char *key, int ival);
 int AdocSetTwoIntegers(const char *typeName, int sectInd, const char *key, int ival1, 
                        int ival2);

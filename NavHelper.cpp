@@ -4442,7 +4442,9 @@ void CNavHelper::RecomputeArrayRefs(void)
   FileOptions *opt;
   MontParam *montp;
   TiltSeriesParam *tsp;
-  int i, loop, limit, fileInd, montInd, tsInd;
+  ShortVec used;
+  int i, loop, limit, fileInd, montInd, tsInd, stateInd;
+  int numStates = (int)mAcqStateArray->GetSize();
 
   // First zero all the references
   for (i = 0; i < mFileOptArray->GetSize(); i++) {
@@ -4458,6 +4460,9 @@ void CNavHelper::RecomputeArrayRefs(void)
     tsp->refCount = 0;
   }
 
+  // NO references for state, just build list of ones used
+  used.resize(numStates);
+
   // Add up the references again
   limit = (int)mItemArray->GetSize();
   for (loop = 0; loop < 2; loop++) {
@@ -4466,12 +4471,14 @@ void CNavHelper::RecomputeArrayRefs(void)
         sched = mGroupFiles->GetAt(i);
         fileInd = sched->filePropIndex;
         montInd = sched->montParamIndex;
+        stateInd = sched->stateIndex;
         tsInd = -1;
       } else {
         item = mItemArray->GetAt(i);
         fileInd = item->mFilePropIndex;
         montInd = item->mMontParamIndex;
         tsInd = item->mTSparamIndex;
+        stateInd = item->mStateIndex;
       }
 
       if (fileInd >= 0) {
@@ -4486,6 +4493,8 @@ void CNavHelper::RecomputeArrayRefs(void)
         tsp = mTSparamArray->GetAt(tsInd);
         tsp->refCount++;
       }
+      if (stateInd >= 0 && stateInd < numStates)
+        used[stateInd] = 1;
     }
     limit = (int)mGroupFiles->GetSize();
   }
@@ -4506,6 +4515,9 @@ void CNavHelper::RecomputeArrayRefs(void)
     if (!tsp->refCount)
       RemoveFromArray(NAVARRAY_TSPARAM, i);
   }
+  for (i = numStates - 1; i >= 0; i--)
+    if (!used[i])
+      RemoveFromArray(NAVARRAY_STATE, i);
 }
 
 // See if an earlier item shares a reference to the given type of index
@@ -5276,12 +5288,13 @@ int CNavHelper::AssessAcquireForParams(NavAcqParams *navParam, NavAcqAction *acq
 // Make sure no indexes are out of range, which can crash when indexes are not checked
 int CNavHelper::CheckForBadParamIndexes(CString prefix)
 {
-  int ind, numBadTS = 0, numBadProp = 0, numBadMont = 0;
+  int ind, numBadTS = 0, numBadProp = 0, numBadMont = 0, numBadState = 0;
   int numTS = (int)mTSparamArray->GetSize();
   int numMont = (int)mMontParArray->GetSize();
   int numProp = (int)mFileOptArray->GetSize();
+  int numStates = (int)mAcqStateArray->GetSize();
   CMapDrawItem *item;
-  CString str, badTSlist, badMontList, badPropList, mess;
+  CString str, badTSlist, badMontList, badPropList, badStateList, mess;
   for (ind = 0; ind < (int)mItemArray->GetSize(); ind++) {
     item = mItemArray->GetAt(ind);
     if (item->mTSparamIndex >= numTS) {
@@ -5302,6 +5315,12 @@ int CNavHelper::CheckForBadParamIndexes(CString prefix)
       badPropList += str;
       item->mFilePropIndex = -1;
     }
+    if (item->mStateIndex >= numStates) {
+      str.Format(" %d", ind + 1);
+      numBadState++;
+      badStateList += str;
+      item->mStateIndex = -1;
+    }
   }
   if (numBadTS) {
     mess.Format("%d items had tilt series parameter indexes out of range:\r\n", numBadTS);
@@ -5315,6 +5334,10 @@ int CNavHelper::CheckForBadParamIndexes(CString prefix)
     str.Format("%d items had file property parameter indexes out of range:\r\n", 
       numBadProp);
     mess += str + badPropList + "\r\n\r\n";
+  }
+  if (numBadState) {
+    str.Format("%d items had state parameter indexes out of range:\r\n", numBadState);
+    mess += str + badStateList + "\r\n\r\n";
   }
   if (!mess.IsEmpty()) {
     mess += "These indexes have all been cleared out";
@@ -6476,7 +6499,7 @@ void CNavHelper::OpenMultiGrid(void)
     mStateDlg->Update();
   if (cartInfo->GetSize()) {
     mMultiGridDlg->SetNumUsedSlots((int)cartInfo->GetSize());
-    mMultiGridDlg->ReloadTable(1, 1);
+    mMultiGridDlg->ReloadTable(1, 2);
     mMultiGridDlg->UpdateEnables();
     mMultiGridDlg->NewGridOnStage(-1);
   }
