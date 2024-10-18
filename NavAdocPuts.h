@@ -174,6 +174,8 @@
     ADOC_PUT(Integer(ADOC_ARG, "FilePropIndex", item->mFilePropIndex));
   if (!item->mFileToOpen.IsEmpty())
     ADOC_PUT(KeyValue(ADOC_ARG, "FileToOpen", (LPCTSTR)item->mFileToOpen));
+  if (item->mStateIndex >= 0)
+    ADOC_PUT(Integer(ADOC_ARG, "StateIndex", item->mStateIndex));
 
   ADOC_PUT(FloatArray(ADOC_ARG, "PtsX", &item->mPtX[0], item->mNumPoints));
   ADOC_PUT(FloatArray(ADOC_ARG, "PtsY", &item->mPtY[0], item->mNumPoints));

@@ -365,6 +365,7 @@ struct StateParams {
     focusXoffset = focusYoffset = 0;
     rotateAxis = false;
     axisRotation = 0;
+    navID = 0;
   }
   LowDoseParams ldParams;  // Low dose Record parameters if this is a low dose state
   int lowDose;            // Flag that it is a low dose state
@@ -406,6 +407,7 @@ struct StateParams {
   float ldShiftOffsetY;
   BOOL montMapConSet;      // Flag that it is mont-map not Record
   CString name;
+  int navID;               // For keeping track of duplicates in merging navs
   int camForParams;        // Runtime: Camera index to which parameters should be restored
 };
 
