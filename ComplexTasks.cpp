@@ -2071,7 +2071,7 @@ void CComplexTasks::StopEucentricity()
   if (!mTiltingBack) {
 
     // restore mag now but come back after tilt is done to do true end
-    if (!mFENextCoarseConSet)
+    if (mFENextCoarseConSet < 0)
       RestoreMagIfNeeded();
     if (!mScope->WaitForStageReady(10000)) {
       mScope->TiltTo(mFEUsersAngle, mStageXtoRestore, mStageYtoRestore);
