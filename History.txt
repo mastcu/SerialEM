@@ -3,7 +3,10 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
-10/21/24: Fixed mag not be restored after rough eucentricity outside of Low
+10/24/24: Fixed the 4 script commands relating stage and image coordinates to
+work correctly for Navigator coordinates and clarified help (In 4.1).
+
+10/21/24: Fixed mag not being restored after rough eucentricity outside of Low
 Dose, broken since 6/17.
 
 10/18/24: Made multigrid run selections be retained if dialog closed and

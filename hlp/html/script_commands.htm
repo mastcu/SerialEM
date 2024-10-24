@@ -1932,18 +1932,19 @@
             coordinates: the 6 elements XperX, XperY. YperX, YperY delX, delY, where the transformation is <br />
             Ximage = Xstage * XperX + Ystage * XperY + delX<br />
             Yimage = Xstage * YperX + Ystage * YperY + delY <br />
-            Set <b>#I</b> 0 to consider just the stage coordinates, or non-zero to
-            consider microscope image shift when the image was taken, as well as various image shift offsets,
-            just as the Navigator does when relating magnification-independent stage positions and
-            positions in a specific image.&nbsp; The latter would be needed to work with stage positions
-            of Navigator items.&nbsp; Image Y is inverted: the origin for the image coordinates is at
-             the top of the image.&nbsp; Values can be assigned to variables at end of command.&nbsp; Command added in 4.1, 16-Jun-23.
+            Set <b>#I</b> 0 for delX and delY values that work with Navigator stage coordinates, which are potentially adjusted to be 
+            magnification-independent, or non-zero for values that wrork with an actual stage coordinate that applies at the 
+            current magnification and image shift.&nbsp; Image Y is inverted: the origin for the image coordinates is at
+             the top of the image.&nbsp; Values can be assigned to variables at end of command.&nbsp; This
+            and the following 3 commands were fixed on 24-Oct-24 to work with Navigator coordinates when <b>#I</b> is 0 and 
+            modified for <B>#I</B> non-zero to treat raw coordinates in a way that is probably 
+            correct but may not be useful.&nbsp; Command added in 4.1, 16-Jun-23.
           </td>
         </TR>
         <TR>
           <TD class="scriptcommand">BufImageToStageMatrix buf #I</TD>
           <td>Like 'StageToBufImageMatrix', but reports the 6-element transformation from image to stage
-            coordinates.&nbsp; Values can be assigned to variables at end of command.&nbsp; Command added in 4.1, 16-Jun-23.</td>
+            coordinates.&nbsp; Values can be assigned to variables at end of command.&nbsp; Command added in 4.1, 16-Jun-23, modified 24-Oct-24.</td>
         </TR>
         <TR>
           <TD class="scriptcommand">BufImagePosToStagePos buf #I #X #Y</TD>
@@ -1952,25 +1953,25 @@
             image is a montage, it also reports the piece the point is in and the coordinates within the piece, 
             defined the same as the PieceOn and XYinPc entries in a Navigator file; 
             otherwise -1 is reported for each.&nbsp; Set <b>#I</b>
-             0 to consider just the stage coordinates, or non-zero to
-            consider microscope image shift when the image was taken, as well as various image shift 
-            offsets.&nbsp; In either case, if the image
+             0 for potentially magnification-independent Navigator stage coordinates, or non-zero for a stage coordinate
+            valid at the current microscope magnification and image shift.&nbsp; In either case, if the image
             is a stage montage overview, the offsets of pieces are taken into account in computing the position,
             making this result different from what could be computed with the matrix 
-            from 'StageToBufImageMatrix'.&nbsp; Values can be assigned to variables at end of command.&nbsp; Command added in 4.1, 16-Jun-23.
+            from 'StageToBufImageMatrix'.&nbsp; Values can be assigned to variables at end of command.&nbsp; Command added in 4.1, 16-Jun-23, modified 24-Oct-24.
           </td>
         </TR>
         <TR>
           <TD class="scriptcommand">StagePosToBufImagePos buf #I #X #Y</TD>
           <td>Like 'BufImagePosToStagePos', but reports the image position (X and Y) in the image in 
             buffer <b>buf</b> of the stage position <b>#X</b>, <b>#Y</b>.&nbsp; These image coordinates are <I>left-handed</I>; 
-            i.e., Y is inverted.&nbsp; If <B>#I</B> is non-zero, coordinates account for image shift and
-             montage piece alignments as in 'BufImagePosToStagePos' and just as occurs when drawing 
-            navigator points on an image.&nbsp; If the image is a montage overview, it also reports the index of 
+            i.e., Y is inverted.&nbsp; Set <B>#I</B> for Navigator stage coordinates, or non-zero for actual stage 
+            coordinates that apply at the current magnification and image shift.  The resulting coordinates account
+            for montage piece alignments as in 'BufImagePosToStagePos' and just as occurs when drawing 
+            Navigator points on an image.&nbsp; If the image is a montage overview, it also reports the index of 
             the montage position and the position within that piece (X and Y) in <I>right-handed coordinates</I>,
              with 0 in Y at the bottom of each piece (see PieceOn and XYinPC in 
             <a href="about_formats.htm#navigator">Navigator Files</a>).&nbsp; Values can be assigned
-             to variables at end of command.&nbsp; Command added in 4.1, 16-Jun-23.
+             to variables at end of command.&nbsp; Command added in 4.1, 16-Jun-23, modified 24-Oct-24.
           </td>
         </TR>
        <TR>

@@ -6267,22 +6267,42 @@ int CMacCmd::CameraToISMatrix(void)
 // BufImagePosToStagePos
 int CMacCmd::StageToBufImageMatrix(void)
 {
-  int index, pcInd = -1;
+  int index, pcInd = -1, magInd;
   ScaleMat aMat;
-  float delX, delY, stageX, stageY, outX, outY, xInPiece =  0., yInPiece = 0.;
+  float delX, delY, outX, outY, xInPiece =  0., yInPiece = 0.;
+  float tilt = 0., adjXstage = 0., adjYstage = 0.;
+  double ISX = 0., ISY = 0.;
   bool im2st = CMD_IS(BUFIMAGETOSTAGEMATRIX) || CMD_IS(BUFIMAGEPOSTOSTAGEPOS);
+  EMimageBuffer *imBuf;
+  ABORT_NONAV;
   if (ConvertBufferLetter(mStrItems[1], 0, true, index, mStrCopy))
     ABORT_LINE(mStrCopy);
-  if (!mImBufs[index].GetStagePosition(stageX, stageY))
-    ABORT_LINE("Image buffer has no stage coordinates stored for line:\n\n");
-  mNavHelper->ComputeStageToImage(&mImBufs[index], stageX, stageY, mItemInt[2] != 0, 
-    aMat, delX, delY);
+  imBuf = &mImBufs[index];
+  if (!mNavigator->BufferStageToImage(imBuf, aMat, delX, delY))
+    ABORT_LINE("Image buffer does not have enough coordinate information for line:\n\n");
   if (im2st) {
     aMat = MatInv(aMat);
     mShiftManager->ApplyScaleMatrix(aMat, -delX, -delY, delX, delY);
   }
   if (!aMat.xpx)
     ABORT_LINE("There is no transformation available for line:\n\n");
+  if (mItemInt[2]) {
+    magInd = imBuf->mMagInd;
+    if (!magInd || imBuf->mCamera < 0)
+      ABORT_LINE("Image buffer does not have camera or "
+        "magnification information needed for line:\n\n");
+    imBuf->GetTiltAngle(tilt);
+
+    // This gives the stage shift to add to convert from raw stage coordinate to Navigator
+    // stage coordinate
+    mNavigator->AdjustISandMagForStageConversion(magInd, ISX, ISY);
+    mNavHelper->ConvertIStoStageIncrement(magInd, imBuf->mCamera, ISX, ISY, tilt,
+      adjXstage, adjYstage, imBuf);
+    if (im2st) {
+      delX -= adjXstage;
+      delY -= adjXstage;
+    }
+  }
   if (CMD_IS(BUFIMAGEPOSTOSTAGEPOS) || CMD_IS(STAGEPOSTOBUFIMAGEPOS)) {
     if (im2st) {
       mNavHelper->AdjustMontImagePos(&mImBufs[index], mItemFlt[3], mItemFlt[4], &pcInd, 
@@ -6293,12 +6313,15 @@ int CMacCmd::StageToBufImageMatrix(void)
       mLogRpt.Format("Stage position is %.3f %.3f", outX, outY);
       SetRepValsAndVars(5, outX, outY, pcInd, xInPiece, yInPiece);
     } else {
-      mWinApp->mMainView->ExternalStageToImage(&mImBufs[index], aMat, delX, delY, 
-        mItemFlt[3], mItemFlt[4], outX, outY);
+      mWinApp->mMainView->ExternalStageToImage(&mImBufs[index], aMat, delX,
+        delY, mItemFlt[3] + adjXstage, mItemFlt[4] + adjYstage, outX, outY);
       mLogRpt.Format("Image position is %.1f %.1f", outX, outY);
       SetRepValsAndVars(5, outX, outY);
     }
   } else {
+    if (!im2st && mItemInt[2]) {
+      mShiftManager->ApplyScaleMatrix(aMat, adjXstage, adjYstage, delX, delY, true);
+    }
     mLogRpt.Format("%s matrix is %5g %.5g %.5g %.5g  %.3f %.3f",
       im2st ? "Image to stage" : "Stage to image",
       aMat.xpx, aMat.xpy, aMat.ypx, aMat.ypy, delX, delY);
