@@ -10102,6 +10102,7 @@ void CCameraController::DisplayNewImage(BOOL acquired)
       hasUserPtSave = imBuf->mHasUserPt;
       imBuf->mHasUserPt = false;
       imBuf->mHasUserLine = false;
+      imBuf->mIllegalUserPt = false;
       imBuf->mCtfFocus1 = 0.;
       imBuf->mMapID = 0;
       imBuf->mChangeWhenSaved = 0;
