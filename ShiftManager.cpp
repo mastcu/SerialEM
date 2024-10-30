@@ -241,8 +241,8 @@ int CShiftManager::SetAlignShifts(float newX, float newY, BOOL incremental,
   EMimageBuffer *activeImBuf = mWinApp->mActiveView->GetActiveImBuf();
 
   int shiftedBuf = mBufferManager->MainImBufIndex(imBuf);
-  BOOL montOverview = mWinApp->Montaging() && shiftedBuf == 1  && 
-    imBuf->IsMontageOverview();
+  BOOL montOverview = shiftedBuf == 1  && imBuf->IsMontageOverview() &&
+    (mWinApp->Montaging() || imBuf->mCaptured == BUFFER_PRESCAN_OVERVIEW);
   BOOL imposeShift = true;
 
   if (!imBuf->mImage)
@@ -2079,6 +2079,23 @@ float CShiftManager::GetPixelSize(EMimageBuffer *imBuf, float *focusRot)
   return pixel;
 }
 
+// Return a refined pixel size in microns if there is one for the camera and mag
+float CShiftManager::GetRefinedPixel(EMimageBuffer *imBuf) {
+  return GetRefinedPixel(imBuf->mCamera, imBuf->mMagInd, imBuf->mBinning);
+}
+
+// Returns the pixel size as unbinned value or binned value if that argument is included
+float CShiftManager::GetRefinedPixel(int camera, int magInd, int binning)
+{
+  std::map<int, float> ::iterator iter;
+  if (camera < 0 || !magInd || !binning)
+    return 0.0f;
+  int index = 10 * magInd + camera;
+  if (!mRefinedPixelSizes.count(index))
+    return 0.;
+  iter = mRefinedPixelSizes.find(index);
+  return (float)(binning * 0.001 * iter->second);
+}
 
 // Get the image rotation: replaced by new methods 11/30/06
 double CShiftManager::GetImageRotation(int inCamera, int inMagInd)

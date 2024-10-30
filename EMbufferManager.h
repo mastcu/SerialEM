@@ -62,7 +62,7 @@ public :
   int FindSectionForPiece(KImageStore *inStore, MontParam &param, int pieceX, int pieceY, int secNum);
   EMimageBuffer *GetSaveBuffer();
   int ReplaceImage(char *inData, int inType, int inX, int inY,
-                   int inBuf, int inCap, int inConSet, bool fftBuf = false, bool display = true);
+                   int inBuf, int inCap, int inConSet, int bufBin, bool fftBuf = false, bool display = true);
   int MainImBufIndex(EMimageBuffer *imBuf);
   GetSetMember(int, RotateAxisAngle);
   void ReportError (int inErr);

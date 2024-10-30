@@ -1673,8 +1673,7 @@ void CFocusManager::FocusDone()
     if (bufnum + 2 <= mBufferManager->GetShiftsOnAcquire())
       mBufferManager->CopyImageBuffer(bufnum, bufnum + 2);
     mBufferManager->ReplaceImage((char *)data, type, nxframe, nyframe,
-      bufnum, BUFFER_PROCESSED, mFocusSetNum);
-    mImBufs[bufnum].mBinning = binning;
+      bufnum, BUFFER_PROCESSED, mFocusSetNum, binning);
     mImBufs[bufnum].mEffectiveBin = (float)binning;
     mImBufs[bufnum].mDivideBinToShow = divForK2;
     removeData = false;

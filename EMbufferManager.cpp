@@ -306,7 +306,7 @@ int EMbufferManager::SaveImageBuffer(KImageStore *inStore, bool skipCheck, int i
   EMimageExtra *extra;
   double axisRot;
   CString str;
-  float axis, bidirAngle, camLen;
+  float axis, bidirAngle, camLen, refinedPix = 0., angSpacing;
   int spot, err, check, cam, mag, oldDivided;
   BOOL savingOther = mWinApp->SavingOther();
   EMimageBuffer *toBuf = GetSaveBuffer();
@@ -324,8 +324,15 @@ int EMbufferManager::SaveImageBuffer(KImageStore *inStore, bool skipCheck, int i
     float pixel = mWinApp->mShiftManager->GetPixelSize(cam, mag);
     if (!mag) {
       mWinApp->mProcessImage->GetDiffractionPixelSize(cam, pixel, camLen);
+    } else {
+      refinedPix = mWinApp->mShiftManager->GetRefinedPixel(toBuf->mCamera, 
+        toBuf->mMagInd);
     }
-    inStore->SetPixelSpacing((float)(10000. * B3DMAX(1, toBuf->mBinning) * pixel));
+
+    // This propagates the global entry in the mdoc so not needed more than here
+    angSpacing = (float)(10000. * B3DMAX(1, toBuf->mBinning) *
+      (refinedPix ? refinedPix : pixel));
+    inStore->SetPixelSpacing(angSpacing);
 
     // 11/6/06: Removed 180 degree rotations for angles beyond 90!  Preserve true 
     // polarity. But 12/4/06: needed to subtract not add the 90 degrees to represent 
@@ -373,7 +380,7 @@ int EMbufferManager::SaveImageBuffer(KImageStore *inStore, bool skipCheck, int i
         (float)mWinApp->mProcessImage->GetRecentVoltage());
       AdocSetKeyValue(ADOC_GLOBAL, 0, ADOC_PROG_VERS,
         (LPCTSTR)mWinApp->GetVersionString());
-      // Writing the adoc here made the first write from the background write to the
+       // Writing the adoc here made the first write from the background write to the
       // backup file when there was TS extra output too.  It was bizarre. 12/30/17
       AdocReleaseMutex();
     }
@@ -985,8 +992,9 @@ int EMbufferManager::FindSectionForPiece(KImageStore *inStore, MontParam &param,
   return -1;
 }
 
+// Replace the image in an image buffer, assigning some of the buffer variables here
 int EMbufferManager::ReplaceImage(char *inData, int inType, int inX, int inY, 
-              int inBuf, int inCap, int inConSet, bool fftBuf, bool display)
+              int inBuf, int inCap, int inConSet, int bufBin, bool fftBuf, bool display)
 {
   EMimageBuffer *toBuf = B3DCHOICE(fftBuf, mWinApp->GetFFTBufs(), mImBufsp) + inBuf;
   toBuf->DeleteImage();
@@ -1019,7 +1027,10 @@ int EMbufferManager::ReplaceImage(char *inData, int inType, int inX, int inY,
   toBuf->mSaveCopyp = NULL;
   toBuf->mConSetUsed = inConSet;
   toBuf->mSecNumber = 0;
-  toBuf->mBinning = 1;
+
+  // Callers have to supply binning because UpdateBufferWindows calls multishot 
+  // ManagePanels which triggers a draw
+  toBuf->mBinning = bufBin;
   toBuf->mHasUserPt = false;
   toBuf->mHasUserLine = false;
   toBuf->mCtfFocus1 = 0.;

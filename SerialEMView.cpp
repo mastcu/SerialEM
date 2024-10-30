@@ -2255,24 +2255,27 @@ void CSerialEMView::SetZoom(double inZoom)
 void CSerialEMView::NewZoom()
 {
   double effZoom;
+  float binning;
   if (mImBufs[mImBufIndex].mImage)
     DrawImage();
   if (mImBufs[mImBufIndex].mImageScale)
     mWinApp->mImageLevel.NewZoom(mZoom);
   
   // Set effective zoom unless it is a map
-  if (GetBufferBinning() > 0. && !mImBufs[mImBufIndex].mMapID) {
-    effZoom = mZoom / GetBufferBinning();
+  binning = GetBufferBinning();
+  if (binning > 0. && !mImBufs[mImBufIndex].mMapID) {
+    effZoom = mZoom / binning;
 
     // Set separately for View, Search, and general
     if (mImBufs[mImBufIndex].mLowDoseArea &&
-      mImBufs[mImBufIndex].mConSetUsed == VIEW_CONSET)
+      mImBufs[mImBufIndex].mConSetUsed == VIEW_CONSET) {
       mViewEffectiveZoom = effZoom;
-    else if (mImBufs[mImBufIndex].mLowDoseArea &&
-      mImBufs[mImBufIndex].mConSetUsed == SEARCH_CONSET)
+    } else if (mImBufs[mImBufIndex].mLowDoseArea &&
+      mImBufs[mImBufIndex].mConSetUsed == SEARCH_CONSET) {
       mSearchEffectiveZoom = effZoom;
-    else
+    } else {
       mEffectiveZoom = effZoom;
+    }
   }
   mImBufs[mImBufIndex].mZoom = mZoom;
 }
@@ -3264,25 +3267,28 @@ void CSerialEMView::TryToChangeBuffer(int iTrial, int iDir)
 // all necessary update calls.
 void CSerialEMView::SetCurrentBuffer(int inIndex)
 {
+  float binning;
   mImBufIndex = inIndex;
   if (mFirstDraw || mBasisSizeX < 0)
     FindEffectiveZoom();
 
   // Autozoom: if there is a binning, set the zoom based on the effective zoom
   // times the binning; notify level window of new zoom
-  if (mWinApp->mBufferManager->GetAutoZoom() && GetBufferBinning() > 0.) {
+  binning = GetBufferBinning();
+  if (mWinApp->mBufferManager->GetAutoZoom() && binning > 0.) {
 
     // But if it is a map with a defined zoom, or View or Search, use previous zoom
     if (mImBufs[mImBufIndex].mMapID && mImBufs[mImBufIndex].mZoom > 0.001)
       mZoom = mImBufs[mImBufIndex].mZoom;
     else if (mImBufs[mImBufIndex].mLowDoseArea &&
-      mImBufs[mImBufIndex].mConSetUsed == VIEW_CONSET && mViewEffectiveZoom > 0.)
-      mZoom = mViewEffectiveZoom * GetBufferBinning();
-    else if (mImBufs[mImBufIndex].mLowDoseArea &&
-      mImBufs[mImBufIndex].mConSetUsed == SEARCH_CONSET && mSearchEffectiveZoom > 0.)
-      mZoom = mSearchEffectiveZoom * GetBufferBinning();
-    else
-      mZoom = mEffectiveZoom * GetBufferBinning();
+      mImBufs[mImBufIndex].mConSetUsed == VIEW_CONSET && mViewEffectiveZoom > 0.) {
+      mZoom = mViewEffectiveZoom * binning;
+    } else if (mImBufs[mImBufIndex].mLowDoseArea &&
+      mImBufs[mImBufIndex].mConSetUsed == SEARCH_CONSET && mSearchEffectiveZoom > 0.) {
+      mZoom = mSearchEffectiveZoom * binning;
+    } else {
+      mZoom = mEffectiveZoom * binning;
+    }
 
     if (mImBufs[mImBufIndex].mImageScale)
       mWinApp->mImageLevel.NewZoom(mZoom);

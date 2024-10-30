@@ -1839,8 +1839,8 @@ void CShiftCalibrator::InterSetShiftNextTask(int param)
         }
 
         mBufferManager->ReplaceImage((char *)zoomData, image->getType(), nxzoom, nyzoom, 
-          0, BUFFER_PROCESSED, mImBufs->mConSetUsed);
-        mImBufs->mBinning = recAliBin * mImBufs[recInd].mBinning;
+          0, BUFFER_PROCESSED, mImBufs->mConSetUsed, 
+          recAliBin * mImBufs[recInd].mBinning);
       } else
         scale = 1.;
     }

@@ -4889,12 +4889,10 @@ void CTSController::Terminate()
             
             // Replace the image, cleaning up on failure
             if (mBufferManager->ReplaceImage((char *)brray, type, ny, nx, 
-              mReadBuf + 1 + i, BUFFER_PROCESSED, RECORD_CONSET) ) {
+              mReadBuf + 1 + i, BUFFER_PROCESSED, RECORD_CONSET, mTSParam.binning) ) {
               delete [] brray;
               break;
             }
-            mImBufs[mReadBuf + 1 + i].mBinning = mTSParam.binning;
-
           }
           image->UnLock();
       }

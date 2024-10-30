@@ -7,6 +7,7 @@
 
 #include <set>
 #include <vector>
+#include <map>
 
 //#include "MontageParam.h" // Added by ClassView
 #include "MagTable.h"   // Added by ClassView
@@ -79,21 +80,21 @@ public:
   ShortVec *GetBeamCalMagInd() { return &mBeamCalMagInd; };
   ShortVec *GetBeamCalAlpha() { return &mBeamCalAlpha; };
   ShortVec *GetBeamCalProbe() { return &mBeamCalProbe; };
-  ShortVec *GetBeamCalRetain()   { return &mBeamCalRetain;};
-  ShortVec *GetBeamShiftBoundaries() {return &mBeamShiftBoundaries;};
+  ShortVec *GetBeamCalRetain() { return &mBeamCalRetain; };
+  ShortVec *GetBeamShiftBoundaries() { return &mBeamShiftBoundaries; };
   GetSetMember(BOOL, InvertStageXAxis)
-  GetSetMember(int, StageInvertsZAxis)
-  void ResetAllTimeouts();
+    GetSetMember(int, StageInvertsZAxis)
+    void ResetAllTimeouts();
   ScaleMat CameraToIS(int magInd);
   ScaleMat CameraToSpecimen(int magInd);
   GetSetMember(BOOL, TrimDarkBorders);
   GetSetMember(BOOL, ErasePeriodicPeaks);
   GetSetMember(int, NoDefaultPeakErasing);
   BOOL CanTransferIS(int magFrom, int magTo, BOOL STEMcamera = false, int GIFcamera = -1);
-	void TransferGeneralIS(int fromMag, double fromX, double fromY, int toMag, double &toX,
+  void TransferGeneralIS(int fromMag, double fromX, double fromY, int toMag, double &toX,
     double &toY, int toCam = -1);
   double TransferImageRotation(double fromAngle, int fromCam, int fromMag,
-                               int toCam, int toMag);
+    int toCam, int toMag);
   void SetBeamShiftCal(ScaleMat inMat, int inMag, int inAlpha, int inProbe, int retain);
   ScaleMat GetBeamShiftCal(int magInd, int inAlpha = -3333, int inProbe = -1);
   float PredictISDelay(double ISX, double ISY);
@@ -102,30 +103,30 @@ public:
   ScaleMat SpecimenToStage(double adjustX, double adjustY);
   double RadialShiftOnSpecimen(double inISX, double inISY, int inMagInd);
   UINT GetAdjustedTiltDelay(double tiltChange);
-  BOOL ResettingIS() {return mResettingIS || mStartedStageMove;};
+  BOOL ResettingIS() { return mResettingIS || mStartedStageMove; };
   void ResetISDone();
   void ResetISCleanup(int error);
   GetSetMember(float, TiltDelay)
-  GetSetMember(float, RegularShiftLimit)
-  GetSetMember(float, LowMagShiftLimit)
-  GetSetMember(BOOL, MouseMoveStage)
-  GetSetMember(float, MouseStageThresh)
-  GetSetMember(float, MouseStageAbsThresh)
-  GetMember(BOOL, ShiftingDefineArea)
-  GetSetMember(float, TrimFrac)
-  GetSetMember(float, TaperFrac)
-  GetSetMember(float, Sigma1)
-  GetSetMember(float, Radius2)
-  GetSetMember(float, Sigma2)
-  GetSetMember(int, NormalizationDelay)
-  GetSetMember(int, LowMagNormDelay);
+    GetSetMember(float, RegularShiftLimit)
+    GetSetMember(float, LowMagShiftLimit)
+    GetSetMember(BOOL, MouseMoveStage)
+    GetSetMember(float, MouseStageThresh)
+    GetSetMember(float, MouseStageAbsThresh)
+    GetMember(BOOL, ShiftingDefineArea)
+    GetSetMember(float, TrimFrac)
+    GetSetMember(float, TaperFrac)
+    GetSetMember(float, Sigma1)
+    GetSetMember(float, Radius2)
+    GetSetMember(float, Sigma2)
+    GetSetMember(int, NormalizationDelay)
+    GetSetMember(int, LowMagNormDelay);
   GetSetMember(int, StageMovedDelay)
-  GetSetMember(float, DefocusZFactor)
-  SetMember(int, StageDelayToUse);
+    GetSetMember(float, DefocusZFactor)
+    SetMember(int, StageDelayToUse);
   int ResetImageShift(BOOL bDoBacklash, BOOL bAdjustScale, int waitTime = 5000,
     float relaxation = 0.);
-  float *GetISmoved() {return &mISmoved[0];};
-  float *GetISdelayNeeded() {return &mISdelayNeeded[0];};
+  float *GetISmoved() { return &mISmoved[0]; };
+  float *GetISdelayNeeded() { return &mISdelayNeeded[0]; };
   SetMember(int, NumISdelays);
   GetSetMember(float, DelayPerMagDoubling);
   GetSetMember(float, StartupForISDelays);
@@ -162,30 +163,31 @@ public:
   CShiftManager();
   virtual ~CShiftManager();
   GetSetMember(float, GlobalExtraRotation)
-  GetSetMember(float, RoughISscale)
-  GetSetMember(float, STEMRoughISscale)
-  float GetLMRoughISscale() {return mLMRoughISscale ? mLMRoughISscale : mRoughISscale;};
+    GetSetMember(float, RoughISscale)
+    GetSetMember(float, STEMRoughISscale)
+    float GetLMRoughISscale() { return mLMRoughISscale ? mLMRoughISscale : mRoughISscale; };
   SetMember(float, LMRoughISscale)
-  GetSetMember(int, NumRelRotations)
-  GetMember(BOOL, AnyCalPixelSizes);
+    GetSetMember(int, NumRelRotations)
+    GetMember(BOOL, AnyCalPixelSizes);
   GetSetMember(BOOL, LastTimeoutWasIS);
   ScaleMat MatMul(ScaleMat aa, ScaleMat bb);
   ScaleMat MatInv(ScaleMat aa);
-  RelRotations *GetRelRotations() {return &mRelRotations[0];};
+  RelRotations *GetRelRotations() { return &mRelRotations[0]; };
   GetSetMember(int, MinTiltDelay)
-  GetSetMember(ScaleMat, StageStretchXform)
-  GetSetMember(float, ISdelayScaleFactor)
-  GetSetMember(BOOL, BacklashMouseAndISR)
-  GetSetMember(int, DisableAutoTrim);
+    GetSetMember(ScaleMat, StageStretchXform)
+    GetSetMember(float, ISdelayScaleFactor)
+    GetSetMember(BOOL, BacklashMouseAndISR)
+    GetSetMember(int, DisableAutoTrim);
   GetSetMember(float, HitachiStageSpecAngle);
   GetSetMember(float, C2SpacingForHighFocus);
   GetMember(BOOL, MouseShifting);
   SetMember(float, NextAutoalignLimit);
   GetSetMember(int, UseSquareShiftLimits);
-  CArray<RotStretchXform, RotStretchXform> *GetRotXforms() {return &mRotXforms;};
-  STEMinterSetShifts *GetSTEMinterSetShifts() {return &mInterSetShifts;};
+  CArray<RotStretchXform, RotStretchXform> *GetRotXforms() { return &mRotXforms; };
+  STEMinterSetShifts *GetSTEMinterSetShifts() { return &mInterSetShifts; };
   HighFocusCalArray *GetFocusMagCals() { return &mFocusMagCals; };
   HighFocusCalArray *GetFocusISCals() { return &mFocusISCals; };
+  std::map<int, float> *GetRefinedPixelSizes() { return &mRefinedPixelSizes; };
 
 private:
   CSerialEMApp * mWinApp;
@@ -290,6 +292,7 @@ private:
   bool mAnyAbsRotCal;           // FLag for there being any absolute rotation calibrations
   std::set<int> mCamWithRotFallback;   // Set of cameras with full rotation fallbacks
   std::vector<int> mMagsWithRotFallback[MAX_CAMERAS];
+  std::map<int, float> mRefinedPixelSizes;
   float mC2SpacingForHighFocus;
 
 public:
@@ -317,7 +320,9 @@ public:
     float scale, float rotation, int magIndForIS);
   bool ImposeImageShiftOnScope(EMimageBuffer *imBuf, float delX, float delY, int magInd, int camera,
     BOOL incremental, BOOL mouseShifting);
-  float GetPixelSize(EMimageBuffer * imBuf, float *rotation = NULL);
+  float GetPixelSize(EMimageBuffer *imBuf, float *rotation = NULL);
+  float GetRefinedPixel(int camera, int magInd, int binning = 1);
+  float GetRefinedPixel(EMimageBuffer *imBuf);
   int FindBoostedMagIndex(int magInd, int boostMag);
   bool ShiftAdjustmentForSet(int conSet, int magInd, float & shiftX, float & shiftY,
     int camera = -1, int recBin = -1);
