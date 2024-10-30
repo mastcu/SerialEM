@@ -181,6 +181,8 @@ void CMacroEditer::MakeMonoFont(CWnd *edit)
   CFileStatus status;
   bool gotNanum = false;
   CSerialEMApp *winApp = (CSerialEMApp *)AfxGetApp();
+  if (!winApp->mMacroProcessor)
+    return;
   CString exePath, str,propFont = winApp->mMacroProcessor->GetMonoFontName();
   const char *tryNames[] = {"NanumGothicCoding", "Lucida Console", "Consolas", 
     "Lucida Sans Typewriter", "Courier New"};
