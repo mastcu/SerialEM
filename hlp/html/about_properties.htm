@@ -2284,6 +2284,22 @@
           </TD>
         </TR>
         <TR VALIGN="top">
+          <TD>RefinedPixelSize</TD>
+          <TD>This entry can be used to enter pixel sizes determined by a different method for a
+            subset of magnifications.&nbsp; If the rest of the pixel sizes in RotationAndPixel lines
+             were measured within SerialEM, it is best to keep all pixel sizes in those lines
+             consistent.&nbsp; Follow with two entries: the magnification index and the refined pixel
+             size in nm.&nbsp; This pixel size will be used for the pixel spacing in an image file header,
+            the 'PixelSpacing' value in the global section of an MRC file's '.mdoc' file or an HDF
+             file autodoc, and a 'RefinedPixelSpacing' entry in the per-image sections of such 
+            autodocs.&nbsp; Those sections will have the unrefined value in their 'PixelSpacing' 
+            entries.&nbsp; The refined pixel size will also be used for frame file headers and
+            for frame stack '.mdoc' files.&nbsp;  In those '.mdoc' files, both the 'PixelSpacing' and
+             'RefinedPixelSpacing' entries will appear with the refined value so that frame alignment
+             software can obtain the right value from the 'PixelSpacing' entry.
+          </TD>
+        </TR>
+        <TR VALIGN="top">
           <TD>SpecialRelativeRotation</TD>
           <TD>Relative rotation between two mags that are not adjacent. This entry will
             allow a rotation calibration to propagate across a gap in magnifications. Follow
@@ -3862,6 +3878,17 @@
           <TD>LDShiftOffsetIterThresh</TD>
           <TD>Threshold image shift in microns for iterating after the first measurement in 
             the routine that measures Low Dose shift offset (default 0.1).</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>LDShiftOffsetMin2StepRatio</TD>
+          <TD>Minimum magnification ratio for doing the Low Dose shift offset routine in two 
+            stages (default 20.)</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>LDShiftOffsetMax2StepFocus</TD>
+          <TD>Maximum defocus offset for using the lower maginfication area as the basis for 
+            the middle magnification image when doing the Low Dose shift offset routine in 
+            two stages (default 20.)</TD>
         </TR>
         <TR VALIGN="top">
           <TD>TiltBacklash</TD>
