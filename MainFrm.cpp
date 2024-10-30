@@ -573,11 +573,15 @@ void CMainFrame::OnSize(UINT nType, int cx, int cy)
 
 void CMainFrame::SetStatusText(int iPane, CString strText)
 {
+  if (mClosingProgram)
+    return;
   m_wndStatusBar.SetPaneText(iPane, strText);
 }
 
 void CMainFrame::GetStatusText(int iPane, CString & strText)
 {
+  if (mClosingProgram)
+    return;
   m_wndStatusBar.GetPaneText(iPane, strText);
 }
 
