@@ -28,6 +28,7 @@ using namespace AdocDefs;
 #define ADOC_SINGLE "ImageFile"
 #define ADOC_PROG_VERS "Version"
 #define ADOC_PCOORD "PieceCoordinates"
+#define ADOC_PSPACE "PieceSpacing"
 #define ADOC_SUPER "SuperMontCoords"
 #define ADOC_TITLE "T"
 #define ADOC_ZVALUE "ZValue"
