@@ -13,6 +13,7 @@
 #include "ParticleTasks.h"
 #include "ComplexTasks.h"
 #include "EMscope.h"
+#include "MultiShotDlg.h"
 #include "NavigatorDlg.h"
 #include "FocusManager.h"
 #include "ShiftManager.h"
@@ -72,6 +73,7 @@ CParticleTasks::CParticleTasks(void)
   mZBGSavedTop = -1;
   mATIterationNum = -1;
   mDVDoingDewarVac = false;
+  mDoingPrevPrescan = false;
 }
 
 
@@ -2411,4 +2413,40 @@ int CParticleTasks::DewarsVacBusy()
 
 void CParticleTasks::DewarsVacCleanup(int error)
 {
+}
+
+//////////////////////////////////////////////////////////////////
+// PREVIEW PRESCAN
+//////////////////////////////////////////////////////////////////
+
+static const char *tempPrevName = "previewPrescanTemp.mrc";
+
+int CParticleTasks::StartPreviewPrescan()
+{
+  LowDoseParams *ldp = mWinApp->GetLowDoseParams() + RECORD_CONSET;
+  if (!mWinApp->LowDoseMode()) {
+    SEMMessageBox("You must be in Low Dose mode to do a preview prescan");
+    return 1;
+  }
+  if (!ldp->magIndex) {
+    SEMMessageBox("Low Dose Record parameters must be defined to do a preview prescan");
+    return 2;
+  }
+  if (CMultiShotDlg::SetupTempPrevMontage(tempPrevName, 3, 3, 1, 20))
+    return 3;
+  if (mWinApp->mMontageController->StartMontage(MONT_TRIAL_IMAGE, false))
+    return 4;
+  mDoingPrevPrescan = true;
+  mWinApp->AddIdleTask(TASK_PREV_PRESCAN, 0, 0);
+  return 0;
+}
+
+void CParticleTasks::StopPreviewPrescan()
+{
+  if (!mDoingPrevPrescan)
+    return;
+  if (mWinApp->mMontageController->DoingMontage())
+    mWinApp->mMontageController->StopMontage();
+  CMultiShotDlg::CloseTempPrevMontage(tempPrevName);
+  mDoingPrevPrescan = false;
 }

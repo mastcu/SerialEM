@@ -70,6 +70,7 @@ public:
   GetSetMember(BOOL, LastHolesWereAdjusted);
   SetMember(int, NextMSUseNavItem);
   GetSetMember(float, MSminTiltToCompensate);
+  GetMember(bool, DoingPrevPrescan);
 
 private:
   CSerialEMApp * mWinApp;
@@ -211,6 +212,8 @@ private:
   bool mDVDoingDewarVac;            // Flag routine is working
   BOOL mDVWaitForPVP;               // Flag to test for PVP in busy
 
+  bool mDoingPrevPrescan;
+
 public:
   void Initialize(void);
   int StartMultiShot(int numPeripheral, int doCenter, float spokeRad, int numSecondRing, float spokeRad2, float extraDelay,
@@ -279,4 +282,6 @@ public:
   void StopDewarsVac();
   int DewarsVacBusy();
   void DewarsVacCleanup(int error);
+  int StartPreviewPrescan();
+  void StopPreviewPrescan();
 };
