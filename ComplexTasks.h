@@ -99,6 +99,8 @@ class CComplexTasks : public CCmdTarget
   GetSetMember(BOOL, DebugRoughEucen);
   GetSetMember(float, LDShiftOffsetResetISThresh);
   GetSetMember(float, LDShiftOffsetIterThresh);
+  GetSetMember(float, LDSOTwoStepMinRatio);
+  GetSetMember(float, LDSOMaxFocusForModArea);
   SetMember(int, FENextCoarseConSet);
   GetSetMember(BOOL, AutoSetAxisOffset);
   void GetBacklashDelta(float &deltaX, float &deltaY) {deltaX = mBASPDeltaX; deltaY = mBASPDeltaY;};
@@ -221,6 +223,15 @@ class CComplexTasks : public CCmdTarget
   float mLDSOMaxRot;
   float mLDShiftOffsetResetISThresh;  // Threshold for doing reset IS at start
   float mLDShiftOffsetIterThresh;     // Threshold for doing second iteration
+  float mLDSOTwoStepMinRatio;     // Minimum pixel size ratio for doing wo-step procedure
+  float mLDSOMaxFocusForModArea;  // Maximum focus offset for area that is modified
+  int mLDSOModifyConsNum;         // Control set modified
+  int mLDSOMiddleMag;             // Middle magnification of two-step
+  double mLDSOMiddleIntensity;    // Intensity to change to
+  float mLDSOMiddleMicrons;       // Microns of shift allowed in first phase
+  double mLDSOSavedIntensity;     // Saved intensity and mag
+  int mLDSOSavedMag;
+  int mLDSOModifiedArea;          // Which area was modified
 
   int mNumWalkAngles;             // Number of angles
   double mWalkStartAngle;         // Starting angle

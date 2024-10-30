@@ -56,7 +56,8 @@ static char THIS_FILE[]=__FILE__;
 #define FE_COARSE_RESTORE_Z  12
 enum {TASM_FIRST_SHOT, TASM_TILTED, TASM_SECOND_SHOT};
 enum {BASP_FIRST_SHOT, BASP_MOVED, BASP_SECOND_SHOT};
-enum { LDSO_RESET_SHIFT, LDSO_HIGHER_MAG, LDSO_FIRST_LOWER, LDSO_SECOND_LOWER };
+enum { LDSO_RESET_SHIFT, LDSO_HIGHER_MAG, LDSO_MIDDLE_MAG, LDSO_FIRST_LOWER,
+  LDSO_SECOND_LOWER };
 
 BEGIN_MESSAGE_MAP(CComplexTasks, CCmdTarget)
   //{{AFX_MSG_MAP(CComplexTasks)
@@ -129,6 +130,8 @@ CComplexTasks::CComplexTasks()
   mDoingLDSO = 0;
   mLDShiftOffsetResetISThresh = 0.5f;
   mLDShiftOffsetIterThresh = 0.1f;
+  mLDSOTwoStepMinRatio = 20.;
+  mLDSOMaxFocusForModArea = 20.;
 
   mWalkShiftLimit = 2.0;
   mWULowDoseISLimit = 1.3f;
@@ -438,7 +441,7 @@ BOOL CComplexTasks::DoingTasks()
     tsTasks->GetAssessingRange() || tsTasks->DoingAnchorImage() || 
     tsTasks->GetConditioningVPP() || particle->DoingZbyG() ||
     particle->DoingTemplateAlign() || particle->DoingMultiShot() || 
-    particle->GetWaitingForDrift() || mDoingLDSO;
+    particle->GetWaitingForDrift() || mDoingLDSO || particle->GetDoingPrevPrescan();
 }
 
 // Strangely enough, nothing in this collection is a complex enough task...
@@ -2329,12 +2332,16 @@ void CComplexTasks::StopBacklashAdjust()
 int CComplexTasks::FindLowDoseShiftOffset(bool searchToView, float maxMicrons, 
   float maxPctCng, float maxRot)
 {
-  float pixel, camSize, field;
-  double ISX, ISY;
+  float bigPixel, camSize, field, highPixel, splitRatio, pixel, ratio, lastRatio = 1.;
+  double ISX, ISY, outFactor;
+  int mag, err, camera = mWinApp->GetCurrentCamera();
   int biggerArea = searchToView ? SEARCH_AREA : VIEW_CONSET;
+  int higherArea = searchToView ? VIEW_CONSET : RECORD_CONSET;
+  bool probeMismatch;
   mLDSOHigherConsNum = searchToView ? VIEW_CONSET : PREVIEW_CONSET;
   LowDoseParams *ldParams = mWinApp->GetLowDoseParams();
   LowDoseParams *bigParams = ldParams + biggerArea;
+  LowDoseParams *highParams;
   CameraParameters *camParams = mWinApp->GetActiveCamParam();
 
   if (!mWinApp->LowDoseMode()) {
@@ -2342,15 +2349,95 @@ int CComplexTasks::FindLowDoseShiftOffset(bool searchToView, float maxMicrons,
     return 1;
   }
 
-  if (searchToView && ldParams[SEARCH_AREA].magIndex > ldParams[VIEW_CONSET].magIndex)
+  if (searchToView && ldParams[SEARCH_AREA].magIndex > ldParams[VIEW_CONSET].magIndex) {
     mLDSOHigherConsNum = PREVIEW_CONSET;
+    higherArea = RECORD_CONSET;
+  }
+  highParams = ldParams + higherArea;
 
-  // Convert fraction of field to microns
+  mLDSOLowerConsNum = searchToView ? SEARCH_CONSET : VIEW_CONSET;
+  mLDSOModifyConsNum = -1;
+  bigPixel = mShiftManager->GetPixelSize(camera, bigParams->magIndex);
+
+  // Test for whether a two-step procedure should be used
+  if (bigParams->magIndex >= mScope->GetLowestMModeMagInd() && 
+    mLDSOHigherConsNum == PREVIEW_CONSET) {
+    highPixel = mShiftManager->GetPixelSize(camera, highParams->magIndex);
+    if (bigPixel / highPixel >= mLDSOTwoStepMinRatio) {
+      splitRatio = sqrtf(bigPixel / highPixel);
+      probeMismatch = (FEIscope && bigParams->probeMode != highParams->probeMode) ||
+        (JEOLscope && bigParams->beamAlpha != highParams->beamAlpha);
+      if (probeMismatch &&
+        fabs(mScope->GetLDViewDefocus(mLDSOLowerConsNum)) < mLDSOMaxFocusForModArea) {
+
+        // OK to use lower conset when probe changes if it is low defocus (fat chance)
+        mLDSOModifyConsNum = mLDSOLowerConsNum;
+        mLDSOSavedIntensity = bigParams->intensity;
+        mLDSOSavedMag = bigParams->magIndex;
+        mLDSOModifiedArea = biggerArea;
+      } else {
+
+        // Otherwise use the higher conset, but stay at a higher mag if probe changes
+        mLDSOModifyConsNum = mLDSOHigherConsNum;
+        mLDSOSavedIntensity = highParams->intensity;
+        mLDSOSavedMag = highParams->magIndex;
+        mLDSOModifiedArea = higherArea;
+        if (probeMismatch)
+          splitRatio = 0.75f * mLDSOTwoStepMinRatio;
+      }
+
+      // Find mags that straddle the ideal ratio split
+      for (mag = bigParams->magIndex + 1; mag <= highParams->magIndex; mag++) {
+        pixel = mShiftManager->GetPixelSize(camera, mag);
+        ratio = bigPixel / pixel;
+        if (lastRatio < splitRatio && ratio >= splitRatio) {
+          if (splitRatio - lastRatio < 0.2 * (ratio - splitRatio) || 
+            ratio >= mLDSOTwoStepMinRatio) {
+            mLDSOMiddleMag = mag - 1;
+          } else if (0.2 * (splitRatio - lastRatio) > ratio - splitRatio) {
+            mLDSOMiddleMag = mag;
+          } else {
+            mLDSOMiddleMag = mLDSOModifyConsNum == mLDSOHigherConsNum ? mag : mag - 1;
+          }
+          pixel = mShiftManager->GetPixelSize(camera, mLDSOMiddleMag);
+          break;
+        }
+        lastRatio = ratio;
+      }
+      SEMTrace('1', "split %.2f ratio %.2f last %.2f mag %d cons %d area %d", splitRatio, 
+        ratio, lastRatio, mLDSOMiddleMag, mLDSOModifyConsNum, mLDSOModifiedArea);
+
+      // Figure out the intensity change and bail out of two-step if it can't be done
+      if (mLDSOModifyConsNum == mLDSOHigherConsNum) {
+        err = mWinApp->mBeamAssessor->AssessBeamChange(powf(highPixel / pixel, 2.f),
+          mLDSOMiddleIntensity, outFactor, higherArea);
+      } else {
+        err = mWinApp->mBeamAssessor->AssessBeamChange(pow(bigPixel / pixel, 2.),
+          mLDSOMiddleIntensity, outFactor, biggerArea);
+      }
+      if (err && B3DMAX(outFactor, 1. / outFactor) > 1.5) {
+        PrintfToLog((err == BEAM_STRENGTH_NOT_CAL || err == BEAM_STRENGTH_WRONG_SPOT) ?
+          "WARNING: No intensity calibration at spot %d for measuring offset in two mag"
+          " steps" : "WARNING: Intensity calibration at spot %d does not extend far "
+          "enough to allow measuring offset in two mag steps",
+          mLDSOModifyConsNum == mLDSOHigherConsNum ? highParams->spotSize :
+          bigParams->spotSize);
+        mLDSOModifyConsNum = -1;
+      }
+    }
+  }
+
+  // Convert fraction of field to microns and set microns for middle mag too
   if (maxMicrons < 0) {
-    pixel = mShiftManager->GetPixelSize(mWinApp->GetCurrentCamera(), bigParams->magIndex);
     camSize = (float)sqrt(camParams->sizeX * camParams->sizeY);
-    field = pixel * camSize;
+    if (mLDSOModifyConsNum >= 0) {
+      field = pixel * camSize;
+      mLDSOMiddleMicrons = -field * maxMicrons;
+    }
+    field = bigPixel * camSize;
     maxMicrons = -field * maxMicrons;
+  } else if (mLDSOModifyConsNum) {
+    mLDSOMiddleMicrons = maxMicrons * pixel / bigPixel;
   }
   mLDSOMaxMicrons = maxMicrons;
 
@@ -2361,7 +2448,8 @@ int CComplexTasks::FindLowDoseShiftOffset(bool searchToView, float maxMicrons,
     maxRot = mWinApp->mNavHelper->GetScaledAliDfltMaxRot();
   mLDSOMaxPctChg = maxPctCng;
   mLDSOMaxRot = maxRot;
-  mLDSOLowerConsNum = searchToView ? SEARCH_CONSET : VIEW_CONSET;
+  mWUSavedShiftsOnAcquire = mBufferManager->GetShiftsOnAcquire();
+  mBufferManager->SetShiftsOnAcquire(3);
 
   // Reset image to start, if necessary
   mDoingLDSO = true;
@@ -2380,27 +2468,49 @@ int CComplexTasks::FindLowDoseShiftOffset(bool searchToView, float maxMicrons,
 // Do the next operation in finding shift
 void CComplexTasks::LDSONextTask(int param)
 {
-  int err, nextAct = LDSO_FIRST_LOWER, consNum = mLDSOLowerConsNum;
-  float scaleMax, rotation;
+  int err, nx, ny;
+  int nextAct = LDSO_FIRST_LOWER;
+  int consNum = mLDSOLowerConsNum;
+  float scaleMax, rotation, xShift, yShift, fillVal, saveStep;
   double ISX, ISY;
+  bool middle = param == LDSO_MIDDLE_MAG;
   CString errStr;
+  LowDoseParams *ldp = mWinApp->GetLowDoseParams();
 
   if (!mDoingLDSO)
     return;
+
+  // Set the middle mag conditions after the higher mag shot, and restore after the middle
+  if (mLDSOModifyConsNum  >= 0 && param == LDSO_HIGHER_MAG) {
+    nextAct = LDSO_MIDDLE_MAG;
+    consNum = mLDSOModifyConsNum;
+    ldp[mLDSOModifiedArea].magIndex = mLDSOMiddleMag;
+    ldp[mLDSOModifiedArea].intensity = mLDSOMiddleIntensity;
+  } else if (mLDSOModifyConsNum >= 0 && middle) {
+    ldp[mLDSOModifiedArea].magIndex = mLDSOSavedMag;
+    ldp[mLDSOModifiedArea].intensity = mLDSOSavedIntensity;
+  }
+
   if (param == LDSO_RESET_SHIFT) {
 
     // Start it for real
-    mCamera->SetRequiredRoll(3);
     nextAct = LDSO_HIGHER_MAG;
     consNum = mLDSOHigherConsNum;
     mWinApp->SetStatusText(MEDIUM_PANE, "FINDING SHIFT OFFSET");
 
   } else if (param != LDSO_HIGHER_MAG) {
 
-    // Align images
-    err = mWinApp->mProcessImage->AlignBetweenMagnifications(1, -1., -1., mLDSOMaxMicrons,
-      mLDSOMaxPctChg / 100.f, 2.f * mLDSOMaxRot, true, scaleMax, rotation, 0, errStr);
-    if (!err) {
+    // Align images - prevent much scaling or rotation in middle mag image - note need to
+    // drop the step size to limit the scaling!
+    saveStep = mWinApp->mMultiTSTasks->GetCkAlignStep();
+    if (middle)
+      mWinApp->mMultiTSTasks->SetCkAlignStep(.0025f);
+    err = mWinApp->mProcessImage->AlignBetweenMagnifications(1, -1., -1.,
+      middle ? mLDSOMiddleMicrons : mLDSOMaxMicrons,
+      middle ? 0.01f : (mLDSOMaxPctChg / 100.f), middle ? 1.f : (2.f * mLDSOMaxRot),
+      !middle, scaleMax, rotation, 0, errStr);
+    mWinApp->mMultiTSTasks->SetCkAlignStep(saveStep);
+    if (!err && !middle) {
       err = mWinApp->mLowDoseDlg.DoSetViewShift(param == LDSO_SECOND_LOWER ? 2 : 1);
       errStr.Format("There is no matrix available for image shift to camera at the %s "
         "magnification", mWinApp->GetModeNames() + mImBufs->mConSetUsed);
@@ -2408,18 +2518,37 @@ void CComplexTasks::LDSONextTask(int param)
     mWinApp->mLowDoseDlg.GetViewShiftOffset(-1, ISX, ISY);
 
     // Stop if done or error
-    if (err || param == LDSO_SECOND_LOWER || 
+    if (err || param == LDSO_SECOND_LOWER || (param == LDSO_FIRST_LOWER &&
       mShiftManager->RadialShiftOnSpecimen(ISX, ISY, mScope->FastMagIndex()) <
-      mLDShiftOffsetIterThresh) {
+      mLDShiftOffsetIterThresh)) {
       StopFindingShiftOffset();
       if (err)
         SEMMessageBox(errStr);
       return;
     }
 
-    // Go on to iteration shot
-    mBufferManager->CopyImageBuffer(3, 0, 0);
-    nextAct = LDSO_SECOND_LOWER;
+    // Go on to lower mag from middle, or to iteration shot
+    if (middle) {
+
+      // Get the shift from the middle-mag extract and use to do actual shift of full
+      // middle shot so alignment and rotation will be to the original reference center
+      mImBufs->mImage->getShifts(xShift, yShift);
+      mImBufs[2].mImage->getSize(nx, ny);
+      mImBufs[2].mImage->Lock();
+      fillVal = imageEdgeMean(mImBufs[2].mImage->getData(), mImBufs[2].mImage->getType(), 
+        nx, 0, nx - 1, 0, ny - 1);
+      ProcShiftInPlace((short *)mImBufs[2].mImage->getData(), 
+        mImBufs[2].mImage->getType(), nx, ny, B3DNINT(xShift), B3DNINT(yShift), fillVal);
+
+      // Copy full middle shot to A to align lower mag to it, copy zoomed down high mag to
+      // E to protect it and have it be last in stack to view
+      mBufferManager->CopyImageBuffer(2, 0, false);
+      mBufferManager->CopyImageBuffer(1, 4, false);
+    } else
+
+      // Regular iteration, copy original high mag to A
+      mBufferManager->CopyImageBuffer(3, 0, false);
+    nextAct = param == LDSO_FIRST_LOWER ? LDSO_SECOND_LOWER : LDSO_FIRST_LOWER;
   }
 
   mWinApp->mCamera->SetCancelNextContinuous(true);
@@ -2445,10 +2574,16 @@ int CComplexTasks::LDShiftOffsetBusy()
 // Stop
 void CComplexTasks::StopFindingShiftOffset()
 {
+  LowDoseParams *ldp = mWinApp->GetLowDoseParams();
   if (!mDoingLDSO)
     return;
+
+  if (mLDSOModifyConsNum >= 0) {
+    ldp[mLDSOModifiedArea].magIndex = mLDSOSavedMag;
+    ldp[mLDSOModifiedArea].intensity = mLDSOSavedIntensity;
+  }
   mDoingLDSO = false;
   mWinApp->UpdateBufferWindows();
   mWinApp->SetStatusText(MEDIUM_PANE, "");
-  mCamera->SetRequiredRoll(0);
+  mBufferManager->SetShiftsOnAcquire(mWUSavedShiftsOnAcquire);
 }

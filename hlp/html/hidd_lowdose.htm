@@ -170,7 +170,8 @@
       or if the markers are indeed on corresponding points.
       </P>
     <P><strong><em>1) Setting shift offset automatically:</em></strong> When you press 
-      the <strong>Auto</strong> button for View, the program will take a Preview then a 
+      the <strong>Auto</strong> button for View and the difference in magnifications 
+      is not too large (20-fold by default), the program will take a Preview then a 
       View image, attempt to align them and set the shift offset, then take another 
       View to refine the offset.&nbsp; With the Search <strong>Auto</strong> button, 
       it will take a View if it has a higher magnification than Search, otherwise it 
@@ -183,18 +184,47 @@
       shift is reset at the start if it exceeds 0.5 micron (this threshold can be set with the property 
       LDShiftOffsetResetISThresh).&nbsp; The alignment is iterated if the image shift of the
       first alignment exceeds 0.1 micron (a limit set with the property 
-      LDShiftOffsetIterThresh).&nbsp; The <strong>Zero</strong> button is 
+      LDShiftOffsetIterThresh).&nbsp; </P>
+    <P>When measuring an offset relative to Record, if the difference in 
+      magnifications exceeds a limit (a 20-fold ratio by default, set with the 
+      property LDShiftOffsetMin2StepRatio), the program will try to do the alignment 
+      in two stages. It picks an intermediate magnification that splits the ratio 
+      approximately in half, modifying the intensity of one of the Low Dose areas to 
+      work at that magnification.&nbsp; (In case you need to know the details: If the 
+      probe mode or alpha values match between Record and the lower magnification 
+      area, then it will modify the Record area parameters by spreading the beam.&nbsp; 
+      If those values do not match, it prefers to modify the lower magnification area, 
+      but if that area has too high a defocus offset (20 microns by default, set with 
+      the property LDShiftOffsetMax2StepFocus), it will modify the Record area 
+      instead, and pick as high a magnification as possible (around 15-fold higher 
+      than the lower one).&nbsp; The motivation there is that nanoprobe mode, or an 
+      alpha value used at high magnification, may not work well at too low a 
+      magnification.)&nbsp; When the two-step procedure is done, images are left in 5 
+      buffers: the extract from the View or Search image in A, the scaled down image 
+      from the intermediate magnification that extract was aligned to in B, the full 
+      View or Search image in C, the extract from the middle magnification image in D, 
+      and the scaled down Preview image in E.&nbsp; Thus, you should be able to assess 
+      the alignment at both stages by comparing A with B and D with E. </P>
+    <P>The <strong>Zero</strong> button is 
       labeled <strong>Undo</strong> after setting a shift automatically, and you can 
       use that button to revert to the previous offset if necessary.&nbsp; Only the 
-      last shift done can be reverted.&nbsp; There are two important points about the 
+      last shift done can be reverted.&nbsp; There are three important points about the 
       automatic aligment:</P>
     <ul>
       <li><em>There must be a well-defined feature in the higher-magnification image 
         that is unique and easily recognizable in the lower-magnification one, and 
         within the central half of that image</em> (unless the maximum allowed shift has 
         been set differently from the default; see <strong>Setup Auto Shift</strong> 
-        below). </li>
-      <li>Be sure to find the View offset before the Search offset (butthis does not 
+        below).&nbsp; Use the Camera menu item
+        <a href="menu_camera.htm#hidd_camera_previewprescan">Preview Prescan</a> 
+        (accelerator key Alt-C - E, script command &#39;PrescanWithPreview&#39;) to capture a 
+        3x3 montage quickly for finding a good area at high magnification.</li>
+      <li>For the two-stage procedure, <em>there must be an intensity calibration to 
+        allow one of the Low Dose area parameters to be modified. </em>&nbsp;A warning 
+        will be issued and it will drop back to the single-stage procedure, which will 
+        likely not work across very large ranges (e.g., 80-fold), or else you will not 
+        be able to tell if it worked.</li>
+      <li>Be sure to find the View offset before the Search offset (but this does not 
         matter if Search is at a higher magnification than View).</li>
     </ul>
     <P><b><i>2) Setting shift offset with an alignment shift:</i></b> The procedure for setting a shift for View is:</P>
