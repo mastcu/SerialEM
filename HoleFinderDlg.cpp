@@ -853,11 +853,11 @@ static char *formatSigma(float sigma)
 void CHoleFinderDlg::OnButFindHoles()
 {
   mFindingFromDialog = true;
-  DoFindHoles(mWinApp->mMainView->GetActiveImBuf());
+  DoFindHoles(mWinApp->mMainView->GetActiveImBuf(), false);
   mFindingFromDialog = false;
 }
 
-int CHoleFinderDlg::DoFindHoles(EMimageBuffer *imBuf)
+int CHoleFinderDlg::DoFindHoles(EMimageBuffer *imBuf, bool synchronous)
 {
   float curDiam, diamReduced, spacingReduced, maxRadius, area, minArea = 1.e30f;
   FloatVec *widths, *increments;
@@ -880,7 +880,7 @@ int CHoleFinderDlg::DoFindHoles(EMimageBuffer *imBuf)
   BOOL convertSave, loadUnbinSave, hexArray;
   CString noMontReason, boundLabel, mess;
 
-  if (CheckAndSetNav("finding holes"))
+  if (!synchronous && CheckAndSetNav("finding holes"))
     return 1;
 
   // Initialize by clearing out existing hole info
@@ -940,8 +940,8 @@ int CHoleFinderDlg::DoFindHoles(EMimageBuffer *imBuf)
     SEMMessageBox("Hole finder does not work on color images");
     return 1;
   }
-  if (!mNav->BufferStageToImage(imBuf, aMat, delX, delY) ||
-    !imBuf->GetStagePosition(bufStageX, bufStageY)) {
+  if (mNav && (!mNav->BufferStageToImage(imBuf, aMat, delX, delY) ||
+    !imBuf->GetStagePosition(bufStageX, bufStageY))) {
     SEMMessageBox("The currently active image does not have enough information\n"
       "to convert positions to stage coordinates.", MB_EXCLAME);
     return 1;
@@ -988,7 +988,7 @@ int CHoleFinderDlg::DoFindHoles(EMimageBuffer *imBuf)
   curDiam = useDiameter / mPixelSize;
   mFullYsize = image->getHeight();
 
-  mNavItem = mNav->FindItemWithMapID(imBuf->mMapID);
+  mNavItem = mNav ? mNav->FindItemWithMapID(imBuf->mMapID) : NULL;
 
   // Get map ID to assign as drawn on ID when holes are made, or negative of mag index if
   // it is non-map buffer
@@ -1003,7 +1003,7 @@ int CHoleFinderDlg::DoFindHoles(EMimageBuffer *imBuf)
   readBuf = mWinApp->mBufferManager->GetBufToReadInto();
 
   // Montaging: check preconditions first
-  if (imBuf->mCaptured == BUFFER_MONTAGE_OVERVIEW) {
+  if (!synchronous && imBuf->mCaptured == BUFFER_MONTAGE_OVERVIEW) {
     mMontage = -1;
     if (!imBuf->mMapID)
       noMontReason = "the buffer has no ID for finding its Navigator map";
@@ -1114,12 +1114,12 @@ int CHoleFinderDlg::DoFindHoles(EMimageBuffer *imBuf)
   if (mMontage && montP != &mMontParam)
     mMontParam = *montP;
 
-  mRegistration = mNav->GetCurrentRegistration();
+  mRegistration = mNav ? mNav->GetCurrentRegistration() : 1;
   if (mNavItem)
     mRegistration = mNavItem->mRegistration;
 
   // Look for boundary contour if selected
-  if (mParams.useBoundary) {
+  if (!synchronous && mParams.useBoundary) {
     itemArray = mNav->GetItemArray();
     mNav->BufferStageToImage(imBuf, aMat, delX, delY);
     bufID = imBuf->mMapID;
@@ -1252,9 +1252,11 @@ int CHoleFinderDlg::DoFindHoles(EMimageBuffer *imBuf)
   mFindingHoles = true;
   mSigInd = 0;
   mThreshInd = 0;
-  mWinApp->SetStatusText(SIMPLE_PANE, "FINDING HOLES");
-  mWinApp->UpdateBufferWindows();
-  ScanningNextTask(0);
+  if (!synchronous) {
+    mWinApp->SetStatusText(SIMPLE_PANE, "FINDING HOLES");
+    mWinApp->UpdateBufferWindows();
+  }
+  ScanningNextTask(synchronous ? -999 : 0);
   return 0;
 }
 
@@ -1281,30 +1283,35 @@ void CHoleFinderDlg::ScanningNextTask(int param)
   int xcoord, ycoord, zcoord, numFromCorr, numPoints;
   ScaleMat aMat, aInv, adjInv;
   float delX, delY, ptX, ptY;
+  bool syncForOneHole = param == -999;
   CString noMontReason, statStr;
 
   if (!mFindingHoles)
     return;
-  if (CheckAndSetNav()) {
+  if (!syncForOneHole && CheckAndSetNav()) {
     StopScanning();
     return;
   }
   
-  err = mHelper->mFindHoles->runSequence(mSigInd, sigUsed, mThreshInd, 
-    threshUsed, mXboundary,  mYboundary, mBestSigInd, mBestThreshInd,
+  for ( ;; ) {
+    err = mHelper->mFindHoles->runSequence(mSigInd, sigUsed, mThreshInd,
+      threshUsed, mXboundary, mYboundary, mBestSigInd, mBestThreshInd,
       mBestRadius, mTrueSpacing, mXcenters, mYcenters,
       peakVals, xMissing, yMissing, xCenClose, yCenClose, peakClose,
       numMissAdded);
-  if (err < 0) {
-    statStr.Format("%s  thr: %.1f  #: %d  miss: %d", formatSigma(sigUsed),
-      threshUsed, (int)mXcenters.size(), (int)xMissing.size());
-    if (mIsOpen) {
-      m_strStatusOutput = statStr;
-      UpdateData(false);
+    if (err < 0 && !syncForOneHole) {
+      statStr.Format("%s  thr: %.1f  #: %d  miss: %d", formatSigma(sigUsed),
+        threshUsed, (int)mXcenters.size(), (int)xMissing.size());
+      if (mIsOpen) {
+        m_strStatusOutput = statStr;
+        UpdateData(false);
+      }
+      mWinApp->SetStatusText(MEDIUM_PANE, statStr);
+      mWinApp->AddIdleTask(TASK_FIND_HOLES, 0, 0);
+      return;
     }
-    mWinApp->SetStatusText(MEDIUM_PANE, statStr);
-    mWinApp->AddIdleTask(TASK_FIND_HOLES, 0, 0);
-    return;
+    if (err >= 0)
+      break;
   }
 
   if (!err) {
@@ -1319,7 +1326,7 @@ void CHoleFinderDlg::ScanningNextTask(int param)
     return;
   }
 
-  if (mMontage > 0) {
+  if (mMontage > 0 && !syncForOneHole) {
     readBuf = mWinApp->mBufferManager->GetBufToReadInto();
     if (mBufInd == readBuf)
       readBuf = mBufInd == 0 ? 1 : 0;
@@ -1476,6 +1483,9 @@ void CHoleFinderDlg::ScanningNextTask(int param)
     -mBufBinning * mGridImYVecs[ind], mGridStageXVecs[ind], mGridStageYVecs[ind]);
 
 // Get stage positions, save matrix for converting average vector later
+  if (!mNav)
+    return;
+
   mNav->BufferStageToImage(imBuf, aMat, delX, delY);
   aInv = MatInv(aMat);
   mImToStage = aInv;
@@ -2054,7 +2064,7 @@ void CHoleFinderDlg::MultiMapNextTask(int param)
       // Find holes
       PrintfToLog("Finding holes in map for item %d (%s)", mPMMcurrentInd + 1,
         (LPCTSTR)item->mLabel);
-      if (DoFindHoles(&imBufs[readBuf])) {
+      if (DoFindHoles(&imBufs[readBuf], false)) {
         StopMultiMap();
         return;
       }
@@ -2085,4 +2095,101 @@ void CHoleFinderDlg::StopMultiMap()
 void CHoleFinderDlg::MultimapCleanup(int error)
 {
   StopMultiMap();
+}
+
+/*
+ * Routine to run hole finder to a small number of holes, return the pixel coordinates
+ * of the one nearest the center, and optionally apply an image shift if it is not too big
+ * It can take a less accurate diameter if a lot of circles are tried, and runs the
+ * hole finder synchronously
+ */
+int CHoleFinderDlg::FindAndCenterOneHole(EMimageBuffer *imBuf, float diameter, int numTry,
+  float maxFracShift, float &xCenter, float &yCenter)
+{
+  FloatVec *widths, *increments;
+  IntVec *numCircles;
+  ScaleMat bInv;
+  int numSave, err, nx, ny, ind, bestInd;
+  float diamSave, xcen, ycen, dist, minDist, pixel, fbin = (float)imBuf->mBinning;
+  float xShift, yShift;
+  HoleFinderParams *hfParams = mHelper->GetHoleFinderParams();
+  double ISX, ISY;
+
+  // Get the parameters and save # of circles and diameter
+  SyncToMasterParams();
+  mHelper->GetHFscanVectors(&widths, &increments, &numCircles);
+  numSave = numCircles->at(0);
+  if (numTry)
+    *(numCircles->data()) = numTry;
+  if (hfParams->hexagonalArray) {
+    diamSave = hfParams->hexDiameter;
+    hfParams->hexDiameter = diameter;
+  } else {
+    diamSave = hfParams->diameter;
+    hfParams->diameter = diameter;
+  }
+  if (mIsOpen)
+    UpdateSettings();
+
+  // Find holes synchronously
+  err = DoFindHoles(imBuf, true);
+
+  // restore parameters
+  if (hfParams->hexagonalArray) {
+    hfParams->hexDiameter = diamSave;
+  } else {
+    hfParams->diameter = diamSave;
+  }
+  *(numCircles->data()) = numSave;
+  if (mIsOpen)
+    UpdateSettings();
+
+  // Error return
+  if (err || !mXcenters.size())
+    return err;
+
+  // Find point closest to center
+  imBuf->mImage->getSize(nx, ny);
+  xcen = (float)(nx / 2.);
+  ycen = (float)(ny / 2.);
+  for (ind = 0; ind < (int)mXcenters.size(); ind++) {
+    dist = powf(mXcenters[ind] - xcen, 2.f) + powf(mXcenters[ind] - xcen, 2.f);
+    if (!ind || dist < minDist) {
+      bestInd = ind;
+      minDist = dist;
+    }
+  }
+  xCenter = mXcenters[bestInd];
+  yCenter = mYcenters[bestInd];
+
+  // If shifting requested, make sure not already done, compute it, apply if above limit
+  if (maxFracShift > 0) {
+    imBuf->mImage->getShifts(xShift, yShift);
+    if (xShift != 0. || yShift != 0.) {
+      SEMAppendToLog("Not applying image shift, the image is already shifted");
+      return -2;
+    }
+
+    // Right-handed shift for coordinate conversion to IS
+    xShift = xcen - xCenter;
+    yShift = yCenter - ycen;
+    pixel = mWinApp->mShiftManager->GetPixelSize(imBuf);
+    if (sqrtf(minDist) * pixel > maxFracShift * diameter) {
+      PrintfToLog("Not applying image shift of %.2f, %.2f microns; it is above "
+        "limit of %.2f", pixel * xShift, pixel * yShift, maxFracShift * diameter);
+      return -1;
+    }
+    bInv = mWinApp->mShiftManager->CameraToIS(imBuf->mMagInd);
+    mWinApp->mShiftManager->ApplyScaleMatrix(bInv, -fbin * xShift, -fbin * yShift,
+      ISX, ISY);
+    mWinApp->mScope->IncImageShift(ISX, ISY);
+
+    // Left-handed shift for image
+    imBuf->mImage->setShifts(xShift, -yShift);
+    imBuf->SetImageChanged(1);
+    mWinApp->mMainView->DrawImage();
+    PrintfToLog("Applied image shift of %.2f, %.2f microns to center hole",
+      pixel * xShift, pixel * yShift);
+  }
+  return 0;
 }

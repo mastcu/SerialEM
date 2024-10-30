@@ -47,7 +47,9 @@ public:
   int MultiMapBusy();
   void StopMultiMap();
   void MultimapCleanup(int error);
-  int DoFindHoles(EMimageBuffer *imBuf);
+  int FindAndCenterOneHole(EMimageBuffer *imBuf, float diameter, int numTry, float maxFracShift,
+    float &xCenter, float &yCenter);
+  int DoFindHoles(EMimageBuffer *imBuf, bool synchronous);
   int DoMakeNavPoints(int layoutType, float lowerMeanCutoff, float upperMeanCutoff,
     float sdCutoff, float blackCutoff, float edgeDistCutoff, int useHexDiagonals);
   bool DoingMultiMapHoles() {return mPMMmagIndex > 0 ; };
