@@ -1485,7 +1485,8 @@ void CLowDoseDlg::Update()
   // Enable unblank button if blanked and no tasks, and camera not busy
   BOOL bEnable = mTrulyLowDose && !mWinApp->DoingTasks();
   BOOL justNavAcq = mWinApp->GetJustNavAcquireOpen();
-  BOOL enableIfNavAcq = mTrulyLowDose && (!mWinApp->DoingTasks() || justNavAcq);
+  BOOL enableIfNavAcq = mTrulyLowDose && !camBusy && 
+    (!mWinApp->DoingTasks() || justNavAcq);
   m_butZeroViewShift.EnableWindow(!STEMmode && enableIfNavAcq && !camBusy &&
     (mViewShiftX[0] != 0. || mViewShiftY[0] != 0.));
   m_butZeroSearchShift.EnableWindow(!STEMmode && enableIfNavAcq && !camBusy &&
