@@ -1044,13 +1044,12 @@ void CProcessImage::NewProcessedImage(EMimageBuffer *imBuf, short *brray, int ty
 
   // Replace the image, again cleaning up on failure
   if (mBufferManager->ReplaceImage((char *)brray, type, nx, ny, toBufNum, capFlag,
-    imBuf->mConSetUsed, fftWindow, display) ) {
+    imBuf->mConSetUsed, B3DNINT(imBufTmp.mBinning * moreBinning), fftWindow, display) ) {
     delete [] brray;
     return;
   }
 
   // Fix the binning, transfer any extra data, and redisplay
-  toImBuf->mBinning = B3DNINT(imBufTmp.mBinning * moreBinning);
   toImBuf->mPixelSize = imBufTmp.mPixelSize * (float)moreBinning;
   if (imBufTmp.mImage) {
     extra = imBufTmp.mImage->GetUserData();
@@ -1093,7 +1092,7 @@ void CProcessImage::OnUpdateProcessCropimage(CCmdUI *pCmdUI)
 
 // Crop the image in the given buffer given the inclusive coordinate limits
 int CProcessImage::CropImage(EMimageBuffer *imBuf, int top, int left, int bottom, 
-  int right)
+  int right, bool display)
 {
   Islice slice;
   Islice *newsl;
@@ -1136,7 +1135,8 @@ int CProcessImage::CropImage(EMimageBuffer *imBuf, int top, int left, int bottom
   centered = fabs((left + right) / 2. - nx / 2.) < cenCrit &&
     fabs((top + bottom) / 2. - ny / 2.) < cenCrit;
   NewProcessedImage(imBuf, newsl->data.s, image->getType(), right + 1 - left,
-    bottom + 1 - top, 1, centered ? imBuf->mCaptured : BUFFER_PROCESSED);
+    bottom + 1 - top, 1, centered ? imBuf->mCaptured : BUFFER_PROCESSED, false, 0, 
+    display);
   free(newsl);
   extra = mImBufs->mImage->GetUserData();
   if (extra && extra->mUncroppedX < 0)
@@ -1512,9 +1512,9 @@ int CProcessImage::AlignBetweenMagnifications(int toBufNum, float xcen, float yc
     mBufferManager->CopyImBuf(&zoomCopy, &mImBufs[1]);
 
   // Tricky rolling to preserve original A then reference if necessary
-  if (nroll >= 3)
+  if (nroll >= 2)
     mBufferManager->CopyImBuf(&aliCopy, &mImBufs[2], false);
-  if (nroll >= 4 && toBufNum < nroll)
+  if (nroll >= 3 && toBufNum < nroll)
     mBufferManager->CopyImBuf(&refCopy, &mImBufs[3], false);
 
   // Align without doing image shift
