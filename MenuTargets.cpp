@@ -532,6 +532,8 @@ BEGIN_MESSAGE_MAP(CMenuTargets, CCmdTarget)
     ON_UPDATE_COMMAND_UI(ID_MONTAGINGGRIDS_IDENTIFYGRIDONSTAGE, OnUpdateIdentifyGridOnStage)
     ON_UPDATE_COMMAND_UI(ID_MONTAGINGGRIDS_LOADALLGRIDMAPS, OnUpdateLoadAllGridMaps)
     ON_COMMAND(ID_MONTAGINGGRIDS_LOADALLGRIDMAPS, OnLoadAllGridMaps)
+    ON_COMMAND(ID_CAMERA_PREVIEWPRESCAN, OnCameraPreviewPrescan)
+    ON_UPDATE_COMMAND_UI(ID_CAMERA_PREVIEWPRESCAN, OnUpdateCameraPrevPrescan)
     END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -1874,6 +1876,16 @@ void CMenuTargets::OnCameraPreview()
 void CMenuTargets::OnCameraSearch()
 {
   mWinApp->UserRequestedCapture(SEARCH_CONSET);
+}
+
+void CMenuTargets::OnCameraPreviewPrescan()
+{
+  mWinApp->mParticleTasks->StartPreviewPrescan();
+}
+
+void CMenuTargets::OnUpdateCameraPrevPrescan(CCmdUI *pCmdUI)
+{
+  pCmdUI->Enable(mWinApp->UserAcquireOK() && mWinApp->LowDoseMode());
 }
 
 void CMenuTargets::OnCameraUseViewForSearch()
