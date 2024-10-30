@@ -2515,7 +2515,7 @@ int CCameraController::SaveFrameStackMdoc(KImage *image, CString &localFramePath
   CString message, str;
   char buffer[20000];
   long stringSize, retVal, sectInd;
-  float tiltDose, cumulDose = 0.;
+  float tiltDose, cumulDose = 0., savePixel;
   int iz, start, end;
   EMimageExtra *extra;
 
@@ -2544,10 +2544,17 @@ int CCameraController::SaveFrameStackMdoc(KImage *image, CString &localFramePath
       if (sectInd < 0)
         message = "adding section to autodoc";
     }
+
+    // Set pixel size to refined size if any before setting values in autodoc
+    extra = image->GetUserData();
+    savePixel = extra->mPixel;
+    if (extra->mRefinedPixel)
+      extra->mPixel = extra->mRefinedPixel;
     if (message.IsEmpty()) {
       if (KStoreADOC::SetValuesFromExtra(image, "FrameSet", 0))
         message = "putting extra data into autodoc structure";
     }
+    extra->mPixel = savePixel;
 
     // Add gain reference for Falcon 4
     if (message.IsEmpty() && IsSaveInEERMode(mParam, conSet)) {
@@ -4583,8 +4590,10 @@ int CCameraController::SetupK2SavingAligning(const ControlSet &conSet, int inSet
     magIndex = ldParam[ldArea].magIndex;
   } else
     magIndex = mScope->FastMagIndex();
-  double pixel = 10000. * mShiftManager->GetPixelSize(mWinApp->GetCurrentCamera(), 
-    magIndex) * (isSuperRes ? 1 : 2);
+  float pixNm = mShiftManager->GetRefinedPixel(mWinApp->GetCurrentCamera(), magIndex);
+  if (!pixNm)
+    pixNm = mShiftManager->GetPixelSize(mWinApp->GetCurrentCamera(), magIndex);
+  double pixel = 10000. * pixNm * (isSuperRes ? 1 : 2);
   if (aligning && conSet.useFrameAlign > 1 && mOneK2FramePerFile) {
     SEMMessageBox("You cannot save a com file for running\n"
       "alignframes when saving one frame per file");
@@ -9492,6 +9501,8 @@ void CCameraController::DisplayNewImage(BOOL acquired)
   int rollKeptIndex = mRollBufKeptIndex;
   float pixelSize = (float)(mBinning * 10000. * 
     mShiftManager->GetPixelSize(curCam, mMagBefore));
+  float refinedPix = 10000.f *
+    mShiftManager->GetRefinedPixel(curCam, mMagBefore, mBinning);
   bool oneViewTakingFrames = mParam->OneViewType && mParam->canTakeFrames && mTD.DoseFrac;
   bool K2orOneView = mParam->K2Type || oneViewTakingFrames;
   bool savingContin = FCAM_CONTIN_SAVE(mParam) && mTD.SaveFrames;
@@ -9643,7 +9654,8 @@ void CCameraController::DisplayNewImage(BOOL acquired)
             mFrameFilename, mDivBy2ForImBuf, divideBy, (float)mTD.CountScaling, 
             mParam->rotationFlip, 
             mParam->DMrotationFlip < 0 ? mParam->rotationFlip : mParam->DMrotationFlip,
-            pixelSize, mFalconAsyncStacking, readLocally, ix, mTD.NumFramesSaved, &mTD);
+            refinedPix ? refinedPix : pixelSize, mFalconAsyncStacking, readLocally, ix, 
+            mTD.NumFramesSaved, &mTD);
         mStackingWasDeferred = false;
         mStartedFalconAlign = mAligningFalconFrames && mFalconAsyncStacking &&
           !mTD.ErrorFromSave;
@@ -9695,7 +9707,7 @@ void CCameraController::DisplayNewImage(BOOL acquired)
         mFrameFilename, mConSetsp[mLastConSet], mSavingPluginFrames,
         mAligningPluginFrames,
         (mTD.K2ParamFlags & K2_MAKE_ALIGN_COM) ? lastConSetp->faParamSetInd : -1,
-        mDivBy2ForImBuf, pixelSize, &mTD);
+        mDivBy2ForImBuf, refinedPix ? refinedPix : pixelSize, &mTD);
       mStartedFalconAlign = !mTD.ErrorFromSave && mAligningPluginFrames;
       if (mStartedFalconAlign) {
         mWinApp->SetStatusText(SIMPLE_PANE, "ALIGNING " + CurrentSetName().MakeUpper());
@@ -10241,7 +10253,9 @@ void CCameraController::DisplayNewImage(BOOL acquired)
       if (CanK3DoCorrDblSamp(mParam))
         extra->mCorrDblSampMode = mUseK3CorrDblSamp ? 1 : 0;
       extra->mPixel = pixelSize;
-      if (mTD.NumAsyncSumFrames != 0 && imBuf->mSampleMean > EXTRA_VALUE_TEST && 
+      if (refinedPix)
+        extra->mRefinedPixel = refinedPix;
+      if (mTD.NumAsyncSumFrames != 0 && imBuf->mSampleMean > EXTRA_VALUE_TEST &&
         IsDirectDetector(mParam) && extra->m_fDose > 0 &&
         !mWinApp->mProcessImage->DoseRateFromMean(imBuf, imBuf->mSampleMean, camRate)) {
           specRate = extra->m_fDose * 
@@ -10826,6 +10840,8 @@ int CCameraController::ConSetToLDArea(int inConSet)
         ldArea = VIEW_CONSET;
       else if (montp->useSearchInLowDose)
         ldArea = SEARCH_AREA;
+      else if (montp->usePrevInLowDose)
+        ldArea = RECORD_CONSET;
     }
   } else if (inConSet == PREVIEW_CONSET)
     ldArea = RECORD_CONSET;
@@ -12036,11 +12052,15 @@ CString CCameraController::CurrentSetName(void)
     MontParam *montp = mWinApp->GetMontParam();
     if (montp->useMontMapParams && !mWinApp->GetUseRecordForMontage())
       useForRec = MONT_USER_CONSET;
+    else if (montp->usePrevInLowDose)
+      useForRec = PREVIEW_CONSET;
   }
   if (mLastConSet == MONTAGE_CONSET && mWinApp->LowDoseMode()) {
     nameInd = ConSetToLDArea(mLastConSet);
     if (nameInd == SEARCH_AREA)
       nameInd = SEARCH_CONSET;
+    if (mLastConSet == PREVIEW_CONSET)
+      nameInd = PREVIEW_CONSET;
   }
   if (nameInd == RECORD_CONSET)
     nameInd = useForRec;
