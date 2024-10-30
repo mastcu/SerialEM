@@ -2433,27 +2433,49 @@
 #define IDC_STAT_GRID3                  3460
 #define IDC_STAT_GRID4                  3461
 #define IDC_CHECK_FRAMES_UNDER_SESSION  3462
-#define IDC_BUT_GRIDUSE_FP              3464
 #define IDC_BUT_APPLY_FP                3463
-#define IDC_CHECK_TOGGLE_ALL            3475
-#define IDC_CHECK_MAKE_ONE_POLY         3476
-#define IDC_STAT_GLOBAL_AC              3483
+#define IDC_BUT_GRIDUSE_FP              3464
 #define IDC_STAT_GLOBAL_HF              3465
 #define IDC_STAT_GLOBAL_MS              3466
 #define IDC_STAT_GLOBAL_GEN             3467
 #define IDC_BUT_RESTORE_CURFP           3468
-#define IDC_BUT_SET_ORDER               3477
 #define IDC_BUT_REVERT_AC2              3469
-#define IDC_BUT_REVERT_FP               3478
-#define IDC_BUT_RESET_ORDER             3479
 #define IDC_STAT_FP_TITLE               3470
-#define IDC_STAT_NOTE                   3480
 #define IDC_STAT_GLOBAL_FP              3471
-#define IDC_EDIT_GRID_NOTE              3481
 #define IDC_STAT_GRID5                  3472
-#define IDC_CHECK_INSIDE_POLYGON        3482
 #define IDC_STAT_FPSET_CURRENT          3473
 #define IDC_STAT_FPSET_GRID             3474
+#define IDC_CHECK_TOGGLE_ALL            3475
+#define IDC_CHECK_MAKE_ONE_POLY         3476
+#define IDC_BUT_SET_ORDER               3477
+#define IDC_BUT_REVERT_FP               3478
+#define IDC_BUT_RESET_ORDER             3479
+#define IDC_STAT_NOTE                   3480
+#define IDC_EDIT_GRID_NOTE              3481
+#define IDC_CHECK_INSIDE_POLYGON        3482
+#define IDC_STAT_GLOBAL_AC              3483
+#define IDC_STAA_2X2MONTAGE             3484
+#define IDC_STAA_DO_AUTOMATIC           3485
+#define IDC_STAA_CROSSCORR              3486
+#define IDC_STAA_CENTER_HOLE            3487
+#define IDC_EDIT_STAA_HOLE              3488
+#define IDC_STAT_HOLE_SIZE              3489
+#define IDC_STAT_MAG_INFO_LINE          3490
+#define IDC_STAT_AUTO_ADJUST            3491
+#define IDC_STAA_2X3MONTAGE             3492
+#define IDC_EDIT_STAA_LIMIT             3494
+#define IDC_BUT_STAA_GO                 3495
+#define IDC_CHECK_SET_PREV_EXP          3496
+#define IDC_EDIT_PREVIEW_EXP            3497
+#define IDC_STAT_PREV_SEC               3498
+#define IDC_STAT_LIMIT_FRAC             3499
+#define IDC_BUT_UNDO_AUTO               3500
+#define IDC_RLD_USE_SEARCH              3501
+#define IDC_STAT_LD_PARAM_SET           3502
+#define IDC_RLD_USE_VIEW                3503
+#define IDC_RLD_USE_RECORD              3504
+#define IDC_RLD_USE_PREVIEW             3505
+#define IDC_RLD_USE_MONTMAP             3506
 #define ID_NEW_IMAGE                    32771
 #define IDM_FILE_SAVEOTHER              32772
 #define IDM_FILE_READ                   32773
@@ -3014,6 +3036,7 @@
 #define ID_MONTAGINGGRIDS_IDENTIFYGRIDONSTAGE 33528
 #define ID_EUCENTRICITY_SETOFFSETAUTOMATICALLY 33529
 #define ID_MONTAGINGGRIDS_LOADALLGRIDMAPS 33530
+#define ID_CAMERA_PREVIEWPRESCAN        33531
 
 // Next default values for new objects
 // 
@@ -3021,8 +3044,8 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        289
-#define _APS_NEXT_COMMAND_VALUE         33531
-#define _APS_NEXT_CONTROL_VALUE         3484
+#define _APS_NEXT_COMMAND_VALUE         33532
+#define _APS_NEXT_CONTROL_VALUE         3507
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif

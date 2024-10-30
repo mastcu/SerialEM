@@ -32,6 +32,7 @@
 #include "ParticleTasks.h"
 #include "FilterTasks.h"
 #include "ProcessImage.h"
+#include "MultiShotDlg.h"
 #include "MacroControlDlg.h"
 #include "NavigatorDlg.h"
 #include "OneLineScript.h"
@@ -245,6 +246,7 @@ CMacroProcessor::CMacroProcessor()
   mShowIndentButtons = true;
   mUseMonoFont = false;
   mFocusedWndWhenSavedStatus = NULL;
+  mSavedMultiShot = NULL;
   mRestoreMacroEditors = true;
   mOneLinePlacement.rcNormalPosition.right = NO_PLACEMENT;
   mFileOptToRestore = NULL;
@@ -1156,6 +1158,7 @@ int CMacroProcessor::TaskBusy()
     mFocusManager->DoingFocus() || mWinApp->mAutoTuning->DoingAutoTune() ||
     mShiftManager->ResettingIS() || mWinApp->mCalibTiming->Calibrating() ||
     mWinApp->mFilterTasks->RefiningZLP() || 
+    (mSavedMultiShot && CMultiShotDlg::DoingAutoStepAdj()) ||
     mNavHelper->mHoleFinderDlg->DoingMultiMapHoles() ||
     mNavHelper->mHoleFinderDlg->GetFindingHoles() || mNavHelper->GetRealigning() ||
     (mWinApp->mComplexTasks->DoingTasks() && 
@@ -1840,6 +1843,7 @@ void CMacroProcessor::SuspendMacro(int abort)
     for (ind = MAX_MACROS + MAX_ONE_LINE_SCRIPTS; ind < MAX_TOT_MACROS; ind++)
       ClearFunctionArray(ind);
   }
+  RestoreMultiShotParams();
   mRunningScrpLang = false;
   mCalledFromScrpLang = false;
   ResetEvent(mScrpLangDoneEvent);
@@ -5681,6 +5685,16 @@ void CMacroProcessor::RestoreLowDoseParams(int index)
   if (index < 0) {
     mLDareasSaved.clear();
     mLDParamsSaved.clear();
+  }
+}
+
+// restore multishot params if they were saved to do step & adjust IS
+void CMacroProcessor::RestoreMultiShotParams()
+{
+  if (mSavedMultiShot) {
+    MultiShotParams *params = mNavHelper->GetMultiShotParams();
+    *params = *mSavedMultiShot;
+    B3DDELETE(mSavedMultiShot);
   }
 }
 

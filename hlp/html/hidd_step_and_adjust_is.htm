@@ -9,20 +9,30 @@
   </HEAD>
   <BODY BGCOLOR="#ffffff" TEXT="#000000">
     <basefont size="2">
-      <P><A NAME="hidd_coma_vs_is_cal"></A><B><FONT size="3">Step and Adjust IS Setup
+      <P><A NAME="hidd_coma_vs_is_cal"></A><B><FONT size="3">Step To and Adjust IS Setup
       Dialog</FONT></B></P>
-      <P> This dialog opens when you press the <strong>Step To and Adjust IS</strong> 
+      <P> This dialog opens when you press the <strong>Step To &amp; Adjust IS...</strong> 
         button in <a href="hidd_multi_shot_setup.htm">Multiple Record 
         Setup</a> dialog when in Low Dose mode and it allows you to specify which Low 
         Dose area to take images with, what magnification to use, and whether to change 
         the defocus offset if using View or Search.&nbsp; It is necessary to specify 
         this in advance so that the initial image shift can be applied after going to 
-        conditions in which images will be taken.</P>
-    <P> <strong>Low Dose area to use</strong></P>
-    <P> <strong>Record</strong> is always available; <strong>View</strong> and
+        conditions in which images will be taken.&nbsp; If parameters are set 
+        appropriately, there is an option to run the procedure automatically.</P>
+    <P> <strong>Low Dose area and images to use</strong></P>
+    <P> <strong>Record (Preview images)</strong> is always available; <strong>View</strong> and
       <strong>Search</strong> are offered as options if they are not currently set to 
-      be in low magnification mode.&nbsp; If <strong>Record</strong> is selected, 
-      images will be taken with the Preview parameter set. Using anything but a higher magnification, 
+      be in low magnification mode.&nbsp; As the name implies, with <strong>Record</strong> <strong>
+      (Preview images)</strong>, 
+      images will be taken with the Preview parameter set.&nbsp; A <strong>2 x 2 
+      Preview Montage</strong> is also always available, and a <strong>2 x 3 Preview Montage</strong> 
+      option (or <strong>3 x 2) </strong>is&nbsp;present to give an image closer to 
+      square when the current camera has an aspect ratio over 1.33 (e.g., a K3 
+      camera).&nbsp; When one of these is selected, the program will open a temporary 
+      file for these montages and remove it at the end of the procedure.&nbsp; These montage options allow the 
+      adjustment to be done at a magnification closer to that of Record, where the 
+      image shifts are liable to be sufficiently close to the ones needed for Record.</P>
+    <P> Using anything but a higher magnification, 
       near that of Record, has the same limitations and requirements as when initially 
       setting the areas: images should be taken near focus unless there are good 
       calibrations for the effects of high defocus.&nbsp; If there are image shift 
@@ -32,9 +42,10 @@
       calibrations of rotation angle and pixel size (i.e., &#39;RotationAndPixel&#39; 
       properties entries) to allow the image shift to be translated accurately from 
       where it is measured to where it is used for acquisition.</P>
-      <p><b>Take image after shifting to position</b></p>
-      <P>Check this option to have an image taken automatically after shifting to each 
-        position.</P> 
+    <P> <strong>Set Preview exposure to</strong></P>
+    <P> Select this option and enter the desired exposure time for the Preview images.&nbsp; 
+      It will probably be necessary to have a longer exposure time when running the 
+      procedure automatically.</P>
     <P> <strong>Magnification to use</strong></P>
     <P> The choices here are the <strong>Current mag of area,</strong> the <strong>Mag 
       at which shifts were recorded</strong>, and a selected <strong>Other mag</strong>.&nbsp; 
@@ -45,9 +56,9 @@
       another magnification may impose a shift on the area unless the magnifications 
       are well-aligned.&nbsp; Since all positions are going to be visited, such a 
       shift is not an intrinsic problem, unless it prevents you from finding the first 
-      hole to be positioned at.&nbsp; Note that there is no automatic change in intensity 
-      when switching to a different magnification; you will need to make such changes 
-      yourself.</P>
+      hole to be positioned at.&nbsp; There is an automatic change in intensity when 
+      switching to a different magnification, but it could result in the beam not 
+      being centered well enough.</P>
     <P> <strong>Change defocus offset to</strong></P>
     <P> This option is available with View or Serach and allows you to switch from the 
       currently set defocus offset to a smaller one if necessary.&nbsp; Like using a 
@@ -59,6 +70,57 @@
     <P> Any changes made to the chosen Low Dose area, either specified here or imposed 
       by you after starting the procedure, will be restored when the procedure is 
       finished.</P>
+    <P> <strong>Do procedure automatically with:</strong></P>
+    <P> Check this option to run the sequence of operations automatically on a regular 
+      hole pattern after you press Start.&nbsp; In order for it be available, you must 
+      set the <strong>Hole size</strong> within 10% and select imaging conditions that 
+      will make the hole size be between 0.33 and 0.75 of the minimum dimension of the 
+      image (or between 0.17 and 0.75 for hex grids).&nbsp; The status line at the 
+      bottom of the group box will indicate why conditions are not met or how they are 
+      being met.&nbsp; When using single images, the program will crop the images down 
+      to a usable size if that contains enough pixels, or you can set the camera 
+      parameters to acquire a subset.&nbsp; No cropping is available with montages.</P>
+    <P> You can choose to have hole positions be adjusted either with <strong>
+      Cross-correlation</strong> or with <strong>Hole centering</strong>.&nbsp; With <strong>Cross-correlation</strong>, the first image is used as a reference, so 
+      it does not matter whether the hole is off-center, as long as most of it is 
+      there and there is not much extraneous material.&nbsp; Images at the remainder 
+      of the holes are correlated with the first one.&nbsp; The cross-correlation can 
+      fail if the hole edge is not distinct enough, the size is not the same between 
+      holes, or if the correlation is thrown off by other contrasting material.&nbsp; 
+      At the end, single images are left in successive buffers with the last one in A 
+      and the reference in D, 
+      while montage overviews are in successive buffers with the last one in B.</P>
+    <P> With <strong>Hole centering</strong>, the program calls the Hole Finder with 
+      some parameters appropriate for finding one hole in an image with one or a few 
+      holes, and other parameters taken from pre-existing hole-finding parameters, 
+      namely as the geometry, spacing, filters, and thresholds.&nbsp; If the
+      <a href="hidd_hole_finder.htm">Hole Finder</a> dialog is open when this dialog 
+      is opened, the hole size is taken from there; otherwise it is based on the last 
+      value used in this dialog.&nbsp; If there is hole at the center of the pattern 
+      (e.g., a 3x3 rectangular pattern or a hex 
+      array), the first image is taken at the center position and the hole is centered, 
+      with a relatively large image shift allowed.&nbsp; Images after that should be 
+      closer to center and require less shifting.&nbsp; At the end, all images are 
+      availlable for inspection is successive buffers, just as with cross-correlation.&nbsp; 
+      The method can give a poor result if montage pieces do not align well enough or if there is 
+      material intruding along one side that throws off the center measurement for a 
+      hole.&nbsp; Probably this method should be used only after finding 
+      cross-correlation inadequate.</P>
+    <P> With either method, the entry for <strong>Maximum shift as fraction of hole 
+      size</strong> determines whether a measured shift will be done; if a shift is 
+      too large, the procedure will be aborted.</P>
+    <P> Before starting, pick an area with relatively clean holes at the corners of 
+      the pattern to be assessed, which is determined by the current Multiple Record 
+      settings.&nbsp; When using Preview images or montages and starting with a View 
+      or Search image, be sure that the View or Search shift offset is well-calibrated 
+      (see <a href="hidd_lowdose.htm#viewShiftOffset">Shift offsets for View and Search</a>).&nbsp; Center
+      on the central hole or center of the pattern and press <strong>Start</strong>.</P>
+      <p><b>Take image after shifting to position</b></p>
+      <P>Check this option to have an image taken automatically after shifting to each 
+        position, when not running the procedure automatically.</P>
+    <P><strong>Close</strong> and <strong>Cancel</strong></P>
+    <P><strong>Close</strong> will close the dialog without running, but saving the 
+      parameters.&nbsp; <strong>Cancel</strong> will not save the parameters.</P> 
     </basefont>
   </BODY>
 </HTML>

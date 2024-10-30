@@ -4518,6 +4518,7 @@ int CNavigatorDlg::SetupMontage(CMapDrawItem *item, CMontageSetupDlg *montDlg,
     }
 
     //montParam->minOverlapFactor = overlapFactor;  ??  HUH??
+    montParam->usePrevInLowDose = false;
     if ((err = FitMontageToItem(montParam, binning, magIndex, forceStage, overlapFac, 
       iCam, lowDose))) {
 
@@ -4571,10 +4572,10 @@ int CNavigatorDlg::SetupMontage(CMapDrawItem *item, CMontageSetupDlg *montDlg,
     err = 0;
   } else {
     if (forMacro && mWinApp->mMacroProcessor->DoingMacro())
-      err = mDocWnd->GetMontageParamsAndFile(true, montParam->xFrame, montParam->yFrame, 
+      err = mDocWnd->GetMontageParamsAndFile(1, montParam->xFrame, montParam->yFrame, 
         mWinApp->mMacroProcessor->GetEnteredName());
     else
-      err = mDocWnd->GetMontageParamsAndFile(true);
+      err = mDocWnd->GetMontageParamsAndFile(1);
   }
   if (err) {
     mMontItem = NULL;
@@ -10654,7 +10655,7 @@ void CNavigatorDlg::AcquireNextTask(int param)
       StopAcquiring();
       return;
     }
-    stopErr = mHelper->mHoleFinderDlg->DoFindHoles(&mImBufs[ind]);
+    stopErr = mHelper->mHoleFinderDlg->DoFindHoles(&mImBufs[ind], false);
     break;
 
     // Relax the stage

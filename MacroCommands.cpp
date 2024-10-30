@@ -656,6 +656,7 @@ void CMacCmd::InitForNextCommand()
   mNavigator = mWinApp->mNavigator;
   mLogRpt = "";
 
+  RestoreMultiShotParams();
   mSleepTime = 0.;
   mDoseTarget = 0.;
   mMovedStage = false;
@@ -1894,6 +1895,16 @@ int CMacCmd::Montage(void)
   return 0;
 }
 
+// PrescanWithPreview
+int CMacCmd::PrescanWithPreview()
+{
+  if (mWinApp->mParticleTasks->StartPreviewPrescan()) {
+    AbortMacro();
+    return 1;
+  }
+  return 0;
+}
+
 // ReportMontagePiece
 int CMacCmd::ReportMontagePiece(void)
 {
@@ -2764,6 +2775,39 @@ int CMacCmd::AdjustMultiShotPattern()
   return 0;
 }
 
+// StepAndAdjustISVectors
+int CMacCmd::StepAndAdjustISVectors()
+{
+  MultiShotParams *params = mNavHelper->GetMultiShotParams();
+  float holeSize, limitFrac;
+  int crop, method = mItemInt[1] ? 1 : 0;
+  if (!mWinApp->LowDoseMode())
+    ABORT_NOLINE("You must be in Low Dose mode to do automatic Step And Adjust IS");
+  mNavHelper->UpdateMultishotIfOpen();
+  if (mItemInt[1] < 0)
+    method = params->autoAdjMethod;
+  holeSize = (mItemEmpty[2] || mItemFlt[2] <= 0.) ? params->autoAdjHoleSize : mItemFlt[2];
+  limitFrac = (mItemEmpty[3] || mItemFlt[3] < 0.) ? params->autoAdjLimitFrac :
+    mItemFlt[3];
+  if (!CMultiShotDlg::CanDoAutoAdjust(params->stepAdjWhichMag, params->stepAdjLDarea,
+    params->stepAdjOtherMag, params->holeMagIndex[params->doHexArray ? 1 : 0],
+    holeSize, params->doHexArray,
+    params->useCustomHoles && params->customMagIndex > 0, crop, mStrCopy))
+    ABORT_NOLINE("Cannot run Step and Adjust IS: " + mStrCopy);
+  mSavedMultiShot = new MultiShotParams;
+  *mSavedMultiShot = *params;
+  params->doAutoAdjustment = true;
+  params->autoAdjMethod = method;
+  params->autoAdjHoleSize = holeSize;
+  params->autoAdjLimitFrac = limitFrac;
+  CMultiShotDlg::SetSteppingAdjusting(1);
+  if (CMultiShotDlg::DoStartRecording()) {
+    AbortMacro();
+    return 1;
+  }
+  return 0;
+}
+
 // OpenMultiShotFiles
 int CMacCmd::OpenMultiShotFiles(void)
 {
@@ -3498,7 +3542,7 @@ int CMacCmd::OpenNewFile(void)
     // If the binning has changed, start from scratch on frame sizes and overlaps
     if (mConSets[setNum].binning != mMontP->binning)
       xFrame = 0;
-    index2 = mDocWnd->GetMontageParamsAndFile(xFrame > 0, ix0, iy0,
+    index2 = mDocWnd->GetMontageParamsAndFile(xFrame > 0 ? 1 : 0, ix0, iy0,
       report);
   }
   if (index2)
@@ -3547,7 +3591,7 @@ int CMacCmd::SetupWaffleMontage(void)
       mMontP->yFrame = sizeY / mMontP->binning;
       mMontP->xOverlap = mMontP->xFrame / 10;
       mMontP->yOverlap = mMontP->yFrame / 10;
-      index2 = mDocWnd->GetMontageParamsAndFile(true, ix0, iy0, report);
+      index2 = mDocWnd->GetMontageParamsAndFile(1, ix0, iy0, report);
       mWinApp->mBufferWindow.UpdateSaveCopy();
       if (index2)
         ABORT_NOLINE("Error trying to open new montage the right size for current"
@@ -12387,10 +12431,34 @@ int CMacCmd::FindHoles(void)
       ABORT_LINE(report);
     imBuf = &mImBufs[index];
   }
-  if (mNavHelper->mHoleFinderDlg->DoFindHoles(imBuf)) {
+   if (mNavHelper->mHoleFinderDlg->DoFindHoles(imBuf, false)) {
     AbortMacro();
     return 1;
   }
+  return 0;
+}
+
+// FindAndCenterOneHole
+int CMacCmd::FindAndCenterOneHole()
+{
+  float xCen, yCen;
+  EMimageBuffer *imBuf;
+  int index;
+  imBuf = mWinApp->mMainView->GetActiveImBuf();
+  if (!imBuf->mImage)
+    ABORT_LINE("There is no image in the active buffer for line:\n\n");
+  if (mStrItems[1] != "0") {
+    if (ConvertBufferLetter(mStrItems[1], -1, true, index, mStrCopy))
+      ABORT_LINE(mStrCopy);
+    imBuf = &mImBufs[index];
+  }
+  index = mNavHelper->mHoleFinderDlg->FindAndCenterOneHole(imBuf, mItemFlt[2],
+    mItemEmpty[3] ? 0 : mItemInt[3], mItemEmpty[4] ? 0.f : mItemFlt[4], xCen, yCen);
+  if (index > 0) {
+    AbortMacro();
+    return 1;
+  }
+  SetReportedValues(xCen, yCen, index);
   return 0;
 }
 
@@ -12471,6 +12539,7 @@ int CMacCmd::ReportLastHoleVectors(void)
     if (!index)
       ABORT_LINE("There is no Record magnification index to use for:\n\n");
   }
+  msParams->canUndoRectOrHex = 0;
   numDir = mNavHelper->mHoleFinderDlg->ConvertHoleToISVectors(index, settingMulti, xVecs,
     yVecs, mStrCopy);
   if (!numDir)

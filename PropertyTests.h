@@ -360,6 +360,8 @@ FLOAT_PROP_TEST("EucentricityFineIntervalAtZero", complexTasks->, MaxFEFineInter
 FLOAT_PROP_TEST("EucentricityFineSubareaMeans", complexTasks->, FESizeOrFracForMean)
 FLOAT_PROP_TEST("LDShiftOffsetResetISThresh", complexTasks->, LDShiftOffsetResetISThresh)
 FLOAT_PROP_TEST("LDShiftOffsetIterThresh", complexTasks->, LDShiftOffsetIterThresh)
+FLOAT_PROP_TEST("LDShiftOffsetMin2StepRatio", complexTasks->, LDSOTwoStepMinRatio)
+FLOAT_PROP_TEST("LDShiftOffsetMax2StepFocus", complexTasks->, LDSOMaxFocusForModArea)
 FLOAT_PROP_TEST("RealignItemMinMarginNeeded", navHelper->, MinMarginNeeded)
 FLOAT_PROP_TEST("RealignItemMinMarginWanted", navHelper->, MinMarginWanted)
 FLOAT_PROP_TEST("RealignItemMaxMarginNeeded", navHelper->, MaxMarginNeeded)

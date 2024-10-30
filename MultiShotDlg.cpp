@@ -9,13 +9,17 @@
 
 #include "stdafx.h"
 #include "SerialEM.h"
+#include "SerialEMDoc.h"
 #include "EMscope.h"
 #include "ShiftManager.h"
 #include "AutoTuning.h"
 #include "CameraController.h"
+#include "EMMontageController.h"
 #include "MacroProcessor.h"
 #include "ParticleTasks.h"
+#include "ProcessImage.h"
 #include "SerialEMView.h"
+#include "BeamAssessor.h"
 #include "ShiftCalibrator.h"
 #include "MultiShotDlg.h"
 #include "StepAdjustISDlg.h"
@@ -23,6 +27,35 @@
 #include "NavHelper.h"
 #include "HoleFinderDlg.h"
 #include "NavAcquireDlg.h"
+
+CSerialEMApp *CMultiShotDlg::mWinApp;
+BOOL CMultiShotDlg::m_bHexGrid;
+MultiShotParams *CMultiShotDlg::mActiveParams;
+CShiftManager *CMultiShotDlg::mShiftManager;
+bool CMultiShotDlg::mRecordingRegular = false;
+bool CMultiShotDlg::mRecordingCustom = false;
+bool CMultiShotDlg::mDoingAutoStepAdj = false;
+int CMultiShotDlg::mSteppingAdjusting = false;
+std::vector<double> CMultiShotDlg::mSavedISX, CMultiShotDlg::mSavedISY;
+BOOL CMultiShotDlg::mSavedMouseStage;
+double CMultiShotDlg::mRecordStageX, CMultiShotDlg::mRecordStageY;
+double CMultiShotDlg::mStartingISX, CMultiShotDlg::mStartingISY;
+int CMultiShotDlg::mNavPointIncrement;
+int CMultiShotDlg::mSavedLDForCamera;
+int CMultiShotDlg::mAreaSaved;
+int CMultiShotDlg::mStepConsNum;
+float CMultiShotDlg::mSavedDefOffset;
+LowDoseParams CMultiShotDlg::mSavedLDParams;
+MontParam *CMultiShotDlg::mSavedMontParam;
+float CMultiShotDlg::mSavedPrevExp = 0.;
+double CMultiShotDlg::mDeferredISX;
+double CMultiShotDlg::mDeferredISY;
+int CMultiShotDlg::mAutoAdjCropSize;
+int CMultiShotDlg::mSavedShiftsOnAcq;
+bool CMultiShotDlg::mAutoAdjDoCenter;
+
+
+static const char *sStepAdjFileName = "stepAndAdjustTemp.mrc";
 
 static int idTable[] = {IDC_CHECK_DO_SHOTS_IN_HOLE, PANEL_END,
 IDC_SPIN_NUM_SHOTS, IDC_RNO_CENTER, IDC_RCENTER_AFTER, IDC_RCENTER_BEFORE, 
@@ -37,7 +70,7 @@ IDC_BUT_SET_REGULAR, IDC_CHECK_USE_CUSTOM, IDC_BUT_SAVE_IS, IDC_CHECK_OMIT_3X3_C
 IDC_BUT_ABORT, IDC_BUT_END_PATTERN, IDC_BUT_IS_TO_PT, IDC_BUT_USE_LAST_HOLE_VECS,
 IDC_BUT_SET_CUSTOM, IDC_STAT_HOLE_DELAY_FAC, IDC_STAT_NUM_Y_HOLES, IDC_BUT_STEP_ADJUST,
 IDC_CHECK_HEX_GRID, IDC_STAT_ADJUST_STATUS, IDC_BUT_USE_MAP_VECTORS, IDC_BUT_USE_NAV_PTS,
-IDC_BUT_APPLY_ADJUSTMENT, IDC_STAT_USE_VECS, PANEL_END,
+IDC_BUT_APPLY_ADJUSTMENT, IDC_STAT_USE_VECS, IDC_BUT_UNDO_AUTO, PANEL_END,
 IDC_TSS_LINE2, IDC_CHECK_SAVE_RECORD, PANEL_END,
 IDC_RNO_EARLY, IDC_RLAST_EARLY, IDC_RALL_EARLY, IDC_RFIRST_FULL, IDC_STAT_NUM_EARLY,
 IDC_STAT_EARLY_GROUP, IDC_EDIT_EARLY_FRAMES, PANEL_END,
@@ -75,9 +108,10 @@ CMultiShotDlg::CMultiShotDlg(CWnd* pParent /*=NULL*/)
   , m_bDoSecondRing(FALSE)
   , m_fRing2Dist(0.1f)
   , m_strNum2Shots(_T(""))
-  , m_bHexGrid(FALSE)
   , m_strAdjustStatus(_T("No adjustment available"))
 {
+  mWinApp = (CSerialEMApp *)AfxGetApp();
+  m_bHexGrid = FALSE;
   mNonModal = true;
   mShiftManager = mWinApp->mShiftManager;
   mRecordingRegular = false;
@@ -224,6 +258,7 @@ BEGIN_MESSAGE_MAP(CMultiShotDlg, CBaseDlg)
   ON_EN_KILLFOCUS(IDC_EDIT_HOLE_DELAY_FAC, OnKillfocusEditHoleDelayFac)
   ON_EN_KILLFOCUS(IDC_EDIT_EXTRA_DELAY, OnKillfocusEditHoleDelayFac)
   ON_BN_CLICKED(IDC_BUT_USE_NAV_PTS, OnButUseNavPts)
+  ON_BN_CLICKED(IDC_BUT_UNDO_AUTO, OnButUndoAuto)
 END_MESSAGE_MAP()
 
 
@@ -347,6 +382,7 @@ BOOL CMultiShotDlg::PreTranslateMessage(MSG* pMsg)
 }
 
 // Adjust the panels for changes in selections, and close up most of dialog to "disable"
+// Adjust (default false) means adjust regardles of changes, AND skip RestoreViewFocus
 void CMultiShotDlg::ManagePanels(bool adjust)
 {
   BOOL states[7] = {true, true, true, true, true, true, true};
@@ -370,7 +406,8 @@ void CMultiShotDlg::ManagePanels(bool adjust)
     if (adjust || !BOOL_EQUIV(states[ind], mLastPanelStates[ind])) {
       AdjustPanels(states, idTable, sLeftTable, sTopTable, mNumInPanel, mPanelStart, 0,
         sHeightTable);
-      mWinApp->RestoreViewFocus();
+      if (adjust)
+        mWinApp->RestoreViewFocus();
       break;
     }
   }
@@ -513,34 +550,77 @@ void CMultiShotDlg::OnButStepAdjust()
   if (mWinApp->LowDoseMode()) {
     dlg.mPrevMag = custom ? mActiveParams->customMagIndex : 
       mActiveParams->holeMagIndex[m_bHexGrid ? 1 : 0];
+    dlg.mHexGrid = m_bHexGrid;
+    dlg.mUseCustom = custom;
     if (dlg.DoModal() == IDCANCEL)
       return;
+    if (!dlg.mStartRoutine) {
+      UpdateAndUseMSparams(false);
+      mSavedParams = *mActiveParams;
+      return;
+    }
   }
   mSteppingAdjusting = custom ? 2 : 1;
   UpdateAndUseMSparams(false);
-  StartRecording(mSteppingAdjusting > 1 ? "Adjust shift at central point of pattern" : 
+  StartRecording(mSteppingAdjusting > 1 ? "Adjust shift at central point of pattern" :
     "Adjust shift at first corner of pattern");
 }
 
-// Common operations to start recording corners/points
+// Button to revert automatic step & adjust
+void CMultiShotDlg::OnButUndoAuto()
+{
+  int hexInd = mActiveParams->canUndoRectOrHex - 1, dir;
+  if (hexInd < 0)
+    return;
+  mActiveParams->holeMagIndex[hexInd] = mActiveParams->prevHoleMag;
+  mActiveParams->origMagOfArray[hexInd] = mActiveParams->prevOrigMag;
+  mActiveParams->xformFromMag = mActiveParams->prevXformFromMag;
+  mActiveParams->xformToMag = mActiveParams->prevXformToMag;
+  mActiveParams->adjustingXform = mActiveParams->prevAdjXform;
+  for (dir = 0; dir < (m_bHexGrid ? 3 : 2); dir++) {
+    mActiveParams->holeISXspacing[dir] = mActiveParams->prevXspacing[dir];
+    mActiveParams->holeISYspacing[dir] = mActiveParams->prevYspacing[dir];
+  }
+  mActiveParams->canUndoRectOrHex = 0;
+  ManageEnables();
+}
+
+/*
+ * Common operations to start recording corners/points
+ */
 void CMultiShotDlg::StartRecording(const char *instruct)
 {
+  m_statSaveInstructions.SetWindowText(instruct);
+  DoStartRecording();
+  ManageEnables();
+}
+
+// Static function that does the work of getting started
+int CMultiShotDlg::DoStartRecording()
+{
+  mWinApp = (CSerialEMApp *)AfxGetApp();
+  mShiftManager = mWinApp->mShiftManager;
   LowDoseParams *ldp = mWinApp->GetLowDoseParams();
+  mActiveParams = mWinApp->mNavHelper->GetMultiShotParams();
   MultiShotParams *params = mActiveParams;
   CString *modeNames = mWinApp->GetModeNames();
-  int prevMag, origMag;
+  int prevMag, origMag, camera = mWinApp->GetCurrentCamera();
+  float ratio;
+  CString str;
   ScaleMat focMat;
-  double ISX, ISY, ISXorig, ISYorig;
+  ControlSet *conSet = mWinApp->GetConSets() + PREVIEW_CONSET;
+  double ISX, ISY, ISXorig, ISYorig, newIntensity, outFactor;
+  CameraParameters *camP = mWinApp->GetActiveCamParam();
   mSavedISX.clear();
   mSavedISY.clear();
   mAreaSaved = RECORD_CONSET;
   if (mWinApp->mNavigator)
     mWinApp->mNavigator->Update();
   mWinApp->mScope->GetImageShift(mStartingISX, mStartingISY);
-  mSavedMouseStage = mShiftManager->GetMouseMoveStage();
-  mShiftManager->SetMouseMoveStage(false);
-  m_statSaveInstructions.SetWindowText(instruct);
   mNavPointIncrement = -9;
+  mSavedShiftsOnAcq = mWinApp->mBufferManager->GetShiftsOnAcquire();
+  if (!(mRecordingCustom || mSteppingAdjusting > 1))
+    params->canUndoRectOrHex = 0;    // Cancel ability to undo
 
   // Set up saved area and mag to go to if adjusting
   if (mSteppingAdjusting) {
@@ -554,21 +634,60 @@ void CMultiShotDlg::StartRecording(const char *instruct)
       if (params->stepAdjWhichMag != 1)
         prevMag = params->stepAdjWhichMag ? params->stepAdjOtherMag : 
         ldp[mAreaSaved].magIndex;
+
+      if (params->stepAdjLDarea > 1 && params->stepAdjSetPrevExp) {
+        mSavedPrevExp = conSet->exposure;
+        conSet->exposure = params->stepAdjPrevExp;
+      }
+
+      // Set up montage if taking images
+      if ((params->stepAdjTakeImage || params->doAutoAdjustment) &&
+        params->stepAdjLDarea > 2) {
+        if (SetupTempPrevMontage(sStepAdjFileName,
+          params->stepAdjLDarea > 3 && camP->sizeY > camP->sizeX ? 3 : 2,
+          params->stepAdjLDarea > 3 && camP->sizeX > camP->sizeY ? 3 : 2,
+          params->autoAdjMethod ? 1 : B3DMAX(1, (3 + conSet->binning) / conSet->binning),
+          10))
+          return 1;
+      }
+      
+      // Set up automatic stepping
+      if (params->doAutoAdjustment && CanDoAutoAdjust(params->stepAdjWhichMag, 
+        params->stepAdjLDarea, params->stepAdjOtherMag, 
+        params->holeMagIndex[params->doHexArray ? 1 : 0],
+          params->autoAdjHoleSize, params->doHexArray, 
+        params->useCustomHoles && params->customMagIndex, mAutoAdjCropSize, str)) {
+        mDoingAutoStepAdj = true;
+        mWinApp->mBufferManager->SetShiftsOnAcquire(0);
+        mWinApp->UpdateBufferWindows();
+        mWinApp->SetStatusText(COMPLEX_PANE, "STEPPING & ADJUSTING");
+      }
     } else
       mWinApp->mScope->SetMagIndex(prevMag);
   }
+  mSavedMouseStage = mShiftManager->GetMouseMoveStage();
+  mShiftManager->SetMouseMoveStage(false);
 
   // General operations for low dose
   if (mWinApp->LowDoseMode()) {
     mSavedLDParams = ldp[mAreaSaved];
     mSavedLDForCamera = mWinApp->GetCurrentCamera();
-    PrintfToLog("Low Dose %s parameters will be restored when you finish defining the"
-      " pattern", modeNames[mAreaSaved == SEARCH_AREA ? SEARCH_CONSET : mAreaSaved]);
+    if (!mDoingAutoStepAdj)
+      PrintfToLog("Low Dose %s parameters will be restored when you finish defining the"
+        " pattern", modeNames[mAreaSaved == SEARCH_AREA ? SEARCH_CONSET : mAreaSaved]);
     if (mSteppingAdjusting) {
 
       // Adjusting: setup modified LD parameters and change view/search defocus if set
       if (mWinApp->mScope->GetLowDoseArea() == mAreaSaved)
         mWinApp->mScope->SetLdsaParams(&mSavedLDParams);
+      if (ldp[mAreaSaved].magIndex != prevMag) {
+        ratio = powf(mShiftManager->GetPixelSize(camera, ldp[mAreaSaved].magIndex) /
+          mShiftManager->GetPixelSize(camera, prevMag), 2.);
+        mWinApp->mBeamAssessor->AssessBeamChange(ldp[mAreaSaved].intensity,
+          ldp[mAreaSaved].spotSize, ldp[mAreaSaved].probeMode, ratio, newIntensity,
+          outFactor);
+        ldp[mAreaSaved].intensity = newIntensity;
+      }
       ldp[mAreaSaved].magIndex = prevMag;
       mWinApp->mScope->GotoLowDoseArea(mAreaSaved);
       if (mAreaSaved != RECORD_CONSET && params->stepAdjSetDefOff) {
@@ -579,7 +698,11 @@ void CMultiShotDlg::StartRecording(const char *instruct)
       mWinApp->mScope->GetImageShift(mStartingISX, mStartingISY);
     }
   }
+  mStepConsNum = B3DCHOICE(mAreaSaved == RECORD_CONSET, PREVIEW_CONSET,
+    mAreaSaved == SEARCH_AREA ? SEARCH_CONSET : VIEW_CONSET);
   if (mSteppingAdjusting == 1) {
+
+    // Set up shift from center to first position and adjust to working mag
     if (m_bHexGrid) {
       ISXorig = params->numHexRings * params->hexISXspacing[0];
       ISYorig = params->numHexRings * params->hexISYspacing[0];
@@ -593,25 +716,32 @@ void CMultiShotDlg::StartRecording(const char *instruct)
     focMat = ISfocusAdjustmentForBufOrArea(NULL, mAreaSaved);
     if (focMat.xpx)
       ApplyScaleMatrix(MatInv(focMat), ISX, ISY, ISX, ISY);
-    mWinApp->mScope->IncImageShift(ISX, ISY);
-    if (params->stepAdjTakeImage && mWinApp->LowDoseMode()) {
-      mStepConsNum = B3DCHOICE(mAreaSaved == RECORD_CONSET, PREVIEW_CONSET,
-        mAreaSaved == SEARCH_AREA ? SEARCH_CONSET : VIEW_CONSET);
-      SEMTrace('1', "Initiate capture area %d cons %d", mAreaSaved, mStepConsNum);
-      mWinApp->mCamera->InitiateCapture(mStepConsNum);
+    mDeferredISX = mDeferredISY = 0.;
+    mAutoAdjDoCenter = params->doAutoAdjustment && mWinApp->LowDoseMode() &&
+      params->autoAdjMethod > 0 && (params->doHexArray ||
+      (params->numHoles[0] % 2 != 0 && params->numHoles[1] % 2 != 0));
+    if (mAutoAdjDoCenter) {
+      mDeferredISX = ISX;
+      mDeferredISY = ISY;
     }
+    if (StartImageIfNeeded())
+      return 1;
   }
-  ManageEnables();
+  return 0;
 }
 
-// Turn off flags and notify Nav when recording ends
+/*
+ * Turn off flags and notify Nav when recording ends, end task if any (static function)
+ */
 void CMultiShotDlg::StopRecording(void)
 {
   LowDoseParams *ldp = mWinApp->GetLowDoseParams();
   LowDoseParams curLDP;
+  ControlSet *conSet = mWinApp->GetConSets() + PREVIEW_CONSET;
   if (mRecordingCustom || mRecordingRegular || mSteppingAdjusting) {
     mRecordingCustom = mRecordingRegular = false;
     mWinApp->mScope->SetImageShift(mStartingISX, mStartingISY);
+    mWinApp->mMontageController->SetBaseISXY(mStartingISX, mStartingISY);
     mShiftManager->SetMouseMoveStage(mSavedMouseStage);
     if (mSavedLDForCamera >= 0) {
       if (mSteppingAdjusting && mAreaSaved != RECORD_CONSET &&
@@ -633,14 +763,27 @@ void CMultiShotDlg::StopRecording(void)
           mWinApp->mScope->SetLdsaParams(&curLDP);
           mWinApp->mScope->GotoLowDoseArea(mAreaSaved);
         }
-        PrintfToLog("Low Dose Record parameters were restored to original values");
+        if (!mDoingAutoStepAdj)
+          PrintfToLog("Low Dose Record parameters were restored to original values");
       }
       mSavedLDForCamera = -1;
     }
+    CloseTempPrevMontage(sStepAdjFileName);
     mSteppingAdjusting = 0;
     if (mWinApp->mNavigator)
       mWinApp->mNavigator->Update();
+    if (mSavedPrevExp)
+      conSet->exposure = mSavedPrevExp;
+    mSavedPrevExp = 0.;
   }
+  if (mDoingAutoStepAdj) {
+    mWinApp->mBufferManager->SetShiftsOnAcquire(mSavedShiftsOnAcq);
+    mDoingAutoStepAdj = false;
+    mWinApp->UpdateBufferWindows();
+    mWinApp->SetStatusText(COMPLEX_PANE, "");
+  }
+  if (mWinApp->mNavHelper->mMultiShotDlg)
+    mWinApp->mNavHelper->mMultiShotDlg->ManageEnables();
 }
 
 // Do IS to XY in Nav and advance point
@@ -698,16 +841,31 @@ void CMultiShotDlg::OnButIsToPt()
   nav->IStoXYandAdvance(mNavPointIncrement);
 }
 
-// Save one image shift, or finish up for regular pattern when there are 4
+/*
+ * Save one image shift, or finish up for regular pattern when there are 4
+ */
 void CMultiShotDlg::OnButSaveIs()
+{
+  CString str;
+  if (DoSaveIS(str)) {
+    ManageEnables();
+    UpdateAndUseMSparams();
+  } else {
+    m_statSaveInstructions.SetWindowText(str);
+  }
+}
+
+// Static function that does the work of saving image shift and finishing up
+int CMultiShotDlg::DoSaveIS(CString &str)
 {
   double ISX, ISY, ISXorig, ISYorig, stageX, stageY, stageZ;
   float ISlimit = 2.f * mWinApp->mShiftCalibrator->GetCalISOstageLimit();
   float defocus = 0., focusLim = -20.;
   EMimageBuffer *imBufs = mWinApp->GetImBufs();
-  CString str;
   ScaleMat focMat;
   LowDoseParams *ldp = mWinApp->GetLowDoseParams();
+  mActiveParams = mWinApp->mNavHelper->GetMultiShotParams();
+  MultiShotParams *params = mActiveParams;
   bool canAdjustIS = mShiftManager->GetFocusISCals()->GetSize() > 0 &&
     mShiftManager->GetFocusMagCals()->GetSize() > 0;
   int dir, area, ind, origMag, numSteps[2], size = (int)mSavedISX.size() + 1;
@@ -715,16 +873,16 @@ void CMultiShotDlg::OnButSaveIs()
   int startInd1[2] = {0, 0}, endInd1[2] = {1, 3}, startInd2[2] = {3, 1}, 
     endInd2[2] = {2, 2};
   ScaleMat newVec, oldVecInv = {0., 0., 0., 0.};
-  double *xSpacing = m_bHexGrid ? &mActiveParams->hexISXspacing[0] :
-    &mActiveParams->holeISXspacing[0];
-  double *ySpacing = m_bHexGrid ? &mActiveParams->hexISYspacing[0] :
-    &mActiveParams->holeISYspacing[0];
+  double *xSpacing = m_bHexGrid ? &params->hexISXspacing[0] :
+    &params->holeISXspacing[0];
+  double *ySpacing = m_bHexGrid ? &params->hexISYspacing[0] :
+    &params->holeISYspacing[0];
 
   // First time, record stage position and check for defocus
-  origMag = mSteppingAdjusting > 1 ? mActiveParams->customMagIndex :
-    mActiveParams->holeMagIndex[m_bHexGrid ? 1 : 0];
+  origMag = mSteppingAdjusting > 1 ? params->customMagIndex :
+    params->holeMagIndex[m_bHexGrid ? 1 : 0];
   area = mWinApp->mScope->GetLowDoseArea();
-  if (size == 1) {
+  if (size == 1 && !mDoingAutoStepAdj) {
     mWinApp->mScope->GetStagePosition(mRecordStageX, mRecordStageY, stageZ);
     if (!canAdjustIS && ((imBufs->mLowDoseArea && (imBufs->mConSetUsed == VIEW_CONSET || 
       imBufs->mConSetUsed == SEARCH_CONSET) && imBufs->mViewDefocus < focusLim) ||
@@ -737,7 +895,7 @@ void CMultiShotDlg::OnButSaveIs()
         AfxMessageBox(str,  MB_EXCLAME);
     }
 
-  } else {
+  } else if (!mDoingAutoStepAdj) {
 
     // After that, check for stage moved
     mWinApp->mScope->GetStagePosition(stageX, stageY, stageZ);
@@ -767,7 +925,7 @@ void CMultiShotDlg::OnButSaveIs()
   magInd = mWinApp->mScope->GetMagIndex();
   if (mRecordingRegular || mSteppingAdjusting == 1) {
     for (dir = 0; dir < 2; dir++)
-      numSteps[dir] = B3DMAX(1, mActiveParams->numHoles[dir] - 1);
+      numSteps[dir] = B3DMAX(1, params->numHoles[dir] - 1);
 
     // Finishing up for regular or hex
     if (size == (m_bHexGrid ? 6 : 4)) {
@@ -775,10 +933,24 @@ void CMultiShotDlg::OnButSaveIs()
       // If this is an adjustment from a defined original mag, or the holes have already
       // been adjusted and mags match current transform, get the inverse of original
       // vector matrix for refining it
-      if (mSteppingAdjusting && (mActiveParams->origMagOfArray[hexInd] < 0 ||
-        (mActiveParams->xformFromMag > 0 && ((magInd == mActiveParams->xformToMag &&
-          mActiveParams->origMagOfArray[hexInd] == mActiveParams->xformFromMag)) || 
-          (mActiveParams->xformToMag == mActiveParams->holeMagIndex[hexInd])))) {
+      if (mSteppingAdjusting && (params->origMagOfArray[hexInd] < 0 ||
+        (params->xformFromMag > 0 && ((magInd == params->xformToMag &&
+          params->origMagOfArray[hexInd] == params->xformFromMag)) || 
+          (params->xformToMag == params->holeMagIndex[hexInd])))) {
+
+        // This is the point at which we can save the previous state for undoability
+        if (params->doAutoAdjustment) {
+          params->canUndoRectOrHex = m_bHexGrid ? 2 : 1;
+          params->prevHoleMag = params->holeMagIndex[hexInd];
+          params->prevOrigMag = params->origMagOfArray[hexInd];
+          params->prevXformFromMag = params->xformFromMag;
+          params->prevXformToMag = params->xformToMag;
+          params->prevAdjXform = params->adjustingXform;
+          for (dir = 0; dir < (m_bHexGrid ? 3 : 2); dir++) {
+            params->prevXspacing[dir] = params->holeISXspacing[dir];
+            params->prevYspacing[dir] = params->holeISYspacing[dir];
+          }
+        }
 
         // TODO: Regression! for hex
         oldVecInv.xpx = (float)xSpacing[0];
@@ -786,25 +958,25 @@ void CMultiShotDlg::OnButSaveIs()
         oldVecInv.ypx = (float)ySpacing[0];
         oldVecInv.ypy = (float)ySpacing[1];
         oldVecInv = MatInv(oldVecInv);
-        if (mActiveParams->origMagOfArray[hexInd] > 0)
-          oldVecInv = MatMul(mActiveParams->adjustingXform, oldVecInv);
+        if (params->origMagOfArray[hexInd] > 0)
+          oldVecInv = MatMul(params->adjustingXform, oldVecInv);
       }
 
       // Compute new vectors
       if (m_bHexGrid) {
         for (dir = 0; dir < 3; dir++) {
-          mActiveParams->hexISXspacing[dir] = 0.5 * (mSavedISX[dir] - mSavedISX[dir + 3])
-            / mActiveParams->numHexRings;
-          mActiveParams->hexISYspacing[dir] = 0.5 * (mSavedISY[dir] - mSavedISY[dir + 3])
-            / mActiveParams->numHexRings;
+          params->hexISXspacing[dir] = 0.5 * (mSavedISX[dir] - mSavedISX[dir + 3])
+            / params->numHexRings;
+          params->hexISYspacing[dir] = 0.5 * (mSavedISY[dir] - mSavedISY[dir + 3])
+            / params->numHexRings;
         }
 
       } else {
         for (dir = 0; dir < 2; dir++) {
-          mActiveParams->holeISXspacing[dir] =
+          params->holeISXspacing[dir] =
             0.5 * ((mSavedISX[endInd1[dir]] - mSavedISX[startInd1[dir]]) +
             (mSavedISX[endInd2[dir]] - mSavedISX[startInd2[dir]])) / numSteps[dir];
-          mActiveParams->holeISYspacing[dir] =
+          params->holeISYspacing[dir] =
             0.5 * ((mSavedISY[endInd1[dir]] - mSavedISY[startInd1[dir]]) +
             (mSavedISY[endInd2[dir]] - mSavedISY[startInd2[dir]])) / numSteps[dir];
         }
@@ -816,21 +988,19 @@ void CMultiShotDlg::OnButSaveIs()
         newVec.xpy = (float)xSpacing[1];
         newVec.ypx = (float)ySpacing[0];
         newVec.ypy = (float)ySpacing[1];
-        mActiveParams->adjustingXform = MatMul(oldVecInv, newVec);
-        mActiveParams->xformToMag = magInd;
-        mActiveParams->xformFromMag = B3DABS(mActiveParams->origMagOfArray[hexInd]);
+        params->adjustingXform = MatMul(oldVecInv, newVec);
+        params->xformToMag = magInd;
+        params->xformFromMag = B3DABS(params->origMagOfArray[hexInd]);
       }
-      mActiveParams->holeMagIndex[hexInd] = magInd;
-      mActiveParams->tiltOfHoleArray[hexInd] = (float)mWinApp->mScope->GetTiltAngle();
+      params->holeMagIndex[hexInd] = magInd;
+      params->tiltOfHoleArray[hexInd] = (float)mWinApp->mScope->GetTiltAngle();
 
       // Save negative of mag as original when recording from scratch
       // Vectors adjusted this way are not eligible for transform, set to 0
-      mActiveParams->origMagOfArray[hexInd] = mSteppingAdjusting ? 
-        B3DABS(mActiveParams->origMagOfArray[hexInd]) : -magInd;
+      params->origMagOfArray[hexInd] = mSteppingAdjusting ? 
+        B3DABS(params->origMagOfArray[hexInd]) : -magInd;
       StopRecording();
-      ManageEnables();
-      UpdateAndUseMSparams();
-      return;
+      return 1;
 
       // Adjusting for regular or hex
     } else if (mSteppingAdjusting) {
@@ -840,19 +1010,19 @@ void CMultiShotDlg::OnButSaveIs()
         dir = size > 2 ? -1 : 1;
         lastInd = (size - 1) % 3;
         lastDir = size > 3 ? -1 : 1;
-        ISXorig = mActiveParams->numHexRings * (mActiveParams->hexISXspacing[ind] * dir -
-          mActiveParams->hexISXspacing[lastInd] * lastDir);
-        ISYorig = mActiveParams->numHexRings * (mActiveParams->hexISYspacing[ind] * dir -
-          mActiveParams->hexISYspacing[lastInd] * lastDir);
+        ISXorig = params->numHexRings * (params->hexISXspacing[ind] * dir -
+          params->hexISXspacing[lastInd] * lastDir);
+        ISYorig = params->numHexRings * (params->hexISYspacing[ind] * dir -
+          params->hexISYspacing[lastInd] * lastDir);
       } else {
         str.Format("Adjust shift for %s %s hole", size == 1 ? "bottom" : "top",
           size == 3 ? "left" : "right");
         ind = size == 2 ? 1 : 0;
         dir = size == 3 ? -1 : 1;
-        ISXorig = ((mActiveParams->numHoles[ind] - 1) *
-          mActiveParams->holeISXspacing[ind]) * dir;
-        ISYorig = ((mActiveParams->numHoles[ind] - 1) *
-          mActiveParams->holeISYspacing[ind]) * dir;
+        ISXorig = ((params->numHoles[ind] - 1) *
+          params->holeISXspacing[ind]) * dir;
+        ISYorig = ((params->numHoles[ind] - 1) *
+          params->holeISYspacing[ind]) * dir;
       }
       mShiftManager->TransferGeneralIS(origMag, ISXorig, ISYorig, magInd, ISX, ISY);
       if (canAdjustIS && focMat.xpx)
@@ -862,7 +1032,7 @@ void CMultiShotDlg::OnButSaveIs()
       // Recording regular or hex: Set up the instruction label
       if (m_bHexGrid) {
         str.Format("Shift by %d holes to corner # %d in the hex array", 
-          mActiveParams->numHexRings, size + 1);
+          params->numHexRings, size + 1);
       } else {
         if (size == 1 || size == 3)
           str.Format("Shift %sby %d holes in first direction", size == 1 ? "" : "back ",
@@ -874,17 +1044,17 @@ void CMultiShotDlg::OnButSaveIs()
 
     // Adjusting custom holes
   } else if (mSteppingAdjusting) {
-    if (size == (int)mActiveParams->customHoleX.size()) {
+    if (size == (int)params->customHoleX.size()) {
     } else if (size > 1) {
       str.Format("Adjust shift for position # %d in the pattern", size);
-      ISXorig = mActiveParams->customHoleX[size - 1] - 
-        mActiveParams->customHoleX[size - 2];
-      ISYorig = mActiveParams->customHoleY[size - 1] - 
-        mActiveParams->customHoleY[size - 2];
+      ISXorig = params->customHoleX[size - 1] - 
+        params->customHoleX[size - 2];
+      ISYorig = params->customHoleY[size - 1] - 
+        params->customHoleY[size - 2];
     } else {
       str = "Adjust shift for first acquire position in the pattern";
-      ISXorig = mActiveParams->customHoleX[size - 1];
-      ISXorig = mActiveParams->customHoleY[size - 1];
+      ISXorig = params->customHoleX[size - 1];
+      ISXorig = params->customHoleY[size - 1];
     }
     mShiftManager->TransferGeneralIS(origMag, ISXorig, ISYorig, magInd, ISX, ISY);
     if (canAdjustIS && focMat.xpx)
@@ -898,14 +1068,253 @@ void CMultiShotDlg::OnButSaveIs()
       str = "Shift to the first acquire position in the pattern";
 
   }
-  m_statSaveInstructions.SetWindowText(str);
   if (mSteppingAdjusting) {
     mWinApp->mScope->IncImageShift(ISX, ISY);
-    if (mActiveParams->stepAdjTakeImage && mWinApp->LowDoseMode()) {
-      SEMTrace('1', "Initiate capture area %d  cons %d", mAreaSaved, mStepConsNum);
-      mWinApp->mCamera->InitiateCapture(mStepConsNum);
+    if (StartImageIfNeeded())
+      return 1;
+  }
+  return 0;
+}
+
+/*
+ * Next task when stepping automatically (static)
+ */
+void CMultiShotDlg::AutoStepAdjNextTask(int param)
+{
+  CString str;
+  float xcen, ycen;
+  bool deferred = mDeferredISX != 0. || mDeferredISY != 0.;
+  float alignLimit = mActiveParams->autoAdjLimitFrac * mActiveParams->autoAdjHoleSize;
+  int bufInd, alignBuf, nx, ny, top, left, bot, right, copyToBuf;
+  EMimageBuffer *imBuf;
+
+  if (!mDoingAutoStepAdj)
+    return;
+
+  // Get the index of the buffer being used, the "alignBuf" which may be aligned to be
+  // is at least the end of the stack, and the buffer to copy this one to
+  bufInd = mActiveParams->stepAdjLDarea > 2 ? 1 : 0;
+  alignBuf = 3 + bufInd + (mAutoAdjDoCenter ? 1 : 0) + 
+    (mActiveParams->doHexArray ? 2 : 0);
+  copyToBuf = alignBuf + (deferred ? 1 : 0) - (int)mSavedISX.size() - 
+    (mAutoAdjDoCenter ? 1 : 0);
+  imBuf = mWinApp->GetImBufs() + bufInd;
+
+  // Crop buffer in place with no display
+  if (mAutoAdjCropSize) {
+    imBuf->mImage->getSize(nx, ny);
+    left = (nx - mAutoAdjCropSize) / 2;
+    right = left + mAutoAdjCropSize - 1;
+    top = (ny - mAutoAdjCropSize) / 2;
+    bot = top + mAutoAdjCropSize - 1;
+    mWinApp->mProcessImage->CropImage(imBuf, top, left, bot, right, false);
+  }
+
+  // Hole centering
+  if (mActiveParams->autoAdjMethod) {
+    if (mWinApp->mNavHelper->mHoleFinderDlg->FindAndCenterOneHole(
+      mWinApp->GetImBufs() + bufInd, mActiveParams->autoAdjHoleSize, 30, 
+      mDeferredISX ? 0.9f : mActiveParams->autoAdjLimitFrac, xcen, ycen)) {
+      StopRecording();
+      return;
+    }
+ 
+    // Of cross-correlation
+  } else if (mSavedISX.size()) {
+    if (bufInd)
+      mWinApp->mBufferManager->CopyImageBuffer(bufInd, 0, false);
+    bufInd = 0;
+    mShiftManager->SetNextAutoalignLimit(alignLimit);
+    if (mShiftManager->AutoAlign(alignBuf, 0)) {
+      str.Format("No alignment peak with the previous image was found with a shift"
+        " of less than %.2f microns", alignLimit);
+      SEMMessageBox(str);
+      StopRecording();
+      return;
     }
   }
+
+  // Copy to stack
+  if (copyToBuf != bufInd) {
+    mWinApp->mBufferManager->CopyImageBuffer(bufInd, copyToBuf, false);
+  }
+
+  // Impose deferred image shift to first corner and return
+  if (deferred) {
+    mWinApp->mScope->IncImageShift(mDeferredISX, mDeferredISY);
+    mDeferredISX = mDeferredISY = 0.;
+    StartImageIfNeeded();
+    return;
+  }
+
+  // Or save the image shift
+  DoSaveIS(str);
+}
+
+// Busy function for task when doing autostep
+int CMultiShotDlg::AutoStepBusy()
+{
+  return (mWinApp->mCamera->CameraBusy() || 
+    mWinApp->mMontageController->DoingMontage()) ? 1 : 0;
+}
+
+/*
+ * Static function to open a temporary Preview montage
+ */
+int CMultiShotDlg::SetupTempPrevMontage(const char *filename, int xNframes, int yNframes,
+  int overviewBin, int overlapDiv)
+{
+  mWinApp = (CSerialEMApp *)AfxGetApp();
+  MontParam *montP = mWinApp->GetMontParam();
+  FileOptions *fileOpt;
+  int err, saveMode;
+  ControlSet *conSet = mWinApp->GetConSets() + PREVIEW_CONSET;
+  CameraParameters *camP = mWinApp->GetActiveCamParam();
+  mSavedMontParam = new MontParam;
+  *mSavedMontParam = *montP;
+  montP->useViewInLowDose = false;
+  montP->useSearchInLowDose = false;
+  montP->useMontMapParams = false;
+  montP->useMultiShot = false;
+  montP->usePrevInLowDose = true;
+  montP->moveStage = false;
+  montP->shiftInOverview = true;
+  montP->closeFileWhenDone = false;
+  montP->makeNewMap = false;
+  montP->useContinuousMode = false;
+  montP->overviewBinning = overviewBin;
+  montP->xNframes = xNframes;
+  montP->yNframes = yNframes;
+  montP->xFrame = camP->sizeX / conSet->binning;
+  montP->yFrame = camP->sizeY / conSet->binning;
+  montP->xOverlap = montP->xFrame / overlapDiv;
+  montP->yOverlap = montP->yFrame / overlapDiv;
+  montP->binning = conSet->binning;
+  montP->cameraIndex = mWinApp->GetCurrentActiveCamera();
+  montP->numToSkip = 0;
+  montP->fitToPolygonID = 0;
+  if (camP->unsignedImages && !mWinApp->mCamera->GetDivideBy2()) {
+    fileOpt = mWinApp->mDocWnd->GetFileOpt();
+    saveMode = fileOpt->mode;
+    fileOpt->mode = MRC_MODE_USHORT;
+  }
+  mWinApp->mDocWnd->LeaveCurrentFile();
+  err = mWinApp->mDocWnd->GetMontageParamsAndFile(2, montP->xNframes,
+    montP->yNframes, sStepAdjFileName);
+  fileOpt->mode = saveMode;
+  if (err) {
+    *montP = *mSavedMontParam;
+    B3DDELETE(mSavedMontParam);
+    return 1;
+  }
+  return 0;
+}
+
+// Static function to close a temporary montage
+void CMultiShotDlg::CloseTempPrevMontage(const char *filename)
+{
+  if (mSavedMontParam) {
+    mWinApp->mDocWnd->DoCloseFile();
+    UtilRemoveFile(filename);
+    UtilRemoveFile(CString(filename) + ".mdoc");
+    *(mWinApp->GetMontParam()) = *mSavedMontParam;
+    B3DDELETE(mSavedMontParam);
+  }
+}
+
+/*
+ * Static function tests whether an image is needed and takes image or starts montage
+ */
+int CMultiShotDlg::StartImageIfNeeded()
+{
+  if ((mActiveParams->stepAdjTakeImage || mActiveParams->doAutoAdjustment) &&
+    mWinApp->LowDoseMode()) {
+    if (mActiveParams->stepAdjLDarea > 2) {
+      if (mWinApp->mMontageController->StartMontage(0, false)) {
+        StopRecording();
+        return 1;
+      }
+    } else {
+      mWinApp->mCamera->InitiateCapture(mStepConsNum);
+    }
+    if (mActiveParams->doAutoAdjustment)
+      mWinApp->AddIdleTask(TASK_AUTO_STEP_ADJ_IS, 0, 0);
+  }
+  return 0;
+}
+
+/*
+ * Static function to test whether auto step and adjust can be done with given conditions
+ */
+bool CMultiShotDlg::CanDoAutoAdjust(int magType, int areaToUse, int otherMag, int prevMag,
+  float holeSize, BOOL hexGrid, BOOL custom, int &cropSize, CString & str)
+{
+  bool enabled = false;
+  float pixel, ratio, fieldX, fieldY, minRatio, maxRatio, min2x3Aspect = 1.33f;
+  mWinApp = (CSerialEMApp *)AfxGetApp();
+  int ldArea, magUse, setNum, camera = mWinApp->GetCurrentCamera();
+  int minCrop = mWinApp->mNavHelper->GetMinAutoAdjCropSize();
+  ControlSet *conSets = mWinApp->GetConSets();
+  LowDoseParams *ldp = mWinApp->GetLowDoseParams();
+  CameraParameters *camP = mWinApp->GetActiveCamParam();
+  cropSize = 0;
+  setNum = SEARCH_CONSET;
+  ldArea = SEARCH_AREA;
+  if (areaToUse) {
+    setNum = areaToUse > 1 ? PREVIEW_CONSET : VIEW_CONSET;
+    ldArea = areaToUse > 1 ? RECORD_CONSET : VIEW_CONSET;
+  }
+  if (custom) {
+    str = "No auto adjustment with custom holes";
+  } else {
+
+    // The mag and pixel size
+    magUse = ldp[ldArea].magIndex;
+    if (magType)
+      magUse = magUse > 1 ? otherMag : prevMag;
+    pixel = mWinApp->mShiftManager->GetPixelSize(camera, magUse);
+
+    // Compute the field of view
+    if (areaToUse < 3) {
+      fieldX = (conSets[setNum].right - conSets[setNum].left) * pixel;
+      fieldY = (conSets[setNum].bottom - conSets[setNum].top) * pixel;
+    } else {
+      fieldX = (float)camP->sizeX * pixel;
+      fieldY = (float)camP->sizeY * pixel;
+      if (areaToUse == 3) {
+        fieldX *= 1.9f;
+        fieldY *= 1.9f;
+      } else if (areaToUse == 4) {
+        fieldX *= camP->sizeX > camP->sizeY ? 1.9f : 2.8f;
+        fieldY *= camP->sizeY > camP->sizeX ? 1.9f : 2.8f;
+      }
+    }
+
+    // Get the ratio to the hole size and test against criteria, compute the size to
+    // crop to if that is needed
+    ratio = holeSize / B3DMIN(fieldX, fieldY);
+    minRatio = hexGrid ? mWinApp->mNavHelper->GetMinAutoAdjHexRatio() :
+      mWinApp->mNavHelper->GetMinAutoAdjSquareRatio();
+    maxRatio = mWinApp->mNavHelper->GetMaxAutoAdjHoleRatio();
+    if (ratio < minRatio && areaToUse >= 3) {
+      str.Format("Mag too low; hole is %.2f of field (min is %.2f)", ratio, minRatio);
+    } else if (ratio < minRatio) {
+      cropSize = (int)((holeSize / pixel) / minRatio) / conSets[setNum].binning;
+      if (cropSize < minCrop) {
+        str.Format("Mag too low; needs cropping to %d (min %d)", cropSize, minCrop);
+      } else {
+        str.Format("Cropping to %d to make hole %.2f of field", cropSize, minRatio);
+        enabled = true;
+      }
+    } else if (ratio > maxRatio) {
+      str.Format("Mag too high; hole is %.2f of field (max is %.2f)", ratio, maxRatio);
+    } else {
+      enabled = true;
+      str.Format("Hole is %.2f of field (%.2f - %.2f is allowed)", ratio, minRatio,
+        maxRatio);
+    }
+  }
+  return enabled;
 }
 
 // Get a matrix for adjusting IS determined on a defocused image to unfocused IS,
@@ -1008,6 +1417,7 @@ void CMultiShotDlg::OnButUseLastHoleVecs()
   if (ConfirmReplacingShiftVectors(0, 
     mWinApp->mNavHelper->mHoleFinderDlg->GetLastWasHexGrid() ? 1: 0))
     return;
+  mActiveParams->canUndoRectOrHex = 0;
   mWinApp->mNavHelper->mHoleFinderDlg->ConvertHoleToISVectors(
     mWinApp->mNavHelper->mHoleFinderDlg->GetLastMagIndex(), true, xVecs, yVecs, str2);
 }
@@ -1024,6 +1434,7 @@ void CMultiShotDlg::OnButUseMapVectors()
   if (ConfirmReplacingShiftVectors(1, (item->mXHoleISSpacing[2] ||
     item->mYHoleISSpacing[2]) ? 1 : 0))
     return;
+  mActiveParams->canUndoRectOrHex = 0;
   mWinApp->mNavHelper->AssignNavItemHoleVectors(item);
   mWinApp->mNavigator->Redraw();
   ManageEnables();
@@ -1049,6 +1460,7 @@ void CMultiShotDlg::OnButUseNavPts()
       return;
   } else if (ConfirmReplacingShiftVectors(2, B3DCHOICE(type > 1, 2, hexInd)))
     return;
+  mActiveParams->canUndoRectOrHex = 0;
   mWinApp->mNavHelper->UseNavPointsForVectors(pattern, 0, 0);
 }
 
@@ -1187,13 +1599,14 @@ void CMultiShotDlg::ManageEnables(void)
   CameraParameters *camParams = mWinApp->GetActiveCamParam();
   CMapDrawItem *item;
   int dir, gst, gnd, numDir = m_bHexGrid ? 3 : 2, pattern = m_bHexGrid ? 1 : 0;
-  bool enable = !(mHasIlluminatedArea && m_bUseIllumArea && mWinApp->LowDoseMode());
+  BOOL lowDose = mWinApp->LowDoseMode();
+  bool enable = !(mHasIlluminatedArea && m_bUseIllumArea && lowDose);
   bool recording = mRecordingRegular || mRecordingCustom;
   bool notRecording = !recording && !mSteppingAdjusting;
   bool useCustom = m_bDoMultipleHoles && m_bUseCustom &&
     mActiveParams->customHoleX.size() > 0;
   bool canAdjustIS = mShiftManager->GetFocusISCals()->GetSize() > 0 &&
-    mShiftManager->GetFocusMagCals()->GetSize() > 0 && mWinApp->LowDoseMode();
+    mShiftManager->GetFocusMagCals()->GetSize() > 0 && lowDose;
   m_statBeamDiam.EnableWindow(enable);
   m_statBeamMicrons.EnableWindow(enable);
   m_editBeamDiam.EnableWindow(enable && !mDisabledDialog);
@@ -1258,7 +1671,7 @@ void CMultiShotDlg::ManageEnables(void)
     str.Format("Use custom pattern (%d positions defined)", 
     mActiveParams->customHoleX.size());
   m_butUseCustom.SetWindowText(str);
-  enable = enable && mWinApp->LowDoseMode() && 
+  enable = enable && lowDose &&
     mWinApp->mNavHelper->mHoleFinderDlg->GetLastMagIndex() > 0 && notRecording;
   if (enable) {
     dir = mWinApp->mNavHelper->mHoleFinderDlg->ConvertHoleToISVectors(
@@ -1335,6 +1748,15 @@ void CMultiShotDlg::ManageEnables(void)
       str += str2;
     }
     SetDlgItemText(IDC_STAT_COMA_CONDITIONS, str);
+  }
+  EnableDlgItem(IDC_BUT_UNDO_AUTO, mActiveParams->canUndoRectOrHex > 0);
+  GetDlgItemText(IDC_BUT_STEP_ADJUST, str);
+  if (!BOOL_EQUIV(lowDose, str.GetAt(str.GetLength() - 1) == '.')) {
+    if (lowDose)
+      str += "...";
+    else
+      str = str.Left(str.GetLength() - 3);
+    SetDlgItemText(IDC_BUT_STEP_ADJUST, str);
   }
 
   mWinApp->RestoreViewFocus();

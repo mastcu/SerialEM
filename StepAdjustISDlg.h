@@ -34,6 +34,9 @@ public:
   MultiShotParams *mParam;
   int mLowestM;
   int mPrevMag;
+  BOOL mHexGrid;
+  BOOL mUseCustom;
+  BOOL mStartRoutine;
   afx_msg void OnAreaToUse();
   int m_iMagTypeToUse;
   afx_msg void OnMagTypeToUse();
@@ -49,4 +52,18 @@ public:
   void ManageEnables();
   CButton m_butImageAfterIS;
   BOOL m_bImageAfterIS;
+  BOOL m_bDoAutomatic;
+  afx_msg void OnStaaDoAutomatic();
+  int m_iXCorrOrHoleCen;
+  afx_msg void OnRadioCrosscorr();
+  float m_fHoleSize;
+  afx_msg void OnKillfocusEditStaaHole();
+  int m_iAutoMethod;
+  float m_fShiftLimit;
+  afx_msg void OnKillfocusEditStaaLimit();
+  afx_msg void OnButStaaStart();
+  BOOL m_bSetPrevExp;
+  afx_msg void OnCheckSetPrevExp();
+  float m_fPrevExposure;
+  afx_msg void OnKillfocusEditPreviewExp();
 };

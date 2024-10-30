@@ -812,7 +812,9 @@ MAC_SAME_FUNC_ARG(SetBufZoomAndCenter, 2, 4, Show, SETBUFZOOMANDCENTER, SDii)
 MAC_SAME_NAME_ARG(BinningForCameraMatrix, 1, 4, BINNINGFORCAMERAMATRIX, D)
 MAC_SAME_NAME_ARG(ReportFileOptions, 1, 4, REPORTFILEOPTIONS, I)
 MAC_SAME_NAME_ARG(SetFileOptions, 2, 4, SETFILEOPTIONS, IIiiiiddiiii)
-
+MAC_SAME_NAME_ARG(FindAndCenterOneHole, 2, 4, FINDANDCENTERONEHOLE, SDid)
+MAC_SAME_NAME_ARG(StepAndAdjustISVectors, 2, 1, StepAndAdjustISVectors, IDd)
+MAC_SAME_NAME_NOARG(PrescanWithPreview, 0, 1, PRESCANWITHPREVIEW)
 
 // new Python-only commands need to be added to pythonOnlyCmds in ::CMacroProcessor
 // New Not from Python items omit _ARG or _NOARG

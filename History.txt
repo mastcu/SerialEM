@@ -3,6 +3,25 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+10/30/24: Automated the Step To and Adjust IS procedure to use
+cross-correlation or hole centering, and made it able to take preview montages
+so it can work closer to the Record mag.
+
+10/30/24: Added routine and script command to find one hole and optionally
+center on it in an image with one or a few holes.
+
+10/30/24: Made the routine that automatically measures View shift offset able
+to align in two mag steps when the mag range exceeds 20-fold.
+
+10/30/24: Added script command and menu item to take a 3x3 Prescan montage
+with Preview in Low Dose, without setting up montaging.
+
+10/30/24: Added ability to take montages with Preview in Low Dose.
+
+10/30/24: Added property to specify refined pixel size at a mag to be used in
+file headers and mdoc files, to avoid inconsistencies between pixel sizes used
+within SerialEM.
+
 10/24/24: Fixed the 4 script commands relating stage and image coordinates to
 work correctly for Navigator coordinates and clarified help (In 4.1).
 

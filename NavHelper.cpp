@@ -238,6 +238,17 @@ CNavHelper::CNavHelper(void)
   mMultiShotParams.xformFromMag = 0;
   mMultiShotParams.xformToMag = 0;
   mMultiShotParams.adjustingXform = {0., 0., 0., 0.};
+  mMultiShotParams.doAutoAdjustment = false;
+  mMultiShotParams.autoAdjHoleSize = 1.f;
+  mMultiShotParams.autoAdjMethod = 0;
+  mMultiShotParams.autoAdjLimitFrac = 0.5f;
+  mMultiShotParams.stepAdjSetPrevExp = false;
+  mMultiShotParams.stepAdjPrevExp = 1.0;
+  mMultiShotParams.canUndoRectOrHex = 0;
+  mMinAutoAdjCropSize = 150;
+  mMinAutoAdjHexRatio = 0.15f;
+  mMinAutoAdjSquareRatio = 0.33f;
+  mMaxAutoAdjHoleRatio = 0.75f;
   mSkipAstigAdjustment = 0;
   mNavAlignParams.maxAlignShift = 1.;
   mNavAlignParams.resetISthresh = 0.2f;
@@ -4073,7 +4084,7 @@ int CNavHelper::SetFileProperties(int itemNum, int listType, ScheduledFile *sche
     CMontageSetupDlg montDlg;
     montDlg.mParam = *montpSrc;
     if (prevIndex < 0)
-      mDocWnd->InitMontParamsForDialog(&montDlg.mParam, false);
+      mDocWnd->InitMontParamsForDialog(&montDlg.mParam, 0);
 
     montDlg.mSizeLocked = false;
     montDlg.mConstrainSize = false;
@@ -5382,8 +5393,8 @@ void CNavHelper::GetMultishotDistAndAngles(MultiShotParams *params, BOOL hexGrid
   avgDist = 0.;
   if (!params->holeMagIndex[hexGrid])
     return;
-  ScaleMat s2c = mShiftManager->StageToCamera(camera,
-    params->holeMagIndex[hexGrid]);
+
+  ScaleMat s2c = mShiftManager->StageToCamera(camera, params->holeMagIndex[hexGrid]);
   ScaleMat is2c = mShiftManager->IStoCamera(params->holeMagIndex[hexGrid]);
   if (s2c.xpx && is2c.xpx) {
     ScaleMat bMat = MatMul(is2c, MatInv(s2c));
@@ -6253,6 +6264,7 @@ void CNavHelper::AssignNavItemHoleVectors(CMapDrawItem * item)
   mMultiShotParams.holeMagIndex[hexInd] = item->mMapMagInd;;
   mMultiShotParams.tiltOfHoleArray[hexInd] = item->mMapTiltAngle;
   mMultiShotParams.doHexArray = hexInd > 0;
+  mMultiShotParams.canUndoRectOrHex = 0;
   if (mMultiShotDlg)
     mMultiShotDlg->UpdateSettings();
   if (mNav)

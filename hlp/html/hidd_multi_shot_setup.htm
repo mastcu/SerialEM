@@ -46,7 +46,8 @@
       will adjust the positions appropriately.&nbsp; This adjustment is also imperfect&nbsp;for large differences in tilt angle but may be useful in some cases.</p>
     <p><i><b>Saving Accurate Image Shift Values for Holes</b></i></p>
     <p>If you have used the hole finder to mark hole positions, the best way of 
-      getting image shift values may be to use the <b>Use Last Hole Vectors</b> button.&nbsp; 
+      getting image shift values is to use the <b>Use Last Hole Vectors</b> button 
+      and then transform and/or adjust the positions to work at higher magnification.&nbsp; 
       Since these vectors are stored as stage positions, they can be accurately 
       converted to image shift positions at the Record magnification even when they 
       were detected on a highly defocused View image (provided that the High Defocus 
@@ -54,7 +55,9 @@
       holes, ranging from centering holes in an image where they are all visible
       (e.g., low dose View), through centering consistent positions at a magnification
       still lower than the Record mag, to centering positions at the Record mag
-      itself.&nbsp; Your choice depends on how accurate the positioning needs to be
+      itself.&nbsp; The best way is probably to mark the centers of holes on an image 
+      showing all of them, press the &#39;Use&#39; Nav Pts button, then transform and/or 
+      adjust their position for the higher mag.&nbsp; Your choice of method depends on how accurate the positioning needs to be
       (more accuracy is needed for holes at more distant image shifts or if multiple
       shots are to be taken inside the holes), and on how well image shift positions
       correspond between the Record mag and the mag where they are defined (a constant
@@ -83,14 +86,14 @@
       a group of points on an image at the locations where you want to save image
       shift values.&nbsp; In fact, this step would allow you to use the &#39;Use:&#39; <strong>Nav Pts</strong> 
       button to convert them directly to image shift vectors, followed by <strong>Step 
-      To and Adjust IS</strong> to position the holes accurately at a chosen 
+      To &amp; Adjust IS</strong> to position the holes accurately at a chosen 
       magnification.&nbsp; This sequence should be easier and more flexible than the 
-      procedures given next.&nbsp; Even if want to use those procedures, having 
+      procedures given next.&nbsp; Even if you want to use those procedures, having 
       Navigator points is helpful when you have more than a 2x2 pattern of
       holes, to avoid losing track of which hole you are on. You should add those
       points in the order in which their positions will be saved (see &#39;Save Image
       Shift Values at Holes&#39; below.)&nbsp; </p>
-    <p>&nbsp;If you are not using <strong>Nav Pts</strong> then <strong>Step To and 
+    <p>&nbsp;If you are not using <strong>Nav Pts</strong> then <strong>Step To &amp; 
       Adjust IS,</strong> then when you press the
       button to start saving image shift values, the Navigator buttons on the left
       change, &#39;Go To XY&#39; and &#39;Go To Marker&#39; change to &#39;IS to XY&#39; and &#39;IS to Marker&#39;
@@ -299,7 +302,8 @@
       arbitrary positions.&nbsp; Press <B>Step To and Adjust IS</B> to visit the corners of a regular pattern, or all of the positions in a custom pattern, and adjust the image shift there, and save the new shifts.  
       In the latter case, when in Low Dose mode, the
       <a href="hidd_step_and_adjust_is.htm">Step and Adjust IS Setup</a> dialog will 
-      open to allow you to set the conditions for imaging.&nbsp; After pressing one of these buttons, the label below
+      open to allow you to set the conditions for imaging andto run the procedure 
+      automatically if possible.&nbsp; After pressing one of these buttons, the label below
       the third line of buttons will summarize what to do next.</p>
     <p>To set the corners of a regular rectangular pattern, you will save to image shifts at 4 hole
       positions, even if one of the spinners is set to 1.&nbsp; Start at one corner of
@@ -319,13 +323,15 @@
     <p> When adjusting existing image shift values, new image shifts are recorded at 
       the same sequence of positions as when first saving them.&nbsp; You should start 
       out positioned on the center of the pattern.&nbsp; If a regular pattern is selected 
-      (i.e., if <strong>Use custom pattern </strong>is not checked), press <b>Step To and Adjust 
-      IS</b>, select the Low Dose area and magnification in the
-      <a href="hidd_step_and_adjust_is.htm">Step and Adjust IS Setup</a> dialog if in 
-      Low Dose mode, and the image shift will be set to reach the first corner of the pattern.&nbsp; Press
+      (i.e., if <strong>Use custom pattern </strong>is not checked), press <b>Step To 
+      &amp; Adjust 
+      IS</b> and select the Low Dose area and magnification in the
+      <a href="hidd_step_and_adjust_is.htm">Step To and Adjust IS Setup</a> dialog if in 
+      Low Dose mode.&nbsp; At that point you can either try to run the routine 
+      automatically, or proceed manually.&nbsp; In the latter case, the image shift will be set to reach the first corner of the pattern.&nbsp; Press
        <b>Save Image Shift</b> after adjusting the image shift (or not), and it will move on to the next position, 
       eventually going to all four corners (or 6 corners for a hexagonal array).&nbsp; 
-      If a custom pattern is selected, press <b>Step To and Adjust 
+      If a custom pattern is selected, press <b>Step To &amp; Adjust 
       IS</b>, then adjust the centering on the origin of the pattern if necessary.&nbsp; Press <b>Save Image Shift</b> 
       to store that reference location, and it will move to the first position to be 
       recorded.&nbsp; Continue through the rest of the positions to be recorded.&nbsp; 
@@ -333,7 +339,8 @@
       previously defined.&nbsp; 
       However, you are free to change the magnification at which you adjust the 
       shifts.</p>
-    <p> In most cases, an adjusting transformation will be saved when you complete the <b>Step To and Adjust 
+    <p> In most cases, an adjusting transformation will be saved when you complete the <b>Step To 
+      &amp; Adjust 
       IS</b> procedure for a regular rectangular or hexagonal array, along with the 
       magnifications at which the pattern was originally defined and at which the 
       positions were adjusted.&nbsp; If vectors are defined again at the same 
@@ -343,14 +350,15 @@
       hole-finding operation are used to define image shift vectors, and you then 
       adjust those vectors to be accurate at higher magnification with this procedure, 
       a new set of hole vectors can be adjusted in the same way with that command.&nbsp; 
-      If you apply the adjusting transform to a pattern and then use the <b>Step To and Adjust 
+      If you apply the adjusting transform to a pattern and then use the <b>Step To &amp; Adjust 
       IS</b> procedure and adjust positions at the same magnification as previously, 
       the adjusting transformation will be modified by the changes in position.&nbsp; 
       In this way, an adjusting transformation from a previous session should be a 
       good starting point and can then be refined to apply to the current session.&nbsp; 
       In addition, the adjusting transform can be refined in two stages.&nbsp; After 
-      defining the pattern and using <b>Step To and Adjust 
-      IS</b> to adjust at an intermediate magnification, you can simply press <b>Step To and Adjust 
+      defining the pattern and using <b>Step To &amp; Adjust 
+      IS</b> to adjust at an intermediate magnification, you can simply press <b>Step To 
+      &amp; Adjust 
       IS</b> again and adjust the shifts at a higher magnification.&nbsp; When that 
       adjustment is finished, the product of adjusting transformations is saved and 
       will be available to transform all the way from the original magnification to 
@@ -410,11 +418,15 @@
       when no custom pattern has been defined yet, the program will let you use this 
       button and ask whether you want to define a custom pattern when there are not 4 
       points (if <strong>Hex grid</strong> is not selected) or 6 points (if <strong>Hex grid</strong> is selected) in the group. </p>
-    <p><strong>Step To and Adjust</strong></p>
+    <p><strong>Step To &amp; Adjust IS</strong></p>
     <p>Press this button to step to each of the positions of a defined pattern and 
       adjust the image shift there.&nbsp; See detailed instructions above.</p>
+    <p><strong>Undo</strong></p>
+    <p>This button is enabled after the Step to &amp; Adjust IS procedure is run 
+      automatically.&nbsp; If an alignment appears to fail, press it to return the 
+      vectors to their state before the routine was run. </p>
     <p><strong>Apply Adjustment (and adjustment status line)</strong></p>
-    <p>Press this button to apply the adjustment stored when <strong>Step To and 
+    <p>Press this button to apply the adjustment stored when <strong>Step To &amp; 
       Adjust</strong> was last used to the current image shift values (which can be 
       regular vectors or customs shifts).&nbsp; The magnification at which the current 
       shifts were defined must match either the original or current magnification of the shifts that were adjusted in that 

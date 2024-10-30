@@ -16,6 +16,8 @@ public:
 	virtual ~CMultiShotDlg();
   bool RecordingISValues() {return mRecordingCustom || mRecordingRegular;};
   bool AdjustingISValues() {return mSteppingAdjusting > 0; };
+  static bool DoingAutoStepAdj() { return mDoingAutoStepAdj; };
+  static void SetSteppingAdjusting(int inVal) { mSteppingAdjusting = inVal; };
 
 // Dialog Data
 	enum { IDD = IDD_MULTI_SHOT_SETUP };
@@ -31,29 +33,38 @@ protected:
 	DECLARE_MESSAGE_MAP()
 
 private:
-  MultiShotParams *mActiveParams;
+  static MultiShotParams *mActiveParams;
   MultiShotParams mSavedParams;
-  CShiftManager *mShiftManager;
+  static CShiftManager *mShiftManager;
   int mPanelStart[7];
   int mNumInPanel[7];
-  bool mRecordingRegular;
-  bool mRecordingCustom;
-  int mSteppingAdjusting;
-  std::vector<double> mSavedISX, mSavedISY;
-  BOOL mSavedMouseStage;
-  double mRecordStageX, mRecordStageY;
-  double mStartingISX, mStartingISY;
+  static bool mRecordingRegular;
+  static bool mRecordingCustom;
+  static int mSteppingAdjusting;
+  static std::vector<double> mSavedISX, mSavedISY;
+  static BOOL mSavedMouseStage;
+  static double mRecordStageX, mRecordStageY;
+  static double mStartingISX, mStartingISY;
   bool mDisabledDialog;
-  int mNavPointIncrement;
+  static int mNavPointIncrement;
   bool mWarnedIStoNav;
   int mLastMagIndex;
   double mLastIntensity;
   double mLastDrawTime;
-  int mSavedLDForCamera;
-  int mAreaSaved;
-  int mStepConsNum;
-  float mSavedDefOffset;
-  LowDoseParams mSavedLDParams;
+  static int mSavedLDForCamera;
+  static int mAreaSaved;
+  static int mStepConsNum;
+  static float mSavedDefOffset;
+  static LowDoseParams mSavedLDParams;
+  static MontParam *mSavedMontParam;
+  static CSerialEMApp *mWinApp;
+  static bool mDoingAutoStepAdj;
+  static float mSavedPrevExp;
+  static double mDeferredISX;
+  static double mDeferredISY;
+  static int mAutoAdjCropSize;
+  static int mSavedShiftsOnAcq;
+  static bool mAutoAdjDoCenter;
 
 public:
   bool mCanReturnEarly;
@@ -129,13 +140,23 @@ public:
   CButton m_butEndPattern;
   CButton m_butAbort;
   afx_msg void OnButSaveIs();
-  ScaleMat ISfocusAdjustmentForBufOrArea(EMimageBuffer *imBufs, int area);
+  static int DoSaveIS(CString &str);
+  static void AutoStepAdjNextTask(int param);
+  static int AutoStepBusy();
+  static ScaleMat ISfocusAdjustmentForBufOrArea(EMimageBuffer *imBufs, int area);
   afx_msg void OnButEndPattern();
   afx_msg void OnButAbort();
   CStatic m_statSaveInstructions;
   bool RecordingHoles() {return mRecordingRegular || mRecordingCustom || mSteppingAdjusting;};
-  void StopRecording(void);
+  static void StopRecording(void);
+  static void CloseTempPrevMontage(const char *filename);
   void StartRecording(const char *instruct);
+  static int DoStartRecording();
+  static int SetupTempPrevMontage(const char *filename, int xNframes, int yNframes, 
+    int overviewBin, int overlapDiv);
+  static int StartImageIfNeeded();
+  static bool CanDoAutoAdjust(int magType, int areaToUse,
+    int otherMag, int prevMag, float holeSize, BOOL hexGrid, BOOL custom, int &cropSize, CString &str);
   void UpdateSettings(void);
   CEdit m_editExtraDelay;
   CButton m_butCancel;
@@ -169,7 +190,7 @@ public:
   afx_msg void OnButCalBtVsIs();
   afx_msg void OnButTestMultishot();
   CButton m_butHexGrid;
-  BOOL m_bHexGrid;
+  static BOOL m_bHexGrid;
   afx_msg void OnCheckHexGrid();
   CString m_strAdjustStatus;
   CButton m_butUseMapVectors;
@@ -180,4 +201,5 @@ public:
   afx_msg void OnKillfocusEditHoleDelayFac();
   CButton m_butUseNavPts;
   afx_msg void OnButUseNavPts();
+  afx_msg void OnButUndoAuto();
 };

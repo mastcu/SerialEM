@@ -614,7 +614,7 @@ void CSerialEMDoc::OnFileMontagesetup()
     }
 
   } else
-    GetMontageParamsAndFile(false);
+    GetMontageParamsAndFile(0);
 
   mBufferWindow->UpdateSaveCopy();
 }
@@ -627,7 +627,7 @@ void CSerialEMDoc::OnUpdateFileMontagesetup(CCmdUI* pCmdUI)
 
 void CSerialEMDoc::OnFileNewmontage() 
 {
-  GetMontageParamsAndFile(false);
+  GetMontageParamsAndFile(0);
   mBufferWindow->UpdateSaveCopy();
   mWinApp->mNavHelper->UpdateAcquireDlgForFileChanges();
 }
@@ -644,7 +644,7 @@ void CSerialEMDoc::OnUpdateFileNewmontage(CCmdUI* pCmdUI)
 // If frameset is false, the number of frames will be set from xNframes, yNframes, which
 // default to -1.  If filename is not empty (the default), the file will be opened
 // with all dialogs bypassed and calibration warnings will be suppressed
-int CSerialEMDoc::GetMontageParamsAndFile(BOOL frameSet, int xNframes, int yNframes,
+int CSerialEMDoc::GetMontageParamsAndFile(int frameSet, int xNframes, int yNframes,
                                           CString filename)
 {
   // Set up the montage parameters based on record parameters
@@ -707,7 +707,7 @@ int CSerialEMDoc::GetMontageParamsAndFile(BOOL frameSet, int xNframes, int yNfra
 // frameSet indicates if the frame is already set up.
 // If frameset is false, the number of frames will be set from xNframes, yNframes, which
 // default to -1, in which case the default number of montage pieces are used
-void CSerialEMDoc::InitMontParamsForDialog(MontParam *param, BOOL frameSet, int xNframes, 
+void CSerialEMDoc::InitMontParamsForDialog(MontParam *param, int frameSet, int xNframes, 
                                            int yNframes, CString filename)
 {
   int setNum = MontageConSetNum(param, false);
@@ -740,7 +740,7 @@ void CSerialEMDoc::InitMontParamsForDialog(MontParam *param, BOOL frameSet, int 
   param->insideNavItem = -1;
   param->warnedCalOpen = !filename.IsEmpty();
   param->warnedCalAcquire = !filename.IsEmpty();
-  param->makeNewMap = frameSet;
+  param->makeNewMap = frameSet == 1;
   param->byteMinScale = 0.;
   param->byteMaxScale = 0.;
   if (param->anchorMagInd <= 0)

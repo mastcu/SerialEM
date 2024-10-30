@@ -526,6 +526,7 @@ CSerialEMApp::CSerialEMApp()
   mMontParam.setupInLowDose = false;
   mMontParam.forFullMontage = false;
   mMontParam.useViewInLowDose = false;
+  mMontParam.usePrevInLowDose = false;
   mMontParam.useSearchInLowDose = false;
   mMontParam.useMontMapParams = false;
   mMontParam.useMultiShot = false;
@@ -1769,6 +1770,8 @@ void CSerialEMApp::AdjustSizesForSuperResolution(int iCam)
 {
   int iSet, mag;
   CameraParameters *camP = &mCamParams[iCam];
+  std::map<int, float> *refinedMap = mShiftManager->GetRefinedPixelSizes();;
+  std::map<int, float> ::iterator iter;
   float pixelDiv = 2.f;
   if (camP->DE_camType && !(camP->CamFlags & DE_CAM_CAN_COUNT)) {
     pixelDiv = 0.5f;
@@ -1795,6 +1798,11 @@ void CSerialEMApp::AdjustSizesForSuperResolution(int iCam)
   camP->pixelMicrons /= pixelDiv;
   for (mag = 1; mag < MAX_MAGS; mag++)
     mMagTab[mag].pixelSize[iCam] /= pixelDiv;
+
+  for (iter = refinedMap->begin(); iter != refinedMap->end(); iter++) {
+    if (iter->first % 10 == iCam)
+      iter->second /= pixelDiv;
+  }
 }
 
 CString CSerialEMApp::GetStartupMessage(bool original)
@@ -2553,6 +2561,8 @@ BOOL CSerialEMApp::CheckIdleTasks()
       busy = mParticleTasks->TemplateAlignBusy();
     else if (idc->source == TASK_DEWARS_VACUUM)
       busy = mParticleTasks->DewarsVacBusy();
+    else if (idc->source == TASK_PREV_PRESCAN)
+      busy = mMontageController->DoingMontage() ? 1 : 0;
     else if (idc->source == TASK_FOCUS_VS_Z)
       busy = mFocusManager->FocusVsZBusy();
     else if (idc->source == TASK_DUAL_MAP)
@@ -2587,6 +2597,8 @@ BOOL CSerialEMApp::CheckIdleTasks()
       busy = mMultiGridTasks->MulGridSeqBusy();
     else if (idc->source == TASK_MULTI_MAP_HOLES)
       busy = mNavHelper->mHoleFinderDlg->MultiMapBusy();
+    else if (idc->source == TASK_AUTO_STEP_ADJ_IS)
+      busy = CMultiShotDlg::AutoStepBusy();
     else if (idc->source == TASK_SNAPSHOT_TO_BUF)
       busy = 0;
 
@@ -2642,6 +2654,8 @@ BOOL CSerialEMApp::CheckIdleTasks()
           mParticleTasks->TemplateAlignNextTask(idc->param);
         else if (idc->source == TASK_DEWARS_VACUUM)
           mParticleTasks->DewarsVacNextTask(idc->param);
+        else if (idc->source == TASK_PREV_PRESCAN)
+          mParticleTasks->StopPreviewPrescan();
         else if (idc->source == TASK_TILT_AFTER_MOVE)
           mComplexTasks->TASMNextTask(idc->param);
         else if (idc->source == TASK_BACKLASH_ADJUST)
@@ -2736,6 +2750,8 @@ BOOL CSerialEMApp::CheckIdleTasks()
           mNavHelper->mHoleFinderDlg->ScanningNextTask(idc->param);
         else if (idc->source == TASK_MULTI_MAP_HOLES)
           mNavHelper->mHoleFinderDlg->MultiMapNextTask(idc->param);
+        else if (idc->source == TASK_AUTO_STEP_ADJ_IS)
+          CMultiShotDlg::AutoStepAdjNextTask(idc->param);
         else if (idc->source == TASK_MACRO_AT_EXIT)
           mMainFrame->DoClose(true);
         else if (idc->source == TASK_AUTO_CONTOUR)
@@ -2782,6 +2798,8 @@ BOOL CSerialEMApp::CheckIdleTasks()
           mParticleTasks->TemplateAlignCleanup(busy);
         else if (idc->source == TASK_DEWARS_VACUUM)
           mParticleTasks->DewarsVacCleanup(busy);
+        else if (idc->source == TASK_PREV_PRESCAN)
+          mParticleTasks->StopPreviewPrescan();
         else if (idc->source == TASK_TILT_AFTER_MOVE)
           mComplexTasks->TASMCleanup(busy);
         else if (idc->source == TASK_BACKLASH_ADJUST)
@@ -2851,6 +2869,8 @@ BOOL CSerialEMApp::CheckIdleTasks()
           mNavHelper->mHoleFinderDlg->StopScanning();
         else if (idc->source == TASK_MULTI_MAP_HOLES)
           mNavHelper->mHoleFinderDlg->StopMultiMap();
+        else if (idc->source == TASK_AUTO_STEP_ADJ_IS)
+          CMultiShotDlg::StopRecording();
         else if (idc->source == TASK_AUTO_CONTOUR)
           mNavHelper->mAutoContouringDlg->CleanupAutoCont(busy);
         else if (idc->source == TASK_MULTI_GRID)
@@ -2998,12 +3018,16 @@ void CSerialEMApp::ErrorOccurred(int error)
     mParticleTasks->StopMultiShot();
   if (mParticleTasks->GetWaitingForDrift())
     mParticleTasks->StopWaitForDrift();
+  if (mParticleTasks->GetDoingPrevPrescan())
+    mParticleTasks->StopPreviewPrescan();
   if (mStageMoveTool && mStageMoveTool->GetGoingToAcquire())
     mStageMoveTool->StopNextAcquire();
   if (mNavHelper->mHoleFinderDlg->GetFindingHoles())
     mNavHelper->mHoleFinderDlg->StopScanning();
   if (mNavHelper->mHoleFinderDlg->DoingMultiMapHoles())
     mNavHelper->mHoleFinderDlg->StopMultiMap();
+  if (CMultiShotDlg::DoingAutoStepAdj())
+    CMultiShotDlg::StopRecording();
   if (mCamera->GetWaitingForStacking())
     mCamera->SetWaitingForStacking(-1);
   mCamera->StopFrameTSTilting();
@@ -3651,7 +3675,7 @@ BOOL CSerialEMApp::DoingImagingTasks()
     mFilterTasks->RefiningZLP() ||
     mGainRefMaker->AcquiringGainRef() ||
     mDistortionTasks->DoingStagePairs() ||
-    mCalibTiming->Calibrating() ||
+    mCalibTiming->Calibrating() || CMultiShotDlg::DoingAutoStepAdj() ||
     mCalibTiming->DoingDeadTime() || mMultiGridTasks->GetDoingMulGridSeq() ||
     (mNavigator && ((mNavigator->GetAcquiring() && !mNavigator->GetStartedTS() && 
     !mNavigator->StartedMacro() && !mNavigator->GetPausedAcquire()) ||
@@ -3894,7 +3918,7 @@ void CSerialEMApp::SetMontaging(BOOL inVal)
 void CSerialEMApp::StartMontageOrTrial(BOOL inTrial)
 {
   if (!Montaging())
-    if (mDocWnd->GetMontageParamsAndFile(false))
+    if (mDocWnd->GetMontageParamsAndFile(0))
       return;
   if (!mMontageController->DoingMontage())
     mMontageController->StartMontage(inTrial ? MONT_TRIAL_IMAGE : MONT_NOT_TRIAL, false);

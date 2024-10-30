@@ -17,6 +17,7 @@
 class CMapDrawItem;
 class COneLineScript;
 struct ScriptLangPlugFuncs;
+struct MultiShotParams;
 
 #define MAX_LOOP_DEPTH  40
 #define MAX_CALL_DEPTH  (2 * MAX_TOT_MACROS)
@@ -482,6 +483,7 @@ protected:
   bool mRamperStarted;         // Flag for focus ramper started
   CString mScriptWindowTitle;  // Title for window opened by script
   float mBinningForCameraMatrix; // Adjust camera matrices to this user binning
+  MultiShotParams *mSavedMultiShot;  // Saved parameters for running step & adjust
 
 public:
   void SetNumCamMacRows(int inVal);
@@ -629,6 +631,7 @@ public:
   void JustStripItems(CString & strLine, int numStrip, CString & strCopy, bool allowComment = false);
   int CheckAndConvertLDAreaLetter(CString & item, int needOnOrOff, int & index, CString &strLine);
   void RestoreLowDoseParams(int index);
+  void RestoreMultiShotParams();
   bool IsLowDoseAreaSaved(int which);
   void UpdateLDAreaIfSaved();
   int MakeNewTempMacro(CString &strVar, CString &strIndex, bool tempOnly, CString &strLine);

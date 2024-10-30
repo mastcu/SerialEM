@@ -78,11 +78,27 @@ struct MultiShotParams
   int stepAdjDefOffset;  // Defocus offset to use
   int stepAdjWhichMag;   // Which kind of mag to use: current, recorded at, or other
   BOOL stepAdjTakeImage; // Flag to take an image of current area
+  BOOL stepAdjSetPrevExp;  // Flag to set Preview exposure
+  float stepAdjPrevExp;  // Exposure to use
+  BOOL doAutoAdjustment; // Flag to do autoamtic adjustment if conditions allow it
+  int autoAdjMethod;     // 0 for xcorr, 1 for hole find & center
+  float autoAdjHoleSize; // Hole size needed either way
+  float autoAdjLimitFrac;  // Limit to shift as fraction of hole diameter 
   int origMagOfArray[2]; // Negative of mag when defined, positive if adjusted
   int origMagOfCustom;
   int xformFromMag;      // Mag that adjusting transform is from and to
   int xformToMag;
   ScaleMat adjustingXform;  // Transform for adjustment
+
+  // Runtime for undo capability: values to restore
+  int canUndoRectOrHex;    // 0 if not, 1 for regular, 2 for hex
+  int prevHoleMag;
+  int prevOrigMag;
+  int prevXformFromMag;
+  int prevXformToMag;
+  double prevXspacing[3];
+  double prevYspacing[3];
+  ScaleMat prevAdjXform;
 };
 
 struct HoleFinderParams
@@ -296,6 +312,11 @@ public:
   GetSetMember(BOOL, ShowStateNumbers);
   SetMember(CString, FirstMontFilename);
   GetMember(bool, OpenedMultiGrid);
+  GetSetMember(float, MinAutoAdjHexRatio);
+  GetSetMember(float, MinAutoAdjSquareRatio);
+  GetSetMember(float, MaxAutoAdjHoleRatio);
+  GetSetMember(int, MinAutoAdjCropSize);
+
 
   int *GetAcqActDefaultOrder() { return &mAcqActDefaultOrder[0]; };
   int *GetAcqActCurrentOrder(int which) { return &mAcqActCurrentOrder[which][0]; };
@@ -537,6 +558,10 @@ private:
   float mScaledAliDfltPctChg;    // Default maximum % size change in search of scaled realign
   float mRISkipItemPosMinField;  // Min field for skipping second round if scaled realign
   CString mFirstMontFilename;
+  float mMinAutoAdjHexRatio;     // Minimum fraction of field hole needs to be for hex
+  float mMinAutoAdjSquareRatio;  // and for rectangular arrays
+  float mMaxAutoAdjHoleRatio;    // Maximum allowed fraction of field
+  int mMinAutoAdjCropSize;       // Minimum number of pixels in image cropped to satisfy min
 
 public:
   void PrepareToReimageMap(CMapDrawItem * item, MontParam * param, ControlSet * conSet,

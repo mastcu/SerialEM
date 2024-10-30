@@ -3235,7 +3235,7 @@ MontParam *CMultiGridTasks::GetGridMontParam()
 {
   if (!mInitializedGridMont) {
     mGridMontParam = *(mWinApp->GetMontParam());
-    mWinApp->mDocWnd->InitMontParamsForDialog(&mGridMontParam, false);
+    mWinApp->mDocWnd->InitMontParamsForDialog(&mGridMontParam, 0);
     mInitializedGridMont = true;
   }
   return &mGridMontParam;
@@ -3249,7 +3249,7 @@ MontParam *CMultiGridTasks::GetMMMmontParam()
 {
   if (!mInitializedMMMmont) {
     mMMMmontParam = *(mWinApp->GetMontParam());
-    mWinApp->mDocWnd->InitMontParamsForDialog(&mMMMmontParam, false);
+    mWinApp->mDocWnd->InitMontParamsForDialog(&mMMMmontParam, 0);
     mInitializedMMMmont = true;
   }
   return &mMMMmontParam;

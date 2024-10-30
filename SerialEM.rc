@@ -208,7 +208,8 @@ BEGIN
         MENUITEM "Previe&w\tCtrl+L",            ID_CAMERA_PREVIEW
         MENUITEM SEPARATOR
         MENUITEM "&Montage\tCtrl+M",            ID_CAMERA_MONTAGE
-        MENUITEM "Pr&escan",                    ID_CAMERA_MONTAGETRIAL
+        MENUITEM "Prescan",                     ID_CAMERA_MONTAGETRIAL
+        MENUITEM "Pr&eview Prescan",            ID_CAMERA_PREVIEWPRESCAN
         POPUP "Correlatio&n Filter"
         BEGIN
             MENUITEM "&Use Filter Set 2",           ID_CORRELATIONFILTER_USEFILTERSET2
@@ -1254,7 +1255,7 @@ BEGIN
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,4,124,113,10
 END
 
-IDD_MONTAGESETUP DIALOGEX 0, 0, 166, 512
+IDD_MONTAGESETUP DIALOGEX 0, 0, 166, 499
 STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION
 EXSTYLE WS_EX_LEFTSCROLLBAR
 CAPTION "Montage Setup"
@@ -1292,9 +1293,9 @@ BEGIN
     RTEXT           "8192 x 8192 pixels",IDC_STATTOTALPIXELS,49,168,65,8
     RTEXT           "50.5 x 50.5 microns",IDC_STATTOTALAREA,24,179,90,8
     PUSHBUTTON      "Update",IDC_UPDATE,121,171,33,14,NOT WS_TABSTOP
-    DEFPUSHBUTTON   "OK",IDOK,24,495,50,14
-    PUSHBUTTON      "Cancel",IDCANCEL,91,495,50,14
-    PUSHBUTTON      "?",IDC_BUTHELP,152,499,10,10
+    DEFPUSHBUTTON   "OK",IDOK,24,481,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,91,481,50,14
+    PUSHBUTTON      "?",IDC_BUTHELP,152,485,10,10
     CONTROL         "Move stage instead of shifting image",IDC_MOVESTAGE,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,190,125,10
     CONTROL         "Do full rectangle; ignore list of pieces to skip",IDC_IGNORESKIPS,
@@ -1311,53 +1312,47 @@ BEGIN
     CONTROL         "Make map from each montage if Navigator open",IDC_CHECKOFFERMAP,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,242,157,10
     CONTROL         "Use settings for high-quality stage montage",IDC_CHECK_USE_HQ_SETTINGS,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,341,144,10
-    CONTROL         "Autofocus at each piece",IDC_CHECK_FOCUS_EACH,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,364,88,10
-    CONTROL         "Autofocus in blocks of ",IDC_CHECK_FOCUS_BLOCKS,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,376,79,10
-    RTEXT           "16x16",IDC_STAT_BLOCKSIZE,89,377,18,8
-    CONTROL         "",IDC_SPIN_BLOCK_SIZE,"msctls_updown32",UDS_ARROWKEYS,109,374,10,14
-    LTEXT           "pieces",IDC_STATBLOCKPIECES,122,377,22,8
-    LTEXT           "Delay time after moving stage:",IDC_STAT_DELAY,10,449,91,8
-    EDITTEXT        IDC_EDITDELAY,107,447,30,12,ES_AUTOHSCROLL
-    LTEXT           "sec",IDC_STATDELAYSEC,140,449,12,8
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,327,144,10
+    CONTROL         "Autofocus at each piece",IDC_CHECK_FOCUS_EACH,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,350,88,10
+    CONTROL         "Autofocus in blocks of ",IDC_CHECK_FOCUS_BLOCKS,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,362,79,10
+    RTEXT           "16x16",IDC_STAT_BLOCKSIZE,89,363,18,8
+    CONTROL         "",IDC_SPIN_BLOCK_SIZE,"msctls_updown32",UDS_ARROWKEYS,109,360,10,14
+    LTEXT           "pieces",IDC_STATBLOCKPIECES,122,363,22,8
+    LTEXT           "Delay time after moving stage:",IDC_STAT_DELAY,10,435,91,8
+    EDITTEXT        IDC_EDITDELAY,107,433,30,12,ES_AUTOHSCROLL
+    LTEXT           "sec",IDC_STATDELAYSEC,140,435,12,8
     CONTROL         "Skip correlations used to align pieces",IDC_CHECK_SKIPCORR,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,473,128,10
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,459,128,10
     EDITTEXT        IDC_EDITMINOVERLAP,108,152,27,14,ES_AUTOHSCROLL
     LTEXT           "and",IDC_STATMINAND,93,155,13,8
     LTEXT           "micron",IDC_STATMINMICRON,137,155,21,8
     PUSHBUTTON      "Reset",IDC_BUT_RESET_OVERLAPS,140,135,24,14
-    LTEXT           "Maximum alignment shift as % of piece",IDC_STATMAXALIGN,20,434,115,8
-    EDITTEXT        IDC_EDITMAXALIGN,138,432,20,12,ES_AUTOHSCROLL
-    GROUPBOX        "High-quality stage montage parameters",IDC_STAT_HQSTAGEBOX,4,354,158,134
+    LTEXT           "Maximum alignment shift as % of piece",IDC_STATMAXALIGN,20,420,115,8
+    EDITTEXT        IDC_EDITMAXALIGN,138,418,20,12,ES_AUTOHSCROLL
+    GROUPBOX        "High-quality stage montage parameters",IDC_STAT_HQSTAGEBOX,4,340,158,134
     CONTROL         "Realign with image shift up to ",IDC_CHECK_IS_REALIGN,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,405,98,10
-    LTEXT           "microns",IDC_STATISMICRONS,136,406,25,8
-    EDITTEXT        IDC_EDIT_IS_REALIGN,110,404,23,12,ES_AUTOHSCROLL
-    CONTROL         "Go from center out; anchor at mag:",IDC_CHECK_USE_ANCHOR,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,418,118,10
-    CONTROL         "",IDC_SPIN_ANCHOR_MAG,"msctls_updown32",UDS_ARROWKEYS,149,416,10,14
-    RTEXT           "5000",IDC_STAT_ANCHOR_MAG,128,419,19,8
-    CONTROL         "Repeat focus until drift is below",IDC_CHECK_REPEAT_FOCUS,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,391,98,10
-    EDITTEXT        IDC_EDIT_NMPERSEC,110,390,23,12,ES_AUTOHSCROLL
-    LTEXT           "nm/sec",IDC_STATNMPERSEC,136,392,23,8
-    CONTROL         "Use View parameters in Low Dose mode",IDC_CHECK_USE_VIEW_IN_LOWDOSE,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,279,138,10
+    LTEXT           "microns",IDC_STATISMICRONS,136,392,25,8
+    EDITTEXT        IDC_EDIT_IS_REALIGN,110,390,23,12,ES_AUTOHSCROLL
+    CONTROL         "Go from center out; anchor at mag:",IDC_CHECK_USE_ANCHOR,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,404,118,10
+    CONTROL         "",IDC_SPIN_ANCHOR_MAG,"msctls_updown32",UDS_ARROWKEYS,149,402,10,14
+    RTEXT           "5000",IDC_STAT_ANCHOR_MAG,128,405,19,8
+    CONTROL         "Repeat focus until drift is below",IDC_CHECK_REPEAT_FOCUS,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,377,98,10
+    EDITTEXT        IDC_EDIT_NMPERSEC,110,376,23,12,ES_AUTOHSCROLL
+    LTEXT           "nm/sec",IDC_STATNMPERSEC,136,378,23,8
     CONTROL         "Do not blank beam during Record readout",IDC_CHECK_SKIP_REBLANK,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,461,141,10
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,447,141,10
     CONTROL         "Turn off Drift Correction for stage montage",IDC_CHECK_NO_DRIFT_CORR,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,329,139,10
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,315,139,10
     CONTROL         "Use continuous mode with settling factor",IDC_CHECK_CONTINUOUS_MODE,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,317,131,10
-    EDITTEXT        IDC_EDIT_CONTIN_DELAY_FAC,142,316,22,12,ES_AUTOHSCROLL
-    CONTROL         "Use Search parameters in Low Dose mode",IDC_CHECK_USE_SEARCH_IN_LD,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,291,145,10
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,303,131,10
+    EDITTEXT        IDC_EDIT_CONTIN_DELAY_FAC,142,302,22,12,ES_AUTOHSCROLL
     CONTROL         "Use Montage Mapping, not Record parameters",IDC_CHECK_USE_MONT_MAP_PARAMS,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,267,154,10
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,273,154,10
     CONTROL         "",IDC_STAT_LINE1,"Static",SS_BLACKFRAME | SS_SUNKEN,5,265,158,1
-    CONTROL         "",IDC_STAT_LINE2,"Static",SS_BLACKFRAME | SS_SUNKEN,5,315,158,1
-    CONTROL         "Acquire with Multiple Record routine",IDC_CHECK_USE_MULTISHOT,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,303,128,10
+    CONTROL         "",IDC_STAT_LINE2,"Static",SS_BLACKFRAME | SS_SUNKEN,5,301,158,1
     CONTROL         "Close file when montage is done",IDC_CHECK_CLOSE_WHEN_DONE,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,254,112,10
     CONTROL         "Image shift in blocks, IS up to",IDC_CHECK_IMSHIFT_IN_BLOCKS,
@@ -1366,6 +1361,14 @@ BEGIN
     CONTROL         "",IDC_STAT_LINE3,"Static",SS_BLACKFRAME | SS_SUNKEN,4,216,158,1
     LTEXT           "***",IDC_STAT_IS_BLOCK_STARS,154,203,8,8
     EDITTEXT        IDC_EDIT_MAX_BLOCK_IS,106,200,22,14,ES_AUTOHSCROLL
+    GROUPBOX        "Parameters to use in Low Dose mode",IDC_STAT_LD_PARAM_SET,4,268,158,19
+    CONTROL         "Search",IDC_RLD_USE_SEARCH,"Button",BS_AUTORADIOBUTTON | WS_GROUP,10,276,25,10
+    CONTROL         "View",IDC_RLD_USE_VIEW,"Button",BS_AUTORADIOBUTTON,39,276,21,10
+    CONTROL         "Preview",IDC_RLD_USE_PREVIEW,"Button",BS_AUTORADIOBUTTON,64,276,27,10
+    CONTROL         "Record",IDC_RLD_USE_RECORD,"Button",BS_AUTORADIOBUTTON,95,276,27,10
+    CONTROL         "Mont-map",IDC_RLD_USE_MONTMAP,"Button",BS_AUTORADIOBUTTON,126,276,35,10
+    CONTROL         "Acquire with Multiple Record routine",IDC_CHECK_USE_MULTISHOT,
+                    "Button",BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,10,289,128,10
 END
 
 IDD_MONTAGECONTROL DIALOGEX 0, 0, 119, 108
@@ -3295,7 +3298,7 @@ BEGIN
     EDITTEXT        IDC_EDIT_HOLE_DELAY_FAC,138,96,28,12,ES_AUTOHSCROLL
     CONTROL         "",IDC_TSS_LINE1,"Static",SS_BLACKFRAME | SS_SUNKEN,4,82,172,1
     CONTROL         "",IDC_TSS_LINE2,"Static",SS_BLACKFRAME | SS_SUNKEN,4,254,172,1
-    GROUPBOX        "Set image shift values at holes",IDC_STAT_MEASURE_BOX,4,156,172,95
+    GROUPBOX        "Set image shift values at holes",IDC_STAT_MEASURE_BOX,4,156,173,95
     PUSHBUTTON      "Save Image Shift",IDC_BUT_SAVE_IS,51,183,55,12
     PUSHBUTTON      "End Pattern",IDC_BUT_END_PATTERN,109,183,39,12
     PUSHBUTTON      "Abort",IDC_BUT_ABORT,151,183,21,12
@@ -3310,17 +3313,18 @@ BEGIN
     CONTROL         "",IDC_SPIN_RING2_NUM,"msctls_updown32",UDS_ARROWKEYS,91,43,10,14
     EDITTEXT        IDC_EDIT_RING2_DIST,130,44,30,12,ES_AUTOHSCROLL
     PUSHBUTTON      "Last Hole Vectors",IDC_BUT_USE_LAST_HOLE_VECS,21,208,58,12
-    PUSHBUTTON      "Step To and Adjust IS",IDC_BUT_STEP_ADJUST,10,223,77,12
+    PUSHBUTTON      "Step To && Adjust IS",IDC_BUT_STEP_ADJUST,8,223,65,12
     CONTROL         "",IDC_TSS_LINE3,"Static",SS_BLACKFRAME | SS_SUNKEN,4,350,172,1
     CONTROL         "",IDC_TSS_LINE4,"Static",SS_BLACKFRAME | SS_SUNKEN,4,393,172,1
     PUSHBUTTON      "Test Multishot Positions",IDC_BUT_TEST_MULTISHOT,93,379,78,12
     PUSHBUTTON      "Calibrate Coma vs. IS",IDC_BUTCAL_BT_VS_IS,9,379,78,12
     CONTROL         "Hex grid",IDC_CHECK_HEX_GRID,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,137,111,38,10
     PUSHBUTTON      "Map Hole Vectors",IDC_BUT_USE_MAP_VECTORS,82,208,58,12
-    PUSHBUTTON      "Apply Stored Adjustment",IDC_BUT_APPLY_ADJUSTMENT,93,223,77,12
+    PUSHBUTTON      "Apply Stored Adjustment",IDC_BUT_APPLY_ADJUSTMENT,99,223,77,12
     LTEXT           "Adjustment not available",IDC_STAT_ADJUST_STATUS,6,237,170,8
     LTEXT           "Use:",IDC_STAT_USE_VECS,6,209,15,8
     PUSHBUTTON      "Nav Pts",IDC_BUT_USE_NAV_PTS,143,208,33,12
+    PUSHBUTTON      "Undo",IDC_BUT_UNDO_AUTO,75,223,21,12
 END
 
 IDD_DE_REFERENCE DIALOGEX 0, 0, 172, 210
@@ -4021,31 +4025,48 @@ BEGIN
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,6,67,144,10
 END
 
-IDD_STEP_AND_ADJUST_IS DIALOGEX 0, 0, 153, 161
+IDD_STEP_AND_ADJUST_IS DIALOGEX 0, 0, 153, 269
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Step and Adjust IS Setup"
+CAPTION "Step To and Adjust IS"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
     CONTROL         "Search",IDC_STAA_SEARCH,"Button",BS_AUTORADIOBUTTON | WS_GROUP,33,15,39,10
     CONTROL         "View",IDC_STAA_VIEW,"Button",BS_AUTORADIOBUTTON,33,27,32,10
     CONTROL         "Record (Preview images)",IDC_STAA_RECORD,"Button",BS_AUTORADIOBUTTON,33,39,91,10
-    GROUPBOX        "Low Dose area to use",IDC_STATIC,26,5,101,47,WS_GROUP
-    CONTROL         "Current mag of area",IDC_STAA_CURRENT_MAG,"Button",BS_AUTORADIOBUTTON | WS_GROUP,14,79,132,10
+    CONTROL         "2 x 2 Preview montage",IDC_STAA_2X2MONTAGE,"Button",BS_AUTORADIOBUTTON,33,51,88,10
+    CONTROL         "2 x 3 Preview montage",IDC_STAA_2X3MONTAGE,"Button",BS_AUTORADIOBUTTON,33,63,88,10
+    GROUPBOX        "Low Dose area and images to use",IDC_STATIC,26,5,101,71,WS_GROUP
+    CONTROL         "Cross-correlation",IDC_STAA_CROSSCORR,"Button",BS_AUTORADIOBUTTON | WS_GROUP,20,183,69,10
+    CONTROL         "Hole centering",IDC_STAA_CENTER_HOLE,"Button",BS_AUTORADIOBUTTON,86,183,58,10
+    CONTROL         "Do procedure automatically with:",IDC_STAA_DO_AUTOMATIC,
+                    "Button",BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,14,172,120,10
+    CONTROL         "Current mag of area",IDC_STAA_CURRENT_MAG,"Button",BS_AUTORADIOBUTTON | WS_GROUP,14,104,132,10
     CONTROL         "Mag at which shifts were recorded",IDC_STAA_PREV_MAG,
-                    "Button",BS_AUTORADIOBUTTON,14,91,129,10
-    CONTROL         "Other mag:",IDC_STAA_OTHER_MAG,"Button",BS_AUTORADIOBUTTON,14,103,49,10
-    GROUPBOX        "Magnification to use",IDC_STATIC,7,69,139,50,WS_TABSTOP
-    DEFPUSHBUTTON   "OK",IDOK,7,140,50,14
-    PUSHBUTTON      "Cancel",IDCANCEL,75,140,50,14
-    RTEXT           "23000",IDC_STAT_OTHER_MAG,66,104,21,8
-    CONTROL         "",IDC_SPIN_OTHER_MAG,"msctls_updown32",UDS_ARROWKEYS,88,101,10,14
+                    "Button",BS_AUTORADIOBUTTON,14,116,129,10
+    CONTROL         "Other mag:",IDC_STAA_OTHER_MAG,"Button",BS_AUTORADIOBUTTON,14,128,47,10
+    GROUPBOX        "Magnification to use",IDC_STATIC,7,94,139,50,WS_TABSTOP
+    DEFPUSHBUTTON   "Close",IDOK,54,249,36,14
+    PUSHBUTTON      "Cancel",IDCANCEL,96,249,36,14
+    RTEXT           "23000",IDC_STAT_OTHER_MAG,62,129,25,8
+    CONTROL         "",IDC_SPIN_OTHER_MAG,"msctls_updown32",UDS_ARROWKEYS,88,126,12,14
     CONTROL         "Change defocus offset to:",IDC_CHECK_SET_DEF_OFFSET,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,14,124,95,10
-    RTEXT           "-20",IDC_STAT_DEF_OFFSET,111,125,14,8
-    CONTROL         "",IDC_SPIN_DEF_OFFSET,"msctls_updown32",UDS_ARROWKEYS,128,122,10,14
-    PUSHBUTTON      "?",IDC_BUTHELP,136,142,11,10
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,14,149,95,10
+    RTEXT           "-20",IDC_STAT_DEF_OFFSET,111,150,14,8
+    CONTROL         "",IDC_SPIN_DEF_OFFSET,"msctls_updown32",UDS_ARROWKEYS,128,147,12,14
+    PUSHBUTTON      "?",IDC_BUTHELP,136,251,11,10
     CONTROL         "Take image after shifting to position",IDC_CHECK_IMAGE_AFTER_IS,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,14,55,130,10
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,14,236,130,10
+    GROUPBOX        "Automatic adjustment",IDC_STAT_AUTO_ADJUST,7,163,139,71
+    LTEXT           "Hole size:",IDC_STAT_HOLE_SIZE,12,197,32,8
+    EDITTEXT        IDC_EDIT_STAA_HOLE,45,195,24,13,ES_AUTOHSCROLL
+    LTEXT           "um",IDC_STAT_MICRONS,70,197,11,8
+    LTEXT           "Static",IDC_STAT_MAG_INFO_LINE,12,222,133,8
+    LTEXT           "Maximum shift as fraction of hole size:",IDC_STAT_LIMIT_FRAC,12,211,108,8
+    EDITTEXT        IDC_EDIT_STAA_LIMIT,121,209,24,14,ES_AUTOHSCROLL
+    PUSHBUTTON      "Start",IDC_BUT_STAA_GO,12,249,36,14
+    CONTROL         "Set Preview exposure to:",IDC_CHECK_SET_PREV_EXP,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,15,80,85,10
+    EDITTEXT        IDC_EDIT_PREVIEW_EXP,103,79,24,14,ES_AUTOHSCROLL
+    LTEXT           "sec",IDC_STAT_PREV_SEC,130,81,11,8
 END
 
 IDD_MULTI_GRID DIALOGEX 0, 0, 343, 291
@@ -4116,15 +4137,15 @@ BEGIN
     EDITTEXT        IDC_EDIT_MG_PREFIX,26,227,75,12,ES_AUTOHSCROLL
     CONTROL         "Append names",IDC_CHECK_MG_APPEND_NAME,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,107,229,57,10
     PUSHBUTTON      "Reset",IDC_BUT_MG_RESET_NAMES,107,213,27,12
-    PUSHBUTTON      "Clear",IDC_BUT_MG_CLEAR,139,213,26,12
+    PUSHBUTTON      "Logs",IDC_BUT_MG_CLEAR,149,191,19,12
     LTEXT           "Rootname: Pref_C###_name",IDC_STAT_MG_ROOTNAME,4,241,111,8
     LTEXT           "Current dir:",IDC_STAT_MG_CURRENT_DIR,4,250,159,8
     PUSHBUTTON      "Set Current Dir",IDC_BUT_SET_CURRENT_DIR,79,258,50,12
     CONTROL         "Use subdirectories",IDC_CHECK_MG_USE_SUBDIRS,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,5,259,73,10
     PUSHBUTTON      "+",IDC_BUT_MG_SETUP,2,203,10,9
     CTEXT           "Grid Setup",IDC_STAT_MG_GRID_SETUP,19,203,39,10
-    PUSHBUTTON      "Load Grid",IDC_BUT_LOAD_GRID,41,191,35,12
-    PUSHBUTTON      "Realign to Map",IDC_BUT_REALIGN_TO_GRID_MAP,79,191,48,12
+    PUSHBUTTON      "Load Grid",IDC_BUT_LOAD_GRID,37,191,33,12
+    PUSHBUTTON      "Realign to Map",IDC_BUT_REALIGN_TO_GRID_MAP,72,191,48,12
     PUSHBUTTON      "+",IDC_BUT_MG_LOW_MAG_MAPS,175,3,10,9
     CONTROL         "LD Search",IDC_RLMM_SEARCH,"Button",BS_AUTORADIOBUTTON | WS_GROUP,192,14,40,10
     CONTROL         "LD View",IDC_RLMM_VIEW,"Button",BS_AUTORADIOBUTTON,236,14,34,10
@@ -4183,8 +4204,8 @@ BEGIN
     COMBOBOX        IDC_COMBO_MMM_STATE4,270,141,70,30,CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
     COMBOBOX        IDC_COMBO_FINAL_STATE4,270,212,70,30,CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
     PUSHBUTTON      "Run Undone",IDC_BUT_RUN_UNDONE,36,277,42,12
-    PUSHBUTTON      "Open Nav",IDC_BUT_OPEN_NAV,2,191,35,12
-    PUSHBUTTON      "Set Params",IDC_BUT_SET_GRID_TYPE,130,191,38,12
+    PUSHBUTTON      "Open Nav",IDC_BUT_OPEN_NAV,2,191,33,12
+    PUSHBUTTON      "Params",IDC_BUT_SET_GRID_TYPE,121,191,27,12
     PUSHBUTTON      "Open Right",IDC_BUT_CLOSE_RIGHT,137,270,30,9
     CONTROL         "Set && show states for each grid",IDC_CHECK_SET_FINAL_BY_GRID,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,177,226,107,10
@@ -4382,7 +4403,7 @@ BEGIN
 
     IDD_MONTAGESETUP, DIALOG
     BEGIN
-        BOTTOMMARGIN, 508
+        BOTTOMMARGIN, 495
     END
 
     IDD_MONTAGECONTROL, DIALOG
@@ -4835,7 +4856,7 @@ BEGIN
         LEFTMARGIN, 7
         RIGHTMARGIN, 146
         TOPMARGIN, 7
-        BOTTOMMARGIN, 154
+        BOTTOMMARGIN, 262
     END
 
     IDD_MULTI_GRID, DIALOG
@@ -7685,6 +7706,8 @@ BEGIN
                             "Set tilt axis offset automatically with value from Fine Eucentricity"
     ID_MONTAGINGGRIDS_LOADALLGRIDMAPS 
                             "Loads all LM maps done in session or lowest LM mag maps from open Navigator"
+    ID_CAMERA_PREVIEWPRESCAN 
+                            "Take a 3x3 Prescan with Preview, without opening a montage file"
 END
 
 STRINGTABLE
@@ -7815,15 +7838,19 @@ STRINGTABLE
 BEGIN
     IDC_CHECK_FRAMES_UNDER_SESSION 
                             "Store frames in directories under the session or grid directories if possible"
-    IDC_BUT_GRIDUSE_FP      "Store the current Focus area position as a separate one for this grid"
     IDC_BUT_APPLY_FP        "Make the global Focus area position be the same as the one for this grid"
+    IDC_BUT_GRIDUSE_FP      "Store the current Focus area position as a separate one for this grid"
     IDC_BUT_RESTORE_CURFP   "Restore the global Focus area position to its value before Save/Apply"
-    IDC_BUT_REVERT_FP       "Remove separate stored Focus area position for this grid"
+END
+
+STRINGTABLE
+BEGIN
     IDC_CHECK_TOGGLE_ALL    "Turn all grid checkboxes on or off"
     IDC_CHECK_MAKE_ONE_POLY "Enable making a polygon by Ctrl-Shift middle click inside a grid square"
     IDC_BUT_SET_ORDER       "Start or stop setting the order in which to run grids"
+    IDC_BUT_REVERT_FP       "Remove separate stored Focus area position for this grid"
     IDC_BUT_RESET_ORDER     "Discard the custom order and use default order for running grids"
-    IDC_CHECK_INSIDE_POLYGON
+    IDC_CHECK_INSIDE_POLYGON 
                             "Limit area that will be contoured to interior of current polygon"
 END
 

@@ -96,9 +96,9 @@ public:
   int DoOpenNewFile(CString filename = "");
   void DoCloseFile();
   void ManageExposure(bool noMessage);
-  int GetMontageParamsAndFile(BOOL frameSet, int xNframes = -1, int yNframes = -1,
+  int GetMontageParamsAndFile(int frameSet, int xNframes = -1, int yNframes = -1,
                               CString filename = "");
-  void InitMontParamsForDialog(MontParam *param, BOOL frameSet, int xNframes = -1,
+  void InitMontParamsForDialog(MontParam *param, int frameSet, int xNframes = -1,
     int yNframes = -1, CString filename = "");
   int OpenMontageDialog(BOOL locked);
   FileOptions *GetDefFileOpt() {return &mDefFileOpt;};

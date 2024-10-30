@@ -1094,6 +1094,11 @@
             parameters if the option is set to use those for Search.</TD>
         </TR>
         <TR>
+          <TD class="scriptcommand">PrescanWithPreview</TD>
+          <TD>In Low Dose mode, acquires a 3x3 Prescan montage with Preview parameters, 
+            automatically opening a temporary montage file and closing it at the end.&nbsp; Command added in 4.2, 29-Oct-24.</TD>
+        </TR>
+        <TR>
           <TD class="scriptcommand">PreCookMontage #D [#P] [#C] [#S]</TD>
           <TD>If montaging is enabled with stage movement, lowers the screen to
             expose the specimen, then moves the stage to each piece position and waits there
@@ -4464,6 +4469,16 @@
             of the adjusting transformation. &nbsp;Command added in 4.1, 9-Jul-23.</TD>
         </TR>
         <TR>
+          <TD class="scriptcommand">StepAndAdjustISVectors #M #D [#S]</TD>
+          <TD>Runs the 'Step and Adjust IS' procedure with <b>#M</b> set to 0 to use cross-correlation or 1 to
+            use hole finding and centering, <b>#D</b> set to the hole diameter in microns, and 
+            optional <b>#S</b> to the maximum shift as a fraction of the hole size.&nbsp; Enter -1 for
+            any of these to use the value in the 
+            <a href="hidd_step_and_adjust_is.htm">Step To and Adjust IS Setup</a> dialog.&nbsp; Other parameters
+            are taken from existing settings for Multiple Records and Hole Finder.&nbsp; Command added in 4.2, 29-Oct-24.
+          </TD>
+        </TR>
+        <TR>
           <TD class="scriptcommand">OpenMultiShotFiles name</TD>
           <TD>Opens a set of files, one for each of the positions specified in the current settings of
             the <a href="hidd_multi_shot_setup.htm">Multiple Record Setup dialog</a> (which need not be 
@@ -5202,6 +5217,17 @@
             if there are at least <b>#C</b> points, or not combining if <b>#C</b> is 0.&nbsp; 
             See <A href="hidd_hole_finder.htm#multimap">Finding Holes in Multiple Maps</A> for details.&nbsp;
           Command added in 4.2, 7-Aug-24.</TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">FindAndCenterOneHole buf #D [#C] [#S]</TD>
+          <TD>Runs the Hole Finder with parameters appropriate for finding the hole nearest to the center
+             of an image with one or a few holes in it, and optionally centering on the hole with image 
+            shift.&nbsp;<b>buf</b> specifies the buffer and can be 0 for the currently displayed 
+            image.&nbsp;Set <b>#D</b> to the diameter in microns; optional <b>#C</b> to the number of 
+            circle sizes to try, or 0 for the default (generally 7); and optional<b>#S</b> to the maximum
+             image shift allowed as a fraction of the hole diameter.  Other hole-finding parameters such as
+            geometry and spacing are taken from existing settings.&nbsp; Command added in 4.2, 29-Oct-24.
+          </TD>
         </TR>
         <TR>
           <TD class="scriptcommand">ReportLastHoleVectors #</TD>

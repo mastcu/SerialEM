@@ -43,12 +43,12 @@ static int sIdTable[] = {IDC_STAT_RUN, IDC_STAT_NAME, IDC_BUT_CLOSE_ALL, PANEL_E
   IDC_STAT_MULGRID_STATUS3, IDC_STAT_MULGRID_STATUS8, IDC_STAT_MULGRID_STATUS12,
   IDC_STAT_MULGRID_STATUS4, IDC_STAT_MULGRID_STATUS9, IDC_STAT_MULGRID_STATUS13,
   IDC_STAT_MULGRID_STATUS5, IDC_CHECK_TOGGLE_ALL, IDC_STAT_NOTE, IDC_EDIT_GRID_NOTE,
-  IDC_BUT_SET_ORDER, IDC_BUT_RESET_ORDER,
+  IDC_BUT_SET_ORDER, IDC_BUT_RESET_ORDER, IDC_BUT_MG_CLEAR,
   IDC_BUT_REALIGN_TO_GRID_MAP, IDC_BUT_OPEN_NAV, IDC_BUT_SET_GRID_TYPE, PANEL_END,
   IDC_BUT_MG_SETUP, IDC_STAT_MG_GRID_SETUP, IDC_TSS_LINE4, PANEL_END,
   IDC_BUT_MG_GET_NAMES, IDC_BUT_MG_INVENTORY, IDC_STAT_MG_PREFIX,
   IDC_EDIT_MG_PREFIX, IDC_CHECK_MG_APPEND_NAME,
-  IDC_BUT_MG_RESET_NAMES, IDC_BUT_MG_CLEAR, IDC_STAT_MG_ROOTNAME,
+  IDC_BUT_MG_RESET_NAMES, IDC_STAT_MG_ROOTNAME,
   IDC_STAT_MG_CURRENT_DIR, IDC_BUT_SET_CURRENT_DIR, IDC_CHECK_MG_USE_SUBDIRS, PANEL_END,
   IDC_BUT_MG_LOW_MAG_MAPS, IDC_CHECK_RUN_LMMS, IDC_TSS_LINE10, PANEL_END,
   IDC_RLMM_SEARCH, IDC_STAT_USE1, IDC_RLMM_VIEW, IDC_RLMM_CUR_OR_STATE,
@@ -2227,6 +2227,8 @@ int CMultiGridDlg::DoSetupLMMmont(bool skipDlg)
 
   montP->useViewInLowDose = ldArea == VIEW_CONSET;
   montP->useSearchInLowDose = ldArea == SEARCH_AREA;
+  montP->usePrevInLowDose = false;
+  montP->useMultiShot = false;
   ind = mWinApp->LookupActiveCamera(camera);
   if (ind < 0) {
     AfxMessageBox("The camera for the state to be set is not in the active list",
@@ -2558,6 +2560,8 @@ int CMultiGridDlg::SetupMMMacquire(bool skipDlg)
   if (m_iSingleVsPolyMont) {
     montP->useViewInLowDose = useView;
     montP->useSearchInLowDose = useSearch;
+    montP->usePrevInLowDose = false;
+    montP->useMultiShot = false;
     if (useMontMap)
       montP->useMontMapParams = useMontMap > 0;
     montP->cameraIndex = actCam;

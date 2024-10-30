@@ -592,6 +592,7 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
           msParams->tiltOfCustomHoles = itemFlt[27];
           msParams->holeFinderAngle = itemFlt[28];
         }
+ 
       } else if (NAME_IS("MultiHexParams")) {
         msParams->doHexArray = itemInt[1] != 0;
         msParams->numHexRings = itemInt[2];
@@ -614,6 +615,15 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
         msParams->stepAdjDefOffset = itemInt[5];
         if (!itemEmpty[6])
           msParams->stepAdjTakeImage = itemInt[6] != 0;
+        if (!itemEmpty[12]) {
+          msParams->doAutoAdjustment = itemInt[7] != 0;
+          msParams->autoAdjMethod = itemInt[8] ? 1 : 0;
+          msParams->autoAdjHoleSize = itemFlt[9];
+          msParams->autoAdjLimitFrac = itemFlt[10];
+          msParams->stepAdjSetPrevExp = itemInt[11] != 0;
+          msParams->stepAdjPrevExp = itemFlt[12];
+        }
+
       } else if (NAME_IS("HoleAdjustXform")) {
         msParams->origMagOfArray[0] = itemInt[1];
         msParams->origMagOfArray[2] = itemInt[2];
@@ -1933,10 +1943,12 @@ void CParameterIO::WriteSettings(CString strFileName)
       msParams->hexISXspacing[2], msParams->hexISYspacing[2], msParams->holeMagIndex[1],
       msParams->tiltOfHoleArray[1]);
     mFile->WriteString(oneState);
-    oneState.Format("StepAdjustParams %d %d %d %d %d %d\n", msParams->stepAdjLDarea,
-      msParams->stepAdjWhichMag, msParams->stepAdjOtherMag,
+    oneState.Format("StepAdjustParams %d %d %d %d %d %d %d %d %f %f %d %f\n",
+      msParams->stepAdjLDarea, msParams->stepAdjWhichMag, msParams->stepAdjOtherMag,
       msParams->stepAdjSetDefOff ? 1 : 0, msParams->stepAdjDefOffset,
-      msParams->stepAdjTakeImage ? 1 : 0);
+      msParams->stepAdjTakeImage ? 1 : 0, msParams->doAutoAdjustment ? 1 : 0,
+      msParams->autoAdjMethod, msParams->autoAdjHoleSize, msParams->autoAdjLimitFrac,
+      msParams->stepAdjSetPrevExp ? 1 : 0, msParams->stepAdjPrevExp);
     mFile->WriteString(oneState);
     oneState.Format("HoleAdjustXform %d %d %d %d %d %f %f %f %f\n",
       msParams->origMagOfArray[0], msParams->origMagOfArray[1], msParams->origMagOfCustom,
@@ -2992,6 +3004,7 @@ int CParameterIO::ReadProperties(CString strFileName)
   CString message;
   CameraParameters *mCamParam = mWinApp->GetCamParams();
   CameraParameters *camP;
+  std::map<int, float> *refinedPix = mShiftManager->GetRefinedPixelSizes();
   FileOptions *defFileOpt = mDocWnd->GetDefFileOpt();
   CArray<CString, CString> *globalValues = mDocWnd->GetGlobalAdocValues();
   CArray<CString, CString> *globalKeys = mDocWnd->GetGlobalAdocKeys();
@@ -3039,7 +3052,8 @@ int CParameterIO::ReadProperties(CString strFileName)
   std::set<std::string> dupOKgenProps(tmpg, tmpg + sizeof(tmpg) / sizeof(tmpg[0]));
   std::string tmpc[] = {"hotpixels", "rotationandpixel", "detectorname", "channelname",
     "rotationstretchxform", "specialrelativerotation", "binningoffset", "hotcolumns",
-    "partialbadcolumn", "badcolumns", "partialbadrow", "badrows", "badpixels"};
+    "partialbadcolumn", "badcolumns", "partialbadrow", "badrows", "badpixels",
+    "refinedpixel"};
   std::set<std::string> dupOKcamProps(tmpc, tmpc + sizeof(tmpc) / sizeof(tmpc[0]));
   std::string tmpnv[] = {"endcameraproperties"};
   std::set<std::string> noValOKprops(tmpnv, tmpnv + sizeof(tmpnv) / sizeof(tmpnv[0]));
@@ -3336,6 +3350,17 @@ int CParameterIO::ReadProperties(CString strFileName)
                 itemDbl[4] = 0.;
               }
               mMagTab[magInd].pixelSize[iset] = (float)(0.001 * itemDbl[4]);
+            }
+
+          } else if (MatchNoCase("RefinedPixel")) {
+            magInd = itemInt[1];
+            if (itemEmpty[2] || magInd < 1 || magInd >= MAX_MAGS) {
+                message.Format("Mag index out of range or missing pixel size in"
+                  " \"RefinedPixel %d\" line for camera %d\nin properties file %s", iset,
+                  strFileName);
+                AfxMessageBox(message, MB_EXCLAME);
+            } else {
+              refinedPix->insert(std::pair<int, float>(10 * magInd + iset, itemFlt[2]));
             }
 
           } else if (MatchNoCase("Binnings")) {
