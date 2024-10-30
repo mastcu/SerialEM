@@ -1963,9 +1963,11 @@ int HoleFinder::findCircles(float midRadius, float radiusInc, float width, int n
     // Stop in a direction if it is monotonic from the peak for two steps
     // And stop measuring when that happens both ways
     stopPlus = stopMinus = false;
-    if (bestInd - 2 >= minIndDone && peakSums[bestInd - 2] < peakSums[bestInd - 1])
+    if ((bestInd - 2 >= minIndDone && peakSums[bestInd - 2] < peakSums[bestInd - 1]) ||
+      radius - width - radiusInc <= 0.)
       stopMinus = true;
-    if (bestInd + 2 <= maxIndDone && peakSums[bestInd + 2] < peakSums[bestInd + 1])
+    if ((bestInd + 2 <= maxIndDone && peakSums[bestInd + 2] < peakSums[bestInd + 1]) ||
+      radius + width + radiusInc > 0.95 * B3DMIN(mXsize, mYsize))
       stopPlus = true;
     if (stopPlus && stopMinus)
       break;
@@ -2021,6 +2023,7 @@ int HoleFinder::findCircles(float midRadius, float radiusInc, float width, int n
                          yCenters[ind]);
     peakVals[ind] = peakVec[bestInd][ind] / peakVec[bestInd][0];
   }
+
   mLastBestRadius = bestRadius;
   mWallCircle += wallTime() - findStart;
   return 0;
