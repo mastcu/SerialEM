@@ -329,6 +329,7 @@ int CLogWindow::StringIndexToRichEditSel(CString &str, int index)
 void CLogWindow::FlushDeferredLines()
 {
   if (mNumDeferred > 0 || !mDeferredLines.IsEmpty()) {
+    SetNextLineColorStyle(0, 0);
     DoAppend(mDeferredLines, 0, 0, 0, 0, 0);
     mNumDeferred = 0;
     mDeferredLines = "";
