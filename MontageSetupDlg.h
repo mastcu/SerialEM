@@ -165,6 +165,7 @@ public:
   int CheckNavigatorFit(int magIndex, int binning, float minOverlap = -1.f, 
     float minMicrons = -1.f, BOOL switchingVinLD = FALSE);
   void LoadParamData(BOOL setPos);
+  void TurnOffOtherUseFlagsIfOn(BOOL &keepIfOn, int radioVal);
   void ManageSizeFields(void);
   void LoadOverlapBoxes();
   void UnloadOverlapBoxes();
@@ -200,8 +201,6 @@ public:
   CStatic m_statNmPerSec;
   afx_msg void OnCheckRepeatFocus();
   BOOL m_bUseViewInLowDose;
-  afx_msg void OnUseViewInLowdose();
-  CButton m_butUseViewInLD;
   BOOL m_bSkipReblank;
   CButton m_butNoDriftCorr;
   BOOL m_bNoDriftCorr;
@@ -211,9 +210,7 @@ public:
   float m_fContinDelayFac;
   afx_msg void OnCheckContinuousMode();
   void ManageCamAndStageEnables(void);
-  CButton m_butUseSearchInLD;
   BOOL m_bUseSearchInLD;
-  afx_msg void OnUseSearchInLD();
   void UseViewOrSearchInLD(BOOL & otherFlag, BOOL &secondFlag);
   CButton m_butUseMontMapParams;
   BOOL m_bUseMontMapParams;
@@ -227,6 +224,10 @@ public:
   CEdit m_editMaxBlockIS;
   float m_fMaxBlockIS;
   afx_msg void OnKillfocusEditMaxBlockIs();
+  int m_iLDParameterSet;
+  afx_msg void OnRLDUseSearch();
+  BOOL m_bUsePrevInLowDose;
+  BOOL m_bUseMontMapInLD;
 };
 
 //{{AFX_INSERT_LOCATION}}

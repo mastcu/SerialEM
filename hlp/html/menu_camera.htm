@@ -66,6 +66,10 @@
           <TD>Acquires binned-down montage without saving.</TD>
         </TR>
         <TR VALIGN="top">
+          <TD class="auto-style1"><A HREF="#hid_camera_previewprescan">Preview Prescan</A>&nbsp;</TD>
+          <TD>Acquires Prescan-style 3 by 3 montage with Preview in Low Dose, without needing a file.&nbsp;</TD>
+        </TR>
+        <TR VALIGN="top">
           <TD class="auto-style1"><b>Correlation Filter</A></b></TD>
           <TD>A submenu with settings to manipulate the filters used when correlating 
             montage overlap zones.</TD>
@@ -311,7 +315,12 @@
         entail defining an output file. If montaging has not been started yet, you will 
         first enter the <A HREF="hidd_montagesetup.htm">Montage Setup dialog box</A>, 
         then ensuing dialogs for opening a file.</P>
-      <P><A NAME="hid_correlationfilter_usefilterset2"></A><B>Use Filter Set 2 command (Camera - Correlation Filter submenu)</B></P>
+      <P><A NAME="hid_camera_previewprescan"></A><B>Preview Prescan command (Camera menu)</B></P>
+      <p>This command will acquire a binned-down 3 by 3 montage with Preview parameters in 
+        Low Dose Mode.&nbsp; There is no need to turn on montaging before using this command, and it
+        can be used when a montage is already open.&nbsp; A temporary file will be created (although
+         not written with images) and removed at the end.</p>
+     <P><A NAME="hid_correlationfilter_usefilterset2"></A><B>Use Filter Set 2 command (Camera - Correlation Filter submenu)</B></P>
     <P>The Correlation Filter submenu has a set of commands for controlling the filter 
       used when correlating montage overlap zones.&nbsp; There are two sets of filter 
       parameters available.&nbsp; Each set has default values, but the defaults can be 

@@ -20,6 +20,7 @@
 #include "MontageWindow.h"
 #include "LogWindow.h"
 #include "MultiGridTasks.h"
+#include "MultiShotDlg.h"
 #include "ParticleTasks.h"
 #include "MacroProcessor.h"
 #include "TSController.h"
@@ -2354,7 +2355,7 @@ int EMmontageController::SavePiece()
 {
   KImage *image;
   void *data;
-  int type, lower, idir, ixy, i, nVar, upper, nSum, cenType, sectInd, dataSize;
+  int type, lower, idir, ixy, i, nVar, upper, nSum, cenType, sectInd, dataSize, adocInd;
   float xPeak, yPeak, lowMean, highMean, midFrac, rangeFrac;
   CString report;
   ScaleMat camToSpec, specToCam;
@@ -2400,6 +2401,17 @@ int EMmontageController::SavePiece()
         return 1;
       isave = mWinApp->mStoreMRC->getDepth();
     }
+
+    // First image: save the spacing to global
+    if (!mWinApp->mStoreMRC->getDepth()) {
+      adocInd = mWinApp->mStoreMRC->GetAdocIndex();
+      if (adocInd >= 0 && !AdocGetMutexSetCurrent(adocInd)) {
+        AdocSetTwoIntegers(ADOC_GLOBAL, 0, ADOC_PSPACE, mParam->xFrame - mParam->xOverlap,
+          mParam->yFrame - mParam->yOverlap);
+        AdocReleaseMutex();
+      }
+    }
+
     SEMTrace('M', "SaveImage Saving image at %d %d,  file Z = %d", mPieceX, mPieceY,
       isave);
     if (mPieceSavedAt[mPieceIndex] < 0) {
@@ -2954,7 +2966,8 @@ int EMmontageController::SavePiece()
       CString strZ = "";
       CString strRtn = "\r\n";
       CString badMess = "";
-      if (!mReadingMontage || mWinApp->GetAdministrator()) {
+      if ((!mReadingMontage || mWinApp->GetAdministrator()) && 
+        !CMultiShotDlg::DoingAutoStepAdj()) {
         int logWhere = LOG_MESSAGE_IF_CLOSED;
         if (mWinApp->mMacroProcessor->DoingMacro() || mWinApp->DoingTiltSeries() ||
           (mWinApp->mNavigator && mWinApp->mNavigator->GetAcquiring())) {
@@ -3046,15 +3059,14 @@ int EMmontageController::SavePiece()
 
     if (mBufferManager->ReplaceImage((char *)mMiniData, miniType, mMiniSizeX, mMiniSizeY,
       1, mTrialMontage ? BUFFER_PRESCAN_OVERVIEW : BUFFER_MONTAGE_OVERVIEW, 
-      MONTAGE_CONSET, false, !mNoDrawOnRead)) {
+      MONTAGE_CONSET, B3DCHOICE(mReadingMontage && mImBufs->mBinning > 0,
+        mImBufs->mBinning, mParam->binning) * mMiniZoom, false, !mNoDrawOnRead)) {
       delete [] mMiniData;
     } else {
 
       // At this point buffer A still has the last read-in image, so get these parameters
       // from it if possible
       int bufCam = mImBufs->mCamera;
-      mImBufs[1].mBinning = B3DCHOICE(mReadingMontage && mImBufs->mBinning > 0,
-        mImBufs->mBinning, mParam->binning) * mMiniZoom;
       mImBufs[1].mMagInd = B3DCHOICE(mReadingMontage && mImBufs->mMagInd > 0, 
         mImBufs->mMagInd, mParam->magIndex);
       mImBufs[1].mCamera = B3DCHOICE(mReadingMontage && bufCam >= 0,
@@ -3341,7 +3353,8 @@ int EMmontageController::SavePiece()
   if (mBufferManager->ReplaceImage((char *)mCenterData, 
     cenType == kUBYTE ? kSHORT : cenType,  mParam->xFrame, mParam->yFrame, 0,
     mTrialMontage ? BUFFER_PRESCAN_CENTER : BUFFER_MONTAGE_CENTER, 
-    mImBufs[0].mConSetUsed, false, !mNoDrawOnRead)) {
+    mImBufs[0].mConSetUsed, mReadingMontage ? 1 : mParam->binning, // Why not set in read
+    false, !mNoDrawOnRead)) {
       delete [] mCenterData;
       if (extra0)
         delete extra1;
@@ -3349,7 +3362,6 @@ int EMmontageController::SavePiece()
     if (extra0)
       mImBufs->mImage->SetUserData(extra1);
     if (!mReadingMontage) {
-      mImBufs->mBinning = mParam->binning;
       mImBufs->mMagInd = mParam->magIndex;
       mImBufs->mEffectiveBin = mParam->binning;
       mImBufs->mDefocus = mBaseFocus;
@@ -5671,12 +5683,23 @@ void EMmontageController::ChangeParamSetToUse(MontParam *montP, int changeType)
     montP->useMontMapParams = changeType > 0;
   if (index == 2) {
     montP->useViewInLowDose = changeType > 0;
-    if (montP->useViewInLowDose)
+    if (montP->useViewInLowDose) {
       montP->useSearchInLowDose = false;
+      montP->usePrevInLowDose = false;
+    }
   }
   if (index == 3) {
     montP->useSearchInLowDose = changeType > 0;
-    if (montP->useSearchInLowDose)
+    if (montP->useSearchInLowDose) {
       montP->useViewInLowDose = false;
+      montP->usePrevInLowDose = false;
+    }
+  }
+  if (index == 4) {
+    montP->usePrevInLowDose = changeType > 0;
+    if (montP->usePrevInLowDose) {
+      montP->useSearchInLowDose = false;
+      montP->useViewInLowDose = false;
+    }
   }
 }

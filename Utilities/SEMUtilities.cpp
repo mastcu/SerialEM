@@ -118,6 +118,8 @@ int MontageConSetNum(MontParam *param, bool trueSet, int lowDose)
     set = VIEW_CONSET;
   else if (lowDose && param->useSearchInLowDose && ldp[SEARCH_AREA].magIndex)
     set = SEARCH_CONSET;
+  else if (lowDose && param->usePrevInLowDose && ldp[RECORD_CONSET].magIndex)
+    set = PREVIEW_CONSET;
   else if (lowDose && param->useMultiShot && ldp[RECORD_CONSET].magIndex)
     set = RECORD_CONSET;
   else if (!sWinApp->GetUseRecordForMontage() && param->useMontMapParams)

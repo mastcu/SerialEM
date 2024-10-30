@@ -56,6 +56,7 @@ struct MontParam {
   BOOL useMontMapParams;    // Flag to use the montage mapping parameters
   BOOL useViewInLowDose;    // Flag to use View parameters in low dose mode
   BOOL useSearchInLowDose;  // Flag to use Search parameters/area in low dose
+  BOOL usePrevInLowDose;    // Internal-use only flag to use preview in low dose
   BOOL useMultiShot;        // Flag to use Multiple Record routine
   BOOL setupInLowDose;      // Flag that params were set up in low dose
   BOOL useContinuousMode;   // Flag to use continuous mode if possible

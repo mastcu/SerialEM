@@ -125,6 +125,7 @@ hid_camera_record								= SerialEM.chm::/html\menu_camera.htm#hid_camera_record
 hid_camera_preview							= SerialEM.chm::/html\menu_camera.htm#hid_camera_preview
 hid_camera_montage							= SerialEM.chm::/html\menu_camera.htm#hid_camera_montage
 hid_camera_montagetrial					= SerialEM.chm::/html\menu_camera.htm#hid_camera_montagetrial
+hid_camera_previewprescan       = SerialEM.chm::/html\menu_camera.htm#hid_camera_previewprescan
 hid_camera_setcountlimit				= SerialEM.chm::/html\menu_camera.htm#hid_camera_setcountlimit
 hid_camera_stopacquire					= SerialEM.chm::/html\menu_camera.htm#hid_camera_stopacquire
 hid_camera_showgainref					= SerialEM.chm::/html\menu_camera.htm#hid_camera_showgainref

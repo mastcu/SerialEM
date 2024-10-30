@@ -38,9 +38,10 @@ static int sIdTable[] = {IDC_STATCAMERA, IDC_RCAMERA1, IDC_RCAMERA2, IDC_RCAMERA
   IDC_UPDATE, IDC_MOVESTAGE, IDC_IGNORESKIPS, IDC_MINOVLABEL, IDC_MINOVVALUE, 
   IDC_SPINMINOV, IDC_EDITMINOVERLAP, IDC_STATMINAND, IDC_STATMINMICRON, IDC_STAT_LINE1,
   IDC_CHECK_SKIP_OUTSIDE, IDC_EDIT_SKIP_OUTSIDE, IDC_CHECKOFFERMAP, IDC_STAT_LINE2, 
-  IDC_CHECK_USE_HQ_SETTINGS, IDC_BUT_RESET_OVERLAPS, IDC_CHECK_USE_VIEW_IN_LOWDOSE,
+  IDC_CHECK_USE_HQ_SETTINGS, IDC_BUT_RESET_OVERLAPS, IDC_CHECK_USE_MONT_MAP_PARAMS,
   IDC_CHECK_NO_DRIFT_CORR, IDC_CHECK_CONTINUOUS_MODE, IDC_EDIT_CONTIN_DELAY_FAC, 
-  IDC_CHECK_USE_SEARCH_IN_LD, IDC_CHECK_USE_MONT_MAP_PARAMS, IDC_CHECK_USE_MULTISHOT,
+  IDC_STAT_LD_PARAM_SET, IDC_RLD_USE_SEARCH, IDC_RLD_USE_VIEW, IDC_RLD_USE_RECORD,
+  IDC_RLD_USE_PREVIEW, IDC_RLD_USE_MONTMAP, IDC_CHECK_USE_MULTISHOT,
   IDC_CHECK_CLOSE_WHEN_DONE, IDC_CHECK_IMSHIFT_IN_BLOCKS, IDC_EDIT_MAX_BLOCK_IS,
   IDC_STAT_IS_BLOCKPIECES, IDC_STAT_IS_BLOCK_STARS, IDC_STAT_LINE3,
   PANEL_END,
@@ -85,6 +86,7 @@ CMontageSetupDlg::CMontageSetupDlg(CWnd* pParent /*=NULL*/)
   , m_bUseMultishot(FALSE)
   , m_bImShiftInBlocks(FALSE)
   , m_fMaxBlockIS(1.f)
+  , m_iLDParameterSet(0)
 {
   //{{AFX_DATA_INIT(CMontageSetupDlg)
   m_iXnFrames = 1;
@@ -215,8 +217,6 @@ void CMontageSetupDlg::DoDataExchange(CDataExchange* pDX)
   DDX_MM_FLOAT(pDX, IDC_EDIT_NMPERSEC, m_fNmPerSec, 0.1f, 30.f,
     "Drift limit for repeating focus");
   DDX_Control(pDX, IDC_STATNMPERSEC, m_statNmPerSec);
-  DDX_Check(pDX, IDC_CHECK_USE_VIEW_IN_LOWDOSE, m_bUseViewInLowDose);
-  DDX_Control(pDX, IDC_CHECK_USE_VIEW_IN_LOWDOSE, m_butUseViewInLD);
   DDX_Check(pDX, IDC_CHECK_SKIP_REBLANK, m_bSkipReblank);
   DDX_Control(pDX, IDC_CHECK_NO_DRIFT_CORR, m_butNoDriftCorr);
   DDX_Check(pDX, IDC_CHECK_NO_DRIFT_CORR, m_bNoDriftCorr);
@@ -225,8 +225,6 @@ void CMontageSetupDlg::DoDataExchange(CDataExchange* pDX)
   DDX_Control(pDX, IDC_EDIT_CONTIN_DELAY_FAC, m_editContinDelayFac);
   DDX_MM_FLOAT(pDX, IDC_EDIT_CONTIN_DELAY_FAC, m_fContinDelayFac, 0., 9.,
     "Settling factor for continuous mode");
-  DDX_Control(pDX, IDC_CHECK_USE_SEARCH_IN_LD, m_butUseSearchInLD);
-  DDX_Check(pDX, IDC_CHECK_USE_SEARCH_IN_LD, m_bUseSearchInLD);
   DDX_Control(pDX, IDC_CHECK_USE_MONT_MAP_PARAMS, m_butUseMontMapParams);
   DDX_Check(pDX, IDC_CHECK_USE_MONT_MAP_PARAMS, m_bUseMontMapParams);
   DDX_Control(pDX, IDC_CHECK_USE_MULTISHOT, m_butUseMultishot);
@@ -236,6 +234,7 @@ void CMontageSetupDlg::DoDataExchange(CDataExchange* pDX)
   DDX_Control(pDX, IDC_EDIT_MAX_BLOCK_IS, m_editMaxBlockIS);
   DDX_MM_FLOAT(pDX, IDC_EDIT_MAX_BLOCK_IS, m_fMaxBlockIS, 1.0f, 1000.0f,
     "Maximum image shift within blocks");
+  DDX_Radio(pDX, IDC_RLD_USE_SEARCH, m_iLDParameterSet);
 }
 
 
@@ -275,13 +274,16 @@ BEGIN_MESSAGE_MAP(CMontageSetupDlg, CBaseDlg)
   ON_BN_CLICKED(IDC_CHECK_USE_ANCHOR, OnCheckUseAnchor)
   ON_NOTIFY(UDN_DELTAPOS, IDC_SPIN_ANCHOR_MAG, OnDeltaposSpinAnchorMag)
   ON_BN_CLICKED(IDC_CHECK_REPEAT_FOCUS, OnCheckRepeatFocus)
-  ON_BN_CLICKED(IDC_CHECK_USE_VIEW_IN_LOWDOSE, OnUseViewInLowdose)
   ON_BN_CLICKED(IDC_CHECK_CONTINUOUS_MODE, OnCheckContinuousMode)
-  ON_BN_CLICKED(IDC_CHECK_USE_SEARCH_IN_LD, OnUseSearchInLD)
   ON_BN_CLICKED(IDC_CHECK_USE_MONT_MAP_PARAMS, OnUseMontMapParams)
   ON_BN_CLICKED(IDC_CHECK_USE_MULTISHOT, OnUseMultishot)
   ON_BN_CLICKED(IDC_CHECK_IMSHIFT_IN_BLOCKS, OnCheckImshiftInBlocks)
   ON_EN_KILLFOCUS(IDC_EDIT_MAX_BLOCK_IS, OnKillfocusEditMaxBlockIs)
+  ON_BN_CLICKED(IDC_RLD_USE_SEARCH, OnRLDUseSearch)
+  ON_BN_CLICKED(IDC_RLD_USE_PREVIEW, OnRLDUseSearch)
+  ON_BN_CLICKED(IDC_RLD_USE_VIEW, OnRLDUseSearch)
+  ON_BN_CLICKED(IDC_RLD_USE_RECORD, OnRLDUseSearch)
+  ON_BN_CLICKED(IDC_RLD_USE_MONTMAP, OnRLDUseSearch)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -294,6 +296,8 @@ BOOL CMontageSetupDlg::OnInitDialog()
   CRect butrect;
   bool needFont, viewOK, recordOK, searchOK;
   BOOL tmpEnable;
+  int smallSets[5] = {IDC_RLD_USE_SEARCH, IDC_RLD_USE_VIEW, IDC_RLD_USE_RECORD,
+    IDC_RLD_USE_PREVIEW, IDC_RLD_USE_MONTMAP};
   BOOL forMultiLMmap = mForMultiGridMap == SETUPMONT_MG_FULL_GRID ||
     mForMultiGridMap == SETUPMONT_MG_LM_NBYN;
   BOOL overlapFixed = forMultiLMmap && mWinApp->mNavHelper->mMultiGridDlg &&
@@ -356,6 +360,19 @@ BOOL CMontageSetupDlg::OnInitDialog()
     }
   }
 
+
+  for (ind = 0; ind < 5; ind++) {
+    if (mLowDoseMode) {
+      radio = (CButton *)GetDlgItem(smallSets[ind]);
+      if (radio)
+        radio->SetFont(littleFont);
+    } else {
+      mIDsToDrop.push_back(smallSets[ind]);
+    }
+  }
+  mIDsToDrop.push_back(mLowDoseMode ? IDC_CHECK_USE_MONT_MAP_PARAMS : 
+    IDC_STAT_LD_PARAM_SET);
+
   // Set up the camera buttons
   if (mNumCameras > 1) {
     for (i = 0; i < mNumCameras; i++) {
@@ -408,20 +425,26 @@ BOOL CMontageSetupDlg::OnInitDialog()
   searchOK = mLdp[SEARCH_AREA].magIndex != 0;
   ReplaceDlgItemText(IDC_CHECK_USE_VIEW_IN_LOWDOSE, "View", modeName[VIEW_CONSET]);
   ReplaceDlgItemText(IDC_CHECK_USE_MONT_MAP_PARAMS, "Record", modeName[RECORD_CONSET]);
-  m_butUseViewInLD.EnableWindow(mLowDoseMode && !mSizeLocked && viewOK &&
-    (recordOK || searchOK) && !mForMultiGridMap);
-  m_butUseSearchInLD.EnableWindow(mLowDoseMode && !mSizeLocked && searchOK && 
-    !mForMultiGridMap);
   m_butUseMultishot.EnableWindow(mLowDoseMode && !mSizeLocked && recordOK &&
     !mFittingItem && !mForMultiGridMap);
-  if (mLowDoseMode && !searchOK)
+  if (mLowDoseMode && !searchOK) {
     mParam.useSearchInLowDose = false;
+    EnableDlgItem(IDC_RLD_USE_SEARCH, false);
+  }
   if (mLowDoseMode && !recordOK && !mParam.useSearchInLowDose)
     mParam.useViewInLowDose = true;
-  if (mLowDoseMode && !viewOK)
+  if (mLowDoseMode && !recordOK) {
+    mParam.usePrevInLowDose = false;
+    EnableDlgItem(IDC_RLD_USE_PREVIEW, false);
+    EnableDlgItem(IDC_RLD_USE_RECORD, false);
+    EnableDlgItem(IDC_RLD_USE_MONTMAP, false);
+  }
+  if (mLowDoseMode && !viewOK) {
     mParam.useViewInLowDose = false;
+    EnableDlgItem(IDC_RLD_USE_VIEW, false);
+  }
   if (mLowDoseMode && (!recordOK || mFittingItem || mParam.useViewInLowDose || 
-    mParam.useSearchInLowDose || mForMultiGridMap))
+    mParam.useSearchInLowDose || mParam.usePrevInLowDose || mForMultiGridMap))
     mParam.useMultiShot = false;
   m_butUseMontMapParams.EnableWindow(!mWinApp->GetUseRecordForMontage() && !mSizeLocked
     && !(mLowDoseMode && (mParam.useViewInLowDose || mParam.useSearchInLowDose ||
@@ -573,10 +596,23 @@ void CMontageSetupDlg::LoadParamData(BOOL setPos)
   m_fMinMicron = mParam.minMicronsOverlap;
   mParam.minOverlapFactor = B3DMAX(0.01f, B3DMIN(mMaxOverFrac, mParam.minOverlapFactor));
   m_strMinOvValue.Format("%d%%", B3DNINT(100. * mParam.minOverlapFactor));
-  m_bUseMontMapParams = mParam.useMontMapParams;
+  m_bUseMontMapParams = m_bUseMontMapInLD = mParam.useMontMapParams;
   m_bUseViewInLowDose = mParam.useViewInLowDose;
   m_bUseSearchInLD = mParam.useSearchInLowDose;
+  m_bUsePrevInLowDose = mParam.usePrevInLowDose;
   m_bUseMultishot = mParam.useMultiShot;
+  if (mLowDoseMode) {
+    if (mWinApp->GetUseRecordForMontage()) {
+      m_bUseMontMapInLD = false;
+      EnableDlgItem(IDC_RLD_USE_MONTMAP, false);
+    }
+    m_iLDParameterSet = 3;
+    TurnOffOtherUseFlagsIfOn(m_bUseViewInLowDose, 1);
+    TurnOffOtherUseFlagsIfOn(m_bUseSearchInLD, 0);
+    TurnOffOtherUseFlagsIfOn(m_bUsePrevInLowDose, 2);
+    TurnOffOtherUseFlagsIfOn(m_bUseMontMapInLD, 4);
+    TurnOffOtherUseFlagsIfOn(m_bUseMultishot, -1);
+  }
   LoadOverlapBoxes();
   UpdateFocusBlockSizes();
   UpdateData(false);
@@ -621,6 +657,21 @@ void CMontageSetupDlg::ManageCameras()
     radio->EnableWindow(mCamFeasible[iCam] && !mLowDoseMode && !mMismatchedModes
       && !mFittingItem && !mForMultiGridMap);
   }
+}
+
+// Make the "use" conset flags consistent but turning off all but one, set radio too
+void CMontageSetupDlg::TurnOffOtherUseFlagsIfOn(BOOL &keepIfOn, int radioVal)
+{
+  if (!keepIfOn)
+    return;
+  m_bUseMontMapInLD = false;
+  m_bUseViewInLowDose = false;
+  m_bUseSearchInLD = false;
+  m_bUsePrevInLowDose = false;
+  m_bUseMultishot = false;
+  keepIfOn = true;
+  if (radioVal >= 0)
+    m_iLDParameterSet = radioVal;
 }
 
 // Enable size if camera allows arbitrary sizes and sizes not locked
@@ -1000,10 +1051,15 @@ void CMontageSetupDlg::UnloadParamData(void)
   mParam.maxRealignIS = m_fISlimit;
   mParam.ISrealign = m_bISrealign;
   mParam.useAnchorWithIS = m_bUseAnchor;
-  mParam.useMontMapParams = m_bUseMontMapParams;
-  mParam.useViewInLowDose = m_bUseViewInLowDose;
-  mParam.useSearchInLowDose = m_bUseSearchInLD;
-  mParam.useMultiShot = m_bUseMultishot;
+  mParam.useMontMapParams = mLowDoseMode ? m_bUseMontMapInLD : m_bUseMontMapParams;
+  if (mLowDoseMode) {
+    mParam.useViewInLowDose = m_bUseViewInLowDose;
+    mParam.useSearchInLowDose = m_bUseSearchInLD && !m_bUseViewInLowDose;
+    mParam.usePrevInLowDose = m_bUsePrevInLowDose && !(m_bUseViewInLowDose ||
+      m_bUseSearchInLD);
+    mParam.useMultiShot = m_bUseMultishot && !(m_bUseViewInLowDose || m_bUseSearchInLD ||
+      m_bUsePrevInLowDose);
+  }
   mParam.useContinuousMode = m_bUseContinMode;
   mParam.continDelayFactor = m_fContinDelayFac;
   if (m_bUseHq)
@@ -1528,33 +1584,56 @@ void CMontageSetupDlg::OnButResetOverlaps()
   SetFocus();
 }
 
+// Mont-mapcheck box, not used in low dose
 void CMontageSetupDlg::OnUseMontMapParams()
 {
   BOOL dummy = false, dummy2 = false;
   UseViewOrSearchInLD(dummy, dummy2);
 }
 
+// Low dose area radio buttons
+void CMontageSetupDlg::OnRLDUseSearch()
+{
+  UpdateData(true);
+  if (m_bUseMultishot) {
+    m_bUseMultishot = false;
+    UpdateData(false);
+  }
+  if (m_iLDParameterSet == 1) {
+    m_bUseViewInLowDose = true;
+    m_bUseMontMapInLD = false;
+    UseViewOrSearchInLD(m_bUseSearchInLD, m_bUsePrevInLowDose);
+  } else if (!m_iLDParameterSet) {
+    m_bUseSearchInLD = true;
+    m_bUseMontMapInLD = false;
+    UseViewOrSearchInLD(m_bUseViewInLowDose, m_bUsePrevInLowDose);
+  } else if (m_iLDParameterSet == 2) {
+    m_bUsePrevInLowDose = true;
+    m_bUseMontMapInLD = false;
+    UseViewOrSearchInLD(m_bUseViewInLowDose, m_bUseSearchInLD);
+  } else if (m_iLDParameterSet == 3) {
+    m_bUsePrevInLowDose = false;
+    m_bUseMontMapInLD = false;
+    UseViewOrSearchInLD(m_bUseViewInLowDose, m_bUseSearchInLD);
+  } else {
+    m_bUseMontMapInLD = true;
+    m_bUsePrevInLowDose = false;
+    UseViewOrSearchInLD(m_bUseViewInLowDose, m_bUseSearchInLD);
+  }
+}
+
 void CMontageSetupDlg::OnUseMultishot()
 {
+  UpdateData(true);
+  bool needUpdate = m_bUseMultishot && m_iLDParameterSet != 3;
+  TurnOffOtherUseFlagsIfOn(m_bUseMultishot, 3);
   UseViewOrSearchInLD(m_bUseViewInLowDose, m_bUseSearchInLD);
-  if (m_bUseMultishot)
-    m_bMoveStage = false;
+  if (needUpdate) 
+    UpdateData(false);
   EnableDlgItem(IDC_MOVESTAGE, !m_bUseMultishot);
   EnableDlgItem(IDC_CHECK_SKIP_OUTSIDE, !m_bUseMultishot);
 }
 
-void CMontageSetupDlg::OnUseViewInLowdose()
-{
-  UseViewOrSearchInLD(m_bUseSearchInLD, m_bUseMultishot);
-}
-
-void CMontageSetupDlg::OnUseSearchInLD()
-{
-  UseViewOrSearchInLD(m_bUseViewInLowDose, m_bUseMultishot);
-}
-
-// When Use View changes, put values back in the param, reinitialize with these
-// conset sizes, and reload the dialog
 void CMontageSetupDlg::UseViewOrSearchInLD(BOOL &otherFlag, BOOL &secondFlag)
 {
   BOOL saveVinLD = m_bUseViewInLowDose;
@@ -1582,8 +1661,8 @@ void CMontageSetupDlg::UseViewOrSearchInLD(BOOL &otherFlag, BOOL &secondFlag)
   // index and binning are supplied there, but need to restore button if fit is rejected
   // Have to supply the actual binning in control set when not low dose
   if (mFittingItem) {
-    setNum = (m_bUseMontMapParams && !mWinApp->GetUseRecordForMontage()) ?
-      MONT_USER_CONSET : RECORD_CONSET;
+    setNum = B3DCHOICE((mLowDoseMode ? m_bUseMontMapInLD : m_bUseMontMapParams) && 
+      !mWinApp->GetUseRecordForMontage(), MONT_USER_CONSET, RECORD_CONSET);
     if (CheckNavigatorFit(mParam.magIndex, conSet[setNum].binning, -1., -1., 
       mLowDoseMode)) {
         m_bUseViewInLowDose = saveVinLD;
@@ -1594,8 +1673,13 @@ void CMontageSetupDlg::UseViewOrSearchInLD(BOOL &otherFlag, BOOL &secondFlag)
     return;
   }
   UnloadParamData();
+  saveUseMMP = mParam.useMontMapParams;
+  if (mLowDoseMode)
+    mParam.useMontMapParams = m_bUseMontMapInLD;
   mLDsetNum = MontageLDAreaIndex(&mParam);
   mWinApp->mDocWnd->MontParamInitFromConSet(&mParam, MontageConSetNum(&mParam, false));
+  if (mLowDoseMode)
+    mParam.useMontMapParams = saveUseMMP;
   if (!mLowDoseMode)
     mParam.moveStage = saveMoveStage > 0;
   else if (!m_bUseViewInLowDose && !m_bUseSearchInLD && !m_bUseMultishot &&
