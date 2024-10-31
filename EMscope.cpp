@@ -5422,8 +5422,10 @@ void CEMscope::GotoLowDoseArea(int newArea)
   mWinApp->mLowDoseDlg.DeselectGoToButtons(newArea);
 
   // Use designated params if set by nav helper, otherwise use set area params
-  if (!mLdsaParams)
-    mLdsaParams = ldParams + oldArea;
+  // Leave it at NULL for now, it is protected by tests for oldArea >= 0 below and needs
+  // be tested for with mLowDoseSetArea in DoISforLowDoseArea
+  if (!mLdsaParams && oldArea >= 0)
+    mLdsaParams = ldParams + (oldArea >= 0 ? oldArea : RECORD_CONSET);
 
   if (oldArea < 0)
     curMagInd = GetMagIndex();
@@ -5771,7 +5773,7 @@ void CEMscope::GotoLowDoseArea(int newArea)
   mChangingLDArea = -1;
 
   // Finally, put the centered IS back at the new mag and area
-  if (changingAtZeroIS) {
+  if (changingAtZeroIS && mLdsaParams) {
     mShiftManager->TransferGeneralIS(mLdsaParams->magIndex, centeredISX, centeredISY,
       ldArea->magIndex, newISX, newISY);
     SetLDCenteredShift(newISX, newISY);
@@ -5918,7 +5920,7 @@ void CEMscope::DoISforLowDoseArea(int inArea, int curMag, double &delISX, double
       cenISX = adjISX;
       cenISY = adjISY;
     }
-    if (doAdj && ((inArea == VIEW_CONSET && mLDViewDefocus) ||
+    if (doAdj && mLowDoseSetArea >= 0 && ((inArea == VIEW_CONSET && mLDViewDefocus) ||
       (inArea == SEARCH_AREA  && mSearchDefocus))) {
 
       // Entering either area, transfer the image shift, transform to camera, rotate and
