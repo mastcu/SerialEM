@@ -3,6 +3,10 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+10/31/24: SEM_4-1-18
+10/31/24: Error details are now included in the popup message about an error
+calling a JEOL scope function (In 4.1).
+
 10/30/24: Fixed going back into Low Dose after Realign to Item , which crashed
 when accounting for some offsets (In 4.1).
 
