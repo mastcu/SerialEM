@@ -77,8 +77,8 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
-#define VERSION_STRING  "SerialEM Version 4.1.17"
-#define TAG_STRING      "(Tagged SEM_4-1-17, 9/26/24)"
+#define VERSION_STRING  "SerialEM Version 4.1.18"
+#define TAG_STRING      "(Tagged SEM_4-1-18, 10/31/24)"
 #define DEPRECATED_PYTHON  "3.5-64"
 
 // Offsets for static window inside main frame
@@ -2947,9 +2947,12 @@ void SEMReportCOMError(_com_error E, CString inString, CString *outStr, bool ski
   ScopePluginFuncs *plugFuncs;
   if (E.Error() == JEOL_FAKE_HRESULT || E.Error() == PLUGIN_FAKE_HRESULT || 
     E.Error() == NOFUNC_FAKE_HRESULT) {
-      if (E.Error() == JEOL_FAKE_HRESULT)
-        sDescription = _T("ERROR in call to JEOL ") + inString;
-      else if (E.Error() == NOFUNC_FAKE_HRESULT)
+    if (E.Error() == JEOL_FAKE_HRESULT) {
+      sDescription = _T("ERROR in call to JEOL ") + inString;
+      plugFuncs = CEMscope::GetPlugFuncs();
+      if (plugFuncs->GetLastErrorString)
+        sDescription += CString(":\r\n") + plugFuncs->GetLastErrorString();
+    } else if (E.Error() == NOFUNC_FAKE_HRESULT)
         sDescription = _T("ERROR ") + inString + 
         _T(": function not defined in microscope plugin");
       else {
