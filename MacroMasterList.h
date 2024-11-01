@@ -815,6 +815,7 @@ MAC_SAME_NAME_ARG(SetFileOptions, 2, 4, SETFILEOPTIONS, IIiiiiddiiii)
 MAC_SAME_NAME_ARG(FindAndCenterOneHole, 2, 4, FINDANDCENTERONEHOLE, SDid)
 MAC_SAME_NAME_ARG(StepAndAdjustISVectors, 2, 1, StepAndAdjustISVectors, IDd)
 MAC_SAME_NAME_NOARG(PrescanWithPreview, 0, 1, PRESCANWITHPREVIEW)
+MAC_SAME_NAME_NOARG(ClearNonPersistentVars, 0, 4, CLEARNONPERSISTENTVARS)
 
 // new Python-only commands need to be added to pythonOnlyCmds in ::CMacroProcessor
 // New Not from Python items omit _ARG or _NOARG

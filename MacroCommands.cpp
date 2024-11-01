@@ -1479,6 +1479,13 @@ int CMacCmd::ClearPersistentVars(void)
   return 0;
 }
 
+// ClearNonPersistentVars
+int CMacCmd::ClearNonPersistentVars()
+{
+  ClearVariables(VARTYPE_REGULAR);
+  return 0;
+}
+
 // MakeVarPersistent
 int CMacCmd::MakeVarPersistent(void)
 {

@@ -424,6 +424,14 @@
           <TD class="scriptcommand">ClearPersistentVars</TD>
           <TD>Removes all persistent variables defined with ':='</TD>
         </TR>
+       <TR>
+          <TD class="scriptcommand">ClearNonPersistentVars</TD>
+          <TD>Removes all non-persistent variables that have been defined, except loop index
+             variables.&nbsp; This command is important to use when controlling the program
+             remotely (e.g., from an external Python script) because variables are cleared
+            only when such a script relinquishes control.&nbsp; Command added in 4.2, 1-Nov-24.
+          </TD>
+        </TR>
         <TR>
           <TD class="scriptcommand">MakeVarPersistent var [#]</TD>
           <TD>Changes a regular variable to persistent, or if a 0 is entered for <b>#</b>, makes a
