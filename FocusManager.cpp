@@ -1849,18 +1849,20 @@ void CFocusManager::FocusDone()
 
 void CFocusManager::StopFocusing()
 {
+  if (mFCindex < 0 && mFocusIndex < 0)
+    return;
   mCamera->StopCapture(1);
   if (mNumRotavs >= 0) {
     StopSTEMfocus();
     return;
   }
   if (mFCindex >= 0) {
+    mFCindex = -1;
     mScope->IncDefocus(-mCalDefocus);
     SetBeamTilt(mCalSavedBeamTilt, "from StopFocusing");
   }
-  mFCindex = -1;
-  mScope->SetBeamTilt(mBaseTiltX, mBaseTiltY);
   mFocusIndex = -1;
+  mScope->SetBeamTilt(mBaseTiltX, mBaseTiltY);
   if (mAppliedOffset)
     mScope->IncDefocus(-mAppliedOffset);
   mAppliedOffset = 0.;
