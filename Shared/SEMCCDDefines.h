@@ -62,6 +62,7 @@ FRAMEDOC_OPEN_ERR, FRAMEDOC_WRITE_ERR, NULL_IMAGE, FRAMETS_NO_ANGLES, VIEW_IS_AC
 #define PLUGCAM_DIV_BY_MORE   (1 << 17)
 #define PLUGCAM_MOREDIV_BITS    18
 #define PLUGCAM_MOREDIV_MASK    15    // bits 18-21 #'d from 0
+#define PLUGCAM_RESTORE_SETTINGS  (1 << 25)
 
 // Flags for SetupFrameAligning (bit 1 is apply gain ref, bit 7 is for early return)
 // (And bit 5 is for synchronous align/save, and bit 6 for apply defects, 

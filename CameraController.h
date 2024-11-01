@@ -99,6 +99,7 @@ class CCEOSFilter;
 #define CAMFLAG_CAN_DIV_MORE      (1 << 17)
 #define CAMFLAG_NO_DIV_BY_2       (1 << 18)
 #define CAMFLAG_SINGLE_OK_IF_SAVE (1 << 19)
+#define CAMFLAG_RESTORE_SETTINGS  (1 << 25)
 
 #define AMT_VERSION_CAN_NORM     700
 #define TIETZ_VERSION_HAS_GPU    102

@@ -3272,6 +3272,8 @@ int CParameterIO::ReadProperties(CString strFileName)
             StripItems(strLine, 1, camP->shutterLabel2);
           else if (MatchNoCase("ShutterLabel3"))
             StripItems(strLine, 1, camP->shutterLabel3);
+          else if (MatchNoCase("RestoreSettings"))
+            camP->CamFlags |= CAMFLAG_RESTORE_SETTINGS;
           else if (MatchNoCase("DMRotationAndFlip") || MatchNoCase("AlignedSumRotFlip"))
             camP->DMrotationFlip = itemInt[1];
           else if (MatchNoCase("MinimumFrameTimes"))

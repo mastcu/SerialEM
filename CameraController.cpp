@@ -3863,6 +3863,8 @@ void CCameraController::Capture(int inSet, bool retrying)
     mTD.PluginAcquireFlags |= PLUGCAM_RETURN_FLOAT;
     mTD.K2ParamFlags |= PLUGCAM_RETURN_FLOAT;
   }
+  if (mTD.plugFuncs && (mParam->CamFlags & CAMFLAG_RESTORE_SETTINGS))
+    mTD.PluginAcquireFlags |= PLUGCAM_RESTORE_SETTINGS;
 
   // Set timeout for camera acquires from exposure and readout components
   megaVoxel = (mDMsizeX * mDMsizeY / 1.e6) / (mParam->fourPort ? 4. : 1.);
