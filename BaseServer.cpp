@@ -319,6 +319,8 @@ int CBaseServer::ReallocArgsBufIfNeeded(int needSize, int sockInd)
   if (needSize < mArgBufSize[sockInd] - 4)
     return 0;
   newSize = ((needSize + ARGS_BUFFER_CHUNK - 1) / ARGS_BUFFER_CHUNK) * ARGS_BUFFER_CHUNK;
+  PrintfToLog("Reallocating the argument buffer for needed size %d to new size %d",
+    needSize, newSize);
   newBuf = (char *)malloc(newSize);
   if (!newBuf)
     return 1;
@@ -326,7 +328,6 @@ int CBaseServer::ReallocArgsBufIfNeeded(int needSize, int sockInd)
   free(mArgsBuffer[sockInd]);
   mArgBufSize[sockInd] = newSize;
   mArgsBuffer[sockInd] = newBuf;
-  DebugToLog("Reallocated the argument buffer");
   return 0;
 }
 
