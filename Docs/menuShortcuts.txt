@@ -22,8 +22,10 @@ X
  Log Window:
  A
  C
+ D
  F
  M
+ N
  O
  P
  R

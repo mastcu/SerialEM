@@ -1095,6 +1095,8 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
             place = mWinApp->mParticleTasks->GetZbyGPlacement();
           else if (NAME_IS("SnapshotPlacement"))
             place = mWinApp->GetScreenShotPlacement();
+          else if (NAME_IS("SecondaryLogPlacement"))
+            place = mWinApp->GetSecondaryLogPlacement();
           else if (NAME_IS("StatePlacement")) {
             mWinApp->SetOpenStateWithNav(itemInt[1] != 0);
             place = mWinApp->mNavHelper->GetStatePlacement();
@@ -1116,7 +1118,7 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
           } else if (NAME_IS("LogPlacement")) {
             mWinApp->SetReopenLog(itemInt[1] != 0);
             place = mWinApp->GetLogPlacement();
-          }
+          } 
           place->showCmd = itemInt[index + 2];
           place->ptMaxPosition.x = itemInt[index + 3];
           place->ptMaxPosition.y = itemInt[index + 4];
@@ -1699,6 +1701,7 @@ void CParameterIO::WriteSettings(CString strFileName)
   WINDOWPLACEMENT *vppPlace = mWinApp->mMultiTSTasks->GetConditionPlacement();
   WINDOWPLACEMENT *zbgPlace = mWinApp->mParticleTasks->GetZbyGPlacement();
   WINDOWPLACEMENT *navAcqPlace = mWinApp->mNavHelper->GetAcquireDlgPlacement(true);
+  WINDOWPLACEMENT *scndLogPlace = mWinApp->GetSecondaryLogPlacement();
   int *macroButtonNumbers = mWinApp->mCameraMacroTools.GetMacroNumbers();
   mWinApp->CopyCurrentToCameraLDP();
   DoseTable *doseTables = mWinApp->mBeamAssessor->GetDoseTables();
@@ -2201,6 +2204,8 @@ void CParameterIO::WriteSettings(CString strFileName)
     if (mWinApp->mLogWindow)
       mWinApp->mLogWindow->GetWindowPlacement(logPlace);
     WritePlacement("LogPlacement", mWinApp->mLogWindow ? 1 : 0, logPlace);
+    if (scndLogPlace->rcNormalPosition.right != NO_PLACEMENT)
+      WritePlacement("SecondaryLogPlacement", 1, scndLogPlace);
 
     // Get Navigator window placement and write it out
     if (mWinApp->mNavigator)

@@ -47,6 +47,7 @@ public:
   enum { IDD = IDD_LOGWINDOW };
   CRichEditCtrl m_editWindow;
   CString m_strLog;
+  bool mIsSecondary;
   //}}AFX_DATA
 
 
@@ -69,7 +70,7 @@ protected:
 	afx_msg void OnMove(int x, int y);
   afx_msg void OnActivate(UINT nState, CWnd* pWndOther, BOOL bMinimized);
 
-	//}}AFX_MSG
+  //}}AFX_MSG
   DECLARE_MESSAGE_MAP()
 private:
   int m_iBorderY;

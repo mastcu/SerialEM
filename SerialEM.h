@@ -534,13 +534,17 @@ public:
   void AppendToLog(CString inString, int inAction = LOG_OPEN_IF_CLOSED, int lineFlags = 0);
   void SetNextLogColorStyle(int colorInd, int style);
   void VerboseAppendToLog(BOOL verbose, CString str);
-  void LogClosing();
+  void LogClosing(CLogWindow *which);
+  void OpenSecondaryLog(CString name, bool readFile);
+  void LogGotFocus(CLogWindow *win);
+  void LogLostFocus(CLogWindow *win);
   WINDOWPLACEMENT *GetLogPlacement() { return &mLogPlacement; };
   WINDOWPLACEMENT *GetNavPlacement() { return &mNavPlacement; };
   WINDOWPLACEMENT *GetStageToolPlacement();
   void OpenStageMoveTool();
   void OpenScreenShotDlg();
   WINDOWPLACEMENT *GetScreenShotPlacement();
+  WINDOWPLACEMENT *GetSecondaryLogPlacement();
   SetMember(bool, ReopenLog);
   void SetReopenMacroEditor(int index, bool open) { mReopenMacroEditor[index] = open; };
   void StartMontageOrTrial(BOOL inTrial);
@@ -1015,6 +1019,10 @@ private:
   int mNextLogStyle;            // Style for next output to log
   CString mNanumFontPath;       // Path to font that needs removing
   BOOL mStartCameraInDebug;     // Flag to transition to Z debug output
+  CArray <CLogWindow *, CLogWindow *> mSecondaryLogs;
+  int mCurSecondaryLog;         // Index if secondary log window with focus or -1 if none
+  int mLastSecondaryLog;        // Index of last one that lost focus
+  WINDOWPLACEMENT mSecondaryLogPlace;
 
 public:
   void UpdateAllEditers(void);
@@ -1088,6 +1096,10 @@ afx_msg void OnUpdateFileAutosaveLog(CCmdUI *pCmdUI);
 bool FilterIsSelectris() {return mFilterParams.firstGIFCamera >= 0 && mCamParams[mActiveCameraList[mFilterParams.firstGIFCamera]].filterIsFEI ; };
 afx_msg void OnUseRTFformatToSave();
 afx_msg void OnUpdateUseRTFformatToSave(CCmdUI *pCmdUI);
+afx_msg void OnSaveSecondaryLog();
+afx_msg void OnUpdateSaveSecondaryLog(CCmdUI *pCmdUI);
+afx_msg void OnOpenSecondaryLog();
+afx_msg void OnUpdateOpenSecondaryLog(CCmdUI *pCmdUI);
 };
 
 /////////////////////////////////////////////////////////////////////////////

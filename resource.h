@@ -2476,6 +2476,7 @@
 #define IDC_RLD_USE_RECORD              3504
 #define IDC_RLD_USE_PREVIEW             3505
 #define IDC_RLD_USE_MONTMAP             3506
+#define IDC_BUT_OPEN_LOGS               3507
 #define ID_NEW_IMAGE                    32771
 #define IDM_FILE_SAVEOTHER              32772
 #define IDM_FILE_READ                   32773
@@ -3037,6 +3038,8 @@
 #define ID_EUCENTRICITY_SETOFFSETAUTOMATICALLY 33529
 #define ID_MONTAGINGGRIDS_LOADALLGRIDMAPS 33530
 #define ID_CAMERA_PREVIEWPRESCAN        33531
+#define ID_LOGWINDOW_SAVESECONDARYLOG   33532
+#define ID_LOGWINDOW_OPENSECONDARYLOG   33533
 
 // Next default values for new objects
 // 
@@ -3044,8 +3047,8 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        289
-#define _APS_NEXT_COMMAND_VALUE         33532
-#define _APS_NEXT_CONTROL_VALUE         3507
+#define _APS_NEXT_COMMAND_VALUE         33534
+#define _APS_NEXT_CONTROL_VALUE         3508
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif

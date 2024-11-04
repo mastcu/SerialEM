@@ -189,8 +189,8 @@
     <p>Use this button to set the program's current directory, the same as can be done 
       through the File menu.</p>
     <p>&nbsp;</p>
-    <p><em>Grid Actions: </em></p>
-    <p>The first row of controls consists of:</p>
+    <p><em><strong>Grid Actions: </strong> </em></p>
+    <p><em>The first row of controls consists of:</em></p>
     <p>Unlabeled Toggle All checkbox</p>
     <p>Turning this checkbox on or off will turn the Run checkboxs on or off for all 
       grids.</p>
@@ -212,8 +212,8 @@
       edited.&nbsp; It allows you to add a note for the grid selected by the 
       push-buttons in the table.&nbsp; The note will appear after the grid name in the 
       edit box for that grid.</p>
-    <p>The second row of buttons below the table operate on the grid 
-      selected by the push-buttons in the table.</p>
+    <p><em>The second row of buttons below the table operate on the grid 
+      selected by the push-buttons in the table.</em></p>
     <p><strong>Open Nav</strong></p>
     <p>Use this button to open the Navigator file for the selected grid.&nbsp; It is 
       disabled if there is a no Navigator file or if it is already open.&nbsp; If the 
@@ -233,7 +233,7 @@
       alignment positions, it determines a more accurate rotation and shift, and uses 
       them to transform the Navigator coordinates of the map and any items at the same 
       registration.</p>
-    <p><strong>Set Params</strong></p>
+    <p><strong>Params</strong></p>
     <p>Press this button to open the <a href="hidd_mulgrid_settings.htm">Multiple Grid Settings Manager</a> and store some 
       separate settings for the currently selected grid.&nbsp; Up to 5 kinds of 
       settings can be stored: for final data acquisition, autocontouring, hole 
@@ -244,6 +244,24 @@
       grid sections of the session autodoc file.&nbsp; When a grid has any one of 
       these kinds of parameters stored, the second character of the status indicator 
       will be 'P' instead of '&mdash;'.</p>
+    <p><strong>Logs</strong></p>
+    <p>Press this button to open any log files from running Acquire at Items on the 
+      grid into secondary log windows.&nbsp; Log files are managed by the routine, with a main log that is repeatedly 
+      reopened for top-level information, and a separate log for each Acquire at Items 
+      run.&nbsp; If you save the log to a file before starting a run, that file will 
+      be retained as the main log; otherwise the log will be named based on the 
+      session file name.&nbsp; Log files for each grid are in the subdirectories and 
+      named like the grid-level files, with &#39;_MMM&#39; or &#39;_final&#39; for medium mag or final 
+      runs, respectively.&nbsp; Similarly to other situations where log files are 
+      automatically managed, the first log with a particular name will have no number 
+      attached, and further logs (in later runs) will be numbered with &#39;-1&#39;, -&#39;2&#39;, 
+      etc.&nbsp; When you open log files with this button, their title bars will 
+      contain &#39;SECONDARY Log:&#39; and the file name, and they will have a pale yellow 
+      background.&nbsp; If you make changes in one of these logs, you can save it with 
+      the File menu item <A HREF="menu_file.htm#hid_logwindow_savesecondarylog">Save Secondary Log</A>,
+      which operates on the last secondary log that had focus.&nbsp; If you press this 
+      button while some of the grid's logs are already open, the ones that are are 
+      open will be raised to the foreground and any that are not will be opened.</p>
     <p>&nbsp;</p>
     <p><em><strong>Acquire Grid Maps</strong></em></p>
     <p>This section of the dialog contains parameters for acquiring grid maps; some of 
@@ -514,16 +532,7 @@
       operations from continuing successfully.&nbsp; If there is any doubt about this, 
       it is safest to terminate with <strong>End MGrid</strong>, uncheck the grids 
       done, and restart the run.</p>
-    <p>Log files are managed by the routine, with a main log that is repeatedly 
-      reopened for top-level information, and a separate log for each Acquire at Items 
-      run.&nbsp; If you save the log to a file before starting a run, that file will 
-      be retained as the main log; otherwise the log will be named based on the 
-      session file name.&nbsp; Log files for each grid are in the subdirectories and 
-      named like the grid-level files, with &#39;_MMM&#39; or &#39;_final&#39; for medium mag or final 
-      runs, respectively.&nbsp; Similarly to other situations where log files are 
-      automatically managed, the first log with a particular name will have no number 
-      attached, and further logs (in later runs) will be numbered with &#39;-1&#39;, -&#39;2&#39;, 
-      etc.</p>
+    <p>&nbsp;</p>
     <p>&nbsp;</p>
 
   </body>

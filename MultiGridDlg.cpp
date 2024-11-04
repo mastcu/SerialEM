@@ -43,11 +43,11 @@ static int sIdTable[] = {IDC_STAT_RUN, IDC_STAT_NAME, IDC_BUT_CLOSE_ALL, PANEL_E
   IDC_STAT_MULGRID_STATUS3, IDC_STAT_MULGRID_STATUS8, IDC_STAT_MULGRID_STATUS12,
   IDC_STAT_MULGRID_STATUS4, IDC_STAT_MULGRID_STATUS9, IDC_STAT_MULGRID_STATUS13,
   IDC_STAT_MULGRID_STATUS5, IDC_CHECK_TOGGLE_ALL, IDC_STAT_NOTE, IDC_EDIT_GRID_NOTE,
-  IDC_BUT_SET_ORDER, IDC_BUT_RESET_ORDER, IDC_BUT_MG_CLEAR,
+  IDC_BUT_SET_ORDER, IDC_BUT_RESET_ORDER, IDC_BUT_OPEN_LOGS,
   IDC_BUT_REALIGN_TO_GRID_MAP, IDC_BUT_OPEN_NAV, IDC_BUT_SET_GRID_TYPE, PANEL_END,
   IDC_BUT_MG_SETUP, IDC_STAT_MG_GRID_SETUP, IDC_TSS_LINE4, PANEL_END,
   IDC_BUT_MG_GET_NAMES, IDC_BUT_MG_INVENTORY, IDC_STAT_MG_PREFIX,
-  IDC_EDIT_MG_PREFIX, IDC_CHECK_MG_APPEND_NAME,
+  IDC_EDIT_MG_PREFIX, IDC_CHECK_MG_APPEND_NAME, IDC_BUT_MG_CLEAR,
   IDC_BUT_MG_RESET_NAMES, IDC_STAT_MG_ROOTNAME,
   IDC_STAT_MG_CURRENT_DIR, IDC_BUT_SET_CURRENT_DIR, IDC_CHECK_MG_USE_SUBDIRS, PANEL_END,
   IDC_BUT_MG_LOW_MAG_MAPS, IDC_CHECK_RUN_LMMS, IDC_TSS_LINE10, PANEL_END,
@@ -247,6 +247,7 @@ BEGIN_MESSAGE_MAP(CMultiGridDlg, CBaseDlg)
   ON_EN_KILLFOCUS(IDC_EDIT_GRID_NOTE, OnEnKillfocusEditGridNote)
   ON_BN_CLICKED(IDC_BUT_SET_ORDER, OnButSetOrder)
   ON_BN_CLICKED(IDC_BUT_RESET_ORDER, OnButResetOrder)
+  ON_BN_CLICKED(IDC_BUT_OPEN_LOGS, OnButOpenLogs)
 END_MESSAGE_MAP()
 
 
@@ -332,6 +333,7 @@ BOOL CMultiGridDlg::OnInitDialog()
   EnableDlgItem(IDC_BUT_LOAD_GRID, false);
   EnableDlgItem(IDC_BUT_OPEN_NAV, false);
   EnableDlgItem(IDC_BUT_REALIGN_TO_GRID_MAP, false);
+  EnableDlgItem(IDC_BUT_OPEN_LOGS, false);
   if (mSingleGridMode) {
     InitForSingleGrid();
   }
@@ -1699,6 +1701,7 @@ void CMultiGridDlg::OnRadioMulgridSelect(UINT nID)
   filename = NavFileIfExistsAndNotLoaded();
   EnableDlgItem(IDC_BUT_OPEN_NAV, !filename.IsEmpty());
   EnableDlgItem(IDC_BUT_SET_GRID_TYPE, jcd.slot >= 0);
+  EnableDlgItem(IDC_BUT_OPEN_LOGS, FindLogFiles(NULL, false));
   if (mWinApp->mNavHelper->mMGSettingsDlg)
     mWinApp->mNavHelper->mMGSettingsDlg->SetJcdIndex(mSelectedGrid < 0 ? -1 :
       mDlgIndToJCDindex[mSelectedGrid]);
@@ -1833,6 +1836,47 @@ void CMultiGridDlg::OnButOpenNav()
     mWinApp->mNavigator->LoadNavFile(false, false, &filename);
   mWinApp->RestoreViewFocus();
   UpdateEnables();
+}
+
+// Open logs if any exist
+void CMultiGridDlg::OnButOpenLogs()
+{
+  std::vector<std::string> strList;
+  if (!FindLogFiles(&strList, true))
+    return;
+  for (int ind = 0; ind < (int)strList.size(); ind++)
+    mWinApp->OpenSecondaryLog(strList[ind].c_str(), true);
+}
+
+// Find all the log files for the selected grid and return in list if returnAll is true;
+// just return true if any exist if returnAll is false; strList can be NULL in this case
+bool CMultiGridDlg::FindLogFiles(std::vector<std::string> *strList, bool returnAll)
+{
+  const char *suffixes[2] = {"*.log", "*.rtf"};
+  HANDLE hFind = NULL;
+  WIN32_FIND_DATA FindFileData;
+  int suff;
+  CString filename, path, name;
+
+  // Loop on .log and .rtf files
+  for (suff = 0; suff < 2; suff++) {
+    filename = mMGTasks->FullGridFilePath(-mDlgIndToJCDindex[mSelectedGrid] - 1,
+      suffixes[suff]);
+    UtilSplitPath(filename, path, name);
+    path += "\\";
+    hFind = FindFirstFile((LPCTSTR)filename, &FindFileData);
+    if (hFind == INVALID_HANDLE_VALUE)
+      continue;
+    do {
+      if (!returnAll) {
+        FindClose(hFind);
+        return true;
+      }
+      strList->push_back((LPCTSTR)(path + FindFileData.cFileName));
+    } while (FindNextFile(hFind, &FindFileData) != 0);
+  }
+  FindClose(hFind);
+  return returnAll && strList->size() > 0;
 }
 
 // Get name of nav file if it is needed for loading

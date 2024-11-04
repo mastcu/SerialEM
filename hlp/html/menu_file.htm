@@ -133,6 +133,14 @@
           <TD class="auto-style1">&nbsp;&nbsp;&nbsp; <A HREF="#hid_window_rescuelogwindow">Reset Log Position</A></TD>
           <TD>Makes the log window visible and moves it to the upper left corner.</TD>
         </TR>
+        <TR VALIGN="top">>
+          <TD class="auto-style1">&nbsp;&nbsp;&nbsp; <A HREF="#hid_logwindow_opensecondarylog">Open Secondary Log</A></TD>
+          <TD>Opens a different log window, either an empty window or with an exsiting log read into it.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="auto-style1">&nbsp;&nbsp;&nbsp; <A HREF="#hid_logwindow_savesecondarylog">Save Secondary Log</A></TD>
+          <TD>Saves the last secondary log window that had focus.</TD>
+        </TR>
         <TR VALIGN="top">
           <TD class="auto-style1"><A HREF="#hid_file_setcurrentdirectory">Set Current Directory...</A></TD>
           <TD>Opens chooser for selecting the current working directory.</TD>
@@ -473,7 +481,27 @@
     <P>Use this command to make the log window visible in the upper left corner of the 
       display with its current size, or a minimum size if that size if smaller than 
       the minimum.</P>
-      <P><A NAME="hid_file_setcurrentdirectory"></A><B>Set Current Directory command (File menu)</B></P>
+      <P><A NAME="hid_logwindow_opensecondarylog"></A><B>Open Secondary Log command (File menu)</B></P>
+      <p>Use this command to open a secondary log window.&nbsp; The program will first 
+        ask if you want to read in an existing log file.&nbsp; If you answer Yes, a file 
+        chooser will open for specifying the file to read in.&nbsp; Otherwise, you will 
+        be asked for a name to place in the title bar, and an empty window will open.&nbsp; 
+        Secondary logs are distinguishable by having a pale yellow background and 
+        'SECONDARY Log:' in the title bar plus this name or the name of the file read 
+        in. If a file is already open in a secondary log, selecting it again will just 
+        raise to existing log to the foreground.&nbsp; Secondary logs were added 
+        to provide a way to view logs conveniently from the <a href="hidd_multi_grid.htm">Multiple Grid Operations</a> dialog. There is 
+        currently no ability to save to a different file, no protection against closing 
+        a log with unsaved changes, and no script access to these logs. Such 
+        functionality can be added if needed.</p>
+      <P><A NAME="hid_logwindow_savesecondarylog"></A><B>Save Secondary Log command (File menu)</B></P>
+      <p>Use this command to save a secondary log window.&nbsp; It operates on the last 
+        log window that had focus, so click on the desired log window before selecting 
+        the menu item.&nbsp; If the window contains a log that was read to a file or has 
+        already been saved to a file, it will simply be saved back to that file.&nbsp; 
+        Otherwise, a file chooser will open for specifying the file to save into.&nbsp; 
+        After saving, the title bar will show the name of that file.</p>
+     <P><A NAME="hid_file_setcurrentdirectory"></A><B>Set Current Directory command (File menu)</B></P>
        <p>Use this command to select a new current working directory, which will become 
          the directory where file choosers open as well as where files will be created or 
          looked for by script commands when no path is specified.&nbsp; A directory 

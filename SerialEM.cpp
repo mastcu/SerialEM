@@ -193,6 +193,10 @@ BEGIN_MESSAGE_MAP(CSerialEMApp, CWinApp)
   ON_UPDATE_COMMAND_UI(ID_FILE_AUTOPRUNELOGWINDOW, OnUpdateFileAutopruneLogWindow)
   ON_COMMAND(ID_LOGWINDOW_USERTFFORMATTOSAVE, OnUseRTFformatToSave)
   ON_UPDATE_COMMAND_UI(ID_LOGWINDOW_USERTFFORMATTOSAVE, OnUpdateUseRTFformatToSave)
+  ON_COMMAND(ID_LOGWINDOW_SAVESECONDARYLOG, OnSaveSecondaryLog)
+  ON_UPDATE_COMMAND_UI(ID_LOGWINDOW_SAVESECONDARYLOG, OnUpdateSaveSecondaryLog)
+  ON_COMMAND(ID_LOGWINDOW_OPENSECONDARYLOG, OnOpenSecondaryLog)
+  ON_UPDATE_COMMAND_UI(ID_LOGWINDOW_OPENSECONDARYLOG, OnUpdateOpenSecondaryLog)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -749,6 +753,7 @@ CSerialEMApp::CSerialEMApp()
   mScreenShotPlacement.rcNormalPosition.right = NO_PLACEMENT;
   mFirstSEMplacement.rcNormalPosition.right = NO_PLACEMENT;
   mStageToolPlacement.rcNormalPosition.right = NO_PLACEMENT;
+  mSecondaryLogPlace.rcNormalPosition.right = NO_PLACEMENT;
   mRightBorderFrac = 0.;
   mBottomBorderFrac = 0.;
   mMainFFTsplitFrac = 0.5f;
@@ -809,6 +814,8 @@ CSerialEMApp::CSerialEMApp()
   mSpecialDebugLevel = 0;
   mNextLogColor = -1;
   mNextLogStyle = -1;
+  mCurSecondaryLog = -1;
+  mLastSecondaryLog = -1;
   mStartCameraInDebug = false;
   traceMutexHandle = CreateMutex(0, 0, 0);
   sStartTime = GetTickCount();
@@ -4264,9 +4271,13 @@ void CSerialEMApp::OnUpdateUseRTFformatToSave(CCmdUI *pCmdUI)
 void CSerialEMApp::OnFileUseMonospacedFont()
 {
   mMonospacedLog = !mMonospacedLog;
-  if (mLogWindow && CMacroEditer::mHasMonoFont > 0)
+  if (mLogWindow && CMacroEditer::mHasMonoFont > 0) {
     mLogWindow->m_editWindow.SetFont(mMonospacedLog ? &CMacroEditer::mMonoFont :
       &CMacroEditer::mDefaultFont);
+    for (int ind = 0; ind < mSecondaryLogs.GetSize(); ind++)
+      mSecondaryLogs[ind]->m_editWindow.SetFont(mMonospacedLog ? &CMacroEditer::mMonoFont :
+        &CMacroEditer::mDefaultFont);
+  }
 }
 
 void CSerialEMApp::OnUpdateFileUseMonospacedFont(CCmdUI *pCmdUI)
@@ -4275,11 +4286,138 @@ void CSerialEMApp::OnUpdateFileUseMonospacedFont(CCmdUI *pCmdUI)
   pCmdUI->Enable(CMacroEditer::mHasMonoFont > 0);
 }
 
-// Log window informs us if it is closing - it takes care of its own destruction
-void CSerialEMApp::LogClosing()
+// Log window informs us it is closing - it takes care of its own destruction
+// Get the placement for either kind of log
+void CSerialEMApp::LogClosing(CLogWindow *which)
 {
-  mLogWindow->GetWindowPlacement(&mLogPlacement);
-  mLogWindow = NULL;
+  if (which == mLogWindow) {
+    mLogWindow->GetWindowPlacement(&mLogPlacement);
+    mLogWindow = NULL;
+  } else {
+
+    // Look up secondary log and remove from array
+    for (int ind = 0; ind < mSecondaryLogs.GetSize(); ind++) {
+      if (which == mSecondaryLogs[ind]) {
+        which->GetWindowPlacement(&mSecondaryLogPlace);
+        mSecondaryLogs.RemoveAt(ind);
+        break;
+      }
+    }
+  }
+}
+
+//  SECONDARY LOGS
+
+// Open a secondary log window either with a name in title, or reading in a file
+void CSerialEMApp::OpenSecondaryLog(CString name, bool readFile)
+{
+  CLogWindow *win;
+  WINDOWPLACEMENT place;
+  int offset = mSecondaryLogs.GetSize() * 30;
+  if (readFile) {
+
+    // If file already open, just raise window
+    for (int ind = 0; ind < mSecondaryLogs.GetSize(); ind++) {
+      win = mSecondaryLogs[ind];
+      if (!win->GetSaveFile().CompareNoCase(name)) {
+        win->BringWindowToTop();
+        return;
+      }
+    }
+  }
+
+  // Create and set last placement plus an offset
+  win = new CLogWindow;
+  win->mIsSecondary = true;
+  win->Create(IDD_LOGWINDOW);
+  mSecondaryLogPlace.showCmd = SW_SHOWNORMAL;
+  if (mSecondaryLogPlace.rcNormalPosition.right != NO_PLACEMENT) {
+    place = mSecondaryLogPlace;
+    place.rcNormalPosition.left += offset;
+    place.rcNormalPosition.right += offset;
+    place.rcNormalPosition.top += offset;
+    place.rcNormalPosition.bottom += offset;
+    ConstrainWindowPlacement(&place, true);
+    win->SetWindowPlacement(&place);
+  }
+  RestoreViewFocus();
+  mSecondaryLogs.Add(win);
+  if (mMonospacedLog && CMacroEditer::mHasMonoFont > 0)
+    win->m_editWindow.SetFont(&CMacroEditer::mMonoFont);
+
+  // Read in or det the name
+  if (readFile)
+    win->ReadAndAppend(name);
+  else
+    win->SetWindowText("SECONDARY Log: " + name);
+  win->m_editWindow.SetBackgroundColor(false, RGB(255, 255, 235));
+}
+
+// Keep track of which one has the focus and the previous one with focus
+void CSerialEMApp::LogGotFocus(CLogWindow * win)
+{
+  mCurSecondaryLog = -1;
+  for (int ind = 0; ind < mSecondaryLogs.GetSize(); ind++) {
+    if (mSecondaryLogs[ind] == win) {
+      mLastSecondaryLog = mCurSecondaryLog;
+      mCurSecondaryLog = ind;
+      break;
+    }
+  }
+}
+
+// Keep track of log losing focus, save into the last variable so menu items etc work
+void CSerialEMApp::LogLostFocus(CLogWindow *win)
+{
+  if (mCurSecondaryLog >= 0 && mCurSecondaryLog < mSecondaryLogs.GetSize() &&
+    mSecondaryLogs[mCurSecondaryLog] == win) {
+    mLastSecondaryLog = mCurSecondaryLog;
+    mCurSecondaryLog = -1;
+  }
+}
+
+// Get a pointer the secondary log position and get placement from either the last one
+// that had focus or the last one on the stack
+WINDOWPLACEMENT *CSerialEMApp::GetSecondaryLogPlacement()
+{
+  int which = mCurSecondaryLog < 0 ? mLastSecondaryLog : mCurSecondaryLog;
+  if (which >= 0 && which < mSecondaryLogs.GetSize())
+    mSecondaryLogs[which]->GetWindowPlacement(&mSecondaryLogPlace);
+  else if (mSecondaryLogs.GetSize() > 0)
+    mSecondaryLogs[mSecondaryLogs.GetSize() - 1]->GetWindowPlacement(&mSecondaryLogPlace);
+  return &mSecondaryLogPlace;
+}
+
+// Save a secondary log
+void CSerialEMApp::OnSaveSecondaryLog()
+{
+  int which = mCurSecondaryLog < 0 ? mLastSecondaryLog : mCurSecondaryLog;
+  mSecondaryLogs[which]->Save();
+}
+
+void CSerialEMApp::OnUpdateSaveSecondaryLog(CCmdUI *pCmdUI)
+{
+  int which = mCurSecondaryLog < 0 ? mLastSecondaryLog : mCurSecondaryLog;
+  pCmdUI->Enable(which >= 0 && which < mSecondaryLogs.GetSize());
+}
+
+// Open a new secondary log either with a title or by reading file
+void CSerialEMApp::OnOpenSecondaryLog()
+{
+  CString name;
+  if (AfxMessageBox("Do you want to read an existing file into the secondary log window?",
+    MB_QUESTION) == IDYES) {
+    OpenSecondaryLog("", false);
+    mSecondaryLogs[mSecondaryLogs.GetSize() - 1]->ReadAndAppend("");
+  } else {
+    KGetOneString("Title for new log window:", name);
+    OpenSecondaryLog(name, false);
+  }
+}
+
+void CSerialEMApp::OnUpdateOpenSecondaryLog(CCmdUI *pCmdUI)
+{
+  pCmdUI->Enable(!DoingTasks());
 }
 
 ///////////////////////////////
@@ -4356,7 +4494,6 @@ WINDOWPLACEMENT * CSerialEMApp::GetScreenShotPlacement()
     mScreenShotDialog->GetWindowPlacement(&mScreenShotPlacement);
   return &mScreenShotPlacement;
 }
-
 
 ////////////////////////////////////////////////////////////////////////
 // FUNCTIONS FOR CAMERA AND EFTEM MODE SWITCHING

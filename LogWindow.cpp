@@ -50,6 +50,7 @@ CLogWindow::CLogWindow(CWnd* pParent /*=NULL*/)
   mNextStyle = -1;
   mLastAppendSel = -1;
   mPalette = mWinApp->GetPaletteColors();
+  mIsSecondary = false;
 }
 
 
@@ -69,7 +70,7 @@ BEGIN_MESSAGE_MAP(CLogWindow, CBaseDlg)
   //{{AFX_MSG_MAP(CLogWindow)
   ON_WM_SIZE()
   ON_WM_CLOSE()
-	ON_WM_MOVE()
+  ON_WM_MOVE()
   ON_WM_ACTIVATE()
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
@@ -153,7 +154,7 @@ void CLogWindow::DoAppend(CString &inString, int lineFlags, int red, int green, 
   int style)
 {
   int oldLen, newLen, lastEnd, pruneInd, lastPrune, pruneSel;
-  int pruneCrit = mWinApp->GetAutoPruneLogLines() * 42;
+  int pruneCrit = mIsSecondary ? 0 : (mWinApp->GetAutoPruneLogLines() * 42);
   int ind = INSERTED_COLOR_IND * 3;
   long sel1, sel2;
   UINT mode = CFile::modeWrite | CFile::shareDenyWrite;
@@ -385,7 +386,7 @@ int CLogWindow::GetFileName(BOOL oldFile, UINT flags, LPCTSTR offerName)
     return 1;
   int trimCount = mSaveFile.GetLength() - (mSaveFile.ReverseFind('\\') + 1);
   CString trimmedName = mSaveFile.Right(trimCount);
-  SetWindowText("Log:  " + trimmedName);
+  SetWindowText((mIsSecondary ? "SECONDARY Log: " : "Log: ") + trimmedName);
   if (!oldFile)
     mTypeOfFileSaved = saveRTF + 1;
   return 0;
@@ -470,7 +471,7 @@ int CLogWindow::UpdateSaveFile(BOOL createIfNone, CString stackName, BOOL replac
       // Set up the window text, and do the save
       dirInd = mSaveFile.GetLength() - (mSaveFile.ReverseFind('\\') + 1);
       name = mSaveFile.Right(dirInd);
-      SetWindowText("Log:  " + name);
+      SetWindowText((mIsSecondary ? "SECONDARY Log: " : "Log: ") + name);
       return (DoSave());
     }
     return 0;
@@ -673,7 +674,7 @@ int CLogWindow::ReadAndAppend(CString readFile)
     mLastStackname = "";
     if (!readFile.IsEmpty()) {
       UtilSplitPath(mSaveFile, dir, str);
-      SetWindowText("Log: " + str);
+      SetWindowText((mIsSecondary ? "SECONDARY Log: " : "Log: ") + str);
     }
   }
   return retval;
@@ -707,7 +708,7 @@ void CLogWindow::OnCancel()
     return;
   // DO NOT call base class, it will leak memory
   //CBaseDlg::OnCancel();
-  mWinApp->LogClosing();
+  mWinApp->LogClosing(this);
   DestroyWindow();
 }
 
@@ -738,8 +739,13 @@ void CLogWindow::OnMove(int x, int y)
 void CLogWindow::OnActivate(UINT nState, CWnd * pWndOther, BOOL bMinimized)
 {
   CBaseDlg::OnActivate(nState, pWndOther, bMinimized);
-  if (nState != WA_INACTIVE)
+  if (nState != WA_INACTIVE) {
     mWinApp->SetNavOrLogHadFocus(-1);
+    if (mIsSecondary)
+      mWinApp->LogGotFocus(this);
+  } else if (mIsSecondary) {
+    mWinApp->LogLostFocus(this);
+  }
 }
 
 BOOL CLogWindow::OnInitDialog() 

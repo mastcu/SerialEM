@@ -229,4 +229,6 @@ public:
   afx_msg void OnButSetOrder();
   afx_msg void OnButResetOrder();
   int GetNumAddedToOrder();
+  afx_msg void OnButOpenLogs();
+  bool FindLogFiles(std::vector<std::string> *strList, bool returnAll);
 };

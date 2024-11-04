@@ -158,11 +158,14 @@ BEGIN
             MENUITEM "&Read && Append...",          ID_FILE_READAPPEND
             MENUITEM "Sa&ve && Autosave...",        ID_FILE_AUTOSAVELOG
             MENUITEM SEPARATOR
-            MENUITEM "Autoprune Log Window...",     ID_FILE_AUTOPRUNELOGWINDOW
+            MENUITEM "Auto&prune Log Window...",    ID_FILE_AUTOPRUNELOGWINDOW
             MENUITEM "Use RTF &Format to Save",     ID_LOGWINDOW_USERTFFORMATTOSAVE
             MENUITEM "&Continuous Save",            ID_FILE_CONTINUOUSSAVE
             MENUITEM "Use &Monospaced Font",        ID_FILE_USEMONOSPACEDFONT
             MENUITEM "Rese&t Log Position",         ID_WINDOW_RESCUELOGWINDOW
+            MENUITEM SEPARATOR
+            MENUITEM "Ope&n Secondary Log...",      ID_LOGWINDOW_OPENSECONDARYLOG
+            MENUITEM "Save Secon&dary Log...",      ID_LOGWINDOW_SAVESECONDARYLOG
         END
         MENUITEM SEPARATOR
         MENUITEM "Set Current Directory...",    ID_FILE_SETCURRENTDIRECTORY
@@ -4137,7 +4140,7 @@ BEGIN
     EDITTEXT        IDC_EDIT_MG_PREFIX,26,227,75,12,ES_AUTOHSCROLL
     CONTROL         "Append names",IDC_CHECK_MG_APPEND_NAME,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,107,229,57,10
     PUSHBUTTON      "Reset",IDC_BUT_MG_RESET_NAMES,107,213,27,12
-    PUSHBUTTON      "Logs",IDC_BUT_MG_CLEAR,149,191,19,12
+    PUSHBUTTON      "Clear",IDC_BUT_MG_CLEAR,139,213,26,12
     LTEXT           "Rootname: Pref_C###_name",IDC_STAT_MG_ROOTNAME,4,241,111,8
     LTEXT           "Current dir:",IDC_STAT_MG_CURRENT_DIR,4,250,159,8
     PUSHBUTTON      "Set Current Dir",IDC_BUT_SET_CURRENT_DIR,79,258,50,12
@@ -4219,6 +4222,7 @@ BEGIN
     PUSHBUTTON      "Reset",IDC_BUT_RESET_ORDER,69,177,24,12
     LTEXT           "Note:",IDC_STAT_NOTE,97,179,15,8
     EDITTEXT        IDC_EDIT_GRID_NOTE,113,177,55,12,ES_AUTOHSCROLL
+    PUSHBUTTON      "Logs",IDC_BUT_OPEN_LOGS,149,191,19,12
 END
 
 IDD_MULGRID_SETTINGS DIALOGEX 0, 0, 311, 368
@@ -7708,6 +7712,9 @@ BEGIN
                             "Loads all LM maps done in session or lowest LM mag maps from open Navigator"
     ID_CAMERA_PREVIEWPRESCAN 
                             "Take a 3x3 Prescan with Preview, without opening a montage file"
+    ID_LOGWINDOW_SAVESECONDARYLOG "Save the secondary log with focus"
+    ID_LOGWINDOW_OPENSECONDARYLOG 
+                            "Open a secondary log window, optionally reading from file"
 END
 
 STRINGTABLE
@@ -7881,6 +7888,7 @@ BEGIN
     IDC_BUT_APPLY_FINAL     "Make the global Final Data parameters be the same as the ones for this grid"
     IDC_BUT_RESTORE_CURFINAL 
                             "Restore the global Final Data acquisition parameters to original values"
+    IDC_BUT_OPEN_LOGS       "Open secondary logs from all Acquire at Items runs on this grid"
 END
 
 #endif    // English (United States) resources
