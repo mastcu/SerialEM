@@ -3604,7 +3604,9 @@
             If that property is set (e.g., for CryoARM), indexes are 0:CL1, 1:CL2,
             2:OL(OL Upper), 3:HC(OL Lower), 4:SA, 5:ENT, 6:HX, 7:BF, 8:AUX1,
              9:AUX2, 10:AUX3, 11:AUX4.&nbsp; For Thermo/FEI scopes, <b>#</b> 
-             can be 0, 1, or 3 for Condenser 1, 2, or 3, 2 for Objective, or 4 for Selected Area.&nbsp; The
+             can be 0, 1, or 3 for Condenser 1, 2, or 3, 2 for Objective, or 4 for Selected Area.&nbsp; For
+            both scopes, you can use aperture names starting with 'c' or 'C', 'o' or 'O', or 's' or 'S', which
+             will be converted to 1, 2, or 4 respectively.&nbsp; The
             reported value can be: the size in microns; 0 if the aperture is retracted; 1 if it is
             moving or not enabled; or the position of a phase plate plus 1 for the
              objective aperture (e.g., 3 for 'Ph P2', but only if the
