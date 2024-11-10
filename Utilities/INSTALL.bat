@@ -74,8 +74,7 @@ IF %ERRORLEVEL% EQU 0 (
 set NEEDREDIST=0
 ver | findstr /i  " 5\.1" > nul
 IF %ERRORLEVEL% EQU 0 GOTO :TestXP
-COPY /Y Microsoft.VC140\*.dll .. > nul
-GOTO :MSDllsDone
+GOTO :XPTestDone
 
 :TestXP
 systeminfo | findstr /i "Service Pack 3" 1> nul
@@ -91,7 +90,8 @@ IF %ERRORLEVEL% EQU 0 (
   exit
 )
 
-:MSDllsDone
+:XPTestDone
+COPY /Y Microsoft.VC140\*.dll .. > nul
 
 Rem # Check properties file(s) for Tietz or DE cameras
 set SAWPROPS=0
