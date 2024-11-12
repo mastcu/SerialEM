@@ -27,6 +27,7 @@
 #include "MultiGridDlg.h"
 #include "CameraController.h"
 #include "EMmontageController.h"
+#include "MacroProcessor.h"
 #include "Shared\b3dutil.h"
 #include "Shared\autodoc.h"
 #include "Utilities\XCorr.h"
@@ -41,7 +42,7 @@ static const char *sActionNames[] = {"Remove objective aperture", "Set condenser
 "Take grid map", "Realign to grid map", "Autocontour grid squares", "Set MMM state",
 "Take MMMs", "Set state for final acquire", "Do final acquisition", "Set up MMM files",
 "Restore state", "Turn Low Dose on", "Turn Low Dose off", "Set Z height", 
-"Check & apply Shift to Marker", "Set Focus area position", "Grid done"};
+"Check & apply Shift to Marker", "Set Focus area position", "Run script", "Grid done"};
 
 
 CMultiGridTasks::CMultiGridTasks()
@@ -79,6 +80,8 @@ CMultiGridTasks::CMultiGridTasks()
   mParams.acquireLMMs = true;
   mParams.acquireMMMs = false;
   mParams.runFinalAcq = false;
+  mParams.runMacroAfterLMM = false;
+  mParams.macroToRun = 0;
   for (int i = 0; i < 4; i++) {
     mParams.MMMstateNums[i] = -1;
     mParams.finalStateNums[i] = -1;
@@ -423,6 +426,7 @@ int CMultiGridTasks::MulGridSeqBusy()
     (mDoingEucentricity && mWinApp->mComplexTasks->DoingEucentricity()) ||
     (mDoingMontage && mWinApp->mMontageController->DoingMontage()) ||
     (mAutoContouring && mNavHelper->mAutoContouringDlg->DoingAutoContour()) ||
+    (mRunningMacro && mWinApp->mMacroProcessor->DoingMacro()) ||
     (mSettingUpNavFiles && mWinApp->mNavigator&& mWinApp->mNavigator->DoingNewFileRange())
     || (mStartedNavAcquire && mWinApp->mNavigator && mWinApp->mNavigator->GetAcquiring()))
     return 1;
@@ -1595,6 +1599,12 @@ int CMultiGridTasks::StartGridRuns(int LMneedsLD, int MMMneedsLD, int finalNeeds
     }
   }
 
+  // Make sure script is runnable
+  if (mParams.acquireLMMs && mParams.runMacroAfterLMM) {
+    if (mWinApp->mMacroProcessor->EnsureMacroRunnable(mParams.macroToRun))
+      return 1;
+  }
+
   // If starting with MMMs and fitting polygons, check all nav files for files to open
   if ((mParams.acquireMMMs || mParams.runFinalAcq) && !mParams.acquireLMMs) {
     mNavigator->SaveAndClearTable();
@@ -1856,6 +1866,10 @@ int CMultiGridTasks::StartGridRuns(int LMneedsLD, int MMMneedsLD, int finalNeeds
       // Autocontour
       if (mParams.autocontour)
         mActSequence.push_back(MGACT_AUTOCONTOUR);
+
+      // Script
+      if (mParams.runMacroAfterLMM)
+        mActSequence.push_back(MGACT_RUN_MACRO);
       didLMMforGrid = true;
     }
 
@@ -2128,6 +2142,7 @@ void CMultiGridTasks::DoNextSequenceAction(int resume)
       case MGACT_TAKE_LMM:
       case MGACT_REALIGN_TO_LMM:
       case MGACT_AUTOCONTOUR:
+      case MGACT_RUN_MACRO:
       case MGACT_TAKE_MMM:
       case MGACT_FINAL_ACQ:
         errStr.Format("Skipping to next grid and marking grid %d as failed because of ",
@@ -2405,6 +2420,17 @@ void CMultiGridTasks::DoNextSequenceAction(int resume)
       mNavigator->SetChanged(true);
       mNavigator->ManageCurrentControls();
       mNavigator->Redraw();
+      break;
+
+      // After script:
+    case MGACT_RUN_MACRO:
+      mRunningMacro = false;
+      if (mWinApp->mMacroProcessor->GetLastAborted()) {
+        ChangeStatusFlag(mCurrentGrid, MGSTAT_FLAG_FAILED, 1);
+        errStr.Format("Marking grid %d as failed because script did not complete");
+        if (SkipToNextGrid(errStr))
+          return;
+      }
       break;
 
       // After setting up files for MMM's, clear flag
@@ -2702,6 +2728,12 @@ void CMultiGridTasks::DoNextSequenceAction(int resume)
       acParam->relThreshold, acParam->useAbsThresh ? acParam->absThreshold : 0.f,
       false);
     mAutoContouring = true;
+    break;
+
+    // Run script
+  case MGACT_RUN_MACRO:
+    mWinApp->mMacroProcessor->Run(mParams.macroToRun);
+    mRunningMacro = true;
     break;
 
     // Shift to marker if necessary and grid startup stuff

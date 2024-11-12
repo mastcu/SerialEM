@@ -551,6 +551,8 @@ struct MultiGridParams {
   int finalStateNums[4];     // State numbers for final acquire
   CString finalStateNames[4]; // State names for final acquire
   BOOL framesUnderSession;   // Make frame directories under session or grid directories
+  BOOL runMacroAfterLMM;     // Flag to run a script after autocontouring step
+  int macroToRun;            // And script to run, numbered from 0
 };
 
 // Cooker parameters

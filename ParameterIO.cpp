@@ -878,6 +878,10 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
         mgParams->MMMnumXpieces = itemInt[19];
         mgParams->MMMnumYpieces = itemInt[20];
         mgParams->framesUnderSession = itemInt[21] > 0;
+        if (!itemEmpty[23]) {
+          mgParams->runMacroAfterLMM = itemInt[22] != 0;
+          mgParams->macroToRun = itemInt[23];
+        }
 
       } else if (strItems[0].Find("MG") == 0 && (strItems[0].Find("MMMstate") == 2 ||
         strItems[0].Find("State") == 7)) {
@@ -2051,7 +2055,7 @@ void CParameterIO::WriteSettings(CString strFileName)
       snapParams->compression, snapParams->jpegQuality, snapParams->skipOverlays);
     mFile->WriteString(oneState);
     oneState.Format("MultiGridParams %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d"
-      " %d %d %d %d -999\n", mgParams->appendNames ? 1 : 0,
+      " %d %d %d %d %d %d -999\n", mgParams->appendNames ? 1 : 0,
       mgParams->useSubdirectory ? 1 : 0, mgParams->setLMMstate ? 1 : 0,
       mgParams->LMMstateType, mgParams->removeObjectiveAp ? 1 : 0,
       mgParams->setCondenserAp ? 1 : 0, mgParams->condenserApSize, mgParams->LMMmontType,
@@ -2060,7 +2064,8 @@ void CParameterIO::WriteSettings(CString strFileName)
       mgParams->acquireMMMs ? 1 : 0,
       mgParams->MMMstateType, mgParams->MMMimageType, mgParams->acquireLMMs ? 1 : 0,
       mgParams->runFinalAcq ? 1 : 0, mgParams->MMMnumXpieces, mgParams->MMMnumYpieces,
-      mgParams->framesUnderSession ? 1 : 0);
+      mgParams->framesUnderSession ? 1 : 0, mgParams->runMacroAfterLMM ? 1 : 0,
+      mgParams->macroToRun);
     mFile->WriteString(oneState);
     oneState.Format("MGLMMstate %d %s\n", mgParams->LMMstateNum, 
       (LPCTSTR)mgParams->LMMstateName);

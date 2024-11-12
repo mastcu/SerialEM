@@ -51,6 +51,7 @@ private:
   int mGridMontSetupState;    // State in last setup
   int mGridMontSetupAcqType;  // Image type in last setup
   int mGridMontSetupOverlap;  // Overlap in last LMM setup
+  int mMacNumAtEnd;           // Script to run at end
   int mMMMsetupAcqType;       // Imaging type in last MMM setup
   int mMMMsetupMontType;      // Montage/single type in last MMM setup
   int mMMMsetupStateForMont;  // State used for MMM montage in last setup
@@ -231,4 +232,8 @@ public:
   int GetNumAddedToOrder();
   afx_msg void OnButOpenLogs();
   bool FindLogFiles(std::vector<std::string> *strList, bool returnAll);
+  CComboBox m_comboEndScript;
+  BOOL m_bScriptAtEnd;
+  afx_msg void OnCheckScriptAtEnd();
+  afx_msg void OnSelendokComboEndScript();
 };

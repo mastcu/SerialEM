@@ -2477,6 +2477,9 @@
 #define IDC_RLD_USE_PREVIEW             3505
 #define IDC_RLD_USE_MONTMAP             3506
 #define IDC_BUT_OPEN_LOGS               3507
+#define IDC_CHECK_SCRIPT_AT_END         3508
+#define IDC_COMBO1                      3509
+#define IDC_COMBO_END_SCRIPT            3509
 #define ID_NEW_IMAGE                    32771
 #define IDM_FILE_SAVEOTHER              32772
 #define IDM_FILE_READ                   32773
@@ -3048,7 +3051,7 @@
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        289
 #define _APS_NEXT_COMMAND_VALUE         33534
-#define _APS_NEXT_CONTROL_VALUE         3508
+#define _APS_NEXT_CONTROL_VALUE         3510
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif

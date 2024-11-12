@@ -14,7 +14,7 @@ enum MultiGridActions {
   MGACT_LOAD_GRID, MGACT_TAKE_LMM, MGACT_REALIGN_TO_LMM, MGACT_AUTOCONTOUR,
   MGACT_MMM_STATE, MGACT_TAKE_MMM, MGACT_FINAL_STATE, MGACT_FINAL_ACQ, 
   MGACT_SETUP_MMM_FILES, MGACT_RESTORE_STATE, MGACT_LOW_DOSE_ON, MGACT_LOW_DOSE_OFF,
-  MGACT_SET_ZHEIGHT, MGACT_MARKER_SHIFT, MGACT_FOCUS_POS, MGACT_GRID_DONE
+  MGACT_SET_ZHEIGHT, MGACT_MARKER_SHIFT, MGACT_FOCUS_POS, MGACT_RUN_MACRO, MGACT_GRID_DONE
 };
 #define OBJECTIVE_APERTURE 2
 #define CONDENSER_APERTURE 1
@@ -263,6 +263,7 @@ private:
   bool mDoingEucentricity;
   bool mDoingMontage;
   bool mAutoContouring;
+  bool mRunningMacro;
   bool mRestoringOnError;     // Flag tht it is doing the aperture restore (generally on error)
   bool mSettingUpNavFiles;    // Flag that it is setting up polygon montages files
   bool mStartedNavAcquire;    // Flag that Nav acquire was started

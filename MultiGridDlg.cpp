@@ -57,7 +57,7 @@ static int sIdTable[] = {IDC_STAT_RUN, IDC_STAT_NAME, IDC_BUT_CLOSE_ALL, PANEL_E
   IDC_RNUM_MONT_PIECES, IDC_STAT_MONTAGE, IDC_EDIT_MONT_XPCS, IDC_STAT_MONT_BY,
   IDC_EDIT_MONT_NUM_YPCS, IDC_STAT_MONT_PCS, IDC_CHECK_USE_OVERLAP, IDC_EDIT_OVERLAP,
   IDC_STAT_PERCENT, IDC_BUT_SETUP_LMM_MONT, IDC_CHECK_AUTOCONTOUR,
-  IDC_BUT_SETUP_AUTOCONT2, PANEL_END,
+  IDC_BUT_SETUP_AUTOCONT2, IDC_COMBO_END_SCRIPT, IDC_CHECK_SCRIPT_AT_END, PANEL_END,
   IDC_BUT_MG_MEDIUM_MAG_MAPS, IDC_CHECK_TAKE_MMMS, IDC_TSS_LINE6, PANEL_END,
   IDC_BUT_SETUP_POLYMONT, IDC_RMMM_SEARCH, IDC_STAT_USE2, IDC_RMMM_VIEW,
   IDC_RMMM_CUR_OR_STATE, IDC_COMBO_MMM_STATE1, IDC_COMBO_MMM_STATE2, IDC_COMBO_MMM_STATE3,
@@ -103,6 +103,7 @@ CMultiGridDlg::CMultiGridDlg(CWnd* pParent /*=NULL*/)
   , m_bSetFinalByGrid(FALSE)
   , m_bToggleAll(FALSE)
   , m_strNote(_T(""))
+  , m_bScriptAtEnd(FALSE)
 {
   mNonModal = true;
   for (int ind = 0; ind < MAX_MULGRID_PANELS; ind++)
@@ -175,6 +176,8 @@ void CMultiGridDlg::DoDataExchange(CDataExchange* pDX)
   DDX_Check(pDX, IDC_CHECK_FRAMES_UNDER_SESSION, m_bFramesUnderSession);
   DDX_Check(pDX, IDC_CHECK_TOGGLE_ALL, m_bToggleAll);
   DDX_Text(pDX, IDC_EDIT_GRID_NOTE, m_strNote);
+  DDX_Control(pDX, IDC_COMBO_END_SCRIPT, m_comboEndScript);
+  DDX_Check(pDX, IDC_CHECK_SCRIPT_AT_END, m_bScriptAtEnd);
 }
 
 
@@ -248,6 +251,8 @@ BEGIN_MESSAGE_MAP(CMultiGridDlg, CBaseDlg)
   ON_BN_CLICKED(IDC_BUT_SET_ORDER, OnButSetOrder)
   ON_BN_CLICKED(IDC_BUT_RESET_ORDER, OnButResetOrder)
   ON_BN_CLICKED(IDC_BUT_OPEN_LOGS, OnButOpenLogs)
+  ON_BN_CLICKED(IDC_CHECK_SCRIPT_AT_END, OnCheckScriptAtEnd)
+  ON_CBN_SELENDOK(IDC_COMBO_END_SCRIPT, OnSelendokComboEndScript)
 END_MESSAGE_MAP()
 
 
@@ -296,6 +301,7 @@ BOOL CMultiGridDlg::OnInitDialog()
   RepackStatesIfNeeded(mNumFinalCombos, &mParams.finalStateNums[0],
     &mParams.finalStateNames[0]);
   LoadAllComboBoxes();
+  LoadMacrosIntoDropDown(m_comboEndScript, false, false);
   m_strPrefix = mMGTasks->GetPrefix();
 
   // Determine if any frame-saving camera has movable frame directory, otherwise drop
@@ -1146,6 +1152,10 @@ void CMultiGridDlg::ParamsToDialog()
   m_bRunFinalAcq = mParams.runFinalAcq;
   m_iSingleVsPolyMont = mParams.MMMimageType;
   m_bFramesUnderSession = mParams.framesUnderSession;
+  m_bScriptAtEnd = mParams.runMacroAfterLMM;
+  mMacNumAtEnd = mParams.macroToRun;
+  m_comboEndScript.SetCurSel(mMacNumAtEnd);
+  m_comboEndScript.EnableWindow(m_bScriptAtEnd);
   SetAllComboBoxesFromNameOrNum();
   ManageFrameDirOption();
   UpdateData(false);
@@ -1179,6 +1189,8 @@ void CMultiGridDlg::DialogToParams()
   mParams.runFinalAcq = m_bRunFinalAcq;
   mParams.MMMimageType = m_iSingleVsPolyMont;
   mParams.framesUnderSession = m_bFramesUnderSession;
+  mParams.runMacroAfterLMM = m_bScriptAtEnd;
+  mParams.macroToRun = mMacNumAtEnd;
   GetStateFromComboBox(m_comboMMMstate1, mParams.MMMstateNums[0],
     mParams.MMMstateNames[0], 1);
   GetStateFromComboBox(m_comboMMMstate2, mParams.MMMstateNums[1],
@@ -1859,6 +1871,8 @@ bool CMultiGridDlg::FindLogFiles(std::vector<std::string> *strList, bool returnA
   CString filename, path, name;
 
   // Loop on .log and .rtf files
+  if (mSelectedGrid < 0)
+    return false;
   for (suff = 0; suff < 2; suff++) {
     filename = mMGTasks->FullGridFilePath(-mDlgIndToJCDindex[mSelectedGrid] - 1,
       suffixes[suff]);
@@ -1957,6 +1971,21 @@ void CMultiGridDlg::OnCheckAutocontour()
   UPDATE_DATA_TRUE;
   EnableDlgItem(IDC_BUT_SETUP_AUTOCONT2, m_bAutocontour);
   mWinApp->RestoreViewFocus();
+}
+
+// Enable running a script at the end
+void CMultiGridDlg::OnCheckScriptAtEnd()
+{
+  UPDATE_DATA_TRUE;
+  m_comboEndScript.EnableWindow(m_bScriptAtEnd);
+  mWinApp->RestoreViewFocus();
+}
+
+// User selects a script
+void CMultiGridDlg::OnSelendokComboEndScript()
+{
+  mWinApp->RestoreViewFocus();
+  mMacNumAtEnd = m_comboEndScript.GetCurSel();
 }
 
 // Button to set up the LM montage
@@ -2283,13 +2312,13 @@ int CMultiGridDlg::DoSetupLMMmont(bool skipDlg)
   montP->setupInLowDose = lowDose;
   montP->skipOutsidePoly = false;
   montP->skipCorrelations = false;
-  montP->ignoreSkipList = false;
   montP->warnedConSetBin = true;
   overlapFrac = m_bUseMontOverlap ? (float)(m_iMontOverlap / 100.) : 0.f;
 
   if (m_iLMMmontType == 0) {
 
     // Setup full montage
+    montP->ignoreSkipList = false;
     err = mWinApp->mNavigator->FullMontage(skipDlg, overlapFrac, SETUPMONT_MG_FULL_GRID);
     if (!err && stateMag > 0 && montP->magIndex != stateMag) {
       str.Format("You selected to set a state at %dx but changed the mag to %d"
@@ -2305,6 +2334,7 @@ int CMultiGridDlg::DoSetupLMMmont(bool skipDlg)
     // Setup specific piece number
     montP->xNframes = m_iXpieces;
     montP->yNframes = m_iYpieces;
+    montP->ignoreSkipList = true;
     if (m_bSetLMMstate)
       mWinApp->mDocWnd->MontParamInitFromFrame(montP, camera, state->xFrame,
         state->yFrame, overlapFrac);
@@ -2661,6 +2691,7 @@ int CMultiGridDlg::SetupMMMacquire(bool skipDlg)
         montP->xNframes = mParams.MMMnumXpieces;
         montP->yNframes = mParams.MMMnumYpieces;
       }
+      montP->ignoreSkipList = true;
       if (stateForMont >= 0) {
         mWinApp->mDocWnd->MontParamInitFromFrame(montP, useCamera,
           stateArr[stateForMont]->xFrame, stateArr[stateForMont]->yFrame, 0.);

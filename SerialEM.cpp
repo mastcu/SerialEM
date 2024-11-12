@@ -4313,7 +4313,7 @@ void CSerialEMApp::OpenSecondaryLog(CString name, bool readFile)
 {
   CLogWindow *win;
   WINDOWPLACEMENT place;
-  int offset = mSecondaryLogs.GetSize() * 30;
+  int offset = (int)mSecondaryLogs.GetSize() * 30;
   if (readFile) {
 
     // If file already open, just raise window
