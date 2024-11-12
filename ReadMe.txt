@@ -31,12 +31,12 @@ change the project properties to access this repository elsewhere.  This
 collection includes libraries that you should not use unless you have a
 license for them.  Namely, libifft-MKL.lib and libifft-MKL-64.lib are import
 libraries for the corresponding DLLs in the binary SerialEM distributions,
-which incorporate Intel Math Kernel Library FFT routines from version 15 of
-the Intel compiler collection.  If you do not have a license for these, you
-should compile with the v140 configurations.  To run the program after such a
-compilation, copy libctffind-VCOMP.dll from SerialEMLibs or SerialEMLibs/x64
-to the executable directory, and copy hdf5.dll and imodzlib1.dll from the
-appropriate SerialEM distribution.
+which incorporate Intel Math Kernel Library FFT routines from version 19
+(2019) of the Intel compiler collection.  If you do not have a license for
+these, you should compile with the v140 configurations.  To run the program
+after such a compilation, copy libctffind-VCOMP.dll from SerialEMLibs or
+SerialEMLibs/x64 to the executable directory, and copy hdf5.dll and
+imodzlib1.dll from the appropriate SerialEM distribution.
 
 The build requires Python to run two scripts in Utilities to generate two
 include files.  This is specified in the Pre-Build Event of the project
@@ -48,8 +48,10 @@ python Utilities/makeSignatures
 python Utilities/makeHideDisable
 If necessary, the two files, DisableHideTable.h and MacroArguments.h can be
 downloaded from the Tools directory on the SerialEM download site; these are
-correct for the current development source, not the stable branch.  The third
-script requires IMOD to run but it will just exit if IMOD is not present.
+correct for the current development source, not the stable branch.  A third
+script, ctrapcheck, requires IMOD to run but it will just exit if IMOD is not
+present when run only on recently changed files, which is what the project
+settings do.
 
 The rest of this file contains a description of the modules in SerialEM.  This
 is unlikely to be up-to-date.  Every .cpp file has a corresponding .h file.
@@ -99,6 +101,7 @@ MainFrm.cpp           Standard MFC MDI component, manages the main program
                          panel management and status line entries
 MapDrawItem.cpp       Class for keeping track of map drawing items
 MenuTargets.cpp       Has MANY event handlers for menu items, see below
+MultiGridTasks.cpp    Runs operations for working with multiple grids
 MultiTSTasks.cpp      Has specimen cooking and autocentering routines
 NavHelper.cpp         Helper routines for the Navigator
 ParameterIO.cpp       Reads property file, reads and writes settings and
@@ -140,6 +143,7 @@ LogWindow.cpp        The log window
 MacroEditer.cpp      Macro editing window
 MacroToolbar.cpp     Toolbar with macro buttons
 MultiCombinerDlg.cpp  To combine Navigator points for multiple Records
+MultiGridDlg.cpp     To manage operations on multiple grids
 MultiShotDlg.cpp     Dialog for setting parameters for multiple records
 NavAcquireDlg.cpp    To set parameters for acquisition from Navigator points
 NavigatorDlg.cpp     The Navigator for storing positions and maps

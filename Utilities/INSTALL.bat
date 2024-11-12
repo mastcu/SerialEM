@@ -524,9 +524,18 @@ echo Copying frame alignment components
 IF NOT EXIST %SHRMEMDIR% MKDIR %SHRMEMDIR%
 IF EXIST %SHRMEMDIR%\Microsoft.VC90.CRT RMDIR /Q /S %SHRMEMDIR%\Microsoft.VC90.CRT
 COPY /Y Shrmemframe\shrmemframe.exe %SHRMEMDIR%
-COPY /Y Shrmemframe\libiomp5md.dll %SHRMEMDIR%
-COPY /Y Shrmemframe\libmmd.dll %SHRMEMDIR%
-XCOPY /Q /S /Y /I Shrmemframe\Microsoft.VC90.CRT  %SHRMEMDIR%\Microsoft.VC90.CRT
+IF EXIST Shrmemframe\msvcr120.dll (
+   COPY /Y libiomp5md.dll %SHRMEMDIR%
+   COPY /Y libmmd.dll %SHRMEMDIR%
+   COPY /Y svml_dispmd.dll %SHRMEMDIR%
+   COPY /Y Shrmemframe\msvcp120.dll %SHRMEMDIR%
+   COPY /Y Shrmemframe\msvcr120.dll %SHRMEMDIR%
+)
+IF NOT EXIST Shrmemframe\msvcr120.dl (
+   COPY /Y Shrmemframe\libiomp5md.dll %SHRMEMDIR%
+   COPY /Y Shrmemframe\libmmd.dll %SHRMEMDIR%
+   XCOPY /Q /S /Y /I Shrmemframe\Microsoft.VC90.CRT  %SHRMEMDIR%\Microsoft.VC90.CRT
+)
 
 :ShrMemDone
 echo.
