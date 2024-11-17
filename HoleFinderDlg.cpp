@@ -255,7 +255,7 @@ void CHoleFinderDlg::OnKillfocusEditHoleSize()
 {
   UPDATE_DATA_TRUE;
   ManageSizeSeparation(true);
-  mWinApp->RestoreViewFocus();
+  mWinApp->RestoreFocusWhenIdle();
 }
 
 
@@ -263,13 +263,13 @@ void CHoleFinderDlg::OnKillfocusEditSpacing()
 {
   UPDATE_DATA_TRUE;
   ManageSizeSeparation(true);
-  mWinApp->RestoreViewFocus();
+  mWinApp->RestoreFocusWhenIdle();
 }
 
 void CHoleFinderDlg::OnKillfocusEditMaxError()
 {
   UPDATE_DATA_TRUE;
-  mWinApp->RestoreViewFocus();
+  mWinApp->RestoreFocusWhenIdle();
 }
 
 void CHoleFinderDlg::OnHexArray()
@@ -290,7 +290,7 @@ void CHoleFinderDlg::OnKillfocusEditSigmas()
   m_strSigmas = ListToString(1, mNumSigmas, &mSigmas[0]);
   mBestThreshInd = -1;
   ManageEnables();
-  mWinApp->RestoreViewFocus();
+  mWinApp->RestoreFocusWhenIdle();
 }
 
 // Iterations for median filter
@@ -310,7 +310,7 @@ void CHoleFinderDlg::OnKillfocusEditMedianIters()
   m_strIterations = ListToString(3, mNumIterations,  &mIterations[0]);
   mBestThreshInd = -1;
   ManageEnables();
-  mWinApp->RestoreViewFocus();
+  mWinApp->RestoreFocusWhenIdle();
 }
 
 // Thresholds
@@ -322,7 +322,7 @@ void CHoleFinderDlg::OnKillfocusEditThresholds()
   m_strThresholds = ListToString(1, mNumThresholds, &mThresholds[0]);
   mBestThreshInd = -1;
   ManageEnables();
-  mWinApp->RestoreViewFocus();
+  mWinApp->RestoreFocusWhenIdle();
 }
 
 // Bracketing
@@ -395,7 +395,7 @@ void CHoleFinderDlg::OnToggleDraw(NMHDR *pNotifyStruct, LRESULT *result)
 void CHoleFinderDlg::OnKillfocusEditLowerMean()
 {
   UPDATE_DATA_TRUE;
-  mWinApp->RestoreViewFocus();
+  mWinApp->RestoreFocusWhenIdle();
   mParams.lowerMeanCutoff = (float)atof(m_strLowerMean);
   m_strLowerMean.FORMAT4OR5G(mParams.lowerMeanCutoff);
   m_intLowerMean = (int)(255. * (mParams.lowerMeanCutoff - mMeanMin) /
@@ -408,7 +408,7 @@ void CHoleFinderDlg::OnKillfocusEditLowerMean()
 void CHoleFinderDlg::OnKillfocusEditUpperMean()
 {
   UPDATE_DATA_TRUE;
-  mWinApp->RestoreViewFocus();
+  mWinApp->RestoreFocusWhenIdle();
   mParams.upperMeanCutoff = (float)atof(m_strUpperMean);
   m_strUpperMean.FORMAT4OR5G(mParams.upperMeanCutoff);
   m_intUpperMean = (int)(255. * (mParams.upperMeanCutoff - mMidMean) /
@@ -421,7 +421,7 @@ void CHoleFinderDlg::OnKillfocusEditUpperMean()
 void CHoleFinderDlg::OnKillfocusEditHullDist()
 {
   UPDATE_DATA_TRUE;
-  mWinApp->RestoreViewFocus();
+  mWinApp->RestoreFocusWhenIdle();
   mParams.edgeDistCutoff = (float)atof(m_strHullDist);
   m_strHullDist.Format("%.2f", mParams.edgeDistCutoff);
   m_intHullDist = (int)(255. * mParams.edgeDistCutoff / B3DMAX(1., mEdgeDistMax));

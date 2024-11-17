@@ -696,6 +696,7 @@ public:
   GetMember(CString, ExePath);
   GetSetMember(CString, NanumFontPath);
   SetMember(BOOL, StartCameraInDebug);
+  void RestoreFocusWhenIdle() { mRestoreFocusIdleCount = 4; };
   unsigned char *GetPaletteColors() {return &mPaletteColors[0][0] ; };
   void SetEnableExternalPython(BOOL inVal);
   std::set<int> *GetIDsToHide() { return &mIDsToHide; };
@@ -1023,6 +1024,7 @@ private:
   int mCurSecondaryLog;         // Index if secondary log window with focus or -1 if none
   int mLastSecondaryLog;        // Index of last one that lost focus
   WINDOWPLACEMENT mSecondaryLogPlace;
+  int mRestoreFocusIdleCount;   // Count for restoring focus from OnIdle
 
 public:
   void UpdateAllEditers(void);

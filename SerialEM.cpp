@@ -816,6 +816,7 @@ CSerialEMApp::CSerialEMApp()
   mNextLogStyle = -1;
   mCurSecondaryLog = -1;
   mLastSecondaryLog = -1;
+  mRestoreFocusIdleCount = 0;
   mStartCameraInDebug = false;
   traceMutexHandle = CreateMutex(0, 0, 0);
   sStartTime = GetTickCount();
@@ -866,6 +867,7 @@ void CSerialEMApp::InitializeOneLDParam(LowDoseParams &ldParam)
   ldParam.darkFieldMode = 0;
   ldParam.dfTiltX = 0.;
   ldParam.dfTiltY = 0.;
+  ldParam.EDMPercent = 100.;
 }
 
 // Clean up everything so we can detect memory leaks
@@ -2469,6 +2471,12 @@ BOOL CSerialEMApp::CheckIdleTasks()
   DWORD time = GetTickCount();
   static DWORD maxInt = 0;
   DWORD interval = 0;
+
+  if (mRestoreFocusIdleCount) {
+    mRestoreFocusIdleCount--;
+    if (!mRestoreFocusIdleCount)
+      RestoreViewFocus();
+  }
 
   // If there is anything in array, get the interval since the last check
   // If the interval is greater than a threshold, add it to the timeouts

@@ -395,26 +395,26 @@ void CAutoContouringDlg::OnRGroupBySize()
 void CAutoContouringDlg::OnKillfocusEditToPixels()
 {
   UPDATE_DATA_TRUE;
-  mWinApp->RestoreViewFocus();
+  mWinApp->RestoreFocusWhenIdle();
 }
 
 void CAutoContouringDlg::OnKillfocusEditToPixSize()
 {
   UPDATE_DATA_TRUE;
-  mWinApp->RestoreViewFocus();
+  mWinApp->RestoreFocusWhenIdle();
 }
 
 // New values of relative and absolute threshold
 void CAutoContouringDlg::OnKillfocusEditRelThresh()
 {
   UPDATE_DATA_TRUE;
-  mWinApp->RestoreViewFocus();
+  mWinApp->RestoreFocusWhenIdle();
 }
 
 void CAutoContouringDlg::OnKillfocusEditAbsThresh()
 {
   UPDATE_DATA_TRUE;
-  mWinApp->RestoreViewFocus();
+  mWinApp->RestoreFocusWhenIdle();
 }
 
 // New number of groups: redo groups
@@ -640,7 +640,7 @@ int CAutoContouringDlg::GetSquareStats(float &minMean, float &maxMean,
 void CAutoContouringDlg::OnKillfocusEditMinMean()
 {
   UPDATE_DATA_TRUE;
-  mWinApp->RestoreViewFocus();
+  mWinApp->RestoreFocusWhenIdle();
   mParams.lowerMeanCutoff = (float)atof(m_strLowerMean);
   m_strLowerMean.Format("%.4g", mParams.lowerMeanCutoff);
   m_intLowerMean = (int)(255. * (mParams.lowerMeanCutoff - mMedianMean) /
@@ -654,7 +654,7 @@ void CAutoContouringDlg::OnKillfocusEditMinMean()
 void CAutoContouringDlg::OnKillfocusEditMaxMean()
 {
   UPDATE_DATA_TRUE;
-  mWinApp->RestoreViewFocus();
+  mWinApp->RestoreFocusWhenIdle();
   mParams.upperMeanCutoff = (float)atof(m_strUpperMean);
   m_strUpperMean.Format("%.4g", mParams.upperMeanCutoff);
   m_intUpperMean = (int)(255. * (mParams.upperMeanCutoff - mMedianMean) /
@@ -668,7 +668,7 @@ void CAutoContouringDlg::OnKillfocusEditMaxMean()
 void CAutoContouringDlg::OnKillfocusEditMinSize()
 {
   UPDATE_DATA_TRUE;
-  mWinApp->RestoreViewFocus();
+  mWinApp->RestoreFocusWhenIdle();
   mParams.minSizeCutoff = (float)atof(m_strUpperMean);
   m_strMinSize.Format("%.4g", mParams.minSizeCutoff);
   m_intMinSize = (int)(255. * (mParams.minSizeCutoff - mStatMinSize) /
@@ -682,7 +682,7 @@ void CAutoContouringDlg::OnKillfocusEditMinSize()
 void CAutoContouringDlg::OnKillfocusEditBorderDist()
 {
   UPDATE_DATA_TRUE;
-  mWinApp->RestoreViewFocus();
+  mWinApp->RestoreFocusWhenIdle();
   mParams.borderDistCutoff = (float)atof(m_strBorderDist);
   m_strBorderDist.Format("%.4g", mParams.borderDistCutoff);
   m_intBorderDist = (int)(255. * mParams.borderDistCutoff / mStatMaxBoundDist);
@@ -695,13 +695,13 @@ void CAutoContouringDlg::OnKillfocusEditBorderDist()
 void CAutoContouringDlg::OnKillfocusEditACMinsize()
 {
   UPDATE_DATA_TRUE;
-  mWinApp->RestoreViewFocus();
+  mWinApp->RestoreFocusWhenIdle();
 }
 
 void CAutoContouringDlg::OnKillfocusEditACMaxsize()
 {
   UPDATE_DATA_TRUE;
-  mWinApp->RestoreViewFocus();
+  mWinApp->RestoreFocusWhenIdle();
 }
 
 // Respond to a slider message, which may or may not be a change
