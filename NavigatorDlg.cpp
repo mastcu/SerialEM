@@ -8861,7 +8861,7 @@ int CNavigatorDlg::LoadNavFile(bool checkAutosave, bool mergeFile, CString *inFi
             if (!retval) {
               ldp = &state->ldParams;
 
-              // Again, the numbering should make ParameterIO, skipping indexes at 1 and 6
+              // Again, the numbering should match ParameterIO, skipping indexes at 1 & 6
               ldp->magIndex = B3DNINT(vals[2]);
               ldp->spotSize = B3DNINT(vals[3]);
               if (ldp->magIndex < 0) {
@@ -8888,6 +8888,8 @@ int CNavigatorDlg::LoadNavFile(bool checkAutosave, bool mergeFile, CString *inFi
               ldp->darkFieldMode = B3DNINT(vals[18]);
               ldp->dfTiltX = vals[19];
               ldp->dfTiltY = vals[20];
+              if (ind2 > 21)
+                ldp->EDMPercent = (float)vals[21];
             }
           }
           if (retval) {
@@ -9834,7 +9836,7 @@ void CNavigatorDlg::AcquireAreas(int source, bool dlgClosing, bool useTempParams
   // If there is no file open for regular acquire, make sure one will be opened on 
   // first item
   mSkippingSave = (mDoingEarlyReturn && !mAcqParm->numEarlyFrames) ||
-    mAcqParm->skipSaving;
+    (mAcqParm->skipSaving && mAcqParm->acquireType == ACQUIRE_IMAGE_ONLY);
   if (dlg->mNumAcqBeforeFile && ((!mWinApp->mStoreMRC && !mSkippingSave && 
     (takingMap || takingImage)) || ((!mWinApp->mStoreMRC || mWinApp->Montaging()) &&
         doingMultishot && mHelper->IsMultishotSaving()))) {
@@ -10252,6 +10254,12 @@ void CNavigatorDlg::AcquireNextTask(int param)
         if (mWinApp->Montaging()) {
           zval = mWinApp->mMontageWindow.m_iCurrentZ - 1;
         } else {
+          if (!mWinApp->mStoreMRC) {
+            StopAcquiring();
+            SEMMessageBox("Program error: there is no open image file but the"
+              " \"Skip saving\" flag is not set");
+            return;
+          }
           if (!mBufferManager->IsBufferSavable(mImBufs)) {
             StopAcquiring();
             SEMMessageBox("This image cannot be saved to the currently open file.\n\n"
