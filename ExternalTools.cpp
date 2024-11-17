@@ -148,8 +148,8 @@ int CExternalTools::RunToolCommand(CString &title, CString extraArgs, int extraP
 }
 
 // Actually do the work of starting the process
-int CExternalTools::RunCreateProcess(CString &command, CString argString, 
-  bool leaveHandles, CString inputString)
+int CExternalTools::RunCreateProcess(CString &command, CString argString,
+  bool leaveHandles, CString inputString, bool pipeOutput, CString *errString)
 {
   STARTUPINFO sinfo;
   bool isBatch = (command.Right(4)).CompareNoCase(".bat") == 0 || 
@@ -164,6 +164,8 @@ int CExternalTools::RunCreateProcess(CString &command, CString argString,
   SECURITY_ATTRIBUTES sa;
   HANDLE hChildStd_IN_Rd = NULL;
   HANDLE hChildStd_IN_Wr = NULL;
+  HANDLE hChildStd_OUT_Rd = NULL;
+  HANDLE hChildStd_OUT_Wr = NULL;
   DWORD dwWrite, dwWritten;
   CString saveAutodoc, saveIMODdir;
   bool pipeInput = !inputString.IsEmpty();
@@ -173,12 +175,17 @@ int CExternalTools::RunCreateProcess(CString &command, CString argString,
   sa.nLength = sizeof(sa);
   sa.lpSecurityDescriptor = NULL;
   sa.bInheritHandle = TRUE;
+  mPipeOutHandle = NULL;
 
   // Do substitutions in the argString
   if (argString.Find("%imagefile%") >= 0) {
     if (!mWinApp->mStoreMRC) {
-      SEMMessageBox("Cannot substitute for %imagefile% in argument\n"
-        "list for running a process; there is no open image file");
+      report = "Cannot substitute for %imagefile% in argument\r\n"
+        "list for running a process; there is no open image file";
+      if (errString)
+        *errString = report;
+      else
+        SEMMessageBox(report);
       return 1;
     }
     SubstituteAndQuote(argString, "%imagefile%", mWinApp->mStoreMRC->getFilePath());
@@ -191,8 +198,12 @@ int CExternalTools::RunCreateProcess(CString &command, CString argString,
     }
     report = mWinApp->mNavigator->GetCurrentNavFile();
     if (report.IsEmpty()) {
-      SEMMessageBox("Cannot substitute for %navfile% in argument\n"
-        "list for running a process; there is no current Navigator file");
+      report = "Cannot substitute for %navfile% in argument\n"
+        "list for running a process; there is no current Navigator file";
+      if (errString)
+        *errString = report;
+      else
+        SEMMessageBox(report);
       return 1;
     }
     SubstituteAndQuote(argString, "%navfile%", report);
@@ -204,6 +215,15 @@ int CExternalTools::RunCreateProcess(CString &command, CString argString,
   // Look for standard output redirection character and open a file if needed
   index = argString.ReverseFind('>');
   if (index >= 0 && index < argString.GetLength() - 1) {
+    if (pipeOutput) {
+      report = "RunCreateProcess was called with the flag to pipe the output\n"
+        "but the command string contains a > for output to a file";
+      if (errString)
+        *errString = report;
+      else
+        SEMMessageBox(report);
+      return 1;
+    }
     ind2 = index + 1;
     if (argString.GetAt(ind2) == '&') {
       ind2++;
@@ -225,7 +245,10 @@ int CExternalTools::RunCreateProcess(CString &command, CString argString,
     if (hFile == INVALID_HANDLE_VALUE) {
       report.Format("Error (%d) opening output file for redirection of process output",
         GetLastError());
-      SEMMessageBox(report);
+      if (errString)
+        *errString = report;
+      else
+        SEMMessageBox(report);
       return 1;
     }
   }
@@ -234,8 +257,12 @@ int CExternalTools::RunCreateProcess(CString &command, CString argString,
   index = argString.ReverseFind('<');
   if (index >= 0 && index < argString.GetLength() - 1) {
     if (pipeInput) {
-      SEMMessageBox("RunCreateProcess was called with a string to pipe to the input\n"
-        "but the command string contains a < for input from a file");
+      report = "RunCreateProcess was called with a string to pipe to the input\r\n"
+        "but the command string contains a < for input from a file";
+      if (errString)
+        *errString = report;
+      else
+        SEMMessageBox(report);
       CloseFileHandles(hInFile, hFile);
       return 1;
     }
@@ -251,7 +278,10 @@ int CExternalTools::RunCreateProcess(CString &command, CString argString,
     if (hInFile == INVALID_HANDLE_VALUE) {
       report.Format("Error (%d) opening input file for redirection into process",
         GetLastError());
-      SEMMessageBox(report);
+      if (errString)
+        *errString = report;
+      else
+        SEMMessageBox(report);
       CloseFileHandles(hInFile, hFile);
       return 1;
     }
@@ -266,20 +296,56 @@ int CExternalTools::RunCreateProcess(CString &command, CString argString,
   if (!argString.IsEmpty())
     report += " " + argString;
 
+  // Create input pipe
   if (pipeInput) {
-    if (!CreatePipe(&hChildStd_IN_Rd, &hChildStd_IN_Wr, &sa, 0)) {
-      SEMMessageBox("Error creating pipe for input to external process");
-      CloseFileHandles(hInFile, hFile);
-      return 1;
+    retval = CreatePipe(&hChildStd_IN_Rd, &hChildStd_IN_Wr, &sa, 0);
+    if (!retval) {
+      report = "Error creating pipe for input to external process";
+    } else {
+      retval = SetHandleInformation(hChildStd_IN_Wr, HANDLE_FLAG_INHERIT, 0);
+      if (!retval)
+        report = "Error running SetHandleInformation on input pipe to external "
+          "process";
+      if (errString)
+        *errString = report;
+      else
+        SEMMessageBox(report);
     }
-    if (!SetHandleInformation(hChildStd_IN_Wr, HANDLE_FLAG_INHERIT, 0)) {
-      SEMMessageBox("Error running SetHandleInformation on input pipe to external "
-        "process");
+    if (!retval) {
       CloseFileHandles(hInFile, hFile);
       CloseFileHandles(hChildStd_IN_Rd, hChildStd_IN_Wr);
       return 1;
     }
     sinfo.hStdInput = hChildStd_IN_Rd;
+    sinfo.dwFlags |= STARTF_USESTDHANDLES;
+  }
+
+  // Create output pipe for stdout only
+  if (pipeOutput) {
+    retval = CreatePipe(&hChildStd_OUT_Rd, &hChildStd_OUT_Wr, &sa, 0);
+    if (!retval) {
+      SEMMessageBox("Error creating pipe for output from external process");
+    } else {
+      retval = SetHandleInformation(hChildStd_OUT_Rd, HANDLE_FLAG_INHERIT, 0);
+      if (!retval)
+        report = "Error running SetHandleInformation on input pipe to external "
+          "process";
+    }
+    if (!retval) {
+      if (errString)
+        *errString = report;
+      else
+        SEMMessageBox(report);
+      CloseFileHandles(hInFile, hFile);
+      CloseFileHandles(hChildStd_IN_Rd, hChildStd_IN_Wr);
+      CloseFileHandles(hChildStd_OUT_Rd, hChildStd_OUT_Wr);
+      if (errString)
+        *errString = report;
+      else
+        SEMMessageBox(report);
+      return 1;
+    }
+    sinfo.hStdOutput = hChildStd_OUT_Wr;
     sinfo.dwFlags |= STARTF_USESTDHANDLES;
   }
 
@@ -308,10 +374,15 @@ int CExternalTools::RunCreateProcess(CString &command, CString argString,
   SEMTrace('1', "%s", (LPCTSTR)report);
   cmdString = strdup((LPCTSTR)report);
   if (!cmdString) {
-    SEMMessageBox("Memory error composing string for process and arguments when trying to"
-      " run a process");
+    report = "Memory error composing string for process and arguments when trying to"
+      " run a process";
+    if (errString)
+      *errString = report;
+    else
+      SEMMessageBox(report);
     CloseFileHandles(hInFile, hFile);
     CloseFileHandles(hChildStd_IN_Rd, hChildStd_IN_Wr);
+    CloseFileHandles(hChildStd_OUT_Rd, hChildStd_OUT_Wr);
     return 1;
   }
 
@@ -343,14 +414,25 @@ int CExternalTools::RunCreateProcess(CString &command, CString argString,
   if (isCtfplotter)
     _putenv("PIP_PRINT_ENTRIES=");
 
+  free(cmdString);
+
   if (!retval) {
     CloseFileHandles(hInFile, hFile);
     CloseFileHandles(hChildStd_IN_Rd, hChildStd_IN_Wr);
+    CloseFileHandles(hChildStd_OUT_Rd, hChildStd_OUT_Wr);
     report.Format("CreateProcess failed to start process %s with error %d",
         (LPCTSTR)command, GetLastError());
+    if (errString)
+      *errString = report;
+    else
       SEMMessageBox(report);
   } else {
 
+    // Close unneeded handle for pipe output
+    if (pipeOutput)
+      CloseHandle(hChildStd_OUT_Wr);
+
+    // Pipe input: write to pipe and close handles
     if (pipeInput) {
       CloseHandle(hChildStd_IN_Rd);
       dwWrite = inputString.GetLength();
@@ -360,24 +442,29 @@ int CExternalTools::RunCreateProcess(CString &command, CString argString,
       if (!retval) {
         CloseFileHandles(hInFile, hFile);
         CloseFileHandles(mExtProcInfo.hProcess, mExtProcInfo.hThread);
+        if (pipeOutput)
+          CloseHandle(hChildStd_OUT_Rd);
         report.Format("Writing input pipe to process %s failed with error %d",
           (LPCTSTR)command, GetLastError());
-        SEMMessageBox(report);
+        if (errString)
+          *errString = report;
+        else
+          SEMMessageBox(report);
       }
     }
 
     if (retval) {
 
-      // Give it a second to finish with the command string
+      // If OK: Give it a second to finish with the command string
       WaitForSingleObject(mExtProcInfo.hProcess, pipeInput ? 250 : 1000);
       CloseFileHandles(hInFile, hFile);
+      mPipeOutHandle = hChildStd_OUT_Rd;
       if (!leaveHandles) {
         CloseHandle(mExtProcInfo.hProcess);
         CloseHandle(mExtProcInfo.hThread);
       }
     }
   }
-  free(cmdString);
   return retval ? 0 : 1;
 }
 
@@ -429,6 +516,39 @@ void CExternalTools::SubstituteAndQuote(CString &argString, const char *keyword,
     argString.Delete(startInd, keyLen);
     argString.Insert(startInd, replacement);
   }
+}
+
+// Wait the given timeout for the process to be done, then get the pipe output
+// Returns -1 for error trying to get output, in which case a message will be placed 
+// output.  Otherwise returns exit status of process
+int CExternalTools::WaitForDoneGetPipeOutput(CString &output, int timeout)
+{
+  const int bufLen = 256;
+  char buffer[bufLen];
+  BOOL bSuccess;
+  DWORD exitCode, dwRead;
+  if (!mPipeOutHandle) {
+    output = "There is no handle for pipe output from process";
+    return -1;
+  }
+  if (WaitForSingleObject(mExtProcInfo.hProcess, timeout) != WAIT_OBJECT_0) {
+    output = "When trying to get pipe output, process did not end before given timeout "
+      "value";
+    CloseHandle(mPipeOutHandle);
+    return -1;
+  }
+  output = mPipeOutput;
+  for (;;) {
+    bSuccess = ReadFile(mPipeOutHandle, buffer, bufLen - 1, &dwRead, NULL);
+    if (!bSuccess || dwRead == 0)
+      break;
+    buffer[dwRead] = 0x00;
+    output += buffer;
+  }
+  CloseHandle(mPipeOutHandle);
+  GetExitCodeProcess(mExtProcInfo.hProcess, &exitCode);
+
+  return (int)exitCode;
 }
 
 // Save the given buffer to a shared memory file  with the given suffix after the standard

@@ -468,6 +468,9 @@ protected:
   IntVec mStoredGraphTypes;    // Stored type data
   std::vector<FloatVec> mStoredGraphValues;    // Stored values from last graph or others
   CString mInputToNextProcess; // Input to pipe in when running next process
+  CString mVarForProcOutputPipe;  // Name of variable to place output in
+  int mGotPipedOutputOrErr;    // 1 if got output, -1 for impossible error, 2 exitcode
+  CString mPipeOutput;         // A string just for this
   HWND mFocusedWndWhenSavedStatus;
   CString mSavedStatusPanes[3];
   CString mStatusLines[NUM_CM_MESSAGE_LINES];

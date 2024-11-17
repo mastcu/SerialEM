@@ -222,6 +222,7 @@ CMacroProcessor::CMacroProcessor()
   mRanGatanScript = false;
   mRanCtfplotter = false;
   mRanExtProcess = false;
+  mGotPipedOutputOrErr = 0;
   mLoadingMap = false;
   mMakingDualMap = false;
   mLastCompleted = false;
@@ -1000,7 +1001,7 @@ void CMacroProcessor::SaveStatusPanes(int macNum)
 int CMacroProcessor::TaskBusy()
 {
   double diff, dose;
-  int tbusy;
+  int tbusy, err;
   EMimageBuffer *imBuf;
   DWORD waitResult;
   CString report;
@@ -1123,6 +1124,13 @@ int CMacroProcessor::TaskBusy()
     waitResult = WaitForSingleObject(mWinApp->mExternalTools->mExtProcInfo.hProcess, 20);
     if (waitResult != WAIT_OBJECT_0)
       return 1;
+    if (!mVarForProcOutputPipe.IsEmpty()) {
+      err = mWinApp->mExternalTools->WaitForDoneGetPipeOutput(mPipeOutput, 1000);
+      if (err < 0)
+        mGotPipedOutputOrErr = -1;
+      else
+        mGotPipedOutputOrErr = err > 0 ? 2 : 1;
+    }
     GetExitCodeProcess(mWinApp->mExternalTools->mExtProcInfo.hProcess,
       &mExtProcExitStatus);
     report.Format("%s exited with status %d", (LPCTSTR)mEnteredName, mExtProcExitStatus);
@@ -1132,7 +1140,7 @@ int CMacroProcessor::TaskBusy()
       mSaveCtfplotGraph = 0;
     }
     SetReportedValues(mExtProcExitStatus);
-    if (mExtProcExitStatus || !mRanCtfplotter) {
+    if (mExtProcExitStatus || (!mRanCtfplotter && !mGotPipedOutputOrErr)) {
       mWinApp->AppendToLog(report, mLogAction);
     }
     CleanupExternalProcess();
@@ -1395,6 +1403,7 @@ void CMacroProcessor::RunOrResume()
   mCropXafterShot = -1;
   mNextProcessArgs = "";
   mInputToNextProcess = "";
+  mVarForProcOutputPipe = "";
   mBeamTiltXtoRestore[0] = mBeamTiltXtoRestore[1] = EXTRA_NO_VALUE;
   mBeamTiltYtoRestore[0] = mBeamTiltYtoRestore[1] = EXTRA_NO_VALUE;
   mAstigXtoRestore[0] = mAstigXtoRestore[1] = EXTRA_NO_VALUE;

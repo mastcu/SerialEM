@@ -53,6 +53,7 @@
 #include "ScreenShotDialog.h"
 #include "Mailer.h"
 #include "PiezoAndPPControl.h"
+#include "DoseModulator.h"
 #include "Utilities\XCorr.h"
 #include "Utilities\KGetOne.h"
 #include "Shared\b3dutil.h"
@@ -398,6 +399,29 @@ int CMacCmd::NextCommand(bool startingOut)
     }
   }
 
+  // Process results of pipe output
+  if (mGotPipedOutputOrErr) {
+    if (mGotPipedOutputOrErr < 0) {
+      SEMAppendToLog("Program error getting piped output from process: " + mPipeOutput);
+      AbortMacro();
+      return 1;
+    } else {
+      SetReportedValues(mExtProcExitStatus, mPipeOutput.IsEmpty() ? 1 : 0);
+      if (!mPipeOutput.IsEmpty()) {
+        mPipeOutput.Replace("\r\n", "\n");
+        if (SetVariable(mVarForProcOutputPipe, mPipeOutput, VARTYPE_REGULAR, -1, false,
+          &mStrCopy)) {
+          SEMAppendToLog("Error setting variable " + mVarForProcOutputPipe +
+            " with output from process");
+          AbortMacro();
+          return 1;
+        }
+      }
+      mVarForProcOutputPipe = "";
+      mPipeOutput = "";
+    }
+  }
+
   InitForNextCommand();
 
   if (mMovedPiezo && mWinApp->mPiezoControl->GetLastMovementError()) {
@@ -667,6 +691,7 @@ void CMacCmd::InitForNextCommand()
   mRanGatanScript = false;
   mRanExtProcess = false;
   mRanCtfplotter = false;
+  mGotPipedOutputOrErr = 0;
   mLoadingMap = false;
   mLoopInOnIdle = false;
 }
@@ -13272,19 +13297,6 @@ int CMacCmd::RunInShell(void)
   return 0;
 }
 
-// RunProcess
-int CMacCmd::RunProcess(void)
-{
-  SubstituteLineStripItems(mStrLine, 1, mEnteredName);
-  if (mWinApp->mExternalTools->RunCreateProcess(mEnteredName, mNextProcessArgs, true, 
-    mInputToNextProcess))
-    ABORT_LINE("Error creating process for line:\n\n");
-  mNextProcessArgs = "";
-  mInputToNextProcess = "";
-  mRanExtProcess = true;
-  return 0;
-}
-
 // NextProcessArgs
 int CMacCmd::NextProcessArgs(void)
 {
@@ -13305,21 +13317,36 @@ int CMacCmd::PipeToNextProcess(void)
   return 0;
 }
 
+// NextProcessPipeToVar
+int CMacCmd::NextProcessPipeToVar()
+{
+  mVarForProcOutputPipe = mStrItems[1];
+  return 0;
+}
+
 #pragma push_macro("CreateProcess")
 #undef CreateProcess
 
-// CreateProcess
+// CreateProcess, RunProcess
 int CMacCmd::CreateProcess(void)
 {
   int index;
+  bool doingRun = CMD_IS(RUNPROCESS);
+  if (!doingRun && !mVarForProcOutputPipe.IsEmpty()) {
+    SEMAppendToLog("WARNING: NextProcessPipeToVar works only with RunProcess, not"
+      " CreateProcess");
+    mVarForProcOutputPipe = "";
+  }
 
-  SubstituteLineStripItems(mStrLine, 1, mStrCopy);
-  index = mWinApp->mExternalTools->RunCreateProcess(mStrCopy, mNextProcessArgs, false, 
-    mInputToNextProcess);
+  SubstituteLineStripItems(mStrLine, 1, mEnteredName);
+  index = mWinApp->mExternalTools->RunCreateProcess(mEnteredName, mNextProcessArgs, 
+    doingRun, mInputToNextProcess, !mVarForProcOutputPipe.IsEmpty(), &mStrCopy);
   mNextProcessArgs = "";
   mInputToNextProcess = "";
   if (index)
-    ABORT_LINE("Script aborted due to failure to run process for line:\n\n");
+    ABORT_NOLINE(CString("Error in ") + (doingRun ? "RunProcess:\n" : "CreateProcess:\n")
+      + mStrCopy);
+  mRanExtProcess = doingRun;
   return 0;
 }
 #pragma pop_macro("CreateProcess")
@@ -13335,6 +13362,10 @@ int CMacCmd::ExternalToolArgPlace(void)
 int CMacCmd::RunExternalTool(void)
 {
   int index;
+  if (!mVarForProcOutputPipe.IsEmpty())
+    SEMAppendToLog("WARNING: NextProcessPipeToVar works only with RunProcess, not"
+      " RunExternalTool");
+  mVarForProcOutputPipe = "";
 
   SubstituteLineStripItems(mStrLine, 1, mStrCopy);
   index = mWinApp->mExternalTools->RunToolCommand(mStrCopy, mNextProcessArgs,
@@ -13492,6 +13523,35 @@ int CMacCmd::MovePiezoZ(void)
       return 1;
   }
   mMovedPiezo = true;
+  return 0;
+}
+
+// SetEDMDutyPercent, ReportEDMDutyPercent
+int CMacCmd::SetEDMDutyPercent()
+{
+  int error;
+  float value;
+  bool doSet = CMD_IS(SETEDMDUTYPERCENT);
+  if (!mCamera->HasDoseModulator())
+    ABORT_LINE("There is no dose modulator for line:\n\n");
+  if (doSet) {
+    if (mItemFlt[1] < 1. || mItemFlt[1] > 100.)
+      ABORT_LINE("Percent value must be between 1 and 100 for line:\n\n");
+    error = mCamera->mDoseModulator->SetDutyPercent(mItemFlt[1], mStrCopy);
+  } else {
+    error = mCamera->mDoseModulator->GetDutyPercent(value, mStrCopy);
+  }
+  if (error > 0) {
+    SEMMessageBox(mStrCopy);
+    AbortMacro();
+    return 1;
+  }
+  if (error)
+    PrintfToLog("WARNING: curl returned normal output but exited with code %d", -error);
+  if (!doSet) {
+    mLogRpt.Format("EDM duty %% is %.1f", value);
+    SetRepValsAndVars(1, value);
+  }
   return 0;
 }
 

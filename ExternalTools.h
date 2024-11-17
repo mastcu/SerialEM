@@ -46,6 +46,8 @@ private:
   CString m3dmodAutodocDir;
   std::vector<HANDLE> mGraphProcessHandles;
   std::vector<HANDLE> mGraphThreadHandles;
+  HANDLE mPipeOutHandle;
+  CString mPipeOutput;
 
 public:
   void AddTool(CString &title);
@@ -53,11 +55,13 @@ public:
   int AddArgString(int index, CString &argString);
   int RunToolCommand(CString &title, CString extraArgs, int extraPlace, CString inputStr);
   int RunToolCommand(int index);
-  int RunCreateProcess(CString &command, CString argString, bool leaveHandles, CString inputString);
+  int RunCreateProcess(CString &command, CString argString, bool leaveHandles, CString inputString,
+    bool pipeOutput = false, CString *errString = NULL);
   void CloseFileHandles(HANDLE &hInFile, HANDLE &hOutFile);
   void AddMenuItems();
   void SubstituteAndQuote(CString &argString, const char *keyword, CString &replacement,
     bool doQuotes = true);
+  int WaitForDoneGetPipeOutput(CString &output, int timeout);
   ImodImageFile *SaveBufferToSharedMemory(int bufInd, CString nameSuffix, CString &filename, float reduction);
   int MakeCtfplotterCommand(CString &memFile, float reduction, int bufInd, float tiltOffset,
     float defStart, float defEnd, float defExpect, int astigPhase, float phase,

@@ -6069,9 +6069,20 @@
              and redirecting input from it.&nbsp; The variable <b>var</b> would typically contain
              an array of strings or numeric values, one per line of input.</TD>
         </TR>
+       <TR>
+          <TD class="scriptcommand">NextProcessPipeToVar var</TD>
+          <TD>Sets up a pipe to collect standard output from the next process started with
+             'RunProcess' and, when the process finishes, assigns the output to the variable
+             <b>var</b>.&nbsp; <i>ReportedValue2</i> is set to 0 if there is output or 1 if there
+             is none (in which case the variable is not set).&nbsp; If there are multiple lines of
+            output, the variable will contain an array of strings.&nbsp; The process arguments cannot
+             include redirection to a file with '>'.&nbsp; This command has no effect with 'CreateProcess'
+            or 'RunExternalTool'.&nbsp; Command added in 4.2, 17-Nov-24.
+          </TD>
+        </TR>
         <TR>
           <TD class="scriptcommand">RunExternalTool #N|name</TD>
-          <TD>Runs an external tool shown in the Tools menu, where <b>#N</b> is either the number of
+          <TD>Starts an external tool shown in the Tools menu, where <b>#N</b> is either the number of
             the tool in the Tools menu, numbered from 1, or <b>name</b> is the full name of the tool in the menu.
             If arguments were set with 'NextProcessArgs', or input to be piped in set with 
             'PipeToNextProcess', they will be included when running the command.</TD>
@@ -6131,6 +6142,16 @@
           <TD>Sets the current dose accummulator to <b>#</b>, which must be between 1 and 250.&nbsp;
             If multiple accumulators are needed, use this command to set the area before the Record,
             take the Record, then gets it dose and use 'AccumulateRecordDose'.&nbsp; Command added in 4.1, 21-Jun-23.
+          </TD>
+        </TR>
+         <TR>
+          <TD class="scriptcommand">ReportEDMDutyPercent</TD>
+          <TD>Reports the current duty percent setting of an IDES dose modulator.&nbsp; Command added in 4.2, 16-Nov-24.</TD>
+        </TR>
+         <TR>
+          <TD class="scriptcommand">SetEDMDutyPercent #</TD>
+          <TD>Sets the duty percent setting of an IDES dose modulator to <b>#</b>.&nbsp; If <b>Continuous update</b>
+            is on in the Low Dose control panel, the current area will be set to this value.&nbsp; Command added in 4.2, 16-Nov-24.
           </TD>
         </TR>
        <TR>
