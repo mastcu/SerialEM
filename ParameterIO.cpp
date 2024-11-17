@@ -1296,7 +1296,9 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
             ldp->dfTiltX = itemDbl[19];
             ldp->dfTiltY = itemDbl[20];
           }
-          // ADD NEW ITEMS TO NAV READING
+          if (!itemEmpty[21])
+            ldp->EDMPercent = itemFlt[21];
+          // ADD NEW ITEMS TO NAV STATE READING
         }
 
       } else if (NAME_IS("ImageXrayCriteria")) {
@@ -2556,12 +2558,12 @@ void CParameterIO::WriteLowDoseToString(LowDoseParams *ldp, int ldi, int ldj, CS
   // zero loss, beam X offset, beam Y offset, alpha, diffraction focus, beam tilt X,
   // beam tilt Y, probe mode, dark field, dark field tilt X and Y
   str.Format("%d %d %d %f %f %d %d %f %f %d %f %f %f %f %f"
-    " %f %d %d %f %f",
+    " %f %d %d %f %f %f",
     ldi, (ldp->magIndex ? ldp->magIndex : -ldp->camLenIndex), ldp->spotSize,
     ldp->intensity, ldp->axisPosition, ldj, ldp->slitIn ? 1 : 0, ldp->slitWidth,
     ldp->energyLoss, ldp->zeroLoss, ldp->beamDelX, ldp->beamDelY, ldp->beamAlpha,
     ldp->diffFocus, ldp->beamTiltDX, ldp->beamTiltDY, ldp->probeMode,
-    ldp->darkFieldMode, ldp->dfTiltX, ldp->dfTiltY);
+    ldp->darkFieldMode, ldp->dfTiltX, ldp->dfTiltY, ldp->EDMPercent);
 }
 
 // Write state parameters to a string without \n for use here and in Navigator
@@ -4102,6 +4104,8 @@ int CParameterIO::ReadProperties(CString strFileName)
 
       } else if (MatchNoCase("CEOSServerIP"))
         camera->SetCEOSserverIP(strItems[1]);
+      else if (MatchNoCase("EDMServerIP"))
+        camera->SetEDMserverIP(strItems[1]);
 
       // Hitachi
       else if (MatchNoCase("HitachiIPaddress"))

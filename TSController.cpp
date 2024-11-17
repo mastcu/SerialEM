@@ -7160,7 +7160,7 @@ double CTSController::AddToDoseSum(int which)
   double intensity, dose;
   LowDoseParams *ldParam = mWinApp->GetLowDoseParams();
   double focusFac = 1.;
-  float exposure;
+  float exposure, EDMpct;
 
   if (mSTEMindex)
     return 0.;
@@ -7182,15 +7182,17 @@ double CTSController::AddToDoseSum(int which)
     spotSize = ldParam[set].spotSize;
     intensity = ldParam[set].intensity;
     probe = ldParam[set].probeMode;
+    EDMpct = ldParam[set].EDMPercent;
   } else {
     spotSize = mScope->FastSpotSize();
     intensity = mScope->FastIntensity();
     probe = mScope->GetProbeMode();
+    EDMpct = mCamera->LastEDMDutyPercent();
   }
   exposure = mCamera->SpecimenBeamExposure(mActiveCameraList[mTSParam.cameraIndex], 
     &mConSets[which]);
   dose = focusFac * mBeamAssessor->GetElectronDose(spotSize, intensity, 
-    exposure, probe);
+    exposure, probe, mCamera->HasDoseModulator() ? EDMpct : 100.f);
   mDoseSums[which] += dose;
   return dose;
 }

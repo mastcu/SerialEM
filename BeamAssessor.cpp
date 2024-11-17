@@ -1219,7 +1219,7 @@ BOOL CBeamAssessor::LookupCurrent(int numIntensities, double inIntensity, double
 
 // Compute electron dose for the given spot size, intensity, and exposure time
 double CBeamAssessor::GetElectronDose(int inSpotSize, double inIntensity, 
-                                      float exposure, int probe)
+                                      float exposure, int probe, float EDMpct)
 {
   double cumFactor = 1.;
   double startIntensity;
@@ -1228,6 +1228,8 @@ double CBeamAssessor::GetElectronDose(int inSpotSize, double inIntensity,
     probe = mScope->GetProbeMode();
   int aboveCross = GetAboveCrossover(inSpotSize, inIntensity, probe);
   DoseTable *dtp = &mDoseTables[inSpotSize][aboveCross][probe];
+  if (EDMpct < 0)
+    EDMpct = mCamera->LastEDMDutyPercent();
 
   // If calibration exists at this spot size, use it
   AssignCrossovers();
@@ -1239,7 +1241,7 @@ double CBeamAssessor::GetElectronDose(int inSpotSize, double inIntensity,
     if (!cumFactor)
       SEMTrace('d', "(spot %d int. %f  aC. %d  pM %d)", inSpotSize, inIntensity, 
       aboveCross, probe);
-    return cumFactor * exposure * dtp->dose;
+    return cumFactor * exposure * dtp->dose * EDMpct / 100.;
   }
         
   // To use calibration at another spot, first find proper spot table and give up
@@ -1275,7 +1277,8 @@ double CBeamAssessor::GetElectronDose(int inSpotSize, double inIntensity,
     return 0.;
   }
   if (!probe && mScope->GetConstantBrightInNano())
-    return cumFactor * exposure * mDoseTables[spotSize][aboveCross][probe].dose;
+    return cumFactor * exposure * mDoseTables[spotSize][aboveCross][probe].dose * 
+    EDMpct / 100.;
 
   // Get the cumulative factor for going from calibrated intensity to intensity that
   // ratios were done at, at the calibrated spot size, then to current spot size, then
@@ -1289,7 +1292,8 @@ double CBeamAssessor::GetElectronDose(int inSpotSize, double inIntensity,
     SEMTrace('d', "(spot %d int. %f  aC. %d  pM %d)", inSpotSize, inIntensity, 
       aboveCross, probe);
 
-  return cumFactor * exposure * mDoseTables[spotSize][aboveCross][probe].dose;
+  return cumFactor * exposure * mDoseTables[spotSize][aboveCross][probe].dose * 
+    EDMpct / 100.;
 }
 
 // Return the factor for change in current from startIntensity to inIntensity
@@ -1440,6 +1444,7 @@ double CBeamAssessor::GetCurrentElectronDose(int camera, int setNum, float csExp
   LowDoseParams *ldParam = mWinApp->GetCamLowDoseParams();
   int set, GIF, probe;
   CameraParameters *camParam = mWinApp->GetCamParams();
+  float EDMpct = 100.;
   
   // Need to synchronize back to camera LDP since we are accessing them
   mWinApp->CopyCurrentToCameraLDP();
@@ -1451,13 +1456,16 @@ double CBeamAssessor::GetCurrentElectronDose(int camera, int setNum, float csExp
     spotSize = ldParam[GIF * MAX_LOWDOSE_SETS + set].spotSize;
     intensity = ldParam[GIF * MAX_LOWDOSE_SETS + set].intensity;
     probe = ldParam[GIF * MAX_LOWDOSE_SETS + set].probeMode;
+    EDMpct = ldParam[GIF * MAX_LOWDOSE_SETS + set].EDMPercent;
   } else {
     spotSize = mWinApp->mScope->GetSpotSize();
     intensity = mWinApp->mScope->GetIntensity();
     probe = mWinApp->mScope->ReadProbeMode();
+    EDMpct = mCamera->LastEDMDutyPercent();
   }
 
-  return mWinApp->mBeamAssessor->GetElectronDose(spotSize, intensity, exposure, probe);
+  return mWinApp->mBeamAssessor->GetElectronDose(spotSize, intensity, exposure, probe,
+    mCamera->HasDoseModulator() ? EDMpct : 100.f);
 }
 
 // Calibrate the dose from the current image
@@ -1523,6 +1531,8 @@ int CBeamAssessor::CalibrateElectronDose(BOOL interactive)
 
   dtp->dose = doseRate / (pixel * pixel);
   dtp->intensity = intensity;
+  if (mCamera->HasDoseModulator() && extra && extra->mEDMPercent > 0.)
+    dtp->dose *= 100. / extra->mEDMPercent;
 
   if (GetElectronDose(spotSize, intensity, imBuf->mExposure)) {
     if (!interactive || AfxMessageBox("To calibrate electron dose, Buffer A must contain"

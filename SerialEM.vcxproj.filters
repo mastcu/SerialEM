@@ -542,6 +542,9 @@
     <ClInclude Include="MGSettingsManagerDlg.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="DoseModulator.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="res\bitmap1.bmp">
@@ -1324,6 +1327,9 @@
       <Filter>CSource Files</Filter>
     </ClCompile>
     <ClCompile Include="MGSettingsManagerDlg.cpp">
+      <Filter>CSource Files</Filter>
+    </ClCompile>
+    <ClCompile Include="DoseModulator.cpp">
       <Filter>CSource Files</Filter>
     </ClCompile>
   </ItemGroup>

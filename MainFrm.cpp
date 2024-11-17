@@ -26,6 +26,7 @@
 #include "NavHelper.h"
 #include "HoleFinderDlg.h"
 #include "FalconHelper.h"
+#include "DoseModulator.h"
 #include "MultiGridDlg.h"
 #include "ProcessImage.h"
 #include "XFolderDialog\XWinVer.h"
@@ -408,6 +409,7 @@ void CMainFrame::DoClose(bool afterScript)
   WINDOWPLACEMENT winPlace;
   int magInd, macNum;
   bool skipReset = false;
+  CString str;
   BOOL wasLD = mWinApp->LowDoseMode();
 
   if (mClosingProgram)
@@ -497,6 +499,8 @@ void CMainFrame::DoClose(bool afterScript)
 
   mWinApp->SetAppExiting(true);
   mWinApp->mCamera->CheckAndFreeK2References(true);
+  if (mWinApp->mCamera->HasDoseModulator())
+    mWinApp->mCamera->mDoseModulator->SetDutyPercent(100., str);
   if (!mWinApp->GetNanumFontPath().IsEmpty())
     RemoveFontResourceEx(mWinApp->GetNanumFontPath(), FR_PRIVATE, NULL);
 

@@ -1572,7 +1572,8 @@ void CLowDoseDlg::ManageMagSpot(int inSetArea, BOOL screenDown)
   float beamX, beamY;
   ScaleMat IStoBS;
   LowDoseParams *ldArea = &mLDParams[inSetArea];
-  ControlSet *conSet = mWinApp->GetConSets() + inSetArea;
+  ControlSet *conSet = mWinApp->GetConSets() + 
+    (inSetArea == SEARCH_AREA ? SEARCH_CONSET : inSetArea);
   BOOL needUpdate = false;
   CString str;
   CString C2units = mScope->GetC2Units();
@@ -1606,10 +1607,11 @@ void CLowDoseDlg::ManageMagSpot(int inSetArea, BOOL screenDown)
   spotSize = ldArea->spotSize;
   intensity = ldArea->intensity;
   dose = 0.;
-  if (inSetArea != SEARCH_AREA)
+  //if (inSetArea != SEARCH_AREA)
     dose = mWinApp->mBeamAssessor->GetElectronDose(spotSize, intensity, 
       mWinApp->mCamera->SpecimenBeamExposure(mWinApp->GetCurrentCamera(), conSet), 
-      ldArea->probeMode);
+      ldArea->probeMode, 
+      mWinApp->mCamera->HasDoseModulator() ? ldArea->EDMPercent : 100.f);
 
   // Compute beam shift in specimen units if it is calibrated
   IStoBS = mShiftManager->GetBeamShiftCal(B3DMAX(1, ldArea->magIndex), 
@@ -1721,10 +1723,12 @@ void CLowDoseDlg::ScopeUpdate(int magIndex, int spotSize, double intensity,
   ScaleMat cMat, cInv;
   LowDoseParams *ldArea;
   double specX, specY, tiltAxisX, newISX, newISY, baseTransX, baseTransY;
+  float pct;
   int shiftedA;
   bool needRedraw = false, needAutoCen = false;
   MultiShotParams *msParams;
   EMimageBuffer *imBuf;
+  static double lastEDMupdate = 0.;
   bool focusOrTrial = inSetArea == FOCUS_CONSET || inSetArea == TRIAL_CONSET;
 
   if (!mInitialized || !mTrulyLowDose)
@@ -1777,6 +1781,11 @@ void CLowDoseDlg::ScopeUpdate(int magIndex, int spotSize, double intensity,
     } else
       ldArea->intensity = intensity;
 
+    if (SEMTickInterval(lastEDMupdate) > 1000. &&
+      mWinApp->mCamera->GetEDMDutyPercent(pct) <= 0) {
+      ldArea->EDMPercent = pct;
+      lastEDMupdate = GetTickCount();
+    }
     if (mWinApp->GetFilterMode())
       SyncFilterSettings(inSetArea);
 

@@ -343,6 +343,7 @@ struct LowDoseParams {
   double beamTiltDX, beamTiltDY;  // Incremental beam tilts for mode
   int darkFieldMode;       // Dark field mode for FEI
   double dfTiltX, dfTiltY;      // Absolute dark field tilt for F/T
+  float EDMPercent;        // Dose modulator duty percent
 };
 
 // State parameters and an initializer

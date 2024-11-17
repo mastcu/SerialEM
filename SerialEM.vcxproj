@@ -907,6 +907,7 @@
     <ClInclude Include="DefineScriptMacros.h" />
     <ClInclude Include="DERefMakerDlg.h" />
     <ClInclude Include="DisableHideTable.h" />
+    <ClInclude Include="DoseModulator.h" />
     <ClInclude Include="DriftWaitSetupDlg.h" />
     <ClInclude Include="ExternalTools.h" />
     <ClInclude Include="FrameAlignDlg.h" />
@@ -1761,6 +1762,7 @@ echo.
     <ClCompile Include="ComaVsISCalDlg.cpp" />
     <ClCompile Include="CtffindParamDlg.cpp" />
     <ClCompile Include="DERefMakerDlg.cpp" />
+    <ClCompile Include="DoseModulator.cpp" />
     <ClCompile Include="DriftWaitSetupDlg.cpp" />
     <ClCompile Include="ExternalTools.cpp" />
     <ClCompile Include="FrameAlignDlg.cpp" />

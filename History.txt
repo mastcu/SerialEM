@@ -3,7 +3,17 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
-11/11/24: Added option to multigrid run a script after each grid map is done.
+11/17/24: Added support for electron dose modulator from IDES and made the
+relevant setting part of Low Dose parameters.
+
+11/17/24: Added script command to collect output from RunProcess directly into
+a variable.
+
+11/16/24: Fixed crash if running multigrid to save maps and "Skip saving" is
+checked.
+
+11/11/24: Added option to multigrid to run a script after each grid map is
+done.
 
 11/10/24: Fixed installer copying Microsoft dlls on XP (In 4.1).
 

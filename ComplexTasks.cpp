@@ -775,6 +775,7 @@ void CComplexTasks::StartCaptureAddDose(int conSet)
   int spotSize, set, probe;
   double intensity, dose;
   LowDoseParams *ldParam = mWinApp->GetLowDoseParams();
+  float EDMpct;
 
   mCamera->SetCancelNextContinuous(true);
   mCamera->InitiateCapture(conSet);
@@ -783,14 +784,17 @@ void CComplexTasks::StartCaptureAddDose(int conSet)
     spotSize = ldParam[set].spotSize;
     intensity = ldParam[set].intensity;
     probe = ldParam[set].probeMode;
+    EDMpct = ldParam[set].EDMPercent;
   } else {
     spotSize = mScope->FastSpotSize();
     intensity = mScope->FastIntensity();
     probe = mScope->GetProbeMode();
+    EDMpct = mCamera->LastEDMDutyPercent();
   }
 
   dose = mWinApp->mBeamAssessor->GetElectronDose(spotSize, intensity, 
-    mCamera->SpecimenBeamExposure(mWinApp->GetCurrentCamera(), &mConSets[conSet]), probe);
+    mCamera->SpecimenBeamExposure(mWinApp->GetCurrentCamera(), &mConSets[conSet]), probe,
+    mCamera->HasDoseModulator() ? EDMpct : 100.f);
   mTotalDose += dose;
   if (mWinApp->LowDoseMode() && (set == VIEW_CONSET || set == RECORD_CONSET))
     mOnAxisDose += dose;

@@ -26,6 +26,7 @@
 class DirectElectronCamera;
 struct CamPluginFuncs;
 class CCEOSFilter;
+class CDoseModulator;
 
 #define MAX_DARK_REFS   10
 #define MAX_CHANNELS     8
@@ -364,6 +365,7 @@ struct InsertThreadData {
 class DLL_IM_EX CCameraController
 {
 public:
+  CDoseModulator *mDoseModulator;   // Module for interface
   void ClearOneShotFlags();
   void AcquiredSize(ControlSet *csp, int camera, int &sizeX, int &sizeY);
   void StartEnsureThread(DWORD timeout);
@@ -458,6 +460,8 @@ public:
   double EasyRunScript(CString command, int selectCamera, int DMindex);
   int CheckFilterSettings();
   void SetFilterSkipping();
+  int GetEDMDutyPercent(float &pct);
+  float LastEDMDutyPercent();
   void ReleaseCamera(int createFor);
   BOOL CreateCamera(int createFor, bool popupError = true);
   void ShowReference(int type);
@@ -613,6 +617,9 @@ public:
   GetSetMember(int, ScreenInIfDetectorOut);
   SetMember(CString, CEOSserverIP);
   GetSetMember(int, CEOSserverPort);
+  GetSetMember(int, EDMserverPort);
+  GetSetMember(CString, EDMserverIP);
+  GetSetMember(int, EDMfrequency);
   GetSetMember(BOOL, ConsetsShareChannelList);
   SetMember(BOOL, SaveInEERformat);
   GetSetMember(int, RotFlipInFalcon3ComFile);
@@ -632,7 +639,8 @@ public:
   SetMember(bool, KeepLastUsedFrameNum);
   CameraThreadData *GetCamThreadData() { return &mTD; };
   bool DoingPartialScan() {return mTD.ReturnPartialScan > 0; };
-  bool HasCEOSFilter() {return mCEOSFilter != NULL ; }
+  bool HasCEOSFilter() { return mCEOSFilter != NULL; }
+  bool HasDoseModulator() { return mDoseModulator != NULL; }
   BOOL GetSaveInEERformat() { return mCanSaveEERformat > 0 && mSaveInEERformat; };
   void GetProcessingRefs(DarkRef **dark, DarkRef **gain) {*dark = mDarkp; *gain = mGainp; };
   void GetProcessingCoords(int &binning, int &top, int &left, int &bot, int &right) {
@@ -674,6 +682,7 @@ public:
   void SetAstigToRestore(double inX, double inY) { mAstigXtoRestore = inX;
     mAstigYtoRestore = inY; mNeedToRestoreISandBT |= 4; };
   void SetDefocusToRestore(double focus) { mDefocusToRestore;  mNeedToRestoreISandBT |= 8; };
+
  private:
   void AdjustSizes(int &DMsizeX, int ccdSizeX, int moduloX,
                    int &Left, int &Right, int binning, int camera = -1);
@@ -1073,6 +1082,9 @@ public:
   int mCEOSserverPort;           // Port for CEOS
   CString mCEOSserverIP;         // IP address
   CCEOSFilter *mCEOSFilter;      // Module for interface
+  int mEDMserverPort;            // Port for dose modulator
+  CString mEDMserverIP;          // IP address
+  int mEDMfrequency;             // Frequency for EDM
   int mLastJeolDetectorID;       // ID of last detector selected
   float mISXcameraOffset[MAX_CAMERAS];
   float mISYcameraOffset[MAX_CAMERAS];

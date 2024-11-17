@@ -3391,6 +3391,27 @@
             Operations dialog can be used to run operations on one grid.&nbsp; The default 
             is 1.</TD>
         </TR>
+       <TR>
+          <TD>EDMServerIP</TD>
+          <TD>IP address of an IDES dose modulation system.&nbsp; When this property is 
+            present, the program will attempt to enable dose modulation and set it to 100%.&nbsp; 
+            If successful, the dose modulation percentage will be a Low Dose parameter that 
+            is recorded when <strong>Continuous update</strong> is on in the Low Dose 
+            control panel, and set when going to an area.&nbsp; The program &#39;curl&#39; must be 
+            on the system path; it is already present in Windows 10 or 11.&nbsp; If a system 
+            lacks it, a package from <a href="https://curl.se/windows/">
+            https://curl.se/windows/</a> can be unzipped anywhere and its &#39;bin&#39; directory 
+            put on the system path.</TD>
+        </TR>
+       <TR>
+          <TD>EDMServerPort</TD>
+          <TD>Port number of an IDES dose modulation system.&nbsp; The default is 4337.</TD>
+        </TR>
+       <TR>
+          <TD>EDMFrequency</TD>
+          <TD>Frequency setting in Hz for an IDES dose modulation system.&nbsp; The default 
+            is 10000.</TD>
+        </TR>
         <TR>
           <TD>LowDoseChangeAtZeroIS</TD>
           <TD>Set to 1 to have the Low Dose area switching routine zero out image shift

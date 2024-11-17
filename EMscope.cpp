@@ -29,6 +29,7 @@
 #include "MultiGridDlg.h"
 #include "MultiGridTasks.h"
 #include "ParticleTasks.h"
+#include "DoseModulator.h"
 #include "ZbyGSetupDlg.h"
 #include "BaseSocket.h"
 #include <assert.h>
@@ -5395,6 +5396,8 @@ void CEMscope::GotoLowDoseArea(int newArea)
   double curISX, curISY, newISX, newISY, centeredISX = 0., centeredISY = 0., intensity;
   int curAlpha, curMagInd;
   DWORD magTime;
+  CString errStr;
+  CString *setNames = mWinApp->GetModeNames();
   LowDoseParams *ldParams = mWinApp->GetLowDoseParams();
   LowDoseParams *ldArea = ldParams + newArea;
   BOOL filterChanged = false;
@@ -5411,7 +5414,7 @@ void CEMscope::GotoLowDoseArea(int newArea)
   bool probeDone = true, changingAtZeroIS, sameIntensity, needCondenserNorm = false;
   BOOL bDebug = GetDebugOutput('b');
   BOOL lDebug = GetDebugOutput('l');
-  int oldArea = mLowDoseSetArea;
+  int setNum, oldArea = mLowDoseSetArea;
   int lowestM = GetLowestMModeMagInd();
   if (!sInitialized || mChangingLDArea || sClippingIS)
     return;
@@ -5646,6 +5649,13 @@ void CEMscope::GotoLowDoseArea(int newArea)
   // spot size; afraid to just move spot size change down here because of note above
   if (!JEOLscope || deferJEOLspot)
     SetSpotSize(ldArea->spotSize);
+
+  if (mCamera->HasDoseModulator() && ldArea->EDMPercent > 0) {
+    setNum = toSearch ? SEARCH_CONSET : newArea;
+    if (mCamera->mDoseModulator->SetDutyPercent(ldArea->EDMPercent, errStr) > 0)
+      PrintfToLog("WARNING: Failed to set dose modulator to %.1f%% for %s area:\r\n %s",
+        ldArea->EDMPercent, setNames[setNum], (LPCSTR)errStr);
+  }
 
   // For alpha change, need to restore the beam shift to what it was for consistent
   // changes; and if there is a calibrated beam shift change, apply that

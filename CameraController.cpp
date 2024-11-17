@@ -29,6 +29,7 @@
 #include "AutocenSetupDlg.h"
 #include "FalconHelper.h"
 #include "CEOSFilter.h"
+#include "DoseModulator.h"
 #include "PluginManager.h"
 #include "CalibCameraTiming.h"
 #include "AutoTuning.h"
@@ -463,6 +464,9 @@ CCameraController::CCameraController()
   mScreenInIfDetectorOut = -1;
   mCEOSFilter = NULL;
   mCEOSserverPort = 7081;
+  mDoseModulator = NULL;
+  mEDMserverPort = 4337;
+  mEDMfrequency = 10000;
   mLastJeolDetectorID = -1;
   mConsetsShareChannelList = false;
   mDoseAdjustmentFactor = 0.;
@@ -592,6 +596,7 @@ CCameraController::~CCameraController()
   delete mBufDeferred;
   delete mExtraDeferred;
   delete mCEOSFilter;
+  delete mDoseModulator;
 }
 
 // Shut down timer to prevent updates
@@ -698,6 +703,15 @@ int CCameraController::Initialize(int whichCameras)
         mNoFilterControl = true;
       }
       mFilterUpdateID = ::SetTimer(NULL, 1, 500, FilterUpdateProc);
+    }
+  }
+
+  if (firstTime && !mEDMserverIP.IsEmpty()) {
+    mDoseModulator = new CDoseModulator;
+    if (mDoseModulator->Initialize(report)) {
+      AfxMessageBox("Initialization of Dose Modulator failed with message:\n" + report +
+        "\n\nDose modulation will not be available", MB_EXCLAME);
+      B3DDELETE(mDoseModulator);
     }
   }
   firstTime = false;
@@ -10257,6 +10271,8 @@ void CCameraController::DisplayNewImage(BOOL acquired)
       extra->mPixel = pixelSize;
       if (refinedPix)
         extra->mRefinedPixel = refinedPix;
+      if (mDoseModulator)
+        extra->mEDMPercent = mDoseModulator->GetLastDutyPctSet();
       if (mTD.NumAsyncSumFrames != 0 && imBuf->mSampleMean > EXTRA_VALUE_TEST &&
         IsDirectDetector(mParam) && extra->m_fDose > 0 &&
         !mWinApp->mProcessImage->DoseRateFromMean(imBuf, imBuf->mSampleMean, camRate)) {
@@ -11298,6 +11314,20 @@ void CCameraController::SetFilterSkipping()
   if (mNumFiltCheckFailures == 3)
     mWinApp->AppendToLog("WARNING: Checking the energy filter has failed 3 times in a "
       "row;   it will be tried only every 5 seconds until it succeeds");
+}
+
+// Functions for quick access from elsewhere
+int CCameraController::GetEDMDutyPercent(float &pct)
+{
+  CString errStr;
+  if (!mDoseModulator)
+    return 1;
+  return mDoseModulator->GetDutyPercent(pct, errStr);
+}
+
+float CCameraController::LastEDMDutyPercent()
+{
+  return mDoseModulator ? mDoseModulator->GetLastDutyPctSet() : 100.0f;
 }
 
 // This is meant to be called from inside a try block

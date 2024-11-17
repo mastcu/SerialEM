@@ -90,7 +90,7 @@ class CBeamAssessor
   int CalibrateElectronDose(BOOL interactive);
   double GetCurrentElectronDose(int conSetNum);
   BOOL LookupCurrent(int numIntensities, double inIntensity, double &newLog);
-  double GetElectronDose(int spotSize, double inIntensity, float exposure, int probe = -1);
+  double GetElectronDose(int spotSize, double inIntensity, float exposure, int probe = -1, float EDMpct = -1.);
   BOOL CalibratingBeamShift() {return mShiftCalIndex >= 0;};
   void ShiftCalImage();
   int FindCenterForShiftCal(int edgeDivisor, int &size);
