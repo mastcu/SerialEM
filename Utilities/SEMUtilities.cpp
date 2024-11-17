@@ -1,5 +1,7 @@
 #include "stdafx.h"
 #include <direct.h>
+#include <winsock2.h>
+#include <ws2tcpip.h>
 #include "SEMUtilities.h"
 #include "..\SerialEM.h"
 #include "..\SerialEMDoc.h"
@@ -1288,3 +1290,95 @@ BOOL SleepMsg(DWORD dwTime_ms)
 
   return TRUE;
 }
+
+// Establishes socket communication at the given address and port
+// Modified from HitachiPlugin
+SOCKET UtilConnectSocket(CString &ipAddress, int port, CString &errStr, 
+  const char *className, const char *description)
+{
+  SOCKET connectSocket;
+
+  // holds address info for socket to connect to
+  struct addrinfo *result = NULL,
+    *ptr = NULL,
+    hints;
+  char portBuf[32];
+
+  // Initialize Winsock through SerialEM
+  int iResult = SEMInitializeWinsock();
+
+  if (iResult != 0) {
+    errStr = "Failed to initialize winsock from " + CString(className);
+    return INVALID_SOCKET;
+  }
+  errStr = "";
+
+  // set address info
+  ZeroMemory(&hints, sizeof(hints));
+  hints.ai_family = AF_INET;	//AF_UNSPEC;
+  hints.ai_socktype = SOCK_STREAM;
+  hints.ai_protocol = IPPROTO_TCP;  //TCP connection!!!	IPPROTO_IPV6;//
+
+                                    //resolve server address and port
+  snprintf(portBuf, 32, "%d", port);
+  iResult = getaddrinfo((LPCTSTR)ipAddress, portBuf, &hints, &result);
+
+  if (iResult != 0) {
+    errStr.Format("%s: getaddrinfo failed with error: %d\n", className,
+      iResult);
+    return INVALID_SOCKET;
+  }
+
+  // "Attempt to connect to an address until one succeeds" is what it said but not what
+  // it did
+  for (ptr = result; ptr != NULL; ptr = ptr->ai_next) {
+    if (ptr->ai_protocol != IPPROTO_TCP)
+      continue;
+
+    // Create a SOCKET for connecting to server
+    connectSocket = socket(ptr->ai_family, ptr->ai_socktype, ptr->ai_protocol);
+
+    if (connectSocket == INVALID_SOCKET) {
+      errStr.Format("%s: socket() failed with error: %ld\n", className,
+        WSAGetLastError());
+      continue;
+    }
+
+    // Connect to server.
+    iResult = connect(connectSocket, ptr->ai_addr, (int)ptr->ai_addrlen);
+
+    if (iResult == SOCKET_ERROR) {
+      errStr.Format("The connection to the %s server failed"
+        " with error %d", description, WSAGetLastError());
+      closesocket(connectSocket);
+      connectSocket = INVALID_SOCKET;
+    } else
+      break;
+  }
+
+  // no longer need address info for server
+  freeaddrinfo(result);
+  if (connectSocket == INVALID_SOCKET) {
+    if (errStr.IsEmpty())
+      errStr.Format("%s: getaddrinto failed to return a TCP connection", className);
+    return INVALID_SOCKET;
+  }
+
+  // Set the mode of the socket to be nonblocking
+  u_long iMode = 1;
+
+  iResult = ioctlsocket(connectSocket, FIONBIO, &iMode);
+  if (iResult == SOCKET_ERROR) {
+    errStr.Format("%s: ioctlsocket failed with error: %d\n", className,
+      WSAGetLastError());
+    closesocket(connectSocket);
+    connectSocket = INVALID_SOCKET;
+    return INVALID_SOCKET;
+  }
+
+  //disable nagle
+  char value = 1;
+  setsockopt(connectSocket, IPPROTO_TCP, TCP_NODELAY, &value, sizeof(value));
+  return connectSocket;
+}
+

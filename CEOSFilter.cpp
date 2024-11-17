@@ -33,86 +33,9 @@ CCEOSFilter::~CCEOSFilter()
 // Modified from HitachiPlugin
 int CCEOSFilter::Connect(CString &ipAddress, int port, CString &errStr)
 {
-  // holds address info for socket to connect to
-  struct addrinfo *result = NULL,
-    *ptr = NULL,
-    hints;
-  char portBuf[32];
-
-  // Initialize Winsock through SerialEM
-  int iResult = SEMInitializeWinsock();
-
-  if (iResult != 0) {
-    errStr = "Failed to initialize winsock from CEOSFilter";
-    return 1;
-  }
-  errStr = "";
-
-  // set address info
-  ZeroMemory(&hints, sizeof(hints));
-  hints.ai_family = AF_INET;	//AF_UNSPEC;
-  hints.ai_socktype = SOCK_STREAM;
-  hints.ai_protocol = IPPROTO_TCP;  //TCP connection!!!	IPPROTO_IPV6;//
-
-                                    //resolve server address and port
-  snprintf(portBuf, 32, "%d", port);
-  iResult = getaddrinfo((LPCTSTR)ipAddress, portBuf, &hints, &result);
-
-  if (iResult != 0) {
-    errStr.Format("CEOSFilter: getaddrinfo failed with error: %d\n", iResult);
-    return 1;
-  }
-
-  // "Attempt to connect to an address until one succeeds" is what it said but not what
-  // it did
-  for (ptr = result; ptr != NULL;ptr = ptr->ai_next) {
-    if (ptr->ai_protocol != IPPROTO_TCP)
-      continue;
-
-    // Create a SOCKET for connecting to server
-    mConnectSocket = socket(ptr->ai_family, ptr->ai_socktype, ptr->ai_protocol);
-
-    if (mConnectSocket == INVALID_SOCKET) {
-      errStr.Format("CEOSFilter: socket() failed with error: %ld\n", WSAGetLastError());
-      continue;
-    }
-
-    // Connect to server.
-    iResult = connect(mConnectSocket, ptr->ai_addr, (int)ptr->ai_addrlen);
-
-    if (iResult == SOCKET_ERROR) {
-      errStr.Format("The connection to the CEOS filter server failed"
-        " with error %d", WSAGetLastError());
-      closesocket(mConnectSocket);
-      mConnectSocket = INVALID_SOCKET;
-    } else
-      break;
-  }
-
-  // no longer need address info for server
-  freeaddrinfo(result);
-  if (mConnectSocket == INVALID_SOCKET) {
-    if (errStr.IsEmpty())
-      errStr = "CEOSFilter: getaddrinto failed to return a TCP connection";
-    return 1;
-  }
-
-  // Set the mode of the socket to be nonblocking
-  u_long iMode = 1;
-
-  iResult = ioctlsocket(mConnectSocket, FIONBIO, &iMode);
-  if (iResult == SOCKET_ERROR) {
-    errStr.Format("CEOSFilter: ioctlsocket failed with error: %d\n", WSAGetLastError());
-    closesocket(mConnectSocket);
-    mConnectSocket = INVALID_SOCKET;
-    return 1;
-  }
-
-  //disable nagle
-  char value = 1;
-  setsockopt(mConnectSocket, IPPROTO_TCP, TCP_NODELAY, &value, sizeof(value));
-  return 0;
-
+  mConnectSocket = UtilConnectSocket(ipAddress, port, errStr, "CEOSFilter", 
+    "CEOS filter");
+  return mConnectSocket == INVALID_SOCKET ? 1 : 0;
 }
 
 #define SOCK_BUF_SIZE 8192
