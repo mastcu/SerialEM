@@ -5619,7 +5619,8 @@ void CEMscope::GotoLowDoseArea(int newArea)
     GetBeamTilt(mBaseForAlphaBTX, mBaseForAlphaBTY);
   if (alphaDone && !mHasNoAlpha)
     ChangeAlphaAndBeam(curAlpha, (int)ldArea->beamAlpha, 
-      mLdsaParams->magIndex > 0 ? mLdsaParams->magIndex : -1, ldArea->magIndex);
+      (oldArea >= 0 && mLdsaParams->magIndex > 0) ? mLdsaParams->magIndex : -1, 
+      ldArea->magIndex);
 
   if (ldArea->magIndex)
     SetMagIndex(ldArea->magIndex);
@@ -5661,7 +5662,8 @@ void CEMscope::GotoLowDoseArea(int newArea)
   // changes; and if there is a calibrated beam shift change, apply that
   if (ldArea->beamAlpha >= 0. && !STEMmode && !alphaDone && !mHasNoAlpha) {
     ChangeAlphaAndBeam(curAlpha, (int)ldArea->beamAlpha,
-      mLdsaParams->magIndex > 0 ? mLdsaParams->magIndex : -1, ldArea->magIndex);
+      (oldArea >= 0 && mLdsaParams->magIndex > 0) ? mLdsaParams->magIndex : -1, 
+      ldArea->magIndex);
   } else if (!STEMmode && !alphaDone)
     ldArea->beamAlpha = (float)curAlpha;
 
