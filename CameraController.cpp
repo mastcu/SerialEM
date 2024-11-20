@@ -481,6 +481,7 @@ CCameraController::CCameraController()
   mFilterObeyNormDelay = false;
   mFilterWaiting = false;
   mKeepLastUsedFrameNum = false;
+  mRamperBlankAtEnd = false;
   for (l = 0; l < MAX_CHANNELS; l++)
     mTD.PartialArrays[l] = NULL;
 }
@@ -11620,6 +11621,10 @@ void CCameraController::SetupDynamicFocus(int numIntervals, double msPerLine,
   }
   SEMTrace('s', "Center focus %.2f  base focus %.2f  numInt %d  focusPerMs %f  indexPerMs"
     " %f", mCenterFocus, mTD.FocusBase, numIntervals, mTD.FocusPerMs, mTD.IndexPerMs);
+
+  // Take negative to blank at end after ALL use of this here is done
+  if (mRamperBlankAtEnd)
+    mTD.IndexPerMs = -mTD.IndexPerMs;
 }
 
 
