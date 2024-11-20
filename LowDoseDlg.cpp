@@ -1781,7 +1781,7 @@ void CLowDoseDlg::ScopeUpdate(int magIndex, int spotSize, double intensity,
     } else
       ldArea->intensity = intensity;
 
-    if (SEMTickInterval(lastEDMupdate) > 1000. &&
+    if ((!lastEDMupdate || SEMTickInterval(lastEDMupdate) > 1000.) &&
       mWinApp->mCamera->GetEDMDutyPercent(pct) <= 0) {
       ldArea->EDMPercent = pct;
       lastEDMupdate = GetTickCount();
