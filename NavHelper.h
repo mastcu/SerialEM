@@ -694,7 +694,7 @@ public:
   void RestoreLowDoseConset(void);
   int ProcessExternalItem(CMapDrawItem * item, int extType);
   int TransformExternalCoords(CMapDrawItem *item, int extType,
-     CMapDrawItem *mapItem, float &fx, float &fy, int &pieceDrawnOn);
+     CMapDrawItem *mapItem, float &fx, float &fy, int &pieceDrawnOn, float &xInPc, float &yInPc);
   void CleanupFromExternalFileAccess();
   static int TaskRealignBusy(void);
   void StartResetISorFinish(int magInd);

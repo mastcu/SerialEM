@@ -1741,7 +1741,8 @@
               image <b>#X</b> by <b>#Y</b> pixels, and binning <b>#B</b>.  Sets <i>reportedValue1-4</i>
             with the parameters to be sent to FocusRamper: initial delay, total time of ramp in msec, 
             interval between focus steps in msec (based on property 'DynamicFocusInterval'), and 
-            index in the focus ramp table per msec.&nbsp; If no ramp can be set up, sets only <i>reportedValue1</i> to -1.&nbsp; Values can be assigned to variables at end of 
+            index in the focus ramp table per msec.&nbsp; The last value will be negative if the 
+            property 'RamperBlankAtEnd' is nonzero.&nbsp; If no ramp can be set up, sets only <i>reportedValue1</i> to -1.&nbsp; Values can be assigned to variables at end of 
             command.&nbsp; Command added in 4.2, 24-May-24.
           </TD>
         </TR>
@@ -1750,7 +1751,9 @@
           <TD>Starts the FocusRamper with the parameters determined by 'SetupDynamicFocus', optionally
             modifiable with entries of <b>#D</b> for initial delay, <b>#T</b> for total time,
             <b>#S</b> for step interval (all in msec), and <b>#I</b> for index in the focus ramp table
-             per msec.&nbsp; Before returning, this command also sets the starting defocus of the ramp
+             per msec.&nbsp; The initial delay can be negative to start the ramp before starting the
+            acquisition.&nbsp; The index per msec can be negative to have the ramper blank
+            the beam at the end of the ramp.&nbsp; Before returning, this command also sets the starting defocus of the ramp
              with backlash and a delay set by property 'InitialDynamicFocusDelay'.&nbsp; The FocusRamper object
             must already have been created by taking at least one STEM image through SerialEM with dynamic
              focus.&nbsp; Command added in 4.2, 24-May-24.

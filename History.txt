@@ -3,6 +3,9 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+11/26/24: SEM_4-2-0beta12
+11/26/24: Stored XYinPc values for externally supplied Navigator items.
+
 11/19/24: Added property to make Focus Ramper blank beam at end of ramp.
 
 11/19/24: Fixed crash going to first low dose area on JEOL.

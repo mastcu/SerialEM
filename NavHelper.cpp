@@ -6706,6 +6706,8 @@ int CNavHelper::ProcessExternalItem(CMapDrawItem *item, int extType)
   ScaleMat aMat;
   mMapMontP = &mMapMontParam;
   CMapDrawItem *mapItem;
+  float xInPc, yInPc;
+
   if (!item->mDrawnOnMapID)
     return NEXERR_NO_DRAWN_ON;
   mapItem = mNav->FindItemWithMapID(item->mDrawnOnMapID, true);
@@ -6759,12 +6761,16 @@ int CNavHelper::ProcessExternalItem(CMapDrawItem *item, int extType)
 
   // Transform the center stage position and all the points
   retval = TransformExternalCoords(item, extType, mapItem, item->mStageX, item->mStageY,
-    item->mPieceDrawnOn);
+    item->mPieceDrawnOn, xInPc, yInPc);
+  if (xInPc >= 0. && yInPc >= 0.) {
+    item->mXinPiece = xInPc;
+    item->mYinPiece = yInPc;
+  }
   if (retval)
     return retval;
   for (ind = 0; ind < item->mNumPoints; ind++) {
     retval = TransformExternalCoords(item, extType, mapItem, item->mPtX[ind], 
-      item->mPtY[ind], drawnOn);
+      item->mPtY[ind], drawnOn, xInPc, yInPc);
     if (retval)
       return retval;
   }
@@ -6775,18 +6781,23 @@ int CNavHelper::ProcessExternalItem(CMapDrawItem *item, int extType)
 // Convert the pixel coordinates in fx, fy to stage coordinates for the item of the given
 // type on the given map; returns pieceDrawnOn for cases of aligned montages
 int CNavHelper::TransformExternalCoords(CMapDrawItem *item, int extType, 
-  CMapDrawItem *mapItem, float &fx, float &fy, int &pieceDrawnOn)
+  CMapDrawItem *mapItem, float &fx, float &fy, int &pieceDrawnOn, float &xInPc, 
+  float &yInPc)
 {
   int pcX, pcY, adocInd, adocSave, numPieces, xPiece, yPiece, ipc, nameInd, iz;
   int pcZ, retval, adjX, adjY, adjZ;
-  float tempx, xInPc, yInPc;
+  float tempx;
   char *names[2] = {ADOC_ZVALUE, ADOC_IMAGE};
   char *keys[2] = {ADOC_ALI_COORD, ADOC_ALI_COORDVS};
+  xInPc = -1;
+  yInPc = -1;
 
   // Convert piece coordinate to coordinate in full image
   if (extType == NAVEXT_ON_PIECE) {
     if (item->mPieceDrawnOn < 0)
       return EXTERR_NO_PIECE_ON;
+    xInPc = fx;
+    yInPc = fy;
     xPiece = item->mPieceDrawnOn / mMapMontP->yNframes;
     yPiece = item->mPieceDrawnOn % mMapMontP->yNframes;
     fx += (float)(xPiece * mExtXspacing);

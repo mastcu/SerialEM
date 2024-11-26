@@ -1253,7 +1253,7 @@
       alpha values are numbered from 0, not 1.</p>
     <p>
       <strong><em>Settings file entries:</em></strong></p>
-    <p>
+    <br>
         <em>LowDoseParameters</em>:
       <br /> There are three sets of parameters, for TEM, EFTEM, and STEM.
       <br />
@@ -1276,8 +1276,8 @@
 &nbsp;&nbsp; beam tilt Y<br />
 &nbsp;&nbsp; probe mode<br />
 &nbsp;&nbsp; dark field mode flag<br />
-&nbsp;&nbsp; dark field tilt X</p>
-&nbsp;&nbsp; dark field tilt Y</p>
+&nbsp;&nbsp; dark field tilt X<br>
+&nbsp;&nbsp; dark field tilt Y<br>
 &nbsp;&nbsp; dose modulation percent (attenuation)</p>
       <p>
           <em>StateParameters</em>:<br />
@@ -1384,14 +1384,17 @@
 &nbsp;&nbsp;
       mag index<br />
 &nbsp;&nbsp; camera number<br />
-&nbsp;&nbsp; Slope in X<br />
-&nbsp;&nbsp; Slope in Y<br />
-&nbsp;&nbsp; beam tilt<br />
+&nbsp;&nbsp; Slope in X:&nbsp;&nbsp; shift in X in unbinned pixels per micron defocus per unit of beam tilt<br />
+&nbsp;&nbsp; Slope in Y:&nbsp;&nbsp; shift in Y per micron per unit of beam tilt<br />
+&nbsp;&nbsp; beam tilt:&nbsp;&nbsp; Beam tilt in mrad or % at which calibration was done<br />
 &nbsp;&nbsp; number of points<br />
-&nbsp;&nbsp; direction index<br />
+&nbsp;&nbsp; direction index:&nbsp;&nbsp; 0 for +X tilt; 1 for +X, +Y; 2 for +Y; 3 for -X, +Y<br />
 &nbsp;&nbsp; probe mode<br />
 &nbsp;&nbsp; alpha<br />
-&nbsp;&nbsp; magnification</p>
+&nbsp;&nbsp; magnification<br />
+      Each line then has the adjusted defocus value (where 0 would be 0 defocus) and the unbinned shifts in X and Y
+    </p>
+
       <p>
           <em>SpotIntensities:</em>&nbsp; There may be two tables if either nanoprobe or
           microprobe has two calibrations, one below crossover and
