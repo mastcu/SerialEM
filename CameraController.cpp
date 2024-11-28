@@ -9205,9 +9205,6 @@ int CCameraController::StartFocusRamp(CameraThreadData *td, bool &rampStarted)
         SEMErrorOccurred(1);
         retval = 1;
       } else {
-        if (td->IndexPerMs < 0)
-          SEMTrace('1', "Calling DoFocusRamp with %d %d %d %f", td->ScanDelay,
-            td->PostActionTime, useInterval, td->IndexPerMs);
         if (td->scopePlugFuncs->DoFocusRamp(td->ScanDelay, td->PostActionTime,
           useInterval, td->rampTable, MAX_RAMP_STEPS, td->IndexPerMs)) {
             DeferMessage(td, CString(td->scopePlugFuncs->GetLastErrorString()));
@@ -9220,6 +9217,10 @@ int CCameraController::StartFocusRamp(CameraThreadData *td, bool &rampStarted)
       td->FocusRamper->DoRamp(td->ScanDelay, td->PostActionTime, 
         td->DynFocusInterval, td->rampTable, td->IndexPerMs);
     }
+    if (td->IndexPerMs < 0 && !retval)
+      SEMTrace('1', "Called DoFocusRamp with %d %d %d %f", td->ScanDelay,
+        td->PostActionTime, useInterval, td->IndexPerMs);
+
     if (chan && !retval)
       Sleep(chan);
   }
