@@ -9217,8 +9217,8 @@ int CCameraController::StartFocusRamp(CameraThreadData *td, bool &rampStarted)
       td->FocusRamper->DoRamp(td->ScanDelay, td->PostActionTime, 
         td->DynFocusInterval, td->rampTable, td->IndexPerMs);
     }
-    if (td->IndexPerMs < 0 && !retval)
-      SEMTrace('1', "Called DoFocusRamp with %d %d %d %f", td->ScanDelay,
+    if (!retval)
+      SEMTrace('s', "Called DoFocusRamp with %d %d %d %f", td->ScanDelay,
         td->PostActionTime, useInterval, td->IndexPerMs);
 
     if (chan && !retval)
