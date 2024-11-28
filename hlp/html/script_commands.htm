@@ -4590,6 +4590,15 @@
           <TD>Sets the lateral offset of the tilt axis to <b>#</b>.</TD>
         </TR>
         <TR>
+          <TD class="scriptcommand">CheckEucenByFocusCal [#L] [#M] [#S] [#P]</TD>
+          <TD>Reports 1 if Eucentricity by Focus is calibrated for the current or specified 
+            conditions, or 0 if not.&nbsp; Set optional <b>#L</b> to 1 for Low Dose mode, <b>#M</b> to the magnification
+            index, <b>#S</b> to the spot size, and <b>#P</b> to the probe mode (0 for nP, 1 for uP) on
+            a Thermo/FEI scope or the alpha value on a JEOL with alpha.&nbsp; The latter 3 entries are ignored
+            in Low Dose mode; enter -1 for any entry to use the current value of the item.&nbsp; Command added in 4.2, 27-Nov-24.
+          </TD>
+        </TR>
+        <TR>
           <TD class="scriptcommand">WalkUpTo #</TD>
           <TD>Tilts up to given angle in steps and track image position</TD>
         </TR>

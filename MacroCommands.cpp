@@ -9088,6 +9088,45 @@ int CMacCmd::ReportRoughEucenFailed(void)
   return 0;
 }
 
+// CheckEucenByFocusCal
+int CMacCmd::CheckEucenByFocusCal()
+{
+  BOOL usingView, lowDose;
+  int magInd, ind, err, probe = -1, spot;
+  ZbyGParams *param;
+  LowDoseParams *ldp = mWinApp->GetLowDoseParams();
+  if (mItemEmpty[1] || mItemInt[1] < 0)
+    lowDose = mWinApp->LowDoseMode();
+  else
+    lowDose = mItemInt[1] > 0;
+  int ldArea = mWinApp->mParticleTasks->GetLDAreaForZbyG(lowDose, -1, usingView);
+  if (ldArea < 0 && (mItemEmpty[2] || mItemInt[2] < 0))
+    magInd = mScope->FastMagIndex();
+  else if (ldArea < 0)
+    magInd = mItemInt[2];
+  else
+    magInd = ldp[ldArea].magIndex;
+  param = mWinApp->mParticleTasks->FindZbyGCalForMagAndArea(magInd, ldArea, mCurrentCam,
+    ind, err);
+  if (param && ldArea < 0) {
+    if (mItemEmpty[3] || mItemInt[3] < 0)
+      spot = mScope->FastSpotSize();
+    else
+      spot = mItemInt[3];
+    if (!mItemEmpty[4] && mItemInt[4] >= 0)
+      probe = mItemInt[4];
+    if (param->spotSize != mScope->FastSpotSize() ||
+      (FEIscope && param->probeOrAlpha != (probe < 0  ? mScope->GetProbeMode() : probe)) 
+      || (JEOLscope && !mScope->GetHasNoAlpha() && param->probeOrAlpha != 
+      (probe < 0 ? mScope->FastAlpha() : probe)))
+      param = NULL;
+  }
+  SetReportedValues(param ? 1 : 0);
+  mLogRpt.Format("Eucentricity by Focus calibration %s exist for the given state", 
+    param ? "DOES" : "does NOT");
+  return 0;
+}
+
 // WalkUpTo
 int CMacCmd::WalkUpTo(void)
 {
