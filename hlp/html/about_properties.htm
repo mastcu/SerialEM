@@ -5135,7 +5135,10 @@
         <TR VALIGN="top">
           <TD>RamperBlankAtEnd</TD>
           <TD>Set to 1 to have the Focus Ramper blank the beam when it finishes the focus 
-            ramp or is stopped by the image being done.</TD>
+            ramp or is stopped by the image being done, as well during the delay before starting
+             the ramp if it exceeds 50 msec.&nbsp; Set to 2, 3 etc. to do this and also have the 
+            program wait for 1, 2, etc sec between telling the ramper to finish and 
+            returning from the acquisition routine.</TD>
         </TR>
         <TR VALIGN="top">
           <TD>ImageDetectorIDs</TD>

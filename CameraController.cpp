@@ -481,7 +481,7 @@ CCameraController::CCameraController()
   mFilterObeyNormDelay = false;
   mFilterWaiting = false;
   mKeepLastUsedFrameNum = false;
-  mRamperBlankAtEnd = false;
+  mRamperBlankAtEnd = 0;
   for (l = 0; l < MAX_CHANNELS; l++)
     mTD.PartialArrays[l] = NULL;
 }
@@ -9205,7 +9205,10 @@ int CCameraController::StartFocusRamp(CameraThreadData *td, bool &rampStarted)
         SEMErrorOccurred(1);
         retval = 1;
       } else {
-        if (td->scopePlugFuncs->DoFocusRamp(td->ScanDelay, td->PostActionTime, 
+        if (td->IndexPerMs < 0)
+          SEMTrace('1', "Calling DoFocusRamp with %d %d %d %f", td->ScanDelay,
+            td->PostActionTime, useInterval, td->IndexPerMs);
+        if (td->scopePlugFuncs->DoFocusRamp(td->ScanDelay, td->PostActionTime,
           useInterval, td->rampTable, MAX_RAMP_STEPS, td->IndexPerMs)) {
             DeferMessage(td, CString(td->scopePlugFuncs->GetLastErrorString()));
             SEMErrorOccurred(1);
@@ -9232,6 +9235,7 @@ void CCameraController::FinishFocusRamp(CameraThreadData *td, bool rampStarted)
 {
   CString report;
   int chan;
+  CSerialEMApp *winApp = (CSerialEMApp *)AfxGetApp();
   try {
     td->ScanIntMin = 0;
     if (FEIscope) {
@@ -9239,6 +9243,8 @@ void CCameraController::FinishFocusRamp(CameraThreadData *td, bool rampStarted)
         &td->ScanIntMax, &td->ScanIntMean, &td->ScanIntSD))
         DeferMessage(td, CString(td->scopePlugFuncs->GetLastErrorString()));
       td->scopePlugFuncs->EndThreadAccess(1);
+      if (winApp->mCamera->GetRamperBlankAtEnd() > 1)
+        Sleep(1000 * (winApp->mCamera->GetRamperBlankAtEnd() - 1));
     } else {
       td->FocusRamper->FinishRamp(3000, &td->ScanIntMin, &td->ScanIntMax, 
         &td->ScanIntMean, &td->ScanIntSD);

@@ -637,7 +637,7 @@ public:
   GetSetMember(bool, FilterObeyNormDelay);
   GetMember(bool, FilterWaiting);
   SetMember(bool, KeepLastUsedFrameNum);
-  GetSetMember(BOOL, RamperBlankAtEnd);
+  GetSetMember(int, RamperBlankAtEnd);
   CameraThreadData *GetCamThreadData() { return &mTD; };
   bool DoingPartialScan() {return mTD.ReturnPartialScan > 0; };
   bool HasCEOSFilter() { return mCEOSFilter != NULL; }
@@ -1101,7 +1101,7 @@ public:
   float mDynFocusTiltOffset;     // Tilt offset for dynamic focusing
   bool mFilterObeyNormDelay;     // Flag to impose post-norm delay before setting filter
   bool mFilterWaiting;           // Flag that filter is waiting for delay
-  BOOL mRamperBlankAtEnd;        // Flag for FocusRamper to blank beam at end of ramp/image
+  int mRamperBlankAtEnd;         // Flag for FocusRamper to blank beam at end of ramp/image
 
 
 public:
