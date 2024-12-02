@@ -4139,6 +4139,10 @@ BOOL CEMscope::SetMagKernel(SynchroThreadData *sytd)
   bool focusChanged = false, ISchanged, normAll;
   int mode;
   int currentIndex = sytd->curIndex, inIndex = sytd->newIndex;
+  int relaxFlag = RELAX_FOR_MAG;
+  if (!BOOL_EQUIV(sytd->curIndex < sytd->lowestM, sytd->newIndex < sytd->lowestM) &&
+    !(RELAX_FOR_MAG & sJeolRelaxationFlags))
+    relaxFlag = RELAX_FOR_LM_M;
   try {
     if (JEOLscope) {
 
@@ -4147,7 +4151,7 @@ BOOL CEMscope::SetMagKernel(SynchroThreadData *sytd)
 
       ticks = GetTickCount();
       PLUGSCOPE_SET(MagnificationIndex, inIndex);
-      WaitForLensRelaxation(RELAX_FOR_MAG, ticks);
+      WaitForLensRelaxation(relaxFlag, ticks);
 
     } else {  // FEIlike
 
@@ -8776,7 +8780,7 @@ int CEMscope::WaitForLensRelaxation(int type, double earliestTime)
 {
   double startTime;
   BOOL state, eventTime;
-  const char *names[] = {"mag", "spot", "alpha"};
+  const char *names[] = {"mag", "spot", "alpha", "LM-nonLM mag"};
   if (!JEOLscope || !(type & sJeolRelaxationFlags) || sJeolSD->JeolSTEM)
     return 0;
   startTime = GetTickCount();

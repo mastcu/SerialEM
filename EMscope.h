@@ -190,6 +190,7 @@ struct SynchroThreadData {
 #define RELAX_FOR_MAG    1
 #define RELAX_FOR_SPOT   2
 #define RELAX_FOR_ALPHA  4
+#define RELAX_FOR_LM_M   8
 
 #define APERTURE_SET_SIZE     1
 #define APERTURE_SET_POS      2
