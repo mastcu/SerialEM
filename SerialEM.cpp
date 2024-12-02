@@ -818,6 +818,7 @@ CSerialEMApp::CSerialEMApp()
   mLastSecondaryLog = -1;
   mRestoreFocusIdleCount = 0;
   mStartCameraInDebug = false;
+  mRecvImageTimeout = 0.;
   traceMutexHandle = CreateMutex(0, 0, 0);
   sStartTime = GetTickCount();
   mLastIdleScriptTime = sStartTime;
@@ -3269,6 +3270,12 @@ int SEMQueueScriptNextIdle(CString name)
   if (i >= 0)
     winApp->mScheduledScripts.push(i);
   return i < 0 ? 1 : 0;
+}
+
+// For plugins to get image timeout
+float DLL_IM_EX SEMGetRecvImageTimeout()
+{
+  return ((CSerialEMApp *)AfxGetApp())->GetRecvImageTimeout();
 }
 
 // Global convenience function for accessing TSMessageBox

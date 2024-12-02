@@ -55,3 +55,60 @@ loop level.
 
 
 
+PYTHON
+
+TaskDone is visited twice; first it runs a command when waitingForCommand is
+still set, then it returns for it to loop back in, either directly or on the
+next OnIdle
+
+waitingForCommand is set by SEM:
+1) when it starts running Python,
+2) in SuspendMacro when it "signal function done after Abort" and sets Done
+event, and
+3) In TaskDone when a command is done (not waitingForCommand), and it
+processes the last command result then sets Done event and "signal operations
+done after loop back in"
+
+it is cleared by SEM:
+1) in TaskDone when it IS waitingForCommand, before starting
+to run the command
+2) In RunOrResume
+3) in PythonServer in TryToStartExternalControl before it sits and waits on
+it
+
+commandReady is set by module before running RegularCommand()
+It is set in PythonServer when running a regular commandn with "Command ready
+to execute, wait for done event"
+It is cleared in:
+1) when starts running Python
+2) TaskDone when it sets waitingForCommand
+3) RunOrResume to initialize
+4) Abort when it sets waitingForCommand
+
+errorOccurred contains an error code for an error or stop.
+Is set to
+1 for bad function code
+SCRIPT_EXIT_NO_EXC or SCRIPT_EXIT_NO_EXC when EXIT command is given
+SCRIPT_NORMAL_EXIT  at ScriptEnd or on RETURN from embedded python in SEM
+script
+SCRIPT_USER_STOP on a user stop in Stop
+1 on "True error" (not exit or user stop) in Abort
+0 by RunOrResume to initialize
+0 in StartRunningScrpLang
+0 by CBaseServer::ReportErrorAndClose when it is set to USER_STOP
+0 in TaskDone AFTER return from command function if not EXIT  (when
+waitingForCommand is set)
+0 when command done after looping back in (when waitingForCommand is not set),
+before checking result of command then signaling done
+0 in ProcessCommand when external control is already off and the next command
+comes in with USER_STOP set - to use up the stop
+
+Abort is generally visited twice, when either internal thread still running or
+under external control, except that if it is already marked as disconnected
+and it is not a user stop with commandReady still set.
+just turns off external control in latter case
+Otherwise it does some cleanup and starts a task when it is internal script
+or errorOccurred set, which makes it call Abort again in TaskDone
+
+The involvement of threadDone is still to be described.
+

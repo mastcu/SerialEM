@@ -579,6 +579,14 @@
             while acquiring data.</TD>
         </TR>
         <TR VALIGN="top">
+          <TD>SocketRecvImageTimeout</TD>
+          <TD>Set to a value in seconds to impose a timeout on &#39;recv&#39; calls for getting an 
+            image back from a plugin or Python after the initial response has been received.&nbsp; 
+            Some virtual networks can lose data and the whole image is never received, 
+            setting a timeout of 2 to 5 sec will let this failure time out sooner than the 
+            camera timeout.&nbsp; The timeout is set only when expecting a message bigger than 1024 bytes.</TD>
+        </TR>
+        <TR VALIGN="top">
           <TD>SmallFontsBad</TD>
           <TD>Set to 1 if the small fonts, such as in the Camera and Script control panel,
            are strangely pixelated and unreadable.</TD>
@@ -4708,7 +4716,7 @@
           <TD>JeolRelaxationFlags</TD>
           <TD>Flags for the operations after which the program should wait for the scope&#39;s lens
             relaxation to finish on a JEOL: set to the sum of 1 for magnification, 2 for
-            spot size, and 4 for alpha changes.</TD>
+            spot size, 4 for alpha changes, and 8 for just magnification changes between LM and nonLM.</TD>
         </TR>
         <TR VALIGN="top">
           <TD>JeolStartRelaxTimeout</TD>

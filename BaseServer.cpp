@@ -270,7 +270,7 @@ DWORD WINAPI CBaseServer::SocketProc(LPVOID pParam)
         ReportErrorAndClose(sockInd, numBytes, "recv from ready client");
       } else {
         memcpy(&numExpected, &mArgsBuffer[sockInd][0], sizeof(int));
-
+ 
         // Reallocate buffer if necessary
         if (ReallocArgsBufIfNeeded(numExpected, sockInd)) {
           mStartupError[sockInd] = 8;
@@ -465,6 +465,11 @@ int CBaseServer::SendBuffer(int sockInd, char *buffer, int numBytes)
       ReportErrorAndClose(sockInd, numSent, "send a chunk of bytes back");
       return 1;
     }
+    if (numSent < numToSend) {
+      _snprintf(mMessageBuf[sockInd], MESS_ERR_BUFF_SIZE, 
+        "requested send %d bytes, only %d sent so far", numToSend, numSent);
+      DebugToLog(mMessageBuf[sockInd]);
+    }
     numTotalSent += numSent;
   }
   return 0;
@@ -569,8 +574,7 @@ int CBaseServer::SendArgsBack(int sockInd, int retval)
   return SendBuffer(sockInd, mArgsBuffer[sockInd], mNumBytesSend[sockInd]);
 }
 
-// Send the arguments from an image acquisition back then send the image if there is no
-// error
+// Send the arguments for an image transfer then send the image if there is no error
 void CBaseServer::SendImageBack(int sockInd, void *imArray, int imSize, int indChunks)
 {
   int numChunks, chunkSize, numToSend, numLeft, err, totalSent = 0;
@@ -600,6 +604,7 @@ void CBaseServer::SendImageBack(int sockInd, void *imArray, int imSize, int indC
   }
 }
 
+// Get an image being sent in for a buffer
 int CBaseServer::ReceiveImage(int sockInd, char *imArray, int numBytes, int numChunks)
 {
   int err, chunkSize, numToGet, chunk, totalRecv = 0;
@@ -615,25 +620,38 @@ int CBaseServer::ReceiveImage(int sockInd, char *imArray, int numBytes, int numC
   chunkSize = (numBytes + numChunks - 1) / numChunks;
   for (chunk = 0; chunk < numChunks; chunk++) {
     numToGet = B3DMIN(numBytes - totalRecv, chunkSize);
-    if (FinishGettingBuffer(sockInd, (char *)imArray + totalRecv, 0, numToGet,
-      numToGet)) {
-      SEMTrace('K', "BaseSocket: Error %d while receiving image (chunk # %d) from "
-        "server", WSAGetLastError(), chunk);
+    err = FinishGettingBuffer(sockInd, (char *)imArray + totalRecv, 0, numToGet,
+      numToGet);
+    if (err) {
+      if (err > 1)
+        SEMTrace('K', "BaseServer: Timeout while receiving image (chunk # %d) from "
+          "server; %d bytes left", chunk, err - 1);
+      else
+        SEMTrace('K', "BaseServer: Error %d while receiving image (chunk # %d) from "
+          "server", WSAGetLastError(), chunk);
       CloseClient(sockInd);
       return 1;
     }
     totalRecv += numToGet;
-    SEMTrace('K', "BaseSocket: Chunk # %d  ttotal %d", chunk, totalRecv);
+    SEMTrace('K', "BaseServer: Chunk # %d  total %d", chunk, totalRecv);
   }
   SEMTrace('K', "Transfer rate %.1f MB/s", numBytes /
     (1000. * B3DMAX(1., SEMTickInterval(startTicks))));
   return 0;
 }
 
+// Finish getting full message into the buffer
 int CBaseServer::FinishGettingBuffer(int sockInd, char *buffer, int numReceived,
   int numExpected, int bufSize)
 {
-  int numNew, ind;
+  int numNew, ind, err = 0;
+  DWORD timeout;
+  if (numExpected > 1024 && SEMGetRecvImageTimeout() > 0.) {
+    timeout = (DWORD)(SEMGetRecvImageTimeout() * 1000);
+    setsockopt(mHClient[sockInd], SOL_SOCKET, SO_RCVTIMEO, (char*)&timeout, 
+      sizeof(timeout));
+  }
+
   while (numReceived < numExpected) {
 
     // If message is too big for buffer, just get it all and throw away the start
@@ -641,13 +659,24 @@ int CBaseServer::FinishGettingBuffer(int sockInd, char *buffer, int numReceived,
     if (numExpected > bufSize)
       ind = 0;
     numNew = recv(mHClient[sockInd], &buffer[ind], bufSize - ind, 0);
-    SEMTrace('K', "BaseSocket: ind %d %d expc %d  nn %d", ind, numReceived, numExpected, numNew);
+    //SEMTrace('K', "BaseServer: ind %d %d expc %d  nn %d", ind, numReceived, numExpected,
+      //numNew);
     if (numNew <= 0) {
-      return 1;
+      if (WSAGetLastError() != WSAETIMEDOUT) {
+        err = 1;
+        break;
+      }
+      err = (numExpected - numReceived) + 1;
+      break;
     }
     numReceived += numNew;
   }
-  return 0;
+  if (numExpected > 1024 && SEMGetRecvImageTimeout() > 0.) {
+    timeout = (DWORD)(10000 * 1000);
+    setsockopt(mHClient[sockInd], SOL_SOCKET, SO_RCVTIMEO, (char*)&timeout,
+      sizeof(timeout));
+  }
+  return err;
 }
 
 // Unpack the received argument buffer, skipping over the first word, the byte count

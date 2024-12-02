@@ -971,6 +971,17 @@
           </TD>
         </TR>
         <TR>
+          <TD class="scriptcommand">SetBufferImageTimeout #</TD>
+          <TD>Sets the timeout for receiving image data through &#39;bufferImage&#39; after getting
+             the initial data to <b>#</b> in seconds.&nbsp; Image transfers are unreliable across some virtual
+            networks (e.g., between a virtual machine and the host computer) and can hang when the network
+            fails to transfer the whole image.&nbsp; Setting this timeout (e.g., to 2 seconds) allows the 
+            Python module to break out of the hang and generate an exception.&nbsp; The exception can be 
+            caught and the transfer will likely succeed if it is tried again.&nbsp; The timeout is set
+             only when expecting to receive more than 1024 bytes.&nbsp; Command added in 4.2, 29-Nov-24.
+          </TD>
+        </TR>
+        <TR>
           <TD class="scriptcommand">PluginAllDoubles(name, func, [,#D, #D, #D, #D, #D, #D, #D]</TD> 
           <TD>Calls the function <b>func</b> in the plugin named <b>name</b> with up to 7 optional 
             floating point values.&nbsp; <b>func</b> and <b>name</b> are string arguments and <b>name</b>

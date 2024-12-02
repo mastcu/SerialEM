@@ -390,20 +390,40 @@ int CBaseSocket::ExchangeMessages(int sockInd)
 int CBaseSocket::FinishGettingBuffer(int sockInd, char *buffer, int numReceived, 
                                       int numExpected, int bufSize)
 {
-  int numNew, ind;
+  int numNew, ind, err = 0;
+  DWORD timeout;
+  if (numExpected > 1024 && SEMGetRecvImageTimeout() > 0.) {
+    timeout = (DWORD)(SEMGetRecvImageTimeout() * 1000);
+    setsockopt(mServer[sockInd], SOL_SOCKET, SO_RCVTIMEO, (char*)&timeout,
+      sizeof(timeout));
+  }
+
   while (numReceived < numExpected) {
 
     // If message is too big for buffer, just get it all and throw away the start
     ind = numReceived;
     if (numExpected > bufSize)
       ind = 0;
-     numNew = recv(mServer[sockInd], &buffer[ind], bufSize - ind, 0);
+    numNew = recv(mServer[sockInd], &buffer[ind], bufSize - ind, 0);
     if (numNew <= 0) {
-      return 1;
+      if (WSAGetLastError() != WSAETIMEDOUT) {
+        err = 1;
+        break;
+      }
+      err = (numExpected - numReceived) + 1;
+      break;
     }
+    if (numNew + numReceived < numExpected)
+      SEMTrace('K', "got %d new, total %d, left %d", numNew, numNew + numReceived,
+        numExpected - (numNew + numReceived));
     numReceived += numNew;
   }
-  return 0;
+  if (numExpected > 1024 && SEMGetRecvImageTimeout() > 0.) {
+    timeout = (DWORD)(10000 * 1000);
+    setsockopt(mServer[sockInd], SOL_SOCKET, SO_RCVTIMEO, (char*)&timeout,
+      sizeof(timeout));
+  }
+  return err;
 }
 
 // Send all or the remainder of a buffer
@@ -553,7 +573,7 @@ int CBaseSocket::SendAndReceiveForImage(int sockInd, short *imArray, long *arrSi
                                          long *width, 
                                          long *height, int bytesPerPixel)
 {
-  int numBytes, numChunks, nsent, chunkSize, numToGet, chunk, totalRecv = 0;
+  int numBytes, numChunks, nsent, chunkSize, numToGet, chunk, totalRecv = 0, err = 0;
   double startTicks;
   mNumLongRecv[sockInd] = 4;
   SendAndReceiveArgs(sockInd);
@@ -586,8 +606,13 @@ int CBaseSocket::SendAndReceiveForImage(int sockInd, short *imArray, long *arrSi
       }
     }
     numToGet = B3DMIN(numBytes - totalRecv, chunkSize);
-    if (FinishGettingBuffer(sockInd, (char *)imArray + totalRecv, 0, numToGet, 
-      numToGet)) {
+    err = FinishGettingBuffer(sockInd, (char *)imArray + totalRecv, 0, numToGet,
+      numToGet);
+    if (err) {
+      if (err > 1)
+        SEMTrace('K', "BaseSocket: Timeout while receiving image (chunk # %d) from "
+          "server; %d bytes left", chunk, err - 1);
+      else
         SEMTrace('K', "BaseSocket: Error %d while receiving image (chunk # %d) from "
           "server", WSAGetLastError(), chunk);
       mCloseBeforeNextUse[sockInd] = true;
