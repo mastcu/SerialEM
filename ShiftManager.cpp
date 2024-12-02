@@ -2763,9 +2763,9 @@ void CShiftManager::FallbackToRotationDifferences(int actCamToDo, int & derived)
 // camera if possible.
 void CShiftManager::PickMagForFallback(int actCamToDo, int & calMag, int & regCam)
 {
-  int iAct, iCam, iMag, gifCam, midMag, minWithIS, maxWithIS, gifMin, gifMax, regMin;
+  int iAct, iCam, iMag, gifCam, midMag, minWithIS, maxWithIS, gifMin = 0, gifMax = 0;
   int regMax, stemMin, stemMax, limlo, limhi, numRanges, lowestMicro, range, stemCam = -1;
-  int midFilmMag = 15000;
+  int regMin, midFilmMag = 15000;
   int numCam = mWinApp->GetNumReadInCameras();
   int lowestMmag = mScope->GetLowestMModeMagInd();
   BOOL anyCal = false;
