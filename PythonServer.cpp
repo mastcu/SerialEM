@@ -180,7 +180,8 @@ int CPythonServer::ProcessCommand(int sockInd, int numBytes)
       sScriptData->strItems[ind] = strArr;
       strArr += strlen(strArr) + 1;
     }
-    SEMTrace('[', "Command ready to execute, wait for done event");
+    SEMTrace('[', "Command ready to execute, wait for done event  EC %d", 
+      sScriptData->externalControl);
     sScriptData->commandReady = 1;
     while (WaitForSingleObject(CMacroProcessor::mScrpLangDoneEvent, 1000)) {
       Sleep(2);
@@ -288,9 +289,14 @@ void CPythonServer::TryToStartExternalControl(void)
   sScriptData->waitingForCommand = 0;
   sScriptData->externalControl = -1;
   Sleep(10);
+  if (mDebugVal > 1)
+    SEMTrace('[', "Try to start extcont");
   for (int ind = 0; ind < 500; ind++) {
     if (sScriptData->externalControl >= 0 && sScriptData->waitingForCommand)
       break;
     Sleep(10);
   }
+  if (mDebugVal > 1)
+    SEMTrace('[', "EXT CONT %d WFC %d", sScriptData->externalControl, 
+      sScriptData->waitingForCommand);
 }

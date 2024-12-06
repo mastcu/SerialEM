@@ -303,6 +303,14 @@ DWORD WINAPI CBaseServer::SocketProc(LPVOID pParam)
         _snprintf(mMessageBuf[sockInd], MESS_ERR_BUFF_SIZE, 
           "Accepted connection from client program %d  ind %d", mPort[sockInd], sockInd);
         EitherToLog("", mMessageBuf[sockInd]);
+        if (mDebugVal > 1)
+          SEMTrace('[', "EC %d discon %d", CMacroProcessor::mScrpLangData.externalControl,
+            CMacroProcessor::mScrpLangData.disconnected ? 1 : 0);
+
+        // If main thread has not caught up to a disconnect and cleared external control,
+        // just turn off the disconnect and let things go on as normal
+        if (CMacroProcessor::mScrpLangData.externalControl)
+          CMacroProcessor::mScrpLangData.disconnected = false;
       }
     }
   }
@@ -487,6 +495,7 @@ void CBaseServer::ReportErrorAndClose(int sockInd, int retval, const char *messa
     // give 0 return value and 0 error
     if (mLastWSAerror[sockInd] == WSAECONNRESET || (!retval && !mLastWSAerror[sockInd])) {
       DebugToLog(mMessageBuf[sockInd]);
+      DebugToLog("Disconnecting");
 
       // Set as disconnected and cancel any pending user stop error
       CMacroProcessor::mScrpLangData.disconnected = true;

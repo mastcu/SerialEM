@@ -112,3 +112,10 @@ or errorOccurred set, which makes it call Abort again in TaskDone
 
 The involvement of threadDone is still to be described.
 
+disconnected is a flag for the socket getting closed
+It is set when the client disconnects, i.e. close after error in
+ReportErrorAndClose
+It is cleared in StartRunningScrpLang
+It is cleared when a new connection is accepted if external control is still on,
+i.e., if MacroProcessor hasn't yet acted on the disconnect and turned off EC
+

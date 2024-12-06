@@ -1049,6 +1049,8 @@ int CMacroProcessor::TaskBusy()
       return 0;
     }
     if (mScrpLangData.commandReady) {
+      //SEMTrace('[', "Got ready, EC %d  RSL %d EO %d", mScrpLangData.externalControl, 
+      //mRunningScrpLang ? 1 : 0, mScrpLangData.errorOccurred);
       return 0;
     }
     if (mScrpLangData.externalControl)
@@ -1659,7 +1661,8 @@ void CMacroProcessor::SuspendMacro(int abort)
   mLoopInOnIdle = false;
   if (!mDoingMacro)
     return;
-  SEMTrace('[', "In abort");
+  //SEMTrace('[', "In abort %d  RSM %d EC %d disc %d", abort, mRunningScrpLang?1:0,  
+  //mScrpLangData.externalControl, mScrpLangData.disconnected ?1:0);
 
   // Intercept abort when doing external script, set error flag and set wait for command
   // Process user stop like any other exit, not like disconnect happened

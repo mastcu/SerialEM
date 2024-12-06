@@ -186,6 +186,10 @@ void CMacCmd::TaskDone(int param)
   int arg, err, cmdInd;
   bool isEcho;
   mStrLine = "";
+  /*SEMTrace('[', "DM %d RSL %d CR %d TD %d WFC %d EO %d FC %d", DoingMacro()?1 : 0, 
+    mRunningScrpLang?1:0, mScrpLangData.commandReady, mScrpLangData.threadDone,
+    mScrpLangData.waitingForCommand, mScrpLangData.errorOccurred,
+    mScrpLangData.functionCode);*/
   if (DoingMacro()) {
     if (mRunningScrpLang) {
       if (mScrpLangData.threadDone) {
