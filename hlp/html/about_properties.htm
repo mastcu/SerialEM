@@ -133,7 +133,9 @@
           <TD>SkipUtapiServices</TD>
           <TD>Follow with a list of indexes to UTAPI services that should be marked as not 
             available.&nbsp; The indexes correspond to the values of the enum 
-            'UtapiSupportTypes' in SerialEM.h.</TD>
+            'UtapiSupportTypes' in SerialEM.h.  These include 20 for cameras, which should be
+             skipped if you have a Falcon or Ceta 2; 13 for stage, which is not working right yet; 
+            9 for magnification, which should be skipped if you have STEM.</TD>
         </TR>
         <TR VALIGN="top">
           <TD>SimulationMode</TD>
