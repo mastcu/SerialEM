@@ -31,9 +31,9 @@ v140 Release (Win 32 & x64)
 
 You must have the library collection SerialEMLibs in an adjacent directory, or
 change the project properties to access this repository elsewhere.  It is
-available at
+available in a Mercurial repository at:
 http://bio3d.colorado.edu/SerialEM/SerialEMLibs
-and
+and in a git repository at:
 https://github.com/mastcu/SerialEMLibs
 This collection includes libraries that you should not use unless you have a
 license for them.  Namely, libifft-MKL.lib and libifft-MKL-64.lib are import
