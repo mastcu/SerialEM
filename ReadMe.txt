@@ -1,3 +1,6 @@
+See Copyright.txt for a description of license terms for SerialEM and other
+components.
+
 SerialEM is currently developed in Visual Studio 2015 with the v140_xp
 platform toolset so that it can still run on XP SP3, but it includes a pure
 v140 configuration as well.  Using the v140_xp configuration requires the
@@ -27,8 +30,12 @@ v140 Release (Win 32 & x64)
    libraries and no Windows XP compatibility.
 
 You must have the library collection SerialEMLibs in an adjacent directory, or
-change the project properties to access this repository elsewhere.  This
-collection includes libraries that you should not use unless you have a
+change the project properties to access this repository elsewhere.  It is
+available at
+http://bio3d.colorado.edu/SerialEM/SerialEMLibs
+and
+https://github.com/mastcu/SerialEMLibs
+This collection includes libraries that you should not use unless you have a
 license for them.  Namely, libifft-MKL.lib and libifft-MKL-64.lib are import
 libraries for the corresponding DLLs in the binary SerialEM distributions,
 which incorporate Intel Math Kernel Library FFT routines from version 15 of
