@@ -5198,7 +5198,8 @@ void CMacroProcessor::EnhancedExceptionToLog(CString &str)
     mWinApp->AppendToLog(attribErr);
 
   // Try to show error
-  if (macNum >= 0 && mLastPythonErrorLine > 0 && mMacroEditer[macNum]) 
+  if (macNum >= 0 && macNum < MAX_MACROS && mLastPythonErrorLine > 0 &&
+    mMacroEditer[macNum]) 
     mMacroEditer[macNum]->SelectAndShowLine(mLastPythonErrorLine);
 }
 
