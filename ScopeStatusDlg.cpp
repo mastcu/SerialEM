@@ -484,7 +484,8 @@ void CScopeStatusDlg::Update(double inCurrent, int inMagInd, double inDefocus,
 
   if (mShowedDose) {
     if (showCamDose) {
-      pixel = 10000. * mWinApp->mShiftManager->GetPixelSize(camera, inMagInd);
+      pixel = 10000. * mWinApp->mShiftManager->GetPixelSize(camera, inMagInd) *
+        BinDivisorF(camParam);
       camDose = dose * pixel * pixel * camParam->specToCamDoseFac;
       if (fabs(camDose - mCamDoseRate) > 1.e-6 || switchCamDose) {
         m_strDoseRate.Format("%.2f", camDose);
