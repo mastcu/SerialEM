@@ -83,6 +83,7 @@ void CAlignFocusWindow::DoDataExchange(CDataExchange* pDX)
   DDX_Check(pDX, IDC_CORRECT_BACKLASH, m_bCorrectBacklash);
   DDX_Control(pDX, IDC_BUT_TO_MARKER, m_butToMarker);
   DDX_Check(pDX, IDC_ERASE_PERIODIC_PEAKS, m_bErasePeriodicPeaks);
+  DDX_Control(pDX, IDC_BUT_EUCEN_FOCUS, m_butEucenFocus);
 }
 
 
@@ -103,6 +104,7 @@ BEGIN_MESSAGE_MAP(CAlignFocusWindow, CToolDlg)
   ON_BN_CLICKED(IDC_CORRECT_BACKLASH, OnCorrectBacklash)
   ON_BN_CLICKED(IDC_BUT_TO_MARKER, OnButToMarker)
   ON_BN_CLICKED(IDC_ERASE_PERIODIC_PEAKS, OnErasePeriodicPeaks)
+  ON_BN_CLICKED(IDC_BUT_EUCEN_FOCUS, &CAlignFocusWindow::OnButEucenFocus)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -299,6 +301,7 @@ void CAlignFocusWindow::Update()
 
   UpdateAutofocus(-1);
   m_statDefTarget.EnableWindow(!mWinApp->GetSTEMMode());
+  UpdateEucenFocus(-1, -1);
 
   // Clear align requires an active image
   imBufs = mWinApp->mMainView->GetActiveImBuf();
@@ -343,4 +346,38 @@ void CAlignFocusWindow::UpdateAutofocus(int magInd)
   m_butFocus.EnableWindow(mWinApp->mFocusManager->FocusReady(magInd) && 
     (!mWinApp->DoingTasks() || mWinApp->GetJustNavAcquireOpen()) && 
     (!mWinApp->mScope || !mWinApp->mScope->GetMovingStage()));
+}
+
+// Not quite... This button does too.  Pass -1, -1 to have it fetch current values for
+// mag and probe
+void CAlignFocusWindow::UpdateEucenFocus(int magInd, int probeMode)
+{
+  m_butEucenFocus.EnableWindow((!mWinApp->DoingTasks() ||
+    mWinApp->GetJustNavAcquireOpen()) && mWinApp->mScope &&
+    !mWinApp->mScope->GetMovingStage() && GetEucentricFocus(magInd, probeMode) > -900.);
+}
+
+// Respond to the eucentric focus button
+void CAlignFocusWindow::OnButEucenFocus()
+{
+  double focus = GetEucentricFocus(-1, -1);
+  if (focus > -900.)
+    mWinApp->mScope->SetFocus(focus);
+}
+
+// General function to return standard focus if available, otherwise -999
+double CAlignFocusWindow::GetEucentricFocus(int magInd, int probeMode)
+{
+  double *focTab = mWinApp->mScope->GetLMFocusTable();
+  double focus;
+  if (magInd < 0)
+    magInd = mWinApp->mScope->GetMagIndex();
+  if (probeMode < 0)
+    probeMode = mWinApp->mScope->GetProbeMode();
+  if (magInd <= 0 || mWinApp->GetSTEMMode())
+    return -999.;
+  focus = focTab[magInd * 2 + mWinApp->mScope->GetProbeMode()];
+  if (focus < -900.)
+    focus = mWinApp->mScope->GetStandardLMFocus(magInd);
+  return focus;
 }

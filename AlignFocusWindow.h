@@ -75,6 +75,10 @@ public:
   CButton m_butToMarker;
   BOOL m_bErasePeriodicPeaks;
   afx_msg void OnErasePeriodicPeaks();
+  CButton m_butEucenFocus;
+  afx_msg void OnButEucenFocus();
+  double GetEucentricFocus(int magInd, int probeMode);
+  void UpdateEucenFocus(int magInd, int probeMode);
 };
 
 //{{AFX_INSERT_LOCATION}}
