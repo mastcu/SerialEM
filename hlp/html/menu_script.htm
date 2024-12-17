@@ -189,8 +189,14 @@
       between sessions in the settings file.&nbsp; The first time that you open the 
       window, it will show one text box; subsequently it will restore its previous 
       size and location.</P>
+    <P>Even Python scripts can be run in this window.&nbsp; They need to start with 
+      &#39;#!Python&#39;.&nbsp; An &#39;import serialem as sem&#39; line is added automatically if 
+      there is not serialem import statement.&nbsp; If you want to use any statements 
+      requiring indentation, use 3 or more spaces, and make sure indentation is 
+      consistent.&nbsp; If there are no semicolons followed by 3 spaces, spaces after 
+      semicolons are removed to prevent indentation errors.</P>
     <P>Command completion with tab or ` works in 
-      this window just as in a regular script editor.&nbsp; In addition, Ctrl-A will 
+      this window just as in a regular script editor (but not for Python).&nbsp; In addition, Ctrl-A will 
       select the whole line, after which it can be deleted with the Delete key, or the 
       whole line can be deleted with Ctrl-U.&nbsp; 
       Ctrl-Z can be used to undo the last operation.&nbsp; Ctrl-X, Ctrl-C, and Ctrl-V also work 
