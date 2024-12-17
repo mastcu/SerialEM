@@ -114,6 +114,13 @@ void COneLineScript::OnRunClicked(UINT nID)
   int ind = nID - IDC_RUN_ONE_LINE1;
   UpdateData(true);
   mMacros[MAX_MACROS + ind] = m_strOneLine[ind];
+  if (mMacros[MAX_MACROS + ind].Find("#!Python") == 0) {
+    if (mMacros[MAX_MACROS + ind].Find("import serialem") < 0 &&
+      mMacros[MAX_MACROS + ind].Find("from serialem import") < 0)
+      mMacros[MAX_MACROS + ind].Replace("#!Python", "#!Python;import serialem as sem");
+    if (mMacros[MAX_MACROS + ind].Find(";   ") < 0)
+      while (mMacros[MAX_MACROS + ind].Replace("; ", ";") > 0) {}
+  }
   mMacros[MAX_MACROS + ind].Replace(";", "\r\n");
   if (!m_strOneLine[ind].IsEmpty()) {
     mWinApp->mMacroProcessor->Run(MAX_MACROS + ind);
