@@ -8043,12 +8043,22 @@ int CNavigatorDlg::AccessMapFile(CMapDrawItem *item, KImageStore *&imageStore,
   useWidth = (float)item->mMapWidth;
   useHeight = (float)item->mMapHeight;
   if (item->mMapMontage && item->mMapFramesX && item->mMapFramesY) {
-    useWidth = (float)((item->mMapWidth * (INT64)(montP->xNframes * montP->xFrame -
-      (montP->xNframes - 1) * montP->xOverlap)) / (item->mMapFramesX * montP->xFrame - 
-      (item->mMapFramesX - 1) * montP->xOverlap));
-    useHeight = (float)((item->mMapHeight * (INT64)(montP->yNframes * montP->yFrame -
-      (montP->yNframes - 1) * montP->yOverlap)) / (item->mMapFramesY * montP->yFrame - 
-      (item->mMapFramesY - 1) * montP->yOverlap));
+    xNframe = item->mMapFramesX * montP->xFrame -
+      (item->mMapFramesX - 1) * montP->xOverlap;
+    yNframe = item->mMapFramesY * montP->yFrame -
+      (item->mMapFramesY - 1) * montP->yOverlap;
+    if (!xNframe || !yNframe) {
+      PrintfToLog("PROGRAM ERROR (please report): #FX %d XF %d XOV %d -> XFN %d; #FY %d "
+        "YF %d YOV %d -> YFN %d", item->mMapFramesX, montP->xFrame, montP->xOverlap, 
+        xNframe, item->mMapFramesY, montP->yFrame, montP->yOverlap, yNframe);
+      delete imageStore;
+      return 1;
+    } else {
+      useWidth = (float)((item->mMapWidth * (INT64)(montP->xNframes * montP->xFrame -
+        (montP->xNframes - 1) * montP->xOverlap)) / xNframe);
+      useHeight = (float)((item->mMapHeight * (INT64)(montP->yNframes * montP->yFrame -
+        (montP->yNframes - 1) * montP->yOverlap)) / yNframe);
+    }
   }
   if (item->mMapMontage && item->mMontUseStage >= 0)
     montP->moveStage = item->mMontUseStage > 0;
