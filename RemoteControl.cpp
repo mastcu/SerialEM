@@ -83,7 +83,6 @@ void CRemoteControl::DoDataExchange(CDataExchange* pDX)
   DDX_Text(pDX, IDC_STAT_DELSTAGE, m_strStageDelta);
   DDX_Control(pDX, IDC_BLANK_UNBLANK, m_butBlankUnblank);
   DDX_Text(pDX, IDC_STAT_WITH_C2, m_strMagWithC2);
-  DDX_Control(pDX, IDC_STAT_BOX1, m_statBox1);
   DDX_Control(pDX, IDC_STAT_BEAM_LABEL, m_statBeamLabel);
   DDX_Control(pDX, IDC_STAT_BEAMDELTA, m_statBeamDelta);
   DDX_Control(pDX, IDC_STAT_FOCUS_LABEL, m_statFocusLabel);
@@ -109,7 +108,6 @@ BEGIN_MESSAGE_MAP(CRemoteControl, CToolDlg)
   ON_BN_CLICKED(IDC_BUT_DELFOCUSMINUS, OnDelFocusMinus)
   ON_BN_CLICKED(IDC_BUT_DELFOCUSPLUS, OnDelFocusPlus)
   ON_BN_CLICKED(IDC_BUT_SCREEN_UPDOWN, OnButScreenUpdown)
-  ON_WM_PAINT()
   ON_NOTIFY(UDN_DELTAPOS, IDC_SPIN_STAGE_UP_DOWN, OnDeltaposSpinStageUpDown)
   ON_NOTIFY(UDN_DELTAPOS, IDC_SPIN_STAGE_LEFT_RIGHT, OnDeltaposSpinStageLeftRight)
   ON_BN_CLICKED(IDC_BLANK_UNBLANK, OnBlankUnblank)
@@ -202,29 +200,7 @@ BOOL CRemoteControl::OnInitDialog()
   return TRUE;
 }
 
-// For Guenter's white bands
-void CRemoteControl::OnPaint()
-{
-  CRect winRect, dcRect;
-  COLORREF light = RGB(250, 250, 250);
-  CPaintDC dc(this); // device context for painting
-  int offset = TopOffsetForFillingRectangle(winRect);
-
-  // Objects must be set not visible to avoid being redrawn
-  FillDialogItemRectangle(dc, winRect, &m_statBox1, offset, light, dcRect);
-  dc.SelectObject(m_statBeamDelta.GetFont());
-  FillDialogItemRectangle(dc, winRect, &m_statBeamDelta, offset, light, dcRect);
-  dc.DrawText(m_strBeamDelta, &dcRect, DT_SINGLELINE | DT_RIGHT | DT_VCENTER);
-  FillDialogItemRectangle(dc, winRect, &m_statFocusDelta, offset, light, dcRect);
-  dc.DrawText(m_strFocusStep, &dcRect, DT_SINGLELINE | DT_RIGHT | DT_VCENTER);
-  dc.SelectObject(m_statBeamLabel.GetFont());
-  FillDialogItemRectangle(dc, winRect, &m_statBeamLabel, offset, light, dcRect);
-  dc.DrawText("Beam", &dcRect, DT_SINGLELINE | DT_LEFT | DT_VCENTER);
-  FillDialogItemRectangle(dc, winRect, &m_statFocusLabel, offset, light, dcRect);
-  dc.DrawText("Focus", &dcRect, DT_SINGLELINE | DT_LEFT | DT_VCENTER);
-
-  DrawSideBorders(dc);
-}
+// 12/13/24: Removed OnPaint For Guenter's white bands
 
 // Called from scope update with current values; keeps track of last values seen and
 // acts on changes only
@@ -293,7 +269,7 @@ void CRemoteControl::Update(int inMagInd, int inCamLen, int inSpot, double inInt
   }
 
   if (inProbe != mLastProbeMode && FEIscope) {
-    m_butNanoMicro.SetWindowText(inProbe == 0 ? "-> uPr" : "-> nPr");
+    m_butNanoMicro.SetWindowText(inProbe == 0 ? "-> uP" : "-> nP");
   }
   if (inSTEM != mLastSTEMmode)
     m_sbcSpot.SetRange(mScope->GetMinSpotSize(), mScope->GetNumSpotSizes(inSTEM));
@@ -763,8 +739,7 @@ void CRemoteControl::SetBeamIncrement(float inVal)
   if (!mInitialized)
     return;
   m_strBeamDelta.Format("%c%.1f%%", 0xB1, 100. * mBeamIncrement);
-  Invalidate();
-  //UpdateData(false);
+  UpdateData(false);
 }
 
 // Set increment for stage shift and update display if it is open and stage is selected
@@ -859,7 +834,6 @@ void CRemoteControl::SetFocusIncrementIndex(int inVal)
     return;
   m_butDelFocusPlus.EnableWindow(mFocusIncrementIndex < MAX_FOCUS_INDEX);
   m_butDelFocusMinus.EnableWindow(mFocusIncrementIndex > 0);
-  Invalidate();
 }
 
 // Set an increment via its index
