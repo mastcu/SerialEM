@@ -173,13 +173,15 @@ BOOL CMacroEditer::OnInitDialog()
                 // EXCEPTION: OCX Property Pages should return FALSE
 }
 
+#define NANUM_NAME "NanumGothicCoding-Regular.ttf"
+
 // Make the monospaced and default font for an editor or log window, whoever calls first
 void CMacroEditer::MakeMonoFont(CWnd *edit)
 {
   CFont *font;
   LOGFONT logFont;
-  CFileStatus status;
   bool gotNanum = false;
+  BOOL fontExists;
   CSerialEMApp *winApp = (CSerialEMApp *)AfxGetApp();
   if (!winApp->mMacroProcessor)
     return;
@@ -188,11 +190,24 @@ void CMacroEditer::MakeMonoFont(CWnd *edit)
     "Lucida Sans Typewriter", "Courier New"};
   int ind, height, lastFont = sizeof(tryNames) / sizeof(const char *) - 1;
 
+  // Look for nanum in 3 places: PF, PD, and exe directory
   if (mHasMonoFont < 0) {
-    exePath = winApp->GetExePath();
-    exePath += "\\";
-    exePath += "NanumGothicCoding-Regular.ttf";
-    if (CFile::GetStatus(exePath, status)) {
+    exePath = "C:\\Program Files\\SerialEM\\" NANUM_NAME;
+    fontExists = UtilFileExists(exePath);
+    if (!fontExists) {
+      exePath = "C:\\ProgramData\\SerialEM\\" NANUM_NAME;
+      fontExists = UtilFileExists(exePath);
+    }
+    if (!fontExists) {
+      exePath = winApp->GetExePath();
+      if (exePath != "C:\\Program Files\\SerialEM\\") {
+        exePath += "\\";
+        exePath += NANUM_NAME;
+        fontExists = UtilFileExists(exePath);
+      }
+    }
+    if (fontExists) {
+
       ind = AddFontResourceEx(
         exePath, 		// font file name
         FR_PRIVATE,    	// font characteristics
