@@ -168,6 +168,8 @@ public:
   BOOL m_iSpecVsCamDose;
   afx_msg void OnRspecVsCamDose();
   GetMember(int, VacStatus);
+  CString m_strProbeAlf;
+  CStatic m_statProbeAlf;
 };
 
 //{{AFX_INSERT_LOCATION}}

@@ -2478,8 +2478,14 @@
 #define IDC_RLD_USE_MONTMAP             3506
 #define IDC_BUT_OPEN_LOGS               3507
 #define IDC_CHECK_SCRIPT_AT_END         3508
-#define IDC_COMBO1                      3509
 #define IDC_COMBO_END_SCRIPT            3509
+#define IDC_STAT_IS_UM                  3510
+#define IDC_STAT_DEFLABEL               3511
+#define IDC_STAT_XLABEL                 3512
+#define IDC_STAT_YLABEL                 3513
+#define IDC_STAT_OBJLABEL               3514
+#define IDC_STAT_PROBEALF               3515
+#define IDC_BUT_EUCEN_FOCUS             3516
 #define ID_NEW_IMAGE                    32771
 #define IDM_FILE_SAVEOTHER              32772
 #define IDM_FILE_READ                   32773
@@ -3051,7 +3057,7 @@
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        289
 #define _APS_NEXT_COMMAND_VALUE         33534
-#define _APS_NEXT_CONTROL_VALUE         3510
+#define _APS_NEXT_CONTROL_VALUE         3517
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif

@@ -33,6 +33,7 @@ CScopeStatusDlg::CScopeStatusDlg(CWnd* pParent /*=NULL*/)
   , m_strIntensity(_T(""))
   , m_strEMmode(_T("EFTEM"))
   , m_iSpecVsCamDose(FALSE)
+  , m_strProbeAlf(_T(""))
 {
   SEMBuildTime(__DATE__, __TIME__);
   //{{AFX_DATA_INIT(CScopeStatusDlg)
@@ -125,6 +126,8 @@ void CScopeStatusDlg::DoDataExchange(CDataExchange* pDX)
   DDX_Control(pDX, IDC_STAT_EM_MODE, m_statEMmode);
   DDX_Text(pDX, IDC_STAT_EM_MODE, m_strEMmode);
   DDX_Radio(pDX, IDC_RSPEC_DOSE, m_iSpecVsCamDose);
+  DDX_Text(pDX, IDC_STAT_PROBEALF, m_strProbeAlf);
+  DDX_Control(pDX, IDC_STAT_PROBEALF, m_statProbeAlf);
 }
 
 
@@ -147,6 +150,10 @@ BOOL CScopeStatusDlg::OnInitDialog()
 {
   CToolDlg::OnInitDialog();
   HitachiParams *hitachi = mWinApp->GetHitachiParams();
+  int medFontIDs[] = {IDC_STAT_DEFLABEL, IDC_STATISORPS, IDC_STAT_IS_UM, IDC_STATXLM,
+    IDC_STAT_XLABEL, IDC_STAT_YLABEL, IDC_STAT_ZLABEL, IDC_STAT_OBJLABEL, IDC_STAT_UMMM,
+    IDC_STAT_UBPIX, IDC_STAT_C23IA, 0};
+  int ind = 0;
 
   // Get the fonts for big and medium windows
   CRect rect;
@@ -156,7 +163,7 @@ BOOL CScopeStatusDlg::OnInitDialog()
       CLIP_CHARACTER_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH |
       FF_DONTCARE, mBigFontName);
   m_statObjective.GetWindowRect(&rect);
-  mMedFont.CreateFont(B3DNINT(0.95 * rect.Height()), 0, 0, 0, FW_MEDIUM,
+  mMedFont.CreateFont(B3DNINT(0.98 * rect.Height()), 0, 0, 0, FW_MEDIUM,
       0, 0, 0, DEFAULT_CHARSET, OUT_CHARACTER_PRECIS,
       CLIP_CHARACTER_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH |
       FF_DONTCARE, mBigFontName);
@@ -167,33 +174,38 @@ BOOL CScopeStatusDlg::OnInitDialog()
   
   // Set the fonts
   //m_statCurrent.SetFont(&mMedFont);
-  m_statEMmode.SetFont(&mMedFont);
+  m_statEMmode.SetFont(&mBigFont);
   m_statMag.SetFont(&mBigFont);
+  m_statProbeAlf.SetFont(&mBigFont);
   m_statDefocus.SetFont(&mBigFont);
-  m_statImageShift.SetFont(&mMedFont);
+  m_statImageShift.SetFont(&mBigFont);
   m_statStageX.SetFont(&mMedFont);
   m_statStageY.SetFont(&mMedFont);
   m_statStageZ.SetFont(&mMedFont);
   m_statC23IA.SetWindowText((LPCTSTR)mWinApp->mScope->GetC2Name());
   m_statPctUm.SetWindowText((LPCTSTR)mWinApp->mScope->GetC2Units());
-  m_statIntensity.SetFont(&mMedFont);
+  m_statIntensity.SetFont(&mBigFont);
   m_statDoseRate.SetFont(&mMedFont);
   m_statObjective.SetFont(&mMedFont);
   m_statSpotSize.SetFont(&mBigFont);
   m_butFloat.SetFont(mLittleFont);
   m_butDose.SetFont(mLittleFont);
+  while (medFontIDs[ind] > 0) {
+    CWnd *win = GetDlgItem(medFontIDs[ind++]);
+    if (win)
+      win->SetFont(&mMedFont);
+  }
   m_statDoseRate.ShowWindow(SW_HIDE);
   m_statUbpix.ShowWindow(SW_HIDE);
   ShowDlgItem(IDC_RSPEC_DOSE, mWinApp->GetAnyDirectDetectors());
   ShowDlgItem(IDC_RCAM_DOSE, mWinApp->GetAnyDirectDetectors());
+  m_butResetDef.SetFont(mLittleFont);
   if (JEOLscope || HitachiScope) {
-    m_butResetDef.SetFont(mLittleFont);
     if (mWinApp->mScope->GetUsePLforIS()) {
       SetDlgItemText(IDC_STATISORPS, "PLA");
       SEMTrace('1',"Setting label to PLA");
     }
-  } else
-    m_butResetDef.ShowWindow(SW_HIDE);
+  } 
   if (mWinApp->mComplexTasks->GetHitachiWithoutZ()) {
     m_statStageZ.ShowWindow(SW_HIDE);
     m_statZlabel.ShowWindow(SW_HIDE);
@@ -203,10 +215,7 @@ BOOL CScopeStatusDlg::OnInitDialog()
     m_butFloat.ShowWindow(SW_HIDE);
     //m_statNano.ShowWindow(SW_HIDE);
   }
-  if (JEOLscope && !mWinApp->mScope->GetHasNoAlpha()) {
-    m_statVacuum.ShowWindow(SW_SHOW);
-    m_statVacuum.SetFont(&mBigFont);
-  }
+ 
   mCurrentSmoother.Setup(5, mSmootherThreshold1, mSmootherThreshold2);
   mInitialized = true;
 
@@ -214,9 +223,9 @@ BOOL CScopeStatusDlg::OnInitDialog()
   // Start with status -2 so it doesn't try to evaluate intensities until the real update
   if (mShowIntensityCal)
     m_statSpotLabel.ShowWindow(SW_HIDE);
-  mShowVacInEMmode = JEOLscope && !mWinApp->mScope->GetHasNoAlpha() && 
-    mWinApp->mScope->mNumGauges > 0 && 
-    !(mWinApp->mScope->mNumGauges == 1 && mWinApp->mScope->mGaugeNames[0] == "P4");
+  m_statProbeAlf.ShowWindow(FEIscope || (JEOLscope && !mWinApp->mScope->GetHasNoAlpha()) ?
+    SW_SHOW : SW_HIDE);
+  mShowVacInEMmode = false;
   if (mShowVacInEMmode)
     m_statEMmode.ShowWindow(SW_HIDE);
   Update(0., 1, 0., 0., 0., 0., 0., 0., true, false, false, false, 0, 1, 0., 0., 0., -1,
@@ -266,6 +275,7 @@ void CScopeStatusDlg::Update(double inCurrent, int inMagInd, double inDefocus,
   if (!mInitialized)
     return;
 
+  // Set probe mode and scope mode
   int temNano = B3DCHOICE(!STEM && inProbeMode == 0, 1, 0);
   if (STEM)
     EMmode = 2;
@@ -282,6 +292,8 @@ void CScopeStatusDlg::Update(double inCurrent, int inMagInd, double inDefocus,
   }
   if (mWinApp->GetShowRemoteControl())
     mWinApp->mRemoteControl.GetPendingMagOrSpot(pendingMag, pendingSpot, pendingCamLen);
+
+  // Switch to pending mag and spot
   if (pendingMag > 0)
     inMagInd = pendingMag;
   if (pendingSpot > 0)
@@ -301,14 +313,23 @@ void CScopeStatusDlg::Update(double inCurrent, int inMagInd, double inDefocus,
       SEMTrace('i', "Scope status: IS %f %f units,  %.2f um", mISX, mISY, specTotal);
   }
 
+  // Update align-focus window with select items
   if (!noScope && mIntCalStatus > -2 && (inMagInd != mMagInd || inAlpha != mBeamAlpha || 
     temNano != (mTEMnanoProbe ? 1 : 0)))
     mWinApp->mAlignFocusWindow.UpdateAutofocus(inMagInd);
+  if (!noScope && mIntCalStatus > -2 && (inMagInd != mMagInd ||
+    temNano != (mTEMnanoProbe ? 1 : 0) || mEMmodeChanged))
+    mWinApp->mAlignFocusWindow.UpdateEucenFocus(inMagInd, temNano);
+
+  // Maintain PLA/IS/CLA for JEOL
   if (STEM != mSTEM && JEOLscope) {
     SetDlgItemText(IDC_STATISORPS, B3DCHOICE(STEM, "CLA",
       mWinApp->mScope->GetUsePLforIS() ? "PLA" : "IS"));
+    mWinApp->mAlignFocusWindow.SetDlgItemText(IDC_BUTRESETSHIFT, B3DCHOICE(STEM, 
+      "Reset CLA", mWinApp->mScope->GetUsePLforIS() ? "Reset PLA" : "Reset IS"));
   }
 
+  // Handle mag
   if (inMagInd) {
     MagTable *magTab = mWinApp->GetMagTable();
     int inMag = screenUp ? magTab[inMagInd].mag : magTab[inMagInd].screenMag;
@@ -396,6 +417,7 @@ void CScopeStatusDlg::Update(double inCurrent, int inMagInd, double inDefocus,
     m_statNano.SetWindowText(naSm);*/
   mSmallScreen = smallScreen;
 
+  // Set smoothed current in screen meter
   inCurrent = exp(mCurrentSmoother.Readout(log(inCurrent + mCurrentLogBase))) -
     mCurrentLogBase;
   if (inCurrent < 0 && inCurrent > -1.e-4)
@@ -433,11 +455,13 @@ void CScopeStatusDlg::Update(double inCurrent, int inMagInd, double inDefocus,
     mMeterCurrent = screenCurrent;
   }
 
+  // Intensity
   if (inSpot != mSpot || rawIntensity != mRawIntensity) {
     m_strIntensity.Format("%.2f", inIntensity);
     m_statIntensity.SetWindowText(m_strIntensity);
   }
 
+  // Update others
   if (mWinApp->mCookerDlg && (!mLastCooker || magChanged || 
     rawIntensity != mRawIntensity || inSpot != mSpot))
     mWinApp->mCookerDlg->LiveUpdate(inMagInd, inSpot, rawIntensity);
@@ -454,6 +478,7 @@ void CScopeStatusDlg::Update(double inCurrent, int inMagInd, double inDefocus,
   mRawIntensity = rawIntensity;
   mLastAutocen = mWinApp->mAutocenDlg != NULL;
 
+  // Focus
   if (inDefocus != mDefocus) {
     if (fabs(inDefocus) < 99.98)
       m_strDefocus.Format("%.2f", inDefocus);
@@ -470,6 +495,7 @@ void CScopeStatusDlg::Update(double inCurrent, int inMagInd, double inDefocus,
     mDefocus = inDefocus;
   }
 
+  // Dose
   if (inMagInd > 0)
     dose = mWinApp->mBeamAssessor->GetElectronDose(inSpot, rawIntensity, 1.);
   if (B3DCHOICE(dose > 0., 1, 0) != B3DCHOICE(mShowedDose, 1, 0)) {
@@ -510,6 +536,7 @@ void CScopeStatusDlg::Update(double inCurrent, int inMagInd, double inDefocus,
   mEnabledSpecCam = haveCamDose;
   mLastSpecCamDose = m_iSpecVsCamDose;
 
+  // Stage
   if (B3DNINT(inStageX * 100.) != B3DNINT(mStageX * 100.)) {
     format.Format("%.2f", inStageX);
     m_statStageX.SetWindowText(format);
@@ -526,22 +553,31 @@ void CScopeStatusDlg::Update(double inCurrent, int inMagInd, double inDefocus,
     mStageZ = inStageZ;
   }
 
+  // Objective
   if (inObjective != mObjective) {
     m_strObjective.Format("%.2f%%", inObjective);
     m_statObjective.SetWindowText(m_strObjective);
     mObjective = inObjective;
   }
+
+  // Spot
   if (inSpot != mSpot || pendingSpot != mPendingSpot) {
     m_strSpotSize.Format("%s%s%d", pendingSpot > 0 && inSpot < 10 ? "-" : "", 
-      pendingSpot > 0 ? ">" : "", inSpot);
+      pendingSpot > 0 ? ">" : " ", inSpot);
     m_statSpotSize.SetWindowText(m_strSpotSize);
     mSpot = inSpot;
     mPendingSpot = pendingSpot;
   }
+  // Alpha or probe
   if (inAlpha >= 0 && inAlpha != mBeamAlpha) {
-    m_strVacuum.Format("a%d", inAlpha + 1);
-    m_statVacuum.SetWindowText(m_strVacuum);
+    m_strProbeAlf.Format("a%d", inAlpha + 1);
+    m_statProbeAlf.SetWindowText(m_strProbeAlf);
     mBeamAlpha = inAlpha;
+  } else if (FEIscope && (mEMmodeChanged || temNano != (mTEMnanoProbe ? 0 : 1))) {
+    m_strProbeAlf = "";
+    if (EMmode < 2)
+      m_strProbeAlf = temNano ? "nP" : "uP";
+    m_statProbeAlf.SetWindowText(m_strProbeAlf);
   }
 
   // See if vacuum or intensity cal status have changed and cause a repaint
@@ -579,12 +615,12 @@ void CScopeStatusDlg::Update(double inCurrent, int inMagInd, double inDefocus,
 
   if (temNano != (mTEMnanoProbe ? 1 : 0)) {
     mTEMnanoProbe = temNano != 0;
-    needDraw = true;
     changed = true;
   }
   if (needDraw)
     Invalidate();
 
+  // Accuemulate dose
   if (!screenUp && !blanked && gunState != 0 && WatchingDose()) {
     int area;
     BOOL lowDose = mWinApp->LowDoseMode();
@@ -650,14 +686,13 @@ void CScopeStatusDlg::OnPaint()
     FillDialogItemRectangle(dc, winRect, &m_statSpotLabel, border, 
       intColors[mIntCalStatus], dcRect);
     dc.SelectObject(&mProbeFont);
-    dc.DrawText(mTEMnanoProbe ? "nPr" : "Spot", &dcRect, 
-      DT_SINGLELINE | DT_CENTER | DT_VCENTER);
+    dc.DrawText("Spot", &dcRect, DT_SINGLELINE | DT_CENTER | DT_VCENTER);
   }
 
   if (mVacStatus >= 0 || mShowVacInEMmode) {
     FillDialogItemRectangle(dc, winRect, mShowVacInEMmode ? &m_statEMmode : &m_statVacuum,
       border, mVacStatus >= 0 ? vacColors[mVacStatus] : RGB(210, 210, 210), dcRect);
-    dc.SelectObject(&mMedFont);
+    dc.SelectObject(&mProbeFont);
     dc.DrawText(mShowVacInEMmode ? m_strEMmode : "VAC", &dcRect, 
       DT_SINGLELINE | DT_CENTER | DT_VCENTER);
   }

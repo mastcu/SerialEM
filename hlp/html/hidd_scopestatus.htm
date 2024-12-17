@@ -12,9 +12,7 @@
     <P>This window displays critical microscope parameters so that a microscope user
       interface&nbsp; can be covered over by SerialEM.</P>
     <P><B>Current&nbsp; button (Thermo/FEI and JEOL only)</B></P>
-    <P>This readout of screen current was eliminated in SerialEM 4.1.&nbsp; This
-      readout has some smoothing to prevent jitter, so it may not respond to very
-      small changes in screen current.</P>
+    <P>The readout of screen current was eliminated from this panel in SerialEM 4.1.</P>
     <P>This button will launch a small window with the screen current readout in 
       nanoamps (nA).
       If the small focusing screen is in, then this is the amount of current that 
@@ -32,16 +30,25 @@
       will be ignored in Low Dose mode. No dose is added when the beam intensity is
       outside a calibrated range. Press the Reset button to zero the cumulative dose.</P>
     <P><strong>Microscope imaging mode</strong></P>
-    <P>There is a text indicator of whether the microscpe is in TEM, EFTEM, STEM, or 
-      diffraction.&nbsp; On a JEOL with alpha, the background color may reflect vacuum 
-      quality, as described below.</P>
-    <P><B>Magnification (X)</B></P>
+    <P>There is a text indicator of whether the microscope is in TEM, EFTEM, STEM, or 
+      diffraction.</P>
+    <P><B>Vacuum Quality (VAC, Thermo/FEI and JEOL)</B></P>
+    <P>This is an indicator of vacuum quality that may alert you to watch the actual
+      vacuum readings in the microscope interface. It should be set up so that green means near perfect,
+      yellow means adequate for working, and red means do not open the column values.&nbsp; 
+      On a JEOL configured to access a vacuum gauge during updates of the microscope 
+      state, the color will show up here if there is no alpha, or on the imaging mode 
+      indicator if there is.</P>
+    <P>&nbsp;<B>Magnification (X)</B></P>
     <P>This readout shows the current magnification, or camera length in diffraction mode.
       On a Thermo/FEI scope, it changes when the screen is
       raised, so it should match the readout in the Thermo/FEI interface.&nbsp; The X changes
       to LM in low mag mode, INV in an inverted mag range on a Titan, ST or SL in
       STEM, or the camera length units in diffraction mode.</P>
-    <P><B>Defocus (Def)</B></P>
+    <P><B>Reset button</B></P>
+    <P>Reset the defocus readout to zero. This does not affect the actual focus setting
+      of the microscope, but on a Thermo/FEI scope, it will zero its defocus readout.</P>
+    <P>&nbsp;<B>Defocus (Def)</B></P>
     <P>This readout shows the same defocus value as appears in a Thermo/FEI interface. On
       a JEOL or Hitachi, it is initially a value relative to the defocus when the program was
       started. It will NOT be the same as the 'measured defocus' reported by the
@@ -51,30 +58,18 @@
       SerialEM. The 'measured defocus' is based on the amount of image displacement
       that occurs when the beam is tilted, and it should reflect how far the specimen
       is from zero defocus.</P>
-    <P><B>Reset button (JEOL and Hitachi only)</B></P>
-    <P>Reset the defocus readout to zero. This does not affect the actual focus setting
-      of the microscope.</P>
-    <P><B>Image Shift (IS or PLA)</B></P>
+    <P><B>Image Shift (IS, PLA, or CLA)</B></P>
     <P>This readout shows the total image shift in microns. When a montage is being
       acquired, this value will briefly reflect the image shift of individual pieces.
       However, in low dose mode, it will show only the image shift used to select the
       field of view and will not show the additional image shift of the acquisition
       areas. On JEOL microscopes where projector shift is being used instead of the
       image shift coils, this field is labeled PLA, but the same kind of shift is
-      referred to everywhere else in the program as image shift.</P>
-    <P><B>Objective Lens Strength (Obj)</B></P>
-    <P>This readout shows the objective lens strength in percent, and will match the
-      value shown in the microscope interface on a Thermo/FEI scope.</P>
-    <P><B>Vacuum Quality (VAC, Thermo/FEI and JEOL without alpha)</B></P>
-    <P>This is an indicator of vacuum quality that may alert you to watch the actual
-      vacuum readings in the microscope interface. It should be set up so that green means near perfect,
-      yellow means adequate for working, and red means do not open the column values.&nbsp; 
-      On a JEOL configured to access a vacuum gauge during updates of the microscope 
-      state, the color will show up here if there is no alpha, or on the imaging mode 
-      indicator if there is.</P>
-    <P><strong>Alpha (JEOL only)</strong></P>
-    <P>On a JEOL with alpha values, this readout shows the alpha value after the 
-      letter &#39;a&#39;.</P>
+      referred to everywhere else in the program as image shift.&nbsp; On a JEOL, it 
+      will be relabeled CLA in STEM mode.</P>
+    <P><strong>Illumination mode</strong></P>
+    <P>On a Thermo/FEI scope, this indicator will show the probe mode as uP or nP.&nbsp; 
+      On a JEOL scope with alpha, the alpha value is shown after the letter &#39;a&#39;.</P>
     <P><B>Spot</B></P>
     <P>The numeric readout shows the spot size. Also, the label 'Spot' has a colored
       background indicating whether the current intensity is calibrated at this spot
@@ -85,18 +80,20 @@
       the current side of crossover. This feature can be disabled by adding a line
       'ShowIntensityCalStatus 0' to SerialEMproperties.txt.</P>
     <p>
-      <b>+</b>&nbsp;&nbsp; <b>Opens an optional section with the following entries:</b></p>
-    <p>
-      <b>Stage X, Y and Z</b></p>
-    <p>
-      This readout shows the position in microns.</p>
-    <p>
       <b>Intensity</b></p>
     <p>
       This readout shows the percent C2 or C3 value or the illuminated area in microns
       for a Titan.</p>
     <p>
-      <b>Dose rate and S/C buttons</b></p>
+      &nbsp;<b>+</b>&nbsp;&nbsp; <b>Opens an optional section with the following entries:</b></p>
+    <p>
+      <b>Stage X, Y and Z</b></p>
+    <p>
+      This readout shows the position in microns.</p>
+    <P><B>Objective Lens Strength (Obj)</B></P>
+    <P>This readout shows the objective lens strength in percent, and will match the
+      value shown in the microscope interface on a Thermo/FEI scope.</P>
+    <P>&nbsp;<b>Dose rate and S/C buttons</b></P>
     <p>
       This readout appears when
       electron dose is calibrated and shows the estimated dose rate incident on either the

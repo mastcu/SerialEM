@@ -3,6 +3,19 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+12/17/24: Rearranged microscope status panel.
+
+12/17/24: Added "Eucen Focus" button to Align & Focus panel to set focus to
+the calibrated standard focus.
+
+12/17/24: Facilitated running a Python command from the One-Line Script
+dialog.
+
+12/17/24: The NanumGothicCoding-Regular.ttf file will be sought in C:\Program
+Files\SerialEM and C:\ProgramData\SerialEM as well as in the executable
+directory, so one copy can be placed in one of those folders to support
+multiple versions.
+
 12/13/24: Fixed dose at camera in Scope Status panel being off by 4 for
 K2/K3 (In 4.1).
 
@@ -311,7 +324,7 @@ is selected (In 4.1).
 mag where vectors were defined to the mag where they are being recorded
 (In 4.1).
 
-6/14/24: Added property to make it to go through the Record mag before going
+6/14/24: Added property to make it go through the Record mag before going
 to the first low dose area after turning on low dose.
 
 6/14/24: Added properties to control number of combo boxes shown for states
@@ -564,6 +577,8 @@ of SetUserSettings commands.
 2/17/24: To try a narrower font being considered as the default monospaced
 font, place NanumGothicCoding-Regular.ttf (from Testing-4.2 download
 directories) in SerialEM executable directory.
+
+2/17/24: Added option to write logs as RTF files to preserve the formatting.
 
 2/16/24: Added routine for measuring View or Search shift offsets using
 correlations between images at different mags; added script command for
