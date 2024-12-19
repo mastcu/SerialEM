@@ -318,7 +318,7 @@ int CSerialEMView::TakeSnapshot(float zoomBy, float sizeScaling, int skipExtra,
   sd->sizeScaling = sizeScaling;
   sd->skipExtra = skipExtra;
   sd->zoomSave = mZoom;
-  sd->pixel = mShiftManager->GetPixelSize(imBuf);
+  sd->pixel = mShiftManager->GetPixelSize(imBuf) * 1.e4f;
 
 
   // For 1:1 whole image drawing, set size to fill image and zoom to 1
