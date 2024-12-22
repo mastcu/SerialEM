@@ -888,12 +888,22 @@ void CNavAcquireDlg::OnSelendokComboMacroAtEnd()
 void CNavAcquireDlg::OnDoSubset()
 {
   UPDATE_DATA_TRUE;
-  ManageForSubset();
+  if (!mOpenedFromMultiGrid)
+    ManageForSubset();
+  else
+    ManageEnables();
 }
 
 void CNavAcquireDlg::OnKillfocusSubsetStart()
 {
   UPDATE_DATA_TRUE;
+  if (mOpenedFromMultiGrid) {
+    if (m_iSubsetStart < 1) {
+      m_iSubsetStart = 1;
+      UpdateData(false);
+    }
+    return;
+  }
   B3DCLAMP(m_iSubsetStart, 1, mNumArrayItems);
   ManageForSubset();
 }
@@ -901,6 +911,8 @@ void CNavAcquireDlg::OnKillfocusSubsetStart()
 void CNavAcquireDlg::OnKillfocusSubsetEnd()
 {
   UPDATE_DATA_TRUE;
+  if (mOpenedFromMultiGrid)
+    return;
   B3DCLAMP(m_iSubsetEnd, 1, mNumArrayItems);
   ManageForSubset();
 }
@@ -984,8 +996,8 @@ void CNavAcquireDlg::ManageEnables(bool rebuilding)
   bool mulGridForMapping = mOpenedFromMultiGrid && !m_iCurParamSet;
   bool mulGridForFinal = mOpenedFromMultiGrid && m_iCurParamSet;
   m_butSetupMultishot.EnableWindow(acquireType == ACQUIRE_MULTISHOT);
-  m_editSubsetStart.EnableWindow(m_bDoSubset && !mOpenedFromMultiGrid);
-  m_editSubsetEnd.EnableWindow(m_bDoSubset && !mOpenedFromMultiGrid);
+  m_editSubsetStart.EnableWindow(m_bDoSubset);
+  m_editSubsetEnd.EnableWindow(m_bDoSubset);
   m_butAcquireTS.EnableWindow(mAnyTSpoints && !mulGridForMapping);
   m_butAcquireMap.EnableWindow(mAnyAcquirePoints && !mulGridForMapping);
   m_butSaveAsMap.EnableWindow(mAnyAcquirePoints && !m_iAcquireChoice && 
@@ -1061,12 +1073,17 @@ void CNavAcquireDlg::RebuildIfEnabled(bool OK, bool & enabled, bool & doBuild)
 
 void CNavAcquireDlg::DisableItemsForMultiGrid()
 {
-  EnableDlgItem(IDC_NA_DO_SUBSET, false);
-  m_iSubsetStart = 1;
+  //EnableDlgItem(IDC_NA_DO_SUBSET, false);
+  m_bDoSubset = mMasterParam->multiGridSubset > 0;
+  SetDlgItemText(IDC_STAT_SUBSET_TO, "acquire items");
+  SetDlgItemText(IDC_NA_DO_SUBSET, "Do subset:   first");
+  ShowDlgItem(IDC_EDIT_SUBSET_END, false);
+  m_iSubsetStart = B3DABS(mMasterParam->multiGridSubset);
   m_iSubsetEnd = 1;
   EnableDlgItem(IDC_RMAPPING, false);
   EnableDlgItem(IDC_RACQUISITION, false);
   EnableDlgItem(IDOK, false);
+  UpdateData(false);
 }
 
 void CNavAcquireDlg::HijackByMultiGrid(int paramSet)
@@ -1200,6 +1217,8 @@ void CNavAcquireDlg::BuildActionSection(bool unhiding)
     mIDsToDrop.push_back(IDC_STAT_FRAMES);
     mIDsToDrop.push_back(IDC_EDIT_EARLY_FRAMES);
   }
+  if (mOpenedFromMultiGrid)
+    mIDsToDrop.push_back(IDC_EDIT_SUBSET_END);
 
   // Now drop unselected items
   if (m_bHideUnselectedOpts) {

@@ -975,6 +975,7 @@ void CMenuTargets::OnUpdateGridsReadSessionfile(CCmdUI *pCmdUI)
 void CMenuTargets::OnGridsClearSession()
 {
   mWinApp->mMultiGridTasks->ClearSession();
+  mWinApp->mMultiGridTasks->TurnOffSubset();
   mWinApp->mMultiGridTasks->SetSessionFilename("");
 }
 

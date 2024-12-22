@@ -497,6 +497,7 @@ struct NavAcqParams {
   BOOL realignToScaledMap;  // Flag to do Realign to Item to scaled map
   int conSetForScaledAli;   // Control set to use for it
   BOOL skipZinRunAtNearest; // Skip Z move when running task at nearest item
+  int multiGridSubset;      // # of items to do if doing multigrid
 };
 
 // Other Nav parameters

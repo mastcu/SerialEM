@@ -2671,6 +2671,8 @@ int CParameterIO::ReadNavAcqParams(NavAcqParams *navParams, NavAcqAction *navAct
         navParams->realignToScaledMap = itemInt[25] != 0;
         navParams->conSetForScaledAli = itemInt[26];
       }
+      if (!itemEmpty[26])
+        navParams->multiGridSubset = itemInt[27];
 
     } else if (strItems[0].Find("NavAcqAction") == 0) {
       index = atoi((LPCTSTR)strItems[0].Mid(12));
@@ -2737,7 +2739,7 @@ void CParameterIO::WriteNavAcqParams(int which, NavAcqParams *navParams,
     navParams->skipZinRunAtNearest ? 1 : 0);
   mFile->WriteString(oneState);
   oneState.Format("AcquireParams2 %d %f %f %d %d %d %d %d %d %d %f %d %d %d %d %d %d %d "
-    "%d %d %d %d %d %d %d %d\n", navParams->cycleDefocus ? 1 : 0,
+    "%d %d %d %d %d %d %d %d %d\n", navParams->cycleDefocus ? 1 : 0,
     navParams->cycleDefFrom,
     navParams->cycleDefTo, navParams->cycleSteps,
     navParams->earlyReturn ? 1 : 0, navParams->numEarlyFrames,
@@ -2750,7 +2752,8 @@ void CParameterIO::WriteNavAcqParams(int which, NavAcqParams *navParams,
     navParams->mapWithViewSearch, navParams->retractCameras ? 1 : 0,
     navParams->runHoleCombiner ? 1 : 0, navParams->useMapHoleVectors ? 1 : 0,
     navParams->endMacroInd, navParams->runEndMacro ? 1 : 0, 
-    navParams->realignToScaledMap ? 1 : 0, navParams->conSetForScaledAli);
+    navParams->realignToScaledMap ? 1 : 0, navParams->conSetForScaledAli,
+    navParams->multiGridSubset);
   mFile->WriteString(oneState);
 
   orderLine = "ActionOrder";
