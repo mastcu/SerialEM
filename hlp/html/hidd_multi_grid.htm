@@ -15,7 +15,17 @@
     <basefont size="2">
     <p><a NAME="hidd_multi_grid"></a><span class="style1">Multiple Grid Operations
         Dialog</span></p>
-    <p>This dialog provides for acquisition from multiple grids using an autoloader.&nbsp; 
+ <p>   <a HREF="#intro">Introduction</a><br>
+    <A HREF="#setup">Grid Setup and the Grid Table</a><br>
+    <A HREF="#gridActions">Grid Actions</a><br>
+    <A HREF="#gridMaps">Acquire Grid Maps</a><br>
+    <A HREF="#mediumMag">Acquire Medium Mag Maps</a><br>
+    <A HREF="#finalAcq">Run Final Acquisition</a><br>
+    <A HREF="#running">Running the Grids, Errors, Pausing, Stopping</a><br>
+</p>
+    <P><a NAME="intro"></a>
+      <em><strong>Introduction</strong></em></P>
+   <p>This dialog provides for acquisition from multiple grids using an autoloader.&nbsp; 
       The operations can occur in three phases: acquisition of grid maps at low 
       maginification, acquisition of medium magnification maps using the 'Mapping' 
       parameters of the Navigator Acquire at Items dialog, and acquisition of final 
@@ -73,7 +83,7 @@
       center point and rotation every time it is reloaded, so whenever a grid is 
       reloaded for the later phases of operation, it is realigned to the grid map (see 
       Realign to Map below and the &#39;RealignReloadedGrid&#39; script command).&nbsp; 
-      Navigator points are transformed based on the shift and rotation. To give a 
+      Navigator points are transformed based on the shift and rotation.&nbsp; To give a 
       better registration with stage positions at higher magnifications, a one-time 
       Shift to Marker has to be applied to the grid map and any items already marked 
       on it.&nbsp; Thus, in general, such a shift needs to be stored before running 
@@ -81,6 +91,12 @@
       dialog is opened while this dialog is open, its radio buttons will be set 
       appropriately for storing a shift.&nbsp;&nbsp; The &#39;ShiftItemsByMicrons&#39; script 
       command can be used instead to apply a shift that will satisfy this requirement.</p>
+    <p>When realigning to a reloaded grid, if the shift, rotation, or degree of 
+      asymmetry of the transformation exceeds the limits controlled by the properties 
+      'GridXformShiftLimit', 'GridXformRotationLimit', and 'GridXformAsymmetryLimit', 
+      the program will unload the grid, reload it, and try to find the transformation 
+      again.&nbsp; This reload is tried only once, and if the transformation still 
+      exceeds a limit, the grid is skipped.</p>
     <p>If you are doing Multiple Records from multiple holes during final data 
       acquisition, there is another situation where a pre-existing transformation is 
       important.&nbsp; In this case, the hole vectors stored with a map after hole 
@@ -109,7 +125,7 @@
         button before running operations.</li>
     </ul>
     <p>&nbsp;</p>
-    <p><strong><em>Grid Setup and the Grid Table</em></strong></p>
+    <p><a NAME="setup"></a><strong><em>Grid Setup and the Grid Table</em></strong></p>
     <p>The top section of the dialog has a table showing the grids that are in the 
       autoloader, omitting any empty cartridges.&nbsp; The first column has a set of 
       checkboxes to select which grids will be included in a multi-grid operation, 
@@ -218,7 +234,10 @@
     <p>Use this button to open the Navigator file for the selected grid.&nbsp; It is 
       disabled if there is a no Navigator file or if it is already open.&nbsp; If the 
       current Navigator table has changes, you will be asked whether you want to save 
-      them.</p>
+      them.&nbsp; The Navigator file for a grid has a fixed name.&nbsp; A new 
+      Navigator file with that name is started whenever a new grid map is obtained for 
+      the grid; if there is a previous Navigator file for that grid, it is renamed to 
+      a unique name with '-1.nav', '-2.nav', etc.</p>
     <p><strong>Load Grid</strong></p>
     <p>Use this button to load the selected grid.&nbsp; The program will also load the 
       Navigator file if it exists.</p>
@@ -263,7 +282,7 @@
       button while some of the grid's logs are already open, the ones that are are 
       open will be raised to the foreground and any that are not will be opened.</p>
     <p>&nbsp;</p>
-    <p><em><strong>Acquire Grid Maps</strong></em></p>
+    <p><a NAME="gridMaps"></a><em><strong>Acquire Grid Maps</strong></em></p>
     <p>This section of the dialog contains parameters for acquiring grid maps; some of 
       them also apply when realigning to a reloaded grid.&nbsp; Grid maps must be 
       montages.</p>
@@ -342,10 +361,10 @@
     <p>Select this option to run a script after each grid map is finished, after 
       autocontouring if any.&nbsp; Pick the desired script in the drop-down box.</p>
     <p>&nbsp;</p>
-    <p><strong><em>Acquire Medium Mag Maps</em></strong></p>
+    <p><A NAME="mediumMag"></a><strong><em>Acquire Medium Mag Maps</em></strong></p>
     <p>This section contains some controls governing the acThis section contains some controls governing the acquisition of 
       medium-magnification maps, although other aspects are controlled through the 
-      Acquire at Items dialog.&nbsp; Select the checkbox to include this phase of 
+      <A HREF="hidd_navacquire.htm">Acquire at Items</A> dialog.&nbsp; Select the checkbox to include this phase of 
       operations in the run.</p>
     <p><strong>Use: LD Search&nbsp; -&nbsp; LD View&nbsp; -&nbsp; Current or set state<br />
       States
@@ -398,7 +417,9 @@
     <p>Use this button to open the Navigator Acquire at Items dialog and set the 
       Mapping parameters.&nbsp; Some entries there, such as the type of single image 
       to take in Low Dose mode, will be disabled because they are controlled by the 
-      multi-grid routine.&nbsp; To do Multiple Records from multiple holes, you must 
+      multi-grid routine.&nbsp; The option to run on a subset of items is changed to 
+      allow you set the maximum number of items to run, which is useful if you want a 
+      sample of data before running full acquisition.&nbsp; To do Multiple Records from multiple holes, you must 
       select the option to 'Use map hole vectors for shifts'.&nbsp; Currently, for 
       this to work well, it will almost certainly require a transformation that was 
       stored by running 'Step To and Adjust' after using hole vectors in the Multiple 
@@ -406,7 +427,7 @@
       conditions.&nbsp; The Acquire at Items dialog will indicate if a transformation 
       exists.</p>
     <p>&nbsp;</p>
-    <p><strong><em>Run Final Acquisition</em></strong></p>
+    <p><A NAME="finalAcq"></a><strong><em>Run Final Acquisition</em></strong></p>
     <p>Select the checkbox to include final data acquisition in the run.</p>
     <p><strong>States</strong></p>
     <p>The selected states must be consistent and determine what the parameters are 
@@ -471,7 +492,7 @@
       acquisition to tilt series when there are items marked for tilt series and now 
       marked for Acquire.</p>
     <p>&nbsp;</p>
-    <p><strong><em>Running the Grids, Errors, Pausing, Stopping</em></strong></p>
+    <p><A NAME="running"></a><strong><em>Running the Grids, Errors, Pausing, Stopping</em></strong></p>
     <p>Press <strong>Run All</strong> to run all the grids whose 'Run' box is checked.&nbsp;
       <strong>Run Undone</strong> can be used to run only the phases that have not yet 
       been done on the selected grids. It is enabled only if some, but not all, of the 

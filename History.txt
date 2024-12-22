@@ -3,6 +3,21 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+12/22/24: When a new low mag map is made through multigrid, it now renames a
+previous Navigator file before starting a new one.
+
+12/22/24: Added check for bad transformation when realigning a reloaded grid
+and made it unload and reload one time to try again.
+
+12/22/24: Added rough estimate of remaining time when running multigrid.
+
+12/22/24: Made it possible to specify a limited number of acquire points to do
+when running acquisition from multigrid.
+
+12/22/24: When merging a Navigator file edited in a dummy version, new points
+will be transformed to be correct if the low mag map has already been
+transformed by realigning after a reload.
+
 12/19/24: Fixed pixel size stored in snapshot (In 4.1).
 
 12/17/24: Rearranged microscope status panel.

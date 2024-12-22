@@ -1541,8 +1541,8 @@ BEGIN
     RTEXT           "800000",IDC_MAGNIFICATION,59,7,45,12,SS_CENTERIMAGE
     RTEXT           "-88.88",IDC_DEFOCUS,18,22,31,12,SS_CENTERIMAGE
     LTEXT           "um",IDC_STAT_UMMM,51,24,13,9,SS_CENTERIMAGE
-    LTEXT           "Obj",IDC_STAT_OBJLABEL,3,57,12,9,SS_CENTERIMAGE
-    LTEXT           "89.17%",IDC_OBJECTIVE,18,57,28,9,SS_CENTERIMAGE
+    LTEXT           "Obj",IDC_STAT_OBJLABEL,67,57,12,9,SS_CENTERIMAGE
+    LTEXT           "89.17%",IDC_OBJECTIVE,82,57,28,9,SS_CENTERIMAGE
     LTEXT           "Spot",IDC_STATSPOTLABEL,33,35,15,10,SS_CENTERIMAGE
     LTEXT           "10",IDC_SPOTSIZE,50,36,16,9,SS_CENTERIMAGE
     RTEXT           "-88.88",IDC_IMAGE_SHIFT,80,22,23,12,SS_CENTERIMAGE
@@ -1560,9 +1560,9 @@ BEGIN
     LTEXT           "Stage X:",IDC_STAT_XLABEL,3,47,27,9,SS_CENTERIMAGE
     RTEXT           "-1200.99",IDC_STAT_STAGEX,31,47,28,9,SS_CENTERIMAGE
     LTEXT           "Y:",IDC_STAT_YLABEL,67,47,8,9,SS_CENTERIMAGE
-    LTEXT           "Z:",IDC_STAT_ZLABEL,67,57,8,9
+    LTEXT           "Z:",IDC_STAT_ZLABEL,24,57,8,9
     RTEXT           "-1200.99",IDC_STAT_STAGEY,74,47,28,9,SS_CENTERIMAGE
-    RTEXT           "-1200.99",IDC_STAT_STAGEZ,74,57,28,9,SS_CENTERIMAGE
+    RTEXT           "-1200.99",IDC_STAT_STAGEZ,31,57,28,9,SS_CENTERIMAGE
     LTEXT           "e/A2/s at specimen",IDC_STAT_UBPIX,53,67,63,9
     CTEXT           "EFTEM",IDC_STAT_EM_MODE,3,8,31,10,SS_CENTERIMAGE
     CTEXT           "",IDC_STAT_PROBEALF,14,36,16,9,SS_CENTERIMAGE
@@ -2380,10 +2380,10 @@ BEGIN
     CONTROL         "Send email at end",IDC_NA_SENDEMAIL,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,366,68,10
     LTEXT           "Images will be saved to:",IDC_STAT_SAVING_FATE,5,210,149,8
     LTEXT           "This open file",IDC_STAT_FILE_SAVING_INTO,5,220,149,8
-    CONTROL         "Do subset from index",IDC_NA_DO_SUBSET,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,317,76,10
-    EDITTEXT        IDC_EDIT_SUBSET_START,84,316,26,12,ES_AUTOHSCROLL
-    LTEXT           "to",IDC_STAT_SUBSET_TO,112,317,8,10
-    EDITTEXT        IDC_EDIT_SUBSET_END,122,316,26,12,ES_AUTOHSCROLL
+    CONTROL         "Do subset from index",IDC_NA_DO_SUBSET,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,317,72,10
+    EDITTEXT        IDC_EDIT_SUBSET_START,82,316,26,12,ES_AUTOHSCROLL
+    LTEXT           "to",IDC_STAT_SUBSET_TO,110,317,52,10
+    EDITTEXT        IDC_EDIT_SUBSET_END,119,316,26,12,ES_AUTOHSCROLL
     CONTROL         "Skip stage move to item if possible",IDC_NA_SKIP_INITIAL_MOVE,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,291,136,10
     CONTROL         "Initial move && Realign",IDC_NA_SKIP_Z_MOVES,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,33,279,75,10
@@ -5652,6 +5652,13 @@ BEGIN
     IDC_BUT_SET_SIZE_SPACE  "Set size and periodicity text boxes above with values from last hole-finding"
     IDC_RHDFFILE            "Save to HDF file that can hold multiple images and metadata"
     IDC_TILTAXIS            "Draw the tilt axis on the image"
+END
+
+STRINGTABLE
+BEGIN
+    IDC_BUT_OPEN_LOGS       "Open secondary logs from all Acquire at Items runs on this grid"
+    IDC_CHECK_SCRIPT_AT_END "Run a script when each grid map is done,including autocontouring if any"
+    IDC_COMBO_END_SCRIPT    "Select the script to run when grid map is done"
     IDC_BUT_EUCEN_FOCUS     "Set focus to standard focus value calibrated for current or nearest mag"
 END
 
@@ -7893,13 +7900,6 @@ BEGIN
     IDC_BUT_APPLY_FINAL     "Make the global Final Data parameters be the same as the ones for this grid"
     IDC_BUT_RESTORE_CURFINAL 
                             "Restore the global Final Data acquisition parameters to original values"
-END
-
-STRINGTABLE
-BEGIN
-    IDC_BUT_OPEN_LOGS       "Open secondary logs from all Acquire at Items runs on this grid"
-    IDC_CHECK_SCRIPT_AT_END "Run a script when each grid map is done,including autocontouring if any"
-    IDC_COMBO_END_SCRIPT    "Select the script to run when grid map is done"
 END
 
 #endif    // English (United States) resources

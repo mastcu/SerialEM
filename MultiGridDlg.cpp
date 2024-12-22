@@ -538,6 +538,7 @@ void CMultiGridDlg::OnButMgGetNames()
   CheckIfAnyUndoneToRun();
   UpdateEnables();
   mMGTasks->SetAdocChanged(true);
+  mMGTasks->TurnOffSubset();
   mWinApp->RestoreViewFocus();
 }
 
@@ -1922,7 +1923,8 @@ void CMultiGridDlg::OnButRealignToGridMap()
 {
   CString errStr;
   mWinApp->RestoreViewFocus();
-  if (mMGTasks->RealignToGridMap(mDlgIndToJCDindex[mSelectedGrid], true, errStr) > 0)
+  if (mMGTasks->RealignToGridMap(mDlgIndToJCDindex[mSelectedGrid], true, false, errStr) >
+    0)
     AfxMessageBox("Failed to realign to grid map: " + errStr);
 }
 

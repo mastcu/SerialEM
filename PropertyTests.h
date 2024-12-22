@@ -393,6 +393,9 @@ INT_PROP_TEST("MulGridNumFinalCombos", mWinApp->mMultiGridTasks->, NumFinalState
 FLOAT_PROP_TEST("GridReloadMaxCenShift", mWinApp->mMultiGridTasks->, RRGmaxCenShift)
 BOOL_PROP_TEST("MulGridSkipRealign", mWinApp->mMultiGridTasks->, SkipGridRealign)
 FLOAT_PROP_TEST("AutocontSubareaSizeFac", navHelper->mAutoContouringDlg->, SingleSizeFac)
+FLOAT_PROP_TEST("GridXformShiftLimit", mWinApp->mMultiGridTasks->, RRGShiftLimitForXform)
+FLOAT_PROP_TEST("GridXformRotationLimit", mWinApp->mMultiGridTasks->, RRGRotLimitForXform)
+FLOAT_PROP_TEST("GridXformAsymmetryLimit", mWinApp->mMultiGridTasks->, RRGAsymLimitForXform)
 
 #endif
 #ifdef PROP_TEST_SECT4

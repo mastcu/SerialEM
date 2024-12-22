@@ -1123,11 +1123,17 @@ float CShiftCalibrator::MatrixMaximum(ScaleMat *mat)
 }
 
 // Return true if the matrix asymmetry exceeds the criterion factor
-bool CShiftCalibrator::MatrixIsAsymmetric(ScaleMat *mat, float symCrit)
+bool CShiftCalibrator::MatrixIsAsymmetric(ScaleMat *mat, float symCrit, float *asymm)
 {
   float matMax = MatrixMaximum(mat);
-  return (fabs(fabs(mat->xpx) - fabs(mat->ypy)) > symCrit * matMax ||
-      fabs(fabs(mat->xpy) - fabs(mat->ypx)) > symCrit * matMax);
+  float mainDiff = fabsf(fabsf(mat->xpx) - fabsf(mat->ypy));
+  float middleDiff = fabsf(fabsf(mat->xpy) - fabsf(mat->ypx));
+  if (asymm) {
+    *asymm = 0.;
+    if (matMax > 1.e-10)
+      *asymm = B3DMAX(mainDiff / matMax, middleDiff / matMax);
+  }
+  return (mainDiff > symCrit * matMax || middleDiff > symCrit * matMax);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////

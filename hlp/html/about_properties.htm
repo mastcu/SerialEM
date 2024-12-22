@@ -4425,6 +4425,28 @@
             rotation angle.&nbsp; The default is 50 microns.</TD>
         </TR>
         <TR>
+          <TD height="20">GridXformShiftLimit</TD>
+          <TD height="20">Maximum allowed shift in the transformation found after realigning 
+            to a reloaded grid.&nbsp; If this or either of the following two limits are exceeded, the program
+            will unload and reload the grid then try to realign to it again.&nbsp; If some aspect is still above
+             its respective limit on that second try, the program will go on to the next grid.&nbsp; A limit
+            of 0 disables the check.&nbsp; The default is 70 microns.
+          </TD>
+        </TR>
+        <TR>
+          <TD height="20">GridXformRotationLimit</TD>
+          <TD height="20">Maximum allowed rotation in the transformation found after realigning 
+            to a reloaded grid.&nbsp; See 'GridXformShiftLimit' above.&nbsp; The default is 17 degrees.</TD>
+        </TR>
+        <TR>
+          <TD height="20">GridXformAsymmetryLimit</TD>
+          <TD height="20">Maximum allowed fractional asymmetry in the transformation found after
+             realigning to a reloaded grid.&nbsp; The asymmetry is the maximum of the difference between
+            absolute values of the outer terms of the matrix and the the difference between the absolute
+             values of the inner terms, divided by the maximum term.&nbsp; See 'GridXformShiftLimit' 
+            above.&nbsp; The default is 0.02.</TD>
+        </TR>
+        <TR>
           <TD height="20">MulGridNumMMMcombos</TD>
           <TD height="20">The number of combo boxes to show for medium mag map states in the 
             Multiple Grid Operations dialog, a number between 0 and 4.&nbsp; The default is 

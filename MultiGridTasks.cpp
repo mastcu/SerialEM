@@ -16,6 +16,7 @@
 #include "LogWindow.h"
 #include "ProcessImage.h"
 #include "ShiftManager.h"
+#include "ShiftCalibrator.h"
 #include "EMbufferManager.h"
 #include "NavHelper.h"
 #include "ParticleTasks.h"
@@ -40,9 +41,10 @@ static const char *sActionNames[] = {"Remove objective aperture", "Set condenser
 , "Set grid map state", "Unload grid", "Take reference image", "Move to survey position",
 "Take survey image", "Find eucentricity", "Move to center of grid map", "Load grid",
 "Take grid map", "Realign to grid map", "Autocontour grid squares", "Set MMM state",
-"Take MMMs", "Set state for final acquire", "Do final acquisition", "Set up MMM files",
-"Restore state", "Turn Low Dose on", "Turn Low Dose off", "Set Z height", 
-"Check & apply Shift to Marker", "Set Focus area position", "Run script", "Grid done"};
+"Take MMMs", "Set state for final acquire", "Do final acquisition",
+"Set up MMM files", "Restore state", "Turn Low Dose on", "Turn Low Dose off", 
+"Set Z height", "Check & apply Shift to Marker", "Set Focus area position", "Run script",
+"Grid done"};
 
 
 CMultiGridTasks::CMultiGridTasks()
@@ -59,6 +61,9 @@ CMultiGridTasks::CMultiGridTasks()
   mRRGcurDirection = -2;
   mRRGMaxRotation = 15.f;
   mRRGmaxCenShift = 50.;
+  mRRGShiftLimitForXform = 70.;
+  mRRGRotLimitForXform = 17.f;
+  mRRGAsymLimitForXform = 0.02f;
   mParams.appendNames = false;
   mParams.useSubdirectory = true;
   mParams.LMMstateType = 0;
@@ -537,6 +542,7 @@ void CMultiGridTasks::CommonMulGridStop(bool suspend)
   mSuspendedMulGrid = suspend;
   mDoingMulGridSeq = false;
   mRestoringOnError = false;
+  mWinApp->mNavigator->ManageListHeader("");
   mWinApp->SetStatusText(COMPLEX_PANE, suspend ? "MULTIGRID SUSPENDED" : "");
   mWinApp->SetStatusText(MEDIUM_PANE, "");
   mWinApp->UpdateBufferWindows();
@@ -663,7 +669,7 @@ void CMultiGridTasks::MGActMessageBox(CString &errStr)
  * Start procedure to realign after loading grid
  */
 int CMultiGridTasks::RealignReloadedGrid(CMapDrawItem *item, float expectedRot, 
-  bool moveInZ, float maxRotation, bool transformNav, CString &errStr)
+  bool moveInZ, float maxRotation, int transformNav, CString &errStr)
 {
   ControlSet *conSet = mWinApp->GetConSets() + TRACK_CONSET;
   int numPieces, numFull, ixMin, iyMin, ixMax, iyMax, midX, midY, delX, delY;
@@ -685,8 +691,9 @@ int CMultiGridTasks::RealignReloadedGrid(CMapDrawItem *item, float expectedRot,
   mNavigator = mWinApp->mNavigator;
 
   mRRGangleRange = 2.f * maxRotation;
-  mRRGtransformNav = transformNav;
+  mRRGtransformNav = B3DMAX(0, B3DMIN(2, transformNav));
   mRRGitem = item;
+  mRRGWasAboveXformLimit = false;
 
   // Require a montage with autodoc info
   if (!mNavigator) {
@@ -1099,11 +1106,11 @@ void CMultiGridTasks::AlignNewReloadImage()
 {
   int err, ind, oldReg, newReg;
   float xShift, yShift, xSign, rotBest, scaleMax, xTiltFac, yTiltFac, dxy[2], incDxy[2];
-  float newXform[6], oldInvXf[6], incXform[6];
+  float newXform[6], oldInvXf[6], incXform[6], theta;
   double xStage, yStage, zStage, transX, transY;
   bool simpleAlign;
   int curInd = B3DMAX(0, mRRGcurDirection);
-  CString mess;
+  CString mess, str;
   ScaleMat bMat, bInv, incMat;
 
   mess = "Error in autoalign routine aligning to map piece";
@@ -1207,10 +1214,38 @@ void CMultiGridTasks::AlignNewReloadImage()
   StopMultiGrid();
 
   // Get transformation
-  bMat = FindReloadTransform(dxy);
+  bMat = FindReloadTransform(dxy, theta);
+  if (mRRGtransformNav > 1) {
+    mess = "";
+    xShift = sqrtf(dxy[0] * dxy[0] + dxy[1] * dxy[1]);
+    if (mRRGShiftLimitForXform > 0. && xShift > mRRGShiftLimitForXform)
+      mess.Format("Realignmentt shift of %.1f um is above limit of %1.f", xShift,
+        mRRGShiftLimitForXform);
+    if (mRRGRotLimitForXform > 0. && fabs(theta) > mRRGRotLimitForXform) {
+      str.Format("Realignment rotation of %.1f deg is above limit of %.1f", theta,
+        mRRGRotLimitForXform);
+      if (!mess.IsEmpty())
+        mess += "\r\n";
+      mess += str;
+    }
+    if (mRRGAsymLimitForXform > 0. &&
+      mWinApp->mShiftCalibrator->MatrixIsAsymmetric(&bMat, mRRGAsymLimitForXform, 
+        &xShift)) {
+      str.Format("Realignment matrix has asymmetry of %.1f%%, more than the limit of "
+        "%.1f%%", 100. * xShift, 100. * mRRGAsymLimitForXform);
+      if (!mess.IsEmpty())
+        mess += "\r\n";
+      mess += str;
+    }
+    if (!mess.IsEmpty()) {
+      mess += "\r\nPoints were not transformed";
+      mRRGWasAboveXformLimit = true;
+      SEMAppendToLog(mess);
+    }
+  }
 
   // Transform points
-  if (mRRGtransformNav && mWinApp->mNavigator) {
+  if (mRRGtransformNav && mWinApp->mNavigator && !mRRGWasAboveXformLimit) {
 
     // Find new registration #
     oldReg = mNavigator->GetCurrentRegistration();
@@ -1265,7 +1300,7 @@ void CMultiGridTasks::AlignNewReloadImage()
 /*
  * Compute transform from results
  */
-ScaleMat CMultiGridTasks::FindReloadTransform(float dxyOut[2])
+ScaleMat CMultiGridTasks::FindReloadTransform(float dxyOut[2], float &thetaOut)
 {
   ScaleMat aM[6], strMat, usMat, usInv;
   const int MSIZE = 5, XSIZE = 5;
@@ -1409,7 +1444,7 @@ ScaleMat CMultiGridTasks::FindReloadTransform(float dxyOut[2])
   }
   dxyOut[0] = dxy[use][0];
   dxyOut[1] = dxy[use][1];
-
+  thetaOut = (float)(theta[use] / DTOR);
 
   PrintfToLog("Grid rotation %.2f  shift %.1f %.1f  mean deviation %.2f um", 
     theta[use] / DTOR, dxyOut[0], dxyOut[1], devSum[use] / (use < 5 ? 4 : 5));
@@ -1880,12 +1915,7 @@ int CMultiGridTasks::StartGridRuns(int LMneedsLD, int MMMneedsLD, int finalNeeds
 
       // If LMM wasn't just done, set state for LM, load grid, and realign to grid
       if (!didLMMforGrid && !mSingleGridMode && !skipRealign) {
-        if (!mSkipGridRealign)
-          AddToSeqForLMimaging(apForLMM, stateForLMM, mLMMneedsLowDose);
-        mActSequence.push_back(MGACT_LOAD_GRID);
-        mActSequence.push_back(MGACT_SET_ZHEIGHT);
-        if (!mSkipGridRealign)
-          mActSequence.push_back(MGACT_REALIGN_TO_LMM);
+        AddToSeqForReloadRealign(apForLMM, stateForLMM);
       }
 
       // Restore from LM imaging if set
@@ -1917,12 +1947,7 @@ int CMultiGridTasks::StartGridRuns(int LMneedsLD, int MMMneedsLD, int finalNeeds
 
       // Reload and realign unless it was just done
       if (!didLMMforGrid && !didMMMforGrid && !mSingleGridMode && !skipRealign) {
-        if (!mSkipGridRealign)
-          AddToSeqForLMimaging(apForLMM, stateForLMM, mLMMneedsLowDose);
-        mActSequence.push_back(MGACT_LOAD_GRID);
-        mActSequence.push_back(MGACT_SET_ZHEIGHT);
-        if (!mSkipGridRealign)
-          mActSequence.push_back(MGACT_REALIGN_TO_LMM);
+        AddToSeqForReloadRealign(apForLMM, stateForLMM);
       } 
 
       AddToSeqForRestoreFromLM(apForLMM, stateForLMM);
@@ -2017,6 +2042,8 @@ int CMultiGridTasks::StartGridRuns(int LMneedsLD, int MMMneedsLD, int finalNeeds
   mSaveMasterMont = *(mWinApp->GetMontParam());
   mDoingMulGridSeq = true;
   mWinApp->UpdateBufferWindows();
+  mRunStartTime = GetTickCount();
+  mRemainingTime = -1.;
   OutputGridStartLine();
   UpdateGridStatusText();
   MultiGridNextTask(MG_RUN_SEQUENCE);
@@ -2039,6 +2066,20 @@ void CMultiGridTasks::AddToSeqForLMimaging(bool &apForLMM, bool &stateForLMM, in
   if (mParams.setCondenserAp && !apForLMM)
     mActSequence.push_back(MGACT_SET_CONDENSER_AP);
   apForLMM = mParams.removeObjectiveAp || mParams.setCondenserAp;
+}
+
+// Add to sequence for loadinga grid and realigning if appropriate
+// Include an unload in case it has to iterate
+void CMultiGridTasks::AddToSeqForReloadRealign(bool &apForLMM, bool &stateForLMM)
+{
+  if (!mSkipGridRealign)
+    AddToSeqForLMimaging(apForLMM, stateForLMM, mLMMneedsLowDose);
+  mActSequence.push_back(MGACT_LOAD_GRID);
+  mActSequence.push_back(MGACT_SET_ZHEIGHT);
+  if (!mSkipGridRealign) {
+    mActSequence.push_back(MGACT_REALIGN_TO_LMM);
+    mActSequence.push_back(MGACT_UNLOAD_GRID);
+  }
 }
 
 // If aperture was set for LM, set up to restore it
@@ -2068,7 +2109,7 @@ void CMultiGridTasks::DoNextSequenceAction(int resume)
   int action, addIdleTask = 1;
   float lowMean, highMean, zStage, meanSXcen, meanSYcen, pctlSXcen, pctlSYcen;
   float dist, bestDist, avgFrac;
-  CString errStr, str, label;
+  CString errStr, str, label, str2, str3;
   int *stateNums = &mParams.MMMstateNums[0];
   StageMoveInfo moveInfo;
   JeolCartridgeData jcd = mCartInfo->ElementAt(mJcdIndsToRun[B3DMIN(mCurrentGrid,
@@ -2427,7 +2468,8 @@ void CMultiGridTasks::DoNextSequenceAction(int resume)
       mRunningMacro = false;
       if (mWinApp->mMacroProcessor->GetLastAborted()) {
         ChangeStatusFlag(mCurrentGrid, MGSTAT_FLAG_FAILED, 1);
-        errStr.Format("Marking grid %d as failed because script did not complete");
+        errStr.Format("Marking grid %d as failed because script did not complete", 
+          jcd.id);
         if (SkipToNextGrid(errStr))
           return;
       }
@@ -2461,13 +2503,42 @@ void CMultiGridTasks::DoNextSequenceAction(int resume)
       break;
 
       // After grid load/unload, clear flags
-    case MGACT_LOAD_GRID:
     case MGACT_UNLOAD_GRID:
+      if (mRealignIteration)
+        mSeqIndex -= 4;
+    case MGACT_LOAD_GRID:
       mStartedLongOp = false;
       mUnloadErrorOK = 0;
       mSurveyIndex = 0;
       break;
 
+      // After realign, see if transform was within limits
+    case MGACT_REALIGN_TO_LMM:
+      if (mRRGWasAboveXformLimit) {
+        if (mRealignIteration) {
+          ChangeStatusFlag(mCurrentGrid, MGSTAT_FLAG_FAILED, 1);
+          errStr.Format("Marking grid %d as failed because realign transformation "
+            "exceeded limits", jcd.id);
+          if (SkipToNextGrid(errStr))
+            return;
+
+        } else {
+
+          // Let it go on to unload, it will have to back up by 4 after the unload
+          mWinApp->SetNextLogColorStyle(0, 1);
+          PrintfToLog("Realign transformation exceeded limits; reloading grid %d to "
+            "try again", jcd.id);
+          mRealignIteration++;
+        }
+
+
+      } else {
+
+        // Skip the unload and iterating
+        if (!mRealignIteration)
+          mSeqIndex++;
+        mRealignIteration = 0;
+      }
     default:
       break;
     }
@@ -2538,7 +2609,7 @@ void CMultiGridTasks::DoNextSequenceAction(int resume)
     mReinsertObjAp = false;
     break;
 
-    // Start getting back to original condenser apertaure
+    // Start getting back to original condenser aperture
   case MGACT_RESTORE_COND_AP:
     mScope->SetApertureSize(CONDENSER_APERTURE, mInitialCondApSize);
     mMovedAperture = true;
@@ -2547,7 +2618,8 @@ void CMultiGridTasks::DoNextSequenceAction(int resume)
 
     // Start unloading grid, allow for error if no grid loaded first time (?)
   case MGACT_UNLOAD_GRID:
-    SEMAppendToLog("Removing loaded grid to take blank reference image");
+    if (!mRealignIteration)
+      SEMAppendToLog("Removing loaded grid to take blank reference image");
     if (mUnloadErrorOK < 0)
       mUnloadErrorOK = 1;
     LoadOrUnloadGrid(-1, MG_SEQ_LOAD);
@@ -2574,7 +2646,7 @@ void CMultiGridTasks::DoNextSequenceAction(int resume)
 
     // Start routine to realign to grid map
   case MGACT_REALIGN_TO_LMM:
-    if (RealignToGridMap(mJcdIndsToRun[mCurrentGrid], false, errStr)) {
+    if (RealignToGridMap(mJcdIndsToRun[mCurrentGrid], false, true, errStr)) {
       errStr += "\r\nMarking grid as failed due to this failure to realign to map";
       ChangeStatusFlag(mCurrentGrid, MGSTAT_FLAG_FAILED, 1);
       SaveSessionFileWarnIfError();
@@ -2689,8 +2761,17 @@ void CMultiGridTasks::DoNextSequenceAction(int resume)
   case MGACT_TAKE_LMM:
 
     // Open new Nav file, i.e. save old, clear out nav, and define new name
-    mNavigator->SaveAndClearTable();
     str = FullGridFilePath(mCurrentGrid, ".nav");
+    if (UtilFileExists(str)) {
+      str2 = FullGridFilePath(mCurrentGrid, "-1.nav");
+      NextAutoFilenameIfNeeded(str2);
+      UtilRenameFile(str, str2);
+      UtilSplitPath(str2, label, str3);
+      UtilSplitPath(str, label, str2);
+      PrintfToLog("Renamed existing Navigator file %s to %s", (LPCTSTR)str2,
+        (LPCTSTR)str3);
+    }
+    mNavigator->SaveAndClearTable();
     mNavigator->SetCurrentNavFile(str);
 
     // Prepare to open image file and guarantee an mdoc
@@ -2788,6 +2869,7 @@ void CMultiGridTasks::DoNextSequenceAction(int resume)
       FocusPosToGridSettings(*mSavedFocusPos);
     }
 
+    mRealignIteration = 0;
     err = OpenNavFileIfNeeded(jcd);
     if (err > 1)
       return;
@@ -2961,10 +3043,7 @@ void CMultiGridTasks::DoNextSequenceAction(int resume)
       }
       return;
     }
-    RestoreImposedParams();
-    mCurrentGrid++;
-    OutputGridStartLine();
-    UpdateGridStatusText();
+    FinishWithGrid();
     break;
 
   default:
@@ -3014,11 +3093,33 @@ int CMultiGridTasks::SkipToNextGrid(CString &errStr)
 
   // Increment the current grid here because the seqindex will always be incremented 
   // before the case is hit
+  FinishWithGrid();
+  return 0;
+}
+
+/*
+ * Common tasks when done with grid
+ */
+void CMultiGridTasks::FinishWithGrid()
+{
+  double timePerGrid;
+  CString str;
   RestoreImposedParams();
   mCurrentGrid++;
+  timePerGrid = SEMTickInterval(mRunStartTime) / mCurrentGrid;
+  if (mCurrentGrid < mNumGridsToRun) {
+    mRemainingTime = timePerGrid * (mNumGridsToRun - 1 - mCurrentGrid);
+    str.Format("Estimated time left after current grid (%d/%d): ", mCurrentGrid + 1,
+      mNumGridsToRun);
+    CTimeSpan ts(B3DNINT(mRemainingTime / 1000.));
+    if (ts.GetDays() > 0)
+      str += ts.Format(" %D da %H:%M:%S");
+    else
+      str += ts.Format(" %H:%M:%S");
+    mWinApp->mNavigator->ManageListHeader(str);
+  }
   OutputGridStartLine();
   UpdateGridStatusText();
-  return 0;
 }
 
 ////////////////////////////////////////////
@@ -3134,6 +3235,7 @@ int CMultiGridTasks::OpenNewMontageFile(MontParam &montP, CString &str)
   mWinApp->mDocWnd->AddCurrentStore();
   return 0;
 }
+
 // If Nav discovers that a file is needed
 int CMultiGridTasks::OpenFileForFinalAcq()
 {
@@ -3153,7 +3255,8 @@ int CMultiGridTasks::OpenFileForFinalAcq()
  * Finds grid map for given item in catalogue, reloading nav file if necessary,
  * and starts realign routine which will reload map if needed
  */
-int CMultiGridTasks::RealignToGridMap(int jcdInd, bool askIfSave, CString &errStr)
+int CMultiGridTasks::RealignToGridMap(int jcdInd, bool askIfSave, bool applyLimits, 
+  CString &errStr)
 {
   JeolCartridgeData jcd = mCartInfo->GetAt(jcdInd);
   CMapDrawItem *item = NULL;
@@ -3186,7 +3289,7 @@ int CMultiGridTasks::RealignToGridMap(int jcdInd, bool askIfSave, CString &errSt
     // Fallback to getting first item!
     item = mNavigator->GetOtherNavItem(0);
   }
-  if (RealignReloadedGrid(item, 0., true, mRRGMaxRotation, true, errStr))
+  if (RealignReloadedGrid(item, 0., true, mRRGMaxRotation, applyLimits ? 2 : 1, errStr))
     return 1;
   return 0;
 }
@@ -3965,6 +4068,17 @@ void CMultiGridTasks::ClearSession(bool keepAcqParams)
     mNavHelper->mMultiGridDlg->UpdateCurrentDir();
   }
   mAdocChanged = false;
+}
+
+/*
+ * Turning off subset is separate because it would not get restored by reading in session
+ */
+void CMultiGridTasks::TurnOffSubset()
+{
+  NavAcqParams *navParams = mWinApp->GetNavAcqParams(0);
+  navParams->multiGridSubset = -B3DABS(navParams->multiGridSubset);
+  navParams = mWinApp->GetNavAcqParams(1);
+  navParams->multiGridSubset = -B3DABS(navParams->multiGridSubset);
 }
 
 /*

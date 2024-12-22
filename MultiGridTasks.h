@@ -12,7 +12,7 @@ enum MultiGridActions {
   MGACT_RESTORE_COND_AP, MGACT_LMM_STATE, MGACT_UNLOAD_GRID, MGACT_REF_IMAGE,
   MGACT_SURVEY_STAGE_MOVE, MGACT_SURVEY_IMAGE, MGACT_EUCENTRICITY, MGACT_LMM_CENTER_MOVE,
   MGACT_LOAD_GRID, MGACT_TAKE_LMM, MGACT_REALIGN_TO_LMM, MGACT_AUTOCONTOUR,
-  MGACT_MMM_STATE, MGACT_TAKE_MMM, MGACT_FINAL_STATE, MGACT_FINAL_ACQ, 
+  MGACT_MMM_STATE, MGACT_TAKE_MMM, MGACT_FINAL_STATE, MGACT_FINAL_ACQ,
   MGACT_SETUP_MMM_FILES, MGACT_RESTORE_STATE, MGACT_LOW_DOSE_ON, MGACT_LOW_DOSE_OFF,
   MGACT_SET_ZHEIGHT, MGACT_MARKER_SHIFT, MGACT_FOCUS_POS, MGACT_RUN_MACRO, MGACT_GRID_DONE
 };
@@ -107,7 +107,7 @@ public:
   void ExternalTaskError(CString &errStr);
   void MGActMessageBox(CString &errStr);
   int RealignReloadedGrid(CMapDrawItem *item, float expectedRot, bool moveInZ,
-    float maxRotation, bool transformNav, CString &errStr);
+    float maxRotation, int transformNav, CString &errStr);
   void CentroidsFromMeansAndPctls(IntVec &ixVec, IntVec &iyVec, FloatVec &xStage, FloatVec &yStage,
     FloatVec &meanVec, FloatVec &midFracs, FloatVec &rangeFracs, float fracThresh, int &meanIXcen, int &meanIYcen, 
     float &meanSXcen, float &meanSYcen, int &pctlIXcen, int & pctlIYcen, float &pctlSXcen, float &pctlSYcen,
@@ -117,15 +117,17 @@ public:
   bool IsDuplicatePiece(int minInd, int bestInd[5], int startInd, int endInd);
   int MoveStageToTargetPiece();
   void AlignNewReloadImage();
-  ScaleMat FindReloadTransform(float dxyOut[2]);
+  ScaleMat FindReloadTransform(float dxyOut[2], float &theta                                        );
   void UndoOrRedoMarkerShift(bool redo);
   int StartGridRuns(int LMneedsLD, int MMMneedsLD, int finalNeedsLD, int finalCamera,
     bool undoneOnly);
   void AddToSeqForLMimaging(bool &apForLMM, bool &stateForLMM, int needsLD);
+  void AddToSeqForReloadRealign(bool &apForLMM, bool &stateForLMM);
   void AddToSeqForRestoreFromLM(bool &apForLMM, bool &stateForLMM);
   void DoNextSequenceAction(int resume);
   int SkipToAction(int mgAct);
   int SkipToNextGrid(CString &errStr);
+  void FinishWithGrid();
   void UpdateGridStatusText();
   void OutputGridStartLine();
   CString FullGridFilePath(int gridInd, CString suffix);
@@ -133,7 +135,7 @@ public:
   void CloseMainLogOpenForGrid(const char *suffix);
   int OpenNewMontageFile(MontParam &montP, CString &str);
   int OpenFileForFinalAcq();
-  int RealignToGridMap(int jcdInd, bool askIfSave, CString &errStr);
+  int RealignToGridMap(int jcdInd, bool askIfSave, bool applyLimits, CString &errStr);
   int ReloadGridMap(CMapDrawItem *item, int useBin, CString &errStr);
   int OpenNavFileIfNeeded(JeolCartridgeData &jcd);
   int MarkerShiftIndexForMag(int magInd, BaseMarkerShift &baseShift);
@@ -163,6 +165,7 @@ public:
   int SaveSessionFile(CString &errStr);
   void SaveSessionFileWarnIfError();
   void ClearSession(bool keepAcqParams = false);
+  void TurnOffSubset();
   int LoadSessionFile(bool useLast, CString &errStr);
   void UpdateDialogForSessionFile();
   void IdentifyGridOnStage(int stageID, int &stageInd);
@@ -183,7 +186,13 @@ public:
   GetSetMember(float, RRGmaxCenShift);
   GetSetMember(bool, AdocChanged);
   GetSetMember(BOOL, SkipGridRealign);
+  GetSetMember(float, RRGShiftLimitForXform);
+  GetSetMember(float, RRGRotLimitForXform);
+  GetSetMember(float, RRGAsymLimitForXform);
   GetMember(float, ReferenceCounts);
+  GetMember(double, RemainingTime);
+  GetMember(int, CurrentGrid);
+  GetMember(int, NumGridsToRun);
   IntVec *GetLastDfltRunInds() { return &mLastDfltRunInds; };
   GetSetMember(int, LastNumSlots);
   GetSetMember(bool, UseCustomOrder);
@@ -285,7 +294,7 @@ private:
   ScaleMat mRRGrotMat;           // Rotation matrix for current rotation value
   BOOL mRRGdidSaveState;         // Flag if saved state
   float mRRGangleRange;          // Angle range (2x max) for rotation searches
-  bool mRRGtransformNav;         // Flag to transform nav items
+  int mRRGtransformNav;          // 1 to transform nav items, 2 to skip if above limits
   float mRRGbacklashX;           // Backlash to use, from map
   float mRRGbacklashY;
   float mRRGmapZvalue;           // Z to move to from the montage adoc
@@ -295,6 +304,10 @@ private:
   int mMapBuf;                   // Buffer the map is in
   int mMapCenX, mMapCenY;        // Center coordinate of center piece in loaded map
   int mLoadedGridIsAligned;      // 1 if it is aligned, 0 if not, -1 if it should be asked
+  bool mRRGWasAboveXformLimit;   // Flag it wasnt aligned because above limit
+  float mRRGShiftLimitForXform;  // Limit to shift in transformation - redo once if over
+  float mRRGRotLimitForXform;    // Limit to rotation in transformation
+  float mRRGAsymLimitForXform;   // Limit to fractional asymmetry in transformation
 
   int mInitialObjApSize;         // Initial size of objective aperture
   int mInitialCondApSize;        // Initial size of condenser aperture
@@ -349,5 +362,8 @@ private:
   int mNumFinalStateCombos;      // NUmber of combo boxes to show for final
   bool mSkipEucentricity;        // Flag to skip rough eucentricty for low-tilt stage
   BOOL mSkipGridRealign;         // Property to skip realign after reload
+  int mRealignIteration;         // Iteration number if it had to repeat realign
+  double mRunStartTime;          // Time that run started
+  double mRemainingTime;         // Estimate of remaining time after current grid is done
 };
 

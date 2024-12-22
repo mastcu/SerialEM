@@ -5543,7 +5543,9 @@
                degrees.&nbsp; (If there is a known starting rotation from a previous reload that could make
                 a difference, increase the search range.)&nbsp; <br />
               Set <b>#T</b> to 0 to prevent transforming
-                of items.&nbsp; The transformation is kept track of so the procedure can be run repeatedly.&nbsp;
+                of items, 1 to transform (the default), or 2 to not transform if the transformation exceeds the shift, 
+            rotation, and symmetry limits controlled by properties 'GridXformShiftLimit', 'GridXformRotationLimit', and
+             'GridXformAsymmetryLimit'.&nbsp; The transformation is kept track of so the procedure can be run repeatedly.&nbsp;
                The routine has not yet been tested with large (i.e., 90 degree) rotations.&nbsp; Command added in 4.2, 16-Apr-24.
  
                         </TD>
@@ -6122,7 +6124,7 @@
           <TD class="scriptcommand">OpenDialog name [#]</TD>
           <TD>Opens the dialog indicated by the given <b>name</b>, which is case-insensitive and can be abbreviated
             to 3 letters.&nbsp; Currently the <b>name</b> can by 'Multishot' to open the Multiple Records 
-            dialog or 'Multigrid' to up the Multiple Grid Operations dialog; in the latter can enter a non-zero value for <b>#</b> to load the last session file.&nbsp; Command added in 4.1, 15-Nov-23.
+            dialog or 'Multigrid' to open the Multiple Grid Operations dialog; in the latter can enter a non-zero value for <b>#</b> to load the last session file.&nbsp; Command added in 4.1, 15-Nov-23.
           </TD>
         </TR>
          <TR>
