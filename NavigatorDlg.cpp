@@ -668,10 +668,18 @@ void CNavigatorDlg::Update()
         timePerItem = (mElapsedAcqTime + sinceLastDone) / (mNumDoneAcq + 1);
       remaining = timePerItem * (mInitialNumAcquire - mNumDoneAcq) -
         B3DMIN(sinceLastDone, timePerItem);
+      if (mNumDoneAcq && (mNumDoneAcq % 2) == 0 && 
+        mWinApp->mMultiGridTasks->GetDoingMulGridSeq() &&
+        mWinApp->mMultiGridTasks->GetRemainingTime() >= 0. ) {
+        str.Format("Doing grid %d/%d. Estimate for finishing all grids", 
+          mWinApp->mMultiGridTasks->GetCurrentGrid() + 1, 
+          mWinApp->mMultiGridTasks->GetNumGridsToRun());
+        remaining += mWinApp->mMultiGridTasks->GetRemainingTime();
+      }
       CTimeSpan ts(B3DNINT(B3DMAX(0., remaining) / 1000.));
       if (ts.GetDays() > 0)
         str += ts.Format(";  ETC %D da %H:%M");
-      else if (multishot)
+      else if (multishot && str.Find("grid") < 0)
         str += ts.Format(";  ETC %H:%M");
       else
         str += ts.Format(";  ETC %H:%M:%S");
@@ -8556,6 +8564,10 @@ int CNavigatorDlg::LoadNavFile(bool checkAutosave, bool mergeFile, CString *inFi
     "an error accessing the mdoc file by its autodoc index", "", "", "", ""};
   int index, i, numPoints, trimCount, ind1, ind2, numFuture = 0, addIndex, highestLabel;
   float xx, yy, fvals[6], varyVals[NUM_VARY_ELEMENTS * MAX_TS_VARIES];
+  float curMapXform[6], dupMapXform[6] = {0., 0., 0., 0., 0., 0.}, oldInvXf[6];
+  float incXform[6], incDxy[2];
+  ScaleMat incMat;
+  int numMapXforms = 0, dupReg, jnd;
   int numExternal, externalType, numParams, curNum, numDig, maxNum;
   int holeSkips[2000];
   std::set<std::string> filesNotFound;
@@ -9430,6 +9442,16 @@ int CNavigatorDlg::LoadNavFile(bool checkAutosave, bool mergeFile, CString *inFi
               (fabs((double)prev->mStageX - item->mStageX) < 1.e-5 &&
               fabs((double)prev->mStageY - item->mStageY) < 1.e-5))) {
                 index = 0;
+                if (item->mMapID && prev->mGridMapXform && 
+                  item->mRegistration < prev->mRegistration) {
+                  numMapXforms++;
+                  dupReg = item->mRegistration;
+                  for (jnd = 0; jnd < 6; jnd++) {
+                    curMapXform[jnd] = prev->mGridMapXform[jnd];
+                    if (item->mGridMapXform)
+                      dupMapXform[jnd] = item->mGridMapXform[jnd];
+                  }
+                }
                 break;
             }
             if (prev->mLabel == item->mLabel) {
@@ -9525,6 +9547,26 @@ int CNavigatorDlg::LoadNavFile(bool checkAutosave, bool mergeFile, CString *inFi
   }
   mHelper->CheckForBadParamIndexes("");
   mHelper->RecomputeArrayRefs();
+
+  // Transform to new registration if grid map was found at a different reg
+  if (numMapXforms == 1) {
+    incMat = mShiftManager->IMODxformToScaleMat(curMapXform, incDxy[0], incDxy[1]);
+    if (dupMapXform[0] != 0. && dupMapXform[1] != 0.) {
+      xfInvert(dupMapXform, oldInvXf, 2);
+      xfMult(oldInvXf, curMapXform, incXform, 2);
+      incMat = mShiftManager->IMODxformToScaleMat(incXform, incDxy[0], incDxy[1]);
+    }
+
+    // Transform items incrementally, and store the new full xform
+    // Pull off the marker shift beforehand and reapply it
+    mWinApp->mMultiGridTasks->UndoOrRedoMarkerShift(false);
+    jnd = TransformToCurrentReg(dupReg, incMat, incDxy, 0, 0);
+    mWinApp->mMultiGridTasks->UndoOrRedoMarkerShift(true);
+    PrintfToLog("%d items transformed to new grid map registration", jnd);
+  } else if (numMapXforms > 1) {
+    PrintfToLog("WARNING: More than one (%d) grid maps found with transforms,\r\n  "
+      "could not transform any points to a new registration");
+  }
 
   // Set up list box and counters
   SetCurrentRegFromMax();
@@ -9665,6 +9707,7 @@ void CNavigatorDlg::AcquireAreas(int source, bool dlgClosing, bool useTempParams
   CameraParameters *camParams = mWinApp->GetActiveCamParam();
   DriftWaitParams *dwParam = mWinApp->mParticleTasks->GetDriftWaitParams();
   CNavAcquireDlg *dlg;
+  CMapDrawItem *item;
   if (!dlgClosing && mNavAcquireDlg) {
     if (source) {
       mNavAcquireDlg->BringWindowToTop();
@@ -9684,7 +9727,8 @@ void CNavigatorDlg::AcquireAreas(int source, bool dlgClosing, bool useTempParams
     dlg->mNumArrayItems = (int)mItemArray.GetSize();
 
     if (fromMultigrid && source < NAVACQ_SRC_MG_RUN_MMM) {
-      dlg->m_bDoSubset = false;
+      dlg->m_bDoSubset = mAcqParm->multiGridSubset > 0;
+      dlg->m_iSubsetStart = B3DABS(mAcqParm->multiGridSubset);
       dlg->mLastNonTStype = mAcqParm->nonTSacquireType;
       dlg->m_iCurParamSet = mgParamSet;
       dlg->mOpenedFromMultiGrid = true;
@@ -9695,13 +9739,16 @@ void CNavigatorDlg::AcquireAreas(int source, bool dlgClosing, bool useTempParams
         dlg->m_iSubsetStart = B3DMIN(mPostponedSubsetStart, dlg->mNumArrayItems);
         dlg->m_iSubsetEnd = B3DMIN(mPostponedSubsetEnd, dlg->mNumArrayItems);
         dlg->m_bDoSubset = mPostposedDoSubset;
+      } else if (fromMultigrid) {
+        dlg->m_bDoSubset = mAcqParm->multiGridSubset > 0;
+        dlg->m_iSubsetStart = B3DABS(mAcqParm->multiGridSubset);
       } else {
         dlg->m_iSubsetStart = 1;
         dlg->m_iSubsetEnd = dlg->mNumArrayItems;
         dlg->m_bDoSubset = false;
       }
       dlg->mLastNonTStype = mAcqParm->nonTSacquireType;
-      EvaluateAcquiresForDlg(dlg);
+      EvaluateAcquiresForDlg(dlg, fromMultigrid);
     }
 
 
@@ -9753,6 +9800,8 @@ void CNavigatorDlg::AcquireAreas(int source, bool dlgClosing, bool useTempParams
         mPostponedSubsetStart = dlg->m_iSubsetStart;
         mPostponedSubsetEnd = dlg->m_iSubsetEnd;
         mPostposedDoSubset = dlg->m_bDoSubset;
+      } else {
+        mAcqParm->multiGridSubset = (dlg->m_bDoSubset ? 1 : -1) * dlg->m_iSubsetStart;
       }
       ManageAcquireDlgCleanup(fromMenu, dlgClosing);
       return;
@@ -9870,8 +9919,25 @@ void CNavigatorDlg::AcquireAreas(int source, bool dlgClosing, bool useTempParams
   acqIndex = 0;
   mEndingAcquireIndex = dlg->mNumArrayItems - 1;
   if (dlg->m_bDoSubset) {
-    acqIndex = B3DMAX(0, dlg->m_iSubsetStart - 1);
-    mEndingAcquireIndex = B3DMIN(mEndingAcquireIndex, dlg->m_iSubsetEnd - 1);
+    if (fromMultigrid) {
+
+      // For multigrid, count up to the number of items given in "start" number
+      loop = 0;
+      for (ind = 0; ind < (int)mItemArray.GetSize(); ind++) {
+        item = mItemArray[ind];
+        if ((mAcqParm->acquireType == ACQUIRE_DO_TS && item->mTSparamIndex >= 0) ||
+          (mAcqParm->acquireType != ACQUIRE_DO_TS && item->mAcquire)) {
+          loop++;
+          if (loop >= dlg->m_iSubsetStart) {
+            mEndingAcquireIndex = ind;
+            break;
+          }
+        }
+      }
+    } else {
+      acqIndex = B3DMAX(0, dlg->m_iSubsetStart - 1);
+      mEndingAcquireIndex = B3DMIN(mEndingAcquireIndex, dlg->m_iSubsetEnd - 1);
+    }
   }
   if (mHelper->AssessAcquireProblems(acqIndex, mEndingAcquireIndex)) {
     ManageAcquireDlgCleanup(fromMenu, dlgClosing);
@@ -11134,13 +11200,13 @@ void CNavigatorDlg::RestoreBeamTiltIfSaved()
 
 // Count items before file opening, # of files to open and type, and whether there are
 // any acquire or TS points in range specified in dialog parameters if doing a subset
-void CNavigatorDlg::EvaluateAcquiresForDlg(CNavAcquireDlg *dlg)
+void CNavigatorDlg::EvaluateAcquiresForDlg(CNavAcquireDlg *dlg, bool fromMultiGrid)
 {
   int i, groupInd, groupID, startInd = 0, endInd = (int)mItemArray.GetSize() - 1;
   ScheduledFile *sched;
   CMapDrawItem *item;
 
-  if (dlg->m_bDoSubset) {
+  if (dlg->m_bDoSubset && !fromMultiGrid) {
     startInd = B3DMAX(0, dlg->m_iSubsetStart - 1);
     endInd = B3DMIN(endInd, dlg->m_iSubsetEnd - 1);
   }

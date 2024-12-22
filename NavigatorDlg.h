@@ -738,7 +738,7 @@ public:
   void ManageNumDoneAcquired(void);
   int SetCurrentRegistration(int newReg);
   int MakeUniqueID(void);
-  void EvaluateAcquiresForDlg(CNavAcquireDlg *dlg);
+  void EvaluateAcquiresForDlg(CNavAcquireDlg *dlg, bool fromMultiGrid = false);
   int OKtoSkipStageMove(NavAcqParams *param);
   int OKtoSkipStageMove(NavAcqAction *actions, int acqType);
   int EndAcquireWithMessage(void);
