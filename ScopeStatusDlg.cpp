@@ -457,7 +457,7 @@ void CScopeStatusDlg::Update(double inCurrent, int inMagInd, double inDefocus,
 
   // Intensity
   if (inSpot != mSpot || rawIntensity != mRawIntensity) {
-    m_strIntensity.Format("%.2f", inIntensity);
+    m_strIntensity.Format(inIntensity >= 100. ? "%.1f" : "%.2f", inIntensity);
     m_statIntensity.SetWindowText(m_strIntensity);
   }
 

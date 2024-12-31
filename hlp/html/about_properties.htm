@@ -4425,6 +4425,11 @@
             rotation angle.&nbsp; The default is 50 microns.</TD>
         </TR>
         <TR>
+          <TD height="20">GridXformResidualLimit</TD>
+          <TD height="20">Maximum allowed residual error when fitting shifts to a rotation transformation when
+             realigning to a reloaded grid.&nbsp; The default is 7.5 microns.</TD>
+        </TR>
+       <TR>
           <TD height="20">GridXformShiftLimit</TD>
           <TD height="20">Maximum allowed shift in the transformation found after realigning 
             to a reloaded grid.&nbsp; If this or either of the following two limits are exceeded, the program
@@ -4439,14 +4444,22 @@
             to a reloaded grid.&nbsp; See 'GridXformShiftLimit' above.&nbsp; The default is 17 degrees.</TD>
         </TR>
         <TR>
-          <TD height="20">GridXformAsymmetryLimit</TD>
-          <TD height="20">Maximum allowed fractional asymmetry in the transformation found after
-             realigning to a reloaded grid.&nbsp; The asymmetry is the maximum of the difference between
-            absolute values of the outer terms of the matrix and the the difference between the absolute
-             values of the inner terms, divided by the maximum term.&nbsp; See 'GridXformShiftLimit' 
-            above.&nbsp; The default is 0.02.</TD>
+          <TD height="20">ShowMulGridRefine</TD>
+          <TD height="20">Show controls for refining grid alignment by correlating corners 
+            of a mesh opening at medium magnification to scaled-up portions of a grid map.</TD>
         </TR>
         <TR>
+          <TD height="20">MulGridRefineMinField</TD>
+          <TD height="20">Minimum field of view for images used in refining grid alignment.&nbsp; 
+            The default is 8 microns.</TD>
+        </TR>
+        <TR>
+          <TD height="20">MulGridMaxRefineDiff</TD>
+          <TD height="20">Maximum allowed difference between the shifts found at the three 
+            corners of a mesh opening in the refine grid alignment routine; Navigator points 
+            will not be shifted if this limit is exceeded.&nbsp; The default is 5 microns.</TD>
+        </TR>
+         <TR>
           <TD height="20">MulGridNumMMMcombos</TD>
           <TD height="20">The number of combo boxes to show for medium mag map states in the 
             Multiple Grid Operations dialog, a number between 0 and 4.&nbsp; The default is 

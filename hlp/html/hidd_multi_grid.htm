@@ -38,7 +38,7 @@
       <strong>Close Right</strong> button at the bottom that can be used to show just the grid 
       table and none of the sections on the right.&nbsp; The +/- button at the upper 
       left can be used to close up or reopen the whole dialog area.</p>
-    <p>In principle, the multiple grid capabilities provided here allow all phases to 
+    <p><em>Use of states:</em> In principle, the multiple grid capabilities provided here allow all phases to 
       be done in sequence during one run on a set of grids.&nbsp; The use of imaging 
       states is crucial to being able to run more than one phase at a time with 
       predictable results.&nbsp; The dialog thus includes drop-down boxes with all of 
@@ -60,7 +60,7 @@
       updating, or renaming an existing state are disabled while the multi-grid dialog 
       is open.&nbsp; If you need to change these settings, just close and reopen this 
       dialog.</p>
-    <p>The first time that the procedure is run on a set of grids, the routine needs 
+    <p><em>Need for reference counts:</em> The first time that the procedure is run on a set of grids, the routine needs 
       to collect an image similar to those which will be taken for the grid map, but 
       with an unobstructed beam.&nbsp; This is necessary to allow proper evaluation of 
       whether a grid is too dark overall, and to pick optimal locations for finding 
@@ -69,7 +69,7 @@
       the procedure on later phases, or doing more grid maps after the reference 
       counts have been measured, the routine will always start with the grid on the 
       stage.</p>
-    <p>Before taking a grid map, the program will initially examine up to four 
+    <p><em>Eucentricity:</em> Before taking a grid map, the program will initially examine up to four 
       candidate locations for running the coarse eucentricity to find a place that is 
       not too dark.&nbsp; If a suitable position is found, it runs the rough 
       eucentricity routine so that the map will be taken at the eucentric height.&nbsp; 
@@ -77,13 +77,19 @@
       gathered during the montage to pick a good location near the center if possible.&nbsp; 
       If the property MaximumTiltAngle is set to less than 8 degrees, the progam will 
       skip doing eucentricity.</p>
-    <p>When a grid is reloaded after mapping, the multi-grid routine must be able to 
-      apply a stored shift from a Shift to Marker to the Navigator items, unless it 
-      sees that such a shift has already been applied.&nbsp; A grid has a different 
+    <p><em>Realigning after reload: </em>&nbsp;On Thermo/FEI scopes, a grid has a different 
       center point and rotation every time it is reloaded, so whenever a grid is 
       reloaded for the later phases of operation, it is realigned to the grid map (see 
       Realign to Map below and the &#39;RealignReloadedGrid&#39; script command).&nbsp; 
-      Navigator points are transformed based on the shift and rotation.&nbsp; To give a 
+      Navigator points are transformed based on the shift and rotation.&nbsp;&nbsp; 
+      The same routine can be used on a JEOL, but these autoloaders do not allow any 
+      rotation and the positional change is apparently small.&nbsp; It is possible to 
+      skip this routine, and thus avoid the aperture and lens changes and extra time 
+      required for it, by setting the property &#39;MulGridSkipRealign&#39; non-zero.&nbsp; 
+      With that set, an option will appear for an alternative alignment routine that 
+      works only at a medium magnification, as described below in <em>
+        <a href="refineRealign">Optional Controls for Refining Alignment</a></em>.</p>
+    <p><em>Aligning to higher magnification:</em>&nbsp; To give a 
       better registration with stage positions at higher magnifications, a one-time 
       Shift to Marker has to be applied to the grid map and any items already marked 
       on it.&nbsp; Thus, in general, such a shift needs to be stored before running 
@@ -91,13 +97,15 @@
       dialog is opened while this dialog is open, its radio buttons will be set 
       appropriately for storing a shift.&nbsp;&nbsp; The &#39;ShiftItemsByMicrons&#39; script 
       command can be used instead to apply a shift that will satisfy this requirement.</p>
-    <p>When realigning to a reloaded grid, if the shift, rotation, or degree of 
-      asymmetry of the transformation exceeds the limits controlled by the properties 
-      'GridXformShiftLimit', 'GridXformRotationLimit', and 'GridXformAsymmetryLimit', 
-      the program will unload the grid, reload it, and try to find the transformation 
+    <p><em>Retry after aberrant realign:</em>&nbsp; When realigning to a reloaded grid, if the 
+      residual error when fitting a transformation to the measured shifts, or the shift 
+      or rotation of the transformation exceeds the limits controlled by the 
+      properties &#39;GridXformResidualLimit, &#39;GridXformShiftLimit&#39;, and 
+      &#39;GridXformRotationLimit&#39;, respectively, 
+      then the program will unload the grid, reload it, and try to find the transformation 
       again.&nbsp; This reload is tried only once, and if the transformation still 
       exceeds a limit, the grid is skipped.</p>
-    <p>If you are doing Multiple Records from multiple holes during final data 
+    <p><em>Transformation for hole vectors:</em>&nbsp; If you are doing Multiple Records from multiple holes during final data 
       acquisition, there is another situation where a pre-existing transformation is 
       important.&nbsp; In this case, the hole vectors stored with a map after hole 
       finding are used to set the current image shift vectors for points on that map.&nbsp; 
@@ -281,6 +289,56 @@
       which operates on the last secondary log that had focus.&nbsp; If you press this 
       button while some of the grid's logs are already open, the ones that are are 
       open will be raised to the foreground and any that are not will be opened.</p>
+    <p>&nbsp;</p>
+    <p><em>Optional Controls for Refining Alignment</em></p>
+    <p><strong><a NAME="refineRealign"></a>Refine after Realign using</strong>&nbsp;&nbsp; or&nbsp;&nbsp; <strong>
+      Refine instead of Realign using</strong></p>
+    <p>These options are shown if either the &#39;ShowMulGridRefine&#39; or the 
+      &#39;MulGridSkipRealign&#39; property is set non-zero and allow the grid alignment to be 
+      refined by correlating images at a medium magnification with scaled up portions 
+      of the grid map.&nbsp; The routine is designed to align to three corners of one 
+      mesh opening.&nbsp; It does not currently try to detect these openings but 
+      instead relies on polygons that have been drawn on the map, either ones produced 
+      by autocontouring or manually drawn ones smaller than 250 microns in size.&nbsp; 
+      The accuracy deteriorates for mesh openings farther away from the center of a 
+      montage piece because of limitations in the accuracy of the stage calibration at 
+      the particular location.&nbsp; The routine thus tries to use an opening near the 
+      center of a montage piece if possible.&nbsp; It will favor using a montage piece 
+      close to the centroid of all polygons, but may use a different piece if the best 
+      polygon is much closer to the center of its piece.&nbsp; If you have to add 
+      polygons manually to enable use of this routine, try to put them near the 
+      centers of montage pieces.</p>
+    <p>When this option is checked with the &#39;ShowMulGridRefine&#39; property set, the 
+      program will run the refinement after the low mag realign to the grid map when 
+      running multiple grids, and will also run it after acquiring a grid map when going 
+      right on to acquiring medium-mag maps.&nbsp; With the &#39;MulGridSkipRealign&#39; property set, the 
+      program will run only this refinement routine after reloading a grid.&nbsp; The 
+      option is labeled <strong>Refine instead of Realign using</strong> in that case, 
+      and pressing the <strong>Realign to Map</strong> button will run just the 
+      refinement routine.</p>
+    <p>The routine can end with an error, causing the grid to be skipped, if the 
+      differences among the three shifts all exceed a criterion controlled by the 
+      property &#39;MulGridMaxRefineDiff&#39;, whose default is 5 microns.</p>
+    <p>This routine is intrinsically only about as accurate as the Realign routine and 
+      is not as robust because it involves aligning between mags.&nbsp; However, 
+      because it aligns at the medium mag, it can make up for a deficiency in the Low 
+      Dose area shift offset and/or marker shift that is otherwise relied on for 
+      alignment between low and medium mags.&nbsp; On a Thermo/FEI scope, that is 
+      probably the only way in which the routine is useful.&nbsp; On a JEOL, if you 
+      find that the routine is useful for this purpose and are acquiring both grid 
+      maps and medium mag maps in a single run, add the property &#39;ShowMulGridRefine&#39;, 
+      which will enable it to be run even right after taking a grid map.</p>
+    <p>On the right side of the line with this option, there is an indicator of the 
+      field of view (FOV) of images acquired with the selected method.</p>
+    <p><strong>Search&nbsp; -&nbsp; View&nbsp; -&nbsp; State</strong></p>
+    <p>Use the radio buttons to select between using Low Dose Search or View with 
+      current parameters, or a stored state.&nbsp; If you use a state, it must be 
+      either a non-Low Dose state or a View or Search state.&nbsp; If not, the FOV 
+      indicator will show &#39;BAD STATE&#39;.&nbsp; If the FOV falls below a minimum value, 
+      controlled by the property &#39;MulGridRefineMinField&#39; (with a default of 8 
+      microns), the indicator will show &#39;BAD FOV&#39;.&nbsp; The FOV indicator is 
+      updated if the magnification of the relevant low dose are is changed with the 
+      'Continuous update' option.</p>
     <p>&nbsp;</p>
     <p><a NAME="gridMaps"></a><em><strong>Acquire Grid Maps</strong></em></p>
     <p>This section of the dialog contains parameters for acquiring grid maps; some of 

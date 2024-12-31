@@ -882,6 +882,10 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
           mgParams->runMacroAfterLMM = itemInt[22] != 0;
           mgParams->macroToRun = itemInt[23];
         }
+        if (!itemEmpty[25]) {
+          mgParams->refineAfterRealign = itemInt[24] != 0;
+          mgParams->refineImageType = itemInt[25];
+        }
 
       } else if (strItems[0].Find("MG") == 0 && (strItems[0].Find("MMMstate") == 2 ||
         strItems[0].Find("State") == 7)) {
@@ -899,6 +903,10 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
         mgParams->LMMstateNum = itemInt[1];
         if (!itemEmpty[2])
           StripItems(strLine, 2, mgParams->LMMstateName);
+      } else if (NAME_IS("MGREFstate")) {
+        mgParams->refineStateNum = itemInt[1];
+        if (!itemEmpty[2])
+          StripItems(strLine, 2, mgParams->refineStateName);
 
       } else if (NAME_IS("MGSessionFile")) {
         StripItems(strLine, 1, message);
@@ -2057,7 +2065,7 @@ void CParameterIO::WriteSettings(CString strFileName)
       snapParams->compression, snapParams->jpegQuality, snapParams->skipOverlays);
     mFile->WriteString(oneState);
     oneState.Format("MultiGridParams %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d"
-      " %d %d %d %d %d %d -999\n", mgParams->appendNames ? 1 : 0,
+      " %d %d %d %d %d %d %d %d -999\n", mgParams->appendNames ? 1 : 0,
       mgParams->useSubdirectory ? 1 : 0, mgParams->setLMMstate ? 1 : 0,
       mgParams->LMMstateType, mgParams->removeObjectiveAp ? 1 : 0,
       mgParams->setCondenserAp ? 1 : 0, mgParams->condenserApSize, mgParams->LMMmontType,
@@ -2067,10 +2075,14 @@ void CParameterIO::WriteSettings(CString strFileName)
       mgParams->MMMstateType, mgParams->MMMimageType, mgParams->acquireLMMs ? 1 : 0,
       mgParams->runFinalAcq ? 1 : 0, mgParams->MMMnumXpieces, mgParams->MMMnumYpieces,
       mgParams->framesUnderSession ? 1 : 0, mgParams->runMacroAfterLMM ? 1 : 0,
-      mgParams->macroToRun);
+      mgParams->macroToRun, mgParams->refineAfterRealign ? 1 : 0, 
+      mgParams->refineImageType);
     mFile->WriteString(oneState);
-    oneState.Format("MGLMMstate %d %s\n", mgParams->LMMstateNum, 
+    oneState.Format("MGLMMstate %d %s\n", mgParams->LMMstateNum,
       (LPCTSTR)mgParams->LMMstateName);
+    mFile->WriteString(oneState);
+    oneState.Format("MGREFstate %d %s\n", mgParams->refineStateNum,
+      (LPCTSTR)mgParams->refineStateName);
     mFile->WriteString(oneState);
     for (i = 0; i < 4; i++) {
       if (mgParams->MMMstateNums[i] >= 0) {

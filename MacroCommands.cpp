@@ -10995,6 +10995,24 @@ int CMacCmd::RealignReloadedGrid()
   return 0;
 }
 
+// RefineGridMapAlignment
+int CMacCmd::RefineGridMapAlignment()
+{
+  CMapDrawItem *navItem;
+  int setNum;
+  navItem = CurrentOrIndexedNavItem(mItemInt[1], mStrLine);
+  if (!navItem)
+    return 1;
+  if (CheckAndConvertCameraSet(mStrItems[2], mItemInt[2], setNum, mStrCopy))
+    ABORT_LINE(mStrCopy);
+  if (mWinApp->mMultiGridTasks->AlignGridMapAcrossMags(navItem, setNum,
+    mItemEmpty[4] ? EXTRA_NO_VALUE : mItemFlt[4],
+    mItemEmpty[5] ? EXTRA_NO_VALUE : mItemFlt[5], mItemEmpty[3] ? 0.f : mItemFlt[3],
+    mStrCopy))
+    ABORT_LINE(mStrCopy + " for line:\n\n");
+  return 0;
+}
+
 // SkipZMoveNextNavRealign
 int CMacCmd::SkipZMoveNextNavRealign(void)
 {

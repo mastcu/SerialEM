@@ -184,6 +184,8 @@ public:
   int SetupMMMacquire(bool skipDlg);
   void SaveMontSetupSize(MontParam *montP, BOOL lowDose, int &setupSizeX, int &setupSizeY);
   bool MontSetupSizesMatch(MontParam *montP, BOOL lowDose, int setupSizeX, int setupSizeY);
+  int CheckRefineOptions(float &FOV, int &ldArea, int &setNum, StateParams **state, CString errStr);
+  int ManageRefineFOV();
   void LoadStatesInComboBox(CComboBox &combo, bool addNone);
   void LoadAllComboBoxes();
   void NewGridOnStage(int jcdInd);
@@ -236,4 +238,11 @@ public:
   BOOL m_bScriptAtEnd;
   afx_msg void OnCheckScriptAtEnd();
   afx_msg void OnSelendokComboEndScript();
+  BOOL m_bRefineRealign;
+  afx_msg void OnCheckMgRefine();
+  BOOL m_iRefineRealign;
+  afx_msg void OnRRefineRealign();
+  CComboBox m_comboRefineState;
+  afx_msg void OnSelendokComboRefineState();
+  CString m_strRefineFOV;
 };

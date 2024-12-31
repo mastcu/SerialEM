@@ -395,7 +395,11 @@ BOOL_PROP_TEST("MulGridSkipRealign", mWinApp->mMultiGridTasks->, SkipGridRealign
 FLOAT_PROP_TEST("AutocontSubareaSizeFac", navHelper->mAutoContouringDlg->, SingleSizeFac)
 FLOAT_PROP_TEST("GridXformShiftLimit", mWinApp->mMultiGridTasks->, RRGShiftLimitForXform)
 FLOAT_PROP_TEST("GridXformRotationLimit", mWinApp->mMultiGridTasks->, RRGRotLimitForXform)
-FLOAT_PROP_TEST("GridXformAsymmetryLimit", mWinApp->mMultiGridTasks->, RRGAsymLimitForXform)
+FLOAT_PROP_TEST("GridXformResidualLimit", mWinApp->mMultiGridTasks->, RRGResidLimitForXform)
+BOOL_PROP_TEST("ShowMulGridRefine", mWinApp->mMultiGridTasks->, ShowRefineAfterRealign)
+FLOAT_PROP_TEST("MulGridRefineMinField", mWinApp->mMultiGridTasks->, RefineMinField)
+FLOAT_PROP_TEST("MulGridMaxRefineDiff", mWinApp->mMultiGridTasks->, MaxRefineShiftDiff)
+
 
 #endif
 #ifdef PROP_TEST_SECT4

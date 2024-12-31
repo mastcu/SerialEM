@@ -12,6 +12,7 @@
 #include "EMscope.h"
 #include "MultiGridTasks.h"
 #include "MultiGridDlg.h"
+#include "ShiftManager.h"
 #include "MGSettingsManagerDlg.h"
 #include "NavigatorDlg.h"
 #include "MontageSetupDlg.h"
@@ -43,8 +44,10 @@ static int sIdTable[] = {IDC_STAT_RUN, IDC_STAT_NAME, IDC_BUT_CLOSE_ALL, PANEL_E
   IDC_STAT_MULGRID_STATUS3, IDC_STAT_MULGRID_STATUS8, IDC_STAT_MULGRID_STATUS12,
   IDC_STAT_MULGRID_STATUS4, IDC_STAT_MULGRID_STATUS9, IDC_STAT_MULGRID_STATUS13,
   IDC_STAT_MULGRID_STATUS5, IDC_CHECK_TOGGLE_ALL, IDC_STAT_NOTE, IDC_EDIT_GRID_NOTE,
-  IDC_BUT_SET_ORDER, IDC_BUT_RESET_ORDER, IDC_BUT_OPEN_LOGS,
-  IDC_BUT_REALIGN_TO_GRID_MAP, IDC_BUT_OPEN_NAV, IDC_BUT_SET_GRID_TYPE, PANEL_END,
+  IDC_BUT_SET_ORDER, IDC_BUT_RESET_ORDER, IDC_BUT_OPEN_LOGS, IDC_RREFINE_VIEW,
+  IDC_RREFINE_SEARCH, IDC_RREFINE_STATE, IDC_CHECK_MG_REFINE, IDC_COMBO_REFINE_STATE,
+  IDC_BUT_REALIGN_TO_GRID_MAP, IDC_BUT_OPEN_NAV, IDC_BUT_SET_GRID_TYPE, 
+  IDC_STAT_REFINE_FOV, PANEL_END,
   IDC_BUT_MG_SETUP, IDC_STAT_MG_GRID_SETUP, IDC_TSS_LINE4, PANEL_END,
   IDC_BUT_MG_GET_NAMES, IDC_BUT_MG_INVENTORY, IDC_STAT_MG_PREFIX,
   IDC_EDIT_MG_PREFIX, IDC_CHECK_MG_APPEND_NAME, IDC_BUT_MG_CLEAR,
@@ -104,6 +107,9 @@ CMultiGridDlg::CMultiGridDlg(CWnd* pParent /*=NULL*/)
   , m_bToggleAll(FALSE)
   , m_strNote(_T(""))
   , m_bScriptAtEnd(FALSE)
+  , m_bRefineRealign(FALSE)
+  , m_iRefineRealign(FALSE)
+  , m_strRefineFOV(_T(""))
 {
   mNonModal = true;
   for (int ind = 0; ind < MAX_MULGRID_PANELS; ind++)
@@ -178,6 +184,10 @@ void CMultiGridDlg::DoDataExchange(CDataExchange* pDX)
   DDX_Text(pDX, IDC_EDIT_GRID_NOTE, m_strNote);
   DDX_Control(pDX, IDC_COMBO_END_SCRIPT, m_comboEndScript);
   DDX_Check(pDX, IDC_CHECK_SCRIPT_AT_END, m_bScriptAtEnd);
+  DDX_Check(pDX, IDC_CHECK_MG_REFINE, m_bRefineRealign);
+  DDX_Radio(pDX, IDC_RREFINE_SEARCH, m_iRefineRealign);
+  DDX_Control(pDX, IDC_COMBO_REFINE_STATE, m_comboRefineState);
+  DDX_Text(pDX, IDC_STAT_REFINE_FOV, m_strRefineFOV);
 }
 
 
@@ -253,6 +263,11 @@ BEGIN_MESSAGE_MAP(CMultiGridDlg, CBaseDlg)
   ON_BN_CLICKED(IDC_BUT_OPEN_LOGS, OnButOpenLogs)
   ON_BN_CLICKED(IDC_CHECK_SCRIPT_AT_END, OnCheckScriptAtEnd)
   ON_CBN_SELENDOK(IDC_COMBO_END_SCRIPT, OnSelendokComboEndScript)
+  ON_BN_CLICKED(IDC_CHECK_MG_REFINE, OnCheckMgRefine)
+  ON_BN_CLICKED(IDC_RREFINE_SEARCH, OnRRefineRealign)
+  ON_BN_CLICKED(IDC_RREFINE_VIEW, OnRRefineRealign)
+  ON_BN_CLICKED(IDC_RREFINE_STATE, OnRRefineRealign)
+  ON_CBN_SELENDOK(IDC_COMBO_REFINE_STATE, OnSelendokComboRefineState)
 END_MESSAGE_MAP()
 
 
@@ -321,6 +336,10 @@ BOOL CMultiGridDlg::OnInitDialog()
   if (mSingleGridMode) {
     mParams.appendNames = false;
   }
+
+  // All hiding is in ManagePanels
+  if (!mMGTasks->GetShowRefineAfterRealign() && !mMGTasks->GetSkipGridRealign())
+    mParams.refineAfterRealign = false;
   ParamsToDialog();
   UpdateData(false);
   mPanelStates[5] = mParams.acquireLMMs;
@@ -340,11 +359,14 @@ BOOL CMultiGridDlg::OnInitDialog()
   EnableDlgItem(IDC_BUT_OPEN_NAV, false);
   EnableDlgItem(IDC_BUT_REALIGN_TO_GRID_MAP, false);
   EnableDlgItem(IDC_BUT_OPEN_LOGS, false);
+  if (mMGTasks->GetSkipGridRealign())
+    SetDlgItemText(IDC_CHECK_MG_REFINE, "Refine instead of Realign using:");
   if (mSingleGridMode) {
     InitForSingleGrid();
   }
   CheckIfAnyUndoneToRun();
   UpdateEnables();
+  ManageRefineFOV();
   UpdateCurrentDir();
   SetRootname();
 
@@ -674,6 +696,24 @@ void CMultiGridDlg::OnButSetCurrentDir()
   mWinApp->mDocWnd->OnFileSetCurrentDirectory();
 }
 
+// Toggle refine after realign
+void CMultiGridDlg::OnCheckMgRefine()
+{
+  UPDATE_DATA_TRUE;
+  UpdateEnables();
+  mWinApp->RestoreViewFocus();
+  ManageRefineFOV();
+}
+
+// New radio button choice on refine image type
+void CMultiGridDlg::OnRRefineRealign()
+{
+  UPDATE_DATA_TRUE;
+  UpdateEnables();
+  mWinApp->RestoreViewFocus();
+  ManageRefineFOV();
+}
+
 // New prefix characters are entered: fix them up
 void CMultiGridDlg::OnEnChangeEditMgPrefix()
 {
@@ -957,7 +997,8 @@ void CMultiGridDlg::UpdateEnables()
     IDC_COMBO_MMM_STATE1, IDC_COMBO_MMM_STATE2, IDC_COMBO_MMM_STATE3, IDC_RFIXED_MONT,
     IDC_COMBO_MMM_STATE4, IDC_RSINGLE_IMAGE, IDC_RPOLYGON_MONT, IDC_BUT_SETUP_MAPPING,
     IDC_CHECK_RUN_FINAL_ACQ, IDC_BUT_SETUP_FINAL_ACQ, IDC_COMBO_FINAL_STATE1,
-    IDC_COMBO_FINAL_STATE2, IDC_COMBO_FINAL_STATE3, IDC_COMBO_FINAL_STATE4};
+    IDC_COMBO_FINAL_STATE2, IDC_COMBO_FINAL_STATE3, IDC_COMBO_FINAL_STATE4,
+    IDC_CHECK_MG_REFINE};
   bool locked = mMGTasks->GetNamesLocked();
   BOOL justTasks = mWinApp->DoingTasks();
   bool suspended = mMGTasks->GetSuspendedMulGrid();
@@ -992,6 +1033,11 @@ void CMultiGridDlg::UpdateEnables()
       jcd.slot >= 0 && (jcd.status & MGSTAT_FLAG_LM_MAPPED));
   } else
     EnableDlgItem(IDC_BUT_REALIGN_TO_GRID_MAP, false);
+  EnableDlgItem(IDC_RREFINE_SEARCH, m_bRefineRealign && !tasks);
+  EnableDlgItem(IDC_RREFINE_VIEW, m_bRefineRealign && !tasks);
+  EnableDlgItem(IDC_RREFINE_STATE, m_bRefineRealign && !tasks);
+  EnableDlgItem(IDC_COMBO_REFINE_STATE, m_bRefineRealign && m_iRefineRealign == 2 &&
+    !tasks);
   EnableDlgItem(IDC_COMBO_LMM_STATE, m_bSetLMMstate && !tasks);
   EnableDlgItem(IDC_EDIT_CONDENSER, m_bSetCondenser && !tasks);
   EnableDlgItem(IDC_EDIT_MONT_XPCS, m_iLMMmontType > 0 && !tasks);
@@ -1062,6 +1108,7 @@ void CMultiGridDlg::UpdateSettings()
 {
   mParams = *mMasterParams;
   ParamsToDialog();
+  ManageRefineFOV();
   UpdateData(false);
 }
 
@@ -1099,6 +1146,8 @@ void CMultiGridDlg::ManagePanels()
     IDC_BUT_MG_CLEAR, IDC_CHECK_SET_FINAL_BY_GRID, IDC_BUT_REVERT_TO_GLOBAL, 
     IDC_CHECK_TOGGLE_ALL, IDC_BUT_RESET_ORDER, IDC_BUT_SET_ORDER, IDC_STAT_NOTE,
   IDC_EDIT_GRID_NOTE};
+  UINT refineIDs[] = {IDC_CHECK_MG_REFINE, IDC_RREFINE_SEARCH, IDC_RREFINE_VIEW, 
+    IDC_RREFINE_STATE, IDC_COMBO_REFINE_STATE, IDC_STAT_REFINE_FOV};
   UINT MMMcomboIDs[4] = {IDC_COMBO_MMM_STATE1, IDC_COMBO_MMM_STATE2, IDC_COMBO_MMM_STATE3,
     IDC_COMBO_MMM_STATE4};
   UINT finalComboIDs[4] = {IDC_COMBO_FINAL_STATE1, IDC_COMBO_FINAL_STATE2,
@@ -1124,6 +1173,10 @@ void CMultiGridDlg::ManagePanels()
     for (ind = 0; ind < sizeof(singleDrops) / sizeof(UINT); ind++)
       mIDsToDrop.push_back(singleDrops[ind]);
   }
+  if (!mMGTasks->GetShowRefineAfterRealign() && !mMGTasks->GetSkipGridRealign()) {
+    for (ind = 0; ind < sizeof(refineIDs) / sizeof(UINT); ind++)
+      mIDsToDrop.push_back(refineIDs[ind]);
+  }
   AdjustPanels(states, sIdTable, sLeftTable, sTopTable, mNumInPanel, mPanelStart, 0,
     sHeightTable);
 }
@@ -1136,6 +1189,8 @@ void CMultiGridDlg::ParamsToDialog()
   BOOL locked = mMGTasks->GetNamesLocked();
   m_bAppendNames = locked ? mMGTasks->GetAppendNames() : mParams.appendNames;
   m_bUseSubdirs = locked ? mMGTasks->GetUseSubdirs() : mParams.useSubdirectory;
+  m_bRefineRealign = mParams.refineAfterRealign;
+  m_iRefineRealign = mParams.refineImageType;
   m_bSetLMMstate = mParams.setLMMstate;
   m_iLMMacquireType = mParams.LMMstateType;
   m_bRemoveObjective = mParams.removeObjectiveAp;
@@ -1192,6 +1247,10 @@ void CMultiGridDlg::DialogToParams()
   mParams.framesUnderSession = m_bFramesUnderSession;
   mParams.runMacroAfterLMM = m_bScriptAtEnd;
   mParams.macroToRun = mMacNumAtEnd;
+  mParams.refineAfterRealign = m_bRefineRealign;
+  mParams.refineImageType = m_iRefineRealign;
+  GetStateFromComboBox(m_comboRefineState, mParams.refineStateNum, 
+    mParams.refineStateName, 0);
   GetStateFromComboBox(m_comboMMMstate1, mParams.MMMstateNums[0],
     mParams.MMMstateNames[0], 1);
   GetStateFromComboBox(m_comboMMMstate2, mParams.MMMstateNums[1],
@@ -1240,6 +1299,8 @@ void CMultiGridDlg::SyncToMasterParams()
  */
 void CMultiGridDlg::SetAllComboBoxesFromNameOrNum()
 {
+  SetComboBoxFromNameOrNum(m_comboRefineState, mParams.refineStateNum, 
+    mParams.refineStateName, 0);
   SetComboBoxFromNameOrNum(m_comboLMMstate, mParams.LMMstateNum, mParams.LMMstateName, 0);
   SetComboBoxFromNameOrNum(m_comboMMMstate1, mParams.MMMstateNums[0],
     mParams.MMMstateNames[0], 1);
@@ -1376,7 +1437,7 @@ int CMultiGridDlg::FindUniqueStateFromName(CString &name)
     }
   }
 
-  return (numMatch != 1) ? stateInd : -1;
+  return (numMatch == 1) ? stateInd : -1;
 }
 
 /*
@@ -1449,6 +1510,7 @@ void CMultiGridDlg::LoadStatesInComboBox(CComboBox &combo, bool addNone)
  */
 void CMultiGridDlg::LoadAllComboBoxes()
 {
+  LoadStatesInComboBox(m_comboRefineState, false);
   LoadStatesInComboBox(m_comboLMMstate, false);
   LoadStatesInComboBox(m_comboMMMstate1, true);
   LoadStatesInComboBox(m_comboMMMstate2, true);
@@ -1922,10 +1984,69 @@ void CMultiGridDlg::OnButLoadGrid()
 void CMultiGridDlg::OnButRealignToGridMap()
 {
   CString errStr;
+  int offsetTypes, ldArea, setNum;
+  StateParams *state;
+  float FOV;
+  CMapDrawItem *item;
+  bool applyMarker = false;
+  BaseMarkerShift baseShift;
+
   mWinApp->RestoreViewFocus();
-  if (mMGTasks->RealignToGridMap(mDlgIndToJCDindex[mSelectedGrid], true, false, errStr) >
-    0)
-    AfxMessageBox("Failed to realign to grid map: " + errStr);
+  if (mScope->GetColumnValvesOpen() < 1)
+    mScope->SetColumnValvesOpen(true);
+  if (mMGTasks->GetSkipGridRealign() && m_bRefineRealign) {
+
+    // Run refine procedure if that is chosen
+    DialogToParams();
+    if (CheckRefineOptions(FOV, ldArea, setNum, &state, errStr)) {
+      AfxMessageBox("Cannot refine alignment: " + errStr, MB_EXCLAME);
+      return;
+    }
+
+    // Need to get Nav loaded, so use this call here
+    if (mMGTasks->PrepareAlignToGridMap(mDlgIndToJCDindex[mSelectedGrid], true, &item,
+      errStr)) {
+      AfxMessageBox("Cannot refine alignment: " + errStr, MB_EXCLAME);
+      return;
+    }
+
+    // If no marker shift has been applied to map yet
+    if (!item->mMarkerShiftX && !item->mMarkerShiftY) {
+      offsetTypes = mMGTasks->CheckShiftsForLMmode(mMGTasks->GetLMMmagIndex());
+
+      // Message was already issued on error
+      if (offsetTypes < 0)
+        return;
+      if (offsetTypes == 1)
+        applyMarker = true;
+
+      // Ask whether to apply marker shift if both kinds exist
+      if (offsetTypes == 3 && AfxMessageBox(
+        "There is both a shift offset for the Low Dose area\n"
+        "used for the grid map, and a marker shift from the grid map\n"
+        "magnification that has not been applied to this map yet.\n\n"
+        "Do you want to apply the marker shift?\n"
+        "(Answer No if the shift offset supercedes the marker shift;\n"
+        "or Yes if the marker shift is needed even with the shift offset.)",
+        MB_QUESTION) == IDYES)
+        applyMarker = true;
+      if (applyMarker) {
+        mMGTasks->MarkerShiftIndexForMag(item->mMapMagInd, baseShift);
+        mWinApp->mNavigator->ShiftItemsAtRegistration(baseShift.shiftX,
+          baseShift.shiftY, item->mRegistration, 1);
+        PrintfToLog("Applied marker shift of %.2f, %.2f to Navigator items for this grid",
+          baseShift.shiftX, baseShift.shiftY);
+      }
+    }
+    if (mMGTasks->RefineGridMapAlignment(mDlgIndToJCDindex[mSelectedGrid],
+      mParams.refineStateNum, true, errStr))
+      AfxMessageBox("Failed to refine grid map alignment:\n" + errStr, MB_EXCLAME);
+
+    // Otherwise regular realign
+  } else if (mMGTasks->RealignToGridMap(mDlgIndToJCDindex[mSelectedGrid], true, true, 
+    errStr) > 0) {
+      AfxMessageBox("Failed to realign to grid map: " + errStr, MB_EXCLAME);
+  }
 }
 
 // Set some individual grid processing parameters
@@ -2033,6 +2154,15 @@ void CMultiGridDlg::OnRfullGridMont()
   UPDATE_DATA_TRUE;
   mWinApp->RestoreViewFocus();
   UpdateEnables();
+}
+
+// New state for refine after realign
+void CMultiGridDlg::OnSelendokComboRefineState()
+{
+  mWinApp->RestoreViewFocus();
+  GetStateFromComboBox(m_comboRefineState, mParams.refineStateNum, 
+    mParams.refineStateName, 0);
+  ManageRefineFOV();
 }
 
 // New state selected in LMM combo box
@@ -2753,6 +2883,108 @@ bool CMultiGridDlg::MontSetupSizesMatch(MontParam *montP, BOOL lowDose, int setu
     consNum;
   return (setupSizeX == conSet->right - conSet->left && 
     setupSizeY == conSet->bottom - conSet->top);
+}
+
+/*
+ * Make sure the image type or state options are valid for the refine operation and
+ * that the FOV is big enough
+ */
+int CMultiGridDlg::CheckRefineOptions(float &FOV, int &ldArea, int &setNum, 
+  StateParams **state, CString errStr)
+{
+  LowDoseParams *ldp = mWinApp->GetLowDoseParams();
+  ControlSet *conSets;
+  int *actList = mWinApp->GetActiveCameraList();
+  CString *setNames = mWinApp->GetModeNames();
+  int magInd, ind, avail = 0, camSize, selInd = -1;
+  int numStates = (int)mStateArray->GetSize();
+  int camera = mWinApp->GetCurrentCamera();
+  FOV = 0.;
+  ldArea = m_iRefineRealign > 0 ? VIEW_CONSET : SEARCH_AREA;
+  setNum = m_iRefineRealign > 0 ? VIEW_CONSET : SEARCH_CONSET;
+  *state = NULL;
+  if (m_iRefineRealign > 1) {
+    if (mParams.refineStateNum < 0 || !numStates) {
+      errStr = "There is no state selected or none defined";
+      return -1;
+    }
+    if (numStates) {
+
+      // If there is a name, look it up by name and make sure it is unique
+      if (!mParams.refineStateName.IsEmpty()) {
+        selInd = FindUniqueStateFromName(mParams.refineStateName);
+        if (selInd >= 0)
+          mParams.refineStateNum = selInd;
+      }
+
+      // By number - make sure its legal
+      if (selInd < 0) {
+        if (mParams.refineStateNum >= numStates) {
+          errStr = "The state could not be found by name and its number is out of range";
+          return -1;
+        }
+        selInd = mParams.refineStateNum;
+      }
+    }
+    *state = mStateArray->GetAt(selInd);
+    mParams.refineStateName = (*state)->name;
+    camera = (*state)->camIndex;
+    for (ind = 0; ind < mWinApp->GetActiveCamListSize(); ind++)
+      if (camera == actList[ind])
+        avail = 1;
+    if (!avail) {
+      errStr = "Selected state is a for a camera that is not available";
+      return -1;
+    }
+    ldArea = -1;
+    if ((*state)->lowDose != 0)
+      ldArea = mWinApp->mNavHelper->AreaFromStateLowDoseValue((*state), NULL);
+    if (ldArea < 0) {
+      setNum = PREVIEW_CONSET;
+      magInd = (*state)->magIndex;
+    } else {
+      if (ldArea != VIEW_CONSET && ldArea != SEARCH_AREA) {
+        errStr = "The state must be either low dose View or Search, or a non-low dose "
+          "state";
+        return -1;
+      }
+      setNum = ldArea ? SEARCH_CONSET : VIEW_CONSET;
+      magInd = (*state)->ldParams.magIndex;
+    }
+  } else {
+    magInd = ldp[ldArea].magIndex;
+  }
+
+  conSets = mWinApp->GetCamConSets() + camera * MAX_CONSETS;
+  camSize = B3DMIN(conSets[setNum].right - conSets[setNum].left,
+    conSets[setNum].bottom - conSets[setNum].top);
+  FOV = mWinApp->mShiftManager->GetPixelSize(camera, magInd) * (float)camSize;
+  if (FOV < mMGTasks->GetRefineMinField()) {
+    errStr.Format("The field of view in the %s parameter set is only %.1f um; %.1f um is"
+      " required", (LPCTSTR)setNames[setNum], FOV, mMGTasks->GetRefineMinField());
+    return 1;
+  }
+  return 0;
+}
+
+int CMultiGridDlg::ManageRefineFOV()
+{
+  StateParams *state;
+  int ldArea, setNum, err;
+  float FOV;
+  CString errStr;
+  ShowDlgItem(IDC_STAT_REFINE_FOV, m_bRefineRealign);
+  if (!m_bRefineRealign)
+    return 0;
+  err = CheckRefineOptions(FOV, ldArea, setNum, &state, errStr);
+  if (err) {
+    m_strRefineFOV = err < 0 ? "BAD STATE" : "BAD FOV";
+    SEMAppendToLog(errStr);
+  } else {
+    m_strRefineFOV.Format("FOV %.1f um", FOV);
+  }
+  UpdateData(false);
+  return err;
 }
 
 /*

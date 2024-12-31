@@ -2486,6 +2486,12 @@
 #define IDC_STAT_OBJLABEL               3514
 #define IDC_STAT_PROBEALF               3515
 #define IDC_BUT_EUCEN_FOCUS             3516
+#define IDC_CHECK_MG_REFINE             3517
+#define IDC_RREFINE_VIEW                3518
+#define IDC_RREFINE_SEARCH              3519
+#define IDC_RREFINE_STATE               3520
+#define IDC_STAT_REFINE_FOV             3521
+#define IDC_COMBO_REFINE_STATE          3522
 #define ID_NEW_IMAGE                    32771
 #define IDM_FILE_SAVEOTHER              32772
 #define IDM_FILE_READ                   32773
@@ -3057,7 +3063,7 @@
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        289
 #define _APS_NEXT_COMMAND_VALUE         33534
-#define _APS_NEXT_CONTROL_VALUE         3517
+#define _APS_NEXT_CONTROL_VALUE         3523
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif

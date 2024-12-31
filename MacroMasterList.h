@@ -820,6 +820,7 @@ MAC_SAME_NAME_ARG(SetEDMDutyPercent, 1, 4, SETEDMDUTYPERCENT, D)
 MAC_SAME_FUNC_NOARG(ReportEDMDutyPercent, 0, 4, SetEDMDutyPercent, REPORTEDMDUTYPERCENT)
 MAC_SAME_NAME_ARG(NextProcessPipeToVar, 1, 4, NEXTPROCESSPIPETOVAR, S)
 MAC_SAME_NAME_ARG(CheckEucenByFocusCal, 0, 4, CHECKEUCENBYFOCUSCAL, iiii)
+MAC_SAME_NAME_ARG(RefineGridMapAlignment, 2, 0, REFINEGRIDMAPALIGNMENT, ISddd)
 
 // new Python-only commands need to be added to pythonOnlyCmds in ::CMacroProcessor
 // New Not from Python items omit _ARG or _NOARG

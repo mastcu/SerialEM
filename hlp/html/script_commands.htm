@@ -1991,7 +1991,7 @@
           <TD class="scriptcommand">StagePosToBufImagePos buf #I #X #Y</TD>
           <td>Like 'BufImagePosToStagePos', but reports the image position (X and Y) in the image in 
             buffer <b>buf</b> of the stage position <b>#X</b>, <b>#Y</b>.&nbsp; These image coordinates are <I>left-handed</I>; 
-            i.e., Y is inverted.&nbsp; Set <B>#I</B> for Navigator stage coordinates, or non-zero for actual stage 
+            i.e., Y is inverted.&nbsp; Set <B>#I</B> 0 for Navigator stage coordinates, or non-zero for actual stage 
             coordinates that apply at the current magnification and image shift.  The resulting coordinates account
             for montage piece alignments as in 'BufImagePosToStagePos' and just as occurs when drawing 
             Navigator points on an image.&nbsp; If the image is a montage overview, it also reports the index of 
@@ -5542,13 +5542,30 @@
                 the value set by the property 'GridReloadMaxRotation', whose default is 15 
                degrees.&nbsp; (If there is a known starting rotation from a previous reload that could make
                 a difference, increase the search range.)&nbsp; <br />
-              Set <b>#T</b> to 0 to prevent transforming
-                of items, 1 to transform (the default), or 2 to not transform if the transformation exceeds the shift, 
-            rotation, and symmetry limits controlled by properties 'GridXformShiftLimit', 'GridXformRotationLimit', and
-             'GridXformAsymmetryLimit'.&nbsp; The transformation is kept track of so the procedure can be run repeatedly.&nbsp;
+              Set <b>#T</b> to 0 to prevent transforming of items, 1 to transform (the 
+            default), or 2 to not transform if the residual error of the fit to the shifts exceeds a limit 
+            controlled by the property 'GridXformResidualLimit', or the transformation exceeds the shift and 
+            rotation limits controlled by properties 'GridXformShiftLimit' anf 'GridXformRotationLimit'.&nbsp; The transformation is kept track of so the procedure can be run repeatedly.&nbsp;
                The routine has not yet been tested with large (i.e., 90 degree) rotations.&nbsp; Command added in 4.2, 16-Apr-24.
  
                         </TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">RefineGridMapAlignment #I set [#M] [#X] [#Y]</TD>
+          <TD>Runs a routine to refine the alignment to a grid map by aligning medium-magnification images 
+            with scaled-up portions of the grid map.&nbsp; See the section <I>Optional Controls for Refining 
+              Alignment</I> in the help for <a href="hidd_multi_grid.htm">Multiple Grid Operations</a>
+             for a full description of this routine.<br />
+            <b>#I</b> specifies the maps and can be its
+            index in the table, 0 for the current item, or the negative of the distance from the end of
+             the table. <br />
+            <b>set</b> specifies the camera parameter set to use, as for camera control commands<br />
+            <b>#M</b> optionally sets a criterion for the maximum allowed difference among the 
+            three measured shifts; enter 0 to use the default limit or -1 to not shift Navigator points
+             regardless of the result.<br />
+            <b>#X</b> and <b>#Y</b> optionally set a preferred position around which to choose a polygon,
+             in place of the centroid of all eligible polygons.&nbsp; Command added in 4.2, 30-Dec-24.
+          </TD>
         </TR>
         <TR>
           <TD class="scriptcommand">ShiftItemsByAlignment</TD>

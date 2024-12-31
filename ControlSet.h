@@ -555,6 +555,10 @@ struct MultiGridParams {
   BOOL framesUnderSession;   // Make frame directories under session or grid directories
   BOOL runMacroAfterLMM;     // Flag to run a script after autocontouring step
   int macroToRun;            // And script to run, numbered from 0
+  BOOL refineAfterRealign;   // Flag to refine alignment after realign to grid map
+  int refineImageType;       // Type of image/state to use for refine
+  int refineStateNum;        // Number of state for refine
+  CString refineStateName;   // Name of state to set
 };
 
 // Cooker parameters

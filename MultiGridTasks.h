@@ -5,7 +5,7 @@
 
 enum { MG_INVENTORY = 1, MG_LOW_MAG_MAP, MG_REALIGN_RELOADED, MG_RRG_MOVED_STAGE, 
   MG_RRG_TOOK_IMAGE, MG_LOAD_CART, MG_UNLOAD_CART, MG_USER_LOAD, MG_RUN_SEQUENCE,
-  MG_RESTORING, MG_SEQ_LOAD
+  MG_RESTORING, MG_SEQ_LOAD, MG_REFINE_REALIGNED, MG_REFINE_MOVED, MG_REFINE_IMAGE
 };
 enum MultiGridActions {
   MGACT_REMOVE_OBJ_AP, MGACT_SET_CONDENSER_AP, MGACT_REPLACE_OBJ_AP, MGACT_REF_MOVE,
@@ -14,7 +14,8 @@ enum MultiGridActions {
   MGACT_LOAD_GRID, MGACT_TAKE_LMM, MGACT_REALIGN_TO_LMM, MGACT_AUTOCONTOUR,
   MGACT_MMM_STATE, MGACT_TAKE_MMM, MGACT_FINAL_STATE, MGACT_FINAL_ACQ,
   MGACT_SETUP_MMM_FILES, MGACT_RESTORE_STATE, MGACT_LOW_DOSE_ON, MGACT_LOW_DOSE_OFF,
-  MGACT_SET_ZHEIGHT, MGACT_MARKER_SHIFT, MGACT_FOCUS_POS, MGACT_RUN_MACRO, MGACT_GRID_DONE
+  MGACT_SET_ZHEIGHT, MGACT_MARKER_SHIFT, MGACT_FOCUS_POS, MGACT_RUN_MACRO,
+  MGACT_REFINE_ALIGN, MGACT_GRID_DONE
 };
 #define OBJECTIVE_APERTURE 2
 #define CONDENSER_APERTURE 1
@@ -108,8 +109,9 @@ public:
   void MGActMessageBox(CString &errStr);
   int RealignReloadedGrid(CMapDrawItem *item, float expectedRot, bool moveInZ,
     float maxRotation, int transformNav, CString &errStr);
+  int LoadOrReloadMapIfNeeded(CMapDrawItem *item, int maxBin, CString &errStr);
   void CentroidsFromMeansAndPctls(IntVec &ixVec, IntVec &iyVec, FloatVec &xStage, FloatVec &yStage,
-    FloatVec &meanVec, FloatVec &midFracs, FloatVec &rangeFracs, float fracThresh, int &meanIXcen, int &meanIYcen, 
+    FloatVec &meanVec, FloatVec &midFracs, FloatVec &rangeFracs, float fracThresh, int &meanIXcen, int &meanIYcen,
     float &meanSXcen, float &meanSYcen, int &pctlIXcen, int & pctlIYcen, float &pctlSXcen, float &pctlSYcen,
     int &numPcts, int &numAbove);
   void MaintainClosestFour(float delX, float delY, int pci, float radDist[4], int minInd[4],
@@ -117,8 +119,12 @@ public:
   bool IsDuplicatePiece(int minInd, int bestInd[5], int startInd, int endInd);
   int MoveStageToTargetPiece();
   void AlignNewReloadImage();
-  ScaleMat FindReloadTransform(float dxyOut[2], float &theta                                        );
+  ScaleMat FindReloadTransform(float dxyOut[2], float &theta, float &residOut);
   void UndoOrRedoMarkerShift(bool redo);
+  int AlignGridMapAcrossMags(CMapDrawItem *item, int setNum, float findNearX, float findNearY,
+    float maxDiff, CString &errStr);
+  void MoveStageForRefineMapAlign();
+  void RefineRealignNextTask(int param);
   int StartGridRuns(int LMneedsLD, int MMMneedsLD, int finalNeedsLD, int finalCamera,
     bool undoneOnly);
   void AddToSeqForLMimaging(bool &apForLMM, bool &stateForLMM, int needsLD);
@@ -136,10 +142,14 @@ public:
   int OpenNewMontageFile(MontParam &montP, CString &str);
   int OpenFileForFinalAcq();
   int RealignToGridMap(int jcdInd, bool askIfSave, bool applyLimits, CString &errStr);
+  int PrepareAlignToGridMap(int jcdInd, bool askIfSave, CMapDrawItem **itemP, CString &errStr);
+  int RefineGridMapAlignment(int jcdInd, int stateNum, bool askIfSave, CString &errStr);
   int ReloadGridMap(CMapDrawItem *item, int useBin, CString &errStr);
   int OpenNavFileIfNeeded(JeolCartridgeData &jcd);
   int MarkerShiftIndexForMag(int magInd, BaseMarkerShift &baseShift);
+  int CheckShiftsForLMmode(int magInd);
   void RestoreState();
+  void RestoreFromRefine();
   GetMember(int, DoingMultiGrid);
   GetMember(bool, DoingMulGridSeq);
   GetMember(bool, SuspendedMulGrid);
@@ -188,7 +198,7 @@ public:
   GetSetMember(BOOL, SkipGridRealign);
   GetSetMember(float, RRGShiftLimitForXform);
   GetSetMember(float, RRGRotLimitForXform);
-  GetSetMember(float, RRGAsymLimitForXform);
+  GetSetMember(float, RRGResidLimitForXform);
   GetMember(float, ReferenceCounts);
   GetMember(double, RemainingTime);
   GetMember(int, CurrentGrid);
@@ -196,6 +206,10 @@ public:
   IntVec *GetLastDfltRunInds() { return &mLastDfltRunInds; };
   GetSetMember(int, LastNumSlots);
   GetSetMember(bool, UseCustomOrder);
+  GetSetMember(BOOL, ShowRefineAfterRealign);
+  GetSetMember(float, RefineMinField);
+  GetMember(int, LMMmagIndex);
+  GetSetMember(float, MaxRefineShiftDiff);
   int *GetMontSetupConsetSizes() { return &mMontSetupConsetSizes[0]; };
   IntVec *GetCustomRunDlgInds() {return &mCustomRunDlgInds ; };
   bool WasStoppedInNavRun() { return mStoppedInNavRun && mSuspendedMulGrid; };
@@ -307,7 +321,16 @@ private:
   bool mRRGWasAboveXformLimit;   // Flag it wasnt aligned because above limit
   float mRRGShiftLimitForXform;  // Limit to shift in transformation - redo once if over
   float mRRGRotLimitForXform;    // Limit to rotation in transformation
-  float mRRGAsymLimitForXform;   // Limit to fractional asymmetry in transformation
+  float mRRGResidLimitForXform;  // Limit to residual in transformation in microns
+  int mRefineSetNum;             // Image type for refine alignment
+  CMapDrawItem *mRefineItem;     // Map item for refine
+  int mRefineStepIndex;          // Index of point being done
+  float mMaxRefineDiff;          // Do not apply refine if minimum difference exceeds this
+  BOOL mShowRefineAfterRealign;  // Flag to hide the options for this
+  float mRefineMinField;         // Minimum field size in microns
+  int mRefineUsedLDorState;      // 1 if turned on LD, -1 if set state
+  float mMaxSizeForRefinePolys;  // Maximum linear extent of polygons for refine align
+  float mMaxRefineShiftDiff;     // Maximum shift difference when running multigrid
 
   int mInitialObjApSize;         // Initial size of objective aperture
   int mInitialCondApSize;        // Initial size of condenser aperture
@@ -365,5 +388,7 @@ private:
   int mRealignIteration;         // Iteration number if it had to repeat realign
   double mRunStartTime;          // Time that run started
   double mRemainingTime;         // Estimate of remaining time after current grid is done
+  int mSkipMarkerShifts;         // User response to query: 1 to skip or -1 to use markers
+  bool mNoMarkerShifts;          // Flag to skip in the run for whatever reason
 };
 

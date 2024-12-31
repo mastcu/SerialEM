@@ -3,6 +3,23 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+12/31/24: Added routine to refine alignment after realigning to reloaded grid
+using correlations between medium-mag images and scaled-up portions of the
+grid map.  A property can be added to make options show up in the multigrid
+dialog.
+
+12/31/24: Changes for multigrid:
+ - Fixed erroreous objection that autocontouring groups to save were not
+defined; restarted label at 1 for each new grid.
+ - Made it clear out existing new file definitions instead of complaining when
+a grid is restarted with polygon montages already defined from an incomplete
+run.
+ - Fixed routine that finds a state by unique name.
+ - Relaxed requirement for marker shift for higher mag operations if grid map
+was acquired with a Search or View offset and asked user whether to use marker
+shift if such an offset exists.
+ - Fixed .adoc filename from previous session being reused in new session.
+
 12/30/24: SEM_4-2-0beta13
 12/22/24: When a new low mag map is made through multigrid, it now renames a
 previous Navigator file before starting a new one.
