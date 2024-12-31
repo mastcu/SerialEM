@@ -1400,6 +1400,10 @@ int CProcessImage::AlignBetweenMagnifications(int toBufNum, float xcen, float yc
       err = mShiftManager->AutoAlign(1, 1, doImShift);
     }
     mImBufs[1].mEffectiveBin = effBinSave;
+    if (mImBufs->mLowDoseArea) {
+      mImBufs[1].mLowDoseArea = true;
+      mImBufs[1].mConSetUsed = mImBufs->mConSetUsed;
+    }
     if (err == 2)
       errStr = "No correlation peaks were found within the allowed range";
     else if (err)
