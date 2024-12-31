@@ -69,6 +69,10 @@ int DLL_IM_EX ProcFindCircleEdges(void *array, int type, int nx, int ny, float x
                         int border, float angleInc, int boxLen, int boxWidth, 
                         float outCrit, float edgeCrit, float *xx, float *yy, 
                         float *angle, float *grad);
+void MakeBoxIncrements(int boxLen, int boxWidth, double rayAng, int *idx, int *idy, int &numInc, 
+  double &xray, double &yray);
+void DLL_IM_EX ProcBoxMeansAlongLine(void *array, int type, int nx, int ny, int border, int boxLen, int boxWidth,
+  int ixStart, int iyStart, int ixEnd, int iyEnd, int numSteps, float *means);
 int DLL_IM_EX ProcGainNormalize(void *image, int type, int nxFull, int top, int left, int bottom,
                        int right, short int *dark1, double exp1, short int *dark2, 
                        double exp2, double exp, int darkScale, int darkByteSize, void *gainRef, int gainBytes, 

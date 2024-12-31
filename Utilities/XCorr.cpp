@@ -2103,15 +2103,13 @@ int ProcFindCircleEdges(void *array, int type, int nx, int ny, float xcen, float
                         float outCrit, float edgeCrit, float *xx, float *yy, 
                         float *angle, float *grad)
 {
-  float xcorn[4], ycorn[4];
   int *idx = new int[2 * boxLen * boxWidth];
   int *idy = new int[2 * boxLen * boxWidth];
   int numPts = 0;
   int numAng = (int)(360. / angleInc);
-  int numInc, xhi, yhi, ix, iy, ixc, iyc, lastxc, lastyc, npix, ixst, ixnd, iyst, iynd;
+  int numInc, xhi, yhi, ix, iy, ixc, iyc, lastxc, lastyc, npix;
   int iray, ixray, iyray, i, rayst, gotCross;
-  double rayAng, xray, yray, rayFac, sum, boxMean, frac, lastMean, mean2, mean3;
-  float xmin, xmax, ymin, ymax, wcos, wsin, lcos, lsin;
+  double rayAng, xray, yray, sum, boxMean, frac, lastMean, mean2, mean3;
   short int *sdata = (short int *)array;
   unsigned short int *usdata = (unsigned short int *)array;
   float *fdata = (float *)array;
@@ -2123,49 +2121,9 @@ int ProcFindCircleEdges(void *array, int type, int nx, int ny, float xcen, float
   for (rayAng = angleInc - 180.; rayAng <= 180.; rayAng += angleInc) {
     
     // Make up the box increments
-    numInc = 0;
     gotCross =0;
     lastMean = mean2 = mean3 = -1.e10;
-    wcos = (float)(0.5 * boxWidth * cos(DTOR * rayAng));
-    wsin = (float)(0.5 * boxWidth * sin(DTOR * rayAng));
-    lcos = (float)(0.5 * boxLen * cos(DTOR * (rayAng + 90)));
-    lsin = (float)(0.5 * boxLen * sin(DTOR * (rayAng + 90)));
-    xcorn[0] = -wcos - lcos;
-    ycorn[0] = -wsin - lsin;
-    xcorn[1] =  wcos - lcos;
-    ycorn[1] =  wsin - lsin;
-    xcorn[2] =  wcos + lcos;
-    ycorn[2] =  wsin + lsin;
-    xcorn[3] = -wcos + lcos;
-    ycorn[3] = -wsin + lsin;
-    xmin = xmax = xcorn[0];
-    ymin = ymax = ycorn[0];
-    for (i = 1; i < 4; i++) {
-      xmin = B3DMIN(xmin, xcorn[i]);
-      ymin = B3DMIN(ymin, ycorn[i]);
-      xmax = B3DMAX(xmax, xcorn[i]);
-      ymax = B3DMAX(ymax, ycorn[i]);
-    }
-    ixst = (int)(xmin - 1.5);
-    ixnd = (int)(xmax + 1.5);
-    iyst = (int)(ymin - 1.5);
-    iynd = (int)(ymax + 1.5);
-
-    for (iy = iyst; iy <= iynd; iy++) {
-      for (ix = ixst; ix <= ixnd; ix++) {
-        if (InsideContour(xcorn, ycorn, 4, (float)ix, (float)iy)) {
-          idx[numInc] = ix;
-          idy[numInc++] = iy;
-        }
-      }
-    }
-
-    // Get the basic pixel increment along the ray
-    xray = cos(DTOR * rayAng);
-    yray = sin(DTOR * rayAng);
-    rayFac = B3DMAX(fabs(xray), fabs(yray));
-    xray /= rayFac;
-    yray /= rayFac;
+    MakeBoxIncrements(boxLen, boxWidth, rayAng, idx, idy, numInc, xray, yray);
 
     // Find the intersection point to start doing boxes at
     ixray = iyray = B3DMAX(nx, ny);
@@ -2228,6 +2186,101 @@ int ProcFindCircleEdges(void *array, int type, int nx, int ny, float xcen, float
   return numPts;
 }
 
+// Fill arrays of position increments for summing in a box oriented along the given ray
+// angle, with length perpendicular to the ray and width parallel to it.
+void MakeBoxIncrements(int boxLen, int boxWidth, double rayAng, int *idx, int *idy,
+  int &numInc, double &xray, double &yray)
+{
+  float xcorn[4], ycorn[4];
+  int ixst, ixnd, iyst, iynd, ix, iy, i;
+  float xmin, xmax, ymin, ymax, wcos, wsin, lcos, lsin;
+  double rayFac;
+  numInc = 0;
+  wcos = (float)(0.5 * boxWidth * cos(DTOR * rayAng));
+  wsin = (float)(0.5 * boxWidth * sin(DTOR * rayAng));
+  lcos = (float)(0.5 * boxLen * cos(DTOR * (rayAng + 90)));
+  lsin = (float)(0.5 * boxLen * sin(DTOR * (rayAng + 90)));
+  xcorn[0] = -wcos - lcos;
+  ycorn[0] = -wsin - lsin;
+  xcorn[1] = wcos - lcos;
+  ycorn[1] = wsin - lsin;
+  xcorn[2] = wcos + lcos;
+  ycorn[2] = wsin + lsin;
+  xcorn[3] = -wcos + lcos;
+  ycorn[3] = -wsin + lsin;
+  xmin = xmax = xcorn[0];
+  ymin = ymax = ycorn[0];
+  for (i = 1; i < 4; i++) {
+    xmin = B3DMIN(xmin, xcorn[i]);
+    ymin = B3DMIN(ymin, ycorn[i]);
+    xmax = B3DMAX(xmax, xcorn[i]);
+    ymax = B3DMAX(ymax, ycorn[i]);
+  }
+  ixst = (int)(xmin - 1.5);
+  ixnd = (int)(xmax + 1.5);
+  iyst = (int)(ymin - 1.5);
+  iynd = (int)(ymax + 1.5);
+
+  for (iy = iyst; iy <= iynd; iy++) {
+    for (ix = ixst; ix <= ixnd; ix++) {
+      if (InsideContour(xcorn, ycorn, 4, (float)ix, (float)iy)) {
+        idx[numInc] = ix;
+        idy[numInc++] = iy;
+      }
+    }
+  }
+
+  // Get the basic pixel increment along the ray
+  xray = cos(DTOR * rayAng);
+  yray = sin(DTOR * rayAng);
+  rayFac = B3DMAX(fabs(xray), fabs(yray));
+  xray /= rayFac;
+  yray /= rayFac;
+}
+
+// Compute means along the line connecting two points using the given box dimensions
+// perpendicular and parallel to the line, and taking numSteps
+void ProcBoxMeansAlongLine(void *array, int type, int nx, int ny, int border, int boxLen,
+  int boxWidth, int ixStart, int iyStart, int ixEnd, int iyEnd, int numSteps, 
+  float *means)
+{
+  int *idx = new int[2 * boxLen * boxWidth];
+  int *idy = new int[2 * boxLen * boxWidth];
+  int numInc, xhi, yhi, ix, iy, iray, i,ixc, iyc, npix;
+  double rayAng, xray, yray, sum, rayLen, stepSize;
+  short int *sdata = (short int *)array;
+  unsigned short int *usdata = (unsigned short int *)array;
+  unsigned char *bdata = (unsigned char *)array;
+  float *fdata = (float *)array;
+
+  xhi = nx - 1 - border;
+  yhi = ny - 1 - border;
+
+  // Get angle, increment, and number of steps
+  rayAng = atan2(iyEnd - iyStart, ixEnd - ixStart) / DTOR;
+  MakeBoxIncrements(boxLen, boxWidth, rayAng, idx, idy, numInc, xray, yray);
+  rayLen = sqrt(pow(ixEnd - ixStart, 2.) + pow(iyEnd - iyStart, 2.));
+  stepSize = rayLen / (numSteps - 1);
+
+  // Loop on steps
+  for (iray = 0; iray < numSteps; iray++) {
+    ixc = (int)(ixStart + iray * xray * stepSize);
+    iyc = (int)(iyStart + iray * yray * stepSize);
+ 
+    // Get the box mean
+    sum = 0.;
+    npix = 0;
+    switch (type) {
+      PFCE_BOX_SUM(BYTE, bdata);
+      PFCE_BOX_SUM(SIGNED_SHORT, sdata);
+      PFCE_BOX_SUM(UNSIGNED_SHORT, usdata);
+      PFCE_BOX_SUM(FLOAT, fdata);
+    }
+    means[iray] = (float)(sum / npix);
+  }
+  delete[] idx;
+  delete[] idy;
+}
 
 // Perform dark subtraction on an image, interpolating between two dark references
 // if ref2 is non-NULL.
