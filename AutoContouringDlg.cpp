@@ -200,8 +200,9 @@ void CAutoContouringDlg::OnOK()
 {
   DialogToParams();
   *mMasterParams = mParams;
-  if (mOpenedFromMultiGrid)
-    mWinApp->mMultiGridTasks->CopyAutoContGroups();
+
+  // Copy to here regardless of whether opened from multigrid
+  mWinApp->mMultiGridTasks->CopyAutoContGroups();
   OnCancel();
 }
 
