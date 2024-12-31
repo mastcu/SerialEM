@@ -820,6 +820,7 @@ CSerialEMApp::CSerialEMApp()
   mRestoreFocusIdleCount = 0;
   mStartCameraInDebug = false;
   mRecvImageTimeout = 0.;
+  mBufToggleCount = 0;
   traceMutexHandle = CreateMutex(0, 0, 0);
   sStartTime = GetTickCount();
   mLastIdleScriptTime = sStartTime;
@@ -3538,6 +3539,7 @@ BOOL CSerialEMApp::SetWindowPlacement(WINDOWPLACEMENT *winPlace)
   return m_pMainWnd->SetWindowPlacement(winPlace);
 }
 
+// Set one of the panes in the status bar
 void CSerialEMApp::SetStatusText(int iPane, CString strText, bool skipBlink)
 {
   mMainFrame->SetStatusText(iPane, strText);
@@ -3550,7 +3552,16 @@ void CSerialEMApp::SetStatusText(int iPane, CString strText, bool skipBlink)
   mNextBlinkTime = GetTickCount() + BLINK_TIME_ON;
 }
 
-// Manage the blinking pane
+// Initite toggling between A and another buffer at the given interval
+void CSerialEMApp::ToggleBuffers(int toBuf, int interval, int maxCount)
+{
+  mBufToToggle = toBuf;
+  mBufToggleCount = maxCount;
+  mBufToggleInterval = interval;
+  mLastToggleTime = GetTickCount();
+}
+
+// Manage the blinking pane and image toggling
 void CSerialEMApp::ManageBlinkingPane(DWORD time)
 {
   if (!mBlinkText.IsEmpty() && time > mNextBlinkTime && !mAppExiting) {
@@ -3563,8 +3574,17 @@ void CSerialEMApp::ManageBlinkingPane(DWORD time)
     }
     mBlinkOn = !mBlinkOn;
   }
+
+  // Toggle if time has elapsed
+  if (mBufToggleCount > 0 && SEMTickInterval(time, mLastToggleTime) > mBufToggleInterval) 
+  {
+    SetCurrentBuffer(mMainView->GetImBufIndex() > 0 ? 0 : mBufToToggle);
+    mBufToggleCount--;
+    mLastToggleTime = time;
+  }
 }
 
+// Set the title bar text, which can be one or more filenames
 void CSerialEMApp::SetTitleFile(CString fileName)
 {
   CString progName = mDummyInstance ? "DUMMY SerialEM" : "SerialEM";

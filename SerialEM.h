@@ -528,6 +528,7 @@ public:
   GetSetMember(BOOL, SmallFontsBad)
     GetSetMember(BOOL, DisplayNotTruly120DPI)
     void SetStatusText(int iPane, CString strText, bool skipBlink = false);
+  void ToggleBuffers(int toBuf, int interval, int maxCount);
   void ManageBlinkingPane(DWORD time);
   BOOL SetWindowPlacement(WINDOWPLACEMENT *winPlace);
   BOOL GetWindowPlacement(WINDOWPLACEMENT *winPlace);
@@ -698,6 +699,7 @@ public:
   GetSetMember(CString, NanumFontPath);
   SetMember(BOOL, StartCameraInDebug);
   GetSetMember(float, RecvImageTimeout);
+  SetMember(int, BufToggleCount);
   void RestoreFocusWhenIdle() { mRestoreFocusIdleCount = 4; };
   unsigned char *GetPaletteColors() {return &mPaletteColors[0][0] ; };
   void SetEnableExternalPython(BOOL inVal);
@@ -1027,7 +1029,11 @@ private:
   int mLastSecondaryLog;        // Index of last one that lost focus
   WINDOWPLACEMENT mSecondaryLogPlace;
   int mRestoreFocusIdleCount;   // Count for restoring focus from OnIdle
-  float mRecvImageTimeout;       // Timeout for recv when getting images
+  float mRecvImageTimeout;      // Timeout for recv when getting images
+  int mBufToggleCount;          // # of image toggles remaining
+  int mBufToToggle;             // Buffer to toggle between A and
+  int mBufToggleInterval;       // Msec between toggles
+  double mLastToggleTime;       // Time of last toggle
 
 public:
   void UpdateAllEditers(void);

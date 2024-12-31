@@ -9555,6 +9555,7 @@ void CCameraController::DisplayNewImage(BOOL acquired)
   }
 
   mInDisplayNewImage = true;
+  mWinApp->SetBufToggleCount(0);
 
   // If in diffraction mode and there are pixel sizes provided, replace the pixel size 
   if (!mMagBefore) {
