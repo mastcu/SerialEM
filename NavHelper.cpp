@@ -4615,6 +4615,27 @@ void CNavHelper::EndAcquireOrNewFile(CMapDrawItem * item, bool endGroupFile)
   }
 }
 
+/*
+ * Turn off all new file at item and tilt series
+ */
+void CNavHelper::EndAllNewFilesSetToOpen()
+{
+  CMapDrawItem *item;
+  int ind;
+  bool changed = false;
+  for (ind = 0; ind < mItemArray->GetSize(); ind++) {
+    item = mItemArray->GetAt(ind);
+    if (item->mFilePropIndex >= 0 || item->mMontParamIndex >= 0) {
+      changed = true;
+      EndAcquireOrNewFile(item);
+    }
+  }
+  if (mNav && changed) {
+    mNav->FillListBox(true, true);
+    mNav->SetChanged(true);
+  }
+}
+
 // Gets the file type and returns the scheduled file object if any for an item
 ScheduledFile * CNavHelper::GetFileTypeAndSchedule(CMapDrawItem * item, int & fileType)
 {
@@ -5782,6 +5803,26 @@ int CNavHelper::FindLastFileWithMatchingMontParams(MontParam *param1)
   return -1;
 }
 
+// See if the only files set to open are reusable montages
+bool CNavHelper::AreOnlyReusableMontagesSetToOpen()
+{
+  MontParam *param;
+  CMapDrawItem *item;
+  for (int ind = 0; ind < (int)mItemArray->GetSize(); ind++) {
+    item = mItemArray->GetAt(ind);
+    if (item->mTSparamIndex >= 0)
+      return false;
+    if (item->mFilePropIndex >= 0 && item->mMontParamIndex < 0)
+      return false;
+    if (item->mMontParamIndex >= 0) {
+      param = mMontParArray->GetAt(item->mMontParamIndex);
+      if (!param->reusability)
+        return false;
+    }
+  }
+  return true;
+}
+
 // See if a read-in image is actually a map and return the map ID, except when a map is
 // being loaded
 int CNavHelper::FindMapIDforReadInImage(CString filename, int secNum, int ignoreLoad)
@@ -5931,7 +5972,7 @@ int CNavHelper::AlignWithRotation(int buffer, float centerAngle, float angleRang
       shiftXbest = shiftX;
       shiftYbest = shiftY;
     }
-    SEMTrace('a', "Rotation %.2f  peak  %g  frac %.3f  shift %.1f %.1f", rotation, peak,
+    SEMTrace('p', "Rotation %.2f  peak  %g  frac %.3f  shift %.1f %.1f", rotation, peak,
       fracPix, shiftX, shiftY);
   }
   if (istMax < 0) {
@@ -5980,7 +6021,7 @@ int CNavHelper::AlignWithRotation(int buffer, float centerAngle, float angleRang
           shiftXbest = shiftX;
           shiftYbest = shiftY;
         }
-        SEMTrace('a', "Rotation %.2f  peak  %g  frac %.3f  shift %.1f %.1f", rotation, 
+        SEMTrace('p', "Rotation %.2f  peak  %g  frac %.3f  shift %.1f %.1f", rotation, 
           peak, fracPix, shiftX, shiftY);
       }
     }

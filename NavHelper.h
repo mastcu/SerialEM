@@ -616,6 +616,7 @@ public:
   int SetTSParams(int itemNum);
   bool EarlierItemSharesRef(int itemNum, int refInd, int which, int &shareInd);
   void EndAcquireOrNewFile(CMapDrawItem * item, bool endGroupFile = false);
+  void EndAllNewFilesSetToOpen();
   ScheduledFile * GetFileTypeAndSchedule(CMapDrawItem * item, int & fileType);
   void DeleteArrays(void);
   int FindMapForRealigning(CMapDrawItem * inItem, BOOL restoreState);
@@ -734,6 +735,7 @@ public:
   bool AnyMontageMapsInNavTable();
   void ModifyMontsForReusability(IntVec &montInds);
   int FindLastFileWithMatchingMontParams(MontParam *param1);
+  bool AreOnlyReusableMontagesSetToOpen();
   int FindMapIDforReadInImage(CString filename, int secNum, int ignoreLoad = false);
   int SetUserValue(CMapDrawItem *item, int number, CString &value);
   int GetUserValue(CMapDrawItem *item, int number, CString &value);
