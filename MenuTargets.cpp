@@ -945,18 +945,21 @@ void CMenuTargets::OnAutocontourGridSquares()
 
 void CMenuTargets::OnMultipleGridOperations()
 {
+  if (!mWinApp->mNavigator)
+    OnTasksNavigator();
   mNavHelper->OpenMultiGrid();
 }
 
 void CMenuTargets::OnUpdateMultipleGridOperations(CCmdUI *pCmdUI)
 {
-  pCmdUI->Enable((!DoingTasks() || mWinApp->GetJustNavAcquireOpen() || 
-    mWinApp->mMultiGridTasks->GetDoingMulGridSeq())
-    && mWinApp->mNavigator);
+  pCmdUI->Enable((!DoingTasks() || mWinApp->GetJustNavAcquireOpen() ||
+    mWinApp->mMultiGridTasks->GetDoingMulGridSeq()));
 }
 
 void CMenuTargets::OnGridsReadSessionfile()
 {
+  if (!mWinApp->mNavigator)
+    OnTasksNavigator();
   CString str;
   if (!mWinApp->mNavHelper->mMultiGridDlg)
     mNavHelper->OpenMultiGrid();
@@ -969,7 +972,7 @@ void CMenuTargets::OnGridsReadSessionfile()
 
 void CMenuTargets::OnUpdateGridsReadSessionfile(CCmdUI *pCmdUI)
 {
-  pCmdUI->Enable(!DoingTasks() && mWinApp->mNavigator);
+  pCmdUI->Enable(!DoingTasks());
 }
 
 void CMenuTargets::OnGridsClearSession()
