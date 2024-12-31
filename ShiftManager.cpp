@@ -27,6 +27,7 @@
 #include "TSController.h"
 #include "EMbufferManager.h"
 #include "ComplexTasks.h"
+#include "MultigridTasks.h"
 #include "ParticleTasks.h"
 #include "MultiTSTasks.h"
 #include "NavHelper.h"
@@ -932,12 +933,13 @@ int CShiftManager::AutoAlign(int bufIndex, int inSmallPad, BOOL doImShift, int c
   doTrim = false;
   if (!(tmplCorr || mWinApp->mShiftCalibrator->CalibratingIS() ||
     mWinApp->mParticleTasks->DoingTemplateAlign() == 1 ||
+    mWinApp->mMultiGridTasks->GetDoingMultiGrid() ||
     (mWinApp->mMacroProcessor->DoingMacro() && 
     mWinApp->mMacroProcessor->GetDisableAlignTrim()))) {
       if (mWinApp->mNavHelper->GetRealigning() == 1 ||
         mWinApp->mParticleTasks->DoingTemplateAlign() > 1)
         doTrim = !disableItemTrim;
-      else if (mWinApp->mComplexTasks->InLowerMag())
+      else if (mWinApp->mComplexTasks->InLowerMag()) 
         doTrim = !disableTaskTrim;
       else if (mWinApp->LowDoseMode())
         doTrim = !disableLDtrim;
@@ -1014,7 +1016,7 @@ int CShiftManager::AutoAlign(int bufIndex, int inSmallPad, BOOL doImShift, int c
           report.Format("Trimming A by %d  %d  %d  %d,  reference by %d  %d  %d  %d", 
           nxTrimA, nxTrimAright, nyTrimA, nyTrimAtop, 
           nxTrimC, nxTrimCright, nyTrimC, nyTrimCtop);
-        if ((!scaling && trimOutput) || GetDebugOutput('1'))
+        if ((!scaling && trimOutput) || GetDebugOutput('a'))
           mWinApp->AppendToLog(report, LOG_SWALLOW_IF_CLOSED);
     }
   }
