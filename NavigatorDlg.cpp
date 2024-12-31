@@ -8114,15 +8114,19 @@ int CNavigatorDlg::DoSaveAs()
 // Check if needs saving and ask user before proceding
 int CNavigatorDlg::AskIfSave(CString reason)
 {
+  static bool suggested = false;
   if (!mChanged && mParam->autosaveFile.IsEmpty())
     return 0;
 
   if (mChanged && !mNavFilename.IsEmpty() && mWinApp->mDocWnd->GetAutoSaveNav())
     return DoSave(false);
 
-  UINT action = MessageBox("Save Navigator entries before " + reason + 
-    "\r\n(Turn on Autosave in Navigator Options submenu to avoid this message)", NULL, 
-    MB_YESNOCANCEL | MB_ICONQUESTION);
+  reason = "Save Navigator entries before " + reason;
+  if (!suggested) {
+    reason += "\r\n(Turn on Autosave in Navigator Options submenu to avoid this message)";
+    suggested = true;
+  }
+  UINT action = AfxMessageBox(reason, MB_QUESTION);
   if (action == IDCANCEL)
     return 1;
   else if (action == IDNO) {
@@ -8174,6 +8178,7 @@ int CNavigatorDlg::SaveAndClearTable(bool askIfSave)
   mHelper->DeleteArrays();
   FillListBox(false);
   mNavFilename = "";
+  mNewItemNum = 1;
   SetWindowText("Navigator");
   return retval;
 }
