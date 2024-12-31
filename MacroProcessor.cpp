@@ -27,6 +27,7 @@
 #include "ParameterIO.h"
 #include "BeamAssessor.h"
 #include "ComplexTasks.h"
+#include "MultiGridTasks.h"
 #include "HoleFinderDlg.h"
 #include "AutoContouringDlg.h"
 #include "ParticleTasks.h"
@@ -1173,6 +1174,7 @@ int CMacroProcessor::TaskBusy()
     mNavHelper->mHoleFinderDlg->GetFindingHoles() || mNavHelper->GetRealigning() ||
     (mWinApp->mComplexTasks->DoingTasks() && 
       !mWinApp->mParticleTasks->GetMSRunningMacro()) || 
+    mWinApp->mMultiGridTasks->GetDoingMultiGrid() ||
     mWinApp->DoingRegisteredPlugCall()) ? 1 : 0;
 }
 
