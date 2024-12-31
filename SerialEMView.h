@@ -74,9 +74,9 @@ protected:
 public:
   void StopBeingActiveStack() { mStackWindow = false; };
   void StageToImage(EMimageBuffer *imBuf, float inX, float inY, float &outX, float &outY,
-    int pcInd = -1);
+    int pcInd = -1, float *pcCenDist = NULL);
   void ExternalStageToImage(EMimageBuffer *imBuf, ScaleMat &aMat, float delX, float delY, 
-    float inX, float inY, float &outX, float &outY);
+    float inX, float inY, float &outX, float &outY, float *pcCenDist = NULL);
   BOOL ConvertMousePoint(CRect *rect, KImage *image, CPoint *point, float &outX, float &outY);
   void MakeDrawPoint(CRect *rect, KImage *image, float inX, float inY, CPoint *point, bool skipShift = false);
   void DrawCross(CDC *cdc, CPen *pNewPen, CPoint point, int crossLen);

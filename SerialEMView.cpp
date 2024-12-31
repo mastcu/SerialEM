@@ -1898,15 +1898,21 @@ void CSerialEMView::GetItemImageCoords(EMimageBuffer *imBuf, CMapDrawItem *item,
 
 // Transform stage position to image position, with optional adjustment in montage
 void CSerialEMView::StageToImage(EMimageBuffer *imBuf, float inX, float inY, float &outX,
-                                 float &outY, int pcInd)
+                                 float &outY, int pcInd, float *pcCenDist)
 {
   MiniOffsets *mini = imBuf->mMiniOffsets;
-  float testX, testY;
+  float testX, testY, delX, delY;
   int ixPiece, iyPiece, index, ind2, ix, iy, minDist, dist;
   outX = mAmat.xpx * (inX - mStageErrX) + mAmat.xpy * (inY - mStageErrY) + mDelX;
   outY = mAmat.ypx * (inX - mStageErrX) + mAmat.ypy * (inY - mStageErrY) + mDelY;
-  if (mAdjustPt < 0)
+  if (mAdjustPt < 0) {
+
+    // Optional return of distance from piece or image center
+    if (pcCenDist)
+      *pcCenDist = sqrtf(powf(outX - (float)imBuf->mImage->getWidth() / 2.f, 2.f) +
+        powf(outY - (float)imBuf->mImage->getHeight() / 2.f, 2.f));
     return;
+  }
   testX = outX;
   testY = outY;
 
@@ -1953,6 +1959,15 @@ void CSerialEMView::StageToImage(EMimageBuffer *imBuf, float inX, float inY, flo
       return;
   } 
 
+  // Compute center distance before offsetting and rotating back
+  if (pcCenDist) {
+    ixPiece = index / mini->yNframes;
+    iyPiece = mini->yNframes - 1 - index % mini->yNframes;
+    delX = testX - (float)(ixPiece * mini->xDelta + mini->xBase + mini->xDelta / 2.);
+    delY = testY - (float)(iyPiece * mini->yDelta + mini->yBase + mini->yDelta / 2.);
+    *pcCenDist = sqrtf(delX * delX + delY * delY);
+  }
+
   // Offset the point, rotate it back
   testX += mini->offsetX[index];
   testY += mini->offsetY[index];
@@ -1968,7 +1983,8 @@ void CSerialEMView::StageToImage(EMimageBuffer *imBuf, float inX, float inY, flo
 // External call for one conversion needs to be supplied with the transformation, which
 // is stored, then it sets up montage adjustments and can call StageToImage
 void CSerialEMView::ExternalStageToImage(EMimageBuffer *imBuf, ScaleMat &aMat, 
-  float delX, float delY, float inX, float inY, float &outX, float &outY)
+  float delX, float delY, float inX, float inY, float &outX, float &outY, 
+  float *pcCenDist)
 {
   mStageErrX = mStageErrY = 0.;
   mAmat = aMat;
@@ -1976,7 +1992,7 @@ void CSerialEMView::ExternalStageToImage(EMimageBuffer *imBuf, ScaleMat &aMat,
   mDelY = delY;
   mAdjustPt = mWinApp->mNavHelper->PrepareMontAdjustments(imBuf, mRmat, mRinv, mRdelX,
     mRdelY);
-  StageToImage(imBuf, inX, inY, outX, outY);
+  StageToImage(imBuf, inX, inY, outX, outY, -1, pcCenDist);
 }
 
 // Draw a cross with the given pen and length
@@ -3105,16 +3121,19 @@ void CSerialEMView::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
       iTrial = 0;
       iDir = 1;
     }
+    mWinApp->SetBufToggleCount(0);
     TryToChangeBuffer(iTrial, iDir);
 
     // Insert key to get to Autoalign image
   } else if (nChar == VK_INSERT) {
+    mWinApp->SetBufToggleCount(0);
     iBuf = mWinApp->mBufferManager->AutoalignBufferIndex();
     if (mainBufs[iBuf].mImage)
       mWinApp->SetCurrentBuffer(iBuf);
 
   // Delete key to get to read-in image
   } else if (nChar == VK_DELETE) {
+    mWinApp->SetBufToggleCount(0);
     iBuf = mWinApp->mBufferManager->GetBufToReadInto();
     if (iBuf >= 0 && mainBufs[iBuf].mImage)
       mWinApp->SetCurrentBuffer(iBuf);
