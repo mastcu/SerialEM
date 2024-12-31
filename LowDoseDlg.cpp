@@ -19,6 +19,7 @@
 #include "BeamAssessor.h"
 #include "NavHelper.h"
 #include "StateDlg.h"
+#include "MultiGridDlg.h"
 #include "ComplexTasks.h"
 #include "MultiShotDlg.h"
 #include "AutocenSetupDlg.h"
@@ -1725,7 +1726,7 @@ void CLowDoseDlg::ScopeUpdate(int magIndex, int spotSize, double intensity,
   double specX, specY, tiltAxisX, newISX, newISY, baseTransX, baseTransY;
   float pct;
   int shiftedA;
-  bool needRedraw = false, needAutoCen = false;
+  bool needRedraw = false, needAutoCen = false, magChanged = false;
   MultiShotParams *msParams;
   EMimageBuffer *imBuf;
   static double lastEDMupdate = 0.;
@@ -1747,6 +1748,7 @@ void CLowDoseDlg::ScopeUpdate(int magIndex, int spotSize, double intensity,
 
     // Change IS position only if mag changes, and treat it as on-axis only for T and F
     if (ldArea->magIndex != magIndex) {
+      magChanged = true;
       if (focusOrTrial) {
         ldArea->axisPosition = ConvertOneIStoAxis(ldArea->magIndex, ldArea->ISX,
           ldArea->ISY);
@@ -1767,6 +1769,11 @@ void CLowDoseDlg::ScopeUpdate(int magIndex, int spotSize, double intensity,
     ldArea->diffFocus = focus;
     ldArea->beamAlpha = alpha;
     ldArea->probeMode = probeMode;
+    if (magChanged && IS_AREA_VIEW_OR_SEARCH(inSetArea) &&
+      mWinApp->mNavHelper->mMultiGridDlg &&
+      mWinApp->mNavHelper->mMultiGridDlg->m_bRefineRealign)
+      mWinApp->mNavHelper->mMultiGridDlg->ManageRefineFOV();
+
     if (inSetArea == RECORD_CONSET && mWinApp->mNavigator &&
       ((mWinApp->mNavigator->m_bShowAcquireArea &&
       (mWinApp->mNavHelper->GetEnableMultiShot() & 1)) || 
