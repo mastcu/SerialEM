@@ -7492,6 +7492,7 @@ void CCameraController::AcquirePluginImage(CameraThreadData *td, void **array,
   bool setReadMode = td->TietzType && td->GatanReadMode >= 0;
   bool tietzAlreadyLive = td->TietzType && (processing & CONTINUOUS_USE_THREAD) &&
     !(processing & CONTINUOUS_FIRST_TIME);
+  bool rampStarted = false;
   int flags = td->PluginAcquireFlags | (td->DivideBy2 ? PLUGCAM_DIVIDE_BY2 : 0);
   if (tietzImage && td->RestoreBBmode)
     flags |= TIETZ_RESTORE_BBMODE;
@@ -7539,21 +7540,32 @@ void CCameraController::AcquirePluginImage(CameraThreadData *td, void **array,
   if (!retval && tietzImage && !tietzAlreadyLive)
     retval = td->plugFuncs->PrepareForAcquire(td->STEMcamera ? td->SelectCamera : 
       td->TietzType, td->ShutterMode);
-  if (!retval && blanker)
+
+  // Start dynamic focus
+  if (!retval && FEIscope && td->STEMcamera && td->DynFocusInterval && 
+    td->PostActionTime) {
+    retval = StartFocusRamp(td, rampStarted);
+
+  } else if (!retval && blanker) {
     StartBlankerThread(td);
+  }
 
   // Get the image
   if (!retval) {
     numAcquired = 1;
     if (td->STEMcamera) {
       retval = td->plugFuncs->AcquireSTEMImage((short **)array, arrSize, td->NumChannels,
-        td->ChannelIndex, td->STEMrotation, td->integration, &sizeX, &sizeY, 
+        td->ChannelIndex, td->STEMrotation, td->integration, &sizeX, &sizeY,
         &numAcquired);
 
       // Set partial scan negative if it is over, signaled by negative numAcquired;
       // fix sign of numAcquired
       if (td->ReturnPartialScan > 0 && numAcquired < 0) {
         td->ReturnPartialScan = -td->ReturnPartialScan;
+
+        // Get statistics back from focus ramp, make sure it ends
+      } else if (FEIscope && td->DynFocusInterval && td->PostActionTime) {
+        FinishFocusRamp(td, rampStarted);
       }
       numAcquired = B3DABS(numAcquired);
     } else
