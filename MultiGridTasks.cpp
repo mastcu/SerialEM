@@ -2071,6 +2071,14 @@ int CMultiGridTasks::StartGridRuns(int LMneedsLD, int MMMneedsLD, int finalNeeds
     SEMMessageBox("Aperture control appears not to work on this scope");
     return 1;
   }
+  if (mParams.setCondenserAp && JEOLscope) {
+    ind = mScope->FindApertureIndexFromSize(CONDENSER_APERTURE, mParams.condenserApSize,
+      str);
+    if ((mParams.condenserApSize && !ind) || ind < 0) {
+      SEMMessageBox("There is a problem with condenser aperture size: \r\n" + str);
+      return 1;
+    }
+  }
 
   if (mSingleGridMode && !mReferenceCounts && mParams.acquireLMMs) {
     if (!KGetOneFloat("Enter the reference counts in a low mag mapping image with no beam"
@@ -3192,7 +3200,9 @@ void CMultiGridTasks::DoNextSequenceAction(int resume)
 
     // Start changing the condenser aperture
   case MGACT_SET_CONDENSER_AP:
-    mScope->SetApertureSize(CONDENSER_APERTURE, mParams.condenserApSize);
+    ind = mScope->FindApertureIndexFromSize(CONDENSER_APERTURE, mParams.condenserApSize,
+      str);
+    mScope->SetApertureSize(CONDENSER_APERTURE, ind);
     mMovedAperture = true;
     mRestoreCondAp = true;
     break;

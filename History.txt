@@ -3,6 +3,14 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+1/8/25: In multigrid for JEOL, allowed condenser aperture size to be entered
+as 0 and as actual sizes listed in an ApertureSizes property; opened in single
+grid mode if JeolHasNitrogenClass < 2.
+
+1/8/25: Fixed crash on startup on JEOL, broken 12/17.
+
+1/8/25: Enabled running FocusRamper for plugin STEM cameras.
+
 1/8/25: Fixed getting standard LM focus for EFTEM when it has different
 highest LM mag and a value is stored for the highest LM mag in TEM (In 4.1).
 

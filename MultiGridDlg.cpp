@@ -147,7 +147,7 @@ void CMultiGridDlg::DoDataExchange(CDataExchange* pDX)
   DDX_Control(pDX, IDC_COMBO_LMM_STATE, m_comboLMMstate);
   DDX_Check(pDX, IDC_CHECK_SET_CONDENSER, m_bSetCondenser);
   DDX_Check(pDX, IDC_CHECK_REMOVE_OBJ, m_bRemoveObjective);
-  DDX_MM_INT(pDX, IDC_EDIT_CONDENSER, m_iCondenserSize, 1, 250,
+  DDX_MM_INT(pDX, IDC_EDIT_CONDENSER, m_iCondenserSize, JEOLscope ? 0 : 1, 250,
     "condenser size to switch to");
   DDX_Check(pDX, IDC_CHECK_USE_OVERLAP, m_bUseMontOverlap);
   DDX_MM_INT(pDX, IDC_EDIT_OVERLAP, m_iMontOverlap, 3, 30, "montage overlap");
