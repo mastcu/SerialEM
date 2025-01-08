@@ -531,7 +531,7 @@ IF EXIST Shrmemframe\msvcr120.dll (
    COPY /Y Shrmemframe\msvcp120.dll %SHRMEMDIR%
    COPY /Y Shrmemframe\msvcr120.dll %SHRMEMDIR%
 )
-IF NOT EXIST Shrmemframe\msvcr120.dl (
+IF NOT EXIST Shrmemframe\msvcr120.dll (
    COPY /Y Shrmemframe\libiomp5md.dll %SHRMEMDIR%
    COPY /Y Shrmemframe\libmmd.dll %SHRMEMDIR%
    XCOPY /Q /S /Y /I Shrmemframe\Microsoft.VC90.CRT  %SHRMEMDIR%\Microsoft.VC90.CRT
