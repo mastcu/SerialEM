@@ -322,7 +322,7 @@ void CScopeStatusDlg::Update(double inCurrent, int inMagInd, double inDefocus,
     mWinApp->mAlignFocusWindow.UpdateEucenFocus(inMagInd, temNano);
 
   // Maintain PLA/IS/CLA for JEOL
-  if (STEM != mSTEM && JEOLscope) {
+  if (STEM != mSTEM && JEOLscope && !mWinApp->GetStartingProgram()) {
     SetDlgItemText(IDC_STATISORPS, B3DCHOICE(STEM, "CLA",
       mWinApp->mScope->GetUsePLforIS() ? "PLA" : "IS"));
     mWinApp->mAlignFocusWindow.SetDlgItemText(IDC_BUTRESETSHIFT, B3DCHOICE(STEM, 
