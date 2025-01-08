@@ -7152,20 +7152,13 @@ int CMacCmd::ReportApertureSize(void)
 int CMacCmd::SetApertureSize(void)
 {
   ConvertApertureNameToNum();
-  int index, ap = mItemInt[1], size = mItemInt[2];
-  if (size > 0 && JEOLscope) {
-    index = mScope->FindApertureIndexFromSize(ap, size);
-    if (index > 0) {
-      size = index;
-    } else if (!index) {
-      mStrCopy.Format("Size %d is not in the list from the AperturesSizes property for "
-        "aperture %d in line:\n\n", size, ap);
-      ABORT_LINE(mStrCopy);
-    } else if (size > 4) {
-      PrintfToLog("WARNING: There is no ApertureSizes property with a size list for"
-        " aperture %d; \r\n %d is probably an incorrect entry for the position index",
-        ap, size);
-    }
+  int ap = mItemInt[1], size;
+  size = mScope->FindApertureIndexFromSize(ap, mItemInt[2], mStrCopy);
+  if (!size && mItemInt[2] != 0) {
+    ABORT_LINE(mStrCopy);
+  } else if (size < 0) {
+    SEMAppendToLog("WARNING: " + mStrCopy);
+    size = -size;
   }
   if (!mScope->SetApertureSize(ap, size)) {
     AbortMacro();

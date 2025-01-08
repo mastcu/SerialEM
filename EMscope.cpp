@@ -705,6 +705,8 @@ int CEMscope::Initialize()
         mLastRegularFocus = 0.;
         mLastSTEMfocus = 0.;
       }
+      if (mScopeHasAutoloader)
+        mScopeHasAutoloader = mJeolHasNitrogenClass > 1 ? 1 : 0;
 
       // Correct the wrong current factor placed in all properties files
       if (fabs(mScreenCurrentFactor - 0.059) < 0.001)
@@ -7727,6 +7729,26 @@ int CEMscope::FindApertureIndexFromSize(int apInd, int size)
     }
   }
   return -1;
+}
+
+// Can be called for both scopes, produces useful error messages when the lookup fails
+int CEMscope::FindApertureIndexFromSize(int apInd, int size, CString &errStr)
+{
+  int index = size;
+  if (size > 0 && JEOLscope) {
+    index = FindApertureIndexFromSize(apInd, size);
+    if (!index) {
+      errStr.Format("Size %d is not in the list from the AperturesSizes property for "
+        "aperture %d in line:\n\n", size, apInd);
+      
+    } else if (index < 0 && size > 4) {
+      errStr.Format("There is no ApertureSizes property with a size list for"
+        " aperture %d; \r\n %d is probably an incorrect entry for the position index",
+        apInd, size);
+      index = -size;
+    }
+  }
+  return index;
 }
 
 // Return the current position of the phase plate

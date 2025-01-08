@@ -1103,6 +1103,7 @@ public:
   bool MovePhasePlateToNextPos();
   int FindApertureSizeFromIndex(int apInd, int sizeInd);
   int FindApertureIndexFromSize(int apInd, int size);
+  int FindApertureIndexFromSize(int apInd, int size, CString &errStr);
   BOOL RunSynchronousThread(int action, int newIndex, int curIndex, const char *routine);
   static UINT SynchronousProc(LPVOID pParam);
   static BOOL SetMagKernel(SynchroThreadData *sytd);
