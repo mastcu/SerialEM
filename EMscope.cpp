@@ -5135,7 +5135,10 @@ BOOL CEMscope::SetDiffractionFocus(double inVal)
 double CEMscope::GetStandardLMFocus(int magInd, int probe)
 {
   int i, dist, distmin = 1000, nearInd = -1;
-  int lowestM = GetLowestMModeMagInd();
+  
+  // USE THIS SO EFTEM FINDS A VALUE SET AT HIGHEST LM FOR TEM
+  // SWITCH BACK TO GET FUNCTION IF SEPARATE EFTEM VALUES GET STORED
+  int lowestM = mLowestMModeMagInd;
   double focus = magInd >= lowestM ? -999 : mStandardLMFocus;
   HitachiParams *hParams = mWinApp->GetHitachiParams();
   if (probe < 0 || probe > 1)
