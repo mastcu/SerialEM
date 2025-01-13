@@ -10,6 +10,7 @@
 #include "stdafx.h"
 #include "SerialEM.h"
 #include "SerialEMDoc.h"
+#include "SerialEMView.h"
 #include "ParticleTasks.h"
 #include "ComplexTasks.h"
 #include "EMscope.h"
@@ -2054,9 +2055,11 @@ int CParticleTasks::AlignToTemplate(NavAlignParams & aliParams)
 // Next operation in align to template
 void CParticleTasks::TemplateAlignNextTask(int param)
 {
-  int alignErr;
+  int alignErr, ix0, ix1, iy0, iy1, nxIm, nyIm;
   double ISX, ISY, radialUM, stz;
   float backlashX, backlashY, shiftX, shiftY;
+  bool cropping;
+  CString mess;
   ScaleMat mat;
   if (mATIterationNum < 0)
     return;
@@ -2086,10 +2089,14 @@ void CParticleTasks::TemplateAlignNextTask(int param)
   } else {
 
     // Got an image, align it
+    mImBufs->mImage->getSize(nxIm, nyIm);
+    if (!mATIterationNum)
+      mImBufs[mATParams.loadAndKeepBuf].mImage->getSize(mATsizeX, mATsizeY);
+    cropping = nxIm > mATsizeX && nyIm > mATsizeY;
     mWinApp->mShiftManager->SetNextAutoalignLimit(mATParams.maxAlignShift);
-    alignErr = mWinApp->mShiftManager->AutoAlign(mATIterationNum ?
-      1 : mATParams.loadAndKeepBuf, 1, true, AUTOALIGN_KEEP_SPOTS, NULL, 0., 0., 0., 0.,
-      0., NULL, NULL, GetDebugOutput('1'));
+    alignErr = mWinApp->mShiftManager->AutoAlign(B3DCHOICE(mATIterationNum, 
+      cropping ? 2 : 1, mATParams.loadAndKeepBuf), 1, true, AUTOALIGN_KEEP_SPOTS, NULL, 
+      0., 0., 0., 0., 0., NULL, NULL, GetDebugOutput('1'));
     if (alignErr) {
       SEMMessageBox(alignErr < 0 ? "Template autoalignment failed to find a peak within"
         " the distance limit" : "Template autoalignment had a memory or other error");
@@ -2098,12 +2105,29 @@ void CParticleTasks::TemplateAlignNextTask(int param)
       return;
     }
 
+    // Crop image and shift it
+    mImBufs->mImage->getShifts(shiftX, shiftY);
+    if (cropping) {
+      ix0 = (nxIm - mATsizeX) / 2;
+      ix1 = ix0 + mATsizeX - 1;
+      iy0 = (nyIm - mATsizeY) / 2;
+      iy1 = iy0 + mATsizeY - 1;
+      ix0 = mWinApp->mProcessImage->CropImage(mImBufs, iy0, ix0, iy1, ix1);
+      if (ix0) {
+        mess.Format("Error # %d attempting to crop new image to match template", ix0);
+        SEMMessageBox(mess);
+      }
+      mImBufs->mImage->setShifts(shiftX, shiftY);
+      mImBufs->mCaptured = BUFFER_CROPPED;
+      mImBufs->SetImageChanged(1);
+      mWinApp->mMainView->DrawImage();
+    }
+
     // Assess shift for iterating or final message
     mScope->GetLDCenteredShift(ISX, ISY);
     if (!mATIterationNum) {
       mat = MatInv(mShiftManager->StageToCamera(mWinApp->GetCurrentCamera(), mMagIndex));
       if (mat.xpx) {
-        mImBufs->mImage->getShifts(shiftX, shiftY);
         shiftX *= mImBufs->mBinning;
         shiftY *= -mImBufs->mBinning;
         ApplyScaleMatrix(mat, shiftX, shiftY, backlashX, backlashY);

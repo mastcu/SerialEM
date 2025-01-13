@@ -199,6 +199,7 @@ private:
   bool mATFinishing;                // Flag that it is in the last round of reset
   bool mATLastFailed;               // Failure flag
   BOOL mATDidSaveState;             // Flag that starting state was saved
+  int mATsizeX, mATsizeY;           // Size of template, for cropping image
 
   DewarVacParams mDVParams;         // Params for operation
   bool mDVAlreadyFilling;           // Flag that it is now/already filling

@@ -270,9 +270,14 @@
       when you reopen the dialog and will apply if the acquisition is started from a
       script command.</P>
     <P>When this dialog is opened from the <a href="hidd_multi_grid.htm">Multiple Grid Operations</a> dialog to set 
-      parameters for mapping or final data acquisition, this entry is changed to
-      <strong>Do Subset: first n acquire items</strong> and the first text box can be used to 
-      enter the number of items to acquire.</P>
+      parameters for mapping or final data acquisition, this entry is completely changed.&nbsp; 
+      You can specify either the number of items to acquire, or the number of Record 
+      images to take when Multiple Records are being acquired.&nbsp; In the latter 
+      case, select which one to do with the <strong>items</strong> or <strong>shots</strong> 
+      radio button.&nbsp; In the text box after <strong>Do</strong>, enter the number 
+      of items or Records to acquire.&nbsp; In the text box after <strong>from item</strong>, 
+      enter the number of the first acquisition item to start with; e.g., an entry of 
+      11 wll make it skip the first 10 items marked for acquisition.</P>
     <P><b>No message box when errors occur</b></P>
     <P>Selecting this option has two effects: message boxes that would block
       unattended operation are converted to messages in the log, and the underlying
