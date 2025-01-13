@@ -2815,6 +2815,11 @@
             exposure starts; default 3000.</TD>
         </TR>
         <TR VALIGN="top">
+          <TD>PostOpenValvesDelay</TD>
+          <TD>Time delay in msec after opening the column or gun valves before an exposure starts;
+            default 0 msec. &nbsp;</TD>
+        </TR>
+        <TR VALIGN="top">
           <TD>LowestMModeMagIndex</TD>
           <TD>Index of the lowest magnification in non-LM mode, needed to prevent the task
             routines or filter control from switching into LM mode, and to indicate that
@@ -4748,6 +4753,16 @@
           <TD>JeolHasExtraApertures</TD>
           <TD>Set to 1 to use aperture commands that can specify up to 12 kinds of apertures
             instead of 6.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>JeolCondenserApertureID</TD>
+          <TD>ID to use for accessing a single condenser aperture in Multiple Grid Operations
+            when 'JeolHasExtraApertures' is set.&nbsp; This property is needed when 'JeolHasExtraApertures' 
+            is set if there is only one condenser aperture and it is C1; it is also useful if you do
+            not wish to have the C1/C2 radio buttons show up in the Multiple Grid Operations dialog and
+            the other condenser aperture is not affected by setting the one specified here.&nbsp;  Must
+             be 0 or 1; the default is 0.
+          </TD>
         </TR>
         <TR VALIGN="top">
           <TD>JeolRelaxationFlags</TD>

@@ -9700,10 +9700,11 @@ CString CNavigatorDlg::NextTabField(CString inStr, int &index)
 void CNavigatorDlg::AcquireAreas(int source, bool dlgClosing, bool useTempParams)
 {
   int loop, ind, loopStart, loopEnd, macnum, numNoMap = 0, numAtEdge = 0, acqIndex;
+  int numHoles, numAcquires, numShots, numTS, fromItem, totalNum;
   int groupID = -1;
   BOOL rangeErr = false;
   BOOL runPremacro, runPostmacro;
-  bool takingMap, takingImage, doingMultishot;
+  bool takingMap, takingImage, doingMultishot, countShots;
   bool fromMenu = source == 1;
   bool fromMultigrid = source > 1;
   int mgParamSet = B3DMIN(1, source - 2);
@@ -9730,10 +9731,15 @@ void CNavigatorDlg::AcquireAreas(int source, bool dlgClosing, bool useTempParams
     mNavAcquireDlg = new CNavAcquireDlg();
     dlg = mNavAcquireDlg;
     dlg->mNumArrayItems = (int)mItemArray.GetSize();
+    if (fromMultigrid && (source < NAVACQ_SRC_MG_RUN_MMM ||
+      !(mAcqDlgPostponed && !useTempParams))) {
+      dlg->m_bDoSubset = mAcqParm->multiGridSubset > 0;
+      dlg->m_iSubsetNum = B3DABS(mAcqParm->multiGridSubset);
+      dlg->m_iSubsetFrom = mAcqParm->mulGridSubsetFrom;
+      dlg->m_iItemsOrShots = mAcqParm->mulGridItemsOrShots;
+    }
 
     if (fromMultigrid && source < NAVACQ_SRC_MG_RUN_MMM) {
-      dlg->m_bDoSubset = mAcqParm->multiGridSubset > 0;
-      dlg->m_iSubsetStart = B3DABS(mAcqParm->multiGridSubset);
       dlg->mLastNonTStype = mAcqParm->nonTSacquireType;
       dlg->m_iCurParamSet = mgParamSet;
       dlg->mOpenedFromMultiGrid = true;
@@ -9744,10 +9750,7 @@ void CNavigatorDlg::AcquireAreas(int source, bool dlgClosing, bool useTempParams
         dlg->m_iSubsetStart = B3DMIN(mPostponedSubsetStart, dlg->mNumArrayItems);
         dlg->m_iSubsetEnd = B3DMIN(mPostponedSubsetEnd, dlg->mNumArrayItems);
         dlg->m_bDoSubset = mPostposedDoSubset;
-      } else if (fromMultigrid) {
-        dlg->m_bDoSubset = mAcqParm->multiGridSubset > 0;
-        dlg->m_iSubsetStart = B3DABS(mAcqParm->multiGridSubset);
-      } else {
+      } else if (!fromMultigrid) {
         dlg->m_iSubsetStart = 1;
         dlg->m_iSubsetEnd = dlg->mNumArrayItems;
         dlg->m_bDoSubset = false;
@@ -9806,7 +9809,9 @@ void CNavigatorDlg::AcquireAreas(int source, bool dlgClosing, bool useTempParams
         mPostponedSubsetEnd = dlg->m_iSubsetEnd;
         mPostposedDoSubset = dlg->m_bDoSubset;
       } else {
-        mAcqParm->multiGridSubset = (dlg->m_bDoSubset ? 1 : -1) * dlg->m_iSubsetStart;
+        mAcqParm->multiGridSubset = (dlg->m_bDoSubset ? 1 : -1) * dlg->m_iSubsetNum;
+        mAcqParm->mulGridSubsetFrom = dlg->m_iSubsetFrom;
+        mAcqParm->mulGridItemsOrShots = dlg->m_iItemsOrShots;
       }
       ManageAcquireDlgCleanup(fromMenu, dlgClosing);
       return;
@@ -9926,20 +9931,88 @@ void CNavigatorDlg::AcquireAreas(int source, bool dlgClosing, bool useTempParams
   if (dlg->m_bDoSubset) {
     if (fromMultigrid) {
 
-      // For multigrid, count up to the number of items given in "start" number
-      loop = 0;
-      for (ind = 0; ind < (int)mItemArray.GetSize(); ind++) {
-        item = mItemArray[ind];
-        if ((mAcqParm->acquireType == ACQUIRE_DO_TS && item->mTSparamIndex >= 0) ||
-          (mAcqParm->acquireType != ACQUIRE_DO_TS && item->mAcquire)) {
-          loop++;
-          if (loop >= dlg->m_iSubsetStart) {
-            mEndingAcquireIndex = ind;
+      //  Subset in multigrid: first count the total number of the type being acquired
+      countShots = doingMultishot && dlg->m_iItemsOrShots;
+      if (countShots) {
+        mHelper->CountHoleAcquires(-1, -1, 0, numAcquires, numHoles, numShots);
+      } else {
+        mHelper->CountAcquireItems(0, -1, numAcquires, numTS);
+      }
+      totalNum = mAcqParm->acquireType == ACQUIRE_DO_TS ? numTS : numAcquires;
+      if (countShots)
+        totalNum = numShots;
+      fromItem = dlg->m_iSubsetFrom;
+      mEndingAcquireIndex = -1;
+
+      // If there are not enough, do them all
+      if (dlg->m_iSubsetNum >= totalNum) {
+        acqIndex = 0;
+      } else if (countShots) {
+
+        // For number of shots, start at the indicated item and count shots from there,
+        // stop if satisfied, if not drop back one item and iterate
+        while (fromItem > 0) {
+          acqIndex = -1;
+          totalNum = 0;
+          loop = 0;
+          for (ind = 0; ind < (int)mItemArray.GetSize(); ind++) {
+            item = mItemArray[ind];
+            if (item->mAcquire && item->mRegistration == mCurrentRegistration) {
+              loop++;
+
+              // If reached the start
+              if (loop >= fromItem && acqIndex < 0)
+                acqIndex = ind;
+
+              // After the start, count shots
+              if (acqIndex >= 0) {
+                mHelper->CountHoleAcquires(ind, ind, 0, numAcquires, numHoles, numShots);
+                totalNum += numShots;
+                if (totalNum >= dlg->m_iSubsetNum) {
+                  mEndingAcquireIndex = ind;
+                  break;
+                }
+              }
+            }
+          }
+          if (mEndingAcquireIndex >= 0)
             break;
+          fromItem--;
+        }
+      } else {
+
+        // Just items: shift start if the number would go past end
+        if (fromItem + dlg->m_iSubsetNum > totalNum)
+          fromItem = totalNum - dlg->m_iSubsetNum;
+       
+        // Then count to the from point and the end point
+        loop = 0;
+        acqIndex = -1;
+        for (ind = 0; ind < (int)mItemArray.GetSize(); ind++) {
+          item = mItemArray[ind];
+          if (((mAcqParm->acquireType == ACQUIRE_DO_TS && item->mTSparamIndex >= 0) ||
+            (mAcqParm->acquireType != ACQUIRE_DO_TS && item->mAcquire)) &&
+            item->mRegistration == mCurrentRegistration) {
+            loop++;
+            if (loop >= fromItem && acqIndex < 0)
+              acqIndex = ind;
+            if (loop + 1 - fromItem >= dlg->m_iSubsetNum) {
+              mEndingAcquireIndex = ind;
+              break;
+            }
           }
         }
       }
+
+      // Fallback when doing all or if something goes wrong: go to end
+      if (mEndingAcquireIndex < 0)
+        mEndingAcquireIndex = (int)mItemArray.GetSize() - 1;
+      if (acqIndex < 0)
+        acqIndex = 0;
+
     } else {
+
+      // Regular subset
       acqIndex = B3DMAX(0, dlg->m_iSubsetStart - 1);
       mEndingAcquireIndex = B3DMIN(mEndingAcquireIndex, dlg->m_iSubsetEnd - 1);
     }

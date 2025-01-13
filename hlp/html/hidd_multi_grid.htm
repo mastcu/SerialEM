@@ -383,11 +383,22 @@
       grid maps.&nbsp; The aperture will also be removed in later phases if grids are 
       reloaded and maps have to be realigned to.&nbsp; Apertures are always restored 
       to their current state at the end of a run.</strong></p>
+    <p><strong>Set condenser aperture to</strong></p>
     <p>Select this option and fill in a size to have the condenser aperture changed to 
-      the given size before starting grid maps.&nbsp; Again, this size will used when 
-      realigning after reloading a map.&nbsp; For a JEOL with no 'ApertureSizes' 
-      property with actual condenser aperture sizes, this must be a size index between 
-      1 and 4.</p>
+      the given size before starting grid maps.&nbsp; Again, this size will be used when 
+      realigning after reloading a map.&nbsp; For a JEOL, 0 can be used to retract 
+      this aperture, and the label after the text box will be <strong>um</strong> if 
+      actual sizes in microns can be entered as well as size indexes, or <strong>
+      (index #) </strong>if a size index between 1 and 4 must be entered because there 
+      is no 'ApertureSizes' 
+      property specifying actual condenser aperture sizes.&nbsp; If the property 
+      'JeolHasExtraApertures' is set, this line will show <strong>C1</strong> and
+      <strong>C2</strong> radio buttons to let you choose between them.&nbsp; In this 
+      case, the state of both apertures will be restored after coming out of LM, 
+      because it is possible that the other condenser aperture was retracted.&nbsp; If 
+      there is in fact only one condenser aperture but 'JeolHasExtraApertures' is set 
+      to allow access to other ones in the system, the index of the aperture (0 for 
+      C1, 1 for C2) should be entered in the property 'JeolCondenserApertureID'.</p>
     <p><strong>Montage: Full grid&nbsp; -&nbsp; N x N pieces</strong></p>
       <p>Use these radio buttons to select whether to do a full grid montage, the same as would be done with the 
       Navigator - Montaging and Grids - Setup Full Montage menu item, or a montage 
@@ -477,7 +488,8 @@
       to take in Low Dose mode, will be disabled because they are controlled by the 
       multi-grid routine.&nbsp; The option to run on a subset of items is changed to 
       allow you set the maximum number of items to run, which is useful if you want a 
-      sample of data before running full acquisition.&nbsp; To do Multiple Records from multiple holes, you must 
+      sample of data before running full acquisition, or the maximum number of Record 
+      images when acquiring Multiple Records.&nbsp; To do Multiple Records from multiple holes, you must 
       select the option to 'Use map hole vectors for shifts'.&nbsp; Currently, for 
       this to work well, it will almost certainly require a transformation that was 
       stored by running 'Step To and Adjust' after using hole vectors in the Multiple 

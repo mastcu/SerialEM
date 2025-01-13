@@ -48,6 +48,11 @@
       the size of the image taken for realigning to be the same size as the template, 
       which may not work well if the image is not big enough to contain the entire 
       feature of interest when it is displaced by the maximum allowed distance.</p>
+    <p> After aligning to the template, the image is cropped to the same size as the 
+      template to make it easier to visualize whether it is aligned.&nbsp; The 
+      uncropped image is still in buffer B.&nbsp; If image shift is reset and a new 
+      image taken, that image will be aligned to the uncropped one, not to the cropped 
+      one or the template, then cropped in turn. </p>
     <p> <em><strong>Disabling Trimming of Dark Borders in Alignments</strong></em></p>
     <p> The option in this section governs whether dark borders are automatically 
       trimmed in two situations: the initial rounds of Realign to Item, including 

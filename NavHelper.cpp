@@ -5660,7 +5660,7 @@ void CNavHelper::CountHoleAcquires(int startInd, int endInd, int minHoles,
   numHoles = 0;
 
   // Get the default from parameters
-  if (mMultiShotDlg)
+  if (mMultiShotDlg && endInd > startInd)
     mMultiShotDlg->UpdateAndUseMSparams(false);
   GetNumHolesFromParam(xt, yt, numDefault);
 

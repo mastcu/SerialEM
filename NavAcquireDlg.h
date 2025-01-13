@@ -215,4 +215,10 @@ public:
   CButton m_butRealignScaledMap;
   BOOL m_bRealignScaledMap;
   BOOL m_bSkipZinRunAtNearest;
+  int m_iSubsetFrom;
+  afx_msg void OnKillfocusEditSubsetFrom();
+  int m_iItemsOrShots;
+  afx_msg void OnRsubsetItems();
+  int m_iSubsetNum;
+  afx_msg void OnKillfocusEditSubsetNum();
 };

@@ -498,6 +498,8 @@ struct NavAcqParams {
   int conSetForScaledAli;   // Control set to use for it
   BOOL skipZinRunAtNearest; // Skip Z move when running task at nearest item
   int multiGridSubset;      // # of items to do if doing multigrid
+  int mulGridSubsetFrom;    // Item to start at
+  int mulGridItemsOrShots;  // 1 for shots, 0 for items
 };
 
 // Other Nav parameters
@@ -535,6 +537,7 @@ struct MultiGridParams {
   BOOL removeObjectiveAp;    // Flag to remove objective aperture for LM imaging
   BOOL setCondenserAp;       // Flag to change condenser aperture for LM imaging
   int condenserApSize;       // Condenser size to set
+  int C1orC2condenserAp;     // 1 to use C2, 0 to use C1 if both
   int LMMmontType;           // Type of montage to take for LM map
   int LMMnumXpieces;         // Number of pieces in X if fixed size LM map
   int LMMnumYpieces;         // Number of pieces in Y

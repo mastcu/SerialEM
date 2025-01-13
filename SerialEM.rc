@@ -2380,9 +2380,9 @@ BEGIN
     CONTROL         "Send email at end",IDC_NA_SENDEMAIL,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,366,68,10
     LTEXT           "Images will be saved to:",IDC_STAT_SAVING_FATE,5,210,149,8
     LTEXT           "This open file",IDC_STAT_FILE_SAVING_INTO,5,220,149,8
-    CONTROL         "Do subset from index",IDC_NA_DO_SUBSET,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,317,72,10
-    EDITTEXT        IDC_EDIT_SUBSET_START,82,316,26,12,ES_AUTOHSCROLL
-    LTEXT           "to",IDC_STAT_SUBSET_TO,110,317,52,10
+    CONTROL         "Do",IDC_NA_DO_SUBSET,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,317,19,10
+    EDITTEXT        IDC_EDIT_SUBSET_START,82,316,24,12,ES_AUTOHSCROLL
+    LTEXT           "to",IDC_STAT_SUBSET_TO,110,317,21,10
     EDITTEXT        IDC_EDIT_SUBSET_END,119,316,26,12,ES_AUTOHSCROLL
     CONTROL         "Skip stage move to item if possible",IDC_NA_SKIP_INITIAL_MOVE,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,291,136,10
@@ -2475,6 +2475,12 @@ BEGIN
                     "Button",BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,9,255,89,10
     LTEXT           "Skip Z in:",IDC_STAT_SKIP_Z_IN,4,280,27,9
     CONTROL         "Run at nearest",IDC_NA_RUN_AT_ITEM_Z,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,109,279,53,10
+    EDITTEXT        IDC_EDIT_SUBSET_NUM,31,316,21,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_EDIT_SUBSET_FROM,142,316,20,12,ES_AUTOHSCROLL
+    CONTROL         "items",IDC_RSUBSET_ITEMS,"Button",BS_AUTORADIOBUTTON | WS_GROUP,54,317,27,10
+    CONTROL         "shots",IDC_RSUBSET_SHOTS,"Button",BS_AUTORADIOBUTTON,84,317,27,10
+    LTEXT           "from item",IDC_STAT_SUBSET_FROM_ITEM,113,318,28,8
+    LTEXT           "subset from index",IDC_STAT_SUB_FROM_INDEX,28,318,54,8
 END
 
 IDD_NAVIMPORT DIALOGEX 0, 0, 162, 134
@@ -4157,11 +4163,10 @@ BEGIN
     LTEXT           "Use:",IDC_STAT_USE1,176,14,14,8
     CONTROL         "Set state:",IDC_CHECK_SET_LMM_STATE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,177,26,39,10
     COMBOBOX        IDC_COMBO_LMM_STATE,216,26,70,30,CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
-    CONTROL         "Remove objective aperture",IDC_CHECK_REMOVE_OBJ,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,177,39,100,10
-    CONTROL         "Set condenser aperture to",IDC_CHECK_SET_CONDENSER,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,177,50,89,10
-    EDITTEXT        IDC_EDIT_CONDENSER,266,49,23,12,ES_AUTOHSCROLL
-    LTEXT           "um",IDC_STAT_MG_MICRON,290,51,11,8
+    CONTROL         "Remove objective aperture",IDC_CHECK_REMOVE_OBJ,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,177,38,100,10
+    CONTROL         "Set",IDC_CHECK_SET_CONDENSER,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,177,49,21,10
+    EDITTEXT        IDC_EDIT_CONDENSER,269,48,23,12,ES_AUTOHSCROLL
+    LTEXT           "um",IDC_STAT_MG_MICRON,293,50,27,8
     CONTROL         "Full grid",IDC_RFULL_GRID_MONT,"Button",BS_AUTORADIOBUTTON | WS_GROUP,209,63,40,10
     CONTROL         "",IDC_RNUM_MONT_PIECES,"Button",BS_AUTORADIOBUTTON,250,63,12,10
     LTEXT           "Montage:",IDC_STAT_MONTAGE,176,63,31,8
@@ -4232,6 +4237,10 @@ BEGIN
     CONTROL         "State:",IDC_RREFINE_STATE,"Button",BS_AUTORADIOBUTTON,72,216,26,10
     COMBOBOX        IDC_COMBO_REFINE_STATE,100,216,70,30,CBS_DROPDOWN | WS_VSCROLL | WS_GROUP | WS_TABSTOP
     LTEXT           "FOV 99.9 um",IDC_STAT_REFINE_FOV,125,206,43,8
+    CONTROL         "C1",IDC_RSET_C1_APERTURE,"Button",BS_AUTORADIOBUTTON | WS_GROUP,199,49,18,10
+    CONTROL         "C2",IDC_RSET_C2_APERTURE,"Button",BS_AUTORADIOBUTTON,217,49,18,10
+    LTEXT           "condenser",IDC_STAT_CONDENSER,201,50,34,8
+    LTEXT           "aperture to",IDC_STAT_APERTURE_TO,236,50,33,8
 END
 
 IDD_MULGRID_SETTINGS DIALOGEX 0, 0, 311, 368
@@ -5666,6 +5675,9 @@ BEGIN
     IDC_CHECK_SCRIPT_AT_END "Run a script when each grid map is done,including autocontouring if any"
     IDC_COMBO_END_SCRIPT    "Select the script to run when grid map is done"
     IDC_BUT_EUCEN_FOCUS     "Set focus to standard focus value calibrated for current or nearest mag"
+    IDC_CHECK_MG_REFINE     "Refine grid alignment at medium mag after or instead of Realign routine"
+    IDC_RREFINE_VIEW        "Use current Low Dose View parameters for refining grid alignment"
+    IDC_RREFINE_SEARCH      "Use current Low Dose Search parameters for refining grid alignment"
 END
 
 STRINGTABLE
@@ -7906,11 +7918,18 @@ BEGIN
     IDC_BUT_APPLY_FINAL     "Make the global Final Data parameters be the same as the ones for this grid"
     IDC_BUT_RESTORE_CURFINAL 
                             "Restore the global Final Data acquisition parameters to original values"
-    IDC_CHECK_MG_REFINE     "Refine grid alignment at medium mag after or instead of Realign routine"
-    IDC_RREFINE_SEARCH      "Use current Low Dose Search parameters for refining grid alignment"
-    IDC_RREFINE_VIEW        "Use current Low Dose View parameters for refining grid alignment"
+END
+
+STRINGTABLE
+BEGIN
     IDC_RREFINE_STATE       "Use images in selected state for refining grid alignment"
     IDC_COMBO_REFINE_STATE  "Set state for refining alignment - must be LD Search, View, or non-LD state"
+    IDC_EDIT_SUBSET_NUM     "Enter maximum number of items or shots to acquire"
+    IDC_EDIT_SUBSET_FROM    "Enter first acquistion item to start with; skip ones before it"
+    IDC_RSUBSET_ITEMS       "Choose to limit the number of items to be acquired"
+    IDC_RSUBSET_SHOTS       "Choose to limit the number of shots to be taken in Multiple Records"
+    IDC_RSET_C1_APERTURE    "Set specific size or retract the C1 aperture"
+    IDC_RSET_C2_APERTURE    "Set specific size or retract the C2 aperture"
 END
 
 #endif    // English (United States) resources

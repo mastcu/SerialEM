@@ -886,6 +886,8 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
           mgParams->refineAfterRealign = itemInt[24] != 0;
           mgParams->refineImageType = itemInt[25];
         }
+        if (!itemEmpty[26] && itemInt[26] >= 0)
+          mgParams->C1orC2condenserAp = itemInt[26];
 
       } else if (strItems[0].Find("MG") == 0 && (strItems[0].Find("MMMstate") == 2 ||
         strItems[0].Find("State") == 7)) {
@@ -2065,7 +2067,7 @@ void CParameterIO::WriteSettings(CString strFileName)
       snapParams->compression, snapParams->jpegQuality, snapParams->skipOverlays);
     mFile->WriteString(oneState);
     oneState.Format("MultiGridParams %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d"
-      " %d %d %d %d %d %d %d %d -999\n", mgParams->appendNames ? 1 : 0,
+      " %d %d %d %d %d %d %d %d %d\n", mgParams->appendNames ? 1 : 0,
       mgParams->useSubdirectory ? 1 : 0, mgParams->setLMMstate ? 1 : 0,
       mgParams->LMMstateType, mgParams->removeObjectiveAp ? 1 : 0,
       mgParams->setCondenserAp ? 1 : 0, mgParams->condenserApSize, mgParams->LMMmontType,
@@ -2076,7 +2078,7 @@ void CParameterIO::WriteSettings(CString strFileName)
       mgParams->runFinalAcq ? 1 : 0, mgParams->MMMnumXpieces, mgParams->MMMnumYpieces,
       mgParams->framesUnderSession ? 1 : 0, mgParams->runMacroAfterLMM ? 1 : 0,
       mgParams->macroToRun, mgParams->refineAfterRealign ? 1 : 0, 
-      mgParams->refineImageType);
+      mgParams->refineImageType, mgParams->C1orC2condenserAp);
     mFile->WriteString(oneState);
     oneState.Format("MGLMMstate %d %s\n", mgParams->LMMstateNum,
       (LPCTSTR)mgParams->LMMstateName);
@@ -2683,8 +2685,12 @@ int CParameterIO::ReadNavAcqParams(NavAcqParams *navParams, NavAcqAction *navAct
         navParams->realignToScaledMap = itemInt[25] != 0;
         navParams->conSetForScaledAli = itemInt[26];
       }
-      if (!itemEmpty[26])
+      if (!itemEmpty[27])
         navParams->multiGridSubset = itemInt[27];
+      if (!itemEmpty[29]) {
+        navParams->mulGridSubsetFrom = itemInt[28];
+        navParams->mulGridItemsOrShots = itemInt[29];
+      }
 
     } else if (strItems[0].Find("NavAcqAction") == 0) {
       index = atoi((LPCTSTR)strItems[0].Mid(12));
@@ -2751,7 +2757,7 @@ void CParameterIO::WriteNavAcqParams(int which, NavAcqParams *navParams,
     navParams->skipZinRunAtNearest ? 1 : 0);
   mFile->WriteString(oneState);
   oneState.Format("AcquireParams2 %d %f %f %d %d %d %d %d %d %d %f %d %d %d %d %d %d %d "
-    "%d %d %d %d %d %d %d %d %d\n", navParams->cycleDefocus ? 1 : 0,
+    "%d %d %d %d %d %d %d %d %d %d %d\n", navParams->cycleDefocus ? 1 : 0,
     navParams->cycleDefFrom,
     navParams->cycleDefTo, navParams->cycleSteps,
     navParams->earlyReturn ? 1 : 0, navParams->numEarlyFrames,
@@ -2765,7 +2771,8 @@ void CParameterIO::WriteNavAcqParams(int which, NavAcqParams *navParams,
     navParams->runHoleCombiner ? 1 : 0, navParams->useMapHoleVectors ? 1 : 0,
     navParams->endMacroInd, navParams->runEndMacro ? 1 : 0, 
     navParams->realignToScaledMap ? 1 : 0, navParams->conSetForScaledAli,
-    navParams->multiGridSubset);
+    navParams->multiGridSubset, navParams->mulGridSubsetFrom,
+    navParams->mulGridItemsOrShots);
   mFile->WriteString(oneState);
 
   orderLine = "ActionOrder";

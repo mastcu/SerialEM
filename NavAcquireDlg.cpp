@@ -52,7 +52,8 @@ IDC_NA_REALIGN_SCALED_MAP, IDC_RREALI_VIEW, IDC_RREALI_PREV, IDC_RREALI_SEARCH,
 IDC_NA_APPLY_REALIGN_ERR, IDC_NA_RELAX_STAGE, IDC_TSS_LINE1, IDC_TSS_LINE2, IDC_TSS_LINE3,
 IDC_NA_HIDE_OPTIONS, IDC_STAT_CYCLE_FROM, IDC_NA_USE_MAP_HOLES, IDC_NA_RUN_SCRIPT_AT_END,
 IDC_STAT_SPACER3, IDC_COMBO_MACRO_AT_END, IDC_TSS_LINE4, IDC_STAT_SKIP_Z_IN,
-IDC_NA_RUN_AT_ITEM_Z, PANEL_END,
+IDC_NA_RUN_AT_ITEM_Z, IDC_EDIT_SUBSET_NUM, IDC_EDIT_SUBSET_FROM, IDC_RSUBSET_ITEMS,
+IDC_STAT_SUBSET_FROM_ITEM, IDC_RSUBSET_SHOTS, IDC_STAT_SUB_FROM_INDEX, PANEL_END,
 IDC_STAT_ACTION_GROUP, IDC_NA_TASK_LINE1, IDC_NA_TASK_LINE2, IDC_STAT_PRIMARY_LINE,
 IDC_COMBO_PREMACRO, IDC_STAT_PREMACRO,  IDC_COMBO_POSTMACRO, IDC_STAT_POSTMACRO,
 IDC_RADIO_NAVACQ_SEL1, IDC_RADIO_NAVACQ_SEL2,IDC_RADIO_NAVACQ_SEL3, IDC_RADIO_NAVACQ_SEL4,
@@ -145,6 +146,9 @@ CNavAcquireDlg::CNavAcquireDlg(CWnd* pParent /*=NULL*/)
   , m_iRealignConset(0)
   , m_bRealignScaledMap(FALSE)
   , m_bSkipZinRunAtNearest(FALSE)
+  , m_iSubsetFrom(1)
+  , m_iItemsOrShots(0)
+  , m_iSubsetNum(0)
 {
   mCurActSelected = -1;
   mNonModal = true;
@@ -248,6 +252,11 @@ void CNavAcquireDlg::DoDataExchange(CDataExchange* pDX)
   DDX_Control(pDX, IDC_NA_REALIGN_SCALED_MAP, m_butRealignScaledMap);
   DDX_Check(pDX, IDC_NA_REALIGN_SCALED_MAP, m_bRealignScaledMap);
   DDX_Check(pDX, IDC_NA_RUN_AT_ITEM_Z, m_bSkipZinRunAtNearest);
+  DDX_Text(pDX, IDC_EDIT_SUBSET_FROM, m_iSubsetFrom);
+  DDV_MinMaxInt(pDX, m_iSubsetFrom, 1, 1000000);
+  DDX_Text(pDX, IDC_EDIT_SUBSET_NUM, m_iSubsetNum);
+  DDV_MinMaxInt(pDX, m_iSubsetNum, 1, 1000000);
+  DDX_Radio(pDX, IDC_RSUBSET_ITEMS, m_iItemsOrShots);
 }
 
 
@@ -311,6 +320,10 @@ BEGIN_MESSAGE_MAP(CNavAcquireDlg, CBaseDlg)
   ON_BN_CLICKED(IDC_RREALI_VIEW, OnRadioRealiConset)
   ON_BN_CLICKED(IDC_RREALI_SEARCH, OnRadioRealiConset)
   ON_BN_CLICKED(IDC_NA_REALIGN_SCALED_MAP, OnNaRealignScaledMap)
+  ON_EN_KILLFOCUS(IDC_EDIT_SUBSET_FROM, OnKillfocusEditSubsetFrom)
+  ON_BN_CLICKED(IDC_RSUBSET_ITEMS, OnRsubsetItems)
+  ON_BN_CLICKED(IDC_RSUBSET_SHOTS, OnRsubsetItems)
+  ON_EN_KILLFOCUS(IDC_EDIT_SUBSET_NUM, OnKillfocusEditSubsetNum)
 END_MESSAGE_MAP()
 
 // CNavAcquireDlg message handlers
@@ -705,6 +718,8 @@ void CNavAcquireDlg::UnloadDialogToCurParams()
   mParam->numEarlyFrames = m_iEarlyFrames;
   mParam->useMapHoleVectors = m_bUseMapHoles;
   mParam->macroIndex = mMacroNum;
+  mParam->mulGridItemsOrShots = m_iItemsOrShots;
+  mParam->mulGridSubsetFrom = m_iSubsetFrom;
   mParam->skipInitialMove = m_bSkipInitialMove;
   mParam->skipZmoves = m_bSkipZmoves;
   mParam->skipZinRunAtNearest = m_bSkipZinRunAtNearest;
@@ -738,6 +753,8 @@ void CNavAcquireDlg::LoadParamsToDialog()
   m_bHideUnusedActions = mParam->hideUnusedActs;
   m_iSelectedPos = mParam->acqDlgSelectedPos;
   mMacroNum = mParam->macroIndex;
+  m_iItemsOrShots = mParam->mulGridItemsOrShots;
+  m_iSubsetFrom = mParam->mulGridSubsetFrom;
   m_bSkipInitialMove = mParam->skipInitialMove;
   m_bSkipZmoves = mParam->skipZmoves;
   m_bSkipZinRunAtNearest = mParam->skipZinRunAtNearest;
@@ -917,6 +934,22 @@ void CNavAcquireDlg::OnKillfocusSubsetEnd()
   ManageForSubset();
 }
 
+void CNavAcquireDlg::OnKillfocusEditSubsetFrom()
+{
+  UPDATE_DATA_TRUE;
+}
+
+void CNavAcquireDlg::OnKillfocusEditSubsetNum()
+{
+  UPDATE_DATA_TRUE;
+}
+
+void CNavAcquireDlg::OnRsubsetItems()
+{
+  UPDATE_DATA_TRUE;
+  mWinApp->RestoreViewFocus();
+}
+
 // Skipping initial move
 void CNavAcquireDlg::OnSkipInitialMove()
 {
@@ -998,6 +1031,11 @@ void CNavAcquireDlg::ManageEnables(bool rebuilding)
   m_butSetupMultishot.EnableWindow(acquireType == ACQUIRE_MULTISHOT);
   m_editSubsetStart.EnableWindow(m_bDoSubset);
   m_editSubsetEnd.EnableWindow(m_bDoSubset);
+  EnableDlgItem(IDC_EDIT_SUBSET_NUM, m_bDoSubset);
+  EnableDlgItem(IDC_EDIT_SUBSET_FROM, m_bDoSubset);
+  EnableDlgItem(IDC_RSUBSET_ITEMS, m_bDoSubset);
+  EnableDlgItem(IDC_RSUBSET_SHOTS, m_bDoSubset && acquireType == ACQUIRE_MULTISHOT);
+  EnableDlgItem(IDC_STAT_SUBSET_FROM_ITEM, m_bDoSubset);
   m_butAcquireTS.EnableWindow(mAnyTSpoints && !mulGridForMapping);
   m_butAcquireMap.EnableWindow(mAnyAcquirePoints && !mulGridForMapping);
   m_butSaveAsMap.EnableWindow(mAnyAcquirePoints && !m_iAcquireChoice && 
@@ -1073,13 +1111,19 @@ void CNavAcquireDlg::RebuildIfEnabled(bool OK, bool & enabled, bool & doBuild)
 
 void CNavAcquireDlg::DisableItemsForMultiGrid()
 {
-  //EnableDlgItem(IDC_NA_DO_SUBSET, false);
   m_bDoSubset = mMasterParam->multiGridSubset > 0;
-  SetDlgItemText(IDC_STAT_SUBSET_TO, "acquire items");
-  SetDlgItemText(IDC_NA_DO_SUBSET, "Do subset:   first");
   ShowDlgItem(IDC_EDIT_SUBSET_END, false);
-  m_iSubsetStart = B3DABS(mMasterParam->multiGridSubset);
-  m_iSubsetEnd = 1;
+  ShowDlgItem(IDC_EDIT_SUBSET_START, false);
+  ShowDlgItem(IDC_STAT_SUBSET_TO, false);
+  ShowDlgItem(IDC_STAT_SUB_FROM_INDEX, false);
+  if (m_bDoSubset || !m_bHideUnselectedOpts) {
+    ShowDlgItem(IDC_EDIT_SUBSET_NUM, true);
+    ShowDlgItem(IDC_EDIT_SUBSET_FROM, true);
+    ShowDlgItem(IDC_RSUBSET_ITEMS, true);
+    ShowDlgItem(IDC_RSUBSET_SHOTS, true);
+    ShowDlgItem(IDC_STAT_SUBSET_FROM_ITEM, true);
+  }
+  m_iSubsetNum = B3DABS(mMasterParam->multiGridSubset);
   EnableDlgItem(IDC_RMAPPING, false);
   EnableDlgItem(IDC_RACQUISITION, false);
   EnableDlgItem(IDOK, false);
@@ -1217,9 +1261,19 @@ void CNavAcquireDlg::BuildActionSection(bool unhiding)
     mIDsToDrop.push_back(IDC_STAT_FRAMES);
     mIDsToDrop.push_back(IDC_EDIT_EARLY_FRAMES);
   }
-  if (mOpenedFromMultiGrid)
+  if (mOpenedFromMultiGrid || (m_bHideUnselectedOpts && !m_bDoSubset)) {
     mIDsToDrop.push_back(IDC_EDIT_SUBSET_END);
-
+    mIDsToDrop.push_back(IDC_EDIT_SUBSET_START);
+    mIDsToDrop.push_back(IDC_STAT_SUBSET_TO);
+    mIDsToDrop.push_back(IDC_STAT_SUB_FROM_INDEX);
+  }
+  if (!mOpenedFromMultiGrid || (m_bHideUnselectedOpts && !m_bDoSubset)) {
+    mIDsToDrop.push_back(IDC_EDIT_SUBSET_FROM);
+    mIDsToDrop.push_back(IDC_EDIT_SUBSET_NUM);
+    mIDsToDrop.push_back(IDC_RSUBSET_ITEMS);
+    mIDsToDrop.push_back(IDC_RSUBSET_SHOTS);
+    mIDsToDrop.push_back(IDC_STAT_SUBSET_FROM_ITEM);
+  }
   // Now drop unselected items
   if (m_bHideUnselectedOpts) {
     if (!m_bCycleDefocus || !mCycleEnabled) {
@@ -1260,12 +1314,8 @@ void CNavAcquireDlg::BuildActionSection(bool unhiding)
     }
     if (!m_bSkipInitialMove || !mSkipMoveEnabled)
       mIDsToDrop.push_back(IDC_NA_SKIP_INITIAL_MOVE);
-    if (!m_bDoSubset) {
+    if (!m_bDoSubset)
       mIDsToDrop.push_back(IDC_NA_DO_SUBSET);
-      mIDsToDrop.push_back(IDC_STAT_SUBSET_TO);
-      mIDsToDrop.push_back(IDC_EDIT_SUBSET_START);
-      mIDsToDrop.push_back(IDC_EDIT_SUBSET_END);
-    }
     if (!m_bNoMBoxOnError)
       mIDsToDrop.push_back(IDC_NA_NO_MBOX_ON_ERROR);
     if (!m_bCloseValves)

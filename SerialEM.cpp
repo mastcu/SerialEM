@@ -666,6 +666,8 @@ CSerialEMApp::CSerialEMApp()
     mNavAcqParams[i].realignToScaledMap = false;
     mNavAcqParams[i].conSetForScaledAli = PREVIEW_CONSET;
     mNavAcqParams[i].multiGridSubset = -100;
+    mNavAcqParams[i].mulGridSubsetFrom = 1;
+    mNavAcqParams[i].mulGridItemsOrShots = 0;
   }
 
   mNavParams.warnedOnSkipMove = false;

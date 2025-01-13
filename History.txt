@@ -3,6 +3,16 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+1/12/24: Changed subset interface for multigrid to allow subset to start at a
+given point and to acquire specified number of items or Records.
+
+1/12/24: Cropped image after template align so it is easier to see if aligned.
+
+1/12/24: In multigrid for JEOL, added radio buttons to select between C1 and
+C2 and a property to specify which aperture to use when there is only one.
+
+1/12/24: Managed beam tilt changes better when Search area is in LM on JEOL.
+
 1/8/25: In multigrid for JEOL, allowed condenser aperture size to be entered
 as 0 and as actual sizes listed in an ApertureSizes property; opened in single
 grid mode if JeolHasNitrogenClass < 2.

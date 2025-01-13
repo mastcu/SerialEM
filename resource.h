@@ -2492,6 +2492,16 @@
 #define IDC_RREFINE_STATE               3520
 #define IDC_STAT_REFINE_FOV             3521
 #define IDC_COMBO_REFINE_STATE          3522
+#define IDC_EDIT_SUBSET_NUM             3524
+#define IDC_EDIT_SUBSET_FROM            3525
+#define IDC_RSUBSET_ITEMS               3526
+#define IDC_RSUBSET_SHOTS               3528
+#define IDC_STAT_SUBSET_FROM_ITEM       3529
+#define IDC_STAT_SUB_FROM_INDEX         3530
+#define IDC_RSET_C1_APERTURE            3531
+#define IDC_RSET_C2_APERTURE            3532
+#define IDC_STAT_CONDENSER              3533
+#define IDC_STAT_APERTURE_TO            3534
 #define ID_NEW_IMAGE                    32771
 #define IDM_FILE_SAVEOTHER              32772
 #define IDM_FILE_READ                   32773
@@ -3063,7 +3073,7 @@
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        289
 #define _APS_NEXT_COMMAND_VALUE         33534
-#define _APS_NEXT_CONTROL_VALUE         3523
+#define _APS_NEXT_CONTROL_VALUE         3535
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif
