@@ -59,7 +59,8 @@ static int sIdTable[] = {IDC_STAT_RUN, IDC_STAT_NAME, IDC_BUT_CLOSE_ALL, PANEL_E
   IDC_CHECK_SET_CONDENSER, IDC_EDIT_CONDENSER, IDC_STAT_MG_MICRON, IDC_RFULL_GRID_MONT,
   IDC_RNUM_MONT_PIECES, IDC_STAT_MONTAGE, IDC_EDIT_MONT_XPCS, IDC_STAT_MONT_BY,
   IDC_EDIT_MONT_NUM_YPCS, IDC_STAT_MONT_PCS, IDC_CHECK_USE_OVERLAP, IDC_EDIT_OVERLAP,
-  IDC_STAT_PERCENT, IDC_BUT_SETUP_LMM_MONT, IDC_CHECK_AUTOCONTOUR,
+  IDC_STAT_PERCENT, IDC_BUT_SETUP_LMM_MONT, IDC_CHECK_AUTOCONTOUR, IDC_STAT_CONDENSER,
+  IDC_STAT_APERTURE_TO, IDC_RSET_C1_APERTURE, IDC_RSET_C2_APERTURE,
   IDC_BUT_SETUP_AUTOCONT2, IDC_COMBO_END_SCRIPT, IDC_CHECK_SCRIPT_AT_END, PANEL_END,
   IDC_BUT_MG_MEDIUM_MAG_MAPS, IDC_CHECK_TAKE_MMMS, IDC_TSS_LINE6, PANEL_END,
   IDC_BUT_SETUP_POLYMONT, IDC_RMMM_SEARCH, IDC_STAT_USE2, IDC_RMMM_VIEW,
@@ -110,6 +111,7 @@ CMultiGridDlg::CMultiGridDlg(CWnd* pParent /*=NULL*/)
   , m_bRefineRealign(FALSE)
   , m_iRefineRealign(FALSE)
   , m_strRefineFOV(_T(""))
+  , m_iC1orC2(0)
 {
   mNonModal = true;
   for (int ind = 0; ind < MAX_MULGRID_PANELS; ind++)
@@ -188,6 +190,7 @@ void CMultiGridDlg::DoDataExchange(CDataExchange* pDX)
   DDX_Radio(pDX, IDC_RREFINE_SEARCH, m_iRefineRealign);
   DDX_Control(pDX, IDC_COMBO_REFINE_STATE, m_comboRefineState);
   DDX_Text(pDX, IDC_STAT_REFINE_FOV, m_strRefineFOV);
+  DDX_Radio(pDX, IDC_RSET_C1_APERTURE, m_iC1orC2);
 }
 
 
@@ -268,6 +271,8 @@ BEGIN_MESSAGE_MAP(CMultiGridDlg, CBaseDlg)
   ON_BN_CLICKED(IDC_RREFINE_VIEW, OnRRefineRealign)
   ON_BN_CLICKED(IDC_RREFINE_STATE, OnRRefineRealign)
   ON_CBN_SELENDOK(IDC_COMBO_REFINE_STATE, OnSelendokComboRefineState)
+  ON_BN_CLICKED(IDC_RSET_C1_APERTURE, OnRsetC1Aperture)
+  ON_BN_CLICKED(IDC_RSET_C2_APERTURE, OnRsetC1Aperture)
 END_MESSAGE_MAP()
 
 
@@ -337,7 +342,7 @@ BOOL CMultiGridDlg::OnInitDialog()
     mParams.appendNames = false;
   }
 
-  // All hiding is in ManagePanels
+  // All hiding is in ManagePanelsq
   if (!mMGTasks->GetShowRefineAfterRealign() && !mMGTasks->GetSkipGridRealign())
     mParams.refineAfterRealign = false;
   ParamsToDialog();
@@ -367,6 +372,7 @@ BOOL CMultiGridDlg::OnInitDialog()
   CheckIfAnyUndoneToRun();
   UpdateEnables();
   ManageRefineFOV();
+  ManageCondenserUnits();
   UpdateCurrentDir();
   SetRootname();
 
@@ -973,6 +979,11 @@ void CMultiGridDlg::InitForSingleGrid()
   CButton *button = (CButton *)GetDlgItem(IDC_RADIO_MULGRID_SEL1);
   if (button)
     button->SetCheck(BST_CHECKED);
+  EnableDlgItem(IDC_CHECK_MULGRID_RUN1, false);
+  button = (CButton *)GetDlgItem(IDC_CHECK_MULGRID_RUN1);
+  if (button)
+    button->SetCheck(BST_CHECKED);
+  EnableDlgItem(IDC_CHECK_MULGRID_RUN1, false);
   mSelectedGrid = 0;
   ReloadTable(1, 1);
   NewGridOnStage(0);
@@ -1040,6 +1051,8 @@ void CMultiGridDlg::UpdateEnables()
     !tasks);
   EnableDlgItem(IDC_COMBO_LMM_STATE, m_bSetLMMstate && !tasks);
   EnableDlgItem(IDC_EDIT_CONDENSER, m_bSetCondenser && !tasks);
+  EnableDlgItem(IDC_RSET_C1_APERTURE, m_bSetCondenser && !tasks);
+  EnableDlgItem(IDC_RSET_C2_APERTURE, m_bSetCondenser && !tasks);
   EnableDlgItem(IDC_EDIT_MONT_XPCS, m_iLMMmontType > 0 && !tasks);
   EnableDlgItem(IDC_EDIT_MONT_NUM_YPCS, m_iLMMmontType > 0 && !tasks);
   EnableDlgItem(IDC_BUT_SETUP_AUTOCONT2, m_bAutocontour && !tasks);
@@ -1058,7 +1071,8 @@ void CMultiGridDlg::UpdateEnables()
     EnableDlgItem(IDC_EDIT_MULGRID_NAME1 + ind, !tasks && !locked && !mSingleGridMode);
     EnableDlgItem(IDC_RADIO_MULGRID_SEL1 + ind, !justTasks && !suspended && 
       !mSingleGridMode);
-    EnableDlgItem(IDC_CHECK_MULGRID_RUN1 + ind, !justTasks && !suspended);
+    EnableDlgItem(IDC_CHECK_MULGRID_RUN1 + ind, !justTasks && !suspended && 
+      !mSingleGridMode);
   }
   EnableDlgItem(IDC_COMBO_FINAL_STATE1, acqStatesEnabled);
   EnableDlgItem(IDC_COMBO_FINAL_STATE2, acqStatesEnabled);
@@ -1177,6 +1191,12 @@ void CMultiGridDlg::ManagePanels()
     for (ind = 0; ind < sizeof(refineIDs) / sizeof(UINT); ind++)
       mIDsToDrop.push_back(refineIDs[ind]);
   }
+  if (mMGTasks->GetUseTwoJeolCondAp()) {
+    mIDsToDrop.push_back(IDC_STAT_CONDENSER);
+  } else {
+    mIDsToDrop.push_back(IDC_RSET_C1_APERTURE);
+    mIDsToDrop.push_back(IDC_RSET_C2_APERTURE);
+  }
   AdjustPanels(states, sIdTable, sLeftTable, sTopTable, mNumInPanel, mPanelStart, 0,
     sHeightTable);
 }
@@ -1196,6 +1216,7 @@ void CMultiGridDlg::ParamsToDialog()
   m_bRemoveObjective = mParams.removeObjectiveAp;
   m_bSetCondenser = mParams.setCondenserAp;
   m_iCondenserSize = mParams.condenserApSize;
+  m_iC1orC2 = mParams.C1orC2condenserAp;
   m_iLMMmontType = mParams.LMMmontType;
   m_iXpieces = mParams.LMMnumXpieces;
   m_iYpieces = mParams.LMMnumYpieces;
@@ -1233,6 +1254,7 @@ void CMultiGridDlg::DialogToParams()
   mParams.removeObjectiveAp = m_bRemoveObjective;
   mParams.setCondenserAp = m_bSetCondenser;
   mParams.condenserApSize = m_iCondenserSize;
+  mParams.C1orC2condenserAp = m_iC1orC2;
   mParams.LMMmontType = m_iLMMmontType;
   mParams.LMMnumXpieces = m_iXpieces;
   mParams.LMMnumYpieces = m_iYpieces;
@@ -2077,7 +2099,15 @@ void CMultiGridDlg::OnCheckSetLmmState()
 void CMultiGridDlg::OnCheckSetCondenser()
 {
   UPDATE_DATA_TRUE;
-  EnableDlgItem(IDC_EDIT_CONDENSER, m_bSetCondenser);
+  UpdateEnables();
+  mWinApp->RestoreViewFocus();
+}
+
+// Radio button to choose between C1 and C2 on JEOL with both
+void CMultiGridDlg::OnRsetC1Aperture()
+{
+  UPDATE_DATA_TRUE;
+  ManageCondenserUnits();
   mWinApp->RestoreViewFocus();
 }
 
@@ -2985,6 +3015,26 @@ int CMultiGridDlg::ManageRefineFOV()
   }
   UpdateData(false);
   return err;
+}
+
+// Set label after aperture size box depending on what is available
+void CMultiGridDlg::ManageCondenserUnits()
+{
+  int ind, apNum = mMGTasks->GetSingleCondenserAp();
+  std::vector<ShortVec> *apList = mScope->GetApertureLists();
+  
+  if (!JEOLscope)
+    return;
+  if (mMGTasks->GetUseTwoJeolCondAp())
+    apNum = m_iC1orC2 ? JEOL_C1_APERTURE : CONDENSER_APERTURE;
+  for (ind = 0; ind < (int)apList->size(); ind++) {
+    ShortVec &sizeList = apList->at(ind);
+    if (sizeList[0] == apNum) {
+      SetDlgItemText(IDC_STAT_MG_MICRON, "um");
+      return;
+    }
+  }
+  SetDlgItemText(IDC_STAT_MG_MICRON, "(index #)");
 }
 
 /*

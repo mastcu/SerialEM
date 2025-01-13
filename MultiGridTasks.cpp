@@ -72,6 +72,7 @@ CMultiGridTasks::CMultiGridTasks()
   mParams.removeObjectiveAp = false;
   mParams.setCondenserAp = false;
   mParams.condenserApSize = 150;
+  mParams.C1orC2condenserAp = 0;
   mParams.LMMmontType = 0;
   mParams.LMMnumXpieces = 5;
   mParams.LMMnumYpieces = 5;
@@ -142,6 +143,10 @@ void CMultiGridTasks::Initialize()
   mSingleGridMode = !mScope->GetScopeHasAutoloader();
   if (!mShowRefineAfterRealign && !mSkipGridRealign)
     mParams.refineAfterRealign = false;
+  mUseTwoJeolCondAp = JEOLscope && mScope->GetJeolHasExtraApertures() && 
+    mScope->GetJeolCondenserApIDtoUse() < 0;
+  mSingleCondenserAp = mScope->GetJeolCondenserApIDtoUse() < 0 ? CONDENSER_APERTURE :
+    mScope->GetJeolCondenserApIDtoUse();
 }
 
 /*
@@ -495,9 +500,12 @@ void CMultiGridTasks::StopMulGridSeq()
     if (mReinsertObjAp) {
       mScope->SetApertureSize(OBJECTIVE_APERTURE, mInitialObjApSize);
       mReinsertObjAp = false;
-    } else if (mRestoreCondAp) {
-      mScope->SetApertureSize(CONDENSER_APERTURE, mInitialCondApSize);
-      mRestoreCondAp = false;
+    } else if (mRestoreCondAp > 0) {
+      if (mRestoreCondAp > 1 && mUseTwoJeolCondAp)
+        mScope->SetApertureSize(JEOL_C1_APERTURE, mInitialC1CondSize);
+      else
+        mScope->SetApertureSize(mSingleCondenserAp, mInitialCondApSize);
+      mRestoreCondAp--;
     }
     mWinApp->SetStatusText(MEDIUM_PANE, "RESTORING APERTURE");
     mWinApp->AddIdleTask(TASK_MULGRID_SEQ, MG_RESTORING, 0);
@@ -2027,7 +2035,7 @@ int CMultiGridTasks::StartGridRuns(int LMneedsLD, int MMMneedsLD, int finalNeeds
   mMGdlg = mNavHelper->mMultiGridDlg;
   dlgIndToJcdInd = mMGdlg->GetDlgIndToJCDindex();
   mReinsertObjAp = false;
-  mRestoreCondAp = false;
+  mRestoreCondAp = 0;
   mNoMarkerShifts = false;
   mSavedLowDose = mWinApp->LowDoseMode();
 
@@ -2064,16 +2072,19 @@ int CMultiGridTasks::StartGridRuns(int LMneedsLD, int MMMneedsLD, int finalNeeds
 
   }
   if (apSize >= 0 && mParams.setCondenserAp) {
-    apSize = mScope->GetApertureSize(CONDENSER_APERTURE);
+    apSize = mScope->GetApertureSize(mSingleCondenserAp);
     mInitialCondApSize = apSize;
+    if (apSize && mUseTwoJeolCondAp)
+      mInitialC1CondSize = mScope->GetApertureSize(JEOL_C1_APERTURE);
   }
   if (apSize < 0) {
     SEMMessageBox("Aperture control appears not to work on this scope");
     return 1;
   }
   if (mParams.setCondenserAp && JEOLscope) {
-    ind = mScope->FindApertureIndexFromSize(CONDENSER_APERTURE, mParams.condenserApSize,
-      str);
+    ind = mScope->FindApertureIndexFromSize(
+      (mUseTwoJeolCondAp && !mParams.C1orC2condenserAp) ?
+      JEOL_C1_APERTURE : mSingleCondenserAp, mParams.condenserApSize, str);
     if ((mParams.condenserApSize && !ind) || ind < 0) {
       SEMMessageBox("There is a problem with condenser aperture size: \r\n" + str);
       return 1;
@@ -2695,8 +2706,11 @@ void CMultiGridTasks::AddToSeqForRestoreFromLM(bool &apForLMM, bool &stateForLMM
   if (apForLMM) {
     if (mParams.removeObjectiveAp)
       mActSequence.push_back(MGACT_REPLACE_OBJ_AP);
-    if (mParams.setCondenserAp)
+    if (mParams.setCondenserAp) {
+      if (mUseTwoJeolCondAp)
+        mActSequence.push_back(MGACT_RESTORE_C1_AP);
       mActSequence.push_back(MGACT_RESTORE_COND_AP);
+    }
     apForLMM = false;
   }
 }
@@ -2708,7 +2722,7 @@ void CMultiGridTasks::DoNextSequenceAction(int resume)
 {
   int err, ind, nx, ny, setNum, fileType, timeout = 0, numPieces, meanIXcen, meanIYcen;
   int pctlIXcen, pctlIYcen, numPctl, numAbove, bestInd, firstInd, lastInd, groupInd;
-  int action, addIdleTask = 1;
+  int action, size, addIdleTask = 1;
   float lowMean, highMean, zStage, meanSXcen, meanSYcen, pctlSXcen, pctlSYcen;
   float dist, bestDist, avgFrac;
   CString errStr, str, label, str2, str3;
@@ -2809,6 +2823,7 @@ void CMultiGridTasks::DoNextSequenceAction(int resume)
       case MGACT_REPLACE_OBJ_AP:
       case MGACT_REF_MOVE:
       case MGACT_RESTORE_COND_AP:
+      case MGACT_RESTORE_C1_AP:
       case MGACT_SURVEY_STAGE_MOVE:
       case MGACT_REF_IMAGE:
       case MGACT_SURVEY_IMAGE:
@@ -3182,8 +3197,8 @@ void CMultiGridTasks::DoNextSequenceAction(int resume)
 
   if (action != MGACT_LOAD_GRID && action != MGACT_UNLOAD_GRID && 
     action != MGACT_GRID_DONE && action != MGACT_RESTORE_COND_AP && 
-    action != MGACT_RESTORE_STATE && action != MGACT_REPLACE_OBJ_AP &&
-    mScope->GetColumnValvesOpen() < 1)
+    action != MGACT_RESTORE_C1_AP && action != MGACT_RESTORE_STATE && 
+    action != MGACT_REPLACE_OBJ_AP && mScope->GetColumnValvesOpen() < 1)
     mScope->SetColumnValvesOpen(true);
 
   /*
@@ -3200,11 +3215,12 @@ void CMultiGridTasks::DoNextSequenceAction(int resume)
 
     // Start changing the condenser aperture
   case MGACT_SET_CONDENSER_AP:
-    ind = mScope->FindApertureIndexFromSize(CONDENSER_APERTURE, mParams.condenserApSize,
-      str);
-    mScope->SetApertureSize(CONDENSER_APERTURE, ind);
+    ind = (mUseTwoJeolCondAp && !mParams.C1orC2condenserAp) ?
+      JEOL_C1_APERTURE : mSingleCondenserAp;
+    size = mScope->FindApertureIndexFromSize(ind, mParams.condenserApSize, str);
+    mScope->SetApertureSize(ind, size);
     mMovedAperture = true;
-    mRestoreCondAp = true;
+    mRestoreCondAp = mUseTwoJeolCondAp ? 2 : 1;
     break;
 
     // Start putting objective aperture back in
@@ -3214,11 +3230,18 @@ void CMultiGridTasks::DoNextSequenceAction(int resume)
     mReinsertObjAp = false;
     break;
 
-    // Start getting back to original condenser aperture
-  case MGACT_RESTORE_COND_AP:
-    mScope->SetApertureSize(CONDENSER_APERTURE, mInitialCondApSize);
+    // Start getting back to original condenser aperture(s)
+    // restore C1 first so a restore value of 1 always means restore condenser
+  case MGACT_RESTORE_C1_AP:
+    mScope->SetApertureSize(JEOL_C1_APERTURE, mInitialC1CondSize);
     mMovedAperture = true;
-    mRestoreCondAp = false;
+    mRestoreCondAp--;
+    break;
+
+  case MGACT_RESTORE_COND_AP:
+    mScope->SetApertureSize(mSingleCondenserAp, mInitialCondApSize);
+    mMovedAperture = true;
+    mRestoreCondAp--;
     break;
 
     // Start unloading grid, allow for error if no grid loaded first time (?)

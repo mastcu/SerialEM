@@ -15,10 +15,11 @@ enum MultiGridActions {
   MGACT_MMM_STATE, MGACT_TAKE_MMM, MGACT_FINAL_STATE, MGACT_FINAL_ACQ,
   MGACT_SETUP_MMM_FILES, MGACT_RESTORE_STATE, MGACT_LOW_DOSE_ON, MGACT_LOW_DOSE_OFF,
   MGACT_SET_ZHEIGHT, MGACT_MARKER_SHIFT, MGACT_FOCUS_POS, MGACT_RUN_MACRO,
-  MGACT_REFINE_ALIGN, MGACT_GRID_DONE
+  MGACT_REFINE_ALIGN, MGACT_RESTORE_C1_AP, MGACT_GRID_DONE
 };
 #define OBJECTIVE_APERTURE 2
 #define CONDENSER_APERTURE 1
+#define JEOL_C1_APERTURE   0
 
 #define MAX_LOADER_SLOTS 13
 
@@ -210,6 +211,8 @@ public:
   GetSetMember(float, RefineMinField);
   GetMember(int, LMMmagIndex);
   GetSetMember(float, MaxRefineShiftDiff);
+  GetMember(bool, UseTwoJeolCondAp);
+  GetMember(int, SingleCondenserAp);
   int *GetMontSetupConsetSizes() { return &mMontSetupConsetSizes[0]; };
   IntVec *GetCustomRunDlgInds() {return &mCustomRunDlgInds ; };
   bool WasStoppedInNavRun() { return mStoppedInNavRun && mSuspendedMulGrid; };
@@ -334,8 +337,11 @@ private:
 
   int mInitialObjApSize;         // Initial size of objective aperture
   int mInitialCondApSize;        // Initial size of condenser aperture
+  int mInitialC1CondSize;        // Initial state of C1 aperture if any
   bool mReinsertObjAp;           // Flag that objective aperture needs to be reinserted
-  bool mRestoreCondAp;           // Flag that condenser aperture needs to be reinserted
+  int mRestoreCondAp;            // Flag that condenser aperture needs to be reinserted
+  bool mUseTwoJeolCondAp;        // Scope-dependent flag for whether to use & show C1&C2
+  int mSingleCondenserAp;         // Number of single aperture if there is just one
   ShortVec mJcdIndsToRun;        // cartridge info indexes of grids to run
   ShortVec mSlotNumsToRun;       // Slot number of cart info +1 of ones to run
   bool mUsingHoleFinder;         // Flag that hole finder is going to be used
