@@ -148,7 +148,7 @@ CNavAcquireDlg::CNavAcquireDlg(CWnd* pParent /*=NULL*/)
   , m_bSkipZinRunAtNearest(FALSE)
   , m_iSubsetFrom(1)
   , m_iItemsOrShots(0)
-  , m_iSubsetNum(0)
+  , m_iSubsetNum(1)
 {
   mCurActSelected = -1;
   mNonModal = true;
@@ -754,7 +754,7 @@ void CNavAcquireDlg::LoadParamsToDialog()
   m_iSelectedPos = mParam->acqDlgSelectedPos;
   mMacroNum = mParam->macroIndex;
   m_iItemsOrShots = mParam->mulGridItemsOrShots;
-  m_iSubsetFrom = mParam->mulGridSubsetFrom;
+  m_iSubsetFrom = B3DMAX(1, B3DMIN(1000000, mParam->mulGridSubsetFrom));
   m_bSkipInitialMove = mParam->skipInitialMove;
   m_bSkipZmoves = mParam->skipZmoves;
   m_bSkipZinRunAtNearest = mParam->skipZinRunAtNearest;
@@ -1123,7 +1123,7 @@ void CNavAcquireDlg::DisableItemsForMultiGrid()
     ShowDlgItem(IDC_RSUBSET_SHOTS, true);
     ShowDlgItem(IDC_STAT_SUBSET_FROM_ITEM, true);
   }
-  m_iSubsetNum = B3DABS(mMasterParam->multiGridSubset);
+  m_iSubsetNum = B3DMAX(1, B3DMIN(1000000, B3DABS(mMasterParam->multiGridSubset)));
   EnableDlgItem(IDC_RMAPPING, false);
   EnableDlgItem(IDC_RACQUISITION, false);
   EnableDlgItem(IDOK, false);
