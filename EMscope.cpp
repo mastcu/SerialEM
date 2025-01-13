@@ -432,6 +432,7 @@ CEMscope::CEMscope()
   mUsePLforIS = false;
   mJeolHasNitrogenClass = false;
   mJeolHasExtraApertures = false;
+  mJeolCondenserApIDtoUse = -1;
   mSequentialLensRelax = false;
   mJeolHasBrightnessZoom = false;
   mJeolRefillTimeout = 2400;
@@ -546,6 +547,7 @@ CEMscope::CEMscope()
   mScreenRaiseDelay = 0;
   mScopeHasAutoloader = 1;
   mLDFreeLensDelay = 0;
+  mOpenValvesDelay = 0;
   mSubFromPosChgISX = mSubFromPosChgISY = 0.;
   mAdvancedScriptVersion = 0;
   mPluginVersion = 0;
@@ -5627,8 +5629,8 @@ void CEMscope::GotoLowDoseArea(int newArea)
   if (!mHasNoAlpha)
     GetBeamTilt(mBaseForAlphaBTX, mBaseForAlphaBTY);
   if (alphaDone && !mHasNoAlpha)
-    ChangeAlphaAndBeam(curAlpha, (int)ldArea->beamAlpha, 
-      (oldArea >= 0 && mLdsaParams->magIndex > 0) ? mLdsaParams->magIndex : -1, 
+    ChangeAlphaAndBeam(curAlpha, (int)ldArea->beamAlpha,
+      (oldArea >= 0 && mLdsaParams->magIndex > 0) ? mLdsaParams->magIndex : -1,
       ldArea->magIndex);
 
   if (ldArea->magIndex)
@@ -6079,7 +6081,21 @@ void CEMscope::ChangeAlphaAndBeam(int oldAlpha, int newAlpha, int oldMag, int ne
   double curISX, curISY;
   double posChangingISX, posChangingISY, pcNewISX, pcNewISY, pcOldISX, pcOldISY;
   int magInd;
+  bool changingLM;
   mSetAlphaBeamTiltX = EXTRA_NO_VALUE;
+
+  // This routine needs to run to assert beam tilt changes at least when going in or out
+  // of LM, so figure out the mag if needed and return if there is nothing to do
+  if (oldMag < 0 || newMag < 0) {
+    magInd = FastMagIndex();
+    if (oldMag < 0)
+      oldMag = magInd;
+    if (newMag < 0)
+      newMag = magInd;
+  }
+  changingLM = !BothLMorNotLM(oldMag, false, newMag, false);
+  if (oldAlpha == newAlpha && !changingLM)
+    return;
 
   if (oldAlpha < mNumAlphaBeamShifts && newAlpha < mNumAlphaBeamShifts) {
     beamDelX = mAlphaBeamShifts[newAlpha][0] - mAlphaBeamShifts[oldAlpha][0];
@@ -6089,16 +6105,22 @@ void CEMscope::ChangeAlphaAndBeam(int oldAlpha, int newAlpha, int oldMag, int ne
     tiltDelX = mAlphaBeamTilts[newAlpha][0] - mAlphaBeamTilts[oldAlpha][0];
     tiltDelY = mAlphaBeamTilts[newAlpha][1] - mAlphaBeamTilts[oldAlpha][1];
   }
-  if (newAlpha != oldAlpha) {
+  GetBeamShift(beamX, beamY);
+
+  // Use base beam tilt when changing low dose area, this could be after a mag change
+  // that changed the tilt
+  if (mChangingLDArea) {
+    tiltX = mBaseForAlphaBTX;
+    tiltY = mBaseForAlphaBTY;
+  } else {
+    GetBeamTilt(tiltX, tiltY);
+  }
+
+  if (oldAlpha != newAlpha) {
 
     // If beam calibrations differ (and they should), translate the beam shift needed for
     // position-changing part of IS, but do it with IS appropriate for each mag if there 
     // are two
-    magInd = FastMagIndex();
-    if (oldMag < 0)
-      oldMag = magInd;
-    if (newMag < 0)
-      newMag = magInd;
     bsmOld = mShiftManager->GetBeamShiftCal(oldMag, oldAlpha);
     bsmNew = mShiftManager->GetBeamShiftCal(newMag, newAlpha);
     if (bsmOld.xpx != bsmNew.xpx && bsmOld.xpx && bsmNew.xpx) {
@@ -6118,30 +6140,23 @@ void CEMscope::ChangeAlphaAndBeam(int oldAlpha, int newAlpha, int oldMag, int ne
         (bsmOld.ypx * pcOldISX + bsmOld.ypy * pcOldISY);
     }
 
-    GetBeamShift(beamX, beamY);
-
-    // Use base beam tilt when changing low dose area, this could be after a mag change
-    // that changed the tilt
-    if (mChangingLDArea) {
-      tiltX = mBaseForAlphaBTX;
-      tiltY = mBaseForAlphaBTY;
-    } else {
-      GetBeamTilt(tiltX, tiltY);
-    }
     if (GetDebugOutput('l') || GetDebugOutput('b'))
       PrintfToLog("Changing alpha from %d to %d and beam shift %.3f %.3f  to %.3f %.3f",
         oldAlpha + 1, newAlpha + 1, beamX, beamY, beamX + beamDelX, beamY + beamDelY);
     SetAlpha(newAlpha);
-    if (mChangingLDArea) {
-      IncOrAccumulateBeamShift(beamDelX, beamDelY, "ChangeAlpha");
-    } else {
-      SetBeamShift(beamX + beamDelX, beamY + beamDelY);
-    }
-    SetBeamTilt(tiltX + tiltDelX, tiltY + tiltDelY);
-    mSetAlphaBeamTiltX = tiltX + tiltDelX;
-    mSetAlphaBeamTiltY = tiltY + tiltDelY;
-    Sleep(mAlphaChangeDelay);
   }
+
+  // Now take care of beam shift/tilt
+  if (mChangingLDArea) {
+    IncOrAccumulateBeamShift(beamDelX, beamDelY, "ChangeAlpha");
+  } else {
+    SetBeamShift(beamX + beamDelX, beamY + beamDelY);
+  }
+  SetBeamTilt(tiltX + tiltDelX, tiltY + tiltDelY);
+  mSetAlphaBeamTiltX = tiltX + tiltDelX;
+  mSetAlphaBeamTiltY = tiltY + tiltDelY;
+  if (oldAlpha != newAlpha)
+    Sleep(mAlphaChangeDelay);
 }
 
 // Set the area that should be shown when screen down; go there if low dose on
@@ -6954,6 +6969,8 @@ BOOL CEMscope::SetColumnValvesOpen(BOOL state, bool crashing)
     result = false;
   }
   ScopeMutexRelease("SetBeamValve");
+  if (mOpenValvesDelay && state)
+    mShiftManager->SetGeneralTimeOut(GetTickCount(), mOpenValvesDelay);
   return result;
 }
 

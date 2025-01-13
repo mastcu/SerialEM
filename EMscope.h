@@ -429,6 +429,7 @@ public:
   GetMember(double, UpdateSawMagTime);
   GetSetMember(int, JeolHasNitrogenClass);
   GetSetMember(BOOL, JeolHasExtraApertures);
+  GetSetMember(int, JeolCondenserApIDtoUse);
   GetSetMember(BOOL, SequentialLensRelax);
   GetSetMember(int, JeolFlashFegTimeout);
   GetSetMember(int, JeolEmissionTimeout);
@@ -574,6 +575,7 @@ public:
   GetSetMember(int, ScreenRaiseDelay);
   GetSetMember(int, ScopeHasAutoloader);
   GetSetMember(int, LDFreeLensDelay);
+  GetSetMember(int, OpenValvesDelay);
   GetMember(int, LastMagIndex);
   std::vector<ShortVec> *GetApertureLists() { return &mApertureSizes; };
   void GetRawImageShift(double &ISX, double &ISY) { ISX = mLastISX; ISY = mLastISY; };
@@ -911,6 +913,7 @@ private:
   int mUseJeolGIFmodeCalls;   // 1 to rely on state from calls, 2 to change EFTEM with it
   int mJeolHasNitrogenClass; // Flag to create the nitrogen class
   BOOL mJeolHasExtraApertures; // Flag to use Ex aperture calls
+  int mJeolCondenserApIDtoUse; // ID to use when there are extra apertures and only one     
   BOOL mSequentialLensRelax;  // Flag to do lens relaxation sequentially not interleaved
   int mJeolRefillTimeout;     // Timeout for refilling
   int mJeolFlashFegTimeout;   // Timeout for flashing FEG
@@ -974,6 +977,7 @@ private:
   std::vector<ShortVec> mApertureSizes;   // Each vector has aperture index then sizes
   int mScreenRaiseDelay;       // Delay time after raising the screen, msec
   int mLDFreeLensDelay;        // Delay time after setting FLC for an area, msec
+  int mOpenValvesDelay;        // Delay time after opening column valves
   int mAdvancedScriptVersion;  // My internal version number for advanced scripting
   int mPluginVersion;          // Version of plugin or server
 
