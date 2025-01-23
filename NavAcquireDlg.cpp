@@ -1112,6 +1112,7 @@ void CNavAcquireDlg::RebuildIfEnabled(bool OK, bool & enabled, bool & doBuild)
 void CNavAcquireDlg::DisableItemsForMultiGrid()
 {
   m_bDoSubset = mMasterParam->multiGridSubset > 0;
+  SetDlgItemText(IDC_NA_DO_SUBSET, "Do subset:");
   ShowDlgItem(IDC_EDIT_SUBSET_END, false);
   ShowDlgItem(IDC_EDIT_SUBSET_START, false);
   ShowDlgItem(IDC_STAT_SUBSET_TO, false);

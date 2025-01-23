@@ -5065,7 +5065,7 @@ int CNavHelper::AssessAcquireForParams(NavAcqParams *navParam, NavAcqAction *acq
 
   // Check for problems if map holes are to be used 
   if (navParam->acquireType == ACQUIRE_MULTISHOT && !MSparams.useCustomHoles &&
-    navParam->useMapHoleVectors) {
+    navParam->useMapHoleVectors && !mWinApp->mMultiGridTasks->GetDoingMulGridSeq()) {
     numNoMap = 0;
     for (i = startInd; i <= endInd; i++) {
       item = mItemArray->GetAt(i);
@@ -5079,7 +5079,10 @@ int CNavHelper::AssessAcquireForParams(NavAcqParams *navParam, NavAcqAction *acq
         } else if (curMap != lastMap) {
           numMaps++;
           lastMap = curMap;
-          if (item2->mXHoleISSpacing[0] == 0. && item2->mYHoleISSpacing[0] == 0.)
+
+          // For multigrid, it is allowed to have vector just on first item
+          if (item2->mXHoleISSpacing[0] == 0. && item2->mYHoleISSpacing[0] == 0. &&
+            (numMaps == 1 || !prefix.IsEmpty()))
             numNoVec++;
           else if (MSparams.xformFromMag && MSparams.adjustingXform.xpx &&
             item2->mMapMagInd != MSparams.xformFromMag)

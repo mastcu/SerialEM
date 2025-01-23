@@ -198,6 +198,7 @@ CNavigatorDlg::CNavigatorDlg(CWnd* pParent /*=NULL*/)
   mInRangeDelete = false;
   mIgnoreUpdates = false;
   mNumWrongMapWarnings = 0;
+  mReloadTableOnNextAdd = false;
   mCurrentItem = -1;
 }
 
@@ -3058,6 +3059,7 @@ void CNavigatorDlg::OnDrawPoints()
   } else {
     ManageListHeader();
     Redraw();
+    mReloadTableOnNextAdd = false;
   }
 
   Update();
@@ -3091,6 +3093,9 @@ void CNavigatorDlg::OnDrawPolygon()
 
         UpdateListString(mCurrentItem);
       }
+      if (mReloadTableOnNextAdd)
+        FillListBox(false, true);
+      mReloadTableOnNextAdd = false;
       ManageCurrentControls();
       Redraw();
     }
@@ -3283,6 +3288,8 @@ BOOL CNavigatorDlg::UserMousePoint(EMimageBuffer *imBuf, float inX, float inY,
       imBuf->mCaptured == BUFFER_LIVE_FFT || imBuf->mCaptured == BUFFER_AUTOCOR_OVERVIEW)
       item->mFlags |= NAV_FLAG_DRAWN_ON_FFT;
     UpdateListString(mCurrentItem);
+    if (mReloadTableOnNextAdd)
+      FillListBox(false, true);
     SetChanged(true);
     ManageCurrentControls();
 
@@ -8179,6 +8186,7 @@ int CNavigatorDlg::SaveAndClearTable(bool askIfSave)
   FillListBox(false);
   mNavFilename = "";
   mNewItemNum = 1;
+  mReloadTableOnNextAdd = false;
   SetWindowText("Navigator");
   return retval;
 }
@@ -10362,9 +10370,12 @@ void CNavigatorDlg::AcquireNextTask(int param)
       } else if (ind != mLastMapForVectors) {
         mLastMapForVectors = ind;
         if (mapItem->mXHoleISSpacing[0] == 0. && mapItem->mYHoleISSpacing[0] == 0.) {
-          PrintfToLog("Cannot change hole shifts for map %s; there are no stored vectors",
-            (LPCTSTR)mapItem->mLabel);
-          err = 1;
+          err = 0;
+          if (!mWinApp->mMultiGridTasks->GetDoingMulGridSeq()) {
+            PrintfToLog("Cannot change hole shifts for map %s; there are no stored"
+              " vectors", (LPCTSTR)mapItem->mLabel);
+            err = 1;
+          }
         } else {
 
           // Assign the vectors and adjust them if possible
@@ -10376,10 +10387,10 @@ void CNavigatorDlg::AcquireNextTask(int param)
               PrintfToLog("Cannot apply adjustment to hole shifts %s: %s",
                 mapItem->mLabel, (LPCTSTR)str);
           }
+          if (err <= 0)
+            PrintfToLog("Changed hole shifts for items drawn on map %s",
+            (LPCTSTR)mapItem->mLabel);
         }
-        if (!err)
-          PrintfToLog("Changed hole shifts for items drawn on map %s", 
-          (LPCTSTR)mapItem->mLabel);
       }
     }
 
@@ -11114,9 +11125,11 @@ int CNavigatorDlg::EndAcquireWithMessage(void)
       scrp.Format("Running script %d next", mScriptToRunAtEnd + 1);
       mWinApp->AppendToLog(scrp);
     } else {
-      if (!mWinApp->mMultiGridTasks->GetDoingMulGridSeq() && 
-        !mWinApp->mMultiGridTasks->GetSuspendedMulGrid() && mAcquireEnded / 2 != 1)
+      if (!mWinApp->mMultiGridTasks->GetDoingMulGridSeq() &&
+        !mWinApp->mMultiGridTasks->GetSuspendedMulGrid() && mAcquireEnded / 2 != 1) {
+        mWinApp->FlashTaskbar();
         AfxMessageBox(report, MB_EXCLAME);
+      }
       if (mNumAcqFilesLeftOpen) {
         report.Format("%d files were left open for reuse\n\nDo you want to close them?",
           mNumAcqFilesLeftOpen);

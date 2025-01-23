@@ -200,6 +200,7 @@ public:
   GetSetMember(int, NumDoneAcq);
   GetMember(bool, UseTempAcqParams);
   GetMember(bool, IgnoreUpdates);
+  SetMember(bool, ReloadTableOnNextAdd);
   void SetCurAcqParmActions(int which) { mAcqParm = mWinApp->GetNavAcqParams(which); mAcqActions = mHelper->GetAcqActions(which); };
   bool OKtoCloseNav();
 
@@ -532,6 +533,7 @@ private:
   int mFileRangeForMultiGrid;  // Flag that new file over range is done for multiple grids
   bool mIgnoreUpdates;         // Flag to prevent update of Nav Acquire when getting file
   int mNumWrongMapWarnings;    // # of warnings given when nav table not right for map
+  bool mReloadTableOnNextAdd;  // Flag set by multigrid to work around vanishing map bug
 
 public:
   afx_msg void OnGotoMarker();

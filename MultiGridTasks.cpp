@@ -573,6 +573,7 @@ void CMultiGridTasks::CommonMulGridStop(bool suspend)
   mWinApp->SetStatusText(COMPLEX_PANE, suspend ? "MULTIGRID SUSPENDED" : "");
   mWinApp->SetStatusText(MEDIUM_PANE, "");
   mWinApp->UpdateBufferWindows();
+  mWinApp->FlashTaskbar();
 }
 
 /*
@@ -2981,6 +2982,7 @@ void CMultiGridTasks::DoNextSequenceAction(int resume)
     case MGACT_TAKE_LMM:
       mDoingMontage = false;
       mNavigator->NewMap(true, 1);
+      mNavigator->SetReloadTableOnNextAdd(true);
       item = mNavigator->GetCurrentItem();
       ChangeStatusFlag(mCurrentGrid, MGSTAT_FLAG_LM_MAPPED, 1);
       jcdEl.LMmapID = item->mMapID;
