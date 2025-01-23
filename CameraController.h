@@ -638,6 +638,7 @@ public:
   GetMember(bool, FilterWaiting);
   SetMember(bool, KeepLastUsedFrameNum);
   GetSetMember(int, RamperBlankAtEnd);
+  GetSetMember(int, MinShotInterval);
   CameraThreadData *GetCamThreadData() { return &mTD; };
   bool DoingPartialScan() {return mTD.ReturnPartialScan > 0; };
   bool HasCEOSFilter() { return mCEOSFilter != NULL; }
@@ -1102,6 +1103,7 @@ public:
   bool mFilterObeyNormDelay;     // Flag to impose post-norm delay before setting filter
   bool mFilterWaiting;           // Flag that filter is waiting for delay
   int mRamperBlankAtEnd;         // Flag for FocusRamper to blank beam at end of ramp/image
+  int mMinShotInterval;          // Interval in msec to sleep before a shot
 
 
 public:

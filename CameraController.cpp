@@ -474,6 +474,8 @@ CCameraController::CCameraController()
   mSkipFiltCheckCount = 0;
   mSuspendFilterUpdates = false;
   mRamperWaitForBlank = false;
+  mRamperBlankAtEnd = 0;
+  mMinShotInterval = 0;
   mTakeUnbinnedIfSavingEER = true;
   mShowLinearForAlpine = true;
   mUseAPI2ForDE = false;
@@ -3297,6 +3299,9 @@ void CCameraController::Capture(int inSet, bool retrying)
   // Set the low dose area, setup the energy filter, and check for timeouts and settling
   if (CapSetLDAreaFilterSettling(inSet))
     return;
+
+  if (mMinShotInterval > 0)
+    Sleep(mMinShotInterval);
 
   // Check the config file time at least before every Falcon shot
   if (IS_BASIC_FALCON2(mParam) && mCanUseFalconConfig >= 0) {
