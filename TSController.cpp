@@ -5065,6 +5065,7 @@ int CTSController::TSMessageBox(CString message, UINT type, BOOL terminate, int 
     if (mMessageBoxCloseValves && mMessageBoxValveTime > 0.)
       mScope->CloseValvesAfterInterval(60000. * mMessageBoxValveTime);
     SEMTrace('m', "TSMessageBox: %s", (LPCTSTR)message);
+    mWinApp->FlashTaskbar();
 
     // Call three-choice box if the type and button texts are adequate
     noEmpty = mTCBoxNoText.IsEmpty();

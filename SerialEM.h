@@ -530,6 +530,7 @@ public:
     void SetStatusText(int iPane, CString strText, bool skipBlink = false);
   void ToggleBuffers(int toBuf, int interval, int maxCount);
   void ManageBlinkingPane(DWORD time);
+  void FlashTaskbar();
   BOOL SetWindowPlacement(WINDOWPLACEMENT *winPlace);
   BOOL GetWindowPlacement(WINDOWPLACEMENT *winPlace);
   void ErrorOccurred(int error);

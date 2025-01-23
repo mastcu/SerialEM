@@ -3586,6 +3586,18 @@ void CSerialEMApp::ManageBlinkingPane(DWORD time)
   }
 }
 
+// Flash the icon in the taskbar if SerialEM doesn't have focus
+void CSerialEMApp::FlashTaskbar()
+{
+  FLASHWINFO fInfo;
+  fInfo.cbSize = sizeof(fInfo);
+  fInfo.dwFlags = FLASHW_ALL | FLASHW_TIMERNOFG;
+  fInfo.uCount = 10000000;
+  fInfo.dwTimeout = 0;
+  fInfo.hwnd = mMainFrame->m_hWnd;
+  FlashWindowEx(&fInfo);
+}
+
 // Set the title bar text, which can be one or more filenames
 void CSerialEMApp::SetTitleFile(CString fileName)
 {
