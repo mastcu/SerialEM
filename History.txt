@@ -3,6 +3,7 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+1/24/25: SEM_4-2-0beta14
 1/23/25: Made multigrid allow having hole vectors on just the first map.
 
 1/23/25: Made program flash taskbar icon if it does not have focus when
