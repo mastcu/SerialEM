@@ -373,7 +373,7 @@ void CRemoteControl::OnDeltaposSpinMag(NMHDR *pNMHDR, LRESULT *pResult)
     } else if (FEIscope) {
       if (index2 > LAD_INDEX_BASE + numLADCamLens)
         index2 = -1;
-      else if (index > numRegCamLens && index <= LAD_INDEX_BASE)
+      else if (index2 > numRegCamLens && index2 <= LAD_INDEX_BASE)
         index2 = pNMUpDown->iDelta > 0 ? LAD_INDEX_BASE + 1 : numRegCamLens;
     } 
   } else {
