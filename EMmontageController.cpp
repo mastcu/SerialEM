@@ -1741,7 +1741,9 @@ int EMmontageController::StartMontage(int inTrial, BOOL inReadMont, float cookDw
     mMultiShotParams->numHoles[0] = mParam->xNframes;
     mMultiShotParams->numHoles[1] = mParam->yNframes;
     mMultiShotParams->holeMagIndex[0] = mParam->magIndex;
-    mMultiShotParams->tiltOfHoleArray[0] = 0,
+    mMultiShotParams->tiltOfHoleArray[0] = 0;
+    mMultiShotParams->useCustomHoles = false;
+    mMultiShotParams->doHexArray = false;
     mWinApp->mParticleTasks->SetNextMSParams(mMultiShotParams);
     mWinApp->AddIdleTask(TASK_MONT_MULTISHOT, 0, 0);
     icx1 = mWinApp->mParticleTasks->StartMultiShot(-1, 0, 0., 0, 0.,
