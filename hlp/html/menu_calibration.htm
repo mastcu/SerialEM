@@ -1698,10 +1698,13 @@
         be to go through a microscope alignment that sets the STEM magnifications and 
         set slightly different values that avoid the duplications.&nbsp; Have this done 
         before doing any calibrations, and get a new new listing of the magnifications.</P>
-      <P><em>On a Thermo/FEI scope</em>, this routine will not produce a camera length table.&nbsp;
-          The only purpose for such a table is to allow the program to display &#39;-&gt;&#39; and
+      <P><em>On a Thermo/FEI scope</em>, this routine will not produce a camera length 
+        table.&nbsp; The main purpose for such a table is to allow the program to display &#39;-&gt;&#39; and
           the camera length to be changed to when using the magnification/camera length
-          spinner in the&nbsp; <a href="hidd_remotecontrol.htm">Microscope Control</a> panel.&nbsp; If you plan to use this panel in
+          spinner in the&nbsp; <a href="hidd_remotecontrol.htm">Microscope Control</a> panel.&nbsp; 
+        You can also add calibrated pixel size or rotation angle values for selected 
+        camera lengths, although that is easy to do for just a few camera lengths 
+        without having the whole table.&nbsp; If you plan to use the control panel in
           diffraction mode, you can add a table prepared with the following script:</P>
       <pre>
 SuppressReports
@@ -1710,16 +1713,20 @@ num = 0
 firstEnd = 0
 secondEnd = 0
 loop 60 ind
+   if $firstEnd > 0 and $ind < 30
+      Continue 
+   Endif 
    SetCamLenIndex $ind
    ReportCameraLength
    len = round ($repVal1 * 1000 0)
-   if $len > $lastlen
+   if $len > $lastlen or $ind == 31
       EchoEval $ind $len
       num = $num + 1
    ElseIf $firstEnd == 0
       firstEnd = $num
-   ElseIf $secondEnd == 0
+   ElseIf $secondEnd == 0 and $num - $firstEnd > 0
       secondEnd = $num - $firstEnd
+      Break 
    Endif
    lastLen = $len
 EndLoop
