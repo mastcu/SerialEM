@@ -439,6 +439,7 @@ public:
   GetSetMember(BOOL, SkipAdvancedScripting);
   GetSetMember(BOOL, ChangeAreaAtZeroIS);
   GetSetMember(int, HitachiDoesBSforIS);
+  GetSetMember(bool, HitachiResetsISinHC);
   GetSetMember(float, TiltSpeedFactor);
   GetSetMember(float, StageXYSpeedFactor);
   GetSetMember(int, RestoreStageXYdelay);
@@ -905,6 +906,7 @@ private:
   int mHitachiSpotStepDelay;  // Msec between stepping up in spot sizes
   int mHitachiSpotBeamWait;
   int mHitachiDoesBSforIS;    // Flags for which modes Hitachi does image-beam shift in
+  bool mHitachiResetsISinHC;  // Flag that IS needs to be reasserted in HC
   int mHighestLMindexToScan;  // Last index of enabled LM mags, if any are disabled
   int mCheckFreeK2RefCount;   // Counter for checking K2 reference freeing
   int mLastNormMagIndex;      // Mag of last normalization

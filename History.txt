@@ -3,11 +3,14 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+2/5/25: Added property to specify that Hitachi scope resets image shift in HC
+mode (In 4.1).
+
 2/4/25: SEM_4-1-20
 2/4/25: Fixed beam size shown for multishot when using illuminated area,
 broken 3/17/24 (In 4.1).
 
-2/3/25: Fixed stepping camera length between D amd LAD in scope control panel
+2/3/25: Fixed stepping camera length between D and LAD in scope control panel
 (In 4.1).
 
 1/27/25: Fixed initialization of some parameters (hex and custom) when
