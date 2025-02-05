@@ -486,6 +486,7 @@ CEMscope::CEMscope()
   mHitachiSpotStepDelay = 300;
   mHitachiSpotBeamWait = 120;
   mHitachiDoesBSforIS = 0;
+  mHitachiResetsISinHC = false;
   mLastNormMagIndex = -1;
   mFakeMagIndex = 1;
   mFakeScreenPos = spUp;
@@ -8968,7 +8969,8 @@ BOOL CEMscope::SaveOrRestoreIS(int saveMag, int otherMag)
 bool CEMscope::MagChgResetsIS(int toInd)
 {
   return JEOLscope || (HitachiScope && (toInd < mLowestMModeMagInd || 
-    (mLowestSecondaryMag > 0 && toInd >= mLowestSecondaryMag)));
+    (mLowestSecondaryMag > 0 && toInd >= mLowestSecondaryMag) || (mHitachiResetsISinHC &&
+     toInd >= mLowestMModeMagInd && toInd < mLowestSecondaryMag)));
 }
 
 int CEMscope::LookupRingIS(int lastMag, BOOL changedEFTEM)
