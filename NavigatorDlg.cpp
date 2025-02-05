@@ -3874,8 +3874,8 @@ MapItemArray *CNavigatorDlg::GetMapDrawItems(
             if (msParams->useIllumArea && mWinApp->mScope->GetUseIllumAreaForC2() && 
               asIfLowDose)
               beamRadius = (float)(50. * 
-              mWinApp->mScope->IntensityToIllumArea(ldp[RECORD_CONSET].intensity) /
-                pixel, ldp[RECORD_CONSET].spotSize, ldp[RECORD_CONSET].probeMode);
+              mWinApp->mScope->IntensityToIllumArea(ldp[RECORD_CONSET].intensity,
+                ldp[RECORD_CONSET].spotSize, ldp[RECORD_CONSET].probeMode) / pixel);
             ptX = box->mStageX + c2s.xpx * beamRadius;
             ptY = box->mStageY + c2s.ypx * beamRadius;
             box->AppendPoint(ptX, ptY);
