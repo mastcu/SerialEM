@@ -1053,7 +1053,7 @@ public:
   void updateEFTEMSpectroscopy(BOOL &EFTEM);
   void UpdateLowDose(int screenPos, BOOL needBlank, BOOL gotoArea, int magIndex,
     double diffFocus, float alpha, int &spotSize,
-    double &rawIntensity, double &ISX, double &ISY);
+    double &rawIntensity, double &ISX, double &ISY, BOOL stageReady);
   void UpdateGauges(int &vacStatus);
   void UpdateScreenBeamFocus(int STEMmode, int &screenPos, int &smallScreen, int &spotSize,
                                      double &rawIntensity, double &current,
@@ -1091,6 +1091,8 @@ public:
   int SetXLensDeflector(int which, double inX, double inY);
   int GetXLensFocus(double &outX);
   int SetXLensFocus(double inX);
+  int GetXLensMode(int &outX);
+  int SetXLensMode(BOOL inX);
   bool GetTemperatureInfo(int type, BOOL & busy, int & time, int which, double & level);
   BOOL IsPVPRunning(BOOL & state);
   BOOL GetIsFlashingAdvised(int high, int &answer);

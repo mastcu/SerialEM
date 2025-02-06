@@ -1264,6 +1264,7 @@ static VOID CALLBACK UpdateProc(
    wallTimes[a] = newWall - wallStart;  \
    wallStart = newWall;\
  }
+//SEMTrace('u', "%.3f", 1000 * wallTimes[a]);\
 
 void CEMscope::ScopeUpdate(DWORD dwTime)
 {
@@ -1289,6 +1290,7 @@ void CEMscope::ScopeUpdate(DWORD dwTime)
   double wallStart, wallTimes[12] = {0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.};
   bool reportTime = GetDebugOutput('u') && (mAutosaveCount % 10 == 0);
   static int firstTime = 1;
+  static bool inUpdate = false;
 
   if (reportTime)
     wallStart = wallTime();
@@ -1307,7 +1309,7 @@ void CEMscope::ScopeUpdate(DWORD dwTime)
   }
 
   mAutosaveCount++;
-  if (!sInitialized || mSelectedSTEM < 0)
+  if (!sInitialized || mSelectedSTEM < 0 || inUpdate)
     return;
   mWinApp->ManageBlinkingPane(GetTickCount());
 
@@ -1338,6 +1340,7 @@ void CEMscope::ScopeUpdate(DWORD dwTime)
     sGettingValuesFast = true;
   }
 
+  inUpdate = true;
   try {
 
     // Get stage position and readiness
@@ -1757,7 +1760,7 @@ void CEMscope::ScopeUpdate(DWORD dwTime)
     // Take care of screen-dependent changes in low dose and update low dose panel
     needBlank = NeedBeamBlanking(screenPos, STEMmode != 0, gotoArea);
     UpdateLowDose(screenPos, needBlank, gotoArea, magIndex, diffFocus, 
-      alpha, spotSize, rawIntensity, ISX, ISY);
+      alpha, spotSize, rawIntensity, ISX, ISY, bReady);
 
     checkpoint = "low dose";
     CHECK_TIME(9);
@@ -1786,7 +1789,7 @@ void CEMscope::ScopeUpdate(DWORD dwTime)
       else if (mPlugFuncs->GetGunValve)
         gunState = mPlugFuncs->GetGunValve();
       mWinApp->mRemoteControl.Update(magIndex, mLastCamLenIndex, spotSize, rawIntensity,
-        mProbeMode, gunState, STEMmode, (int)alpha, screenPos, mBeamBlanked);
+        mProbeMode, gunState, STEMmode, (int)alpha, screenPos, mBeamBlanked, bReady);
     }
     mWinApp->mScopeStatus.Update(current, magIndex, defocus, ISX, ISY, stageX, stageY,
       stageZ, screenPos == spUp, smallScreen != 0, mBeamBlanked, EFTEM, STEMmode,spotSize, 
@@ -1917,6 +1920,7 @@ void CEMscope::ScopeUpdate(DWORD dwTime)
       1000.*wallTimes[4],1000.*wallTimes[5],1000.*wallTimes[6],
       1000.*wallTimes[7],1000.*wallTimes[8],1000.*wallTimes[9],1000.*wallTimes[10]);
   }
+  inUpdate = false;
 }
 
 // UPDATE SUB-ROUTINES CALLED ONLY FROM INSIDE ScopeUpdate
@@ -2036,8 +2040,8 @@ void CEMscope::UpdateGauges(int &vacStatus)
 
 // Manage things when screen changes in low dose, update low dose panel
 void CEMscope::UpdateLowDose(int screenPos, BOOL needBlank, BOOL gotoArea, int magIndex,
-                             double diffFocus, float alpha, 
-                             int &spotSize, double &rawIntensity, double &ISX,double &ISY)
+  double diffFocus, float alpha, int &spotSize, double &rawIntensity, double &ISX,
+  double &ISY, BOOL stageReady)
 {
   double delISX, delISY;
   if (mLowDoseMode) {
@@ -2075,7 +2079,7 @@ void CEMscope::UpdateLowDose(int screenPos, BOOL needBlank, BOOL gotoArea, int m
     // After those potential changes, send update to low dose window
     mWinApp->mLowDoseDlg.ScopeUpdate(magIndex, spotSize, rawIntensity, ISX, ISY,
       screenPos == spDown, mLowDoseSetArea, mLastCamLenIndex, diffFocus, alpha, 
-      mProbeMode);
+      mProbeMode, stageReady);
 
     // Subtract the current image shift from the IS sent to scope window
     if (mLowDoseSetArea >= 0 && (!mUsePiezoForLDaxis || !mLowDoseSetArea)) {
@@ -2085,6 +2089,7 @@ void CEMscope::UpdateLowDose(int screenPos, BOOL needBlank, BOOL gotoArea, int m
       if (ldParams->magIndex != magIndex)
         mWinApp->mShiftManager->TransferGeneralIS(ldParams->magIndex, delISX, delISY, 
         magIndex, delISX, delISY);
+
       ISX -= mLastLDpolarity * delISX;
       ISY -= mLastLDpolarity * delISY;
     }
@@ -3545,8 +3550,8 @@ int CEMscope::a##Deflector(int which, double x, double y) \
 XLENS_GETSETXY(GetXLens, &outX, &outY);
 XLENS_GETSETXY(SetXLens, inX, inY);
 
-#define XLENS_GETSETFOCUS(a, x, c) \
-int CEMscope::a(double x)  \
+#define XLENS_GETSETFOCUS(a, typ, x, c) \
+int CEMscope::a(typ x)  \
 {  \
   XLENS_ERROR_STARTUP(a);  \
   ScopeMutexAcquire(#a, true);  \
@@ -3561,8 +3566,10 @@ int CEMscope::a(double x)  \
   return retval;  \
 }
 
-XLENS_GETSETFOCUS(GetXLensFocus, &outX, outX = mPlugFuncs->GetXLensFocus());
-XLENS_GETSETFOCUS(SetXLensFocus, inX, mPlugFuncs->SetXLensFocus(inX));
+XLENS_GETSETFOCUS(GetXLensFocus, double, &outX, outX = mPlugFuncs->GetXLensFocus());
+XLENS_GETSETFOCUS(SetXLensFocus, double, inX, mPlugFuncs->SetXLensFocus(inX));
+XLENS_GETSETFOCUS(GetXLensMode, int, &outX, outX = mPlugFuncs->GetXLensMode());
+XLENS_GETSETFOCUS(SetXLensMode, BOOL, inX, mPlugFuncs->SetXLensMode(inX));
 
 // SCREEN POSITION AND CURRENT FUNCTIONS
 //
@@ -4002,7 +4009,7 @@ BOOL CEMscope::SetMagIndex(int inIndex)
   BOOL result = true;
   BOOL convertIS, restoreIS, ifSTEM;
   bool unblankAfter;
-  int lowestM, ticks;
+  int lowestM, ticks, newLowestM;
   CameraParameters *camParam = mWinApp->GetActiveCamParam();
   const char *routine = "SetMagIndex";
   ScaleMat bsmFrom, bsmTo;
@@ -4027,11 +4034,21 @@ BOOL CEMscope::SetMagIndex(int inIndex)
   // First see if need to save the current IS and then whether to restore it
   ifSTEM = GetSTEMmode();
   lowestM = ifSTEM ? mLowestSTEMnonLMmag[mProbeMode] : GetLowestMModeMagInd();
+  if (ifSTEM) {
+    newLowestM = lowestM;
+    if (!BOOL_EQUIV(inIndex < mLowestMicroSTEMmag, currentIndex < mLowestMicroSTEMmag))
+      newLowestM = mLowestSTEMnonLMmag[1 - mProbeMode];
+  }
+      
 
   // There is no way to set the projection submode (which is psmLAD in STEM low mag and 
   // psmD in nonLM) so we cannot go between LM and nonLM
-  if (FEIscope && ifSTEM && !BOOL_EQUIV(inIndex < lowestM, currentIndex < lowestM))
-    return false;
+  if (FEIscope && ifSTEM && !BOOL_EQUIV(inIndex < newLowestM, currentIndex < lowestM)) {
+    if (!UtapiSupportsService(UTSUP_MAGNIFICATION))
+      return false;
+    lowestM = inIndex < newLowestM ? -2 : -1;
+  }
+
   if (GetDebugOutput('i')) {
     GetTiltAxisIS(axisISX, axisISY);
     GetImageShift(curISX, curISY);
@@ -4177,6 +4194,10 @@ BOOL CEMscope::SetMagKernel(SynchroThreadData *sytd)
         sytd->newProbeMode = inIndex >= sytd->lowestMicroSTEMmag ? 1 : 0;
         if (mode != sytd->newProbeMode) {
           PLUGSCOPE_SET(ProbeMode, (sytd->newProbeMode ? imMicroProbe : imNanoProbe));
+        }
+        if (sytd->lowestM < 0) {
+          PLUGSCOPE_SET(ObjectiveMode, -sytd->lowestM - 1);
+          Sleep(2000);
         }
         PLUGSCOPE_SET(STEMMagnification, sytd->STEMmag);
       } else {
@@ -9075,6 +9096,11 @@ int CEMscope::SetSecondaryModeForMag(int index)
     return -1;
   winApp->mScope->SetSecondaryMode(index >= secondary ? 1 : 0);
   return index >= secondary ? 1 : 0;
+}
+
+BOOL SEMScanningMags()
+{
+  return sScanningMags;
 }
 
 // FILM EXPOSURE ROUTINES
