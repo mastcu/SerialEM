@@ -3130,15 +3130,24 @@ void CShiftManager::TransferGeneralIS(int fromMag, double fromX, double fromY, i
                                     double &toX, double &toY, int toCam)
 {
   ScaleMat cMat, cTo, cProd;
+  static int lastFrom = 0, lastTo = 0;
+  static double lastX = 0., lastY = 0.;
+  bool diffFromLast = fromMag != lastFrom || toMag != lastTo || fromX != lastX || 
+    fromY != lastY;
   int iCam = mWinApp->GetCurrentCamera();
   toX = toY = 0;
   if (!fromMag || !toMag)
     return;
+  lastX = fromX;
+  lastY = fromY;
+  lastFrom = fromMag;
+  lastTo = toMag;
   toX = fromX;
   toY = fromY;
   if (toMag == fromMag || CanTransferIS(toMag, fromMag, mCamParams[iCam].STEMcamera,
     mCamParams[iCam].GIF ? 1 : 0)) {
-    SEMTrace('l', "TransferGeneralIS %d to %d direct copy", fromMag, toMag);
+    if (diffFromLast)
+      SEMTrace('l', "TransferGeneralIS %d to %d direct copy", fromMag, toMag);
     return;
   } else {
     cMat = IStoSpecimen(fromMag);
@@ -3148,7 +3157,8 @@ void CShiftManager::TransferGeneralIS(int fromMag, double fromX, double fromY, i
     cProd = MatMul(cMat, MatInv(cTo));
     toX = cProd.xpx * fromX + cProd.xpy * fromY;
     toY = cProd.ypx * fromX + cProd.ypy * fromY;
-    SEMTrace('l', "TransferGeneralIS %d to %d (cam %d to %d): %f %f  to %f %f", fromMag, 
+    if (diffFromLast)
+      SEMTrace('l', "TransferGeneralIS %d to %d (cam %d to %d): %f %f  to %f %f", fromMag,
       toMag, iCam, toCam,  fromX, fromY, toX, toY);
   }
 }
@@ -4240,6 +4250,9 @@ void CShiftManager::AddHighFocusMagCal(int spot, int probeMode, double intensity
   if (mScope->GetUseIllumAreaForC2()) {
     if (fabs((double)defocus - mLastFocusForMagCal) < 5.) {
       newAp = mLastApertureForMagCal;
+    } else if (mWinApp->mMacroProcessor->DoingMacro() &&
+      mWinApp->mMacroProcessor->GetC2ApForScalingWasSet()) {
+      newAp = mWinApp->mBeamAssessor->GetCurrentAperture();
     } else {
       newAp = mWinApp->mBeamAssessor->RequestApertureSize();
       if (newAp) {
