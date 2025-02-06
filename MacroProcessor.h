@@ -175,6 +175,7 @@ public:
   GetMember(bool, DeferLogUpdates);
   GetMember(bool, NonMacroDeferring);
   GetMember(float, CumulRecordDose);
+  GetMember(bool, C2ApForScalingWasSet);
   void SetNonMacroDeferLog(bool inVal) { mDeferLogUpdates = inVal; mNonMacroDeferring = inVal; };
 
   GetMember(bool, LoopInOnIdle);
@@ -487,6 +488,7 @@ protected:
   CString mScriptWindowTitle;  // Title for window opened by script
   float mBinningForCameraMatrix; // Adjust camera matrices to this user binning
   MultiShotParams *mSavedMultiShot;  // Saved parameters for running step & adjust
+  bool mC2ApForScalingWasSet;  // Flag that C2 aperture size was set
 
 public:
   void SetNumCamMacRows(int inVal);
