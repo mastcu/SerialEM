@@ -3859,11 +3859,14 @@ MoveStage 0 0 -$zRange / 2.
       procedure, you can then apply additional beam shifts as necessary.</p>
       <P>&nbsp;</P>
         <p><a name="apertures"></a><B>Controlling Apertures on Thermo/FEI Scopes &nbsp;</B><BR>
-          <p>SerialEM can control apertures on Thermo/FEI scopes using Microsoft 'UI 
+          <p>Apertures can be controlled on Thermo/FEI scopes through UTAPI scripting.  If that
+             interface is not available, SerialEM can control apertures using Microsoft 'UI 
             Automation' instead of with Thermo/FEI scripting commands.&nbsp;For this to work, the 
             microscope software must be running on Windows 7 or above, the TEM user 
-            interface must not be minimized, and the Apertures panel must be included on 
-            some tab in the Workset area of the TEM user interface.&nbsp; The tab will be 
+            interface must be open, and the Apertures panel must be included on 
+            some tab in the Workset area of the TEM user interface (as of Serialem 4.2, 
+            25-Jan-2024, if the TEM interface is minimized, the program should manage to 
+            raise it).&nbsp; The tab will be 
             switched to if that panel is not currently visible.&nbsp; The UI Automation alone 
             cannot change an aperture size in Windows 7, and in some Windows 10 systems.&nbsp; 
             In these cases, copy the compiled AutoIT program SEM-AutoIT.exe from the 

@@ -3,6 +3,15 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+2/5/25: Made sure Navigator files for multigrid all have Acquire polygons if
+polygon montage selected.
+
+2/5/25: New multigrid sessions will make files with underscore after the
+prefix as indicated in dialog.
+
+2/5/25: Added script command to report and set X Lens mode and the stored C2
+aperture size used to scale intensities.
+
 2/5/25: Added property to specify that Hitachi scope resets image shift in HC
 mode (In 4.1).
 

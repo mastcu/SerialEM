@@ -185,7 +185,7 @@ public:
   GetSetMember(CString, WorkingDir);
   GetSetMember(CString, LastSessionFile);
   SetMember(CString, SessionFilename);
-  GetMember(bool, NamesLocked);
+  GetMember(int, NamesLocked);
   GetSetMember(CString, Prefix);
   GetMember(int, UnloadErrorOK);
   GetMember(bool, StartedNavAcquire);
@@ -376,7 +376,7 @@ private:
   CString mLastSessionFile;      // Name of last session file, for browsing or script load
   BOOL mBackedUpSessionFile;     // Flag tht file was backed up
   BOOL mBackedUpAcqItemsFile;    // Flag file with per-grid acquire parameters backed up
-  bool mNamesLocked;             // Flag that all those things were locked in for session
+  int mNamesLocked;              // Flag that all those things were locked in for session
   CString mMainLogName;          // Name of main log that is returned to
   int mLMMmagIndex;              // Mag index being used for LMM
   int mUnloadErrorOK;            // Flag that load/unload may give error because unneeded

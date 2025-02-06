@@ -162,7 +162,7 @@ void CMultiGridTasks::InitOrClearSessionValues()
   mHaveAutoContGroups = false;
   mLMMmagIndex = 0;
   mSkipMarkerShifts = 0;
-  mNamesLocked = false;
+  mNamesLocked = 0;
   mLoadedGridIsAligned = 0;
 }
 
@@ -236,6 +236,8 @@ CString CMultiGridTasks::RootnameFromUsername(JeolCartridgeData &jcd)
     }
 
     // Compose number and whatever preceeds it, if anything; add to prefix
+    if (lenPref > 0 && !extra && mNamesLocked > 1)
+      str += "_";
     if (!skipC)
       str += "C";
     str2.Format("%d", jcd.id);
@@ -1992,7 +1994,7 @@ int CMultiGridTasks::StartGridRuns(int LMneedsLD, int MMMneedsLD, int finalNeeds
   int finalCamera, bool undoneOnly)
 {
   int err, grid, ind, apSize = 0, numAcq, numTS, acqType, numFail = 0, numDark = 0;
-  int magInd, camera, ldArea;
+  int magInd, camera, ldArea, numPoly;
   float halfx, halfy, size;
   ScaleMat cam2st;
   CFileStatus status;
@@ -2014,7 +2016,7 @@ int CMultiGridTasks::StartGridRuns(int LMneedsLD, int MMMneedsLD, int finalNeeds
   CMapDrawItem *item, *mapItem;
   MapItemArray *itemArray;
   BOOL LDforZbyG, usingView;
-  bool noFrameSubs, movable, doRefine;
+  bool noFrameSubs, movable, doRefine, doPolyMonts;
   bool apForLMM = false;
   bool stateForLMM = false;
   bool stateForMMM = false;
@@ -2046,7 +2048,7 @@ int CMultiGridTasks::StartGridRuns(int LMneedsLD, int MMMneedsLD, int finalNeeds
     mAppendNames = mParams.appendNames;
     mUseSubdirs = mParams.useSubdirectory;
     mWorkingDir = mWinApp->mDocWnd->GetInitialDir();
-    mNamesLocked = true;
+    mNamesLocked = 2;
     mMGdlg->UpdateEnables();
     mMGdlg->UpdateCurrentDir();
   }
@@ -2191,26 +2193,39 @@ int CMultiGridTasks::StartGridRuns(int LMneedsLD, int MMMneedsLD, int finalNeeds
         (mapItem->mMarkerShiftX < EXTRA_VALUE_TEST || !mapItem->mShiftCohortID))
         mapLacksMarkerShift = true;
 
-      // Make sure polygons exist for refine operation
-      if (doRefine) {
+      // Make sure polygons exist for refine operation or for polygon montage
+      doPolyMonts = mParams.acquireMMMs && mParams.MMMimageType == 1;
+      if (doRefine || doPolyMonts) {
         numAcq = 0;
+        numPoly = 0;
         itemArray = mNavigator->GetItemArray();
         for (ind = 0; ind < (int)itemArray->GetSize(); ind++) {
           item = itemArray->GetAt(ind);
+          if (item->IsPolygon() && item->mAcquire)
+            numPoly++;
           if (item->IsPolygon() && item->mDrawnOnMapID == mapItem->mMapID) {
             if (item->mGroupID > 0) {
               numAcq = 1;
-              break;
+              if (!doPolyMonts)
+                break;
             }
             size = sqrtf(mNavigator->ContourArea(item->mPtX, item->mPtY, item->mNumPoints));
             if (size < mMaxSizeForRefinePolys) {
               numAcq = 1;
-              break;
+              if (!doPolyMonts)
+                break;
             }
           }
         }
-        if (!numAcq) {
+        if (doRefine && !numAcq) {
           str.Format("There are no polygons suitable for refining grid alignment in the"
+            " Navigator file for grid # %d", jcd.id);
+          SEMMessageBox(str);
+          return 1;
+        }
+        if (doPolyMonts && !numPoly) {
+          str.Format("You have selected to acquire polygon montages but\n"
+            "there are no polygons marked for acquisition in the"
             " Navigator file for grid # %d", jcd.id);
           SEMMessageBox(str);
           return 1;
@@ -4625,7 +4640,7 @@ int CMultiGridTasks::SaveSessionFile(CString &errStr)
     if (!mPrefix.IsEmpty())
       err += AdocSetKeyValue(ADOC_GLOBAL_NAME, 0, MGDOC_PREFIX, (LPCTSTR)mPrefix);
     err += AdocSetInteger(ADOC_GLOBAL_NAME, 0, MGDOC_APPEND, mAppendNames ? 1 : 0);
-    err += AdocSetInteger(ADOC_GLOBAL_NAME, 0, MGDOC_LOCKED, mNamesLocked ? 1 : 0);
+    err += AdocSetInteger(ADOC_GLOBAL_NAME, 0, MGDOC_LOCKED, mNamesLocked);
     err += AdocSetInteger(ADOC_GLOBAL_NAME, 0, MGDOC_SUBDIRS, mUseSubdirs ? 1 : 0);
     if (mReferenceCounts > 0.)
       err += AdocSetFloat(ADOC_GLOBAL_NAME, 0, MGDOC_REFCOUNT, mReferenceCounts);
@@ -4783,7 +4798,7 @@ void CMultiGridTasks::ClearSession(bool keepAcqParams)
   InitOrClearSessionValues();
   mPrefix = "";
   mWorkingDir = "";
-  mNamesLocked = false;
+  mNamesLocked = 0;
   mUseCustomOrder = false;
   mLastNumSlots = 0;
   mLMMusedStateName = "";
@@ -4960,10 +4975,8 @@ int CMultiGridTasks::LoadSessionFile(bool useLast, CString &errStr)
   if (AdocGetInteger(ADOC_GLOBAL_NAME, 0, MGDOC_APPEND, &val))
     err = 1;
   mAppendNames = val != 0;
-  val = 0;
-  if (AdocGetInteger(ADOC_GLOBAL_NAME, 0, MGDOC_LOCKED, &val) < 0)
+  if (AdocGetInteger(ADOC_GLOBAL_NAME, 0, MGDOC_LOCKED, &mNamesLocked) < 0)
     err++;
-  mNamesLocked = val != 0;
   val = 0;
   if (AdocGetInteger(ADOC_GLOBAL_NAME, 0, MGDOC_SUBDIRS, &val) < 0)
     err++;

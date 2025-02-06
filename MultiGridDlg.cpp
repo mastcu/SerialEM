@@ -1010,7 +1010,7 @@ void CMultiGridDlg::UpdateEnables()
     IDC_CHECK_RUN_FINAL_ACQ, IDC_BUT_SETUP_FINAL_ACQ, IDC_COMBO_FINAL_STATE1,
     IDC_COMBO_FINAL_STATE2, IDC_COMBO_FINAL_STATE3, IDC_COMBO_FINAL_STATE4,
     IDC_CHECK_MG_REFINE};
-  bool locked = mMGTasks->GetNamesLocked();
+  bool locked = mMGTasks->GetNamesLocked() > 0;
   BOOL justTasks = mWinApp->DoingTasks();
   bool suspended = mMGTasks->GetSuspendedMulGrid();
   BOOL tasks = justTasks || suspended || mSettingOrder;
@@ -1206,7 +1206,7 @@ void CMultiGridDlg::ManagePanels()
  */
 void CMultiGridDlg::ParamsToDialog()
 {
-  BOOL locked = mMGTasks->GetNamesLocked();
+  BOOL locked = mMGTasks->GetNamesLocked() > 0;
   m_bAppendNames = locked ? mMGTasks->GetAppendNames() : mParams.appendNames;
   m_bUseSubdirs = locked ? mMGTasks->GetUseSubdirs() : mParams.useSubdirectory;
   m_bRefineRealign = mParams.refineAfterRealign;
