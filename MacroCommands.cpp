@@ -6015,10 +6015,11 @@ int CMacCmd::SetDiffractionStigmator(void)
 
 
 // ReportXLensDeflector, SetXLensDeflector, ReportXLensFocus, SetXLensFocus
+// ReportXLensMode, SetXLensMode
 int CMacCmd::ReportXLensDeflector(void)
 {
   double delX, delY;
-  int index;
+  int index, mode;
   const char * defNames[] = {"Shift", "Tilt", "Stigmator"};
   switch (mCmdIndex) {
   case CME_REPORTXLENSDEFLECTOR:
@@ -6041,6 +6042,16 @@ int CMacCmd::ReportXLensDeflector(void)
   case CME_SETXLENSFOCUS:
     index = mScope->SetXLensFocus(mItemDbl[1]);
     break;
+  case CME_REPORTXLENSMODE:
+    index = mScope->GetXLensMode(mode);
+    if (!index) {
+      mLogRpt.Format("X Lens mode is %s", mode ? "ON" : "OFF");
+      SetRepValsAndVars(1, delX);
+    }
+    break;
+  case CME_SETXLENSMODE:
+    index = mScope->SetXLensMode(mItemInt[1] ? 1 : 0);
+    break;
   }
   if (index == 1) {
     ABORT_LINE("Scope is not initialized for:\n\n");
@@ -6051,7 +6062,7 @@ int CMacCmd::ReportXLensDeflector(void)
   } else if (index == 5) {
     ABORT_LINE("There is no connection to adatl COM object for:\n\n");
   } else if (index > 5) {
-    ABORT_LINE("X Mode is not available for:\n\n");
+    ABORT_LINE("X Lens Mode is not available for:\n\n");
   }
   return 0;
 }
@@ -7165,6 +7176,28 @@ int CMacCmd::SetApertureSize(void)
     return 1;
   }
   mMovedAperture = true;
+  return 0;
+}
+
+// ReportC2ApSizeForScaling
+int CMacCmd::ReportC2ApSizeForScaling() {
+  mLogRpt.Format("Current C2 aperture size for scaling intensities is %d",
+    mWinApp->mBeamAssessor->GetCurrentAperture());
+  SetRepValsAndVars(1, mWinApp->mBeamAssessor->GetCurrentAperture());
+  return 0;
+}
+
+// SetC2ApSizeForScaling
+int CMacCmd::SetC2ApSizeForScaling() {
+  if (!mScope->GetUseIllumAreaForC2())
+    ABORT_LINE("SetC2ApSizeForScaling works only for microscopes using illuminated area");
+  if (mItemInt[1] < 5 || mItemInt[1] > 250)
+    ABORT_LINE("The aperture size must be between 5 and 250 microns for line:\n\n");
+  mWinApp->mBeamAssessor->ScaleTablesForAperture(mItemInt[1], false);
+  mWinApp->mDocWnd->SetShortTermNotSaved();
+  mC2ApForScalingWasSet = true;
+  mLogRpt.Format("Scaled intensities in calibrations for C2 aperture size %d um",
+    mItemInt[1]);
   return 0;
 }
 

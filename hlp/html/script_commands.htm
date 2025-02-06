@@ -3231,6 +3231,22 @@
           <TD>Sets the illuminated area on a Titan to the given value, expressed in microns
             times 0.01.</TD>
         </TR>
+        <TR>
+          <TD class="scriptcommand">ReportC2ApSizeForScaling</TD>
+          <TD>Reports the stored value for the C2 aperture size in microns that is used to 
+            scale intensity values in various calibrations when the aperture size changes on 
+            a Titan.&nbsp; Command added in 4.2, 5-Feb-25.</TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">SetC2ApSizeForScaling #</TD>
+          <TD>Sets the value for the C2 aperture size in microns that is used to scale 
+            intensity values on a Titan to <b>#</b>.&nbsp; This command has the same effect as <A href="menu_calibration.htm#hid_calibration_set_aperture_size">Set Aperture Size</A> in
+             the Calibration - Beam &amp; Spot submenu.&nbsp If there is a change in aperture size,
+             intensity values in various calibrations will be scaled.&nbsp; Also, if run in the
+             same script, the 'CalibrateHighFocusMag' and 'CalibrateHighFocusIS' commands will run
+             without requesting an aperture size.&nbsp; Command added in 4.2, 5-Feb-25.
+          </TD>
+        </TR>
        <TR>
           <TD class="scriptcommand">ReportImageDistanceOffset</TD>
           <TD>Reports the offset of the distance from the condenser plane to the image plane
@@ -3710,12 +3726,23 @@
             reply from the box: 2 for Yes or OK, 1 for No, 0 for Cancel, or -1 for an error.</TD>
         </TR>
         <TR>
+          <TD class="scriptcommand">ReportXLensMode</TD>
+          <TD>Reports whether X Lens mode is on (1) or off (0).&nbsp; X lens
+            commands are all available if connected to UTAPI scripting.&nbsp; If not, the adatl module
+             must be registered and the environment variable
+            SEM_USE_ADATL must be set to any value on the microscope, and XL mode must be
+            turned on in the microscope interface.&nbsp; Command added in 4.2, 
+            5-Feb-25.</TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">SetXLensMode #</TD>
+          <TD>Sets the X Lens mode on if <b>#</b> is non-zero or off if it is 0.&nbsp; 
+            Command added in 4.2, 5-Feb-25.</TD>
+        </TR>
+        <TR>
           <TD class="scriptcommand">ReportXLensDeflector #D</TD>
           <TD>Reports the X and Y values of a deflector associated with the X lens, where <b>#D</b>
-            should be 1 for shift, 2 for tilt, 3 for stigmators.&nbsp; To use X lens
-            commands, the adatl module must be registered and the environment variable
-            SEM_USE_ADATL must be set to any value on the microscope, and XL mode must be
-            turned on in the microscope interface.</TD>
+            should be 1 for shift, 2 for tilt, 3 for stigmators.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">SetXLensDeflector #D #X #Y</TD>
@@ -3724,11 +3751,14 @@
         </TR>
         <TR>
           <TD class="scriptcommand">ReportXLensFocus</TD>
-          <TD>Reports the focus setting of the X lens.</TD>
+          <TD>Reports the focus setting of the X lens.&nbsp; When connected with UTAPI, this returns
+            an absolute focus value.
+          </TD>
         </TR>
         <TR>
           <TD class="scriptcommand">SetXLensFocus #</TD>
-          <TD>Sets the focus setting of the X lens.</TD>
+          <TD>Sets the focus setting of the X lens.&nbsp; When connected with UTAPI, this sets
+            an absolute focus value.</TD>
         </TR>
         <TR>
           <TD colspan="2"><A name="filter_commands"></A><B>Energy Filter Commands</B></TD>
@@ -3786,7 +3816,7 @@
             &nbsp; With a Thermo/FEI autoloader, the command takes the slot number and reports a one or two values:
              first -1 for an error, 0 for empty, or 1 for occupied; then possibly a name.&nbsp; The name is
             reported if the
-             microscope software is running on Windows 7 or above, the TEM user interface is not minimized, and 
+             microscope software is running on Windows 7 or above, the TEM user interface is open, and 
             the 'Autoloader (User)' panel (<em>not</em> the 'Autoloader (Service)' panel)
              is included on some tab in the Workset area of the TEM user interface.&nbsp; The tab will be switched
             to if that panel is not currently visible.&nbsp; Names are obtained from
