@@ -59,11 +59,11 @@ public:
 		BOOL mouseShifting);
 	void SetIgnoreIS() {mIgnoreIS = true;};
 	void ManageMagSpot(int inSetArea, BOOL screenDown);
-	void Update();
+	void Update(int stageReady = -1);
   BOOL GetDefining() {return m_iDefineArea > 0;};
 	void ScopeUpdate(int magIndex, int spotSize, double intensity, double ISX, double ISY,
     BOOL screenDown, int inSetArea, int camLenIndex, double focus, float alpha,
-    int probeMode);
+    int probeMode, BOOL stageReady);
   bool DoingContinuousUpdate(int inSetArea);
 	CLowDoseDlg(CWnd* pParent = NULL);   // standard constructor
   GetSetMember(int, AxisPiezoPlugNum);

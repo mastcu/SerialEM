@@ -25,7 +25,7 @@ protected:
 	DECLARE_MESSAGE_MAP()
 public:
   void Update(int inMag, int inCamLen, int inSpot, double inIntensity, int inProbe, int inGun, 
-    int inSTEM, int inAlpha, int inScreenPos, BOOL beamBlanked);
+    int inSTEM, int inAlpha, int inScreenPos, BOOL beamBlanked, BOOL stageReady);
   void UpdateSettings();
   void UpdateEnables(void);
   void ChangeIntensityByIncrement(int delta);

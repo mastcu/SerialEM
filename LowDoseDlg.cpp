@@ -1470,7 +1470,7 @@ void CLowDoseDlg::UpdateDefocusOffset()
 }
 
 // Update enables based on state of system
-void CLowDoseDlg::Update()
+void CLowDoseDlg::Update(BOOL stageReady)
 {
   if (!mInitialized)
     return;
@@ -1480,7 +1480,8 @@ void CLowDoseDlg::Update()
   BOOL STEMmode = mWinApp->GetSTEMMode();
   BOOL camBusy = mWinApp->mCamera->CameraBusy();
   BOOL usePiezo =  mScope->GetUsePiezoForLDaxis();
-  BOOL stageBusy = mScope->StageBusy(-2) > 0 && !mWinApp->GetDummyInstance();
+  int stageState = B3DCHOICE(stageReady < 0, mScope->StageBusy(-2), stageReady ? 0 : 1);
+  BOOL stageBusy = stageState > 0 && !mWinApp->GetDummyInstance();
   ManageDefines(mScope->GetLowDoseArea());
 
   // Enable unblank button if blanked and no tasks, and camera not busy
@@ -1719,7 +1720,7 @@ void CLowDoseDlg::ManageDefines(int area)
 // Regular update of scope parameters when in low dose mode
 void CLowDoseDlg::ScopeUpdate(int magIndex, int spotSize, double intensity, 
                 double ISX, double ISY, BOOL screenDown, int inSetArea, int camLenIndex,
-                double focus, float alpha, int probeMode)
+                double focus, float alpha, int probeMode, BOOL stageReady)
 {
   ScaleMat cMat, cInv;
   LowDoseParams *ldArea;
@@ -1737,7 +1738,7 @@ void CLowDoseDlg::ScopeUpdate(int magIndex, int spotSize, double intensity,
 
   // If the area has changed, update the enables
   if (mLastSetArea != inSetArea)
-    Update();
+    Update(stageReady ? 1 : 0);
   
   // If continuous update and no tasks, update the text if anything has changed, and
   // modify the current set mode unconditionally

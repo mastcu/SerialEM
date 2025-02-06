@@ -205,7 +205,8 @@ BOOL CRemoteControl::OnInitDialog()
 // Called from scope update with current values; keeps track of last values seen and
 // acts on changes only
 void CRemoteControl::Update(int inMagInd, int inCamLen, int inSpot, double inIntensity, 
-  int inProbe, int inGunOn, int inSTEM, int inAlpha, int inScreenPos, BOOL beamBlanked)
+  int inProbe, int inGunOn, int inSTEM, int inAlpha, int inScreenPos, BOOL beamBlanked,
+  BOOL stageReady)
 {
   int junk;
   //bool enable;
@@ -217,7 +218,7 @@ void CRemoteControl::Update(int inMagInd, int inCamLen, int inSpot, double inInt
   bool baseEnable = !((mWinApp->DoingTasks() && !doingOffset && 
     !mWinApp->GetJustNavAcquireOpen()) || (mWinApp->mCamera && 
     mWinApp->mCamera->CameraBusy() && !mWinApp->mCamera->DoingContinuousAcquire()));
-  bool stageBusy = mScope->StageBusy(-2) > 0;
+  bool stageBusy = !stageReady;
 
   if (inMagInd != mLastMagInd || inCamLen != mLastCamLenInd) {
     if (inMagInd) {
@@ -428,7 +429,8 @@ void CRemoteControl::OnDeltaposSpinMag(NMHDR *pNMHDR, LRESULT *pResult)
     // here for going in or out
     index2 = mWinApp->FindNextMagForCamera(mWinApp->GetCurrentCamera(), index,
       pNMUpDown->iDelta > 0 ? 1 : -1);
-    if (FEIscope && mLastSTEMmode && (((index == mScope->GetLowestSTEMnonLMmag(0) - 1 ||
+    if (FEIscope && mLastSTEMmode && !mScope->UtapiSupportsService(UTSUP_MAGNIFICATION) &&
+      (((index == mScope->GetLowestSTEMnonLMmag(0) - 1 ||
       index == mScope->GetLowestSTEMnonLMmag(1) - 1) && pNMUpDown->iDelta > 0) ||
       ((index == mScope->GetLowestSTEMnonLMmag(0) ||
         index == mScope->GetLowestSTEMnonLMmag(1) && pNMUpDown->iDelta < 0))))
