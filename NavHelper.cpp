@@ -2289,7 +2289,7 @@ void CNavHelper::StoreCurrentStateInParam(StateParams *param, int lowdose,
   ControlSet *conSets;
   double shiftX, shiftY;
   int curCam = mWinApp->GetCurrentCamera();
-  int ldInd = RECORD_CONSET;
+  int consInd, ldInd = RECORD_CONSET;
   int montInd = MONT_USER_CONSET;
   if (camNum < 0)
     camNum = curCam;
@@ -2303,10 +2303,11 @@ void CNavHelper::StoreCurrentStateInParam(StateParams *param, int lowdose,
 
   // Get the right LD params for the camera, and the right consets too
   ldp = mWinApp->GetLDParamsForCamera(camNum) + ldInd;
+  consInd = ldInd;
   if (ldInd == SEARCH_AREA)
-    ldInd = mWinApp->GetUseViewForSearch() ? VIEW_CONSET : SEARCH_CONSET;
+    consInd = mWinApp->GetUseViewForSearch() ? VIEW_CONSET : SEARCH_CONSET;
   if (ldInd == RECORD_CONSET && param->montMapConSet) {
-    ldInd = MONT_USER_CONSET;
+    consInd = MONT_USER_CONSET;
     montInd = RECORD_CONSET;
   }
 
@@ -2346,22 +2347,22 @@ void CNavHelper::StoreCurrentStateInParam(StateParams *param, int lowdose,
   if (saveTargOffs > 0 && lowdose)
     param->ldDefocusOffset = mScope->GetLDViewDefocus(saveTargOffs - 1);
   param->camIndex = mWinApp->GetCurrentCamera();
-  param->binning = conSets[ldInd].binning;
-  param->exposure = conSets[ldInd].exposure;
-  param->drift = conSets[ldInd].drift;
-  param->shuttering = conSets[ldInd].shuttering;
-  param->K2ReadMode = conSets[ldInd].K2ReadMode;
-  param->singleContMode = conSets[ldInd].mode;
-  param->saveFrames = conSets[ldInd].saveFrames;
-  param->doseFrac = conSets[ldInd].doseFrac;
-  param->frameTime = conSets[ldInd].frameTime;
-  param->processing = conSets[ldInd].processing;
-  param->alignFrames = conSets[ldInd].alignFrames;
-  param->useFrameAlign = conSets[ldInd].useFrameAlign;
-  param->faParamSetInd = conSets[ldInd].faParamSetInd;
+  param->binning = conSets[consInd].binning;
+  param->exposure = conSets[consInd].exposure;
+  param->drift = conSets[consInd].drift;
+  param->shuttering = conSets[consInd].shuttering;
+  param->K2ReadMode = conSets[consInd].K2ReadMode;
+  param->singleContMode = conSets[consInd].mode;
+  param->saveFrames = conSets[consInd].saveFrames;
+  param->doseFrac = conSets[consInd].doseFrac;
+  param->frameTime = conSets[consInd].frameTime;
+  param->processing = conSets[consInd].processing;
+  param->alignFrames = conSets[consInd].alignFrames;
+  param->useFrameAlign = conSets[consInd].useFrameAlign;
+  param->faParamSetInd = conSets[consInd].faParamSetInd;
 
-  param->xFrame = (conSets[ldInd].right - conSets[ldInd].left) / param->binning;
-  param->yFrame = (conSets[ldInd].bottom - conSets[ldInd].top) / param->binning;
+  param->xFrame = (conSets[consInd].right - conSets[consInd].left) / param->binning;
+  param->yFrame = (conSets[consInd].bottom - conSets[consInd].top) / param->binning;
 
   SaveLDFocusPosition(lowdose ? saveLDfocusPos : 0, param->focusAxisPos, param->rotateAxis
     , param->axisRotation, param->focusXoffset, param->focusYoffset, true);

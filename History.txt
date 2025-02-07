@@ -3,6 +3,8 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+2/7/25: Fixed storing Search shift offsets in Search states (In 4.1).
+
 2/5/25: Made sure Navigator files for multigrid all have Acquire polygons if
 polygon montage selected.
 
