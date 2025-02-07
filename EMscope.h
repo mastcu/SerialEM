@@ -603,8 +603,7 @@ public:
   void SetIncrement(float increment) {mIncrement = increment;};
   float GetIncrement();
   float GetBaseIncrement() {return mIncrement;};
-  void SetCosineTilt(BOOL inVal) {m_bCosineTilt = inVal;};
-  BOOL GetCosineTilt() {return m_bCosineTilt;};
+  GetSetMember(BOOL, CosineTilt);
   ShortVec *GetSkipUtapiServices() {return &mSkipUtapiServices ; };
   bool UtapiSupportsService(int kind) { B3DCLAMP(kind, 0, UTAPI_SUPPORT_END - 1); return mUtapiConnected && mUtapiSupportsService[kind] ; };
   int Initialize();
@@ -742,7 +741,7 @@ private:
   int mLastLongOpTimes[MAX_LONG_OPERATIONS];
   UINT_PTR mUpdateID;         // ID of timer for updates
   float mIncrement;           // Tilt increment
-  BOOL m_bCosineTilt;         // Flag for cosine tilt
+  BOOL mCosineTilt;         // Flag for cosine tilt
   StageMoveInfo mMoveInfo;
   ApertureThreadData mApertureTD;
   BOOL mBeamBlankSet;         // Keeps track of requested blank setting

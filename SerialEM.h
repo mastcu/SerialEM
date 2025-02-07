@@ -583,8 +583,8 @@ public:
   void SetActiveView(CSerialEMView *inActiveView);
   void SetDisplayTruncation(float inPctLo, float inPctHi) { mPctLo = inPctLo; mPctHi = inPctHi; };
   void GetDisplayTruncation(float &outPctLo, float &outPctHi) { outPctLo = mPctLo; outPctHi = mPctHi; };
-  void SetPctAreaFraction(float inAreaFrac) { mAreaFrac = inAreaFrac; };
-  float GetPctAreaFraction() { return mAreaFrac; };
+  void SetPctAreaFraction(float inAreaFrac) { mPctAreaFraction = inAreaFrac; };
+  float GetPctAreaFraction() { return mPctAreaFraction; };
   BOOL Montaging() { return mMontaging; };
   BOOL SavingOther() { return mSavingOther; };
   SetMember(bool, SavingOther)
@@ -868,7 +868,7 @@ private:
   int mImBufIndex;
   int mFFTbufIndex;
   float mPctLo, mPctHi;
-  float mAreaFrac;
+  float mPctAreaFraction;
   int mBkgdGrayOfFFT;                  // Mean gray level for background of FFT
   float mTruncDiamOfFFT;                 // Diameter of FFT area to truncate as frac of size
   DialogTable mDialogTable[MAX_TOOL_DLGS];

@@ -215,7 +215,7 @@ CEMscope::CEMscope()
   mLastTiltTime = mLastNormalization;
   mLastStageTime = mLastNormalization;
   mLastBacklashX = mLastBacklashY = 0.;
-  m_bCosineTilt = false;
+  mCosineTilt = false;
   mScreenCurrentFactor = 1.;
   mFilamentCurrentScale = 100.;
   mLastTiltChange = 0.;
@@ -2276,7 +2276,7 @@ double CEMscope::GetReversalTilt()
 
 float CEMscope::GetIncrement()
 {
-  if (!m_bCosineTilt)
+  if (!mCosineTilt)
     return mIncrement;
   return (float)cos(GetTiltAngle() * DTOR) * mIncrement;
 }

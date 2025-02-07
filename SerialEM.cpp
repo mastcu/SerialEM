@@ -292,7 +292,7 @@ CSerialEMApp::CSerialEMApp()
   
   mPctLo = 0.1f;
   mPctHi = 0.1f;
-  mAreaFrac = 0.8f;
+  mPctAreaFraction = 0.8f;
   mTruncDiamOfFFT = 0.004f;
   mBkgdGrayOfFFT = 32;
   mCurrentCamera = 0;
