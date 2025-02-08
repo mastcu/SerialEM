@@ -1664,7 +1664,7 @@ void CMultiShotDlg::ManageEnables(void)
   m_butSetCustom.EnableWindow(m_bDoMultipleHoles && notRecording);
   m_butStepAdjust.EnableWindow(m_bDoMultipleHoles && notRecording && (useCustom ||
     mActiveParams->holeMagIndex[m_bHexGrid ? 1 : 0]));
-  m_butCalBTvsIS.EnableWindow(notRecording && !mSteppingAdjusting);
+  m_butCalBTvsIS.EnableWindow(notRecording && !mSteppingAdjusting && !mDisabledDialog);
   m_butTestMultishot.EnableWindow(notRecording && !mSteppingAdjusting && !mDisabledDialog
     && (m_bDoMultipleHoles || m_bDoShotsInHoles) && comaVsIS->magInd > 0);
   if (mActiveParams->customHoleX.size() > 0)
