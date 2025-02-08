@@ -32,6 +32,7 @@ bool CStateDlg::mWarnedSharedParams;
 bool CStateDlg::mWarnedNoMontMap;
 bool CStateDlg::mRemindedToGoTo;
 int CStateDlg::mCamOfSetState;
+CSerialEMApp *CStateDlg::winApp;
 
 // CStateDlg dialog
 
@@ -106,8 +107,7 @@ BOOL CStateDlg::OnInitDialog()
   BOOL states[2] = {true, true};
   CRect clientRect, editRect;
   CBaseDlg::OnInitDialog();
-  mHelper = mWinApp->mNavHelper;
-  mStateArray = mHelper->GetStateArray();
+  SetStaticPointers();
   m_bShowNumber = mHelper->GetShowStateNumbers();
 
   GetClientRect(clientRect);
@@ -140,6 +140,13 @@ BOOL CStateDlg::OnInitDialog()
   //UpdateData(false);
    
   return TRUE;
+}
+
+void CStateDlg::SetStaticPointers()
+{
+  winApp = (CSerialEMApp *)AfxGetApp();
+  mHelper = winApp->mNavHelper;
+  mStateArray = mHelper->GetStateArray();
 }
 
 void CStateDlg::PostNcDestroy() 
@@ -215,8 +222,8 @@ void CStateDlg::Update(void)
   BOOL mapItem = false;
   BOOL schedItem = false, doUpdate = false;
   BOOL imOK = SetCurrentParam() && mWinApp->LookupActiveCamera(mParam->camIndex) >= 0;
-  BOOL mgOK = !mWinApp->mNavHelper->mMultiGridDlg ||
-    mCurrentItem >= mWinApp->mNavHelper->mMultiGridDlg->m_comboLMMstate.GetCount();
+  BOOL mgOK = !mHelper->mMultiGridDlg ||
+    mCurrentItem >= mHelper->mMultiGridDlg->m_comboLMMstate.GetCount();
   int type = mHelper->GetTypeOfSavedState();
   if (mWinApp->LowDoseMode())
     ldArea = mWinApp->mScope->GetLowDoseArea();
@@ -410,16 +417,76 @@ void CStateDlg::OnButUpdateState()
   mWinApp->RestoreViewFocus();
   if (!SetCurrentParam())
     return;
-  mHelper->StoreCurrentStateInParam(mParam, mWinApp->LowDoseMode() ? 1 : 0, 
-    B3DCHOICE(area == FOCUS_CONSET || area == TRIAL_CONSET, area == FOCUS_CONSET ? 1 : 2,
-      0), -1, IS_AREA_VIEW_OR_SEARCH(area) ? area + 1 : 0);
-  str.Format("Updated state # %d  %s   with current imaging state", mCurrentItem + 1, 
-    (LPCTSTR)mParam->name);
-  mWinApp->AppendToLog(str);
-  UpdateListString(mCurrentItem);
-  Update();
+  DoUpdateState(mCurrentItem, mParam, area);
 }
 
+// Common function for updating state and dialog
+void CStateDlg::DoUpdateState(int selInd, StateParams *param, int area)
+{
+  CString str;
+  mHelper->StoreCurrentStateInParam(param, winApp->LowDoseMode() ? 1 : 0,
+    B3DCHOICE(area == FOCUS_CONSET || area == TRIAL_CONSET,
+      area == FOCUS_CONSET ? 1 : 2, 0), -1,
+    IS_AREA_VIEW_OR_SEARCH(area) ? area + 1 : 0);
+  str.Format("Updated state # %d  %s   with current imaging state", selInd + 1,
+    (LPCTSTR)param->name);
+  winApp->AppendToLog(str);
+  if (mHelper->mStateDlg) {
+    mHelper->mStateDlg->UpdateListString(selInd);
+    mHelper->mStateDlg->Update();
+  }
+}
+
+// External call to update a state
+int CStateDlg::UpdateStateByNameOrNum(CString name, CString &errStr)
+{
+  int ind, selInd, ldArea = -2, paramArea;
+  StateParams *param;
+
+  // Lookup state
+  ind = LookupStateByNameOrNum(name, selInd, errStr);
+  if (ind)
+    return ind;
+
+  // Replicate almost all the tests made for enabling the Update button
+  param = mStateArray->GetAt(selInd);
+  ind = winApp->LookupActiveCamera(param->camIndex);
+  if (ind < 0 || winApp->GetCurrentCamera() != param->camIndex) {
+    errStr = "The camera for the specified state is not ";
+    errStr += ind < 0 ? "available" : "the current camera";
+    return ind < 0 ? 5 : 6;
+  }
+  if (mHelper->mMultiGridDlg &&
+    selInd < mHelper->mMultiGridDlg->m_comboLMMstate.GetCount()) {
+    errStr = "You cannot update a state while the Multiple Grid Operations dialog is"
+      " open";
+    return 7;
+  }
+  if (mHelper->GetTypeOfSavedState() != STATE_IMAGING) {
+    errStr = "A map acquire state is currently set";
+    return 4;
+  }
+  for (ind = 0; ind <= MAX_SAVED_STATE_IND; ind++)
+    if (mSetStateIndex[ind] == selInd)
+      break;
+  if (ind > MAX_SAVED_STATE_IND) {
+    errStr = "The specified state is not a currently set state";
+    return 8;
+  }
+  if (winApp->LowDoseMode())
+    ldArea = winApp->mScope->GetLowDoseArea();
+  paramArea = mHelper->AreaFromStateLowDoseValue(param, NULL);
+  if ((ldArea == -2 && paramArea < 0) || (ldArea == paramArea)) {
+
+    // Finally, do it the same as above
+    DoUpdateState(selInd, param, ldArea);
+
+  } else {
+    errStr = "The specified state does not match the current low dose area";
+    return 9;
+  }
+  return 0;
+}
 
 // Set imaging state
 void CStateDlg::OnButSetImState()
@@ -435,14 +502,12 @@ void CStateDlg::OnButSetImState()
 // Common function that does the work
 int CStateDlg::DoSetImState(int stateNum, CString &errStr)
 {
-  CSerialEMApp *winApp = (CSerialEMApp *)AfxGetApp();
+  SetStaticPointers();
   ControlSet *conSet = winApp->GetConSets();
   CString *names = winApp->GetModeNames();
   StateParams *param;
-  mHelper = winApp->mNavHelper;
   int type = mHelper->GetTypeOfSavedState();
   int area, setNum, indSave, areaInd, saveTarg = 0;
-  mStateArray = mHelper->GetStateArray();
   param = mStateArray->GetAt(stateNum);
 
   if (winApp->LookupActiveCamera(param->camIndex) < 0) {
@@ -615,20 +680,36 @@ void CStateDlg::OnButForgetState()
 // For an external caller to set a state specified by name or number in table
 int CStateDlg::SetStateByNameOrNum(CString name, CString &errStr)
 {
+  int ind, selInd = -1;
+  ind = LookupStateByNameOrNum(name, selInd, errStr);
+  if (ind)
+    return ind;
+  if (mHelper->GetTypeOfSavedState() == STATE_MAP_ACQUIRE) {
+    errStr = "A map acquire state is already set";
+    return 4;
+  }
+
+  ind = DoSetImState(selInd, errStr);
+  if (mHelper->mStateDlg)
+    mHelper->mStateDlg->SetCurrentParam();
+  return ind;
+}
+
+int CStateDlg::LookupStateByNameOrNum(CString name, int &selInd, CString &errStr)
+{
   StateParams *state;
   CString ucName = name.Trim(), stateName;
-  int ind, selInd = -1, selNum, numExact = 0;
+  int ind, selNum, numExact = 0;
   bool numOK, twoMatch = false;
   const char *namePtr = (LPCTSTR)name;
   char *endPtr;
-  CSerialEMApp *winApp = (CSerialEMApp *)AfxGetApp();
-  mHelper = winApp->mNavHelper;
-  mStateArray = mHelper->GetStateArray();
+  SetStaticPointers();
 
   // Do case insensitive comparisons, convert to number and detect if there are bad chars
   ucName.MakeUpper();
   selNum = strtol(namePtr, &endPtr, 10) - 1;
   numOK = endPtr - namePtr == ucName.GetLength();
+  selInd = -1;
 
   // Find a match or more than one
   for (ind = 0; ind < (int)mStateArray->GetSize(); ind++) {
@@ -669,15 +750,7 @@ int CStateDlg::SetStateByNameOrNum(CString name, CString &errStr)
       return 3;
     }
   }
-  if (mHelper->GetTypeOfSavedState() == STATE_MAP_ACQUIRE) {
-    errStr = "A map acquire state is already set";
-    return 4;
-  }
-
-  ind = DoSetImState(selInd, errStr);
-  if (mHelper->mStateDlg)
-    mHelper->mStateDlg->SetCurrentParam();
-  return ind;
+  return 0;
 }
 
 // Format the string for the list box
@@ -693,7 +766,7 @@ void CStateDlg::StateToListString(StateParams *state, CString &string, const cha
 {
   int magInd = state->lowDose ? state->ldParams.magIndex : state->magIndex;
   int mag, active, spot, probe, ldArea;
-  CSerialEMApp *winApp = (CSerialEMApp *)AfxGetApp();
+  SetStaticPointers();
   int *activeList = winApp->GetActiveCameraList();
   double percentC2 = 0., intensity;
   CString *names = winApp->GetModeNames(), intStr;

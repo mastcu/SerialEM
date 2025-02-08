@@ -825,6 +825,9 @@ MAC_SAME_FUNC_NOARG(ReportXLensMode, 0, 0, ReportXLensDeflector, REPORTXLENSMODE
 MAC_SAME_FUNC_ARG(SetXLensMode, 1, 0, ReportXLensDeflector, SETXLENSMODE, D)
 MAC_SAME_NAME_NOARG(ReportC2ApSizeForScaling, 0, 4, REPORTC2APSIZEFORSCALING)
 MAC_SAME_NAME_ARG(SetC2ApSizeForScaling, 1, 4, SETC2APSIZEFORSCALING, I)
+MAC_SAME_NAME_NOARG(ReportObjectiveStrength, 0, 4, REPORTOBJECTIVESTRENGTH)
+MAC_SAME_FUNC_ARG(UpdateImagingState, 1, 0, GoToImagingState, UPDATEIMAGINGSTATE, S)
+MAC_SAME_NAME_ARG(ImagingStateProperties, 1, 0, IMAGINGSTATEPROPERTIES, S)
 
 // new Python-only commands need to be added to pythonOnlyCmds in ::CMacroProcessor
 // New Not from Python items omit _ARG or _NOARG

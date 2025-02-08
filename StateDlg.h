@@ -38,6 +38,7 @@ private:
   static CArray<StateParams *, StateParams *> *mStateArray;
   static CNavHelper *mHelper;
   static StateParams *mParam;
+  static CSerialEMApp *winApp;
   int mNumInPanel[2];
   int mPanelStart[2];
   bool mAdjustingPanels;
@@ -72,6 +73,7 @@ public:
   static void DoRestoreState(bool skipScope);
   afx_msg void OnButForgetState();
   static int SetStateByNameOrNum(CString name, CString &errStr);
+  static int LookupStateByNameOrNum(CString name, int &selInd, CString &errStr);
   void Update(void);
   void UpdateListString(int index);
   void FillListBox(void);
@@ -85,6 +87,8 @@ public:
   static void StateToListString(StateParams *state, CString &string, const char *sep, int index,
     int *setStateIndex, int numSet, BOOL showNumber);
   afx_msg void OnButUpdateState();
+  static void DoUpdateState(int selInd, StateParams *param, int area);
+  static int UpdateStateByNameOrNum(CString name, CString &errStr);
   CButton m_butUpdate;
   void DisableUpdateButton(void);
   void UpdateHiding(void);
@@ -94,6 +98,7 @@ public:
   CButton m_butAddMontMap;
   afx_msg void OnButAddMontMap();
   static SetMember(int, CamOfSetState);
+  static void SetStaticPointers();
 
   BOOL m_bShowNumber;
   afx_msg void OnCheckNumber();

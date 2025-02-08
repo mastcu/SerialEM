@@ -3091,6 +3091,11 @@
           <TD>Same as &#39;ReportAbsoluteFocus&#39;, which is a better description of the operation</TD>
         </TR>
         <TR>
+          <TD class="scriptcommand">ReportObjectiveStrength</TD>
+          <TD>Reports the objective strength value (between 0 and 1) shown in the 
+            microscope control panel.&nbsp; Command added in 4.2, 7-Feb-25.</TD>
+        </TR>
+        <TR>
           <TD class="scriptcommand">SetEucentricFocus [#]</TD>
           <TD>Sets to the standard focus for the current mag or the nearest
             mag if one has been set within the current mag range; otherwise it stops with an error unless
@@ -5091,7 +5096,7 @@
           <TD>Sets the state with which the specified map item was acquired.&nbsp; For <b>#I</b>,
               enter 0 for the current item or the item being acquired; an index greater than 0
               for the item with that index in the table; or a value less than 0 to count back
-              from the end of the table, where -1 is the last item.&nbsp; The optional <b>#S determines 
+              from the end of the table, where -1 is the last item.&nbsp; The optional <b>#S</b> determines 
                 whether taking frames is allowed in the camera parameter set; 0 allows frames to be saved,
                  1 (the default) turns off frame saving but allows frame aligning; 2 turns off aligning also.</b></TD>
         </TR>
@@ -5108,6 +5113,19 @@
             is already a state set with a different camera number.&nbsp; Command added in 4.1, 15-Sept-22.
           </TD>
         </TR>
+         <TR>
+          <TD class="scriptcommand">UpdateImagingState name</TD>
+          <TD>Updates an imaging state with the current state; again, the <A HREF="hidd_statedlg.htm">Imaging 
+            States dialog</A> need not be open.&nbsp; The text on the rest of the line, <b>name</b>, 
+            can be either the full name of the state, a unique set of starting letters in the name of the state, or
+             the number of the state in the table (numbered from 1).&nbsp; The comparison with state names is 
+            case-insensitive.&nbsp; If the command fails, a message is printed to the log 
+            and <i>reportedValue1</i> is set to 1 for no matching name,
+            2 for more than one matching name, 3 for a number out of range, 4 if a map acquire state is already set,
+            5 if the camera that the state is defined for is not available, 6 if it is a Low Dose state and there
+            is already a state set with a different camera number, 7 if the Multiple Grid Operations dialog is open,
+            or 8 if the specified state does not match the currently set state.&nbsp; Command added in 4.2, 7-Feb-24.</TD>
+        </TR>
         <TR>
            <TD class="scriptcommand">RestoreState [#]</TD>
          <TD>Restores the state if one has been saved with 'SetMapAcquireState' or 
@@ -5121,6 +5139,18 @@
             'GoToImagingState' or with the <A HREF="hidd_statedlg.htm">Imaging States dialog</A>, equivalent to
            pressing <b>Forget Prior State</b> in that dialog.&nbsp; Set the optional <b>#</b> 
             non-zero to generate an error if no state was saved.&nbsp; Command added in 4.1, 16-Nov-22</TD>
+        </TR>
+        <TR>
+           <TD class="scriptcommand">ImagingStateProperties name</TD>
+         <TD>Reports properties of an imaging state specified by <b>name</b>, which
+            can be either the full name of the state, a unique set of starting letter, or
+             the number of the state in the table (numbered from 1).&nbsp; <i>reportedValue1</i> is set to 
+           1 for no matching name, 2 for more than one matching name, 3 for a number out of range, or 0 
+           otherwise.&nbsp; For a valid state, <i>reportedValues 2-6</i> are set with the state number, the type 
+           of state, the active camera number or 0 if the camera is not available, the magnification index, and 
+           the name.&nbsp; The type is 0-5 for Low Dose V, F, T, R, S, or R using Mont-Map parameters, or -1 or -2
+            for a non-Low Dose Record or Mont-Map state.&nbsp; Command added in 4.2, 8-Feb-24.
+          </TD>
         </TR>
          <TR>
           <TD class="scriptcommand">OpenImagingStateDialog</TD>

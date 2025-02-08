@@ -6820,6 +6820,15 @@ int CMacCmd::ReportFocus(void)
   return 0;
 }
 
+// ReportObjectiveStrength
+int CMacCmd::ReportObjectiveStrength()
+{
+  double obj = mScope->GetObjectiveStrength();
+  mLogRpt.Format("Object strength = %.5f", obj);
+  SetRepValsAndVars(1, obj);
+  return 0;
+}
+
 // ReportPercentC2
 int CMacCmd::ReportPercentC2(void)
 {
@@ -11815,16 +11824,46 @@ int CMacCmd::ForgetPriorState(void)
   return 0;
 }
 
-// GoToImagingState
+// GoToImagingState, UpdateImagingState
 int CMacCmd::GoToImagingState(void)
 {
   int index;
   CString errStr;
   SubstituteLineStripItems(mStrLine, 1, mStrCopy);
-  index = CStateDlg::SetStateByNameOrNum(mStrCopy, errStr);
-  if (index)
-    mLogRpt = "Cannot set imaging state; " + errStr;
+  if (CMD_IS(GOTOIMAGINGSTATE)) {
+    index = CStateDlg::SetStateByNameOrNum(mStrCopy, errStr);
+    if (index)
+      mLogRpt = "Cannot set imaging state; " + errStr;
+  } else {
+    index = CStateDlg::UpdateStateByNameOrNum(mStrCopy, errStr);
+    if (index)
+      mLogRpt = "Cannot update imaging state; " + errStr;
+  }
   SetReportedValues(index);
+  return 0;
+}
+
+// ImagingStateProperties
+int CMacCmd::ImagingStateProperties()
+{
+  int index = 0, err, area, setNum;
+  StateParams *param;
+  CArray<StateParams *, StateParams *> *stateArr = mNavHelper->GetStateArray();
+  CString errStr;
+  SubstituteLineStripItems(mStrLine, 1, mStrCopy);
+  err = CStateDlg::LookupStateByNameOrNum(mStrCopy, index, errStr);
+  if (err) {
+    SetReportedValues(err);
+    mLogRpt = "Specified imaging state not available: " + errStr;
+  } else {
+    param = stateArr->GetAt(index);
+    area = mNavHelper->AreaFromStateLowDoseValue(param, &setNum);
+    if (setNum == MONT_USER_CONSET)
+      area = area < 0 ? area - 1 : SEARCH_AREA + 1;
+    SetReportedValues(err, index + 1, area,
+      mWinApp->LookupActiveCamera(param->camIndex) + 1, param->magIndex);
+    SetOneReportedValue(param->name, 6);
+  }
   return 0;
 }
 
