@@ -5174,6 +5174,25 @@ BOOL CEMscope::ResetDefocus(BOOL assumeInit) {
   return success;
 }
 
+// Return the objective strength
+double CEMscope::GetObjectiveStrength(void)
+{
+  double result;
+  if (!sInitialized)
+    return 0.;
+
+  ScopeMutexAcquire("GetObjectiveStrength", true);
+  try {
+    PLUGSCOPE_GET(ObjectiveStrength, result, 1.);
+  }
+  catch (_com_error E) {
+    SEMReportCOMError(E, _T("getting objective strength "));
+    result = 0.;
+  }
+  ScopeMutexRelease("GetObjectiveStrength");
+  return result;
+}
+
 // Return an absolute focus value appropriate for the mag mode
 double CEMscope::GetFocus(void)
 {

@@ -1001,6 +1001,7 @@ public:
   void FilmCleanup(int error);
   static UINT FilmExposeProc(LPVOID pParam);
   double GetFocus(void);
+  double GetObjectiveStrength(void);
   BOOL SetFocus(double inVal);
   BOOL WaitForStageReady(int msecs);
   BOOL GetUsePLforIS(void);
