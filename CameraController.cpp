@@ -9520,7 +9520,7 @@ void CCameraController::DisplayNewImage(BOOL acquired)
   int alignErr, sumCount, curBuf, camFrames, typext = 0, ldSet = 0, darkScale = 1;
   BOOL lowDoseMode, hasUserPtSave = false;
   bool nameConfirmed, readLocally = false, reportContinAlign = false;
-  float axoff, ayoff, specRate, camRate;
+  float axoff, ayoff, specRate, camRate, refSave;
   double delay;
   CString message, str, root, ext, localFramePath;
   CString *comFolder = NULL;
@@ -10528,6 +10528,7 @@ void CCameraController::DisplayNewImage(BOOL acquired)
     // Save to autodoc file if one is designated, adjusting pixel/binning first
     axoff = extra->mBinning;
     ayoff = extra->mPixel;
+    refSave = extra->mRefinedPixel;
     ixoff = extra->mDividedBy2;
     camRate = extra->mCountsPerElectron;
     if (mParam->K2Type) {
@@ -10536,6 +10537,8 @@ void CCameraController::DisplayNewImage(BOOL acquired)
         lastConSetp->processing == GAIN_NORMALIZED && !mSaveUnnormalizedFrames) ||
         IsK3BinningSuperResFrames(lastConSetp, mParam)), 0.5f, 1.f);
       extra->mPixel *= extra->mBinning / axoff;
+      if (extra->mRefinedPixel)
+        extra->mRefinedPixel *= extra->mBinning / axoff;
       if (lastConSetp->processing != GAIN_NORMALIZED || mSaveUnnormalizedFrames) {
         extra->mDividedBy2 = 0;
         extra->mCountsPerElectron = 1.;
@@ -10565,6 +10568,7 @@ void CCameraController::DisplayNewImage(BOOL acquired)
     extra->mPixel = ayoff;
     extra->mDividedBy2 = ixoff;
     extra->mCountsPerElectron = camRate;
+    extra->mRefinedPixel = refSave;
 
     // If making a deferred sum, now is the time to copy the extra
     if (mStartingDeferredSum) {
