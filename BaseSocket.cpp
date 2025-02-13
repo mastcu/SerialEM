@@ -576,7 +576,7 @@ int CBaseSocket::SendAndReceiveForImage(int sockInd, short *imArray, long *arrSi
   // Copy extra bytes from return message into front of image
   if (numExtraBytes > 0) {
     numToGet = B3DMIN(numBytes, numExtraBytes);
-    memcpy(imArray, mArgsBuffer[sockInd], numToGet);
+    memcpy(imArray, mArgsBuffer[sockInd] + mArgBufSize[sockInd] - numToGet, numToGet);
     totalRecv = numToGet;
   }
   SEMTrace('K', "Return args received (%d %d %d), expecting %d bytes for image in %d "
