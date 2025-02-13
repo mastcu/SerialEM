@@ -305,7 +305,10 @@ void CScopeStatusDlg::Update(double inCurrent, int inMagInd, double inDefocus,
       double specTotal = 0.;
       if (inMagInd)
         specTotal = mWinApp->mShiftManager->RadialShiftOnSpecimen(inISX, inISY, inMagInd);
-      m_strImageShift.Format("%.2f", specTotal);
+      if (fabs(specTotal) < 99.98)
+        m_strImageShift.Format("%.2f", specTotal);
+      else
+        m_strImageShift.Format("%.1f", specTotal);
       m_statImageShift.SetWindowText(m_strImageShift);
       mISX = inISX;
       mISY = inISY;
