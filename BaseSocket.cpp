@@ -298,7 +298,7 @@ void CBaseSocket::CloseServer(int sockInd)
 // Send a message in the argument buffer to the server and get a reply
 // returns 1 for an error, and the negative of the number of bytes received if
 // it is not as many as are needed for the command so that can be reponded to later
-int CBaseSocket::ExchangeMessages(int sockInd)
+int CBaseSocket::ExchangeMessages(int sockInd, int *numExtraBytes)
 {
   int nbytes, err, trial, numReceived, numExpected, needed;
   double startTime, timeDiff;
@@ -312,6 +312,8 @@ int CBaseSocket::ExchangeMessages(int sockInd)
     SEMTrace('K', "BaseSocket: Failed to open socket");
     return 1;
   }
+  if (numExtraBytes)
+    *numExtraBytes = 0;
   for (trial = 0; trial < 2; trial++) {
 
     // Try to send the message
@@ -364,6 +366,8 @@ int CBaseSocket::ExchangeMessages(int sockInd)
   // Find out how many bytes are in message and make sure we have the whole thing
   memcpy(&numExpected, &mArgsBuffer[sockInd][0], sizeof(int));
   ReallocArgsBufIfNeeded(sockInd, numExpected);
+  if (numReceived > numExpected && numExtraBytes)
+    *numExtraBytes = numReceived - numExpected;
   if (FinishGettingBuffer(sockInd, mArgsBuffer[sockInd], numReceived, numExpected, 
                           mArgBufSize[sockInd])) {
     CloseServer(sockInd);
@@ -466,7 +470,7 @@ void CBaseSocket::InitializePacking(int sockInd, int funcCode)
 // Once arguments have been placed in the arrays, this routine packs them into a message,
 // sends the message, received the reply, unpacks it into the argument arrays, and sets
 // the return code to a negative value in various error cases
-void CBaseSocket::SendAndReceiveArgs(int sockInd)
+void CBaseSocket::SendAndReceiveArgs(int sockInd, int *numExtraBytes)
 {
  // This value was set to actual arguments for clarity; add one now for the return value
  mNumLongRecv[sockInd]++;
@@ -476,7 +480,7 @@ void CBaseSocket::SendAndReceiveArgs(int sockInd)
    SEMTrace('K', "BaseSocket: Data to send are too large for argument buffer");
    return;
  }
- int err = ExchangeMessages(sockInd);
+ int err = ExchangeMessages(sockInd, numExtraBytes);
  if (err > 0) {
    mLongArgs[sockInd][0] = -1;
    return;
@@ -574,9 +578,10 @@ int CBaseSocket::SendAndReceiveForImage(int sockInd, short *imArray, long *arrSi
                                          long *height, int bytesPerPixel)
 {
   int numBytes, numChunks, nsent, chunkSize, numToGet, chunk, totalRecv = 0, err = 0;
+  int numExtraBytes;
   double startTicks;
   mNumLongRecv[sockInd] = 4;
-  SendAndReceiveArgs(sockInd);
+  SendAndReceiveArgs(sockInd, &numExtraBytes);
   if (mLongArgs[sockInd][0] < 0)
     return 1;
   *arrSize = mLongArgs[sockInd][1];
@@ -587,6 +592,13 @@ int CBaseSocket::SendAndReceiveForImage(int sockInd, short *imArray, long *arrSi
     return mLongArgs[sockInd][0];
   numBytes = *arrSize * bytesPerPixel;
   memset(imArray, 0, numBytes);
+
+  // Copy extra bytes from return message into front of image
+  if (numExtraBytes > 0) {
+    numToGet = B3DMIN(numBytes, numExtraBytes);
+    memcpy(imArray, mArgsBuffer[sockInd], numToGet);
+    totalRecv = numToGet;
+  }
   SEMTrace('K', "Return args received (%d %d %d), expecting %d bytes for image in %d "
     "chunks", *arrSize, *width, *height, numBytes, numChunks);
   startTicks = GetTickCount();

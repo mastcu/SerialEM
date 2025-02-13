@@ -3,6 +3,9 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+2/12/25: Fixed hangs/timeouts receiving images over socket in SerialEM (In
+4.1).
+
 2/8/25: Fixed pixel sizes in frame stack mdoc file when there is a refined
 pixel size defined.
 

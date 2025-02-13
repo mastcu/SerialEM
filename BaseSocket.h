@@ -72,14 +72,14 @@ public:
   static int InitializeOneSocket(int sockInd, const char *message);
   static int InitializeSocketByID(int typeID, int *sockInd, int addToPort, const char *message);
   static void UninitializeWSA(void);
-  static int ExchangeMessages(int sockInd);
+  static int ExchangeMessages(int sockInd, int *numExtraBytes);
   static int OpenServerSocket(int sockInd);
   static void CloseServer(int sockInd);
   static int ReallocArgsBufIfNeeded(int sockInd, int needSize);
 
   static void InitializePacking(int funcCode) {InitializePacking(0, funcCode);};
   static void InitializePacking(int sockInd, int funcCode);
-  static void SendAndReceiveArgs(int sockInd);
+  static void SendAndReceiveArgs(int sockInd, int *numExtraBytes = NULL);
   static int SendOneArgReturnRetVal(int sockInd, int funcCode, int argument);
   static const char *GetOneString(int sock, int funcCode);
   static void AddStringAsLongArray(int sock, const char *name, long *longArr, int maxLen);
