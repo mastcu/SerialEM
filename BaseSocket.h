@@ -8,6 +8,8 @@
 #define JEOLCAM_SOCK_ID  4
 #define TIETZ_SOCK_ID    5
 #define HITACHI_SOCK_ID  6
+#define FEI2ND_SOCK_ID   6
+#define JEOL2ND_SOCK_ID  6
 #define RUN_PYTH_SOCK_ID 7
 #define EXT_PYTH_SOCK_ID 8
 // Note that SavvyScan was given 9!
@@ -70,14 +72,14 @@ public:
   static int InitializeOneSocket(int sockInd, const char *message);
   static int InitializeSocketByID(int typeID, int *sockInd, int addToPort, const char *message);
   static void UninitializeWSA(void);
-  static int ExchangeMessages(int sockInd);
+  static int ExchangeMessages(int sockInd, int *numExtraBytes);
   static int OpenServerSocket(int sockInd);
   static void CloseServer(int sockInd);
   static int ReallocArgsBufIfNeeded(int sockInd, int needSize);
 
   static void InitializePacking(int funcCode) {InitializePacking(0, funcCode);};
   static void InitializePacking(int sockInd, int funcCode);
-  static void SendAndReceiveArgs(int sockInd);
+  static void SendAndReceiveArgs(int sockInd, int *numExtraBytes = NULL);
   static int SendOneArgReturnRetVal(int sockInd, int funcCode, int argument);
   static const char *GetOneString(int sock, int funcCode);
   static void AddStringAsLongArray(int sock, const char *name, long *longArr, int maxLen);
@@ -96,6 +98,7 @@ public:
   static unsigned short GetServerPort(int typeID, unsigned short dfltPort);
   static void GetServerIP(int typeID, std::string &serverIP);
   static int LookupTypeID(int typeID);
+  static int IsTypeIDassigned(int typeID);
   void Release() {};   // Needed to keep macros happy
   static void CloseBeforeNextUse(int typeID);
   static bool ServerIsRemote(int typeID);
