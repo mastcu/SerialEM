@@ -654,12 +654,6 @@ int CBaseServer::FinishGettingBuffer(int sockInd, char *buffer, int numReceived,
   int numExpected, int bufSize)
 {
   int numNew, ind, err = 0;
-  DWORD timeout;
-  if (numExpected > 1024 && SEMGetRecvImageTimeout() > 0.) {
-    timeout = (DWORD)(SEMGetRecvImageTimeout() * 1000);
-    setsockopt(mHClient[sockInd], SOL_SOCKET, SO_RCVTIMEO, (char*)&timeout, 
-      sizeof(timeout));
-  }
 
   while (numReceived < numExpected) {
 
@@ -679,11 +673,6 @@ int CBaseServer::FinishGettingBuffer(int sockInd, char *buffer, int numReceived,
       break;
     }
     numReceived += numNew;
-  }
-  if (numExpected > 1024 && SEMGetRecvImageTimeout() > 0.) {
-    timeout = (DWORD)(10000 * 1000);
-    setsockopt(mHClient[sockInd], SOL_SOCKET, SO_RCVTIMEO, (char*)&timeout,
-      sizeof(timeout));
   }
   return err;
 }

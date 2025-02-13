@@ -471,7 +471,6 @@ bool DLL_IM_EX SEMSetVariableWithStr(CString name, CString value, bool persisten
 bool DLL_IM_EX SEMSetVariableWithDbl(CString name, double value, bool persistent, bool mustBeNew,
   CString *errStr);
 int DLL_IM_EX SEMQueueScriptNextIdle(CString name);
-float DLL_IM_EX SEMGetRecvImageTimeout();
 void DLL_IM_EX AddBackTraceToMessage(CString &message);
 void DLL_IM_EX SEMAppendToLog(CString inString, int inAction = LOG_OPEN_IF_CLOSED, int lineFlags = 0);
 BOOL DLL_IM_EX SEMScanningMags();
@@ -700,7 +699,6 @@ public:
   GetMember(CString, ExePath);
   GetSetMember(CString, NanumFontPath);
   SetMember(BOOL, StartCameraInDebug);
-  GetSetMember(float, RecvImageTimeout);
   SetMember(int, BufToggleCount);
   void RestoreFocusWhenIdle() { mRestoreFocusIdleCount = 4; };
   unsigned char *GetPaletteColors() {return &mPaletteColors[0][0] ; };
@@ -1031,7 +1029,6 @@ private:
   int mLastSecondaryLog;        // Index of last one that lost focus
   WINDOWPLACEMENT mSecondaryLogPlace;
   int mRestoreFocusIdleCount;   // Count for restoring focus from OnIdle
-  float mRecvImageTimeout;      // Timeout for recv when getting images
   int mBufToggleCount;          // # of image toggles remaining
   int mBufToToggle;             // Buffer to toggle between A and
   int mBufToggleInterval;       // Msec between toggles
