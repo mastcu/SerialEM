@@ -3,6 +3,10 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+2/18/25: SEM_4-1-21
+2/18/25: Fixed combining holes on a hex grid when there is an inversion
+between stage and image shift coordinates (In 4.1).
+
 2/12/25: Eliminated property SocketRecvImageTimeout, it is not needed.
 
 2/12/25: Fixed hangs/timeouts receiving images over socket in SerialEM (In

@@ -498,8 +498,8 @@ void CMultiShotDlg::OnDeltaposSpinNumXHoles(NMHDR *pNMHDR, LRESULT *pResult)
 {
   int minNum = mActiveParams->numHoles[1] == 1 ? 2 : 1;
   int oldVal = m_bHexGrid ? mActiveParams->numHexRings : mActiveParams->numHoles[0];
-  FormattedSpinnerValue(pNMHDR, pResult, minNum, MAX_HOLE_SPINNERS, oldVal, 
-    m_strNumXholes, "%d");
+  FormattedSpinnerValue(pNMHDR, pResult, minNum, (m_bHexGrid ? 2 : 1) * MAX_HOLE_SPINNERS,
+    oldVal, m_strNumXholes, "%d");
   if (m_bHexGrid)
     mActiveParams->numHexRings = oldVal;
   else
