@@ -545,10 +545,10 @@ int CMultiHoleCombiner::CombineItems(int boundType, BOOL turnOffOutside, int inX
           // Might as well take the rotation into account here!
           if (posRotInvertDir) {
             if (ind)
-              mOneDIndexToPosInRing[point] = ((11 - hexPosRot1 - step) % 6) * ring + 
+              mOneDIndexToPosInRing[point] = ((11 + hexPosRot1 - step) % 6) * ring + 
               ring - ind;
             else
-              mOneDIndexToPosInRing[point] = ((12 - hexPosRot1 - step) % 6) * ring;
+              mOneDIndexToPosInRing[point] = ((12 + hexPosRot1 - step) % 6) * ring;
 
           } else {
             mOneDIndexToPosInRing[point] = ((step + hexPosRot1) % 6) * ring + ind;
