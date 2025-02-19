@@ -3,7 +3,10 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
-2/18/25: SEM_4-1-21
+2/19/25: SEM_4-1-21
+2/19/25: Prevented beam shift from being calibrated at mag indexes that are in
+LM for TEM and nonLM in EFTEM for FEI scopes (In 4.1).
+
 2/18/25: Fixed combining holes on a hex grid when there is an inversion
 between stage and image shift coordinates (In 4.1).
 
