@@ -369,6 +369,9 @@ int CMacCmd::NextCommand(bool startingOut)
   if (mRanGatanScript)
     SetReportedValues(mCamera->GetScriptReturnVal());
 
+  if (mStartedRefineZLP)
+    SetReportedValues(mWinApp->mFilterTasks->GetLastRZlpFailed() ? 1 : 0);
+
   // If ctfplotter was run, see if succeeded
   if (mRanCtfplotter) {
     cartInd = mSaveCtfplotGraph;
@@ -691,6 +694,7 @@ void CMacCmd::InitForNextCommand()
   mMovedScreen = false;
   mExposedFilm = false;
   mStartedLongOp = false;
+  mStartedRefineZLP = false;
   mMovedAperture = false;
   mRanGatanScript = false;
   mRanExtProcess = false;
@@ -958,9 +962,13 @@ int CMacCmd::Catch(void)
 // EndTry
 int CMacCmd::EndTry(void)
 {
-  mBlockLevel--;
-  mBlockDepths[mCallLevel]--;
-  mLastIndex = -1;
+  if (mRunningScrpLang) {
+    mPythonTryLevel = B3DMAX(0, mPythonTryLevel - 1);
+  } else {
+    mBlockLevel--;
+    mBlockDepths[mCallLevel]--;
+    mLastIndex = -1;
+  }
   return 0;
 }
 
@@ -974,6 +982,15 @@ int CMacCmd::Throw(void)
     return 1;
   ABORT_NOLINE("Stopping because a THROW statement was encountered outside of a TRY "
     "block");
+  return 0;
+}
+
+// StartTry (Python only)
+int CMacCmd::StartTry(void)
+{
+  if (mPythonTryLevel < MAX_PY_TRY_DEPTH)
+    mNoCatchOutput[mPythonTryLevel] = mItemInt[1] != 0;
+  mPythonTryLevel++;
   return 0;
 }
 
@@ -9857,13 +9874,26 @@ int CMacCmd::SetSlitIn(void)
 int CMacCmd::RefineZLP(void)
 {
   CString report;
+  bool allowFail = !mItemEmpty[4] && mItemInt[4];
 
   if (mItemEmpty[1] || !mItemDbl[1] || 
     SEMTickInterval(1000. * mFiltParam->alignZLPTimeStamp) > 60000. *mItemDbl[1]) {
     CTime ctdt = CTime::GetCurrentTime();
     report.Format("%02d:%02d:%02d", ctdt.GetHour(), ctdt.GetMinute(), ctdt.GetSecond());
     mWinApp->AppendToLog(report, mLogInfoAction);
-    mWinApp->mFilterTasks->RefineZLP(false, mItemInt[2]);
+    if (!mItemEmpty[3] && mItemInt[3])
+      mWinApp->mFilterTasks->SetNextRZlpRedoInLD(true);
+    if (allowFail)
+      mWinApp->mFilterTasks->SetAllowNextRZlpFailure(true);
+    if (mWinApp->mFilterTasks->RefineZLP(false, mItemInt[2])) {
+      if (allowFail)
+        SetReportedValues(1.);
+      else {
+        AbortMacro();
+        return 1;
+      }
+    } else
+      mStartedRefineZLP = true;
   }
   return 0;
 }

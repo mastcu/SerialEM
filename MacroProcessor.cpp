@@ -185,7 +185,8 @@ CMacroProcessor::CMacroProcessor()
     "SKIPTO", "FUNCTION", "CALLFUNCTION", "ENDFUNCTION", "CALLSCRIPT", "DOSCRIPT",
     "TRY", "CATCH", "ENDTRY", "THROW"};
   int pythonOnlyCmds[] = {CME_SETVARIABLE, CME_SETPERSISTENTVAR, CME_GETVARIABLE,
-  CME_SETFLOATVARIABLE, CME_PLUGINALLDOUBLES, CME_PLUGINSTRING, CME_PLUGINDOUBLESTRING};
+  CME_SETFLOATVARIABLE, CME_PLUGINALLDOUBLES, CME_PLUGINSTRING, CME_PLUGINDOUBLESTRING,
+  CME_STARTTRY};
   SEMBuildTime(__DATE__, __TIME__);
   mWinApp = (CSerialEMApp *)AfxGetApp();
   mModeNames = mWinApp->GetModeNames();
@@ -1272,6 +1273,7 @@ void CMacroProcessor::Run(int which)
   mBlockLevel = -1;
   mBlockDepths[0] = -1;
   mTryCatchLevel = 0;
+  mPythonTryLevel = 0;
   mCallFunction[0] = NULL;
   mCurrentIndex = 0;
   mLastIndex = -1;

@@ -5016,6 +5016,10 @@ int CTSController::TSMessageBox(CString message, UINT type, BOOL terminate, int 
   bool *noCatchMess = macProc->GetNoCatchOutput();
   bool mgTask = mWinApp->mMultiGridTasks->RunningExternalTask() &&
     !mWinApp->mMultiGridTasks->GetStartedNavAcquire();
+  if (macProc->GetPythonTryLevel() > 0) {
+    noCatchMess = macProc->GetNoPyTryOutput();
+    tryLevel = macProc->GetPythonTryLevel();
+  }
 
   // Intercept error from macros if the flag is set, make sure there is a \r before at
   // least one \n in a row, print message and return

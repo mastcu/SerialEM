@@ -20,7 +20,8 @@ struct ScriptLangPlugFuncs;
 struct MultiShotParams;
 
 #define MAX_LOOP_DEPTH  40
-#define MAX_CALL_DEPTH  (2 * MAX_TOT_MACROS)
+#define MAX_CALL_DEPTH  80
+#define MAX_PY_TRY_DEPTH 20
 #define MAX_MACRO_LABELS 100
 #define MAX_MACRO_SKIPS  100
 #define MACRO_NO_VALUE  -123456789.
@@ -171,6 +172,7 @@ public:
   GetMember(bool, CompensatedBTforIS);
   GetMember(bool, NoMessageBoxOnError);
   GetMember(int, TryCatchLevel);
+  GetMember(int, PythonTryLevel);
   GetMember(bool, SuspendNavRedraw);
   GetMember(bool, DeferLogUpdates);
   GetMember(bool, NonMacroDeferring);
@@ -189,7 +191,8 @@ public:
   GetSetMember(CString, PyIncludePath);
   GetSetMember(int, NextParamSetForMont);
   GetMember(CString, ScriptWindowTitle);
-  bool *GetNoCatchOutput() {return &mNoCatchOutput[0] ; };
+  bool *GetNoCatchOutput() { return &mNoCatchOutput[0]; };
+  bool *GetNoPyTryOutput() { return &mNoPyTryOutput[0]; };
   std::vector<std::string> *GetVersionsOfPython() { return &mVersionsOfPython; };
   int GetReadOnlyStart(int macNum) { return mReadOnlyStart[macNum]; };
   void SetReadOnlyStart(int macNum, int start) { mReadOnlyStart[macNum] = start; };
@@ -293,8 +296,10 @@ protected:
   int mBlockLevel;         // Index for block level, 0 in top block or -1 if not in block
   int mCallLevel;          // Index for call level, 0 in main macro
   int mTryCatchLevel;      // Level of try blocks, raised at Try, dropped at Catch
+  int mPythonTryLevel;     // Level for StartTry/EndTry from other script language
   bool mInInitialSubEval;  // Flag to test if in a block-raising statement if error
   bool mNoCatchOutput[MAX_LOOP_DEPTH];  // Flag to suppress output, index 0 for level 1
+  bool mNoPyTryOutput[MAX_PY_TRY_DEPTH];  // Block level reached in current call level
   int mBlockDepths[MAX_CALL_DEPTH];  // Block level reached in current call level
   int mCallMacro[MAX_CALL_DEPTH];   // Current macro for given call level
   int mCallIndex[MAX_CALL_DEPTH];   // Current index into macro for given call level
@@ -341,6 +346,7 @@ protected:
   BOOL mLoadingMap;    // Flag that an asynchronous map load was started
   BOOL mMakingDualMap; // Flag that anchor map has been started
   BOOL mAutoContouring; // Flag that autocontouring was started
+  BOOL mStartedRefineZLP;   // Flag that refine ZLP was started
   double mDoseStart;   // Starting cumulative dose
   double mDoseTarget;  // Target dose to accumulate
   double mDoseTime;    // Time it started

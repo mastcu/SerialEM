@@ -327,7 +327,8 @@
         </TR>
         <TR>
           <TD class="scriptcommand">EndTry</TD>
-          <TD>Ends the block of commands run upon error.&nbsp; <br>Not from Python.</TD>
+          <TD>Ends the block of commands run upon error.&nbsp; Can also be used from Python to indicate 
+            that a block started with the 'StartTry' command has ended.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">Throw [text]</TD>
@@ -979,6 +980,16 @@
             Python module to break out of the hang and generate an exception.&nbsp; The exception can be 
             caught and the transfer will likely succeed if it is tried again.&nbsp; The timeout is set
              only when expecting to receive more than 1024 bytes.&nbsp; Command added in 4.2, 29-Nov-24.
+          </TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">StartTry([#])</TD>
+          <TD>Tells SerialEM that the script is starting a Python &#39;try&#39; block that can catch 
+            errors in SerialEM.&nbsp; The end of the block can be indicated with 'EndTry'.&nbsp; Without the
+            optional <b>#</b>, or with a value of 0, the effect is equivalent to using 'NoMessageBoxOnError'.&nbsp; With
+            <B>#</B> non-zero, the error message to the log is suppressed, similar to using 'Try 1' in SerialEM
+            scripting.&nbsp; Multiple levels of StartTry - EndTry can be used, with the argument for whether to 
+            suppress messages kept track of separately for each level.&nbsp; Command added in 4.2, 17-Feb-25.
           </TD>
         </TR>
         <TR>
@@ -4652,13 +4663,17 @@
             optional 1 or -1 to specify a specific direction for further tilts</TD>
         </TR>
         <TR>
-          <TD class="scriptcommand">RefineZLP [#I] [#T]</TD>
+          <TD class="scriptcommand">RefineZLP [#I] [#T] [#R] [#F]</TD>
           <TD>Reports time of day and runs Refine Zero Loss Peak procedure.&nbsp; If the
             optional <b>#I</b> is entered with an interval in minutes, the procedure is not run if
             the time since the last run is less than that interval.&nbsp; If the
             optional <b>#T</b> has a positive value, the procedure is run with Trial in Low Dose; if 
             it has a negative value, the procedure is run with Preview; otherwise it is governed by
-            the selection in the<a href="hidd_filtercontrol.htm"> Filter Control</a> panel.
+            the selection in the <a href="hidd_filtercontrol.htm">Filter Control</a> panel.&nbsp; Set the
+            optional <b>#R</b> non-zero to retry the procedure at lower and higher energy ranges
+             in Low Dose mode, as it does outside of Low Dose.&nbsp; Set <b>#F</b> non-zero to allow the
+            procedure to fail without generating the usual error; in this case the script will go on and
+            <i>reportedValue1</i> will be 0 for success or 1 for failure.
           </TD>
         </TR>
         <TR>
