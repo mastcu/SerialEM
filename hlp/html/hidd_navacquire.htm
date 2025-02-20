@@ -383,7 +383,18 @@
       in a restricted mode that has settings based on the current Record acquisition parameters.
     </P>
     <P><strong>Refine ZLP -</strong> This task runs the Refine ZLP routine started by
-      the button in the <a href="hidd_filtercontrol.htm">Filter Control panel</a>.</P>
+      the button in the <a href="hidd_filtercontrol.htm">Filter Control panel</a>.&nbsp; 
+      There are two options available for this operation, accessed with the <strong>
+      Setup</strong> button.&nbsp; One is the choice of whether to retry the procedure 
+      at lower and higher energy ranges in Low Dose mode, if it fails to find the 
+      peak.&nbsp; Doing so is appropriate if the operation is being done after 
+      acquisition on an area, or in a separate location from the current item.&nbsp; 
+      The second choice is whether to allow a failure on the current item without 
+      generating an error that would stop acquisition on that item, or stop the whole 
+      run when <strong>No message box when errors occur</strong> is not selected.&nbsp; 
+      This choice will make it run the procedure on the next item after a failure, 
+      regardless of whether it is scheduled to run then, which does not happen when 
+      just suppressing message boxes.</P>
     <P><B>Rough Eucentricity - </B>Either the Rough Eucentricity or the Eucentricity
       by Focus task should be selected if it
       is necessary that the specimen be eucentric and if the Z height might be off by

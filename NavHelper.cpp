@@ -96,7 +96,7 @@ CNavHelper::CNavHelper(void)
     {"Update Dark Reference", NAA_FLAG_ANY_SITE_OK, 0, 1, 15, 40.},
     {"Wait for Drift", BEFORE_SETUP_EVERYN, 0, 1, 15, 40.},
     {"Align to Template", BEFORE_SETUP_EVERYN, 0, 1, 15, 40.},
-    {"Refine ZLP", 0, 0, 1, 15, 40.},
+    {"Refine ZLP", NAA_FLAG_HAS_SETUP, 0, 1, 15, 40.},
     {"Run Script before Action", NAA_FLAG_ONLY_BEFORE, 0, 1, 15, 40.},
     {"Run Script after Action", NAA_FLAG_AFTER_ITEM, 0, 1, 15,40.},
     {"Flash FEG", NAA_FLAG_ANY_SITE_OK, 0, 1, 15, 40.},
@@ -4933,10 +4933,16 @@ void CNavHelper::StopDualMap(void)
 int CNavHelper::AssessAcquireProblems(int startInd, int endInd)
 {
   NavAcqParams *navParam = mWinApp->GetNavAcqParams(GetAcqParamIndexToUse(true));
+  CameraParameters *camP = mWinApp->GetActiveCamParam();
   mAcqActions = mAllAcqActions[GetAcqParamIndexToUse(true)];
   if (AssessAcquireForParams(navParam, mAcqActions, mMultiShotParams, startInd, endInd,
     ""))
     return 1;
+  if ((mAcqActions[NAACT_REFINE_ZLP].flags & NAA_FLAG_RUN_IT) &&
+    !(camP->GIF || mScope->GetHasOmegaFilter())) {
+    SEMMessageBox("Refine ZLP is selected but you are not imaging with an energy filter");
+    return 1;
+  }
   return 0;
 }
 

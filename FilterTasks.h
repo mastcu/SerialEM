@@ -34,6 +34,9 @@ class CFilterTasks : public CCmdTarget
   GetSetMember(float, RZlpMeanCrit)
   GetSetMember(BOOL, RZlpRedoInLowDose)
   GetSetMember(BOOL, RZlpLeaveCDSmode);
+  SetMember(bool, NextRZlpRedoInLD);
+  SetMember(bool, AllowNextRZlpFailure);
+  GetMember(bool, LastRZlpFailed);
   BOOL AllocateArrays(int size);
   BOOL RefiningZLP() {return mRZlpIndex >= 0;};
   void CleanupArrays();
@@ -129,6 +132,9 @@ class CFilterTasks : public CCmdTarget
   float mRZlpUserCancelFrac;     // Fraction of slit width to cancel automatically
   int mRZlpCancelLDArea;         // Area loss originated from
   BOOL mRZlpRedoInLowDose;       // Flag to iterate upon failure in low dose
+  bool mNextRZlpRedoInLD;        // Flag to redo next time
+  bool mAllowNextRZlpFailure;    // Flag to not thrpw an error if next one fails
+  bool mLastRZlpFailed;          // Flag set on failure
   bool mRZlpRestoreCDSmode;      // Flag to restore CDS mode for a K3 camera
   BOOL mRZlpLeaveCDSmode;        // Flag to leave CDS mode if it is on
 };

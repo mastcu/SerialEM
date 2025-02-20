@@ -66,6 +66,9 @@ CFilterTasks::CFilterTasks()
   mRZlpUserCancelFrac = 0.5f;  // Automatically cancel loss less than this frac of width
   mRZlpRedoInLowDose = false;  // Do not try again in low dose
   mRZlpLeaveCDSmode = false;   // Stay in CDS mode unless property set
+  mNextRZlpRedoInLD = false;
+  mAllowNextRZlpFailure = false;
+  mLastRZlpFailed = false;
 }
 
 CFilterTasks::~CFilterTasks()
@@ -222,17 +225,18 @@ void CFilterTasks::CalibrateMagShift()
   if (!camParams->DMbeamShutterOK && conSet->shuttering != USE_FILM_SHUTTER) {
     conSet->drift = 0.;
     conSet->shuttering = USE_FILM_SHUTTER;
-    message += "(modified to use the regular shutter because beam shuttering is inaccurate)\n";
+    message += "(modified to use the regular shutter because beam shuttering is "
+      "inaccurate)\n";
   }
 
-  message += "\nThe binning should be set to give fast pictures (a subset area can be used).\n"
-    "The beam and exposure time should be adjusted to give a moderate number of counts.\n\n"
-    "The procedure will work best if you have aligned the zero loss peak recently and if\n"
-    "no sample appears in the beam at the lowest mag\n\n";
+  message += "\nThe binning should be set to give fast pictures (a subset area can be "
+    "used).\nThe beam and exposure time should be adjusted to give a moderate number of "
+    "counts.\n\nhe procedure will work best if you have aligned the zero loss peak "
+    "recently and if\nno sample appears in the beam at the lowest mag\n\n";
 
   if (mWinApp->GetAdministrator())
-    message += "The procedure will measure shifts twice, from the lowest to the highest mag\n"
-      "then back to the lowest, because you are in Administrator mode.\n\n";
+    message += "The procedure will measure shifts twice, from the lowest to the highest"
+    " mag\nthen back to the lowest, because you are in Administrator mode.\n\n";
   else
     message += "The procedure will measure shifts once then stop\n"
       "because you are not in Administrator mode.\n\n";
@@ -587,11 +591,16 @@ BOOL CFilterTasks::RefineZLP(bool interactive, int useTrial)
   if (!useTrial)
     useTrial = mFiltParams->refineWithTrial ? 1 : -1;
   trialInLD = useTrial > 0 && mLowDoseMode && !JEOLscope;
+  mLastRZlpFailed = true;
+
+  if (!mWinApp->GetEFTEMMode() && !mScope->GetHasOmegaFilter()) {
+    SEMMessageBox("The scope must be in EFTEM mode to refine the zero-loss peak");
+    return 1;
+  }
 
   // Set up maximum scan size, and arrays
   mNumEnergies = (int)(1.5 * mRZlpSlitWidth / mRZlpStepSize);
-  if (AllocateArrays(mNumEnergies))
-    return false;
+  AllocateArrays(mNumEnergies);
 
   // Find out if there is a user loss to cancel
   mRZlpUserLoss = 0.;
@@ -698,7 +707,8 @@ BOOL CFilterTasks::RefineZLP(bool interactive, int useTrial)
   mRZlpIndex = 0;
   mPeakDelta = mPeakMean = -1.e10;
   mPeakIndex = -1;
-  
+  mLastRZlpFailed = false;
+
   mWinApp->SetStatusText(MEDIUM_PANE, "REFINING ZERO LOSS PEAK");
   mWinApp->UpdateBufferWindows();
   mCamera->SetIgnoreFilterDiffs(true);
@@ -719,6 +729,7 @@ void CFilterTasks::RefineZLPNextTask()
     mWinApp->mFilterControl.LossToApply() < 0.);
   BOOL lastEnergy = (mFiltParams->positiveLossOnly && 
     mWinApp->mFilterControl.LossToApply() < mRZlpStepSize);
+  bool allowFail = mAllowNextRZlpFailure;
 
   mImBufs->mCaptured = BUFFER_CALIBRATION;
   if (mRZlpIndex < 0)
@@ -813,14 +824,19 @@ void CFilterTasks::RefineZLPNextTask()
     (delta < mPeakDelta * mRZlpDeltaCrit && curMean < mPeakMean * mRZlpMeanCrit))) {
     
     // Third time or low dose mode, give up
-    if (mRZlpTrial >= 3 || (mLowDoseMode && !mRZlpRedoInLowDose)) {
+    if (mRZlpTrial >= 3 || (mLowDoseMode && !mRZlpRedoInLowDose && !mNextRZlpRedoInLD)) {
       StopRefineZLP();
       report = "The Refine ZLP routine failed to find the zero-loss peak.";
       if (lastEnergy || badEnergy)
         report += "\n\nThis may be because the net energy shift was not able to "
         "become negative.\nYou should do the \"Adjust Slit Offset\" procedure.";
-      mWinApp->mTSController->TSMessageBox(report);
-      mWinApp->ErrorOccurred(1);
+      if (allowFail) {
+        SEMAppendToLog(report);
+      } else {
+        mWinApp->mTSController->TSMessageBox(report);
+        mWinApp->ErrorOccurred(1);
+      }
+      mLastRZlpFailed = true;
       return;
     }
 
@@ -883,6 +899,8 @@ void CFilterTasks::StopRefineZLP()
 
   CleanupArrays();
   mRZlpIndex = -1;
+  mNextRZlpRedoInLD = false;
+  mAllowNextRZlpFailure = false;
   if (mRZlpRestoreCDSmode)
     mCamera->SetUseK3CorrDblSamp(true);
 
@@ -898,26 +916,15 @@ BOOL CFilterTasks::AllocateArrays(int size)
   mEnergies = new float[size];
   mMeanCounts = new float[size];
   mDeltaCounts = new float[size];
-  if (!mEnergies || !mMeanCounts || !mDeltaCounts) {
-    mWinApp->mTSController->TSMessageBox("Failed to get memory for working tables"); 
-    CleanupArrays();
-    return true;
-  }
   return false;
 }
 
 // Delete arrays if they were allocated
 void CFilterTasks::CleanupArrays()
 {
-  if (mEnergies)
-    delete [] mEnergies;
-  if (mMeanCounts)
-    delete [] mMeanCounts;
-  if (mDeltaCounts)
-    delete [] mDeltaCounts;
-  mEnergies = NULL;
-  mMeanCounts = NULL;
-  mDeltaCounts = NULL;
+  DELETE_ARR(mEnergies);
+  DELETE_ARR(mMeanCounts);
+  DELETE_ARR(mDeltaCounts);
 }
 
 // Test for whether a scan of the refine ZLP procedure has enough range to work

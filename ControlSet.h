@@ -500,6 +500,7 @@ struct NavAcqParams {
   int multiGridSubset;      // # of items to do if doing multigrid
   int mulGridSubsetFrom;    // Item to start at
   int mulGridItemsOrShots;  // 1 for shots, 0 for items
+  int refineZlpOptions;     // 1 to retry in Low dose plus 2 to allow failures
 };
 
 // Other Nav parameters

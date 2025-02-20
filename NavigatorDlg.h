@@ -534,6 +534,7 @@ private:
   bool mIgnoreUpdates;         // Flag to prevent update of Nav Acquire when getting file
   int mNumWrongMapWarnings;    // # of warnings given when nav table not right for map
   bool mReloadTableOnNextAdd;  // Flag set by multigrid to work around vanishing map bug
+  bool mDoRefineZlpNextItem;   // Flag to do it unconditionally because it failed
 
 public:
   afx_msg void OnGotoMarker();

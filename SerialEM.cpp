@@ -668,6 +668,7 @@ CSerialEMApp::CSerialEMApp()
     mNavAcqParams[i].multiGridSubset = -100;
     mNavAcqParams[i].mulGridSubsetFrom = 1;
     mNavAcqParams[i].mulGridItemsOrShots = 0;
+    mNavAcqParams[i].refineZlpOptions = 0;
   }
 
   mNavParams.warnedOnSkipMove = false;

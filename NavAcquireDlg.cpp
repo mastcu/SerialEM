@@ -1768,6 +1768,19 @@ void CNavAcquireDlg::OnButSetupAction(UINT nID)
     }
     break;
 
+  case NAACT_REFINE_ZLP:
+    boolVal = mParam->refineZlpOptions & 1;
+    if (KGetOneChoice("When refine ZLP fails, it can retry at higher at lower energy "
+      "ranges", "Do you want this task to retry in Low Dose mode?", boolVal,
+      "Just try once in Low Dose mode", "Retry in Low dose mode"))
+      setOrClearFlags((b3dUInt32 *)&mParam->refineZlpOptions, 1, boolVal ? 1 : 0);
+    boolVal = mParam->refineZlpOptions & 2;
+    if (KGetOneChoice("What do you want Refine ZLP to do when it fails?",
+      "", boolVal, "Generate an error that will end acquiring the current item",
+      "Just print an error in the log and go on, trying on next item"))
+      setOrClearFlags((b3dUInt32 *)&mParam->refineZlpOptions, 2, boolVal ? 1 : 0);
+    break;
+
     // Hardware dark reference
   case NAACT_HW_DARK_REF:
     if (mWinApp->GetDEcamCount() > 0) {

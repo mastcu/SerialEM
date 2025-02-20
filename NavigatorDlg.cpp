@@ -4063,6 +4063,17 @@ void CNavigatorDlg::AddHolePositionsToItemPts(FloatVec &delISX, FloatVec &delISY
 {
   int ind, minInd = -1, indexInd;
   float dist, ptX, ptY, minDist = 1.e20f;
+
+  // Negative numHoles means just add them and skip swapping the closest point
+  if (numHoles < 0) {
+    for (ind = 0; ind < -numHoles; ind++) {
+      ptX = mIStoStageForHoles.xpx * delISX[ind] + mIStoStageForHoles.xpy * delISY[ind];
+      ptY = mIStoStageForHoles.ypx * delISX[ind] + mIStoStageForHoles.ypy * delISY[ind];
+      item->AppendPoint(ptX, ptY);
+    }
+    return;
+  }
+
   for (ind = 0; ind < numHoles; ind++) {
     ptX = mIStoStageForHoles.xpx * delISX[ind] + mIStoStageForHoles.xpy * delISY[ind];
     ptY = mIStoStageForHoles.ypx * delISX[ind] + mIStoStageForHoles.ypy * delISY[ind];
@@ -10067,6 +10078,7 @@ void CNavigatorDlg::AcquireAreas(int source, bool dlgClosing, bool useTempParams
   mSelectedItems.clear();
   mNumReconnectsInAcq = 0;
   mReconnectedInAcq = false;
+  mDoRefineZlpNextItem = false;
   mSaveCollapsed = m_bCollapseGroups;
   SetCollapsing(false);
   if (FindAndSetupNextAcquireArea()) {
@@ -10287,6 +10299,11 @@ void CNavigatorDlg::AcquireNextTask(int param)
           }
           break;
 
+        }
+
+        if (act == NAACT_REFINE_ZLP && mDoRefineZlpNextItem) {
+          runIt = true;
+          mDoRefineZlpNextItem = false;
         }
 
         // If running it, now see if it is done elsewhere and if it is not already there,
@@ -10611,6 +10628,12 @@ void CNavigatorDlg::AcquireNextTask(int param)
         SkipToNextItemInAcquire(item, "waiting for drift");
       break;
 
+      // But Refine ZLP could just go on
+    case NAACT_REFINE_ZLP:
+      if (mWinApp->mFilterTasks->GetLastRZlpFailed() && (mAcqParm->refineZlpOptions & 2))
+        mDoRefineZlpNextItem = true;
+      break;
+
       // Record that eucentricity was done
     case NAACT_EUCEN_BY_FOCUS:
     case NAACT_ROUGH_EUCEN:
@@ -10766,6 +10789,10 @@ void CNavigatorDlg::AcquireNextTask(int param)
     // Refine the ZLP
   case NAACT_REFINE_ZLP:
     SEMTrace('n', "Doing %s", (LPCTSTR)mAcqActions[mAcqSteps[mAcqStepIndex]].name);
+    if (mAcqParm->refineZlpOptions & 1)
+      mWinApp->mFilterTasks->SetNextRZlpRedoInLD(true);
+    if (mAcqParm->refineZlpOptions & 2)
+      mWinApp->mFilterTasks->SetAllowNextRZlpFailure(true);
     stopErr = mWinApp->mFilterTasks->RefineZLP(false) ? 0 : 1;
     break;
 
