@@ -639,6 +639,7 @@ public:
   SetMember(bool, KeepLastUsedFrameNum);
   GetSetMember(int, RamperBlankAtEnd);
   GetSetMember(int, MinShotInterval);
+  GetSetMember(float, GIFslitWidthScaling);
   CameraThreadData *GetCamThreadData() { return &mTD; };
   bool DoingPartialScan() {return mTD.ReturnPartialScan > 0; };
   bool HasCEOSFilter() { return mCEOSFilter != NULL; }
@@ -816,6 +817,7 @@ public:
   float mGIFoffsetDelayBase2;   // base delay in DM ticks, large offsets
   float mGIFoffsetDelaySlope2;  // increase per EV of offset
   int mGIFslitInOutDelay;       // Ticks of delay when slit in/out
+  float mGIFslitWidthScaling;        // Scaling FROM actual value to reported value
   int mNumZLPAlignChanges;      // minimum number of energy shift changes
   float mMinZLPAlignInterval;   // in minimum time interval
   double mLastEnergyShift;

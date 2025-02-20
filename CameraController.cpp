@@ -484,6 +484,7 @@ CCameraController::CCameraController()
   mFilterWaiting = false;
   mKeepLastUsedFrameNum = false;
   mRamperBlankAtEnd = 0;
+  mGIFslitWidthScaling = 1.;
   for (l = 0; l < MAX_CHANNELS; l++)
     mTD.PartialArrays[l] = NULL;
 }
@@ -11100,6 +11101,7 @@ int CCameraController::SetupFilter(BOOL acquiring)
   if (CreateCamera(CREATE_FOR_GIF))
     return -1;
   SEMTrace('Z', "SetupFilter slit %d", filtParam->slitIn);
+  float useWidth = mGIFslitWidthScaling * filtParam->slitWidth;
 
   // Exit with error if not in imaging mode
   command.Format("if (IFCGetFilterMode() == 0)\n"
@@ -11131,7 +11133,7 @@ int CCameraController::SetupFilter(BOOL acquiring)
           mGIFBiggestAperture, mGIFBiggestAperture,
           filtParam->slitIn ? 1 : 0, filtParam->slitIn ? 1 : 0,
           mGIFslitInOutDelay,
-          filtParam->slitWidth, filtParam->slitIn ? 0.1 : 1000., filtParam->slitWidth, 
+          useWidth, filtParam->slitIn ? 0.1 : 1000., useWidth, 
           (LPCTSTR)offsetFunc, loss, (LPCTSTR)offsetFunc, loss,
           mGIFoffsetDelayCrit,
           delayBase1, delaySlope1, delayBase2, delaySlope2);
@@ -11264,6 +11266,7 @@ int CCameraController::CheckFilterSettings()
       tvIn = (states & 8) > 0;
       slitIn = (states & 16) > 0;
       imageMode = (states & 32) > 0;
+      width /= mGIFslitWidthScaling;
 
       // Change slit width unless in spectroscopy mode or just came out of it
       if (!mWasSpectroscopy && imageMode && fabs(width - filtParam->slitWidth) > 0.1) {

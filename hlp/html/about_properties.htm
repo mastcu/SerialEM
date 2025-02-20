@@ -1446,7 +1446,7 @@
             set to 1 to set energy loss using only the high tension offset.&nbsp; Otherwise, the 
             liner tube voltage will be used if possible, and high tension offset will be adjusted instead 
             only if setting the energy shift with liner tube voltage would make it go out of range.&nbsp; In
-            either case, the energy shift reported by the program is the sum of high tensin offset and liner 
+            either case, the energy shift reported by the program is the sum of high tension offset and liner 
             tube voltage.&nbsp; It is recommended that the high tension offset be set to -50, and liner 
             tube voltage adjusted to compensate, to avoid transitions between the two methods of setting shift.
           </TD>
@@ -1464,6 +1464,11 @@
             Filter Control panel.&nbsp; To see if this setting is needed, align the ZLP with
             a slit width of 20 and see if the image is lost as the slit width is stepped
             below 10 eV.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>GIFslitWidthScaling</TD>
+          <TD>Scaling <b>from</b> the actual slit width <b>to</b> the value that must be set in a GIF
+            to achieve that width, or that is read back when it is that width.</TD>
         </TR>
         <TR VALIGN="top">
           <TD>OmegaCanDoNegativeShift</TD>
@@ -3899,7 +3904,7 @@
         </TR>
         <TR VALIGN="top">
           <TD>CookerRealignMinField</TD>
-          <TD>Minimum camera field of view, in microns, for the realignment afer running
+          <TD>Minimum camera field of view, in microns, for the realignment after running
             cooking routine. Default is 8.0.</TD>
         </TR>
         <TR VALIGN="top">
@@ -3994,11 +3999,6 @@
             calibrating mag-dependent energy shifts. This should be set to the largest
             minimum field size for any of the tasks. The default is 8 microns.
           </TD>
-        </TR>
-        <TR VALIGN="top">
-          <TD>CookerRealignMinField</TD>
-          <TD>Minimum camera field of view, in microns, for images used to realign after
-            cooking a specimen. Default is 8.</TD>
         </TR>
         <TR VALIGN="top">
           <TD>CookerISLimit</TD>
