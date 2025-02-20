@@ -233,7 +233,7 @@ public:
   void MakeSpiralPattern(int numX, int numY, IntVec &order);
   void DirectionIndexesForHexSide(int step, int &mainDir, int &mainSign, int &sideDir, int &sideSign);
   void SkipHolesInList(FloatVec &delISX, FloatVec &delISY, IntVec &posIndex,
-    unsigned char *skipIndex, int numSkip, int &numHoles);
+    unsigned char *skipIndex, int numSkip, int &numHoles, FloatVec *skippedISX = NULL, FloatVec *skippedISY = NULL);
   bool ItemIsEmptyMultishot(CMapDrawItem *item);
   int MultiShotBusy(void);
   bool CurrentHoleAndPosition(CString &strCurPos);

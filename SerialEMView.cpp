@@ -1363,7 +1363,7 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
   int regMatch = imBuf->mRegistration ? 
     imBuf->mRegistration : navigator->GetCurrentRegistration();
   std::set<int> *selectedItems = navigator->GetSelectedItems();
-  bool highlight, draw, doInHole;
+  bool highlight, draw, doInHole, drawSkips;
   CMapDrawItem holeItem;
   MultiShotParams *msParams;
   int msNumXholes = 0, msNumYholes = 0, useXholes, useYholes;
@@ -1395,6 +1395,11 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
 
   FloatVec drawnXinHole, drawnYinHole, drawnXallHole, drawnYallHole;
   FloatVec convXinHole, convYinHole, convXallHole, convYallHole;
+  FloatVec skippedX, skippedY, acquireXhole, acquireYhole, convXacquire, convYacquire;
+  ShortVec skippedDraw;
+  float area, side, skipPad;
+  CMapDrawItem skipItem, triangleItem;
+
   for (int iDraw = -1; iDraw < itemArray->GetSize(); iDraw++) {
     adjSave = mAdjustPt;
     float delPtX = 0., delPtY = 0.;
@@ -1479,7 +1484,7 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
         }
       }
 
-      // Draw multi-shot pattern
+      // DRAW MULTI-SHOT PATTERN
       if (iDraw < 0 && useMultiShot) {
         float holeXoffset = 0, holeYoffset = 0;
         int inHoleEnd = item->mNumPoints - 2;
@@ -1503,7 +1508,7 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
               delPtX, delPtY, &drawnXinHole, &drawnYinHole);
 
           // Adjust the list of drawn points to be relative to their center after adding
-          // absoulte points to the list of multihole points
+          // absolute points to the list of multihole points
           for (int pt = 0; pt < (int)drawnXinHole.size(); pt++) {
             drawnXallHole.push_back(drawnXinHole[pt]);
             drawnYallHole.push_back(drawnYinHole[pt]);
@@ -1568,11 +1573,22 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
         // Now if doing multiholes, draw a circle on each that is either acquire or
         // multi inhole radius
         if (doMultiHole && item->mDraw) {
-          for (int pt = numPoints; pt < inHoleStart; pt++) {
+          size = inHoleStart;
+          ix = numPoints;
+
+          // Limit to 3 rings of circles, account for swapping of a point into the first
+          // spot
+          if (msParams->doHexArray && size - ix > 37) {
+            ACCUM_MIN(size, numPoints + 37);
+            ix++;
+          }
+          for (int pt = ix; pt < inHoleStart; pt++) {
             StageToImage(imBuf, item->mPtX[pt] + item->mStageX, 
               item->mPtY[pt] + item->mStageY, ptX, ptY);
             DrawCircle(&cdc, &circlePen, &rect, imBuf->mImage, ptX + delPtX, ptY + delPtY, 
               doInHole ? acquireRadii[1] : acquireRadii[0]);
+            if (pt >= size - 1)
+              pt = inHoleStart - 1;
           }
         }
 
@@ -1590,16 +1606,16 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
             DrawCircle(&cdc, &circlePen, &rect, imBuf->mImage, ptX + delPtX, ptY + delPtY,
               acquireRadii[0]);
         }
-      }
+      }  // END OF MULTISHOT PATTERN
       cdc.SelectObject(pOldPen);
     }
 
     // Draw polygons for full acquire area on all acquire points if selected, or on
     // current/selected points
     if (iDraw >= 0 && item->mAcquire && item->mNumPoints == 1 && mAcquireBox &&
-      (showMultiOnAll && 
+      (showMultiOnAll &&
       (!showOnlyCombined || (item->mNumXholes != 0 && item->mNumYholes != 0) ||
-        mWinApp->mNavHelper->mCombineHoles->IsItemInUndoList(item->mMapID)) || 
+        mWinApp->mNavHelper->mCombineHoles->IsItemInUndoList(item->mMapID)) ||
         (showCurPtAcquire && highlight && doMultiHole))) {
       GetSingleAdjustmentForItem(imBuf, item, delPtX, delPtY);
       CPen pnAcquire(PS_SOLID, thick1, item->GetColor(highlight));
@@ -1607,12 +1623,33 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
       mAcquireBox->mDraw = true;
       if (useMultiShot) {
 
+        // One-time computation of the triangle area for skipped points
+        if (!triangleItem.mNumPoints) {
+          area = 0.2f;
+          if (doInHole && (int)convXinHole.size() > 2)
+            area = 0.67f * navigator->ContourArea(&convXinHole[0], &convYinHole[0],
+            (int)convXinHole.size());
+          else if (mAcquireBox && mAcquireBox->mNumPoints > 2)
+            area = navigator->ContourArea(mAcquireBox->mPtX, mAcquireBox->mPtY,
+              B3DMIN(5, mAcquireBox->mNumPoints));
+          skipPad = 0.5f * sqrtf(area);
+          tempX = sqrtf(3.f) / 2.f;
+          side = sqrtf(area / tempX);
+          cenX = side / 2.f;
+          cenY = side * tempX / 3.f;
+          triangleItem.AppendPoint(-cenX, -cenY);
+          triangleItem.AppendPoint(side - cenX, -cenY);
+          triangleItem.AppendPoint(side / 2.f - cenX, side * tempX - cenY);
+          triangleItem.AppendPoint(-cenX, -cenY);
+        }
+
         // If this point has special hole pattern and does not match the default from the
         // params, need to get specific list of holes for it
         numSpecHoles = 0;
-        useXholes = (doMultiHole && item->mNumXholes) ? item->mNumXholes : 
+        drawSkips = false;
+        useXholes = (doMultiHole && item->mNumXholes) ? item->mNumXholes :
           msNumXholes;
-        useYholes = (doMultiHole && item->mNumYholes) ? item->mNumYholes : 
+        useYholes = (doMultiHole && item->mNumYholes) ? item->mNumYholes :
           msNumYholes;
         if (useXholes && useYholes && (useXholes != msNumXholes ||
           useYholes != msNumYholes || item->mNumSkipHoles || highlight)) {
@@ -1633,39 +1670,118 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
           delISX = specialFullISX;
           delISY = specialFullISY;
           holeIndex = fullHoleIndex;
+
+          // Keep track of skipped holes 
+          acquireXhole.clear();
+          acquireYhole.clear();
+          skippedX.clear();
+          skippedY.clear();
           if (item->mNumSkipHoles) {
             mWinApp->mParticleTasks->SkipHolesInList(delISX, delISY, holeIndex,
-              item->mSkipHolePos, item->mNumSkipHoles, numSpecHoles);
+              item->mSkipHolePos, item->mNumSkipHoles, numSpecHoles, &skippedX,
+              &skippedY);
           }
           holeItem.mNumPoints = 0;
           mWinApp->mNavigator->AddHolePositionsToItemPts(delISX, delISY, holeIndex, false,
             numSpecHoles, &holeItem);
+
+          // Put skipped holes into an item too
+          skipItem.mNumPoints = 0;
+          if (skippedX.size())
+            mWinApp->mNavigator->AddHolePositionsToItemPts(skippedX, skippedY,
+              holeIndex, false, -(int)skippedX.size(), &skipItem);
         }
         if (numSpecHoles) {
+
+          // Draw the special holes
           mAcquireBox->mDraw = true;
           if (highlight && saveCurHolePos)
             *curHoleIndex = holeIndex;
           for (int hole = 0; hole < numSpecHoles; hole++) {
-            ptX = item->mStageX + holeItem.mPtX[hole] - mAcquireBox->mStageX;
-            ptY = item->mStageY + holeItem.mPtY[hole] - mAcquireBox->mStageY;
+
+            // First get their actual coordinates for saving current pos and pos of ones
+            // not being drawn because of boundary display
+            ptX = item->mStageX + holeItem.mPtX[hole];
+            ptY = item->mStageY + holeItem.mPtY[hole];
             if (highlight && saveCurHolePos) {
               curHoleXYpos->push_back(item->mStageX + holeItem.mPtX[hole]);
               curHoleXYpos->push_back(item->mStageY + holeItem.mPtY[hole]);
             }
-            if (doInHole)
-              DrawVectorPolygon(cdc, &rect, item, imBuf, convXinHole, convYinHole, ptX,
-                ptY, delPtX, delPtY, NULL, NULL);
-            else
-              DrawMapItemBox(cdc, &rect, mAcquireBox, imBuf,
-                B3DMIN(5, mAcquireBox->mNumPoints), ptX, ptY, delPtX, delPtY, NULL, NULL);
+            acquireXhole.push_back(ptX);
+            acquireYhole.push_back(ptY);
           }
-        } 
-        if ((!numSpecHoles || numSpecHoles == numFullSpecHoles) && 
+
+          if (!highlight) {
+
+            // Get the convex boundary of the ones being acquired
+            convXacquire.resize(numSpecHoles);
+            convYacquire.resize(numSpecHoles);
+            convexBound(&acquireXhole[0], &acquireYhole[0], numSpecHoles, 0., skipPad,
+              &convXacquire[0], &convYacquire[0], &size, &ptX, &ptY, numSpecHoles);
+            convXacquire.resize(size);
+            convYacquire.resize(size);
+            skippedDraw.resize(skipItem.mNumPoints, 0);
+
+            // Count up number actually to be drawn
+            ix = 0;
+            for (int hole = 0; hole < skipItem.mNumPoints; hole++) {
+              ptX = item->mStageX + skipItem.mPtX[hole];
+              ptY = item->mStageY + skipItem.mPtY[hole];
+              if (InsideContour(&convXacquire[0], &convYacquire[0], size, ptX, ptY)) {
+                skippedDraw[hole] = 1;
+                ix++;
+              }
+            }
+            drawSkips = ix < numSpecHoles / 2 && size > 2;
+          }
+
+          if (!drawSkips) {
+
+            // Subtract acquire box center so it works for drawing in-hole points and 
+            // item box using acquire box
+            for (int hole = 0; hole < numSpecHoles; hole++) {
+              ptX = acquireXhole[hole] - mAcquireBox->mStageX;
+              ptY = acquireYhole[hole] - mAcquireBox->mStageY;
+              if (doInHole) {
+                DrawVectorPolygon(cdc, &rect, item, imBuf, convXinHole, convYinHole, ptX,
+                  ptY, delPtX, delPtY, NULL, NULL);
+              } else {
+                DrawMapItemBox(cdc, &rect, mAcquireBox, imBuf,
+                  B3DMIN(5, mAcquireBox->mNumPoints), ptX, ptY, delPtX, delPtY, NULL, 
+                  NULL);
+              }
+            }
+          }
+        }
+
+        // Draw the full convex bound if it is a standard pattern with nothing skipped
+        if ((!numSpecHoles || numSpecHoles == numFullSpecHoles) &&
           useXholes == msNumXholes && useYholes == msNumYholes) {
           DrawVectorPolygon(cdc, &rect, item, imBuf, convXallHole, convYallHole,
             item->mStageX, item->mStageY, delPtX, delPtY, NULL, NULL);
+        } else {
+
+          // Otherwise,  the convex boundary of the ones being acquired
+          if (size > 2) 
+            DrawVectorPolygon(cdc, &rect, item, imBuf, convXacquire, convYacquire,
+              0., 0., delPtX, delPtY, NULL, NULL);
+
+          // Draw skipped points 
+          if (drawSkips) {
+            CPen pnSkipped(PS_SOLID, thick1, RGB(0, 255, 255));
+            cdc.SelectObject(&pnSkipped);
+            for (int hole = 0; hole < skipItem.mNumPoints; hole++) {
+              ptX = item->mStageX + skipItem.mPtX[hole];
+              ptY = item->mStageY + skipItem.mPtY[hole];
+              if (!size || InsideContour(&convXacquire[0], &convYacquire[0], size, ptX, ptY))
+                DrawMapItemBox(cdc, &rect, &triangleItem, imBuf, 4, ptX, ptY, delPtX,
+                  delPtY, NULL, NULL);
+            }
+          }
         }
       } else {
+
+        // if not multishot, draw acquire box
         DrawMapItemBox(cdc, &rect, mAcquireBox, imBuf,
           B3DMIN(5, mAcquireBox->mNumPoints), item->mStageX - mAcquireBox->mStageX,
           item->mStageY - mAcquireBox->mStageY, delPtX, delPtY, NULL, NULL);

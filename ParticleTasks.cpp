@@ -843,7 +843,7 @@ int CParticleTasks::GetHolePositions(FloatVec &delISX, FloatVec &delISY, IntVec 
     }
 
   } else if (mMSParams->holeMagIndex[0] > 0) {
-    if (numXholes && numYholes) {
+    if (numXholes > 0 && numYholes > 0) {
       crossPattern = numXholes == -3 && numYholes == -3;
       if (crossPattern) {
         numXholes = 3;
@@ -1070,13 +1070,22 @@ return 0;
  * listed in the skipIndex list
  */
 void CParticleTasks::SkipHolesInList(FloatVec &delISX, FloatVec &delISY, IntVec &posIndex,
-  unsigned char *skipIndex, int numSkip, int &numHoles)
+  unsigned char *skipIndex, int numSkip, int &numHoles, FloatVec *skippedISX,
+  FloatVec *skippedISY)
 {
   int pos, skip;
+  if (skippedISX && skippedISY) {
+    skippedISX->clear();
+    skippedISY->clear();
+  }
   for (pos = numHoles - 1; pos >= 0; pos--) {
     for (skip = 0; skip < numSkip; skip++) {
       if (posIndex[2 * pos] == skipIndex[2 * skip] &&
         posIndex[2 * pos + 1] == skipIndex[2 * skip + 1]) {
+        if (skippedISX && skippedISY) {
+          skippedISX->push_back(delISX[pos]);
+          skippedISY->push_back(delISY[pos]);
+        }
         delISX.erase(delISX.begin() + pos);
         delISY.erase(delISY.begin() + pos);
         posIndex.erase(posIndex.begin() + 2 * pos);
