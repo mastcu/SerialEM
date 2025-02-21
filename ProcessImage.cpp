@@ -1496,7 +1496,8 @@ void CProcessImage::EnableMoveBeam(CCmdUI * pCmdUI, bool skipUserPt)
    mat = mShiftManager->IStoCamera(imBuf->mMagInd);
    mat2 = mShiftManager->GetBeamShiftCal(imBuf->mMagInd);
  }
- pCmdUI->Enable(!mWinApp->DoingTasks() && !mCamera->CameraBusy() && mat.xpx != 0. 
+ pCmdUI->Enable(!mWinApp->GetSTEMMode() && !mWinApp->DoingTasks() && 
+   !mCamera->CameraBusy() && mat.xpx != 0. 
    && mat2.xpx != 0 && imBuf->mImage != NULL && imBuf->mTimeStamp != mMoveBeamStamp &&
    (skipUserPt || imBuf->mHasUserPt) && imBuf->mMagInd && imBuf->mBinning);
 }
