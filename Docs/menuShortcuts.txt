@@ -196,11 +196,9 @@ Tasks:
   B
   E
   F
-  L
   O
   P
   R
-  S
   T
 A
 B

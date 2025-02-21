@@ -528,12 +528,12 @@ BEGIN
             MENUITEM SEPARATOR
             MENUITEM "Set &Tilt Axis Offset",       ID_TASKS_SETTILTAXISOFFSET
             MENUITEM "Set &Offset Automatically after Fine", ID_EUCENTRICITY_SETOFFSETAUTOMATICALLY
-            MENUITEM "Use Trial in &LD Refine",     ID_TASKS_TRIAL_IN_LD_REFINE
-            MENUITEM "Rough Use &Search if in LM",  ID_TASKS_ROUGHUSESEARCHIFINLM
             MENUITEM SEPARATOR
             MENUITEM "&Eucentricity by Focus",      ID_EUCENTRICITY_EUCENTRICITYBYFOCUS
             MENUITEM "Setu&p Eucentricity by Focus...", ID_EUCENTRICITY_SETUPEUCENTRICITYBYFOCUS
         END
+        MENUITEM SEPARATOR
+        MENUITEM "Set Low Dose Areas...",       ID_TASKS_SETAREASINLOWDOSE
         MENUITEM SEPARATOR
         MENUITEM "&Set intensity\tShift+I",     ID_PROCESS_SETINTENSITY
         MENUITEM "Set &Dose Rate",              ID_TASKS_SET_DOSE_RATE
@@ -547,7 +547,6 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Walk Up",                    ID_TASKS_WALKUP
         MENUITEM "Wal&kup && Anchor",           ID_TASKS_WALKUPANCHOR
-        MENUITEM "Use View in LD",              ID_TASKS_USE_VIEW_IN_LOWDOSE
         MENUITEM "Set Increments",              ID_TASKS_SETINCREMENTS
         MENUITEM SEPARATOR
         MENUITEM "Setu&p Cooker...",            ID_TASKS_SETUPCOOKER
@@ -560,7 +559,6 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Reset IS && Realign",        ID_RESET_REALIGN
         MENUITEM "Set &Iteration Limit",        ID_TASKS_SETITERATIONLIMIT
-        MENUITEM "Use Trial in LD",             ID_TASKS_USETRIALINLD
         MENUITEM SEPARATOR
         MENUITEM "Setup VPP Conditioning...",   ID_TASKS_SETUPVPPCONDITIONING
         MENUITEM "Setup Wait for Drift...",     ID_TASKS_SETUPWAITFORDRIFT
@@ -580,7 +578,6 @@ BEGIN
             MENUITEM "&Normalize via View for Autofocus ", ID_SPECIALOPTIONS_NORMALIZEVIAVIEWFORAU
             MENUITEM "Skip &Blanking in LD when Screen Up", ID_SPECIALIZEDOPTIONS_SKIPBLANKINGINLDWITHSCREENUP
             MENUITEM "&Keep Focus && Trial at Same Position", ID_SPECIALIZEDOPTIONS_KEEPFOCUSTRIALSTSAMEPOSITION
-            MENUITEM "Tasks &Use View Even if Search Better", ID_SPECIALIZEDOPTIONS_TASKSUSEVIEWEVENIFSEARCHBETTER
             MENUITEM SEPARATOR
             MENUITEM "Allow &Continuous in TS",     ID_SPECIALOPTIONS_ALLOWCONTINUOUSINTASKS
             MENUITEM "&Skip Beam Shift in TS",      ID_SPECIAL_SKIP_BEAM_SHIFT_IN_TS
@@ -4318,6 +4315,35 @@ BEGIN
     CONTROL         "",IDC_STAT_LINE1,"Static",SS_BLACKFRAME | SS_SUNKEN,11,257,95,1
 END
 
+IDD_TASK_AREA_OPTIONS DIALOGEX 0, 0, 207, 144
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Low Dose Area Options for Tasks"
+FONT 8, "Microsoft Sans Serif", 400, 0, 0x0
+BEGIN
+    CONTROL         "Search",IDC_RROUGH_LM_SEARCH,"Button",BS_AUTORADIOBUTTON | WS_GROUP,103,22,39,10
+    CONTROL         "View or Search",IDC_RROUGHLM_V_OR_S,"Button",BS_AUTORADIOBUTTON,141,22,58,10
+    LTEXT           "Rough Eucentricity, if started \nin LM and Search is in LM",IDC_STATIC,9,19,93,16
+    CONTROL         "Trial",IDC_RREFINE_TRIAL,"Button",BS_AUTORADIOBUTTON | WS_GROUP,103,49,29,10
+    CONTROL         "View or Search",IDC_RREFINE_V_OR_S,"Button",BS_AUTORADIOBUTTON,141,49,58,10
+    LTEXT           "Refine Eucentricity",IDC_STATIC,8,50,59,8
+    CONTROL         "Trial",IDC_RESETIS_TRIAL,"Button",BS_AUTORADIOBUTTON | WS_GROUP,103,62,29,10
+    CONTROL         "View or Search",IDC_RRESETIS_V_OR_S,"Button",BS_AUTORADIOBUTTON,141,62,58,10
+    LTEXT           " ",IDC_STATIC,8,63,8,8
+    CONTROL         "Trial",IDC_RWALKUP_TRIAL,"Button",BS_AUTORADIOBUTTON | WS_GROUP,103,75,29,10
+    CONTROL         "View or Search",IDC_RWALKUP_V_OR_S,"Button",BS_AUTORADIOBUTTON,141,75,58,10
+    LTEXT           "Walkup",IDC_STATIC,8,76,25,8
+    DEFPUSHBUTTON   "OK",IDOK,42,123,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,115,123,50,14
+    CONTROL         "Use View for tasks even if Search is a better size",IDC_CHECK_USE_VIEW,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,8,108,190,10
+    CTEXT           "Select area to use for task in Low Dose mode:",IDC_STATIC,31,7,145,8
+    PUSHBUTTON      "?",IDC_BUTHELP,189,127,11,10
+    LTEXT           "Rough Eucentricity otherwise:",IDC_STATIC,8,37,93,8
+    LTEXT           "View or Search",IDC_STAT_ROUGH_VORS,151,37,49,8
+    LTEXT           "With ""View or Search"", the area with the most appropriate field of view will be selected",IDC_STATIC,9,90,189,15
+    LTEXT           "Reset Image Shift && Realign",IDC_STATIC,8,63,85,8
+END
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -4896,6 +4922,14 @@ BEGIN
         TOPMARGIN, 7
         BOTTOMMARGIN, 361
     END
+
+    IDD_TASK_AREA_OPTIONS, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 200
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 137
+    END
 END
 #endif    // APSTUDIO_INVOKED
 
@@ -5203,6 +5237,11 @@ BEGIN
 END
 
 IDD_MULGRID_SETTINGS AFX_DIALOG_LAYOUT
+BEGIN
+    0
+END
+
+IDD_TASK_AREA_OPTIONS AFX_DIALOG_LAYOUT
 BEGIN
     0
 END
@@ -7745,6 +7784,8 @@ BEGIN
     ID_LOGWINDOW_SAVESECONDARYLOG "Save the secondary log with focus"
     ID_LOGWINDOW_OPENSECONDARYLOG 
                             "Open a secondary log window, optionally reading from file"
+    ID_TASKS_SETAREASINLOWDOSE 
+                            "Open dialog to set which Low Dose area to use for some tasks"
 END
 
 STRINGTABLE
@@ -7930,6 +7971,19 @@ BEGIN
     IDC_RSUBSET_SHOTS       "Choose to limit the number of shots to be taken in Multiple Records"
     IDC_RSET_C1_APERTURE    "Set specific size or retract the C1 aperture"
     IDC_RSET_C2_APERTURE    "Set specific size or retract the C2 aperture"
+    IDC_RROUGH_LM_SEARCH    "Use Search for Rough Eucentricity if starting in LM and it is in LM"
+END
+
+STRINGTABLE
+BEGIN
+    IDC_RROUGHLM_V_OR_S     "Always do Rough Eucentricity outside of LM with View or Search"
+    IDC_RREFINE_TRIAL       "Use Trial for Refine Eucentricity"
+    IDC_RREFINE_V_OR_S      "Use View or Search, whichever is more suitable, for Refine Eucentricity"
+    IDC_RESETIS_TRIAL       "Use Trial for Reset image shift & Realign"
+    IDC_RRESETIS_V_OR_S     "Use View or Search, whichever is more suitable, for Reset IS & Realign"
+    IDC_RWALKUP_TRIAL       "Use Trial for Walkup"
+    IDC_RWALKUP_V_OR_S      "Use View or Search, whichever is more suitable, for Walkup"
+    IDC_CHECK_USE_VIEW      "Always use View instead of Search, even when its FOV is too small"
 END
 
 #endif    // English (United States) resources

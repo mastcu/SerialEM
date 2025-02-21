@@ -1,0 +1,65 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<HTML>
+  <HEAD>
+    <TITLE>Low Dose Area Options for Tasks Dialog</TITLE>
+    <META HTTP-EQUIV="Content-Type" Content="text/html; charset=Windows-1252">
+    <style type="text/css"> <!-- BODY { font-family:"Arial" }
+  TD { font-size:16 }
+  --></style>
+  </HEAD>
+  <BODY BGCOLOR="#ffffff" TEXT="#000000">
+    <basefont size="2">
+      <P><A NAME="hidd_task_area_options"></A><B><FONT size="3">Low Dose Area Options for Tasks
+      Dialog</FONT></B></P>
+    <P> This dialog
+      allows you to select which Low Dose area is used for some tasks.&nbsp; Each 
+      operation shown here has a choice between a specific area and &#39;View or Search&#39;; 
+      in the latter case, the program will use View if it has large enough field of 
+      View, but use Search if it is not in LM and has a suitable field of view while 
+      View does not.</P>
+     <P><B>Rough eucentricity, if started in LM and Search is in LM</B></P>
+      <P>Select between using the View or Search area (as described 
+        above) for the rough
+        eucentricity procedure and using the Search area, if it is
+        defined as being in low magnification <em>and</em> if the microscope is already
+        in low magnification.&nbsp; Running this procedure in LM may be accurate enough
+        for some purposes, so this option allows it to be run with the Search area
+        without losing the time involved in leaving low magnification just for this
+        purpose.</P>
+      <P><B>Refine eucentricty</B></P>
+      <P>Select whether the Trial area rather than the View or 
+        Search area will
+        be used for the tilted images that are taken when refining eucentricity. The
+        View or Search area will still be used for the initial and final tracking images when the
+        Refine and Realign procedure is used, and for the rough eucentricity procedure
+        when both rough and fine procedures are run together. Using the Trial area will
+        save a little dose but will reduce the range of Z heights over which the
+        procedure can run reliably. Also, if the specimen is not relatively flat along
+        the tilt axis, the Trial area rather than the Record area will be brought to
+        the eucentric height.</P>
+    <P><strong>Reset image shift &amp; realign</strong></P>
+    <P>Select whether to use the View or Search area versus the Trial area for the Reset
+        IS &amp; Realign procedure. The View or Search area is the default because the stage
+        movement involved in resetting the shift is unpredictable, and the larger field
+        of view of the View area is assumed to be needed to do the reset reliably. It
+        may be safe to use the trial area if your limit for resetting image shift is
+        small (~1 micron), if the field of view of the trial area is fairly large (2
+        microns), and if your stage is adjusted so that stage movements are reliable at
+        high tilt for the holder being used.</P>
+    <P><strong>Walkup</strong></P>
+    <P>Select whether the Walk Up routine will be run with the
+        View or Search area instead of the Trial area.</P>
+    <P><strong>Use View for tasks even if Search is a better size</strong></P>
+    <P>Toggle this option to prevent the program from choosing between using View and 
+      Search based on field of View, as explained above, and using the View area 
+      regardless of its suitability.&nbsp; In addition to the tasks listed above and 
+      rough eucentricity started outside of LM, this choice is made for Reverse Tilt, 
+      Tilt after Stage Move, Adjust Backlash, Assess Angle Range, and Condition Phase 
+      Plate, and the anchor image in bidirectional tilt series.</P>
+    <P>&nbsp;</P>
+    <P>&nbsp;</P>
+    <P>&nbsp;</P>
+      <P> &nbsp;</P>
+    </basefont>
+  </BODY>
+</HTML>

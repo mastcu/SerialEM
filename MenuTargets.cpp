@@ -498,8 +498,6 @@ BEGIN_MESSAGE_MAP(CMenuTargets, CCmdTarget)
     ON_UPDATE_COMMAND_UI(ID_NAVIGATOR_SETUPALIGN, OnUpdateNavigatorSetupAlign)
     ON_COMMAND(ID_TASKS_SETUPSCOPEMANAGEMENT, OnSetupScopeManagement)
     ON_UPDATE_COMMAND_UI(ID_TASKS_SETUPSCOPEMANAGEMENT, OnUpdateSetupScopeManagement)
-    ON_COMMAND(ID_SPECIALIZEDOPTIONS_TASKSUSEVIEWEVENIFSEARCHBETTER, OnTasksUseViewEvenIfSearchBetter)
-    ON_UPDATE_COMMAND_UI(ID_SPECIALIZEDOPTIONS_TASKSUSEVIEWEVENIFSEARCHBETTER, OnUpdateTasksUseViewEvenIfSearchBetter)
     ON_COMMAND(ID_SPECIALIZEDOPTIONS_KEEPFOCUSTRIALSTSAMEPOSITION, OnKeepFocusTrialAtSamePosition)
     ON_UPDATE_COMMAND_UI(ID_SPECIALIZEDOPTIONS_KEEPFOCUSTRIALSTSAMEPOSITION, OnUpdateKeepFocusTrialAtSamePosition)
     ON_COMMAND(ID_TILTSERIES_SETBIDIRRETURNDELAY, OnTiltseriesSetBidirReturnDelay)
@@ -3105,18 +3103,6 @@ void CMenuTargets::OnUpdateCloseValvesAfterLongInactivity(CCmdUI *pCmdUI)
 {
   pCmdUI->SetCheck(mScope->GetIdleTimeToCloseValves() > 0 ? 1 : 0);
   pCmdUI->Enable(!mWinApp->DoingTasks() && !HitachiScope && !mScope->GetNoScope());
-}
-
-void CMenuTargets::OnTasksUseViewEvenIfSearchBetter()
-{
-  mWinApp->mComplexTasks->SetTasksUseViewNotSearch(
-    !mWinApp->mComplexTasks->GetTasksUseViewNotSearch());
-}
-
-void CMenuTargets::OnUpdateTasksUseViewEvenIfSearchBetter(CCmdUI *pCmdUI)
-{
-  pCmdUI->Enable(!mWinApp->DoingTasks());
-  pCmdUI->SetCheck(mWinApp->mComplexTasks->GetTasksUseViewNotSearch() ? 1 : 0);
 }
 
 void CMenuTargets::OnWindowStageMoveTool()

@@ -298,6 +298,11 @@
 			</OBJECT>
 			<A HREF="html/hidd_montagesetup.htm">Montage Setup dialog</A><BR>
 		<LI><OBJECT type="text/sitemap">
+			<param name="Name" value="Low Dose Area Options for Tasks dialog">
+			<param name="Local" value="html/hidd_task_area_options.htm">
+			</OBJECT>
+			<A HREF="html/hidd_task_area_options.htm">Low Dose Area Options for Tasks dialog</A><BR>
+		<LI><OBJECT type="text/sitemap">
 			<param name="Name" value="Beam Autocentering Setup dialog">
 			<param name="Local" value="html/hidd_autocensetup.htm">
 			</OBJECT>

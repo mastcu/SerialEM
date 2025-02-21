@@ -37,11 +37,12 @@ class CComplexTasks : public CCmdTarget
   void StopFindingShiftOffset();
   void BASPNextTask(int param);
   void BASPCleanup(int error);
-  GetSetMember(float, MinTaskExposure)
-  GetSetMember(BOOL, RSRAUseTrialInLDMode)
+  GetSetMember(float, MinTaskExposure);
+  GetSetMember(BOOL, RSRAUseTrialInLDMode);
+  GetSetMember(BOOL, RSRAWarnedUseTrial);
   GetSetMember(BOOL, WalkUseViewInLD);
-  GetSetMember(BOOL, Verbose)
-  GetSetMember(float, RSRAUserCriterion)
+  GetSetMember(BOOL, Verbose);
+  GetSetMember(float, RSRAUserCriterion);
   double GetAndClearDose();
   void StartCaptureAddDose(int conSet);
   BOOL InLowerMag();
@@ -80,6 +81,7 @@ class CComplexTasks : public CCmdTarget
   GetSetMember(double, FEMaxFineIS)
   SetMember(BOOL, SkipNextBeamShift);
   GetSetMember(BOOL, FEUseTrialInLD);
+  GetSetMember(BOOL, FEWarnedUseTrial);
   GetSetMember(BOOL, FEUseSearchIfInLM);
   GetMember(BOOL, WalkDidResetShift)
   GetMember(BOOL, LastWalkCompleted);
@@ -331,18 +333,13 @@ class CComplexTasks : public CCmdTarget
 
 public:
   afx_msg void OnTasksSetincrements();
-  afx_msg void OnTrialInLdRefine();
-  afx_msg void OnUpdateTrialInLdRefine(CCmdUI *pCmdUI);
   int EucentricityBusy(void);
   void BacklashAdjustStagePos(float backX, float backY, bool callNav, bool showC);
-  afx_msg void OnTasksUseViewInLowdose();
-  afx_msg void OnUpdateTasksUseViewInLowdose(CCmdUI *pCmdUI);
   afx_msg void OnUpdateNoTasksNoTSNoHitachi(CCmdUI *pCmdUI);
   void ReportManualZChange(float delZ, const char *roughFine);
-  afx_msg void OnRoughUseSearchIfInLM();
-  afx_msg void OnUpdateRoughUseSearchIfInLM(CCmdUI *pCmdUI);
   afx_msg void OnEucentricitySetoffsetAutomatically();
   afx_msg void OnUpdateEucentricitySetOffsetAutomatically(CCmdUI *pCmdUI);
+  afx_msg void OnTasksSetareasinlowdose();
 };
 
 #endif // !defined(AFX_COMPLEXTASKS_H__83D1F77E_0AB8_47A4_B1C7_C4C29586A770__INCLUDED_)

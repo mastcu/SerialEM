@@ -22,6 +22,7 @@
 #include "NavigatorDlg.h"
 #include "ProcessImage.h"
 #include "ParticleTasks.h"
+#include "TaskAreaOptionDlg.h"
 #include "Utilities\XCorr.h"
 #include "Utilities\KGetOne.h"
 
@@ -72,7 +73,6 @@ BEGIN_MESSAGE_MAP(CComplexTasks, CCmdTarget)
   ON_UPDATE_COMMAND_UI(ID_RESET_REALIGN, OnUpdateNoTasks)
 	ON_COMMAND(ID_TASKS_SETTILTAXISOFFSET, OnTasksSettiltaxisoffset)
 	ON_COMMAND(ID_TASKS_SETITERATIONLIMIT, OnTasksSetiterationlimit)
-	ON_COMMAND(ID_TASKS_USETRIALINLD, OnTasksUsetrialinld)
   ON_UPDATE_COMMAND_UI(ID_TASKS_FINEREALIGN, OnUpdateNoTasksNoTSNoHitachi)
   ON_UPDATE_COMMAND_UI(ID_EUCENTRICITY_BOTH, OnUpdateNoTasksNoTSNoHitachi)
 	ON_UPDATE_COMMAND_UI(ID_TASKS_WALKUPANCHOR, OnUpdateNoTasksNoTS)
@@ -82,20 +82,15 @@ BEGIN_MESSAGE_MAP(CComplexTasks, CCmdTarget)
   ON_UPDATE_COMMAND_UI(ID_REVERSE_TILT, OnUpdateNoTasksNoTS)
 	ON_UPDATE_COMMAND_UI(ID_TASKS_SETTILTAXISOFFSET, OnUpdateNoTasksNoTS)
 	ON_UPDATE_COMMAND_UI(ID_FOCUS_RESETDEFOCUS, OnUpdateNoTasksNoTS)
-	ON_UPDATE_COMMAND_UI(ID_TASKS_USETRIALINLD, OnUpdateTasksUsetrialinld)
   ON_COMMAND(ID_TASKS_SETINCREMENTS, OnTasksSetincrements)
 	ON_UPDATE_COMMAND_UI(ID_TASKS_SETINCREMENTS, OnUpdateNoTasks)
 	//}}AFX_MSG_MAP
   ON_COMMAND_RANGE(ID_EUCENTRICITY_COARSE, ID_EUCENTRICITY_BOTH, OnEucentricity)
   ON_UPDATE_COMMAND_UI_RANGE(ID_EUCENTRICITY_COARSE, ID_EUCENTRICITY_FINE, OnUpdateNoTasksNoTS)
-  ON_COMMAND(ID_TASKS_TRIAL_IN_LD_REFINE, OnTrialInLdRefine)
-  ON_UPDATE_COMMAND_UI(ID_TASKS_TRIAL_IN_LD_REFINE, OnUpdateTrialInLdRefine)
-  ON_COMMAND(ID_TASKS_USE_VIEW_IN_LOWDOSE, OnTasksUseViewInLowdose)
-  ON_UPDATE_COMMAND_UI(ID_TASKS_USE_VIEW_IN_LOWDOSE, OnUpdateTasksUseViewInLowdose)
-  ON_COMMAND(ID_TASKS_ROUGHUSESEARCHIFINLM, OnRoughUseSearchIfInLM)
-  ON_UPDATE_COMMAND_UI(ID_TASKS_ROUGHUSESEARCHIFINLM, OnUpdateRoughUseSearchIfInLM)
   ON_COMMAND(ID_EUCENTRICITY_SETOFFSETAUTOMATICALLY, OnEucentricitySetoffsetAutomatically)
   ON_UPDATE_COMMAND_UI(ID_EUCENTRICITY_SETOFFSETAUTOMATICALLY, OnUpdateEucentricitySetOffsetAutomatically)
+  ON_COMMAND(ID_TASKS_SETAREASINLOWDOSE, OnTasksSetareasinlowdose)
+  ON_UPDATE_COMMAND_UI(ID_TASKS_SETAREASINLOWDOSE, OnUpdateNoTasks)
 END_MESSAGE_MAP()
 
 
@@ -333,41 +328,6 @@ void CComplexTasks::OnTasksSettiltaxisoffset()
     "center image shift on the tilt axis in the Align&Focus control panel", MB_EXCLAME);
 }
 
-void CComplexTasks::OnTrialInLdRefine()
-{
-  if (!mFEUseTrialInLD && !mFEWarnedUseTrial) {
-    mFEWarnedUseTrial = true;
-    CString message;
-    message.Format("The minimum field of view for reliable Fine Eucentricity is %.1f "
-      "microns.\nThe procedure could fail if the field of view of a Trial image\n"
-      "is much smaller than this and if the stage is not well-behaved.\n\n"
-      "Also, the eucentricity will not be set well if the Trial area\n"
-      "is not at about the same height as the Record area.\n\n"
-      "Are you sure you want to use the Trial area?", mMinFEFineField);
-    if (AfxMessageBox(message, MB_YESNO | MB_ICONQUESTION) == IDNO)
-      return;
-  }
-	mFEUseTrialInLD = !mFEUseTrialInLD;
-}
-
-void CComplexTasks::OnUpdateTrialInLdRefine(CCmdUI *pCmdUI)
-{
-  pCmdUI->Enable(!mWinApp->DoingTasks());
-  pCmdUI->SetCheck(mFEUseTrialInLD ? 1 : 0);
-}
-
-// View in Walkup low dose
-void CComplexTasks::OnTasksUseViewInLowdose()
-{
-  mWalkUseViewInLD = !mWalkUseViewInLD;
-}
-
-void CComplexTasks::OnUpdateTasksUseViewInLowdose(CCmdUI *pCmdUI)
-{
-  pCmdUI->Enable(!mWinApp->DoingTasks());
-  pCmdUI->SetCheck(mWalkUseViewInLD ? 1 : 0);
-}
-
 void CComplexTasks::OnTasksVerbose() 
 {
   mVerbose = !mVerbose; 
@@ -387,38 +347,6 @@ void CComplexTasks::OnTasksSetiterationlimit()
     mRSRAUserCriterion = limit;
 }
 
-void CComplexTasks::OnTasksUsetrialinld() 
-{
-  if (!mRSRAUseTrialInLDMode && !mRSRAWarnedUseTrial) {
-    mRSRAWarnedUseTrial = true;
-    CString message;
-    message.Format("The minimum field of view for reliable Reset and Realign is %.1f "
-      "microns.\nThe procedure could fail and lose positioning if the field of view of\n"
-      "a Trial image is much smaller than this and if the stage is not well-behaved.\n\n"
-      "Are you sure you want to use the Trial area?", mMinRSRAField);
-    if (AfxMessageBox(message, MB_YESNO | MB_ICONQUESTION) == IDNO)
-      return;
-  }
-	mRSRAUseTrialInLDMode = !mRSRAUseTrialInLDMode;
-}
-
-void CComplexTasks::OnUpdateTasksUsetrialinld(CCmdUI* pCmdUI) 
-{
-  pCmdUI->Enable();
-  pCmdUI->SetCheck(mRSRAUseTrialInLDMode ? 1 : 0);
-}
-
-void CComplexTasks::OnRoughUseSearchIfInLM()
-{
-  mFEUseSearchIfInLM = !mFEUseSearchIfInLM;
-}
-
-void CComplexTasks::OnUpdateRoughUseSearchIfInLM(CCmdUI *pCmdUI)
-{
-  pCmdUI->Enable();
-  pCmdUI->SetCheck(mFEUseSearchIfInLM ? 1 : 0);
-}
-
 void CComplexTasks::OnEucentricitySetoffsetAutomatically()
 {
   mAutoSetAxisOffset = !mAutoSetAxisOffset;
@@ -428,6 +356,12 @@ void CComplexTasks::OnUpdateEucentricitySetOffsetAutomatically(CCmdUI *pCmdUI)
 {
   pCmdUI->Enable(!mWinApp->DoingTasks());
   pCmdUI->SetCheck(mAutoSetAxisOffset ? 1 : 0);
+}
+
+void CComplexTasks::OnTasksSetareasinlowdose()
+{
+  CTaskAreaOptionDlg dlg;
+  dlg.DoModal();
 }
 
 // ComplexTasks will report in on tasks from MultiTSTasks and ParticleTasks too!

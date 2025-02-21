@@ -49,14 +49,6 @@
           <TD>Set tilt axis offset automatically with total lateral offset after Fine Eucentricity./TD>
         </TR>
         <TR VALIGN="top">
-          <TD class="auto-style1">&nbsp;&nbsp;&nbsp;&nbsp; <A HREF="#hid_tasks_trial_in_ld_refine">Use Trial in LD Refine</A></TD>
-          <TD>Use Trial area in Low Dose mode for Refine Eucentricity.</TD>
-        </TR>
-        <TR VALIGN="top">
-          <TD class="auto-style1">&nbsp;&nbsp;&nbsp;&nbsp; <A HREF="#hid_tasks_roughusesearchifinlm">Rough Use Search if in LM</A></TD>
-          <TD>Use Search area in Low Dose mode for Rough Eucentricity if it is in LM and the scope is in LM.</TD>
-        </TR>
-        <TR VALIGN="top">
           <TD class="auto-style1">&nbsp;&nbsp;&nbsp;&nbsp; <A HREF="#hid_eucentricity_eucentricitybyfocus">Eucentricity by Focus</A></TD>
           <TD>Finds eucentricity by setting an absolute focus value and adjusting Z to match calibrated measured defocus.</TD>
         </TR>
@@ -64,6 +56,10 @@
           <TD class="auto-style1">&nbsp;&nbsp;&nbsp;&nbsp; 
             <A HREF="#hid_eucentricity_setupeucentricitybyfocus">Setup Eucentricity byFocus</A></TD>
           <TD>Open dialog to calibrate defocus and set parameters for Eucentricity by Focus.</TD>
+        </TR>
+       <TR VALIGN="top">
+          <TD class="auto-style1"><A HREF="#hid_tasks_setareasinlowdose">Set Low Dose Areas</A></TD>
+          <TD>Open dialog to select which Low Dose areas to use for some tasks.</TD>
         </TR>
         <TR VALIGN="top">
           <TD class="auto-style1"><A HREF="#hid_process_setintensity">Set Intensity</A></TD>
@@ -106,10 +102,6 @@
           <TD>Goes to high tilt in steps, leaving an image at intermediate tilt.</TD>
         </TR>
         <TR VALIGN="top">
-          <TD class="auto-style1"><A HREF="#hid_tasks_use_view_in_lowdose">Use View in LD</A></TD>
-          <TD>Use View area in Low Dose mode for Walkup operation.</TD>
-        </TR>
-        <TR VALIGN="top">
           <TD class="auto-style1"><A HREF="#hid_tasks_setincrements">Set Increments</A></TD>
           <TD>Set minimum and maximum tilt increment for Walkup.</TD>
         </TR>
@@ -142,10 +134,6 @@
         <TR VALIGN="top">
           <TD class="auto-style1"><A HREF="#hid_tasks_setiterationlimit">Set Iteration Limit</A></TD>
           <TD>Set minimum Image Shift for reiterating Reset &amp; Realign</TD>
-        </TR>
-        <TR VALIGN="top">
-          <TD class="auto-style1"><A HREF="#hid_tasks_usetrialinld">Use Trial In LD Refine</A></TD>
-          <TD>Use Trial area in Low Dose mode for Reset &amp; Realign</TD>
         </TR>
         <TR VALIGN="top">
           <TD class="auto-style1"><A HREF="#hid_tasks_setupvppconditioning">Setup VPP Conditioning</A></TD>
@@ -206,10 +194,6 @@
        <TR VALIGN="top">
           <TD class="auto-style1">&nbsp; <a href="#hid_specializedoptions_keepfocustrialstsameposition">Keep Focus & Trial at Same Position</a></TD>
           <TD>Make Focus and Trial in Low Dose mode be at same position</TD>
-        </TR>
-       <TR VALIGN="top">
-          <TD class="auto-style1">&nbsp; <a href="#hid_specializedoptions_tasksuseviewevenifsearchbetter">Tasks Use View Even if Search Better</a></TD>
-          <TD>Use View for tasks in Low Dose mode even when Search has a more appropriate magnification</TD>
         </TR>
        <TR VALIGN="top">
           <TD class="auto-style1">&nbsp; <a href="#hid_special_skip_beam_shift_in_ts">Skip Beam Shift
@@ -305,29 +289,8 @@
         to the total lateral offset determined from running the fine eucentricity 
         procedure.&nbsp; It will use the same number that appears in the entry box when 
         using the preceding command.</P>
-      <p></p>
-      <P><A NAME="hid_tasks_trial_in_ld_refine"></A><B>Use Trial in LD Refine command (Tasks
-          - Eucentricity submenu)</B></P>
-      <P>Use this command to select whether the Trial area rather than the View or 
-        Search area will
-        be used for the tilted images that are taken when refining eucentricity. The
-        View or Search area will still be used for the initial and final tracking images when the
-        Refine and Realign procedure is used, and for the rough eucentricity procedure
-        when both rough and fine procedures are run together. Using the Trial area will
-        save a little dose but will reduce the range of Z heights over which the
-        procedure can run reliably. Also, if the specimen is not relatively flat along
-        the tilt axis, the Trial area rather than the Record area will be brought to
-        the eucentric height.</P>
-     <P><A NAME="hid_tasks_roughusesearchifinlm"></A><B>Rough Use Search if in LM command (Tasks - Eucentricity submenu)</B></P>
-      <P>Toggle this entry to switch between using the View or Search area (as described 
-        above) for the rough
-        eucentricity procedure in Low Dose mode and using the Search area, if it is
-        defined as being in low magnification <em>and</em> if the microscope is already
-        in low magnification.&nbsp; Running this procedure in LM may be accurate enough
-        for some purposes, so this option allows it to be run with the Search area
-        without losing the time involved in leaving low magnification just for this
-        purpose.</P>
-      <P><A NAME="hid_eucentricity_eucentricitybyfocus"></A><B>Eucentricity by Focus command (Tasks - Eucentricity submenu)</B></P>
+     <P><A NAME="hid_tasks_roughusesearchifinlm"></A>
+       <A NAME="hid_eucentricity_eucentricitybyfocus"></A><B>Eucentricity by Focus command (Tasks - Eucentricity submenu)</B></P>
     <P>Use this command to set the Z height to the eucentric point with a procedure
       that sets an absolute focus value then measures the defocus and adjusts Z until
       the measured defocus matches the appropriate value.&nbsp; Both the absolute
@@ -340,7 +303,12 @@
     <P>Use this command to open the <a href="hidd_z_by_g_setup.htm">Eucentricity by
       Focus Setup dialog</a> and calibrate the focus targets for the Eucentricity
       by Focus command as well as set a few parameters controlling how it operates.</P>
-     <P><A NAME="hid_process_setintensity"></A><B>Set Intensity command (Tasks menu)</B></P>
+      <P><A NAME="hid_tasks_setareasinlowdose"></A><B>Set Low Dose Areas command (Tasks menu)</B></P>
+      <p>Use this command to open the&nbsp;
+      <A HREF="hidd_task_area_options.htm">Low Dose Area Options for Tasks dialog</A> 
+        and select which areas are used for various tasks in Low Dose mode, including 
+        Rough and Fine Eucentricity, Reset IS &amp; Realign, and Walkup.</p>
+      <P><A NAME="hid_process_setintensity"></A><B>Set Intensity command (Tasks menu)</B></P>
       <P>Use this command to change the beam intensity so as to achieve a desired mean
         level in images taken with Record parameters. When you select this command, the
         program first computes the zero-tilt mean (mean of the tilt-foreshortened area)
@@ -566,16 +534,7 @@
         After resetting the shift, the program takes an image and aligns it to image
         taken before the reset. If image shift is still greater than this criterion, it
         will be reset again, and another image taken and aligned.</P>
-      <P><A NAME="hid_tasks_usetrialinld"></A><B>Use Trial in LD command (Tasks menu)</B></P>
-      <P>Toggle this entry to switch between using the View or Search area versus the Trial area for the Reset
-        IS &amp; Realign procedure. The View or Search area (as described above) is the default because the stage
-        movement involved in resetting the shift is unpredictable, and the larger field
-        of view of the View area is assumed to be needed to do the reset reliably. It
-        may be safe to use the trial area if your limit for resetting image shift is
-        small (~1 micron), if the field of view of the trial area is fairly large (2
-        microns), and if your stage is adjusted so that stage movements are reliable at
-        high tilt for the holder being used.</P>
-      <P><A NAME="hid_tasks_setupvppconditioning"></A><B>Setup VPP Conditioning command (Tasks menu)</B></P>
+      <P><A NAME="hid_tasks_usetrialinld"></A><A NAME="hid_tasks_setupvppconditioning"></A><B>Setup VPP Conditioning command (Tasks menu)</B></P>
       <P>Use this command to open the <A HREF="hidd_vpp_expose_setup.htm">Phase Plate Conditioning Setup
           dialog box</A> and set parameters for conditioning a Volta phase plate. The dialog allows one to
         start the conditioning operation, which can also be run with the
@@ -698,19 +657,9 @@
        the <strong>Keep Focus and Trial identical</strong> option in the <A HREF="hidd_lowdose.htm">Low Dose control
         panel</A> is not selected.&nbsp; </p>
       <p>
-      <a NAME="hid_specializedoptions_tasksuseviewevenifsearchbetter"></A><B>Tasks Use View Even if Search Better command (Tasks&nbsp; - Specialized Options submenu)</B></p>
-      <p>When a task is run in low dose mode and needs to take tracking images at a lower magnification, it will
-        generally use the View area.&nbsp; As of SerialEM 4.0, January 16, 2022, the Search area will be used instead
-        if it provides a better field of view for reliable tracking, namely, if the View magnification exceeds
-        the maximum magnification for that particular task when run outside of low dose while the Search 
-        magnification is less than that of View but not in LM mode.&nbsp; The list of 
-        tasks where this will occur is: Reset Shift and Realign, Walk Up with 'Use View in LD' selected or when getting an anchor image,
-        Reverse Tilt, Rough and Fine Eucentricity, Tilt after Stage Move, Adjust Backlash,
-        Assess Angle Range, and Condition Phase Plate.&nbsp; This option can be used to 
-        disable this new behavior and use the View area regardless of how unsuitable it 
-        is.</p>
-     <P><A NAME="hid_special_skip_beam_shift_in_ts"></A><B>Skip Beam Shift in TS
-        command (Tasks - Specialized Options submenu)</B></P>
+      <a NAME="hid_specializedoptions_tasksuseviewevenifsearchbetter"></A>
+        <A NAME="hid_special_skip_beam_shift_in_ts"></A><B>Skip Beam Shift in TS
+        command (Tasks - Specialized Options submenu)</B></p>
     <P>When using a phase plate on a JEOL microscope, the beam shift that accompanies
       every image shift operation will change the centering of the phase plate.&nbsp;
       Turn on this entry to suppress the beam shift for the alignment operations

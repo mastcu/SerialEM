@@ -90,6 +90,7 @@
 #define IDD_STEP_AND_ADJUST_IS          279
 #define IDD_MULTI_GRID                  284
 #define IDD_MULGRID_SETTINGS            287
+#define IDD_TASK_AREA_OPTIONS           289
 #define IDC_EDITXSIZE                   1000
 #define IDC_EDITYSIZE                   1002
 #define IDC_EDITYOVERLAP                1003
@@ -2502,6 +2503,16 @@
 #define IDC_RSET_C2_APERTURE            3532
 #define IDC_STAT_CONDENSER              3533
 #define IDC_STAT_APERTURE_TO            3534
+#define IDC_RROUGH_LM_SEARCH            3535
+#define IDC_RROUGHLM_V_OR_S             3536
+#define IDC_RREFINE_TRIAL               3537
+#define IDC_RREFINE_V_OR_S              3538
+#define IDC_RESETIS_TRIAL               3539
+#define IDC_RRESETIS_V_OR_S             3540
+#define IDC_RWALKUP_TRIAL               3541
+#define IDC_RWALKUP_V_OR_S              3542
+#define IDC_CHECK_USE_VIEW              3543
+#define IDC_STAT_ROUGH_VORS             3544
 #define ID_NEW_IMAGE                    32771
 #define IDM_FILE_SAVEOTHER              32772
 #define IDM_FILE_READ                   32773
@@ -3065,15 +3076,16 @@
 #define ID_CAMERA_PREVIEWPRESCAN        33531
 #define ID_LOGWINDOW_SAVESECONDARYLOG   33532
 #define ID_LOGWINDOW_OPENSECONDARYLOG   33533
+#define ID_TASKS_SETAREASINLOWDOSE      33534
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        289
-#define _APS_NEXT_COMMAND_VALUE         33534
-#define _APS_NEXT_CONTROL_VALUE         3535
+#define _APS_NEXT_RESOURCE_VALUE        291
+#define _APS_NEXT_COMMAND_VALUE         33535
+#define _APS_NEXT_CONTROL_VALUE         3545
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif

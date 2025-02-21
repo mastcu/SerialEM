@@ -335,6 +335,7 @@ hid_tasks_set_dose_rate					= SerialEM.chm::/html\menu_tasks.htm#hid_tasks_set_d
 hid_tasks_centerbeam						= SerialEM.chm::/html\menu_tasks.htm#hid_tasks_centerbeam
 hid_tasks_autocenterbeam				= SerialEM.chm::/html\menu_tasks.htm#hid_tasks_autocenterbeam
 hid_tasks_setupautocenter				= SerialEM.chm::/html\menu_tasks.htm#hid_tasks_setupautocenter
+hid_tasks_setareasinlowdose     = SerialEM.chm::/html\menu_tasks.htm#hid_tasks_setareasinlowdose
 hid_eucentricity_coarse					= SerialEM.chm::/html\menu_tasks.htm#hid_eucentricity_coarse
 hid_eucentricity_fine						= SerialEM.chm::/html\menu_tasks.htm#hid_eucentricity_fine
 hid_eucentricity_both						= SerialEM.chm::/html\menu_tasks.htm#hid_eucentricity_both

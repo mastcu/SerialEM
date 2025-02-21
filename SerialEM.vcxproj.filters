@@ -545,6 +545,9 @@
     <ClInclude Include="DoseModulator.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="TaskAreaOptionDlg.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="res\bitmap1.bmp">
@@ -899,6 +902,9 @@
       <Filter>HTML Help Topics</Filter>
     </None>
     <None Include="hlp\html\hidd_mulgrid_settings.htm">
+      <Filter>HTML Help Topics</Filter>
+    </None>
+    <None Include="hlp\html\hidd_task_area_options.htm">
       <Filter>HTML Help Topics</Filter>
     </None>
   </ItemGroup>
@@ -1330,6 +1336,9 @@
       <Filter>CSource Files</Filter>
     </ClCompile>
     <ClCompile Include="DoseModulator.cpp">
+      <Filter>CSource Files</Filter>
+    </ClCompile>
+    <ClCompile Include="TaskAreaOptionDlg.cpp">
       <Filter>CSource Files</Filter>
     </ClCompile>
   </ItemGroup>
