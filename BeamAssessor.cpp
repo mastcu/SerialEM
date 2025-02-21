@@ -1620,13 +1620,13 @@ void CBeamAssessor::CalibrateBeamShift()
   for (i = 0; i < 6; i++)
     mBSCshiftX[i] = mBSCshiftY[i] = 0.;
   i = mScope->GetMagIndex();
-  if (FEIscope && i >= mScope->GetLowestMModeMagInd(true) &&
+  if (FEIscope && mWinApp->GetEFTEMMode() && i >= mScope->GetLowestMModeMagInd(true) &&
     i < mScope->GetLowestMModeMagInd(false)) {
     i = mScope->GetLowestMModeMagInd(true) - 1;
     str.Format("A calibration at this mag will not be handled correctly\n"
       "because of the mismatch in mag indexes between TEM and EFTEM.\n\n"
-      "Drop the mag to %d in TEM (or %d in EFTEM) to do a calibration for LM", 
-      MagOrEFTEMmag(false, i), MagOrEFTEMmag(true, i));
+      "Drop the mag to %d in EFTEM mode to do a calibration for LM", 
+      MagOrEFTEMmag(true, i));
     AfxMessageBox(str, MB_EXCLAME);
     return;
   }

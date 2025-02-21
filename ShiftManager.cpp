@@ -3207,6 +3207,8 @@ ScaleMat CShiftManager::GetBeamShiftCal(int magInd, int inAlpha, int inProbe)
   int j, dir, diff, calMag, loop, skipBound, numBoundLoop, numLoop, calSign = 1;
   int bestJ = -1, bestMag;
   ScaleMat mat, mat2, currIStoSpec, calSpecToIS;
+  BOOL EFTEM = mWinApp->GetEFTEMMode();
+  bool EFTEMnonLM = FEIscope && EFTEM && magInd >= mScope->GetLowestMModeMagInd(true);
   mat.xpx = 0.;
   if (!mNumBeamShiftCals)
     return mat;
@@ -3220,7 +3222,7 @@ ScaleMat CShiftManager::GetBeamShiftCal(int magInd, int inAlpha, int inProbe)
   numBoundLoop = mBeamShiftBoundaries.size() > 0 ? 2 : 1;
 
   // Access only ones with negative mag index for JEOL EFTEM mode
-  if (JEOLscope && !mScope->GetHasOmegaFilter() && mWinApp->GetEFTEMMode())
+  if (JEOLscope && !mScope->GetHasOmegaFilter() && EFTEM)
     calSign = -1;
 
   // Loop through this twice if alpha; first try to match alpha
@@ -3245,6 +3247,8 @@ ScaleMat CShiftManager::GetBeamShiftCal(int magInd, int inAlpha, int inProbe)
         // Assume old calibration is from M mode range
         if (!calMag)
           calMag = mScope->GetLowestMModeMagInd();
+        if (EFTEMnonLM && calMag < mScope->GetLowestMModeMagInd(false))
+          continue;
         if (CanTransferIS(calMag, magInd) &&
           (skipBound || !CrossesBeamShiftBoundary(calMag, magInd))) {
           if (bestJ < 0 || B3DABS(calMag - magInd) < B3DABS(bestMag - magInd)) {
@@ -3257,8 +3261,12 @@ ScaleMat CShiftManager::GetBeamShiftCal(int magInd, int inAlpha, int inProbe)
       }
       if (bestJ >= 0) {
         if (JEOLscope)
-          SEMTrace('c', "For mag %d  alpha %d returning BS cal from mag %d alpha %d",
+          SEMTrace('c', "For mag %d alpha %d returning BS cal from mag %d alpha %d",
             magInd, inAlpha + 1, bestMag, mBeamCalAlpha[bestJ] + 1);
+        else
+          SEMTrace('c', "For mag %d %s returning BS cal from mag %d %s",
+            magInd, inProbe ? "micro" : "nano", bestMag, mBeamCalProbe[bestJ] ?
+            "micro" : "nano");
         return mIStoBS[bestJ];
       }
 
@@ -3285,6 +3293,8 @@ ScaleMat CShiftManager::GetBeamShiftCal(int magInd, int inAlpha, int inProbe)
               continue;
 
             // Check a mag only if it is on the same side of LM-M as given mag
+            if (EFTEMnonLM && calMag < mScope->GetLowestMModeMagInd(false))
+              continue;
             if (magInd + dir * diff == calMag &&
               mScope->BothLMorNotLM(calMag, false, magInd, false)) {
               mat2 = IStoSpecimen(calMag);
