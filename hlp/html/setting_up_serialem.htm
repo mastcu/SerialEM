@@ -1638,7 +1638,14 @@
 &nbsp;&nbsp;&nbsp; SocketServerPort 4 48896</p><br />
       On Windows 7 or above, the first time that you start this server, you need to run it
       as Administrator to guarantee that various JEOL DLLs can be copied to the folder where
-      the server is located.
+      the server is located.&nbsp; Debugging output from the plugin can be obtained by 
+      including &#39;j&#39; in the DebugOutput letters.&nbsp; In the server, it can be turned 
+      on or off by toggling debug mode in the camera menu or changing whether the 
+      debug output letters include &#39;Z&#39;.&nbsp; It can also be activated with the 
+      environment variable JEOL_SEM_SERVER_DEBUG, which can be set to 1 for basic 
+      output or 4 to write output to a file &#39;C:\Program 
+      Files\SerialEM\JeolSemServerDebug.txt&#39;; this would be needed to get debug output 
+      while initializing.
       <p><b><i>To run a second JEOL camera on a different computer through JEOL-SEMCamServer:</i></b></p>
       <p>Running two cameras is possible with the following setup:</p>
       <ul>
@@ -1660,7 +1667,7 @@
           </li>
         <li>The environment variable&nbsp; JEOL_SEM_SERVER_PORT must be set to 48896 on 
           the second computer.</li>
-        <li>JOEL-SEMCamServer is started on both computers, then SerialEM is started.</li>
+        <li>JEOL-SEMCamServer is started on both computers, then SerialEM is started.</li>
       </ul>
        <p>
         <a name="RemoteTietz"><i><b>For accessing a Tietz camera remotely</b></i></a>,
