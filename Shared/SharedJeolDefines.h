@@ -167,6 +167,7 @@ struct JeolParams {
   int fillNitrogenTimeout;
   int emissionTimeout;
   int beamRampupTimeout;
+  int gaugeSwitchDelay;
   // Used to keep track if actual structure is smaller than what was built against
   int lastMember; 
 };

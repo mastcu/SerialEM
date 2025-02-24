@@ -439,6 +439,7 @@ CEMscope::CEMscope()
   mJeolFlashFegTimeout = 45;
   mJeolEmissionTimeout = 180;
   mBeamRampupTimeout = 0;
+  mGaugeSwitchDelay = 0;
   mAdjustForISSkipBacklash = -1;
   mBacklashTolerance = -1.;
   mXYbacklashValid = false;
@@ -747,6 +748,7 @@ int CEMscope::Initialize()
       mJeolParams.flashFegTimeout = mJeolFlashFegTimeout;
       mJeolParams.emissionTimeout = mJeolEmissionTimeout;
       mJeolParams.beamRampupTimeout = mBeamRampupTimeout;
+      mJeolParams.gaugeSwitchDelay = mGaugeSwitchDelay;
       mJeolParams.fillNitrogenTimeout = mJeolRefillTimeout;
       mJeolSD.mainDetectorID = mMainDetectorID;
       mJeolSD.pairedDetectorID = mPairedDetectorID;

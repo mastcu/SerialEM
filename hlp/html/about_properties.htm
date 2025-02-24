@@ -5007,6 +5007,13 @@
           <TD>Set a time in seconds after turning on the beam during which the state of the
             beam switch will not be accessed, to work around th same JEOL bug.</TD>
         </TR>
+        <TR VALIGN="top">
+          <TD>JeolGaugeSwitchDelay</TD>
+          <TD>Set to a delay in msec between the first call to turn on the switch for a 
+            vacuum gauge and the call to get the gauge value.&nbsp; This delay is needed if 
+            the first call to get the gauge value gives an error with unknown method 30 and 
+            unknown status 255.&nbsp; The default is 0.</TD>
+        </TR>
       </TABLE>
       <BR>
       <P><A NAME="hitachi_properties"></A><B>Hitachi properties</B></P>
