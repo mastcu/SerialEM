@@ -570,15 +570,17 @@ int CLogWindow::OpenAndWriteFile(UINT flags, int length, int offset)
     mLastPosition = cFile->GetPosition();
   }
   catch (CFileException *perr) {
+    TCHAR szCause[255];
+    perr->GetErrorMessage(szCause, 255);
     perr->Delete();
     if (mWinApp->DoingTiltSeries() || mWinApp->mMacroProcessor->DoingMacro() ||
       (mWinApp->mNavigator && mWinApp->mNavigator->GetAcquiring())) {
       warning = "\r\nPlease send this log with backtrace to David; this is NOT a crash";
       AddBackTraceToMessage(warning);
       Append(warning + "\r\n\r\n", 0);
-      Append("WARNING: " + message + "\r\n", 0);
+      Append("WARNING: " + message + ": " + CString(szCause) + "\r\n", 0);
     } else
-      SEMMessageBox(message);
+      SEMMessageBox(message + ": " + CString(szCause));
     retval = -1;
   }
   if (cFile) {
