@@ -6185,7 +6185,7 @@ int CMacCmd::ReportAlignShift(void)
 {
   ScaleMat aMat, bInv;
   double delISX, delISY, delX, delY, h1, v1;
-  int index, index2;
+  int index, index2, camera;
   float shiftX, shiftY;
 
   delISY = 0.;
@@ -6200,10 +6200,11 @@ int CMacCmd::ReportAlignShift(void)
     shiftY *= -mImBufs->mBinning;
     mAccumShiftX += shiftX;
     mAccumShiftY += shiftY;
-    index = mScope->GetMagIndex();
+    index = mImBufs->mMagInd > 0 ? mImBufs->mMagInd : mScope->GetMagIndex();
+    camera = mImBufs->mCamera >= 0 ? mImBufs->mCamera : mCurrentCam;
     index2 = BinDivisorI(mCamParams);
     if (delISY) {
-      delX = mShiftManager->GetPixelSize(mCurrentCam, index);
+      delX = mShiftManager->GetPixelSize(camera, index);
       delY = delX * sqrt(shiftX * shiftX + shiftY * shiftY);
       delISX = 100. * (delY / delISY - 1.);
       mAccumDiff += (float)(delY - delISY);
@@ -6212,8 +6213,8 @@ int CMacCmd::ReportAlignShift(void)
         delISX, mAccumDiff, delISY);
       SetRepValsAndVars(2, delISX, mAccumDiff, delISY);
     } else {
-      bInv = mShiftManager->CameraToIS(index);
-      aMat = mShiftManager->IStoSpecimen(index);
+      bInv = MatInv(mShiftManager->IStoGivenCamera(index, camera));
+      aMat = mShiftManager->IStoSpecimen(index, camera);
 
       // Convert to image shift units, then determine distance on specimen
       // implied by each axis of image shift separately
