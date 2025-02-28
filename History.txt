@@ -3,6 +3,12 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+2/28/25: Fixed ReportAlignShift, ReportShiftDiffFrom, and
+ReportISforBufferShift to take camera and mag index from buffer if available
+(In 4.1).
+
+2/28/25: Fixed getting nitrogen level from transfer tank on JEOL (In 4.1).
+
 2/21/25: Fixed use of beam shift cal from LM when in lowest nonLM EFTEM mag
 and allowed beam shift cal in TEM to be done at highest LM mag (In 4.1).
 
