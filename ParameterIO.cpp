@@ -6682,6 +6682,9 @@ void CParameterIO::ReportSpecialOptions(void)
   if (mWinApp->mScope->GetIdleTimeToCloseValves() > 0)
     PrintfToLog("Special option is set to turn off beam after %d minutes of inactivity",
       mWinApp->mScope->GetIdleTimeToCloseValves());
+  if (mWinApp->mScope->GetIdleTimeToStopEmission() > 0)
+    PrintfToLog("Special option is set to turn off emission after %d minutes of "
+      "inactivity", mWinApp->mScope->GetIdleTimeToStopEmission());
   if (mWinApp->mComplexTasks->GetTasksUseViewNotSearch())
     PrintAnOption(any, "Special option is set to use View for tasks in Low Dose even if"
       " Search has more appropriate magnification");

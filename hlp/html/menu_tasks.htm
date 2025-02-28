@@ -631,8 +631,15 @@
       <p>With this option, you can enable the program to close valves or turn off the
         filament if it is left idle for longer than a specified length of time.&nbsp;
         After selecting the option, enter the number of minutes of inactivity after
-        which the program should turn off the beam, or 0 to disable this feature.&nbsp;
-        The option appears checked in the menu when a positive time has been entered.</p>
+        which the program should turn off the beam, or 0 to disable this feature.&nbsp; 
+        Inactivity means no operations like running scripts, taking images, or other 
+        higher-level operations have occurred; simply accessing a menu item or pressing 
+        a button does not count as activity.&nbsp;
+        The option appears checked in the menu when a positive time has been entered.&nbsp; 
+        On a JEOL with the property &#39;AllowStopEmissionIfIdle&#39; set, a second entry box 
+        will come up allowing you to set the number of minutes after which the emission 
+        should be turned.&nbsp; The menu item will be checked if either of these entries 
+        are non-zero.</p>
     <p>
       <A NAME="hid_specialoptions_normalizeviaviewforau"></A><B>Normalize Via View
       for Autofocus command (Tasks&nbsp; - Specialized Options submenu)</B></p>

@@ -3097,11 +3097,20 @@ void CMenuTargets::OnCloseValvesAfterLongInactivity()
     "Number of minutes of inactivity after which " + mess, time))
     return;
   mScope->SetIdleTimeToCloseValves(time);
+  if (JEOLscope && mScope->GetAllowStopEmissionIfIdle()) {
+    time = mScope->GetIdleTimeToStopEmission();
+    if (!KGetOneInt("Enter 0 to disable this feature",
+      "Number of minutes of inactivity after which to turn off emission", time))
+      return;
+    mScope->SetIdleTimeToStopEmission(time);
+  }
 }
 
 void CMenuTargets::OnUpdateCloseValvesAfterLongInactivity(CCmdUI *pCmdUI)
 {
-  pCmdUI->SetCheck(mScope->GetIdleTimeToCloseValves() > 0 ? 1 : 0);
+  pCmdUI->SetCheck((mScope->GetIdleTimeToCloseValves() > 0 || 
+    (JEOLscope && mScope->GetAllowStopEmissionIfIdle() && 
+      mScope->GetIdleTimeToStopEmission()> 0)) ? 1 : 0);
   pCmdUI->Enable(!mWinApp->DoingTasks() && !HitachiScope && !mScope->GetNoScope());
 }
 

@@ -3,6 +3,9 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+2/28/25: Added property to enable setting a time for turning off emission on a
+JEOL after inactivity.
+
 2/28/25: Fixed ReportAlignShift, ReportShiftDiffFrom, and
 ReportISforBufferShift to take camera and mag index from buffer if available
 (In 4.1).

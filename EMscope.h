@@ -480,6 +480,8 @@ public:
   GetSetMember(int, NormAllOnMagChange);
   GetSetMember(int, GoToRecMagEnteringLD);
   GetSetMember(int, IdleTimeToCloseValves);
+  GetSetMember(int, IdleTimeToStopEmission);
+  GetSetMember(BOOL, AllowStopEmissionIfIdle);
   void GetMinMaxBeamShiftSpots(int secondary, int &outMin, int &outMax)
   {
     outMin = mMinSpotWithBeamShift[secondary], outMax = mMaxSpotWithBeamShift[secondary];
@@ -951,6 +953,9 @@ private:
   float mAddToRawIntensity;    // Amount to add to an intensity value to keep it in range
   int mIdleTimeToCloseValves;  // Minutes of no activity after which to close the valves
   bool mClosedValvesAfterIdle; // Flag that it happened
+  int mIdleTimeToStopEmission; // Minutes of no activity after which to trun off emission
+  BOOL mAllowStopEmissionIfIdle;  // Property enabling the stopping of emission
+  bool mStoppedEmissionOnIdle; // Flag that it happened
   BOOL mUpdateDuringAreaChange; // Flag to allow scope updates during LD area change
   float mDetectorOffsetX;      // PLA offsets potentially for each detector/camera
   float mDetectorOffsetY;

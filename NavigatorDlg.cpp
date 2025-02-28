@@ -6744,7 +6744,7 @@ int CNavigatorDlg::TransformToCurrentReg(int reg, ScaleMat aM, float *dxy, int r
 {
   CMapDrawItem *item;
   ScaleMat IS2Spec, prod;
-  int dir, numDone = 0;
+  int dir, numDone = 0, numHoles = 0;
   float xToAdopt = -9999.f, transX, transY;
   if (RegistrationUseType(reg) == NAVREG_IMPORT && curDrawnOn > 0) {
     item = FindItemWithMapID(curDrawnOn);
@@ -6772,6 +6772,7 @@ int CNavigatorDlg::TransformToCurrentReg(int reg, ScaleMat aM, float *dxy, int r
             item->mXHoleISSpacing[dir] = transX;
             item->mYHoleISSpacing[dir] = transY;
           }
+          numHoles++;
         }
       }
 
@@ -6797,6 +6798,8 @@ int CNavigatorDlg::TransformToCurrentReg(int reg, ScaleMat aM, float *dxy, int r
     mFromRegSaved[mNumSavedRegXforms++] = reg;
     mLastXformToReg = mCurrentRegistration;
   }
+  if (numHoles)
+    PrintfToLog("Map hole vectors transformed for %d items", numHoles);
   return numDone;
 }
 

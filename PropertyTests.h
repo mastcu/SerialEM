@@ -153,6 +153,7 @@ INT_PROP_TEST("ScreenRaiseDelay", scope->, ScreenRaiseDelay)
 INT_PROP_TEST("ScopeHasAutoloader", scope->, ScopeHasAutoloader)
 INT_PROP_TEST("GoToRecMagEnteringLD", scope->, GoToRecMagEnteringLD)
 INT_PROP_TEST("LowDoseFreeLensDelay", scope->, LDFreeLensDelay)
+BOOL_PROP_TEST("AllowStopEmissionIfIdle", scope->, AllowStopEmissionIfIdle)
 
 #endif
 #ifdef PROP_TEST_SECT2

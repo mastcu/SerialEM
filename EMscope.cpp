@@ -516,6 +516,8 @@ CEMscope::CEMscope()
   mStageXYSpeedFactor = 0.;
   mRestoreStageXYdelay = 100;
   mIdleTimeToCloseValves = 0;
+  mIdleTimeToStopEmission = 0;
+  mAllowStopEmissionIfIdle = false;
   mUpdateDuringAreaChange = false;
   mDetectorOffsetX = mDetectorOffsetY = 0.;
   mRestoreViewFocusCount = 0;
@@ -1876,7 +1878,6 @@ void CEMscope::ScopeUpdate(DWORD dwTime)
   if (mIdleTimeToCloseValves > 0 && SEMTickInterval(mWinApp->GetLastActivityTime()) >
     60000. * mIdleTimeToCloseValves) {
     if (!mClosedValvesAfterIdle && GetColumnValvesOpen() > 0) {
-      mClosedValvesAfterIdle = true;
       SetColumnValvesOpen(false, true);
       CTime ctdt = CTime::GetCurrentTime();
       if (mNoColumnValve)
@@ -1890,6 +1891,18 @@ void CEMscope::ScopeUpdate(DWORD dwTime)
     mClosedValvesAfterIdle = true;
   } else {
     mClosedValvesAfterIdle = false;
+  }
+  if (JEOLscope && mAllowStopEmissionIfIdle && mIdleTimeToStopEmission > 0 &&
+    SEMTickInterval(mWinApp->GetLastActivityTime()) > 60000. * mIdleTimeToStopEmission) {
+    if (!mStoppedEmissionOnIdle && GetEmissionState(toCam) && toCam) {
+      SetEmissionState(0);
+      CTime ctdt = CTime::GetCurrentTime();
+      PrintfToLog("%02d:%02d:%02d: Turned off emission after %d minutes of inactivity",
+          ctdt.GetHour(), ctdt.GetMinute(), ctdt.GetSecond(), mIdleTimeToStopEmission);
+    }
+    mStoppedEmissionOnIdle = true;
+  } else {
+    mStoppedEmissionOnIdle = false;
   }
 
   if (mPlugFuncs->DoingUpdate) {
