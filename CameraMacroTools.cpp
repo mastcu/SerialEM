@@ -701,7 +701,7 @@ void CCameraMacroTools::Update()
     
   // Set the Montage/Preview button
   if (doingMulGrid || suspendedMG)
-    SetDlgItemText(IDC_BUTMONTAGE, doingMulGrid ? "PauseMG" : "End MGrid");
+    SetDlgItemText(IDC_BUTMONTAGE, doingMulGrid ? "PauseMG" : "EndMGrid");
   else if (!mWinApp->Montaging() || mWinApp->LowDoseMode()) {
     CString *modeNames = mWinApp->GetModeNames();
     SetDlgItemText(IDC_BUTMONTAGE, modeNames[4]);
