@@ -1106,6 +1106,7 @@ int CNavHelper::RealignToItem(CMapDrawItem *inItem, BOOL restoreState,
   }
 
   // Go to Z position of item unless this is after doing eucentricity in acquire
+  mRealigning = 1;
   axes = axisXY;
   if (!(mNav->GetAcquiring() && (mNav->GetDidEucentricity() || navParams->skipZmoves)) &&
     !(mWinApp->mMacroProcessor->DoingMacro() && mRISkipNextZMove))
@@ -1131,7 +1132,6 @@ int CNavHelper::RealignToItem(CMapDrawItem *inItem, BOOL restoreState,
     " VS change %.2f %.2f firstIS %.2f %.2f", mRIfirstStageX ,mRIfirstStageY, 
     mRInetViewShiftX, mRInetViewShiftY, firstDelX, firstDelY, mRIviewShiftChangeX,
     mRIviewShiftChangeY, mRIfirstISX, mRIfirstISY);
-  mRealigning = 1;
   mNav->AdjustAndMoveStage(mRIfirstStageX + mRInetViewShiftX + firstDelX - 
     mRIviewShiftChangeX, mRIfirstStageY + mRInetViewShiftY + firstDelY - 
     mRIviewShiftChangeY, inItem->mStageZ, axes, itemBackX, itemBackY, 

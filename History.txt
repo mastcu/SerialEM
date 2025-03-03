@@ -3,6 +3,9 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+3/2/25: Fixed runaway Realign to Item if stopped during initial mag change
+(In 4.1).
+
 2/28/25: Added property to enable setting a time for turning off emission on a
 JEOL after inactivity.
 
