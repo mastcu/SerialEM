@@ -948,7 +948,8 @@ int CNavHelper::RealignToItem(CMapDrawItem *inItem, BOOL restoreState,
 
   // This sets mRInetViewShiftX/Y, mRIconSetNum, and mRIstayingInLD, and mrIcalShiftX/Y
   // Here is where low dose gets turned off if so
-  PrepareToReimageMap(item, mMapMontP, conSet, TRIAL_CONSET, 
+  mRealigning = 1;
+  PrepareToReimageMap(item, mMapMontP, conSet, TRIAL_CONSET,
     (restoreState || !(mWinApp->LowDoseMode() && item->mMapLowDoseConSet < 0)) ? 1 : 0);
   if (mRIstayingInLD)
     mRIContinuousMode = 0;   // To avoid this, need to set/restore mode in LD conset
@@ -993,8 +994,10 @@ int CNavHelper::RealignToItem(CMapDrawItem *inItem, BOOL restoreState,
             mWinApp->AppendToLog("Just moving to target after skipping first"
               " round alignment to center");
           } else {
-            if (LoadForAlignAtTarget(item))
+            if (LoadForAlignAtTarget(item)) {
+              mRealigning = 0;
               return 7;
+            }
             mWinApp->AppendToLog("Skipping first round alignment to center of map frame");
           }
         }
@@ -1015,7 +1018,6 @@ int CNavHelper::RealignToItem(CMapDrawItem *inItem, BOOL restoreState,
   }
 
   // Go to Z position of item unless this is after doing eucentricity in acquire
-  mRealigning = 1;
   axes = axisXY;
   if (!(mNav->GetAcquiring() && (mNav->GetDidEucentricity() || navParams->skipZmoves)) &&
     !(mWinApp->mMacroProcessor->DoingMacro() && mRISkipNextZMove))
