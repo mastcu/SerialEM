@@ -595,7 +595,7 @@ BOOL CFilterTasks::RefineZLP(bool interactive, int useTrial)
 
   if (!mWinApp->GetEFTEMMode() && !mScope->GetHasOmegaFilter()) {
     SEMMessageBox("The scope must be in EFTEM mode to refine the zero-loss peak");
-    return 1;
+    return false;
   }
 
   // Set up maximum scan size, and arrays
@@ -707,7 +707,6 @@ BOOL CFilterTasks::RefineZLP(bool interactive, int useTrial)
   mRZlpIndex = 0;
   mPeakDelta = mPeakMean = -1.e10;
   mPeakIndex = -1;
-  mLastRZlpFailed = false;
 
   mWinApp->SetStatusText(MEDIUM_PANE, "REFINING ZERO LOSS PEAK");
   mWinApp->UpdateBufferWindows();
@@ -813,6 +812,7 @@ void CFilterTasks::RefineZLPNextTask()
       } else
         mSavedParams.energyLoss = 0.;
     }
+    mLastRZlpFailed = false;
     StopRefineZLP();
     return;
   }
@@ -834,9 +834,8 @@ void CFilterTasks::RefineZLPNextTask()
         SEMAppendToLog(report);
       } else {
         mWinApp->mTSController->TSMessageBox(report);
-        mWinApp->ErrorOccurred(1);
+        //mWinApp->ErrorOccurred(1);
       }
-      mLastRZlpFailed = true;
       return;
     }
 
@@ -845,7 +844,7 @@ void CFilterTasks::RefineZLPNextTask()
       mCurEnergy = mRZlpUserLoss - mRZlpSlitWidth;
       if (TestRefineZLPStart(mCurEnergy, "run a second scan of")) {
         StopRefineZLP();
-        mWinApp->ErrorOccurred(1);
+        //mWinApp->ErrorOccurred(1);
         return;
       }
 
