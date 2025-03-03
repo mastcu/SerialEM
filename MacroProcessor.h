@@ -346,7 +346,7 @@ protected:
   BOOL mLoadingMap;    // Flag that an asynchronous map load was started
   BOOL mMakingDualMap; // Flag that anchor map has been started
   BOOL mAutoContouring; // Flag that autocontouring was started
-  BOOL mStartedRefineZLP;   // Flag that refine ZLP was started
+  int mStartedRefineZLP; // Flag that refine ZLP was started: 1 normal, -1 allow failure
   double mDoseStart;   // Starting cumulative dose
   double mDoseTarget;  // Target dose to accumulate
   double mDoseTime;    // Time it started

@@ -1439,11 +1439,11 @@ void CMacroProcessor::RunOrResume()
   mStoppedContSetNum = mCamera->DoingContinuousAcquire() - 1;
   mWinApp->UpdateBufferWindows();
   SetComplexPane();
+  mWinApp->mMacroProcessor->InitForNextCommand();
 
   // Start the script language thread unless doing external control,
   // and set up waiting for command
   if (mRunningScrpLang) {
-    mWinApp->mMacroProcessor->InitForNextCommand();
     StartRunningScrpLang();
     mWinApp->AddIdleTask(NULL, TASK_MACRO_RUN, 0, 0);
     return;
@@ -1640,6 +1640,9 @@ int CMacroProcessor::TestTryLevelAndSkip(CString *mess)
       str += ": " + *mess;
     if (!mNoCatchOutput[B3DMAX(0, mTryCatchLevel)])
       mWinApp->AppendToLog(str);
+
+    // Need to clear to avoid all the tests that could occur and abort the macro
+    mWinApp->mMacroProcessor->InitForNextCommand();
     mWinApp->AddIdleTask(NULL, TASK_MACRO_RUN, 0, 0);
     return 1;
   }

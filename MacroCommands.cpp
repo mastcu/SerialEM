@@ -369,8 +369,13 @@ int CMacCmd::NextCommand(bool startingOut)
   if (mRanGatanScript)
     SetReportedValues(mCamera->GetScriptReturnVal());
 
-  if (mStartedRefineZLP)
+  if (mStartedRefineZLP) {
     SetReportedValues(mWinApp->mFilterTasks->GetLastRZlpFailed() ? 1 : 0);
+    if (mWinApp->mFilterTasks->GetLastRZlpFailed() && mStartedRefineZLP > 0) {
+      AbortMacro();
+      return 1;
+    }
+  }
 
   // If ctfplotter was run, see if succeeded
   if (mRanCtfplotter) {
@@ -694,7 +699,7 @@ void CMacCmd::InitForNextCommand()
   mMovedScreen = false;
   mExposedFilm = false;
   mStartedLongOp = false;
-  mStartedRefineZLP = false;
+  mStartedRefineZLP = 0;
   mMovedAperture = false;
   mRanGatanScript = false;
   mRanExtProcess = false;
@@ -9886,7 +9891,7 @@ int CMacCmd::RefineZLP(void)
       mWinApp->mFilterTasks->SetNextRZlpRedoInLD(true);
     if (allowFail)
       mWinApp->mFilterTasks->SetAllowNextRZlpFailure(true);
-    if (mWinApp->mFilterTasks->RefineZLP(false, mItemInt[2])) {
+    if (!mWinApp->mFilterTasks->RefineZLP(false, mItemInt[2])) {
       if (allowFail)
         SetReportedValues(1.);
       else {
@@ -9894,7 +9899,7 @@ int CMacCmd::RefineZLP(void)
         return 1;
       }
     } else
-      mStartedRefineZLP = true;
+      mStartedRefineZLP = allowFail ? -1 : 1;
   }
   return 0;
 }
