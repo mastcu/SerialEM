@@ -992,11 +992,13 @@ int CGainRefMaker::GetReference(int binning, void *&gainRef, int &byteSize,
     if (mCamera->GetScaledGainRefMax() && !mCamera->ReturningFloatImages(mParam) && 
       !needFloat)
       NewArray2(usdata, unsigned short int, nx, ny);
+
+    // This returns error for usdata NULL allowing assignment if float needed or if error
     if (ProcConvertGainRef((float *)image->getData(), usdata, nx * ny, 
       mCamera->GetScaledGainRefMax(), mCamera->GetMinGainRefBits(), 
       &mGainRefBits[mCurrentCamera][needInd])) {
 
-      // error in conversion: delete int array and detach float array from image
+      // error or no conversion: delete int array and detach float array from image
       if (usdata)
         delete [] usdata;
       mGainRef[mCurrentCamera][needInd] = image->getData();
@@ -1057,12 +1059,13 @@ int CGainRefMaker::GetReference(int binning, void *&gainRef, int &byteSize,
 
     // Otherwise, need to try to scale it down as usual
     usdata = NULL;
-    if (mCamera->GetScaledGainRefMax() && !mCamera->ReturningFloatImages(mParam))
+    if (mCamera->GetScaledGainRefMax() && !mCamera->ReturningFloatImages(mParam) &&
+      !needFloat)
       NewArray(usdata,unsigned short int,binnedSize);
     if (ProcConvertGainRef((float *)sdata, usdata, (int)binnedSize, 
       mCamera->GetScaledGainRefMax(), mCamera->GetMinGainRefBits(), &scaleBits)) {
 
-      // Failure: delete int array and return floats
+      // Failure or not needed: delete int array and return floats
       if (usdata)
         delete [] usdata;
       gainRef = sdata;
