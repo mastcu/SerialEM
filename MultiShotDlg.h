@@ -195,7 +195,6 @@ public:
   CString m_strAdjustStatus;
   CButton m_butUseMapVectors;
   afx_msg void OnButUseMapVectors();
-  int ConfirmReplacingShiftVectors(int kind, int vecType);
   CButton m_butApplyAdjustment;
   afx_msg void OnButApplyAdjustment();
   afx_msg void OnKillfocusEditHoleDelayFac();

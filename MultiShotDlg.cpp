@@ -946,6 +946,7 @@ int CMultiShotDlg::DoSaveIS(CString &str)
           params->prevXformFromMag = params->xformFromMag;
           params->prevXformToMag = params->xformToMag;
           params->prevAdjXform = params->adjustingXform;
+          params->prevMinuteTime = params->xformMinuteTime;
           for (dir = 0; dir < (m_bHexGrid ? 3 : 2); dir++) {
             params->prevXspacing[dir] = params->holeISXspacing[dir];
             params->prevYspacing[dir] = params->holeISYspacing[dir];
@@ -991,6 +992,7 @@ int CMultiShotDlg::DoSaveIS(CString &str)
         params->adjustingXform = MatMul(oldVecInv, newVec);
         params->xformToMag = magInd;
         params->xformFromMag = B3DABS(params->origMagOfArray[hexInd]);
+        params->xformMinuteTime = mWinApp->MinuteTimeStamp();
       }
       params->holeMagIndex[hexInd] = magInd;
       params->tiltOfHoleArray[hexInd] = (float)mWinApp->mScope->GetTiltAngle();
@@ -1414,7 +1416,7 @@ void CMultiShotDlg::OnButUseLastHoleVecs()
   CString str2;
   double xVecs[3], yVecs[3];
   LowDoseParams *ldp = mWinApp->GetLowDoseParams() + RECORD_CONSET;
-  if (ConfirmReplacingShiftVectors(0, 
+  if (mWinApp->mNavHelper->ConfirmReplacingShiftVectors(0,
     mWinApp->mNavHelper->mHoleFinderDlg->GetLastWasHexGrid() ? 1: 0))
     return;
   mActiveParams->canUndoRectOrHex = 0;
@@ -1431,7 +1433,7 @@ void CMultiShotDlg::OnButUseMapVectors()
     return;
   if (!item->mXHoleISSpacing[0] && !item->mYHoleISSpacing[0])
     return;
-  if (ConfirmReplacingShiftVectors(1, (item->mXHoleISSpacing[2] ||
+  if (mWinApp->mNavHelper->ConfirmReplacingShiftVectors(1, (item->mXHoleISSpacing[2] ||
     item->mYHoleISSpacing[2]) ? 1 : 0))
     return;
   mActiveParams->canUndoRectOrHex = 0;
@@ -1458,32 +1460,10 @@ void CMultiShotDlg::OnButUseNavPts()
       "\n\nAre you sure you want to do this?", m_bHexGrid ? "hexagonal" : "regular");
     if (AfxMessageBox(mess, MB_QUESTION) == IDNO)
       return;
-  } else if (ConfirmReplacingShiftVectors(2, B3DCHOICE(type > 1, 2, hexInd)))
+  } else if (mWinApp->mNavHelper->ConfirmReplacingShiftVectors(2, B3DCHOICE(type > 1, 2, hexInd)))
     return;
   mActiveParams->canUndoRectOrHex = 0;
   mWinApp->mNavHelper->UseNavPointsForVectors(pattern, 0, 0);
-}
-
-// Common confirmation
-int CMultiShotDlg::ConfirmReplacingShiftVectors(int kind, int vecType)
-{
-  CString str2;
-  const char *kindText[] = {"last hole vectors", "map hole vectors", "navigator points"};
-  int kindFlags[3] = {1, 2, 4};
-  const char *vecText[] = {"regular", "hex", "custom"};
-  int ans, okToUse = mWinApp->mNavHelper->GetOKtoUseHoleVectors();
-  if (!(okToUse & kindFlags[kind])) {
-    str2.Format("Using %s will replace the currently defined "
-      "image shift vectors for the %s pattern.\n\nAre you sure you want to do this?",
-      kindText[kind], vecText[vecType]);
-    ans = SEMThreeChoiceBox(str2, "Yes", "Yes Always", "No",
-      MB_YESNOCANCEL | MB_ICONQUESTION);
-    if (ans == IDCANCEL)
-      return 1;
-    if (ans == IDNO)
-      mWinApp->mNavHelper->SetOKtoUseHoleVectors(okToUse | kindFlags[kind]);
-  }
-  return 0;
 }
 
 // Apply existing adjustment
