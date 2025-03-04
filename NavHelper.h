@@ -89,6 +89,7 @@ struct MultiShotParams
   int xformFromMag;      // Mag that adjusting transform is from and to
   int xformToMag;
   ScaleMat adjustingXform;  // Transform for adjustment
+  int xformMinuteTime;   // Minute time stamp when it was last done
 
   // Runtime for undo capability: values to restore
   int canUndoRectOrHex;    // 0 if not, 1 for regular, 2 for hex
@@ -99,6 +100,7 @@ struct MultiShotParams
   double prevXspacing[3];
   double prevYspacing[3];
   ScaleMat prevAdjXform;
+  int prevMinuteTime;
 };
 
 struct HoleFinderParams
@@ -708,6 +710,7 @@ public:
   void AssignNavItemHoleVectors(CMapDrawItem * item);
   int OKtoUseNavPtsForVectors(int pattern, int &groupStart, int &groupEnd, ScaleMat *ISmat = NULL,
     CString *reason = NULL);
+  int ConfirmReplacingShiftVectors(int kind, int vecType);
   int UseNavPointsForVectors(int pattern, int numXholes, int numYholes);
   void OpenHoleFinder(void);
   WINDOWPLACEMENT *GetHoleFinderPlacement(void);

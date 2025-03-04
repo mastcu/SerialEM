@@ -16,6 +16,7 @@
 #include ".\NavAcquireDlg.h"
 #include "NavigatorDlg.h"
 #include "NavRealignDlg.h"
+#include "MultiGridDlg.h"
 #include "NavAcqHoleFinder.h"
 #include "CameraController.h"
 #include "CookerSetupDlg.h"
@@ -716,7 +717,8 @@ void CNavAcquireDlg::UnloadDialogToCurParams()
   mParam->noMBoxOnError = m_bNoMBoxOnError;
   mParam->earlyReturn = m_bEarlyReturn;
   mParam->numEarlyFrames = m_iEarlyFrames;
-  mParam->useMapHoleVectors = m_bUseMapHoles;
+  if (!mOpenedFromMultiGrid)
+    mParam->useMapHoleVectors = m_bUseMapHoles;
   mParam->macroIndex = mMacroNum;
   mParam->mulGridItemsOrShots = m_iItemsOrShots;
   mParam->mulGridSubsetFrom = m_iSubsetFrom;
@@ -1125,6 +1127,10 @@ void CNavAcquireDlg::DisableItemsForMultiGrid()
     ShowDlgItem(IDC_STAT_SUBSET_FROM_ITEM, true);
   }
   m_iSubsetNum = B3DMAX(1, B3DMIN(1000000, B3DABS(mMasterParam->multiGridSubset)));
+  if (mWinApp->mNavHelper->mMultiGridDlg) {
+    m_bUseMapHoles = mWinApp->mNavHelper->mMultiGridDlg->m_iVectorSource == 0;
+    EnableDlgItem(IDC_NA_USE_MAP_HOLES, false);
+  }
   EnableDlgItem(IDC_RMAPPING, false);
   EnableDlgItem(IDC_RACQUISITION, false);
   EnableDlgItem(IDOK, false);

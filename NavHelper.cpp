@@ -238,6 +238,7 @@ CNavHelper::CNavHelper(void)
   mMultiShotParams.xformFromMag = 0;
   mMultiShotParams.xformToMag = 0;
   mMultiShotParams.adjustingXform = {0., 0., 0., 0.};
+  mMultiShotParams.xformMinuteTime = 0;
   mMultiShotParams.doAutoAdjustment = false;
   mMultiShotParams.autoAdjHoleSize = 1.f;
   mMultiShotParams.autoAdjMethod = 0;
@@ -1063,8 +1064,8 @@ int CNavHelper::RealignToItem(CMapDrawItem *inItem, BOOL restoreState,
           mWinApp->AppendToLog("Just moving to target and skipping both "
             " rounds of alignment to map");
         } else {
-            if (LoadForAlignAtTarget(item))
-              return 7;
+          if (LoadForAlignAtTarget(item))
+            return 7;
           mWinApp->AppendToLog("Skipping first round alignment to center of map frame");
         }
       }
@@ -1132,7 +1133,7 @@ int CNavHelper::RealignToItem(CMapDrawItem *inItem, BOOL restoreState,
     " VS change %.2f %.2f firstIS %.2f %.2f", mRIfirstStageX ,mRIfirstStageY, 
     mRInetViewShiftX, mRInetViewShiftY, firstDelX, firstDelY, mRIviewShiftChangeX,
     mRIviewShiftChangeY, mRIfirstISX, mRIfirstISY);
-  mNav->AdjustAndMoveStage(mRIfirstStageX + mRInetViewShiftX + firstDelX - 
+  mNav->AdjustAndMoveStage(mRIfirstStageX + mRInetViewShiftX + firstDelX -
     mRIviewShiftChangeX, mRIfirstStageY + mRInetViewShiftY + firstDelY - 
     mRIviewShiftChangeY, inItem->mStageZ, axes, itemBackX, itemBackY, 
     mRIfirstISX + mRIleaveISX, mRIfirstISY + mRIleaveISY, mapAngle);
@@ -1166,6 +1167,7 @@ void CNavHelper::RealignNextTask(int param)
   bool betterPeak, setShiftInImage;
   int i, ixNew, iyNew, ixCen, iyCen, ix, iy, ind, indBest;
   CString report;
+
   if (!mRealigning)
     return;
   if (mRIJustMoving) {
@@ -1650,7 +1652,6 @@ void CNavHelper::StopRealigning(void)
   ControlSet *conSet = mWinApp->GetConSets() + TRACK_CONSET;
   if (!mRealigning)
     return;
-
   mRealigning = 0;
   mRIJustMoving = false;
 
@@ -4952,7 +4953,7 @@ int CNavHelper::AssessAcquireForParams(NavAcqParams *navParam, NavAcqAction *acq
   MultiShotParams &MSparams, int startInd, int endInd, CString prefix)
 {
   ScheduledFile *sched;
-  CMapDrawItem *item, *item2;
+  CMapDrawItem *item, *item2, *item3;
   MontParam *montp;
   StateParams *state;
   TiltSeriesParam *tsp;
@@ -4966,6 +4967,7 @@ int CNavHelper::AssessAcquireForParams(NavAcqParams *navParam, NavAcqAction *acq
   float delX, delY, critDist, critDistSq;
   double holeDist, dists[3], angle;
   bool seen;
+  bool checkingMulGrd = !prefix.IsEmpty();
   BOOL savingMulti = navParam->acquireType == ACQUIRE_MULTISHOT && 
     IsMultishotSaving(NULL, &MSparams);
   int *seenGroups;
@@ -5087,9 +5089,9 @@ int CNavHelper::AssessAcquireForParams(NavAcqParams *navParam, NavAcqAction *acq
           numMaps++;
           lastMap = curMap;
 
-          // For multigrid, it is allowed to have vector just on first item
+          // For multigrid, it is allowed to have vector just onany similar item
           if (item2->mXHoleISSpacing[0] == 0. && item2->mYHoleISSpacing[0] == 0. &&
-            (numMaps == 1 || !prefix.IsEmpty()))
+            (!checkingMulGrd || mNav->GetMatchingMapWithVectors(item2, item3) < 0))
             numNoVec++;
           else if (MSparams.xformFromMag && MSparams.adjustingXform.xpx &&
             item2->mMapMagInd != MSparams.xformFromMag)
@@ -5110,6 +5112,9 @@ int CNavHelper::AssessAcquireForParams(NavAcqParams *navParam, NavAcqAction *acq
       if (numNoVec) {
         mess2.Format("Hole vector shifts were not stored for %d of %d maps.\n", numNoVec,
           numMaps);
+        if (checkingMulGrd)
+          mess2.Format("Hole vector shifts were not available, even from similar maps, "
+            "for %d of %d maps\n", numNoVec, numMaps);
         mess += mess2;
       }
       if (numNoXform) {
@@ -5223,7 +5228,7 @@ int CNavHelper::AssessAcquireForParams(NavAcqParams *navParam, NavAcqAction *acq
         if (err == 5)
           numAtEdge++;
 
-        if (prefix.IsEmpty()) {
+        if (!checkingMulGrd) {
 
           // Get camera and binning from state first 
           stateCam = -1;
@@ -6389,6 +6394,35 @@ int CNavHelper::OKtoUseNavPtsForVectors(int pattern, int &groupStart, int &group
       "vectors", doHex ? "hexagonal" : "regular");
   return 0;
 }
+
+// Common confirmation for replacing vectors, returns 0 if OK
+int CNavHelper::ConfirmReplacingShiftVectors(int kind, int vecType)
+{
+  CString str2;
+  const char *kindText[] = {"last hole vectors", "map hole vectors", "navigator points"};
+  int kindFlags[4] = {1, 2, 4, 8};
+  const char *vecText[] = {"regular", "hex", "custom"};
+  int ans, okToUse = GetOKtoUseHoleVectors();
+  if (!(okToUse & kindFlags[kind])) {
+    if (kind < 3)
+      str2.Format("Using %s will replace the currently defined "
+        "image shift vectors for the %s pattern.\n\nAre you sure you want to do this?",
+        kindText[kind], vecText[vecType]);
+    else
+      str2.Format("This map has stored hole vectors.\nDo you want replace the currently"
+        " defined image shift vectors for the %s pattern?\n\n"
+        "(Press \"Yes Always\" to do this whenever working with multiple\ngrids "
+        "and loading the first map with vectors from a grid)", (LPCTSTR)vecText[vecType]);
+    ans = SEMThreeChoiceBox(str2, "Yes", "Yes Always", "No",
+      MB_YESNOCANCEL | MB_ICONQUESTION);
+    if (ans == IDCANCEL)
+      return 1;
+    if (ans == IDNO)
+      SetOKtoUseHoleVectors(okToUse | kindFlags[kind]);
+  }
+  return 0;
+}
+
 
 // Use group of Nav points for hole vectors; pattern as defined above in OKtoUse
 // UpdateAndUseMSParams should be called before this

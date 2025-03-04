@@ -248,4 +248,6 @@ public:
   CString m_strRefineFOV;
   int m_iC1orC2;
   afx_msg void OnRsetC1Aperture();
+  afx_msg void OnRvectorsFromMaps();
+  int m_iVectorSource;
 };

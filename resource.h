@@ -2513,6 +2513,9 @@
 #define IDC_RWALKUP_V_OR_S              3542
 #define IDC_CHECK_USE_VIEW              3543
 #define IDC_STAT_ROUGH_VORS             3544
+#define IDC_RVECTORS_FROM_MAPS          3546
+#define IDC_RVECTORS_FROM_SETTINGS      3547
+#define IDC_STAT_VECTOR_SOURCE          3548
 #define ID_NEW_IMAGE                    32771
 #define IDM_FILE_SAVEOTHER              32772
 #define IDM_FILE_READ                   32773
@@ -3085,7 +3088,7 @@
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        291
 #define _APS_NEXT_COMMAND_VALUE         33535
-#define _APS_NEXT_CONTROL_VALUE         3545
+#define _APS_NEXT_CONTROL_VALUE         3549
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif

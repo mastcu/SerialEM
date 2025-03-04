@@ -563,6 +563,7 @@ struct MultiGridParams {
   int refineImageType;       // Type of image/state to use for refine
   int refineStateNum;        // Number of state for refine
   CString refineStateName;   // Name of state to set
+  int msVectorSource;        // 1 to take multishot vectors from settings, 0 from maps
 };
 
 // Cooker parameters

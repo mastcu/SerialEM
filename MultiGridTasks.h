@@ -35,8 +35,10 @@ class CMultiGridDlg;
 enum MShotIndexes {
   MS_spokeRad0, MS_spokeRad1, MS_numShots0, MS_numShots1, MS_numHoles0,
   MS_numHoles1, MS_doSecondRing, MS_doCenter, MS_inHoleOrMultiHole, MS_numHexRings,
-  MS_skipCornersOf3x3, MS_noParam
-};
+  MS_skipCornersOf3x3, MS_origMagOfArray, MS_holeMagIndex, MS_ISXspacing0, MS_ISYspacing0,
+  MS_ISXspacing1, MS_ISYspacing1, MS_ISXspacing2, MS_ISYspacing2, MS_xformFromMag,
+  MS_xformToMag, MS_xformXpx, MS_xformXpy, MS_xformYpx, MS_xformYpy, MS_xformMinuteTime, 
+  MS_noParam };
 struct MGridMultiShotParams
 {
   float values[MS_noParam];
@@ -101,6 +103,7 @@ public:
   void CleanupMulGridSeq(int error);
   void StopMulGridSeq();
   void RestoreImposedParams();
+  void ReopenMainLog(int idVal);
   void SuspendMulGridSeq();
   void CommonMulGridStop(bool suspend);
   void EndMulGridSeq();
@@ -109,7 +112,7 @@ public:
   void ExternalTaskError(CString &errStr);
   void MGActMessageBox(CString &errStr);
   int RealignReloadedGrid(CMapDrawItem *item, float expectedRot, bool moveInZ,
-    float maxRotation, int transformNav, CString &errStr);
+    float maxRotation, int transformNav, CString &errStr, int jcdInd = -1);
   int LoadOrReloadMapIfNeeded(CMapDrawItem *item, int maxBin, CString &errStr);
   void CentroidsFromMeansAndPctls(IntVec &ixVec, IntVec &iyVec, FloatVec &xStage, FloatVec &yStage,
     FloatVec &meanVec, FloatVec &midFracs, FloatVec &rangeFracs, float fracThresh, int &meanIXcen, int &meanIYcen,
@@ -131,6 +134,7 @@ public:
   void AddToSeqForLMimaging(bool &apForLMM, bool &stateForLMM, int needsLD);
   void AddToSeqForReloadRealign(bool &apForLMM, bool &stateForLMM);
   void AddToSeqForRestoreFromLM(bool &apForLMM, bool &stateForLMM);
+  int CheckStatesInRange(int *stateNums, CString *names, int numStates, CString mess);
   void DoNextSequenceAction(int resume);
   int SkipToAction(int mgAct);
   int SkipToNextGrid(CString &errStr);
@@ -138,6 +142,7 @@ public:
   void UpdateGridStatusText();
   void OutputGridStartLine();
   CString FullGridFilePath(int gridInd, CString suffix);
+  int GridIndexOfCurrentNavFile();
   void NextAutoFilenameIfNeeded(CString &str);
   void CloseMainLogOpenForGrid(const char *suffix);
   int OpenNewMontageFile(MontParam &montP, CString &str);
@@ -171,6 +176,7 @@ public:
   void GeneralToGridSettings(MGridGeneralParams &mgParam);
   void GridToFocusPosSettings(MGridFocusPosParams &mgParam);
   void FocusPosToGridSettings(MGridFocusPosParams &mgParam);
+  void TransformStoredVectors(MGridMultiShotParams &mgParam, ScaleMat mat);
   int LoadAllGridMaps(int startBuf, CString &errStr);
   bool GetGridMapLabel(int mapID, CString &value);
   int SaveSessionFile(CString &errStr);
@@ -317,6 +323,7 @@ private:
   float mRRGmapZvalue;           // Z to move to from the montage adoc
   float mRRGmaxCenShift;         // Maximum allowed shift at center of grid
   float mRRGmaxInitShift;        // Actual shift allowed in initial correlation
+  int mRRGjcdIndex;              // Index in table so multishot vectors can be rotated
   bool mBigRotation;             // Flag if a big rotation is expected
   int mMapBuf;                   // Buffer the map is in
   int mMapCenX, mMapCenY;        // Center coordinate of center piece in loaded map

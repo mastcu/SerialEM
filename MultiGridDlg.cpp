@@ -71,7 +71,7 @@ static int sIdTable[] = {IDC_STAT_RUN, IDC_STAT_NAME, IDC_BUT_CLOSE_ALL, PANEL_E
   IDC_COMBO_FINAL_STATE3, IDC_COMBO_FINAL_STATE2, IDC_COMBO_FINAL_STATE1,
   IDC_COMBO_FINAL_STATE4, IDC_STAT_SET_FINAL_STATES, IDC_BUT_SETUP_FINAL_ACQ, 
   IDC_CHECK_SET_FINAL_BY_GRID, IDC_BUT_REVERT_TO_GLOBAL, IDC_CHECK_FRAMES_UNDER_SESSION,
-  PANEL_END,
+  IDC_STAT_VECTOR_SOURCE, IDC_RVECTORS_FROM_MAPS, IDC_RVECTORS_FROM_SETTINGS, PANEL_END,
   IDC_BUT_START_RUN, IDC_TSS_LINE2, IDCANCEL, IDOK, IDC_BUTHELP, IDC_STAT_SPACER,
   IDC_BUT_RUN_UNDONE, IDC_BUT_CLOSE_RIGHT, PANEL_END, TABLE_END};
 
@@ -112,6 +112,7 @@ CMultiGridDlg::CMultiGridDlg(CWnd* pParent /*=NULL*/)
   , m_iRefineRealign(FALSE)
   , m_strRefineFOV(_T(""))
   , m_iC1orC2(0)
+  , m_iVectorSource(0)
 {
   mNonModal = true;
   for (int ind = 0; ind < MAX_MULGRID_PANELS; ind++)
@@ -191,6 +192,7 @@ void CMultiGridDlg::DoDataExchange(CDataExchange* pDX)
   DDX_Control(pDX, IDC_COMBO_REFINE_STATE, m_comboRefineState);
   DDX_Text(pDX, IDC_STAT_REFINE_FOV, m_strRefineFOV);
   DDX_Radio(pDX, IDC_RSET_C1_APERTURE, m_iC1orC2);
+  DDX_Radio(pDX, IDC_RVECTORS_FROM_MAPS, m_iVectorSource);
 }
 
 
@@ -273,6 +275,8 @@ BEGIN_MESSAGE_MAP(CMultiGridDlg, CBaseDlg)
   ON_CBN_SELENDOK(IDC_COMBO_REFINE_STATE, OnSelendokComboRefineState)
   ON_BN_CLICKED(IDC_RSET_C1_APERTURE, OnRsetC1Aperture)
   ON_BN_CLICKED(IDC_RSET_C2_APERTURE, OnRsetC1Aperture)
+  ON_BN_CLICKED(IDC_RVECTORS_FROM_MAPS, OnRvectorsFromMaps)
+  ON_BN_CLICKED(IDC_RVECTORS_FROM_SETTINGS, OnRvectorsFromMaps)
 END_MESSAGE_MAP()
 
 
@@ -1009,7 +1013,7 @@ void CMultiGridDlg::UpdateEnables()
     IDC_COMBO_MMM_STATE4, IDC_RSINGLE_IMAGE, IDC_RPOLYGON_MONT, IDC_BUT_SETUP_MAPPING,
     IDC_CHECK_RUN_FINAL_ACQ, IDC_BUT_SETUP_FINAL_ACQ, IDC_COMBO_FINAL_STATE1,
     IDC_COMBO_FINAL_STATE2, IDC_COMBO_FINAL_STATE3, IDC_COMBO_FINAL_STATE4,
-    IDC_CHECK_MG_REFINE};
+    IDC_CHECK_MG_REFINE, IDC_RVECTORS_FROM_MAPS, IDC_RVECTORS_FROM_SETTINGS};
   bool locked = mMGTasks->GetNamesLocked() > 0;
   BOOL justTasks = mWinApp->DoingTasks();
   bool suspended = mMGTasks->GetSuspendedMulGrid();
@@ -1230,6 +1234,7 @@ void CMultiGridDlg::ParamsToDialog()
   m_iSingleVsPolyMont = mParams.MMMimageType;
   m_bFramesUnderSession = mParams.framesUnderSession;
   m_bScriptAtEnd = mParams.runMacroAfterLMM;
+  m_iVectorSource = mParams.msVectorSource;
   mMacNumAtEnd = mParams.macroToRun;
   m_comboEndScript.SetCurSel(mMacNumAtEnd);
   m_comboEndScript.EnableWindow(m_bScriptAtEnd);
@@ -1268,6 +1273,7 @@ void CMultiGridDlg::DialogToParams()
   mParams.MMMimageType = m_iSingleVsPolyMont;
   mParams.framesUnderSession = m_bFramesUnderSession;
   mParams.runMacroAfterLMM = m_bScriptAtEnd;
+  mParams.msVectorSource = m_iVectorSource;
   mParams.macroToRun = mMacNumAtEnd;
   mParams.refineAfterRealign = m_bRefineRealign;
   mParams.refineImageType = m_iRefineRealign;
@@ -2309,6 +2315,13 @@ void CMultiGridDlg::OnButRevertToGlobal()
 
 // Check for frame dir under session/grid dir
 void CMultiGridDlg::OnCheckFramesUnderSession()
+{
+  UpdateData(true);
+  mWinApp->RestoreViewFocus();
+}
+
+// Radio buttons for source of multishot vectors
+void CMultiGridDlg::OnRvectorsFromMaps()
 {
   UpdateData(true);
   mWinApp->RestoreViewFocus();

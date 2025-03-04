@@ -107,13 +107,20 @@
       exceeds a limit, the grid is skipped.</p>
     <p><em>Transformation for hole vectors:</em>&nbsp; If you are doing Multiple Records from multiple holes during final data 
       acquisition, there is another situation where a pre-existing transformation is 
-      important.&nbsp; In this case, the hole vectors stored with a map after hole 
-      finding are used to set the current image shift vectors for points on that map.&nbsp; 
+      important.&nbsp; If you choose to have the image shift vectors set from <strong>
+      Map hole vectors</strong> (see below), the hole vectors stored with a map after hole 
+      finding are used to set the current image shift vectors for points on that map, 
+      and possibly for point son other maps.&nbsp; 
       They are also transformed automatically to work at the Record magnification if 
       an appropriate transformation has been saved from the &#39;Step To and Adjust IS&#39; 
-      procedure in the <a href="hidd_multi_shot_setup.htm">Multiple Record Setup</a> dialog.&nbsp; 
-      The program will object if no hole vectors are stored with any maps, but it is 
-      allowed to have hole vectors only on the first map to be acquired from.</p>
+      procedure in the <a href="hidd_multi_shot_setup.htm">Multiple Record Setup</a> 
+      dialog.</p>
+    <p><em>Automatic setting of Multiple Record vectors when loading a map:</em> If 
+      this dialog is open, the program can automatically switch the image shift 
+      vectors for Multiple Records when a map for a grid is loaded.&nbsp; This occurs 
+      when the first map from a grid that has hole vectors is read in.&nbsp; The 
+      program will ask you to confirm that you want to set the vectors, and you can 
+      press &quot;Yes Always&quot; to stop being asked during this run of of the program.</p>
     <p><em>Managing operations on a single grid with no autoloader:</em> This dialog may also be useful for managing the workflow when 
       there is just one manually loaded grid.&nbsp; When the property 
       'ScopeHasAutoloader 0' is present, the menu entry appears as 'Multiple 
@@ -247,7 +254,8 @@
     <p>Use this button to open the Navigator file for the selected grid.&nbsp; It is 
       disabled if there is a no Navigator file or if it is already open.&nbsp; If the 
       current Navigator table has changes, you will be asked whether you want to save 
-      them.&nbsp; The Navigator file for a grid has a fixed name.&nbsp; A new 
+      them unless the <a href="#hid_navigator_autosave">Autosave Nav File</a> option 
+      is set in the Navigator - Options menu.&nbsp; The Navigator file for a grid has a fixed name.&nbsp; A new 
       Navigator file with that name is started whenever a new grid map is obtained for 
       the grid; if there is a previous Navigator file for that grid, it is renamed to 
       a unique name with '-1.nav', '-2.nav', etc.</p>
@@ -556,6 +564,39 @@
       the numbering will pick up where it left off.&nbsp; Also note that if the base 
       name is used in frame stack or folder names, it will have the name of the grid 
       added to it.</p>
+    <p><strong>Set vectors for multiple Records from: Map hole vectors <em>or</em> 
+      Settings for each grid</strong></p>
+    <p>These buttons provide two different ways to set image shift vectors for 
+      Multiple Records, which need to be different for each grid.&nbsp; With <strong>
+      Map hole vectors</strong> chosen, the vectors will be taken from the ones stored 
+      in a map when the Hole Finder makes Navigator points.&nbsp; During acquisition, 
+      the map that an item was created on is determined, and when this map is 
+      different from the previous one, the vectors are used from this map if possible.&nbsp; 
+      However, when running from this dialog, not every map needs to have hole 
+      vectors; the program will take the vectors from any map that was acquired with 
+      similar microscope settings (e.g., magnification, spot size, defocus offset).&nbsp; 
+      In fact, only one map needs to have vectors, and there need not be any points 
+      being acquired from that map.&nbsp; Typically, these vectors need to be modified 
+      by an adjustment transform to be accurate at the Record magnification; if an 
+      appropriate one exists, it will be applied when the Multiple Record vectors are 
+      set.</p>
+    <p>When <strong>Settings for each grid</strong> is chosen, then separate Multiple 
+      Record settings must be saved for each grid.&nbsp; Both the current image shift 
+      vectors and the adjusting transform are saved in these settings. The program 
+      will check that these vectors are indeed different for all the grids being run.&nbsp; 
+      The vectors can be saved in raw form (as produced by the <strong>Map Hole 
+      Vectors</strong> 
+      button in the <a href="hidd_multi_shot_setup.htm">Multiple Record Setup dialog</a>) 
+      or already transformed; they will be transformed if appropriate before the run 
+      begins.&nbsp; This method allows you to have vectors not derived from the Hole 
+      Finder, or vectors adjusted by different transforms if necessary.&nbsp; In the 
+      latter case, you can set up the vectors and save settings for all the grids 
+      needing one transform, find a new transform, and then set up the vectors for the 
+      grids needing that transform.&nbsp; When the program sees more than one set of 
+      transforms, it will ask whether you want to apply the newer transform to the 
+      earlier set (just in case the transform was an afterthought).&nbsp; If you make 
+      yet another adjusting transform after saving the settings, the program will ask 
+      if you want to apply those to some or all of the stored settings.&nbsp; </p>
     <p><strong>Set Final Data Parameters</strong></p>
     <p>Use this button to open the Navigator Acquire at Items dialog and set the Final 
       Data parameters.&nbsp; Here, only a few choices will be disabled.&nbsp;&nbsp; 
@@ -616,7 +657,7 @@
       Montage)</strong> will be labeled <strong>PauseMG</strong>.&nbsp; Pressing this 
       button will suspend the multi-grid routine at the end of the current grid.&nbsp; 
       Whenever no operations are running and this routine is suspended, that button 
-      will be labeled <strong>End MGrid</strong>, and pressing it will terminate the 
+      will be labeled <strong>EndMGrid</strong>, and pressing it will terminate the 
       routine, return the microscope to the initial conditions, and re-enable 
       everything in the dialog.&nbsp; The usual <strong>Resume</strong> button will be labeled <strong>ResumeM</strong>.&nbsp; 
       Pressing this after a pause will resume the multi-grid routine on the next grid.</p>
@@ -629,7 +670,7 @@
       should be safe to redo.&nbsp; Also note that the routine assumes that nothing 
       has changed on the scope (e.g., states or apertures) that would prevent 
       operations from continuing successfully.&nbsp; If there is any doubt about this, 
-      it is safest to terminate with <strong>End MGrid</strong>, uncheck the grids 
+      it is safest to terminate with <strong>EndMGrid</strong>, uncheck the grids 
       done, and restart the run.</p>
     <p>&nbsp;</p>
     <p>&nbsp;</p>

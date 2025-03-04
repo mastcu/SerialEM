@@ -3,6 +3,20 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+3/3/25: Added ability to set the multishot IS vectors automatically from hole
+vectors of the first map loaded from a grid.
+
+3/3/25: Made IS vectors for multishot and ajduting transform be saved with
+multigrid settings for individual grids, and added option to take IS vectors
+from these settings.
+
+3/3/25: Allowed hole vectors for multigrid to come from any similar map to the
+map being acquired from, instead of just the first map being acquired from.
+
+3/3/25: Fixed script handling of errors in RefineZLP and made them catchable;
+made error during Acquire at items skip to next item if no message box on
+error set.
+
 3/2/25: Fixed runaway Realign to Item if stopped during initial mag change
 (In 4.1).
 

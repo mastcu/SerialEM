@@ -199,6 +199,7 @@ CNavigatorDlg::CNavigatorDlg(CWnd* pParent /*=NULL*/)
   mIgnoreUpdates = false;
   mNumWrongMapWarnings = 0;
   mReloadTableOnNextAdd = false;
+  mGridIndexOfMap = -1;
   mCurrentItem = -1;
 }
 
@@ -3540,7 +3541,7 @@ void CNavigatorDlg::MouseDoubleClick(int button)
       item = mItemArray[minInd];
       minDist = sqrt(minDist) * mMapDblClickScale;
       if (minDist < mWinApp->ScaleValueForDPI(10.)) {
-        DoLoadMap(false, item, -1);
+        DoLoadMap(false, item, -1, true, true);
         mCurrentItem = minInd;
         mCurListSel = minInd;
         if (m_bCollapseGroups)
@@ -7739,11 +7740,11 @@ void CNavigatorDlg::OnLoadMap()
     mHelper->LoadPieceContainingPoint(mItem, mFoundItem);
     AddFocusAreaPoint(false);
   } else
-    DoLoadMap(false, NULL, -1);
+    DoLoadMap(false, NULL, -1, true, true);
 }
 
 int CNavigatorDlg::DoLoadMap(bool synchronous, CMapDrawItem *item, int bufToReadInto,
-  BOOL display)
+  BOOL display, bool interactive)
 {
   int err;
   static MontParam mntp;
@@ -7757,7 +7758,7 @@ int CNavigatorDlg::DoLoadMap(bool synchronous, CMapDrawItem *item, int bufToRead
     return 1;
   mOriginalStore = mDocWnd->GetCurrentStore();
   mLoadItem = mItem;
-  mShowAfterLoad = display;
+  mShowAfterLoad = (display ? 1 : 0) + (interactive ? 2 : 0);
 
   // Get the pointers to file, open if necessary
   err = AccessMapFile(mItem, mLoadStoreMRC, mCurStore, montP, mUseWidth, mUseHeight);
@@ -7820,7 +7821,7 @@ void CNavigatorDlg::FinishLoadMap(void)
   MontParam *masterMont = mWinApp->GetMontParam();
   CameraParameters *camP = &mCamParams[B3DMAX(0, mLoadItem->mMapCamera)];
   EMimageExtra *extra1;
-  int uncroppedX, uncroppedY;
+  int uncroppedX, uncroppedY, gridInd, hexGrid;
   float stageX, stageY, angle;
   bool noStage, noTilt, cropped, needDefocusData;
 
@@ -7897,12 +7898,27 @@ void CNavigatorDlg::FinishLoadMap(void)
   // 4/20/09: montage has already been copied there, but still work on buffer B first and
   // then copy it again so that both buffers have the map data
   if (mLoadItem->mMapMontage)
-    mBufferManager->CopyImageBuffer(1, mBufToLoadInto, mShowAfterLoad);
+    mBufferManager->CopyImageBuffer(1, mBufToLoadInto, mShowAfterLoad & 1);
   if (mLoadItem->mRotOnLoad)
     RotateMap(&mImBufs[mBufToLoadInto], false);
-  if (mShowAfterLoad) {
+  if (mShowAfterLoad & 1) {
     mWinApp->SetCurrentBuffer(mBufToLoadInto);
     Redraw();
+  }
+
+  // For an interactive load, see if this is a map with hole vectors from a new grid and
+  // potentially replace the IS vectors
+  if ((mShowAfterLoad & 2) && mHelper->mMultiGridDlg && 
+    (mLoadItem->mXHoleISSpacing[0] != 0. || mLoadItem->mYHoleISSpacing[0] != 0.)) {
+    gridInd = mWinApp->mMultiGridTasks->GridIndexOfCurrentNavFile();
+    if (gridInd >= 0 && gridInd != mGridIndexOfMap) {
+      mGridIndexOfMap = gridInd;
+      hexGrid = (mLoadItem->mXHoleISSpacing[2] != 0. ||
+        mLoadItem->mYHoleISSpacing[2] != 0.) ? 1 : 0;
+      if (!mHelper->ConfirmReplacingShiftVectors(3, hexGrid)) {
+        mHelper->AssignNavItemHoleVectors(mLoadItem);
+      }
+    }
   }
 }
 
@@ -10144,7 +10160,7 @@ void CNavigatorDlg::AcquireNextTask(int param)
   double ISX, ISY, ticks;
   BOOL runIt, vppNearestSave;
   CameraParameters *camParams = mWinApp->GetActiveCamParam();
-  CMapDrawItem *item, *nextItem, *mapItem;
+  CMapDrawItem *item, *nextItem, *mapItem, *vecMap, *drawnMap;
   TiltSeriesParam *tsp;
   FilterParams *filtParam = mWinApp->GetFilterParams();
   MultiShotParams *msParams = mHelper->GetMultiShotParams();
@@ -10386,9 +10402,19 @@ void CNavigatorDlg::AcquireNextTask(int param)
       if (err < 0)
         ind = mFoundItem;
       if (err > 0) {
-
+        SEMTrace('1', "Cannot find map this item is drawn on: %s", (LPCTSTR)str);
       } else if (ind != mLastMapForVectors) {
         mLastMapForVectors = ind;
+        drawnMap = mapItem;
+        if (mapItem->mXHoleISSpacing[0] == 0. && mapItem->mYHoleISSpacing[0] == 0. &&
+          mWinApp->mMultiGridTasks->GetDoingMulGridSeq()) {
+          ind = GetMatchingMapWithVectors(mapItem, vecMap);
+          if (ind >= 0) {
+            mapItem = vecMap;
+            PrintfToLog("Taking hole IS vectors from map item %d because the map this"
+              " item is drawn on has no vectors", ind + 1);
+          }
+        }
         if (mapItem->mXHoleISSpacing[0] == 0. && mapItem->mYHoleISSpacing[0] == 0.) {
           err = 0;
           if (!mWinApp->mMultiGridTasks->GetDoingMulGridSeq()) {
@@ -10396,6 +10422,7 @@ void CNavigatorDlg::AcquireNextTask(int param)
               " vectors", (LPCTSTR)mapItem->mLabel);
             err = 1;
           }
+         
         } else {
 
           // Assign the vectors and adjust them if possible
@@ -10408,8 +10435,8 @@ void CNavigatorDlg::AcquireNextTask(int param)
                 mapItem->mLabel, (LPCTSTR)str);
           }
           if (err <= 0)
-            PrintfToLog("Changed hole shifts for items drawn on map %s",
-            (LPCTSTR)mapItem->mLabel);
+            PrintfToLog("Changed hole shifts%s for items drawn on map %s",
+            err < 0 ? "" : " and transformed them", (LPCTSTR)drawnMap->mLabel);
         }
       }
     }
@@ -10424,6 +10451,10 @@ void CNavigatorDlg::AcquireNextTask(int param)
 
     // PROCESS THE PRECEDING ACTION
     switch (mAcqSteps[mAcqStepIndex]) {
+      
+      // A note on errors.  Anything that calls ErrorOccurred(1) will stop the acquisition
+      // Anything that does not call this must leave a failure flag set that can be tested
+      // here, otherwise it will plow on to next step instead of skipping to next item
 
       // After reconnect
     case ACQ_MAX_STEPS +1:
@@ -10633,8 +10664,14 @@ void CNavigatorDlg::AcquireNextTask(int param)
 
       // But Refine ZLP could just go on
     case NAACT_REFINE_ZLP:
-      if (mWinApp->mFilterTasks->GetLastRZlpFailed() && (mAcqParm->refineZlpOptions & 2))
-        mDoRefineZlpNextItem = true;
+      if (mWinApp->mFilterTasks->GetLastRZlpFailed()) {
+        if (mAcqParm->refineZlpOptions & 2)
+          mDoRefineZlpNextItem = true;
+        else if (mAcqParm->noMBoxOnError)
+          SkipToNextItemInAcquire(item, "refining the ZLP");
+        else
+          mAcquireEnded = 1;
+      }
       break;
 
       // Record that eucentricity was done
@@ -12138,6 +12175,9 @@ int CNavigatorDlg::GetCurrentOrAcquireItem(CMapDrawItem *&item)
   return index;
 }
 
+// Finds the map that the item at the given index was on, or the item iself if is a map
+// The item pointer is returned in item, error messages in mess, and it returns 1 for an
+// error, 0 if the itself is a map, and -1 if it the map drawn on
 int CNavigatorDlg::GetMapOrMapDrawnOn(int index, CMapDrawItem *&item, CString &mess)
 {
   if (index < 0) {
@@ -12164,6 +12204,29 @@ int CNavigatorDlg::GetMapOrMapDrawnOn(int index, CMapDrawItem *&item, CString &m
     mess.Format("The map that Navigator item %d was drawn on is no longer in the "
       " table", index + 1);
     return 1;
+  }
+  return -1;
+}
+
+// Find the first map in the array that has hole vectors and whose acquisition properties
+// match that of the given map
+int CNavigatorDlg::GetMatchingMapWithVectors(CMapDrawItem *map, CMapDrawItem *&vecMap)
+{
+  CMapDrawItem *item;
+  for (int ind = 0; ind < (int)mItemArray.GetSize(); ind++) {
+    item = mItemArray[ind];
+    if (item->IsMap() && (item->mXHoleISSpacing[0] != 0. ||
+      item->mYHoleISSpacing[0] != 0.) && item->mMapMagInd == map->mMapMagInd &&
+      item->mMapSpotSize == map->mMapSpotSize &&
+      ((FEIscope && item->mMapProbeMode == map->mMapProbeMode) ||
+      (JEOLscope && item->mMapAlpha == map->mMapAlpha)) &&
+      item->mMapLowDoseConSet == map->mMapLowDoseConSet &&
+      ((item->mMapLowDoseConSet != VIEW_CONSET &&
+        item->mMapLowDoseConSet != SEARCH_CONSET) ||
+        fabs(item->mDefocusOffset - map->mDefocusOffset) < 1.e-2)) {
+      vecMap = item;
+      return ind;
+    }
   }
   return -1;
 }

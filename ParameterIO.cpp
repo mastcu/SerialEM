@@ -634,6 +634,8 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
         msParams->adjustingXform.xpy = itemFlt[7];
         msParams->adjustingXform.ypx = itemFlt[8];
         msParams->adjustingXform.ypy = itemFlt[9];
+        if (!itemEmpty[10])
+          msParams->xformMinuteTime = itemInt[10];
       } else if (NAME_IS("CustomHoleX")) {
         for (index = 1; index < MAX_TOKENS && !itemEmpty[index]; index++)
           msParams->customHoleX.push_back(itemFlt[index]);
@@ -888,6 +890,8 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
         }
         if (!itemEmpty[26] && itemInt[26] >= 0)
           mgParams->C1orC2condenserAp = itemInt[26];
+        if (!itemEmpty[27])
+          mgParams->msVectorSource = itemInt[27];
 
       } else if (strItems[0].Find("MG") == 0 && (strItems[0].Find("MMMstate") == 2 ||
         strItems[0].Find("State") == 7)) {
@@ -1969,11 +1973,11 @@ void CParameterIO::WriteSettings(CString strFileName)
       msParams->autoAdjMethod, msParams->autoAdjHoleSize, msParams->autoAdjLimitFrac,
       msParams->stepAdjSetPrevExp ? 1 : 0, msParams->stepAdjPrevExp);
     mFile->WriteString(oneState);
-    oneState.Format("HoleAdjustXform %d %d %d %d %d %f %f %f %f\n",
+    oneState.Format("HoleAdjustXform %d %d %d %d %d %f %f %f %f %d\n",
       msParams->origMagOfArray[0], msParams->origMagOfArray[1], msParams->origMagOfCustom,
       msParams->xformFromMag, msParams->xformToMag, msParams->adjustingXform.xpx,
       msParams->adjustingXform.xpy, msParams->adjustingXform.ypx, 
-      msParams->adjustingXform.ypy);
+      msParams->adjustingXform.ypy, msParams->xformMinuteTime);
     mFile->WriteString(oneState);
     if (msParams->customHoleX.size()) {
       OutputVector("CustomHoleX", (int)msParams->customHoleX.size(), NULL,
@@ -2067,7 +2071,7 @@ void CParameterIO::WriteSettings(CString strFileName)
       snapParams->compression, snapParams->jpegQuality, snapParams->skipOverlays);
     mFile->WriteString(oneState);
     oneState.Format("MultiGridParams %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d"
-      " %d %d %d %d %d %d %d %d %d\n", mgParams->appendNames ? 1 : 0,
+      " %d %d %d %d %d %d %d %d %d %d\n", mgParams->appendNames ? 1 : 0,
       mgParams->useSubdirectory ? 1 : 0, mgParams->setLMMstate ? 1 : 0,
       mgParams->LMMstateType, mgParams->removeObjectiveAp ? 1 : 0,
       mgParams->setCondenserAp ? 1 : 0, mgParams->condenserApSize, mgParams->LMMmontType,
@@ -2078,7 +2082,7 @@ void CParameterIO::WriteSettings(CString strFileName)
       mgParams->runFinalAcq ? 1 : 0, mgParams->MMMnumXpieces, mgParams->MMMnumYpieces,
       mgParams->framesUnderSession ? 1 : 0, mgParams->runMacroAfterLMM ? 1 : 0,
       mgParams->macroToRun, mgParams->refineAfterRealign ? 1 : 0, 
-      mgParams->refineImageType, mgParams->C1orC2condenserAp);
+      mgParams->refineImageType, mgParams->C1orC2condenserAp, mgParams->msVectorSource);
     mFile->WriteString(oneState);
     oneState.Format("MGLMMstate %d %s\n", mgParams->LMMstateNum,
       (LPCTSTR)mgParams->LMMstateName);

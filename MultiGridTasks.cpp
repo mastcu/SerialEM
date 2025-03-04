@@ -97,6 +97,7 @@ CMultiGridTasks::CMultiGridTasks()
     mMontSetupConsetSizes[i] = 0;
   }
   mParams.framesUnderSession = false;
+  mParams.msVectorSource = 0;
   mPctStatMidCrit = 0.33f;
   mPctStatRangeCrit = 0.45f;
   mPctRightAwayFrac = 0.5f;
@@ -493,6 +494,7 @@ void CMultiGridTasks::StopMulGridSeq()
   montP = mWinApp->GetMontParam();
   *montP = mSaveMasterMont;
   RestoreImposedParams();
+  ReopenMainLog(-1);
   mCamNumForFrameDir = -1;
 
   // Start restoring apertures, loop back in until done
@@ -551,6 +553,28 @@ void CMultiGridTasks::RestoreImposedParams()
     mCamera->SetNumberedFramePrefix(mSavedNumberedPrefix);
     mCamera->SetNumberedFrameFolder(mSavedNumberedFolder);
   }
+}
+
+/*
+ * If the current log is not the main log, close it and reopen the main one, giving a
+ * message about the previous acquire if idVal is not negative.
+ */
+void CMultiGridTasks::ReopenMainLog(int idVal)
+{
+  CString str = mWinApp->mLogWindow->GetSaveFile();
+  if (mMainLogName.IsEmpty() || !str.CompareNoCase(mMainLogName))
+    return;
+  mWinApp->mLogWindow->DoSave();
+  mWinApp->mLogWindow->CloseLog();
+  mWinApp->AppendToLog(mWinApp->mDocWnd->DateTimeForTitle());
+  if (idVal >= 0)
+    PrintfToLog("Navigator Acquire %s for grid # %d", mNavigator->GetAcquireEnded() ?
+      "finished" : "failed", idVal);
+  else
+    PrintfToLog("Multiple grid operations ended");
+  SEMAppendToLog("Log for Acquire is in " + str);
+  mWinApp->mLogWindow->ReadAndAppend(mMainLogName);
+
 }
 
 /*
@@ -649,7 +673,8 @@ void CMultiGridTasks::UserResumeMulGridSeq()
     if (!mSingleGridMode)
       mess += "\n\n\"Skip to Next Grid\" to abandon this grid and go to the next one";
     answer = SEMThreeChoiceBox(mess, "Redo Last", "Do Next", 
-      mSingleGridMode ? "" : "Skip to Next Grid", 1);
+      mSingleGridMode ? "" : "Skip to Next Grid", mSingleGridMode ?
+      MB_QUESTION : MB_YESNOCANCEL);
     if (answer == IDYES)
       resume = 1;
     else if (answer == IDNO)
@@ -699,7 +724,7 @@ void CMultiGridTasks::MGActMessageBox(CString &errStr)
  * Start procedure to realign after loading grid
  */
 int CMultiGridTasks::RealignReloadedGrid(CMapDrawItem *item, float expectedRot, 
-  bool moveInZ, float maxRotation, int transformNav, CString &errStr)
+  bool moveInZ, float maxRotation, int transformNav, CString &errStr, int jcdInd)
 {
   ControlSet *conSet = mWinApp->GetConSets() + TRACK_CONSET;
   int numPieces, numFull, ixMin, iyMin, ixMax, iyMax, midX, midY, delX, delY;
@@ -724,6 +749,7 @@ int CMultiGridTasks::RealignReloadedGrid(CMapDrawItem *item, float expectedRot,
   mRRGtransformNav = B3DMAX(0, B3DMIN(2, transformNav));
   mRRGitem = item;
   mRRGWasAboveXformLimit = false;
+  mRRGjcdIndex = jcdInd;
 
   // Require a montage with autodoc info
   if (!mNavigator) {
@@ -1147,12 +1173,14 @@ void CMultiGridTasks::AlignNewReloadImage()
 {
   int err, ind, oldReg, newReg;
   float xShift, yShift, xSign, rotBest, scaleMax, xTiltFac, yTiltFac, dxy[2], incDxy[2];
-  float newXform[6], oldInvXf[6], incXform[6], theta, resid;
+  float newXform[6], oldInvXf[6], incXform[6], theta, resid, smag, stretch, phi;
   double xStage, yStage, zStage, transX, transY;
   bool simpleAlign;
   int curInd = B3DMAX(0, mRRGcurDirection);
   CString mess, str;
-  ScaleMat bMat, bInv, incMat;
+  ScaleMat bMat, bInv, incMat, rotMat;
+  JeolCartridgeData jcd;
+  MGridMultiShotParams mgParam;
 
   mess = "Error in autoalign routine aligning to map piece";
   simpleAlign = (mBigRotation && mRRGcurDirection > 0) ||
@@ -1319,6 +1347,29 @@ void CMultiGridTasks::AlignNewReloadImage()
     ind = mNavigator->TransformToCurrentReg(oldReg, incMat, incDxy, 0, 0);
     UndoOrRedoMarkerShift(true);
     PrintfToLog("%d items transformed to new registration", ind);
+
+    // Given a grid index from the dialog, see if the grid has multishot settings with
+    // hole vectors and rotate those vector ins specimen space by the angle extracted
+    // from the incremental transform
+    if (mRRGjcdIndex >= 0) {
+      jcd = mCartInfo->GetAt(mRRGjcdIndex);
+      if (jcd.multiShotParamIndex >= 0 &&
+        jcd.multiShotParamIndex < (int)mMGMShotParamArray.GetSize()) {
+        mgParam = mMGMShotParamArray.GetAt(jcd.multiShotParamIndex);
+        if (mgParam.values[MS_holeMagIndex] > 0) {
+          bMat = mShiftManager->IStoSpecimen((int)mgParam.values[MS_holeMagIndex]);
+          amatToRotmagstr(incMat.xpx, incMat.xpy, incMat.ypx, incMat.ypy, &theta, &smag,
+            &stretch, &phi);
+          rotMat = mNavHelper->GetRotationMatrix(theta, false);
+          bInv = MatMul(bMat, rotMat);
+          incMat = MatMul(bInv, MatInv(bMat));
+          TransformStoredVectors(mgParam, incMat);
+          mMGMShotParamArray.SetAt(jcd.multiShotParamIndex, mgParam);
+          PrintfToLog("IS vectors in this grid\'s Multiple Record parameters rotated by "
+            "%.2f deg", theta);
+        }
+      }
+    }
 
     if (!mRRGitem->mGridMapXform)
       mRRGitem->mGridMapXform = new float[6];
@@ -1994,8 +2045,12 @@ int CMultiGridTasks::StartGridRuns(int LMneedsLD, int MMMneedsLD, int finalNeeds
   int finalCamera, bool undoneOnly)
 {
   int err, grid, ind, apSize = 0, numAcq, numTS, acqType, numFail = 0, numDark = 0;
-  int magInd, camera, ldArea, numPoly;
+  int magInd, camera, ldArea, numPoly, jnd, numMSparam = 0, maxStamp, minStamp;
+  int numXformed = 0, paramXformable = 0, curSetXformable = 0, backXformable = 0;
+  int backXfStamp, subXfStamp;
   float halfx, halfy, size;
+  double dists[3], avgDist, angle;
+  FloatVec msDists, msAngles;
   ScaleMat cam2st;
   CFileStatus status;
   JeolCartridgeData jcd;
@@ -2007,16 +2062,18 @@ int CMultiGridTasks::StartGridRuns(int LMneedsLD, int MMMneedsLD, int finalNeeds
   NavAcqParams *testAcqParams;
   NavAcqAction *testActions;
   MultiShotParams testMSparams;
+  MultiShotParams *curMSparams;
+  MGridMultiShotParams mgMSparam;
   ZbyGParams *zbygParam;
   StateParams *state;
   int *stateNums;
-  IntVec dlgIndToJcdInd;
+  IntVec dlgIndToJcdInd, gridsDoingMulShot;
   CameraParameters *camParams = mWinApp->GetCamParams() + finalCamera;
   LowDoseParams *ldp = mWinApp->GetLowDoseParams();
   CMapDrawItem *item, *mapItem;
   MapItemArray *itemArray;
   BOOL LDforZbyG, usingView;
-  bool noFrameSubs, movable, doRefine, doPolyMonts;
+  bool noFrameSubs, movable, doRefine, doPolyMonts, fpMultiShot, sameXform;
   bool apForLMM = false;
   bool stateForLMM = false;
   bool stateForMMM = false;
@@ -2114,7 +2171,7 @@ int CMultiGridTasks::StartGridRuns(int LMneedsLD, int MMMneedsLD, int finalNeeds
         "\"Aligned\" if it is still aligned\n"
         "\"Disturbed\" if the realign to grid map routine needs to be run", jcd.id);
 
-      if (SEMThreeChoiceBox(str, "Aligned", "Disturbed", "") == IDYES)
+      if (SEMThreeChoiceBox(str, "Aligned", "Disturbed", "", MB_QUESTION) == IDYES)
         mLoadedGridIsAligned = 1;
       else
         mLoadedGridIsAligned = 0;
@@ -2165,6 +2222,25 @@ int CMultiGridTasks::StartGridRuns(int LMneedsLD, int MMMneedsLD, int finalNeeds
   if (mParams.acquireLMMs && mParams.runMacroAfterLMM) {
     if (mWinApp->mMacroProcessor->EnsureMacroRunnable(mParams.macroToRun))
       return 1;
+  }
+
+  // Do final check for states
+  if (mParams.acquireLMMs && CheckStatesInRange(&mParams.LMMstateNum,
+    &mParams.LMMstateName, 1, "grid mapping"))
+    return 1;
+  if (mParams.acquireMMMs && CheckStatesInRange(mParams.MMMstateNums,
+    mParams.MMMstateNames, 4, "medium-mag mapping"))
+    return 1;
+  if (mParams.runFinalAcq) {
+    if (CheckStatesInRange(mParams.finalStateNums,
+      mParams.finalStateNames, 4, "final acquisition global state"))
+      return 1;
+    for (grid = 0; grid < mNumGridsToRun; grid++) {
+      jcd = mCartInfo->GetAt(mJcdIndsToRun[grid]);
+      str.Format("final acquisition state for grid %d", jcd.id);
+      if (CheckStatesInRange(jcd.acqStateNums, jcd.acqStateNames, 4, str))
+        return 1;
+    }
   }
 
   // If starting with MMMs and fitting polygons, check all nav files for files to open
@@ -2258,6 +2334,8 @@ int CMultiGridTasks::StartGridRuns(int LMneedsLD, int MMMneedsLD, int finalNeeds
       }
       acqType = testAcqParams->acquireType;
       testAcqParams->acquireType = testAcqParams->nonTSacquireType;
+      if (testAcqParams->acquireType == ACQUIRE_MULTISHOT)
+        testAcqParams->useMapHoleVectors = mParams.msVectorSource == 0;
       if (jcd.multiShotParamIndex >= 0) {
         MGridMultiShotParams mgParam = mMGMShotParamArray.GetAt(jcd.multiShotParamIndex);
         GridToMultiShotSettings(mgParam, &testMSparams);
@@ -2280,8 +2358,8 @@ int CMultiGridTasks::StartGridRuns(int LMneedsLD, int MMMneedsLD, int finalNeeds
         } else {
           LDforZbyG = finalNeedsLD;
           stateNums = mParams.finalStateNums;
-          if (jcd.acqStateNums[0] >= 0 || jcd.acqStateNums[1] >= 0 || jcd.acqStateNums[2] >= 0
-            || jcd.acqStateNums[3] >= 0)
+          if (jcd.acqStateNums[0] >= 0 || jcd.acqStateNums[1] >= 0 || 
+            jcd.acqStateNums[2] >= 0 || jcd.acqStateNums[3] >= 0)
             stateNums = &jcd.acqStateNums[0];
         }
 
@@ -2407,13 +2485,13 @@ int CMultiGridTasks::StartGridRuns(int LMneedsLD, int MMMneedsLD, int finalNeeds
         " set the option to use the hole combiner.\n\nDo you really want to proceed?", 
         MB_QUESTION) == IDNO)
       return 1;
-    if (!finalParams->useMapHoleVectors && 
+    /*if (!finalParams->useMapHoleVectors && 
       finalParams->nonTSacquireType == ACQUIRE_MULTISHOT && mNumGridsToRun > 1) {
       AfxMessageBox("You are trying to do Multiple Records on \n"
         "more than one grid and did not select to use map hole vectors for shifts", 
         MB_EXCLAME);
       return 1;
-    }
+    }*/
   }
 
   // Set flags for parameter swaps needed
@@ -2421,17 +2499,189 @@ int CMultiGridTasks::StartGridRuns(int LMneedsLD, int MMMneedsLD, int finalNeeds
   // parameters and/or comes through as 0 in what is tested
   mUsingAutoContour = mParams.acquireLMMs && mParams.autocontour;
   if (mParams.runFinalAcq) {
-    mUsingMultishot = finalParams->nonTSacquireType == ACQUIRE_MULTISHOT;
-    if (!mUsingMultishot && mMGMShotParamArray.GetSize() > 0) {
-      for (grid = 0; grid < mNumGridsToRun && !mUsingMultishot; grid++) {
+
+    // Make list of grids using multishot and number with params in case vectors
+    // come from settings
+    fpMultiShot = finalParams->nonTSacquireType == ACQUIRE_MULTISHOT;
+    mUsingMultishot = fpMultiShot;
+    if (mMGMShotParamArray.GetSize() > 0) {
+      for (grid = 0; grid < mNumGridsToRun; grid++) {
         jcd = mCartInfo->GetAt(mJcdIndsToRun[grid]);
         if (jcd.finalDataParamIndex >= 0) {
           MGridAcqItemsParams acqParam =
             mMGAcqItemsParamArray.GetAt(jcd.finalDataParamIndex);
-          if (acqParam.params.nonTSacquireType == ACQUIRE_MULTISHOT)
+          if (acqParam.params.nonTSacquireType == ACQUIRE_MULTISHOT) {
             mUsingMultishot = true;
+            gridsDoingMulShot.push_back(grid);
+            if (jcd.multiShotParamIndex >= 0)
+              numMSparam++;
+          } 
+        } else if (fpMultiShot) {
+          gridsDoingMulShot.push_back(grid);
+          if (jcd.multiShotParamIndex >= 0)
+            numMSparam++;
         }
       }
+    }
+
+    // If more than one grid has multishot and using settings, check that each has them
+    if ((int)gridsDoingMulShot.size() > 1 && mParams.msVectorSource) {
+      if (numMSparam < (int)gridsDoingMulShot.size()) {
+        str.Format("You set up to do Multiple Records on %d grids and \n"
+          "selected for image shifts vectors to come from settings\n"
+          "but there are saved settings for only %d of the grids",
+          gridsDoingMulShot.size(), numMSparam);
+        AfxMessageBox(str, MB_EXCLAME);
+        return 1;
+      }
+
+      // Make sure they have unique vectors: get distance and angle for each
+      mNavHelper->UpdateMultishotIfOpen();
+      curMSparams = mNavHelper->GetMultiShotParams();
+      sameXform = true;
+      for (ind = 0; ind < numMSparam; ind++) {
+        grid = gridsDoingMulShot[ind];
+        jcd = mCartInfo->GetAt(mJcdIndsToRun[grid]);
+        mgMSparam = mMGMShotParamArray.GetAt(jcd.multiShotParamIndex);
+        GridToMultiShotSettings(mgMSparam, &testMSparams);
+        mNavHelper->GetMultishotDistAndAngles(&testMSparams, testMSparams.doHexArray,
+          dists, avgDist, angle);
+        msDists.push_back((float)avgDist);
+        msAngles.push_back((float)angle);
+
+        // Keep track of number xformable etc, and if the xforms are the same
+        magInd = (int)mgMSparam.values[MS_origMagOfArray];
+        if (magInd > 0) {
+          numXformed++;
+          if (testMSparams.xformFromMag == magInd)
+            backXformable++;
+        } else {
+          if (testMSparams.xformFromMag == -magInd)
+            paramXformable++;
+        }
+        if (curMSparams->xformFromMag == B3DABS(magInd))
+          curSetXformable++;
+        if (!ind) {
+          minStamp = maxStamp = testMSparams.xformMinuteTime;
+        } else {
+          ACCUM_MIN(minStamp, testMSparams.xformMinuteTime);
+          ACCUM_MAX(maxStamp, testMSparams.xformMinuteTime);
+        }
+      }
+
+      // Compare distances and angles
+      for (ind = 0; ind < numMSparam - 1; ind++) {
+        for (jnd = ind + 1; jnd < numMSparam; jnd++) {
+          if (fabs(msDists[ind] - msDists[jnd]) < 1.e-4 &&
+            fabs(msAngles[ind] - msAngles[jnd]) < 1.e-3) {
+            grid = gridsDoingMulShot[ind];
+            jcd = mCartInfo->GetAt(mJcdIndsToRun[grid]);
+            err = jcd.id;
+            grid = gridsDoingMulShot[jnd];
+            jcd = mCartInfo->GetAt(mJcdIndsToRun[grid]);
+            str.Format("The Multiple Record settings for grids %d and %d have the same"
+              " vectors", err, jcd.id);
+            AfxMessageBox(str, MB_EXCLAME);
+            return 1;
+          }
+        }
+      }
+
+      // Determine whether to use new transforms for any and whether to back-transform
+      backXfStamp = -2;
+      subXfStamp = -2;
+      if (curSetXformable &&
+        ((minStamp == maxStamp && minStamp != curMSparams->xformMinuteTime) ||
+        (minStamp != maxStamp && maxStamp == curMSparams->xformMinuteTime))) {
+
+        // All the same and a new one was done, or the current doesn't match the earliest
+        str = "You have made a new refining transform for vectors since the";
+        if (minStamp != maxStamp)
+          str += " earliest";
+        str += " Multiple Record settings were stored.  Do you want to use it";
+        if (minStamp != maxStamp)
+          str += " in the earliest settings";
+        str += "?   Press:\n\n";
+        str += backXformable ? "\"Use New for Raw\"" : "\"Use New\"";
+        str += " to apply the new transform to vectors that have not been "
+          "transformed";
+        str += minStamp != maxStamp ? " in the earliest settings\n" : "\n";
+        if (backXformable) {
+          str += "\"Use New for All\" to use the new transform for all vectors";
+          if (minStamp != maxStamp)
+            str += " in the earliest settings";
+          str += ", refining ones that have already been transformed\n";
+        }
+        str += "\"Use Old\" to go on with the transformations stored in the settings";
+        ind = SEMThreeChoiceBox(str, backXformable ? "Use New for Raw" : "Use New",
+          backXformable ? "Use New for All" : "Use Old",
+          backXformable ? "Use Old" : "", backXformable ? MB_YESNOCANCEL : MB_QUESTION);
+        if (ind == IDYES)
+          subXfStamp = minStamp;
+        if (backXformable && ind == IDNO) {
+          subXfStamp = minStamp;
+          backXfStamp = minStamp;
+        }
+
+      } else if (curSetXformable && minStamp != curMSparams->xformMinuteTime) {
+
+        // Otherwise, multiple stored one and a new current one!
+        str = "You have made a new refining transform for vectors since some"
+          " Multiple Record settings were stored.  Do you want to use it?   Press:\n\n"
+          "\"Use for Earliest\" to apply the new transform only to the settings with the"
+          " oldest stored transforms\n"
+          "\"Use for All\" to apply the new transform instead in all stored settings\n"
+          "\"Use Old\" to go on with the transformations stored in the settings";
+        ind = SEMThreeChoiceBox(str, "Use for Earliest", "Use for All", "Use Old",
+          MB_YESNOCANCEL);
+        if (ind == IDYES)
+          subXfStamp = minStamp;
+        if (ind == IDNO)
+          subXfStamp = -1;
+        if (ind != IDCANCEL && backXformable) {
+          if (AfxMessageBox("Do you want to use the new transform to refine\n"
+            " vectors that have already been transformed?", MB_QUESTION) == IDYES) {
+            backXfStamp = ind == IDYES ? minStamp : -1;
+          }
+        }
+      }
+    }
+
+    // Loop on grids doing appropriate actions ending in transformed vectors if possible
+    for (ind = 0; ind < numMSparam; ind++) {
+      grid = gridsDoingMulShot[ind];
+      jcd = mCartInfo->GetAt(mJcdIndsToRun[grid]);
+      mgMSparam = mMGMShotParamArray.GetAt(jcd.multiShotParamIndex);
+      GridToMultiShotSettings(mgMSparam, &testMSparams);
+      magInd = (int)mgMSparam.values[MS_origMagOfArray];
+
+      // Backtransform if appropriate
+      if ((backXfStamp == -1 || backXfStamp == testMSparams.xformMinuteTime) && magInd > 0
+        && magInd == testMSparams.xformFromMag) {
+        TransformStoredVectors(mgMSparam, MatInv(testMSparams.adjustingXform));
+        magInd = -magInd;
+        mgMSparam.values[MS_origMagOfArray] = (float)magInd;
+      }
+
+      // Substitute current transform if appropriate
+      if ((subXfStamp == -1 || subXfStamp == testMSparams.xformMinuteTime) && magInd < 0
+        && curMSparams->xformFromMag == -magInd) {
+        testMSparams.adjustingXform = curMSparams->adjustingXform;
+        mgMSparam.values[MS_xformXpx] = curMSparams->adjustingXform.xpx;
+        mgMSparam.values[MS_xformXpy] = curMSparams->adjustingXform.xpy;
+        mgMSparam.values[MS_xformYpx] = curMSparams->adjustingXform.ypx;
+        mgMSparam.values[MS_xformYpy] = curMSparams->adjustingXform.ypy;
+        mgMSparam.values[MS_xformMinuteTime] = (float)curMSparams->xformMinuteTime;
+      }
+
+      // Transform unconditionally now
+      if (magInd < 0 && -magInd == testMSparams.xformFromMag) {
+        TransformStoredVectors(mgMSparam, testMSparams.adjustingXform);
+        mgMSparam.values[MS_origMagOfArray] = -(float)magInd;
+        PrintfToLog("Applied adjusting transform to IS vectors in multiple record"
+          " settings for grid %d", jcd.id);
+      }
+      mMGMShotParamArray.SetAt(jcd.multiShotParamIndex, mgMSparam);
     }
   }
 
@@ -2729,6 +2979,21 @@ void CMultiGridTasks::AddToSeqForRestoreFromLM(bool &apForLMM, bool &stateForLMM
     }
     apForLMM = false;
   }
+}
+// Check if a state number is out of range and issue message
+int CMultiGridTasks::CheckStatesInRange(int *stateNums, CString *names, int numStates,
+  CString mess)
+{
+  CString str;
+  for (int ind = 0; ind < numStates; ind++) {
+    if (stateNums[ind] >= (int)mStateArray->GetSize()) {
+      str.Format("State # %d (%s) for %s is no longer in the array of states",
+        stateNums[ind], (LPCTSTR)names[ind], (LPCTSTR)mess);
+      AfxMessageBox(str, MB_EXCLAME);
+      return 1;
+    }
+  }
+  return 0;
 }
 
 /*
@@ -3126,14 +3391,7 @@ void CMultiGridTasks::DoNextSequenceAction(int resume)
           MGSTAT_FLAG_MMM_DONE : MGSTAT_FLAG_ACQ_DONE, 1);
       else
         ChangeStatusFlag(mCurrentGrid, MGSTAT_FLAG_FAILED, 1);
-      str = mWinApp->mLogWindow->GetSaveFile();
-      mWinApp->mLogWindow->DoSave();
-      mWinApp->mLogWindow->CloseLog();
-      mWinApp->AppendToLog(mWinApp->mDocWnd->DateTimeForTitle());
-      PrintfToLog("Navigator Acquire %s for grid # %d", mNavigator->GetAcquireEnded() ?
-        "finished" : "failed", jcd.id);
-      SEMAppendToLog("Log for Acquire is in " + str);
-      mWinApp->mLogWindow->ReadAndAppend(mMainLogName);
+      ReopenMainLog(jcd.id);
       SaveSessionFileWarnIfError();
       break;
 
@@ -3498,6 +3756,8 @@ void CMultiGridTasks::DoNextSequenceAction(int resume)
       }
       msParam = mMGMShotParamArray.GetAt(jcd.multiShotParamIndex);
       GridToMultiShotSettings(msParam);
+      if (mParams.msVectorSource)
+        PrintfToLog("Using IS vectors from this grid\'s multiple Record settings");
     }
 
     if (mUsingAutoContour && jcd.autoContParamIndex >= 0 &&
@@ -3619,6 +3879,7 @@ void CMultiGridTasks::DoNextSequenceAction(int resume)
   case MGACT_TAKE_MMM:
     mNavHelper->CopyAcqParamsAndActionsToTemp(0);
     acqParams = mWinApp->GetNavAcqParams(2);
+    acqParams->useMapHoleVectors = mParams.msVectorSource == 0;
     acqParams->noMBoxOnError = true;
     if (mParams.MMMimageType > 0) {
       acqParams->acquireType = ACQUIRE_TAKE_MAP;
@@ -3652,6 +3913,7 @@ void CMultiGridTasks::DoNextSequenceAction(int resume)
     } else
       mNavHelper->CopyAcqParamsAndActionsToTemp(1);
     acqParams = mWinApp->GetNavAcqParams(2);
+    acqParams->useMapHoleVectors = mParams.msVectorSource == 0;
     acqParams->noMBoxOnError = true;
     CloseMainLogOpenForGrid("_final.log");
     mNavigator->SetCurAcqParmActions(2);
@@ -3833,6 +4095,23 @@ CString CMultiGridTasks::FullGridFilePath(int gridInd, CString suffix)
 }
 
 /*
+ * Determine which grid the current navigator file belongs to
+ */
+int CMultiGridTasks::GridIndexOfCurrentNavFile()
+{
+  CString nav, str;
+  if (!mWinApp->mNavigator || mSingleGridMode)
+    return -1;
+  nav = mWinApp->mNavigator->GetCurrentNavFile();
+  for (int ind = 0; ind < (int)mCartInfo->GetSize(); ind++) {
+    str = FullGridFilePath(-ind - 1, ".nav");
+    if (str == nav)
+      return ind;
+  }
+  return -1;
+}
+
+/*
  * Calls for next autonumbered file if th given file exists
  */
 void CMultiGridTasks::NextAutoFilenameIfNeeded(CString &str)
@@ -3921,7 +4200,8 @@ int CMultiGridTasks::RealignToGridMap(int jcdInd, bool askIfSave, bool applyLimi
   CMapDrawItem *item;
   if (PrepareAlignToGridMap(jcdInd, askIfSave, &item, errStr))
     return 1;
-  if (RealignReloadedGrid(item, 0., true, mRRGMaxRotation, applyLimits ? 2 : 1, errStr))
+  if (RealignReloadedGrid(item, 0., true, mRRGMaxRotation, applyLimits ? 2 : 1, errStr,
+    jcdInd))
     return 1;
   return 0;
 }
@@ -4192,8 +4472,32 @@ void CMultiGridTasks::GridToMultiShotSettings(MGridMultiShotParams &mgParam,
   COPY_MEMBER(inHoleOrMultiHole);
   COPY_MEMBER(skipCornersOf3x3);
   msParam->doHexArray = mgParam.values[MS_numHexRings] != 0;
-  if (msParam->doHexArray)
-    COPY_MEMBER(numHexRings);
+  COPY_MEMBER(numHexRings);
+  msParam->useCustomHoles = false;
+  if (msParam->doHexArray) {
+    msParam->holeMagIndex[1] = B3DNINT(mgParam.values[MS_holeMagIndex]);
+    msParam->origMagOfArray[1] = B3DNINT(mgParam.values[MS_origMagOfArray]);
+    msParam->hexISXspacing[0] = mgParam.values[MS_ISXspacing0];
+    msParam->hexISYspacing[0] = mgParam.values[MS_ISYspacing0];
+    msParam->hexISXspacing[1] = mgParam.values[MS_ISXspacing1];
+    msParam->hexISYspacing[1] = mgParam.values[MS_ISYspacing1];
+    msParam->hexISXspacing[2] = mgParam.values[MS_ISXspacing2];
+    msParam->hexISYspacing[2] = mgParam.values[MS_ISYspacing2];
+  } else {
+    msParam->holeMagIndex[0] = B3DNINT(mgParam.values[MS_holeMagIndex]);
+    msParam->origMagOfArray[0] = B3DNINT(mgParam.values[MS_origMagOfArray]);
+    msParam->holeISXspacing[0] = mgParam.values[MS_ISXspacing0];
+    msParam->holeISYspacing[0] = mgParam.values[MS_ISYspacing0];
+    msParam->holeISXspacing[1] = mgParam.values[MS_ISXspacing1];
+    msParam->holeISYspacing[1] = mgParam.values[MS_ISYspacing1];
+  }
+  msParam->xformFromMag = B3DNINT(mgParam.values[MS_xformFromMag]);
+  msParam->xformToMag = B3DNINT(mgParam.values[MS_xformToMag]);
+  msParam->adjustingXform.xpx = mgParam.values[MS_xformXpx];
+  msParam->adjustingXform.xpy = mgParam.values[MS_xformXpy];
+  msParam->adjustingXform.ypx = mgParam.values[MS_xformYpx];
+  msParam->adjustingXform.ypy = mgParam.values[MS_xformYpy];
+  msParam->xformMinuteTime = B3DNINT(mgParam.values[MS_xformMinuteTime]);
   if (mNavHelper->mMultiShotDlg)
     mNavHelper->mMultiShotDlg->UpdateSettings();
 }
@@ -4225,6 +4529,29 @@ void CMultiGridTasks::MultiShotToGridSettings(MGridMultiShotParams &mgParam)
   COPY_MEMBER(skipCornersOf3x3);
   mgParam.values[MS_numHexRings] = (float)
     (msParam->doHexArray ? msParam->numHexRings : 0);
+  mgParam.values[MS_origMagOfArray] = (float)
+    msParam->origMagOfArray[msParam->doHexArray ? 1 : 0];
+  mgParam.values[MS_holeMagIndex] = (float)
+    msParam->holeMagIndex[msParam->doHexArray ? 1 : 0];
+  mgParam.values[MS_ISXspacing0] = (float)(msParam->doHexArray ?
+    msParam->hexISXspacing[0] : msParam->holeISXspacing[0]);
+  mgParam.values[MS_ISYspacing0] = (float)(msParam->doHexArray ?
+    msParam->hexISYspacing[0] : msParam->holeISYspacing[0]);
+  mgParam.values[MS_ISXspacing1] = (float)(msParam->doHexArray ?
+    msParam->hexISXspacing[1] : msParam->holeISXspacing[1]);
+  mgParam.values[MS_ISYspacing1] = (float)(msParam->doHexArray ?
+    msParam->hexISYspacing[1] : msParam->holeISYspacing[1]);
+  mgParam.values[MS_ISXspacing2] = (float)(msParam->doHexArray ?
+    msParam->hexISXspacing[2] : 0.);
+  mgParam.values[MS_ISYspacing2] = (float)(msParam->doHexArray ?
+    msParam->hexISYspacing[2] : 0.);
+  mgParam.values[MS_xformFromMag] = (float)msParam->xformFromMag;
+  mgParam.values[MS_xformToMag] = (float)msParam->xformToMag;
+  mgParam.values[MS_xformXpx] = msParam->adjustingXform.xpx;
+  mgParam.values[MS_xformXpy] = msParam->adjustingXform.xpy;
+  mgParam.values[MS_xformYpx] = msParam->adjustingXform.ypx;
+  mgParam.values[MS_xformYpy] = msParam->adjustingXform.ypy;
+  mgParam.values[MS_xformMinuteTime] = (float)msParam->xformMinuteTime;
 }
 #undef COPY_MEMBER
 
@@ -4353,6 +4680,16 @@ void CMultiGridTasks::FocusPosToGridSettings(MGridFocusPosParams &fpParam)
   fpParam.values[FP_axisRotation] = (float)axisRot;
   fpParam.values[FP_focusXoffset] = (float)xOffset;
   fpParam.values[FP_focusYoffset] = (float)yOffset;
+}
+
+void CMultiGridTasks::TransformStoredVectors(MGridMultiShotParams &mgParam, ScaleMat mat)
+{
+  ApplyScaleMatrix(mat, mgParam.values[MS_ISXspacing0], mgParam.values[MS_ISYspacing0],
+    mgParam.values[MS_ISXspacing0], mgParam.values[MS_ISYspacing0]);
+  ApplyScaleMatrix(mat, mgParam.values[MS_ISXspacing1], mgParam.values[MS_ISYspacing1],
+    mgParam.values[MS_ISXspacing1], mgParam.values[MS_ISYspacing1]);
+  ApplyScaleMatrix(mat, mgParam.values[MS_ISXspacing2], mgParam.values[MS_ISYspacing2],
+    mgParam.values[MS_ISXspacing2], mgParam.values[MS_ISYspacing2]);
 }
 
 /*

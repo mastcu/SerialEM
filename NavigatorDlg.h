@@ -397,7 +397,7 @@ private:
   int mOverviewBinSave;
   BOOL mLoadingMap;         // Flag that map is being loaded
   int mBufToLoadInto;      // Buffer being loaded to
-  BOOL mShowAfterLoad;     // Flag to display after loading map
+  int mShowAfterLoad;      // Flag to display after loading map, plus 2 for interactive
   int mShiftAIndex;        // Starting index for doing shift A
   int mShiftDIndex;        // Starting index for doing shift D
   int mShiftTIndex;        // Starting index for doing shift T
@@ -535,6 +535,7 @@ private:
   int mNumWrongMapWarnings;    // # of warnings given when nav table not right for map
   bool mReloadTableOnNextAdd;  // Flag set by multigrid to work around vanishing map bug
   bool mDoRefineZlpNextItem;   // Flag to do it unconditionally because it failed
+  int mGridIndexOfMap;         // Index of grid that last map was loaded from
 
 public:
   afx_msg void OnGotoMarker();
@@ -565,6 +566,7 @@ public:
   afx_msg void OnRealigntoitem();
   int GetCurrentOrAcquireItem(CMapDrawItem *&item);
   int GetMapOrMapDrawnOn(int index, CMapDrawItem *&item, CString &mess);
+  int GetMatchingMapWithVectors(CMapDrawItem *item, CMapDrawItem *&vecMap);
   int RealignToOtherItem(int index, BOOL restore, float resetISalignCrit, 
     int maxNumResetAlign, int leaveZeroIS, int realiFlags, int setForScaled);
   int RealignToAnItem(CMapDrawItem * item, BOOL restore, float resetISalignCrit, 
@@ -613,7 +615,8 @@ public:
   CStatic m_statListHeader;
   void GetSuperCoords(int & superX, int &superY);
   int ShiftItemsByAlign(void);
-  int DoLoadMap(bool synchronous, CMapDrawItem *item, int bufToReadInto, BOOL display = true);
+  int DoLoadMap(bool synchronous, CMapDrawItem *item, int bufToReadInto, BOOL display = true,
+    bool interactive = false);
   CButton m_butTiltSeries;
   BOOL m_bTiltSeries;
   CButton m_butFileAtItem;
