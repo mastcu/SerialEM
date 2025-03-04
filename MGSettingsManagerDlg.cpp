@@ -541,7 +541,9 @@ void CMGSettingsManagerDlg::FormatMultiShotSettings(MGridMultiShotParams &param,
 {
   CString line, one;
   float *vals = param.values;
+  MultiShotParams msParams;
   int nxHoles, nyHoles, doCen = B3DNINT(vals[MS_doCenter]);
+  double dists[3], dist, angle;
   str = "Within hole: one";
   if (B3DNINT(vals[MS_inHoleOrMultiHole]) & MULTI_IN_HOLE) {
     str.Format("Within hole: %d @ %.2f um, %scenter%s, ", B3DNINT(vals[MS_numShots0]),
@@ -557,14 +559,23 @@ void CMGSettingsManagerDlg::FormatMultiShotSettings(MGridMultiShotParams &param,
     nxHoles = B3DNINT(vals[MS_numHoles0]);
     nyHoles = B3DNINT(vals[MS_numHoles1]);
     if (B3DNINT(vals[MS_numHexRings]))
-      one.Format("Multi-hole: %d rings of hex pattern", B3DNINT(vals[MS_numHexRings]));
+      one.Format(";  Multi-hole: %d rings of hex pattern", B3DNINT(vals[MS_numHexRings]));
     else
-      one.Format("Multi-hole: %d by %d %s pattern", nxHoles, nyHoles,
-        (B3DNINT(vals[MS_skipCornersOf3x3]) && 
-        nxHoles == 3 && nyHoles == 3 )? "cross" : "rectangle");
+      one.Format(";  Multi-hole: %d by %d %s pattern", nxHoles, nyHoles,
+        (B3DNINT(vals[MS_skipCornersOf3x3]) &&  nxHoles == 3 && nyHoles == 3 ) ? 
+        "cross" : "rectangle");
     str += one;
+    if (vals[MS_origMagOfArray]) {
+      mMGTasks->GridToMultiShotSettings(param, &msParams);
+      mWinApp->mNavHelper->GetMultishotDistAndAngles(&msParams, msParams.doHexArray, dists,
+        dist, angle);
+      one.Format(" @ %.2f um, %.0f deg", dist, angle);
+      str += one;
+    } else {
+      str += " pattern";
+    }
   } else
-    str += "NO multiple holes";
+    str += ";  NO multiple holes";
 }
 
 // Format general settings, break lines as needed
