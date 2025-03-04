@@ -1207,9 +1207,11 @@ void CAutoTuning::SetRecordConSetForCTF()
     recSet->bottom = camParam->sizeY;
   }
   recSet->mode = SINGLE_FRAME;
-  recSet->alignFrames = 0;
   recSet->saveFrames = 0;
-  recSet->doseFrac = 0;
+  if (mCtfDriftSettling >= 0) {
+    recSet->alignFrames = 0;
+    recSet->doseFrac = 0;
+  }
   B3DCLAMP(recSet->K2ReadMode, 0, 1);
   if (camParam->K2Type)
     recSet->binning = B3DMAX(2, recSet->binning);
@@ -1825,7 +1827,8 @@ int CAutoTuning::SetupCtfAcquireParams(bool fromCheck)
   mCtfExposure = B3DMAX(0, val);
   if (!KGetOneInt("Binning, or 0 to use current Record binning", mCtfBinning))
     return 1;
-  if (!KGetOneFloat("Drift settling time (in sec), or 0 to use current Record value",
+  if (!KGetOneFloat("Enter -1 to not turn off frame alignment if set in Record", 
+    "Drift settling time (in sec), or 0 to use current Record value",
     mCtfDriftSettling, 2))
     return 1;
   if (!KGetOneInt("1 to take full-field images or 0 to use current Record subarea",

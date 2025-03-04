@@ -477,8 +477,10 @@
         binning.&nbsp; The CTF analysis itself should be fairly insensitive to binning
         unless it is too high, but you may want to use a binning higher than 1 to make
         the Thon rings extend farther out in the display.</li>
-      <li><i>Drift settling time</i>.&nbsp; Enter a specific settling time, or 0 to use
-        the current Record settling.</li>
+      <li><i>Drift settling time</i>.&nbsp; Enter a specific settling time, 0 to use
+        the current Record settling, or -1 to use the current Record setting for frame 
+        alignment as well.&nbsp; Without the latter entry, frame alignment will be 
+        turned off.</li>
       <li><i>Field size</i>.&nbsp; Enter 1 to take full-field images, or 0 to use the
         current Record subarea if any.</li>
       <li>Smallest defocus value allowed for measuring and correcting astigmatism.&nbsp;

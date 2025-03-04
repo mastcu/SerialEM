@@ -3,6 +3,9 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+3/4/25: Allowed frame alignment to be used in CTF-based astigmatism and coma
+correction images.
+
 3/4/25: Fixed frame alignment when normalizing in SerialEM for cameras where
 gain references normally are converted to integers (In 4.1).
 
