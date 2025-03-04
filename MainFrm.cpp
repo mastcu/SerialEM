@@ -2,8 +2,7 @@
 //                          window and has code for program shutdown, control
 //                          panel management and status line entries
 //
-// Copyright (C) 2003 by Boulder Laboratory for 3-Dimensional Electron 
-// Microscopy of Cells ("BL3DEMC") and the Regents of the University of
+// Copyright (C) 2003-2025 by the Regents of the University of
 // Colorado.  See Copyright.txt for full notice of copyright and limitations.
 //
 // Author: David Mastronarde
@@ -20,6 +19,7 @@
 #include "MacroProcessor.h"
 #include "AutocenSetupDlg.h"
 #include "shiftManager.h"
+#include "MultiGridTasks.h"
 #include "TSController.h"
 #include "CameraController.h"
 #include "NavigatorDlg.h"
@@ -441,6 +441,9 @@ void CMainFrame::DoClose(bool afterScript)
 
     if (mWinApp->mNavigator)
       mWinApp->SetOpenStateWithNav(mWinApp->mNavHelper->mStateDlg != NULL);
+    if (mWinApp->mMultiGridTasks->GetDoingMulGridSeq() ||
+      mWinApp->mMultiGridTasks->GetSuspendedMulGrid())
+      mWinApp->mMultiGridTasks->RestoreImposedParams();
 
     // Auto save files, may save some inquiries
     mWinApp->mDocWnd->AutoSaveFiles();
