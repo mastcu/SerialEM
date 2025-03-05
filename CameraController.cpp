@@ -10017,7 +10017,11 @@ void CCameraController::DisplayNewImage(BOOL acquired)
       CUR_OR_DEFD_TO_BUF(mISX, mStartingISX);
       CUR_OR_DEFD_TO_BUF(mISY, mStartingISY);
       CUR_OR_DEFD_TO_BUF(mExposure, (float)mExposure);
-      CUR_OR_DEFD_TO_BUF(mK2ReadMode, mTD.GatanReadMode);
+      ix = 0;
+      if (mParam->K2Type || (IS_FALCON3_OR_4(mParam) && FCAM_CAN_COUNT(mParam)) ||
+        (mParam->DE_camType && (mParam->CamFlags & DE_CAM_CAN_COUNT)))
+        ix = lastConSetp->K2ReadMode;
+      CUR_OR_DEFD_TO_BUF(mK2ReadMode, ix);
       mScope->GetValidXYbacklash(mStageXbefore, mStageYbefore, imBuf->mBacklashX, 
           imBuf->mBacklashY);
       if (mTD.GetDeferredSum) {
