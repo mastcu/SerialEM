@@ -6399,26 +6399,33 @@ int CNavHelper::OKtoUseNavPtsForVectors(int pattern, int &groupStart, int &group
 int CNavHelper::ConfirmReplacingShiftVectors(int kind, int vecType)
 {
   CString str2;
-  const char *kindText[] = {"last hole vectors", "map hole vectors", "navigator points"};
-  int kindFlags[4] = {1, 2, 4, 8};
+  const char *kindText[] = {"last hole vectors", "map hole vectors", "navigator points",
+  "", ""};
+  int kindFlags[5] = {1, 2, 4, 8, 16};
   const char *vecText[] = {"regular", "hex", "custom"};
-  int ans, okToUse = GetOKtoUseHoleVectors();
-  if (!(okToUse & kindFlags[kind])) {
+  int ans;
+  if (!(mOKtoUseHoleVectors & kindFlags[kind])) {
     if (kind < 3)
       str2.Format("Using %s will replace the currently defined "
         "image shift vectors for the %s pattern.\n\nAre you sure you want to do this?",
         kindText[kind], vecText[vecType]);
-    else
+    else if (kind == 3)
       str2.Format("This map has stored hole vectors.\nDo you want replace the currently"
         " defined image shift vectors for the %s pattern?\n\n"
         "(Press \"Yes Always\" to do this whenever working with multiple\ngrids "
         "and loading the first map with vectors from a grid)", (LPCTSTR)vecText[vecType]);
+    else
+      str2.Format("This grid has stored settings for Multiple Records.\n"
+        "Do you want replace the currently"
+        " defined image shift vectors for the %s pattern?\n\n"
+        "(Press \"Yes Always\" to do this whenever working with multiple\ngrids "
+        "and loading the Navigator file for a grid)", (LPCTSTR)vecText[vecType]);
     ans = SEMThreeChoiceBox(str2, "Yes", "Yes Always", "No",
       MB_YESNOCANCEL | MB_ICONQUESTION);
     if (ans == IDCANCEL)
       return 1;
     if (ans == IDNO)
-      SetOKtoUseHoleVectors(okToUse | kindFlags[kind]);
+      mOKtoUseHoleVectors |= kindFlags[kind];
   }
   return 0;
 }

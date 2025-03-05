@@ -4472,7 +4472,8 @@ void CMultiGridTasks::GridToMultiShotSettings(MGridMultiShotParams &mgParam,
   COPY_MEMBER(inHoleOrMultiHole);
   COPY_MEMBER(skipCornersOf3x3);
   msParam->doHexArray = mgParam.values[MS_numHexRings] != 0;
-  COPY_MEMBER(numHexRings);
+  if (msParam->doHexArray)
+    COPY_MEMBER(numHexRings);
   msParam->useCustomHoles = false;
   if (msParam->doHexArray) {
     msParam->holeMagIndex[1] = B3DNINT(mgParam.values[MS_holeMagIndex]);
@@ -4690,6 +4691,47 @@ void CMultiGridTasks::TransformStoredVectors(MGridMultiShotParams &mgParam, Scal
     mgParam.values[MS_ISXspacing1], mgParam.values[MS_ISYspacing1]);
   ApplyScaleMatrix(mat, mgParam.values[MS_ISXspacing2], mgParam.values[MS_ISYspacing2],
     mgParam.values[MS_ISXspacing2], mgParam.values[MS_ISYspacing2]);
+}
+
+/*
+ * What Chen really wanted: apply just the vectors when loading a Nav file and settings
+ * are stored for the grid
+ */
+void CMultiGridTasks::ApplyVectorsIfSavedAndOK(int jcdInd)
+{
+  JeolCartridgeData jcd = mCartInfo->ElementAt(jcdInd);
+  MGridMultiShotParams mgParam;
+  MultiShotParams tempParam;
+  MultiShotParams *master = mNavHelper->GetMultiShotParams();
+  int hexInd, dir;
+  if (jcd.multiShotParamIndex < 0)
+    return;
+  mgParam = mMGMShotParamArray.GetAt(jcd.multiShotParamIndex);
+  if (!mgParam.values[MS_holeMagIndex])
+    return;
+  mNavHelper->UpdateMultishotIfOpen();
+  GridToMultiShotSettings(mgParam, &tempParam);
+  hexInd = tempParam.doHexArray ? 1 : 0;
+  if (mNavHelper->ConfirmReplacingShiftVectors(4, hexInd))
+    return;
+  double *xOut = hexInd ? &master->hexISXspacing[0] : &master->holeISXspacing[0];
+  double *yOut = hexInd ? &master->hexISYspacing[0] : &master->holeISYspacing[0];
+  double *xIn = hexInd ? &tempParam.hexISXspacing[0] : &tempParam.holeISXspacing[0];
+  double *yIn = hexInd ? &tempParam.hexISYspacing[0] : &tempParam.holeISYspacing[0];
+  for (dir = 0; dir < 2 + hexInd; dir++) {
+    xOut[dir] = xIn[dir];
+    yOut[dir] = yIn[dir];
+  }
+  master->origMagOfArray[hexInd] = tempParam.origMagOfArray[hexInd];
+  master->holeMagIndex[hexInd] = tempParam.holeMagIndex[hexInd];
+  master->doHexArray = hexInd > 0;
+  master->canUndoRectOrHex = 0;
+  if (mNavHelper->mMultiShotDlg)
+    mNavHelper->mMultiShotDlg->UpdateSettings();
+  if (mWinApp->mNavigator) {
+    mWinApp->mNavigator->Redraw();
+    mWinApp->mNavigator->SetGridIndexOfMap(jcdInd);
+  }
 }
 
 /*

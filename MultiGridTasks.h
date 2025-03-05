@@ -177,6 +177,7 @@ public:
   void GridToFocusPosSettings(MGridFocusPosParams &mgParam);
   void FocusPosToGridSettings(MGridFocusPosParams &mgParam);
   void TransformStoredVectors(MGridMultiShotParams &mgParam, ScaleMat mat);
+  void ApplyVectorsIfSavedAndOK(int jcdInd);
   int LoadAllGridMaps(int startBuf, CString &errStr);
   bool GetGridMapLabel(int mapID, CString &value);
   int SaveSessionFile(CString &errStr);

@@ -1935,8 +1935,10 @@ void CMultiGridDlg::OnButOpenNav()
 {
   CFileStatus status;
   CString filename = NavFileIfExistsAndNotLoaded();
-  if (!filename.IsEmpty())
+  if (!filename.IsEmpty()) {
     mWinApp->mNavigator->LoadNavFile(false, false, &filename);
+    mMGTasks->ApplyVectorsIfSavedAndOK(mDlgIndToJCDindex[mSelectedGrid]);
+  }
   mWinApp->RestoreViewFocus();
   UpdateEnables();
 }

@@ -115,12 +115,19 @@
       an appropriate transformation has been saved from the &#39;Step To and Adjust IS&#39; 
       procedure in the <a href="hidd_multi_shot_setup.htm">Multiple Record Setup</a> 
       dialog.</p>
-    <p><em>Automatic setting of Multiple Record vectors when loading a map:</em> If 
+    <p><em>Automatic setting of Multiple Record vectors when loading a map or a 
+      Navigator file:</em> There are two features that can setthe image shift vectors 
+      for Multiple records appropriately for a given grid.&nbsp; First, when you press
+      <strong>Open Nav</strong> for a grid for which you have saved separate Multiple 
+      Record settings, the program will ask if you want to switch the image shift 
+      vectors to the saved values.&nbsp; You can answer 'Yes Always' to stop being 
+      asked during this run of the program.&nbsp; Second, if 
       this dialog is open, the program can automatically switch the image shift 
       vectors for Multiple Records when a map for a grid is loaded.&nbsp; This occurs 
-      when the first map from a grid that has hole vectors is read in.&nbsp; The 
+      when the first map from a grid that has hole vectors is read in, but not if 
+      vectors were already set by the first mechanism.&nbsp; The 
       program will ask you to confirm that you want to set the vectors, and you can 
-      press &quot;Yes Always&quot; to stop being asked during this run of of the program.</p>
+      answer 'Yes Always' to stop being asked during this run of the program.</p>
     <p><em>Managing operations on a single grid with no autoloader:</em> This dialog may also be useful for managing the workflow when 
       there is just one manually loaded grid.&nbsp; When the property 
       'ScopeHasAutoloader 0' is present, the menu entry appears as 'Multiple 
@@ -160,7 +167,7 @@
       have a green border.&nbsp; Once the names are fixed, a small note can be added 
       in the text box below the table and will show up after the name here.</p>
     <p>&nbsp;</p>
-    <p><em>Grid Setup: </em>the controls in ths section determine where files will be 
+    <p><em>Grid Setup: </em>the controls in this section determine where files will be 
       located and how they will be named. They are disabled and their values are 
       locked in when the first run is started; the name text boxes are also disabled.&nbsp; 
       The controls and outputs here are:</p>

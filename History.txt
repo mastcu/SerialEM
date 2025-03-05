@@ -3,6 +3,9 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+3/5/25: Added ability to set IS vectors from saved settings for a grid when a
+Nav file is loaded through multishot dialog.
+
 3/4/25: Allowed frame alignment to be used in CTF-based astigmatism and coma
 correction images.
 
@@ -12,7 +15,7 @@ gain references normally are converted to integers (In 4.1).
 3/3/25: Added ability to set the multishot IS vectors automatically from hole
 vectors of the first map loaded from a grid.
 
-3/3/25: Made IS vectors for multishot and ajduting transform be saved with
+3/3/25: Made IS vectors for multishot and adjusting transform be saved with
 multigrid settings for individual grids, and added option to take IS vectors
 from these settings.
 

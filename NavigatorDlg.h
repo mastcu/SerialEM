@@ -201,6 +201,7 @@ public:
   GetMember(bool, UseTempAcqParams);
   GetMember(bool, IgnoreUpdates);
   SetMember(bool, ReloadTableOnNextAdd);
+  SetMember(int, GridIndexOfMap);
   void SetCurAcqParmActions(int which) { mAcqParm = mWinApp->GetNavAcqParams(which); mAcqActions = mHelper->GetAcqActions(which); };
   bool OKtoCloseNav();
 
