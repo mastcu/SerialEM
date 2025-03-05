@@ -3,7 +3,9 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
-3/5/25: Added ability to set IS vectors from saved settings for a grid when a
+3/5/25: Fixed display labeling linear CDS mode images as counted (In 4.1).
+
+3/4/25: Added ability to set IS vectors from saved settings for a grid when a
 Nav file is loaded through multishot dialog.
 
 3/4/25: Allowed frame alignment to be used in CTF-based astigmatism and coma
