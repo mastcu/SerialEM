@@ -623,13 +623,14 @@ public:
   void DeleteArrays(void);
   int FindMapForRealigning(CMapDrawItem * inItem, BOOL restoreState);
   void StoreCurrentStateInParam(StateParams * param, int lowdose,
-    int saveLDfocusPos, int camNum, int saveTargOffs);
+    int saveLDfocusPos, int camNum, int saveTargOffs, int saveReadModes = -1);
   void StoreMapStateInParam(CMapDrawItem * item, MontParam *montP, int baseNum,
     StateParams * param);
   void SetStateFromParam(StateParams *param, ControlSet *conSet, int baseNum,
     int hideLDoff = 0, bool skipScope = false);
   void SetConsetsFromParam(StateParams *param, ControlSet *conSet, int baseNum);
-  void SaveCurrentState(int type, int saveLDfocusPos, int camNum, int saveTargOffs, BOOL montMap = false);
+  void SaveCurrentState(int type, int saveLDfocusPos, int camNum, int saveTargOffs, BOOL montMap = false,
+    int saveReadModes = -1);
   void SaveLowDoseAreaForState(int area, int camNum, bool saveTargOffs, BOOL montMap);
   int AreaFromStateLowDoseValue(StateParams *param, int *setNum);
   void ForgetSavedState(void);

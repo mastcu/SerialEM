@@ -558,7 +558,7 @@ int CStateDlg::DoSetImState(int stateNum, CString &errStr)
   }
   mHelper->SaveCurrentState(STATE_IMAGING, B3DCHOICE(area == FOCUS_CONSET ||
     area == TRIAL_CONSET, area == FOCUS_CONSET ? 1 : 2, 0), param->camIndex, saveTarg,
-    param->montMapConSet);
+    param->montMapConSet, param->lowDose ? 0 : 1);
   mHelper->SaveLowDoseAreaForState(area, param->camIndex, saveTarg > 0, 
     param->montMapConSet);
   mHelper->SetStateFromParam(param, conSet, setNum);
@@ -619,7 +619,8 @@ void CStateDlg::OnButSetSchedState()
     area = mHelper->AreaFromStateLowDoseValue(state, &setNum);
     if (setNum == SEARCH_CONSET && mWinApp->GetUseViewForSearch())
       setNum = VIEW_CONSET;
-    mHelper->SaveCurrentState(STATE_IMAGING, 1, state->camIndex, 0);
+    mHelper->SaveCurrentState(STATE_IMAGING, 1, state->camIndex, 0, false, 
+      state->lowDose ? 0 : 1);
     mHelper->SetStateFromParam(state, conSet + setNum, setNum);
     DisableUpdateButton();
     Update();

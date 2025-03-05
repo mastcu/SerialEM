@@ -2283,7 +2283,7 @@ int CNavHelper::RestoreFromMapState(void)
 // Store the current scope state or a set of low dose params into the state param
 // 0 for non-lowdose, 1 for current state, or < 0 for specific state
 void CNavHelper::StoreCurrentStateInParam(StateParams *param, int lowdose, 
-  int saveLDfocusPos, int camNum, int saveTargOffs)
+  int saveLDfocusPos, int camNum, int saveTargOffs, int saveReadModes)
 {
   LowDoseParams *ldp;
   FilterParams *filtParam = mWinApp->GetFilterParams();
@@ -2301,6 +2301,8 @@ void CNavHelper::StoreCurrentStateInParam(StateParams *param, int lowdose,
       ldInd = mScope->GetLowDoseArea();
     lowdose = -1 - ldInd;
   }
+  if (saveReadModes < 0)
+    saveReadModes = lowdose ? 0 : 1;
 
   // Get the right LD params for the camera, and the right consets too
   ldp = mWinApp->GetLDParamsForCamera(camNum) + ldInd;
@@ -2367,13 +2369,13 @@ void CNavHelper::StoreCurrentStateInParam(StateParams *param, int lowdose,
 
   SaveLDFocusPosition(lowdose ? saveLDfocusPos : 0, param->focusAxisPos, param->rotateAxis
     , param->axisRotation, param->focusXoffset, param->focusYoffset, true);
-  param->readModeView = lowdose ? -1 : conSets[VIEW_CONSET].K2ReadMode;
-  param->readModeFocus = lowdose ? -1 : conSets[FOCUS_CONSET].K2ReadMode;
-  param->readModeTrial = lowdose ? -1 : conSets[TRIAL_CONSET].K2ReadMode;
-  param->readModePrev = lowdose ? -1 : conSets[PREVIEW_CONSET].K2ReadMode;
-  param->readModeSrch = (lowdose || mWinApp->GetUseViewForSearch()) ? -1 : 
+  param->readModeView = !saveReadModes ? -1 : conSets[VIEW_CONSET].K2ReadMode;
+  param->readModeFocus = !saveReadModes ? -1 : conSets[FOCUS_CONSET].K2ReadMode;
+  param->readModeTrial = !saveReadModes ? -1 : conSets[TRIAL_CONSET].K2ReadMode;
+  param->readModePrev = !saveReadModes ? -1 : conSets[PREVIEW_CONSET].K2ReadMode;
+  param->readModeSrch = (!saveReadModes || mWinApp->GetUseViewForSearch()) ? -1 :
     conSets[SEARCH_CONSET].K2ReadMode;
-  param->readModeMont = (lowdose || mWinApp->GetUseRecordForMontage()) ? -1 : 
+  param->readModeMont = (!saveReadModes || mWinApp->GetUseRecordForMontage()) ? -1 :
     conSets[montInd].K2ReadMode;
 }
 
@@ -2719,7 +2721,7 @@ void CNavHelper::SetLDFocusPosition(int camIndex, float axisPos, BOOL rotateAxis
 
 // Save the current state if it is not already saved
 void CNavHelper::SaveCurrentState(int type, int saveLDfocusPos, int camNum,
-  int saveTargOffs, BOOL montMap)
+  int saveTargOffs, BOOL montMap, int saveReadModes)
 {
   StateParams state;
   if (mTypeOfSavedState != STATE_NONE)
@@ -2728,9 +2730,9 @@ void CNavHelper::SaveCurrentState(int type, int saveLDfocusPos, int camNum,
   mTypeOfSavedState = type;
   mPriorState.montMapConSet = montMap;
   StoreCurrentStateInParam(&mPriorState, mWinApp->LowDoseMode() ? 1 : 0, 0, 
-    mWinApp->GetCurrentCamera(), 0);
+    mWinApp->GetCurrentCamera(), 0, saveReadModes);
   StoreCurrentStateInParam(&state, mWinApp->LowDoseMode() ? 1 : 0, saveLDfocusPos, 
-    camNum, saveTargOffs);
+    camNum, saveTargOffs, saveReadModes);
   SEMTrace('I', "SaveCurrentState saved intensity %.5f", mWinApp->LowDoseMode() ? 
     state.ldParams.intensity : state.intensity);
   mSavedStates.Add(state);
