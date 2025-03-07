@@ -3428,8 +3428,7 @@ void CMultiGridTasks::DoNextSequenceAction(int resume)
       } else {
 
         // Skip the unload and iterating
-        if (!mRealignIteration)
-          mSeqIndex++;
+        mSeqIndex++;
         mRealignIteration = 0;
       }
     default:
