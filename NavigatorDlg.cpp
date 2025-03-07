@@ -11886,7 +11886,7 @@ int CNavigatorDlg::RegistrationUseType(int reg)
   CMapDrawItem *item;
   for (int i = 0; i < mItemArray.GetSize(); i++) {
     item = mItemArray[i];
-    if (item->mRegistration == reg)
+    if (item && item->mRegistration == reg)
       return item->mImported > 0 ? NAVREG_IMPORT : NAVREG_REGULAR;
   }
   return NAVREG_UNUSED;
@@ -12288,7 +12288,7 @@ CMapDrawItem * CNavigatorDlg::FindItemWithMapID(int mapID, bool requireMap,
     return NULL;
   for (mFoundItem = 0; mFoundItem < mItemArray.GetSize(); mFoundItem++) {
     item = mItemArray[mFoundItem];
-    if ((item->IsMap() || !requireMap) && 
+    if ((item && item->IsMap() || !requireMap) && 
       ((!matchGroup && item->mMapID == mapID) || (matchGroup && item->mGroupID == mapID)))
       return item;
   }

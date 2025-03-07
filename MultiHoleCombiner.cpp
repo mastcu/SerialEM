@@ -678,7 +678,7 @@ int CMultiHoleCombiner::CombineItems(int boundType, BOOL turnOffOutside, int inX
             // Add around the other center
             data.xCen = xCen + hexIndXvecs[ind];
             data.yCen = yCen + hexIndYvecs[ind];
-            mHexToItemIndex.resize(extraHexNum + 1);
+            mHexToItemIndex.resize(extraHexNum + 1, -1);
             AddPointsToHexItem(itemArray, data, extraHexNum++, boxAssigns, navInds,
               xCenters, yCenters, gridMat, ixSkip, iySkip, numAdded);
             handled = true;
@@ -745,7 +745,7 @@ int CMultiHoleCombiner::CombineItems(int boundType, BOOL turnOffOutside, int inX
             useHex = hex;
             if (vnd) {
               useHex = extraHexNum++;
-              mHexToItemIndex.resize(extraHexNum);
+              mHexToItemIndex.resize(extraHexNum, -1);
             }
             AddPointsToHexItem(itemArray, data, useHex, boxAssigns, navInds,
               xCenters, yCenters, gridMat, ixSkip, iySkip, numAdded);
@@ -770,7 +770,7 @@ int CMultiHoleCombiner::CombineItems(int boundType, BOOL turnOffOutside, int inX
           useHex = hex;
           if (bx) {
             useHex = extraHexNum++;
-            mHexToItemIndex.resize(extraHexNum);
+            mHexToItemIndex.resize(extraHexNum, -1);
           }
           AddPointsToHexItem(itemArray, data, useHex, boxAssigns, navInds,
             xCenters, yCenters, gridMat, ixSkip, iySkip, numAdded);
@@ -784,7 +784,7 @@ int CMultiHoleCombiner::CombineItems(int boundType, BOOL turnOffOutside, int inX
       hex = boxAssigns[ind];
       if (hex >= 0 && hex < (int)mHexToItemIndex.size()) {
         jnd = mHexToItemIndex[hex];
-        if (jnd >= 0 && itemArray->GetAt(jnd)) {
+        if (jnd > 0 && itemArray->GetAt(jnd)) {
           tempArray.Add(itemArray->GetAt(jnd));
           itemArray->SetAt(jnd, NULL);
         }
