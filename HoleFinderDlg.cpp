@@ -1531,6 +1531,7 @@ void CHoleFinderDlg::ScanningNextTask(int param)
 
   // Get the hole vectors as IS values and store in Nav item if it is a map
   mIDofNavItem = 0;
+  mCurHexSubset = -1;
   SetNavMapHoleVectors();
 
   // Get edge distances
