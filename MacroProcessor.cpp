@@ -1935,13 +1935,21 @@ int CMacroProcessor::ScanForName(int macroNumber, CString *macro)
       if ((strItem[0].CompareNoCase(prefix + "MacroName") == 0 ||
         strItem[0].CompareNoCase(prefix + "ScriptName") == 0) && !strItem[1].IsEmpty()) {
         mParamIO->StripItems(strLine, 1, newName, false, scriptLang);
+      } else if (strItem[0] == "#" && (strItem[1].CompareNoCase("MacroName") == 0 ||
+        strItem[1].CompareNoCase("ScriptName") == 0) && !strItem[2].IsEmpty()) {
+          mParamIO->StripItems(strLine, 2, newName, false, scriptLang);
       } else if (strItem[0].CompareNoCase(prefix + "LongName") == 0 &&
         !strItem[1].IsEmpty()) {
         mParamIO->StripItems(strLine, 1, longName, false, scriptLang);
+      } else if (strItem[0] == "#" && strItem[0].CompareNoCase("LongName") == 0 &&
+        !strItem[2].IsEmpty()) {
+        mParamIO->StripItems(strLine, 2, longName, false, scriptLang);
 
       // Put all the functions in there that won't be eliminated by minimum argument
       // requirement and let pre-checking complain about details
-      } else if (strItem[0].CompareNoCase(prefix + "ReadOnlyUnlessAdmin") == 0) {
+      } else if (strItem[0].CompareNoCase(prefix + "ReadOnlyUnlessAdmin") == 0 ||
+        (strItem[0] == "#" && strItem[1].CompareNoCase("ReadOnlyUnlessAdmin")  
+          == 0)) {
         mReadOnlyStart[macroNumber] = lastIndex;
       } else if (strItem[0].CompareNoCase("Function") == 0 && !strItem[1].IsEmpty() && 
         !scriptLang) {
@@ -5295,7 +5303,7 @@ UINT CMacroProcessor::StdoutToLogProc(LPVOID pParam)
     if (!bSuccess || dwRead == 0)
       break;
     buffer[B3DMIN(bufLen - 1, dwRead)] = 0x00;
-    SEMTrace('0', buffer);
+    SEMTrace('0', "%s", buffer);
   }
   CloseHandle(*outRd);
   return 0;
