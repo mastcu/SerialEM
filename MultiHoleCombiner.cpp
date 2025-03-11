@@ -224,7 +224,6 @@ int CMultiHoleCombiner::CombineItems(int boundType, BOOL turnOffOutside, int inX
     itemArray = mWinApp->mMainView->GetMapItemsForImageCoords(mImBuf, true);
     if (!itemArray)
       return ERR_NO_NAV;
-    drawnOnID = 0;
     mUseImageCoords = item && item->mMapMontage;
     for (ind = 0; ind < itemArray->GetSize(); ind++) {
       item = itemArray->GetAt(ind);
@@ -273,7 +272,7 @@ int CMultiHoleCombiner::CombineItems(int boundType, BOOL turnOffOutside, int inX
     return ERR_TOO_FEW_POINTS;
 
   // Try to find a buffer with the map if there is a common drawn on ID for poly/group
-  if (drawnOnID > 0) {
+  if (drawnOnID > 0 && boundType != COMBINE_ON_IMAGE) {
     ind = mNav->FindBufferWithMontMap(drawnOnID);
     if (ind >= 0) {
       mImBuf = mWinApp->GetImBufs() + ind;
@@ -497,6 +496,27 @@ int CMultiHoleCombiner::CombineItems(int boundType, BOOL turnOffOutside, int inX
   for (ind = 0; ind < numPoints; ind++)
     if (!worsePoints.count(ind))
       mGrid[gridY[ind]][gridX[ind]] = ind;
+
+  if (mDebug) {
+    float xperx = 0., xpery = 0., yperx = 0., ypery = 0.;
+    int numInY = 0, numInX = 0;
+    for (ix = 0; ix < mNxGrid - 1;ix++) {
+      for (iy = 0; iy < mNyGrid - 1; iy++) {
+        if (mGrid[iy][ix] >= 0 && mGrid[iy + 1][ix] >= 0) {
+          xpery += xCenters[mGrid[iy + 1][ix]] - xCenters[mGrid[iy][ix]];
+          ypery += yCenters[mGrid[iy + 1][ix]] - yCenters[mGrid[iy][ix]];
+          numInY++;
+        }
+        if (mGrid[iy][ix] >= 0 && mGrid[iy][ix + 1] >= 0) {
+          xperx += xCenters[mGrid[iy][ix + 1]] - xCenters[mGrid[iy][ix]];
+          yperx += yCenters[mGrid[iy][ix + 1]] - yCenters[mGrid[iy][ix]];
+          numInX++;
+        }
+      }
+    }
+    PrintfToLog("Grid step in X: %.2f %.2f  in Y: %.2f %.2f", xperx / numInX, 
+      yperx / numInX, xpery / numInY, ypery / numInY);
+  }
 
   boxAssigns.resize(numPoints, -1);
   ClearSavedItemArray(false, true);
