@@ -318,6 +318,7 @@ public:
   GetSetMember(float, MinAutoAdjSquareRatio);
   GetSetMember(float, MaxAutoAdjHoleRatio);
   GetSetMember(int, MinAutoAdjCropSize);
+  float *GetLastUsedHoleISvecs() {return &mLastUsedHoleISvecs[0] ; };
 
 
   int *GetAcqActDefaultOrder() { return &mAcqActDefaultOrder[0]; };
@@ -564,6 +565,9 @@ private:
   float mMinAutoAdjSquareRatio;  // and for rectangular arrays
   float mMaxAutoAdjHoleRatio;    // Maximum allowed fraction of field
   int mMinAutoAdjCropSize;       // Minimum number of pixels in image cropped to satisfy min
+  float mLastUsedHoleISvecs[6];  // Last set of hole IS vectors used to set multishot IS
+  float mMaxISvecMatchScaleDiff; // Maximum difference in scale or rotations from last set
+  float mMaxISvecMatchRotDiff;   // of hole IS vectors allowed for permuting vectors
 
 public:
   void PrepareToReimageMap(CMapDrawItem * item, MontParam * param, ControlSet * conSet,
@@ -708,7 +712,13 @@ public:
   int RotateMultiShotVectors(MultiShotParams *params, float angle, int customOrHex);
   int AdjustMultiShotVectors(MultiShotParams *params, int customOrHex, bool statusOnly, CString &mess);
   void TransformMultiShotVectors(MultiShotParams *params, int customOrHex, ScaleMat &aProd);
+  int XformISVecsWithSpecOrStage(float *xVecIn, float *yVecIn, int numVec, ScaleMat mat, 
+    bool stage, int magInd, int camera, float *xVecOut, float *yVecOut);
   void AssignNavItemHoleVectors(CMapDrawItem * item);
+  int PermuteISvecsToMatchLastUsed(float *xVecIn, float *yVecIn, int hexInd, 
+    float &bestRot, float &maxAngDiff, float &maxScaleDiff, float *xVecOut, float *yVecOut);
+  void PermuteISVectors(float *xVecIn, float *yVecIn, int numVec, int rotInd, float *xVecOut, float *yVecOut);
+  void SetLastUsedHoleISVecs(float *xVecs, float *yVecs, bool setChanged);
   int OKtoUseNavPtsForVectors(int pattern, int &groupStart, int &groupEnd, ScaleMat *ISmat = NULL,
     CString *reason = NULL);
   int ConfirmReplacingShiftVectors(int kind, int vecType);

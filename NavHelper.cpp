@@ -351,6 +351,8 @@ CNavHelper::CNavHelper(void)
   mShowStateNumbers = false;
   mDoingMultiGridFiles = false;
   mOpenedMultiGrid = false;
+  mMaxISvecMatchRotDiff = 2.f;
+  mMaxISvecMatchScaleDiff = 0.02f;
 }
 
 CNavHelper::~CNavHelper(void)
@@ -6306,18 +6308,58 @@ void CNavHelper::TransformMultiShotVectors(MultiShotParams *params, int customOr
   }
 }
 
+// Transforms image shift vectors given a transform defined in specimen or stage space
+// at the given mag, with optional camera specification too.  return 1 if no xform
+int CNavHelper::XformISVecsWithSpecOrStage(float *xVecIn, float *yVecIn, int numVec, 
+  ScaleMat mat, bool stage, int magInd, int camera, float *xVecOut, float *yVecOut)
+{
+  ScaleMat IS2space, IS2cam, stage2cam, prod;
+  float transX, transY;
+  if (camera < 0)
+    camera = mWinApp->GetCurrentCamera();
+  if (stage) {
+    IS2cam = mShiftManager->IStoGivenCamera(magInd, camera);
+    stage2cam = mShiftManager->StageToCamera(camera, magInd);
+    if (!IS2cam.xpx || !stage2cam.xpx)
+      return 1;
+    IS2space = MatMul(IS2cam, MatInv(stage2cam));
+  } else {
+    IS2space = mShiftManager->IStoSpecimen(magInd, camera);
+    if (!IS2space.xpx)
+      return 1;
+  }
+  prod = MatMul(MatMul(IS2space, mat), MatInv(IS2space));
+  for (int dir = 0; dir < numVec; dir++) {
+    ApplyScaleMatrix(prod, xVecIn[dir], yVecIn[dir], transX, transY);
+    xVecOut[dir] = transX;
+    yVecOut[dir] = transY;
+  } 
+  return 0;
+}
+
 // Use the hole vectors from a map item, stored when holes were found
 void CNavHelper::AssignNavItemHoleVectors(CMapDrawItem * item)
 {
   int dir, hexInd = (item->mXHoleISSpacing[2] || item->mYHoleISSpacing[2]) ? 1 : 0;
+  float xFloat[3] = {0., 0., 0.}, yFloat[3] = {0., 0., 0.}, xTemp[3], yTemp[3];
   double *xSpacing = hexInd ? &mMultiShotParams.hexISXspacing[0] :
     &mMultiShotParams.holeISXspacing[0];
   double *ySpacing = hexInd ? &mMultiShotParams.hexISYspacing[0] :
     &mMultiShotParams.holeISYspacing[0];
+  float bestRot, maxAngDiff, maxScaleDiff;
   for (dir = 0; dir < 2 + hexInd; dir++) {
-    xSpacing[dir] = item->mXHoleISSpacing[dir];
-    ySpacing[dir] = item->mYHoleISSpacing[dir];
+    xSpacing[dir] = xFloat[dir] = item->mXHoleISSpacing[dir];
+    ySpacing[dir] = yFloat[dir] = item->mYHoleISSpacing[dir];
   }
+  if (PermuteISvecsToMatchLastUsed(xFloat, yFloat, hexInd, bestRot, maxAngDiff, 
+    maxScaleDiff, xTemp, yTemp)) {
+    for (dir = 0; dir < 2 + hexInd; dir++) {
+      xSpacing[dir] = xFloat[dir] = xTemp[dir];
+      ySpacing[dir] = yFloat[dir] = yTemp[dir];
+    }
+  }
+
+  SetLastUsedHoleISVecs(&xFloat[0], &yFloat[0], true);
   mMultiShotParams.origMagOfArray[hexInd] = -item->mMapMagInd;
   mMultiShotParams.holeMagIndex[hexInd] = item->mMapMagInd;;
   mMultiShotParams.tiltOfHoleArray[hexInd] = item->mMapTiltAngle;
@@ -6327,6 +6369,98 @@ void CNavHelper::AssignNavItemHoleVectors(CMapDrawItem * item)
     mMultiShotDlg->UpdateSettings();
   if (mNav)
     mNav->Redraw();
+}
+
+// Tests whether a plus or minus rotation of the given set of vectors matches the last
+// used vectors closely enough; if so, return the vectors in x/yVecOut, which must be
+// different from x/yVecIn, and returns 1.
+int CNavHelper::PermuteISvecsToMatchLastUsed(float *xVecIn, float *yVecIn, int hexInd,
+  float &bestRot, float &maxAngDiff, float &maxScaleDiff, float *xVecOut, float *yVecOut)
+{
+  float xTemp[3], yTemp[3], delAngle = hexInd ? 60.f : 90.f;
+  int dir, rot, bestRotInd = 0, numVec = hexInd ? 3 : 2;
+  float *xLast = &mLastUsedHoleISvecs[0];
+  float *yLast = &mLastUsedHoleISvecs[3];
+  float rotAngDiff, rotScaleDiff, tempLen, msLen[3];
+  float scaleDiff, angDiff, minAngDiff = 1.e10;
+  ScaleMat rotMat;
+
+  bestRot = 0.;
+  if (!xLast[0] && !yLast[0])
+    return 0;
+  for (dir = 0; dir < numVec; dir++) {
+    msLen[dir] = sqrt(xLast[dir] * xLast[dir] + yLast[dir] * yLast[dir]);
+  }
+
+  maxAngDiff = 0.;
+  maxScaleDiff = 0.;
+
+  // Loop on rotations and transform vectors
+  for (rot = -1; rot <= 1; rot++) {
+    rotAngDiff = rotScaleDiff = 0.;
+    rotMat = GetRotationMatrix((float)rot * delAngle, false);
+    PermuteISVectors(xVecIn, yVecIn, hexInd, rot, xTemp, yTemp);
+
+    // Measure difference in length and angle between each vector, get maxes for rotation
+    for (dir = 0; dir < numVec; dir++) {
+      tempLen = sqrtf(xTemp[dir] * xTemp[dir] + yTemp[dir] * yTemp[dir]);
+      scaleDiff = 1.f - B3DMIN(tempLen, msLen[dir]) / B3DMAX(tempLen, msLen[dir]);
+      if (scaleDiff > 0.99)
+        angDiff = delAngle;
+      else
+        angDiff = acos((xTemp[dir] * xLast[dir] + yTemp[dir] * yLast[dir]) /
+        (tempLen * msLen[dir])) / (float)DTOR;
+      ACCUM_MAX(rotAngDiff, B3DABS(angDiff));
+      ACCUM_MAX(rotScaleDiff, scaleDiff);
+    }
+
+    // If this is the closest angle yet, save index and maxes
+    if (rotAngDiff < minAngDiff) {
+      minAngDiff = rotAngDiff;
+      bestRotInd = rot;
+      maxAngDiff = rotAngDiff;
+      maxScaleDiff = rotScaleDiff;
+    }
+  }
+
+  // return 0 if nothing passes both criteria, or of no rotation is best
+  // otherwise transform the vector, set angle and return 1
+  if (maxAngDiff > mMaxISvecMatchRotDiff || maxScaleDiff > mMaxISvecMatchScaleDiff || 
+    !bestRotInd)
+    return 0;
+  bestRot = (float)bestRotInd * delAngle;
+  rotMat = GetRotationMatrix(bestRot, false);
+  PermuteISVectors(xVecIn, yVecIn, hexInd, bestRotInd, xVecOut, yVecOut);
+  SEMTrace('1', "Rotating hole IS vectors by %.0f degrees to match previously used"
+    " vectors", bestRot);
+  return 1;
+}
+// "Rotate" the set of vectors plus or minus 90 or 60 by rolling them through array and
+// inverting the one that rolls around
+void CNavHelper::PermuteISVectors(float *xVecIn, float *yVecIn, int hexInd, int rotInd,
+  float *xVecOut, float *yVecOut)
+{
+  int rectInds[3][2] = {{1, 0},{0, 1},{1, 0}};
+  float rectSigns[3][2] = {{-1., 1.},{1., 1.},{1, -1.}};
+  int hexInds[3][3] = {{2, 0, 1}, {0, 1, 2}, {1, 2, 0}};
+  float hexSigns[3][3] = {{-1., 1., 1.}, {1., 1., 1.}, {1., 1., -1.}};
+  int *inds = hexInd ? &hexInds[rotInd + 1][0] : &rectInds[rotInd + 1][0];
+  float *signs = hexInd ? &hexSigns[rotInd + 1][0] : &rectSigns[rotInd + 1][0];
+  for (int dir = 0; dir < 2 + hexInd; dir++) {
+    xVecOut[dir] = signs[dir] * xVecIn[inds[dir]];
+    yVecOut[dir] = signs[dir] * yVecIn[inds[dir]];
+  }
+}
+
+// Save the hole IS vectors last used to set multishot vectors (global nav entry)
+void CNavHelper::SetLastUsedHoleISVecs(float *xVecs, float *yVecs, bool setChanged)
+{
+  for (int ind = 0; ind < 3; ind++) {
+    mLastUsedHoleISvecs[ind] = xVecs ? xVecs[ind] : 0.f;
+    mLastUsedHoleISvecs[3 + ind] = xVecs ? yVecs[ind] : 0.f;
+  }
+  if (xVecs && setChanged && mNav)
+    mNav->SetChanged(true);
 }
 
 // If OK to use the current navigator group to define hole vectors, return 1 for regular/
@@ -6415,7 +6549,8 @@ int CNavHelper::ConfirmReplacingShiftVectors(int kind, int vecType)
       str2.Format("This map has stored hole vectors.\nDo you want replace the currently"
         " defined image shift vectors for the %s pattern?\n\n"
         "(Press \"Yes Always\" to do this whenever working with multiple\ngrids "
-        "and loading the first map with vectors from a grid)", (LPCTSTR)vecText[vecType]);
+        "and loading the first map with vectors from a grid\n"
+        "or similar to one with vectors)", (LPCTSTR)vecText[vecType]);
     else
       str2.Format("This grid has stored settings for Multiple Records.\n"
         "Do you want replace the currently"

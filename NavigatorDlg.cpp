@@ -387,6 +387,7 @@ BOOL CNavigatorDlg::OnInitDialog()
   // Set up default registration point number from first free value
   SetCurrentRegFromMax();
   SetRegPtNum(GetFreeRegPtNum(mCurrentRegistration, 0));
+  mHelper->SetLastUsedHoleISVecs(NULL, NULL, false);
 
   FillListBox();
   mNewItemNum = (int)mItemArray.GetSize() + 1;
@@ -6744,9 +6745,8 @@ int CNavigatorDlg::TransformToCurrentReg(int reg, ScaleMat aM, float *dxy, int r
   int curDrawnOn)
 {
   CMapDrawItem *item;
-  ScaleMat IS2Spec, prod;
-  int dir, numDone = 0, numHoles = 0;
-  float xToAdopt = -9999.f, transX, transY;
+  int numDone = 0, numHoles = 0;
+  float xToAdopt = -9999.f;
   if (RegistrationUseType(reg) == NAVREG_IMPORT && curDrawnOn > 0) {
     item = FindItemWithMapID(curDrawnOn);
     if (item)
@@ -6764,17 +6764,10 @@ int CNavigatorDlg::TransformToCurrentReg(int reg, ScaleMat aM, float *dxy, int r
       // and transform back to IS
       if (item->IsMap() && (item->mXHoleISSpacing[0] != 0. ||
         item->mYHoleISSpacing[0] != 0.)) {
-        IS2Spec = mShiftManager->IStoSpecimen(item->mMapMagInd, item->mMapCamera);
-        if (IS2Spec.xpx) {
-          prod = MatMul(MatMul(IS2Spec, aM), MatInv(IS2Spec));
-          for (dir = 0; dir < 3; dir++) {
-            ApplyScaleMatrix(prod, item->mXHoleISSpacing[dir], item->mYHoleISSpacing[dir],
-              transX, transY);
-            item->mXHoleISSpacing[dir] = transX;
-            item->mYHoleISSpacing[dir] = transY;
-          }
+        if (!mHelper->XformISVecsWithSpecOrStage(item->mXHoleISSpacing,
+          item->mYHoleISSpacing, 3, aM, false, item->mMapMagInd, item->mMapCamera,
+          item->mXHoleISSpacing, item->mYHoleISSpacing))
           numHoles++;
-        }
       }
 
       // Set the imported flag negative now.  Also, if this was drawn on the imported map,
@@ -7821,6 +7814,7 @@ void CNavigatorDlg::FinishLoadMap(void)
   MontParam *masterMont = mWinApp->GetMontParam();
   CameraParameters *camP = &mCamParams[B3DMAX(0, mLoadItem->mMapCamera)];
   EMimageExtra *extra1;
+  CMapDrawItem *checkItem, *vecMap;
   int uncroppedX, uncroppedY, gridInd, hexGrid;
   float stageX, stageY, angle;
   bool noStage, noTilt, cropped, needDefocusData;
@@ -7908,15 +7902,21 @@ void CNavigatorDlg::FinishLoadMap(void)
 
   // For an interactive load, see if this is a map with hole vectors from a new grid and
   // potentially replace the IS vectors
-  if ((mShowAfterLoad & 2) && mHelper->mMultiGridDlg && 
-    (mLoadItem->mXHoleISSpacing[0] != 0. || mLoadItem->mYHoleISSpacing[0] != 0.)) {
-    gridInd = mWinApp->mMultiGridTasks->GridIndexOfCurrentNavFile();
-    if (gridInd >= 0 && gridInd != mGridIndexOfMap) {
-      mGridIndexOfMap = gridInd;
-      hexGrid = (mLoadItem->mXHoleISSpacing[2] != 0. ||
-        mLoadItem->mYHoleISSpacing[2] != 0.) ? 1 : 0;
-      if (!mHelper->ConfirmReplacingShiftVectors(3, hexGrid)) {
-        mHelper->AssignNavItemHoleVectors(mLoadItem);
+  if ((mShowAfterLoad & 2) && mHelper->mMultiGridDlg) {
+    checkItem = mLoadItem;
+    if (checkItem->mXHoleISSpacing[0] == 0. && checkItem->mYHoleISSpacing[0] == 0.) {
+      if (GetMatchingMapWithVectors(mLoadItem, vecMap) >= 0)
+        checkItem = vecMap;
+    }
+    if (checkItem->mXHoleISSpacing[0] != 0. || checkItem->mYHoleISSpacing[0] != 0.) {
+      gridInd = mWinApp->mMultiGridTasks->GridIndexOfCurrentNavFile();
+      if (gridInd >= 0 && gridInd != mGridIndexOfMap) {
+        mGridIndexOfMap = gridInd;
+        hexGrid = (checkItem->mXHoleISSpacing[2] != 0. ||
+          checkItem->mYHoleISSpacing[2] != 0.) ? 1 : 0;
+        if (!mHelper->ConfirmReplacingShiftVectors(3, hexGrid)) {
+          mHelper->AssignNavItemHoleVectors(checkItem);
+        }
       }
     }
   }
@@ -8274,6 +8274,7 @@ void CNavigatorDlg::OpenAndWriteFile(bool autosave)
   IntVec skipIndex;
   int adocInd, adocErr, ind, sectInd, outInd, ind2;
   float varyVals[NUM_VARY_ELEMENTS * MAX_TS_VARIES];
+  float *lastVecs = mHelper->GetLastUsedHoleISvecs();
   FILE *fp;
   if (autosave)
     filename = mParam->autosaveFile;
@@ -8285,6 +8286,8 @@ void CNavigatorDlg::OpenAndWriteFile(bool autosave)
 #define ADOC_ARG "Item",sectInd
 
   adocErr = 0;
+  str.Format("%f %f %f %f %f %f", lastVecs[0], lastVecs[1], lastVecs[2], lastVecs[3],
+    lastVecs[4], lastVecs[5]);
 
   if (mHelper->GetWriteNavAsXML()) {
 
@@ -8309,6 +8312,8 @@ void CNavigatorDlg::OpenAndWriteFile(bool autosave)
     if (AdocSetKeyValue(ADOC_GLOBAL_NAME, 0, "AdocVersion", NAV_FILE_VERSION))
       adocErr++;
     if (AdocSetKeyValue(ADOC_GLOBAL_NAME, 0, "LastSavedAs", (LPCTSTR)filename))
+      adocErr++;
+    if (AdocSetKeyValue(ADOC_GLOBAL_NAME, 0, "LastUsedHoleISVecs", (LPCTSTR)str))
       adocErr++;
 
     // Save all the members in the include file
@@ -8423,6 +8428,7 @@ void CNavigatorDlg::OpenAndWriteFile(bool autosave)
     }
     adocErr += AdocWriteKeyValue(fp, "AdocVersion", NAV_FILE_VERSION);
     adocErr += AdocWriteKeyValue(fp, "LastSavedAs", (LPCTSTR)filename);
+    adocErr += AdocWriteKeyValue(fp, "LastUsedHoleISVecs", (LPCTSTR)str);
 
     // Regular members
     for (ind = 0; ind < mItemArray.GetSize(); ind++) {
@@ -8669,6 +8675,8 @@ int CNavigatorDlg::LoadNavFile(bool checkAutosave, bool mergeFile, CString *inFi
   }
   mHelper->mCombineHoles->ClearSavedItemArray(true, true);
   UtilSplitPath(name, navRoot, str);
+  if (!mergeFile)
+    mHelper->SetLastUsedHoleISVecs(NULL, NULL, false);
 
   try {
     // Open the file for reading and verify first line; get optional version
@@ -8709,6 +8717,12 @@ int CNavigatorDlg::LoadNavFile(bool checkAutosave, bool mergeFile, CString *inFi
         return 1;
       }
       version = B3DNINT(100. * xx);
+
+      numToGet = 6;
+      if (!AdocGetFloatArray(ADOC_GLOBAL_NAME, 0, "LastUsedHoleISVecs", incXform,
+        &numToGet, 6)) {
+        mHelper->SetLastUsedHoleISVecs(&incXform[0], &incXform[3], false);
+      }
 
     } else {
 
@@ -9766,6 +9780,11 @@ void CNavigatorDlg::AcquireAreas(int source, bool dlgClosing, bool useTempParams
   mUseTempAcqParams = useTempParams;
 
   if (!dlgClosing) {
+    if (!useTempParams && source == NAVACQ_SRC_MG_SET_MMM)
+      SetCurAcqParmActions(0);
+    else if (!useTempParams && source == NAVACQ_SRC_MG_SET_ACQ)
+      SetCurAcqParmActions(1);
+
     mNavAcquireDlg = new CNavAcquireDlg();
     dlg = mNavAcquireDlg;
     dlg->mNumArrayItems = (int)mItemArray.GetSize();

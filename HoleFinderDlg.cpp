@@ -1684,6 +1684,7 @@ int CHoleFinderDlg::ConvertHoleToISVectors(int index, bool setVecs, double *xVec
   ScaleMat st2is;
   int dir, numVecs = mLastWasHexGrid ? 3 : 2, hexInd = mLastWasHexGrid ? 1 : 0;
   float *xVecs, *yVecs;
+  float xFloat[3], yFloat[3], xTemp[3], yTemp[3], bestRot, maxAngDiff, maxScaleDiff;
   float ySign = 1.;
   float diagXvecs[3], diagYvecs[3];
   MultiShotParams *msParams = mWinApp->mNavHelper->GetMultiShotParams();
@@ -1731,11 +1732,27 @@ int CHoleFinderDlg::ConvertHoleToISVectors(int index, bool setVecs, double *xVec
       ApplyScaleMatrix(st2is, xVecs[dir], ySign * yVecs[dir], xVecOut[dir], yVecOut[dir]);
   }
   if (setVecs) {
+
+    // If setting vectors, copy to param and float variables
     for (dir = 0; dir < numVecs; dir++) {
       xSpacing[dir] = xVecOut[dir];
       ySpacing[dir] = yVecOut[dir];
+      xFloat[dir] = (float)xVecOut[dir];
+      yFloat[dir] = (float)yVecOut[dir];
     }
-    msParams->origMagOfArray[hexInd] = index == mLastMagIndex ? -index : 0;
+
+    // Then check if a rotation by one vector position matches last used vectors;
+    // if so copy over the rotated vectors
+    if (mHelper->PermuteISvecsToMatchLastUsed(xFloat, yFloat, hexInd, bestRot, 
+      maxAngDiff, maxScaleDiff, xTemp, yTemp)) {
+      for (dir = 0; dir < numVecs; dir++) {
+        xSpacing[dir] = xFloat[dir] = xTemp[dir];
+        ySpacing[dir] = yFloat[dir] = yTemp[dir];
+      }
+    }
+
+    // Save that this was last vectors, set other parameters
+    mHelper->SetLastUsedHoleISVecs(&xFloat[0], &yFloat[0], true);
     msParams->holeMagIndex[hexInd] = index;
     msParams->tiltOfHoleArray[hexInd] = mLastTiltAngle;
     msParams->doHexArray = mLastWasHexGrid;
