@@ -1377,6 +1377,7 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
   int groupThresh = mWinApp->mNavHelper->GetPointLabelDrawThresh();
   bool showCurPtAcquire = !imBuf->mHasUserPt && mAcquireBox;
   bool doMultiHole = mWinApp->mNavHelper->MultipleHolesAreSelected();
+  bool checkUndos = mWinApp->mNavHelper->mCombineHoles->OKtoUndoCombine();
   BOOL useMultiShot = ((mWinApp->mNavHelper->GetEnableMultiShot() & 1) &&
     navigator->m_bShowAcquireArea) || mWinApp->mNavHelper->mMultiShotDlg;
   if (useMultiShot) {
@@ -1399,6 +1400,8 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
   ShortVec skippedDraw;
   float area, side, skipPad;
   CMapDrawItem skipItem, triangleItem;
+  ScaleMat is2st;
+  int holeMag = mWinApp->mNavigator->GetMagIndForHoles();
 
   for (int iDraw = -1; iDraw < itemArray->GetSize(); iDraw++) {
     adjSave = mAdjustPt;
@@ -1615,7 +1618,8 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
     if (iDraw >= 0 && item->mAcquire && item->mNumPoints == 1 && mAcquireBox &&
       (showMultiOnAll &&
       (!showOnlyCombined || (item->mNumXholes != 0 && item->mNumYholes != 0) ||
-        mWinApp->mNavHelper->mCombineHoles->IsItemInUndoList(item->mMapID)) ||
+        (checkUndos && 
+          mWinApp->mNavHelper->mCombineHoles->IsItemInUndoList(item->mMapID))) ||
         (showCurPtAcquire && highlight && doMultiHole))) {
       GetSingleAdjustmentForItem(imBuf, item, delPtX, delPtY);
       CPen pnAcquire(PS_SOLID, thick1, item->GetColor(highlight));
@@ -1635,6 +1639,18 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
           skipPad = 0.5f * sqrtf(area);
           tempX = sqrtf(3.f) / 2.f;
           side = sqrtf(area / tempX);
+          is2st = MatMul(mShiftManager->IStoCamera(holeMag),
+            MatInv(mShiftManager->StageToCamera(mWinApp->GetCurrentCamera(), holeMag)));
+
+          // prefereably, base it all on the interhole distance
+          if (is2st.xpx && holeMag) {
+            size = (item->mNumXholes > 0 && item->mNumYholes == -1) ? 1 : 0;
+            mShiftManager->ApplyScaleMatrix(is2st,
+              size ? msParams->hexISXspacing[0] : msParams->holeISXspacing[0],
+              size ? msParams->hexISXspacing[1] : msParams->holeISXspacing[1], ptX, ptY);
+            skipPad = 0.5f * sqrtf(ptX * ptX + ptY * ptY);
+            side = 1.25f * skipPad;
+          }
           cenX = side / 2.f;
           cenY = side * tempX / 3.f;
           triangleItem.AppendPoint(-cenX, -cenY);
