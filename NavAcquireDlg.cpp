@@ -1113,7 +1113,8 @@ void CNavAcquireDlg::RebuildIfEnabled(bool OK, bool & enabled, bool & doBuild)
 
 void CNavAcquireDlg::DisableItemsForMultiGrid()
 {
-  m_bDoSubset = mMasterParam->multiGridSubset > 0;
+  int multiSubset = mAllCurParam[m_iCurParamSet].multiGridSubset;
+  m_bDoSubset = multiSubset > 0;
   SetDlgItemText(IDC_NA_DO_SUBSET, "Do subset:");
   ShowDlgItem(IDC_EDIT_SUBSET_END, false);
   ShowDlgItem(IDC_EDIT_SUBSET_START, false);
@@ -1126,7 +1127,7 @@ void CNavAcquireDlg::DisableItemsForMultiGrid()
     ShowDlgItem(IDC_RSUBSET_SHOTS, true);
     ShowDlgItem(IDC_STAT_SUBSET_FROM_ITEM, true);
   }
-  m_iSubsetNum = B3DMAX(1, B3DMIN(1000000, B3DABS(mMasterParam->multiGridSubset)));
+  m_iSubsetNum = B3DMAX(1, B3DMIN(1000000, B3DABS(multiSubset)));
   if (mWinApp->mNavHelper->mMultiGridDlg) {
     m_bUseMapHoles = mWinApp->mNavHelper->mMultiGridDlg->m_iVectorSource == 0;
     EnableDlgItem(IDC_NA_USE_MAP_HOLES, false);
