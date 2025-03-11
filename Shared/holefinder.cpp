@@ -3257,27 +3257,33 @@ void HoleFinder::assignGridPositions
 void HoleFinder::getGridVectors(float *gridX, float *gridY, float &avgAngle,
                                 float &avgLen, int hexGrid)
 {
-  int numDir, useDir;
-  float angle, delta;
+  int numDir, useDir, loop;
+  float angle, delta, delAngle = 0.;
   if (hexGrid < 0)
     hexGrid = mHexGrid ? 1 : 0;
   delta = hexGrid ? 60.f : 90.f;
   numDir = hexGrid ? 3 : 2;
-  avgAngle = 0.;
-  avgLen = 0.;
-  for (int dir = 0; dir < numDir; dir++) {
 
-    // The twisted logic of hole combiner requires the non-hex to be in the same order and
-    // quadrants as they used to be: so do the secoind one first, rotate first one by 180
-    useDir = hexGrid ? dir : 1 - dir;
-    angle = mJustAngles[useDir];
-    if (angle < -180. || (!hexGrid && dir))
-      angle += 180.f;
-    gridX[dir] = mJustLengths[useDir] * (float)cos(RADIANS_PER_DEGREE * angle);
-    gridY[dir] = mJustLengths[useDir] * (float)sin(RADIANS_PER_DEGREE * angle);
-    avgAngle += (float)((mJustAngles[dir] + (1. - dir) * delta) / numDir);
-    avgLen += mJustLengths[dir] / (float)numDir;
+  // Loop twice: if the average angle comes out < 0, add one delta to all the angles and
+  // repeat the loop: this guarantees average angle and vectors are consistent
+  for (loop = 0; loop < 2; loop++) {
+    avgAngle = 0.;
+    avgLen = 0.;
+    for (int dir = 0; dir < numDir; dir++) {
+
+      // The twisted logic of hole combiner requires the non-hex to be in the same order &
+      // quadrants as they used to be: so do the second one first, rotate first one by 180
+      useDir = hexGrid ? dir : 1 - dir;
+      angle = mJustAngles[useDir] + delAngle;
+      if (angle < -180. || (!hexGrid && dir))
+        angle += 180.f;
+      gridX[dir] = mJustLengths[useDir] * (float)cos(RADIANS_PER_DEGREE * angle);
+      gridY[dir] = mJustLengths[useDir] * (float)sin(RADIANS_PER_DEGREE * angle);
+      avgAngle += (float)((mJustAngles[dir] + delAngle + (1. - dir) * delta) / numDir);
+      avgLen += mJustLengths[dir] / (float)numDir;
+    }
+    if (avgAngle >= 0.)
+      break;
+    delAngle = delta;
   }
-  if (avgAngle < 0.)
-    avgAngle += delta;
 }
