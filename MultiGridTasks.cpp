@@ -2515,7 +2515,7 @@ int CMultiGridTasks::StartGridRuns(int LMneedsLD, int MMMneedsLD, int finalNeeds
             gridsDoingMulShot.push_back(grid);
             if (jcd.multiShotParamIndex >= 0)
               numMSparam++;
-          } 
+          }
         } else if (fpMultiShot) {
           gridsDoingMulShot.push_back(grid);
           if (jcd.multiShotParamIndex >= 0)
@@ -2645,43 +2645,43 @@ int CMultiGridTasks::StartGridRuns(int LMneedsLD, int MMMneedsLD, int finalNeeds
           }
         }
       }
-    }
 
-    // Loop on grids doing appropriate actions ending in transformed vectors if possible
-    for (ind = 0; ind < numMSparam; ind++) {
-      grid = gridsDoingMulShot[ind];
-      jcd = mCartInfo->GetAt(mJcdIndsToRun[grid]);
-      mgMSparam = mMGMShotParamArray.GetAt(jcd.multiShotParamIndex);
-      GridToMultiShotSettings(mgMSparam, &testMSparams);
-      magInd = (int)mgMSparam.values[MS_origMagOfArray];
+      // Loop on grids doing appropriate actions ending in transformed vectors if possible
+      for (ind = 0; ind < numMSparam; ind++) {
+        grid = gridsDoingMulShot[ind];
+        jcd = mCartInfo->GetAt(mJcdIndsToRun[grid]);
+        mgMSparam = mMGMShotParamArray.GetAt(jcd.multiShotParamIndex);
+        GridToMultiShotSettings(mgMSparam, &testMSparams);
+        magInd = (int)mgMSparam.values[MS_origMagOfArray];
 
-      // Backtransform if appropriate
-      if ((backXfStamp == -1 || backXfStamp == testMSparams.xformMinuteTime) && magInd > 0
-        && magInd == testMSparams.xformFromMag) {
-        TransformStoredVectors(mgMSparam, MatInv(testMSparams.adjustingXform));
-        magInd = -magInd;
-        mgMSparam.values[MS_origMagOfArray] = (float)magInd;
+        // Backtransform if appropriate
+        if ((backXfStamp == -1 || backXfStamp == testMSparams.xformMinuteTime) && 
+          magInd > 0 && magInd == testMSparams.xformFromMag) {
+          TransformStoredVectors(mgMSparam, MatInv(testMSparams.adjustingXform));
+          magInd = -magInd;
+          mgMSparam.values[MS_origMagOfArray] = (float)magInd;
+        }
+
+        // Substitute current transform if appropriate
+        if ((subXfStamp == -1 || subXfStamp == testMSparams.xformMinuteTime) && magInd < 0
+          && curMSparams->xformFromMag == -magInd) {
+          testMSparams.adjustingXform = curMSparams->adjustingXform;
+          mgMSparam.values[MS_xformXpx] = curMSparams->adjustingXform.xpx;
+          mgMSparam.values[MS_xformXpy] = curMSparams->adjustingXform.xpy;
+          mgMSparam.values[MS_xformYpx] = curMSparams->adjustingXform.ypx;
+          mgMSparam.values[MS_xformYpy] = curMSparams->adjustingXform.ypy;
+          mgMSparam.values[MS_xformMinuteTime] = (float)curMSparams->xformMinuteTime;
+        }
+
+        // Transform unconditionally now
+        if (magInd < 0 && -magInd == testMSparams.xformFromMag) {
+          TransformStoredVectors(mgMSparam, testMSparams.adjustingXform);
+          mgMSparam.values[MS_origMagOfArray] = -(float)magInd;
+          PrintfToLog("Applied adjusting transform to IS vectors in multiple record"
+            " settings for grid %d", jcd.id);
+        }
+        mMGMShotParamArray.SetAt(jcd.multiShotParamIndex, mgMSparam);
       }
-
-      // Substitute current transform if appropriate
-      if ((subXfStamp == -1 || subXfStamp == testMSparams.xformMinuteTime) && magInd < 0
-        && curMSparams->xformFromMag == -magInd) {
-        testMSparams.adjustingXform = curMSparams->adjustingXform;
-        mgMSparam.values[MS_xformXpx] = curMSparams->adjustingXform.xpx;
-        mgMSparam.values[MS_xformXpy] = curMSparams->adjustingXform.xpy;
-        mgMSparam.values[MS_xformYpx] = curMSparams->adjustingXform.ypx;
-        mgMSparam.values[MS_xformYpy] = curMSparams->adjustingXform.ypy;
-        mgMSparam.values[MS_xformMinuteTime] = (float)curMSparams->xformMinuteTime;
-      }
-
-      // Transform unconditionally now
-      if (magInd < 0 && -magInd == testMSparams.xformFromMag) {
-        TransformStoredVectors(mgMSparam, testMSparams.adjustingXform);
-        mgMSparam.values[MS_origMagOfArray] = -(float)magInd;
-        PrintfToLog("Applied adjusting transform to IS vectors in multiple record"
-          " settings for grid %d", jcd.id);
-      }
-      mMGMShotParamArray.SetAt(jcd.multiShotParamIndex, mgMSparam);
     }
   }
 
