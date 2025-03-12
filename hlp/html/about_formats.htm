@@ -1355,7 +1355,7 @@
       &nbsp;
       added Y beam shift<p>
           <em>MultishotParams:</em><p>
-&nbsp;&nbsp; Beam diameter for display<br />
+&nbsp;&nbsp;&nbsp; Beam diameter for display<br />
 &nbsp;&nbsp; Distance to off-center shots in main ring<br />
 &nbsp;&nbsp; Number of shots in main ring<br />
 &nbsp;&nbsp; Do center shot: -1 before, 0 none, 1 after<br />
@@ -1384,7 +1384,34 @@
 &nbsp;&nbsp; Tilt angle at which custom holes were defined<br />
 &nbsp;&nbsp; Angle found in hole finder associated with regular array<br />
           &nbsp;<p>
-          <em><strong>Calibration file entries:</strong></em><p>
+            <em>MultiHexParams: </em> <p>
+&nbsp;&nbsp;&nbsp; 1 to do hex array, 0 not to<br />
+&nbsp;&nbsp; Number of hex rings<br />
+&nbsp;&nbsp; X component of image shift vector in first direction<br />
+&nbsp;&nbsp; Y component of image shift vector in first direction<br />
+&nbsp;&nbsp; X component of image shift vector in second direction<br />
+&nbsp;&nbsp; Y component of image shift vector in second direction<br />
+&nbsp;&nbsp; X component of image shift vector in third direction<br />
+&nbsp;&nbsp; Y component of image shift vector in third direction<br />
+&nbsp;&nbsp; Mag at which hex hole positions are measured<br />
+&nbsp;&nbsp; Tilt angle at which hex holes were defined</p>
+    <p>
+      <em>HoleAdjustXform</em>:</p>
+    <p>
+&nbsp;&nbsp;&nbsp; Original mag of rectangular pattern, negative if not transformed<br />
+&nbsp;&nbsp; Original mag of hexagonal pattern, negative if not transformed<br />
+&nbsp;&nbsp; Original mag of custom pattern, negative if not transformed<br />
+&nbsp;&nbsp; Mag transformation is from<br />
+&nbsp;&nbsp; Mag transformation is to<br />
+&nbsp;&nbsp; X change at 'to' mag per X change at 'from' mag<br />
+&nbsp;&nbsp; X change at 'to' mag per Y change at 'from' mag<br />
+&nbsp;&nbsp; Y change at 'to' mag per X change at 'from' mag<br />
+&nbsp;&nbsp; Y change at 'to' mag per Y change at 'from' mag<br />
+&nbsp;&nbsp; Minute time stamp when transformation was defined<br />
+                            </p>
+          <em><strong>
+    <br />
+    Calibration file entries:</strong></em><p>
         <em>StandardLMFocus</em>: This entry contains the recorded standard focus in LM or
          the eucentric focus is nonLM.<br />
 &nbsp;&nbsp; Magnification index<br />
