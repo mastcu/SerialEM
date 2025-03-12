@@ -626,7 +626,7 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
 
       } else if (NAME_IS("HoleAdjustXform")) {
         msParams->origMagOfArray[0] = itemInt[1];
-        msParams->origMagOfArray[2] = itemInt[2];
+        msParams->origMagOfArray[1] = itemInt[2];
         msParams->origMagOfCustom = itemInt[3];
         msParams->xformFromMag = itemInt[4];
         msParams->xformToMag = itemInt[5];
