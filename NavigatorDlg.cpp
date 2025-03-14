@@ -8158,8 +8158,9 @@ int CNavigatorDlg::AskIfSave(CString reason)
   if (mChanged && !mNavFilename.IsEmpty() && mWinApp->mDocWnd->GetAutoSaveNav())
     return DoSave(false);
 
-  PrintfToLog("Navigator Changed %d  filename %s  autosave %d", mChanged ? 1 : 0,
-    (LPCTSTR)mNavFilename, mWinApp->mDocWnd->GetAutoSaveNav() ? 1 : 0);
+  PrintfToLog("Navigator Changed %d  filename %s  autosave %d  autofile %d", 
+    mChanged ? 1 : 0, (LPCTSTR)mNavFilename, mWinApp->mDocWnd->GetAutoSaveNav() ? 1 : 0,
+    mParam->autosaveFile.IsEmpty() ? 0 : 1);
   reason = "Save Navigator entries before " + reason;
   if (!suggested) {
     reason += "\r\n(Turn on Autosave in Navigator Options submenu to avoid this message)";
@@ -8216,6 +8217,7 @@ int CNavigatorDlg::SaveAndClearTable(bool askIfSave)
     retval = DoSave(false);
   mHelper->DeleteArrays();
   FillListBox(false);
+  RemoveAutosaveFile();
   mNavFilename = "";
   mNewItemNum = 1;
   mReloadTableOnNextAdd = false;
