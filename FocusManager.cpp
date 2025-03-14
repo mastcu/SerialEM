@@ -827,6 +827,7 @@ void CFocusManager::CalFocusStart(bool doSparse)
   DetectFocus(FOCUS_CALIBRATE);
 }
 
+// Set a beam tilt value for the current operation instead of modifying mBeamTilt
 void CFocusManager::SetWorkingBeamTilt(int magInd)
 {
   mWorkingBT = mBeamTilt;

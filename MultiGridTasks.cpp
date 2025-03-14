@@ -3262,7 +3262,7 @@ void CMultiGridTasks::DoNextSequenceAction(int resume)
     case MGACT_TAKE_LMM:
       mDoingMontage = false;
       mNavigator->NewMap(true, 1);
-      mNavigator->SetReloadTableOnNextAdd(true);
+      mNavigator->SetReloadTableOnNextAdd(10);
       item = mNavigator->GetCurrentItem();
       ChangeStatusFlag(mCurrentGrid, MGSTAT_FLAG_LM_MAPPED, 1);
       jcdEl.LMmapID = item->mMapID;

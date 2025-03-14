@@ -198,7 +198,7 @@ CNavigatorDlg::CNavigatorDlg(CWnd* pParent /*=NULL*/)
   mInRangeDelete = false;
   mIgnoreUpdates = false;
   mNumWrongMapWarnings = 0;
-  mReloadTableOnNextAdd = false;
+  mReloadTableOnNextAdd = 0;
   mGridIndexOfMap = -1;
   mCurrentItem = -1;
 }
@@ -3061,7 +3061,7 @@ void CNavigatorDlg::OnDrawPoints()
   } else {
     ManageListHeader();
     Redraw();
-    mReloadTableOnNextAdd = false;
+    mReloadTableOnNextAdd = B3DMAX(0, mReloadTableOnNextAdd - 1);
   }
 
   Update();
@@ -3095,9 +3095,9 @@ void CNavigatorDlg::OnDrawPolygon()
 
         UpdateListString(mCurrentItem);
       }
-      if (mReloadTableOnNextAdd)
+      if (mReloadTableOnNextAdd > 0)
         FillListBox(false, true);
-      mReloadTableOnNextAdd = false;
+      mReloadTableOnNextAdd = B3DMAX(0, mReloadTableOnNextAdd - 1);
       ManageCurrentControls();
       Redraw();
     }
@@ -3290,7 +3290,7 @@ BOOL CNavigatorDlg::UserMousePoint(EMimageBuffer *imBuf, float inX, float inY,
       imBuf->mCaptured == BUFFER_LIVE_FFT || imBuf->mCaptured == BUFFER_AUTOCOR_OVERVIEW)
       item->mFlags |= NAV_FLAG_DRAWN_ON_FFT;
     UpdateListString(mCurrentItem);
-    if (mReloadTableOnNextAdd)
+    if (mReloadTableOnNextAdd > 0)
       FillListBox(false, true);
     SetChanged(true);
     ManageCurrentControls();
@@ -8220,7 +8220,7 @@ int CNavigatorDlg::SaveAndClearTable(bool askIfSave)
   RemoveAutosaveFile();
   mNavFilename = "";
   mNewItemNum = 1;
-  mReloadTableOnNextAdd = false;
+  mReloadTableOnNextAdd = 0;
   SetWindowText("Navigator");
   return retval;
 }
