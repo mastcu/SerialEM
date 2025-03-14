@@ -3086,8 +3086,10 @@ int CMacCmd::AlignBetweenMags()
     ABORT_LINE("The maximum scaling to test should be either 0 or between 1% and 25% in "
       "line\n\n");
   if (mProcessImage->AlignBetweenMagnifications(index, mItemFlt[2], mItemFlt[3],
-    mItemFlt[4], (mItemEmpty[5] ? mNavHelper->GetScaledAliDfltPctChg() : mItemFlt[5]) /
-    100.f, 2.f * (mItemEmpty[6] ? mNavHelper->GetScaledAliDfltMaxRot() : mItemFlt[6]),
+    mItemFlt[4], ((mItemEmpty[5] || !mItemFlt[5]) ? 
+      mNavHelper->GetScaledAliDfltPctChg() : mItemFlt[5]) / 100.f, 
+    2.f * ((mItemEmpty[6] || mItemFlt[6] < 0) ? 
+      mNavHelper->GetScaledAliDfltMaxRot() : mItemFlt[6]),
     mItemEmpty[7] || mItemInt[7] <= 0, scaleMax, rotation, 0, report))
     ABORT_LINE(report + " for line:\n\n");
   SetReportedValues(scaleMax, rotation);
