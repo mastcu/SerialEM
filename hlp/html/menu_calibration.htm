@@ -255,10 +255,6 @@
           <TD>List some calibrations related to beam and spot.</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style1"><A href="#hid_calibration_set_aperture_size">Set Aperture Size</A></TD>
-          <TD>Inform program about size of C2 aperture on Titan microscope.</TD>
-        </TR>
-        <TR vAlign="top">
           <TD class="style4">Electron Dose</TD>
           <TD class="style5">Moved to <A href="menu_tasks.htm#hid_calibration_electrondose">Tasks menu</A> in SerialEM 4.1 to allow whole Calibration menu to be removed in Basic mode.</TD>
         </TR>
@@ -1454,8 +1450,8 @@
       readout as an intensity measure, and the microscope scales this readout by the
       aperture size.&nbsp; Thus, intensity calibrations are valid only if the program
       knows both what aperture size the calibration was obtained at, and what the
-      current aperture size is. Use the  <A href="#hid_calibration_set_aperture_size">
-      Set Aperture Size</A> command to inform the program when the C2 aperture has
+      current aperture size is. Use the  <A href="menu_tasks.htm#hid_calibration_set_aperture_size">
+      Set Aperture Size</A> command in the Tasks menu to inform the program when the C2 aperture has
       changed. </P>
     <P>If you have existing calibrations from before this feature was added to keep
       track of the aperture, you can edit the SerialEMcalibrations.txt file to insert
@@ -1616,16 +1612,6 @@
       <P><A name="hid_beamspot_listcalibrations"></A><B>List Calibrations command
         (Calibration - Beam  &amp; Spot sub-menu)</B></P>
         <p>Use this command to list some spot and beam related calibrations.</p>
-      <P><A name="hid_calibration_set_aperture_size"></A><B>Set Aperture Size command
-        (Calibration menu)</B></P>
-    <P>Use this command to inform the program of the current size of the C2 aperture
-      on a Titan microscope, where the illuminated area read from the microscope and
-      used for intensity is scaled by this aperture size when the aperture is changed.&nbsp;
-      The program will scale the intensity values in the beam intensity, spot
-      intensity, and crossover calibrations so that they are valid for this aperture
-      size.&nbsp;&nbsp; Once the aperture size is set either with this command or&nbsp;
-      after one of those calibrations, it will be remembered between sessions in the
-      short term calibration file.</P>
       <P><A name="hid_calibration_magenergyshifts"></A><B>Mag Energy Shifts command
           (Calibration menu)</B></P>
       <P>Use this command to calibrate how much the zero loss peak shifts in energy when

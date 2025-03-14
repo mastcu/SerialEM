@@ -77,6 +77,10 @@
           <TD class="style1"><A href="#hid_calibration_purgeoldcalibs">Purge Old Calibs</A></TD>
           <TD>Remove dose calibrations done prior to current run of the program.</TD>
         </TR>
+        <TR vAlign="top">
+          <TD class="style1"><A href="#hid_calibration_set_aperture_size">Set Aperture Size</A></TD>
+          <TD>Inform program about size of C2 aperture on Titan microscope.</TD>
+        </TR>
         <TR VALIGN="top">
           <TD class="auto-style1"><A HREF="#hid_process_movebeam">Move Beam</A></TD>
           <TD>Moves beam based on center marked by display point.</TD>
@@ -393,6 +397,16 @@
         calibrations older than 24 hours are ignored when the program starts. Also,
         when dose is calibrated, other calibrations older than 12 hours are then
         removed.</P>
+      <P><A name="hid_calibration_set_aperture_size"></A><B>Set Aperture Size command
+        (Tasks menu)</B></P>
+      <P>Use this command to inform the program of the current size of the C2 aperture
+      on a Titan microscope, where the illuminated area read from the microscope and
+      used for intensity is scaled by this aperture size when the aperture is changed.&nbsp;
+      The program will scale the intensity values in the beam intensity, spot
+      intensity, and crossover calibrations so that they are valid for this aperture
+      size.&nbsp;&nbsp; Once the aperture size is set either with this command or&nbsp;
+      after one of those calibrations, it will be remembered between sessions in the
+      short term calibration file.</P>
       <P><A NAME="hid_process_movebeam"></A><B>Move Beam command (Tasks menu)</B></P>
       <P>Use this command to move the beam by a controlled amount. You can use it to
         center the beam by first taking a picture with the beam condensed enough to
