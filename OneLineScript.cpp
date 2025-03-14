@@ -38,24 +38,39 @@ void COneLineScript::DoDataExchange(CDataExchange* pDX)
   DDX_Control(pDX, IDC_EDIT_ONE_LINE3, m_editOneLine[2]);
   DDX_Control(pDX, IDC_EDIT_ONE_LINE4, m_editOneLine[3]);
   DDX_Control(pDX, IDC_EDIT_ONE_LINE5, m_editOneLine[4]);
+  DDX_Control(pDX, IDC_EDIT_ONE_LINE6, m_editOneLine[5]);
+  DDX_Control(pDX, IDC_EDIT_ONE_LINE7, m_editOneLine[6]);
+  DDX_Control(pDX, IDC_EDIT_ONE_LINE8, m_editOneLine[7]);
+  DDX_Control(pDX, IDC_EDIT_ONE_LINE9, m_editOneLine[8]);
+  DDX_Control(pDX, IDC_EDIT_ONE_LINE10, m_editOneLine[9]);
   DDX_Text(pDX, IDC_EDIT_ONE_LINE, m_strOneLine[0]);
   DDX_Text(pDX, IDC_EDIT_ONE_LINE2, m_strOneLine[1]);
   DDX_Text(pDX, IDC_EDIT_ONE_LINE3, m_strOneLine[2]);
   DDX_Text(pDX, IDC_EDIT_ONE_LINE4, m_strOneLine[3]);
   DDX_Text(pDX, IDC_EDIT_ONE_LINE5, m_strOneLine[4]);
+  DDX_Text(pDX, IDC_EDIT_ONE_LINE6, m_strOneLine[5]);
+  DDX_Text(pDX, IDC_EDIT_ONE_LINE7, m_strOneLine[6]);
+  DDX_Text(pDX, IDC_EDIT_ONE_LINE8, m_strOneLine[7]);
+  DDX_Text(pDX, IDC_EDIT_ONE_LINE9, m_strOneLine[8]);
+  DDX_Text(pDX, IDC_EDIT_ONE_LINE10, m_strOneLine[9]);
   DDX_Control(pDX, IDC_RUN_ONE_LINE1, m_butRun[0]);
   DDX_Control(pDX, IDC_RUN_ONE_LINE2, m_butRun[1]);
   DDX_Control(pDX, IDC_RUN_ONE_LINE3, m_butRun[2]);
   DDX_Control(pDX, IDC_RUN_ONE_LINE4, m_butRun[3]);
   DDX_Control(pDX, IDC_RUN_ONE_LINE5, m_butRun[4]);
+  DDX_Control(pDX, IDC_RUN_ONE_LINE6, m_butRun[5]);
+  DDX_Control(pDX, IDC_RUN_ONE_LINE7, m_butRun[6]);
+  DDX_Control(pDX, IDC_RUN_ONE_LINE8, m_butRun[7]);
+  DDX_Control(pDX, IDC_RUN_ONE_LINE9, m_butRun[8]);
+  DDX_Control(pDX, IDC_RUN_ONE_LINE10, m_butRun[9]);
 }
 
 
 BEGIN_MESSAGE_MAP(COneLineScript, CDialog)
-  ON_CONTROL_RANGE(EN_CHANGE, IDC_EDIT_ONE_LINE, IDC_EDIT_ONE_LINE5, OnEnChangeEditOneLine)
-  ON_CONTROL_RANGE(BN_CLICKED, IDC_RUN_ONE_LINE1, IDC_RUN_ONE_LINE5, OnRunClicked)
-  ON_CONTROL_RANGE(EN_KILLFOCUS, IDC_EDIT_ONE_LINE, IDC_EDIT_ONE_LINE5, OnEnKillfocusEditOneLine)
-  ON_CONTROL_RANGE(EN_SETFOCUS,IDC_EDIT_ONE_LINE, IDC_EDIT_ONE_LINE5, OnEnSetfocusEditOneLine)
+  ON_CONTROL_RANGE(EN_CHANGE, IDC_EDIT_ONE_LINE, IDC_EDIT_ONE_LINE10, OnEnChangeEditOneLine)
+  ON_CONTROL_RANGE(BN_CLICKED, IDC_RUN_ONE_LINE1, IDC_RUN_ONE_LINE10, OnRunClicked)
+  ON_CONTROL_RANGE(EN_KILLFOCUS, IDC_EDIT_ONE_LINE, IDC_EDIT_ONE_LINE10, OnEnKillfocusEditOneLine)
+  ON_CONTROL_RANGE(EN_SETFOCUS,IDC_EDIT_ONE_LINE, IDC_EDIT_ONE_LINE10, OnEnSetfocusEditOneLine)
   ON_WM_SIZE()
   ON_WM_PAINT()
 END_MESSAGE_MAP()
@@ -207,7 +222,7 @@ BOOL COneLineScript::PreTranslateMessage(MSG* pMsg)
     pMsg->wParam = 0x00;
   }
   if (ctrlPressed && pMsg->message == WM_KEYDOWN && mLineWithFocus >= 0 &&
-    mLineWithFocus < 5) {
+    mLineWithFocus < 10) {
     edit = (CEdit *)GetDlgItem(mLineWithFocus + IDC_EDIT_ONE_LINE);
     if (pMsg->wParam == 'A')
       edit->SetSel(0xFFFF0000);

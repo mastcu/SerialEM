@@ -1392,11 +1392,16 @@
 #define IDC_EDIT_ONE_LINE3              2381
 #define IDC_EDIT_ONE_LINE4              2382
 #define IDC_EDIT_ONE_LINE5              2383
-#define IDC_SKIP_FILE_DLG               2385
-#define IDC_RSUPER_RES_REF              2386
-#define IDC_STAT_ALIBIN                 2387
-#define IDC_RBIN_TO_SIZE                2388
-#define IDC_SPIN_BIN_TO                 2389
+#define IDC_EDIT_ONE_LINE6              2384
+#define IDC_EDIT_ONE_LINE7              2385
+#define IDC_EDIT_ONE_LINE8              2386
+#define IDC_EDIT_ONE_LINE9              2387
+#define IDC_EDIT_ONE_LINE10             2388
+#define IDC_SKIP_FILE_DLG               3549
+#define IDC_RSUPER_RES_REF              3550
+#define IDC_STAT_ALIBIN                 3551
+#define IDC_RBIN_TO_SIZE                3552
+#define IDC_SPIN_BIN_TO                 3553
 #define IDC_STAT_ALIBIN_PIX             2390
 #define IDC_RALIBIN_BY_FAC              2391
 #define IDC_STAT_ALIGN_TARGET           2392
@@ -1467,11 +1472,16 @@
 #define IDC_RUN_ONE_LINE3               2463
 #define IDC_RUN_ONE_LINE4               2464
 #define IDC_RUN_ONE_LINE5               2465
-#define IDC_CHECK_USE_CORR_DBL_SAMP     2466
-#define IDC_STATLISTHEADER1             2467
-#define IDC_STATLISTHEADER2             2468
-#define IDC_STATLISTHEADER3             2469
-#define IDC_STATLISTHEADER4             2470
+#define IDC_RUN_ONE_LINE6               2466
+#define IDC_RUN_ONE_LINE7               2467
+#define IDC_RUN_ONE_LINE8               2468
+#define IDC_RUN_ONE_LINE9               2469
+#define IDC_RUN_ONE_LINE10              2470
+#define IDC_CHECK_USE_CORR_DBL_SAMP     3554
+#define IDC_STATLISTHEADER1             3555
+#define IDC_STATLISTHEADER2             3556
+#define IDC_STATLISTHEADER3             3557
+#define IDC_STATLISTHEADER4             3558
 #define IDC_STATLISTHEADER5             2471
 #define IDC_STATLISTHEADER6             2472
 #define IDC_STATLISTHEADER7             2473
@@ -3088,7 +3098,7 @@
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        291
 #define _APS_NEXT_COMMAND_VALUE         33535
-#define _APS_NEXT_CONTROL_VALUE         3549
+#define _APS_NEXT_CONTROL_VALUE         3559
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif
