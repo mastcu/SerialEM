@@ -138,6 +138,7 @@ CFocusManager::CFocusManager()
   mFracTiltY = 0.;
   mTiltDirection = 0;
   mBeamTilt = 5.;
+  mLMBeamTilt = 0.;
   mPostTiltDelay = 0;
   mLastFailed = false;
   mLastAborted = 0;
@@ -458,6 +459,13 @@ void CFocusManager::OnFocusSetbeamtilt()
   if (oldVal < 0.)
     oldVal *= -1.;
   SetBeamTilt(oldVal, "from menu");
+  oldVal = mLMBeamTilt;
+  message = !FEIscope ? "Beam tilt for autofocus in LM, as % of full scale:" :
+    "Beam tilt for autofocus in LM, in milliradians:";
+  if (!KGetOneFloat("Enter 0 to use the same beam tilt in LM as in nonLM",
+    message, oldVal, 1))
+    return;
+  mLMBeamTilt = oldVal;
 }
 
 void CFocusManager::OnFocusResetdefocus() 
@@ -776,10 +784,11 @@ void CFocusManager::CalFocusStart(bool doSparse)
   if (AfxMessageBox(str + "Do you want to proceed?", MB_YESNO | MB_ICONQUESTION) == IDNO)
     return;
   mFCindex = 0;
+  SetWorkingBeamTilt(mFocusMag);
   mNumSparseBelow = mNumSparseAbove = 0;
   mCalDelta = mCalRange / (mNumCalLevels - 1);
   mCalDefocus = mCalOffset - mCalRange / 2.;
-  mCalSavedBeamTilt = mBeamTilt;
+  mCalSavedBeamTilt = mWorkingBT;
 
   // For extended cal, find number of points to do in the two extended regions
   if (doSparse) {
@@ -800,7 +809,7 @@ void CFocusManager::CalFocusStart(bool doSparse)
   mNewCal.defocus.resize(0);
   if (mNumSparseBelow > 0) {
     sparseTemp = rangeBelow / mNumSparseBelow;
-    mBeamTilt *= mSparseBTFactor;
+    mWorkingBT *= mSparseBTFactor;
     for (ind = 0; ind < mNumSparseBelow; ind++)
       mNewCal.defocus.push_back((float)(mSparseLowFocus + ind * sparseTemp));
   }
@@ -816,6 +825,13 @@ void CFocusManager::CalFocusStart(bool doSparse)
   mScope->NormalizeProjector();
   mWinApp->SetStatusText(MEDIUM_PANE, "CALIBRATING AUTOFOCUS");
   DetectFocus(FOCUS_CALIBRATE);
+}
+
+void CFocusManager::SetWorkingBeamTilt(int magInd)
+{
+  mWorkingBT = mBeamTilt;
+  if (mLMBeamTilt > 0. && magInd < mScope->GetLowestMModeMagInd())
+    mWorkingBT = mLMBeamTilt;
 }
 
 // Routine to process an image shift when calibrating focus
@@ -840,17 +856,17 @@ void CFocusManager::CalFocusData(float inX, float inY)
       source = "derived from uncalibrated image shifts";
   }
 
-  mNewCal.shiftX[mFCindex] = inX / mBeamTilt;
-  mNewCal.shiftY[mFCindex] = inY / mBeamTilt;
+  mNewCal.shiftX[mFCindex] = inX / mWorkingBT;
+  mNewCal.shiftY[mFCindex] = inY / mWorkingBT;
   if (mFCindex) {
     normScale = (mCalDelta / (mCalDefocus - mNewCal.defocus[mFCindex - 1])) * 
-      (mCalSavedBeamTilt / mBeamTilt);
+      (mCalSavedBeamTilt / mWorkingBT);
   } else {
     mWinApp->AppendToLog("Differences in extended region are adjusted for interval and"
       " beam tilt to make them comparable", LOG_SWALLOW_IF_CLOSED);
   }
-  double diffX = normScale * (inX - mBeamTilt * mNewCal.shiftX[B3DMAX(mFCindex - 1, 0)]);
-  double diffY = normScale * (inY - mBeamTilt * mNewCal.shiftY[B3DMAX(mFCindex - 1, 0)]);
+  double diffX = normScale * (inX - mWorkingBT * mNewCal.shiftX[B3DMAX(mFCindex - 1, 0)]);
+  double diffY = normScale * (inY - mWorkingBT * mNewCal.shiftY[B3DMAX(mFCindex - 1, 0)]);
   report.Format("%7.2f %7.2f %7.2f %11.2f %6.2f", mCalDefocus, inX, inY, diffX, diffY);
 
 
@@ -862,9 +878,9 @@ void CFocusManager::CalFocusData(float inX, float inY)
 
     // Restore beam tilt if leaving sparse region, or scale it down if entering one
     if (mFCindex == mNumSparseBelow)
-      SetBeamTilt(mCalSavedBeamTilt, "from CalFocusData");
+      mWorkingBT = mCalSavedBeamTilt;
     else if (mFCindex == mNumSparseBelow + mNumCalLevels)
-      mBeamTilt *= mSparseBTFactor;
+      mWorkingBT *= mSparseBTFactor;
     DetectFocus(FOCUS_CALIBRATE);
     return;
   }
@@ -872,7 +888,6 @@ void CFocusManager::CalFocusData(float inX, float inY)
   mFCindex = -1;
   mScope->IncDefocus(-mCalDefocus);
   mCalDefocus = 0.;
-  SetBeamTilt(mCalSavedBeamTilt, "from CalFocusData");
 
   iCen = belowInd + mNumCalLevels / 2;
   numBad = 0;
@@ -907,7 +922,7 @@ void CFocusManager::CalFocusData(float inX, float inY)
     intcpY);
   mNewCal.slopeX = slopeX;
   mNewCal.slopeY = slopeY;
-  mNewCal.beamTilt = mBeamTilt;
+  mNewCal.beamTilt = mWorkingBT;
   mNewCal.numPoints = mTotalCalLevels;
   mNewCal.calibrated = 1;
   mNewCal.direction = mTiltDirection;
@@ -968,8 +983,8 @@ void CFocusManager::CalFocusData(float inX, float inY)
     "%.2f X and %.2f Y pixels/um/mrad for %.2f mrad of %s beam tilt\r\n"
     "current defocus computed to be %.2f micron, line is %.2f pixels from origin",
     MagOrEFTEMmag(mCamParams[camera].GIF, mFocusMag),
-    slopeX * mBeamTilt, intcpX * mBeamTilt, slopeY * mBeamTilt, intcpY * mBeamTilt,
-    slopeX, slopeY, mBeamTilt, (LPCTSTR)axis, -zeroDefocus, originDist * mBeamTilt);
+    slopeX * mWorkingBT, intcpX * mWorkingBT, slopeY * mWorkingBT, intcpY * mWorkingBT,
+    slopeX, slopeY, mWorkingBT, (LPCTSTR)axis, -zeroDefocus, originDist * mWorkingBT);
   mWinApp->AppendToLog(report, LOG_MESSAGE_IF_CLOSED);
 
   if (wasCalibrated) {
@@ -1344,7 +1359,7 @@ int CFocusManager::CurrentDefocusFromShift(float inX, float inY, float &defocus,
   if (!GetFocusCal(magInd, mCurrentCamera, mFocusProbe, mFocusAlpha, useCal))
     return 1;
   aInv = mShiftManager->CameraToSpecimen(magInd);
-  defocus = DefocusFromCal(&useCal, inX / (float)mBeamTilt, inY / (float)mBeamTilt, 
+  defocus = DefocusFromCal(&useCal, inX / (float)mWorkingBT, inY / (float)mWorkingBT, 
     minDist);
   rawDefocus = defocus;
 
@@ -1401,6 +1416,10 @@ void CFocusManager::DetectFocus(int inWhere, int useViewInLD)
     mFocusMag = ldParm[mFocusSetNum].magIndex;
   else
     mFocusMag = mScope->FastMagIndex();
+
+  // Set working beam tilt here except for calibrate, which manages it completely
+  if (inWhere != FOCUS_CALIBRATE)
+    SetWorkingBeamTilt(mFocusMag);
 
   if (mWinApp->LowDoseMode()) {
     mFocusProbe = ldParm[mFocusSetNum].probeMode;
@@ -1475,10 +1494,10 @@ void CFocusManager::DetectFocus(int inWhere, int useViewInLD)
   for (int k = 0; k < 5; k++)
     mFocusBuf[k] = NULL;
   mScope->GetBeamTilt(mBaseTiltX, mBaseTiltY);
-  //PrintfToLog("Set beam tilt to %.2f, %.2f", mBaseTiltX + mNextXtiltOffset - mFracTiltX * mBeamTilt, 
-  //  mBaseTiltY + mNextYtiltOffset - mFracTiltY * mBeamTilt);
-  mScope->SetBeamTilt(mBaseTiltX + mNextXtiltOffset - mFracTiltX * mBeamTilt, 
-    mBaseTiltY + mNextYtiltOffset - mFracTiltY * mBeamTilt);
+  //PrintfToLog("Set beam tilt to %.2f, %.2f", mBaseTiltX + mNextXtiltOffset - mFracTiltX * mWorkingBT, 
+  //  mBaseTiltY + mNextYtiltOffset - mFracTiltY * mWorkingBT);
+  mScope->SetBeamTilt(mBaseTiltX + mNextXtiltOffset - mFracTiltX * mWorkingBT, 
+    mBaseTiltY + mNextYtiltOffset - mFracTiltY * mWorkingBT);
   if (mPostTiltDelay > 0)
     Sleep(mPostTiltDelay);
 
@@ -1649,7 +1668,7 @@ void CFocusManager::FocusDone()
     cosphi = (float)cos(DTOR * imRot);
     tanTilt = (float)(tan(DTOR * tilt) * (mShiftManager->GetStageInvertsZAxis() ? -1 :1));
     /* (mShiftManager->GetInvertStageXAxis() ? -1 : 1)*/;
-    pixel *= (float)mBeamTilt;    // Slopes are per mRad of tilt
+    pixel *= (float)mWorkingBT;    // Slopes are per mRad of tilt
     a11 = 1.f - focCal.slopeX * sinphi * tanTilt * pixel;
     a12 = focCal.slopeX * cosphi * tanTilt * pixel;
     a21 = -focCal.slopeY * sinphi * tanTilt * pixel;
@@ -1699,10 +1718,10 @@ void CFocusManager::FocusDone()
   mFocusIndex++;
   if (mFocusIndex < mNumShots) {
     int sign = 3 - 2 * mFocusIndex;
-    //PrintfToLog("Set beam tilt to %.2f, %.2f", mBaseTiltX + mNextXtiltOffset + mFracTiltX * sign * mBeamTilt,
-    //  mBaseTiltY + mNextYtiltOffset + mFracTiltY * sign * mBeamTilt);
-    mScope->SetBeamTilt(mBaseTiltX + mNextXtiltOffset + mFracTiltX * sign * mBeamTilt,
-      mBaseTiltY + mNextYtiltOffset + mFracTiltY * sign * mBeamTilt);
+    //PrintfToLog("Set beam tilt to %.2f, %.2f", mBaseTiltX + mNextXtiltOffset + mFracTiltX * sign * mWorkingBT,
+    //  mBaseTiltY + mNextYtiltOffset + mFracTiltY * sign * mWorkingBT);
+    mScope->SetBeamTilt(mBaseTiltX + mNextXtiltOffset + mFracTiltX * sign * mWorkingBT,
+      mBaseTiltY + mNextYtiltOffset + mFracTiltY * sign * mWorkingBT);
     if (mPostTiltDelay > 0)
       Sleep(mPostTiltDelay);
     if (mWinApp->mParticleTasks->GetWaitingForDrift()) {
@@ -1859,7 +1878,6 @@ void CFocusManager::StopFocusing()
   if (mFCindex >= 0) {
     mFCindex = -1;
     mScope->IncDefocus(-mCalDefocus);
-    SetBeamTilt(mCalSavedBeamTilt, "from StopFocusing");
   }
   mFocusIndex = -1;
   mScope->SetBeamTilt(mBaseTiltX, mBaseTiltY);
@@ -1903,7 +1921,6 @@ void CFocusManager::CheckAccuracy(int logging)
   mCheckLogging = logging;
   mCalDefocus = 0.;
   mFCindex = 0;
-  mCalSavedBeamTilt = mBeamTilt;
   mAccuracyMeasured = false;
   report.Format("Checking accuracy of autofocus by measuring defocus at\r\n"
     "current value and at %.1f microns above and below current defocus", mCalDelta);

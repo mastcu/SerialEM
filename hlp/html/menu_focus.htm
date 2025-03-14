@@ -242,9 +242,13 @@
         for entering the number; the default value shown is the current target. Enter a
         defocus in microns.</P>
       <P><A NAME="hid_focus_setbeamtilt"></A><B>Set Beam Tilt command (Focus/Tune menu)</B></P>
-      <P>This command is used to set the beam tilt that is used for autofocusing.
+      <P>This command is used to set the beam tilt that is used for autofocusing, and 
+        optionally a separate beam tilt for autofocusing in Low Magnification mode.
         Selecting this command brings up a dialog box with a default value equal to the
-        current beam tilt value. The units are milliradians (mrad).</P>
+        current beam tilt value. The units are milliradians (mrad) for Thermo/FEI and 
+        percent of full scale for other scopes.&nbsp; Then a second box opens to allow 
+        you to enter a different value for LM mode, or 0 to use the same beam tilt as in 
+        non-LM mode.</P>
       <P><A NAME="hid_focus_setoffset"></A><B>Set Offset command (Focus/Tune menu)</B></P>
       <P>Use this command to set a focus offset that will be applied before any of the
         autofocusing operations invoked in the Focus menu. For example, if the offset

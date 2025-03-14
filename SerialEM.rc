@@ -312,7 +312,6 @@ BEGIN
             MENUITEM SEPARATOR
             MENUITEM "&List Calibrations",          ID_AUTOFOCUSFOCUS_LISTCALIBRATIONS
         END
-        MENUITEM SEPARATOR
         POPUP "&Beam && Spot"
         BEGIN
             MENUITEM "&Illuminated Area Limits",    ID_BEAMSPOT_ILLUMINATEDAREALIMITS
@@ -327,7 +326,6 @@ BEGIN
             MENUITEM "S&pot Beam Shifts",           ID_BEAMSPOT_SPOTBEAMSHIFTS
             MENUITEM "&List Calibrations",          ID_BEAMSPOT_LISTCALIBRATIONS
         END
-        MENUITEM "Set Aperture Si&ze",          ID_CALIBRATION_SET_APERTURE_SIZE
         MENUITEM SEPARATOR
         MENUITEM "&Mag Energy Shifts",          ID_CALIBRATION_MAGENERGYSHIFTS
         MENUITEM "&List Mags",                  ID_CALIBRATION_LISTMAGS
@@ -539,6 +537,7 @@ BEGIN
         MENUITEM "Set &Dose Rate",              ID_TASKS_SET_DOSE_RATE
         MENUITEM "Calibra&te Electron Dose",    ID_CALIBRATION_ELECTRONDOSE
         MENUITEM "Purge Old Dose Calibs",       ID_CALIBRATION_PURGEOLDCALIBS
+        MENUITEM "Set Aperture Size",           ID_CALIBRATION_SET_APERTURE_SIZE
         MENUITEM SEPARATOR
         MENUITEM "M&ove beam\tShift+M",         ID_PROCESS_MOVEBEAM
         MENUITEM "&Center Beam\tShift+C",       ID_TASKS_CENTERBEAM
@@ -566,8 +565,8 @@ BEGIN
         MENUITEM "Reverse Ti&lt",               ID_REVERSE_TILT
         MENUITEM SEPARATOR
         MENUITEM "Setup Scope M&anagement...",  ID_TASKS_SETUPSCOPEMANAGEMENT
-        MENUITEM "&Verbose",                    ID_TASKS_VERBOSE
         MENUITEM SEPARATOR
+        MENUITEM "&Verbose",                    ID_TASKS_VERBOSE
         POPUP "Speciali&zed Options"
         BEGIN
             MENUITEM "&Disable Dark Trim in Align...", ID_SPECIAL_DISABLE_DARK_TRIM_IN_ALIGN
@@ -3369,9 +3368,9 @@ BEGIN
 END
 
 IDD_ONELINESCRIPT DIALOGEX 0, 0, 137, 81
-STYLE DS_SETFONT | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME
+STYLE DS_SETFONT | WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME
 EXSTYLE WS_EX_TOOLWINDOW
-CAPTION "Five One-line Scripts"
+CAPTION "Ten One-line Scripts"
 FONT 8, "Microsoft Sans Serif", 400, 0, 0x0
 BEGIN
     LTEXT           "Tab or  `  to complete command",IDC_STAT_COMPLETIONS,3,1,131,8
@@ -3385,6 +3384,16 @@ BEGIN
     DEFPUSHBUTTON   "Run",IDC_RUN_ONE_LINE4,109,52,25,12
     EDITTEXT        IDC_EDIT_ONE_LINE5,3,66,103,12,ES_AUTOHSCROLL
     DEFPUSHBUTTON   "Run",IDC_RUN_ONE_LINE5,109,66,25,12
+    EDITTEXT        IDC_EDIT_ONE_LINE6,3,80,103,12,ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "Run",IDC_RUN_ONE_LINE6,109,80,25,12
+    EDITTEXT        IDC_EDIT_ONE_LINE7,3,94,103,12,ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "Run",IDC_RUN_ONE_LINE7,109,94,25,12
+    EDITTEXT        IDC_EDIT_ONE_LINE8,3,108,103,12,ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "Run",IDC_RUN_ONE_LINE8,109,108,25,12
+    EDITTEXT        IDC_EDIT_ONE_LINE9,3,122,103,12,ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "Run",IDC_RUN_ONE_LINE9,109,122,25,12
+    EDITTEXT        IDC_EDIT_ONE_LINE10,3,136,103,12,ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "Run",IDC_RUN_ONE_LINE10,109,136,25,12
 END
 
 IDD_CTFFINDDLG DIALOGEX 0, 0, 183, 146
@@ -5250,6 +5259,11 @@ BEGIN
     0
 END
 
+IDD_ONELINESCRIPT AFX_DIALOG_LAYOUT
+BEGIN
+    0
+END
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -6365,10 +6379,29 @@ END
 
 STRINGTABLE
 BEGIN
+    IDC_RROUGHLM_V_OR_S     "Always do Rough Eucentricity outside of LM with View or Search"
+    IDC_RREFINE_TRIAL       "Use Trial for Refine Eucentricity"
+    IDC_RREFINE_V_OR_S      "Use View or Search, whichever is more suitable, for Refine Eucentricity"
+    IDC_RESETIS_TRIAL       "Use Trial for Reset image shift & Realign"
+    IDC_RRESETIS_V_OR_S     "Use View or Search, whichever is more suitable, for Reset IS & Realign"
+    IDC_RWALKUP_TRIAL       "Use Trial for Walkup"
+    IDC_RWALKUP_V_OR_S      "Use View or Search, whichever is more suitable, for Walkup"
+    IDC_CHECK_USE_VIEW      "Always use View instead of Search, even when its FOV is too small"
+    IDC_RVECTORS_FROM_MAPS  "Use hole vectors stored with maps to set IS vectors for multiple Records"
+    IDC_RVECTORS_FROM_SETTINGS 
+                            "Set IS vectors for multiple Records from settings stored for each grid"
     IDC_SKIP_FILE_DLG       "Use the values set here instead of opening this dialog every time"
     IDC_RSUPER_RES_REF      "Make gain reference for correcting super-resolution images"
+END
+
+STRINGTABLE
+BEGIN
     IDC_RBIN_TO_SIZE        "Reduce images for correlation to be close to the specified size"
     IDC_SPIN_BIN_TO         "Select reduction amount or target size for images being correlated"
+END
+
+STRINGTABLE
+BEGIN
     IDC_RALIBIN_BY_FAC      "Reduce images for correlation by a selected amount"
     IDC_CONSECUTIVE_FILES   "Save multiple extra Records to separate files following the selected one"
     IDC_BUT_POSTPONE        "Close dialog and save parameters so acquisition can be started from script"
@@ -7976,21 +8009,6 @@ BEGIN
     IDC_RSET_C1_APERTURE    "Set specific size or retract the C1 aperture"
     IDC_RSET_C2_APERTURE    "Set specific size or retract the C2 aperture"
     IDC_RROUGH_LM_SEARCH    "Use Search for Rough Eucentricity if starting in LM and it is in LM"
-    IDC_RVECTORS_FROM_MAPS  "Use hole vectors stored with maps to set IS vectors for multiple Records"
-    IDC_RVECTORS_FROM_SETTINGS
-                            "Set IS vectors for multiple Records from settings stored for each grid"
-END
-
-STRINGTABLE
-BEGIN
-    IDC_RROUGHLM_V_OR_S     "Always do Rough Eucentricity outside of LM with View or Search"
-    IDC_RREFINE_TRIAL       "Use Trial for Refine Eucentricity"
-    IDC_RREFINE_V_OR_S      "Use View or Search, whichever is more suitable, for Refine Eucentricity"
-    IDC_RESETIS_TRIAL       "Use Trial for Reset image shift & Realign"
-    IDC_RRESETIS_V_OR_S     "Use View or Search, whichever is more suitable, for Reset IS & Realign"
-    IDC_RWALKUP_TRIAL       "Use Trial for Walkup"
-    IDC_RWALKUP_V_OR_S      "Use View or Search, whichever is more suitable, for Walkup"
-    IDC_CHECK_USE_VIEW      "Always use View instead of Search, even when its FOV is too small"
 END
 
 #endif    // English (United States) resources

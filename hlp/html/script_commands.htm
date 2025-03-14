@@ -3256,8 +3256,8 @@
         <TR>
           <TD class="scriptcommand">SetC2ApSizeForScaling #</TD>
           <TD>Sets the value for the C2 aperture size in microns that is used to scale 
-            intensity values on a Titan to <b>#</b>.&nbsp; This command has the same effect as <A href="menu_calibration.htm#hid_calibration_set_aperture_size">Set Aperture Size</A> in
-             the Calibration - Beam &amp; Spot submenu.&nbsp If there is a change in aperture size,
+            intensity values on a Titan to <b>#</b>.&nbsp; This command has the same effect as <A href="menu_tasks.htm#hid_calibration_set_aperture_size">Set Aperture Size</A> in
+             the Tasks menu.&nbsp If there is a change in aperture size,
              intensity values in various calibrations will be scaled.&nbsp; Also, if run in the
              same script, the 'CalibrateHighFocusMag' and 'CalibrateHighFocusIS' commands will run
              without requesting an aperture size.&nbsp; Command added in 4.2, 5-Feb-25.
@@ -4065,17 +4065,20 @@
             magnification image is in A, then the default behavior is to scale up and rotate a region of the reference
              centered on <b>#CX</b>, <b>#CY</b> and align to that, testing a small range of additional rotations and
             scalings.&nbsp; Enter -1 for <b>#CX</b> and <b>#CY</b> to align to the center of the reference.&nbsp; The
-            scaled reference will be left in the B buffer.&nbsp; The size of scaled up region is
-             determined by <b>#M</b>, which sets the maximum allowed shift in microns in the autoalignments;
+            scaled reference will be left in the B buffer.&nbsp; Additional entries are: <br />
+            <b>#M</b> determines the size of scaled up region by setting the maximum allowed shift in microns in the autoalignments;
              if possible, the size is set so that an aligned image at that shift will still fully 
             overlap the scaled reference.&nbsp; A negative value of <b>#M</b> specifies the number of fields
             of view to add to the size of the image in A, or equivalently the number of FOVs of shift 
             that can occur with full overlap.&nbsp; A value of -1 would make the reference about 3 times as big
-            as the image in A.&nbsp; The optional <b>#S</b> sets the maximum percent change in size to be tested; the default is
+            as the image in A.&nbsp; <br />
+            The optional <b>#S</b> sets the maximum percent change in size to be tested; the default is
             the value of the property 'ScaledAliDfltPctChg', which defaults to 4
-            to test scalings from 0.96 to 1.04.&nbsp; Set <b>#A</b> to the maximum rotation to be tested; the
-            default is the value of the property 'ScaledAliDfltMaxRot', which defaults to 3 degrees.&nbsp; Set
-             <b>#I</b> greater than 0 to suppress the change in microscope image shift. This 
+            to test scalings from 0.96 to 1.04.&nbsp;  Enter 0 for the default.<Br>
+            Set <b>#A</b> to the maximum rotation to be tested; the
+            default is the value of the property 'ScaledAliDfltMaxRot', which defaults to 3 
+            degrees.&nbsp; Enter -1 for the default.<br />
+             Set <b>#I</b> greater than 0 to suppress the change in microscope image shift. This 
             same procedure can also be used if the images are from the same magnification 
             and camera, provided that the reference has a larger field off view.<br />
             If the lower magnification image is in A or a negative value is entered for <b>#S</b>, the higher mag image
@@ -4461,7 +4464,7 @@
             <i>ReportedValue1</i> is set to the total number of Record images to be taken.</TD>
         </TR>
         <TR>
-          <TD class="scriptcommand">SetMultiShotParams #N [#C] [#O] [#D] [#S] [#E] [#F] [#B] [#H] [#R2] [#N2] [#O2] [#X #Y] [#DH] </TD>
+          <TD class="scriptcommand">SetMultishotParams #N [#C] [#O] [#D] [#S] [#E] [#F] [#B] [#H] [#R2] [#N2] [#O2] [#X #Y] [#DH] </TD>
           <TD>Sets parameters for Multiple Records persistently.&nbsp; The first 12 parameters have 
             exactly the same meaning as for the &#39;MultipleRecords&#39; command, except that the 
             entry for <b>#H</b> can be the sum of 1, 2, 16 or 32, and 64 or 128.&nbsp; In addition:<br />

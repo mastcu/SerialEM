@@ -3,6 +3,17 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+3/13/25: Allowed the center of the pattern for the calibrate coma versus IS
+pattern to be moved with the marker point.
+
+3/13/25: Added separate beam tilt for autofocusing in LM.
+
+3/13/25: Expanded One-line scripts from 5 to 10.
+
+3/13/25: Moved Set C2 Aperture Size from Calibration to Tasks menu.
+
+3/13/25: Implemented and documented defaults properly for AlignBetweenMags.
+
 3/13/25: Fixed montages opened with SetupPolygonMontage becoming unusable
 after closing the file (In 4.1).
 

@@ -61,6 +61,7 @@ public:
   BOOL GetTripleMode() {return mTripleMode;};
   SetMember(BOOL, TripleMode);
   GetMember(float, BeamTilt);
+  GetSetMember(float, LMBeamTilt);
   void SetBeamTilt(float inVal, const char *from = NULL);
   void SetNextTiltOffset(double inX, double inY) {mNextXtiltOffset = inX, mNextYtiltOffset = inY;};
   GetMember(float, TargetDefocus)
@@ -88,6 +89,7 @@ public:
   CArray<STEMFocusZTable, STEMFocusZTable> *GetSFfocusZtables() {return &mSFfocusZtables;};
   BOOL DoingFocus() {return (mFocusIndex >= 0 || mNumRotavs >= 0);};
   void CalFocusStart(bool doSparse);
+  void SetWorkingBeamTilt(int magInd);
   BOOL DoingSTEMfocusVsZ() {return mSFVZindex > -3;};
   void CalFocusData(float inX, float inY);
   void AutoFocusStart(int inChange, int useViewInLD = 0, int iterNum = 1);
@@ -208,7 +210,9 @@ private:
   float mFracTiltX, mFracTiltY;    // Fraction of each coil to use
   double mBaseTiltX, mBaseTiltY;   // Existing tilts
   float mBeamTilt;
-  float mCalSavedBeamTilt;
+  float mLMBeamTilt;         // Beam tilt for LM, or 0 for same
+  float mWorkingBT;          // Value to use in current focus detection
+  float mCalSavedBeamTilt;   // Base beam tilt value used in cal
   double mNextXtiltOffset;   // Offset from center of beam tilt on next run
   double mNextYtiltOffset;
   int mPostTiltDelay;        // Delay after tilting, in milliseconds
