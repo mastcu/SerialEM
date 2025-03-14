@@ -2714,6 +2714,12 @@ void CSerialEMDoc::AppendToProgramLog(BOOL starting)
   }
 }
 
+void CSerialEMDoc::SetAutoSaveNav(BOOL inVal)
+{
+  SEMTrace('0', "Autosave Nav set to %d", inVal ? 1 : 0);
+  mAutoSaveNav = inVal;
+}
+
 // Save the short-term calibrations - this is called when settings or calibrations are
 // saved or upon exit
 void CSerialEMDoc::SaveShortTermCal()

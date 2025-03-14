@@ -3427,7 +3427,8 @@ void SEMTrace(char key, char *fmt, ...)
   va_list args;
   CString str;
   CString specKeys = "!@#$";
-  int special = ((CSerialEMApp *)AfxGetApp())->GetSpecialDebugLevel();
+  CSerialEMApp *winApp = (CSerialEMApp *)AfxGetApp();
+  int special = winApp->GetSpecialDebugLevel();
   int keyInd = specKeys.Find(key);
   if ((debugOutput.IsEmpty() || debugOutput == "0" || 
     (key != '1' && debugOutput.Find(key) < 0)) && key != '0' && 
@@ -3450,15 +3451,15 @@ void SEMTrace(char key, char *fmt, ...)
   sTraceMsg[sNumTraceMsg++] += str;
 
   // If this is the main thread, dump the output immediately
-  if (GetCurrentThreadId() == appThreadID) {
+  if (GetCurrentThreadId() == appThreadID && winApp->mLogWindow) {
     for (int len = 0; len < sNumTraceMsg; len++) {
       if (sTraceIsDebug[len])
-        ((CSerialEMApp *)AfxGetApp())->SetNextLogColorStyle(DEBUG_COLOR_IND, 0);
-      ((CSerialEMApp *)AfxGetApp())->AppendToLog(sTraceMsg[len], LOG_OPEN_IF_CLOSED);
+        winApp->SetNextLogColorStyle(DEBUG_COLOR_IND, 0);
+      winApp->AppendToLog(sTraceMsg[len], LOG_OPEN_IF_CLOSED);
     }
     sNumTraceMsg = 0;
     if (debugOutput.Find('A') >= 0)
-      ((CSerialEMApp *)AfxGetApp())->mLogWindow->UpdateSaveFile(false);
+      winApp->mLogWindow->UpdateSaveFile(false);
   }
 
   ReleaseMutex(traceMutexHandle);

@@ -73,7 +73,9 @@ public:
   void SaveCalibrations();
 	void SaveShortTermCal();
 	void AppendToProgramLog(BOOL starting);
-  GetSetMember(BOOL, AutoSaveNav);
+  //GetSetMember(BOOL, AutoSaveNav);
+  GetMember(BOOL, AutoSaveNav);
+  void SetAutoSaveNav(BOOL inVal);
   GetSetMember(BOOL, AutoSaveSettings);
   GetSetMember(BOOL, IgnoreShortTerm);
   SetMember(int, DefaultMontXpieces);

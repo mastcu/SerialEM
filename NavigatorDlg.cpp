@@ -8158,6 +8158,8 @@ int CNavigatorDlg::AskIfSave(CString reason)
   if (mChanged && !mNavFilename.IsEmpty() && mWinApp->mDocWnd->GetAutoSaveNav())
     return DoSave(false);
 
+  PrintfToLog("Navigator Changed %d  filename %s  autosave %d", mChanged ? 1 : 0,
+    (LPCTSTR)mNavFilename, mWinApp->mDocWnd->GetAutoSaveNav() ? 1 : 0);
   reason = "Save Navigator entries before " + reason;
   if (!suggested) {
     reason += "\r\n(Turn on Autosave in Navigator Options submenu to avoid this message)";
