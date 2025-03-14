@@ -85,7 +85,7 @@ KStoreIMOD::KStoreIMOD(CString inFilename, FileOptions inFileOpt)
   if (isHdf) {
     mStoreType = STORE_TYPE_HDF;
     mAdocIndex = mIIfile->adocIndex;
-    mMontCoordsInMdoc = inFileOpt.montageInMdoc;
+    mMontCoordsInMdoc = true;
     mIIfile->hdfCompression = 0;
     if (inFileOpt.hdfCompression == COMPRESS_ZIP) {
       compEnvVar = getenv("IMOD_HDF_COMPRESSION");
