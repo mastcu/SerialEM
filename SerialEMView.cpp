@@ -610,6 +610,7 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
   int tmpWidth, tmpHeight, ierr, ifilt, numLines, thick, loop, ix, iy, group, numGroups;
   int adjSave;
   float imXcenter, imYcenter, halfXwin, halfYwin, tempX, tempY, ptX, ptY;
+  float comaXcen, comaYcen;
   float minXstage = 1.e30f, maxXstage = -1.e30f, minYstage = 1.e30f, maxYstage = -1.e30f;
   float cenX, cenY, scale, rotation, filtMean = 128., filtSD, boost, targetSD = 40.;
   float crossXoffset = 0., crossYoffset = 0., minLimX, minLimY, maxLimX, maxLimY;
@@ -1210,8 +1211,12 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
     isToCamNoFoc = mShiftManager->IStoGivenCamera(imBuf->mMagInd,
       imBuf->mCamera);
     isToCam = mShiftManager->MatScaleRotate(isToCamNoFoc, scale, rotation);
-    cenX = imBuf->mImage->getWidth() / 2.f;
-    cenY = imBuf->mImage->getHeight() / 2.f;
+    cenX = comaXcen = imBuf->mImage->getWidth() / 2.f;
+    cenY = comaYcen = imBuf->mImage->getHeight() / 2.f;
+    if (imBuf->mHasUserPt) {
+      comaXcen = imBuf->mUserPtX;
+      comaYcen = imBuf->mUserPtY;
+    }
     boost = 0.;
     for (ix = 0; ix < 4; ix++) {
       mWinApp->mAutoTuning->GetComaVsISVector(ldp->magIndex,
@@ -1223,11 +1228,12 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
         ptX, ptY);
       ptX /= (float)imBuf->mBinning;
       ptY /= (float)imBuf->mBinning;
-      DrawLowDoseAreas(cdc, rect, imBuf, ptX, -ptY, thick2, -1, ix);
+      DrawLowDoseAreas(cdc, rect, imBuf, (comaXcen - cenX) + ptX, (comaYcen - cenY) - ptY,
+        thick2, -1, ix);
       boost += sqrtf(ptX * ptX + ptY * ptY) / 4.f;
     }
     CPen pnSolidPen(PS_SOLID, thick2, RGB(0, 255, 0));
-    DrawCircle(&cdc, &pnSolidPen, &rect, imBuf->mImage, cenX, cenY, boost);
+    DrawCircle(&cdc, &pnSolidPen, &rect, imBuf->mImage, comaXcen, comaYcen, boost);
   }
 
   // Various tests for skipping navigator display
@@ -1488,7 +1494,7 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
       }
 
       // DRAW MULTI-SHOT PATTERN
-      if (iDraw < 0 && useMultiShot) {
+      if (iDraw < 0 && useMultiShot && !mWinApp->mNavHelper->mComaVsISCalDlg) {
         float holeXoffset = 0, holeYoffset = 0;
         int inHoleEnd = item->mNumPoints - 2;
         int inHoleStart = inHoleEnd - B3DCHOICE(doInHole, msParams->numShots[0] + 
