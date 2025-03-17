@@ -2436,10 +2436,25 @@ void CBeamAssessor::ScaleTablesForAperture(int currentAp, bool fromMeasured)
   mCurrentAperture = currentAp;
 }
 
+// Common function for simple task of scalingtables if aperture change, setting
+// short term cal not saved, and optionally giving a message
+void CBeamAssessor::ScaleIntensitiesIfApChanged(int newAp, bool doMess)
+{
+  if (newAp == mCurrentAperture || newAp < 5)
+    return;
+  ScaleTablesForAperture(newAp, false);
+  mWinApp->mDocWnd->SetShortTermNotSaved();
+  if (doMess)
+    PrintfToLog("Scaled intensities in calibrations for new C2 aperture size %d um",
+      newAp);
+}
+
 // Ask the user to enter an aperture size, require it to be within generous limits or to
 // match a property for sizes
 int CBeamAssessor::RequestApertureSize(void)
 {
+  if (mScope->GetMonitorC2ApertureSize() > 0)
+    return mCurrentAperture;
   while (true) {
     int newAp = mCurrentAperture;
     if (!KGetOneInt("Enter the current C2 aperture size in microns:", newAp))

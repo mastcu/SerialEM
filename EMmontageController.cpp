@@ -1856,6 +1856,9 @@ int EMmontageController::DoNextPiece(int param)
   if (mReadingMontage) {
     report.Format("PIECE %d of %d", mNumDoing, mNumPieces - mNumToSkip);
     mWinApp->SetStatusText(SIMPLE_PANE, report);
+    SEMTrace('1', "Reading in Z = %d for piece %d (%d,%d)", mPieceSavedAt[mPieceIndex], 
+      mPieceIndex, mPieceIndex / mParam->yNframes + 1, mPieceIndex % mParam->yNframes + 1);
+
     int err = mBufferManager->ReadFromFile(mReadStoreMRC, mPieceSavedAt[mPieceIndex], 0,
       true);
     if (err) {

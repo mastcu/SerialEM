@@ -1463,15 +1463,14 @@ void CMenuTargets::OnUpdateCalibrationBeamintensity(CCmdUI* pCmdUI)
 void CMenuTargets::OnCalibrationSetApertureSize()
 {
   int newAp = mWinApp->mBeamAssessor->RequestApertureSize();
-  if (newAp) {
-    mWinApp->mBeamAssessor->ScaleTablesForAperture(newAp, false);
-    mWinApp->mDocWnd->SetShortTermNotSaved();
-  }
+  if (newAp)
+    mWinApp->mBeamAssessor->ScaleIntensitiesIfApChanged(newAp, false);
 }
 
 void CMenuTargets::OnUpdateCalibrationSetApertureSize(CCmdUI *pCmdUI)
 {
-  pCmdUI->Enable(!DoingTasks() && mScope->GetUseIllumAreaForC2());
+  pCmdUI->Enable(!DoingTasks() && mScope->GetUseIllumAreaForC2() && 
+    mScope->GetMonitorC2ApertureSize() <= 0);
 }
 
 void CMenuTargets::OnCalibrationBeamshift() 

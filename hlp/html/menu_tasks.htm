@@ -401,11 +401,12 @@
         (Tasks menu)</B></P>
       <P>Use this command to inform the program of the current size of the C2 aperture
       on a Titan microscope, where the illuminated area read from the microscope and
-      used for intensity is scaled by this aperture size when the aperture is changed.&nbsp;
+      used for intensity is scaled by this aperture size when the aperture is changed.&nbsp; 
+        The command is enabled if the program determines on startup that it cannot 
+        control the apertures, or if the property &#39;MonitorC2ApertureSize&#39; is set to 0.&nbsp;
       The program will scale the intensity values in the beam intensity, spot
       intensity, and crossover calibrations so that they are valid for this aperture
-      size.&nbsp;&nbsp; Once the aperture size is set either with this command or&nbsp;
-      after one of those calibrations, it will be remembered between sessions in the
+      size.&nbsp;&nbsp; Once the aperture size is set either with this command or&nbsp;after one of those calibrations, it will be remembered between sessions in the
       short term calibration file.</P>
       <P><A NAME="hid_process_movebeam"></A><B>Move Beam command (Tasks menu)</B></P>
       <P>Use this command to move the beam by a controlled amount. You can use it to

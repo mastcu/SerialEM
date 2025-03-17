@@ -4947,6 +4947,22 @@ int CMacCmd::Show(void)
   return 0;
 }
 
+// ToggleBufferDisplay
+int CMacCmd::ToggleBufferDisplay()
+{
+  CString report;
+  int index;
+  if (ConvertBufferLetter(mStrItems[1], -1, true, index, report))
+    ABORT_LINE(report);
+  if (!mImBufs->mImage)
+    ABORT_LINE("There must be an image in buffer A for line:\n\n");
+  if (mItemInt[2] <= 50 || mItemInt[3] < 0 || mItemInt[4] <= 0)
+    ABORT_LINE("Interval must be > 50, minimum count >= 0, and maximum count > 0 for "
+      "line:\n\n");
+  mWinApp->ToggleBuffers(index, mItemInt[2], mItemInt[3], mItemInt[4]);
+  return 0;
+}
+
 // ReportCurrentBuffer
 int CMacCmd::ReportCurrentBuffer(void)
 {
@@ -7225,6 +7241,9 @@ int CMacCmd::ReportC2ApSizeForScaling() {
 int CMacCmd::SetC2ApSizeForScaling() {
   if (!mScope->GetUseIllumAreaForC2())
     ABORT_LINE("SetC2ApSizeForScaling works only for microscopes using illuminated area");
+  if (mScope->GetMonitorC2ApertureSize() > 0)
+    ABORT_NOLINE("The SetC2ApSizeForScaling command does not work unless the property"
+      " MonitorC2ApertureSize is set to 0");
   if (mItemInt[1] < 5 || mItemInt[1] > 250)
     ABORT_LINE("The aperture size must be between 5 and 250 microns for line:\n\n");
   mWinApp->mBeamAssessor->ScaleTablesForAperture(mItemInt[1], false);

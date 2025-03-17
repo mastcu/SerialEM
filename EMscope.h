@@ -580,6 +580,7 @@ public:
   GetSetMember(int, ScopeHasAutoloader);
   GetSetMember(int, LDFreeLensDelay);
   GetSetMember(int, OpenValvesDelay);
+  GetSetMember(int, MonitorC2ApertureSize);
   GetMember(int, LastMagIndex);
   std::vector<ShortVec> *GetApertureLists() { return &mApertureSizes; };
   void GetRawImageShift(double &ISX, double &ISY) { ISX = mLastISX; ISY = mLastISY; };
@@ -986,6 +987,7 @@ private:
   int mScreenRaiseDelay;       // Delay time after raising the screen, msec
   int mLDFreeLensDelay;        // Delay time after setting FLC for an area, msec
   int mOpenValvesDelay;        // Delay time after opening column valves
+  int mMonitorC2ApertureSize;  // Flag to keep aperture size up to date
   int mAdvancedScriptVersion;  // My internal version number for advanced scripting
   int mPluginVersion;          // Version of plugin or server
 

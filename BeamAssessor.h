@@ -261,6 +261,7 @@ public:
   int OutOfCalibratedRange(double startIntensity, int spotSize, int probe, int & polarity,
     bool warnIfExtrap = false);
   void ScaleTablesForAperture(int currentAp, bool fromCurrent);
+  void ScaleIntensitiesIfApChanged(int newAp, bool doMess);
   int RequestApertureSize(void);
   void InitialSetupForAperture(void);
   void CalibrateIllumAreaLimits(void);

@@ -553,6 +553,7 @@ CEMscope::CEMscope()
   mLDFreeLensDelay = 0;
   mOpenValvesDelay = 0;
   mSubFromPosChgISX = mSubFromPosChgISY = 0.;
+  mMonitorC2ApertureSize = -1;
   mAdvancedScriptVersion = 0;
   mPluginVersion = 0;
   mPlugFuncs = NULL;
@@ -662,6 +663,7 @@ int CEMscope::Initialize()
       mScopeMutexOwnerId = 0;
       strcpy(mScopeMutexOwnerStr,"NOBODY");
       UsingScopeMutex = true;
+      mMonitorC2ApertureSize = 0;
     }
 
     // Finish conditional initialization of variables
@@ -690,6 +692,10 @@ int CEMscope::Initialize()
         mDewarVacCapabilities = mUseIllumAreaForC2 ? 3 : 0;
       if (!mPlugFuncs->GetApertureSize)
         mFEIhasApertureSupport = 0;
+      if (mMonitorC2ApertureSize && !(mUseIllumAreaForC2 && mFEIhasApertureSupport))
+        mMonitorC2ApertureSize = 0;
+      else
+        mMonitorC2ApertureSize = 1;
 
     } else if (JEOLscope) {
 
@@ -906,6 +912,15 @@ int CEMscope::Initialize()
     for (ind = 0; ind < (int)mSkipUtapiServices.size(); ind++)
       if (mSkipUtapiServices[ind] >= 0 && mSkipUtapiServices[ind] < UTAPI_SUPPORT_END)
         mUtapiSupportsService[mSkipUtapiServices[ind]] = false;
+  }
+  if (mMonitorC2ApertureSize > 0) {
+    try {
+      mPlugFuncs->GetApertureSize(1);
+    }
+    catch (_com_error E) {
+      mFEIhasApertureSupport = 0;
+      PrintfToLog("There is no support for monitoring C2 aperture on this scope");
+    }
   }
 
   // Now set up a lot of things for TEMCON JEOL scope
@@ -1277,7 +1292,7 @@ void CEMscope::ScopeUpdate(DWORD dwTime)
   int spotSize, probe, returnedProbe, tmpMag, toCam, oldNeutralInd, subMode;
   double intensity, objective, rawIntensity, ISX, ISY, current, defocus;
   BOOL EFTEM, bReady, smallScreen, manageISonMagChg, gotoArea, blanked, restoreIS = false;
-  int STEMmode, gunState = -1;
+  int STEMmode, gunState = -1, apSize;
   bool newISseen = false;
   bool handleMagChange, deferISchange, temProbeChanged = false;
   int vacStatus = -1;
@@ -1295,6 +1310,7 @@ void CEMscope::ScopeUpdate(DWORD dwTime)
   bool reportTime = GetDebugOutput('u') && (mAutosaveCount % 10 == 0);
   static int firstTime = 1;
   static bool inUpdate = false;
+  static int apertureUpdateCount = 0, numApertureFailures = 0;
 
   if (reportTime)
     wallStart = wallTime();
@@ -1760,6 +1776,23 @@ void CEMscope::ScopeUpdate(DWORD dwTime)
     UpdateGauges(vacStatus);
     checkpoint = "vacuum";
     CHECK_TIME(8);
+    if (mMonitorC2ApertureSize > 0 && mUpdateInterval * apertureUpdateCount++ > 2000 &&
+      !mMovingAperture) {
+      apertureUpdateCount = 0;
+      try {
+        apSize = mPlugFuncs->GetApertureSize(1);
+        numApertureFailures = 0;
+        mWinApp->mBeamAssessor->ScaleIntensitiesIfApChanged(apSize, true);
+      }
+      catch (_com_error E) {
+        numApertureFailures++;
+        if (numApertureFailures > 4) {
+          mMonitorC2ApertureSize = 0;
+          PrintfToLog("WARNING: Getting C2 aperture size has failed 5 times in a row;\r\n"
+            "   it will no longer be monitored");
+        }
+      }
+    }
 
     // Take care of screen-dependent changes in low dose and update low dose panel
     needBlank = NeedBeamBlanking(screenPos, STEMmode != 0, gotoArea);
@@ -7897,6 +7930,8 @@ int CEMscope::ApertureBusy()
   mMovingAperture = retval > 0;
   if (retval <= 0)
     mCamera->SetSuspendFilterUpdates(false);
+  if (!retval && mMonitorC2ApertureSize > 0 && mApertureTD.apIndex == 1)
+    mWinApp->mBeamAssessor->ScaleIntensitiesIfApChanged(mApertureTD.sizeOrIndex, true);
   return retval;
 }
 
@@ -7906,7 +7941,7 @@ int CEMscope::TaskApertureBusy()
   return winApp->mScope->ApertureBusy();
 }
 
-// Delete the thread for moving an aperture if there is a timeout and issue message
+// Delete the thread for moving an aperture, and if there is an error, issue message
 void CEMscope::ApertureCleanup(int error)
 {
   UtilThreadCleanup(&mApertureThread);

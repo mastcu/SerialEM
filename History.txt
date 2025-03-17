@@ -3,6 +3,16 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+3/17/25: For Titan microscopes (UseIlluminatedArea property set to 1), it will
+now check for aperture control on program startup and monitor the C2 aperture
+size and scale intensity values in tables automatically.
+
+3/17/25: Added hot key Ctrl-Shift M to start/stop a continuous movie through
+the stack window used for tilt series and other stacks.
+
+3/17/25: Improved new method of toggling buffers to allow alignment to be
+monitored and added a script command to start the toggling.
+
 3/13/25: Allowed the center of the pattern for the calibrate coma versus IS
 pattern to be moved with the marker point.
 
