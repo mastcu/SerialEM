@@ -45,12 +45,20 @@
         used as usual to scroll through and zoom the display. (It may be necessary to 
         click inside the window with the mouse to make it active.) Images will be 
         labeled by their number in the buffer stack and by the Z value of the 
-        corresponding image in the output file.</P>
+        corresponding image in the output file.&nbsp; For bidirectional and 
+        dose-symmetric series, images are added at the top or bottom of the stack to 
+        keep them in order by tilt angle.</P>
+    <P>You can start or stop an automatic movie through the stack with the hot key 
+      Ctrl-Shift M.&nbsp; The program will continuously loop from one end of the 
+      stored images to other and back.&nbsp; The speed of the movie can be decreased 
+      or increased with hot keys &#39;Ctrl &lt;&#39; (Ctrl-Shift comma) and &#39;Ctrl &gt;&#39; (Ctrl-Shift 
+      period).</P>
       <P>This option can be turned on and off at any time during a series. If the window 
         is closed, a new window will be opened when the next image is ready to be 
         shown, but the previous images will be gone. At the end of tilt series, the 
         window will no longer accept new images but it will be left open until you 
-        close it. If you start a new tilt series, a new window will be opened for its 
+        close it, and a movie can be run in that window until a new stack window is 
+        started. If you start a new tilt series, a new window will be opened for its 
         images.</P>
       <P><B>Bin to N KB/image</B></P>
       <P>This spin button lets you control how much the images are binned by adjusting 

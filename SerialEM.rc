@@ -2106,9 +2106,9 @@ BEGIN
     PUSHBUTTON      "?",IDC_BUTHELP,142,448,9,10
     CONTROL         "Stack Record/Overview in separate window",IDC_STACKRECORD,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,8,7,139,10
-    LTEXT           "Bin to",IDC_STATIC,7,21,17,8
-    CONTROL         "",IDC_SPINBINSIZE,"msctls_updown32",UDS_ARROWKEYS,25,18,9,14
-    LTEXT           "256 KB/image (e.g., 512 x512)",IDC_STATKBPIMAGE,37,21,110,8
+    LTEXT           "Bin to",IDC_STATIC,7,24,17,8
+    CONTROL         "",IDC_SPINBINSIZE,"msctls_updown32",UDS_ARROWKEYS,25,21,9,14
+    LTEXT           "256 KB/image (e.g., 512 x512)",IDC_STATKBPIMAGE,37,24,110,8
     CONTROL         "Change spot size to",IDC_CHECK_SETSPOT,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,11,344,70,10
     LTEXT           "Change intensity by factor of",IDC_STATIC,22,330,63,8
     EDITTEXT        IDC_EDIT_DELTAC2,83,328,30,12,ES_AUTOHSCROLL
@@ -2135,6 +2135,7 @@ BEGIN
     EDITTEXT        IDC_EDIT_MAP_CUTOFF,86,428,21,14,ES_AUTOHSCROLL
     LTEXT           "falloff",IDC_STAT_MAP_FALLOFF,109,430,17,8
     EDITTEXT        IDC_EDIT_MAP_FALLOFF,127,428,21,14,ES_AUTOHSCROLL
+    LTEXT           "(Ctrl-Shift-M to toggle movie)",IDC_STATIC,52,16,90,8
 END
 
 IDD_REFPOLICY DIALOGEX 0, 0, 248, 122

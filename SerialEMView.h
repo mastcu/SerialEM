@@ -96,6 +96,7 @@ public:
   SetMember(bool, FlashNextDisplay);
   SetMember(COLORREF, FlashColor)
   GetMember(bool, DrewLDAreasAtNavPt);
+  GetMember(int, ImBufNumber);
   static GetMember(bool, TakingSnapshot);
   void SetOffsets(int inX, int inY) { m_iOffsetX = inX, m_iOffsetY = inY; };
   void GetCenterForLDAreas(float &xcen, float &ycen) { xcen = mNavLDAreasXcenter; ycen = mNavLDAreasYcenter; };
@@ -122,6 +123,10 @@ public:
                          int *doff);       /* data offset in ipixels           */
   EMimageBuffer *GetActiveImBuf();
   static SnapshotData *mSnapshotData;   // Structure for snapshot data,to be new/deleted
+  static UINT_PTR mMovieTimerID;   // ID if running a movie
+  static int mMovieDir;            // -1 or +1 for current direction
+  static int mMovieInterval;       // Interval for movie steps in msec
+  static bool mNewMovieInterval;   // Flag to restart with new interval
 
 #ifdef _DEBUG
   virtual void AssertValid() const;
@@ -231,6 +236,9 @@ public:
   void SetupZoomAroundPoint(CPoint * point);
   void WindowCornersInImageCoords(EMimageBuffer *imBuf, float *xCorner, float *yCorner);
   bool IsBufferInStack(EMimageBuffer *imBuf);
+  void ToggleStackMovie();
+  static void KillMovieTimer();
+  void ChangeMovieInterval(float delta);
   void DrawMapItemBox(CDC &cdc, CRect *rect, CMapDrawItem *item, EMimageBuffer *imBuf,
     int numPoints, float delXstage, float delYstage, float delPtX, float delPtY, 
     FloatVec *drawnX, FloatVec *drawnY);

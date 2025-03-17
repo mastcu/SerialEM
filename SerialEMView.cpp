@@ -50,6 +50,8 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
+static VOID CALLBACK MovieProc(HWND hwnd, UINT uMsg, UINT_PTR idEvent, DWORD dwTime);
+
 #define USER_PT_CLICK_TIME 500
 #define PAN_THRESH 5
 static double zoomvals[] =
@@ -60,6 +62,12 @@ static double zoomvals[] =
 
 bool CSerialEMView::mTakingSnapshot = false;
 SnapshotData *CSerialEMView::mSnapshotData = NULL;
+
+UINT_PTR CSerialEMView::mMovieTimerID = 0;
+int CSerialEMView::mMovieDir = 1;
+int CSerialEMView::mMovieInterval = 250;
+bool CSerialEMView::mNewMovieInterval = false;
+
 
 /////////////////////////////////////////////////////////////////////////////
 // CSerialEMView
@@ -252,7 +260,7 @@ void CSerialEMView::OnDestroy()
   if (mMainWindow)
     mWinApp->mMainView = NULL;
   else
-    mWinApp->ViewClosing(mStackWindow, mFFTWindow);
+    mWinApp->ViewClosing(mStackWindow, mFFTWindow, this);
   CView::OnDestroy();
 }
 
@@ -3190,7 +3198,7 @@ void CSerialEMView::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
       fdy = (float)((39. - nChar) * arrowInc);
     mWinApp->mProcessImage->MoveBeamByCameraFraction(fdx, fdy, true);
 
-  } else if (mShiftPressed && (nChar == VK_OEM_COMMA || nChar == VK_OEM_PERIOD)) {
+  } else if ((shift && !ctrl) && (nChar == VK_OEM_COMMA || nChar == VK_OEM_PERIOD)) {
     arrowInc *= (nChar == VK_OEM_COMMA ? 0.707107f : 1.414214f);
     mWinApp->mRemoteControl.SetBeamIncrement(arrowInc);
 
@@ -3198,7 +3206,7 @@ void CSerialEMView::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
   } else if (mCtrlPressed && (nChar == VK_UP || nChar == VK_DOWN)) {
     mWinApp->mRemoteControl.ChangeIntensityByIncrement(39 - nChar); 
 
-  } else if (mCtrlPressed && (nChar == VK_OEM_COMMA || nChar == VK_OEM_PERIOD)) {
+  } else if ((ctrl && !shift) && (nChar == VK_OEM_COMMA || nChar == VK_OEM_PERIOD)) {
     brightInc *= (nChar == VK_OEM_COMMA ? 0.707107f : 1.414214f);
     mWinApp->mRemoteControl.SetIntensityIncrement(brightInc);
      
@@ -3284,7 +3292,17 @@ void CSerialEMView::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
   } else if (cChar == 'B' && GetAsyncKeyState(VK_CONTROL) / 2 &&
     !mWinApp->DoingTasks()) {
     mWinApp->mLowDoseDlg.ToggleBlankWhenDown();
+
+  // Start/stop movie in stack window, adjust speed
+  } else if (nChar == 'M' && ctrl && shift && 
+    (mWinApp->mStackView || mWinApp->mLastStackView)) {
+    ToggleStackMovie();
+  } else if (nChar == VK_OEM_PERIOD && ctrl && shift) {
+    ChangeMovieInterval(0.707107f);
+  } else if (nChar == VK_OEM_COMMA && ctrl && shift) {
+    ChangeMovieInterval(1.414214f);
   }
+    
 
   CView::OnKeyDown(nChar, nRepCnt, nFlags);
 }
@@ -3747,3 +3765,50 @@ bool CSerialEMView::IsBufferInStack(EMimageBuffer *imBuf)
       return true;
   return false;
 }
+
+void CSerialEMView::ToggleStackMovie()
+{
+  if ((!mStackWindow && mWinApp->mLastStackView != this)|| mImBufNumber < 2)
+    return;
+  if (mMovieTimerID) {
+    CSerialEMView::KillMovieTimer();
+  } else {
+    mMovieTimerID = ::SetTimer(NULL, 1, mMovieInterval, MovieProc);
+  }
+}
+
+void CSerialEMView::KillMovieTimer()
+{
+  ::KillTimer(NULL, mMovieTimerID);
+  mMovieTimerID = 0;
+}
+
+void CSerialEMView::ChangeMovieInterval(float delta)
+{
+  mMovieInterval = B3DNINT(mMovieInterval * delta);
+  B3DCLAMP(mMovieInterval, 50, 5000);
+  mNewMovieInterval = true;
+}
+
+static VOID CALLBACK MovieProc(HWND hwnd, UINT uMsg, UINT_PTR idEvent, DWORD dwTime)
+{
+  int curInd, lastBuf, dir = CSerialEMView::mMovieDir;
+  CSerialEMApp *winApp = (CSerialEMApp *)AfxGetApp();
+  CSerialEMView *stack = winApp->mStackView ? winApp->mStackView : winApp->mLastStackView;
+  if (!stack) {
+    CSerialEMView::KillMovieTimer();
+    return;
+  }
+  if (CSerialEMView::mNewMovieInterval) {
+    CSerialEMView::KillMovieTimer();
+    CSerialEMView::mMovieTimerID = ::SetTimer(NULL, 1, CSerialEMView::mMovieInterval, 
+      MovieProc);
+    CSerialEMView::mNewMovieInterval = false;
+  }
+  curInd = stack->GetImBufIndex();
+  lastBuf = stack->GetImBufNumber() - 1;
+  if (curInd == 0 && dir < 0 || curInd >= lastBuf && dir > 0)
+    CSerialEMView::mMovieDir = -dir;
+  stack->SetCurrentBuffer(B3DMAX(0, B3DMIN(lastBuf, curInd + CSerialEMView::mMovieDir)));
+}
+
