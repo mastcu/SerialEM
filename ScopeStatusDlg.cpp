@@ -276,7 +276,7 @@ void CScopeStatusDlg::Update(double inCurrent, int inMagInd, double inDefocus,
     return;
 
   // Set probe mode and scope mode
-  int temNano = B3DCHOICE(!STEM && inProbeMode == 0, 1, 0);
+  int temNano = B3DCHOICE(inProbeMode == 0, 1, 0);
   if (STEM)
     EMmode = 2;
   else if (!inMagInd)
@@ -321,7 +321,7 @@ void CScopeStatusDlg::Update(double inCurrent, int inMagInd, double inDefocus,
     temNano != (mTEMnanoProbe ? 1 : 0)))
     mWinApp->mAlignFocusWindow.UpdateAutofocus(inMagInd);
   if (!noScope && mIntCalStatus > -2 && (inMagInd != mMagInd ||
-    temNano != (mTEMnanoProbe ? 1 : 0) || mEMmodeChanged))
+    (!STEM && temNano != (mTEMnanoProbe ? 1 : 0)) || mEMmodeChanged))
     mWinApp->mAlignFocusWindow.UpdateEucenFocus(inMagInd, temNano);
 
   // Maintain PLA/IS/CLA for JEOL
@@ -579,7 +579,7 @@ void CScopeStatusDlg::Update(double inCurrent, int inMagInd, double inDefocus,
     mBeamAlpha = inAlpha;
   } else if (FEIscope && (mEMmodeChanged || temNano != (mTEMnanoProbe ? 0 : 1))) {
     m_strProbeAlf = "";
-    if (EMmode < 2)
+    if (EMmode < 3)
       m_strProbeAlf = temNano ? "nP" : "uP";
     m_statProbeAlf.SetWindowText(m_strProbeAlf);
   }
