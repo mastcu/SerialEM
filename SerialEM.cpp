@@ -234,6 +234,7 @@ CSerialEMApp::CSerialEMApp()
   mStackViewImBuf = NULL;
   mViewOpening = false;
   mStackView = NULL;
+  mLastStackView = NULL;
   mFFTView = NULL;
   mFFTbufIndex = 0;
   mViewClosing = false;
@@ -2266,7 +2267,7 @@ int CSerialEMApp::AddToStackView(EMimageBuffer * imBuf, int angleOrder)
 }
 
 // When a view is closing, if it is stack view clear out pointer, set flag, resize
-void CSerialEMApp::ViewClosing(BOOL stackView, BOOL FFTview)
+void CSerialEMApp::ViewClosing(BOOL stackView, BOOL FFTview, CSerialEMView *view)
 {
   int nview;
   if (stackView) {
@@ -2276,6 +2277,8 @@ void CSerialEMApp::ViewClosing(BOOL stackView, BOOL FFTview)
     }
     mStackView = NULL;
   }
+  if (view == mLastStackView)
+    mLastStackView = NULL;
   if (FFTview) {
     mFFTView = NULL;
     for (nview = 0; nview < MAX_FFT_BUFFERS; nview++) {
@@ -2296,8 +2299,10 @@ void CSerialEMApp::ViewClosing(BOOL stackView, BOOL FFTview)
 // Stop keeping track of a stack view, tell it so
 void CSerialEMApp::DetachStackView(void)
 {
-  if (mStackView)
+  if (mStackView) {
+    mLastStackView = mStackView;
     mStackView->StopBeingActiveStack();
+  }
   mStackView = NULL;
 }
 
@@ -3550,12 +3555,42 @@ void CSerialEMApp::SetStatusText(int iPane, CString strText, bool skipBlink)
 }
 
 // Initite toggling between A and another buffer at the given interval
-void CSerialEMApp::ToggleBuffers(int toBuf, int interval, int maxCount)
+void CSerialEMApp::ToggleBuffers(int toBuf, int interval, int minCount, int maxCount)
 {
   mBufToToggle = toBuf;
   mBufToggleCount = maxCount;
+  mMaxTogglesLeft = maxCount - minCount;
   mBufToggleInterval = interval;
   mLastToggleTime = GetTickCount();
+}
+
+// Completes the minimum count of toggle before a new image is displayed
+void CSerialEMApp::FinishBufferToggles()
+{
+  if (!mBufToggleCount)
+    return;
+  int firstWait = mBufToggleInterval - (int)SEMTickInterval(mLastToggleTime);
+  while (mBufToggleCount > mMaxTogglesLeft) {
+    if (firstWait > 0)
+      Sleep(firstWait);
+    firstWait = 0;
+    SetCurrentBuffer(mMainView->GetImBufIndex() > 0 ? 0 : mBufToToggle);
+    Sleep(mBufToggleInterval);
+    mBufToggleCount--;
+  }
+  mBufToggleCount = 0;
+}
+
+// This called before a buffer is copied when rolling and it shifts the buffer being
+// toggled to, or finishes the toggling if that one is being copied to
+void CSerialEMApp::ManageToggleForCopy(int from, int to)
+{
+  if (mBufToggleCount < 0)
+    return;
+  if (mBufToToggle == from)
+    mBufToToggle = to;
+  else if (mBufToToggle == to)
+    FinishBufferToggles();
 }
 
 // Manage the blinking pane and image toggling

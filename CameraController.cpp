@@ -1998,6 +1998,7 @@ void CCameraController::RollBuffers(int nRoll, int keepIndexCurrent)
 {
   mRollBufKeptIndex = 0;
   for (int i = nRoll; i > 0 ; i--) {
+    mWinApp->ManageToggleForCopy(i - 1, i);
     mBufferManager->CopyImageBuffer(i - 1, i, false);
     if (keepIndexCurrent > 0 && keepIndexCurrent == i - 1) {
       mWinApp->SetCurrentBuffer(keepIndexCurrent + 1);
@@ -9573,7 +9574,7 @@ void CCameraController::DisplayNewImage(BOOL acquired)
   }
 
   mInDisplayNewImage = true;
-  mWinApp->SetBufToggleCount(0);
+  mWinApp->FinishBufferToggles();
 
   // If in diffraction mode and there are pixel sizes provided, replace the pixel size 
   if (!mMagBefore) {

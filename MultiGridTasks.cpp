@@ -1238,7 +1238,7 @@ void CMultiGridTasks::AlignNewReloadImage()
     mRRGcurDirection, xShift, yShift, xStage, yStage, xStage - mMoveInfo.x,
     yStage - mMoveInfo.y);
   mWinApp->mMainView->DrawImage();
-  mWinApp->ToggleBuffers(1, 300, 16);
+  mWinApp->ToggleBuffers(1, 300, 8, 16);
 
   // For first position, set the post-rotation shift and adjust the expected rotation
   if (!simpleAlign) {
@@ -1943,7 +1943,7 @@ void CMultiGridTasks::RefineRealignNextTask(int param)
       SEMMessageBox("Error aligning to grid map: " + errStr);
       return;
     }
-    mWinApp->ToggleBuffers(1, 300, 10);
+    mWinApp->ToggleBuffers(1, 300, 6, 10);
 
     // Get shift and equivalent stage position
     mImBufs->mImage->getShifts(xShift, yShift);

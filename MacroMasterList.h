@@ -829,6 +829,7 @@ MAC_SAME_NAME_NOARG(ReportObjectiveStrength, 0, 4, REPORTOBJECTIVESTRENGTH)
 MAC_SAME_FUNC_ARG(UpdateImagingState, 1, 0, GoToImagingState, UPDATEIMAGINGSTATE, S)
 MAC_SAME_NAME_ARG(ImagingStateProperties, 1, 0, IMAGINGSTATEPROPERTIES, S)
 MAC_SAME_NAME_ARG(StartTry, 0, 4, STARTTRY, i)
+MAC_SAME_NAME_ARG(ToggleBufferDisplay, 4, 0, TOGGLEBUFFERDISPLAY, SIII)
 
 // new Python-only commands need to be added to pythonOnlyCmds in ::CMacroProcessor
 // New Not from Python items omit _ARG or _NOARG

@@ -528,7 +528,9 @@ public:
   GetSetMember(BOOL, SmallFontsBad)
     GetSetMember(BOOL, DisplayNotTruly120DPI)
     void SetStatusText(int iPane, CString strText, bool skipBlink = false);
-  void ToggleBuffers(int toBuf, int interval, int maxCount);
+  void ToggleBuffers(int toBuf, int interval, int minCount, int maxCount);
+  void FinishBufferToggles();
+  void ManageToggleForCopy(int from, int to);
   void ManageBlinkingPane(DWORD time);
   void FlashTaskbar();
   BOOL SetWindowPlacement(WINDOWPLACEMENT *winPlace);
@@ -731,6 +733,7 @@ public:
   CSerialEMView *mActiveView;        // The active view window
   CSerialEMView *mMainView;          // The main view window
   CSerialEMView *mStackView;          // The stack view window
+  CSerialEMView *mLastStackView;     // The previous (detached) stack view window
   CSerialEMView *mFFTView;           // View for side-by-side FFT
   CMenuTargets mMenuTargets;
   CImageLevelDlg mImageLevel;
@@ -1033,6 +1036,7 @@ private:
   int mBufToToggle;             // Buffer to toggle between A and
   int mBufToggleInterval;       // Msec between toggles
   double mLastToggleTime;       // Time of last toggle
+  int mMaxTogglesLeft;          // Maximum number of toggles to skip
 
 public:
   void UpdateAllEditers(void);
@@ -1040,7 +1044,7 @@ public:
   void InitializeOneLDParam(LowDoseParams &ldParam);
   CString GetDebugKeys(void);
   int AddToStackView(EMimageBuffer * imBuf, int angleOrder);
-  void ViewClosing(BOOL stackView, BOOL FFTview);
+  void ViewClosing(BOOL stackView, BOOL FFTview, CSerialEMView *view);
   void DetachStackView(void);
   BOOL UserAcquireOK(void);
   float GetGainFactor(int camera, int binning);

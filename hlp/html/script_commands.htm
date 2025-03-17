@@ -1813,6 +1813,16 @@
           <TD>Displays the given buffer (e.g., Show C)</TD>
         </TR>
         <TR>
+          <TD class="scriptcommand">ToggleBufferDisplay buf #I #N #X</TD>
+          <TD>Starts automatic toggling between the A buffer and <b>buf</b> with an interval given by <b>#I</b>
+            in msec, and the minimum and maximum number of display switches given by <b>#N</b> ans <b>#X</b>.
+            Image acquisitions and other actions can be taken.  When an acquisition is done, it will 
+            continue toggling until the minimum count is reached before processing the image.  If the
+             buffer being toggled to is in the last rolling buffer, an acquisition will be delayed until the
+            minimum count is reached.&nbsp; Command added in 4.2, 15-Mar-25.
+          </TD>
+        </TR>
+        <TR>
           <TD class="scriptcommand">ReportCurrentBuffer</TD>
           <TD>Returns the letter of the buffer currently open in the main window in <i>reportedValue1</i>
           and 0 or 1 in <i>reportedValue2</i> indicating if the buffer contains an image or not. FFT windows
