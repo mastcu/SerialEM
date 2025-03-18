@@ -2436,7 +2436,7 @@ void CBeamAssessor::ScaleTablesForAperture(int currentAp, bool fromMeasured)
   mCurrentAperture = currentAp;
 }
 
-// Common function for simple task of scalingtables if aperture change, setting
+// Common function for simple task of scaling tables if aperture change, setting
 // short term cal not saved, and optionally giving a message
 void CBeamAssessor::ScaleIntensitiesIfApChanged(int newAp, bool doMess)
 {
@@ -2453,10 +2453,18 @@ void CBeamAssessor::ScaleIntensitiesIfApChanged(int newAp, bool doMess)
 // match a property for sizes
 int CBeamAssessor::RequestApertureSize(void)
 {
-  if (mScope->GetMonitorC2ApertureSize() > 0)
+  int newAp;
+  if (mScope->GetMonitorC2ApertureSize() > 1)
     return mCurrentAperture;
+  if (mScope->GetMonitorC2ApertureSize() > 0) {
+    newAp = mScope->GetApertureSize(CONDENSER_APERTURE);
+    if (newAp > 2) {
+      mCurrentAperture = newAp;
+      return mCurrentAperture;
+    }
+  }
   while (true) {
-    int newAp = mCurrentAperture;
+    newAp = mCurrentAperture;
     if (!KGetOneInt("Enter the current C2 aperture size in microns:", newAp))
       break;
     if ((!mNumC2Apertures && newAp >= 10 && newAp <= 500) || 
@@ -2485,16 +2493,19 @@ void CBeamAssessor::InitialSetupForAperture(void)
       numNotMeas++;
   }
   if (numMeas) {
-    if (mCurrentAperture)
+    if (mCurrentAperture && mScope->GetMonitorC2ApertureSize() < 2)
       mess.Format("Last known C2 aperture size was %d microns.\r\n   %d intensity "
-      "calibrations have been set to work with that size.\r\n   Use Calibration - Set"
-      " Aperture Size if the size is now different or you change the aperture.", 
-      mCurrentAperture, numMeas);
-    else
+        "calibrations have been set to work with that size.\r\n   Use Tasks - Set"
+        " Aperture Size if the size is now different or you change the aperture.",
+        mCurrentAperture, numMeas);
+    else if (!mCurrentAperture) {
       mess.Format("The C2 aperture size is not known from a previous session.\r\n"
         "   For %d intensity calibrations, the aperture size was recorded at the time."
-        "\r\n   These will work correctly if you run Calibration - Set Aperture Size", 
-        numMeas);
+        "\r\n   These will work correctly", numMeas);
+      mess += mScope->GetMonitorC2ApertureSize() < 2 ?
+        " if you run Tasks - Set Aperture Size" :
+        " once the program determines the current size";
+    }
     mWinApp->AppendToLog(mess);
   }
   if (numNotMeas) {

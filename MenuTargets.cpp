@@ -1470,7 +1470,7 @@ void CMenuTargets::OnCalibrationSetApertureSize()
 void CMenuTargets::OnUpdateCalibrationSetApertureSize(CCmdUI *pCmdUI)
 {
   pCmdUI->Enable(!DoingTasks() && mScope->GetUseIllumAreaForC2() && 
-    mScope->GetMonitorC2ApertureSize() <= 0);
+    mScope->GetMonitorC2ApertureSize() <= 1);
 }
 
 void CMenuTargets::OnCalibrationBeamshift() 

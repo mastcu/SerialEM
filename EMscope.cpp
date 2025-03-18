@@ -692,10 +692,6 @@ int CEMscope::Initialize()
         mDewarVacCapabilities = mUseIllumAreaForC2 ? 3 : 0;
       if (!mPlugFuncs->GetApertureSize)
         mFEIhasApertureSupport = 0;
-      if (mMonitorC2ApertureSize && !(mUseIllumAreaForC2 && mFEIhasApertureSupport))
-        mMonitorC2ApertureSize = 0;
-      else
-        mMonitorC2ApertureSize = 1;
 
     } else if (JEOLscope) {
 
@@ -912,10 +908,16 @@ int CEMscope::Initialize()
     for (ind = 0; ind < (int)mSkipUtapiServices.size(); ind++)
       if (mSkipUtapiServices[ind] >= 0 && mSkipUtapiServices[ind] < UTAPI_SUPPORT_END)
         mUtapiSupportsService[mSkipUtapiServices[ind]] = false;
+    if (mMonitorC2ApertureSize < 0 && mUtapiSupportsService[UTSUP_APERTURES])
+      mMonitorC2ApertureSize = 2;
   }
-  if (mMonitorC2ApertureSize > 0) {
+  if (!(mUseIllumAreaForC2 && mFEIhasApertureSupport))
+    mMonitorC2ApertureSize = 0;
+  else if (mMonitorC2ApertureSize < 0)
+    mMonitorC2ApertureSize = 1;
+  if (mMonitorC2ApertureSize > 1) {
     try {
-      mPlugFuncs->GetApertureSize(1);
+      mPlugFuncs->GetApertureSize(CONDENSER_APERTURE);
     }
     catch (_com_error E) {
       mFEIhasApertureSupport = 0;
@@ -1776,11 +1778,11 @@ void CEMscope::ScopeUpdate(DWORD dwTime)
     UpdateGauges(vacStatus);
     checkpoint = "vacuum";
     CHECK_TIME(8);
-    if (mMonitorC2ApertureSize > 0 && mUpdateInterval * apertureUpdateCount++ > 2000 &&
+    if (mMonitorC2ApertureSize > 1 && mUpdateInterval * apertureUpdateCount++ > 5000 &&
       !mMovingAperture) {
       apertureUpdateCount = 0;
       try {
-        apSize = mPlugFuncs->GetApertureSize(1);
+        apSize = mPlugFuncs->GetApertureSize(CONDENSER_APERTURE);
         numApertureFailures = 0;
         mWinApp->mBeamAssessor->ScaleIntensitiesIfApChanged(apSize, true);
       }
@@ -7638,7 +7640,7 @@ int CEMscope::CheckApertureKind(int kind)
 
         // This function will throw only if there is no automation, so it doesn't matter
         // if it fails to work
-        mPlugFuncs->GetApertureSize(2);
+        mPlugFuncs->GetApertureSize(OBJECTIVE_APERTURE);
         mFEIhasApertureSupport = 1;
       }
       catch (_com_error E) {

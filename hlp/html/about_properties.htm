@@ -2915,6 +2915,18 @@
           <TD>For a Titan, follow this with the list of available C2 apertures, without
             decimal points.</TD>
         </TR>
+        <TR>
+          <TD>MonitorC2ApertureSize</TD>
+          <TD>This property controls whether intensities in calibrations will be scaled 
+            automatically when the C2 aperture changes on a Titan microscope.&nbsp; With a value
+            of 2, the aperture size will be monitored and intensities will be scaled whenever it
+            changes; this is the default with UTAPI scripting.&nbsp; With a value of 1, intensities
+             will be scaled when the aperture size is set from SerialEM; this is the default when
+             there is aperture control through UI Automation.&nbsp; In the latter case, set the 
+           property to 2 to have the size be monitored (which will require the aperture panel in
+             the microscope user interface to be visible all the time) or 0 to disable the automatic scaling.
+          </TD>
+        </TR>
           <TD>ApertureSizes</TD>
           <TD>Enter the index by which an aperture is controlled (see script command ReportApertureSize)
               followed by the list of integer aperture sizes in microns.&nbsp; Thus far this is used
