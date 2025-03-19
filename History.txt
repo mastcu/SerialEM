@@ -3,9 +3,11 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
-3/17/25: For Titan microscopes (UseIlluminatedArea property set to 1), it will
-now check for aperture control on program startup and monitor the C2 aperture
-size and scale intensity values in tables automatically.
+3/18/25: For Titan microscopes (UseIlluminatedArea property set to 1) with
+UTAPI scripting control of apertures, it will monitor the C2 aperture size and
+scale intensity values in tables automatically.  With non-UTAPI aperture
+control, it will find out the size when a relevant calibration is done and
+scale automatically when the aperture is changed from SerialEM.
 
 3/17/25: Added hot key Ctrl-Shift M to start/stop a continuous movie through
 the stack window used for tilt series and other stacks.

@@ -2768,6 +2768,7 @@ int EMmontageController::SavePiece()
     }
 
     // Bin if possible
+    SEMTrace('1', "Copying into %d  %d", miniBaseX + xstrt, miniBaseY + ystrt);
     if (!needSample && xstrt < xend && ystrt < yend) {
       if (type == kUBYTE)
         keepByte = mConvertMini ? 1 : -1;
