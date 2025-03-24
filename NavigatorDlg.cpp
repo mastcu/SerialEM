@@ -1851,7 +1851,8 @@ void CNavigatorDlg::ProcessTKey(void)
       continue;
     item = mItemArray[ind];
     if (item->mTSparamIndex < 0 && !item->mAcquire) {
-      mHelper->NewAcquireFile(ind, NAVFILE_TS, NULL);
+      if (mHelper->NewAcquireFile(ind, NAVFILE_TS, NULL) < 0)
+        break;
       UpdateListString(ind);
       needFocusArea = true;
     } else if (allOn && !item->mAcquire) {
