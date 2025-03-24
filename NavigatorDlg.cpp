@@ -10224,6 +10224,10 @@ void CNavigatorDlg::AcquireNextTask(int param)
     return;
   }
   item = mItemArray[mAcquireIndex];
+  if (!mScope->FastColumnValvesOpen()) {
+    mWinApp->AppendToLog("Opening valves next item!");
+    mScope->SetColumnValvesOpen(true, false);
+  }
 
   if (mAcqStepIndex < 0) {
 
