@@ -222,6 +222,7 @@ CSerialEMDoc::CSerialEMDoc()
   mNumCalsAskThresh[CAL_DONE_BEAM] = 1;
   mNumCalsAskThresh[CAL_DONE_SPOT] = 1;
   mNumCalsAskThresh[CAL_DONE_HIGH_FOCUS] = 2;
+  mNumCalsAskThresh[CAL_DONE_PAR_ILLUM] = 2;
   mAbandonSettings = false;
   mHDFsupported = iiTestIfHDF("Animpossible63873Filename_629384") != -2;
 }
