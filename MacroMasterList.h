@@ -564,7 +564,7 @@ MAC_SAME_NAME_NOARG(ClearHoleFinder, 0, 4, CLEARHOLEFINDER)
 MAC_SAME_NAME_ARG(CombineHolesToMulti, 1, 4, COMBINEHOLESTOMULTI, Iiii)
 MAC_SAME_NAME_NOARG(UndoHoleCombining, 0, 4, UNDOHOLECOMBINING)
 MAC_SAME_NAME_ARG(SetHelperParams, 1, 4, SETHELPERPARAMS, Dddd)
-MAC_SAME_NAME_ARG(SetMontageParams, 1, 4, SETMONTAGEPARAMS, Iiiiiii)
+MAC_SAME_NAME_ARG(SetMontageParams, 1, 4, SETMONTAGEPARAMS, Iiiiiiid)
 MAC_SAME_NAME_ARG(ManualFilmExposure, 1, 1, MANUALFILMEXPOSURE, D)
 MAC_SAME_NAME_NOARG(ExposeFilm, 0, 1, EXPOSEFILM)
 MAC_SAME_FUNC_ARG(SpecialExposeFilm, 1, 1, ExposeFilm, SPECIALEXPOSEFILM, Ddi)
@@ -830,6 +830,8 @@ MAC_SAME_FUNC_ARG(UpdateImagingState, 1, 0, GoToImagingState, UPDATEIMAGINGSTATE
 MAC_SAME_NAME_ARG(ImagingStateProperties, 1, 0, IMAGINGSTATEPROPERTIES, S)
 MAC_SAME_NAME_ARG(StartTry, 0, 4, STARTTRY, i)
 MAC_SAME_NAME_ARG(ToggleBufferDisplay, 4, 0, TOGGLEBUFFERDISPLAY, SIII)
+MAC_SAME_NAME_NOARG(SetParallelIllumination, 0, 4, SETPARALLELILLUMINATION)
+MAC_SAME_NAME_NOARG(ReportCurrentMulGridID, 0, 4, REPORTCURRENTMULGRIDID)
 
 // new Python-only commands need to be added to pythonOnlyCmds in ::CMacroProcessor
 // New Not from Python items omit _ARG or _NOARG

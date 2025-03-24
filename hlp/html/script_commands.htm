@@ -2704,12 +2704,20 @@
             with the default overlap and will use stage movement if it is obvious enough that it is appropriate.</TD>
         </TR>
         <TR>
-          <TD class="scriptcommand">SetMontageParams #S [#OX #OY #FX #FY #N #B]</TD>
-          <TD>Sets up to 7 montage parameters after a montage file has been opened; enter a value or -1 to leave the parameter
-            unchanged. The entries are: <b>#S</b> 1 to use stage movement or 0 not to; <b>#OX</b> overlap in X in pixels;
-            <b>#OY</b> overlap in Y in pixels <b>#FX</b> frame size in X; <b>#FY</b> frame size in Y, <b>#N</b> 1 to skip correlations or 0 not
-            to; <b>#B</b> a binning.&nbsp; The frame sizes, overlaps, 
-            and binnings cannot validly be changed after acquiring into the file.&nbsp; As of 12-Jul-23, if the 
+          <TD class="scriptcommand">SetMontageParams #S [#OX #OY #FX #FY #N #B #M]</TD>
+          <TD>Sets up to 8 montage parameters after a montage file has been opened; enter a value or -1 to leave the parameter
+            unchanged. The entries are: <br />
+            <b>#S</b> 1 to use stage movement, 0 not to, or 2 for stage movement with
+            image shifting in blocks <b>#OX</b> overlap in X in pixels<br />
+            <b>#OY</b> overlap in Y in pixels<br />
+             <b>#FX</b> frame size in X<br />
+             <b>#FY</b> frame size in Y<br />
+             <b>#N</b> 1 to skip correlations or 0 not to<br />
+             <b>#B</b> a binning<br />
+            <b>#M</b> maximum image shift in microns when using image shift in blocks.&nbsp; Be sure that the 
+            magnification of the montage has already been set up so that appropriate limit for LM or nonLM can be changed.<br />
+            The frame sizes, overlaps, 
+            binning and use of image shitf in blocks cannot validly be changed after acquiring into the file.&nbsp; As of 12-Jul-23, if the 
             binning is changed before acquiring, then whichever frame sizes and overlaps are specified as -1 
             will be changed by the change in binning to maintain the same acquisition area.&nbsp; If binning 
             is changed after acquiring, it will attempt to take frames with the same number of pixels
@@ -3309,6 +3317,16 @@
           <TD class="scriptcommand">ChangeIntensityBy #</TD>
           <TD>Changes beam intensity by the given factor using calibrations. In low dose mode
             this changes the intensity of the current area.</TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">SetParallelIllumination</TD>
+          <TD>Sets beam intensity to a value that was stored with the <A href="menu_calibration.htm#hid_beamspot_parallelillumination">Parallel Illumination</A>
+            item in the Calibration - Beam &amp; Spot submenu for the current spot size and probe 
+            mode (on Thermo/FEI scopes) or alpha (on JEOL scopes).&nbsp; Sets <i>reportedValue1</i> to 1 if no
+              calibration is available or 0 if one is, and <i>reportedValue2</i> to the intensity value or
+            -1 if none is available.&nbsp; Values may be assigned to variables after the command.&nbsp; 
+            Command added in 4.2, 23-Mar-25.
+          </TD>
         </TR>
         <TR>
           <TD class="scriptcommand">SetDoseRate #</TD>
@@ -5854,11 +5872,19 @@
           <TD class="scriptcommand">SuffixForExtraFile suffix [suffix] [suffix] [...]</TD>
           <TD>Sets one or more suffixes so that the Acquire at Items routine will open the
             corresponding number of extra files whenever it opens a regular file for
-            output.&nbsp;Follow with the suffixes, separated by spaces (and thus a suffix cannot
+            output.&nbsp; Follow with the suffixes, separated by spaces (and thus a suffix cannot
             contain a space). An entry here overrides the corresponding entry in the 
             <a href="hidd_tsextrafile.htm#Suffixes">Tilt Series Extra Output</a> dialog; see the help there for details.&nbsp; The
              suffixes entered here are not persistent
             and the command needs to be included in a script run before the main action.
+          </TD>
+        </TR>
+
+         <TR>
+          <TD class="scriptcommand">ReportCurrentMulGridID</TD>
+          <TD>Reports the current grid ID and a time stamp for the start of the current run if
+            Multiple Grid Operations is either running or suspended, thus allowing a script to detect
+            when a new grid has been started.&nbsp; Command added in 4.2, 23-Mar-25.
           </TD>
         </TR>
         </TABLE>

@@ -9556,6 +9556,26 @@ int CMacCmd::SetImageDistanceOffset(void)
   return 0;
 }
 
+// SetParallelIllumination
+int CMacCmd::SetParallelIllumination()
+{
+  double value = mWinApp->mBeamAssessor->GetParallelIllum();
+  int rep = 0;
+  if (value < 0) {
+    rep = 1;
+    mLogRpt = "No parallel illumination has been saved for the current spot size";
+    if (mLogRpt)
+      mStrCopy += " and probe mode";
+    else if (JEOLscope && !mScope->GetHasNoAlpha())
+      mLogRpt += " and alpha";
+  } else {
+    mLogRpt = "Intensity was set for parallel illumination";
+    mScope->SetIntensity(value);
+  }
+  SetRepValsAndVars(1, rep, value);
+  return 0;
+}
+
 // SetAlpha
 int CMacCmd::SetAlpha(void)
 {
@@ -11102,6 +11122,20 @@ int CMacCmd::RefineGridMapAlignment()
     mItemEmpty[5] ? EXTRA_NO_VALUE : mItemFlt[5], mItemEmpty[3] ? 0.f : mItemFlt[3],
     mStrCopy))
     ABORT_LINE(mStrCopy + " for line:\n\n");
+  return 0;
+}
+
+// ReportCurrentMulGridID
+int CMacCmd::ReportCurrentMulGridID()
+{
+  int time = 0;
+  int ID = mWinApp->mMultiGridTasks->GetCurrentGridID();
+  if (ID >= 0) {
+    time = B3DNINT(mWinApp->mMultiGridTasks->GetRunStartTime() / 1000.);
+    mLogRpt.Format("Current grid ID is %d", ID);
+  } else
+    mLogRpt = "Multiple grid operations in not running, no ID available";
+  SetRepValsAndVars(1, ID, time);
   return 0;
 }
 
@@ -13009,18 +13043,20 @@ int CMacCmd::SetMontageParams(void)
   CString report;
   int index, act, cam, top, bot;
   float binChange = 0.;
-  bool frameChange = false;
+  bool frameChange = false, hybridChange = false;
   CameraParameters *camParam;
 
   if (!mWinApp->Montaging())
     ABORT_LINE("Montaging must be on already to use this command:\n\n");
+  if (mItemInt[1] > 0 && BOOL_EQUIV(mItemInt[1] == 1, mMontP->imShiftInBlocks))
+    hybridChange = true;
   cam = mActiveList[mWinApp->mMontageController->GetMontageActiveCamera(mMontP)];
   camParam = mWinApp->GetCamParams() + cam;
   if (mWinApp->mStoreMRC && mWinApp->mStoreMRC->getDepth() > 0 &&
     ((mItemInt[2] > 0) || (mItemInt[3] > 0) ||
-    (mItemInt[4] > 0) || (mItemInt[5] > 0)))
-      ABORT_LINE("After writing to the file, you cannot change frame size or overlaps "
-        " in line:\n\n");
+    (mItemInt[4] > 0) || (mItemInt[5] > 0) || hybridChange))
+      ABORT_LINE("After writing to the file, you cannot change frame size, overlaps, "
+        "or use of image shifting in blocks in line:\n\n");
   if (!mItemEmpty[7] && mItemDbl[7] >= 0.5) {
     if (CheckCameraBinning(mItemDbl[7], index, report))
       ABORT_LINE(report);
@@ -13072,6 +13108,15 @@ int CMacCmd::SetMontageParams(void)
     mMontP->yOverlap = mItemInt[3];
   } else if (binChange)
     mMontP->yOverlap = B3DNINT(mMontP->yOverlap / binChange);
+
+  if (mItemInt[1] > 0)
+    mMontP->imShiftInBlocks = mItemInt[1] > 1;
+  if (!mItemEmpty[8] && mItemFlt[8] > 0) {
+    if (mMontP->magIndex < mScope->GetLowestMModeMagInd())
+      mMontP->maxBlockImShiftLM = mItemFlt[8];
+    else
+      mMontP->maxBlockImShiftNonLM = mItemFlt[8];
+  }
 
   if (!mItemEmpty[6] && mItemInt[6] >= 0)
     mMontP->skipCorrelations = mItemInt[6] != 0;
