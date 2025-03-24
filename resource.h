@@ -1473,11 +1473,6 @@
 #define IDC_RUN_ONE_LINE8               2468
 #define IDC_RUN_ONE_LINE9               2469
 #define IDC_RUN_ONE_LINE10              2470
-#define IDC_STATLISTHEADER5             2471
-#define IDC_STATLISTHEADER6             2472
-#define IDC_STATLISTHEADER7             2473
-#define IDC_STATLISTHEADER8             2474
-#define IDC_STATLISTHEADER9             2475
 #define IDC_CHECK_DATE_PREFIX           2476
 #define IDC_CHECK_EXTRA_STATS           2477
 #define IDC_CHECK_DRAW_RINGS            2478
@@ -2530,6 +2525,11 @@
 #define IDC_STATLISTHEADER2             3556
 #define IDC_STATLISTHEADER3             3557
 #define IDC_STATLISTHEADER4             3558
+#define IDC_STATLISTHEADER5             3559
+#define IDC_STATLISTHEADER6             3560
+#define IDC_STATLISTHEADER7             3561
+#define IDC_STATLISTHEADER8             3562
+#define IDC_STATLISTHEADER9             3563
 #define ID_NEW_IMAGE                    32771
 #define IDM_FILE_SAVEOTHER              32772
 #define IDM_FILE_READ                   32773
