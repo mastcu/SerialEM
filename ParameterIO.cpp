@@ -4758,7 +4758,6 @@ int CParameterIO::ReadCalibration(CString strFileName)
         parallelIllum.spotSize = itemInt[2];
         parallelIllum.probeOrAlpha = itemInt[3];
         parallelIllum.crossover = itemDbl[4];
-        parallelIllum.measuredAperture = itemInt[5];
         parIllums->Add(parallelIllum);
 
       } else if (NAME_IS("IntensityToC2Factor")) {
@@ -5423,9 +5422,8 @@ void CParameterIO::WriteCalibration(CString strFileName)
     // Write parallel illums
     for (i = 0; i < parIllums->GetSize(); i++) {
       parallelIllum = parIllums->GetAt(i);
-      string.Format("ParallelIllum %f %d %d %f %d\n", parallelIllum.intensity,
-        parallelIllum.spotSize, parallelIllum.probeOrAlpha, parallelIllum.crossover,
-        parallelIllum.measuredAperture);
+      string.Format("ParallelIllum %f %d %d %f\n", parallelIllum.intensity,
+        parallelIllum.spotSize, parallelIllum.probeOrAlpha, parallelIllum.crossover);
       mFile->WriteString(string);
     }
 

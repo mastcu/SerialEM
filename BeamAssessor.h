@@ -59,7 +59,6 @@ struct ParallelIllum {
   int spotSize;
   int probeOrAlpha;
   double crossover;
-  int measuredAperture;
 };
 
 class CBeamAssessor

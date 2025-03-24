@@ -9559,6 +9559,8 @@ int CMacCmd::SetImageDistanceOffset(void)
 // SetParallelIllumination
 int CMacCmd::SetParallelIllumination()
 {
+  if (mScope->GetUseIllumAreaForC2())
+    ABORT_NOLINE("Parallel illumination settings are not saved on Titan microscopes");
   double value = mWinApp->mBeamAssessor->GetParallelIllum();
   int rep = 0;
   if (value < 0) {

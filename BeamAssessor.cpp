@@ -2447,16 +2447,6 @@ void CBeamAssessor::ScaleTablesForAperture(int currentAp, bool fromMeasured)
     }
   }
 
-  // Parallel illuminations
-  for (i = 0; i < mParIllumArray.GetSize(); i++) {
-    ParallelIllum &illum = mParIllumArray.ElementAt(i);
-    if (fromMeasured)
-      fromAp = illum.measuredAperture;
-    illum.intensity = mScope->IntensityAfterApertureChange(illum.intensity, fromAp,
-      currentAp, illum.spotSize, illum.probeOrAlpha);
-    illum.crossover = mScope->IntensityAfterApertureChange(illum.crossover, fromAp,
-      currentAp, illum.spotSize, illum.probeOrAlpha);
-  }
   if (currentAp != mCurrentAperture)
     mWinApp->mDocWnd->SetShortTermNotSaved();
   mCurrentAperture = currentAp;
@@ -2949,7 +2939,7 @@ int CBeamAssessor::CheckCalForZeroIntensities(BeamTable &table, const char *mess
 // Save intensity or IA at the current spot and probe/alpha as parallel illumination
 void CBeamAssessor::SaveParallelIllumination()
 {
-  int index, newAp, probe = -999, spot = mScope->GetSpotSize();
+  int index, probe = -999, spot = mScope->GetSpotSize();
   CString probeText = "";
   if (FEIscope) {
     probe = mScope->ReadProbeMode();
@@ -2960,23 +2950,13 @@ void CBeamAssessor::SaveParallelIllumination()
   }
   index = LookupParallelIllum(spot, probe);
   if (index < 0) {
-    index = mParIllumArray.GetSize();
+    index = (int)mParIllumArray.GetSize();
     mParIllumArray.SetSize(index + 1);
   }
   mParIllumArray[index].intensity = mScope->GetIntensity();
   mParIllumArray[index].probeOrAlpha = probe;
   mParIllumArray[index].spotSize = spot;
   mParIllumArray[index].crossover = mScope->GetCrossover(spot);
-  mParIllumArray[index].measuredAperture = 0;
-  if (mScope->GetUseIllumAreaForC2()) {
-    newAp = RequestApertureSize();
-    if (newAp) {
-      mParIllumArray[index].measuredAperture = newAp;
-      ScaleIntensitiesIfApChanged(newAp, "");
-    } else
-      mWinApp->AppendToLog("No aperture size is being recorded for this parallel"
-        " illumination");
-  }
   PrintfToLog(" %.2f%s %s saved as parallel illumination for spot %d%s",
     mScope->GetC2Percent(spot, mParIllumArray[index].intensity), mScope->GetC2Units(),
     mScope->GetC2Name(), spot, (LPCTSTR)probeText);

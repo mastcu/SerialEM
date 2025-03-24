@@ -533,8 +533,8 @@ ON_COMMAND(ID_MONTAGINGGRIDS_LOADALLGRIDMAPS, OnLoadAllGridMaps)
 ON_COMMAND(ID_CAMERA_PREVIEWPRESCAN, OnCameraPreviewPrescan)
 ON_UPDATE_COMMAND_UI(ID_CAMERA_PREVIEWPRESCAN, OnUpdateCameraPrevPrescan)
 ON_COMMAND(ID_BEAMSPOT_PARALLELILLUMINATION, OnBeamspotParallelIllumination)
-ON_UPDATE_COMMAND_UI(ID_BEAMSPOT_PARALLELILLUMINATION, OnUpdateNoTasksNoSTEM)
-    END_MESSAGE_MAP()
+ON_UPDATE_COMMAND_UI(ID_BEAMSPOT_PARALLELILLUMINATION, OnUpdateParallelillumination)
+END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
 // CMenuTargets message handlers
@@ -2450,6 +2450,12 @@ void CMenuTargets::OnUpdateCalibrationAlphaBeamShifts(CCmdUI *pCmdUI)
 void CMenuTargets::OnBeamspotParallelIllumination()
 {
   mWinApp->mBeamAssessor->SaveParallelIllumination();
+}
+
+void CMenuTargets::OnUpdateParallelillumination(CCmdUI *pCmdUI)
+{
+  pCmdUI->Enable(!DoingTasks() && !mWinApp->GetSTEMMode() &&
+    !mScope->GetUseIllumAreaForC2());
 }
 
 void CMenuTargets::OnCalibrationHighDefocus()
