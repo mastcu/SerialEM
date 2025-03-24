@@ -441,6 +441,7 @@ public:
   afx_msg void OnLoadAllGridMaps();
   afx_msg void OnCameraPreviewPrescan();
   afx_msg void OnUpdateCameraPrevPrescan(CCmdUI *pCmdUI);
+  afx_msg void OnBeamspotParallelIllumination();
 };
 
 /////////////////////////////////////////////////////////////////////////////
