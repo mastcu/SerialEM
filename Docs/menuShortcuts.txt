@@ -116,9 +116,11 @@ Calibration:
   C
   E
   I
+  L
   P
   R
   S
+  U
   2
 A
 B

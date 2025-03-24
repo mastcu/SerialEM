@@ -664,6 +664,10 @@ CSerialEMApp::CSerialEMApp()
     mNavAcqParams[i].useMapHoleVectors = false;
     mNavAcqParams[i].runEndMacro = false;
     mNavAcqParams[i].endMacroInd = 1;
+    mNavAcqParams[i].runStartMacro = false;
+    mNavAcqParams[i].startMacroInd = 1;
+    mNavAcqParams[i].runExtramacro = false;
+    mNavAcqParams[i].extraMacroInd = 1;
     mNavAcqParams[i].realignToScaledMap = false;
     mNavAcqParams[i].conSetForScaledAli = PREVIEW_CONSET;
     mNavAcqParams[i].multiGridSubset = -100;

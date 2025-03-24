@@ -9759,7 +9759,7 @@ void CNavigatorDlg::AcquireAreas(int source, bool dlgClosing, bool useTempParams
   int numHoles, numAcquires, numShots, numTS, fromItem, totalNum;
   int groupID = -1;
   BOOL rangeErr = false;
-  BOOL runPremacro, runPostmacro;
+  BOOL runPremacro, runPostmacro, runExtramacro;
   bool takingMap, takingImage, doingMultishot, countShots;
   bool fromMenu = source == 1;
   bool fromMultigrid = source > 1;
@@ -9904,8 +9904,11 @@ void CNavigatorDlg::AcquireAreas(int source, bool dlgClosing, bool useTempParams
   runPostmacro = mAcqParm->runPostmacro;
   if (!mUseTSprePostMacros)
     runPostmacro = mAcqParm->runPostmacroNonTS;
+  runExtramacro = mHelper->IsExtraTaskIncluded(NAACT_RUN_EX_MACRO) && 
+    mAcqParm->runExtramacro;
   setOrClearFlags(&mAcqActions[NAACT_RUN_PREMACRO].flags, NAA_FLAG_RUN_IT, runPremacro);
   setOrClearFlags(&mAcqActions[NAACT_RUN_POSTMACRO].flags, NAA_FLAG_RUN_IT, runPostmacro);
+  setOrClearFlags(&mAcqActions[NAACT_RUN_EX_MACRO].flags, NAA_FLAG_RUN_IT, runExtramacro);
 
   if (mAcqParm->skipInitialMove && OKtoSkipStageMove(mAcqParm) != 0 && 
     (fromMenu || dlgClosing)) {
@@ -9926,9 +9929,10 @@ void CNavigatorDlg::AcquireAreas(int source, bool dlgClosing, bool useTempParams
   mSkipStageMoveInAcquire = mAcqParm->skipInitialMove;
 
   // Set up for macro, or check file if images
-  if (mAcqParm->acquireType == ACQUIRE_RUN_MACRO || runPremacro || runPostmacro) {
+  if (mAcqParm->acquireType == ACQUIRE_RUN_MACRO || runPremacro || runPostmacro ||
+    runExtramacro) {
     loopStart = mAcqParm->acquireType == ACQUIRE_RUN_MACRO ? 0 : 1;
-    loopEnd = (runPremacro || runPostmacro) ? 3 : 1;
+    loopEnd = (runPremacro || runPostmacro || runExtramacro) ? 4 : 1;
     for (loop = loopStart; loop < loopEnd; loop++) {
       macnum = -1;
       if (loop == 1 && runPremacro)
@@ -9937,6 +9941,8 @@ void CNavigatorDlg::AcquireAreas(int source, bool dlgClosing, bool useTempParams
       if (loop == 2 && runPostmacro)
         macnum = (mUseTSprePostMacros ?
           mAcqParm->postMacroInd : mAcqParm->postMacroIndNonTS) - 1;
+      if (loop == 3)
+        macnum = mAcqParm->extraMacroInd - 1;
       if (loop == 0)
         macnum = mAcqParm->macroIndex - 1;
       if (macnum >= 0 && mMacroProcessor->EnsureMacroRunnable(macnum)) {
@@ -10098,7 +10104,8 @@ void CNavigatorDlg::AcquireAreas(int source, bool dlgClosing, bool useTempParams
   }
   mAcqCycleDefocus = mAcqParm->cycleDefocus && (mAcqParm->acquireType == ACQUIRE_DO_TS ||
     mAcqParm->acquireType == ACQUIRE_RUN_MACRO || DOING_ACTION(NAACT_RUN_POSTMACRO) ||
-    DOING_ACTION(NAACT_RUN_PREMACRO) || DOING_ACTION(NAACT_AUTOFOCUS) ||
+    DOING_ACTION(NAACT_RUN_PREMACRO) || DOING_ACTION(NAACT_RUN_EX_MACRO) || 
+    DOING_ACTION(NAACT_AUTOFOCUS) ||
     (DOING_ACTION(NAACT_WAIT_DRIFT) && dwParam->measureType == WFD_WITHIN_AUTOFOC));
   if (mAcqCycleDefocus)
     mFocusCycleCounter = 0;
@@ -10154,7 +10161,12 @@ void CNavigatorDlg::AcquireAreas(int source, bool dlgClosing, bool useTempParams
     mWinApp->SetStatusText(COMPLEX_PANE, "ACQUIRING AREAS");
   }
   mWinApp->UpdateBufferWindows();
-  AcquireNextTask(0);
+  if (mAcqParm->runStartMacro && mHelper->IsExtraTaskIncluded(NAA_MACRO_AT_START)) {
+    mWinApp->AddIdleTask(TASK_NAVIGATOR_ACQUIRE, 0, 0);
+    mMacroProcessor->Run(mAcqParm->startMacroInd - 1);
+  } else {
+    AcquireNextTask(0);
+  }
 }
 
 // Function for cleaning up from either dialog closing or working with temporary dialog
@@ -10231,7 +10243,10 @@ void CNavigatorDlg::AcquireNextTask(int param)
           for (ind = mNumAcqSteps - 1; ind >= 0; ind--) {
             if (mAcqSteps[ind] == ACQ_MOVE_TO_AREA ||
               mAcqSteps[ind] == NAACT_REALIGN_ITEM || 
-              (mAcqSteps[ind] == NAACT_ALIGN_TEMPLATE && aliParams->maxNumResetIS > 0)) {
+              ((mAcqSteps[ind] == NAACT_ALIGN_TEMPLATE || 
+                (mAcqSteps[ind] == NAACT_EX_ALIGN_TEMPLATE && 
+                  mHelper->IsExtraTaskIncluded(NAACT_EX_ALIGN_TEMPLATE))) &&
+                aliParams->maxNumResetIS > 0)) {
               for (next = mNumAcqSteps - 1; next > ind; next--)
                 mAcqSteps[next + 1] = mAcqSteps[next];
               mNumAcqSteps++;
@@ -10385,7 +10400,8 @@ void CNavigatorDlg::AcquireNextTask(int param)
             mAcqSteps[mNumAcqSteps++] = ACQ_MOVE_TO_AREA;
             elsewhereInd = -1;
           }
-          if (act == NAACT_ALIGN_TEMPLATE)
+          if (act == NAACT_ALIGN_TEMPLATE || (act == NAACT_EX_ALIGN_TEMPLATE &&
+            mHelper->IsExtraTaskIncluded(NAACT_EX_ALIGN_TEMPLATE)))
             mWillDoTemplateAlign = true;
           mAcqSteps[mNumAcqSteps++] = act;
         }
@@ -10416,7 +10432,8 @@ void CNavigatorDlg::AcquireNextTask(int param)
     }
 
     // Handle hole vectors for multishot
-    if (mAcqParm->acquireType == ACQUIRE_MULTISHOT && !msParams->useCustomHoles &&
+    if ((mAcqParm->acquireType == ACQUIRE_MULTISHOT || 
+      mAcqParm->acquireType == ACQUIRE_RUN_MACRO) && !msParams->useCustomHoles &&
       mAcqParm->useMapHoleVectors) {
       ind = mAcquireIndex;
 
@@ -10646,8 +10663,10 @@ void CNavigatorDlg::AcquireNextTask(int param)
       // step; increase acquire index because it is still marked as acquire
       // The help says failure does not matter... not sure if this is a good idea
     case NAACT_RUN_PREMACRO:
+    case NAACT_RUN_EX_MACRO:
       if (mSkipAcquiringItem) {
-        SkipToNextItemInAcquire(item, "in pre-script");
+        SkipToNextItemInAcquire(item, mAcqSteps[mAcqStepIndex] == NAACT_RUN_PREMACRO ?
+          "in pre-script" : "in extra script");
       }
       break;
 
@@ -10674,6 +10693,7 @@ void CNavigatorDlg::AcquireNextTask(int param)
 
       // Handle other failures similarly
     case NAACT_ALIGN_TEMPLATE:
+    case NAACT_EX_ALIGN_TEMPLATE:
       if (mWinApp->mParticleTasks->GetATLastFailed()) {
         SkipToNextItemInAcquire(item, "aligning to template");
       }
@@ -10753,6 +10773,10 @@ void CNavigatorDlg::AcquireNextTask(int param)
 
     // Align to template
   case NAACT_ALIGN_TEMPLATE:
+  case NAACT_EX_ALIGN_TEMPLATE:
+    if (mAcqSteps[mAcqStepIndex] == NAACT_EX_ALIGN_TEMPLATE &&
+      !mHelper->IsExtraTaskIncluded(NAACT_EX_ALIGN_TEMPLATE))
+      break;
     SEMTrace('n', "Doing %s", (LPCTSTR)mAcqActions[mAcqSteps[mAcqStepIndex]].name);
     mRealignedInAcquire = true;
     stopErr = mWinApp->mParticleTasks->AlignToTemplate(*aliParams);
@@ -10779,6 +10803,10 @@ void CNavigatorDlg::AcquireNextTask(int param)
 
     // Center beam
   case NAACT_CEN_BEAM:
+  case NAACT_EX_CEN_BEAM:
+    if (mAcqSteps[mAcqStepIndex] == NAACT_EX_CEN_BEAM &&
+      !mHelper->IsExtraTaskIncluded(NAACT_EX_CEN_BEAM))
+      break;
     SEMTrace('n', "Doing %s", (LPCTSTR)mAcqActions[mAcqSteps[mAcqStepIndex]].name);
     stopErr = mWinApp->mMultiTSTasks->AutocenterBeam();
     break;
@@ -10982,6 +11010,14 @@ void CNavigatorDlg::AcquireNextTask(int param)
       mAcqParm->preMacroInd : mAcqParm->preMacroIndNonTS) - 1);
     break;
 
+    // Run an extra macro
+  case NAACT_RUN_EX_MACRO:
+    if (!mHelper->IsExtraTaskIncluded(NAACT_RUN_EX_MACRO))
+      break;
+    SEMTrace('n', "Doing %s", stepNames[mAcqSteps[mAcqStepIndex]]);
+    mMacroProcessor->Run(mAcqParm->extraMacroInd - 1);
+    break;
+      
     // Run a macro
   case ACQ_RUN_MACRO:
     SEMTrace('n', "Doing %s", stepNames[mAcqSteps[mAcqStepIndex]]);

@@ -110,13 +110,13 @@
       important.&nbsp; If you choose to have the image shift vectors set from <strong>
       Map hole vectors</strong> (see below), the hole vectors stored with a map after hole 
       finding are used to set the current image shift vectors for points on that map, 
-      and possibly for point son other maps.&nbsp; 
+      and possibly for points on other maps.&nbsp; 
       They are also transformed automatically to work at the Record magnification if 
       an appropriate transformation has been saved from the &#39;Step To and Adjust IS&#39; 
       procedure in the <a href="hidd_multi_shot_setup.htm">Multiple Record Setup</a> 
       dialog.</p>
     <p><em>Automatic setting of Multiple Record vectors when loading a map or a 
-      Navigator file:</em> There are two features that can setthe image shift vectors 
+      Navigator file:</em> There are two features that can set the image shift vectors 
       for Multiple records appropriately for a given grid.&nbsp; First, when you press
       <strong>Open Nav</strong> for a grid for which you have saved separate Multiple 
       Record settings, the program will ask if you want to switch the image shift 
@@ -605,6 +605,11 @@
       earlier set (just in case the transform was an afterthought).&nbsp; If you make 
       yet another adjusting transform after saving the settings, the program will ask 
       if you want to apply those to some or all of the stored settings.&nbsp; </p>
+    <p>Note that if you are not running Multiple Records directly as the main action 
+      in Acquire at Items, but are instead running a script that does the Multiple 
+      Records, then the use of map hole vectors is not controlled by the option here.&nbsp; 
+      It is governed solely by the&nbsp; setting of the option <strong>Use map hole 
+      vectors for shifts </strong>in the Acquire at Items dialog.</p>
     <p><strong>Set Final Data Parameters</strong></p>
     <p>Use this button to open the Navigator Acquire at Items dialog and set the Final 
       Data parameters.&nbsp; Here, only a few choices will be disabled.&nbsp;&nbsp; 

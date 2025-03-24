@@ -53,10 +53,12 @@ IDC_NA_REALIGN_SCALED_MAP, IDC_RREALI_VIEW, IDC_RREALI_PREV, IDC_RREALI_SEARCH,
 IDC_NA_APPLY_REALIGN_ERR, IDC_NA_RELAX_STAGE, IDC_TSS_LINE1, IDC_TSS_LINE2, IDC_TSS_LINE3,
 IDC_NA_HIDE_OPTIONS, IDC_STAT_CYCLE_FROM, IDC_NA_USE_MAP_HOLES, IDC_NA_RUN_SCRIPT_AT_END,
 IDC_STAT_SPACER3, IDC_COMBO_MACRO_AT_END, IDC_TSS_LINE4, IDC_STAT_SKIP_Z_IN,
+IDC_NA_RUN_SCRIPT_AT_START, IDC_COMBO_MACRO_AT_START,
 IDC_NA_RUN_AT_ITEM_Z, IDC_EDIT_SUBSET_NUM, IDC_EDIT_SUBSET_FROM, IDC_RSUBSET_ITEMS,
 IDC_STAT_SUBSET_FROM_ITEM, IDC_RSUBSET_SHOTS, IDC_STAT_SUB_FROM_INDEX, PANEL_END,
 IDC_STAT_ACTION_GROUP, IDC_NA_TASK_LINE1, IDC_NA_TASK_LINE2, IDC_STAT_PRIMARY_LINE,
 IDC_COMBO_PREMACRO, IDC_STAT_PREMACRO,  IDC_COMBO_POSTMACRO, IDC_STAT_POSTMACRO,
+IDC_COMBO_EXTRAMACRO, IDC_STAT_EXTRAMACRO,
 IDC_RADIO_NAVACQ_SEL1, IDC_RADIO_NAVACQ_SEL2,IDC_RADIO_NAVACQ_SEL3, IDC_RADIO_NAVACQ_SEL4,
 IDC_RADIO_NAVACQ_SEL5, IDC_RADIO_NAVACQ_SEL6, IDC_RADIO_NAVACQ_SEL7, IDC_STAT_PUSH_BUT,
 IDC_RADIO_NAVACQ_SEL8,
@@ -77,12 +79,20 @@ IDC_BUT_NAVACQ_SETUP6, IDC_BUT_NAVACQ_SETUP7, IDC_BUT_NAVACQ_SETUP8,
 IDC_BUT_NAVACQ_SETUP9, IDC_BUT_NAVACQ_SETUP10, IDC_BUT_NAVACQ_SETUP11,
 IDC_BUT_NAVACQ_SETUP12, IDC_BUT_NAVACQ_SETUP13, IDC_BUT_NAVACQ_SETUP14,
 IDC_BUT_NAVACQ_SETUP15, IDC_BUT_NAVACQ_SETUP16, IDC_BUT_NAVACQ_SETUP17,
-IDC_BUT_NAVACQ_SETUP18, IDC_BUT_NAVACQ_SETUP19,
+IDC_BUT_NAVACQ_SETUP18, IDC_BUT_NAVACQ_SETUP19, IDC_BUT_NAVACQ_SETUP20,
+IDC_BUT_NAVACQ_SETUP21, IDC_BUT_NAVACQ_SETUP22, IDC_BUT_NAVACQ_SETUP23,
+IDC_BUT_NAVACQ_SETUP24,
 IDC_CHECK_NAVACQ_RUN15, IDC_RADIO_NAVACQ_SEL15, IDC_STAT_NAVACQ_WHEN15,
 IDC_CHECK_NAVACQ_RUN16, IDC_RADIO_NAVACQ_SEL16, IDC_STAT_NAVACQ_WHEN16,
 IDC_CHECK_NAVACQ_RUN17, IDC_RADIO_NAVACQ_SEL17, IDC_STAT_NAVACQ_WHEN17,
 IDC_CHECK_NAVACQ_RUN18, IDC_RADIO_NAVACQ_SEL18, IDC_STAT_NAVACQ_WHEN18,
 IDC_CHECK_NAVACQ_RUN19, IDC_RADIO_NAVACQ_SEL19, IDC_STAT_NAVACQ_WHEN19,
+IDC_CHECK_NAVACQ_RUN20, IDC_RADIO_NAVACQ_SEL20, IDC_STAT_NAVACQ_WHEN20,
+IDC_CHECK_NAVACQ_RUN21, IDC_RADIO_NAVACQ_SEL21, IDC_STAT_NAVACQ_WHEN21,
+IDC_CHECK_NAVACQ_RUN22, IDC_RADIO_NAVACQ_SEL22, IDC_STAT_NAVACQ_WHEN22,
+IDC_CHECK_NAVACQ_RUN23, IDC_RADIO_NAVACQ_SEL23, IDC_STAT_NAVACQ_WHEN23,
+IDC_CHECK_NAVACQ_RUN24, IDC_RADIO_NAVACQ_SEL24, IDC_STAT_NAVACQ_WHEN24,
+IDC_CHECK_NAVACQ_RUN25, IDC_RADIO_NAVACQ_SEL25, IDC_STAT_NAVACQ_WHEN25,
 IDC_TSS_LINE5, PANEL_END,
 IDC_RNAVACQ_EVERY_N, IDC_RNAVACQ_GROUP_START,
 IDC_RNAVACQ_GROUP_END, IDC_RNAVACQ_AFTER_MINUTES, IDC_RNAVACQ_WHEN_MOVED,
@@ -182,6 +192,7 @@ void CNavAcquireDlg::DoDataExchange(CDataExchange* pDX)
   DDX_Control(pDX, IDC_NA_ACQUIREMAP, m_butAcquireMap);
   DDX_Control(pDX, IDC_COMBO_PREMACRO, m_comboPremacro);
   DDX_Control(pDX, IDC_COMBO_POSTMACRO, m_comboPostmacro);
+  DDX_Control(pDX, IDC_COMBO_EXTRAMACRO, m_comboExtramacro);
   DDX_Control(pDX, IDC_COMBO_MACRO, m_comboMacro);
   DDX_Text(pDX, IDC_STAT_SAVING_FATE, m_strSavingFate);
   DDX_Text(pDX, IDC_STAT_FILE_SAVING_INTO, m_strFileSavingInto);
@@ -248,6 +259,8 @@ void CNavAcquireDlg::DoDataExchange(CDataExchange* pDX)
   DDX_Check(pDX, IDC_NA_USE_MAP_HOLES, m_bUseMapHoles);
   DDX_Check(pDX, IDC_NA_RUN_SCRIPT_AT_END, m_bEndRunMacro);
   DDX_Control(pDX, IDC_COMBO_MACRO_AT_END, m_comboEndMacro);
+  DDX_Check(pDX, IDC_NA_RUN_SCRIPT_AT_START, m_bStartRunMacro);
+  DDX_Control(pDX, IDC_COMBO_MACRO_AT_START, m_comboStartMacro);
   DDX_Radio(pDX, IDC_RREALI_PREV, m_iRealignConset);
   DDV_MinMaxInt(pDX, m_iRealignConset, 0, 3);
   DDX_Control(pDX, IDC_NA_REALIGN_SCALED_MAP, m_butRealignScaledMap);
@@ -269,6 +282,7 @@ BEGIN_MESSAGE_MAP(CNavAcquireDlg, CBaseDlg)
   ON_BN_CLICKED(IDC_NA_DO_MULTISHOT, OnNaAcquiremap)
   ON_CBN_SELENDOK(IDC_COMBO_PREMACRO, OnSelendokComboPremacro)
   ON_CBN_SELENDOK(IDC_COMBO_POSTMACRO, OnSelendokComboPostmacro)
+  ON_CBN_SELENDOK(IDC_COMBO_EXTRAMACRO, OnSelendokComboExtramacro)
   ON_CBN_SELENDOK(IDC_COMBO_MACRO, OnSelendokComboMacro)
   ON_BN_CLICKED(IDC_NA_DO_SUBSET, OnDoSubset)
   ON_EN_KILLFOCUS(IDC_EDIT_SUBSET_START, OnKillfocusSubsetStart)
@@ -315,7 +329,9 @@ BEGIN_MESSAGE_MAP(CNavAcquireDlg, CBaseDlg)
   ON_BN_CLICKED(IDC_NA_SAVE_AS_MAP, OnSaveAsMap)
   ON_BN_CLICKED(IDC_NA_RETRACT_CAMS, OnRetractCams)
   ON_BN_CLICKED(IDC_NA_RUN_SCRIPT_AT_END, OnNaRunScriptAtEnd)
+  ON_BN_CLICKED(IDC_NA_RUN_SCRIPT_AT_START, OnNaRunScriptAtStart)
   ON_CBN_SELENDOK(IDC_COMBO_MACRO_AT_END, OnSelendokComboMacroAtEnd)
+  ON_CBN_SELENDOK(IDC_COMBO_MACRO_AT_START, OnSelendokComboMacroAtStart)
   ON_BN_CLICKED(IDC_RREALI_PREV, OnRadioRealiConset)
   ON_BN_CLICKED(IDC_RREALI_REC, OnRadioRealiConset)
   ON_BN_CLICKED(IDC_RREALI_VIEW, OnRadioRealiConset)
@@ -355,9 +371,12 @@ BOOL CNavAcquireDlg::OnInitDialog()
   mAddItemIDs.push_back(IDC_NA_TASK_LINE2);
   mAddItemIDs.push_back(IDC_STAT_POSTMACRO);
   mAddItemIDs.push_back(IDC_COMBO_POSTMACRO);
+  mAddItemIDs.push_back(IDC_STAT_EXTRAMACRO);
+  mAddItemIDs.push_back(IDC_COMBO_EXTRAMACRO);
   mAddUnitStartInds.push_back(0);
   mAddUnitStartInds.push_back(2);
   mAddUnitStartInds.push_back(5);
+  mAddUnitStartInds.push_back(7);
 
   // Set up to adjust group boxes
   // It cannot be drawn after the big redraw without obscuring tooltips, so set up for
@@ -441,8 +460,10 @@ BOOL CNavAcquireDlg::OnInitDialog()
   mCurrentOrder = &mAllOrders[m_iCurParamSet][0];
   LoadMacrosIntoDropDown(m_comboPremacro, false, false);
   LoadMacrosIntoDropDown(m_comboPostmacro, false, false);
+  LoadMacrosIntoDropDown(m_comboExtramacro, false, false);
   LoadMacrosIntoDropDown(m_comboMacro, false, false);
   LoadMacrosIntoDropDown(m_comboEndMacro, false, false);
+  LoadMacrosIntoDropDown(m_comboStartMacro, false, false);
 
   // Adjust some text
   if (mWinApp->mScope->GetNoColumnValve())
@@ -741,7 +762,11 @@ void CNavAcquireDlg::UnloadDialogToCurParams()
   mParam->saveAsMapChoice = m_bSaveAsMap;
   mParam->mapWithViewSearch = m_iMapWithViewSearch;
   mParam->runEndMacro = m_bEndRunMacro;
+  mParam->runStartMacro = m_bStartRunMacro;
   mParam->endMacroInd = mEndMacroNum;
+  mParam->startMacroInd = mStartMacroNum;
+  mParam->extraMacroInd = mExtramacNum;
+  mParam->runExtramacro = DOING_ACTION(NAACT_RUN_EX_MACRO);
   mParam->realignToScaledMap = m_bRealignScaledMap;
   B3DCLAMP(m_iRealignConset, 0, 3);
   mParam->conSetForScaledAli = radioToConset[m_iRealignConset];
@@ -779,6 +804,12 @@ void CNavAcquireDlg::LoadParamsToDialog()
   m_bEndRunMacro = mParam->runEndMacro;
   mEndMacroNum = mParam->endMacroInd;
   B3DCLAMP(mEndMacroNum, 1, MAX_MACROS);
+  m_bStartRunMacro = mParam->runStartMacro;
+  mStartMacroNum = mParam->startMacroInd;
+  B3DCLAMP(mStartMacroNum, 1, MAX_MACROS);
+  mExtramacNum = mParam->extraMacroInd;
+  B3DCLAMP(mExtramacNum, 1, MAX_MACROS);
+  SET_ACTION(mActions, NAACT_RUN_EX_MACRO, mParam->runExtramacro);
   m_bRealignScaledMap = mParam->realignToScaledMap;
   B3DCLAMP(mParam->realignToScaledMap, 0, SEARCH_CONSET);
   m_iRealignConset = consetToRadio[mParam->conSetForScaledAli];
@@ -867,13 +898,17 @@ void CNavAcquireDlg::ManageMacro(void)
 {
   m_comboPremacro.SetCurSel(mPremacNum - 1);
   m_comboPostmacro.SetCurSel(mPostmacNum - 1);
+  m_comboExtramacro.SetCurSel(mExtramacNum - 1);
   m_comboMacro.SetCurSel(mMacroNum - 1);
   m_comboEndMacro.SetCurSel(mEndMacroNum - 1);
+  m_comboStartMacro.SetCurSel(mStartMacroNum - 1);
   m_comboMacro.EnableWindow(OptionsToAcquireType() == ACQUIRE_RUN_MACRO);
   m_comboPremacro.EnableWindow(DOING_ACTION(NAACT_RUN_PREMACRO));
   m_comboPostmacro.EnableWindow(DOING_ACTION(NAACT_RUN_POSTMACRO));
+  m_comboExtramacro.EnableWindow(DOING_ACTION(NAACT_RUN_EX_MACRO));
   EnableDlgItem(IDC_STAT_PREMACRO, DOING_ACTION(NAACT_RUN_PREMACRO));
   EnableDlgItem(IDC_STAT_POSTMACRO, DOING_ACTION(NAACT_RUN_POSTMACRO));
+  EnableDlgItem(IDC_STAT_EXTRAMACRO, DOING_ACTION(NAACT_RUN_EX_MACRO));
   UpdateData(false);
 }
 
@@ -887,6 +922,11 @@ void CNavAcquireDlg::OnSelendokComboPostmacro()
   mPostmacNum = m_comboPostmacro.GetCurSel() + 1;
 }
 
+void CNavAcquireDlg::OnSelendokComboExtramacro()
+{
+  mExtramacNum = m_comboExtramacro.GetCurSel() + 1;
+}
+
 void CNavAcquireDlg::OnSelendokComboMacro()
 {
   mMacroNum = m_comboMacro.GetCurSel() + 1;
@@ -898,9 +938,20 @@ void CNavAcquireDlg::OnNaRunScriptAtEnd()
   m_comboEndMacro.EnableWindow(m_bEndRunMacro);
 }
 
+void CNavAcquireDlg::OnNaRunScriptAtStart()
+{
+  UPDATE_DATA_TRUE;
+  m_comboStartMacro.EnableWindow(m_bStartRunMacro);
+}
+
 void CNavAcquireDlg::OnSelendokComboMacroAtEnd()
 {
   mEndMacroNum = m_comboEndMacro.GetCurSel() + 1;
+}
+
+void CNavAcquireDlg::OnSelendokComboMacroAtStart()
+{
+  mStartMacroNum = m_comboStartMacro.GetCurSel() + 1;
 }
 
 // Subset entries
@@ -1027,7 +1078,8 @@ void CNavAcquireDlg::ManageEnables(bool rebuilding)
     && mActions[NAACT_ALIGN_TEMPLATE].timingType == NAA_EVERY_N_ITEMS &&
     mActions[NAACT_ALIGN_TEMPLATE].everyNitems == 1;
   bool skipMoveOK = mWinApp->mNavigator->OKtoSkipStageMove(mActions, acquireType) != 0;
-  bool useMapEnabled = acquireType == ACQUIRE_MULTISHOT && !msParams->useCustomHoles;
+  bool useMapEnabled = (acquireType == ACQUIRE_MULTISHOT || 
+    acquireType == ACQUIRE_RUN_MACRO)&& !msParams->useCustomHoles;
   bool mulGridForMapping = mOpenedFromMultiGrid && !m_iCurParamSet;
   bool mulGridForFinal = mOpenedFromMultiGrid && m_iCurParamSet;
   m_butSetupMultishot.EnableWindow(acquireType == ACQUIRE_MULTISHOT);
@@ -1068,7 +1120,9 @@ void CNavAcquireDlg::ManageEnables(bool rebuilding)
   RebuildIfEnabled(acquireType == ACQUIRE_IMAGE_ONLY, mSkipSaveEnabled, doBuild);
   m_butHybridRealign.EnableWindow(hybridOK);
   RebuildIfEnabled(hybridOK, mHybridEnabled, doBuild);
-  m_comboEndMacro.EnableWindow(m_bEndRunMacro && 
+  m_comboEndMacro.EnableWindow(m_bEndRunMacro &&
+    mWinApp->mCameraMacroTools.GetNavigatorState() != NAV_PAUSED);
+  m_comboStartMacro.EnableWindow(m_bStartRunMacro &&
     mWinApp->mCameraMacroTools.GetNavigatorState() != NAV_PAUSED);
   m_butUseMapHoles.EnableWindow(useMapEnabled);
   RebuildIfEnabled(useMapEnabled, mUseMapHolesEnabled, doBuild);
@@ -1224,9 +1278,10 @@ void CNavAcquireDlg::BuildActionSection(bool unhiding)
           mIDsToDrop.push_back(IDC_BUT_NAVACQ_SETUP1 + pos);
 
         // Add a macro when it is time
-        if (actInd == NAACT_RUN_PREMACRO || actInd == NAACT_RUN_POSTMACRO) {
-          mAddUnitAfterIDs[actInd == NAACT_RUN_PREMACRO ? 0 : 2] = 
-            IDC_STAT_NAVACQ_WHEN1 + pos;
+        if (actInd == NAACT_RUN_PREMACRO || actInd == NAACT_RUN_POSTMACRO ||
+          actInd == NAACT_RUN_EX_MACRO) {
+          mAddUnitAfterIDs[B3DCHOICE(actInd == NAACT_RUN_EX_MACRO, 3,
+            actInd == NAACT_RUN_PREMACRO ? 0 : 2)] = IDC_STAT_NAVACQ_WHEN1 + pos;
           mAddAfterIDSet.insert(IDC_STAT_NAVACQ_WHEN1 + pos);
         }
 
@@ -1354,6 +1409,13 @@ void CNavAcquireDlg::BuildActionSection(bool unhiding)
       mIDsToDrop.push_back(IDC_COMBO_MACRO);
     }
 
+  }
+
+  // Drop optional script at start
+  if (!mWinApp->mNavHelper->IsExtraTaskIncluded(NAA_MACRO_AT_START) ||
+    (m_bHideUnselectedOpts && !m_bStartRunMacro)) {
+    mIDsToDrop.push_back(IDC_NA_RUN_SCRIPT_AT_START);
+    mIDsToDrop.push_back(IDC_COMBO_MACRO_AT_START);
   }
 
   // Reform the window and set the group box

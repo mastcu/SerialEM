@@ -197,9 +197,11 @@ struct NavAlignParams {
 #define NAA_FLAG_ANY_SITE_OK  (1 << 9)
 #define NAA_FLAG_HERE_ONLY    (1 << 10)
 
-#define NAA_MAX_ACTIONS    20
+#define NAA_MAX_ACTIONS    25
+#define NAA_NUM_EXTRA_ACTS  6
 #define DOING_ACTION(a) ((mAcqActions[a].flags & NAA_FLAG_RUN_IT) ? 1 : 0)
 #define SET_ACTION(p, a, s) setOrClearFlags(&p[a].flags, NAA_FLAG_RUN_IT, (s) ? 1 : 0);
+#define NAA_MACRO_AT_START -1
 
 enum {NAA_EVERY_N_ITEMS = 0, NAA_GROUP_START, NAA_GROUP_END, NAA_AFTER_TIME, 
   NAA_IF_SEPARATED};
@@ -209,7 +211,9 @@ enum {
   NAACT_FINE_EUCEN, NAACT_EUCEN_BY_FOCUS, NAACT_AUTOFOCUS, NAACT_COMA_FREE,
   NAACT_ASTIGMATISM, NAACT_CONDITION_VPP, NAACT_HW_DARK_REF, NAACT_WAIT_DRIFT,
   NAACT_ALIGN_TEMPLATE, NAACT_REFINE_ZLP, NAACT_RUN_PREMACRO, NAACT_RUN_POSTMACRO,
-  NAACT_FLASH_FEG, NAACT_CHECK_DEWARS, NAACT_HOLE_FINDER, // Add navActions here
+  NAACT_FLASH_FEG, NAACT_CHECK_DEWARS, NAACT_HOLE_FINDER, NAACT_RUN_EX_MACRO,
+  NAACT_EX_CEN_BEAM, NAACT_EX_ALIGN_TEMPLATE, NAACT_EX_RESERVED1, NAACT_EX_RESERVED2,
+  NAACT_EX_RESERVED3, // Add navActions here
   ACQ_FIND_SETUP_NEXT, ACQ_OPEN_FILE, ACQ_ACQUIRE, ACQ_DO_MULTISHOT, ACQ_RUN_MACRO,
   ACQ_START_TS, ACQ_MOVE_TO_AREA, ACQ_BACKLASH, ACQ_MOVE_ELSEWHERE, ACQ_RELAX_STAGE,
   ACQ_MAX_STEPS // End with this
@@ -318,6 +322,7 @@ public:
   GetSetMember(float, MinAutoAdjSquareRatio);
   GetSetMember(float, MaxAutoAdjHoleRatio);
   GetSetMember(int, MinAutoAdjCropSize);
+  IntVec *GetExtraTaskList() { return &mExtraTaskList; };
   float *GetLastUsedHoleISvecs() {return &mLastUsedHoleISvecs[0] ; };
 
 
@@ -568,6 +573,7 @@ private:
   float mLastUsedHoleISvecs[6];  // Last set of hole IS vectors used to set multishot IS
   float mMaxISvecMatchScaleDiff; // Maximum difference in scale or rotations from last set
   float mMaxISvecMatchRotDiff;   // of hole IS vectors allowed for permuting vectors
+  IntVec mExtraTaskList;       // List of NAACT_EX... indexes to include, plus special
 
 public:
   void PrepareToReimageMap(CMapDrawItem * item, MontParam * param, ControlSet * conSet,
@@ -600,6 +606,7 @@ public:
   int GetLastErrorTarget(float & targetX, float & targetY);
   void NavOpeningOrClosing(bool open);
   void InitAcqActionFlags(bool opening);
+  bool IsExtraTaskIncluded(int ind);
   void UpdateSettings();
   float *GetGridLimits() {return &mGridLimits[0];};
   void Initialize(void);

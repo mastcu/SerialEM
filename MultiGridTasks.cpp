@@ -3878,7 +3878,8 @@ void CMultiGridTasks::DoNextSequenceAction(int resume)
   case MGACT_TAKE_MMM:
     mNavHelper->CopyAcqParamsAndActionsToTemp(0);
     acqParams = mWinApp->GetNavAcqParams(2);
-    acqParams->useMapHoleVectors = mParams.msVectorSource == 0;
+    if (acqParams->acquireType == ACQUIRE_MULTISHOT)
+      acqParams->useMapHoleVectors = mParams.msVectorSource == 0;
     acqParams->noMBoxOnError = true;
     if (mParams.MMMimageType > 0) {
       acqParams->acquireType = ACQUIRE_TAKE_MAP;
@@ -3912,7 +3913,8 @@ void CMultiGridTasks::DoNextSequenceAction(int resume)
     } else
       mNavHelper->CopyAcqParamsAndActionsToTemp(1);
     acqParams = mWinApp->GetNavAcqParams(2);
-    acqParams->useMapHoleVectors = mParams.msVectorSource == 0;
+    if (acqParams->acquireType == ACQUIRE_MULTISHOT)
+      acqParams->useMapHoleVectors = mParams.msVectorSource == 0;
     acqParams->noMBoxOnError = true;
     CloseMainLogOpenForGrid("_final.log");
     mNavigator->SetCurAcqParmActions(2);
@@ -4868,6 +4870,16 @@ bool CMultiGridTasks::GetGridMapLabel(int mapID, CString &value)
   iter = mMultiLoadLabelMap.find(mapID);
   value = iter->second.c_str();
   return !value.IsEmpty();
+}
+
+int CMultiGridTasks::GetCurrentGridID()
+{
+  JeolCartridgeData jcd;
+  if (!(mDoingMulGridSeq || mSuspendedMulGrid) || mCurrentGrid < 0 || 
+    mCurrentGrid >= mNumGridsToRun)
+    return -1;
+  jcd = mCartInfo->GetAt(mJcdIndsToRun[mCurrentGrid]);
+  return jcd.id;
 }
 
 //////////////////////////////////////////////////////////////////

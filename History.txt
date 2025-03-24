@@ -3,6 +3,23 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+3/23/25: Added some tasks and options to Navigator Acquire at Items that are
+"extra" and will show up only if listed in a property setting.
+
+3/23/25: Allowed the "Use map hole vectors" option in Acquire at Items to be
+set and have an effect when running a script as the main action.
+
+3/23/25: Allowed SetMontageParams command to be used to specify a stage
+montage with image shifting in blocks.
+
+3/23/25: Added calibration for saving an intensity at parallel illumination
+that can be returned to with a script command.
+
+3/23/25: Added script command to report current grid ID when running
+multiple grids.
+
+3/23/25: Added ability to map Ctrl F1-F10 to run specific scripts.
+
 3/19/25: Set attribute to avoid contrast stretching in returned images from
 DE camera with API 2 (In 4.1).
 

@@ -456,11 +456,13 @@ struct NavAcqParams {
   int nonTSacquireType;    // User's latest value for a non-TS acquire type
   int macroIndex;          // Macro index numbered from 1
   int preMacroInd;         // Pre-macro index also from 1
-  int postMacroInd;         // Post-macro index also from 1
+  int postMacroInd;        // Post-macro index also from 1
+  int extraMacroInd;       // Extra-macro index also from 1
   int preMacroIndNonTS;    // Pre-macro index for non tilt series actions
   int postMacroIndNonTS;    // Post-macro index for non tilt series actions
   BOOL runPremacro;         // Run script before TS
   BOOL runPostmacro;        // run script after TS
+  BOOL runExtramacro;       // Run extra script
   BOOL runPremacroNonTS;    // Run script before nonTS
   BOOL runPostmacroNonTS;   // run script after nonTS
   BOOL skipInitialMove;     // Skip final move now
@@ -494,6 +496,8 @@ struct NavAcqParams {
   BOOL useMapHoleVectors;   // Flag to use hole vectors in new drawn-on map for multishot
   int endMacroInd;          // Macro to run at end of acquisition
   BOOL runEndMacro;         // Flag for whether to run it
+  int startMacroInd;        // Macro to run at end of acquisition
+  BOOL runStartMacro;       // Flag for whether to run it
   BOOL realignToScaledMap;  // Flag to do Realign to Item to scaled map
   int conSetForScaledAli;   // Control set to use for it
   BOOL skipZinRunAtNearest; // Skip Z move when running task at nearest item

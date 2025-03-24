@@ -173,8 +173,9 @@
       frames if a positive number is entered in the text box, no image if 0 is
       entered, or a sum of all the frames if -1 is entered. </P>
     <P><strong>Use map hole vectors for shifts, with adjustment</strong></P>
-    <P>This option is enabled when acquiring multiple Records with a regular array of 
-      holes and makes the program set the image shifts vectors for the holes with the 
+    <P>This option is enabled when the main action is acquiring multiple Records or 
+      running a script with a regular array of holes selected in the multiple Record 
+      parameters. It makes the program set the image shift vectors for the holes with the 
       hole vectors found when Hole Finder was run on a map. The vectors are set from a 
       map when the first item drawn on that map is encountered.&nbsp; If there is an 
       adjustment saved from using the <strong>Step To and Adjust</strong> operation in 
@@ -182,7 +183,7 @@
       <a href="hidd_multi_shot_setup.htm">Multiple Record Setup dialog</a>, it will be 
       applied provided that the map&#39;s magnification matches the original magnification 
       of the shifts that were last adjusted.&nbsp; It is important that the adjustment 
-      of hole vectors is known to give accurate hole positions from at the Record 
+      of hole vectors is known to give accurate hole positions at the Record 
       magnification before choosing this option. This will certainly be useful if a 
       different grid is loaded, and may also be useful for some grid squares that are 
       tilted or distorted.&nbsp; If this option is selected, the program will check 
@@ -301,6 +302,10 @@
       from must be specified in the SerialEM properties file.&nbsp; The program keeps
       track of this option setting separately for tilt series and other kinds of
       primary tasks.</P>
+    <P>Run script at start</P>
+    <P>This option appears if the property AcquireAtItemsExtraTasks includes -1.&nbsp; 
+      Select the option to run a script before starting acquisition on the first item, 
+      and pick the script to run in the combo box.</P>
     <P><strong>Run script at end</strong></P>
     <P>Select this option to run a script after acquisition finishes, and select the 
       script in the combo box.&nbsp; The script is checked before acquisition is 
@@ -502,6 +507,17 @@
       will apply when the task is run.&nbsp; The <a href="hidd_multi_combiner.htm">
       Multi-hole Combiner</a> will operate on all points in the current image, which 
       will be the map at that point.</P>
+    <P><strong>Extra Tasks</strong> - A second set of controls for a few particular 
+      tasks can appear in the task collection if they are listed in the property 
+      &#39;AcquireAtItemsExtraTasks&#39;.&nbsp; These include <strong>Extra Run Script</strong>,
+      <strong>Extra Autocenter Beam</strong>, and <strong>Extra Align to Template</strong>, 
+      which will appear if the numbers 19, 20, and 21, respectively, are included in 
+      the property list.&nbsp; None of these tasks are constrained to occur before or 
+      after the main action.&nbsp; Duplicate tasks do not have <strong>Setup</strong> 
+      buttons because they do not have separate parameters to be set through such a 
+      button; however, the settings for when and how often to run them is independent 
+      from the settings for the original task. Additional duplicate tasks can be added 
+      upon request.</P>
     <P><A NAME="taskControls"></A></P>
     <P><em><strong>General controls for selected task:</strong></em></P>
     <P><strong>How often to run task </strong>- radio button group</P>

@@ -1397,11 +1397,6 @@
 #define IDC_EDIT_ONE_LINE8              2386
 #define IDC_EDIT_ONE_LINE9              2387
 #define IDC_EDIT_ONE_LINE10             2388
-#define IDC_SKIP_FILE_DLG               3549
-#define IDC_RSUPER_RES_REF              3550
-#define IDC_STAT_ALIBIN                 3551
-#define IDC_RBIN_TO_SIZE                3552
-#define IDC_SPIN_BIN_TO                 3553
 #define IDC_STAT_ALIBIN_PIX             2390
 #define IDC_RALIBIN_BY_FAC              2391
 #define IDC_STAT_ALIGN_TARGET           2392
@@ -1417,7 +1412,8 @@
 #define IDC_STAT_COMA_CONDITIONS        2403
 #define IDC_NA_POSTMACRO                2404
 #define IDC_COMBO_POSTMACRO             2405
-#define IDC_CHECK_DO_SHOTS_IN_HOLE      2406
+#define IDC_CHECK_DO_SHOTS_IN_HOLE      2398
+#define IDC_COMBO_EXTRAMACRO            2406
 #define IDC_CHECK_DO_MULTIPLE_HOLES     2407
 #define IDC_STAT_REGULAR                2408
 #define IDC_STAT_NUM_X_HOLES            2409
@@ -1477,11 +1473,6 @@
 #define IDC_RUN_ONE_LINE8               2468
 #define IDC_RUN_ONE_LINE9               2469
 #define IDC_RUN_ONE_LINE10              2470
-#define IDC_CHECK_USE_CORR_DBL_SAMP     3554
-#define IDC_STATLISTHEADER1             3555
-#define IDC_STATLISTHEADER2             3556
-#define IDC_STATLISTHEADER3             3557
-#define IDC_STATLISTHEADER4             3558
 #define IDC_STATLISTHEADER5             2471
 #define IDC_STATLISTHEADER6             2472
 #define IDC_STATLISTHEADER7             2473
@@ -1880,11 +1871,12 @@
 #define IDC_STAT_AFTER_MINUTES          2882
 #define IDC_NA_HIDE_UNUSED              2883
 #define IDC_STAT_INFO_LINE1             2884
+#define IDC_STAT_EXTRAMACRO             2901
 #define IDC_STAT_INFO_LINE2             2885
 #define IDC_RCHOICE_ONE                 2886
 #define IDC_STAT_SPACER                 2887
 #define IDC_RCHOICE_THREE               2888
-#define IDC_NA_ADJUST_BT_FOR_IS         2888
+#define IDC_NA_ADJUST_BT_FOR_IS         2946
 #define IDC_STAT_TASK_OPTIONS           2889
 #define IDC_STAT_ACTION_OPTIONS         2890
 #define IDC_STAT_GEN_OPTIONS            2891
@@ -2236,9 +2228,11 @@
 #define IDC_EDIT_MULGRID_NAME20         3249
 #define IDC_COMBO_MACRO_AT_END          3250
 #define IDC_STAT_RUN                    3251
+#define IDC_COMBO_MACRO_AT_START        3267
 #define IDC_STAT_NAME                   3252
 #define IDC_NA_RUN_SCRIPT_AT_END        3253
 #define IDC_EDIT_MAX_PCT_CHANGE         3254
+#define IDC_NA_RUN_SCRIPT_AT_START      3559
 #define IDC_EDIT_MAX_ROTATION           3255
 #define IDC_EDIT_EXTRA_FOVS             3256
 #define IDC_STAT_REF_MAP_BUF            3257
@@ -2526,6 +2520,16 @@
 #define IDC_RVECTORS_FROM_MAPS          3546
 #define IDC_RVECTORS_FROM_SETTINGS      3547
 #define IDC_STAT_VECTOR_SOURCE          3548
+#define IDC_SKIP_FILE_DLG               3549
+#define IDC_RSUPER_RES_REF              3550
+#define IDC_STAT_ALIBIN                 3551
+#define IDC_RBIN_TO_SIZE                3552
+#define IDC_SPIN_BIN_TO                 3553
+#define IDC_CHECK_USE_CORR_DBL_SAMP     3554
+#define IDC_STATLISTHEADER1             3555
+#define IDC_STATLISTHEADER2             3556
+#define IDC_STATLISTHEADER3             3557
+#define IDC_STATLISTHEADER4             3558
 #define ID_NEW_IMAGE                    32771
 #define IDM_FILE_SAVEOTHER              32772
 #define IDM_FILE_READ                   32773
@@ -3090,6 +3094,19 @@
 #define ID_LOGWINDOW_SAVESECONDARYLOG   33532
 #define ID_LOGWINDOW_OPENSECONDARYLOG   33533
 #define ID_TASKS_SETAREASINLOWDOSE      33534
+#define ID_MACRO_FKEYRUN1               33537
+#define ID_MACRO_FKEYRUN2               33538
+#define ID_MACRO_FKEYRUN3               33539
+#define ID_MACRO_FKEYRUN4               33540
+#define ID_MACRO_FKEYRUN5               33541
+#define ID_MACRO_FKEYRUN6               33542
+#define ID_MACRO_FKEYRUN7               33543
+#define ID_MACRO_FKEYRUN8               33544
+#define ID_MACRO_FKEYRUN9               33545
+#define ID_MACRO_FKEYRUN10              33546
+#define ID_SCRIPT_MAPFUNCTIONKEY        33547
+#define ID_SCRIPT_LISTFKEYMAPPINGS      33548
+#define ID_BEAMSPOT_PARALLELILLUMINATION 33549
 
 // Next default values for new objects
 // 
@@ -3097,8 +3114,8 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        291
-#define _APS_NEXT_COMMAND_VALUE         33535
-#define _APS_NEXT_CONTROL_VALUE         3559
+#define _APS_NEXT_COMMAND_VALUE         33550
+#define _APS_NEXT_CONTROL_VALUE         3560
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif

@@ -177,6 +177,7 @@ public:
   void ApplyVectorsIfSavedAndOK(int jcdInd);
   int LoadAllGridMaps(int startBuf, CString &errStr);
   bool GetGridMapLabel(int mapID, CString &value);
+  int GetCurrentGridID();
   int SaveSessionFile(CString &errStr);
   void SaveSessionFileWarnIfError();
   void ClearSession(bool keepAcqParams = false);
@@ -217,6 +218,7 @@ public:
   GetSetMember(float, MaxRefineShiftDiff);
   GetMember(bool, UseTwoJeolCondAp);
   GetMember(int, SingleCondenserAp);
+  GetMember(double, RunStartTime);
   int *GetMontSetupConsetSizes() { return &mMontSetupConsetSizes[0]; };
   IntVec *GetCustomRunDlgInds() {return &mCustomRunDlgInds ; };
   bool WasStoppedInNavRun() { return mStoppedInNavRun && mSuspendedMulGrid; };

@@ -51,6 +51,7 @@ enum HelperTasks {TASK_FIRST_MOVE = 1, TASK_FIRST_SHOT, TASK_SECOND_MOVE,
 TASK_SECOND_SHOT, TASK_FINAL_SHOT, TASK_RESET_IS, TASK_RESET_SHOT};
 
 // Default order for task list (actions) in acquire
+// This table sets size in mNumAcqActions but has to include all buttons
 int CNavHelper::mAcqActDefaultOrder[NAA_MAX_ACTIONS + 1] = {
   NAACT_CHECK_DEWARS,
   NAACT_FLASH_FEG,
@@ -70,8 +71,14 @@ int CNavHelper::mAcqActDefaultOrder[NAA_MAX_ACTIONS + 1] = {
   NAACT_WAIT_DRIFT,
   NAACT_RUN_PREMACRO, 
   NAACT_HOLE_FINDER,
-  NAACT_RUN_POSTMACRO, 
- -1};
+  NAACT_RUN_POSTMACRO,
+  NAACT_RUN_EX_MACRO,
+  NAACT_EX_CEN_BEAM,
+  NAACT_EX_ALIGN_TEMPLATE,
+  NAACT_EX_RESERVED1,
+  NAACT_EX_RESERVED2,
+  NAACT_EX_RESERVED3,
+  -1};
 
 #define BEFORE_SETUP_EVERYN (NAA_FLAG_ONLY_BEFORE | NAA_FLAG_HAS_SETUP | NAA_FLAG_EVERYN_ONLY)
 
@@ -103,7 +110,13 @@ CNavHelper::CNavHelper(void)
     {"Manage Dewars/Vacuum", NAA_FLAG_HAS_SETUP | NAA_FLAG_EVERYN_ONLY |
     NAA_FLAG_ANY_SITE_OK, 0, 1, 15, 40.},
     {"Hole Finder && Combiner", NAA_FLAG_AFTER_ITEM | NAA_FLAG_HAS_SETUP | 
-    NAA_FLAG_EVERYN_ONLY | NAA_FLAG_HERE_ONLY, 0, 1, 15, 40.}
+    NAA_FLAG_EVERYN_ONLY | NAA_FLAG_HERE_ONLY, 0, 1, 15, 40.},
+    {"Extra Run Script", 0, 0, 1, 15,40.},
+    {"Extra Autocenter Beam", 0, 0, 1, 15, 40.},
+    {"Extra Align to Template", 0, 0, 1, 15, 40.},
+    {"Ex. Reserved 1", 0, 0, 1, 15, 40.},
+    {"Ex. Reserved 2", 0, 0, 1, 15, 40.},
+    {"Ex. Reserved 3", 0, 0, 1, 15, 40.}
   };
 
   mWinApp = (CSerialEMApp *)AfxGetApp();
@@ -403,7 +416,7 @@ void CNavHelper::NavOpeningOrClosing(bool open)
 // Make sure bad flags haven't come in from settings and hide irrelevant actions
 void CNavHelper::InitAcqActionFlags(bool opening)
 {
-  int i;
+  int i, ind;
   bool setFlag;
   NavAcqAction *actions;
   bool canHWDR = mWinApp->GetHasK2OrK3Camera() || mWinApp->GetDEcamCount() > 0;
@@ -450,8 +463,23 @@ void CNavHelper::InitAcqActionFlags(bool opening)
         setFlag ? 1 : 0);
       if (setFlag)
         setOrClearFlags(&actions[NAACT_CONDITION_VPP].flags, NAA_FLAG_RUN_IT, 0);
+
+      // Manage extra tasks
+      for (ind = NAA_MAX_ACTIONS - NAA_NUM_EXTRA_ACTS; ind < NAA_MAX_ACTIONS; ind++) {
+        setFlag = !mExtraTaskList.size() || !IsExtraTaskIncluded(ind);
+        setOrClearFlags(&actions[ind].flags, NAA_FLAG_ALWAYS_HIDE,
+          setFlag ? 1 : 0);
+        if (setFlag)
+          setOrClearFlags(&actions[ind].flags, NAA_FLAG_RUN_IT, 0);
+      }
     }
   }
+}
+
+bool CNavHelper::IsExtraTaskIncluded(int ind)
+{
+  return mExtraTaskList.size() > 0 &&
+    numberInList(ind, &mExtraTaskList[0], (int)mExtraTaskList.size(), 0) != 0;
 }
 
 void CNavHelper::UpdateSettings()

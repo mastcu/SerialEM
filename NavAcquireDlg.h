@@ -65,7 +65,9 @@ public:
   int mMacroNum;
   int mPremacNum;
   int mPostmacNum;
+  int mExtramacNum;
   int mEndMacroNum;
+  int mStartMacroNum;
   int mNumArrayItems;
   int mNumAcqBeforeFile;
   int mNumFilesToOpen;
@@ -92,8 +94,10 @@ public:
   void UnloadTSdependentFromDlg(int acquireType);
   CComboBox m_comboPremacro;
   CComboBox m_comboPostmacro;
+  CComboBox m_comboExtramacro;
   afx_msg void OnSelendokComboPremacro();
   afx_msg void OnSelendokComboPostmacro();
+  afx_msg void OnSelendokComboExtramacro();
   CComboBox m_comboMacro;
   afx_msg void OnSelendokComboMacro();
   CString m_strSavingFate;
@@ -206,9 +210,13 @@ public:
   CButton m_butUseMapHoles;
   BOOL m_bUseMapHoles;
   afx_msg void OnNaRunScriptAtEnd();
+  afx_msg void OnNaRunScriptAtStart();
   BOOL m_bEndRunMacro;
   CComboBox m_comboEndMacro;
+  BOOL m_bStartRunMacro;
+  CComboBox m_comboStartMacro;
   afx_msg void OnSelendokComboMacroAtEnd();
+  afx_msg void OnSelendokComboMacroAtStart();
   afx_msg void OnRadioRealiConset();
   int m_iRealignConset;
   afx_msg void OnNaRealignScaledMap();
