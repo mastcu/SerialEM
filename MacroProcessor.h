@@ -191,6 +191,7 @@ public:
   GetSetMember(CString, PyIncludePath);
   GetSetMember(int, NextParamSetForMont);
   GetMember(CString, ScriptWindowTitle);
+  GetMember(CString *, FKeyMapping);
   bool *GetNoCatchOutput() { return &mNoCatchOutput[0]; };
   bool *GetNoPyTryOutput() { return &mNoPyTryOutput[0]; };
   std::vector<std::string> *GetVersionsOfPython() { return &mVersionsOfPython; };
@@ -223,6 +224,7 @@ protected:
   afx_msg void OnMacroEdit(UINT nID);
   afx_msg void OnUpdateMacroEdit(CCmdUI* pCmdUI);
   afx_msg void OnMacroRun(UINT nID);
+  afx_msg void OnMacroFKeyRun(UINT nID);
   afx_msg void OnUpdateMacroRun(CCmdUI* pCmdUI);
   afx_msg void OnMacroToolbar();
   afx_msg void OnMacroSetlength();
@@ -495,6 +497,7 @@ protected:
   float mBinningForCameraMatrix; // Adjust camera matrices to this user binning
   MultiShotParams *mSavedMultiShot;  // Saved parameters for running step & adjust
   bool mC2ApForScalingWasSet;  // Flag that C2 aperture size was set
+  CString mFKeyMapping[10];    // Custom mapping to actual macros
 
 public:
   void SetNumCamMacRows(int inVal);
@@ -678,6 +681,8 @@ public:
   afx_msg void OnUpdateMonospaceStatusLines(CCmdUI *pCmdUI);
   afx_msg void OnKeepFocusOnOneLine();
   afx_msg void OnUpdateKeepFocusOnOneLine(CCmdUI *pCmdUI);
+  afx_msg void OnScriptMapFunctionKey();
+  afx_msg void OnScriptListFKeyMappings();
 };
 
 #include "MacroCommands.h"

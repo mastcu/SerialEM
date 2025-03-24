@@ -102,6 +102,7 @@ BEGIN_MESSAGE_MAP(CMacroProcessor, CCmdTarget)
   ON_COMMAND_RANGE(ID_MACRO_EDIT1, ID_MACRO_EDIT10, OnMacroEdit)
   ON_UPDATE_COMMAND_UI_RANGE(ID_MACRO_EDIT1, ID_MACRO_EDIT10, OnUpdateMacroEdit)
   ON_COMMAND_RANGE(ID_MACRO_RUN1, ID_MACRO_RUN60, OnMacroRun)
+  ON_COMMAND_RANGE(ID_MACRO_FKEYRUN1, ID_MACRO_FKEYRUN10, OnMacroFKeyRun)
   ON_UPDATE_COMMAND_UI_RANGE(ID_MACRO_RUN1, ID_MACRO_RUN60, OnUpdateMacroRun)
   ON_COMMAND(ID_MACRO_TOOLBAR, OnMacroToolbar)
   ON_UPDATE_COMMAND_UI(ID_MACRO_END, OnUpdateMacroEnd)
@@ -167,6 +168,10 @@ BEGIN_MESSAGE_MAP(CMacroProcessor, CCmdTarget)
   ON_UPDATE_COMMAND_UI(ID_SCRIPT_MONOSPACESTATUSLINES, OnUpdateMonospaceStatusLines)
   ON_COMMAND(ID_SCRIPT_KEEPFOCUSONONELINE, OnKeepFocusOnOneLine)
   ON_UPDATE_COMMAND_UI(ID_SCRIPT_KEEPFOCUSONONELINE, OnUpdateKeepFocusOnOneLine)
+  ON_COMMAND(ID_SCRIPT_MAPFUNCTIONKEY, OnScriptMapFunctionKey)
+  ON_UPDATE_COMMAND_UI(ID_SCRIPT_MAPFUNCTIONKEY, OnUpdateNoTasks)
+  ON_COMMAND(ID_SCRIPT_LISTFKEYMAPPINGS, OnScriptListFKeyMappings)
+  ON_UPDATE_COMMAND_UI(ID_SCRIPT_LISTFKEYMAPPINGS, OnUpdateNoTasks)
 END_MESSAGE_MAP()
 
 //////////////////////////////////////////////////////////////////////
@@ -244,7 +249,7 @@ CMacroProcessor::CMacroProcessor()
   for (i = 0; i < NUM_CM_MESSAGE_LINES; i++)
     mHighlightStatus[i] = false;
   mMonospaceStatus = false;
-  mKeepOneLineFocus = true;
+  mKeepOneLineFocus = false;
   mAutoIndentSize = 3;
   mShowIndentButtons = true;
   mUseMonoFont = false;
@@ -782,6 +787,21 @@ void CMacroProcessor::OnMacroRun(UINT nID)
     Run(index);
 }
 
+void CMacroProcessor::OnMacroFKeyRun(UINT nID)
+{
+  int mapInd = nID - ID_MACRO_FKEYRUN1;
+  int index = mapInd;
+  if (!mFKeyMapping[mapInd].IsEmpty()) {
+    index = FindMacroByNameOrTextNum(mFKeyMapping[mapInd]);
+    if (index < 0) {
+      AfxMessageBox("The script " + mFKeyMapping[mapInd] + " can no longer be found",
+        MB_EXCLAME);
+      return;
+    }
+  }
+  OnMacroRun(index + ID_MACRO_RUN1);
+}
+
 // Enable a macro if there are no tasks, and it is nonempty or being edited
 void CMacroProcessor::OnUpdateMacroRun(CCmdUI* pCmdUI)
 {
@@ -967,6 +987,31 @@ void CMacroProcessor::OnUpdateRunIfProgramIdle(CCmdUI *pCmdUI)
   pCmdUI->Enable(!mWinApp->DoingTasks());
   pCmdUI->SetCheck(mWinApp->GetScriptToRunOnIdle().IsEmpty() ? 0 : 1 && 
     mWinApp->GetIdleScriptIntervalSec() > 0);
+}
+
+void CMacroProcessor::OnScriptMapFunctionKey()
+{
+  int index = 1;
+  CString str, str2;
+  if (!KGetOneInt("Enter number of F key to map (1 to 10):", index))
+    return;
+  if (index < 1 || index > 10)
+    return;
+  str = mFKeyMapping[index - 1];
+  str2.Format("with Ctrl-F%d", index);
+  if (SelectScriptAtStartEnd(str, str2))
+    return;
+  mFKeyMapping[index - 1] = str;
+}
+
+void CMacroProcessor::OnScriptListFKeyMappings()
+{
+  SEMAppendToLog("\r\nFunction key mappings:");
+  for (int ind = 0; ind < 10; ind++) {
+    if (!mFKeyMapping[ind].IsEmpty())
+      PrintfToLog("Ctrl-F%d: %s", ind + 1, (LPCTSTR)mFKeyMapping[ind]);
+  }
+  SEMAppendToLog("");
 }
 
 // Common routine for opening the macro selector with the current selection and getting

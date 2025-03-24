@@ -47,8 +47,16 @@
           <TD class="auto-style1">Opens window to allow up to 5 one-line scripts.</TD>
         </TR>
          <TR VALIGN="top">
-          <TD class="auto-style2"><a href="#hid_script_keepfocusononeline">Keep Focus on One Line</a>...</TD>
+          <TD class="auto-style2"><a href="#hid_script_keepfocusononeline">Keep Focus on One Line</a></TD>
           <TD class="auto-style1">Toggles whether keyboard focus returns to One-Line Script window after script runs.</TD>
+        </TR>
+         <TR VALIGN="top">
+          <TD class="auto-style2"><a href="#hid_script_mapfunctionkey">Map Function Key</a></TD>
+          <TD class="auto-style1">Assign a script to a function key.</TD>
+        </TR>
+         <TR VALIGN="top">
+          <TD class="auto-style2"><a href="#hid_script_listfkeymappings">List F Key Mappings</a></TD>
+          <TD class="auto-style1">Print list of function key mapppings to the log.</TD>
         </TR>
        <TR VALIGN="top">
           <TD class="auto-style2"><A HREF="#hid_macro_stop">Stop</A></TD>
@@ -201,14 +209,27 @@
       whole line can be deleted with Ctrl-U.&nbsp; 
       Ctrl-Z can be used to undo the last operation.&nbsp; Ctrl-X, Ctrl-C, and Ctrl-V also work 
       for cut, copy, and paste.&nbsp; Up and down arrows can be used to jump to the line 
-      above or below.&nbsp; When a script is done, focus will return to the text box 
-      of the script that was run, so you can easily change it and run again, or move 
-      to another script with an arrow key and run that.&nbsp; The Escape key will return 
+      above or below.&nbsp; The Escape key will return 
       focus to the main program, without closing the window, so that other keyboard 
-      commands can be used.&nbsp; The focus can be kept from returning by turning off the next option.</P>
+      commands can be used.&nbsp; If you turn on the next option focus will return to 
+      the text box of the script that was run when it is done, so you can easily 
+      change it and run again, or move to another script with an arrow key and run 
+      that.</P>
        <P><A NAME="hid_script_keepfocusononeline"></A><B>Keep Focus on One Line command (Script menu)</B></P>
     <p>Use this command to toggle whether keyboard focus returns to the line of the 
       one-line script that is run.</p>
+      <P><A NAME="hid_script_mapfunctionkey"></A><B>Map Function Key command (Script menu)</B></P>
+    <p>Use this command to assign a script to a function key, so that it can be run 
+      with the keyboard shortcut Ctrl - Fn.&nbsp; By default Ctrl F1 to Ctrl F10 run 
+      scripts 1 to 10.&nbsp; An assignment here replaces that default.&nbsp; First 
+      enter the number of the function key that you want to map.&nbsp; Then select the 
+      script to assign in the script combo box.&nbsp; Scripts with names are kept 
+      track of by name so that they can be found if scripts are rearranged.&nbsp; 
+      Otherwise, the script number is saved.</p>
+      <P><A NAME="hid_script_listfkeymappings"></A><B>List F Key Mappings command (Script menu)</B></P>
+    <p>Use this command to get a list of the saved assignments in the log.&nbsp; If an 
+      F key is not listed, there is no assignments and the script at that number will 
+      be run.</p>
         <P><A NAME="hid_macro_stop"></A><B>Stop command (Script menu)</B></P>
       <P>Use this command to stop a running script.</P>
       <P><A NAME="hid_macro_end"></A><B>End command (Script menu)</B></P>
