@@ -2226,7 +2226,7 @@ void CBeamAssessor::CalibrateCrossover(void)
   int minSpot = mScope->GetMinSpotSize();
   int numBeamChg = 0, numWarn = 0;
   BOOL changed = false;
-  bool focChanged = false;
+  bool focChanged = false, parIllumChanged = false;
   CString message;
   HighFocusCalArray *focusMagCals;
  	int spotSave = mScope->GetSpotSize();
@@ -2318,6 +2318,18 @@ void CBeamAssessor::CalibrateCrossover(void)
     }
   }
 
+  // Shift parallel illuminations
+  for (i = 0; i < mParIllumArray.GetSize(); i++) {
+    ParallelIllum &illum = mParIllumArray.ElementAt(i);
+    if ((!FEIscope || illum.probeOrAlpha == probe) && illum.crossover > 0.) {
+      crossover = mScope->GetCrossover(illum.spotSize, FEIscope ? illum.probeOrAlpha : -1);
+      delCross = crossover - illum.crossover;
+      illum.intensity += delCross;
+      illum.crossover = crossover;
+      parIllumChanged = true;
+    }
+  }
+
   // Let the user know what happened
   if (numBeamChg)
     message.Format("%s values in %d beam calibration tables\nwere shifted by the changes"
@@ -2335,8 +2347,11 @@ void CBeamAssessor::CalibrateCrossover(void)
   if (focChanged)
     message += "\n" + CString(mScope->GetC2Name()) + " values in the high defocus mag "
     "and/or IS calibrations\nwere shifted by the changes in crossover.";
+  if (parIllumChanged)
+    message += "\n" + CString(mScope->GetC2Name()) + " values in the parallel "
+    "illumination calibrations\nwere shifted by the changes in crossover.";
 
-  if (numBeamChg || changed || numWarn || focChanged)
+  if (numBeamChg || changed || numWarn || focChanged || parIllumChanged)
     AfxMessageBox(message, MB_EXCLAME);
 }
 
@@ -2430,6 +2445,17 @@ void CBeamAssessor::ScaleTablesForAperture(int currentAp, bool fromMeasured)
       focCal.crossover = mScope->IntensityAfterApertureChange(focCal.crossover, fromAp,
         currentAp, focCal.spot, focCal.probeMode);
     }
+  }
+
+  // Parallel illuminations
+  for (i = 0; i < mParIllumArray.GetSize(); i++) {
+    ParallelIllum &illum = mParIllumArray.ElementAt(i);
+    if (fromMeasured)
+      fromAp = illum.measuredAperture;
+    illum.intensity = mScope->IntensityAfterApertureChange(illum.intensity, fromAp,
+      currentAp, illum.spotSize, illum.probeOrAlpha);
+    illum.crossover = mScope->IntensityAfterApertureChange(illum.crossover, fromAp,
+      currentAp, illum.spotSize, illum.probeOrAlpha);
   }
   if (currentAp != mCurrentAperture)
     mWinApp->mDocWnd->SetShortTermNotSaved();
@@ -2918,6 +2944,100 @@ int CBeamAssessor::CheckCalForZeroIntensities(BeamTable &table, const char *mess
   mWinApp->AppendToLog(str);
   AfxMessageBox(str, MB_EXCLAME);
   return 1;
+}
+
+// Save intensity or IA at the current spot and probe/alpha as parallel illumination
+void CBeamAssessor::SaveParallelIllumination()
+{
+  int index, newAp, probe = -999, spot = mScope->GetSpotSize();
+  CString probeText = "";
+  if (FEIscope) {
+    probe = mScope->ReadProbeMode();
+    probeText = probe ? " microprobe" : " nanoprobe";
+  } else if (JEOLscope && !mScope->GetHasNoAlpha()) {
+    probe = mScope->GetAlpha();
+    probeText.Format(" alpha %d", probe);
+  }
+  index = LookupParallelIllum(spot, probe);
+  if (index < 0) {
+    index = mParIllumArray.GetSize();
+    mParIllumArray.SetSize(index + 1);
+  }
+  mParIllumArray[index].intensity = mScope->GetIntensity();
+  mParIllumArray[index].probeOrAlpha = probe;
+  mParIllumArray[index].spotSize = spot;
+  mParIllumArray[index].crossover = mScope->GetCrossover(spot);
+  mParIllumArray[index].measuredAperture = 0;
+  if (mScope->GetUseIllumAreaForC2()) {
+    newAp = RequestApertureSize();
+    if (newAp) {
+      mParIllumArray[index].measuredAperture = newAp;
+      ScaleIntensitiesIfApChanged(newAp, "");
+    } else
+      mWinApp->AppendToLog("No aperture size is being recorded for this parallel"
+        " illumination");
+  }
+  PrintfToLog(" %.2f%s %s saved as parallel illumination for spot %d%s",
+    mScope->GetC2Percent(spot, mParIllumArray[index].intensity), mScope->GetC2Units(),
+    mScope->GetC2Name(), spot, (LPCTSTR)probeText);
+  mWinApp->mDocWnd->CalibrationWasDone(CAL_DONE_PAR_ILLUM);
+}
+
+// Find a parallel illumination for the given conditions
+int CBeamAssessor::LookupParallelIllum(int spot, int probeOrAlpha)
+{
+  for (int ind = 0; ind < mParIllumArray.GetSize(); ind++)
+    if (mParIllumArray[ind].spotSize == spot &&
+      mParIllumArray[ind].probeOrAlpha == probeOrAlpha)
+      return ind;
+  return -1;
+}
+
+// Return the intensity for a parallel illuminatoin given or current conditions
+// or -1 if none
+double CBeamAssessor::GetParallelIllum(int spot, int probeOrAlpha)
+{
+  int index;
+  if (spot < 0)
+    spot = mScope->GetSpotSize();
+  if (probeOrAlpha < -9000) {
+    probeOrAlpha = -999;
+    if (FEIscope)
+      probeOrAlpha = mScope->ReadProbeMode();
+    else if (JEOLscope && !mScope->GetHasNoAlpha())
+      probeOrAlpha = mScope->GetAlpha();
+  }
+  index = LookupParallelIllum(spot, probeOrAlpha);
+  return index < 0 ? -1.0 : mParIllumArray[index].intensity;
+}
+
+// List the parallel illumination calibrations
+void CBeamAssessor::ListParallelIlluminations()
+{
+  CString probeText = "";
+  if (!mParIllumArray.GetSize()) {
+    SEMAppendToLog("\r\nNo parallel illuminations saved\r\n");
+    return;
+  }
+  if (FEIscope)
+    probeText = "Probe";
+  else if (JEOLscope && !mScope->GetHasNoAlpha())
+    probeText = "Alpha";
+  mWinApp->SetNextLogColorStyle(0, 1);
+  SEMAppendToLog("\r\nParallel illuminations saved");
+  mWinApp->SetNextLogColorStyle(0, 4);
+  PrintfToLog("Parallel illuminations saved\r\n"
+      "%s %s    Spot   %s", mScope->GetC2Units(), mScope->GetC2Name(), (LPCTSTR)probeText);
+  probeText = "";
+  for (int ind = 0; ind < mParIllumArray.GetSize(); ind++) {
+    if (FEIscope)
+      probeText = mParIllumArray[ind].probeOrAlpha ? "uP" : "nP";
+    else if (JEOLscope && !mScope->GetHasNoAlpha())
+      probeText.Format("%d", mParIllumArray[ind].probeOrAlpha);
+    PrintfToLog("%.2f     %d     %s", mScope->GetC2Percent(mParIllumArray[ind].spotSize, 
+      mParIllumArray[ind].intensity, FEIscope ? mParIllumArray[ind].probeOrAlpha : -1),
+      mParIllumArray[ind].spotSize, (LPCTSTR)probeText);
+  }
 }
 
 // List the intensity calibrations

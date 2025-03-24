@@ -205,6 +205,7 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
   CArray<ZbyGParams> *zbgArray = mWinApp->mParticleTasks->GetZbyGcalArray();
   ZbyGParams zbgParam;
   NavAcqAction *navActions;
+  CString *fKeyMapping = mWinApp->mMacroProcessor->GetFKeyMapping();
   NavAlignParams *navAliParm = mWinApp->mNavHelper->GetNavAlignParams();
   DewarVacParams *dewar = mWinApp->mScope->GetDewarVacParams();
   CArray<BaseMarkerShift, BaseMarkerShift> *markerShiftArr =
@@ -432,6 +433,9 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
       } else if (NAME_IS("ScriptToRunOnIdle")) {
         StripItems(strLine, 1, strCopy);
         mWinApp->SetScriptToRunOnIdle(strCopy);
+      } else if (NAME_IS("FKeyMapping")) {
+        if (itemInt[1] >= 0 && itemInt[1] < 10)
+          StripItems(strLine, 2, fKeyMapping[itemInt[1]]);
       } else if (MatchNoCase("BasicModeFile")) {
         StripItems(strLine, 1, strCopy);
         mDocWnd->SetBasicModeFile(strCopy);
@@ -1744,6 +1748,7 @@ void CParameterIO::WriteSettings(CString strFileName)
     mWinApp->mCamera->GetFrameAliParams();
   FrameAliParams faParam;
   BOOL *useGPU4K2Ali = mWinApp->mCamera->GetUseGPUforK2Align();
+  CString *fKeyMapping = mWinApp->mMacroProcessor->GetFKeyMapping();
   MultiShotParams *msParams = mWinApp->mNavHelper->GetMultiShotParams();
   HoleFinderParams *hfParams = mWinApp->mNavHelper->GetHoleFinderParams();
   AutoContourParams *contParams = mWinApp->mNavHelper->GetAutocontourParams();
@@ -1783,6 +1788,12 @@ void CParameterIO::WriteSettings(CString strFileName)
     oneState = mWinApp->GetScriptToRunOnIdle();
     if (!oneState.IsEmpty())
       WriteString("ScriptToRunOnIdle", oneState);
+    for (i = 0; i < 10; i++) {
+      if (!fKeyMapping[i].IsEmpty()) {
+        oneState.Format("%d %s", i, (LPCTSTR)fKeyMapping[i]);
+        WriteString("FKeyMapping", oneState);
+      }
+    }
     oneState = mDocWnd->GetBasicModeFile();
     if (!oneState.IsEmpty())
       WriteString("BasicModeFile", oneState);
@@ -2655,6 +2666,12 @@ int CParameterIO::ReadNavAcqParams(NavAcqParams *navParams, NavAcqAction *navAct
         navParams->skipZinRunAtNearest = itemInt[22] != 0;
       if (!itemEmpty[23])
         navParams->refineZlpOptions = itemInt[23];
+      if (!itemEmpty[27]) {
+        navParams->runExtramacro = itemInt[24] != 0;
+        navParams->extraMacroInd = itemInt[25];
+        navParams->runStartMacro = itemInt[27] != 0;
+        navParams->startMacroInd = itemInt[26];
+      }
 
     } else if (NAME_IS("AcquireParams2")) {
       navParams->cycleDefocus = itemInt[1] != 0;
@@ -2748,19 +2765,21 @@ void CParameterIO::WriteNavAcqParams(int which, NavAcqParams *navParams,
   else
     WriteInt("NavAcquireParams", which);
   oneState.Format("AcquireParams1 %d %d %d %d %d %d %d %d %d %d %d %d %d"
-    " %d %d %d %d %d %d %d %d %d %d\n", DOING_ACTION(NAACT_AUTOFOCUS),
+    " %d %d %d %d %d %d %d %d %d %d %d %d %d %d\n", DOING_ACTION(NAACT_AUTOFOCUS),
     DOING_ACTION(NAACT_FINE_EUCEN),
     DOING_ACTION(NAACT_REALIGN_ITEM), navParams->restoreOnRealign ? 1 : 0,
     DOING_ACTION(NAACT_ROUGH_EUCEN), navParams->nonTSacquireType,
     navParams->macroIndex, navParams->closeValves ? 1 : 0,
-    navParams->sendEmail ? 1 : 0, 
+    navParams->sendEmail ? 1 : 0,
     navParams->preMacroInd, navParams->runPremacro ? 1 : 0,
     navParams->preMacroIndNonTS, navParams->runPremacroNonTS ? 1 : 0,
     navParams->sendEmailNonTS ? 1 : 0, navParams->skipInitialMove ? 1 : 0,
     navParams->skipZmoves ? 1 : 0, navParams->postMacroInd,
     navParams->runPostmacro ? 1 : 0, navParams->postMacroIndNonTS,
     navParams->runPostmacroNonTS ? 1 : 0, navParams->saveAsMapChoice ? 1 : 0,
-    navParams->skipZinRunAtNearest ? 1 : 0, navParams->refineZlpOptions);
+    navParams->skipZinRunAtNearest ? 1 : 0, navParams->refineZlpOptions,
+    navParams->runExtramacro ? 1 : 0, navParams->extraMacroInd,
+    navParams->runStartMacro ? 1 : 0, navParams->startMacroInd);
   mFile->WriteString(oneState);
   oneState.Format("AcquireParams2 %d %f %f %d %d %d %d %d %d %d %f %d %d %d %d %d %d %d "
     "%d %d %d %d %d %d %d %d %d %d %d\n", navParams->cycleDefocus ? 1 : 0,
@@ -3072,6 +3091,7 @@ int CParameterIO::ReadProperties(CString strFileName)
   LensRelaxData relax;
   FreeLensSequence FLCseq;
   FloatVec *vec;
+  IntVec *extraTasks = mWinApp->mNavHelper->GetExtraTaskList();
   unsigned char *palette = mWinApp->GetPaletteColors();
   short lensNormMap[] = {nmSpotsize, nmCondenser, pnmObjective, pnmProjector, nmAll,
     pnmAll};
@@ -3847,6 +3867,12 @@ int CParameterIO::ReadProperties(CString strFileName)
 
       else if (MatchNoCase("SingleTecnaiObject")) {
       } else if (MatchNoCase("CookerScreenTiltDelay")) {
+      } else if (MatchNoCase("AcquireAtItemsExtraTasks")) {
+        for (index = 1; index < MAX_TOKENS; index++) {
+          if (itemEmpty[index])
+            break;
+          extraTasks->push_back(itemInt[index]);
+        }
       } else if (MatchNoCase("BackgroundSocketToFEI")) {
         SetNumFEIChannels(itemInt[1] ? 4 : 3);
       } else if (MatchNoCase("SkipUtapiServices")) {
@@ -4627,6 +4653,9 @@ int CParameterIO::ReadCalibration(CString strFileName)
   CArray <CtfBasedCalib, CtfBasedCalib> *ctfAstigCals =
     mWinApp->mAutoTuning->GetCtfBasedCals();
   CtfBasedCalib ctfCal;
+  CArray<ParallelIllum, ParallelIllum> *parIllums =
+    mWinApp->mBeamAssessor->GetParIllumArray();
+  ParallelIllum parallelIllum;
   HighFocusCalArray *focusMagCals;
   HighFocusMagCal focCal;
   HitachiParams *hParams = mWinApp->GetHitachiParams();
@@ -4709,7 +4738,7 @@ int CParameterIO::ReadCalibration(CString strFileName)
         }
 
       } else if (NAME_IS("HighFocusMagCal") || NAME_IS("HighFocusISCal")) {
-        focusMagCals = NAME_IS("HighFocusISCal") ? 
+        focusMagCals = NAME_IS("HighFocusISCal") ?
           mShiftManager->GetFocusISCals() :
           mShiftManager->GetFocusMagCals();
 
@@ -4723,6 +4752,14 @@ int CParameterIO::ReadCalibration(CString strFileName)
         focCal.measuredAperture = itemEmpty[8] ? 0 : itemInt[8];
         focCal.magIndex = itemEmpty[9] ? 0 : itemInt[9];
         focusMagCals->Add(focCal);
+
+      } else if (NAME_IS("ParallelIllum")) {
+        parallelIllum.intensity = itemDbl[1];
+        parallelIllum.spotSize = itemInt[2];
+        parallelIllum.probeOrAlpha = itemInt[3];
+        parallelIllum.crossover = itemDbl[4];
+        parallelIllum.measuredAperture = itemInt[5];
+        parIllums->Add(parallelIllum);
 
       } else if (NAME_IS("IntensityToC2Factor")) {
         mWinApp->mScope->SetC2IntensityFactor(1, itemFlt[1]);
@@ -5318,6 +5355,9 @@ void CParameterIO::WriteCalibration(CString strFileName)
   CArray <CtfBasedCalib, CtfBasedCalib> *ctfAstigCals =
     mWinApp->mAutoTuning->GetCtfBasedCals();
   CtfBasedCalib ctfCal;
+  CArray<ParallelIllum, ParallelIllum> *parIllums =
+    mWinApp->mBeamAssessor->GetParIllumArray();
+  ParallelIllum parallelIllum;
   HighFocusCalArray *focusMagCals;
   HighFocusMagCal focCal;
   HitachiParams *hParams = mWinApp->GetHitachiParams();
@@ -5378,6 +5418,15 @@ void CParameterIO::WriteCalibration(CString strFileName)
             focCal.probeMode), focCal.measuredAperture, focCal.magIndex);
         mFile->WriteString(string);
       }
+    }
+
+    // Write parallel illums
+    for (i = 0; i < parIllums->GetSize(); i++) {
+      parallelIllum = parIllums->GetAt(i);
+      string.Format("ParallelIllum %f %d %d %f %d\n", parallelIllum.intensity,
+        parallelIllum.spotSize, parallelIllum.probeOrAlpha, parallelIllum.crossover,
+        parallelIllum.measuredAperture);
+      mFile->WriteString(string);
     }
 
     // Write intensity to C2 factors

@@ -231,6 +231,10 @@
           <TD class="style1">&nbsp;&nbsp;&nbsp; <A href="#hid_calibration_c2factor">Set C2 Factor</A></TD>
           <TD>Set scaling factors for C2 by entering the C2 readout for all spot sizes.</TD>
         </tr>
+        <tr>
+          <TD class="style1">&nbsp;&nbsp;&nbsp; <A href="#hid_beamspot_parallelillumination">Parallel Illumination</A></TD>
+          <TD>Save intensity that gives parallel illumination at the current illumination conditions.</TD>
+        </tr>
         <TR vAlign="top">
           <TD class="style1">&nbsp;&nbsp;&nbsp; <A href="#hid_calibration_beamshift">Beam Shift</A></TD>
           <TD>Calibrate beam shift by taking pictures of a small spot.</TD>
@@ -1363,7 +1367,8 @@
         visualized easily. After you select the command, the program will cycle though
         the spot sizes and ask you to bring the beam to crossover at each.</P>
     <P><i>For a Titan microscope,</i> you will be asked to enter the size of the C2
-      aperture after running this command.</P>
+      aperture after running this command, unless the program can access the aperture 
+      size on the scope.</P>
       <P><A name="hid_calibration_beamintensity"></A><B>Beam Intensity command (Calibration
           - Beam &amp; Spot sub-menu)</B></P>
       <P>This command will calibrate beam intensity for the current spot size, starting
@@ -1446,7 +1451,8 @@
     <P>These settings will also work for a Falcon 4 camera, with BeamCalMinCounts set
       to 1000.</P>
     <P><i>For a Titan microscope,</i> you will be asked to enter the size of the C2
-      aperture after running this command.&nbsp; SerialEM uses the illuminated area
+      aperture after running this command, unless the program can access the aperture 
+      size on the scope.&nbsp; SerialEM uses the illuminated area
       readout as an intensity measure, and the microscope scales this readout by the
       aperture size.&nbsp; Thus, intensity calibrations are valid only if the program
       knows both what aperture size the calibration was obtained at, and what the
@@ -1495,7 +1501,8 @@
       saturated.&nbsp; Then set the beam for that many counts with no specimen in
       place and see if it works down to the dimmest spot.&nbsp; Run the procedure.</P>
     <P><i>For a Titan microscope,</i> you will be asked to enter the size of the C2
-      aperture after running this command.</P>
+      aperture after running this command, unless the program can access the aperture 
+      size on the scope.</P>
       <P><A name="hid_calibration_c2factor"></A><B>Set C2 Factors command (Calibration -
         Beam &amp; Spot sub-menu)</B></P>
       <P>Use this command to calibrate the factors that SerialEM needs to convert from
@@ -1506,6 +1513,17 @@
         procedure will not match values shown by the scope. First be sure that you
         have a C2 lens readout in your MUI workspace. Then activate the command and
         type in the value shown in the C2 readout for each spot size.</P>
+      
+     <P><A name="hid_beamspot_parallelillumination"></A><B>Parallel Illumination command (Calibration -
+        Beam &amp; Spot sub-menu)</B></P>
+      <p>Use this command to save the current intensity as one that produces parallel 
+        illumination at the current spot size and probe mode (for Thermo/FEI) or alpha 
+        (for JEOL).&nbsp; If there is already a value saved at these conditions, it will 
+        be replaced.&nbsp; The intensity can be returned to with the 
+        'SetParallelIllumination' script command when at the same spot size and probe 
+        mode or alpha.&nbsp; <i>For a Titan microscope,</i> you will be asked to enter the size of the C2
+      aperture after running this command, unless the program can access the aperture 
+        size on the scope.</p>
       <P><A name="hid_calibration_beamshift"></A><B>Beam Shift command (Calibration -
         Beam &amp; Spot sub-menu)</B></P>
       <P>This command will calibrate beam shift so that the beam can be moved by

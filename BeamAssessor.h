@@ -54,6 +54,14 @@ struct SpotTable {
   int probeMode;
 };
 
+struct ParallelIllum {
+  double intensity;
+  int spotSize;
+  int probeOrAlpha;
+  double crossover;
+  int measuredAperture;
+};
+
 class CBeamAssessor
 {
  public:
@@ -127,6 +135,7 @@ class CBeamAssessor
   int *GetCrossCalAperture(void) {return &mCrossCalAperture[0];};
   int *GetSpotCalAperture(void) {return &mSpotCalAperture[0];};
   int *GetC2Apertures(void) {return &mC2Apertures[0];};
+  CArray<ParallelIllum, ParallelIllum> *GetParIllumArray() { return &mParIllumArray; };
   GetSetMember(BOOL, FavorMagChanges);
   float *GetBSCalAlphaFactors() { return &mBSCalAlphaFactors[0];};
   bool CalibratingIAlimits() { return mCalIAlimitSpot > 0; };
@@ -248,6 +257,7 @@ class CBeamAssessor
   float mCalIAtestValue;  // Extreme value to test limit with
   float mCalIAlowLimits[MAX_SPOT_SIZE + 1][2];    // Values accumulated diring routine
   float mCalIAhighLimits[MAX_SPOT_SIZE + 1][2];
+  CArray<ParallelIllum, ParallelIllum> mParIllumArray;
 
 public:
   void CalibrateCrossover(void);
@@ -276,6 +286,10 @@ public:
   int SetAndCheckSpotSize(int newSize, BOOL normalize = FALSE);
   int CountNonEmptyBeamCals(void);
   int CheckCalForZeroIntensities(BeamTable &table, const char *message, int postMessType);
+  void SaveParallelIllumination();
+  int LookupParallelIllum(int spot, int probeOrAlpha);
+  double GetParallelIllum(int spot = -1, int probeOrAlpha = -9999);
+  void ListParallelIlluminations();
 };
 
 #endif // !defined(AFX_BEAMASSESSOR_H__67812E27_EF7F_4AFB_A706_766E3FEA19AA__INCLUDED_)
