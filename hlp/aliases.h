@@ -10,6 +10,7 @@ hidd_camerasetup								= SerialEM.chm::/html\hidd_camerasetup.htm
 hidd_coma_vs_is_cal             = SerialEM.chm::/html\hidd_coma_vs_is_cal.htm
 hidd_cooksetup									= SerialEM.chm::/html\hidd_cooksetup.htm
 hidd_ctffinddlg                 = SerialEM.chm::/html\hidd_ctffinddlg.htm
+hidd_ctf_acq_params             = SerialEM.chm::/html\hidd_ctf_acq_params.htm
 hidd_de_reference         			= SerialEM.chm::/html\hidd_de_reference.htm
 hidd_detooldlg									= SerialEM.chm::/html\hidd_detoolpanel.htm
 hidd_driftwaitsetup             = SerialEM.chm::/html\hidd_driftwaitsetup.htm

@@ -4391,6 +4391,39 @@ BEGIN
     LTEXT           "Reset Image Shift && Realign",IDC_STATIC,8,63,85,8
 END
 
+IDD_CTF_ACQ_PARAMS DIALOGEX 0, 0, 203, 181
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "CTF-based Tuning Parameters"
+FONT 8, "Microsoft Sans Serif", 400, 0, 0x0
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,36,160,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,116,160,50,14
+    PUSHBUTTON      "?",IDC_BUTHELP,185,164,11,10
+    CONTROL         "Find initial defocus with Focus area in Low Dose mode",IDC_CHECK_USE_FOCUS_IN_LD,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,113,174,10
+    CONTROL         "Set exposure to:",IDC_CHECK_CTF_EXPOSURE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,16,20,64,10
+    EDITTEXT        IDC_EDIT_CTF_EXPOSURE,80,18,28,14,ES_AUTOHSCROLL
+    CONTROL         "Set drift settling to:",IDC_CHECKCTF_DRIFT,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,16,36,62,10
+    LTEXT           "sec",IDC_STAT_EXP_SEC,109,21,12,8
+    LTEXT           "sec",IDC_STAT_DRIFT_SEC,109,37,12,8
+    EDITTEXT        IDC_EDITCTF_DRIFT,80,34,28,14,ES_AUTOHSCROLL
+    CONTROL         "Set binning to:",IDC_CHECK_CTF_BINNING,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,16,52,52,10
+    EDITTEXT        IDC_EDIT_CTF_BINNING,69,50,20,14,ES_AUTOHSCROLL
+    CONTROL         "Use full-field images, not current subarea",IDC_CHECK_CTF_FULL_FIELD,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,16,65,137,10
+    CONTROL         "Align frames using",IDC_CHECKCTF_ALIGN_FRAMES,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,16,78,66,10
+    EDITTEXT        IDC_EDIT_CTF_NUM_FRAMES,82,76,20,14,ES_AUTOHSCROLL
+    LTEXT           "frames",IDC_STAT_FRAMES,103,79,22,8
+    LTEXT           "Smallest defocus allowed for correcting astigmatism:",IDC_STATIC,10,126,156,8
+    EDITTEXT        IDC_EDIT_CTF_MIN_FOCUS,167,123,29,14,ES_AUTOHSCROLL
+    LTEXT           "Amount to increase underfocus when calibrating astigmatism or correcting coma:",IDC_STATIC,10,139,128,16
+    EDITTEXT        IDC_EDIT_CTF_MIN_ADD,139,140,28,14,ES_AUTOHSCROLL
+    GROUPBOX        "Changes to current Record parameters for CTF images:",IDC_STATIC,11,7,181,100
+    CONTROL         "Align with parameter set:",IDC_CHECK_USE_ALI_SET,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,25,91,85,10
+    EDITTEXT        IDC_EDIT_ALIGN_SET,114,89,20,14,ES_AUTOHSCROLL
+    LTEXT           "Static",IDC_STAT_ALI_SET_NAME,137,92,53,8
+END
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -4977,6 +5010,14 @@ BEGIN
         TOPMARGIN, 7
         BOTTOMMARGIN, 137
     END
+
+    IDD_CTF_ACQ_PARAMS, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 196
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 174
+    END
 END
 #endif    // APSTUDIO_INVOKED
 
@@ -5294,6 +5335,11 @@ BEGIN
 END
 
 IDD_ONELINESCRIPT AFX_DIALOG_LAYOUT
+BEGIN
+    0
+END
+
+IDD_CTF_ACQ_PARAMS AFX_DIALOG_LAYOUT
 BEGIN
     0
 END
@@ -6432,6 +6478,8 @@ STRINGTABLE
 BEGIN
     IDC_RBIN_TO_SIZE        "Reduce images for correlation to be close to the specified size"
     IDC_SPIN_BIN_TO         "Select reduction amount or target size for images being correlated"
+    IDC_NA_RUN_SCRIPT_AT_START 
+                            "Run a script before acquiring at the first item"
 END
 
 STRINGTABLE
@@ -6441,6 +6489,8 @@ BEGIN
     IDC_BUT_POSTPONE        "Close dialog and save parameters so acquisition can be started from script"
     IDC_CHECK_HARDWARE_ROI  "Acquire subarea with hardware ROI for speed"
     IDC_EDIT_REF_FPS        "Enter the frames per second for the reference images"
+    IDC_CHECK_DO_SHOTS_IN_HOLE 
+                            "Acquire in circular pattern around center, typically inside a hole"
     IDC_USE_REC_HARDWARE_ROI 
                             "Acquire reference image with hardware ROI in current Record subarea"
 END
@@ -7387,8 +7437,7 @@ BEGIN
                             "Use calibration of beam tilt versus image shift to adjust beam tilt"
     IDC_NA_POSTMACRO        "Run a script after the main action is done"
     IDC_COMBO_POSTMACRO     "Select script to run after main action is done"
-    IDC_CHECK_DO_SHOTS_IN_HOLE 
-                            "Acquire in circular pattern around center, typically inside a hole"
+    IDC_COMBO_EXTRAMACRO    "Select the script to run at the selected point in the sequence"
     IDC_CHECK_DO_MULTIPLE_HOLES 
                             "Acquire in rectangular or arbitrary set of positions, typically holes"
     IDC_SPIN_NUM_X_HOLES    "Set number of positions in X in regular pattern"
@@ -7673,8 +7722,16 @@ BEGIN
                             "Run the task periodically, after given time has elapsed"
     IDC_EDIT_AFTER_MINUTES  "Enter number of minutes between running the task"
     IDC_NA_HIDE_UNUSED      "Do not show lines in task list for tasks not being run"
-    IDC_NA_ADJUST_BT_FOR_IS "Change beam tilt (& astigmatism if calibrated) to compensate for image shift"
     IDC_EDIT_MAP_LABEL      "Enter the label of a map to use as template, or to assign to a new template"
+END
+
+STRINGTABLE
+BEGIN
+    IDC_NA_ADJUST_BT_FOR_IS "Change beam tilt (& astigmatism if calibrated) to compensate for image shift"
+    IDC_NA_HIDE_OPTIONS     "Do not show any unchecked options above"
+    IDC_CHECK_USE_PRIOR_AUTOFOCUS 
+                            "Skip running the dirft routine if the last autofocus has a low enough drift"
+    IDC_EDIT_PRIOR_THRESH   "Enter the maximum drift considered acceptable for the last autofocus"
 END
 
 STRINGTABLE
@@ -7715,14 +7772,6 @@ BEGIN
     IDC_RACQUISITION        "Show and modify the second acquisition parameter set, usually for real data"
     IDC_NA_READ_PARAMS      "Read in the acquisition parameters show here from a file"
     IDC_NA_SAVE_PARAMS      "Write the acquisition parameters show here to a text file"
-END
-
-STRINGTABLE
-BEGIN
-    IDC_NA_HIDE_OPTIONS     "Do not show any unchecked options above"
-    IDC_CHECK_USE_PRIOR_AUTOFOCUS 
-                            "Skip running the dirft routine if the last autofocus has a low enough drift"
-    IDC_EDIT_PRIOR_THRESH   "Enter the maximum drift considered acceptable for the last autofocus"
 END
 
 STRINGTABLE
@@ -7861,6 +7910,8 @@ END
 
 STRINGTABLE
 BEGIN
+    IDC_COMBO_MACRO_AT_START 
+                            "Select the script to run before acquiring at the first item"
     IDC_NA_REALIGN_SCALED_MAP 
                             "Do third round of alignment at higher mag to scaled extract from map"
     IDC_RREALI_REC          "Use Record parameters for third round of alignment"
@@ -8049,15 +8100,26 @@ STRINGTABLE
 BEGIN
     ID_SCRIPT_MAPFUNCTIONKEY 
                             "Select script to run with one of Ctrl F1-F10 keys"
-    ID_SCRIPT_LISTFKEYMAPPINGS
-                            "Print list of function key mappings to log"
+    ID_SCRIPT_LISTFKEYMAPPINGS "Print list of function key mappings to log"
     ID_BEAMSPOT_PARALLELILLUMINATION 
                             "Save intensity, spot size, and probe/alpha as parallel illumination conditions"
-    IDC_NA_RUN_SCRIPT_AT_START
-                            "Run a script before acquiring at the first item"
-    IDC_COMBO_EXTRAMACRO    "Select the script to run at the selected point in the sequence"
-    IDC_COMBO_MACRO_AT_START
-                            "Select the script to run before acquiring at the first item"
+    IDC_CHECK_USE_FOCUS_IN_LD
+                            "If initial defocus is needed, use Focus area when in Low Dose mode"
+    IDC_CHECK_CTF_EXPOSURE  "Use the exposure time here instead of the time in the Record parameters"
+    IDC_EDIT_CTF_EXPOSURE   "Enter the exposure time to use in images for CTF fitting"
+    IDC_CHECKCTF_DRIFT      "Use the drift settling time here instead of the time in the Record parameters"
+    IDC_EDITCTF_DRIFT       "Enter the drift settling time to use in images for CTF fitting"
+    IDC_CHECK_CTF_BINNING   "Use the binning here instead of the binning in the Record parameters"
+    IDC_EDIT_CTF_BINNING    "Enter the binning to use in images for CTF fitting"
+    IDC_CHECK_CTF_FULL_FIELD
+                            "Take images with full camera area even if a subset is set in Record parameters"
+    IDC_CHECKCTF_ALIGN_FRAMES
+                            "Acquire and align frames with Framealign if possible; otherwise take no frames"
+    IDC_EDIT_CTF_NUM_FRAMES "Enter the number of frames to acquire"
+    IDC_EDIT_CTF_MIN_FOCUS  "Least negative defocus value allowed when correcting astigmatism"
+    IDC_EDIT_CTF_MIN_ADD    "Amount to increase underfocus to account for beam-tilted images having less"
+    IDC_CHECK_USE_ALI_SET   "Use a different set for frame alignment than the one set in Record parameters"
+    IDC_EDIT_ALIGN_SET      "Enter the number of the frame alignment parameter set to use (numbered from 1)"
 END
 
 #endif    // English (United States) resources

@@ -117,7 +117,7 @@
         </TR>
         <TR VALIGN="top">
           <TD class="style1"><a href="#hid_focus_setctfacquireparams">Set CTF Acquire Params</A></TD>
-          <TD class="style2">Set parameters for acquiring images for CTF fitting</TD>
+          <TD class="style2">Open dialog to set parameters for acquiring images for CTF fitting</TD>
         </TR>
         <TR VALIGN="top">
           <TD class="style1"><a href="#hid_focus_set_ctf_coma_bt">Set CTF Coma-free Params</A></TD>
@@ -352,55 +352,69 @@
       Here is a general introduction to the operation and use of this routine.</p>
     <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <A NAME="autotuning_by_ctf"></A><i><b>Autotuning by CTF Fitting</b></i>&nbsp;</p>
     <p>The CTF autotuning routines require images with Thon rings suitable for fitting
-      with the Ctffind module.&nbsp; To get the best signal-to-noise ratio and the
+      with the Ctffind module or Ctfplotter program.&nbsp; To get the best signal-to-noise ratio and the
       most accurate fitting, images need to have a long enough exposure and use the
       full camera area.&nbsp; They are taken with parameters generally derived from
       the Record parameters, but specific values, such as for exposure time and
-      binning, can be set with the <a href="#hid_focus_setctfacquireparams">Set CTF Acquire Params</A>.&nbsp;
+      binning, can be set with the <A HREF="hidd_ctf_acq_params.htm">CTF-based Tuning Parameters dialog</A>.&nbsp;
       For example, if your Record exposure time is set for a long acquisition for
       single-particle reconstruction, you should specify a shorter time for the CTF
       tuning images.</p>
-    <p>The first step in the CTF tuning routine is to measure the current defocus,
+    <p>The first step in the CTF tuning routine is to measure the current defocus 
+      using autofocus with the usual beam-tilted images,
       both to make sure that defocus is an acceptable range and to set the defocus
-      range for CTF fitting.&nbsp; The routine will then run at the current defocus
+      range for CTF fitting.&nbsp; If you find a chronic, substantial discrepancy 
+      between the defocus measured with beam-tilted images and one reported by CTF 
+      fitting, you should investigate the cause and resolve this problem, otherwise 
+      CTF fitting is liable to fail because it has been given a bad range to fit. 
+      After finding the defocus, the routine will run at the current defocus
       provided that it is within a range where the CTF fitting is expected to work.&nbsp;
       Defocus will be changed if necessary to avoid defocus values that are too low in
       astigmatic images, and so that the expected number of CTF rings will not be too
       low or too high.</p>
     <p>Defocus should be in the range of -1.0 to -2.5 microns, or more underfocused at
-      lower magnifications (e.g., with a pixel size in the range of 1 nm or more).</p>
+      lower magnifications (e.g., with a pixel size in the range of 1 nm or more).&nbsp; </p>
+    <p>The CTF fitting for these routines can be done with either the Ctffind module 
+      or the Ctfplotter program; Ctfplotter is more accurate for lower dose and tilted 
+      images, whereas Ctffind may be better for highly astigmatic images.&nbsp; Which 
+      module to use can be chosen in the <A HREF="hidd_ctffinddlg.htm">CTF Fitting Parameters dialog</A> 
+      for both these tuning routines and the fitting that occurs when clicking in an 
+      image.&nbsp; For many of the kinds of errors that can occur in the tuning 
+      routines, the program will automatically abandon the chosen module and start the 
+      routine over with the other module.</p>
     <p>You should verify that the CTF fitting is reasonably accurate with the
       acquisition parameters and defocus being used by turning on
-        <a href="menu_process.htm#hid_process_doctffindfitonclick">Do Ctffind On Click</a>
+         <a href="menu_process.htm#hid_process_doctffindfitonclick"Do CTF Fit On Click</a>
       and checking that the fits work when clicking, and that the defocus varies by
       only about 3-10 nm between successive images (e.g., for focus near -2 microns).&nbsp;
       Larger variations will occur at lower magnifications and higher defocus,
       situations where the lower accuracy of fitting may be acceptable.&nbsp; </p>
     <p>It is a good idea to open the side-by-side FFT display (see
-        <a href="menu_process.htm#hid_process_side_by_side">Side by Side</a>)
+         <a href="menu_process.htm#hid_process_side_by_side">Side by Side</a>)
       when you are first using these routines.&nbsp; When this window is open, the
       program will show the CTF fit for each image, taking an FFT if it is not being
       done automatically (i.e., with <a href="menu_process.htm#hid_process_automaticffts">Automatic Single FFTs</a>
       turned on).</p>
-    <p>Fitting will be done with the slower 2D search, which may not be turned on when
+    <p>If you are fitting with Ctffind, it will be done with the slower 2D search, which may not be turned on when
       clicking in an image.&nbsp; If you see bad fits when running these routines, you
       should make sure the 2D search is enabled when clicking with the
-        <a href="menu_process.htm#hid_process_setctffindoptions">Set Ctffind Options</a>
-      command, and adjust parameters until fitting works when clicking in an image.</p>
+        <a href="menu_process.htm#hid_process_setctffindoptions"Set CTF Fit Options</a>
+      command, and adjust parameters until fitting works when clicking in an image.&nbsp; 
+      Alternatively, try Ctfplotter instead.</p>
     <p>If there are few Thon rings and they do not extend out very far, the fitting
       may fail because the resolution range for fitting is set too high.&nbsp; Two alternative
       solutions for this are to increase the limit on the maximum resolution for fitting
         with
-        <a href="menu_process.htm#hid_process_setctffindoptions">Set Ctffind Options</a> or  to bin the images so that the Thon rings extend
+         <a href="menu_process.htm#hid_process_setctffindoptions"Set CTF Fit Options</a> or  to bin the images so that the Thon rings extend
       to a higher frequency (in reciprocal pixels) in the image.</p>
     <p>The CTF autotuning routines will zero out the image shift, giving a zero
-      reading of IS or PLA in the Microscope Status panel.</p>
+      reading of IS or PLA in the Microscope Status panel..</p>
     <p>&nbsp;&nbsp;&nbsp;&nbsp; <i><b>Correcting Astigmatism by CTF Fitting</b></i>&nbsp;</p>
     <p>The astigmatism correction routine will measure defocus, take a single image,
       and correct the astigmatism.&nbsp; If the change in stigmators is above a
       threshold, it will take another image and refine the correction.&nbsp; You can
       check the result by taking an image and clicking near the first zero with
-        <a href="menu_process.htm#hid_process_doctffindfitonclick">Do Ctffind On Click</a>
+        <a href="menu_process.htm#hid_process_doctffindfitonclick"Do CTF Fit On Click</a>
       enabled.</p>
     <p>Technically, if you are going to correct coma as well, you should correct that
       first, then astigmatism. In practice, this matters only if the the beam tilt
@@ -408,7 +422,7 @@
       image may be due to beam tilt, and simply making the image have no astigmatism
       will leave the stigmators at the wrong setting. The coma-free alignment routine
       is insensitive to astigmatism, so it will fix the beam tilt and leave the
-      astigmatism in the image that does need to be corrected with stigmators.</p>
+      astigmatism in the image that does need to be corrected with stigmators..</p>
     <p>&nbsp;&nbsp;&nbsp; <b><i>Which Astigmatism Method to Use</i></b></p>
     <p>The CTF-based method has several advantages: it is based on a direct
       measurement of astigmatism, it is insensitive to drift, it does not require beam
@@ -471,32 +485,8 @@
       <br />
       https://bio3d.colorado.edu/SerialEM/OpenSerialEM/Docs/Coma.docx</p>
     <P><A NAME="hid_focus_setctfacquireparams"></A><B>Set CTF Acquire Params command (Focus/Tune menu)</B></P>
-    <p>Use this command to set the parameters for acquiring and analyzing images for
-      the CTF-based astigmatism and coma routines, and for the Zemlin tableau.&nbsp; You can set:</p>
-    <ol>
-      <li><i>Exposure time</i>.&nbsp; Enter a specific time 0 to use the current Record
-        exposure time.&nbsp; If you take long Record images during single particle
-        acquisition, you will want to set this to a reasonable time.</li>
-      <li><i>Binning</i>.&nbsp; Enter a specific binning or 0 to use the current Record
-        binning.&nbsp; The CTF analysis itself should be fairly insensitive to binning
-        unless it is too high, but you may want to use a binning higher than 1 to make
-        the Thon rings extend farther out in the display.</li>
-      <li><i>Drift settling time</i>.&nbsp; Enter a specific settling time, 0 to use
-        the current Record settling, or -1 to use the current Record setting for frame 
-        alignment as well.&nbsp; Without the latter entry, frame alignment will be 
-        turned off.</li>
-      <li><i>Field size</i>.&nbsp; Enter 1 to take full-field images, or 0 to use the
-        current Record subarea if any.</li>
-      <li>Smallest defocus value allowed for measuring and correcting astigmatism.&nbsp;
-        The default is -0.9 micron and a value as small as -0.1 micron is allowed.&nbsp;
-        Astigmatism calibration and coma measurement will require a larger
-        defocus to allow for the astigmatism in these images, controlled by the next entry.</li>
-      <li>Amount to increase underfocus when calibrating astigatism or measuring coma.&nbsp;
-        The default is 0.5 micron and a value as small as 0.2 is allowed.
-      </li>
-    </ol>
-    <p>
-      If you cancel one of the entry boxes, it will skip the rest.</p>
+    <p>Use this command to open the <A HREF="hidd_ctf_acq_params.htm">CTF-based Tuning Parameters dialog</A> and set the parameters for acquiring and analyzing images for
+      the CTF-based astigmatism and coma routines, and for the Zemlin tableau.&nbsp; </p>
     <P><A NAME="hid_focus_set_ctf_coma_bt"></A><B>Set CTF Coma-free Params command (Focus/Tune menu)</B></P>
     <p>Use this command to set parameters for the coma-free alignment.&nbsp; You can
       set:</p>

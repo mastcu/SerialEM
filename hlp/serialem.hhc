@@ -433,6 +433,11 @@
 			</OBJECT>
 			<A HREF="html/hidd_ctffinddlg.htm">CTF Fitting Parameters dialog</A><BR>
 		<LI><OBJECT type="text/sitemap">
+			<param name="Name" value="CTF-base Tuning Parameters dialog">
+			<param name="Local" value="html/hidd_ctf_acq_params.htm">
+			</OBJECT>
+			<A HREF="html/hidd_ctf_acq_params.htm">CTF Fitting Parameters dialog</A><BR>
+		<LI><OBJECT type="text/sitemap">
 			<param name="Name" value="Image Snapshot dialog">
 			<param name="Local" value="html/hidd_screenshot.htm">
 			</OBJECT>

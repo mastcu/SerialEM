@@ -2717,7 +2717,8 @@ void CSerialEMDoc::AppendToProgramLog(BOOL starting)
 
 void CSerialEMDoc::SetAutoSaveNav(BOOL inVal)
 {
-  SEMTrace('0', "Autosave Nav set to %d", inVal ? 1 : 0);
+  if (!mWinApp->GetStartingProgram())
+    SEMTrace('0', "Autosave Nav set to %d", inVal ? 1 : 0);
   mAutoSaveNav = inVal;
 }
 

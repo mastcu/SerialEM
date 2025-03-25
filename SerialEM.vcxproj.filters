@@ -548,6 +548,9 @@
     <ClInclude Include="TaskAreaOptionDlg.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="CtfAcquireParamDlg.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="res\bitmap1.bmp">
@@ -848,6 +851,9 @@
       <Filter>HTML Help Topics</Filter>
     </None>
     <None Include="hlp\html\hidd_ctffinddlg.htm">
+      <Filter>HTML Help Topics</Filter>
+    </None>
+    <None Include="hlp\html\hidd_ctf_acq_params.htm">
       <Filter>HTML Help Topics</Filter>
     </None>
     <None Include="hlp\html\hidd_tsdosesym.htm">
@@ -1339,6 +1345,9 @@
       <Filter>CSource Files</Filter>
     </ClCompile>
     <ClCompile Include="TaskAreaOptionDlg.cpp">
+      <Filter>CSource Files</Filter>
+    </ClCompile>
+    <ClCompile Include="CtfAcquireParamDlg.cpp">
       <Filter>CSource Files</Filter>
     </ClCompile>
   </ItemGroup>

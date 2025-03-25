@@ -1,0 +1,71 @@
+<html>
+  <head>
+    <title>CTF-based Tuning Parameters Dialog</title>
+    <meta HTTP-EQUIV="Content-Type" Content="text/html; charset=Windows-1252"/>
+    <style type="text/css"> <!-- BODY { font-family:"Arial" }
+  TD { font-size:16 }
+      .style1
+      {
+        font-size: larger;
+        font-weight: bold;
+      }
+      --></style>
+  </head>
+  <body BGCOLOR="#ffffff" TEXT="#000000">
+    <basefont size="2">
+    <p><a NAME="hidd_ctffinddlg"></a><span class="style1">CTF-based 
+        Tuning Parameters Dialog</span></p>
+    <p>This dialog allows you to set parameters 
+      that are used when taking images for routines that do CTF fitting, namely, when 
+      calibrating and correcting astigmatism, correcting coma, and taking a Zemlin 
+      tableau.&nbsp; By default, Record parameters are used for these images.&nbsp; 
+      The upper part of the dialog lets you change the Record parameters in specific 
+      ways.&nbsp; The bottom of the dialog has options governing how the routines 
+      initially determine and modify focus.</p>
+    <p><strong>Set exposure to X sec</strong></p>
+    <p>Select this option and enter an exposure time to use in place of the one in 
+      Record parameters.</p>
+    <p><strong>Set drift settling to X sec</strong></p>
+    <p>Select this option and enter a drift settling time to use for the images.</p>
+    <p><strong>Set binning to N</strong></p>
+    <p>Select this option and enter a binning to use for the images.&nbsp; The CTF 
+      analysis itself should be fairly insensitive to binning unless it is too high, 
+      but you may want to use a binning higher than 1 to make the Thon rings extend 
+      farther out in the display. The program will find the nearest available binning.&nbsp; 
+      For K2/K3 cameras, the program will use a binning of at least 1 if this option 
+      is not selected.</p>
+    <p><strong>Use full-field images, not current subarea</strong></p>
+    <p>Select this option to use the full camera area regardless of any subarea set in 
+      Record perameters; this will generally give the most signal for CTF fitting.</p>
+    <p><strong>Align frames with N frames</strong></p>
+    <p>Select this option to use frame alignment with the Framealign module in 
+      SerialEM or the SEMCCD plugin to DigitalMicrograph if the camera supports taking 
+      frames, and enter the number of frames to acquire.&nbsp; If this option is off, 
+      frame alignment will not be done, regardless of the setting in Record 
+      parameters.</p>
+    <p><strong>Align with parameter set N</strong></p>
+    <p>Select this option to use a specific frame alignment parameter set instead of 
+      whatever is specified in Record parameters, and enter the position of the set in 
+      the table in the&nbsp; <a href="hidd_framealign.htm">Frame Alignment
+      Parameters dialog</a> (numbered from 1).</p>
+    <p><strong>Find initial defocus with Focus area in Low Dose mode</strong></p>
+    <p>For the astigmatism and coma operations, the program needs to know what the 
+      defocus is so that it can set the fitting range correcting for the CTF routines. 
+      If necessary, it will measure defocus using beam-tilted images as usual.&nbsp; 
+      By default, it does this on-axis with Record images when in Low Dose mode, to 
+      give the most accuracy by measuring at the same location where CTF will be 
+      measured.&nbsp; Select this option to use the Focus area instead, if you are 
+      trying to minimize dose at the current location.</p>
+    <p><strong>Smallest defocus allowed for correcting astigmatism</strong></p>
+    <p>The program will make the defocus more negative, if necessary, to have a 
+      minimum amount of underfocus when measuring or correcting astigmatism.&nbsp; 
+      Enter a minimum value here; the default is -0.9 micron and a value as small as 
+      -0.1 micron is allowed.</p>
+    <p><strong>Amount to increase underfocus when calibrating astigmatism or measuring 
+      coma</strong></p>
+    <p>Astigmatism calibration and coma measurement require a larger defocus to allow 
+      for the astigmatism in the beam-tilted images.&nbsp; This entry specifes the 
+      increase in underfocus; the default is 0.5 micron and a value as small as 0.2 is 
+      allowed.</p>
+</body>
+</html>

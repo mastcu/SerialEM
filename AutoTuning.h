@@ -6,6 +6,13 @@ enum {COMA_JUST_MEASURE = 0, COMA_INITIAL_ITERS, COMA_ADD_ONE_ITER, COMA_CONTINU
 #define MIN_COMA_VS_IS_EXTENT 0.5f
 #define MAX_COMA_VS_IS_EXTENT 18.f
 
+#define CTF_SET_EXPOSURE 0x1
+#define CTF_SET_DRIFT    0x2
+#define CTF_SET_BINNING  0x4
+#define CTF_ALIGN_FRAMES 0x8
+#define CTF_USE_ALI_SET  0x10
+#define CTF_OLD_SETTINGS 0x80
+
 struct AstigCalib {
   int probeMode;
   int alpha;
@@ -89,6 +96,10 @@ public:
   GetSetMember(float, AddToMinForAstigCTF);
   GetMember(float, AstigBacklash);
   GetSetMember(int, BacklashDelay);
+  GetSetMember(b3dUInt32, CtfAcqSetFlags);
+  GetSetMember(int, NumCtfFrames);
+  GetSetMember(int, AlignParamSetNum);
+  GetSetMember(BOOL, CtfUseFocusInLD);
   float GetBeamTiltBacklash();
   ComaVsISCalib *GetComaVsIScal() {return &mComaVsIScal;};
   void SetBaseBeamTilt(double inX, double inY) {mBaseBeamTiltX = inX; mBaseBeamTiltY = inY;};
@@ -172,11 +183,15 @@ private:
   bool mDoingCtfBased;            // Flag that CTF-based operations are occurring
   bool mCtfCalibrating;           // Flag for calibrating
   int mCtfComaFree;               // Flag for coma-free: 2 for full array
+  b3dUInt32 mCtfAcqSetFlags;      // Flags for which items to set
   float mCtfExposure;             // User's variables to potentially replace Record
   float mCtfDriftSettling;        // exposure, drift, and binning
   int mCtfBinning;
   BOOL mCtfUseFullField;          // And whether to use full field even if Record isn't
   BOOL mCtfDoFullArray;           // Flag to do 10 image array
+  int mNumCtfFrames;              // Number of frames to align
+  int mAlignParamSetNum;          // Number of alignment parameter set
+  BOOL mCtfUseFocusInLD;          // Flag to use focus area in low dose for initial focus
   float mMinCtfBasedDefocus;      // Absolute min and max focus range for doing fits
   float mMaxCtfBasedDefocus;
   float mMinDefocusForMag;        // Minimum and maximum defocus allowed for this mag
@@ -205,6 +220,7 @@ private:
   float mTestCtfTuningDefocus;    // Initial focus to assign when reading in images
   bool mLastCtfBasedFailed;       // Flag for failure in last CTF-based operation
   BOOL mSkipMessageBox;
+  bool mDoingCTFfallover;         // Flag that switched between CTFplotter and ctffind 
   int mCtfBasedLDareaDelay;       // Delay after changing low dose area
   float mLastXStigNeeded;         // Change needed from last astigmatism measurement only
   float mLastYStigNeeded;         // Can be BTID or CTF
@@ -260,7 +276,7 @@ public:
   int CtfBasedAstigmatismComa(int comaFree, bool calibrate, int actionType, bool leaveIS, BOOL noMessageBox);
   void SetRecordConSetForCTF();
   void CtfBasedNextTask(int tparm);
-  void ErrorInCtfBased(const char *mess);
+  void ErrorInCtfBased(const char *mess, bool tryFallover);
   void StopCtfBased(bool restore = true, bool failed = true);
   void CtfBasedCleanup(int error);
   int LookupCtfBasedCal(bool coma, int magInd, bool matchMag, float *rotateImage = NULL);

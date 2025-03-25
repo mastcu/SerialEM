@@ -3,6 +3,14 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+3/25/25: Added dialog for setting acquisition parameters for CTF-based coma
+and astigmatism routines, including new options to specify frame alignment and
+do initial focus measurement with Focus area.
+
+3/25/25: Made CTF-based astigmatism and coma routines switch between Ctffind
+and Ctfplotter for most kinds of errors, in case the other method works
+better.
+
 3/24/25: Fixed canceling out when defining tilt series over a range with Shift
 T (In 4.1).
 

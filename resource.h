@@ -91,6 +91,7 @@
 #define IDD_MULTI_GRID                  284
 #define IDD_MULGRID_SETTINGS            287
 #define IDD_TASK_AREA_OPTIONS           289
+#define IDD_CTF_ACQ_PARAMS              291
 #define IDC_EDITXSIZE                   1000
 #define IDC_EDITYSIZE                   1002
 #define IDC_EDITYOVERLAP                1003
@@ -1405,6 +1406,7 @@
 #define IDC_BUT_POSTPONE                2395
 #define IDC_CHECK_HARDWARE_ROI          2396
 #define IDC_EDIT_REF_FPS                2397
+#define IDC_CHECK_DO_SHOTS_IN_HOLE      2398
 #define IDC_USE_REC_HARDWARE_ROI        2399
 #define IDC_STAT_REC_AREA               2400
 #define IDC_CHECK_ADJUST_BEAM_TILT      2401
@@ -1412,7 +1414,6 @@
 #define IDC_STAT_COMA_CONDITIONS        2403
 #define IDC_NA_POSTMACRO                2404
 #define IDC_COMBO_POSTMACRO             2405
-#define IDC_CHECK_DO_SHOTS_IN_HOLE      2398
 #define IDC_COMBO_EXTRAMACRO            2406
 #define IDC_CHECK_DO_MULTIPLE_HOLES     2407
 #define IDC_STAT_REGULAR                2408
@@ -1866,12 +1867,10 @@
 #define IDC_STAT_AFTER_MINUTES          2882
 #define IDC_NA_HIDE_UNUSED              2883
 #define IDC_STAT_INFO_LINE1             2884
-#define IDC_STAT_EXTRAMACRO             2901
 #define IDC_STAT_INFO_LINE2             2885
 #define IDC_RCHOICE_ONE                 2886
 #define IDC_STAT_SPACER                 2887
 #define IDC_RCHOICE_THREE               2888
-#define IDC_NA_ADJUST_BT_FOR_IS         2946
 #define IDC_STAT_TASK_OPTIONS           2889
 #define IDC_STAT_ACTION_OPTIONS         2890
 #define IDC_STAT_GEN_OPTIONS            2891
@@ -1885,6 +1884,7 @@
 #define IDC_STAT_SELECTED_BUF           2898
 #define IDC_SPIN_TEMPLATE_BUF           2899
 #define IDC_STAT_ALIGN_LIMIT            2900
+#define IDC_STAT_EXTRAMACRO             2901
 #define IDC_STAT_MAXALI_UM              2902
 #define IDC_STAT_RESET_IS_TITLE         2903
 #define IDC_CHECK_RESET_IS              2904
@@ -1929,6 +1929,7 @@
 #define IDC_NA_SAVE_PARAMS              2943
 #define IDC_STAT_SPACER2                2944
 #define IDC_STAT_SPACER3                2945
+#define IDC_NA_ADJUST_BT_FOR_IS         2946
 #define IDC_NA_HIDE_OPTIONS             2951
 #define IDC_STAT_PARAMS_SHARED          2952
 #define IDC_STAT_ONLY_ONCE              2953
@@ -2223,11 +2224,9 @@
 #define IDC_EDIT_MULGRID_NAME20         3249
 #define IDC_COMBO_MACRO_AT_END          3250
 #define IDC_STAT_RUN                    3251
-#define IDC_COMBO_MACRO_AT_START        3267
 #define IDC_STAT_NAME                   3252
 #define IDC_NA_RUN_SCRIPT_AT_END        3253
 #define IDC_EDIT_MAX_PCT_CHANGE         3254
-#define IDC_NA_RUN_SCRIPT_AT_START      3559
 #define IDC_EDIT_MAX_ROTATION           3255
 #define IDC_EDIT_EXTRA_FOVS             3256
 #define IDC_STAT_REF_MAP_BUF            3257
@@ -2240,6 +2239,7 @@
 #define IDC_STAT_SIZE_CHANGE            3264
 #define IDC_STAT_ROTATION               3265
 #define IDC_STAT_REF_MAP_LABEL          3266
+#define IDC_COMBO_MACRO_AT_START        3267
 #define IDC_STAT_X_FOVS                 3268
 #define IDC_NA_REALIGN_SCALED_MAP       3269
 #define IDC_RREALI_REC                  3270
@@ -2530,6 +2530,23 @@
 #define IDC_STATLISTHEADER7             3561
 #define IDC_STATLISTHEADER8             3562
 #define IDC_STATLISTHEADER9             3563
+#define IDC_CHECKCTF_DRIFT              3563
+#define IDC_EDITCTF_DRIFT               3564
+#define IDC_CHECK_CTF_BINNING           3565
+#define IDC_EDIT_CTF_BINNING            3566
+#define IDC_CHECK_CTF_FULL_FIELD        3567
+#define IDC_CHECKCTF_ALIGN_FRAMES       3568
+#define IDC_EDIT_CTF_NUM_FRAMES         3569
+#define IDC_EDIT_CTF_MIN_FOCUS          3571
+#define IDC_EDIT_CTF_MIN_ADD            3572
+#define IDC_STAT_DRIFT_SEC              3573
+#define IDC_CHECK_USE_ALI_SET           3574
+#define IDC_EDIT_ALIGN_SET              3575
+#define IDC_STAT_ALI_SET_NAME           3576
+#define IDC_NA_RUN_SCRIPT_AT_START      3577
+#define IDC_CHECK_USE_FOCUS_IN_LD       3578
+#define IDC_CHECK_CTF_EXPOSURE          3579
+#define IDC_EDIT_CTF_EXPOSURE           3580
 #define ID_NEW_IMAGE                    32771
 #define IDM_FILE_SAVEOTHER              32772
 #define IDM_FILE_READ                   32773
@@ -3113,9 +3130,9 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        291
+#define _APS_NEXT_RESOURCE_VALUE        293
 #define _APS_NEXT_COMMAND_VALUE         33550
-#define _APS_NEXT_CONTROL_VALUE         3560
+#define _APS_NEXT_CONTROL_VALUE         3581
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif

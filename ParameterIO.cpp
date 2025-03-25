@@ -862,6 +862,9 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
       } else if (NAME_IS("VppCondNavText")) {
         StripItems(strLine, 1, vppParams->navText);
 
+      } else if (NAME_IS("CtfAcqSetFlags")) {
+        mWinApp->mAutoTuning->SetCtfAcqSetFlags((b3dUInt32)itemInt[1]);
+
       } else if (NAME_IS("MultiGridParams")) {
         mgParams->appendNames = itemInt[1] != 0;
         mgParams->useSubdirectory = itemInt[2] != 0;
@@ -2113,6 +2116,9 @@ void CParameterIO::WriteSettings(CString strFileName)
         mFile->WriteString(oneState);
       }
     }
+    oneState.Format("CtfAcqSetFlags %d\n", mWinApp->mAutoTuning->GetCtfAcqSetFlags());
+    mFile->WriteString(oneState);
+    
     oneState = mWinApp->mMultiGridTasks->GetLastSessionFile();
     if (!oneState.IsEmpty())
       mFile->WriteString("MGSessionFile " + oneState + "\n");

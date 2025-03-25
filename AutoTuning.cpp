@@ -17,6 +17,7 @@
 #include "BeamAssessor.h"
 #include "NavHelper.h"
 #include "MultiShotDlg.h"
+#include "CtfAcquireParamDlg.h"
 #include "CameraController.h"
 #include "ExternalTools.h"
 #include "Shared\b3dutil.h"
@@ -71,6 +72,10 @@ CAutoTuning::CAutoTuning(void)
   mCtfDriftSettling = 0.;
   mCtfBinning = 0;
   mCtfUseFullField = true;
+  mCtfAcqSetFlags = CTF_OLD_SETTINGS;
+  mAlignParamSetNum = 0;
+  mNumCtfFrames = 7;
+  mCtfUseFocusInLD = false;
   mComaIterationThresh = 1.f;
   mCtfDoFullArray = false;
   mCtfBasedLDareaDelay = 8000;   // Based on coming back from View on an F20
@@ -102,6 +107,16 @@ void CAutoTuning::Initialize(void)
     mAstigBeamTilt = mUsersAstigTilt;
   if (mUsersComaTilt > 0)
     mMaxComaBeamTilt = mUsersComaTilt;
+  if (mCtfAcqSetFlags == CTF_OLD_SETTINGS) {
+    mCtfAcqSetFlags = 0;
+    setOrClearFlags(&mCtfAcqSetFlags, CTF_SET_EXPOSURE, mCtfExposure > 0. ? 1 : 0);
+    setOrClearFlags(&mCtfAcqSetFlags, CTF_SET_DRIFT, mCtfDriftSettling > 0. ? 1 : 0);
+    setOrClearFlags(&mCtfAcqSetFlags, CTF_SET_BINNING, mCtfBinning > 0 ? 1 : 0);
+    setOrClearFlags(&mCtfAcqSetFlags, CTF_ALIGN_FRAMES, mCtfDriftSettling < 0. ? 1 : 0);
+    B3DCLAMP(mCtfExposure, 0.1f, 10.f);
+    B3DCLAMP(mCtfDriftSettling, 0.f, 1.f);
+    B3DCLAMP(mCtfBinning, 1, 8);
+  }
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -1060,6 +1075,7 @@ int CAutoTuning::CtfBasedAstigmatismComa(int comaFree, bool calibrate, int actio
   mCtfCal.numFits = 0;
   mCtfCal.comaType = comaFree > 0;
   mCtfCal.amplitude = mAstigToApply;
+  mDoingCTFfallover = false;
 
   if (comaFree) 
     mLastXTiltNeeded = mLastYTiltNeeded = 0.;
@@ -1178,7 +1194,7 @@ int CAutoTuning::CtfBasedAstigmatismComa(int comaFree, bool calibrate, int actio
   if (mSkipMeasuringFocus)
     mGotFocusMinuteStamp = mWinApp->MinuteTimeStamp();
   if (actionType / 2 == 0 && !mSkipMeasuringFocus)
-    mFocusManager->AutoFocusStart(-1, -1);
+    mFocusManager->AutoFocusStart(-1, mCtfUseFocusInLD ? 0 : -1);
   mWinApp->AddIdleTask(TASK_CTF_BASED, 0, 0); 
   mWinApp->UpdateBufferWindows();
   return 0;
@@ -1190,17 +1206,25 @@ void CAutoTuning::SetRecordConSetForCTF()
   ControlSet *recSet = mWinApp->GetConSets() + RECORD_CONSET;
   CameraParameters *camParam = mWinApp->GetActiveCamParam();
   int binInd, realBin;
+  CArray<FrameAliParams, FrameAliParams> *faParams = 
+    mWinApp->mCamera->GetFrameAliParams();
 
   mSavedRecSet = *recSet;
-  if (mCtfBinning > 0) {
+
+  // Look up actual binning
+  if (mCtfAcqSetFlags & CTF_SET_BINNING) {
     recSet->binning = mCtfBinning * BinDivisorI(camParam);
     mWinApp->mCamera->FindNearestBinning(camParam, recSet, binInd, realBin);
     recSet->binning = realBin;
   }
-  if (mCtfExposure > 0)
+
+  // Adopt exposure & drift
+  if (mCtfAcqSetFlags & CTF_SET_EXPOSURE)
     recSet->exposure = mCtfExposure;
-  if (mCtfDriftSettling > 0)
+  if (mCtfAcqSetFlags & CTF_SET_DRIFT)
     recSet->drift = mCtfDriftSettling;
+
+  // set for full field
   if (mCtfUseFullField) {
     recSet->left = recSet->top = 0;
     recSet->right = camParam->sizeX;
@@ -1208,7 +1232,17 @@ void CAutoTuning::SetRecordConSetForCTF()
   }
   recSet->mode = SINGLE_FRAME;
   recSet->saveFrames = 0;
-  if (mCtfDriftSettling >= 0) {
+
+  // Set up or cancel alignment
+  if (mCtfAcqSetFlags & CTF_ALIGN_FRAMES) {
+    recSet->alignFrames = 1;
+    recSet->doseFrac = 1;
+    recSet->frameTime = recSet->exposure / mNumCtfFrames;
+    if (mCtfAcqSetFlags & CTF_USE_ALI_SET) {
+      B3DCLAMP(mAlignParamSetNum, 0, (int)faParams->GetSize() - 1);
+      recSet->faParamSetInd = mAlignParamSetNum;
+    }
+  } else {
     recSet->alignFrames = 0;
     recSet->doseFrac = 0;
   }
@@ -1239,9 +1273,10 @@ void CAutoTuning::CtfBasedNextTask(int tparm)
   int centralInds[4][2] = {{1, 5}, {3, 7}, {2, 6}, {4, 8}};
   float resultsArray[7], solution[4];
   float newFocus = 0, negMicrons, xCoeff, yCoeff, angle, diffPlus, diffMinus, minFocus;
-  float intercept, diff1, diff9, rotateImage, astig, minAstig, maxAstig;
+  float intercept, diff1, diff9, rotateImage, astig, minAstig, maxAstig, minTiltedAstig;
   float plotterDef, phase;
   const int maxInLineFit = 50;
+  float pFailMaxCen = 0.1f, pFailMaxAstig = 0.75f, pFailMaxMinTilted = 0.2f;
   float xfit[maxInLineFit], yfit[maxInLineFit], zfit[maxInLineFit];
   double xmax = 0., ymax = 0., nextXval, nextYval, assumedPosFocus;
   float minDef, maxDef, expectDef, reduction;
@@ -1252,6 +1287,8 @@ void CAutoTuning::CtfBasedNextTask(int tparm)
     "structure or carbon in the field of view.\n" + CString(mCtfComaFree ? "Try less "
       "beam tilt if the Thon rings are not visible on the long axis in beam-tilted "
       "images." : "");
+  if (mDoingCTFfallover)
+    usePlotter = !usePlotter;
 
   if (mDoingFullArray) {
     numOperations = 9;
@@ -1266,7 +1303,8 @@ void CAutoTuning::CtfBasedNextTask(int tparm)
   if (mCtfActionType / 2)
     imBufs += B3DCHOICE(mCtfCalibrating || mCtfComaFree, numOperations- mOperationInd, 0);
   if (!imBufs->mImage || imBufs->mCaptured == BUFFER_FFT) {
-    ErrorInCtfBased("The buffers do not have the right images to do this operation");
+    ErrorInCtfBased("The buffers do not have the right images to do this operation", 
+      false);
     return;
   }
   str.Format("%s %s", mCtfCalibrating ? "CALIBRATING" : "MEASURING", 
@@ -1282,7 +1320,7 @@ void CAutoTuning::CtfBasedNextTask(int tparm)
     if (!mSkipMeasuringFocus) {
       if (mFocusManager->GetLastFailed() || mFocusManager->GetLastAborted()) {
         ErrorInCtfBased("Stopping the procedure because the initial focus measurement "
-          "failed");
+          "failed", false);
         return;
       }
       mLastMeasuredFocus = mFocusManager->GetCurrentDefocus();
@@ -1309,7 +1347,7 @@ void CAutoTuning::CtfBasedNextTask(int tparm)
 
     // An image is ready to analyze
     if (processImg->InitializeCtffindParams(imBufs, param)) {
-      ErrorInCtfBased("An error occurred setting up Ctffind parameters");
+      ErrorInCtfBased("An error occurred setting up Ctffind parameters", false);
       return;
     }
 
@@ -1341,24 +1379,24 @@ void CAutoTuning::CtfBasedNextTask(int tparm)
         maxDef = -param.maximum_defocus / 10000.f;
       }
       if (processImg->MakeCtfplotterShrMemFile(0, filename, reduction)) {
-        ErrorInCtfBased(filename);
+        ErrorInCtfBased(filename, true);
         return;
       }
       if (mWinApp->mExternalTools->MakeCtfplotterCommand(filename, reduction, 0, 0.,
         minDef, maxDef, expectDef, 1, 0., mOperationInd ? -1 : 1, 0., 0., 0., 0, str, 
         command)) {
         processImg->DeletePlotterShrMemFile();
-        ErrorInCtfBased(command);
+        ErrorInCtfBased(command, true);
         return;
       }
       if (processImg->RunCtfplotterOnBuffer(filename, command, 5000)) {
-        ErrorInCtfBased(command);
+        ErrorInCtfBased(command, true);
         return;
       }
       if (mWinApp->mExternalTools->ReadCtfplotterResults(plotterDef, astig, 
         resultsArray[2], phase, astigPhase, resultsArray[5], resultsArray[4], str, 
         command)) {
-        ErrorInCtfBased(command);
+        ErrorInCtfBased(command, true);
         return;
       }
       mWinApp->AppendToLog(str);
@@ -1368,7 +1406,7 @@ void CAutoTuning::CtfBasedNextTask(int tparm)
       SEMTrace('1', "rmin %.1f  rmax %.1f  dmin %.0f  dmax %.0f", param.minimum_resolution,
         param.maximum_resolution, param.minimum_defocus, param.maximum_defocus);
       if (processImg->RunCtffind(imBufs, param, resultsArray)) {
-        ErrorInCtfBased("An error occurred running the Ctffind operation");
+        ErrorInCtfBased("An error occurred running the Ctffind operation", true);
         return;
       }
     }
@@ -1388,7 +1426,7 @@ void CAutoTuning::CtfBasedNextTask(int tparm)
 
           // To force refocusing on some of these errors
           mGotFocusMinuteStamp -= 60;
-          ErrorInCtfBased(str);
+          ErrorInCtfBased(str, false);
           return;
       }
       if (mCenteredScore < (usePlotter ? mMinPlotterCenScore : mMinCenteredScore)) {
@@ -1397,7 +1435,7 @@ void CAutoTuning::CtfBasedNextTask(int tparm)
           usePlotter ? "CCC" : "score", usePlotter ? "plotter" : "find", mCenteredScore,
           usePlotter ? mMinPlotterCenScore : mMinCenteredScore); 
         mGotFocusMinuteStamp -= 60;
-        ErrorInCtfBased(str + suggest);
+        ErrorInCtfBased(str + suggest, true);
         return;
       }
     }
@@ -1409,7 +1447,7 @@ void CAutoTuning::CtfBasedNextTask(int tparm)
         "by %.2f from the initial fit so fitting may be unreliable", 
         usePlotter ? "CCC" : "score", usePlotter ? "plotter" : "find", resultsArray[4],
         resultsArray[4] / mCenteredScore);
-      ErrorInCtfBased(str);
+      ErrorInCtfBased(str, true);
       return;
     }
 
@@ -1425,7 +1463,7 @@ void CAutoTuning::CtfBasedNextTask(int tparm)
           mLastMeasuredFocus);
         suggest = command + suggest;
       }
-      ErrorInCtfBased(str + suggest);
+      ErrorInCtfBased(str + suggest, true);
       return;
     }
     if (fabs(negMicrons - mCenteredDefocus) > B3DMAX(1., -0.33 * mCenteredDefocus)) {
@@ -1436,7 +1474,7 @@ void CAutoTuning::CtfBasedNextTask(int tparm)
         1.0)
         str += "\r\n\r\nIf the fit seems good, try a smaller beam tilt to get closer to"
         " coma-free; after it is close you maybe able to raise the beam tilt again";
-      ErrorInCtfBased(str);
+      ErrorInCtfBased(str, true);
       return;
     }
 
@@ -1520,10 +1558,19 @@ void CAutoTuning::CtfBasedNextTask(int tparm)
           // First check range of astigmatism values.  Defocus is now negative so 
           maxAstig = -10000.;
           minAstig = 10000.;
-          for (ind = 0; ind < mCtfCal.numFits; ind++) {
+          for (ind = mCtfCal.numFits - 1; ind >= 0; ind--) {
+            if (!ind)
+              minTiltedAstig = minAstig;
             astig = mCtfCal.fitValues[3 * ind + 1] - mCtfCal.fitValues[3 * ind];
             ACCUM_MIN(minAstig, astig);
             ACCUM_MAX(maxAstig, astig);
+          }
+          if (usePlotter && !mDoingCTFfallover && maxAstig > pFailMaxAstig &&
+            astig < pFailMaxCen && minTiltedAstig < pFailMaxMinTilted) {
+            str.Format("One of the beam-tilted astigmatism values is very low (%.2f)"
+              " compared the \r\nmaximum (%.2f), suggesting Ctfplotter failed to find"
+              " astigmatism correctly", minTiltedAstig, maxAstig);
+            ErrorInCtfBased(str, true);
           }
           if (maxAstig - minAstig < 0.05) {
             str.Format("The range of astigmatism values (%.2f) is too low for a reliable"
@@ -1531,7 +1578,7 @@ void CAutoTuning::CtfBasedNextTask(int tparm)
               " \"Set CTF Coma-free Params\".\r\n", maxAstig - minAstig);
             if (mWinApp->mScope->GetUseIllumAreaForC2())
               str += "(Do not try to detect coma on a Cs-corrected microscope)";
-            ErrorInCtfBased(str);
+            ErrorInCtfBased(str, false);
             mWinApp->AppendToLog(str);
             return;
           }
@@ -1699,8 +1746,18 @@ void CAutoTuning::CtfBasedNextTask(int tparm)
   mWinApp->AddIdleTask(CCameraController::TaskCameraBusy, TASK_CTF_BASED, 0, 0);
 }
 
-void CAutoTuning::ErrorInCtfBased(const char * mess)
+void CAutoTuning::ErrorInCtfBased(const char *mess, bool tryFallover)
 {
+  if (!mDoingCTFfallover && tryFallover) {
+    mDoingCTFfallover = true;
+    mOperationInd = 0;
+    PrintfToLog("WARNING: %s", mess);
+    mWinApp->SetNextLogColorStyle(WARNING_COLOR_IND, 1);
+    PrintfToLog("Starting over with Ctf%s",
+      mWinApp->mProcessImage->GetTuneUseCtfplotter() ? "find" : "plotter");
+    mWinApp->AddIdleTask(CCameraController::TaskCameraBusy, TASK_CTF_BASED, 0, 0);
+    return;
+  }
   if (mSkipMessageBox)
     PrintfToLog("WARNING: %s", mess);
   else
@@ -1821,32 +1878,39 @@ int CAutoTuning::SetupCtfAcquireParams(bool fromCheck)
   int full = mCtfUseFullField ? 1 : 0;
   if (!fromCheck)
     CheckAndSetupCtfAcquireParams("CTF-based astigmatism or coma-free operations", true);
-  if (!KGetOneFloat("Exposure time (in sec), or 0 to use current Record exposure:", 
-    val, 2))
+  CCtfAcquireParamDlg dlg;
+  dlg.m_bSetExposure = (mCtfAcqSetFlags & CTF_SET_EXPOSURE) != 0;
+  dlg.m_bSetDrift = (mCtfAcqSetFlags & CTF_SET_DRIFT) != 0;
+  dlg.m_bSetBinning = (mCtfAcqSetFlags & CTF_SET_BINNING) != 0;
+  dlg.m_bAlignFrames = (mCtfAcqSetFlags & CTF_ALIGN_FRAMES) != 0;
+  dlg.m_bUseAliSet = (mCtfAcqSetFlags & CTF_USE_ALI_SET) != 0;
+  dlg.m_bUseFocusInLD = mCtfUseFocusInLD;
+  dlg.m_bUseFullField = mCtfUseFullField;
+  dlg.m_fExposure = mCtfExposure;
+  dlg.m_fDrift = mCtfDriftSettling;
+  dlg.m_iBinning = mCtfBinning;
+  dlg.m_fMinFocus = mMinCtfBasedDefocus;
+  dlg.m_fMinAdd = -mAddToMinForAstigCTF;
+  dlg.m_iNumFrames = mNumCtfFrames;
+  dlg.m_iAlignSet = mAlignParamSetNum + 1;
+  if (dlg.DoModal() == IDCANCEL)
     return 1;
-  mCtfExposure = B3DMAX(0, val);
-  if (!KGetOneInt("Binning, or 0 to use current Record binning", mCtfBinning))
-    return 1;
-  if (!KGetOneFloat("Enter -1 to not turn off frame alignment if set in Record", 
-    "Drift settling time (in sec), or 0 to use current Record value",
-    mCtfDriftSettling, 2))
-    return 1;
-  if (!KGetOneInt("1 to take full-field images or 0 to use current Record subarea",
-    full))
-    return 1;
-  mCtfUseFullField = full != 0;
-  if (!KGetOneFloat("Smallest defocus allowed for correcting astigmatism (must be at"
-    " least -0.1)", mMinCtfBasedDefocus, 2))
-    return 1;
-  B3DCLAMP(mMinCtfBasedDefocus, -10.f, -0.1f);
-  val = -mAddToMinForAstigCTF;
-  if (!KGetOneFloat("Amount to increase underfocus when calbrating astigmatic or "
-    "measuring coma (must be at least 0.2)", val, 2))
-    return 1;
-  mAddToMinForAstigCTF = -val;
-  B3DCLAMP(mAddToMinForAstigCTF, -10.f, -0.2f);
-  return 0;
+  setOrClearFlags(&mCtfAcqSetFlags, CTF_SET_EXPOSURE, dlg.m_bSetExposure ? 1 : 0);
+  setOrClearFlags(&mCtfAcqSetFlags, CTF_SET_DRIFT, dlg.m_bSetDrift ? 1 : 0);
+  setOrClearFlags(&mCtfAcqSetFlags, CTF_SET_BINNING, dlg.m_bSetBinning ? 1 : 0);
+  setOrClearFlags(&mCtfAcqSetFlags, CTF_ALIGN_FRAMES, dlg.m_bAlignFrames ? 1 : 0);
+  setOrClearFlags(&mCtfAcqSetFlags, CTF_USE_ALI_SET, dlg.m_bUseAliSet ? 1 : 0);
+  mCtfUseFocusInLD = dlg.m_bUseFocusInLD;
+  mCtfUseFullField = dlg.m_bUseFullField;
+  mCtfExposure = dlg.m_fExposure;
+  mCtfDriftSettling = dlg.m_fDrift;
+  mCtfBinning = dlg.m_iBinning;
+  mMinCtfBasedDefocus = dlg.m_fMinFocus;
+  mAddToMinForAstigCTF  = -dlg.m_fMinAdd;
+  mNumCtfFrames = dlg.m_iNumFrames;
+  mAlignParamSetNum = dlg.m_iAlignSet - 1;
 
+  return 0;
 }
 
 // Check whether the acquisition parameters have ever been set up, and if not, call to
