@@ -10280,7 +10280,8 @@ void CCameraController::DisplayNewImage(BOOL acquired)
       if (mDoseAdjustmentFactor > 0.)
         extra->m_fDose *= mDoseAdjustmentFactor;
       extra->m_fDose *= (float)mExposure / lastConSetp->exposure;
-      extra->mPriorRecordDose = mPriorRecordDose;
+      if (extra->m_fDose > 0 || mPriorRecordDose > 0.)
+        extra->mPriorRecordDose = mPriorRecordDose;
 
       // Store other no-cost stuff and then convert header items to shorts
       extra->mSpotSize = spotSize;
