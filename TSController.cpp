@@ -6492,7 +6492,9 @@ void CTSController::ComputePredictions(double angle)
   float x1fit[MAX_PRED_FITS], x2fit[MAX_PRED_FITS], yfit[MAX_PRED_FITS];
   float tmpFit[MAX_PRED_FITS];
   CString message, messadd;
-  BOOL recentlyReversed = mDirection * (angle - mScope->GetReversalTilt()) < 
+  int direction = (mDoingDoseSymmetric && !mTSParam.dosymSkipBacklash) ? 
+    mDosymBacklashDir : mDirection;
+  BOOL recentlyReversed = direction * (angle - mScope->GetReversalTilt()) < 
     mComplexTasks->GetTiltBacklash() - 3. * mMaxTiltError;
   double usableAngleDiff = MaxUsableDiffFromAngle(angle);
   bool reversingDosym = mBidirSeriesPhase == DOSYM_ALTERNATING_PART;
@@ -6502,7 +6504,7 @@ void CTSController::ComputePredictions(double angle)
     
   if (recentlyReversed)
     SEMTrace('1', "recentlyReversed: dir %d ang %f revtilt %f back %f 3mte %f",
-      mDirection,  angle, mScope->GetReversalTilt(), mComplexTasks->GetTiltBacklash(),
+      direction,  angle, mScope->GetReversalTilt(), mComplexTasks->GetTiltBacklash(),
       3. * mMaxTiltError);
   nFitX = mConSets[TRACKING_CONSET].right - mConSets[TRACKING_CONSET].left;
   nFitY = mConSets[TRACKING_CONSET].bottom - mConSets[TRACKING_CONSET].top;
