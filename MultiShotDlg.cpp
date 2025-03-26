@@ -312,7 +312,8 @@ void CMultiShotDlg::UpdateSettings(void)
   m_bAdjustBeamTilt = mActiveParams->adjustBeamTilt;
   m_bUseIllumArea = mActiveParams->useIllumArea;
   m_bUseCustom = mActiveParams->useCustomHoles;
-  m_bOmit3x3Corners = mActiveParams->skipCornersOf3x3;
+  m_bOmit3x3Corners = m_bHexGrid ? mActiveParams->skipHexCenter :
+    mActiveParams->skipCornersOf3x3;
   m_bDoShotsInHoles = (mActiveParams->inHoleOrMultiHole & MULTI_IN_HOLE) != 0;
   m_bDoMultipleHoles = (mActiveParams->inHoleOrMultiHole & MULTI_HOLES) != 0;
   if (mActiveParams->numHoles[1] <= 1) {
@@ -521,7 +522,13 @@ void CMultiShotDlg::OnDeltaposSpinNumYHoles(NMHDR *pNMHDR, LRESULT *pResult)
 // For Hex Grid
 void CMultiShotDlg::OnCheckHexGrid()
 {
+  if (m_bHexGrid)
+    mActiveParams->skipHexCenter = m_bOmit3x3Corners;
+  else
+    mActiveParams->skipCornersOf3x3 = m_bOmit3x3Corners;
   UPDATE_DATA_TRUE;
+  m_bOmit3x3Corners = m_bHexGrid ? mActiveParams->skipHexCenter :
+    mActiveParams->skipCornersOf3x3;
   ManageHexGrid();
   ManageEnables();
   UpdateAndUseMSparams();
@@ -1559,7 +1566,10 @@ void CMultiShotDlg::UpdateAndUseMSparams(bool draw)
   mActiveParams->doHexArray = m_bHexGrid;
   mActiveParams->adjustBeamTilt = m_bAdjustBeamTilt;
   mActiveParams->useIllumArea = m_bUseIllumArea;
-  mActiveParams->skipCornersOf3x3 = m_bOmit3x3Corners;
+  if (m_bHexGrid)
+    mActiveParams->skipHexCenter = m_bOmit3x3Corners;
+  else
+    mActiveParams->skipCornersOf3x3 = m_bOmit3x3Corners;
   mActiveParams->useCustomHoles = m_bUseCustom;
   mActiveParams->inHoleOrMultiHole = (m_bDoShotsInHoles ? MULTI_IN_HOLE : 0) +
     (m_bDoMultipleHoles ? MULTI_HOLES : 0);
@@ -1632,8 +1642,8 @@ void CMultiShotDlg::ManageEnables(void)
   m_sbcNumXholes.EnableWindow(enable);
   m_sbcNumYholes.EnableWindow(enable);
   m_butHexGrid.EnableWindow(enable);
-  m_butOmit3x3Corners.EnableWindow(enable && mActiveParams->numHoles[0] == 3 && 
-    mActiveParams->numHoles[1] == 3 && !m_bHexGrid);
+  m_butOmit3x3Corners.EnableWindow(enable && ((mActiveParams->numHoles[0] == 3 && 
+    mActiveParams->numHoles[1] == 3 && !m_bHexGrid) || m_bHexGrid));
   m_butUseCustom.EnableWindow(m_bDoMultipleHoles && mActiveParams->customHoleX.size() >0);
   m_butSetRegular.EnableWindow(enable && notRecording &&
     (mActiveParams->numHoles[0] > 1 || mActiveParams->numHoles[1] > 1));
@@ -1751,6 +1761,8 @@ void CMultiShotDlg::ManageHexGrid()
     m_strNumYholes = "rings";
   else
     m_strNumYholes.Format("by %2d", mActiveParams->numHoles[1]);
+  m_butOmit3x3Corners.SetWindowText(m_bHexGrid ? "Omit center hole of hex pattern" :
+    "Omit corners of 3 by 3 array (cross pattern)");
   UpdateData(false);
 }
 

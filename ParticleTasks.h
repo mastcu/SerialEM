@@ -97,6 +97,7 @@ private:
   float mMSRadiusOnCam[2];        // Radius to peripheral shots in camera coords
   BOOL mMSUseCustomHoles;         // Flag to do custom holes during acquisition
   BOOL mMSNoCornersOf3x3;         // Flag for cross pattern if 3x3 during acquisition
+  BOOL mMSNoHexCenter;            // Flag for no center of hex when acquiring
   double mBaseISX, mBaseISY;      // Starting IS
   double mLastISX, mLastISY;      // Last IS position
   double mBaseBeamTiltX, mBaseBeamTiltY;  // Starting beam tilt

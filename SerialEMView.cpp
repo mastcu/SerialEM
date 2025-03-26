@@ -1591,21 +1591,31 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
         // multi inhole radius
         if (doMultiHole && item->mDraw) {
           size = inHoleStart;
-          ix = numPoints;
+          ix = -1;
+          iy = (size - numPoints) % 3;
 
-          // Limit to 3 rings of circles, account for swapping of a point into the first
-          // spot
-          if (msParams->doHexArray && size - ix > 37) {
-            ACCUM_MIN(size, numPoints + 37);
-            ix++;
-          }
-          for (int pt = ix; pt < inHoleStart; pt++) {
+          // Limit to 3 rings of circles, account for swapping of last point into the
+          // spot closest to center - find one to skip
+          if (msParams->doHexArray && size - numPoints > 36 + iy) {
+            ACCUM_MIN(size, numPoints + 36 + iy);
+            tempX = 0.;
+            for (int pt = numPoints; pt < numPoints + 7; pt++) {
+              tempY = item->mPtX[pt] * item->mPtX[pt] + item->mPtY[pt] * item->mPtY[pt];
+              if (tempY > tempX) {
+                ix = pt;
+                tempX = tempY;
+              }
+            }
+          } 
+          for (int pt = numPoints; pt < inHoleStart; pt++) {
+            if (pt == ix)
+              continue;
             StageToImage(imBuf, item->mPtX[pt] + item->mStageX, 
               item->mPtY[pt] + item->mStageY, ptX, ptY);
             DrawCircle(&cdc, &circlePen, &rect, imBuf->mImage, ptX + delPtX, ptY + delPtY, 
               doInHole ? acquireRadii[1] : acquireRadii[0]);
-            if (pt >= size - 1)
-              pt = inHoleStart - 1;
+            if (pt >= size - 1 && pt < inHoleStart - 1)
+              pt = inHoleStart - 2;
           }
         }
 

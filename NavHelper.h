@@ -24,6 +24,8 @@ class CMGSettingsManagerDlg;
 #define MULTI_FORCE_CUSTOM  0x20
 #define MULTI_NO_3X3_CROSS  0x40
 #define MULTI_DO_CROSS_3X3  0x80
+#define MULTI_NO_HEX_CENTER 0x100
+#define MULTI_DO_HEX_CENTER 0x200
 
 #define REALI2ITEM_JUST_MOVE   0x1
 
@@ -65,6 +67,7 @@ struct MultiShotParams
   int numHoles[2];       // Number of holes in each direction
   int numHexRings;       // NUmber of rings of hex
   BOOL skipCornersOf3x3; // Take cross pattern when it is 3x3
+  BOOL skipHexCenter;    // Drop center hole of hex pattern
   int customMagIndex;    // Mag index at which custom holes defined
   float tiltOfCustomHoles;  // Tilt angle at which custom holes defined
   FloatVec customHoleX;  // For custom holes, list of hole IS relative

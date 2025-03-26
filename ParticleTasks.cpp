@@ -149,6 +149,11 @@ int CParticleTasks::StartMultiShot(int numPeripheral, int doCenter, float spokeR
     mMSNoCornersOf3x3 = true;
   else if (inHoleOrMulti & MULTI_NO_3X3_CROSS)
     mMSNoCornersOf3x3 = false;
+  mMSNoHexCenter = mMSParams->skipHexCenter;
+  if (inHoleOrMulti & MULTI_DO_HEX_CENTER)
+    mMSNoHexCenter = true;
+  else if (inHoleOrMulti & MULTI_NO_HEX_CENTER)
+    mMSNoHexCenter = false;
 
   // Check conditions, first for test runs
   if (testImage && testComa) {
@@ -777,6 +782,7 @@ int CParticleTasks::GetHolePositions(FloatVec &delISX, FloatVec &delISY, IntVec 
   int ring, step, mainDir, sideDir, mainSign, sideSign, origMag, numRings;
   double xCenISX, yCenISX, xCenISY, yCenISY, transISX, transISY;
   BOOL crossPattern = startingMulti ? mMSNoCornersOf3x3 : mMSParams->skipCornersOf3x3;
+  BOOL skipHexCenter = startingMulti ? mMSNoHexCenter : mMSParams->skipHexCenter;
   bool adjustForTilt = false;
   float holeAngle, specX, specY, cosRatio;
   std::vector<double> fromISX, fromISY;
@@ -811,13 +817,15 @@ int CParticleTasks::GetHolePositions(FloatVec &delISX, FloatVec &delISY, IntVec 
     (numXholes > 0 && numYholes == -1))) {
 
     // Hex positions: start at center
-    fromISX.push_back(0.);
-    fromISY.push_back(0.);
-    posIndex.push_back(0);
-    posIndex.push_back(0);
+    if (!skipHexCenter) {
+      fromISX.push_back(0.);
+      fromISY.push_back(0.);
+      posIndex.push_back(0);
+      posIndex.push_back(0);
+    }
     numRings = (numXholes > 0 && numYholes == -1) ? numXholes : mMSParams->numHexRings;
     ring = numRings;
-    numHoles = 3 * ring * (ring + 1) + 1;
+    numHoles = 3 * ring * (ring + 1) + (skipHexCenter ? 0 : 1);
 
     // Loop on rings and steps in rings
     for (ring = 1; ring <= numRings; ring++) {

@@ -222,6 +222,7 @@ CNavHelper::CNavHelper(void)
   mMultiShotParams.numHexRings = 1;
   mMultiShotParams.doHexArray = false;
   mMultiShotParams.skipCornersOf3x3 = false;
+  mMultiShotParams.skipHexCenter = false;
   for (i = 0; i < 3; i++) {
     if (i < 2) {
       mMultiShotParams.holeISXspacing[i] = 1.;

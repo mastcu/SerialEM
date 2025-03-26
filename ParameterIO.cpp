@@ -611,6 +611,9 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
           msParams->holeMagIndex[1] = msParams->holeMagIndex[0];
           msParams->tiltOfHoleArray[1] = msParams->tiltOfHoleArray[0];
         }
+        if (!itemEmpty[11])
+          msParams->skipHexCenter = itemInt[11] != 0;
+
       } else if (NAME_IS("StepAdjustParams")) {
         msParams->stepAdjLDarea = itemInt[1];
         msParams->stepAdjWhichMag = itemInt[2];
@@ -1978,11 +1981,11 @@ void CParameterIO::WriteSettings(CString strFileName)
       msParams->doSecondRing ? 1 : 0, msParams->numShots[1], msParams->spokeRad[1],
       msParams->tiltOfHoleArray[0], msParams->tiltOfCustomHoles, msParams->holeFinderAngle);
     mFile->WriteString(oneState);
-    oneState.Format("MultiHexParams %d %d %f %f %f %f %f %f %d %f\n",
+    oneState.Format("MultiHexParams %d %d %f %f %f %f %f %f %d %f %d\n",
       msParams->doHexArray ? 1 : 0, msParams->numHexRings, msParams->hexISXspacing[0],
       msParams->hexISYspacing[0], msParams->hexISXspacing[1], msParams->hexISYspacing[1],
       msParams->hexISXspacing[2], msParams->hexISYspacing[2], msParams->holeMagIndex[1],
-      msParams->tiltOfHoleArray[1]);
+      msParams->tiltOfHoleArray[1], msParams->skipHexCenter ? 1 : 0);
     mFile->WriteString(oneState);
     oneState.Format("StepAdjustParams %d %d %d %d %d %d %d %d %f %f %d %f\n",
       msParams->stepAdjLDarea, msParams->stepAdjWhichMag, msParams->stepAdjOtherMag,
