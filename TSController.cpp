@@ -808,6 +808,7 @@ int CTSController::StartTiltSeries(BOOL singleStep, int external)
   int error, spot, iDir, probe, numTilts, cenMag, imSize, newBaseZ, i, magToSet = 0;
   CString message, str, bidirStr;
   MontParam *montP = mWinApp->GetMontParam();
+  bool noSubDirs, movable;
 
   mLowDoseMode = mWinApp->LowDoseMode();
   mInInitialChecks = true;
@@ -886,7 +887,7 @@ int CTSController::StartTiltSeries(BOOL singleStep, int external)
 
   // Check for whether frame saving folder is defined: this is fatal even in batch
   if (mCamera->IsConSetSaving(&mCamConSets[i], RECORD_CONSET, mCamParams, false)) {
-    mCamera->SetCameraFrameFolder(mCamParams, str);
+    str = mCamera->GetCameraFrameFolder(mCamParams, noSubDirs, movable);
     if (str.IsEmpty()) {
       AfxMessageBox("No folder is defined for saving frames from the selected camera",
         MB_EXCLAME);
