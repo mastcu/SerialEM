@@ -12947,7 +12947,7 @@ CString CCameraController::MakeFullDMRefName(CameraParameters *camP, const char 
 
 // Returns true if all conditions are set for frame-saving from K2/OneView or permanent 
 // frame-saving from Falcon or DE based on camera and control set.  K2only includes 
-// Oneview taking frames.  This does not work for plugin cameras
+// Oneview taking frames.  This works for plugin cameras too.
 bool CCameraController::IsConSetSaving(const ControlSet *conSet, int setNum,
   CameraParameters *param, bool K2only)
 {
@@ -12964,7 +12964,9 @@ bool CCameraController::IsConSetSaving(const ControlSet *conSet, int setNum,
     mWinApp->mMacroProcessor->GetAlignWholeTSOnly());
 
   return (((K2Type && conSet->doseFrac) ||   // Saving possible for camera type
-           ((falconCanSave || DEcanSave) && !K2only)) &&
+           ((falconCanSave || DEcanSave || 
+             ((!param->pluginName.IsEmpty() || param->TietzType) && 
+              (param->canTakeFrames | FRAMES_CAN_BE_SAVED))) && !K2only)) &&
           (((!DEcanSave && conSet->saveFrames) ||   // Ordinary saving selected
             (DEcanSave && (conSet->saveFrames & DE_SAVE_MASTER))) ||
            (conSet->useFrameAlign > 1 &&            // Or forced saving is called for
