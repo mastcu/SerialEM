@@ -345,6 +345,8 @@ CTSController::CTSController()
   mTSParam.dosymAnchorIfRunToEnd = false;
   mTSParam.dosymMinUniForAnchor = 10;
   mTSParam.dosymSkipBacklash = false;
+  mTSParam.dosymTrackBigReversal = false;
+  mTSParam.dosymBigTiltToTrack = 50;
   mTSParam.dosymStartingISLimit = 1.;
   mTSParam.waitForDrift = false;
   mTSParam.onlyWaitDriftAboveBelow = 0;
@@ -806,6 +808,7 @@ int CTSController::StartTiltSeries(BOOL singleStep, int external)
   int error, spot, iDir, probe, numTilts, cenMag, imSize, newBaseZ, i, magToSet = 0;
   CString message, str, bidirStr;
   MontParam *montP = mWinApp->GetMontParam();
+
   mLowDoseMode = mWinApp->LowDoseMode();
   mInInitialChecks = true;
   mUserPresent = !external;
@@ -878,6 +881,16 @@ int CTSController::StartTiltSeries(BOOL singleStep, int external)
         "order to check exposures?";
       if (AfxMessageBox(message, MB_YESNO | MB_ICONQUESTION) == IDYES)
         mPostponed = true;
+    }
+  }
+
+  // Check for whether frame saving folder is defined: this is fatal even in batch
+  if (mCamera->IsConSetSaving(&mCamConSets[i], RECORD_CONSET, mCamParams, false)) {
+    mCamera->SetCameraFrameFolder(mCamParams, str);
+    if (str.IsEmpty()) {
+      AfxMessageBox("No folder is defined for saving frames from the selected camera",
+        MB_EXCLAME);
+      mPostponed = true;
     }
   }
 
@@ -6643,8 +6656,9 @@ void CTSController::ComputePredictions(double angle)
     // Track if only 2 points, if recent tilt reversal, if manual tracking,
     // if either X or Y last error is bigger
     // than the criterion, or if the standard error as a vector is bigger
-
     mNeedRegularTrack = nUsable == 2 || recentlyReversed || mTSParam.manualTracking ||
+      (mDoingDoseSymmetric && mTSParam.dosymTrackBigReversal && 
+        fabs(angle - mTiltAngles[mTiltIndex - 1]) > mTSParam.dosymBigTiltToTrack) || 
       fabs((double)lastErrorX) > trackCrit || 
       fabs((double)lastErrorY) > trackCrit ||
       sqrt((double)(stdErrorX * stdErrorX + stdErrorY * stdErrorY)) > trackCrit;

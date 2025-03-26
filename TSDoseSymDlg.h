@@ -69,4 +69,8 @@ public:
   BOOL m_bSkipBacklash;
   static FloatVec mIdealAnglesToUse;
   static bool mIgnoreAnglesToUse;
+  BOOL m_bTrackOnBigTilt;
+  int m_iBigTiltToTrack;
+  afx_msg void OnEnKillfocusEditBigTilt();
+  afx_msg void OnCheckTrackBigTilt();
 };

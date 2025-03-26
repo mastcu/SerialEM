@@ -3471,13 +3471,13 @@ BEGIN
     CONTROL         "",IDC_STATIC,"Static",SS_BLACKFRAME | SS_SUNKEN,7,15,169,1
 END
 
-IDD_TSDOSESYM DIALOGEX 0, 0, 227, 163
+IDD_TSDOSESYM DIALOGEX 0, 0, 227, 179
 STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Dose Symmetric Tilt Series Parameters"
 FONT 8, "Microsoft Sans Serif", 400, 0, 0x0
 BEGIN
-    DEFPUSHBUTTON   "OK",IDOK,48,142,40,14
-    PUSHBUTTON      "Cancel",IDCANCEL,131,142,40,14
+    DEFPUSHBUTTON   "OK",IDOK,48,158,40,14
+    PUSHBUTTON      "Cancel",IDCANCEL,131,158,40,14
     LTEXT           "Initial group size (tilts to acquire on each side):",IDC_STATIC,9,10,137,8
     RTEXT           "99",IDC_STAT_GROUP_SIZE,145,10,9,8
     CONTROL         "",IDC_SPIN_GROUP_SIZE,"msctls_updown32",UDS_ARROWKEYS,156,7,10,14
@@ -3494,18 +3494,22 @@ BEGIN
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,60,114,10
     EDITTEXT        IDC_EDIT_RUN_TO_END,122,58,30,14,ES_AUTOHSCROLL
     LTEXT           "deg from initial angle",IDC_STAT_RUN_TO_END,154,61,66,8
-    LTEXT           "30 tilt reversals involving 150 deg total tilt",IDC_STAT_SUMMARY,9,131,158,8
-    PUSHBUTTON      "?",IDC_BUTHELP,209,144,11,10
+    LTEXT           "30 tilt reversals involving 150 deg total tilt",IDC_STAT_SUMMARY,9,146,158,8
+    PUSHBUTTON      "?",IDC_BUTHELP,209,161,11,10
     CONTROL         "Use View anchor if first unidirectional part has >=",IDC_CHECK_USE_ANCHOR,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,18,73,154,10
     EDITTEXT        IDC_EDIT_INC_INTERVAL,134,39,20,14,ES_AUTOHSCROLL
     LTEXT           "tilts",IDC_STAT_ANCHOR_TILTS,195,74,12,8
     CONTROL         "Reorder file synchronously when finished (blocking other operations)",IDC_CHECK_REORDER_FILE,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,100,213,10
-    LTEXT           "Group",IDC_STAT_ANGLE_SUMMARY,9,113,210,17
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,115,213,10
+    LTEXT           "Group",IDC_STAT_ANGLE_SUMMARY,9,128,210,17
     LTEXT           "every",IDC_STATEVERY,114,42,18,8
     CONTROL         "Skip backlash tilt on second side of series",IDC_CHECK_SKIP_BACKLASH,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,86,141,10
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,101,141,10
+    CONTROL         "Track when tilting by more than",IDC_CHECK_TRACK_BIG_TILT,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,87,106,10
+    EDITTEXT        IDC_EDIT_BIG_TILT,116,85,30,14,ES_AUTOHSCROLL
+    LTEXT           "degrees",IDC_STAT_BIGTILT_DEG,147,88,30,8
 END
 
 IDD_DRIFTWAITSETUP DIALOGEX 0, 0, 162, 300
@@ -4865,7 +4869,7 @@ BEGIN
         LEFTMARGIN, 7
         RIGHTMARGIN, 220
         TOPMARGIN, 7
-        BOTTOMMARGIN, 156
+        BOTTOMMARGIN, 172
     END
 
     IDD_DRIFTWAITSETUP, DIALOG
@@ -5340,6 +5344,11 @@ BEGIN
 END
 
 IDD_CTF_ACQ_PARAMS AFX_DIALOG_LAYOUT
+BEGIN
+    0
+END
+
+IDD_TSDOSESYM AFX_DIALOG_LAYOUT
 BEGIN
     0
 END
@@ -6478,8 +6487,29 @@ STRINGTABLE
 BEGIN
     IDC_RBIN_TO_SIZE        "Reduce images for correlation to be close to the specified size"
     IDC_SPIN_BIN_TO         "Select reduction amount or target size for images being correlated"
+    IDC_CHECKCTF_DRIFT      "Use the drift settling time here instead of the time in the Record parameters"
+    IDC_EDITCTF_DRIFT       "Enter the drift settling time to use in images for CTF fitting"
+    IDC_CHECK_CTF_BINNING   "Use the binning here instead of the binning in the Record parameters"
+    IDC_EDIT_CTF_BINNING    "Enter the binning to use in images for CTF fitting"
+    IDC_CHECK_CTF_FULL_FIELD 
+                            "Take images with full camera area even if a subset is set in Record parameters"
+END
+
+STRINGTABLE
+BEGIN
+    IDC_CHECKCTF_ALIGN_FRAMES 
+                            "Acquire and align frames with Framealign if possible; otherwise take no frames"
+    IDC_EDIT_CTF_NUM_FRAMES "Enter the number of frames to acquire"
+    IDC_EDIT_CTF_MIN_FOCUS  "Least negative defocus value allowed when correcting astigmatism"
+    IDC_EDIT_CTF_MIN_ADD    "Amount to increase underfocus to account for beam-tilted images having less"
+    IDC_CHECK_USE_ALI_SET   "Use a different set for frame alignment than the one set in Record parameters"
+    IDC_EDIT_ALIGN_SET      "Enter the number of the frame alignment parameter set to use (numbered from 1)"
     IDC_NA_RUN_SCRIPT_AT_START 
                             "Run a script before acquiring at the first item"
+    IDC_CHECK_USE_FOCUS_IN_LD 
+                            "If initial defocus is needed, use Focus area when in Low Dose mode"
+    IDC_CHECK_CTF_EXPOSURE  "Use the exposure time here instead of the time in the Record parameters"
+    IDC_EDIT_CTF_EXPOSURE   "Enter the exposure time to use in images for CTF fitting"
 END
 
 STRINGTABLE
@@ -8103,23 +8133,9 @@ BEGIN
     ID_SCRIPT_LISTFKEYMAPPINGS "Print list of function key mappings to log"
     ID_BEAMSPOT_PARALLELILLUMINATION 
                             "Save intensity, spot size, and probe/alpha as parallel illumination conditions"
-    IDC_CHECK_USE_FOCUS_IN_LD
-                            "If initial defocus is needed, use Focus area when in Low Dose mode"
-    IDC_CHECK_CTF_EXPOSURE  "Use the exposure time here instead of the time in the Record parameters"
-    IDC_EDIT_CTF_EXPOSURE   "Enter the exposure time to use in images for CTF fitting"
-    IDC_CHECKCTF_DRIFT      "Use the drift settling time here instead of the time in the Record parameters"
-    IDC_EDITCTF_DRIFT       "Enter the drift settling time to use in images for CTF fitting"
-    IDC_CHECK_CTF_BINNING   "Use the binning here instead of the binning in the Record parameters"
-    IDC_EDIT_CTF_BINNING    "Enter the binning to use in images for CTF fitting"
-    IDC_CHECK_CTF_FULL_FIELD
-                            "Take images with full camera area even if a subset is set in Record parameters"
-    IDC_CHECKCTF_ALIGN_FRAMES
-                            "Acquire and align frames with Framealign if possible; otherwise take no frames"
-    IDC_EDIT_CTF_NUM_FRAMES "Enter the number of frames to acquire"
-    IDC_EDIT_CTF_MIN_FOCUS  "Least negative defocus value allowed when correcting astigmatism"
-    IDC_EDIT_CTF_MIN_ADD    "Amount to increase underfocus to account for beam-tilted images having less"
-    IDC_CHECK_USE_ALI_SET   "Use a different set for frame alignment than the one set in Record parameters"
-    IDC_EDIT_ALIGN_SET      "Enter the number of the frame alignment parameter set to use (numbered from 1)"
+    IDC_CHECK_TRACK_BIG_TILT
+                            "Always track when tilt from other side exceeds a certain number of degrees"
+    IDC_EDIT_BIG_TILT       "Change in tilt angle above which to track every time"
 END
 
 #endif    // English (United States) resources

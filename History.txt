@@ -3,6 +3,12 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+3/25/25: Added option to track in a dose-symmetric series when the tilt from
+the other side exceed a specified amount.
+
+3/25/25: Added check for whether frame-saving folder is defined at start of
+tilt series.
+
 3/25/25: Fixed unneeded tracking on every tilt on backlashed side of
 dose-symmetric series (In 4.1).
 

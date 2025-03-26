@@ -1499,6 +1499,7 @@
 #define IDC_EDIT_RUN_TO_END             2500
 #define IDC_STAT_RUN_TO_END             2501
 #define IDC_STAT_SUMMARY                2502
+#define IDC_STAT_BIGTILT_DEG            2503
 #define IDC_USE_DOSE_SYM                2504
 #define IDC_BUT_SETUP_DOSE_SYM          2505
 #define IDC_STAT_ANCHOR_TILTS           2506
@@ -2547,6 +2548,8 @@
 #define IDC_CHECK_USE_FOCUS_IN_LD       3578
 #define IDC_CHECK_CTF_EXPOSURE          3579
 #define IDC_EDIT_CTF_EXPOSURE           3580
+#define IDC_CHECK_TRACK_BIG_TILT        3581
+#define IDC_EDIT_BIG_TILT               3582
 #define ID_NEW_IMAGE                    32771
 #define IDM_FILE_SAVEOTHER              32772
 #define IDM_FILE_READ                   32773
@@ -3130,9 +3133,9 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        293
+#define _APS_NEXT_RESOURCE_VALUE        294
 #define _APS_NEXT_COMMAND_VALUE         33550
-#define _APS_NEXT_CONTROL_VALUE         3581
+#define _APS_NEXT_CONTROL_VALUE         3583
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif

@@ -33,6 +33,8 @@ CTSDoseSymDlg::CTSDoseSymDlg(CWnd* pParent /*=NULL*/)
   , m_bReorderFile(FALSE)
   , m_strAngleSummary(_T(""))
   , m_bSkipBacklash(FALSE)
+  , m_bTrackOnBigTilt(FALSE)
+  , m_iBigTiltToTrack(0)
 {
 
 }
@@ -75,6 +77,8 @@ void CTSDoseSymDlg::DoDataExchange(CDataExchange* pDX)
   DDX_Text(pDX, IDC_STAT_ANGLE_SUMMARY, m_strAngleSummary);
   DDX_Control(pDX, IDC_STATEVERY, m_statEvery);
   DDX_Check(pDX, IDC_CHECK_SKIP_BACKLASH, m_bSkipBacklash);
+  DDX_Check(pDX, IDC_CHECK_TRACK_BIG_TILT, m_bTrackOnBigTilt);
+  DDX_Text(pDX, IDC_EDIT_BIG_TILT, m_iBigTiltToTrack);
 }
 
 
@@ -88,6 +92,8 @@ BEGIN_MESSAGE_MAP(CTSDoseSymDlg, CBaseDlg)
   ON_EN_KILLFOCUS(IDC_EDIT_RUN_TO_END, OnEnKillfocusEditRunToEnd)
   ON_BN_CLICKED(IDC_CHECK_USE_ANCHOR, OnCheckUseAnchor)
   ON_EN_KILLFOCUS(IDC_EDIT_INC_INTERVAL, OnEnKillfocusEditIncInterval)
+  ON_EN_KILLFOCUS(IDC_EDIT_BIG_TILT, OnEnKillfocusEditBigTilt)
+  ON_BN_CLICKED(IDC_CHECK_TRACK_BIG_TILT, OnCheckTrackBigTilt)
 END_MESSAGE_MAP()
 
 
@@ -109,6 +115,8 @@ BOOL CTSDoseSymDlg::OnInitDialog()
   m_strMinForAnchor.Format("%d", mTSparam.dosymMinUniForAnchor);
   m_bSkipBacklash = mTSparam.dosymSkipBacklash;
   m_bReorderFile = mWinApp->mTSController->GetReorderDoseSymFile();
+  m_bTrackOnBigTilt = mTSparam.dosymTrackBigReversal;
+  m_iBigTiltToTrack = mTSparam.dosymBigTiltToTrack;
   m_sbcGroupSize.SetRange(0, 1000);
   m_sbcGroupSize.SetPos(500);
   m_sbcIncAmount.SetRange(0, 1000);
@@ -211,6 +219,19 @@ void CTSDoseSymDlg::OnEnKillfocusEditIncInterval()
   ManageSummary();
 }
 
+void CTSDoseSymDlg::OnCheckTrackBigTilt()
+{
+  UpdateData(true);
+  mTSparam.dosymTrackBigReversal = m_bTrackOnBigTilt;
+  ManageEnables();
+}
+
+void CTSDoseSymDlg::OnEnKillfocusEditBigTilt()
+{
+  UpdateData(true);
+  mTSparam.dosymBigTiltToTrack = m_iBigTiltToTrack;
+}
+
 // Enable items depending on what is checked
 void CTSDoseSymDlg::ManageEnables()
 {
@@ -226,6 +247,8 @@ void CTSDoseSymDlg::ManageEnables()
   m_butUseAnchor.EnableWindow(m_bRunToEnd);
   m_editIncInterval.EnableWindow(m_bIncGroup);
   m_statAnchorTilts.EnableWindow(m_bRunToEnd);
+  EnableDlgItem(IDC_EDIT_BIG_TILT, m_bTrackOnBigTilt);
+  EnableDlgItem(IDC_STAT_BIGTILT_DEG, m_bTrackOnBigTilt);
 }
 
 // Compose the summary lines
