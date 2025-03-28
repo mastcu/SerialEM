@@ -110,6 +110,7 @@ static int sRestoreStageXYdelay;
 static int sSimpOrigEndTimeout = 300;
 static int sSimpOrigStartTimeout = 15;
 static int sSimpleOriginIndex = -1;
+static int sRetryStageMove = 0;
 
 static JeolStateData *sJeolSD;
 
@@ -2614,7 +2615,7 @@ UINT CEMscope::StageMoveProc(LPVOID pParam)
   CoInitializeEx(NULL, COINIT_MULTITHREADED);
   int retval = 0;
   double xyLimit = 0.95e-3 * (JEOLscope ? 1.2 : 1.0);
-  CString str, toStr;
+  CString toStr;
   stData.info = info;
 
   // Checking this in the main thread hangs the interface, so wait until we get to the
@@ -2637,19 +2638,7 @@ UINT CEMscope::StageMoveProc(LPVOID pParam)
       StageMoveKernel(&stData, false, false, destX, destY, destZ, destAlpha);
     }
     catch (_com_error E) {
-      toStr = "moving stage to";
-      if (info->axisBits & (axisX | axisY)) {
-        str.Format(" X %.2f  Y %.2f", destX * 1.e6, destY * 1.e6);
-        toStr += str;
-      }
-      if (info->axisBits & axisZ) {
-        str.Format("  Z %.2f", destZ * 1.e6);
-        toStr += str;
-      }
-      if (info->axisBits & axisA) {
-        str.Format("  tilt %.1f", destAlpha);
-        toStr += str;
-      }
+      StageMovingToMessage(destX, destY, destZ, destAlpha, info->axisBits, toStr);
       if (fabs(destX) > xyLimit || fabs(destY) > xyLimit) {
         SEMReportCOMError(E, _T(toStr + CString(".\r\n\r\n"
           "You are very close to the end of the stage range")), &sThreadErrString);
@@ -2667,6 +2656,42 @@ UINT CEMscope::StageMoveProc(LPVOID pParam)
   return retval;
 }
 
+// Common function for getting the string for the stage move
+void CEMscope::StageMovingToMessage(double destX, double destY, double destZ, 
+  double destAlpha, int axisBits, CString &toStr)
+{
+  CString str;
+  toStr = "moving stage to";
+  if (axisBits & (axisX | axisY)) {
+    str.Format(" X %.2f  Y %.2f", destX * 1.e6, destY * 1.e6);
+    toStr += str;
+  }
+  if (axisBits & axisZ) {
+    str.Format("  Z %.2f", destZ * 1.e6);
+    toStr += str;
+  }
+  if (axisBits & axisA) {
+    str.Format("  tilt %.1f", destAlpha);
+    toStr += str;
+  }
+}
+
+// Macro to do a call in a retry loop
+#define RETRY_LOOP(call) \
+  for (retry = (sRetryStageMove ? 0 : 1); retry < 2; retry++) {    \
+    try {     \
+      info->plugFuncs->call;    \
+      break;     \
+    }     \
+    catch (_com_error E) {    \
+      if (retry > 0)     \
+        throw E;     \
+      StageMovingToMessage(destX, destY, destZ, destAlpha, info->axisBits, str);    \
+      SEMReportCOMError(E, str, &errStr, true);     \
+      SEMTrace('0', "WARNING: %s\r\nRetrying...", (LPCTSTR)errStr);     \
+    }     \
+  }
+
 // Underlying stage move procedure, callable in try block from scope or blanker threads
 void CEMscope::StageMoveKernel(StageThreadData *std, BOOL fromBlanker, BOOL async, 
   double &destX, double &destY, double &destZ, double &destAlpha)
@@ -2675,7 +2700,8 @@ void CEMscope::StageMoveKernel(StageThreadData *std, BOOL fromBlanker, BOOL asyn
   bool xyBacklash = info->doBacklash && (info->axisBits & axisXY);
   double xpos = 0., ypos = 0., zpos = 0., alpha, timeout, beta;
   double startTime = GetTickCount();
-  int step, back, relax, restore, axisBitsUse;
+  int step, back, relax, restore, axisBitsUse, retry;
+  CString str, errStr;
   destX = 0.;
   destY = 0.;
   destZ = 0.;
@@ -2736,7 +2762,7 @@ void CEMscope::StageMoveKernel(StageThreadData *std, BOOL fromBlanker, BOOL asyn
           if (info->speed > sStageErrSpeedThresh || SEMTickInterval(startTime) <
             1000. * sStageErrTimeThresh) {
             SEMTrace('S', "Stage error occurred at %.1f sec with speed factor %.3f",
-              SEMTickInterval(startTime) / 1000., std->info->speed);
+              SEMTickInterval(startTime) / 1000., info->speed);
             throw E;
           }
           timeout = 1000. * sStageErrWaitFactor / info->speed;
@@ -2755,22 +2781,21 @@ void CEMscope::StageMoveKernel(StageThreadData *std, BOOL fromBlanker, BOOL asyn
           }
         }
       } else {
-        info->plugFuncs->SetStagePositionExtra(destX, destY, destZ, alpha * DTOR,
-          beta * DTOR, 1., axisBitsUse);
+        RETRY_LOOP(SetStagePositionExtra(destX, destY, destZ, alpha * DTOR,
+          beta * DTOR, 1., axisBitsUse));
       }
 
     } else {
-      std->info->plugFuncs->SetStagePosition(destX, destY, destZ, alpha * DTOR,
-        axisBitsUse);
+      RETRY_LOOP(SetStagePosition(destX, destY, destZ, alpha * DTOR, axisBitsUse));
     }
     if (async && (JEOLscope || FEIscope))
       return;
     if (HitachiScope || JEOLscope)
       WaitForStageDone(info, fromBlanker ? "BlankerProc" : "StageMoveProc");         
-    mTiltAngle = std->info->plugFuncs->GetTiltAngle() / DTOR;
+    mTiltAngle = info->plugFuncs->GetTiltAngle() / DTOR;
     ManageTiltReversalVars();
     if ((step == 2 && !info->doRestoreXY) || (restore && step == 3)) {
-      std->info->plugFuncs->GetStagePosition(&xpos, &ypos, &zpos);
+      info->plugFuncs->GetStagePosition(&xpos, &ypos, &zpos);
       info->x = xpos * 1.e6;
       info->y = ypos * 1.e6;
     }
@@ -8979,6 +9004,16 @@ float CEMscope::GetMaxJeolImageShift(int magInd)
   // Retrun minimum of the two shifts
   return (float)B3DMIN(mShiftManager->RadialShiftOnSpecimen(maxISX, 0., magInd),
     mShiftManager->RadialShiftOnSpecimen(0., maxISY, magInd));
+}
+
+void CEMscope::SetRetryStageMove(int inVal)
+{
+  sRetryStageMove = inVal;
+}
+
+int CEMscope::GetRetryStageMove()
+{
+  return sRetryStageMove;
 }
 
 // Gets and sets for the properties

@@ -456,6 +456,8 @@ public:
   SetMember(bool, DoNextFEGFlashHigh);
   GetMember(int, AdvancedScriptVersion);
   GetSetMember(float, CurDefocusOffset);
+  void SetRetryStageMove(int inVal);
+  int GetRetryStageMove();
   void SetAdvancedScriptVersion(int inVal) { mAdvancedScriptVersion = B3DMAX(mAdvancedScriptVersion, inVal); };
 
   void SetJeolRelaxationFlags(int inVal);
@@ -732,6 +734,8 @@ private:
 
  private:
   static UINT StageMoveProc(LPVOID pParam);
+  static void StageMovingToMessage(double destX, double destY, double destZ, double destAlpha,
+    int axisBits, CString &str);
   static UINT ScreenMoveProc(LPVOID pParam);
   static UINT ApertureMoveProc(LPVOID pParam);
   static UINT LongOperationProc(LPVOID pParam);
