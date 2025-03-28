@@ -748,7 +748,7 @@ int CParticleTasks::StartOneShotOfMulti(void)
     mRecConSet->alignFrames = 0;
   mMSImageReturned = false;
   if (mMSTestRun & MULTI_TEST_COMA) {
-    mWinApp->mAutoTuning->CtfBasedAstigmatismComa(1, false, 1, true, false);
+    mWinApp->mAutoTuning->CtfBasedAstigmatismComa(1, false, 1, 1, false);
   } else if (mMSTestRun && mWinApp->Montaging()) {
     mWinApp->mMontageController->StartMontage(MONT_NOT_TRIAL, false);
   } else if (mMSDoStartMacro) {

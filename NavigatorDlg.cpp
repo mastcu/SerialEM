@@ -10829,7 +10829,7 @@ void CNavigatorDlg::AcquireNextTask(int param)
   case NAACT_COMA_FREE:
     SEMTrace('n', "Doing %s", (LPCTSTR)mAcqActions[mAcqSteps[mAcqStepIndex]].name);
     stopErr = mWinApp->mAutoTuning->CtfBasedAstigmatismComa(
-      mWinApp->mAutoTuning->GetCtfDoFullArray() ? 2 : 1, false, 0, false,
+      mWinApp->mAutoTuning->GetCtfDoFullArray() ? 2 : 1, false, 0, 0,
       mAcqParm->noMBoxOnError);
     break;
 
@@ -10839,7 +10839,7 @@ void CNavigatorDlg::AcquireNextTask(int param)
     if (mAcqParm->astigByBTID)
       stopErr = mWinApp->mAutoTuning->FixAstigmatism(true);
     else
-      stopErr = mWinApp->mAutoTuning->CtfBasedAstigmatismComa(0, false, 0, false,
+      stopErr = mWinApp->mAutoTuning->CtfBasedAstigmatismComa(0, false, 0, 0,
         mAcqParm->noMBoxOnError);
     break;
 
@@ -13002,7 +13002,8 @@ void CNavigatorDlg::UpdateHiding()
   int IDsToHide[] = {IDC_NEW_MAP, IDC_BUT_DUAL_MAP, IDC_CHECKCORNER, IDC_CHECKROTATE,
     IDC_CHECK_DUALMAP, IDC_DRAW_LABELS, IDC_DRAW_NONE, IDC_DRAW_ALL_REG, 
     IDC_STAT_NAV_DRAW, IDC_STAT_NAV_SET, IDC_BUT_NAV_FILEPROPS, IDC_BUT_NAV_STATE,
-    IDC_BUT_NAV_TSPARAMS, IDC_BUT_NAV_FILENAME, IDC_BUT_NAV_FOCUS_POS};
+    IDC_BUT_NAV_TSPARAMS, IDC_BUT_NAV_FILENAME, IDC_BUT_NAV_FOCUS_POS, IDC_SPIN_REGPT_NUM,
+    IDC_CHECK_REGPOINT};
   int numHide = sizeof(IDsToHide) / sizeof(int);
   for (int ind = 0; ind < numHide; ind++)
     ShowDlgItem(IDsToHide[ind], !mWinApp->IsIDinHideSet(IDsToHide[ind]));

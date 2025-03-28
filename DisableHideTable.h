@@ -178,7 +178,9 @@ static DisableHideItem sDisableHideList[] =
   {"Navigator - TS params", 2, 0, IDC_BUT_NAV_TSPARAMS},
   {"Navigator - Filename", 2, 0, IDC_BUT_NAV_FILENAME},
   {"Navigator - Focus pos", 2, 0, IDC_BUT_NAV_FOCUS_POS},
-  // Frame File Options Dialog
+  {"Navigator - Registration point", 2, 0, IDC_CHECK_REGPOINT},
+  {"Navigator - Reg point spinner", 2, 0, IDC_SPIN_REGPT_NUM},
+    // Frame File Options Dialog
   {"FrameFileOpts - Save MRC", 2, 0, IDC_SAVE_MRC},
   {"FrameFileOpts - Use .mrcs", 2, 0, IDC_USE_EXTENSION_MRCS},
   {"FrameFileOpts - LZW compressed", 2, 0, IDC_COMPRESSED_TIFF},

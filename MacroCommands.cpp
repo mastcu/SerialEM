@@ -3184,7 +3184,7 @@ int CMacCmd::CBAstigComa(void)
 {
   B3DCLAMP(mItemInt[1], 0, 2);
   if (mWinApp->mAutoTuning->CtfBasedAstigmatismComa(mItemInt[1], mItemInt[2] != 0,
-    mItemInt[3], mItemInt[4] > 0, mItemInt[5] > 0)) {
+    mItemInt[3], mItemInt[4] > 0 ? 1 : 0, mItemInt[5] > 0)) {
     AbortMacro();
     return 1;
   }
@@ -3206,7 +3206,7 @@ int CMacCmd::FixAstigmatismByCTF(void)
   } else
     truth = mItemInt[3] > 0;
   if (mWinApp->mAutoTuning->CtfBasedAstigmatismComa(index, false,
-    (mItemInt[1] > 0) ? 1 : 0, mItemInt[2] > 0, truth)){
+    (mItemInt[1] > 0) ? 1 : 0, mItemInt[2] > 0 ? 1 : 0, truth)){
     AbortMacro();
     return 1;
   }

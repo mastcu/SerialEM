@@ -1047,7 +1047,7 @@ void CAutoTuning::ZemlinCleanup(int error)
 // The external call to start the operation for calibration or measurement of the given
 // type, actionType = 0 to apply, 1 to measure, 2/3 to measure from existing images
 int CAutoTuning::CtfBasedAstigmatismComa(int comaFree, bool calibrate, int actionType,
-  bool leaveIS, BOOL noMessageBox)
+  int leaveIS, BOOL noMessageBox)
 {
   double curDefocus, tryFocus, stageX, stageY, stageZ;
   int maxMinutes = 5;
@@ -1172,7 +1172,7 @@ int CAutoTuning::CtfBasedAstigmatismComa(int comaFree, bool calibrate, int actio
     fabs(stageX - mLastStageX) < maxStageFocusChange && fabs(stageY - mLastStageY) < 
     maxStageFocusChange && fabs(stageZ - mLastStageZ) < maxStageFocusChange && 
     fabs(curDefocus - mSavedDefocus) < maxStageFocusChange && mCtfCal.magInd == mMagIndex
-    && !needAreaChange && 
+    && !needAreaChange && (!leaveIS || leaveIS > 1) &&
     SEMTickInterval(mScope->GetInternalMagTime()) > minMagChangeInterval &&
     SEMTickInterval(mScope->GetUpdateSawMagTime()) > minMagChangeInterval;
   if (mSkipMeasuringFocus)
@@ -1411,6 +1411,13 @@ void CAutoTuning::CtfBasedNextTask(int tparm)
       }
     }
 
+    if (usePlotter && !resultsArray[4]) {
+      str = "Ctfplotter did not compute a CCC because it fit to too few CTF zeros, so\r\n"
+        "the fitting may be unreliable.  You may need more defocus or stronger signal.";
+      ErrorInCtfBased(str, true);
+      return;
+    }
+
     // reality check on fit to centered image
     negMicrons = usePlotter ? plotterDef : -(resultsArray[0] + resultsArray[1]) / 20000.f;
     if (!mOperationInd) {
@@ -1466,12 +1473,15 @@ void CAutoTuning::CtfBasedNextTask(int tparm)
       ErrorInCtfBased(str + suggest, true);
       return;
     }
-    if (fabs(negMicrons - mCenteredDefocus) > B3DMAX(1., -0.33 * mCenteredDefocus)) {
+    if (!usePlotter)
+      astig = fabs(resultsArray[0] - resultsArray[1]) / 10000.f;
+    if (B3DMIN(fabs(negMicrons - mCenteredDefocus), 
+      fabs(negMicrons - astig / 2. - mCenteredDefocus)) > 
+      B3DMAX(1., -0.33 * mCenteredDefocus)) {
       str.Format("The mean defocus from this fit, %.2f um, is\r\n"
         "%.2f from the defocus in the initial fit, the fit may be unreliable",
         negMicrons, fabs(negMicrons - mCenteredDefocus));
-      if (B3DCHOICE(usePlotter, astig, fabs(resultsArray[0] - resultsArray[1]) / 10000.) >
-        1.0)
+      if (astig > 1.0)
         str += "\r\n\r\nIf the fit seems good, try a smaller beam tilt to get closer to"
         " coma-free; after it is close you maybe able to raise the beam tilt again";
       ErrorInCtfBased(str, true);
@@ -1746,15 +1756,31 @@ void CAutoTuning::CtfBasedNextTask(int tparm)
   mWinApp->AddIdleTask(CCameraController::TaskCameraBusy, TASK_CTF_BASED, 0, 0);
 }
 
+// Common function for error processing before stopping
 void CAutoTuning::ErrorInCtfBased(const char *mess, bool tryFallover)
 {
-  if (!mDoingCTFfallover && tryFallover) {
+  if (!mDoingCTFfallover && tryFallover && mCtfActionType / 2 == 0) {
+
+    // If conditions are met, try fallback to other program - reset the index to -1 to 
+    // go through everything after getting focus, and reset beam tilt/ astig to the 
+    // initial states
     mDoingCTFfallover = true;
-    mOperationInd = 0;
-    PrintfToLog("WARNING: %s", mess);
-    mWinApp->SetNextLogColorStyle(WARNING_COLOR_IND, 1);
-    PrintfToLog("Starting over with Ctf%s",
+    mOperationInd = -1;
+    mSkipMeasuringFocus = true;
+    PrintfToLog("WARNING: %s\r\nStarting over with Ctf%s", mess,
       mWinApp->mProcessImage->GetTuneUseCtfplotter() ? "find" : "plotter");
+    if (mCtfComaFree) {
+      BacklashedBeamTilt(mBaseBeamTiltX, mBaseBeamTiltY, true);
+      mShiftManager->SetGeneralTimeOut(GetTickCount(), mPostBeamTiltDelay);
+    } else if (mCtfCalibrating) {
+      if (TestAndSetStigmator(mSavedAstigX + mAstigBacklash,
+        mSavedAstigY + mAstigBacklash, "The starting stigmator value minus backlash"))
+        return;
+      Sleep(mBacklashDelay);
+      if (TestAndSetStigmator(mSavedAstigX, mSavedAstigY, "The starting stigmator value"))
+        return;
+      mShiftManager->SetGeneralTimeOut(GetTickCount(), mPostAstigDelay);
+    }
     mWinApp->AddIdleTask(CCameraController::TaskCameraBusy, TASK_CTF_BASED, 0, 0);
     return;
   }
@@ -1964,7 +1990,7 @@ int CAutoTuning::CalibrateComaVsImageShift(float extent, int rotation, int useFu
   mCVISfullArrayToUse = useFullArray;
   mComaVsISindex = 0;
   mLastCtfBasedFailed = false;
-  mScope->GetBeamTilt(mBaseBeamTiltX, mBaseBeamTiltY);
+  mScope->GetBeamTilt(mCvsISbaseBTX, mCvsISbaseBTY);
   mWinApp->UpdateBufferWindows();
   ComaVsISNextTask(0);
   return 0;
@@ -2001,7 +2027,7 @@ void CAutoTuning::ComaVsISNextTask(int param)
     } else {
       mComaVsISXAstigNeeded[posIndex] = mLastXStigNeeded;
       mComaVsISYAstigNeeded[posIndex] = mLastYStigNeeded;
-      BacklashedBeamTilt(mBaseBeamTiltX, mBaseBeamTiltY, true);
+      BacklashedBeamTilt(mCvsISbaseBTX, mCvsISbaseBTY, true);
     }
   }
 
@@ -2013,8 +2039,8 @@ void CAutoTuning::ComaVsISNextTask(int param)
     // On even indexes, go to the next image shift
     if (index % 2) {
       if (!skipBT)
-        BacklashedBeamTilt(mBaseBeamTiltX + mComaVsISXTiltNeeded[posIndex],
-          mBaseBeamTiltY + mComaVsISYTiltNeeded[posIndex], true);
+        BacklashedBeamTilt(mCvsISbaseBTX + mComaVsISXTiltNeeded[posIndex],
+          mCvsISbaseBTY + mComaVsISYTiltNeeded[posIndex], true);
     } else {
       GetComaVsISVector(magInd, mCVISextentToUse, mCVISrotationToUse, posIndex,
         mComaVsISAppliedISX[posIndex], mComaVsISAppliedISY[posIndex]);
@@ -2035,7 +2061,8 @@ void CAutoTuning::ComaVsISNextTask(int param)
     mComaVsISindex++;
     if (index % 2 || !skipBT) {
       mWinApp->AddIdleTask(TASK_CAL_COMA_VS_IS, 0, 0);
-      CtfBasedAstigmatismComa(useFullFac * ((index + 1) % 2), false, 1, true, false);
+      CtfBasedAstigmatismComa(useFullFac * ((index + 1) % 2), false,
+        1, (index % 2 && !skipBT) ? 2 : 1, false);
     } else {
       mLastXTiltNeeded = mLastYTiltNeeded = 0.;
       ComaVsISNextTask(0);
@@ -2094,12 +2121,13 @@ void CAutoTuning::ComaVsISCleanup(int error)
   mWinApp->ErrorOccurred(1);
 }
 
-// Stop function, restore values
+// Stop function, restore values, force focusing on next run
 void CAutoTuning::StopComaVsISCal(void)
 {
   mComaVsISindex = -1;
   mScope->SetImageShift(0., 0.);
-  mScope->SetBeamTilt(mBaseBeamTiltX, mBaseBeamTiltY);
+  mScope->SetBeamTilt(mCvsISbaseBTX, mCvsISbaseBTY);
+  mGotFocusMinuteStamp = 0;
   mWinApp->UpdateBufferWindows();
 }
 

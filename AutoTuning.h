@@ -169,6 +169,7 @@ private:
   short *mSpectrum;
   int mTableauSize;
   double mBaseBeamTiltX, mBaseBeamTiltY;
+  double mCvsISbaseBTX, mCvsISbaseBTY;
   int mComaActionType;
   int mInitialComaIters;
   int mMaxComaIters;
@@ -273,7 +274,7 @@ public:
   float DefocusFromCtfFit(float * fitValues, float angle);
   float DefocusDiffFromTwoCtfFits(float * fitValues, int index1, int index2, float angle);
   void AstigCoefficientsFromCtfFits(float * fitValues, float angle, float astig,  float &xCoeff, float &yCoeff);
-  int CtfBasedAstigmatismComa(int comaFree, bool calibrate, int actionType, bool leaveIS, BOOL noMessageBox);
+  int CtfBasedAstigmatismComa(int comaFree, bool calibrate, int actionType, int leaveIS, BOOL noMessageBox);
   void SetRecordConSetForCTF();
   void CtfBasedNextTask(int tparm);
   void ErrorInCtfBased(const char *mess, bool tryFallover);
