@@ -16,7 +16,7 @@ CMailer::CMailer(void)
   mServer = "";
   mPort = 0;
   mWinApp = (CSerialEMApp *)AfxGetApp();
-
+  mConnectTimeout = 7;
 }
 
 CMailer::~CMailer(void)
@@ -73,8 +73,12 @@ bool CMailer::SendMail(CString subject, CString message)
   CString report, fromAddress, sendTo = mSendTo;
   char *username;
   bool acceptedForDelivery = false;
-  SOCKET hServer; 
+  fd_set write, err;
+  SOCKET hServer;
   char szBuffer[4096], szMsgLine[1024]; 
+  TIMEVAL timeout;
+  u_long iMode = 1;
+  int retVal;
 
   // Just return silently if not initialized
   if (!mInitialized)
@@ -115,13 +119,36 @@ bool CMailer::SendMail(CString subject, CString message)
     return false;
   }
 
-  // Connect the Socket.
-  if(connect(hServer, (PSOCKADDR) &mSockAddr, sizeof(mSockAddr))) {
+  // Set the socket nonblocking and start connecting the Socket.
+  ioctlsocket(hServer, FIONBIO, &iMode);
+  retVal = connect(hServer, (PSOCKADDR)&mSockAddr, sizeof(mSockAddr));
+
+  // Check for the expected return from a non-blocking connect attempt
+  if (retVal != 0 && (retVal != SOCKET_ERROR ||  WSAGetLastError() != WSAEWOULDBLOCK) ) {
     mWinApp->AppendToLog("Mailer: Error connecting to Server socket",
       LOG_OPEN_IF_CLOSED);
     return false;
   }
 
+  // Restore to blocking mode
+  iMode = 0;
+  ioctlsocket(hServer, FIONBIO, &iMode);
+
+  // Check for write connection to socket with gievn timeout
+  FD_ZERO(&write);
+  FD_ZERO(&err);
+  FD_SET(hServer, &write);
+  FD_SET(hServer, &err);
+  timeout.tv_sec = mConnectTimeout;
+  timeout.tv_usec = 0;
+
+  select(0, NULL, &write, &err, &timeout);
+  if (!FD_ISSET(hServer, &write)) {
+    report.Format("Mailer: Failed to connect to Server socket within %d seconds",
+      mConnectTimeout);
+    mWinApp->AppendToLog(report, LOG_OPEN_IF_CLOSED);
+    return false;
+  }
 
   try {
 

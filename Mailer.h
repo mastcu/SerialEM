@@ -16,6 +16,7 @@ public:
   SetMember(int, Port);
   GetSetMember(CString, SendTo);
   GetMember(bool, Initialized);
+  GetSetMember(int, ConnectTimeout);
   void SetNextEmailAddress(CString &addr, bool addTo) { mNextEmailAddress = addr; addTo = mAddToAddress ; };
 
 private:
@@ -28,6 +29,7 @@ private:
   CSerialEMApp *mWinApp;
   bool mAddToAddress;
   CString mNextEmailAddress;
+  int mConnectTimeout;
 
   void Check(int iStatus, char *szFunction);
 };
