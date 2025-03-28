@@ -705,8 +705,8 @@ BOOL CFilterTasks::RefineZLP(bool interactive, int useTrial)
   mRZlpTrial = 1;
   mCurEnergy = mRZlpUserLoss;
   mRZlpIndex = 0;
-  mPeakDelta = mPeakMean = -1.e10;
-  mPeakIndex = -1;
+  mPeakDelta = mPeakMean = mB2WpeakDelta = -1.e10;
+  mPeakIndex = mB2WpeakIndex = -1;
 
   mWinApp->SetStatusText(MEDIUM_PANE, "REFINING ZERO LOSS PEAK");
   mWinApp->UpdateBufferWindows();
@@ -722,13 +722,15 @@ BOOL CFilterTasks::RefineZLP(bool interactive, int useTrial)
 void CFilterTasks::RefineZLPNextTask()
 {
   float tradeoffFactor = 3.;     // Amount by which one ratio can make up for another
-  float curMean, delta, cy, y1, y3, denom, meanRatio, deltaRatio;
+  float curMean, delta, cy, cx, meanRatio, deltaRatio;
+  float b2wMeanRatio, b2wDeltaRatio;
   CString report;
   BOOL badEnergy = (mFiltParams->positiveLossOnly && 
     mWinApp->mFilterControl.LossToApply() < 0.);
   BOOL lastEnergy = (mFiltParams->positiveLossOnly && 
     mWinApp->mFilterControl.LossToApply() < mRZlpStepSize);
   bool allowFail = mAllowNextRZlpFailure;
+  bool posPasses, negPasses;
 
   mImBufs->mCaptured = BUFFER_CALIBRATION;
   if (mRZlpIndex < 0)
@@ -747,46 +749,67 @@ void CFilterTasks::RefineZLPNextTask()
       mPeakDelta = delta;
       mPeakIndex = mRZlpIndex - 1;
     }
+    if (mB2WpeakDelta < -delta) {
+      mB2WpeakDelta = -delta;
+      mB2WpeakIndex = mRZlpIndex - 1;
+    }
   }
 
   // Keep track of maximum counts too
   if (mPeakMean < curMean)
     mPeakMean = curMean;
 
-  SEMTrace('F', "%7.1f  %7.1f  %7.1f", mCurEnergy + mRZlpSlitWidth / 2., curMean, delta);
+  SEMTrace('F', "%7.1f  (or %7.1f)   %7.1f  %7.1f", mCurEnergy + mRZlpSlitWidth / 2.,
+    mCurEnergy - mRZlpSlitWidth / 2., curMean, delta);
   mEnergies[mRZlpIndex++] = mCurEnergy;
   mCurEnergy -= mRZlpStepSize;
 
   // Allow the two criteria to trade against each other up to the limit set by factor
   meanRatio = 1.;
-  if (mPeakMean > 1.)
+  b2wMeanRatio = 1.;
+  if (mPeakMean > 1.) {
     meanRatio = B3DMAX(curMean / mPeakMean, mRZlpMeanCrit / tradeoffFactor);
+    b2wMeanRatio = B3DMAX(mMeanCounts[0] / mPeakMean, mRZlpMeanCrit / tradeoffFactor);
+  }
   deltaRatio = 1.;
   if (mPeakDelta > 1.)
     deltaRatio = B3DMAX(delta / mPeakDelta, mRZlpDeltaCrit / tradeoffFactor);
+  b2wDeltaRatio = 1.;
+  if (mB2WpeakDelta > 1.)
+    b2wDeltaRatio = B3DMAX(-delta / mB2WpeakDelta, mRZlpDeltaCrit / tradeoffFactor);
 
   // Done if we have points on either side of the peak and both the delta and the
   // mean counts has fallen below criterion, or the constrained ratio product is
   // below the product of criteria
-  if (!badEnergy && mPeakIndex > 0 && mPeakIndex < mRZlpIndex - 1 && 
-    ((delta < mPeakDelta * mRZlpDeltaCrit && curMean < mPeakMean * mRZlpMeanCrit) ||
-    deltaRatio * meanRatio < mRZlpDeltaCrit * mRZlpMeanCrit)) {
+  // Do independent evaluation of positive and negative transitions
+  posPasses = mPeakIndex > 0 && mPeakIndex < mRZlpIndex - 1 && mPeakDelta > mB2WpeakDelta
+    && ((delta < mPeakDelta * mRZlpDeltaCrit && curMean < mPeakMean * mRZlpMeanCrit) ||
+      deltaRatio * meanRatio < mRZlpDeltaCrit * mRZlpMeanCrit);
+  negPasses = mB2WpeakIndex > 0 && mB2WpeakIndex < mRZlpIndex - 1 && 
+    mB2WpeakDelta > mPeakDelta && ((-delta < mB2WpeakDelta * mRZlpDeltaCrit &&
+      mMeanCounts[0] < mPeakMean * mRZlpMeanCrit) ||
+      b2wDeltaRatio * b2wMeanRatio < mRZlpDeltaCrit * mRZlpMeanCrit);
+  if (!badEnergy && (posPasses || negPasses)) {
 
     // Do parabolic fit to peak
-    cy = 0.;
-    y1 = mDeltaCounts[mPeakIndex - 1];
-    y3 = mDeltaCounts[mPeakIndex + 1];
-    denom = 2.f * (y1 + y3 - 2.f * mDeltaCounts[mPeakIndex]);
-    if(denom != 0.0)
-      cy = (y1 - y3) / denom;
-    if (cy > 0.5)
-      cy = 0.5f;
-    if (cy < -0.5)
-      cy = -0.5f;
-
-    // Multiply fractional value by step (which is negative) and add the peak location
-    cy = -cy * mRZlpStepSize + 
-      0.5f *(mEnergies[mPeakIndex] + mEnergies[mPeakIndex + 1] +  mRZlpSlitWidth);
+    // Multiply fractional value by step (which is negative) and add the peak location,
+    // subtracting half the slit width if left edge of slit comes in for black to white
+    if (posPasses) {
+      cx = (float)parabolicFitPosition(mDeltaCounts[mPeakIndex - 1],
+        mDeltaCounts[mPeakIndex], mDeltaCounts[mPeakIndex + 1]);
+      cy = -cx * mRZlpStepSize + 0.5f *(mEnergies[mPeakIndex] + mEnergies[mPeakIndex + 1]
+        + mRZlpSlitWidth);
+    } else {
+      cx = (float)parabolicFitPosition(-mDeltaCounts[mB2WpeakIndex - 1],
+        -mDeltaCounts[mB2WpeakIndex], -mDeltaCounts[mB2WpeakIndex + 1]);
+      cy = -cx * mRZlpStepSize + 0.5f *(mEnergies[mB2WpeakIndex] +
+        mEnergies[mB2WpeakIndex + 1] - mRZlpSlitWidth);
+    }
+    /*PrintfToLog("pos %d  posind %d  negInd %d pospeak %.2f  negPeak %.2f  cx %.2f "
+      "cx*st %.2f", posPasses ? 1 : 0, mPeakIndex, mB2WpeakIndex,
+      0.5f *(mEnergies[mPeakIndex] + mEnergies[mPeakIndex + 1]),
+      0.5f *(mEnergies[mB2WpeakIndex] + mEnergies[mB2WpeakIndex + 1]), cx,
+      -cx * mRZlpStepSize);*/
     
     // Implement by adding to saved parameter value, then restore and quit
     mSavedParams.refineZLPOffset += cy;
@@ -820,8 +843,10 @@ void CFilterTasks::RefineZLPNextTask()
   // Need to restart if limit of index is reached, or if the peak is at the first point
   // and either delta or mean value has fallen below criterion fraction of its peak
   if (lastEnergy || badEnergy || mRZlpIndex >= mNumEnergies || 
-    (mRZlpIndex > 1 && !mPeakIndex &&
-    (delta < mPeakDelta * mRZlpDeltaCrit && curMean < mPeakMean * mRZlpMeanCrit))) {
+    (mRZlpIndex > 1 && ((!mPeakIndex &&
+    delta < mPeakDelta * mRZlpDeltaCrit && curMean < mPeakMean * mRZlpMeanCrit) ||
+      (!mB2WpeakIndex &&  -delta < mB2WpeakDelta * mRZlpDeltaCrit &&
+        mMeanCounts[0] < mPeakMean * mRZlpMeanCrit)))) {
     
     // Third time or low dose mode, give up
     if (mRZlpTrial >= 3 || (mLowDoseMode && !mRZlpRedoInLowDose && !mNextRZlpRedoInLD)) {
@@ -839,9 +864,12 @@ void CFilterTasks::RefineZLPNextTask()
       return;
     }
 
-    // It is safer to go to the left first then go right on the last trial
+    // 3/27/25: it used to go to negative first with the comment
+    // "It is safer to go to the left first then go right on the last trial"
+    // Not sure what that meant but now that it can catch a peak with negative offset 
+    // in the B2W transition, make it go positive first
     if (mRZlpTrial++ == 1) {
-      mCurEnergy = mRZlpUserLoss - mRZlpSlitWidth;
+      mCurEnergy = mRZlpUserLoss + mRZlpSlitWidth;
       if (TestRefineZLPStart(mCurEnergy, "run a second scan of")) {
         StopRefineZLP();
         //mWinApp->ErrorOccurred(1);
@@ -849,14 +877,14 @@ void CFilterTasks::RefineZLPNextTask()
       }
 
     } else
-      mCurEnergy = mRZlpUserLoss + mRZlpSlitWidth;
+      mCurEnergy = mRZlpUserLoss - mRZlpSlitWidth;
     report.Format("Restarting ZLP search with offset of %7.1f eV", mCurEnergy);
     mWinApp->AppendToLog(report, LOG_SWALLOW_IF_CLOSED);
 
     // Reset parameters and go on
     mRZlpIndex = 0;
-    mPeakDelta = mPeakMean = -1.e10;
-    mPeakIndex = -1;
+    mPeakDelta = mPeakMean = mB2WpeakDelta = -1.e10;
+    mPeakIndex = mB2WpeakIndex = -1;
     StartAcquisition(mBigEnergyShiftDelay, mRZlpConSetNum, TASK_REFINE_ZLP);
     return;
   }

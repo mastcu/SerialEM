@@ -126,6 +126,8 @@ class CFilterTasks : public CCmdTarget
   int mRZlpTrial;                // Counter for trials
   float mPeakDelta;              // Peak delta value
   float mPeakMean;               // Peak mean value
+  float mB2WpeakDelta;           // Negative peak mean value for black to white transition
+  int mB2WpeakIndex;             // Index of negative peak
   float mRZlpDeltaCrit;          // Criterion for final delta as fraction of peak
   float mRZlpMeanCrit;           // Criterion for final mean as fraction of peak
   float mRZlpUserLoss;           // Starting user loss to cancel

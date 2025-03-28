@@ -3,6 +3,16 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+3/27/25: Added ability to retry a stage move after a COM error, activated by
+property RetryStageMove.
+
+3/27/25: Made Refine ZLP detect a transition from black to white, i.e., the
+slit entering rather than leaving the field.
+
+3/27/25: For CTF-based tuning, made it redo focus measurement at every image
+shift position when doing coma vs. IS, and fixed some big problems with the
+switch between Ctffind and Ctfplotter.
+
 3/26/25: Added option to skip center of pattern in multishot on hex grid.
 
 3/26/25: Fixed test for frame folder in tilt series startup.

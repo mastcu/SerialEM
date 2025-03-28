@@ -3977,7 +3977,12 @@
         </TR>
         <TR VALIGN="top">
           <TD>RefineZLPSlitWidth</TD>
-          <TD>The slit width used for the Refine ZLP procedure. Default is 20 eV.</TD>
+          <TD>The slit width used for the Refine ZLP procedure.&nbsp; Default is 20 eV.&nbsp; 
+            This value affects the number of steps it will take and how big an offset can be 
+            detected in the first (or only) round.  With a width as low as 10, it can only 
+            detect fairly small changes (2-3 eV) and the retry at shifts of -10 and 10 (if any) may fail
+             to find the peak because it occurs at the start or end of the range tested.
+          </TD>
         </TR>
         <TR VALIGN="top">
           <TD>RefineZLPMinimumExposure</TD>
