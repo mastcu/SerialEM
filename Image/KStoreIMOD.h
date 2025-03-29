@@ -25,7 +25,7 @@ public:
   virtual int getTiffField(int tag, void *value);
   virtual int getTiffValue(int tag, int type, int tokenNum, 
     double &dvalue, CString &valstring);
-  virtual int getTiffArray(int tag, b3dUInt16 *count, void *value);
+  virtual int getTiffArray(int tag, b3dUInt32 *count, void *value);
   virtual int WriteSection(KImage * inImage);
   virtual void CommonInit(void);
   virtual int     AppendImage(KImage *inImage);
