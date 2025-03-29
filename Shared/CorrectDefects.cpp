@@ -1912,7 +1912,7 @@ int CorDefProcessFeiDefects(ImodImageFile *iiFile, CameraDefects &defects, int n
                             const char *dumpDefectName, char *messBuf, int  bufLen)
 {
   int retval;
-  b3dUInt16 count;
+  b3dUInt32 count;
   char *strng, *strCopy;
   FILE *defFP;
   std::string sstr;

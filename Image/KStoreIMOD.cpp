@@ -255,7 +255,7 @@ int KStoreIMOD::getTiffField(int tag, void *value)
 
 // Here's the scoop: you need to call it with a count argument, but it does not get
 // returned with a usable count
-int KStoreIMOD::getTiffArray(int tag, b3dUInt16 *count, void *value) 
+int KStoreIMOD::getTiffArray(int tag, b3dUInt32 *count, void *value) 
 {
   if (!mIIfile || mIIfile->file != IIFILE_TIFF)
     return -1;
@@ -274,7 +274,7 @@ int KStoreIMOD::getTiffValue(int tag, int type, int tokenNum, double &dvalue,
   unsigned int *uintptr;
   double *dptr;
   float *fptr;
-  b3dUInt16 count;
+  b3dUInt32 count;
 
   char *sptr = NULL;
   //CString sepstr = sep;
