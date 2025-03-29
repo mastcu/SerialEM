@@ -64,6 +64,7 @@ extern "C" {
 #define IICOMPRESSION_EER_8BIT  65000
 #define IICOMPRESSION_EER_7BIT  65001
 #define FEI_TIFF_DEFECT_TAG     65100
+#define FEI_EER_METADATA_TAG    65001
 
   /* Error codes, used by check routines */
 #define IIERR_BAD_CALL   -1
@@ -307,6 +308,7 @@ extern "C" {
   void iiSyncFromMrcHeader(ImodImageFile *inFile, MrcHeader *hdata);
   int iiDefaultMinMaxMean(int type, float *amin, float *amax, float *amean);
   int iiWriteHeader(ImodImageFile *inFile);
+  int iiAddToOpenedList(ImodImageFile *iiFile);
   int  iiSetMM(ImodImageFile *inFile, float inMin, float inMax, float scaleMax);
   void iiFileChangeAddress(ImodImageFile *oldFile, ImodImageFile *newFile);
   FILE *iiFOpen(const char *filename, const char *mode);
@@ -360,7 +362,7 @@ extern "C" {
   int tiffReadSection(ImodImageFile *inFile, char *buf, int inSection);
   void tiffClose(ImodImageFile *inFile);
   int tiffGetField(ImodImageFile *inFile, int tag, void *value);
-  int tiffGetArray(ImodImageFile *inFile, int tag, b3dUInt16 *count, void *value);
+  int tiffGetArray(ImodImageFile *inFile, int tag, b3dUInt32 *count, void *value);
   void tiffSuppressWarnings(void);
   void tiffSuppressErrors(void);
   void tiffFilterWarnings(void);
@@ -381,6 +383,7 @@ extern "C" {
   void tiffGainReferenceForEER(float *ref);
   int tiffGetMaxEERsuperRes();
   int tiffGetMinEERsuperRes();
+  void tiffSetStringTagToPrint(int tag);
   void getDfltEERsummingFromEnv(int *superRes, int *zSumming);
   void tiffAddDescription(const char *text);
   int tiffNumReadThreads(int nx, int ny, int compression, int maxThreads);
