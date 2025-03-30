@@ -5164,6 +5164,7 @@ int CNavHelper::AssessAcquireForParams(NavAcqParams *navParam, NavAcqAction *acq
   }
 
   seenGroups = new int[mItemArray->GetSize()];
+  numNoMap = 0;
   for (i = startInd; i <= endInd; i++) {
     item = mItemArray->GetAt(i);
     if (item->mRegistration == mNav->GetCurrentRegistration() &&
