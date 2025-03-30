@@ -4832,6 +4832,7 @@ int CNavHelper::AssessAcquireProblems(int startInd, int endInd)
   }
 
   seenGroups = new int[mItemArray->GetSize()];
+  numNoMap = 0;
   for (i = startInd; i <= endInd; i++) {
     item = mItemArray->GetAt(i);
     if (item->mRegistration == mNav->GetCurrentRegistration() && 
