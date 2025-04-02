@@ -485,6 +485,7 @@ CCameraController::CCameraController()
   mKeepLastUsedFrameNum = false;
   mRamperBlankAtEnd = 0;
   mGIFslitWidthScaling = 1.;
+  mFalconWarningCount = 0;
   for (l = 0; l < MAX_CHANNELS; l++)
     mTD.PartialArrays[l] = NULL;
 }
@@ -2380,6 +2381,7 @@ int CCameraController::MakeMdocFrameAlignCom(CString mdocPath)
 
   // For Falcon, just call routine and leave
   if (!mParam->K2Type) {
+    WarnEmptyFalconFramePath(mLastLocalFramePath, "Cannot make com file for aligning");
     UtilSplitPath(mLastLocalFramePath, frameDir, tempStr);
     mFalconHelper->SetLastFrameDir(frameDir);
     comDir = mAlignFramesComPath;
@@ -9669,8 +9671,10 @@ void CCameraController::DisplayNewImage(BOOL acquired)
               mSavingFalconFrames || (mLastConSet == RECORD_CONSET &&
               (mWinApp->mTSController->GetFrameAlignInIMOD() ||
                 mWinApp->mMacroProcessor->GetAlignWholeTSOnly()));
-            if (needRefCopy)
+            if (needRefCopy) {
+              WarnEmptyFalconFramePath(localFramePath, "Cannot copy EER gain reference");
               UtilSplitPath(localFramePath, str, ext);
+            }
             if (mFalconHelper->ManageFalconReference(mSavingFalconFrames,
               mAligningFalconFrames, needRefCopy ? str : ""))
               mAligningFalconFrames = false;
@@ -10383,6 +10387,8 @@ void CCameraController::DisplayNewImage(BOOL acquired)
                 !IsSaveInEERMode(mParam, lastConSetp))
                 operation = 0;
               mFalconHelper->SetRotFlipForComFile(operation);
+              WarnEmptyFalconFramePath(localFramePath, 
+                "Cannot make com file for aligning");
               MakeOneFrameAlignCom(localFramePath, lastConSetp);
             }
           }
@@ -10569,6 +10575,9 @@ void CCameraController::DisplayNewImage(BOOL acquired)
     if (extra->mNumSubFrames > 0 && !mTD.GetDeferredSum && (mSaveFrameStackMdoc || 
       (mTD.FrameTStiltToAngle.size() > 0 && mTD.FrameTSactualAngle.size() > 0)) &&
       CanSaveFrameStackMdoc(mParam)) {
+      if (IS_FALCON3_OR_4(mParam))
+        WarnEmptyFalconFramePath(mLastLocalFramePath,
+          "Cannot make frame stack mdoc file");
       SaveFrameStackMdoc(image, mLastLocalFramePath, lastConSetp);
     }
     extra->mBinning = axoff;
@@ -12724,6 +12733,18 @@ void CCameraController::RestoreGatanOrientations(void)
         mGatanCamera->Release();
     }
   }
+}
+
+// Test for falcon frame path entry hand complain if not there
+void CCameraController::WarnEmptyFalconFramePath(CString &localFramePath, 
+  const char *prefix)
+{
+  if (mFalconWarningCount < 5 && 
+    (mLocalFalconFramePath.IsEmpty() || !UtilFileExists(localFramePath)))
+    SEMAppendToLog("WARNING: " + CString(prefix) + " because neither "
+      "general property\r\n LocalFalconFramePath nor camera property "
+      "FalconLocalFramePath is properly defined");
+  mFalconWarningCount++;
 }
 
 // Test if a camera is inserted, return 1 if it is, 0 not, or leave inserted unchanged

@@ -1106,6 +1106,7 @@ public:
   bool mFilterWaiting;           // Flag that filter is waiting for delay
   int mRamperBlankAtEnd;         // Flag for FocusRamper to blank beam at end of ramp/image
   int mMinShotInterval;          // Interval in msec to sleep before a shot
+  int mFalconWarningCount;       // Number of times falcon local path warning given
 
 
 public:
@@ -1241,6 +1242,7 @@ void RetractAllCameras(void);
 float GetCountScaling(CameraParameters * camParam);
 int TargetSizeForTasks(CameraParameters *camParam = NULL);
 void RestoreGatanOrientations(void);
+void WarnEmptyFalconFramePath(CString &localFramePath, const char *prefix);
 void GetMergeK2DefectList(int DMind, CameraParameters *param, bool errToLog);
 bool NoSubareasForDoseFrac(CameraParameters *param, BOOL alignFrames, int useFrameAlign);
 bool IsConSetSaving(const ControlSet *conSet, int setNum, CameraParameters *param, bool K2only);
