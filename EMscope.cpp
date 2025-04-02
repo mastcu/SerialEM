@@ -10323,6 +10323,12 @@ UINT CEMscope::LongOperationProc(LPVOID pParam)
   const char *name;
   int slot, station, rotation, cartType;
   JeolCartridgeData jcData;
+  const char *jeolFEGmess[5] = {
+    ": Timeout waiting for the scope to be able to start flashing the FEG",
+    ": Scope error flashing the FEG",
+    ": Timeout time reached before FEG flashing done; check property JeolFlashFegTimeout",
+    ": Timeout waiting for the scope to be ready to turn on emission after flashing",
+    ": Timeout before emission reached ON state; check property JeolEmissionTimeout"};
 
   CoInitializeEx(NULL, COINIT_MULTITHREADED);
   CEMscope::ScopeMutexAcquire("LongOperationProc", true);
@@ -10460,6 +10466,8 @@ UINT CEMscope::LongOperationProc(LPVOID pParam)
           if (lod->plugFuncs->GetLastErrorString) {
             descrip += ": ";
             descrip += lod->plugFuncs->GetLastErrorString();
+          } else if (JEOLscope && longOp == LONG_OP_FLASH_FEG && error > 1 && error < 7) {
+            descrip += jeolFEGmess[error - 2];
           }
 
           SEMTestHResult(hr,  _T(descrip), &lod->errString, &error, true);
