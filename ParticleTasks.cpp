@@ -1521,20 +1521,24 @@ int CParticleTasks::EucentricityFromFocus(int useVinLD)
   double *focTab = mScope->GetLMFocusTable();
   ZbyGParams *zbgParams;
   BOOL lowDose = mWinApp->LowDoseMode();
+  CString *modeNames = mWinApp->GetModeNames();
 
   // Get the parameters
   if (mZbyGsetupDlg)
     mZbyGsetupDlg->UnloadControlParams();
   zbgParams = GetZbyGCalAndCheck(useVinLD, index, area, paramInd, nearest, error);
   if (!zbgParams) {
-    if (error == 1) {
-      SEMMessageBox("Eucentricity by focus cannot be run from diffraction or STEM mode");
+    if (error == 4) {
+      SEMMessageBox("Low dose parameters are not set up for the " + modeNames[area] +
+        " area to be used for Eucentricity by Focus");
+    } else if (error == 1) {
+      SEMMessageBox("Eucentricity by Focus cannot be run from diffraction mode");
     } else if (error == 2) {
-      SEMMessageBox(CString("There is no calibration for eucentricity by focus "
+      SEMMessageBox(CString("There is no calibration for Eucentricity by Focus "
         "for the current magnification and camera ") +
         (lowDose ? "and specified Low Dose area" : "outside of Low Dose"));
     } else {
-      SEMMessageBox(CString("There is no calibration for eucentricity by focus "
+      SEMMessageBox(CString("There is no calibration for Eucentricity by Focus "
         "for the current spot size and ") + (FEIscope ? "probe mode" : "alpha"));
     }
     return 1;
@@ -1867,9 +1871,12 @@ ZbyGParams * CParticleTasks::GetZbyGCalAndCheck(int useVinLD, int &magInd, int &
   LowDoseParams *ldp = mWinApp->GetLowDoseParams();
   ZbyGParams *zbgParams;
   ldArea = GetLDAreaForZbyG(mWinApp->LowDoseMode(), useVinLD, mZBGUsingView);
-  if (ldArea >= 0)
+  error = 4;
+  if (ldArea >= 0) {
     magInd = ldp[ldArea].magIndex;
-  else
+    if (magInd <= 0 && ldp[ldArea].camLenIndex <= 0)
+      return NULL;
+  } else
     magInd = mScope->GetMagIndex();
 
   error = 1;
