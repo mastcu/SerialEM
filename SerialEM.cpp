@@ -463,6 +463,8 @@ CSerialEMApp::CSerialEMApp()
     mCamParams[i].defNameHasFrameFile = false;
     mCamParams[i].taskTargetSize = 512;
     mCamParams[i].specToCamDoseFac = 0.;
+    mCamParams[i].maxGainRefAge = 0.;
+    mCamParams[i].skipGainRefWarning = 0;
     mCamParams[i].invertFocusRamp = false;
     mCamParams[i].numChannels = 0;
     mCamParams[i].JeolDetectorID = -1;

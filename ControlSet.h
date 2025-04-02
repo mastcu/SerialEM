@@ -238,6 +238,8 @@ struct CameraParameters {
   int balanceHalves;          // Flag to do balance-halves correction in continuous mode
   int halfBoundary;           // Unbinned pixel above boundary for balancing halves
   int ifHorizontalBoundary;   // If boundary is horizontal
+  float maxGainRefAge;        // Warn once if references older than this in days
+  int skipGainRefWarning;     // 1 to skip for DM refs, -1 to skip for SEM Gatan cam
   CString pluginName;         // Name for a plugin camera
   int cameraNumber;           // Camera number to select by
   int noShutter;              // No shutter at all, use blanking

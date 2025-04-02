@@ -110,12 +110,14 @@ private:
   int mUseDMRef[MAX_CAMERAS][MAX_EXTRA_REFS + 3];    // Flag to use newer DM ref (+1) or check on it (-1)
   BOOL mDMRefChecked[MAX_CAMERAS];  // Flag that DM reference has been checked for time
   BOOL mWarnedNoDM[MAX_CAMERAS];    // Flag for initial warning of no DM reference
+  bool mOldWarnedDM[MAX_CAMERAS];   // Flag that warning for old DM references was done
+  bool mOldWarnedSEM[MAX_CAMERAS];  // Flag the warning was done for SEM references
   int mNumBinnings[MAX_CAMERAS];    // Number of binnings to have references for
   int mDMind;                       // Index of DM reference for current camera
   BOOL mCalibrateDose;              // Flag to calibrate electron dose
   int mRefKVList[MAX_GAINREF_KVS];  // List of KVs at which to keep separate gain references
   int mNumRefKVs;
-  int mHTValue;                     // KV value if at on of the separate KVs, otherwise 0
+  int mHTValue;                     // KV value if at one of the separate KVs, otherwise 0
   int mDMrefAskPolicy;              // Whether and when to ask about using DM ref
   BOOL mIgnoreHigherRefs;           // Ignore refs above binning 2
   BOOL mUseOlderBinned2;            // Use a binned by 2 even if it is older
@@ -139,6 +141,7 @@ private:
 public:
   void UpdateDMReferenceTimes(void);
   bool IsDMReferenceNew(int camNum);
+  void CheckForAgeWarning(CameraParameters *param, bool Dmref, CString &refName, CTime &mtime, bool *warned);
   void MakeRefInDEserver(bool setupRecDark);
   void StartDEserverRef(int processType, int referenceType);
   int MakeDEdarkRefIfNeeded(int processType, float hoursSinceLast, CString &message);

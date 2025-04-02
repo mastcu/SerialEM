@@ -3,6 +3,19 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+4/1/25: Added properties to get a warning when gain reference is older than a
+given time.
+
+4/1/25: Fixed displayed multishot progress numbers if items or groups are
+skipped during acquisition.
+
+4/1/25: Initial focus will be restored at end of batch tilt series if Focus
+was determined in an Autofocus task in Acquire at Items.
+
+4/1/25: Made the defocus cycling in Acquire at Items change scope focus on
+first item only if current raget and focus readout match values from last
+autofocus.
+
 3/28/25: Made email connection take only 7 seconds to time out and added a
 property to control the timeout.
 

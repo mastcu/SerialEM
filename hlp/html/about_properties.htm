@@ -1770,6 +1770,19 @@
             extension.</TD>
         </TR>
         <TR VALIGN="top">
+          <TD>MaxGainRefAge</TD>
+          <TD>Set this to a number of days (fractions allowed) to have the program print a 
+            one-time warning in the log when it finds that the reference is older than this.&nbsp; 
+            For Gatan cameras that can have references in SerialEM, both those references 
+            and the DigitalMicrograph references will be checked unless 'SkipGainRefWarning' 
+            is set.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>SkipGainRefWarning</TD>
+          <TD>For a Gatan camera, set to 1 to not warn about the age of DigitalMicrograph 
+            references or -1 to not warn about the age of SerialEM references.</TD>
+        </TR>
+        <TR VALIGN="top">
           <TD>FalconLocalFramePath</TD>
           <TD>For Falcon 3 or 4 or Ceta 2, path to top directory where
             frames are written by the Thermo/FEI software, as seen from the computer running

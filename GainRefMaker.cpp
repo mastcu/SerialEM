@@ -99,7 +99,9 @@ void CGainRefMaker::InitializeRefArrays(void)
     int numbase = camP[i].binnings[0] == 1 ? 2 : 1;
     mDMRefChecked[i] = false;
     mWarnedNoDM[i] = false;
-    camP[i].numExtraGainRefs = B3DMAX(0, 
+    mOldWarnedDM[i] = false;
+    mOldWarnedSEM[i] = false;
+    camP[i].numExtraGainRefs = B3DMAX(0,
       B3DMIN(camP[i].numBinnings - numbase, camP[i].numExtraGainRefs));
     mNumBinnings[i] = numbase + camP[i].numExtraGainRefs;
     for (int j = 0; j < mNumBinnings[i] + 1; j++) {
@@ -786,6 +788,7 @@ void CGainRefMaker::FindExistingReferences()
   CFileStatus status;
   CString name;
   BOOL ok;
+  mParam = mWinApp->GetCamParams() + mCurrentCamera;
 
   if(mSearchedRefs)
     return;
@@ -794,8 +797,10 @@ void CGainRefMaker::FindExistingReferences()
   for (int i = 0; i < mNumBinnings[mCurrentCamera]; i++) {
     name = ComposeRefName(mParam->binnings[i]);
     ok = CFile::GetStatus((LPCTSTR)name, status);
-    if ((mRefExists[mCurrentCamera][i] = (ok && status.m_size > 1024)))
+    if ((mRefExists[mCurrentCamera][i] = (ok && status.m_size > 1024))) {
       mRefTime[mCurrentCamera][i] = status.m_mtime;
+      CheckForAgeWarning(mParam, false, name, status.m_mtime, &mOldWarnedSEM[0]);
+    }
   }
   mSearchedRefs = true;
 }
@@ -1238,6 +1243,7 @@ void CGainRefMaker::UpdateDMReferenceTimes(void)
         // Set that it exists and record the time
         mRefExists[mCurrentCamera][mDMind] = true;
         mRefTime[mCurrentCamera][mDMind] = cmtime;
+        CheckForAgeWarning(mParam, true, name, cmtime, &mOldWarnedDM[0]);
       } else {
 
         // If not OK, need to clear existence flag
@@ -1275,6 +1281,25 @@ bool CGainRefMaker::IsDMReferenceNew(int camNum)
   // This does not really need to be restored...
   mCurrentCamera = mWinApp->GetCurrentCamera(); 
   return (mRefExists[camNum][refInd] && (!didExist || mRefTime[camNum][refInd] > oldTime));
+}
+
+// If maximum gain ref age is set, check for reference too old of the given type
+void CGainRefMaker::CheckForAgeWarning(CameraParameters *param, bool DMref, 
+  CString &refName, CTime &mtime, bool *warned)
+{
+  CString str;
+  if (param->maxGainRefAge <= 0. || warned[mCurrentCamera] || (param->GatanCam &&
+    (DMref && param->skipGainRefWarning > 0) ||
+    (!DMref && param->skipGainRefWarning < 0)))
+    return;
+  int days = (int)param->maxGainRefAge;
+  int hours = B3DNINT(24. * (param->maxGainRefAge - days));
+  CTime now = CTime::GetCurrentTime();
+  if (mtime + CTimeSpan(days, hours, 0, 0) < now) {
+    warned[mCurrentCamera] = true;
+    PrintfToLog("WARNING: gain reference %s\r\n for camera %s is more than %.1f days old",
+      (LPCTSTR)refName, (LPCTSTR)param->name, param->maxGainRefAge);
+  }
 }
 
 // Return the binning offsets for the given camera, for going from a reference

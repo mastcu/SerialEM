@@ -577,4 +577,6 @@ INT_PROP_TEST("DarkXRayRequireBothCriteria", darkXRayBothCrit)
 INT_PROP_TEST("MaximumXRayDiameter", maxXRayDiameter)
 INT_PROP_TEST("ShowRemoveXRaysBox", showImageXRayBox)
 FLOAT_PROP_TEST("PixelMatchFactor", matchFactor)
+FLOAT_PROP_TEST("MaxGainRefAge", maxGainRefAge)
+INT_PROP_TEST("SkipGainRefWarning", skipGainRefWarning)
 #endif
