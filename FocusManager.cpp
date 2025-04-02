@@ -123,6 +123,7 @@ CFocusManager::CFocusManager()
 
   mCurrentDefocus = 0.;
   mTargetDefocus = 0.;
+  mLastTargetFocus = EXTRA_NO_VALUE;
   mRefocusThreshold = 8.;
   mAbortThreshold = 1.;
   mNumCalLevels = 13;
@@ -1088,6 +1089,8 @@ void CFocusManager::AutoFocusStart(int inChange, int useViewInLD, int iterNum)
   mRatioOfCalSlopes = 0.;
   mDistPastEndOfCal = 0.;
   mDoChangeFocus = inChange;
+  if (mDoChangeFocus > 0)
+    mLastTargetFocus = mTargetDefocus;
   SEMTrace('M', "Autofocus Start");
   if (mWinApp->LowDoseMode() && ldParm[mFocusSetNum].magIndex)
     mFocusMag = ldParm[areaNum].magIndex;
@@ -1329,6 +1332,7 @@ void CFocusManager::AutoFocusData(float inX, float inY)
       }
     } else {
       mWinApp->AppendToLog(report + changeText + driftText, LOG_SWALLOW_IF_CLOSED);
+      mLastScopeFocus = (float)mScope->GetDefocus();
     }
   } else if (!mDoChangeFocus && !mWinApp->mLogWindow) {
     report.Format("The current defocus is computed to be %6.2f microns", 

@@ -110,6 +110,9 @@ public:
   GetMember(float, EucenMaxDefocus);
   GetSetMember(BOOL, UseEucenAbsLimits);
   GetMember(BOOL, TestOffsetEucenAbs);
+  GetMember(float, LastTargetFocus);
+  GetMember(float, LastScopeFocus);
+
   void SetBaseBeamTilt(double inX, double inY) {mBaseTiltX = inX; mBaseTiltY = inY;};
 
 
@@ -222,6 +225,8 @@ private:
   float mRequiredBWMean;     // Black/white mean per unbinned sec required
   BOOL mLastFailed;          // Flag that last capture did not complete
   int mLastAborted;          // Aborted: 1 if inconsistent, 2 or 3 if exceed abs/rel limit
+  float mLastTargetFocus;    // Target for last autofocus
+  float mLastScopeFocus;     // And scope value it was set to
   BOOL mVerbose;
   BOOL mAccuracyMeasured;    // Flag that accuracy of focus calibration was measured
   float mPlusAccuracy;       // Measured defocus change over actual change for + change
