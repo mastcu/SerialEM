@@ -3163,9 +3163,12 @@ BOOL SEMTestHResult(HRESULT hr, CString inString, CString *outStr, int *errFlag,
   if (inString) {
     CString message;
     message.Format(_T("Error 0x%x %s"), hr, inString);
-    if (outStr && !(errFlag && *errFlag))
-      *outStr = message;
-    else
+    if (outStr) {
+      if (!outStr->IsEmpty())
+        *outStr += "  AND  " + message;
+      else
+        *outStr = message;
+    } else
       SEMMessageBox(message);
     if (errFlag)
       (*errFlag)++;

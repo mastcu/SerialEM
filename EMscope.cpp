@@ -10463,13 +10463,13 @@ UINT CEMscope::LongOperationProc(LPVOID pParam)
         if (error) {
           hr = 0x80000000 | (B3DABS(error));
           descrip = longOpDescription[longOp];
-          if (lod->plugFuncs->GetLastErrorString) {
+          if (JEOLscope && longOp == LONG_OP_FLASH_FEG) {
+            if (error > 1 && error < 7)
+              descrip += jeolFEGmess[error - 2];
+          } else if(lod->plugFuncs->GetLastErrorString) {
             descrip += ": ";
             descrip += lod->plugFuncs->GetLastErrorString();
-          } else if (JEOLscope && longOp == LONG_OP_FLASH_FEG && error > 1 && error < 7) {
-            descrip += jeolFEGmess[error - 2];
           }
-
           SEMTestHResult(hr,  _T(descrip), &lod->errString, &error, true);
           retval = 1;
         } else
