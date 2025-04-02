@@ -11184,7 +11184,7 @@ int CMacCmd::ReportNavItem(void)
 {
   CString report;
   BOOL truth;
-  int index, index2, ix0, ix1;
+  int index, index2, ix0;
   CMapDrawItem *navItem;
   ABORT_NONAV;
   truth = CMD_IS(REPORTNEXTNAVACQITEM);
@@ -11232,9 +11232,8 @@ int CMacCmd::ReportNavItem(void)
     index = atoi(navItem->mLabel);
     report.Format("%d", index);
     SetVariable("NAVINTLABEL", report, VARTYPE_REGULAR + VARTYPE_ADD_FOR_NUM, -1, false);
-    mNavHelper->GetNumHolesFromParam(ix0, ix1, index2);
     SetVariable("NAVNUMHOLES", navItem->mAcquire ?
-      mNavHelper->GetNumHolesForItem(navItem, index2) : 0,
+      mNavHelper->GetNumHolesForItem(navItem, -1) : 0,
       VARTYPE_REGULAR + VARTYPE_ADD_FOR_NUM, -1, false);
     if (mNavigator->GetAcquiring()) {
       report.Format("%d", mNavigator->GetNumAcquired() + (truth ? 2 : 1));
@@ -11348,7 +11347,7 @@ int CMacCmd::SetSelectedNavItem()
 int CMacCmd::SetItemAcquire(void)
 {
   BOOL turnOn, inRange;
-  int index, err = 0;
+  int index, err = 0, shotsBefore, shotsAfter;
   CMapDrawItem *navItem;
 
   index = mItemEmpty[1] ? 0 : mItemInt[1];
@@ -11367,9 +11366,13 @@ int CMacCmd::SetItemAcquire(void)
         "line:\n\n");
     mLogRpt.Format("Navigator item %d Acquire set to %s", index + 1,
       turnOn ? "enabled" : "disabled");
+    shotsBefore = mNavigator->NumShotsLeftIfDoingMultishot();
     if (!navItem->mAcquire)
       inRange = false;
     navItem->mAcquire = turnOn;
+    shotsAfter = mNavigator->NumShotsLeftIfDoingMultishot();
+    mNavigator->SetInitialTotalShots(mNavigator->GetInitialTotalShots() +
+      shotsAfter - shotsBefore);
   } else {
     if (turnOn && navItem->mAcquire)
       ABORT_LINE("You cannot do a tilt series at an item set to Acquire for "
@@ -12232,13 +12235,18 @@ int CMacCmd::SetItemSeriesAngles(void)
 int CMacCmd::SkipAcquiringNavItem(void)
 {
   CMapDrawItem *navItem = NULL;
+  int numBefore, numAfter;
   ABORT_NONAV;
   int index = mNavigator->GetCurrentOrAcquireItem(navItem);
   if (!mNavigator->GetAcquiring())
     mWinApp->AppendToLog("SkipAcquiringNavItem has no effect except from a\r\n"
     "    pre-script or main script when acquiring Navigator items", mLogAction);
   else if (!mItemEmpty[1] && mItemInt[1] && navItem && navItem->mAcquire) {
+    numBefore = mNavigator->NumShotsLeftIfDoingMultishot();
     navItem->mAcquire = false;
+    numAfter = mNavigator->NumShotsLeftIfDoingMultishot();
+    mNavigator->SetInitialTotalShots(mNavigator->GetInitialTotalShots() + 
+      numAfter - numBefore);
     mNavigator->UpdateListString(index);
   }
   mNavigator->SetSkipAcquiringItem(true);

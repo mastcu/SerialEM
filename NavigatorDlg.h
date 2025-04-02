@@ -128,6 +128,7 @@ public:
 	void Redraw();
 	void Update();
   CString FormatProgress(int numDone, int numTot, int numLeft, const char *text);
+  int NumShotsLeftIfDoingMultishot();
 	int MoveStage(int axisBits, bool justCheck = false);
 	void SetCurrentStagePos(int index);
 	CMapDrawItem *MakeNewItem(int groupID);
@@ -202,6 +203,8 @@ public:
   GetMember(bool, IgnoreUpdates);
   SetMember(int, ReloadTableOnNextAdd);
   SetMember(int, GridIndexOfMap);
+  GetMember(double, AcqAutoDefocus);
+  GetSetMember(int, InitialTotalShots);
   void SetCurAcqParmActions(int which) { mAcqParm = mWinApp->GetNavAcqParams(which); mAcqActions = mHelper->GetAcqActions(which); };
   bool OKtoCloseNav();
 
@@ -537,6 +540,7 @@ private:
   int mReloadTableOnNextAdd;   // Flag set by multigrid to work around vanishing map bug
   bool mDoRefineZlpNextItem;   // Flag to do it unconditionally because it failed
   int mGridIndexOfMap;         // Index of grid that last map was loaded from
+  double mAcqAutoDefocus;      // Keep track of valid focus from autofocus for tilt series
 
 public:
   afx_msg void OnGotoMarker();
@@ -763,6 +767,7 @@ float ContourArea(float *ptx, float *pty, int numPoints);
 void GetCurrentNavDir(CString &navPath);
 void SetCurrentNavFile(CString &inFile);
 void UpdateHiding();
+void RemoveFromArray(int index, int num = 1);
 void ManageListHeader(CString str = "");
 CButton m_butNavFocusPos;
 afx_msg void OnButNavFocusPos();

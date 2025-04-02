@@ -1879,7 +1879,7 @@ void CTSController::NextAction(int param)
         return;
       }
     }
-
+    
     // Check for failure in wait for drift
     if (mWaitingForDrift) {
       dwErr = mWinApp->mParticleTasks->GetWDLastFailed();
@@ -4993,10 +4993,14 @@ void CTSController::TerminateOnError(void)
 
 void CTSController::DoFinalTerminationTasks()
 {
+  double startDef = mWinApp->mNavigator ? mWinApp->mNavigator->GetAcqAutoDefocus() :
+    EXTRA_NO_VALUE;
   if (mLowDoseMode)
     mLDParam[RECORD_CONSET].intensity = mOriginalIntensity;
   else if (!mSTEMindex)
     mScope->SetIntensity(mOriginalIntensity);
+  if (startDef > EXTRA_VALUE_TEST)
+    mScope->SetDefocus(startDef);
   mScope->TiltTo(0.);
   mWinApp->AddIdleTask(CEMscope::TaskStageBusy, -1, 0, 0);
 

@@ -3498,7 +3498,9 @@ bool CNavHelper::GetNumHolesFromParam(int &xnum, int &ynum, int &numTotal)
 // default if no items 
 int CNavHelper::GetNumHolesForItem(CMapDrawItem *item, int numDefault)
 {
-  int numForItem = numDefault;
+  int nx, ny, numForItem = numDefault;
+  if (numForItem < 0)
+    GetNumHolesFromParam(nx, ny, numForItem);
   if (item->mNumXholes && item->mNumYholes) {
     if (item->mNumXholes == -3 && item->mNumYholes == -3)
       numForItem = 5;

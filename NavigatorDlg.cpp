@@ -641,7 +641,8 @@ void CNavigatorDlg::Update()
     str = FormatProgress(mNumDoneAcq, mInitialNumAcquire, numLeft,
       multishot ? "items" : "done");
     if (multishot)
-      str += ";  " + FormatProgress(mNumTotalShotsAcq, mInitialTotalShots, numShots, "shots");
+      str += ";  " + FormatProgress(mNumTotalShotsAcq, mInitialTotalShots, numShots, 
+        "shots");
     if (mWinApp->mMontageController->DoingMontage())
       montLeft = mWinApp->mMontageController->GetRemainingTime();
     if (mNumDoneAcq || montLeft >= 0.) {
@@ -726,7 +727,7 @@ void CNavigatorDlg::Update()
   else
     item = FindMontMapDrawnOn(GetSingleSelectedItem());
   m_butLoadMap.EnableWindow((curExists || item) && (noTasks || justAcqOpen) && noDrawing
-    && !mCamera->CameraBusy() && (mItem->IsMap() || item != NULL));
+    && !mCamera->CameraBusy() && ((curExists && mItem->IsMap()) || item != NULL));
   m_butLoadMap.SetWindowText(item ? "Load Piece" : "Load Map");
 
   m_butNewMap.EnableWindow(noDrawing && noTasks && mWinApp->mStoreMRC != NULL);
@@ -777,6 +778,16 @@ CString CNavigatorDlg::FormatProgress(int numDone, int numTot, int numLeft,
     str += str2;
   }
   return str;
+}
+
+// Count the number of shots remaining for acquire items if doing multishot
+int CNavigatorDlg::NumShotsLeftIfDoingMultishot()
+{
+  int numLeft, numHoles, numShots;
+  if (mAcquireIndex < 0 || mAcqParm->acquireType != ACQUIRE_MULTISHOT)
+    return 0;
+  mHelper->CountHoleAcquires(mAcquireIndex, -1, 0, numLeft, numHoles, numShots);
+  return numShots;
 }
 
 // A call specifically for the Add Marker and other buttons depend on the active buffer
@@ -1640,7 +1651,7 @@ void CNavigatorDlg::OnListItemDrag(int oldIndex, int newIndex)
   CMapDrawItem *item = mItemArray.GetAt(oldIndex);
   mWinApp->RestoreViewFocus();
   if (!m_bCollapseGroups) {
-    mItemArray.RemoveAt(oldIndex);
+    RemoveFromArray(oldIndex);
     mItemArray.InsertAt(newIndex, item);
   } else {
 
@@ -1668,7 +1679,7 @@ void CNavigatorDlg::OnListItemDrag(int oldIndex, int newIndex)
     
     for (i = 0; i < num; i++) {
       item = mItemArray[fromInd];
-      mItemArray.RemoveAt(fromInd);
+      RemoveFromArray(fromInd);
       mItemArray.InsertAt(toInd, item);
       fromInd += moveInc;
       toInd += moveInc;
@@ -3816,7 +3827,7 @@ void CNavigatorDlg::UndoAutocontPolyAddition(
     polyArray.SetAt(indsInPoly[ind], item);
     item->mDraw = true;
   }
-  mItemArray.RemoveAt(size - numRemove, numRemove);
+  RemoveFromArray(size - numRemove, numRemove);
   RefillAfterAutocontPolys();
 }
 
@@ -4251,7 +4262,7 @@ void CNavigatorDlg::PolygonFromCorners(void)
       for (int i = (int)mItemArray.GetSize() - 1; i >= 0; i--) {
         item = mItemArray[i];
         if (item->mCorner && item->mRegistration == mCurrentRegistration) {
-          mItemArray.RemoveAt(i);
+          RemoveFromArray(i);
           delete item;
         }
       }
@@ -5245,7 +5256,7 @@ void CNavigatorDlg::DeleteGroup(bool collapsedGroup)
         item->mAcquire = false;
         mHelper->EndAcquireOrNewFile(item);
       }
-      mItemArray.RemoveAt(i);
+      RemoveFromArray(i);
       delete item;
     }
   }
@@ -6212,7 +6223,7 @@ int CNavigatorDlg::MakeGridOrFoundPoints(int jstart, int jend, int jdir, int kst
           item = mItemArray[k];
           delete item;
         }
-        mItemArray.RemoveAt(mNumberBeforeAdd, mItemArray.GetSize() - mNumberBeforeAdd);
+        RemoveFromArray(mNumberBeforeAdd, (int)mItemArray.GetSize() - mNumberBeforeAdd);
         mSelectedItems = selListBefore;
         mCurListSel = curSelBefore;
         mCurrentItem = curItemBefore;
@@ -10238,6 +10249,7 @@ void CNavigatorDlg::AcquireNextTask(int param)
     mWillDoTemplateAlign = false;
     mWillRelaxStage = false;
     mAcqMadeMapWithID = 0;
+    mAcqAutoDefocus = EXTRA_NO_VALUE;
     for (after = 0; after < 2; after++) {
 
       // Do final things before primary action, at start of second loop
@@ -10430,10 +10442,17 @@ void CNavigatorDlg::AcquireNextTask(int param)
         mAcqParm->cycleDefFrom) * mFocusCycleCounter / mAcqParm->cycleSteps);
       oldTarget = mWinApp->mFocusManager->GetTargetDefocus();
       mWinApp->mFocusManager->SetTargetDefocus(target);
-      mScope->IncDefocus(target - oldTarget);
+      report.Format("Target defocus set to %.2f um", target);
+      if (mNumDoneAcq || (!mWinApp->mFocusManager->GetLastFailed() && 
+        !mWinApp->mFocusManager->GetLastAborted() &&
+        fabs(mWinApp->mFocusManager->GetLastTargetFocus() - oldTarget) < 0.01 && 
+        fabs(mWinApp->mFocusManager->GetLastScopeFocus() - mScope->GetDefocus()) < 0.5)) {
+        mScope->IncDefocus(target - oldTarget);
+        str.Format(" and scope defocus changed by %.2f", target - oldTarget);
+        report += str;
+      }
       mFocusCycleCounter = (mFocusCycleCounter + 1) % (mAcqParm->cycleSteps + 1);
-      PrintfToLog("Target defocus set to %.2f um and scope defocus changed by %.2f", 
-        target, target - oldTarget);
+      SEMAppendToLog(report);
     }
 
     // Handle hole vectors for multishot
@@ -10670,6 +10689,8 @@ void CNavigatorDlg::AcquireNextTask(int param)
     case NAACT_RUN_PREMACRO:
     case NAACT_RUN_EX_MACRO:
       if (mSkipAcquiringItem) {
+        if (mAcqParm->acquireType == ACQUIRE_MULTISHOT)
+          mInitialTotalShots -= mHelper->GetNumHolesForItem(item, -1);
         SkipToNextItemInAcquire(item, mAcqSteps[mAcqStepIndex] == NAACT_RUN_PREMACRO ?
           "in pre-script" : "in extra script");
       }
@@ -10693,6 +10714,8 @@ void CNavigatorDlg::AcquireNextTask(int param)
       } else if (mWinApp->mFocusManager->GetLastFailed() ||
         mWinApp->mFocusManager->GetLastAborted()) {
         SkipToNextItemInAcquire(item, "in autofocus");
+      } else {
+        mAcqAutoDefocus = mScope->GetDefocus();
       }
       break;
 
@@ -10722,11 +10745,12 @@ void CNavigatorDlg::AcquireNextTask(int param)
       }
       break;
 
-      // Record that eucentricity was done
+      // Record that eucentricity was done and invalidate defocus
     case NAACT_EUCEN_BY_FOCUS:
     case NAACT_ROUGH_EUCEN:
     case NAACT_FINE_EUCEN:
       mDidEucentricity = true;
+      mAcqAutoDefocus = EXTRA_NO_VALUE;
       break;
 
     default:
@@ -11520,7 +11544,7 @@ void CNavigatorDlg::SendEmailIfNeeded(void)
 // of doing a new area
 int CNavigatorDlg::FindAndSetupNextAcquireArea()
 {
-  int ind, err, axisBits = axisXY | axisZ;
+  int ind, err, numShots, axisBits = axisXY | axisZ;
   bool skippedGroup = false, skippingGroup, acquire;
   CMapDrawItem *item;
   mRealignedInAcquire = false;
@@ -11531,8 +11555,15 @@ int CNavigatorDlg::FindAndSetupNextAcquireArea()
       PrintfToLog("Skipping point(s) with group ID %d", mGroupIDtoSkip);
       skippedGroup = true;
     }
-    if (!acquire && skippingGroup)
+    if (!acquire && skippingGroup) {
       mNumDoneAcq++;
+
+      // Adjust multishot count for items still marked as acquire
+      if (mAcqParm->acquireType == ACQUIRE_MULTISHOT && item->mAcquire) {
+        numShots = mHelper->GetNumHolesForItem(item, -1);
+        mInitialTotalShots -= numShots;
+      }
+    }
     if (!acquire)
       continue;
 
@@ -12038,7 +12069,7 @@ void CNavigatorDlg::FinishSingleDeletion(CMapDrawItem *item, int delIndex, int l
   }
   delete item;
 
-  mItemArray.RemoveAt(delIndex);
+  RemoveFromArray(delIndex);
   MakeListMappings();
   if (!isCurrentInList) {
     if (listInd < mCurListSel && !multipleInGroup) {
@@ -12082,16 +12113,28 @@ void CNavigatorDlg::ExternalDeleteItem(CMapDrawItem *item, int delIndex)
 void CNavigatorDlg::SetGroupAcquireFlags(int groupID, BOOL acquire)
 {
   CMapDrawItem *item;
-  int numTS, numNonTS, numBefore, numAfter;
+  int numTS, numNonTS, numBefore, numAfter, numDef, numShots, delAcq;
+  mHelper->GetNumHolesFromParam(numBefore, numAfter, numDef);
   if (mAcquireIndex >= 0) {
     mHelper->CountAcquireItems(mAcquireIndex, mEndingAcquireIndex, numNonTS, numTS);
     numBefore = mAcqParm->acquireType == ACQUIRE_DO_TS ? numTS : numNonTS;
   }
+
   for (int ind = 0; ind < (int)mItemArray.GetSize(); ind++) {
     item = mItemArray.GetAt(ind);
     if (item->mGroupID == groupID) {
+      delAcq = 0;
+      if (!BOOL_EQUIV(item->mAcquire, acquire))
+        delAcq = acquire ? 1 : -1;
       item->mAcquire = acquire;
       UpdateListString(ind);
+
+      // Adjust multishot count if in range, not item itself, and acquire is changing
+      if (mAcquireIndex >= 0 && mAcqParm->acquireType == ACQUIRE_MULTISHOT &&
+        ind > mAcquireIndex && ind <= mEndingAcquireIndex) {
+        numShots = mHelper->GetNumHolesForItem(item, numDef);
+        mInitialTotalShots += delAcq * numShots;
+      }
     }
   }
   if (mAcquireIndex >= 0) {
@@ -13007,4 +13050,17 @@ void CNavigatorDlg::UpdateHiding()
   int numHide = sizeof(IDsToHide) / sizeof(int);
   for (int ind = 0; ind < numHide; ind++)
     ShowDlgItem(IDsToHide[ind], !mWinApp->IsIDinHideSet(IDsToHide[ind]));
+}
+
+void CNavigatorDlg::RemoveFromArray(int index, int num)
+{
+  CString str;
+  if (mReloadTableOnNextAdd > 0) {
+    str.Format("\r\nSpecial backtrace on removals after new multigrid map:\r\n"
+      "Remove from item array called with index %d num %d cur size %d", index,
+      num, mItemArray.GetSize());
+    AddBackTraceToMessage(str);
+    SEMAppendToLog(str);
+  }
+  mItemArray.RemoveAt(index, num);
 }
