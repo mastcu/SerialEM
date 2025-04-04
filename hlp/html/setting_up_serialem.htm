@@ -3831,16 +3831,19 @@ MoveStage 0 0 -$zRange / 2.
         an image, and use a script command 'SetApertureSize 2 X' to change the size to 
         'X'.&nbsp; Aperture control has been found not to work on more than one Glacios and 
         at least one Krios running Windows 10 when using the UI Automation.</p>
-      <p>By default, SEM-AutoIT will select an aperture by its index on Windows 7 and by 
-        its size on Windows 10, because selecting by index failed on some Windows 10 
-        systems (the same ones where UI Automation fails).&nbsp; The disadvantage of 
-        selecting by size is that if the size passed in does not match an available 
-        size, either no change will occur or it will select an aperture with the same 
-        starting digit, and no error message is generated.&nbsp; An environment 
-        variable, FEISEM_APERTURE_BY_SIZE, can be set on the microscope computer to 1 to 
-        make the program select by size on Windows 7, or to 0 to make it select by index 
+      <p>By default, SEM-AutoIT will select an aperture by its position in the combo box 
+        on Windows 7 and by its size value in the combo box on Windows 10, because 
+        selecting by positional index failed on some Windows 10 systems (the same ones 
+        where UI Automation fails).&nbsp; The disadvantage of selecting by size is that 
+        if the size passed in does not match an available size, either no change will 
+        occur or it will select an aperture with the same starting digit, and no error 
+        message is generated.&nbsp; An environment variable, FEISEM_APERTURE_BY_SIZE, 
+        can be set on the microscope computer to 1 to make SEM-AutoIT select by size 
+        value in the combo box on Windows 7, or to 0 to make it select by position in 
+        the combo box 
         on Windows 10.&nbsp; As always, restart FEI-SEMserver.exe after changing any of 
-        the relevant environment variables.</p>
+        the relevant environment variables.&nbsp; Regardless of how SEM-AutoIT tries to 
+        select the aperture, the command from SerialEM specifies a size, not an index.</p>
       <p>The aperture operations, and 'ReportSlotStatus', will hang FEI-SEMserver.exe on 
         some Windows 7 systems, even though they work when SerialEM is running directly 
         on the scope computer. &nbsp; If this occurs, set the environment variable 
