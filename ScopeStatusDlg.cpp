@@ -154,6 +154,7 @@ BOOL CScopeStatusDlg::OnInitDialog()
     IDC_STAT_XLABEL, IDC_STAT_YLABEL, IDC_STAT_ZLABEL, IDC_STAT_OBJLABEL, IDC_STAT_UMMM,
     IDC_STAT_UBPIX, IDC_STAT_C23IA, 0};
   int ind = 0;
+  CWnd *win;
 
   // Get the fonts for big and medium windows
   CRect rect;
@@ -191,14 +192,21 @@ BOOL CScopeStatusDlg::OnInitDialog()
   m_butFloat.SetFont(mLittleFont);
   m_butDose.SetFont(mLittleFont);
   while (medFontIDs[ind] > 0) {
-    CWnd *win = GetDlgItem(medFontIDs[ind++]);
+    win = GetDlgItem(medFontIDs[ind++]);
     if (win)
       win->SetFont(&mMedFont);
   }
+  win = GetDlgItem(IDC_RSPEC_DOSE);
+  if (win)
+    win->SetFont(mLittleFont);
+  win = GetDlgItem(IDC_RCAM_DOSE);
+  if (win)
+    win->SetFont(mLittleFont);
   m_statDoseRate.ShowWindow(SW_HIDE);
   m_statUbpix.ShowWindow(SW_HIDE);
   ShowDlgItem(IDC_RSPEC_DOSE, mWinApp->GetAnyDirectDetectors());
   ShowDlgItem(IDC_RCAM_DOSE, mWinApp->GetAnyDirectDetectors());
+
   m_butResetDef.SetFont(mLittleFont);
   if (JEOLscope || HitachiScope) {
     if (mWinApp->mScope->GetUsePLforIS()) {
@@ -526,13 +534,13 @@ void CScopeStatusDlg::Update(double inCurrent, int inMagInd, double inDefocus,
         BinDivisorF(camParam);
       camDose = dose * pixel * pixel * camParam->specToCamDoseFac;
       if (fabs(camDose - mCamDoseRate) > 1.e-6 || switchCamDose) {
-        m_strDoseRate.Format("%.2f", camDose);
+        m_strDoseRate.Format(camDose > 999. ? "%.1f" : "%.2f", camDose);
         m_statDoseRate.SetWindowText(m_strDoseRate);
         mCamDoseRate = camDose;
       }
 
     } else if (fabs(dose - mDoseRate) > 1.e-6 || switchCamDose) {
-      m_strDoseRate.Format("%.2f", dose);
+      m_strDoseRate.Format(dose > 999. ? "%.1f" : "%.2f", dose);
       m_statDoseRate.SetWindowText(m_strDoseRate);
       mDoseRate = dose;
     }

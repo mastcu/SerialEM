@@ -1533,9 +1533,9 @@ EXSTYLE WS_EX_TOOLWINDOW | WS_EX_LEFTSCROLLBAR
 FONT 8, "Microsoft Sans Serif", 0, 0, 0x1
 BEGIN
     PUSHBUTTON      "-",IDC_BUTOPEN,4,0,9,7
-    CONTROL         "S",IDC_RSPEC_DOSE,"Button",BS_AUTORADIOBUTTON | BS_PUSHLIKE | WS_GROUP,4,66,8,10
-    CONTROL         "C",IDC_RCAM_DOSE,"Button",BS_AUTORADIOBUTTON | BS_PUSHLIKE,14,66,8,10
-    RTEXT           "67.32",IDC_STAT_DOSERATE,22,67,29,9
+    CONTROL         "Spec",IDC_RSPEC_DOSE,"Button",BS_AUTORADIOBUTTON | BS_PUSHLIKE | WS_GROUP,2,67,14,8
+    CONTROL         "Cam",IDC_RCAM_DOSE,"Button",BS_AUTORADIOBUTTON | BS_PUSHLIKE,16,67,13,8
+    RTEXT           "67.32",IDC_STAT_DOSERATE,29,67,24,9
     CTEXT           "Microscope",IDC_STATTOPLINE,69,0,36,8
     LTEXT           "Def",IDC_STAT_DEFLABEL,4,24,12,9,SS_CENTERIMAGE
     LTEXT           "mm",IDC_STATXLM,105,9,12,9,SS_CENTERIMAGE
@@ -1564,7 +1564,7 @@ BEGIN
     LTEXT           "Z:",IDC_STAT_ZLABEL,24,57,8,9
     RTEXT           "-1200.99",IDC_STAT_STAGEY,74,47,28,9,SS_CENTERIMAGE
     RTEXT           "-1200.99",IDC_STAT_STAGEZ,31,57,28,9,SS_CENTERIMAGE
-    LTEXT           "e/A2/s at specimen",IDC_STAT_UBPIX,53,67,63,9
+    LTEXT           "e/A2/s at specimen",IDC_STAT_UBPIX,54,67,62,9
     CTEXT           "EFTEM",IDC_STAT_EM_MODE,3,8,35,10,SS_CENTERIMAGE
     CTEXT           "",IDC_STAT_PROBEALF,14,36,16,9,SS_CENTERIMAGE
     PUSHBUTTON      "Reset",IDC_BUTRESETDEFOCUS,2,18,16,7
@@ -6510,6 +6510,9 @@ BEGIN
                             "If initial defocus is needed, use Focus area when in Low Dose mode"
     IDC_CHECK_CTF_EXPOSURE  "Use the exposure time here instead of the time in the Record parameters"
     IDC_EDIT_CTF_EXPOSURE   "Enter the exposure time to use in images for CTF fitting"
+    IDC_CHECK_TRACK_BIG_TILT 
+                            "Always track when tilt from other side exceeds a certain number of degrees"
+    IDC_EDIT_BIG_TILT       "Change in tilt angle above which to track every time"
 END
 
 STRINGTABLE
@@ -8133,9 +8136,6 @@ BEGIN
     ID_SCRIPT_LISTFKEYMAPPINGS "Print list of function key mappings to log"
     ID_BEAMSPOT_PARALLELILLUMINATION 
                             "Save intensity, spot size, and probe/alpha as parallel illumination conditions"
-    IDC_CHECK_TRACK_BIG_TILT
-                            "Always track when tilt from other side exceeds a certain number of degrees"
-    IDC_EDIT_BIG_TILT       "Change in tilt angle above which to track every time"
 END
 
 #endif    // English (United States) resources
