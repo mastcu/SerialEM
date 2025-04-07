@@ -354,6 +354,8 @@ CEMscope::CEMscope()
   mJeolSD.coarseBaseFocus = 0x8000;
   mJeolSD.fineBaseFocus = 0x8000;
   mJeolSD.miniBaseFocus = 0x8000;
+  mJeolSD.StemCL3BaseFocus = 0x8000;
+  mJeolParams.StemLMCL3ToUm = 0.;
   mJeolSD.relaxingLenses = false;
   mC2IntensityFactor[0] = mC2IntensityFactor[1] = 1.;
   mAddToRawIntensity = 0.;
@@ -757,6 +759,8 @@ int CEMscope::Initialize()
       mJeolParams.fillNitrogenTimeout = mJeolRefillTimeout;
       mJeolSD.mainDetectorID = mMainDetectorID;
       mJeolSD.pairedDetectorID = mPairedDetectorID;
+      if (mJeolParams.StemLMCL3ToUm > 0.)
+        mJeolParams.flags |= JEOL_CL3_FOCUS_LM_STEM;
 
       // Event stuff is subject to revision if it fails, including spectrum by event
       mScreenByEvent = mUpdateByEvent;  // This hasn't needed to be separate
@@ -9166,6 +9170,16 @@ void CEMscope::SetJeolUsePLforIS(BOOL inVal)
     for (int i = 2; i < MAX_MAGS; i++)
       AddShiftBoundary(i);
   }
+}
+
+void CEMscope::SetJeolStemLMCL3toUm(float inVal)
+{
+  mJeolParams.StemLMCL3ToUm = inVal;
+}
+
+float CEMscope::GetJeolStemLMCL3toUm()
+{
+  return mJeolParams.StemLMCL3ToUm;
 }
 
 void CEMscope::SetMessageWhenClipIS(BOOL inVal)

@@ -231,6 +231,8 @@ public:
   const char *GetC2Name() { return (LPCTSTR)mC2Name; };
   const char *GetC2Units() { return (LPCTSTR)mC2Units; };
   void SetJeolUsePLforIS(BOOL inVal);
+  void SetJeolStemLMCL3toUm(float inVal);
+  float GetJeolStemLMCL3toUm();
   BOOL SetColumnValvesOpen(BOOL state, bool crashing = false);
   int GetColumnValvesOpen();
   int FastColumnValvesOpen();

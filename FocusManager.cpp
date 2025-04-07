@@ -386,7 +386,7 @@ void CFocusManager::OnFocusReportonexisting()
     if (!KGetOneInt("Number of images to analyze:", numpic))
       return;
     B3DCLAMP(numpic, 3, MAX_BUFFERS - 3);
-    if (!mSFnormalizedSlope[mScope->GetProbeMode()])
+    if (!mSFnormalizedSlope[GetSTEMFocusProbeOrIndex()])
       KGetOneFloat("Normalized slope to use:", mBackupSlope, 2);
     mDoChangeFocus = 0;
     mNumRotavs = 0;
@@ -1039,7 +1039,7 @@ BOOL CFocusManager::FocusReady(int magInd, bool *calibrated)
   if (!mScope)
     return false;
   if (mWinApp->GetSTEMMode())
-    return (mSFnormalizedSlope[mScope->GetProbeMode()] != 0.);
+    return (mSFnormalizedSlope[GetSTEMFocusProbeOrIndex()] != 0.);
 
   // Use actual parameters in low dose
   if (mWinApp->LowDoseMode()) {
@@ -1168,7 +1168,7 @@ void CFocusManager::AutoFocusStart(int inChange, int useViewInLD, int iterNum)
   } else {
 
     // STEM
-    slope = mSFnormalizedSlope[mScope->GetProbeMode()];
+    slope = mSFnormalizedSlope[GetSTEMFocusProbeOrIndex()];
     if (!slope)
       return;
     if (mShiftManager->ShiftAdjustmentForSet(FOCUS_CONSET, mFocusMag, shiftX, shiftY))
@@ -2272,7 +2272,7 @@ int CFocusManager::RotationAveragedSpectrum(EMimageBuffer * imBuf, float * rotav
   int ix0, ix1, iy0, iy1, width, nxpad, nypad;
   int nx = image->getWidth();
   int ny = image->getHeight();
-  int probeMode = mScope->GetProbeMode();
+  int probeMode = GetSTEMFocusProbeOrIndex();
 
   // Set up the subarea to use: if there is a normalized slope and the tilt is sizable,
   // get the width that will contain the maximum allowed change in beam size
@@ -2469,7 +2469,7 @@ void CFocusManager::STEMfocusShot(int param)
     bestFocus = (intcp1 - intcp2) / (slope1 + slope2) + mRFTdefocus[mSFmaxPowerInd] +
       (float)mSFbaseFocus;
     meanSlope = (numpts1 * slope1 + numpts2 *slope2) / (numpts1 + numpts2);
-    ind = mScope->GetProbeMode();
+    ind = GetSTEMFocusProbeOrIndex();
     mSFnormalizedSlope[ind] = meanSlope * mShiftManager->GetPixelSize(&mImBufs[bufInd]);
     str.Format("Slopes of fits below and above are %.2f and %.2f pixel/um (CCs %.4f and "
       "%.4f)\r\nWeighted mean slope is %.2f pixel/um, %f um/um\r\n"
@@ -2582,7 +2582,7 @@ void CFocusManager::STEMfocusShot(int param)
         fitRotavs[numpts1++] = mRFTrotavs[i];
       }
     }
-    slope1 = mSFnormalizedSlope[mScope->GetProbeMode()] / 
+    slope1 = mSFnormalizedSlope[GetSTEMFocusProbeOrIndex()] /
       mShiftManager->GetPixelSize(&mImBufs[bufInd]);
     i = findFocus(fitRotavs, numpts1, mRFTnumPoints, fitFocus, 
       fitPowers, fitBackgrounds, slope1, mRFTfitStart, mRFTfitEnd, 
@@ -2718,7 +2718,7 @@ void CFocusManager::OnStemFocusVsZ()
   SEMTrace('f', "base Z %.2f  defocus %.2f", mSFVZbaseZ, mSFVZbaseFocus);
   mSFVZindex = -2;
   mSFVZtable.numPoints = 0;
-  mSFVZtable.probeMode = mScope->GetProbeMode();
+  mSFVZtable.probeMode = GetSTEMFocusProbeOrIndex();
   mSFVZtable.spotSize = mScope->GetSpotSize();
   mSFVZdefocusToDeltaZ = mSTEMdefocusToDelZ[mSFVZtable.probeMode];
   mWinApp->SetStatusText(COMPLEX_PANE, "MEASURING FOCUS(Z)");
@@ -2947,7 +2947,7 @@ float CFocusManager::GetSTEMdefocusToDelZ(int spotSize, int probeMode, double ab
   int ind, i, imin, imax;
   double diff, minDiff = 10000.;
   if (probeMode < 0)
-    probeMode = mScope->GetProbeMode();
+    probeMode = GetSTEMFocusProbeOrIndex();
   if (!mSFfocusZtables.GetSize())
     return mSTEMdefocusToDelZ[probeMode];
   if (spotSize < 0)
@@ -2972,6 +2972,15 @@ float CFocusManager::GetSTEMdefocusToDelZ(int spotSize, int probeMode, double ab
   imin = B3DMAX(0, imin - 2);
   return (mSFfocusZtables[ind].stageZ[imax] - mSFfocusZtables[ind].stageZ[imin]) /
     (mSFfocusZtables[ind].defocus[imax] - mSFfocusZtables[ind].defocus[imin]);
+}
+
+// A hack to enable autofocus in LM in JEOL.  If necessary, the array(s) could be extended
+// and the index could be 2 to apply it for FEI
+int CFocusManager::GetSTEMFocusProbeOrIndex()
+{
+  if (JEOLscope && mScope->GetMagIndex() < mScope->GetLowestSTEMnonLMmag(0))
+    return 1;
+  return mScope->GetProbeMode();
 }
 
 // Compute beam tilt scaling to mrad from focus calibrations

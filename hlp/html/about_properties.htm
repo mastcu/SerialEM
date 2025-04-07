@@ -5202,14 +5202,26 @@
         <TR VALIGN="top">
           <TD>JeolSTEMdefocusFactor</TD>
           <TD>Scaling factor needed to make changes in the defocus readout in SerialEM match
-            changes in the JEOL interface.</TD>
+            changes in the JEOL interface outside of LM.</TD>
         </TR>
         <TR VALIGN="top">
           <TD>STEMdefocusToDeltaZ</TD>
           <TD>Scaling factor to convert a defocus change to a difference in Z height, as
             output by <A HREF="menu_calibration.htm#hid_calibration_stemfocusvsz">
               STEM Focus Vs. Z</A> in the Calibration menu.&nbsp; There can be two numbers
-            on this line, the first for nanoprobe mode and the second for microprobe mode.</TD>
+            on this line: for Thermo/FEI, the first for nanoprobe mode and the second for microprobe mode; for
+            JEOL, the first for nonLM and the second for LM.
+          </TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>JeolLMStemCL3ToMicrons</TD>
+          <TD>Scaling factor to convert a CL3 value to a defocus in microns when a JEOL 
+            scope is in low-magnification STEM.&nbsp; There is no default; this property 
+            must be present to have focus obtained and set through CL3 in LM.&nbsp; Start 
+            with an arbitrary value (0.01?), and determine how big the change in defocus 
+            readout is in the microscope interface for a given focus change imposed in 
+            SerialEM (or vice versa).&nbsp; Multiply the existing factor by the ratio of 
+            the change in the microscope interface to the change in SerialEM.</TD>
         </TR>
         <TR VALIGN="top">
           <TD>STEMFocusVsZBacklash</TD>

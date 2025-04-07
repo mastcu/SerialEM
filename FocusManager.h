@@ -86,6 +86,7 @@ public:
   void SetTiltDirection(int inVal);
   void SetSTEMdefocusToDelZ(float in1, float in2) {mSTEMdefocusToDelZ[0] = in1; if (in2) mSTEMdefocusToDelZ[1] = in2;};
   float GetSTEMdefocusToDelZ(int spotSize, int probeMode = -1, double absFocus = -1.);
+  int GetSTEMFocusProbeOrIndex();
   CArray<STEMFocusZTable, STEMFocusZTable> *GetSFfocusZtables() {return &mSFfocusZtables;};
   BOOL DoingFocus() {return (mFocusIndex >= 0 || mNumRotavs >= 0);};
   void CalFocusStart(bool doSparse);
