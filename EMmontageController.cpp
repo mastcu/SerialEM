@@ -123,6 +123,7 @@ EMmontageController::EMmontageController()
   mNoMontXCorrThread = false;
   mNoDrawOnRead = false;
   mNextPctlPatchSize = 0;
+  mLastSavedAtZ = -1;
 }
 
 EMmontageController::~EMmontageController()
@@ -1807,14 +1808,17 @@ int EMmontageController::DoNextPiece(int param)
   float delayFactor = MONTAGE_DELAY_FACTOR;
   CString report, str;
   bool doBacklash, invertBacklash, nextPieceBlockCen, gotStageXY = false;
+  bool checkStats = false;
   bool precooking = mTrialMontage == MONT_TRIAL_PRECOOK;
   BOOL moveStage = mDoStageMoves;
   double adjISX, adjISY;
   float alignISDelayFac = 0.25f;
-  int ix, type, delay, iDelX, iDelY, nextPiece, startsCol;
+  int ix, type, delay, iDelX, iDelY, nextPiece, startsCol, adocInd, nameInd;
   KImage *image;
   void *data;
   float sDmin, denmin;
+  float amin, amax, amean, expMin, expMax, expMean, lastMin, lastMax, lastMean;
+  char *names[2] = {ADOC_ZVALUE, ADOC_IMAGE};
 
   if (mTrialMontage)
     delayFactor /= 4.f;
@@ -1856,15 +1860,57 @@ int EMmontageController::DoNextPiece(int param)
   if (mReadingMontage) {
     report.Format("PIECE %d of %d", mNumDoing, mNumPieces - mNumToSkip);
     mWinApp->SetStatusText(SIMPLE_PANE, report);
-    SEMTrace('1', "Reading in Z = %d for piece %d (%d,%d)", mPieceSavedAt[mPieceIndex], 
-      mPieceIndex, mPieceIndex / mParam->yNframes + 1, mPieceIndex % mParam->yNframes + 1);
 
-    int err = mBufferManager->ReadFromFile(mReadStoreMRC, mPieceSavedAt[mPieceIndex], 0,
-      true);
-    if (err) {
-      StopMontage();
-      return err;
+    // For the first read-in image, if saving was the last action, need to check for it
+    // reading in the wrong data - get the min/max/mean for the images in question
+    if (!mSeqIndex && mLastSavedAtZ >= 0) {
+      adocInd = mReadStoreMRC->GetAdocIndex();
+      nameInd = mReadStoreMRC->getStoreType() == STORE_TYPE_ADOC ? 1 : 0;
+      if (adocInd >= 0 && !AdocGetMutexSetCurrent(adocInd)) {
+        if (!AdocGetThreeFloats(names[nameInd], mPieceSavedAt[mPieceIndex], 
+          ADOC_MINMAXMEAN, &expMin, &expMax, &expMean) && 
+          !AdocGetThreeFloats(names[nameInd], mLastSavedAtZ,
+            ADOC_MINMAXMEAN, &lastMin, &lastMax, &lastMean))
+          checkStats = true;
+        AdocReleaseMutex();
+      }
     }
+
+    for (int readLoop = 0; readLoop < (checkStats ? 3 : 1); readLoop++) {
+      int err = mBufferManager->ReadFromFile(mReadStoreMRC, mPieceSavedAt[mPieceIndex], 0,
+        true);
+      if (err) {
+        StopMontage();
+        return err;
+      }
+      if (checkStats) {
+
+        // If checking, get the MMM and see if everything matches the last written image
+        // better than the current image
+        mImBufs->mImage->getSize(iDelX, iDelY);
+        fullArrayMinMaxMean(mImBufs->mImage->getData(), mImBufs->mImage->getType(), iDelX,
+          iDelY, &amin, &amax, &amean);
+        if (fabs(lastMin - amin) < fabs(expMin - amin) && 
+          fabs(lastMax - amax) < fabs(expMax - amax) &&
+          fabs(lastMean - amean) < fabs(expMean - amean)) {
+          if (readLoop < 2) {
+            SEMAppendToLog("WARNING: First read-in image matches last saved one better"
+              " than expected image, reading it again");
+            mWinApp->mStoreMRC->Flush();
+            Sleep(1000);
+          } else {
+            SEMAppendToLog("WARNING: It still matches; giving up");
+          }
+        } else {
+          SEMTrace('1', "Image stats match expected values");
+          break;
+        }
+      }
+    }
+
+    // If anything else gets read, clear out last saved Z to avoid checks on just reading
+    if (mSeqIndex)
+      mLastSavedAtZ = -1;
     SavePiece();
     if (!mSynchronous)
       mWinApp->AddIdleTask(CCameraController::TaskCameraBusy, TASK_MONTAGE, 0, 0);
@@ -2375,7 +2421,7 @@ int EMmontageController::SavePiece()
   float *centerFloat = (float *)mCenterData;
   unsigned short int *uCenter = (unsigned short int *)mCenterData;
   double aMaxCos;
-  EMimageExtra *extra0, *extra1;
+  EMimageExtra *extra0 = NULL, *extra1;
   BOOL doingTasks;
 
   debugLevel = GetDebugOutput('a') ? 2 : 0;
@@ -2383,6 +2429,13 @@ int EMmontageController::SavePiece()
   image = mImBufs[0].mImage;
   type = image->getType();
   dataSizeForMode(type, &dataSize, &i);
+  if (GetDebugOutput('1') && (!mReadingMontage || !mSeqIndex)) {
+    mWinApp->SetCurrentBuffer(0);
+    fullArrayMinMaxMean(image->getData(), type, image->getWidth(),
+      image->getHeight(), &specX, &specY, &xPeak);
+    PrintfToLog("Piece %d  min/max/mean:  %.2f %.2f %.3f", mPieceIndex,
+      specX, specY, xPeak);
+  }
   if (!BOOL_EQUIV(mExpectingFloats, dataSize == 4)) {
     report.Format("SavePiece in montaging got a %s image when expecting %s",
       mExpectingFloats ? "integer" : "float", mExpectingFloats ? "floats" : "integers");
@@ -2393,8 +2446,8 @@ int EMmontageController::SavePiece()
 
   // Save the image
   if (!mReadingMontage && !mTrialMontage) {
+    extra0 = mImBufs->mImage->GetUserData();
     if (mImShiftInBlocks) {
-      extra0 = mImBufs->mImage->GetUserData();
       if (extra0) {
         extra0->mNominalStageX = mNominalStageX;
         extra0->mNominalStageY = mNominalStageY;
@@ -2430,6 +2483,7 @@ int EMmontageController::SavePiece()
       StopMontage();
       return 1;
     }
+    mLastSavedAtZ = isave;
 
     // Maintain Zmax every time a piece is saved
     if (mParam->zCurrent > mParam->zMax)
@@ -2768,7 +2822,6 @@ int EMmontageController::SavePiece()
     }
 
     // Bin if possible
-    SEMTrace('1', "Copying into %d  %d", miniBaseX + xstrt, miniBaseY + ystrt);
     if (!needSample && xstrt < xend && ystrt < yend) {
       if (type == kUBYTE)
         keepByte = mConvertMini ? 1 : -1;
