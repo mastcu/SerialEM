@@ -3193,6 +3193,17 @@ void CCameraController::Capture(int inSet, bool retrying)
     !(inSet == mRetainMagAndShift && mParam->STEMcamera))
     RestoreMagAndShift();
 
+  // Set partial scan to 2 the first time to signal that buffers need to be rolled
+  // This had to be moved up to handle dynamic focus correctly, so now ReturnPartialScan
+  // needs to be clear before any return that will come back in
+  // JEOL scope accesses need to be prevented when RPS is 1, and PostActionTime,
+  // DynFpcusInterval, and LineSyncAndFlags need to be protected from change
+  if (mParam->STEMcamera && (mParam->TietzType || mTD.UseUtapi) &&
+    conSet.exposure >= mPartialScanThreshExp && mSingleContModeUsed == SINGLE_FRAME) {
+    mTD.ReturnPartialScan = (mTD.ReturnPartialScan > 0) ? 1 : 2;
+  } else
+    mTD.ReturnPartialScan = 0;
+
   // For STEM camera, figure out detectors now in case it affects screen
   // Clear low dose area flag if returning just to be safe
   if (CapSetupSTEMChannelsDetectors(conSet, inSet, retracting)) {
@@ -3201,8 +3212,10 @@ void CCameraController::Capture(int inSet, bool retrying)
   }
 
   // Now manage the screen, raise or lower if necessary
-  if (CapManageScreen(inSet, retracting, numActive))
+  if (CapManageScreen(inSet, retracting, numActive)) {
+    mTD.ReturnPartialScan = 0;
     return;
+  }
 
   // If FEI camera has bad index, look it up to make sure it's there
   if (mParam->FEItype && mParam->eagleIndex < 0) {
@@ -3288,8 +3301,9 @@ void CCameraController::Capture(int inSet, bool retrying)
     mTD.NumAsyncSumFrames = -1;
     mNumSubsetAligned = 0;
     if (CapManageInsertTempK2Saving(conSet, inSet, retracting, numActive)) {
-        mLDwasSetToArea = -1;
-        return;
+      mLDwasSetToArea = -1;
+      mTD.ReturnPartialScan = 0;
+      return;
     }
   }
 
@@ -3299,10 +3313,12 @@ void CCameraController::Capture(int inSet, bool retrying)
     InitiateIfPending();
     return;
   }
-
+ 
   // Set the low dose area, setup the energy filter, and check for timeouts and settling
-  if (CapSetLDAreaFilterSettling(inSet))
+  if (CapSetLDAreaFilterSettling(inSet)) {
+    mTD.ReturnPartialScan = 0;
     return;
+  }
 
   if (mMinShotInterval > 0)
     Sleep(mMinShotInterval);
@@ -3332,8 +3348,8 @@ void CCameraController::Capture(int inSet, bool retrying)
   mNextFrameSkipThresh = 0.;
 
   // Log warning if column valves are closed or beam is off
-  if ((mScope->FastColumnValvesOpen() == 0) && !mScope->GetSimulationMode() &&
-    mWarnIfBeamNotOn)
+  if (mTD.ReturnPartialScan != 1 && mWarnIfBeamNotOn && !mScope->GetSimulationMode() &&
+    mScope->FastColumnValvesOpen() == 0)
     mWinApp->AppendToLog("WARNING: Column valves closed or beam off while acquiring "
       "image.");
 
@@ -3974,8 +3990,10 @@ void CCameraController::Capture(int inSet, bool retrying)
     mTD.cameraTimeout += 240000;
 
   // Save stage and mag before starting, setup drift with IS and dynamic focus
-  if (CapSaveStageMagSetupDynFocus(conSet, inSet))
+  if (CapSaveStageMagSetupDynFocus(conSet, inSet)) {
+    mTD.ReturnPartialScan = 0;
     return;
+  }
 
   // Set timeout for blanker to basic value plus an amount per micron for stage move
   mTD.blankerTimeout = 0;
@@ -4063,13 +4081,6 @@ void CCameraController::Capture(int inSet, bool retrying)
     (mTD.DivideBy2 ? PLUGCAM_DIVIDE_BY2 : 0);
   mTD.integration = conSet.integration;
   mTD.PluginVersion = GetPluginVersion(mParam);
-
-  // Set partial scan to 2 the first time to signal that buffers need to be rolled
-  if (mParam->STEMcamera && (mParam->TietzType || mTD.UseUtapi) && 
-    conSet.exposure >= mPartialScanThreshExp && mSingleContModeUsed == SINGLE_FRAME) {
-    mTD.ReturnPartialScan = (mTD.ReturnPartialScan > 0) ? 1 : 2;
-  } else
-    mTD.ReturnPartialScan = 0;
 
   if (mTD.ReturnPartialScan)
     mTD.PlugSTEMacquireFlags |= PLUGCAM_PARTIAL_SCAN;
@@ -4240,25 +4251,27 @@ int CCameraController::CapSetupSTEMChannelsDetectors(ControlSet &conSet, int inS
     }
 
     // Select the detectors for JEOL
-    if (JEOLscope) {
-      if (!mScope->SelectJeolDetectors((int *)mTD.ChannelIndex, mTD.NumChannels)) {
-        ErrorCleanup(1);
-        return 1;
-      }
+    if (mTD.ReturnPartialScan != 1) {
+      if (JEOLscope) {
+        if (!mScope->SelectJeolDetectors((int *)mTD.ChannelIndex, mTD.NumChannels)) {
+          ErrorCleanup(1);
+          return 1;
+        }
 
-      // Remap the channel index array into DS channels
-      if (mParam->GatanCam)
-        for (chan = 0; chan < mTD.NumChannels; chan++)
-          mTD.ChannelIndex[chan] = ChannelMappedTo(mTD.ChannelIndex[chan]);
+        // Remap the channel index array into DS channels
+        if (mParam->GatanCam)
+          for (chan = 0; chan < mTD.NumChannels; chan++)
+            mTD.ChannelIndex[chan] = ChannelMappedTo(mTD.ChannelIndex[chan]);
 
-    } else {
+      } else {
 
-      // Check for need to insert FEI detectors.  This seems to apply to any detector
-      // selected in TUI, so need to check all available ones
-      for (ind = 0; ind < mParam->numChannels; ind++) {
-        if (mParam->availableChan[ind] && !mFEIdetectorInserted[ind] && 
-          mParam->needShotToInsert[ind])
-          mNeedShotToInsert = inSet;
+        // Check for need to insert FEI detectors.  This seems to apply to any detector
+        // selected in TUI, so need to check all available ones
+        for (ind = 0; ind < mParam->numChannels; ind++) {
+          if (mParam->availableChan[ind] && !mFEIdetectorInserted[ind] &&
+            mParam->needShotToInsert[ind])
+            mNeedShotToInsert = inSet;
+        }
       }
     }
   }
@@ -5478,12 +5491,15 @@ void CCameraController::CapSetupShutteringTiming(ControlSet & conSet, int inSet,
   mTD.UnblankTime = 0;
   mTD.ReblankTime = 0;
   mTD.ShutterTime = 0;
-  mTD.DynFocusInterval = 0;
+  if (mTD.ReturnPartialScan != 1)
+    mTD.DynFocusInterval = 0;
   mTD.RamperWaitForBlank = mRamperWaitForBlank;
   mTD.ScanTime = 0;
   mTD.ShotDelayTime = 0;
   mTD.MinBlankTime = (int)(1000. * mMinBlankingTime);
   mTD.STEMcamera = mParam->STEMcamera;
+  if (mTD.ReturnPartialScan != 1)
+    mTD.LineSyncAndFlags = 0;
 
   if (FEIscope && mParam->DMCamera && mBeamWidth > 0. && mTD.IStoBS.xpx != 0.) {
     SetupBeamScan(&conSet);
@@ -5518,6 +5534,7 @@ void CCameraController::CapSetupShutteringTiming(ControlSet & conSet, int inSet,
             mTD.LineSyncAndFlags |= (mDScontrolBeam << 1);
       }
     }
+    
     SetNonGatanPostActionTime();
     mTD.DMsettling = 0.;
     if (mParam->TietzType)
@@ -5756,7 +5773,7 @@ void CCameraController::CapSetupShutteringTiming(ControlSet & conSet, int inSet,
   }
 
   // If there is no shutter, redo all of this!
-  if (mParam->noShutter && mScope->GetInitialized()) {
+  if (mParam->noShutter && mScope->GetInitialized() && mTD.ReturnPartialScan <= 0) {
     mTD.DMsettling = 0.;
     mTD.UnblankTime = 0;
     mTD.ReblankTime = 0;
@@ -5819,7 +5836,7 @@ int CCameraController::CapSaveStageMagSetupDynFocus(ControlSet & conSet, int inS
   // Now ready to set up parameters for drift compensation, or dynamic focus, and to set
   // the rotation angle for STEM
   SetupDriftWithIS();
-  if (mParam->STEMcamera) {
+  if (mParam->STEMcamera && mTD.ReturnPartialScan != 1) {
 
     // Boost the mag and save the old mag; but the mag for the image has to be the
     // boosted mag.  This variable was not set if a boost was retained
@@ -5854,7 +5871,7 @@ int CCameraController::CapSaveStageMagSetupDynFocus(ControlSet & conSet, int inS
     }
 
     // Create focus ramper if needed and make sure it's still there and responds
-    if (FEIscope && (mTD.UnblankTime != 0 || 
+    if (FEIscope && !mTD.UseUtapi && (mTD.UnblankTime != 0 ||
       (mTD.DynFocusInterval && mTD.PostActionTime))) {
 
         // Plugin scope
@@ -7552,7 +7569,7 @@ void CCameraController::AcquirePluginImage(CameraThreadData *td, void **array,
 
   // Start dynamic focus
   if (!retval && FEIscope && td->STEMcamera && td->DynFocusInterval && 
-    td->PostActionTime) {
+    td->PostActionTime && !td->UseUtapi) {
     retval = StartFocusRamp(td, rampStarted);
 
   } else if (!retval && blanker) {
@@ -7573,7 +7590,7 @@ void CCameraController::AcquirePluginImage(CameraThreadData *td, void **array,
         td->ReturnPartialScan = -td->ReturnPartialScan;
 
         // Get statistics back from focus ramp, make sure it ends
-      } else if (FEIscope && td->DynFocusInterval && td->PostActionTime) {
+      } else if (FEIscope && td->DynFocusInterval && td->PostActionTime && !td->UseUtapi){
         FinishFocusRamp(td, rampStarted);
       }
       numAcquired = B3DABS(numAcquired);
@@ -7841,7 +7858,7 @@ void CCameraController::StartAcquire()
   if (mShiftedISforSTEM) {
     mStartingISX = mIStoRestoreX;
     mStartingISY = mIStoRestoreY;
-  } else
+  } else if (mTD.ReturnPartialScan != 1)
     mScope->FastImageShift(mStartingISX, mStartingISY);
 
   // Shift for subarea in STEM
@@ -7897,7 +7914,7 @@ void CCameraController::StartAcquire()
   if (mTD.ScanTime > 0.) {
     mScope->SetDefocus(mTD.FocusBase);
     mScope->SetBeamShift(mTD.BeamBaseX, mTD.BeamBaseY);
-  } else if (mTD.DynFocusInterval > 0) {
+  } else if (mTD.DynFocusInterval > 0 && mTD.ReturnPartialScan != 1) {
     double extra = mTD.FocusBase > mCenterFocus ? 1. : -1.;
     mScope->SetDefocus(mTD.FocusBase + extra);
     mScope->SetDefocus(mTD.FocusBase);
@@ -7911,13 +7928,15 @@ void CCameraController::StartAcquire()
 
   // Unblank now for noShutter = 2 camera with known timing; it will get reblanked in
   // the blanker thread
-  if (mParam->noShutter == 2 && mTD.UnblankTime <= mTD.MinBlankTime)
-    mScope->BlankBeam(false, "For NoShutter 2");
-  if (mParam->noShutter == 1 && mTD.UnblankTime && !mTD.ReblankTime && 
-    mWinApp->mCalibTiming->Calibrating())
+  if (mTD.ReturnPartialScan != 1) {
+    if (mParam->noShutter == 2 && mTD.UnblankTime <= mTD.MinBlankTime)
+      mScope->BlankBeam(false, "For NoShutter 2");
+    if (mParam->noShutter == 1 && mTD.UnblankTime && !mTD.ReblankTime &&
+      mWinApp->mCalibTiming->Calibrating())
       mTD.MinBlankTime = 0;
-  if (mBlankNextShot)
-    mScope->BlankBeam(true, "For BlankNextShot");
+    if (mBlankNextShot)
+      mScope->BlankBeam(true, "For BlankNextShot");
+  }
 
   // Now set flag and start thread for actual acquisition
   mNeedToRestoreISandBT = 0;
@@ -7928,7 +7947,7 @@ void CCameraController::StartAcquire()
   mAcquireThread->m_bAutoDelete = false;
   if (mTD.ScanTime)
     mScope->SuspendUpdate((int)mTD.ScanTime + mTD.ScanDelay);
-  else if (mTD.DynFocusInterval > 0)
+  else if (mTD.DynFocusInterval > 0 && mTD.ReturnPartialScan != 1)
     mScope->SuspendUpdate((int)mTD.PostActionTime + mTD.ScanDelay);
 
   // Take care of our window stuff, then sleep right after starting thread
@@ -7992,9 +8011,9 @@ UINT CCameraController::AcquireProc(LPVOID pParam)
   CoInitializeEx(NULL, COINIT_MULTITHREADED);
   CameraThreadData *td = (CameraThreadData *)pParam;
   CameraThreadData pdTD;
-  bool startBlanker = td->PostActionTime || td->UnblankTime || td->ReblankTime ||
+  bool startBlanker = (td->PostActionTime || td->UnblankTime || td->ReblankTime ||
     td->FocusStep1 || td->TiltDuringDelay || td->FrameTStiltToAngle.size() || 
-    td->FrameTSwaitOrInterval.size();
+    td->FrameTSwaitOrInterval.size()) && td->ReturnPartialScan != 1;
   int sizeX, sizeY, chan, numChan, retval = 0, numCopied = 0;
   CString report, str;
   long binning = td->Binning;
@@ -8116,12 +8135,13 @@ UINT CCameraController::AcquireProc(LPVOID pParam)
       if (!retval) {
         
         // Start dynamic focus ramper for FEI scope
-        if (FEIscope && td->STEMcamera && (td->UnblankTime != 0 || 
-          (td->DynFocusInterval && td->PostActionTime))) {
+        if (FEIscope && td->STEMcamera && !td->UseUtapi && (td->UnblankTime != 0 || 
+          (td->DynFocusInterval && td->PostActionTime)) && td->ReturnPartialScan != 1) {
             retval = StartFocusRamp(td, rampStarted);
 
         // Or start thread to do extra blanking
-        } else if (startBlanker || td->ReblankTime || td->ScanTime > 0.) {
+        } else if ((startBlanker || td->ReblankTime || td->ScanTime > 0.) &&
+          td->ReturnPartialScan != 1) {
           if (td->WaitUntilK2Ready) {
             try {
               CallGatanCamera(pGatan, WaitUntilReady(td->WaitUntilK2Ready - 1));
@@ -8176,7 +8196,7 @@ UINT CCameraController::AcquireProc(LPVOID pParam)
  
           // Get statistics back from focus ramp, make sure it ends
           if (FEIscope && td->DynFocusInterval && td->PostActionTime && 
-            td->STEMcamera) {
+            td->STEMcamera && !td->UseUtapi) {
               FinishFocusRamp(td, rampStarted);
           }
 
@@ -8308,7 +8328,7 @@ UINT CCameraController::AcquireProc(LPVOID pParam)
     if (!retval) {
 
       // Start dynamic focus
-      if (td->STEMcamera && (td->UnblankTime != 0 || 
+      if (td->STEMcamera && !td->UseUtapi && (td->UnblankTime != 0 || 
         (td->DynFocusInterval && td->PostActionTime))) {
           retval = StartFocusRamp(td, rampStarted);
 
@@ -8327,7 +8347,7 @@ UINT CCameraController::AcquireProc(LPVOID pParam)
       }
 
       // Get statistics back from focus ramp, make sure it ends
-      if (td->DynFocusInterval && td->PostActionTime && td->STEMcamera) {
+      if (td->DynFocusInterval && td->PostActionTime && td->STEMcamera && !td->UseUtapi) {
         FinishFocusRamp(td, rampStarted);
       }
       
@@ -8537,7 +8557,7 @@ UINT CCameraController::AcquireProc(LPVOID pParam)
 
   // Deal with the blanking thread properly
   td->imageReturned = true;
-  if (td->blankerThread && !td->DoingTiltSums) {
+  if (td->blankerThread && !td->DoingTiltSums && td->ReturnPartialScan <= 0) {
     retval = WaitForBlankerThread(td, td->blankerTimeout, 
       _T("Blanking/post action thread did not end properly after the exposure"));
   }
@@ -8629,12 +8649,12 @@ UINT CCameraController::BlankerProc(LPVOID pParam)
   bool doFocusInTS = td->FrameTSfocusChange.size() > 0;
   bool doISinTS = td->FrameTSdeltaISX.size() > 0;
   bool doBSinTS = td->FrameTSdeltaBeamX.size() > 0;
-  int  numScan, step, numSteps;
+  int  numScan, step, numSteps, index;
   float minDelayOneRefine = 0.5f, minDelayPostTiltRefine = 0.2f;
-  double focus, focusBase;
+  double focus, rindex, focusBase = 0.;
   float focusChange, newChange, delISX, delISY, newDelISX, newDelISY;
   bool applyBefore = true;
-  long last_coarse, fineBase, coarseBase;
+  long last_coarse = 0, fineBase = 0, coarseBase = 0;
   HRESULT hr = S_OK;
   stData.info = info;
   _variant_t *vFalse = new _variant_t(false);
@@ -8757,7 +8777,7 @@ UINT CCameraController::BlankerProc(LPVOID pParam)
           "focus steps");
 
         // Get starting value in defocus units not microns
-        if (!JEOLscope) {
+        if (!JEOLscope || (td->LineSyncAndFlags & LSFLAG_JEOL_IN_LM)) {
           focusBase = 1.e6 * td->scopePlugFuncs->GetDefocus();
         } else {
           fineBase = td->JeolSD->objectiveFine;
@@ -8778,7 +8798,16 @@ UINT CCameraController::BlankerProc(LPVOID pParam)
             elapsed = SEMTickInterval((double)curTime, (double)startTime);
             if (elapsed > td->PostActionTime)
               break;
-            focus = elapsed * td->FocusPerMs;    // This is already in defocus units
+            if (FEIscope) {
+              rindex = elapsed * td->IndexPerMs;
+              index = (int)rindex;
+              if (index > MAX_RAMP_STEPS - 2)
+                index = MAX_RAMP_STEPS - 2;
+              focus = td->rampTable[index] + (rindex - index) *
+                (td->rampTable[index + 1] - td->rampTable[index]);
+            } else {
+              focus = elapsed * td->FocusPerMs;    // This is already in defocus units
+            }
             ChangeDynFocus(td, focusBase, focus, fineBase, coarseBase, 
               last_coarse);
             
@@ -8798,8 +8827,8 @@ UINT CCameraController::BlankerProc(LPVOID pParam)
               coarseBase, last_coarse);
           }
         }
-        SEMTrace('1', "Done with %s", td->DynFocusInterval ? "Dynamic focus" :
-          "focus steps");
+        SEMTrace('1', "Done with %s  PAT %d", td->DynFocusInterval ? "Dynamic focus" :
+          "focus steps", td->PostActionTime);
 
        // Tilt series while taking frames
       } else if (doFrameTS) {
@@ -9131,7 +9160,7 @@ void CCameraController::AddStatsAndSleep(CameraThreadData *td, DWORD &curTime,
 void CCameraController::ChangeDynFocus(CameraThreadData *td, double focusBase,
   double focus, long fineBase, long coarseBase, long &last_coarse)
 {
-  if (!JEOLscope) {
+  if (!JEOLscope || (td->LineSyncAndFlags & LSFLAG_JEOL_IN_LM)) {
     td->scopePlugFuncs->SetDefocus(1.e-6 * (focus + focusBase));
   } else {  // JEOL
     int focusSteps = B3DNINT(focus / td->JeolOLtoUm);
@@ -9928,7 +9957,8 @@ void CCameraController::DisplayNewImage(BOOL acquired)
         CorDefCorrectDefects(&mParam->defects, mTD.Array[chan], mTD.ImageType, 
           mBinning, mTop, mLeft, mBottom, mRight);
       }
-      if (mParam->OneViewType && !oneViewTakingFrames && mTD.Corrections > 0 && 
+
+      if (mParam->OneViewType && !oneViewTakingFrames && mTD.Corrections > 0 &&
         (mTD.Corrections & OVW_DRIFT_CORR_FLAG) != 0) {
           int analyzeLen = B3DMAX(1024, B3DMAX(mTD.DMSizeY, mTD.DMSizeX) / 4);
           int width = mBinning > 1 ? 30 : 60;
@@ -10801,7 +10831,7 @@ void CCameraController::ErrorCleanup(int error)
     mTD.FrameTStiltToAngle.clear();
     mTD.FrameTSwaitOrInterval.clear();
   }
-  if (mStartedScanning) {
+  if (mStartedScanning && mTD.ReturnPartialScan <= 0) {
     if (mTD.ScanTime || mTD.DynFocusInterval || mTD.FocusStep1)
       mScope->SetDefocus(mCenterFocus);
     if (mTD.ScanTime)
@@ -11631,6 +11661,10 @@ void CCameraController::SetupDynamicFocus(int numIntervals, double msPerLine,
   startZ = startY * tanAng;
   mTD.FocusBase = mCenterFocus + startZ / defocusToDelZ;
   mTD.JeolOLtoUm = mScope->GetJeol_OLfine_to_um() * mScope->GetJeolSTEMdefocusFac();
+  if (JEOLscope && mMagBefore < mScope->GetLowestSTEMnonLMmag(0)) {
+    mTD.LineSyncAndFlags |= LSFLAG_JEOL_IN_LM;
+    mTD.JeolOLtoUm = mScope->GetJeolStemLMCL3toUm();
+  }
 
   mTD.FocusPerMs = -mBinning * pixel * tanAng / (msPerLine * defocusToDelZ);
   mTD.PostActionTime = (int)(1000. * mExposure + mTD.DMSizeY * flyback / 1000.);
@@ -11711,6 +11745,8 @@ int CCameraController::ExternalSetupDynFocus(float exposure, int xSize, int ySiz
 // Set time for post-exposure actions; set up test blanking if extra beam time negative
 void CCameraController::SetNonGatanPostActionTime(void)
 {
+  if (mTD.ReturnPartialScan > 0)
+    return;
   mTD.PostActionTime = 0;
   if (!mScope->GetInitialized()) {
     mTD.UnblankTime = mTD.ReblankTime = 0;

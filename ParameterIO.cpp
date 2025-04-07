@@ -3955,7 +3955,7 @@ int CParameterIO::ReadProperties(CString strFileName)
         }
 
       } else if (MatchNoCase("STEMdefocusToDeltaZ"))
-        mWinApp->mFocusManager->SetSTEMdefocusToDelZ(itemFlt[1],itemFlt[1]);
+        mWinApp->mFocusManager->SetSTEMdefocusToDelZ(itemFlt[1],itemFlt[2]);
       else if (MatchNoCase("IntensityToC2Factor")) {
       }
       else if (MatchNoCase("StageLimits")) {

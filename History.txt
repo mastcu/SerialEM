@@ -3,6 +3,20 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+4/7/25: Added script command to load montage piece or image at Navigator
+point.
+
+4/7/25: Possibly fixed montage reading problem where the last piece saved was
+returned for the first piece being read in.
+
+4/7/25: Enabled dynamic focus to work with CL3 in LM on JEOL; fixed dynamic
+focus and probably some other problems when partial STEM scans are being
+returned.  This applies to TVIPS STEM, and also to STEM on Thermo through
+Utapi, where the ramp will done from SerialEM instead of FocusRamper.
+
+4/7/25: Added ability to get focus from CL3 in LM in STEM on a JEOL, and
+ability to autofocus and run routine to get delta Z versus defocus.
+
 4/4/25:  SEM_4-1-23
 4/1/25: Improved message when there is an error flashing FEG on JEOL and
 stopped message box from coming up.

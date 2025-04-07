@@ -97,6 +97,7 @@ FRAMEDOC_OPEN_ERR, FRAMEDOC_WRITE_ERR, NULL_IMAGE, FRAMETS_NO_ANGLES, VIEW_IS_AC
 #define DS_BEAM_TO_FIXED   (1 << 2)
 #define DS_BEAM_TO_EDGE    (1 << 3)
 #define DS_CONTROL_SCAN    (1 << 4)
+#define LSFLAG_JEOL_IN_LM  (1 << 5)
 
 // Continuous mode definitions
 #define QUALITY_BITS_SHIFT   3

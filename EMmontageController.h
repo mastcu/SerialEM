@@ -370,6 +370,7 @@ class EMmontageController
   float mHighPercentile;
   float mPctlMidCrit;
   float mPctlRangeCrit;
+  int mLastSavedAtZ;
 
 public:
 	void AdjustShiftInCenter(MontParam *param, float &shiftX, float &shiftY);
