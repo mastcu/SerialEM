@@ -11252,6 +11252,31 @@ int CMacCmd::ReportNavItem(void)
   return 0;
 }
 
+// LoadPieceAtNavPoint
+int CMacCmd::LoadPieceAtNavPoint()
+{
+  int index = mItemInt[1];
+  CMapDrawItem *mapItem;
+  CMapDrawItem *navItem = CurrentOrIndexedNavItem(index, mStrLine);
+  if (!navItem)
+    return 1;
+  if (!navItem->IsPoint())
+    ABORT_LINE("Specified item is not a Navigator point for line:\n\n");
+  if (!navItem->mDrawnOnMapID)
+    ABORT_LINE("Specified item does not have the ID of the map it was drawn on for"
+      " line:\n\n");
+  mapItem = mNavigator->FindItemWithMapID(navItem->mDrawnOnMapID);
+  if (!mapItem)
+    ABORT_LINE("Cannot find the map that the specified item was drawn on for line:\n\n");
+  if (!mapItem->mMapMontage)
+    index = mNavigator->DoLoadMap(false, mapItem, 0);
+  else
+    index = mNavHelper->LoadPieceContainingPoint(navItem, mNavigator->GetFoundItem());
+  if (index)
+    ABORT_LINE("Error loading piece or map at specified point for line:\n\n");
+  return 0;
+}
+
 // LoadAllGridMaps
 int CMacCmd::LoadAllGridMaps()
 {

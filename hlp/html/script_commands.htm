@@ -5004,6 +5004,15 @@
              buffer instead of the read buffer.</TD>
         </TR>
         <TR>
+          <TD class="scriptcommand">LoadPieceAtNavPoint #</TD>
+          <TD>Loads the montage piece of the map containing the Navigator point whose index is specified by 
+            <b>#</b>: the current Navigator item or the one being acquired if <b>#</b> is 0, or 
+            the item whose index in the table is <B>#</B> if <B>#</B> is positive, or that number of items
+             from the end if it is negative.&nbsp; If the map that the point is drawn on is not a montage,
+            the single image will be loaded.&nbsp; The image will be in buffer A.&nbsp; Command added in 4.2, 2-Apr-25.
+          </TD>
+        </TR>
+        <TR>
           <TD class="scriptcommand">LoadAllGridMaps [buf]</TD>
           <TD>When a session is defined for multiple grid operations and some grid maps have 
             been obtained, loads all the maps available for the collection of grids, starting 
