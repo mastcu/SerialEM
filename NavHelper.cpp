@@ -6859,7 +6859,7 @@ void CNavHelper::CopyAcqParamsAndActions(NavAcqAction *useAct, NavAcqParams *use
 }
 
 // Loads a piece or synthesizes piece containing the given item
-void CNavHelper::LoadPieceContainingPoint(CMapDrawItem *ptItem, int mapIndex)
+int CNavHelper::LoadPieceContainingPoint(CMapDrawItem *ptItem, int mapIndex)
 {
   int cenX[2], cenY[2], xFrame, yFrame, xOverlap, yOverlap, err, yNframes, binning;
   int imageX, imageY, ix, iy;
@@ -6874,7 +6874,7 @@ void CNavHelper::LoadPieceContainingPoint(CMapDrawItem *ptItem, int mapIndex)
   if (err > 1 && mCurStoreInd < 0)
     delete mMapStore;
   if (err)
-    return;
+    return err;
   cenX[1] = cenX[0];
   cenY[1] = cenY[0];
   xOverlap = mMapMontP->xOverlap;
@@ -6918,7 +6918,7 @@ void CNavHelper::LoadPieceContainingPoint(CMapDrawItem *ptItem, int mapIndex)
     mMapStore, true)) {
       if (mCurStoreInd < 0)
         delete mMapStore;
-      return;
+      return 1;
   }
 
   // Get the stage position of this piece by averaging all contributing pieces
@@ -6954,6 +6954,7 @@ void CNavHelper::LoadPieceContainingPoint(CMapDrawItem *ptItem, int mapIndex)
   if (mCurStoreInd < 0)
     delete mMapStore;
   mWinApp->SetCurrentBuffer(0);
+  return 0;
 }
 
 //////////////////////////////////////////////////////

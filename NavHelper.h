@@ -700,7 +700,7 @@ public:
     int &ixSafer, int &iySafer, int &imageX, int &imageY, bool keepStore, int &xFrame,
     int &yFrame, int &binning);
 
-  void LoadPieceContainingPoint(CMapDrawItem * ptItem, int mapIndex);
+  int LoadPieceContainingPoint(CMapDrawItem * ptItem, int mapIndex);
   void StartRealignCapture(bool useContinuous, int nextTask);
   void GetViewOffsets(CMapDrawItem * item, float & netShiftX, float & netShiftY, float & beamShiftX, float & beamShiftY, float & beamTiltX, float & beamTiltY, int area = VIEW_CONSET);
   void StateCameraCoords(int camIndex, int xFrame, int yFrame, int binning, int &left, int &right, int &top, int &bottom);
