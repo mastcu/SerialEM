@@ -3550,6 +3550,7 @@ void CCameraController::Capture(int inSet, bool retrying)
   }
 
   mTD.UseUtapi = UsingUtapiForCamera(mParam);
+  mTD.UtapiForRamp = FEIscope && mScope->UtapiSupportsService(UTSUP_FOCUS);
   
   // Convert from coordinates in conset to unbinned coordinates, adjusting as needed
   CapManageCoordinates(conSet, gainXoffset, gainYoffset);
@@ -5871,7 +5872,7 @@ int CCameraController::CapSaveStageMagSetupDynFocus(ControlSet & conSet, int inS
     }
 
     // Create focus ramper if needed and make sure it's still there and responds
-    if (FEIscope && !mTD.UseUtapi && (mTD.UnblankTime != 0 ||
+    if (FEIscope && !mTD.UtapiForRamp && (mTD.UnblankTime != 0 ||
       (mTD.DynFocusInterval && mTD.PostActionTime))) {
 
         // Plugin scope
@@ -7081,9 +7082,20 @@ bool CCameraController::FindNearestBinning(CameraParameters *camParam,
 bool CCameraController::FindNearestBinning(CameraParameters *camParam, int binning,
   int readMode, int &binInd, int &realBin)
 {
+  FindNearestBinning(binning, camParam->binnings, camParam->numBinnings, binInd, realBin);
+  if (camParam->K2Type && !IS_SUPERRES(camParam, readMode) && !binInd)
+    binInd = 1;
+  realBin = camParam->binnings[binInd];
+  return realBin != binning;
+
+}
+
+bool CCameraController::FindNearestBinning(int binning, int *binnings, int numBin, 
+  int &binInd, int &realBin)
+{
   int i, diff, minDiff = 100;
-  for (i = 0; i < camParam->numBinnings; i++) {
-    diff = binning - camParam->binnings[i];
+  for (i = 0; i < numBin; i++) {
+    diff = binning - binnings[i];
     if (diff < 0)
       diff = -diff;
     if (minDiff > diff) {
@@ -7091,11 +7103,8 @@ bool CCameraController::FindNearestBinning(CameraParameters *camParam, int binni
       binInd = i;
     }
   }
-  if (camParam->K2Type && !IS_SUPERRES(camParam, readMode) && !binInd)
-    binInd = 1;
-  realBin = camParam->binnings[binInd];
+  realBin = binnings[binInd];
   return realBin != binning;
-
 }
 
 // Add a reference to the array, computing total memory occupied and deleting any
@@ -7569,7 +7578,7 @@ void CCameraController::AcquirePluginImage(CameraThreadData *td, void **array,
 
   // Start dynamic focus
   if (!retval && FEIscope && td->STEMcamera && td->DynFocusInterval && 
-    td->PostActionTime && !td->UseUtapi) {
+    td->PostActionTime && !td->UtapiForRamp) {
     retval = StartFocusRamp(td, rampStarted);
 
   } else if (!retval && blanker) {
@@ -7590,7 +7599,8 @@ void CCameraController::AcquirePluginImage(CameraThreadData *td, void **array,
         td->ReturnPartialScan = -td->ReturnPartialScan;
 
         // Get statistics back from focus ramp, make sure it ends
-      } else if (FEIscope && td->DynFocusInterval && td->PostActionTime && !td->UseUtapi){
+      } else if (FEIscope && td->DynFocusInterval && td->PostActionTime &&
+        !td->UtapiForRamp){
         FinishFocusRamp(td, rampStarted);
       }
       numAcquired = B3DABS(numAcquired);
@@ -8135,7 +8145,7 @@ UINT CCameraController::AcquireProc(LPVOID pParam)
       if (!retval) {
         
         // Start dynamic focus ramper for FEI scope
-        if (FEIscope && td->STEMcamera && !td->UseUtapi && (td->UnblankTime != 0 || 
+        if (FEIscope && td->STEMcamera && !td->UtapiForRamp && (td->UnblankTime != 0 || 
           (td->DynFocusInterval && td->PostActionTime)) && td->ReturnPartialScan != 1) {
             retval = StartFocusRamp(td, rampStarted);
 
@@ -8196,7 +8206,7 @@ UINT CCameraController::AcquireProc(LPVOID pParam)
  
           // Get statistics back from focus ramp, make sure it ends
           if (FEIscope && td->DynFocusInterval && td->PostActionTime && 
-            td->STEMcamera && !td->UseUtapi) {
+            td->STEMcamera && !td->UtapiForRamp) {
               FinishFocusRamp(td, rampStarted);
           }
 
@@ -8328,7 +8338,7 @@ UINT CCameraController::AcquireProc(LPVOID pParam)
     if (!retval) {
 
       // Start dynamic focus
-      if (td->STEMcamera && !td->UseUtapi && (td->UnblankTime != 0 || 
+      if (td->STEMcamera && !td->UtapiForRamp && (td->UnblankTime != 0 || 
         (td->DynFocusInterval && td->PostActionTime))) {
           retval = StartFocusRamp(td, rampStarted);
 
@@ -8347,7 +8357,8 @@ UINT CCameraController::AcquireProc(LPVOID pParam)
       }
 
       // Get statistics back from focus ramp, make sure it ends
-      if (td->DynFocusInterval && td->PostActionTime && td->STEMcamera && !td->UseUtapi) {
+      if (td->DynFocusInterval && td->PostActionTime && td->STEMcamera &&
+        !td->UtapiForRamp) {
         FinishFocusRamp(td, rampStarted);
       }
       
@@ -13077,7 +13088,10 @@ bool CCameraController::UsingUtapiForCamera(CameraParameters * param)
     param->moduloX = useUtapi ? 2 : -1;
     param->moduloY = useUtapi ? 2 : -1;
     param->useContinuousMode = useUtapi;
-  }
+  } else if (FCAM_CONTIN_SAVE(param))
+    useUtapi = mScope->UtapiSupportsService(UTSUP_CAM_CONTIN);
+  else
+    useUtapi = mScope->UtapiSupportsService(UTSUP_CAM_SINGLE);
   return useUtapi;
 }
 

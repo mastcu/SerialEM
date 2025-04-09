@@ -289,6 +289,7 @@ struct CameraThreadData {
   int LineSyncAndFlags;       // Flag to do line sync for Digiscan: now flags
   int integration;            // Integration for JEOL STEM
   bool UseUtapi;              // Flag to use Utapi call for acquisition
+  bool UtapiForRamp;          // Flag to use it for ramp
   IFocusRamperPtr FocusRamper; // Pointer to focus ramper for FEI STEM
   float rampTable[MAX_RAMP_STEPS];
   double IndexPerMs;           // Table step per ms
@@ -1219,6 +1220,8 @@ public:
   bool FindNearestBinning(CameraParameters *camParam, ControlSet *conSet, int &binInd,
     int &realBin);
   bool FindNearestBinning(CameraParameters *camParam, int binning, int readMode, int &binInd,
+    int &realBin);
+  bool FindNearestBinning(int binning, int *binnings, int numBin, int &binInd,
     int &realBin);
   void ComposeFramePathAndName(bool temporary);
   CString GetCameraFrameFolder(CameraParameters *camParam, bool &noSubdirs, bool &movable);
