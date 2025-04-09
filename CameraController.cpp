@@ -8370,7 +8370,7 @@ UINT CCameraController::AcquireProc(LPVOID pParam)
         retval = td->DE_Cam->setCorrectionMode(td->ProcessingPlus & 3, td->GatanReadMode);
 
       // Set alignment in server if relevant
-      if (!retval && td->AlignFrames >= 0)
+      if (!retval && td->AlignFrames >= 0 && (td->CamFlags & DE_CAM_CAN_ALIGN))
         retval = td->DE_Cam->SetAlignInServer(td->AlignFrames);
 
       // Set the binning
