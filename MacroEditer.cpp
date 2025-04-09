@@ -1283,10 +1283,11 @@ bool CMacroEditer::CheckForPythonAndImport(CString &strMacro, CString &importNam
     strItems[0].TrimLeft();
     strItems[0].TrimRight(" \r\n");
     if (strItems[0].Find("#") == 0 || strItems[0].IsEmpty()) {
-      if (strItems[0].Find("#serialemPrefix") < 0)
+      if (strItems[0].Find("#serialemPrefix") < 0 && 
+        strItems[0].Find("# serialemPrefix") < 0)
         continue;
       winApp->mParamIO->ParseString(strLine, strItems, 4, false, true);
-      importName = strItems[1];
+      importName = strItems[1] == "#" ? strItems[2] : strItems[1];
       return true;
     }
 
