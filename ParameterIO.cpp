@@ -6195,65 +6195,74 @@ void CParameterIO::WriteFlybackTimes(CString & fileName)
 
 
 void CParameterIO::SetDefaultCameraControls(int which, ControlSet *cs,
-                      int cameraSizeX, int cameraSizeY)
+  CameraParameters *camParams)
 {
+  int cameraSizeX = camParams->sizeX;
+  int cameraSizeY = camParams->sizeY;
+  int binDivisor = BinDivisorI(camParams);
   int minSize = cameraSizeX < cameraSizeY ? cameraSizeX : cameraSizeY;
-  int minBin = minSize / 2048;
-  if (minBin < 1)
-    minBin = 1;
+  int minBin = B3DMAX(1, B3DNINT(minSize / (4096 * binDivisor))) * binDivisor;
+  int highBin = B3DNINT(minSize / (1024. * binDivisor)) * binDivisor;
+  int realBin, binInd;
 
   switch(which) {
   case VIEW_CONSET:
   case SEARCH_CONSET:
     // Default values for VIEW Control Set
     InitializeControlSet(cs, cameraSizeX, cameraSizeY);
-    cs->binning = minSize / 512;
-    cs->exposure = 0.05f;
-    cs->shuttering = USE_DUAL_SHUTTER;
-    cs++;
+    cs->binning = highBin;
+    cs->exposure = 0.3f;
+    cs->shuttering = USE_BEAM_BLANK;
     break;
     
   case FOCUS_CONSET:
     // Default values for focus Control Set
     InitializeControlSet(cs, cameraSizeX, cameraSizeY);
-    cs->binning = minBin;
+    cs->binning = 2 * minBin;
     cs->exposure = 0.5f;
-    cs->shuttering = USE_DUAL_SHUTTER;
+    cs->shuttering = USE_BEAM_BLANK;
     cs->left = cameraSizeX / 4;
-    cs->top = cameraSizeY * 3 / 8;
+    cs->top = cameraSizeY / 4;
     cs->right =cameraSizeX * 3 / 4;
-    cs->bottom = cameraSizeY * 5 / 8;
-    cs++;
+    cs->bottom = cameraSizeY * 3 / 4;
     break;
     
   case TRIAL_CONSET:
     // Default values for Trial Control Set
     InitializeControlSet(cs, cameraSizeX, cameraSizeY);
-    cs->binning = minSize / 512;
-    cs->exposure = 0.05f;
-    cs->shuttering = USE_DUAL_SHUTTER;
-    cs++;
+    cs->binning = highBin;
+    cs->exposure = 0.2f;
+    cs->shuttering = USE_BEAM_BLANK;
     break;
     
   case RECORD_CONSET:
-  case MONT_USER_CONSET:
     // Default values for Record 2 Control Set
     InitializeControlSet(cs, cameraSizeX, cameraSizeY);
     cs->binning = minBin;  
     cs->exposure = 1.0f;
-    cs->shuttering = USE_DUAL_SHUTTER;
-    cs->numAverage = 10;
-    cs++;
+    cs->shuttering = USE_BEAM_BLANK;
+    cs->numAverage = 4;
+    break;
+
+  case MONT_USER_CONSET:
+    // Default values for Record 2 Control Set
+    InitializeControlSet(cs, cameraSizeX, cameraSizeY);
+    cs->binning = 2 * minBin;
+    cs->exposure = 0.8f;
+    cs->shuttering = USE_BEAM_BLANK;
     break;
     
   case PREVIEW_CONSET:
     // Default values for Preview Control Set
     InitializeControlSet(cs, cameraSizeX, cameraSizeY);
-    cs->binning = minSize / 512;
-    cs->exposure = 0.01f;
+    cs->binning = highBin;
+    cs->exposure = 0.1f;
     cs->shuttering = USE_BEAM_BLANK;
     break;
   }
+  mWinApp->mCamera->FindNearestBinning(cs->binning, camParams->binnings, 
+    camParams->numBinnings, binInd, realBin);
+  cs->binning = realBin;
 }
 
 // Overall defaults that apply to all or almost all consets

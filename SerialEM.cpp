@@ -1310,8 +1310,7 @@ BOOL CSerialEMApp::InitInstance()
           mCamConSets[iCam][iSet] = mCamConSets[iCam][RECORD_CONSET];
         numMontSearchCopy = 1;
       } else {
-        mParamIO->SetDefaultCameraControls(iSet, &mConSets[iSet], mCamParams[iCam].sizeX, 
-          mCamParams[iCam].sizeY);
+        mParamIO->SetDefaultCameraControls(iSet, &mConSets[iSet], &mCamParams[iCam]);
       }
       numInit++;
     }
@@ -1350,7 +1349,7 @@ BOOL CSerialEMApp::InitInstance()
           TransferConSet(iSet, mActiveCameraList[0], iCam);
         } else {
           mParamIO->SetDefaultCameraControls(iSet, &mCamConSets[iCam][iSet],
-            mCamParams[iCam].sizeX, mCamParams[iCam].sizeY);
+            &mCamParams[iCam]);
         }
       }
 
