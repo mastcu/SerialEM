@@ -73,8 +73,9 @@ public:
   GetSetMember(BOOL, CircleOnLiveFFT)
   GetSetMember(bool, SideBySideFFT);
   GetSetMember(bool, AutoSingleFFT);
-  GetSetMember(int, NumCircles)
-  GetSetMember(float, GridLinesPerMM)
+  GetSetMember(int, NumCircles);
+  GetSetMember(float, GridLinesPerMM);
+  GetSetMember(int, GridMeshSize);
   SetMember(float, ShortCatalaseNM);
   SetMember(float, LongCatalaseNM);
   GetSetMember(BOOL, CatalaseForPixel);

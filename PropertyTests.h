@@ -470,6 +470,7 @@ BOOL_PROP_TEST("RefineZLPRedoInLowDose", mWinApp->mFilterTasks->, RZlpRedoInLowD
 BOOL_PROP_TEST("RefineZLPLeaveCDSMode", mWinApp->mFilterTasks->, RZlpLeaveCDSmode)
 FLOAT_PROP_TEST("EnergyShiftCalMinField", mWinApp->mFilterTasks->, ShiftCalMinField)
 FLOAT_PROP_TEST("GridLinesPerMM", mWinApp->mProcessImage->, GridLinesPerMM)
+INT_PROP_TEST("GridMeshSize", mWinApp->mProcessImage->, GridMeshSize)
 FLOAT_PROP_TEST("TestCtfPixelSize", mWinApp->mProcessImage->, TestCtfPixelSize)
 FLOAT_PROP_TEST("DefaultMaxCtfFitRes", mWinApp->mProcessImage->, DefaultMaxCtfFitRes)
 FLOAT_PROP_TEST("FindBeamOutsideFrac", mWinApp->mProcessImage->, FindBeamOutsideFrac)
