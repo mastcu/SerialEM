@@ -495,6 +495,13 @@
             calibrate pixel sizes. The default is 2160.</TD>
         </TR>
         <TR VALIGN="top">
+          <TD>GridMeshSize</TD>
+          <TD>Mesh size to indicate that pixel size is to be measured from the spacing of 
+            grid bars; the default is 0, which is necessary to enable the normal measurement 
+            from lines of the cross-line grating.&nbsp; Do not enter this property in the 
+            property file; just use the 'SetProperty' script command to set it.</TD>
+        </TR>
+        <TR VALIGN="top">
           <TD>CatalaseAxisLengths</TD>
           <TD>Distances along the short and long axes to assume for catalase crystal when
             finding pixel size.&nbsp; The defaults are 6.85 and 8.75.</TD>
@@ -5420,7 +5427,8 @@
         <TR VALIGN="top">
           <TD>PartialScanThreshold</TD>
           <TD>Minimum exposure time for displaying partial scans as a STEM image is acquired, for
-            situations that support this (currently just the Tietz scan generator).&nbsp; The default is 0.5 sec.
+            situations that support this (currently the Tietz scan generator and Thermo/FEI STEM accessed through
+            UTAPI).&nbsp; The default is 0.5 sec.
           </TD>
         </TR>
         <TR VALIGN="top">

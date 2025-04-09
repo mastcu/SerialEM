@@ -47,16 +47,6 @@
 			<param name="Local" value="html/menu_file.htm#hidm_file_readother">
 			<param name="Name" value="File Menu Commands">
 			<param name="Local" value="html/menu_file.htm#hid_file_readpiece">
-			<param name="Name" value="File Menu Commands">
-			<param name="Local" value="html/menu_file.htm#hid_file_openlog">
-			<param name="Name" value="File Menu Commands">
-			<param name="Local" value="html/menu_file.htm#hid_file_savelog">
-			<param name="Name" value="File Menu Commands">
-			<param name="Local" value="html/menu_file.htm#hid_file_savelogas">
-			<param name="Name" value="File Menu Commands">
-			<param name="Local" value="html/menu_file.htm#hid_file_readappend">
-			<param name="Name" value="File Menu Commands">
-			<param name="Local" value="html/menu_file.htm#hid_file_continuoussave">
 			</OBJECT>
 	</UL>
 	<LI> <OBJECT type="text/sitemap">

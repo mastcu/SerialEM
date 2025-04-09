@@ -16,8 +16,8 @@
         <PARAM NAME="Keyword" VALUE="files: managing">
       </OBJECT>
       <P><A NAME="menu_file"></A><B><FONT size="3">File menu commands</FONT></B></P>
-      <P>The File menu contains commands for opening, writing to, and reading from MRC 
-        image files, and for saving a Log Window:</P>
+      <P>The File menu contains commands for opening, writing to, and reading from
+        image files, and some commands for metadata files:</P>
       <TABLE BORDER cols="2">
         <TR VALIGN="top">
           <TD class="auto-style1"><A HREF="#hidm_file_opennew">Open New</A></TD>
@@ -88,58 +88,6 @@
         <TR VALIGN="top">
           <TD class="auto-style1"><A HREF="#hid_file_readpiece">Read Piece</A></TD>
           <TD>Reads one piece from a montaged image file.</TD>
-        </TR>
-        <TR VALIGN="top">
-          <TD class="auto-style1">Log Window</TD>
-          <TD>&nbsp;</TD>
-        </TR>
-        <TR VALIGN="top">
-          <TD class="auto-style1">&nbsp;&nbsp;&nbsp; <A HREF="#hid_file_openlog">Open Log</A></TD>
-          <TD>Opens a log window to record program messages.</TD>
-        </TR>
-        <TR VALIGN="top">
-          <TD class="auto-style1">&nbsp;&nbsp;&nbsp; <A HREF="#hid_file_savelog">Save Log</A></TD>
-          <TD>Saves the log window to a file.</TD>
-        </TR>
-        <TR VALIGN="top">
-          <TD class="auto-style1">&nbsp;&nbsp;&nbsp; <A HREF="#hid_file_savelogas">Save Log As</A></TD>
-          <TD>Saves the log window to a different file.</TD>
-        </TR>
-        <TR VALIGN="top">
-          <TD class="auto-style1">&nbsp;&nbsp;&nbsp; <A HREF="#hid_file_readappend">Read &amp; Append</A></TD>
-          <TD>Reads from an existing log file and appends output to it.</TD>
-        </TR>
-        <TR VALIGN="top">
-          <TD class="auto-style1">&nbsp;&nbsp;&nbsp; <A HREF="#hid_file_autosavelog">Save &amp; Autosave Log</A></TD>
-          <TD>Saves the log window to a file immediately and keeps it up to date thereafter.</TD>
-        </TR>
-        <TR VALIGN="top">
-          <TD class="auto-style1">&nbsp;&nbsp;&nbsp; <A HREF="#hid_file_autoprunelogwindow">Autoprune Log Window</A>&nbsp;</TD>
-          <TD>Removes lines from the log window after saving them to file to prevent slowdown.</TD>
-        </TR>
-        <TR VALIGN="top">
-          <TD class="auto-style1">&nbsp;&nbsp;&nbsp; <A HREF="#hid_logwindow_usertfformattosave">Use RTF Format to Save</A></TD>
-          <TD>Saves log as an RTF file, preserving color and style.</TD>
-        </TR>
-        <TR VALIGN="top">
-          <TD class="auto-style1">&nbsp;&nbsp;&nbsp; <A HREF="#hid_file_continuoussave">Continuous Save</A></TD>
-          <TD>Toggles saving to file after each line of output to log window.</TD>
-        </TR>
-        <TR VALIGN="top">
-          <TD class="auto-style1">&nbsp;&nbsp;&nbsp; <A HREF="#hid_file_usemonospacedfont">Use Monospaced Font</A></TD>
-          <TD>Toggles using a fixed pitch font in the log windows.</TD>
-        </TR>
-        <TR VALIGN="top">
-          <TD class="auto-style1">&nbsp;&nbsp;&nbsp; <A HREF="#hid_window_rescuelogwindow">Reset Log Position</A></TD>
-          <TD>Makes the log window visible and moves it to the upper left corner.</TD>
-        </TR>
-        <TR VALIGN="top">>
-          <TD class="auto-style1">&nbsp;&nbsp;&nbsp; <A HREF="#hid_logwindow_opensecondarylog">Open Secondary Log</A></TD>
-          <TD>Opens a different log window, either an empty window or with an exsiting log read into it.</TD>
-        </TR>
-        <TR VALIGN="top">
-          <TD class="auto-style1">&nbsp;&nbsp;&nbsp; <A HREF="#hid_logwindow_savesecondarylog">Save Secondary Log</A></TD>
-          <TD>Saves the last secondary log window that had focus.</TD>
         </TR>
         <TR VALIGN="top">
           <TD class="auto-style1"><A HREF="#hid_file_setcurrentdirectory">Set Current Directory...</A></TD>
@@ -378,129 +326,6 @@
         in X and Y; pieces are numbered from 1. The image will be read into the buffer 
         selected in the <A HREF="hidd_buffercontrol.htm">Buffer Control Panel</A>.
       </P>
-      <OBJECT classid="clsid:1e2a7bd0-dab9-11d0-b93a-00c04fc99f9e" type="application/x-oleobject">
-        <PARAM NAME="Keyword" VALUE="files: managing">
-      </OBJECT>
-      <P><A NAME="hid_file_openlog"></A><B>Open Log command (File menu)</B></P>
-      <P>Use this command to open a Log Window for recording messages from the program. 
-        Once the window is open, some messages will be logged there instead of 
-        presented in message boxes. You can control how much output goes to the window 
-        by selecting Verbose in various menus (Focus, Tasks, Tilt Series).&nbsp; Adding 
-        text to this window becomes progressively slower the more it contains, which can 
-        significantly slow down long-term acquisition that writes to the log.&nbsp; The 
-        program will thus periodically prune the beginning of the text in the window after 
-        saving it to file.&nbsp; See <A HREF="#hid_file_autoprunelogwindow">Autoprune Log Window</A> for details.</P>
-      <OBJECT classid="clsid:1e2a7bd0-dab9-11d0-b93a-00c04fc99f9e" type="application/x-oleobject">
-        <PARAM NAME="Keyword" VALUE="files: managing">
-      </OBJECT>
-      <P><A NAME="hid_file_savelog"></A><B>Save Log command (File menu)</B></P>
-      <P>Use this command to save the contents of the Log Window to a file. You will 
-        enter the <A HREF="afx_hidd_filesave.htm">Save As dialog box</A> to specify the 
-        file, which will have the default extension .log. Once the window has been 
-        saved, selecting this command will save it again to the same file as the last 
-        time that it was saved.</P>
-      <OBJECT classid="clsid:1e2a7bd0-dab9-11d0-b93a-00c04fc99f9e" type="application/x-oleobject">
-        <PARAM NAME="Keyword" VALUE="files: managing">
-      </OBJECT>
-      <P><A NAME="hid_file_savelogas"></A><B>Save Log As command (File menu)</B></P>
-      <P>Use this command to save the contents of the Log Window to a different file from 
-        one already specified. You will enter the <A HREF="afx_hidd_filesave.htm">Save As 
-          dialog box</A> to specify the file, which will have the default extension 
-        .log. Once you save to a file with this command, using the Save Log command 
-        will save to this file.</P>
-      <OBJECT classid="clsid:1e2a7bd0-dab9-11d0-b93a-00c04fc99f9e" type="application/x-oleobject">
-        <PARAM NAME="Keyword" VALUE="files: managing">
-      </OBJECT>
-      <P><A NAME="hid_file_readappend"></A><B>Read &amp; Append command (File menu)</B></P>
-      <P>Use this command to append the contents of the Log Window to an existing log 
-        file. You will enter the <A HREF="afx_hidd_fileopen.htm">File Open dialog box</A>
-        to select a file. The program will then read in the contents of this file, 
-        place it before any text already in the Log Window, then write the window back 
-        out to the file.&nbsp; If pruning has already happened, you will be warned that 
-        pruned lines will not be included and asked if you want to continue.&nbsp; You 
-        will be able to choose either an RTF or a plain text file.&nbsp; If you choose 
-        an RTF fle, any formatting of the existing log will be lost upon saving, even 
-        though it may appear to be present in the window.&nbsp; To minimize this loss, 
-        use this command immediately after starting.</P>
-    <OBJECT classid="clsid:1e2a7bd0-dab9-11d0-b93a-00c04fc99f9e" type="application/x-oleobject">
-        <PARAM NAME="Keyword" VALUE="files: managing">
-      </OBJECT>
-       <P><A NAME="hid_file_autosavelog"></A><B>Save &amp; Autosave Log command (File menu)</B></P>
-      <p>When this command is toggled on, the program will save the log to a file 
-        immediately and then save it every minute if it has changed.&nbsp; If no file is 
-        defined yet, a file chooser dialog will open with a default name based on the 
-        date and time.&nbsp; If this setting is already on when starting the program, 
-        the chooser dialog will open with that default name at the end of the startup 
-        actions.&nbsp; If the log window is closed and reopened, the chooser dialog will 
-        come up to define a name at the next autosave, provided that the program is not 
-        busy.&nbsp; This will not happen if the log is kept closed.</p>
-     <OBJECT classid="clsid:1e2a7bd0-dab9-11d0-b93a-00c04fc99f9e" type="application/x-oleobject">
-        <PARAM NAME="Keyword" VALUE="files: managing">
-      </OBJECT>
-      <P><A NAME="hid_file_autoprunelogwindow"></A><B>Autoprune Log Window command (File menu)</B></P>
-      <p>Use this command to set the amount of text that will be retained in the Log 
-        Window when the program prunes text from the beginning of the window.&nbsp; 
-        Pruning keeps the program from running progressively slower as more text is 
-        added to the log.&nbsp; Enter the minimum number of lines to be left in the 
-        window if lines average 40 characters each.&nbsp; If lines are shorter than 40, 
-        on average, then more will be kept.&nbsp; You can enter 0 instead to disable 
-        pruning. Internally, the pruning is based on the number of characters in the 
-        window.&nbsp;&nbsp; Pruning occurs when the number of characters reaches twice 
-        the minimum.&nbsp; Lines are pruned to the half-way point and written to a file.&nbsp; 
-        If a log file has not been defined yet, they are written to a file 
-        'AUTOPRUNETEMP.log' in the system directory (the one with properties and 
-        calibrations files).&nbsp; When saving to a selected file, pruned lines are 
-        copied from this temporary file to the new file.&nbsp; Similarly, pruned lines 
-        are copied when using Save As to save to a different file.&nbsp; After pruning, 
-        the first line in the window will show the file that the pruned lines can be 
-        found in.&nbsp; Pruning will not occur when the log is being saved as RTF, so 
-        this command is disabled when saving as RTF is selected and still possible.</p>
-      <P><A NAME="hid_logwindow_usertfformattosave"></A><B>Use RTF Format to Save command (File menu)</B></P>
-      <p>Use this command to select whether the log is saved as plain text or in an RTF file, which 
-        will preserve colors and styles like bolding. 
-      <strong>Do not use RTF for a log that will grow to over 10,000 lines in an 
-        extended acquisition.</strong>&nbsp; Pruning is not possible with RTF files, and 
-        adding lines to the log will take progressively longer for larger logs.&nbsp; 
-        RTF files would be suitable for running batch tilt series when every series gets 
-        its own log. The format may also be unsuitable even for shorter logs if <strong>
-        Save &amp; Autosave Log </strong>is set, because RTF files have to be written entirely each 
-        time, whereas new lines are appended to plain text logs.&nbsp;&nbsp; If a log 
-        window has already been pruned, it cannot be saved as RTF and will be saved as plain 
-        text despite this setting.&nbsp; Conversely, if you start saving an RTF file and 
-        then unselect this option, the existing file will continue to be saved as RTF.</p>
-      <P><A NAME="hid_file_continuoussave"></A><B>Continuous Save command (File menu)</B></P>
-      <P>Use this command to control whether each line of output to the Log Window is 
-        saved immediately to a log file. If there is no log file open when you turn 
-        this on, you will be prompted to open one the next time output is sent to the 
-        log window.&nbsp; This command is primarily for debugging purposes and could 
-        slow down program operation.</P>
-      <P><A NAME="hid_file_usemonospacedfont"></A><B>Use Monospaced Font command (File menu)</B></P>
-    <P>Use this command to control whether text is displayed in the log window with a 
-      monospaced (fixed width) font or a proportionally spaced font.</P>
-      <P><A NAME="hid_window_rescuelogwindow"></A><B>Reset Log Position command (File menu)</B></P>
-    <P>Use this command to make the log window visible in the upper left corner of the 
-      display with its current size, or a minimum size if that size if smaller than 
-      the minimum.</P>
-      <P><A NAME="hid_logwindow_opensecondarylog"></A><B>Open Secondary Log command (File menu)</B></P>
-      <p>Use this command to open a secondary log window.&nbsp; The program will first 
-        ask if you want to read in an existing log file.&nbsp; If you answer Yes, a file 
-        chooser will open for specifying the file to read in.&nbsp; Otherwise, you will 
-        be asked for a name to place in the title bar, and an empty window will open.&nbsp; 
-        Secondary logs are distinguishable by having a pale yellow background and 
-        'SECONDARY Log:' in the title bar plus this name or the name of the file read 
-        in. If a file is already open in a secondary log, selecting it again will just 
-        raise to existing log to the foreground.&nbsp; Secondary logs were added 
-        to provide a way to view logs conveniently from the <a href="hidd_multi_grid.htm">Multiple Grid Operations</a> dialog. There is 
-        currently no ability to save to a different file, no protection against closing 
-        a log with unsaved changes, and no script access to these logs. Such 
-        functionality can be added if needed.</p>
-      <P><A NAME="hid_logwindow_savesecondarylog"></A><B>Save Secondary Log command (File menu)</B></P>
-      <p>Use this command to save a secondary log window.&nbsp; It operates on the last 
-        log window that had focus, so click on the desired log window before selecting 
-        the menu item.&nbsp; If the window contains a log that was read to a file or has 
-        already been saved to a file, it will simply be saved back to that file.&nbsp; 
-        Otherwise, a file chooser will open for specifying the file to save into.&nbsp; 
-        After saving, the title bar will show the name of that file.</p>
      <P><A NAME="hid_file_setcurrentdirectory"></A><B>Set Current Directory command (File menu)</B></P>
        <p>Use this command to select a new current working directory, which will become 
          the directory where file choosers open as well as where files will be created or 

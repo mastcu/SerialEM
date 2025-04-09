@@ -150,29 +150,28 @@ BEGIN
         MENUITEM "R&ead from Other",            IDM_FILE_READOTHER
         MENUITEM "Rea&d Piece",                 ID_FILE_READPIECE
         MENUITEM SEPARATOR
-        POPUP "&Log Window"
-        BEGIN
-            MENUITEM "&Open Log",                   ID_FILE_OPENLOG
-            MENUITEM "&Save Log...",                ID_FILE_SAVELOG
-            MENUITEM "Save Log &As...",             ID_FILE_SAVELOGAS
-            MENUITEM "&Read && Append...",          ID_FILE_READAPPEND
-            MENUITEM "Sa&ve && Autosave...",        ID_FILE_AUTOSAVELOG
-            MENUITEM SEPARATOR
-            MENUITEM "Auto&prune Log Window...",    ID_FILE_AUTOPRUNELOGWINDOW
-            MENUITEM "Use RTF &Format to Save",     ID_LOGWINDOW_USERTFFORMATTOSAVE
-            MENUITEM "&Continuous Save",            ID_FILE_CONTINUOUSSAVE
-            MENUITEM "Use &Monospaced Font",        ID_FILE_USEMONOSPACEDFONT
-            MENUITEM "Rese&t Log Position",         ID_WINDOW_RESCUELOGWINDOW
-            MENUITEM SEPARATOR
-            MENUITEM "Ope&n Secondary Log...",      ID_LOGWINDOW_OPENSECONDARYLOG
-            MENUITEM "Save Secon&dary Log...",      ID_LOGWINDOW_SAVESECONDARYLOG
-        END
-        MENUITEM SEPARATOR
         MENUITEM "Set Current Directory...",    ID_FILE_SETCURRENTDIRECTORY
         MENUITEM "Open .mdoc for &Frames",      ID_FILE_OPEN_MDOC
         MENUITEM "Close Frames .mdoc",          ID_FILE_CLOSE_MDOC
         MENUITEM SEPARATOR
         MENUITEM "E&xit",                       ID_APP_EXIT
+    END
+    POPUP "Lo&g"
+    BEGIN
+        MENUITEM "&Open Log",                   ID_FILE_OPENLOG
+        MENUITEM "&Save Log...",                ID_FILE_SAVELOG
+        MENUITEM "Save Log &As...",             ID_FILE_SAVELOGAS
+        MENUITEM "&Read && Append...",          ID_FILE_READAPPEND
+        MENUITEM "Sa&ve && Autosave...",        ID_FILE_AUTOSAVELOG
+        MENUITEM SEPARATOR
+        MENUITEM "Auto&prune Log Window...",    ID_FILE_AUTOPRUNELOGWINDOW
+        MENUITEM "Use RTF &Format to Save",     ID_LOGWINDOW_USERTFFORMATTOSAVE
+        MENUITEM "&Continuous Save",            ID_FILE_CONTINUOUSSAVE
+        MENUITEM "Use &Monospaced Font",        ID_FILE_USEMONOSPACEDFONT
+        MENUITEM "Rese&t Log Position",         ID_WINDOW_RESCUELOGWINDOW
+        MENUITEM SEPARATOR
+        MENUITEM "Ope&n Secondary Log",         ID_LOGWINDOW_OPENSECONDARYLOG
+        MENUITEM "Save Secon&dary Log...",      ID_LOGWINDOW_SAVESECONDARYLOG
     END
     POPUP "S&ettings"
     BEGIN

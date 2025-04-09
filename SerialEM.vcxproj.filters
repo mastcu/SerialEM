@@ -787,6 +787,9 @@
     <None Include="hlp\html\menu_file.htm">
       <Filter>HTML Help Topics</Filter>
     </None>
+    <None Include="hlp\html\menu_log.htm">
+      <Filter>HTML Help Topics</Filter>
+    </None>
     <None Include="hlp\html\menu_focus.htm">
       <Filter>HTML Help Topics</Filter>
     </None>
