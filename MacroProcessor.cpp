@@ -4755,7 +4755,7 @@ int CMacroProcessor::EnsureMacroRunnable(int macnum)
 int CMacroProcessor::CheckForScriptLanguage(int macNum, bool justCheckStart, int argInd,
   int currentInd, int lastInd, int startLine)
 {
-  bool isPython;
+  bool isPython, lbspace;
   int ind, fail, size, cumulLine = 0, indent = 0, lineNum = 0, firstRealLine = -1;
   int pyVersion = 0;
   CFile *file = NULL;
@@ -4932,16 +4932,18 @@ int CMacroProcessor::CheckForScriptLanguage(int macNum, bool justCheckStart, int
 
     if (name.IsEmpty())
       continue;
-    if (name.Find("#include") != 0)
+    if (name.Find("#include") != 0 && name.Find("# include") != 0)
       continue;
 
     // Process an #includeFile entry
-    if (name.Find("#includeFile") == 0 || name.Find("#includefile") == 0) {
+    lbspace = name.Find("# includeFile") == 0 || name.Find("# includefile") == 0;
+    if (lbspace || name.Find("#includeFile") == 0 || name.Find("#includefile") == 0) {
       fail = 0;
       includePath = mPyIncludePath;
 
       // get the file name
-      fileName = name.Mid((int)strlen("#includefile"));
+      ind = (int)strlen("#includefile") + (lbspace ? 1 : 0);
+      fileName = name.Mid(ind);
       while (fileName.GetLength() > 0 && fileName.GetAt(0) == ' ')
         fileName = fileName.Mid(1);
       if (fileName.IsEmpty()) {
@@ -5022,7 +5024,7 @@ int CMacroProcessor::CheckForScriptLanguage(int macNum, bool justCheckStart, int
     } else {
 
       // regular include of other script
-      includeInd = FindCalledMacro(name.Mid(1), true);
+      includeInd = FindCalledMacro(name.Mid(lbspace ? 2 : 1), true);
       if (includeInd < 0)
         return 1;
     }
