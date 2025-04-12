@@ -125,17 +125,21 @@
        <TR VALIGN="top">
           <TD>UseUtapiScripting</TD>
           <TD>Set to 1 to try to connect to the new Thermo/FEI UTAPI scripting, either on the local computer or
-            at the address used to connect to FEI-SEMserver.exe.&nbsp; For testing, set to 2 to connect to UTAPI without 
-            trying to connect to the scope otherwise.
+            at the address used to connect to FEI-SEMserver.exe.&nbsp; Set to 2 to connect to UTAPI without 
+            trying to connect to the standard or advanced scripting.&nbsp; Set to 3 to avoid connecting to
+            the older scripting but use the 
+            standard plugin/server interface to perform some tasks using UI Automation, specifically getting 
+            grid names from an autoloader and inserting the beam stop halfway.&nbsp; In the latter case, if running
+            through FEI-SEMserver.exe, set the environment variable FEISEM_UI_ACCESS_ONLY to any value
+             to prevent FEI-SEMserver.exe from trying to connect to the scope.
           </TD>
         </TR>
        <TR VALIGN="top">
           <TD>SkipUtapiServices</TD>
           <TD>Follow with a list of indexes to UTAPI services that should be marked as not 
             available.&nbsp; The indexes correspond to the values of the enum 
-            'UtapiSupportTypes' in SerialEM.h.  These include 20 for cameras, which should be
-             skipped if you have a Falcon or Ceta 2; 13 for stage, which is not working right yet; 
-            9 for magnification, which should be skipped if you have STEM.</TD>
+            'UtapiSupportTypes' in SerialEM.h.  With the latest UTAPI server (April 2025), only 20 needs
+            to be used for cameras, and only if you have a Falcon or Ceta 2.</TD>
         </TR>
         <TR VALIGN="top">
           <TD>SimulationMode</TD>

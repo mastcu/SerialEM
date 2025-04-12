@@ -3590,11 +3590,17 @@
           <TD>Reports 0 or 1 if the beam stop is out or in, -1 if it is in an unknown position, 
             and on Thermo/FEI scopes, 2 if it is inserted halfway or 3 if it is moving.&nbsp; 
             Should work on newer generation JEOL scopes (F200, various ARM's, also 2200FS) 
-            and on Thermo/FEI scopes with the UTAPI interface.&nbsp; </TD>
+            on Thermo/FEI scopes with the UTAPI interface, and on some Thermo/FEI scopes
+            without UTAPI where UI Automation can detect which button in the Flucam Viewer is 
+            selected.&nbsp; </TD>
         </TR>
         <TR>
           <TD class="scriptcommand">SetBeamStopPosition #</TD>
-          <TD>Inserts or retracts the beam stop if <b>#</b> is non-zero or 0.&nbsp; </TD>
+          <TD>Inserts or retracts the beam stop if <b>#</b> is 1 or 0.&nbsp; On Thermo/FEI scopes,
+            it will use UTAPI if available, otherwise UI Automation, in which case the Flucam Viewer 
+            must be open.&nbsp; A value of 2 will insert the beam stop halfway, but this call
+            always goes through UI Automation because UTAPI does not support this position.
+          </TD>
         </TR>
         <TR>
           <TD class="scriptcommand">ReportLens name</TD>

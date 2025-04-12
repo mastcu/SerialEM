@@ -5538,7 +5538,10 @@ int CMacCmd::ReportBeamStopPosition()
 // SetBeamStopPosition
 int CMacCmd::SetBeamStopPosition()
 {
-  if (!mScope->SetBeamStopPos(mItemInt[1] ? 1 : 0))
+  B3DCLAMP(mItemInt[1], 0, (JEOLscope || 
+    (mScope->UtapiSupportsService(UTSUP_BEAM_STOP) && SEMUseUtapiScripting() == 2)) ?
+    1 : 2);
+  if (!mScope->SetBeamStopPos(mItemInt[1]))
     return 1;
   mMovedAperture = true;
   return 0;
@@ -6099,8 +6102,10 @@ int CMacCmd::ReportXLensDeflector(void)
     ABORT_LINE("Plugin is missing needed function for:\n\n");
   } else if (index == 3) {
     ABORT_LINE("Deflector number must be between 1 and 3 in:\n\n");
-  } else if (index == 5) {
+  } else if (index == 5 && mScope->UtapiSupportsService(UTSUP_DEFLECTORS1)) {
     ABORT_LINE("There is no connection to adatl COM object for:\n\n");
+  } else if (index == 5) {
+    ABORT_LINE("X Lens Mode was reported as not supported for:\n\n");
   } else if (index > 5) {
     ABORT_LINE("X Lens Mode is not available for:\n\n");
   }

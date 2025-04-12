@@ -4691,7 +4691,10 @@ BOOL CEMscope::ScanMagnifications()
             break;
           PLUGSCOPE_GET(Magnification, curSMag, 1.);
           magVal = B3DNINT(curSMag);
-          PLUGSCOPE_GET(ImageRotation, curSMag, 1.);
+          if (mSimulationMode && UtapiSupportsService(UTSUP_MAGNIFICATION))
+            curSMag = 0.;
+          else
+            PLUGSCOPE_GET(ImageRotation, curSMag, 1.);
           rot = B3DNINT(curSMag / DTOR);
         }
         if (STEMmode)
@@ -7993,8 +7996,7 @@ UINT CEMscope::ApertureMoveProc(LPVOID pParam)
 
   ScopeMutexAcquire("ApertureMoveProc", true);
 
-  // Beam stop available only with Utapi, does not need thread
-  if (FEIscope && !(td->actionFlags & APERTURE_BEAM_STOP)) {
+  if (FEIscope) {
     if (td->plugFuncs->BeginThreadAccess(1, 0)) {
       sThreadErrString.Format("Error creating second instance of microscope object for"
         " moving %s", (td->actionFlags & APERTURE_NEXT_PP_POS) ? "phase plate" :
