@@ -110,7 +110,7 @@ void CExternalTools::AddMenuItems()
   } else {
 
     // Or remove the whole menu!
-    mWinApp->m_pMainWnd->GetMenu()->DeleteMenu(10, MF_BYPOSITION);
+    mWinApp->m_pMainWnd->GetMenu()->DeleteMenu(TOOL_MENU_INDEX, MF_BYPOSITION);
   }
   mWinApp->m_pMainWnd->DrawMenuBar();
 }

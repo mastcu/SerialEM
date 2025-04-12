@@ -1,5 +1,6 @@
 And by the way, when you add a menu item to the help, you need to add the
 entry to aliases.h by hand.
+AND IF YOU ADD A WHOLE MENU, INCREASE TOOL_MENU_INDEX
 
 File:
 A
@@ -19,19 +20,21 @@ S
 V
 W
 X
- Log Window:
- A
- C
- D
- F
- M
- N
- O
- P
- R
- S
- T
- V
+
+
+Log:
+A
+C
+D
+F
+M
+N
+O
+P
+R
+S
+T
+V
 
 Settings:
 A

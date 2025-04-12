@@ -30,6 +30,7 @@
 #define ISCAL_CONSET   7
 #define TRACK_CONSET   7
 #define MAX_LENS_TO_RELAX 6
+#define TOOL_MENU_INDEX 11
 
 //#define TASK_TIMER_INTERVAL 50
 
