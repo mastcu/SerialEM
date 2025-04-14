@@ -360,8 +360,12 @@ IF %Major% EQU 3 (
 GOTO :SetupSEMCCDdone
 
 :VS2015GM3
+IF %Minor% GEQ 62 (
+  set versRange64=3.62 and higher
+  set SEMCCD64=SEMCCD-GMS3.62-64.dll
+  set BIT64=1
 IF %Minor% GEQ 60 (
-  set versRange64=3.60 and higher
+  set versRange64=3.60-3.61
   set SEMCCD64=SEMCCD-GMS3.60-64.dll
   set BIT64=1
 ) ELSE IF %Minor% GEQ 50 (
