@@ -964,7 +964,7 @@ int CHoleFinderDlg::DoFindHoles(EMimageBuffer *imBuf, bool synchronous)
       FIND_ACPK_NO_WAFFLE | FIND_PIX_NO_DISPLAY | FIND_PIX_NO_TARGET | 
       (hexArray ? FIND_ACPK_HEX_GRID : 0), autocorSpacing, vectors)) {
       autocorSpacing *= mPixelSize;
-      delX = fabs(testSpacing - autocorSpacing) / testSpacing;
+      delX = fabsf(testSpacing - autocorSpacing) / testSpacing;
       if (delX > autocorCrit) {
         mess.Format("Autocorrelation peak analysis indicates that the spacing\n"
           "between hole centers is %.2f microns, %.0f%% from the entered value\n\n"

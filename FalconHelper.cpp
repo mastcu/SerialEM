@@ -727,7 +727,7 @@ int CFalconHelper::StackFrames(CString localPath, CString &directory, CString &r
     // Open a file locally if flag set for that
   if (readLocally) {
     if (mEERsumming > 0) {
-      mFloatScale = mLastEERcountScaling * pow((float)GetEERsuperFactor(mEERsuperRes), 2);
+      mFloatScale = mLastEERcountScaling * powf((float)GetEERsuperFactor(mEERsuperRes), 2);
       eerFlags = mWinApp->mScope->GetSimulationMode() ? IIFLAG_IGNORE_BAD_EER_END : 0;
       if (mEERsuperRes < 2 && mReadEERantialiased) {
         eerFlags |= (IIFLAG_ANTIALIAS_EER | IIFLAG_EER_USE_LANCZOS);

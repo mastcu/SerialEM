@@ -6421,7 +6421,7 @@ int CNavHelper::PermuteISvecsToMatchLastUsed(float *xVecIn, float *yVecIn, int h
   if (!xLast[0] && !yLast[0])
     return 0;
   for (dir = 0; dir < numVec; dir++) {
-    msLen[dir] = sqrt(xLast[dir] * xLast[dir] + yLast[dir] * yLast[dir]);
+    msLen[dir] = sqrtf(xLast[dir] * xLast[dir] + yLast[dir] * yLast[dir]);
   }
 
   maxAngDiff = 0.;
@@ -6440,7 +6440,7 @@ int CNavHelper::PermuteISvecsToMatchLastUsed(float *xVecIn, float *yVecIn, int h
       if (scaleDiff > 0.99)
         angDiff = delAngle;
       else
-        angDiff = acos((xTemp[dir] * xLast[dir] + yTemp[dir] * yLast[dir]) /
+        angDiff = acosf((xTemp[dir] * xLast[dir] + yTemp[dir] * yLast[dir]) /
         (tempLen * msLen[dir])) / (float)DTOR;
       ACCUM_MAX(rotAngDiff, B3DABS(angDiff));
       ACCUM_MAX(rotScaleDiff, scaleDiff);

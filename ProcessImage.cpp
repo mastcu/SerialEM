@@ -4576,9 +4576,9 @@ int CProcessImage::FindDoseRate(float countVal, float *counts, float *rates, int
 
     // Get the residual errors at the two ends of the interpolation
     resBefore = counts[indBefore] / rates[indBefore] -
-      (exp(scale * rates[indBefore] + intercp) + base);
+      (expf(scale * rates[indBefore] + intercp) + base);
     resAfter = counts[indAfter] / rates[indAfter] -
-      (exp(scale * rates[indAfter] + intercp) + base);
+      (expf(scale * rates[indAfter] + intercp) + base);
 
     // For the current dose rate, estimate the attenuation ratio from the fit and an 
     // interpolated residual value, then the error to minimize is the difference between 
@@ -4586,7 +4586,7 @@ int CProcessImage::FindDoseRate(float countVal, float *counts, float *rates, int
     for (;;) {
       frac = (curRate - rates[indBefore]) / (rates[indAfter] - rates[indBefore]);
       res = resBefore + frac * (resAfter - resBefore);
-      ratio1 = exp(scale * curRate + intercp) + base + res;
+      ratio1 = expf(scale * curRate + intercp) + base + res;
       count1 = curRate * ratio1;
       diff = (float)fabs((double)count1 - countVal);
       if (diff < diffMin) {

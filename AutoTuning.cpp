@@ -879,7 +879,7 @@ void CAutoTuning::BacklashedBeamTilt(double btX, double btY, bool doBacklash)
 void CAutoTuning::BacklashedStigmator(double astX, double astY, bool doBacklash)
 {
   if (mBacklashDelay && doBacklash) {
-    mAstigBacklash = -fabs(mAstigBacklash);
+    mAstigBacklash = -fabsf(mAstigBacklash);
     mScope->SetObjectiveStigmator(astX + mAstigBacklash, astY + mAstigBacklash);
     Sleep(mBacklashDelay);
   }
@@ -1149,7 +1149,7 @@ int CAutoTuning::CtfBasedAstigmatismComa(int comaFree, bool calibrate, int actio
   } else {
 
     // Operations for astigmatism
-    mAstigBacklash= -fabs(mAstigBacklash);
+    mAstigBacklash= -fabsf(mAstigBacklash);
     mScope->GetObjectiveStigmator(mSavedAstigX, mSavedAstigY);
     BacklashedStigmator(mSavedAstigX, mSavedAstigY, true);
     mShiftManager->SetGeneralTimeOut(GetTickCount(), mPostAstigDelay);
@@ -1474,8 +1474,8 @@ void CAutoTuning::CtfBasedNextTask(int tparm)
       return;
     }
     if (!usePlotter)
-      astig = fabs(resultsArray[0] - resultsArray[1]) / 10000.f;
-    if (B3DMIN(fabs(negMicrons - mCenteredDefocus), 
+      astig = fabsf(resultsArray[0] - resultsArray[1]) / 10000.f;
+    if (B3DMIN(fabsf(negMicrons - mCenteredDefocus), 
       fabs(negMicrons - astig / 2. - mCenteredDefocus)) > 
       B3DMAX(1., -0.33 * mCenteredDefocus)) {
       str.Format("The mean defocus from this fit, %.2f um, is\r\n"
@@ -1854,7 +1854,7 @@ float CAutoTuning::GetBeamTiltBacklash()
     if (!FEIscope && scaling > 0.)
       mBeamTiltBacklash /= scaling;
   }
-  mBeamTiltBacklash = -fabs(mBeamTiltBacklash);
+  mBeamTiltBacklash = -fabsf(mBeamTiltBacklash);
   if (first)
     SEMTrace('1', "Beam tilt backlash %.3f  delay  %d", mBeamTiltBacklash,mBacklashDelay);
   first = false;

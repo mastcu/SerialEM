@@ -1148,7 +1148,7 @@ UINT CAutoContouringDlg::AutoContProc(LPVOID pParam)
   if (targetIsPix) {
     redFac = acd->targetSizeOrPix / acd->pixel;
   } else {
-    redFac = sqrt(nxBuf * nyBuf / (acd->targetSizeOrPix * acd->targetSizeOrPix));
+    redFac = sqrtf(nxBuf * nyBuf / (acd->targetSizeOrPix * acd->targetSizeOrPix));
   }
   acd->needReduce = redFac > 1.25;
 
