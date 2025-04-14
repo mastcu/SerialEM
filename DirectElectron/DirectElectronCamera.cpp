@@ -915,7 +915,7 @@ int DirectElectronCamera::copyImageData(unsigned short *image4k, long &imageSize
     if (!api2Reference) {
       DE::ImageAttributes attributes;
       DE::PixelFormat pixForm = DE::PixelFormat::UINT16;
-        attributes.linearStretch = false;
+      attributes.stretchType = DE::ContrastStretchType::NONE;
       imageOK = mDeServer->GetResult(useBuf, imageSizeX * imageSizeY * 2,
         mLastElectronCounting ? DE::FrameType::TOTAL_SUM_COUNTED :
         DE::FrameType::TOTAL_SUM_INTEGRATED, &pixForm, &attributes);

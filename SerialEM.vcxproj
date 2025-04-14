@@ -907,6 +907,7 @@
     <ClInclude Include="CtffindParamDlg.h" />
     <ClInclude Include="DefineScriptMacros.h" />
     <ClInclude Include="DERefMakerDlg.h" />
+    <ClInclude Include="DirectElectron\DE.h" />
     <ClInclude Include="DisableHideTable.h" />
     <ClInclude Include="DoseModulator.h" />
     <ClInclude Include="DriftWaitSetupDlg.h" />

@@ -551,6 +551,9 @@
     <ClInclude Include="CtfAcquireParamDlg.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="DirectElectron\DE.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="res\bitmap1.bmp">
