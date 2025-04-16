@@ -1123,7 +1123,7 @@ void CMenuTargets::OnNavigatorShifttomarker()
 
 void CMenuTargets::OnUpdateNavigatorShifttomarker(CCmdUI *pCmdUI)
 {
-  pCmdUI->Enable(mNavHelper->GetMarkerShiftArray()->GetSize() > 0 ||
+  pCmdUI->Enable((mNavigator && mNavHelper->GetMarkerShiftArray()->GetSize() > 0) ||
     mNavHelper->OKtoShiftToMarker());
 }
 
