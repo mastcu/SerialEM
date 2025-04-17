@@ -5032,6 +5032,7 @@ int CTSController::TSMessageBox(CString message, UINT type, BOOL terminate, int 
   CMacroProcessor *macProc = mWinApp->mMacroProcessor;
   int tryLevel = macProc->GetTryCatchLevel();
   bool *noCatchMess = macProc->GetNoCatchOutput();
+  bool fromThreeChoice = mCallFromThreeChoice;
   bool mgTask = mWinApp->mMultiGridTasks->RunningExternalTask() &&
     !mWinApp->mMultiGridTasks->GetStartedNavAcquire();
   if (macProc->GetPythonTryLevel() > 0) {
@@ -5042,6 +5043,7 @@ int CTSController::TSMessageBox(CString message, UINT type, BOOL terminate, int 
   // Intercept error from macros if the flag is set, make sure there is a \r before at
   // least one \n in a row, print message and return
   mLastNoBoxMessage = "";
+  mCallFromThreeChoice = false;
   if (mWinApp->mCamera->GetNoMessageBoxOnError() < 0 ||
     (macProc->DoingMacro() && (macProc->GetNoMessageBoxOnError() || tryLevel > 0)) || 
     (!DoingTiltSeries() && mWinApp->mNavHelper->GetNoMessageBoxOnError()) || mgTask) {
@@ -5092,11 +5094,10 @@ int CTSController::TSMessageBox(CString message, UINT type, BOOL terminate, int 
     // Call three-choice box if the type and button texts are adequate
     noEmpty = mTCBoxNoText.IsEmpty();
     cancelEmpty = mTCBoxCancelText.IsEmpty();
-    if (mCallFromThreeChoice && !mTCBoxYesText.IsEmpty() && 
+    if (fromThreeChoice && !mTCBoxYesText.IsEmpty() && 
       (((type & (MB_YESNO | MB_YESNOCANCEL)) == 0 && noEmpty && cancelEmpty) ||
       ((type & MB_YESNO) != 0 && !noEmpty && cancelEmpty) || 
       ((type & MB_YESNOCANCEL) != 0 && !noEmpty && !cancelEmpty))) {
-        mCallFromThreeChoice = false;
         CThreeChoiceBox tcb;
         tcb.mDlgType = type;
         tcb.mYesText = mTCBoxYesText;
@@ -5109,7 +5110,6 @@ int CTSController::TSMessageBox(CString message, UINT type, BOOL terminate, int 
         tcb.DoModal();
         retval = tcb.mChoice;
     } else {
-      mCallFromThreeChoice = false;
       retval = ::MessageBox(mWinApp->m_pMainWnd->m_hWnd, (LPCTSTR)message, "SerialEM",
         type);
     }
