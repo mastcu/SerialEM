@@ -123,6 +123,7 @@ void DirectElectronToolDlg::updateDEToolDlgPanel(bool initialCall)
       if (!value.IsEmpty()) {
         ((CWnd *) GetDlgItem(ID_DE_saveDir))->SetWindowText(value);
         mAutosaveDir = value;
+        camParam->DE_AutosaveDir = value;
       }
 
       // Update file format if no user value yet

@@ -1181,13 +1181,15 @@ int DirectElectronCamera::copyImageData(unsigned short *image4k, long &imageSize
 UINT DirectElectronCamera::LiveProc(LPVOID pParam)
 {
   LiveThreadData *td = (LiveThreadData *)pParam;
-  int newInd, outX, outY, retval = 0;
+  int newInd, acqIndex, outX, outY, retval = 0;
   int numAcquis = 1000;
   unsigned short *useBuf, *image4k;
   BOOL needStart = sUsingAPI2, imageOK;
 
   while (!td->quitLiveMode) {
 
+    if (needStart)
+      acqIndex = -1;
     if (needStart && !td->DeServer->StartAcquisition(numAcquis)) {
       retval = 1;
       break;
@@ -1203,10 +1205,16 @@ UINT DirectElectronCamera::LiveProc(LPVOID pParam)
     if (sUsingAPI2) {
       DE::ImageAttributes attributes;
       DE::PixelFormat pixForm = DE::PixelFormat::AUTO;
-      imageOK = td->DeServer->GetResult(useBuf, td->inSizeX * td->inSizeY * 2,
-        td->electronCounting ? DE::FrameType::TOTAL_SUM_COUNTED :
-        DE::FrameType::TOTAL_SUM_INTEGRATED, &pixForm, &attributes);
-      needStart = imageOK && attributes.acqIndex == numAcquis - 1;
+      for (;;) {
+        imageOK = true;
+        td->DeServer->GetResult(useBuf, td->inSizeX * td->inSizeY * 2,
+          td->electronCounting ? DE::FrameType::TOTAL_SUM_COUNTED :
+          DE::FrameType::TOTAL_SUM_INTEGRATED, &pixForm, &attributes);
+        if (acqIndex != attributes.acqIndex || attributes.acqFinished)
+          break;
+      }
+      needStart = attributes.acqIndex == numAcquis - 1 || attributes.acqFinished;
+      acqIndex = attributes.acqIndex;
     } else {
       imageOK = td->DeServer->getImage(useBuf, td->inSizeX * td->inSizeY * 2);
     }
