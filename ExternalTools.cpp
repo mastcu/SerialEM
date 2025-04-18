@@ -91,7 +91,7 @@ void CExternalTools::AddMenuItems()
   int ind;
   CString mess;
   UINT nID;
-  CMenu *menu = mWinApp->m_pMainWnd->GetMenu()->GetSubMenu(10);
+  CMenu *menu = mWinApp->m_pMainWnd->GetMenu()->GetSubMenu(TOOL_MENU_INDEX);
   if (mNumToolsAdded > 0) {
 
     // Modify the existing text then remove the rest of the items
