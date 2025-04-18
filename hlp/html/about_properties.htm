@@ -1689,9 +1689,10 @@
             type is determined from the &#39;DMGainReferenceName&#39; property.&nbsp; If a
             property is entered for an Orius, be sure to include the fourth value to balance
             the two halves, unless using a quality level where it is not needed.&nbsp; For a
-            DE camera, the use of live mode is specified by the first parameter, and the use
+            DE camera running with API 1, the use of live mode is specified by the first parameter, and the use
             of a separate thread that acquires in parallel with the display operations is
-            specified by the second parameter; both values are set to 1 by default.&nbsp;
+            specified by the second parameter.  Running with API 2, true live mode is available only if
+            both values are 1.&nbsp; Both values are set to 1 by default.&nbsp;
             For Tietz F216/F416/F816/XF416 cameras, the first parameter is 1 by default.
             &nbsp; For a plugin camera, just the first parameter is used to indicate that a
             continuous mode should be used; the plugin must have the function StopContinuous
