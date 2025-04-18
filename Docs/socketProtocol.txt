@@ -1,0 +1,85 @@
+A common protocol is used for the the socket communications between
+SerialEM-associated plugins and servers, and for communication between
+the Python serialem module and SerialEM.  The server opens and listens on one
+or more sockets for connections and then for "function calls", which are
+packets pf defined form.  The client initiates function calls; the server
+performs the indicated action and sends a packet back with the response.
+
+The packet sent to the server has this form, where all of the arguments and
+the long array are optional:
+
+Total number of bytes in packet  (4 bytes)
+Function code    (4 bytes)
+Long arguments (4 bytes each)
+BOOL arguments (4 bytes each)
+Double arguments (8 bytes each)
+A long array whose size is in the last long argument
+
+The return packet is similar, with everything after the main return value
+optional:
+
+Total number of bytes in packet  (4 bytes)
+Main return value/error code    (4 bytes)
+Long return values (4 bytes each)
+BOOL return values (4 bytes each)
+Double return values (8 bytes each)
+A long array whose size is in the last long return value
+
+The server contains a definition of what to expect and return in a function
+table, an array of ArgDescriptor structures, generally of this form:
+
+Function code (defined in an enum shared or duplicated between the client and server)
+# of incoming longs, including the final long containing the size of a received
+     long array, if any
+# of incoming BOOLs
+# of incoming doubles
+# of returned longs, including the final long containing the size of a returned
+     long array, if any
+# of returned BOOLs
+# of returned doubles
+The sum of 1 if there is an incoming long array, and 2 if there is a returned long array
+A string with the name of the function, for debug and error output
+
+Here is an example from PythonServer.cpp:
+static ArgDescriptor sFuncTable[] = {
+  {PSS_RegularCommand,              3, 0, 0,   3, 0, 0,   3, "RegularCommand"},
+  {PSS_OKtoRunExternalScript,       0, 0, 0,   0, 1, 0,   0, "OKtoRunExternalScript"},
+  {PSS_GetBufferImage,              2, 0, 0,   6, 0, 0,   0, "GetBufferImage"},
+  {PSS_PutImageInBuffer,            9, 0, 0,   0, 0, 0,   0, "PutImageInBuffer"},
+  {-1, 0,0,0,0,0,0,0, NULL}
+};
+
+The image handling for Python is atypical in terms of number of arguments.
+All of the camera servers (SerialEMCCD, JeolCamera, TietzCamera,
+FEI-SEMserver) follow a convention of receiving the array size (# of shorts)
+and expected size in X and Y as the first three long arguments, and returning
+4 long arguments: the actual number of image pixels, the actual size in X and
+Y, and the number of chunks that the image is being sent in.  The return
+arguments are sent, then the first or only chunk of the image, without
+requiring any acknowledgement.  If there is more than one chunk, the client
+sends a handshake that the server waits for before sending the next chunk.
+
+On the client side, a specific socket module, a subclass of BaseSocket,
+consists of a set of functions that each compose a single function call and
+return the response.  BaseSocket has convenience functions for packing the
+data as well as the functions for socket interactions.  Open source examples
+are in SerialEM GatanSocket.cpp and PythonModule PySEMSocket.cpp.
+
+On the server side, the typical structure is to have a specific server module
+that is a subclass of BaseServer.cpp, where each server has its own copy of
+BaseServer.cpp (which may have some unfortunate divergence between servers).
+The base class handles the socket interactions and has functions for unpacking
+and packing data.  In SerialEMCCD, the pioneer case, this was not done; all
+the server code is in SocketPathway.  Thus the only open-source example of the
+typical form is PythonServer.cpp and BaseServer.cpp in SerialEM.  The server
+subclasses have similar code for startup, shutdown, and processing a received
+message to the point of the switch on the function code, within which each
+call is dispatched to a function in the module that does the actual work.
+
+In all cases that use this model (JeolCamera, TietzCamera, FEIScopePlugin,
+HitachiPlugin), there is a single Visual Studio solution with a plugin and a
+server project that share the same file for the functional module.  An example
+of such a plugin/server solution is available upon request (it is based on
+JeolCamera, with proprietary calls and structures stripped out, and it will
+not compile).
+
