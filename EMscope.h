@@ -47,7 +47,6 @@ enum {RefrigerantLevel_AutoloaderDewar = 0,
 enum { JAL_STATION_UNKNOWN = 0, JAL_STATION_MAGAZINE, JAL_STATION_STORAGE, JAL_STATION_STAGE };
 enum {gsUnderflow = 1, gsOverflow, gsInvalid};
 enum {imNanoProbe = 0, imMicroProbe};
-enum {lpRegular = 1, lpEFTEM};
 #define pmDiffraction 2
 #define pmImaging 1
 #define psmLAD 5

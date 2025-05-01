@@ -149,6 +149,9 @@ static CString sAboutVersion;
 static CString sFunctionCalled = "";
 static bool sIgnoreFunctionCalled = false;
 static DWORD sMainThreadID;
+static void(__cdecl *sReviseITOFunc)(int) = NULL;
+static int sReviseITOSource = 0;
+static DWORD sRevisedIdleTimeout;
 
 CComModule _Module;
 
@@ -2476,6 +2479,16 @@ void CSerialEMApp::RemoveIdleTask(int source)
   }
 }
 
+// Set up to change a timeout for an existing task
+void CSerialEMApp::ReviseIdleTaskTimeout(void(__cdecl *nextFunc)(int), int source,
+  int newTimeOut)
+{
+  sReviseITOFunc = nextFunc;
+  sReviseITOSource = source;
+  sRevisedIdleTimeout = 
+    ((CSerialEMApp *)AfxGetApp())->mShiftManager->AddIntervalToTickTime(GetTickCount(), 
+      newTimeOut);
+}
 
 // Check the idle tasks, return true if any are still running
 BOOL CSerialEMApp::CheckIdleTasks()
@@ -2547,6 +2560,19 @@ BOOL CSerialEMApp::CheckIdleTasks()
       mMacroProcessor->SaveStatusPanes(i);
       mMacroProcessor->Run(i);
     }
+  }
+
+  // Revise a timeout if one was registered: look for matching done func or source
+  if (sReviseITOFunc || sReviseITOSource) {
+    for (i = 0; i < mIdleArray.GetSize(); i++) {
+      idc = mIdleArray[i];
+      if (sReviseITOFunc == idc->nextFunc || sReviseITOSource == idc->source) {
+        idc->extendTimeOut = false;
+        idc->timeOut = sRevisedIdleTimeout;
+      }
+    }
+    sReviseITOFunc = NULL;
+    sReviseITOSource = 0;
   }
 
   // Look through the list of tasks if any

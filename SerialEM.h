@@ -118,6 +118,7 @@ enum UtapiSupportTypes {
 #define axisZ 4
 #define axisA 8
 #define axisB 16
+enum { lpRegular = 1, lpEFTEM };
 enum {spUnknown = 1, spUp, spDown};
 enum JeolScreenPosition 
   {
@@ -1080,6 +1081,7 @@ public:
   CString BinningText(int binning, CameraParameters *camParam);
   void RestoreCameraForExit(void);
   void RemoveIdleTask(int source);
+  static void ReviseIdleTaskTimeout(void(__cdecl *nextFunc)(int), int source, int newTimeOut);
   EMimageBuffer * GetActiveNonStackImBuf(void);
   PlugStopFunc RegisterPlugStopFunc(PlugStopFunc func);
   PlugDoingFunc RegisterPlugDoingFunc(PlugDoingFunc func, bool imaging, bool &wasImaging);
