@@ -1293,7 +1293,7 @@ void CCameraController::InitializeDMcameras(int DMind, int *numDMListed,
         "You probably need to start Filter Control and restart Digital Micrograph\n"
         "if you want to use the energy filter", MB_EXCLAME);
 
-      mFilterUpdateID = ::SetTimer(NULL, 1, 5000, FilterUpdateProc);
+      mFilterUpdateID = ::SetTimer(NULL, 1, 500, FilterUpdateProc);
     }
   }
 
