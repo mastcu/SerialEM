@@ -150,6 +150,7 @@ struct CameraParameters {
   float falconEventScaling;  // Value to scale aligned EER sums by instead of count/elec
   CString falconRefDir;    // Reference directory for this camera
   CString falconFramePath; // Local Frame path for this camera
+  CString remoteFalconFramePath;  // Actual frame path on server, needed with dumb UTAPI
   int falconVariant;      // Separate flag for Falcon 4i variant (for now)
   float linear2CountingRatio;  // Ratio of raw counts in linear mode to counting mode
   float linearOffset;      // Amount to subtract before scaling (K3)

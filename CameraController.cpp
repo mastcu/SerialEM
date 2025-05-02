@@ -310,7 +310,7 @@ CCameraController::CCameraController()
   mInsertDetShotTime = 3.;
   mMagToRestore = 0;
   mRetainMagAndShift = -1;
-  mMakeFEIerrorBeTimeout = false;
+  mMakeFEIerrorBeTimeout = 0;
   mNumK2Filters = 1;
   mK2FilterNames[0] = "None";
   mAntialiasBinning = 1;
@@ -1293,7 +1293,7 @@ void CCameraController::InitializeDMcameras(int DMind, int *numDMListed,
         "You probably need to start Filter Control and restart Digital Micrograph\n"
         "if you want to use the energy filter", MB_EXCLAME);
 
-      mFilterUpdateID = ::SetTimer(NULL, 1, 500, FilterUpdateProc);
+      mFilterUpdateID = ::SetTimer(NULL, 1, 5000, FilterUpdateProc);
     }
   }
 
@@ -7244,7 +7244,7 @@ UINT CCameraController::EnsureProc(LPVOID pParam)
   long longSize, height, width;
   size_t arrSize;
   CameraThreadData *td = (CameraThreadData *)pParam;
-  int sizeX, sizeY, numDum, flagsSave, retval = 0;
+  int sizeX, sizeY, numDum, flagsSave, retval = 0, errorTimeout;
   int callSizeX = td->CallSizeX, callSizeY = td->CallSizeY;
   long binning = td->Binning;
   double expSave = td->Exposure;
@@ -7324,10 +7324,15 @@ UINT CCameraController::EnsureProc(LPVOID pParam)
                 // Turn into a timeout
                 delete [] ref->Array;
                 ref->Array = NULL;
+                errorTimeout = td->MakeFEIerrorTimeout > 1 ? 
+                  (1000 * td->MakeFEIerrorTimeout) : 
+                  (td->cameraTimeout + td->blankerTimeout);
                 SEMTrace('1', "Error obtaining %s reference, turning into a "
-                  "timeout by sleeping %d", iGainDark ? "dark" : "gain",
-                  td->cameraTimeout + td->blankerTimeout +3000);
-                Sleep(td->cameraTimeout + td->blankerTimeout + 3000);
+                  "timeout by sleeping %d sec", iGainDark ? "dark" : "gain", 
+                  errorTimeout / 1000 + 3);
+                CSerialEMApp::ReviseIdleTaskTimeout(CCameraController::AcquireDone, 0,
+                  errorTimeout);
+                Sleep(errorTimeout + 3000);
               }
               if (iGainDark)
                 message.Format("obtaining dark reference - %s", 
@@ -8024,7 +8029,7 @@ UINT CCameraController::AcquireProc(LPVOID pParam)
   bool startBlanker = (td->PostActionTime || td->UnblankTime || td->ReblankTime ||
     td->FocusStep1 || td->TiltDuringDelay || td->FrameTStiltToAngle.size() || 
     td->FrameTSwaitOrInterval.size()) && td->ReturnPartialScan != 1;
-  int sizeX, sizeY, chan, numChan, retval = 0, numCopied = 0;
+  int sizeX, sizeY, chan, numChan, retval = 0, numCopied = 0, errorTimeout;
   CString report, str;
   long binning = td->Binning;
 
@@ -8316,9 +8321,14 @@ UINT CCameraController::AcquireProc(LPVOID pParam)
               if (td->MakeFEIerrorTimeout) {
 
                 // Turn into a timeout
-                SEMTrace('1', "Error getting image from camera, turning into a "
-                  "timeout by sleeping %d", td->cameraTimeout + td->blankerTimeout +3000);
-                Sleep(td->cameraTimeout + td->blankerTimeout + 3000);
+                errorTimeout = td->MakeFEIerrorTimeout > 1 ?
+                  (1000 * td->MakeFEIerrorTimeout) :
+                  (td->cameraTimeout + td->blankerTimeout);
+                SEMTrace('0', "Error getting image from camera, turning into a "
+                  "timeout by sleeping %d sec", errorTimeout / 1000 + 3);
+                CSerialEMApp::ReviseIdleTaskTimeout(CCameraController::AcquireDone, 0,
+                  errorTimeout);
+                Sleep(errorTimeout + 3000);
               }
               report.Format("Getting image from camera - %s\n\n%sDescription: ",
                 errCode > 0 ? SEMCCDErrorMessage(errCode) : "", sAmtCurrent ? "" : 
@@ -9684,7 +9694,10 @@ void CCameraController::DisplayNewImage(BOOL acquired)
         // Adjust to full path for advanced scripting, but if there is a local path,
         // compose full path with that and set to read locally
         if (FCAM_ADVANCED(mParam)) {
-          message = mTD.scopePlugFuncs->ASIgetLastStoragePath();
+          if (mTD.UseUtapi)
+            message = mParam->remoteFalconFramePath;
+          else
+            message = mTD.scopePlugFuncs->ASIgetLastStoragePath();
           SEMTrace('E', "%s   %s  local path: %s", (LPCTSTR)message,
             (LPCTSTR)mPathForFrames, (LPCTSTR)localFramePath);
           message.Replace("\\\\127.0.0.1", "C:");
@@ -11975,7 +11988,7 @@ int CCameraController::AcquireFEIimage(CameraThreadData *td, void *array, int co
   long retval = 0, index = 0;
   static bool needFalconShutter = true;
   bool advanced = (td->CamFlags & PLUGFEI_USES_ADVANCED) != 0;
-  int saveFrames = -1;
+  int saveFrames = -1, errorTimeout;
   DWORD ticks = GetTickCount();
   if (td->SaveFrames && (td->CamFlags & PLUGFEI_CAM_CONTIN_SAVE))
     saveFrames = -1 - B3DNINT(td->Exposure / td->FrameTime);
@@ -12016,11 +12029,16 @@ int CCameraController::AcquireFEIimage(CameraThreadData *td, void *array, int co
   if (retval == 2 && td->MakeFEIerrorTimeout) {
 
     // Turn into a timeout
-    SEMTrace('1', "COM Error from FEI Camera, turning into a timeout by sleeping %d", 
-      td->cameraTimeout + td->blankerTimeout + 3000);
+    errorTimeout = td->MakeFEIerrorTimeout > 1 ?
+      (1000 * td->MakeFEIerrorTimeout) :
+      (td->cameraTimeout + td->blankerTimeout);
+    CSerialEMApp::ReviseIdleTaskTimeout(CCameraController::AcquireDone, 0,
+      errorTimeout);
+    SEMTrace('1', "COM Error from FEI Camera, turning into a timeout by sleeping %d sec",
+      errorTimeout / 1000 + 3);
     delete [] td->Array[0];
     td->Array[0] = NULL;
-    Sleep(td->cameraTimeout + td->blankerTimeout + 3000);
+    Sleep(errorTimeout + 3000);
   }
   if (retval) {
     DeferMessage(td, message);

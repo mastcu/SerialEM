@@ -1022,11 +1022,15 @@
         </TR>
         <TR VALIGN="top">
           <TD>MakeFEIerrorBeTimeout</TD>
-          <TD>Set to 1 to convert a COM error from a Thermo/FEI or Gatan camera into a timeout.
-            (Yes, the same property works for Gatan cameras).&nbsp; Use this together with
-            CameraRetries to see if trying again will overcome the original problem; use
+          <TD>Set to 1 to convert a COM error from a Thermo/FEI or Gatan camera into a timeout after
+             the originally defined timeout for the acquisition.&nbsp; 
+            (Yes, the same property works for Gatan cameras).&nbsp; Set to a value greater than 1 to have
+            the timeout be that number of seconds after the error occurs.&nbsp; This is useful for giving a 
+            consistent and controllable time delay, because the timeouts originally set for frame acquisitions may
+             be quite long and ones for single acquisitions may be too short.&nbsp; Use this property 
+            together with CameraRetries to see if trying again will overcome the original problem.&nbsp; You can use
             CameraTimeoutFactor with a number greater than 1 to increase the time delay between the
-            retries.</TD>
+            retries, but it is better to use a value greater than 1 for MakeFEIerrorBeTimeout.</TD>
         </TR>
         <TR VALIGN="top">
           <TD>DarkRefMaxMeanOrSD</TD>

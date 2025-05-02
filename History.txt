@@ -3,6 +3,9 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+5/1/25: Allowed a value for MakeFEIerrorBeTimeout to set the interval from
+the error to the timeout and possible retry.
+
 4/17/25: Fixed Tools menu contents.
 
 4/17/25: Fixed setting a subdirectory for frames for DE camera, and fixed live

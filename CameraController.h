@@ -296,7 +296,7 @@ struct CameraThreadData {
   int ContinuousSTEM;
   int PlugSTEMacquireFlags;    // Acquire flags for plugin STEM
   int ReturnPartialScan;       // Flag that STEM is to return a partial scan
-  BOOL MakeFEIerrorTimeout;    // Turn FEI COM error into timeout
+  int MakeFEIerrorTimeout;    // Turn FEI COM error into timeout
   int GatanReadMode;           // The read mode of Gatan camera, -1 not to set it
   bool NeedsReadMode;          // Flag that plugin needs to be told the read mode
   double CountScaling;         // Amount to scale counts in counting mode
@@ -475,7 +475,7 @@ public:
   int ConSetToLDArea(int inConSet);
   SetMember(int, RequiredRoll);
   SetMember(BOOL, ObeyTiltDelay);
-  GetSetMember(BOOL, MakeFEIerrorBeTimeout);
+  GetSetMember(int, MakeFEIerrorBeTimeout);
   void QueueMagChange(int inMagInd);
   void QueueImageShift(double inISX, double inISY, int inDelay);
   void QueueStageMove(StageMoveInfo inSmi, int inDelay, bool doBacklash = false, BOOL doRestoreXY = false);
@@ -897,7 +897,7 @@ public:
   float mPartialScanThreshExp;  // Threshold exposure for asking for a partial scan
   int mTietzScanCoordRange;     // Range of coordinates to use for a TVIPS scan
   BOOL mInvertTietzScan;        // Flip the VY vectors
-  BOOL mMakeFEIerrorBeTimeout;  // Flag to convert an FEI error to a timeout for retries
+  int mMakeFEIerrorBeTimeout;   // Flag to convert an FEI error to a timeout for retries
   CString mK2FilterNames[MAX_K2_FILTERS];
   int mNumK2Filters;
   float mMinK2FrameTime;        // Minimum frame time allowed in dose fractionation

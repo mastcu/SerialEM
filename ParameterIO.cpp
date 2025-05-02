@@ -3468,6 +3468,8 @@ int CParameterIO::ReadProperties(CString strFileName)
 
           else if (MatchNoCase("FalconLocalFramePath")) {
             StripItems(strLine, 1, camP->falconFramePath);
+          } else if (MatchNoCase("FalconRemoteFramePath")) {
+            StripItems(strLine, 1, camP->remoteFalconFramePath);
           } else if (MatchNoCase("FalconGainRefDir")) {
             StripItems(strLine, 1, camP->falconRefDir);
 
