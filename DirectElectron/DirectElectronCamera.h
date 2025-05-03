@@ -220,7 +220,7 @@ public:
   GetSetMember(CString, LastErrorString);
   void SetAndTraceErrorString(CString str);
 
-  bool ServerIsLocal() {return mDE_SERVER_IP == "127.0.0.1";};
+  bool ServerIsLocal() {return mDE_SERVER_IP == "127.0.0.1" || mDE_SERVER_IP == "localhost";};
   void SetupServerReference(int repeat, int mode) {mRepeatForServerRef = repeat;
     mModeForServerRef = mode; mNumLeftServerRef = repeat;};
   bool justSetDoubleProperty(const char * propName, double value);
