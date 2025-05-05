@@ -161,6 +161,8 @@ typedef void (*DEerrString)(std::string *);
 typedef bool (*DEstartAcquis)(int);
 typedef bool(*DEgetResult)(void *, unsigned int, DE::FrameType,
   DE::PixelFormat *, DE::ImageAttributes *);
+typedef int(*DEsetROI)(int, int, int, int, int);
+typedef int(*DEsetBinning)(int, int, int);
 
 // DE camera functions
 struct DEPluginFuncs {
@@ -181,6 +183,8 @@ struct DEPluginFuncs {
   DEerrString getLastErrorDescription;
   DEstartAcquis StartAcquisition;
   DEgetResult GetResult;
+  DEsetROI SetROI;
+  DEsetBinning SetBinning;
 };
 
 typedef int(*RunScriptLang)(const char *);

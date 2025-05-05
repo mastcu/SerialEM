@@ -28,6 +28,12 @@ IF NOT EXIST ..\FEIScopePlugin.dll IF NOT EXIST ../Plugins\FEIScopePlugin.dll SE
 set HASJEOLPLUG=1
 IF NOT EXIST ..\JeolScopePlugin.dll IF NOT EXIST ../Plugins\JeolScopePlugin.dll SET HASJEOLPLUG=0
 
+rem Find out if there is an API1 or API2 DE dll
+set HASDEAPI1=1
+set HASDEAPI2=1
+IF NOT EXIST ..\DEcamAPI1Plugin.dll IF NOT EXIST ../Plugins\DEcamAPI1Plugin.dll SET HASDEAPI1=0
+IF NOT EXIST ..\DEcamAPI2Plugin.dll IF NOT EXIST ../Plugins\DEcamAPI2Plugin.dll SET HASDEAPI2=0
+
 set GMS64PLUGS=SEMCCD-GMS2-64.dll SEMCCD-GMS2.2-64.dll SEMCCD-GMS2.30-64.dll SEMCCD-GMS2.31-64.dll^
  SEMCCD-GMS3.01-64.dll SEMCCD-GMS3.30-64.dll SEMCCD-GMS3.31-64.dll SEMCCD-GMS3.42-64.dll^
  SEMCCD-GMS3.50-64.dll SEMCCD-GMS3.60-64.dll
@@ -39,7 +45,8 @@ for %%A in (SerialEM.exe SERIALEM.HLP SerialEM.cnt SerialEM.chm FTComm.dll jpeg6
  SEMCCDps-GMS2-32.dll SEMCCDps-GMS2-64.dll SerialEMCCD.dll SerialEMCCDps.dll %GMS64PLUGS% ^
  msvcp90.dll mfc90.dll msvcr90.dll vcomp90.dll FEIScopePlugin.dll Plugins\FEIScopePlugin.dll^
  JeolScopePlugin.dll Plugins\JeolScopePlugin.dll TietzPlugin.dll Plugins\TietzPlugin.dll^
- DEcamPlugin.dll Plugins\DEcamPlugin.dll DeInterface.Win32.dll Plugins\DeInterface.Win32.dll^
+ DEcamPlugin.dll Plugins\DEcamPlugin.dll DEcamAP1Plugin.dll Plugins\API1DEcamPlugin.dll ^
+ DEcamAPI2Plugin.dll Plugins\DEcamAPI2Plugin.dll DeInterface.Win32.dll Plugins\DeInterface.Win32.dll^
  libifft-MKL.dll libifft-MKL-64.dll libiomp5md.dll libctffind.dll libmmd.dll imodzlib1.dll^
  hdf5.dll SerialEM_Snapshot.txt concrt140.dll mfc140.dll msvcp140.dll ucrtbase.dll^
  vcruntime140.dll msvcp120.dll msvcr120.dll DE.Win32.dll DE.Win64.dll svml_dispmd.dll^
@@ -135,9 +142,8 @@ COPY /Y SerialEM_Snapshot.txt ..
 Rem # If neither properties file seen, just copy them
 if %SAWPROPS% EQU 0 (
   set NEEDTIETZ=1
-  set NEEDDECAM=1
   echo.
-  echo Copying Tietz and Direct Electron plugins because no properties file was found
+  echo Copying Tietz plugin because no properties file was found
 )
 
 IF  %SAWPROPS% EQU 1 IF %NEEDTIETZ% EQU 1 (
@@ -150,11 +156,35 @@ IF  %SAWPROPS% EQU 1 IF %NEEDDECAM% EQU 1 (
   echo.
   echo Copying DE plugin because a DE camera is listed in a properties file
 )
-if %NEEDDECAM% EQU 1 (
-  COPY /Y DEcamPlugin.dll ..
-  IF EXIST DE.Win32.dll COPY /Y DE.Win32.dll ..
-  IF EXIST DE.Win64.dll COPY /Y DE.Win64.dll ..
+
+IF %HASDEAPI1% EQU 1 (
+  echo.
+  echo Copying DE plugin for API1 because it was already present
+  set NEEDDECAM=1  
 )
+IF %HASDEAPI2% EQU 1 (
+  echo.
+  echo Copying DE plugin for API2 because it was already present
+  set NEEDDECAM=1  
+)
+
+IF %NEEDDECAM% EQU 0 GOTO :DEcamDone
+IF %HASDEAPI1% EQU 1 GOTO :CopyAPI1
+IF %HASDEAPI2% EQU 1 GOTO :CopyAPI2
+
+CHOICE /C 120 /M "Enter 2 to copy the API2-only DLLs for a DE camera, 1 to copy the API1 DLLs, or 0 to skip copying: "
+IF %ERRORLEVEL%==3 GOTO :DEcamDone
+IF %ERRORLEVEL%==2 GOTO :CopyAPI2
+IF %ERRORLEVEL%==1 GOTO :CopyAPI1
+
+:CopyAPI1
+COPY /Y DE-API1\*.dll ..
+GOTO :DEcamDone
+
+:CopyAPI2
+COPY /Y DE-API2\*.dll ..
+
+:DEcamDone
 
 IF EXIST FTComm.dll COPY /Y FTComm.dll ..
 
@@ -364,7 +394,7 @@ IF %Minor% GEQ 62 (
   set versRange64=3.62 and higher
   set SEMCCD64=SEMCCD-GMS3.62-64.dll
   set BIT64=1
-IF %Minor% GEQ 60 (
+) ELSE IF %Minor% GEQ 60 (
   set versRange64=3.60-3.61
   set SEMCCD64=SEMCCD-GMS3.60-64.dll
   set BIT64=1

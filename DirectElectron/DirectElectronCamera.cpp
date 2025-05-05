@@ -81,7 +81,7 @@ bool FIX_COLUMNS = false;
 static HANDLE sLiveMutex = NULL;
 #define LIVE_MUTEX_WAIT 2000
 static void CleanupLiveMode(LiveThreadData *td);
-static BOOL sUsingAPI2;                      // Flag to use API2
+static int sUsingAPI2;                      // Flag to use API2: 2 if API2-only plugin
 
 
 ///////////////////////////////////////////////////////////////////
@@ -97,7 +97,6 @@ DirectElectronCamera::DirectElectronCamera(int camType, int index)
   mCurCamIndex = -1;
   mWinApp = (CSerialEMApp *)AfxGetApp();
   mCamParams = mWinApp->GetCamParams();
-  sUsingAPI2 = SEMUseAPI2ForDE();
 
   // This will need to be false if the server can ever be connected to from multiple 
   // sources or can restart without our knowledge, and it should be false if server delays
@@ -224,6 +223,7 @@ int DirectElectronCamera::initialize(CString camName, int camIndex)
     AfxMessageBox("The LC1100 is no longer supported");
     return -1;
   }
+  sUsingAPI2 = SEMUseAPI2ForDE();
 
   //pull the reference to the ToolDialog box for DE.
   //We need to give our dialogs the camera reference.
@@ -277,8 +277,8 @@ int DirectElectronCamera::initDEServer()
     SEMTrace('D', "Successfully connected to the DE Server.");
     m_DE_CONNECTED = true;
   } else {
-    AfxMessageBox("Could NOT connect to DE server. \n Be sure the Direct Electron "
-      "server IS running\nand MicroManager is NOT running!");
+    AfxMessageBox("Could NOT connect to DE server. \nMake sure the Direct Electron "
+      "server is running.!");
     ErrorTrace("ERROR: Could NOT connect to the DE server.");
     m_DE_CONNECTED = false;
     return -1;
@@ -916,9 +916,8 @@ int DirectElectronCamera::copyImageData(unsigned short *image4k, long &imageSize
       DE::ImageAttributes attributes;
       DE::PixelFormat pixForm = DE::PixelFormat::UINT16;
       attributes.stretchType = DE::ContrastStretchType::NONE;
-      imageOK = mDeServer->GetResult(useBuf, imageSizeX * imageSizeY * 2,
-        mLastElectronCounting ? DE::FrameType::TOTAL_SUM_COUNTED :
-        DE::FrameType::TOTAL_SUM_INTEGRATED, &pixForm, &attributes);
+      imageOK = mDeServer->GetResult(useBuf, imageSizeX * imageSizeY * 2, 
+        DE::FrameType::SUMTOTAL, &pixForm, &attributes);
     }
   } else {
     imageOK = mDeServer->getImage(useBuf, imageSizeX * imageSizeY * 2);
@@ -935,8 +934,8 @@ int DirectElectronCamera::copyImageData(unsigned short *image4k, long &imageSize
 
   // Try to read back the actual image size from these READ-ONLY properties and if it 
   // is different, truncate the Y size if necessary and set the return size from actual
-  if (!api2Reference && mDeServer->getIntProperty(g_Property_DE_ImageWidth, &actualSizeX) &&
-    mDeServer->getIntProperty(g_Property_DE_ImageHeight, &actualSizeY) &&
+  if (!api2Reference && mDeServer->getIntProperty(g_Property_DE_ImageWidth, &actualSizeX)
+    && mDeServer->getIntProperty(g_Property_DE_ImageHeight, &actualSizeY) &&
     (actualSizeX != imageSizeX || actualSizeY != imageSizeY)) {
     if (actualSizeX * actualSizeY > imageSizeX * imageSizeY)
       actualSizeY = (imageSizeX * imageSizeY) / actualSizeX;
@@ -1037,13 +1036,21 @@ UINT DirectElectronCamera::LiveProc(LPVOID pParam)
     if (sUsingAPI2) {
       DE::ImageAttributes attributes;
       DE::PixelFormat pixForm = DE::PixelFormat::UINT16;
+      attributes.stretchType = DE::ContrastStretchType::NONE;
       for (;;) {
-        imageOK = true;
-        td->DeServer->GetResult(useBuf, td->inSizeX * td->inSizeY * 2,
-          td->electronCounting ? DE::FrameType::TOTAL_SUM_COUNTED :
-          DE::FrameType::TOTAL_SUM_INTEGRATED, &pixForm, &attributes);
-        if (acqIndex != attributes.acqIndex || attributes.acqFinished)
+        imageOK = td->DeServer->GetResult(useBuf, td->inSizeX * td->inSizeY * 2,
+          DE::FrameType::SUMTOTAL, &pixForm, &attributes);
+        if (!imageOK) {
+          std::string stdStr;
+          CString str2;
+          td->DeServer->getLastErrorDescription(&stdStr);
+          str2.Format("getResult failed   %s%s", stdStr.c_str() != NULL ? ": " : "", 
+            stdStr.c_str() != NULL ? stdStr.c_str() : "");
+          SEMTrace('D', "%s", str2);
           break;
+        } else if (acqIndex != attributes.acqIndex || attributes.acqFinished) {
+          break;
+        }
       }
       needStart = attributes.acqIndex == numAcquis - 1 || attributes.acqFinished;
       acqIndex = attributes.acqIndex;
@@ -1106,6 +1113,8 @@ static void CleanupLiveMode(LiveThreadData *td)
 ///////////////////////////////////////////////////////////////////
 int DirectElectronCamera::setBinning(int x, int y, int sizex, int sizey, int hardwareBin)
 {
+  bool useOld = true;
+  int retVal;
   CSingleLock slock(&m_mutex);
 
   // Software binning is now additive to the hardware binning, so needs to be less
@@ -1113,9 +1122,26 @@ int DirectElectronCamera::setBinning(int x, int y, int sizex, int sizey, int har
 
   if (slock.Lock(1000)) {
 
+    if (sUsingAPI2 > 1 && hardwareBin >= 0) {
+      if (hardwareBin != mLastUseHardwareBin || x != mLastXbinning ||
+        y != mLastYbinning || !mTrustLastSettings) {
+        retVal = mDeServer->SetBinning(x, y, hardwareBin);
+        if (retVal > 0) {
+          mLastErrorString = ErrorTrace("ERROR calling SetBinning with %d %d %d",
+            x, y, hardwareBin);
+          return 1;
+        } else if (!retVal) {
+          SEMTrace('D', "Called SetBinning with %d %d %d", x, y, hardwareBin);
+          useOld = false;
+        }
+      } else {
+        return 0;
+      }
+    }
+
     // Set hardware binning first and if it has changed, force setting new binning
-    if (hardwareBin >= 0 && (hardwareBin != mLastUseHardwareBin || !mTrustLastSettings))
-    {
+    if (useOld && hardwareBin >= 0 && (hardwareBin != mLastUseHardwareBin || 
+      !mTrustLastSettings)) {
       SEMTrace('D', "SetBinning set hw bin %d", hardwareBin);
       if (mServerVersion < DE_HAS_API2) {
         if (!setStringWithError(psHardwareBin, hardwareBin > 0 ? psEnable : psDisable))
@@ -1136,7 +1162,7 @@ int DirectElectronCamera::setBinning(int x, int y, int sizex, int sizey, int har
     mLastUseHardwareBin = hardwareBin;
 
     // set binning if it does not match last value
-    if (x != mLastXbinning || y != mLastYbinning || !mTrustLastSettings) {
+    if (useOld && (x != mLastXbinning || y != mLastYbinning || !mTrustLastSettings)) {
       if (!justSetIntProperty(g_Property_DE_BinningX, x / lessBin) ||
         !justSetIntProperty(g_Property_DE_BinningY, y / lessBin)) {
         mLastErrorString = ErrorTrace("ERROR: Could NOT set the software binning "
@@ -1144,8 +1170,8 @@ int DirectElectronCamera::setBinning(int x, int y, int sizex, int sizey, int har
         return 1;
       } else {
         m_binFactor = x;
-        SEMTrace('D', "Software binning factors now set to X: %d Y: %d x %d lb %d", x / lessBin,
-          y / lessBin, x, lessBin);
+        SEMTrace('D', "Software binning factors now set to X: %d Y: %d x %d lb %d", 
+          x / lessBin, y / lessBin, x, lessBin);
       }
     }
 
@@ -1222,103 +1248,120 @@ int DirectElectronCamera::setROI(int offset_x, int offset_y, int xsize, int ysiz
   CameraParameters *camP = mCamParams + mCurCamIndex;
   if (slock.Lock(1000)) {
 
-    bool needOffset, needSize, ret1 = true, ret2 = true, ret3 = true;
+    bool needOffset, needSize, ret1 = true, ret2 = true, ret3 = true, needOld = true;
     int hwXoff, hwYoff, hwXsize, hwYsize, swXoff, swYoff, swXsize, swYsize, xbin, ybin;
+    int retVal;
 
     // Set hardware ROI first and if it has changed, force setting new ROI
     needOffset = offset_x != mLastXoffset || offset_y != mLastYoffset;
     needSize = xsize != mLastROIsizeX || ysize != mLastROIsizeY;
     if (hardwareROI >= 0 && (hardwareROI != mLastUseHardwareROI ||
-      (newProp && hardwareROI > 0 && (needSize || needOffset)) ||
+      (((newProp && hardwareROI > 0) || sUsingAPI2) && (needSize || needOffset)) ||
       !mTrustLastSettings)) {
-      if (mServerVersion < DE_HAS_API2) {
-        if (!setStringWithError(psHardwareROI, hardwareROI > 0 ? psEnable : psDisable))
+      if (sUsingAPI2 > 1) {
+        retVal = mDeServer->SetROI(offset_x, offset_y, xsize, ysize, hardwareROI);
+        if (retVal > 0) {
+          mLastErrorString = ErrorTrace("ERROR calling SetROI with %d %d %d %d %d",
+            offset_x, offset_y, xsize, ysize, hardwareROI);
           return 1;
-      } else if (!newProp) {
-        if (!setStringWithError(psROIMode, hardwareROI > 0 ? psHWandSW : psSWonly))
-          return 1;
-      } else {
+        } else if (!retVal) {
+          needOld = false;
+          mLastUseHardwareROI = hardwareROI;
+          SEMTrace('D', "Called SetROI with %d %d %d %d %d", retVal,
+            offset_x, offset_y, xsize, ysize, hardwareROI);
+        }
+      }
+      if (needOld) {
+        if (mServerVersion < DE_HAS_API2) {
+          if (!setStringWithError(psHardwareROI, hardwareROI > 0 ? psEnable : psDisable))
+            return 1;
+        } else if (!newProp) {
+          if (!setStringWithError(psROIMode, hardwareROI > 0 ? psHWandSW : psSWonly))
+            return 1;
+        } else {
 
-        // New API: follow same procedure of setting 0 offset, then size, then offset
-        if (hardwareROI != mLastUseHardwareROI || (needSize && needOffset)) {
-          ret3 = justSetIntProperty("Hardware ROI Offset X", 0)
-            && justSetIntProperty("Hardware ROI Offset Y", 0);
-          SEMTrace('D', "Hardware ROI offset set to 0 before setting size and offset,"
-            " ret: %d", ret3 ? 1 : 0);
+          // New API: follow same procedure of setting 0 offset, then size, then offset
+          if (hardwareROI != mLastUseHardwareROI || (needSize && needOffset)) {
+            ret3 = justSetIntProperty("Hardware ROI Offset X", 0)
+              && justSetIntProperty("Hardware ROI Offset Y", 0);
+            SEMTrace('D', "Hardware ROI offset set to 0 before setting size and offset,"
+              " ret: %d", ret3 ? 1 : 0);
+          }
+
+          // It is either the specified ROI if hardware, or the full size if not
+          hwXoff = hardwareROI > 0 ? offset_x : 0;
+          hwYoff = hardwareROI > 0 ? offset_y : 0;
+          hwXsize = hardwareROI > 0 ? xsize : camP->sizeX;
+          hwYsize = hardwareROI > 0 ? ysize : camP->sizeY;
+          if (hardwareROI != mLastUseHardwareROI || needSize) {
+            ret2 = justSetIntProperty("Hardware ROI Size X",
+              hwXsize) && justSetIntProperty("Hardware ROI Size Y", hwYsize);
+            SEMTrace('D', "Hardware ROI settings: xsize: %d ysize: %d  ret: %d", hwXsize,
+              hwYsize, ret2 ? 1 : 0);
+          }
+          if (hardwareROI != mLastUseHardwareROI || needOffset) {
+            ret1 = justSetIntProperty("Hardware ROI Offset X",
+              hwXoff) && justSetIntProperty("Hardware ROI Offset Y", hwYoff);
+            SEMTrace('D', "Hardware ROI settings: xsize: %d ysize: %d  ret: %d", hwXoff,
+              hwYoff, ret1 ? 1 : 0);
+          }
+          if (!ret1 || !ret2 || !ret3) {
+            mLastErrorString.Format("Error setting hardware offset and size "
+              "(%d - %d - %d)", ret1, ret2, ret3);
+            mLastXoffset = mLastROIsizeX = -1;
+            return 1;
+          }
+
+        }
+        mLastXoffset = mLastROIsizeX = -1;
+        mLastUseHardwareROI = hardwareROI;
+
+        // Now do software ROI that depends on hardware ROI and binning in new API
+        // EValuate what needs setting; of both need to be set, it may be best practice to
+        // set to offset to 0 first so the new size is always valid
+        needOffset = offset_x != mLastXoffset || offset_y != mLastYoffset ||
+          !mTrustLastSettings;
+        needSize = xsize != mLastROIsizeX || ysize != mLastROIsizeY || !mTrustLastSettings;
+        if (needOffset && needSize) {
+          ret3 = justSetIntProperty(newProp ? "Crop Offset X" : g_Property_DE_RoiOffsetX, 
+            0)
+            && justSetIntProperty(newProp ? "Crop Offset Y" : g_Property_DE_RoiOffsetY, 0);
+          SEMTrace('D', "ROI offset set to 0 before setting size and offset, ret: %d",
+            ret3 ? 1 : 0);
         }
 
-        // It is either the specified ROI if hardware, or the full size if not
-        hwXoff = hardwareROI > 0 ? offset_x : 0;
-        hwYoff = hardwareROI > 0 ? offset_y : 0;
-        hwXsize = hardwareROI > 0 ? xsize : camP->sizeX;
-        hwYsize = hardwareROI > 0 ? ysize : camP->sizeY;
-        if (hardwareROI != mLastUseHardwareROI || needSize) {
-          ret2 = justSetIntProperty("Hardware ROI Size X",
-            hwXsize) && justSetIntProperty("Hardware ROI Size Y", hwYsize);
-          SEMTrace('D', "Hardware ROI settings: xsize: %d ysize: %d  ret: %d", hwXsize,
-            hwYsize, ret2 ? 1 : 0);
+        // Set to passed ROI or full subarea of HW ROI, but adjust for hardware binning
+        xbin = (newProp && mLastUseHardwareBin > 0) ? 2 : 1;
+        ybin = (newProp && mLastUseHardwareBin > 0) ? 2 : 1;
+        swXoff = (newProp && hardwareROI > 0) ? 0 : offset_x / xbin;
+        swYoff = (newProp && hardwareROI > 0) ? 0 : offset_y / ybin;
+        swXsize = xsize / xbin;
+        swYsize = ysize / ybin;
+
+        // Set size
+        if (needSize) {
+          ret2 = justSetIntProperty(newProp ? "Crop Size X" : g_Property_DE_RoiDimensionX,
+            swXsize) && justSetIntProperty(newProp ? "Crop Size Y" :
+              g_Property_DE_RoiDimensionY, swYsize);
+          SEMTrace('D', "ROI settings: xsize: %d ysize: %d  ret: %d", swXsize, swYsize,
+            ret2 ? 1 : 0);
         }
-        if (hardwareROI != mLastUseHardwareROI || needOffset) {
-          ret1 = justSetIntProperty("Hardware ROI Offset X",
-            hwXoff) && justSetIntProperty("Hardware ROI Offset Y", hwYoff);
-          SEMTrace('D', "Hardware ROI settings: xsize: %d ysize: %d  ret: %d", hwXoff,
-            hwYoff, ret1 ? 1 : 0);
+
+        //Set offset
+        if (needOffset) {
+          ret1 = justSetIntProperty(newProp ? "Crop Offset X" : g_Property_DE_RoiOffsetX,
+            swXoff) && justSetIntProperty(newProp ?
+              "Crop Offset Y" : g_Property_DE_RoiOffsetY, swYoff);
+          SEMTrace('D', "ROI settings: offsetX: %d offsetY: %d  ret: %d", swXoff,
+            swYoff, ret1 ? 1 : 0);
         }
         if (!ret1 || !ret2 || !ret3) {
-          mLastErrorString.Format("Error setting hardware offset and size "
+          mLastErrorString.Format("Error setting offset and size for region of interest "
             "(%d - %d - %d)", ret1, ret2, ret3);
           mLastXoffset = mLastROIsizeX = -1;
           return 1;
         }
-
       }
-      mLastXoffset = mLastROIsizeX = -1;
-    }
-    mLastUseHardwareROI = hardwareROI;
-
-    // Now do software ROI that depends on hardware ROI and binning in new API
-    // EValuate what needs setting; of both need to be set, it may be best practice to
-    // set to offset to 0 first so the new size is always valid
-    needOffset = offset_x != mLastXoffset || offset_y != mLastYoffset ||
-      !mTrustLastSettings;
-    needSize = xsize != mLastROIsizeX || ysize != mLastROIsizeY || !mTrustLastSettings;
-    if (needOffset && needSize) {
-      ret3 = justSetIntProperty(newProp ? "Crop Offset X" : g_Property_DE_RoiOffsetX, 0)
-        && justSetIntProperty(newProp ? "Crop Offset Y" : g_Property_DE_RoiOffsetY, 0);
-      SEMTrace('D', "ROI offset set to 0 before setting size and offset, ret: %d",
-        ret3 ? 1 : 0);
-    }
-
-    // Set to passed ROI or full subarea of HW ROI, but adjust for hardware binning
-    xbin = (newProp && mLastUseHardwareBin > 0) ? 2 : 1;
-    ybin = (newProp && mLastUseHardwareBin > 0) ? 2 : 1;
-    swXoff = (newProp && hardwareROI > 0) ? 0 : offset_x / xbin;
-    swYoff = (newProp && hardwareROI > 0) ? 0 : offset_y / ybin;
-    swXsize = xsize / xbin;
-    swYsize = ysize / ybin;
-
-    // Set size
-    if (needSize) {
-      ret2 = justSetIntProperty(newProp ? "Crop Size X" : g_Property_DE_RoiDimensionX,
-        swXsize) && justSetIntProperty(newProp ? "Crop Size Y" :
-          g_Property_DE_RoiDimensionY, swYsize);
-      SEMTrace('D', "ROI settings: xsize: %d ysize: %d  ret: %d", swXsize, swYsize,
-        ret2 ? 1 : 0);
-    }
-
-    //Set offset
-    if (needOffset) {
-      ret1 = justSetIntProperty(newProp ? "Crop Offset X" : g_Property_DE_RoiOffsetX,
-        swXoff) && justSetIntProperty(newProp ?
-          "Crop Offset Y" : g_Property_DE_RoiOffsetY, swYoff);
-      SEMTrace('D', "ROI settings: offsetX: %d offsetY: %d  ret: %d", swXoff,
-        swYoff, ret1 ? 1 : 0);
-    }
-    if (!ret1 || !ret2 || !ret3) {
-      mLastErrorString.Format("Error setting offset and size for region of interest "
-        "(%d - %d - %d)", ret1, ret2, ret3);
-      mLastXoffset = mLastROIsizeX = -1;
-      return 1;
     }
     mLastXoffset = offset_x;
     mLastYoffset = offset_y;
@@ -1919,6 +1962,34 @@ CString DirectElectronCamera::ErrorTrace(char *fmt, ...)
   SEMTrace('D', "%s", (LPCTSTR)str);
   return str;
 }
+
+/*
+Error codes for API2:
+NoError                  = 0,
+AckPacketNotReceived     = 1,
+ConnectToCameraFailed    = 2,
+ConnectionFailed         = 3,
+ExceptionCatched         = 4,
+GetPropertySettingFailed = 5,
+GetPropertyFailed        = 6,
+GetListPropertiesFailed  = 7,
+InvalidParameter         = 8,
+ImageHeaderMissing       = 9,
+ImageSizeIncorrect       = 10,
+ImageNotReceived         = 11,
+NoValuesReturned         = 12,
+ParametersDoNotMatch     = 13,
+ReceiveFromServerFailed  = 14,
+SendCommandFailed        = 15,
+UnableToParseMsg         = 16,
+InvalidFrameCount        = 17,
+Timeout                  = 18,
+Undefined                = 19,
+ReturnChangedPropsFailed = 20,
+SendVirtualMaskFailed    = 21,
+FunctionAccessDenied     = 22,
+SendScanXYArrayFailed    = 23,
+*/
 
 void DirectElectronCamera::SetAndTraceErrorString(CString str)
 {

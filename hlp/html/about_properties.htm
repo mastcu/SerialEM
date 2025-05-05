@@ -811,14 +811,20 @@
         </TR>
         <TR VALIGN="top">
           <TD>UseAPI2ForDE</TD>
-          <TD>Set to 1 to connect to the DE server with API 2.&nbsp; This new interface was 
-              added in server 2.5, but can only be used with server DE 2.7 or higher.&nbsp; 
-              Currently the only advantage of API 2 is that continuous (live) mode works well 
-            and can give much higher frames per second.&nbsp; SerialEM cannot switch connection methods after it determines 
-              the server version, so this property is the only way to access API 2.&nbsp; The 
-              default read port for API 2 is 13240 (see DECameraReadPort).&nbsp;&nbsp; If 
-              you change this property after connecting to the server, you will probably need 
-              to restart the server.</TD>
+          <TD>The API2 interface was 
+              added in server 2.5, but it seems that it can only be used with server DE 2.7 or 
+              higher. As of SerialEM 4.2, 5-May-25, there are two plugins for the DE camera: 
+              DEcamAPI1Plugin.dll, which can connect to both API1 and API2 and will connect to 
+              API2 if this property is 1; and DEcamAPI2Plugin.dll, which can connect only to 
+              API2, with this property being ignored.&nbsp; There is no good reason to use the 
+              API1 plugin with API2, since the API2 plugin handles setting hardware binning 
+              and ROI better.&nbsp; Thus, to switch which API is being used, you should switch 
+              the plugin and the DE.Winxx.dll instead of using this property.&nbsp;&nbsp;&nbsp; If 
+              you change this property after connecting to a server with the API1 plugin, you will probably need 
+              to restart the server.&nbsp; &nbsp;These points are relevant only for servers 2.7.0 
+              to 2.73, since the API1 interface was eliminated in server 2.7.4 and the API2 
+              plugin is required from that point on.&nbsp; The default read port for API 2 is 
+              13240 (see DECameraReadPort).&nbsp;&nbsp;</TD>
         </TR>
         <TR VALIGN="top">
           <TD>InitialCurrentCamera</TD>
@@ -2618,7 +2624,7 @@
         </TR>
         <TR VALIGN="top">
           <TD>DECameraWritePort</TD>
-          <TD>Set to a port number for rwriting to DE server, typically 48879.</TD>
+          <TD>Set to a port number for writing to DE server, typically 48879.</TD>
         </TR>
         <TR VALIGN="top">
           <TD>DEImageRotation</TD>

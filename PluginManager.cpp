@@ -5,6 +5,7 @@
 #include "ParameterIO.h"
 #include "MacroProcessor.h"
 #include "TSController.h"
+#include "CameraController.h"
 #include "PiezoAndPPControl.h"
 
 typedef int (*InfoFunc)(const char **, int *, int *);
@@ -284,12 +285,19 @@ int CPluginManager::LoadPlugins(void)
           DECAM_PROC(DEerrString, getLastErrorDescription);
           DECAM_PROC(DEstartAcquis, StartAcquisition);
           DECAM_PROC(DEgetResult, GetResult);
-          if (i)
+          DECAM_PROC(DEsetROI, SetROI);
+          DECAM_PROC(DEsetBinning, SetBinning);
+          if (i) {
             mess.Format("Tried to load %s as a plugin for the DE camera interface but\r\n"
               "   could not resolve some required functions; this plugin is not up to date",
               FindFileData.cFileName);
-          else
+          } else {
             mDEplugIndex = (int)mPlugins.GetSize();
+
+            // Set flag that API2 only plugin was loaded
+            if (newPlug->shortName.Find("API2") > 0)
+              mWinApp->mCamera->SetUseAPI2ForDE(2);
+          }
         }
         if (i) {
           mWinApp->AppendToLog(mess, action);
