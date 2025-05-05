@@ -3451,7 +3451,7 @@ void CCameraSetupDlg::ManageDEpanel(void)
     UpdateData(false);
   }
   m_butNameSuffix.EnableWindow(!mParam->DE_AutosaveDir.IsEmpty() && saving);
-  m_butDESetSaveFolder.EnableWindow(saving);
+  m_butDESetSaveFolder.EnableWindow(saving || m_bDEsaveFinal);
   m_editSumCount.EnableWindow(saving);
   m_butDESaveMaster.EnableWindow(!forceSaving);
   m_butDESaveFrames.EnableWindow(m_bDEsaveMaster && (m_iSumCount > 1 || m_iDEMode > 0));

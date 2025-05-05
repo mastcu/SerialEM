@@ -478,7 +478,7 @@ CCameraController::CCameraController()
   mMinShotInterval = 0;
   mTakeUnbinnedIfSavingEER = true;
   mShowLinearForAlpine = true;
-  mUseAPI2ForDE = false;
+  mUseAPI2ForDE = 0;
   mDynFocusTiltOffset = 0.;
   mFilterObeyNormDelay = false;
   mFilterWaiting = false;
@@ -3518,15 +3518,8 @@ void CCameraController::Capture(int inSet, bool retrying)
       }
 
       // Set up frame folder before getting full folder, make sure it is OK
-      mFrameFolder = mParam->DE_AutosaveDir;
-      if (!mFrameFolder.IsEmpty() && !mDirForDEFrames.IsEmpty()) {
-        mFrameFolder += "\\" + mDirForDEFrames;
-        if (CreateFrameDirIfNeeded(mFrameFolder, &logmess, 'D')) {
-          SEMMessageBox(logmess);
-          ErrorCleanup(1);
-          return;
-        }
-      }
+      if (SetDEUsersFrameFolder())
+        return;
 
       // Get full folder and suffix, using temporary name if aligning only
       // again make sure folder is OK
@@ -3536,7 +3529,9 @@ void CCameraController::Capture(int inSet, bool retrying)
         ErrorCleanup(1);
         return;
       }
-    }
+    } else if ((conSet.saveFrames & DE_SAVE_FINAL) && SetDEUsersFrameFolder())
+      return;
+
     if (mTD.DE_Cam->SetAllAutoSaves(setState, sumCount, mFrameFilename, mFrameFolder, 
       conSet.K2ReadMode > 0)) {
         ErrorCleanup(1);
@@ -12975,6 +12970,22 @@ void CCameraController::ComposeFramePathAndName(bool temporary)
     UtilAppendWithSeparator(filename, date, "_");
   }
   mFrameFilename = filename;
+}
+
+// Set up frame folder name based on user's specified folder for frames
+int CCameraController::SetDEUsersFrameFolder()
+{
+  CString logmess;
+  mFrameFolder = mParam->DE_AutosaveDir;
+  if (!mFrameFolder.IsEmpty() && !mDirForDEFrames.IsEmpty()) {
+    mFrameFolder += "\\" + mDirForDEFrames;
+    if (CreateFrameDirIfNeeded(mFrameFolder, &logmess, 'D')) {
+      SEMMessageBox(logmess);
+      ErrorCleanup(1);
+      return 1;
+    }
+  }
+  return 0;
 }
 
 // Get the frame saving dir for the given camera

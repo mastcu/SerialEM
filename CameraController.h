@@ -629,7 +629,7 @@ public:
   SetMember(float, DoseAdjustmentFactor);
   SetMember(bool, SuspendFilterUpdates);
   GetSetMember(BOOL, ShowLinearForAlpine);
-  GetSetMember(BOOL, UseAPI2ForDE);
+  GetSetMember(int, UseAPI2ForDE);
   GetSetMember(int, TietzScanCoordRange);
   GetSetMember(BOOL, InvertTietzScan);
   GetSetMember(float, PartialScanThreshExp);
@@ -1100,7 +1100,7 @@ public:
   int mTimeoutForScriptThread;   // Keep track of timeout: a call without one is killable
   BOOL mRamperWaitForBlank;      // Flag to wait for blank when measuring STEMM flyback
   BOOL mShowLinearForAlpine;     // Show linear mode in setup dialog for Alpine camera
-  BOOL mUseAPI2ForDE;            // Use the API 2 for DE camera connection and all calls
+  int mUseAPI2ForDE;             // Use the API 2 for DE camera connection and all calls
   int mRollBufKeptIndex;         // Last buffer that was redisplayed in RollBuffers
   float mDynFocusTiltOffset;     // Tilt offset for dynamic focusing
   bool mFilterObeyNormDelay;     // Flag to impose post-norm delay before setting filter
@@ -1224,6 +1224,7 @@ public:
   bool FindNearestBinning(int binning, int *binnings, int numBin, int &binInd,
     int &realBin);
   void ComposeFramePathAndName(bool temporary);
+  int SetDEUsersFrameFolder();
   CString GetCameraFrameFolder(CameraParameters *camParam, bool &noSubdirs, bool &movable);
   CString *GetCameraFrameDirPtr(CameraParameters *camParam);
   void SetCameraFrameFolder(CameraParameters *camParam, CString &str);
