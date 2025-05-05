@@ -3,6 +3,10 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+5/5/25: SEM_4-1-24
+5/5/25: Allowed Wait for Drift task to be run at a subset of items in
+Navigator Acquire at Items (In 4.1).
+
 5/5/25: Switched to having separate plugins for connecting to DE camera with
 API1 or API2; the UseAPI2forDE property is irrelevant with the API2 plugin.
 

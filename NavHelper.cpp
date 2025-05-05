@@ -101,7 +101,7 @@ CNavHelper::CNavHelper(void)
     {"Correct Astigmatism", NAA_FLAG_HAS_SETUP, 0, 1, 15, 40.},
     {"Condition Phase Plate", NAA_FLAG_HAS_SETUP, 0, 1, 15, 40.},
     {"Update Dark Reference", NAA_FLAG_ANY_SITE_OK, 0, 1, 15, 40.},
-    {"Wait for Drift", BEFORE_SETUP_EVERYN, 0, 1, 15, 40.},
+    {"Wait for Drift", NAA_FLAG_ONLY_BEFORE | NAA_FLAG_HAS_SETUP, 0, 1, 15, 40.},
     {"Align to Template", BEFORE_SETUP_EVERYN, 0, 1, 15, 40.},
     {"Refine ZLP", NAA_FLAG_HAS_SETUP, 0, 1, 15, 40.},
     {"Run Script before Action", NAA_FLAG_ONLY_BEFORE, 0, 1, 15, 40.},
