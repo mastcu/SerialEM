@@ -1204,7 +1204,7 @@ UINT DirectElectronCamera::LiveProc(LPVOID pParam)
     double start = GetTickCount();
     if (sUsingAPI2) {
       DE::ImageAttributes attributes;
-      DE::PixelFormat pixForm = DE::PixelFormat::AUTO;
+      DE::PixelFormat pixForm = DE::PixelFormat::UINT16;
       for (;;) {
         imageOK = true;
         td->DeServer->GetResult(useBuf, td->inSizeX * td->inSizeY * 2,
