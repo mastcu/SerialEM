@@ -437,14 +437,8 @@ int DirectElectronCamera::initDEServer()
   std::string propValue;
   if (mDeServer->getProperty(std::string(psServerVersion), &propValue))
     SetSoftwareAndServerVersion(propValue);
-#ifndef _WIN64
-  if (mAPI2Server) {
-    AfxMessageBox("A 32-bit version of SerialEM will not work with this version of the DE"
-      " server.\nInstall a 64-bit version of SerialEM.", MB_EXCLAME);
-    unInitialize();
-    return -1;
-  }
-#endif
+
+  // 5/5/25: Removed restriction on 32 bit version with API2
   return 1;
 }
 
