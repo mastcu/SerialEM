@@ -12799,12 +12799,15 @@ void CCameraController::RestoreGatanOrientations(void)
 void CCameraController::WarnEmptyFalconFramePath(CString &localFramePath, 
   const char *prefix)
 {
-  if (mFalconWarningCount < 5 && 
-    (mLocalFalconFramePath.IsEmpty() || !UtilFileExists(localFramePath)))
+  CString path, file;
+  UtilSplitPath(localFramePath, path, file);
+  if (mFalconWarningCount < 5 &&
+    (mLocalFalconFramePath.IsEmpty() || !UtilFileExists(path))) {
     SEMAppendToLog("WARNING: " + CString(prefix) + " because neither "
       "general property\r\n LocalFalconFramePath nor camera property "
       "FalconLocalFramePath is properly defined");
-  mFalconWarningCount++;
+    mFalconWarningCount++;
+  }
 }
 
 // Test if a camera is inserted, return 1 if it is, 0 not, or leave inserted unchanged
