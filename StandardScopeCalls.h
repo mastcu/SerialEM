@@ -134,6 +134,7 @@ UTGET_ONE_DBL(GetObjectiveStrength, UTSUP_ILLUMINATION) LINE_END
 UTGET_ONE_BOOL(TempControlAvailable, UTSUP_TEMP_CONTROL) LINE_END
 UTGET_ONE_BOOL(DewarsAreBusyFilling, UTSUP_TEMP_CONTROL) LINE_END
 UTGET_ONE_INT(DewarsRemainingTime, UTSUP_TEMP_CONTROL) LINE_END
+UTGET_ONE_INT(GetBeamStopper, UTSUP_BEAM_STOP) LINE_END
 #ifndef  MATCHING_NAMES_ONLY
 UTGET_ONE_BOOL(GetSmallScreenOut, UTSUP_FLUSCREEN) LINE_END
 #endif
@@ -251,7 +252,6 @@ SCOPE_SAMENAME(CamNoArg, FocusRamperInitialize);
 SCOPE_SAMENAME(DoFocRamp, DoFocusRamp);
 SCOPE_SAMENAME(FinishFocRamp, FinishFocusRamp);
 SCOPE_SAMENAME(ShowMB, ShowMessageBox);
-SCOPE_SAMENAME(ScopeGetInt, GetBeamStopper);
 SCOPE_SAMENAME(ScopeSetInt, SetBeamStopper);
 SCOPE_SAMENAME(UtapiSTEMimage, UtapiAcquireSTEMimage);
 SCOPE_SAMENAME(ScopeNoArg, UtapiStopContinuous);

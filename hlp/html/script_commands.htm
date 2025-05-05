@@ -3598,7 +3598,8 @@
           <TD class="scriptcommand">SetBeamStopPosition #</TD>
           <TD>Inserts or retracts the beam stop if <b>#</b> is 1 or 0.&nbsp; On Thermo/FEI scopes,
             it will use UTAPI if available, otherwise UI Automation, in which case the Flucam Viewer 
-            must be open.&nbsp; A value of 2 will insert the beam stop halfway, but this call
+            must be open.&nbsp; Howvever, the UI Automation has not been found to work on
+             a real scope yet.&nbsp; A value of 2 will insert the beam stop halfway, but this call
             always goes through UI Automation because UTAPI does not support this position.
           </TD>
         </TR>

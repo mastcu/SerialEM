@@ -3,6 +3,12 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+5/5/25: SEM_4-2-0beta16
+5/5/25: Added UI Automation code to control beam stop on Thermo which is
+probably useless.
+
+5/5/25: Changes in FEIScopePlugin for new UTAPI interfaces, mostly untested.
+
 5/5/25: SEM_4-1-24
 5/5/25: Allowed Wait for Drift task to be run at a subset of items in
 Navigator Acquire at Items (In 4.1).
