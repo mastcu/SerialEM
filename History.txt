@@ -3,6 +3,8 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+5/7/25: Fixed Step To & Adjust IS not stopping for custom pattern (In 5.1).
+
 5/5/25: SEM_4-2-0beta16
 5/5/25: Added UI Automation code to control beam stop on Thermo which is
 probably useless.
