@@ -50,7 +50,7 @@ void CDERefMakerDlg::DoDataExchange(CDataExchange* pDX)
   DDV_MinMaxInt(pDX, m_iNumRepeats, 1, MAX_REPEATS);
   DDX_Control(pDX, IDC_RDARK_REF, m_butDarkRef);
   DDX_Text(pDX, IDC_EDIT_REF_FPS, m_fRefFPS);
-  DDV_MinMaxFloat(pDX, m_fRefFPS, 1., 400.);
+  DDV_MinMaxFloat(pDX, m_fRefFPS, 0.5f, 400.);
   DDX_Control(pDX, IDC_EDIT_REF_FPS, m_editRefFPS);
   DDX_Check(pDX, IDC_USE_REC_HARDWARE_ROI, m_bUseRecHardwareROI);
   DDX_Control(pDX, IDC_USE_REC_HARDWARE_ROI, m_butUseRecHardwareROI);
