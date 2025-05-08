@@ -1319,7 +1319,7 @@ void CEMscope::ScopeUpdate(DWORD dwTime)
   static bool inUpdate = false;
   static int apertureUpdateCount = 0, numApertureFailures = 0;
 
-  if (reportTime)
+  //if (reportTime)
     wallStart = wallTime();
 
   // If a counter was set to restore focus, decrement and act on it when count expires
@@ -1864,11 +1864,14 @@ void CEMscope::ScopeUpdate(DWORD dwTime)
        mNumGauges = 0;
     
     // Report first error and then multiple errors every 10 seconds
-    if (dwTime  > 10000 + mLastReport && !mReportingErr) {
+    if ((dwTime  > 10000 + mLastReport && !mReportingErr) || (mDisconnected && 
+      mPlugFuncs->ScopeIsDisconnected && mPlugFuncs->ScopeIsDisconnected())) {
       mReportingErr = true;
       if (mPlugFuncs->ScopeIsDisconnected && 
         mPlugFuncs->ScopeIsDisconnected()) {
-          SuspendUpdate(2000);
+        probe = (int)(1000. * (wallTime() - wallStart));
+        B3DCLAMP(probe, 2000, 5000);
+        SuspendUpdate(probe);
           if (!mDisconnected) {
             mDisconnected = true;
             message = "Connection to microscope has been lost";
@@ -2997,7 +3000,7 @@ BOOL CEMscope::ChangeImageShift(double shiftX, double shiftY, BOOL bInc)
   mLastISdelX = shiftX;
   mLastISdelY = shiftY;
   ScaleMat IStoBS;
-  if (!sInitialized)
+  if (!sInitialized || mDisconnected)
     return false;
 
   ScopeMutexAcquire("ChangeImageShift", true);
@@ -3712,7 +3715,7 @@ int CEMscope::GetScreenPos()
   int result;
   if (mNoScope)
     return mFakeScreenPos;
-  if (!sInitialized)
+  if (!sInitialized || mDisconnected)
     return spUnknown;
 
   // Plugin will use state value if update by event or getting fast
@@ -4005,7 +4008,7 @@ int CEMscope::GetMagIndex(BOOL forceGet)
   int result, gettingFast = 0;
   if (mNoScope)
     return mFakeMagIndex;
-  if (!sInitialized)
+  if (!sInitialized || mDisconnected)
     return -1;
 
   // Plugin will use state value only if getting fast and mag is valid
@@ -5473,7 +5476,7 @@ void CEMscope::SetLowDoseMode(BOOL inVal, BOOL hidingOffState)
 // Blank or unblank the beam; keep track of requested setting
 void CEMscope::BlankBeam(BOOL inVal, const char *fromWhere)
 {
-  if (!sInitialized || mJeol1230)
+  if (!sInitialized || mJeol1230 || mDisconnected)
     return;
   ScopeMutexAcquire("BlankBeam", true);
   try {
@@ -5551,7 +5554,7 @@ void CEMscope::GotoLowDoseArea(int newArea)
   BOOL lDebug = GetDebugOutput('l');
   int setNum, oldArea = mLowDoseSetArea;
   int lowestM = GetLowestMModeMagInd();
-  if (!sInitialized || mChangingLDArea || sClippingIS)
+  if (!sInitialized || mChangingLDArea || sClippingIS || mDisconnected)
     return;
 
   mChangingLDArea = -1;
@@ -5839,7 +5842,7 @@ void CEMscope::GotoLowDoseArea(int newArea)
     // Send out values if any changed - need to set actual filter on the JEOL because
     // with an energy offset, it adjusts intensity
     // Yes, let camera set filter and this will put the proper delays in
-    if (filterChanged) {
+    if (filterChanged || (JEOLscope && (enteringLowMag || leavingLowMag))) {
       mCamera->SetIgnoreFilterDiffs(true);
       if (JEOLscope)
         mCamera->SetupFilter();
