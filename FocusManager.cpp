@@ -2014,6 +2014,8 @@ int CFocusManager::GetFocusCal(int inMag, int inCam, int probeMode, int inAlpha,
   int *activeList = mWinApp->GetActiveCameraList();
   bool debug = GetDebugOutput('C') && !mWinApp->GetInUpdateWindows();
 
+  if (inMag < 0)
+    return 0;
   if (mCamParams[inCam].STEMcamera)
     return 0;
   if ((focInd = LookupFocusCal(inMag, inCam, mTiltDirection, probeMode, inAlpha, false))

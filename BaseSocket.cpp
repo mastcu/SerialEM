@@ -263,6 +263,12 @@ void CBaseSocket::CloseBeforeNextUse(int typeID)
 // Open the socket and connect it to the server
 int CBaseSocket::OpenServerSocket(int sockInd)
 {
+  fd_set write, err;
+  TIMEVAL timeout;
+  u_long iMode = 1;
+  int retVal;
+  double startTime;
+
   mSockAddr[sockInd].sin_addr.S_un.S_addr = inet_addr(mIPaddress[sockInd]); 
   mSockAddr[sockInd].sin_family = AF_INET;
   mSockAddr[sockInd].sin_port = htons(mPort[sockInd]);     // short, network byte order
@@ -275,13 +281,56 @@ int CBaseSocket::OpenServerSocket(int sockInd)
     return 1;
   }
 
-  // Connect the Socket.
-  if(connect(mServer[sockInd], (PSOCKADDR) &mSockAddr[sockInd], sizeof(SOCKADDR_IN))) {
+  // Set the socket nonblocking
+  retVal = ioctlsocket(mServer[sockInd], FIONBIO, &iMode);
+  if (retVal == SOCKET_ERROR) {
+    SEMTrace('K', "Basesocket: Error setting socket at IP %s non-blocking for connect"
+      " (%d)", mIPaddress[sockInd], WSAGetLastError());
+    CloseServer(sockInd);
+    return 1;
+  }
+
+  //  Start connecting the Socket..
+  retVal = connect(mServer[sockInd], (PSOCKADDR)&mSockAddr[sockInd], sizeof(SOCKADDR_IN));
+  // Check for the expected return from a non-blocking connect attempt
+  if (retVal != 0 && (retVal != SOCKET_ERROR || WSAGetLastError() != WSAEWOULDBLOCK)) {
     SEMTrace('K', "BaseSocket: Error connecting to Server socket at IP %s on port %d (%d)"
       , mIPaddress[sockInd], mPort[sockInd], WSAGetLastError());
     CloseServer(sockInd);
     return 1;
   }
+
+  // Restore to blocking mode
+  iMode = 0;
+  retVal = ioctlsocket(mServer[sockInd], FIONBIO, &iMode);
+  if (retVal == SOCKET_ERROR) {
+    SEMTrace('K', "Basesocket: Error restoring socket at IP %s to blocking after connect"
+      " (%d)", mIPaddress[sockInd], WSAGetLastError());
+    CloseServer(sockInd);
+    return 1;
+  }
+
+  // Check for write connection to socket with given timeout
+  FD_ZERO(&write);
+  FD_ZERO(&err);
+  FD_SET(mServer[sockInd], &write);
+  FD_SET(mServer[sockInd], &err);
+  timeout.tv_sec = 5;
+  timeout.tv_usec = 0;
+
+  startTime = GetTickCount();
+  retVal = select(0, NULL, &write, &err, &timeout);
+  if (!FD_ISSET(mServer[sockInd], &write)) {
+    if (SEMTickInterval(startTime) < 750 * timeout.tv_sec)
+      SEMTrace('K', "BaseSocket: Failed connect to Server socket at IP %s on port %d",
+        mIPaddress[sockInd], mPort[sockInd]);
+    else
+      SEMTrace('K', "BaseSocket: Timeout connecting to Server socket at IP %s on port %d",
+        mIPaddress[sockInd], mPort[sockInd]);
+    CloseServer(sockInd);
+    return 1;
+  }
+
   SEMTrace('K', "BaseSocket: Connected to Server socket at IP %s on port %d",
       mIPaddress[sockInd], mPort[sockInd]);
   return 0;

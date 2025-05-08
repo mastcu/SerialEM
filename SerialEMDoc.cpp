@@ -2520,9 +2520,13 @@ int CSerialEMDoc::SaveSettingsOnExit()
   if (mAbandonSettings)
     return 0;
 
-  if (!mSettingsOpen)
-    return (OfferToSaveSettings("exit the program?"));
-
+  if (!mSettingsOpen || mWinApp->mScope->GetDisconnected()) {
+    str = "exit the program?";
+    if (mWinApp->mScope->GetDisconnected())
+      str += "\n(This could save undesired values because the scope is\n"
+      "disconnected, e.g., if an imaging state was set and could not be restored)";
+    return (OfferToSaveSettings(str));
+  }
   OnSettingsSave();
   return 0;
 }
@@ -2662,7 +2666,7 @@ void CSerialEMDoc::AutoSaveFiles()
   if (mWinApp->mNavigator && mAutoSaveNav)
     mWinApp->mNavigator->AutoSave();
   if (mAutoSaveSettings && mSettingsOpen && !mAbandonSettings &&
-    !mWinApp->mTSController->StartedTiltSeries())
+    !mWinApp->mTSController->StartedTiltSeries() && !mWinApp->mScope->GetDisconnected())
     OnSettingsSave();
   if (mWinApp->mLogWindow && saveAuto) {
     if (saveAuto && (mWinApp->mLogWindow->GetSaveFile()).IsEmpty() && 

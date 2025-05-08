@@ -409,6 +409,7 @@ void CMainFrame::DoClose(bool afterScript)
   WINDOWPLACEMENT winPlace;
   int magInd, macNum;
   bool skipReset = false;
+  bool disconnected = mWinApp->mScope->GetDisconnected();
   CString str;
   BOOL wasLD = mWinApp->LowDoseMode();
 
@@ -448,7 +449,8 @@ void CMainFrame::DoClose(bool afterScript)
     // Auto save files, may save some inquiries
     mWinApp->mDocWnd->AutoSaveFiles();
 
-    if (mWinApp->mAutocenDlg && !wasLD && mWinApp->mAutocenDlg->m_bSetState)
+    if (mWinApp->mAutocenDlg && !wasLD && mWinApp->mAutocenDlg->m_bSetState && 
+      !disconnected)
       mWinApp->mAutocenDlg->RestoreScopeState();
 
     // Want to shut off low dose mode now so that parameters return
@@ -492,7 +494,7 @@ void CMainFrame::DoClose(bool afterScript)
     }
     macNum = mWinApp->mMacroProcessor->FindMacroByNameOrTextNum(
       mWinApp->GetScriptToRunAtEnd());
-    if (macNum >= 0) {
+    if (macNum >= 0 && !disconnected) {
       mWinApp->mMacroProcessor->Run(macNum);
       mClosingProgram = false;
       mWinApp->AddIdleTask(TASK_MACRO_AT_EXIT, 0, 0);
@@ -527,7 +529,7 @@ void CMainFrame::DoClose(bool afterScript)
 
   // Be bold and reset shifts now, without a backlash if one is programmed
   // then sit on stage busy
-  if (mWinApp->mScope->GetInitialized()) {
+  if (mWinApp->mScope->GetInitialized() && !disconnected) {
     mWinApp->mScope->BlankBeam(false);
     mWinApp->mScope->SetTiltAxisOffset(0.);
     if (HitachiScope) {
@@ -550,7 +552,8 @@ void CMainFrame::DoClose(bool afterScript)
   mWinApp->mCamera->KillUpdateTimer();
   mWinApp->mDEToolDlg.KillUpdateTimer();
   mWinApp->mCamera->RestoreGatanOrientations();
-  mWinApp->mCamera->RestoreFEIshutter();
+  if (!disconnected)
+    mWinApp->mCamera->RestoreFEIshutter();
 
   // If frame width is too narrow, make it wider to avoid crash bug when
   // exiting (i.e. if menu line is wrapped)

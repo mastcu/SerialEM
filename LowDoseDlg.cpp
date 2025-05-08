@@ -246,7 +246,7 @@ void CLowDoseDlg::ToggleBlankWhenDown(void)
 // External entry for changing the mode
 void CLowDoseDlg::SetLowDoseMode(BOOL inVal, BOOL hideOffState)
 {
-  if (!mInitialized)
+  if (!mInitialized || mScope->GetDisconnected())
     return;
   if (inVal == m_bLowDoseMode && inVal == mTrulyLowDose)
     return;
