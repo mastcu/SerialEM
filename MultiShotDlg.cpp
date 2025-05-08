@@ -1055,9 +1055,7 @@ int CMultiShotDlg::DoSaveIS(CString &str)
   } else if (mSteppingAdjusting) {
     if (size == (int)params->customHoleX.size()) {
       StopRecording();
-      ManageEnables();
-      UpdateAndUseMSparams();
-      return;
+      return 1;
     } else if (size > 1) {
       str.Format("Adjust shift for position # %d in the pattern", size);
       ISXorig = params->customHoleX[size - 1] - 
