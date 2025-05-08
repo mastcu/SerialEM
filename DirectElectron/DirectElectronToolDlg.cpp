@@ -262,11 +262,6 @@ void DirectElectronToolDlg::ApplyUserSettings()
     ((CWnd *) GetDlgItem(ID_DE_currfps))->SetWindowText(value);
     mDECamera->SetFramesPerSecond((double)camParam->DE_FramesPerSec);
   }
-  if (isDE12 && mProtCoverDelay >= 0) {
-    value.Format("%d", mProtCoverDelay);
-    ((CWnd *) GetDlgItem(ID_DE_coverDelay))->SetWindowText(value);
-    mDECamera->setIntProperty("Protection Cover Delay (milliseconds)", mProtCoverDelay);
-  }
   if (isDE12 && mTemperSetpoint > -999 && (camParam->CamFlags & DE_HAS_TEMP_SET_PT)) {
     value.Format("Setpoint(C): %d", mTemperSetpoint);
     ((CWnd *) GetDlgItem(ID_DE_temperSet))->SetWindowText(value);
@@ -312,8 +307,6 @@ void DirectElectronToolDlg::Update()
   ((CWnd *) GetDlgItem(ID_DE_currfps))->EnableWindow(isEither && !thisCamBusy &&
     mDECamera->GetCurCamIndex() >= 0);
   ((CWnd *) GetDlgItem(IDC_STAT_PROT_COV))->EnableWindow(isDE12);
-  ((CWnd *) GetDlgItem(IDC_STAT_PROT_DELAY))->EnableWindow(isDE12);
-  ((CWnd *) GetDlgItem(ID_DE_coverDelay))->EnableWindow(!thisCamBusy && isDE12);
   ((CWnd *) GetDlgItem(ID_DE_protectMode))->EnableWindow(!thisCamBusy && isDE12);
 
   // Handle protection cover, open it for tasks that take images
@@ -373,10 +366,9 @@ void DirectElectronToolDlg::DoDataExchange(CDataExchange *pDX)
 
 BEGIN_MESSAGE_MAP(DirectElectronToolDlg, CToolDlg)
   ON_CBN_SELCHANGE(ID_DE_protectMode, Modechange)
-  ON_BN_CLICKED(IDC_COOLCAM, &DirectElectronToolDlg::OnBnClickedCoolcam)
-  ON_BN_CLICKED(IDC_DE_insertCam, &DirectElectronToolDlg::OnBnClickedinsert)
-  ON_EN_KILLFOCUS(ID_DE_currfps, &DirectElectronToolDlg::OnEnKillfocusDecurrfps)
-  ON_EN_KILLFOCUS(ID_DE_coverDelay, &DirectElectronToolDlg::OnEnKillfocusDecoverdelay)
+  ON_BN_CLICKED(IDC_COOLCAM, OnBnClickedCoolcam)
+  ON_BN_CLICKED(IDC_DE_insertCam, OnBnClickedinsert)
+  ON_EN_KILLFOCUS(ID_DE_currfps, OnEnKillfocusDecurrfps)
   ON_CBN_SELCHANGE(ID_DE_autosaveF, FormatChange)
 END_MESSAGE_MAP()
 
