@@ -1806,10 +1806,19 @@
         </TR>
         <TR VALIGN="top">
           <TD>FalconLocalFramePath</TD>
-          <TD>For Falcon 3 or 4 or Ceta 2, path to top directory where
+          <TD>For a Falcon 3 or 4 or Ceta 2, path to the top directory where
             frames are written by the Thermo/FEI software, as seen from the computer running
             SerialEM.&nbsp; If this property is omitted, the path is taken from the general property
             'LocalFalconFramePath'; see that property for details.&nbsp;</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>FalconRemoteFramePath</TD>
+          <TD>For a Falcon 3 or 4 or Ceta 2, path on the storage server (typically starting with 
+            'C:\OffloadData\') to the top directory where
+            frames are written by the Thermo/FEI software.&nbsp; This entry is needed when acquiring
+            frames through UTAPI, because Thermo decided not to provide a function for determining 
+            it.&nbsp; It is used to provide the correct path in the log and .mdoc file.
+          </TD>
         </TR>
         <TR VALIGN="top">
           <TD>FalconGainRefDir</TD>

@@ -3,6 +3,14 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+5/7/25: Added option in NAvigator Realign setup dialog to apply setting for
+treatment of image shift to Realign to Item run from Navigator dialog or menu.
+
+5/7/25: Improved behavior of program and ability to exit when FEI-SEEmserver
+dies or scope computer dies.
+
+5/7/25: Added option to WaitForMidnight to close valves and repoen them.
+
 5/7/25: Fixed Step To & Adjust IS not stopping for custom pattern (In 5.1).
 
 5/5/25: SEM_4-2-0beta16

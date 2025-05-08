@@ -76,4 +76,5 @@ public:
   CStatic m_statScaledTitle;
   BOOL m_bDisableTrim;
   CStatic m_statDisableTrim;
+  BOOL m_bApplyInteractive;
 };

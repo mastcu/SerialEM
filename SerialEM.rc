@@ -3861,14 +3861,14 @@ BEGIN
     CTEXT           "Static",IDC_STAT_INFO_LINE1,7,9,276,8
 END
 
-IDD_NAVREALIGN DIALOGEX 0, 0, 174, 335
+IDD_NAVREALIGN DIALOGEX 0, 0, 174, 347
 STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Z"
 FONT 8, "Microsoft Sans Serif", 400, 0, 0x0
 BEGIN
-    LTEXT           "",IDC_STAT_SPACER,0,320,8,8
-    DEFPUSHBUTTON   "OK",IDOK,28,314,50,14
-    PUSHBUTTON      "Cancel",IDCANCEL,89,314,50,14
+    LTEXT           "",IDC_STAT_SPACER,0,333,8,8
+    DEFPUSHBUTTON   "OK",IDOK,28,327,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,89,327,50,14
     CTEXT           "Aligning to Template",IDC_STAT_TEMPLATE_TITLE,41,36,93,8
     LTEXT           "Label of Navigator map with template",IDC_STAT_TEMP_LABEL,9,49,111,8
     EDITTEXT        IDC_EDIT_MAP_LABEL,121,46,42,14,ES_AUTOHSCROLL
@@ -3883,38 +3883,40 @@ BEGIN
     CONTROL         "",IDC_STAT_LINE,"Static",SS_BLACKFRAME | SS_SUNKEN,9,139,157,1
     CTEXT           "Handling Image Shift after Alignment",IDC_STAT_RESET_IS_TITLE,24,144,126,8
     CONTROL         "Reset image shift and realign if >",IDC_CHECK_RESET_IS,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,186,108,10
-    EDITTEXT        IDC_EDIT_RESET_IS,118,184,22,14,ES_AUTOHSCROLL
-    LTEXT           "microns",IDC_STAT_RESET_UM,142,187,25,8
-    LTEXT           "Reset IS up to 3",IDC_STAT_REPEAT_RESET,9,201,48,8
-    LTEXT           "times",IDC_STAT_RESET_TIMES,71,201,17,8
-    CONTROL         "",IDC_SPIN_RESET_TIMES,"msctls_updown32",UDS_ARROWKEYS,58,198,10,14
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,199,108,10
+    EDITTEXT        IDC_EDIT_RESET_IS,118,197,22,14,ES_AUTOHSCROLL
+    LTEXT           "microns",IDC_STAT_RESET_UM,142,200,25,8
+    LTEXT           "Reset IS up to 3",IDC_STAT_REPEAT_RESET,9,214,48,8
+    LTEXT           "times",IDC_STAT_RESET_TIMES,71,214,17,8
+    CONTROL         "",IDC_SPIN_RESET_TIMES,"msctls_updown32",UDS_ARROWKEYS,58,211,10,14
     CONTROL         "Leave IS at 0 (skip last realign)",IDC_CHECK_LEAVE_IS_ZERO,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,213,107,10
-    PUSHBUTTON      "?",IDC_BUTHELP,157,316,10,10
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,226,107,10
+    PUSHBUTTON      "?",IDC_BUTHELP,157,329,10,10
     CTEXT           "Buffer is currently rolling",IDC_STAT_BUFFER_ROLLS,17,111,106,8
     CTEXT           "These settings apply to both Align to Template and Realign to Item when run from Acquire at Items",IDC_STAT_PARAMS_SHARED,6,155,164,16
     CTEXT           "If both are run from there, image shift is reset only once",IDC_STAT_ONLY_ONCE,7,172,160,8
     CTEXT           "The image in A is already a map",IDC_STAT_WHY_A_NO_GOOD,9,87,156,8
-    CONTROL         "",IDC_STAT_LINE3,"Static",SS_BLACKFRAME | SS_SUNKEN,9,226,157,1
-    CTEXT           "Realign to Item Aligning to Scaled Map",IDC_STAT_SCALED_TITLE,22,231,130,8
-    LTEXT           "Maximum added size change to test",IDC_STAT_SIZE_CHANGE,9,261,108,8
-    EDITTEXT        IDC_EDIT_MAX_PCT_CHANGE,118,258,23,14,ES_AUTOHSCROLL
-    LTEXT           "%",IDC_STAT_PCT,143,261,8,8
-    LTEXT           "Maximum added rotation to test",IDC_STAT_ROTATION,9,277,94,8
-    EDITTEXT        IDC_EDIT_MAX_ROTATION,104,274,23,14,ES_AUTOHSCROLL
-    LTEXT           "degrees",IDC_STAT_DEG,129,277,27,8
-    LTEXT           "Extra area for scaled reference",IDC_STAT_EXTRA_AREA,9,245,93,8
-    EDITTEXT        IDC_EDIT_EXTRA_FOVS,103,242,23,14,ES_AUTOHSCROLL
-    LTEXT           "x FOV of A",IDC_STAT_X_FOVS,128,245,32,8
-    LTEXT           "Buffer to load and keep whole map in:",IDC_STAT_REF_MAP_LABEL,9,292,112,8
-    CTEXT           "W",IDC_STAT_REF_MAP_BUF,122,292,8,8
-    CONTROL         "",IDC_SPIN_REF_MAP_BUF,"msctls_updown32",UDS_ARROWKEYS,131,289,10,14
-    CTEXT           "Buffer is currently rolling",IDC_STAT_REF_BUF_ROLLS,17,301,106,8
+    CONTROL         "",IDC_STAT_LINE3,"Static",SS_BLACKFRAME | SS_SUNKEN,9,239,157,1
+    CTEXT           "Realign to Item Aligning to Scaled Map",IDC_STAT_SCALED_TITLE,22,244,130,8
+    LTEXT           "Maximum added size change to test",IDC_STAT_SIZE_CHANGE,9,274,108,8
+    EDITTEXT        IDC_EDIT_MAX_PCT_CHANGE,118,271,23,14,ES_AUTOHSCROLL
+    LTEXT           "%",IDC_STAT_PCT,143,274,8,8
+    LTEXT           "Maximum added rotation to test",IDC_STAT_ROTATION,9,290,94,8
+    EDITTEXT        IDC_EDIT_MAX_ROTATION,104,287,23,14,ES_AUTOHSCROLL
+    LTEXT           "degrees",IDC_STAT_DEG,129,290,27,8
+    LTEXT           "Extra area for scaled reference",IDC_STAT_EXTRA_AREA,9,258,93,8
+    EDITTEXT        IDC_EDIT_EXTRA_FOVS,103,255,23,14,ES_AUTOHSCROLL
+    LTEXT           "x FOV of A",IDC_STAT_X_FOVS,128,258,32,8
+    LTEXT           "Buffer to load and keep whole map in:",IDC_STAT_REF_MAP_LABEL,9,305,112,8
+    CTEXT           "W",IDC_STAT_REF_MAP_BUF,122,305,8,8
+    CONTROL         "",IDC_SPIN_REF_MAP_BUF,"msctls_updown32",UDS_ARROWKEYS,131,302,10,14
+    CTEXT           "Buffer is currently rolling",IDC_STAT_REF_BUF_ROLLS,17,314,106,8
     CTEXT           "Trimming Dark Borders in Rounds 1&&2 of Realign to Item and in Align to Template IS Resets",IDC_STAT_DISABLE_TRIM,7,3,160,16
     CONTROL         "Disable trimming in these alignments",IDC_CHECK_DISABLE_TRIM,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,21,131,10
     CONTROL         "",IDC_STAT_LINE2,"Static",SS_BLACKFRAME | SS_SUNKEN,8,33,157,1
+    CONTROL         "Apply to Realign to Item run from menu or button",IDC_CHECK_APPLY_INTERACTIVE,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,183,164,10
 END
 
 IDD_MANAGE_DEWARS DIALOGEX 0, 0, 204, 212
@@ -4946,7 +4948,7 @@ BEGIN
         LEFTMARGIN, 7
         RIGHTMARGIN, 167
         TOPMARGIN, 7
-        BOTTOMMARGIN, 328
+        BOTTOMMARGIN, 340
     END
 
     IDD_MANAGE_DEWARS, DIALOG
@@ -8129,6 +8131,8 @@ BEGIN
     IDC_RSET_C1_APERTURE    "Set specific size or retract the C1 aperture"
     IDC_RSET_C2_APERTURE    "Set specific size or retract the C2 aperture"
     IDC_RROUGH_LM_SEARCH    "Use Search for Rough Eucentricity if starting in LM and it is in LM"
+    IDC_CHECK_APPLY_INTERACTIVE
+                            "Use these image shift options for Realign to Item run from the interface"
 END
 
 STRINGTABLE

@@ -2550,6 +2550,7 @@
 #define IDC_EDIT_CTF_EXPOSURE           3580
 #define IDC_CHECK_TRACK_BIG_TILT        3581
 #define IDC_EDIT_BIG_TILT               3582
+#define IDC_CHECK_APPLY_INTERACTIVE     3583
 #define ID_NEW_IMAGE                    32771
 #define IDM_FILE_SAVEOTHER              32772
 #define IDM_FILE_READ                   32773
@@ -3135,7 +3136,7 @@
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        294
 #define _APS_NEXT_COMMAND_VALUE         33550
-#define _APS_NEXT_CONTROL_VALUE         3583
+#define _APS_NEXT_CONTROL_VALUE         3584
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif

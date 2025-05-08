@@ -1061,8 +1061,12 @@ int CNavigatorDlg::MoveToItem(int index, BOOL skipZ)
 // The button to realign is pressed
 void CNavigatorDlg::OnRealigntoitem()
 {
+  NavAlignParams *params = mHelper->GetNavAlignParams();
+  BOOL apply = params->applyInteractive;
   mWinApp->RestoreViewFocus();
-  RealignToCurrentItem(true, 0., 0, 0, 0, -1);
+  RealignToCurrentItem(true, apply ? params->resetISthresh : 0.f, 
+    apply ? params->maxNumResetIS : 0 , apply ? params->leaveISatZero : 0, 
+    0, -1);
 }
 
 /////////////////////////////////////////////////////////////////////

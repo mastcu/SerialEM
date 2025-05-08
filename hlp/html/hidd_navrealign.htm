@@ -98,8 +98,14 @@
       compensate, and restoring the alignment with a new image.&nbsp; As the verbose 
       lines in this section of the dialog indicate, the settings specified here are 
       applied for both procedures: when running Align to Template from Acquire at 
-      Points, as defaults when running the AlignToTemplate script command, and when 
-      running Realign to Item from Acquire at points.</p>
+      Items, as defaults when running the AlignToTemplate script command, and when 
+      running Realign to Item from Acquire at Items.&nbsp; By default, they are not 
+      applied when running Realign to Item from the button in the Navigator dialog or 
+      from the Navigator menu, but the option <strong>Apply to Realign to Item run 
+      from menu or button</strong> can be selected to use these image shift parameters 
+      in those cases.&nbsp; However, regardless of these settings, image shift is 
+      handled from the 'RealignToNavItem' script command only when specified with the 
+      appropriate optional arguments.</p>
     <p> <strong>Reset image shift and realign if &gt; D microns</strong></p>
     <p> Check the option to enable restting of image shift, and fill in the text box 
       with a threshold in microns above which it will be reset after aligning to the 

@@ -779,6 +779,8 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
           navAliParm->scaledAliExtraFOV = itemFlt[8];
           navAliParm->scaledAliLoadBuf = itemInt[9];
         }
+        if (!itemEmpty[10])
+          navAliParm->applyInteractive = itemInt[10] != 0;
       }
       else if (NAME_IS("NavAliMapLabel")) {
         StripItems(strLine, 1, navAliParm->templateLabel);
@@ -2049,11 +2051,11 @@ void CParameterIO::WriteSettings(CString strFileName)
       WriteNavAcqParams(i, mWinApp->GetNavAcqParams(i),
       mWinApp->mNavHelper->GetAcqActions(i),
       mWinApp->mNavHelper->GetAcqActCurrentOrder(i), false);
-    oneState.Format("NavAlignParams %d %f %d %f %d %f %f %f %d\n", 
+    oneState.Format("NavAlignParams %d %f %d %f %d %f %f %f %d %d\n", 
       navAliParm->loadAndKeepBuf, navAliParm->maxAlignShift, navAliParm->maxNumResetIS,
       navAliParm->resetISthresh, navAliParm->leaveISatZero ? 1 : 0, 
       navAliParm->scaledAliMaxRot, navAliParm->scaledAliPctChg, navAliParm->scaledAliExtraFOV,
-      navAliParm->scaledAliLoadBuf);
+      navAliParm->scaledAliLoadBuf, navAliParm->applyInteractive ? 1 : 0);
     mFile->WriteString(oneState);
     mFile->WriteString("NavAliMapLabel " + navAliParm->templateLabel + "\n");
 

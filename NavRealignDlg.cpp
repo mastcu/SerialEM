@@ -27,7 +27,7 @@ IDC_STAT_SELECTED_BUF, IDC_SPIN_TEMPLATE_BUF, IDC_EDIT_MAX_SHIFT, IDC_STAT_ALIGN
 IDC_STAT_MAXALI_UM, IDC_STAT_LINE, IDC_STAT_WHY_A_NO_GOOD, PANEL_END,
 IDC_STAT_RESET_IS_TITLE, IDC_CHECK_RESET_IS, IDC_STAT_PARAMS_SHARED, IDC_STAT_ONLY_ONCE,
 IDC_EDIT_RESET_IS, IDC_STAT_RESET_UM, IDC_STAT_REPEAT_RESET, IDC_STAT_RESET_TIMES,
-IDC_SPIN_RESET_TIMES, IDC_CHECK_LEAVE_IS_ZERO, PANEL_END,
+IDC_SPIN_RESET_TIMES, IDC_CHECK_LEAVE_IS_ZERO, IDC_CHECK_APPLY_INTERACTIVE, PANEL_END,
 IDC_STAT_SCALED_TITLE, IDC_STAT_EXTRA_AREA,
 IDC_EDIT_EXTRA_FOVS, IDC_STAT_X_FOVS, IDC_STAT_SIZE_CHANGE, IDC_EDIT_MAX_PCT_CHANGE, 
 IDC_STAT_PCT, IDC_STAT_ROTATION, IDC_EDIT_MAX_ROTATION, IDC_STAT_DEG, IDC_STAT_LINE3,
@@ -55,6 +55,7 @@ CNavRealignDlg::CNavRealignDlg(CWnd* pParent /*=NULL*/)
   , m_fMaxPctChange(0)
   , m_fMaxRotation(0)
   , m_bDisableTrim(FALSE)
+  , m_bApplyInteractive(FALSE)
 {
   mForRealignOnly = 0;
   mMaxRotChgd = mMaxPctChgd = false;
@@ -97,6 +98,7 @@ void CNavRealignDlg::DoDataExchange(CDataExchange* pDX)
   DDX_Control(pDX, IDC_STAT_SCALED_TITLE, m_statScaledTitle);
   DDX_Check(pDX, IDC_CHECK_DISABLE_TRIM, m_bDisableTrim);
   DDX_Control(pDX, IDC_STAT_DISABLE_TRIM, m_statDisableTrim);
+  DDX_Check(pDX, IDC_CHECK_APPLY_INTERACTIVE, m_bApplyInteractive);
 }
 
 
@@ -140,6 +142,7 @@ BOOL CNavRealignDlg::OnInitDialog()
   m_fAlignShift = mParams.maxAlignShift;
   m_fResetThresh = mParams.resetISthresh;
   m_bLeaveISzero = mParams.leaveISatZero;
+  m_bApplyInteractive = mParams.applyInteractive;
   m_bDisableTrim = (mWinApp->mShiftManager->GetDisableAutoTrim() & NOTRIM_REALIGN_ITEM)
     != 0;
   mMaxNumResets = B3DMAX(1, B3DABS(mParams.maxNumResetIS));
@@ -183,6 +186,7 @@ void CNavRealignDlg::OnOK()
   mParams.maxAlignShift = m_fAlignShift;
   mParams.resetISthresh = m_fResetThresh;
   mParams.leaveISatZero = m_bLeaveISzero;
+  mParams.applyInteractive = m_bApplyInteractive;
   if (m_bResetIS)
     mParams.maxNumResetIS = mMaxNumResets;
   else

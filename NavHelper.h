@@ -183,6 +183,7 @@ struct NavAlignParams {
   float scaledAliPctChg;     // Maximum percent size change in realign to scaled
   float scaledAliExtraFOV;   // Extra A fields of View to add
   int scaledAliLoadBuf;      // Buffer to keep map in
+  BOOL applyInteractive;     // Flag to apply when run R2I from menu or button
 };
 
 // BEWARE.  Nav Actions are the "other tasks" in user terminology
