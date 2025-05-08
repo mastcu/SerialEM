@@ -1261,7 +1261,7 @@ int DirectElectronCamera::setROI(int offset_x, int offset_y, int xsize, int ysiz
         } else if (!retVal) {
           needOld = false;
           mLastUseHardwareROI = hardwareROI;
-          SEMTrace('D', "Called SetROI with %d %d %d %d %d", retVal,
+          SEMTrace('D', "Called SetROI with %d %d %d %d %d",
             offset_x, offset_y, xsize, ysize, hardwareROI);
         }
       }
@@ -1430,7 +1430,9 @@ int DirectElectronCamera::SetExposureTimeAndMode(float seconds, int mode)
   }
   mLastExposureTime = seconds;
 
-  if (mLastExposureMode != mode || !mTrustLastSettings) {
+  // 5/7/25: DE requested this be set uncontionally in case user took gain ref in MC
+  if (!mLastLiveMode) {
+  //if (mLastExposureMode != mode || !mTrustLastSettings) {
     if (!setStringWithError("Exposure Mode", modeName[mode])) 
       return 1;
     SEMTrace('D', "Exposure mode set to %s", modeName[mode]);
