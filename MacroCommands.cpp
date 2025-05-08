@@ -5421,13 +5421,13 @@ int CMacCmd::WaitForMidnight(void)
   int ix0, ix1;
   // Get the times before and after the target time and the alternative target
   delX = delY = 5.;
-  if (!mItemEmpty[1])
+  if (!mItemEmpty[1] && mItemDbl[1] >= 0.)
     delX = mItemDbl[1];
-  if (!mItemEmpty[2])
+  if (!mItemEmpty[2] && mItemDbl[2] >= 0.)
     delY = mItemDbl[2];
   ix0 = 24;
   ix1 = 0;
-  if (!mItemEmpty[3] && !mItemEmpty[4]) {
+  if (!mItemEmpty[3] && !mItemEmpty[4] && mItemDbl[3] >= 0. && mItemDbl[4] >= 0.) {
     ix0 = mItemInt[3];
     ix1 = mItemInt[4];
   }
@@ -5439,6 +5439,10 @@ int CMacCmd::WaitForMidnight(void)
 
   // If within the window at all, set up the sleep
   if (delISY + delY > 0 && delISY < delX) {
+    if (!mItemEmpty[5] && mItemInt[5] && mScope->GetColumnValvesOpen()) {
+      mOpenValvesAfterSleep = true;
+      mScope->SetColumnValvesOpen(false);
+    }
     mSleepTime = 60000. * (delISY + delY);
     mSleepStart = GetTickCount();
     report.Format("Sleeping until %.1f minutes after ", delY);

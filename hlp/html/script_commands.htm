@@ -557,11 +557,14 @@
             60 is taken to be milliseconds</TD>
         </TR>
         <TR>
-          <TD class="scriptcommand">WaitForMidnight [#B] [#A] [#H #M]</TD>
+          <TD class="scriptcommand">WaitForMidnight [#B] [#A] [#H #M] [#B]</TD>
           <TD>If the current time is between <b>#B</b> (default 5) minutes before and <b>#A</b> (default 5) minutes after
             midnight, or an alternative time specified by the optional entries <b>#H</b> (the hour from 0 to 23) and
             <b>#M</b> (the minute from 0 to 59), the script will wait until <b>#A</b> minutes after
-            midnight or the given time.</TD>
+            midnight or the given time.&nbsp; If the optional <b>#B</b> is set non-zero, the column 
+            values will be closed or the beam turned off during the wait and restored at the end.&nbsp; Set any of the
+            preceeding entries to -1 to use the default values.
+          </TD>
         </TR>
         <TR>
           <TD class="scriptcommand">WaitForNewMarkerPoint</TD>

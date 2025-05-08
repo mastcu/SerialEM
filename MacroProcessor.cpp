@@ -1155,6 +1155,9 @@ int CMacroProcessor::TaskBusy()
     }
     mWinApp->SetStatusText(SIMPLE_PANE, "");
     mSleepTime = 0.;
+    if (mOpenValvesAfterSleep)
+      mScope->SetColumnValvesOpen(true);
+    mOpenValvesAfterSleep = false;
   }
 
   // If ran a process, check if it is still running; if not, set the output values and
@@ -1452,6 +1455,8 @@ void CMacroProcessor::RunOrResume()
   mSuspendNavRedraw = false;
   mDeferLogUpdates = false;
   mDeferSettingsUpdate = false;
+  mSleepTime = 0.;
+  mOpenValvesAfterSleep = false;
   mCropXafterShot = -1;
   mNextProcessArgs = "";
   mInputToNextProcess = "";

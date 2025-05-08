@@ -331,6 +331,7 @@ protected:
   short int mKeepOrRestoreArea[MAX_LOWDOSE_SETS];    // -1 to keep or 1 to restore an area
   double mSleepStart;  // Starting time to sleep from
   double mSleepTime;   // Number of ticks (msec) to sleep
+  bool mOpenValvesAfterSleep; // Flag to reopen valves after sleep expires
   bool mWaitingForMarker; //  Flag that we are waiting for a new marker point
   BOOL mStartedWithMarker;  // Flag that there was a marker on that image already
   float mOldMarkerX, mOldMarkerY;   // Starting value if any
