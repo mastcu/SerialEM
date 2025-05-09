@@ -139,6 +139,7 @@ public:
   GetMember(int, NumLeftServerRef);
   GetSetMember(CString, PathAndDatasetName);
   GetSetMember(CString, LastErrorString);
+  SetMember(BOOL, TrustLastSettings);
   void SetAndTraceErrorString(CString str);
 
   bool ServerIsLocal() {return mDE_SERVER_IP == "127.0.0.1" || mDE_SERVER_IP == "localhost";};

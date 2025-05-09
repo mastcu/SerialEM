@@ -648,7 +648,7 @@ int DirectElectronCamera::SetAllAutoSaves(int autoSaveFlags, int sumCount, CStri
   int saveRaw = (autoSaveFlags & DE_SAVE_FRAMES) ? 1 : 0;
   int saveSums = (autoSaveFlags & DE_SAVE_SUMS) ? 1 : 0;
   int saveFinal = (autoSaveFlags & DE_SAVE_FINAL) ? 1 : 0;
-  bool setSaves = mLastSaveFlags < 0 || !mTrustLastSettings;
+  bool setSaves = (mLastSaveFlags < 0 || !mTrustLastSettings) && !mLastLiveMode;
   CSingleLock slock(&m_mutex);
 
   if (slock.Lock(1000)) {
@@ -668,7 +668,7 @@ int DirectElectronCamera::SetAllAutoSaves(int autoSaveFlags, int sumCount, CStri
       ret2 = mDeServer->setProperty(mNormAllInServer ? "Autosave Movie" : 
       "Autosave Summed Image", saveSums ? psSave : psNoSave);
     if (saveSums && (mLastSumCount < 0 || !mTrustLastSettings || 
-      mLastSumCount != sumCount)) {
+      mLastSumCount != sumCount) && !mLastLiveMode) {
         if (mNormAllInServer)
           ret4 = justSetIntProperty(mAPI2Server ? "Autosave Movie Sum Count" :
           B3DCHOICE(counting && !IsApolloCamera(),
@@ -719,7 +719,8 @@ int DirectElectronCamera::setPreExposureTime(double preExpMillisecs)
 
   if (slock.Lock(1000)) {
 
-    if (fabs(mLastPreExposure - preExpMillisecs) > 0.01 || !mTrustLastSettings) {
+    if ((fabs(mLastPreExposure - preExpMillisecs) > 0.01 || !mTrustLastSettings) && 
+      !mLastLiveMode) {
       if (!justSetDoubleProperty(mAPI2Server ? "Pre-Exposure Time (seconds)" :
         "Preexposure Time (seconds)", preExpMillisecs / 1000.))
       {
@@ -969,6 +970,10 @@ int DirectElectronCamera::copyImageData(unsigned short *image4k, long &imageSize
       return 1;
     }
   }
+
+  // This will now be cleared when STOP button is disabled
+  mTrustLastSettings = true;
+
   if (api2Reference) {
     memset(useBuf, 0, imageSizeX * imageSizeY * 2);
     return 0;
@@ -1117,8 +1122,8 @@ int DirectElectronCamera::setBinning(int x, int y, int sizex, int sizey, int har
   if (slock.Lock(1000)) {
 
     if (sUsingAPI2 > 1 && hardwareBin >= 0) {
-      if (hardwareBin != mLastUseHardwareBin || x != mLastXbinning ||
-        y != mLastYbinning || !mTrustLastSettings) {
+      if ((hardwareBin != mLastUseHardwareBin || x != mLastXbinning ||
+        y != mLastYbinning || !mTrustLastSettings) && !mLastLiveMode) {
         retVal = mDeServer->SetBinning(x, y, hardwareBin);
         if (retVal > 0) {
           mLastErrorString = ErrorTrace("ERROR calling SetBinning with %d %d %d",
@@ -1135,7 +1140,7 @@ int DirectElectronCamera::setBinning(int x, int y, int sizex, int sizey, int har
 
     // Set hardware binning first and if it has changed, force setting new binning
     if (useOld && hardwareBin >= 0 && (hardwareBin != mLastUseHardwareBin || 
-      !mTrustLastSettings)) {
+      !mTrustLastSettings) && !mLastLiveMode) {
       SEMTrace('D', "SetBinning set hw bin %d", hardwareBin);
       if (mServerVersion < DE_HAS_API2) {
         if (!setStringWithError(psHardwareBin, hardwareBin > 0 ? psEnable : psDisable))
@@ -1156,7 +1161,8 @@ int DirectElectronCamera::setBinning(int x, int y, int sizex, int sizey, int har
     mLastUseHardwareBin = hardwareBin;
 
     // set binning if it does not match last value
-    if (useOld && (x != mLastXbinning || y != mLastYbinning || !mTrustLastSettings)) {
+    if (useOld && (x != mLastXbinning || y != mLastYbinning || !mTrustLastSettings) && 
+      !mLastLiveMode) {
       if (!justSetIntProperty(g_Property_DE_BinningX, x / lessBin) ||
         !justSetIntProperty(g_Property_DE_BinningY, y / lessBin)) {
         mLastErrorString = ErrorTrace("ERROR: Could NOT set the software binning "
@@ -1191,8 +1197,9 @@ int DirectElectronCamera::SetCountingParams(int readMode, double scaling, double
   bool superRes = readMode == SUPERRES_MODE;
   mCountScaling = (float)scaling;
   if (!IsApolloCamera() && slock.Lock(1000)) {
-    if ((readMode == LINEAR_MODE && mLastElectronCounting != 0) ||
-      (readMode > 0 && mLastElectronCounting <= 0) || !mTrustLastSettings) {
+    if (((readMode == LINEAR_MODE && mLastElectronCounting != 0) ||
+      (readMode > 0 && mLastElectronCounting <= 0) || !mTrustLastSettings) &&
+      !mLastLiveMode) {
       if (mAPI2Server) {
         if (!setStringWithError("Image Processing - Mode", readMode > 0 ? "Counting" :
           "Integrating"))
@@ -1203,14 +1210,15 @@ int DirectElectronCamera::SetCountingParams(int readMode, double scaling, double
       }
       mLastElectronCounting = readMode > 0 ? 1 : 0;
     }
-    if ((readMode == COUNTING_MODE && mLastSuperResolution != 0) ||
-      (superRes && mLastSuperResolution <= 0) || !mTrustLastSettings) {
+    if (((readMode == COUNTING_MODE && mLastSuperResolution != 0) ||
+      (superRes && mLastSuperResolution <= 0) || !mTrustLastSettings) && !mLastLiveMode) {
       if (!setStringWithError(mAPI2Server ? "Event Counting - Super Resolution" :
         DE_PROP_COUNTING" - Super Resolution", superRes ? psEnable : psDisable))
             return 1;
         mLastSuperResolution = superRes ? 1 : 0;
     }
-    if ((fabs(FPS - mLastFPS) > 1.e-3 || !mTrustLastSettings) && SetFramesPerSecond(FPS))
+    if ((fabs(FPS - mLastFPS) > 1.e-3 || !mTrustLastSettings) && !mLastLiveMode
+      && SetFramesPerSecond(FPS))
       return 1;
   }
   return 0;
@@ -1220,7 +1228,7 @@ int DirectElectronCamera::SetAlignInServer(int alignFrames)
 {
   CSingleLock slock(&m_mutex);
   if (slock.Lock(1000)) {
-    if (alignFrames != mLastServerAlign || !mTrustLastSettings) {
+    if ((alignFrames != mLastServerAlign || !mTrustLastSettings) && !mLastLiveMode) {
       if (!setStringWithError(
         mServerVersion >= DE_HAS_NEW_MOT_COR_PROP ? psMotionCorNew : psMotionCor, 
         alignFrames > 0 ? psEnable : psDisable))
@@ -1249,23 +1257,28 @@ int DirectElectronCamera::setROI(int offset_x, int offset_y, int xsize, int ysiz
     // Set hardware ROI first and if it has changed, force setting new ROI
     needOffset = offset_x != mLastXoffset || offset_y != mLastYoffset;
     needSize = xsize != mLastROIsizeX || ysize != mLastROIsizeY;
-    if (hardwareROI >= 0 && (hardwareROI != mLastUseHardwareROI ||
-      (((newProp && hardwareROI > 0) || sUsingAPI2) && (needSize || needOffset)) ||
-      !mTrustLastSettings)) {
-      if (sUsingAPI2 > 1) {
-        retVal = mDeServer->SetROI(offset_x, offset_y, xsize, ysize, hardwareROI);
-        if (retVal > 0) {
-          mLastErrorString = ErrorTrace("ERROR calling SetROI with %d %d %d %d %d",
-            offset_x, offset_y, xsize, ysize, hardwareROI);
-          return 1;
-        } else if (!retVal) {
-          needOld = false;
-          mLastUseHardwareROI = hardwareROI;
-          SEMTrace('D', "Called SetROI with %d %d %d %d %d",
-            offset_x, offset_y, xsize, ysize, hardwareROI);
-        }
+    if (sUsingAPI2 > 1 && (hardwareROI != mLastUseHardwareROI || (needSize || needOffset)
+      || !mTrustLastSettings) && !mLastLiveMode) {
+      retVal = mDeServer->SetROI(offset_x, offset_y, xsize, ysize, hardwareROI);
+      if (retVal > 0) {
+        mLastErrorString = ErrorTrace("ERROR calling SetROI with %d %d %d %d %d",
+          offset_x, offset_y, xsize, ysize, hardwareROI);
+        return 1;
+      } else if (!retVal) {
+        needOld = false;
+        mLastUseHardwareROI = hardwareROI;
+        SEMTrace('D', "Called SetROI with %d %d %d %d %d",
+          offset_x, offset_y, xsize, ysize, hardwareROI);
       }
-      if (needOld) {
+    }
+
+    if (needOld) {
+
+      // Old logic to set hardware ROI if it exists, then software
+      if (hardwareROI >= 0 && (hardwareROI != mLastUseHardwareROI ||
+        (((newProp && hardwareROI > 0) || sUsingAPI2) && (needSize || needOffset)) ||
+        !mTrustLastSettings) && !mLastLiveMode) {
+
         if (mServerVersion < DE_HAS_API2) {
           if (!setStringWithError(psHardwareROI, hardwareROI > 0 ? psEnable : psDisable))
             return 1;
@@ -1309,52 +1322,53 @@ int DirectElectronCamera::setROI(int offset_x, int offset_y, int xsize, int ysiz
         }
         mLastXoffset = mLastROIsizeX = -1;
         mLastUseHardwareROI = hardwareROI;
+      }
 
-        // Now do software ROI that depends on hardware ROI and binning in new API
-        // EValuate what needs setting; of both need to be set, it may be best practice to
-        // set to offset to 0 first so the new size is always valid
-        needOffset = offset_x != mLastXoffset || offset_y != mLastYoffset ||
-          !mTrustLastSettings;
-        needSize = xsize != mLastROIsizeX || ysize != mLastROIsizeY || !mTrustLastSettings;
-        if (needOffset && needSize) {
-          ret3 = justSetIntProperty(newProp ? "Crop Offset X" : g_Property_DE_RoiOffsetX, 
-            0)
-            && justSetIntProperty(newProp ? "Crop Offset Y" : g_Property_DE_RoiOffsetY, 0);
-          SEMTrace('D', "ROI offset set to 0 before setting size and offset, ret: %d",
-            ret3 ? 1 : 0);
-        }
+      // Now do software ROI that depends on hardware ROI and binning in new API
+      // EValuate what needs setting; of both need to be set, it may be best practice to
+      // set to offset to 0 first so the new size is always valid
+      needOffset = (offset_x != mLastXoffset || offset_y != mLastYoffset ||
+        !mTrustLastSettings) && !mLastLiveMode;
+      needSize = (xsize != mLastROIsizeX || ysize != mLastROIsizeY ||
+        !mTrustLastSettings) && !mLastLiveMode;
+      if (needOffset && needSize) {
+        ret3 = justSetIntProperty(newProp ? "Crop Offset X" : g_Property_DE_RoiOffsetX,
+          0)
+          && justSetIntProperty(newProp ? "Crop Offset Y" : g_Property_DE_RoiOffsetY, 0);
+        SEMTrace('D', "ROI offset set to 0 before setting size and offset, ret: %d",
+          ret3 ? 1 : 0);
+      }
 
-        // Set to passed ROI or full subarea of HW ROI, but adjust for hardware binning
-        xbin = (newProp && mLastUseHardwareBin > 0) ? 2 : 1;
-        ybin = (newProp && mLastUseHardwareBin > 0) ? 2 : 1;
-        swXoff = (newProp && hardwareROI > 0) ? 0 : offset_x / xbin;
-        swYoff = (newProp && hardwareROI > 0) ? 0 : offset_y / ybin;
-        swXsize = xsize / xbin;
-        swYsize = ysize / ybin;
+      // Set to passed ROI or full subarea of HW ROI, but adjust for hardware binning
+      xbin = (newProp && mLastUseHardwareBin > 0) ? 2 : 1;
+      ybin = (newProp && mLastUseHardwareBin > 0) ? 2 : 1;
+      swXoff = (newProp && hardwareROI > 0) ? 0 : offset_x / xbin;
+      swYoff = (newProp && hardwareROI > 0) ? 0 : offset_y / ybin;
+      swXsize = xsize / xbin;
+      swYsize = ysize / ybin;
 
-        // Set size
-        if (needSize) {
-          ret2 = justSetIntProperty(newProp ? "Crop Size X" : g_Property_DE_RoiDimensionX,
-            swXsize) && justSetIntProperty(newProp ? "Crop Size Y" :
-              g_Property_DE_RoiDimensionY, swYsize);
-          SEMTrace('D', "ROI settings: xsize: %d ysize: %d  ret: %d", swXsize, swYsize,
-            ret2 ? 1 : 0);
-        }
+      // Set size
+      if (needSize) {
+        ret2 = justSetIntProperty(newProp ? "Crop Size X" : g_Property_DE_RoiDimensionX,
+          swXsize) && justSetIntProperty(newProp ? "Crop Size Y" :
+            g_Property_DE_RoiDimensionY, swYsize);
+        SEMTrace('D', "ROI settings: xsize: %d ysize: %d  ret: %d", swXsize, swYsize,
+          ret2 ? 1 : 0);
+      }
 
-        //Set offset
-        if (needOffset) {
-          ret1 = justSetIntProperty(newProp ? "Crop Offset X" : g_Property_DE_RoiOffsetX,
-            swXoff) && justSetIntProperty(newProp ?
-              "Crop Offset Y" : g_Property_DE_RoiOffsetY, swYoff);
-          SEMTrace('D', "ROI settings: offsetX: %d offsetY: %d  ret: %d", swXoff,
-            swYoff, ret1 ? 1 : 0);
-        }
-        if (!ret1 || !ret2 || !ret3) {
-          mLastErrorString.Format("Error setting offset and size for region of interest "
-            "(%d - %d - %d)", ret1, ret2, ret3);
-          mLastXoffset = mLastROIsizeX = -1;
-          return 1;
-        }
+      //Set offset
+      if (needOffset) {
+        ret1 = justSetIntProperty(newProp ? "Crop Offset X" : g_Property_DE_RoiOffsetX,
+          swXoff) && justSetIntProperty(newProp ?
+            "Crop Offset Y" : g_Property_DE_RoiOffsetY, swYoff);
+        SEMTrace('D', "ROI settings: offsetX: %d offsetY: %d  ret: %d", swXoff,
+          swYoff, ret1 ? 1 : 0);
+      }
+      if (!ret1 || !ret2 || !ret3) {
+        mLastErrorString.Format("Error setting offset and size for region of interest "
+          "(%d - %d - %d)", ret1, ret2, ret3);
+        mLastXoffset = mLastROIsizeX = -1;
+        return 1;
       }
     }
     mLastXoffset = offset_x;
@@ -1420,7 +1434,8 @@ int DirectElectronCamera::SetExposureTimeAndMode(float seconds, int mode)
     return 1;
   }
 
-  if (fabs((double)(seconds - mLastExposureTime)) > 1.e-4 || !mTrustLastSettings) {
+  if ((fabs((double)(seconds - mLastExposureTime)) > 1.e-4 || !mTrustLastSettings) &&
+    !mLastLiveMode) {
     if (!justSetDoubleProperty(g_Property_DE_ExposureTime, seconds)) {
       mLastErrorString = ErrorTrace("ERROR: Could NOT set the exposure time to %.3f",
         seconds);
@@ -1430,9 +1445,7 @@ int DirectElectronCamera::SetExposureTimeAndMode(float seconds, int mode)
   }
   mLastExposureTime = seconds;
 
-  // 5/7/25: DE requested this be set uncontionally in case user took gain ref in MC
-  if (!mLastLiveMode) {
-  //if (mLastExposureMode != mode || !mTrustLastSettings) {
+  if ((mLastExposureMode != mode || !mTrustLastSettings) && !mLastLiveMode) {
     if (!setStringWithError("Exposure Mode", modeName[mode])) 
       return 1;
     SEMTrace('D', "Exposure mode set to %s", modeName[mode]);
@@ -1440,7 +1453,7 @@ int DirectElectronCamera::SetExposureTimeAndMode(float seconds, int mode)
   mLastExposureMode = mode;
 
   if (mLastAutoRepeatRef >= 0 && (mLastAutoRepeatRef != (mRepeatForServerRef > 0 ? 1 : 0)
-    || !mTrustLastSettings)) {
+    || !mTrustLastSettings) && !mLastLiveMode) {
       if (!setStringWithError(psAutoRepeatRef, mRepeatForServerRef > 0 ? 
         psEnable : psDisable))
           return 1;
@@ -1754,7 +1767,7 @@ int DirectElectronCamera::setCorrectionMode(int nIndex, int readMode)
   }
 
   if (readMode > 0 && (normCount != mLastNormCounting || !mTrustLastSettings) && 
-    !IsApolloCamera()) {
+    !IsApolloCamera() && !mLastLiveMode) {
     if (!setStringWithError(mAPI2Server ? 
       "Event Counting - Apply Post-Counting Gain" :
       DE_PROP_COUNTING" - Apply Post-Counting Gain", normCount ? psEnable : psDisable))
@@ -1765,7 +1778,7 @@ int DirectElectronCamera::setCorrectionMode(int nIndex, int readMode)
   // Set the output bits if they are not normalized
   if (mLastSaveFlags > 0 && mNormAllInServer && mServerVersion < DE_HAS_AUTO_PIXEL_DEPTH
     && (!normDoseFrac || nIndex < 2 || (readMode > 0 && !normCount)) && 
-    (bits != mLastUnnormBits || !mTrustLastSettings)) {
+    (bits != mLastUnnormBits || !mTrustLastSettings) && !mLastLiveMode) {
       str.Format("%dbit", bits);
       if (!setStringWithError(DE_PROP_AUTOMOVIE"Format for Unnormalized Movie",
         (LPCTSTR)str))
@@ -1774,7 +1787,7 @@ int DirectElectronCamera::setCorrectionMode(int nIndex, int readMode)
   }
 
   // Set the general correction mode
-  if (nIndex != mLastProcessing || !mTrustLastSettings) {
+  if ((nIndex != mLastProcessing || !mTrustLastSettings) && !mLastLiveMode) {
     if (!mAPI2Server) {
       if (!setStringWithError("Correction Mode", corrections[nIndex]))
         return 1;
@@ -1788,7 +1801,7 @@ int DirectElectronCamera::setCorrectionMode(int nIndex, int readMode)
 
   // Set the movie correction for newer server
   if (mServerVersion >= DE_HAS_MOVIE_COR_ENABLE &&
-    (movieCorrEnable != mLastMovieCorrEnabled || !mTrustLastSettings)) {
+    (movieCorrEnable != mLastMovieCorrEnabled || !mTrustLastSettings) && !mLastLiveMode) {
     if (!mAPI2Server) {
       if (!setStringWithError(DE_PROP_AUTOMOVIE"Image Correction",
       movieCorrEnable ? psEnable : psDisable))

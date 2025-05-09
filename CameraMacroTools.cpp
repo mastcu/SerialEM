@@ -15,6 +15,7 @@
 #include "MainFrm.h"
 #include "MultiGridTasks.h"
 #include "CameraController.h"
+#include "DirectElectron\DirectElectronCamera.h"
 #include "ProcessImage.h"
 #include "MacroEditer.h"
 #include "MacroToolbar.h"
@@ -719,6 +720,12 @@ void CCameraMacroTools::Update()
     name = camParams[mWinApp->GetCurrentCamera()].name;
     SetDlgItemText(IDC_STAT_CAMNAME, name);
   }
+  if (!stopEnabled && mStopEnabled) {
+    CameraThreadData *td = mWinApp->mCamera->GetCamThreadData();
+    if (td->DE_Cam)
+      td->DE_Cam->SetTrustLastSettings(false);
+  }
+  mStopEnabled = stopEnabled;
 }
 
 void CCameraMacroTools::UpdateHiding(void)

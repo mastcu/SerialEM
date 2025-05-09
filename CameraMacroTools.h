@@ -106,6 +106,7 @@ private:
   bool mEnabledSearch;
   bool mDeferredUserStop;
   bool mMediumWasEmpty;
+  bool mStopEnabled;
   int mLastRowsShown;
   int mLastLinesShown;
   int mPanelStart[TOT_CAM_MAC_PANELS];
