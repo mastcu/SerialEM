@@ -155,7 +155,6 @@ void DirectElectronToolDlg::updateDEToolDlgPanel(bool initialCall)
     if (isDE12 && mProtCoverDelay < 0) {
       if (mDECamera->getIntProperty("Protection Cover Delay (milliseconds)", temp_int)) {
         value.Format("%d", temp_int);
-        ((CWnd *) GetDlgItem(ID_DE_coverDelay))->SetWindowText(value);
         mProtCoverDelay = temp_int;
       }
     }
@@ -328,7 +327,6 @@ void DirectElectronToolDlg::UpdateSettings()
 void DirectElectronToolDlg::OnOK()
 {
   OnEnKillfocusDecurrfps();
-  OnEnKillfocusDecoverdelay();
 }
 
 // Return the FPS value in the text box
@@ -508,31 +506,4 @@ void DirectElectronToolDlg::OnEnKillfocusDecurrfps()
     value.Format("%0.2f", temp_float);
   }
   ((CWnd *) GetDlgItem(ID_DE_currfps))->SetWindowText(value);
-}
-
-// Possible new value in the cover delay box
-void DirectElectronToolDlg::OnEnKillfocusDecoverdelay()
-{
-  if (!mDECamera || !mDECamera->CurrentIsDE12())
-    return;
-  CString value;
-  mWinApp->RestoreViewFocus();
-  ((CWnd *) GetDlgItem(ID_DE_coverDelay))->GetWindowText(value);
-  int temp_int = atoi(value);
-  if (temp_int >= 0 && temp_int <= 999) {
-
-    // Read current setup. Change value if they are different from the Edittext
-    int compate_int = 0;
-    mDECamera->getIntProperty("Protection Cover Delay (milliseconds)", compate_int);
-    if (compate_int != temp_int) {
-      mDECamera->setIntProperty("Protection Cover Delay (milliseconds)", temp_int);
-      mProtCoverDelay = temp_int;
-    }
-  } else {
-    AfxMessageBox("Please provide a reasonable protection cover delay between 0 to 999"
-      " milliseconds. ");
-    mDECamera->getIntProperty("Protection Cover Delay (milliseconds)", temp_int);
-    value.Format("%d", temp_int);
-    ((CWnd *) GetDlgItem(ID_DE_coverDelay))->SetWindowText(value);
-  }
 }

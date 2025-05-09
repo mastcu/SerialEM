@@ -81,7 +81,6 @@ public:
 	afx_msg void OnEnKillfocusDecurrfps();
 	afx_msg void OnEnKillfocusDepreexptime();
 	afx_msg void OnEnKillfocusDesensordelay();
-	afx_msg void OnEnKillfocusDecoverdelay();
   afx_msg void FormatChange();
   double GetFramesPerSecond(void);
   const char *FileFormatProperty();
