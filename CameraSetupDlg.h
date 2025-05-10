@@ -315,6 +315,7 @@ public:
   void ManageAntialias(void);
   CString m_strDoseRate;
   float ManageExposure(bool updateIfChange = true);
+  void HandleFrameLongerThanExposure();
   CButton m_butSetupFalconFrames;
   afx_msg void OnSetupFalconFrames();
   void ManageDarkRefs(void);

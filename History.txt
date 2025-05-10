@@ -3,6 +3,10 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+5/10/25: When frame acquisition is turned on camera setup dialog and exposure
+time is less than frame time, it will try to change frame time and keep
+exposure the same.
+
 5/9/25: Made it set unchanged properties in DE server on every acquisition
 unless a some kind of operation is running, in case images are taken in MC.
 

@@ -1311,6 +1311,20 @@ float CCameraSetupDlg::ManageExposure(bool updateIfChange)
   return realExp;
 }
 
+// When frame time becomes enabled by turning on saving, aligning or dose-frac, and
+// exposure is less than frame time, make sure it is frame time that changes, not exposure
+void CCameraSetupDlg::HandleFrameLongerThanExposure()
+{
+  float maxFrame = m_eExposure * (mParam->TietzType ? 0.5f : 1.f);
+  if (m_fFrameTime <= maxFrame || !(mParam->K2Type || mParam->canTakeFrames ||
+    mCamera->IsSaveInEERMode(mParam, m_bSaveFrames, m_bAlignDoseFrac,
+      mCurSet->useFrameAlign, m_iK2Mode)))
+    return;
+  m_fFrameTime = maxFrame;
+  UpdateData(false);
+  OnKillfocusEditFrameTime();
+}
+
 //  Set the minimum drift settling text based on shuttering mode
 void CCameraSetupDlg::ManageDrift(bool useMinRate)
 {
@@ -2743,6 +2757,8 @@ void CCameraSetupDlg::ManageK2Binning(void)
 void CCameraSetupDlg::OnDoseFracMode()
 {
   UpdateData(true);
+  if (m_bDoseFracMode)
+    HandleFrameLongerThanExposure();
   if (mFalconCanSave)
     mCamera->SetFrameSavingEnabled(m_bDoseFracMode);
   if (mParam->K2Type && m_bDoseFracMode && m_bSaveFrames && m_bSaveK2Sums)
@@ -2768,6 +2784,8 @@ void CCameraSetupDlg::OnAlignDoseFrac()
 {
   BOOL oldDF = m_bDoseFracMode;
   UpdateData(true);
+  if (m_bAlignDoseFrac)
+    HandleFrameLongerThanExposure();
   if (m_bAlignDoseFrac)
     CheckFrameAliRestrictions(m_iK2Mode, mCamera->GetSaveUnnormalizedFrames(), 
       mUserSaveFrames, NULL);
@@ -2931,6 +2949,8 @@ void CCameraSetupDlg::OnSaveFrames()
 {
   BOOL oldDF = m_bDoseFracMode;
   UpdateData(true);
+  if (m_bSaveFrames)
+    HandleFrameLongerThanExposure();
   if (CheckFrameAliRestrictions(m_iK2Mode, mCamera->GetSaveUnnormalizedFrames(),
     m_bSaveFrames, "setting for saving frames")) {
       m_bSaveFrames = false;
@@ -3404,6 +3424,11 @@ void CCameraSetupDlg::OnDeSaveMaster()
   mUserSaveFrames = m_bDEsaveMaster;
   if (!m_bDEalignFrames && !m_bDEsaveMaster && m_iDEMode == SUPERRES_MODE)
     m_iDEMode = COUNTING_MODE;
+  if (m_fDEframeTime > m_eExposure && m_bDEsaveMaster) {
+    m_fDEframeTime = m_eExposure;
+    UpdateData(false);
+    OnKillfocusEditFrameTime();
+  }
   ManageDEpanel();
   ManageExposure();
   UpdateData(false);
