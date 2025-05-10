@@ -1316,6 +1316,12 @@ float CCameraSetupDlg::ManageExposure(bool updateIfChange)
 void CCameraSetupDlg::HandleFrameLongerThanExposure()
 {
   float maxFrame = m_eExposure * (mParam->TietzType ? 0.5f : 1.f);
+  if (mParam->DE_camType && m_fDEframeTime > maxFrame) {
+    m_fDEframeTime = maxFrame;
+    UpdateData(false);
+    OnKillfocusDeFrameTime();
+    return;
+  }
   if (m_fFrameTime <= maxFrame || !(mParam->K2Type || mParam->canTakeFrames ||
     mCamera->IsSaveInEERMode(mParam, m_bSaveFrames, m_bAlignDoseFrac,
       mCurSet->useFrameAlign, m_iK2Mode)))
@@ -3424,11 +3430,8 @@ void CCameraSetupDlg::OnDeSaveMaster()
   mUserSaveFrames = m_bDEsaveMaster;
   if (!m_bDEalignFrames && !m_bDEsaveMaster && m_iDEMode == SUPERRES_MODE)
     m_iDEMode = COUNTING_MODE;
-  if (m_fDEframeTime > m_eExposure && m_bDEsaveMaster) {
-    m_fDEframeTime = m_eExposure;
-    UpdateData(false);
-    OnKillfocusEditFrameTime();
-  }
+  if (m_bDEsaveMaster)
+    HandleFrameLongerThanExposure();
   ManageDEpanel();
   ManageExposure();
   UpdateData(false);
@@ -3456,6 +3459,8 @@ void CCameraSetupDlg::OnDeAlignFrames()
   UpdateData(true);
   if (!m_bDEalignFrames && !m_bDEsaveMaster && m_iDEMode == SUPERRES_MODE)
     m_iDEMode = COUNTING_MODE;
+  if (m_bDEalignFrames)
+    HandleFrameLongerThanExposure();
   if (m_bDEalignFrames)
     CheckFrameAliRestrictions(m_iDEMode, mCamera->GetSaveUnnormalizedFrames(), 
       mUserSaveFrames, NULL);
