@@ -3,6 +3,7 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+5/13/25: SEM_4-1-25
 5/7/25: Fixed Step To & Adjust IS not stopping for custom pattern (In 5.1).
 
 5/5/25: SEM_4-1-24
