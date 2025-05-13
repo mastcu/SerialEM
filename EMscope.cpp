@@ -919,7 +919,7 @@ int CEMscope::Initialize()
   if (!(mUseIllumAreaForC2 && mFEIhasApertureSupport))
     mMonitorC2ApertureSize = 0;
   else if (mMonitorC2ApertureSize < 0)
-    mMonitorC2ApertureSize = 1;
+    mMonitorC2ApertureSize = 2;       // Default changed back to 2, 5/12/25
   if (mMonitorC2ApertureSize > 1) {
     try {
       mPlugFuncs->GetApertureSize(CONDENSER_APERTURE);
