@@ -1,7 +1,7 @@
 // SerialEM.cpp          The main module, has top level routines and
 //                          miscellaneous message handlers
 //
-// Copyright (C) 2003-2019 by the Regents of the University of
+// Copyright (C) 2003-2025 by the Regents of the University of
 // Colorado.  See Copyright.txt for full notice of copyright and limitations.
 //
 // Author: David Mastronarde
@@ -80,8 +80,8 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
-#define VERSION_STRING  "SerialEM Version 4.2.0beta"
-#define TAG_STRING      "(Tagged SEM_4-1-25, 5/12/25)"
+#define VERSION_STRING  "SerialEM Version 4.2"
+#define TAG_STRING      "(Tagged SEM_4-2-0, 5/13/25)"
 #define DEPRECATED_PYTHON  "3.5-64"
 
 // Offsets for static window inside main frame
