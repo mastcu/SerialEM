@@ -1762,7 +1762,7 @@ void CMultiGridDlg::OnRadioMulgridSelect(UINT nID)
   button = (CButton *)GetDlgItem(nID);
 
   // Make button unchecked or checked (pushed)
-  if (mSelectedGrid == nID - IDC_RADIO_MULGRID_SEL1) {
+  if (mSelectedGrid == nID - IDC_RADIO_MULGRID_SEL1 && !mSettingOrder) {
     if (button)
       button->SetCheck(BST_UNCHECKED);
     mSelectedGrid = -1;
