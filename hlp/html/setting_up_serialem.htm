@@ -238,7 +238,7 @@
       program itself should be installed in a folder C:\Program Files\SerialEM; this
       is the location where the package unpacks by default. The configuration and data
       files are also placed in this folder under Windows 2000 and XP, but under
-      Windows 7 and Server 2008 they need to be placed in a folder
+      Windows 7 and higher or Server 2008 and higher they need to be placed in a folder
       C:\ProgramData\SerialEM instead. For the latter systems, if you received a
       custom framework file, it should be set up to unpack in C:\ProgramData, but if
       not, you should change 'Program Files' to 'ProgramData' before unzipping. </P>
@@ -3871,10 +3871,14 @@ MoveStage 0 0 -$zRange / 2.
             Automation' instead of with Thermo/FEI scripting commands.&nbsp;For this to work, the 
             microscope software must be running on Windows 7 or above, the TEM user 
             interface must be open, and the Apertures panel must be included on 
-            some tab in the Workset area of the TEM user interface (as of Serialem 4.2, 
-            25-Jan-2024, if the TEM interface is minimized, the program should manage to 
-            raise it).&nbsp; The tab will be 
-            switched to if that panel is not currently visible.&nbsp; The UI Automation alone 
+            some tab in the Workset area of the TEM user interface (if the TEM interface is minimized, the program should manage to 
+            raise it).&nbsp;If the Apertures panel is not in the current tab, the program 
+            will first try to open it with the combo box in the lower.&nbsp; If that fails, 
+            the Workset tab will be 
+            switched to one with the panel.&nbsp; This switching has killed the TEM 
+            interface on one system, so there is an environment variable, 
+            FEISEM_NO_WORKSET_TABBING, that can be set to any value to prevent it.</p>
+      <p>&nbsp;The UI Automation alone 
             cannot change an aperture size in Windows 7, and in some Windows 10 systems.&nbsp; 
             In these cases, copy the compiled AutoIT program SEM-AutoIT.exe from the 
             SerialEM program package to either the directory with the SerialEM executable 
@@ -3910,7 +3914,9 @@ MoveStage 0 0 -$zRange / 2.
         aperture size because that works on most systems, but at least one site needed 
         to have only the Select call.&nbsp; Two environment variables can be set to 
         control whether it calls just one or both: FEISEM_NO_INVOKE_APERTURE to use just 
-        Select, or FEISEM_NO_SELECT_APERTURE to use just Invoke.</p>
+        Select, or FEISEM_NO_SELECT_APERTURE to use just Invoke.&nbsp; These variables 
+        similarly affect how the selection of a panel in the combo box in the lower 
+        right operates.</p>
       <p>For Thermo/FEI server version 7.18.1 and higher, the new 
         UTAPI scripting can be used to control the apertures, provided that a license is 
         installed.&nbsp; Access to this 
@@ -4459,6 +4465,12 @@ Device Settings:
         </tr>
         <tr>
           <td class="style2">
+            svml_dispmd.dll</td>
+          <td class="style3">
+            Intel library needed by ctfplotter and shrmemframe</td>
+        </tr>
+        <tr>
+          <td class="style2">
             hdf5.dll</td>
           <td class="style3">
             Library for HD5 files</td>
@@ -4468,18 +4480,6 @@ Device Settings:
             imodzlib1.dll</td>
           <td class="style3">
             Library needed by hdf5.dll</td>
-        </tr>
-        <tr>
-          <td class="style2">
-            msvcp120.dll</td>
-          <td class="style3">
-            Library needed by libctffind.dll and ctfplotter.exe, compiled with Visual Studio 2013</td>
-        </tr>
-        <tr>
-          <td class="style2">
-            msvcr120.dll</td>
-          <td class="style3">
-            Library needed by libctffind.dll and ctfplotter.exe</td>
         </tr>
         <tr>
           <td class="style2">
@@ -4608,7 +4608,14 @@ Device Settings:
           <td class="style2">
             SEMCCD-GMS3.60-64.dll</td>
           <td class="style3">
-            The plugin to DigitalMicrograph for GMS 3.6</td>
+            The plugin to DigitalMicrograph for GMS 3.6.0 and 3.6.1</td>
+        </tr>
+        <tr>
+          <td class="style2">
+            SEMCCD-GMS3.62-64.dll</td>
+          <td class="style3">
+            The plugin to DigitalMicrograph for GMS 3.6.2 
+            and higher</td>
         </tr>
         <tr>
           <td class="style2">
@@ -4632,8 +4639,8 @@ Device Settings:
           <td class="style2">
             Shrmemframe</td>
           <td class="style3">
-            A folder with shrmemframe.exe and its needed libraries from older Microsotf and Intel
-             compilers.&nbsp; This is a program that the plugin to 64-bit DM uses for frame 
+            A folder with shrmemframe.exe and additional Microsoft libraries that only it 
+            needs.&nbsp; This is a program that the plugin to 64-bit DM uses for frame 
             alignment with the CPU or GPU, with data passed through shared memory.
         </tr>
         <tr>
@@ -4732,16 +4739,30 @@ Device Settings:
         </tr>
         <tr>
           <td class="style2">
-            DEcamPlugin.dll</td>
+            DE-API1/DEcamAP1Plugin.dll</td>
           <td class="style3">
             A simple wrapper plugin for accessing Direct Electron cameras without linking
-            the DE DLL into SerialEM</td>
+            the DE DLL into SerialEM, supporting both API1 and API2</td>
         </tr>
         <tr>
           <td class="auto-style1">
-            DE.Win32.dll or DE.Win64.dll</td>
+            DE-API1/DE.Win32.dll or DE.Win64.dll</td>
           <td class="auto-style2">
-            A DLL from Direct Electron for connecting with the DE server</td>
+            A DLL from Direct Electron for connecting with the DE server from SDK 5.0 that 
+            supports both APIs</td>
+        </tr>
+        <tr>
+          <td class="style2">
+            DE-API2/DEcamAP1Plugin.dll</td>
+          <td class="style3">
+            A simple wrapper plugin for accessing Direct Electron cameras with API2 only</td>
+        </tr>
+        <tr>
+          <td class="auto-style1">
+            DE-API2/DE.Win32.dll or DE.Win64.dll</td>
+          <td class="auto-style2">
+            A DLL from Direct Electron for connecting with the DE server from a later SDK 
+            that supports only API2</td>
         </tr>
         <tr>
           <td class="style2">
@@ -4774,7 +4795,7 @@ Device Settings:
           <td class="style2">
             LGPL.txt</td>
           <td class="style3">
-            LGPL licence covering libcfshr, libiimod, libimod, and libifft libraries
+            LGPL license covering libcfshr, libiimod, libimod, and libifft libraries
             from IMOD</td>
         </tr>
         <tr>

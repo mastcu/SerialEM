@@ -1,12 +1,13 @@
 #!/usr/bin/python -u
 # Script to create an include file with array of argument signatures for script commands
+# Also gets the debug output keys into a variable
 
 progname = 'makeSignatures'
 prefix = 'ERROR: ' + progname + ' - '
 
 def exitError(mess):
- sys.stdout.write(mess + '\n')
- sys.exit(1)
+   sys.stdout.write(mess + '\n')
+   sys.exit(1)
 
 # Copied from imodpy for reading and writing a file
 def readTextFile(filename):
@@ -37,6 +38,33 @@ def writeTextFile(filename, strings):
       errString = action + " file: " + filename + "  - " + str(sys.exc_info()[1])
       exitError(errString)
 
+
+# Like doing awk from starting to ending line.  Modified from alignlog to return list of lines
+def pyawk(lines, start, end, excludeEnd = False, skipMatch = None, skipEmpty = False, \
+             separator = False):
+   retLines = []
+   reStart = re.compile(start)
+   reEnd = re.compile(end)
+   gotStart = False
+   gotAny = False
+   for l in lines:
+      if not gotStart and re.search(reStart, l):
+         gotStart = True
+         if separator and gotAny:
+            retLines.append('')
+         gotAny = True
+      putout = gotStart
+      if gotStart and re.search(reEnd, l):
+         gotStart = False
+         putout = not excludeEnd
+
+      if putout:
+         if (not skipEmpty or len(l.rstrip())) and \
+                (not skipMatch or l.find(skipMatch) < 0):
+            retLines.append(l.rstrip())
+   
+   return retLines
+  
 
 # Find the end of the command and the argument string after it, add to dictionary
 def extractEntry(line, nameInd):
@@ -75,15 +103,17 @@ def extractEntry(line, nameInd):
 incFile = 'MacroArguments.h'
 masterFile = 'MacroMasterList.h'
 helpFile = 'hlp/html/script_commands.htm'
+helpFile2 = 'hlp/html/about_properties.htm'
 
 # load System Libraries
-import os, sys
+import os, sys, re
 
 # Run if help file is newer than include file
 if os.path.exists(incFile):
    incTime = os.path.getmtime(incFile)
    helpTime = os.path.getmtime(helpFile)
-   if helpTime < incTime:
+   helpTime2 = os.path.getmtime(helpFile2)
+   if helpTime < incTime and helpTime2 < incTime:
       sys.exit(0)
 
 # Read the files
@@ -126,6 +156,23 @@ for ind in range(len(nameArr)):
       sig += ','
    incLines.append(sig)
    
+incLines.append('};')
+
+# Now get the properties help file and grab the debug output lines
+helpLines = readTextFile(helpFile2)
+debLines = pyawk(helpLines, '<TD>DebugOutput</TD>', ' </TD>', True)
+gotBR = False
+incLines.append('static const char *sKeyLetters = {')
+for line in debLines:
+   lstrip = line.strip()
+   if lstrip == '<BR>' and not gotBR:
+      gotBR = True
+   elif gotBR:
+      lstrip = lstrip.replace('<BR>', '\\r\\n')
+      lstrip = lstrip.replace('<br />', '\\r\\n')
+      lstrip = lstrip.replace('</P>', '\\r\\n')
+      incLines.append('"' + lstrip + '"')
+
 incLines.append('};')
 
 # Write file

@@ -1364,6 +1364,12 @@ bool CMacroEditer::GetPrevLineIndexes(CString &strMacro, int curStart, bool isPy
   return isBlank;
 }
 
+void CMacroEditer::ListDebugKeyLetters()
+{
+  SEMAppendToLog("\r\nKey letters for specific debug output:");
+  SEMAppendToLog(sKeyLetters);
+}
+
 // Finds the number of current spaces indenting the line at lineStart and looks for a
 // match of the first word with one of the keywords
 bool CMacroEditer::FindIndentAndMatch(CString &strMacro, int lineStart, int limit, 

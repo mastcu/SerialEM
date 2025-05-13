@@ -784,6 +784,7 @@ BEGIN
         MENUITEM "&Using Help",                 ID_HELP_USING
         MENUITEM "&About SerialEM...",          ID_APP_ABOUT
         MENUITEM "&Run SerialEM Snapshot",      ID_HELP_RUNSERIALEMSNAPSHOT
+        MENUITEM "&List Debug Output Key Letters", ID_HELP_LISTDEBUGOUTPUTKEYLETTERS
     END
 END
 
@@ -6517,6 +6518,8 @@ BEGIN
     IDC_CHECK_TRACK_BIG_TILT 
                             "Always track when tilt from other side exceeds a certain number of degrees"
     IDC_EDIT_BIG_TILT       "Change in tilt angle above which to track every time"
+    IDC_CHECK_APPLY_INTERACTIVE 
+                            "Use these image shift options for Realign to Item run from the interface"
 END
 
 STRINGTABLE
@@ -8131,8 +8134,6 @@ BEGIN
     IDC_RSET_C1_APERTURE    "Set specific size or retract the C1 aperture"
     IDC_RSET_C2_APERTURE    "Set specific size or retract the C2 aperture"
     IDC_RROUGH_LM_SEARCH    "Use Search for Rough Eucentricity if starting in LM and it is in LM"
-    IDC_CHECK_APPLY_INTERACTIVE
-                            "Use these image shift options for Realign to Item run from the interface"
 END
 
 STRINGTABLE
@@ -8142,6 +8143,8 @@ BEGIN
     ID_SCRIPT_LISTFKEYMAPPINGS "Print list of function key mappings to log"
     ID_BEAMSPOT_PARALLELILLUMINATION 
                             "Save intensity, spot size, and probe/alpha as parallel illumination conditions"
+    ID_HELP_LISTDEBUGOUTPUTKEYLETTERS 
+                            "List key letter for debug output in log"
 END
 
 #endif    // English (United States) resources

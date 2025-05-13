@@ -131,7 +131,8 @@
             standard plugin/server interface to perform some tasks using UI Automation, specifically getting 
             grid names from an autoloader and inserting the beam stop halfway.&nbsp; In the latter case, if running
             through FEI-SEMserver.exe, set the environment variable FEISEM_UI_ACCESS_ONLY to any value
-             to prevent FEI-SEMserver.exe from trying to connect to the scope.
+             to prevent FEI-SEMserver.exe from trying to connect to the scope.&nbsp; Full support for a microscope
+             with no scripting except UTAPI will be provided in SerialEM 4.3, not 4.2.
           </TD>
         </TR>
        <TR VALIGN="top">
@@ -139,7 +140,9 @@
           <TD>Follow with a list of indexes to UTAPI services that should be marked as not 
             available.&nbsp; The indexes correspond to the values of the enum 
             'UtapiSupportTypes' in SerialEM.h.  With the latest UTAPI server (April 2025), only 20 needs
-            to be used for cameras, and only if you have a Falcon or Ceta 2.</TD>
+            to be used for cameras, and only if you have a Ceta 2 or want to save MRC files 
+            from a Falcon.&nbsp; Saving EER files from a Falcon 4 currently works, and MRC saving will be
+             supported in SerialEM 4.2 when problems are resolved.</TD>
         </TR>
         <TR VALIGN="top">
           <TD>SimulationMode</TD>
@@ -608,16 +611,15 @@
         <TR VALIGN="top">
           <TD>DebugOutput</TD>
           <TD>
-            <P style="Z-INDEX: 0">Set to 1 to obtain general debugging output in the Log
+            <P style="Z-INDEX: 0"><A NAME="debugOutput"></A>Set to 1 to obtain general debugging output in the Log
               Window. Set to a list of key letters (e.g., JTC) to obtain additional output
               corresponding to the particular key letters. Key letters are:
               <BR>
-              A to autosave log on debug output (save file must already be defined)
-              <BR>
+              A to autosave log on debug output (save file must already be defined)<BR>
               B for beam blanking<br />
-              C for focus calibration derivation<br />
-              D for &nbsp;Direct Electron camera<br />
-              E for eagle camera<BR>
+              C for output about how focus calibration is derived<br />
+              D for &nbsp;Direct Electron camera, add * to get properties list on startup<br />
+              E for Thermo/FEI camera and other debug output from FEIScopePlugin, add * for UTAPI services<BR>
               F for Refine ZLP<br />
               G for verbose GIF and magnification lookups (during JEOL updates)<BR>
               H for Hitachi<br />
@@ -630,14 +632,14 @@
               P reserved for general plugins<BR>
               R for camera retraction<BR>
               S for stage and montaging information<BR>
-              T for Tietz setup/reset time, camera coords, auotoalign time<BR>
+              T for Tietz setup/reset time, camera coords, autoalign time<BR>
               V for vacuum gauge status output<br />
               W for Winkler LD axis position bug/autoloader/preventing DE retraction on exit/more output from TestNextMultiShot<br />
               X for EMSIS and DECTRIS cameras<BR>
               Z for general camera debug mode<br>
               a for alignment correlation coefficients and peak erasing details; GPU frame alignment choices/memory usage<br />
               b for beam shift<BR>
-              c for calibration and scale matrix derivation<BR>
+              c for for output during some calibration routines and output about how some calibrations are derived<BR>
               d for reason why no electron dose<br />
               e for JEOL event reports<br />
               f for STEM autofocus<BR>
@@ -648,7 +650,7 @@
               k for keystrokes<BR>
               l (lower case L) for low dose<BR>
               m to output all SEMMessageBox messages to log<br />
-              n&nbsp;for Navigator map transform and other items<BR>
+              n for Navigator map transform and other items<BR>
               p for AlignWithScaling and FindBeamCenter output<br />
               q for multiple grid operations<br />
               r for gain and dark references<BR>
@@ -657,6 +659,8 @@
               u for update items when polling JEOL, or time of scope update for all scopes<BR>
               w for output on stage ready status<br />
               y for reports when background saving starts and ends<br />
+              [ for output about running a Python script<br />
+              * for more verbose output, available for some situations<br />
               % list script commands other than Set that allow arithmetic when program starts</P>
           </TD>
         </TR>
@@ -2969,11 +2973,13 @@
           <TD>This property controls whether intensities in calibrations will be scaled 
             automatically when the C2 aperture changes on a Titan microscope.&nbsp; With a value
             of 2, the aperture size will be monitored and intensities will be scaled whenever it
-            changes; this is the default with UTAPI scripting.&nbsp; With a value of 1, intensities
-             will be scaled when the aperture size is set from SerialEM; this is the default when
-             there is aperture control through UI Automation.&nbsp; In the latter case, set the 
-           property to 2 to have the size be monitored (which will require the aperture panel in
-             the microscope user interface to be visible all the time) or 0 to disable the automatic scaling.
+            changes; this is the default value.&nbsp; With a value of 1, intensities
+             will be scaled when the aperture size is set from SerialEM, but aperture size will not be
+            monitored. When there is aperture control only through UI Automation and not UTAPI, the
+            aperture panel in the microscope user interface has to be visible all the time, and the 
+            program will try to open it in the lower right instead of changing workset tabs, to avoid 
+            interfering with the use of workset tabs.&nbsp; If this is problematic, set the 
+           property to 1 to have the scaling done only when aperture size is set, or 0 to disable the automatic scaling.
           </TD>
         </TR>
           <TD>ApertureSizes</TD>

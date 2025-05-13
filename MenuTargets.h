@@ -443,6 +443,7 @@ public:
   afx_msg void OnUpdateCameraPrevPrescan(CCmdUI *pCmdUI);
   afx_msg void OnBeamspotParallelIllumination();
   afx_msg void OnUpdateParallelillumination(CCmdUI *pCmdUI);
+  afx_msg void OnHelpListDebugOutputKeyLetters();
 };
 
 /////////////////////////////////////////////////////////////////////////////

@@ -3128,6 +3128,7 @@
 #define ID_SCRIPT_MAPFUNCTIONKEY        33547
 #define ID_SCRIPT_LISTFKEYMAPPINGS      33548
 #define ID_BEAMSPOT_PARALLELILLUMINATION 33549
+#define ID_HELP_LISTDEBUGOUTPUTKEYLETTERS 33550
 
 // Next default values for new objects
 // 
@@ -3135,7 +3136,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        294
-#define _APS_NEXT_COMMAND_VALUE         33550
+#define _APS_NEXT_COMMAND_VALUE         33551
 #define _APS_NEXT_CONTROL_VALUE         3584
 #define _APS_NEXT_SYMED_VALUE           104
 #endif

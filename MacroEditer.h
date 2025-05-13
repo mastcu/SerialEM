@@ -124,6 +124,7 @@ public:
   static bool CheckForPythonAndImport(CString &strMacro, CString &importName);
   static bool GetPrevLineIndexes(CString &strMacro, int curStart, bool isPython, 
     int &indStart, int &indEnd, bool &isContinued);
+  static void ListDebugKeyLetters();
   void JustCloseWindow(void);
   afx_msg void OnButToMacroLine();
   void SelectAndShowLine(int lineFromOne);

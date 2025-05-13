@@ -15,6 +15,7 @@
 #include "SerialEMView.h"
 #include ".\MenuTargets.h"
 #include "MacroSelector.h"
+#include "MacroEditer.h"
 #include "MacroProcessor.h"
 #include "NavigatorDlg.h"
 #include "NavHelper.h"
@@ -534,6 +535,8 @@ ON_COMMAND(ID_CAMERA_PREVIEWPRESCAN, OnCameraPreviewPrescan)
 ON_UPDATE_COMMAND_UI(ID_CAMERA_PREVIEWPRESCAN, OnUpdateCameraPrevPrescan)
 ON_COMMAND(ID_BEAMSPOT_PARALLELILLUMINATION, OnBeamspotParallelIllumination)
 ON_UPDATE_COMMAND_UI(ID_BEAMSPOT_PARALLELILLUMINATION, OnUpdateParallelillumination)
+ON_COMMAND(ID_HELP_LISTDEBUGOUTPUTKEYLETTERS, OnHelpListDebugOutputKeyLetters)
+ON_UPDATE_COMMAND_UI(ID_HELP_LISTDEBUGOUTPUTKEYLETTERS, OnUpdateNoTasks)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -2777,10 +2780,12 @@ void CMenuTargets::OnUpdateCalibrationShutterdeadtime(CCmdUI *pCmdUI)
   pCmdUI->SetCheck(!mCamera->IsDirectDetector(camParam));
 }
 
-void CMenuTargets::OnCalibrationSetdebugoutput() 
+void CMenuTargets::OnCalibrationSetdebugoutput()
 {
+  static bool firstTime = true;
   CString str = mWinApp->GetDebugKeys();
-  if (KGetOneString("Key letters for debugging output (0 for none):", str))
+  if (KGetOneString(firstTime ? "For list of letters, use \"List Debug Output Key "
+    "Letters\" in Help menu" : "", "Key letters for debugging output (0 for none):", str))
     mWinApp->SetDebugOutput(str);
 }
 
@@ -3436,4 +3441,10 @@ void CMenuTargets::OnMarkerToCenter()
 void CMenuTargets::OnReverseWheelZoomDirection()
 {
   mWinApp->SetReverseWheelZoom(!mWinApp->GetReverseWheelZoom());
+}
+
+
+void CMenuTargets::OnHelpListDebugOutputKeyLetters()
+{
+  CMacroEditer::ListDebugKeyLetters();
 }
