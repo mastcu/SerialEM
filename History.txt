@@ -4,6 +4,9 @@ This is a record of changes to SerialEM since it was first publicly released.
 significance, for the stable release version
 ============================================================================
 5/13/25: SEM_4-2-0 stable
+5/13/25: Fixed some problems with DE-MC being used between images and a
+problem with Apollo with particular settings.
+
 5/13/25: SEM_4-1-25
 5/13/25: Added an entry in the Help menu to list debug output key letters.
 

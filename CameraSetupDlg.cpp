@@ -896,8 +896,9 @@ void CCameraSetupDlg::LoadConsetToDialog()
     radio->EnableWindow(mBinningEnabled);
   }
 
-  if (mDE_Type && (mParam->CamFlags & DE_APOLLO_CAMERA))
-    mCurSet->K2ReadMode = COUNTING_MODE;
+  // Do not set to counting mode, it gets turned off below because counting flag not set
+  //if (mDE_Type && ((mParam->CamFlags & DE_APOLLO_CAMERA))
+   // mCurSet->K2ReadMode = COUNTING_MODE;
 
   // Fix exposure and frame times in control set before loading
   mCamera->ConstrainExposureTime(mParam, mCurSet);

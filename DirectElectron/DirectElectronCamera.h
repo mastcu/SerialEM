@@ -32,6 +32,7 @@ struct LiveThreadData {
   int divideBy2;
   bool quitLiveMode;
   int electronCounting;
+  CString errString;
 };
 
 // Defines for normal, gain, and dark; gain does not work in a call to set mode
@@ -76,14 +77,13 @@ public:
 	~DirectElectronCamera(void);
 	int initialize(CString camName, int camIndex);
 	int setBinning(int x, int y, int sizex, int sizey, int hardwareBin);
-	int AcquireImage(float seconds);
-	int AcquireDarkImage(float seconds);
+	int SetImageExposureAndMode(float seconds);
+	int SetDarkExposureAndMode(float seconds);
 	void StopAcquistion();
 	int setPreExposureTime(double preExpSeconds);
-	bool isImageAcquistionDone();
 	int setDebugMode();
 	int unInitialize();
-	int copyImageData(unsigned short *image4k, long &ImageSizeX, long &ImageSizeY, 
+	int AcquireImageData(unsigned short *image4k, long &ImageSizeX, long &ImageSizeY, 
     int divideBy2);
 	float getCameraTemp();
 

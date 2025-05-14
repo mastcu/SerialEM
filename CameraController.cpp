@@ -6668,7 +6668,8 @@ int CCameraController::DESumCountForConstraints(CameraParameters *camP, ControlS
 {
  if (mWinApp->mDEToolDlg.HasFrameTime(camP) && ((consP->saveFrames & DE_SAVE_MASTER) ||
    (consP->alignFrames && consP->useFrameAlign > 1)))
-     return (consP->K2ReadMode > 0 ? consP->sumK2Frames : consP->DEsumCount);
+     return B3DMAX(1, B3DCHOICE(consP->K2ReadMode > 0 && consP->sumK2Frames > 0, 
+       consP->sumK2Frames, consP->DEsumCount));
  return 1;
 }
 
@@ -7405,6 +7406,10 @@ UINT CCameraController::EnsureProc(LPVOID pParam)
       if (retval != 1) {
         retval = td->DE_Cam->setPreExposureTime((long) (1000 * td->DMsettling));
 
+        // Doesn't do anything except set time and mode
+        if (!retval)
+          retval = td->DE_Cam->SetDarkExposureAndMode((float)ref->Exposure);
+
         // Calculate the proper ROI and set the binning
         if (!retval)
           retval = td->DE_Cam->setBinning(binning, binning, td->CallSizeX, td->CallSizeY,
@@ -7412,34 +7417,26 @@ UINT CCameraController::EnsureProc(LPVOID pParam)
         if (!retval)
           retval = td->DE_Cam->setROI(td->Left * binning, td->Top * binning, 
             td->CallSizeX * binning, td->CallSizeY * binning, -1);
+
+        // This is the call that acquires image
         if (!retval)
-          retval = td->DE_Cam->AcquireDarkImage((float)ref->Exposure);	
-        bool imageFinished = false;
-        while (!imageFinished && !retval) {  
-          //Here because of the way it works it will
-          //take "small naps" and wait until it is finished
-          // DE12 etc do not work that way: this is the call that acquires image
-          if(td->DE_Cam->isImageAcquistionDone()) {
-            imageFinished = true;
-            retval = td->DE_Cam->copyImageData((unsigned short*) ref->Array, 
-              td->CallSizeX, td->CallSizeY, td->DivideBy2);
+          retval = td->DE_Cam->AcquireImageData((unsigned short*)ref->Array,
+            td->CallSizeX, td->CallSizeY, td->DivideBy2);
 
-            // Try to recover from image size not being what was expected
-            if (!retval && (callSizeX != td->CallSizeX || callSizeY != td->CallSizeY)) {
-              if (callSizeX == td->DMSizeX && callSizeY == td->DMSizeY) {
-                td->DMSizeX = td->CallSizeX;
-                td->DMSizeY = td->CallSizeY;
-              } else if (callSizeY == td->DMSizeX && callSizeX == td->DMSizeY) {
-                td->DMSizeX = td->CallSizeY;
-                td->DMSizeY = td->CallSizeX;
-              }
-            }
-          } else
-            ::Sleep(100);
-
-          //need this for time stamp
-          ref->TimeStamp = 0.001 * GetTickCount();
+        // Try to recover from image size not being what was expected
+        if (!retval && (callSizeX != td->CallSizeX || callSizeY != td->CallSizeY)) {
+          if (callSizeX == td->DMSizeX && callSizeY == td->DMSizeY) {
+            td->DMSizeX = td->CallSizeX;
+            td->DMSizeY = td->CallSizeY;
+          } else if (callSizeY == td->DMSizeX && callSizeX == td->DMSizeY) {
+            td->DMSizeX = td->CallSizeY;
+            td->DMSizeY = td->CallSizeX;
+          }
         }
+
+        //need this for time stamp
+        ref->TimeStamp = 0.001 * GetTickCount();
+
         if (retval) {
           delete [] ref->Array;
           ref->Array = NULL;
@@ -8381,6 +8378,10 @@ UINT CCameraController::AcquireProc(LPVOID pParam)
       if (td->DE_camType >= 2 && !(td->ProcessingPlus & CONTINUOUS_USE_THREAD))
         retval = td->DE_Cam->SetLiveMode(0); 
 
+      // Set the exposure and mode
+      if (!retval)
+        retval = td->DE_Cam->SetImageExposureAndMode((float)td->Exposure);
+
       // Set the processing
       if (!retval && td->DE_camType >= 2) 
         retval = td->DE_Cam->setCorrectionMode(td->ProcessingPlus & 3, td->GatanReadMode);
@@ -8413,29 +8414,17 @@ UINT CCameraController::AcquireProc(LPVOID pParam)
         StartBlankerThread(td);
       }
 
-      if (!retval)
-        retval = td->DE_Cam->AcquireImage((float)td->Exposure);	
-
       // Turn on live mode if flag set
       if (!retval && td->DE_camType >= 2 && 
         (td->ProcessingPlus & CONTINUOUS_USE_THREAD))
         retval = td->DE_Cam->SetLiveMode(1 + 
-          B3DCHOICE(td->ProcessingPlus & CONTINUOUS_SET_MODE, 1 , 0));
+          B3DCHOICE(td->ProcessingPlus & CONTINUOUS_SET_MODE, 1, 0));
 
-  	  bool imageFinished = false;
-      while (!imageFinished && !retval) {
+      // Get the image
+      if (!retval)
+        retval = td->DE_Cam->AcquireImageData((unsigned short*)td->Array[0],
+          td->CallSizeX, td->CallSizeY, td->DivideBy2);
 
-        //Here because of the way it works it will
-        //take "small naps" and wait until it is finished
-        // Actually the DE-12 will not take the image until the get_image call inside
-        // CopyImageData, but this costs nothing to test first in this loop
-        if (td->DE_Cam->isImageAcquistionDone()) {
-          imageFinished = true;
-          retval = td->DE_Cam->copyImageData((unsigned short*)td->Array[0], td->CallSizeX, 
-            td->CallSizeY, td->DivideBy2);
-        }	else
-          ::Sleep(100);
-      }
       if (retval) {
         if (retval > 0) {
           str = td->DE_Cam->GetLastErrorString();
@@ -10731,7 +10720,7 @@ void CCameraController::DisplayNewImage(BOOL acquired)
     mContinuousCount++;
     SEMTrace('t', "%u elapsed,  %.2f FPS", GetTickCount() - mStartTime, axoff);
   }
-  
+
   // Update filter settings if there is a timer that may have been waiting
   if (mFilterUpdateID && !mTD.ContinuousSTEM && 
     !(mTD.ProcessingPlus & CONTINUOUS_USE_THREAD))

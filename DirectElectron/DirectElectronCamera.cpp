@@ -386,9 +386,14 @@ int DirectElectronCamera::initializeDECamera(CString camName, int camIndex)
     }
 
     if (debug) {
-      str += "\r\nProperties for : " + listProps;
-      str += "\r\n\r\n";
-      PrintfToLog("%s", str);
+      if (!GetDebugOutput('*')) {
+        SEMAppendToLog("\r\nAdd * (asterisk) to DebugOutput to get full list of camera "
+          "properties\r\n");
+      } else {
+        str += "\r\nProperties for : " + listProps;
+        str += "\r\n\r\n";
+        PrintfToLog("%s", str);
+      }
     }
 
     // If saw HW ROI for 2.7 on, check the features and turn it on if either X or Y is
@@ -648,7 +653,7 @@ int DirectElectronCamera::SetAllAutoSaves(int autoSaveFlags, int sumCount, CStri
   int saveRaw = (autoSaveFlags & DE_SAVE_FRAMES) ? 1 : 0;
   int saveSums = (autoSaveFlags & DE_SAVE_SUMS) ? 1 : 0;
   int saveFinal = (autoSaveFlags & DE_SAVE_FINAL) ? 1 : 0;
-  bool setSaves = (mLastSaveFlags < 0 || !mTrustLastSettings) && !mLastLiveMode;
+  bool setSaves = (mLastSaveFlags < 0 || !mTrustLastSettings) && !mLiveThread;
   CSingleLock slock(&m_mutex);
 
   if (slock.Lock(1000)) {
@@ -667,8 +672,10 @@ int DirectElectronCamera::SetAllAutoSaves(int autoSaveFlags, int sumCount, CStri
     if (setSaves || ((mLastSaveFlags & DE_SAVE_SUMS) ? 1 : 0) != saveSums)
       ret2 = mDeServer->setProperty(mNormAllInServer ? "Autosave Movie" : 
       "Autosave Summed Image", saveSums ? psSave : psNoSave);
+    SEMTrace('D', "SetAllAutoSaves: setSaves %d  saveSums %d saveFinal %d", 
+      setSaves ? 1 : 0, saveSums, saveFinal);
     if (saveSums && (mLastSumCount < 0 || !mTrustLastSettings || 
-      mLastSumCount != sumCount) && !mLastLiveMode) {
+      mLastSumCount != sumCount) && !mLiveThread) {
         if (mNormAllInServer)
           ret4 = justSetIntProperty(mAPI2Server ? "Autosave Movie Sum Count" :
           B3DCHOICE(counting && !IsApolloCamera(),
@@ -720,7 +727,7 @@ int DirectElectronCamera::setPreExposureTime(double preExpMillisecs)
   if (slock.Lock(1000)) {
 
     if ((fabs(mLastPreExposure - preExpMillisecs) > 0.01 || !mTrustLastSettings) && 
-      !mLastLiveMode) {
+      !mLiveThread) {
       if (!justSetDoubleProperty(mAPI2Server ? "Pre-Exposure Time (seconds)" :
         "Preexposure Time (seconds)", preExpMillisecs / 1000.))
       {
@@ -738,13 +745,13 @@ int DirectElectronCamera::setPreExposureTime(double preExpMillisecs)
 }
 
 ///////////////////////////////////////////////////////////////////
-//copyImageData() routine.  Set up and start the acquisition, then copy the data from what
-// as acquired from the camera into an appropriately sized array for
+//AcquireImageData() routine.  Set up and start the acquisition, then copy the data from
+// from what was acquired from the camera into an appropriately sized array for
 //SerialEM to use for its acquisition process. 
 //
 ///////////////////////////////////////////////////////////////////
 
-int DirectElectronCamera::copyImageData(unsigned short *image4k, long &imageSizeX,
+int DirectElectronCamera::AcquireImageData(unsigned short *image4k, long &imageSizeX,
   long &imageSizeY, int divideBy2)
 {
   CString valStr;
@@ -788,6 +795,7 @@ int DirectElectronCamera::copyImageData(unsigned short *image4k, long &imageSize
         SEMTrace('D', "Failed to get memory for live mode buffers");
         return 1;
       }
+      mLiveTD.errString = "";
 
       // Start the thread as usual
       mLiveThread = AfxBeginThread(LiveProc, &mLiveTD, THREAD_PRIORITY_NORMAL,
@@ -816,7 +824,8 @@ int DirectElectronCamera::copyImageData(unsigned short *image4k, long &imageSize
       if (mLiveTD.outBufInd == -1) {
         SetAndTraceErrorString("Live mode did not get started in timely manner");
       } else if (status < 0) {
-        mLastErrorString = ErrorTrace("ERROR: Live mode ended with an error");
+        mLastErrorString = "ERROR: Live mode ended with an error:\r\n" + 
+          mLiveTD.errString;
       } else if (startedThread) {
         SetAndTraceErrorString("Live mode ended without error right after being "
           "started");
@@ -830,6 +839,14 @@ int DirectElectronCamera::copyImageData(unsigned short *image4k, long &imageSize
     // Loop until the output buffer is new; let SEM kill this thread if it times out?
     for (;;) {
       WaitForSingleObject(sLiveMutex, LIVE_MUTEX_WAIT);
+      if (mLiveTD.outBufInd < 0) {
+        ReleaseMutex(sLiveMutex);
+        mLastErrorString = "ERROR: Live mode ended";
+        if (!mLiveTD.errString.IsEmpty())
+          mLastErrorString += " with an error:\r\n" + mLiveTD.errString;
+        CleanupLiveMode(&mLiveTD);
+        return 1;
+      }
       if (!mLiveTD.returnedImage[mLiveTD.outBufInd]) {
         memcpy(image4k, mLiveTD.buffers[mLiveTD.outBufInd], 2 * inSizeX * inSizeY);
         mLiveTD.returnedImage[mLiveTD.outBufInd] = true;
@@ -1014,6 +1031,8 @@ UINT DirectElectronCamera::LiveProc(LPVOID pParam)
   int newInd, acqIndex, outX, outY, retval = 0;
   int numAcquis = 1000;
   unsigned short *useBuf, *image4k;
+  std::string stdStr;
+  CString str2;
   BOOL needStart = sUsingAPI2, imageOK;
 
   while (!td->quitLiveMode) {
@@ -1021,6 +1040,7 @@ UINT DirectElectronCamera::LiveProc(LPVOID pParam)
     if (needStart)
       acqIndex = -1;
     if (needStart && !td->DeServer->StartAcquisition(numAcquis)) {
+      str2 = "StartAcquisition failed";
       retval = 1;
       break;
     }
@@ -1040,12 +1060,7 @@ UINT DirectElectronCamera::LiveProc(LPVOID pParam)
         imageOK = td->DeServer->GetResult(useBuf, td->inSizeX * td->inSizeY * 2,
           DE::FrameType::SUMTOTAL, &pixForm, &attributes);
         if (!imageOK) {
-          std::string stdStr;
-          CString str2;
-          td->DeServer->getLastErrorDescription(&stdStr);
-          str2.Format("getResult failed   %s%s", stdStr.c_str() != NULL ? ": " : "", 
-            stdStr.c_str() != NULL ? stdStr.c_str() : "");
-          SEMTrace('D', "%s", str2);
+          str2 = "GetResult failed";
           break;
         } else if (acqIndex != attributes.acqIndex || attributes.acqFinished) {
           break;
@@ -1055,6 +1070,9 @@ UINT DirectElectronCamera::LiveProc(LPVOID pParam)
       acqIndex = attributes.acqIndex;
     } else {
       imageOK = td->DeServer->getImage(useBuf, td->inSizeX * td->inSizeY * 2);
+      if (!imageOK) {
+        str2 = "getImage failed";
+      }
     }
     if (!imageOK) {
       retval = 1;
@@ -1080,6 +1098,13 @@ UINT DirectElectronCamera::LiveProc(LPVOID pParam)
     SEMTrace('D', "Got frame - %.0f acquire, %.0f process, %.0f for mutex", getTime, 
       procTime, SEMTickInterval(start));
     Sleep(10);
+  }
+  if (retval) {
+    td->DeServer->getLastErrorDescription(&stdStr);
+    td->errString.Format("%s, error code %d %s %s", (LPCTSTR)str2,
+      td->DeServer->getLastErrorCode(),
+      stdStr.c_str() != NULL ? ": " : "", stdStr.c_str() != NULL ? stdStr.c_str() : "");
+    SEMTrace('D', "%s", td->errString);
   }
 
   // Shut down and clean up completely when done
@@ -1123,7 +1148,7 @@ int DirectElectronCamera::setBinning(int x, int y, int sizex, int sizey, int har
 
     if (sUsingAPI2 > 1 && hardwareBin >= 0) {
       if ((hardwareBin != mLastUseHardwareBin || x != mLastXbinning ||
-        y != mLastYbinning || !mTrustLastSettings) && !mLastLiveMode) {
+        y != mLastYbinning || !mTrustLastSettings) && !mLiveThread) {
         retVal = mDeServer->SetBinning(x, y, hardwareBin);
         if (retVal > 0) {
           mLastErrorString = ErrorTrace("ERROR calling SetBinning with %d %d %d",
@@ -1140,7 +1165,7 @@ int DirectElectronCamera::setBinning(int x, int y, int sizex, int sizey, int har
 
     // Set hardware binning first and if it has changed, force setting new binning
     if (useOld && hardwareBin >= 0 && (hardwareBin != mLastUseHardwareBin || 
-      !mTrustLastSettings) && !mLastLiveMode) {
+      !mTrustLastSettings) && !mLiveThread) {
       SEMTrace('D', "SetBinning set hw bin %d", hardwareBin);
       if (mServerVersion < DE_HAS_API2) {
         if (!setStringWithError(psHardwareBin, hardwareBin > 0 ? psEnable : psDisable))
@@ -1162,7 +1187,7 @@ int DirectElectronCamera::setBinning(int x, int y, int sizex, int sizey, int har
 
     // set binning if it does not match last value
     if (useOld && (x != mLastXbinning || y != mLastYbinning || !mTrustLastSettings) && 
-      !mLastLiveMode) {
+      !mLiveThread) {
       if (!justSetIntProperty(g_Property_DE_BinningX, x / lessBin) ||
         !justSetIntProperty(g_Property_DE_BinningY, y / lessBin)) {
         mLastErrorString = ErrorTrace("ERROR: Could NOT set the software binning "
@@ -1199,7 +1224,7 @@ int DirectElectronCamera::SetCountingParams(int readMode, double scaling, double
   if (!IsApolloCamera() && slock.Lock(1000)) {
     if (((readMode == LINEAR_MODE && mLastElectronCounting != 0) ||
       (readMode > 0 && mLastElectronCounting <= 0) || !mTrustLastSettings) &&
-      !mLastLiveMode) {
+      !mLiveThread) {
       if (mAPI2Server) {
         if (!setStringWithError("Image Processing - Mode", readMode > 0 ? "Counting" :
           "Integrating"))
@@ -1211,13 +1236,13 @@ int DirectElectronCamera::SetCountingParams(int readMode, double scaling, double
       mLastElectronCounting = readMode > 0 ? 1 : 0;
     }
     if (((readMode == COUNTING_MODE && mLastSuperResolution != 0) ||
-      (superRes && mLastSuperResolution <= 0) || !mTrustLastSettings) && !mLastLiveMode) {
+      (superRes && mLastSuperResolution <= 0) || !mTrustLastSettings) && !mLiveThread) {
       if (!setStringWithError(mAPI2Server ? "Event Counting - Super Resolution" :
         DE_PROP_COUNTING" - Super Resolution", superRes ? psEnable : psDisable))
             return 1;
         mLastSuperResolution = superRes ? 1 : 0;
     }
-    if ((fabs(FPS - mLastFPS) > 1.e-3 || !mTrustLastSettings) && !mLastLiveMode
+    if ((fabs(FPS - mLastFPS) > 1.e-3 || !mTrustLastSettings) && !mLiveThread
       && SetFramesPerSecond(FPS))
       return 1;
   }
@@ -1228,7 +1253,7 @@ int DirectElectronCamera::SetAlignInServer(int alignFrames)
 {
   CSingleLock slock(&m_mutex);
   if (slock.Lock(1000)) {
-    if ((alignFrames != mLastServerAlign || !mTrustLastSettings) && !mLastLiveMode) {
+    if ((alignFrames != mLastServerAlign || !mTrustLastSettings) && !mLiveThread) {
       if (!setStringWithError(
         mServerVersion >= DE_HAS_NEW_MOT_COR_PROP ? psMotionCorNew : psMotionCor, 
         alignFrames > 0 ? psEnable : psDisable))
@@ -1258,7 +1283,7 @@ int DirectElectronCamera::setROI(int offset_x, int offset_y, int xsize, int ysiz
     needOffset = offset_x != mLastXoffset || offset_y != mLastYoffset;
     needSize = xsize != mLastROIsizeX || ysize != mLastROIsizeY;
     if (sUsingAPI2 > 1 && (hardwareROI != mLastUseHardwareROI || (needSize || needOffset)
-      || !mTrustLastSettings) && !mLastLiveMode) {
+      || !mTrustLastSettings) && !mLiveThread) {
       retVal = mDeServer->SetROI(offset_x, offset_y, xsize, ysize, hardwareROI);
       if (retVal > 0) {
         mLastErrorString = ErrorTrace("ERROR calling SetROI with %d %d %d %d %d",
@@ -1277,7 +1302,7 @@ int DirectElectronCamera::setROI(int offset_x, int offset_y, int xsize, int ysiz
       // Old logic to set hardware ROI if it exists, then software
       if (hardwareROI >= 0 && (hardwareROI != mLastUseHardwareROI ||
         (((newProp && hardwareROI > 0) || sUsingAPI2) && (needSize || needOffset)) ||
-        !mTrustLastSettings) && !mLastLiveMode) {
+        !mTrustLastSettings) && !mLiveThread) {
 
         if (mServerVersion < DE_HAS_API2) {
           if (!setStringWithError(psHardwareROI, hardwareROI > 0 ? psEnable : psDisable))
@@ -1328,9 +1353,9 @@ int DirectElectronCamera::setROI(int offset_x, int offset_y, int xsize, int ysiz
       // EValuate what needs setting; of both need to be set, it may be best practice to
       // set to offset to 0 first so the new size is always valid
       needOffset = (offset_x != mLastXoffset || offset_y != mLastYoffset ||
-        !mTrustLastSettings) && !mLastLiveMode;
+        !mTrustLastSettings) && !mLiveThread;
       needSize = (xsize != mLastROIsizeX || ysize != mLastROIsizeY ||
-        !mTrustLastSettings) && !mLastLiveMode;
+        !mTrustLastSettings) && !mLiveThread;
       if (needOffset && needSize) {
         ret3 = justSetIntProperty(newProp ? "Crop Offset X" : g_Property_DE_RoiOffsetX,
           0)
@@ -1381,12 +1406,10 @@ int DirectElectronCamera::setROI(int offset_x, int offset_y, int xsize, int ysiz
 }
 
 ///////////////////////////////////////////////////////////////////
-//AcquireImage() routine.  Function will read in the passed
-//exposure time and execute an acquire (except for DE server).  The notification
-//of when the camera has finished acquired
+//SetImageExposureAndMode() routine. 
 //
 ///////////////////////////////////////////////////////////////////
-int DirectElectronCamera::AcquireImage(float seconds)
+int DirectElectronCamera::SetImageExposureAndMode(float seconds)
 {
   CSingleLock slock(&m_mutex);
   int mode;
@@ -1407,11 +1430,9 @@ int DirectElectronCamera::AcquireImage(float seconds)
 
 
 ///////////////////////////////////////////////////////////////////
-//AcquireDarkImage() routine.  Function will read in the Bias
-//image, except for DE Server!.  This function takes into account the exposure time so
-//its more appropriate to state that it reads in the BIAS image.
+//SetDarkExposureAndMode() routine.  
 ///////////////////////////////////////////////////////////////////
-int DirectElectronCamera::AcquireDarkImage(float seconds)
+int DirectElectronCamera::SetDarkExposureAndMode(float seconds)
 {
 
   CSingleLock slock(&m_mutex);
@@ -1435,7 +1456,7 @@ int DirectElectronCamera::SetExposureTimeAndMode(float seconds, int mode)
   }
 
   if ((fabs((double)(seconds - mLastExposureTime)) > 1.e-4 || !mTrustLastSettings) &&
-    !mLastLiveMode) {
+    !mLiveThread) {
     if (!justSetDoubleProperty(g_Property_DE_ExposureTime, seconds)) {
       mLastErrorString = ErrorTrace("ERROR: Could NOT set the exposure time to %.3f",
         seconds);
@@ -1445,7 +1466,7 @@ int DirectElectronCamera::SetExposureTimeAndMode(float seconds, int mode)
   }
   mLastExposureTime = seconds;
 
-  if ((mLastExposureMode != mode || !mTrustLastSettings) && !mLastLiveMode) {
+  if ((mLastExposureMode != mode || !mTrustLastSettings) && !mLiveThread) {
     if (!setStringWithError("Exposure Mode", modeName[mode])) 
       return 1;
     SEMTrace('D', "Exposure mode set to %s", modeName[mode]);
@@ -1453,7 +1474,7 @@ int DirectElectronCamera::SetExposureTimeAndMode(float seconds, int mode)
   mLastExposureMode = mode;
 
   if (mLastAutoRepeatRef >= 0 && (mLastAutoRepeatRef != (mRepeatForServerRef > 0 ? 1 : 0)
-    || !mTrustLastSettings) && !mLastLiveMode) {
+    || !mTrustLastSettings) && !mLiveThread) {
       if (!setStringWithError(psAutoRepeatRef, mRepeatForServerRef > 0 ? 
         psEnable : psDisable))
           return 1;
@@ -1540,17 +1561,6 @@ void DirectElectronCamera::StopAcquistion()
     mDeServer->abortAcquisition();
     m_STOPPING_ACQUISITION = true;
   } 
-}
-
-
-
-///////////////////////////////////////////////////////////////////
-//isImageAcquistionDone() routine.  Routine used to determine when its appropriate to 
-// get image, except for DE Server where it does nothing!
-///////////////////////////////////////////////////////////////////
-bool DirectElectronCamera::isImageAcquistionDone()
-{
-  return true;
 }
 
 int DirectElectronCamera::setDebugMode()
@@ -1767,7 +1777,7 @@ int DirectElectronCamera::setCorrectionMode(int nIndex, int readMode)
   }
 
   if (readMode > 0 && (normCount != mLastNormCounting || !mTrustLastSettings) && 
-    !IsApolloCamera() && !mLastLiveMode) {
+    !IsApolloCamera() && !mLiveThread) {
     if (!setStringWithError(mAPI2Server ? 
       "Event Counting - Apply Post-Counting Gain" :
       DE_PROP_COUNTING" - Apply Post-Counting Gain", normCount ? psEnable : psDisable))
@@ -1778,7 +1788,7 @@ int DirectElectronCamera::setCorrectionMode(int nIndex, int readMode)
   // Set the output bits if they are not normalized
   if (mLastSaveFlags > 0 && mNormAllInServer && mServerVersion < DE_HAS_AUTO_PIXEL_DEPTH
     && (!normDoseFrac || nIndex < 2 || (readMode > 0 && !normCount)) && 
-    (bits != mLastUnnormBits || !mTrustLastSettings) && !mLastLiveMode) {
+    (bits != mLastUnnormBits || !mTrustLastSettings) && !mLiveThread) {
       str.Format("%dbit", bits);
       if (!setStringWithError(DE_PROP_AUTOMOVIE"Format for Unnormalized Movie",
         (LPCTSTR)str))
@@ -1787,7 +1797,7 @@ int DirectElectronCamera::setCorrectionMode(int nIndex, int readMode)
   }
 
   // Set the general correction mode
-  if ((nIndex != mLastProcessing || !mTrustLastSettings) && !mLastLiveMode) {
+  if ((nIndex != mLastProcessing || !mTrustLastSettings) && !mLiveThread) {
     if (!mAPI2Server) {
       if (!setStringWithError("Correction Mode", corrections[nIndex]))
         return 1;
@@ -1801,7 +1811,7 @@ int DirectElectronCamera::setCorrectionMode(int nIndex, int readMode)
 
   // Set the movie correction for newer server
   if (mServerVersion >= DE_HAS_MOVIE_COR_ENABLE &&
-    (movieCorrEnable != mLastMovieCorrEnabled || !mTrustLastSettings) && !mLastLiveMode) {
+    (movieCorrEnable != mLastMovieCorrEnabled || !mTrustLastSettings) && !mLiveThread) {
     if (!mAPI2Server) {
       if (!setStringWithError(DE_PROP_AUTOMOVIE"Image Correction",
       movieCorrEnable ? psEnable : psDisable))
