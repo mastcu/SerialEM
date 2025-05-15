@@ -109,7 +109,7 @@ public:
   void ExternalTaskError(CString &errStr);
   void MGActMessageBox(CString &errStr);
   int RealignReloadedGrid(CMapDrawItem *item, float expectedRot, bool moveInZ,
-    float maxRotation, int transformNav, CString &errStr, int jcdInd = -1);
+    float maxRotation, int transformNav, CString &errStr, int jcdInd = -1, bool needState = true);
   int LoadOrReloadMapIfNeeded(CMapDrawItem *item, int maxBin, CString &errStr);
   void CentroidsFromMeansAndPctls(IntVec &ixVec, IntVec &iyVec, FloatVec &xStage, FloatVec &yStage,
     FloatVec &meanVec, FloatVec &midFracs, FloatVec &rangeFracs, float fracThresh, int &meanIXcen, int &meanIYcen,
@@ -144,7 +144,7 @@ public:
   void CloseMainLogOpenForGrid(const char *suffix);
   int OpenNewMontageFile(MontParam &montP, CString &str);
   int OpenFileForFinalAcq();
-  int RealignToGridMap(int jcdInd, bool askIfSave, bool applyLimits, CString &errStr);
+  int RealignToGridMap(int jcdInd, bool askIfSave, bool applyLimits, CString &errStr, bool needState = true);
   int PrepareAlignToGridMap(int jcdInd, bool askIfSave, CMapDrawItem **itemP, CString &errStr);
   int RefineGridMapAlignment(int jcdInd, int stateNum, bool askIfSave, CString &errStr);
   int ReloadGridMap(CMapDrawItem *item, int useBin, CString &errStr);
@@ -176,6 +176,7 @@ public:
   void TransformStoredVectors(MGridMultiShotParams &mgParam, ScaleMat mat);
   void ApplyVectorsIfSavedAndOK(int jcdInd);
   int LoadAllGridMaps(int startBuf, CString &errStr);
+  void ReportRecParams(const char *where);
   bool GetGridMapLabel(int mapID, CString &value);
   int GetCurrentGridID();
   int SaveSessionFile(CString &errStr);

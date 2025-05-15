@@ -724,7 +724,8 @@ void CMultiGridTasks::MGActMessageBox(CString &errStr)
  * Start procedure to realign after loading grid
  */
 int CMultiGridTasks::RealignReloadedGrid(CMapDrawItem *item, float expectedRot, 
-  bool moveInZ, float maxRotation, int transformNav, CString &errStr, int jcdInd)
+  bool moveInZ, float maxRotation, int transformNav, CString &errStr, int jcdInd,
+  bool needState)
 {
   ControlSet *conSet = mWinApp->GetConSets() + TRACK_CONSET;
   int numPieces, numFull, ixMin, iyMin, ixMax, iyMax, midX, midY, delX, delY;
@@ -980,7 +981,7 @@ int CMultiGridTasks::RealignReloadedGrid(CMapDrawItem *item, float expectedRot,
   if (mScope->GetColumnValvesOpen() < 1)
     mScope->SetColumnValvesOpen(true);
 
-  mRRGdidSaveState = true; //!mWinApp->LowDoseMode();
+  mRRGdidSaveState = needState; //!mWinApp->LowDoseMode();
   if (mRRGdidSaveState) {
     mNavHelper->SetTypeOfSavedState(STATE_NONE);
     mNavHelper->SaveCurrentState(STATE_MAP_ACQUIRE, 0, item->mMapCamera, 0);
@@ -1272,6 +1273,7 @@ void CMultiGridTasks::AlignNewReloadImage()
       StopMultiGrid();
     return;
   }
+
   StopMultiGrid();
 
   // Get transformation
@@ -3548,7 +3550,8 @@ void CMultiGridTasks::DoNextSequenceAction(int resume)
 
     // Start routine to realign to grid map
   case MGACT_REALIGN_TO_LMM:
-    if (RealignToGridMap(mJcdIndsToRun[mCurrentGrid], false, true, errStr)) {
+    if (RealignToGridMap(mJcdIndsToRun[mCurrentGrid], false, true, errStr, 
+      !mParams.setLMMstate)) {
       errStr += "\r\nMarking grid as failed due to this failure to realign to map";
       ChangeStatusFlag(mCurrentGrid, MGSTAT_FLAG_FAILED, 1);
       SaveSessionFileWarnIfError();
@@ -4196,13 +4199,13 @@ int CMultiGridTasks::OpenFileForFinalAcq()
  * and starts realign routine which will reload map if needed
  */
 int CMultiGridTasks::RealignToGridMap(int jcdInd, bool askIfSave, bool applyLimits, 
-  CString &errStr)
+  CString &errStr, bool needState)
 {
   CMapDrawItem *item;
   if (PrepareAlignToGridMap(jcdInd, askIfSave, &item, errStr))
     return 1;
   if (RealignReloadedGrid(item, 0., true, mRRGMaxRotation, applyLimits ? 2 : 1, errStr,
-    jcdInd))
+    jcdInd, needState))
     return 1;
   return 0;
 }
@@ -4860,6 +4863,17 @@ int CMultiGridTasks::LoadAllGridMaps(int startBuf, CString &errStr)
   mWinApp->SetCurrentBuffer(startBuf);
   mWinApp->mBufferManager->SetShiftsOnAcquire(saveRolls);
   return 0;
+}
+
+// For debug output if needed for tracing a parameter
+void CMultiGridTasks::ReportRecParams(const char * where)
+{
+  int curcam = mWinApp->GetCurrentCamera();
+  ControlSet *conSet = mWinApp->GetConSets() + RECORD_CONSET;
+  ControlSet *camConSet = mWinApp->GetCamConSets() + RECORD_CONSET + MAX_CONSETS * curcam;
+  PrintfToLog("From %s: working %.3f  save %d %d  cam %.3f  save %d %d", where, 
+    conSet->exposure, conSet->saveFrames, conSet->doseFrac, camConSet->exposure,
+    camConSet->saveFrames, camConSet->doseFrac);
 }
 
 bool CMultiGridTasks::GetGridMapLabel(int mapID, CString &value)
