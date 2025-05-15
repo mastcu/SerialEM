@@ -10,6 +10,9 @@ If StringInStr($CmdLine[1], "aperture") Then
 ElseIf StringInStr($CmdLine[1], "apBySize") Then
    Call("ApertureBySize", $CmdLine[2], $CmdLine[3])
    Exit(0)
+ElseIf StringInStr($CmdLine[1], "beamStop") Then
+   Call("BeamStop", $CmdLine[2], $CmdLine[3])
+   Exit(0)
 Endif
 Exit(1)
 
@@ -37,4 +40,11 @@ Func ApertureBySize($AP, $SEL)
     $comboNames[4] = "[CLASS:ComboBox; INSTANCE:5]"
     WinActivate ("[TITLE:Apertures; CLASS:#32770; W:243; H:225]")
     ControlSend ("Apertures", "",$comboNames[$AP], $SEL)
+EndFunc
+
+Func BeamStop($XX, $YY)
+    $hWnd = "Flucam Viewer"
+    If WinExists($hWnd) Then WinActivate($hWnd)
+    WinWaitActive($hWnd)
+    ControlClick($hWnd, "", "[NAME:toolStripLeft]", "left", 1, $XX, $YY)
 EndFunc

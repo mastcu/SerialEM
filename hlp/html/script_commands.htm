@@ -3601,8 +3601,9 @@
           <TD class="scriptcommand">SetBeamStopPosition #</TD>
           <TD>Inserts or retracts the beam stop if <b>#</b> is 1 or 0.&nbsp; On Thermo/FEI scopes,
             it will use UTAPI if available, otherwise UI Automation, in which case the Flucam Viewer 
-            must be open.&nbsp; The UI Automation has been found to work on a Windows 10 Glacios but 
-            has failed on two scopes under Windows 7.&nbsp; A value of 2 will insert the beam
+            must be open.&nbsp; The UI Automation has been found to work on a Windows 10 Glacios, but in
+            Windows 7, it fails unless SEM-AutoIT.exe is present, since it is needed to press the  button.
+            &nbsp; A value of 2 will insert the beam
              stop halfway, but this call always goes through UI Automation because UTAPI does 
             not support this position.
           </TD>
@@ -4988,7 +4989,8 @@
           <TD>Loads the montage piece of the map containing the Navigator point whose index is specified by 
             <b>#</b>: the current Navigator item or the one being acquired if <b>#</b> is 0, or 
             the item whose index in the table is <B>#</B> if <B>#</B> is positive, or that number of items
-             from the end if it is negative.&nbsp; If the map that the point is drawn on is not a montage,
+             from the end if it is negative.&nbsp; The program will access only the map that the point was drawn on;
+            if it is not a montage,
             the single image will be loaded.&nbsp; The image will be in buffer A.&nbsp; Command added in 4.2, 2-Apr-25.
           </TD>
         </TR>
@@ -5574,7 +5576,7 @@
           <TD>Centers on the specified item by first realigning to the map that the item was drawn
               on, then using image shift to center on the marked item.&nbsp;  The specified item
               must have been drawn on a higher-magnification map that can be aligned to in two rounds
-              using some lower mignification map, such as an anchor map.  For <b>#I</b>, enter 0 for
+              using some lower magnification map, such as an anchor map.  For <b>#I</b>, enter 0 for
               the current item or the item being acquired; an index greater than 0 for the item with
               that index in the table; or a value less than 0 to count back from the end of the
               table, where -1 is the last item.  For <b>#R</b>, enter 1 to restore the microscope state
