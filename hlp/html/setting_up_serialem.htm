@@ -224,7 +224,7 @@
         <BR>
         <A href="#separate_kv">Setting Up for a Separate Voltage</A><br />
         <a href="#nanoprobe">Setting Up to Use Nanoprobe TEM on Thermo/FEI Scopes </a>&nbsp;<BR>
-        <a href="#apertures">Controlling Apertures on Thermo/FEI Scopes </a>&nbsp;<BR>
+        <a href="#apertures">Controlling Apertures and Beam Stop on Thermo/FEI Scopes </a>&nbsp;<BR>
         <a href="#alpha_beamshift">Alpha and Beam Shift Calibration Issues on JEOL scopes </a>&nbsp;<BR>
         <a href="#using_gpu">Setting Up to Use a GPU for Frame Alignment</a>&nbsp;<BR>
         <a href="#adding_nvidia">Adding an NVIDIA card to a K2/K3 Computer</a>&nbsp;<BR>
@@ -3865,28 +3865,29 @@ MoveStage 0 0 -$zRange / 2.
       mode.&nbsp; After establishing the basic beam position in each mode with this
       procedure, you can then apply additional beam shifts as necessary.</p>
       <P>&nbsp;</P>
-        <p><a name="apertures"></a><B>Controlling Apertures on Thermo/FEI Scopes &nbsp;</B><BR>
-          <p>Apertures can be controlled on Thermo/FEI scopes through UTAPI scripting.  If that
-             interface is not available, SerialEM can control apertures using Microsoft 'UI 
+        <p><a name="apertures"></a><B>Controlling Apertures and Beam Stop on Thermo/FEI Scopes &nbsp;</B><BR>
+          <p>Apertures and the beam stop can be controlled on Thermo/FEI scopes through UTAPI scripting.  If that
+             interface is not available, SerialEM can control them using Microsoft 'UI 
             Automation' instead of with Thermo/FEI scripting commands.&nbsp;For this to work, the 
-            microscope software must be running on Windows 7 or above, the TEM user 
-            interface must be open, and the Apertures panel must be included on 
+            microscope software must be running on Windows 7 or above and the TEM user 
+            interface must be open.&nbsp; To use apertures, the Apertures panel must be included on 
             some tab in the Workset area of the TEM user interface (if the TEM interface is minimized, the program should manage to 
             raise it).&nbsp;If the Apertures panel is not in the current tab, the program 
             will first try to open it with the combo box in the lower.&nbsp; If that fails, 
             the Workset tab will be 
             switched to one with the panel.&nbsp; This switching has killed the TEM 
             interface on one system, so there is an environment variable, 
-            FEISEM_NO_WORKSET_TABBING, that can be set to any value to prevent it.</p>
+            FEISEM_NO_WORKSET_TABBING, that can be set to any value to prevent it.&nbsp; To 
+            control the beam stop, the Flucam Viewer must be open.</p>
       <p>&nbsp;The UI Automation alone 
             cannot change an aperture size in Windows 7, and in some Windows 10 systems.&nbsp; 
-            In these cases, copy the compiled AutoIT program SEM-AutoIT.exe from the 
+            Similarly, it fails to move the beam stop in Windows 7.&nbsp; In these cases, copy the compiled AutoIT program SEM-AutoIT.exe from the 
             SerialEM program package to either the directory with the SerialEM executable 
             (when running directly on the scope) or to the same location as 
             FEI-SEMserver.exe, when running through that.&nbsp; If desired, you can place 
             this file elsewhere and define the environment variable SEM_AUTOIT_DIR with the 
             full path to that location.</p>
-      <p>When changing size fails on these systems, the TEM interface will show the 
+      <p>When changing aperture size fails on these systems, the TEM interface will show the 
         desired change.&nbsp; To assess whether this is happening on a Windows 10 
         system, go to a lower magnification where you can see the objective aperture in 
         an image, and use a script command 'SetApertureSize 2 X' to change the size to 
@@ -3918,7 +3919,7 @@ MoveStage 0 0 -$zRange / 2.
         similarly affect how the selection of a panel in the combo box in the lower 
         right operates.</p>
       <p>For Thermo/FEI server version 7.18.1 and higher, the new 
-        UTAPI scripting can be used to control the apertures, provided that a license is 
+        UTAPI scripting can be used to control the apertures and beam stop, provided that a license is 
         installed.&nbsp; Access to this 
         scripting is activated with a property 'UseUtapiScripting 1'.</p>
       <p>&nbsp;</p>
