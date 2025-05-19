@@ -12831,8 +12831,8 @@ int CMacCmd::ReportLastHoleVectors(void)
       index = mLdParam[RECORD_CONSET].magIndex;
     if (!index)
       ABORT_LINE("There is no Record magnification index to use for:\n\n");
+    msParams->canUndoRectOrHex = 0;
   }
-  msParams->canUndoRectOrHex = 0;
   numDir = mNavHelper->mHoleFinderDlg->ConvertHoleToISVectors(index, settingMulti, xVecs,
     yVecs, mStrCopy);
   if (!numDir)
@@ -12848,7 +12848,7 @@ int CMacCmd::ReportLastHoleVectors(void)
       B3DCHOICE(index < 0, "image", index ? "IS" : "stage"), xVecs[0], yVecs[0], xVecs[1],
       yVecs[1], xVecs[2], yVecs[2]);
   else
-    mLogRpt.Format("Hole %s vector  s are %.4g, %.4g and %.4g, %.4g", B3DCHOICE(index < 0,
+    mLogRpt.Format("Hole %s vectors are %.4g, %.4g and %.4g, %.4g", B3DCHOICE(index < 0,
       "image", index ? "IS" : "stage"), xVecs[0], yVecs[0], xVecs[1], yVecs[1]);
   return 0;
 }
