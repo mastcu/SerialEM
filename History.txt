@@ -3,11 +3,13 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+5/18/25: Fixed crash in ReportLastHoleVectors (in 4.2).
+
 5/15/25: Fixed management of imaging states when realigning to a grid map in a
 multigrid run (In 4.2).
 
 5/15/25: Improved beam stop control on Thermo scopes to work through
-SEM_AutoIT if it present (In 4.2).
+SEM-AutoIT if it is present (In 4.2).
 
 5/13/25: SEM_4-2-0 stable
 5/13/25: Fixed some problems with DE-MC being used between images and a
