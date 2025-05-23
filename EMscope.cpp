@@ -7225,7 +7225,8 @@ BOOL CEMscope::CassetteSlotStatus(int slot, int &status, CString &names, int *nu
         status = -1;
       success = true;
     }
-    if (mFEIhasApertureSupport && mPlugFuncs->GetCartridgeInfo && !numSlotsPtr) {
+    if (mFEIhasApertureSupport && mPlugFuncs->GetCartridgeInfo && !numSlotsPtr && 
+      status >= 0) {
       success = true;
       if (!slot)
         status = 0;

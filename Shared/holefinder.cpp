@@ -3067,6 +3067,13 @@ void HoleFinder::assignGridPositions
   gridY.clear();
   gridX.resize(numPoints, -1);
   gridY.resize(numPoints, -1);
+  if (numPoints == 1) {
+    gridX[0] = 0;
+    gridY[0] = 0;
+    avgAngle = 0.;
+    avgLen = 100.;
+    return;
+  }
 
   if (avgAngle < -180) {
     avgAngle = 0.;
