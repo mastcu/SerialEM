@@ -119,6 +119,7 @@ enum UtapiSupportTypes {
 #define axisA 8
 #define axisB 16
 enum { lpRegular = 1, lpEFTEM };
+enum {CassetteSlotStatus_Unknown, CassetteSlotStatus_Occupied, CassetteSlotStatus_Empty };
 enum {spUnknown = 1, spUp, spDown};
 enum JeolScreenPosition 
   {

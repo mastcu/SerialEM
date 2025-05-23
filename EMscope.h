@@ -41,7 +41,6 @@ enum {CAL_NTRL_FIND = 0, CAL_NTRL_RESTORE, CAL_NTRL_FOCUS};
 #define CONDENSER_APERTURE 1
 #define JEOL_C1_APERTURE   0
 
-enum {CassetteSlotStatus_Unknown, CassetteSlotStatus_Occupied, CassetteSlotStatus_Empty};
 enum {RefrigerantLevel_AutoloaderDewar = 0,
     RefrigerantLevel_ColumnDewar, RefrigerantLevel_HeliumDewar};
 enum { JAL_STATION_UNKNOWN = 0, JAL_STATION_MAGAZINE, JAL_STATION_STORAGE, JAL_STATION_STAGE };
