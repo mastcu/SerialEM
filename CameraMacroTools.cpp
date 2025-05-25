@@ -496,8 +496,6 @@ void CCameraMacroTools::OnButstop()
   } else if (mWinApp->mScope->DoingSynchroThread() ||
     mWinApp->mBufferManager->DoingSychroThread()) {
     mDeferredUserStop = true;
-    mWinApp->mMainFrame->GetStatusText(MEDIUM_PANE, str);
-    mMediumWasEmpty = str.IsEmpty();
     mWinApp->SetStatusText(MEDIUM_PANE, "STOPPING...");
   } else {
     DoUserStop();
@@ -510,7 +508,7 @@ void CCameraMacroTools::DoUserStop(void)
   mUserStop = TRUE;
   mWinApp->ErrorOccurred(0);
   mUserStop = FALSE;
-  if (mDeferredUserStop && mMediumWasEmpty)
+  if (mDeferredUserStop)
     mWinApp->SetStatusText(MEDIUM_PANE, "");
   mDeferredUserStop = false;
 }

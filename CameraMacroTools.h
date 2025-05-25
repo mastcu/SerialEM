@@ -105,7 +105,6 @@ private:
   BOOL mUserStop;     // Flag that user pushed stop
   bool mEnabledSearch;
   bool mDeferredUserStop;
-  bool mMediumWasEmpty;
   bool mStopEnabled;
   int mLastRowsShown;
   int mLastLinesShown;
