@@ -4741,10 +4741,15 @@ int CMacroProcessor::PiecesForMinimumSize(float minMicrons, int camSize,
 int CMacroProcessor::EnsureMacroRunnable(int macnum)
 {
   int err, tryLevel = 0;
+  CString *names, nam;
   if (mMacroEditer[macnum])
     mMacroEditer[macnum]->TransferMacro(true);
   if (mMacros[macnum].IsEmpty()) {
-    SEMMessageBox("The script you selected to run is empty", MB_EXCLAME);
+    names = mWinApp->GetMacroNames();
+    nam = names[macnum];
+    if (nam.IsEmpty())
+      nam.Format("# %d", macnum + 1);
+    SEMMessageBox(("The script you selected to run (" + nam) + ") is empty", MB_EXCLAME);
     return 1;
   } 
   PrepareForMacroChecking(macnum);
