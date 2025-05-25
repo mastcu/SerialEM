@@ -9957,7 +9957,7 @@ void CNavigatorDlg::AcquireAreas(int source, bool dlgClosing, bool useTempParams
       if (loop == 2 && runPostmacro)
         macnum = (mUseTSprePostMacros ?
           mAcqParm->postMacroInd : mAcqParm->postMacroIndNonTS) - 1;
-      if (loop == 3)
+      if (loop == 3 && runExtramacro)
         macnum = mAcqParm->extraMacroInd - 1;
       if (loop == 0)
         macnum = mAcqParm->macroIndex - 1;
