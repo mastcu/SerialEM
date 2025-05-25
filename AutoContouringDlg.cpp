@@ -1190,7 +1190,7 @@ UINT CAutoContouringDlg::AutoContProc(LPVOID pParam)
     nyRed = (int)(nyBuf / redFac);
     xOffset = (float)(nxBuf - redFac * nxRed) / 2.f;
     yOffset = (float)(nyBuf - redFac * nyRed) / 2.f;
-    if (nxRed < 100 || nyRed < 100) {
+    if (nxRed < 50 || nyRed < 50) {
       acd->errString.Format("The size reduction by %.1f would make the size too small,"
         " %d x %d", redFac, nxRed, nyRed);
       return 1;
