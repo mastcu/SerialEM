@@ -2429,14 +2429,9 @@ int EMmontageController::SavePiece()
   image = mImBufs[0].mImage;
   type = image->getType();
   dataSizeForMode(type, &dataSize, &i);
-  if (GetDebugOutput('1') && (!mReadingMontage || !mSeqIndex)) {
-    mWinApp->SetCurrentBuffer(0);
-    fullArrayMinMaxMean(image->getData(), type, image->getWidth(),
-      image->getHeight(), &specX, &specY, &xPeak);
-    PrintfToLog("Piece %d  min/max/mean:  %.2f %.2f %.3f", mPieceIndex,
-      specX, specY, xPeak);
-  }
-  if (!BOOL_EQUIV(mExpectingFloats, dataSize == 4)) {
+
+  // 5/27/25: Removed debug output on piece min/max/mean
+   if (!BOOL_EQUIV(mExpectingFloats, dataSize == 4)) {
     report.Format("SavePiece in montaging got a %s image when expecting %s",
       mExpectingFloats ? "integer" : "float", mExpectingFloats ? "floats" : "integers");
     SEMMessageBox(report);
