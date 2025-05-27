@@ -231,10 +231,10 @@ int CShiftManager::SetAlignShifts(float newX, float newY, BOOL incremental,
                   EMimageBuffer *imBuf, BOOL doImShift)
 {
   float oldX, oldY, delX, delY, defocus = 0.;
-  double delISX, delISY, fracX, fracY, angle, intensity, xTiltFac, yTiltFac;
+  double delISX, delISY, fracX, fracY, angle, intensity = 0.5, xTiltFac, yTiltFac;
   double fieldFrac = 0.;
   double absMove = 0.;
-  int limitX, limitY, magInd, camera, spot;
+  int limitX, limitY, magInd = 17, camera, spot = 3;
   ScaleMat bMat, bInv;
   int binning;
   MontParam *montParam = mWinApp->GetMontParam();
