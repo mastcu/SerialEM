@@ -118,6 +118,7 @@ CShiftManager::CShiftManager()
     mInterSetShifts.binning[i] = 0;
   mUseSquareShiftLimits = -1;
   mC2SpacingForHighFocus = 0.2f;
+  mAcquireWhenShiftDone = -1;
 }
 
 CShiftManager::~CShiftManager()
@@ -228,7 +229,7 @@ void CShiftManager::SetPeaksToEvaluate(int maxPeaks, float minStrength)
 
 // Set the shift of an image, and possibly change the image shift as well
 int CShiftManager::SetAlignShifts(float newX, float newY, BOOL incremental,
-                  EMimageBuffer *imBuf, BOOL doImShift)
+                  EMimageBuffer *imBuf, BOOL doImShift, BOOL imposeOnImage)
 {
   float oldX, oldY, delX, delY, defocus = 0.;
   double delISX, delISY, fracX, fracY, angle, intensity = 0.5, xTiltFac, yTiltFac;
@@ -244,7 +245,7 @@ int CShiftManager::SetAlignShifts(float newX, float newY, BOOL incremental,
   int shiftedBuf = mBufferManager->MainImBufIndex(imBuf);
   BOOL montOverview = shiftedBuf == 1  && imBuf->IsMontageOverview() &&
     (mWinApp->Montaging() || imBuf->mCaptured == BUFFER_PRESCAN_OVERVIEW);
-  BOOL imposeShift = true;
+  BOOL imposeShift = imposeOnImage;
 
   if (!imBuf->mImage)
     return 1;
@@ -299,10 +300,10 @@ int CShiftManager::SetAlignShifts(float newX, float newY, BOOL incremental,
            absMove >= mMouseStageAbsThresh)) ||
          (montOverview && montParam->moveStage)))) {
       imposeShift = ImposeImageShiftOnScope(imBuf, delX, delY, magInd, camera, 
-        incremental, mMouseShifting);
+        incremental, mMouseShifting) && imposeOnImage;
 
       // Otherwise, proceed with stage move if at end of shift
-    } else if (mMouseEnding) {
+    } else if (mMouseEnding && (delX || delY)) {
       if (mScope->StageBusy() > 0) {
         AfxMessageBox(_T("Stage is busy - shift cancelled"));
         imposeShift = false;
@@ -466,10 +467,34 @@ void CShiftManager::AlignmentShiftToMarker(BOOL forceStage)
   mMouseEnding = true;
   mShiftPressed = forceStage;
   SetAlignShifts(-(float)(imBuf->mUserPtX - imBuf->mImage->getWidth() / 2.),
-    -(float)(imBuf->mUserPtY - imBuf->mImage->getHeight() / 2.), false, imBuf);
+    -(float)(imBuf->mUserPtY - imBuf->mImage->getHeight() / 2.), false, imBuf, true);
   mMouseEnding = false;
   mShiftPressed = false;
 }
+
+// Higher-level operation: start shift to clicked position then acquire image there
+void CShiftManager::AcquireAtRightDoubleClick(EMimageBuffer *imBuf, float shiftX, 
+  float shiftY, BOOL forceStage)
+{
+
+  // Set up control set to acquire
+  mAcquireWhenShiftDone = imBuf->mConSetUsed;
+  if (mAcquireWhenShiftDone == RECORD_CONSET && mWinApp->LowDoseMode())
+    mAcquireWhenShiftDone = PREVIEW_CONSET;
+  mMouseEnding = true;
+  mShiftPressed = forceStage;
+  SetAlignShifts(-(float)(shiftX - imBuf->mImage->getWidth() / 2.),
+    -(float)(shiftY - imBuf->mImage->getHeight() / 2.), false, imBuf, true, false);
+  mMouseEnding = false;
+  mShiftPressed = false;
+
+  // If it was not a stage move, do the shot now
+  if (!mScope->StageBusy()) {
+    mCamera->InitiateCapture(mAcquireWhenShiftDone);
+    mAcquireWhenShiftDone = -1;
+  }
+}
+
 
 // Align the image in A against the image in the autoalign buffer or the buffer indicated
 // by bufIndex > 0, or to an autocorrelation if bufIndex is -1
@@ -1641,8 +1666,13 @@ void CShiftManager::ResetISDone()
 {
   mResettingIS = false;
   mStartedStageMove = false;
-  mWinApp->UpdateBufferWindows();
-  mWinApp->SetStatusText(SIMPLE_PANE, "");
+  if (mAcquireWhenShiftDone >= 0) {
+    mCamera->InitiateCapture(mAcquireWhenShiftDone);
+    mAcquireWhenShiftDone = -1;
+  } else {
+    mWinApp->UpdateBufferWindows();
+    mWinApp->SetStatusText(SIMPLE_PANE, "");
+  }
 }
 
 void CShiftManager::ResetISCleanup(int error)
@@ -1650,6 +1680,7 @@ void CShiftManager::ResetISCleanup(int error)
   if (error == IDLE_TIMEOUT_ERROR)
     mWinApp->mTSController->TSMessageBox(
     _T("Time out trying to move stage while resetting image shift"));
+  mAcquireWhenShiftDone = -1;
   ResetISDone();
   mWinApp->ErrorOccurred(error);
 }

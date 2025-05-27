@@ -87,6 +87,7 @@ BEGIN_MESSAGE_MAP(CSerialEMView, CView)
   ON_WM_LBUTTONUP()
   ON_WM_LBUTTONDBLCLK()
   ON_WM_MBUTTONDBLCLK()
+  ON_WM_RBUTTONDBLCLK()
   ON_WM_ERASEBKGND()
   ON_WM_RBUTTONUP()
   ON_WM_HELPINFO()
@@ -2475,6 +2476,7 @@ void CSerialEMView::SetupZoomAroundPoint(CPoint *point)
 }
 
 // Left double click goes to Navigator for editing points
+// Note that the event sequence is Down, Up, DblClick, Up
 void CSerialEMView::OnLButtonDblClk(UINT nFlags, CPoint point)
 {
   if (mWinApp->mNavigator &&
@@ -2488,6 +2490,24 @@ void CSerialEMView::OnMButtonDblClk(UINT nFlags, CPoint point)
   if (mWinApp->mNavigator && (GetAsyncKeyState(VK_SHIFT) / 2) &&
     !(GetAsyncKeyState(VK_CONTROL) / 2))
     mWinApp->mNavigator->MouseDoubleClick(VK_MBUTTON);
+}
+
+// Right double click to acquire at clicked position
+void CSerialEMView::OnRButtonDblClk(UINT nFlags, CPoint point)
+{
+  EMimageBuffer *imBuf = &mImBufs[mImBufIndex];
+  CRect rect;
+  float shiftX, shiftY;
+  if (!imBuf->mImage || (mWinApp->DoingTasks() && !mWinApp->GetJustNavAcquireOpen()) ||
+    !mMainWindow || !(!mImBufIndex || (mImBufIndex == 1 && imBuf->IsMontageOverview() &&
+    (mWinApp->Montaging() || imBuf->mCaptured == BUFFER_PRESCAN_OVERVIEW))) || 
+    imBuf->mConSetUsed < 0 || 
+    !BOOL_EQUIV(imBuf->mLowDoseArea, mWinApp->LowDoseMode()))
+    return;
+  GetClientRect(&rect);
+  ConvertMousePoint(&rect, imBuf->mImage, &point, shiftX, shiftY);
+  mShiftManager->AcquireAtRightDoubleClick(imBuf, shiftX, shiftY, 
+    GetAsyncKeyState(VK_SHIFT) / 2 != 0);
 }
 
 // Release mouse if it was captured by this window

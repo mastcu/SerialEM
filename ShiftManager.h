@@ -138,6 +138,7 @@ public:
   float GetLastISDelay();
   void EndMouseShifting(int index);
   void AlignmentShiftToMarker(BOOL forceStage);
+  void AcquireAtRightDoubleClick(EMimageBuffer *imBuf, float shiftX, float shiftY, BOOL forceStage);
   void StartMouseShifting(BOOL shiftPressed, int index);
   ScaleMat IStoGivenCamera(int inMagInd, int inCamera);
   double GetImageRotation(int inCamera, int inMagInd);
@@ -150,7 +151,7 @@ public:
   BOOL MemoryError(BOOL inTest);
   BOOL ImageShiftIsOK(double newX, double newY, BOOL incremental);
   int SetAlignShifts(float inX, float inY, BOOL incremental, EMimageBuffer *imBuf,
-    BOOL doImShift = true);
+    BOOL doImShift = true, BOOL imposeOnImage = true);
   void Initialize();
   ScaleMat AdjustedISmatrix(int iCamCal, int iMagCal, int iCamWant, int iMagWant);
   float GetCalibratedImageRotation(int inCamera, int inMagIndex);
@@ -268,6 +269,7 @@ private:
   BOOL mBacklashMouseAndISR;   // Flag to correct backlash in mouse move or reset IS
   BOOL mResettingIS;           // flag that reset is being done
   BOOL mStartedStageMove;      // Flag that stage movement was started from mouse shift
+  int mAcquireWhenShiftDone;   // Control set to acquire after IS or stage move, -1 none
   float mTiltDelay;            // Tilt delay value
   double mResetStageMoveX;     // last stage displacement computes by ResetImageShift
   double mResetStageMoveY;
