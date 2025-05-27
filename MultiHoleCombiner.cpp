@@ -151,7 +151,7 @@ int CMultiHoleCombiner::CombineItems(int boundType, BOOL turnOffOutside, int inX
     }
   }
 
-  mDebug = 0; //GetDebugOutput('C');
+  mDebug = (GetDebugOutput('C') && GetDebugOutput('*')) ? 1 : 0;
   mUseImageCoords = false;
   mGroupIDsInPoly.clear();
   hexGrid = msParams->doHexArray ? 1 : 0;
@@ -341,21 +341,18 @@ int CMultiHoleCombiner::CombineItems(int boundType, BOOL turnOffOutside, int inX
         camera);
       hxHex[ind] = (float)hx;
       hyHex[ind] = (float)hy;
-      if (mDebug)
-        PrintfToLog("%d: Grid %.3f %.3f  IS %.3f %.3f", ind, gridXvecs[ind], 
-          gridYvecs[ind], hx, hy);
+      SEMTrace('C', "%d: Grid %.3f %.3f  IS %.3f %.3f", ind, gridXvecs[ind],
+        gridYvecs[ind], hx, hy);
     }
-    if (mDebug)
-      PrintfToLog("GridStMat %.3f %.3f %.3f %.3f", gridStMat.xpx, gridStMat.ypx,
-        gridStMat.xpy, gridStMat.ypy);
+    SEMTrace('C', "GridStMat %.3f %.3f %.3f %.3f", gridStMat.xpx, gridStMat.ypx,
+      gridStMat.xpy, gridStMat.ypy);
 
 
     // This gives best estimate of first two vectors in IS space at the given mag
     // multiply by IS to Stage to get these vectors in stage space
     lsFit2(xfit, yfit, hxHex, 3, &holeInv.xpx, &holeInv.xpy, NULL);
     lsFit2(xfit, yfit, hyHex, 3, &holeInv.ypx, &holeInv.ypy, NULL);
-    if (mDebug)
-      PrintfToLog("holeInv %.3f %.3f %.3f %.3f", holeInv.xpx, holeInv.ypx,
+    SEMTrace('C', "holeInv %.3f %.3f %.3f %.3f", holeInv.xpx, holeInv.ypx,
         holeInv.xpy, holeInv.ypy);
     holeMat = MatMul(holeInv, is2st);
     gridAng1 = (float)(atan2f(gridStMat.ypx, gridStMat.xpx) / DTOR);
@@ -397,15 +394,13 @@ int CMultiHoleCombiner::CombineItems(int boundType, BOOL turnOffOutside, int inX
 
     posRotInvertDir = hexPosRot2 != hexPosRot1;
     avgAngle = (float)(atan2f(gridMat.ypx, gridMat.xpx) / DTOR);
-    if (mDebug) {
-      PrintfToLog("  Stage vectors from actual positions: %.2f um %.1f deg   %.2f um %.1f deg\r\n"
-        "  Stage vectors from IS vectors: %.2f um %.1f deg   %.2f um %.1f deg\r\n"
-        " Rotations between corresponding vectors: %.1f  %.1f deg",
-        gridDist1, gridAng1, gridDist2, gridAng2,
-        holeDist1, holeAng1, holeDist2, holeAng2, angDiff1, angDiff2);
-      PrintfToLog("posRotInvert %d  avgAngle %f posrot1 %d posrot2 %d", posRotInvertDir,
-        avgAngle, hexPosRot1, hexPosRot2);
-    }
+    SEMTrace('C', "  Stage vectors from actual positions: %.2f um %.1f deg   %.2f um %.1f"
+      " deg\r\n  Stage vectors from IS vectors: %.2f um %.1f deg   %.2f um %.1f deg\r\n"
+      " Rotations between corresponding vectors: %.1f  %.1f deg",
+      gridDist1, gridAng1, gridDist2, gridAng2,
+      holeDist1, holeAng1, holeDist2, holeAng2, angDiff1, angDiff2);
+    SEMTrace('C', "posRotInvert %d  avgAngle %f posrot1 %d posrot2 %d", posRotInvertDir,
+      avgAngle, hexPosRot1, hexPosRot2);
 
   } else {
 
@@ -448,8 +443,7 @@ int CMultiHoleCombiner::CombineItems(int boundType, BOOL turnOffOutside, int inX
         holeMat.xpx, holeMat.xpy, holeMat.ypx, holeMat.ypy);
       return ERR_BAD_UNIT_XFORM;
     }
-    if (mDebug)
-      PrintfToLog(
+    SEMTrace('C',
         " Matrix to xform relative hole positions from %s to IS space: %.3f %.3f %.3f "
         "%.3f\r\n gridMat:  %.3f %.3f %.3f %.3f\r\n %s to IS:  %f  %f  %f  %f\r\n"
         "holeMat: %.3f %.3f %.3f %.3f", mUseImageCoords ? "image" : "stage",
@@ -585,8 +579,7 @@ int CMultiHoleCombiner::CombineItems(int boundType, BOOL turnOffOutside, int inX
           } else {
             mOneDIndexToPosInRing[point] = ((step + hexPosRot1) % 6) * ring + ind;
           }
-          if (mDebug)
-            PrintfToLog("Ring %d  step %d  ind %d  ixy %d %d  point %d  index %d", ring, 
+          SEMTrace('C', "Ring %d  step %d  ind %d  ixy %d %d  point %d  index %d", ring,
               step, ind, ix, iy, point, mOneDIndexToPosInRing[point]);
           if (ring > 1) {
             tripletsDelX[step / 2].push_back(ix);
@@ -595,7 +588,6 @@ int CMultiHoleCombiner::CombineItems(int boundType, BOOL turnOffOutside, int inX
         }
       }
     }
-    mDebug = 0;
 
     // Try hexes centered so that the center point is at all possible positions, and
     // try rows pitched above and below X axis
