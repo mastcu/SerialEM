@@ -3,6 +3,9 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+5/27/25: If the property GridReloadMaxRotation is 0, the routine for
+realigning to a reloaded grid will not solve for any rotation (In 4.2).
+
 5/25/25: Fixed checking of "extra" script in Acquire at Items when it is not
 selected or enabled (In 4.2).
 
