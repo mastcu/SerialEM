@@ -1401,7 +1401,7 @@ ScaleMat CMultiGridTasks::FindReloadTransform(float dxyOut[2], float &thetaOut,
   float minLeaveOutForElim = 2.f;
 
   strMat.xpx = 0.;
-  if (fabs(mRRGexpectedRot) > threshForStretch) {
+  if (fabs(mRRGexpectedRot) > threshForStretch && mRRGangleRange != 0.) {
 
     strMat = mShiftManager->GetStageStretchXform();
     if (strMat.xpx) {
@@ -1435,7 +1435,10 @@ ScaleMat CMultiGridTasks::FindReloadTransform(float dxyOut[2], float &thetaOut,
     StatCorrel(&x[0][0], XSIZE, 5, MSIZE, &nPairs, sx, &ss[0][0], &ssd[0][0], &d[0][0],
       &r[0][0], xm, sd, &nCol);
 
-    theta[skip] = atan2(-(ssd[1][3] - ssd[0][4]), (ssd[0][3] + ssd[1][4]));
+    if (mRRGangleRange)
+      theta[skip] = atan2(-(ssd[1][3] - ssd[0][4]), (ssd[0][3] + ssd[1][4]));
+    else
+      theta[skip] = 0.;
     sinth = (float)sin(theta[skip]);
     costh = (float)cos(theta[skip]);
     aM[skip].xpx = costh;
