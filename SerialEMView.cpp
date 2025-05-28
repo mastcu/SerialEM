@@ -2506,7 +2506,7 @@ void CSerialEMView::OnRButtonDblClk(UINT nFlags, CPoint point)
     return;
   GetClientRect(&rect);
   ConvertMousePoint(&rect, imBuf->mImage, &point, shiftX, shiftY);
-  mShiftManager->AcquireAtRightDoubleClick(imBuf, shiftX, shiftY, 
+  mShiftManager->AcquireAtRightDoubleClick(mImBufIndex, shiftX, shiftY, 
     GetAsyncKeyState(VK_SHIFT) / 2 != 0);
 }
 

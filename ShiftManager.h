@@ -138,7 +138,8 @@ public:
   float GetLastISDelay();
   void EndMouseShifting(int index);
   void AlignmentShiftToMarker(BOOL forceStage);
-  void AcquireAtRightDoubleClick(EMimageBuffer *imBuf, float shiftX, float shiftY, BOOL forceStage);
+  void AcquireAtRightDoubleClick(int bufInd, float shiftX, float shiftY, BOOL forceStage);
+  void DoAlignDblClickImage();
   void StartMouseShifting(BOOL shiftPressed, int index);
   ScaleMat IStoGivenCamera(int inMagInd, int inCamera);
   double GetImageRotation(int inCamera, int inMagInd);
@@ -270,6 +271,9 @@ private:
   BOOL mResettingIS;           // flag that reset is being done
   BOOL mStartedStageMove;      // Flag that stage movement was started from mouse shift
   int mAcquireWhenShiftDone;   // Control set to acquire after IS or stage move, -1 none
+  float mRDCexpectedXshift;    // expected shift unadjusted for existing image shift
+  float mRDCexpectedYshift;    // of image clicked on
+  int mRDCclickedBufInd;       // Buffer with clicked-in image
   float mTiltDelay;            // Tilt delay value
   double mResetStageMoveX;     // last stage displacement computes by ResetImageShift
   double mResetStageMoveY;

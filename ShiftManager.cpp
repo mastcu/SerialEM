@@ -43,6 +43,8 @@ static char THIS_FILE[]=__FILE__;
 #define new DEBUG_NEW
 #endif
 
+static void AlignRightDblClickImage();
+
 
 #pragma warning ( disable : 4244 )
 
@@ -473,9 +475,13 @@ void CShiftManager::AlignmentShiftToMarker(BOOL forceStage)
 }
 
 // Higher-level operation: start shift to clicked position then acquire image there
-void CShiftManager::AcquireAtRightDoubleClick(EMimageBuffer *imBuf, float shiftX, 
+void CShiftManager::AcquireAtRightDoubleClick(int bufInd, float shiftX, 
   float shiftY, BOOL forceStage)
 {
+  EMimageBuffer *imBuf = &mImBufs[bufInd];
+  mRDCclickedBufInd = bufInd;
+  mRDCexpectedXshift = (float)(shiftX - imBuf->mImage->getWidth() / 2.);
+  mRDCexpectedYshift = (float)(shiftY - imBuf->mImage->getHeight() / 2.);
 
   // Set up control set to acquire
   mAcquireWhenShiftDone = imBuf->mConSetUsed;
@@ -483,16 +489,54 @@ void CShiftManager::AcquireAtRightDoubleClick(EMimageBuffer *imBuf, float shiftX
     mAcquireWhenShiftDone = PREVIEW_CONSET;
   mMouseEnding = true;
   mShiftPressed = forceStage;
-  SetAlignShifts(-(float)(shiftX - imBuf->mImage->getWidth() / 2.),
-    -(float)(shiftY - imBuf->mImage->getHeight() / 2.), false, imBuf, true, false);
+  SetAlignShifts(-mRDCexpectedXshift, -mRDCexpectedYshift, false, imBuf, true, false);
   mMouseEnding = false;
   mShiftPressed = false;
+  mWinApp->SetStatusText(MEDIUM_PANE, "CENTERING CLICKED POINT");
 
   // If it was not a stage move, do the shot now
   if (!mScope->StageBusy()) {
     mCamera->InitiateCapture(mAcquireWhenShiftDone);
     mAcquireWhenShiftDone = -1;
+    mRDCclickedBufInd = -1;
+    mCamera->SetNewImageCallback(AlignRightDblClickImage);
   }
+}
+
+// Align image if there was a stage move
+void CShiftManager::DoAlignDblClickImage()
+{
+  EMimageBuffer *aliBuf = &mImBufs[mRDCclickedBufInd + 1];
+  float xx, yy;
+  mWinApp->SetStatusText(MEDIUM_PANE, "");
+  if (mRDCclickedBufInd < 0)
+    return;
+
+  // The shift is already defined relative to real image area, so it is used directly in
+  // this test for being within image
+  if (mBufferManager->GetShiftsOnAcquire() < (mRDCclickedBufInd == 1 ? 2 : 1) ||
+    !aliBuf->mImage && !aliBuf->mBinning || (aliBuf->mBinning < mImBufs->mBinning &&
+    (mImBufs->mBinning % aliBuf->mBinning) != 0) ||
+      (aliBuf->mBinning > mImBufs->mBinning && 
+    (aliBuf->mBinning % mImBufs->mBinning) != 0) ||
+    fabs(mRDCexpectedXshift) > aliBuf->mImage->getWidth() / 2. ||
+    fabs(mRDCexpectedYshift) > aliBuf->mImage->getHeight() / 2.)
+    return;
+
+  // But the expected shift for autoalign has to include any existing shift
+  aliBuf->mImage->getShifts(xx, yy);
+  mRDCexpectedXshift = (float)(((mRDCexpectedXshift + xx) * aliBuf->mBinning) /
+    mImBufs->mBinning);
+  mRDCexpectedYshift = (float)(((mRDCexpectedYshift + yy) * aliBuf->mBinning) /
+    mImBufs->mBinning);
+  AutoAlign(mRDCclickedBufInd + 1, 0, 1, 0, NULL, mRDCexpectedXshift, mRDCexpectedYshift);
+  aliBuf->mImage->setShifts(xx, yy);
+}
+
+// Callback function
+void AlignRightDblClickImage()
+{
+  ((CSerialEMApp *)AfxGetApp())->mShiftManager->DoAlignDblClickImage();
 }
 
 
@@ -1669,6 +1713,7 @@ void CShiftManager::ResetISDone()
   if (mAcquireWhenShiftDone >= 0) {
     mCamera->InitiateCapture(mAcquireWhenShiftDone);
     mAcquireWhenShiftDone = -1;
+    mCamera->SetNewImageCallback(AlignRightDblClickImage);
   } else {
     mWinApp->UpdateBufferWindows();
     mWinApp->SetStatusText(SIMPLE_PANE, "");

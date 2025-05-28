@@ -486,6 +486,7 @@ CCameraController::CCameraController()
   mRamperBlankAtEnd = 0;
   mGIFslitWidthScaling = 1.;
   mFalconWarningCount = 0;
+  mNewImageCallback = NULL;
   for (l = 0; l < MAX_CHANNELS; l++)
     mTD.PartialArrays[l] = NULL;
 }
@@ -10746,6 +10747,12 @@ void CCameraController::DisplayNewImage(BOOL acquired)
   if (mTD.ReturnPartialScan < 0 && mTD.UseUtapi) {
     CleanupPartialArrays();
     mTD.ReturnPartialScan = 0;
+  }
+
+  // Call a callback function if any
+  if (mNewImageCallback) {
+    mNewImageCallback();
+    mNewImageCallback = NULL;
   }
   
   // Check for whether to start pending capture

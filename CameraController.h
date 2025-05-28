@@ -27,6 +27,8 @@ class DirectElectronCamera;
 struct CamPluginFuncs;
 class CCEOSFilter;
 class CDoseModulator;
+typedef void(*NewImCallback)(void);
+
 
 #define MAX_DARK_REFS   10
 #define MAX_CHANNELS     8
@@ -641,6 +643,7 @@ public:
   GetSetMember(int, RamperBlankAtEnd);
   GetSetMember(int, MinShotInterval);
   GetSetMember(float, GIFslitWidthScaling);
+  SetMember(NewImCallback, NewImageCallback);
   CameraThreadData *GetCamThreadData() { return &mTD; };
   bool DoingPartialScan() {return mTD.ReturnPartialScan > 0; };
   bool HasCEOSFilter() { return mCEOSFilter != NULL; }
@@ -1108,6 +1111,7 @@ public:
   int mRamperBlankAtEnd;         // Flag for FocusRamper to blank beam at end of ramp/image
   int mMinShotInterval;          // Interval in msec to sleep before a shot
   int mFalconWarningCount;       // Number of times falcon local path warning given
+  NewImCallback mNewImageCallback;  // Function to call with new image in place
 
 
 public:
