@@ -725,7 +725,7 @@ public:
   void TransformMultiShotVectors(MultiShotParams *params, int customOrHex, ScaleMat &aProd);
   int XformISVecsWithSpecOrStage(float *xVecIn, float *yVecIn, int numVec, ScaleMat mat, 
     bool stage, int magInd, int camera, float *xVecOut, float *yVecOut);
-  void AssignNavItemHoleVectors(CMapDrawItem * item);
+  void AssignNavItemHoleVectors(CMapDrawItem * item, MultiShotParams *msParams = NULL);
   int PermuteISvecsToMatchLastUsed(float *xVecIn, float *yVecIn, int hexInd, 
     float &bestRot, float &maxAngDiff, float &maxScaleDiff, float *xVecOut, float *yVecOut);
   void PermuteISVectors(float *xVecIn, float *yVecIn, int numVec, int rotInd, float *xVecOut, float *yVecOut);

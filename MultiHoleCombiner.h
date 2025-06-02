@@ -25,7 +25,7 @@ public:
   CMultiHoleCombiner(void);
   ~CMultiHoleCombiner(void);
 
-  int CombineItems(int boundType, BOOL turnOffOutside, int inXholes = -9, int inYholes = -9);
+  int CombineItems(int boundType, BOOL turnOffOutside, int inXholes = -9, int inYholes = -9, CMapDrawItem *vecItem = NULL);
   void AddItemToCenters(FloatVec &xCenters, FloatVec &yCenters, IntVec &navInds,
     CMapDrawItem *item, int ind, int &drawnOnID);
   bool OKtoUndoCombine(void);

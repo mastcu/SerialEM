@@ -10670,8 +10670,14 @@ void CNavigatorDlg::AcquireNextTask(int param)
             "criteria");
         err = len > 0 ? 0 : 1;
         if (!err && mAcqParm->runHoleCombiner) {
-          err = mHelper->mCombineHoles->CombineItems(0,
-            mHelper->GetMHCturnOffOutsidePoly());
+
+          // When running multigrid, the vectors may not be set up, so tell combine to
+          // use the hole vectors in the map item
+          mapItem = NULL;
+          if (mWinApp->mMultiGridTasks->GetDoingMulGridSeq())
+            mapItem = FindItemWithMapID(mAcqMadeMapWithID);
+           err = mHelper->mCombineHoles->CombineItems(0,
+            mHelper->GetMHCturnOffOutsidePoly(), -9, -9, mapItem);
           if (err)
             SEMMessageBox("Error trying to combine hole for multiple Records:\n" +
               CString(mHelper->mCombineHoles->GetErrorMessage(err)));

@@ -510,13 +510,16 @@
       multi-grid routine.&nbsp; The option to run on a subset of items is changed to 
       allow you set the maximum number of items to run, which is useful if you want a 
       sample of data before running full acquisition, or the maximum number of Record 
-      images when acquiring Multiple Records.&nbsp; To do Multiple Records from multiple holes, you must 
+      images when acquiring Multiple Records.&nbsp; To do Multiple Records from multiple holes 
+      at this stage, you must 
       select the option to 'Use map hole vectors for shifts'.&nbsp; Currently, for 
       this to work well, it will almost certainly require a transformation that was 
       stored by running 'Step To and Adjust' after using hole vectors in the Multiple 
       Record Setup dialog, and the transformation will need to be good for the current 
       conditions.&nbsp; The Acquire at Items dialog will indicate if a transformation 
-      exists.</p>
+      exists.&nbsp; If you select to do hole finding and combining after each map, the 
+      image shift vectors needed to do the combining correctly are taken from the hole 
+      image shift vectors stored in each map.</p>
     <p>&nbsp;</p>
     <p><A NAME="finalAcq"></a><strong><em>Run Final Acquisition</em></strong></p>
     <p>Select the checkbox to include final data acquisition in the run.</p>
@@ -618,7 +621,7 @@
       up the other acquisition, then switch the main action to tilt series and set 
       that up.&nbsp; Leave the dialog with tilt series selected.&nbsp;&nbsp; When 
       running from the multi-grid routine, the program will automatically switch the 
-      acquisition to tilt series when there are items marked for tilt series and now 
+      acquisition to tilt series when there are items marked for tilt series and none 
       marked for Acquire.</p>
     <p>&nbsp;</p>
     <p><A NAME="running"></a><strong><em>Running the Grids, Errors, Pausing, Stopping</em></strong></p>
