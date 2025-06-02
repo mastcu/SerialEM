@@ -11220,7 +11220,7 @@ int CCameraController::CheckFilterSettings()
   CString command;
   BOOL slitIn;
   BOOL tvIn;
-  BOOL imageMode;
+  BOOL imageMode = true;
   int retval = 0;
   CString report;
   DWORD curTime = GetTickCount();

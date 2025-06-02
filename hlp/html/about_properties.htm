@@ -140,9 +140,7 @@
           <TD>Follow with a list of indexes to UTAPI services that should be marked as not 
             available.&nbsp; The indexes correspond to the values of the enum 
             'UtapiSupportTypes' in SerialEM.h.  With the latest UTAPI server (April 2025), only 20 needs
-            to be used for cameras, and only if you have a Ceta 2 or want to save MRC files 
-            from a Falcon.&nbsp; Saving EER files from a Falcon 4 currently works, and MRC saving will be
-             supported in SerialEM 4.2 when problems are resolved.</TD>
+            to be used for cameras, and only if you have a Ceta 2.</TD>
         </TR>
         <TR VALIGN="top">
           <TD>SimulationMode</TD>
@@ -1561,8 +1559,12 @@
           <TD>DetectorName</TD>
           <TD>Use this entry to indicate the required name for a Thermo/FEI CCD camera, if it is
             different from the entry given by 'Name'.&nbsp; Follow with 0 and the name.&nbsp; The name
-            must be 'CCD' for Tecnai versions before 4.1, and names like 'BM-Eagle' and
-            'BM-Falcon' thereafter.</TD>
+            must be 'CCD' for Tecnai versions before 4.1, and names like 'BM-Ceta' and
+            'BM-Falcon' thereafter, with either standard or Advanced scripting.&nbsp; With UTAPI, 
+            set the DebugOutput property to 1 to see the camera names.&nbsp; These names
+            are more elaborate and you will definitely need to use a DetectorName entry in addition to
+            a shorter Name entry.&nbsp; 
+          </TD>
         </TR>
         <TR VALIGN="top">
           <TD>JeolDetectorID</TD>
