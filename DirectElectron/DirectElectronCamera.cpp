@@ -1219,12 +1219,13 @@ int DirectElectronCamera::setBinning(int x, int y, int sizex, int sizey, int har
 int DirectElectronCamera::SetCountingParams(int readMode, double scaling, double FPS)
 {
   CSingleLock slock(&m_mutex);
+  CameraParameters *camP = mCamParams + mCurCamIndex;
   bool superRes = readMode == SUPERRES_MODE;
   mCountScaling = (float)scaling;
   if (!IsApolloCamera() && slock.Lock(1000)) {
     if (((readMode == LINEAR_MODE && mLastElectronCounting != 0) ||
       (readMode > 0 && mLastElectronCounting <= 0) || !mTrustLastSettings) &&
-      !mLiveThread) {
+      (camP->CamFlags & DE_CAM_CAN_COUNT) && !mLiveThread) {
       if (mAPI2Server) {
         if (!setStringWithError("Image Processing - Mode", readMode > 0 ? "Counting" :
           "Integrating"))
