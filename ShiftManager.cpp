@@ -2360,6 +2360,7 @@ void CShiftManager::PropagateRotations(void)
   MagTable *magT = mMagTab;
   int camFallbackDerived[MAX_CAMERAS];
   mAnyAbsRotCal = false;
+  mAnyAbsSTEMrotCal = false;
   mWinApp->mMacroProcessor->SetNonMacroDeferLog(true);
 
   // Clear out existing derived calibrations; see if there are any calibrated rotations
@@ -2372,6 +2373,11 @@ void CShiftManager::PropagateRotations(void)
             SEMTrace('c', "First calibrated absolute rotation of %.2f found at mag %d "
             "for camera %d", magT[iMag].rotation[iCam], iMag, iCam);
           mAnyAbsRotCal = true;
+        } else {
+          if (!mAnyAbsSTEMrotCal)
+            SEMTrace('c', "First calibrated absolute STEM rotation of %.2f found at mag"
+              " %d for camera %d", magT[iMag].rotation[iCam], iMag, iCam);
+          mAnyAbsSTEMrotCal = true;
         }
       } else {
         magT[iMag].rotation[iCam] = 999.;
@@ -2435,8 +2441,8 @@ void CShiftManager::PropagateRotations(void)
                 camP[iCam].extraRotation - camP[iCam2].extraRotation);
               anyCal = true;
               magT[iMag].rotDerived[iCam] = derived + 1;
-              SEMTrace('c', "Mag %d Cam %d  Rotation = %.1f assigned from Cam %d",
-                iMag, iCam, magT[iMag].rotation[iCam], iCam2);
+              SEMTrace('c', "Mag %d Cam %d  Rotation = %.1f assigned from Cam %d by diff"
+                " in ExtraRotations", iMag, iCam, magT[iMag].rotation[iCam], iCam2);
               break;
             }
           }
@@ -2863,11 +2869,13 @@ void CShiftManager::PickMagForFallback(int actCamToDo, int & calMag, int & regCa
 // Prints the warnings about problems with rotations
 int CShiftManager::ReportFallbackRotations(int onlyAbs)
 {
-  int iAct, iCam, ind, retval = 0;
+  int iAct, iCam, ind = 0, retval = 0;
   CString str, str2;
   if (!mAnyAbsRotCal || mCamWithRotFallback.size() > 0) {
     str2 = "WARNING: There is no calibrated absolute rotation information for ";
-    if (!mAnyAbsRotCal)
+    if (mAnyAbsSTEMrotCal)
+      str2 += "any non-STEM camera";
+    else if (!mAnyAbsRotCal)
       str2 += "any camera";
     else {
       ind = 0;
@@ -2881,7 +2889,11 @@ int CShiftManager::ReportFallbackRotations(int onlyAbs)
       }
     }
     if (!mAnyAbsRotCal || ind > 0) {
-      mWinApp->AppendToLog(str2 + ".\r\n  All rotations will rely on GlobalExtraRotation "
+      if (mAnyAbsSTEMrotCal)
+        str2 += ".\r\n  All non-STEM";
+      else
+        str2 += ".\r\n  All";
+      mWinApp->AppendToLog(str2 + " rotations will rely on GlobalExtraRotation "
         "and ExtraRotation properties", LOG_SWALLOW_IF_CLOSED);
       retval = 1;
     }
