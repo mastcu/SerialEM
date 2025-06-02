@@ -557,6 +557,7 @@ CEMscope::CEMscope()
   mOpenValvesDelay = 0;
   mSubFromPosChgISX = mSubFromPosChgISY = 0.;
   mMonitorC2ApertureSize = -1;
+  mInScopeUpdate = false;
   mAdvancedScriptVersion = 0;
   mPluginVersion = 0;
   mPlugFuncs = NULL;
@@ -1316,7 +1317,6 @@ void CEMscope::ScopeUpdate(DWORD dwTime)
   double wallStart, wallTimes[12] = {0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.};
   bool reportTime = GetDebugOutput('u') && (mAutosaveCount % 10 == 0);
   static int firstTime = 1;
-  static bool inUpdate = false;
   static int apertureUpdateCount = 0, numApertureFailures = 0;
 
   //if (reportTime)
@@ -1336,7 +1336,7 @@ void CEMscope::ScopeUpdate(DWORD dwTime)
   }
 
   mAutosaveCount++;
-  if (!sInitialized || mSelectedSTEM < 0 || inUpdate)
+  if (!sInitialized || mSelectedSTEM < 0 || mInScopeUpdate)
     return;
   mWinApp->ManageBlinkingPane(GetTickCount());
 
@@ -1367,7 +1367,7 @@ void CEMscope::ScopeUpdate(DWORD dwTime)
     sGettingValuesFast = true;
   }
 
-  inUpdate = true;
+  mInScopeUpdate = true;
   try {
 
     // Get stage position and readiness
@@ -1978,7 +1978,7 @@ void CEMscope::ScopeUpdate(DWORD dwTime)
       1000.*wallTimes[4],1000.*wallTimes[5],1000.*wallTimes[6],
       1000.*wallTimes[7],1000.*wallTimes[8],1000.*wallTimes[9],1000.*wallTimes[10]);
   }
-  inUpdate = false;
+  mInScopeUpdate = false;
 }
 
 // UPDATE SUB-ROUTINES CALLED ONLY FROM INSIDE ScopeUpdate
@@ -5407,8 +5407,9 @@ double CEMscope::GetStandardLMFocus(int magInd, int probe)
   if (HitachiScope && focus != -999. && nearInd > 0)
     focus += (hParams->baseFocus[magInd] - hParams->baseFocus[nearInd]) / 
     (double)HITACHI_LENS_MAX;
-  SEMTrace('c', "GetStandardLMFocus: mag %d, nearest mag %d, focus %f", magInd, nearInd,
-    focus);
+  if (!mInScopeUpdate)
+    SEMTrace('c', "GetStandardLMFocus: mag %d, nearest mag %d, focus %f", magInd, nearInd,
+      focus);
   return focus;
 }
 
