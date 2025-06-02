@@ -6370,15 +6370,19 @@ int CNavHelper::XformISVecsWithSpecOrStage(float *xVecIn, float *yVecIn, int num
   return 0;
 }
 
-// Use the hole vectors from a map item, stored when holes were found
-void CNavHelper::AssignNavItemHoleVectors(CMapDrawItem * item)
+// Use the hole vectors from a map item, stored when holes were found.. Optionally supply
+// a parameter set to modify, in which case updates are skipped
+void CNavHelper::AssignNavItemHoleVectors(CMapDrawItem * item, MultiShotParams *msParams)
 {
+  bool useMainParams = msParams == NULL;
+  if (useMainParams)
+    msParams = &mMultiShotParams;
   int dir, hexInd = (item->mXHoleISSpacing[2] || item->mYHoleISSpacing[2]) ? 1 : 0;
   float xFloat[3] = {0., 0., 0.}, yFloat[3] = {0., 0., 0.}, xTemp[3], yTemp[3];
-  double *xSpacing = hexInd ? &mMultiShotParams.hexISXspacing[0] :
-    &mMultiShotParams.holeISXspacing[0];
-  double *ySpacing = hexInd ? &mMultiShotParams.hexISYspacing[0] :
-    &mMultiShotParams.holeISYspacing[0];
+  double *xSpacing = hexInd ? &msParams->hexISXspacing[0] :
+    &msParams->holeISXspacing[0];
+  double *ySpacing = hexInd ? &msParams->hexISYspacing[0] :
+    &msParams->holeISYspacing[0];
   float bestRot, maxAngDiff, maxScaleDiff;
   for (dir = 0; dir < 2 + hexInd; dir++) {
     xSpacing[dir] = xFloat[dir] = item->mXHoleISSpacing[dir];
@@ -6393,15 +6397,17 @@ void CNavHelper::AssignNavItemHoleVectors(CMapDrawItem * item)
   }
 
   SetLastUsedHoleISVecs(&xFloat[0], &yFloat[0], true);
-  mMultiShotParams.origMagOfArray[hexInd] = -item->mMapMagInd;
-  mMultiShotParams.holeMagIndex[hexInd] = item->mMapMagInd;;
-  mMultiShotParams.tiltOfHoleArray[hexInd] = item->mMapTiltAngle;
-  mMultiShotParams.doHexArray = hexInd > 0;
-  mMultiShotParams.canUndoRectOrHex = 0;
-  if (mMultiShotDlg)
-    mMultiShotDlg->UpdateSettings();
-  if (mNav)
-    mNav->Redraw();
+  msParams->origMagOfArray[hexInd] = -item->mMapMagInd;
+  msParams->holeMagIndex[hexInd] = item->mMapMagInd;;
+  msParams->tiltOfHoleArray[hexInd] = item->mMapTiltAngle;
+  msParams->doHexArray = hexInd > 0;
+  msParams->canUndoRectOrHex = 0;
+  if (useMainParams) {
+    if (mMultiShotDlg)
+      mMultiShotDlg->UpdateSettings();
+    if (mNav)
+      mNav->Redraw();
+  }
 }
 
 // Tests whether a plus or minus rotation of the given set of vectors matches the last

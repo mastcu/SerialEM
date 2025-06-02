@@ -73,10 +73,11 @@ const char *CMultiHoleCombiner::GetErrorMessage(int error)
 }
 
 /*
- * Main call to combine items, picked by the specified boundary type
+ * Main call to combine items, picked by the specified boundary type. inXholes, inYholes
+ * default values are -9, -9, vecItem non-NULL specifies item to take IS vectors from
  */
 int CMultiHoleCombiner::CombineItems(int boundType, BOOL turnOffOutside, int inXholes,
-  int inYholes)
+  int inYholes, CMapDrawItem *vecItem)
 {
   CMapDrawItem *item, *curItem;
   MapItemArray *itemArray;
@@ -125,6 +126,10 @@ int CMultiHoleCombiner::CombineItems(int boundType, BOOL turnOffOutside, int inX
   int ori, crossDx[5] = {0, -1, 1, 0, 0}, crossDy[5] = {0, 0, 0, -1, 1};
   int numAdded = 0;
   msParams = &msParamsCopy;
+
+  // When runing multi-grid, the map is passed in for the vectors to be taken from
+  if (vecItem)
+    mHelper->AssignNavItemHoleVectors(vecItem, msParams);
 
   // Process optional setting of # of holes
   if (inXholes != -9 && inYholes != -9) {

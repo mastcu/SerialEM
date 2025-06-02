@@ -657,7 +657,8 @@ void CComplexTasks::RestoreMagIfNeeded()
 // inverted mag range
 int CComplexTasks::FindMaxMagInd(float inField, int curMag)
 {
-  int iMag,limlo, limhi, thisMag, prevMag;
+  int iMag, limlo, limhi;
+  double thisMag, prevMag;
   int iCam = mWinApp->GetCurrentCamera();
   CameraParameters *camParam = mWinApp->GetCamParams() + iCam;
   MagTable *magTab = mWinApp->GetMagTable();
@@ -682,8 +683,10 @@ int CComplexTasks::FindMaxMagInd(float inField, int curMag)
 
   mWinApp->GetMagRangeLimits(iCam, lowestInd, limlo, limhi);
   for (iMag = limhi; iMag > lowestInd; iMag--) {
-    thisMag = B3DCHOICE(camParam->GIF, magTab[iMag].EFTEMmag, magTab[iMag].mag);
-    prevMag = B3DCHOICE(camParam->GIF, magTab[iMag - 1].EFTEMmag, magTab[iMag - 1].mag);
+    thisMag = B3DCHOICE(camParam->GIF, magTab[iMag].EFTEMmag, 
+      camParam->STEMcamera ? magTab[iMag].STEMmag : magTab[iMag].mag);
+    prevMag = B3DCHOICE(camParam->GIF, magTab[iMag - 1].EFTEMmag, 
+      camParam->STEMcamera ? magTab[iMag - 1].STEMmag : magTab[iMag - 1].mag);
     if (!thisMag || thisMag < prevMag)
       continue;
     if (mShiftManager->GetPixelSize(iCam, iMag) * size >= inField)

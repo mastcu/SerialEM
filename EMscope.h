@@ -731,6 +731,7 @@ private:
   int mLastSTEMmode;          // Last STEM mode from update loop
   bool mNeedSTEMneutral;      // Flag that STEM neutral hasn't been gotten yet
   int mFeiSTEMprobeModeInLM;  // 0 to leave mode as is, 1 to say it is nano, 2 micro
+  bool mInScopeUpdate;        // Flag that it is in scope update
 
  private:
   static UINT StageMoveProc(LPVOID pParam);

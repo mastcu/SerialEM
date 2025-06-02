@@ -296,6 +296,7 @@ private:
   float mLastFocusForMagCal;
   int mLastApertureForMagCal;
   bool mAnyAbsRotCal;           // FLag for there being any absolute rotation calibrations
+  bool mAnyAbsSTEMrotCal;       // Flag specific to STEM cameras
   std::set<int> mCamWithRotFallback;   // Set of cameras with full rotation fallbacks
   std::vector<int> mMagsWithRotFallback[MAX_CAMERAS];
   std::map<int, float> mRefinedPixelSizes;

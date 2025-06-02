@@ -4839,17 +4839,7 @@ void CTSController::Terminate()
           return;
   }
 
-  answer = IDYES;
-  if (!mDoingDoseSymmetric) {
-    answer = SEMThreeChoiceBox(_T("Do you want the image file to be closed when\n"
-      "the tilt series controller is terminated?\n\n"
-      "Press:\n\"Close File\" to terminate and close the file,\n\n"
-      "\"Leave Open\" to terminate and leave the file open,\n\n"
-      "\"Cancel\" to avoid terminating the controller."), "Close File", "Leave Open",
-      "Cancel", MB_YESNOCANCEL | MB_ICONQUESTION);
-    if (answer == IDCANCEL)
-      return;
-  }
+  // 5/31/25: Guenter wondered why anyone would leave file open, so get rid of choice
 
   // Option to read in zero-tilt view and rotate it 90 degrees
   if (mTiltIndex > 0 && ((mTiltAngles[0] >= 0. && mTiltAngles[mTiltIndex - 1] <= 0. ||
@@ -4915,8 +4905,7 @@ void CTSController::Terminate()
   mTermFromMenu = true;
   if (EndControl(true, mReorderDoseSymFile) < 0)
     return;
-  if (answer == IDYES)
-    mDocWnd->DoCloseFile();
+  mDocWnd->DoCloseFile();
   mWinApp->DetachStackView();
 }
 
