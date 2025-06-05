@@ -30,9 +30,14 @@
     Quick Flyback Time</A>.</li>
       <li>On a Thermo/FEI, both nanoprobe and microprobe mode are recognized and can be
         calibrated separately for effective use.</li>
-      <li>With Thermo/FEI STEM, manual focusing must be done only with the objective 
-        lens, not with objective and condenser (&#39;IIntensity &amp; Objective&#39; in the TEM User 
-        Interface) or condenser only.</li>
+      <li>With Thermo/FEI STEM, manual focusing must be done only with the lens being 
+        used by SerialEM.&nbsp; For Tecnais, this was found to be the objective lens, so 
+        focusing should not be done with objective and condenser (&#39;IIntensity &amp; Objective&#39; in the TEM User 
+        Interface) or condenser only.&nbsp; For Krios, the C3 lens is used, so focusing 
+        with condenser only should be chosen in the TEM User Interface.&nbsp; In 
+        general, you can open System Status and see which lens changes when SerialEM 
+        changes focus, then make sure that focusing through the hand panels uses the 
+        same lens.</li>
       <li>Tilt series can be acquired in STEM mode; aspects that are different from TEM
         mode are described in <A HREF="hidd_tiltseries.htm#tss_stem">Tilt Series in STEM Mode</A>.</li>
       <li>Images from more than one detector can be saved during a tilt series with the
