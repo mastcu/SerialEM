@@ -4548,6 +4548,7 @@ int CNavigatorDlg::SetupMontage(CMapDrawItem *item, CMontageSetupDlg *montDlg,
     // Check for Record area smaller than camera and ask if user wants that limit
     mFrameLimitX = camParam->sizeX;
     mFrameLimitY = camParam->sizeY;
+    mConSetWithFrameLimit = -1;
     mWinApp->mMontageController->LimitSizesToUsable(camParam, iCam, magIndex, 
       mFrameLimitX, mFrameLimitY, 1);
     if (!skipSetupDlg && (conSet->right - conSet->left < askLimitRatio * mFrameLimitX ||
@@ -4557,8 +4558,9 @@ int CNavigatorDlg::SetupMontage(CMapDrawItem *item, CMontageSetupDlg *montDlg,
       "\n\nDo you want to keep the montage frame size from being bigger than this area?"
       "\n (Otherwise the frame might be as big as the full camera field).",
       MB_YESNO | MB_ICONQUESTION) == IDYES) {
-        mFrameLimitX = conSet->right - conSet->left;
-        mFrameLimitY = conSet->bottom - conSet->top;
+        mFrameLimitX = mSavedLimitX = conSet->right - conSet->left;
+        mFrameLimitY = mSavedLimitY = conSet->bottom - conSet->top;
+        mConSetWithFrameLimit = consetNum;
     }
 
     //montParam->minOverlapFactor = overlapFactor;  ??  HUH??
@@ -4659,14 +4661,24 @@ int CNavigatorDlg::FitMontageToItem(MontParam *montParam, int binning, int magIn
   float xMin, xMax, yMin, yMax, xx, yy, pixel, maxIS, tmpov, rotation;
   double maxISX, maxISY;
   int i, xNframes, yNframes, overlap, camSize, left, right, which, xFrame, yFrame;
-  int top, bot, saveOverlap, set = -1;
+  int top, bot, maxOverlap, saveOverlap, set = -1, consNum;
   int binx2 = 2 * binning;
-  int maxOverlap = (int)(mDocWnd->GetMaxOverlapFraction() * 
-    B3DMIN(mFrameLimitX, mFrameLimitY));
   float extraSizeFactor = 0.05f;   // Fraction to increase size overall
   float maxOverlapInc = 1.5f;      // Maximum to increase overlap with restrictied sizes
   CameraParameters *camParam = mWinApp->GetCamParams() + iCam;
   CMapDrawItem *item = mMontItem;
+
+  consNum = MontageConSetNum(montParam, false, lowDose ? 1 : 0);
+  if (consNum == mConSetWithFrameLimit) {
+    mFrameLimitX = mSavedLimitX;
+    mFrameLimitY = mSavedLimitY;
+  } else if (mConSetWithFrameLimit >= 0) {
+    mFrameLimitX = camParam->sizeX;
+    mFrameLimitY = camParam->sizeY;
+  }
+
+  maxOverlap = (int)(mDocWnd->GetMaxOverlapFraction() *
+    B3DMIN(mFrameLimitX, mFrameLimitY));
 
   if (overlapFac <= 0. || overlapFac >= 0.5)
     overlapFac = montParam->minOverlapFactor;

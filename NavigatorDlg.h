@@ -382,6 +382,8 @@ private:
   double mSavedAstigY;
 
   int mFrameLimitX, mFrameLimitY;         // Frame limits for montage setup
+  int mSavedLimitX, mSavedLimitY;         // Saved values if return to conset
+  int mConSetWithFrameLimit;              // Con Set # at which limit set
   CMapDrawItem *mMontItem;  // Item used
   CMapDrawItem *mMontItemCam;  // Item used with camera coordinates
   float mCamCenX, mCamCenY; // Center and extra for making skip list
