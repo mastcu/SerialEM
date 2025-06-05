@@ -3,10 +3,16 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
-6/2/25: SEM_4-2-2
-6/2/25: Prevented trying to disable electron counting for DE camera that
-doesn't have counting (In 4.2).
+6/4/25: Changed default back to NOT monitoring C2 aperture on Titan (In 4.2).
 
+6/4/25: Prevented trying to disable electron counting or super-resolution mode
+for DE camera that doesn't have counting (In 4.2).
+
+6/4/25: Applied frame size limitation when fitting to polygon only to
+parameter set where constraining to subarea was initially queried about
+(In 4.2).
+
+6/2/25: SEM_4-2-2
 6/2/25: Made the IS vectors needed from hole combining to work correctly be
 taken from the hole vectors stored with each map when running multi-grid
 (In 4.2)

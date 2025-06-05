@@ -1222,10 +1222,10 @@ int DirectElectronCamera::SetCountingParams(int readMode, double scaling, double
   CameraParameters *camP = mCamParams + mCurCamIndex;
   bool superRes = readMode == SUPERRES_MODE;
   mCountScaling = (float)scaling;
-  if (!IsApolloCamera() && slock.Lock(1000)) {
+  if (!IsApolloCamera() && (camP->CamFlags & DE_CAM_CAN_COUNT) && slock.Lock(1000)) {
     if (((readMode == LINEAR_MODE && mLastElectronCounting != 0) ||
       (readMode > 0 && mLastElectronCounting <= 0) || !mTrustLastSettings) &&
-      (camP->CamFlags & DE_CAM_CAN_COUNT) && !mLiveThread) {
+      !mLiveThread) {
       if (mAPI2Server) {
         if (!setStringWithError("Image Processing - Mode", readMode > 0 ? "Counting" :
           "Integrating"))
