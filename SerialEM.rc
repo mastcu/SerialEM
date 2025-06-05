@@ -4291,79 +4291,80 @@ BEGIN
     LTEXT           "Set vectors for multiple Records from:",IDC_STAT_VECTOR_SOURCE,176,263,119,8
 END
 
-IDD_MULGRID_SETTINGS DIALOGEX 0, 0, 311, 368
+IDD_MULGRID_SETTINGS DIALOGEX 0, 0, 311, 379
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Multiple Grid Settings Manager"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
-    CONTROL         "",IDC_STAT_LINE2,"Static",SS_BLACKFRAME | SS_SUNKEN,7,135,95,1
-    DEFPUSHBUTTON   "OK",IDOK,131,347,50,14
-    PUSHBUTTON      "Set for Grid",IDC_BUT_GRIDUSE_HF,104,175,65,14
-    PUSHBUTTON      "Apply Grid Settings to Global",IDC_BUT_APPLY_HF,7,175,91,14
-    PUSHBUTTON      "Restore Global",IDC_BUT_RESTORE_CURHF,174,175,58,14
-    PUSHBUTTON      "Set for Grid",IDC_BUT_GRIDUSE_MS,104,235,65,14
-    PUSHBUTTON      "Apply Grid Settings to Global",IDC_BUT_APPLY_MS,7,235,91,14
-    PUSHBUTTON      "Restore Global",IDC_BUT_RESTORE_CURMS,174,235,58,14
-    PUSHBUTTON      "Set for Grid",IDC_BUT_GRIDUSE_AC,104,115,65,14
-    PUSHBUTTON      "Apply Grid Settings to Global",IDC_BUT_APPLY_AC,7,115,91,14
-    PUSHBUTTON      "Restore Global",IDC_BUT_RESTORE_CURAC,174,115,58,14
-    PUSHBUTTON      "Set for Grid",IDC_BUT_GRIDUSE_GEN,104,69,65,14
-    PUSHBUTTON      "Apply Grid Settings to Global",IDC_BUT_APPLY_GEN,7,69,91,14
-    PUSHBUTTON      "Restore Global",IDC_BUT_RESTORE_CURGEN,174,69,58,14
-    PUSHBUTTON      "Discard Grid Settings",IDC_BUT_REVERT_HF,237,175,67,14
-    PUSHBUTTON      "Discard Grid Settings",IDC_BUT_REVERT_MS,238,235,67,14
-    PUSHBUTTON      "Discard Grid Settings",IDC_BUT_REVERT_AC,238,115,67,14
-    PUSHBUTTON      "Discard Grid Settings",IDC_BUT_REVERT_GEN,238,69,67,14
-    PUSHBUTTON      "Set/View for Grid",IDC_BUT_SET_VIEW_FINAL,7,329,65,14
-    PUSHBUTTON      "Discard Grid Settings",IDC_BUT_REVERT_FINAL,237,329,67,14
-    PUSHBUTTON      "Apply Grid Settings to Global",IDC_BUT_APPLY_FINAL,78,329,91,14
-    PUSHBUTTON      "Restore Global",IDC_BUT_RESTORE_CURFINAL,175,329,56,14
-    CTEXT           "Autocontouring Settings",IDC_STAT_AC_TITLE,111,87,89,8
-    CONTROL         "",IDC_STAT_LINE4,"Static",SS_BLACKFRAME | SS_SUNKEN,208,91,95,1
-    RTEXT           "Saved global:",IDC_STAT_GLOBAL_AC,7,95,40,8
-    RTEXT           "Grid:",IDC_STAT_GRID1,30,105,17,8
-    LTEXT           "Static",IDC_STAT_ACSET_CURRENT,49,95,255,8
-    LTEXT           "Static",IDC_STAT_ACSET_GRID,49,105,255,8
-    CTEXT           "Hole Finder Settings",IDC_STAT_HF_TITLE,111,131,89,8
-    CONTROL         "",IDC_STAT_LINE6,"Static",SS_BLACKFRAME | SS_SUNKEN,207,135,95,1
-    CONTROL         "",IDC_STAT_LINE7,"Static",SS_BLACKFRAME | SS_SUNKEN,12,91,95,1
-    RTEXT           "Global:",IDC_STAT_GLOBAL_HF,7,139,40,8
-    RTEXT           "Grid:",IDC_STAT_GRID2,30,157,17,8
-    RTEXT           "Global:",IDC_STAT_GLOBAL_MS,7,199,40,8
-    RTEXT           "Grid:",IDC_STAT_GRID4,30,217,17,8
-    RTEXT           "Global:",IDC_STAT_GLOBAL_GEN,7,33,40,8
-    RTEXT           "Grid:",IDC_STAT_GRID3,30,51,17,8
-    LTEXT           "Static",IDC_STAT_HFSET_CURRENT,49,139,255,16
-    LTEXT           "Static",IDC_STAT_HFSET_GRID,49,157,255,16
-    LTEXT           "Static",IDC_STAT_MSSET_CURRENT,49,199,255,16
-    LTEXT           "Static",IDC_STAT_MSSET_GRID,49,217,255,16
-    LTEXT           "Static",IDC_STAT_GENSET_CURRENT,49,33,255,16
-    LTEXT           "Static",IDC_STAT_GENSET_GRID,49,51,255,16
-    LTEXT           "Grid has no stored settings",IDC_STAT_ACQ_ITEMS,12,319,183,8
-    PUSHBUTTON      "?",IDC_BUTHELP,293,350,11,11
-    CONTROL         "",IDC_STAT_LINE5,"Static",SS_BLACKFRAME | SS_SUNKEN,8,195,95,1
-    CTEXT           "Multiple Record Settings",IDC_STAT_MS_TITLE,112,191,89,8
-    CONTROL         "",IDC_STAT_LINE8,"Static",SS_BLACKFRAME | SS_SUNKEN,208,195,95,1
-    CONTROL         "",IDC_STAT_LINE9,"Static",SS_BLACKFRAME | SS_SUNKEN,9,29,95,1
-    CTEXT           "General Settings",IDC_STAT_GEN_TITLE,113,25,89,8
-    CONTROL         "",IDC_STAT_LINE10,"Static",SS_BLACKFRAME | SS_SUNKEN,209,29,95,1
-    CONTROL         "",IDC_STAT_LINE11,"Static",SS_BLACKFRAME | SS_SUNKEN,8,303,95,1
-    CTEXT           "Final Data Acquire Settings",IDC_STAT_FINAL_TITLE,112,299,89,8
-    CONTROL         "",IDC_STAT_LINE12,"Static",SS_BLACKFRAME | SS_SUNKEN,208,303,95,1
-    LTEXT           "To store or change separate settings, just use ""Set/View"", adjust settings, and ""Close"" dialog",IDC_STATIC,10,308,291,8
+    CONTROL         "",IDC_STAT_LINE2,"Static",SS_BLACKFRAME | SS_SUNKEN,7,146,95,1
+    DEFPUSHBUTTON   "OK",IDOK,131,358,50,14
+    PUSHBUTTON      "Set for Grid",IDC_BUT_GRIDUSE_HF,104,186,65,14
+    PUSHBUTTON      "Apply Grid Settings to Global",IDC_BUT_APPLY_HF,7,186,91,14
+    PUSHBUTTON      "Restore Global",IDC_BUT_RESTORE_CURHF,174,186,58,14
+    PUSHBUTTON      "Set for Grid",IDC_BUT_GRIDUSE_MS,104,246,65,14
+    PUSHBUTTON      "Apply Grid Settings to Global",IDC_BUT_APPLY_MS,7,246,91,14
+    PUSHBUTTON      "Restore Global",IDC_BUT_RESTORE_CURMS,174,246,58,14
+    PUSHBUTTON      "Set for Grid",IDC_BUT_GRIDUSE_AC,104,126,65,14
+    PUSHBUTTON      "Apply Grid Settings to Global",IDC_BUT_APPLY_AC,7,126,91,14
+    PUSHBUTTON      "Restore Global",IDC_BUT_RESTORE_CURAC,174,126,58,14
+    PUSHBUTTON      "Set for Grid",IDC_BUT_GRIDUSE_GEN,104,80,65,14
+    PUSHBUTTON      "Apply Grid Settings to Global",IDC_BUT_APPLY_GEN,7,80,91,14
+    PUSHBUTTON      "Restore Global",IDC_BUT_RESTORE_CURGEN,174,80,58,14
+    PUSHBUTTON      "Discard Grid Settings",IDC_BUT_REVERT_HF,237,186,67,14
+    PUSHBUTTON      "Discard Grid Settings",IDC_BUT_REVERT_MS,238,246,67,14
+    PUSHBUTTON      "Discard Grid Settings",IDC_BUT_REVERT_AC,238,126,67,14
+    PUSHBUTTON      "Discard Grid Settings",IDC_BUT_REVERT_GEN,238,80,67,14
+    PUSHBUTTON      "Set/View for Grid",IDC_BUT_SET_VIEW_FINAL,7,340,65,14
+    PUSHBUTTON      "Discard Grid Settings",IDC_BUT_REVERT_FINAL,237,340,67,14
+    PUSHBUTTON      "Apply Grid Settings to Global",IDC_BUT_APPLY_FINAL,78,340,91,14
+    PUSHBUTTON      "Restore Global",IDC_BUT_RESTORE_CURFINAL,175,340,56,14
+    CTEXT           "Autocontouring Settings",IDC_STAT_AC_TITLE,111,98,89,8
+    CONTROL         "",IDC_STAT_LINE4,"Static",SS_BLACKFRAME | SS_SUNKEN,208,102,95,1
+    RTEXT           "Saved global:",IDC_STAT_GLOBAL_AC,7,106,40,8
+    RTEXT           "Grid:",IDC_STAT_GRID1,30,116,17,8
+    LTEXT           "Static",IDC_STAT_ACSET_CURRENT,49,106,255,8
+    LTEXT           "Static",IDC_STAT_ACSET_GRID,49,116,255,8
+    CTEXT           "Hole Finder Settings",IDC_STAT_HF_TITLE,111,142,89,8
+    CONTROL         "",IDC_STAT_LINE6,"Static",SS_BLACKFRAME | SS_SUNKEN,207,146,95,1
+    CONTROL         "",IDC_STAT_LINE7,"Static",SS_BLACKFRAME | SS_SUNKEN,12,102,95,1
+    RTEXT           "Global:",IDC_STAT_GLOBAL_HF,7,150,40,8
+    RTEXT           "Grid:",IDC_STAT_GRID2,30,168,17,8
+    RTEXT           "Global:",IDC_STAT_GLOBAL_MS,7,210,40,8
+    RTEXT           "Grid:",IDC_STAT_GRID4,30,228,17,8
+    RTEXT           "Global:",IDC_STAT_GLOBAL_GEN,7,44,40,8
+    RTEXT           "Grid:",IDC_STAT_GRID3,30,62,17,8
+    LTEXT           "Static",IDC_STAT_HFSET_CURRENT,49,150,255,16
+    LTEXT           "Static",IDC_STAT_HFSET_GRID,49,168,255,16
+    LTEXT           "Static",IDC_STAT_MSSET_CURRENT,49,210,255,16
+    LTEXT           "Static",IDC_STAT_MSSET_GRID,49,228,255,16
+    LTEXT           "Static",IDC_STAT_GENSET_CURRENT,49,44,255,16
+    LTEXT           "Static",IDC_STAT_GENSET_GRID,49,62,255,16
+    LTEXT           "Grid has no stored settings",IDC_STAT_ACQ_ITEMS,12,330,183,8
+    PUSHBUTTON      "?",IDC_BUTHELP,293,361,11,11
+    CONTROL         "",IDC_STAT_LINE5,"Static",SS_BLACKFRAME | SS_SUNKEN,8,206,95,1
+    CTEXT           "Multiple Record Settings",IDC_STAT_MS_TITLE,112,202,89,8
+    CONTROL         "",IDC_STAT_LINE8,"Static",SS_BLACKFRAME | SS_SUNKEN,208,206,95,1
+    CONTROL         "",IDC_STAT_LINE9,"Static",SS_BLACKFRAME | SS_SUNKEN,9,40,95,1
+    CTEXT           "General Settings",IDC_STAT_GEN_TITLE,113,36,89,8
+    CONTROL         "",IDC_STAT_LINE10,"Static",SS_BLACKFRAME | SS_SUNKEN,209,40,95,1
+    CONTROL         "",IDC_STAT_LINE11,"Static",SS_BLACKFRAME | SS_SUNKEN,8,314,95,1
+    CTEXT           "Final Data Acquire Settings",IDC_STAT_FINAL_TITLE,112,310,89,8
+    CONTROL         "",IDC_STAT_LINE12,"Static",SS_BLACKFRAME | SS_SUNKEN,208,314,95,1
+    LTEXT           "To store or change separate settings, just use ""Set/View"", adjust settings, and ""Close"" dialog",IDC_STATIC,10,319,291,8
     LTEXT           "In top 5 sections, initially use ""Save Global"", adjust settings, ""Set for Grid"", and ""Restore""",IDC_STATIC,12,6,281,8
     LTEXT           "To modify stored settings, use ""Apply Grid"", adjust settings, ""Set for Grid"", and ""Restore""",IDC_STATIC,12,16,281,8
-    PUSHBUTTON      "Set for Grid",IDC_BUT_GRIDUSE_FP,103,281,65,14
-    PUSHBUTTON      "Apply Grid Settings to Global",IDC_BUT_APPLY_FP,6,281,91,14
-    PUSHBUTTON      "Restore Global",IDC_BUT_RESTORE_CURFP,173,281,58,14
-    PUSHBUTTON      "Discard Grid Settings",IDC_BUT_REVERT_FP,237,281,67,14
-    CTEXT           "Focus Area Position",IDC_STAT_FP_TITLE,110,253,89,8
-    CONTROL         "",IDC_STAT_LINE3,"Static",SS_BLACKFRAME | SS_SUNKEN,207,257,95,1
-    RTEXT           "Saved global:",IDC_STAT_GLOBAL_FP,6,261,40,8
-    RTEXT           "Grid:",IDC_STAT_GRID5,29,271,17,8
-    LTEXT           "Static",IDC_STAT_FPSET_CURRENT,48,261,255,8
-    LTEXT           "Static",IDC_STAT_FPSET_GRID,48,271,255,8
-    CONTROL         "",IDC_STAT_LINE1,"Static",SS_BLACKFRAME | SS_SUNKEN,11,257,95,1
+    PUSHBUTTON      "Set for Grid",IDC_BUT_GRIDUSE_FP,103,292,65,14
+    PUSHBUTTON      "Apply Grid Settings to Global",IDC_BUT_APPLY_FP,6,292,91,14
+    PUSHBUTTON      "Restore Global",IDC_BUT_RESTORE_CURFP,173,292,58,14
+    PUSHBUTTON      "Discard Grid Settings",IDC_BUT_REVERT_FP,237,292,67,14
+    CTEXT           "Focus Area Position",IDC_STAT_FP_TITLE,110,264,89,8
+    CONTROL         "",IDC_STAT_LINE3,"Static",SS_BLACKFRAME | SS_SUNKEN,207,268,95,1
+    RTEXT           "Saved global:",IDC_STAT_GLOBAL_FP,6,272,40,8
+    RTEXT           "Grid:",IDC_STAT_GRID5,29,282,17,8
+    LTEXT           "Static",IDC_STAT_FPSET_CURRENT,48,272,255,8
+    LTEXT           "Static",IDC_STAT_FPSET_GRID,48,282,255,8
+    CONTROL         "",IDC_STAT_LINE1,"Static",SS_BLACKFRAME | SS_SUNKEN,11,268,95,1
+    LTEXT           "THERE IS NO INHERITANCE: To apply to next grid, select it in main dialog and use ""Set for Grid""",IDC_STATIC,12,26,309,8
 END
 
 IDD_TASK_AREA_OPTIONS DIALOGEX 0, 0, 209, 144
@@ -5004,7 +5005,7 @@ BEGIN
         LEFTMARGIN, 7
         RIGHTMARGIN, 304
         TOPMARGIN, 7
-        BOTTOMMARGIN, 361
+        BOTTOMMARGIN, 372
     END
 
     IDD_TASK_AREA_OPTIONS, DIALOG
