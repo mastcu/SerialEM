@@ -938,7 +938,7 @@ void CAutoContouringDlg::ParamsToDialog()
   m_strMinSize.Format("%.1f", mParams.minSizeCutoff > EXTRA_VALUE_TEST ?
     mParams.minSizeCutoff : 0.);
   m_strBorderDist.Format("%.1f", mParams.borderDistCutoff > EXTRA_VALUE_TEST ?
-    mParams.minSizeCutoff : 0.);
+    mParams.borderDistCutoff : 0.);
   if (mIsOpen)
     UpdateData(false);
 }
