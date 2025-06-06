@@ -75,7 +75,7 @@ void CAutoContouringDlg::DoDataExchange(CDataExchange* pDX)
   DDX_Radio(pDX, IDC_RTOPIXELS, m_iReduceToWhich);
   DDX_Radio(pDX, IDC_RRELATIVE_THRESH, m_iThreshType);
   DDX_Radio(pDX, IDC_RGROUP_BY_SIZE, m_iGroupType);
-  DDX_MM_INT(pDX, IDC_IDC_EDIT_TO_PIXELS, m_iReducePixels, 200, 5000,
+  DDX_MM_INT(pDX, IDC_IDC_EDIT_TO_PIXELS, m_iReducePixels, 100, 5000,
     "number of pixels to reduce to");
   DDX_Control(pDX, IDC_SPIN_NUM_GROUPS, m_sbcNumGroups);
   DDX_Text(pDX, IDC_EDIT_MIN_MEAN, m_strLowerMean);
