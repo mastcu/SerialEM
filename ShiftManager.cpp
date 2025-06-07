@@ -121,6 +121,7 @@ CShiftManager::CShiftManager()
   mUseSquareShiftLimits = -1;
   mC2SpacingForHighFocus = 0.2f;
   mAcquireWhenShiftDone = -1;
+  mRDCthreshFor2ndShot = 0.25f;
 }
 
 CShiftManager::~CShiftManager()
@@ -497,7 +498,7 @@ void CShiftManager::AcquireAtRightDoubleClick(int bufInd, float shiftX,
   // If it was not a stage move, do the shot now
   if (!mScope->StageBusy()) {
     mCamera->InitiateCapture(mAcquireWhenShiftDone);
-    mAcquireWhenShiftDone = -1;
+    mAcquireWhenShiftDone = -1 - mAcquireWhenShiftDone;
     mRDCclickedBufInd = -1;
     mCamera->SetNewImageCallback(AlignRightDblClickImage);
   }
@@ -508,6 +509,7 @@ void CShiftManager::DoAlignDblClickImage()
 {
   EMimageBuffer *aliBuf = &mImBufs[mRDCclickedBufInd + 1];
   float xx, yy;
+  int nx, ny;
   mWinApp->SetStatusText(MEDIUM_PANE, "");
   if (mRDCclickedBufInd < 0)
     return;
@@ -531,6 +533,14 @@ void CShiftManager::DoAlignDblClickImage()
     mImBufs->mBinning);
   AutoAlign(mRDCclickedBufInd + 1, 0, 1, 0, NULL, mRDCexpectedXshift, mRDCexpectedYshift);
   aliBuf->mImage->setShifts(xx, yy);
+  if (mRDCthreshFor2ndShot <= 0.)
+    return;
+  aliBuf->mImage->getSize(nx, ny);
+  if (nx * ny - (nx - fabs(xx)) * (ny - fabs(yy)) < mRDCthreshFor2ndShot * nx * ny)
+    return;
+  for (nx = 0; nx < mBufferManager->GetShiftsOnAcquire(); nx++)
+    mBufferManager->CopyImageBuffer(nx + 1, nx, false);
+  mCamera->InitiateCapture(-mAcquireWhenShiftDone - 1);
 }
 
 // Callback function
@@ -1712,7 +1722,7 @@ void CShiftManager::ResetISDone()
   mStartedStageMove = false;
   if (mAcquireWhenShiftDone >= 0) {
     mCamera->InitiateCapture(mAcquireWhenShiftDone);
-    mAcquireWhenShiftDone = -1;
+    mAcquireWhenShiftDone = -1 - mAcquireWhenShiftDone;
     mCamera->SetNewImageCallback(AlignRightDblClickImage);
   } else {
     mWinApp->UpdateBufferWindows();

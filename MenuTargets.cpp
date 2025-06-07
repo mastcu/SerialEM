@@ -537,6 +537,8 @@ ON_COMMAND(ID_BEAMSPOT_PARALLELILLUMINATION, OnBeamspotParallelIllumination)
 ON_UPDATE_COMMAND_UI(ID_BEAMSPOT_PARALLELILLUMINATION, OnUpdateParallelillumination)
 ON_COMMAND(ID_HELP_LISTDEBUGOUTPUTKEYLETTERS, OnHelpListDebugOutputKeyLetters)
 ON_UPDATE_COMMAND_UI(ID_HELP_LISTDEBUGOUTPUTKEYLETTERS, OnUpdateNoTasks)
+ON_COMMAND(ID_SPECIALIZEDMISC_SETTHRESHOLDFORRIGHT, OnSetThresholdForRightDblClick)
+ON_UPDATE_COMMAND_UI(ID_SPECIALIZEDMISC_SETTHRESHOLDFORRIGHT, OnUpdateNoTasks)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -3443,6 +3445,14 @@ void CMenuTargets::OnReverseWheelZoomDirection()
   mWinApp->SetReverseWheelZoom(!mWinApp->GetReverseWheelZoom());
 }
 
+void CMenuTargets::OnSetThresholdForRightDblClick()
+{
+  float thresh = mShiftManager->GetRDCthreshFor2ndShot();
+  if (KGetOneFloat("When stage is moved after right-double-click, an overlapping image is"
+    " aligned", "Threshold fraction of field lost above which "
+    "a second shot is taken (0 for no shot):", thresh, 2))
+    mShiftManager->SetRDCthreshFor2ndShot(thresh);
+}
 
 void CMenuTargets::OnHelpListDebugOutputKeyLetters()
 {

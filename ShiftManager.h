@@ -185,6 +185,7 @@ public:
   GetMember(BOOL, MouseShifting);
   SetMember(float, NextAutoalignLimit);
   GetSetMember(int, UseSquareShiftLimits);
+  GetSetMember(float, RDCthreshFor2ndShot);
   CArray<RotStretchXform, RotStretchXform> *GetRotXforms() { return &mRotXforms; };
   STEMinterSetShifts *GetSTEMinterSetShifts() { return &mInterSetShifts; };
   HighFocusCalArray *GetFocusMagCals() { return &mFocusMagCals; };
@@ -271,6 +272,7 @@ private:
   BOOL mResettingIS;           // flag that reset is being done
   BOOL mStartedStageMove;      // Flag that stage movement was started from mouse shift
   int mAcquireWhenShiftDone;   // Control set to acquire after IS or stage move, -1 none
+  float mRDCthreshFor2ndShot;  // Threshold fraction of field loss for taking 2nd shot
   float mRDCexpectedXshift;    // expected shift unadjusted for existing image shift
   float mRDCexpectedYshift;    // of image clicked on
   int mRDCclickedBufInd;       // Buffer with clicked-in image
