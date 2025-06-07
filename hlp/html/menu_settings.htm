@@ -10,7 +10,7 @@
         width: 114px;
       }
       .auto-style1 {
-        width: 256px;
+        width: 299px;
       }
   --></style>
   </HEAD>
@@ -53,6 +53,71 @@
           <TD>Periodically save settings to currently open file.</TD>
         </TR>
         <TR VALIGN="top">
+          <TD class="auto-style1"><b>Specialized &amp; Misc. Options</b></TD>
+          <TD>Miscelleous program control options, and specialized and experimental options for tasks, tilt series, Navigator, or Low
+            Dose</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="auto-style1">&nbsp;&nbsp;<a href="#hid_miscellaneousoptions_reversewheelzoomdirection">Reverse Wheel Zoom Direction</a></TD>
+          <TD>Sets which direction of mouse wheel movement zooms image up.</TD>
+        </TR>        
+       <TR VALIGN="top">
+          <TD class="auto-style1">&nbsp; <a href="#hid_specializedoptions_closevalvesafterlonginactivity">Turn Off Beam After Long Inactivity</a></TD>
+          <TD>Close valves or turn off filament after a specified period of inactivity</TD>
+        </TR>
+       <TR VALIGN="top">
+          <TD class="auto-style1">&nbsp; 
+            <a href="#hid_specializedmisc_setthresholdforright">Set Threshold for 
+              Right-dbl-click 2nd shot</a></TD>
+          <TD>Set threshold fraction of field loss for taking a second shot after a stage 
+            move from double-clickig right mouse button</TD>
+        </TR>
+         <TR VALIGN="top">
+          <TD class="auto-style1">&nbsp; <a href="#hid_special_disable_dark_trim_in_align">
+            Disable Dark Trim in Align</a></TD>
+          <TD>Disable automatic trimming of dark borders in Autoalign in some cases</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="auto-style1">&nbsp;
+            <a href="#hid_specialoptions_adjustfocusonprobemodechange">Adjust Focus on Probe Mode Change</a>&nbsp;&nbsp;</TD>
+          <TD>Maintain constant focus difference when switching between microprobe and
+            nanoprobe</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="auto-style1">&nbsp; <a href="#hid_specialoptions_normalizealllens">Normalize
+            All on Mag Change</a></TD>
+          <TD>Specify whether to normalize all lenses when changing mag within LM, or on all
+            mag changes</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="auto-style1">&nbsp; <a href="#hid_specialoptions_normalizeviaviewforau">Normalize
+            Via View for Autofocus</a>&nbsp;</TD>
+          <TD>In Low Dose mode, go through View mode to normalize before autofocus</TD>
+        </TR>
+       <TR VALIGN="top">
+          <TD class="auto-style1">&nbsp; <a href="#hid_specializedoptions_skipblankinginldwithscreenup">Skip Blanking in LD when Screen Up</a></TD>
+          <TD>Do not keep beam blanked when screen is up in Low Dose mode</TD>
+        </TR>
+       <TR VALIGN="top">
+          <TD class="auto-style1">&nbsp; <a href="#hid_specializedoptions_keepfocustrialstsameposition">Keep Focus & Trial at Same Position</a></TD>
+          <TD>Make Focus and Trial in Low Dose mode be at same position</TD>
+        </TR>
+       <TR VALIGN="top">
+          <TD class="auto-style1">&nbsp; <a href="#hid_special_skip_beam_shift_in_ts">Skip Beam Shift
+            in TS</a>&nbsp;</TD>
+          <TD>Skip beam shift when autoaligning with image shift in tilt series</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="auto-style1">&nbsp; <a href="#hid_special_piezo_for_ld_axis_shift">Piezo for LD
+            Axis Shift</a>&nbsp;</TD>
+          <TD>Use piezo-driven stage movement for on-axis shift between Low Dose areas</TD>
+        </TR>
+         <TR VALIGN="top">
+          <TD class="auto-style1">&nbsp; <a href="#hid_specialoptions_allowcontinuousintasks">Allow
+            Continuous in TS</a>&nbsp;</TD>
+          <TD>Permit continuous mode acquisitions to be started during tilt series</TD>
+        </TR>
+        <TR VALIGN="top">
           <TD class="auto-style1"><A HREF="#hid_tiltseries_setaddress">Set Email Address</A></TD>
           <TD>Opens dialog box to set address to send emails to.</TD>
         </TR>
@@ -67,14 +132,6 @@
           <TD class="auto-style1"><a href="#hid_settings_readbasicmodefile">Read Basic Mode File</a></TD>
           <TD>Reads in a new file defining items to hide in Basic Mode.</TD>
         </TR>
-       <TR VALIGN="top">
-          <TD class="auto-style1"><strong>Miscellaneous Options</strong></TD>
-          <TD>Options with no other logical place, or not worth putting in a control panel</TD>
-        </TR>
-        <TR VALIGN="top">
-          <TD class="auto-style1">&nbsp;&nbsp;&nbsp; <a href="#hid_miscellaneousoptions_reversewheelzoomdirection">Reverse Wheel Zoom Direction</a></TD>
-          <TD>Sets which direction of mouse wheel movement zooms image up.</TD>
-        </TR>        
       </TABLE>
       <BR>
       <P><A NAME="about_settings"></A><B>About Settings Files</B></P>
@@ -172,6 +229,152 @@
         periodically (every 5 minutes, except during a tilt series). Autosaving is 
         useful if you are doing things that present a risk of crashing the program. If 
         no settings file is open when Autosave is on, then nothing will be saved.</P>
+       <P><A NAME="hid_miscellaneousoptions_reversewheelzoomdirection"></A><B>Reverse Wheel Zoom 
+         Direction command (Settings - Specialized &amp; Misc. Options submenu)</B></P>
+      <p>Use this command to toggle whether moving the mouse wheel away from you zooms 
+        the image down (the default) or up (the behavior when the option is selected).</p>
+     <p>
+     <A NAME="hid_specializedoptions_closevalvesafterlonginactivity"></A><B>Turn Off Beam After Long Inactivity command (Settings - Specialized &amp; Misc. Options submenu)</B></p>
+      <p>With this option, you can enable the program to close valves or turn off the
+        filament if it is left idle for longer than a specified length of time.&nbsp;
+        After selecting the option, enter the number of minutes of inactivity after
+        which the program should turn off the beam, or 0 to disable this feature.&nbsp; 
+        Inactivity means no operations like running scripts, taking images, or other 
+        higher-level operations have occurred; simply accessing a menu item or pressing 
+        a button does not count as activity.&nbsp;
+        The option appears checked in the menu when a positive time has been entered.&nbsp; 
+        On a JEOL with the property &#39;AllowStopEmissionIfIdle&#39; set, a second entry box 
+        will come up allowing you to set the number of minutes after which the emission 
+        should be turned.&nbsp; The menu item will be checked if either of these entries 
+        are non-zero.</p>
+      <p><A NAME="hid_specializedmisc_setthresholdforright"></A><B>Set Threshold for 
+              Right-dbl-click 2nd shot (Settings - Specialized &amp; Misc. Options submenu)</B></p>
+      <p>Use this option to set the threshold fraction of the image field lost before a 
+        second image is taken after you double-click in an image with the right mouse 
+        button, causing the program to do a stage move to reach that position, take an 
+        image, and align it to image clicked in.&nbsp; If hte fraction of image area no 
+        longer visiable after the shift exceeds the fraction set here, a second image is 
+        taken so that you can see the full area.</p>
+     <p>
+      <A NAME="hid_special_disable_dark_trim_in_align"></A><B>Disable Dark Trim in
+      Align command (Settings - Specialized &amp; Misc. Options submenu)</B></p>
+    <p>
+      Even when 'Trim dark borders in Autoalign' is not selected in the
+      <a href="hidd_alignfocus.htm">Image
+      Alignment &amp; Focus</a> control panel, this trimming happens automatically in 
+      three cases: when in Low Dose mode, when doing a task at a lower magnification 
+      and not in Low Dose mode, and in the first two rounds of Realign to Item or alignments after resetting image shift 
+      in Align to Template.&nbsp; This option allows the automatic
+      trimming to be disabled in selected cases.&nbsp; Three dialog boxes will come
+      up.&nbsp; The first controls the trimming in Low Dose mode; enter 1 if you want
+      to disable it just when doing a tilt series, or 2 if you want to disable it
+      always.&nbsp; The second entry controls the trimming when doing tasks; again,
+      enter 1 if you want to disable it just when doing a tilt series, or 2 if you
+      want to disable it always.&nbsp; The third entry allows you to disable the
+      trimming when running Realign to Item or Align to Template - this is the same 
+      option that can be set in the <a href="hidd_navrealign.htm">Navigator Align 
+      Setup</a> dialog.&nbsp; Note that the &#39;AlignTo&#39; script
+      command also has an optional entry to prevent trimming.&nbsp; The decision to
+      trim is made as follows: </p>
+    <ul>
+      <li>Trimming is not done if &#39;AlignTo&#39; is run with that option set to prevent
+        trimming</li>
+      <li>Otherwise, if doing Realign to Item or Align to Template, trimming is 
+        determined by the option set here for those operations</li>
+      <li>Or, if in low mag for another task and not in Low Dose, trimming is determined
+        by the option set here for tasks</li>
+      <li>Or if in Low Dose mode, not doing a Realign or&nbsp; Template Align, trimming is determined by the
+        option set here for Low Dose</li>
+      <li>If not in Low Dose mode or doing Realign or Template Align or a task, trimming is controlled by
+        the choice in the control panel</li>
+    </ul>
+    <p>
+      <A NAME="hid_specialoptions_adjustfocusonprobemodechange"></A><B>Adjust Focus on Probe Mode Change command (Tasks - Special Option submenu)</B></p>
+    <p>
+      When changing between microprobe and nanoprobe TEM modes on Thermo/FEI scopes, the
+      scope will restore the defocus last seen in a mode when returning to that mode.&nbsp;
+      With this option turned on, the program will try to maintain a constant
+      difference between the focus levels in the two modes. It does this by tracking
+      how much defocus changes during the time spent in one mode and imposing that
+      focus change on the scope's restored focus value when switching to the other
+      mode.&nbsp; This means that you can use autofocus in one mode and have the
+      required focus change applied when returning to the other mode.&nbsp; </p>
+    <p>
+      The option needs to be turned off in order to impose a needed focus difference
+      between the modes.&nbsp; As of SerialEM 3.7, focus differences are always
+      applied in Low Dose mode only when this option is on. </p>
+    <p>
+      If you want to &quot;Reset Defocus&quot; while this option is on and have that change in
+      focus readout ignored, use the entry in the Focus menu instead of a button in
+      the microscope interface.</p>
+    <p>
+      <A NAME="hid_specialoptions_normalizealllens"></A><B>Normalize All on Mag Change command (Settings - Specialized &amp; Misc. Options submenu)</B></p>
+    <p>This option controls when all lenses are normalized after changing
+      magnification on a Thermo/FEI or Hitachi scope.&nbsp; Normally, the program will
+      always normalize the projector lenses, and normalize condenser and objective
+      lenses in addition when changing between LM and nonLM magnifications.&nbsp; With
+      this option, you can enter a 1 to normalize all lenses after all mag changes
+      within LM, or a 2 to normalize all lenses after all mag changes.</p>
+    <p>
+      <A NAME="hid_specialoptions_normalizeviaviewforau"></A><B>Normalize Via View
+      for Autofocus command (Settings - Specialized &amp; Misc. Options submenu)</B></p>
+    <p>
+      When this option is selected, the program will switch to the View area in Low
+      Dose before going to the Focus area for autofocusing, unless it is currently in
+      Focus and arrived there from View.&nbsp; When &#39;Keep Focus and Trial identical&#39;
+      is selected in the Low Dose Control Panel, Trial and Focus are considered
+      equivalent for the purpose of deciding whether this normalization needs to be
+      done.</p>
+     <A NAME="hid_specializedoptions_skipblankinginldwithscreenup"></A><B>Skip Blanking in LD when Screen Up command (Settings - Specialized &amp; Misc. Options submenu)</B><p> This option controls whether the beam is kept blanked except when acquiring images when the
+       screen is up in Low Dose mode.
+       &nbsp; This blanking protects the specimen from being exposed when there is no camera
+       inserted that would cause shuttering to keep the beam blanked.  When there is a camera inserted,
+        it also protects the specimen when the screen is lowered during the interval between the
+       camera opening its shutter and SerialEM discovering that the screen is down.&nbsp; Select this option to
+       prevent the blanking if it is problematic for some reason.
+     </p>
+      <p><a name="hid_specializedoptions_keepfocustrialstsameposition"></a><B>Keep Focus & Trial at Same Position 
+        (Settings - Specialized &amp; Misc. Options submenu)</B></p>
+     <p>Keep the Focus and Trial areas in Low Dose mode at the same position even when 
+       the <strong>Keep Focus and Trial identical</strong> option in the <A HREF="hidd_lowdose.htm">Low Dose control
+        panel</A> is not selected.&nbsp; </p>
+      <p>
+      <a NAME="hid_specializedoptions_tasksuseviewevenifsearchbetter"></A>
+        <A NAME="hid_special_skip_beam_shift_in_ts"></A><B>Skip Beam Shift in TS
+        command (Settings - Specialized &amp; Misc. Options submenu)</B></p>
+    <P>When using a phase plate on a JEOL microscope, the beam shift that accompanies
+      every image shift operation will change the centering of the phase plate.&nbsp;
+      Turn on this entry to suppress the beam shift for the alignment operations
+      involving image shift during a tilt series.</P>
+      <P><A NAME="hid_special_piezo_for_ld_axis_shift"></A><B>Piezo for LD Axis Shift
+        command (Settings - Specialized &amp; Misc. Options submenu)</B></P>
+    <p>
+      If there is a piezo plugin loaded that can provide stage movement along the tilt
+      axis, and the properties file contains both an entry 'UsePiezoForLDAxis'
+      specifying this piezo and an entry 'PiezoScale' defining the range and scaling
+      of this piezo, this option can be turned on to use this piezo movement as a
+      substitute for on-axis image shift between Record/View and Trial/Focus areas in
+      Low Dose mode.&nbsp; The option can be toggled only when Low Dose mode is off.&nbsp;
+      When Low Dose is turned on with this option enabled, the piezo is moved to the
+      end of its range appropriate for the Record area.&nbsp; Several restrictions are
+      also enforced: Focus and Trial are constrained to the same properties; 'Balance
+      Shifts' is turned off; rotation of the interarea axis away from the tilt axis is
+      turned off.&nbsp; The 'Position on tilt axis' entry can be negative or positive
+      as needed, but the stage will be moved to the other end of its range when the
+      sign is changed.</p>
+    <p>
+      <A NAME="hid_specialoptions_allowcontinuousintasks"></A><B>Allow
+      Continuous in TS command (Settings - Specialized &amp; Misc. Options submenu)</B></p>
+    <p>
+      Ordinarily, the program will acquire images in single-frame mode for almost all
+      automated operations, even when using a camera parameter set that has continuous
+      mode set.&nbsp; If this option is selected, images acquired directly by the Tilt
+      Series Controller will be allowed to be taken in continuous mode if that mode is
+      set in the camera parameters.&nbsp; Such continuous acquisitions must be stopped
+      manually by the user before the tilt series can go on.&nbsp; This exception does
+      not apply to images taken when autofocusing or doing other tasks; all tasks
+      enforce single-frame mode.&nbsp; Thus, it applies to Trial and Record, as well
+      as to View and Preview images taken in Low Dose mode.</p>
       <P><A NAME="hid_tiltseries_setaddress"></A><B>Set Email Address command (Settings 
           menu)</B></P>
       <P>Use this command to set the address(es) to which emails from SerialEM will be 
@@ -203,10 +406,6 @@
        Mode.&nbsp; This filename will be stored in the settings file and reloaded when 
        the program is restarted with those settings, or when those settings are read 
        in.</p>
-       <P><A NAME="hid_miscellaneousoptions_reversewheelzoomdirection"></A><B>Reverse Wheel Zoom 
-         Direction command (Settings - Miscellaneous Options submenu)</B></P>
-      <p>Use this command to toggle whether moving the mouse wheel away from you zooms 
-        the image down (the default) or up (the behavior when the option is selected).</p>
     </basefont>
   </BODY>
 </HTML>
