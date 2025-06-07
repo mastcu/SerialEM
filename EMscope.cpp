@@ -10554,7 +10554,8 @@ int CEMscope::LongOperationBusy(int index)
             longOp == LONG_OP_FILL_TRANSFER) && !mLongOpData[thread].errString.IsEmpty()) 
           {
             mWinApp->AppendToLog("WARNING: " + mLongOpData[thread].errString);
-            mLongOpErrorToReport = 1;
+            mLongOpErrorToReport = mLongOpData[thread].errString.Find("imeout") > 0 ? 
+              1 : 2;
           }
           if (longOp == LONG_OP_INVENTORY && JEOLscope) {
             mChangedLoaderInfo = mJeolLoaderInfo.GetSize() ? -1 : 0;

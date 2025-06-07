@@ -3969,7 +3969,7 @@
             filling.&nbsp; In order for time
             intervals to be kept track of between runs of the program, the property
             IgnoreShortTermCals must not be set.&nbsp; The command sets <i>reportedValue1</i> with a return code 
-            (currently just 1 if JEOL filling timed out and was stopped) and sets <i>reportedValue2</i> to 0.
+            (currently just 1 if JEOL filling timed out and was stopped, or 2 for other refilling errors) and sets <i>reportedValue2</i> to 0.
             <br />&nbsp;&nbsp;&nbsp;&nbsp; With a JEOL autoloader, the Inventory does three things: fills an internal program array
              with the information about each cartridge, prints a table to the log, and creates a persistent variable 
             <i>autoloaderInfo</i> with the same information in a 2D array.&nbsp; Each line of the 2D array has the
