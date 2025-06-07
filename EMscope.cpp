@@ -10588,7 +10588,7 @@ int CEMscope::LongOperationBusy(int index)
             }
           }
           didError = busy && (!mLongOpData[thread].finished[op] || thread == 1);
-          if (didError || !mWinApp->GetSuppressSomeMessages())
+          if (didError || mLongOpErrorToReport || !mWinApp->GetSuppressSomeMessages())
             mWinApp->AppendToLog("Call for " + CString(longOpDescription[longOp]) +
             B3DCHOICE(didError, " ended with error" + excuse, " finished successfully"));
           if (!excuse.IsEmpty())
@@ -10601,7 +10601,7 @@ int CEMscope::LongOperationBusy(int index)
             mFegFlashCounter++;
           mLastLongOpTimes[longOp] = now;
           mWinApp->mDocWnd->SetShortTermNotSaved();
-        } else if (busy < 0 && !errorOK[longOp])
+        } else if (busy < 0 && !errorOK[longOp] && !mLongOpErrorToReport)
           throwErr = true;
       }
     }
