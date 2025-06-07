@@ -50,11 +50,11 @@ enum {imNanoProbe = 0, imMicroProbe};
 #define pmImaging 1
 #define psmLAD 5
 
-#define MAX_LONG_OPERATIONS 11
+#define MAX_LONG_OPERATIONS 12
 #define MAX_LONG_THREADS 2
 enum {LONG_OP_BUFFER = 0, LONG_OP_REFILL, LONG_OP_INVENTORY, LONG_OP_LOAD_CYCLE,
 LONG_OP_MESSAGE_BOX, LONG_OP_HW_DARK_REF, LONG_OP_UNLOAD_CART, LONG_OP_LOAD_CART,
-LONG_OP_FILL_STAGE, LONG_OP_FILL_TRANSFER, LONG_OP_FLASH_FEG};
+LONG_OP_FILL_STAGE, LONG_OP_FILL_TRANSFER, LONG_OP_FLASH_FEG, LONG_OP_FILL_BOTH };
 
 // Standard conversions from signed real to nearest integer for JEOL calls
 #define NINT8000(a) (long)floor((a) + 0x8000 + 0.5)

@@ -2330,9 +2330,7 @@ void CParticleTasks::SetupRefillLongOp(int *longOps, float *hours, int &numLongO
   float hourVal)
 {
   if (JEOLscope && mScope->GetJeolHasNitrogenClass()) {
-    longOps[numLongOps] = LONG_OP_FILL_STAGE;
-    hours[numLongOps++] = hourVal;
-    longOps[numLongOps] = LONG_OP_FILL_TRANSFER;
+    longOps[numLongOps] = LONG_OP_FILL_BOTH;
     hours[numLongOps++] = hourVal;
   } else if ((FEIscope && (mScope->GetDewarVacCapabilities() & 2)) ||
     mScope->GetHasSimpleOrigin()) {

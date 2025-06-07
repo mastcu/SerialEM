@@ -3946,8 +3946,9 @@
           <TD>Starts one or more time-consuming operations: <b>op</b> can be Buffer cycle ('Bu'), Refill
             refrigerant on Thermo/FEI or SimpleOrigin ('Re'), Inventory cassettes ('In') on Thermo/FEI 
             or JEOL, Loader buffer cycle ('Lo'), Unload cartridge ('Un') on Thermo/FEI only, Dark
-            reference update for K2 (or K3 with GMS 3.31+) ('Da'), Refill Stage tank ('RS') or Refill Transfer
-            tank ('RT') on JEOL, or Flash FEG ('FF') on JEOL or Thermo/FEI.&nbsp; Operations are identified by the first two
+            reference update for K2 (or K3 with GMS 3.31+) ('Da'), Refill Stage tank ('RS'), Refill Transfer
+            tank ('RT'), or Refill Both tanks 'RB' on JEOL, or Flash FEG ('FF') on JEOL or 
+            Thermo/FEI.&nbsp; Operations are identified by the first two
             letters of whatever full word you use (case insensitive).&nbsp; 
             <br />&nbsp;&nbsp;&nbsp;&nbsp; Each operation
             except Inventory and Unload cartridge must be followed by an interval in hours (<b>#</b>).&nbsp; If <b>#</b> is &gt;
@@ -3969,7 +3970,10 @@
             filling.&nbsp; In order for time
             intervals to be kept track of between runs of the program, the property
             IgnoreShortTermCals must not be set.&nbsp; The command sets <i>reportedValue1</i> with a return code 
-            (currently just 1 if JEOL filling timed out and was stopped, or 2 for other refilling errors) and sets <i>reportedValue2</i> to 0.
+            (currently, 1 if JEOL filling timed out and was stopped, 3, 4 or 5, if starting stage tank,
+             transfer tank, or both tank fillings failed,  or 2 for other refilling errors) and sets
+             <i>reportedValue2</i> to 0.&nbsp; When there is an error from Refill Both on JEOL, the time for 
+            last filling is not changed even if one tank is filled, since the other is not.&nbsp; 
             <br />&nbsp;&nbsp;&nbsp;&nbsp; With a JEOL autoloader, the Inventory does three things: fills an internal program array
              with the information about each cartridge, prints a table to the log, and creates a persistent variable 
             <i>autoloaderInfo</i> with the same information in a 2D array.&nbsp; Each line of the 2D array has the
@@ -5338,12 +5342,20 @@
             thresholds).&nbsp; </TD>
         </TR>
         <TR>
-          <TD class="scriptcommand">FindMultiMapHoles #S #E #C</TD>
+          <TD class="scriptcommand">FindMultiMapHoles #S #E #C [#A] [#R] [#H] [#T] [#S] [#L]</TD>
           <TD>Runs a routine to find holes for all maps at one magnification with Navigator table indexes
             between <b>#S</b> and <b>#E</b> inclusive, and combining the resulting points for Multiple Records 
             if there are at least <b>#C</b> points, or not combining if <b>#C</b> is 0.&nbsp; 
             See <A href="hidd_hole_finder.htm#multimap">Finding Holes in Multiple Maps</A> for details.&nbsp;
-          Command added in 4.2, 7-Aug-24.</TD>
+            If the optional <b>#A</b> is 1or 2 autocontouring is used to create a polygon around the mesh opening;
+             when it is 1, all eligible maps within the range will be processed with hole finding and 
+            autocontouring; when it is 2, only maps
+            marked as Acquire will be processed, and then Acquire will be turned off for them.&nbsp; The other
+            optional parameters are the same as the ones described in detail for the 'AutoContourGridSquares' command
+            (in brief, reduction target, histogram-based threshold, absolute threshold, smallest and largest 
+            sizes).&nbsp; Reduction to 100-200 pixels is useful to avoid a very ragged contour when 
+            contouring a single grid square.
+          &nbsp; Command added in 4.2, 7-Aug-24; autocontouring added in 4.3, 6-Jun-25.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">FindAndCenterOneHole buf #D [#C] [#S]</TD>

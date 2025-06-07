@@ -187,14 +187,28 @@ BEGIN
         MENUITEM "R&ead Defaults",              ID_SETTINGS_READDEFAULTS
         MENUITEM "A&utosave",                   ID_SETTINGS_AUTOSAVE
         MENUITEM SEPARATOR
+        POPUP "Speciali&zed && Misc. Options"
+        BEGIN
+            MENUITEM "&Reverse Wheel Zoom Direction", ID_MISCELLANEOUSOPTIONS_REVERSEWHEELZOOMDIRECTION
+            MENUITEM "Turn &Off Beam after Long Inactivity...", ID_SPECIALIZEDOPTIONS_CLOSEVALVESAFTERLONGINACTIVITY
+            MENUITEM "Set Threshold for Right-dbl-click &2nd shot", ID_SPECIALIZEDMISC_SETTHRESHOLDFORRIGHT
+            MENUITEM SEPARATOR
+            MENUITEM "&Disable Dark Trim in Align...", ID_SPECIAL_DISABLE_DARK_TRIM_IN_ALIGN
+            MENUITEM "Adjust &Focus on Probe Mode Change", ID_SPECIALOPTIONS_ADJUSTFOCUSONPROBEMODECHANGE
+            MENUITEM "Normalize &All on Mag Change...", ID_SPECIALOPTIONS_NORMALIZEALLLENS
+            MENUITEM SEPARATOR
+            MENUITEM "&Normalize via View for Autofocus ", ID_SPECIALOPTIONS_NORMALIZEVIAVIEWFORAU
+            MENUITEM "Skip &Blanking in LD when Screen Up", ID_SPECIALIZEDOPTIONS_SKIPBLANKINGINLDWITHSCREENUP
+            MENUITEM "&Keep Focus && Trial at Same Position", ID_SPECIALIZEDOPTIONS_KEEPFOCUSTRIALSTSAMEPOSITION
+            MENUITEM SEPARATOR
+            MENUITEM "Allow &Continuous in TS",     ID_SPECIALOPTIONS_ALLOWCONTINUOUSINTASKS
+            MENUITEM "&Skip Beam Shift in TS",      ID_SPECIAL_SKIP_BEAM_SHIFT_IN_TS
+            MENUITEM "&Piezo for LD Axis Shift",    ID_SPECIAL_PIEZO_FOR_LD_AXIS_SHIFT
+        END
         MENUITEM "Set E&mail Address",          ID_TILTSERIES_SETADDRESS
         MENUITEM "Set a &Property",             ID_SETTINGS_SETAPROPERTY
         MENUITEM "&Basic Mode",                 ID_SETTINGS_BASICMODE
         MENUITEM "Read Basic Mode &File",       ID_SETTINGS_READBASICMODEFILE
-        POPUP "Miscella&neous Options"
-        BEGIN
-            MENUITEM "Reverse Wheel Zoom Direction", ID_MISCELLANEOUSOPTIONS_REVERSEWHEELZOOMDIRECTION
-        END
     END
     POPUP "&Camera"
     BEGIN
@@ -571,21 +585,6 @@ BEGIN
         MENUITEM "Setup Scope M&anagement...",  ID_TASKS_SETUPSCOPEMANAGEMENT
         MENUITEM SEPARATOR
         MENUITEM "&Verbose",                    ID_TASKS_VERBOSE
-        POPUP "Speciali&zed Options"
-        BEGIN
-            MENUITEM "&Disable Dark Trim in Align...", ID_SPECIAL_DISABLE_DARK_TRIM_IN_ALIGN
-            MENUITEM "Adjust &Focus on Probe Mode Change", ID_SPECIALOPTIONS_ADJUSTFOCUSONPROBEMODECHANGE
-            MENUITEM "Normalize &All on Mag Change...", ID_SPECIALOPTIONS_NORMALIZEALLLENS
-            MENUITEM "&Turn Off Beam after Long Inactivity...", ID_SPECIALIZEDOPTIONS_CLOSEVALVESAFTERLONGINACTIVITY
-            MENUITEM SEPARATOR
-            MENUITEM "&Normalize via View for Autofocus ", ID_SPECIALOPTIONS_NORMALIZEVIAVIEWFORAU
-            MENUITEM "Skip &Blanking in LD when Screen Up", ID_SPECIALIZEDOPTIONS_SKIPBLANKINGINLDWITHSCREENUP
-            MENUITEM "&Keep Focus && Trial at Same Position", ID_SPECIALIZEDOPTIONS_KEEPFOCUSTRIALSTSAMEPOSITION
-            MENUITEM SEPARATOR
-            MENUITEM "Allow &Continuous in TS",     ID_SPECIALOPTIONS_ALLOWCONTINUOUSINTASKS
-            MENUITEM "&Skip Beam Shift in TS",      ID_SPECIAL_SKIP_BEAM_SHIFT_IN_TS
-            MENUITEM "&Piezo for LD Axis Shift",    ID_SPECIAL_PIEZO_FOR_LD_AXIS_SHIFT
-        END
     END
     POPUP "T&ilt Series"
     BEGIN

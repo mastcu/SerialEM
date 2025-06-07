@@ -50,6 +50,19 @@ P
 R
 S
 U
+  Specialized & Misc options:
+  2
+  A
+  B
+  C
+  D
+  F
+  K
+  N
+  O
+  P
+  S
+  T
 
 Camera:
 A
@@ -224,15 +237,6 @@ U
 V
 W
 Z
-  Specialized options:
-  A
-  C
-  D
-  F
-  N
-  P
-  S
-  T
 
 Tilt series:
 A

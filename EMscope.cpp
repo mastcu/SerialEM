@@ -10215,7 +10215,8 @@ static char *longOpDescription[MAX_LONG_OPERATIONS] =
 {"running buffer cycle", "refilling refrigerant",
   "getting cassette inventory", "running autoloader buffer cycle", "showing message box",
   "updating hardware dark reference", "unloading a cartridge", "loading a cartridge",
-  "refilling stage", "refilling transfer tank", "flashing FEG"};
+  "refilling stage", "refilling transfer tank", "flashing FEG", 
+  "refilling stage and transfer tank"};
 
 // Start a thread for a long-running operation: returns 1 if thread busy, 
 // 2 if inappropriate in some other way, -1 if nothing was started
@@ -10226,8 +10227,8 @@ int CEMscope::StartLongOperation(int *operations, float *hoursSinceLast, int num
   bool needHWDR = false, startedThread = false, suspendFilter = false;
   int now = mWinApp->MinuteTimeStamp();
   // Change second one back to 0 to enable simpleorigin
-  short scopeType[MAX_LONG_OPERATIONS] = {1, 0, 1, 1, 1, 0, 1, 1, 2, 2, 0};
-  short blocksFilter[MAX_LONG_OPERATIONS] = {0, 4, 4, 4, 0, 0, 4, 4, 0, 0, 4};
+  short scopeType[MAX_LONG_OPERATIONS] = {1, 0, 1, 1, 1, 0, 1, 1, 2, 2, 0, 2};
+  short blocksFilter[MAX_LONG_OPERATIONS] = {0, 4, 4, 4, 0, 0, 4, 4, 0, 0, 4, 0};
   mDoingStoppableRefill = 0;
   mChangedLoaderInfo = false;
   mLongOpErrorToReport = 0;
@@ -10259,9 +10260,9 @@ int CEMscope::StartLongOperation(int *operations, float *hoursSinceLast, int num
           if (JEOLscope && !mPlugFuncs->FlashFEG)
             return 3;
         }
-        if (longOp == LONG_OP_FILL_STAGE)
+        if (longOp == LONG_OP_FILL_STAGE || longOp == LONG_OP_FILL_BOTH)
           mDoingStoppableRefill |= 1;
-        if (longOp == LONG_OP_FILL_TRANSFER)
+        if (longOp == LONG_OP_FILL_TRANSFER || longOp == LONG_OP_FILL_BOTH)
           mDoingStoppableRefill |= 2;
         if (longOp == LONG_OP_REFILL) {
           if (!FEIscope && !mHasSimpleOrigin)
@@ -10338,7 +10339,7 @@ UINT CEMscope::LongOperationProc(LPVOID pParam)
   LongThreadData *lod = (LongThreadData *)pParam;
   HRESULT hr = S_OK;
   CString descrip;
-  int retval = 0, longOp, ind, error, idAtZero = -1;
+  int retval = 0, longOp, ind, error, idAtZero = -1, fillVal = 0;
   bool fillTransfer, loadCart, valid;
   double startTime;
   const char *name;
@@ -10365,7 +10366,7 @@ UINT CEMscope::LongOperationProc(LPVOID pParam)
     // Do the operations in the entered sequence
     for (ind = 0; ind < lod->numOperations; ind++) {
       longOp = lod->operations[ind];
-      fillTransfer = longOp == LONG_OP_FILL_TRANSFER;
+      fillTransfer = longOp == LONG_OP_FILL_TRANSFER || longOp == LONG_OP_FILL_BOTH;
       loadCart = longOp == LONG_OP_LOAD_CART;
       error = 0;
       try {
@@ -10468,12 +10469,29 @@ UINT CEMscope::LongOperationProc(LPVOID pParam)
 
         // Fill JEOL stage tank or transfer tank
         if (longOp == LONG_OP_FILL_STAGE || fillTransfer) {
-          error = lod->plugFuncs->RefillNitrogen(fillTransfer ? 2 : 1, 1);
+          if (fillTransfer)
+            fillVal = 2;
+          if (longOp == LONG_OP_FILL_STAGE || longOp == LONG_OP_FILL_BOTH)
+            fillVal++;
+          error = lod->plugFuncs->RefillNitrogen(fillVal, 1);
           if (error == 2) {
-            error = lod->plugFuncs->RefillNitrogen(fillTransfer ? 2 : 1, 0);
+            error = lod->plugFuncs->RefillNitrogen(fillVal, 0);
             lod->errString = "Timeout ";
             lod->errString += longOpDescription[longOp];
             lod->errString += " - stopped the filling";
+          } else if (error > 2) {
+            lod->errString.Format("Error starting refill for %s tank%s",
+              B3DCHOICE(error == 5, "both", error == 3 ? "stage" : "transfer"),
+              B3DCHOICE(error == 5, "s", 
+                longOp == LONG_OP_FILL_BOTH ? " (the other one filled OK)" : ""));
+            if (lod->plugFuncs->GetLastErrorString) {
+              lod->errString += ": ";
+              lod->errString += lod->plugFuncs->GetLastErrorString();
+            }
+          }
+          if (error > 1) {
+            error = 0;
+            retval = 1;
           }
         }
 
@@ -10494,7 +10512,8 @@ UINT CEMscope::LongOperationProc(LPVOID pParam)
           SEMTestHResult(hr,  _T(descrip), &lod->errString, &error, true);
           retval = 1;
         } else
-          lod->finished[ind] = longOp != LONG_OP_REFILL || retval == 0;
+          lod->finished[ind] = (longOp != LONG_OP_REFILL && longOp != LONG_OP_FILL_BOTH) 
+          || retval == 0;
       }
 
       // Save an error in the error string and retval but continue in loop
@@ -10522,9 +10541,9 @@ int CEMscope::LongOperationBusy(int index)
 { 
   int thread, op, longOp, busy, indStart, indEnd, retval = 0;
   int now = mWinApp->MinuteTimeStamp();
-  int errorOK[MAX_LONG_OPERATIONS] = {0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+  int errorOK[MAX_LONG_OPERATIONS] = {0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
   const char *errStringsOK[MAX_LONG_OPERATIONS] = {"", "Cannot force refill", "", "", "",
-    "", "", "", "", "", ""};
+    "", "", "", "", "", "", ""};
   JeolCartridgeData jcData;
   bool throwErr = false, didError;
   CString excuse;
@@ -10551,11 +10570,21 @@ int CEMscope::LongOperationBusy(int index)
             busy = 0;
         } else {
           if ((longOp == LONG_OP_REFILL || longOp == LONG_OP_FILL_STAGE || 
-            longOp == LONG_OP_FILL_TRANSFER) && !mLongOpData[thread].errString.IsEmpty()) 
+            longOp == LONG_OP_FILL_TRANSFER || longOp == LONG_OP_FILL_BOTH) && 
+            !mLongOpData[thread].errString.IsEmpty()) 
           {
             mWinApp->AppendToLog("WARNING: " + mLongOpData[thread].errString);
-            mLongOpErrorToReport = mLongOpData[thread].errString.Find("imeout") > 0 ? 
-              1 : 2;
+            if (mLongOpData[thread].errString.Find("imeout") > 0)
+              mLongOpErrorToReport = 1;
+            if (mLongOpData[thread].errString.Find("starting") > 0) {
+              if (mLongOpData[thread].errString.Find("both") > 0)
+                mLongOpErrorToReport = 5;
+              if (mLongOpData[thread].errString.Find("stage") > 0)
+                mLongOpErrorToReport = 3;
+              else if (mLongOpData[thread].errString.Find("transfer") > 0)
+                mLongOpErrorToReport = 4;
+            } else
+              mLongOpErrorToReport = 2;
           }
           if (longOp == LONG_OP_INVENTORY && JEOLscope) {
             mChangedLoaderInfo = mJeolLoaderInfo.GetSize() ? -1 : 0;
@@ -10590,7 +10619,8 @@ int CEMscope::LongOperationBusy(int index)
           didError = busy && (!mLongOpData[thread].finished[op] || thread == 1);
           if (didError || mLongOpErrorToReport || !mWinApp->GetSuppressSomeMessages())
             mWinApp->AppendToLog("Call for " + CString(longOpDescription[longOp]) +
-            B3DCHOICE(didError, " ended with error" + excuse, " finished successfully"));
+            B3DCHOICE(didError || mLongOpErrorToReport, " ended with error" + excuse, 
+              " finished successfully"));
           if (!excuse.IsEmpty())
             busy = 0;
         }

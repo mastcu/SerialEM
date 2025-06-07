@@ -112,6 +112,7 @@ FLOAT_SETT_GETSET("MouseStageThreshold", mWinApp->mShiftManager->, MouseStageThr
 FLOAT_SETT_GETSET("MouseStageAbsoluteThreshold", mWinApp->mShiftManager->,
   MouseStageAbsThresh)
 FLOAT_SETT_GETSET("TiltDelay", mWinApp->mShiftManager->, TiltDelay)
+FLOAT_SETT_GETSET("RDCthreshFor2ndShot", mWinApp->mShiftManager->, RDCthreshFor2ndShot)
 BOOL_SETT_ASSIGN("MacroLimitRuns", macControl->limitRuns)
 BOOL_SETT_ASSIGN("MacroLimitScaleMax", macControl->limitScaleMax)
 BOOL_SETT_ASSIGN("MacroLimitTiltUp", macControl->limitTiltUp)

@@ -3,6 +3,16 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+6/6/25: Added LongOperation RB to fill both tanks at once on JEOL.
+
+6/6/25: Added options to FindMultiMapHoles script command to autocontour the
+mesh opening also.
+
+6/6/25: Moved Specialized Options from Tasks to Settings.
+
+6/6/25: Added second shot when aligning image after right double click shifts
+too much of the image out of the field.
+
 6/4/25: Changed default back to NOT monitoring C2 aperture on Titan (In 4.2).
 
 6/4/25: Prevented trying to disable electron counting or super-resolution mode
