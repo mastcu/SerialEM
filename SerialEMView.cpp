@@ -909,7 +909,7 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
   // Draw crosshairs if mouse shifting is underway
   if (!toBuffer&& (mMouseShifting || mWinApp->mBufferManager->GetDrawCrosshairs() || 
     (navigator && navigator->MovingMapItem()))) {
-    CPen pnSolidPen (PS_SOLID, 1, mShiftManager->GetShiftingDefineArea() ?
+    CPen pnSolidPen (PS_SOLID, thick1, mShiftManager->GetShiftingDefineArea() ?
       RGB(0, 255, 0) : RGB(255, 0, 0));
     crossLen = (rect.Width() < rect.Height() ? rect.Width() : rect.Height()) / 5;
     CPoint point = rect.CenterPoint();
