@@ -5804,6 +5804,28 @@ void CMacroProcessor::UpdateLDAreaIfSaved()
     mWinApp->mLowDoseDlg.SetContinuousUpdate(false);
 }
 
+// Get all the optional arguments needed for autocontouring starting at index fi
+void CMacroProcessor::GetAutocontourParams(int fi, float &target, float &minSize, 
+  float &maxSize, float &relThresh, float &absThresh, BOOL &usePoly)
+{
+  mNavHelper->mAutoContouringDlg->SyncToMasterParams();
+  AutoContourParams *param = mNavHelper->GetAutocontourParams();
+  target = param->usePixSize ? param->targetPixSizeUm :
+    param->targetSizePixels;
+  minSize = (mItemEmpty[fi + 3] || mItemFlt[fi + 3] < 0) ? param->minSize : mItemFlt[fi + 3];
+  maxSize = (mItemEmpty[fi + 4] || mItemFlt[fi + 4] < 0) ? param->maxSize : mItemFlt[fi + 4];
+  relThresh = param->useAbsThresh ? 0.f : param->relThreshold;
+  absThresh = param->useAbsThresh ? param->absThreshold : 0.f;
+  usePoly = (mItemEmpty[fi + 5] || mItemInt[fi + 5] > 0) ?
+    param->useCurrentPolygon : mItemInt[fi + 5] > 0;
+  if (!mItemEmpty[fi] && mItemFlt[fi] >= 0)
+    target = mItemFlt[fi];
+  if (!mItemEmpty[fi + 1] && mItemFlt[fi + 1] >= 0)
+    relThresh = mItemFlt[fi + 1];
+  if (!mItemEmpty[fi + 2] && mItemFlt[fi + 2] >= 0)
+    absThresh = mItemFlt[fi + 2];
+}
+
 // Store string variable into an extra script
 int CMacroProcessor::MakeNewTempMacro(CString &strVar, CString &strIndex, bool tempOnly,
   CString &strLine)

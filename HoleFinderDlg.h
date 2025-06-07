@@ -41,7 +41,8 @@ public:
   void CloseWindow();
   bool IsOpen() { return mIsOpen; };
   bool CheckAndSetNav(const char *message = NULL);
-  int ProcessMultipleMaps(int indStart, int indEnd, int minForCombine);
+  int ProcessMultipleMaps(int indStart, int indEnd, int minForCombine, int ifAutoCont, float target, float minSize,
+    float maxSize, float relThresh, float absThresh);
   int CountAcquirePointsDrawnOnMap(MapItemArray *itemArray, int mapID);
   void MultiMapNextTask(int param);
   int MultiMapBusy();
@@ -145,6 +146,12 @@ private:
   int mPMMmagIndex;
   int mPMMcombineMinPts;
   int mPMMminPtsForSkipIfIS;
+  int mPMMifAutoCont;
+  float mPMMtarget;
+  float mPMMminSize;
+  float mPMMmaxSize;
+  float mPMMrelThresh;
+  float mPMMabsThresh;
 
 
 public:

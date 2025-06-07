@@ -1993,7 +1993,8 @@ void CNavigatorDlg::ProcessHKey(void)
     "Otherwise enter minimum # of found holes required to do combining",
     mParam->minPtsForCombineInPMM))
     return;
-  mHelper->mHoleFinderDlg->ProcessMultipleMaps(start, end, mParam->minPtsForCombineInPMM);
+  mHelper->mHoleFinderDlg->ProcessMultipleMaps(start, end, mParam->minPtsForCombineInPMM,
+    0, 0., 0., 0., 0., 0.);
 }
 
 // Do common actions for selecting a range of contiguous items with collapse off

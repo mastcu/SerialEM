@@ -143,8 +143,8 @@ static CmdItem cmdList[] = {
 
 // Be sure to add an entry for longHasTime when adding long operation
 const char *CMacCmd::mLongKeys[MAX_LONG_OPERATIONS] =
-  {"BU", "RE", "IN", "LO", "$=", "DA", "UN", "$=", "RS", "RT", "FF"};
-int CMacCmd::mLongHasTime[MAX_LONG_OPERATIONS] = {1, 1, 0, 1, 0, 1, 0, 0, 1, 1, 1};
+  {"BU", "RE", "IN", "LO", "$=", "DA", "UN", "$=", "RS", "RT", "FF", "RB"};
+int CMacCmd::mLongHasTime[MAX_LONG_OPERATIONS] = {1, 1, 0, 1, 0, 1, 0, 0, 1, 1, 1, 1};
 
 CMacCmd::CMacCmd() : CMacroProcessor()
 {
@@ -12959,13 +12959,18 @@ int CMacCmd::UndoHoleCombining(void)
 // FindMultiMapHoles
 int CMacCmd::FindMultiMapHoles()
 {
-  int numItems;
+  int numItems, ifAutoCont;
+  float target =0., minSize = 0., maxSize = 0., relThresh= 0., absThresh = 0.;
+  BOOL usePoly = false;
   ABORT_NONAV;
   numItems = mNavigator->GetNumberOfItems();
   if (mItemInt[1] < 1 || mItemInt[2] > numItems || mItemInt[1] > mItemInt[2])
     ABORT_LINE("The Navigator indexes are out of range or swapped in line:\n\n");
+  ifAutoCont = mItemEmpty[4] ? 0 : mItemInt[4];
+  if (ifAutoCont > 0)
+    GetAutocontourParams(5, target, minSize, maxSize, relThresh, absThresh, usePoly);
   if (mNavHelper->mHoleFinderDlg->ProcessMultipleMaps(mItemInt[1] - 1, mItemInt[2] - 1,
-    mItemInt[3])) {
+    mItemInt[3], ifAutoCont, target, minSize, maxSize, relThresh, absThresh)) {
     AbortMacro();
     return 1;
   }
@@ -13003,28 +13008,14 @@ int CMacCmd::GetItemHolesToAcquire()
   return 0;
 }
 
-
 // AutoContourGridSquares
 int CMacCmd::AutoContourGridSquares(void)
 {
   ABORT_NONAV;
   int index;
-  mNavHelper->mAutoContouringDlg->SyncToMasterParams();
-  AutoContourParams *param = mNavHelper->GetAutocontourParams();
-  float target = param->usePixSize ? param->targetPixSizeUm :
-    param->targetSizePixels;
-  float minSize = (mItemEmpty[5] || mItemFlt[5] < 0) ? param->minSize : mItemFlt[5];
-  float maxSize = (mItemEmpty[6] || mItemFlt[6] < 0) ? param->maxSize : mItemFlt[6];
-  float relThresh = param->useAbsThresh ? 0.f : param->relThreshold;
-  float absThresh = param->useAbsThresh ? param->absThreshold : 0.f;
-  BOOL usePoly = (mItemEmpty[7] || mItemInt[7] > 0) ?
-    param->useCurrentPolygon : mItemInt[7] > 0;
-  if (!mItemEmpty[2] && mItemFlt[2] >= 0)
-    target = mItemFlt[2];
-  if (!mItemEmpty[3] && mItemFlt[3] >= 0)
-    relThresh = mItemFlt[3];
-  if (!mItemEmpty[4] && mItemFlt[4] >= 0)
-    absThresh = mItemFlt[4];
+  float target, minSize, maxSize, relThresh, absThresh;
+  BOOL usePoly;
+  GetAutocontourParams(2, target, minSize, maxSize, relThresh, absThresh, usePoly);
   if (ConvertBufferLetter(mStrItems[1], 0, true, index, mStrCopy))
     ABORT_LINE(mStrCopy);
   mNavHelper->mAutoContouringDlg->AutoContourImage(&mImBufs[index], target, minSize, 
@@ -13484,7 +13475,7 @@ int CMacCmd::LongOperation(void)
 
   ix1 = 0;
   iy1 = 1;
-  int used[] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+  int used[] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
   int operations[MAX_LONG_OPERATIONS + 1];
   float intervals[MAX_LONG_OPERATIONS + 1];
   for (index = 1; index < MAX_MACRO_TOKENS && !mItemEmpty[index]; index++) {

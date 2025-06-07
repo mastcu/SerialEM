@@ -649,6 +649,8 @@ public:
   void RestoreMultiShotParams();
   bool IsLowDoseAreaSaved(int which);
   void UpdateLDAreaIfSaved();
+  void GetAutocontourParams(int fi, float &target, float &minSize,
+    float &maxSize, float &relThresh, float &absThresh, BOOL &usePoly);
   int MakeNewTempMacro(CString &strVar, CString &strIndex, bool tempOnly, CString &strLine);
   bool SetupStageRestoreAfterTilt(CString * strItems, double &stageX, double &stageY);
   int DoStageRelaxation(double delx);

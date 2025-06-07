@@ -1938,7 +1938,9 @@ bool CHoleFinderDlg::CheckAndSetNav(const char *message)
 /*
  * Find holes, make points, and optionally combine in a range of maps at one mag index
  */
-int CHoleFinderDlg::ProcessMultipleMaps(int indStart, int indEnd, int minForCombine)
+int CHoleFinderDlg::ProcessMultipleMaps(int indStart, int indEnd, int minForCombine, 
+  int ifAutoCont, float target, float minSize,
+  float maxSize, float relThresh, float absThresh)
 {
   if (CheckAndSetNav("process multiple maps"))
     return 1;
@@ -1957,7 +1959,7 @@ int CHoleFinderDlg::ProcessMultipleMaps(int indStart, int indEnd, int minForComb
   for (ind = B3DMAX(0, indStart); ind <= indEnd; ind++) {
     item = itemArray->GetAt(ind);
     if (item->IsMap() && item->mMapMagInd > 0 && item->mMapMagInd <= MAX_MAGS &&
-      item->mColor != NAV_SKIP_COLOR &&
+      item->mColor != NAV_SKIP_COLOR && (item->mAcquire || ifAutoCont < 2) &&
       ((!item->mXHoleISSpacing[0] && !item->mYHoleISSpacing[0]) ||
         CountAcquirePointsDrawnOnMap(itemArray, item->mMapID) < mPMMminPtsForSkipIfIS)) {
       magList[item->mMapMagInd]++;
@@ -1980,6 +1982,12 @@ int CHoleFinderDlg::ProcessMultipleMaps(int indStart, int indEnd, int minForComb
   mPMMcurrentInd = indStart;
   mPMMendInd = indEnd;
   mPMMcombineMinPts = minForCombine;
+  mPMMifAutoCont = ifAutoCont;
+  mPMMtarget= target;
+  mPMMminSize = minSize;
+  mPMMmaxSize = maxSize;
+  mPMMrelThresh = relThresh;
+  mPMMabsThresh = absThresh;
   camera = B3DNINT((float)camList[mPMMmagIndex] / numMaps);
   B3DCLAMP(camera, 0, MAX_CAMERAS - 1);
   PrintfToLog("Processing %d maps at magnification %d", numMaps, 
@@ -2009,6 +2017,8 @@ void CHoleFinderDlg::MultiMapNextTask(int param)
 {
   CMapDrawItem *item;
   CString str;
+  double tmp1, tmp2, tmp3;
+  float shiftX, shiftY, xcen, ycen;
   EMimageBuffer *imBufs = mWinApp->GetImBufs();
   int ind, numPts, readBuf = mWinApp->mBufferManager->GetBufToReadInto();
   if (!mPMMmagIndex)
@@ -2021,7 +2031,7 @@ void CHoleFinderDlg::MultiMapNextTask(int param)
   MapItemArray *itemArray = mNav->GetItemArray();
 
   // Process results of hole finder: make points and combine
-  if (param) {
+  if (param == 1) {
     numPts = DoMakeNavPoints(-1, EXTRA_NO_VALUE, EXTRA_NO_VALUE, -1., -1., -1., -1);
     if (numPts < 0) {
       StopMultiMap();
@@ -2058,6 +2068,21 @@ void CHoleFinderDlg::MultiMapNextTask(int param)
       }
     }
     mPMMcurrentInd++;
+    if (mPMMifAutoCont > 0) {
+      item = itemArray->GetAt(mPMMcurrentInd - 1);
+      item->mAcquire = false;
+      ind = mNav->FindBufferWithMapID(item->mMapID);
+      if (ind >= 0) {
+        mWinApp->mProcessImage->GetCentroidOfBuffer(&imBufs[ind], xcen, ycen, shiftX, 
+          shiftY, false, tmp1, tmp2, tmp3);
+        mHelper->mAutoContouringDlg->AutoContourImage(&imBufs[ind], mPMMtarget,
+          mPMMminSize, mPMMmaxSize, mPMMrelThresh, mPMMabsThresh, false, xcen, ycen);
+        mWinApp->AddIdleTask(TASK_MULTI_MAP_HOLES, 2, 0);
+        return;
+      } else {
+        SEMAppendToLog("Cannot find map in buffer for autocontouring");
+      }
+    }
   }
 
   // Loop to look for next map
@@ -2066,7 +2091,7 @@ void CHoleFinderDlg::MultiMapNextTask(int param)
 
     // Same test as above except for the specific mag
     if (item->IsMap() && item->mMapMagInd == mPMMmagIndex && 
-      item->mColor != NAV_SKIP_COLOR && 
+      item->mColor != NAV_SKIP_COLOR && (item->mAcquire || mPMMifAutoCont < 2) &&
       ((!item->mXHoleISSpacing[0] && !item->mYHoleISSpacing[0]) ||
         CountAcquirePointsDrawnOnMap(itemArray, item->mMapID) < mPMMminPtsForSkipIfIS)) {
 
@@ -2098,7 +2123,7 @@ void CHoleFinderDlg::MultiMapNextTask(int param)
 // Busy if hole finder running
 int CHoleFinderDlg::MultiMapBusy()
 {
-  return mFindingHoles ? 1 : 0;
+  return (mFindingHoles || mHelper->mAutoContouringDlg->AutoContBusy()) ? 1 : 0;
 }
 
 // Stop: just clear mag index
