@@ -10550,7 +10550,9 @@ int CEMscope::LongOperationBusy(int index)
             mLongOpData[thread].finished[op] = true;
             busy = 0;
         } else {
-          if (longOp == LONG_OP_REFILL && !mLongOpData[thread].errString.IsEmpty()) {
+          if ((longOp == LONG_OP_REFILL || longOp == LONG_OP_FILL_STAGE || 
+            longOp == LONG_OP_FILL_TRANSFER) && !mLongOpData[thread].errString.IsEmpty()) 
+          {
             mWinApp->AppendToLog("WARNING: " + mLongOpData[thread].errString);
             mLongOpErrorToReport = 1;
           }
