@@ -2129,7 +2129,7 @@ int CHoleFinderDlg::FindAndCenterOneHole(EMimageBuffer *imBuf, float diameter, i
   ScaleMat bInv;
   int numSave, err, nx, ny, ind, bestInd;
   float diamSave, xcen, ycen, dist, minDist, pixel, fbin = (float)imBuf->mBinning;
-  float xShift, yShift;
+  float xShift, yShift, imXshift, imYshift;
   HoleFinderParams *hfParams = mHelper->GetHoleFinderParams();
   double ISX, ISY;
 
@@ -2168,10 +2168,11 @@ int CHoleFinderDlg::FindAndCenterOneHole(EMimageBuffer *imBuf, float diameter, i
 
   // Find point closest to center
   imBuf->mImage->getSize(nx, ny);
-  xcen = (float)(nx / 2.);
-  ycen = (float)(ny / 2.);
+  imBuf->mImage->getShifts(imXshift, imYshift);
+  xcen = (float)(nx / 2.) - imXshift;
+  ycen = (float)(ny / 2.) - imYshift;
   for (ind = 0; ind < (int)mXcenters.size(); ind++) {
-    dist = powf(mXcenters[ind] - xcen, 2.f) + powf(mXcenters[ind] - xcen, 2.f);
+    dist = powf(mXcenters[ind] - xcen, 2.f) + powf(mYcenters[ind] - ycen, 2.f);
     if (!ind || dist < minDist) {
       bestInd = ind;
       minDist = dist;
@@ -2182,11 +2183,6 @@ int CHoleFinderDlg::FindAndCenterOneHole(EMimageBuffer *imBuf, float diameter, i
 
   // If shifting requested, make sure not already done, compute it, apply if above limit
   if (maxFracShift > 0) {
-    imBuf->mImage->getShifts(xShift, yShift);
-    if (xShift != 0. || yShift != 0.) {
-      SEMAppendToLog("Not applying image shift, the image is already shifted");
-      return -2;
-    }
 
     // Right-handed shift for coordinate conversion to IS
     xShift = xcen - xCenter;
@@ -2203,7 +2199,7 @@ int CHoleFinderDlg::FindAndCenterOneHole(EMimageBuffer *imBuf, float diameter, i
     mWinApp->mScope->IncImageShift(ISX, ISY);
 
     // Left-handed shift for image
-    imBuf->mImage->setShifts(xShift, -yShift);
+    imBuf->mImage->setShifts(imXshift + xShift, imYshift - yShift);
     imBuf->SetImageChanged(1);
     mWinApp->mMainView->DrawImage();
     PrintfToLog("Applied image shift of %.2f, %.2f microns to center hole",
