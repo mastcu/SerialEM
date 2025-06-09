@@ -3,6 +3,7 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+6/2/25: SEM_4-2-3
 6/9/25: Added property MulGridPostLoadDelay to set delay between loading a
 grid and reopening gun valve in multigrid routine, and prevented it from
 setting a state twice, which can screw up camera parameters.
