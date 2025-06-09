@@ -443,8 +443,10 @@ void CMainFrame::DoClose(bool afterScript)
     if (mWinApp->mNavigator)
       mWinApp->SetOpenStateWithNav(mWinApp->mNavHelper->mStateDlg != NULL);
     if (mWinApp->mMultiGridTasks->GetDoingMulGridSeq() ||
-      mWinApp->mMultiGridTasks->GetSuspendedMulGrid())
+      mWinApp->mMultiGridTasks->GetSuspendedMulGrid()) {
       mWinApp->mMultiGridTasks->RestoreImposedParams();
+      mWinApp->mMultiGridTasks->RestoreState();
+    }
 
     // Auto save files, may save some inquiries
     mWinApp->mDocWnd->AutoSaveFiles();

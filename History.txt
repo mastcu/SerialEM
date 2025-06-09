@@ -3,6 +3,14 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+6/2/25: SEM_4-2-3
+6/9/25: Added property MulGridPostLoadDelay to set delay between loading a
+grid and reopening gun valve in multigrid routine, and prevented it from
+setting a state twice, which can screw up camera parameters.
+
+6/9/25: Made Step to and Adjust IS routine change to a slighty lower intensity
+when changing mag to reduce chance of beam getting too small (In 4.1).
+
 6/7/25: Fixed distance measurement in FindAndCenterOneHole and allowed it
 to work on already shifted image (In 4.2).
 

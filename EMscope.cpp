@@ -10456,6 +10456,7 @@ UINT CEMscope::LongOperationProc(LPVOID pParam)
                 sSimLoadedCartridge = sCartridgeToLoad;
               else
                 sSimLoadedCartridge = -1;
+              lod->plugFuncs->SetGunValve(false);
 
             } else {
               if (loadCart) {

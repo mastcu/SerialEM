@@ -220,6 +220,7 @@ public:
   GetMember(bool, UseTwoJeolCondAp);
   GetMember(int, SingleCondenserAp);
   GetMember(double, RunStartTime);
+  GetSetMember(int, PostLoadDelay);
   int *GetMontSetupConsetSizes() { return &mMontSetupConsetSizes[0]; };
   IntVec *GetCustomRunDlgInds() {return &mCustomRunDlgInds ; };
   bool WasStoppedInNavRun() { return mStoppedInNavRun && mSuspendedMulGrid; };
@@ -404,5 +405,6 @@ private:
   double mRemainingTime;         // Estimate of remaining time after current grid is done
   int mSkipMarkerShifts;         // User response to query: 1 to skip or -1 to use markers
   bool mNoMarkerShifts;          // Flag to skip in the run for whatever reason
+  int mPostLoadDelay;            // Delay time in seconds after loading/unloading grid
 };
 

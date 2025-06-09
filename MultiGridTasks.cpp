@@ -126,6 +126,7 @@ CMultiGridTasks::CMultiGridTasks()
   mRefineUsedLDorState = 0;
   mMaxSizeForRefinePolys = 250.;
   mMaxRefineShiftDiff = 5.;
+  mPostLoadDelay = 0;
 }
 
 
@@ -487,8 +488,7 @@ void CMultiGridTasks::StopMulGridSeq()
     return;
 
   // restore state and lowdose
-  if (mStateWasSet)
-    RestoreState();
+  RestoreState();
   if (!BOOL_EQUIV(mWinApp->LowDoseMode(), mSavedLowDose))
     mWinApp->mLowDoseDlg.SetLowDoseMode(mSavedLowDose);
   montP = mWinApp->GetMontParam();
@@ -3408,6 +3408,18 @@ void CMultiGridTasks::DoNextSequenceAction(int resume)
       mStartedLongOp = false;
       mUnloadErrorOK = 0;
       mSurveyIndex = 0;
+      if (mPostLoadDelay > 0) {
+        mWinApp->SetStatusText(SIMPLE_PANE, "POST LOADER WAIT");
+        for (ind = 0; ind < mPostLoadDelay; ind++) {
+          SleepMsg(1000);
+          if (mExtErrorOccurred > 1) {
+            mWinApp->SetStatusText(SIMPLE_PANE, "");
+            DoNextSequenceAction(0);
+            return;
+          }
+        }
+        mWinApp->SetStatusText(SIMPLE_PANE, "");
+      }
       break;
 
       // After realign, see if transform was within limits
@@ -3474,11 +3486,15 @@ void CMultiGridTasks::DoNextSequenceAction(int resume)
     SEMTrace('q', "Index %d action %d %s", mSeqIndex, action,
       sActionNames[action]);
 
-  if (action != MGACT_LOAD_GRID && action != MGACT_UNLOAD_GRID && 
-    action != MGACT_GRID_DONE && action != MGACT_RESTORE_COND_AP && 
-    action != MGACT_RESTORE_C1_AP && action != MGACT_RESTORE_STATE && 
-    action != MGACT_REPLACE_OBJ_AP && mScope->GetColumnValvesOpen() < 1)
-    mScope->SetColumnValvesOpen(true);
+  if (action != MGACT_LOAD_GRID && action != MGACT_UNLOAD_GRID &&
+    action != MGACT_GRID_DONE && action != MGACT_RESTORE_COND_AP &&
+    action != MGACT_RESTORE_C1_AP && action != MGACT_RESTORE_STATE &&
+    action != MGACT_REPLACE_OBJ_AP && mScope->GetColumnValvesOpen() < 1) {
+    if (!mScope->SetColumnValvesOpen(true)) {
+      StopMulGridSeq();
+      return;
+    }
+  }
 
   /*
    * NOW START THE NEXT ACTION
@@ -3591,6 +3607,7 @@ void CMultiGridTasks::DoNextSequenceAction(int resume)
 
     // Set state(s) for MM mapping
   case MGACT_LMM_STATE:
+    RestoreState();
     if (CStateDlg::DoSetImState(mParams.LMMstateNum, errStr)) {
       SEMMessageBox("Error trying to set LM state: " + errStr);
       StopMulGridSeq();
@@ -3607,6 +3624,7 @@ void CMultiGridTasks::DoNextSequenceAction(int resume)
       stateNums = &jcd.acqStateNums[0];
   case MGACT_MMM_STATE:   // Fall through to states for MMM
     err = 0;
+    RestoreState();
     for (ind = 0; ind < 4; ind++) {
       if (stateNums[ind] >= 0) {
         err = CStateDlg::DoSetImState(stateNums[ind], errStr);
@@ -4388,10 +4406,12 @@ int CMultiGridTasks::CheckShiftsForLMmode(int magInd)
 }
 
 /*
- * Restore state and update dialog
+ * Restore state and update dialog IF STATE IS SET - so safe to call unconditionally
  */
 void CMultiGridTasks::RestoreState()
 {
+  if (!mStateWasSet)
+    return;
   mNavHelper->RestoreSavedState();
   if (mNavHelper->mStateDlg) {
     mNavHelper->mStateDlg->Update();
