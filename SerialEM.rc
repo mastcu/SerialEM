@@ -4090,33 +4090,33 @@ BEGIN
     CONTROL         "2 x 2 Preview montage",IDC_STAA_2X2MONTAGE,"Button",BS_AUTORADIOBUTTON,33,51,88,10
     CONTROL         "2 x 3 Preview montage",IDC_STAA_2X3MONTAGE,"Button",BS_AUTORADIOBUTTON,33,63,88,10
     GROUPBOX        "Low Dose area and images to use",IDC_STATIC,26,5,101,71,WS_GROUP
-    CONTROL         "Cross-correlation",IDC_STAA_CROSSCORR,"Button",BS_AUTORADIOBUTTON | WS_GROUP,20,183,69,10
-    CONTROL         "Hole centering",IDC_STAA_CENTER_HOLE,"Button",BS_AUTORADIOBUTTON,86,183,58,10
+    CONTROL         "Cross-correlation",IDC_STAA_CROSSCORR,"Button",BS_AUTORADIOBUTTON | WS_GROUP,20,195,69,10
+    CONTROL         "Hole centering",IDC_STAA_CENTER_HOLE,"Button",BS_AUTORADIOBUTTON,86,195,58,10
     CONTROL         "Do procedure automatically with:",IDC_STAA_DO_AUTOMATIC,
-                    "Button",BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,14,172,120,10
-    CONTROL         "Current mag of area",IDC_STAA_CURRENT_MAG,"Button",BS_AUTORADIOBUTTON | WS_GROUP,14,104,132,10
+                    "Button",BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,14,184,120,10
+    CONTROL         "Current mag of area",IDC_STAA_CURRENT_MAG,"Button",BS_AUTORADIOBUTTON | WS_GROUP,14,116,132,10
     CONTROL         "Mag at which shifts were recorded",IDC_STAA_PREV_MAG,
-                    "Button",BS_AUTORADIOBUTTON,14,116,129,10
-    CONTROL         "Other mag:",IDC_STAA_OTHER_MAG,"Button",BS_AUTORADIOBUTTON,14,128,47,10
-    GROUPBOX        "Magnification to use",IDC_STATIC,7,94,139,50,WS_TABSTOP
+                    "Button",BS_AUTORADIOBUTTON,14,128,129,10
+    CONTROL         "Other mag:",IDC_STAA_OTHER_MAG,"Button",BS_AUTORADIOBUTTON,14,140,47,10
+    GROUPBOX        "Magnification to use",IDC_STATIC,7,106,139,50,WS_TABSTOP
     DEFPUSHBUTTON   "Close",IDOK,54,249,36,14
     PUSHBUTTON      "Cancel",IDCANCEL,96,249,36,14
-    RTEXT           "23000",IDC_STAT_OTHER_MAG,62,129,25,8
-    CONTROL         "",IDC_SPIN_OTHER_MAG,"msctls_updown32",UDS_ARROWKEYS,88,126,12,14
+    RTEXT           "23000",IDC_STAT_OTHER_MAG,62,141,25,8
+    CONTROL         "",IDC_SPIN_OTHER_MAG,"msctls_updown32",UDS_ARROWKEYS,88,138,12,14
     CONTROL         "Change defocus offset to:",IDC_CHECK_SET_DEF_OFFSET,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,14,149,95,10
-    RTEXT           "-20",IDC_STAT_DEF_OFFSET,111,150,14,8
-    CONTROL         "",IDC_SPIN_DEF_OFFSET,"msctls_updown32",UDS_ARROWKEYS,128,147,12,14
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,14,161,95,10
+    RTEXT           "-20",IDC_STAT_DEF_OFFSET,111,162,14,8
+    CONTROL         "",IDC_SPIN_DEF_OFFSET,"msctls_updown32",UDS_ARROWKEYS,128,159,12,14
     PUSHBUTTON      "?",IDC_BUTHELP,136,251,11,10
     CONTROL         "Take image after shifting to position",IDC_CHECK_IMAGE_AFTER_IS,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,14,236,130,10
-    GROUPBOX        "Automatic adjustment",IDC_STAT_AUTO_ADJUST,7,163,139,71
-    LTEXT           "Hole size:",IDC_STAT_HOLE_SIZE,12,197,32,8
-    EDITTEXT        IDC_EDIT_STAA_HOLE,45,195,24,13,ES_AUTOHSCROLL
-    LTEXT           "um",IDC_STAT_MICRONS,70,197,11,8
-    LTEXT           "Static",IDC_STAT_MAG_INFO_LINE,12,222,133,8
-    LTEXT           "Maximum shift as fraction of hole size:",IDC_STAT_LIMIT_FRAC,12,211,108,8
-    EDITTEXT        IDC_EDIT_STAA_LIMIT,121,209,24,14,ES_AUTOHSCROLL
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,15,92,130,10
+    GROUPBOX        "Automatic adjustment",IDC_STAT_AUTO_ADJUST,7,175,139,71
+    LTEXT           "Hole size:",IDC_STAT_HOLE_SIZE,12,209,32,8
+    EDITTEXT        IDC_EDIT_STAA_HOLE,45,207,24,13,ES_AUTOHSCROLL
+    LTEXT           "um",IDC_STAT_MICRONS,70,209,11,8
+    LTEXT           "Static",IDC_STAT_MAG_INFO_LINE,12,234,133,8
+    LTEXT           "Maximum shift as fraction of hole size:",IDC_STAT_LIMIT_FRAC,12,223,108,8
+    EDITTEXT        IDC_EDIT_STAA_LIMIT,121,221,24,14,ES_AUTOHSCROLL
     PUSHBUTTON      "Start",IDC_BUT_STAA_GO,12,249,36,14
     CONTROL         "Set Preview exposure to:",IDC_CHECK_SET_PREV_EXP,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,15,80,85,10
     EDITTEXT        IDC_EDIT_PREVIEW_EXP,103,79,24,14,ES_AUTOHSCROLL
