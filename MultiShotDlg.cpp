@@ -613,6 +613,7 @@ int CMultiShotDlg::DoStartRecording()
   CString *modeNames = mWinApp->GetModeNames();
   int prevMag, origMag, camera = mWinApp->GetCurrentCamera();
   float ratio;
+  float intensityChgSafetyFactor = 0.8f;
   CString str;
   ScaleMat focMat;
   ControlSet *conSet = mWinApp->GetConSets() + PREVIEW_CONSET;
@@ -689,7 +690,7 @@ int CMultiShotDlg::DoStartRecording()
         mWinApp->mScope->SetLdsaParams(&mSavedLDParams);
       if (ldp[mAreaSaved].magIndex != prevMag) {
         ratio = powf(mShiftManager->GetPixelSize(camera, ldp[mAreaSaved].magIndex) /
-          mShiftManager->GetPixelSize(camera, prevMag), 2.);
+          mShiftManager->GetPixelSize(camera, prevMag), 2.f) * intensityChgSafetyFactor;
         mWinApp->mBeamAssessor->AssessBeamChange(ldp[mAreaSaved].intensity,
           ldp[mAreaSaved].spotSize, ldp[mAreaSaved].probeMode, ratio, newIntensity,
           outFactor);
