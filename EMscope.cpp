@@ -6122,10 +6122,13 @@ void CEMscope::DoISforLowDoseArea(int inArea, int curMag, double &delISX, double
   if (JEOLscope) {
     bsMat = mShiftManager->GetBeamShiftCal(curMag);
     if (bsMat.xpx) {
-      mLDChangeCumulBeamX += bsMat.xpx * posChgX + bsMat.xpy * posChgY;
-      mLDChangeCumulBeamY += bsMat.ypx * posChgX + bsMat.ypy * posChgY;
-      SEMTrace('b', "posChg %.3f %.3f -> change accumBS to %.5g %.5g ", posChgX, posChgY,
-        mLDChangeCumulBeamX, mLDChangeCumulBeamY);
+      adjISX = bsMat.xpx * posChgX + bsMat.xpy * posChgY;
+      adjISY = bsMat.ypx * posChgX + bsMat.ypy * posChgY;
+      mLDChangeCumulBeamX += adjISX;
+      mLDChangeCumulBeamY += adjISY;
+      SEMTrace('b', "posChg %.3f %.3f -> change accumBS at mag %d by %.5g %.5g to %.5g "
+        "%.5g ", posChgX, posChgY, curMag, adjISX, adjISY, mLDChangeCumulBeamX,
+        mLDChangeCumulBeamY);
     }
   }
 }
@@ -6208,7 +6211,7 @@ void CEMscope::ChangeAlphaAndBeam(int oldAlpha, int newAlpha, int oldMag, int ne
   ScaleMat bsmOld, bsmNew;
   double curISX, curISY;
   double posChangingISX, posChangingISY, pcNewISX, pcNewISY, pcOldISX, pcOldISY;
-  int magInd;
+  int magInd = 0;
   bool changingLM;
   mSetAlphaBeamTiltX = EXTRA_NO_VALUE;
 
@@ -6252,16 +6255,22 @@ void CEMscope::ChangeAlphaAndBeam(int oldAlpha, int newAlpha, int oldMag, int ne
     bsmOld = mShiftManager->GetBeamShiftCal(oldMag, oldAlpha);
     bsmNew = mShiftManager->GetBeamShiftCal(newMag, newAlpha);
     if (bsmOld.xpx != bsmNew.xpx && bsmOld.xpx && bsmNew.xpx) {
+      if (!magInd)
+        magInd = FastMagIndex();
       GetImageShift(curISX, curISY);
       PositionChangingPartOfIS(curISX, curISY, posChangingISX, posChangingISY);
       pcOldISX = pcNewISX = posChangingISX;
       pcOldISY = pcNewISY = posChangingISY;
+      /*PrintfToLog("cur %d old %d new %d  posChg %.3f %.3f", magInd, oldMag, newMag, 
+      pcOldISX, pcOldISY);*/
       if (oldMag != magInd)
         mShiftManager->TransferGeneralIS(newMag, pcNewISX, pcNewISY, oldMag, pcOldISX,
           pcOldISY);
       if (newMag != magInd)
         mShiftManager->TransferGeneralIS(oldMag, pcOldISX, pcOldISY, newMag, pcNewISX,
           pcNewISY);
+      /*PrintfToLog("old posChg old %.3f %.3f  new %.3f %.3f", pcOldISX, pcOldISY,
+      pcNewISX, pcNewISY);*/
       beamDelX += bsmNew.xpx * pcNewISX + bsmNew.xpy * pcNewISY -
         (bsmOld.xpx * pcOldISX + bsmOld.xpy * pcOldISY);
       beamDelY += bsmNew.ypx * pcNewISX + bsmNew.ypy * pcNewISY -
@@ -6694,7 +6703,7 @@ BOOL CEMscope::SetSpotSize(int inIndex, int normalize)
   BOOL result = true;
   int curSpot = -1;
   bool fixBeam, unblankAfter;
-  double beamXorig, beamYorig;
+  double beamXorig, beamYorig, delX, delY;
   const char *routine = "SetSpotSize";
 
   if (!sInitialized || inIndex < mMinSpotSize)
@@ -6710,7 +6719,7 @@ BOOL CEMscope::SetSpotSize(int inIndex, int normalize)
     curSpot <= mMaxSpotWithBeamShift[mSecondaryMode] &&
     inIndex >= mMinSpotWithBeamShift[mSecondaryMode] &&
     inIndex <= mMaxSpotWithBeamShift[mSecondaryMode];
-  if (fixBeam)
+  if (fixBeam && !(JEOLscope && mChangingLDArea))
     GetBeamShift(beamXorig, beamYorig);
 
   unblankAfter = BlankTransientIfNeeded(routine);
@@ -6727,12 +6736,19 @@ BOOL CEMscope::SetSpotSize(int inIndex, int normalize)
 
   // Finally, call the routine to set the fixed beam shift
   if (result && fixBeam) {
-    beamXorig += mSpotBeamShifts[mSecondaryMode][inIndex][0] -
+    delX = mSpotBeamShifts[mSecondaryMode][inIndex][0] -
       mSpotBeamShifts[mSecondaryMode][curSpot][0];
-    beamYorig += mSpotBeamShifts[mSecondaryMode][inIndex][1] -
+    delY = mSpotBeamShifts[mSecondaryMode][inIndex][1] -
       mSpotBeamShifts[mSecondaryMode][curSpot][1];
-    SEMTrace('b', "Fixing BS to %f %f", beamXorig, beamYorig);
-    SetBeamShift(beamXorig, beamYorig);
+    if (JEOLscope && mChangingLDArea) {
+      IncOrAccumulateBeamShift(delX, delY, "Spot beam shift");
+    } else {
+      beamXorig += delX;
+      beamYorig += delY;
+      SEMTrace('b', "Fixing BS for spot by %.5g %.5g to %.5g %.5g", delX, delY, beamXorig,
+        beamYorig);
+      SetBeamShift(beamXorig, beamYorig);
+    }
   }
   return result;
 }
@@ -6778,7 +6794,7 @@ BOOL CEMscope::SetSpotKernel(SynchroThreadData *sytd)
         }
         mPlugFuncs->GetBeamShift(&curBSX, &curBSY);
         if (curBSX != startBSX || curBSY != startBSY) {
-          SEMTrace('b', "BS change seen in %.0f to %f %f", SEMTickInterval(startTime),
+          SEMTrace('b', "BS change seen in %.0f to %.5g %.5g", SEMTickInterval(startTime),
             curBSX, curBSX);
           break;
         }
