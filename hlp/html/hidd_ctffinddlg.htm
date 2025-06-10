@@ -31,10 +31,12 @@
     <p><strong>Use Ctfplotter for: Fits for tuning</strong></p>
     <p>Select this option to use Ctfplotter instead Ctffind for CTF fitting when 
       calibrating or correcting astigmatism or when correcting coma.&nbsp; Tests at 
-      200 kV with a cross-line gratig showed that Ctfplotter was ~30% more accurate 
-      for coma correction, but no better for astigmatism correction.&nbsp; Ctfplotter 
-      may not work correctly in this context with images having high astigmatism (&gt;= 1 
-      micron), but then Ctfplotter may not either.</p>
+      200 kV with a cross-line grating showed that Ctfplotter was ~30% more accurate 
+      for coma correction, but no better for astigmatism correction.&nbsp; However, 
+      Ctfplotter may frequently fail in this context with images having high 
+      astigmatism (&gt;= 1 micron, or at lower astigmatism levels when defocus is low), a 
+      situation where Ctffind is more likely to succeed.&nbsp; Ctfplotter may be 
+      especially problematic for the calibration of coma versus image shift.</p>
     <p><b>Use slower search, needed for high astigmatism&nbsp; <em>(Ctffind only)</em></b></p>
     <p>Select this option to do a slower 2-D initial exhaustive search instead of the default 
         1-D search with a rotational averaged spectrum.&nbsp; This search is needed if 

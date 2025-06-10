@@ -10804,10 +10804,14 @@ int CMacCmd::CameraProperties(void)
     iy1 = mItemInt[2];
   delX = 1000. * ix1 * mShiftManager->GetPixelSize(
     mItemEmpty[1] ? mCurrentCam : mActiveList[mItemInt[1] - 1], iy1);
+
+  // Modify ix1 for DE Apollo now that other uses of ix1 are done
+  if (mCamParams->DE_camType && (mCamParams->CamFlags & DE_APOLLO_CAMERA))
+    ix1 = 2;
   mLogRpt.Format("%s: size %d x %d    rotation/flip %d   pixel on chip %.1f   "
-    "unbinned pixel %.3f nm at %dx",
+    "physical pixel %.3f nm at %dx",
     (LPCSTR)mCamParams->name, index, index2, mCamParams->rotationFlip,
-    mCamParams->pixelMicrons *ix1, delX, MagForCamera(mCamParams, iy1));
+    mCamParams->pixelMicrons * ix1, delX, MagForCamera(mCamParams, iy1));
   SetReportedValues((double)index, (double)index2,
     (double)mCamParams->rotationFlip, mCamParams->pixelMicrons * ix1, delX,
     (double)actNum);

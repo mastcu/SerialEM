@@ -3,19 +3,22 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+6/10/25: Fixed CameraProperties command to give right chip pixel size output
+for DE Apollo (In 4.2)
+
 6/10/25: Fixed adjustment in beam shift across an image shift boundary when
 changing alpha between low dose areas on a JEOL, and integrated the spot beam
 shift during area change with other accumulated incremental changes so it now
 has an effect; THIS INVALIDATES INCREMENTAL BEAM SHIFTS IN EXISTING LOW DOSE
-SETUPS IF SPOT CHANGES AND THIS CALIBRATION EXISTS.
+SETUPS IF SPOT CHANGES AND THIS CALIBRATION EXISTS (In 4.2).
 
 6/9/25: SEM_4-2-3
 6/9/25: Added property MulGridPostLoadDelay to set delay between loading a
 grid and reopening gun valve in multigrid routine, and prevented it from
-setting a state twice, which can screw up camera parameters.
+setting a state twice, which can screw up camera parameters (In 4.2).
 
 6/9/25: Made Step to and Adjust IS routine change to a slighty lower intensity
-when changing mag to reduce chance of beam getting too small (In 4.1).
+when changing mag to reduce chance of beam getting too small (In 4.2).
 
 6/7/25: Fixed distance measurement in FindAndCenterOneHole and allowed it
 to work on already shifted image (In 4.2).
