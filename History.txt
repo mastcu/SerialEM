@@ -3,6 +3,9 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+6/11/25: Changed properties sent to DE server when doing dark-corrected only
+counting (in 4.2).
+
 6/10/25: Fixed CameraProperties command to give right chip pixel size output
 for DE Apollo (In 4.2)
 

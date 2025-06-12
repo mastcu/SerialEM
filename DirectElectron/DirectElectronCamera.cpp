@@ -1757,6 +1757,9 @@ int DirectElectronCamera::setCorrectionMode(int nIndex, int readMode)
   CString str;
   int normCount, normDoseFrac = 1, movieCorrEnable = 1;
   int bits = (readMode == SUPERRES_MODE) ? 8 : 16;
+  int corrSet = -1;
+
+  // This seems not to happen in camcontroller
   if (nIndex & 4) {
     movieCorrEnable = 0;
     nIndex -= 4;
@@ -1769,7 +1772,10 @@ int DirectElectronCamera::setCorrectionMode(int nIndex, int readMode)
   if (mNormAllInServer) {
     normDoseFrac = nIndex / 2;
     if (readMode > 0) {
-      nIndex = 2;
+
+      // 6/11/25: do not change processing for counting mode, it should do Dark not
+      // not Dark and Gain
+      //nIndex = 2;  
       normCount = normDoseFrac;
       if (mRepeatForServerRef > 0)
         normCount = 0;
@@ -1779,10 +1785,13 @@ int DirectElectronCamera::setCorrectionMode(int nIndex, int readMode)
 
   if (readMode > 0 && (normCount != mLastNormCounting || !mTrustLastSettings) && 
     !IsApolloCamera() && !mLiveThread) {
-    if (!setStringWithError(mAPI2Server ? 
+    // 6/11/25 All server versions should use post-counting gain. We set the post-counting
+    // gain to a read-only property in the latest DE-MC. And SerialEM does not need to set
+    // this property for all server versions.
+    /* if (!setStringWithError(mAPI2Server ? 
       "Event Counting - Apply Post-Counting Gain" :
       DE_PROP_COUNTING" - Apply Post-Counting Gain", normCount ? psEnable : psDisable))
-        return 1;
+        return 1;*/
     mLastNormCounting = normCount;
   }
 
@@ -1807,6 +1816,7 @@ int DirectElectronCamera::setCorrectionMode(int nIndex, int readMode)
         newCorrections[nIndex]))
         return 1;
     }
+    corrSet = nIndex;
   }
   mLastProcessing = nIndex;
 
@@ -1817,7 +1827,7 @@ int DirectElectronCamera::setCorrectionMode(int nIndex, int readMode)
       if (!setStringWithError(DE_PROP_AUTOMOVIE"Image Correction",
       movieCorrEnable ? psEnable : psDisable))
       return 1;
-    } else {
+    } else if (corrSet < 0) {
       if (!setStringWithError("Image Processing - Flatfield Correction",
         movieCorrEnable ? newCorrections[nIndex] : "None"))
         return 1;
