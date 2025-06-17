@@ -886,14 +886,16 @@ int DirectElectronCamera::AcquireImageData(unsigned short *image4k, long &imageS
     AddValidStateToMap(checksum, mExpFPSchecks, minuteNow);
   }
 
-  // Check dark reference if any processing or counting mode
-  if ((mLastProcessing != UNPROCESSED || mLastElectronCounting > 0) &&
+  // Check dark reference if any processing or counting mode and older server
+  if ((mLastProcessing != UNPROCESSED || 
+    (mLastElectronCounting > 0 && mServerVersion < DE_NO_REF_IF_UNNORMED)) &&
     !IsReferenceValid(checksum, mDarkChecks, minuteNow, mAPI2Server ?
       "Reference - Dark" : "Correction Mode Dark Reference Status", "dark"))
     return 1;
 
-  // Check gain reference if normalized or counting mode
-  if ((mLastProcessing == GAIN_NORMALIZED || mLastElectronCounting > 0) &&
+  // Check gain reference if normalized or counting mode and older server
+  if ((mLastProcessing == GAIN_NORMALIZED ||
+    (mLastElectronCounting > 0 && mServerVersion < DE_NO_REF_IF_UNNORMED)) &&
     !IsReferenceValid(checksum, mGainChecks, minuteNow, mAPI2Server ?
       "Reference - Gain" : "Correction Mode Gain Reference Status", "gain"))
     return 1;
@@ -2089,12 +2091,16 @@ int DirectElectronCamera::OperationForRotateFlip(int DErotation, int flip)
 bool DirectElectronCamera::IsReferenceValid(int checksum, std::map<int, int> &vmap, 
   int minuteNow, const char *propStr, const char *refType)
 {
-  CString valStr;
+  CString valStr, statStr;
   if (!CheckMapForValidState(checksum, vmap, minuteNow)) {
     if (getStringProperty(propStr, valStr)) {
       if (valStr == "None") {
         valStr.Format("There is no %s reference valid for the current conditions", 
           refType);
+        if (mServerVersion >= DE_NO_REF_IF_UNNORMED &&
+          getStringProperty("System Status", statStr)) {
+          valStr += ".  Message from server:\r\n" + statStr;
+        }
         SetAndTraceErrorString(valStr);
         return false;
       }
