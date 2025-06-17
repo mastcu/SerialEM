@@ -9797,6 +9797,7 @@ int CEMscope::GetFEIChannelList(CameraParameters * params, bool refresh)
 {
   int chan, err;
   char *detNames[MAX_STEM_CHANNELS];
+  static bool firstTime = true;
 
   for (chan = 0; chan < params->numChannels; chan++)
     detNames[chan] = _strdup((LPCTSTR)params->detectorName[chan]);
@@ -9808,8 +9809,10 @@ int CEMscope::GetFEIChannelList(CameraParameters * params, bool refresh)
     B3DFREE(detNames[chan]);
   if (err == 3)
     SEMMessageBox(CString(mPlugFuncs->GetLastErrorString()));
-  else if (!refresh)
+  else if (firstTime) {
     mWinApp->AppendToLog(mPlugFuncs->GetLastErrorString());
+    firstTime = false;
+  }
   return err;
 }
 
