@@ -3285,8 +3285,9 @@ void CCameraController::Capture(int inSet, bool retrying)
     //conSet.K2ReadMode = COUNTING_MODE;
 
   // For K3, unprocessed for counting mode is really raw and not the same as DS so promote
-  if (mParam->K2Type == K3_TYPE && conSet.processing == UNPROCESSED && 
-    conSet.K2ReadMode > 0)
+  // 6/17/25: Do the same for DE upon request, counting should always be dark-subtracted
+  if ((mParam->K2Type == K3_TYPE || mParam->DE_camType) &&
+    conSet.processing == UNPROCESSED && conSet.K2ReadMode > 0)
       conSet.processing = DARK_SUBTRACTED;
   mTD.Processing = conSet.processing;
   mTD.FrameTime = conSet.frameTime;
@@ -9944,7 +9945,7 @@ void CCameraController::DisplayNewImage(BOOL acquired)
         }
 
       } else if (!mSimulationMode && mTD.Processing != lastConSetp->processing && 
-        !mAligningPluginFrames) {
+        !mAligningPluginFrames && !(mParam->DE_camType && lastConSetp->K2ReadMode > 0)) {
 
         // Gain normalization or other processing
         ProcessImageOrFrame(mTD.Array[chan], mTD.ImageType, lastConSetp->processing, 
