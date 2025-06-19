@@ -955,6 +955,7 @@ private:
   float mSavedAperturePosX[MAX_APERTURE_NUM + 1];   // Apertures are numbered from 1, 
   float mSavedAperturePosY[MAX_APERTURE_NUM + 1];   // subtract 1 to access array
   int mFEIhasApertureSupport;  // Flag that aperture support exists on FEI scope
+  int mFEIcanGetLoaderNames;   // Flag that it can get names from an autoloader panel
   float mDiffShiftScaling;     // Scaling to apply to diffraction shift
   int mXLensModeAvailable;     // 1 if available, 0 no object, -1 not available
   int mRestoreStageXYdelay;    // Delay between tilt and restore step

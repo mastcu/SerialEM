@@ -458,6 +458,7 @@ CEMscope::CEMscope()
   mBkgdMovingStage = false;
   mMovingAperture = false;
   mFEIhasApertureSupport = -1;
+  mFEIcanGetLoaderNames = -1;
   mLastGaugeStatus = gsInvalid;
   mVacCount = 100;
   mLastSpectroscopy = false;
@@ -696,6 +697,8 @@ int CEMscope::Initialize()
         mDewarVacCapabilities = mUseIllumAreaForC2 ? 3 : 0;
       if (!mPlugFuncs->GetApertureSize)
         mFEIhasApertureSupport = 0;
+      if (!mPlugFuncs->GetCartridgeInfo)
+        mFEIcanGetLoaderNames = 0;
 
     } else if (JEOLscope) {
 
@@ -7242,8 +7245,7 @@ BOOL CEMscope::CassetteSlotStatus(int slot, int &status, CString &names, int *nu
         status = -1;
       success = true;
     }
-    if (mFEIhasApertureSupport && mPlugFuncs->GetCartridgeInfo && !numSlotsPtr && 
-      status >= 0) {
+    if (mFEIcanGetLoaderNames && !numSlotsPtr && (status >= 0 || !slot)) {
       success = true;
       if (!slot)
         status = 0;
@@ -7258,7 +7260,7 @@ BOOL CEMscope::CassetteSlotStatus(int slot, int &status, CString &names, int *nu
   }
   catch (_com_error E) {
     if (success) {
-      mFEIhasApertureSupport = 0;
+      mFEIcanGetLoaderNames = 0;
     } else if (numSlots == -999)
       SEMReportCOMError(E, _T("getting number of autoloader cassette slots "));
     else
