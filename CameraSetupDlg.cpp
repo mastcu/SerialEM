@@ -1868,12 +1868,12 @@ void CCameraSetupDlg::ManageDarkRefs(void)
 void CCameraSetupDlg::ManageK2Processing(void)
 {
   CWnd *wnd = GetDlgItem(IDC_RUNPROCESSED);
-  int *modeP = mParam->DE_camType ? &m_iDEMode : &m_iK2Mode;
-  if (mParam->K2Type && m_iK2Mode && !m_iProcessing) {
+  int *modeP = mDE_Type ? &m_iDEMode : &m_iK2Mode;
+  if ((mParam->K2Type || mDE_Type) && *modeP && !m_iProcessing) {
     m_iProcessing = 1;
     UpdateData(false);
   }
-  if (mParam->K2Type || (mDE_Type && (mParam->CamFlags & DE_APOLLO_CAMERA))) {
+  if (mParam->K2Type || mDE_Type) {
     wnd->ShowWindow((*modeP) ? SW_HIDE : SW_SHOW);
     SetDlgItemText(IDC_RDARKSUBTRACT, (*modeP) ? "Unnormalized" : "Dark Subtracted");
   }
@@ -2671,6 +2671,7 @@ void CCameraSetupDlg::OnK2Mode()
       m_iSumCount = B3DMAX(1, m_iSumCount);
     }
     ManageDEpanel();
+    ManageK2Processing();
     ManageExposure();
     UpdateData(false);
     return;
