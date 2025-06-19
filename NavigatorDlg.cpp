@@ -10176,10 +10176,6 @@ void CNavigatorDlg::AcquireAreas(int source, bool dlgClosing, bool useTempParams
   mNumDoneAcq = 0;
   mNumTotalShotsAcq = 0;
   mLastMontLeft = -1.;
-  if (!mScope->FastColumnValvesOpen()) {
-    mWinApp->AppendToLog("Opening valves for acquisition!");
-    mScope->SetColumnValvesOpen(true, false);
-  }
 
   if (mAcqParm->acquireType != ACQUIRE_RUN_MACRO) {
     mSaveAlignOnSave = mBufferManager->GetAlignOnSave();
@@ -10189,6 +10185,11 @@ void CNavigatorDlg::AcquireAreas(int source, bool dlgClosing, bool useTempParams
     mWinApp->SetStatusText(COMPLEX_PANE, "ACQUIRING AREAS");
   }
   mWinApp->UpdateBufferWindows();
+  if (!mScope->FastColumnValvesOpen()) {
+    mWinApp->AppendToLog("Opening valves for acquisition!");
+    if (!mScope->SetColumnValvesOpen(true, false))
+      return;
+  }
   if (mAcqParm->runStartMacro && mHelper->IsExtraTaskIncluded(NAA_MACRO_AT_START)) {
     mWinApp->AddIdleTask(TASK_NAVIGATOR_ACQUIRE, 0, 0);
     mMacroProcessor->Run(mAcqParm->startMacroInd - 1);
@@ -10253,7 +10254,8 @@ void CNavigatorDlg::AcquireNextTask(int param)
   item = mItemArray[mAcquireIndex];
   if (!mScope->FastColumnValvesOpen()) {
     mWinApp->AppendToLog("Opening valves next item!");
-    mScope->SetColumnValvesOpen(true, false);
+    if (!mScope->SetColumnValvesOpen(true, false))
+      return;
   }
 
   if (mAcqStepIndex < 0) {
@@ -11418,7 +11420,7 @@ void CNavigatorDlg::StopAcquiring(BOOL testMacro)
   SetCollapsing(mSaveCollapsed);
   mWinApp->UpdateBufferWindows();
   if (mAcqParm->closeValves && !HitachiScope && !mScope->SetColumnValvesOpen(false))
-    AfxMessageBox("An error occurred closing the gun valve at the end of acquisitions.",
+    SEMMessageBox("An error occurred closing the gun valve at the end of acquisitions.",
          MB_EXCLAME);
   if (mAcqParm->acquireType == ACQUIRE_RUN_MACRO)
     return;
