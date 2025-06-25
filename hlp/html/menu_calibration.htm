@@ -1673,11 +1673,11 @@
         the image rotation as reported by a Thermo/FEI scope (or a 0 for a JEOL). These numbers
         are listed in the form required for the magnification table in the
         SerialEMProperties.txt file. Different numbers will be output in EFTEM mode than
-        in normal lens mode. <i>On a Thermo/FEI scope</i> in EFTEM mode, the normal mode
+        in normal lens mode. <i>On a Thermo/FEI scope</i> or a <em>JEOL scope with GIF</em> in EFTEM mode, the normal mode
         magnification and rotation will be printed on each line before the EFTEM values,
-        so that the full table can be pasted directly into the properties file.&nbsp;
-        However, make sure that the table entries for normal mode are correct before
-        adding the EFTEM values.&nbsp; If necessary, correct the table for normal mode
+        so that the full table can be pasted directly into the properties file.&nbsp;&nbsp; However, make sure that the table entries for normal mode are correct before
+        adding the EFTEM values, and that LowestMModeMagIndex is correct in the 
+        properties file before running this on a JEOL with GIF.&nbsp; If necessary, correct the table for normal mode
         and add the screen down magnifications (if they differ), then restart SerialEM
         with the corrected properties file.&nbsp; Then run this command in EFTEM mode to
         get the EFTEM table combined with the correct one for normal mode.</P>
@@ -1701,15 +1701,15 @@
         Press the <strong>End</strong> button when you reach the highest magnification 
         in nanoprobe; the program will switch to microprobe and tell you to go to the 
         lowest magnification again.&nbsp; Step through the magnifications again and 
-        press <strong>End</strong> when done.&nbsp; At the end, the program will
-      output the table, two entries for LowestSTEMnonLMmag, and an entry for LowestMicroSTEMmag.&nbsp; 
-        You may find that some magnifications show up in both LM and nonLM.&nbsp; The 
-        program has no good way to distinguish these and they will show up as &quot;S?&quot; in 
-        the microscope status panel.&nbsp; This may not be a problem in practice.&nbsp; 
-        One solution would be to skip the LM magnifications, but a better solution would 
-        be to go through a microscope alignment that sets the STEM magnifications and 
-        set slightly different values that avoid the duplications.&nbsp; Have this done 
-        before doing any calibrations, and get a new new listing of the magnifications.</P>
+        press <strong>End</strong> when done.&nbsp; At the end, the program will output 
+        the table, two entries for LowestSTEMnonLMmag, and an entry for 
+        LowestMicroSTEMmag.&nbsp; You may find that some magnifications show up in both 
+        LM and nonLM.&nbsp; The program has no good way to distinguish these and they 
+        will show up as &quot;S?&quot; in the microscope status panel.&nbsp; This may not be a 
+        problem in practice.&nbsp; One solution would be to skip the LM magnifications, 
+        but a better solution would be to go through a microscope alignment that sets 
+        the STEM magnifications and set slightly different values that avoid the 
+        duplications.&nbsp; Have this done before doing any calibrations, and get a new listing of the magnifications.</P>
       <P><em>On a Thermo/FEI scope</em>, this routine will not produce a camera length 
         table.&nbsp; The main purpose for such a table is to allow the program to display &#39;-&gt;&#39; and
           the camera length to be changed to when using the magnification/camera length
