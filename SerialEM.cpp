@@ -5134,6 +5134,7 @@ int CSerialEMApp::FindNextMagForCamera(int camera, int magInd, int delta, BOOL n
   int secondary = mScope->GetLowestSecondaryMag();
   int lowestM = mScope->GetLowestMModeMagInd();
   BOOL ifSTEM = mCamParams[mCurrentCamera].STEMcamera;
+  BOOL ifEFTEM = mCamParams[mCurrentCamera].GIF;
   bool inSecondary = !ifSTEM && secondary && magInd >= secondary;
   bool inDualLM = !ifSTEM && secondary && magInd < lowestM && mScope->GetSecondaryMode();
   GetMagRangeLimits(mCurrentCamera, magInd, limlo, limhi);
@@ -5165,7 +5166,8 @@ int CSerialEMApp::FindNextMagForCamera(int camera, int magInd, int delta, BOOL n
     }
     if (magInd < limlo || magInd > limhi)
       return -1;
-    if ((!ifSTEM && mMagTab[magInd].mag > 0) || (ifSTEM && mMagTab[magInd].STEMmag > 0))
+    if ((!ifSTEM && !ifEFTEM && mMagTab[magInd].mag > 0) || (ifEFTEM && 
+      mMagTab[magInd].EFTEMmag > 0) || (ifSTEM && mMagTab[magInd].STEMmag > 0))
       index++;
   }
   return magInd;
