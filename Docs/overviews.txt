@@ -1,0 +1,197 @@
+Program Startup and Class Instantiation
+
+Classes fall into several categories that are created at different times.
+Single-instance modules are created early in program startup so that they can
+received properties that are read in.  These all have publicly accessible
+member pointers in CSerialEMApp and are created with "new", so they have to be
+deleted on program termination.  Most of these classes have an
+Initialize() function that is called after properties are read and a number of
+operations are done using those properties.  These functions copy commonly
+used pointers from CSerialEMApp.
+
+Control panels are non-modal dialogs that inherit from CToolDlg, which in turn
+inherits from CBaseDlg.  They all exist as member variables in CSerialEMApp
+(which means all parts of the program have to be recompiled when they change),
+so they can also receive properties and settings as they are read in.
+The panels are created and initialized in the startup sequence after other
+classes are initialized.  They are managed by functions in MainFrm.cpp, which
+also manages the image windows.
+
+Modal dialogs are opened from various places when needed, often from
+MenuTargets if they open from menu, or from buttons in larger, complex
+dialogs.
+
+Non-modal dialogs are also created when needed, but can stay open while the
+program is active.  Their size and position (placement) are saved when they close and
+restored when they are opened, with the placements stored in settings.  Many
+of them are managed by NavHelper, and many of those reqiure Navigator to be
+open, so there is a mechanism to close them when Navigator is closed.
+
+Sometimes functions in a dialog become more generally useful, and one approach
+is to make them static.  Generally, this requires that any member variables to
+be used in these functions must also be static.  Static variables are annoying
+because they require declaration in the header and instantiation in the class
+file, so sometimes that is avoided by defining static variables within the
+class file, with the naming convention "sVariableName".  The other approach is
+to create the class on startup but only create and initialize the dialog
+itself when needed.  This is done with CHoleFinderDlg and CAutoContouringDlg,
+which are created on startup by NavHelper.cpp, along with the computational
+classes CMultiHoleCombiner and HoleFinder.
+
+Finally, there are multi-instance classes for image files and images in
+memory.  The four different kinds of image classes are all in KImage.cpp, with
+KImageShort, KImageFloat, and KImage inheriting from KImage.  Image files all
+inherit from KImageStore, which inherits an almost useless KImageBase.  They
+are KStoreMRC for MRC files; KStoreIMOD for HDF, TIFF, JPEG, and other files
+that can be read by the IMOD libiimod library into ImodImageFile (IIFile)
+structures; and KStoreADOC for handling series of tiff files and mdoc
+files or autodoc structures in HDF files.  (The K is for Jim Kremer who
+started these classes for what became the HVEM version of SerialEM).
+
+In more detail, the startup sequence:
+  instantiates single-instance classes;
+  does some operations, many on camera settings and properties;
+  loads plugins and initializes the scope;
+  does some more scope-dependent initializations on camera parameters
+  initializes most classes
+  creates the control panels that are needed
+  initializes the cameras
+  does MORE camera property manipulations
+  starts scope update
+  does final operations to do with the log window, information and warning
+  messages, memory limits, etc.
+
+BaseDlg has some convenience functions and functions to
+help with drawing, mouse functions
+specifically for non-modal dialogs to return focus to the main program,
+replacements for DDX macros that are useful in non-modal dialogs, and a set of
+functions for rudimentary geometry management to provide closable panels and hidable
+controls.
+
+ToolDlg has functions to handle the opening and closing or the panel or options
+section and floating and docking, and to draw the colored side borders.
+
+
+Idle Processing, Threads, and Tasks
+
+The user interface is run by the MFC event loop, which dispatches messages to
+program components.  When there are no events, it calls OnIdle in
+CSerialEMApp.  This provides the main mechanism for managing threaded
+and complex operations.  Typically, a thread is started for a potentially
+time-consuming operation such as image acquisition or stage movement.  The
+module starting the thread then sets appropriate flags, calls
+mWinApp->UpdateBufferWindows to disable UI elements that shouldn't be used,
+calls mWinApp->AddIdleTask,  and returns.  AddIdleTask has two basic forms:
+1) it can take functions to call to determine if the thread or task is still
+busy, to perform the next action when no longer busy, and to process an error,
+plus an integer parameter value and a timeOut in milliseconds or 0 for no
+timeout.  These functions all have to be static.  2) It can take a source
+value from the Tasks enum in SerialEM.h, plus a parameter and timeout; a
+variant of this form can also take a busy function, which is convenient when
+it the test is whether the stage or camera is busy.  The first form was used
+early on, but source values are now used exclusively to avoid the extra step of
+adding static functions that then call into the class instance.
+
+The function CheckIdleTasks is called by OnIdle and checks all the entries in
+the task list.  First it calls the busy function.  If the task is no longer
+busy, it calls the next task function with the parameter.  If there is an
+error returned by the busy function or the timeout is reached, it calls the
+error function.  These can be the registered callback functions sent with
+AddIdleTask, but much more commonly they are defined in a big series of tests
+on the source value.
+
+The "NextTask" function will often use the parameter value to keep track of
+the next operation to do, but sometimes that is 0 or just not passed, and the
+task keeps track with its own member flags or counters.  Thus, a typical task
+will have a case statement on the possible parameter (enum) values; within
+each case it will process the last action and start the next, call AddIdleTask
+with the enum value for the next action, and return.
+
+Tasks also have a Stop function that performs all actions needed to finish up
+and restore to a non-running state.  The same function is typically when there
+is an internal error on an action, when the error function is called, when the
+task is successfully completed, and when there is a general stop initiated
+from mWinApp->ErrorOccurred.  The user STOP button calls ErrorOccurred with a
+0, so some components can distinguish between a user stop and a genuine error.
+
+Although single operations call AddIdleTask, they do 
+The task structure is good for keeping the UI alive during time-consuming
+operations, but it does require the ability to leave and come back in between
+lengthy steps.  This is not feasible for a widely used call such as to change
+the mag.  The solution here is to run the call in a "synchronous thread",
+which is named that way because the caller (e.g., SetMagIndex) starts the
+thread and waits for it to finish.  Blocking the UI is avoided by sleeping
+with SleepMsg in a loop that tests for the thread to be done.  SleepMsg sleeps
+in a way that is interruptable by event processing, so the UI stays
+responsive.  Of course, many inappropriate things, even STOP, have to be
+disabled during such a thread because there is no mechanism for stop to be
+used on the routines that were trying to treat this as a synchronous
+operation.
+
+A task is defined (in my mind, anyway) as a routine that has to perform a
+sequence of operations and handles being returned to for successive operations
+in the sequence.  This is somewhat distinct from single operations that call
+AddIdleTask in order to allow their result to be processed, such as taking an
+image, moving the stage, rasing the screen, or moving an aperture.  There are
+several files with "Tasks" in their name that typical contain more than one
+related task.  The original ones were ComplexTasks, with the basic building
+blocks for automating tilt series, and FilterTasks with routines for
+calibrating the energy shift with mag and refining the ZLP.  MultiTSTasks was
+added with tasks to support taking batch tilt series.  ParticleTasks started
+with multishot acquisition, but other tasks were added to support the upgrade
+of Navigator Acquire at Items in 4.0 to support SPA more explicitly.  The
+latest is MultiGridTasks.  Other tasks are scattered and include calibration
+routines in ShiftCalibrator and BeamAssessor, autofocusing in FocusManager,
+montaging in EMmontageController, tilt series in TScontroller,
+astigmatism/coma in AutoTuning, and scripts in MacroProcessor and
+MacroCommands.
+
+Tasks will often run in a heirarchy, with single operations at the bottom.
+Each level except the bottom one registers an idle task.  The busy function at
+each level has to test whether the operation started at that level is done.
+For example, if TSController starts a eucentricity run, the latter starts
+either a stage move or image acquisition, and calls AddIdleTask with
+the global SEMStageCameraBusy as the busy function, and its NextTask function
+is called when that operation is done.  TSController calls AddIdleTask with a
+source argument of TASK_TILT_SERIES, which makes CheckIdleTasks call the
+TiltSeriesBusy member function, and the latter checks whether eucentricity is
+still running.
+
+
+Global Functions, C Macros
+
+The use of global functions reflects two factors.  First, they give plugins
+access to functions in the program.  Early in the process of providing for
+plugins, some classes were exported, and a plugin can call member functions
+in them directly.  However, this is workable only in limited cases, such as
+a person developing a plugin for internal use against a fixed version of
+SerialEM.  Whenever something changes in an exported class, a plugin accessing
+it would need to be recompiled.  Thus there are many global functions,
+typically prefixed with SEM, that are basically stable wrappers for accessing
+class functions.  The second factor is that global functions are temptingly
+convenient to the classical programmer.  Thus, there are other functions that
+are global for convenient use within the program or to be callable from
+threads.  Some of these are prefixed with SEM, and there also global functions
+in SEMUtilities.cpp, many of them prefixed with Util.
+
+C macros are another frowned-upon feature used liberally in the program.  Some
+of this represents a lack of facility with C++ templates, and many uses could
+probably be replaced with templates.  A related use is to avoid repetitive,
+near-duplicate code.  The problem with such code is that when one needs to
+review and compare the near-duplicates, it becomes difficult to see what is
+the same and what are the essential differences.
+
+The other major use of macros is to provide a centralized source for
+information that needs to be used in different ways in different places.  The
+prime example of this is StandardScopeCalls.h, which is used to build the
+scope plugin structure and to load the plugin functions in SerialEM, and also
+with FEIScopePlugin to create declarations in three places and create wrapper
+functions, a function table, and function calls in 5 places.
+MacroMasterList.h provides for creation of declarations, enum values, and the
+function dispatch table within SerialEM, and is essential for building the
+Python module and keeping it up to date automatically.  Other multi-purpose
+macros are in MdocDefines.h, NavAdocParams.h, PropertyTests.h, and
+SettingsTests.h.  The latter both simplify the reading of properties and the
+reading and writing of settings, ans also allow for the script commands to set
+properties or settings by name.
+
