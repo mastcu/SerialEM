@@ -4498,7 +4498,7 @@ int CParameterIO::ReadProperties(CString strFileName)
            mMagTab[index].tecnaiRotation = itemFlt[2];
            mMagTab[index].screenMag = (strItems[3].IsEmpty() || strItems[3] == "0") ?
              mMagTab[index].mag : itemInt[3];
-           mMagTab[index].EFTEMmag = (strItems[4].IsEmpty() || strItems[4] == "0") ?
+           mMagTab[index].EFTEMmag = strItems[4].IsEmpty() ?
              mMagTab[index].mag : itemInt[4];
            mMagTab[index].EFTEMtecnaiRotation = strItems[5].IsEmpty() ?
              mMagTab[index].tecnaiRotation : itemFlt[5];
