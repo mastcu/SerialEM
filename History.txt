@@ -3,6 +3,21 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+6/24/25: Made function that finds next mag (e.g., for Mag spinner in scope
+control) consider EFTEM instead of TEM mags in EFETM mode (In 4.2).
+
+6/24/25: Stopped copying the TEM mag as the EFTEM mage when there is 0 in the
+EFTEM mag column of the mag table (In 4.2).
+
+6/24/25: Fixed problems with using "Match pixel size" in the EFTEM control
+panel on a JEOL with GIF.
+
+6/24/25: Fixed setting GIF mode for JEOL, which only worked to turn it off,
+not on.  PROPERTY ENTRIES OF "UseJeolGIFmodeCalls 1" CAN PROBABLY ALL BE
+CHANGED TO BE 2.
+
+6/24/25: Made List Mags in GIF mode on JEOL print full mag table (In 4.2).
+
 6/19/25: SEM_4-2-4
 6/19/25: Fixed getting all names from Thermo autoloader panel, broken
 6/2/25 (In 4.2).

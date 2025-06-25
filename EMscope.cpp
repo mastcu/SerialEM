@@ -4166,7 +4166,6 @@ BOOL CEMscope::SetMagIndex(int inIndex)
   SaveISifNeeded(currentIndex, inIndex);
   if (!ifSTEM)
     restoreIS = AssessRestoreIS(currentIndex, inIndex, tranISX, tranISY);
-
   unblankAfter = BlankTransientIfNeeded(routine);
   mSynchroTD.initialSleep = 0;
   mSynchroTD.ifSTEM = ifSTEM;
@@ -4513,7 +4512,7 @@ BOOL CEMscope::ScanMagnifications()
   long magVal;
   int rot, magInd, magSet, curMode, startingMode, firstBase;
   double startingSMag, curSMag, lastSMag;
-  int lastMag, baseIndex = 0, lowestNonLM[2] = {0, 0};
+  int lastMag, trueInd, baseIndex = 0, lowestNonLM[2] = {0, 0};
   BOOL retval = true;
   CString report, str;
   int functionModes[] = {JEOL_LOWMAG_MODE, JEOL_MAG1_MODE, JEOL_DIFF_MODE, 1, 3};
@@ -4550,6 +4549,9 @@ BOOL CEMscope::ScanMagnifications()
         "\r\nafter setting LowestMModeMagIndex correctly in the property file.\r\n"
         "Output below assumes that the value of %d is correct", mLowestMModeMagInd);
       mWinApp->AppendToLog(report, LOG_OPEN_IF_CLOSED);
+      for (trueInd = 1; trueInd <= baseIndex; trueInd++)
+        PrintfToLog("%d %8d %5d %8d %5d", trueInd, mMagTab[trueInd].mag,
+          B3DNINT(mMagTab[trueInd].tecnaiRotation), mMagTab[trueInd].screenMag, 0);
     }
     if (STEMmode) {
       numModes = 2;
@@ -4703,18 +4705,27 @@ BOOL CEMscope::ScanMagnifications()
             PLUGSCOPE_GET(ImageRotation, curSMag, 1.);
           rot = B3DNINT(curSMag / DTOR);
         }
+        trueInd = magInd + baseIndex;
         if (STEMmode)
-          report.Format("%d %8d", magInd + baseIndex, magVal);
+          report.Format("%d %8d", trueInd, magVal);
         else if (!JeolGIF && mode && mode == numModes - 1)
           report.Format("%d %8d", magInd, magVal);
         else if (FEIscope && GetEFTEM())
           report.Format("%d %8d %5d %8d %8d %5d", magInd, mMagTab[magInd].mag, 
-           B3DNINT(mMagTab[magInd].tecnaiRotation), mMagTab[magInd].screenMag, magVal, rot);
+            B3DNINT(mMagTab[magInd].tecnaiRotation), mMagTab[magInd].screenMag, magVal, 
+            rot);
+        else if (JeolGIF)
+          report.Format("%d %8d %5d %8d %8d %5d", trueInd, mMagTab[trueInd].mag,
+            B3DNINT(mMagTab[trueInd].tecnaiRotation), mMagTab[trueInd].screenMag, magVal,
+            rot);
+
         else
-          report.Format("%d %8d %5d", magInd + baseIndex, magVal, rot);
+          report.Format("%d %8d %5d", trueInd, magVal, rot);
          mWinApp->AppendToLog(report, LOG_OPEN_IF_CLOSED);
       }
-      if (FEIscope && GetEFTEM()) {
+      if ((FEIscope && GetEFTEM()) || JeolGIF) {
+        if (JeolGIF)
+          magInd += baseIndex;
         for (; magInd < MAX_MAGS; magInd++) {
           if (!mMagTab[magInd].mag)
             break;
@@ -6910,7 +6921,7 @@ BOOL CEMscope::SetJeolGIF(int inIndex)
   ScopeMutexAcquire("SetJeolGIF", true);
 
   try {
-    if (mPlugFuncs->GetEFTEMMode() != inIndex) {
+    if (mPlugFuncs->GetEFTEMMode() != inIndex + 1) {
       mPlugFuncs->SetEFTEMMode(inIndex + 1);
       if (mPostJeolGIFdelay > 0)
         Sleep(mPostJeolGIFdelay);
@@ -8411,8 +8422,9 @@ BOOL CEMscope::SetEFTEM(BOOL inState)
         FindMatchingMag(fromCam, toCam, toFactor, oldMag, curMag, newMag, fromPixel, 
           toPixel, mFromPixelMatchMag, mToPixelMatchMag, mFiltParam->matchPixel);
         if (mFiltParam->matchPixel)
-          SEMTrace('g', "SetEFTEM: from old mag %d, cur mag %d, to mag %d", oldMag, 
-            curMag, newMag);
+          SEMTrace('g', "SetEFTEM: from old mag %d, cur mag %d, to mag %d;"
+            " pixel %.3f -> %.3ff", oldMag, curMag, newMag, 1000. * fromPixel, 
+            1000. * toPixel);
 
         // Now change intensity if that option is selected and it is not a STEM camera
         if (mFiltParam->matchIntensity && !mLowDoseMode && !regIsSTEM) {
@@ -8432,6 +8444,7 @@ BOOL CEMscope::SetEFTEM(BOOL inState)
         if (mCanControlEFTEM)
           SetJeolGIF(inState ? 1 : 0);
         if (newMag) {
+          ScopeMutexRelease("SetEFTEM");
           SetMagIndex(newMag);
           mLastMagIndex = newMag;
         }
