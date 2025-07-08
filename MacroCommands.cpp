@@ -4455,8 +4455,11 @@ int CMacCmd::SetDirectory(void)
   if (mStrCopy.IsEmpty())
     ABORT_LINE("Missing directory name in statement:\n\n");
   if (CMD_IS(SETDIRECTORY)) {
-    if (_chdir((LPCTSTR)mStrCopy))
-      SUSPEND_NOLINE("because of failure to change directory to " + mStrCopy);
+    if (_chdir((LPCTSTR)mStrCopy)) {
+      mStrItems[2].Format(" (error %d)", GetLastError());
+      SUSPEND_NOLINE("because of failure to change directory to " + mStrCopy + 
+        mStrItems[2]);
+    }
   } else {
     if (CFile::GetStatus((LPCTSTR)mStrCopy, status)) {
       mWinApp->AppendToLog("Not making directory " + mStrCopy + " - it already exists",
