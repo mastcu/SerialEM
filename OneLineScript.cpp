@@ -210,7 +210,7 @@ BOOL COneLineScript::PreTranslateMessage(MSG* pMsg)
   if (pMsg->message == VK_PRIOR || pMsg->message == VK_NEXT)
     return FALSE;
   if (pMsg->message == WM_KEYDOWN && (pMsg->wParam == VK_DOWN ||pMsg->wParam == VK_UP)) {
-    if ((pMsg->wParam == VK_DOWN && mLineWithFocus < 4) ||
+    if ((pMsg->wParam == VK_DOWN && mLineWithFocus < MAX_ONE_LINE_SCRIPTS - 1) ||
       (pMsg->wParam == VK_UP && mLineWithFocus > 0)) {
       edit = (CEdit *)GetDlgItem(mLineWithFocus + IDC_EDIT_ONE_LINE +
         (pMsg->wParam == VK_UP ? -1 : 1));
