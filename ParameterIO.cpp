@@ -6962,6 +6962,7 @@ void CParameterIO::UserSetProperty(void)
   bool recognized = true, recognized2 = true, recognized30 = true, recognized35 = true;
   if (!KGetOneString("Enter full name of property to set (case insensitive):", name))
     return;
+  name = name.Trim(" \t");
   if (false) {
   }
 #define PROP_TEST_SECT1
