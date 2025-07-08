@@ -6104,7 +6104,7 @@ BEGIN
     IDC_DELSTAGE_PLUS       "Increase step size for stage movement"
     IDC_DELSTAGE_MINUS      "Decrease step size for stage movement"
     IDC_AUTO_VIEW_SHIFT     "Take and align Preview & View images to measure View shift offset"
-    IDC_ZERO_SEARCH_SHIFT   "Reset the shift offset for Search mode to zeroor undo Auto shift"
+    IDC_ZERO_SEARCH_SHIFT   "Reset the shift offset for Search mode to zero or undo Auto shift"
     IDC_TABLE_INDEXES       "Show item numbers, numbered from 1, as first column of table"
     IDC_AUTO_SEARCH_SHIFT   "Take and align View & Search images to measure Search shift offset"
 END

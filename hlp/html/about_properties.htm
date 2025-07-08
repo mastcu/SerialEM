@@ -140,8 +140,7 @@
           <TD>Follow with a list of indexes to UTAPI services that should be marked as not 
             available.&nbsp; The indexes correspond to the values of the enum 
             'UtapiSupportTypes' in SerialEM.h.  With the latest UTAPI server (April 2025), only 20 needs
-            to be used for cameras, and only if you have a Ceta 2 or a Falcon 4, where the latter fails when 
-            trying to save MRC frames with an exposure over 1 second.</TD>
+            to be used for cameras if you have a Ceta 2.</TD>
         </TR>
         <TR VALIGN="top">
           <TD>SimulationMode</TD>
@@ -633,7 +632,7 @@
               S for stage and montaging information<BR>
               T for Tietz setup/reset time, camera coords, autoalign time<BR>
               V for vacuum gauge status output<br />
-              W for Winkler LD axis position bug/autoloader/preventing DE retraction on exit/more output from TestNextMultiShot<br />
+              W for LD axis position bug/autoloader/preventing DE retraction on exit/more output from TestNextMultiShot<br />
               X for EMSIS and DECTRIS cameras<BR>
               Z for general camera debug mode<br>
               a for alignment correlation coefficients and peak erasing details; GPU frame alignment choices/memory usage<br />
@@ -657,7 +656,7 @@
               t for exposure time changes in tasks and for continuous mode timing<BR>
               u for update items when polling JEOL, or time of scope update for all scopes<BR>
               w for output on stage ready status<br />
-              y for reports when background saving starts and ends<br />
+              y for reports when background saving starts and ends, add * for adoc mutex output<br />
               [ for output about running a Python script<br />
               * for more verbose output, available for some situations<br />
               % list script commands other than Set that allow arithmetic when program starts</P>
@@ -1647,14 +1646,15 @@
         </TR>
         <TR VALIGN="top">
           <TD>RotationAndFlip</TD>
-          <TD>This entry is used for STEM cameras and K2/K3 and Falcon cameras, as well as for
+          <TD>This entry is used for STEM cameras, Gatan cameras where SerialEM supports saving frames
+            (K2/K3, OneView/Rio, Metro, Alpine and ClearView), and Falcon cameras, as well as for
             DE cameras with a server version of 1.0.1243 or higher. <i>For a STEM camera</i>, use it
             to indicate whether to rotate and flip images after acquisition to make them
             match image orientation on the screen and other cameras.&nbsp; The value is the sum
             of 0-3 for the number of 90 degree rotations counterclockwise (e.g., 3 for 90
             degrees clockwise) plus 4 for flipping around the Y axis before the rotation.&nbsp;
-            Set this before doing any calibrations that rely on image orientation. <i>For a K2/K3
-            camera</i>, this entry indicates operations to be applied to dose fractionation
+            Set this before doing any calibrations that rely on image orientation. <i>For a Gatan
+            camera that can save frames</i>, this entry indicates operations to be applied to dose fractionation
             images returned to SerialEM and to frames saved from the plugin by default.&nbsp;
             Even if frames are being saved without rotation and flip, the correct entry is
             needed here to keep DM from applying its own rotation.&nbsp; <i>For a

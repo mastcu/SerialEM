@@ -1421,8 +1421,9 @@
         <TR>
           <TD class="scriptcommand">SetFolderForFrames dir</TD>
           <TD>Sets the folder for saving frames from the current camera to <b>dir</b>.&nbsp; A simple
-            directory name without path separators is required for DE cameras and Thermo/FEI cameras run with
-             Advanced Scripting.&nbsp; For other cameras, an absolute path is required,
+            directory name without path separators is required for DE cameras and for Thermo/FEI cameras for which 
+            subdirectories cannot be made (i.e., Falcon 3 cameras run with Advanced Scripting and without the property
+            SubdirsOkInFalcon3Save set to 1).&nbsp; For other cameras, an absolute path is required,
              either a network path starting with two slashes or one starting with a drive
             letter.</TD>
         </TR>

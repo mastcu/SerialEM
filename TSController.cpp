@@ -4518,6 +4518,8 @@ int CTSController::EndControl(BOOL terminating, BOOL startReorder)
   CTime ctdt = CTime::GetCurrentTime();
   bool saveFailed = mBufferManager->GetSaveAsynchronously() &&
     mBufferManager->GetBufferAsyncFailed();
+  bool lastNavItem = mWinApp->mNavigator && mWinApp->mNavigator->GetAcquiring() &&
+    !mWinApp->mNavigator->FindNextAcquireItem(i);
   if (!mTerminationStarted)
     mEndCtlMdocPath = "";
   if (terminating)
@@ -4544,10 +4546,11 @@ int CTSController::EndControl(BOOL terminating, BOOL startReorder)
     // Base Z is not allowed for these files, so leave it out
     // If there was failure in asynchronous save, skip last Z value and make it reorder
     // synchronously.  The ErrorOccurred is still to be called, so make it ignore stop
+    // Also need to do synchronous on last navigator item or it can fail to happen if slow
     if (saveFailed)
       mMultiTSTasks->SetBfcIgnoreNextStop(true);
     error = mMultiTSTasks->InvertFileInZ(mTiltIndex - (saveFailed ? 1 : 0), mTiltAngles, 
-      mFrameAlignInIMOD || saveFailed);
+      mFrameAlignInIMOD || saveFailed || lastNavItem);
     if (error > 3 && error != 11)
       mClosedDoseSymFile = true;
     if (error <= 0)
