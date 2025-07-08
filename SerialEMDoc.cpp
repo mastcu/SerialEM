@@ -2085,7 +2085,7 @@ void CSerialEMDoc::SetSystemPath(CString sysPath)
 {
   CString strSys, sub = mWinApp->GetSysSubpath();
   CFileStatus status;
-  mSysPathForSettings = sysPath;
+  mSysPathForSettings = sysPath.Trim("\\/");
   if (!mWinApp->GetStartingProgram()) {
     if (sub.IsEmpty() && sysPath != mSystemPath)
       mWinApp->AppendToLog("WARNING: SystemPath in this settings file, " + sysPath +

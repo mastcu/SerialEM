@@ -683,7 +683,7 @@
       </Command>
     </PostBuildEvent>
     <PreBuildEvent>
-      <Command>C:/cygwin/bin/python Utilities/makeHideDisable &amp; C:/cygwin/bin/python Utilities/makeSignatures</Command>
+      <Command>python Utilities/makeHideDisable &amp; python Utilities/makeSignatures</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='v140 Release|x64'">

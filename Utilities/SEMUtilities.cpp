@@ -1001,7 +1001,8 @@ BOOL AdocAcquireMutex()
       GetCurrentThreadId());
     return FALSE;
   }
-  SEMTrace('y', "Acquired adoc access mutex for thread %d", GetCurrentThreadId());
+  if (GetDebugOutput('*'))
+    SEMTrace('y', "Acquired adoc access mutex for thread %d", GetCurrentThreadId());
   return TRUE;
 }
 
@@ -1023,7 +1024,8 @@ void AdocReleaseMutex()
   if (!sAutodocMutex)
     return;
   ReleaseMutex(sAutodocMutex);
-  SEMTrace('y', "Released adoc access mutex for thread %d", GetCurrentThreadId());
+  if (GetDebugOutput('*'))
+    SEMTrace('y', "Released adoc access mutex for thread %d", GetCurrentThreadId());
 }
 
 // Computes a new spinner value and returns true if it is out of range, sets pResult
