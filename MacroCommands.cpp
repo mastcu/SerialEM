@@ -9874,6 +9874,18 @@ int CMacCmd::ReportHighVoltage(void)
   return 0;
 }
 
+// SetHighVoltage
+int CMacCmd::SetHighVoltage()
+{
+  if (!HitachiScope)
+    ABORT_LINE("Setting high voltage is available only on Hitachi scopes");
+  if (!mScope->SetHTValue(mItemDbl[1])) {
+    AbortMacro();
+    return 1;
+  }
+  return 0;
+}
+
 // SetSlitWidth
 int CMacCmd::SetSlitWidth(void)
 {

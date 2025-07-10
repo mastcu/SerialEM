@@ -833,6 +833,7 @@ MAC_SAME_NAME_ARG(ToggleBufferDisplay, 4, 0, TOGGLEBUFFERDISPLAY, SIII)
 MAC_SAME_NAME_NOARG(SetParallelIllumination, 0, 4, SETPARALLELILLUMINATION)
 MAC_SAME_NAME_NOARG(ReportCurrentMulGridID, 0, 4, REPORTCURRENTMULGRIDID)
 MAC_SAME_NAME_ARG(LoadPieceAtNavPoint, 1, 4, LOADPIECEATNAVPOINT, I)
+MAC_SAME_NAME_ARG(SetHighVoltage, 1, 4, SETHIGHVOLTAGE, D)
 
 // new Python-only commands need to be added to pythonOnlyCmds in ::CMacroProcessor
 // New Not from Python items omit _ARG or _NOARG

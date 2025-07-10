@@ -325,6 +325,9 @@ FLOAT_PROP_TEST("HitachiZMicronsPerGroove", mWinApp->mComplexTasks->, ZMicronsPe
 INT_PROP_TEST("HitachiSpotStepDelay", scope->, HitachiSpotStepDelay)
 INT_PROP_TEST("HitachiDoesBSforISflags", scope->, HitachiDoesBSforIS)
 BOOL_PROP_TEST("HitachiMagResetsISinHC", scope->, HitachiResetsISinHC)
+INT_PROP_TEST("HitachiCanUseGunValve", scope->, HitachiCanUseGunValve)
+
+
 BOOL_PROP_TEST("InvertStageXAxis", shiftManager->, InvertStageXAxis)
 INT_PROP_TEST("StageInvertsZAxis", shiftManager->, StageInvertsZAxis)
 INT_PROP_TEST("RotateHeaderAngleBy180", mWinApp->mBufferManager->, RotateAxisAngle)
