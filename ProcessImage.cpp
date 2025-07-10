@@ -2084,13 +2084,34 @@ int CProcessImage::MoveBeam(EMimageBuffer *imBuf, float shiftX, float shiftY,
 // Returns 1 if beam shift or image shift is not calibrated
 int CProcessImage::MoveBeamByCameraFraction(float shiftX, float shiftY, bool uncalOK)
 {
-  double bsX, bsY, pixel;
-  int magInd = mScope->FastMagIndex();
+  double bsX, bsY, pixel, angle;
+  int regMag, magInd = mScope->FastMagIndex();
   int cam = mWinApp->GetCurrentCamera();
   CameraParameters *camp = mWinApp->GetCamParams() + cam;
-  ScaleMat bInv = mShiftManager->CameraToIS(magInd);
+  ScaleMat fluMat, bInv = mShiftManager->CameraToIS(magInd);
   ScaleMat IStoBS = mShiftManager->GetBeamShiftCal(magInd);
   float camSize = (float)sqrt((double)camp->sizeX * camp->sizeY);
+  float newX, newY;
+  FilterParams *filtParam = mWinApp->GetFilterParams();
+
+  // If in EFTEM with screen down and there is a regular camera, rotate vectors so
+  // they are in right orientation on screen
+  if (mWinApp->GetEFTEMMode() && mScope->GetScreenPos() == spDown &&
+    filtParam->firstRegularCamera >= 0) {
+    if (magInd >= mScope->GetLowestMModeMagInd(true))
+      regMag = B3DMAX(magInd, mScope->GetLowestMModeMagInd(false));
+    else
+      regMag = B3DMIN(magInd, mScope->GetLowestMModeMagInd(false) - 1);
+    angle = mShiftManager->GetImageRotation(filtParam->firstRegularCamera, regMag) -
+      mShiftManager->GetImageRotation(cam, magInd);
+    fluMat = mWinApp->mNavHelper->GetRotationMatrix((float)angle, false);
+    mShiftManager->ApplyScaleMatrix(fluMat, shiftX, shiftY, newX, newY);
+    if (newX || newY) {
+      shiftX = newX;
+      shiftY = newY;
+    }
+  }
+
   shiftX *= camSize;
   shiftY *= camSize;
   if (!bInv.xpx || !IStoBS.xpx) {
