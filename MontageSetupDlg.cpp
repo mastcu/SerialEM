@@ -298,6 +298,9 @@ BOOL CMontageSetupDlg::OnInitDialog()
   BOOL tmpEnable;
   int smallSets[5] = {IDC_RLD_USE_SEARCH, IDC_RLD_USE_VIEW, IDC_RLD_USE_RECORD,
     IDC_RLD_USE_PREVIEW, IDC_RLD_USE_MONTMAP};
+  int multiDisables[] = {IDC_CHECK_SKIP_OUTSIDE, IDC_CHECK_CLOSE_WHEN_DONE,
+    IDC_CHECKOFFERMAP, IDC_CHECK_SKIPCORR, IDC_RLD_USE_SEARCH, IDC_RLD_USE_VIEW,
+    IDC_RLD_USE_PREVIEW, IDC_RLD_USE_RECORD, IDC_RLD_USE_MONTMAP, 0};
   BOOL forMultiLMmap = mForMultiGridMap == SETUPMONT_MG_FULL_GRID ||
     mForMultiGridMap == SETUPMONT_MG_LM_NBYN;
   BOOL overlapFixed = forMultiLMmap && mWinApp->mNavHelper->mMultiGridDlg &&
@@ -328,11 +331,10 @@ BOOL CMontageSetupDlg::OnInitDialog()
     mParam.useMultiShot = false;
   }
   if (mForMultiGridMap) {
-    EnableDlgItem(IDC_CHECK_SKIP_OUTSIDE, false);
+    ind = 0;
+    while (multiDisables[ind])
+      EnableDlgItem(multiDisables[ind++], false);
     EnableDlgItem(IDC_MOVESTAGE, !forMultiLMmap);
-    EnableDlgItem(IDC_CHECK_CLOSE_WHEN_DONE, false);
-    EnableDlgItem(IDC_CHECKOFFERMAP, false);
-    EnableDlgItem(IDC_CHECK_SKIPCORR, false);
   }
 
   SetupPanelTables(sIdTable, sLeftTable, sTopTable, mNumInPanel, mPanelStart,

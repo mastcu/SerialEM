@@ -2917,6 +2917,7 @@ int CMultiGridTasks::StartGridRuns(int LMneedsLD, int MMMneedsLD, int finalNeeds
   mUnloadErrorOK = -1;
   mRestoringOnError = false;
   mFailureRetry = 0;
+  mRealignIteration = 0;
   mExternalFailedStr = "";
   mExtErrorOccurred = -1;
   mSuspendedMulGrid = false;
