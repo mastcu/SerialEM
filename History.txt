@@ -3,6 +3,13 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+7/10/25: For multigrid, fixed potential crash from uninitialized variable and
+disabled low dose area radio buttons in montage setup (In 4.2).
+
+7/10/25: Fixed direction of horizontal beam and stage movement in scope
+control panel and reverted wrong arrow key change of 5/23/25; also made beam
+movement from control panel work in continuous mode. (In 4.2).
+
 7/8/25: SEM_4-2-5
 7/8/25: Fixed saving MRC frames from Falcon 4 through UTAPI (In 4.2).
 

@@ -6532,10 +6532,12 @@ double CEMscope::GetCrossover(int spotSize, int probe)
   static CString outVals = "BUG: GetCrossover values out of range in startup:\r\n";
   static int numWarn = 0;
   CString str;
+  if (probe < 0 && mProbeMode < 0)
+    ReadProbeMode();
   if (probe < 0 || probe > 1)
     probe = mProbeMode;
 
-  // Ridiculous stuff to find bug
+  // Ridiculous stuff to find bug, probably fixed now by getting probe mode
   if (!(mWinApp->GetStartingProgram() || mWinApp->GetAppExiting())) {
     if (numOut && !outVals.IsEmpty()) {
       mWinApp->AppendToLog(outVals);
