@@ -759,7 +759,8 @@ JeolCartridgeData CMultiGridDlg::FindCartDataForDlgIndex(int ind)
 {
   static JeolCartridgeData jcd;
   jcd.slot = -1;
-  if (ind >= 0 && ind < (int)mDlgIndToJCDindex.size() && mDlgIndToJCDindex[ind] >= 0)
+  if (ind >= 0 && ind < (int)mDlgIndToJCDindex.size() && mDlgIndToJCDindex[ind] >= 0 &&
+    mDlgIndToJCDindex[ind] < (int)mCartInfo->GetSize())
     jcd = mCartInfo->GetAt(mDlgIndToJCDindex[ind]);
   return jcd;
 }
@@ -1025,7 +1026,7 @@ void CMultiGridDlg::UpdateEnables()
     !locked);
   EnableDlgItem(IDC_BUT_MG_CLEAR, mNumUsedSlots > 0 && !tasks && !locked);
   EnableDlgItem(IDC_BUT_MG_RESET_NAMES, mNumUsedSlots > 0 && !tasks && !locked);
-  EnableDlgItem(IDC_BUT_MG_INVENTORY, !tasks && !locked);
+  EnableDlgItem(IDC_BUT_MG_INVENTORY, !tasks && (!locked || JEOLscope));
   EnableDlgItem(IDC_BUT_SET_CURRENT_DIR, !tasks && !locked);
   EnableDlgItem(IDC_CHECK_MG_USE_SUBDIRS, !tasks && !locked);
   EnableDlgItem(IDC_CHECK_MG_APPEND_NAME, !tasks && !locked);
@@ -1072,7 +1073,9 @@ void CMultiGridDlg::UpdateEnables()
   for (ind = 0; ind < sizeof(noTaskList) / sizeof(int); ind++)
     EnableDlgItem(noTaskList[ind], !tasks);
   for (ind = 0; ind < mNumUsedSlots; ind++) {
-    EnableDlgItem(IDC_EDIT_MULGRID_NAME1 + ind, !tasks && !locked && !mSingleGridMode);
+    jcd = FindCartDataForDlgIndex(ind);
+    EnableDlgItem(IDC_EDIT_MULGRID_NAME1 + ind, !tasks && 
+      (!locked || (jcd.status & MGSTAT_FLAG_NEW_GRID)) && !mSingleGridMode);
     EnableDlgItem(IDC_RADIO_MULGRID_SEL1 + ind, !justTasks && !suspended && 
       !mSingleGridMode);
     EnableDlgItem(IDC_CHECK_MULGRID_RUN1 + ind, !justTasks && !suspended && 
@@ -1150,6 +1153,12 @@ void CMultiGridDlg::UpdateCurrentDir()
     m_strCurrentDir = current + " dir: ..." + file;
   }
   UpdateData(false);
+}
+
+void CMultiGridDlg::ManageInventory(int locked)
+{
+  SetDlgItemText(IDC_BUT_MG_INVENTORY, (JEOLscope && locked > 0) ? 
+    "Refresh List" : "Run Inventory");
 }
 
 /*

@@ -114,7 +114,6 @@ CMultiGridTasks::CMultiGridTasks()
   mSavedGeneralParams = NULL;
   mSavedFocusPos = NULL;
   mCamNumForFrameDir = -1;
-  InitOrClearSessionValues();
   mAdocChanged = false;
   mSkipGridRealign = false;
   mRRGstore = NULL;
@@ -142,6 +141,7 @@ void CMultiGridTasks::Initialize()
   mNavHelper = mWinApp->mNavHelper;
   mCartInfo = mScope->GetJeolLoaderInfo();
   mStateArray = mNavHelper->GetStateArray();
+  InitOrClearSessionValues();
   mSingleGridMode = !mScope->GetScopeHasAutoloader();
   if (!mShowRefineAfterRealign && !mSkipGridRealign)
     mParams.refineAfterRealign = false;
@@ -165,6 +165,8 @@ void CMultiGridTasks::InitOrClearSessionValues()
   mLMMmagIndex = 0;
   mSkipMarkerShifts = 0;
   mNamesLocked = 0;
+  if (mNavHelper->mMultiGridDlg)
+    mNavHelper->mMultiGridDlg->ManageInventory(0);
   mLoadedGridIsAligned = 0;
 }
 
@@ -259,6 +261,15 @@ int CMultiGridTasks::GetInventory()
 {
   int err, operations = LONG_OP_INVENTORY;
   float hours = 0.;
+  CString errStr;
+
+  // Copy existing one if refreshing
+  if (JEOLscope && mNamesLocked) {
+    mCartCopy.RemoveAll();
+    mCartCopy.Copy(*mCartInfo);
+    if (SaveSessionFile(errStr))
+      SEMAppendToLog("WARNING: error saving session file before refreshing: " + errStr);
+  }
   err = mScope->StartLongOperation(&operations, &hours, 1);
   if (err) {
     SEMMessageBox("Could not run inventory; " + CString(err == 1 ?
@@ -314,7 +325,7 @@ int CMultiGridTasks::LoadOrUnloadGrid(int slot, int taskParam)
  */
 void CMultiGridTasks::MultiGridNextTask(int param)
 {
-  int ind, id;
+  int ind, id, jnd;
   JeolCartridgeData jcd;
   CString str;
   int curInd = B3DMAX(0, mRRGcurDirection);
@@ -328,6 +339,29 @@ void CMultiGridTasks::MultiGridNextTask(int param)
 
     // Inventory or internal load or unload, just stop
   case MG_INVENTORY:
+    if (JEOLscope && mNamesLocked) {
+
+      // Refresh: Loop through the new inventory, copy any entry that matches an old one
+      for (ind = 0; ind < (int)mCartInfo->GetSize(); ind++) {
+        JeolCartridgeData &jcdEl = mCartInfo->ElementAt(ind);
+        jcdEl.status |= MGSTAT_FLAG_NEW_GRID;
+        for (jnd = 0; jnd < (int)mCartCopy.GetSize(); jnd++) {
+          if (mCartCopy[jnd].id == jcdEl.id) {
+            jcdEl = mCartCopy[jnd];
+            break;
+          }
+        }
+      }
+
+      // Reload the table and set new session file name
+      if (mNavHelper->mMultiGridDlg)
+        mNavHelper->mMultiGridDlg->OnButMgGetNames();
+      NextAutoFilenameIfNeeded(mSessionFilename);
+      UpdateDialogForSessionFile();
+    }
+    StopMultiGrid();
+    return;
+
   case MG_SEQ_LOAD:
     StopMultiGrid();
     return;
@@ -2111,8 +2145,15 @@ int CMultiGridTasks::StartGridRuns(int LMneedsLD, int MMMneedsLD, int finalNeeds
     mUseSubdirs = mParams.useSubdirectory;
     mWorkingDir = mWinApp->mDocWnd->GetInitialDir();
     mNamesLocked = 2;
+    mMGdlg->ManageInventory(2);
     mMGdlg->UpdateEnables();
     mMGdlg->UpdateCurrentDir();
+  }
+
+  // Lock in names for new ones in refreshed list
+  for (ind = 0; ind < mCartInfo->GetSize(); ind++) {
+    JeolCartridgeData &jcdEl = mCartInfo->ElementAt(ind);
+    jcdEl.status &= ~MGSTAT_FLAG_NEW_GRID;
   }
 
   // Assign these items as what will be used if doing LMMs, otherwise use existing values
@@ -2917,6 +2958,7 @@ int CMultiGridTasks::StartGridRuns(int LMneedsLD, int MMMneedsLD, int finalNeeds
   mUnloadErrorOK = -1;
   mRestoringOnError = false;
   mFailureRetry = 0;
+  mRealignIteration = 0;
   mExternalFailedStr = "";
   mExtErrorOccurred = -1;
   mSuspendedMulGrid = false;
@@ -5226,6 +5268,8 @@ void CMultiGridTasks::ClearSession(bool keepAcqParams)
   mPrefix = "";
   mWorkingDir = "";
   mNamesLocked = 0;
+  if (mNavHelper->mMultiGridDlg)
+    mNavHelper->mMultiGridDlg->ManageInventory(0);
   mUseCustomOrder = false;
   mLastNumSlots = 0;
   mLMMusedStateName = "";
@@ -5616,6 +5660,7 @@ int CMultiGridTasks::LoadSessionFile(bool useLast, CString &errStr)
       mNavHelper->mMultiGridDlg->ReloadTable(1, 1 + (mUseCustomOrder ? 1 : 0));
       mNavHelper->mMultiGridDlg->CheckIfAnyUndoneToRun();
       mNavHelper->mMultiGridDlg->UpdateCurrentDir();
+      mNavHelper->mMultiGridDlg->ManageInventory(mNamesLocked);
     }
     IdentifyGridOnStage(stageID, stageInd);
     if (stageInd >= 0)
