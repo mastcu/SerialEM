@@ -618,24 +618,24 @@ void CRemoteControl::OnDeltaposSpinBeamShift(NMHDR *pNMHDR, LRESULT *pResult)
   SetFocus();
   mWinApp->RestoreViewFocus();
   *pResult = 0;
-  if (mLastMagInd > 0)
+  if (mScope->FastMagIndex() > 0)
     mWinApp->mProcessImage->MoveBeamByCameraFraction(0.,
       mBeamIncrement * pNMUpDown->iDelta, true);
-  else if (mLastCamLenInd > 0)
+  else if (mScope->GetCamLenIndex() > 0)
     ChangeDiffShift(0, pNMUpDown->iDelta);
 }
 
-// Beam or stage left-right: the horizontal spin box is backwards
+// Beam or stage left-right: the horizontal spin box is NOT backwards (any more?)
 void CRemoteControl::OnDeltaposSpinBeamLeftRight(NMHDR *pNMHDR, LRESULT *pResult)
 {
   LPNMUPDOWN pNMUpDown = reinterpret_cast<LPNMUPDOWN>(pNMHDR);
   SetFocus();
   mWinApp->RestoreViewFocus();
   *pResult = 0;
-  if (mLastMagInd > 0)
+  if (mScope->FastMagIndex() > 0)
     mWinApp->mProcessImage->MoveBeamByCameraFraction(
-      -mBeamIncrement * pNMUpDown->iDelta, 0., true);
-  else if (mLastCamLenInd > 0)
+      mBeamIncrement * pNMUpDown->iDelta, 0., true);
+  else if (mScope->GetCamLenIndex() > 0)
     ChangeDiffShift(pNMUpDown->iDelta, 0);
 }
 
@@ -901,7 +901,7 @@ void CRemoteControl::OnDeltaposSpinStageLeftRight(NMHDR *pNMHDR, LRESULT *pResul
   SetFocus();
   mWinApp->RestoreViewFocus();
   *pResult = 0;
-  MoveStageByMicronsOnCamera(-mStageIncrement * pNMUpDown->iDelta, 0.);
+  MoveStageByMicronsOnCamera(mStageIncrement * pNMUpDown->iDelta, 0.);
 }
 
 

@@ -3223,7 +3223,7 @@ void CSerialEMView::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
     // Beam shift with shifted arrow keys; change increment with < or >
   } else if (mShiftPressed && nChar >= VK_LEFT && nChar <= VK_DOWN) {
     if (nChar % 2)
-      fdx = (float)((38. - nChar) * arrowInc);
+      fdx = (float)((nChar - 38.) * arrowInc);
     else
       fdy = (float)((39. - nChar) * arrowInc);
     mWinApp->mProcessImage->MoveBeamByCameraFraction(fdx, fdy, true);
