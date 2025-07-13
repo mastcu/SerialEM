@@ -480,6 +480,7 @@ FLOAT_PROP_TEST("DefaultMaxCtfFitRes", mWinApp->mProcessImage->, DefaultMaxCtfFi
 FLOAT_PROP_TEST("FindBeamOutsideFrac", mWinApp->mProcessImage->, FindBeamOutsideFrac)
 FLOAT_PROP_TEST("ThicknessCoefficient", mWinApp->mProcessImage->, ThicknessCoefficient)
 FLOAT_PROP_TEST("MinCtfplotterPixel", mWinApp->mProcessImage->, MinCtfplotterPixel)
+INT_PROP_TEST("FlucamRotationAndFlip", mWinApp->mProcessImage->, FlucamRotationFlip)
 FLOAT_PROP_TEST("TestCtfTuningDefocus", mWinApp->mAutoTuning->, TestCtfTuningDefocus)
 INT_PROP_TEST("CtfBasedLDareaDelay", mWinApp->mAutoTuning->, CtfBasedLDareaDelay)
 INT_PROP_TEST("AstigBTBacklashDelay", mWinApp->mAutoTuning->, BacklashDelay)

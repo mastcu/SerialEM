@@ -104,6 +104,7 @@ public:
   GetSetMember(BOOL, CtfFixAstigForPhase);
   GetSetMember(float, FindBeamOutsideFrac);
   GetMember(float, BeamShiftFromImage);
+  GetSetMember(int, FlucamRotationFlip);
   GetSetMember(float, ThicknessCoefficient);
   SetMember(float, NextThicknessCoeff);
   GetMember(int, BufIndForCtffind);
@@ -187,6 +188,7 @@ private:
   float mCorrMaxScale;
   float mFindBeamOutsideFrac; // Fraction that periphery has to be below mean
   float mBeamShiftFromImage;  // Last value of micron shift centering from image
+  int mFlucamRotationFlip;    // Rotation/flip to apply to beam shift in EFTEM on screen
   int mGridMeshSize;          // Mesh to calibrate from grid bar spacing
   int mPixelTimeStamp;        // Time stamp of LAST pixel size measurement
   int mNumFFTZeros;
