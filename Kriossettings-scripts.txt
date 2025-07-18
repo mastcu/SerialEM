@@ -1,0 +1,4567 @@
+MaxMacros	60
+Macro	0
+NavAcqAtEndUseParams F
+SetNavAcqAtEndParams scrp-a 40
+StartNavAcquireAtEnd 
+EndMacro
+Macro	1
+EarlyReturnNextShot 1 1
+R
+GetDeferredSum 
+EndMacro
+Macro	2
+ScriptName fkey test
+echo fkeytest
+EndMacro
+Macro	3
+ScriptName fkeytest 4
+echo fkeytest 4
+EndMacro
+Macro	7
+ScriptName EarlyRet
+EarlyReturnNextShot 0
+R
+ReportClock
+#UpdateHWDarkRef 0
+EndMacro
+Macro	8
+OpenNewMontage 0 0  c:\Documents and Settings\mast\Images\navtests\macrotest.adoc
+index = 6
+Loop 6
+ItemForSuperCoord  $index
+reportOtherItem $index
+index = $index + 1
+MoveStageTo $repval2 $repval3
+Montage
+EndLoop
+ItemForSuperCoord -1
+EndMacro
+Macro	9
+dir = 1
+newval = 2
+newval = $newval + $dir
+exit
+OpenTextFile junk o 0 junk.txt
+WriteLineToFile junk Here is my line # Hah is it there?
+WriteLineToFile junk 
+WriteLineToFile junk a final line
+CloseTextFile junk
+EndMacro
+Macro	10
+SuppressReports
+tot = 0
+Loop 5
+   failed = 0
+   Loop 100
+      AlignTo J 1  1 1
+      ReportAlignShift xsh ysh
+      if abs ( $xsh - 1303 ) > 4 or abs ( $ysh + 1459 ) > 4
+         failed = $failed + 1
+      Endif 
+   EndLoop 
+   echo failed $failed times
+   tot = $tot + $failed
+EndLoop 
+EchoEval $tot  $tot / 5
+EndMacro
+Macro	11
+expt = 0.25
+toss = 5
+num = 30 / $expt + $toss
+SetExposure R $expt
+SetBinning R 2
+SetContinuous R 1
+UseContinuousFrames 1
+ResetClock
+R
+Loop $num ind
+   if $ind == $toss + 1
+      ResetClock 
+   Endif 
+      
+   StartFrameWaitTimer -1
+   WaitForNextFrame 
+   S
+EndLoop 
+ReportClock 
+EndMacro
+Macro	12
+MacroName K2Test
+Require variable1
+
+# Before starting, set Record to 1.6 sec exposure, 0.2 sec frames or other setting with 8 frames
+# turn on Save frames and Save frame sums and Setup the sums
+# Set up for 2 at 1 frame and 3 at 2 frames
+# Turn off the saving of frame sums
+
+# Set to 0 for a real camera, 1 for simulator
+simulator = 1
+
+# Set to 1 to test with CPU and GPU; otherwise it uses whatever is set
+gpuVsCpu = 0
+
+# Set to 0 to keep valves open when it is failing tests quickly
+closeValvesOnFailure = 1
+
+# Set any of these non-zero to start at the given loop index and go on from there
+startMode = 1
+startFile = 0
+startDivide = 0
+startEarly = 0
+startDefer = 0
+
+waitPerFrame = 0.3
+removeFrames = 1
+tolerance = 0.01
+
+# Higher binnings to test
+highBinCM = 4
+highBinSR = 2
+
+# The exposures have to be multiple of the frame time that is legal for single-shot too
+# These combinations work in the simulator
+expCM = 1.0
+expSR = 1.0
+frameCM = 0.2
+frameSR = 0.25
+sumExpCM = 1.6
+sumExpSR = 1.5
+
+# of frames in early return sum
+erSumCM = 2
+erSumSR = 1
+
+faBinningCM = 4
+faBinningSR = 8
+
+CameraProperties 
+camXsize = $repVal1
+camYsize = $repVal2
+rotFlip = $repVal3
+RetryReadOtherFile 5
+SkipFrameAliParamCheck
+SetUserSetting SaveFrameStackMdoc 0
+
+SetColumnOrGunValve 1
+
+# Get starting parameters for restoring
+echo Starting Params:
+ReportK2FileParams saveFileType savePackVal saveUse101 saveTimes100 saveSkipRot saveFilePerFrame
+ReportCountScaling saveDivideBy2 fullScale
+ReportFrameAliParams saveAliBin saveKeepPrec
+ReportFrameAli2 saveGPU
+
+OnStopCallFunc DoRestoreChanges
+
+SuppressReports
+ 
+# Loop on modes
+Loop 2 modeInd
+   if $startMode > 0 and $startMode > $modeInd
+      continue
+   endif
+   K2mode = $modeInd
+
+   # Set mode-dependent parameters
+   baseBin = 1
+   highBin = $highBinCM
+   tolAdjusted = $tolerance
+   baseExp = $expCM
+   earlySum = $erSumCM
+   faBinning = $faBinningCM
+   frameTime = $frameCM
+   sumExp = $sumExpCM
+   if $K2mode == 2
+      baseBin = 0.5
+      highBin = $highBinSR
+      baseExp = $expSR
+      earlySum = $erSumSR
+      if $simulator > 0
+         tolAdjusted = $tolerance * 3.5
+      Endif 
+      faBinning = $faBinningSR
+      frameTime = $frameSR
+      sumExp = $sumExpSR
+   Endif 
+   
+   # Loop on file type (2 or 3 times)
+   Loop 2 fileInd
+      if $startFile > 0
+         if $startFile == $fileInd
+            startFile = 0
+         else
+            continue
+         Endif 
+      Endif 
+      fileType = $fileInd - 1
+      
+      # Loop on divide by 2
+      Loop 2 divideInd
+         if $startDivide > 0
+            if $startDivide == $divideInd
+               startDivide = 0
+            Else
+               continue
+            Endif 
+         Endif 
+         divideBy2 = $divideInd - 1
+         
+         # Loop on early return
+         Loop 3 earlyInd
+            if $startEarly > 0
+               if $startEarly == $earlyInd
+                  startEarly = 0
+               Else
+                  continue
+               Endif 
+            Endif 
+            earlyReturn = -1
+            numDef = 1
+            if $earlyInd == 2
+               earlyReturn = 0
+               numDef = 2
+            elseif $earlyInd == 3
+               earlyReturn = $earlySum
+               numDef = 2
+            Endif 
+            
+            # Loop on deferred sum 
+            Loop $numDef deferInd
+               if $startDefer > 0
+                  if $startDefer == $deferInd
+                     startDefer = 0
+                  Else
+                     continue
+                  Endif 
+               Endif 
+               deferredSum = $deferInd - 1 
+          
+               Echo ****************************************************************
+               Echo TEST SEQUENCE WITH: mode $K2mode file $fileType divide $divideBy2 early $earlyReturn defer $deferredSum
+               Echo ****************************************************************
+               # exp proc b testSums packVal use101 times100 skipRot keepPrec reduceSuper
+               
+               # Gain norm regular or times 100, test skip rot and sums
+               CallFunction TestVariations $baseExp 2 $baseBin 0 0 0 0 0 0 0
+               CallFunction TestVariations  $baseExp 2 $baseBin 0 0 0 1 0 0 0
+               CallFunction TestVariations  $baseExp 2 $baseBin 0 0 0 0 1 0 0
+               CallFunction TestVariations  $baseExp 2 $highBin 0 0 0 1 0 0 0
+               #if $gpuVsCpu > 0
+                  CallFunction TestVariations  $baseExp 2 $baseBin 0 0 0 0 0 1 0
+               #Endif
+               if $simulator == 0  or $K2mode < 2
+                  CallFunction TestVariations $sumExp 2 $baseBin 1 0 0 0 0 0 0
+                  CallFunction TestVariations $sumExp 2 $highBin 1 0 0 0 1 0 0
+               Endif
+               if $K2mode == 2
+                  CallFunction TestVariations $baseExp 2 $baseBin 0 0 0 0 0 0 1
+                  CallFunction TestVariations $baseExp 2 $highBin 0 0 0 0 0 0 1
+                  CallFunction TestVariations $baseExp 2 $highBin 0 0 0 1 0 0 1
+                  CallFunction TestVariations $baseExp 2 $baseBin 0 0 0 0 0 1 1
+               Endif
+               if $earlyReturn > 0 and $fileType == 0 and $deferredSum == 0
+                  CallFunction TestVariations $baseExp 2 $baseBin 0 0 0 0 0 1 0
+                  CallFunction TestVariations  $baseExp 2 $baseBin 0 0 0 1 0 1 0
+                  CallFunction TestVariations  $baseExp 2 $highBin 0 0 0 0 0 1 0
+               Endif 
+               
+               # Dark-subtracted regular, mild pack, more pack, 101 for MRC
+               CallFunction TestVariations $baseExp 1 $baseBin  0 0 0 0 0 0 0
+               CallFunction TestVariations $baseExp 1 $baseBin 0 1 0 0 0 0 0
+               if $K2mode == 1
+                  CallFunction TestVariations $baseExp 1 $baseBin 0 3 0 0 0 0 0
+               Endif 
+               if $fileType == 0
+                  CallFunction TestVariations $baseExp 1 $baseBin 0 3 1 0 0 0 0
+               Endif 
+               CallFunction TestVariations $baseExp 1 $baseBin 0 1 0 0 1 0 0
+               if $simulator == 0  or $K2mode < 2
+                  CallFunction TestVariations $sumExp 1 $baseBin 1 1 0 0 0 0 0
+                  CallFunction TestVariations $sumExp 1 $highBin 1 1 0 0 1 0 0
+               Endif 
+               CallFunction TestVariations $baseExp 1 $highBin 0 1 0 0 0 0 0
+               SuppressReports 0
+               ReportClock 
+               SuppressReports 
+            EndLoop 
+         EndLoop 
+      EndLoop 
+   EndLoop 
+EndLoop 
+SetColumnOrGunValve 0
+# END OF MAIN MACRO
+
+### TestVariations
+###
+# Variables that are expected to be set: in caller:
+# fileType
+# K2mode
+# divideBy2
+# earlyReturn
+# deferredSum
+# fullScale
+#
+Function TestVariations 10 1 exposure processing binning tstSms packVal use101 times100 skipRot keepPrec reduceSuper
+
+testSums = $tstSms
+echo ****************************************************************
+echo TestVariations VALUES: proc $processing bin $binning sums $testSums pack $packVal mode101 $use101 x100 $times100  skipRot $skipRot keepPrec $keepPrec redSR $reduceSuper
+
+numFrames = NEARINT ($exposure / $frameTime)
+
+# Get the scaling for the current Record image and frames
+div2factor = 1.
+if $divideBy2 > 0
+   div2factor = 2.
+endif
+scaleRec = $fullScale * $binning * $binning / $div2factor
+
+frameBin = 1.
+scaleFrame = $fullScale / $div2factor
+if $K2mode > 1
+   if $reduceSuper == 0
+      frameBin = 0.5
+      scaleFrame = $scaleFrame / 4
+      if $times100 == 0
+         scaleFrame = 4.
+      endif
+   elseif $times100 == 0
+      scaleFrame = 16.
+   Endif
+endif
+if $processing < 2
+   scaleFrame = 1. * $frameBin * $frameBin
+elseif $times100 > 0
+   scaleFrame = 100. * $scaleFrame
+endif
+
+frameTol = $tolAdjusted
+frameX = NEARINT ($camXsize / $frameBin)
+frameY = NEARINT ($camYsize / $frameBin)
+if $skipRot > 0 and MODULO ($rotFlip 2) > 0
+   frameX = NEARINT ($camYsize / $frameBin)
+   frameY = NEARINT ($camXsize / $frameBin)
+endif
+
+# Frame in X is half the size if 4-bit vales are written to TIFF
+if $processing < 2 and $fileType == 0 and $use101 == 0 and $packVal > 0 and ($K2mode == 2 or $packVal == 3)
+   frameX = $frameX / 2
+   scaleFrame = $scaleFrame * 16.5
+   frameTol = $tolAdjusted + (1. / 16.)
+endif
+
+# Set parameters for this call
+# Set the frame time first since it might constrain the exposure; then the exposure can be set
+cenX = NEARINT ($camXsize / $binning - 0.4)
+cenY = NEARINT ($camYsize / $binning - 0.4)
+SetCenteredSize R $binning $cenX $cenY
+SetFrameTime R $frameTime
+SetExposure R $exposure
+SetK2ReadMode R $K2mode
+SetBinning R $binning
+SetProcessing R $processing
+SetDivideBy2 $divideBy2
+SetFrameAliParams $faBinning $keepPrec
+SetUserSetting SaveSuperResReduced $reduceSuper
+  SetK2FileParams $fileType $packVal $use101 $times100 $skipRot 0
+   SetDivideBy2 $divideBy2
+#CallFunction ImposeChanges
+
+# do the reference exposure
+SetDoseFracParams R 0 0 0 0 0
+R
+ImageProperties A recXsize recYsize
+ReportMeanCounts A
+refMean = $repVal1
+
+# Expected counts in one frame
+refFrame = $refMean * $scaleFrame / ( $scaleRec * $numFrames )
+
+# Dose frac and nothing else: SR does not work in simulator
+if $skipRot == 0 and ($simulator == 0  or $K2mode < 2)
+   SetDoseFracParams R 1
+   R
+   
+   CallFunction CheckReturnImage 1. Simple dose frac shot
+endif
+
+# Save frames
+align = 0
+SetDoseFracParams R 1 1 0 0 $testSums
+fracFrames = 1.
+if $earlyReturn >= 0
+   EarlyReturnNextShot $earlyReturn $deferredSum
+   fracFrames = $earlyReturn / $numFrames
+endif
+R
+
+# Test returns or wait until frames are surely done, then check frames
+CallFunction CheckAllReturns Frame-saving shot
+CallFunction CheckFrames Frame-saving shot
+echo Finished Save Frames
+
+# Set up number of align loops, 2 for CPU/GPU test
+numAliLoop = 1
+if $gpuVsCpu  > 0
+   numAliLoop = 2
+Endif
+
+Loop $numAliLoop gpuInd
+   if $gpuVsCpu > 0
+      SetFrameAli2 $gpuInd - 1
+   Endif
+
+   # Align frames without saving
+   if $skipRot == 0
+      SetDoseFracParams R 1 0 1 1 $testSums
+      align = 1
+      if $earlyReturn >= 0
+         EarlyReturnNextShot $earlyReturn
+      endif
+      R
+      CallFunction CheckAllReturns Align without saving $gpuInd
+   endif
+   Echo Finished align frames $gpuInd
+
+   # Align frames with saving
+   SetDoseFracParams R 1 1 1 1 $testSums
+   if $earlyReturn >= 0
+      EarlyReturnNextShot $earlyReturn
+   endif
+   R
+   CallFunction CheckAllReturns Align and save
+   CallFunction CheckFrames Align and save $gpuInd
+   echo Finished align frames with save $gpuInd
+EndLoop
+
+# Save frames and align com file if no special options
+if $packVal == 0  and $times100 == 0 and $testSums == 0 and $skipRot == 0
+   align = 0
+   SetDoseFracParams R 1 1 1 1 $testSums
+   if $earlyReturn >= 0
+      EarlyReturnNextShot $earlyReturn $deferredSum
+   endif
+   R
+   CallFunction CheckAllReturns Save and make align com
+   CallFunction CheckFrames Save and make align com
+Endif 
+
+
+EndFunction 
+
+
+### CheckAllReturns
+###
+Function CheckAllReturns 0 1 mess1
+   if $earlyReturn != 0
+       CallFunction CheckReturnImage $fracFrames $mess1
+   endif
+   if $earlyReturn >= 0
+      if $deferredSum > 0 or $align > 0
+         GetDeferredSum
+         CallFunction CheckReturnImage 1. Deferred sum from $mess1
+      Else
+         wait = $numFrames * $waitPerFrame / ($frameBin * $frameBin)
+         Delay $wait
+      Endif 
+   Endif 
+EndFunction 
+
+###
+### CheckReturnImage
+###
+# argument 1 is fraction of reference frames in image
+#
+Function CheckReturnImage 1 1 frac mess2
+   ImageProperties A testX testY
+   ReportMeanCounts A
+   testMean = $repVal1
+   
+   Test $testX == $recXsize and $testY == $recYsize
+   CallFunction RestoreChanges $repVal1
+   AbortIfFailed $mess2  size ($testX $testY) does not match single-shot ($recXsize $recYsize)
+   
+   expect = $frac * $refMean
+   Test  FRACDIFF ($expect $testMean) < $tolAdjusted
+   CallFunction RestoreChanges $repVal1
+   AbortIfFailed $mess2 mean ($testMean) does not match expected value from single-shot ($expect)
+EndFunction 
+
+###
+### CheckFrames
+###
+Function CheckFrames 0 1 mess3
+   
+   # Make sure there is the right number of frames, and less with summing
+   ReportNumFramesSaved  savedFrames
+   lastFrame = $savedFrames - 1
+   checkFrame = $lastFrame
+   if $testSums == 0
+      Test $savedFrames == $numFrames
+      CallFunction RestoreChanges $repVal1
+      AbortIfFailed $mess3 gave $savedFrames frames, not expected $numFrames
+   Else
+      Test $savedFrames < $numFrames
+      CallFunction RestoreChanges $repVal1
+      AbortIfFailed Selecting frame sums gave the same number of frames, is frame summing set up for an exposure with $numFrames frames? 
+      checkFrame = 0
+   Endif 
+   
+   # Check first or last frame
+   ReportLastFrameFile 
+   ReadOtherFile $checkFrame P $repVal1
+   ImageProperties P testX testY
+   ReportMeanCounts P
+   testMean = $repVal1
+   Test $testX == $frameX and $testY == $frameY
+   CallFunction RestoreChanges $repVal1
+   AbortIfFailed $mess3 frame size ($testX $testY) does not match expected ($frameX $frameY)
+   
+   Test  FRACDIFF ($refFrame $testMean) < $frameTol
+   CallFunction RestoreChanges $repVal1
+   AbortIfFailed $mess3 frame mean ($testMean) does not match expected value ($refFrame)
+   
+   # Test the last frame with summed frames
+   if $testSums > 0
+      ReportLastFrameFile 
+      ReadOtherFile $lastFrame P $repVal1
+      ReportMeanCounts P
+      testMean = $repVal1
+      match = 0
+      loop 5 mult
+         if  FRACDIFF ($mult * $refFrame $testMean) < $frameTol
+            match = 1
+            Break 
+         Endif 
+      EndLoop 
+      test $match == 1
+      CallFunction RestoreChanges $repVal1
+      AbortIfFailed $mess3 last frame mean ($testMean) is not a small multiple of expected value ($refFrame)
+   Endif 
+   
+   if $removeFrames > 0
+      ReportLastFrameFile
+      RemoveFile $repVal1
+   Endif 
+   
+EndFunction 
+
+
+### RestoreChanges
+###
+Function RestoreChanges 1
+   if $argVal1 == 0
+      CallFunction DoRestoreChanges
+   endif
+EndFunction 
+
+### ImposeChanges
+###
+Function ImposeChanges
+   SetK2FileParams $fileType $packVal $use101 $times100 $skipRot 0
+   SetDivideBy2 $divideBy2
+EndFunction 
+
+### DoRestoreChanges
+###
+Function DoRestoreChanges
+   SetK2FileParams $saveFileType $savePackVal $saveUse101 $saveTimes100 $saveSkipRot $saveFilePerFrame
+   SetDivideBy2 $saveDivideBy2
+   SetFrameAliParams $saveAliBin $saveKeepPrec
+   SetFrameAli2 $saveGPU
+   if $closeValvesOnFailure > 0
+      SetColumnOrGunValve 0
+   Endif 
+EndFunction 
+EndMacro
+Macro	13
+ReportXLensMode 
+SetXLensMode 0
+ReportXLensMode 
+ReportXLensFocus 
+ReportXLensDeflector 1
+ReportXLensDeflector 2
+ReportXLensDeflector 3
+Exit 
+#SuppressReports
+lastlen = 0
+num = 0
+firstEnd = 0
+secondEnd = 0
+loop 60 ind
+   SetCamLenIndex $ind
+   ReportCameraLength
+   len = round ($repVal1 * 1000 0)
+   if $len != $lastlen
+      EchoEval $ind $len
+      num = $num + 1
+   ElseIf $firstEnd == 0
+      firstEnd = $num
+   ElseIf $secondEnd == 0
+      secondEnd = $num - $firstEnd
+   Endif
+   lastLen = $len
+EndLoop
+echo NumberOfCameraLengths $firstEnd $secondEnd
+
+exit
+ReportCurrentFilename 
+echo Criteria $mcrit  $rcrit
+SuppressReports 1
+loop 7 ix
+   loop 8 iy
+      try 1
+         ReadMontagePiece $ix $iy 0 B
+         ReportPercentileStats B 1 $mcrit $rcrit 50 low high mid range
+         EchoEval $ix $iy : round $mid 2 round $range 2
+
+      Catch 
+         Continue 
+      EndTry 
+   EndLoop 
+EndLoop 
+
+
+exit
+ParseQuotedStrings 1
+header = { 'It is critical that you answer a question about what to do at this point.' \
+   ' This way is better than asking several yes-no questions in a row.' }
+prompt1 = { 'Press "Fiddle" to experiment with the parameters;' \
+   ' this could be rewarding but dangerous' }
+#OKBox $prompt1
+
+prompt2 = 'Press "What to Do?" to find && out more about the possibilities'
+prompt3 = { 'Press "Proceed" to continue the operation with current parameters;' \
+  ' this will give familiar results' }
+ParseQuotedStrings 0
+buttons = { Fid&&dle WhaTtoDo?  Proceed }
+buttons[2] @= What to do && see? 
+ThreeChoiceBox header prompt1 prompt2 prompt3 buttons
+
+exit
+loop 5
+echo dsjhkjhdkjhksjhdkjsdkfjshdkfjhskjhskjfhksjfdhkjhh skjdhfkjshdfkjh  fkjhkjhfdskjhksfjh
+EndLoop 
+ReportClock 
+Loop 7 ind
+   SetNextLogOutputStyle $ind  $ind - 1
+echoEval Here is a line with index $ind - 1
+endloop
+#SetNextLogLineColor 255 130 0
+#reportClock
+#SetNextLogLineColor 210 0 0
+Echo Error formatting the line!
+#SetNextLogLineColor 5
+#echo Something else
+exit
+#
+New2DArray allPos
+AppendToArray allPos { 30 50 70 2000 }
+AppendToArray allPos {  10 50 100 150 }
+AppendToArray allPos {  10 50 100 150 }
+AppendToArray allPos {  150 70 150 1000 }
+AppendToArray allPos { 0 10 40 200 800 }
+loop 20
+   DoLoop ind 1 5
+      if $ind == 3
+         Continue 
+      Endif 
+      ap = $ind - 1
+      ReportApertureSize $ap
+      DoLoop siz 1 $#allPos[$ind]
+         SetApertureSize $ap $allPos[$ind][$siz]
+         ReportApertureSize $ap
+      EndLoop 
+   EndLoop 
+EndLoop 
+exit
+OpenOldFile ..\..\..\Images\realign-fail-hex.st
+#OpenOldFile ..\..\..\Images\V-map.st
+ReadFile 0 I
+ReadFile 1 A
+exit
+ParseQuotedStrings 1
+var = { 'My very first message'  'A better one'  'The best yet'  'But now going downhill, lets make this one really really long'  'To hte ends of the earth' 'really a last one?' }
+DoLoop ind 1 6
+   SetStatusLine $ind $var[$ind]
+if modulo ( $ind 2 ) != 0
+   HighlightStatusLine $ind 1
+Endif 
+Delay 1 s
+EndLoop 
+#Delay 3 s
+ClearStatusLine 0
+Delay 3
+#SetUserSetting NumStatusLines 0 1
+exit
+exit
+#Loop 5
+ListISVectorsToGraph 1 1 3
+SetGraphAxisLabel Magnification index
+SetGraphKeyLabel X length
+SetGraphKeyLabel Y length
+SetGraphOptions colors 0 con
+SetGraphColumns 1 2 3
+SetGraphSymbols -1 6
+GraphPreStoredValues 0
+SetGraphAxisLabel Magnification index
+SetGraphSymbols 0 0
+SetGraphKeyLabel X angle
+SetGraphKeyLabel Y angle
+SetGraphOptions colors 0 con
+SetGraphColumns 1 4 5
+GraphPreStoredValues 0
+#GetLastTiltXYZToGraph 
+SetGraphAxisLabel Tilt angle
+SetGraphKeyLabel X
+SetGraphKeyLabel  Y
+SetGraphKeyLabel Z
+SetGraphOptions colors 0 con
+GraphPreStoredValues 0
+#endloop
+exit
+xvar = { -1 2 1.4 -0.6 0.9 }
+yvar = { 1 .3 -.5 1.6 1.3 }
+zvar =  { -12 -8 -4  0 4 }
+types = { 1 1 2 2 2 }
+SetGraphAxisLabel Values in xvar
+#SetGraphKeyLabel First type
+SetGraphOptions colors 0 #yran -1.5 2.5 con 
+#SetGraphTypes 1
+SetGraphColumns 1 3
+GraphValuesInArrays 1 types xvar yvar zvar
+#SetGraphAxisLabel Values in xvar
+#SetGraphTypes 2
+#SetGraphKeyLabel Second type
+#GraphPreStoredValues 1
+exit
+SuppressReports 
+ReportNavItem 
+if $navIntLabel == 12
+SkipAcquiringNavItem 
+SkipAcquiringGroup 0 0
+endif
+exit
+#OpenStateDialog 
+GoToImagingState Name2
+echo $repVal1
+#RestoreState 
+Exit
+xvar = { -1 2 1.4 -0.6 0.9 }
+yvar = { 1 .3 -.5 1.6 1.3 }
+dvar = { -.3 -.6 .2 -.9 }
+SetCustomHoleShifts xvar yvar
+SetCustomHoleDefocus dvar
+#MultipleRecords 
+exit
+NextProcessArgs  ExternalTools.cpp
+RunProcess ..\NotesLogsMisc\test.bat
+echo $repVal1
+Ctfplotter J -2 -6 3
+ReportClock
+#ResetClock 
+#Ctffind J -2 -6
+#ReportClock
+
+
+exit
+#ReportStageXYZ xx yy zz
+#ReportImageShift isx isy
+#AdjustStagePosForNav $xx $yy $isx $isy 1 
+#AddStagePosAsNavPoint $repVal1 $repVal2 $zz
+xarr = { 512 305 511 715 512 }
+yarr = { 714 511 305 511 714 }
+AddImagePointsAsPolygon A xarr yarr
+exit
+loop 5 ind
+   sx = $xx + ( $xarr[$ind] - 512 ) / 1000.
+   sy = $yy + ( $yarr[$ind] - 512 ) / 1000.
+   AdjustStagePosForNav $sx $sy $isx $isy 1 
+   xarr[$ind] = $repval1
+   yarr[$ind] = $repVal2
+EndLoop 
+AddStagePointsAsPolygon xarr yarr $zz
+echo $repVal1
+GetUniqueNavID ID
+draw = 1
+loop 4 ind
+   if $ind > 3
+draw = 0
+endif
+AddStagePosAsNavPoint $xarr[$ind] $yarr[$ind] $zz $ID $draw
+echo $repVal1
+endloop
+
+#DeleteNavigatorItem 1 1
+exit
+ReadStringsFromFile mac1 C:\USers\mast\Images\junkmac1.txt
+ReadStringsFromFile mac2 C:\USers\mast\Images\junkmac2.txt
+ReadStringsFromFile mac3 C:\USers\mast\Images\junkmac3.txt
+#MakeVarPersistent mac1
+StringArrayToScript mac2 1
+CallStringArray mac1
+CallStringArray mac3 1
+exit
+NewArray scrip -1 10
+scrip[1] = 15
+scrip[1] @= reportmag
+scrip[2] @= reportimageshift
+scrip[3] @= arr = { Some tokens 53 and higher }
+scrip[4] @= changefocus -5
+CallStringArray scrip
+echo $arr[2] $arr[1]
+exit
+SettleRecordShot = .3
+
+OpenTextFile junky O 0 junk.txt
+WriteLineToFile junky # Here is a bad line that is desperately wanted
+#WriteLineToFile junky # HEre is a pure comment
+ReportStageXYZ 
+WriteLineToFile junky $repval1 $repval2 $repval3  #comment
+IsTextFileOpen junky
+echo $repval1
+IsTextFileOpen junky2
+echo $repval1
+IsTextFileOpen junky2 junk.txt
+echo $repval1
+CloseTextFile junky
+echo closed
+ReadStringsFromFile allStr junk.txt
+echo $#allStr
+echo $allStr[2]
+echo $allStr[1]
+OpenTextFile junk2 R 0 junk.txt
+echo opened
+ReadLineToString junk2 strnvar
+echo $strnvar
+echo $repval1
+ReadLineToArray junk2 stage
+echo z = $stage[3] y = $stage[2] x = $stage[1]
+echo $repval1
+ReadLineToArray junk2 empty
+echo $repVal1
+loop 10
+   ReadLineToString junk2 empty
+   if $repval1 > 0
+      echo $empty
+      break
+   Endif 
+   delay 1
+SuppressReports 1
+EndLoop 
+SuppressReports 0
+
+loop 100
+   OpenTextFile isit T 0 commjunk.txt
+   if $repval1 > 0
+      ReadLineToString isit stnv
+      echo $stnv
+     echo $repval1
+       break
+   Endif 
+   delay 1
+SuppressReports 1
+EndLoop 
+exit
+
+ReportPercentC2 
+echo $repVal2
+EchoNoLineEnd Here is a prefix to a line, and...
+Echo Here is a status line:
+loop 100 ind
+   EchoReplaceLine slice: $ind ...
+   KeyBreak 6
+   Delay  1
+EndLoop 
+echo Done!
+exit
+#FrameThresholdNextShot 1
+TiltTo 33
+TiltTo 30
+QueueFrameTiltSeries 30 -3 22 2 .5 .1 0.05 .05 .05
+var = { 30 0.7 0.2  26 0.7 0.2  20  0.5 0.2  13 0.55 0.1  \
+             4 0.49 0.2  -4  0.49  0.2  -13 0.55 .1  -20  0.5 0.2  -26 0.7 0.25 \
+            -30 0.7 0.2 }
+var2 = { \
+0.7 1.5 -0.9 -0.5 -1 \
+0.65 1.7 -.5 -.2 -.5 \
+0.77 1.9 0 .1 -.1 \
+0.68 1.8  0.4 .3 .3 \
+0.77 2.1 0.6 .5 .6 }
+#FrameSeriesFromVar var 7 2
+#BackgroundTilt -30 .07
+#EarlyReturnNextShot 3
+R
+WriteFrameSeriesAngles junk.rawtlt
+#GetDeferredSum
+exit
+ReportAxisPosition F pos ang xoff yoff
+echo $pos $ang
+SetAxisPosition F 4.2 0.
+ReportAxisPosition F
+Delay 5
+SetAxisPosition F $pos $ang
+ReportAxisPosition F
+exit
+StartNavAcquireAtEnd 
+T
+F
+#SuffixForExtraFile _DarkField2 _DarkField4 _HAADF
+#IsPVPRunning 
+#MultipleRecords -9 -9 -9 -9  -9 1 0
+exit
+#NoMessageBoxOnError
+LongOperation Da 0 Lo 0
+#ReportOtherItem 7
+ArePostActionsEnabled anble
+echo $anble
+#RecordAndTiltUp
+exit
+AllowFileOverwrite 1
+OpenNewFile C:\USers\mast\Images\junk2.mrc
+AlignWholeTSOnly 1
+echo $repVal1
+ifwhole = $repVal1
+RecordAndTiltUp
+S
+RecordAndTiltDown
+S
+RecordAndTiltTo 10
+S
+if $ifwhole > 0
+   WriteComForTSAlign 
+endif
+CloseFile
+exit
+#TestRelaxingStage 10 10
+#RelaxStage
+echo In script
+loop 2 i
+echo wait $i
+Delay 3
+endloop
+exit
+ScreenDown
+delay 0.25
+ReportLowDose 
+delay 1
+ReportLowDose 
+delay 2
+ScreenUp 
+ReportUserSetting  LowDoseAreaToShow
+exit
+CallFunction VarLvlTst::duplicate
+exit
+loop 300
+#LongOperation Bu 0
+UpdateHWDarkRef  5
+ReportClock
+Delay 5
+endloop
+exit
+ReportNavItem 
+if modulo ($navIndex 10) == 3
+   SkipAcquiringGroup 
+  echo Skipping rest of group
+Endif
+exit
+ReportUserSetting AutoFocusBeamTilt  btval
+newval = $btval * 2
+SetUserSetting AutofocusBeamTilt  $newval 1
+echo Doubled:
+ReportUserSetting AutofocusBeamTilt
+newval = $btval * 4
+SetUserSetting AutofocusBeamTilt  $newval
+echo Doubled again:
+ReportUserSetting AutofocusBeamTilt
+AutoFocus -1
+ReportUserSetting AutofocusBeamTilt
+Delay 2s
+WaitForMidnight 5 1 15 54
+exit
+Search 
+SetupScopeMessage 3 .1 Keep it simple
+ShowMessageOnScope MovePhasePlate
+if $repval1 != 0T
+echo Return value was $repVal2
+endif
+#UpdateHWDarkRef 1
+exit
+ScreenDown 
+AutoFocus 
+ReportAutoFocus
+ReportNavItem 
+if (modulo $NavIndex  2) == 0
+  SkipAcquiringNavItem 
+Endif 
+exit
+#RealignToNavItem 1
+#EarlyReturnNextShot 0
+#Pause FAILED TO HAVE THE RIGHST SIZE
+#R
+#T
+#F
+#GetDeferredSum 
+#SetJeolGIF 0
+#ReportAbsoluteFocus 
+#ReportImageShift
+#TiltDuringRecord -60
+#ErrorBoxSendEmail DUmmy that was a bad macro
+#ImageProperties M
+#RetractCamera 
+#SetK2ReadMode R 1
+#SetCenteredSize R 1 3710 3838
+#R
+#R
+#S
+#SetMag 3800
+#MoveStageTo -200 200
+#ReportPercentC2 
+#SetPercentC2 3.2
+#TiltDuringRecord 60 1000  1
+#R
+#TiltTo 0
+#Eucentricity 1
+#copy a p
+ReportNumNavAcquire 
+#ReportMeanCounts A 1
+#ImageProperties A
+#FFT A
+#SetExposureForMean 650 1
+SetColumnOrGunValve 1
+#$ind = 1
+shot2 = View
+#$shot
+ProgramTimeStamps
+Pause Hi there
+echo $repVal1 $repVal2
+exit
+NoMessageBoxOnError 
+OnStopCallFunc Cleanup
+IsVariableDefined Shot$ind
+test $repVal1 == 1
+AbortIfFailed That variable was NOT defined
+#echo $shot$ind
+#LongOperation Bu 10
+ReadTextFile textArr CameraController.cpp
+#Loop $#textArr ind
+#echo $textArr[$ind]
+#EndLoop 
+echo $#textArr
+RunInShell imodifo  2>&1  info.out
+echo $repVal1 $repVal2
+#exit
+ReportTickTime ticks
+TiltTo 50
+TiltTo 40
+#BackgroundTilt 40 .01
+ReportTickTime now
+elaps = $now - $ticks
+echo Elapsed: $elaps
+ElapsedTickTime $ticks elaps
+echo Elapsed: $elaps
+
+ReportNavItem 
+if modulo $navIndex 2 > 0
+  StepFocusNextShot 1. 2. 3.
+endif
+exit
+UseContinuousFrames 1
+T
+copy a b
+loop 200 ind
+WaitForNextFrame 
+StartFrameWaitTimer 
+#AlignTo b
+copy a b
+#S
+ReportStageBusy busy
+if $busy == 0
+break
+endif
+EndLoop 
+StopContinuous 
+
+#TiltDuringRecord -50 1000 .2
+#Echo $name
+loop 1 i
+name @= spacey mrcfile-$i.mrc 
+echo $name
+EndLoop 
+ReportDirectory 
+#OpenNewFile junk910.mrc
+
+Function Cleanup
+Tiltto 30
+EndFunction
+EndMacro
+Macro	14
+ScriptName VarLvlTst
+require zeroloop
+require 203
+LocalLoopIndexes 
+
+CallFunction duplicate -4 stuff and nonsense
+echo Returned $repVal1 $repVal2
+loop -1
+   Echo in EMPTY loop!
+   exit
+EndLoop 
+
+test 1 == 2
+ReportBeamShift BSX BSY
+
+loop 1 mainLoopInd
+   CallFunction topFunc 12 -3 17.4
+   Echo mainLoopInd after: $mainLoopInd
+   if $mainLoopInd != 1
+      Echo mainLoopInd is $mainLoopInd not 1 back in main
+      Exit 
+   Endif 
+EndLoop 
+
+IsVariableDefined spot
+if $repVal1 == 0
+   echo Spot var is not defined in main
+   exit
+endif
+echo orig local clock and clockVal: $localClock $clockVal
+if $localClock >= $clockVal
+   echo clockVal is not the global value main
+   exit
+endif
+IsVariableDefined argVal1 isDef1
+IsVariableDefined numCallArgs isDef2
+if ($isDef1  != 0) OR ($isDef2 != 0)
+   echo argVal1  or numCallArgs defined in main ($isDef1 $isDef2)
+   exit
+endif
+
+Echo persistent vars are $persist
+
+echo ALL SUCCESSFUL
+return $persist $spot really nice
+
+####  topFunc
+#
+Function topFunc 3 0
+   LocalVar clockVal
+   echo topFunc args: $argVal1 $argVal2 $argVal3
+   echo BSX,Y vars: $BSX $BSY
+   echo BS repVals: $repVal1 $repVal2
+   if ($repVal1 != $BSX) OR ($BSY != $repVal2)
+      echo "repVals do not match BSX,Y"
+      exit
+   endif
+   test 2 == 2
+   
+   #newvar = 3
+   LocalVar clockVal BSX
+   
+   IsVariableDefined mainLoopInd
+   if $repVal1 != 0
+      echo mainLoopInd is defined in function
+      #exit
+   Endif 
+   mainLoopInd = 0
+   if $mainLoopInd != 0
+      echo mainLoopInd is $mainLoopInd not 0
+      #exit
+   Endif 
+   
+   ReportSpotSize spot
+   echo repVal1: $repVal1
+   if $spot != $repVal1
+      echo repVal1 not set  right in topFunc
+      Exit 
+   Endif 
+   IsVariableDefined repVal2 isDef
+   if $isDef != 0
+      echo repVal2 not cleared by report
+      Exit 
+   Endif 
+   callFunction secondFunc $spot $BSY
+   echo test back in topFunc: $testResult
+   if $testResult != 1
+      echo test result not right in topFunc
+      Exit 
+   Endif 
+   IsVariableDefined secInd isDef1
+   IsVariableDefined secVal isDef2
+   if ($isDef1 != 0) OR ($isDef2 != 0)
+      echo secInd or secVal defined in topFunc ($isDef1 $isDef2)
+      Exit 
+   Endif 
+   IsVariableDefined secFuncVar isDef
+   if $isDef != 0
+      echo secFuncVar not cleared by return
+      exit 1
+   Endif 
+   ReportClock clockVal
+   localClock = $clockVal
+   Delay  200
+   Call CalledLvl
+   echo clock val back in top func: $clockVal
+   if $localClock != $clockVal
+      echo clock value does not match original
+      Exit 
+   Endif 
+EndFunction 
+
+#### secondFunc
+#
+Function secondFunc 2 0 secInd secVal
+   LocalVar secFuncVar
+   echo secFuncVar is $secFuncVar 
+   echo secondFunc: $secind $secVal
+   if $secInd != $spot OR $secVal != $BSY
+      Echo second args not right
+      Exit 
+   Endif 
+   echo test val up in second: $testResult
+   if $testResult != 1
+      echo test result not from topFunc in second
+      Exit 
+   Endif 
+   secFuncVar = 15
+EndFunction 
+
+function duplicate 1 1
+echo in VarLvlTst  $argVal1 $argval2
+echo returning $argVal1 nicer
+return $argVal1 nicer
+#CallFunction CalledLvl::duplicate
+EndFunction 
+EndMacro
+Macro	15
+ScriptName CalledLvl
+IsVariableDefined spot
+if $repVal1 != 1
+  echo spot not defined in calledLvl
+ exit
+endif
+CallFunction duplicate
+echo CalledLvl: spot size should be $spot
+ReportClock clockVal
+persist := $clockVal
+return
+
+function duplicate 0 0
+echo in CalledLvl
+CallFunction VarLvlTst::duplicate 123  silly loopback
+echo Returned $repVal1 $repVal2
+EndFunction
+EndMacro
+Macro	16
+ClearPersistentVars 
+var = { 1 2 3 4 5 }
+echo $var[3]
+var[3] = { 11 7 9 }
+echo $var
+exit
+
+#ReportPercentC2 
+#SetPercentC2 $repVal2 + 0.01
+#ReportPercentC2 
+#Echo $repVal1 $repVal2
+#ReportSlotStatus 0
+#MoveStage  10 10
+#RecordAndTiltUp
+#SetJeolSTEMflags 0 20 9
+UseContinuousFrames 1
+SetLiveSettleFraction 0.5
+ForceCenterRealign 
+RealignToNavItem 1 2
+ReportContinuous 
+if $repVal1 < 0
+   SetContinuous V 1
+   V
+endif
+Copy A P
+ReportContinuous 
+ReportImageShift 
+ResetImageShift
+Loop 2
+echo Waiting for frame
+WaitForNextFrame
+echo Back from wait
+ReportContinuous
+AlignTo P
+ReportImageShift 
+ResetImageShift
+EndLoop
+StopContinuous
+EndMacro
+Macro	17
+var =  1 + cos ((14 + 16) * 2.) + sin ((15 - 75) / 2)  + atan2 (1 1)
+echo $var
+if 1 +  cos ( ( 14 + 16 ) * 2.  )   + sin ( ( 15 - 75 ) / 2 )   + atan2 ( 1 1 ) == $var
+echo IT WAS EQUAL
+endif
+if ((1 + 3 == 4 and 5 - 3 == 1) or (2 * 3 >= 6 and 7 * 6 < 43)) AND  (6 / 3 == 2)
+echo PASSED
+endif
+#SkipTo Place
+Loop 4 ind
+  echo outer $ind
+ if $ind < 2
+  Loop 2 jnd
+  echo inner $jnd
+  if $ind == 2 and $jnd == 1
+    SkipTo Place2
+  endif
+EndLoop
+endif 
+Place2:
+EndLoop 
+echo Fell out of loop
+Loop 3 ind2
+  echo in loop2
+  if $ind2 == 1
+   echo in if
+  endif
+EndLoop 
+Place:
+echo Came to Place
+powe = power 5 3
+echo $powe
+val = SQRT (POWER (5 3))
+echo $val
+val2 = NEARINT ($val)
+val3 = ROUND ($val 2)
+val4 = ABS ($val3 - 20)
+CallFunction TestFunc1  43 $val4 C:\Program Files\SerialEM
+
+CallFunction Two Words::TestFunc2 $val2 $val3 C:\\Program Files\Gatan\Reference Images
+echo $val2 $val3 $val4
+
+
+
+Function TestFunc1 2 1
+echo in TestFunc1  arguments $argVal1 $argVal2
+Loop 3 i
+echo in loop $i
+CallFunction 18::TestFunc2 $i
+if $i == 2
+return
+endif
+EndLoop 
+echo string: $argVal3
+EndFunction 
+
+Function TestFunc2 1
+echo in TestFunc2 of macro 18 arg $argVal1
+#CallFunction TestFunc1 5 8 junk
+EndFunction 
+EndMacro
+Macro	18
+var1 = 1
+var2 = 6
+YesNoBox Do you want to set var2 to 8 instead of 6?
+if  $repval1 > 0
+ var2 = 8
+else
+pause So you didn't really change anything!
+endif
+
+#clearpersistentvars
+#pvar1 :=
+#echo $pvar1
+if $var1 < 0.5 or $var2 < 9 and $var1 > 1
+  if $var2 < $var1
+    echo yes 2 is bigger
+  elseif $var1 > 5
+    echo nested elseif
+  endif
+  echo Yes I was here
+elseif $var1 == 1 and $var2 < 7
+  echo passed elseif
+else
+  loop 3 ind
+    echo failed $ind
+  endloop
+endif
+AllowFileOverwrite 1
+MakeDirectory C:\Documents and Settings\mast\Images\junkdir
+SetDirectory C:\Documents and Settings\mast\Images\junkdir
+OpenNewFile junk1.st
+
+MacroName Two Words
+Function TestFunc2 2 1
+echo in TestFunc2 of Two Words
+echo arguments $argVal1 $argVal2 $argVal3
+EndFunction
+EndMacro
+Macro	19
+Plugin PluginTest Test1IntIn3DblOut 13
+Plugin PluginTest Test1IntStr 3.5 Hiyawatha is big
+Plugin PluginTest TestStr Just A filename
+Plugin PluginTest Test1DblStr 4.4 Another file
+Plugin PluginTest Test2Dbl -5 16
+Plugin PluginTest Test3DblOut
+#echo $repVal2   $repVal3 $repVal4
+#ListPluginCalls
+Plugin PluginTest Test3DblStrInOut 15. -27.3 6 A filename with spaces
+echo $repVal1 $repVal2  
+echo $pluginDblVar
+echo $pluginStrVar[1]
+echo $pluginStrVar[2]
+echo $pluginStrVar[3]
+#Plugin PluginTest Test3DblStrInOut 15. -27.3 6 A filename with spaces
+Plugin PluginTest Test7Dbl 7.7 6.6 5.5 4.4 3.3 2.2 1.1
+EndMacro
+Macro	21
+FrameThresholdNextShot 1.1 0.75 0.9
+TiltTo 3
+TiltTo 0
+#QueueFrameTiltSeries 30 -3 22 2 .5 .1 0.05 .05 .05
+var = {0 0.7 0.2  3 0.7 0.2 -3  0.5 0.2  6 0.55 0.1  \
+             -6 0.49 0.2  9  0.49  0.2  -9 0.55 .1  12  0.5 0.2  -12 0.7 0.25 \
+            -15 0.7 0.2 }
+var2 = { \
+0.7 1.5 -0.9 -0.5 -1 \
+0.65 1.7 -.5 -.2 -.5 \
+0.77 1.9 0 .1 -.1 \
+0.68 1.8  0.4 .3 .3 \
+0.77 2.1 0.6 .5 .6 }
+FrameSeriesFromVar var 7
+#BackgroundTilt -30 .07
+EarlyReturnNextShot 0
+ReportStageXYZ stageX stageY
+SetFrameSeriesParams 1 0 $stageX $stageY
+R
+ReportClock
+WriteFrameSeriesAngles junk.rawtlt
+#GetDeferredSum
+exit
+EndMacro
+Macro	22
+ScriptName startup
+var = 15
+if $var == 15
+   echo yes
+   
+   echo long enough?
+endif
+#NoMessageBoxOnError 
+ParseQuotedStrings 
+Try 1
+   FindScriptByName Small Test
+   CallScript -1 15 23.2 'A string with spaces'
+   echo $repVal1 $repVal2 $repVal3
+Catch 
+   echo Got to my catch
+EndTry 
+echo That did something OK
+#exit
+#PythonScript -12.3  47 'An error occurred?'
+
+#
+#!Python
+##import serialem as s
+#print(SEMargStrings)
+#s.Echo('Whoopee, I am running it')
+#s.Return('12', '23')
+#EndPythonScript 
+echo Started right here! 
+#$repval1 $repval2
+echo next line
+#Call mainTest
+EndMacro
+Macro	23
+#!Python
+#
+# import serialEM
+#
+import serialem as sem
+
+#
+# import date/time stuff
+#
+from datetime import date
+from datetime import datetime
+
+#
+# import system stuff
+#
+import os
+
+#ScriptName Testing Python Calls
+arrstr = sem.GetVariable('testArr')
+arr = SEMarrayToFloats(arrstr)
+print(len(arr))
+print("Testing python calls, native and via serialEM")
+sem.Echo(' ')
+sem.Exit()
+
+print("using serialEM calls:")
+sem.Echo(' ')
+sem.Echo('Hi how are you?')
+sem.Echo('Personally, I am fine :-)')
+sem.Echo(' ')
+
+print("using Python calls:")
+words = 'Hi how are you?' + os.linesep + 'Personally, I am fine :-)'
+print(words)
+
+sem.Echo(' ')
+
+sem.Echo("using variable containing os.linesep and serialEM:")
+
+sem.Echo(words)
+
+sem.Echo(' ')
+
+print("using sem.EchoBreakLines command:")
+sem.Echo(' ')
+sem.EchoBreakLines("This\nis a\ntest")
+
+sem.Echo(' ')
+
+print("default date:")
+today = date.today()
+print("Today's date:", today)
+
+sem.Echo(' ')
+
+#
+print("change the date formats...")
+#
+# dd/mm/YY
+d1 = today.strftime("%d/%m/%Y")
+print("d1 =", d1)
+
+# Textual month, day and year 
+d2 = today.strftime("%B %d, %Y")
+print("d2 =", d2)
+
+# mm/dd/y
+d3 = today.strftime("%m/%d/%y")
+print("d3 =", d3)
+
+# Month abbreviation, day and year  
+d4 = today.strftime("%b-%d-%Y")
+print("d4 =", d4)
+
+sem.Echo(' ')
+
+#
+print("add the time:")
+#
+# datetime object containing current date and time
+now = datetime.now()
+ 
+print("now =", now)
+
+sem.Echo(' ')
+print("format the string differently:")
+
+# dd/mm/YY H:M:S
+dt_string = now.strftime("%d/%m/%Y %H:%M:%S")
+print("date and time =", dt_string)
+
+sem.Echo(' ')
+
+print("change to Textual month, day, year H:M:S")
+dt_string = now.strftime("%B %d, %Y %H:%M:%S")
+print("date and time =", dt_string)
+
+
+sem.Echo(' ')
+
+print("example using a tab!")
+
+print("Hi user" + os.linesep + chr(9) + "How are you?")
+
+sem.Echo(' ')
+
+print("open a separate python window")
+
+from subprocess import call
+dir = "C:\Program Files\Python311"
+cmdline = "python.exe"
+rc = call("start cmd /K " + cmdline, cwd=dir, shell=True)
+
+sem.Echo(' ')
+
+sem.Echo('Done!')
+
+sem.Exit()
+EndMacro
+Macro	24
+#!Python
+# from serialem import *
+# serialemPrefix sem
+
+import sys,os,datetime,glob,dateutil
+import numpy as np
+sys.path.insert(0,'C:/cygwin/home/mast/IMOD/pylib')
+from imodpy import *
+
+def myFunc():
+   if stuff:
+      sem.Echo('dtu')
+
+# include utils
+# scriptname mainTest
+import serialem as sem
+
+
+#print(sys.path)
+sem.ReportClock()
+
+sem.ImageMetadataToVar('A', 'meta')
+meta = sem.GetVariable('meta')
+msplit = meta.split('\n')
+print(len(msplit))
+sem.Exit()
+#try:
+sem.NoMessageBoxOnError(1)
+try:
+   sem.Call('VarLvlTst')
+except SEMerror:
+   pass
+for ind in range(1):
+   #sem.SetExposure('R', 1.)
+   sem.EarlyReturnNextShot(0)
+
+sem.ReportClock()
+#sem.ReadOtherFile(0, "A", "../../../Images/focusbin4.000.tif")
+sem.ReadOtherFile(0, "B", "..\..\..\Images\focusbin4.000.tif")
+#sem.Exit()
+arr = sem.bufferImage('B')
+sem.ReportClock()
+rv1 = sem.GetVariable('repVal1')
+print('That was: ', rv1)
+nparr = np.asarray(arr)
+nparr = np.frombuffer(arr)
+print(nparr.shape)
+(ny, nx) = nparr.shape
+sem.Trial()
+sem.PutImageInBuffer(nparr, 'E', nx, ny, 'B')
+sem.Echo('Got through it')
+sem.SaveToOtherFile('B', 'MRC', 'CUR', 'junk.mrc')
+
+(stagex, stagey, stagez) = sem.ReportStageXYZ()
+stxt = fmtstr("fmt stage {:.2f}, {:.2f}", stagex, stagey)
+sem.Echo(stxt)
+#sem.OpenNavigator()
+sem.Exit()
+print(34.)
+sem.Verbose(0)
+sem.SetVariable('myTestVar', '23.4')
+varr = sem.GetVariable('myTestVar')
+prnstr(varr)
+sem.SetFloatVariable('numVar', 654.23, 1)
+sem.ListPersistentVars()
+val = sem.GetVariable('numVar')
+print(val)
+#sem.Exit(0, 'OK')
+#sem.CropImage('A', 200, 800, 800, 1600)
+try:
+   stats = sem.ElectronStats('1')
+   val = sem.GetVariable('repVal1')
+   if isinstance(val, str):
+      sem.Echo('string')
+   else:
+      sem.Echo('double')
+   sem.Echo('myval' + '   ' + str(val))
+
+except SEMerror as ex:
+   sem.Echo("in the exception, passing");
+   pass
+   #print(ex)
+#abc = int('asd')
+sem.Echo('got to next')
+sem.SetImageShift(1,1)
+stats = sem.ElectronStats('1')
+
+sem.Verbose(0)
+(isx, isy, psecx, specy, stagex, stagey) = \
+   sem.ReportImageShift()
+again = sem.GetVariable('repVal1')
+print('Tuple is ', isx, isy, psecx, specy, stagex, stagey)
+sem.Echo('repVal1 is' + str(again))
+arr = [ 1, 3, 5, \
+   15, 16, 18, \
+   20, 22, 24]
+if arr[0] > 1:
+   arr[0] = 1
+elif arr[4] > 5:
+   kk = 2
+else:
+
+   stuff = 0
+
+stxt = "stage: " + str(round(stagex, 3)) + '  ' + str(round(stagey,3))
+
+#sys.exit(0)
+#
+#sem.Trial()
+sem.Exit(0, stxt)
+EndMacro
+Macro	25
+#!Python
+#scriptname utils
+import serialem as sem
+def prnstr(strn):
+   # Better bulk this up to make it clearer
+   if isinstance(strn, str):
+      sem.Echo(strn)
+   else:
+      sem.Echo(str(strn))
+      
+variable = 1.0
+sem.IsVariableDefined('XTiltX')
+#sem.R()
+EndMacro
+Macro	26
+#!Python
+#scriptname Small Test
+import serialem as sem
+#sem.OKBox("Is this for real?  But   is a really long piece of text and why does he say it is cut off?")
+#ans = sem.YesNoBox("Do you to do it?")
+#judnk := what
+print(SEMargs)
+sem.Call('regular')
+ret = sem.GetVariable('a')
+print(SEMarrayToInts(ret))
+print(SEMarrayToFloats(ret))
+vr = [12.2, 43., 15]
+svr = listToSEMarray(vr)
+print(svr)
+sem.SetVariable('svr', svr)
+ret = sem.GetVariable('svr')
+print(SEMarrayToFloats(ret))
+sem.ReportSpotSize()
+ret = sem.GetVariable('repVal1')
+print(ret)
+print(SEMarrayToFloats(ret))
+sem.SetVariable('aa', '1|\n2')
+print(sem.GetVariable('aa'))
+ret = sem.CallFunction('VarLvlTst::duplicate', 'Here is my choice', 23.3)
+sem.Echo(ret[0] + ' ' + ret[1])
+sem.SetImageShift(0.3, 0.3)
+tup = sem.ReportImageShift()
+print(tup[3], tup[4])
+#tup = sem.Call('VarLvlTst')
+#print(tup)
+#sem.EnterString("temp", "Tell me what you want to do")
+#ans = sem.GetVariable("temp")
+#print("The answer is", ans)
+strn = """A string with a ' quite " and
+nl   new line"""
+ind = strn.find('\n')
+sem.Echo(str(ind))
+sem.Echo(strn)
+import socket
+s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+# now connect to the web server on port 80 - the normal http port
+s.connect(("www.python.org", 80))
+sem.Echo('Connected to server')
+import time,sys
+ans = "did you exit?"
+#sem.Call('mainTest')
+sem.Return('1', '23','nice')
+#sem.Exit(0, ans)
+EndMacro
+Macro	27
+ScriptName regular
+a = {1 2 3 4 5 }
+
+Echo a = $a
+#Call Python
+#delay 0
+#Echo b = $b
+EndMacro
+Macro	28
+#!Python
+#scriptName Python
+import serialem as sem
+###
+## get a
+scrip = ['#!Python', 'import serialem as sem', 
+'sem.ReportNavItem()',
+'sem.Echo("Nothing to do")']
+semscr = ['echo npthing much to do here either', 'ReportImageShift']
+sem.SuppressReports()
+#for ind in range(1000):
+#   sem.ReportLDDefocusOffset('V')
+sem.SuppressReports(0)
+sem.ReportClock()
+sem.View()
+sem.ReportClock()
+#
+#sem.OpenNavigator('cdmerge5.nav')
+#sem.MergeNavFile('junk2.nav')
+###
+EndMacro
+Macro	29
+#!Python
+import serialem as sem
+sem.AllowFileOverwrite(1)
+sem.ParamSetToUseForMontage(3)
+sem.SetupFullMontage(0, 'C:\Users\mast\Images\junk4.hdf')
+sem.SetMontageParams(1) # the 1 here is to move the stage instead of shifting image
+sem.GoToLowDoseArea('S')
+# sem.GoToImagingState('S')
+sem.SetDefocus(0)
+sem.Montage()
+sem.NewMap()
+strn = 'A multiline message'
+strn += '\r\n'
+strn += 'a second line'
+sem.Echo(strn)
+print(strn)
+exe = sem.ReportNumExeFuncs()
+modu = sem.ReportNumModuleFuncs()
+print(exe, modu, exe - modu)
+EndMacro
+Macro	30
+delZarr = { -120 -100 -80 - 50 50 80 100 120 }
+numZ = $#delZarr
+ReportStageXYZ sx sy sz
+loop $numZ ind
+   delZ = delZarr[$ind]
+   MoveStageTo $sx $sy $sz + $delZ
+   Autofocus -1 0
+   ReportAutofocus def
+  defInt = ROUND ( $def 0 )
+  scale =  ROUND ( $delZ / $def 2 )
+  if $ind > 0
+     scaleArr = { $scaleArr $defInt $scale }
+  Else
+     scaleArr = { $defInt $scale }
+  Endif 
+EndLoop 
+echo ZbyGFocusScalings $scaleArr
+EndMacro
+Macro	31
+#!Python
+from  serialem import *
+NoMessageBoxOnError(1)
+try:
+  Trial()
+  #AutoAlign()
+except SEMerror as e:
+   Echo (str(e))
+   Echo('Hah')
+Echo ('going on')
+res = ReportNavItem()
+print(res)
+#Exit(0)
+EndMacro
+Macro	32
+/* here is a single line*/
+#try
+ # T
+#catch
+#   echo caught
+#EndTry 
+echo went on
+ReportNumExeFuncs exe
+PythonScript $exe
+#!Python
+import serialem as sem
+modu = sem.ReportNumModuleFuncs()
+print('missing: ', int(SEMargStrings[0]) - modu)
+EndPythonScript 
+EndMacro
+Macro	33
+SuppressReports 
+#ParseQuotedStrings 1
+str1 @= test
+str2 @= hmm
+CallFunction StringCompare $str1 $str2
+
+function StringCompare 0 1 arg
+echo $arg
+
+PythonScript $arg
+#!Python
+#import serialem
+txt = SEMargStrings[0].split()
+a = txt[0]
+b = txt[1]
+if a in b:
+   print('ok')
+else:
+   print('nope')
+EndPythonScript
+
+EndFunction 
+EndMacro
+Macro	34
+#!Python3.11
+import sys,os
+import numpy as np
+#scriptname PythonTest
+import serialem as sem
+
+spot = sem.ReportSpotSize()
+print('Spot size is' ,int( spot))
+sem.Trial()
+arr = sem.bufferImage('A')
+nparr = np.asarray(arr)
+nparr = nparr // 2
+(ny, nx) = nparr.shape
+sem.PutImageInBuffer(nparr, 'E', nx, ny, 'B')
+EndMacro
+Macro	35
+#!python
+import serialem as sem
+import os
+
+
+
+def list_to_string(l):
+     return '\n'.join([str(i) for i in l])
+
+def float_to_string(l):
+    l = int(l)
+    return '\n'.join([str(i) for i in range(l)])
+
+
+
+
+lower = 1
+upper = 390
+sd = -1
+bp = 13.2
+
+maximum_errors = []
+fvars = []
+tvars = []
+
+
+params_list = [[], [], []]
+params_list[0] = [0.19, .2, 3.3, 4.4, -18, 27.7, 43.8, 69.2]
+params_list[2] = [0.13, 8.8, 3.5, None, -2, 19.9, 39.4, None]
+params_list[1] = [0.22, 7.4, 5.4, 7.5, -17, 22.6, 59.1, 45.7]
+for params in params_list:
+    maximum_errors.append(params[0])
+    fvar = [params[e] for e in range(1, 5)]
+    tvar = [params[p] for p in range(5, 8)]
+    fvars.append(fvar)
+    tvars.append(tvar)
+    
+
+sem.OpenNavigator()
+
+
+file_path = "C:\\Users\\mast\\Images\\20dec13a_gr6.mrc"
+if sem.ReportIfNavOpen() == 0:
+    sem.OpenNavigator()
+sem.OpenOldFile(file_path)
+sem.ReadFile(0, 'A')
+sem.NewMap()
+sem.LoadNavMap()
+for params_counter, params in enumerate(params_list):
+    maximum_error = maximum_errors[params_counter]
+    fvar = fvars[params_counter]
+    tvar = tvars[params_counter]
+    fvar = list(fvar)
+    tvar = list(tvar)
+    if None in fvar:
+        fvar.remove(None)
+    if None in tvar:
+        tvar.remove(None)  
+    
+    sem.SetVariable('fvar', list_to_string(fvar))
+    sem.SetVariable('tvar', list_to_string(tvar))
+    sem.SetHoleFinderParams(2.61, 4.14, 0, maximum_error, 'fvar', 'tvar')
+
+    try:
+        
+            
+        # print('made it to find holes')
+        
+        sem.FindHoles()
+        try: 
+            sem.MakeNavPointsAtHoles(0, lower, upper, sd, bp)
+            
+        except Exception as ex:
+            print('ex: ' + str(ex))
+        number_of_points = int(sem.ReportNumTableItems() + 1)
+        coords = []
+        for m in range(2, number_of_points):
+            coords.append(list(sem.ReportItemImageCoords(m, 'O')))
+        for l in range(int(sem.ReportNumTableItems())):
+                sem.DeleteNavigatorItem(1)
+                    
+            
+            
+        x_ = []
+        y_ = []
+        for coord in coords:
+            x_.append(coord[0])
+            y_.append(coord[1])
+        
+        
+    except Exception as e:
+        print('--------------')
+        
+        print(e)
+sem.CloseFile()              
+    
+            
+            
+        
+        
+        
+
+        
+   
+    
+    
+EndMacro
+Macro	36
+#!Python
+import serialem as sem
+sem.StartTry(1)
+try:
+   sem.FixAstigmatismByCTF()
+except SEMerror:
+   sem.Echo('Caught the error')
+sem.EndTry()
+sem.Echo('got here')
+EndMacro
+Macro	37
+SuspendNavRedraw 1
+DeferLogUpdates 1
+T
+ReportCurrentBuffer 
+current_buffer = $repVal1
+loop 100 i
+   x0 = $i * 10
+   y0 = $i * 10
+
+   points_X = { $x0 ($x0 + 10) ($x0 + 10) $x0 $x0 }
+   points_Y = { $y0 $y0 ($y0 + 10) ($y0 + 10) $y0 }
+
+   # add the contour as a polygon
+   AddImagePointsAsPolygon $current_buffer points_X points_Y -9999 1
+EndLoop 
+
+# re-enable redrawing of Navigator window
+SuspendNavRedraw 0
+DeferLogUpdates 0
+ReportClock
+EndMacro
+Macro	38
+#!Python
+import serialem as sem
+import sys,os,datetime,glob,dateutil
+import numpy as np
+sys.path.insert(0,'C:/cygwin/home/mast/IMOD/pylib')
+from imodpy import *
+for ind in range(20):
+   sem.AllowFileOverwrite(1)
+   sem.SetupPolygonMontage(1, .25, 'C:\Users\mast\Images\polyjunk.mrc')
+   sem.Montage()
+   sem.NewMap()
+   sem.LoadNavMap()
+   arr = sem.bufferImage('H')
+   nparr = np.asarray(arr)
+   print(nparr.shape)
+   (ny, nx) = nparr.shape
+   sem.PutImageInBuffer(nparr, 'E', nx, ny, 'B')
+   sem.CloseFile()
+   sem.Save('E')
+EndMacro
+Macro	39
+ScriptName Last One
+Echo IN LAST ONE
+EndMacro
+Macro	40
+#!Python
+
+import serialem as sem
+import numpy as np
+from pathlib import Path
+from PIL import Image
+
+polygon_id = 1
+folder_path = Path("C:/Users/mast/Images/test")
+
+overlap = 0.25
+
+folder_path.mkdir(exist_ok=True)
+sem.AllowFileOverwrite(1)
+
+counter = 0
+while True:
+    sem.SetupPolygonMontage(polygon_id, overlap, str(folder_path / "polygon_montage.mrc"))
+
+    sem.M()
+    map_id = int(sem.NewMap())
+    sem.CloseFile()
+
+    sem.LoadOtherMap(map_id, "A")
+
+    image = np.asarray(sem.bufferImage("A"))
+
+    image_file = folder_path / f"polygon_montage_{counter}.png"
+    Image.fromarray(image).save(image_file)
+    counter += 1
+    break
+EndMacro
+Macro	59
+MacroName K2Test
+Require variable1
+
+# Before starting, set Record to 1.6 sec exposure, 0.2 sec frames or other setting with 8 frames
+# turn on Save frames and Save frame sums and Setup the sums
+# Set up for 2 at 1 frame and 3 at 2 frames
+# Turn off the saving of frame sums
+
+# Set to 0 for a real camera, 1 for simulator
+simulator = 1
+
+# Set to 1 to test with CPU and GPU; otherwise it uses whatever is set
+gpuVsCpu = 0
+
+# Set to 0 to keep valves open when it is failing tests quickly
+closeValvesOnFailure = 1
+
+# Set any of these non-zero to start at the given loop index and go on from there
+startMode = 1
+startFile = 0
+startDivide = 0
+startEarly = 0
+startDefer = 0
+
+waitPerFrame = 0.3
+removeFrames = 1
+tolerance = 0.01
+
+# Higher binnings to test
+highBinCM = 4
+highBinSR = 2
+
+# The exposures have to be multiple of the frame time that is legal for single-shot too
+# These combinations work in the simulator
+expCM = 1.0
+expSR = 1.0
+frameCM = 0.2
+frameSR = 0.25
+sumExpCM = 1.6
+sumExpSR = 1.5
+
+# of frames in early return sum
+erSumCM = 2
+erSumSR = 1
+
+faBinningCM = 4
+faBinningSR = 8
+
+CameraProperties 
+camXsize = $repVal1
+camYsize = $repVal2
+rotFlip = $repVal3
+RetryReadOtherFile 5
+SkipFrameAliParamCheck
+SetUserSetting SaveFrameStackMdoc 0
+
+SetColumnOrGunValve 1
+
+# Get starting parameters for restoring
+echo Starting Params:
+ReportK2FileParams saveFileType savePackVal saveUse101 saveTimes100 saveSkipRot saveFilePerFrame
+ReportCountScaling saveDivideBy2 fullScale
+ReportFrameAliParams saveAliBin saveKeepPrec
+ReportFrameAli2 saveGPU
+
+OnStopCallFunc DoRestoreChanges
+
+SuppressReports
+ 
+# Loop on modes
+Loop 2 modeInd
+   if $startMode > 0 and $startMode > $modeInd
+      continue
+   endif
+   K2mode = $modeInd
+
+   # Set mode-dependent parameters
+   baseBin = 1
+   highBin = $highBinCM
+   tolAdjusted = $tolerance
+   baseExp = $expCM
+   earlySum = $erSumCM
+   faBinning = $faBinningCM
+   frameTime = $frameCM
+   sumExp = $sumExpCM
+   if $K2mode == 2
+      baseBin = 0.5
+      highBin = $highBinSR
+      baseExp = $expSR
+      earlySum = $erSumSR
+      if $simulator > 0
+         tolAdjusted = $tolerance * 3.5
+      Endif 
+      faBinning = $faBinningSR
+      frameTime = $frameSR
+      sumExp = $sumExpSR
+   Endif 
+   
+   # Loop on file type (2 or 3 times)
+   Loop 2 fileInd
+      if $startFile > 0
+         if $startFile == $fileInd
+            startFile = 0
+         else
+            continue
+         Endif 
+      Endif 
+      fileType = $fileInd - 1
+      
+      # Loop on divide by 2
+      Loop 2 divideInd
+         if $startDivide > 0
+            if $startDivide == $divideInd
+               startDivide = 0
+            Else
+               continue
+            Endif 
+         Endif 
+         divideBy2 = $divideInd - 1
+         
+         # Loop on early return
+         Loop 3 earlyInd
+            if $startEarly > 0
+               if $startEarly == $earlyInd
+                  startEarly = 0
+               Else
+                  continue
+               Endif 
+            Endif 
+            earlyReturn = -1
+            numDef = 1
+            if $earlyInd == 2
+               earlyReturn = 0
+               numDef = 2
+            elseif $earlyInd == 3
+               earlyReturn = $earlySum
+               numDef = 2
+            Endif 
+            
+            # Loop on deferred sum 
+            Loop $numDef deferInd
+               if $startDefer > 0
+                  if $startDefer == $deferInd
+                     startDefer = 0
+                  Else
+                     continue
+                  Endif 
+               Endif 
+               deferredSum = $deferInd - 1 
+          
+               Echo ****************************************************************
+               Echo TEST SEQUENCE WITH: mode $K2mode file $fileType divide $divideBy2 early $earlyReturn defer $deferredSum
+               Echo ****************************************************************
+               # exp proc b testSums packVal use101 times100 skipRot keepPrec reduceSuper
+               
+               # Gain norm regular or times 100, test skip rot and sums
+               CallFunction TestVariations $baseExp 2 $baseBin 0 0 0 0 0 0 0
+               CallFunction TestVariations  $baseExp 2 $baseBin 0 0 0 1 0 0 0
+               CallFunction TestVariations  $baseExp 2 $baseBin 0 0 0 0 1 0 0
+               CallFunction TestVariations  $baseExp 2 $highBin 0 0 0 1 0 0 0
+               #if $gpuVsCpu > 0
+                  CallFunction TestVariations  $baseExp 2 $baseBin 0 0 0 0 0 1 0
+               #Endif
+               if $simulator == 0  or $K2mode < 2
+                  CallFunction TestVariations $sumExp 2 $baseBin 1 0 0 0 0 0 0
+                  CallFunction TestVariations $sumExp 2 $highBin 1 0 0 0 1 0 0
+               Endif
+               if $K2mode == 2
+                  CallFunction TestVariations $baseExp 2 $baseBin 0 0 0 0 0 0 1
+                  CallFunction TestVariations $baseExp 2 $highBin 0 0 0 0 0 0 1
+                  CallFunction TestVariations $baseExp 2 $highBin 0 0 0 1 0 0 1
+                  CallFunction TestVariations $baseExp 2 $baseBin 0 0 0 0 0 1 1
+               Endif
+               if $earlyReturn > 0 and $fileType == 0 and $deferredSum == 0
+                  CallFunction TestVariations $baseExp 2 $baseBin 0 0 0 0 0 1 0
+                  CallFunction TestVariations  $baseExp 2 $baseBin 0 0 0 1 0 1 0
+                  CallFunction TestVariations  $baseExp 2 $highBin 0 0 0 0 0 1 0
+               Endif 
+               
+               # Dark-subtracted regular, mild pack, more pack, 101 for MRC
+               CallFunction TestVariations $baseExp 1 $baseBin  0 0 0 0 0 0 0
+               CallFunction TestVariations $baseExp 1 $baseBin 0 1 0 0 0 0 0
+               if $K2mode == 1
+                  CallFunction TestVariations $baseExp 1 $baseBin 0 3 0 0 0 0 0
+               Endif 
+               if $fileType == 0
+                  CallFunction TestVariations $baseExp 1 $baseBin 0 3 1 0 0 0 0
+               Endif 
+               CallFunction TestVariations $baseExp 1 $baseBin 0 1 0 0 1 0 0
+               if $simulator == 0  or $K2mode < 2
+                  CallFunction TestVariations $sumExp 1 $baseBin 1 1 0 0 0 0 0
+                  CallFunction TestVariations $sumExp 1 $highBin 1 1 0 0 1 0 0
+               Endif 
+               CallFunction TestVariations $baseExp 1 $highBin 0 1 0 0 0 0 0
+               SuppressReports 0
+               ReportClock 
+               SuppressReports 
+            EndLoop 
+         EndLoop 
+      EndLoop 
+   EndLoop 
+EndLoop 
+SetColumnOrGunValve 0
+# END OF MAIN MACRO
+
+### TestVariations
+###
+# Variables that are expected to be set: in caller:
+# fileType
+# K2mode
+# divideBy2
+# earlyReturn
+# deferredSum
+# fullScale
+#
+Function TestVariations 10 1 exposure processing binning tstSms packVal use101 times100 skipRot keepPrec reduceSuper
+
+testSums = $tstSms
+echo ****************************************************************
+echo TestVariations VALUES: proc $processing bin $binning sums $testSums pack $packVal mode101 $use101 x100 $times100  skipRot $skipRot keepPrec $keepPrec redSR $reduceSuper
+
+numFrames = NEARINT ($exposure / $frameTime)
+
+# Get the scaling for the current Record image and frames
+div2factor = 1.
+if $divideBy2 > 0
+   div2factor = 2.
+endif
+scaleRec = $fullScale * $binning * $binning / $div2factor
+
+frameBin = 1.
+scaleFrame = $fullScale / $div2factor
+if $K2mode > 1
+   if $reduceSuper == 0
+      frameBin = 0.5
+      scaleFrame = $scaleFrame / 4
+      if $times100 == 0
+         scaleFrame = 4.
+      endif
+   elseif $times100 == 0
+      scaleFrame = 16.
+   Endif
+endif
+if $processing < 2
+   scaleFrame = 1. * $frameBin * $frameBin
+elseif $times100 > 0
+   scaleFrame = 100. * $scaleFrame
+endif
+
+frameTol = $tolAdjusted
+frameX = NEARINT ($camXsize / $frameBin)
+frameY = NEARINT ($camYsize / $frameBin)
+if $skipRot > 0 and MODULO ($rotFlip 2) > 0
+   frameX = NEARINT ($camYsize / $frameBin)
+   frameY = NEARINT ($camXsize / $frameBin)
+endif
+
+# Frame in X is half the size if 4-bit vales are written to TIFF
+if $processing < 2 and $fileType == 0 and $use101 == 0 and $packVal > 0 and ($K2mode == 2 or $packVal == 3)
+   frameX = $frameX / 2
+   scaleFrame = $scaleFrame * 16.5
+   frameTol = $tolAdjusted + (1. / 16.)
+endif
+
+# Set parameters for this call
+# Set the frame time first since it might constrain the exposure; then the exposure can be set
+cenX = NEARINT ($camXsize / $binning - 0.4)
+cenY = NEARINT ($camYsize / $binning - 0.4)
+SetCenteredSize R $binning $cenX $cenY
+SetFrameTime R $frameTime
+SetExposure R $exposure
+SetK2ReadMode R $K2mode
+SetBinning R $binning
+SetProcessing R $processing
+SetDivideBy2 $divideBy2
+SetFrameAliParams $faBinning $keepPrec
+SetUserSetting SaveSuperResReduced $reduceSuper
+  SetK2FileParams $fileType $packVal $use101 $times100 $skipRot 0
+   SetDivideBy2 $divideBy2
+#CallFunction ImposeChanges
+
+# do the reference exposure
+SetDoseFracParams R 0 0 0 0 0
+R
+ImageProperties A recXsize recYsize
+ReportMeanCounts A
+refMean = $repVal1
+
+# Expected counts in one frame
+refFrame = $refMean * $scaleFrame / ( $scaleRec * $numFrames )
+
+# Dose frac and nothing else: SR does not work in simulator
+if $skipRot == 0 and ($simulator == 0  or $K2mode < 2)
+   SetDoseFracParams R 1
+   R
+   
+   CallFunction CheckReturnImage 1. Simple dose frac shot
+endif
+
+# Save frames
+align = 0
+SetDoseFracParams R 1 1 0 0 $testSums
+fracFrames = 1.
+if $earlyReturn >= 0
+   EarlyReturnNextShot $earlyReturn $deferredSum
+   fracFrames = $earlyReturn / $numFrames
+endif
+R
+
+# Test returns or wait until frames are surely done, then check frames
+CallFunction CheckAllReturns Frame-saving shot
+CallFunction CheckFrames Frame-saving shot
+echo Finished Save Frames
+
+# Set up number of align loops, 2 for CPU/GPU test
+numAliLoop = 1
+if $gpuVsCpu  > 0
+   numAliLoop = 2
+Endif
+
+Loop $numAliLoop gpuInd
+   if $gpuVsCpu > 0
+      SetFrameAli2 $gpuInd - 1
+   Endif
+
+   # Align frames without saving
+   if $skipRot == 0
+      SetDoseFracParams R 1 0 1 1 $testSums
+      align = 1
+      if $earlyReturn >= 0
+         EarlyReturnNextShot $earlyReturn
+      endif
+      R
+      CallFunction CheckAllReturns Align without saving $gpuInd
+   endif
+   Echo Finished align frames $gpuInd
+
+   # Align frames with saving
+   SetDoseFracParams R 1 1 1 1 $testSums
+   if $earlyReturn >= 0
+      EarlyReturnNextShot $earlyReturn
+   endif
+   R
+   CallFunction CheckAllReturns Align and save
+   CallFunction CheckFrames Align and save $gpuInd
+   echo Finished align frames with save $gpuInd
+EndLoop
+
+# Save frames and align com file if no special options
+if $packVal == 0  and $times100 == 0 and $testSums == 0 and $skipRot == 0
+   align = 0
+   SetDoseFracParams R 1 1 1 1 $testSums
+   if $earlyReturn >= 0
+      EarlyReturnNextShot $earlyReturn $deferredSum
+   endif
+   R
+   CallFunction CheckAllReturns Save and make align com
+   CallFunction CheckFrames Save and make align com
+Endif 
+
+
+EndFunction 
+
+
+### CheckAllReturns
+###
+Function CheckAllReturns 0 1 mess1
+   if $earlyReturn != 0
+       CallFunction CheckReturnImage $fracFrames $mess1
+   endif
+   if $earlyReturn >= 0
+      if $deferredSum > 0 or $align > 0
+         GetDeferredSum
+         CallFunction CheckReturnImage 1. Deferred sum from $mess1
+      Else
+         wait = $numFrames * $waitPerFrame / ($frameBin * $frameBin)
+         Delay $wait
+      Endif 
+   Endif 
+EndFunction 
+
+###
+### CheckReturnImage
+###
+# argument 1 is fraction of reference frames in image
+#
+Function CheckReturnImage 1 1 frac mess2
+   ImageProperties A testX testY
+   ReportMeanCounts A
+   testMean = $repVal1
+   
+   Test $testX == $recXsize and $testY == $recYsize
+   CallFunction RestoreChanges $repVal1
+   AbortIfFailed $mess2  size ($testX $testY) does not match single-shot ($recXsize $recYsize)
+   
+   expect = $frac * $refMean
+   Test  FRACDIFF ($expect $testMean) < $tolAdjusted
+   CallFunction RestoreChanges $repVal1
+   AbortIfFailed $mess2 mean ($testMean) does not match expected value from single-shot ($expect)
+EndFunction 
+
+###
+### CheckFrames
+###
+Function CheckFrames 0 1 mess3
+   
+   # Make sure there is the right number of frames, and less with summing
+   ReportNumFramesSaved  savedFrames
+   lastFrame = $savedFrames - 1
+   checkFrame = $lastFrame
+   if $testSums == 0
+      Test $savedFrames == $numFrames
+      CallFunction RestoreChanges $repVal1
+      AbortIfFailed $mess3 gave $savedFrames frames, not expected $numFrames
+   Else
+      Test $savedFrames < $numFrames
+      CallFunction RestoreChanges $repVal1
+      AbortIfFailed Selecting frame sums gave the same number of frames, is frame summing set up for an exposure with $numFrames frames? 
+      checkFrame = 0
+   Endif 
+   
+   # Check first or last frame
+   ReportLastFrameFile 
+   ReadOtherFile $checkFrame P $repVal1
+   ImageProperties P testX testY
+   ReportMeanCounts P
+   testMean = $repVal1
+   Test $testX == $frameX and $testY == $frameY
+   CallFunction RestoreChanges $repVal1
+   AbortIfFailed $mess3 frame size ($testX $testY) does not match expected ($frameX $frameY)
+   
+   Test  FRACDIFF ($refFrame $testMean) < $frameTol
+   CallFunction RestoreChanges $repVal1
+   AbortIfFailed $mess3 frame mean ($testMean) does not match expected value ($refFrame)
+   
+   # Test the last frame with summed frames
+   if $testSums > 0
+      ReportLastFrameFile 
+      ReadOtherFile $lastFrame P $repVal1
+      ReportMeanCounts P
+      testMean = $repVal1
+      match = 0
+      loop 5 mult
+         if  FRACDIFF ($mult * $refFrame $testMean) < $frameTol
+            match = 1
+            Break 
+         Endif 
+      EndLoop 
+      test $match == 1
+      CallFunction RestoreChanges $repVal1
+      AbortIfFailed $mess3 last frame mean ($testMean) is not a small multiple of expected value ($refFrame)
+   Endif 
+   
+   if $removeFrames > 0
+      ReportLastFrameFile
+      RemoveFile $repVal1
+   Endif 
+   
+EndFunction 
+
+
+### RestoreChanges
+###
+Function RestoreChanges 1
+   if $argVal1 == 0
+      CallFunction DoRestoreChanges
+   endif
+EndFunction 
+
+### ImposeChanges
+###
+Function ImposeChanges
+   SetK2FileParams $fileType $packVal $use101 $times100 $skipRot 0
+   SetDivideBy2 $divideBy2
+EndFunction 
+
+### DoRestoreChanges
+###
+Function DoRestoreChanges
+   SetK2FileParams $saveFileType $savePackVal $saveUse101 $saveTimes100 $saveSkipRot $saveFilePerFrame
+   SetDivideBy2 $saveDivideBy2
+   SetFrameAliParams $saveAliBin $saveKeepPrec
+   SetFrameAli2 $saveGPU
+   if $closeValvesOnFailure > 0
+      SetColumnOrGunValve 0
+   Endif 
+EndFunction 
+MacroName K2Test
+Require variable1
+
+# Before starting, set Record to 1.6 sec exposure, 0.2 sec frames or other setting with 8 frames
+# turn on Save frames and Save frame sums and Setup the sums
+# Set up for 2 at 1 frame and 3 at 2 frames
+# Turn off the saving of frame sums
+
+# Set to 0 for a real camera, 1 for simulator
+simulator = 1
+
+# Set to 1 to test with CPU and GPU; otherwise it uses whatever is set
+gpuVsCpu = 0
+
+# Set to 0 to keep valves open when it is failing tests quickly
+closeValvesOnFailure = 1
+
+# Set any of these non-zero to start at the given loop index and go on from there
+startMode = 1
+startFile = 0
+startDivide = 0
+startEarly = 0
+startDefer = 0
+
+waitPerFrame = 0.3
+removeFrames = 1
+tolerance = 0.01
+
+# Higher binnings to test
+highBinCM = 4
+highBinSR = 2
+
+# The exposures have to be multiple of the frame time that is legal for single-shot too
+# These combinations work in the simulator
+expCM = 1.0
+expSR = 1.0
+frameCM = 0.2
+frameSR = 0.25
+sumExpCM = 1.6
+sumExpSR = 1.5
+
+# of frames in early return sum
+erSumCM = 2
+erSumSR = 1
+
+faBinningCM = 4
+faBinningSR = 8
+
+CameraProperties 
+camXsize = $repVal1
+camYsize = $repVal2
+rotFlip = $repVal3
+RetryReadOtherFile 5
+SkipFrameAliParamCheck
+SetUserSetting SaveFrameStackMdoc 0
+
+SetColumnOrGunValve 1
+
+# Get starting parameters for restoring
+echo Starting Params:
+ReportK2FileParams saveFileType savePackVal saveUse101 saveTimes100 saveSkipRot saveFilePerFrame
+ReportCountScaling saveDivideBy2 fullScale
+ReportFrameAliParams saveAliBin saveKeepPrec
+ReportFrameAli2 saveGPU
+
+OnStopCallFunc DoRestoreChanges
+
+SuppressReports
+ 
+# Loop on modes
+Loop 2 modeInd
+   if $startMode > 0 and $startMode > $modeInd
+      continue
+   endif
+   K2mode = $modeInd
+
+   # Set mode-dependent parameters
+   baseBin = 1
+   highBin = $highBinCM
+   tolAdjusted = $tolerance
+   baseExp = $expCM
+   earlySum = $erSumCM
+   faBinning = $faBinningCM
+   frameTime = $frameCM
+   sumExp = $sumExpCM
+   if $K2mode == 2
+      baseBin = 0.5
+      highBin = $highBinSR
+      baseExp = $expSR
+      earlySum = $erSumSR
+      if $simulator > 0
+         tolAdjusted = $tolerance * 3.5
+      Endif 
+      faBinning = $faBinningSR
+      frameTime = $frameSR
+      sumExp = $sumExpSR
+   Endif 
+   
+   # Loop on file type (2 or 3 times)
+   Loop 2 fileInd
+      if $startFile > 0
+         if $startFile == $fileInd
+            startFile = 0
+         else
+            continue
+         Endif 
+      Endif 
+      fileType = $fileInd - 1
+      
+      # Loop on divide by 2
+      Loop 2 divideInd
+         if $startDivide > 0
+            if $startDivide == $divideInd
+               startDivide = 0
+            Else
+               continue
+            Endif 
+         Endif 
+         divideBy2 = $divideInd - 1
+         
+         # Loop on early return
+         Loop 3 earlyInd
+            if $startEarly > 0
+               if $startEarly == $earlyInd
+                  startEarly = 0
+               Else
+                  continue
+               Endif 
+            Endif 
+            earlyReturn = -1
+            numDef = 1
+            if $earlyInd == 2
+               earlyReturn = 0
+               numDef = 2
+            elseif $earlyInd == 3
+               earlyReturn = $earlySum
+               numDef = 2
+            Endif 
+            
+            # Loop on deferred sum 
+            Loop $numDef deferInd
+               if $startDefer > 0
+                  if $startDefer == $deferInd
+                     startDefer = 0
+                  Else
+                     continue
+                  Endif 
+               Endif 
+               deferredSum = $deferInd - 1 
+          
+               Echo ****************************************************************
+               Echo TEST SEQUENCE WITH: mode $K2mode file $fileType divide $divideBy2 early $earlyReturn defer $deferredSum
+               Echo ****************************************************************
+               # exp proc b testSums packVal use101 times100 skipRot keepPrec reduceSuper
+               
+               # Gain norm regular or times 100, test skip rot and sums
+               CallFunction TestVariations $baseExp 2 $baseBin 0 0 0 0 0 0 0
+               CallFunction TestVariations  $baseExp 2 $baseBin 0 0 0 1 0 0 0
+               CallFunction TestVariations  $baseExp 2 $baseBin 0 0 0 0 1 0 0
+               CallFunction TestVariations  $baseExp 2 $highBin 0 0 0 1 0 0 0
+               #if $gpuVsCpu > 0
+                  CallFunction TestVariations  $baseExp 2 $baseBin 0 0 0 0 0 1 0
+               #Endif
+               if $simulator == 0  or $K2mode < 2
+                  CallFunction TestVariations $sumExp 2 $baseBin 1 0 0 0 0 0 0
+                  CallFunction TestVariations $sumExp 2 $highBin 1 0 0 0 1 0 0
+               Endif
+               if $K2mode == 2
+                  CallFunction TestVariations $baseExp 2 $baseBin 0 0 0 0 0 0 1
+                  CallFunction TestVariations $baseExp 2 $highBin 0 0 0 0 0 0 1
+                  CallFunction TestVariations $baseExp 2 $highBin 0 0 0 1 0 0 1
+                  CallFunction TestVariations $baseExp 2 $baseBin 0 0 0 0 0 1 1
+               Endif
+               if $earlyReturn > 0 and $fileType == 0 and $deferredSum == 0
+                  CallFunction TestVariations $baseExp 2 $baseBin 0 0 0 0 0 1 0
+                  CallFunction TestVariations  $baseExp 2 $baseBin 0 0 0 1 0 1 0
+                  CallFunction TestVariations  $baseExp 2 $highBin 0 0 0 0 0 1 0
+               Endif 
+               
+               # Dark-subtracted regular, mild pack, more pack, 101 for MRC
+               CallFunction TestVariations $baseExp 1 $baseBin  0 0 0 0 0 0 0
+               CallFunction TestVariations $baseExp 1 $baseBin 0 1 0 0 0 0 0
+               if $K2mode == 1
+                  CallFunction TestVariations $baseExp 1 $baseBin 0 3 0 0 0 0 0
+               Endif 
+               if $fileType == 0
+                  CallFunction TestVariations $baseExp 1 $baseBin 0 3 1 0 0 0 0
+               Endif 
+               CallFunction TestVariations $baseExp 1 $baseBin 0 1 0 0 1 0 0
+               if $simulator == 0  or $K2mode < 2
+                  CallFunction TestVariations $sumExp 1 $baseBin 1 1 0 0 0 0 0
+                  CallFunction TestVariations $sumExp 1 $highBin 1 1 0 0 1 0 0
+               Endif 
+               CallFunction TestVariations $baseExp 1 $highBin 0 1 0 0 0 0 0
+               SuppressReports 0
+               ReportClock 
+               SuppressReports 
+            EndLoop 
+         EndLoop 
+      EndLoop 
+   EndLoop 
+EndLoop 
+SetColumnOrGunValve 0
+# END OF MAIN MACRO
+
+### TestVariations
+###
+# Variables that are expected to be set: in caller:
+# fileType
+# K2mode
+# divideBy2
+# earlyReturn
+# deferredSum
+# fullScale
+#
+Function TestVariations 10 1 exposure processing binning tstSms packVal use101 times100 skipRot keepPrec reduceSuper
+
+testSums = $tstSms
+echo ****************************************************************
+echo TestVariations VALUES: proc $processing bin $binning sums $testSums pack $packVal mode101 $use101 x100 $times100  skipRot $skipRot keepPrec $keepPrec redSR $reduceSuper
+
+numFrames = NEARINT ($exposure / $frameTime)
+
+# Get the scaling for the current Record image and frames
+div2factor = 1.
+if $divideBy2 > 0
+   div2factor = 2.
+endif
+scaleRec = $fullScale * $binning * $binning / $div2factor
+
+frameBin = 1.
+scaleFrame = $fullScale / $div2factor
+if $K2mode > 1
+   if $reduceSuper == 0
+      frameBin = 0.5
+      scaleFrame = $scaleFrame / 4
+      if $times100 == 0
+         scaleFrame = 4.
+      endif
+   elseif $times100 == 0
+      scaleFrame = 16.
+   Endif
+endif
+if $processing < 2
+   scaleFrame = 1. * $frameBin * $frameBin
+elseif $times100 > 0
+   scaleFrame = 100. * $scaleFrame
+endif
+
+frameTol = $tolAdjusted
+frameX = NEARINT ($camXsize / $frameBin)
+frameY = NEARINT ($camYsize / $frameBin)
+if $skipRot > 0 and MODULO ($rotFlip 2) > 0
+   frameX = NEARINT ($camYsize / $frameBin)
+   frameY = NEARINT ($camXsize / $frameBin)
+endif
+
+# Frame in X is half the size if 4-bit vales are written to TIFF
+if $processing < 2 and $fileType == 0 and $use101 == 0 and $packVal > 0 and ($K2mode == 2 or $packVal == 3)
+   frameX = $frameX / 2
+   scaleFrame = $scaleFrame * 16.5
+   frameTol = $tolAdjusted + (1. / 16.)
+endif
+
+# Set parameters for this call
+# Set the frame time first since it might constrain the exposure; then the exposure can be set
+cenX = NEARINT ($camXsize / $binning - 0.4)
+cenY = NEARINT ($camYsize / $binning - 0.4)
+SetCenteredSize R $binning $cenX $cenY
+SetFrameTime R $frameTime
+SetExposure R $exposure
+SetK2ReadMode R $K2mode
+SetBinning R $binning
+SetProcessing R $processing
+SetDivideBy2 $divideBy2
+SetFrameAliParams $faBinning $keepPrec
+SetUserSetting SaveSuperResReduced $reduceSuper
+  SetK2FileParams $fileType $packVal $use101 $times100 $skipRot 0
+   SetDivideBy2 $divideBy2
+#CallFunction ImposeChanges
+
+# do the reference exposure
+SetDoseFracParams R 0 0 0 0 0
+R
+ImageProperties A recXsize recYsize
+ReportMeanCounts A
+refMean = $repVal1
+
+# Expected counts in one frame
+refFrame = $refMean * $scaleFrame / ( $scaleRec * $numFrames )
+
+# Dose frac and nothing else: SR does not work in simulator
+if $skipRot == 0 and ($simulator == 0  or $K2mode < 2)
+   SetDoseFracParams R 1
+   R
+   
+   CallFunction CheckReturnImage 1. Simple dose frac shot
+endif
+
+# Save frames
+align = 0
+SetDoseFracParams R 1 1 0 0 $testSums
+fracFrames = 1.
+if $earlyReturn >= 0
+   EarlyReturnNextShot $earlyReturn $deferredSum
+   fracFrames = $earlyReturn / $numFrames
+endif
+R
+
+# Test returns or wait until frames are surely done, then check frames
+CallFunction CheckAllReturns Frame-saving shot
+CallFunction CheckFrames Frame-saving shot
+echo Finished Save Frames
+
+# Set up number of align loops, 2 for CPU/GPU test
+numAliLoop = 1
+if $gpuVsCpu  > 0
+   numAliLoop = 2
+Endif
+
+Loop $numAliLoop gpuInd
+   if $gpuVsCpu > 0
+      SetFrameAli2 $gpuInd - 1
+   Endif
+
+   # Align frames without saving
+   if $skipRot == 0
+      SetDoseFracParams R 1 0 1 1 $testSums
+      align = 1
+      if $earlyReturn >= 0
+         EarlyReturnNextShot $earlyReturn
+      endif
+      R
+      CallFunction CheckAllReturns Align without saving $gpuInd
+   endif
+   Echo Finished align frames $gpuInd
+
+   # Align frames with saving
+   SetDoseFracParams R 1 1 1 1 $testSums
+   if $earlyReturn >= 0
+      EarlyReturnNextShot $earlyReturn
+   endif
+   R
+   CallFunction CheckAllReturns Align and save
+   CallFunction CheckFrames Align and save $gpuInd
+   echo Finished align frames with save $gpuInd
+EndLoop
+
+# Save frames and align com file if no special options
+if $packVal == 0  and $times100 == 0 and $testSums == 0 and $skipRot == 0
+   align = 0
+   SetDoseFracParams R 1 1 1 1 $testSums
+   if $earlyReturn >= 0
+      EarlyReturnNextShot $earlyReturn $deferredSum
+   endif
+   R
+   CallFunction CheckAllReturns Save and make align com
+   CallFunction CheckFrames Save and make align com
+Endif 
+
+
+EndFunction 
+
+
+### CheckAllReturns
+###
+Function CheckAllReturns 0 1 mess1
+   if $earlyReturn != 0
+       CallFunction CheckReturnImage $fracFrames $mess1
+   endif
+   if $earlyReturn >= 0
+      if $deferredSum > 0 or $align > 0
+         GetDeferredSum
+         CallFunction CheckReturnImage 1. Deferred sum from $mess1
+      Else
+         wait = $numFrames * $waitPerFrame / ($frameBin * $frameBin)
+         Delay $wait
+      Endif 
+   Endif 
+EndFunction 
+
+###
+### CheckReturnImage
+###
+# argument 1 is fraction of reference frames in image
+#
+Function CheckReturnImage 1 1 frac mess2
+   ImageProperties A testX testY
+   ReportMeanCounts A
+   testMean = $repVal1
+   
+   Test $testX == $recXsize and $testY == $recYsize
+   CallFunction RestoreChanges $repVal1
+   AbortIfFailed $mess2  size ($testX $testY) does not match single-shot ($recXsize $recYsize)
+   
+   expect = $frac * $refMean
+   Test  FRACDIFF ($expect $testMean) < $tolAdjusted
+   CallFunction RestoreChanges $repVal1
+   AbortIfFailed $mess2 mean ($testMean) does not match expected value from single-shot ($expect)
+EndFunction 
+
+###
+### CheckFrames
+###
+Function CheckFrames 0 1 mess3
+   
+   # Make sure there is the right number of frames, and less with summing
+   ReportNumFramesSaved  savedFrames
+   lastFrame = $savedFrames - 1
+   checkFrame = $lastFrame
+   if $testSums == 0
+      Test $savedFrames == $numFrames
+      CallFunction RestoreChanges $repVal1
+      AbortIfFailed $mess3 gave $savedFrames frames, not expected $numFrames
+   Else
+      Test $savedFrames < $numFrames
+      CallFunction RestoreChanges $repVal1
+      AbortIfFailed Selecting frame sums gave the same number of frames, is frame summing set up for an exposure with $numFrames frames? 
+      checkFrame = 0
+   Endif 
+   
+   # Check first or last frame
+   ReportLastFrameFile 
+   ReadOtherFile $checkFrame P $repVal1
+   ImageProperties P testX testY
+   ReportMeanCounts P
+   testMean = $repVal1
+   Test $testX == $frameX and $testY == $frameY
+   CallFunction RestoreChanges $repVal1
+   AbortIfFailed $mess3 frame size ($testX $testY) does not match expected ($frameX $frameY)
+   
+   Test  FRACDIFF ($refFrame $testMean) < $frameTol
+   CallFunction RestoreChanges $repVal1
+   AbortIfFailed $mess3 frame mean ($testMean) does not match expected value ($refFrame)
+   
+   # Test the last frame with summed frames
+   if $testSums > 0
+      ReportLastFrameFile 
+      ReadOtherFile $lastFrame P $repVal1
+      ReportMeanCounts P
+      testMean = $repVal1
+      match = 0
+      loop 5 mult
+         if  FRACDIFF ($mult * $refFrame $testMean) < $frameTol
+            match = 1
+            Break 
+         Endif 
+      EndLoop 
+      test $match == 1
+      CallFunction RestoreChanges $repVal1
+      AbortIfFailed $mess3 last frame mean ($testMean) is not a small multiple of expected value ($refFrame)
+   Endif 
+   
+   if $removeFrames > 0
+      ReportLastFrameFile
+      RemoveFile $repVal1
+   Endif 
+   
+EndFunction 
+
+
+### RestoreChanges
+###
+Function RestoreChanges 1
+   if $argVal1 == 0
+      CallFunction DoRestoreChanges
+   endif
+EndFunction 
+
+### ImposeChanges
+###
+Function ImposeChanges
+   SetK2FileParams $fileType $packVal $use101 $times100 $skipRot 0
+   SetDivideBy2 $divideBy2
+EndFunction 
+
+### DoRestoreChanges
+###
+Function DoRestoreChanges
+   SetK2FileParams $saveFileType $savePackVal $saveUse101 $saveTimes100 $saveSkipRot $saveFilePerFrame
+   SetDivideBy2 $saveDivideBy2
+   SetFrameAliParams $saveAliBin $saveKeepPrec
+   SetFrameAli2 $saveGPU
+   if $closeValvesOnFailure > 0
+      SetColumnOrGunValve 0
+   Endif 
+EndFunction 
+MacroName K2Test
+Require variable1
+
+# Before starting, set Record to 1.6 sec exposure, 0.2 sec frames or other setting with 8 frames
+# turn on Save frames and Save frame sums and Setup the sums
+# Set up for 2 at 1 frame and 3 at 2 frames
+# Turn off the saving of frame sums
+
+# Set to 0 for a real camera, 1 for simulator
+simulator = 1
+
+# Set to 1 to test with CPU and GPU; otherwise it uses whatever is set
+gpuVsCpu = 0
+
+# Set to 0 to keep valves open when it is failing tests quickly
+closeValvesOnFailure = 1
+
+# Set any of these non-zero to start at the given loop index and go on from there
+startMode = 1
+startFile = 0
+startDivide = 0
+startEarly = 0
+startDefer = 0
+
+waitPerFrame = 0.3
+removeFrames = 1
+tolerance = 0.01
+
+# Higher binnings to test
+highBinCM = 4
+highBinSR = 2
+
+# The exposures have to be multiple of the frame time that is legal for single-shot too
+# These combinations work in the simulator
+expCM = 1.0
+expSR = 1.0
+frameCM = 0.2
+frameSR = 0.25
+sumExpCM = 1.6
+sumExpSR = 1.5
+
+# of frames in early return sum
+erSumCM = 2
+erSumSR = 1
+
+faBinningCM = 4
+faBinningSR = 8
+
+CameraProperties 
+camXsize = $repVal1
+camYsize = $repVal2
+rotFlip = $repVal3
+RetryReadOtherFile 5
+SkipFrameAliParamCheck
+SetUserSetting SaveFrameStackMdoc 0
+
+SetColumnOrGunValve 1
+
+# Get starting parameters for restoring
+echo Starting Params:
+ReportK2FileParams saveFileType savePackVal saveUse101 saveTimes100 saveSkipRot saveFilePerFrame
+ReportCountScaling saveDivideBy2 fullScale
+ReportFrameAliParams saveAliBin saveKeepPrec
+ReportFrameAli2 saveGPU
+
+OnStopCallFunc DoRestoreChanges
+
+SuppressReports
+ 
+# Loop on modes
+Loop 2 modeInd
+   if $startMode > 0 and $startMode > $modeInd
+      continue
+   endif
+   K2mode = $modeInd
+
+   # Set mode-dependent parameters
+   baseBin = 1
+   highBin = $highBinCM
+   tolAdjusted = $tolerance
+   baseExp = $expCM
+   earlySum = $erSumCM
+   faBinning = $faBinningCM
+   frameTime = $frameCM
+   sumExp = $sumExpCM
+   if $K2mode == 2
+      baseBin = 0.5
+      highBin = $highBinSR
+      baseExp = $expSR
+      earlySum = $erSumSR
+      if $simulator > 0
+         tolAdjusted = $tolerance * 3.5
+      Endif 
+      faBinning = $faBinningSR
+      frameTime = $frameSR
+      sumExp = $sumExpSR
+   Endif 
+   
+   # Loop on file type (2 or 3 times)
+   Loop 2 fileInd
+      if $startFile > 0
+         if $startFile == $fileInd
+            startFile = 0
+         else
+            continue
+         Endif 
+      Endif 
+      fileType = $fileInd - 1
+      
+      # Loop on divide by 2
+      Loop 2 divideInd
+         if $startDivide > 0
+            if $startDivide == $divideInd
+               startDivide = 0
+            Else
+               continue
+            Endif 
+         Endif 
+         divideBy2 = $divideInd - 1
+         
+         # Loop on early return
+         Loop 3 earlyInd
+            if $startEarly > 0
+               if $startEarly == $earlyInd
+                  startEarly = 0
+               Else
+                  continue
+               Endif 
+            Endif 
+            earlyReturn = -1
+            numDef = 1
+            if $earlyInd == 2
+               earlyReturn = 0
+               numDef = 2
+            elseif $earlyInd == 3
+               earlyReturn = $earlySum
+               numDef = 2
+            Endif 
+            
+            # Loop on deferred sum 
+            Loop $numDef deferInd
+               if $startDefer > 0
+                  if $startDefer == $deferInd
+                     startDefer = 0
+                  Else
+                     continue
+                  Endif 
+               Endif 
+               deferredSum = $deferInd - 1 
+          
+               Echo ****************************************************************
+               Echo TEST SEQUENCE WITH: mode $K2mode file $fileType divide $divideBy2 early $earlyReturn defer $deferredSum
+               Echo ****************************************************************
+               # exp proc b testSums packVal use101 times100 skipRot keepPrec reduceSuper
+               
+               # Gain norm regular or times 100, test skip rot and sums
+               CallFunction TestVariations $baseExp 2 $baseBin 0 0 0 0 0 0 0
+               CallFunction TestVariations  $baseExp 2 $baseBin 0 0 0 1 0 0 0
+               CallFunction TestVariations  $baseExp 2 $baseBin 0 0 0 0 1 0 0
+               CallFunction TestVariations  $baseExp 2 $highBin 0 0 0 1 0 0 0
+               #if $gpuVsCpu > 0
+                  CallFunction TestVariations  $baseExp 2 $baseBin 0 0 0 0 0 1 0
+               #Endif
+               if $simulator == 0  or $K2mode < 2
+                  CallFunction TestVariations $sumExp 2 $baseBin 1 0 0 0 0 0 0
+                  CallFunction TestVariations $sumExp 2 $highBin 1 0 0 0 1 0 0
+               Endif
+               if $K2mode == 2
+                  CallFunction TestVariations $baseExp 2 $baseBin 0 0 0 0 0 0 1
+                  CallFunction TestVariations $baseExp 2 $highBin 0 0 0 0 0 0 1
+                  CallFunction TestVariations $baseExp 2 $highBin 0 0 0 1 0 0 1
+                  CallFunction TestVariations $baseExp 2 $baseBin 0 0 0 0 0 1 1
+               Endif
+               if $earlyReturn > 0 and $fileType == 0 and $deferredSum == 0
+                  CallFunction TestVariations $baseExp 2 $baseBin 0 0 0 0 0 1 0
+                  CallFunction TestVariations  $baseExp 2 $baseBin 0 0 0 1 0 1 0
+                  CallFunction TestVariations  $baseExp 2 $highBin 0 0 0 0 0 1 0
+               Endif 
+               
+               # Dark-subtracted regular, mild pack, more pack, 101 for MRC
+               CallFunction TestVariations $baseExp 1 $baseBin  0 0 0 0 0 0 0
+               CallFunction TestVariations $baseExp 1 $baseBin 0 1 0 0 0 0 0
+               if $K2mode == 1
+                  CallFunction TestVariations $baseExp 1 $baseBin 0 3 0 0 0 0 0
+               Endif 
+               if $fileType == 0
+                  CallFunction TestVariations $baseExp 1 $baseBin 0 3 1 0 0 0 0
+               Endif 
+               CallFunction TestVariations $baseExp 1 $baseBin 0 1 0 0 1 0 0
+               if $simulator == 0  or $K2mode < 2
+                  CallFunction TestVariations $sumExp 1 $baseBin 1 1 0 0 0 0 0
+                  CallFunction TestVariations $sumExp 1 $highBin 1 1 0 0 1 0 0
+               Endif 
+               CallFunction TestVariations $baseExp 1 $highBin 0 1 0 0 0 0 0
+               SuppressReports 0
+               ReportClock 
+               SuppressReports 
+            EndLoop 
+         EndLoop 
+      EndLoop 
+   EndLoop 
+EndLoop 
+SetColumnOrGunValve 0
+# END OF MAIN MACRO
+
+### TestVariations
+###
+# Variables that are expected to be set: in caller:
+# fileType
+# K2mode
+# divideBy2
+# earlyReturn
+# deferredSum
+# fullScale
+#
+Function TestVariations 10 1 exposure processing binning tstSms packVal use101 times100 skipRot keepPrec reduceSuper
+
+testSums = $tstSms
+echo ****************************************************************
+echo TestVariations VALUES: proc $processing bin $binning sums $testSums pack $packVal mode101 $use101 x100 $times100  skipRot $skipRot keepPrec $keepPrec redSR $reduceSuper
+
+numFrames = NEARINT ($exposure / $frameTime)
+
+# Get the scaling for the current Record image and frames
+div2factor = 1.
+if $divideBy2 > 0
+   div2factor = 2.
+endif
+scaleRec = $fullScale * $binning * $binning / $div2factor
+
+frameBin = 1.
+scaleFrame = $fullScale / $div2factor
+if $K2mode > 1
+   if $reduceSuper == 0
+      frameBin = 0.5
+      scaleFrame = $scaleFrame / 4
+      if $times100 == 0
+         scaleFrame = 4.
+      endif
+   elseif $times100 == 0
+      scaleFrame = 16.
+   Endif
+endif
+if $processing < 2
+   scaleFrame = 1. * $frameBin * $frameBin
+elseif $times100 > 0
+   scaleFrame = 100. * $scaleFrame
+endif
+
+frameTol = $tolAdjusted
+frameX = NEARINT ($camXsize / $frameBin)
+frameY = NEARINT ($camYsize / $frameBin)
+if $skipRot > 0 and MODULO ($rotFlip 2) > 0
+   frameX = NEARINT ($camYsize / $frameBin)
+   frameY = NEARINT ($camXsize / $frameBin)
+endif
+
+# Frame in X is half the size if 4-bit vales are written to TIFF
+if $processing < 2 and $fileType == 0 and $use101 == 0 and $packVal > 0 and ($K2mode == 2 or $packVal == 3)
+   frameX = $frameX / 2
+   scaleFrame = $scaleFrame * 16.5
+   frameTol = $tolAdjusted + (1. / 16.)
+endif
+
+# Set parameters for this call
+# Set the frame time first since it might constrain the exposure; then the exposure can be set
+cenX = NEARINT ($camXsize / $binning - 0.4)
+cenY = NEARINT ($camYsize / $binning - 0.4)
+SetCenteredSize R $binning $cenX $cenY
+SetFrameTime R $frameTime
+SetExposure R $exposure
+SetK2ReadMode R $K2mode
+SetBinning R $binning
+SetProcessing R $processing
+SetDivideBy2 $divideBy2
+SetFrameAliParams $faBinning $keepPrec
+SetUserSetting SaveSuperResReduced $reduceSuper
+  SetK2FileParams $fileType $packVal $use101 $times100 $skipRot 0
+   SetDivideBy2 $divideBy2
+#CallFunction ImposeChanges
+
+# do the reference exposure
+SetDoseFracParams R 0 0 0 0 0
+R
+ImageProperties A recXsize recYsize
+ReportMeanCounts A
+refMean = $repVal1
+
+# Expected counts in one frame
+refFrame = $refMean * $scaleFrame / ( $scaleRec * $numFrames )
+
+# Dose frac and nothing else: SR does not work in simulator
+if $skipRot == 0 and ($simulator == 0  or $K2mode < 2)
+   SetDoseFracParams R 1
+   R
+   
+   CallFunction CheckReturnImage 1. Simple dose frac shot
+endif
+
+# Save frames
+align = 0
+SetDoseFracParams R 1 1 0 0 $testSums
+fracFrames = 1.
+if $earlyReturn >= 0
+   EarlyReturnNextShot $earlyReturn $deferredSum
+   fracFrames = $earlyReturn / $numFrames
+endif
+R
+
+# Test returns or wait until frames are surely done, then check frames
+CallFunction CheckAllReturns Frame-saving shot
+CallFunction CheckFrames Frame-saving shot
+echo Finished Save Frames
+
+# Set up number of align loops, 2 for CPU/GPU test
+numAliLoop = 1
+if $gpuVsCpu  > 0
+   numAliLoop = 2
+Endif
+
+Loop $numAliLoop gpuInd
+   if $gpuVsCpu > 0
+      SetFrameAli2 $gpuInd - 1
+   Endif
+
+   # Align frames without saving
+   if $skipRot == 0
+      SetDoseFracParams R 1 0 1 1 $testSums
+      align = 1
+      if $earlyReturn >= 0
+         EarlyReturnNextShot $earlyReturn
+      endif
+      R
+      CallFunction CheckAllReturns Align without saving $gpuInd
+   endif
+   Echo Finished align frames $gpuInd
+
+   # Align frames with saving
+   SetDoseFracParams R 1 1 1 1 $testSums
+   if $earlyReturn >= 0
+      EarlyReturnNextShot $earlyReturn
+   endif
+   R
+   CallFunction CheckAllReturns Align and save
+   CallFunction CheckFrames Align and save $gpuInd
+   echo Finished align frames with save $gpuInd
+EndLoop
+
+# Save frames and align com file if no special options
+if $packVal == 0  and $times100 == 0 and $testSums == 0 and $skipRot == 0
+   align = 0
+   SetDoseFracParams R 1 1 1 1 $testSums
+   if $earlyReturn >= 0
+      EarlyReturnNextShot $earlyReturn $deferredSum
+   endif
+   R
+   CallFunction CheckAllReturns Save and make align com
+   CallFunction CheckFrames Save and make align com
+Endif 
+
+
+EndFunction 
+
+
+### CheckAllReturns
+###
+Function CheckAllReturns 0 1 mess1
+   if $earlyReturn != 0
+       CallFunction CheckReturnImage $fracFrames $mess1
+   endif
+   if $earlyReturn >= 0
+      if $deferredSum > 0 or $align > 0
+         GetDeferredSum
+         CallFunction CheckReturnImage 1. Deferred sum from $mess1
+      Else
+         wait = $numFrames * $waitPerFrame / ($frameBin * $frameBin)
+         Delay $wait
+      Endif 
+   Endif 
+EndFunction 
+
+###
+### CheckReturnImage
+###
+# argument 1 is fraction of reference frames in image
+#
+Function CheckReturnImage 1 1 frac mess2
+   ImageProperties A testX testY
+   ReportMeanCounts A
+   testMean = $repVal1
+   
+   Test $testX == $recXsize and $testY == $recYsize
+   CallFunction RestoreChanges $repVal1
+   AbortIfFailed $mess2  size ($testX $testY) does not match single-shot ($recXsize $recYsize)
+   
+   expect = $frac * $refMean
+   Test  FRACDIFF ($expect $testMean) < $tolAdjusted
+   CallFunction RestoreChanges $repVal1
+   AbortIfFailed $mess2 mean ($testMean) does not match expected value from single-shot ($expect)
+EndFunction 
+
+###
+### CheckFrames
+###
+Function CheckFrames 0 1 mess3
+   
+   # Make sure there is the right number of frames, and less with summing
+   ReportNumFramesSaved  savedFrames
+   lastFrame = $savedFrames - 1
+   checkFrame = $lastFrame
+   if $testSums == 0
+      Test $savedFrames == $numFrames
+      CallFunction RestoreChanges $repVal1
+      AbortIfFailed $mess3 gave $savedFrames frames, not expected $numFrames
+   Else
+      Test $savedFrames < $numFrames
+      CallFunction RestoreChanges $repVal1
+      AbortIfFailed Selecting frame sums gave the same number of frames, is frame summing set up for an exposure with $numFrames frames? 
+      checkFrame = 0
+   Endif 
+   
+   # Check first or last frame
+   ReportLastFrameFile 
+   ReadOtherFile $checkFrame P $repVal1
+   ImageProperties P testX testY
+   ReportMeanCounts P
+   testMean = $repVal1
+   Test $testX == $frameX and $testY == $frameY
+   CallFunction RestoreChanges $repVal1
+   AbortIfFailed $mess3 frame size ($testX $testY) does not match expected ($frameX $frameY)
+   
+   Test  FRACDIFF ($refFrame $testMean) < $frameTol
+   CallFunction RestoreChanges $repVal1
+   AbortIfFailed $mess3 frame mean ($testMean) does not match expected value ($refFrame)
+   
+   # Test the last frame with summed frames
+   if $testSums > 0
+      ReportLastFrameFile 
+      ReadOtherFile $lastFrame P $repVal1
+      ReportMeanCounts P
+      testMean = $repVal1
+      match = 0
+      loop 5 mult
+         if  FRACDIFF ($mult * $refFrame $testMean) < $frameTol
+            match = 1
+            Break 
+         Endif 
+      EndLoop 
+      test $match == 1
+      CallFunction RestoreChanges $repVal1
+      AbortIfFailed $mess3 last frame mean ($testMean) is not a small multiple of expected value ($refFrame)
+   Endif 
+   
+   if $removeFrames > 0
+      ReportLastFrameFile
+      RemoveFile $repVal1
+   Endif 
+   
+EndFunction 
+
+
+### RestoreChanges
+###
+Function RestoreChanges 1
+   if $argVal1 == 0
+      CallFunction DoRestoreChanges
+   endif
+EndFunction 
+
+### ImposeChanges
+###
+Function ImposeChanges
+   SetK2FileParams $fileType $packVal $use101 $times100 $skipRot 0
+   SetDivideBy2 $divideBy2
+EndFunction 
+
+### DoRestoreChanges
+###
+Function DoRestoreChanges
+   SetK2FileParams $saveFileType $savePackVal $saveUse101 $saveTimes100 $saveSkipRot $saveFilePerFrame
+   SetDivideBy2 $saveDivideBy2
+   SetFrameAliParams $saveAliBin $saveKeepPrec
+   SetFrameAli2 $saveGPU
+   if $closeValvesOnFailure > 0
+      SetColumnOrGunValve 0
+   Endif 
+EndFunction 
+MacroName K2Test
+Require variable1
+
+# Before starting, set Record to 1.6 sec exposure, 0.2 sec frames or other setting with 8 frames
+# turn on Save frames and Save frame sums and Setup the sums
+# Set up for 2 at 1 frame and 3 at 2 frames
+# Turn off the saving of frame sums
+
+# Set to 0 for a real camera, 1 for simulator
+simulator = 1
+
+# Set to 1 to test with CPU and GPU; otherwise it uses whatever is set
+gpuVsCpu = 0
+
+# Set to 0 to keep valves open when it is failing tests quickly
+closeValvesOnFailure = 1
+
+# Set any of these non-zero to start at the given loop index and go on from there
+startMode = 1
+startFile = 0
+startDivide = 0
+startEarly = 0
+startDefer = 0
+
+waitPerFrame = 0.3
+removeFrames = 1
+tolerance = 0.01
+
+# Higher binnings to test
+highBinCM = 4
+highBinSR = 2
+
+# The exposures have to be multiple of the frame time that is legal for single-shot too
+# These combinations work in the simulator
+expCM = 1.0
+expSR = 1.0
+frameCM = 0.2
+frameSR = 0.25
+sumExpCM = 1.6
+sumExpSR = 1.5
+
+# of frames in early return sum
+erSumCM = 2
+erSumSR = 1
+
+faBinningCM = 4
+faBinningSR = 8
+
+CameraProperties 
+camXsize = $repVal1
+camYsize = $repVal2
+rotFlip = $repVal3
+RetryReadOtherFile 5
+SkipFrameAliParamCheck
+SetUserSetting SaveFrameStackMdoc 0
+
+SetColumnOrGunValve 1
+
+# Get starting parameters for restoring
+echo Starting Params:
+ReportK2FileParams saveFileType savePackVal saveUse101 saveTimes100 saveSkipRot saveFilePerFrame
+ReportCountScaling saveDivideBy2 fullScale
+ReportFrameAliParams saveAliBin saveKeepPrec
+ReportFrameAli2 saveGPU
+
+OnStopCallFunc DoRestoreChanges
+
+SuppressReports
+ 
+# Loop on modes
+Loop 2 modeInd
+   if $startMode > 0 and $startMode > $modeInd
+      continue
+   endif
+   K2mode = $modeInd
+
+   # Set mode-dependent parameters
+   baseBin = 1
+   highBin = $highBinCM
+   tolAdjusted = $tolerance
+   baseExp = $expCM
+   earlySum = $erSumCM
+   faBinning = $faBinningCM
+   frameTime = $frameCM
+   sumExp = $sumExpCM
+   if $K2mode == 2
+      baseBin = 0.5
+      highBin = $highBinSR
+      baseExp = $expSR
+      earlySum = $erSumSR
+      if $simulator > 0
+         tolAdjusted = $tolerance * 3.5
+      Endif 
+      faBinning = $faBinningSR
+      frameTime = $frameSR
+      sumExp = $sumExpSR
+   Endif 
+   
+   # Loop on file type (2 or 3 times)
+   Loop 2 fileInd
+      if $startFile > 0
+         if $startFile == $fileInd
+            startFile = 0
+         else
+            continue
+         Endif 
+      Endif 
+      fileType = $fileInd - 1
+      
+      # Loop on divide by 2
+      Loop 2 divideInd
+         if $startDivide > 0
+            if $startDivide == $divideInd
+               startDivide = 0
+            Else
+               continue
+            Endif 
+         Endif 
+         divideBy2 = $divideInd - 1
+         
+         # Loop on early return
+         Loop 3 earlyInd
+            if $startEarly > 0
+               if $startEarly == $earlyInd
+                  startEarly = 0
+               Else
+                  continue
+               Endif 
+            Endif 
+            earlyReturn = -1
+            numDef = 1
+            if $earlyInd == 2
+               earlyReturn = 0
+               numDef = 2
+            elseif $earlyInd == 3
+               earlyReturn = $earlySum
+               numDef = 2
+            Endif 
+            
+            # Loop on deferred sum 
+            Loop $numDef deferInd
+               if $startDefer > 0
+                  if $startDefer == $deferInd
+                     startDefer = 0
+                  Else
+                     continue
+                  Endif 
+               Endif 
+               deferredSum = $deferInd - 1 
+          
+               Echo ****************************************************************
+               Echo TEST SEQUENCE WITH: mode $K2mode file $fileType divide $divideBy2 early $earlyReturn defer $deferredSum
+               Echo ****************************************************************
+               # exp proc b testSums packVal use101 times100 skipRot keepPrec reduceSuper
+               
+               # Gain norm regular or times 100, test skip rot and sums
+               CallFunction TestVariations $baseExp 2 $baseBin 0 0 0 0 0 0 0
+               CallFunction TestVariations  $baseExp 2 $baseBin 0 0 0 1 0 0 0
+               CallFunction TestVariations  $baseExp 2 $baseBin 0 0 0 0 1 0 0
+               CallFunction TestVariations  $baseExp 2 $highBin 0 0 0 1 0 0 0
+               #if $gpuVsCpu > 0
+                  CallFunction TestVariations  $baseExp 2 $baseBin 0 0 0 0 0 1 0
+               #Endif
+               if $simulator == 0  or $K2mode < 2
+                  CallFunction TestVariations $sumExp 2 $baseBin 1 0 0 0 0 0 0
+                  CallFunction TestVariations $sumExp 2 $highBin 1 0 0 0 1 0 0
+               Endif
+               if $K2mode == 2
+                  CallFunction TestVariations $baseExp 2 $baseBin 0 0 0 0 0 0 1
+                  CallFunction TestVariations $baseExp 2 $highBin 0 0 0 0 0 0 1
+                  CallFunction TestVariations $baseExp 2 $highBin 0 0 0 1 0 0 1
+                  CallFunction TestVariations $baseExp 2 $baseBin 0 0 0 0 0 1 1
+               Endif
+               if $earlyReturn > 0 and $fileType == 0 and $deferredSum == 0
+                  CallFunction TestVariations $baseExp 2 $baseBin 0 0 0 0 0 1 0
+                  CallFunction TestVariations  $baseExp 2 $baseBin 0 0 0 1 0 1 0
+                  CallFunction TestVariations  $baseExp 2 $highBin 0 0 0 0 0 1 0
+               Endif 
+               
+               # Dark-subtracted regular, mild pack, more pack, 101 for MRC
+               CallFunction TestVariations $baseExp 1 $baseBin  0 0 0 0 0 0 0
+               CallFunction TestVariations $baseExp 1 $baseBin 0 1 0 0 0 0 0
+               if $K2mode == 1
+                  CallFunction TestVariations $baseExp 1 $baseBin 0 3 0 0 0 0 0
+               Endif 
+               if $fileType == 0
+                  CallFunction TestVariations $baseExp 1 $baseBin 0 3 1 0 0 0 0
+               Endif 
+               CallFunction TestVariations $baseExp 1 $baseBin 0 1 0 0 1 0 0
+               if $simulator == 0  or $K2mode < 2
+                  CallFunction TestVariations $sumExp 1 $baseBin 1 1 0 0 0 0 0
+                  CallFunction TestVariations $sumExp 1 $highBin 1 1 0 0 1 0 0
+               Endif 
+               CallFunction TestVariations $baseExp 1 $highBin 0 1 0 0 0 0 0
+               SuppressReports 0
+               ReportClock 
+               SuppressReports 
+            EndLoop 
+         EndLoop 
+      EndLoop 
+   EndLoop 
+EndLoop 
+SetColumnOrGunValve 0
+# END OF MAIN MACRO
+
+### TestVariations
+###
+# Variables that are expected to be set: in caller:
+# fileType
+# K2mode
+# divideBy2
+# earlyReturn
+# deferredSum
+# fullScale
+#
+Function TestVariations 10 1 exposure processing binning tstSms packVal use101 times100 skipRot keepPrec reduceSuper
+
+testSums = $tstSms
+echo ****************************************************************
+echo TestVariations VALUES: proc $processing bin $binning sums $testSums pack $packVal mode101 $use101 x100 $times100  skipRot $skipRot keepPrec $keepPrec redSR $reduceSuper
+
+numFrames = NEARINT ($exposure / $frameTime)
+
+# Get the scaling for the current Record image and frames
+div2factor = 1.
+if $divideBy2 > 0
+   div2factor = 2.
+endif
+scaleRec = $fullScale * $binning * $binning / $div2factor
+
+frameBin = 1.
+scaleFrame = $fullScale / $div2factor
+if $K2mode > 1
+   if $reduceSuper == 0
+      frameBin = 0.5
+      scaleFrame = $scaleFrame / 4
+      if $times100 == 0
+         scaleFrame = 4.
+      endif
+   elseif $times100 == 0
+      scaleFrame = 16.
+   Endif
+endif
+if $processing < 2
+   scaleFrame = 1. * $frameBin * $frameBin
+elseif $times100 > 0
+   scaleFrame = 100. * $scaleFrame
+endif
+
+frameTol = $tolAdjusted
+frameX = NEARINT ($camXsize / $frameBin)
+frameY = NEARINT ($camYsize / $frameBin)
+if $skipRot > 0 and MODULO ($rotFlip 2) > 0
+   frameX = NEARINT ($camYsize / $frameBin)
+   frameY = NEARINT ($camXsize / $frameBin)
+endif
+
+# Frame in X is half the size if 4-bit vales are written to TIFF
+if $processing < 2 and $fileType == 0 and $use101 == 0 and $packVal > 0 and ($K2mode == 2 or $packVal == 3)
+   frameX = $frameX / 2
+   scaleFrame = $scaleFrame * 16.5
+   frameTol = $tolAdjusted + (1. / 16.)
+endif
+
+# Set parameters for this call
+# Set the frame time first since it might constrain the exposure; then the exposure can be set
+cenX = NEARINT ($camXsize / $binning - 0.4)
+cenY = NEARINT ($camYsize / $binning - 0.4)
+SetCenteredSize R $binning $cenX $cenY
+SetFrameTime R $frameTime
+SetExposure R $exposure
+SetK2ReadMode R $K2mode
+SetBinning R $binning
+SetProcessing R $processing
+SetDivideBy2 $divideBy2
+SetFrameAliParams $faBinning $keepPrec
+SetUserSetting SaveSuperResReduced $reduceSuper
+  SetK2FileParams $fileType $packVal $use101 $times100 $skipRot 0
+   SetDivideBy2 $divideBy2
+#CallFunction ImposeChanges
+
+# do the reference exposure
+SetDoseFracParams R 0 0 0 0 0
+R
+ImageProperties A recXsize recYsize
+ReportMeanCounts A
+refMean = $repVal1
+
+# Expected counts in one frame
+refFrame = $refMean * $scaleFrame / ( $scaleRec * $numFrames )
+
+# Dose frac and nothing else: SR does not work in simulator
+if $skipRot == 0 and ($simulator == 0  or $K2mode < 2)
+   SetDoseFracParams R 1
+   R
+   
+   CallFunction CheckReturnImage 1. Simple dose frac shot
+endif
+
+# Save frames
+align = 0
+SetDoseFracParams R 1 1 0 0 $testSums
+fracFrames = 1.
+if $earlyReturn >= 0
+   EarlyReturnNextShot $earlyReturn $deferredSum
+   fracFrames = $earlyReturn / $numFrames
+endif
+R
+
+# Test returns or wait until frames are surely done, then check frames
+CallFunction CheckAllReturns Frame-saving shot
+CallFunction CheckFrames Frame-saving shot
+echo Finished Save Frames
+
+# Set up number of align loops, 2 for CPU/GPU test
+numAliLoop = 1
+if $gpuVsCpu  > 0
+   numAliLoop = 2
+Endif
+
+Loop $numAliLoop gpuInd
+   if $gpuVsCpu > 0
+      SetFrameAli2 $gpuInd - 1
+   Endif
+
+   # Align frames without saving
+   if $skipRot == 0
+      SetDoseFracParams R 1 0 1 1 $testSums
+      align = 1
+      if $earlyReturn >= 0
+         EarlyReturnNextShot $earlyReturn
+      endif
+      R
+      CallFunction CheckAllReturns Align without saving $gpuInd
+   endif
+   Echo Finished align frames $gpuInd
+
+   # Align frames with saving
+   SetDoseFracParams R 1 1 1 1 $testSums
+   if $earlyReturn >= 0
+      EarlyReturnNextShot $earlyReturn
+   endif
+   R
+   CallFunction CheckAllReturns Align and save
+   CallFunction CheckFrames Align and save $gpuInd
+   echo Finished align frames with save $gpuInd
+EndLoop
+
+# Save frames and align com file if no special options
+if $packVal == 0  and $times100 == 0 and $testSums == 0 and $skipRot == 0
+   align = 0
+   SetDoseFracParams R 1 1 1 1 $testSums
+   if $earlyReturn >= 0
+      EarlyReturnNextShot $earlyReturn $deferredSum
+   endif
+   R
+   CallFunction CheckAllReturns Save and make align com
+   CallFunction CheckFrames Save and make align com
+Endif 
+
+
+EndFunction 
+
+
+### CheckAllReturns
+###
+Function CheckAllReturns 0 1 mess1
+   if $earlyReturn != 0
+       CallFunction CheckReturnImage $fracFrames $mess1
+   endif
+   if $earlyReturn >= 0
+      if $deferredSum > 0 or $align > 0
+         GetDeferredSum
+         CallFunction CheckReturnImage 1. Deferred sum from $mess1
+      Else
+         wait = $numFrames * $waitPerFrame / ($frameBin * $frameBin)
+         Delay $wait
+      Endif 
+   Endif 
+EndFunction 
+
+###
+### CheckReturnImage
+###
+# argument 1 is fraction of reference frames in image
+#
+Function CheckReturnImage 1 1 frac mess2
+   ImageProperties A testX testY
+   ReportMeanCounts A
+   testMean = $repVal1
+   
+   Test $testX == $recXsize and $testY == $recYsize
+   CallFunction RestoreChanges $repVal1
+   AbortIfFailed $mess2  size ($testX $testY) does not match single-shot ($recXsize $recYsize)
+   
+   expect = $frac * $refMean
+   Test  FRACDIFF ($expect $testMean) < $tolAdjusted
+   CallFunction RestoreChanges $repVal1
+   AbortIfFailed $mess2 mean ($testMean) does not match expected value from single-shot ($expect)
+EndFunction 
+
+###
+### CheckFrames
+###
+Function CheckFrames 0 1 mess3
+   
+   # Make sure there is the right number of frames, and less with summing
+   ReportNumFramesSaved  savedFrames
+   lastFrame = $savedFrames - 1
+   checkFrame = $lastFrame
+   if $testSums == 0
+      Test $savedFrames == $numFrames
+      CallFunction RestoreChanges $repVal1
+      AbortIfFailed $mess3 gave $savedFrames frames, not expected $numFrames
+   Else
+      Test $savedFrames < $numFrames
+      CallFunction RestoreChanges $repVal1
+      AbortIfFailed Selecting frame sums gave the same number of frames, is frame summing set up for an exposure with $numFrames frames? 
+      checkFrame = 0
+   Endif 
+   
+   # Check first or last frame
+   ReportLastFrameFile 
+   ReadOtherFile $checkFrame P $repVal1
+   ImageProperties P testX testY
+   ReportMeanCounts P
+   testMean = $repVal1
+   Test $testX == $frameX and $testY == $frameY
+   CallFunction RestoreChanges $repVal1
+   AbortIfFailed $mess3 frame size ($testX $testY) does not match expected ($frameX $frameY)
+   
+   Test  FRACDIFF ($refFrame $testMean) < $frameTol
+   CallFunction RestoreChanges $repVal1
+   AbortIfFailed $mess3 frame mean ($testMean) does not match expected value ($refFrame)
+   
+   # Test the last frame with summed frames
+   if $testSums > 0
+      ReportLastFrameFile 
+      ReadOtherFile $lastFrame P $repVal1
+      ReportMeanCounts P
+      testMean = $repVal1
+      match = 0
+      loop 5 mult
+         if  FRACDIFF ($mult * $refFrame $testMean) < $frameTol
+            match = 1
+            Break 
+         Endif 
+      EndLoop 
+      test $match == 1
+      CallFunction RestoreChanges $repVal1
+      AbortIfFailed $mess3 last frame mean ($testMean) is not a small multiple of expected value ($refFrame)
+   Endif 
+   
+   if $removeFrames > 0
+      ReportLastFrameFile
+      RemoveFile $repVal1
+   Endif 
+   
+EndFunction 
+
+
+### RestoreChanges
+###
+Function RestoreChanges 1
+   if $argVal1 == 0
+      CallFunction DoRestoreChanges
+   endif
+EndFunction 
+
+### ImposeChanges
+###
+Function ImposeChanges
+   SetK2FileParams $fileType $packVal $use101 $times100 $skipRot 0
+   SetDivideBy2 $divideBy2
+EndFunction 
+
+### DoRestoreChanges
+###
+Function DoRestoreChanges
+   SetK2FileParams $saveFileType $savePackVal $saveUse101 $saveTimes100 $saveSkipRot $saveFilePerFrame
+   SetDivideBy2 $saveDivideBy2
+   SetFrameAliParams $saveAliBin $saveKeepPrec
+   SetFrameAli2 $saveGPU
+   if $closeValvesOnFailure > 0
+      SetColumnOrGunValve 0
+   Endif 
+EndFunction 
+MacroName K2Test
+Require variable1
+
+# Before starting, set Record to 1.6 sec exposure, 0.2 sec frames or other setting with 8 frames
+# turn on Save frames and Save frame sums and Setup the sums
+# Set up for 2 at 1 frame and 3 at 2 frames
+# Turn off the saving of frame sums
+
+# Set to 0 for a real camera, 1 for simulator
+simulator = 1
+
+# Set to 1 to test with CPU and GPU; otherwise it uses whatever is set
+gpuVsCpu = 0
+
+# Set to 0 to keep valves open when it is failing tests quickly
+closeValvesOnFailure = 1
+
+# Set any of these non-zero to start at the given loop index and go on from there
+startMode = 1
+startFile = 0
+startDivide = 0
+startEarly = 0
+startDefer = 0
+
+waitPerFrame = 0.3
+removeFrames = 1
+tolerance = 0.01
+
+# Higher binnings to test
+highBinCM = 4
+highBinSR = 2
+
+# The exposures have to be multiple of the frame time that is legal for single-shot too
+# These combinations work in the simulator
+expCM = 1.0
+expSR = 1.0
+frameCM = 0.2
+frameSR = 0.25
+sumExpCM = 1.6
+sumExpSR = 1.5
+
+# of frames in early return sum
+erSumCM = 2
+erSumSR = 1
+
+faBinningCM = 4
+faBinningSR = 8
+
+CameraProperties 
+camXsize = $repVal1
+camYsize = $repVal2
+rotFlip = $repVal3
+RetryReadOtherFile 5
+SkipFrameAliParamCheck
+SetUserSetting SaveFrameStackMdoc 0
+
+SetColumnOrGunValve 1
+
+# Get starting parameters for restoring
+echo Starting Params:
+ReportK2FileParams saveFileType savePackVal saveUse101 saveTimes100 saveSkipRot saveFilePerFrame
+ReportCountScaling saveDivideBy2 fullScale
+ReportFrameAliParams saveAliBin saveKeepPrec
+ReportFrameAli2 saveGPU
+
+OnStopCallFunc DoRestoreChanges
+
+SuppressReports
+ 
+# Loop on modes
+Loop 2 modeInd
+   if $startMode > 0 and $startMode > $modeInd
+      continue
+   endif
+   K2mode = $modeInd
+
+   # Set mode-dependent parameters
+   baseBin = 1
+   highBin = $highBinCM
+   tolAdjusted = $tolerance
+   baseExp = $expCM
+   earlySum = $erSumCM
+   faBinning = $faBinningCM
+   frameTime = $frameCM
+   sumExp = $sumExpCM
+   if $K2mode == 2
+      baseBin = 0.5
+      highBin = $highBinSR
+      baseExp = $expSR
+      earlySum = $erSumSR
+      if $simulator > 0
+         tolAdjusted = $tolerance * 3.5
+      Endif 
+      faBinning = $faBinningSR
+      frameTime = $frameSR
+      sumExp = $sumExpSR
+   Endif 
+   
+   # Loop on file type (2 or 3 times)
+   Loop 2 fileInd
+      if $startFile > 0
+         if $startFile == $fileInd
+            startFile = 0
+         else
+            continue
+         Endif 
+      Endif 
+      fileType = $fileInd - 1
+      
+      # Loop on divide by 2
+      Loop 2 divideInd
+         if $startDivide > 0
+            if $startDivide == $divideInd
+               startDivide = 0
+            Else
+               continue
+            Endif 
+         Endif 
+         divideBy2 = $divideInd - 1
+         
+         # Loop on early return
+         Loop 3 earlyInd
+            if $startEarly > 0
+               if $startEarly == $earlyInd
+                  startEarly = 0
+               Else
+                  continue
+               Endif 
+            Endif 
+            earlyReturn = -1
+            numDef = 1
+            if $earlyInd == 2
+               earlyReturn = 0
+               numDef = 2
+            elseif $earlyInd == 3
+               earlyReturn = $earlySum
+               numDef = 2
+            Endif 
+            
+            # Loop on deferred sum 
+            Loop $numDef deferInd
+               if $startDefer > 0
+                  if $startDefer == $deferInd
+                     startDefer = 0
+                  Else
+                     continue
+                  Endif 
+               Endif 
+               deferredSum = $deferInd - 1 
+          
+               Echo ****************************************************************
+               Echo TEST SEQUENCE WITH: mode $K2mode file $fileType divide $divideBy2 early $earlyReturn defer $deferredSum
+               Echo ****************************************************************
+               # exp proc b testSums packVal use101 times100 skipRot keepPrec reduceSuper
+               
+               # Gain norm regular or times 100, test skip rot and sums
+               CallFunction TestVariations $baseExp 2 $baseBin 0 0 0 0 0 0 0
+               CallFunction TestVariations  $baseExp 2 $baseBin 0 0 0 1 0 0 0
+               CallFunction TestVariations  $baseExp 2 $baseBin 0 0 0 0 1 0 0
+               CallFunction TestVariations  $baseExp 2 $highBin 0 0 0 1 0 0 0
+               #if $gpuVsCpu > 0
+                  CallFunction TestVariations  $baseExp 2 $baseBin 0 0 0 0 0 1 0
+               #Endif
+               if $simulator == 0  or $K2mode < 2
+                  CallFunction TestVariations $sumExp 2 $baseBin 1 0 0 0 0 0 0
+                  CallFunction TestVariations $sumExp 2 $highBin 1 0 0 0 1 0 0
+               Endif
+               if $K2mode == 2
+                  CallFunction TestVariations $baseExp 2 $baseBin 0 0 0 0 0 0 1
+                  CallFunction TestVariations $baseExp 2 $highBin 0 0 0 0 0 0 1
+                  CallFunction TestVariations $baseExp 2 $highBin 0 0 0 1 0 0 1
+                  CallFunction TestVariations $baseExp 2 $baseBin 0 0 0 0 0 1 1
+               Endif
+               if $earlyReturn > 0 and $fileType == 0 and $deferredSum == 0
+                  CallFunction TestVariations $baseExp 2 $baseBin 0 0 0 0 0 1 0
+                  CallFunction TestVariations  $baseExp 2 $baseBin 0 0 0 1 0 1 0
+                  CallFunction TestVariations  $baseExp 2 $highBin 0 0 0 0 0 1 0
+               Endif 
+               
+               # Dark-subtracted regular, mild pack, more pack, 101 for MRC
+               CallFunction TestVariations $baseExp 1 $baseBin  0 0 0 0 0 0 0
+               CallFunction TestVariations $baseExp 1 $baseBin 0 1 0 0 0 0 0
+               if $K2mode == 1
+                  CallFunction TestVariations $baseExp 1 $baseBin 0 3 0 0 0 0 0
+               Endif 
+               if $fileType == 0
+                  CallFunction TestVariations $baseExp 1 $baseBin 0 3 1 0 0 0 0
+               Endif 
+               CallFunction TestVariations $baseExp 1 $baseBin 0 1 0 0 1 0 0
+               if $simulator == 0  or $K2mode < 2
+                  CallFunction TestVariations $sumExp 1 $baseBin 1 1 0 0 0 0 0
+                  CallFunction TestVariations $sumExp 1 $highBin 1 1 0 0 1 0 0
+               Endif 
+               CallFunction TestVariations $baseExp 1 $highBin 0 1 0 0 0 0 0
+               SuppressReports 0
+               ReportClock 
+               SuppressReports 
+            EndLoop 
+         EndLoop 
+      EndLoop 
+   EndLoop 
+EndLoop 
+SetColumnOrGunValve 0
+# END OF MAIN MACRO
+
+### TestVariations
+###
+# Variables that are expected to be set: in caller:
+# fileType
+# K2mode
+# divideBy2
+# earlyReturn
+# deferredSum
+# fullScale
+#
+Function TestVariations 10 1 exposure processing binning tstSms packVal use101 times100 skipRot keepPrec reduceSuper
+
+testSums = $tstSms
+echo ****************************************************************
+echo TestVariations VALUES: proc $processing bin $binning sums $testSums pack $packVal mode101 $use101 x100 $times100  skipRot $skipRot keepPrec $keepPrec redSR $reduceSuper
+
+numFrames = NEARINT ($exposure / $frameTime)
+
+# Get the scaling for the current Record image and frames
+div2factor = 1.
+if $divideBy2 > 0
+   div2factor = 2.
+endif
+scaleRec = $fullScale * $binning * $binning / $div2factor
+
+frameBin = 1.
+scaleFrame = $fullScale / $div2factor
+if $K2mode > 1
+   if $reduceSuper == 0
+      frameBin = 0.5
+      scaleFrame = $scaleFrame / 4
+      if $times100 == 0
+         scaleFrame = 4.
+      endif
+   elseif $times100 == 0
+      scaleFrame = 16.
+   Endif
+endif
+if $processing < 2
+   scaleFrame = 1. * $frameBin * $frameBin
+elseif $times100 > 0
+   scaleFrame = 100. * $scaleFrame
+endif
+
+frameTol = $tolAdjusted
+frameX = NEARINT ($camXsize / $frameBin)
+frameY = NEARINT ($camYsize / $frameBin)
+if $skipRot > 0 and MODULO ($rotFlip 2) > 0
+   frameX = NEARINT ($camYsize / $frameBin)
+   frameY = NEARINT ($camXsize / $frameBin)
+endif
+
+# Frame in X is half the size if 4-bit vales are written to TIFF
+if $processing < 2 and $fileType == 0 and $use101 == 0 and $packVal > 0 and ($K2mode == 2 or $packVal == 3)
+   frameX = $frameX / 2
+   scaleFrame = $scaleFrame * 16.5
+   frameTol = $tolAdjusted + (1. / 16.)
+endif
+
+# Set parameters for this call
+# Set the frame time first since it might constrain the exposure; then the exposure can be set
+cenX = NEARINT ($camXsize / $binning - 0.4)
+cenY = NEARINT ($camYsize / $binning - 0.4)
+SetCenteredSize R $binning $cenX $cenY
+SetFrameTime R $frameTime
+SetExposure R $exposure
+SetK2ReadMode R $K2mode
+SetBinning R $binning
+SetProcessing R $processing
+SetDivideBy2 $divideBy2
+SetFrameAliParams $faBinning $keepPrec
+SetUserSetting SaveSuperResReduced $reduceSuper
+  SetK2FileParams $fileType $packVal $use101 $times100 $skipRot 0
+   SetDivideBy2 $divideBy2
+#CallFunction ImposeChanges
+
+# do the reference exposure
+SetDoseFracParams R 0 0 0 0 0
+R
+ImageProperties A recXsize recYsize
+ReportMeanCounts A
+refMean = $repVal1
+
+# Expected counts in one frame
+refFrame = $refMean * $scaleFrame / ( $scaleRec * $numFrames )
+
+# Dose frac and nothing else: SR does not work in simulator
+if $skipRot == 0 and ($simulator == 0  or $K2mode < 2)
+   SetDoseFracParams R 1
+   R
+   
+   CallFunction CheckReturnImage 1. Simple dose frac shot
+endif
+
+# Save frames
+align = 0
+SetDoseFracParams R 1 1 0 0 $testSums
+fracFrames = 1.
+if $earlyReturn >= 0
+   EarlyReturnNextShot $earlyReturn $deferredSum
+   fracFrames = $earlyReturn / $numFrames
+endif
+R
+
+# Test returns or wait until frames are surely done, then check frames
+CallFunction CheckAllReturns Frame-saving shot
+CallFunction CheckFrames Frame-saving shot
+echo Finished Save Frames
+
+# Set up number of align loops, 2 for CPU/GPU test
+numAliLoop = 1
+if $gpuVsCpu  > 0
+   numAliLoop = 2
+Endif
+
+Loop $numAliLoop gpuInd
+   if $gpuVsCpu > 0
+      SetFrameAli2 $gpuInd - 1
+   Endif
+
+   # Align frames without saving
+   if $skipRot == 0
+      SetDoseFracParams R 1 0 1 1 $testSums
+      align = 1
+      if $earlyReturn >= 0
+         EarlyReturnNextShot $earlyReturn
+      endif
+      R
+      CallFunction CheckAllReturns Align without saving $gpuInd
+   endif
+   Echo Finished align frames $gpuInd
+
+   # Align frames with saving
+   SetDoseFracParams R 1 1 1 1 $testSums
+   if $earlyReturn >= 0
+      EarlyReturnNextShot $earlyReturn
+   endif
+   R
+   CallFunction CheckAllReturns Align and save
+   CallFunction CheckFrames Align and save $gpuInd
+   echo Finished align frames with save $gpuInd
+EndLoop
+
+# Save frames and align com file if no special options
+if $packVal == 0  and $times100 == 0 and $testSums == 0 and $skipRot == 0
+   align = 0
+   SetDoseFracParams R 1 1 1 1 $testSums
+   if $earlyReturn >= 0
+      EarlyReturnNextShot $earlyReturn $deferredSum
+   endif
+   R
+   CallFunction CheckAllReturns Save and make align com
+   CallFunction CheckFrames Save and make align com
+Endif 
+
+
+EndFunction 
+
+
+### CheckAllReturns
+###
+Function CheckAllReturns 0 1 mess1
+   if $earlyReturn != 0
+       CallFunction CheckReturnImage $fracFrames $mess1
+   endif
+   if $earlyReturn >= 0
+      if $deferredSum > 0 or $align > 0
+         GetDeferredSum
+         CallFunction CheckReturnImage 1. Deferred sum from $mess1
+      Else
+         wait = $numFrames * $waitPerFrame / ($frameBin * $frameBin)
+         Delay $wait
+      Endif 
+   Endif 
+EndFunction 
+
+###
+### CheckReturnImage
+###
+# argument 1 is fraction of reference frames in image
+#
+Function CheckReturnImage 1 1 frac mess2
+   ImageProperties A testX testY
+   ReportMeanCounts A
+   testMean = $repVal1
+   
+   Test $testX == $recXsize and $testY == $recYsize
+   CallFunction RestoreChanges $repVal1
+   AbortIfFailed $mess2  size ($testX $testY) does not match single-shot ($recXsize $recYsize)
+   
+   expect = $frac * $refMean
+   Test  FRACDIFF ($expect $testMean) < $tolAdjusted
+   CallFunction RestoreChanges $repVal1
+   AbortIfFailed $mess2 mean ($testMean) does not match expected value from single-shot ($expect)
+EndFunction 
+
+###
+### CheckFrames
+###
+Function CheckFrames 0 1 mess3
+   
+   # Make sure there is the right number of frames, and less with summing
+   ReportNumFramesSaved  savedFrames
+   lastFrame = $savedFrames - 1
+   checkFrame = $lastFrame
+   if $testSums == 0
+      Test $savedFrames == $numFrames
+      CallFunction RestoreChanges $repVal1
+      AbortIfFailed $mess3 gave $savedFrames frames, not expected $numFrames
+   Else
+      Test $savedFrames < $numFrames
+      CallFunction RestoreChanges $repVal1
+      AbortIfFailed Selecting frame sums gave the same number of frames, is frame summing set up for an exposure with $numFrames frames? 
+      checkFrame = 0
+   Endif 
+   
+   # Check first or last frame
+   ReportLastFrameFile 
+   ReadOtherFile $checkFrame P $repVal1
+   ImageProperties P testX testY
+   ReportMeanCounts P
+   testMean = $repVal1
+   Test $testX == $frameX and $testY == $frameY
+   CallFunction RestoreChanges $repVal1
+   AbortIfFailed $mess3 frame size ($testX $testY) does not match expected ($frameX $frameY)
+   
+   Test  FRACDIFF ($refFrame $testMean) < $frameTol
+   CallFunction RestoreChanges $repVal1
+   AbortIfFailed $mess3 frame mean ($testMean) does not match expected value ($refFrame)
+   
+   # Test the last frame with summed frames
+   if $testSums > 0
+      ReportLastFrameFile 
+      ReadOtherFile $lastFrame P $repVal1
+      ReportMeanCounts P
+      testMean = $repVal1
+      match = 0
+      loop 5 mult
+         if  FRACDIFF ($mult * $refFrame $testMean) < $frameTol
+            match = 1
+            Break 
+         Endif 
+      EndLoop 
+      test $match == 1
+      CallFunction RestoreChanges $repVal1
+      AbortIfFailed $mess3 last frame mean ($testMean) is not a small multiple of expected value ($refFrame)
+   Endif 
+   
+   if $removeFrames > 0
+      ReportLastFrameFile
+      RemoveFile $repVal1
+   Endif 
+   
+EndFunction 
+
+
+### RestoreChanges
+###
+Function RestoreChanges 1
+   if $argVal1 == 0
+      CallFunction DoRestoreChanges
+   endif
+EndFunction 
+
+### ImposeChanges
+###
+Function ImposeChanges
+   SetK2FileParams $fileType $packVal $use101 $times100 $skipRot 0
+   SetDivideBy2 $divideBy2
+EndFunction 
+
+### DoRestoreChanges
+###
+Function DoRestoreChanges
+   SetK2FileParams $saveFileType $savePackVal $saveUse101 $saveTimes100 $saveSkipRot $saveFilePerFrame
+   SetDivideBy2 $saveDivideBy2
+   SetFrameAliParams $saveAliBin $saveKeepPrec
+   SetFrameAli2 $saveGPU
+   if $closeValvesOnFailure > 0
+      SetColumnOrGunValve 0
+   Endif 
+EndFunction 
+EndMacro
+Macro	60
+SetProperty MulGridSkipRealign 1
+EndMacro
+Macro	61
+SetCamLenIndex 42 
+ SetMagIndex 22
+EndMacro
+Macro	62
+AlignBetweenMags B -1 -1 -1 -1 -1 1
+EndMacro
+Macro	63
+SetCamLenIndex 20
+EndMacro
+Macro	64
+DewarsRemainingTime 
+EndMacro
+Macro	65
+ReportApertureSize O
+EndMacro
+Macro	66
+FindMultiMapHoles 5 9 0 2
+EndMacro

@@ -92,6 +92,7 @@
 #define IDD_MULGRID_SETTINGS            287
 #define IDD_TASK_AREA_OPTIONS           289
 #define IDD_CTF_ACQ_PARAMS              291
+#define IDD_MANYCHOICEBOX               294
 #define IDC_EDITXSIZE                   1000
 #define IDC_EDITYSIZE                   1002
 #define IDC_EDITYOVERLAP                1003
@@ -2551,6 +2552,38 @@
 #define IDC_CHECK_TRACK_BIG_TILT        3581
 #define IDC_EDIT_BIG_TILT               3582
 #define IDC_CHECK_APPLY_INTERACTIVE     3583
+#define IDC_GENERIC_CHECK1              3584
+#define IDC_GENERIC_CHECK2              3587
+#define IDC_GENERIC_CHECK3              3588
+#define IDC_GENERIC_CHECK4              3589
+#define IDC_GENERIC_CHECK5              3590
+#define IDC_GENERIC_CHECK6              3591
+#define IDC_GENERIC_CHECK7              3592
+#define IDC_GENERIC_CHECK8              3593
+#define IDC_GENERIC_CHECK9              3594
+#define IDC_GENERIC_CHECK10             3595
+#define IDC_GENERIC_CHECK11             3596
+#define IDC_GENERIC_CHECK12             3597
+#define IDC_GENERIC_CHECK13             3598
+#define IDC_GENERIC_CHECK14             3599
+#define IDC_GENERIC_CHECK15             3600
+#define IDC_GENERIC_RADIO1              3601
+#define IDC_GENERIC_RADIO2              3602
+#define IDC_GENERIC_RADIO3              3603
+#define IDC_GENERIC_RADIO4              3604
+#define IDC_GENERIC_RADIO5              3605
+#define IDC_GENERIC_RADIO6              3606
+#define IDC_GENERIC_RADIO7              3607
+#define IDC_GENERIC_RADIO8              3608
+#define IDC_GENERIC_RADIO9              3609
+#define IDC_GENERIC_RADIO10             3610
+#define IDC_GENERIC_RADIO11             3611
+#define IDC_GENERIC_RADIO12             3612
+#define IDC_GENERIC_RADIO13             3613
+#define IDC_GENERIC_RADIO14             3614
+#define IDC_MANYCHOICE_RADIO15          3615
+#define IDC_GENERIC_RADIO15             3615
+#define IDC_MANYCHOICEHEADER            3616
 #define ID_NEW_IMAGE                    32771
 #define IDM_FILE_SAVEOTHER              32772
 #define IDM_FILE_READ                   32773
@@ -3136,9 +3169,9 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        294
+#define _APS_NEXT_RESOURCE_VALUE        296
 #define _APS_NEXT_COMMAND_VALUE         33552
-#define _APS_NEXT_CONTROL_VALUE         3584
+#define _APS_NEXT_CONTROL_VALUE         3617
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif

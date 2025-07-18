@@ -293,7 +293,7 @@
       </Command>
     </PostBuildEvent>
     <PreBuildEvent>
-      <Command>C:/cygwin/bin/python Utilities/makeHideDisable &amp; C:/cygwin/bin/python Utilities/makeSignatures &amp; C:/cygwin/bin/python  Utilities/ctrapcheck -r 10</Command>
+      <Command>python Utilities/makeHideDisable &amp; python Utilities/makeSignatures &amp; python  Utilities/ctrapcheck -r 10</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='v140 Debug|Win32'">
@@ -419,7 +419,7 @@
       </Command>
     </PostBuildEvent>
     <PreBuildEvent>
-      <Command>C:/cygwin/bin/python Utilities/makeHideDisable &amp; C:/cygwin/bin/python Utilities/makeSignatures</Command>
+      <Command>python Utilities/makeHideDisable &amp; python Utilities/makeSignatures</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='v140 Debug|x64'">
@@ -919,6 +919,7 @@
     <ClInclude Include="MacroMasterList.h" />
     <ClInclude Include="MacroSelector.h" />
     <ClInclude Include="ManageDewarsDlg.h" />
+    <ClInclude Include="ManyChoiceDlg.h" />
     <ClInclude Include="MGSettingsManagerDlg.h" />
     <ClInclude Include="MultiCombinerDlg.h" />
     <ClInclude Include="MultiGridDlg.h" />
@@ -1783,6 +1784,7 @@ echo.
     <ClCompile Include="MacroCommands.cpp" />
     <ClCompile Include="MacroSelector.cpp" />
     <ClCompile Include="ManageDewarsDlg.cpp" />
+    <ClCompile Include="ManyChoiceDlg.cpp" />
     <ClCompile Include="MGSettingsManagerDlg.cpp" />
     <ClCompile Include="MultiCombinerDlg.cpp" />
     <ClCompile Include="MultiGridDlg.cpp" />
