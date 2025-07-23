@@ -3,6 +3,9 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+7/23/25: Changes to make directions of beam movement on the Fluscreen correct
+when the option for TEM mode when screen down is on in EFETM mode.
+
 7/23/25: Added property FEIcanGetLoaderNames to prevent trying to access a
 non-existent autoloader panel in TUI.
 

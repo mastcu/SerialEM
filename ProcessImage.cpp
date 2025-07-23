@@ -2086,18 +2086,22 @@ int CProcessImage::MoveBeam(EMimageBuffer *imBuf, float shiftX, float shiftY,
 int CProcessImage::MoveBeamByCameraFraction(float shiftX, float shiftY, bool uncalOK)
 {
   double bsX, bsY, pixel, angle;
+  FilterParams *filtParam = mWinApp->GetFilterParams();
   int magInd = mScope->FastMagIndex();
   int cam = mWinApp->GetCurrentCamera();
+  bool onFlucam = mWinApp->GetEFTEMMode() && mScope->GetScreenPos() == spDown;
+  if (onFlucam && filtParam->autoMag && filtParam->firstRegularCamera >= 0)
+    cam = filtParam->firstRegularCamera;
   CameraParameters *camp = mWinApp->GetCamParams() + cam;
-  ScaleMat fluMat, bInv = mShiftManager->CameraToIS(magInd);
+  ScaleMat fluMat, bInv, bMat = mShiftManager->IStoGivenCamera(magInd, cam);
   ScaleMat IStoBS = mShiftManager->GetBeamShiftCal(magInd);
   float camSize = (float)sqrt((double)camp->sizeX * camp->sizeY);
   float newX, newY;
+  bInv = MatInv(bMat);
 
   // If in EFTEM with screen down and there is defined rotation, rotate vectors so
   // they are in right orientation on screen
-  if (mWinApp->GetEFTEMMode() && mScope->GetScreenPos() == spDown && 
-    mFlucamRotationFlip > 0) {
+  if (onFlucam && !filtParam->autoMag && mFlucamRotationFlip > 0) {
     angle = 90. * (mFlucamRotationFlip % 4);
     fluMat = mWinApp->mNavHelper->GetRotationMatrix((float)angle, false);
     mShiftManager->ApplyScaleMatrix(fluMat, ((mFlucamRotationFlip > 3) ? -1 : 1) * shiftX,
