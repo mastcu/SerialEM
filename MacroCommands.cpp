@@ -11889,6 +11889,19 @@ int CMacCmd::NavGoToMarker()
   return 0;
 }
 
+// MoveToMarker
+int CMacCmd::MoveToMarker()
+{
+  if (mImBufs[0].mImage == NULL) 
+    ABORT_LINE("There is no image in buffer A for line:\n\n");
+  if (!(mImBufs[0].mHasUserPt || mImBufs[0].mIllegalUserPt))
+    ABORT_LINE("There is no marker point on buffer A for line:\n\n");
+  mWinApp->SetCurrentBuffer(0);
+  mShiftManager->AlignmentShiftToMarker(mItemInt[1] != 0);
+  mMovedStage = mShiftManager->GetStartedStageMove();
+  return 0;
+}
+
 // EndAcquireAtItems
 int CMacCmd::EndAcquireAtItems(void)
 {

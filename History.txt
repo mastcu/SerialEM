@@ -3,6 +3,9 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+7/23/25: Added script command to do the same operation as the To Marker button 
+in the Image Alignment & Focus control panel.
+
 7/13/25: The property FlucamRotationAndFlip can be set to make the direction
 of beam movement on the screen in EFTEM mode with the screen down match the
 direction of arrow keys or buttons pressed.
