@@ -1010,7 +1010,7 @@ BEGIN
     LTEXT           "Static",IDC_OTHERBUF2,11,49,85,8
     LTEXT           "Size:",IDC_SIZETEXT,4,22,81,8
     LTEXT           "Stage:",IDC_STAGETEXT,4,31,74,8
-    LTEXT           "Tilt:",IDC_TILTTEXT,85,22,30,8
+    LTEXT           "Tilt:",IDC_TILTTEXT,85,22,32,8
     LTEXT           "Def:",IDC_STATDEFOCUS,81,31,35,8
     PUSHBUTTON      "?",IDC_BUTHELP,107,0,9,7
     PUSHBUTTON      "F",IDC_BUTFLOATDOCK,17,0,9,7
@@ -6156,7 +6156,7 @@ BEGIN
     IDC_DELSTAGE_PLUS       "Increase step size for stage movement"
     IDC_DELSTAGE_MINUS      "Decrease step size for stage movement"
     IDC_AUTO_VIEW_SHIFT     "Take and align Preview & View images to measure View shift offset"
-    IDC_ZERO_SEARCH_SHIFT   "Reset the shift offset for Search mode to zeroor undo Auto shift"
+    IDC_ZERO_SEARCH_SHIFT   "Reset the shift offset for Search mode to zero or undo Auto shift"
     IDC_TABLE_INDEXES       "Show item numbers, numbered from 1, as first column of table"
     IDC_AUTO_SEARCH_SHIFT   "Take and align View & Search images to measure Search shift offset"
 END

@@ -1864,18 +1864,19 @@ void CCameraSetupDlg::ManageDarkRefs(void)
   }
 }
 
-// Manage the processing buttons for a K2/K3 camera (depends on mode)
+// Manage the processing buttons for a K2/K3 or DE camera (depends on mode)
 void CCameraSetupDlg::ManageK2Processing(void)
 {
   CWnd *wnd = GetDlgItem(IDC_RUNPROCESSED);
   int *modeP = mDE_Type ? &m_iDEMode : &m_iK2Mode;
-  if ((mParam->K2Type || mDE_Type) && *modeP && !m_iProcessing) {
+  bool counting = *modeP || ((mParam->CamFlags & DE_APOLLO_CAMERA) != 0);
+  if ((mParam->K2Type || mDE_Type) && counting && !m_iProcessing) {
     m_iProcessing = 1;
     UpdateData(false);
   }
   if (mParam->K2Type || mDE_Type) {
-    wnd->ShowWindow((*modeP) ? SW_HIDE : SW_SHOW);
-    SetDlgItemText(IDC_RDARKSUBTRACT, (*modeP) ? "Unnormalized" : "Dark Subtracted");
+    wnd->ShowWindow(counting ? SW_HIDE : SW_SHOW);
+    SetDlgItemText(IDC_RDARKSUBTRACT, counting ? "Unnormalized" : "Dark Subtracted");
   }
 }
 
@@ -3059,7 +3060,12 @@ void CCameraSetupDlg::OnButFileOptions()
   optDlg.mCanSaveTimes100 = 
     mCamera->CAN_PLUGIN_DO(SAVES_TIMES_100, mParam) && mParam->K2Type == K2_SUMMIT;
   optDlg.mCanUseExtMRCS = mCamera->CAN_PLUGIN_DO(CAN_SET_MRCS_EXT, mParam);
-  optDlg.mCanSaveFrameStackMdoc = mCamera->CanSaveFrameStackMdoc(mParam);
+  optDlg.mCanSaveFrameStackMdoc = mCamera->CanSaveFrameStackMdoc(mParam) ? 1 : 0;
+
+  // Ceta 2 can have an mdoc saved only when aligning, because otherwise there is no
+  // returned image and no extra data filled for an mdoc
+  if (!m_bAlignDoseFrac && FCAM_CONTIN_SAVE(mParam))
+    optDlg.mCanSaveFrameStackMdoc = -1;
   optDlg.mCanGainNormSum = mCamera->CAN_PLUGIN_DO(CAN_GAIN_NORM, mParam);
   optDlg.mCanReduceSuperres = mCamera->CAN_PLUGIN_DO(CAN_REDUCE_SUPER, mParam);
   optDlg.mSetIsGainNormalized = m_iProcessing == GAIN_NORMALIZED;

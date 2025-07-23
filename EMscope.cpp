@@ -503,6 +503,7 @@ CEMscope::CEMscope()
   mHitachiSpotBeamWait = 120;
   mHitachiDoesBSforIS = 0;
   mHitachiResetsISinHC = false;
+  mHitachiCanUseGunValve = -1;
   mLastNormMagIndex = -1;
   mPrevNormMagIndex = -1;
   mFakeMagIndex = 1;
@@ -828,6 +829,8 @@ int CEMscope::Initialize()
           if (mMagTab[ind].mag)
             AddShiftBoundary(ind);
       }
+      if (mHitachiCanUseGunValve < 0)
+        mHitachiCanUseGunValve = (hitachi->flags & HITACHI_IS_HT7800) ? 1 : 0;
       mDewarVacCapabilities = 0;
       mScopeHasPhasePlate = 0;
       mScopeCanFlashFEG = 0;
@@ -1833,7 +1836,7 @@ void CEMscope::ScopeUpdate(DWORD dwTime)
     if (mWinApp->GetShowRemoteControl()) {
       if (JEOLscope)
         gunState = mJeolSD.valveOrFilament;
-      else if (mPlugFuncs->GetGunValve)
+      else if (mPlugFuncs->GetGunValve && (!HitachiScope || mHitachiCanUseGunValve))
         gunState = mPlugFuncs->GetGunValve();
       mWinApp->mRemoteControl.Update(magIndex, mLastCamLenIndex, spotSize, rawIntensity,
         mProbeMode, gunState, STEMmode, (int)alpha, screenPos, mBeamBlanked, bReady);
@@ -6529,10 +6532,12 @@ double CEMscope::GetCrossover(int spotSize, int probe)
   static CString outVals = "BUG: GetCrossover values out of range in startup:\r\n";
   static int numWarn = 0;
   CString str;
+  if (probe < 0 && mProbeMode < 0)
+    ReadProbeMode();
   if (probe < 0 || probe > 1)
     probe = mProbeMode;
 
-  // Ridiculous stuff to find bug
+  // Ridiculous stuff to find bug, probably fixed now by getting probe mode
   if (!(mWinApp->GetStartingProgram() || mWinApp->GetAppExiting())) {
     if (numOut && !outVals.IsEmpty()) {
       mWinApp->AppendToLog(outVals);
@@ -7224,6 +7229,24 @@ double CEMscope::GetHTValue()
     result = -1.;
   }
   ScopeMutexRelease("GetHTValue");
+  return result;
+}
+
+bool CEMscope::SetHTValue(double inVal)
+{
+  bool result = true;
+  if (!sInitialized || !HitachiScope || !mPlugFuncs->SetHighVoltage)
+    return false;
+
+  ScopeMutexAcquire("SetHTValue", true);
+  try {
+    mPlugFuncs->SetHighVoltage(inVal);
+  }
+  catch (_com_error E) {
+    result = false;
+    SEMReportCOMError(E, _T("setting the high voltage "));
+  }
+  ScopeMutexRelease("SetHTValue");
   return result;
 }
 

@@ -465,7 +465,8 @@ void CShiftManager::AlignmentShiftToMarker(BOOL forceStage)
 {
   EMimageBuffer *imBuf = mWinApp->mMainView->GetActiveImBuf();
   if (!(imBuf->mHasUserPt || imBuf->mIllegalUserPt) || !imBuf->mImage || 
-    (mWinApp->DoingTasks() && !mWinApp->GetJustNavAcquireOpen()))
+    (mWinApp->DoingTasks() && !mWinApp->GetJustNavAcquireOpen() 
+    && !mWinApp->mMacroProcessor->DoingMacro()))
     return;
   mMouseEnding = true;
   mShiftPressed = forceStage;
@@ -485,14 +486,18 @@ void CShiftManager::AcquireAtRightDoubleClick(int bufInd, float shiftX,
   mRDCexpectedYshift = (float)(shiftY - imBuf->mImage->getHeight() / 2.);
 
   // Set up control set to acquire
-  mAcquireWhenShiftDone = imBuf->mConSetUsed;
-  if (mAcquireWhenShiftDone == RECORD_CONSET && mWinApp->LowDoseMode())
-    mAcquireWhenShiftDone = PREVIEW_CONSET;
+  if (!mCamera->DoingContinuousAcquire()) {
+    mAcquireWhenShiftDone = imBuf->mConSetUsed;
+    if (mAcquireWhenShiftDone == RECORD_CONSET && mWinApp->LowDoseMode())
+      mAcquireWhenShiftDone = PREVIEW_CONSET;
+  }
   mMouseEnding = true;
   mShiftPressed = forceStage;
   SetAlignShifts(-mRDCexpectedXshift, -mRDCexpectedYshift, false, imBuf, true, false);
   mMouseEnding = false;
   mShiftPressed = false;
+  if (mAcquireWhenShiftDone < 0)
+    return;
   mWinApp->SetStatusText(MEDIUM_PANE, "CENTERING CLICKED POINT");
 
   // If it was not a stage move, do the shot now

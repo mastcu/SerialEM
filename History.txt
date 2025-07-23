@@ -3,18 +3,53 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+7/23/25: Changes to make directions of beam movement on the Fluscreen correct
+when the option for TEM mode when screen down is on in EFETM mode.
+
+7/23/25: Added property FEIcanGetLoaderNames to prevent trying to access a
+non-existent autoloader panel in TUI.
+
+7/23/25: Added script command to do the same operation as the To Marker button 
+in the Image Alignment & Focus control panel.
+
+7/13/25: The property FlucamRotationAndFlip can be set to make the direction
+of beam movement on the screen in EFTEM mode with the screen down match the
+direction of arrow keys or buttons pressed.
+
+7/10/25: On Hitachi scopes, added support for gun valve and a script command
+to set the high voltage on, off, or to a specific value.
+
+7/10/25: Added ability to refresh multigrid table on JEOL after replacing some
+of the grids, retaining information on the grids that are the same.
+
+7/10/25: For multigrid, fixed potential crash from uninitialized variable and
+disabled low dose area radio buttons in montage setup (In 4.2).
+
+7/10/25: Fixed direction of horizontal beam and stage movement in scope
+control panel and reverted wrong arrow key change of 5/23/25; also made beam
+movement from control panel work in continuous mode. (In 4.2).
+
+7/8/25: SEM_4-2-5
+7/8/25: Fixed saving MRC frames from Falcon 4 through UTAPI (In 4.2).
+
+7/8/25: Fixed problem with reordering of last dose-symmetric series run from
+Navigator not being done if reordering is slow (In 4.2).
+
+7/8/25: Fixed camera setup dialog for Apollo to behave like other DE cameras
+in counting mode (In 4.2).
+
 6/24/25: Made function that finds next mag (e.g., for Mag spinner in scope
-control) consider EFTEM instead of TEM mags in EFETM mode (In 4.2).
+control) consider EFTEM instead of TEM mags in EFTEM mode (In 4.2).
 
 6/24/25: Stopped copying the TEM mag as the EFTEM mage when there is 0 in the
 EFTEM mag column of the mag table (In 4.2).
 
 6/24/25: Fixed problems with using "Match pixel size" in the EFTEM control
-panel on a JEOL with GIF.
+panel on a JEOL with GIF (In 4.2).
 
 6/24/25: Fixed setting GIF mode for JEOL, which only worked to turn it off,
 not on.  PROPERTY ENTRIES OF "UseJeolGIFmodeCalls 1" CAN PROBABLY ALL BE
-CHANGED TO BE 2.
+CHANGED TO BE 2.  (In 4.2).
 
 6/24/25: Made List Mags in GIF mode on JEOL print full mag table (In 4.2).
 

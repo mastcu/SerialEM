@@ -3013,7 +3013,7 @@ void CBeamAssessor::ListParallelIlluminations()
     if (FEIscope)
       probeText = mParIllumArray[ind].probeOrAlpha ? "uP" : "nP";
     else if (JEOLscope && !mScope->GetHasNoAlpha())
-      probeText.Format("%d", mParIllumArray[ind].probeOrAlpha);
+      probeText.Format("%d", mParIllumArray[ind].probeOrAlpha + 1);
     PrintfToLog("%.2f     %d     %s", mScope->GetC2Percent(mParIllumArray[ind].spotSize, 
       mParIllumArray[ind].intensity, FEIscope ? mParIllumArray[ind].probeOrAlpha : -1),
       mParIllumArray[ind].spotSize, (LPCTSTR)probeText);

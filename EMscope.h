@@ -445,6 +445,7 @@ public:
   GetSetMember(BOOL, ChangeAreaAtZeroIS);
   GetSetMember(int, HitachiDoesBSforIS);
   GetSetMember(bool, HitachiResetsISinHC);
+  GetSetMember(int, HitachiCanUseGunValve);
   GetSetMember(float, TiltSpeedFactor);
   GetSetMember(float, StageXYSpeedFactor);
   GetSetMember(int, RestoreStageXYdelay);
@@ -528,6 +529,7 @@ public:
   int GetCamLenIndex();
   double GetMagnification();
   double GetHTValue();
+  bool SetHTValue(double inVal);
   BOOL GetStagePosition(double &X, double &Y, double &Z);
   BOOL GetLDCenteredShift(double &shiftX, double &shiftY);
   BOOL SetLDCenteredShift(double shiftX, double shiftY);
@@ -564,6 +566,7 @@ public:
   GetSetMember(int, UseUtapiScripting);
   GetMember(bool, MovingAperture);
   GetSetMember(BOOL, SkipJeolNeutralCheck);
+  GetSetMember(int, FEIcanGetLoaderNames);
   GetMember(int, HasSimpleOrigin);
   void SetHasSimpleOrigin(int inVal);
   GetSetMember(int, DewarVacCapabilities);
@@ -919,6 +922,7 @@ private:
   int mHitachiSpotBeamWait;
   int mHitachiDoesBSforIS;    // Flags for which modes Hitachi does image-beam shift in
   bool mHitachiResetsISinHC;  // Flag that IS needs to be reasserted in HC
+  int mHitachiCanUseGunValve; // Flag that gun valve is accessible
   int mHighestLMindexToScan;  // Last index of enabled LM mags, if any are disabled
   int mCheckFreeK2RefCount;   // Counter for checking K2 reference freeing
   int mLastNormMagIndex;      // Mag of last normalization

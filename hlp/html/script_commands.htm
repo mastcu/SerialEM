@@ -1421,8 +1421,9 @@
         <TR>
           <TD class="scriptcommand">SetFolderForFrames dir</TD>
           <TD>Sets the folder for saving frames from the current camera to <b>dir</b>.&nbsp; A simple
-            directory name without path separators is required for DE cameras and Thermo/FEI cameras run with
-             Advanced Scripting.&nbsp; For other cameras, an absolute path is required,
+            directory name without path separators is required for DE cameras and for Thermo/FEI cameras for which 
+            subdirectories cannot be made (i.e., Falcon 3 cameras run with Advanced Scripting and without the property
+            SubdirsOkInFalcon3Save set to 1).&nbsp; For other cameras, an absolute path is required,
              either a network path starting with two slashes or one starting with a drive
             letter.</TD>
         </TR>
@@ -1876,6 +1877,14 @@
             <B>buf</B> can be 0 or -1 to select the active image buffer.&nbsp; Reports -1, -1 if there
             is no marker point set.&nbsp; Values can be assigned to variables after the buffer 
             letter.&nbsp; </TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">MoveToMarker [#]</TD>
+          <TD>Centers the image in buffer A on the marker point and moves to that position with
+               image or stage shift, equivalent to pushing the <a href="hidd_alignfocus.htm#to_marker"><strong>To Marker</strong></a> button
+               in the Image Alignment &amp; Focus control panel. 
+               If the optional <strong># </strong>is nonzero, stage shift is used unconditionally. 
+              Command added in 4.3, 23-Jul-25.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">ImageConditions buf</TD>
@@ -3719,6 +3728,11 @@
         <TR>
           <TD class="scriptcommand">ReportHighVoltage</TD>
           <TD>Reports the current value of the high tension in kV.</TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">SetHighVoltage #</TD>
+          <TD>On a Hitachi scope, turns the high tension off if <strong>#</strong> is 0, on 
+            if it is 1, or to <strong>#</strong> in kV if it is greater than 1.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">ManualFilmExposure #</TD>

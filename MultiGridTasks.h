@@ -25,6 +25,7 @@ enum MultiGridActions {
 #define MGSTAT_FLAG_FAILED      0x4
 #define MGSTAT_FLAG_MMM_DONE    0x8
 #define MGSTAT_FLAG_ACQ_DONE   0x10
+#define MGSTAT_FLAG_NEW_GRID   0x20
 
 class CMultiGridDlg;
 
@@ -257,6 +258,7 @@ private:
   bool mStoppedInNavRun;      // Flag that stopping/suspend was in a Navigator acquire
   bool mStoppedInLMMont;      // Flag that stopping/suspend was in the LM montage
   CArray<JeolCartridgeData, JeolCartridgeData> *mCartInfo;
+  CArray<JeolCartridgeData, JeolCartridgeData> mCartCopy;
   CArray<StateParams *, StateParams *> *mStateArray;
   CArray<MGridMultiShotParams, MGridMultiShotParams> mMGMShotParamArray;
   CArray<MGridHoleFinderParams, MGridHoleFinderParams> mMGHoleParamArray;

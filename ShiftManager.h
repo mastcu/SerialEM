@@ -183,6 +183,7 @@ public:
   GetSetMember(float, HitachiStageSpecAngle);
   GetSetMember(float, C2SpacingForHighFocus);
   GetMember(BOOL, MouseShifting);
+  GetMember(BOOL, StartedStageMove);
   SetMember(float, NextAutoalignLimit);
   GetSetMember(int, UseSquareShiftLimits);
   GetSetMember(float, RDCthreshFor2ndShot);

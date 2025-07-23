@@ -99,6 +99,7 @@ public:
   void ManageFrameDirOption();
   void UpdateSettings();
   void UpdateCurrentDir();
+  void ManageInventory(int locked);
   void ManagePanels();
   void ParamsToDialog();
   void SetAllComboBoxesFromNameOrNum();

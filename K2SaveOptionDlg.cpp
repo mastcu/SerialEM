@@ -364,7 +364,7 @@ void CK2SaveOptionDlg::ManagePackOptions(void)
   m_butReduceSuperres.EnableWindow(!unNormed && mCanReduceSuperres && !mTakingK3Binned);
   m_butSavesTimes100.EnableWindow(!unNormed && mCanSaveTimes100 && !m_bReduceSuperres);
   m_butUseExtensionMRCS.EnableWindow(!m_iFileType && mCanUseExtMRCS);
-  m_butSaveFrameStackMdoc.EnableWindow(mCanSaveFrameStackMdoc);
+  m_butSaveFrameStackMdoc.EnableWindow(mCanSaveFrameStackMdoc > 0);
   m_strCurSetSaves.Format("%s to %s%s%s%s", unNormed ? "raw" : "norm",
       m_iFileType > 0 ? (m_iFileType > 1 ? "TIF-ZIP" : "TIF-LZW") : "MRC", 
       (reducing || binning) ? "" : (m_bOneFramePerFile ? " files" : " stack"),

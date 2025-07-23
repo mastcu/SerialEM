@@ -4455,8 +4455,11 @@ int CMacCmd::SetDirectory(void)
   if (mStrCopy.IsEmpty())
     ABORT_LINE("Missing directory name in statement:\n\n");
   if (CMD_IS(SETDIRECTORY)) {
-    if (_chdir((LPCTSTR)mStrCopy))
-      SUSPEND_NOLINE("because of failure to change directory to " + mStrCopy);
+    if (_chdir((LPCTSTR)mStrCopy)) {
+      mStrItems[2].Format(" (error %d)", GetLastError());
+      SUSPEND_NOLINE("because of failure to change directory to " + mStrCopy + 
+        mStrItems[2]);
+    }
   } else {
     if (CFile::GetStatus((LPCTSTR)mStrCopy, status)) {
       mWinApp->AppendToLog("Not making directory " + mStrCopy + " - it already exists",
@@ -9871,6 +9874,18 @@ int CMacCmd::ReportHighVoltage(void)
   return 0;
 }
 
+// SetHighVoltage
+int CMacCmd::SetHighVoltage()
+{
+  if (!HitachiScope)
+    ABORT_LINE("Setting high voltage is available only on Hitachi scopes");
+  if (!mScope->SetHTValue(mItemDbl[1])) {
+    AbortMacro();
+    return 1;
+  }
+  return 0;
+}
+
 // SetSlitWidth
 int CMacCmd::SetSlitWidth(void)
 {
@@ -11871,6 +11886,19 @@ int CMacCmd::NavGoToMarker()
       "some other condition for going to it is not satisfied for line:\n\n");
   mNavigator->OnGotoMarker();
   mMovedStage = true;
+  return 0;
+}
+
+// MoveToMarker
+int CMacCmd::MoveToMarker()
+{
+  if (mImBufs[0].mImage == NULL) 
+    ABORT_LINE("There is no image in buffer A for line:\n\n");
+  if (!(mImBufs[0].mHasUserPt || mImBufs[0].mIllegalUserPt))
+    ABORT_LINE("There is no marker point on buffer A for line:\n\n");
+  mWinApp->SetCurrentBuffer(0);
+  mShiftManager->AlignmentShiftToMarker(mItemInt[1] != 0);
+  mMovedStage = mShiftManager->GetStartedStageMove();
   return 0;
 }
 

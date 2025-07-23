@@ -144,12 +144,12 @@ BOOL CRemoteControl::OnInitDialog()
     if (wnd)
       wnd->SetFont(smallFont);
   }
-  if (HitachiScope || mScope->GetNoScope())
+  if ((HitachiScope && !mScope->GetHitachiCanUseGunValve()) || mScope->GetNoScope())
     m_butValves.ShowWindow(SW_HIDE);
   if (mScope->GetNoColumnValve())
     m_butValves.SetWindowText("Turn On Beam");
   else
-    m_butValves.SetWindowText(JEOLscope ? "Open Valve" : "Open Valves");
+    m_butValves.SetWindowText(FEIscope ? "Open Valves" : "Open Valve");
   if (!FEIscope)
     m_butNanoMicro.ShowWindow(SW_HIDE);
   if (!JEOLscope || mScope->GetHasNoAlpha()) {
@@ -295,7 +295,7 @@ void CRemoteControl::Update(int inMagInd, int inCamLen, int inSpot, double inInt
     if (inGunOn > 0)
       m_butValves.mSpecialColor = RGB(96, 255, 96);
     else
-      m_butValves.mSpecialColor = JEOLscope ? RGB(255, 64, 64) : RGB(255, 255, 0);
+      m_butValves.mSpecialColor = FEIscope ? RGB(255, 255, 0) : RGB(255, 64, 64);
   }
   mLastGunOn = inGunOn;
   mLastIntensity = inIntensity;
@@ -386,7 +386,7 @@ void CRemoteControl::OnButValves()
       if (mScope->GetNoColumnValve())
         PrintfToLog("Beam should now be turning %s", state ? "OFF" : "ON");
       else
-        PrintfToLog("Valve%s now %s", JEOLscope ? " is" : "s are",
+        PrintfToLog("Valve%s now %s", FEIscope ? "s are" : " is",
           state ? "CLOSED" : "OPEN");
     }
   }
@@ -618,24 +618,24 @@ void CRemoteControl::OnDeltaposSpinBeamShift(NMHDR *pNMHDR, LRESULT *pResult)
   SetFocus();
   mWinApp->RestoreViewFocus();
   *pResult = 0;
-  if (mLastMagInd > 0)
+  if (mScope->FastMagIndex() > 0)
     mWinApp->mProcessImage->MoveBeamByCameraFraction(0.,
       mBeamIncrement * pNMUpDown->iDelta, true);
-  else if (mLastCamLenInd > 0)
+  else if (mScope->GetCamLenIndex() > 0)
     ChangeDiffShift(0, pNMUpDown->iDelta);
 }
 
-// Beam or stage left-right: the horizontal spin box is backwards
+// Beam or stage left-right: the horizontal spin box is NOT backwards (any more?)
 void CRemoteControl::OnDeltaposSpinBeamLeftRight(NMHDR *pNMHDR, LRESULT *pResult)
 {
   LPNMUPDOWN pNMUpDown = reinterpret_cast<LPNMUPDOWN>(pNMHDR);
   SetFocus();
   mWinApp->RestoreViewFocus();
   *pResult = 0;
-  if (mLastMagInd > 0)
+  if (mScope->FastMagIndex() > 0)
     mWinApp->mProcessImage->MoveBeamByCameraFraction(
-      -mBeamIncrement * pNMUpDown->iDelta, 0., true);
-  else if (mLastCamLenInd > 0)
+      mBeamIncrement * pNMUpDown->iDelta, 0., true);
+  else if (mScope->GetCamLenIndex() > 0)
     ChangeDiffShift(pNMUpDown->iDelta, 0);
 }
 
@@ -901,7 +901,7 @@ void CRemoteControl::OnDeltaposSpinStageLeftRight(NMHDR *pNMHDR, LRESULT *pResul
   SetFocus();
   mWinApp->RestoreViewFocus();
   *pResult = 0;
-  MoveStageByMicronsOnCamera(-mStageIncrement * pNMUpDown->iDelta, 0.);
+  MoveStageByMicronsOnCamera(mStageIncrement * pNMUpDown->iDelta, 0.);
 }
 
 
