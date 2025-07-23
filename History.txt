@@ -3,6 +3,9 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+7/23/25: Added property FEIcanGetLoaderNames to prevent trying to access a
+non-existent autoloader panel in TUI.
+
 7/23/25: Added script command to do the same operation as the To Marker button 
 in the Image Alignment & Focus control panel.
 

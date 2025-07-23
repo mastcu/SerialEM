@@ -566,6 +566,7 @@ public:
   GetSetMember(int, UseUtapiScripting);
   GetMember(bool, MovingAperture);
   GetSetMember(BOOL, SkipJeolNeutralCheck);
+  GetSetMember(int, FEIcanGetLoaderNames);
   GetMember(int, HasSimpleOrigin);
   void SetHasSimpleOrigin(int inVal);
   GetSetMember(int, DewarVacCapabilities);
