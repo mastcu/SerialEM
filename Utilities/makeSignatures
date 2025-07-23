@@ -32,7 +32,7 @@ def writeTextFile(filename, strings):
       comf = open(filename, 'w')
       action = 'Writing to'
       for line in strings:
-         comf.write(line + '\r\n')
+         comf.write(line + lineEnding)
       comf.close()
    except IOError:
       errString = action + " file: " + filename + "  - " + str(sys.exc_info()[1])
@@ -119,6 +119,10 @@ if os.path.exists(incFile):
 # Read the files
 helpLines = readTextFile(helpFile)
 masterLines = readTextFile(masterFile)
+
+lineEnding = '\r\n'
+if sys.platform.find('win32') >= 0:
+   lineEnding = '\n'
 
 # Make an array of the names in the macro file
 nameArr = []

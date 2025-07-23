@@ -3060,7 +3060,12 @@ void CCameraSetupDlg::OnButFileOptions()
   optDlg.mCanSaveTimes100 = 
     mCamera->CAN_PLUGIN_DO(SAVES_TIMES_100, mParam) && mParam->K2Type == K2_SUMMIT;
   optDlg.mCanUseExtMRCS = mCamera->CAN_PLUGIN_DO(CAN_SET_MRCS_EXT, mParam);
-  optDlg.mCanSaveFrameStackMdoc = mCamera->CanSaveFrameStackMdoc(mParam);
+  optDlg.mCanSaveFrameStackMdoc = mCamera->CanSaveFrameStackMdoc(mParam) ? 1 : 0;
+
+  // Ceta 2 can have an mdoc saved only when aligning, because otherwise there is no
+  // returned image and no extra data filled for an mdoc
+  if (!m_bAlignDoseFrac && FCAM_CONTIN_SAVE(mParam))
+    optDlg.mCanSaveFrameStackMdoc = -1;
   optDlg.mCanGainNormSum = mCamera->CAN_PLUGIN_DO(CAN_GAIN_NORM, mParam);
   optDlg.mCanReduceSuperres = mCamera->CAN_PLUGIN_DO(CAN_REDUCE_SUPER, mParam);
   optDlg.mSetIsGainNormalized = m_iProcessing == GAIN_NORMALIZED;
