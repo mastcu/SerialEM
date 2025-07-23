@@ -43,7 +43,7 @@ public:
   BOOL mCanSaveTimes100;
   BOOL mCanReduceSuperres;
   BOOL mCanUseExtMRCS;
-  BOOL mCanSaveFrameStackMdoc;
+  int mCanSaveFrameStackMdoc;
   BOOL mCanGainNormSum;
   BOOL mSetIsGainNormalized;
   BOOL mTakingK3Binned;
