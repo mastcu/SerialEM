@@ -106,18 +106,26 @@ BOOL CManyChoiceDlg::OnInitDialog()
 	SetupPanelTables(sIdTable, sLeftTable, sTopTable, mNumInPanel, mPanelStart,
 		sHeightTable);
 	mIDsToDrop.push_back(IDC_BUTHELP);
-/*
-	for (int id = IDC_GENERIC_CHECK1, i = 0; i < MAX_CHOICES; id++, i++) {
-
-	}
-	*/
+	
   if (mIsRadio) {
-		for (int i = IDC_GENERIC_CHECK1; i < IDC_GENERIC_CHECK1 + MAX_CHOICES; i++) {
+		// Hide checkboxes if there should be radio options
+    for (int i = IDC_GENERIC_CHECK1; i < IDC_GENERIC_CHECK1 + MAX_CHOICES; i++) {
+			mIDsToDrop.push_back(i);
+		}
+    // Hide extra options that will be unused
+		for (int i = IDC_GENERIC_RADIO1 + mNumChoices; i < IDC_GENERIC_RADIO1 + MAX_CHOICES; 
+     i++) {
 			mIDsToDrop.push_back(i);
 		}
 	}
 	else {
+		// Hide radios if there should be checkbox options
 		for (int i = IDC_GENERIC_RADIO1; i < IDC_GENERIC_RADIO1 + MAX_CHOICES; i++) {
+			mIDsToDrop.push_back(i);
+		}
+		// Hide extra options that will be unused
+		for (int i = IDC_GENERIC_CHECK1 + mNumChoices; i < IDC_GENERIC_CHECK1 + MAX_CHOICES; 
+     i++) {
 			mIDsToDrop.push_back(i);
 		}
 	}
