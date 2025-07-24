@@ -13,7 +13,8 @@ IDC_GENERIC_RADIO7, IDC_GENERIC_CHECK7, IDC_GENERIC_RADIO8, IDC_GENERIC_CHECK8,
 IDC_GENERIC_RADIO9, IDC_GENERIC_CHECK9, IDC_GENERIC_RADIO10, IDC_GENERIC_CHECK10,
 IDC_GENERIC_RADIO11, IDC_GENERIC_CHECK11, IDC_GENERIC_RADIO12, IDC_GENERIC_CHECK12,
 IDC_GENERIC_RADIO13, IDC_GENERIC_CHECK13, IDC_GENERIC_RADIO14, IDC_GENERIC_CHECK14,
-IDC_GENERIC_RADIO15, IDC_GENERIC_CHECK15, IDOK, IDCANCEL, TABLE_END };
+IDC_GENERIC_RADIO15, IDC_GENERIC_CHECK15, PANEL_END, IDOK, IDCANCEL, IDC_BUTHELP, PANEL_END,
+TABLE_END };
 
 static int sTopTable[sizeof(sIdTable) / sizeof(int)];
 static int sLeftTable[sizeof(sIdTable) / sizeof(int)];
@@ -24,16 +25,15 @@ static int sHeightTable[sizeof(sIdTable) / sizeof(int)];
 
 CManyChoiceDlg::CManyChoiceDlg(CWnd* pParent /*=NULL*/)
 	: CBaseDlg(IDD_MANYCHOICEBOX, pParent)
-	, m_isRadio(TRUE)
-	, m_numChoices(15)
-	, m_header()
-	, m_choiceLabels({_T("")})
-	, m_checkboxVals({ FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE,
-		FALSE, FALSE, FALSE, FALSE, FALSE, FALSE })
-	, m_radioVals({ TRUE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE,
-		FALSE, FALSE, FALSE, FALSE, FALSE, FALSE })
 {
-
+	mIsRadio = false;
+	mNumChoices = MAX_CHOICES;
+	mHeader = _T("");
+  m_radioVal = 0;
+	for (int i = 0; i < mNumChoices; i++) {
+		m_checkboxVals[i] = FALSE;
+    mChoiceLabels[i] = _T("");
+	}
 }
 
 CManyChoiceDlg::~CManyChoiceDlg()
@@ -43,6 +43,24 @@ CManyChoiceDlg::~CManyChoiceDlg()
 void CManyChoiceDlg::DoDataExchange(CDataExchange* pDX)
 {
 	CBaseDlg::DoDataExchange(pDX);
+	DDX_Text(pDX, IDC_MANYCHOICEHEADER, mHeader);
+	DDX_Check(pDX, IDC_GENERIC_CHECK1, m_checkboxVals[0]);
+	DDX_Check(pDX, IDC_GENERIC_CHECK2, m_checkboxVals[1]);
+	DDX_Check(pDX, IDC_GENERIC_CHECK3, m_checkboxVals[2]);
+	DDX_Check(pDX, IDC_GENERIC_CHECK4, m_checkboxVals[3]);
+	DDX_Check(pDX, IDC_GENERIC_CHECK5, m_checkboxVals[4]);
+	DDX_Check(pDX, IDC_GENERIC_CHECK6, m_checkboxVals[5]);
+	DDX_Check(pDX, IDC_GENERIC_CHECK7, m_checkboxVals[6]);
+	DDX_Check(pDX, IDC_GENERIC_CHECK8, m_checkboxVals[7]);
+	DDX_Check(pDX, IDC_GENERIC_CHECK9, m_checkboxVals[8]);
+	DDX_Check(pDX, IDC_GENERIC_CHECK10, m_checkboxVals[9]);
+	DDX_Check(pDX, IDC_GENERIC_CHECK11, m_checkboxVals[10]);
+	DDX_Check(pDX, IDC_GENERIC_CHECK12, m_checkboxVals[11]);
+	DDX_Check(pDX, IDC_GENERIC_CHECK13, m_checkboxVals[12]);
+	DDX_Check(pDX, IDC_GENERIC_CHECK14, m_checkboxVals[13]);
+	DDX_Check(pDX, IDC_GENERIC_CHECK15, m_checkboxVals[14]);
+  DDX_Radio(pDX, IDC_GENERIC_RADIO1, m_radioVal);
+  
 }
 
 
@@ -76,201 +94,264 @@ BEGIN_MESSAGE_MAP(CManyChoiceDlg, CBaseDlg)
 	ON_BN_CLICKED(IDC_GENERIC_CHECK13, &CManyChoiceDlg::OnBnClickedGenericCheck13)
 	ON_BN_CLICKED(IDC_GENERIC_CHECK14, &CManyChoiceDlg::OnBnClickedGenericCheck14)
 	ON_BN_CLICKED(IDC_GENERIC_CHECK15, &CManyChoiceDlg::OnBnClickedGenericCheck15)
-	ON_BN_CLICKED(IDOK, &CManyChoiceDlg::OnBnClickedOk)
-	ON_BN_CLICKED(IDCANCEL, &CManyChoiceDlg::OnBnClickedCancel)
 END_MESSAGE_MAP()
 
 
 // CManyChoiceDlg message handlers
 
+BOOL CManyChoiceDlg::OnInitDialog()
+{
+	CBaseDlg::OnInitDialog();
+	BOOL states[2] = { true, true };
+	SetupPanelTables(sIdTable, sLeftTable, sTopTable, mNumInPanel, mPanelStart,
+		sHeightTable);
+	mIDsToDrop.push_back(IDC_BUTHELP);
+/*
+	for (int id = IDC_GENERIC_CHECK1, i = 0; i < MAX_CHOICES; id++, i++) {
+
+	}
+	*/
+  if (mIsRadio) {
+		for (int i = IDC_GENERIC_CHECK1; i < IDC_GENERIC_CHECK1 + MAX_CHOICES; i++) {
+			mIDsToDrop.push_back(i);
+		}
+	}
+	else {
+		for (int i = IDC_GENERIC_RADIO1; i < IDC_GENERIC_RADIO1 + MAX_CHOICES; i++) {
+			mIDsToDrop.push_back(i);
+		}
+	}
+	AdjustPanels(states, sIdTable, sLeftTable, sTopTable, mNumInPanel, mPanelStart, 0,
+   sHeightTable);
+  return TRUE;
+}
+
 
 void CManyChoiceDlg::OnBnClickedGenericRadio1()
 {
 	// TODO: Add your control notification handler code here
+	UpdateData(true);
 }
 
 
 void CManyChoiceDlg::OnBnClickedGenericRadio2()
 {
 	// TODO: Add your control notification handler code here
+	UpdateData(true);
 }
 
 
 void CManyChoiceDlg::OnBnClickedGenericRadio3()
 {
 	// TODO: Add your control notification handler code here
+	UpdateData(true);
 }
 
 
 void CManyChoiceDlg::OnBnClickedGenericRadio4()
 {
 	// TODO: Add your control notification handler code here
+	UpdateData(true);
 }
 
 
 void CManyChoiceDlg::OnBnClickedGenericRadio5()
 {
 	// TODO: Add your control notification handler code here
+	UpdateData(true);
 }
 
 
 void CManyChoiceDlg::OnBnClickedGenericRadio6()
 {
 	// TODO: Add your control notification handler code here
+	UpdateData(true);
 }
 
 
 void CManyChoiceDlg::OnBnClickedGenericRadio7()
 {
 	// TODO: Add your control notification handler code here
+	UpdateData(true);
 }
 
 
 void CManyChoiceDlg::OnBnClickedGenericRadio8()
 {
 	// TODO: Add your control notification handler code here
+	UpdateData(true);
 }
 
 
 void CManyChoiceDlg::OnBnClickedGenericRadio9()
 {
 	// TODO: Add your control notification handler code here
+	UpdateData(true);
 }
 
 
 void CManyChoiceDlg::OnBnClickedGenericRadio10()
 {
 	// TODO: Add your control notification handler code here
+	UpdateData(true);
 }
 
 
 void CManyChoiceDlg::OnBnClickedGenericRadio11()
 {
 	// TODO: Add your control notification handler code here
+	UpdateData(true);
 }
 
 
 void CManyChoiceDlg::OnBnClickedGenericRadio12()
 {
 	// TODO: Add your control notification handler code here
+	UpdateData(true);
 }
 
 
 void CManyChoiceDlg::OnBnClickedGenericRadio13()
 {
 	// TODO: Add your control notification handler code here
+	UpdateData(true);
 }
 
 
 void CManyChoiceDlg::OnBnClickedGenericRadio14()
 {
 	// TODO: Add your control notification handler code here
+	UpdateData(true);
 }
 
 
 void CManyChoiceDlg::OnBnClickedGenericRadio15()
 {
 	// TODO: Add your control notification handler code here
+	UpdateData(true);
 }
 
 
 void CManyChoiceDlg::OnBnClickedGenericCheck1()
 {
 	// TODO: Add your control notification handler code here
+	UpdateData(true);
 }
 
 
 void CManyChoiceDlg::OnBnClickedGenericCheck2()
 {
 	// TODO: Add your control notification handler code here
+	UpdateData(true);
 }
 
 
 void CManyChoiceDlg::OnBnClickedGenericCheck3()
 {
 	// TODO: Add your control notification handler code here
+	UpdateData(true);
 }
 
 
 void CManyChoiceDlg::OnBnClickedGenericCheck4()
 {
 	// TODO: Add your control notification handler code here
+	UpdateData(true);
 }
 
 
 void CManyChoiceDlg::OnBnClickedGenericCheck5()
 {
 	// TODO: Add your control notification handler code here
+	UpdateData(true);
 }
 
 
 void CManyChoiceDlg::OnBnClickedGenericCheck6()
 {
 	// TODO: Add your control notification handler code here
+	UpdateData(true);
 }
 
 
 void CManyChoiceDlg::OnBnClickedGenericCheck7()
 {
 	// TODO: Add your control notification handler code here
+	UpdateData(true);
 }
 
 
 void CManyChoiceDlg::OnBnClickedGenericCheck8()
 {
 	// TODO: Add your control notification handler code here
+	UpdateData(true);
 }
 
 
 void CManyChoiceDlg::OnBnClickedGenericCheck9()
 {
 	// TODO: Add your control notification handler code here
+	UpdateData(true);
 }
 
 
 void CManyChoiceDlg::OnBnClickedGenericCheck10()
 {
 	// TODO: Add your control notification handler code here
+	UpdateData(true);
 }
 
 
 void CManyChoiceDlg::OnBnClickedGenericCheck11()
 {
 	// TODO: Add your control notification handler code here
+	UpdateData(true);
 }
 
 
 void CManyChoiceDlg::OnBnClickedGenericCheck12()
 {
 	// TODO: Add your control notification handler code here
+	UpdateData(true);
 }
 
 
 void CManyChoiceDlg::OnBnClickedGenericCheck13()
 {
 	// TODO: Add your control notification handler code here
+	UpdateData(true);
 }
 
 
 void CManyChoiceDlg::OnBnClickedGenericCheck14()
 {
 	// TODO: Add your control notification handler code here
+	UpdateData(true);
 }
 
 
 void CManyChoiceDlg::OnBnClickedGenericCheck15()
 {
 	// TODO: Add your control notification handler code here
+	UpdateData(true);
+}
+
+void CManyChoiceDlg::DoCancel()
+{
+	DestroyWindow();
+}
+
+void CManyChoiceDlg::OnOK()
+{
+	// TODO: Add your control notification handler code here
+	CBaseDlg::OnOK();
+	DoCancel();
 }
 
 
-void CManyChoiceDlg::OnBnClickedOk()
+void CManyChoiceDlg::OnCancel()
 {
 	// TODO: Add your control notification handler code here
-}
-
-
-void CManyChoiceDlg::OnBnClickedCancel()
-{
-	// TODO: Add your control notification handler code here
+	CBaseDlg::OnCancel();
+	DoCancel();
 }

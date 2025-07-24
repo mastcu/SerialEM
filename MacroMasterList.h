@@ -835,6 +835,7 @@ MAC_SAME_NAME_NOARG(ReportCurrentMulGridID, 0, 4, REPORTCURRENTMULGRIDID)
 MAC_SAME_NAME_ARG(LoadPieceAtNavPoint, 1, 4, LOADPIECEATNAVPOINT, I)
 MAC_SAME_NAME_ARG(SetHighVoltage, 1, 4, SETHIGHVOLTAGE, D)
 MAC_SAME_NAME_ARG(MoveToMarker, 0, 0, MOVETOMARKER, i)
+MAC_SAME_NAME_ARG(ManyChoiceBox, 4, 0, MANYCHOICEBOX, ISSS)
 
 // new Python-only commands need to be added to pythonOnlyCmds in ::CMacroProcessor
 // New Not from Python items omit _ARG or _NOARG

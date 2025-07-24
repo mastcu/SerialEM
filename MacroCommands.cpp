@@ -62,6 +62,7 @@
 #include "Shared\ctffind.h"
 #include "Image\KStoreADOC.h"
 #include "XFolderDialog\XFolderDialog.h"
+#include "ManyChoiceDlg.h"
 
 #ifdef _DEBUG
 #undef THIS_FILE
@@ -8867,6 +8868,26 @@ int CMacCmd::ThreeChoiceBox(void)
     buttons[index - 1].Replace("&&", "&");
     mLogRpt = "\"" + buttons[index - 1] + "\" was chosen";
   }
+  return 0;
+}
+
+// ManyChoiceBox
+int CMacCmd::ManyChoiceBox(void)
+{
+	CManyChoiceDlg dlg;
+  /*TODO:
+  - Get isRadio from macro arguments and set the appropriate dialog type
+  - Get header from macro arguments and make it the header in the dialog
+  - Get the choice labels and write them
+  - Get the default option values and set them
+  */	
+
+  dlg.mIsRadio = true; //For testing
+  dlg.mHeader = _T("header");
+  dlg.mNumChoices = 2;
+  dlg.mChoiceLabels[0] = _T("howdy");
+  dlg.mChoiceLabels[1] = _T("rowdy");
+  dlg.DoModal();
   return 0;
 }
 

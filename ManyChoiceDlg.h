@@ -1,5 +1,6 @@
 #pragma once
 
+#define MAX_CHOICES 15
 
 // CManyChoiceDlg dialog
 
@@ -22,13 +23,17 @@ protected:
 	virtual void OnCancel();
 	DECLARE_MESSAGE_MAP()
 
+private:
+	int mPanelStart[2];
+	int mNumInPanel[2];
+
 public:
-	BOOL m_isRadio;
-	int m_numChoices;
-	char m_header;
-	char m_choiceLabels[15];
-	BOOL m_checkboxVals[15];
-	BOOL m_radioVals[15];
+	int mNumChoices;
+  bool mIsRadio;	
+	CString mHeader;
+	CString mChoiceLabels[MAX_CHOICES];
+	BOOL m_checkboxVals[MAX_CHOICES];
+	int m_radioVal;
 
 	afx_msg void OnBnClickedGenericRadio1();
 	afx_msg void OnBnClickedGenericRadio2();
@@ -60,6 +65,5 @@ public:
 	afx_msg void OnBnClickedGenericCheck13();
 	afx_msg void OnBnClickedGenericCheck14();
 	afx_msg void OnBnClickedGenericCheck15();
-	afx_msg void OnBnClickedOk();
-	afx_msg void OnBnClickedCancel();
+	afx_msg void DoCancel();
 };

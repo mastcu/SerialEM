@@ -675,6 +675,7 @@
 #define HIDD_MULGRID_SETTINGS                   0x2011F
 #define HIDD_TASK_AREA_OPTIONS                  0x20121
 #define HIDD_CTF_ACQ_PARAMS                     0x20123
+#define HIDD_MANYCHOICEBOX                      0x20126
  
 // Frame Controls (IDW_*) 
 // This is a part of the Microsoft Foundation Classes C++ library.

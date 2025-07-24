@@ -2552,7 +2552,7 @@
 #define IDC_CHECK_TRACK_BIG_TILT        3581
 #define IDC_EDIT_BIG_TILT               3582
 #define IDC_CHECK_APPLY_INTERACTIVE     3583
-#define IDC_GENERIC_CHECK1              3584
+#define IDC_GENERIC_CHECK1              3586
 #define IDC_GENERIC_CHECK2              3587
 #define IDC_GENERIC_CHECK3              3588
 #define IDC_GENERIC_CHECK4              3589
@@ -2581,7 +2581,6 @@
 #define IDC_GENERIC_RADIO12             3612
 #define IDC_GENERIC_RADIO13             3613
 #define IDC_GENERIC_RADIO14             3614
-#define IDC_MANYCHOICE_RADIO15          3615
 #define IDC_GENERIC_RADIO15             3615
 #define IDC_MANYCHOICEHEADER            3616
 #define ID_NEW_IMAGE                    32771
