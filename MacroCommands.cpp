@@ -8876,10 +8876,7 @@ int CMacCmd::ManyChoiceBox(void)
 {
 	CManyChoiceDlg dlg;
   /*TODO:
-  - Get isRadio from macro arguments and set the appropriate dialog type
-  - Get header from macro arguments and make it the header in the dialog
-  - Get the choice labels and write them
-  - Get the default option values and set them
+ - Output selection(s)
   */	
   int index, ix0, ix1;
 	Variable *headervar, *labelsvar, *valuesvar;
@@ -8921,6 +8918,8 @@ int CMacCmd::ManyChoiceBox(void)
 		if (valuesvar->numElements > 1)
 			ABORT_LINE("The variable " + mStrItems[4] + " should not be an array for line:\n\n");
     dlg.m_radioVal = atoi(valuesvar->value);
+    if (dlg.m_radioVal >= dlg.mNumChoices)
+      ABORT_LINE("The given radio selection exceeds the number of options for line:\n\n");
 	}
 	else {
 		if (valuesvar->rowsFor2d)

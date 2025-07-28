@@ -59,7 +59,37 @@ void CManyChoiceDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Check(pDX, IDC_GENERIC_CHECK13, m_checkboxVals[12]);
 	DDX_Check(pDX, IDC_GENERIC_CHECK14, m_checkboxVals[13]);
 	DDX_Check(pDX, IDC_GENERIC_CHECK15, m_checkboxVals[14]);
+	DDX_Control(pDX, IDC_GENERIC_CHECK1, m_checkboxes[0]);
+	DDX_Control(pDX, IDC_GENERIC_CHECK2, m_checkboxes[1]);
+	DDX_Control(pDX, IDC_GENERIC_CHECK3, m_checkboxes[2]);
+	DDX_Control(pDX, IDC_GENERIC_CHECK4, m_checkboxes[3]);
+	DDX_Control(pDX, IDC_GENERIC_CHECK5, m_checkboxes[4]);
+	DDX_Control(pDX, IDC_GENERIC_CHECK6, m_checkboxes[5]);
+	DDX_Control(pDX, IDC_GENERIC_CHECK7, m_checkboxes[6]);
+	DDX_Control(pDX, IDC_GENERIC_CHECK8, m_checkboxes[7]);
+	DDX_Control(pDX, IDC_GENERIC_CHECK9, m_checkboxes[8]);
+	DDX_Control(pDX, IDC_GENERIC_CHECK10, m_checkboxes[9]);
+	DDX_Control(pDX, IDC_GENERIC_CHECK11, m_checkboxes[10]);
+	DDX_Control(pDX, IDC_GENERIC_CHECK12, m_checkboxes[11]);
+	DDX_Control(pDX, IDC_GENERIC_CHECK13, m_checkboxes[12]);
+	DDX_Control(pDX, IDC_GENERIC_CHECK14, m_checkboxes[13]);
+	DDX_Control(pDX, IDC_GENERIC_CHECK15, m_checkboxes[14]);
   DDX_Radio(pDX, IDC_GENERIC_RADIO1, m_radioVal);
+	DDX_Control(pDX, IDC_GENERIC_RADIO1, m_radios[0]);
+	DDX_Control(pDX, IDC_GENERIC_RADIO2, m_radios[1]);
+	DDX_Control(pDX, IDC_GENERIC_RADIO3, m_radios[2]);
+	DDX_Control(pDX, IDC_GENERIC_RADIO4, m_radios[3]);
+	DDX_Control(pDX, IDC_GENERIC_RADIO5, m_radios[4]);
+	DDX_Control(pDX, IDC_GENERIC_RADIO6, m_radios[5]);
+	DDX_Control(pDX, IDC_GENERIC_RADIO7, m_radios[6]);
+	DDX_Control(pDX, IDC_GENERIC_RADIO8, m_radios[7]);
+	DDX_Control(pDX, IDC_GENERIC_RADIO9, m_radios[8]);
+	DDX_Control(pDX, IDC_GENERIC_RADIO10, m_radios[9]);
+	DDX_Control(pDX, IDC_GENERIC_RADIO11, m_radios[10]);
+	DDX_Control(pDX, IDC_GENERIC_RADIO12, m_radios[11]);
+	DDX_Control(pDX, IDC_GENERIC_RADIO13, m_radios[12]);
+	DDX_Control(pDX, IDC_GENERIC_RADIO14, m_radios[13]);
+	DDX_Control(pDX, IDC_GENERIC_RADIO15, m_radios[14]);
   
 }
 
@@ -103,32 +133,37 @@ BOOL CManyChoiceDlg::OnInitDialog()
 {
 	CBaseDlg::OnInitDialog();
 	BOOL states[2] = { true, true };
-	SetupPanelTables(sIdTable, sLeftTable, sTopTable, mNumInPanel, mPanelStart,
+  int IDstart, otherIDstart;
+  CButton (*buttons)[MAX_CHOICES];
+	
+  SetupPanelTables(sIdTable, sLeftTable, sTopTable, mNumInPanel, mPanelStart,
 		sHeightTable);
 	mIDsToDrop.push_back(IDC_BUTHELP);
+	if (mIsRadio) {
+    IDstart = IDC_GENERIC_RADIO1;
+    otherIDstart = IDC_GENERIC_CHECK1;
+    buttons = &m_radios;
+  }  
+  else {
+		IDstart = IDC_GENERIC_CHECK1;
+		otherIDstart = IDC_GENERIC_RADIO1;
+		buttons = &m_checkboxes;
+  }
+  
+
+	// Hide controls of other type
+	for (int i = otherIDstart; i < otherIDstart + MAX_CHOICES; i++) {
+		mIDsToDrop.push_back(i);
+	}
+	for (int i = IDstart, ind = 0; i < IDstart + MAX_CHOICES; i++, ind++) {
+		if (ind < mNumChoices)
+			// Edit the button label
+			(*buttons)[ind].SetWindowText(_T(mChoiceLabels[ind]));
+		else
+			// Hide extra options that will be unused
+			mIDsToDrop.push_back(i);
+	}
 	
-  if (mIsRadio) {
-		// Hide checkboxes if there should be radio options
-    for (int i = IDC_GENERIC_CHECK1; i < IDC_GENERIC_CHECK1 + MAX_CHOICES; i++) {
-			mIDsToDrop.push_back(i);
-		}
-    // Hide extra options that will be unused
-		for (int i = IDC_GENERIC_RADIO1 + mNumChoices; i < IDC_GENERIC_RADIO1 + MAX_CHOICES; 
-     i++) {
-			mIDsToDrop.push_back(i);
-		}
-	}
-	else {
-		// Hide radios if there should be checkbox options
-		for (int i = IDC_GENERIC_RADIO1; i < IDC_GENERIC_RADIO1 + MAX_CHOICES; i++) {
-			mIDsToDrop.push_back(i);
-		}
-		// Hide extra options that will be unused
-		for (int i = IDC_GENERIC_CHECK1 + mNumChoices; i < IDC_GENERIC_CHECK1 + MAX_CHOICES; 
-     i++) {
-			mIDsToDrop.push_back(i);
-		}
-	}
 	AdjustPanels(states, sIdTable, sLeftTable, sTopTable, mNumInPanel, mPanelStart, 0,
    sHeightTable);
   return TRUE;

@@ -33,7 +33,9 @@ public:
 	CString mHeader;
 	CString mChoiceLabels[MAX_CHOICES];
 	BOOL m_checkboxVals[MAX_CHOICES];
+  CButton m_checkboxes[MAX_CHOICES];
 	int m_radioVal;
+	CButton m_radios[MAX_CHOICES];
 
 	afx_msg void OnBnClickedGenericRadio1();
 	afx_msg void OnBnClickedGenericRadio2();
