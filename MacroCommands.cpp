@@ -8881,12 +8881,59 @@ int CMacCmd::ManyChoiceBox(void)
   - Get the choice labels and write them
   - Get the default option values and set them
   */	
+  int index, ix0, ix1;
+	Variable *headervar, *labelsvar, *valuesvar;
+	CString* valPtr;
 
-  dlg.mIsRadio = true; //For testing
-  dlg.mHeader = _T("header");
-  dlg.mNumChoices = 2;
-  dlg.mChoiceLabels[0] = _T("howdy");
-  dlg.mChoiceLabels[1] = _T("rowdy");
+	dlg.mIsRadio = mItemInt[1] != 0;
+
+	mItem1upper = mStrItems[2];
+	mItem1upper.MakeUpper();
+	headervar = LookupVariable(mItem1upper, index);
+	if (!headervar)
+		ABORT_LINE("The variable " + mStrItems[2] + "is not defined for line:\n\n");
+	dlg.mHeader = headervar->value;
+
+	mItem1upper = mStrItems[3];
+  mItem1upper.MakeUpper();
+	labelsvar = LookupVariable(mItem1upper, index);
+	if (!labelsvar)
+		ABORT_LINE("The variable " + mStrItems[3] + " is not defined for line:\n\n");
+	if (labelsvar->rowsFor2d)
+		ABORT_LINE("The variable " + mStrItems[3] + " should not be a 2D array for line:\n\n");
+	if (labelsvar->numElements > MAX_CHOICES)
+		ABORT_LINE("The number of choices exceeds the maximum for line:\n\n");
+  dlg.mNumChoices = labelsvar->numElements;
+	
+	valPtr = &labelsvar->value;
+	for (int i = 0; i < dlg.mNumChoices; i++) {
+		FindValueAtIndex(*valPtr, i + 1, ix0, ix1);
+		dlg.mChoiceLabels[i] = valPtr->Mid(ix0, ix1 - ix0);
+	}
+
+	mItem1upper = mStrItems[4];
+	mItem1upper.MakeUpper();
+	valuesvar = LookupVariable(mItem1upper, index);
+	if (!valuesvar)
+		ABORT_LINE("The variable " + mStrItems[4] + "is not defined for line:\n\n");
+	
+  if (dlg.mIsRadio) {
+		if (valuesvar->numElements > 1)
+			ABORT_LINE("The variable " + mStrItems[4] + " should not be an array for line:\n\n");
+    dlg.m_radioVal = atoi(valuesvar->value);
+	}
+	else {
+		if (valuesvar->rowsFor2d)
+			ABORT_LINE("The variable " + mStrItems[4] + " should not be a 2D array for line:\n\n");
+		if (dlg.mNumChoices != valuesvar->numElements)
+			ABORT_LINE("The variables " + mStrItems[3] + " and " + mStrItems[4] + "  do not have the same number of values for line:\n\n");
+		valPtr = &valuesvar->value;
+		for (int i = 0; i < dlg.mNumChoices; i++) {
+			FindValueAtIndex(*valPtr, i + 1, ix0, ix1);
+			dlg.m_checkboxVals[i] = atoi(valPtr->Mid(ix0, ix1 - ix0)) != 0;
+		}
+  }
+  
   dlg.DoModal();
   return 0;
 }
