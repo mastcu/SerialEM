@@ -8893,7 +8893,8 @@ int CMacCmd::ManyChoiceBox(void)
   if (!labelsvar)
     ABORT_LINE("The variable " + mStrItems[3] + " is not defined for line:\n\n");
   if (labelsvar->rowsFor2d)
-    ABORT_LINE("The variable " + mStrItems[3] + " should not be a 2D array for line:\n\n");
+    ABORT_LINE("The variable " + mStrItems[3] + 
+     " should not be a 2D array for line:\n\n");
   if (labelsvar->numElements > MAX_CHOICES)
     ABORT_LINE("The number of choices exceeds the maximum for line:\n\n");
   dlg.mNumChoices = labelsvar->numElements;
@@ -8910,16 +8911,20 @@ int CMacCmd::ManyChoiceBox(void)
   
   if (valuesvar && dlg.mIsRadio) {
     if (valuesvar->numElements > 1)
-      ABORT_LINE("The variable " + mStrItems[4] + " should not be an array for line:\n\n");
+      ABORT_LINE("The variable " + mStrItems[4] + 
+       " should not be an array for line:\n\n");
     dlg.m_radioVal = atoi(valuesvar->value);
     if (dlg.m_radioVal >= dlg.mNumChoices)
-      ABORT_LINE("The given radio selection exceeds the number of options for line:\n\n");
+      ABORT_LINE("The given radio selection exceeds the number of options"
+       " for line:\n\n");
   }
   else if (valuesvar && !dlg.mIsRadio) {
     if (valuesvar->rowsFor2d)
-      ABORT_LINE("The variable " + mStrItems[4] + " should not be a 2D array for line:\n\n");
+      ABORT_LINE("The variable " + mStrItems[4] + " should not be a 2D array for "
+       "line:\n\n");
     if (dlg.mNumChoices != valuesvar->numElements)
-      ABORT_LINE("The variables " + mStrItems[3] + " and " + mStrItems[4] + "  do not have the same number of values for line:\n\n");
+      ABORT_LINE("The variables " + mStrItems[3] + " and " + mStrItems[4] + 
+       "  do not have the same number of values for line:\n\n");
     valPtr = &valuesvar->value;
     for (int i = 0; i < dlg.mNumChoices; i++) {
       FindValueAtIndex(*valPtr, i + 1, ix0, ix1);
@@ -8929,7 +8934,8 @@ int CMacCmd::ManyChoiceBox(void)
   
   dlg.DoModal();
   if (dlg.mIsRadio) {
-    SetVariable(mItem1upper, dlg.m_radioVal, VARTYPE_REGULAR + VARTYPE_ADD_FOR_NUM, -1, false);
+    SetVariable(mItem1upper, dlg.m_radioVal, VARTYPE_REGULAR + VARTYPE_ADD_FOR_NUM, -1, 
+     false);
 	}
   else {
     CString vvar, one;

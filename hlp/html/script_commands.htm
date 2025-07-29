@@ -851,6 +851,20 @@
             <A HREF="about_scripts.htm#examples">Advanced Examples</A>.</TD>
         </TR>
         <TR>
+          <TD class="scriptcommand">ManyChoiceBox # header svar vvar</TD>
+          <TD>Opens a dialog box allowing the user to choose from a list of up to 15 choices.
+              <strong>#</strong> should be 0 for a checkboxes, or nonzero for radio buttons.
+              <strong>header</strong> is the text that appears at the top of the dialog box.
+              <strong>svar</strong> must be a variable holding an array of strings which are 
+              the labels for each choice. <strong>vvar</strong> is the variable name for the array of zeros and 
+              ones indicating which checkboxes were selected, or, in the case of a radio 
+              dialog, an integer indicating the zero-based index of the selected choice.
+              <strong>vvar</strong> can be defined prior to running this command to 
+              instantiate the dialog with default selections. Sets <em>reportedValue1</em> to 
+              1 if the user clicks OK or -1 if the user clicks Cancel. Command added in 4.3, 
+              30-Jul-25.</TD>
+        </TR>
+        <TR>
           <TD class="scriptcommand">NoLineWrapInMessageBox [#W] [#M]</TD>
           <TD>Sets parameters for the message boxes opened with 'ThreeChoiceBox', 'YesNoBox', 
             and OKBox'.  Enter no arguments or a non-zero value for <b>#W</b> to disable line wrapping; enter
