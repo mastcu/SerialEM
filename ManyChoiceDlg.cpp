@@ -388,6 +388,7 @@ void CManyChoiceDlg::OnOK()
 {
 	// TODO: Add your control notification handler code here
 	CBaseDlg::OnOK();
+  mClickedOK = 1;
 	DoCancel();
 }
 
@@ -396,5 +397,6 @@ void CManyChoiceDlg::OnCancel()
 {
 	// TODO: Add your control notification handler code here
 	CBaseDlg::OnCancel();
+  mClickedOK = -1;
 	DoCancel();
 }

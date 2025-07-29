@@ -36,6 +36,7 @@ public:
   CButton m_checkboxes[MAX_CHOICES];
 	int m_radioVal;
 	CButton m_radios[MAX_CHOICES];
+  int mClickedOK;
 
 	afx_msg void OnBnClickedGenericRadio1();
 	afx_msg void OnBnClickedGenericRadio2();

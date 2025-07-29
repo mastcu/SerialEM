@@ -8942,6 +8942,7 @@ int CMacCmd::ManyChoiceBox(void)
     }
     SetVariable(mItem1upper, vvar, VARTYPE_REGULAR, -1, false);
   }
+  SetReportedValues(dlg.mClickedOK);
 	
   return 0;
 }
