@@ -322,12 +322,13 @@ int DirectElectronCamera::initializeDECamera(CString camName, int camIndex)
       "Temperature Control - Setpoint (Celsius)", 
       "Temperature - Cool Down Setpoint (Celsius)", psReadoutDelay, psHardwareBin,
       psBinMode, psHardwareROI, psROIMode, psCountsPerElec,
-      psCountsPerEvent, psADUsPerElectron, "ADUs Per Electron Bin1x"};
+      psCountsPerEvent, psADUsPerElectron, "ADUs Per Electron Bin1x", 
+      "Electron Counting - Super Resolution", "Event Counting - Super Resolution"};
     unsigned int flagsToSet[] = {DE_CAM_CAN_COUNT, DE_CAM_CAN_ALIGN, DE_CAM_CAN_ALIGN, 
       DE_HAS_TEMP_SET_PT, DE_HAS_TEMP_SET_PT, DE_HAS_READOUT_DELAY, DE_HAS_HARDWARE_BIN,
       DE_HAS_HARDWARE_BIN, DE_HAS_HARDWARE_ROI, DE_HAS_HARDWARE_ROI,
       DE_SCALES_ELEC_COUNTS, DE_SCALES_ELEC_COUNTS, DE_HARDWARE_SCALES, 
-      DE_HARDWARE_SCALES};
+      DE_HARDWARE_SCALES, DE_CAN_SAVE_SUPERRES, DE_CAN_SAVE_SUPERRES};
     int numFlags = sizeof(flagsToSet) / sizeof(unsigned int);
 
     result = mDeServer->setCameraName((LPCTSTR)camName);

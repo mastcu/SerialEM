@@ -1555,7 +1555,7 @@ BOOL CSerialEMApp::InitInstance()
       mCamera->AdjustCountsPerElecForScale(&mCamParams[iCam]);
     }
     if (mCamParams[iCam].K2Type || (mCamParams[iCam].DE_camType && 
-      (mCamParams[iCam].CamFlags & DE_CAM_CAN_COUNT)))
+      (mCamParams[iCam].CamFlags & DE_CAN_SAVE_SUPERRES)))
       mAnySuperResMode = true;
     if (mCamParams[iCam].K2Type)
       mHasK2OrK3Camera = true;
@@ -1583,6 +1583,9 @@ BOOL CSerialEMApp::InitInstance()
           cs->saveFrames |= DE_SAVE_MASTER;
         }
         cs->saveFrames &= ~(DE_SAVE_FRAMES | DE_SAVE_SUMS) ;
+        if (cs->K2ReadMode == SUPERRES_MODE &&
+          !(mCamParams[iCam].CamFlags & DE_CAN_SAVE_SUPERRES))
+          cs->K2ReadMode = COUNTING_MODE;
       }
 
       // Make sure there are valid binnings
