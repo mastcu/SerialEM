@@ -805,9 +805,9 @@ void CBaseDlg::ManageDropping(int *topTable, int index, int nID, int topAtLastDr
       }
     }
 
-    // Record index of first dropped one
+    // Record index of first dropped one on a line, identified above or by this test
     drop = true;
-    if (firstDropped < 0) {
+    if (firstDropped < 0 || topTable[index] - topTable[firstDropped] > mSameLineCrit) {
       firstDropped = index;
       droppingLine = lineDrop;
     }
