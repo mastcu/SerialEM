@@ -19,8 +19,6 @@ public:
 protected:
   virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
   virtual BOOL OnInitDialog();
-  virtual void OnOK();
-  virtual void OnCancel();
   DECLARE_MESSAGE_MAP()
 
 private:
@@ -34,7 +32,6 @@ public:
   CString mChoiceLabels[MAX_CHOICES];
   BOOL mCheckboxVals[MAX_CHOICES];
   int mRadioVal;
-  int mClickedOK;
 
   afx_msg void OnRadio(UINT nID);
   afx_msg void OnCheck(UINT nID);

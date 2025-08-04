@@ -105,16 +105,3 @@ void CManyChoiceDlg::OnCheck(UINT nID)
 {
   UpdateData(true);
 }
-
-void CManyChoiceDlg::OnOK()
-{
-  CBaseDlg::OnOK();
-  mClickedOK = 1;
-}
-
-
-void CManyChoiceDlg::OnCancel()
-{
-  CBaseDlg::OnCancel();
-  mClickedOK = -1;
-}

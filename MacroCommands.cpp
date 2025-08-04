@@ -8876,6 +8876,8 @@ int CMacCmd::ManyChoiceBox(void)
 {
   CManyChoiceDlg dlg;
   int index, ix0, ix1;
+  double repval1;
+  INT_PTR dlgstate;
   Variable *headervar, *labelsvar, *valuesvar;
   CString* valPtr;
 
@@ -8928,13 +8930,17 @@ int CMacCmd::ManyChoiceBox(void)
       dlg.mCheckboxVals[i] = atoi(valPtr->Mid(ix0, ix1 - ix0)) != 0;
     }
   }
-  
-  dlg.DoModal();
-  if (dlg.mIsRadio) {
-    SetVariable(mItem1upper, dlg.mRadioVal, VARTYPE_REGULAR + VARTYPE_ADD_FOR_NUM, -1, 
-     false);
+
+  dlgstate = dlg.DoModal();
+  if (dlgstate == IDCANCEL) {
+    repval1 = -1.;
+  }
+  else if (dlgstate == IDOK && dlg.mIsRadio) {
+    SetVariable(mItem1upper, dlg.mRadioVal, VARTYPE_REGULAR + VARTYPE_ADD_FOR_NUM, -1,
+      false);
+    repval1 = (double)(dlg.mRadioVal); 
 	}
-  else {
+  else if (dlgstate == IDOK && !dlg.mIsRadio){
     CString vvar, one;
     for (index = 0; index < dlg.mNumChoices; index++) {
       if (index) {
@@ -8944,9 +8950,9 @@ int CMacCmd::ManyChoiceBox(void)
       vvar += one;
     }
     SetVariable(mItem1upper, vvar, VARTYPE_REGULAR, -1, false);
+    repval1 = 0.;
   }
-  SetReportedValues(dlg.mClickedOK);
-	
+  SetReportedValues(repval1, 0.);
   return 0;
 }
 
