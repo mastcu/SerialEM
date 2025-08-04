@@ -285,17 +285,18 @@ void CScopeStatusDlg::Update(double inCurrent, int inMagInd, double inDefocus,
 
   // Set probe mode and scope mode
   int temNano = B3DCHOICE(inProbeMode == 0, 1, 0);
+  bool tNanoChanged = temNano != (mTEMnanoProbe ? 1 : 0);
   if (STEM)
     EMmode = 2;
   else if (!inMagInd)
     EMmode = 3;
   else if (EFTEM)
     EMmode = 1;
-  if (mEMmode != EMmode) {
+  mEMmodeChanged = mEMmode != EMmode;
+  if (mEMmodeChanged) {
     m_strEMmode = modeNames[EMmode];
     m_statEMmode.SetWindowText(modeNames[EMmode]);
     mEMmode = EMmode;
-    mEMmodeChanged = true;
     needDraw = true;
   }
   if (mWinApp->GetShowRemoteControl())
@@ -326,10 +327,10 @@ void CScopeStatusDlg::Update(double inCurrent, int inMagInd, double inDefocus,
 
   // Update align-focus window with select items
   if (!noScope && mIntCalStatus > -2 && (inMagInd != mMagInd || inAlpha != mBeamAlpha || 
-    temNano != (mTEMnanoProbe ? 1 : 0)))
+    tNanoChanged))
     mWinApp->mAlignFocusWindow.UpdateAutofocus(inMagInd);
   if (!noScope && mIntCalStatus > -2 && (inMagInd != mMagInd ||
-    (!STEM && temNano != (mTEMnanoProbe ? 1 : 0)) || mEMmodeChanged))
+    (!STEM && tNanoChanged) || mEMmodeChanged))
     mWinApp->mAlignFocusWindow.UpdateEucenFocus(inMagInd, temNano);
 
   // Maintain PLA/IS/CLA for JEOL
@@ -481,7 +482,7 @@ void CScopeStatusDlg::Update(double inCurrent, int inMagInd, double inDefocus,
 
   if (mWinApp->mAutocenDlg && (!mLastAutocen || magChanged ||
     rawIntensity != mRawIntensity || inSpot != mSpot || 
-    temNano != (mTEMnanoProbe ? 1 : 0)))
+    tNanoChanged))
     mWinApp->mAutocenDlg->LiveUpdate(inMagInd, inSpot, inProbeMode, rawIntensity);
 
   if (mWinApp->mVPPConditionSetup)
@@ -585,7 +586,7 @@ void CScopeStatusDlg::Update(double inCurrent, int inMagInd, double inDefocus,
     m_strProbeAlf.Format("a%d", inAlpha + 1);
     m_statProbeAlf.SetWindowText(m_strProbeAlf);
     mBeamAlpha = inAlpha;
-  } else if (FEIscope && (mEMmodeChanged || temNano != (mTEMnanoProbe ? 0 : 1))) {
+  } else if (FEIscope && (mEMmodeChanged || tNanoChanged)) {
     m_strProbeAlf = "";
     if (EMmode < 3)
       m_strProbeAlf = temNano ? "nP" : "uP";
@@ -625,7 +626,7 @@ void CScopeStatusDlg::Update(double inCurrent, int inMagInd, double inDefocus,
     }
   }
 
-  if (temNano != (mTEMnanoProbe ? 1 : 0)) {
+  if (tNanoChanged) {
     mTEMnanoProbe = temNano != 0;
     changed = true;
   }

@@ -8700,6 +8700,7 @@ int CMacCmd::ListAllCalibrations(void)
   mShiftManager->ListBeamShiftCals();
   mWinApp->mBeamAssessor->ListIntensityCalibrations();
   mWinApp->mBeamAssessor->ListSpotCalibrations();
+  mWinApp->mBeamAssessor->ListParallelIlluminations();
   mShiftManager->ReportFallbackRotations(false);
   mShiftManager->CheckStageToCamConsistency(8.f, 0.08f, true);
   mWinApp->mMenuTargets.OnListFocusMagCals();
