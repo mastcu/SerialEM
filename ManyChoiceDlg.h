@@ -13,7 +13,7 @@ public:
 
 // Dialog Data
 #ifdef AFX_DESIGN_TIME
-	enum { IDD = IDD_MANYCHOICEBOX };
+  enum { IDD = IDD_MANYCHOICEBOX };
 #endif
 
 protected:

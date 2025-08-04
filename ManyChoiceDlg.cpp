@@ -24,7 +24,7 @@ static int sHeightTable[sizeof(sIdTable) / sizeof(int)];
 // CManyChoiceDlg dialog
 
 CManyChoiceDlg::CManyChoiceDlg(CWnd* pParent /*=NULL*/)
-	: CBaseDlg(IDD_MANYCHOICEBOX, pParent)
+  : CBaseDlg(IDD_MANYCHOICEBOX, pParent)
 {
   mIsRadio = false;
   mNumChoices = MAX_CHOICES;
@@ -64,7 +64,7 @@ BOOL CManyChoiceDlg::OnInitDialog()
   CBaseDlg::OnInitDialog();
   BOOL states[2] = { true, true };
   int IDstart, otherIDstart;
-	
+  
   SetupPanelTables(sIdTable, sLeftTable, sTopTable, mNumInPanel, mPanelStart,
     sHeightTable);
   mIDsToDrop.push_back(IDC_BUTHELP);
@@ -79,17 +79,17 @@ BOOL CManyChoiceDlg::OnInitDialog()
 
   // Hide controls of other type
   for (int i = otherIDstart; i < otherIDstart + MAX_CHOICES; i++) {
-	  mIDsToDrop.push_back(i);
+    mIDsToDrop.push_back(i);
   }
   for (int i = IDstart, ind = 0; i < IDstart + MAX_CHOICES; i++, ind++) {
     if (ind < mNumChoices)
       // Edit the button label
       SetDlgItemText(i, _T(mChoiceLabels[ind]));
-	  else
+    else
       // Hide extra options that will be unused
       mIDsToDrop.push_back(i);
   }
-	
+  
   AdjustPanels(states, sIdTable, sLeftTable, sTopTable, mNumInPanel, mPanelStart, 0,
    sHeightTable);
   return TRUE;
