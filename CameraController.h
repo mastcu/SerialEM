@@ -92,6 +92,7 @@ typedef void(*NewImCallback)(void);
 #define DE_SCALES_ELEC_COUNTS     0x100
 #define DE_APOLLO_CAMERA          0x200
 #define DE_HARDWARE_SCALES        0x400
+#define DE_CAN_SAVE_SUPERRES      0x800
 
 // Camera flags for Gatan cameras
 #define K3_CAM_ROTFLIP_BUG        0x2

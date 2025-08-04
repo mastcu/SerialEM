@@ -7,6 +7,9 @@ significance, for the stable release version
 
 8/4/25: Fixed flickering nP/uP text in scope status window (In 4.2).
 
+7/28/25: Show super-resolution option for DE only if camera has property
+for it.
+
 7/23/25: Changes to make directions of beam movement on the Fluscreen correct
 when the option for TEM mode when screen down is on in EFETM mode.
 

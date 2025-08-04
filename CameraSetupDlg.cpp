@@ -1454,7 +1454,7 @@ void CCameraSetupDlg::ManageCamera()
   int i, j, dir, err, showbox, maxChan, visTop, lastTop, areaHeight = mAreaBaseHeight;
   int canConfig, state;
   BOOL states[NUM_CAMSETUP_PANELS] = {0, true, 0, 0, 0, 0, 0, 0, 0, true};
-  bool twoRowPos, otherSizesNoShutter;
+  bool twoRowPos, otherSizesNoShutter, showDEmodes;
   bool alpine = IS_ALPINE(mParam) && !mCamera->GetShowLinearForAlpine();
   int hideForFalcon[] = {IDC_STAT_FRAME_TIME, IDC_EDIT_FRAME_TIME, IDC_STAT_FRAME_SEC,
     IDC_STAT_K2MODE, IDC_BUT_SETUP_ALIGN, IDC_RLINEAR, IDC_RCOUNTING, IDC_RSUPERRES, 
@@ -1693,12 +1693,13 @@ void CCameraSetupDlg::ManageCamera()
     mDEweCanAlign = (mParam->CamFlags & DE_WE_CAN_ALIGN) != 0;
     if (!mParam->DE_AutosaveDir.IsEmpty())
       ReplaceWindowText(&m_butNameSuffix, "Suffix", "Options");
-    if (!(mParam->CamFlags & DE_CAM_CAN_COUNT) || (mParam->CamFlags & DE_APOLLO_CAMERA)) {
-      ShowDlgItem(IDC_RDE_LINEAR, false);
-      ShowDlgItem(IDC_RDE_COUNTING, false);
-      ShowDlgItem(IDC_RDE_SUPERRES, false);
-      ShowDlgItem(IDC_STAT_DEMODE, false);
-    }
+    showDEmodes = (mParam->CamFlags & DE_CAM_CAN_COUNT) &&
+      !(mParam->CamFlags & DE_APOLLO_CAMERA);
+    ShowDlgItem(IDC_RDE_LINEAR, showDEmodes);
+    ShowDlgItem(IDC_RDE_COUNTING, showDEmodes);
+    ShowDlgItem(IDC_RDE_SUPERRES, showDEmodes && 
+      (mParam->CamFlags & DE_CAN_SAVE_SUPERRES));
+    ShowDlgItem(IDC_STAT_DEMODE, showDEmodes);
 
     ShowDlgItem(IDC_STAT_DEFPS, !(mParam->CamFlags & DE_APOLLO_CAMERA));
     ShowDlgItem(IDC_EDIT_DE_FPS, !(mParam->CamFlags & DE_APOLLO_CAMERA));
