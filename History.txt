@@ -3,7 +3,7 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
-8/4/25: Added script command to create a customizable dialog with many options.
+8/5/25: Added script command to create a customizable dialog with many options.
 
 8/4/25: Fixed flickering nP/uP text in scope status window (In 4.2).
 
