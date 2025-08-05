@@ -35,7 +35,6 @@ hlp\HTMLDefines.h
 macroTestSettings.txt
 SEMbasicModeItems.txt
 .vs
-Kriossettings.txt
-Kriossettings.bak
+Kriossettings*.*
 MacroArguments.h
 HTMLDefines.h
