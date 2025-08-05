@@ -8937,7 +8937,7 @@ int CMacCmd::ManyChoiceBox(void)
     repval1 = -1.;
   }
   else if (dlgstate == IDOK && dlg.mIsRadio) {
-    SetVariable(mItem1upper, dlg.mRadioVal, VARTYPE_REGULAR + VARTYPE_ADD_FOR_NUM, -1,
+    SetVariable(mItem1upper, dlg.mRadioVal, VARTYPE_REGULAR, -1,
       false);
     repval1 = (double)(dlg.mRadioVal); 
 	}
