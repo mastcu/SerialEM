@@ -137,7 +137,8 @@ protected:
 
 	// Generated message map functions
 	//{{AFX_MSG(CLowDoseDlg)
-	afx_msg void OnLowdosemode();
+  afx_msg void OnBlankbeam();
+  afx_msg void OnLowdosemode();
 	afx_msg void OnRdefine();
 	afx_msg void OnTiefocustrial();
 	virtual BOOL OnInitDialog();
@@ -204,6 +205,7 @@ public:
   void AreaAcqCoordToView(int inArea, int binning, int sizeX, int sizeY, ScaleMat aMat,
     ScaleMat vMat, int acqX, int acqY, StateParams &state, float & imX, float & imY);
   void ManageDefines(int area);
+  CButton m_butBlankBeam;
   void ToggleBlankWhenDown(void);
   CString m_strViewDefocus;
   CSpinButtonCtrl m_sbcViewDefocus;

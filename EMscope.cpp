@@ -5701,7 +5701,7 @@ void CEMscope::GotoLowDoseArea(int newArea)
   // separation may be out of range at a higher mag where a bigger projector shift is 
   // needed for the given IS offset
   if (GetUsePLforIS(ldArea->magIndex) && ((fromFocTrial && !toFocTrial) ||
-    (!fromFocTrial && toFocTrial && mLdsaParams->magIndex) || 
+    (!fromFocTrial && toFocTrial && mLdsaParams && mLdsaParams->magIndex) ||
     fromSearchOK || toSearch))
     ISdone = oldArea >= 0 && (fromFocTrial || fromSearch || 
     (!ldArea->magIndex && ldArea->camLenIndex));
