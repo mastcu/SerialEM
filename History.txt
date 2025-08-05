@@ -3,6 +3,11 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+8/4/25: Restored function to "BLANK BEAM when screen down" in low dose panel,
+broken February 2024 (In 4.2).
+
+8/4/25: Fixed crash in low dose mode when using PLA for IS on JEOL (In 4.2).
+
 8/4/25: Fixed flickering nP/uP text in scope status window (In 4.2).
 
 7/10/25: For multigrid, fixed potential crash from uninitialized variable and

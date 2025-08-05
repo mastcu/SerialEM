@@ -155,6 +155,7 @@ void CLowDoseDlg::DoDataExchange(CDataExchange* pDX)
   DDX_Control(pDX, IDC_EDITPOSITION, m_editPosition);
   DDX_Control(pDX, IDC_STATOVERLAP, m_statOverlap);
   DDX_Control(pDX, IDC_STATMAGSPOTC2, m_statMagSpot);
+  DDX_Control(pDX, IDC_BLANKBEAM, m_butBlankBeam);
   DDX_Radio(pDX, IDC_RDEFINENONE, m_iDefineArea);
   DDX_Text(pDX, IDC_STATMAGSPOTC2, m_strMagSpot);
   DDX_Check(pDX, IDC_LOWDOSEMODE, m_bLowDoseMode);
@@ -202,6 +203,7 @@ void CLowDoseDlg::DoDataExchange(CDataExchange* pDX)
 
 BEGIN_MESSAGE_MAP(CLowDoseDlg, CToolDlg)
   //{{AFX_MSG_MAP(CLowDoseDlg)
+  ON_BN_CLICKED(IDC_BLANKBEAM, OnBlankbeam)
   ON_BN_CLICKED(IDC_LOWDOSEMODE, OnLowdosemode)
   ON_BN_CLICKED(IDC_RDEFINEFOCUS, OnRdefine)
   ON_BN_CLICKED(IDC_TIEFOCUSTRIAL, OnTiefocustrial)
@@ -234,6 +236,15 @@ END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
 // CLowDoseDlg message handlers
+
+// Changing beam blank when down: inform the scope
+void CLowDoseDlg::OnBlankbeam()
+{
+  UpdateData(true);
+  mWinApp->RestoreViewFocus();
+  mScope->SetBlankWhenDown(m_bBlankWhenDown);
+
+}
 
 // External entry for toggling that state
 void CLowDoseDlg::ToggleBlankWhenDown(void)
@@ -1404,6 +1415,7 @@ BOOL CLowDoseDlg::OnInitDialog()
   // Assume all variables are set into this dialog
 
   if (mScope->GetJeol1230()) {
+    m_butBlankBeam.EnableWindow(false);
     m_bBlankWhenDown = false;
   }
 
