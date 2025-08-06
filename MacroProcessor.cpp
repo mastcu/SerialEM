@@ -84,6 +84,7 @@ ScriptLangData CMacroProcessor::mScrpLangData;
 ScriptLangPlugFuncs *CMacroProcessor::mScrpLangFuncs = NULL;
 HANDLE CMacroProcessor::mScrpLangDoneEvent = NULL;
 HANDLE CMacroProcessor::mPyProcessHandle = NULL;
+int CMacroProcessor::mSuppressJobObjWarning = -1;
 CWinThread *CMacroProcessor::mScrpLangThread;
 std::set<int> CMacroProcessor::mPythonOnlyCmdSet;
 
@@ -5419,9 +5420,13 @@ UINT CMacroProcessor::RunScriptLangProc(LPVOID pParam)
     //
     // Assign the process to the job object so that if SerialEM dies, it will be killed
     if (CPythonServer::mJobObject) {
-      if (!AssignProcessToJobObject(CPythonServer::mJobObject, mPyProcessHandle))
-        SEMTrace('0', "WARNING: Error %d occurred assigning python process to job object", 
-          GetLastError());
+      if (!AssignProcessToJobObject(CPythonServer::mJobObject, mPyProcessHandle) &&
+        mSuppressJobObjWarning <= 0) {
+        SEMTrace('0', "WARNING: Error %d occurred assigning python process to job object"
+          "%s", GetLastError(), mSuppressJobObjWarning < 0 ? "\r\n   (You can suppress"
+          " this message by setting property \'SuppressJobObjectWarning\' to 1)" : "");
+        mSuppressJobObjWarning = 0;
+      }
     }
 
     dwWrite = (DWORD)strlen(script);

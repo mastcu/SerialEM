@@ -192,6 +192,7 @@ public:
   GetSetMember(int, NextParamSetForMont);
   GetMember(CString, ScriptWindowTitle);
   GetMember(CString *, FKeyMapping);
+  GetSetMember(int, SuppressJobObjWarning);
   bool *GetNoCatchOutput() { return &mNoCatchOutput[0]; };
   bool *GetNoPyTryOutput() { return &mNoPyTryOutput[0]; };
   std::vector<std::string> *GetVersionsOfPython() { return &mVersionsOfPython; };
@@ -209,6 +210,7 @@ public:
   static HANDLE mScrpLangDoneEvent;            // Event to notify server thread command done
   static std::set<int> mPythonOnlyCmdSet;      // Set of commands available only from Python
   static HANDLE mPyProcessHandle;              // Process handle so we can kill it
+  static int mSuppressJobObjWarning;           // Suppress error assigning process to job
 
 protected:
 
