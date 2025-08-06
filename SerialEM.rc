@@ -7,7 +7,8 @@
 //
 // Generated from the TEXTINCLUDE 2 resource.
 //
-#include "afxres.h"
+#include "afxres.h"
+
 /////////////////////////////////////////////////////////////////////////////
 #undef APSTUDIO_READONLY_SYMBOLS
 
@@ -1168,9 +1169,9 @@ BEGIN
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,8,215,129,10
     LTEXT           "Timing available, extrapolated from one point",IDC_STAT_TIMING_AVAIL,126,314,150,8
     CONTROL         "Dose Fractionation mode",IDC_DOSE_FRAC_MODE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,87,381,169,10
-    LTEXT           "Frame time",IDC_STAT_FRAME_TIME,88,395,37,8
-    EDITTEXT        IDC_EDIT_FRAME_TIME,126,391,31,14,ES_AUTOHSCROLL
-    LTEXT           "sec",IDC_STAT_FRAME_SEC,159,394,12,8
+    LTEXT           "Frame time",IDC_STAT_FRAME_TIME,88,394,35,8
+    EDITTEXT        IDC_EDIT_FRAME_TIME,123,391,31,14,ES_AUTOHSCROLL
+    LTEXT           "sec",IDC_STAT_FRAME_SEC,155,394,16,8
     CONTROL         "Align frames",IDC_ALIGN_DOSE_FRAC,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,87,408,50,10
     PUSHBUTTON      "Set Folder",IDC_DE_SET_SAVE_FOLDER,215,483,43,14
     CTEXT           "Dose rate: 9999 e/physpix/s at specimen",IDC_STATDOSERATE,159,298,117,8
@@ -1212,7 +1213,7 @@ BEGIN
     CONTROL         "Align frames",IDC_DE_ALIGN_FRAMES,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,84,500,50,10
     PUSHBUTTON      "Set Up",IDC_BUT_DE_SETUP_ALIGN,138,499,26,12
     CTEXT           "Align in Server",IDC_STAT_DE_WHERE_ALIGN,63,511,123,8
-    LTEXT           "sec",IDC_STAT_DE_FRAME_SEC,178,468,12,8
+    LTEXT           "sec",IDC_STAT_DE_FRAME_SEC,178,468,15,8
     CONTROL         "Use Hardware ROI",IDC_CHECK_HARDWARE_ROI,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,11,167,73,10
     CONTROL         "Bin counting frames by 2",IDC_CHECK_TAKE_K3_BINNED,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,438,136,10
@@ -4428,6 +4429,51 @@ BEGIN
     LTEXT           "Static",IDC_STAT_ALI_SET_NAME,137,92,53,8
 END
 
+IDD_DECTRIS_TOOLDLG DIALOGEX 0, 0, 119, 68
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP
+EXSTYLE WS_EX_TOOLWINDOW | WS_EX_LEFTSCROLLBAR
+FONT 8, "Microsoft Sans Serif", 400, 0, 0x0
+BEGIN
+    PUSHBUTTON      "-",IDC_BUTOPEN,4,0,9,7
+    PUSHBUTTON      "F",IDC_BUTFLOATDOCK,17,0,9,7
+    CTEXT           "DECTRIS Detector Control",IDC_STATTOPLINE,26,0,80,8
+    PUSHBUTTON      "?",IDC_BUTHELP,107,0,9,7
+    PUSHBUTTON      "Acquire Flatfield",IDC_BUT_ACQUIRE_FLATFIELD,4,10,62,12
+    PUSHBUTTON      "Initialize Detector",IDC_BUT_INIT_DETECTOR,4,40,62,12
+    PUSHBUTTON      "Toggle HV State",IDC_BUT_TOGGLE_HV,4,55,62,12
+    LTEXT           "initialize",IDC_STAT_STATUS,77,20,37,8
+    LTEXT           "retracted",IDC_STAT_SENSOR_POS,77,41,37,8
+    LTEXT           "HV: ramping",IDC_STAT_HV_STATE,71,57,42,8
+    LTEXT           "Status:",IDC_STATIC,71,12,24,8
+    LTEXT           "Sensor:",IDC_STAT_SENSOR,71,33,24,8
+    PUSHBUTTON      "Advanced Settings",IDC_BUT_ADVANCED_SET,4,25,62,12
+END
+
+IDD_DECTRIS_SETTINGS DIALOGEX 0, 0, 222, 109
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION
+CAPTION "DECTRIS Advanced Settings"
+FONT 8, "Microsoft Sans Serif", 400, 0, 0x0
+BEGIN
+    DEFPUSHBUTTON   "Apply",IDOK,46,88,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,126,88,50,14
+    COMBOBOX        IDC_COMBO_INCIDENT_KV,115,7,31,30,CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
+    COMBOBOX        IDC_COMBO_THRESHOLD_KV,115,21,31,30,CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "Incident energy",IDC_STATIC,60,8,49,8
+    LTEXT           "Threshold energy",IDC_STATIC,60,22,53,8
+    LTEXT           "keV",IDC_STATIC,148,8,13,8
+    LTEXT           "keV",IDC_STATIC,148,22,13,8
+    CONTROL         "Autosummation",IDC_CHECK_AUTOSUM,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,37,66,10
+    CONTROL         "Countrate correction",IDC_CHECK_COUNTRATE_CORR,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,49,80,10
+    CONTROL         "Retrigger",IDC_CHECK_RETRIGGER,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,61,45,10
+    CONTROL         "DCU internal flatfield correction",IDC_CHECK_DCU_FLAT_CORR,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,73,114,10
+    CONTROL         "Bad pixel interpolation",IDC_CHECK_BAD_PIX_INTERP,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,122,37,85,10
+    CONTROL         "Module gap interpolation",IDC_CHECK_MODULE_INTERP,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,122,49,91,10
+    PUSHBUTTON      "?",IDC_BUTHELP,205,92,10,10
+END
+
 IDD_MANYCHOICEBOX DIALOGEX 0, 0, 193, 238
 STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION
 CAPTION "SerialEM Choice"
@@ -4467,6 +4513,7 @@ BEGIN
     CONTROL         "Radio14",IDC_GENERIC_RADIO14,"Button",BS_AUTORADIOBUTTON,14,190,164,10
     CONTROL         "Radio15",IDC_GENERIC_RADIO15,"Button",BS_AUTORADIOBUTTON,14,202,164,10
     PUSHBUTTON      "?",IDC_BUTHELP,175,221,11,10,NOT WS_VISIBLE | WS_GROUP
+
 END
 
 
@@ -5064,7 +5111,19 @@ BEGIN
         BOTTOMMARGIN, 174
     END
 
-    IDD_MANYCHOICEBOX, DIALOG
+    IDD_DECTRIS_TOOLDLG, DIALOG
+    BEGIN
+    END
+
+    IDD_DECTRIS_SETTINGS, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 215
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 102
+    END
+
+   IDD_MANYCHOICEBOX, DIALOG
     BEGIN
         LEFTMARGIN, 7
         RIGHTMARGIN, 186
@@ -5072,6 +5131,7 @@ BEGIN
         BOTTOMMARGIN, 231
     END
 END
+
 #endif    // APSTUDIO_INVOKED
 
 
@@ -5403,6 +5463,16 @@ BEGIN
 END
 
 IDD_DETOOLDLG AFX_DIALOG_LAYOUT
+BEGIN
+    0
+END
+
+IDD_DECTRIS_TOOLDLG AFX_DIALOG_LAYOUT
+BEGIN
+    0
+END
+
+IDD_DECTRIS_SETTINGS AFX_DIALOG_LAYOUT
 BEGIN
     0
 END
@@ -8224,7 +8294,8 @@ LANGUAGE 9, 1
 #include "res\SerialEM.rc2"  // non-Microsoft Visual C++ edited resources
 #include "afxres.rc"         // Standard components
 #include "XFolderDialog\XFolderDialog.rc"
-#endif
+#endif
+
 /////////////////////////////////////////////////////////////////////////////
 #endif    // not APSTUDIO_INVOKED
 

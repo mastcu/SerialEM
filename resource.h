@@ -93,6 +93,8 @@
 #define IDD_TASK_AREA_OPTIONS           289
 #define IDD_CTF_ACQ_PARAMS              291
 #define IDD_MANYCHOICEBOX               294
+#define IDD_DECTRIS_TOOLDLG             296
+#define IDD_DECTRIS_SETTINGS            298
 #define IDC_EDITXSIZE                   1000
 #define IDC_EDITYSIZE                   1002
 #define IDC_EDITYOVERLAP                1003
@@ -2394,8 +2396,8 @@
 #define IDC_BUT_SET_GRID_TYPE           3420
 #define IDC_BUT_CLOSE_RIGHT             3421
 #define IDC_CHECK_SET_FINAL_BY_GRID     3422
-#define IDC_BUTTON2                     3423
 #define IDC_BUT_REVERT_TO_GLOBAL        3423
+#define IDC_BUT_ADVANCED_SET            3633
 #define IDC_BUT_GRIDUSE_HF              3424
 #define IDC_BUT_APPLY_HF                3425
 #define IDC_BUT_RESTORE_CURHF           3426
@@ -2532,7 +2534,7 @@
 #define IDC_STATLISTHEADER7             3561
 #define IDC_STATLISTHEADER8             3562
 #define IDC_STATLISTHEADER9             3563
-#define IDC_CHECKCTF_DRIFT              3563
+#define IDC_CHECKCTF_DRIFT              3634
 #define IDC_EDITCTF_DRIFT               3564
 #define IDC_CHECK_CTF_BINNING           3565
 #define IDC_EDIT_CTF_BINNING            3566
@@ -2583,6 +2585,21 @@
 #define IDC_GENERIC_RADIO14             3614
 #define IDC_GENERIC_RADIO15             3615
 #define IDC_MANYCHOICEHEADER            3616
+#define IDC_BUT_ACQUIRE_FLATFIELD       3617
+#define IDC_BUT_INIT_DETECTOR           3618
+#define IDC_BUT_TOGGLE_HV               3619
+#define IDC_STAT_STATUS                 3620
+#define IDC_STAT_SENSOR_POS             3621
+#define IDC_STAT_HV_STATE               3622
+#define IDC_COMBO_INCIDENT_KV           3623
+#define IDC_COMBO_THRESHOLD_KV          3624
+#define IDC_CHECK_AUTOSUM               3625
+#define IDC_CHECK_COUNTRATE_CORR        3626
+#define IDC_CHECK_RETRIGGER             3627
+#define IDC_CHECK_DCU_FLAT_CORR         3628
+#define IDC_CHECK_BAD_PIX_INTERP        3629
+#define IDC_CHECK_MODULE_INTERP         3630
+#define IDC_STAT_SENSOR                 3631
 #define ID_NEW_IMAGE                    32771
 #define IDM_FILE_SAVEOTHER              32772
 #define IDM_FILE_READ                   32773
@@ -3168,9 +3185,9 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        296
+#define _APS_NEXT_RESOURCE_VALUE        300
 #define _APS_NEXT_COMMAND_VALUE         33552
-#define _APS_NEXT_CONTROL_VALUE         3617
+#define _APS_NEXT_CONTROL_VALUE         3635
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif
