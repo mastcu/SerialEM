@@ -316,19 +316,21 @@ int DirectElectronCamera::initializeDECamera(CString camName, int camIndex)
     CString str;
     CString tmp, tmp2;
     std::string propValue;
-    bool result, sawHWROI = false, sawHWbinning = false;
+    bool result, sawHWROI = false, sawHWbinning = false, hasHDRlicense = false;
     BOOL debug = GetDebugOutput('D');
     const char *propsToCheck[] = {DE_PROP_COUNTING, psMotionCor, psMotionCorNew, 
       "Temperature Control - Setpoint (Celsius)", 
       "Temperature - Cool Down Setpoint (Celsius)", psReadoutDelay, psHardwareBin,
       psBinMode, psHardwareROI, psROIMode, psCountsPerElec,
       psCountsPerEvent, psADUsPerElectron, "ADUs Per Electron Bin1x", 
-      "Electron Counting - Super Resolution", "Event Counting - Super Resolution"};
+      "Electron Counting - Super Resolution", "Event Counting - Super Resolution",
+      "Readout - Hardware HDR", "Readout - HDR"};
     unsigned int flagsToSet[] = {DE_CAM_CAN_COUNT, DE_CAM_CAN_ALIGN, DE_CAM_CAN_ALIGN, 
       DE_HAS_TEMP_SET_PT, DE_HAS_TEMP_SET_PT, DE_HAS_READOUT_DELAY, DE_HAS_HARDWARE_BIN,
       DE_HAS_HARDWARE_BIN, DE_HAS_HARDWARE_ROI, DE_HAS_HARDWARE_ROI,
       DE_SCALES_ELEC_COUNTS, DE_SCALES_ELEC_COUNTS, DE_HARDWARE_SCALES, 
-      DE_HARDWARE_SCALES, DE_CAN_SAVE_SUPERRES, DE_CAN_SAVE_SUPERRES};
+      DE_HARDWARE_SCALES, DE_CAN_SAVE_SUPERRES, DE_CAN_SAVE_SUPERRES, DE_HAS_HARDWARE_HDR,
+      DE_HAS_HARDWARE_HDR};
     int numFlags = sizeof(flagsToSet) / sizeof(unsigned int);
 
     result = mDeServer->setCameraName((LPCTSTR)camName);
@@ -368,7 +370,13 @@ int DirectElectronCamera::initializeDECamera(CString camName, int camIndex)
         sawHWbinning = true;
       if (!camProps[i].compare("Hardware ROI Size X"))
         sawHWROI = true;
-      if (debug && camProps[i].find("Preset") != 0) {
+      if (!camProps[i].compare("License - HDR Readout Modes")) {
+        if (mDeServer->getProperty(camProps[i], &propValue) &&
+          propValue.find("Valid") >= 0)
+          hasHDRlicense = true;
+      }
+
+      if (debug && camProps[i].find("Preset") != 0 && camProps[i].find("Scan") != 0) {
         listProps += camProps[i].c_str();
         if (mDeServer->getProperty(camProps[i], &propValue))
           listProps += CString("    Value: ") + propValue.c_str() + "\r\n";
@@ -385,6 +393,12 @@ int DirectElectronCamera::initializeDECamera(CString camName, int camIndex)
         mServerVersion = 1;
       }
     }
+
+    // Clear super-res flag if server no longer supports it
+    if (mServerVersion >= DE_NO_MORE_SUPER_RES)
+      mCamParams[camIndex].CamFlags &= ~DE_CAN_SAVE_SUPERRES;
+    if (mServerVersion >= DE_HAS_LICENSE_PROPS && !hasHDRlicense)
+      mCamParams[camIndex].CamFlags &= ~DE_HAS_HARDWARE_HDR;
 
     if (debug) {
       if (!GetDebugOutput('*')) {
@@ -872,7 +886,8 @@ int DirectElectronCamera::AcquireImageData(unsigned short *image4k, long &imageS
   // Check exposure time and FPS if needed
   if (!CheckMapForValidState(checksum, mExpFPSchecks, minuteNow)) {
     float maxFPS = mLastFPS, maxExp = mLastExposureTime;
-    getFloatProperty("Frames Per Second (Max)", maxFPS);
+    if (getFloatProperty("Frames Per Second (Max)", maxFPS))
+      mCamParams[mCurCamIndex].DE_MaxFrameRate = maxFPS;
     getFloatProperty("Exposure Time Max (seconds)", maxExp);
     if (mLastExposureTime > maxExp || mLastFPS > maxFPS) {
       if (mLastExposureTime > maxExp)

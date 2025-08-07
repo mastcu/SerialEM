@@ -85,21 +85,22 @@ typedef void(*NewImCallback)(void);
 #define DE_CAM_CAN_ALIGN          0x2
 #define DE_HAS_TEMP_SET_PT        0x4
 #define DE_HAS_READOUT_DELAY      0x8
-#define DE_HAS_HARDWARE_BIN       0x10
+#define DE_HAS_HARDWARE_BIN       0x10  // (1 << 4)
 #define DE_WE_CAN_ALIGN           0x20
 #define DE_NORM_IN_SERVER         0x40
 #define DE_HAS_HARDWARE_ROI       0x80
-#define DE_SCALES_ELEC_COUNTS     0x100
+#define DE_SCALES_ELEC_COUNTS     0x100  // (1 << 8)
 #define DE_APOLLO_CAMERA          0x200
 #define DE_HARDWARE_SCALES        0x400
 #define DE_CAN_SAVE_SUPERRES      0x800
+#define DE_HAS_HARDWARE_HDR       0x1000 // (1 << 12)
 
 // Camera flags for Gatan cameras
 #define K3_CAM_ROTFLIP_BUG        0x2
 
 // General camera flags: keep DE flags here and PLUGFEI in SerialEM.h from conflicting
 // But these conflict with the max Falcon frames in the high 2 bytes
-#define CAMFLAG_FLOATS_BY_FLAG    (1 << 16)
+#define CAMFLAG_FLOATS_BY_FLAG    (1 << 16)  // 0x10000
 #define CAMFLAG_CAN_DIV_MORE      (1 << 17)
 #define CAMFLAG_NO_DIV_BY_2       (1 << 18)
 #define CAMFLAG_SINGLE_OK_IF_SAVE (1 << 19)
