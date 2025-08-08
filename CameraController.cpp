@@ -289,6 +289,7 @@ CCameraController::CCameraController()
   mOppositeAreaNextShot = false;
   mDynFocusInterval = -1;
   mStartDynFocusDelay = -1;
+  mFlybackWarningFocusTol = 0.2;
   mScreenUpSTEMdelay = 7000;
   mLowerScreenForSTEM = 1;
   mRamperInstance = false;
@@ -5810,7 +5811,8 @@ int CCameraController::CapSaveStageMagSetupDynFocus(ControlSet & conSet, int inS
   float flyback = mParam->flyback, startupDelay = mParam->startupDelay;
   MagTable *magTab = mWinApp->GetMagTable();
   BOOL boostMag;
-  int ind;
+  int ind, flybackInd;
+  bool ignoreFlybackWarning =  false;
 
   // Determine if doing a focus picture that needs its mag boosted
   boostMag = mParam->STEMcamera && conSet.boostMag && inSet == FOCUS_CONSET && 
@@ -5857,15 +5859,20 @@ int CCameraController::CapSaveStageMagSetupDynFocus(ControlSet & conSet, int inS
     if (conSet.dynamicFocus && mSingleContModeUsed == SINGLE_FRAME && 
       mNeedShotToInsert < 0) {
         if (mParam->FEItype) {
-          ind = mWinApp->mCalibTiming->FlybackTimeFromTable(mBinning, mTD.DMSizeX, 
+          flybackInd = mWinApp->mCalibTiming->FlybackTimeFromTable(mBinning, mTD.DMSizeX, 
             mMagBefore, conSet.exposure, flyback, startupDelay, &mess);
-          if (ind != FLYBACK_EXACT)
-            mWinApp->AppendToLog("WARNING: " + mess);
         }
         ind = DynamicFocusOK(conSet.exposure, mTD.DMSizeY, flyback, 
           mTD.DynFocusInterval, msPerLine);
-        if (ind > 0)
+        if (ind > 0) {
           SetupDynamicFocus(ind, msPerLine, flyback, startupDelay);
+          float startFocusChange = B3DABS(mTD.FocusBase - mCenterFocus);
+          float endFocusChange = B3DABS(startFocusChange + mTD.rampTable[MAX_RAMP_STEPS - 1]);
+          ignoreFlybackWarning = B3DMAX(startFocusChange, endFocusChange) < mFlybackWarningFocusTol;
+         }
+        if (mParam->FEItype && flybackInd != FLYBACK_EXACT && !ignoreFlybackWarning) {
+          mWinApp->AppendToLog("WARNING: " + mess);
+        }
     }
 
     // Create focus ramper if needed and make sure it's still there and responds

@@ -413,6 +413,7 @@ public:
     SetMember(int, BlockOffsetSign)
     GetSetMember(int, DynFocusInterval)
     GetSetMember(int, StartDynFocusDelay);
+    GetSetMember(float, FlybackWarningFocusTol);
   GetSetMember(int, LowerScreenForSTEM);
   SetMember(BOOL, BlankNextShot)
     GetSetMember(int, DSextraShotDelay);
@@ -1108,6 +1109,7 @@ public:
   int mUseAPI2ForDE;             // Use the API 2 for DE camera connection and all calls
   int mRollBufKeptIndex;         // Last buffer that was redisplayed in RollBuffers
   float mDynFocusTiltOffset;     // Tilt offset for dynamic focusing
+  float mFlybackWarningFocusTol; // Focus tolerance to suppress flyback warning in dynamic focus
   bool mFilterObeyNormDelay;     // Flag to impose post-norm delay before setting filter
   bool mFilterWaiting;           // Flag that filter is waiting for delay
   int mRamperBlankAtEnd;         // Flag for FocusRamper to blank beam at end of ramp/image

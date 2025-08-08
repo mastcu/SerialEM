@@ -5340,6 +5340,12 @@
             exposure with dynamic focus.&nbsp; The default is 100 for Thermo/FEI and 250 for JEOL.</TD>
         </TR>
         <TR VALIGN="top">
+          <TD>FlybackWarningFocusTol</TD>
+          <TD>For Thermo/FEI using dynamic focus, suppress the warning about missing flyback 
+              times if the maximum change in defocus from the center defocus is below this 
+              tolerance. The default is 0.2 microns.</TD>
+        </TR>
+        <TR VALIGN="top">
           <TD>RamperWaitForBlank</TD>
           <TD>With a Thermo/FEI scope, set to 1 if the blanking starts after the beginning 
             of the scan (below the top of the image) when doing the 
