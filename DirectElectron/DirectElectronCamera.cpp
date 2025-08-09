@@ -317,6 +317,7 @@ int DirectElectronCamera::initializeDECamera(CString camName, int camIndex)
     CString tmp, tmp2;
     std::string propValue;
     bool result, sawHWROI = false, sawHWbinning = false, hasHDRlicense = false;
+    bool hasCountingLicense = false;
     BOOL debug = GetDebugOutput('D');
     const char *propsToCheck[] = {DE_PROP_COUNTING, psMotionCor, psMotionCorNew, 
       "Temperature Control - Setpoint (Celsius)", 
@@ -370,6 +371,11 @@ int DirectElectronCamera::initializeDECamera(CString camName, int camIndex)
         sawHWbinning = true;
       if (!camProps[i].compare("Hardware ROI Size X"))
         sawHWROI = true;
+      if (!camProps[i].compare("License - Event Counting")) {
+        if (mDeServer->getProperty(camProps[i], &propValue) &&
+          propValue.find("Valid") >= 0)
+          hasCountingLicense = true;
+      }
       if (!camProps[i].compare("License - HDR Readout Modes")) {
         if (mDeServer->getProperty(camProps[i], &propValue) &&
           propValue.find("Valid") >= 0)
@@ -395,8 +401,11 @@ int DirectElectronCamera::initializeDECamera(CString camName, int camIndex)
     }
 
     // Clear super-res flag if server no longer supports it
+    // Use licenses now as the ruling factor
     if (mServerVersion >= DE_NO_MORE_SUPER_RES)
       mCamParams[camIndex].CamFlags &= ~DE_CAN_SAVE_SUPERRES;
+    if (mServerVersion >= DE_HAS_LICENSE_PROPS && !hasCountingLicense)
+      mCamParams[camIndex].CamFlags &= ~DE_CAM_CAN_COUNT;
     if (mServerVersion >= DE_HAS_LICENSE_PROPS && !hasHDRlicense)
       mCamParams[camIndex].CamFlags &= ~DE_HAS_HARDWARE_HDR;
 
@@ -426,12 +435,14 @@ int DirectElectronCamera::initializeDECamera(CString camName, int camIndex)
       if (sawHWbinning && mDeServer->getProperty("Hardware Binning X", &propValue) &&
         propValue.length() > 0)
         mCamParams[camIndex].CamFlags |= DE_HAS_HARDWARE_BIN;
+      /* 8/9/25: Philip says there can be a feature listed but no license, so this is
+      worthless
       if (mDeServer->getProperty("Feature - Counting", &propValue)) {
         if (propValue == "On")
           mCamParams[camIndex].CamFlags |= DE_CAM_CAN_COUNT;
         else 
           mCamParams[camIndex].CamFlags &= ~DE_CAM_CAN_COUNT;
-      }
+      }*/
     }
 
     // Set some properties that are not going to be managed
@@ -964,8 +975,10 @@ int DirectElectronCamera::AcquireImageData(unsigned short *image4k, long &imageS
 
   // Try to read back the actual image size from these READ-ONLY properties and if it 
   // is different, truncate the Y size if necessary and set the return size from actual
-  if (!api2Reference && mDeServer->getIntProperty(g_Property_DE_ImageWidth, &actualSizeX)
-    && mDeServer->getIntProperty(g_Property_DE_ImageHeight, &actualSizeY) &&
+  if (!api2Reference && mDeServer->getIntProperty(mServerVersion >= DE_HAS_API2 ? 
+    "Image Size X (pixels)" : g_Property_DE_ImageWidth, &actualSizeX)
+    && mDeServer->getIntProperty(mServerVersion >= DE_HAS_API2 ?
+      "Image Size Y (pixels)" : g_Property_DE_ImageHeight, &actualSizeY) &&
     (actualSizeX != imageSizeX || actualSizeY != imageSizeY)) {
     if (actualSizeX * actualSizeY > imageSizeX * imageSizeY)
       actualSizeY = (imageSizeX * imageSizeY) / actualSizeX;
