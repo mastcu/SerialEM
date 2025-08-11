@@ -5868,7 +5868,8 @@ int CCameraController::CapSaveStageMagSetupDynFocus(ControlSet & conSet, int inS
           SetupDynamicFocus(ind, msPerLine, flyback, startupDelay);
           double startFocusChange = mTD.FocusBase - mCenterFocus;
           double endFocusChange = startFocusChange + mTD.rampTable[MAX_RAMP_STEPS - 1];
-          ignoreFlybackWarning = B3DMAX(B3DABS(startFocusChange), B3DABS(endFocusChange)) < mFlybackWarningFocusTol;
+          ignoreFlybackWarning = B3DMAX(B3DABS(startFocusChange), B3DABS(endFocusChange)) 
+            < mFlybackWarningFocusTol;
          }
         if (mParam->FEItype && flybackInd != FLYBACK_EXACT && !ignoreFlybackWarning) {
           mWinApp->AppendToLog("WARNING: " + mess);
