@@ -8027,6 +8027,7 @@ UINT CCameraController::AcquireProc(LPVOID pParam)
   CoInitializeEx(NULL, COINIT_MULTITHREADED);
   CameraThreadData *td = (CameraThreadData *)pParam;
   CameraThreadData pdTD;
+  int callSizeX = td->CallSizeX, callSizeY = td->CallSizeY;
   bool startBlanker = (td->PostActionTime || td->UnblankTime || td->ReblankTime ||
     td->FocusStep1 || td->TiltDuringDelay || td->FrameTStiltToAngle.size() || 
     td->FrameTSwaitOrInterval.size()) && td->ReturnPartialScan != 1;
@@ -8433,6 +8434,18 @@ UINT CCameraController::AcquireProc(LPVOID pParam)
       if (!retval)
         retval = td->DE_Cam->AcquireImageData((unsigned short*)td->Array[0],
           td->CallSizeX, td->CallSizeY, td->DivideBy2);
+
+      // Try to recover from image size not being what was expected (e.g., DE developers
+      // changing rotation properties on the fly)
+      if (!retval && (callSizeX != td->CallSizeX || callSizeY != td->CallSizeY)) {
+        if (callSizeX == td->DMSizeX && callSizeY == td->DMSizeY) {
+          td->DMSizeX = td->CallSizeX;
+          td->DMSizeY = td->CallSizeY;
+        } else if (callSizeY == td->DMSizeX && callSizeX == td->DMSizeY) {
+          td->DMSizeX = td->CallSizeY;
+          td->DMSizeY = td->CallSizeX;
+        }
+      }
 
       if (retval) {
         if (retval > 0) {
