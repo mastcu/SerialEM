@@ -4843,6 +4843,12 @@ void CTSController::Terminate()
   }
 
   // 5/31/25: Guenter wondered why anyone would leave file open, so get rid of choice
+  // 8/12/25: But he still wanted the choice to terminate or cancel!
+  if (!mDoingDoseSymmetric) {
+    if (AfxMessageBox("Are you sure you want to terminate the tilt series?", MB_QUESTION)
+      == IDNO)
+      return;
+  }
 
   // Option to read in zero-tilt view and rotate it 90 degrees
   if (mTiltIndex > 0 && ((mTiltAngles[0] >= 0. && mTiltAngles[mTiltIndex - 1] <= 0. ||
