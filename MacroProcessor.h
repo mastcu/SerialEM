@@ -500,7 +500,7 @@ protected:
   float mBinningForCameraMatrix; // Adjust camera matrices to this user binning
   MultiShotParams *mSavedMultiShot;  // Saved parameters for running step & adjust
   bool mC2ApForScalingWasSet;  // Flag that C2 aperture size was set
-  CString mFKeyMapping[10];    // Custom mapping to actual macros
+  CString mFKeyMapping[12];    // Custom mapping to actual macros
 
 public:
   void SetNumCamMacRows(int inVal);

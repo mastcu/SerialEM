@@ -7,8 +7,7 @@
 //
 // Generated from the TEXTINCLUDE 2 resource.
 //
-#include "afxres.h"
-
+#include "afxres.h"
 /////////////////////////////////////////////////////////////////////////////
 #undef APSTUDIO_READONLY_SYMBOLS
 
@@ -840,6 +839,8 @@ BEGIN
     "R",            IDM_FILE_READ,          VIRTKEY, SHIFT, NOINVERT
     "S",            IDM_FILE_SAVE,          VIRTKEY, CONTROL, NOINVERT
     "P",            IDM_MARKER_TO_CENTER,   VIRTKEY, SHIFT, NOINVERT
+    VK_F11,         ID_MACRO_FKEYRUN11,     VIRTKEY, CONTROL, NOINVERT
+    VK_F12,         ID_MACRO_FKEYRUN12,     VIRTKEY, CONTROL, NOINVERT
 END
 
 
@@ -4513,7 +4514,6 @@ BEGIN
     CONTROL         "Radio14",IDC_GENERIC_RADIO14,"Button",BS_AUTORADIOBUTTON,14,190,164,10
     CONTROL         "Radio15",IDC_GENERIC_RADIO15,"Button",BS_AUTORADIOBUTTON,14,202,164,10
     PUSHBUTTON      "?",IDC_BUTHELP,175,221,11,10,NOT WS_VISIBLE | WS_GROUP
-
 END
 
 
@@ -5123,7 +5123,7 @@ BEGIN
         BOTTOMMARGIN, 102
     END
 
-   IDD_MANYCHOICEBOX, DIALOG
+    IDD_MANYCHOICEBOX, DIALOG
     BEGIN
         LEFTMARGIN, 7
         RIGHTMARGIN, 186
@@ -5131,7 +5131,6 @@ BEGIN
         BOTTOMMARGIN, 231
     END
 END
-
 #endif    // APSTUDIO_INVOKED
 
 
@@ -6616,12 +6615,16 @@ STRINGTABLE
 BEGIN
     IDC_RBIN_TO_SIZE        "Reduce images for correlation to be close to the specified size"
     IDC_SPIN_BIN_TO         "Select reduction amount or target size for images being correlated"
-    IDC_CHECKCTF_DRIFT      "Use the drift settling time here instead of the time in the Record parameters"
     IDC_EDITCTF_DRIFT       "Enter the drift settling time to use in images for CTF fitting"
     IDC_CHECK_CTF_BINNING   "Use the binning here instead of the binning in the Record parameters"
     IDC_EDIT_CTF_BINNING    "Enter the binning to use in images for CTF fitting"
     IDC_CHECK_CTF_FULL_FIELD 
                             "Take images with full camera area even if a subset is set in Record parameters"
+END
+
+STRINGTABLE
+BEGIN
+    IDC_CHECKCTF_DRIFT      "Use the drift settling time here instead of the time in the Record parameters"
 END
 
 STRINGTABLE
@@ -8267,6 +8270,10 @@ BEGIN
     ID_SCRIPT_LISTFKEYMAPPINGS "Print list of function key mappings to log"
     ID_BEAMSPOT_PARALLELILLUMINATION 
                             "Save intensity, spot size, and probe/alpha as parallel illumination conditions"
+END
+
+STRINGTABLE
+BEGIN
     ID_HELP_LISTDEBUGOUTPUTKEYLETTERS 
                             "List key letter for debug output in log"
 END
@@ -8294,8 +8301,7 @@ LANGUAGE 9, 1
 #include "res\SerialEM.rc2"  // non-Microsoft Visual C++ edited resources
 #include "afxres.rc"         // Standard components
 #include "XFolderDialog\XFolderDialog.rc"
-#endif
-
+#endif
 /////////////////////////////////////////////////////////////////////////////
 #endif    // not APSTUDIO_INVOKED
 
