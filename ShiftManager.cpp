@@ -629,7 +629,7 @@ int CShiftManager::AutoAlign(int bufIndex, int inSmallPad, BOOL doImShift, int c
   float tiltA = 0., tiltC = 0., tiltAngles[2] = {0., 0.}, axisAngle = 0.;
   float *fillArray = NULL, *fillBrray = NULL, *fillCrray = NULL;
   bool failed = true;
-  int commonBin, size, sizeC, maxBin;
+  int commonBin, size, sizeC, maxBin, maxCommon;
   float stretchAxis, alignLimit = -1.;
   ScaleMat str, strInv;
   float tempX, tempY;
@@ -718,8 +718,7 @@ int CShiftManager::AutoAlign(int bufIndex, int inSmallPad, BOOL doImShift, int c
   if (mImA == NULL)
     return 1;
   if (mImC == NULL) {
-    mWinApp->mTSController->TSMessageBox(_T("No image to align to in the expected "
-      "buffer"));
+    SEMMessageBox(_T("No image to align to in the expected buffer"));
     return 1;
   }
   typeA = mImA->getType();
@@ -728,10 +727,13 @@ int CShiftManager::AutoAlign(int bufIndex, int inSmallPad, BOOL doImShift, int c
   widthA = mImA->getWidth();
   heightC = mImC->getHeight();
   widthC = mImC->getWidth();
+  if (B3DMAX((size_t)widthA * heightA, (size_t)widthC * heightC) > 1.e8 && !autoCorr)
+    ACCUM_MAX(targetSize, 1024);
 
   // Look for a common binning starting at the bigger binning
   maxBin = binA > binC ? binA : binC;
-  for (commonBin = maxBin; commonBin < 64; commonBin++) {
+  maxCommon = B3DMAX(100, 50 * maxBin);
+  for (commonBin = maxBin; commonBin < maxCommon; commonBin++) {
 
     // Evaluate only for common multiples of the two binnings
     if (commonBin % binA || commonBin % binC)
@@ -748,21 +750,20 @@ int CShiftManager::AutoAlign(int bufIndex, int inSmallPad, BOOL doImShift, int c
     // If the images are less than half the target and this is not the 
     // first try, quit
     if (size < targetSize / 2 && commonBin > maxBin) {
-      commonBin = 64;
-      break;
+      SEMMessageBox(_T("Image binnings cannot be matched up - cannot autoalign"));
+      return 1;
     }
 
   // Stop when size reaches the target
     if (size <= targetSize)
       break;
   }
-
-  if (commonBin == 64) {
-    mWinApp->mTSController->TSMessageBox(_T("Image binnings cannot be matched up - "
-      "cannot autoalign"));
+  
+  if (size > targetSize) {
+    SEMMessageBox(_T("Images are too large to bin for autoalign"));
     return 1;
   }
-  
+
   mWinApp->mMainView->SetFocus();
   //app->CallStatusUpdate(4);
 

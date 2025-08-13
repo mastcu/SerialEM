@@ -14,7 +14,16 @@
 
 
 // CCtfAcquireParamDlg dialog
-
+#define DDV_MIN_EXP 0.1f
+#define DDV_MAX_EXP 10.f
+#define DDV_MAX_DRIFT 1.f
+#define DDV_MAX_BIN 8
+#define DDV_MIN_FRAMES 3
+#define DDV_MAX_FRAMES 20
+#define DDV_MIN_FOCUS -10.f
+#define DDV_MAX_FOCUS -0.1f
+#define DDV_MIN_ADD 0.2f
+#define DDV_MAX_ADD 10.f
 
 CCtfAcquireParamDlg::CCtfAcquireParamDlg(CWnd* pParent /*=NULL*/)
 	: CBaseDlg(IDD_CTF_ACQ_PARAMS, pParent)
@@ -45,24 +54,23 @@ void CCtfAcquireParamDlg::DoDataExchange(CDataExchange* pDX)
   CBaseDlg::DoDataExchange(pDX);
   DDX_Check(pDX, IDC_CHECK_CTF_EXPOSURE, m_bSetExposure);
   DDX_Text(pDX, IDC_EDIT_CTF_EXPOSURE, m_fExposure);
-  DDV_MinMaxFloat(pDX, m_fExposure, 0.1f, 10.f);
+  DDV_MinMaxFloat(pDX, m_fExposure, DDV_MIN_EXP, DDV_MAX_EXP);
   DDX_Check(pDX, IDC_CHECKCTF_DRIFT, m_bSetDrift);
   DDX_Text(pDX, IDC_EDITCTF_DRIFT, m_fDrift);
-  DDV_MinMaxFloat(pDX, m_fDrift, 0, 1);
+  DDV_MinMaxFloat(pDX, m_fDrift, 0, DDV_MAX_DRIFT);
   DDX_Check(pDX, IDC_CHECK_CTF_BINNING, m_bSetBinning);
   DDX_Text(pDX, IDC_EDIT_CTF_BINNING, m_iBinning);
-  DDV_MinMaxInt(pDX, m_iBinning, 1, 8);
+  DDV_MinMaxInt(pDX, m_iBinning, 1, DDV_MAX_BIN);
   DDX_Check(pDX, IDC_CHECK_CTF_FULL_FIELD, m_bUseFullField);
   DDX_Check(pDX, IDC_CHECK_USE_FOCUS_IN_LD, m_bUseFocusInLD);
   DDX_Check(pDX, IDC_CHECKCTF_ALIGN_FRAMES, m_bAlignFrames);
   DDX_Text(pDX, IDC_EDIT_CTF_NUM_FRAMES, m_iNumFrames);
-  DDV_MinMaxInt(pDX, m_iNumFrames, 3, 20);
+  DDV_MinMaxInt(pDX, m_iNumFrames, DDV_MIN_FRAMES, DDV_MAX_FRAMES);
   DDX_Text(pDX, IDC_EDIT_CTF_MIN_FOCUS, m_fMinFocus);
-  DDV_MinMaxFloat(pDX, m_fMinFocus, -10.f, -0.1f);
+  DDV_MinMaxFloat(pDX, m_fMinFocus, DDV_MIN_FOCUS, DDV_MAX_FOCUS);
   DDX_Text(pDX, IDC_EDIT_CTF_MIN_ADD, m_fMinAdd);
-  DDV_MinMaxFloat(pDX, m_fMinAdd, 0.2f, 10.f);
+  DDV_MinMaxFloat(pDX, m_fMinAdd, DDV_MIN_ADD, DDV_MAX_ADD);
   DDX_Check(pDX, IDC_CHECK_USE_ALI_SET, m_bUseAliSet);
-  DDV_MinMaxInt(pDX, m_iNumFrames, 3, 20);
   DDX_Text(pDX, IDC_EDIT_ALIGN_SET, m_iAlignSet);
   DDV_MinMaxInt(pDX, m_iAlignSet, 1, 
     (int)(mWinApp->mCamera->GetFrameAliParams())->GetSize());
@@ -89,6 +97,17 @@ END_MESSAGE_MAP()
 // CCtfAcquireParamDlg message handlers
 BOOL CCtfAcquireParamDlg::OnInitDialog()
 {
+
+  // Make sure values are valid before initializing and validating
+  if (m_fExposure < 0)
+    m_fExposure = -m_fExposure;
+  B3DCLAMP(m_fExposure, DDV_MIN_EXP, DDV_MAX_EXP);
+  B3DCLAMP(m_fDrift, 0, DDV_MAX_DRIFT);
+  B3DCLAMP(m_iBinning, 1, DDV_MAX_BIN);
+  B3DCLAMP(m_iNumFrames, DDV_MIN_FRAMES, DDV_MAX_FRAMES);
+  B3DCLAMP(m_fMinFocus, DDV_MIN_FOCUS, DDV_MAX_FOCUS);
+  B3DCLAMP(m_fMinAdd, DDV_MIN_ADD, DDV_MAX_ADD);
+  B3DCLAMP(m_iAlignSet, 1, (int)(mWinApp->mCamera->GetFrameAliParams())->GetSize());
   CBaseDlg::OnInitDialog();
 
   // The caller loads and unloads the dialog values
