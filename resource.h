@@ -2397,7 +2397,6 @@
 #define IDC_BUT_CLOSE_RIGHT             3421
 #define IDC_CHECK_SET_FINAL_BY_GRID     3422
 #define IDC_BUT_REVERT_TO_GLOBAL        3423
-#define IDC_BUT_ADVANCED_SET            3633
 #define IDC_BUT_GRIDUSE_HF              3424
 #define IDC_BUT_APPLY_HF                3425
 #define IDC_BUT_RESTORE_CURHF           3426
@@ -2534,7 +2533,6 @@
 #define IDC_STATLISTHEADER7             3561
 #define IDC_STATLISTHEADER8             3562
 #define IDC_STATLISTHEADER9             3563
-#define IDC_CHECKCTF_DRIFT              3634
 #define IDC_EDITCTF_DRIFT               3564
 #define IDC_CHECK_CTF_BINNING           3565
 #define IDC_EDIT_CTF_BINNING            3566
@@ -2600,6 +2598,8 @@
 #define IDC_CHECK_BAD_PIX_INTERP        3629
 #define IDC_CHECK_MODULE_INTERP         3630
 #define IDC_STAT_SENSOR                 3631
+#define IDC_BUT_ADVANCED_SET            3633
+#define IDC_CHECKCTF_DRIFT              3634
 #define ID_NEW_IMAGE                    32771
 #define IDM_FILE_SAVEOTHER              32772
 #define IDM_FILE_READ                   32773
@@ -3174,11 +3174,13 @@
 #define ID_MACRO_FKEYRUN8               33544
 #define ID_MACRO_FKEYRUN9               33545
 #define ID_MACRO_FKEYRUN10              33546
-#define ID_SCRIPT_MAPFUNCTIONKEY        33547
-#define ID_SCRIPT_LISTFKEYMAPPINGS      33548
-#define ID_BEAMSPOT_PARALLELILLUMINATION 33549
-#define ID_HELP_LISTDEBUGOUTPUTKEYLETTERS 33550
-#define ID_SPECIALIZEDMISC_SETTHRESHOLDFORRIGHT 33551
+#define ID_MACRO_FKEYRUN11              33547
+#define ID_MACRO_FKEYRUN12              33548
+#define ID_SCRIPT_MAPFUNCTIONKEY        33549
+#define ID_SCRIPT_LISTFKEYMAPPINGS      33550
+#define ID_BEAMSPOT_PARALLELILLUMINATION 33551
+#define ID_HELP_LISTDEBUGOUTPUTKEYLETTERS 33552
+#define ID_SPECIALIZEDMISC_SETTHRESHOLDFORRIGHT 33553
 
 // Next default values for new objects
 // 
@@ -3186,7 +3188,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        300
-#define _APS_NEXT_COMMAND_VALUE         33552
+#define _APS_NEXT_COMMAND_VALUE         33554
 #define _APS_NEXT_CONTROL_VALUE         3635
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
