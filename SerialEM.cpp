@@ -121,13 +121,13 @@ static int  initialDlgState[MAX_TOOL_DLGS] =
 static COLORREF dlgBorderColors[] =
 {RGB(255,0,0), RGB(0,0,170), RGB(0,255,0), RGB(255,128,0), RGB(255,183,120), 
 RGB(0,128,255), RGB(0,140,60), RGB(255,255,0), RGB(255,0,255), RGB(128,64,64), 
-RGB(0,255,255), RGB(127,0,192), RGB(150,160,0), RGB(255,170,255), RGB(75,75,0), 
-RGB(0,0,0), RGB(255,255,255)};
+RGB(0,255,255), RGB(127,0,192), RGB(150,160,0), RGB(150,160,0), RGB(255,170,255),
+RGB(75,75,0), RGB(0,0,0), RGB(255,255,255)};
 
 static UINT sToolDlgIDs[] = 
 {IDD_BUFFERSTATUS, IDD_BUFFERCONTROL, IDD_IMAGELEVEL, IDD_SCOPESTATUS, IDD_REMOTE_CONTROL,
 IDD_TILTCONTROL, IDD_CAMERA_MACRO, IDD_ALIGNFOCUS, IDD_LOWDOSE, IDD_MONTAGECONTROL,
-IDD_STEMCONTROL, IDD_FILTERCONTROL, IDD_DETOOLDLG};
+IDD_STEMCONTROL, IDD_FILTERCONTROL, IDD_DETOOLDLG, IDD_DECTRIS_TOOLDLG};
 
 // Static variable for com and other errors to be reported in, watched by OnIdle
 static int sThreadError = 0;
@@ -332,6 +332,7 @@ CSerialEMApp::CSerialEMApp()
     mCamParams[i].ReadoutInterval = 0.;
     mCamParams[i].CamFlags = 0;
     mCamParams[i].DE_camType = 0;      // Wasn't init
+    mCamParams[i].DectrisType = 0;
     mCamParams[i].DE_ImageInvertX = 0;
     mCamParams[i].DE_ImageRot = 0;
     mCamParams[i].DE_FramesPerSec = -1.;
@@ -934,13 +935,13 @@ CSerialEMApp theApp;
 BOOL CSerialEMApp::InitInstance()
 {
   int iSet, iCam, iAct, mag, indSpace, indQuote1, indQuote2;
-  bool anyFrameSavers = false;
+  bool anyFrameSavers = false, anyDectris = false;
   char fullPath[MAX_PATH + 10];
   CameraParameters *camP;
   CString message, dropCameras, settingsFile, str;
   void *toolDlgs[] = {&mStatusWindow, &mBufferWindow, &mImageLevel, &mScopeStatus,
   &mRemoteControl, &mTiltWindow, &mCameraMacroTools, &mAlignFocusWindow, &mLowDoseDlg,
-    &mMontageWindow, &mSTEMcontrol, &mFilterControl, &mDEToolDlg};
+    &mMontageWindow, &mSTEMcontrol, &mFilterControl, &mDEToolDlg, &mDectrisToolDlg};
   for (mag = 0; mag < sizeof(toolDlgs) / sizeof(void *); mag++)
     mToolDlgs[mag] = (CToolDlg *)toolDlgs[mag];
 
@@ -1289,7 +1290,7 @@ BOOL CSerialEMApp::InitInstance()
     mCamParams[iCam].GatanCam = mCamParams[iCam].DMCamera && !mCamParams[iCam].AMTtype;
     if (!mCamParams[iCam].GatanCam)
       mCamParams[iCam].K2Type = 0;
-    if (mCamParams[iCam].K2Type)
+    if (CamHasDoubledBinnings(&mCamParams[iCam]))
       AdjustSizesForSuperResolution(iCam);
   }
 
@@ -1420,6 +1421,8 @@ BOOL CSerialEMApp::InitInstance()
         mDEcamCount++;
       }
     }
+    if (camP->DectrisType)
+      anyDectris = true;
   }
 
   mScopeHasFilter = anyGIF || mScope->GetHasOmegaFilter();
@@ -1474,6 +1477,7 @@ BOOL CSerialEMApp::InitInstance()
   CREATE_IF_SHOWING(mScopeHasSTEM && !IsIDinHideSet(-20), 10);
   CREATE_IF_SHOWING(mScopeHasFilter && !IsIDinHideSet(-21), 11);
   CREATE_IF_SHOWING(mDEcamCount > 0 && !IsIDinHideSet(-22), 12);
+  CREATE_IF_SHOWING(anyDectris && !IsIDinHideSet(-23), 13);
 
   if (mDEcamCount > 0)
 	  mDEToolDlg.setUpDialogNames(DE_camNames,mDEcamCount);
@@ -2656,6 +2660,8 @@ BOOL CSerialEMApp::CheckIdleTasks()
       busy = mMultiGridTasks->MulGridSeqBusy();
     else if (idc->source == TASK_MULTI_MAP_HOLES)
       busy = mNavHelper->mHoleFinderDlg->MultiMapBusy();
+    else if (idc->source == TASK_DECTRIS_INITIALIZE)
+      busy = mDectrisToolDlg.InitializeBusy();
     else if (idc->source == TASK_AUTO_STEP_ADJ_IS)
       busy = CMultiShotDlg::AutoStepBusy();
     else if (idc->source == TASK_SNAPSHOT_TO_BUF)
@@ -2815,6 +2821,10 @@ BOOL CSerialEMApp::CheckIdleTasks()
           mMainFrame->DoClose(true);
         else if (idc->source == TASK_AUTO_CONTOUR)
           mNavHelper->mAutoContouringDlg->AutoContDone();
+        else if (idc->source == TASK_DECTRIS_INITIALIZE)
+          mDectrisToolDlg.InitializeDone();
+        else if (idc->source == TASK_DECTRIS_FLATFIELD)
+          mDectrisToolDlg.FlatfieldNextTask();
         else if (idc->source == TASK_MULTI_GRID || idc->source == TASK_MULGRID_SEQ)
           mMultiGridTasks->MultiGridNextTask(idc->param);
         else if (idc->source == TASK_SNAPSHOT_TO_BUF && CSerialEMView::mSnapshotData)
@@ -2932,6 +2942,10 @@ BOOL CSerialEMApp::CheckIdleTasks()
           CMultiShotDlg::StopRecording();
         else if (idc->source == TASK_AUTO_CONTOUR)
           mNavHelper->mAutoContouringDlg->CleanupAutoCont(busy);
+        else if (idc->source == TASK_DECTRIS_INITIALIZE)
+          mDectrisToolDlg.CleanupInitialize(busy);
+        else if (idc->source == TASK_DECTRIS_FLATFIELD)
+          mDectrisToolDlg.CleanupFlatfield(busy);
         else if (idc->source == TASK_MULTI_GRID)
           mMultiGridTasks->CleanupMultiGrid(busy);
         else if (idc->source == TASK_MULGRID_SEQ)
@@ -3050,6 +3064,8 @@ void CSerialEMApp::ErrorOccurred(int error)
     mFilterTasks->StopRefineZLP();
   if (mGainRefMaker->AcquiringGainRef())
     mGainRefMaker->StopAcquiringRef();
+  if (mDectrisToolDlg.GetDoingFlatfield())
+    mDectrisToolDlg.FlatfieldDone();
   if (mDistortionTasks->DoingStagePairs())
     mDistortionTasks->StopStagePairs();
   if (mNavigator && mNavigator->GetAcquiring())
@@ -3131,6 +3147,8 @@ void SEMReportCOMError(_com_error E, CString inString, CString *outStr, bool ski
 {
   CString sDescription;
   ScopePluginFuncs *plugFuncs;
+  if (CEMscope::GetScopeCallFromPlugin())
+    return;
   if (E.Error() == JEOL_FAKE_HRESULT || E.Error() == PLUGIN_FAKE_HRESULT || 
     E.Error() == NOFUNC_FAKE_HRESULT) {
     if (E.Error() == JEOL_FAKE_HRESULT) {
@@ -3690,6 +3708,7 @@ void CSerialEMApp::UpdateBufferWindows()
   mLowDoseDlg.Update();
   mMontageWindow.Update();
   mDEToolDlg.Update();
+  mDectrisToolDlg.UpdateEnables();
   if (mFilterParams.firstGIFCamera >= 0 || mScope->GetHasOmegaFilter())
     mFilterControl.Update();
   if (mShowRemoteControl)
@@ -3801,7 +3820,7 @@ BOOL CSerialEMApp::DoingImagingTasks()
     mFilterTasks->CalibratingMagShift() ||
     mFilterTasks->RefiningZLP() ||
     mGainRefMaker->AcquiringGainRef() ||
-    mDistortionTasks->DoingStagePairs() ||
+    mDistortionTasks->DoingStagePairs() || mDectrisToolDlg.DoingInitialize() ||
     mCalibTiming->Calibrating() || CMultiShotDlg::DoingAutoStepAdj() ||
     mCalibTiming->DoingDeadTime() || mMultiGridTasks->GetDoingMulGridSeq() ||
     (mNavigator && ((mNavigator->GetAcquiring() && !mNavigator->GetStartedTS() && 
@@ -5319,6 +5338,27 @@ void SEMAppendToLog(CString inString, int inAction, int lineFlags)
 {
   ((CSerialEMApp *)AfxGetApp())->AppendToLog(inString, inAction, lineFlags);
 };
+
+#define GETSET_TWO_SCOPE_DBL(name) \
+BOOL DLL_IM_EX Get##name(double &outX, double &outY) \
+{ \
+  CEMscope::SetScopeCallFromPlugin(1);  \
+  BOOL ret = ((CSerialEMApp *)AfxGetApp())->mScope->Get##name(outX, outY); \
+  CEMscope::SetScopeCallFromPlugin(0);  \
+  return ret; \
+}  \
+BOOL DLL_IM_EX Set##name(double inX, double inY) \
+{ \
+  CEMscope::SetScopeCallFromPlugin(1);  \
+  BOOL ret = ((CSerialEMApp *)AfxGetApp())->mScope->Set##name(inX, inY); \
+  CEMscope::SetScopeCallFromPlugin(0);  \
+  return ret; \
+}
+
+GETSET_TWO_SCOPE_DBL(ImageShift);
+GETSET_TWO_SCOPE_DBL(BeamShift);
+GETSET_TWO_SCOPE_DBL(BeamTilt);
+GETSET_TWO_SCOPE_DBL(ObjectiveStigmator);
 
 double CSerialEMApp::ProgramStartTime(void)
 {

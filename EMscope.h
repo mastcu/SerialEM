@@ -590,6 +590,8 @@ public:
   GetSetMember(int, LDFreeLensDelay);
   GetSetMember(int, OpenValvesDelay);
   GetSetMember(int, MonitorC2ApertureSize);
+  static int GetScopeCallFromPlugin() {return mScopeCallFromPlugin ; };
+  static void SetScopeCallFromPlugin(int val) { mScopeCallFromPlugin = val; };
   GetMember(int, LastMagIndex);
   std::vector<ShortVec> *GetApertureLists() { return &mApertureSizes; };
   void GetRawImageShift(double &ISX, double &ISY) { ISX = mLastISX; ISY = mLastISY; };
@@ -671,6 +673,7 @@ private:
   static double mPreviousISX;  // IS before the last one seen in update
   static double mPreviousISY;
   static double mTiltAngle;
+  static int mScopeCallFromPlugin; // Flag that errors should be returned, not processed
   int mLastCamLenIndex;        // Last value of camera length index
   static BOOL mLastEFTEMmode;  // Last value of EFTEM mode from update
   static BOOL mBeamBlanked;    // To keep track of actual blank state

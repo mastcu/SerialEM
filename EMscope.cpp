@@ -152,6 +152,7 @@ double CEMscope::mPreviousISY;
 BOOL   CEMscope::mBeamBlanked = false;
 char * CEMscope::mFEIInstrumentName;
 ScopePluginFuncs *CEMscope::mPlugFuncs;
+int CEMscope::mScopeCallFromPlugin = 0;
 
 #define VAR_BOOL(a) ((a) ? *vTrue : *vFalse)
 
@@ -9820,6 +9821,9 @@ int CEMscope::LookupScriptingCamera(CameraParameters *params, bool refresh,
         else
           params->canTakeFrames = 0;
       }
+      if (UtapiSupportsService(UTSUP_CAM_CONTIN) && 
+        (params->CamFlags & PLUGFEI_CAN_LIVE_MODE))
+        params->useContinuousMode = 1;
     } else {
       params->minimumDrift = (float)B3DMAX(params->minimumDrift, minDrift);
     }

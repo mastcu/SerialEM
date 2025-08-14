@@ -67,6 +67,7 @@
 #include "STEMcontrolDlg.h"
 #include "RemoteControl.h"
 #include "./DirectElectron/DirectElectronToolDlg.h"
+#include "DectrisToolDlg.h"
 #include "Utilities\SEMUtilities.h"
 
 typedef std::set<std::string> StringSet;
@@ -94,7 +95,7 @@ enum Tasks {TASK_NAVIGATOR_ACQUIRE, TASK_DISTORTION_STAGEPAIR, TASK_CAL_BEAMSHIF
   TASK_DEWARS_VACUUM, TASK_NAV_ACQ_RETRACT, TASK_MONT_MULTISHOT, TASK_AUTO_CONTOUR,
   TASK_SNAPSHOT_TO_BUF, TASK_NAV_FILE_RANGE, TASK_MONT_MACRO, TASK_LD_SHIFT_OFFSET,
   TASK_MULTI_GRID, TASK_MULGRID_SEQ, TASK_MULTI_MAP_HOLES, TASK_AUTO_STEP_ADJ_IS,
-  TASK_PREV_PRESCAN
+  TASK_PREV_PRESCAN, TASK_DECTRIS_FLATFIELD, TASK_DECTRIS_INITIALIZE
 };
 
 enum CalTypes {CAL_DONE_IS = 0, CAL_DONE_STAGE, CAL_DONE_FOCUS, CAL_DONE_BEAM, 
@@ -205,22 +206,28 @@ struct JeolParams;
 
 #define DTOR 0.01745329252
 
-// Flags and definitions for plugins
+// Flags for plugins to pass back
 #define PLUGFLAG_CAMERA            1
 #define PLUGFLAG_SCOPE             (1 << 1)
 #define PLUGFLAG_INFOEX            (1 << 2)
 #define PLUGFLAG_TSCALLS           (1 << 3)
-#define PLUGFLAG_PIEZO             (1 << 4)
+#define PLUGFLAG_PIEZO             (1 << 4)   // 0x10
 #define PLUGFLAG_DECAM             (1 << 5)
 #define PLUGFLAG_RETURNS_FLOATS    (1 << 6)
 #define PLUGFLAG_FLOATS_BY_FLAG    (1 << 7)
-#define PLUGFLAG_CAN_DIV_MORE      (1 << 8)
+#define PLUGFLAG_CAN_DIV_MORE      (1 << 8)   // 0x100
 #define PLUGFLAG_SCRIPT_LANG       (1 << 9)
 #define PLUGFLAG_NO_DIV_BY_2       (1 << 10)
 #define PLUGFLAG_SINGLE_OK_IF_SAVE (1 << 11)
-#define PLUGCALL_TSACTION          1
+#define PLUGFLAG_DECTRIS           (1 << 12)  // 0x1000
+#define PLUGCALL_TSACTION          1          // Passed in flags for getCallEx
+
+// Flags passed to plugins as Acquire Flags
 #define PLUGCAM_DIVIDE_BY2         1
-#define PLUGCAM_CONTINUOUS         2
+#define PLUGCAM_CONTINUOUS         (1 << 1)  // 0x2    For STEM
+#define PLUGCAM_SINGLE_EVENT       (1 << 2)  // 0x4
+#define PLUGCAM_DO_SUPER_RES       (1 << 3)  // 0x8
+
 // See SEMCCDDefines.h for bits 17-21
 #define PLUGCAM_PARTIAL_SCAN  (1 << 22)
 #define PLUGCAM_ABORT_SCAN    (1 << 23)
@@ -242,6 +249,7 @@ struct JeolParams;
 #define PLUGFEI_CAM_CAN_ALIGN     0x800
 #define PLUGFEI_CAM_CONTIN_SAVE   0x1000
 #define PLUGFEI_CAN_DARK_ONLY     0x2000
+#define PLUGFEI_CAN_LIVE_MODE     0x4000
 #define PLUGFEI_NO_RECORD_LIMIT   1000000000
 #define PLUGFEI_INDEX_MASK        0xFF
 #define PLUGFEI_MAX_FRAC_SHIFT    16
@@ -253,6 +261,7 @@ struct JeolParams;
 #define PLUGFEI_TAKE_UNBINNED     0x20
 #define PLUGFEI_SKIP_FRAME_WAIT   0x40
 #define PLUGFEI_DARK_CORR_ONLY    0x80
+#define PLUGFEI_USE_LIVE_MODE    0x100
 
 typedef _variant_t PLUGIN_BOOL;
 typedef void (*PlugStopFunc)(int);
@@ -479,7 +488,17 @@ bool DLL_IM_EX SEMSetVariableWithDbl(CString name, double value, bool persistent
 int DLL_IM_EX SEMQueueScriptNextIdle(CString name);
 void DLL_IM_EX AddBackTraceToMessage(CString &message);
 void DLL_IM_EX SEMAppendToLog(CString inString, int inAction = LOG_OPEN_IF_CLOSED, int lineFlags = 0);
+
+// Functions that return true on success, false on error
 BOOL DLL_IM_EX SEMScanningMags();
+BOOL DLL_IM_EX SEMSetImageShift(double inX, double inY);
+BOOL DLL_IM_EX SEMGetImageShift(double &outX, double &outY);
+BOOL DLL_IM_EX SEMSetBeamShift(double inX, double inY);
+BOOL DLL_IM_EX SEMGetBeamShift(double &outX, double &outY);
+BOOL DLL_IM_EX SEMSetBeamTilt(double inX, double inY);
+BOOL DLL_IM_EX SEMGetBeamTilt(double &outX, double &outY);
+BOOL DLL_IM_EX SEMSetObjectiveStigmator(double inX, double inY);
+BOOL DLL_IM_EX SEMGetObjectiveStigmator(double &outX, double &outY);
 
 class DLL_IM_EX CSerialEMApp : public CWinApp
 {
@@ -755,6 +774,7 @@ public:
   CFilterControlDlg mFilterControl;
   CSTEMcontrolDlg mSTEMcontrol;
   DirectElectronToolDlg mDEToolDlg;
+  CDectrisToolDlg mDectrisToolDlg;
   CMainFrame *mMainFrame;
 
   EMbufferManager *mBufferManager;
