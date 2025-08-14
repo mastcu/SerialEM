@@ -553,6 +553,7 @@ void CMainFrame::DoClose(bool afterScript)
   mWinApp->mScope->KillUpdateTimer();
   mWinApp->mCamera->KillUpdateTimer();
   mWinApp->mDEToolDlg.KillUpdateTimer();
+  mWinApp->mDectrisToolDlg.KillUpdateTimer();
   mWinApp->mCamera->RestoreGatanOrientations();
   if (!disconnected)
     mWinApp->mCamera->RestoreFEIshutter();

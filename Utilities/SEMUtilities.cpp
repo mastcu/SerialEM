@@ -770,18 +770,18 @@ bool UtilMagInInvertedRange(int magInd, BOOL EFTEM)
 // Return a divisor for a binning to apply for a camera with super-resolution mode
 int BinDivisorI(CameraParameters *camParam)
 {
-  return (camParam->K2Type ? 2 : 1);
+  return ((camParam->K2Type || DECTRIS_WITH_SUPER_RES(camParam))? 2 : 1);
 }
 
 float BinDivisorF(CameraParameters *camParam)
 {
-  return (camParam->K2Type ? 2.f : 1.f);
+  return (camParam->K2Type || DECTRIS_WITH_SUPER_RES(camParam) ? 2.f : 1.f);
 }
 
 // Return true if a camera has its binnings doubled to allow for super-res images
 bool CamHasDoubledBinnings(CameraParameters *camParam)
 {
-  return (camParam->K2Type > 0);
+  return (camParam->K2Type > 0) || DECTRIS_WITH_SUPER_RES(camParam);
 }
 
 // Returns the index in the CamLowDoseParams for the given camera (-1 for current)

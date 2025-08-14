@@ -17,7 +17,9 @@
       ones for Falcon cameras in <a href="#FalconControls">Controls for Thermo/FEI Falcon
       Cameras</a>. The simpler set of options for other cameras that can take frames are described in
       <A href="#FrameControls">Controls for Other Cameras that Can Take Frames
-      (OneView, Rio, ClearView, Metro, Tietz XF416/Fn16, Ceta 2)</A>. &nbsp;Controls for STEM acquisition, and modifications of the existing
+      (OneView, Rio, ClearView, Metro, Tietz XF416/Fn16, Ceta 2, DECTRIS)</A>.&nbsp; 
+      Some different features for DECTRIS cameras are described in <a href="#dectris">
+      Modifications for DECTRIS Cameras</a>.&nbsp;Controls for STEM acquisition, and modifications of the existing
       controls, are described in
       <A HREF="#STEMcontrols">Controls in STEM Mode.</A>
     </P>
@@ -584,7 +586,7 @@
       name subfolders will not be available in the other dialog.</P>
     <P>&nbsp;</P>
     <P><i><A NAME="FrameControls"></A><B><FONT size="3">Controls for Other Cameras that Can Take Frames
-      (OneView, Rio, Clearview, Metro, Tietz XF416/Fn16, and Ceta 2)</FONT></B></i></P>
+      (OneView, Rio, Clearview, Metro, Tietz XF416/Fn16, Ceta 2, and DECTRIS)</FONT></B></i></P>
     <P>For a camera capable of taking frames, controls in this section will appear 
       based on the CanTakeFrames entry in SerialEMproperties.txt: either ones related to saving
       frames, or ones related to aligning frames, or both.&nbsp; </P>
@@ -662,6 +664,32 @@
       In this situation,&nbsp;if you enter into the text box a
       new directory that is accessible only from a separate camera computer,
       be sure to create this directory before trying to acquire.</P>
+    <P>&nbsp;</P>
+    <P><strong><em><A NAME="dectris"></A><FONT size="3">Modifications for DECTRIS Cameras</FONT></em></strong></P>
+    <P>The features described here are available only if the camera properties have a 
+      'DectrisCameraType' entry AND a newer (2025) DectrisPlugin.dll has been loaded 
+      that identifies itself as a DECTRIS plugin. </P>
+    <P><strong>Single Event Processing and Super-resolution Mode</strong></P>
+    <P>If a DECTRIS camera supports event processing (electron counting), a checkbox 
+      will appear below the <strong>Processing</strong> group box to activate the 
+      single event processing.&nbsp; If the camera also supports super-resolution 
+      mode, then the <strong>Binning</strong> group box will include binning 0.5.&nbsp; 
+      This binning can be selected only when single event processing is selected.&nbsp; 
+      If the checkbox is turned off when binning 0.5 is selected, the binning will 
+      switch to 1.</P>
+    <P><strong>Frame Time in Milliseconds</strong></P>
+    <P>Because of the very high frame rates of these cameras, the frame time is shown 
+      in milliseconds instead of seconds in the <strong>Frame time</strong> 
+      entry box.</P>
+    <P><strong>Saving HDF5 Files</strong></P>FFrame files can be saved either as MRC by SerialEM, after it receives each 
+      frame, or directly as HDF5 files by the DECTRIS software.&nbsp; Saving as HDF5 
+      can be selected by pressing the <strong>Set File Options</strong> button to open 
+      the <a href="hidd_k2_save_options.htm">Frame File
+      Options dialog</a> and turning on the HDF5 checkbox at the top.&nbsp; In this 
+      case, SerialEM does not receive the frames and cannot align them; thus, the 
+      option to align frames, if present, will be disabled and have no effect if 
+      checked.&nbsp; Also, the complete filename,, which includes an assigned number, 
+      is unknown and will not be shown in the log.</P>
     <P>&nbsp;</P>
     <P><i><A NAME="STEMcontrols"></A><B><FONT size="3">Controls in STEM Mode</FONT></B></i></P>
 

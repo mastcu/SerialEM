@@ -1662,6 +1662,14 @@
             OneView even though it is similar to a K3.&nbsp; Set to 6 for a ClearView camera.</TD>
         </TR>
         <TR VALIGN="top">
+          <TD>DectrisCameraType</TD>
+          <TD>Set to 1 for Quadro, 2 for Ela, 3 for Singla with a selection of incident 
+            energies and only Auto for threshold energy, 4 for Singla with a selection of 
+            threshold energies and only Auto for incident energy, 5 for Sarina Si, and 6 for 
+            Sarina CZT.&nbsp; The DectrisPlugin.dll that is loaded must be the newer (2025) 
+            version that identifies itself as being for DECTRIS cameras.</TD>
+        </TR>
+        <TR VALIGN="top">
           <TD>RotationAndFlip</TD>
           <TD>This entry is used for STEM cameras, Gatan cameras where SerialEM supports saving frames
             (K2/K3, OneView/Rio, Metro, Alpine and ClearView), and Falcon cameras, as well as for
@@ -1864,6 +1872,13 @@
             assessing the readout interval described in 
             <a href = "setting_up_serialem.htm#falcon4timing">Adjusting timing for Falcon 4 camera</a>.
           </TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>DectrisSingleEventProcessing</TD>
+          <TD>Set to 1 if the camera supports single event processing (electron counting) or 
+            2 if it can also acquire 2x super-resolution images.&nbsp; For a camera 
+            supporting super-resolution, all size-related properties are entered in terms of 
+            physical rather than super-resolution pixels.</TD>
         </TR>
         <TR VALIGN="top">
           <TD>CameraSizeX</TD>

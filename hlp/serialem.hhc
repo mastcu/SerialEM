@@ -242,6 +242,11 @@
 			<param name="Local" value="html/hidd_detoolpanel.htm">
 			</OBJECT>
 			<A HREF="html/hidd_detoolpanel.htm">Direct Electron Camera Panel</A><BR>
+		<LI><OBJECT type="text/sitemap">
+			<param name="Name" value="DECTRIS Detector Control Panel">
+			<param name="Local" value="html/hidd_dectris_tooldlg.htm">
+			</OBJECT>
+			<A HREF="html/hidd_dectris_tooldlg.htm">DECTRIS Detector Control Panel</A><BR>
 	</UL>
 	<LI><OBJECT type="text/sitemap">
 		<param name="Name" value="Dialog Boxes">
@@ -487,6 +492,11 @@
 			<param name="Local" value="html/hidd_stagemovetool.htm">
 			</OBJECT>
 			<A HREF="html/hidd_readfiledlg.htm">Stage Move Tool</A><BR>
+		<LI><OBJECT type="text/sitemap">
+			<param name="Name" value="DECTRIS Advanced Settings dialog">
+			<param name="Local" value="html/hidd_dectris_advanced.htm">
+			</OBJECT>
+			<A HREF="html/hidd_dectris_advanced.htm">DECTRIS Advanced Settings dialog</A><BR>
 	</UL>
 </UL>
 </HTML>

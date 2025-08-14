@@ -488,6 +488,7 @@ CCameraController::CCameraController()
   mGIFslitWidthScaling = 1.;
   mFalconWarningCount = 0;
   mNewImageCallback = NULL;
+  mDectrisSaveAsHDF = false;
   for (l = 0; l < MAX_CHANNELS; l++)
     mTD.PartialArrays[l] = NULL;
 }
@@ -675,6 +676,8 @@ int CCameraController::Initialize(int whichCameras)
   {0.066667f, 0.016667f, 0.016667f, 0.016667f}, {0.05f,0.0125f, 0.00625f, 0.00625f},
   {0.066667f, 0.066667f, 0.066667f, 0.066667f}, {0.00203f, 0.00203f, 0.00203f},
   {0.000625f,0.000625f, 0.000625f}};
+  float dectrisDivisors[MAX_DECTRIS_TYPES] = {1.f / 4500.f, 1.f / 4500.f, 1.f / 4500.f,
+    1.f / 4500.f, 1.f / 1.2e5f,1.f / 1.2e5f};
   float tietzFrame;
   int i, ind, jnd, err, DMind, ovInd;
   long num;
@@ -813,7 +816,7 @@ int CCameraController::Initialize(int whichCameras)
       if (param->TietzType >= MIN_XF416_TYPE || param->OneViewType == METRO_TYPE)
         param->canTakeFrames = 3;
     }
-    if (IsDirectDetector(param) && !param->OneViewType)
+    if (IsDirectDetector(param) && !param->OneViewType && !param->DectrisType)
       param->canTakeFrames = 0;
 
     if (param->canTakeFrames) {
@@ -827,6 +830,8 @@ int CCameraController::Initialize(int whichCameras)
           if (ovInd >= 0) {
             if (jnd < 4)
               param->frameTimeDivisor[jnd] = ovFrameDivisors[ovInd][jnd];
+          } else if (mParam->DectrisType) {
+            param->frameTimeDivisor[jnd] = dectrisDivisors[mParam->DectrisType - 1];
           } else if (!jnd || param->AMTtype)
             param->frameTimeDivisor[jnd] = 0.001f;
         }
@@ -1732,6 +1737,16 @@ void CCameraController::InitializePluginCameras(int &numPlugListed, int *origina
           mAllParams[i].CamFlags |= CAMFLAG_NO_DIV_BY_2;
         if (flags & PLUGFLAG_SINGLE_OK_IF_SAVE)
           mAllParams[i].CamFlags |= CAMFLAG_SINGLE_OK_IF_SAVE;
+        if (!err && (flags & PLUGFLAG_DECTRIS) && !mAllParams[i].DectrisType) {
+          AfxMessageBox("With the newer DECTRIS plugin that was loaded,\n"
+            "additional features will be available if the properties\nfor the camera "
+            "named " + mAllParams[i].name + " include a DectrisCameraType entry");
+        } else if (!err && !(flags & PLUGFLAG_DECTRIS) && mAllParams[i].DectrisType) {
+          AfxMessageBox("An older DECTRIS plugin was loaded and the properties\n"
+            "for the camera named " + mAllParams[i].name + " should NOT"
+            " include a DectrisCameraType entry");
+          mAllParams[i].DectrisType = 0;
+        }
 
         // Send a gain index if that function exists and there is a non-negative value
         // Clamp it to the given range if the the plugin supplies a limit 
@@ -2125,7 +2140,7 @@ BOOL CCameraController::GetInitialized()
   if (camP->FEItype)
     return mFEIinitialized;
   if (!camP->pluginName.IsEmpty())
-    return mPlugInitialized;
+    return mPlugInitialized && !camP->failedToInitialize;
   return mDMInitialized[CAMP_DM_INDEX(camP)];
 }
 
@@ -3114,12 +3129,14 @@ void CCameraController::Capture(int inSet, bool retrying)
 {
   int ind, error, setState, binIndex, sumCount, binDiv, special;
   BOOL bEnsureDark = false;
-  CString logmess;
+  CString logmess, ext;
   FrameAliParams faParam;
   int numActive = mWinApp->GetNumActiveCameras();
   int gainXoffset, gainYoffset, offsetPerMs;
   double intensity,exposure, megaVoxel, megaVoxPerSec = 0.15;
   float scaleFac;
+  DectrisPlugFuncs *dectrisFuncs;
+  std::string dirStr, nameStr;
   bool superRes, falconHasFrames, weCanAlignFalcon, aligningOnly, alignNotSave;
   BOOL retracting = inSet == RETRACT_BLOCKERS || inSet == RETRACT_ALL;
   mWinApp->CopyOptionalSetIfNeeded(inSet);
@@ -3583,6 +3600,7 @@ void CCameraController::Capture(int inSet, bool retrying)
   mTD.FEItype = mParam->FEItype;
   mTD.CamFlags = mParam->CamFlags;
   mTD.DE_camType = mParam->DE_camType;
+  mTD.DectrisType = mParam->DectrisType;
   mTD.TietzFlatfieldDir = mParam->pluginCanProcess ? mParam->TietzFlatfieldDir : "";
 
   // DNM: this was added for NCMIR camera
@@ -3781,6 +3799,18 @@ void CCameraController::Capture(int inSet, bool retrying)
     if (mParam->TietzType) {
       mTD.PluginFrameFlags = mParam->dropFrameFlags;
     }
+    if (mParam->DectrisType && mDectrisSaveAsHDF) {
+      UtilSplitExtension(mFrameFilename, logmess, ext);
+      dectrisFuncs = mWinApp->mPluginManager->GetDectrisFuncs();
+      dirStr = (LPCTSTR)mFrameFolder;
+      nameStr = (LPCTSTR)logmess;
+      if (dectrisFuncs->SetHDF5FileSave(&dirStr, &nameStr)) {
+        SEMMessageBox("The call to tell DECTRIS plugin to save in an HDF5 file returned"
+          " with an error");
+        ErrorCleanup(1);
+        return;
+      }
+    }
   }
   mTD.NeedFrameDarkRef = mSavingPluginFrames || mAligningPluginFrames;
 
@@ -3904,6 +3934,12 @@ void CCameraController::Capture(int inSet, bool retrying)
   }
   if (mTD.plugFuncs && (mParam->CamFlags & CAMFLAG_RESTORE_SETTINGS))
     mTD.PluginAcquireFlags |= PLUGCAM_RESTORE_SETTINGS;
+
+  // Set single event and super-res flags for Dectris
+  if (DECTRIS_WITH_COUNTING(mParam) && conSet.K2ReadMode)
+    mTD.PluginAcquireFlags |= PLUGCAM_SINGLE_EVENT;
+  if (DECTRIS_WITH_SUPER_RES(mParam) && conSet.binning == 1)
+    mTD.PluginAcquireFlags |= PLUGCAM_DO_SUPER_RES;
 
   // Set timeout for camera acquires from exposure and readout components
   megaVoxel = (mDMsizeX * mDMsizeY / 1.e6) / (mParam->fourPort ? 4. : 1.);
@@ -4100,7 +4136,8 @@ void CCameraController::Capture(int inSet, bool retrying)
       // This variable will serve as the flag that the mode is on
       if (((mParam->GatanCam && !mParam->STEMcamera && !conSet.doseFrac) ||
         (mTD.plugFuncs && mTD.plugFuncs->StopContinuous) || 
-        (mParam->DE_camType >= 2 && !conSet.saveFrames)) &&
+        (mParam->DE_camType >= 2 && !conSet.saveFrames) || 
+        (mParam->FEItype && (mParam->CamFlags & PLUGFEI_CAN_LIVE_MODE))) &&
         mParam->useContinuousMode > 0) {
           mTD.ProcessingPlus += CONTINUOUS_USE_THREAD + 
             (mParam->setContinuousReadout ? CONTINUOUS_SET_MODE : 0) +
@@ -4112,6 +4149,9 @@ void CCameraController::Capture(int inSet, bool retrying)
               mTD.ProcessingPlus += CONTINUOUS_FIRST_TIME;
             mTD.GatanReadMode = 1;
           }
+
+          if (mParam->FEItype)
+            mTD.FEIacquireFlags |= PLUGFEI_USE_LIVE_MODE;
 
           // Make sure the camera timeout is appropriately longer than the return time
           // Plus, if continuous has already started, the return time governs completely
@@ -5272,7 +5312,7 @@ void CCameraController::CapManageCoordinates(ControlSet & conSet, int &gainXoffs
   int tLeft, tTop, tBot, tRight, tsizeX, tsizeY, margin, reducedSizeX, reducedSizeY;
   BOOL unbinnedK2, doseFrac, superRes, antialiasInPlugin, swapXYinAcquire = false;
   bool reduceAligned, binInPlugin, oneViewTakingFrames, mapForGeometry, cropSubarea;
-  bool noSubarea;
+  bool noSubarea, doubledBinning = false;
 
   // Get the CCD coordinates after binning. First make sure binning is right for K2
   // and set various flags about taking images unbinned and antialiasing in plugin
@@ -5299,6 +5339,10 @@ void CCameraController::CapManageCoordinates(ControlSet & conSet, int &gainXoffs
   reduceAligned = mParam->K2Type && doseFrac && conSet.alignFrames && 
     conSet.useFrameAlign == 1;
   unbinnedK2 = mParam->K2Type && (superRes || doseFrac || antialiasInPlugin);
+  if (mTD.plugFuncs && CamHasDoubledBinnings(mParam)) {
+    doubledBinning = true;
+    superRes = conSet.binning == 1;
+  }
   mBinning = conSet.binning;
   mLeft = conSet.left / mBinning;
   mTop = conSet.top / mBinning;
@@ -5380,7 +5424,7 @@ void CCameraController::CapManageCoordinates(ControlSet & conSet, int &gainXoffs
   // Fix for K2 superresolution mode or dose fractionation
   // Set coordinates for binning 2 (actually unbinned) and set sizes to actual acquired
   // size, 4 times bigger for superres
-  if (unbinnedK2) {
+  if (unbinnedK2 || (superRes && doubledBinning)) {
     tLeft = tLeft * mBinning / 2;
     tRight = tRight * mBinning / 2;
     tTop = tTop * mBinning / 2;
@@ -5440,6 +5484,8 @@ void CCameraController::CapManageCoordinates(ControlSet & conSet, int &gainXoffs
     if (mUseK3CorrDblSamp && CanK3DoCorrDblSamp(mParam))
       mTD.K2ParamFlags |= K3_USE_CORR_DBL_SAMP;
   }
+  if (doubledBinning && !superRes)
+    mTD.Binning /= 2;
 
   if (!(mParam->FEItype || mParam->subareasBad || mParam->TietzType == 8 || 
     mParam->TietzType > 11)) {
@@ -6876,7 +6922,7 @@ float CCameraController::ExposureRoundingFactor(CameraParameters *camP)
 bool CCameraController::IsDirectDetector(CameraParameters *camP)
 {
   return camP->K2Type || IS_FALCON2_3_4(camP) || camP->DE_camType == DE_12 || 
-    camP->OneViewType == METRO_TYPE;
+    camP->OneViewType == METRO_TYPE || DECTRIS_WITH_COUNTING(camP);
 }
 
 // Constrain a frame time for the K2 camera and return true if changed
@@ -9608,6 +9654,7 @@ void CCameraController::DisplayNewImage(BOOL acquired)
   bool oneViewTakingFrames = mParam->OneViewType && mParam->canTakeFrames && mTD.DoseFrac;
   bool K2orOneView = mParam->K2Type || oneViewTakingFrames;
   bool savingContin = FCAM_CONTIN_SAVE(mParam) && mTD.SaveFrames;
+  bool dectrisSavingHDF = mSavingPluginFrames && mParam->DectrisType && mDectrisSaveAsHDF;
   bool needRefCopy;
   static int numDrop = 0, numWait = 0;
 
@@ -9804,23 +9851,28 @@ void CCameraController::DisplayNewImage(BOOL acquired)
     }
 
     // Similarly handle saving/aligning plugin frames
-    if ((mSavingPluginFrames || mAligningPluginFrames) && !mStartedFalconAlign) {
+   if ((mSavingPluginFrames ||
+      mAligningPluginFrames) && !mStartedFalconAlign) {
       darkScale = B3DNINT(mTD.Exposure / mTD.FrameTime);
       if (mSavingPluginFrames) {
-        mPathForFrames.Format("%s%s%s.mrc", (LPCTSTR)mFrameFolder,
-          mFrameFolder.IsEmpty() ? "" : "\\", (LPCTSTR)mFrameFilename);
+        mPathForFrames.Format("%s%s%s%s", (LPCTSTR)mFrameFolder,
+          mFrameFolder.IsEmpty() ? "" : "\\", (LPCTSTR)mFrameFilename, 
+          dectrisSavingHDF ? "....h5" : ".mrc");
         mTD.NumFramesSaved = B3DNINT(mTD.Exposure / mTD.FrameTime);
+        mTD.ErrorFromSave = 0;
       }
-      mTD.ErrorFromSave = mFalconHelper->ProcessPluginFrames(mFrameFolder,
-        mFrameFilename, mConSetsp[mLastConSet], mSavingPluginFrames,
-        mAligningPluginFrames,
-        (mTD.K2ParamFlags & K2_MAKE_ALIGN_COM) ? lastConSetp->faParamSetInd : -1,
-        mDivBy2ForImBuf, refinedPix ? refinedPix : pixelSize, &mTD);
-      mStartedFalconAlign = !mTD.ErrorFromSave && mAligningPluginFrames;
-      if (mStartedFalconAlign) {
-        mWinApp->SetStatusText(SIMPLE_PANE, "ALIGNING " + CurrentSetName().MakeUpper());
-        mInDisplayNewImage = false;
-        return;
+      if (!dectrisSavingHDF) {
+        mTD.ErrorFromSave = mFalconHelper->ProcessPluginFrames(mFrameFolder,
+          mFrameFilename, mConSetsp[mLastConSet], mSavingPluginFrames,
+          mAligningPluginFrames,
+          (mTD.K2ParamFlags & K2_MAKE_ALIGN_COM) ? lastConSetp->faParamSetInd : -1,
+          mDivBy2ForImBuf, refinedPix ? refinedPix : pixelSize, &mTD);
+        mStartedFalconAlign = !mTD.ErrorFromSave && mAligningPluginFrames;
+        if (mStartedFalconAlign) {
+          mWinApp->SetStatusText(SIMPLE_PANE, "ALIGNING " + CurrentSetName().MakeUpper());
+          mInDisplayNewImage = false;
+          return;
+        }
       }
     }
 
@@ -9851,22 +9903,27 @@ void CCameraController::DisplayNewImage(BOOL acquired)
         // For STEM, see if images need to be reoriented or contrast inverted
         operation = mWinApp->mCalibTiming->Calibrating() ? 0 : mParam->rotationFlip;
         invertCon = mWinApp->GetInvertSTEMimages() ? 1 : 0;
-        if (mInvertBrightField <= 0 && 
+        if (mInvertBrightField <= 0 &&
           mParam->channelName[mTD.ChanIndOrig[chan]].Find("Bright") == 0) {
-            if (mInvertBrightField < 0)
-              invertCon = 1 - invertCon;
-            else
-              invertCon = 0;
+          if (mInvertBrightField < 0)
+            invertCon = 1 - invertCon;
+          else
+            invertCon = 0;
         }
         if (mWinApp->mCalibTiming->Calibrating())
           invertCon = 0;
-        if (operation || invertCon) { 
+        if (operation || invertCon) {
           if (RotateAndReplaceArray(chan, operation, invertCon)) {
             SEMMessageBox("Failed to get memory for processing STEM image", MB_EXCLAME);
             errForCleanup = 1;
           }
         }
-        
+
+        // Adjust binning back up for non-super-resolution image from plugin camera
+      } else if (mTD.plugFuncs && CamHasDoubledBinnings(mParam) && 
+        (mTD.PluginAcquireFlags & PLUGCAM_DO_SUPER_RES) == 0) {
+        mTD.Binning *= 2;
+
       } else if ((mParam->K2Type || oneViewTakingFrames) &&  mTD.NumAsyncSumFrames == 0) {
       } else if (mParam->K2Type || oneViewTakingFrames) {
 
@@ -13150,7 +13207,7 @@ bool CCameraController::CanSaveFrameStackMdoc(CameraParameters * param)
 {
   bool canSave = (param->canTakeFrames & FRAMES_CAN_BE_SAVED) != 0;
   return ((param->K2Type || (param->OneViewType && canSave)) && 
-    CAN_PLUGIN_DO(CAN_SAVE_MDOC, param)) || (param->FEItype && !FCAM_CONTIN_SAVE(mParam)
+    CAN_PLUGIN_DO(CAN_SAVE_MDOC, param)) || (param->FEItype //&& !FCAM_CONTIN_SAVE(mParam)
       && !((IS_FALCON3_OR_4(param) || FCAM_CONTIN_SAVE(param)) &&
         mLocalFalconFramePath.IsEmpty())) ||
       (param->DE_camType && mTD.DE_Cam->ServerIsLocal() || (!param->GatanCam && canSave));

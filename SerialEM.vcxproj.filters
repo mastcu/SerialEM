@@ -554,6 +554,12 @@
     <ClInclude Include="DirectElectron\DE.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="DectrisToolDlg.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="DectrisSettingsDlg.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="ManyChoiceDlg.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -920,6 +926,12 @@
       <Filter>HTML Help Topics</Filter>
     </None>
     <None Include="hlp\html\hidd_task_area_options.htm">
+      <Filter>HTML Help Topics</Filter>
+    </None>
+    <None Include="hlp\html\hidd_dectris_tooldlg.htm">
+      <Filter>HTML Help Topics</Filter>
+    </None>
+    <None Include="hlp\html\hidd_dectris_advanced.htm">
       <Filter>HTML Help Topics</Filter>
     </None>
   </ItemGroup>
@@ -1357,6 +1369,12 @@
       <Filter>CSource Files</Filter>
     </ClCompile>
     <ClCompile Include="CtfAcquireParamDlg.cpp">
+      <Filter>CSource Files</Filter>
+    </ClCompile>
+    <ClCompile Include="DectrisToolDlg.cpp">
+      <Filter>CSource Files</Filter>
+    </ClCompile>
+    <ClCompile Include="DectrisSettingsDlg.cpp">
       <Filter>CSource Files</Filter>
     </ClCompile>
     <ClCompile Include="ManyChoiceDlg.cpp">

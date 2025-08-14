@@ -8271,6 +8271,25 @@ BEGIN
                             "List key letter for debug output in log"
 END
 
+STRINGTABLE
+BEGIN
+    IDC_BUT_ACQUIRE_FLATFIELD
+                            "Start acquiring images for computing a new gain reference"
+    IDC_BUT_INIT_DETECTOR   "Start initializing the detector to make it ready for use"
+    IDC_BUT_TOGGLE_HV       "Switch the high voltage for the detector between ready and off"
+    IDC_BUT_ADVANCED_SET    "Open dialog for settings to control energy levels, interpolation, etc."
+    IDC_COMBO_INCIDENT_KV   "Select an incident energy from the list or Auto for automatic selection"
+    IDC_COMBO_THRESHOLD_KV  "Select a threshold energy from the list or Auto for automatic selection"
+    IDC_CHECK_AUTOSUM       "Sum something automatically TODO"
+    IDC_CHECK_COUNTRATE_CORR
+                            "Correct TODO"
+    IDC_CHECK_RETRIGGER     "Trigger TODO"
+    IDC_CHECK_DCU_FLAT_CORR "Apply correction TODO"
+    IDC_CHECK_BAD_PIX_INTERP
+                            "Interpolate bad pixel values from neighboring pixels"
+    IDC_CHECK_MODULE_INTERP "Interpolate TODO"
+END
+
 #endif    // English (United States) resources
 /////////////////////////////////////////////////////////////////////////////
 

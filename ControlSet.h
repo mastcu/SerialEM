@@ -115,6 +115,7 @@ struct CameraParameters {
   float DE_CountingFPS;    // User's setting for FPS in counting mode
   float DE_MaxFrameRate;   // Maximum frame rate from server
   CString DE_AutosaveDir;  // Top folder for autosaves
+  int DectrisType;         // Type of Dectris camera
   int alsoInsertCamera;    // Other camera to insert to make sure blanking is OK
   int samePhysicalCamera;  // Camera on same insertion state
   int eagleIndex;          // Index from looking up eagle camera by name
@@ -664,6 +665,17 @@ struct HitachiParams {
   BOOL usingSharedMem;
   int flags;
   int lastMember;
+};
+
+struct DectrisAdvancedSettings {
+  float incidentEnergy;	// in keV, 0 = “auto”
+  float thresholdEnergy;	// in keV, 0 = “auto”
+  BOOL autosummation;
+  BOOL countrateCorrection;
+  BOOL retrigger;
+  BOOL dcuInternalCorrection;
+  BOOL badPixelInterpolation;
+  BOOL moduleGapInterpolation;
 };
 
 struct ScreenShotParams {

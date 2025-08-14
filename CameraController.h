@@ -98,6 +98,10 @@ typedef void(*NewImCallback)(void);
 // Camera flags for Gatan cameras
 #define K3_CAM_ROTFLIP_BUG        0x2
 
+// DECTRIS camera flags
+#define DECTRIS_HAS_SINGLE_EVENT  0x1
+#define DECTRIS_HAS_SUPER_RES     0x2
+
 // General camera flags: keep DE flags here and PLUGFEI in SerialEM.h from conflicting
 // But these conflict with the max Falcon frames in the high 2 bytes
 #define CAMFLAG_FLOATS_BY_FLAG    (1 << 16)  // 0x10000
@@ -146,6 +150,8 @@ enum {K2_SUMMIT = 1, K2_BASE, K3_TYPE};
 #define PLUGFEI_FILT_FLASH_LOAD   111
 #define PLUGFEI_CONTINUOUS_SAVE   112
 #define PLUGFEI_CAN_BIN_IMAGE     114
+#define DECTRIS_WITH_SUPER_RES(a) ((a)->DectrisType && ((a)->CamFlags & DECTRIS_HAS_SUPER_RES))
+#define DECTRIS_WITH_COUNTING(a) ((a)->DectrisType && ((a)->CamFlags & DECTRIS_HAS_SINGLE_EVENT))
 
 struct DarkRef {
   int Left, Right, Top, Bottom;   // binned CCD coordinates of the image
@@ -181,7 +187,8 @@ struct CameraThreadData {
   int TietzType;              // Or type of Tietz camera
   int FEItype;                // Or flag for FEI camera
   unsigned int CamFlags;      // Flags entry for advanced interface and anything else
-  int DE_camType;             // Flag for NCMIR camera
+  int DE_camType;             // Flag for DE camera
+  int DectrisType;            // Flag for DECTRIS camera
   CString cameraName;         // Camera name for FEI, or mapping name for Tietz (from detector name)
   BOOL checkFEIname;          // Flag to check name of FEI camera
   int STEMcamera;             // Flag for STEM camera
@@ -647,6 +654,7 @@ public:
   GetSetMember(int, MinShotInterval);
   GetSetMember(float, GIFslitWidthScaling);
   SetMember(NewImCallback, NewImageCallback);
+  GetSetMember(BOOL, DectrisSaveAsHDF);
   CameraThreadData *GetCamThreadData() { return &mTD; };
   bool DoingPartialScan() {return mTD.ReturnPartialScan > 0; };
   bool HasCEOSFilter() { return mCEOSFilter != NULL; }
@@ -692,7 +700,7 @@ public:
   void SetAstigToRestore(double inX, double inY) { mAstigXtoRestore = inX;
     mAstigYtoRestore = inY; mNeedToRestoreISandBT |= 4; };
   void SetDefocusToRestore(double focus) { mDefocusToRestore;  mNeedToRestoreISandBT |= 8; };
-
+  CamPluginFuncs *GetOneCamPlugFuncs(int ind) { return mPlugFuncs[ind]; };
  private:
   void AdjustSizes(int &DMsizeX, int ccdSizeX, int moduloX,
                    int &Left, int &Right, int binning, int camera = -1);
@@ -1116,6 +1124,7 @@ public:
   int mMinShotInterval;          // Interval in msec to sleep before a shot
   int mFalconWarningCount;       // Number of times falcon local path warning given
   NewImCallback mNewImageCallback;  // Function to call with new image in place
+  BOOL mDectrisSaveAsHDF;         // Flag for plugin/cmera to save directly as HDF5
 
 
 public:

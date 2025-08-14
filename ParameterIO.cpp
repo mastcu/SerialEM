@@ -3290,7 +3290,10 @@ int CParameterIO::ReadProperties(CString strFileName)
             camP->moduloX = camP->moduloY = -1;
           } else if (MatchNoCase("AMTCameraType"))
             camP->AMTtype = itemInt[1];
-          else if (MatchNoCase("DECameraType")) {
+          else if (MatchNoCase("DectrisCameraType")) {
+            B3DCLAMP(itemInt[1], 0, MAX_DECTRIS_TYPES);
+            camP->DectrisType = itemInt[1];
+          } else if (MatchNoCase("DECameraType")) {
 
             // Old Direct Electron LC_1100 camera is centered only
             camP->DE_camType = itemInt[1];
@@ -3434,10 +3437,10 @@ int CParameterIO::ReadProperties(CString strFileName)
           } else if (MatchNoCase("RefinedPixel")) {
             magInd = itemInt[1];
             if (itemEmpty[2] || magInd < 1 || magInd >= MAX_MAGS) {
-                message.Format("Mag index out of range or missing pixel size in"
-                  " \"RefinedPixel %d\" line for camera %d\nin properties file %s", iset,
-                  strFileName);
-                AfxMessageBox(message, MB_EXCLAME);
+              message.Format("Mag index out of range or missing pixel size in"
+                " \"RefinedPixel %d\" line for camera %d\nin properties file %s", iset,
+                strFileName);
+              AfxMessageBox(message, MB_EXCLAME);
             } else {
               refinedPix->insert(std::pair<int, float>(10 * magInd + iset, itemFlt[2]));
             }
@@ -3461,6 +3464,11 @@ int CParameterIO::ReadProperties(CString strFileName)
           } else if (MatchNoCase("Name")) {
             StripItems(strLine, 1, camP->name);
 
+          } else if (MatchNoCase("DectrisSingleEventProcessing")) {
+            if (itemInt[1] > 0)
+              camP->CamFlags |= DECTRIS_HAS_SINGLE_EVENT;
+            if (itemInt[1] > 1)
+              camP->CamFlags |= DECTRIS_HAS_SUPER_RES;
           } else if (MatchNoCase("DMGainReferenceName"))
             StripItems(strLine, 1, camP->DMRefName);
 

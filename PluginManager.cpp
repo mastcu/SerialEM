@@ -46,6 +46,7 @@ typedef double(*Func3DblStrInOut)(double, double, double, const char *, const ch
 
 #define CAMERA_PROC(a,b) cfuncs->b = (a)GetProcAddress(module, #b)
 #define DECAM_PROC(a,b) mDEcamFuncs->b = (a)GetProcAddress(module, #b) ; if (!mDEcamFuncs->b) i++;
+#define DECTRIS_PROC(a,b) mDectrisFuncs->b = (a)GetProcAddress(module, #b) ; if (!mDectrisFuncs->b) i++;
 #define SCOPE_PROC(a,b,c) mScopeFuncs.a = (b)GetProcAddress(module, c) ; if (!mScopeFuncs.a) i++; else j++
 #define SCOPE_SAMENAME(a, b) SCOPE_PROC(b, a, #b )
 #define GET_ONE_INT(a) SCOPE_PROC(a, ScopeGetInt, #a )
@@ -65,9 +66,11 @@ CPluginManager::CPluginManager(void)
   mPlugins.SetSize(0, 4);
   mScopePlugIndex = -1;
   mDEplugIndex = -1;
+  mDectrisPlugIndex = -1;
   mLastTiltIndex = -1;
   mAnyTSplugins = false;
   mDEcamFuncs = NULL;
+  mDectrisFuncs = NULL;
 }
 
 CPluginManager::~CPluginManager(void)
@@ -81,7 +84,7 @@ int CPluginManager::LoadPlugins(void)
   CString mess, typeStr, pythonList;
   WIN32_FIND_DATA FindFileData;
   HANDLE hFind = NULL;
-  HMODULE module;
+  HINSTANCE module;
   DWORD lastErr;
   InfoFunc getInfo;
   CallFunc getCall;
@@ -307,6 +310,46 @@ int CPluginManager::LoadPlugins(void)
         }
       }
 
+      // Get DECTRIS plugin functions
+      if (flags & PLUGFLAG_DECTRIS) {
+        if (mDectrisPlugIndex >= 0) {
+          i = 1;
+          mess.Format("There is more than one DECTRIS camera interface plugin in\r\n"
+            "%s%s%s\r\n\r\nThe plugin %s in %s will be ignored\r\n",
+            (LPCTSTR)plugPath, !mExePath.IsEmpty() ? " and/or " : "",
+            !mExePath.IsEmpty() ? (LPCTSTR)mExePath : "",
+            FindFileData.cFileName, (LPCTSTR)path);
+        } else {
+
+          mDectrisFuncs = new DectrisPlugFuncs;
+          i = 0;
+          DECTRIS_PROC(CamGetFloatInt, AcquireFlatfield);
+          DECTRIS_PROC(ScopeNoArg, FinishFlatfield);
+          DECTRIS_PROC(CamNoArg, RequestInitializeDetector);
+          DECTRIS_PROC(CamNoArg, RequestHVToggle);
+          DECTRIS_PROC(DectrisGetStr, GetDetectorStatus);
+          DECTRIS_PROC(DectrisGetStr, GetHVStatus);
+          DECTRIS_PROC(DectrisGetSettings, GetDectrisAdvancedSettings);
+          DECTRIS_PROC(DectrisSetSettings, SetDectrisAdvancedSettings);
+          DECTRIS_PROC(DectrisSetHDF5, SetHDF5FileSave);
+          if (i) {
+            mess.Format("Tried to load %s as a plugin for DECTRIS cameras but\r\n"
+              "   could not resolve some required functions; this plugin is not up to "
+              "date", FindFileData.cFileName);
+          } else {
+            mDectrisPlugIndex = (int)mPlugins.GetSize();
+          }
+        }
+        if (i) {
+          mWinApp->AppendToLog(mess, action);
+          delete newPlug;
+          // This crashes, if you continue it says a heap has been corrupted.
+          //AfxFreeLibrary(module);
+          continue;
+        }
+      }
+
+
       // Get script language functions
       if (flags & PLUGFLAG_SCRIPT_LANG) {
         newPlug->scriptLangFuncs = new ScriptLangPlugFuncs;
@@ -325,7 +368,8 @@ int CPluginManager::LoadPlugins(void)
           mWinApp->AppendToLog(mess, action);
           delete newPlug;
           AfxFreeLibrary(module);
-        } 
+          continue;
+        }
       }
       
       // Get piezo plugin functions

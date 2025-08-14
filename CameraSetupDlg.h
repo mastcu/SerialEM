@@ -221,6 +221,7 @@ private:
   bool mCanSaveFrames;
   CFont mBigModeFont;
   bool mUsingUtapi;
+  float mFrameTimeMsScale;
 
 public:
   afx_msg void OnAcquireReopen();
@@ -342,7 +343,7 @@ public:
   void ManageK2SaveSummary(void);
   CString m_strExpTimesInt;
   void ManageIntegration();
-  BOOL m_bCorrDrift_DeHwBin;
+  BOOL m_bOvDrift_DeHwBin_DctSep;
   CButton m_butCorrDrift_DeHwBin;
   BOOL m_bUseHwROI_OvDiff;
   CButton m_butUseHwROI_OvDiff;
@@ -366,13 +367,14 @@ afx_msg void OnKillfocusDeFrameTime();
 void ManageDEpanel(void);
 afx_msg void OnDeSaveMaster();
   void CheckFalconFrameSumList(void);
-float RoundedDEframeTime(float frameTime, CameraParameters *param = NULL);
+float RoundedFrameTime(float frameTime, CameraParameters *param = NULL);
 int GetMagIndexForCamAndSet(void);
 float ActualFrameTime(float roundedTime);
-void ManageK2Binning(void);
+void ManageSuperResBinning(void);
   BOOL m_bTakeK3Binned;
   afx_msg void OnTakeK3Binned();
   afx_msg void OnUseHwROI_OvDiff();
+  afx_msg void OnCorrectDrift();
   CButton m_butTakeK3Binned;
   int CheckFrameAliRestrictions(int useMode, BOOL saveUnnormed, BOOL useSave, const char *descrip);
   CEdit m_editPrepixel;

@@ -162,17 +162,20 @@ BOOL CK2SaveOptionDlg::OnInitDialog()
   m_butSaveUnnormalized.EnableWindow(mCanGainNormSum);
   SetupPanelTables(idTable, leftTable, topTable, mNumInPanel, mPanelStart);
   states[0] = mCamParams->GatanCam;
-  states[1] = mCanSaveFrameStackMdoc || mK2Type;
+  states[1] = mCanSaveFrameStackMdoc || mK2Type || mCamParams->DectrisType;
   states[2] = mK2Type;
   states[3] = mCamParams->GatanCam;
   states[5] = !mDEtype;
   if (mCamParams->FEItype == FALCON4_TYPE && mWinApp->mCamera->GetCanSaveEERformat() > 0) {
-    SetDlgItemText(IDC_ONE_FRAME_PER_FILE, 
+    SetDlgItemText(IDC_ONE_FRAME_PER_FILE,
       "Save counting frames in EER file instead of MRC file");
     m_bOneFramePerFile = mWinApp->mCamera->GetSaveInEERformat();
     states[1] = true;
     if (!mCanSaveFrameStackMdoc)
       mIDsToDrop.push_back(IDC_FRAME_STACK_MDOC);
+  } else if (mCamParams->DectrisType) {
+    SetDlgItemText(IDC_ONE_FRAME_PER_FILE, "Save in native DECTRIS format (HDF5)");
+    m_bOneFramePerFile = mWinApp->mCamera->GetDectrisSaveAsHDF();
   } else if (!mK2Type)
     mIDsToDrop.push_back(IDC_ONE_FRAME_PER_FILE);
   AdjustPanels(states, idTable, leftTable, topTable, mNumInPanel, mPanelStart, 0);

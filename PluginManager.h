@@ -19,6 +19,8 @@ typedef int (*CamGetTwoInt)(int *,int *);
 typedef int (*CamFourIntString)(int, int, int, int, const char *);
 typedef int (*CamSetupFrames)(double, int, int, int);
 typedef int (*CamGetFrame)(short *, int);
+typedef int (*CamGetFloat)(float *);
+typedef int(*CamGetFloatInt)(float *, int *);
 
 
 // Camera plugin functions
@@ -187,6 +189,24 @@ struct DEPluginFuncs {
   DEsetBinning SetBinning;
 };
 
+typedef int (*DectrisGetStr)(std::string *);
+typedef int(*DectrisGetSettings)(DectrisAdvancedSettings *, int);
+typedef int(*DectrisSetSettings)(const DectrisAdvancedSettings *, int);
+typedef int(*DectrisSetHDF5)(std::string *, std::string *);
+
+// Dectris additional camera functions
+struct DectrisPlugFuncs {
+  CamGetFloatInt AcquireFlatfield;
+  ScopeNoArg FinishFlatfield;
+  CamNoArg RequestInitializeDetector;
+  CamNoArg RequestHVToggle;
+  DectrisGetStr GetDetectorStatus;
+  DectrisGetStr GetHVStatus;
+  DectrisGetSettings GetDectrisAdvancedSettings;
+  DectrisSetSettings SetDectrisAdvancedSettings;
+  DectrisSetHDF5 SetHDF5FileSave;
+};
+
 typedef int(*RunScriptLang)(const char *);
 
 // Scripting interpreter plugin functions
@@ -240,7 +260,9 @@ private:
   ScopePluginFuncs mScopeFuncs;
   int mScopePlugIndex;
   DEPluginFuncs *mDEcamFuncs;
+  DectrisPlugFuncs *mDectrisFuncs;
   int mDEplugIndex;
+  int mDectrisPlugIndex;
   int mLastTSplugInd;
   int mLastTScallInd;
   int mLastTiltIndex;
@@ -261,7 +283,8 @@ public:
   void CompletedTSCall(void);
   GetMember(bool, AnyTSplugins);
   int GetPiezoPlugins(PiezoPluginFuncs **plugFuncs, CString **names);
-  DEPluginFuncs *GetDEcamFuncs() {return mDEcamFuncs;};
+  DEPluginFuncs *GetDEcamFuncs() { return mDEcamFuncs; };
+  DectrisPlugFuncs *GetDectrisFuncs() { return mDectrisFuncs; };
   ScriptLangPlugFuncs *GetScriptLangFuncs(CString name);
   GetMember(int, DEplugIndex);
   GetMember(CString, ExePath);
