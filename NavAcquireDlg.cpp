@@ -1257,6 +1257,8 @@ void CNavAcquireDlg::BuildActionSection(bool unhiding)
       if (!BOOL_EQUIV(mActions[actInd].flags & NAA_FLAG_AFTER_ITEM, loop > 0))
         continue;
       runIt = (mActions[actInd].flags & NAA_FLAG_RUN_IT) != 0;
+      if (actInd == NAACT_HOLE_FINDER && OptionsToAcquireType() != ACQUIRE_TAKE_MAP)
+        runIt = false;
       if ((mActions[actInd].flags & (NAA_FLAG_ALWAYS_HIDE | NAA_FLAG_HIDE_IT)) == 0 &&
         (!m_bHideUnusedActions || runIt)) {
 
