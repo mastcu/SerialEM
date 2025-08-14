@@ -31,7 +31,7 @@ def writeTextFile(filename, strings):
       comf = open(filename, 'w')
       action = 'Writing to'
       for line in strings:
-         comf.write(line + '\r\n')
+         comf.write(line + lineEnding)
       comf.close()
    except IOError:
       errString = action + " file: " + filename + "  - " + str(sys.exc_info()[1])
@@ -84,6 +84,10 @@ resources = readTextFile(resFile)
 menus = readTextFile(rcFile)
 table = readTextFile(incFile)
 stubLines = readTextFile(stubFile)
+
+lineEnding = '\r\n'
+if sys.platform.find('win32') >= 0:
+   lineEnding = '\n'
 
 # Make dictionary from all the IDs
 idDict = {}
