@@ -270,7 +270,7 @@ public:
   void ZemlinNextTask(int param);
   void StopZemlin(void);
   void ZemlinCleanup(int error);
-  void ReportMisalignment(const char *prefix, double misAlignX, double misAlignY);
+  void ReportMisalignment(const char *prefix, double misAlignX, double misAlignY, const char *suffix = "");
   float DefocusFromCtfFit(float * fitValues, float angle);
   float DefocusDiffFromTwoCtfFits(float * fitValues, int index1, int index2, float angle);
   void AstigCoefficientsFromCtfFits(float * fitValues, float angle, float astig,  float &xCoeff, float &yCoeff);
