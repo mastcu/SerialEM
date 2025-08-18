@@ -3786,7 +3786,8 @@ void CCameraController::Capture(int inSet, bool retrying)
       conSet.binning, 0));
     mSavingPluginFrames = conSet.saveFrames != 0 || 
       (conSet.alignFrames && conSet.useFrameAlign > 1);
-    mAligningPluginFrames = conSet.alignFrames && conSet.useFrameAlign == 1;
+    mAligningPluginFrames = conSet.alignFrames && conSet.useFrameAlign == 1 &&
+      !(mParam->DectrisType && mSavingPluginFrames && mDectrisSaveAsHDF);
     if (mSavingPluginFrames) {
       ComposeFramePathAndName(false);
       if (!mFrameFolder.IsEmpty() && CreateFrameDirIfNeeded(mFrameFolder, &logmess, '}'))
@@ -9857,7 +9858,7 @@ void CCameraController::DisplayNewImage(BOOL acquired)
       if (mSavingPluginFrames) {
         mPathForFrames.Format("%s%s%s%s", (LPCTSTR)mFrameFolder,
           mFrameFolder.IsEmpty() ? "" : "\\", (LPCTSTR)mFrameFilename, 
-          dectrisSavingHDF ? "....h5" : ".mrc");
+          dectrisSavingHDF ? "_master.h5" : ".mrc");
         mTD.NumFramesSaved = B3DNINT(mTD.Exposure / mTD.FrameTime);
         mTD.ErrorFromSave = 0;
       }
@@ -10569,8 +10570,8 @@ void CCameraController::DisplayNewImage(BOOL acquired)
     }
 
     // Report on frame aligning if not deferred
-    if ((mTD.UseFrameAlign && mTD.NumAsyncSumFrames < 0) || reportContinAlign ||
-      (mDoingDEframeAlign == 1 && mStartedExtraForDEalign)) {
+    if (((mTD.UseFrameAlign && mTD.NumAsyncSumFrames < 0) || reportContinAlign ||
+      (mDoingDEframeAlign == 1 && mStartedExtraForDEalign)) && !dectrisSavingHDF) {
       if (!K2orOneView && !reportContinAlign &&
         ((alignErr = mFalconHelper->GetAlignError()) != 0 ||
         !(ix = mFalconHelper->GetNumAligned()))) {
