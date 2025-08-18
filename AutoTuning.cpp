@@ -1678,7 +1678,7 @@ void CAutoTuning::CtfBasedNextTask(int tparm)
           nextYval = mLastBeamY - (mCtfActionType ? 0. : solution[1]);
           str.Format("Beam tilt %s adjusted by", mCtfActionType ? "needs to be" : "was");
           CString str2;
-          str2.Format("to %.2f  %.2f", nextXval, nextYval);
+          str2.Format("  (to %.2f  %.2f)", nextXval, nextYval);
           ReportMisalignment((LPCTSTR)str, -solution[0], -solution[1], (LPCTSTR)str2);
           if (mCtfActionType / 2 == 0) {
             BacklashedBeamTilt(nextXval, nextYval, true);
