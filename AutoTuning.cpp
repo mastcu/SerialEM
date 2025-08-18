@@ -850,9 +850,9 @@ int CAutoTuning::SaveAndSetDefocus(float defocus)
 }
 
 void CAutoTuning::ReportMisalignment(const char *prefix, double misAlignX, 
-  double misAlignY)
+  double misAlignY, const char *suffix)
 {
-  CString mess, mess2;
+  CString mess, mess2, mess3;
   mess.Format("%s %.2f  %.2f", (LPCTSTR)prefix, misAlignX, misAlignY);
   if (!FEIscope) {
     float scale = mFocusManager->EstimatedBeamTiltScaling();
@@ -861,6 +861,8 @@ void CAutoTuning::ReportMisalignment(const char *prefix, double misAlignX,
     mess += mess2;
   } else
     mess += " milliradians";
+  mess3.Format(" %s", (LPCTSTR)suffix);
+  mess += mess3;
   mWinApp->AppendToLog(mess);
 }
 
@@ -1668,14 +1670,16 @@ void CAutoTuning::CtfBasedNextTask(int tparm)
 
  
           // Output results and apply them; use ill-fated calibration if it exists
-          str.Format("Beam tilt %s adjusted by", mCtfActionType ? "needs to be" : "was");
-          ReportMisalignment((LPCTSTR)str, -solution[0], -solution[1]);
           if (mCtfActionType) {
             mLastXTiltNeeded = -solution[0];
             mLastYTiltNeeded = -solution[1];
           }
           nextXval = mLastBeamX - (mCtfActionType ? 0. : solution[0]);
           nextYval = mLastBeamY - (mCtfActionType ? 0. : solution[1]);
+          str.Format("Beam tilt %s adjusted by", mCtfActionType ? "needs to be" : "was");
+          CString str2;
+          str2.Format("  (to %.2f  %.2f)", nextXval, nextYval);
+          ReportMisalignment((LPCTSTR)str, -solution[0], -solution[1], (LPCTSTR)str2);
           if (mCtfActionType / 2 == 0) {
             BacklashedBeamTilt(nextXval, nextYval, true);
           }
