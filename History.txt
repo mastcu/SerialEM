@@ -3,7 +3,10 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
-8/13/25: prevented out of range values from being loaded into CTF Acquire
+8/19/25: Fixed saving of intensity value for beam autocenter test shot
+(In 4.2).
+
+8/13/25: Prevented out of range values from being loaded into CTF Acquire
 Params dialog (In 4.2).
 
 8/13/25: Allowed greater total binning in autoalign and increased the target
