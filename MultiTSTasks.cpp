@@ -978,7 +978,12 @@ void CMultiTSTasks::TestAutocenAcquire()
   mAcSavedMagInd = dlg->mSavedMagInd;
   mAcSavedSpot = dlg->mSavedSpot;
   mAcSavedProbe = dlg->mSavedProbe;
-  mAcSavedIntensity = dlg->mSavedIntensity;
+  if (mWinApp->LowDoseMode())
+    mAcSavedIntensity = ldParm->intensity;
+  else if (AutocenTrackingState())
+    mAcSavedIntensity = dlg->mSavedIntensity;
+  else
+    mAcSavedIntensity = mScope->GetIntensity();
   mAcSavedScreen = mScope->GetScreenPos();
   param = GetAutocenSettings((mWinApp->LowDoseMode() && mUseEasyAutocen) ?
     -1 : dlg->mCamera, dlg->mCurMagInd, dlg->mCurSpot,
@@ -1050,6 +1055,9 @@ void CMultiTSTasks::MakeAutocenConset(AutocenParams * param)
   conSet->mode = SINGLE_FRAME;
 
   // Switch a direct detector to linear mode if there is a big enough intensity change
+  // The centering intensity has already been set by the caller either on the scope or
+  // or in the low dose param, so the threshold is determined by finding the intensity
+  // of a beam weaker than what was set
   if (mCamera->IsDirectDetector(camParams) && conSet->K2ReadMode > 0) {
     err = mWinApp->mBeamAssessor->AssessBeamChange(linearThresh, threshIntensity, 
       outFactor,
@@ -1059,6 +1067,9 @@ void CMultiTSTasks::MakeAutocenConset(AutocenParams * param)
     } else {
       useIntensity = param->intensity;
     }
+
+    // If the intensity being used is more a extreme change from the original value than
+    // the threshold, then it should be switched
     if (!err && ((threshIntensity < mAcSavedIntensity && useIntensity < threshIntensity)
       || (threshIntensity > mAcSavedIntensity && useIntensity > threshIntensity)))
       conSet->K2ReadMode = LINEAR_MODE;
