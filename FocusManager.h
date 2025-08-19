@@ -80,6 +80,7 @@ public:
   GetSetMember(int, PostTiltDelay);
   GetSetMember(BOOL, SFshowBestAtEnd);
   GetSetMember(float, SFVZbacklashZ);
+  GetSetMember(float, SFmidFocusStep)
   GetMember(int, TiltDirection);
   GetSetMember(int, DDDminBinning);
   GetSetMember(float, SFcalRange);
