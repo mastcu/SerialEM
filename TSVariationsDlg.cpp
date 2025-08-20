@@ -633,7 +633,7 @@ bool CTSVariationsDlg::ListVaryingTypes(VaryInSeries *varyArray, int numVaries,
   int i, type, numv = 0;
   CSerialEMApp *winApp = (CSerialEMApp *)AfxGetApp();
   BOOL STEM = winApp->GetSTEMMode();
-  BOOL EFTEM = winApp->GetEFTEMMode();
+  BOOL EFTEM = winApp->GetEFTEMMode() || winApp->mScope->GetHasOmegaFilter();
   for (i = 0; i < MAX_VARY_TYPES; i++)
     typeVaries[i] = 0;
   if (!numVaries)
