@@ -2564,6 +2564,16 @@ int CEMscope::StageBusy(int ignoreOrTrustState)
       }
       SetValidXYbacklash(&mMoveInfo);
       SetValidZbacklash(&mMoveInfo);
+
+      // Update JEOL stage position in case events off or failing
+      if (JEOLscope && !retval) {
+        SEMAcquireJeolDataMutex();
+        mJeolSD.stageX = mMoveInfo.x;
+        mJeolSD.stageY = mMoveInfo.y;
+        mJeolSD.stageZ = mMoveInfo.z;
+        SEMReleaseJeolDataMutex();
+      }
+
       if (!sThreadErrString.IsEmpty())
         SEMMessageBox(sThreadErrString);
     }
