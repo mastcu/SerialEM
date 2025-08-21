@@ -285,7 +285,8 @@ void CDectrisToolDlg::FlatfieldNextTask()
   message.Format("ACQUIRING FLATFIELD %d of %d", mFlatCount, mNumFlatAcquires);
   mWinApp->SetStatusText(MEDIUM_PANE, message);
   mWinApp->mCamera->InitiateCapture(TRACK_CONSET);
-  mWinApp->AddIdleTask(SEMStageCameraBusy, TASK_DECTRIS_FLATFIELD, 0, 120 * 1000);
+  mWinApp->AddIdleTask(CCameraController::TaskCameraBusy, TASK_DECTRIS_FLATFIELD, 0, 
+    120 * 1000);
 }
 
 // Process error during flatfieling
