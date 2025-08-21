@@ -3137,8 +3137,8 @@ void CNavigatorDlg::OnMoveItem()
     if (mItem->IsMap()) {
       mess = "This item is a map.  Are you sure you want to change its position?";
       if (RawStageIsRevisable(false))
-        mess += "\n\nIf you move to the exact center of the current image, the map will\n"
-        "be assigned a new raw stage position at the current stage position";
+        mess += "\n\nIf you move to the exact center of the current image, the map\n"
+        "will be assigned a new raw stage position at the current stage position";
       if (AfxMessageBox(mess, MB_QUESTION) == IDNO)
         return;
     }
