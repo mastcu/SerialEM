@@ -2645,6 +2645,9 @@ void CSerialEMView::OnLButtonUp(UINT nFlags, CPoint point)
     mPanning = false;
   }
   CView::OnLButtonUp(nFlags, point);
+
+  //Update AlignFocusWindow to potentailly enable/disable To Marker button
+  mWinApp->mAlignFocusWindow.Update();
 }
 
 
