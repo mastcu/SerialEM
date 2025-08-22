@@ -373,12 +373,12 @@ int DirectElectronCamera::initializeDECamera(CString camName, int camIndex)
         sawHWROI = true;
       if (!camProps[i].compare("License - Event Counting")) {
         if (mDeServer->getProperty(camProps[i], &propValue) &&
-          propValue.find("Valid") >= 0)
+          propValue.find("Valid") == 0)
           hasCountingLicense = true;
       }
       if (!camProps[i].compare("License - HDR Readout Modes")) {
         if (mDeServer->getProperty(camProps[i], &propValue) &&
-          propValue.find("Valid") >= 0)
+          propValue.find("Valid") == 0)
           hasHDRlicense = true;
       }
 
@@ -404,10 +404,14 @@ int DirectElectronCamera::initializeDECamera(CString camName, int camIndex)
     // Use licenses now as the ruling factor
     if (mServerVersion >= DE_NO_MORE_SUPER_RES)
       mCamParams[camIndex].CamFlags &= ~DE_CAN_SAVE_SUPERRES;
-    if (mServerVersion >= DE_HAS_LICENSE_PROPS && !hasCountingLicense)
-      mCamParams[camIndex].CamFlags &= ~DE_CAM_CAN_COUNT;
-    if (mServerVersion >= DE_HAS_LICENSE_PROPS && !hasHDRlicense)
-      mCamParams[camIndex].CamFlags &= ~DE_HAS_HARDWARE_HDR;
+    if (mServerVersion >= DE_HAS_LICENSE_PROPS) {
+      if (hasCountingLicense)
+        mCamParams[camIndex].CamFlags |= DE_CAM_CAN_COUNT;
+      else
+        mCamParams[camIndex].CamFlags &= ~DE_CAM_CAN_COUNT;
+      if (!hasHDRlicense)
+        mCamParams[camIndex].CamFlags &= ~DE_HAS_HARDWARE_HDR;
+    }
 
     if (debug) {
       if (!GetDebugOutput('*')) {
