@@ -296,8 +296,10 @@ void CAlignFocusWindow::Update()
   bEnable = imBufs[0].mImage && 
     imBufs[mWinApp->mBufferManager->AutoalignBufferIndex()].mImage;
   m_butAlign.EnableWindow(bEnable && (!bTasks || justNavAcq));
-
-  m_butToMarker.EnableWindow(imBufs[0].mImage && (!bTasks || justNavAcq) && imBufs[0].mHasUserPt);
+  
+  m_butToMarker.EnableWindow(imBufs[0].mImage && (!bTasks || justNavAcq) && 
+  (mWinApp->mMainView->GetImBufIndex() == 0) && 
+  (imBufs[0].mHasUserPt || imBufs[0].mIllegalUserPt));
 
   UpdateAutofocus(-1);
   m_statDefTarget.EnableWindow(!mWinApp->GetSTEMMode());
