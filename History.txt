@@ -3,6 +3,9 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+8/25/25: To Marker button in Align & Focus window is only enabled when the 
+marker is on an image in buffer A.
+
 8/22/25: SEM_4-2-7
 8/21/25: Fixed Advanced scripting getting stuck with failures to acquire mutex
 after failing to look up a camera (In 4.2).
