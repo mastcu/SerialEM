@@ -33,7 +33,7 @@ int CPythonServer::mCapFlag;
 char *CPythonServer::mImArray = NULL;
 HANDLE CPythonServer::mJobObject = NULL;
 
-static ScriptLangData *sScriptData;
+static ScriptLangData *sScriptData[2];
 
 CPythonServer::CPythonServer()
 {
@@ -50,14 +50,20 @@ CPythonServer::~CPythonServer()
 
 int CPythonServer::StartServerIfNeeded(int sockInd)
 {
-  int serverInd = (sockInd == RUN_PYTH_SOCK_ID ? 0 : 1);
-  int err = 0;
+  int serverInd = sockInd == RUN_PYTH_SOCK_ID ? REGULAR_PYSOCK_IND : EXTERNAL_PYSOCK_IND;
+  int err = 0, procInd = 0;
   int dfltPort = mWinApp->GetDummyInstance() ? 48887 : 48889;
   JOBOBJECT_EXTENDED_LIMIT_INFORMATION jobInfo;
   CString mess, code;
+  if (sockInd == BKGD_PYTH_SOCK_ID) {
+    serverInd = BKGD_PYSOCK_IND;
+    dfltPort = mWinApp->GetDummyInstance() ? 48885 : 48886;
+    procInd = 1;
+  }
 
-  sScriptData = &mWinApp->mMacroProcessor->mScrpLangData;
-  if (!CMacroProcessor::mScrpLangDoneEvent)
+  sScriptData[0] = &mWinApp->mMacroProcessor->mScrpLangData[0];
+  sScriptData[1] = &mWinApp->mMacroProcessor->mScrpLangData[1];
+  if (!CMacroProcessor::mScrpLangDoneEvent[procInd])
     err = 1;
   if (mHSocketThread[serverInd] && mInitialized[serverInd]) {
     if (!mStartupError[serverInd])
@@ -71,16 +77,18 @@ int CPythonServer::StartServerIfNeeded(int sockInd)
     return 1;
   }
 
-  mPort[serverInd] = CBaseSocket::GetServerPort(sockInd, serverInd ? 48888 : dfltPort);
+  mPort[serverInd] = CBaseSocket::GetServerPort(sockInd, serverInd == EXTERNAL_PYSOCK_IND
+    ? 48888 : dfltPort);
   err = StartSocket(serverInd);
   if (err) {
     mess.Format("Cannot run %s Python scripts due to error (%d) in starting socket for"
-      " communication", serverInd ? "external " : "", err);
+      " communication", B3DCHOICE(serverInd == BKGD_PYSOCK_IND, "background ",
+        serverInd ? "external " : ""), err);
     SEMMessageBox(mess);
   }
 
   // Create a job object if starting python processes to run scripts
-  if (!err && !serverInd && !mJobObject) {
+  if (!err && (serverInd != EXTERNAL_PYSOCK_IND) && !mJobObject) {
     mess = "";
     mJobObject = CreateJobObject(NULL, NULL);
     if (!mJobObject)
@@ -115,7 +123,9 @@ int CPythonServer::StartServerIfNeeded(int sockInd)
 
 void CPythonServer::ShutdownSocketIfOpen(int sockInd)
 {
-  int serverInd = (sockInd == RUN_PYTH_SOCK_ID ? 0 : 1);
+  int serverInd = sockInd == RUN_PYTH_SOCK_ID ? REGULAR_PYSOCK_IND : EXTERNAL_PYSOCK_IND;
+  if (sockInd == BKGD_PYTH_SOCK_ID)
+    serverInd = BKGD_PYSOCK_IND;
   if (mHSocketThread[serverInd] && mInitialized[serverInd]) {
     ShutdownSocket(serverInd);
   }
@@ -135,22 +145,24 @@ int CPythonServer::ProcessCommand(int sockInd, int numBytes)
   char *imArray;
   int arrSize, numChunks;
   bool doSendArgs = true;
+  int pnd = sockInd == BKGD_PYSOCK_IND ? 1 : 0;
 
   if (PrepareCommand(sockInd, numBytes, sFuncTable,
     "SerialEM probably needs to be upgraded to match the current Python module version\n",
     ind))
     return 1;
 
-  if (mLongArgs[sockInd][0] != PSS_OKtoRunExternalScript && sockInd > 0 && 
-    !sScriptData->externalControl) {
+  if (mLongArgs[sockInd][0] != PSS_OKtoRunExternalScript && sockInd == EXTERNAL_PYSOCK_IND
+    && !sScriptData[pnd]->externalControl) {
 
     // Try to start external control unless there is a pending STOP, use up the STOP
-    if (sScriptData->errorOccurred != SCRIPT_USER_STOP)
+    if (sScriptData[pnd]->errorOccurred != SCRIPT_USER_STOP)
       TryToStartExternalControl();
-    if (!sScriptData->externalControl) {
-      SendArgsBack(sockInd, sScriptData->errorOccurred == SCRIPT_USER_STOP ? -10 : -9);
-      if (sScriptData->errorOccurred == SCRIPT_USER_STOP)
-        sScriptData->errorOccurred = 0;
+    if (!sScriptData[pnd]->externalControl) {
+      SendArgsBack(sockInd, sScriptData[pnd]->errorOccurred == SCRIPT_USER_STOP ? -10 :
+        -9);
+      if (sScriptData[pnd]->errorOccurred == SCRIPT_USER_STOP)
+        sScriptData[pnd]->errorOccurred = 0;
       return 0;
     }
   }
@@ -161,34 +173,34 @@ int CPythonServer::ProcessCommand(int sockInd, int numBytes)
   // integer argument passed in either direction is in mLongArgs[1]
   switch (mLongArgs[sockInd][0]) {
   case PSS_OKtoRunExternalScript:
-    if (!sScriptData->externalControl) {
+    if (!sScriptData[pnd]->externalControl) {
       TryToStartExternalControl();
-      boolArgs[0] = sScriptData->externalControl > 0;
+      boolArgs[0] = sScriptData[pnd]->externalControl > 0;
     } else
       boolArgs[0] = false;
     break;
 
   case PSS_RegularCommand:
-    sScriptData->functionCode = longArgs[1];
+    sScriptData[pnd]->functionCode = longArgs[1];
     numItems = longArgs[2] + 1;
-    sScriptData->lastNonEmptyInd = longArgs[2];
+    sScriptData[pnd]->lastNonEmptyInd = longArgs[2];
     dblArr = (double *)(&mLongArray[sockInd][numItems]);
     strArr = (char *)(&dblArr[numItems]);
     for (ind = 0; ind < numItems; ind++) {
-      sScriptData->itemInt[ind] = mLongArray[sockInd][ind];
-      sScriptData->itemDbl[ind] = dblArr[ind];
-      sScriptData->strItems[ind] = strArr;
+      sScriptData[pnd]->itemInt[ind] = mLongArray[sockInd][ind];
+      sScriptData[pnd]->itemDbl[ind] = dblArr[ind];
+      sScriptData[pnd]->strItems[ind] = strArr;
       strArr += strlen(strArr) + 1;
     }
     SEMTrace('[', "Command ready to execute, wait for done event  EC %d", 
-      sScriptData->externalControl);
-    sScriptData->commandReady = 1;
-    while (WaitForSingleObject(CMacroProcessor::mScrpLangDoneEvent, 1000)) {
+      sScriptData[pnd]->externalControl);
+    sScriptData[pnd]->commandReady = 1;
+    while (WaitForSingleObject(CMacroProcessor::mScrpLangDoneEvent[pnd], 1000)) {
       Sleep(2);
     }
-    longArgs[1] = sScriptData->highestReportInd;
-    longArgs[2] = sScriptData->errorOccurred;
-    longArr = AddReturnArrays(lenTot);
+    longArgs[1] = sScriptData[pnd]->highestReportInd;
+    longArgs[2] = sScriptData[pnd]->errorOccurred;
+    longArr = AddReturnArrays(lenTot, pnd);
     if (!longArr) {
       retSend = -2;
     } else {
@@ -231,7 +243,7 @@ int CPythonServer::ProcessCommand(int sockInd, int numBytes)
         delete[] imArray;
       } else {
         mImArray = imArray;
-        while (WaitForSingleObject(CMacroProcessor::mScrpLangDoneEvent, 1000))
+        while (WaitForSingleObject(CMacroProcessor::mScrpLangDoneEvent[pnd], 1000))
           Sleep(2);
       }
     }
@@ -247,16 +259,16 @@ int CPythonServer::ProcessCommand(int sockInd, int numBytes)
   return 0;
 }
 
-long *CPythonServer::AddReturnArrays(int &lenTot)
+long *CPythonServer::AddReturnArrays(int &lenTot, int pnd)
 {
-  int numLongs = sScriptData->highestReportInd + 1;
+  int numLongs = sScriptData[pnd]->highestReportInd + 1;
   int ind, len, charsLeft;
   long *longArr;
   char *nameStr;
   lenTot = numLongs * (sizeof(long) + sizeof(double));
   for (ind = 0; ind < numLongs; ind++) {
-    if (sScriptData->repValIsString[ind])
-      lenTot += (int)sScriptData->reportedStrs[ind].GetLength() + 1;
+    if (sScriptData[pnd]->repValIsString[ind])
+      lenTot += (int)sScriptData[pnd]->reportedStrs[ind].GetLength() + 1;
   }
   lenTot = (lenTot + 5) / 4;
   longArr = (long *)malloc(lenTot * sizeof(long));
@@ -266,16 +278,17 @@ long *CPythonServer::AddReturnArrays(int &lenTot)
   // Pack the  and terminate with an empty string (not needed...)
   charsLeft = (lenTot - numLongs) * sizeof(long) - 1;
   for (ind = 0; ind < numLongs; ind++)
-    longArr[ind] = sScriptData->repValIsString[ind] ? 1 : 0;
+    longArr[ind] = sScriptData[pnd]->repValIsString[ind] ? 1 : 0;
   nameStr = (char *)(&longArr[numLongs]);
-  memcpy(nameStr, &sScriptData->reportedVals[0], numLongs * sizeof(double));
+  memcpy(nameStr, &sScriptData[pnd]->reportedVals[0], numLongs * sizeof(double));
   charsLeft -= numLongs * sizeof(double);
   nameStr += numLongs * sizeof(double);
 
   for (ind = 0; ind < numLongs; ind++) {
-    if (sScriptData->repValIsString[ind]) {
-      strncpy_s(nameStr, charsLeft, (LPCTSTR)sScriptData->reportedStrs[ind], _TRUNCATE);
-      len = (int)sScriptData->reportedStrs[ind].GetLength() + 1;
+    if (sScriptData[pnd]->repValIsString[ind]) {
+      strncpy_s(nameStr, charsLeft, (LPCTSTR)sScriptData[pnd]->reportedStrs[ind], 
+        _TRUNCATE);
+      len = (int)sScriptData[pnd]->reportedStrs[ind].GetLength() + 1;
       nameStr += len;
       charsLeft -= len;
     }
@@ -286,17 +299,17 @@ long *CPythonServer::AddReturnArrays(int &lenTot)
 
 void CPythonServer::TryToStartExternalControl(void)
 {
-  sScriptData->waitingForCommand = 0;
-  sScriptData->externalControl = -1;
+  sScriptData[0]->waitingForCommand = 0;
+  sScriptData[0]->externalControl = -1;
   Sleep(10);
   if (mDebugVal > 1)
     SEMTrace('[', "Try to start extcont");
   for (int ind = 0; ind < 500; ind++) {
-    if (sScriptData->externalControl >= 0 && sScriptData->waitingForCommand)
+    if (sScriptData[0]->externalControl >= 0 && sScriptData[0]->waitingForCommand)
       break;
     Sleep(10);
   }
   if (mDebugVal > 1)
-    SEMTrace('[', "EXT CONT %d WFC %d", sScriptData->externalControl, 
-      sScriptData->waitingForCommand);
+    SEMTrace('[', "EXT CONT %d WFC %d", sScriptData[0]->externalControl,
+      sScriptData[0]->waitingForCommand);
 }

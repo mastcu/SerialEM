@@ -562,8 +562,9 @@
             ID 4 is assigned to the JEOL camera server, 5 is assigned to the Tietz camera remote
             server, and 6 is assigned to the Hitachi remote shared memory server or to the first 
             server channel on second Thermo/FEI computer
-            with a camera and advanced and standard scripting.&nbsp; ID 7 is
-            assigned to Python scripts run from SerialEM, and ID 8 is assigned to externally run Python,
+            with a camera and advanced and standard scripting.&nbsp; ID 7 and ID 10 are
+            assigned to regular or background Python scripts run from SerialEM, 
+            respectively, and ID 8 is assigned to externally run Python,
              but these should be used only in 'SocketServerPort' entries; there should
             be no SocketServerIP entry for 7 or 8.
           </TD>
@@ -574,7 +575,10 @@
             &#39;SocketServerIP&#39; entry.&nbsp; The default ports are 48890 for
             SerialEMCCD, 48892-48895 for Thermo/FEI, 48896 for JEOL camera, 48897 for Tietz, 48898
             for Hitachi, 48888 for externally run Python, 48889 for Python scripts run from
-            a primary instance of SerialEM, and 48887 for Python scripts run from a Dummy instance of SerialEM.
+            a primary instance of SerialEM, 48887 for Python scripts run from a Dummy instance of SerialEM,
+            and 48886 and 48885 for Python scripts run in the background from a primary and Dummy
+            instance, respectively..&nbsp; For running Python scripts, you do not need this entry 
+            unless you need to use a different port from the default.
           </TD>
         </TR>
         <TR VALIGN="top">
@@ -662,7 +666,7 @@
               u for update items when polling JEOL, or time of scope update for all scopes<BR>
               w for output on stage ready status<br />
               y for reports when background saving starts and ends, add * for adoc mutex output<br />
-              [ for output about running a Python script<br />
+              [ for output about running a Python script, add * for script output<br />
               * for more verbose output, available for some situations<br />
               % list script commands other than Set that allow arithmetic when program starts</P>
           </TD>

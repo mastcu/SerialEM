@@ -836,6 +836,15 @@ MAC_SAME_NAME_ARG(LoadPieceAtNavPoint, 1, 4, LOADPIECEATNAVPOINT, I)
 MAC_SAME_NAME_ARG(SetHighVoltage, 1, 4, SETHIGHVOLTAGE, D)
 MAC_SAME_NAME_ARG(MoveToMarker, 0, 0, MOVETOMARKER, i)
 MAC_SAME_NAME_ARG(ManyChoiceBox, 4, 0, MANYCHOICEBOX, ISSS)
+MAC_SAME_NAME_ARG(RunBackgroundScript, 1, 0, RUNBACKGROUNDSCRIPT, I)
+MAC_SAME_NAME_NOARG(StopBackgroundScript, 0, 0, STOPBACKGROUNDSCRIPT)
+MAC_SAME_NAME_ARG(SetBkgdScriptVar, 1, 4, SETBKGDSCRIPTVAR, S)
+MAC_SAME_NAME_ARG(GetBkgdScriptVar, 1, 4, GETBKGDSCRIPTVAR, Si)
+MAC_SAME_NAME_ARG(WaitForBkgdScriptVar, 1, 0, WAITFORBKGDSCRIPTVAR, I)
+MAC_SAME_NAME_ARG(AllowTimeForBkgdScript, 1, 0, ALLOWTIMEFORBKGDSCRIPT, I)
+MAC_SAME_NAME_ARG(CopyOtherScriptVar, 2, 4, COPYOTHERSCRIPTVAR, SSi)
+
+
 
 // new Python-only commands need to be added to pythonOnlyCmds in ::CMacroProcessor
 // New Not from Python items omit _ARG or _NOARG

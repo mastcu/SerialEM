@@ -10,7 +10,7 @@ public:
   int StartServerIfNeeded(int sockInd);
   void ShutdownSocketIfOpen(int sockInd);
   static int ProcessCommand(int sockInd, int numExpected);
-  static long *AddReturnArrays(int &lenTot);
+  static long *AddReturnArrays(int &lenTot, int pnd);
   static void TryToStartExternalControl(void);
   static int mImType;
   static int mImSizeX;

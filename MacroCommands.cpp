@@ -74,56 +74,33 @@ static char THIS_FILE[] = __FILE__;
 
 #define ABORT_NOLINE(a) \
 { \
-  mWinApp->AppendToLog((a), mLogErrAction);  \
-  SEMMessageBox((a), MB_EXCLAME); \
-  AbortMacro(); \
+  NoLineAbort(a);  \
   return 1; \
 }
 
 #define ABORT_LINE(a) \
 { \
-  mWinApp->AppendToLog((a) + mStrLine, mLogErrAction);  \
-  SEMMessageBox((a) + mStrLine, MB_EXCLAME); \
-  AbortMacro(); \
+  LineAbort(a);  \
   return 1; \
 }
 
 #define ABORT_NONAV \
 { if (!mWinApp->mNavigator) \
   { \
-    CString macStr = CString("The Navigator must be open to execute:\r\n") + mStrLine; \
-    mWinApp->AppendToLog(macStr, mLogErrAction);  \
-    SEMMessageBox(macStr, MB_EXCLAME); \
-    AbortMacro(); \
+    NoNavAbort();  \
     return 1; \
   } \
 }
 
 #define SUSPEND_NOLINE(a) \
 { \
-  mCurrentIndex = mLastIndex; \
-  CString macStr = CString(mNoMessageBoxOnError ? "Script stopped " : \
-    "Script suspended ") + (a);  \
-  mWinApp->AppendToLog(macStr, mLogErrAction);  \
-  SEMMessageBox(macStr, MB_EXCLAME); \
-  if (mNoMessageBoxOnError) \
-    AbortMacro(); \
-  else \
-    SuspendMacro(); \
+  NoLineSuspend(a);  \
   return 1; \
 }
 
 #define SUSPEND_LINE(a) \
 { \
-  mCurrentIndex = mLastIndex; \
-  CString macStr = CString(mNoMessageBoxOnError ? "Script stopped " : \
-    "Script suspended ") + (a) + mStrLine;  \
-  mWinApp->AppendToLog(macStr, mLogErrAction);  \
-  SEMMessageBox(macStr, MB_EXCLAME); \
-  if (mNoMessageBoxOnError) \
-    AbortMacro(); \
-  else \
-    SuspendMacro(); \
+  LineSuspend(a);  \
   return 1; \
 }
 
@@ -147,7 +124,7 @@ const char *CMacCmd::mLongKeys[MAX_LONG_OPERATIONS] =
   {"BU", "RE", "IN", "LO", "$=", "DA", "UN", "$=", "RS", "RT", "FF", "RB"};
 int CMacCmd::mLongHasTime[MAX_LONG_OPERATIONS] = {1, 1, 0, 1, 0, 1, 0, 0, 1, 1, 1, 1};
 
-CMacCmd::CMacCmd() : CMacroProcessor()
+CMacCmd::CMacCmd(int index) : CMacroProcessor(index)
 {
   int i;
   unsigned int hash;
@@ -184,55 +161,56 @@ CMacCmd::~CMacCmd()
 // When a task is done, if the macro flag is still set, call next command
 void CMacCmd::TaskDone(int param)
 {
-  int arg, err, cmdInd;
+  int arg, err, cmdInd, pnd = mProcessorIndex;
   bool isEcho;
   mStrLine = "";
   /*SEMTrace('[', "DM %d RSL %d CR %d TD %d WFC %d EO %d FC %d", DoingMacro()?1 : 0, 
-    mRunningScrpLang?1:0, mScrpLangData.commandReady, mScrpLangData.threadDone,
-    mScrpLangData.waitingForCommand, mScrpLangData.errorOccurred,
-    mScrpLangData.functionCode);*/
+    mRunningScrpLang?1:0, mScrpLangData[pnd].commandReady, mScrpLangData[pnd].threadDone,
+    mScrpLangData[pnd].waitingForCommand, mScrpLangData[pnd].errorOccurred,
+    mScrpLangData[pnd].functionCode);*/
   if (DoingMacro()) {
     if (mRunningScrpLang) {
-      if (mScrpLangData.threadDone) {
+      if (mScrpLangData[pnd].threadDone) {
 
         // If thread finished, clear flag and abort/terminate for real
         mRunningScrpLang = false;
-        mLastCompleted = mScrpLangData.threadDone < 0 && !mScrpLangData.exitedFromWrapper;
+        mLastCompleted = mScrpLangData[pnd].threadDone < 0 && 
+          !mScrpLangData[pnd].exitedFromWrapper;
         if (!mLastCompleted)
-          SEMMessageBox("Error running Python script; see log for information");
+          PythonErrorMessageBox();
         AbortMacro();
         if (mLastCompleted && mStartNavAcqAtEnd)
           mWinApp->AddIdleTask(TASK_START_NAV_ACQ, 0, 0);
 
-      } else if (mScrpLangData.waitingForCommand) {
+      } else if (mScrpLangData[pnd].waitingForCommand) {
 
         // If waiting for command, it has arrived -check if in range
-        cmdInd = mScrpLangData.functionCode;
+        cmdInd = mScrpLangData[pnd].functionCode;
         if (cmdInd < 0 || cmdInd >= mNumCommands) {
           PrintfToLog("External script interpreter passed an out-of-bounds function code"
             " of %d (maximum is %d)", cmdInd, mNumCommands - 1);
-          mScrpLangData.errorOccurred = 1;
-          SetEvent(mScrpLangDoneEvent);
-          SEMTrace('[', "signal out of bounds error");
+          mScrpLangData[pnd].errorOccurred = 1;
+          SetEvent(mScrpLangDoneEvent[pnd]);
+          SEMTrace('[', "signal out of bounds error %d", pnd);
           return;
         }
         InitForNextCommand();
         //SEMAcquireScriptLangMutex(1000, "run the operation");
 
         // Copy over the arguments and compose a line in case of error messages
-        mCmdIndex = mScrpLangData.functionCode;
+        mCmdIndex = mScrpLangData[pnd].functionCode;
         isEcho = CMD_IS(ECHO) || CMD_IS(ECHOREPLACELINE);
         mStrLine = mCmdList[cmdInd].mixedCase;
         mStrItems[0] = mStrLine;
         mStrLine += isEcho ? " " : "(";
-        mLastNonEmptyInd = mScrpLangData.lastNonEmptyInd;
+        mLastNonEmptyInd = mScrpLangData[pnd].lastNonEmptyInd;
         for (arg = 1; arg < MAX_SCRIPT_LANG_ARGS; arg++) {
           if (arg <= mLastNonEmptyInd) {
 
             // Copy actual arguments
-            mStrItems[arg] = mScrpLangData.strItems[arg];
+            mStrItems[arg] = mScrpLangData[pnd].strItems[arg];
             mItemEmpty[arg] = mStrItems[arg].IsEmpty();
-            mItemDbl[arg] = mScrpLangData.itemDbl[arg];
+            mItemDbl[arg] = mScrpLangData[pnd].itemDbl[arg];
             if (arg > 1)
               mStrLine += ", ";
             mStrLine += mStrItems[arg];
@@ -251,7 +229,7 @@ void CMacCmd::TaskDone(int param)
         mWinApp->VerboseAppendToLog(mVerbose, mStrLine);
         mItem1upper = mStrItems[1];
         mItem1upper.MakeUpper();
-        mScrpLangData.waitingForCommand = 0;
+        mScrpLangData[pnd].waitingForCommand = 0;
         if (mCmdIndex != CME_GETVARIABLE)
           ClearVariables(VARTYPE_REPORT);
 
@@ -261,23 +239,23 @@ void CMacCmd::TaskDone(int param)
 
           // Abort should have been called before an error return, but just in case, let's
           // do it now and let it signal done
-          if (!mScrpLangData.errorOccurred)
+          if (!mScrpLangData[pnd].errorOccurred)
             AbortMacro();
           return;
         }
         if (mCmdIndex != CME_EXIT)
-          mScrpLangData.errorOccurred = 0;
+          mScrpLangData[pnd].errorOccurred = 0;
 
         // Output the standard log report variable if set
         if (!mLogRpt.IsEmpty())
           mWinApp->AppendToLog(mLogRpt, mLogAction);
 
-        // The action is taken or started: now set up an idle task unless looping is allowed
-        // for this command and not too many loops have happened
+        // The action is taken or started: now set up an idle task unless looping is 
+        // allowed for this command and not too many loops have happened
         if (!((cmdList[mCmdIndex].arithAllowed & 4) || mLoopInOnIdle ||
           cmdList[mCmdIndex].cmd.find("REPORT") == 0) ||
           mNumCmdSinceAddIdle > mMaxCmdToLoopOnIdle) {
-          mWinApp->AddIdleTask(NULL, TASK_MACRO_RUN, 0, 0);
+          AddIdleTask();
           mNumCmdSinceAddIdle = 0;
         } else {
 
@@ -292,16 +270,16 @@ void CMacCmd::TaskDone(int param)
 
         // Command is done after looping back in: Set up to wait for next and to the part
         // NextCommand that checks and finalizes from last command
-        mScrpLangData.waitingForCommand = 1;
-        mScrpLangData.commandReady = 0;
-        mScrpLangData.errorOccurred = 0;
+        mScrpLangData[pnd].waitingForCommand = 1;
+        mScrpLangData[pnd].commandReady = 0;
+        mScrpLangData[pnd].errorOccurred = 0;
         NextCommand(false);
 
         // That might have set error
         // The return values have already been set in the data structure, so ready to go
-        SetEvent(mScrpLangDoneEvent);
-        SEMTrace('[', "signal operations done after loop back in");
-        mWinApp->AddIdleTask(NULL, TASK_MACRO_RUN, 0, 0);
+        SetEvent(mScrpLangDoneEvent[pnd]);
+        SEMTrace('[', "signal operations done after loop back in %d",pnd);
+        AddIdleTask();
       }
 
     } else {
@@ -668,7 +646,7 @@ int CMacCmd::NextCommand(bool startingOut)
     cmdList[mCmdIndex].cmd.find("REPORT") == 0) ||
     mNumCmdSinceAddIdle > mMaxCmdToLoopOnIdle ||
     SEMTickInterval(mLastAddIdleTime) > 1000. * mMaxSecToLoopOnIdle) {
-    mWinApp->AddIdleTask(NULL, TASK_MACRO_RUN, 0, 0);
+    AddIdleTask();
     mNumCmdSinceAddIdle = 0;
     mLastAddIdleTime = GetTickCount();
   } else {
@@ -707,22 +685,24 @@ void CMacCmd::InitForNextCommand()
   mRanCtfplotter = false;
   mGotPipedOutputOrErr = 0;
   mLoadingMap = false;
+  mTestScale = false;
+  mStartedOtherTask = false;
   mLoopInOnIdle = false;
 }
 
 // ScriptEnd, Exit, Return, EndFunction, Function
 int CMacCmd::ScriptEnd(void)
 {
-  int index;
+  int index, pnd = mProcessorIndex;
 
   if (!mCallLevel || CMD_IS(EXIT) || (CMD_IS(ENDFUNCTION) && mExitAtFuncEnd)) {
     if (CMD_IS(EXIT)) {
       if (mRunningScrpLang) {
         if (!mItemEmpty[1] && mItemInt[1]) {
-          mScrpLangData.errorOccurred = SCRIPT_EXIT_NO_EXC;
-          mScrpLangData.exitedFromWrapper = mItemInt[1] < 0;
+          mScrpLangData[pnd].errorOccurred = SCRIPT_EXIT_NO_EXC;
+          mScrpLangData[pnd].exitedFromWrapper = mItemInt[1] < 0;
         } else
-          mScrpLangData.errorOccurred = SCRIPT_NORMAL_EXIT;
+          mScrpLangData[pnd].errorOccurred = SCRIPT_NORMAL_EXIT;
         if (!mItemEmpty[2])
           EnhancedExceptionToLog(mStrItems[2]);
       } else if (!mStrItems[1].IsEmpty()) {
@@ -730,7 +710,7 @@ int CMacCmd::ScriptEnd(void)
         mWinApp->AppendToLog(mStrCopy);
       }
     } else if (mRunningScrpLang || mCalledFromScrpLang)
-      mScrpLangData.errorOccurred = SCRIPT_NORMAL_EXIT;
+      mScrpLangData[pnd].errorOccurred = SCRIPT_NORMAL_EXIT;
     AbortMacro(true);
     mLastCompleted = !mExitAtFuncEnd;
     if (mLastCompleted && mStartNavAcqAtEnd)
@@ -743,9 +723,9 @@ int CMacCmd::ScriptEnd(void)
   if (mRunningScrpLang && mCalledFromSEMmacro) {
     mRunningScrpLang = false;
     mCalledFromSEMmacro = false;
-    mScrpLangData.errorOccurred = SCRIPT_NORMAL_EXIT;
-    SetEvent(mScrpLangDoneEvent);
-    SEMTrace('[', "signal normal exit on return");
+    mScrpLangData[pnd].errorOccurred = SCRIPT_NORMAL_EXIT;
+    SetEvent(mScrpLangDoneEvent[pnd]);
+    SEMTrace('[', "signal normal exit on return %d", pnd);
   }
 
   // Put return values in repVals
@@ -1190,6 +1170,127 @@ int CMacCmd::DoMacro(void)
       SetVariable("NUMCALLARGS", index, VARTYPE_LOCAL + VARTYPE_ADD_FOR_NUM, -1, false);
    }
   }
+  return 0;
+}
+
+// RunBackgroundScript
+int CMacCmd::RunBackgroundScript()
+{
+  int index = mScriptNumFound;
+  int wasRunning = mWinApp->RunningBkgdMacro() ? 1 : 0;
+  if (mItemInt[1] < -1) {
+    SetRepValsAndVars(2, wasRunning);
+    mLogRpt.Format("Background script %s running", wasRunning ? "IS" : "is NOT");
+    return 0;
+  }
+  if (wasRunning)
+    ABORT_NOLINE("You cannot run a background script; one is already running");
+  if (mItemInt[1] == -1) {
+    if (index < 0)
+      ABORT_LINE("No script number was previously found with FindScriptByName for "
+        "line:\n\n");
+  } else {
+    index = mItemInt[1] - 1;
+    if (index < 0 || index >= MAX_MACROS)
+      ABORT_LINE("Illegal script number in line:\n\n");
+  }
+  if (mMacroEditer[index])
+    mMacroEditer[index]->TransferMacro(true);
+  if (!mWinApp->mBkgdProcessor) {
+    mWinApp->mBkgdProcessor = new CMacCmd(1);
+    mWinApp->mBkgdProcessor->Initialize();
+  }
+
+  mWinApp->mBkgdProcessor->Run(index);
+  return 0;
+}
+
+// StopBackgroundScript
+int CMacCmd::StopBackgroundScript()
+{
+  int wasRunning = mWinApp->RunningBkgdMacro() ? 1 : 0;
+  if (mProcessorIndex) {
+    AbortMacro();
+    return 1;
+  }
+  if (wasRunning)
+    DoStopBackgroundScript();
+  SetRepValsAndVars(1, wasRunning, 0);
+  return 0;
+}
+
+// SetBkgdScriptVar
+int CMacCmd::SetBkgdScriptVar()
+{
+  int index;
+  CArray < ArrayRow, ArrayRow > *rowsFor2d = NULL;
+  if (!mWinApp->RunningBkgdMacro())
+    ABORT_LINE("There is no background script running for line:\n\n");
+  Variable *var = LookupVariable(mStrItems[1], index);
+  if (!var)
+    ABORT_LINE("The variable " + mStrItems[1] + " is not defined in line:\n\n");
+  delete mBkgdVariable.rowsFor2d;
+  mBkgdVariable.rowsFor2d = NULL;
+  mBkgdVariable = *var;
+  if (var->rowsFor2d) {
+    rowsFor2d = new CArray < ArrayRow, ArrayRow >;
+    rowsFor2d->Append(*(var->rowsFor2d));
+    mBkgdVariable.rowsFor2d = rowsFor2d;
+  }
+  mBkgdScriptVarState = mProcessorIndex;
+  return 0;
+}
+
+// GetBkgdScriptVar
+int CMacCmd::GetBkgdScriptVar()
+{
+  if (!mWinApp->RunningBkgdMacro())
+    ABORT_LINE("There is no background script running for line:\n\n");
+  mBkgdScriptVarState = -1;
+  if (CopyVariable(&mBkgdVariable, mStrItems[1], mItemInt[2] != 0)) {
+    ABORT_LINE(mStrCopy + " in script line: \n\n");
+  }
+  return 0;
+}
+
+// WaitForBkgdScriptVar
+int CMacCmd::WaitForBkgdScriptVar()
+{
+  if (!mWinApp->RunningBkgdMacro())
+    ABORT_LINE("There is no background script running for line:\n\n");
+  if (!mProcessorIndex) {
+    mSavedAllowBkgdTime = mWinApp->GetAllowBkgdMacroTime();
+    mWinApp->SetAllowBkgdMacroTime(true);
+  }
+  mWaitForBkgdVarState = mItemInt[1] ? 1 - mProcessorIndex : -1;
+  return 0;
+}
+
+// AllowTimeForBkgdScript()
+int CMacCmd::AllowTimeForBkgdScript()
+{
+  if (mProcessorIndex)
+    ABORT_LINE("The background script cannot give itself time in line:\n\n");
+  if (!mWinApp->RunningBkgdMacro())
+    ABORT_LINE("There is no background script running for line:\n\n");
+  mWinApp->SetAllowBkgdMacroTime(mItemInt[1] != 0);
+  return 0;
+}
+
+// CopyOtherScriptVar
+int CMacCmd::CopyOtherScriptVar()
+{
+  if (!mWinApp->RunningBkgdMacro())
+    ABORT_LINE("There is no background script running for line:\n\n");
+  int ind;
+  CMacroProcessor *macProc = mProcessorIndex ? mWinApp->mMacroProcessor : 
+    mWinApp->mBkgdProcessor;
+  Variable *var = macProc->LookupVariable(mStrItems[1], ind);
+  if (var) {
+    if (CopyVariable(var, mStrItems[2], mItemInt[3] != 0))
+      ABORT_LINE(mStrCopy + " in script line: \n\n");
+  }
+  SetReportedValues(var ? 0 : 1, 0);
   return 0;
 }
 
@@ -2007,6 +2108,7 @@ int CMacCmd::OppositeTrial(void)
     mCamera->InitiateCapture(2);
   else
     mCamera->InitiateCapture(1);
+  mStartedOtherTask = true;
   return 0;
 }
 
@@ -2692,6 +2794,7 @@ int CMacCmd::MultipleRecords(void)
     return 1;
   }
   SetReportedValues(-iy1);
+  mStartedOtherTask = true;
   return 0;
 }
 
@@ -2864,6 +2967,7 @@ int CMacCmd::StepAndAdjustISVectors()
     AbortMacro();
     return 1;
   }
+  mStartedOtherTask = true;
   return 0;
 }
 
@@ -3118,6 +3222,7 @@ int CMacCmd::AutoFocus(void)
     mFocusManager->AutoFocusStart(index,
       !mItemEmpty[2] ? mItemInt[2] : 0);
   mTestScale = true;
+  mStartedOtherTask = true;
   return 0;
 }
 
@@ -3149,6 +3254,7 @@ int CMacCmd::CorrectAstigmatism(void)
 {
   if (mWinApp->mAutoTuning->FixAstigmatism(mItemEmpty[1] || mItemInt[1] >= 0))
     ABORT_NOLINE("There is no astigmatism calibration for the current settings");
+  mStartedOtherTask = true;
   return 0;
 }
 
@@ -3162,6 +3268,7 @@ int CMacCmd::CorrectComa(void)
     index = mItemInt[1] > 0 ? COMA_ADD_ONE_ITER : COMA_JUST_MEASURE;
   if (mWinApp->mAutoTuning->ComaFreeAlignment(false, index))
     AbortMacro();
+  mStartedOtherTask = true;
   return 0;
 }
 
@@ -3177,6 +3284,7 @@ int CMacCmd::ZemlinTableau(void)
   if (mItemInt[3] > 0)
     index2 = mItemInt[3];
   mWinApp->mAutoTuning->MakeZemlinTableau(mItemFlt[1], index, index2);
+  mStartedOtherTask = true;
   return 0;
 }
 
@@ -3189,6 +3297,7 @@ int CMacCmd::CBAstigComa(void)
     AbortMacro();
     return 1;
   }
+  mStartedOtherTask = true;
   return 0;
 }
 
@@ -3211,6 +3320,7 @@ int CMacCmd::FixAstigmatismByCTF(void)
     AbortMacro();
     return 1;
   }
+  mStartedOtherTask = true;
   return 0;
 }
 
@@ -3229,6 +3339,7 @@ int CMacCmd::CalibrateComaVsIS(void)
     AbortMacro();
     return 1;
   }
+  mStartedOtherTask = true;
   return 0;
 }
 
@@ -5680,6 +5791,7 @@ int CMacCmd::CalibrateImageShift(void)
   if (mItemInt[1])
     index = -1;
   mWinApp->mShiftCalibrator->CalibrateIS(index, false, true);
+  mStartedOtherTask = true;
   return 0;
 }
 
@@ -5694,6 +5806,7 @@ int CMacCmd::CalibrateHighFocusIS(void)
     AbortMacro();
     return 1;
   }
+  mStartedOtherTask = true;
   return 0;
 }
 
@@ -5707,6 +5820,7 @@ int CMacCmd::CalibrateHighFocusMag()
     return 1;
   }
   SetRepValsAndVars(2, scale, rotation);
+  mStartedOtherTask = true;
   return 0;
 }
 
@@ -5742,6 +5856,7 @@ int CMacCmd::QuickFlyback(void)
     ABORT_NOLINE("QuickFlyback can be run only if the current camera is an FEI STEM"
     " camera")
   mWinApp->mCalibTiming->CalibrateTiming(index, mItemFlt[2], false);
+  mStartedOtherTask = true;
   return 0;
 }
 
@@ -9182,6 +9297,7 @@ int CMacCmd::ResetImageShift(void)
     SuspendMacro();
     return 1;
   }
+  mStartedOtherTask = true;
   return 0;
 }
 
@@ -9200,6 +9316,7 @@ int CMacCmd::ResetShiftIfAbove(void)
   specDist = sqrt(delX * delX + delY * delY);
   if (specDist > mItemDbl[1])
     mWinApp->mComplexTasks->ResetShiftRealign();
+  mStartedOtherTask = true;
   return 0;
 }
 
@@ -9227,6 +9344,7 @@ int CMacCmd::Eucentricity(void)
     ABORT_LINE(report);
   }
   mWinApp->mComplexTasks->FindEucentricity(index);
+  mStartedOtherTask = true;
   return 0;
 }
 
@@ -9320,6 +9438,7 @@ int CMacCmd::WalkUpTo(void)
   if (fabs(delISX) > mScope->GetMaxTiltAngle())
     ABORT_LINE("Target angle is bigger than the maximum allowed tilt angle: \n\n");
   mWinApp->mComplexTasks->WalkUp((float)delISX, -1, 0);
+  mStartedOtherTask = true;
   return 0;
 }
 
@@ -9339,6 +9458,7 @@ int CMacCmd::ReverseTilt(void)
       ABORT_NOLINE("Error in script: ReverseTilt should not be followed by 0");
   }
   mWinApp->mComplexTasks->ReverseTilt(index);
+  mStartedOtherTask = true;
   return 0;
 }
 
@@ -9357,6 +9477,7 @@ int CMacCmd::FindLowDoseShiftOffset()
     AbortMacro();
     return 1;
   }
+  mStartedOtherTask = true;
   return 0;
 }
 
@@ -9476,6 +9597,7 @@ int CMacCmd::DriftWaitTask(void)
       dwparm.binning = mItemInt[9];
   }
   mWinApp->mParticleTasks->WaitForDrift(dwparm, false);
+  mStartedOtherTask = true;
   return 0;
 }
 
@@ -9486,6 +9608,7 @@ int CMacCmd::ConditionPhasePlate(void)
     AbortMacro();
     return 1;
   }
+  mStartedOtherTask = true;
   return 0;
 }
 
@@ -9504,6 +9627,7 @@ int CMacCmd::BacklashAdjust(void)
 
   mWinApp->mMontageController->GetColumnBacklash(backlashX, backlashY);
   mWinApp->mComplexTasks->BacklashAdjustStagePos(backlashX, backlashY, false, false);
+  mStartedOtherTask = true;
   return 0;
 }
 
@@ -9537,6 +9661,7 @@ int CMacCmd::AutoCenterBeam(void)
     AbortMacro();
     return 1;
   }
+  mStartedOtherTask = true;
   return 0;
 }
 
@@ -9547,6 +9672,7 @@ int CMacCmd::CookSpecimen(void)
     AbortMacro();
     return 1;
   }
+  mStartedOtherTask = true;
   return 0;
 }
 
@@ -9829,7 +9955,7 @@ int CMacCmd::RefrigerantLevel(void)
     ABORT_LINE("Dewar number must be between 0 and 2 in: \n\n");
   if (!mScope->GetRefrigerantLevel(mItemInt[1], delX)) {
     if (JEOLscope && GetDebugOutput('1'))
-      SEMMessageBox("Script halted due to failure in RefrigerantLevel");
+      MacMessageBox("Script halted due to failure in RefrigerantLevel");
     AbortMacro();
     return 1;
   }
@@ -9845,7 +9971,7 @@ int CMacCmd::DewarsRemainingTime(void)
 
   if (!mScope->GetDewarsRemainingTime(0, index)) {
     if (JEOLscope && GetDebugOutput('1'))
-      SEMMessageBox("Script halted due to failure in DewarsRemainingTime");
+      MacMessageBox("Script halted due to failure in DewarsRemainingTime");
     AbortMacro();
     return 1;
   }
@@ -9868,7 +9994,7 @@ int CMacCmd::AreDewarsFilling(void)
 
   if (!mScope->AreDewarsFilling(index)) {
     if (JEOLscope && GetDebugOutput('1'))
-      SEMMessageBox("Script halted due to failure in AreDewarsFilling");
+      MacMessageBox("Script halted due to failure in AreDewarsFilling");
     AbortMacro();
     return 1;
   }
@@ -11157,6 +11283,7 @@ int CMacCmd::AlignToTemplate(void)
     JustStripItems(mStrLine, 5, params.templateLabel);
   if (mWinApp->mParticleTasks->AlignToTemplate(params))
     ABORT_NOLINE("Script halted due to failure in Align to Template routine");
+  mStartedOtherTask = true;
   return 0;
 }
 
@@ -11204,6 +11331,7 @@ int CMacCmd::RealignToNavItem(void)
     report.Format("Script halted due to failure %d in Realign to Item routine", iy0);
     ABORT_NOLINE(report);
   }
+  mStartedOtherTask = true;
   return 0;
 }
 
@@ -11221,6 +11349,7 @@ int CMacCmd::RealignReloadedGrid()
     mWinApp->mMultiGridTasks->GetRRGMaxRotation() : mItemFlt[4],
     mItemEmpty[5] ? 1 : mItemInt[5], mStrCopy))
     ABORT_LINE(mStrCopy + " for line:\n\n");
+  mStartedOtherTask = true;
   return 0;
 }
 
@@ -11239,6 +11368,7 @@ int CMacCmd::RefineGridMapAlignment()
     mItemEmpty[5] ? EXTRA_NO_VALUE : mItemFlt[5], mItemEmpty[3] ? 0.f : mItemFlt[3],
     mStrCopy))
     ABORT_LINE(mStrCopy + " for line:\n\n");
+  mStartedOtherTask = true;
   return 0;
 }
 
@@ -11281,6 +11411,7 @@ int CMacCmd::RealignToMapDrawnOn(void)
       ix0);
     ABORT_LINE(report);
   }
+  mStartedOtherTask = true;
   return 0;
 }
 
@@ -12843,10 +12974,11 @@ int CMacCmd::FindHoles(void)
       ABORT_LINE(report);
     imBuf = &mImBufs[index];
   }
-   if (mNavHelper->mHoleFinderDlg->DoFindHoles(imBuf, false)) {
+  if (mNavHelper->mHoleFinderDlg->DoFindHoles(imBuf, false)) {
     AbortMacro();
     return 1;
   }
+  mStartedOtherTask = true;
   return 0;
 }
 
@@ -13672,7 +13804,9 @@ int CMacCmd::NewDEserverDarkRef(void)
 int CMacCmd::RunInShell(void)
 {
   SubstituteLineStripItems(mStrLine, 1, mEnteredName);
-  mProcessThread = AfxBeginThread(RunInShellProc, &mEnteredName, THREAD_PRIORITY_NORMAL,
+  mShellProcTD.strPtr = &mEnteredName;
+  mShellProcTD.processorIndex = mProcessorIndex;
+  mProcessThread = AfxBeginThread(RunInShellProc, &mShellProcTD, THREAD_PRIORITY_NORMAL,
      0, CREATE_SUSPENDED);
   mProcessThread->m_bAutoDelete = false;
   mProcessThread->ResumeThread();
@@ -13924,7 +14058,7 @@ int CMacCmd::SetEDMDutyPercent()
     error = mCamera->mDoseModulator->GetDutyPercent(value, mStrCopy);
   }
   if (error > 0) {
-    SEMMessageBox(mStrCopy);
+    MacMessageBox(mStrCopy);
     AbortMacro();
     return 1;
   }

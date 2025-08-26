@@ -125,6 +125,16 @@ struct CmdItem {
   std::string cmd;
 };
 
+struct ScrpLangThreadData {
+  const char *script;
+  int processorIndex;
+};
+
+struct ShellProcThreadData {
+  CString *strPtr;
+  int processorIndex;
+};
+
 ScriptLangData DLL_IM_EX *SEMGetScriptLangData();
 
 class DLL_IM_EX CMacroProcessor : public CCmdTarget
@@ -136,12 +146,14 @@ public:
   void Stop(BOOL ifNow);
   void Resume();
   void Run(int which);
+  void AddIdleTask();
   void ClearGraphVariables();
   int TaskBusy();
+  bool StartedTask();
   void CleanupExternalProcess();
   void CheckAndSetupExternalControl(void);
   void Initialize();
-  CMacroProcessor();
+  CMacroProcessor(int index);
   virtual ~CMacroProcessor();
   void ShutdownScrpLangScripting();
   BOOL DoingMacro() { return mDoingMacro && mCurrentMacro >= 0; };
@@ -149,6 +161,15 @@ public:
   void SetNonResumable() { mCurrentMacro = -1; };
   void SetMontageError(float inErr) { mLastMontError = inErr; };
   void SuspendMacro(int abort = 0);
+  int MacMessageBox(CString message, UINT type = MB_OK | MB_ICONEXCLAMATION,
+    BOOL terminate = true, int retval = 0);
+  int PythonErrorMessageBox();
+  void LineAbort(CString str);
+  void NoLineAbort(CString str);
+  void NoNavAbort();
+  void LineSuspend(CString str);
+  void NoLineSuspend(CString str);
+  static int GetMessageCallerProcInd() {return mMessageCallerProcInd ; };
   void AbortMacro(bool ending = false);
   GetMember(BOOL, LastCompleted)
     GetMember(BOOL, LastAborted)
@@ -193,6 +214,8 @@ public:
   GetMember(CString, ScriptWindowTitle);
   GetMember(CString *, FKeyMapping);
   GetSetMember(int, SuppressJobObjWarning);
+  int GetNumVariables() { return (int)mVarArray.GetSize(); };
+  int GetBaseMacroBeingRun() {return DoingMacro() ? mCallMacro[0] : -1; };
   bool *GetNoCatchOutput() { return &mNoCatchOutput[0]; };
   bool *GetNoPyTryOutput() { return &mNoPyTryOutput[0]; };
   std::vector<std::string> *GetVersionsOfPython() { return &mVersionsOfPython; };
@@ -205,11 +228,11 @@ public:
   IntVec *GetStoredGraphTypes() { return &mStoredGraphTypes; };
   std::vector<FloatVec> *GetStoredGraphValues() { return &mStoredGraphValues; };
   COneLineScript *mOneLineScript;
-  static ScriptLangData mScrpLangData;         // Data structure for external scripting
+  static ScriptLangData mScrpLangData[2];      // Data structure for external scripting
   static ScriptLangPlugFuncs *mScrpLangFuncs;  // The functions of a scripting plugin
-  static HANDLE mScrpLangDoneEvent;            // Event to notify server thread command done
+  static HANDLE mScrpLangDoneEvent[2];         // Event to notify server thread command done
   static std::set<int> mPythonOnlyCmdSet;      // Set of commands available only from Python
-  static HANDLE mPyProcessHandle;              // Process handle so we can kill it
+  static HANDLE mPyProcessHandle[2];           // Process handle so we can kill it
   static int mSuppressJobObjWarning;           // Suppress error assigning process to job
 
 protected:
@@ -273,7 +296,9 @@ protected:
   int mItemInt[MAX_MACRO_TOKENS];
   double mItemDbl[MAX_MACRO_TOKENS];
   float mItemFlt[MAX_MACRO_TOKENS];
+  CString mStrLine;
 
+  int mProcessorIndex;    // 1 for the background processor
   BOOL mDoingMacro;       // Flag for whether running
   int mCurrentMacro;      // Currently running macro
   int mCurrentIndex;      // Index into macro
@@ -339,6 +364,8 @@ protected:
   float mOldMarkerX, mOldMarkerY;   // Starting value if any
   double mMarkerTimeStamp;  // Time stamp of image
   int mMarkerImageCapFlag;  // mCaptured value of image too
+
+  // Flags for action started; add to StartedTasks
   BOOL mMovedStage;       // Flag that stage should be checked
   BOOL mExposedFilm;   // Flag that film should be checked
   BOOL mMovedScreen;
@@ -351,6 +378,7 @@ protected:
   BOOL mLoadingMap;    // Flag that an asynchronous map load was started
   BOOL mMakingDualMap; // Flag that anchor map has been started
   BOOL mAutoContouring; // Flag that autocontouring was started
+  bool mStartedOtherTask;  // General flag that can be set for error tracking
   int mStartedRefineZLP; // Flag that refine ZLP was started: 1 normal, -1 allow failure
   double mDoseStart;   // Starting cumulative dose
   double mDoseTarget;  // Target dose to accumulate
@@ -442,7 +470,7 @@ protected:
   bool mCalledFromScrpLang;  // Flag that regular script called from language script
   bool mCalledFromSEMmacro;  // Flag that language script called from regular one
   CString mMacroForScrpLang; // String actually passed with other scripts included
-  static CWinThread *mScrpLangThread;
+  static CWinThread *mScrpLangThread[2];
   IntVec mLineInSrcMacro;      // Map from line in composite script to line in source
   IntVec mIndexOfSrcLine;      // And the character index of that line in the source
   IntVec mMacNumAtScrpLine;    // Macro number for each block of composite script
@@ -450,9 +478,9 @@ protected:
   IntVec mFirstRealLineInPart; // Macro line number of first non-blank line in a block
   int mLastPythonErrorLine;    // Last line number and error happened on
   std::vector<std::string> mIncludedFiles;
-  std::vector<std::string> mPathsToPython;
-  std::vector<std::string> mVersionsOfPython;
-  CString mPyModulePath;       // Module path set by property or set as default
+  static std::vector<std::string> mPathsToPython;
+  static std::vector<std::string> mVersionsOfPython;
+  static CString mPyModulePath;       // Module path set by property or set as default
   int mScriptNumFound;         // Last script number (0-based) for FindScriptByName
   float mCumulRecordDose;      // Cumulative Record dose for tilt series
   FloatVec mAreaRecordDoses;   // Record doses for separate areas
@@ -501,6 +529,13 @@ protected:
   MultiShotParams *mSavedMultiShot;  // Saved parameters for running step & adjust
   bool mC2ApForScalingWasSet;  // Flag that C2 aperture size was set
   CString mFKeyMapping[12];    // Custom mapping to actual macros
+  ScrpLangThreadData mScrpLangTD;
+  ShellProcThreadData mShellProcTD;
+  static int mMessageCallerProcInd;   // Index of processor calling SEMMessageBox
+  static int mBkgdScriptVarState;  // -1 not set (or received), 0, 1 proc index of setter
+  static Variable mBkgdVariable;   // Variable for communicating between scripts
+  int mWaitForBkgdVarState;       // Value of state to wait for
+  bool mSavedAllowBkgdTime;       // Saved value for allowing time for bkgd script
 
 public:
   void SetNumCamMacRows(int inVal);
@@ -511,6 +546,7 @@ public:
     CString *errStr = NULL, CArray<ArrayRow, ArrayRow> *rowsFor2d = NULL);
   bool SetVariable(CString name, double value, int type, int index, bool mustBeNew,
     CString *errStr = NULL, CArray<ArrayRow, ArrayRow> *rowsFor2d = NULL);
+  int CopyVariable(Variable *var, CString name, bool persist);
   Variable *LookupVariable(CString name, int &ind);
   void ListVariables(int type = -1);
   void ClearVariables(int type = -1, int level = -1, int index = -1);
@@ -565,6 +601,7 @@ public:
   afx_msg void OnMacroEdit55();
   afx_msg void OnMacroEdit60();
   void PrepareForMacroChecking(int which);
+  bool IsMacroBeingUsed(int which);
   afx_msg void OnMacroReadMany();
   afx_msg void OnUpdateMacroReadMany(CCmdUI *pCmdUI);
   afx_msg void OnUpdateNoTasks(CCmdUI *pCmdUI);
@@ -608,9 +645,9 @@ public:
   static UINT RunInShellProc(LPVOID pParam);
   static UINT RunScriptLangProc(LPVOID pParam);
   static int CreateOnePipe(HANDLE *childRd, HANDLE *childWr, SECURITY_ATTRIBUTES *saAttr, bool setForWrite,
-    const char *descrip);
+    int pnd, const char *descrip);
   static UINT StdoutToLogProc(LPVOID pParam);
-  static void TerminateScrpLangProcess(void);
+  static void TerminateScrpLangProcess(int pnd);
   afx_msg void OnScriptSetIndentSize();
   afx_msg void OnScriptListPersistentVars();
   afx_msg void OnScriptClearPersistentVars();
@@ -688,6 +725,12 @@ public:
   afx_msg void OnUpdateKeepFocusOnOneLine(CCmdUI *pCmdUI);
   afx_msg void OnScriptMapFunctionKey();
   afx_msg void OnScriptListFKeyMappings();
+  afx_msg void OnRunBackgroundScript();
+  int DoRunBackgroundScript(int which);
+  afx_msg void OnStopBackgroundScript();
+  void DoStopBackgroundScript();
+  afx_msg void OnUpdateRunbackgroundScript(CCmdUI *pCmdUI);
+  afx_msg void OnUpdateStopBackgroundScript(CCmdUI *pCmdUI);
 };
 
 #include "MacroCommands.h"

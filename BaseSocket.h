@@ -2,7 +2,7 @@
 #include <winsock.h>
 
 #define MAX_SOCKETS 8
-#define MAX_SOCKET_IDS 10
+#define MAX_SOCKET_IDS 12
 #define GATAN_SOCK_ID    0
 #define FEI_SOCK_ID      1
 #define JEOLCAM_SOCK_ID  4
@@ -12,6 +12,7 @@
 #define JEOL2ND_SOCK_ID  6
 #define RUN_PYTH_SOCK_ID 7
 #define EXT_PYTH_SOCK_ID 8
+#define BKGD_PYTH_SOCK_ID 10
 // Note that SavvyScan was given 9!
 
 // Macros for adding arguments

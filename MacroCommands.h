@@ -5,7 +5,7 @@
 class CMacCmd : public CMacroProcessor
 {
  public:
-  CMacCmd();
+  CMacCmd(int index);
   virtual ~CMacCmd();
   int NextCommand(bool startingOut);
   void InitForNextCommand();
@@ -18,7 +18,7 @@ class CMacCmd : public CMacroProcessor
   static int mLongHasTime[MAX_LONG_OPERATIONS];
 
 
-  CString mStrLine, mStrCopy, mItem1upper;
+  CString mStrCopy, mItem1upper;
   CString *mMacro;
 
   // Use this only for output followed by break not return, output at end of switch

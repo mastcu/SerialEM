@@ -461,6 +461,14 @@ void CMacroEditer::OnLoadmacro()
   int fileErr = 0;
   static char szFilter[] = "Script files (*.txt, *.py)|*.txt; *.py|All files (*.*)|*.*||";
   CString cPathname, filename, direc;
+
+  if (mWinApp->RunningBkgdMacro() &&
+    mWinApp->mBkgdProcessor->IsMacroBeingUsed(m_iMacroNumber)) {
+    SEMAppendToLog("WARNING: Cannot load into the editor for a script being run in the"
+      " background");
+    return;
+  }
+
   mWinApp->mDocWnd->DirFromCurrentOrSettingsFile(mSaveFile[m_iMacroNumber], direc);
   if (mWinApp->mDocWnd->GetTextFileName(true, true, cPathname, &filename, &direc,
     &szFilter[0]))
@@ -686,7 +694,9 @@ int CMacroEditer::GetLineSelectLimits(int &startInd, int &endInd, int &indentSiz
 void CMacroEditer::UpdateButtons()
 {
   int navScript = -2;
-  BOOL inactive = !mProcessor->DoingMacro();
+  bool inUse = mWinApp->RunningBkgdMacro() &&
+    mWinApp->mBkgdProcessor->GetBaseMacroBeingRun() == m_iMacroNumber;
+  BOOL inactive = !mProcessor->DoingMacro() && !inUse;
   if (inactive && mWinApp->mCameraMacroTools.GetNavigatorState() == NAV_PAUSED &&
     mWinApp->mNavigator) {
     navScript = mWinApp->mNavigator->GetScriptToRunAtEnd();
@@ -695,7 +705,7 @@ void CMacroEditer::UpdateButtons()
   }
   m_butOK.EnableWindow(inactive);
   m_butRun.EnableWindow(!mWinApp->DoingTasks() && !mWinApp->StartedTiltSeries() && 
-    !mWinApp->mScope->GetMovingStage());
+    !mWinApp->mScope->GetMovingStage() && !inUse);
   m_editMacro.EnableWindow(inactive);
   m_butLoad.EnableWindow(inactive);
   m_butPrevMacro.EnableWindow(inactive && AdjacentMacro(-1) >= 0 && 
@@ -713,6 +723,12 @@ void CMacroEditer::UpdateButtons()
 void CMacroEditer::TransferMacro(BOOL fromEditor)
 {
   if (fromEditor) {
+    if (mWinApp->RunningBkgdMacro() &&
+      mWinApp->mBkgdProcessor->IsMacroBeingUsed(m_iMacroNumber)) {
+      SEMAppendToLog("WARNING: Not saving changes to a script currently being run in "
+        "the background");
+      return;
+    }
     UpdateData(true);
     *mMyMacro = m_strMacro;
     mLoadUncommitted = false;
@@ -787,6 +803,13 @@ void CMacroEditer::ShiftMacro(int dir)
   mWinApp->RestoreViewFocus();
   if (newNum < 0 || newNum >= MAX_MACROS)
     return;
+
+  if (mWinApp->RunningBkgdMacro() &&
+    (mWinApp->mBkgdProcessor->IsMacroBeingUsed(m_iMacroNumber) ||
+      mWinApp->mBkgdProcessor->IsMacroBeingUsed(newNum))) {
+    SEMAppendToLog("WARNING: Cannot shift a script being run in the background");
+    return;
+  }
 
   // Transfer both macros
   TransferMacro(true);

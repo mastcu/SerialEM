@@ -439,6 +439,8 @@ void CMainFrame::DoClose(bool afterScript)
       }
       mWinApp->ErrorOccurred(0);
     }
+    if (mWinApp->RunningBkgdMacro())
+      mWinApp->mBkgdProcessor->Stop(true);
 
     if (mWinApp->mNavigator)
       mWinApp->SetOpenStateWithNav(mWinApp->mNavHelper->mStateDlg != NULL);

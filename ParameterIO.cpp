@@ -433,8 +433,11 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
       } else if (NAME_IS("ScriptToRunOnIdle")) {
         StripItems(strLine, 1, strCopy);
         mWinApp->SetScriptToRunOnIdle(strCopy);
+      } else if (NAME_IS("BackgroundScript")) {
+        StripItems(strLine, 1, strCopy);
+        mWinApp->SetBackgroundScript(strCopy);
       } else if (NAME_IS("FKeyMapping")) {
-        if (itemInt[1] >= 0 && itemInt[1] < 10)
+        if (itemInt[1] >= 0 && itemInt[1] < 12)
           StripItems(strLine, 2, fKeyMapping[itemInt[1]]);
       } else if (MatchNoCase("BasicModeFile")) {
         StripItems(strLine, 1, strCopy);
@@ -1800,7 +1803,10 @@ void CParameterIO::WriteSettings(CString strFileName)
     oneState = mWinApp->GetScriptToRunOnIdle();
     if (!oneState.IsEmpty())
       WriteString("ScriptToRunOnIdle", oneState);
-    for (i = 0; i < 10; i++) {
+    oneState = mWinApp->GetBackgroundScript();
+    if (!oneState.IsEmpty())
+      WriteString("BackgroundScript", oneState);
+    for (i = 0; i < 12; i++) {
       if (!fKeyMapping[i].IsEmpty()) {
         oneState.Format("%d %s", i, (LPCTSTR)fKeyMapping[i]);
         WriteString("FKeyMapping", oneState);

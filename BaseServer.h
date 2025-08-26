@@ -1,6 +1,8 @@
 #pragma once
-#define MAX_SOCK_CHAN 2
+#define MAX_SOCK_CHAN 3
 #define MESS_ERR_BUFF_SIZE 320
+
+enum { REGULAR_PYSOCK_IND = 0, EXTERNAL_PYSOCK_IND, BKGD_PYSOCK_IND};
 
 #include <winsock.h>
 //#include "WinDef.h"

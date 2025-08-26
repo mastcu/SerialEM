@@ -304,13 +304,13 @@ DWORD WINAPI CBaseServer::SocketProc(LPVOID pParam)
           "Accepted connection from client program %d  ind %d", mPort[sockInd], sockInd);
         EitherToLog("", mMessageBuf[sockInd]);
         if (mDebugVal > 1)
-          SEMTrace('[', "EC %d discon %d", CMacroProcessor::mScrpLangData.externalControl,
-            CMacroProcessor::mScrpLangData.disconnected ? 1 : 0);
+          SEMTrace('[', "EC %d discon %d", CMacroProcessor::mScrpLangData[0].externalControl,
+            CMacroProcessor::mScrpLangData[0].disconnected ? 1 : 0);
 
         // If main thread has not caught up to a disconnect and cleared external control,
         // just turn off the disconnect and let things go on as normal
-        if (CMacroProcessor::mScrpLangData.externalControl)
-          CMacroProcessor::mScrpLangData.disconnected = false;
+        if (CMacroProcessor::mScrpLangData[0].externalControl)
+          CMacroProcessor::mScrpLangData[0].disconnected = false;
       }
     }
   }
@@ -486,6 +486,7 @@ int CBaseServer::SendBuffer(int sockInd, char *buffer, int numBytes)
 // Close the connection upon error; report it unless it is clearly a SerialEM disconnect
 void CBaseServer::ReportErrorAndClose(int sockInd, int retval, const char *message)
 {
+  int pnd = sockInd == BKGD_PYSOCK_IND ? 1 : 0;
   if (retval == SOCKET_ERROR || !retval) {
     mLastWSAerror[sockInd] = WSAGetLastError();
     _snprintf(mMessageBuf[sockInd], MESS_ERR_BUFF_SIZE, "WSA Error %d on call to %s", 
@@ -498,9 +499,9 @@ void CBaseServer::ReportErrorAndClose(int sockInd, int retval, const char *messa
       DebugToLog("Disconnecting");
 
       // Set as disconnected and cancel any pending user stop error
-      CMacroProcessor::mScrpLangData.disconnected = true;
-      if (CMacroProcessor::mScrpLangData.errorOccurred == SCRIPT_USER_STOP)
-        CMacroProcessor::mScrpLangData.errorOccurred = 0;
+      CMacroProcessor::mScrpLangData[pnd].disconnected = true;
+      if (CMacroProcessor::mScrpLangData[pnd].errorOccurred == SCRIPT_USER_STOP)
+        CMacroProcessor::mScrpLangData[pnd].errorOccurred = 0;
     } else
       ErrorToLog(mMessageBuf[sockInd]);
   } else {

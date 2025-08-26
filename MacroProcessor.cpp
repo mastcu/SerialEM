@@ -58,7 +58,7 @@ static char THIS_FILE[]=__FILE__;
 #define ABORT_NORET_LINE(a) \
 { \
   mWinApp->AppendToLog((a) + strLine, mLogErrAction);  \
-  SEMMessageBox((a) + strLine, MB_EXCLAME); \
+  MacMessageBox((a) + strLine, MB_EXCLAME); \
   AbortMacro(); \
 }
 
@@ -80,106 +80,117 @@ static char THIS_FILE[]=__FILE__;
   return 98; \
 }
 
-ScriptLangData CMacroProcessor::mScrpLangData;
+ScriptLangData CMacroProcessor::mScrpLangData[2];
 ScriptLangPlugFuncs *CMacroProcessor::mScrpLangFuncs = NULL;
-HANDLE CMacroProcessor::mScrpLangDoneEvent = NULL;
-HANDLE CMacroProcessor::mPyProcessHandle = NULL;
+HANDLE CMacroProcessor::mScrpLangDoneEvent[2] = {NULL, NULL};
+HANDLE CMacroProcessor::mPyProcessHandle[2] = {NULL, NULL};
 int CMacroProcessor::mSuppressJobObjWarning = -1;
-CWinThread *CMacroProcessor::mScrpLangThread;
+CWinThread *CMacroProcessor::mScrpLangThread[2];
 std::set<int> CMacroProcessor::mPythonOnlyCmdSet;
+std::vector<std::string> CMacroProcessor::mPathsToPython;
+std::vector<std::string> CMacroProcessor::mVersionsOfPython;
+CString CMacroProcessor::mPyModulePath;
+int CMacroProcessor::mMessageCallerProcInd = -1;
+int CMacroProcessor::mBkgdScriptVarState = -1;
+Variable CMacroProcessor::mBkgdVariable;
 
-static int sProcessExitStatus;
-static int sProcessErrno;
+static int sProcessExitStatus[2];
+static int sProcessErrno[2];
+static CMacroProcessor *sMP = NULL;
 
 BEGIN_MESSAGE_MAP(CMacroProcessor, CCmdTarget)
   //{{AFX_MSG_MAP(CMacroProcessor)
-  ON_COMMAND(ID_MACRO_END, OnMacroEnd)
-  ON_COMMAND(ID_MACRO_STOP, OnMacroStop)
-  ON_COMMAND(ID_MACRO_RESUME, OnMacroResume)
-  ON_UPDATE_COMMAND_UI(ID_MACRO_RESUME, OnUpdateMacroResume)
-  ON_COMMAND(ID_MACRO_CONTROLS, OnMacroControls)
-  ON_UPDATE_COMMAND_UI(ID_MACRO_STOP, OnUpdateMacroStop)
+  ON_COMMAND(ID_MACRO_END, sMP->OnMacroEnd)
+  ON_COMMAND(ID_MACRO_STOP, sMP->OnMacroStop)
+  ON_COMMAND(ID_MACRO_RESUME, sMP->OnMacroResume)
+  ON_UPDATE_COMMAND_UI(ID_MACRO_RESUME, sMP->OnUpdateMacroResume)
+  ON_COMMAND(ID_MACRO_CONTROLS, sMP->OnMacroControls)
+  ON_UPDATE_COMMAND_UI(ID_MACRO_STOP, sMP->OnUpdateMacroStop)
   //}}AFX_MSG_MAP
-  ON_COMMAND_RANGE(ID_MACRO_EDIT1, ID_MACRO_EDIT10, OnMacroEdit)
-  ON_UPDATE_COMMAND_UI_RANGE(ID_MACRO_EDIT1, ID_MACRO_EDIT10, OnUpdateMacroEdit)
-  ON_COMMAND_RANGE(ID_MACRO_RUN1, ID_MACRO_RUN60, OnMacroRun)
-  ON_COMMAND_RANGE(ID_MACRO_FKEYRUN1, ID_MACRO_FKEYRUN12, OnMacroFKeyRun)
-  ON_UPDATE_COMMAND_UI_RANGE(ID_MACRO_RUN1, ID_MACRO_RUN60, OnUpdateMacroRun)
-  ON_COMMAND(ID_MACRO_TOOLBAR, OnMacroToolbar)
-  ON_UPDATE_COMMAND_UI(ID_MACRO_END, OnUpdateMacroEnd)
-  ON_COMMAND(ID_MACRO_SETLENGTH, OnMacroSetlength)
-  ON_COMMAND(ID_MACRO_VERBOSE, OnMacroVerbose)
-  ON_UPDATE_COMMAND_UI(ID_MACRO_VERBOSE, OnUpdateMacroVerbose)
-  ON_COMMAND(ID_MACRO_EDIT15, OnMacroEdit15)
-  ON_UPDATE_COMMAND_UI(ID_MACRO_EDIT15, OnUpdateMacroEdit)
-  ON_UPDATE_COMMAND_UI(ID_MACRO_EDIT20, OnUpdateMacroEdit)
-  ON_COMMAND(ID_MACRO_EDIT20, OnMacroEdit20)
-  ON_COMMAND(ID_MACRO_EDIT25, OnMacroEdit25)
-  ON_UPDATE_COMMAND_UI(ID_MACRO_EDIT25, OnUpdateMacroEdit)
-  ON_UPDATE_COMMAND_UI(ID_MACRO_EDIT30, OnUpdateMacroEdit)
-  ON_COMMAND(ID_MACRO_EDIT30, OnMacroEdit30)
-  ON_COMMAND(ID_MACRO_EDIT35, OnMacroEdit35)
-  ON_UPDATE_COMMAND_UI(ID_MACRO_EDIT35, OnUpdateMacroEdit)
-  ON_UPDATE_COMMAND_UI(ID_MACRO_EDIT40, OnUpdateMacroEdit)
-  ON_COMMAND(ID_MACRO_EDIT40, OnMacroEdit40)
-  ON_COMMAND(ID_MACRO_EDIT45, OnMacroEdit45)
-  ON_COMMAND(ID_MACRO_EDIT50, OnMacroEdit50)
-  ON_COMMAND(ID_MACRO_EDIT55, OnMacroEdit55)
-  ON_COMMAND(ID_MACRO_EDIT60, OnMacroEdit60)
-  ON_UPDATE_COMMAND_UI(ID_MACRO_EDIT45, OnUpdateMacroEdit)
-  ON_UPDATE_COMMAND_UI(ID_MACRO_EDIT50, OnUpdateMacroEdit)
-  ON_UPDATE_COMMAND_UI(ID_MACRO_EDIT55, OnUpdateMacroEdit)
-  ON_UPDATE_COMMAND_UI(ID_MACRO_EDIT60, OnUpdateMacroEdit)
-  ON_COMMAND(ID_MACRO_READMANY, OnMacroReadMany)
-  ON_UPDATE_COMMAND_UI(ID_MACRO_READMANY, OnUpdateMacroReadMany)
-  ON_COMMAND(ID_MACRO_LISTFUNCTIONS, OnMacroListFunctions)
-  ON_UPDATE_COMMAND_UI(ID_MACRO_LISTFUNCTIONS, OnUpdateNoTasks)
-  ON_COMMAND(ID_SCRIPT_SETINDENTSIZE, OnScriptSetIndentSize)
-  ON_COMMAND(ID_SCRIPT_LISTPERSISTENTVARS, OnScriptListPersistentVars)
-  ON_UPDATE_COMMAND_UI(ID_SCRIPT_CLEARPERSISTENTVARS, OnUpdateNoTasks)
-  ON_COMMAND(ID_SCRIPT_CLEARPERSISTENTVARS, OnScriptClearPersistentVars)
-  ON_UPDATE_COMMAND_UI(ID_SCRIPT_CLEARPERSISTENTVARS, OnUpdateClearPersistentVars)
-  ON_COMMAND(ID_SCRIPT_RUNONECOMMAND, OnScriptRunOneCommand)
-  ON_UPDATE_COMMAND_UI(ID_SCRIPT_RUNONECOMMAND, OnUpdateScriptRunOneCommand)
-  ON_COMMAND(ID_SCRIPT_OPENEDITORSONSTART, OnOpenEditorsOnStart)
-  ON_UPDATE_COMMAND_UI(ID_SCRIPT_OPENEDITORSONSTART, OnUpdateOpenEditorsOnStart)
-  ON_COMMAND(ID_SCRIPT_LOADNEWPACKAGE, OnScriptLoadNewPackage)
-  ON_UPDATE_COMMAND_UI(ID_SCRIPT_LOADNEWPACKAGE, OnUpdateMacroReadMany)
-  ON_COMMAND(ID_SCRIPT_SAVEPACKAGE, OnScriptSavePackage)
-  ON_UPDATE_COMMAND_UI(ID_SCRIPT_SAVEPACKAGE, OnUpdateNoTasks)
-  ON_COMMAND(ID_SCRIPT_SAVEPACKAGEAS, OnScriptSavePackageAs)
-  ON_UPDATE_COMMAND_UI(ID_SCRIPT_SAVEPACKAGEAS, OnUpdateNoTasks)
-  ON_COMMAND(ID_SCRIPT_RUNONPROGRAMSTART, OnRunOnProgramStart)
-  ON_UPDATE_COMMAND_UI(ID_SCRIPT_RUNONPROGRAMSTART, OnUpdateRunOnProgramStart)
-  ON_COMMAND(ID_SCRIPT_RUNATPROGRAMEND, OnRunAtProgramEnd)
-  ON_UPDATE_COMMAND_UI(ID_SCRIPT_RUNATPROGRAMEND, OnUpdateRunAtProgramEnd)
-  ON_COMMAND(ID_SCRIPT_USEMONOSPACEDFONT, OnUseMonospacedFont)
-  ON_UPDATE_COMMAND_UI(ID_SCRIPT_USEMONOSPACEDFONT, OnUpdateUseMonospacedFont)
-  ON_COMMAND(ID_SCRIPT_SHOWINDENTBUTTONS, OntShowIndentButtons)
-  ON_UPDATE_COMMAND_UI(ID_SCRIPT_SHOWINDENTBUTTONS, OnUpdateShowIndentButtons)
-  ON_COMMAND(ID_SCRIPT_SETPANELROWS, OnScriptSetpanelrows)
-  ON_UPDATE_COMMAND_UI(ID_SCRIPT_SETPANELROWS, OnUpdateScriptSetpanelrows)
-  ON_COMMAND(ID_HELP_RUNSERIALEMSNAPSHOT, OnRunSerialemSnapshot)
-  ON_UPDATE_COMMAND_UI(ID_HELP_RUNSERIALEMSNAPSHOT, OnUpdateRunSerialemSnapshot)
-  ON_COMMAND(ID_SCRIPT_RUNIFPROGRAMIDLE, OnRunIfProgramIdle)
-  ON_UPDATE_COMMAND_UI(ID_SCRIPT_RUNIFPROGRAMIDLE, OnUpdateRunIfProgramIdle)
-  ON_COMMAND(ID_SCRIPT_SET_NUM_STATUS, OnScriptSetNumStatus)
-  ON_UPDATE_COMMAND_UI(ID_SCRIPT_SET_NUM_STATUS, OnUpdateScriptSetpanelrows)
-  ON_COMMAND(ID_SCRIPT_MONOSPACESTATUSLINES, OnMonospaceStatusLines)
-  ON_UPDATE_COMMAND_UI(ID_SCRIPT_MONOSPACESTATUSLINES, OnUpdateMonospaceStatusLines)
-  ON_COMMAND(ID_SCRIPT_KEEPFOCUSONONELINE, OnKeepFocusOnOneLine)
-  ON_UPDATE_COMMAND_UI(ID_SCRIPT_KEEPFOCUSONONELINE, OnUpdateKeepFocusOnOneLine)
-  ON_COMMAND(ID_SCRIPT_MAPFUNCTIONKEY, OnScriptMapFunctionKey)
-  ON_UPDATE_COMMAND_UI(ID_SCRIPT_MAPFUNCTIONKEY, OnUpdateNoTasks)
-  ON_COMMAND(ID_SCRIPT_LISTFKEYMAPPINGS, OnScriptListFKeyMappings)
-  ON_UPDATE_COMMAND_UI(ID_SCRIPT_LISTFKEYMAPPINGS, OnUpdateNoTasks)
+  ON_COMMAND_RANGE(ID_MACRO_EDIT1, ID_MACRO_EDIT10, sMP->OnMacroEdit)
+  ON_UPDATE_COMMAND_UI_RANGE(ID_MACRO_EDIT1, ID_MACRO_EDIT10, sMP->OnUpdateMacroEdit)
+  ON_COMMAND_RANGE(ID_MACRO_RUN1, ID_MACRO_RUN60, sMP->OnMacroRun)
+  ON_COMMAND_RANGE(ID_MACRO_FKEYRUN1, ID_MACRO_FKEYRUN12, sMP->OnMacroFKeyRun)
+  ON_UPDATE_COMMAND_UI_RANGE(ID_MACRO_RUN1, ID_MACRO_RUN60, sMP->OnUpdateMacroRun)
+  ON_COMMAND(ID_MACRO_TOOLBAR, sMP->OnMacroToolbar)
+  ON_UPDATE_COMMAND_UI(ID_MACRO_END, sMP->OnUpdateMacroEnd)
+  ON_COMMAND(ID_MACRO_SETLENGTH, sMP->OnMacroSetlength)
+  ON_COMMAND(ID_MACRO_VERBOSE, sMP->OnMacroVerbose)
+  ON_UPDATE_COMMAND_UI(ID_MACRO_VERBOSE, sMP->OnUpdateMacroVerbose)
+  ON_COMMAND(ID_MACRO_EDIT15, sMP->OnMacroEdit15)
+  ON_UPDATE_COMMAND_UI(ID_MACRO_EDIT15, sMP->OnUpdateMacroEdit)
+  ON_UPDATE_COMMAND_UI(ID_MACRO_EDIT20, sMP->OnUpdateMacroEdit)
+  ON_COMMAND(ID_MACRO_EDIT20, sMP->OnMacroEdit20)
+  ON_COMMAND(ID_MACRO_EDIT25, sMP->OnMacroEdit25)
+  ON_UPDATE_COMMAND_UI(ID_MACRO_EDIT25, sMP->OnUpdateMacroEdit)
+  ON_UPDATE_COMMAND_UI(ID_MACRO_EDIT30, sMP->OnUpdateMacroEdit)
+  ON_COMMAND(ID_MACRO_EDIT30, sMP->OnMacroEdit30)
+  ON_COMMAND(ID_MACRO_EDIT35, sMP->OnMacroEdit35)
+  ON_UPDATE_COMMAND_UI(ID_MACRO_EDIT35, sMP->OnUpdateMacroEdit)
+  ON_UPDATE_COMMAND_UI(ID_MACRO_EDIT40, sMP->OnUpdateMacroEdit)
+  ON_COMMAND(ID_MACRO_EDIT40, sMP->OnMacroEdit40)
+  ON_COMMAND(ID_MACRO_EDIT45, sMP->OnMacroEdit45)
+  ON_COMMAND(ID_MACRO_EDIT50, sMP->OnMacroEdit50)
+  ON_COMMAND(ID_MACRO_EDIT55, sMP->OnMacroEdit55)
+  ON_COMMAND(ID_MACRO_EDIT60, sMP->OnMacroEdit60)
+  ON_UPDATE_COMMAND_UI(ID_MACRO_EDIT45, sMP->OnUpdateMacroEdit)
+  ON_UPDATE_COMMAND_UI(ID_MACRO_EDIT50, sMP->OnUpdateMacroEdit)
+  ON_UPDATE_COMMAND_UI(ID_MACRO_EDIT55, sMP->OnUpdateMacroEdit)
+  ON_UPDATE_COMMAND_UI(ID_MACRO_EDIT60, sMP->OnUpdateMacroEdit)
+  ON_COMMAND(ID_MACRO_READMANY, sMP->OnMacroReadMany)
+  ON_UPDATE_COMMAND_UI(ID_MACRO_READMANY, sMP->OnUpdateMacroReadMany)
+  ON_COMMAND(ID_MACRO_LISTFUNCTIONS, sMP->OnMacroListFunctions)
+  ON_UPDATE_COMMAND_UI(ID_MACRO_LISTFUNCTIONS, sMP->OnUpdateNoTasks)
+  ON_COMMAND(ID_SCRIPT_SETINDENTSIZE, sMP->OnScriptSetIndentSize)
+  ON_COMMAND(ID_SCRIPT_LISTPERSISTENTVARS, sMP->OnScriptListPersistentVars)
+  ON_UPDATE_COMMAND_UI(ID_SCRIPT_CLEARPERSISTENTVARS, sMP->OnUpdateNoTasks)
+  ON_COMMAND(ID_SCRIPT_CLEARPERSISTENTVARS, sMP->OnScriptClearPersistentVars)
+  ON_UPDATE_COMMAND_UI(ID_SCRIPT_CLEARPERSISTENTVARS, sMP->OnUpdateClearPersistentVars)
+  ON_COMMAND(ID_SCRIPT_RUNONECOMMAND, sMP->OnScriptRunOneCommand)
+  ON_UPDATE_COMMAND_UI(ID_SCRIPT_RUNONECOMMAND, sMP->OnUpdateScriptRunOneCommand)
+  ON_COMMAND(ID_SCRIPT_OPENEDITORSONSTART, sMP->OnOpenEditorsOnStart)
+  ON_UPDATE_COMMAND_UI(ID_SCRIPT_OPENEDITORSONSTART, sMP->OnUpdateOpenEditorsOnStart)
+  ON_COMMAND(ID_SCRIPT_LOADNEWPACKAGE, sMP->OnScriptLoadNewPackage)
+  ON_UPDATE_COMMAND_UI(ID_SCRIPT_LOADNEWPACKAGE, sMP->OnUpdateMacroReadMany)
+  ON_COMMAND(ID_SCRIPT_SAVEPACKAGE, sMP->OnScriptSavePackage)
+  ON_UPDATE_COMMAND_UI(ID_SCRIPT_SAVEPACKAGE, sMP->OnUpdateNoTasks)
+  ON_COMMAND(ID_SCRIPT_SAVEPACKAGEAS, sMP->OnScriptSavePackageAs)
+  ON_UPDATE_COMMAND_UI(ID_SCRIPT_SAVEPACKAGEAS, sMP->OnUpdateNoTasks)
+  ON_COMMAND(ID_SCRIPT_RUNONPROGRAMSTART, sMP->OnRunOnProgramStart)
+  ON_UPDATE_COMMAND_UI(ID_SCRIPT_RUNONPROGRAMSTART, sMP->OnUpdateRunOnProgramStart)
+  ON_COMMAND(ID_SCRIPT_RUNATPROGRAMEND, sMP->OnRunAtProgramEnd)
+  ON_UPDATE_COMMAND_UI(ID_SCRIPT_RUNATPROGRAMEND, sMP->OnUpdateRunAtProgramEnd)
+  ON_COMMAND(ID_SCRIPT_USEMONOSPACEDFONT, sMP->OnUseMonospacedFont)
+  ON_UPDATE_COMMAND_UI(ID_SCRIPT_USEMONOSPACEDFONT, sMP->OnUpdateUseMonospacedFont)
+  ON_COMMAND(ID_SCRIPT_SHOWINDENTBUTTONS, sMP->OntShowIndentButtons)
+  ON_UPDATE_COMMAND_UI(ID_SCRIPT_SHOWINDENTBUTTONS, sMP->OnUpdateShowIndentButtons)
+  ON_COMMAND(ID_SCRIPT_SETPANELROWS, sMP->OnScriptSetpanelrows)
+  ON_UPDATE_COMMAND_UI(ID_SCRIPT_SETPANELROWS, sMP->OnUpdateScriptSetpanelrows)
+  ON_COMMAND(ID_HELP_RUNSERIALEMSNAPSHOT, sMP->OnRunSerialemSnapshot)
+  ON_UPDATE_COMMAND_UI(ID_HELP_RUNSERIALEMSNAPSHOT, sMP->OnUpdateRunSerialemSnapshot)
+  ON_COMMAND(ID_SCRIPT_RUNIFPROGRAMIDLE, sMP->OnRunIfProgramIdle)
+  ON_UPDATE_COMMAND_UI(ID_SCRIPT_RUNIFPROGRAMIDLE, sMP->OnUpdateRunIfProgramIdle)
+  ON_COMMAND(ID_SCRIPT_SET_NUM_STATUS, sMP->OnScriptSetNumStatus)
+  ON_UPDATE_COMMAND_UI(ID_SCRIPT_SET_NUM_STATUS, sMP->OnUpdateScriptSetpanelrows)
+  ON_COMMAND(ID_SCRIPT_MONOSPACESTATUSLINES, sMP->OnMonospaceStatusLines)
+  ON_UPDATE_COMMAND_UI(ID_SCRIPT_MONOSPACESTATUSLINES, sMP->OnUpdateMonospaceStatusLines)
+  ON_COMMAND(ID_SCRIPT_KEEPFOCUSONONELINE, sMP->OnKeepFocusOnOneLine)
+  ON_UPDATE_COMMAND_UI(ID_SCRIPT_KEEPFOCUSONONELINE, sMP->OnUpdateKeepFocusOnOneLine)
+  ON_COMMAND(ID_SCRIPT_MAPFUNCTIONKEY, sMP->OnScriptMapFunctionKey)
+  ON_UPDATE_COMMAND_UI(ID_SCRIPT_MAPFUNCTIONKEY, sMP->OnUpdateNoTasks)
+  ON_COMMAND(ID_SCRIPT_LISTFKEYMAPPINGS, sMP->OnScriptListFKeyMappings)
+  ON_UPDATE_COMMAND_UI(ID_SCRIPT_LISTFKEYMAPPINGS, sMP->OnUpdateNoTasks)
+  ON_COMMAND(ID_SCRIPT_RUNBACKGROUNDSCRIPT, sMP->OnRunBackgroundScript)
+  ON_COMMAND(ID_SCRIPT_STOPBACKGROUNDSCRIPT, sMP->OnStopBackgroundScript)
+  ON_UPDATE_COMMAND_UI(ID_SCRIPT_RUNBACKGROUNDSCRIPT, sMP->OnUpdateRunbackgroundScript)
+  ON_UPDATE_COMMAND_UI(ID_SCRIPT_STOPBACKGROUNDSCRIPT, sMP->OnUpdateStopBackgroundScript)
 END_MESSAGE_MAP()
 
 //////////////////////////////////////////////////////////////////////
 // Construction/Destruction
 //////////////////////////////////////////////////////////////////////
 
-CMacroProcessor::CMacroProcessor()
+CMacroProcessor::CMacroProcessor(int index)
 {
   int i;
   std::string tmpOp1[] = { "SQRT", "COS", "SIN", "TAN", "ATAN", "ABS", "NEARINT",
@@ -194,6 +205,9 @@ CMacroProcessor::CMacroProcessor()
   CME_SETFLOATVARIABLE, CME_PLUGINALLDOUBLES, CME_PLUGINSTRING, CME_PLUGINDOUBLESTRING,
   CME_STARTTRY};
   SEMBuildTime(__DATE__, __TIME__);
+  mProcessorIndex = index;
+  if (!index)
+    sMP = this;
   mWinApp = (CSerialEMApp *)AfxGetApp();
   mModeNames = mWinApp->GetModeNames();
   mMacNames = mWinApp->GetMacroNames();
@@ -233,6 +247,8 @@ CMacroProcessor::CMacroProcessor()
   mGotPipedOutputOrErr = 0;
   mLoadingMap = false;
   mMakingDualMap = false;
+  mStartedOtherTask = false;
+  mWaitForBkgdVarState = -2;
   mLastCompleted = false;
   mLastAborted = false;
   mSuspendNavRedraw = false;
@@ -240,7 +256,6 @@ CMacroProcessor::CMacroProcessor()
   mRunningScrpLang = false;
   mCalledFromScrpLang = false;
   mNonMacroDeferring = false;
-  mScrpLangData.externalControl = 0;
   mShrMemFile = NULL;
   mToolPlacement.rcNormalPosition.right = NO_PLACEMENT;
   mNumToolButtons = 10;
@@ -270,11 +285,17 @@ CMacroProcessor::CMacroProcessor()
     mReadOnlyStart[i] = -1;
   srand(GetTickCount());
   mProcessThread = NULL;
-  mScrpLangThread = NULL;
-  mScrpLangDoneEvent = CreateEventA(NULL, FALSE, FALSE, SCRIPT_EVENT_NAME);
-  if (!mScrpLangDoneEvent) {
-    AfxMessageBox("Cannot run external scripting language; failed to make event"
-      " for signaling to it");
+  for (i = 0; i < 2; i++) {
+    CString mess;
+    mScrpLangData[i].externalControl = 0;
+    mScrpLangThread[i] = NULL;
+    mess.Format("%s%d", SCRIPT_EVENT_NAME, i);
+    mScrpLangDoneEvent[i] = CreateEventA(NULL, FALSE, FALSE, (LPCTSTR)mess);
+    if (!mScrpLangDoneEvent[i]) {
+      mess.Format("Cannot run external scripting language%d; failed to make event"
+        " for signaling to it", i ? " in background": "");
+      AfxMessageBox(mess);
+    }
   }
 }
 
@@ -288,9 +309,10 @@ CMacroProcessor::~CMacroProcessor()
 
 void CMacroProcessor::ShutdownScrpLangScripting()
 {
-  TerminateScrpLangProcess();
+  TerminateScrpLangProcess(mProcessorIndex);
   if (mWinApp->mPythonServer)
-    mWinApp->mPythonServer->ShutdownSocketIfOpen(RUN_PYTH_SOCK_ID);
+    mWinApp->mPythonServer->ShutdownSocketIfOpen(mProcessorIndex ? 
+      BKGD_PYTH_SOCK_ID : RUN_PYTH_SOCK_ID);
 }
 
 void CMacroProcessor::Initialize()
@@ -612,7 +634,8 @@ void CMacroProcessor::OnMacroReadMany()
 void CMacroProcessor::OnUpdateMacroReadMany(CCmdUI *pCmdUI)
 {
   pCmdUI->Enable(!(mWinApp->DoingTasks() || mWinApp->DoingTiltSeries() ||
-    (mWinApp->mNavigator && mWinApp->mNavigator->GetAcquiring())));
+    (mWinApp->mNavigator && mWinApp->mNavigator->GetAcquiring()) ||
+    mWinApp->RunningBkgdMacro()));
 }
 
 void CMacroProcessor::OnUpdateNoTasks(CCmdUI *pCmdUI)
@@ -630,8 +653,8 @@ void CMacroProcessor::OnScriptLoadNewPackage()
 
   // Find out if want to save
   if (!oldFile.IsEmpty())
-    saveCurrent = AfxMessageBox("Save current scripts to current file before loading a new"
-      " package file?", MB_QUESTION) == IDYES;
+    saveCurrent = AfxMessageBox("Save current scripts to current file before loading a"
+      " new package file?", MB_QUESTION) == IDYES;
   if (mDocWnd->GetTextFileName(true, true, filename, NULL, &path))
     return;
   LoadNewScriptPackage(filename, saveCurrent);
@@ -990,13 +1013,72 @@ void CMacroProcessor::OnUpdateRunIfProgramIdle(CCmdUI *pCmdUI)
     mWinApp->GetIdleScriptIntervalSec() > 0);
 }
 
+
+void CMacroProcessor::OnRunBackgroundScript()
+{
+  int ind;
+  CString str = mWinApp->GetBackgroundScript();
+  if (SelectScriptAtStartEnd(str, "in the background when idle or main script allows it")
+    || str.IsEmpty())
+    return;
+  mWinApp->SetBackgroundScript(str);
+  ind = FindMacroByNameOrTextNum(str);
+  if (ind < 0) {
+    AfxMessageBox("Cannot find that script by its name", MB_EXCLAME);
+    return;
+  }
+  DoRunBackgroundScript(ind);
+}
+
+// Make sure macro can be run and start it
+int CMacroProcessor::DoRunBackgroundScript(int which)
+{
+  if (EnsureMacroRunnable(which))
+    return 1;
+  if (!mWinApp->mBkgdProcessor) {
+    mWinApp->mBkgdProcessor = new CMacCmd(1);
+    mWinApp->mBkgdProcessor->Initialize();
+  }
+  mWinApp->mBkgdProcessor->Run(which);
+  if (mMacroEditer[which])
+    mMacroEditer[which]->UpdateButtons();
+  return 0;
+}
+
+
+void CMacroProcessor::OnStopBackgroundScript()
+{
+  if (!mWinApp->RunningBkgdMacro())
+    return;
+  DoStopBackgroundScript();
+}
+
+void CMacroProcessor::DoStopBackgroundScript()
+{
+  int which = mWinApp->mBkgdProcessor->GetBaseMacroBeingRun();
+  mWinApp->mBkgdProcessor->Stop(true);
+  if (mMacroEditer[which])
+    mMacroEditer[which]->UpdateButtons();
+}
+
+void CMacroProcessor::OnUpdateRunbackgroundScript(CCmdUI *pCmdUI)
+{
+  pCmdUI->Enable(!mWinApp->DoingTasks() && !mWinApp->RunningBkgdMacro());
+}
+
+
+void CMacroProcessor::OnUpdateStopBackgroundScript(CCmdUI *pCmdUI)
+{
+  pCmdUI->Enable(!mWinApp->DoingTasks() && mWinApp->RunningBkgdMacro());
+}
+
 void CMacroProcessor::OnScriptMapFunctionKey()
 {
   int index = 1;
   CString str, str2;
-  if (!KGetOneInt("Enter number of F key to map (1 to 10):", index))
+  if (!KGetOneInt("Enter number of F key to map (1 to 12):", index))
     return;
-  if (index < 1 || index > 10)
+  if (index < 1 || index > 12)
     return;
   str = mFKeyMapping[index - 1];
   str2.Format("with Ctrl-F%d", index);
@@ -1008,7 +1090,7 @@ void CMacroProcessor::OnScriptMapFunctionKey()
 void CMacroProcessor::OnScriptListFKeyMappings()
 {
   SEMAppendToLog("\r\nFunction key mappings:");
-  for (int ind = 0; ind < 10; ind++) {
+  for (int ind = 0; ind < 12; ind++) {
     if (!mFKeyMapping[ind].IsEmpty())
       PrintfToLog("Ctrl-F%d: %s", ind + 1, (LPCTSTR)mFKeyMapping[ind]);
   }
@@ -1049,7 +1131,7 @@ void CMacroProcessor::SaveStatusPanes(int macNum)
 int CMacroProcessor::TaskBusy()
 {
   double diff, dose;
-  int tbusy, err;
+  int tbusy, err, pnd = mProcessorIndex;
   EMimageBuffer *imBuf;
   DWORD waitResult;
   CString report;
@@ -1080,7 +1162,7 @@ int CMacroProcessor::TaskBusy()
   }
 
   // Check if command is ready from external scripting, or if it finished/errored
-  if (mRunningScrpLang && mScrpLangData.waitingForCommand) {
+  if (mRunningScrpLang && mScrpLangData[pnd].waitingForCommand) {
 
     // But first handle inserting an image in a buffer
     if (CPythonServer::mImArray) {
@@ -1089,31 +1171,31 @@ int CMacroProcessor::TaskBusy()
         CPythonServer::mImSizeY, CPythonServer::mMoreBinning, CPythonServer::mCapFlag,
         false, CPythonServer::mImToBuf);
       CPythonServer::mImArray = NULL;
-      SetEvent(mScrpLangDoneEvent);
-      SEMTrace('[', "signal function done after NewProcessedImage");
+      SetEvent(mScrpLangDoneEvent[pnd]);
+      SEMTrace('[', "signal function done after NewProcessedImage %d", pnd);
     }
-    if (mScrpLangData.externalControl && mScrpLangData.disconnected) {
+    if (mScrpLangData[pnd].externalControl && mScrpLangData[pnd].disconnected) {
       AbortMacro();
       return 0;
     }
-    if (mScrpLangData.commandReady) {
-      //SEMTrace('[', "Got ready, EC %d  RSL %d EO %d", mScrpLangData.externalControl, 
-      //mRunningScrpLang ? 1 : 0, mScrpLangData.errorOccurred);
+    if (mScrpLangData[pnd].commandReady) {
+      //SEMTrace('[', "Got ready, EC %d  RSL %d EO %d", mScrpLangData[pnd].externalControl, 
+      //mRunningScrpLang ? 1 : 0, mScrpLangData[pnd].errorOccurred);
       return 0;
     }
-    if (mScrpLangData.externalControl)
+    if (mScrpLangData[pnd].externalControl)
       return 1;
-    tbusy = UtilThreadBusy(&mScrpLangThread);
+    tbusy = UtilThreadBusy(&mScrpLangThread[pnd]);
     if (tbusy > 0)
       return 1;
-    SEMTrace('[', "thread done %d", tbusy);
-    mScrpLangData.threadDone = tbusy ? 1 : -1;
-    if (tbusy && mScrpLangData.gotExceptionText)
-      EnhancedExceptionToLog(mScrpLangData.strItems[0]);
+    SEMTrace('[', "thread done %d pnd %d", tbusy, pnd);
+    mScrpLangData[pnd].threadDone = tbusy ? 1 : -1;
+    if (tbusy && mScrpLangData[pnd].gotExceptionText)
+      EnhancedExceptionToLog(mScrpLangData[pnd].strItems[0]);
 
     // If there was an error and it is not cleared by a successful non-exit, go back to
     // Abort
-    if (mScrpLangData.errorOccurred == 1) {
+    if (mScrpLangData[pnd].errorOccurred == 1) {
       AbortMacro();
       return 0;
     }
@@ -1146,6 +1228,26 @@ int CMacroProcessor::TaskBusy()
     }
   }
 
+  // If waiting for background variable
+  if (mWaitForBkgdVarState > -2) {
+    if (!mProcessorIndex && !mWinApp->RunningBkgdMacro()) {
+      MacMessageBox("Waiting for background script variable failed because background "
+        "script ended");
+      mWaitForBkgdVarState = -2;
+      AbortMacro();
+      return 0;
+    }
+    if ((mWaitForBkgdVarState == -1 && mBkgdScriptVarState != mProcessorIndex) ||
+      (mWaitForBkgdVarState >= 0 && mWaitForBkgdVarState == mBkgdScriptVarState)) {
+      mWaitForBkgdVarState = -2;
+      if (!mProcessorIndex)
+        mWinApp->SetAllowBkgdMacroTime(mSavedAllowBkgdTime);
+    } else {
+      Sleep(1);
+      return 1;
+    }
+  }
+
   // If sleeping, take little naps to avoid using lots of CPU
   if (mDoingMacro && mSleepTime > 0.) {
     diff = SEMTickInterval(mSleepStart);
@@ -1166,7 +1268,7 @@ int CMacroProcessor::TaskBusy()
   if (mProcessThread) {
     if (UtilThreadBusy(&mProcessThread) > 0)
       return 1;
-    SetReportedValues(sProcessExitStatus, sProcessErrno);
+    SetReportedValues(sProcessExitStatus[pnd], sProcessErrno[pnd]);
     report.Format("Shell command exited with status %d, error code %d",
       sProcessExitStatus, sProcessErrno);
     mWinApp->AppendToLog(report, mLogAction);
@@ -1228,6 +1330,13 @@ int CMacroProcessor::TaskBusy()
     mWinApp->DoingRegisteredPlugCall()) ? 1 : 0;
 }
 
+bool CMacroProcessor::StartedTask()
+{
+  return DoingMacro() && (mStartedOtherTask || mMovedStage || mExposedFilm || 
+    mMovedScreen || mMovedAperture || mRanGatanScript || mStartedLongOp || mMovedPiezo ||
+    mLoadingMap || mMakingDualMap || mAutoContouring || mTestScale);
+}
+
 // Clean up handles from external process, and kill it if it is still running, and close
 // shared memory file
 void CMacroProcessor::CleanupExternalProcess()
@@ -1250,10 +1359,10 @@ void CMacroProcessor::CheckAndSetupExternalControl(void)
 {
   if (mWinApp->DoingTasks() || (mCamera->CameraBusy() && 
     !mCamera->DoingContinuousAcquire())) {
-    mScrpLangData.externalControl = 0;
+    mScrpLangData[0].externalControl = 0;
     return;
   }
-  mScrpLangData.externalControl = 1;
+  mScrpLangData[0].externalControl = 1;
   Run(0);
 }
 
@@ -1262,7 +1371,7 @@ void CMacroProcessor::Run(int which)
 {
   int mac, ind, tryLevel = 0;
   double startTime;
-  bool external = mScrpLangData.externalControl > 0;
+  bool external = mScrpLangData[mProcessorIndex].externalControl > 0;
   MacroFunction *func;
   CString *longMacNames = mWinApp->GetLongMacroNames();
   CString name;
@@ -1296,9 +1405,9 @@ void CMacroProcessor::Run(int which)
         Sleep(100);
       }
       if (mCamera->CameraBusy()) {
-        SEMMessageBox("Could not stop continuous camera acquisition; cannot proceed with"
+        MacMessageBox("Could not stop continuous camera acquisition; cannot proceed with"
           " script");
-        mScrpLangData.externalControl = 0;
+        mScrpLangData[mProcessorIndex].externalControl = 0;
         return;
       }
     }
@@ -1401,6 +1510,12 @@ void CMacroProcessor::Run(int which)
   RunOrResume();
 }
 
+// Convenience function to make sure the right task is added
+void CMacroProcessor::AddIdleTask()
+{
+  mWinApp->AddIdleTask(mProcessorIndex ? TASK_BKGD_MACRO : TASK_MACRO_RUN, 0, 0);
+}
+
 // Clear these variables before a script or after starting a graph
 void CMacroProcessor::ClearGraphVariables()
 {
@@ -1426,7 +1541,7 @@ void CMacroProcessor::ClearGraphVariables()
 // Do all the common initializations for running or restarting a macro
 void CMacroProcessor::RunOrResume()
 {
-  int ind;
+  int ind, pnd = mProcessorIndex;
   mDoingMacro = true;
   mOpenDE12Cover = false;
   mStopAtEnd = false;
@@ -1481,38 +1596,45 @@ void CMacroProcessor::RunOrResume()
   }
 
   mNumCmdSinceAddIdle = mMaxCmdToLoopOnIdle + 1;
-  mScrpLangData.waitingForCommand = 0;
-  mScrpLangData.commandReady = 0;
-  mScrpLangData.threadDone = 0;
-  mScrpLangData.errorOccurred = 0;
-  mScrpLangData.exitedFromWrapper = false;
+  mScrpLangData[pnd].waitingForCommand = 0;
+  mScrpLangData[pnd].commandReady = 0;
+  mScrpLangData[pnd].threadDone = 0;
+  mScrpLangData[pnd].errorOccurred = 0;
+  mScrpLangData[pnd].exitedFromWrapper = false;
   mLastPythonErrorLine = -1;
+  mWaitForBkgdVarState = -2;
   mStoppedContSetNum = mCamera->DoingContinuousAcquire() - 1;
   mWinApp->UpdateBufferWindows();
   SetComplexPane();
-  mWinApp->mMacroProcessor->InitForNextCommand();
+  if (mProcessorIndex)
+    mWinApp->mBkgdProcessor->InitForNextCommand();
+  else
+    mWinApp->mMacroProcessor->InitForNextCommand();
 
   // Start the script language thread unless doing external control,
   // and set up waiting for command
   if (mRunningScrpLang) {
     StartRunningScrpLang();
-    mWinApp->AddIdleTask(NULL, TASK_MACRO_RUN, 0, 0);
+    AddIdleTask();
     return;
   }
 
   if (mStoppedContSetNum >= 0) {
     mCamera->StopCapture(0);
-    mWinApp->AddIdleTask(NULL, TASK_MACRO_RUN, 0, 0);
+    AddIdleTask();
     return;
   }
-  mWinApp->mMacroProcessor->NextCommand(true);
+  if (mProcessorIndex)
+    mWinApp->mBkgdProcessor->NextCommand(true);
+  else
+    mWinApp->mMacroProcessor->NextCommand(true);
 }
 
 // To start running external script language, clear out unneeded items and start thread
 // if not under external control
 void CMacroProcessor::StartRunningScrpLang(void)
 {
-  int ind;
+  int ind, pnd = mProcessorIndex;
   for (ind = MAX_SCRIPT_LANG_ARGS; ind < MAX_MACRO_TOKENS; ind++) {
     mItemEmpty[ind] = true;
     mStrItems[ind] = "";
@@ -1523,31 +1645,32 @@ void CMacroProcessor::StartRunningScrpLang(void)
 
   // Clear flags out for this run.  The function that starts external control is looking
   // for both that and waitingForCommand, so be sure to do that last
-  mScrpLangData.commandReady = 0;
-  mScrpLangData.disconnected = false;
-  mScrpLangData.threadDone = 0;
-  mScrpLangData.errorOccurred = 0;
-  mScrpLangData.exitedFromWrapper = false;
-  mScrpLangData.waitingForCommand = 1;
-  if (!mScrpLangData.externalControl) {
-    if (mScrpLangThread || mPyProcessHandle) {
+  mScrpLangData[pnd].commandReady = 0;
+  mScrpLangData[pnd].disconnected = false;
+  mScrpLangData[pnd].threadDone = 0;
+  mScrpLangData[pnd].errorOccurred = 0;
+  mScrpLangData[pnd].exitedFromWrapper = false;
+  mScrpLangData[pnd].waitingForCommand = 1;
+  if (!mScrpLangData[pnd].externalControl) {
+    if (mScrpLangThread[pnd] || mPyProcessHandle[pnd]) {
 
       // Handle a lingering process by killing it, then sending the done event to release
       // the socket interface, and consuming that event if it wasn't needed
-      TerminateScrpLangProcess();
-      SetEvent(mScrpLangDoneEvent);
-      SEMTrace('[', "signal done after killing process");
+      TerminateScrpLangProcess(pnd);
+      SetEvent(mScrpLangDoneEvent[pnd]);
+      SEMTrace('[', "signal done after killing process %d", pnd);
       Sleep(100);
-      WaitForSingleObject(mScrpLangDoneEvent, 100);
-      mScrpLangData.disconnected = false;
+      WaitForSingleObject(mScrpLangDoneEvent[pnd], 100);
+      mScrpLangData[pnd].disconnected = false;
     }
-    mScrpLangData.exitStatus = 0;
-    mScrpLangThread = AfxBeginThread(RunScriptLangProc,
-      (LPVOID)(LPCTSTR)(mMacroForScrpLang.IsEmpty() ? mMacros[mCurrentMacro] :
-        mMacroForScrpLang),
+    mScrpLangData[pnd].exitStatus = 0;
+    mScrpLangTD.script = (LPCTSTR)(mMacroForScrpLang.IsEmpty() ? mMacros[mCurrentMacro] :
+      mMacroForScrpLang);
+    mScrpLangTD.processorIndex = pnd;
+    mScrpLangThread[pnd] = AfxBeginThread(RunScriptLangProc, (LPVOID)&mScrpLangTD,
       THREAD_PRIORITY_NORMAL, 0, CREATE_SUSPENDED);
-    mScrpLangThread->m_bAutoDelete = false;
-    mScrpLangThread->ResumeThread();
+    mScrpLangThread[pnd]->m_bAutoDelete = false;
+    mScrpLangThread[pnd]->ResumeThread();
   }
   mNumCmdSinceAddIdle = 2 * mMaxCmdToLoopOnIdle;
   mLoopInOnIdle = false;
@@ -1556,7 +1679,9 @@ void CMacroProcessor::StartRunningScrpLang(void)
 // Set the macro name or message in complex pane
 void CMacroProcessor::SetComplexPane(void)
 {
-  if (mScrpLangData.externalControl)
+  if (mProcessorIndex)
+    return;
+  if (mScrpLangData[0].externalControl)
     mMacroPaneText.Format("EXTERNAL CONTROL");
   else if (mMacNames[mCurrentMacro].IsEmpty())
     mMacroPaneText.Format("DOING SCRIPT %d", mCurrentMacro + 1);
@@ -1598,12 +1723,13 @@ void CMacroProcessor::Resume()
 // Stop either now or at an ending place
 void CMacroProcessor::Stop(BOOL ifNow)
 {
+  int pnd = mProcessorIndex;
   if (ifNow) {
     if (!mWinApp->mCameraMacroTools.GetUserStop() && TestTryLevelAndSkip(NULL))
       return;
     if (!mWinApp->mCameraMacroTools.GetUserStop() && mRunningScrpLang &&
       mNoMessageBoxOnError) {
-      SuspendMacro(mScrpLangData.disconnected);
+      SuspendMacro(mScrpLangData[pnd].disconnected);
       return;
     }
     if (TestAndStartFuncOnStop())
@@ -1612,22 +1738,22 @@ void CMacroProcessor::Stop(BOOL ifNow)
       UtilThreadCleanup(&mProcessThread);
 
     // If we are running Python, kill it now
-    if (mScrpLangThread && UtilThreadBusy(&mScrpLangThread) > 0) {
-      mScrpLangThread->SuspendThread();
-      TerminateScrpLangProcess();
-      UtilThreadCleanup(&mScrpLangThread);
+    if (mScrpLangThread && UtilThreadBusy(&mScrpLangThread[pnd]) > 0) {
+      mScrpLangThread[pnd]->SuspendThread();
+      TerminateScrpLangProcess(pnd);
+      UtilThreadCleanup(&mScrpLangThread[pnd]);
 
     }
 
     // Mark external as disconnected by set error as user stop so this case is recognized
-    if (mRunningScrpLang && mScrpLangData.externalControl) {
-      mScrpLangData.disconnected = true;
-      mScrpLangData.errorOccurred = SCRIPT_USER_STOP;
+    if (mRunningScrpLang && mScrpLangData[pnd].externalControl) {
+      mScrpLangData[pnd].disconnected = true;
+      mScrpLangData[pnd].errorOccurred = SCRIPT_USER_STOP;
     }
       
     if (mDoingMacro && mLastIndex >= 0)
       mAskRedoOnResume = true;
-    SuspendMacro(mScrpLangData.disconnected);
+    SuspendMacro(mScrpLangData[pnd].disconnected);
   } else
     mStopAtEnd = true;
 }
@@ -1640,7 +1766,7 @@ int CMacroProcessor::TestAndStartFuncOnStop(void)
     mCurrentIndex = mOnStopLineIndex;
     mOnStopMacroIndex = -1;
     mExitAtFuncEnd = true;
-    mWinApp->AddIdleTask(NULL, TASK_MACRO_RUN, 0, 0);
+    AddIdleTask();
     return 1;
   }
   return 0;
@@ -1665,7 +1791,7 @@ int CMacroProcessor::TestTryLevelAndSkip(CString *mess)
       if (mCallLevel > 0) {
         LeaveCallLevel(true);
       } else {
-        SEMMessageBox("Terminating script because no CATCH block was found for "
+        MacMessageBox("Terminating script because no CATCH block was found for "
           "processing an error or THROW");
         mTryCatchLevel = 0;
         return 0;
@@ -1693,8 +1819,11 @@ int CMacroProcessor::TestTryLevelAndSkip(CString *mess)
       mWinApp->AppendToLog(str);
 
     // Need to clear to avoid all the tests that could occur and abort the macro
-    mWinApp->mMacroProcessor->InitForNextCommand();
-    mWinApp->AddIdleTask(NULL, TASK_MACRO_RUN, 0, 0);
+    if (mProcessorIndex)
+      mWinApp->mBkgdProcessor->InitForNextCommand();
+    else
+      mWinApp->mMacroProcessor->InitForNextCommand();
+    AddIdleTask();
     return 1;
   }
   mTryCatchLevel = 0;
@@ -1713,7 +1842,7 @@ void CMacroProcessor::AbortMacro(bool ending)
 void CMacroProcessor::SuspendMacro(int abort)
 {
   CameraParameters *camParams = mWinApp->GetCamParams();
-  int probe, ind;
+  int probe, ind, pnd = mProcessorIndex;
   FileOptions *fileOpt;
   bool restoreArea = false;
   float *gridLims = mNavHelper->GetGridLimits();
@@ -1726,10 +1855,11 @@ void CMacroProcessor::SuspendMacro(int abort)
   // Intercept abort when doing external script, set error flag and set wait for command
   // Process user stop like any other exit, not like disconnect happened
   if ((mRunningScrpLang || mCalledFromScrpLang) && 
-    (!mScrpLangData.threadDone || mScrpLangData.externalControl)) {
-    if (mScrpLangData.disconnected && !(mScrpLangData.errorOccurred == SCRIPT_USER_STOP &&
-      mScrpLangData.commandReady)) {
-      mScrpLangData.externalControl = 0;
+    (!mScrpLangData[pnd].threadDone || mScrpLangData[pnd].externalControl)) {
+    if (mScrpLangData[pnd].disconnected && 
+      !(mScrpLangData[pnd].errorOccurred == SCRIPT_USER_STOP &&
+        mScrpLangData[pnd].commandReady)) {
+      mScrpLangData[pnd].externalControl = 0;
     } else {
 
       // Clean up from running regular scripts
@@ -1749,25 +1879,25 @@ void CMacroProcessor::SuspendMacro(int abort)
       }
 
       // Process true error
-      if (mScrpLangData.errorOccurred != SCRIPT_NORMAL_EXIT &&
-        mScrpLangData.errorOccurred != SCRIPT_EXIT_NO_EXC &&
-        mScrpLangData.errorOccurred != SCRIPT_USER_STOP) {
-        mScrpLangData.errorOccurred = 1;
-        mScrpLangData.highestReportInd = 0;
-        mScrpLangData.reportedStrs[0] = mWinApp->mTSController->GetLastNoBoxMessage();
-        mScrpLangData.repValIsString[0] = true;
-        mScrpLangData.reportedVals[0] = 0.;
+      if (mScrpLangData[pnd].errorOccurred != SCRIPT_NORMAL_EXIT &&
+        mScrpLangData[pnd].errorOccurred != SCRIPT_EXIT_NO_EXC &&
+        mScrpLangData[pnd].errorOccurred != SCRIPT_USER_STOP) {
+        mScrpLangData[pnd].errorOccurred = 1;
+        mScrpLangData[pnd].highestReportInd = 0;
+        mScrpLangData[pnd].reportedStrs[0] = mWinApp->mTSController->GetLastNoBoxMessage();
+        mScrpLangData[pnd].repValIsString[0] = true;
+        mScrpLangData[pnd].reportedVals[0] = 0.;
       }
-      mScrpLangData.waitingForCommand = 1;
-      mScrpLangData.commandReady = 0;
-      if (mScrpLangData.disconnected)
-        mScrpLangData.externalControl = 0;
-      SetEvent(mScrpLangDoneEvent);
-      SEMTrace('[', "signal function done after Abort");
-      if (mCalledFromSEMmacro && (mScrpLangData.errorOccurred != 1))
+      mScrpLangData[pnd].waitingForCommand = 1;
+      mScrpLangData[pnd].commandReady = 0;
+      if (mScrpLangData[pnd].disconnected)
+        mScrpLangData[pnd].externalControl = 0;
+      SetEvent(mScrpLangDoneEvent[pnd]);
+      SEMTrace('[', "signal function done after Abort %d", pnd);
+      if (mCalledFromSEMmacro && (mScrpLangData[pnd].errorOccurred != 1))
         mCalledFromSEMmacro = false;
-      if (!mScrpLangData.externalControl || mScrpLangData.errorOccurred == 1) {
-        mWinApp->AddIdleTask(TASK_MACRO_RUN, 0, 0);
+      if (!mScrpLangData[pnd].externalControl || mScrpLangData[pnd].errorOccurred == 1) {
+        AddIdleTask();
         return;
       }
     }
@@ -1775,9 +1905,9 @@ void CMacroProcessor::SuspendMacro(int abort)
   if (mRunningScrpLang && mCalledFromSEMmacro)
     mRunningScrpLang = false;
 
-  if (mRunningScrpLang && (mScrpLangData.threadDone > 0 ||
-    mScrpLangData.exitedFromWrapper))
-    SEMMessageBox("Error running Python script; see log for information");
+  if (mRunningScrpLang && (mScrpLangData[pnd].threadDone > 0 ||
+    mScrpLangData[pnd].exitedFromWrapper))
+    PythonErrorMessageBox();
 
   CleanupExternalProcess();
   if (!mWinApp->mCameraMacroTools.GetUserStop() && TestTryLevelAndSkip(NULL))
@@ -1917,10 +2047,10 @@ void CMacroProcessor::SuspendMacro(int abort)
   RestoreMultiShotParams();
   mRunningScrpLang = false;
   mCalledFromScrpLang = false;
-  ResetEvent(mScrpLangDoneEvent);
-  SEMTrace('[', "reset all done ending macro");
+  ResetEvent(mScrpLangDoneEvent[pnd]);
+  SEMTrace('[', "reset all done ending macro %d", pnd);
   mMacroForScrpLang = "";
-  mScrpLangData.externalControl = 0;
+  mScrpLangData[pnd].externalControl = 0;
   mWinApp->UpdateBufferWindows();
   mWinApp->SetStatusText(mWinApp->DoingTiltSeries() &&
     mWinApp->mTSController->GetRunningMacro() ? MEDIUM_PANE : COMPLEX_PANE, 
@@ -1931,7 +2061,7 @@ void CMacroProcessor::SuspendMacro(int abort)
   mCamera->StopFrameTSTilting();
   mWinApp->mScopeStatus.SetWatchDose(false);
   mDocWnd->SetDeferWritingFrameMdoc(false);
-  if (!mPackToLoadAtEnd.IsEmpty())
+  if (!mPackToLoadAtEnd.IsEmpty() && !mWinApp->RunningBkgdMacro())
     LoadNewScriptPackage(mPackToLoadAtEnd, mSaveCurrentPack);
   for (ind = 0; ind < 3; ind++) {
     if (!mSavedStatusPanes[ind].IsEmpty()) {
@@ -1945,6 +2075,73 @@ void CMacroProcessor::SuspendMacro(int abort)
   }
 }
 
+// Centralized SEMmessagebox function to set the caller index and clear it
+int CMacroProcessor::MacMessageBox(CString message, UINT type, BOOL terminate, int retval)
+{
+  mMessageCallerProcInd = mProcessorIndex;
+  int ret = SEMMessageBox(message, type, terminate, retval);
+  mMessageCallerProcInd = -1;
+  return ret;
+}
+
+// Function to avoid duplicate code
+int CMacroProcessor::PythonErrorMessageBox()
+{
+  CString str = "Error running ";
+  if (mProcessorIndex)
+    str += "background ";
+  return MacMessageBox(str + "Python script; see log for information");
+}
+
+// Actual functions called by the various abort/suspend macros, to reduce the amount of 
+// code compiled repeatedly
+void CMacroProcessor::LineAbort(CString str)
+{
+  mWinApp->AppendToLog(str + mStrLine, mLogErrAction);
+  MacMessageBox(str + mStrLine, MB_EXCLAME);
+  AbortMacro();
+}
+
+void CMacroProcessor::NoLineAbort(CString a)
+{
+  mWinApp->AppendToLog((a), mLogErrAction);
+  MacMessageBox((a), MB_EXCLAME);
+  AbortMacro();
+}
+
+void CMacroProcessor::NoNavAbort()
+{
+  CString macStr = CString("The Navigator must be open to execute:\r\n") + mStrLine;
+  mWinApp->AppendToLog(macStr, mLogErrAction);
+  MacMessageBox(macStr, MB_EXCLAME);
+  AbortMacro();
+}
+
+void CMacroProcessor::LineSuspend(CString a)
+{
+  mCurrentIndex = mLastIndex;
+  CString macStr = CString(mNoMessageBoxOnError ? "Script stopped " :
+    "Script suspended ") + (a)+mStrLine;
+  mWinApp->AppendToLog(macStr, mLogErrAction);
+  MacMessageBox(macStr, MB_EXCLAME);
+  if (mNoMessageBoxOnError)
+    AbortMacro();
+  else
+    SuspendMacro();
+}
+
+void CMacroProcessor::NoLineSuspend(CString a)
+{
+  mCurrentIndex = mLastIndex;
+  CString macStr = CString(mNoMessageBoxOnError ? "Script stopped " :
+    "Script suspended ") + (a);
+  mWinApp->AppendToLog(macStr, mLogErrAction);
+  MacMessageBox(macStr, MB_EXCLAME);
+  if (mNoMessageBoxOnError)
+    AbortMacro();
+  else
+    SuspendMacro();
+}
 
 void CMacroProcessor::SetIntensityFactor(int iDir)
 {
@@ -2112,7 +2309,7 @@ int CMacroProcessor::FindCalledMacro(CString strLine, bool scanning, CString use
     ScanMacroIfNeeded(index2, scanning);
     if (strCopy == mMacNames[index2]) {
       if (index >= 0) {
-        SEMMessageBox("Two scripts have a matching name for this call:\n\n" + strLine,
+        MacMessageBox("Two scripts have a matching name for this call:\n\n" + strLine,
           MB_EXCLAME);
         return -1;
       }
@@ -2120,7 +2317,7 @@ int CMacroProcessor::FindCalledMacro(CString strLine, bool scanning, CString use
     }
   }
   if (index < 0)
-    SEMMessageBox("No script has a matching name for this call:\n\n" + strLine,
+    MacMessageBox("No script has a matching name for this call:\n\n" + strLine,
           MB_EXCLAME);
   return index;
 }
@@ -2436,6 +2633,25 @@ bool CMacroProcessor::SetVariable(CString name, double value, int type,
   return SetVariable(name, str, type, index, mustBeNew, errStr, rowsFor2d);
 }
 
+// Copy the given variable to a new one by the given name
+int CMacroProcessor::CopyVariable(Variable *var, CString name, bool persist)
+{
+  CArray < ArrayRow, ArrayRow > *rowsFor2d = NULL;
+  CString mess;
+  if (var->rowsFor2d) {
+    rowsFor2d = new CArray < ArrayRow, ArrayRow >;
+    rowsFor2d->Append(*(var->rowsFor2d));
+  }
+  if (SetVariable(name, var->value, mItemInt[2] ? VARTYPE_PERSIST :
+    VARTYPE_REGULAR, -1, false, &mess, rowsFor2d)) {
+    delete rowsFor2d;
+    AbortMacro();
+    return 1;
+  }
+
+  return 0;
+}
+
 // Globally callable functions; can only be used to set regular or persistent variables.
 // Return true for error
 bool SEMSetVariableWithStr(CString name, CString value, bool persistent, bool mustBeNew,
@@ -2570,7 +2786,7 @@ void CMacroProcessor::ListVariables(int type)
 void CMacroProcessor::ClearVariables(int type, int level, int index)
 {
   Variable *var;
-  int ind;
+  int ind, pnd = mProcessorIndex;
   for (ind = (int)mVarArray.GetSize() - 1; ind >= 0; ind--) {
     var = mVarArray[ind];
     if (((type < 0 && var->type != VARTYPE_PERSIST) || var->type == type) &&
@@ -2581,12 +2797,12 @@ void CMacroProcessor::ClearVariables(int type, int level, int index)
     }
   }
   if (type == VARTYPE_REPORT) {
-    mScrpLangData.highestReportInd = -1;
+    mScrpLangData[pnd].highestReportInd = -1;
     if (mRunningScrpLang) {
       for (ind = 0; ind < 6; ind++) {
-        mScrpLangData.reportedStrs[ind] = "";
-        mScrpLangData.reportedVals[ind] = 0.;
-        mScrpLangData.repValIsString[ind] = false;
+        mScrpLangData[pnd].reportedStrs[ind] = "";
+        mScrpLangData[pnd].reportedVals[ind] = 0.;
+        mScrpLangData[pnd].repValIsString[ind] = false;
       }
     }
 
@@ -2693,7 +2909,7 @@ int CMacroProcessor::SubstituteVariables(CString * strItems, int maxItems, CStri
       }
 
       if (!maxlen) {
-        SEMMessageBox("Undefined variable in script line:\n\n" +
+        MacMessageBox("Undefined variable in script line:\n\n" +
           line, MB_EXCLAME);
         return 1;
       }
@@ -2702,7 +2918,7 @@ int CMacroProcessor::SubstituteVariables(CString * strItems, int maxItems, CStri
       // If it is a loop index, look up the value and put in value string
       if (var->type == VARTYPE_INDEX) {
         if (var->index < 0 || var->index >= MAX_LOOP_DEPTH) {
-          SEMMessageBox("The variable " + var->name + " is apparently a loop index "
+          MacMessageBox("The variable " + var->name + " is apparently a loop index "
             "variable,\nbut the pointer to the loop is out of range in script line:\n\n" +
             line, MB_EXCLAME);
           return 2;
@@ -2715,12 +2931,12 @@ int CMacroProcessor::SubstituteVariables(CString * strItems, int maxItems, CStri
       leftInd = nameInd + maxlen;
       numElements = var->numElements;
       if (FindAndCheckArrayIndexes(strItems[ind], leftInd, nright, nright2, &newstr) < 0) {
-        SEMMessageBox(newstr + " in line:\n\n" + line, MB_EXCLAME);
+        MacMessageBox(newstr + " in line:\n\n" + line, MB_EXCLAME);
         return 2;
       }
       if (nright > 0) {
         if (subArrSize && (!var->rowsFor2d || nright2 > 0)) {
-          SEMMessageBox("Illegal use of $# with an array element in line:\n\n" + line,
+          MacMessageBox("Illegal use of $# with an array element in line:\n\n" + line,
             MB_EXCLAME);
           return 2;
         }
@@ -2728,14 +2944,14 @@ int CMacroProcessor::SubstituteVariables(CString * strItems, int maxItems, CStri
         // 2D array reference: make sure it IS 2D array, then get the index of the row
         if (nright2 > 0) {
           if (!var->rowsFor2d) {
-            SEMMessageBox("Reference to 2D array element, but " + var->name + "is not"
+            MacMessageBox("Reference to 2D array element, but " + var->name + "is not"
               "a 2D array in line:\n\n" + line, MB_EXCLAME);
             return 2;
           }
           arrInd = ConvertArrayIndex(strItems[ind], leftInd, nright, var->name,
             (int)var->rowsFor2d->GetSize(), &newstr);
           if (!arrInd) {
-            SEMMessageBox(newstr + " in line:\n\n" + line, MB_EXCLAME);
+            MacMessageBox(newstr + " in line:\n\n" + line, MB_EXCLAME);
             return 2;
           }
           ArrayRow& arrRow = var->rowsFor2d->ElementAt(arrInd - 1);
@@ -2751,7 +2967,7 @@ int CMacroProcessor::SubstituteVariables(CString * strItems, int maxItems, CStri
         arrInd = ConvertArrayIndex(strItems[ind], leftInd, nright, var->name,
           numElements, &newstr);
         if (!arrInd) {
-          SEMMessageBox(newstr + " in line:\n\n" + line, MB_EXCLAME);
+          MacMessageBox(newstr + " in line:\n\n" + line, MB_EXCLAME);
           return 2;
         }
 
@@ -2772,7 +2988,7 @@ int CMacroProcessor::SubstituteVariables(CString * strItems, int maxItems, CStri
         maxlen += nright - (subInd + maxlen);
       } else if (var->rowsFor2d) {
         if (!subArrSize) {
-          SEMMessageBox("Reference to 2D array variable " + var->name +
+          MacMessageBox("Reference to 2D array variable " + var->name +
             " without any subscripts in line:\n\n" + line, MB_EXCLAME);
           return 2;
         }
@@ -3104,13 +3320,13 @@ int CMacroProcessor::EvalExpressionInIndex(CString &indStr)
   }
 
   if (splitInd >= maxItems) {
-    SEMMessageBox("Too many components to evaluate expression in array index");
+    MacMessageBox("Too many components to evaluate expression in array index");
     return 1;
   }
   if (EvaluateExpression(strItems, splitInd + 1, "", 0, numItems, opInd))
     return 1;
   if (numItems > 1) {
-    SEMMessageBox("Array index still has multiple components after doing arithmetic");
+    MacMessageBox("Array index still has multiple components after doing arithmetic");
     return 1;
   }
   indStr = strItems[0];
@@ -3155,7 +3371,7 @@ int CMacroProcessor::EvaluateExpression(CString *strItems, int maxItems, CString
     }
 
     if (level) {
-      SEMMessageBox("Unbalanced parentheses while evaluating an expression in script" +
+      MacMessageBox("Unbalanced parentheses while evaluating an expression in script" +
         CString(noLine ? "" : " line:\n\n") + line, MB_EXCLAME);
         return 1;
     }
@@ -3223,7 +3439,7 @@ int CMacroProcessor::EvaluateArithmeticClause(CString * strItems, int maxItems,
           ind--;
 
         }  else if (!ind || ind == numItems - 1) {
-           SEMMessageBox("Arithmetic operator at beginning or end of script line or "
+           MacMessageBox("Arithmetic operator at beginning or end of script line or "
              "clause:\n\n" + line, MB_EXCLAME);
            return 1;
         } else {
@@ -3242,7 +3458,7 @@ int CMacroProcessor::EvaluateArithmeticClause(CString * strItems, int maxItems,
             result = left - right;
           else {
             if (fabs(right) < 1.e-30 * fabs(left)) {
-              SEMMessageBox("Division by 0 or very small number in script line:\n\n" +
+              MacMessageBox("Division by 0 or very small number in script line:\n\n" +
                 line, MB_EXCLAME);
               return 1;
             }
@@ -3276,7 +3492,7 @@ int CMacroProcessor::EvaluateArithmeticClause(CString * strItems, int maxItems,
         return 1;
       if (str == "SQRT") {
         if (right < 0.) {
-          SEMMessageBox("Taking square root of negative number in script line:\n\n" +
+          MacMessageBox("Taking square root of negative number in script line:\n\n" +
               line, MB_EXCLAME);
           return 1;
         }
@@ -3295,7 +3511,7 @@ int CMacroProcessor::EvaluateArithmeticClause(CString * strItems, int maxItems,
         result = B3DNINT(right);
       else if (str == "LOG" || str == "LOG10") {
         if (right <= 0.) {
-          SEMMessageBox("Taking logarithm of non-positive number in script line:\n\n" +
+          MacMessageBox("Taking logarithm of non-positive number in script line:\n\n" +
               line, MB_EXCLAME);
           return 1;
         }
@@ -3340,7 +3556,7 @@ int CMacroProcessor::EvaluateArithmeticClause(CString * strItems, int maxItems,
         format = strItems[ind + 1];
         conv = format.GetAt(format.GetLength() - 1);
         if (allowedConv.Find(conv) < 0) {
-          SEMMessageBox("The format string " + format + " does not end in one of: " + 
+          MacMessageBox("The format string " + format + " does not end in one of: " + 
             allowedConv);
           return 1;
         }
@@ -3348,19 +3564,19 @@ int CMacroProcessor::EvaluateArithmeticClause(CString * strItems, int maxItems,
           char let = format.GetAt(dig);
           if (let == '.') {
             if (gotDec) {
-              SEMMessageBox("The format string " + format +
+              MacMessageBox("The format string " + format +
                 " has more than one decimal point");
               return 1;
             }
             if (conv == 'x' || conv == 'X' || conv == 'd') {
-              SEMMessageBox("The format string " + format +
+              MacMessageBox("The format string " + format +
                 " for integer conversion should not have a decimal point");
               return 1;
             }
             gotDec = true;
 
           } else if (let < '0' || let > '9') {
-            SEMMessageBox("The format string " + format + 
+            MacMessageBox("The format string " + format + 
               " has a non-numeric character before the end");
             return 1;
           }
@@ -3569,7 +3785,7 @@ BOOL CMacroProcessor::ItemToDouble(CString str, CString line, double & value)
   char *invalid;
   value = strtod(strptr, &invalid);
   if (invalid - strptr != str.GetLength()) {
-    SEMMessageBox("Invalid character in " +  str +
+    MacMessageBox("Invalid character in " +  str +
       " which you are trying to do arithmetic with in script line:\n\n" +
       line, MB_EXCLAME);
     return true;
@@ -3637,21 +3853,22 @@ void CMacroProcessor::SetOneReportedValue(CString *strItems, CString *valStr,
 {
   CString num, str;
   int typeAdd = valStr ? 0 : VARTYPE_ADD_FOR_NUM;
+  int pnd = mProcessorIndex;
   if (index < 1 || index > 6)
     return;
   num.Format("%d", index);
   if (valStr) {
     str = *valStr;
-    mScrpLangData.repValIsString[index - 1] = true;
+    mScrpLangData[pnd].repValIsString[index - 1] = true;
   } else {
     str.Format("%f", value);
     UtilTrimTrailingZeros(str);
-    mScrpLangData.reportedVals[index - 1] = value;
+    mScrpLangData[pnd].reportedVals[index - 1] = value;
   }
   if (index == 1 && !mRunningScrpLang)
     ClearVariables(VARTYPE_REPORT);
-  mScrpLangData.reportedStrs[index - 1] = str;
-  ACCUM_MAX(mScrpLangData.highestReportInd, index - 1);
+  mScrpLangData[pnd].reportedStrs[index - 1] = str;
+  ACCUM_MAX(mScrpLangData[pnd].highestReportInd, index - 1);
   SetVariable("REPORTEDVALUE" + num, str, VARTYPE_REPORT + typeAdd, index, true);
   SetVariable("REPVAL" + num, str, VARTYPE_REPORT + typeAdd, index, true);
   if (strItems && !strItems[index - 1].IsEmpty())
@@ -4124,7 +4341,7 @@ int CMacroProcessor::CheckLegalCommandAndArgNum(CString * strItems, int cmdIndex
   if (strItems[mCmdList[i].minargs].IsEmpty()) {
     errmess.Format("The command must be followed by at least %d entries\n"
       " on this line in script #%d:\n\n", mCmdList[i].minargs, macroNum + 1);
-    SEMMessageBox(errmess + strLine, MB_EXCLAME);
+    MacMessageBox(errmess + strLine, MB_EXCLAME);
     return 17;
   }
   return 0;
@@ -4201,6 +4418,17 @@ void CMacroProcessor::PrepareForMacroChecking(int which)
     mAlreadyChecked[i] = false;
   mCallLevel = 0;
   mCallMacro[0] = which;
+}
+
+// Returns true if given macro is in the stack of ones being called
+bool CMacroProcessor::IsMacroBeingUsed(int which)
+{
+  if (!DoingMacro())
+    return false;
+  for (int level = 0; level <= mCallLevel; level++)
+    if (which == mCallMacro[level])
+      return true;
+  return false;
 }
 
 // Skips to the end of a block or to a catch or else statement, leaves current index
@@ -4386,7 +4614,7 @@ int CMacroProcessor::CheckIntensityChangeReturn(int err)
       report = "Error trying to change beam strength";
       if (err == BEAM_STRENGTH_NOT_CAL || err == BEAM_STRENGTH_WRONG_SPOT)
         report += "\nBeam strength is not calibrated for this spot size";
-      SEMMessageBox(report, MB_EXCLAME);
+      MacMessageBox(report, MB_EXCLAME);
       AbortMacro();
       return 1;
     }
@@ -4401,7 +4629,7 @@ int CMacroProcessor::CheckConvertFilename(CString * strItems, CString strLine, i
   char absPath[_MAX_PATH];
   char *fullp;
   if (strItems[index].IsEmpty()) {
-    SEMMessageBox("Missing filename in statement:\n\n" + strLine, MB_EXCLAME);
+    MacMessageBox("Missing filename in statement:\n\n" + strLine, MB_EXCLAME);
     AbortMacro();
     return 1;
   }
@@ -4411,7 +4639,7 @@ int CMacroProcessor::CheckConvertFilename(CString * strItems, CString strLine, i
   JustStripItems(strLine, index, strCopy);
   fullp = _fullpath(absPath, (LPCTSTR)strCopy, _MAX_PATH);
   if (!fullp) {
-    SEMMessageBox("The filename cannot be converted to an absolute path in statement:"
+    MacMessageBox("The filename cannot be converted to an absolute path in statement:"
       "\n\n" + strLine, MB_EXCLAME);
     AbortMacro();
     return 1;
@@ -4768,7 +4996,7 @@ int CMacroProcessor::CheckForScriptLanguage(int macNum, bool justCheckStart, int
 {
   bool isPython, lbspace;
   int ind, fail, size, cumulLine = 0, indent = 0, lineNum = 0, firstRealLine = -1;
-  int pyVersion = 0;
+  int pyVersion = 0, pnd = mProcessorIndex;
   CFile *file = NULL;
   unsigned char *buffer = NULL;
   CString indentStr, fileName, fileStr, errStr, modulePath = mPyModulePath;
@@ -4792,7 +5020,7 @@ int CMacroProcessor::CheckForScriptLanguage(int macNum, bool justCheckStart, int
   }
   if (line.Find("#!") != 0)
     return 0;
-  if (!mScrpLangDoneEvent) {
+  if (!mScrpLangDoneEvent[pnd]) {
     if (!justCheckStart)
       mWinApp->AppendToLog("Cannot run external scripting language without object"
         " for communicating with it");
@@ -4811,9 +5039,10 @@ int CMacroProcessor::CheckForScriptLanguage(int macNum, bool justCheckStart, int
   line = name;
   line.MakeLower();
   isPython = line.Find("pyth") == 0;
-  mScrpLangData.strItems[0] = "";
+  mScrpLangData[pnd].strItems[0] = "";
   if (isPython) {
-    if (mWinApp->mPythonServer->StartServerIfNeeded(RUN_PYTH_SOCK_ID))
+    if (mWinApp->mPythonServer->StartServerIfNeeded(pnd ? BKGD_PYTH_SOCK_ID : 
+      RUN_PYTH_SOCK_ID))
       return 1;
 
     // If there is a full "python" see if there is one matching the version number given
@@ -4823,8 +5052,8 @@ int CMacroProcessor::CheckForScriptLanguage(int macNum, bool justCheckStart, int
       for (ind = 0; ind < (int)mPathsToPython.size(); ind++) {
         if ((line.IsEmpty() && !ind) || (!line.IsEmpty() && 
           mVersionsOfPython[ind].find((LPCTSTR)line) == 0)) {
-          mScrpLangData.strItems[0] = mPathsToPython[ind].c_str();
-          mScrpLangData.strItems[0] += "\\";
+          mScrpLangData[pnd].strItems[0] = mPathsToPython[ind].c_str();
+          mScrpLangData[pnd].strItems[0] += "\\";
           pyVersion = 100 * atoi(mVersionsOfPython[ind].c_str()) +
             atoi(mVersionsOfPython[ind].c_str() + 2);
           if (pyVersion >= 207 && pyVersion <= 304)
@@ -4833,17 +5062,18 @@ int CMacroProcessor::CheckForScriptLanguage(int macNum, bool justCheckStart, int
       }
 
       // Nothing found is bad if they specified one
-      if (mScrpLangData.strItems[0].IsEmpty() && !line.IsEmpty()) {
-        SEMMessageBox("Could not find a PathToPython entry with a version"
+      if (mScrpLangData[pnd].strItems[0].IsEmpty() && !line.IsEmpty()) {
+        MacMessageBox("Could not find a PathToPython entry with a version"
           " matching " + name);
         return 1;
       }
-      mScrpLangData.strItems[0] = "\"" + mScrpLangData.strItems[0] + "python.exe\"";
+      mScrpLangData[pnd].strItems[0] = "\"" + mScrpLangData[pnd].strItems[0] + 
+        "python.exe\"";
     }
   } else {
     mScrpLangFuncs = mWinApp->mPluginManager->GetScriptLangFuncs(name);
     if (!mScrpLangFuncs) {
-      SEMMessageBox("There is no scripting language plugin loaded whose\n"
+      MacMessageBox("There is no scripting language plugin loaded whose\n"
         "name matches the one at the start of this script, " + name);
       return 1;
     }
@@ -4859,7 +5089,8 @@ int CMacroProcessor::CheckForScriptLanguage(int macNum, bool justCheckStart, int
   if (isPython) {
     startLine += 27;
     name.Format("sys.path.insert(0, \"%s\")\r\n", modulePath);
-    line.Format("ConnectToSEM(%d)\r\n", CBaseServer::GetPortForSocketIndex(0));
+    line.Format("ConnectToSEM(%d)\r\n", CBaseServer::GetPortForSocketIndex(pnd ? 
+      BKGD_PYSOCK_IND : REGULAR_PYSOCK_IND));
     mMacroForScrpLang = "import sys\r\n" +
       name +
       "from serialem import SEMexited, SEMerror, ConnectToSEM\r\n"
@@ -4958,7 +5189,7 @@ int CMacroProcessor::CheckForScriptLanguage(int macNum, bool justCheckStart, int
       while (fileName.GetLength() > 0 && fileName.GetAt(0) == ' ')
         fileName = fileName.Mid(1);
       if (fileName.IsEmpty()) {
-        SEMMessageBox("A filename must be included after #includeFile");
+        MacMessageBox("A filename must be included after #includeFile");
         return 1;
       }
 
@@ -4967,7 +5198,7 @@ int CMacroProcessor::CheckForScriptLanguage(int macNum, bool justCheckStart, int
         (fileName.GetLength() > 3 && fileName.GetAt(1) == ':' &&
         (fileName.GetAt(2) == '\\' || fileName.GetAt(2) == '/')))) {
         if (!CFile::GetStatus((LPCTSTR)fileName, status)) {
-          SEMMessageBox("File to be included does not exist: " + fileName);
+          MacMessageBox("File to be included does not exist: " + fileName);
           return 1;
         }
       } else {
@@ -4995,7 +5226,7 @@ int CMacroProcessor::CheckForScriptLanguage(int macNum, bool justCheckStart, int
 
           // If index is no good, it is all over, can't find it
           if (ind <= 0) {
-            SEMMessageBox("Cannot find " + fileName +
+            MacMessageBox("Cannot find " + fileName +
               " in the current path or on the PythonIncludePath");
             return 1;
           }
@@ -5028,7 +5259,7 @@ int CMacroProcessor::CheckForScriptLanguage(int macNum, bool justCheckStart, int
       delete file;
       delete buffer;
       if (fail) {
-        SEMMessageBox(errStr);
+        MacMessageBox(errStr);
         return 1;
       }
 
@@ -5075,8 +5306,8 @@ int CMacroProcessor::CheckForScriptLanguage(int macNum, bool justCheckStart, int
       "  serialem.Exit(-1, line)\r\n";
 
   }
-  if (GetDebugOutput(']'))
-    mWinApp->AppendToLog(mMacroForScrpLang);
+  if (GetDebugOutput('*'))
+    SEMTrace('[', "%s", mMacroForScrpLang);
   return -1;
 }
 
@@ -5132,9 +5363,10 @@ void CMacroProcessor::DoReplacementsInPythonLine(CString & line)
   }
 }
 
-// Test whether an embedded script can be run by looking for the End line, and return the index of that line
-// plus the index past that line
-bool CMacroProcessor::IsEmbeddedPythonOK(int macNum, int currentInd, int &lastInd, int &newCurrentInd)
+// Test whether an embedded script can be run by looking for the End line, and return the 
+// index of that lineplus the index past that line
+bool CMacroProcessor::IsEmbeddedPythonOK(int macNum, int currentInd, int &lastInd, 
+  int &newCurrentInd)
 {
   CString line, strItems[2];
   int cmdIndex, length = mMacros[macNum].GetLength();
@@ -5171,7 +5403,7 @@ void CMacroProcessor::EnhancedExceptionToLog(CString &str)
   int currentInd = 0, length = str.GetLength();
   CString attribErr;
 
-  if (length && mScrpLangData.exitStatus < 0) {
+  if (length && mScrpLangData[mProcessorIndex].exitStatus < 0) {
     mWinApp->AppendToLog("Error trying to run Python to execute script:\r\n   " + str);
     return;
   }
@@ -5293,18 +5525,19 @@ void CMacroProcessor::SendEmailIfNeeded(void)
 // Thread Procedure for running a process
 UINT CMacroProcessor::RunInShellProc(LPVOID pParam)
 {
-  CString *strCopy = (CString *)pParam;
-  std::string command = (LPCTSTR)(*strCopy);
+  ShellProcThreadData *td = (ShellProcThreadData *)pParam;
+  std::string command = (LPCTSTR)(*td->strPtr);
+  int pnd = td->processorIndex;
   _flushall();
-  sProcessErrno = 0;
-  sProcessExitStatus = system(command.c_str());
-  if (sProcessExitStatus == -1) {
+  sProcessErrno[pnd] = 0;
+  sProcessExitStatus[pnd] = system(command.c_str());
+  if (sProcessExitStatus[pnd] == -1) {
     switch (errno) {
-    case E2BIG: sProcessErrno = 1; break;
-    case ENOENT: sProcessErrno = 2; break;
-    case ENOEXEC: sProcessErrno = 3; break;
-    case ENOMEM: sProcessErrno = 4; break;
-    default: sProcessErrno = 5;
+    case E2BIG: sProcessErrno[pnd] = 1; break;
+    case ENOENT: sProcessErrno[pnd] = 2; break;
+    case ENOEXEC: sProcessErrno[pnd] = 3; break;
+    case ENOMEM: sProcessErrno[pnd] = 4; break;
+    default: sProcessErrno[pnd] = 5;
     }
     return 1;
   }
@@ -5325,16 +5558,18 @@ UINT CMacroProcessor::RunScriptLangProc(LPVOID pParam)
   STARTUPINFO siStartInfo;
   BOOL bSuccess = FALSE;
   char *cmdLine = NULL;
-  const char *script = (const char *)pParam;
+  ScrpLangThreadData *td = (ScrpLangThreadData *)pParam;
+  const char *script = td->script;
+  int pnd = td->processorIndex;
   DWORD dwWrite, dwWritten, exitCode, dwRead;
   const int bufLen = 256;
   char buffer[bufLen];
 
-  if (mScrpLangData.strItems[0].IsEmpty()) {
-    mScrpLangData.exitStatus = mScrpLangFuncs->RunScript(script);
+  if (mScrpLangData[pnd].strItems[0].IsEmpty()) {
+    mScrpLangData[pnd].exitStatus = mScrpLangFuncs->RunScript(script);
   } else {
-    mScrpLangData.exitStatus = -1;
-    mScrpLangData.gotExceptionText = true;
+    mScrpLangData[pnd].exitStatus = -1;
+    mScrpLangData[pnd].gotExceptionText = true;
 
     // This is based heavily on a Microsoft post
 
@@ -5347,17 +5582,17 @@ UINT CMacroProcessor::RunScriptLangProc(LPVOID pParam)
     saAttr.lpSecurityDescriptor = NULL;
 
     // Create a pipe for the child process's STDOUT.
-    if (CreateOnePipe(&hChildStd_OUT_Rd, &hChildStd_OUT_Wr, &saAttr, false, 
+    if (CreateOnePipe(&hChildStd_OUT_Rd, &hChildStd_OUT_Wr, &saAttr, false, pnd,
       "stdout output"))
       return 1;
 
     // Create a pipe for the child process's STDERR.
-    if (CreateOnePipe(&hChildStd_ERR_Rd, &hChildStd_ERR_Wr, &saAttr, false, 
+    if (CreateOnePipe(&hChildStd_ERR_Rd, &hChildStd_ERR_Wr, &saAttr, false, pnd,
       "stderr output"))
       return 1;
 
     // Create a pipe for the child process's STDIN.
-    if (CreateOnePipe(&hChildStd_IN_Rd, &hChildStd_IN_Wr, &saAttr, true, "input"))
+    if (CreateOnePipe(&hChildStd_IN_Rd, &hChildStd_IN_Wr, &saAttr, true, pnd, "input"))
       return 1;
 
     // Set up members of the PROCESS_INFORMATION structure.
@@ -5372,9 +5607,9 @@ UINT CMacroProcessor::RunScriptLangProc(LPVOID pParam)
     siStartInfo.hStdInput = hChildStd_IN_Rd;
     siStartInfo.dwFlags |= STARTF_USESTDHANDLES;
 
-    cmdLine = _strdup((LPCTSTR)mScrpLangData.strItems[0]);
+    cmdLine = _strdup((LPCTSTR)mScrpLangData[pnd].strItems[0]);
     if (!cmdLine) {
-      mScrpLangData.strItems[0] = "Failed to duplicate the command line for running"
+      mScrpLangData[pnd].strItems[0] = "Failed to duplicate the command line for running"
         " Python";
       return 1;
     }
@@ -5399,8 +5634,8 @@ UINT CMacroProcessor::RunScriptLangProc(LPVOID pParam)
     CloseHandle(hChildStd_IN_Rd);
 
     if (!bSuccess) {
-      mScrpLangData.strItems[0] = "Error starting Python with this command: ";
-      mScrpLangData.strItems[0] += cmdLine;
+      mScrpLangData[pnd].strItems[0] = "Error starting Python with this command: ";
+      mScrpLangData[pnd].strItems[0] += cmdLine;
       CloseHandle(hChildStd_IN_Wr);
       CloseHandle(hChildStd_ERR_Rd);
       CloseHandle(hChildStd_OUT_Rd);
@@ -5408,11 +5643,11 @@ UINT CMacroProcessor::RunScriptLangProc(LPVOID pParam)
       return 1;
     }
     free(cmdLine);
-    mScrpLangData.exitStatus = 0;
+    mScrpLangData[pnd].exitStatus = 0;
 
     // Close handle to the child process primary thread, keep the other handle
     CloseHandle(piProcInfo.hThread);
-    mPyProcessHandle = piProcInfo.hProcess;
+    mPyProcessHandle[pnd] = piProcInfo.hProcess;
 
      // People are getting error 5, access denied.  Tried: CREATE_SUSPENDED: it hung
     //        BREAKAWAY_FROM_JOB  it couldn't run python
@@ -5420,7 +5655,7 @@ UINT CMacroProcessor::RunScriptLangProc(LPVOID pParam)
     //
     // Assign the process to the job object so that if SerialEM dies, it will be killed
     if (CPythonServer::mJobObject) {
-      if (!AssignProcessToJobObject(CPythonServer::mJobObject, mPyProcessHandle) &&
+      if (!AssignProcessToJobObject(CPythonServer::mJobObject, mPyProcessHandle[pnd]) &&
         mSuppressJobObjWarning <= 0) {
         SEMTrace('0', "WARNING: Error %d occurred assigning python process to job object"
           "%s", GetLastError(), mSuppressJobObjWarning < 0 ? "\r\n   (You can suppress"
@@ -5437,10 +5672,10 @@ UINT CMacroProcessor::RunScriptLangProc(LPVOID pParam)
 
     // Give up if there was an error writing to pipe
     if (!bSuccess) {
-      TerminateScrpLangProcess();
-      mScrpLangData.strItems[0] = "An error occurred writing the script to the pipe into"
+      TerminateScrpLangProcess(pnd);
+      mScrpLangData[pnd].strItems[0] = "An error occurred writing the script to the pipe into"
         " Python";
-      mScrpLangData.exitStatus = -1;
+      mScrpLangData[pnd].exitStatus = -1;
       return 1;
     }
 
@@ -5448,44 +5683,45 @@ UINT CMacroProcessor::RunScriptLangProc(LPVOID pParam)
     AfxBeginThread(StdoutToLogProc, (LPVOID)(&hChildStd_OUT_Rd), THREAD_PRIORITY_NORMAL);
 
     // Read stderr from pipe
-    mScrpLangData.strItems[0] = "";
+    mScrpLangData[pnd].strItems[0] = "";
     for (;;) {
       bSuccess = ReadFile(hChildStd_ERR_Rd, buffer, bufLen - 1, &dwRead, NULL);
       if (!bSuccess || dwRead == 0)
         break;
       buffer[dwRead] = 0x00;
-      mScrpLangData.strItems[0] += buffer;
+      mScrpLangData[pnd].strItems[0] += buffer;
     }
     CloseHandle(hChildStd_ERR_Rd);
 
     // Waiting now may be gratuitous...
-    WaitForSingleObject(mPyProcessHandle, INFINITE);
+    WaitForSingleObject(mPyProcessHandle[pnd], INFINITE);
 
     // Get the exit status and close handles
-    GetExitCodeProcess(mPyProcessHandle, &exitCode);
-    CloseHandle(mPyProcessHandle);
-    mPyProcessHandle = NULL;
-    mScrpLangData.exitStatus = (int)exitCode;
-    mScrpLangData.gotExceptionText = !mScrpLangData.strItems[0].IsEmpty();
+    GetExitCodeProcess(mPyProcessHandle[pnd], &exitCode);
+    CloseHandle(mPyProcessHandle[pnd]);
+    mPyProcessHandle[pnd] = NULL;
+    mScrpLangData[pnd].exitStatus = (int)exitCode;
+    mScrpLangData[pnd].gotExceptionText = !mScrpLangData[pnd].strItems[0].IsEmpty();
   }
-  SEMTrace('[', "RunScriptLangProc exit stat %d", mScrpLangData.exitStatus);
-  return mScrpLangData.exitStatus ? 1 : 0;
+  SEMTrace('[', "RunScriptLangProc exit stat %d pnd %d", mScrpLangData[pnd].exitStatus,
+    pnd);
+  return mScrpLangData[pnd].exitStatus ? 1 : 0;
 }
 
 // Function for the boilerplate in creating a pipe
 int CMacroProcessor::CreateOnePipe(HANDLE * childRd, HANDLE * childWr, 
-  SECURITY_ATTRIBUTES * saAttr, bool setForWrite, const char *descrip)
+  SECURITY_ATTRIBUTES * saAttr, bool setForWrite, int pnd, const char *descrip)
 {
   // Create a pipe for the child process's STDOUT.
   if (!CreatePipe(childRd, childWr, saAttr, 0)) {
-    mScrpLangData.strItems[0].Format("Error creating %s pipe for Python process", 
+    mScrpLangData[pnd].strItems[0].Format("Error creating %s pipe for Python process", 
       descrip);
     return 1;
   }
 
   // Ensure the read handle to the pipe for STDOUT is not inherited.
   if (!SetHandleInformation(setForWrite ? *childWr : *childRd, HANDLE_FLAG_INHERIT, 0)) {
-    mScrpLangData.strItems[0].Format("Error in SetHandleInformation for %s pipe of Python"
+    mScrpLangData[pnd].strItems[0].Format("Error in SetHandleInformation for %s pipe of Python"
       " process", descrip);
     return 1;
   }
@@ -5513,18 +5749,18 @@ UINT CMacroProcessor::StdoutToLogProc(LPVOID pParam)
 }
 
 // Common call to terminate the process and to let the thread exit before closing handle
-void CMacroProcessor::TerminateScrpLangProcess(void)
+void CMacroProcessor::TerminateScrpLangProcess(int pnd)
 {
-  if (mPyProcessHandle) {
-    TerminateProcess(mPyProcessHandle, 1);
+  if (mPyProcessHandle[pnd]) {
+    TerminateProcess(mPyProcessHandle[pnd], 1);
     for (int ind = 0; ind < 100; ind++) {
-      if (!mScrpLangThread || UtilThreadBusy(&mScrpLangThread) <= 0)
+      if (!mScrpLangThread[pnd] || UtilThreadBusy(&mScrpLangThread[pnd]) <= 0)
         break;
       Sleep(10);
     }
-    if (mPyProcessHandle)
-      CloseHandle(mPyProcessHandle);
-    mPyProcessHandle = NULL;
+    if (mPyProcessHandle[pnd])
+      CloseHandle(mPyProcessHandle[pnd]);
+    mPyProcessHandle[pnd] = NULL;
   }
 }
 
@@ -5718,7 +5954,8 @@ void CMacroProcessor::JustStripItems(CString &strLine, int numStrip, CString &st
   bool allowComment)
 {
   if (mRunningScrpLang)
-    strCopy = mScrpLangData.strItems[mScrpLangData.lastNonEmptyInd];
+    strCopy = mScrpLangData[mProcessorIndex].strItems[
+      mScrpLangData[mProcessorIndex].lastNonEmptyInd];
   else
     mParamIO->StripItems(strLine, numStrip, strCopy, allowComment);
 }
@@ -5937,5 +6174,5 @@ int CMacroProcessor::DoStageRelaxation(double delX)
 
 ScriptLangData *SEMGetScriptLangData() 
 {
-  return &CMacroProcessor::mScrpLangData; 
+  return &CMacroProcessor::mScrpLangData[0]; 
 }

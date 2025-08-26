@@ -5028,6 +5028,9 @@ int CTSController::TSMessageBox(CString message, UINT type, BOOL terminate, int 
   CString valve;
   bool noEmpty, cancelEmpty;
   CMacroProcessor *macProc = mWinApp->mMacroProcessor;
+  if (mWinApp->RunningBkgdMacro() && (CMacroProcessor::GetMessageCallerProcInd() > 0 ||
+    (mWinApp->mBkgdProcessor->StartedTask() && !mWinApp->mMacroProcessor->StartedTask())))
+    macProc = mWinApp->mBkgdProcessor;
   int tryLevel = macProc->GetTryCatchLevel();
   bool *noCatchMess = macProc->GetNoCatchOutput();
   bool fromThreeChoice = mCallFromThreeChoice;
@@ -5080,8 +5083,8 @@ int CTSController::TSMessageBox(CString message, UINT type, BOOL terminate, int 
     } else {
       if (mWinApp->mNavigator && mWinApp->mNavigator->GetAcquiring())
         mWinApp->mNavigator->SendEmailIfNeeded();
-      if (macProc->DoingMacro())
-        macProc->SendEmailIfNeeded();
+      if (mWinApp->mMacroProcessor->DoingMacro())
+        mWinApp->mMacroProcessor->SendEmailIfNeeded();
     }
     LeaveInitialChecks();
     if (mMessageBoxCloseValves && mMessageBoxValveTime > 0.)

@@ -102,6 +102,7 @@
       &nbsp;&nbsp;&nbsp;&nbsp; <A href="#var_array">Variable and Array Commands</A><br>
       &nbsp;&nbsp;&nbsp;&nbsp; <A href="#other_control">Other Script Operation Control Commands</A><br>
       &nbsp;&nbsp;&nbsp;&nbsp; <A href="#interaction">Log Output, User Input, and Other Communication Commands</A><br>
+      &nbsp;&nbsp;&nbsp;&nbsp; <A href="#bkgd_scripts">Background Script Commands</A><br>
       &nbsp;&nbsp;&nbsp;&nbsp; <A href="#python_only">Functions Available Only from Python</A><br>
       <A href="#camera_commands">Camera Commands</A>
       <BR>
@@ -197,7 +198,7 @@
         <TR>
           <TD class="scriptcommand">CallScript # [arg1 arg2 ...]<br />
             CallMacro # [arg1 arg2 ...]</TD>
-          <TD>Calls other script by <b>#</b> and returns.&nbsp; The <b>#</b> can be -1 to use the script
+          <TD>Calls other script by <b>#</b> and returns.&nbsp; The <b>#</b> is numbered from 1 and can be -1 to use the script
             number found by a previous 'FindScriptByName'.&nbsp; A regular SerialEM script
             may call a Python script provided that the top-level script was not Python.&nbsp;
             When doing so, optional arguments can be added and will be placed into a list of
@@ -926,7 +927,69 @@
             The third optional entry, <b>rgb</b>, sets the color of the flashing screen in
             hexadecimal (RRGGBB) notation, e.g. FF5500 is orange.</TD>
         </TR>
-         <TD colspan="2"><A name ="python_only"></A><B>Functions Available Only from Python</B></TD>
+          <TD><A name ="bkgd_scripts"></A><B>Background Script Commands</B></TD>
+        <TD>See the help for 
+            <a href="menu_script.htm#hid_script_runbackgroundscript">Run Background Script</a> in the script menu for
+             full details on using background scripts and a dedicated variable for exchanging information
+            in a synchronized way between regular and background scripts.</TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">RunBackgroundScript #</TD>
+          <TD>
+            Starts the script indicated by <b>#</b> running in the background, allowing all 
+            other operations to proceed.  &nbsp; The entry <b>#</b> can be -1 to use the script
+            number found by a previous 'FindScriptByName'.&nbsp; The entry can be -2 to determine whether a 
+            background script is already running; <i>reportedValue1</i> is to set to 1 if one is, 0 otherwise, and this
+            value can be assigned to a variable at the end of the command.&nbsp; Command added in 4.3, 25-Aug-25.
+          </TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">StopBackgroundScript</TD>
+          <TD>
+            Stops a script running in the background.&nbsp; Command added in 4.3, 25-Aug-25.</TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">SetBkgdScriptVar var</TD>
+          <TD>
+            Copies the variable <b>var</b> to the background script variable; it can be a 1-D or 2-D array.
+            &nbsp; Command related to the background script variable can be used by either the background
+            script or a regular script.&nbsp; Command added in 4.3, 25-Aug-25.</TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">GetBkgdScriptVar var [#P]</TD>
+          <TD>
+            Copies the background script variable to the variable <b>var</b>, making it persistent if the
+            optional <b>#P</b> is non-zero.&nbsp; Command added in 4.3, 25-Aug-25.</TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">WaitForBkgdScriptVar #</TD>
+          <TD>
+            Waits for the background script variable to be gotten by the other script if <b>#</b> is 0,
+            or waits for the variable to be set by the other script if <b>#</b> is nonzero.&nbsp;
+            When run from a regular script, this sets the flag for allowing the background script to run; when
+            the conditions is satisafoed, the flag is restored to its previous state (which might have been
+            set with 'AllowTimeForBkgdScript').
+            &nbsp; For a regular script to use this command, a background script must be running; but a 
+            background script can call this command with no regular script running.&nbsp; Command added in 4.3, 25-Aug-25.</TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">CopyOtherScriptVar other this [#P]</TD>
+          <TD>
+             Copies a variable <B>other</B> from the other script to the variable <b>this</b> in the 
+            script calling this command, making it persistent if the optional <b>#P</b> is nonzero.&nbsp; 
+            Sets <i>reportedValue1</i> to 1 if the variable does not exist in the other script, and 0
+            if the copy succeeds.&nbsp; For a regular script to use this command, a background 
+            script must be running&nbsp; Command added in 4.3, 25-Aug-25.</TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">AllowTimeForBkgdScript #</TD>
+          <TD>
+            Allows the background script to execute commands even when other tasks are 
+            running if <strong>#</strong> is non-zero; with a 0, the background script can 
+            run only if there are no other tasks to be checked, or if the regular script has 
+            called 'WaitForBkgdScriptVar'.&nbsp; Command added in 4.3, 25-Aug-25.</TD>
+        </TR>
+        <TD colspan="2"><A name ="python_only"></A><B>Functions Available Only from Python</B></TD>
         </TR>
         <TR>
           <TD class="scriptcommand">SetVariable(var, value)</TD>

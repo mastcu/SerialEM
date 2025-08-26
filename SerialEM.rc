@@ -530,6 +530,9 @@ BEGIN
         MENUITEM "R&un at Program Start...",    ID_SCRIPT_RUNONPROGRAMSTART
         MENUITEM "Run at Pro&gram End...",      ID_SCRIPT_RUNATPROGRAMEND
         MENUITEM "Run If Program Idle...",      ID_SCRIPT_RUNIFPROGRAMIDLE
+        MENUITEM "Run &Background Script...",   ID_SCRIPT_RUNBACKGROUNDSCRIPT
+        MENUITEM "Stop Background Script",      ID_SCRIPT_STOPBACKGROUNDSCRIPT
+        MENUITEM SEPARATOR
         MENUITEM "Open E&ditors on Start",      ID_SCRIPT_OPENEDITORSONSTART
         MENUITEM "&Verbose",                    ID_MACRO_VERBOSE
     END
@@ -6624,6 +6627,7 @@ END
 
 STRINGTABLE
 BEGIN
+    IDC_BUT_ADVANCED_SET    "Open dialog for settings to control energy levels, interpolation, etc."
     IDC_CHECKCTF_DRIFT      "Use the drift settling time here instead of the time in the Record parameters"
 END
 
@@ -8276,23 +8280,24 @@ STRINGTABLE
 BEGIN
     ID_HELP_LISTDEBUGOUTPUTKEYLETTERS 
                             "List key letter for debug output in log"
+    ID_SCRIPT_RUNBACKGROUNDSCRIPT 
+                            "Select and start a script to run in the background"
+    ID_SCRIPT_STOPBACKGROUNDSCRIPT "Stop the script running in the background"
 END
 
 STRINGTABLE
 BEGIN
-    IDC_BUT_ACQUIRE_FLATFIELD
+    IDC_BUT_ACQUIRE_FLATFIELD 
                             "Start acquiring images for computing a new gain reference"
     IDC_BUT_INIT_DETECTOR   "Start initializing the detector to make it ready for use"
     IDC_BUT_TOGGLE_HV       "Switch the sensor bias high voltage for the detector between ready and off"
-    IDC_BUT_ADVANCED_SET    "Open dialog for settings to control energy levels, interpolation, etc."
     IDC_COMBO_INCIDENT_KV   "Select an incident energy from the list or Auto for automatic selection"
     IDC_COMBO_THRESHOLD_KV  "Select a threshold energy from the list or Auto for automatic selection"
     IDC_CHECK_AUTOSUM       "Automatically subdivide long exposures to extend dynamic range"
-    IDC_CHECK_COUNTRATE_CORR
-                            "Apply built-in linearity correction"
+    IDC_CHECK_COUNTRATE_CORR "Apply built-in linearity correction"
     IDC_CHECK_RETRIGGER     "Use non-paralyzable counting"
     IDC_CHECK_DCU_FLAT_CORR "Apply the DCU internal flatfield correction mechanism"
-    IDC_CHECK_BAD_PIX_INTERP
+    IDC_CHECK_BAD_PIX_INTERP 
                             "Interpolate bad pixel values using neighboring pixels"
     IDC_CHECK_MODULE_INTERP "Interpolate gap between sensor modules"
 END

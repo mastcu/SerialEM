@@ -142,17 +142,26 @@
          <TR VALIGN="top">
           <TD class="auto-style2"><a href="#hid_script_runonprogramstart">Run at Program Start...</a></TD>
           <TD class="auto-style1">Toggles whether to run a script on program startup and 
-            lets you select script</TD>
+            lets you select script.</TD>
         </TR>
         <TR VALIGN="top">
           <TD class="auto-style2"><a href="#hid_script_runatprogramend">Run at Program End...</a></TD>
           <TD class="auto-style1">Toggles whether to run a script on program exit and lets 
-            you select script</TD>
+            you select script.</TD>
         </TR>
         <TR VALIGN="top">
           <TD class="auto-style2"><a href="#hid_script_runifprogramidle">Run if Program Idle...</a></TD>
           <TD class="auto-style1">Toggles whether to run a script periodically when the program is idle and
-            lets you select script and time interval</TD>
+            lets you select script and time interval.</TD>
+        </TR>
+       <TR VALIGN="top">
+          <TD class="auto-style2"><a href="#hid_script_runbackgroundscript">Run Background Script...</a></TD>
+          <TD class="auto-style1">Starts a script to run continuously in the background when 
+            the program is idle or a regular script allows it to run.</TD>
+        </TR>
+       <TR VALIGN="top">
+          <TD class="auto-style2"><a href="#hid_script_stopbackgroundscript">Stop Background Script</a></TD>
+          <TD class="auto-style1">Stops a script running in the background.</TD>
         </TR>
         <TR VALIGN="top">
           <TD class="auto-style2"><a href="#hid_script_openeditorsonstart">Open Editors on Start</a></TD>
@@ -220,8 +229,8 @@
       one-line script that is run.</p>
       <P><A NAME="hid_script_mapfunctionkey"></A><B>Map Function Key command (Script menu)</B></P>
     <p>Use this command to assign a script to a function key, so that it can be run 
-      with the keyboard shortcut Ctrl - Fn.&nbsp; By default Ctrl F1 to Ctrl F10 run 
-      scripts 1 to 10.&nbsp; An assignment here replaces that default.&nbsp; First 
+      with the keyboard shortcut Ctrl - Fn.&nbsp; By default Ctrl F1 to Ctrl F12 run 
+      scripts 1 to 12.&nbsp; An assignment here replaces that default.&nbsp; First 
       enter the number of the function key that you want to map.&nbsp; Then select the 
       script to assign in the script combo box.&nbsp; Scripts with names are kept 
       track of by name so that they can be found if scripts are rearranged.&nbsp; 
@@ -364,13 +373,74 @@
           take more than a few seconds.</P>
       <P><A NAME="hid_script_runifprogramidle"></a><B>Run if Program Idle command (Script menu)</B></P>
         <p>Use this command to choose a script to run periodically when the program is not 
-          busy doing any other operations.&nbsp; When you select this command, a dialog 
+          busy doing any other operations.&nbsp; Each time, the script is run from the 
+          start until it finishes or exits.&nbsp; When you select this command, a dialog 
           will open with a drop-down list in which you can select the script by its name 
           or number; having a named script is advisable.&nbsp; After specifying the 
           script, you can then enter the interval in seconds at which the script should 
           run. It will not run with an interval of 0, so setting it to 0 would be a quick 
           way to disable it.&nbsp; The menu entry shows up as checked when a script has 
           been chosen and the interval is nonzero.&nbsp; </p>
+    
+      <P><A NAME="hid_script_runbackgroundscript"></a><B>Run Background Script command (Script menu)</B></P>
+      <p>Use this command to start a script to run continuously in the background, the 
+        same as with the script command 'RunBackgroundScript'.&nbsp; The script is 
+        started once and then is able to execute commands whenever the program is idle, 
+        or when a regular script allows it to run. Currently the script is not allowed 
+        to execute during other program operations, but this capability can be added for 
+        particular operations if the need becomes clear.&nbsp; The background script can 
+        do synchronized communication with a regular script using a special shared 
+        variable referred to as the 'background script variable'.&nbsp; This variable 
+        can contain a 1-D or 2-D array; it can be set from a defined variable with 
+        'SetBkgdScriptVar' and accessed by copying it to a variable with 
+        'GetBkgdScriptVar'.&nbsp; The background script can also access other variables 
+        in a regular script, including persistent ones when no script it running, with 
+        the command 'CopyOtherScriptVar'.&nbsp; A regular script can use the same 
+        command to access variables in the background script.&nbsp; The two scripts run 
+        in separate instances of the script processing class and each object can have 
+        its own persistent variables.</p>
+    <p>When you select the command, a script chooser will open, showing the name or 
+      number of the last background script run, if any.&nbsp;&nbsp; The script will be 
+      checked and started after you finish selecting it.</p>
+    <p>How many commands the background script can execute at a time depends on the 
+      situation:</p>
+    <ul>
+      <li>If the program is idle, the script will run one command after another just 
+        like a regular script.</li>
+      <li>If a regular script allows it to run by giving the command 
+        'AllowTimeForBkgdScript 1', then the idle time processor will allow it to run at 
+        least one command before going back to the regular script or other task.&nbsp; 
+        However, it may be able to run many commands until one is run that does not 
+        allow looping in the idle time processor.&nbsp; (For those who want to know: in 
+        MacroMasterList.h, commands that have 4, 5, or 6 as the second numeric entry 
+        allow looping in the idle time processor, which means that the next command is 
+        run immediately instead of waiting for the system to call the idle time 
+        processor again.)</li>
+      <li>If a regular script uses the command 'WaitForBkgdScriptVar' with a 0 or 1, the 
+        background script will be allowed to run until it either accesses or sets the 
+        background script variable, respectively.</li>
+      <li>For a Python script, 'command' means 'SerialEM script command' and the 
+        background script can do as much as it wants in Python code between calling such 
+        commands.</li>
+    </ul>
+    <P><A NAME="hid_script_stopbackgroundscript"></a>A background script cannot be 
+      stopped directly with the STOP button, only with the next menu item or the 
+      corresponding script command.&nbsp; However, if it runs a task or takes an 
+      image, the STOP button will be enabled, and pressing the button during this time 
+      will stop the script.&nbsp; Similarly, if an error occurs in a task started by 
+      the background script, the background script will be stopped unless it catches 
+      the error.</P>
+    <P>The program has some ability to prevent changes to the scripts being used by a 
+      background script.&nbsp; The editor for the script that was run directly will 
+      have action buttons disabled as if it was being run in a regular script.&nbsp; 
+      Scripts that are currently being called by the directly run script at the moment 
+      when changes would be saved to the script in memory will be protected from such 
+      changes, so editing in these windows may be lost.&nbsp; These protections are 
+      imperfect, so it is advisable not to interact with scripts involved in a 
+      background script except in testing situations.&nbsp; </P>
+    <P><B>Stop Background Script command (Script menu)</B></P>
+    <p>Use this command to stop a background script, it is equivalent to the script 
+      command 'StopBackgroundScript'.</p>
     <P><A NAME="hid_script_openeditorsonstart"></A><B>Open Editors on Start command (Script menu)</B></P>
     <p>Use this command to control whether editor windows are restored to their last 
       state when the program is restarted.&nbsp; In addition, if this option is selected, 

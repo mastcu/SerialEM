@@ -214,6 +214,7 @@ CSerialEMApp::CSerialEMApp()
 	EnableHtmlHelp();
   mBufferManager = NULL;
   mMacroProcessor = NULL;
+  mBkgdProcessor = NULL;
   mShiftManager = NULL;
   mShiftCalibrator = NULL;
   mMontageController = NULL;
@@ -834,6 +835,7 @@ CSerialEMApp::CSerialEMApp()
   mRestoreFocusIdleCount = 0;
   mStartCameraInDebug = false;
   mBufToggleCount = 0;
+  mAllowBkgdMacroTime = false;
   traceMutexHandle = CreateMutex(0, 0, 0);
   sStartTime = GetTickCount();
   mLastIdleScriptTime = sStartTime;
@@ -893,6 +895,7 @@ CSerialEMApp::~CSerialEMApp()
     delete mCamParams[i].origDefects;
   delete mBufferManager;
   delete mMacroProcessor;
+  delete mBkgdProcessor;
   delete mShiftManager;
   delete mShiftCalibrator;
   delete mMontageController;
@@ -1088,7 +1091,7 @@ BOOL CSerialEMApp::InitInstance()
   
   // Initialize the buffer manager
   mBufferManager = new EMbufferManager(mModeName, mImBufs);
-  mMacroProcessor = new CMacCmd();
+  mMacroProcessor = new CMacCmd(0);
   
   // Get the various task managers
   // Don't forget to add new ones to the destructor
@@ -1890,7 +1893,9 @@ int CSerialEMApp::ExitInstance()
   if (mPluginManager)
     mPluginManager->ReleasePlugins();
   if (mMacroProcessor)
-    mMacroProcessor->TerminateScrpLangProcess();
+    mMacroProcessor->TerminateScrpLangProcess(0);
+  if (mBkgdProcessor)
+    mMacroProcessor->TerminateScrpLangProcess(1);
   if (mScope)
     delete mScope;
   if (mCamera)
@@ -2017,7 +2022,8 @@ void CSerialEMApp::CleanupAndReportCrash(CString &message)
   try {
 
     // Clean up python process if any
-    mMacroProcessor->TerminateScrpLangProcess();
+    mMacroProcessor->TerminateScrpLangProcess(0);
+    mMacroProcessor->TerminateScrpLangProcess(1);
 
     // Then try to save the log somewhere
     if (mLogWindow) {
@@ -2458,6 +2464,8 @@ void CSerialEMApp::AddIdleTask(int (__cdecl *busyFunc)(void), void (__cdecl *nex
   idc->param = param;
   idc->extendTimeOut = timeOut > 0;
   mLastCheckTime = GetTickCount();
+  if (source == TASK_BKGD_MACRO)
+    RemoveIdleTask(TASK_BKGD_MACRO);
   if (timeOut)
     idc->timeOut = mShiftManager->AddIntervalToTickTime(mLastCheckTime, B3DABS(timeOut));
   else
@@ -2506,6 +2514,7 @@ BOOL CSerialEMApp::CheckIdleTasks()
   DWORD time = GetTickCount();
   static DWORD maxInt = 0;
   DWORD interval = 0;
+  bool bkgdMacroIsOnlyTask = false;
 
   if (mRestoreFocusIdleCount) {
     mRestoreFocusIdleCount--;
@@ -2546,7 +2555,7 @@ BOOL CSerialEMApp::CheckIdleTasks()
     mLastActivityTime = time;
   
   // Act on request for external control
-  if (mMacroProcessor->mScrpLangData.externalControl < 0) {
+  if (mMacroProcessor->mScrpLangData[0].externalControl < 0) {
     mMacroProcessor->CheckAndSetupExternalControl();
   }
 
@@ -2558,9 +2567,22 @@ BOOL CSerialEMApp::CheckIdleTasks()
     mMacroProcessor->Run(i);
   }
 
+  if (RunningBkgdMacro() && mIdleArray.GetSize() == 1) {
+    idc = mIdleArray[0];
+    if (idc->source == TASK_BKGD_MACRO)
+      bkgdMacroIsOnlyTask = true;
+  }
+
+  // Clean up background processor unless it has variables
+  if (!RunningBkgdMacro() && mBkgdProcessor && !mBkgdProcessor->GetNumVariables()) {
+    delete mBkgdProcessor;
+    mBkgdProcessor = NULL;
+  }
+
   // Check for idle script
-  if (!mIdleArray.GetSize() && !mScriptToRunOnIdle.IsEmpty() && mIdleScriptIntervalSec >
-    0 && SEMTickInterval(time, mLastIdleScriptTime) > 1000. * mIdleScriptIntervalSec) {
+  if ((!mIdleArray.GetSize() || bkgdMacroIsOnlyTask) && !mScriptToRunOnIdle.IsEmpty() && 
+    mIdleScriptIntervalSec > 0 && 
+    SEMTickInterval(time, mLastIdleScriptTime) > 1000. * mIdleScriptIntervalSec) {
     i = mMacroProcessor->FindMacroByNameOrTextNum(mScriptToRunOnIdle);
     if (i >= 0) {
       mLastIdleScriptTime = time;
@@ -2588,12 +2610,19 @@ BOOL CSerialEMApp::CheckIdleTasks()
     bRtn = TRUE;
     idc = mIdleArray[i];
     busy = 0;
+    if (idc->source == TASK_BKGD_MACRO && RunningBkgdMacro() && 
+      !(mAllowBkgdMacroTime || bkgdMacroIsOnlyTask))
+      continue;
     if (idc->busyFunc)
       busy = (*(idc->busyFunc))();
     else if (idc->source == TASK_TILT_SERIES)
       busy = mTSController->TiltSeriesBusy();
     else if (idc->source == TASK_MACRO_RUN)
       busy = mMacroProcessor->TaskBusy();
+    else if (idc->source == TASK_BKGD_MACRO && !RunningBkgdMacro())
+      busy = 0;
+    else if (idc->source == TASK_BKGD_MACRO && mBkgdProcessor)
+      busy = mBkgdProcessor->TaskBusy();
     else if (idc->source == TASK_MONTAGE_FOCUS || idc->source == TASK_CAL_ASTIG ||
       idc->source == TASK_FIX_ASTIG || idc->source == TASK_COMA_FREE ||
       idc->source == TASK_CTF_BASED)
@@ -2771,6 +2800,11 @@ BOOL CSerialEMApp::CheckIdleTasks()
           do {
             mMacroProcessor->TaskDone(idc->param);
           } while (mMacroProcessor->GetLoopInOnIdle());
+        } else if (idc->source == TASK_BKGD_MACRO && mBkgdProcessor) {
+          do {
+            mBkgdProcessor->TaskDone(idc->param);
+          } while (mBkgdProcessor->GetLoopInOnIdle());
+
         }  else if (idc->source == TASK_ACQUIRE_RESETUP)
           ReopenCameraSetup();
         else if (idc->source == TASK_SET_CAMERA_NUM)
@@ -3004,7 +3038,10 @@ int SEMStageCameraBusy()
 // Central reporting location for error, so that complex tasks can be stopped
 void CSerialEMApp::ErrorOccurred(int error)
 {
-  if (mMacroProcessor->DoingMacro())
+  if (RunningBkgdMacro() && mBkgdProcessor->StartedTask() &&
+    !mMacroProcessor->StartedTask())
+    mBkgdProcessor->Stop(true);
+  else if (mMacroProcessor->DoingMacro())
     mMacroProcessor->Stop(true);
   if (mShiftCalibrator->CalibratingIS())
     mShiftCalibrator->StopCalibrating();
@@ -3829,6 +3866,11 @@ BOOL CSerialEMApp::DoingImagingTasks()
     mNavHelper->GetAcquiringDual())) || mAutoTuning->DoingAutoTune() ||
     (mStageMoveTool && mStageMoveTool->GetGoingToAcquire()) ||
     DoingTiltSeries() || (mPlugImagingTask && mPlugDoingFunc && mPlugDoingFunc()));
+}
+
+BOOL CSerialEMApp::RunningBkgdMacro()
+{
+  return mBkgdProcessor != NULL && mBkgdProcessor->DoingMacro();
 }
 
 BOOL CSerialEMApp::DoingTasks()

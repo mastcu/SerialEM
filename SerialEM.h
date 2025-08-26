@@ -95,7 +95,7 @@ enum Tasks {TASK_NAVIGATOR_ACQUIRE, TASK_DISTORTION_STAGEPAIR, TASK_CAL_BEAMSHIF
   TASK_DEWARS_VACUUM, TASK_NAV_ACQ_RETRACT, TASK_MONT_MULTISHOT, TASK_AUTO_CONTOUR,
   TASK_SNAPSHOT_TO_BUF, TASK_NAV_FILE_RANGE, TASK_MONT_MACRO, TASK_LD_SHIFT_OFFSET,
   TASK_MULTI_GRID, TASK_MULGRID_SEQ, TASK_MULTI_MAP_HOLES, TASK_AUTO_STEP_ADJ_IS,
-  TASK_PREV_PRESCAN, TASK_DECTRIS_FLATFIELD, TASK_DECTRIS_INITIALIZE
+  TASK_PREV_PRESCAN, TASK_DECTRIS_FLATFIELD, TASK_DECTRIS_INITIALIZE, TASK_BKGD_MACRO
 };
 
 enum CalTypes {CAL_DONE_IS = 0, CAL_DONE_STAGE, CAL_DONE_FOCUS, CAL_DONE_BEAM, 
@@ -616,6 +616,7 @@ public:
   SetMember(bool, SavingOther)
     BOOL DoingTasks();
   BOOL DoingImagingTasks();
+  BOOL RunningBkgdMacro(); 
   GetMember(LowDoseParams *, LowDoseParams)
     LowDoseParams *GetCamLowDoseParams() { return &mCamLowDoseParams[0][0]; };
   MontParam *GetMontParam() { return &mMontParam; };
@@ -703,6 +704,7 @@ public:
   GetSetMember(CString, ScriptToRunAtStart);
   GetSetMember(CString, ScriptToRunAtEnd);
   GetSetMember(CString, ScriptToRunOnIdle);
+  GetSetMember(CString, BackgroundScript);
   GetSetMember(int, IdleScriptIntervalSec);
   GetSetMember(int, SuppressSomeMessages);
   GetSetMember(CString, ProgramTitleText);
@@ -727,6 +729,7 @@ public:
   GetSetMember(CString, NanumFontPath);
   SetMember(BOOL, StartCameraInDebug);
   SetMember(int, BufToggleCount);
+  GetSetMember(bool, AllowBkgdMacroTime);
   void RestoreFocusWhenIdle() { mRestoreFocusIdleCount = 4; };
   unsigned char *GetPaletteColors() {return &mPaletteColors[0][0] ; };
   void SetEnableExternalPython(BOOL inVal);
@@ -789,6 +792,7 @@ public:
   CLogWindow *mLogWindow;
   CFocusManager *mFocusManager;
   CMacCmd *mMacroProcessor;
+  CMacCmd *mBkgdProcessor;
   CMacroEditer *mMacroEditer[MAX_MACROS];
   CMacroToolbar *mMacroToolbar;
   CComplexTasks *mComplexTasks;
@@ -1028,6 +1032,7 @@ private:
   CString mScriptToRunAtStart;
   CString mScriptToRunAtEnd;
   CString mScriptToRunOnIdle;
+  CString mBackgroundScript;
   int mIdleScriptIntervalSec;   // Seconds between running idle script
   double mLastIdleScriptTime;
   CString mProgramTitleText;
@@ -1063,6 +1068,7 @@ private:
   int mBufToggleInterval;       // Msec between toggles
   double mLastToggleTime;       // Time of last toggle
   int mMaxTogglesLeft;          // Maximum number of toggles to skip
+  bool mAllowBkgdMacroTime;     // flag to let background script run w/o being only task
 
 public:
   void UpdateAllEditers(void);
