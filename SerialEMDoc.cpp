@@ -2112,6 +2112,8 @@ void CSerialEMDoc::SetSystemPath(CString sysPath)
 // Open a new settings file
 void CSerialEMDoc::OnSettingsOpen() 
 {
+  if (CheckBgkdScript())
+    return;
   if (mSettingsOpen) {
     if (OfferToSaveSettings("open a new settings file?") > 0)
       return;
@@ -2183,6 +2185,8 @@ void CSerialEMDoc::OnUpdateSettingsOpen(CCmdUI* pCmdUI)
 // Reread settings file
 void CSerialEMDoc::OnSettingsReadagain() 
 {
+  if (CheckBgkdScript())
+    return;
   PreSettingsRead();
 
   if (mParamIO->ReadSettings(mCurrentSettingsPath)) {
@@ -2270,6 +2274,8 @@ void CSerialEMDoc::OnUpdateSettingsClose(CCmdUI* pCmdUI)
 
 void CSerialEMDoc::OnSettingsReaddefaults() 
 {
+  if (CheckBgkdScript())
+    return;
   if (mSettingsOpen) {
     if (OfferToSaveSettings("read the system settings file?") > 0)
       return;
@@ -2298,6 +2304,8 @@ void CSerialEMDoc::OnUpdateSettingsAutosave(CCmdUI* pCmdUI)
 
 void CSerialEMDoc::OnSettingsRecent(UINT nID)
 {
+  if (CheckBgkdScript())
+    return;
 
   // Get the index, return if out of range or doing complex tasks
   int index = nID - ID_SETTINGS_MRU_FILE1;
@@ -2356,6 +2364,17 @@ void CSerialEMDoc::PreSettingsRead()
   if (mWinApp->LowDoseMode() && mTrueLDArea >= 0)
     mWinApp->mScope->GotoLowDoseArea(0);
   mPreReadBasicFile = mBasicModeFile;
+}
+
+int CSerialEMDoc::CheckBgkdScript()
+{
+  if (mWinApp->RunningBkgdMacro()) {
+    AfxMessageBox("You cannot load settings while a background script is running\n\n"
+      "Please stop the script with the entry in the script menu and try again",
+      MB_EXCLAME);
+    return 1;
+  }
+  return 0;
 }
 
 void CSerialEMDoc::PostSettingsRead()

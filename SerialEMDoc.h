@@ -67,6 +67,7 @@ public:
   CString GetCurrentSettingsDir();
   void DirFromCurrentOrSettingsFile(const CString &curFile, CString &direc);
 	void PreSettingsRead();
+  int CheckBgkdScript();
   GetMember(CTime, StartupTime)
   GetMember(CString, OriginalCwd)
   void SetShortTermNotSaved() {mShortTermNotSaved = true;};
