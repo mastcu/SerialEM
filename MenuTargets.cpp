@@ -207,6 +207,7 @@ BEGIN_MESSAGE_MAP(CMenuTargets, CCmdTarget)
 	ON_COMMAND(ID_NAVIGATOR_ALIGNEDSUPERMONTAGE, OnNavigatorAlignedsupermontage)
 	ON_COMMAND(ID_CALIBRATION_LISTISVECTORS, OnCalibrationListisvectors)
 	ON_COMMAND(ID_CALIBRATION_LISTSTAGECALS, OnCalibrationListstagecals)
+  ON_COMMAND(ID_CALIBRATION_LISTMAGISOFFSETS, OnDoListMagISOffsets)
   ON_COMMAND(ID_CALIBRATION_SHUTTERDEADTIME, OnCalibrationShutterdeadtime)
   ON_COMMAND(ID_CALIBRATION_SETDEBUGOUTPUT, OnCalibrationSetdebugoutput)
 	ON_COMMAND(ID_TILTSERIES_EXTRAOUTPUT, OnTiltseriesExtraoutput)
@@ -240,6 +241,7 @@ BEGIN_MESSAGE_MAP(CMenuTargets, CCmdTarget)
 	ON_UPDATE_COMMAND_UI(ID_NAVIGATOR_ALIGNEDSUPERMONTAGE, OnUpdateNavigatorSkewedsupermontage)
 	ON_UPDATE_COMMAND_UI(ID_CALIBRATION_LISTISVECTORS, OnUpdateNoTasks)
 	ON_UPDATE_COMMAND_UI(ID_CALIBRATION_LISTSTAGECALS, OnUpdateNoTasks)
+  ON_UPDATE_COMMAND_UI(ID_CALIBRATION_LISTMAGISOFFSETS, OnUpdateNoTasks)
 	ON_UPDATE_COMMAND_UI(ID_CALIBRATION_SHUTTERDEADTIME, OnUpdateCalibrationShutterdeadtime)
 	ON_UPDATE_COMMAND_UI(ID_CALIBRATION_SETDEBUGOUTPUT, OnUpdateNoTasks)
 	ON_UPDATE_COMMAND_UI(ID_TILTSERIES_EXTRAOUTPUT, OnUpdateNoTasks)
@@ -364,8 +366,10 @@ BEGIN_MESSAGE_MAP(CMenuTargets, CCmdTarget)
   ON_UPDATE_COMMAND_UI(ID_IMAGESTAGESHIFT_USETRIALSIZE, OnUpdateUseTrialSize)
   ON_COMMAND(ID_IMAGESTAGESHIFT_REMOVEISCAL, OnRemoveIScal)
   ON_COMMAND(ID_IMAGESTAGESHIFT_REMOVESTAGECAL, OnRemoveStageCal)
+  ON_COMMAND(ID_IMAGESTAGESHIFT_REMOVEISOFFSETS, OnRemoveMagISOffsetCals)
   ON_UPDATE_COMMAND_UI(ID_IMAGESTAGESHIFT_REMOVEISCAL, OnUpdateNoTasksNoTS)
   ON_UPDATE_COMMAND_UI(ID_IMAGESTAGESHIFT_REMOVESTAGECAL, OnUpdateNoTasksNoTS)
+  ON_UPDATE_COMMAND_UI(ID_IMAGESTAGESHIFT_REMOVEISOFFSETS, OnUpdateNoTasksNoTS)
   ON_COMMAND(ID_SPECIALOPTIONS_ADJUSTFOCUSONPROBEMODECHANGE, OnAdjustFocusOnProbeModeChange)
   ON_UPDATE_COMMAND_UI(ID_SPECIALOPTIONS_ADJUSTFOCUSONPROBEMODECHANGE, OnUpdateAdjustFocusOnProbeModeChange)
   ON_COMMAND(ID_TILTSERIES_SAVEX, OnTiltseriesSaveXYZFile)
@@ -1764,6 +1768,48 @@ void CMenuTargets::DoListStageCals()
   mWinApp->AppendToLog(str, LOG_OPEN_IF_CLOSED);
 }
 
+void CMenuTargets::OnDoListMagISOffsets()
+{
+  DoListMagISOffsets();
+}
+
+void CMenuTargets::DoListMagISOffsets()
+{
+  int mag, numRanges, lowestMicro, limlo, limhi;
+  int camera = mWinApp->GetCurrentCamera();
+  int ind = mWinApp->GetEFTEMMode() ? 1 : 0;
+  MagTable *magTab = mWinApp->GetMagTable();
+  ScaleMat mat;
+  CString str;
+  double offsetISX, offsetISY, x, y, offset;
+  
+  str.Format("\r\nMag image shift offset calibration %s", ind ? "(EFTEM mode)" : "");
+  mWinApp->SetNextLogColorStyle(0, 1);
+  mWinApp->AppendToLog(str, LOG_OPEN_IF_CLOSED);
+  mWinApp->SetNextLogColorStyle(0, 4);
+  mWinApp->AppendToLog("Index  Mag     Offset (microns)", LOG_OPEN_IF_CLOSED);
+  mWinApp->GetNumMagRanges(camera, numRanges, lowestMicro);
+
+  for (int range = 0; range < numRanges; range++) {
+    mWinApp->GetMagRangeLimits(camera, range * lowestMicro, limlo, limhi);
+    for (int i = limlo; i <= limhi; i++) {
+      offsetISX = magTab[i].calOffsetISX[ind];
+      offsetISY = magTab[i].calOffsetISY[ind];
+      
+      mat = mShiftManager->IStoSpecimen(i, camera);
+
+      if (!mat.xpx || (!offsetISX && !offsetISY))
+        continue;
+      
+      mag = MagForCamera(camera, i);
+      mShiftManager->ApplyScaleMatrix(mat, offsetISX, offsetISY, x, y, false, false);
+      offset = sqrt(x * x + y * y);
+      str.Format("  %2d %7d   %10.3f", i, mag, offset);
+      mWinApp->AppendToLog(str, LOG_OPEN_IF_CLOSED);
+    }
+  }
+}
+
 void CMenuTargets::OnRemoveIScal()
 {
   RemoveOneCal(false);
@@ -1814,6 +1860,47 @@ void CMenuTargets::RemoveOneCal(bool doStage)
   // It gets saved if either of these is non-zero
   mat->xpx = mat->xpy = 0.;
   *calibrated = 0;
+  mWinApp->mDocWnd->SetShortTermNotSaved();
+  mWinApp->SetCalibrationsNotSaved(true);
+}
+
+void CMenuTargets::OnRemoveMagISOffsetCals()
+{
+  int camera = mWinApp->GetCurrentCamera();
+  BOOL eftem = mWinApp->GetEFTEMMode();
+  int offsetInd = eftem ? 1 : 0;
+  CameraParameters *camP = mWinApp->GetCamParams() + camera;
+  MagTable *magTab;
+  CString str;
+  str.Format("Magnification at which to remove mag IS offset calibration for %s mode",
+    eftem ? "EFTEM": "non-EFTEM");
+  int magInd = mScope->GetMagIndex();
+  int mag = MagForCamera(camP, magInd);
+  if (!KGetOneInt(str, mag))
+    return;
+  magInd = FindIndexForMagValue(mag, camera, magInd);
+  if (magInd <= 0) {
+    AfxMessageBox("That magnification value does not exist for this camera", MB_EXCLAME);
+    return;
+  }
+  magTab = mWinApp->GetMagTable() + magInd;
+  
+  str.Format("The mag image shift offset calibration for mag %d in %s mode is:\n"  
+    "%.3f %.3f\n\n"
+    "Are you sure you want to remove this calibration?\n\n"
+    "Doing so will remove it from this run of the program and from\n"
+    "the short term calibration file, and will keep it from being\n"
+    "saved in the main calibration file.  It will be removed from the\n"
+    "main calibration file only if you save calibrations",
+    mag, eftem ? "EFTEM": "non-EFTEM", magTab->calOffsetISX[offsetInd],
+      magTab->calOffsetISY[offsetInd]);
+  if (AfxMessageBox(str, MB_QUESTION) != IDYES)
+    return;
+  
+  // It gets saved if either of these is non-zero
+  magTab->calOffsetISX[offsetInd] = 0.;
+  magTab->calOffsetISY[offsetInd] = 0.;
+
   mWinApp->mDocWnd->SetShortTermNotSaved();
   mWinApp->SetCalibrationsNotSaved(true);
 }

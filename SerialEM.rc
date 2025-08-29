@@ -290,6 +290,8 @@ BEGIN
             MENUITEM SEPARATOR
             MENUITEM "&Mag IS Offsets",             ID_CALIBRATION_MAGISOFFSETS
             MENUITEM "&EFTEM IS Offset",            ID_CALIBRATION_EFTEMISOFFSET
+            MENUITEM "List Mag IS Offsets",         ID_CALIBRATION_LISTMAGISOFFSETS
+            MENUITEM "Remove Mag IS Offsets",       ID_IMAGESTAGESHIFT_REMOVEISOFFSETS
             MENUITEM SEPARATOR
             MENUITEM "Set IS &Delay Factor",        ID_CALIBRATION_SET_IS_DELAY_FACTOR
         END
@@ -8283,6 +8285,9 @@ BEGIN
     ID_SCRIPT_RUNBACKGROUNDSCRIPT 
                             "Select and start a script to run in the background"
     ID_SCRIPT_STOPBACKGROUNDSCRIPT "Stop the script running in the background"
+    ID_IMAGESTAGESHIFT_REMOVEISOFFSETS 
+                            "Remove an image shift offset calibration for one mag"
+    ID_CALIBRATION_LISTMAGISOFFSETS "List mag image shift offset distances"
 END
 
 STRINGTABLE

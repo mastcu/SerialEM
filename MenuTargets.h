@@ -174,6 +174,7 @@ public:
   int SetTwoFlags(CString mess1, CString mess2, int flag1, int flag2, int &value);
   void DoListStageCals();
   void DoListISVectors(BOOL useCalPixel);
+  void DoListMagISOffsets();
   void SaveNextISVectorsForGraph(int inCam, int whichSave) {
     mCamForNextVectorSave = inCam; mWhichNextVectorSave = whichSave;
   };
@@ -300,9 +301,11 @@ public:
   afx_msg void OnUseTrialSize();
   afx_msg void OnUpdateUseTrialBinning(CCmdUI *pCmdUI);
   afx_msg void OnUpdateUseTrialSize(CCmdUI *pCmdUI);
+  afx_msg void OnDoListMagISOffsets();
   afx_msg void OnRemoveIScal();
   afx_msg void OnRemoveStageCal();
   void RemoveOneCal(bool doStage);
+  afx_msg void OnRemoveMagISOffsetCals();
   afx_msg void OnAdjustFocusOnProbeModeChange();
   afx_msg void OnUpdateAdjustFocusOnProbeModeChange(CCmdUI *pCmdUI);
   afx_msg void OnTiltseriesSaveXYZFile();

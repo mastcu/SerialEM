@@ -8810,6 +8810,7 @@ int CMacCmd::ListAllCalibrations(void)
   mDeferLogUpdates = true;
   mWinApp->mMenuTargets.DoListISVectors(true);
   mWinApp->mMenuTargets.DoListISVectors(false);
+  mWinApp->mMenuTargets.DoListMagISOffsets();
   mWinApp->mMenuTargets.DoListStageCals();
   mFocusManager->OnAutofocusListCalibrations();
   mShiftManager->ListBeamShiftCals();
