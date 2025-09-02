@@ -290,8 +290,8 @@ BEGIN
             MENUITEM SEPARATOR
             MENUITEM "&Mag IS Offsets",             ID_CALIBRATION_MAGISOFFSETS
             MENUITEM "&EFTEM IS Offset",            ID_CALIBRATION_EFTEMISOFFSET
-            MENUITEM "List Mag IS Offsets",         ID_CALIBRATION_LISTMAGISOFFSETS
-            MENUITEM "Remove Mag IS Offsets",       ID_IMAGESTAGESHIFT_REMOVEISOFFSETS
+            MENUITEM "List M&ag IS Offsets",        ID_CALIBRATION_LISTMAGISOFFSETS
+            MENUITEM "Remove Mag IS O&ffsets",      ID_IMAGESTAGESHIFT_REMOVEISOFFSETS
             MENUITEM SEPARATOR
             MENUITEM "Set IS &Delay Factor",        ID_CALIBRATION_SET_IS_DELAY_FACTOR
         END
