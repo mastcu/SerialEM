@@ -1802,7 +1802,7 @@ void CMenuTargets::DoListMagISOffsets()
         continue;
       
       mag = MagForCamera(camera, i);
-      ApplyScaleMatrix(mat, offsetISX, offsetISY, x, y, false, true);
+      ApplyScaleMatrix(mat, offsetISX, offsetISY, x, y);
       offset = sqrt(x * x + y * y);
       str.Format("  %2d %7d   %10.3f", i, mag, offset);
       mWinApp->AppendToLog(str, LOG_OPEN_IF_CLOSED);
@@ -1875,7 +1875,7 @@ void CMenuTargets::OnRemoveMagISOffsetCals()
   str.Format("Magnification at which to remove mag IS offset calibration for %s mode",
     eftem ? "EFTEM": "non-EFTEM");
   int magInd = mScope->GetMagIndex();
-  int mag, numRanges, lowestMicro, limlo, limhi;
+  int numRanges, lowestMicro, limlo, limhi;
 
   str.Format("Are you sure you want to remove the mag image shift offset\n"
     "calibration for %s mode?\n\n"

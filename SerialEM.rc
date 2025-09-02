@@ -8286,7 +8286,7 @@ BEGIN
                             "Select and start a script to run in the background"
     ID_SCRIPT_STOPBACKGROUNDSCRIPT "Stop the script running in the background"
     ID_IMAGESTAGESHIFT_REMOVEISOFFSETS 
-                            "Remove an image shift offset calibration for one mag"
+                            "Remove image shift offset calibrations for current mode"
     ID_CALIBRATION_LISTMAGISOFFSETS "List mag image shift offset distances"
 END
 

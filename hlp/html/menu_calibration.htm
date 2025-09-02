@@ -97,6 +97,14 @@
           <TD class="style1">&nbsp;&nbsp;&nbsp; <A href="#hid_calibration_eftemisoffset">EFTEM IS Offset</A></TD>
           <TD>Calibrate the offset between regular and energy filter cameras at one mag.</TD>
         </TR>
+        <TR vAlign="top">
+          <TD class="style1">&nbsp;&nbsp;&nbsp; <A href="#hid_calibration_listmagisoffsets">List IS Offset</A></TD>
+          <TD>List image shift offset distances for the current mode (EFTEM or non-EFTEM) at each mag.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style1">&nbsp;&nbsp;&nbsp; <A href="#hid_calibration_removeisoffsets">Remove IS Offset</A></TD>
+          <TD>Remove mag image shift offset calibrations for the current mode (EFTEM or non-EFTEM).</TD>
+        </TR>
         <TR>
           <TD class="style1">&nbsp;&nbsp;&nbsp;&nbsp;<A href="#hid_calibration_set_is_delay_factor">Set IS
             Delay Factor</A></TD>
@@ -711,6 +719,17 @@
           Invoke this command. If you have not already specified which camera should have
           one magnification with image shift offset set to zero, you will be asked about
           this.</LI></OL>
+
+      <P><A name="hid_calibration_listmagisoffsets"></A><B>List IS Offset command
+        (Calibration - Image &amp; Stage Shift sub-menu)</B></P>
+        <P>This command lists the image shift offsets for each mag. It will list the offset 
+            distance (in microns) for EFTEM or non-EFTEM based on whether the scope is 
+            currently in EFTEM or non-EFTEM mode.</P>
+
+      <P><A name="hid_calibration_removeisoffsets"></A><B>Remove IS Offset command
+        (Calibration - Image &amp; Stage Shift sub-menu)</B></P>
+        <P>Use this command to remove image shift offset calibrations. Only calibrations 
+            corresponding to the current mode (EFTEM or non-EFTEM) are removed.</P>
 
       <P><A name="hid_calibration_set_is_delay_factor"></A><B>Set IS Delay Factor
         command (Calibration menu)</B></P>
