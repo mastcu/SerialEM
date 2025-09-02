@@ -92,9 +92,11 @@ Z
 
 Calibration:
   Image&Stage shift
+  A
   C
   D
   E
+  F
   G
   I
   L
