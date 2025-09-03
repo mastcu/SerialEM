@@ -5390,12 +5390,11 @@
         <TR VALIGN="top">
           <TD>DigiScanExtraShotDelay</TD>
           <TD>This entry has two effects: 1) it is the delay time
-            between stopping continuous acquisition and deleting the parameters; 2) if it is
+            between stopping continuous acquisition and deleting the parameters; 2) before GMS 3, if it is
             non-zero, single-shot DigiScan images will be taken asynchronously with a loop
             to check if they are done, but if it is 0, images will be taken synchronously.&nbsp;
-            The latter will crash current versions of DM, but apparently not some future
-            version.&nbsp; The default
-            is 100 ms.</TD>
+            The latter will crash some older versions of DM, but possibly not more recent GMS 2 versions.
+            &nbsp; Images are taken synchronously in GMS 3.&nbsp; The default is 100 ms.</TD>
         </TR>
         <TR VALIGN="top">
           <TD>DigiScanLineSyncWait</TD>
