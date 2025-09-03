@@ -62,6 +62,7 @@ private:
   int mProtCoverDelay;
   int mFormatForAutoSave;
   int mTemperSetpoint;
+  float mLastFPSset;
   CString mAutosaveDir;
   CString mHdfMrcSaveOption;
 
