@@ -904,16 +904,16 @@ int DirectElectronCamera::AcquireImageData(unsigned short *image4k, long &imageS
     if (getFloatProperty("Frames Per Second (Max)", maxFPS))
       mCamParams[mCurCamIndex].DE_MaxFrameRate = maxFPS;
     getFloatProperty("Exposure Time Max (seconds)", maxExp);
-    if (mLastExposureTime > maxExp || mLastFPS > maxFPS) {
-      if (mLastExposureTime > maxExp)
-        mLastErrorString.Format("The exposure time of %.3f exceeds the maximum allowed "
-          "under current conditions (%.3f)", mLastExposureTime, maxExp);
-      else
-        mLastErrorString.Format("The frames per second of %.2f exceeds the maximum "
-          "allowed under current conditions (%.2f)", mLastFPS, maxFPS);
+    if (mLastExposureTime > maxExp) {
+      mLastErrorString.Format("The exposure time of %.3f exceeds the maximum allowed "
+        "under current conditions (%.3f)", mLastExposureTime, maxExp);
       SEMTrace('D', "%s", (LPCTSTR)mLastErrorString);
       return 1;
     }
+    if (mLastFPS > maxFPS + 1) 
+      SEMTrace('0', "WARNING: The specified frames per second of %.2f has been truncated"
+        " to the maximum allowed under current conditions (%.2f)", mLastFPS, maxFPS);
+
     AddValidStateToMap(checksum, mExpFPSchecks, minuteNow);
   }
 
@@ -1257,29 +1257,32 @@ int DirectElectronCamera::SetCountingParams(int readMode, double scaling, double
   CameraParameters *camP = mCamParams + mCurCamIndex;
   bool superRes = readMode == SUPERRES_MODE;
   mCountScaling = (float)scaling;
-  if (!IsApolloCamera() && (camP->CamFlags & DE_CAM_CAN_COUNT) && slock.Lock(1000)) {
-    if (((readMode == LINEAR_MODE && mLastElectronCounting != 0) ||
-      (readMode > 0 && mLastElectronCounting <= 0) || !mTrustLastSettings) &&
-      !mLiveThread) {
-      if (mAPI2Server) {
-        if (!setStringWithError("Image Processing - Mode", readMode > 0 ? "Counting" :
-          "Integrating"))
-          return 1;
-      } else {
-        if (!setStringWithError(DE_PROP_COUNTING, readMode > 0 ? psEnable : psDisable))
-          return 1;
-      }
-      mLastElectronCounting = readMode > 0 ? 1 : 0;
-    }
-    if (((readMode == COUNTING_MODE && mLastSuperResolution != 0) ||
-      (superRes && mLastSuperResolution <= 0) || !mTrustLastSettings) && !mLiveThread) {
-      if (!setStringWithError(mAPI2Server ? "Event Counting - Super Resolution" :
-        DE_PROP_COUNTING" - Super Resolution", superRes ? psEnable : psDisable))
+  if (slock.Lock(1000)) {
+    if (!IsApolloCamera() && (camP->CamFlags & DE_CAM_CAN_COUNT)) {
+      if (((readMode == LINEAR_MODE && mLastElectronCounting != 0) ||
+        (readMode > 0 && mLastElectronCounting <= 0) || !mTrustLastSettings) &&
+        !mLiveThread) {
+        if (mAPI2Server) {
+          if (!setStringWithError("Image Processing - Mode", readMode > 0 ? "Counting" :
+            "Integrating"))
             return 1;
+        } else {
+          if (!setStringWithError(DE_PROP_COUNTING, readMode > 0 ? psEnable : psDisable))
+            return 1;
+        }
+        mLastElectronCounting = readMode > 0 ? 1 : 0;
+      }
+      if (((readMode == COUNTING_MODE && mLastSuperResolution != 0) ||
+        (superRes && mLastSuperResolution <= 0) || !mTrustLastSettings) && !mLiveThread &&
+        (camP->CamFlags & DE_CAN_SAVE_SUPERRES)) {
+        if (!setStringWithError(mAPI2Server ? "Event Counting - Super Resolution" :
+          DE_PROP_COUNTING" - Super Resolution", superRes ? psEnable : psDisable))
+          return 1;
         mLastSuperResolution = superRes ? 1 : 0;
+      }
     }
-    if ((fabs(FPS - mLastFPS) > 1.e-3 || !mTrustLastSettings) && !mLiveThread
-      && SetFramesPerSecond(FPS))
+    if (!IsApolloCamera() && (fabs(FPS - mLastFPS) > 1.e-3 || !mTrustLastSettings) &&
+      !mLiveThread && SetFramesPerSecond(FPS))
       return 1;
   }
   return 0;

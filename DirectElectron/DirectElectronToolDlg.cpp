@@ -78,15 +78,15 @@ void DirectElectronToolDlg::updateDEToolDlgPanel(bool initialCall)
     BOOL isDE12 = mDECamera->CurrentIsDE12();
     BOOL isSurvey = mDECamera->CurrentIsSurvey();
     BOOL isEither = isDE12 || isSurvey;
-    ((CWnd *)GetDlgItem(ID_DE_camName))->SetWindowText(value);
-    ((CWnd *) GetDlgItem(ID_DE_currfps))->EnableWindow(!isDE12); 
+    SetDlgItemText(ID_DE_camName, value);
+    EnableDlgItem(ID_DE_currfps, !isDE12); 
     float temp_float = 0.0;
     int temp_int = 1;
 
     // Update Temperature
     if (!isSurvey) {
       value.Format("%0.2f", mDECamera->getCameraTemp());
-      ((CWnd *) GetDlgItem(IDC_DDD_Temp))->SetWindowText(value);
+      SetDlgItemText(IDC_DDD_Temp, value);
     }
 
     // update temperature setpoint if no property entered
@@ -95,7 +95,7 @@ void DirectElectronToolDlg::updateDEToolDlgPanel(bool initialCall)
         (camParam->CamFlags & DE_HAS_TEMP_SET_PT)) {
         if (mDECamera->getIntProperty(newNames ? sSetpointNew : sSetpointOld, temp_int)) {
           value.Format("Setpoint(C): %d", temp_int);
-          ((CWnd *) GetDlgItem(ID_DE_temperSet))->SetWindowText(value);
+          SetDlgItemText(ID_DE_temperSet, value);
           mTemperSetpoint = temp_int;
         }
       }
@@ -109,7 +109,7 @@ void DirectElectronToolDlg::updateDEToolDlgPanel(bool initialCall)
     if (isEither) {
       // update waterline temp
       value.Format("Water line(C): %0.1f", mDECamera->getWaterLineTemp());
-      ((CWnd *) GetDlgItem(ID_DE_waterlineTemp))->SetWindowText(value);
+      SetDlgItemText(ID_DE_waterlineTemp, value);
 
       // read "Camera Position Status"
       if (mDECamera->getStringProperty("Camera Position Status", value))
@@ -121,7 +121,7 @@ void DirectElectronToolDlg::updateDEToolDlgPanel(bool initialCall)
       if (value.IsEmpty() && !mDECamera->getStringProperty(DE_PROP_AUTOSAVE_DIR, value))
         value = "";
       if (!value.IsEmpty()) {
-        ((CWnd *) GetDlgItem(ID_DE_saveDir))->SetWindowText(value);
+        SetDlgItemText(ID_DE_saveDir, value);
         mAutosaveDir = value;
       }
 
@@ -138,16 +138,21 @@ void DirectElectronToolDlg::updateDEToolDlgPanel(bool initialCall)
       // Update Max FPS
       if (camParam->DE_MaxFrameRate > 0.) {
         value.Format("%0.2f", camParam->DE_MaxFrameRate);
-        ((CWnd *) GetDlgItem(ID_DE_maxfps))->SetWindowText(value);
+        SetDlgItemText(ID_DE_maxfps, value);
       }
     }
 
     // Update Current FPS if there is no user value yet
-    if (isEither && curIsDE && camParam->DE_FramesPerSec <= 0) {
-      if (mDECamera->getFloatProperty("Frames Per Second", temp_float)) {
-        value.Format("%0.2f", temp_float);
-        ((CWnd *) GetDlgItem(ID_DE_currfps))->SetWindowText(value);
-        camParam->DE_FramesPerSec = temp_float;
+    if (isEither && curIsDE && (camParam->DE_FramesPerSec <= 0 ||
+      camParam->DE_FramesPerSec != mLastFPSset)) {
+      if (camParam->DE_FramesPerSec <= 0) {
+        if (mDECamera->getFloatProperty("Frames Per Second", temp_float))
+          camParam->DE_FramesPerSec = temp_float;
+      }
+      if (camParam->DE_FramesPerSec > 0) {
+        value.Format("%0.2f", camParam->DE_FramesPerSec);
+        SetDlgItemText(ID_DE_currfps, value);
+        mLastFPSset = camParam->DE_FramesPerSec;
       }
     }
 
@@ -258,18 +263,17 @@ void DirectElectronToolDlg::ApplyUserSettings()
   }
   if (camParam->DE_FramesPerSec > 0) {
     value.Format("%0.2f", camParam->DE_FramesPerSec);
-    ((CWnd *) GetDlgItem(ID_DE_currfps))->SetWindowText(value);
+    SetDlgItemText(ID_DE_currfps, value);
     mDECamera->SetFramesPerSecond((double)camParam->DE_FramesPerSec);
   }
   if (isDE12 && mTemperSetpoint > -999 && (camParam->CamFlags & DE_HAS_TEMP_SET_PT)) {
     value.Format("Setpoint(C): %d", mTemperSetpoint);
-    ((CWnd *) GetDlgItem(ID_DE_temperSet))->SetWindowText(value);
+    SetDlgItemText(ID_DE_temperSet, value);
     mDECamera->setIntProperty(mDECamera->GetAPI2Server() ?
       sSetpointNew : sSetpointOld, mTemperSetpoint);
   }
   if (isDE12)
-    ((CWnd *) GetDlgItem(ID_DE_temperSet))->EnableWindow
-    (camParam->CamFlags & DE_HAS_TEMP_SET_PT);
+    EnableDlgItem(ID_DE_temperSet, (camParam->CamFlags & DE_HAS_TEMP_SET_PT));
 }
 
 // Update the enable/disable state based on what is active, and manage protection cover
@@ -290,23 +294,23 @@ void DirectElectronToolDlg::Update()
 
   //The Lens coupled system is different than the direct detection system
   //Certain properties will be disabled or enabled for this or survey sensor
-  ((CWnd *) GetDlgItem(IDC_DE_insertCam))->EnableWindow(isEither && !busy);
-  ((CWnd *) GetDlgItem(IDC_DDD_Temp))->EnableWindow(!isSurvey);
-  ((CWnd *) GetDlgItem(IDC_STAT_DETECTOR))->EnableWindow(!isSurvey);
-  ((CWnd *) GetDlgItem(IDC_COOLCAM))->EnableWindow(!thisCamBusy && isDE12);
-  ((CWnd *) GetDlgItem(ID_DE_temperSet))->EnableWindow(isDE12);
-  ((CWnd *) GetDlgItem(ID_DE_waterlineTemp))->EnableWindow(isEither);
-  ((CWnd *) GetDlgItem(IDC_STAT_AUTOSAVE_DIR))->EnableWindow(isEither);
-  ((CWnd *) GetDlgItem(ID_DE_saveDir))->EnableWindow(isEither);
-  ((CWnd *) GetDlgItem(ID_DE_autosaveF))->EnableWindow(isEither && !thisCamBusy);
-  ((CWnd *) GetDlgItem(IDC_STAT_FORMAT_LABEL))->EnableWindow(isEither);
-  ((CWnd *) GetDlgItem(IDC_STAT_FPSLABEL))->EnableWindow(isEither);
-  ((CWnd *) GetDlgItem(IDC_STAT_FPSMAX_LABEL))->EnableWindow(isEither);
-  ((CWnd *) GetDlgItem(ID_DE_maxfps))->EnableWindow(isEither);
-  ((CWnd *) GetDlgItem(ID_DE_currfps))->EnableWindow(isEither && !thisCamBusy &&
+  EnableDlgItem(IDC_DE_insertCam, isEither && !busy);
+  EnableDlgItem(IDC_DDD_Temp, !isSurvey);
+  EnableDlgItem(IDC_STAT_DETECTOR, !isSurvey);
+  EnableDlgItem(IDC_COOLCAM, !thisCamBusy && isDE12);
+  EnableDlgItem(ID_DE_temperSet, isDE12);
+  EnableDlgItem(ID_DE_waterlineTemp, isEither);
+  EnableDlgItem(IDC_STAT_AUTOSAVE_DIR, isEither);
+  EnableDlgItem(ID_DE_saveDir, isEither);
+  EnableDlgItem(ID_DE_autosaveF, isEither && !thisCamBusy);
+  EnableDlgItem(IDC_STAT_FORMAT_LABEL, isEither);
+  EnableDlgItem(IDC_STAT_FPSLABEL, isEither);
+  EnableDlgItem(IDC_STAT_FPSMAX_LABEL, isEither);
+  EnableDlgItem(ID_DE_maxfps, isEither);
+  EnableDlgItem(ID_DE_currfps, !isDE12 && !thisCamBusy &&
     mDECamera->GetCurCamIndex() >= 0);
-  ((CWnd *) GetDlgItem(IDC_STAT_PROT_COV))->EnableWindow(isDE12);
-  ((CWnd *) GetDlgItem(ID_DE_protectMode))->EnableWindow(!thisCamBusy && isDE12);
+  EnableDlgItem(IDC_STAT_PROT_COV, isDE12);
+  EnableDlgItem(ID_DE_protectMode, !thisCamBusy && isDE12);
 
   // Handle protection cover, open it for tasks that take images
   if (((mWinApp->DoingImagingTasks() || (mWinApp->mMacroProcessor->DoingMacro() && 
@@ -505,5 +509,5 @@ void DirectElectronToolDlg::OnEnKillfocusDecurrfps()
     mDECamera->getFloatProperty("Frames Per Second", temp_float);
     value.Format("%0.2f", temp_float);
   }
-  ((CWnd *) GetDlgItem(ID_DE_currfps))->SetWindowText(value);
+  SetDlgItemText(ID_DE_currfps, value);
 }
