@@ -3,6 +3,8 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+9/3/25: Fixed getting names from autoloader before inventory is done.
+
 8/22/25: SEM_4-2-7
 8/21/25: Fixed Advanced scripting getting stuck with failures to acquire mutex
 after failing to look up a camera (In 4.2).

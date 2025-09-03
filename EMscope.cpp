@@ -7268,7 +7268,7 @@ BOOL CEMscope::CassetteSlotStatus(int slot, int &status, CString &names, int *nu
         status = -1;
       success = true;
     }
-    if (mFEIcanGetLoaderNames && !numSlotsPtr && (status >= 0 || !slot)) {
+    if (mFEIcanGetLoaderNames && !numSlotsPtr && (status >= -1 || !slot)) {
       success = true;
       if (!slot)
         status = 0;
