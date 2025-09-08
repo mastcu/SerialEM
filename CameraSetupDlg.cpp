@@ -3198,11 +3198,9 @@ void CCameraSetupDlg::OnSetSaveFolder()
 void CCameraSetupDlg::OnDESetSaveFolder()
 {
   CString str = mCamera->GetDirForDEFrames();
-  CString ip = mParam->DEServerIP;
-  bool isLocal = strcmp("127.0.0.1", ip) != 0 || strcmp("localhost", ip) != 0;
 
-  // Remote DE cam server: only a subfolder of predefined base directory can be specified
-  if (!isLocal) {
+  // Remote or too old DE cam server: only subfolder of autosave folder can be specified
+  if (!mCamera->DECanIgnoreAutosaveFolder()) {
     if (KGetOneString("Here, you can specify a single subfolder under this camera's "
       "autosave directory", "Enter name of a new or existing subfolder to save frames in, "
       "or leave blank for none", str)) {
@@ -3214,7 +3212,7 @@ void CCameraSetupDlg::OnDESetSaveFolder()
       }
     }
   }
-  // Local DE cam server: any existing folder can be specified
+  // Local and new enough DE cam server: any existing folder can be specified
   else
   {
     CString DEbaseDir = mParam->DE_AutosaveDir;

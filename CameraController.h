@@ -1241,6 +1241,7 @@ public:
   bool FindNearestBinning(int binning, int *binnings, int numBin, int &binInd,
     int &realBin);
   void ComposeFramePathAndName(bool temporary);
+  bool DECanIgnoreAutosaveFolder();
   int SetDEUsersFrameFolder();
   CString GetCameraFrameFolder(CameraParameters *camParam, bool &noSubdirs, bool &movable);
   CString *GetCameraFrameDirPtr(CameraParameters *camParam);

@@ -13051,16 +13051,24 @@ void CCameraController::ComposeFramePathAndName(bool temporary)
   mFrameFilename = filename;
 }
 
+//Check if Direct Electron Camera can save frames to folder outside autosave folder
+bool CCameraController::DECanIgnoreAutosaveFolder()
+{
+  CString ip = mParam->DEServerIP;
+  int serverVersion = GetDEServerVersion();
+  return serverVersion >= DE_CAN_SET_FOLDER && (strcmp("127.0.0.1", ip) != 0 || 
+    strcmp("localhost", ip) != 0);
+}
+
 // Set up frame folder name based on user's specified folder for frames
 int CCameraController::SetDEUsersFrameFolder()
 {
   CString logmess;
   CString ip = mParam->DEServerIP;
   CString DEbaseDir = mParam->DE_AutosaveDir;
-  bool isLocal = strcmp("127.0.0.1", ip) != 0 || strcmp("localhost", ip) != 0;
   if (!mDirForDEFrames.IsEmpty()) {
     //For local server, DirForDEFrames can be a full path
-    if (isLocal && mDirForDEFrames.FindOneOf("/\\") >= 0)
+    if (DECanIgnoreAutosaveFolder() && mDirForDEFrames.FindOneOf("/\\") >= 0)
       mFrameFolder = mDirForDEFrames;
     // For remote server of if DirForDEFrames is a subfolder, append to the autosave dir
     else {
