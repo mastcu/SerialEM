@@ -3,6 +3,9 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+9/8/25: For Direct Electron, the "Set Folder" button in the camera panel opens 
+a folder selection dialog if the camera server is running locally.
+
 9/3/25: SEM_4-2-8
 9/3/25: Updated redistributed Microsoft dlls to prevent crash in Advanced
 Scripting with TEM server version 7.25 (In 4.2).

@@ -3198,16 +3198,43 @@ void CCameraSetupDlg::OnSetSaveFolder()
 void CCameraSetupDlg::OnDESetSaveFolder()
 {
   CString str = mCamera->GetDirForDEFrames();
-  if (KGetOneString("Here, you can specify a single subfolder under this camera's "
-    "autosave directory", "Enter name of a new or existing subfolder to save frames in, "
-    "or leave blank for none", str)) {
-    if (!UtilCheckIllegalChars(str, 1, "The subfolder name")) {
-      if (str.FindOneOf("/\\") < 0)
-        mCamera->SetDirForDEFrames(str);
-      else
-        AfxMessageBox("You can enter only a single folder name without \\ or /");
+  CString ip = mParam->DEServerIP;
+  bool isLocal = strcmp("127.0.0.1", ip) != 0 || strcmp("localhost", ip) != 0;
+
+  // Remote DE cam server: only a subfolder of predefined base directory can be specified
+  if (!isLocal) {
+    if (KGetOneString("Here, you can specify a single subfolder under this camera's "
+      "autosave directory", "Enter name of a new or existing subfolder to save frames in, "
+      "or leave blank for none", str)) {
+      if (!UtilCheckIllegalChars(str, 1, "The subfolder name")) {
+        if (str.FindOneOf("/\\") < 0)
+          mCamera->SetDirForDEFrames(str);
+        else
+          AfxMessageBox("You can enter only a single folder name without \\ or /");
+      }
     }
   }
+  // Local DE cam server: any existing folder can be specified
+  else
+  {
+    CString DEbaseDir = mParam->DE_AutosaveDir;
+    int err;
+    
+    //If the current DE directory is a full valid path, use that as default
+    //Otherwise use the base directory, if it exists
+    if (!UtilIsDirectoryUsable(str, err)) {
+      if (DEbaseDir.IsEmpty())
+        str = "C:\\";
+      else
+        str = DEbaseDir;
+    }
+    CXFolderDialog dlg(str);
+    dlg.SetTitle("SELECT folder for saving frames (typing name may not work)");
+    if (dlg.DoModal() == IDOK) {
+      mCamera->SetDirForDEFrames(dlg.GetPath());
+    }  
+  }
+
   FixButtonFocus(m_butDESetSaveFolder);
 }
 

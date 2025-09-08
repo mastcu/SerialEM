@@ -13055,14 +13055,26 @@ void CCameraController::ComposeFramePathAndName(bool temporary)
 int CCameraController::SetDEUsersFrameFolder()
 {
   CString logmess;
-  mFrameFolder = mParam->DE_AutosaveDir;
-  if (!mFrameFolder.IsEmpty() && !mDirForDEFrames.IsEmpty()) {
-    mFrameFolder += "\\" + mDirForDEFrames;
+  CString ip = mParam->DEServerIP;
+  CString DEbaseDir = mParam->DE_AutosaveDir;
+  bool isLocal = strcmp("127.0.0.1", ip) != 0 || strcmp("localhost", ip) != 0;
+  if (!mDirForDEFrames.IsEmpty()) {
+    //For local server, DirForDEFrames can be a full path
+    if (isLocal && mDirForDEFrames.FindOneOf("/\\") >= 0)
+      mFrameFolder = mDirForDEFrames;
+    // For remote server of if DirForDEFrames is a subfolder, append to the autosave dir
+    else {
+      if (!DEbaseDir.IsEmpty())
+        mFrameFolder = DEbaseDir + "\\" + mDirForDEFrames;
+      else
+        return 0;
+      }
+      
     if (CreateFrameDirIfNeeded(mFrameFolder, &logmess, 'D')) {
       SEMMessageBox(logmess);
       ErrorCleanup(1);
       return 1;
-    }
+      }
   }
   return 0;
 }
