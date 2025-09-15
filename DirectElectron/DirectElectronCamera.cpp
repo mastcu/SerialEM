@@ -528,6 +528,11 @@ int DirectElectronCamera::initializeDECamera(CString camName, int camIndex)
     } else
       mCamParams[camIndex].DE_AutosaveDir = "";
 
+    //If frame folder doesn't have to be the autosave folder, but is not yet assigned, 
+    //initialize it to be the autosave folder
+    if (CanIgnoreAutosaveFolder() && mCamParams[camIndex].dirForFrameSaving.IsEmpty())
+      mCamParams[camIndex].dirForFrameSaving = mCamParams[camIndex].DE_AutosaveDir;
+
     // Set that we can align if server is local and frames are normalized
     if (ServerIsLocal() && mServerVersion >= DE_ALL_NORM_IN_SERVER)
       mCamParams[camIndex].CamFlags |= DE_WE_CAN_ALIGN;
@@ -536,6 +541,12 @@ int DirectElectronCamera::initializeDECamera(CString camName, int camIndex)
   }
 
   return 1;
+}
+
+//Check if Direct Electron Camera can save frames to folder outside autosave folder
+bool DirectElectronCamera::CanIgnoreAutosaveFolder()
+{
+  return GetServerVersion() >= DE_CAN_SET_FOLDER && ServerIsLocal();
 }
 
 // Save the string for the software version and convert it to a number

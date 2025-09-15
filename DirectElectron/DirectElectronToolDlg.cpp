@@ -118,11 +118,19 @@ void DirectElectronToolDlg::updateDEToolDlgPanel(bool initialCall)
 
       // Update Auto save address either from the camera properties or the server
       value = camParam->DE_AutosaveDir;
-      if (value.IsEmpty() && !mDECamera->getStringProperty(DE_PROP_AUTOSAVE_DIR, value))
-        value = "";
-      if (!value.IsEmpty()) {
-        SetDlgItemText(ID_DE_saveDir, value);
-        mAutosaveDir = value;
+      if (mDECamera->CanIgnoreAutosaveFolder()) {
+        if (curIsDE && strcmp(camParam->dirForFrameSaving, value) != 0) {
+          SetDlgItemText(ID_DE_saveDir, camParam->dirForFrameSaving);
+          mAutosaveDir = camParam->dirForFrameSaving;
+        }
+      }
+      else {
+        if (value.IsEmpty() && !mDECamera->getStringProperty(DE_PROP_AUTOSAVE_DIR, value))
+          value = "";
+        if (!value.IsEmpty()) {
+          SetDlgItemText(ID_DE_saveDir, value);
+          mAutosaveDir = value;
+        }
       }
 
       // Update file format if no user value yet

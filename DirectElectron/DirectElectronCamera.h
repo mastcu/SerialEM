@@ -152,6 +152,7 @@ public:
   bool justSetDoubleProperty(const char * propName, double value);
   bool justSetIntProperty(const char * propName, int value);
   CString ErrorTrace(char *fmt, ...);
+  bool DirectElectronCamera::CanIgnoreAutosaveFolder();
   void SetSoftwareAndServerVersion(std::string & propValue);
   bool IsApolloCamera();
   bool CheckMapForValidState(int checksum, std::map<int, int> &map, int minuteNow);

@@ -12970,7 +12970,8 @@ void CCameraController::ComposeFramePathAndName(bool temporary)
     label = item->mLabel;
 
   // Set up folder
-  if (!mParam->DE_camType || !mParam->DE_AutosaveDir.IsEmpty()) {
+  if (!mParam->DE_camType || mTD.DE_Cam->CanIgnoreAutosaveFolder() || 
+  !mParam->DE_AutosaveDir.IsEmpty()) {
      if ((mFrameNameFormat & FRAME_FOLDER_ROOT) && !mFrameBaseName.IsEmpty())
       path = mFrameBaseName;
     if ((mFrameNameFormat & FRAME_FOLDER_SAVEFILE) && !savefile.IsEmpty())
@@ -13054,36 +13055,24 @@ void CCameraController::ComposeFramePathAndName(bool temporary)
 //Check if Direct Electron Camera can save frames to folder outside autosave folder
 bool CCameraController::DECanIgnoreAutosaveFolder()
 {
-  CString ip = mParam->DEServerIP;
-  int serverVersion = GetDEServerVersion();
-  return serverVersion >= DE_CAN_SET_FOLDER && (strcmp("127.0.0.1", ip) != 0 || 
-    strcmp("localhost", ip) != 0);
+  return mTD.DE_camType && mTD.DE_Cam->CanIgnoreAutosaveFolder();
 }
 
 // Set up frame folder name based on user's specified folder for frames
 int CCameraController::SetDEUsersFrameFolder()
 {
   CString logmess;
-  CString ip = mParam->DEServerIP;
-  CString DEbaseDir = mParam->DE_AutosaveDir;
-  if (!mDirForDEFrames.IsEmpty()) {
-    //For local server, DirForDEFrames can be a full path
-    if (DECanIgnoreAutosaveFolder() && mDirForDEFrames.FindOneOf("/\\") >= 0)
-      mFrameFolder = mDirForDEFrames;
-    // For remote server of if DirForDEFrames is a subfolder, append to the autosave dir
-    else {
-      if (!DEbaseDir.IsEmpty())
-        mFrameFolder = DEbaseDir + "\\" + mDirForDEFrames;
-      else
-        return 0;
-      }
-      
+  mFrameFolder = mParam->DE_AutosaveDir;
+  if (!mFrameFolder.IsEmpty() && !mDirForDEFrames.IsEmpty()) {
+    mFrameFolder += "\\" + mDirForDEFrames;
     if (CreateFrameDirIfNeeded(mFrameFolder, &logmess, 'D')) {
       SEMMessageBox(logmess);
       ErrorCleanup(1);
       return 1;
-      }
+    }
   }
+  if (mTD.DE_Cam->CanIgnoreAutosaveFolder())
+    mFrameFolder = mParam->dirForFrameSaving;
   return 0;
 }
 
@@ -13104,8 +13093,13 @@ CString * CCameraController::GetCameraFrameDirPtr(CameraParameters *camParam)
 {
   if (camParam->K2Type)
     return &mDirForK2Frames;
-  if (camParam->DE_camType)
-    return &mDirForDEFrames;
+  if (camParam->DE_camType) {
+    if (mTD.DE_Cam->CanIgnoreAutosaveFolder())
+      return &camParam->dirForFrameSaving;
+    else
+      return &mDirForDEFrames;
+  }
+    
   if (camParam->FEItype && FCAM_ADVANCED(camParam) && !FCAM_CONTIN_SAVE(camParam))
     return &mDirForFalconFrames;
   return &camParam->dirForFrameSaving;

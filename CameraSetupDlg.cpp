@@ -1718,7 +1718,7 @@ void CCameraSetupDlg::ManageCamera()
   // Manage the DE panel
   if (mDE_Type) {
     mDEweCanAlign = (mParam->CamFlags & DE_WE_CAN_ALIGN) != 0;
-    if (!mParam->DE_AutosaveDir.IsEmpty())
+    if (mCamera->DECanIgnoreAutosaveFolder() || !mParam->DE_AutosaveDir.IsEmpty())
       ReplaceWindowText(&m_butNameSuffix, "Suffix", "Options");
     showDEmodes = (mParam->CamFlags & DE_CAM_CAN_COUNT) &&
       !(mParam->CamFlags & DE_APOLLO_CAMERA);
@@ -3093,8 +3093,8 @@ void CCameraSetupDlg::OnButFileOptions()
     (mParam->FEItype == FALCON3_TYPE && mCamera->GetSubdirsOkInFalcon3Save()) ||
     FCAM_CONTIN_SAVE(mParam))) ||
     (mParam->GatanCam && mCamera->CAN_PLUGIN_DO(CREATES_DIRECTORY, mParam)) ||
-    (mParam->DE_camType && !mParam->DE_AutosaveDir.IsEmpty()) ||
-    (!mParam->GatanCam && mParam->canTakeFrames);
+    (mParam->DE_camType && (mCamera->DECanIgnoreAutosaveFolder() || 
+    !mParam->DE_AutosaveDir.IsEmpty())) || (!mParam->GatanCam && mParam->canTakeFrames);
   optDlg.mCan4BitModeAndCounting = 
     mCamera->CAN_PLUGIN_DO(4BIT_101_COUNTING, mParam);
   optDlg.mCanSaveTimes100 = 
@@ -3197,7 +3197,8 @@ void CCameraSetupDlg::OnSetSaveFolder()
 // And a separate call for DE
 void CCameraSetupDlg::OnDESetSaveFolder()
 {
-  CString str = mCamera->GetDirForDEFrames();
+  bool noSubdirs, movable;
+  CString str = mCamera->GetCameraFrameFolder(mParam, noSubdirs, movable);
 
   // Remote or too old DE cam server: only subfolder of autosave folder can be specified
   if (!mCamera->DECanIgnoreAutosaveFolder()) {
@@ -3206,7 +3207,7 @@ void CCameraSetupDlg::OnDESetSaveFolder()
       "or leave blank for none", str)) {
       if (!UtilCheckIllegalChars(str, 1, "The subfolder name")) {
         if (str.FindOneOf("/\\") < 0)
-          mCamera->SetDirForDEFrames(str);
+          mCamera->SetCameraFrameFolder(mParam, str);
         else
           AfxMessageBox("You can enter only a single folder name without \\ or /");
       }
@@ -3215,22 +3216,21 @@ void CCameraSetupDlg::OnDESetSaveFolder()
   // Local and new enough DE cam server: any existing folder can be specified
   else
   {
-    CString DEbaseDir = mParam->DE_AutosaveDir;
-    int err;
-    
-    //If the current DE directory is a full valid path, use that as default
-    //Otherwise use the base directory, if it exists
-    if (!UtilIsDirectoryUsable(str, err)) {
-      if (DEbaseDir.IsEmpty())
-        str = "C:\\";
-      else
-        str = DEbaseDir;
-    }
+    //CString DEbaseDir = mParam->DE_AutosaveDir;
+    //int err;
+    //
+    ////If the current DE directory is a full valid path, use that as default
+    ////Otherwise use the base directory, if it exists
+    //if (!UtilIsDirectoryUsable(str, err)) {
+    //  if (DEbaseDir.IsEmpty())
+    //    str = "C:\\";
+    //  else
+    //    str = DEbaseDir;
+    //}
     CXFolderDialog dlg(str);
     dlg.SetTitle("SELECT folder for saving frames (typing name may not work)");
-    if (dlg.DoModal() == IDOK) {
-      mCamera->SetDirForDEFrames(dlg.GetPath());
-    }  
+    if (dlg.DoModal() == IDOK) 
+      mCamera->SetCameraFrameFolder(mParam, dlg.GetPath());
   }
 
   FixButtonFocus(m_butDESetSaveFolder);
@@ -3558,7 +3558,8 @@ void CCameraSetupDlg::ManageDEpanel(void)
     m_bDEsaveMaster = B3DCHOICE(forceSaving, true, mUserSaveFrames);
     UpdateData(false);
   }
-  m_butNameSuffix.EnableWindow(!mParam->DE_AutosaveDir.IsEmpty() && saving);
+  m_butNameSuffix.EnableWindow((!mParam->DE_AutosaveDir.IsEmpty() || 
+    mCamera->DECanIgnoreAutosaveFolder()) && saving);
   m_butDESetSaveFolder.EnableWindow(saving || m_bDEsaveFinal);
   m_editSumCount.EnableWindow(saving);
   m_butDESaveMaster.EnableWindow(!forceSaving);
