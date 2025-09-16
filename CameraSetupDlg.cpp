@@ -3199,9 +3199,9 @@ void CCameraSetupDlg::OnDESetSaveFolder()
 {
   bool noSubdirs, movable;
   CString str = mCamera->GetCameraFrameFolder(mParam, noSubdirs, movable);
-
-  // Remote or too old DE cam server: only subfolder of autosave folder can be specified
+  
   if (!mCamera->DECanIgnoreAutosaveFolder()) {
+    // Remote or old DE cam server: only subfolder of autosave folder can be specified
     if (KGetOneString("Here, you can specify a single subfolder under this camera's "
       "autosave directory", "Enter name of a new or existing subfolder to save frames in, "
       "or leave blank for none", str)) {
@@ -3212,10 +3212,8 @@ void CCameraSetupDlg::OnDESetSaveFolder()
           AfxMessageBox("You can enter only a single folder name without \\ or /");
       }
     }
-  }
-  // Local and new enough DE cam server: any existing folder can be specified
-  else
-  {
+  } else {
+    // Local and new enough DE cam server: any existing folder can be specified
     CXFolderDialog dlg(str);
     dlg.SetTitle("SELECT folder for saving frames (typing name may not work)");
     if (dlg.DoModal() == IDOK) 

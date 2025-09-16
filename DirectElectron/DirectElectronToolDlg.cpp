@@ -122,8 +122,7 @@ void DirectElectronToolDlg::updateDEToolDlgPanel(bool initialCall)
           SetDlgItemText(ID_DE_saveDir, camParam->dirForFrameSaving);
           mAutosaveDir = camParam->dirForFrameSaving;
         }
-      }
-      else {
+      } else {
         value = camParam->DE_AutosaveDir;
         if (value.IsEmpty() && !mDECamera->getStringProperty(DE_PROP_AUTOSAVE_DIR, value))
           value = "";
