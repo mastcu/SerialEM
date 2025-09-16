@@ -1498,10 +1498,12 @@
         </TR>
         <TR>
           <TD class="scriptcommand">SetFolderForFrames dir</TD>
-          <TD>Sets the folder for saving frames from the current camera to <b>dir</b>.&nbsp; A simple
-            directory name without path separators is required for DE cameras and for Thermo/FEI cameras for which 
+          <TD>Sets the folder for saving frames from the current camera to <b>dir</b>.&nbsp;For DE 
+              cameras in which the camera server is runnning remotely and/or older than 
+              version 1.0.943, or for Thermo/FEI cameras for which 
             subdirectories cannot be made (i.e., Falcon 3 cameras run with Advanced Scripting and without the property
-            SubdirsOkInFalcon3Save set to 1).&nbsp; For other cameras, an absolute path is required,
+            SubdirsOkInFalcon3Save set to 1), then <strong>dir</strong> must be a simple 
+              directory name without path separators. For other cameras, an absolute path is required,
              either a network path starting with two slashes or one starting with a drive
             letter.</TD>
         </TR>
@@ -2761,7 +2763,8 @@
        <TR>
           <TD class="scriptcommand">ReportFrameSavingPath</TD>
           <TD>Reports the path defined with the <b>Set Folder</b> button in the Camera Setup dialog for the current camera,
-            which must be either a Gatan or a generic frame-saving camera.&nbsp; Sets <i>reportedValue1</i> to the path, or
+            which must be either a Gatan or a generic frame-saving camera, or a DE camera with 
+              the DE camera server running locally and version 1.0.943 or newer.&nbsp; Sets <i>reportedValue1</i> to the path, or
             to NONE if it is not defined.&nbsp; </TD>
         </TR>
         <TR>

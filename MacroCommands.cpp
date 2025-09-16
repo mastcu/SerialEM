@@ -4425,7 +4425,8 @@ int CMacCmd::ReportFrameNameFormat()
 // ReportFrameSavingPath
 int CMacCmd::ReportFrameSavingPath(void)
 {
-  if (!(mCamParams->K2Type || mCamParams->canTakeFrames) || mCamParams->FEItype)
+  if (!(mCamParams->K2Type || mCamParams->canTakeFrames || (mCamParams->DE_camType && 
+   mCamera->DECanIgnoreAutosaveFolder())) || mCamParams->FEItype)
     ABORT_NOLINE("ReportFrameSavingPath works only with Gatan and generic frame-saving"
       " cameras");
   if (mCamParams->K2Type)
