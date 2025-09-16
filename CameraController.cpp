@@ -13062,17 +13062,19 @@ bool CCameraController::DECanIgnoreAutosaveFolder()
 int CCameraController::SetDEUsersFrameFolder()
 {
   CString logmess;
-  mFrameFolder = mParam->DE_AutosaveDir;
-  if (!mFrameFolder.IsEmpty() && !mDirForDEFrames.IsEmpty()) {
-    mFrameFolder += "\\" + mDirForDEFrames;
-    if (CreateFrameDirIfNeeded(mFrameFolder, &logmess, 'D')) {
-      SEMMessageBox(logmess);
-      ErrorCleanup(1);
-      return 1;
-    }
-  }
   if (mTD.DE_Cam->CanIgnoreAutosaveFolder())
     mFrameFolder = mParam->dirForFrameSaving;
+  else {
+    mFrameFolder = mParam->DE_AutosaveDir;
+    if (!mFrameFolder.IsEmpty() && !mDirForDEFrames.IsEmpty()) {
+      mFrameFolder += "\\" + mDirForDEFrames;
+    }
+  }
+  if (CreateFrameDirIfNeeded(mFrameFolder, &logmess, 'D')) {
+    SEMMessageBox(logmess);
+    ErrorCleanup(1);
+    return 1;
+  }
   return 0;
 }
 

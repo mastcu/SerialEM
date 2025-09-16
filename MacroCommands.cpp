@@ -10914,7 +10914,7 @@ int CMacCmd::SetFolderForFrames(void)
     (mCamParams->canTakeFrames & FRAMES_CAN_BE_SAVED)))
     ABORT_LINE("Cannot save frames from the current camera for line:\n\n");
   SubstituteLineStripItems(mStrLine, 1, mStrCopy);
-  if (mCamParams->DE_camType && !mCamera->DECanIgnoreAutosaveFolder() ||
+  if ((mCamParams->DE_camType && !mCamera->DECanIgnoreAutosaveFolder()) ||
     (mCamParams->FEItype == FALCON3_TYPE && !mCamera->GetSubdirsOkInFalcon3Save())) {
     if (mStrCopy.FindOneOf("/\\") >= 0)
       ABORT_LINE("Only a single folder can be entered for this camera type in:\n\n");

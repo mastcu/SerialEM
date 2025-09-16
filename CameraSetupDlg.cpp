@@ -3216,17 +3216,6 @@ void CCameraSetupDlg::OnDESetSaveFolder()
   // Local and new enough DE cam server: any existing folder can be specified
   else
   {
-    //CString DEbaseDir = mParam->DE_AutosaveDir;
-    //int err;
-    //
-    ////If the current DE directory is a full valid path, use that as default
-    ////Otherwise use the base directory, if it exists
-    //if (!UtilIsDirectoryUsable(str, err)) {
-    //  if (DEbaseDir.IsEmpty())
-    //    str = "C:\\";
-    //  else
-    //    str = DEbaseDir;
-    //}
     CXFolderDialog dlg(str);
     dlg.SetTitle("SELECT folder for saving frames (typing name may not work)");
     if (dlg.DoModal() == IDOK) 
