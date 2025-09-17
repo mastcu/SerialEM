@@ -434,11 +434,14 @@
     <P>Press this button to open the <a href="hidd_k2_save_options.htm">Frame File
       Options dialog</a>, which allows you to add a suffix to the frame filenames based
       on your selection of components, such as SerialEM output filename or tilt angle.&nbsp;
-      If you have a server version that allows control over the location of saved
-      frames, and if the property DEAutosaveFolder is set, the dialog will also
+      If you are running a server that allows control over the location of saved
+      frames, the dialog will also
       contain options for placing frames in subfolders with selected names.</P>
     <P><b>Set Folder</b></P>
-    <P>Press this button to enter the name of a single subfolder for saving your
+    <P>Press this button to select the directory for saving frames.&nbsp; If the Direct 
+        Electron camera server is running locally (on the same computer as SerialEM) and 
+        is version 1.0.943 or newer, a directory browser will open.&nbsp; Otherwise, a 
+        small dialog will appear with a text box in which you can specify the name of a single subfolder for saving your
       frames, under the one defined by the DEAutosaveFolder property.&nbsp; If you
       choose folder options as well in the <a href="hidd_k2_save_options.htm">Frame File
       Options dialog</a>, the automatically named folders will be made under this

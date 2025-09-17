@@ -3,11 +3,11 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
-9/16/25: For Direct Electron Cameras, the "Set Folder" button in the camera 
+9/17/25: For Direct Electron Cameras, the "Set Folder" button in the camera 
 panel opens a folder selection dialog if the camera server is 1.0.943 or newer 
 and running locally.  
 
-9/16/25: For Direct Electron Cameras, if the camera server is 1.0.943 or newer 
+9/17/25: For Direct Electron Cameras, if the camera server is 1.0.943 or newer 
 and running locally, the SetFolderForFrames script command sets the full path
 instead of a single folder name.
 
