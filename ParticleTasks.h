@@ -213,7 +213,9 @@ private:
   double mDVStartTime;              // Starting time for a wait
   bool mDVDoingDewarVac;            // Flag routine is working
   BOOL mDVWaitForPVP;               // Flag to test for PVP in busy
-
+  bool mDVUseVibManager;            // Flag to use vibration manager
+  bool mDVSetAutoVibOff;            // Flag that auto vibration management turned off
+  bool mDVSawFilling;               // Flag that filling occurred during prepare to avoid
   bool mDoingPrevPrescan;
 
 public:

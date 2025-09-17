@@ -121,8 +121,8 @@ static CmdItem cmdList[] = {
 
 // Be sure to add an entry for longHasTime when adding long operation
 const char *CMacCmd::mLongKeys[MAX_LONG_OPERATIONS] =
-  {"BU", "RE", "IN", "LO", "$=", "DA", "UN", "$=", "RS", "RT", "FF", "RB"};
-int CMacCmd::mLongHasTime[MAX_LONG_OPERATIONS] = {1, 1, 0, 1, 0, 1, 0, 0, 1, 1, 1, 1};
+  {"BU", "RE", "IN", "LO", "$=", "DA", "UN", "$=", "RS", "RT", "FF", "RB", "PA"};
+int CMacCmd::mLongHasTime[MAX_LONG_OPERATIONS] = {1, 1, 0, 1, 0, 1, 0, 0, 1, 1, 1, 1, 1};
 
 CMacCmd::CMacCmd(int index) : CMacroProcessor(index)
 {
@@ -10014,6 +10014,36 @@ int CMacCmd::AreDewarsFilling(void)
   return 0;
 }
 
+// QueryVibrationManager
+int CMacCmd::QueryVibrationManager()
+{
+  int answer;
+  const char *states[4] = {"unknown", "not vibrating", "vibrating soon", "vibrating"};
+  if (mItemInt[1] < 0 || mItemInt[1] > 2)
+    ABORT_LINE("Query type must be between 0 and 2 for line:\n\n");
+  if (!mScope->QueryVibrationManager(mItemInt[1] + VIBMGR_QUERY_STATE, answer))
+    ABORT_NOLINE("Script halted due to failure in QueryVibrationManager");
+  if (!mItemInt[1]) {
+    answer -= VIBMGR_STATE_UNKNOWN;
+    B3DCLAMP(answer, 0, 3);
+    mLogRpt.Format("Vibration state is %s", states[answer]);
+  } else 
+    mLogRpt.Format("%s is %s", mItemInt[1] == 1 ? "Auto-vibration-avoidance" : 
+      "Avoiding vibrations",  answer ? "ON" : "OFF");
+  SetRepValsAndVars(2, answer, 0.);
+  return 0;
+}
+
+// VibrationManagerRequest
+int CMacCmd::VibrationManagerRequest()
+{
+  if (mItemInt[1] < 0 || mItemInt[1] > 3)
+    ABORT_LINE("Action type must be between 0 and 3 for line:\n\n");
+  if (!mScope->VibrationManagerAction(mItemInt[1]))
+    ABORT_NOLINE("Script halted due to failure in VibrationManagerRequest");
+  return 0;
+}
+
 // SimpleOriginStatus
 int CMacCmd::SimpleOriginStatus(void)
 {
@@ -13730,7 +13760,7 @@ int CMacCmd::LongOperation(void)
 
   ix1 = 0;
   iy1 = 1;
-  int used[] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+  int used[] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
   int operations[MAX_LONG_OPERATIONS + 1];
   float intervals[MAX_LONG_OPERATIONS + 1];
   for (index = 1; index < MAX_MACRO_TOKENS && !mItemEmpty[index]; index++) {

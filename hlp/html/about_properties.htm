@@ -142,6 +142,15 @@
             'UtapiSupportTypes' in SerialEM.h.  With the latest UTAPI server (April 2025), only 20 needs
             to be used for cameras if you have a Ceta 2.</TD>
         </TR>
+       <TR VALIGN="top">
+          <TD>UseDetectorNameIfUtapi</TD>
+          <TD>Set to 1 if the DetectorName entry for a Thermo/FEI camera should be used only 
+            if connecting to the camera with UTAPI.&nbsp; With this property, you can turn 
+            the use of UTAPI on and off, or change whether the camera service is skipped, 
+            without having to change the DetectorName entry that is needed for UTAPI, 
+            provided that the CameraName entry is the full name for the camera in standard or 
+            Advanced scripting.</TD>
+        </TR>
         <TR VALIGN="top">
           <TD>SimulationMode</TD>
           <TD>Set to 1 or to a desired high voltage value to indicate a microscope/camera simulator 
@@ -1030,6 +1039,11 @@
           <TD>Factor by which to increase the time allowed for image acquisition before a
             timeout occurs. The default timeout is 5 seconds plus pre-exposure/exposure time
             plus readout time estimated from a readout rate of 0.15 megapixels/second.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>ExtraSTEMTimeout</TD>
+          <TD>Additional time in seconds to add to the timeout for a STEM camera; the 
+            default is 5.</TD>
         </TR>
         <TR VALIGN="top">
           <TD>CameraRetries</TD>

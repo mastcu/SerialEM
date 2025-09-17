@@ -116,7 +116,8 @@ BOOL CManageDewarsDlg::OnInitDialog()
 
   // Drop items or whole panels based on properties
   states[0] = FEIscope;
-  if ((capabilities & 1) == 0) {
+  mUsingVibrationManager = mWinApp->mScope->UtapiSupportsService(UTSUP_VIBRATION);
+  if ((capabilities & 1) == 0 || mUsingVibrationManager) {
     mIDsToDrop.push_back(IDC_RUN_AUTOLOADER_CYCLE);
     mIDsToDrop.push_back(IDC_EDIT_AUTOLOADER_TIME);
     mIDsToDrop.push_back(IDC_STAT_AUTOLOADER_MIN);
@@ -128,17 +129,25 @@ BOOL CManageDewarsDlg::OnInitDialog()
   if (JEOLscope && !simpleOrig)
     states[2] = false;
 
+  if (mUsingVibrationManager) {
+    SetDlgItemText(IDC_STAT_DEWAR_TITLE, "Vibration Avoidance and Nitrogen Management");
+    SetDlgItemText(IDC_REFILL_DEWARS, "Prepare to avoid every");
+    SetDlgItemText(IDC_CHECK_DEWARS, "Check for ongoing filling or vibrations and wait"
+      " until done");
+    SetDlgItemText(IDC_START_REFILL, "Prepare to avoid if time to next refill is below");
+  }
+
   // Load data from master params
   m_bCheckPVPrunning = param->checkPVP;
   m_bRunBufferCycle = param->runBufferCycle;
   m_iBufferTime = param->bufferTimeMin;
   m_bRunAutoloader = param->runAutoloaderCycle;
   m_iAutoloaderTime = param->autoloaderTimeMin;
-  m_bRefillDewars = param->refillDewars;
+  m_bRefillDewars = param->refillAtInterval;
   m_fRefillTime = param->dewarTimeHours;
   m_bCheckDewars = param->checkDewars;
   m_fPauseBefore = param->pauseBeforeMin;
-  m_bStartRefill = param->startRefill;
+  m_bStartRefill = param->startRefillEarly;
   m_fStartIfBelow = param->startIntervalMin;
   m_fWaitAfter = param->postFillWaitMin;
   m_bDoCheckJustBefore = param->doChecksBeforeTask;
@@ -159,11 +168,11 @@ void CManageDewarsDlg::OnOK()
   param->bufferTimeMin = m_iBufferTime;
   param->runAutoloaderCycle = m_bRunAutoloader;
   param->autoloaderTimeMin = m_iAutoloaderTime;
-  param->refillDewars = m_bRefillDewars;
+  param->refillAtInterval = m_bRefillDewars;
   param->dewarTimeHours = m_fRefillTime;
   param->checkDewars = m_bCheckDewars;
   param->pauseBeforeMin = m_fPauseBefore;
-  param->startRefill = m_bStartRefill;
+  param->startRefillEarly = m_bStartRefill;
   param->startIntervalMin = m_fStartIfBelow;
   param->postFillWaitMin = m_fWaitAfter;
   param->doChecksBeforeTask = m_bDoCheckJustBefore;

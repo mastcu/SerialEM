@@ -698,11 +698,11 @@ struct DewarVacParams
   int bufferTimeMin;         // Interval to run at
   BOOL runAutoloaderCycle;   // Run autoloader buffer cycle at interval
   int autoloaderTimeMin;     // Interval to run at
-  BOOL refillDewars;         // Refill at interval
+  BOOL refillAtInterval;     // Refill at interval
   float dewarTimeHours;      // Time between refills
   BOOL checkDewars;          // Check status of dewar filling
   float pauseBeforeMin;      // Pause time before filling
-  BOOL startRefill;          // Start a refill if remaining time is low enough
+  BOOL startRefillEarly;     // Start a refill if remaining time is low enough
   float startIntervalMin;    // Start a refill if within this time
   float postFillWaitMin;     // Wait time after filling
   BOOL doChecksBeforeTask;   // Separate when the checks are done from when filling is

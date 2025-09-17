@@ -50,11 +50,12 @@ enum {imNanoProbe = 0, imMicroProbe};
 #define pmImaging 1
 #define psmLAD 5
 
-#define MAX_LONG_OPERATIONS 12
+#define MAX_LONG_OPERATIONS 13
 #define MAX_LONG_THREADS 2
 enum {LONG_OP_BUFFER = 0, LONG_OP_REFILL, LONG_OP_INVENTORY, LONG_OP_LOAD_CYCLE,
 LONG_OP_MESSAGE_BOX, LONG_OP_HW_DARK_REF, LONG_OP_UNLOAD_CART, LONG_OP_LOAD_CART,
-LONG_OP_FILL_STAGE, LONG_OP_FILL_TRANSFER, LONG_OP_FLASH_FEG, LONG_OP_FILL_BOTH };
+LONG_OP_FILL_STAGE, LONG_OP_FILL_TRANSFER, LONG_OP_FLASH_FEG, LONG_OP_FILL_BOTH,
+LONG_OP_PREPARE_NO_VIBRATE};
 
 // Standard conversions from signed real to nearest integer for JEOL calls
 #define NINT8000(a) (long)floor((a) + 0x8000 + 0.5)
@@ -590,6 +591,7 @@ public:
   GetSetMember(int, LDFreeLensDelay);
   GetSetMember(int, OpenValvesDelay);
   GetSetMember(int, MonitorC2ApertureSize);
+  GetSetMember(BOOL, UseDetectorNameIfUtapi);
   static int GetScopeCallFromPlugin() {return mScopeCallFromPlugin ; };
   static void SetScopeCallFromPlugin(int val) { mScopeCallFromPlugin = val; };
   GetMember(int, LastMagIndex);
@@ -1005,6 +1007,7 @@ private:
   int mLDFreeLensDelay;        // Delay time after setting FLC for an area, msec
   int mOpenValvesDelay;        // Delay time after opening column valves
   int mMonitorC2ApertureSize;  // Flag to keep aperture size up to date
+  BOOL mUseDetectorNameIfUtapi; // Use regular name if not going through Utapi
   int mAdvancedScriptVersion;  // My internal version number for advanced scripting
   int mPluginVersion;          // Version of plugin or server
 
@@ -1103,6 +1106,8 @@ public:
   bool AreDewarsFilling(int & busy);
   bool GetDewarsRemainingTime(int which, int & time);
   bool GetRefrigerantLevel(int which, double & level);
+  bool QueryVibrationManager(int which, int &response);
+  bool VibrationManagerAction(int action);
   bool GetNitrogenInfo(int which, int &time, double &level);
   bool GetSimpleOriginStatus(int &numRefills, int &secToNextRefill, int &filling, int &active, float *sensor = NULL);
   static int RefillSimpleOrigin(CString &errString);

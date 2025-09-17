@@ -4001,6 +4001,20 @@
           <TD>Turns the Simple Origin system off if <b>#</b> is zero or on if it is non-zero.</TD>
         </TR>
         <TR>
+          <TD class="scriptcommand">QueryVibrationManager #</TD>
+          <TD>Reports the state of the Vibration Manager in the UTAPI interface.&nbsp; If <b>#</b> is 0,
+            it reports the vibration state: 0 for unknown, 1 for not vibrating, 2 for vibrating soon
+             (within 10 minutes), or 3 for vibrating.&nbsp; With a 1 or 2 auto-vibration it reports whether avoidance is on and
+            whether it is currently avoiding vibrations, repectively, with a 0 for off and 1 for on.&nbsp; The 
+            value may be assigned to a variable at the end of the command.&nbsp; Command added in 4.3, 1-Sep-25.</TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">VibrationManagerRequest #</TD>
+          <TD>Makes one call to the Vibration Manager in the UTAPI interface: <b>#</b> can be 0 to avoid
+            vibrations, 1 to allow vibrations, or 2 or 3 to turn auto-vibration avoidance on or off, 
+            respectively&nbsp;  Command added in 4.3, 1-Sep-25.</TD>
+        </TR>
+        <TR>
           <TD class="scriptcommand">ReportVacuumGauge name</TD>
           <TD>Reports the status and pressure reading from a vacuum gauge identified by the
               given <b>name</b>.&nbsp; For Thermo/FEI scopes, <b>name</b> is of the style accepted in the
@@ -4043,8 +4057,9 @@
             refrigerant on Thermo/FEI or SimpleOrigin ('Re'), Inventory cassettes ('In') on Thermo/FEI 
             or JEOL, Loader buffer cycle ('Lo'), Unload cartridge ('Un') on Thermo/FEI only, Dark
             reference update for K2 (or K3 with GMS 3.31+) ('Da'), Refill Stage tank ('RS'), Refill Transfer
-            tank ('RT'), or Refill Both tanks 'RB' on JEOL, or Flash FEG ('FF') on JEOL or 
-            Thermo/FEI.&nbsp; Operations are identified by the first two
+            tank ('RT'), or Refill Both tanks 'RB' on JEOL, Flash FEG ('FF') on JEOL or 
+            Thermo/FEI, or Prepare to Avoid vibrations ('PA') on Thermo/FEI scopes with the 
+            UTAPI vibration manager supported.&nbsp; Operations are identified by the first two
             letters of whatever full word you use (case insensitive).&nbsp; 
             <br />&nbsp;&nbsp;&nbsp;&nbsp; Each operation
             except Inventory and Unload cartridge must be followed by an interval in hours (<b>#</b>).&nbsp; If <b>#</b> is &gt;

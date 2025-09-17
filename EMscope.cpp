@@ -537,11 +537,11 @@ CEMscope::CEMscope()
   mDewarVacParams.bufferTimeMin = 60;
   mDewarVacParams.runAutoloaderCycle = false;
   mDewarVacParams.autoloaderTimeMin = 60;
-  mDewarVacParams.refillDewars = false;
+  mDewarVacParams.refillAtInterval = false;
   mDewarVacParams.dewarTimeHours = 4.;
   mDewarVacParams.checkDewars = false;
   mDewarVacParams.pauseBeforeMin = 1.;
-  mDewarVacParams.startRefill = false;
+  mDewarVacParams.startRefillEarly = false;
   mDewarVacParams.startIntervalMin = 15.;
   mDewarVacParams.postFillWaitMin = 5.;
   mDewarVacParams.doChecksBeforeTask = true;
@@ -561,6 +561,7 @@ CEMscope::CEMscope()
   mSubFromPosChgISX = mSubFromPosChgISY = 0.;
   mMonitorC2ApertureSize = -1;
   mInScopeUpdate = false;
+  mUseDetectorNameIfUtapi = false;
   mAdvancedScriptVersion = 0;
   mPluginVersion = 0;
   mPlugFuncs = NULL;
@@ -7502,6 +7503,43 @@ bool CEMscope::GetRefrigerantLevel(int which, double &level)
   return GetTemperatureInfo(2, busy, time, which, level);
 }
 
+// Pass-through functions to vibration manager.  Calls must use and interpret enum values
+bool CEMscope::QueryVibrationManager(int which, int & response)
+{
+  bool retVal = true;
+  CString str;
+  if (!sInitialized || !FEIscope || !mPlugFuncs->GetVibrationState)
+    return false;
+  ScopeMutexAcquire("QueryVibrationManager", true);
+  try {
+    response = mPlugFuncs->GetVibrationState(which);
+  }
+  catch (_com_error E) {
+    SEMReportCOMError(E, _T("getting Vibration Manager state information "), &str, true);
+    SEMTrace('0', "WARNING: %s", (LPCTSTR)str);
+    retVal = false;
+  }
+  ScopeMutexRelease("QueryVibrationManager");
+  return retVal;
+}
+
+bool CEMscope::VibrationManagerAction(int action)
+{
+  bool retVal = true;
+  if (!sInitialized || !FEIscope || !mPlugFuncs->SetVibrationAvoidance)
+    return false;
+  ScopeMutexAcquire("VibrationManagerAction", true);
+  try {
+    mPlugFuncs->SetVibrationAvoidance(action);
+  }
+  catch (_com_error E) {
+    SEMReportCOMError(E, _T("requesting Vibration Manager action "));
+    retVal = false;
+  }
+  ScopeMutexRelease("VibrationManagerAction");
+  return retVal;
+}
+
 bool CEMscope::GetNitrogenInfo(int which, int & time, double & level)
 {
   try {
@@ -9731,7 +9769,8 @@ int CEMscope::LookupScriptingCamera(CameraParameters *params, bool refresh,
         params->detectorName[i] = params->channelName[i];
     return GetFEIChannelList(params, false);
   }
-  if (!params->detectorName[0].IsEmpty())
+  if (!params->detectorName[0].IsEmpty() &&
+    (!mUseDetectorNameIfUtapi || UtapiSupportsService(UTSUP_CAM_SINGLE)))
     CCDname = params->detectorName[0];
 
   // It outputs a message only for error 3, COM error
@@ -10287,7 +10326,7 @@ static char *longOpDescription[MAX_LONG_OPERATIONS] =
   "getting cassette inventory", "running autoloader buffer cycle", "showing message box",
   "updating hardware dark reference", "unloading a cartridge", "loading a cartridge",
   "refilling stage", "refilling transfer tank", "flashing FEG", 
-  "refilling stage and transfer tank"};
+  "refilling stage and transfer tank", "preparing to avoid vibration"};
 
 // Start a thread for a long-running operation: returns 1 if thread busy, 
 // 2 if inappropriate in some other way, -1 if nothing was started
@@ -10298,8 +10337,8 @@ int CEMscope::StartLongOperation(int *operations, float *hoursSinceLast, int num
   bool needHWDR = false, startedThread = false, suspendFilter = false;
   int now = mWinApp->MinuteTimeStamp();
   // Change second one back to 0 to enable simpleorigin
-  short scopeType[MAX_LONG_OPERATIONS] = {1, 0, 1, 1, 1, 0, 1, 1, 2, 2, 0, 2};
-  short blocksFilter[MAX_LONG_OPERATIONS] = {0, 4, 4, 4, 0, 0, 4, 4, 0, 0, 4, 0};
+  short scopeType[MAX_LONG_OPERATIONS] = {1, 0, 1, 1, 1, 0, 1, 1, 2, 2, 0, 2, 1};
+  short blocksFilter[MAX_LONG_OPERATIONS] = {0, 4, 4, 4, 0, 0, 4, 4, 0, 0, 4, 0, 0};
   mDoingStoppableRefill = 0;
   mChangedLoaderInfo = false;
   mLongOpErrorToReport = 0;
@@ -10339,6 +10378,9 @@ int CEMscope::StartLongOperation(int *operations, float *hoursSinceLast, int num
           if (!FEIscope && !mHasSimpleOrigin)
             return 2;
         }
+        if (longOp == LONG_OP_PREPARE_NO_VIBRATE &&
+          !(UtapiSupportsService(UTSUP_VIBRATION) && mPlugFuncs->SetVibrationAvoidance))
+          return 3;
         if (FEIscope && blocksFilter[longOp] > 0 && mWinApp->FilterIsSelectris() &&
           mAdvancedScriptVersion >= blocksFilter[longOp])
           suspendFilter = true;
@@ -10446,6 +10488,7 @@ UINT CEMscope::LongOperationProc(LPVOID pParam)
         if (longOp == LONG_OP_BUFFER) {
           lod->plugFuncs->RunBufferCycle();
         }
+        
         // Refill refrigerant
         if (longOp == LONG_OP_REFILL) {
           if (lod->flags & LONGOP_SIMPLE_ORIGIN)
@@ -10453,6 +10496,17 @@ UINT CEMscope::LongOperationProc(LPVOID pParam)
           else 
             lod->plugFuncs->ForceRefill();
         }
+        
+        // Prepare to avoid vibrations
+        if (longOp == LONG_OP_PREPARE_NO_VIBRATE) {
+          if (lod->plugFuncs->GetVibrationState(VIBMGR_QUERY_AVOIDING))
+            lod->plugFuncs->SetVibrationAvoidance(VIBMGR_ACTION_ALLOW);
+          SEMTrace('0', "Prepare beingcalled");
+          lod->plugFuncs->SetVibrationAvoidance(VIBMGR_ACTION_PREPARE);
+          SEMTrace('0', "Prepare fininshed");
+          lod->plugFuncs->SetVibrationAvoidance(VIBMGR_ACTION_AVOID);
+        }
+
         // Do the cassette inventory
         if (longOp == LONG_OP_INVENTORY) {
           if (JEOLscope) {
@@ -10590,7 +10644,7 @@ UINT CEMscope::LongOperationProc(LPVOID pParam)
 
       // Save an error in the error string and retval but continue in loop
       catch (_com_error E) {
-        descrip == ": ";
+        descrip = ": ";
         if (lod->plugFuncs->GetLastErrorString && SEMGetSimulationMode() >= 0)
           descrip += lod->plugFuncs->GetLastErrorString();
         SEMReportCOMError(E, _T(longOpDescription[longOp] + descrip), &lod->errString,
@@ -10613,9 +10667,9 @@ int CEMscope::LongOperationBusy(int index)
 { 
   int thread, op, longOp, busy, indStart, indEnd, retval = 0;
   int now = mWinApp->MinuteTimeStamp();
-  int errorOK[MAX_LONG_OPERATIONS] = {0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+  int errorOK[MAX_LONG_OPERATIONS] = {0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1};
   const char *errStringsOK[MAX_LONG_OPERATIONS] = {"", "Cannot force refill", "", "", "",
-    "", "", "", "", "", "", ""};
+    "", "", "", "", "", "", "", "Failure preparing to avoid vibrations"};
   JeolCartridgeData jcData;
   bool throwErr = false, didError;
   CString excuse;

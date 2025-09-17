@@ -58,4 +58,5 @@ public:
   afx_msg void OnDoChecksJustBefore();
   void ManageEnables();
   BOOL m_bDoCheckJustBefore;
+  bool mUsingVibrationManager;
 };
