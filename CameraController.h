@@ -655,6 +655,7 @@ public:
   GetSetMember(float, GIFslitWidthScaling);
   SetMember(NewImCallback, NewImageCallback);
   GetSetMember(BOOL, DectrisSaveAsHDF);
+  GetSetMember(float, ExtraSTEMTimout);
   CameraThreadData *GetCamThreadData() { return &mTD; };
   bool DoingPartialScan() {return mTD.ReturnPartialScan > 0; };
   bool HasCEOSFilter() { return mCEOSFilter != NULL; }
@@ -1125,6 +1126,7 @@ public:
   int mFalconWarningCount;       // Number of times falcon local path warning given
   NewImCallback mNewImageCallback;  // Function to call with new image in place
   BOOL mDectrisSaveAsHDF;         // Flag for plugin/cmera to save directly as HDF5
+  float mExtraSTEMTimout;         // Time to add to timeout in seconds for any STEM camera
 
 
 public:
