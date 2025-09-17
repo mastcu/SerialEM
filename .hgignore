@@ -6,8 +6,8 @@ syntax: glob
 *.mod
 *.chm
 *~
-*.\#*
-\#*\#
+*./#*
+/#*/#
 
 Debug
 Release
@@ -33,7 +33,7 @@ JEOLsettings*.*
 SEMset*
 AUTOSAVE*
 SerialEMcrash*.log
-hlp\HTMLDefines.h
+hlp/HTMLDefines.h
 macroTestSettings.txt
 SEMbasicModeItems.txt
 .vs

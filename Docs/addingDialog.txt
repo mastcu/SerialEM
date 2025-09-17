@@ -11,7 +11,7 @@ Change CDialog to CBaseDlg in .h and .cpp
 Under DoDataExchange add:
   virtual BOOL OnInitDialog();
   virtual void OnOK();
-  virtual void OnCancel();
+  virtual void OnCancel();    (Not needed for modal if there is nothing to do)
 And for non-modal:
   virtual void PostNcDestroy();
   virtual BOOL PreTranslateMessage(MSG* pMsg);
@@ -32,9 +32,10 @@ BOOL CHoleFinder::OnInitDialog()
   return TRUE;
 }
 
+These are the kinds of basic entries needed for nonmodal where placement is stored
 void CHoleFinder::OnOK()
 {
-  OnCancel();
+  OnCancel();    (For common closing actions to occur if any)
 }
 
 // Inform managing module of closing, or store placement and NULL out pointer
@@ -58,6 +59,10 @@ BOOL CHoleFinder::PreTranslateMessage(MSG* pMsg)
     SetFocus();
   return CDialog::PreTranslateMessage(pMsg);
 }
+
+Probably OnOK should call CBaseDlg::OnOK, and OnCancel should call
+CBaseDlg::OnCancel (although the latter might be problematic if OnOK calls
+OnCancel, but this is not done universally
 ----------------------
 Add class pointer and placement to managing module and functions to open
 and get placement

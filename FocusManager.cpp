@@ -2335,7 +2335,7 @@ int CFocusManager::RotationAveragedSpectrum(EMimageBuffer * imBuf, float * rotav
 void CFocusManager::CalSTEMfocus(void)
 {
   if (AfxMessageBox(
-    "This procedures estimates the spreading of the beam with defocus using"
+    "This procedure estimates the spreading of the beam with defocus using"
     " a series of pictures with the " +  mModeNames[1] + " parameter set.\n"
     "Before proceeding, make sure that this parameter set takes\n"
     "fairly good pictures and that you are already well focused.\n\n"

@@ -3944,20 +3944,20 @@ BEGIN
     LTEXT           "minutes",IDC_STAT_AUTOLOADER_MIN,149,48,26,8
     CTEXT           "Vacuum Management",IDC_STAT_VACUUM_TITLE,54,9,90,8
     CONTROL         "",IDC_STAT_LINE,"Static",SS_BLACKFRAME,9,64,183,1
-    CTEXT           "Nitrogen Management",IDC_STAT_DEWAR_TITLE,51,69,96,8
-    CONTROL         "Refill nitrogen every",IDC_REFILL_DEWARS,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,81,71,10
-    EDITTEXT        IDC_EDIT_REFILL_TIME,83,79,24,14,ES_AUTOHSCROLL
-    LTEXT           "hours",IDC_STAT_REFILL_HOURS,109,82,19,8
+    CTEXT           "Nitrogen Management",IDC_STAT_DEWAR_TITLE,21,69,161,8
+    CONTROL         "Refill nitrogen every",IDC_REFILL_DEWARS,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,81,74,10
+    EDITTEXT        IDC_EDIT_REFILL_TIME,86,79,24,14,ES_AUTOHSCROLL
+    LTEXT           "hours",IDC_STAT_REFILL_HOURS,112,82,19,8
     CONTROL         "Check for ongoing filling and wait until done",IDC_CHECK_DEWARS,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,95,143,10
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,95,176,10
     LTEXT           "Pause if time to next refill is below ",IDC_STAT_PAUSE_BEFORE,27,110,102,8
     EDITTEXT        IDC_EDIT_PAUSE_BEFORE,130,107,24,14,ES_AUTOHSCROLL
     LTEXT           "minutes",IDC_STAT_BEFORE_MIN,156,110,26,8
     CONTROL         "Start the refill if time to next refill is below",IDC_START_REFILL,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,126,130,10
-    EDITTEXT        IDC_EDIT_START_IF_BELOW,141,124,24,14,ES_AUTOHSCROLL
-    LTEXT           "minutes",IDC_STAT_START_BELOW_MIN,167,127,26,8
-    LTEXT           "Time to wait after refilling is done",IDC_STAT_WAIT_TIME,10,144,100,8
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,126,133,10
+    EDITTEXT        IDC_EDIT_START_IF_BELOW,144,124,24,14,ES_AUTOHSCROLL
+    LTEXT           "minutes",IDC_STAT_START_BELOW_MIN,170,127,26,8
+    LTEXT           "Time to wait after refilling is done",IDC_STAT_WAIT_TIME,10,144,105,8
     EDITTEXT        IDC_EDIT_WAIT_AFTER,112,141,24,14,ES_AUTOHSCROLL
     LTEXT           "minutes",IDC_STAT_AFTER_MIN,138,144,26,8
     CONTROL         "Repeat checks just before primary action in Acquire at Items",IDC_DO_CHECKS_JUST_BEFORE,

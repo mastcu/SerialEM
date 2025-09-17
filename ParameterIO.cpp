@@ -814,11 +814,11 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
         dewar->bufferTimeMin = itemInt[3];
         dewar->runAutoloaderCycle = itemInt[4] != 0;
         dewar->autoloaderTimeMin = itemInt[5];
-        dewar->refillDewars = itemInt[6] != 0;
+        dewar->refillAtInterval = itemInt[6] != 0;
         dewar->dewarTimeHours = itemFlt[7];
         dewar->checkDewars = itemInt[8] != 0;
         dewar->pauseBeforeMin = itemFlt[9];
-        dewar->startRefill = itemInt[10] != 0;
+        dewar->startRefillEarly = itemInt[10] != 0;
         dewar->startIntervalMin = itemFlt[11];
         dewar->postFillWaitMin = itemFlt[12];
         dewar->doChecksBeforeTask = itemInt[13] != 0;
@@ -2075,8 +2075,8 @@ void CParameterIO::WriteSettings(CString strFileName)
     oneState.Format("DewarVacParams %d %d %d %d %d %d %f %d %f %d %f %f %d\n",
       dewar->checkPVP ? 1 : 0, dewar->runBufferCycle ? 1 : 0,
       dewar->bufferTimeMin, dewar->runAutoloaderCycle ? 1 : 0, dewar->autoloaderTimeMin,
-      dewar->refillDewars ? 1 : 0, dewar->dewarTimeHours, dewar->checkDewars ? 1 : 0,
-      dewar->pauseBeforeMin, dewar->startRefill ? 1 : 0, dewar->startIntervalMin,
+      dewar->refillAtInterval ? 1 : 0, dewar->dewarTimeHours, dewar->checkDewars ? 1 : 0,
+      dewar->pauseBeforeMin, dewar->startRefillEarly ? 1 : 0, dewar->startIntervalMin,
       dewar->postFillWaitMin, dewar->doChecksBeforeTask ? 1 : 0);
     mFile->WriteString(oneState);
 
