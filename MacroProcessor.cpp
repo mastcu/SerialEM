@@ -1683,9 +1683,12 @@ void CMacroProcessor::SetComplexPane(void)
     return;
   if (mScrpLangData[0].externalControl)
     mMacroPaneText.Format("EXTERNAL CONTROL");
-  else if (mMacNames[mCurrentMacro].IsEmpty())
-    mMacroPaneText.Format("DOING SCRIPT %d", mCurrentMacro + 1);
-  else
+  else if (mMacNames[mCurrentMacro].IsEmpty()) {
+    if (mCurrentMacro >= MAX_MACROS && mCurrentMacro < MAX_MACROS + MAX_ONE_LINE_SCRIPTS)
+      mMacroPaneText.Format("DOING 1-LINE SCRP %d", mCurrentMacro + 1 - MAX_MACROS);
+    else
+      mMacroPaneText.Format("DOING SCRIPT %d", mCurrentMacro + 1);
+  } else
     mMacroPaneText.Format("DOING %d: %s", mCurrentMacro + 1, mMacNames[mCurrentMacro]);
   mWinApp->SetStatusText(mWinApp->DoingTiltSeries() &&
     mWinApp->mTSController->GetRunningMacro() ? MEDIUM_PANE : COMPLEX_PANE,
