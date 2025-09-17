@@ -3071,6 +3071,15 @@ void CNavigatorDlg::OnDrawPoints()
 {
   m_butDrawPts.SetWindowText(mAddingPoints ? "Add Points" : "Stop Adding");
   mAddingPoints = !mAddingPoints;
+
+  // Remove group ID for single point and update the mappings and that item's string
+  if (!mAddingPoints && (int)mItemArray.GetSize() - mNumberBeforeAdd == 1) {
+    mItemArray[mNumberBeforeAdd]->mGroupID = 0;
+    if (m_bCollapseGroups) {
+      MakeListMappings();
+      UpdateListString(mNumberBeforeAdd);
+    }
+  }
   mNumberBeforeAdd = (int)mItemArray.GetSize();
   mAddPointID = MakeUniqueID();
   if (mAddingPoints) {
