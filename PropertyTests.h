@@ -38,6 +38,7 @@ CBeamAssessor *beamAssessor =  mWinApp->mBeamAssessor;
 // #undef PROP_TEST_SECT2
 // and so on, ending with an error after the final else
 //
+// Should be plenty of space in SECT1 and SECT12
 #ifdef PROP_TEST_SECT1
 FLOAT_PROP_TEST("DarkRefAgeLimit", camera->, DarkAgeLimit)
 FLOAT_PROP_TEST("GainRefInactivityLimit", camera->, GainTimeLimit)
@@ -98,6 +99,8 @@ BOOL_PROP_TEST("IgnoreShortTermCals", mWinApp->mDocWnd->, IgnoreShortTerm)
 BOOL_PROP_TEST("DiscardSettings", mWinApp->mDocWnd->, AbandonSettings)
 BOOL_PROP_TEST("ExitWithUnsavedLog", mWinApp->, ExitWithUnsavedLog)
 BOOL_PROP_TEST("ContinuousSaveLog", mWinApp->, ContinuousSaveLog)
+#endif
+#ifdef PROP_TEST_SECT12
 BOOL_PROP_TEST("TestGainFactors", mWinApp->, TestGainFactors)
 BOOL_PROP_TEST("ShiftScriptOnlyInAdmin", mWinApp->, ShiftScriptOnlyInAdmin)
 INT_PROP_TEST("DoseLifetimeInHours", mWinApp->, DoseLifetimeHours)

@@ -3075,7 +3075,7 @@ int CParameterIO::ReadProperties(CString strFileName)
   float *radii = mWinApp->mProcessImage->GetFFTCircleRadii();
   float *alphaFacs = mWinApp->mBeamAssessor->GetBSCalAlphaFactors();
   BOOL recognized, recognized2, recognized30, recognized35, recognizedc, recognizedc1;
-  BOOL recognized15, recognized4;
+  BOOL recognized15, recognized4, recognized12;
   bool startCcomment, warned999 = false;
   CString strLine;
   CString strItems[MAX_TOKENS];
@@ -3180,6 +3180,7 @@ int CParameterIO::ReadProperties(CString strFileName)
       recognized4 = true;
       recognizedc = true;
       recognized15 = true;
+      recognized12 = true;
 
       message = strItems[0];
       startCcomment = strItems[0].Find("/*") == 0;
@@ -3671,6 +3672,14 @@ int CParameterIO::ReadProperties(CString strFileName)
         recognized = false;
 
       if (recognized || recognizedc) {
+        recognized = true;
+      }
+#define PROP_TEST_SECT12
+#include "PropertyTests.h"
+#undef PROP_TEST_SECT12
+      else
+        recognized12 = false;
+      if (recognized || recognized12) {
         recognized = true;
       }
 
@@ -6877,6 +6886,7 @@ int CParameterIO::MacroSetProperty(CString name, double value)
 #include "PropertyTests.h"
 #undef PROP_MODULES
   bool recognized = true, recognized2 = true, recognized30 = true, recognized35 = true;
+  bool recognized12 = true;
   if (false) {
   }
 #define PROP_TEST_SECT1
@@ -6887,6 +6897,14 @@ int CParameterIO::MacroSetProperty(CString name, double value)
       
   if (recognized) {
   }
+#define PROP_TEST_SECT12
+#include "PropertyTests.h"
+#undef PROP_TEST_SECT12
+  else
+    recognized12 = false;
+  if (recognized || recognized12)
+    recognized = true;
+
 #define PROP_TEST_SECT2
 #include "PropertyTests.h"
 #undef PROP_TEST_SECT2
@@ -6974,6 +6992,7 @@ void CParameterIO::UserSetProperty(void)
   int ival = 0, ivalIn = -1000000000;
   float fval = 0., fvalIn = EXTRA_NO_VALUE;
   bool recognized = true, recognized2 = true, recognized30 = true, recognized35 = true;
+  bool recognized12 = true;
   if (!KGetOneString("Enter full name of property to set (case insensitive):", name))
     return;
   name = name.Trim(" \t");
@@ -6987,6 +7006,13 @@ void CParameterIO::UserSetProperty(void)
       
   if (recognized) {
   }
+#define PROP_TEST_SECT12
+#include "PropertyTests.h"
+#undef PROP_TEST_SECT12
+  else
+    recognized12 = false;
+  if (recognized || recognized12)
+    recognized = true;
 #define PROP_TEST_SECT2
 #include "PropertyTests.h"
 #undef PROP_TEST_SECT2
@@ -7086,6 +7112,7 @@ int CParameterIO::MacroGetProperty(CString name, double &value)
 #include "PropertyTests.h"
 #undef PROP_MODULES
   bool recognized = true, recognized2 = true, recognized30 = true, recognized35 = true;
+  bool recognized12 = true;
   if (false) {
   }
 #define PROP_TEST_SECT1
@@ -7096,6 +7123,14 @@ int CParameterIO::MacroGetProperty(CString name, double &value)
       
   if (recognized) {
   }
+#define PROP_TEST_SECT12
+#include "PropertyTests.h"
+#undef PROP_TEST_SECT12
+  else
+    recognized12 = false;
+  if (recognized || recognized12)
+    recognized = true;
+
 #define PROP_TEST_SECT2
 #include "PropertyTests.h"
 #undef PROP_TEST_SECT2
