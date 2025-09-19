@@ -192,6 +192,7 @@ CFocusManager::CFocusManager()
   mSFmaxFocusStep = 0.75f;
   mBackupSlope = 10.;
   mSFnormalizedSlope[0] = mSFnormalizedSlope[1] = 0.;
+  mSFconvAngle[0] = mSFconvAngle[1] = 0.;
   mSincCurve = NULL;
   mSFtargetSize = 6.;
   mSFmaxTiltedSizeRange = 5.;
@@ -1168,7 +1169,7 @@ void CFocusManager::AutoFocusStart(int inChange, int useViewInLD, int iterNum)
   } else {
 
     // STEM
-    slope = mSFnormalizedSlope[GetSTEMFocusProbeOrIndex()];
+    slope = GetAdjustedSFnormalizedSlope(GetSTEMFocusProbeOrIndex());
     if (!slope)
       return;
     if (mShiftManager->ShiftAdjustmentForSet(FOCUS_CONSET, mFocusMag, shiftX, shiftY))
@@ -2275,6 +2276,7 @@ int CFocusManager::RotationAveragedSpectrum(EMimageBuffer * imBuf, float * rotav
   int nx = image->getWidth();
   int ny = image->getHeight();
   int probeMode = GetSTEMFocusProbeOrIndex();
+  float slope = GetAdjustedSFnormalizedSlope(probeMode);
 
   // Set up the subarea to use: if there is a normalized slope and the tilt is sizable,
   // get the width that will contain the maximum allowed change in beam size
@@ -2283,12 +2285,12 @@ int CFocusManager::RotationAveragedSpectrum(EMimageBuffer * imBuf, float * rotav
   ix1 = nx - 1;
   iy1 = ny - 1;
 
-  if (mSFnormalizedSlope[probeMode] && !imBuf->mDynamicFocused) {
+  if (slope && !imBuf->mDynamicFocused) {
     if (!imBuf->GetTiltAngle(angle))
       angle = (float)mScope->GetTiltAngle();
     if (imBuf->GetAxisAngle(rotation) && fabs((double)angle) > 10.) {
       width = (int)(mSFmaxTiltedSizeRange * mSTEMdefocusToDelZ[probeMode] /
-        (mSFnormalizedSlope[probeMode] * tan(DTOR * angle)));
+        (slope * tan(DTOR * angle)));
       if (fabs((double)rotation) < 45. || fabs(fabs((double)rotation) - 180.) < 45.) {
         B3DCLAMP(width, (int)(mSFminTiltedFraction * ny), ny);
         iy0 = (ny - width) / 2;
@@ -2330,6 +2332,15 @@ int CFocusManager::RotationAveragedSpectrum(EMimageBuffer * imBuf, float * rotav
 
   // Get the background and power
   return 0;
+}
+
+float CFocusManager::GetAdjustedSFnormalizedSlope(int probeMode) 
+{
+  float slope = mSFnormalizedSlope[probeMode];
+  if (mScope->GetIlluminatedArea() && mSFconvAngle[probeMode] !=0) {
+    slope = mSFnormalizedSlope[probeMode] * (float)(mScope->GetConvergenceAngle() / mSFconvAngle[probeMode]);
+  }
+  return slope;
 }
 
 void CFocusManager::CalSTEMfocus(void)
@@ -2473,6 +2484,12 @@ void CFocusManager::STEMfocusShot(int param)
     meanSlope = (numpts1 * slope1 + numpts2 *slope2) / (numpts1 + numpts2);
     ind = GetSTEMFocusProbeOrIndex();
     mSFnormalizedSlope[ind] = meanSlope * mShiftManager->GetPixelSize(&mImBufs[bufInd]);
+
+    //For Krios, store the convergence angle
+    if (mScope->GetIlluminatedArea()) {
+      mSFconvAngle[ind] = mScope->GetConvergenceAngle();
+    }
+
     str.Format("Slopes of fits below and above are %.2f and %.2f pixel/um (CCs %.4f and "
       "%.4f)\r\nWeighted mean slope is %.2f pixel/um, %f um/um\r\n"
       "Best focus should be at %.2f um", slope1, slope2, ro1, ro2, meanSlope, 
@@ -2584,7 +2601,7 @@ void CFocusManager::STEMfocusShot(int param)
         fitRotavs[numpts1++] = mRFTrotavs[i];
       }
     }
-    slope1 = mSFnormalizedSlope[GetSTEMFocusProbeOrIndex()] /
+    slope1 = GetAdjustedSFnormalizedSlope(GetSTEMFocusProbeOrIndex()) /
       mShiftManager->GetPixelSize(&mImBufs[bufInd]);
     i = findFocus(fitRotavs, numpts1, mRFTnumPoints, fitFocus, 
       fitPowers, fitBackgrounds, slope1, mRFTfitStart, mRFTfitEnd, 

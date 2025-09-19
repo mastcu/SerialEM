@@ -7049,6 +7049,17 @@ int CMacCmd::ReportImageDistanceOffset(void)
   return 0;
 }
 
+// ReportConvergenceAngle
+int CMacCmd::ReportConvergenceAngle(void)
+{
+  double angle;
+
+  angle = mScope->GetConvergenceAngle();
+  mLogRpt.Format("Convergence angle %f", angle);
+  SetRepValsAndVars(1, angle);
+  return 0;
+}
+
 // ReportAlpha
 int CMacCmd::ReportAlpha(void)
 {

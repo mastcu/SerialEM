@@ -353,6 +353,7 @@ public:
   BOOL SetIlluminatedArea(double inVal);
   double GetImageDistanceOffset();
   BOOL SetImageDistanceOffset(double inVal);
+  double GetConvergenceAngle();
   BOOL SetIntensityZoom(BOOL inVal);
   BOOL GetIntensityZoom();
   GetSetMember(float, SmallScreenFactor)

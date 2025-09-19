@@ -286,6 +286,7 @@ private:
   int mNumSincPts;           // Number of points and nodes
   int mNumSincNodes;
   float mSFnormalizedSlope[2];  // Calibration value for slope in um/um
+  double mSFconvAngle[2];     //Convergence angle at which STEM focus is calibrated
   int mSFstepLimit;          // Limit on number of coarse steps
   bool mSFcoarseOnly;        // Flag for doing coarse steps only
   float mSFtargetSize;       // Target step is filtering size units
@@ -321,6 +322,7 @@ public:
   void SetTargetDefocus(float val);
   int RotationAveragedSpectrum(EMimageBuffer * imBuf, float * rotav, float & background,
     float & totPower);
+  float GetAdjustedSFnormalizedSlope(int probeMode);
   void CalSTEMfocus(void);
   void StartSTEMfocusShot(void);
   void STEMfocusShot(int param);

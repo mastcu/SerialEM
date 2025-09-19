@@ -6694,6 +6694,20 @@ BOOL CEMscope::SetImageDistanceOffset(double inVal)
   return result;
 }
 
+double CEMscope::GetConvergenceAngle()
+{
+  double result = -999.;
+  if (!sInitialized || !FEIscope)
+    return -999.;
+  try {
+    PLUGSCOPE_GET(ConvergenceAngle, result, 1);
+  }
+  catch (_com_error E) {
+    SEMReportCOMError(E, _T("getting convergence angle "));
+    result = -999.;
+  }
+  return result;
+}
 
 // Get the spot size index
 int CEMscope::GetSpotSize()
