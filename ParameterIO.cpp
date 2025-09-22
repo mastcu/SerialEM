@@ -4889,6 +4889,10 @@ int CParameterIO::ReadCalibration(CString strFileName)
         mWinApp->mFocusManager->SetSFnormalizedSlope(0, itemFlt[1]);
         mWinApp->mFocusManager->SetSFnormalizedSlope(1, itemFlt[2]);
 
+      } else if (NAME_IS("STEMconvAngle")) {
+        mWinApp->mFocusManager->SetSFconvAngle(0, itemDbl[3]);
+        mWinApp->mFocusManager->SetSFconvAngle(1, itemDbl[4]);
+
       } else if (NAME_IS("STEMfocusVersusZ")) {
         sfZtable.numPoints = itemInt[1];
         sfZtable.spotSize = itemInt[2];
@@ -5509,11 +5513,17 @@ void CParameterIO::WriteCalibration(CString strFileName)
         mFile->WriteString(string);
       }
     }
+    
     string.Format("STEMnormalizedSlope %f %f\n", 
       mWinApp->mFocusManager->GetSFnormalizedSlope(0),
       mWinApp->mFocusManager->GetSFnormalizedSlope(1));
     mFile->WriteString(string);
-
+    
+    string.Format("STEMconvAngle %f %f\n",
+      mWinApp->mFocusManager->GetSFconvAngle(0),
+      mWinApp->mFocusManager->GetSFconvAngle(1));
+    mFile->WriteString(string);
+    
     // Write focus versus Z tables
     for (i = 0; i < focusZtables->GetSize(); i++) {
       STEMFocusZTable sfZtable = focusZtables->GetAt(i);

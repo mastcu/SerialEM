@@ -332,6 +332,8 @@ public:
   int MakeSincLikeCurve(void);
   float GetSFnormalizedSlope(int i) {return mSFnormalizedSlope[i];};
   void SetSFnormalizedSlope(int i, float val) {mSFnormalizedSlope[i] = val;};
+  double GetSFconvAngle(int i) { return mSFconvAngle[i]; };
+  void SetSFconvAngle(int i, double val) { mSFconvAngle[i] = val; };
   afx_msg void OnUpdateFocusCheckautofocus(CCmdUI *pCmdUI);
   afx_msg void OnUpdateFocusShowexistingcorr(CCmdUI *pCmdUI);
   double StepForSTEMFocus(int multiple);

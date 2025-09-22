@@ -6694,6 +6694,7 @@ BOOL CEMscope::SetImageDistanceOffset(double inVal)
   return result;
 }
 
+//Get the convergence angle on a Titan 
 double CEMscope::GetConvergenceAngle()
 {
   double result = -999.;
