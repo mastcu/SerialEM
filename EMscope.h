@@ -596,6 +596,12 @@ public:
   static int GetScopeCallFromPlugin() {return mScopeCallFromPlugin ; };
   static void SetScopeCallFromPlugin(int val) { mScopeCallFromPlugin = val; };
   GetMember(int, LastMagIndex);
+  BOOL GetUseCL3LmStemFocus() {return mJeolParams.flags & JEOL_SET_CL3_LMSTEM_FOCUS ; };
+  void SetUseCL3LmStemFocus(BOOL inVal) {
+    if (inVal)
+      mJeolParams.flags |= JEOL_SET_CL3_LMSTEM_FOCUS; else 
+      mJeolParams.flags &= ~JEOL_SET_CL3_LMSTEM_FOCUS;
+  };
   std::vector<ShortVec> *GetApertureLists() { return &mApertureSizes; };
   void GetRawImageShift(double &ISX, double &ISY) { ISX = mLastISX; ISY = mLastISY; };
 

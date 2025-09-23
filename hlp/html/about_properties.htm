@@ -646,7 +646,7 @@
               M for Moran montaging time stamps<br />
               N for multi-grid routines<br />
               P reserved for general plugins<BR>
-              R for camera retraction<BR>
+              R for camera retraction and JEOL STEM detector management<BR>
               S for stage and montaging information<BR>
               T for Tietz setup/reset time, camera coords, autoalign time<BR>
               V for vacuum gauge status output<br />
@@ -2634,6 +2634,15 @@
           <TD>For a multichannel JEOL STEM interface, follow with a list of the binnings to
             which the acquisition must be restricted for 2, 3, and 4 detectors.&nbsp; For
             F200, if the CameraSize entries are 4096, this entry would be '2 4 4'.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>BaseJeolSTEMflags</TD>
+          <TD>Flags for testing.&nbsp; Set to the sum of: 4 to start live mode on a 
+            single-channel interface and wait for a frame before taking a single shot; 16 to 
+            not rely on snapshot started or finished events with a multi-channel interface 
+            and just test for whether snapshot is till running.&nbsp; In the latter case, 
+            the environment variable SJC_FLAG16_DELAY can be used to set a delay in msec 
+            before starting to test; the default is 500 msec.</TD>
         </TR>
         <TR VALIGN="top">
           <TD><b>Plugin Camera Properties</b></TD>
@@ -5334,11 +5343,18 @@
           <TD>JeolLMStemCL3ToMicrons</TD>
           <TD>Scaling factor to convert a CL3 value to a defocus in microns when a JEOL 
             scope is in low-magnification STEM.&nbsp; There is no default; this property 
-            must be present to have focus obtained and set through CL3 in LM.&nbsp; Start 
+            must be present to have focus obtained and set through CL3 or the &#39;SetObjFocus&#39; 
+            call in LM.&nbsp; Start 
             with an arbitrary value (0.01?), and determine how big the change in defocus 
             readout is in the microscope interface for a given focus change imposed in 
             SerialEM (or vice versa).&nbsp; Multiply the existing factor by the ratio of 
             the change in the microscope interface to the change in SerialEM.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>UseCL3ToSetLMStemFocus</TD>
+          <TD>Set to 1 to use &#39;SetCL3&#39; to set STEM focus in LM on a JEOL, which may be 
+            required on older scopes; the F200 requires using &#39;SetObjFocus&#39; and does not 
+            need this.</TD>
         </TR>
         <TR VALIGN="top">
           <TD>STEMFocusVsZBacklash</TD>

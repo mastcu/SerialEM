@@ -3,6 +3,11 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+9/23/25: Fixed order of setting subarea parameters in JEOL STEM (In 5.1).
+
+9/23/25: Changed setting of focus in LM STEM on a JEOL to use a different
+function call unless property UseCL3ToSetLMStemFocus is set (In 4.2).
+
 9/23/25: Added script command to get the image shift values of the hole
 nearest to the center of a multishot pattern for an item.
 
