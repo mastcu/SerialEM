@@ -844,8 +844,9 @@ MAC_SAME_NAME_ARG(WaitForBkgdScriptVar, 1, 0, WAITFORBKGDSCRIPTVAR, I)
 MAC_SAME_NAME_ARG(AllowTimeForBkgdScript, 1, 0, ALLOWTIMEFORBKGDSCRIPT, I)
 MAC_SAME_NAME_ARG(CopyOtherScriptVar, 2, 4, COPYOTHERSCRIPTVAR, SSi)
 MAC_SAME_NAME_ARG(QueryVibrationManager, 1, 4, QUERYVIBRATIONMANAGER, I)
-MAC_SAME_NAME_ARG(VibrationManagerRequest, 1, 4, VIBRATIONMANAGERREQUEST, I)
+MAC_SAME_NAME_ARG(VibrationManagerRequest, 1, 0, VIBRATIONMANAGERREQUEST, I)
 MAC_SAME_NAME_NOARG(ReportConvergenceAngle, 0, 0, REPORTCONVERGENCEANGLE)
+MAC_SAME_FUNC_ARG(ReportSmallestHoleShift, 1, 4, GetItemHolesToAcquire, REPORTSMALLESTHOLESHIFT, I)
 
 
 // new Python-only commands need to be added to pythonOnlyCmds in ::CMacroProcessor

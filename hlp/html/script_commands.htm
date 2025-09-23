@@ -3490,7 +3490,7 @@
         <TR>
           <TD class="scriptcommand">ReportConvergenceAngle</TD>
           <TD>Reports the current convergence angle on a Titan, in milliradians. Must be in 
-              Probe mode, or else a convergence angle of 0 will be returned.</TD>
+              Probe mode, or else a convergence angle of 0 will be returned.&nbsp; Command added in 4.3, 23-Sep-25.</TD>
         </TR>
         <TR>
           <TD colspan="2"><A name="image_shift"></A><B>Image Shift-Related Commands</B></TD>
@@ -5526,6 +5526,13 @@
             of rings for a hexagonal pattern; otherwise the values in the Multiple Record dialog 
             apply.&nbsp; </TD>
         </TR>
+       <TR>
+          <TD class="scriptcommand">ReportSmallestHoleShift #</TD>
+          <TD>Reports the X and Y components of the image shift for the hole closest to the 
+            center of the multishot pattern for the current item if <b>#</b> is 0, or the item whose index is 
+            specified in <b>#</b> with a positive or
+            negative number (as in ReportItemAcquire).&nbsp; If the item has no defined multishot pattern, the current
+            pattern from the settings is used.&nbsp; Command added in 4.3, 23-Sep-25.</TR>
         <TR>
           <TD class="scriptcommand">AutoContourGridSquares buf [#R] [#H] [#T] [#S] [#L] [#P]</TD>
           <TD>Finds areas above a threshold in the image in [buf] and makes contours around them, then divides them into groups
@@ -5860,7 +5867,7 @@
             a hexagonal pattern, the first index is the ring number (0 for the center), and the second index
              is the position in the ring, where position 0 is along the first hexagonal image shift 
             vector.&nbsp; </TR>
-        <TR>
+         <TR>
           <TD class="scriptcommand">ReportItemAcquire [#]</TD>
           <TD>Reports the Acquire state of the Navigator item whose index in the table is <b>#</b>,
             numbered from 1; or if <b>#</b> is negative, reports on item that many items from the

@@ -13273,14 +13273,16 @@ int CMacCmd::FindMultiMapHoles()
   return 0;
 }
 
-// ReportHolesToAcquire
+// GetItemHolesToAcquire, ReportSmallestHoleShift
 int CMacCmd::GetItemHolesToAcquire()
 {
-  int index;
+  int index, minInd;
   CMapDrawItem *navItem;
   FloatVec xVec, yVec;
   IntVec holePos;
   CString value, one;
+  bool nearestToCen = CMD_IS(REPORTSMALLESTHOLESHIFT);
+  float dist, minDist = 1.e10;
 
   index = mItemInt[1];
   navItem = CurrentOrIndexedNavItem(index, mStrLine);
@@ -13288,12 +13290,28 @@ int CMacCmd::GetItemHolesToAcquire()
     return 1;
   mStrCopy.Format("Navigator item %d (%s) does not have a defined multishot pattern for"
     " line:\n\n", index + 1, (LPCTSTR)navItem->mLabel);
-  if (!navItem->mNumXholes)
+  if (!navItem->mNumXholes && !nearestToCen)
     ABORT_LINE(mStrCopy);
   index = mWinApp->mParticleTasks->GetHolePositions(xVec, yVec, holePos, 
     mScope->FastMagIndex(), mCurrentCam, navItem->mNumXholes, navItem->mNumYholes, -999.);
   mWinApp->mParticleTasks->SkipHolesInList(xVec, yVec, holePos, navItem->mSkipHolePos,
     navItem->mNumSkipHoles, index);
+  if (nearestToCen) {
+    if (!index)
+      ABORT_LINE("There are no hole positions defined by the settings or Navigator item "
+        "for line:\n\n");
+    for (index = 0; index < (int)xVec.size(); index++) {
+      dist = xVec[index] * xVec[index] + yVec[index] * yVec[index];
+      if (dist < minDist) {
+        minDist = dist;
+        minInd = index;
+      }
+    }
+    SetRepValsAndVars(2, xVec[minInd], yVec[minInd]);
+    mLogRpt.Format("IS of hole closest to center of pattern: %.3f %.3f", xVec[minInd], 
+      yVec[minInd]);
+    return 0;
+  }
   value.Format("%d\n%d", navItem->mNumXholes, navItem->mNumYholes);
   for (index = 0; index < (int)holePos.size(); index++) {
     one.Format("\n%d", holePos[index]);
