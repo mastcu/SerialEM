@@ -356,6 +356,7 @@ CEMscope::CEMscope()
   mJeolSD.miniBaseFocus = 0x8000;
   mJeolSD.StemCL3BaseFocus = 0x8000;
   mJeolParams.StemLMCL3ToUm = 0.;
+  mJeolParams.flags = 0;
   mJeolSD.relaxingLenses = false;
   mC2IntensityFactor[0] = mC2IntensityFactor[1] = 1.;
   mAddToRawIntensity = 0.;
@@ -753,7 +754,7 @@ int CEMscope::Initialize()
       mJeolParams.hasOmegaFilter = mHasOmegaFilter;
       mJeolParams.initializeJeolDelay = mInitializeJeolDelay;
       mJeolParams.useGIFmodeCalls = mUseJeolGIFmodeCalls;
-      mJeolParams.flags = (mJeolHasNitrogenClass ? JEOL_HAS_NITROGEN_CLASS : 0) |
+      mJeolParams.flags |= (mJeolHasNitrogenClass ? JEOL_HAS_NITROGEN_CLASS : 0) |
         (mJeolHasExtraApertures ? JEOL_HAS_EXTRA_APERTURES : 0) |
         (mSequentialLensRelax ? JEOL_SEQUENTIAL_RELAX : 0);
       mJeolParams.flashFegTimeout = mJeolFlashFegTimeout;
