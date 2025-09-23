@@ -460,6 +460,7 @@ CSerialEMApp::CSerialEMApp()
     mCamParams[i].addToEERExposure = .02f;
     mCamParams[i].falcon3ScalePower = 4;
     mCamParams[i].falconEventScaling = 0.;
+    mCamParams[i].EERscaleForIMODalign = 0.;
     mCamParams[i].falconVariant = 0;
     mCamParams[i].linear2CountingRatio = 8.;
     mCamParams[i].linearOffset = 0.;

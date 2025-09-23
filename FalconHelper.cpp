@@ -1796,6 +1796,7 @@ int CFalconHelper::WriteAlignComFile(CString inputFile, CString comName, int faP
   FrameAliParams param; 
   int ind, superFac = 1, error = 0;
   float fSuperFac = 1.f, radius2[4];
+  CameraParameters *camParams = mWinApp->GetActiveCamParam();
   int numAllVsAll, groupSize, refineIter, doSpline, numFilters;
   B3DCLAMP(faParamInd, 0, (int)faParams->GetSize() - 1);
   param = faParams->GetAt(faParamInd);
@@ -1858,7 +1859,8 @@ int CFalconHelper::WriteAlignComFile(CString inputFile, CString comName, int faP
     comStr += strTemp;
     if (!mFalconRefName.IsEmpty())
       comStr += "GainReferenceFile " + mFalconRefName + "\n";
-    strTemp.Format("ScalingOfSum %f\n", mLastEERcountScaling);
+    strTemp.Format("ScalingOfSum %f\n", camParams->EERscaleForIMODalign > 0 ?
+      camParams->EERscaleForIMODalign : mLastEERcountScaling);
     comStr += strTemp;
     mLastUseOfFalconRef = mWinApp->MinuteTimeStamp();
   }

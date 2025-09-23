@@ -149,6 +149,7 @@ struct CameraParameters {
   int autoGainAtBinning;   // Binning at which to start automatic gain factors
   int falcon3ScalePower;   // Power for Falcon 3 scaling
   float falconEventScaling;  // Value to scale aligned EER sums by instead of count/elec
+  float EERscaleForIMODalign;  // scaling to put in command files for align in IMOD
   CString falconRefDir;    // Reference directory for this camera
   CString falconFramePath; // Local Frame path for this camera
   CString remoteFalconFramePath;  // Actual frame path on server, needed with dumb UTAPI
