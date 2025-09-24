@@ -172,6 +172,8 @@ IF %NEEDDECAM% EQU 0 GOTO :DEcamDone
 IF %HASDEAPI1% EQU 1 GOTO :CopyAPI1
 IF %HASDEAPI2% EQU 1 GOTO :CopyAPI2
 
+echo.        
+echo Use API1 DLLs for a DE server before 2.5.17 and API2 DLLs for server 2.5.17 and higher
 CHOICE /C 120 /M "Enter 2 to copy the API2-only DLLs for a DE camera, 1 to copy the API1 DLLs, or 0 to skip copying: "
 IF %ERRORLEVEL%==3 GOTO :DEcamDone
 IF %ERRORLEVEL%==2 GOTO :CopyAPI2
