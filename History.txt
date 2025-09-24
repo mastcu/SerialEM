@@ -3,6 +3,9 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+9/24/25: Packaged new DLLs for DE that allow API2 to be used with server
+2.5.17 and higher (In 4.2).
+
 9/23/25: SEM_4-3-0beta1
 9/23/25: Fixed order of setting subarea parameters in JEOL STEM (In 4.2).
 

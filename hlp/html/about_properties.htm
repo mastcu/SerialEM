@@ -831,20 +831,23 @@
         </TR>
         <TR VALIGN="top">
           <TD>UseAPI2ForDE</TD>
-          <TD>The API2 interface was 
-              added in server 2.5, but it seems that it can only be used with server DE 2.7 or 
-              higher. As of SerialEM 4.2, 5-May-25, there are two plugins for the DE camera: 
-              DEcamAPI1Plugin.dll, which can connect to both API1 and API2 and will connect to 
-              API2 if this property is 1; and DEcamAPI2Plugin.dll, which can connect only to 
-              API2, with this property being ignored.&nbsp; There is no good reason to use the 
-              API1 plugin with API2, since the API2 plugin handles setting hardware binning 
-              and ROI better.&nbsp; Thus, to switch which API is being used, you should switch 
-              the plugin and the DE.Winxx.dll instead of using this property.&nbsp;&nbsp;&nbsp; If 
-              you change this property after connecting to a server with the API1 plugin, you will probably need 
-              to restart the server.&nbsp; &nbsp;These points are relevant only for servers 2.7.0 
-              to 2.73, since the API1 interface was eliminated in server 2.7.4 and the API2 
-              plugin is required from that point on.&nbsp; The default read port for API 2 is 
-              13240 (see DECameraReadPort).&nbsp;&nbsp;</TD>
+          <TD>This property is useful only for testing.  The API2 interface was 
+              added in server 2.5, but until SerialEM 4.2.9, it did not work with the 2.5 server, only 
+            with server DE 2.7 or higher. There are two plugins for the DE camera: 
+              DEcamAPI1Plugin.dll, which is useful for API1 and should be used with servers before 2.5.17; 
+             and DEcamAPI2Plugin.dll, which can connect only to 
+              API2, and should be used for servers 2.5.17 and newer.&nbsp; If you have a 2.5 server before 
+            that, DE recommends that you upgrade to 2.5.17 or higher.&nbsp; To switch which API is being 
+              used when going between server versions, you should switch 
+              the plugin and the DE.Winxx.dll instead of using this property.&nbsp;  You will also have to 
+            change the IP address if SerialEM is running on the server computer (127.0.0.1 for API1, 
+            localhost for API2), and change the read port (48880 for API1, 13240 for API2). &nbsp;Although 
+            the API1 plugin can connect to both API1 and API2 and will connect to 
+              API2 if this property is 1, there is no good reason to use the 
+              API1 plugin with API2, since the API2 plugin handles several features better.&nbsp; 
+            These points are relevant only for servers up to 
+              to 2.7.3, since the API1 interface was eliminated in server 2.7.4 and the API2 
+              plugin is required from that point on.&nbsp;</TD>
         </TR>
         <TR VALIGN="top">
           <TD>InitialCurrentCamera</TD>
