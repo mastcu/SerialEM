@@ -22,6 +22,7 @@
 #include "MapDrawItem.h"
 #include <algorithm>
 #include "Shared\b3dutil.h"
+#include "Utilities\PathOptimizer.h"
 
 #define XY_IN_GRID(xx, yy) (xx >= 0 && xx < mNxGrid && yy >= 0 && yy < mNyGrid)
 
@@ -122,6 +123,7 @@ int CMultiHoleCombiner::CombineItems(int boundType, BOOL turnOffOutside, int inX
   int hexPosRot1, hexPosRot2, hexGrid;
   bool posRotInvertDir;
   BOOL skipAveraging;
+  PathOptimizer pathOpt;
 
   int ori, crossDx[5] = {0, -1, 1, 0, 0}, crossDy[5] = {0, 0, 0, -1, 1};
   int numAdded = 0;
@@ -1270,6 +1272,43 @@ int CMultiHoleCombiner::CombineItems(int boundType, BOOL turnOffOutside, int inX
         item->mDraw = false;
         mIDsOutsidePoly.insert(item->mMapID);
       }
+    }
+  }
+
+  //Get the coordinates of new comined hole items so they can be arranged in better path
+  FloatVec xCombineCenters, yCombineCenters;
+  IntVec tourInd;
+  int combineStart = (int) itemArray->GetSize() - numAdded;
+  for (ind = combineStart; ind < itemArray->GetSize(); ind++) {
+    item = itemArray->GetAt(ind);
+    if (item->IsPoint() && item->mAcquire) {
+      xCombineCenters.push_back(item->mStageX);
+      yCombineCenters.push_back(item->mStageY);
+    }
+  }
+
+  //Optimize the path of the acquire items
+  ind = pathOpt.OptimizePath(xCombineCenters, yCombineCenters, tourInd);
+  
+  if (ind) {
+    mWinApp->SetNextLogColorStyle(2,1);
+    PrintfToLog(
+     "WARNING: Combined hole items were not sorted into better acquisition path: %s", 
+     pathOpt.returnErrorString(ind));
+  }
+  else {
+    tempArray.Copy(*itemArray);
+    for (ind = 0; ind < (int)tourInd.size(); ind++) {
+      item = tempArray.GetAt(combineStart + tourInd[ind]);
+      itemArray->SetAt(combineStart + ind, item);
+    }
+
+    //Calculate improvement in path length 
+    if (pathOpt.mInitialPathLength > 0.) {
+      //(Perhaps print the map label/note too so it's clearer)
+      PrintfToLog("Length of acquisition path from item %d to %d was reduced by %.1f %%",
+        combineStart + 1, combineStart + numAdded,
+        100 * (1 - pathOpt.mPathLength / pathOpt.mInitialPathLength));
     }
   }
 

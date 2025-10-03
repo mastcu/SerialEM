@@ -563,6 +563,15 @@
     <ClInclude Include="ManyChoiceDlg.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Utilities\PathOptimizer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Shared\delaunay.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Shared\nn.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="res\bitmap1.bmp">
@@ -1378,6 +1387,9 @@
       <Filter>CSource Files</Filter>
     </ClCompile>
     <ClCompile Include="ManyChoiceDlg.cpp">
+      <Filter>CSource Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Utilities\PathOptimizer.cpp">
       <Filter>CSource Files</Filter>
     </ClCompile>
   </ItemGroup>

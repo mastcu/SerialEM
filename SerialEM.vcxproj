@@ -393,7 +393,7 @@
       <Culture>0x0409</Culture>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>libiimod-IOMP-64.lib;libtiff-14-64.lib;zlib-64.lib;libjpeg-14-64.lib;libifft-MKL-64.lib;x64\libctffind.lib;libcfshr-IOMP-64.lib;libimxml-14-64.lib;x64\libiomp5md.lib;hdf5-14-64.lib;libimod-IOMP-64.lib;kernel32.lib;user32.lib;gdi32.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;imm32.lib;wsock32.lib;winspool.lib;winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>libiimod-IOMP-64.lib;libtiff-14-64.lib;zlib-64.lib;libjpeg-14-64.lib;libifft-MKL-64.lib;x64\libctffind.lib;libcfshr-IOMP-64.lib;libimxml-14-64.lib;x64\libiomp5md.lib;hdf5-14-64.lib;libimod-IOMP-64.lib;kernel32.lib;user32.lib;gdi32.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;imm32.lib;wsock32.lib;winspool.lib;winmm.lib;libiwarp-64.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>$(IntDir)SerialEM.exe</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <IgnoreSpecificDefaultLibraries>MSVCRT;LIBC;LIBCMT;LIBCMTD;VCOMP;VCOMPD;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
@@ -659,7 +659,7 @@
       <Culture>0x0409</Culture>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>libiimod-IOMP-64.lib;libtiff-14-64.lib;zlib-64.lib;libjpeg-14-64.lib;libifft-MKL-64.lib;x64\libctffind.lib;libcfshr-IOMP-64.lib;libimxml-14-64.lib;x64\libiomp5md.lib;hdf5-14-64.lib;libimod-IOMP-64.lib;imm32.lib;wsock32.lib;winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>libiimod-IOMP-64.lib;libtiff-14-64.lib;zlib-64.lib;libjpeg-14-64.lib;libifft-MKL-64.lib;x64\libctffind.lib;libcfshr-IOMP-64.lib;libimxml-14-64.lib;x64\libiomp5md.lib;hdf5-14-64.lib;libimod-IOMP-64.lib;imm32.lib;wsock32.lib;winmm.lib;libiwarp-64.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>$(IntDir)SerialEM.exe</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <IgnoreSpecificDefaultLibraries>LIBC;LIBCMT;LIBCMTD;VCOMP;VCOMPD;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
@@ -943,12 +943,14 @@
     <ClInclude Include="SettingsTests.h" />
     <ClInclude Include="Shared\ctffind.h" />
     <ClInclude Include="Shared\ctfutils.h" />
+    <ClInclude Include="Shared\delaunay.h" />
     <ClInclude Include="Shared\framealign.h" />
     <ClInclude Include="Shared\gpuframe.h" />
     <ClInclude Include="Shared\holefinder.h" />
     <ClInclude Include="Shared\icont.h" />
     <ClInclude Include="Shared\imodel.h" />
     <ClInclude Include="Shared\iobj.h" />
+    <ClInclude Include="Shared\nn.h" />
     <ClInclude Include="Shared\SEMCCDDefines.h" />
     <ClInclude Include="Shared\SharedJeolDefines.h" />
     <ClInclude Include="ShiftToMarkerDlg.h" />
@@ -1040,6 +1042,7 @@
     <ClInclude Include="ProcessImage.h" />
     <ClInclude Include="ReadFileDlg.h" />
     <ClInclude Include="RefPolicyDlg.h" />
+    <ClInclude Include="Utilities\PathOptimizer.h" />
     <ClInclude Include="ZbyGSetupDlg.h" />
     <CustomBuild Include="Resource.h">
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Generating map file for help compiler...</Message>
@@ -2979,6 +2982,7 @@ echo.
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='v140 Release|x64'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
+    <ClCompile Include="Utilities\PathOptimizer.cpp" />
     <ClCompile Include="Utilities\SEMUtilities.cpp" />
     <ClCompile Include="SerialEM.cpp">
       <Optimization Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Disabled</Optimization>
