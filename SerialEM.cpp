@@ -4882,6 +4882,7 @@ void CSerialEMApp::SetEFTEMMode(BOOL inState)
 void CSerialEMApp::SetSTEMMode(BOOL inState)
 {
   int toCamera = mFilterParams.firstRegularCamera;
+  int screenPos;
   if (toCamera < 0)
     toCamera = mFilterParams.firstGIFCamera;
   bool toEFTEM = !inState && (mSettingSTEM || mCamParams[mCurrentCamera].GIF ||
@@ -4922,14 +4923,19 @@ void CSerialEMApp::SetSTEMMode(BOOL inState)
     if (mScopeHasFilter)
       mFilterControl.Update();
   }
-  mScope->SetSTEM(mSTEMMode && 
-    (mScope->GetScreenPos() == spUp || !DoSwitchSTEMwithScreen()));
+  if (mSTEMMode)
+    screenPos = mScope->GetScreenPos();
+  mScope->SetSTEM(mSTEMMode &&
+    (screenPos == spUp || !DoSwitchSTEMwithScreen()));
   mSTEMcontrol.UpdateSTEMstate(mScope->GetProbeMode());
   if (mSTEMMode) {
-    if (DoDropScreenForSTEM() > 1)
-      mScope->SetScreenPos(spDown);
-    else if (mCamera->GetLowerScreenForSTEM() < -1)
-      mScope->SetScreenPos(spUp);
+    if (DoDropScreenForSTEM() > 1) {
+      if (screenPos != spDown)
+        mScope->SynchronousScreenPos(spDown);
+    } else if (mCamera->GetLowerScreenForSTEM() < -1) {
+      if (screenPos != spUp)
+        mScope->SynchronousScreenPos(spUp);
+    }
   }
   mSettingSTEM = false;
 }

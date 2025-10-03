@@ -3813,6 +3813,7 @@ BOOL CEMscope::SynchronousScreenPos(int inPos)
     SleepMsg(50);
   }
   SEMMessageBox("Timeout setting screen position");
+  UtilThreadCleanup(&mScreenThread);
   return false;
 }
 

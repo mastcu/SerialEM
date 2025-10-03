@@ -296,12 +296,18 @@ int UtilCheckDiskFreeSpace(float needed, const char * operation)
 void UtilRemoveFile(CString filename)
 {
   CFileStatus status;
-  try {
-    if (CFile::GetStatus((LPCTSTR)filename, status))
-      CFile::Remove((LPCTSTR)filename);
-  }
-  catch (CFileException *cerr) {
-    cerr->Delete();
+  int numRetry = 5;
+  for (int retry = 0; retry < numRetry; retry++) {
+    try {
+      if (CFile::GetStatus((LPCTSTR)filename, status))
+        CFile::Remove((LPCTSTR)filename);
+      return;
+    }
+    catch (CFileException *cerr) {
+      cerr->Delete();
+      if (retry < numRetry - 1)
+        Sleep(500);
+    }
   }
 }
 
