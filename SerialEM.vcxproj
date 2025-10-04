@@ -266,7 +266,7 @@
       <Culture>0x0409</Culture>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>libiimod-IOMP.lib;libtiff-14.lib;zlib.lib;libjpeg-14.lib;libifft-MKL.lib;libctffind.lib;libcfshr-IOMP.lib;libimxml-14.lib;libiomp5md.lib;hdf5-14.lib;libimod-IOMP.lib;kernel32.lib;user32.lib;gdi32.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;imm32.lib;wsock32.lib;winspool.lib;winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>libiimod-IOMP.lib;libtiff-14.lib;zlib.lib;libjpeg-14.lib;libifft-MKL.lib;libctffind.lib;libcfshr-IOMP.lib;libimxml-14.lib;libiwarp.lib;libiomp5md.lib;hdf5-14.lib;libimod-IOMP.lib;kernel32.lib;user32.lib;gdi32.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;imm32.lib;wsock32.lib;winspool.lib;winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>.\Debug/SerialEM.exe</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <IgnoreSpecificDefaultLibraries>MSVCRT;LIBC;LIBCMT;LIBCMTD;VCOMP;VCOMPD;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
@@ -332,7 +332,7 @@
       <Culture>0x0409</Culture>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>libiimod-14.lib;libtiff-14.lib;hdf5-14.lib;libimod.lib;zlib.lib;libjpeg-14.lib;libifft-14.lib;libctffind-VCOMP-14.lib;libcfshr-14.lib;libimxml-14.lib;kernel32.lib;user32.lib;gdi32.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;imm32.lib;wsock32.lib;winspool.lib;winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>libiimod-14.lib;libtiff-14.lib;hdf5-14.lib;libimod.lib;zlib.lib;libjpeg-14.lib;libifft-14.lib;libctffind-VCOMP-14.lib;libcfshr-14.lib;libimxml-14.lib;libiwarp.lib;kernel32.lib;user32.lib;gdi32.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;imm32.lib;wsock32.lib;winspool.lib;winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>.\Debug/SerialEM.exe</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <IgnoreSpecificDefaultLibraries>MSVCRT;LIBC;LIBCMT;LIBCMTD;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
@@ -393,7 +393,7 @@
       <Culture>0x0409</Culture>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>libiimod-IOMP-64.lib;libtiff-14-64.lib;zlib-64.lib;libjpeg-14-64.lib;libifft-MKL-64.lib;x64\libctffind.lib;libcfshr-IOMP-64.lib;libimxml-14-64.lib;x64\libiomp5md.lib;hdf5-14-64.lib;libimod-IOMP-64.lib;kernel32.lib;user32.lib;gdi32.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;imm32.lib;wsock32.lib;winspool.lib;winmm.lib;libiwarp-64.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>libiimod-IOMP-64.lib;libtiff-14-64.lib;zlib-64.lib;libjpeg-14-64.lib;libifft-MKL-64.lib;x64\libctffind.lib;libcfshr-IOMP-64.lib;libimxml-14-64.lib;libiwarp-64.lib;x64\libiomp5md.lib;hdf5-14-64.lib;libimod-IOMP-64.lib;kernel32.lib;user32.lib;gdi32.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;imm32.lib;wsock32.lib;winspool.lib;winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>$(IntDir)SerialEM.exe</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <IgnoreSpecificDefaultLibraries>MSVCRT;LIBC;LIBCMT;LIBCMTD;VCOMP;VCOMPD;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
@@ -458,7 +458,7 @@
       <Culture>0x0409</Culture>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>libiimod-14-64.lib;libtiff-14-64.lib;hdf5-14-64.lib;zlib-64.lib;libimod-64.lib;libjpeg-14-64.lib;libifft-14-64.lib;x64\libctffind-VCOMP-14.lib;libcfshr-14-64.lib;libimxml-14-64.lib;kernel32.lib;user32.lib;gdi32.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;imm32.lib;wsock32.lib;winspool.lib;winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>libiimod-14-64.lib;libtiff-14-64.lib;hdf5-14-64.lib;zlib-64.lib;libimod-64.lib;libjpeg-14-64.lib;libifft-14-64.lib;x64\libctffind-VCOMP-14.lib;libcfshr-14-64.lib;libimxml-14-64.lib;libiwarp-64.lib;kernel32.lib;user32.lib;gdi32.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;imm32.lib;wsock32.lib;winspool.lib;winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>$(IntDir)SerialEM.exe</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <IgnoreSpecificDefaultLibraries>MSVCRT;LIBC;LIBCMT;LIBCMTD;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
@@ -521,7 +521,7 @@
       <Culture>0x0409</Culture>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>libiimod-IOMP.lib;libtiff-14.lib;zlib.lib;libjpeg-14.lib;libifft-MKL.lib;libctffind.lib;libcfshr-IOMP.lib;libimxml-14.lib;libiomp5md.lib;hdf5-14.lib;libimod-IOMP.lib;imm32.lib;wsock32.lib;winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>libiimod-IOMP.lib;libtiff-14.lib;zlib.lib;libjpeg-14.lib;libifft-MKL.lib;libctffind.lib;libcfshr-IOMP.lib;libimxml-14.lib;libiwarp.lib;libiomp5md.lib;hdf5-14.lib;libimod-IOMP.lib;imm32.lib;wsock32.lib;winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>.\Release/SerialEM.exe</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <IgnoreSpecificDefaultLibraries>LIBC;LIBCMT;LIBCMTD;VCOMP;VCOMPD;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
@@ -590,7 +590,7 @@
       <Culture>0x0409</Culture>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>libiimod-14.lib;libtiff-14.lib;hdf5-14.lib;libimod.lib;zlib.lib;libjpeg-14.lib;libifft-14.lib;libctffind-VCOMP-14.lib;libcfshr-14.lib;libimxml-14.lib;imm32.lib;wsock32.lib;winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>libiimod-14.lib;libtiff-14.lib;hdf5-14.lib;libimod.lib;zlib.lib;libjpeg-14.lib;libifft-14.lib;libctffind-VCOMP-14.lib;libcfshr-14.lib;libimxml-14.lib;libiwarp.lib;imm32.lib;wsock32.lib;winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>.\Release/SerialEM.exe</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <IgnoreSpecificDefaultLibraries>LIBC;LIBCMT;LIBCMTD;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
@@ -659,7 +659,7 @@
       <Culture>0x0409</Culture>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>libiimod-IOMP-64.lib;libtiff-14-64.lib;zlib-64.lib;libjpeg-14-64.lib;libifft-MKL-64.lib;x64\libctffind.lib;libcfshr-IOMP-64.lib;libimxml-14-64.lib;x64\libiomp5md.lib;hdf5-14-64.lib;libimod-IOMP-64.lib;imm32.lib;wsock32.lib;winmm.lib;libiwarp-64.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>libiimod-IOMP-64.lib;libtiff-14-64.lib;zlib-64.lib;libjpeg-14-64.lib;libifft-MKL-64.lib;x64\libctffind.lib;libcfshr-IOMP-64.lib;libimxml-14-64.lib;libiwarp-64.lib;x64\libiomp5md.lib;hdf5-14-64.lib;libimod-IOMP-64.lib;imm32.lib;wsock32.lib;winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>$(IntDir)SerialEM.exe</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <IgnoreSpecificDefaultLibraries>LIBC;LIBCMT;LIBCMTD;VCOMP;VCOMPD;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
@@ -724,7 +724,7 @@
       <Culture>0x0409</Culture>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>libiimod-14-64.lib;libtiff-14-64.lib;hdf5-14-64.lib;libimod-64.lib;zlib-64.lib;libjpeg-14-64.lib;libifft-14-64.lib;x64\libctffind-VCOMP-14.lib;libcfshr-14-64.lib;libimxml-14-64.lib;imm32.lib;wsock32.lib;winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>libiimod-14-64.lib;libtiff-14-64.lib;hdf5-14-64.lib;libimod-64.lib;zlib-64.lib;libjpeg-14-64.lib;libifft-14-64.lib;x64\libctffind-VCOMP-14.lib;libcfshr-14-64.lib;libimxml-14-64.lib;libiwarp-64.lib;imm32.lib;wsock32.lib;winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>$(IntDir)SerialEM.exe</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <IgnoreSpecificDefaultLibraries>LIBC;LIBCMT;LIBCMTD;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
