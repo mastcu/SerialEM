@@ -1258,11 +1258,14 @@
         </TR>
         <TR>
           <TD class="scriptcommand">SetDoseFracParams set #D [#S] [#A] [#M] [#C]&nbsp;</TD>
-          <TD>Sets dose fractionation parameters for <B>set</B>; follow with up to 5
-            numbers: <B>#D</B> non-zero for dose-fractionation mode on K2/K3; <B>#S</B> non-zero to save frames
-            (not just for K2/K3); <B>#A</B> non-zero to align frames; <B>#M</B> 0 to align in DM, 1 to align in
-            plugin, or 2 to save a command file for alignframes; <B>#C</B> non-zero to combine
-            frames into sums.</TD>
+          <TD>Sets dose fractionation or frame saving/aligning parameters for <B>set</B>; follow with up to 5
+            numbers: <B>#D</B> non-zero for dose-fractionation mode on K2/K3; <B>#S</B> non-zero to save frames or 0 not to
+            (not just for K2/K3); <B>#A</B> non-zero to align frames or 0 not to; <B>#M</B> 0 to align in camera software, 1 to align in
+            plugin to DM or SerialEM, or 2 to save a command file for alignframes; <B>#C</B> non-zero to combine
+            frames into sums, or 0 not to (for Gatan camera only, do not include for DE cameras).&nbsp; For DE cameras,
+            <b>#S</b> sets a variable that holds flags for 3 different settings.&nbsp; Set this to the sum of 
+            16 to save summed frames, 4 to save final images, and 32 to save single (unsummed) frames.
+            &nbsp; If an optional value is not included, the respective parameter is unchanged.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">RestoreCameraSet [set]</TD>
