@@ -1291,10 +1291,8 @@ int CMultiHoleCombiner::CombineItems(int boundType, BOOL turnOffOutside, int inX
   ind = pathOpt.OptimizePath(xCombineCenters, yCombineCenters, tourInd);
   
   if (ind) {
-    mWinApp->SetNextLogColorStyle(2,1);
-    PrintfToLog(
-     "WARNING: Combined hole items were not sorted into better acquisition path: %s", 
-     pathOpt.returnErrorString(ind));
+    SEMTrace(1, "WARNING: Combined hole items were not sorted into better acquisition path: %s",
+      pathOpt.returnErrorString(ind));
   }
   else {
     tempArray.Copy(*itemArray);

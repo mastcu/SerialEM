@@ -95,14 +95,16 @@ int PathOptimizer::OptimizePath(FloatVec &xCen, FloatVec &yCen, IntVec &tourInd)
   }
 
   mPoints = new point[nPts];
-  int nvert, pid, i, j, insertInd, numMatches, startInd = 0;
+  int nHull, pid, i, j, v1, v2, insertInd, numMatches, startInd = 0;
   FloatVec xHull, yHull;
   DoubleVec vertEdgeSum;
   point ipt;
   IntVec interiorInd, vertexDeg;
-  bool inHull = false;
-  double xdif, ydif, changeInLength, minChange, edgeLength, longestEdgeLength;
+  bool reverse = false, inHull = false;
+  double x, y, xdif, ydif, changeInLength, minChange, longestEdgeLength;
   float xcen, ycen;
+  std::vector<bool> nearCenter;
+  double distToHull, distToCenter;
   
   //Initialize and resize vectors
   tourInd.clear();
@@ -115,6 +117,7 @@ int PathOptimizer::OptimizePath(FloatVec &xCen, FloatVec &yCen, IntVec &tourInd)
   xHull.resize(nPts);
   yHull.resize(nPts);
   mDistMatrix.resize(nPts);
+  nearCenter.resize(nPts, false);
   for (i = 0; i < nPts; i++) {
     ipt.x = (double)xCen[i];
     ipt.y = (double)yCen[i];
@@ -144,10 +147,10 @@ int PathOptimizer::OptimizePath(FloatVec &xCen, FloatVec &yCen, IntVec &tourInd)
   
   //Find convex hull of the points, which will be used for the initial tour
   convexBound(&xCen[0], &yCen[0], nPts, 0., 0., &xHull[0], &yHull[0],
-    &nvert, &xcen, &ycen, nPts);
+    &nHull, &xcen, &ycen, nPts);
 
   //match points from convexBound with points in the Delaunay Triangulation
-  for (i = 0; i < nvert; i++) {
+  for (i = 0; i < nHull; i++) {
     inHull = false;
     numMatches = 0;
     for (j = 0; j < nPts; j++) {
@@ -167,6 +170,25 @@ int PathOptimizer::OptimizePath(FloatVec &xCen, FloatVec &yCen, IntVec &tourInd)
       return ERR_MATCHING_HULL_POINTS;
   }
 
+  //Get x and y mid point of bounding box
+  xdif = (mTriangulation->xmin + mTriangulation->xmax) / 2.;
+  ydif = (mTriangulation->ymin + mTriangulation->ymax) / 2.;
+
+  //Check if each interior point is closer to the center than the hull
+  for (i = 0; i < (int)interiorInd.size(); i++) {
+    x = mTriangulation->points[i].x;
+    y = mTriangulation->points[i].y;
+
+    distToHull = DBL_MAX;
+    for (j = 0; j < nHull; j++) {
+      if (mDistMatrix[interiorInd[i]][tourInd[j]] < distToHull)
+        distToHull = mDistMatrix[interiorInd[i]][tourInd[j]];
+    }
+
+    distToCenter = sqrt((x - xdif) * (x - xdif) + (y - ydif) * (y - ydif));
+    nearCenter[interiorInd[i]] = distToCenter < distToHull;
+  }
+
   //Find the degree of each vertex in the DT
   vertexDeg.resize(mTriangulation->npoints, 0);
   vertEdgeSum.resize(mTriangulation->npoints, 0.);
@@ -177,8 +199,8 @@ int PathOptimizer::OptimizePath(FloatVec &xCen, FloatVec &yCen, IntVec &tourInd)
   for (int i = 0; i < mTriangulation->ntriangles; i++) {
     // Process each edge of the triangle
     for (int j = 0; j < 3; j++) {
-      int v1 = mTriangulation->triangles[i].vids[j];
-      int v2 = mTriangulation->triangles[i].vids[(j + 1) % 3];
+      v1 = mTriangulation->triangles[i].vids[j];
+      v2 = mTriangulation->triangles[i].vids[(j + 1) % 3];
 
       // Create a unique key for the edge (always store with smaller index first)
       int64_t edgeKey;
@@ -231,18 +253,27 @@ int PathOptimizer::OptimizePath(FloatVec &xCen, FloatVec &yCen, IntVec &tourInd)
     tourInd.insert(tourInd.begin() + insertInd, pid);
   }
 
-  //Delete the longest edge to find the start and end point of the tour
-  longestEdgeLength = mDistMatrix[tourInd.back()][tourInd[0]];
+  //Delete the longest edge inside the center region of points to find the start point
+  longestEdgeLength = 0;
   for (i = 0; i < (int) tourInd.size() - 1; i++) {
-    edgeLength = mDistMatrix[tourInd[i]][tourInd[i+1]];
-    if (edgeLength > longestEdgeLength) {
-      longestEdgeLength = edgeLength;
+    
+    //Only consider if at least one of the edge points is near the center
+    if ((nearCenter[tourInd[i]] || nearCenter[tourInd[i + 1]]) && 
+     mDistMatrix[tourInd[i]][tourInd[i + 1]] > longestEdgeLength) {
+      longestEdgeLength = mDistMatrix[tourInd[i]][tourInd[i + 1]];
       startInd = i + 1;
+
+      //Reverse the order so that the starting point will be near the center 
+      if (!nearCenter[tourInd[i + 1]])
+        reverse = true;
     }
   }
 
   //Shift the tour indices so the starting point is first
   std::rotate(tourInd.begin(), tourInd.begin() + startInd, tourInd.end());
+
+  if (reverse)
+    std::reverse(tourInd.begin(), tourInd.end());
 
   //Get new path length
   mPathLength = 0.;
