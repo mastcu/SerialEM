@@ -100,7 +100,7 @@ int PathOptimizer::OptimizePath(FloatVec &xCen, FloatVec &yCen, IntVec &tourInd)
   DoubleVec vertEdgeSum;
   point ipt;
   IntVec interiorInd, vertexDeg;
-  bool reverse = false, inHull = false;
+  bool reverse = false, inHull = false, noPtsNearCenter = true;
   double x, y, xdif, ydif, changeInLength, minChange, longestEdgeLength;
   float xcen, ycen;
   std::vector<bool> nearCenter;
@@ -186,7 +186,10 @@ int PathOptimizer::OptimizePath(FloatVec &xCen, FloatVec &yCen, IntVec &tourInd)
     }
 
     distToCenter = sqrt((x - xdif) * (x - xdif) + (y - ydif) * (y - ydif));
-    nearCenter[interiorInd[i]] = distToCenter < distToHull;
+    if (distToCenter < distToHull) {
+      nearCenter[interiorInd[i]] = true;
+      noPtsNearCenter = false;
+    }
   }
 
   //Find the degree of each vertex in the DT
@@ -257,8 +260,8 @@ int PathOptimizer::OptimizePath(FloatVec &xCen, FloatVec &yCen, IntVec &tourInd)
   longestEdgeLength = 0;
   for (i = 0; i < (int) tourInd.size() - 1; i++) {
     
-    //Only consider if at least one of the edge points is near the center
-    if ((nearCenter[tourInd[i]] || nearCenter[tourInd[i + 1]]) && 
+    //Ensure at least one edge point near center, unless there are no points near center
+    if ((noPtsNearCenter || nearCenter[tourInd[i]] || nearCenter[tourInd[i + 1]]) && 
      mDistMatrix[tourInd[i]][tourInd[i + 1]] > longestEdgeLength) {
       longestEdgeLength = mDistMatrix[tourInd[i]][tourInd[i + 1]];
       startInd = i + 1;
