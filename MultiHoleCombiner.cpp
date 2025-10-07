@@ -1291,7 +1291,7 @@ int CMultiHoleCombiner::CombineItems(int boundType, BOOL turnOffOutside, int inX
   ind = pathOpt.OptimizePath(xCombineCenters, yCombineCenters, tourInd);
   
   if (ind) {
-    SEMTrace(1, "WARNING: Combined hole items were not sorted into better acquisition path: %s",
+    SEMTrace('1', "WARNING: Combined hole items were not sorted into better acquisition path: %s",
       pathOpt.returnErrorString(ind));
   }
   else {
@@ -1304,7 +1304,7 @@ int CMultiHoleCombiner::CombineItems(int boundType, BOOL turnOffOutside, int inX
     //Calculate improvement in path length 
     if (pathOpt.mInitialPathLength > 0.) {
       //(Perhaps print the map label/note too so it's clearer)
-      PrintfToLog("Length of acquisition path from item %d to %d was reduced by %.1f %%",
+      SEMTrace('1', "Length of acquisition path from item %d to %d was reduced by %.1f %%",
         combineStart + 1, combineStart + numAdded,
         100 * (1 - pathOpt.mPathLength / pathOpt.mInitialPathLength));
     }
