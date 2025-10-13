@@ -847,6 +847,7 @@ MAC_SAME_NAME_ARG(QueryVibrationManager, 1, 4, QUERYVIBRATIONMANAGER, I)
 MAC_SAME_NAME_ARG(VibrationManagerRequest, 1, 0, VIBRATIONMANAGERREQUEST, I)
 MAC_SAME_NAME_NOARG(ReportConvergenceAngle, 0, 0, REPORTCONVERGENCEANGLE)
 MAC_SAME_FUNC_ARG(ReportSmallestHoleShift, 1, 4, GetItemHolesToAcquire, REPORTSMALLESTHOLESHIFT, I)
+MAC_SAME_NAME_ARG(GetMapIndexes, 1, 0, GETMAPINDEXES, S)
 
 
 // new Python-only commands need to be added to pythonOnlyCmds in ::CMacroProcessor

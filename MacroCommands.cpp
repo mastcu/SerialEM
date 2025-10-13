@@ -12122,6 +12122,28 @@ int CMacCmd::GetUniqueNavID(void)
   return 0;
 }
 
+// GetMapIndexes
+int CMacCmd::GetMapIndexes()
+{
+  ABORT_NONAV;
+  int ind;
+  CString str, arr;
+  CMapDrawItem* item;
+  MapItemArray* itemArray = mNavigator->GetItemArray();
+
+  for (ind = 0; ind < (int)itemArray->GetSize(); ind++) {
+    item = itemArray->GetAt(ind);
+    if (item->IsMap()) {
+      str.Format("%d\n", ind + 1);
+      arr += str;
+    }
+  }
+  if (SetVariable(mStrItems[1].MakeUpper(), arr, VARTYPE_REGULAR, -1, false,
+    &mStrCopy))
+    ABORT_LINE(mStrCopy + "in line:\n\n");
+   return 0;
+}
+
 // ReportLastMarkerShift
 int CMacCmd::ReportLastMarkerShift()
 {
