@@ -1330,6 +1330,8 @@ int CCameraController::InitializeTietz(int whichCameras, int *originalList, int 
           "Tietz camera will be available", MB_EXCLAME);
       return 1;
     }
+    if (funcs->SetDebugMode)
+      funcs->SetDebugMode(GetDebugOutput('Z') ? 1 : 0);
 
     for (i = 0; i < numOrig; i++) {
       ind = originalList[i];
@@ -1685,6 +1687,8 @@ void CCameraController::InitializePluginCameras(int &numPlugListed, int *origina
             err = 1;
           }
         }
+        if (mPlugFuncs[i]->SetDebugMode)
+          mPlugFuncs[i]->SetDebugMode(GetDebugOutput('Z') ? 1 : 0);
         if (!err && num > 1 && !mPlugFuncs[i]->SelectCamera) {
           AfxMessageBox("The camera plugin named " + mAllParams[i].pluginName +
             "reported more than one camera but has no CameraSelect function",
