@@ -10395,7 +10395,7 @@ int CMacCmd::SetDoseFracParams(void)
   SaveControlSet(index);
   mConSets[index].doseFrac = mItemInt[2] ? 1 : 0;
   if (!mItemEmpty[3])
-    mConSets[index].saveFrames = mItemInt[3] ? 1 : 0;
+    mConSets[index].saveFrames = mItemInt[3];
   if (!mItemEmpty[4])
     mConSets[index].alignFrames = mItemInt[4] ? 1 : 0;
   if (!mItemEmpty[5])
