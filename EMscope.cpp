@@ -2568,11 +2568,14 @@ int CEMscope::StageBusy(int ignoreOrTrustState)
       SetValidZbacklash(&mMoveInfo);
 
       // Update JEOL stage position in case events off or failing
-      if (JEOLscope && !retval) {
+      if (JEOLscope && !retval && (mMoveInfo.axisBits & (axisXY | axisZ))) {
         SEMAcquireJeolDataMutex();
-        mJeolSD.stageX = mMoveInfo.x;
-        mJeolSD.stageY = mMoveInfo.y;
-        mJeolSD.stageZ = mMoveInfo.z;
+        if (mMoveInfo.axisBits & axisXY) {
+          mJeolSD.stageX = mMoveInfo.x;
+          mJeolSD.stageY = mMoveInfo.y;
+        }
+        if (mMoveInfo.axisBits & axisZ)
+          mJeolSD.stageZ = mMoveInfo.z;
         SEMReleaseJeolDataMutex();
       }
 

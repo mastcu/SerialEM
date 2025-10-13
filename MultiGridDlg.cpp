@@ -2944,7 +2944,7 @@ bool CMultiGridDlg::MontSetupSizesMatch(MontParam *montP, BOOL lowDose, int setu
  * that the FOV is big enough
  */
 int CMultiGridDlg::CheckRefineOptions(float &FOV, int &ldArea, int &setNum, 
-  StateParams **state, CString errStr)
+  StateParams **state, CString &errStr)
 {
   LowDoseParams *ldp = mWinApp->GetLowDoseParams();
   ControlSet *conSets;
