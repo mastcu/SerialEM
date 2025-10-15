@@ -3,8 +3,9 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+10/15/25: SEM_4-2-10
 10/13/25: Fixed SetDoseFracParams to control frame saving for DE cameras
-(In 4.1).
+(In 4.2).
 
 10/12/25: Fixed bad stage positions (particularly Z) being recorded on JEOL at
 the end of stage movements, broken 8/19/25 (In 4.2).
