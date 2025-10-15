@@ -1756,7 +1756,6 @@ int CMacCmd::ImageMetadataToVar(void)
       report = "Error converting autodoc to string";
     } else {
       bufStr = buffer;
-      mStrItems[2].MakeUpper();
       SetVariable(mStrItems[2], bufStr.Trim(" \r\n"), VARTYPE_REGULAR, 0, false, &report);
     }
   } else if (report.IsEmpty()) {
@@ -2552,7 +2551,6 @@ int CMacCmd::ReplaceFrameTSFocus(void)
   truth = CMD_IS(REPLACEFRAMETSSHIFTS);
   for (index = 1; index < (truth ? 3 : 2); index++) {
     mStrCopy = mStrItems[index];
-    mStrCopy.MakeUpper();
     var = LookupVariable(mStrCopy, index2);
     if (!var)
       ABORT_LINE("The variable " + mStrItems[index] + " is not defined in line:\n\n");
@@ -3002,7 +3000,6 @@ int CMacCmd::SetCustomHoleShifts(void)
     if (!xvar)
       ABORT_LINE("The variable " + mStrItems[1] + "is not defined for line:\n\n");
     mItem1upper = mStrItems[2];
-    mItem1upper.MakeUpper();
     yvar = LookupVariable(mItem1upper, index);
     if (!yvar)
       ABORT_LINE("The variable " + mStrItems[2] + "is not defined for line:\n\n");
@@ -3896,7 +3893,6 @@ int CMacCmd::ChooserForNewFile(void)
     return 1;
   }
   report = mStrItems[2];
-  report.MakeUpper();
   if (SetVariable(report, mStrCopy, VARTYPE_REGULAR, -1, false))
     ABORT_NOLINE("Error setting variable " + mStrItems[2] + " with filename " + mStrCopy);
   mOverwriteOK = true;
@@ -8960,7 +8956,6 @@ int CMacCmd::ThreeChoiceBox(void)
     numButtons = 1;
   for (i = 0; i < numButtons + 2; i++) {
     report = mStrItems[i + 1];
-    report.MakeUpper();
     vars[i] = LookupVariable(report, index2);
     if (!vars[i])
       ABORT_LINE("The variable " + mStrItems[i + 1] + " is not defined in line:\n\n");
@@ -9236,7 +9231,6 @@ int CMacCmd::StripEndingDigits(void)
   mStrCopy = report.Right(report.GetLength() - (index + 1));
   report = report.Left(index + 1);
   mItem1upper = mStrItems[2];
-  mItem1upper.MakeUpper();
   if (SetVariable(mItem1upper, report, VARTYPE_REGULAR + VARTYPE_ADD_FOR_NUM, -1, false))
     ABORT_LINE("Error setting variable " + mStrItems[2] + " with string " + report +
     " in:\n\n");
@@ -11991,14 +11985,14 @@ int CMacCmd::GetNavGroupStageCoords(void)
   }
   mLogRpt.Format("%d point positions found in group", numPts);
   if (numPts) {
-    if (SetVariable(mStrItems[varInd].MakeUpper(), xval, VARTYPE_REGULAR, -1, false,
+    if (SetVariable(mStrItems[varInd], xval, VARTYPE_REGULAR, -1, false,
       &mStrCopy))
       ABORT_LINE(mStrCopy + "in line:\n\n");
-    if (SetVariable(mStrItems[varInd + 1].MakeUpper(), yval, VARTYPE_REGULAR, -1, false,
+    if (SetVariable(mStrItems[varInd + 1], yval, VARTYPE_REGULAR, -1, false,
       &mStrCopy))
       ABORT_LINE(mStrCopy + "in line:\n\n");
     if (!image && !mItemEmpty[4]) {
-      if (SetVariable(mStrItems[4].MakeUpper(), zval, VARTYPE_REGULAR, -1, false,
+      if (SetVariable(mStrItems[4], zval, VARTYPE_REGULAR, -1, false,
         &mStrCopy))
         ABORT_LINE(mStrCopy + "in line:\n\n");
     }
@@ -12138,7 +12132,7 @@ int CMacCmd::GetMapIndexes()
       arr += str;
     }
   }
-  if (SetVariable(mStrItems[1].MakeUpper(), arr, VARTYPE_REGULAR, -1, false,
+  if (SetVariable(mStrItems[1], arr, VARTYPE_REGULAR, -1, false,
     &mStrCopy))
     ABORT_LINE(mStrCopy + "in line:\n\n");
    return 0;
