@@ -1318,7 +1318,7 @@ int CProcessImage::AlignBetweenMagnifications(int toBufNum, float xcen, float yc
 
   } else if (!(nxAli * fromPixel < nxRef * toPixel &&
     nyAli * fromPixel < nyRef * toPixel)) {
-    errStr = sameMagCam ? "For images are from the same mag and camera, the reference"
+    errStr = sameMagCam ? "For images from the same mag and camera, the reference"
       " image" : "One image";
     errStr += " must have a larger field of view than the other in both dimensions";
     return 1;
