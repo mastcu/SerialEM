@@ -1486,13 +1486,13 @@ int CProcessImage::AlignBetweenMagnifications(int toBufNum, float xcen, float yc
     return 1;
   }
 
-  // Set offsets if there is empty area on left/top, and extract it
+  // Set offsets if there is empty area on left/top, and extract it, bin 1, keep bytes
   if (ixCen < nxCrop / 2)
     bxOffset = nxCrop / 2 - ixCen;
   if (iyCen < nyCrop / 2)
     byOffset = nyCrop / 2 - iyCen;
   err = extractAndBinIntoArray(image->getData(), type, image->getRowBytes() / dataSize,
-    ixStart, ixEnd, iyStart, iyEnd, 1, cropBuf, nxCrop, bxOffset, byOffset, 0, &nxAli,
+    ixStart, ixEnd, iyStart, iyEnd, 1, cropBuf, nxCrop, bxOffset, byOffset, 1, &nxAli,
     &nyAli);
   image->UnLock();
   if (err) {
