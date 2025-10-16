@@ -5486,7 +5486,8 @@
           <TD>Runs the Hole Finder with parameters appropriate for finding the hole nearest to the center
              of an image with one or a few holes in it, and optionally centering on the hole with image 
             shift.&nbsp;<b>buf</b> specifies the buffer and can be 0 for the currently displayed 
-            image.&nbsp;Set <b>#D</b> to the diameter in microns; optional <b>#C</b> to the number of 
+            image.&nbsp;Set <b>#D</b> to the diameter in microns, or 0 to use the hole size 
+              stored in the map if it exists; optional <b>#C</b> to the number of 
             circle sizes to try, or 0 for the default (generally 7); and optional<b>#S</b> to the maximum
              image shift allowed as a fraction of the hole diameter.  Other hole-finding parameters such as
             geometry and spacing are taken from existing settings.&nbsp; Command added in 4.2, 29-Oct-24.

@@ -1775,6 +1775,8 @@ void CHoleFinderDlg::SetNavMapHoleVectors()
       mNavItem->mXHoleISSpacing[ind] = (float)xISvectors[ind];
       mNavItem->mYHoleISSpacing[ind] = (float)yISvectors[ind];
     }
+    mNavItem->mFoundHoleSize = mLastHoleSize;
+    mNavItem->mFoundHoleSpacing = mLastHoleSpacing;
     mNav->SetChanged(true);
     mIDofNavItem = mNavItem->mMapID;
   }

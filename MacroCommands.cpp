@@ -13046,7 +13046,7 @@ int CMacCmd::FindHoles(void)
 // FindAndCenterOneHole
 int CMacCmd::FindAndCenterOneHole()
 {
-  float xCen, yCen;
+  float xCen, yCen, holeSize, scale, rotation;
   EMimageBuffer *imBuf;
   int index;
   imBuf = mWinApp->mMainView->GetActiveImBuf();
@@ -13057,7 +13057,18 @@ int CMacCmd::FindAndCenterOneHole()
       ABORT_LINE(mStrCopy);
     imBuf = &mImBufs[index];
   }
-  index = mNavHelper->mHoleFinderDlg->FindAndCenterOneHole(imBuf, mItemFlt[2],
+  holeSize = mItemFlt[2];
+  if (!holeSize) {
+    if (!imBuf->mMapID)
+      ABORT_LINE("No map ID found for the current buffer image for line:\n\n");
+    CMapDrawItem* item = mNavigator->FindItemWithMapID(imBuf->mMapID, true);
+    holeSize = item->mFoundHoleSize;
+    if (!holeSize)
+      ABORT_LINE("No hole size was stored in the map item for line:\n\n");
+    mShiftManager->GetScaleAndRotationForFocus(imBuf, scale, rotation);
+    holeSize *= scale;
+  }
+  index = mNavHelper->mHoleFinderDlg->FindAndCenterOneHole(imBuf, holeSize,
     mItemEmpty[3] ? 0 : mItemInt[3], mItemEmpty[4] ? 0.f : mItemFlt[4], xCen, yCen);
   if (index > 0) {
     AbortMacro();
