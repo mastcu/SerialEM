@@ -731,6 +731,8 @@ int CMultiShotDlg::DoStartRecording()
     if (mAutoAdjDoCenter) {
       mDeferredISX = ISX;
       mDeferredISY = ISY;
+    } else {
+      mWinApp->mScope->IncImageShift(ISX, ISY);
     }
     if (StartImageIfNeeded())
       return 1;
