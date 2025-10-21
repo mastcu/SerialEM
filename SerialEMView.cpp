@@ -2141,14 +2141,17 @@ void CSerialEMView::StageToImage(EMimageBuffer *imBuf, float inX, float inY, flo
 // is stored, then it sets up montage adjustments and can call StageToImage
 void CSerialEMView::ExternalStageToImage(EMimageBuffer *imBuf, ScaleMat &aMat, 
   float delX, float delY, float inX, float inY, float &outX, float &outY, 
-  float *pcCenDist)
+  float *pcCenDist, bool adjust)
 {
   mStageErrX = mStageErrY = 0.;
   mAmat = aMat;
   mDelX = delX;
   mDelY = delY;
-  mAdjustPt = mWinApp->mNavHelper->PrepareMontAdjustments(imBuf, mRmat, mRinv, mRdelX,
-    mRdelY);
+  if (adjust)
+    mAdjustPt = mWinApp->mNavHelper->PrepareMontAdjustments(imBuf, mRmat, mRinv, mRdelX,
+      mRdelY);
+  else
+    mAdjustPt = -1;
   StageToImage(imBuf, inX, inY, outX, outY, -1, pcCenDist);
 }
 
