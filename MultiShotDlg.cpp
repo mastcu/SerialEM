@@ -1173,25 +1173,32 @@ int CMultiShotDlg::AutoStepBusy()
 }
 
 /*
- * Static function to open a temporary Preview montage
+ * Static function to open a temporary Preview or other montage
  */
 int CMultiShotDlg::SetupTempPrevMontage(const char *filename, int xNframes, int yNframes,
   int overviewBin, int overlapDiv)
+{
+  return SetupTempMontage(filename, xNframes, yNframes, overviewBin, overlapDiv,
+    PREVIEW_CONSET, true, false);
+}
+
+int CMultiShotDlg::SetupTempMontage(const char *filename, int xNframes, int yNframes,
+    int overviewBin, int overlapDiv, int conSetNum, BOOL lowDose, BOOL moveStage)
 {
   mWinApp = (CSerialEMApp *)AfxGetApp();
   MontParam *montP = mWinApp->GetMontParam();
   FileOptions *fileOpt;
   int err, saveMode;
-  ControlSet *conSet = mWinApp->GetConSets() + PREVIEW_CONSET;
+  ControlSet *conSet = mWinApp->GetConSets() + conSetNum;
   CameraParameters *camP = mWinApp->GetActiveCamParam();
   mSavedMontParam = new MontParam;
   *mSavedMontParam = *montP;
-  montP->useViewInLowDose = false;
-  montP->useSearchInLowDose = false;
-  montP->useMontMapParams = false;
+  montP->useViewInLowDose = lowDose && conSetNum == VIEW_CONSET;
+  montP->useSearchInLowDose = lowDose && conSetNum == SEARCH_CONSET;
+  montP->useMontMapParams = conSetNum == MONT_USER_CONSET;
   montP->useMultiShot = false;
-  montP->usePrevInLowDose = true;
-  montP->moveStage = false;
+  montP->usePrevInLowDose = lowDose && conSetNum == PREVIEW_CONSET;
+  montP->moveStage = moveStage;
   montP->shiftInOverview = true;
   montP->closeFileWhenDone = false;
   montP->makeNewMap = false;
@@ -1214,7 +1221,7 @@ int CMultiShotDlg::SetupTempPrevMontage(const char *filename, int xNframes, int 
   }
   mWinApp->mDocWnd->LeaveCurrentFile();
   err = mWinApp->mDocWnd->GetMontageParamsAndFile(2, montP->xNframes,
-    montP->yNframes, sStepAdjFileName);
+    montP->yNframes, filename);
   fileOpt->mode = saveMode;
   if (err) {
     *montP = *mSavedMontParam;

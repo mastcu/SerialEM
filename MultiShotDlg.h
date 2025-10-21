@@ -154,6 +154,8 @@ public:
   static int DoStartRecording();
   static int SetupTempPrevMontage(const char *filename, int xNframes, int yNframes, 
     int overviewBin, int overlapDiv);
+  static int SetupTempMontage(const char *filename, int xNframes, int yNframes,
+    int overviewBin, int overlapDiv, int conSetNum, BOOL lowDose, BOOL moveStage);
   static int StartImageIfNeeded();
   static bool CanDoAutoAdjust(int magType, int areaToUse,
     int otherMag, int prevMag, float holeSize, BOOL hexGrid, BOOL custom, int &cropSize, CString &str);
