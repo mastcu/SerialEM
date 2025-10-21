@@ -1275,7 +1275,7 @@ int CProcessImage::AlignBetweenMagnifications(int toBufNum, float xcen, float yc
   int bxOffset = 0, byOffset = 0, nroll = mBufferManager->GetShiftsOnAcquire();
   float fromPixel, toPixel, aMat[2][2] = {{1.f, 0.f}, {0.f, 1.f}}, edgeMean;
   float zoomXform[6], aliXform[6], zoomXfInv[6], prodXf[6], xShift, yShift;
-  float effBinSave;
+  float effBinSave, FOV, fallback;
   EMimageBuffer aliCopy, refCopy, zoomCopy;
   unsigned char *cropBuf;
   KImage *image;
@@ -1311,16 +1311,15 @@ int CProcessImage::AlignBetweenMagnifications(int toBufNum, float xcen, float yc
   // the other.
   mImBufs->mImage->getSize(nxAli, nyAli);
   mImBufs[toBufNum].mImage->getSize(nxRef, nyRef);
-  if (nxAli * fromPixel > nxRef * toPixel && nyAli * fromPixel > nyRef * toPixel &&
+  if (nxAli * fromPixel * nyAli * fromPixel > nxRef * toPixel * nyRef * toPixel &&
     !sameMagCam) {
     B3DSWAP(zoomInd, cropInd, err);
     aliBigger = true;
 
-  } else if (!(nxAli * fromPixel < nxRef * toPixel &&
-    nyAli * fromPixel < nyRef * toPixel)) {
-    errStr = sameMagCam ? "For images from the same mag and camera, the reference"
-      " image" : "One image";
-    errStr += " must have a larger field of view than the other in both dimensions";
+  } else if (!(nxAli * fromPixel * nyAli * fromPixel <= nxRef * toPixel * nyRef * 
+    toPixel)) {
+    errStr ="For images from the same mag and camera, the reference"
+      " image must have a larger field of view";
     return 1;
   }
 
@@ -1363,7 +1362,12 @@ int CProcessImage::AlignBetweenMagnifications(int toBufNum, float xcen, float yc
       ind = (int)sqrt(nxAli * nyAli);
       nxCrop = B3DMIN(nxAli + 2 * (int)(maxShiftUm * ind), 16000);
       nyCrop = B3DMIN(nyAli + 2 * (int)(maxShiftUm * ind), 16000);
-      maxShiftUm = B3DMAX(0.5f, B3DMIN((float)(nxCrop - nxAli) * toPixel / 2.f,
+
+      // Even if a big enough area can't be used to allow full overlap, allow a fallback
+      // max shift up to half the minimum dimension
+      FOV = toPixel * (float)B3DMIN(nxAli, nyAli);
+      fallback = B3DMIN(0.5f, maxShiftUm) * FOV;
+      maxShiftUm = B3DMAX(fallback, B3DMIN((float)(nxCrop - nxAli) * toPixel / 2.f,
         (float)(nyCrop - nyAli) * toPixel / 2.f));
     } else {
       nxCrop = nxAli + 2 * (int)(maxShiftUm / toPixel);
@@ -1401,6 +1405,10 @@ int CProcessImage::AlignBetweenMagnifications(int toBufNum, float xcen, float yc
       err = mShiftManager->AutoAlign(1, 1, doImShift);
     }
     mImBufs[1].mEffectiveBin = effBinSave;
+    if (mImBufs->IsMontageOverview()) {
+      mImBufs[0].mEffectiveBin = mImBufs[1].mEffectiveBin;
+      mImBufs[0].SetImageChanged(1);
+    }
     if (mImBufs->mLowDoseArea) {
       mImBufs[1].mLowDoseArea = true;
       mImBufs[1].mConSetUsed = mImBufs->mConSetUsed;
@@ -1420,7 +1428,7 @@ int CProcessImage::AlignBetweenMagnifications(int toBufNum, float xcen, float yc
   mBufferManager->CopyImBuf(mImBufs, &aliCopy);
   mBufferManager->CopyImBuf(&mImBufs[toBufNum], &refCopy);
 
-  // Scale down entire higher mag image to match the lower mag ine
+  // Scale down entire higher mag image to match the lower mag one
   if (TransformToOtherMag(&mImBufs[zoomInd], &mImBufs[cropInd], 0, errStr, -1., -1., -1,
     -1, zoomXform))
     return 1;
@@ -1431,7 +1439,9 @@ int CProcessImage::AlignBetweenMagnifications(int toBufNum, float xcen, float yc
     ind = (int)sqrt(nxAli * nyAli);
     nxCrop = B3DMIN(nxAli + 2 * (int)(maxShiftUm * ind), nxRef);
     nyCrop = B3DMIN(nyAli + 2 * (int)(maxShiftUm * ind), nyRef);
-    maxShiftUm = B3DMAX(0.5f, B3DMIN((float)(nxCrop - nxAli) * toPixel / 2.f,
+    FOV = toPixel * (float)B3DMIN(nxAli, nyAli);
+    fallback = B3DMIN(0.5f, maxShiftUm) * FOV;
+    maxShiftUm = B3DMAX(fallback, B3DMIN((float)(nxCrop - nxAli) * toPixel / 2.f,
       (float)(nyCrop - nyAli) * toPixel / 2.f));
   } else {
     nxCrop = B3DMIN(nxAli + 2 * (int)(maxShiftUm / toPixel), nxRef);
