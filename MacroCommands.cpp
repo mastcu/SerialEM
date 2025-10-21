@@ -13071,7 +13071,7 @@ int CMacCmd::FindAndCenterOneHole()
     if (!imBuf->GetStagePosition(stageX, stageY))
       ABORT_LINE("Could not obtain stage position of buffer image for line:\n\n");
     if (!imBuf->GetAxisAngle(tilt))
-      ABORT_LINE("Could not obtain tilt angle of buffer image for line:\n\n");
+      tilt = 0.f;
     if (!imBuf->mMagInd || imBuf->mCamera < 0)
       ABORT_LINE("Image buffer does not have camera or "
         "magnification information needed for line:\n\n");
@@ -13079,10 +13079,10 @@ int CMacCmd::FindAndCenterOneHole()
     mNavHelper->ConvertIStoStageIncrement(imBuf->mMagInd, imBuf->mCamera, imBuf->mISX, 
       imBuf->mISY, tilt, stageX, stageY);
 
-    //TODO get size of buffer image in microns, compare to size of map in microns
+    //get size of buffer image in microns, compare to size of map in microns
     imBuf->mImage->getSize(sizeX, sizeY);
-    imSizeX = sizeX * imBuf->mPixelSize;
-    imSizeY = sizeY * imBuf->mPixelSize;
+    imSizeX = (float) (sizeX) * mShiftManager->GetPixelSize(imBuf);
+    imSizeY = (float) (sizeY) * mShiftManager->GetPixelSize(imBuf);
     
     for (index = 0; index < (int)itemArr->GetSize(); index++) {
       item = itemArr->GetAt(index);
@@ -13097,10 +13097,10 @@ int CMacCmd::FindAndCenterOneHole()
         ymin = item->mPtY[0];
         ymax = ymin;
         for (int j = 1; j < item->mNumPoints; j++) {
-          xmin = B3DMIN(item->mPtX[j], xmin);
-          ymin = B3DMIN(item->mPtY[j], ymin);
-          xmax = B3DMAX(item->mPtX[j], xmax);
-          ymax = B3DMAX(item->mPtY[j], ymax);
+          ACCUM_MIN(xmin, item->mPtX[j]);
+          ACCUM_MIN(ymin, item->mPtY[j]);
+          ACCUM_MAX(xmax, item->mPtX[j]);
+          ACCUM_MAX(ymax, item->mPtY[j]);
         }
         if (imSizeX <= xmax - xmin && imSizeY <= ymax - ymin) {
           SEMTrace('1', "Using hole size from map with ID %d for hole centering", 
