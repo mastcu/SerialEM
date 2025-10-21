@@ -9125,6 +9125,8 @@ int CNavigatorDlg::LoadNavFile(bool checkAutosave, bool mergeFile, CString *inFi
         ADOC_OPTIONAL(AdocGetThreeFloats("Item", sectInd, "HoleISYspacing",
           &item->mYHoleISSpacing[0], &item->mYHoleISSpacing[1], 
           &item->mYHoleISSpacing[2]));
+        ADOC_OPTIONAL(AdocGetTwoFloats("Item", sectInd, "HoleSizeSpacing", 
+          &item->mFoundHoleSize, &item->mFoundHoleSpacing));
         ADOC_OPTIONAL(AdocGetTwoFloats("Item", sectInd, "MarkerShift",
           &item->mMarkerShiftX, &item->mMarkerShiftY));
         ADOC_OPTIONAL(AdocGetInteger("Item", sectInd, "ShiftCohortID", 

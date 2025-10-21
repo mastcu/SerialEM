@@ -155,6 +155,10 @@
     ADOC_PUT(ThreeFloats(ADOC_ARG, "HoleISYspacing", item->mYHoleISSpacing[0],
       item->mYHoleISSpacing[1], item->mYHoleISSpacing[2]));
   }
+  if (item->mFoundHoleSize != 0. && item->mFoundHoleSpacing != 0.) {
+    ADOC_PUT(TwoFloats(ADOC_ARG, "HoleSizeSpacing", item->mFoundHoleSize, 
+      item->mFoundHoleSpacing));
+  }
   if (item->mMarkerShiftX > EXTRA_VALUE_TEST) {
     ADOC_PUT(TwoFloats(ADOC_ARG, "MarkerShift", item->mMarkerShiftX, 
       item->mMarkerShiftY));

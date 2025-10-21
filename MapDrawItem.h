@@ -146,6 +146,8 @@ public:
   unsigned char *mSkipHolePos;    // list of x,y indexes of holes to skip (new/delete)
   float mXHoleISSpacing[3]; // IS vectors from hole finding, valid at map's mag
   float mYHoleISSpacing[3];
+  float mFoundHoleSize;    //Hole diameter obtained from hole finder
+  float mFoundHoleSpacing; //Hole spacing obtained from hole finder
   float mTSstartAngle;    // Special stored starting and ending angle for tilt series
   float mTSendAngle;
   float mTSbidirAngle;    // And bidirectional start angle

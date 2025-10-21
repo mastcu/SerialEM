@@ -3,7 +3,10 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
-1/16/25: Fixed crash aligning lower mag to higher mag image with the latter 
+10/21/25: Enabled FindAndCenterOneHole script command to use a previously found
+hole size in a map containing the current buffer image.
+
+10/16/25: Fixed crash aligning lower mag to higher mag image with the latter 
 loaded as bytes (In 4.2).
 
 10/15/25: Fixed Step To & Adjust IS to shift to first hole when starting the

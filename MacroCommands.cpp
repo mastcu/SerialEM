@@ -13046,9 +13046,14 @@ int CMacCmd::FindHoles(void)
 // FindAndCenterOneHole
 int CMacCmd::FindAndCenterOneHole()
 {
-  float xCen, yCen;
+  float xCen, yCen, holeSize;
   EMimageBuffer *imBuf;
-  int index;
+  int index, sizeX, sizeY;
+  float stageX, stageY, tilt, scale, rotation, imSizeX, imSizeY;
+  MapItemArray* itemArr = mNavigator->GetItemArray();
+  CMapDrawItem* item;
+  float xmin, xmax, ymin, ymax;
+  
   imBuf = mWinApp->mMainView->GetActiveImBuf();
   if (!imBuf->mImage)
     ABORT_LINE("There is no image in the active buffer for line:\n\n");
@@ -13057,7 +13062,62 @@ int CMacCmd::FindAndCenterOneHole()
       ABORT_LINE(mStrCopy);
     imBuf = &mImBufs[index];
   }
-  index = mNavHelper->mHoleFinderDlg->FindAndCenterOneHole(imBuf, mItemFlt[2],
+  holeSize = mItemFlt[2];
+  
+  //If no hole size was specified, try to find parent map with stored hole size
+  if (!holeSize) {
+    
+    //Get stage coordinates and tilt of current buffer image
+    if (!imBuf->GetStagePosition(stageX, stageY))
+      ABORT_LINE("Could not obtain stage position of buffer image for line:\n\n");
+    if (!imBuf->GetAxisAngle(tilt))
+      tilt = 0.f;
+    if (!imBuf->mMagInd || imBuf->mCamera < 0)
+      ABORT_LINE("Image buffer does not have camera or "
+        "magnification information needed for line:\n\n");
+    
+    mNavHelper->ConvertIStoStageIncrement(imBuf->mMagInd, imBuf->mCamera, imBuf->mISX, 
+      imBuf->mISY, tilt, stageX, stageY);
+
+    //get size of buffer image in microns, compare to size of map in microns
+    imBuf->mImage->getSize(sizeX, sizeY);
+    imSizeX = (float) sizeX * mShiftManager->GetPixelSize(imBuf);
+    imSizeY = (float) sizeY * mShiftManager->GetPixelSize(imBuf);
+    
+    for (index = 0; index < (int)itemArr->GetSize(); index++) {
+      item = itemArr->GetAt(index);
+
+      //If item is a map containing the buffer image position, use its stored hole size
+      if (item->IsMap() && item->mFoundHoleSize > 0. &&
+        InsideContour(item->mPtX, item->mPtY, item->mNumPoints, stageX, stageY)) {
+        
+        //Ensure that the buffer image is smaller overall than the map
+        xmin = item->mPtX[0];
+        xmax = xmin;
+        ymin = item->mPtY[0];
+        ymax = ymin;
+        for (int j = 1; j < item->mNumPoints; j++) {
+          ACCUM_MIN(xmin, item->mPtX[j]);
+          ACCUM_MIN(ymin, item->mPtY[j]);
+          ACCUM_MAX(xmax, item->mPtX[j]);
+          ACCUM_MAX(ymax, item->mPtY[j]);
+        }
+        if (imSizeX <= xmax - xmin && imSizeY <= ymax - ymin) {
+          SEMTrace('1', "Using hole size from map with ID %d for hole centering", 
+            index + 1);
+          holeSize = item->mFoundHoleSize;
+          break;
+        }
+      }
+    }
+    if (!holeSize)
+      ABORT_LINE("No map with a stored hole size was found containing the buffer image"
+      " position for line:\n\n");
+    mShiftManager->GetScaleAndRotationForFocus(imBuf, scale, rotation);
+    holeSize *= scale;
+  }
+  
+  index = mNavHelper->mHoleFinderDlg->FindAndCenterOneHole(imBuf, holeSize,
     mItemEmpty[3] ? 0 : mItemInt[3], mItemEmpty[4] ? 0.f : mItemFlt[4], xCen, yCen);
   if (index > 0) {
     AbortMacro();
