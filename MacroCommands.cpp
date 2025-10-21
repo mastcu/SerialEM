@@ -13081,8 +13081,8 @@ int CMacCmd::FindAndCenterOneHole()
 
     //get size of buffer image in microns, compare to size of map in microns
     imBuf->mImage->getSize(sizeX, sizeY);
-    imSizeX = (float) (sizeX) * mShiftManager->GetPixelSize(imBuf);
-    imSizeY = (float) (sizeY) * mShiftManager->GetPixelSize(imBuf);
+    imSizeX = (float) sizeX * mShiftManager->GetPixelSize(imBuf);
+    imSizeY = (float) sizeY * mShiftManager->GetPixelSize(imBuf);
     
     for (index = 0; index < (int)itemArr->GetSize(); index++) {
       item = itemArr->GetAt(index);
