@@ -1174,6 +1174,10 @@ int CHoleFinderDlg::DoFindHoles(EMimageBuffer *imBuf, bool synchronous)
   mReduction = B3DMAX(1.f, curDiam / targetDiam);
   diamReduced = curDiam / mReduction;
   spacingReduced = (testSpacing / mPixelSize) / mReduction;
+  if (diamReduced < 4. || spacingReduced < 5.) {
+    SEMMessageBox("The holes are too small in the image being analyzed");
+    return 1;
+  }
 
   // get the maximum radius assuming worst-case expansion
   maxRadius = diamReduced / 2.f;
