@@ -144,10 +144,10 @@
       <br>
 	   &nbsp;&nbsp;&nbsp;&nbsp; <A href="#navigatorlist">Navigator Window and List Commands</A><br>
 	   &nbsp;&nbsp;&nbsp;&nbsp; <A href="#navigatoritems">Item and Group Commands</A><br>
-	   &nbsp;&nbsp;&nbsp;&nbsp; <A href="#hole_square_finding">Hole and Grid Square Finding Commands</A><br>
-	   &nbsp;&nbsp;&nbsp;&nbsp; <A href="#navigatoritemgen">Other Item Generating Commands</A><br>
+	   &nbsp;&nbsp;&nbsp;&nbsp; <A href="#navigatoritemgen">Item Generating Commands</A><br>
 	   &nbsp;&nbsp;&nbsp;&nbsp; <A href="#navigatorali">Alignment and Shift Commands</A><br>
 	   &nbsp;&nbsp;&nbsp;&nbsp; <A href="#acqcontrol">Acquisition Control Commands</A><br>
+	   &nbsp;&nbsp;&nbsp;&nbsp; <A href="#hole_square_finding">Hole and Grid Square Finding Commands</A><br>
       <A href="#miscellaneous">Miscellaneous Commands</A><br />
       &nbsp;&nbsp;&nbsp;&nbsp; <A href="#time_output">Time-Related Commands</A><br>
       &nbsp;&nbsp;&nbsp;&nbsp; <A href="#graphing">Graphing Commands</A><br>
@@ -5393,215 +5393,8 @@
           <TD>Gets the navigator indices of all maps and places them in increasing order in an 
               array variable named <strong>var</strong>.&nbsp; <TD>
                 &nbsp;</TR>
-        <TR>
-          <TD colspan="2"><A name="hole_square_finding"></A><B>Hole and Grid Square Finding Commands</B></TD>
-        </TR>
-              <TR>
-          <TD class="scriptcommand">FindHoles [buf]</TD>
-          <TD>Runs the Hole Finder routine on the image in the current buffer, or in the
-            buffer optionally specified by <b>buf</b>, using all of the
-               parameters set in the <A HREF="hidd_hole_finder.htm">Hole Finder dialog</A>.&nbsp; That dialog
-            need not be open, but the Navigator must be.
-            </TD>
-        </TR>
        <TR>
-          <TD class="scriptcommand">MakeNavPointsAtHoles [#A] [#L] [#U] [#S] [#B] [#E] [#H]</TD>
-          <TD>Makes positions found by the Hole Finder into Navigator points, using the various
-            thresholds for exclusion set in
-              the <A HREF="hidd_hole_finder.htm">Hole Finder dialog</A>.&nbsp; That dialog
-            need not be open, but the Navigator must be.&nbsp; Optionally, <b>#A</b> may be entered with 0 to 2
-            to specify the arrangement of points (0 for zigzag, 1 for away from focus, 2 for divided
-            into groups, or -1 to use the layout set in the dialog); <b>#L</b> and
-            <b>#U</b>
-             may be entered to set alternative lower and/or upper mean thresholds for excluding points
-            (enter -999999 for <b>#L</b> or <b>#U</b> to use the dialog setting);
-            <b>#S</b> may be entered to set the SD cutoff
-             (or -1 to use the dialog value); <b>#B</b> may be entered to set the cutoff for the
-            percentage of black pixels; <b>#E</b> may be entered to set the edge distance cutoff; and <b>#H</b>
-            may be entered to use a 1/3 subset of points on a hex grid.</TD>
-        </TR>
-      <TR>
-          <TD class="scriptcommand">ClearHoleFinder</TD>
-          <TD>Removes the display of points found by the Hole Finder and frees its memory.
-            </TD>
-        </TR>
-      <TR>
-          <TD class="scriptcommand">CombineHolesToMulti #S [#O] [#X #Y]</TD>
-          <TD>Combines a set of Navigator points marked for acquisition into a subset suitable for
-            acquisition of a rectangular array with 'MultipleRecords', using the parameters set in the
-            <A HREF="hidd_multi_shot_setup.htm">Multiple Record Setup dialog</A>.
-            See the &nbsp; <A HREF="hidd_multi_combiner.htm">Multiple Hole Combiner dialog</A>
-            for details and restrictions.&nbsp; Neither of those two dialogs need to be open, but the Navigator must be.
-            &nbsp; Set <b>#S</b> to 0 to select points on the currently displayed image, 1 to select points
-            within the current polygon, or 2 to select points in the same group as the current point.&nbsp; Set 
-            the optional <b>#O</b> to 1 to turn off points outside a polygon in the same groups as the ones combined,
-            or 0 not to, overriding the selection in the dialog, or -1 to use the dialog setting.&nbsp; To override 
-            the number of holes specified in the dialog, add both <b>#X</b> and <b>#Y</b> with either the number of
-            holes in X and Y in a rectangular pattern, or -3 and -3 for a cross pattern, or -1 and the number of 
-            rings in a hexagonal pattern.
-            </TD>
-        </TR>
-        <TR>
-          <TD class="scriptcommand">UndoHoleCombining</TD>
-          <TD>Removes the multi-shot acquisition points created by the last hole-combining
-             operation (through script command or dialog) and restores the individual points
-             to the Navigator table.&nbsp; All of the multi-shot points must still exist.
-             </TD>
-        </TR>
-        <TR>
-          <TD class="scriptcommand">ReportHoleFinderParams</TD>
-          <TD>Reports the diameter and center-to-center spacing in microns currently being 
-            used for hole finding, whether it is set to analyze for a hexagonal array, and the
-            maximum error.</TD>
-        </TR>
-        <TR>
-          <TD class="scriptcommand">SetHoleFinderParams #D #S #H [#M] [fvar] [tvar]</TD>
-          <TD>Sets the parameters for hole finding to <b>#D</b> for the diameter and <b>#S</b> for the 
-            center-to-center spacing in microns and sets it to analyze for a hexagonal array if <b>#H</b> is 
-            non-zero, in which case the hex-specific size and spacing are set.&nbsp; The maximum error is set 
-            with the optional <b>#M</b> if it is positive.&nbsp; If <b>fvar</b> is included with the name of
-            an array variable, it is used to set the filter sigma values and median iterations (positive values for sigma,
-            or negative number of iterations). If <b>tvar</b> is included with the name of
-            an array variable, it is used to set the thresholds (use 'NONE' for <b>fvar</b> to set just the
-            thresholds).&nbsp; </TD>
-        </TR>
-        <TR>
-          <TD class="scriptcommand">FindMultiMapHoles #S #E #C [#A] [#R] [#H] [#T] [#S] [#L]</TD>
-          <TD>Runs a routine to find holes for all maps at one magnification with Navigator table indexes
-            between <b>#S</b> and <b>#E</b> inclusive, and combining the resulting points for Multiple Records 
-            if there are at least <b>#C</b> points, or not combining if <b>#C</b> is 0.&nbsp; 
-            See <A href="hidd_hole_finder.htm#multimap">Finding Holes in Multiple Maps</A> for details.&nbsp;
-            If the optional <b>#A</b> is 1or 2 autocontouring is used to create a polygon around the mesh opening;
-             when it is 1, all eligible maps within the range will be processed with hole finding and 
-            autocontouring; when it is 2, only maps
-            marked as Acquire will be processed, and then Acquire will be turned off for them.&nbsp; The other
-            optional parameters are the same as the ones described in detail for the 'AutoContourGridSquares' command
-            (in brief, reduction target, histogram-based threshold, absolute threshold, smallest and largest 
-            sizes).&nbsp; Reduction to 100-200 pixels is useful to avoid a very ragged contour when 
-            contouring a single grid square.
-          &nbsp; Command added in 4.2, 7-Aug-24; autocontouring added in 4.3, 6-Jun-25.</TD>
-        </TR>
-        <TR>
-          <TD class="scriptcommand">FindAndCenterOneHole buf #D [#C] [#S]</TD>
-          <TD>Runs the Hole Finder with parameters appropriate for finding the hole nearest to the center
-             of an image with one or a few holes in it, and optionally centering on the hole with image 
-            shift.&nbsp;<b>buf</b> specifies the buffer and can be 0 for the currently displayed 
-            image.&nbsp;Set <b>#D</b> to the diameter in microns; optional <b>#C</b> to the number of 
-            circle sizes to try, or 0 for the default (generally 7); and optional<b>#S</b> to the maximum
-             image shift allowed as a fraction of the hole diameter.  Other hole-finding parameters such as
-            geometry and spacing are taken from existing settings.&nbsp; Command added in 4.2, 29-Oct-24.
-          </TD>
-        </TR>
-        <TR>
-          <TD class="scriptcommand">ReportLastHoleVectors #</TD>
-          <TD>Reports the vectors between holes along the two axes from the last hole finding operation in
-            one of 3 forms.&nbsp; If <b>#</b> is 0, the vectors are in stage coordinates, adjusted for
-            View or Search defocus offset if there is a high-magnification defocus calibration.&nbsp; If
-            <b>#</b> is negative, the vectors are in image coordinates, with Y inverted.&nbsp; If <b>#</b>
-            is a magnification index, the vectors are in image shift coordinates at the given magnification.</TD>
-        </TR>
-        <TR>
-          <TD class="scriptcommand">UseHoleVectorsForMulti [#]</TD>
-          <TD>Converts the vectors between holes from the last hole finding operation to image shift
-             values and assigns them as the hole vectors for doing multiple records in a regular pattern 
-            of holes.&nbsp; If the optional [#] is absent or 0, the values are computed for the current
-            Low Dose Record magnification; if it is positive, the vectors are computed for the given 
-            magnification index; if it is -1, they are computed for the magnification at which 
-            hole IS vectors were last defined; if it is < -1, they are computed for the magnification of 
-            the image in which holes were detected.&nbsp; The magnification associated with the image shift vectors in the
-            multiple Record parameters is set to whatever value is used here, and the tilt angle stored in
-            the parameters is that of the image in which holes were found.&nbsp; Use -2 to be able to apply a
-            stored adjusting transformation to the vectors.</TD>
-        </TR>
-        <TR>
-          <TD class="scriptcommand">UseMapItemHoleVectors #</TD>
-          <TD>For the Navigator item indicated by <b>#</b> (0 for current item or item being acquired,
-             positive for index in table, negative for distance from end of table), assigns image shift 
-            values stored when holes were found on an associated image as the vectors for doing multiple 
-            records in a regular pattern of holes.&nbsp; If the given item is not a map, shift values are 
-            sought in the map that item was drawn on.&nbsp; This command has the same effect as running
-            'UseHoleVectorsFromMulti -2' when holes were first found.&nbsp; </TD>
-        </TR>
-        <TR>
-          <TD class="scriptcommand">UseNavGroupForMultishot #K [#X] [#Y]</TD>
-          <TD>Converts the relative stage positions of items in the currently selected Navigator group, or the
-            group currently being acquired if acquiring, to hole 
-            image shift vectors of the kind specified by <b>#K</b>: 0 for a regular rectangular pattern, 1 for 
-            a hexagonal pattern, or 2 for a custom pattern. &nbsp;There must be 4, 6, or at least 2 points in
-            the group, respectively, and points in a rectangle or hexagon must occur in a regular progression 
-            around the pattern.&nbsp; Enter the optional <b>#X</b> and <b>#Y</b> to specify the number of holes
-            in each direction over which these points apply for a regular pattern, or <b>#X</b> to specify the number
-            of rings for a hexagonal pattern; otherwise the values in the Multiple Record dialog 
-            apply.&nbsp; </TD>
-        </TR>
-       <TR>
-          <TD class="scriptcommand">ReportSmallestHoleShift #</TD>
-          <TD>Reports the X and Y components of the image shift for the hole closest to the 
-            center of the multishot pattern for the current item if <b>#</b> is 0, or the item whose index is 
-            specified in <b>#</b> with a positive or
-            negative number (as in ReportItemAcquire).&nbsp; If the item has no defined multishot pattern, the current
-            pattern from the settings is used.&nbsp; Command added in 4.3, 23-Sep-25.</TR>
-        <TR>
-          <TD class="scriptcommand">AutoContourGridSquares buf [#R] [#H] [#T] [#S] [#L] [#P]</TD>
-          <TD>Finds areas above a threshold in the image in [buf] and makes contours around them, then divides them into groups
-            that are displayed in different colors, depending on the elimination criteria and settings in the
-            <a href="hidd_autocontour.htm">Autocontouring Grid Squares dialog</a>, which need not be open.&nbsp; The 
-            autocontouring routines in the IMOD model library are used and take byte input,
-            so the image will be scaled to bytes using the Black and White values in Image Display control panel.&nbsp; If
-             an optional input is omitted or negative, the value from the dialog will be used.&nbsp; Optional inputs are:<br />
-            &nbsp;&nbsp;&nbsp; <b>#R</b> - Either a pixel size in microns (if &lt; 10) or a target size in pixels (if &gt; 10) for
-            image reduction.&nbsp; Some reduction is needed both to reduce noise and to speed up the processing, but too 
-            much reduction will give inaccurate contours.&nbsp; Whole grid maps should be reduced to
-             ~1500-2000 pixels; a pixel size of ~1.2 um is useful.<br />
-            &nbsp;&nbsp;&nbsp; <b>#H</b> - Fraction used for setting a threshold based on a histogram analysis
-            that finds two peak values in a bimodal distribution of image intensities.&nbsp; The contouring 
-            threshold is set to the given fractional distance between the peaks.&nbsp; If the analysis fails to find two
-            peaks, a specific threshold must be set instead.<br />
-            &nbsp;&nbsp;&nbsp; <b>#T</b> - A specific threshold to use instead of doing a histogram analysis;
-            enter 0 for <b>#H</b> and enter either an actual intensity value in the displayed image (a value &gt; 1),
-            or a relative threshold, the fraction of the way between the Black and White values in the current 
-            display.&nbsp; This value is ignored if <b>#H</b> is nonzero.<br />
-            &nbsp;&nbsp;&nbsp; <b>#S</b> - Smallest size, in microns, for an area; the square of this value is used
-            to set the minimum area to retain as a polygon.<br />
-            &nbsp;&nbsp;&nbsp; <b>#L</b> - Largest size, in microns, for an area; again, the square is 
-            used to set the maximum area to retain as a polygon.<br />
-            &nbsp;&nbsp;&nbsp; <b>#P</b> - 1 to contour inside current polygon if any, or 0 not to.<br />
-            &nbsp; </TD>
-        </TR>
-        <TR>
-          <TD class="scriptcommand">SetAutocontourGroups #N #W [#O...]</TD>
-          <TD>Sets the number of groups of grid square contours with <B>#N</B> and the way in which contours are
-             sorted into groups with <b>#W</b> (0 for size or 1 for mean).&nbsp; This can be followed by a series
-            values to set the option to show a group on (1) or off (0); values need not be entered for all groups.&nbsp; Any
-            of these entries can be -1 to leave the existing setting unchanged.&nbsp; This command modifies the user
-            settings for these items, and if the <a href="hidd_autocontour.htm">Autocontouring Grid Squares dialog</a>
-             is open it will reflect these changes.&nbsp; </TD>
-        </TR>
-        <TR>
-          <TD class="scriptcommand">ReportAutocontourStats</TD>
-          <TD>Reports the minimum, maximum, and median intensity inside of the current set of grid 
-            squares found with 'AutoContourGridSquares'.&nbsp; </TD>
-        </TR>
-        <TR>
-          <TD class="scriptcommand">MakePolygonsAtSquares [#L] [#U] [#M] [#S] [#I] [#B]</TD>
-          <TD>Converts the current set of grid squares found with 'AutoContourGridSquares' to Navigator
-            polygons, equivalent to pushing the <b>Make Polygons</b> button in the
-            <a href="hidd_autocontour.htm">Autocontouring Grid Squares dialog</a>.&nbsp; The values from the
-            dialog, or stored settings, are used for the various cutoffs, but they can be overridden by these optional
-            entries: (enter -1 for any of these to use the dialog or stored value instead:
-            <br />&nbsp;&nbsp;&nbsp; <b>#L</b> - Lower mean cutoff, either an absolute value > 1, or a value between
-             0 and 1 for a relative cutoff, the fraction of the way between the minimum and median mean (which 
-            corresponds to the fractional position of the slider in the dialog).
-            <br />&nbsp;&nbsp;&nbsp; <b>#U</b> - Upper mean cutoff, either an absolute value > 1, or a value between
-             0 and 1 for a relative cutoff, the fraction of the way between the median and maximum mean.
-            <br />&nbsp;&nbsp;&nbsp; <b>#</b> - Minimum size cutoff in microns.
-            <br />&nbsp;&nbsp;&nbsp; <b>#</b> - Maximum SD cutoff.
-            <br />&nbsp;&nbsp;&nbsp; <b>#</b> - Maximum irregularity cutoff.
-            <br />&nbsp;&nbsp;&nbsp; <b>#</b> - Minimum border distance, in microns.
-             &nbsp;</TD>
-        </TR>
-       <TR>
-          <TD colspan="2"><A name="navigatoritemgen"></A><B>Other Item Generating Commands</B></TD>
+          <TD colspan="2"><A name="navigatoritemgen"></A><B>Item Generating Commands</B></TD>
         </TR>
         <TR>
           <TD class="scriptcommand">NewMap [#N text]</TD>
@@ -6012,6 +5805,213 @@
             Multiple Grid Operations is either running or suspended, thus allowing a script to detect
             when a new grid has been started.&nbsp; Command added in 4.2, 23-Mar-25.
           </TD>
+        </TR>
+        <TR>
+          <TD colspan="2"><A name="hole_square_finding"></A><B>Hole and Grid Square Finding Commands</B></TD>
+        </TR>
+              <TR>
+          <TD class="scriptcommand">FindHoles [buf]</TD>
+          <TD>Runs the Hole Finder routine on the image in the current buffer, or in the
+            buffer optionally specified by <b>buf</b>, using all of the
+               parameters set in the <A HREF="hidd_hole_finder.htm">Hole Finder dialog</A>.&nbsp; That dialog
+            need not be open, but the Navigator must be.
+            </TD>
+        </TR>
+       <TR>
+          <TD class="scriptcommand">MakeNavPointsAtHoles [#A] [#L] [#U] [#S] [#B] [#E] [#H]</TD>
+          <TD>Makes positions found by the Hole Finder into Navigator points, using the various
+            thresholds for exclusion set in
+              the <A HREF="hidd_hole_finder.htm">Hole Finder dialog</A>.&nbsp; That dialog
+            need not be open, but the Navigator must be.&nbsp; Optionally, <b>#A</b> may be entered with 0 to 2
+            to specify the arrangement of points (0 for zigzag, 1 for away from focus, 2 for divided
+            into groups, or -1 to use the layout set in the dialog); <b>#L</b> and
+            <b>#U</b>
+             may be entered to set alternative lower and/or upper mean thresholds for excluding points
+            (enter -999999 for <b>#L</b> or <b>#U</b> to use the dialog setting);
+            <b>#S</b> may be entered to set the SD cutoff
+             (or -1 to use the dialog value); <b>#B</b> may be entered to set the cutoff for the
+            percentage of black pixels; <b>#E</b> may be entered to set the edge distance cutoff; and <b>#H</b>
+            may be entered to use a 1/3 subset of points on a hex grid.</TD>
+        </TR>
+      <TR>
+          <TD class="scriptcommand">ClearHoleFinder</TD>
+          <TD>Removes the display of points found by the Hole Finder and frees its memory.
+            </TD>
+        </TR>
+      <TR>
+          <TD class="scriptcommand">CombineHolesToMulti #S [#O] [#X #Y]</TD>
+          <TD>Combines a set of Navigator points marked for acquisition into a subset suitable for
+            acquisition of a rectangular array with 'MultipleRecords', using the parameters set in the
+            <A HREF="hidd_multi_shot_setup.htm">Multiple Record Setup dialog</A>.
+            See the &nbsp; <A HREF="hidd_multi_combiner.htm">Multiple Hole Combiner dialog</A>
+            for details and restrictions.&nbsp; Neither of those two dialogs need to be open, but the Navigator must be.
+            &nbsp; Set <b>#S</b> to 0 to select points on the currently displayed image, 1 to select points
+            within the current polygon, or 2 to select points in the same group as the current point.&nbsp; Set 
+            the optional <b>#O</b> to 1 to turn off points outside a polygon in the same groups as the ones combined,
+            or 0 not to, overriding the selection in the dialog, or -1 to use the dialog setting.&nbsp; To override 
+            the number of holes specified in the dialog, add both <b>#X</b> and <b>#Y</b> with either the number of
+            holes in X and Y in a rectangular pattern, or -3 and -3 for a cross pattern, or -1 and the number of 
+            rings in a hexagonal pattern.
+            </TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">UndoHoleCombining</TD>
+          <TD>Removes the multi-shot acquisition points created by the last hole-combining
+             operation (through script command or dialog) and restores the individual points
+             to the Navigator table.&nbsp; All of the multi-shot points must still exist.
+             </TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">ReportHoleFinderParams</TD>
+          <TD>Reports the diameter and center-to-center spacing in microns currently being 
+            used for hole finding, whether it is set to analyze for a hexagonal array, and the
+            maximum error.</TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">SetHoleFinderParams #D #S #H [#M] [fvar] [tvar]</TD>
+          <TD>Sets the parameters for hole finding to <b>#D</b> for the diameter and <b>#S</b> for the 
+            center-to-center spacing in microns and sets it to analyze for a hexagonal array if <b>#H</b> is 
+            non-zero, in which case the hex-specific size and spacing are set.&nbsp; The maximum error is set 
+            with the optional <b>#M</b> if it is positive.&nbsp; If <b>fvar</b> is included with the name of
+            an array variable, it is used to set the filter sigma values and median iterations (positive values for sigma,
+            or negative number of iterations). If <b>tvar</b> is included with the name of
+            an array variable, it is used to set the thresholds (use 'NONE' for <b>fvar</b> to set just the
+            thresholds).&nbsp; </TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">FindMultiMapHoles #S #E #C [#A] [#R] [#H] [#T] [#S] [#L]</TD>
+          <TD>Runs a routine to find holes for all maps at one magnification with Navigator table indexes
+            between <b>#S</b> and <b>#E</b> inclusive, and combining the resulting points for Multiple Records 
+            if there are at least <b>#C</b> points, or not combining if <b>#C</b> is 0.&nbsp; 
+            See <A href="hidd_hole_finder.htm#multimap">Finding Holes in Multiple Maps</A> for details.&nbsp;
+            If the optional <b>#A</b> is 1or 2 autocontouring is used to create a polygon around the mesh opening;
+             when it is 1, all eligible maps within the range will be processed with hole finding and 
+            autocontouring; when it is 2, only maps
+            marked as Acquire will be processed, and then Acquire will be turned off for them.&nbsp; The other
+            optional parameters are the same as the ones described in detail for the 'AutoContourGridSquares' command
+            (in brief, reduction target, histogram-based threshold, absolute threshold, smallest and largest 
+            sizes).&nbsp; Reduction to 100-200 pixels is useful to avoid a very ragged contour when 
+            contouring a single grid square.
+          &nbsp; Command added in 4.2, 7-Aug-24; autocontouring added in 4.3, 6-Jun-25.</TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">FindAndCenterOneHole buf #D [#C] [#S]</TD>
+          <TD>Runs the Hole Finder with parameters appropriate for finding the hole nearest to the center
+             of an image with one or a few holes in it, and optionally centering on the hole with image 
+            shift.&nbsp;<b>buf</b> specifies the buffer and can be 0 for the currently displayed 
+            image.&nbsp;Set <b>#D</b> to the diameter in microns; optional <b>#C</b> to the number of 
+            circle sizes to try, or 0 for the default (generally 7); and optional<b>#S</b> to the maximum
+             image shift allowed as a fraction of the hole diameter.  Other hole-finding parameters such as
+            geometry and spacing are taken from existing settings.&nbsp; Command added in 4.2, 29-Oct-24.
+          </TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">ReportLastHoleVectors #</TD>
+          <TD>Reports the vectors between holes along the two axes from the last hole finding operation in
+            one of 3 forms.&nbsp; If <b>#</b> is 0, the vectors are in stage coordinates, adjusted for
+            View or Search defocus offset if there is a high-magnification defocus calibration.&nbsp; If
+            <b>#</b> is negative, the vectors are in image coordinates, with Y inverted.&nbsp; If <b>#</b>
+            is a magnification index, the vectors are in image shift coordinates at the given magnification.</TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">UseHoleVectorsForMulti [#]</TD>
+          <TD>Converts the vectors between holes from the last hole finding operation to image shift
+             values and assigns them as the hole vectors for doing multiple records in a regular pattern 
+            of holes.&nbsp; If the optional [#] is absent or 0, the values are computed for the current
+            Low Dose Record magnification; if it is positive, the vectors are computed for the given 
+            magnification index; if it is -1, they are computed for the magnification at which 
+            hole IS vectors were last defined; if it is < -1, they are computed for the magnification of 
+            the image in which holes were detected.&nbsp; The magnification associated with the image shift vectors in the
+            multiple Record parameters is set to whatever value is used here, and the tilt angle stored in
+            the parameters is that of the image in which holes were found.&nbsp; Use -2 to be able to apply a
+            stored adjusting transformation to the vectors.</TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">UseMapItemHoleVectors #</TD>
+          <TD>For the Navigator item indicated by <b>#</b> (0 for current item or item being acquired,
+             positive for index in table, negative for distance from end of table), assigns image shift 
+            values stored when holes were found on an associated image as the vectors for doing multiple 
+            records in a regular pattern of holes.&nbsp; If the given item is not a map, shift values are 
+            sought in the map that item was drawn on.&nbsp; This command has the same effect as running
+            'UseHoleVectorsFromMulti -2' when holes were first found.&nbsp; </TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">UseNavGroupForMultishot #K [#X] [#Y]</TD>
+          <TD>Converts the relative stage positions of items in the currently selected Navigator group, or the
+            group currently being acquired if acquiring, to hole 
+            image shift vectors of the kind specified by <b>#K</b>: 0 for a regular rectangular pattern, 1 for 
+            a hexagonal pattern, or 2 for a custom pattern. &nbsp;There must be 4, 6, or at least 2 points in
+            the group, respectively, and points in a rectangle or hexagon must occur in a regular progression 
+            around the pattern.&nbsp; Enter the optional <b>#X</b> and <b>#Y</b> to specify the number of holes
+            in each direction over which these points apply for a regular pattern, or <b>#X</b> to specify the number
+            of rings for a hexagonal pattern; otherwise the values in the Multiple Record dialog 
+            apply.&nbsp; </TD>
+        </TR>
+       <TR>
+          <TD class="scriptcommand">ReportSmallestHoleShift #</TD>
+          <TD>Reports the X and Y components of the image shift, in raw units, for the hole closest to the 
+            center of the multishot pattern for the current item if <b>#</b> is 0, or the item whose index is 
+            specified in <b>#</b> with a positive or
+            negative number (as in ReportItemAcquire).&nbsp; If the item has no defined multishot pattern, the current
+            pattern from the settings is used.&nbsp; Command added in 4.3, 23-Sep-25.</TR>
+        <TR>
+          <TD class="scriptcommand">AutoContourGridSquares buf [#R] [#H] [#T] [#S] [#L] [#P]</TD>
+          <TD>Finds areas above a threshold in the image in [buf] and makes contours around them, then divides them into groups
+            that are displayed in different colors, depending on the elimination criteria and settings in the
+            <a href="hidd_autocontour.htm">Autocontouring Grid Squares dialog</a>, which need not be open.&nbsp; The 
+            autocontouring routines in the IMOD model library are used and take byte input,
+            so the image will be scaled to bytes using the Black and White values in Image Display control panel.&nbsp; If
+             an optional input is omitted or negative, the value from the dialog will be used.&nbsp; Optional inputs are:<br />
+            &nbsp;&nbsp;&nbsp; <b>#R</b> - Either a pixel size in microns (if &lt; 10) or a target size in pixels (if &gt; 10) for
+            image reduction.&nbsp; Some reduction is needed both to reduce noise and to speed up the processing, but too 
+            much reduction will give inaccurate contours.&nbsp; Whole grid maps should be reduced to
+             ~1500-2000 pixels; a pixel size of ~1.2 um is useful.<br />
+            &nbsp;&nbsp;&nbsp; <b>#H</b> - Fraction used for setting a threshold based on a histogram analysis
+            that finds two peak values in a bimodal distribution of image intensities.&nbsp; The contouring 
+            threshold is set to the given fractional distance between the peaks.&nbsp; If the analysis fails to find two
+            peaks, a specific threshold must be set instead.<br />
+            &nbsp;&nbsp;&nbsp; <b>#T</b> - A specific threshold to use instead of doing a histogram analysis;
+            enter 0 for <b>#H</b> and enter either an actual intensity value in the displayed image (a value &gt; 1),
+            or a relative threshold, the fraction of the way between the Black and White values in the current 
+            display.&nbsp; This value is ignored if <b>#H</b> is nonzero.<br />
+            &nbsp;&nbsp;&nbsp; <b>#S</b> - Smallest size, in microns, for an area; the square of this value is used
+            to set the minimum area to retain as a polygon.<br />
+            &nbsp;&nbsp;&nbsp; <b>#L</b> - Largest size, in microns, for an area; again, the square is 
+            used to set the maximum area to retain as a polygon.<br />
+            &nbsp;&nbsp;&nbsp; <b>#P</b> - 1 to contour inside current polygon if any, or 0 not to.<br />
+            &nbsp; </TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">SetAutocontourGroups #N #W [#O...]</TD>
+          <TD>Sets the number of groups of grid square contours with <B>#N</B> and the way in which contours are
+             sorted into groups with <b>#W</b> (0 for size or 1 for mean).&nbsp; This can be followed by a series
+            values to set the option to show a group on (1) or off (0); values need not be entered for all groups.&nbsp; Any
+            of these entries can be -1 to leave the existing setting unchanged.&nbsp; This command modifies the user
+            settings for these items, and if the <a href="hidd_autocontour.htm">Autocontouring Grid Squares dialog</a>
+             is open it will reflect these changes.&nbsp; </TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">ReportAutocontourStats</TD>
+          <TD>Reports the minimum, maximum, and median intensity inside of the current set of grid 
+            squares found with 'AutoContourGridSquares'.&nbsp; </TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">MakePolygonsAtSquares [#L] [#U] [#M] [#S] [#I] [#B]</TD>
+          <TD>Converts the current set of grid squares found with 'AutoContourGridSquares' to Navigator
+            polygons, equivalent to pushing the <b>Make Polygons</b> button in the
+            <a href="hidd_autocontour.htm">Autocontouring Grid Squares dialog</a>.&nbsp; The values from the
+            dialog, or stored settings, are used for the various cutoffs, but they can be overridden by these optional
+            entries: (enter -1 for any of these to use the dialog or stored value instead:
+            <br />&nbsp;&nbsp;&nbsp; <b>#L</b> - Lower mean cutoff, either an absolute value > 1, or a value between
+             0 and 1 for a relative cutoff, the fraction of the way between the minimum and median mean (which 
+            corresponds to the fractional position of the slider in the dialog).
+            <br />&nbsp;&nbsp;&nbsp; <b>#U</b> - Upper mean cutoff, either an absolute value > 1, or a value between
+             0 and 1 for a relative cutoff, the fraction of the way between the median and maximum mean.
+            <br />&nbsp;&nbsp;&nbsp; <b>#</b> - Minimum size cutoff in microns.
+            <br />&nbsp;&nbsp;&nbsp; <b>#</b> - Maximum SD cutoff.
+            <br />&nbsp;&nbsp;&nbsp; <b>#</b> - Maximum irregularity cutoff.
+            <br />&nbsp;&nbsp;&nbsp; <b>#</b> - Minimum border distance, in microns.
+             &nbsp;</TD>
         </TR>
         </TABLE>
       <BR>
