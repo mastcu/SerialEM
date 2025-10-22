@@ -11403,8 +11403,10 @@ int CMacCmd::RefineGridMapAlignment()
   if (CheckAndConvertCameraSet(mStrItems[2], mItemInt[2], setNum, mStrCopy))
     ABORT_LINE(mStrCopy);
   if (mWinApp->mMultiGridTasks->AlignGridMapAcrossMags(navItem, setNum,
-    mItemEmpty[4] ? EXTRA_NO_VALUE : mItemFlt[4],
-    mItemEmpty[5] ? EXTRA_NO_VALUE : mItemFlt[5], mItemEmpty[3] ? 0.f : mItemFlt[3],
+    mItemEmpty[6] ? 1 : mItemInt[6], mItemEmpty[7] ? 1 : mItemInt[7],
+    (mItemEmpty[4] || mItemFlt[4] < -1900) ? EXTRA_NO_VALUE : mItemFlt[4],
+   ( mItemEmpty[5] || mItemFlt[5] < -1900) ? EXTRA_NO_VALUE : mItemFlt[5], 
+    mItemEmpty[3] ? 0.f : mItemFlt[3],
     mStrCopy))
     ABORT_LINE(mStrCopy + " for line:\n\n");
   mStartedOtherTask = true;

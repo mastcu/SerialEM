@@ -4209,7 +4209,10 @@
             overlap the scaled reference.&nbsp; A negative value of <b>#M</b> specifies the number of fields
             of view to add to the size of the image in A, or equivalently the number of FOVs of shift 
             that can occur with full overlap.&nbsp; A value of -1 would make the reference about 3 times as big
-            as the image in A.&nbsp; <br />
+            as the image in A.&nbsp; The maximum amount of shift may be reduced if a limited area can be extracted 
+            from the scaled-up image, but
+            the requirement for full overlap overlap is relaxed to allow shifts up to 0.5 FOV or the amount specified,
+             whichever is less.<br />
             The optional <b>#S</b> sets the maximum percent change in size to be tested; the default is
             the value of the property 'ScaledAliDfltPctChg', which defaults to 4
             to test scalings from 0.96 to 1.04.&nbsp;  Enter 0 for the default.<Br>
@@ -5579,7 +5582,7 @@
                         </TD>
         </TR>
         <TR>
-          <TD class="scriptcommand">RefineGridMapAlignment #I set [#M] [#X] [#Y]</TD>
+          <TD class="scriptcommand">RefineGridMapAlignment #I set [#M] [#X] [#Y] [#PX] [#PY]</TD>
           <TD>Runs a routine to refine the alignment to a grid map by aligning medium-magnification images 
             with scaled-up portions of the grid map.&nbsp; See the section <I>Optional Controls for Refining 
               Alignment</I> in the help for <a href="hidd_multi_grid.htm">Multiple Grid Operations</a>
@@ -5592,7 +5595,11 @@
             three measured shifts; enter 0 to use the default limit or -1 to not shift Navigator points
              regardless of the result.<br />
             <b>#X</b> and <b>#Y</b> optionally set a preferred position around which to choose a polygon,
-             in place of the centroid of all eligible polygons.&nbsp; Command added in 4.2, 30-Dec-24.
+             in place of the centroid of all eligible polygons; enter X/Y values less than -1900 for the 
+            default position.<br />
+            <b>#PX</b> and <b>#PY</b> optionally set the number of pieces in X and Y if a montage is 
+            needed at each corner.&nbsp; Stage movement will be used if the property MulGridRefineStageMont
+             is set.&nbsp; Command added in 4.2, 30-Dec-24; montage added in 4.3, 21-Oct-25.
           </TD>
         </TR>
         <TR>

@@ -3,6 +3,13 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+10/21/25: Made the routine for refining grid alignment able to take a montage
+at each corner to get the required FOV, and improved corrdinate handling and
+picking of corner positions.
+
+10/21/25: Made AlignBetweenMags more flexible when images being aligned are
+close to the same size in microns.
+
 10/21/25: Enabled FindAndCenterOneHole script command to use a previously found
 hole size in a map containing the current buffer image.
 

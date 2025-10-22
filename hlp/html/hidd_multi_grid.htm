@@ -337,6 +337,14 @@
       polygon is much closer to the center of its piece.&nbsp; If you have to add 
       polygons manually to enable use of this routine, try to put them near the 
       centers of montage pieces.</p>
+    <p>The routine requires images or montages with a field of view (FOV) bigger than 
+      a value that can be set with the property &#39;MulGridRefineMinField&#39;, with a 
+      default of 8 microns.&nbsp; When the required FOV is bigger than that of the 
+      camera, the program will determine the number of montage pieces required to 
+      achieve the requirement, and the realignment routine will take a montage at each 
+      of the 3 corners.&nbsp; On the right side of the line with this option, there is an indicator of the 
+      FOV that will be acquired with the selected method, including &#39;in 2x3&#39; or other 
+      numbers if a montage will be taken.</p>
     <p>When this option is checked with the &#39;ShowMulGridRefine&#39; property set, the 
       program will run the refinement after the low mag realign to the grid map when 
       running multiple grids, and will also run it after acquiring a grid map when going 
@@ -357,8 +365,7 @@
       find that the routine is useful for this purpose and are acquiring both grid 
       maps and medium mag maps in a single run, add the property &#39;ShowMulGridRefine&#39;, 
       which will enable it to be run even right after taking a grid map.</p>
-    <p>On the right side of the line with this option, there is an indicator of the 
-      field of view (FOV) of images acquired with the selected method.</p>
+    <p>&nbsp;</p>
     <p><strong>Search&nbsp; -&nbsp; View&nbsp; -&nbsp; State</strong></p>
     <p>Use the radio buttons to select between using Low Dose Search or View with 
       current parameters, or a stored state.&nbsp; If you use a state, it must be 

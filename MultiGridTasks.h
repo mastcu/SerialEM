@@ -123,7 +123,7 @@ public:
   void AlignNewReloadImage();
   ScaleMat FindReloadTransform(float dxyOut[2], float &theta, float &residOut);
   void UndoOrRedoMarkerShift(bool redo);
-  int AlignGridMapAcrossMags(CMapDrawItem *item, int setNum, float findNearX, float findNearY,
+  int AlignGridMapAcrossMags(CMapDrawItem *item, int setNum, int numXpiece, int numYpiece, float findNearX, float findNearY,
     float maxDiff, CString &errStr);
   void MoveStageForRefineMapAlign();
   void RefineRealignNextTask(int param);
@@ -147,7 +147,7 @@ public:
   int OpenFileForFinalAcq();
   int RealignToGridMap(int jcdInd, bool askIfSave, bool applyLimits, CString &errStr, bool needState = true);
   int PrepareAlignToGridMap(int jcdInd, bool askIfSave, CMapDrawItem **itemP, CString &errStr);
-  int RefineGridMapAlignment(int jcdInd, int stateNum, bool askIfSave, CString &errStr);
+  int RefineGridMapAlignment(int jcdInd, int stateNum, bool askIfSave, int numXpc, int numYpc, CString &errStr);
   int ReloadGridMap(CMapDrawItem *item, int useBin, CString &errStr);
   int OpenNavFileIfNeeded(JeolCartridgeData &jcd);
   int MarkerShiftIndexForMag(int magInd, BaseMarkerShift &baseShift);
@@ -222,6 +222,7 @@ public:
   GetMember(int, SingleCondenserAp);
   GetMember(double, RunStartTime);
   GetSetMember(int, PostLoadDelay);
+  GetSetMember(BOOL, RefineUseStageMont);
   int *GetMontSetupConsetSizes() { return &mMontSetupConsetSizes[0]; };
   IntVec *GetCustomRunDlgInds() {return &mCustomRunDlgInds ; };
   bool WasStoppedInNavRun() { return mStoppedInNavRun && mSuspendedMulGrid; };
@@ -337,6 +338,15 @@ private:
   float mRRGRotLimitForXform;    // Limit to rotation in transformation
   float mRRGResidLimitForXform;  // Limit to residual in transformation in microns
   int mRefineSetNum;             // Image type for refine alignment
+  int mRefineXpieces;            // Number of pieces for montage when running one
+  int mRefineYpieces;
+  int mUseNumXpieces;            // Saved number of pieces from check function to use when
+  int mUseNumYpieces;            // run it
+  int mMaxRefineMontPixels;      // Maximum number of pixels in overview to align
+  int mRefineOverviewBin;        // Saved overview binning needed to get that
+  bool mRefineOpenedMont;        // Flag that montage was opened
+  float mRefineXinImage[3];      // Pixel positions in image determined in startup
+  float mRefineYinImage[3];
   CMapDrawItem *mRefineItem;     // Map item for refine
   int mRefineStepIndex;          // Index of point being done
   float mMaxRefineDiff;          // Do not apply refine if minimum difference exceeds this
@@ -345,6 +355,7 @@ private:
   int mRefineUsedLDorState;      // 1 if turned on LD, -1 if set state
   float mMaxSizeForRefinePolys;  // Maximum linear extent of polygons for refine align
   float mMaxRefineShiftDiff;     // Maximum shift difference when running multigrid
+  BOOL mRefineUseStageMont;      // Flag to use stage montage
 
   int mInitialObjApSize;         // Initial size of objective aperture
   int mInitialCondApSize;        // Initial size of condenser aperture

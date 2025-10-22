@@ -185,7 +185,8 @@ public:
   int SetupMMMacquire(bool skipDlg);
   void SaveMontSetupSize(MontParam *montP, BOOL lowDose, int &setupSizeX, int &setupSizeY);
   bool MontSetupSizesMatch(MontParam *montP, BOOL lowDose, int setupSizeX, int setupSizeY);
-  int CheckRefineOptions(float &FOV, int &ldArea, int &setNum, StateParams **state, CString &errStr);
+  int CheckRefineOptions(float &FOV, int &ldArea, int &setNum, StateParams **state, 
+    int &numXpiece, int &numYpiece, CString errStr);
   int ManageRefineFOV();
   void ManageCondenserUnits();
   void LoadStatesInComboBox(CComboBox &combo, bool addNone);

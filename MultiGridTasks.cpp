@@ -46,6 +46,8 @@ static const char *sActionNames[] = {"Remove objective aperture", "Set condenser
 "Set Z height", "Check & apply Shift to Marker", "Set Focus area position", "Run script",
 "Refine grid alignment", "Grid done"};
 
+static const char *sTempMontName = "refineRealignTemp.mrc";
+
 
 CMultiGridTasks::CMultiGridTasks()
 {
@@ -125,6 +127,9 @@ CMultiGridTasks::CMultiGridTasks()
   mRefineUsedLDorState = 0;
   mMaxSizeForRefinePolys = 250.;
   mMaxRefineShiftDiff = 5.;
+  mMaxRefineMontPixels = 2500;
+  mRefineOpenedMont = false;
+  mRefineUseStageMont = false;
   mPostLoadDelay = 0;
 }
 
@@ -438,6 +443,8 @@ int CMultiGridTasks::MultiGridBusy()
 {
   if (mStartedLongOp) 
     return mScope->LongOperationBusy();
+  if (mDoingMultiGrid == MG_REFINE_REALIGNED && mRefineXpieces > 0)
+    return mWinApp->mMontageController->DoingMontage();
   return 0;
 }
 
@@ -459,6 +466,10 @@ void CMultiGridTasks::StopMultiGrid()
 {
   if (!mDoingMultiGrid)
     return;
+
+  if (mRefineOpenedMont)
+    CMultiShotDlg::CloseTempPrevMontage(sTempMontName);
+  mRefineOpenedMont = false;
 
   // Reset things from the reload realign
   if (mDoingMultiGrid == MG_REALIGN_RELOADED) {
@@ -1606,22 +1617,24 @@ void CMultiGridTasks::UndoOrRedoMarkerShift(bool redo)
   * but imaging conditions must already be set up.  
  */
 int CMultiGridTasks::AlignGridMapAcrossMags(CMapDrawItem *mapItem, int setNum,
-  float findNearX, float findNearY, float maxDiff, CString &errStr)
+  int numXpiece, int numYpiece, float findNearX, float findNearY, float maxDiff,
+  CString &errStr)
 {
-  FloatVec polySizes, tempSizes, fitX, fitY, fitDist, angles, pcCenDists;
+  FloatVec polySizes, tempSizes, fitX, fitY, fitDist, angles, pcCenDists, candX, candY;
   IntVec candidates;
   MapItemArray *itemArray;
   LowDoseParams *ldp = mWinApp->GetLowDoseParams();
   int ind, ldArea, magInd, numPoly, bestInd = -1, camSize, cen, jnd, dir, lastJnd;
   int numFit, cornInd[3], numSteps, nxIm, nyIm, type, boxLen, boxWidth, knd, indMinCen;
-  float pctCrit = 0.9f, perimFrac = 0.1f;
-  float cenOffset = 0.1f, edgeTestLen = 5., edgeCritFrac = 0.33f;
+  int sizeX, sizeY, binSize, isi, numInterp;
+  float pctCrit = 0.9f, perimFrac = 0.1f, maxPerimFrac = 0.22f, fitIntervalFrac = 0.005f;
+  float cenOffset = 0.1f, edgeTestLen = 8.f, edgeCritFrac = 0.33f;
   float xSum = 0., ySum = 0., size, dist, FOV;
-  float perim, minLength, intcp, slope, ro, vecX[2], vecY[2], frac;
-  float intcp2, slope2, ro2, delX, delY, cenXdel, cenYdel;
+  float perim, minLength, intcpx[2], slopex[2], ro, vecX[2], vecY[2], frac, maxLength;
+  float intcpy[2], slopey[2], ro2, delX, delY, cenXdel, cenYdel, denom, segLen, subSeg;
   float nearXstage, nearYstage, farXstage, farYstage, nearXim, nearYim, farXim, farYim;
-  float xCorn, yCorn;
-  float maxCenDist = -1.e30f, minCenDist = 1.e30f, bestTargDist;
+  float xCorn, yCorn, pixel, singleXadj = 0., singleYadj = 0.;
+  float maxCenDist = -1.e30f, minCenDist = 1.e30f, bestTargDist, fitInterval, subDist;
   ScaleMat aMat;
   ControlSet *conSets = mWinApp->GetConSets();
   CMapDrawItem *item;
@@ -1647,12 +1660,23 @@ int CMultiGridTasks::AlignGridMapAcrossMags(CMapDrawItem *mapItem, int setNum,
   } else {
     magInd = mScope->GetMagIndex();
   }
-  camSize = B3DMIN(conSets[setNum].right - conSets[setNum].left,
-    conSets[setNum].bottom - conSets[setNum].top);
-  FOV = mShiftManager->GetPixelSize(mWinApp->GetCurrentCamera(), magInd) * (float)camSize;
+  pixel = mShiftManager->GetPixelSize(mWinApp->GetCurrentCamera(), magInd);
+  sizeX = conSets[setNum].right - conSets[setNum].left;
+  sizeY = conSets[setNum].bottom - conSets[setNum].top;
+  if (numXpiece * numYpiece > 1) {
+    camSize = B3DMIN(sizeX + (numXpiece - 1) * (sizeX - sizeX / 10),
+      sizeY + (numYpiece - 1) * (sizeY - sizeY / 10));
+    binSize = camSize / conSets[setNum].binning;
+    mRefineOverviewBin = (mMaxRefineMontPixels + binSize - 1) / binSize;
+  } else {
+    camSize = B3DMIN(sizeX, sizeY);
+    numXpiece = 0;
+  }
+  FOV = pixel * (float)camSize;
   if (FOV < mRefineMinField) {
-    errStr.Format("The minimum dimension of the camera field is only %.1f um, less than "
-      "the %.1f required to refine grid map alignment", FOV, mRefineMinField);
+    errStr.Format("The minimum dimension of the %s is only %.1f um, less than "
+      "the %.1f required to refine grid map alignment", numXpiece > 0 ?
+      "montage" : "camera field", FOV, mRefineMinField);
     return 1;
   }
 
@@ -1678,7 +1702,7 @@ int CMultiGridTasks::AlignGridMapAcrossMags(CMapDrawItem *mapItem, int setNum,
         xSum += item->mStageX;
         ySum += item->mStageY;
         mWinApp->mMainView->ExternalStageToImage(&mImBufs[mMapBuf], aMat, delX,
-          delY, item->mStageX, item->mStageY, slope, slope2, &dist);
+          delY, item->mStageX, item->mStageY, xCorn, yCorn, &dist);
         ACCUM_MAX(maxCenDist, dist);
         if (dist < minCenDist) {
           minCenDist = dist;
@@ -1735,12 +1759,15 @@ int CMultiGridTasks::AlignGridMapAcrossMags(CMapDrawItem *mapItem, int setNum,
     perim += sqrtf(powf(item->mPtX[ind] - item->mPtX[ind - 1], 2.f) + 
       powf(item->mPtY[ind] - item->mPtY[ind - 1], 2.f));
   minLength = perimFrac * perim;
+  maxLength = maxPerimFrac * perim;
+  fitInterval = fitIntervalFrac * perim;
 
   // Walk around, fit lines in two directions from each point out to 1/10 of perimeter
   candidates.clear();
   for (cen = 0; cen < item->mNumPoints - 1; cen++) {
     for (dir = -1; dir <= 1; dir += 2) {
       dist = 0.;
+      isi = (dir + 1) / 2;
       lastJnd = cen;
       fitX.clear();
       fitY.clear();
@@ -1750,24 +1777,48 @@ int CMultiGridTasks::AlignGridMapAcrossMags(CMapDrawItem *mapItem, int setNum,
       fitDist.push_back(0.);
       for (ind = (!cen && dir < 0) ? 2 : 1; ind < item->mNumPoints; ind++) {
         jnd = (ind * dir + cen + item->mNumPoints) % item->mNumPoints;
-        dist += sqrtf(powf(item->mPtX[jnd] - item->mPtX[lastJnd], 2.f) +
+        segLen = sqrtf(powf(item->mPtX[jnd] - item->mPtX[lastJnd], 2.f) +
           powf(item->mPtY[jnd] - item->mPtY[lastJnd], 2.f));
+
+        // If segment is longer than this interval, add points along it to give more
+        // equal weighting to long straight parts of the contour
+        if (segLen > 1.05 * fitInterval) {
+          numInterp = (int)(segLen / fitInterval);
+          subSeg = segLen / (numInterp + 1);
+          for (knd = 1; knd <= numInterp; knd++) {
+            subDist = (float)(knd * subSeg);
+            if (dist + subDist > maxLength)
+              break;
+            fitX.push_back(item->mPtX[lastJnd] + subDist *
+              (item->mPtX[jnd] - item->mPtX[lastJnd]) / segLen);
+            fitY.push_back(item->mPtY[lastJnd] + subDist *
+              (item->mPtY[jnd] - item->mPtY[lastJnd]) / segLen);
+            fitDist.push_back(dist + subDist);
+          }
+        }
+
+        // stop if length would exceed maximum before adding point
+        dist += segLen;
+        if (dist > maxLength)
+          break;
         fitX.push_back(item->mPtX[jnd]);
         fitY.push_back(item->mPtY[jnd]);
         fitDist.push_back(dist);
         lastJnd = jnd;
+
+        // Stop if enough length
         if (dist > minLength)
           break;
       }
 
       // Get X and Y as function of distance, and vector
       numFit = (int)fitX.size();
-      lsFit(&fitDist[0], &fitX[0], numFit, &slope, &intcp, &ro);
-      vecX[(dir + 1) / 2] = slope * fitDist[numFit - 1];
-      lsFit(&fitDist[0], &fitY[0], numFit, &slope2, &intcp2, &ro2);
-      vecY[(dir + 1) / 2] = slope2 * fitDist[numFit - 1];
+      lsFit(&fitDist[0], &fitX[0], numFit, &slopex[isi], &intcpx[isi], &ro);
+      vecX[isi] = slopex[isi] * fitDist[numFit - 1];
+      lsFit(&fitDist[0], &fitY[0], numFit, &slopey[isi], &intcpy[isi], &ro2);
+      vecY[isi] = slopey[isi] * fitDist[numFit - 1];
       //PrintfToLog("n %d X int %.3f slo %.3f ro %.3f Y int %.3f slo %.3f ro %.3f  vec %.1f %.1f",
-        //numFit, intcp, slope, ro, intcp2, slope2, ro2, vecX[(dir + 1) / 2], vecY[(dir + 1) / 2]);
+        //numFit, intcpx[isi], slopex[isi], ro, intcpy[isi], slopey[isi], ro2, vecX[isi], vecY[isi]);
 
     }
 
@@ -1776,8 +1827,21 @@ int CMultiGridTasks::AlignGridMapAcrossMags(CMapDrawItem *mapItem, int setNum,
       sqrtf((vecX[0] * vecX[0] + vecY[0] * vecY[0]) *
       (vecX[1] * vecX[1] + vecY[1] * vecY[1]))) / DTOR));
     candidates.push_back(cen);
-    //SEMTrace('q', "pt %d  at %.1f %.1f  angle %.1f", cen, item->mPtX[cen],
-      //item->mPtY[cen], angles[cen]);
+    xCorn = item->mPtX[cen];
+    yCorn = item->mPtY[cen];
+
+    // Solve for intersection of the two lines if possible and substitute that point
+    denom = slopey[0] * slopex[1] - slopex[0] * slopey[1];
+    if (fabs(denom) > -1.e10) {
+      dist = ((slopey[0] * intcpx[0] - slopex[0] * intcpy[0]) +
+        (slopex[0] * intcpy[1] - slopey[0] * intcpx[1])) / denom;
+      xCorn = slopex[1] * dist + intcpx[1];
+      yCorn = slopey[1] * dist + intcpy[1];
+    }
+    candX.push_back(xCorn);
+    candY.push_back(yCorn);
+    SEMTrace('q', "pt %d  at %.2f %.2f  angle %.1f  line intcp %.2f %.2f", cen,
+      item->mPtX[cen], item->mPtY[cen], angles[cen], xCorn, yCorn);
   }
 
   if (!mNavigator->BufferStageToImage(&mImBufs[mMapBuf], aMat, delX, delY)) {
@@ -1786,6 +1850,16 @@ int CMultiGridTasks::AlignGridMapAcrossMags(CMapDrawItem *mapItem, int setNum,
   }
   type = mImBufs[mMapBuf].mImage->getType();
   mImBufs[mMapBuf].mImage->getSize(nxIm, nyIm);
+
+  // Get single adjustment for item if it has group ID
+  if (item->mGroupID) {
+    mWinApp->mMainView->ExternalStageToImage(&mImBufs[mMapBuf], aMat, delX,
+      delY, item->mStageX, item->mStageY, xCorn, yCorn, NULL, false);
+    mWinApp->mMainView->ExternalStageToImage(&mImBufs[mMapBuf], aMat, delX,
+      delY, item->mStageX, item->mStageY, singleXadj, singleYadj, NULL, true);
+    singleXadj -= xCorn;
+    singleYadj -= yCorn;
+  }
 
   // Sort them to find smallest angles and find points that are well-separated
   rsSortIndexedFloats(&angles[0], &candidates[0], item->mNumPoints - 1);
@@ -1812,8 +1886,8 @@ int CMultiGridTasks::AlignGridMapAcrossMags(CMapDrawItem *mapItem, int setNum,
         ind = candidates[cen];
 
         // Get stage positions closer and farther from center along the sample line
-        xCorn = item->mPtX[ind];
-        yCorn = item->mPtY[ind];
+        xCorn = candX[ind];
+        yCorn = candY[ind];
         cenXdel = xCorn - item->mStageX;
         cenYdel = yCorn - item->mStageY;
         dist = sqrtf(powf(cenXdel, 2.f) + powf(cenYdel, 2.f));
@@ -1824,21 +1898,25 @@ int CMultiGridTasks::AlignGridMapAcrossMags(CMapDrawItem *mapItem, int setNum,
 
         // Convert to image coords
         mWinApp->mMainView->ExternalStageToImage(&mImBufs[mMapBuf], aMat, delX,
-          delY, nearXstage, nearYstage, nearXim, nearYim);
+          delY, nearXstage, nearYstage, nearXim, nearYim, NULL, item->mGroupID == 0);
         mWinApp->mMainView->ExternalStageToImage(&mImBufs[mMapBuf], aMat, delX,
-          delY, farXstage, farYstage, farXim, farYim);
+          delY, farXstage, farYstage, farXim, farYim, NULL, item->mGroupID == 0);
+        nearXim += singleXadj;
+        nearYim += singleYadj;
+        farXim += singleXadj;
+        farYim += singleYadj;
 
-        // Set up for maximum of 100 step sample
+        // Set up for maximum of 160 step sample
         dist = sqrtf(powf(farXim - nearXim, 2.f) + powf(farYim - nearYim, 2.f));
-        numSteps = B3DMIN(100, B3DNINT(dist));
+        numSteps = B3DMIN(160, B3DNINT(dist));
         if (nearXim > 2 && nearXim < nxIm - 3 && nearYim > 2 && nearYim < nyIm - 3 &&
           farXim > 2 && farXim < nxIm - 3 && farYim > 2 && farYim < nyIm - 3 &&
           numSteps > 20) {
 
           // If both ends are inside the image and there are at least 20 steps, set a box
           // size of at least 25 pixels, use square since it is going into a corner
-          //SEMTrace('q', "near st %.2f %.2f  im %.0f %.0f  far st %.2f %.2f  im %.0f %.0f",
-            //nearXstage, nearYstage, nearXim, nearYim, farXstage, farYstage, farXim, farYim);
+          SEMTrace('q', "near st %.2f %.2f  im %.0f %.0f  far st %.2f %.2f  im %.0f %.0f",
+           nearXstage, nearYstage, nearXim, nearYim, farXstage, farYstage, farXim, farYim);
           frac = dist / (float)numSteps;
           boxLen = B3DNINT(5. * frac);
           boxWidth = B3DNINT(5. * frac);
@@ -1854,8 +1932,9 @@ int CMultiGridTasks::AlignGridMapAcrossMags(CMapDrawItem *mapItem, int setNum,
             B3DNINT(farYim), numSteps, &fitX[0]);
 
           for (knd = 2; knd < numSteps - 2; knd++) {
-            lsFit(&fitDist[0], &fitX[knd - 2], 5, &fitY[knd], &intcp, &ro);
-            //SEMTrace('q', "%d  %.2f  %.3f", knd, fitY[knd], ro);
+            lsFit(&fitDist[0], &fitX[knd - 2], 5, &fitY[knd], &intcpx[0], &ro);
+            if (GetDebugOutput('*'))
+              SEMTrace('q', "%d  %.1f  %.2f  %.3f", knd, fitX[knd], fitY[knd], ro);
           }
 
           float firstPeak = -1.e10, secondPeak = -1.e10;
@@ -1893,7 +1972,7 @@ int CMultiGridTasks::AlignGridMapAcrossMags(CMapDrawItem *mapItem, int setNum,
             }
           }
           if (knd) {
-            if (knd < numSteps / 4) {
+            if (knd < numSteps / 8) {
               SEMTrace('q', "Gradient peak at %d of %d: inside polygon", knd + 1,
                 numSteps);
             } else {
@@ -1910,9 +1989,17 @@ int CMultiGridTasks::AlignGridMapAcrossMags(CMapDrawItem *mapItem, int setNum,
         }
 
         // Now compute position that offsets the corner from the center of field
+        // Use same adjustment method as above to get and save the image positions
         frac = cenOffset * FOV / dist;
         mRRGxStages[jnd] = frac * item->mStageX + (1.f - frac) * xCorn;
         mRRGyStages[jnd] = frac * item->mStageY + (1.f - frac) * yCorn;
+        mWinApp->mMainView->ExternalStageToImage(&mImBufs[mMapBuf], aMat, delX,
+          delY, mRRGxStages[jnd], mRRGyStages[jnd], mRefineXinImage[jnd], 
+          mRefineYinImage[jnd], NULL, item->mGroupID == 0);
+        mRefineXinImage[jnd] += singleXadj;
+        mRefineYinImage[jnd] += singleYadj;
+        SEMTrace('q', "Extraction center %.0f %.0f", mRefineXinImage[jnd],
+          mRefineYinImage[jnd]);
         cornInd[jnd++] = ind;
         if (jnd >= 3)
           break;
@@ -1933,6 +2020,8 @@ int CMultiGridTasks::AlignGridMapAcrossMags(CMapDrawItem *mapItem, int setNum,
   mRefineStepIndex = 0;
   mRefineItem = mapItem;
   mRefineSetNum = setNum;
+  mRefineXpieces = numXpiece;
+  mRefineYpieces = numYpiece;
   mDoingMultiGrid = MG_REFINE_REALIGNED;
   mWinApp->SetStatusText(MEDIUM_PANE, "REFINING GRID ALIGNMENT");
   mWinApp->UpdateBufferWindows();
@@ -1955,27 +2044,37 @@ void CMultiGridTasks::MoveStageForRefineMapAlign()
 // Next task for refining alignment
 void CMultiGridTasks::RefineRealignNextTask(int param)
 {
-  ScaleMat aMat;
-  float delX, delY, imageX, imageY, scale, rot, xShift, yShift, xDeltas[3], yDeltas[3];
+  float scale, rot, xShift, yShift, xDeltas[3], yDeltas[3];
   float delDiffs[3], minDiff = 1.e10, maxDiff = -1.e10;
-  float badDiffCrit = 1., useTwoCritFac = 2.f, useTwoAbsCrit = 0.5f;
+  float badDiffCrit = 1., useTwoCritFac = 2.f, useTwoAbsCrit = 0.8f;
   int ind, twoInd, maxInd, midInd, drop = -1;
   double xStage, yStage;
-  CString errStr;
+  CString errStr, diffStr, dropStr;
 
   // Take image
   if (param == MG_REFINE_MOVED) {
-    mWinApp->mCamera->InitiateCapture(mRefineSetNum);
-    mWinApp->AddIdleTask(SEMStageCameraBusy, TASK_MULTI_GRID, MG_REFINE_IMAGE, 0);
+    if (mRefineXpieces > 0) {
+      if (!mRefineOpenedMont)
+        CMultiShotDlg::SetupTempMontage(sTempMontName, mRefineXpieces, mRefineYpieces,
+          mRefineOverviewBin, 10, mRefineSetNum, mWinApp->LowDoseMode(), 
+          mRefineUseStageMont);
+      mRefineOpenedMont = true;
+      if (mWinApp->mMontageController->StartMontage(0, false)) {
+        StopMultiGrid();
+        return;
+      }
+      mWinApp->AddIdleTask(TASK_MULTI_GRID, MG_REFINE_IMAGE, 0);
+    } else {
+      mWinApp->mCamera->InitiateCapture(mRefineSetNum);
+      mWinApp->AddIdleTask(SEMStageCameraBusy, TASK_MULTI_GRID, MG_REFINE_IMAGE, 0);
+    }
   } else {
+    if (mRefineXpieces > 0)
+      mWinApp->mBufferManager->CopyImageBuffer(1, 0);
 
-    // Or align to image: get the image position
-    mNavigator->BufferStageToImage(&mImBufs[mMapBuf], aMat, delX, delY);
-    mWinApp->mMainView->ExternalStageToImage(&mImBufs[mMapBuf], aMat, delX,
-      delY, mRRGxStages[mRefineStepIndex], mRRGyStages[mRefineStepIndex], imageX, imageY);
-
-    // Align
-    if (mWinApp->mProcessImage->AlignBetweenMagnifications(mMapBuf, imageX, imageY, -0.8f,
+    // Or align to image using saved image position
+    if (mWinApp->mProcessImage->AlignBetweenMagnifications(mMapBuf, 
+      mRefineXinImage[mRefineStepIndex], mRefineYinImage[mRefineStepIndex], -0.8f,
       mNavHelper->GetScaledAliDfltPctChg() / 100.f,
       2.f * mRRGMaxRotation, false, scale, rot, 0, errStr)) {
       StopMultiGrid();
@@ -2052,22 +2151,27 @@ void CMultiGridTasks::RefineRealignNextTask(int param)
       xShift = yShift = 0.;
       for (ind = 0; ind < 3; ind++) {
         if (ind != drop) {
+          errStr.Format("  %.2f, %.2f", xDeltas[ind], yDeltas[ind]);
+          diffStr += errStr;
           xShift += xDeltas[ind];
           yShift += yDeltas[ind];
+        } else {
+          dropStr.Format("  (dropped %.2f, %.2f)", xDeltas[ind], yDeltas[ind]);
         }
       }
       xShift /= (drop < 0 ? 3.f : 2.f);
       yShift /= (drop < 0 ? 3.f : 2.f);
+      diffStr += dropStr;
 
       // Shift or just report
       if (mMaxRefineDiff >= 0.) {
         ind = mNavigator->ShiftItemsAtRegistration(xShift, yShift, 
           mNavigator->GetCurrentRegistration(), 0);
-        PrintfToLog("%d items shifted by %.3f  %.3f microns from average of %d positions",
-          ind, xShift, yShift, drop < 0 ? 3 : 2);
+        PrintfToLog("%d items shifted by %.2f  %.2f microns from average at %d positions:"
+          "%s", ind, xShift, yShift, drop < 0 ? 3 : 2, (LPCTSTR)diffStr);
       } else {
-        PrintfToLog("Average shift from %d positions was %.3f  %.3f microns", 
-          drop < 0 ? 3 : 2, xShift, yShift);
+        PrintfToLog("Average shift was %.2f  %.2f microns at %d positions:%s", 
+          xShift, yShift, drop < 0 ? 3 : 2, (LPCTSTR)diffStr);
       }
     }
   }
@@ -2465,8 +2569,9 @@ int CMultiGridTasks::StartGridRuns(int LMneedsLD, int MMMneedsLD, int finalNeeds
   // A couple of sanity checks
   if (mParams.acquireMMMs || mParams.runFinalAcq) {
 
-    // Make sure refine will work
-    if (doRefine && mMGdlg->CheckRefineOptions(size, grid, ind, &state, str)) {
+    // Make sure refine will work and save number of montage pieces
+    if (doRefine && mMGdlg->CheckRefineOptions(size, grid, ind, &state, mUseNumXpieces, 
+      mUseNumYpieces, str)) {
       SEMMessageBox(str);
       return 1;
     }
@@ -3624,7 +3729,7 @@ void CMultiGridTasks::DoNextSequenceAction(int resume)
     // Start routine to refine alignment to grid map
   case MGACT_REFINE_ALIGN:
     if (RefineGridMapAlignment(mJcdIndsToRun[mCurrentGrid], mParams.refineStateNum, true,
-      errStr)) {
+      mUseNumXpieces, mUseNumYpieces, errStr)) {
       errStr += "\r\nMarking grid as failed due to this failure to refine alignment to"
         " map";
       ChangeStatusFlag(mCurrentGrid, MGSTAT_FLAG_FAILED, 1);
@@ -4316,7 +4421,7 @@ int CMultiGridTasks::PrepareAlignToGridMap(int jcdInd, bool askIfSave,
  * Top-level routine for starting refinement of grid map alignment for operations here
  */
 int CMultiGridTasks::RefineGridMapAlignment(int jcdInd, int stateNum, bool askIfSave, 
-  CString &errStr)
+  int numXpc, int numYpc, CString &errStr)
 {
   CMapDrawItem *item;
   StateParams *state;
@@ -4348,8 +4453,8 @@ int CMultiGridTasks::RefineGridMapAlignment(int jcdInd, int stateNum, bool askIf
   }
 
   // Start the routine, with the property value as maximum difference
-  if (AlignGridMapAcrossMags(item, consNum, EXTRA_NO_VALUE, EXTRA_NO_VALUE, 
-    mMaxRefineShiftDiff, errStr)) {
+  if (AlignGridMapAcrossMags(item, consNum, numXpc, numYpc, EXTRA_NO_VALUE, 
+    EXTRA_NO_VALUE, mMaxRefineShiftDiff, errStr)) {
     RestoreFromRefine();
     return 1;
   }
@@ -4420,6 +4525,7 @@ int CMultiGridTasks::CheckShiftsForLMmode(int magInd)
   BaseMarkerShift baseShift;
   StateParams *state;
   double shiftX, shiftY;
+  mMGdlg = mNavHelper->mMultiGridDlg;
   if (MarkerShiftIndexForMag(magInd, baseShift) >= 0)
     retVal = 1;
   if (mParams.LMMstateType < 2) {

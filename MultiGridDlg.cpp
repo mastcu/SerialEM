@@ -2023,7 +2023,7 @@ void CMultiGridDlg::OnButLoadGrid()
 void CMultiGridDlg::OnButRealignToGridMap()
 {
   CString errStr;
-  int offsetTypes, ldArea, setNum;
+  int offsetTypes, ldArea, setNum, numXpc, numYpc;
   StateParams *state;
   float FOV;
   CMapDrawItem *item;
@@ -2037,7 +2037,7 @@ void CMultiGridDlg::OnButRealignToGridMap()
 
     // Run refine procedure if that is chosen
     DialogToParams();
-    if (CheckRefineOptions(FOV, ldArea, setNum, &state, errStr)) {
+    if (CheckRefineOptions(FOV, ldArea, setNum, &state, numXpc, numYpc, errStr)) {
       AfxMessageBox("Cannot refine alignment: " + errStr, MB_EXCLAME);
       return;
     }
@@ -2078,7 +2078,7 @@ void CMultiGridDlg::OnButRealignToGridMap()
       }
     }
     if (mMGTasks->RefineGridMapAlignment(mDlgIndToJCDindex[mSelectedGrid],
-      mParams.refineStateNum, true, errStr))
+      mParams.refineStateNum, true, numXpc, numYpc, errStr))
       AfxMessageBox("Failed to refine grid map alignment:\n" + errStr, MB_EXCLAME);
 
     // Otherwise regular realign
@@ -2944,15 +2944,18 @@ bool CMultiGridDlg::MontSetupSizesMatch(MontParam *montP, BOOL lowDose, int setu
  * that the FOV is big enough
  */
 int CMultiGridDlg::CheckRefineOptions(float &FOV, int &ldArea, int &setNum, 
-  StateParams **state, CString &errStr)
+  StateParams **state, int &numXpiece, int &numYpiece, CString errStr)
 {
   LowDoseParams *ldp = mWinApp->GetLowDoseParams();
   ControlSet *conSets;
+  CameraParameters *camParams = mWinApp->GetCamParams();
   int *actList = mWinApp->GetActiveCameraList();
   CString *setNames = mWinApp->GetModeNames();
-  int magInd, ind, avail = 0, camSize, selInd = -1;
+  int magInd, ind, avail = 0, camSize, selInd = -1, numPixNeeded, sizeX, sizeY;
+  int xSpacing, ySpacing;
   int numStates = (int)mStateArray->GetSize();
   int camera = mWinApp->GetCurrentCamera();
+  float pixel;
   FOV = 0.;
   ldArea = m_iRefineRealign > 0 ? VIEW_CONSET : SEARCH_AREA;
   setNum = m_iRefineRealign > 0 ? VIEW_CONSET : SEARCH_CONSET;
@@ -2987,7 +2990,7 @@ int CMultiGridDlg::CheckRefineOptions(float &FOV, int &ldArea, int &setNum,
       if (camera == actList[ind])
         avail = 1;
     if (!avail) {
-      errStr = "Selected state is a for a camera that is not available";
+      errStr = "Selected state is for a camera that is not available";
       return -1;
     }
     ldArea = -1;
@@ -3012,30 +3015,43 @@ int CMultiGridDlg::CheckRefineOptions(float &FOV, int &ldArea, int &setNum,
   conSets = mWinApp->GetCamConSets() + camera * MAX_CONSETS;
   camSize = B3DMIN(conSets[setNum].right - conSets[setNum].left,
     conSets[setNum].bottom - conSets[setNum].top);
-  FOV = mWinApp->mShiftManager->GetPixelSize(camera, magInd) * (float)camSize;
-  if (FOV < mMGTasks->GetRefineMinField()) {
-    errStr.Format("The field of view in the %s parameter set is only %.1f um; %.1f um is"
-      " required", (LPCTSTR)setNames[setNum], FOV, mMGTasks->GetRefineMinField());
-    return 1;
-  }
+  pixel = mWinApp->mShiftManager->GetPixelSize(camera, magInd);
+  FOV = pixel * (float)camSize;
+  numXpiece = numYpiece = 0;
+  if (FOV > mMGTasks->GetRefineMinField())
+    return 0;
+
+  numPixNeeded = (int)(mMGTasks->GetRefineMinField() / pixel);
+  sizeX = camParams[camera].sizeX;
+  sizeY = camParams[camera].sizeY;
+  xSpacing = sizeX - sizeX / 10;
+  ySpacing = sizeY - sizeY / 10;
+  numXpiece = 1 + ((numPixNeeded - sizeX) + xSpacing - 1) / xSpacing;
+  numYpiece = 1 + ((numPixNeeded - sizeY) + ySpacing - 1) / ySpacing;
+  FOV = pixel * B3DMIN(sizeX + xSpacing * (numXpiece - 1),
+    sizeY + ySpacing * (numYpiece - 1));
   return 0;
 }
 
 int CMultiGridDlg::ManageRefineFOV()
 {
   StateParams *state;
-  int ldArea, setNum, err;
+  int ldArea, setNum, err, numXpc, numYpc;
   float FOV;
   CString errStr;
   ShowDlgItem(IDC_STAT_REFINE_FOV, m_bRefineRealign);
   if (!m_bRefineRealign)
     return 0;
-  err = CheckRefineOptions(FOV, ldArea, setNum, &state, errStr);
+  err = CheckRefineOptions(FOV, ldArea, setNum, &state, numXpc, numYpc, errStr);
   if (err) {
     m_strRefineFOV = err < 0 ? "BAD STATE" : "BAD FOV";
     SEMAppendToLog(errStr);
   } else {
     m_strRefineFOV.Format("FOV %.1f um", FOV);
+    if (numXpc * numYpc > 1) {
+      errStr.Format(" in %dx%d", numXpc, numYpc);
+      m_strRefineFOV += errStr;
+    }
   }
   UpdateData(false);
   return err;

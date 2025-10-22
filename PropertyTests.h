@@ -416,6 +416,7 @@ FLOAT_PROP_TEST("GridXformShiftLimit", mWinApp->mMultiGridTasks->, RRGShiftLimit
 FLOAT_PROP_TEST("GridXformRotationLimit", mWinApp->mMultiGridTasks->, RRGRotLimitForXform)
 FLOAT_PROP_TEST("GridXformResidualLimit", mWinApp->mMultiGridTasks->, RRGResidLimitForXform)
 BOOL_PROP_TEST("ShowMulGridRefine", mWinApp->mMultiGridTasks->, ShowRefineAfterRealign)
+BOOL_PROP_TEST("MulGridRefineStageMont", mWinApp->mMultiGridTasks->, RefineUseStageMont)
 FLOAT_PROP_TEST("MulGridRefineMinField", mWinApp->mMultiGridTasks->, RefineMinField)
 FLOAT_PROP_TEST("MulGridMaxRefineDiff", mWinApp->mMultiGridTasks->, MaxRefineShiftDiff)
 INT_PROP_TEST("MulGridPostLoadDelay", mWinApp->mMultiGridTasks->, PostLoadDelay)
