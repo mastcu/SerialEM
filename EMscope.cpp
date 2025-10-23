@@ -10472,7 +10472,7 @@ UINT CEMscope::LongOperationProc(LPVOID pParam)
   LongThreadData *lod = (LongThreadData *)pParam;
   HRESULT hr = S_OK;
   CString descrip;
-  int retval = 0, longOp, ind, jmd, error, idAtZero = -1, fillVal = 0;
+  int retval = 0, longOp, ind, jnd, error, idAtZero = -1, fillVal = 0;
   bool fillTransfer, loadCart, valid;
   double startTime;
   const char *name;
