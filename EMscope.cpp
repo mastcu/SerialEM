@@ -10472,7 +10472,7 @@ UINT CEMscope::LongOperationProc(LPVOID pParam)
   LongThreadData *lod = (LongThreadData *)pParam;
   HRESULT hr = S_OK;
   CString descrip;
-  int retval = 0, longOp, ind, error, idAtZero = -1, fillVal = 0;
+  int retval = 0, longOp, ind, jmd, error, idAtZero = -1, fillVal = 0;
   bool fillTransfer, loadCart, valid;
   double startTime;
   const char *name;
@@ -10546,9 +10546,9 @@ UINT CEMscope::LongOperationProc(LPVOID pParam)
             }
 
             // For JEOL, get as much info as possible;
-            for (ind = 1; ind <= lod->maxLoaderSlots; ind++) {
+            for (jnd = 1; jnd <= lod->maxLoaderSlots; jnd++) {
               try {
-                name = mPlugFuncs->GetCartridgeInfo(ind, &jcData.id, &station, &slot,
+                name = mPlugFuncs->GetCartridgeInfo(jnd, &jcData.id, &station, &slot,
                   &rotation, &cartType);
                 if (name && name[0] != 0x00 && jcData.id > 0) {
                   jcData.station = station;
