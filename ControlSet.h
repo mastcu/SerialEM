@@ -669,8 +669,8 @@ struct HitachiParams {
 };
 
 struct DectrisAdvancedSettings {
-  float incidentEnergy;	// in keV, 0 = “auto”
-  float thresholdEnergy;	// in keV, 0 = “auto”
+  float incidentEnergy;	// in keV, 0 = "auto"
+  float thresholdEnergy;	// in keV, 0 = "auto"
   BOOL autosummation;
   BOOL countrateCorrection;
   BOOL retrigger;
