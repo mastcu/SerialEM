@@ -3173,6 +3173,10 @@ void CCameraController::Capture(int inSet, bool retrying)
     mWinApp->SetStatusText(SIMPLE_PANE, "");
   }
 
+  // Need to set this before any ErrorCleanup calls
+  mTD.UseUtapi = UsingUtapiForCamera(mParam);
+  mTD.UtapiForRamp = FEIscope && mScope->UtapiSupportsService(UTSUP_FOCUS);
+
   // If we just raised the screen to switch into STEM, set a timeout
   if (mRaisingScreen > 0 && mParam->STEMcamera && mWinApp->DoSwitchSTEMwithScreen())
     mShiftManager->SetGeneralTimeOut(GetTickCount(), mScreenUpSTEMdelay);
@@ -3568,9 +3572,6 @@ void CCameraController::Capture(int inSet, bool retrying)
     ErrorCleanup(1);
     return;
   }
-
-  mTD.UseUtapi = UsingUtapiForCamera(mParam);
-  mTD.UtapiForRamp = FEIscope && mScope->UtapiSupportsService(UTSUP_FOCUS);
   
   // Convert from coordinates in conset to unbinned coordinates, adjusting as needed
   CapManageCoordinates(conSet, gainXoffset, gainYoffset);
