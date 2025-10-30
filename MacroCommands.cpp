@@ -3409,11 +3409,11 @@ int CMacCmd::SaveToOtherFile(void)
     index2 = STORE_TYPE_MRC;
   else if (mStrItems[ix0] == "HDF")
     index2 = STORE_TYPE_HDF;
-  else if (mStrItems[ix0] == "TIF" || mStrItems[2] == "TIFF")
+  else if (mStrItems[ix0] == "TIF" || mStrItems[ix0] == "TIFF")
     index2 = STORE_TYPE_TIFF;
-  else if (mStrItems[ix0] == "JPG" || mStrItems[2] == "JPEG")
+  else if (mStrItems[ix0] == "JPG" || mStrItems[ix0] == "JPEG")
     index2 = STORE_TYPE_JPEG;
-  else if (mStrItems[ix0] != "CUR" && mStrItems[2] != "-1")
+  else if (mStrItems[ix0] != "CUR" && mStrItems[ix0] != "-1")
     ABORT_LINE(CString(ix0 == 2 ? "Second" : "Fourth") + 
       " entry must be MRC, TIF, TIFF, JPG, JPEG, CUR, or -1 in line:\n\n");
   if (truth && (index2 == STORE_TYPE_MRC || index2 == STORE_TYPE_HDF))
