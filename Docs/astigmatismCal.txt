@@ -1,0 +1,68 @@
+The astigmatism calibration is done in AutoTuning.cpp by acquiring an image at
+four astigmatism values, with a positive then negative change in the X
+stigmator, then in the Y stigmator.  An initial shot is taken with no
+astigmatism change to assess CTF fitting.  The CTF is analyzed with either the
+internal ctffind or ctfplotter and the recorded results are the smaller and
+larger defocus values in microns and the angle in degrees of the axis with the
+smaller defocus value (almost certainly, but this should be checked).
+
+The calibration is not analyzed further - it is stored in the CtfBasedCalib
+structure defined in AutoTuning.h:
+  int magInd;         Mag index
+  bool comaType;      Will always be false
+  float amplitude;    Astigmatism change on each axis
+  int numFits;        Number of stored values
+  float fitValues[3 * MAX_CAL_CTF_FITS];    The 3 values per fit, sequentially
+
+To correct astigmatism, an image is taken, the CTF analyzed, and the results
+stored in mCtfCal.  The solution is obtained in CtfBasedNextTask at the lines
+starting with
+
+     // Astigmatism measurement: Lookup calibration and get angle that image
+     // would need to be rotated
+
+where the lookup routine derives the rotation between the mag where the image
+is taken and the mag where the calibration was taken.  This angle is used by
+adjusting the angles at which defocus differences are measured in the image
+relative to the angle used in measuring differences in the calibration.
+
+Fitting arrays xfit, yfit, zfit are set up containing values for 36 angles.
+Three routines are used here:
+
+// Returns the defocus at a particular angle implied by the given CTF fit
+// The equation here is from Rohou and Grigorieff, 2015
+// 0.5 * (df1 + df2 + (df1 - df2) * cos(2 * (angle - axis)))
+ float CAutoTuning::DefocusFromCtfFit(float *fitValues, float angle)
+
+// Returns the difference in defocus at a particular angle between two fits
+float CAutoTuning::DefocusDiffFromTwoCtfFits(float *fitValues, int index1, int index2,
+  float angle)
+
+The two fits are the ones with positive and negative change to the same
+stigmator when this is called by:
+
+// Returns the two coefficients of astigmatism at a particular angle from the 4 fits
+void CAutoTuning::AstigCoefficientsFromCtfFits(float *fitValues, float angle, float astig,
+  float &xCoeff, float &yCoeff)
+
+Here, the difference in defocus at the given angle are taken between the first
+and second set of values from X stigmator changes, and the first and second
+set of values from stigmator changes.  The coefficients are obtained by
+dividing by the total stigmator change, twice the applied change in each
+direction.  xCoeff, yCoeff are thus the defocus difference at a particular angle per
+unit of X or Y stigmator change, respectively.  These are used to fill xfit
+and yfit.  zfit is filled with the actual defocus differences at the
+corresponding angles in the image.  The equation fit is
+
+actualDelFocus = xStig * xCoeff + yStig * yCoeff + const
+
+where xStig, yStig are the stigmator changes that would produce the observed
+changes.  These are obtained by calling lsFit2:
+
+  lsFit2(xfit, yfit, zfit, numInDat, &solution[0], &solution[1], &intercept);
+
+and the amount to change the stigmators is the negative of the solution.
+
+The appropriateness of fitting with an intercept is not clear.  Probably the
+fit would be less biased if the intercept were omitted, which can be done by
+passing NULL instead of &intercept.
