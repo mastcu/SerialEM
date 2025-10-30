@@ -78,7 +78,7 @@ void CCtfAcquireParamDlg::DoDataExchange(CDataExchange* pDX)
 }
 
 
-BEGIN_MESSAGE_MAP(CCtfAcquireParamDlg, CDialog)
+BEGIN_MESSAGE_MAP(CCtfAcquireParamDlg, CBaseDlg)
   ON_BN_CLICKED(IDC_CHECK_CTF_EXPOSURE, OnCheckCtfExposure)
   ON_BN_CLICKED(IDC_CHECKCTF_DRIFT, OnCheckCtfDrift)
   ON_EN_KILLFOCUS(IDC_EDIT_CTF_EXPOSURE, OnEnKillfocusEditCtfExposure)

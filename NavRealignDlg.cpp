@@ -67,7 +67,7 @@ CNavRealignDlg::~CNavRealignDlg()
 
 void CNavRealignDlg::DoDataExchange(CDataExchange* pDX)
 {
-  CDialog::DoDataExchange(pDX);
+  CBaseDlg::DoDataExchange(pDX);
   DDX_Text(pDX, IDC_EDIT_MAP_LABEL, m_strMapLabel);
   DDX_Control(pDX, IDC_MAKE_TEMPLATE_MAP, m_butMakeMap);
   DDX_Text(pDX, IDC_STAT_SELECTED_BUF, m_strSelectedBuf);

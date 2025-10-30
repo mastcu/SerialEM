@@ -62,7 +62,7 @@ void CStepAdjustISDlg::DoDataExchange(CDataExchange* pDX)
 }
 
 
-BEGIN_MESSAGE_MAP(CStepAdjustISDlg, CDialog)
+BEGIN_MESSAGE_MAP(CStepAdjustISDlg, CBaseDlg)
   ON_BN_CLICKED(IDC_STAA_SEARCH, OnAreaToUse)
   ON_BN_CLICKED(IDC_STAA_VIEW, OnAreaToUse)
   ON_BN_CLICKED(IDC_STAA_RECORD, OnAreaToUse)
