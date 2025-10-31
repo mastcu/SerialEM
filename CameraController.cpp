@@ -3788,9 +3788,9 @@ void CCameraController::Capture(int inSet, bool retrying)
   if ((mTD.plugFuncs || (mParam->AMTtype && mParam->canTakeFrames)) && conSet.doseFrac) {
 
     // Set readouts per frame in case it is needed and meaningful
-    mTD.ReadoutsPerFrame = B3DNINT(conSet.frameTime / GetK2ReadoutInterval(mParam, 
+    mTD.ReadoutsPerFrame = B3DNINT(conSet.frameTime / GetK2ReadoutInterval(mParam,
       conSet.binning, 0));
-    mSavingPluginFrames = conSet.saveFrames != 0 || 
+    mSavingPluginFrames = conSet.saveFrames != 0 ||
       (conSet.alignFrames && conSet.useFrameAlign > 1);
     mAligningPluginFrames = conSet.alignFrames && conSet.useFrameAlign == 1 &&
       !(mParam->DectrisType && mSavingPluginFrames && mDectrisSaveAsHDF);
@@ -3805,6 +3805,8 @@ void CCameraController::Capture(int inSet, bool retrying)
     }
     if (mParam->TietzType) {
       mTD.PluginFrameFlags = mParam->dropFrameFlags;
+    } else if (mPlugFuncs && mScope->GetSimulationMode()) {
+      mTD.PluginFrameFlags = PLUGCAM_AVERAGE_FRAMES;
     }
     if (mParam->DectrisType && mDectrisSaveAsHDF) {
       UtilSplitExtension(mFrameFilename, logmess, ext);

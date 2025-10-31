@@ -234,6 +234,7 @@ struct JeolParams;
 #define PLUGCAM_CONTINUOUS         (1 << 1)  // 0x2    For STEM
 #define PLUGCAM_SINGLE_EVENT       (1 << 2)  // 0x4
 #define PLUGCAM_DO_SUPER_RES       (1 << 3)  // 0x8
+#define PLUGCAM_AVERAGE_FRAMES     (1 << 4)  // 0x10   For JEOL simulator in frame flags
 
 // See SEMCCDDefines.h for bits 17-21
 #define PLUGCAM_PARTIAL_SCAN  (1 << 22)

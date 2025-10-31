@@ -61,12 +61,14 @@ static const char *errMess[] = {"Unspecified communication error",
 "Error opening file to be returned", "Error reading file to be returned",
 };
 
+static bool sFrameDebugOutput = false;
+
 static void framePrintFunc(const char *strMessage)
 {
   CString str = strMessage;
   str.TrimRight('\n');
   str.Replace("\n", "\r\n");
-  if (GetDebugOutput('D') || GetDebugOutput('E'))
+  if (sFrameDebugOutput)
     PrintfToLog("Framealign : %s", (LPCTSTR)str);
 }
 
@@ -131,13 +133,14 @@ void CFalconHelper::Initialize(int skipConfigs)
   }
   mReadoutInterval = mCamera->GetFalconReadoutInterval();
   if (!mFrameAli) {
+    sFrameDebugOutput = GetDebugOutput('E') || GetDebugOutput('D') || 
+      GetDebugOutput('T') || GetDebugOutput('M') || GetDebugOutput('j') ||
+      GetDebugOutput('X');
     mFrameAli = new FrameAlign();
     mFrameAli->setPrintFunc(framePrintFunc);
     if (skipConfigs == -3 && !mGpuForContinuousAli)
       return;
-    if (!mFrameAli->gpuAvailable(0, &mGpuMemory,
-      (GetDebugOutput('E') || GetDebugOutput('D') || GetDebugOutput('T') ||
-        GetDebugOutput('M')) ? 1 : 0)) {
+    if (!mFrameAli->gpuAvailable(0, &mGpuMemory, sFrameDebugOutput ? 1 : 0)) {
       mGpuMemory = 0;
       mGpuForContinuousAli = 0;
     }
@@ -626,7 +629,7 @@ int CFalconHelper::SetupFrameAlignment(ControlSet &conSet, CameraParameters *cam
     param.hybridShifts, (deferGpuSum | doSpline) ? 1 : 0, groupSize, nx, ny, 
     fullTaperFrac, taperFrac, param.antialiasType, 0., radius2, sigma1, sigma2, 
     numFilters, param.shiftLimit, kFactor, maxMaxWeight, 0, numFrames, 0, gpuFlags, 
-    (GetDebugOutput('E') || GetDebugOutput('D') || GetDebugOutput('T')) ? 11 : 0);
+    sFrameDebugOutput ? 11 : 0);
   if (ind) {
     str.Format("The framealign routine failed to initialize (error %d)", ind);
     mFrameAli->cleanup();
