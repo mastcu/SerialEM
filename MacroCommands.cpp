@@ -13054,6 +13054,7 @@ int CMacCmd::FindAndCenterOneHole()
   float stageX, stageY, tilt, scale, rotation, imSizeX, imSizeY;
   MapItemArray* itemArr = mNavigator->GetItemArray();
   CMapDrawItem* item;
+  HoleFinderParams *holeParams = mNavHelper->GetHoleFinderParams();
   float xmin, xmax, ymin, ymax;
   
   imBuf = mWinApp->mMainView->GetActiveImBuf();
@@ -13065,6 +13066,14 @@ int CMacCmd::FindAndCenterOneHole()
     imBuf = &mImBufs[index];
   }
   holeSize = mItemFlt[2];
+  if (holeSize < 0) {
+    mNavHelper->mHoleFinderDlg->SyncToMasterParams();
+    holeSize = holeParams->hexagonalArray ? holeParams->hexDiameter :
+      holeParams->diameter;
+    if (!holeSize)
+      ABORT_LINE("There is no usable diameter in the current Hole Finder parameters for "
+        "line:\n\n");
+  }
   
   //If no hole size was specified, try to find parent map with stored hole size
   if (!holeSize) {
