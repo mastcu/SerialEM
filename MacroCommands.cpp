@@ -13077,6 +13077,7 @@ int CMacCmd::FindAndCenterOneHole()
   
   //If no hole size was specified, try to find parent map with stored hole size
   if (!holeSize) {
+    ABORT_NONAV;
     
     //Get stage coordinates and tilt of current buffer image
     if (!imBuf->GetStagePosition(stageX, stageY))
