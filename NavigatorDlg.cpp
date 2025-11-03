@@ -9867,10 +9867,14 @@ void CNavigatorDlg::AcquireAreas(int source, bool dlgClosing, bool useTempParams
       return;
     
     } else {
+
+      // Or auto-switch to TS when acquiring from multigrid or starting from script 
+      // without temp params
       if (!useTempParams || source == NAVACQ_SRC_MG_RUN_ACQ)
         mAcqParm->acquireType = dlg->mAnyTSpoints ? ACQUIRE_DO_TS :
         mAcqParm->nonTSacquireType;
-      if (mAcqParm->acquireType != ACQUIRE_DO_TS && !dlg->mAnyAcquirePoints) {
+      if ((mAcqParm->acquireType != ACQUIRE_DO_TS && !dlg->mAnyAcquirePoints) ||
+        (mAcqParm->acquireType == ACQUIRE_DO_TS && !dlg->mAnyTSpoints)) {
         ManageAcquireDlgCleanup(fromMenu, dlgClosing);
         return;
       }
@@ -9924,8 +9928,9 @@ void CNavigatorDlg::AcquireAreas(int source, bool dlgClosing, bool useTempParams
   }
   mRetractAtAcqEnd = mWinApp->GetAnyRetractableCams() && mAcqParm->retractCameras;
 
-  mUseTSprePostMacros = mAcqParm->acquireType == ACQUIRE_DO_TS ||
-    (useTempParams && !fromMultigrid);
+  // 11/3/25: it was also setting this if using temp params from script start acq at end
+  // but can't see any possible logic in that, acquireType should be set regardless
+  mUseTSprePostMacros = mAcqParm->acquireType == ACQUIRE_DO_TS;
   runPremacro = mAcqParm->runPremacro;
   if (!mUseTSprePostMacros)
     runPremacro = mAcqParm->runPremacroNonTS;
