@@ -1311,7 +1311,7 @@ bool CMultiShotDlg::CanDoAutoAdjust(int magType, int areaToUse, int otherMag, in
       mWinApp->mNavHelper->GetMinAutoAdjSquareRatio();
     maxRatio = mWinApp->mNavHelper->GetMaxAutoAdjHoleRatio();
     if (ratio < minRatio && areaToUse >= 3) {
-      str.Format("Mag too low; hole is %.2f of field (min is %.2f)", ratio, minRatio);
+      str.Format("Try no montage; hole is only %.2f of field", ratio);
     } else if (ratio < minRatio) {
       cropSize = (int)((holeSize / pixel) / minRatio) / conSets[setNum].binning;
       if (cropSize < minCrop) {
