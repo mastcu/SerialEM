@@ -1429,6 +1429,7 @@ void CEMscope::ScopeUpdate(DWORD dwTime)
       if (STEMmode) {
 
         PLUGSCOPE_GET(STEMMagnification, curMag, 1);
+        PLUGSCOPE_GET(CameraLength, mLastCameraLength, 1);
 
         // Hijack the probe logic if in LM and assert it when property set
         if (mFeiSTEMprobeModeInLM > 0) {
