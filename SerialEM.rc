@@ -558,6 +558,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Set intensity\tShift+I",     ID_PROCESS_SETINTENSITY
         MENUITEM "Set &Dose Rate",              ID_TASKS_SET_DOSE_RATE
+        MENUITEM "Set Dose Rate wit&h EDM",     ID_TASKS_SETDOSERATEWITHEDM
         MENUITEM "Calibra&te Electron Dose",    ID_CALIBRATION_ELECTRONDOSE
         MENUITEM "Purge Old Dose Calibs",       ID_CALIBRATION_PURGEOLDCALIBS
         MENUITEM "Set Aperture Size",           ID_CALIBRATION_SET_APERTURE_SIZE
@@ -3238,7 +3239,7 @@ BEGIN
     LTEXT           "Process EER data with super-resolution:",IDC_STAT_EER_SUPER_LABEL,8,256,122,8
 END
 
-IDD_REMOTE_CONTROL DIALOGEX 0, 0, 119, 76
+IDD_REMOTE_CONTROL DIALOGEX 0, 0, 119, 99
 STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP
 EXSTYLE WS_EX_TOOLWINDOW
 FONT 8, "Microsoft Sans Serif", 400, 0, 0x0
@@ -3280,6 +3281,12 @@ BEGIN
     PUSHBUTTON      "+",IDC_DELSTAGE_PLUS,57,59,9,8
     PUSHBUTTON      "-",IDC_DELSTAGE_MINUS,57,67,9,8
     LTEXT           "&& C2",IDC_STAT_WITH_C2,76,68,17,8
+    CONTROL         "",IDC_SPIN_EDM_PCT,"msctls_updown32",UDS_ARROWKEYS,46,78,11,16
+    CTEXT           "EDM",IDC_STAT_EDM_LABEL,4,78,16,9
+    RTEXT           "20%",IDC_STAT_EDM_DELTA_PCT,20,87,25,8
+    PUSHBUTTON      "+",IDC_DEL_EDM_PLUS,57,78,9,8
+    PUSHBUTTON      "-",IDC_DEL_EDM_MINUS,57,86,9,8
+    RTEXT           "100.0%",IDC_STAT_EDM_PCT,22,78,23,8
 END
 
 IDD_THREE_CHOICE_BOX DIALOGEX 0, 0, 223, 44
@@ -4926,7 +4933,7 @@ BEGIN
     BEGIN
         LEFTMARGIN, 2
         RIGHTMARGIN, 116
-        BOTTOMMARGIN, 75
+        BOTTOMMARGIN, 98
     END
 
     IDD_THREE_CHOICE_BOX, DIALOG
@@ -6642,6 +6649,9 @@ STRINGTABLE
 BEGIN
     IDC_BUT_ADVANCED_SET    "Open dialog for settings to control energy levels, interpolation, etc."
     IDC_CHECKCTF_DRIFT      "Use the drift settling time here instead of the time in the Record parameters"
+    IDC_SPIN_EDM_PCT        "Set the electronic dose modulator dose percentage"
+    IDC_DEL_EDM_PLUS        "Increase the increment used in adjusting the EDM dose percentage"
+    IDC_DEL_EDM_MINUS       "Decrease the increment used in adjusting the EDM dose percentage"
 END
 
 STRINGTABLE
@@ -8299,6 +8309,8 @@ BEGIN
     ID_IMAGESTAGESHIFT_REMOVEISOFFSETS 
                             "Remove image shift offset calibrations for current mode"
     ID_CALIBRATION_LISTMAGISOFFSETS "List mag image shift offset distances"
+    ID_TASKS_SETDOSERATEWITHEDM 
+                            "Set dose rate on camera in e/pixel/sec with an electronic dose modulator"
 END
 
 STRINGTABLE

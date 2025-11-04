@@ -13,12 +13,15 @@
 #include "ExternalTools.h"
 #include "MacroProcessor.h"
 
+#define PCT_CHECK_SECONDS 5.
+
 CDoseModulator::CDoseModulator()
 {
   mWinApp = (CSerialEMApp *)AfxGetApp();
   mLastFrequencySet = 0;
   mLastDutyPctSet = 0.;
   mIsInitialized = false;
+  mDutyPercentTime = -1.;
 }
 
 
@@ -67,6 +70,7 @@ int CDoseModulator::SetDutyPercent(float pct, CString &errStr)
   err = RunCommand("ModulationSettings/DutyPercent", (LPCTSTR)data, errStr, outStr);
   if (err <= 0)
     mLastDutyPctSet = pct;
+    mDutyPercentTime = GetTickCount();
   return err;
 }
 
@@ -97,6 +101,7 @@ int CDoseModulator::GetDutyPercent(float & pct, CString & errStr)
   valStr = valStr.Left(ind);
   pct = (float)atof((LPCTSTR)valStr);
   mLastDutyPctSet = pct;
+  mDutyPercentTime = GetTickCount();
   return err;
 }
 
@@ -153,6 +158,20 @@ int CDoseModulator::RunCommand(const char *urlOpt, const char *data, CString &er
   return -err;
 }
 
-
+float CDoseModulator::GetRecentDutyPercent()
+{
+  float pct;
+  CString str;
+  
+  if (mDutyPercentTime < 0 || SEMTickInterval(mDutyPercentTime) > 1000 * PCT_CHECK_SECONDS) {
+    mDutyPercentTime = GetTickCount();
+    if (!GetDutyPercent(pct, str)) {
+      pct = mLastDutyPctSet;
+    }
+  } else {
+    pct = mLastDutyPctSet;
+  }
+  return pct;
+}
 
 

@@ -1022,6 +1022,8 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
           mWinApp->mRemoteControl.SetFocusIncrementIndex(itemInt[5]);
         if (!itemEmpty[7])
           mWinApp->mRemoteControl.SetStageIncrementIndex(itemInt[7]);
+        if (!itemEmpty[8])
+          mWinApp->mRemoteControl.SetDutyPercentIncrementIndex(itemInt[8]);
 
       // Tool dialog placements and states now work when reading settings
       } else if (NAME_IS("ToolDialogStates") || NAME_IS("ToolDialogStates2")) {
@@ -2236,12 +2238,13 @@ void CParameterIO::WriteSettings(CString strFileName)
     }
     mFile->WriteString(oneState + "\n");
 
-    oneState.Format("RemoteControlParams %d %f %f %d %d %d %d\n", 
+    oneState.Format("RemoteControlParams %d %f %f %d %d %d %d %d\n", 
       mWinApp->GetShowRemoteControl() ? 1 : 0, mWinApp->mRemoteControl.GetBeamIncrement(), 
       mWinApp->mRemoteControl.GetIntensityIncrement(), 
       mWinApp->mRemoteControl.m_bMagIntensity ? 1: 0,
       mWinApp->mRemoteControl.GetFocusIncrementIndex(), 
-      0, mWinApp->mRemoteControl.GetStageIncIndex());
+      0, mWinApp->mRemoteControl.GetStageIncIndex(),
+      mWinApp->mRemoteControl.GetDutyPercentIncrementIndex());
     mFile->WriteString(oneState);
 
     // Get window placement and write it out

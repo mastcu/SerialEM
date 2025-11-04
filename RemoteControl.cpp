@@ -20,8 +20,28 @@
 #define MAX_FOCUS_DECIMALS 2
 #define MAX_STAGE_INDEX 14
 #define MAX_STAGE_DECIMALS 2
+#define MAX_DUTY_PCT_INDEX 7
+#define MAX_DUTY_PCT_DECIMALS 1
 
 static VOID CALLBACK TimerProc(HWND hwnd, UINT uMsg, UINT_PTR idEvent, DWORD dwTime);
+
+static int sIdTable[] = { IDC_BUTOPEN, IDC_BUTFLOATDOCK, IDC_STATTOPLINE, IDC_BUTHELP,
+PANEL_END,
+IDC_BUT_VALVES, IDC_BLANK_UNBLANK, IDC_BUT_SCREEN_UPDOWN, IDC_BUT_NANO_MICRO, 
+IDC_SPIN_RCMAG, IDC_SPIN_RCSPOT, IDC_SPIN_RCBEAM, IDC_SPIN_RCINTENSITY,
+IDC_BUT_DELBEAMMINUS, IDC_BUT_DELBEAMPLUS, IDC_BUT_DELC2MINUS, IDC_BUT_DELC2PLUS, 
+IDC_STAT_BEAMDELTA, IDC_STAT_C2DELTA, IDC_SPIN_BEAM_LEFT_RIGHT, IDC_STAT_RCC2IA, 
+IDC_STAT_ALPHA, IDC_SPIN_ALPHA, IDC_STAT_FOCUS_STEP, IDC_SPIN_FOCUS, 
+IDC_BUT_DELFOCUSMINUS, IDC_BUT_DELFOCUSPLUS, IDC_SPIN_STAGE_UP_DOWN,
+IDC_SPIN_STAGE_LEFT_RIGHT, IDC_DELSTAGE_MINUS, IDC_DELSTAGE_PLUS, IDC_STAT_DELSTAGE,
+IDC_STAT_DELSTAGE, IDC_STAT_WITH_C2, IDC_STAT_BEAM_LABEL, IDC_STAT_BEAMDELTA, 
+IDC_STAT_FOCUS_LABEL, IDC_STAT_FOCUS_STEP, IDC_STAT_EDM_PCT, IDC_STAT_EDM_LABEL,
+IDC_STAT_EDM_DELTA_PCT, IDC_SPIN_EDM_PCT, IDC_DEL_EDM_PLUS, IDC_DEL_EDM_MINUS,
+PANEL_END, TABLE_END};
+
+static int sTopTable[sizeof(sIdTable) / sizeof(int)];
+static int sLeftTable[sizeof(sIdTable) / sizeof(int)];
+static int sHeightTable[sizeof(sIdTable) / sizeof(int)];
 
 // CRemoteControl dialog
 
@@ -34,15 +54,20 @@ CRemoteControl::CRemoteControl(CWnd* pParent /*=NULL*/)
   , m_strFocusStep(_T(""))
   , m_strStageDelta(_T(""))
   , m_strMagWithC2(_T(""))
+  , m_strEDMpct(_T(""))
+  , m_strEDMdeltaPct(_T(""))
 {
   SEMBuildTime(__DATE__, __TIME__);
   mBeamIncrement = 0.05f;
   mIntensityIncrement = 0.5f;
   mFocusIncrementIndex = 3 * MAX_FOCUS_DECIMALS;
   mStageIncIndex = 3 * MAX_STAGE_DECIMALS;
+  mDutyPercentIncrement = 0.1f;
+  mDutyPercentIncrementIndex = 7 * MAX_DUTY_PCT_DECIMALS;
   mMaxClickInterval = 350;
   mDidExtendedTimeout = false;
   mDoingTask = 0;
+  mPanelResized = false;
 }
 
 CRemoteControl::~CRemoteControl()
@@ -87,6 +112,11 @@ void CRemoteControl::DoDataExchange(CDataExchange* pDX)
   DDX_Control(pDX, IDC_STAT_BEAMDELTA, m_statBeamDelta);
   DDX_Control(pDX, IDC_STAT_FOCUS_LABEL, m_statFocusLabel);
   DDX_Control(pDX, IDC_STAT_FOCUS_STEP, m_statFocusDelta);
+  DDX_Text(pDX, IDC_STAT_EDM_PCT, m_strEDMpct);
+  DDX_Text(pDX, IDC_STAT_EDM_DELTA_PCT, m_strEDMdeltaPct);
+  DDX_Control(pDX, IDC_SPIN_EDM_PCT, m_sbcEDMpct);
+  DDX_Control(pDX, IDC_DEL_EDM_PLUS, m_butDelEDMplus);
+  DDX_Control(pDX, IDC_DEL_EDM_MINUS, m_butDelEDMminus);
 }
 
 
@@ -113,6 +143,9 @@ BEGIN_MESSAGE_MAP(CRemoteControl, CToolDlg)
   ON_BN_CLICKED(IDC_BLANK_UNBLANK, OnBlankUnblank)
   ON_BN_CLICKED(IDC_DELSTAGE_PLUS, OnDelStagePlus)
   ON_BN_CLICKED(IDC_DELSTAGE_MINUS, OnDelStageMinus)
+  ON_NOTIFY(UDN_DELTAPOS, IDC_SPIN_EDM_PCT, OnDeltaposSpinEdmPct)
+  ON_BN_CLICKED(IDC_DEL_EDM_PLUS, OnDelEdmPlus)
+  ON_BN_CLICKED(IDC_DEL_EDM_MINUS, OnDelEdmMinus)
 END_MESSAGE_MAP()
 
 
@@ -121,7 +154,7 @@ END_MESSAGE_MAP()
 BOOL CRemoteControl::OnInitDialog()
 {
   UINT needLittle[] = {IDC_STAT_BEAMDELTA, IDC_STAT_DELSTAGE, IDC_STAT_FOCUS_STEP,
-    IDC_STAT_C2DELTA};
+    IDC_STAT_C2DELTA, IDC_STAT_EDM_DELTA_PCT};
   int ind;
   CToolDlg::OnInitDialog();
   CWnd *wnd;
@@ -152,9 +185,13 @@ BOOL CRemoteControl::OnInitDialog()
     m_butValves.SetWindowText(FEIscope ? "Open Valves" : "Open Valve");
   if (!FEIscope)
     m_butNanoMicro.ShowWindow(SW_HIDE);
+    mIDsToDrop.push_back(IDC_BUT_NANO_MICRO);
   if (!JEOLscope || mScope->GetHasNoAlpha()) {
     m_sbcAlpha.ShowWindow(SW_HIDE);
     m_statAlpha.ShowWindow(SW_HIDE);
+
+    mIDsToDrop.push_back(IDC_SPIN_ALPHA);
+    mIDsToDrop.push_back(IDC_STAT_ALPHA);
   }
   m_sbcMag.SetRange(1, 2000);
   m_sbcSpot.SetRange(mScope->GetMinSpotSize(), mScope->GetNumSpotSizes());
@@ -195,8 +232,13 @@ BOOL CRemoteControl::OnInitDialog()
   SetBeamOrStageIncrement(1., 0, 1);
   SetIncrementFromIndex(mFocusIncrement, mFocusIncrementIndex, mFocusIncrementIndex,
     MAX_FOCUS_INDEX, MAX_FOCUS_DECIMALS, m_strFocusStep);
+  SetIncrementFromIndex(mDutyPercentIncrement, mDutyPercentIncrementIndex, 
+    mDutyPercentIncrementIndex, MAX_DUTY_PCT_INDEX, MAX_DUTY_PCT_DECIMALS, 
+    m_strEDMdeltaPct, "%");
   m_butDelFocusPlus.EnableWindow(mFocusIncrementIndex < MAX_FOCUS_INDEX);
   m_butDelFocusMinus.EnableWindow(mFocusIncrementIndex > 0);
+  SetupPanels(sIdTable, sLeftTable, sTopTable, sHeightTable);
+  ManagePanels();
   return TRUE;
 }
 
@@ -303,6 +345,29 @@ void CRemoteControl::Update(int inMagInd, int inCamLen, int inSpot, double inInt
   mLastSTEMmode = inSTEM;
   mLastAlpha = inAlpha;
   mLastScreenPos = inScreenPos;
+
+  if (mWinApp->mCamera->HasDoseModulator()) {
+    float pct = mWinApp->mCamera->mDoseModulator->GetRecentDutyPercent();
+    if (pct != mLastDutyPercent) {
+      mLastDutyPercent = pct;
+      m_strEDMpct.Format("%.1f%%", pct);
+      UpdateData(false);
+    }
+  } else {
+    //IDs are dropped here instead of in OnInitDialog because mCamera is initialized after
+    // this control panel
+    if (!mPanelResized) {
+      mIDsToDrop.push_back(IDC_STAT_EDM_LABEL);
+      mIDsToDrop.push_back(IDC_STAT_EDM_PCT);
+      mIDsToDrop.push_back(IDC_STAT_EDM_DELTA_PCT);
+      mIDsToDrop.push_back(IDC_SPIN_EDM_PCT);
+      mIDsToDrop.push_back(IDC_DEL_EDM_PLUS);
+      mIDsToDrop.push_back(IDC_DEL_EDM_MINUS);
+      ManagePanels();
+      mPanelResized = true;
+      mWinApp->ManageDialogOptionsHiding();
+    }
+  }
 }
 
 // Just update the window for magIntensity if settings changed, the increments already
@@ -838,17 +903,32 @@ void CRemoteControl::SetFocusIncrementIndex(int inVal)
   m_butDelFocusMinus.EnableWindow(mFocusIncrementIndex > 0);
 }
 
+void CRemoteControl::SetDutyPercentIncrementIndex(int inVal)
+{
+  SetIncrementFromIndex(mDutyPercentIncrement, mDutyPercentIncrementIndex, inVal,
+    MAX_DUTY_PCT_INDEX, MAX_DUTY_PCT_DECIMALS, m_strEDMdeltaPct, "%");
+  if (!mInitialized)
+    return;
+  m_butDelEDMplus.EnableWindow(mDutyPercentIncrementIndex < MAX_DUTY_PCT_INDEX);
+  m_butDelEDMminus.EnableWindow(mDutyPercentIncrementIndex > 0);
+}
+
 // Set an increment via its index
 void CRemoteControl::SetIncrementFromIndex(float &incrVal, int &incrInd, int newInd, 
-  int maxIndex, int maxDecimals, CString &str)
+  int maxIndex, int maxDecimals, CString &str, const char *units)
 {
+  CString unitStr;
+  if (!units)
+    unitStr = "um";
+  else
+    unitStr = (LPCTSTR) units;
   float digits[3] = {1., 2., 5.};
   B3DCLAMP(newInd, 0, maxIndex);
   incrVal = digits[newInd % 3] * (float)pow(10., newInd / 3 - maxDecimals);
   incrInd = newInd;
   if (!mInitialized)
     return;
-  str.Format("%c%gum", 0xB1, incrVal);
+  str.Format("%c%g%s", 0xB1, incrVal, unitStr);
   UpdateData(false);
 }
 
@@ -924,4 +1004,37 @@ void CRemoteControl::OnDelStageMinus()
   SetBeamOrStageIncrement(0.707107f, -1, 1);
   SetFocus();
   mWinApp->RestoreViewFocus();
+}
+
+
+void CRemoteControl::OnDeltaposSpinEdmPct(NMHDR *pNMHDR, LRESULT *pResult)
+{
+  LPNMUPDOWN pNMUpDown = reinterpret_cast<LPNMUPDOWN>(pNMHDR);
+  CString err;
+  float oldVal = mWinApp->mCamera->mDoseModulator->GetRecentDutyPercent();
+  //For some reason up is negative and down is positive
+  float delta = - mDutyPercentIncrement * pNMUpDown->iDelta;
+  
+  float newVal = oldVal + delta;
+  if (newVal <= 0 && delta < 0)
+    newVal = oldVal;
+  if (newVal > 100 && delta > 0)
+    newVal = 100.f;
+
+  if (newVal > 0 && newVal <= 100 && newVal != oldVal) {
+    mWinApp->mCamera->mDoseModulator->SetDutyPercent(newVal, err);
+    *pResult = 0;
+  }
+}
+
+
+void CRemoteControl::OnDelEdmPlus()
+{
+  SetDutyPercentIncrementIndex(mDutyPercentIncrementIndex + 1);
+}
+
+
+void CRemoteControl::OnDelEdmMinus()
+{
+  SetDutyPercentIncrementIndex(mDutyPercentIncrementIndex - 1);
 }

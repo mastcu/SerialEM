@@ -271,8 +271,10 @@ public:
   int LookupFoundPixelSize(int camera, int magInd);
   afx_msg void OnSetDoseRate();
   afx_msg void OnUpdateSetDoseRate(CCmdUI *pCmdUI);
+  afx_msg void OnSetDoseRateWithEDM();
+  afx_msg void OnUpdateSetDoseRateWithEDM(CCmdUI *pCmdUI);
   void DoUpdateSetintensity(CCmdUI* pCmdUI, bool doseRate);
-  int DoSetIntensity(bool doseRate, float useFactor);
+  int DoSetIntensity(bool doseRate, float useFactor, bool useEDM = false);
   afx_msg void OnPixelsizeCatalaseCrystal();
   afx_msg void OnUpdatePixelsizeCatalaseCrystal(CCmdUI *pCmdUI);
   afx_msg void OnProcessCropAverage();

@@ -2267,6 +2267,7 @@
 #define IDC_ZERO_SEARCH_SHIFT           3289
 #define IDC_STAT_BOX1                   3290
 #define IDC_TABLE_INDEXES               3291
+#define IDC_DELSTAGE_MINUS2             3291
 #define IDC_AUTO_SEARCH_SHIFT           3292
 #define IDC_STAT_HEADER_INDEX           3293
 #define IDC_STATVS_BOX                  3294
@@ -2611,6 +2612,12 @@
 #define IDC_DE_STEM_GAIN_CORR           3642
 #define IDC_STAT_DE_PRESET              3643
 #define IDC_COMBO_DE_PRESET             3644
+#define IDC_STAT_EDM_LABEL              3646
+#define IDC_STAT_EDM_PCT                3647
+#define IDC_SPIN_EDM_PCT                3648
+#define IDC_STAT_EDM_DELTA_PCT          3649
+#define IDC_DEL_EDM_PLUS                3650
+#define IDC_DEL_EDM_MINUS               3651
 #define ID_NEW_IMAGE                    32771
 #define IDM_FILE_SAVEOTHER              32772
 #define IDM_FILE_READ                   32773
@@ -3196,6 +3203,7 @@
 #define ID_SCRIPT_STOPBACKGROUNDSCRIPT  33555
 #define ID_IMAGESTAGESHIFT_REMOVEISOFFSETS 33556
 #define ID_CALIBRATION_LISTMAGISOFFSETS 33557
+#define ID_TASKS_SETDOSERATEWITHEDM     33558
 
 // Next default values for new objects
 // 
@@ -3203,8 +3211,8 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        300
-#define _APS_NEXT_COMMAND_VALUE         33558
-#define _APS_NEXT_CONTROL_VALUE         3646
+#define _APS_NEXT_COMMAND_VALUE         33559
+#define _APS_NEXT_CONTROL_VALUE         3652
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif

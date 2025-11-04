@@ -972,6 +972,25 @@ int CBeamAssessor::ChangeBeamStrength(double inFactor, int lowDoseArea)
   return err;
 }
 
+int CBeamAssessor::SetDoseRateWithEDM(float inFactor, int lowDoseArea)
+{
+  CString msg;
+  float currentPct, newPct;
+  if (!mCamera->HasDoseModulator() || mCamera->mDoseModulator->GetDutyPercent(currentPct, msg))
+    return BEAM_STRENGTH_SCOPE_ERROR;
+  if (currentPct <= 0)
+    return BEAM_STARTING_OUT_OF_RANGE;
+  newPct = currentPct * inFactor;
+  if (newPct > 100)
+    return BEAM_ENDING_OUT_OF_RANGE;
+
+  if (lowDoseArea < 0 || mScope->GetLowDoseArea() == lowDoseArea) {
+    if (mCamera->mDoseModulator->SetDutyPercent(newPct, msg))
+      return BEAM_STRENGTH_SCOPE_ERROR;
+  }
+  return 0;
+}
+
 // Assess whether beam can be changed by inFactor for a low dose area or generally
 // (if lowDoseArea < 0).  The C2 intensity that can be achieved is returned in
 // newIntensity, and the remaining factor by which it failed to change intensity 

@@ -176,6 +176,8 @@ BEGIN_MESSAGE_MAP(CProcessImage, CCmdTarget)
   ON_UPDATE_COMMAND_UI(ID_PIXELSIZE_ADD_TO_ROTATION, OnUpdateProcess)
   ON_COMMAND(ID_TASKS_SET_DOSE_RATE, OnSetDoseRate)
   ON_UPDATE_COMMAND_UI(ID_TASKS_SET_DOSE_RATE, OnUpdateSetDoseRate)
+  ON_COMMAND(ID_TASKS_SETDOSERATEWITHEDM, OnSetDoseRateWithEDM)
+  ON_UPDATE_COMMAND_UI(ID_TASKS_SETDOSERATEWITHEDM, OnUpdateSetDoseRateWithEDM)
   ON_COMMAND(ID_PIXELSIZE_CATALASE_CRYSTAL, OnPixelsizeCatalaseCrystal)
   ON_UPDATE_COMMAND_UI(ID_PIXELSIZE_CATALASE_CRYSTAL, OnUpdatePixelsizeCatalaseCrystal)
   ON_COMMAND(ID_PROCESS_CROP_AVERAGE, OnProcessCropAverage)
@@ -1749,7 +1751,7 @@ void CProcessImage::OnProcessSetintensity()
   DoSetIntensity(false, -1.);
 }
 
-int CProcessImage::DoSetIntensity(bool doseRate, float useFactor)
+int CProcessImage::DoSetIntensity(bool doseRate, float useFactor, bool useEDM)
 {
   int bufNum = 0;
   int error, ldArea;
@@ -1819,13 +1821,24 @@ int CProcessImage::DoSetIntensity(bool doseRate, float useFactor)
   else
     delta = factor / oldMean;
 
-  error = mWinApp->mBeamAssessor->ChangeBeamStrength(delta, ldArea);
-  if (error && useFactor <= 0.) {
-    if (error == BEAM_STARTING_OUT_OF_RANGE || error == BEAM_ENDING_OUT_OF_RANGE)
-      AfxMessageBox("Warning: attempting to set beam strength beyond"
-        " calibrated range", MB_EXCLAME);
-    else
-      AfxMessageBox("Error trying to change beam strength", MB_EXCLAME);
+  if (useEDM) {
+    error = mWinApp->mBeamAssessor->SetDoseRateWithEDM((float) delta, ldArea);
+    if (error && useFactor <= 0.) {
+      if (error == BEAM_STARTING_OUT_OF_RANGE || error == BEAM_ENDING_OUT_OF_RANGE)
+        AfxMessageBox("Warning: attempting to set EDM dose percent percentage beyond"
+          " allowed range", MB_EXCLAME);
+      else
+        AfxMessageBox("Error trying to change EDM dose percentage", MB_EXCLAME);
+    }
+  } else {
+    error = mWinApp->mBeamAssessor->ChangeBeamStrength(delta, ldArea);
+    if (error && useFactor <= 0.) {
+      if (error == BEAM_STARTING_OUT_OF_RANGE || error == BEAM_ENDING_OUT_OF_RANGE)
+        AfxMessageBox("Warning: attempting to set beam strength beyond"
+          " calibrated range", MB_EXCLAME);
+      else
+        AfxMessageBox("Error trying to change beam strength", MB_EXCLAME);
+    }
   }
   return error;
 }
@@ -1873,6 +1886,20 @@ void CProcessImage::OnUpdateSetDoseRate(CCmdUI *pCmdUI)
   DoUpdateSetintensity(pCmdUI, true);
 }
 
+void CProcessImage::OnSetDoseRateWithEDM()
+{
+  DoSetIntensity(true, -1., true);
+}
+
+void CProcessImage::OnUpdateSetDoseRateWithEDM(CCmdUI *pCmdUI)
+{
+  LowDoseParams *ldParm = mWinApp->GetLowDoseParams();
+  CameraParameters *camP = mWinApp->GetCamParams() + mImBufs->mCamera;
+  BOOL enable = mCamera->IsDirectDetector(camP) && camP->countsPerElectron > 0. &&
+    mImBufs->mExposure > 0.;
+    
+  pCmdUI->Enable(enable);
+}
 
 float CProcessImage::EquivalentRecordMean(int bufNum)
 {

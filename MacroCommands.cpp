@@ -9720,17 +9720,20 @@ int CMacCmd::SetIntensityByLastTilt(void)
 int CMacCmd::SetDoseRate(void)
 {
   int index;
+  bool useEDM = false;
 
   if (mItemDbl[1] <= 0)
     ABORT_LINE("Dose rate must be positive for line:\n\n");
   if (!mImBufs->mImage)
     ABORT_LINE("There must be an image in buffer A for line:\n\n");
-  index = mProcessImage->DoSetIntensity(true, mItemFlt[1]);
+  if (!mItemEmpty[2] && mItemInt[2] > 0)
+    useEDM = true;
+  index = mProcessImage->DoSetIntensity(true, mItemFlt[1], useEDM);
   if (index < 0) {
     AbortMacro();
     return 1;
   }
-  if (CheckIntensityChangeReturn(index))
+  if (CheckIntensityChangeReturn(index, useEDM))
     return 1;
   UpdateLDAreaIfSaved();
   return 0;

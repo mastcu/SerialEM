@@ -2,6 +2,7 @@
 #include "afxwin.h"
 #include "afxcmn.h"
 #include "MyButton.h"
+#include "DoseModulator.h"
 
 class EMscope;
 
@@ -41,8 +42,10 @@ public:
   GetMember(int, DoingTask);
   GetMember(bool, SpotClicked);
   GetMember(bool, MagClicked);
+  GetMember(int, DutyPercentIncrementIndex);
+  void SetDutyPercentIncrementIndex(int inVal);
   void SetIncrementFromIndex(float &incrVal, int &incrInd, int newInd,
-  int maxIndex, int maxDecimals, CString &str);
+  int maxIndex, int maxDecimals, CString &str, const char *units = NULL);
   void SetBeamOrStageIncrement(float beamIncFac, int stageIndAdd, int stageNotBeam);
   CMyButton m_butValves;
   afx_msg void OnButValves();
@@ -104,6 +107,10 @@ private:
   int mDoingTask;               // 1 if doing screen, 2 if doing stage
   bool mMagIntensityOK;
   CFont mDeltaFont;
+  float mDutyPercentIncrement;
+  int mDutyPercentIncrementIndex;
+  float mLastDutyPercent;
+  bool mPanelResized;
 
 public:
   CSpinButtonCtrl m_sbcBeamLeftRight;
@@ -148,4 +155,12 @@ public:
   CStatic m_statBeamDelta;
   CStatic m_statFocusLabel;
   CStatic m_statFocusDelta;
+  CString m_strEDMpct;
+  CString m_strEDMdeltaPct;
+  CSpinButtonCtrl m_sbcEDMpct;
+  CButton m_butDelEDMplus;
+  CButton m_butDelEDMminus;
+  afx_msg void OnDeltaposSpinEdmPct(NMHDR *pNMHDR, LRESULT *pResult);
+  afx_msg void OnDelEdmPlus();
+  afx_msg void OnDelEdmMinus();
 };

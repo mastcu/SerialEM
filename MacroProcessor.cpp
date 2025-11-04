@@ -4606,20 +4606,33 @@ bool CMacroProcessor::ArithmeticIsAllowed(CString &str)
 }
 
 // Check for the return values from an intensity change and issue warning or message
-int CMacroProcessor::CheckIntensityChangeReturn(int err)
+int CMacroProcessor::CheckIntensityChangeReturn(int err, bool useEDM)
 {
   CString report;
   if (err) {
-    if (err == BEAM_STARTING_OUT_OF_RANGE || err == BEAM_ENDING_OUT_OF_RANGE) {
-      mWinApp->AppendToLog("Warning: attempting to set beam strength beyond"
-        " calibrated range", LOG_OPEN_IF_CLOSED);
+    if (useEDM) {
+      if (err == BEAM_STARTING_OUT_OF_RANGE || err == BEAM_ENDING_OUT_OF_RANGE) {
+        mWinApp->AppendToLog("Warning: attempting to set EDM dose percentage outside"
+          " allowed range", LOG_OPEN_IF_CLOSED);
+      }
+      else {
+        report = "Error trying to change EDM dose percentage";
+        MacMessageBox(report, MB_EXCLAME);
+        AbortMacro();
+        return 1;
+      }
     } else {
-      report = "Error trying to change beam strength";
-      if (err == BEAM_STRENGTH_NOT_CAL || err == BEAM_STRENGTH_WRONG_SPOT)
-        report += "\nBeam strength is not calibrated for this spot size";
-      MacMessageBox(report, MB_EXCLAME);
-      AbortMacro();
-      return 1;
+      if (err == BEAM_STARTING_OUT_OF_RANGE || err == BEAM_ENDING_OUT_OF_RANGE) {
+        mWinApp->AppendToLog("Warning: attempting to set beam strength beyond"
+          " calibrated range", LOG_OPEN_IF_CLOSED);
+      } else {
+        report = "Error trying to change beam strength";
+        if (err == BEAM_STRENGTH_NOT_CAL || err == BEAM_STRENGTH_WRONG_SPOT)
+          report += "\nBeam strength is not calibrated for this spot size";
+        MacMessageBox(report, MB_EXCLAME);
+        AbortMacro();
+        return 1;
+      }
     }
   }
   return 0;

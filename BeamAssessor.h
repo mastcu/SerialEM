@@ -23,6 +23,9 @@
 #define BEAM_ENDING_OUT_OF_RANGE   5
 #define BEAM_DONT_EXTRAP_HIGH      1
 #define BEAM_DONT_EXTRAP_LOW       2
+#define NO_EDM_ERROR               6
+#define GET_EDM_PCT_ERROR          7
+#define SET_EDM_PCT_ERROR          8
 
 struct BeamTable {
   int numIntensities;
@@ -125,6 +128,7 @@ class CBeamAssessor
   void FitIntensityCurve(int indStart, int nFit, float &a, float &b, float &con);
   void FitCurrentCurve(int indStart, int nFit, float &a, float &b, float &con);
   int ChangeBeamStrength(double inFactor, int lowDoseArea);
+  int SetDoseRateWithEDM(float inFactor, int lowDoseArea);
   void StopCalibratingIntensity() {mStoppingCal = true;};
   BOOL CalibratingIntensity() {return mCalibratingIntensity;};
   BeamTable *GetBeamTables() {return mBeamTables;};

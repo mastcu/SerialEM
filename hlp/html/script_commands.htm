@@ -3406,13 +3406,15 @@
           </TD>
         </TR>
         <TR>
-          <TD class="scriptcommand">SetDoseRate #</TD>
+          <TD class="scriptcommand">SetDoseRate #D [#E]</TD>
           <TD>Changes the beam intensity to set the dose rate at the camera to the given value
+              <strong>#D</strong>
             in electrons per physical pixel per second beam intensity, based on the image in
             buffer A.  This command is the same as running
             <a href="menu_tasks.htm#hid_tasks_set_dose_rate">Set Dose Rate</a> in the Tasks
             menu. In low dose mode it changes the intensity of the current area.
-          </TD>
+              The dose rate will be adjusted using an electronic dose modulator if the 
+              optional argument <strong>#E</strong> is greater than 0.</TD>
         </TR>
          <TR>
           <TD class="scriptcommand">SetAlpha #</TD>
