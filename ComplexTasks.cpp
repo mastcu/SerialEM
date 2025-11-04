@@ -448,7 +448,7 @@ void CComplexTasks::MakeTrackingConSet(ControlSet *conSet, int targetSize,
     int sizeY = (conSet->bottom - conSet->top) / conSet->binning;
     float pixel = (float)conSet->binning * mShiftManager->GetPixelSize(
       mWinApp->GetCurrentCamera(), mScope->FastMagIndex());
-    mCamera->ComputePixelTime(camParam, sizeX, sizeY, conSet->lineSync,
+    mCamera->ComputePixelTime(camParam, sizeX, sizeY, conSet->lineSyncOrPattern,
         pixel, camParam->maxScanRate, conSet->exposure, dum1, dum2);
   }
   SEMTrace('t', "MakeTrackingConset: binning %d from %d, exposure %f from %f, drift %f", 
@@ -509,7 +509,7 @@ void CComplexTasks::LowerMagIfNeeded(int maxMagInd, float calIntSafetyFac,
       if (camParam->maxScanRate > 0.) {
         sizeX = (conSet->right - conSet->left) / conSet->binning;
         sizeY = (conSet->bottom - conSet->top) / conSet->binning;
-        mCamera->ComputePixelTime(camParam, sizeX, sizeY, conSet->lineSync,
+        mCamera->ComputePixelTime(camParam, sizeX, sizeY, conSet->lineSyncOrPattern,
           (float)conSet->binning * mShiftManager->GetPixelSize(camera, maxMagInd), 
           camParam->maxScanRate, conSet->exposure, delBeam, newDelta);
         SEMTrace('t', "LowerMagIfNeeded: STEM exposure set to %.3f", conSet->exposure);

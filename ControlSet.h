@@ -40,7 +40,7 @@ typedef std::vector <float> FloatVec;
 
 struct ControlSet {
   int mode;
-  int processing;
+  int processing;      // Also for Gain correction in DE STEM
   int forceDark;
   int onceDark;
   int shuttering;
@@ -51,16 +51,16 @@ struct ControlSet {
   int top;
   int right;
   int bottom;
-  int numAverage;
+  int numAvgOrPtRpt;      // # darks to average or point repeats option in DE STEM
   int averageDark;
   int averageOnce;
   int removeXrays;
   int channelIndex[MAX_STEM_CHANNELS];
-  int lineSync;       // For line sync in DigiScan
+  int lineSyncOrPattern; // For line sync in DigiScan or for pattern index in DE STEM
   int dynamicFocus;
-  int boostMag;       // For boostin mag in STEM focus AND for DE hardware binning
-  int magAllShots;    // For choice to boost mag on all shots AND for DE hardware ROI
-  int integration;
+  int boostMagOrHwBin;       // For boostin mag in STEM focus AND for DE hardware binning
+  int magAllShotsOrHwROI;  // For choice to boost mag on all shots AND for DE hardware ROI
+  int integration;    
   int correctDrift;   // Flag to use internal drift correction of camera
   int K2ReadMode;     // Linear/counting/super-res for K2, DE, and Falcon; diff for 1View
   int doseFrac;
@@ -69,14 +69,14 @@ struct ControlSet {
   int useFrameAlign;  // 1 to align in SerialEM[CCD], 2 to write alignframes pcm file
   int faParamSetInd;
   int saveFrames;
-  int filterType;
-  int sumK2Frames;    // Flag that K2 summing is active; AND DE counting mode dose frac #
+  int filtTypeOrPreset; // K2 align filter type or DE STEM preset index
+  int sumK2OrDeCntFrames; // Flag that K2 summing is active; AND DE counting mode dose frac #
   ShortVec summedFrameList;
   FloatVec userFrameFractions;
   FloatVec userSubframeFractions;
   int numSkipBefore;  // Also used for prepixel time in microseconds in Tietz STEM
   int numSkipAfter;
-  int DEsumCount;     // DE sum count only for linear mode
+  int DElinSumCount;     // DE sum count only for linear mode
 };
 
 struct CameraParameters {

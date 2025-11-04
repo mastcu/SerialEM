@@ -298,7 +298,7 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
           else if (NAME_IS("AverageDarkReference"))
             cs->averageDark = itemInt[1];
           else if (NAME_IS("TimesToAverageDarkRef"))
-            cs->numAverage = itemInt[1];
+            cs->numAvgOrPtRpt = itemInt[1];
           else if (NAME_IS("RemoveXrays"))
             cs->removeXrays = itemInt[1];
           else if (NAME_IS("Binning"))
@@ -318,7 +318,7 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
           else if (NAME_IS("DriftSettling"))
             cs->drift = itemFlt[1];
           else if (NAME_IS("LineSync"))
-            cs->lineSync = itemInt[1];
+            cs->lineSyncOrPattern = itemInt[1];
           else if (NAME_IS("DynamicFocus"))
             cs->dynamicFocus = itemInt[1];
           else if (NAME_IS("CorrectDrift"))
@@ -338,9 +338,9 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
           else if (NAME_IS("SaveFrames"))
             cs->saveFrames = itemInt[1];
           else if (NAME_IS("SumK2Frames"))
-            cs->sumK2Frames = itemInt[1];
+            cs->sumK2OrDeCntFrames = itemInt[1];
           else if (NAME_IS("DEsumCount"))
-            cs->DEsumCount = itemInt[1];
+            cs->DElinSumCount = itemInt[1];
           else if (NAME_IS("SkipFramesBefore"))
             cs->numSkipBefore = (itemInt[1] < 0 || itemInt[1] > 10) ? 0 : itemInt[1];
           else if (NAME_IS("SkipFramesAfter"))
@@ -388,14 +388,14 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
               for (index = 1; index < MAX_TOKENS && !itemEmpty[index]; index++)
                 cs->userSubframeFractions.push_back(itemFlt[index]);
           } else if (NAME_IS("FilterType"))
-            cs->filterType = itemInt[1];
+            cs->filtTypeOrPreset = itemInt[1];
           else if (NAME_IS("ChannelIndex")) {
             for (index = 0; index < MAX_STEM_CHANNELS; index++)
               if (!strItems[index+1].IsEmpty())
                 cs->channelIndex[index] = itemInt[index+1];
           } else if (NAME_IS("BoostMag")) {
-            cs->boostMag = itemInt[1];
-            cs->magAllShots = itemInt[2];
+            cs->boostMagOrHwBin = itemInt[1];
+            cs->magAllShotsOrHwROI = itemInt[2];
           } else {
             // Unrecognized camera parameter      
             message.Format("For camera parameter set %d: %s\n", iset, strLine);
@@ -1829,7 +1829,7 @@ void CParameterIO::WriteSettings(CString strFileName)
         WriteInt("Processing", cs->processing);
         WriteInt("DarkReferenceEveryTime", cs->forceDark);
         WriteInt("AverageDarkReference", cs->averageDark);
-        WriteInt("TimesToAverageDarkRef", cs->numAverage);
+        WriteInt("TimesToAverageDarkRef", cs->numAvgOrPtRpt);
         WriteInt("RemoveXrays", cs->removeXrays);
         WriteInt("Binning", cs->binning);
         WriteInt("ShutteringMode", cs->shuttering);
@@ -1839,22 +1839,22 @@ void CParameterIO::WriteSettings(CString strFileName)
         WriteInt("Bottom", cs->bottom);
         WriteFloat("ExposureTime", cs->exposure);
         WriteFloat("DriftSettling", cs->drift);
-        WriteInt("LineSync", cs->lineSync);
+        WriteInt("LineSync", cs->lineSyncOrPattern);
         WriteInt("DynamicFocus", cs->dynamicFocus);
         WriteInt("CorrectDrift", cs->correctDrift);
         WriteInt("K2ReadMode", cs->K2ReadMode);
-        WriteInt("SumK2Frames", cs->sumK2Frames);
+        WriteInt("SumK2Frames", cs->sumK2OrDeCntFrames);
         WriteInt("DoseFracMode", cs->doseFrac);
         WriteFloat("FrameTime", cs->frameTime);
         WriteInt("AlignFrames", cs->alignFrames);
         WriteInt("SaveFrames", cs->saveFrames);
         WriteInt("UseFrameAlign", cs->useFrameAlign);
         WriteInt("FAParamSetInd", cs->faParamSetInd);
-        if (cs->DEsumCount)
-          WriteInt("DEsumCount", cs->DEsumCount);
-        WriteInt("FilterType", cs->filterType);
+        if (cs->DElinSumCount)
+          WriteInt("DEsumCount", cs->DElinSumCount);
+        WriteInt("FilterType", cs->filtTypeOrPreset);
         WriteIndexedInts("ChannelIndex", cs->channelIndex, MAX_STEM_CHANNELS);
-        oneState.Format("BoostMag %d %d\n", cs->boostMag, cs->magAllShots);
+        oneState.Format("BoostMag %d %d\n", cs->boostMagOrHwBin, cs->magAllShotsOrHwROI);
         mFile->WriteString(oneState);
         if (cs->numSkipBefore)
           WriteInt("SkipFramesBefore", cs->numSkipBefore);
@@ -6278,7 +6278,7 @@ void CParameterIO::SetDefaultCameraControls(int which, ControlSet *cs,
     cs->binning = minBin;  
     cs->exposure = 1.0f;
     cs->shuttering = USE_BEAM_BLANK;
-    cs->numAverage = 4;
+    cs->numAvgOrPtRpt = 4;
     break;
 
   case MONT_USER_CONSET:
@@ -6305,29 +6305,29 @@ void CParameterIO::SetDefaultCameraControls(int which, ControlSet *cs,
 // Overall defaults that apply to all or almost all consets
 void CParameterIO::InitializeControlSet(ControlSet * cs, int sizeX, int sizeY)
 {
-    cs->mode = SINGLE_FRAME;
-    cs->processing = GAIN_NORMALIZED;
-    cs->forceDark = 0;
-    cs->onceDark = 0;
-    cs->drift = 0.0;
-    cs->left = 0;
-    cs->top = 0;
-    cs->right = sizeX;
-    cs->bottom = sizeY;
-    cs->averageDark = 0;
-    cs->averageOnce = 0;
-    cs->numAverage = 4;
-    cs->removeXrays = 0;
-    cs->K2ReadMode = K2_LINEAR_MODE;
-    cs->doseFrac = 0;
-    cs->alignFrames = 0;
-    cs->useFrameAlign = 1;
-    cs->frameTime = 0.04f;
-    cs->filterType = 0;
-    cs->sumK2Frames = 0;
-    cs->numSkipBefore = 0;
-    cs->numSkipAfter = 0;
-    cs->DEsumCount = 0;
+  cs->mode = SINGLE_FRAME;
+  cs->processing = GAIN_NORMALIZED;
+  cs->forceDark = 0;
+  cs->onceDark = 0;
+  cs->drift = 0.0;
+  cs->left = 0;
+  cs->top = 0;
+  cs->right = sizeX;
+  cs->bottom = sizeY;
+  cs->averageDark = 0;
+  cs->averageOnce = 0;
+  cs->numAvgOrPtRpt = 4;
+  cs->removeXrays = 0;
+  cs->K2ReadMode = K2_LINEAR_MODE;
+  cs->doseFrac = 0;
+  cs->alignFrames = 0;
+  cs->useFrameAlign = 1;
+  cs->frameTime = 0.04f;
+  cs->filtTypeOrPreset = 0;
+  cs->sumK2OrDeCntFrames = 0;
+  cs->numSkipBefore = 0;
+  cs->numSkipAfter = 0;
+  cs->DElinSumCount = 0;
 }
 
 

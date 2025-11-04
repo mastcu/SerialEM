@@ -116,7 +116,7 @@ void CCalibCameraTiming::CalibrateTiming(int setNum, float exposure, bool confir
   mConSet->mode = SINGLE_FRAME;
   mConSet->processing = GAIN_NORMALIZED;
   mConSet->dynamicFocus = false;
-  mConSet->lineSync = false;
+  mConSet->lineSyncOrPattern = false;
   mStartupOnly = !mCamParam->GatanCam || mCamParam->onlyOneShutter || mSTEMcamera ||
     mCamParam->noShutter || mCamParam->OneViewType;
   mConSet->shuttering = mStartupOnly ? USE_BEAM_BLANK : USE_FILM_SHUTTER;
@@ -212,7 +212,7 @@ void CCalibCameraTiming::CalibrateTiming(int setNum, float exposure, bool confir
   mConSet->alignFrames = trialSet->alignFrames;
   mConSet->useFrameAlign = trialSet->useFrameAlign;
   mConSet->saveFrames = 0;
-  mConSet->filterType = trialSet->filterType;
+  mConSet->filtTypeOrPreset = trialSet->filtTypeOrPreset;
 
   // Assess blanking time
   mBlankCycleTime = 0.;

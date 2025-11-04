@@ -119,8 +119,8 @@ BOOL CDERefMakerDlg::OnInitDialog()
   if (mSetupDarkForRec) {
     m_iProcessingType = B3DMIN(1, mRecSet->K2ReadMode);
     m_iReferenceType = 0;
-    m_bUseHardwareBin = mRecSet->boostMag && mRecSet->binning > 1;
-    m_bUseRecHardwareROI = mRecSet->magAllShots;
+    m_bUseHardwareBin = mRecSet->boostMagOrHwBin && mRecSet->binning > 1;
+    m_bUseRecHardwareROI = mRecSet->magAllShotsOrHwROI;
     EnableDlgItem(m_iProcessingType ? IDC_RLINEAR_REF : IDC_RPRE_COUNTING, false);
     EnableDlgItem(IDC_RGAIN_REF, false);
     m_butUseRecHardwareROI.EnableWindow(false);

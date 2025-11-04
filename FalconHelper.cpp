@@ -1378,7 +1378,8 @@ int CFalconHelper::AlignFramesFromFile(CString filename, ControlSet &conSet,
   char errStr[160];
   int hwSuperDiv = SuperResHardwareBinDivisor(camParam, &conSet);
   int top, bottom, left, right, fullSizeX, fullSizeY, frameX, frameY, fullFileX;
-  bool hardwareROI = (camParam->CamFlags & DE_HAS_HARDWARE_ROI) && conSet.magAllShots;
+  bool hardwareROI = (camParam->CamFlags & DE_HAS_HARDWARE_ROI) && 
+    conSet.magAllShotsOrHwROI;
   mAlignError = 0;
   mNumAligned = 0;
   mCamTD = td;
@@ -1734,7 +1735,7 @@ float CFalconHelper::AdjustSumsForExposure(CameraParameters *camParams,
     mCamera->GetMaxFalconFrames(camParams) && 
     (mCamera->GetFrameSavingEnabled() || FCAM_ADVANCED(camParams));
   if (falconCanSave || (mCamera->IsConSetSaving(conSet, consNum, camParams, true) && 
-    conSet->sumK2Frames))
+    conSet->sumK2OrDeCntFrames))
     return AdjustForExposure(conSet->summedFrameList, 
       falconCanSave ? conSet->numSkipBefore : 0, falconCanSave ? conSet->numSkipAfter : 0, 
       exposure,
@@ -1965,7 +1966,7 @@ void CFalconHelper::GetSavedFrameSizes(CameraParameters *camParams,
     superResDiv = SuperResHardwareBinDivisor(camParams, conSet);
     frameX = (camParams->sizeX * 2) / superResDiv;
     frameY = (camParams->sizeY * 2) / superResDiv;
-    if ((camParams->CamFlags & DE_HAS_HARDWARE_ROI) && conSet->magAllShots) {
+    if ((camParams->CamFlags & DE_HAS_HARDWARE_ROI) && conSet->magAllShotsOrHwROI) {
       frameX = 2 * (conSet->right - conSet->left) / superResDiv;
       frameY = 2 * (conSet->bottom - conSet->top) / superResDiv;
     }
@@ -1984,8 +1985,8 @@ int CFalconHelper::SuperResHardwareBinDivisor(CameraParameters *camParams,
 {
   int superResDiv = B3DCHOICE((camParams->CamFlags & DE_CAM_CAN_COUNT) && 
     conSet->K2ReadMode == SUPERRES_MODE, 1, 2);
-  int hwBin = B3DCHOICE((camParams->CamFlags & DE_HAS_HARDWARE_BIN) && conSet->boostMag &&
-      conSet->binning > 1, 2, 1);
+  int hwBin = B3DCHOICE((camParams->CamFlags & DE_HAS_HARDWARE_BIN) && 
+    conSet->boostMagOrHwBin && conSet->binning > 1, 2, 1);
   return superResDiv * hwBin;
 }
 

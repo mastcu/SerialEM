@@ -1182,9 +1182,9 @@ void CFocusManager::AutoFocusStart(int inChange, int useViewInLD, int iterNum)
       mCamera->StopCapture(0);
     mSFbaseFocus = mScope->GetDefocus();
 
-    if (mConSets[FOCUS_CONSET].boostMag && !mWinApp->LowDoseMode())
+    if (mConSets[FOCUS_CONSET].boostMagOrHwBin && !mWinApp->LowDoseMode())
       mFocusMag = mShiftManager->FindBoostedMagIndex(mFocusMag, 
-        mConSets[FOCUS_CONSET].boostMag);
+        mConSets[FOCUS_CONSET].boostMagOrHwBin);
     slope /= conSet->binning * mShiftManager->GetPixelSize(mWinApp->GetCurrentCamera(),
       mFocusMag);
     mCalDelta = sqrt(mSFmidFocusStep * mSFtargetSize / slope);

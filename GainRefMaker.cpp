@@ -379,9 +379,10 @@ void CGainRefMaker::StartDEserverRef(int processType, int referenceType)
       SEMMessageBox("Program error: StartDEserverRef called with -1 and 1");
       return;
     }
-    useHardwareBin = (mParam->CamFlags & DE_HAS_HARDWARE_BIN) && recSet->boostMag && 
-      recSet->binning > 1;
-    useHardwareROI = (mParam->CamFlags & DE_HAS_HARDWARE_BIN) && recSet->magAllShots;
+    useHardwareBin = (mParam->CamFlags & DE_HAS_HARDWARE_BIN) && recSet->boostMagOrHwBin
+      && recSet->binning > 1;
+    useHardwareROI = (mParam->CamFlags & DE_HAS_HARDWARE_BIN) && 
+      recSet->magAllShotsOrHwROI;
     processType = B3DMIN(1, recSet->K2ReadMode);
   }
 
@@ -394,8 +395,8 @@ void CGainRefMaker::StartDEserverRef(int processType, int referenceType)
   mConSet->exposure = mDEexposureTimes[ind];
   mConSet->drift = 0.;
   mConSet->binning = useHardwareBin ? 2 : 1;
-  mConSet->boostMag = useHardwareBin ? 1 : 0;
-  mConSet->magAllShots = 0;
+  mConSet->boostMagOrHwBin = useHardwareBin ? 1 : 0;
+  mConSet->magAllShotsOrHwROI = 0;
   mConSet->processing = UNPROCESSED;
 
   // Set up gain normalized for post-counting reference
@@ -417,13 +418,13 @@ void CGainRefMaker::StartDEserverRef(int processType, int referenceType)
     mConSet->right = recSet->right;
     mConSet->top = recSet->top;
     mConSet->bottom = recSet->bottom;
-    mConSet->magAllShots = 1;
+    mConSet->magAllShotsOrHwROI = 1;
   } else {
     mConSet->left = 0;
     mConSet->right = mParam->sizeX;
     mConSet->top = 0;
     mConSet->bottom = mParam->sizeY;
-    mConSet->magAllShots = 0;
+    mConSet->magAllShotsOrHwROI = 0;
   }
   mStartingServerFrames = mFrameCount =mCamera->GetDEServerVersion() < DE_HAS_API2 ?
     mDEnumRepeats[ind] : 10;
@@ -553,13 +554,13 @@ void CGainRefMaker::AcquiringRefNextTask(int param)
     mConSet->binning = mParam->gainRefBinning;
     mConSet->forceDark = 0;
     mConSet->onceDark = 1;
-    mConSet->numAverage = mParam->gainRefNumDarkAvg;
+    mConSet->numAvgOrPtRpt = mParam->gainRefNumDarkAvg;
     mConSet->averageOnce = mParam->gainRefAverageDark;
     if (mWinApp->mDEToolDlg.CanSaveFrames(mParam) && mParam->gainRefSaveRaw) {
       mConSet->saveFrames = DE_SAVE_SUMS;   // This will save a sum of all frames
-      mConSet->DEsumCount = 0;
+      mConSet->DElinSumCount = 0;
     }
-    timeout = 120000 * (1 + (mConSet->averageOnce ? mConSet->numAverage : 1));
+    timeout = 120000 * (1 + (mConSet->averageOnce ? mConSet->numAvgOrPtRpt : 1));
     mTakingRefImages = true;
     break;
 

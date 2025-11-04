@@ -150,8 +150,8 @@ enum {K2_SUMMIT = 1, K2_BASE, K3_TYPE};
 #define PLUGFEI_FILT_FLASH_LOAD   111
 #define PLUGFEI_CONTINUOUS_SAVE   112
 #define PLUGFEI_CAN_BIN_IMAGE     114
-#define DECTRIS_WITH_SUPER_RES(a) ((a)->DectrisType && ((a)->CamFlags & DECTRIS_HAS_SUPER_RES))
-#define DECTRIS_WITH_COUNTING(a) ((a)->DectrisType && ((a)->CamFlags & DECTRIS_HAS_SINGLE_EVENT))
+#define DECTRIS_WITH_SUPER_RES(a) ((a)->DectrisType && !(a)->STEMcamera && ((a)->CamFlags & DECTRIS_HAS_SUPER_RES))
+#define DECTRIS_WITH_COUNTING(a) ((a)->DectrisType && !(a)->STEMcamera && ((a)->CamFlags & DECTRIS_HAS_SINGLE_EVENT))
 
 struct DarkRef {
   int Left, Right, Top, Bottom;   // binned CCD coordinates of the image

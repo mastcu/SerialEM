@@ -1753,7 +1753,7 @@ int CShiftCalibrator::MeasureInterSetShift(int fromTS)
     return 0;
   for (i = 0; i < 5; i++)
     mISSshifts->binning[i] = 0;
-  mISSmagAllShotsSave = mConSets[FOCUS_CONSET].magAllShots;
+  mISSmagAllShotsSave = mConSets[FOCUS_CONSET].magAllShotsOrHwROI;
   mCamera->SetRequiredRoll(2);
   mISSindex = 0;
   mWinApp->SetStatusText(MEDIUM_PANE, "MEASURING INTERSET SHIFTS");
@@ -1898,7 +1898,7 @@ void CShiftCalibrator::InterSetShiftNextTask(int param)
   if (param == 2)
     mBufferManager->CopyImageBuffer(2, 1);
   if (setMap[mISSindex] == FOCUS_CONSET)
-    mConSets[FOCUS_CONSET].magAllShots = 1;
+    mConSets[FOCUS_CONSET].magAllShotsOrHwROI = 1;
   mCamera->SetCancelNextContinuous(true);
   mCamera->InitiateCapture(setMap[mISSindex]);
   mWinApp->AddIdleTask(CCameraController::TaskCameraBusy, TASK_INTERSET_SHIFT, param + 1,
@@ -1930,7 +1930,7 @@ void CShiftCalibrator::StopInterSetShift(void)
 {
   mISSindex = -1;
   mCamera->SetRequiredRoll(0);
-  mConSets[FOCUS_CONSET].magAllShots = mISSmagAllShotsSave;
+  mConSets[FOCUS_CONSET].magAllShotsOrHwROI = mISSmagAllShotsSave;
   mWinApp->SetStatusText(MEDIUM_PANE, "");
   mWinApp->UpdateBufferWindows();
 }

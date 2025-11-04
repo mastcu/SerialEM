@@ -52,6 +52,8 @@ MDOC_INTEGER(mSecondTimeStamp, 0, ADOC_SEC_STAMP, "TimeStamp")
 MDOC_INTEGER(mFlashCounter, -1, ADOC_FLASH_COUNT, "FlashCounter")
 MDOC_FLOAT(mFEGCurrent, -1., -0.1, ADOC_FEG_CURRENT, "FEGCurrent")
 MDOC_FLOAT(mEDMPercent, -1., -0.1, ADOC_EDM_PERCENT, "EDMPercent")
+MDOC_FLOAT(mConvergenceAngle, -1., -0.1, ADOC_CONV_ANG, "ConvergenceAngle")
+MDOC_FLOAT(mScanRotation, -1., -0.1, ADOC_SCAN_ROT, "ScanRotation")
 
 // DE12 items
 MDOC_STRING(mDE12Version, ADOC_DE12_VERSION, "ServerSoftwareVersion")

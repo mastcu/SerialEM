@@ -10591,7 +10591,8 @@ int CMacCmd::SetFrameTime(void)
     fps = mCamParams->DE_FramesPerSec;
     if (mCamSet->K2ReadMode > 0 && mCamParams->DE_CountingFPS > 0.)
       fps = mCamParams->DE_CountingFPS;
-    sumP = mCamSet->K2ReadMode > 0 ? &mCamSet->sumK2Frames : &mCamSet->DEsumCount;
+    sumP = mCamSet->K2ReadMode > 0 ? &mCamSet->sumK2OrDeCntFrames : 
+      &mCamSet->DElinSumCount;
     if (truth) {
       newSum = B3DNINT(mItemFlt[2] * *sumP);
       mCamSet->exposure *= (float)newSum / (float)(*sumP);
@@ -10662,7 +10663,7 @@ int CMacCmd::SetDoseFracParams(void)
   if (!mItemEmpty[5])
     mConSets[index].useFrameAlign = mItemInt[5];
   if (!mItemEmpty[6])
-    mConSets[index].sumK2Frames = mItemInt[6] ? 1 : 0;
+    mConSets[index].sumK2OrDeCntFrames = mItemInt[6] ? 1 : 0;
   return 0;
 }
 

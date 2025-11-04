@@ -63,6 +63,9 @@ BOOL CHoleFinder::PreTranslateMessage(MSG* pMsg)
 Probably OnOK should call CBaseDlg::OnOK, and OnCancel should call
 CBaseDlg::OnCancel (although the latter might be problematic if OnOK calls
 OnCancel, but this is not done universally
+
+Copy the "?" help button from another dialog
+
 ----------------------
 Add class pointer and placement to managing module and functions to open
 and get placement
@@ -79,3 +82,18 @@ field and a descriptor text.
   MinMaxFloat(IDC_EDIT_ACS_BEAM_SHIFT, m_fBeamShift, -10.f, 10.f,
     "Beam shift for centering");
 Or better yet, replace the preceding DDX_Text too with DDX_MM_INT or DDX_MMF_LOAT
+
+--------------------------------------------
+Adding a help file:  Copy an existing file to get started.  Change the hidd_
+NAME entry  (although this doesn't matter if it is wrong).  Use a right-click
+to add the file in the help files section (?)
+Add to aliases.h
+Add to SerialEM.hhc and SerialEM.hhp
+Add to SerialEM.vcxproj somewhere in the 10 help dependency lines with find
+and replace.
+
+If it crashes when you push the button, make sure that DoDataExchange calls
+CBaseDlg::DoDataExchange, not CDialog::DoDataExchange
+If the button does not work, make sure that BEGIN_MESSAGE_MAP has CBaseDlg not
+CDialog
+

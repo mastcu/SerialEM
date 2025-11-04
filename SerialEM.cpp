@@ -483,13 +483,13 @@ CSerialEMApp::CSerialEMApp()
       // NEED TO SPLIT OFF NON SIZE_DEPENDENT ITEMS IN PARAMIO AND CALL HERE
       mCamConSets[i][k].useFrameAlign = 1;
       mCamConSets[i][k].faParamSetInd = 0;
-      mCamConSets[i][k].lineSync = 0;
+      mCamConSets[i][k].lineSyncOrPattern = 0;
       mCamConSets[i][k].dynamicFocus = 0;
       for (j = 0; j < MAX_STEM_CHANNELS; j++)
         mCamConSets[i][k].channelIndex[j] = -1;
       mCamConSets[i][k].channelIndex[0] = 0;
-      mCamConSets[i][k].boostMag = 0;
-      mCamConSets[i][k].magAllShots = 0;
+      mCamConSets[i][k].boostMagOrHwBin = 0;
+      mCamConSets[i][k].magAllShotsOrHwROI = 0;
       mCamConSets[i][k].integration = 1;
       mCamConSets[i][k].correctDrift = -1;
     }
@@ -1586,7 +1586,7 @@ BOOL CSerialEMApp::InitInstance()
            cs->saveFrames |= DE_SAVE_MASTER | DE_SAVE_SINGLE;
         else if (cs->saveFrames & DE_SAVE_FRAMES) {
           cs->saveFrames |= DE_SAVE_MASTER;
-          cs->DEsumCount = 1;
+          cs->DElinSumCount = 1;
         } else if (cs->saveFrames & DE_SAVE_SUMS) {
           cs->saveFrames |= DE_SAVE_MASTER;
         }

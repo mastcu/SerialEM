@@ -10,7 +10,7 @@
 #include "afxcmn.h"
 #include "afxwin.h"
 
-#define NUM_CAMSETUP_PANELS 10
+#define NUM_CAMSETUP_PANELS 12
 /////////////////////////////////////////////////////////////////////////////
 // CCameraSetupDlg dialog
 
@@ -54,11 +54,12 @@ public:
   int mNumCameras;
   int mCurrentCamera;
   int mTietzType;
-  int mDE_Type;  //DE addition
+  int mDE_Type;
   BOOL mGatanType;
   int mAMTtype;
   int mFEItype;
   BOOL mPluginType;
+  BOOL mSTEMcamera;
   BOOL mBinningEnabled;
   int mCoordScaling;
   int mCanProcess;
@@ -384,6 +385,16 @@ void ManageSuperResBinning(void);
   CEdit m_editTiltOffset;
   float m_fTiltOffset;
   afx_msg void OnKillfocusEditTiltOffset();
+  CComboBox m_comboDePreset;
+  CComboBox m_comboPattern;
+  afx_msg void OnStemSaveFolder();
+  BOOL m_bDeSTEMSaveFinal;
+  BOOL m_bSave4dSTEM;
+  BOOL m_bDePointRepeats;
+  BOOL m_bDeSTEMGainCorr;
+  afx_msg void OnDeStemSaveFinal();
+  afx_msg void OnSave4dStack();
+  void ManageVirtualSTEM();
 };
 
 //{{AFX_INSERT_LOCATION}}

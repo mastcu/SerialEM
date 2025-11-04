@@ -4106,8 +4106,9 @@ bool CShiftManager::ShiftAdjustmentForSet(int conSet, int magInd, float &shiftX,
   }
 
   // For focus, find the higher mag if appropriate
-  if (conSet == FOCUS_CONSET && !mWinApp->LowDoseMode() && camSets[conSet].boostMag)
-    setMag = FindBoostedMagIndex(magInd, camSets[conSet].boostMag);
+  if (conSet == FOCUS_CONSET && !mWinApp->LowDoseMode() && 
+    camSets[conSet].boostMagOrHwBin)
+    setMag = FindBoostedMagIndex(magInd, camSets[conSet].boostMagOrHwBin);
   if (mInterSetShifts.binning[conSet] != camSets[conSet].binning ||
     mInterSetShifts.binning[recSet] != recBin ||
     mInterSetShifts.magInd[conSet] != setMag || mInterSetShifts.magInd[recSet] != recMag
