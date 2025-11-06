@@ -279,6 +279,18 @@ bool EMimageBuffer::GetIntensity(double & intensity)
   return true;
 }
 
+bool EMimageBuffer::GetEDMPercent(double & EDMPercent)
+{
+  EDMPercent = 0.;
+  if (!mImage)
+    return false;
+  EMimageExtra *extra = mImage->GetUserData();
+  if (!extra || extra->mEDMPercent < 0)
+    return false;
+  EDMPercent = extra->mEDMPercent;
+  return true;
+}
+
 bool EMimageBuffer::GetUncroppedSize(int &uncroppedX, int &uncroppedY, int *centered)
 {
   if (!mImage)

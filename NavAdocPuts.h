@@ -183,4 +183,7 @@
 
   ADOC_PUT(FloatArray(ADOC_ARG, "PtsX", &item->mPtX[0], item->mNumPoints));
   ADOC_PUT(FloatArray(ADOC_ARG, "PtsY", &item->mPtY[0], item->mNumPoints));
+
+  if (item->mEDMPercent >= 0)
+    ADOC_PUT(Float(ADOC_ARG, "EDMPercent", item->mEDMPercent));
 }

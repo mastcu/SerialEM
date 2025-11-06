@@ -109,6 +109,7 @@ public:
   bool GetDefocus(float & focus);
   bool GetSpotSize(int &spot);
   bool GetIntensity(double & intensity);
+  bool GetEDMPercent(double & EDMPercent);
   bool GetUncroppedSize(int &uncroppedX, int &uncroppedY, int *centered = NULL);
   bool GetTimeStamp(int &timeStamp);
   bool IsProcessedOKforMap();

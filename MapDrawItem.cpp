@@ -94,6 +94,7 @@ CMapDrawItem::CMapDrawItem()
   mMarkerShiftX = mMarkerShiftY = EXTRA_NO_VALUE;
   mFilePropIndex =  mTSparamIndex = mMontParamIndex =  mStateIndex = -1;
   mFileToOpen = "";
+  mEDMPercent = -1.f;
  }
 
 CMapDrawItem::CMapDrawItem(CMapDrawItem *item)

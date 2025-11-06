@@ -208,6 +208,8 @@ BOOL CRemoteControl::OnInitDialog()
   m_sbcStageLeftRight.SetRange(-30000, 30000);
   m_sbcStageUpDown.SetPos(0);
   m_sbcStageLeftRight.SetPos(0);
+  m_sbcEDMpct.SetRange(-30000, 30000);
+  m_sbcEDMpct.SetPos(0);
   m_butDelBeamMinus.SetFont(&mButFont);
   m_butDelBeamPlus.SetFont(&mButFont);
   m_butDelC2Minus.SetFont(&mButFont);
@@ -1011,8 +1013,7 @@ void CRemoteControl::OnDeltaposSpinEdmPct(NMHDR *pNMHDR, LRESULT *pResult)
   LPNMUPDOWN pNMUpDown = reinterpret_cast<LPNMUPDOWN>(pNMHDR);
   CString err;
   float oldVal = mWinApp->mCamera->mDoseModulator->GetRecentDutyPercent();
-  //For some reason up is negative and down is positive
-  float delta = - mDutyPercentIncrement * pNMUpDown->iDelta;
+  float delta = mDutyPercentIncrement * pNMUpDown->iDelta;
   
   float newVal = oldVal + delta;
   if (newVal <= 0 && delta < 0)

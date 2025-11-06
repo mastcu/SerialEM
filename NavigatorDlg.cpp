@@ -51,6 +51,7 @@
 #include "MontageSetupDlg.h"
 //#include "TiltSeriesParam.h"
 #include "TSController.h"
+#include "DoseModulator.h"
 #include "Utilities\XCorr.h"
 #include "Utilities\KGetOne.h"
 #include "Shared\autodoc.h"
@@ -7044,9 +7045,9 @@ int CNavigatorDlg::NewMap(bool unsuitableOK, int addOrReplaceNote, CString *newN
   CMapDrawItem *item, *item2;
   int trimCount, i, setNum, sizeX, sizeY, area, montSect = -1;
   int uncroppedX, uncroppedY;
-  float slitIn;
+  float slitIn, edmPct;
   ScaleMat aInv;
-  CString report;
+  CString report, errStr;
   bool singleBufSaved, singleBufReadIn;
   FilterParams *filtParam = mWinApp->GetFilterParams();
   MontParam *montp = mWinApp->GetMontParam();
@@ -7319,6 +7320,11 @@ int CNavigatorDlg::NewMap(bool unsuitableOK, int addOrReplaceNote, CString *newN
   if (imBuf->mLowDoseArea || (item->mMapMontage && 
     IS_SET_VIEW_OR_SEARCH(imBuf->mConSetUsed)))
     item->mMapLowDoseConSet = imBuf->mConSetUsed;
+
+  if (mCamera->HasDoseModulator() && 
+    !mCamera->mDoseModulator->GetDutyPercent(edmPct, errStr)) {
+    item->mEDMPercent = edmPct;
+  }
 
   // For a LD View image, store the defocus offset, and get the net view IS shift and 
   // convert it to a stage position for use in realign to item
@@ -9248,6 +9254,9 @@ int CNavigatorDlg::LoadNavFile(bool checkAutosave, bool mergeFile, CString *inFi
             &item->mShutterMode));
           ADOC_OPTIONAL(AdocGetInteger("Item", sectInd, "MapSpotSize", 
             &item->mMapSpotSize));
+
+          item->mEDMPercent = -1.f;
+          ADOC_OPTIONAL(AdocGetFloat("Item", sectInd, "EDMPercent", &item->mEDMPercent));
 
           // Preserve double precision if it is there
           ADOC_OPTIONAL(AdocGetString("Item", sectInd, "MapIntensity", &adocStr));
