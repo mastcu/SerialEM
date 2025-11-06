@@ -979,6 +979,8 @@ int CBeamAssessor::SetDoseRateWithEDM(float inFactor, int lowDoseArea)
 {
   CString msg;
   float currentPct, newPct;
+  double newIntensity;
+  
   if (!mCamera->HasDoseModulator() || 
     mCamera->mDoseModulator->GetDutyPercent(currentPct, msg))
     return BEAM_STRENGTH_SCOPE_ERROR;
@@ -993,12 +995,16 @@ int CBeamAssessor::SetDoseRateWithEDM(float inFactor, int lowDoseArea)
       return BEAM_STRENGTH_SCOPE_ERROR;
   }
 
-  //Change area's value if there was no error; change focus/trial together if needed
-  /*if (lowDoseArea >= 0) {
+  newIntensity = 
+    lowDoseArea < 0 ? mScope->GetIntensity() : mLDParam[lowDoseArea].intensity;
+  newIntensity *= (double) inFactor;
+
+  //Change area's value; change focus/trial together if needed
+  if (lowDoseArea >= 0) {
     mLDParam[lowDoseArea].intensity = newIntensity;
     if (mWinApp->mLowDoseDlg.m_bTieFocusTrial && (lowDoseArea + 1) / 2 == 1)
       mLDParam[3 - lowDoseArea].intensity = newIntensity;
-  }*/
+  }
 
   return 0;
 }
