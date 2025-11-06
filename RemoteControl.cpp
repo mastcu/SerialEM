@@ -10,6 +10,7 @@
 #include "ProcessImage.h"
 #include "ShiftManager.h"
 #include "ShiftCalibrator.h"
+#include "DoseModulator.h"
 
 #define MIN_BEAM_DELTA  0.00625f
 #define MAX_BEAM_DELTA  0.81f
@@ -177,19 +178,17 @@ BOOL CRemoteControl::OnInitDialog()
     if (wnd)
       wnd->SetFont(smallFont);
   }
-  if ((HitachiScope && !mScope->GetHitachiCanUseGunValve()) || mScope->GetNoScope())
-    m_butValves.ShowWindow(SW_HIDE);
+  if ((HitachiScope && !mScope->GetHitachiCanUseGunValve()) || mScope->GetNoScope()) {
+    mIDsToDrop.push_back(IDC_BUT_VALVES);
+  }
   if (mScope->GetNoColumnValve())
     m_butValves.SetWindowText("Turn On Beam");
   else
     m_butValves.SetWindowText(FEIscope ? "Open Valves" : "Open Valve");
-  if (!FEIscope)
-    m_butNanoMicro.ShowWindow(SW_HIDE);
+  if (!FEIscope) {
     mIDsToDrop.push_back(IDC_BUT_NANO_MICRO);
+  }
   if (!JEOLscope || mScope->GetHasNoAlpha()) {
-    m_sbcAlpha.ShowWindow(SW_HIDE);
-    m_statAlpha.ShowWindow(SW_HIDE);
-
     mIDsToDrop.push_back(IDC_SPIN_ALPHA);
     mIDsToDrop.push_back(IDC_STAT_ALPHA);
   }
@@ -363,8 +362,8 @@ void CRemoteControl::Update(int inMagInd, int inCamLen, int inSpot, double inInt
       mIDsToDrop.push_back(IDC_SPIN_EDM_PCT);
       mIDsToDrop.push_back(IDC_DEL_EDM_PLUS);
       mIDsToDrop.push_back(IDC_DEL_EDM_MINUS);
-      ManagePanels();
       mPanelResized = true;
+      ManagePanels();
       mWinApp->ManageDialogOptionsHiding();
     }
   }

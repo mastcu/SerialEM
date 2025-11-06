@@ -163,8 +163,8 @@ float CDoseModulator::GetRecentDutyPercent()
   float pct;
   CString str;
   
-  if (mDutyPercentTime < 0 || SEMTickInterval(mDutyPercentTime) > 1000 * PCT_CHECK_SECONDS) {
-    mDutyPercentTime = GetTickCount();
+  if (mDutyPercentTime < 0 || 
+    SEMTickInterval(mDutyPercentTime) > 1000 * PCT_CHECK_SECONDS) {
     if (!GetDutyPercent(pct, str)) {
       pct = mLastDutyPctSet;
     }

@@ -728,6 +728,7 @@ int CCameraController::Initialize(int whichCameras)
   firstTime = false;
 
   if (!HasDoseModulator()) {
+    
     //Delete the EDM menu item if there is no EDM
     CMenu *menu = mWinApp->m_pMainWnd->GetMenu()->GetSubMenu(TASKS_MENU_INDEX);
     menu->DeleteMenu(ID_TASKS_SETDOSERATEWITHEDM, MF_BYCOMMAND);

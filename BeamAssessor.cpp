@@ -23,6 +23,7 @@
 #include "NavHelper.h"
 #include "Utilities\KGetOne.h"
 #include "Shared\b3dutil.h"
+#include "DoseModulator.h"
 
 #ifdef _DEBUG
 #undef THIS_FILE
@@ -972,11 +973,14 @@ int CBeamAssessor::ChangeBeamStrength(double inFactor, int lowDoseArea)
   return err;
 }
 
+// Change the dose rate by the given inFactor by modifying the EDM dose percentage;         
+// do it for given lowDoseArea or generally if lowDoseArea < 0
 int CBeamAssessor::SetDoseRateWithEDM(float inFactor, int lowDoseArea)
 {
   CString msg;
   float currentPct, newPct;
-  if (!mCamera->HasDoseModulator() || mCamera->mDoseModulator->GetDutyPercent(currentPct, msg))
+  if (!mCamera->HasDoseModulator() || 
+    mCamera->mDoseModulator->GetDutyPercent(currentPct, msg))
     return BEAM_STRENGTH_SCOPE_ERROR;
   if (currentPct <= 0)
     return BEAM_STARTING_OUT_OF_RANGE;
@@ -988,6 +992,14 @@ int CBeamAssessor::SetDoseRateWithEDM(float inFactor, int lowDoseArea)
     if (mCamera->mDoseModulator->SetDutyPercent(newPct, msg))
       return BEAM_STRENGTH_SCOPE_ERROR;
   }
+
+  //Change area's value if there was no error; change focus/trial together if needed
+  /*if (lowDoseArea >= 0) {
+    mLDParam[lowDoseArea].intensity = newIntensity;
+    if (mWinApp->mLowDoseDlg.m_bTieFocusTrial && (lowDoseArea + 1) / 2 == 1)
+      mLDParam[3 - lowDoseArea].intensity = newIntensity;
+  }*/
+
   return 0;
 }
 

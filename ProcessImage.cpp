@@ -1748,7 +1748,7 @@ void CProcessImage::OnUpdateProcessZerotiltmean(CCmdUI* pCmdUI)
 
 void CProcessImage::OnProcessSetintensity() 
 {
-  DoSetIntensity(false, -1.);
+  DoSetIntensity(false, -1., false);
 }
 
 int CProcessImage::DoSetIntensity(bool doseRate, float useFactor, bool useEDM)
@@ -1878,7 +1878,7 @@ void CProcessImage::DoUpdateSetintensity(CCmdUI* pCmdUI, bool doseRate)
 
 void CProcessImage::OnSetDoseRate()
 {
-  DoSetIntensity(true, -1.);
+  DoSetIntensity(true, -1., false);
 }
 
 void CProcessImage::OnUpdateSetDoseRate(CCmdUI *pCmdUI)

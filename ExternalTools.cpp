@@ -369,9 +369,9 @@ int CExternalTools::RunCreateProcess(CString &command, CString argString,
     cstrCmd = systemDirPath;
     cstrCmd += "\\cmd.exe";
     report = "/C " + ("\"" + report + "\"");
-    SEMTrace('1', "%s", (LPCTSTR)cstrCmd);
+    SEMTrace('p', "%s", (LPCTSTR)cstrCmd);
   }
-  SEMTrace('1', "%s", (LPCTSTR)report);
+  SEMTrace('p', "%s", (LPCTSTR)report);
   cmdString = strdup((LPCTSTR)report);
   if (!cmdString) {
     report = "Memory error composing string for process and arguments when trying to"

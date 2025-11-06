@@ -2,7 +2,6 @@
 #include "afxwin.h"
 #include "afxcmn.h"
 #include "MyButton.h"
-#include "DoseModulator.h"
 
 class EMscope;
 

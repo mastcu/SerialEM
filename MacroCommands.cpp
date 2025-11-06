@@ -5424,7 +5424,7 @@ int CMacCmd::ChangeMagAndIntensity(void)
   delISY = pow((double)mShiftManager->GetPixelSize(i, index) /
     mShiftManager->GetPixelSize(i, index2), 2.);
   i = mWinApp->mBeamAssessor->AssessBeamChange(delISY, delX, delY, -1);
-  if (CheckIntensityChangeReturn(i))
+  if (CheckIntensityChangeReturn(i, false))
     return 1;
 
   // Change the mag then the intensity
@@ -9710,7 +9710,7 @@ int CMacCmd::SetIntensityByLastTilt(void)
   }
 
   index = mWinApp->mBeamAssessor->ChangeBeamStrength(delISX, index2);
-  if (CheckIntensityChangeReturn(index))
+  if (CheckIntensityChangeReturn(index, false))
     return 1;
   UpdateLDAreaIfSaved();
   return 0;

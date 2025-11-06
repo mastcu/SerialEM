@@ -585,7 +585,7 @@ public:
   int FindCalledMacro(CString strLine, bool scanning, CString useName = "");
   int FindMacroByNameOrTextNum(CString name);
   BOOL WordIsReserved(CString str);
-  int CheckIntensityChangeReturn(int err, bool useEDM = false);
+  int CheckIntensityChangeReturn(int err, bool useEDM);
   int CheckConvertFilename(CString * strItems, CString strLine, int index, CString & strCopy);
   afx_msg void OnMacroVerbose();
   afx_msg void OnUpdateMacroVerbose(CCmdUI *pCmdUI);
