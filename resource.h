@@ -2267,7 +2267,6 @@
 #define IDC_ZERO_SEARCH_SHIFT           3289
 #define IDC_STAT_BOX1                   3290
 #define IDC_TABLE_INDEXES               3291
-#define IDC_DELSTAGE_MINUS2             3291
 #define IDC_AUTO_SEARCH_SHIFT           3292
 #define IDC_STAT_HEADER_INDEX           3293
 #define IDC_STATVS_BOX                  3294

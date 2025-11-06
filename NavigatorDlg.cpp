@@ -7047,7 +7047,7 @@ int CNavigatorDlg::NewMap(bool unsuitableOK, int addOrReplaceNote, CString *newN
   int uncroppedX, uncroppedY;
   float slitIn, edmPct;
   ScaleMat aInv;
-  CString report, errStr;
+  CString report;
   bool singleBufSaved, singleBufReadIn;
   FilterParams *filtParam = mWinApp->GetFilterParams();
   MontParam *montp = mWinApp->GetMontParam();
@@ -7322,7 +7322,7 @@ int CNavigatorDlg::NewMap(bool unsuitableOK, int addOrReplaceNote, CString *newN
     item->mMapLowDoseConSet = imBuf->mConSetUsed;
 
   if (mCamera->HasDoseModulator() && 
-    !mCamera->mDoseModulator->GetDutyPercent(edmPct, errStr)) {
+    !mCamera->mDoseModulator->GetDutyPercent(edmPct, report)) {
     item->mEDMPercent = edmPct;
   }
 
@@ -9254,8 +9254,7 @@ int CNavigatorDlg::LoadNavFile(bool checkAutosave, bool mergeFile, CString *inFi
             &item->mShutterMode));
           ADOC_OPTIONAL(AdocGetInteger("Item", sectInd, "MapSpotSize", 
             &item->mMapSpotSize));
-
-          item->mEDMPercent = -1.f;
+          
           ADOC_OPTIONAL(AdocGetFloat("Item", sectInd, "EDMPercent", &item->mEDMPercent));
 
           // Preserve double precision if it is there
