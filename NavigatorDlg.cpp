@@ -1708,6 +1708,8 @@ void CNavigatorDlg::OnListItemDrag(int oldIndex, int newIndex)
     m_strItemNum.Format("# %d", mCurrentItem + 1);
   mSelectedItems.clear();
   mSelectedItems.insert(mCurrentItem);
+  if (m_bTableIndexes)
+    FillListBox(true, true);
   UpdateData(false);
 }
 
@@ -3060,6 +3062,8 @@ void CNavigatorDlg::OnDeleteitem()
     ManageCurrentControls();
     Redraw();
   }
+  if (m_bTableIndexes)
+    FillListBox(true, true);
 }
 
 //////////////////////////////////////////////////////////////////////

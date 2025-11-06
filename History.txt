@@ -3,6 +3,11 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+11/6/25: Fixed index numbers in Navigator when items are deleted (In 4.2).
+
+11/6/25: Fixed SetBinning, SetCenteredSize, and SetMontageParams to accept
+binning 0.5 in Python (In 4.2).
+
 11/3/25: Fixed ReportCameraLength for Thermo in STEM mode (In 4.2).
 
 11/3/25: SEM_4-2-11 
