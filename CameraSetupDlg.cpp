@@ -1472,8 +1472,8 @@ void CCameraSetupDlg::ManageCamera()
   mWeCanAlignFalcon = mCamera->CanWeAlignFalcon(mParam, true, mFalconCanSave); 
   otherSizesNoShutter = mParam->STEMcamera &&  mUsingUtapi;
   states[0] = mNumCameras > 1;
-  states[2] = (!mParam->STEMcamera || otherSizesNoShutter) && 
-    !(IS_FALCON2_3_4(mParam) || FCAM_CONTIN_SAVE(mParam));   // Shutter and other sizes
+  states[2] = (!mParam->STEMcamera || otherSizesNoShutter) &&  // Shutter and other sizes
+    !(IS_FALCON2_3_4(mParam) || FCAM_CONTIN_SAVE(mParam) || mParam->FEItype == 3);
   states[4] = !mParam->STEMcamera;    // Dose
   states[5] = mParam->STEMcamera;
   states[6] = mParam->K2Type || mFalconCanSave || mParam->canTakeFrames;
@@ -1792,7 +1792,7 @@ void CCameraSetupDlg::ManageCamera()
   SetDlgItemText(IDC_DRIFTTEXT2, mParam->STEMcamera ? "usec" : "sec");
   if (mParam->STEMcamera)
     areaHeight = mParam->moduloX >= 0 ? mAreaTwoRowHeight : mAreaSTEMHeight;
-  else if (IS_FALCON2_3_4(mParam) || FCAM_CONTIN_SAVE(mParam))
+  else if (IS_FALCON2_3_4(mParam) || FCAM_CONTIN_SAVE(mParam) || mFEItype == 3)
     areaHeight = mAreaSTEMHeight;
   m_statArea.SetWindowPos(NULL, 0, 0, mAreaWidth, areaHeight, SWP_NOMOVE);
   m_statProcessing.SetWindowPos(NULL, 0, 0, mProcWidth, 
