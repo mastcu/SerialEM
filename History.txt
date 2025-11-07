@@ -3,6 +3,8 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+11/7/25: Fixed camera setup to show only 3 size buttons for Ceta (In 4.2).
+
 11/6/25: Added buttons to scope control panel to adjust EDM dose percentage if
 there is an EDM.
 
