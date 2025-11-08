@@ -2188,10 +2188,11 @@ bool CCameraController::CanProcessHere(CameraParameters *param)
 }
 
 // Returns 1 if camera always returns floats, 2 if returning floats by user choice
+// Exclude FEI because the flag conflicts with max frames return for now, it seems
 int CCameraController::ReturningFloatImages(CameraParameters *param)
 {
-  return (param->returnsFloats ? 1 : 0) + 
-    ((mAcquireFloatImages && (param->CamFlags & CAMFLAG_FLOATS_BY_FLAG)) ? 2 : 0);
+  return (param->returnsFloats ? 1 : 0) + ((!param->FEItype &&
+    mAcquireFloatImages && (param->CamFlags & CAMFLAG_FLOATS_BY_FLAG)) ? 2 : 0);
 }
 
 // Returns true if camera is a OneView and the DM version can do drift correction
