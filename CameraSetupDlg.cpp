@@ -852,7 +852,7 @@ int CCameraSetupDlg::GetMagIndexForCamAndSet(void)
 
   // Get the right mag in low dose mode for the selected camera
   if (mLowDoseMode) {
-    ldSet = mCamera->ConSetToLDArea(m_iControlSet);
+    ldSet = mCamera->ConSetToLDArea(mCurrentSet);
     curLDind = CamLDParamIndex();
     camLDind = CamLDParamIndex(mParam);
     if (camLDind == curLDind)
