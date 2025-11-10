@@ -1430,7 +1430,8 @@ int EMmontageController::StartMontage(int inTrial, BOOL inReadMont, float cookDw
     } 
     mConSets[MONTAGE_CONSET] = mConSets[setNum];
     mCamera->CenteredSizes(mParam->xFrame, cam->sizeX, cam->moduloX, left, right, 
-      mParam->yFrame, cam->sizeY, cam->moduloY, top, bottom, mParam->binning);
+      mParam->yFrame, cam->sizeY, cam->moduloY, top, bottom, mParam->binning, 
+      &mConSets[MONTAGE_CONSET]);
     mConSets[MONTAGE_CONSET].left = left * mParam->binning;
     mConSets[MONTAGE_CONSET].right = right * mParam->binning;
     mConSets[MONTAGE_CONSET].top = top * mParam->binning;
@@ -2321,7 +2322,7 @@ int EMmontageController::DoNextPiece(int param)
 
           // If count is less than limit, retry after some delay; otherwise ask what to do
           if (mDuplicateRetryCount < mDuplicateRetryLimit) {
-            mWinApp->AppendToLog("Duplicate image received from Eagle camera - retrying");
+            mWinApp->AppendToLog("Duplicate image received from FEI camera - retrying");
             mDuplicateRetryCount++;
             mShiftManager->SetISTimeOut(10.);
             mShiftManager->SetLastTimeoutWasIS(false);
@@ -2332,7 +2333,7 @@ int EMmontageController::DoNextPiece(int param)
               mAction = MOVE_STAGE - 1;
             }
           } else {
-            report.Format("A duplicate image was received from the Eagle camera after %d "
+            report.Format("A duplicate image was received from the FEI camera after %d "
               "retries.\n\nPress:\n\"Save && Go On\" to save the image and go on,\n\n"
               "\"Stop\" to stop the montage.", mDuplicateRetryCount);
             if (SEMThreeChoiceBox(report, "Save && Go On", "Stop", "",
@@ -3893,7 +3894,7 @@ bool EMmontageController::CameraNotFeasible(MontParam *param)
   yFrame = param->yFrame;
   mCamera->CenteredSizes(xFrame, mCamParams[camera].sizeX, mCamParams[camera].moduloX, 
     left, right, yFrame, mCamParams[camera].sizeY, mCamParams[camera].moduloY, top, bot,
-    param->binning);
+    param->binning, mWinApp->GetConSets() + setNum);
   return xFrame != param->xFrame || yFrame != param->yFrame;
 }
 

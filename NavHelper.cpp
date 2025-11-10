@@ -1924,7 +1924,9 @@ void CNavHelper::PrepareToReimageMap(CMapDrawItem *item, MontParam *param,
       bottom = mSavedConset.bottom / binning;
       right = mSavedConset.right / binning;
       mCamera->AdjustSizes(xFrame, camP->sizeX, camP->moduloX, left, right, yFrame,
-        camP->sizeY, camP->moduloY, top, bottom, binning, item->mMapCamera);
+        camP->sizeY, camP->moduloY, top, bottom, binning, item->mMapCamera, 
+        mRIuseCurrentLDparams ? mSavedConset.saveFrames : 0, mSavedConset.alignFrames,
+        mSavedConset.useFrameAlign, mSavedConset.K2ReadMode);
       conSets[mRIconSetNum].top = top * binning;
       conSets[mRIconSetNum].left = left * binning;
       conSets[mRIconSetNum].bottom = bottom * binning;
@@ -2647,8 +2649,8 @@ void CNavHelper::SetConsetsFromParam(StateParams *param, ControlSet *conSet, int
     baseNum = VIEW_CONSET;
   *conSet = *(workSets + baseNum);
 
-  StateCameraCoords(destCam, param->xFrame, param->yFrame, param->binning,
-    conSet->left, conSet->right, conSet->top, conSet->bottom);
+  StateCameraCoords(param, destCam, param->xFrame, param->yFrame,
+    param->binning, conSet->left, conSet->right, conSet->top, conSet->bottom);
   conSet->binning = param->binning;
   conSet->mode = param->singleContMode;
   conSet->exposure = param->exposure;
@@ -3457,12 +3459,13 @@ ScaleMat CNavHelper::ItemStageToCamera(CMapDrawItem * item)
 }
 
 // Get the coordinates for a camera set from the state parameters
-void CNavHelper::StateCameraCoords(int camIndex, int xFrame, int yFrame, int binning,
-  int &left, int &right, int &top, int &bottom)
+void CNavHelper::StateCameraCoords(StateParams *param, int camIndex, int xFrame, 
+  int yFrame, int binning, int &left, int &right, int &top, int &bottom)
 {
   CameraParameters *camP = mWinApp->GetCamParams() + camIndex;
   mCamera->CenteredSizes(xFrame, camP->sizeX, camP->moduloX, left, right, 
-    yFrame, camP->sizeY, camP->moduloY, top, bottom, binning, camIndex);
+    yFrame, camP->sizeY, camP->moduloY, top, bottom, binning, camIndex, param->saveFrames,
+    param->alignFrames, param->useFrameAlign, param->K2ReadMode);
   left *= binning;
   right *= binning;
   top *= binning;

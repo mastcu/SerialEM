@@ -152,7 +152,7 @@ static int sGIFisSocket;             // 0 or 1 if GIF is on socket interface
 
 #define FALCON_DIR_UNSET "NotSetByUser"
 
-static int restrictedSizeIndex;       // Index to last selected restricted size
+static int sRestrictedSizeIndex;       // Index to last selected restricted size
 
 static const char *sGetCamObjText = "Object manager = CM_GetCameraManager()\n"
     "Object cameraList = CM_GetCameras(manager)\n"
@@ -1533,12 +1533,13 @@ void CCameraController::InitializeFEIcameras(int &numFEIlisted, int *originalLis
     i = originalList[ind];
     if (mAllParams[i].FEItype) {
       if (mAllParams[i].CamFlags & PLUGFEI_USES_ADVANCED) {
-        if (mTakeUnbinnedIfSavingEER > 0 && IS_FALCON2_3_4((&mAllParams[i]))) {
+        if (mTakeUnbinnedIfSavingEER && IS_FALCON2_3_4((&mAllParams[i]))) {
           mAllParams[i].autoGainAtBinning = 0;
-          B3DCLAMP(mAllParams[i].numBinnings, 1, 3);
+          B3DCLAMP(mAllParams[i].numBinnings, 1, 4);
           mAllParams[i].gainFactor[0] = 1.;
-          mAllParams[i].gainFactor[1] = mTakeUnbinnedIfSavingEER > 1 ? 1.f : 0.25f;
-          mAllParams[i].gainFactor[2] = mTakeUnbinnedIfSavingEER > 1 ? 1.f : 0.0625f;
+          mAllParams[i].gainFactor[1] = 0.25f;
+          mAllParams[i].gainFactor[2] = 0.0625f;
+          mAllParams[i].gainFactor[3] = 0.015625f;
         }
         if (mAllParams[i].autoGainAtBinning > 0) {
           for (bin = 0; bin < mAllParams[i].numBinnings; bin++) {
@@ -3142,6 +3143,7 @@ int CCameraController::ReplaceFrameTSFocusChange(FloatVec &changes)
 void CCameraController::Capture(int inSet, bool retrying)
 {
   int ind, error, setState, binIndex, sumCount, binDiv, special;
+  int camLeft, camRight, camTop, camBot, siz, frac, postBin;
   BOOL bEnsureDark = false;
   CString logmess, ext;
   FrameAliParams faParam;
@@ -3441,7 +3443,8 @@ void CCameraController::Capture(int inSet, bool retrying)
       mTD.FEIacquireFlags |= PLUGFEI_USE_EER_MODE;
 
       // Set up for software binning in server if property is set for it
-      if ((conSet.binning > 1 || conSet.right < mParam->sizeX) &&
+      if ((conSet.binning > 1 || conSet.left > 0 || conSet.top > 0 || 
+        conSet.right < mParam->sizeX || conSet.bottom < mParam->sizeY) &&
         mTakeUnbinnedIfSavingEER)
         mTD.FEIacquireFlags |= PLUGFEI_TAKE_UNBINNED;
       if (mAligningFalconFrames) {
@@ -3489,6 +3492,10 @@ void CCameraController::Capture(int inSet, bool retrying)
       return;
     }
     mDiscardImage = FCAM_CONTIN_SAVE(mParam);
+  }
+  if (conSet.binning == 8 && (mParam->FEItype == FALCON2_TYPE || 
+    mParam->FEItype == FALCON3_TYPE) && !(mTD.FEIacquireFlags & PLUGFEI_TAKE_UNBINNED)) {
+    mTD.FEIacquireFlags |= PLUGFEI_TAKE_BINNED_4;
   }
 
   // For Ceta saving, make direct call to set up location
@@ -3609,7 +3616,7 @@ void CCameraController::Capture(int inSet, bool retrying)
 
   // Set up all the shuttering and timing parameters
   CapSetupShutteringTiming(conSet, inSet, bEnsureDark);
-
+  
   // Copy flags and targets, clear the flags
   mTD.TietzType = mParam->TietzType;
   mTD.FEItype = mParam->FEItype;
@@ -3628,15 +3635,65 @@ void CCameraController::Capture(int inSet, bool retrying)
   mTD.MakeFEIerrorTimeout = mMakeFEIerrorBeTimeout;
   mTD.checkFEIname = mOtherCamerasInTIA;
   mTD.oneFEIshutter = mParam->onlyOneShutter;
-  binDiv = BinDivisorI(mParam);
 
   // Pass the native chip size and let plugin adjust for image type
+  binDiv = BinDivisorI(mParam);
   mTD.fullSizeX = mParam->sizeX / binDiv;
   mTD.fullSizeY = mParam->sizeY / binDiv;
   if (mTD.UseUtapi && mParam->STEMcamera) {
     mTD.fullSizeX /= conSet.binning;
     mTD.fullSizeY /= conSet.binning;
   }
+
+  // Set up subarea extraction; the unbinned flag was set above here
+  mTD.xSubOffset = -1;
+  if (mTD.restrictedSize < 0 && mParam->FEItype && !mParam->STEMcamera) {
+    if (mTD.FEIacquireFlags & PLUGFEI_TAKE_UNBINNED) {
+
+      // If taking unbinned, fix the full size and set the offset in unbinned coords
+      mTD.restrictedSize = 0;
+      mTD.xSubOffset = mTD.Left * mTD.Binning;
+      mTD.ySubOffset = mTD.Top * mTD.Binning;
+      mTD.fullSizeX = mParam->sizeX;
+      mTD.fullSizeY = mParam->sizeY;
+    } else {
+
+      // Otherwise find the smallest standard area that the subarea will fit in
+      frac = 4;
+      postBin = (mTD.FEIacquireFlags & PLUGFEI_TAKE_BINNED_4) ? 2 : 1;
+      mTD.fullSizeX /= (mTD.Binning / postBin);
+      mTD.fullSizeY /= (mTD.Binning / postBin);
+      for (siz = 2; siz >= 0; siz--) {
+        camLeft = (frac - 1) * mTD.fullSizeX / (2 * frac);
+        camRight = (frac + 1) * mTD.fullSizeX / (2 * frac);
+        camTop = (frac - 1) * mTD.fullSizeY / (2 * frac);
+        camBot = (frac + 1) * mTD.fullSizeY / (2 * frac);
+        if (mTD.Left * postBin >= camLeft && mTD.Right * postBin <= camRight &&
+          mTD.Top * postBin >= camTop && mTD.Bottom * postBin <= camBot) {
+
+          // Set the restricted size, its dimensions, and an offset into that area
+          mTD.restrictedSize = siz;
+          mTD.xSubOffset = mTD.Left * postBin - camLeft;
+          mTD.ySubOffset = mTD.Top * postBin - camTop;
+          mTD.fullSizeX /= frac;
+          mTD.fullSizeY /= frac;
+          break;
+        }
+        frac /= 2;
+      }
+      if (siz < 0) {
+        PrintfToLog("Coordinates out of range: bin %d left %d right %d top %d bot %d",
+          mTD.Binning, mTD.Left, mTD.Right, mTD.Top, mTD.Bottom);
+        SEMMessageBox("Program error: subarea coordinates for Thermo/FEI camera out of"
+          " range (see log)");
+        ErrorCleanup(1);
+        return;
+      }
+    }
+    SEMTrace('E', "Extract from full %d %d  offset %d %d", mTD.fullSizeX, mTD.fullSizeY,
+      mTD.xSubOffset, mTD.ySubOffset);
+  }
+
   mTD.PostMoveStage = mStageQueued;
   mTD.imageReturned = false;
   mTD.GetDeferredSum = 0;
@@ -5393,7 +5450,8 @@ void CCameraController::CapManageCoordinates(ControlSet & conSet, int &gainXoffs
       reducedSizeY, mParam->sizeY, mParam->moduloY, tTop, tBot, mBinning);
   }
   AdjustSizes(mDMsizeX, mParam->sizeX, noSubarea ? -2 : mParam->moduloX, mLeft, mRight,
-    mDMsizeY, mParam->sizeY, noSubarea ? -2 : mParam->moduloY, mTop, mBottom, mBinning);
+    mDMsizeY, mParam->sizeY, noSubarea ? -2 : mParam->moduloY, mTop, mBottom, mBinning,
+    &conSet);
   
   // Fix coordinates for Tietz geometry
   tsizeX = mDMsizeX;
@@ -5592,10 +5650,10 @@ void CCameraController::CapSetupShutteringTiming(ControlSet & conSet, int inSet,
       conSet.exposure = tmpExp;
     conSet.processing = UNPROCESSED;
     if (mParam->FEItype) {
-      if (restrictedSizeIndex <= 0)
+      if (sRestrictedSizeIndex <= 0)
         mTD.restrictedSize = 0;
       else
-        mTD.restrictedSize = restrictedSizeIndex;
+        mTD.restrictedSize = sRestrictedSizeIndex;
     } else if (mParam->GatanCam) {
 
        // Set up line sync variable, which is now a set of flags for plugin high enough
@@ -5821,10 +5879,10 @@ void CCameraController::CapSetupShutteringTiming(ControlSet & conSet, int inSet,
     mTD.eagleIndex = mParam->eagleIndex;
     if (FCAM_CONTIN_SAVE(mParam) && conSet.saveFrames)
       mTD.eagleIndex = mParam->cameraNumber;
-    if (restrictedSizeIndex <= 0)
+    if (sRestrictedSizeIndex <= 0 && !IsFEISubareaFlexible(mParam, &conSet))
       mTD.restrictedSize = 0;
     else
-      mTD.restrictedSize = restrictedSizeIndex;
+      mTD.restrictedSize = sRestrictedSizeIndex;
 
   } else if (mTD.plugFuncs) {
 
@@ -6377,9 +6435,8 @@ int CCameraController::CapManageDarkGainRefs(ControlSet & conSet, int inSet,
 
 // Return coordinates for a legal centered frame given the starting sizes
 void CCameraController::CenteredSizes(int &DMsizeX, int ccdSizeX, int moduloX, int &Left,
-                                      int &Right, int &DMsizeY, int ccdSizeY, 
-                                      int moduloY, int &Top, int &Bottom,int binning, 
-                                      int camera)
+  int &Right, int &DMsizeY, int ccdSizeY, int moduloY, int &Top, int &Bottom,int binning, 
+  int camera, int saveFrames, int alignFrames, int useFrameAli, int readMode)
 {
   CameraParameters *camParam = (camera >= 0) ? &mAllParams[camera] : mParam;
   Left = (ccdSizeX / binning - DMsizeX) / 2;
@@ -6387,7 +6444,7 @@ void CCameraController::CenteredSizes(int &DMsizeX, int ccdSizeX, int moduloX, i
   Top = (ccdSizeY / binning - DMsizeY) / 2;
   Bottom = Top + DMsizeY;
   AdjustSizes(DMsizeX, ccdSizeX, moduloX, Left, Right, DMsizeY, ccdSizeY, moduloY, Top, 
-    Bottom, binning, camera);
+    Bottom, binning, camera, saveFrames, alignFrames, useFrameAli, readMode);
 
   // If Tietz blocked camera is now miscentered, increase by one block
   if (camParam->TietzBlocks) {
@@ -6411,6 +6468,17 @@ void CCameraController::CenteredSizes(int &DMsizeX, int ccdSizeX, int moduloX, i
       Bottom, binning, camera);
   }
 }
+
+// Overload that takes a conSet
+void CCameraController::CenteredSizes(int &DMsizeX, int ccdSizeX, int moduloX,
+  int &Left, int &Right, int &DMsizeY, int ccdSizeY, int moduloY,
+  int &Top, int &Bottom, int binning, ControlSet *conSet, int camera)
+{
+  CenteredSizes(DMsizeX, ccdSizeX, moduloX, Left, Right, DMsizeY, ccdSizeY, moduloY,
+    Top, Bottom, binning, camera, conSet->saveFrames, conSet->alignFrames,
+    conSet->useFrameAlign, conSet->K2ReadMode);
+}
+
  
 // Return just the size that a control set would acquire from the given camera
 void CCameraController::AcquiredSize(ControlSet *csp, int camera, int &sizeX, int &sizeY)
@@ -6428,14 +6496,14 @@ void CCameraController::AcquiredSize(ControlSet *csp, int camera, int &sizeX, in
   sizeX = right - left;
   sizeY = bottom - top;
   AdjustSizes(sizeX, camP->sizeX, camP->moduloX, left, right, sizeY, camP->sizeY, 
-    camP->moduloY, top, bottom, binning, camera);
+    camP->moduloY, top, bottom, binning, csp, camera);
 }
 
 // Adjust sizes and positions for both axes: all external calls are through this
 // version and not the one-axis version
 void CCameraController::AdjustSizes(int &DMsizeX, int ccdSizeX, int moduloX, int &Left,
-                                    int &Right, int &DMsizeY, int ccdSizeY, int moduloY, 
-                                    int &Top, int &Bottom, int binning, int camera)
+  int &Right, int &DMsizeY, int ccdSizeY, int moduloY, int &Top, int &Bottom, int binning,
+  int camera, int saveFrames, int alignFrames, int useFrameAli, int readMode)
 {
   int diff;
   CameraParameters *camParam = (camera >= 0) ? &mAllParams[camera] : mParam;
@@ -6446,6 +6514,17 @@ void CCameraController::AdjustSizes(int &DMsizeX, int ccdSizeX, int moduloX, int
         camParam->DE_ImageInvertX);
     else
       operation = mParam->rotationFlip;
+  }
+
+  // If call has the parameters that allow evaluation, set the modulos if flexible
+  // subareas are allowed
+  if (camParam->FEItype && saveFrames >= 0 && readMode >= 0 &&
+    IsFEISubareaFlexible(camParam, saveFrames, alignFrames, useFrameAli, readMode,
+      binning)) {
+    moduloX = 8;
+    moduloY = 8;
+    camParam->coordsModulo = true;
+    sRestrictedSizeIndex = -1;
   }
   if (camParam->TietzType && camParam->TietzImageGeometry > 0)
     UserToTietzCCD(camParam->TietzImageGeometry, binning, ccdSizeX, ccdSizeY, DMsizeX, 
@@ -6479,6 +6558,16 @@ void CCameraController::AdjustSizes(int &DMsizeX, int ccdSizeX, int moduloX, int
       DMsizeY, Top, Left, Bottom, Right);
 }
 
+// Overload that takes a conSet
+void CCameraController::AdjustSizes(int &DMsizeX, int ccdSizeX, int moduloX, int &Left,
+  int &Right, int &DMsizeY, int ccdSizeY, int moduloY, int &Top, int &Bottom, 
+  int binning, ControlSet *conSet, int camera)
+{
+  AdjustSizes(DMsizeX, ccdSizeX, moduloX, Left, Right, DMsizeY, ccdSizeY, moduloY,
+    Top, Bottom, binning, camera, conSet->saveFrames, conSet->alignFrames,
+    conSet->useFrameAlign, conSet->K2ReadMode);
+}
+
 // Adjust sizes and positions so that dimensions are a multiple of modulo number
 // And impose other restrictions encoded in moduloX
 // DMsizeX, Left, and Right are in binned pixels
@@ -6489,6 +6578,7 @@ void CCameraController::AdjustSizes(int &DMsizeX, int ccdSizeX, int moduloX,
   int moduloMap[] = {8,16,32,64};
   int *tietzSizes;
   int numSizes, nearInd, ind, binInd = -1, mapBase = -5;
+  int curCen, cenSubAdd, newCen, newSize;
   bool mapping = moduloX <= -5 && moduloX >= -8;
   int xMax = ccdSizeX/binning;
   CameraParameters *camParam = (camera >= 0) ? &mAllParams[camera] : mParam;
@@ -6529,11 +6619,11 @@ void CCameraController::AdjustSizes(int &DMsizeX, int ccdSizeX, int moduloX,
         moduloX == -2 || mapping) {
           DMsizeX = xMax;
           Left = 0;
-          restrictedSizeIndex = 0;
+          sRestrictedSizeIndex = 0;
       } else if ((DMsizeX > (xMax + 3) / 4 && lastRestricted < 0) || lastRestricted == 1){
         DMsizeX = xMax / 2;
         Left = xMax / 4;
-        restrictedSizeIndex = 1;
+        sRestrictedSizeIndex = 1;
         if (lastRestricted < 0 && binInd >= 0 && camParam->halfSizeX[binInd])
           DMsizeX = camParam->halfSizeX[binInd];
         if (lastRestricted == 1 && binInd >= 0 && camParam->halfSizeY[binInd])
@@ -6541,7 +6631,7 @@ void CCameraController::AdjustSizes(int &DMsizeX, int ccdSizeX, int moduloX,
       } else {
         DMsizeX = xMax / 4;
         Left = (3 * xMax) / 8;
-        restrictedSizeIndex = 2;
+        sRestrictedSizeIndex = 2;
         if (lastRestricted < 0 && binInd >= 0 && camParam->quarterSizeX[binInd])
           DMsizeX = camParam->quarterSizeX[binInd];
         if (lastRestricted > 0 && binInd >= 0 && camParam->quarterSizeY[binInd])
@@ -6549,7 +6639,7 @@ void CCameraController::AdjustSizes(int &DMsizeX, int ccdSizeX, int moduloX,
       }
 
       // Toggle index stored here between -1 and the size index
-      lastRestricted = lastRestricted < 0 ? restrictedSizeIndex : -1;
+      lastRestricted = lastRestricted < 0 ? sRestrictedSizeIndex : -1;
     }
     Right = Left + DMsizeX;
 
@@ -6568,11 +6658,25 @@ void CCameraController::AdjustSizes(int &DMsizeX, int ccdSizeX, int moduloX,
   // Take care of each coordinate being required to be a multiple of modulo
   if (camParam->coordsModulo) {
 
-    // Expand to left and right, drop back if too big
-    Left = moduloX * (Left / moduloX);
-    Right = moduloX * ((Right + moduloX - 1) / moduloX);
-    if (Right > xMax)
-      Right -= moduloX;
+    // Move the center to the nearest half-multiple of a modulo that is even
+    if (moduloX % 2)
+      moduloX *= 2;
+    curCen = (Left + Right) / 2;
+    newCen = moduloX * B3DNINT((2. * curCen) / moduloX) / 2;
+
+    // Make the new size be an even or odd multiple depending on where the center is
+    cenSubAdd = (newCen % moduloX) ? moduloX : 0;
+    newSize = 2 * moduloX * B3DNINT(0.5 * ((Right - Left) - cenSubAdd) / moduloX) + 
+      cenSubAdd;
+
+    // Back off from edges symmetrically
+    while (newCen - newSize / 2 < 0 || newCen + newSize / 2 > xMax &&
+      newSize > 2 * moduloX)
+      newSize -= 2 * moduloX;
+
+    // Get positions
+    Left = newCen - newSize / 2;
+    Right = newCen + newSize / 2;
     DMsizeX = Right - Left;
     return;
   }
@@ -12117,7 +12221,16 @@ int CCameraController::AcquireFEIimage(CameraThreadData *td, void *array, int co
     return 1;
   }
 
-  if (advanced) {
+  // Set the subarea information if the plugin is to do it
+  if (td->xSubOffset >= 0) {
+    if (!td->scopePlugFuncs->ASIsetCameraSubarea)
+      retval = -19;
+    else
+      retval = td->scopePlugFuncs->ASIsetCameraSubarea(td->fullSizeX, td->fullSizeY,
+        td->xSubOffset, td->ySubOffset);
+  }
+
+  if (advanced && !retval) {
     SEMTrace('E', "Calling ASIacquireFromcamera %p %d %d %f %d %d %d %d %d %d %d %d %d "
       "%x %f", array, sizeX, sizeY,  td->Exposure,  messInd, td->Binning, 
       td->restrictedSize, td->ImageType, td->DivideBy2, td->eagleIndex, 
@@ -12131,12 +12244,14 @@ int CCameraController::AcquireFEIimage(CameraThreadData *td, void *array, int co
       td->GatanReadMode, (td->CamFlags & PLUGFEI_CAM_CAN_ALIGN) ? td->AlignFrames : -1, 
       td->FEIacquireFlags, 0, 0, td->CountScaling, 0.);
 
-  } else
+  } else if (!retval)
     retval = td->scopePlugFuncs->AcquireFEIimage(array, sizeX, sizeY, correction, 
       td->Exposure, settling, messInd, td->Binning, td->restrictedSize, td->ImageType,
       td->DivideBy2, &td->eagleIndex, (LPCTSTR)td->cameraName, td->checkFEIname,
       td->FEItype, td->oneFEIshutter, td->FauxCamera, &td->startingFEIshutter);
-  if (retval)
+  if (retval == -19)
+    message = "Cannot set subarea, the plugin is out of date";
+  else if (retval)
     message = td->scopePlugFuncs->GetLastErrorString();
   td->scopePlugFuncs->EndThreadAccess(2);
 
@@ -13246,6 +13361,24 @@ bool CCameraController::IsSaveInEERMode(CameraParameters *param, BOOL saveFrames
   return param->FEItype == FALCON4_TYPE && mCanSaveEERformat && readMode > 0 &&
     ((mSaveInEERformat && (saveFrames || (alignFrames && useFramealign > 1))) ||
      (!saveFrames && alignFrames && useFramealign == 1));
+}
+
+// Return whether the plugin supports flexible subareas and if conditions are appropriate:
+// Not saving as MRC and not aligning in SerialEM
+bool CCameraController::IsFEISubareaFlexible(CameraParameters *param, 
+  const ControlSet *conSet)
+{
+  return IsFEISubareaFlexible(param, conSet->saveFrames != 0, conSet->alignFrames != 0,
+    conSet->useFrameAlign, conSet->K2ReadMode, conSet->binning);
+}
+
+bool CCameraController::IsFEISubareaFlexible(CameraParameters *param, BOOL saveFrames,
+  BOOL alignFrames, int useFramealign, int readMode, int binning)
+{
+  return mScope->GetPluginVersion() >= PLUGFEI_FLEXIBLE_SUBAREAS && param->FEItype > 1 &&
+    binning <= 8 && !param->STEMcamera && (!alignFrames || useFramealign != 1 || 
+      param->FEItype == FALCON4_TYPE) && (!saveFrames ||
+      IsSaveInEERMode(param, saveFrames, alignFrames, useFramealign, readMode));
 }
 
 // Returns true if camera is using Utapi interface, plus adjusts needed parameters

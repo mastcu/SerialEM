@@ -680,13 +680,32 @@ void CMontageSetupDlg::TurnOffOtherUseFlagsIfOn(BOOL &keepIfOn, int radioVal)
 void CMontageSetupDlg::ManageSizeFields(void)
 {
   bool useMulti = mLowDoseMode && m_bUseMultishot;
-  BOOL enable = !mSizeLocked && mCamParams[mCurrentCamera].moduloX >= 0 && !useMulti &&
-    mForMultiGridMap != SETUPMONT_MG_POLYGON;
+  ControlSet *conSet = GetCurMontConSet();
+  BOOL enable = !mSizeLocked && (mCamParams[mCurrentCamera].moduloX >= 0 || 
+    mWinApp->mCamera->IsFEISubareaFlexible(&mCamParams[mCurrentCamera], conSet)) && 
+    !useMulti && mForMultiGridMap != SETUPMONT_MG_POLYGON;
   m_statPieceSize.EnableWindow(enable);
   m_statY2.EnableWindow(enable);
   m_editXsize.EnableWindow(enable);
   m_editYsize.EnableWindow(enable);
   SetDlgItemText(IDC_STATOVERLAP, useMulti ? "0-tilt % overlap in X:" : "Overlap in X:");
+}
+
+// Get the control set given current parameters
+ControlSet *CMontageSetupDlg::GetCurMontConSet()
+{
+  int setNum;
+  MontParam tmpParam = mParam;
+  ControlSet *conSets = mWinApp->GetConSets();
+  tmpParam.useMontMapParams = m_bUseMontMapParams;
+  tmpParam.useViewInLowDose = m_bUseViewInLowDose;
+  tmpParam.usePrevInLowDose = m_bUsePrevInLowDose;
+  tmpParam.useSearchInLowDose = m_bUseSearchInLD;
+  setNum = MontageConSetNum(&tmpParam, false);
+  if (mCurrentCamera == mWinApp->GetCurrentCamera())
+    return mWinApp->GetConSets() + setNum;
+  else
+    return mWinApp->GetCamConSets() + MAX_CONSETS * mCurrentCamera + setNum;
 }
 
 // Use overlap directly or convert to a percentage if doing multishot
@@ -1180,6 +1199,7 @@ void CMontageSetupDlg::ValidateEdits()
   UPDATE_DATA_TRUE;
   UnloadOverlapBoxes();
   BOOL needUpdate = false;
+  ControlSet *conSet = GetCurMontConSet();
 
   // Constrain maximum pieces in one direction
   if (m_iXnFrames > mMaxPieces || m_iXnFrames < 1) {
@@ -1231,7 +1251,7 @@ void CMontageSetupDlg::ValidateEdits()
         mLowDoseMode ? mLdp[mLDsetNum].magIndex : mParam.magIndex, m_iXsize, m_iYsize, 
       mParam.binning);
     mWinApp->mCamera->CenteredSizes(m_iXsize, cam->sizeX, cam->moduloX, left, right,
-      m_iYsize, cam->sizeY, cam->moduloY, top, bot, mParam.binning, 
+      m_iYsize, cam->sizeY, cam->moduloY, top, bot, mParam.binning, conSet,
       mCurrentCamera);
     if (tempX != m_iXsize)
       needUpdate = true;

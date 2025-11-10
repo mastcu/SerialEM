@@ -222,6 +222,7 @@ private:
   bool mCanSaveFrames;
   CFont mBigModeFont;
   bool mUsingUtapi;
+  bool mFlexibleSubareas;
   float mFrameTimeMsScale;
 
 public:
@@ -237,7 +238,7 @@ public:
   CButton m_butMatchPixel;
   CButton m_butMatchIntensity;
   afx_msg void OnSwapXY();
-  bool AdjustCoords(int binning, bool updateIfNoSubarea = false);
+  bool AdjustCoords(int binning, int updateIfNoSubarea = 0);
   CEdit m_editExposure;
   CButton m_butLineSync;
   BOOL m_bLineSync;

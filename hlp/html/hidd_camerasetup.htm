@@ -162,9 +162,7 @@
       of the references already obtained, and will be used on the next acquisition.</P>
     <P><B>Top - Left - Bottom - Right</B></P>
     <P>These text boxes display and allow you to change the coordinates of the area to
-      be acquired. As in DM, Y coordinates start with zero at the top. Unlike in DM,
-      coordinates are always expressed in terms of the full, unbinned size of the CCD
-      camera.</P>
+      be acquired. Y coordinates start with zero at the top, and coordinates are always expressed in terms of the full, unbinned size of the camera.</P>
     <P><B>Up-down and Left-right Spin Buttons and Recenter Button</B></P>
     <P>The two pairs of spin buttons allow you to shift the capture area in any
       desired direction without changing its size. The Recenter button will undo these
@@ -199,6 +197,15 @@
       dimension to match the short dimension.&nbsp; For a Gatan ClearView camera, the 
         button is converted to &#39;Eighth&#39; to give easy access to a size that allows the 
         smallest frame time available, 0.000625 sec.</P>
+    <P>Thermo/FEI cameras can generate only full images and centered half and quarter 
+      sizes.&nbsp; As of SerialEM 4.3.0beta2, more flexible subareas are provided for 
+      all Falcon and Ceta cameras with 
+      software extraction of the selected area from a larger acquired area.&nbsp; 
+      These subareas are not supported when saving frames from a Falcon as MRC or from 
+      a Ceta 2, or when aligning frames in SerialEM without saving for Falcon 2, 
+      Falcon 3, and Ceta 2.&nbsp; Arbitrary subareas are allowed when aligning without 
+      saving from a Falcon 4, where an EER file is saved as the intermediate and 
+      extraction from a full image is required anyway.</P>
     <P><B>Dose readout and Update Dose button</B></P>
     <P>If electron dose is calibrated for the current spot size and intensity, the
       estimated dose will be shown for the given exposure. This readout is refreshed

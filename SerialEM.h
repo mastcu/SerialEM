@@ -261,8 +261,9 @@ struct JeolParams;
 #define PLUGFEI_CAM_CONTIN_SAVE   0x1000
 #define PLUGFEI_CAN_DARK_ONLY     0x2000
 #define PLUGFEI_CAN_LIVE_MODE     0x4000
+#define PLUGFEI_CAN_SAVE_TIFF     0x80
 #define PLUGFEI_NO_RECORD_LIMIT   1000000000
-#define PLUGFEI_INDEX_MASK        0xFF
+#define PLUGFEI_INDEX_MASK        0x7F   // chop this down as flags are added below 0x100
 #define PLUGFEI_MAX_FRAC_SHIFT    16
 #define PLUGFEI_WAIT_FOR_FRAMES   1
 #define PLUGFEI_APPLY_PIX2COUNT   2
@@ -273,6 +274,7 @@ struct JeolParams;
 #define PLUGFEI_SKIP_FRAME_WAIT   0x40
 #define PLUGFEI_DARK_CORR_ONLY    0x80
 #define PLUGFEI_USE_LIVE_MODE    0x100
+#define PLUGFEI_TAKE_BINNED_4    0x200
 
 typedef _variant_t PLUGIN_BOOL;
 typedef void (*PlugStopFunc)(int);

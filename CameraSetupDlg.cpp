@@ -506,35 +506,80 @@ void CCameraSetupDlg::OnButwidequarter()
   FixButtonFocus(m_butWideQuarter);
 }
 
+// Adjust the size by the given delta values, or more if that is needed to produce a real
+// change in size
 void CCameraSetupDlg::SetAdjustedSize(int deltaX, int deltaY)
 {
   int Left = mCoordScaling * m_eLeft;
   int Right = mCoordScaling * m_eRight;
   int Top = mCoordScaling * m_eTop;
   int Bottom = mCoordScaling * m_eBottom;
+  int lnew, rnew, tnew, bnew, sizeX, sizeY, trial;
+  int binning = mBinnings[m_iBinning];
+  int sizeXst = (Right - Left) / binning;
+  int sizeYst = (Bottom - Top) / binning;
+  int dxStart = deltaX, dyStart = deltaY;
   BOOL update = false;
-  if (Left - deltaX >= 0 && Right + deltaX <= mCameraSizeX &&
-    2 * deltaX + Right - Left >= 16) {
-    m_eLeft -= deltaX / mCoordScaling;
-    m_eRight += deltaX / mCoordScaling;
-    update = true;
+  for (trial = 0; trial < 100; trial++) {
+    update = false;
+
+    // If both sizes go out of range, set to limits
+    if (Left - deltaX < 0 && Right + deltaX > mCameraSizeX) {
+      m_eLeft = 0;
+      m_eRight = mCameraSizeX / mCoordScaling;
+      update = true;
+    } else if (Left - deltaX >= 0 && Right + deltaX <= mCameraSizeX &&
+      2 * deltaX + Right - Left >= 16) {
+
+      // Otherwise make the change
+      m_eLeft -= deltaX / mCoordScaling;
+      m_eRight += deltaX / mCoordScaling;
+      update = true;
+    }
+
+    // Similarly for Y
+    if (Top - deltaY < 0 && Bottom + deltaY > mCameraSizeY) {
+      m_eTop = 0;
+      m_eBottom = mCameraSizeY / mCoordScaling;
+      update = true;
+    } else if (Top - deltaY >= 0 && Bottom + deltaY <= mCameraSizeY &&
+      2 * deltaY + Bottom - Top >= 16) {
+      m_eTop -= deltaY / mCoordScaling;
+      m_eBottom += deltaY / mCoordScaling;
+      update = true;
+    }
+
+    // Do an adjust operation here to detect whether there is enough change after
+    // constraints are applied
+    lnew = mCoordScaling * m_eLeft / binning;
+    rnew = mCoordScaling * m_eRight / binning;
+    tnew = mCoordScaling * m_eTop / binning;
+    bnew = mCoordScaling * m_eBottom / binning;
+    sizeX = rnew - lnew;
+    sizeY = bnew - tnew;
+    mCamera->AdjustSizes(sizeX, mCameraSizeX, mParam->moduloX, lnew, rnew, sizeY,
+      mCameraSizeY, mParam->moduloY, tnew, bnew, binning, mActiveCameraList[mCurrentCamera],
+      m_bSaveFrames ? 1 : 0, m_bAlignDoseFrac ? 1 : 0, mCurSet->useFrameAlign, m_iK2Mode);
+    if (B3DSIGN(1, deltaX) * (sizeX - sizeXst) > 3 || 
+      B3DSIGN(1, deltaX) * (sizeY - sizeYst) > 3 || !update)
+      break;
+
+    // If not good enough, increase the deltas
+    deltaX += B3DCHOICE(deltaX < 0, B3DMIN(-2, deltaX / 4), B3DMAX(2, deltaX / 4));
+    deltaY += B3DCHOICE(deltaY < 0, B3DMIN(-2, deltaY / 4), B3DMAX(2, deltaY / 4));
   }
-  if (Top - deltaY >= 0 && Bottom + deltaY <= mCameraSizeY &&
-    2 * deltaY + Bottom - Top >= 16) {
-    m_eTop -= deltaY / mCoordScaling;
-    m_eBottom += deltaY / mCoordScaling;
-    update = true;
-  }
-  if (AdjustCoords(mBinnings[m_iBinning]))
+
+  // Final adjustment with unconditional update
+  if (AdjustCoords(binning, 2))
     update = true;
   if (update) {
     UpdateData(FALSE);
-    DrawBox();
   }
   if (mSTEMcamera)
     ManageDrift();
 }
 
+// Decrease area by 10%
 void CCameraSetupDlg::OnButsmaller10() 
 {
   int nearInd;
@@ -555,6 +600,7 @@ void CCameraSetupDlg::OnButsmaller10()
   FixButtonFocus(m_butSmaller10);
 }
 
+// Increase area by 10%
 void CCameraSetupDlg::OnButbigger10() 
 {
   int nearInd;
@@ -577,6 +623,7 @@ void CCameraSetupDlg::OnButbigger10()
   FixButtonFocus(m_butBigger10);
 }
 
+// Decrease size by a bit, or make  it square
 void CCameraSetupDlg::OnButabitless() 
 {
   int deltaX = -8, deltaY = -8;
@@ -586,7 +633,9 @@ void CCameraSetupDlg::OnButabitless()
   if (mEighthForBitless) {
     SetFractionalSize(8, 8);
   } else {
-    if (mParam->moduloX > 0 && mParam->moduloY > 0 &&
+    if (mParam->FEItype)
+      deltaX = deltaY = -8;
+    else if (mParam->moduloX > 0 && mParam->moduloY > 0 &&
       B3DMAX(mParam->moduloX, mParam->moduloY) > 8)
       deltaX = deltaY = -B3DMAX(mParam->moduloX, mParam->moduloY);
     if (mSquareForBitLess) {
@@ -660,6 +709,8 @@ void CCameraSetupDlg::OnBinning()
   ManageK2SaveSummary();
   ManageTimingAvailable();
   ManageAntialias();
+  if (mFlexibleSubareas)
+    ManageSizeAndPositionButtons(false);
 }
 
 void CCameraSetupDlg::OnContSingle()
@@ -831,8 +882,9 @@ void CCameraSetupDlg::ManageBinnedSize()
     mActiveCameraList[mCurrentCamera], magInd));
 
   mCamera->AdjustSizes(sizeX, mCameraSizeX, mParam->moduloX, left, right, 
-    sizeY, mCameraSizeY, mParam->moduloY, top, bottom, 
-    binning, mActiveCameraList[mCurrentCamera]);
+    sizeY, mCameraSizeY, mParam->moduloY, top, bottom, binning, 
+    mActiveCameraList[mCurrentCamera], m_bSaveFrames ? 1 : 0, m_bAlignDoseFrac ? 1 : 0, 
+    mCurSet->useFrameAlign, m_iK2Mode);
   str.Format("%sed size: %d x %d", mSTEMcamera ? "Sampl" : "Binn", sizeX, sizeY);
   SetDlgItemText(IDC_STATSIZE, str);
   str.Format("%.2f x %.2f um @ " + mWinApp->PixelFormat(pixel * 1000.f), sizeX * pixel, 
@@ -937,6 +989,10 @@ void CCameraSetupDlg::LoadConsetToDialog()
   m_eBottom = mCurSet->bottom / mCoordScaling;
   m_bDoseFracMode = B3DCHOICE(mParam->K2Type, mCurSet->doseFrac > 0,
     mCamera->GetFrameSavingEnabled() || (FCAM_ADVANCED(mParam) && IS_FALCON2_3_4(mParam)));
+  if (mFEItype && !IS_FALCON2_3_4(mParam) && !FCAM_CONTIN_SAVE(mParam)) {
+    mCurSet->saveFrames = 0;
+    mCurSet->alignFrames = 0;
+  }
   if (mParam->canTakeFrames)
     m_bDoseFracMode = (mCanAlignFrames && mCurSet->alignFrames) ||
     (mCanSaveFrames && mCurSet->saveFrames);
@@ -1022,7 +1078,7 @@ void CCameraSetupDlg::LoadConsetToDialog()
     (mParam->K2Type && m_bDoseFracMode);
   if (mParam->moduloX < 0 || mParam->centeredOnly || mParam->squareSubareas || 
     mTietzBlocks || alwaysAdjust)
-    AdjustCoords(binning, alwaysAdjust);
+    AdjustCoords(binning, alwaysAdjust ? 2 : 0);
 
   m_iContSingle = 1 - mCurSet->mode;
   m_iShuttering = mCurSet->shuttering;
@@ -1546,12 +1602,14 @@ void CCameraSetupDlg::ManageCamera()
   mTietzType = mParam->TietzType;
   mSTEMcamera = mParam->STEMcamera;
   mUsingUtapi = mCamera->UsingUtapiForCamera(mParam);
+  mFlexibleSubareas = mFEItype && mWinApp->mScope->GetPluginVersion() >=
+    PLUGFEI_FLEXIBLE_SUBAREAS;
   mWeCanAlignFalcon = mCamera->CanWeAlignFalcon(mParam, true, mFalconCanSave);
   mFrameTimeMsScale = mParam->DectrisType ? 0.001f : 1.f;
   otherSizesNoShutter = mSTEMcamera &&  mUsingUtapi;
   states[0] = mNumCameras > 1;
   states[2] = (!mSTEMcamera || otherSizesNoShutter) &&  // Shutter and other sizes
-    !(IS_FALCON2_3_4(mParam) || FCAM_CONTIN_SAVE(mParam) || mFEItype == 3);
+    (!(IS_FALCON2_3_4(mParam) || mFEItype == OTHER_FEI_TYPE) || mFlexibleSubareas);
   states[4] = !mSTEMcamera;    // Dose
   states[5] = mSTEMcamera;
   states[6] = mSTEMcamera && (mDE_Type || mParam->DectrisType);
@@ -1976,8 +2034,18 @@ void CCameraSetupDlg::ManageK2Processing(void)
 // Take care of size and position controls for camera or K2 mode
 void CCameraSetupDlg::ManageSizeAndPositionButtons(BOOL disableAll)
 {
+  static bool lastFlexEnabled = false;
   bool enable = (mParam->moduloX >= 0 || mTietzSizes) && !disableAll;
-  m_butABitLess.EnableWindow(enable && mParam->moduloX >= 0);
+  if (!disableAll && mFlexibleSubareas)
+    enable = mCamera->IsFEISubareaFlexible(mParam, m_bSaveFrames != 0,
+      m_bAlignDoseFrac != 0, mCurSet->useFrameAlign, m_iK2Mode, mBinnings[m_iBinning]);
+  if (mFlexibleSubareas && lastFlexEnabled && !enable) {
+    AdjustCoords(mBinnings[m_iBinning]);
+    UpdateData(false);
+  }
+  lastFlexEnabled = enable;
+
+  m_butABitLess.EnableWindow(enable && (mParam->moduloX >= 0 || mFlexibleSubareas));
   m_butBigger10.EnableWindow(enable);
   m_butWideHalf.EnableWindow(enable && !mParam->squareSubareas);
   m_butWideQuarter.EnableWindow(enable && !mParam->squareSubareas);
@@ -2594,7 +2662,9 @@ void CCameraSetupDlg::ManageDose()
   UpdateData(FALSE);
 }
 
-bool CCameraSetupDlg::AdjustCoords(int binning, bool updateIfNoSubarea)
+// Adjust the possibly newly set coordinate values to fit constraints, updating if no
+// subareas allowed or uncondistionally if updateIfNoSubarea is 1 or 2 (default 0)
+bool CCameraSetupDlg::AdjustCoords(int binning, int updateIfNoSubarea)
 {
   bool update;
   int left, right, top, bottom, sizeX, sizeY, ucrit = 4 * binning - 1;
@@ -2612,19 +2682,23 @@ bool CCameraSetupDlg::AdjustCoords(int binning, bool updateIfNoSubarea)
   sizeX = right - left;
   sizeY = bottom - top;
   mCamera->AdjustSizes(sizeX, mCameraSizeX, moduloX, left, right, sizeY, mCameraSizeY, 
-    moduloY, top, bottom, binning, mActiveCameraList[mCurrentCamera]);
-  update = fabs(mCoordScaling * m_eLeft - left * dbin) > ucrit || 
+    moduloY, top, bottom, binning, mActiveCameraList[mCurrentCamera], 
+    m_bSaveFrames ? 1 : 0, m_bAlignDoseFrac ? 1 : 0, mCurSet->useFrameAlign, m_iK2Mode);
+  update = fabs(mCoordScaling * m_eLeft - left * dbin) > ucrit ||
     fabs(mCoordScaling * m_eRight - right * dbin) > ucrit ||
     fabs(mCoordScaling * m_eTop - top * dbin) > ucrit || 
     fabs(mCoordScaling * m_eBottom - bottom * dbin) > ucrit;
 
   // Update parameters in the conset and the screen if there is a substantial change
   // this is to avoid losing pixels when going between binnings
-  if (update || (updateIfNoSubarea && noSubarea)) {
+  if (update || (updateIfNoSubarea && noSubarea) || updateIfNoSubarea > 1) {
+    update = true;
     m_eLeft = left * binning / mCoordScaling;
     m_eRight = right * binning / mCoordScaling;
     m_eTop = top * binning / mCoordScaling;
     m_eBottom = bottom * binning / mCoordScaling;
+    DrawBox();
+    ManageBinnedSize();
   }
   return update;
 }
@@ -2877,7 +2951,7 @@ void CCameraSetupDlg::OnDoseFracMode()
   ManageDoseFrac();
   // TODO: is this the case for Falcon too?
   if (m_bDoseFracMode) {
-    AdjustCoords(mBinnings[m_iBinning], true);
+    AdjustCoords(mBinnings[m_iBinning], 1);
     UpdateData(FALSE);
     DrawBox();
   }
@@ -2900,7 +2974,7 @@ void CCameraSetupDlg::OnAlignDoseFrac()
   if (mParam->canTakeFrames)
     m_bDoseFracMode = m_bAlignDoseFrac || (mCanSaveFrames && m_bSaveFrames);
   if (m_bDoseFracMode && (!oldDF || (mParam->K2Type && m_bAlignDoseFrac))) {
-    AdjustCoords(mBinnings[m_iBinning], true);
+    AdjustCoords(mBinnings[m_iBinning], 1);
     UpdateData(FALSE);
     DrawBox();
   }
@@ -2914,6 +2988,8 @@ void CCameraSetupDlg::OnAlignDoseFrac()
   ManageDrift();
   ManageK2SaveSummary();
   ManageDose();
+  if (mFlexibleSubareas)
+    ManageSizeAndPositionButtons(false);
 }
 
 // New frame time for anybody but DE
@@ -3076,7 +3152,7 @@ void CCameraSetupDlg::OnSaveFrames()
   if (mParam->canTakeFrames)
     m_bDoseFracMode = (mCanAlignFrames && m_bAlignDoseFrac) || m_bSaveFrames;
   if (m_bDoseFracMode && !oldDF) {
-    AdjustCoords(mBinnings[m_iBinning], true);
+    AdjustCoords(mBinnings[m_iBinning], 1);
     UpdateData(FALSE);
     DrawBox();
   }
@@ -3088,6 +3164,8 @@ void CCameraSetupDlg::OnSaveFrames()
   ManageAntialias();
   ManageK2SaveSummary();
   ManageDose();
+  if (mFlexibleSubareas)
+    ManageSizeAndPositionButtons(false);
 }
 
 // Make sure there is a good summed frame list when save or align is turned on
@@ -3202,6 +3280,8 @@ void CCameraSetupDlg::OnButFileOptions()
     ManageK2SaveSummary();
     ManageDoseFrac();
     ManageDose();
+    if (mFlexibleSubareas)
+      ManageSizeAndPositionButtons(false);
   }
   FixButtonFocus(m_butFileOptions);
 }
@@ -3358,7 +3438,7 @@ void CCameraSetupDlg::OnButSetupAlign()
   ManageFalcon4FrameSpec();
   ManageSuperResBinning();
   ManageBinnedSize();
-  AdjustCoords(mBinnings[m_iBinning], true);
+  AdjustCoords(mBinnings[m_iBinning], 1);
   UpdateData(FALSE);
   DrawBox();
   if (mDE_Type)
@@ -3366,6 +3446,8 @@ void CCameraSetupDlg::OnButSetupAlign()
   else
     ManageDoseFrac();
   ManageExposure();
+  if (mFlexibleSubareas)
+    ManageSizeAndPositionButtons(false);
 }
 
 // Manage the line that reports whether antialiasing will be applied

@@ -179,6 +179,8 @@ public:
     int subsetEnd, int maxFrames = -1);
   int AlignFramesFromFile(CString filename, ControlSet &conSet, int rotateFlip, int divideBy2, 
     float scaling, int &numFrames, CameraThreadData *td);
+  void ComputeNativeTrimming(ControlSet &conSet, CameraParameters *camParam, int rotateFlip,
+    int &left, int &right);
   void AlignNextFrameTask(int param);
   void GetSavedFrameSizes(CameraParameters *camParams, const ControlSet *conSet, 
     int & frameX, int & frameY, bool acquiredSize);

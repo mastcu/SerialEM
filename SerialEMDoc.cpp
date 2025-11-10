@@ -761,7 +761,8 @@ void CSerialEMDoc::MontParamInitFromConSet(MontParam *param, int setNum,
   if (CamHasDoubledBinnings(camParam) && cs->binning == 1)
     param->binning = 2;
   MontParamInitFromFrame(param, curCam, (cs->right - cs->left) / param->binning,
-    (cs->bottom - cs->top) / param->binning, overlapFrac);
+    (cs->bottom - cs->top) / param->binning, overlapFrac, cs->saveFrames,
+    cs->alignFrames, cs->useFrameAlign, cs->K2ReadMode);
 
   // Set up to use stage if appropriate
   param->moveStage = FieldAboveStageMoveThreshold(param, mWinApp->LowDoseMode(), curCam);
@@ -769,7 +770,8 @@ void CSerialEMDoc::MontParamInitFromConSet(MontParam *param, int setNum,
 
 // This variant takes the binned frame size and a specified camera and overlap
 void CSerialEMDoc::MontParamInitFromFrame(MontParam *param, int camNum, int xFrame, 
-  int yFrame, float overlapFrac)
+  int yFrame, float overlapFrac, int saveFrames, int alignFrames, int useFrameAli, 
+  int readMode)
 {
   CameraParameters *camParam = mWinApp->GetCamParams() + camNum;
   if (!overlapFrac)
@@ -778,7 +780,8 @@ void CSerialEMDoc::MontParamInitFromFrame(MontParam *param, int camNum, int xFra
   param->xFrame = xFrame;
   param->yFrame = yFrame;
   mWinApp->mCamera->CenteredSizes(param->xFrame, camParam->sizeX, camParam->moduloX, left,
-    right, param->yFrame, camParam->sizeY, camParam->moduloY, top, bottom, param->binning);
+    right, param->yFrame, camParam->sizeY, camParam->moduloY, top, bottom, param->binning,
+    camNum, saveFrames, alignFrames, useFrameAli, readMode);
   int maxSize = param->xFrame > param->yFrame ? param->xFrame : param->yFrame;
   param->xOverlap = (int)floor(overlapFrac * maxSize + 0.5);
   param->xOverlap += param->xOverlap % 2;

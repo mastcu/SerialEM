@@ -62,6 +62,8 @@ static const char *errMess[] = {"Unspecified communication error",
 };
 
 static bool sFrameDebugOutput = false;
+static int sInvBeforeMap[8] = {6, 7, 4, 5, 2, 3, 0, 1};
+
 
 static void framePrintFunc(const char *strMessage)
 {
@@ -499,6 +501,7 @@ int CFalconHelper::SetupFrameAlignment(ControlSet &conSet, CameraParameters *cam
   float totAliMem = 0.,cpuMemFrac = 0.75f;
   float maxMemory, memoryLimit;
   int xTrim, yTrim, left, right, top, bottom, sizeX, sizeY;
+  int rotFlip = camParams->rotationFlip;
   int numAliFrames, numAllVsAll, groupSize, refineIter, doSpline, gpuFlags = 0;
   FrameAliParams param;
   CArray<FrameAliParams, FrameAliParams> *faParams = 
@@ -535,10 +538,9 @@ int CFalconHelper::SetupFrameAlignment(ControlSet &conSet, CameraParameters *cam
         mAlignTruncation = param.truncLimit;
 
       // May have to trim the full-sized EER sum
-      mTrimXstart = conSet.left / conSet.binning;
-      mTrimXend = conSet.right / conSet.binning - 1;
-      mTrimYstart = conSet.top / conSet.binning;
-      mTrimYend = conSet.bottom / conSet.binning - 1;
+      B3DCLAMP(rotFlip, 0, 7);
+      ComputeNativeTrimming(conSet, camParams, sInvBeforeMap[rotFlip], left, right);
+     
       mTrimDEsum = (conSet.left > 0 || conSet.right < camParams->sizeX ||
         conSet.top > 0 || conSet.bottom < camParams->sizeY);
       param.multAliBinByEERfac = !mReadEERantialiased;
@@ -650,7 +652,6 @@ int CFalconHelper::StackFrames(CString localPath, CString &directory, CString &r
   float pixel, BOOL doAsync, bool readLocally, int aliParamInd, long &numStacked, 
   CameraThreadData *camTD)
 {
-  int invBeforeMap[8] = {6, 7, 4, 5, 2, 3, 0, 1};
   int ind, eerFlags, totalSubframes = 0, start, end, retval = 0;
   char errStr[160];
   CFileStatus status;
@@ -677,7 +678,7 @@ int CFalconHelper::StackFrames(CString localPath, CString &directory, CString &r
   mRotFlipForComFile = aliSumRotFlip;
   if (camTD->FEItype == FALCON4_TYPE && mEERsumming) {
     B3DCLAMP(aliSumRotFlip, 0, 7);
-    aliSumRotFlip = invBeforeMap[aliSumRotFlip];
+    aliSumRotFlip = sInvBeforeMap[aliSumRotFlip];
   }
   mAliSumRotFlip = aliSumRotFlip;
   mSumNeedsRotFlip = mAliSumRotFlip != 0;
@@ -691,7 +692,7 @@ int CFalconHelper::StackFrames(CString localPath, CString &directory, CString &r
   // now does this too, in which case this will be a wrong operation, hence an override
   if ((camTD->CamFlags & PLUGFEI_USES_ADVANCED) && camTD->FEItype != FALCON4_TYPE) {
     B3DCLAMP(mRotFlipForComFile, 0, 7);
-    mRotFlipForComFile = invBeforeMap[mRotFlipForComFile];
+    mRotFlipForComFile = sInvBeforeMap[mRotFlipForComFile];
     if (camTD->FEItype == FALCON3_TYPE && mCamera->GetRotFlipInFalcon3ComFile() >= 0)
       mRotFlipForComFile = mCamera->GetRotFlipInFalcon3ComFile();
   }
@@ -1377,7 +1378,7 @@ int CFalconHelper::AlignFramesFromFile(CString filename, ControlSet &conSet,
   CString str;
   char errStr[160];
   int hwSuperDiv = SuperResHardwareBinDivisor(camParam, &conSet);
-  int top, bottom, left, right, fullSizeX, fullSizeY, frameX, frameY, fullFileX;
+  int left, right, frameX, frameY, fullFileX;
   bool hardwareROI = (camParam->CamFlags & DE_HAS_HARDWARE_ROI) && 
     conSet.magAllShotsOrHwROI;
   mAlignError = 0;
@@ -1433,28 +1434,8 @@ int CFalconHelper::AlignFramesFromFile(CString filename, ControlSet &conSet,
   mSumNeedsRotFlip = mAliSumRotFlip != 0;
   mFloatScale = scaling * (divideBy2 ? 0.5f : 1.f);
 
-  // The alignment will do the binning but not the rotation.  If trimming is needed, it
-  // needs to be native full-chip coordinates but binned by final binning
-  left = conSet.left;
-  right = conSet.right;
-  top = conSet.top;
-  bottom = conSet.bottom;
-  frameX = right - left;
-  frameY = bottom - top;
-  fullSizeX = camParam->sizeX;
-  fullSizeY = camParam->sizeY;
-  CorDefUserToRotFlipCCD(rotateFlip, 1, fullSizeX, fullSizeY, frameX, frameY, top, left,
-    bottom, right);
+  ComputeNativeTrimming(conSet, camParam, rotateFlip, left, right);
 
-  /*// But native coordinates need to be inverted in Y since the right-handed image will be
-  // trimmed
-  frameY = fullSizeY - top;
-  top = fullSizeY - bottom;
-  bottom = frameY;*/
-  mTrimXstart = left / conSet.binning;
-  mTrimXend = right / conSet.binning - 1;
-  mTrimYstart = top / conSet.binning;
-  mTrimYend = bottom / conSet.binning - 1;
   mTrimDEsum = (conSet.left > 0 || conSet.right < camParam->sizeX ||
     conSet.top > 0 || conSet.bottom < camParam->sizeY) && !hardwareROI;
 
@@ -1484,6 +1465,30 @@ int CFalconHelper::AlignFramesFromFile(CString filename, ControlSet &conSet,
   mFileInd = mAlignStart - 1;
   mWinApp->AddIdleTask(TASK_ALIGN_DE_FRAMES, 0, 0);
   return 0;
+}
+
+// The alignment will do the binning but not the rotation.  If trimming is needed, it
+// needs to be native full-chip coordinates but binned by final binning
+void CFalconHelper::ComputeNativeTrimming(ControlSet &conSet, CameraParameters *camParam,
+  int rotateFlip, int &left, int &right)
+{
+  int top, bottom, fullSizeX, fullSizeY, frameX, frameY;
+
+  left = conSet.left;
+  right = conSet.right;
+  top = conSet.top;
+  bottom = conSet.bottom;
+  frameX = right - left;
+  frameY = bottom - top;
+  fullSizeX = camParam->sizeX;
+  fullSizeY = camParam->sizeY;
+  CorDefUserToRotFlipCCD(rotateFlip, 1, fullSizeX, fullSizeY, frameX, frameY, top, left,
+    bottom, right);
+
+  mTrimXstart = left / conSet.binning;
+  mTrimXend = right / conSet.binning - 1;
+  mTrimYstart = top / conSet.binning;
+  mTrimYend = bottom / conSet.binning - 1;
 }
 
 // Read the next frame and align it

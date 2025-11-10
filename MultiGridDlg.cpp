@@ -2523,7 +2523,8 @@ int CMultiGridDlg::DoSetupLMMmont(bool skipDlg)
     montP->ignoreSkipList = true;
     if (m_bSetLMMstate)
       mWinApp->mDocWnd->MontParamInitFromFrame(montP, camera, state->xFrame,
-        state->yFrame, overlapFrac);
+        state->yFrame, overlapFrac, state->saveFrames,
+        state->alignFrames, state->useFrameAlign, state->K2ReadMode);
     else
       mWinApp->mDocWnd->MontParamInitFromConSet(montP, consNum, overlapFrac);
     montP->moveStage = true;
@@ -2880,7 +2881,9 @@ int CMultiGridDlg::SetupMMMacquire(bool skipDlg)
       montP->ignoreSkipList = true;
       if (stateForMont >= 0) {
         mWinApp->mDocWnd->MontParamInitFromFrame(montP, useCamera,
-          stateArr[stateForMont]->xFrame, stateArr[stateForMont]->yFrame, 0.);
+          stateArr[stateForMont]->xFrame, stateArr[stateForMont]->yFrame, 0., 
+          stateArr[stateForMont]->saveFrames, stateArr[stateForMont]->alignFrames, 
+          stateArr[stateForMont]->useFrameAlign, stateArr[stateForMont]->K2ReadMode);
       } else {
         mWinApp->mDocWnd->MontParamInitFromConSet(montP, 
           MontageConSetNum(montP, true, useLD), 0.);

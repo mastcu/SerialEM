@@ -2785,7 +2785,7 @@
             with the default overlap and will use stage movement if it is obvious enough that it is appropriate.</TD>
         </TR>
         <TR>
-          <TD class="scriptcommand">SetMontageParams #S [#OX #OY #FX #FY #N #B #M]</TD>
+          <TD class="scriptcommand">SetMontageParams #S [#OX #OY #FX #FY #N #B #M #FS]</TD>
           <TD>Sets up to 8 montage parameters after a montage file has been opened; enter a value or -1 to leave the parameter
             unchanged. The entries are: <br />
             <b>#S</b> 1 to use stage movement, 0 not to, or 2 for stage movement with
@@ -2796,13 +2796,15 @@
              <b>#N</b> 1 to skip correlations or 0 not to<br />
              <b>#B</b> a binning<br />
             <b>#M</b> maximum image shift in microns when using image shift in blocks.&nbsp; Be sure that the 
-            magnification of the montage has already been set up so that appropriate limit for LM or nonLM can be changed.<br />
-            The frame sizes, overlaps, 
-            binning and use of image shitf in blocks cannot validly be changed after acquiring into the file.&nbsp; As of 12-Jul-23, if the 
+            magnification of the montage has already been set up so that the appropriate limit for LM or nonLM can be changed.<br />
+            <b>#FS</b> 1 to allow flexible piece sizes for a Thermo/FEI camera, not constrained to full or half frame.&nbsp; This
+            will not work if frames are being aligned in SerialEM or saved as MRC.<br />
+             The frame sizes, overlaps, 
+            binning and use of image shift in blocks cannot validly be changed after acquiring into the file.&nbsp; As of 12-Jul-23, if the 
             binning is changed before acquiring, then whichever frame sizes and overlaps are specified as -1 
             will be changed by the change in binning to maintain the same acquisition area.&nbsp; If binning 
             is changed after acquiring, it will attempt to take frames with the same number of pixels
-             and the new binning, which may or may not work.</TD>
+             at the new binning, which may or may not work.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">ParamSetToUseForMontage #P [#N]</TD>

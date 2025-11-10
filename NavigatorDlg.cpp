@@ -4682,6 +4682,7 @@ int CNavigatorDlg::FitMontageToItem(MontParam *montParam, int binning, int magIn
   float maxOverlapInc = 1.5f;      // Maximum to increase overlap with restrictied sizes
   CameraParameters *camParam = mWinApp->GetCamParams() + iCam;
   CMapDrawItem *item = mMontItem;
+  ControlSet *conSet;
 
   consNum = MontageConSetNum(montParam, false, lowDose ? 1 : 0);
   if (consNum == mConSetWithFrameLimit) {
@@ -4691,6 +4692,10 @@ int CNavigatorDlg::FitMontageToItem(MontParam *montParam, int binning, int magIn
     mFrameLimitX = camParam->sizeX;
     mFrameLimitY = camParam->sizeY;
   }
+  if (iCam == mWinApp->GetCurrentCamera())
+    conSet = mWinApp->GetConSets() + consNum;
+  else
+    conSet = mWinApp->GetCamConSets() + iCam * MAX_CONSETS + consNum;
 
   maxOverlap = (int)(mDocWnd->GetMaxOverlapFraction() *
     B3DMIN(mFrameLimitX, mFrameLimitY));
@@ -4796,7 +4801,7 @@ int CNavigatorDlg::FitMontageToItem(MontParam *montParam, int binning, int magIn
   // Adjust the sizes properly, set up parameters
   montParam->binning = binning;
   mCamera->CenteredSizes(xFrame, camParam->sizeX, camParam->moduloX, left, 
-    right, yFrame, camParam->sizeY, camParam->moduloY, top, bot, binning);
+    right, yFrame, camParam->sizeY, camParam->moduloY, top, bot, binning, conSet, iCam);
 
   montParam->xFrame = xFrame;
   montParam->yFrame = yFrame;

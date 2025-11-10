@@ -704,7 +704,7 @@ public:
   int LoadPieceContainingPoint(CMapDrawItem * ptItem, int mapIndex);
   void StartRealignCapture(bool useContinuous, int nextTask);
   void GetViewOffsets(CMapDrawItem * item, float & netShiftX, float & netShiftY, float & beamShiftX, float & beamShiftY, float & beamTiltX, float & beamTiltY, int area = VIEW_CONSET);
-  void StateCameraCoords(int camIndex, int xFrame, int yFrame, int binning, int &left, int &right, int &top, int &bottom);
+  void StateCameraCoords(StateParams *param, int camIndex, int xFrame, int yFrame, int binning, int &left, int &right, int &top, int &bottom);
   bool CanStayInLowDose(CMapDrawItem * item, int xFrame, int yFrame, int binning, int & set, float & netShiftX, float & netShiftY, bool forReal);
   void SimpleIStoStage(CMapDrawItem * item, double ISX, double ISY, float &stageX, float &stageY);
   ScaleMat ItemStageToCamera(CMapDrawItem * item);

@@ -167,6 +167,7 @@ public:
   void LoadParamData(BOOL setPos);
   void TurnOffOtherUseFlagsIfOn(BOOL &keepIfOn, int radioVal);
   void ManageSizeFields(void);
+  ControlSet *GetCurMontConSet();
   void LoadOverlapBoxes();
   void UnloadOverlapBoxes();
   void ManageStageAndGeometry(BOOL reposition);

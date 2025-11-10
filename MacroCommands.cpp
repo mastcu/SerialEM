@@ -2140,7 +2140,8 @@ int CMacCmd::AcquireToMatchBuffer(void)
   // Get the parameters to achieve a size that is big enough
   for (;;) {
     mCamera->CenteredSizes(sizeX, mCamParams->sizeX, mCamParams->moduloX, ix0, ix1,
-      sizeY, mCamParams->sizeY, mCamParams->moduloY, iy0, iy1, binning);
+      sizeY, mCamParams->sizeY, mCamParams->moduloY, iy0, iy1, binning, 
+      &mConSets[index2]);
     if (sizeX >= mCamParams->sizeX / binning && sizeY >= mCamParams->sizeY / binning)
       break;
     if (sizeX >= mCropXafterShot && sizeY >= mCropYafterShot)
@@ -10390,7 +10391,7 @@ int CMacCmd::SetCameraArea(void)
   sizeX = ix1 - ix0;
   sizeY = iy1 - iy0;
   mCamera->AdjustSizes(sizeX, mCamParams->sizeX, mCamParams->moduloX, ix0, ix1, sizeY,
-    mCamParams->sizeY, mCamParams->moduloY, iy0, iy1, index2);
+    mCamParams->sizeY, mCamParams->moduloY, iy0, iy1, index2, &mConSets[index]);
   SaveControlSet(index);
   mConSets[index].left = ix0 * index2;
   mConSets[index].right = ix1 * index2;
@@ -10417,7 +10418,7 @@ int CMacCmd::SetCenteredSize(void)
   SaveControlSet(index);
   mConSets[index].binning = index2;
   mCamera->CenteredSizes(sizeX, mCamParams->sizeX, mCamParams->moduloX, ix0, ix1,
-    sizeY, mCamParams->sizeY, mCamParams->moduloY, iy0, iy1, index2);
+    sizeY, mCamParams->sizeY, mCamParams->moduloY, iy0, iy1, index2, &mConSets[index]);
   mConSets[index].left = ix0 * index2;
   mConSets[index].right = ix1 * index2;
   mConSets[index].top = iy0 * index2;
@@ -13484,7 +13485,7 @@ int CMacCmd::SetMontageParams(void)
   CString report;
   int index, act, cam, top, bot;
   float binChange = 0.;
-  bool frameChange = false, hybridChange = false;
+  bool frameChange = false, hybridChange = false, flexSubs = mItemInt[9] != 0;
   CameraParameters *camParam;
 
   if (!mWinApp->Montaging())
@@ -13563,7 +13564,8 @@ int CMacCmd::SetMontageParams(void)
     mMontP->skipCorrelations = mItemInt[6] != 0;
   if (frameChange || binChange) {
     mCamera->CenteredSizes(mMontP->xFrame, camParam->sizeX, camParam->moduloX, act, index,
-      mMontP->yFrame, camParam->sizeY, camParam->moduloY, top, bot, mMontP->binning, cam);
+      mMontP->yFrame, camParam->sizeY, camParam->moduloY, top, bot, mMontP->binning, cam,
+    flexSubs ? 0 : -1, 0, 0, flexSubs ? 0 : -1);
   }
   mWinApp->mMontageController->SetNeedBoxSetup(true);
   mWinApp->mMontageWindow.UpdateSettings();

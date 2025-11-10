@@ -150,6 +150,7 @@ enum {K2_SUMMIT = 1, K2_BASE, K3_TYPE};
 #define PLUGFEI_FILT_FLASH_LOAD   111
 #define PLUGFEI_CONTINUOUS_SAVE   112
 #define PLUGFEI_CAN_BIN_IMAGE     114
+#define PLUGFEI_FLEXIBLE_SUBAREAS 117
 #define DECTRIS_WITH_SUPER_RES(a) ((a)->DectrisType && !(a)->STEMcamera && ((a)->CamFlags & DECTRIS_HAS_SUPER_RES))
 #define DECTRIS_WITH_COUNTING(a) ((a)->DectrisType && !(a)->STEMcamera && ((a)->CamFlags & DECTRIS_HAS_SINGLE_EVENT))
 
@@ -198,7 +199,8 @@ struct CameraThreadData {
   long Left, Right, Top, Bottom;     // binned CCD coordinates of the image
   long DMSizeX, DMSizeY;      // Binned size in X and Y
   long CallSizeX, CallSizeY;  // Sizes to use in calls for DE and Tietz
-  int fullSizeX, fullSizeY;   // Actual full size of camera
+  int fullSizeX, fullSizeY;   // Actual full size of camera, or size camera will return for FEI
+  int xSubOffset, ySubOffset; // Offsets into camera image for FEI extraction
   int restrictedSize;         // Restricted size index
   int ImageType;              // Type of image
   long Binning;                // Binning
@@ -686,10 +688,18 @@ public:
   BOOL DoingTiltSums() { return mTD.DoingTiltSums; };
   void AdjustSizes(int &DMsizeX, int ccdSizeX, int moduloX,
                    int &Left, int &Right, int &DMsizeY, int ccdSizeY, int moduloY,
-                   int &Top, int &Bottom, int binning, int camera = -1);
+                   int &Top, int &Bottom, int binning, int camera = -1, int saveFrames = -1,
+    int alignFrames = -1, int useFrameAli = -1, int readMode = -1);
+  void AdjustSizes(int &DMsizeX, int ccdSizeX, int moduloX,
+    int &Left, int &Right, int &DMsizeY, int ccdSizeY, int moduloY,
+    int &Top, int &Bottom, int binning, ControlSet *conSet, int camera = -1);
   void CenteredSizes(int &DMsizeX, int ccdSizeX, int moduloX,
                      int &Left, int &Right, int &DMsizeY, int ccdSizeY, int moduloY,
-                     int &Top, int &Bottom,int binning, int camera = -1);
+                     int &Top, int &Bottom,int binning, int camera = -1, int saveFrames = -1,
+    int alignFrames = -1, int useFrameAli = -1, int readMode = -1);
+  void CenteredSizes(int &DMsizeX, int ccdSizeX, int moduloX,
+    int &Left, int &Right, int &DMsizeY, int ccdSizeY, int moduloY,
+    int &Top, int &Bottom, int binning, ControlSet *conSet, int camera = -1);
   void BlockAdjustSizes(int &DMsize, int ccdSize, int sizeMod, int startMod,
                         int &start, int &end, int binning);
   void GetLastCoords(int &top, int &left, int &bottom, int &right) {top = mTop;
@@ -963,7 +973,7 @@ public:
   BOOL mFalconAlignsWithoutSave;  // A flag just in case this is wrong
   int mRotFlipInFalcon3ComFile; // Value to set in com file if default is wrong
   BOOL mSubdirsOkInFalcon3Save; // Flag that Advanced scripting will create multiple dirs
-  BOOL mTakeUnbinnedIfSavingEER;  // 1 to acquire and bin with averaging, > 1 bin by summing
+  BOOL mTakeUnbinnedIfSavingEER;  // Flag to acquire and bin with averaging
 
   bool mSavingPluginFrames;     // Flags for saving or aligning frames from plugin camera
   bool mAligningPluginFrames;
@@ -1273,6 +1283,9 @@ bool IsConSetSaving(const ControlSet *conSet, int setNum, CameraParameters *para
 bool CanWeAlignFalcon(CameraParameters *param, BOOL savingEnabled, bool &canSave, int readMode = -1);
 bool IsSaveInEERMode(CameraParameters *param, const ControlSet *conSet);
 bool IsSaveInEERMode(CameraParameters *param, BOOL saveFrames, BOOL alignFrames, int useFramealign, int readMode);
+bool IsFEISubareaFlexible(CameraParameters *param, const ControlSet *conSet);
+bool IsFEISubareaFlexible(CameraParameters *param, BOOL saveFrames, BOOL alignFrames, int useFramealign,
+  int readMode, int binning);
 bool UsingUtapiForCamera(CameraParameters *param);
 bool CanProcessHere(CameraParameters *param);
 int ReturningFloatImages(CameraParameters *param);

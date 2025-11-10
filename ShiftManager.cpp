@@ -2149,6 +2149,8 @@ ScaleMat CShiftManager::FallbackSpecimenToStage(double adjustX, double adjustY)
 // Get pixel size for the current camera at the specified mag index (replaced 11/30/06)
 float CShiftManager::GetPixelSize(int inCamera, int inMagIndex)
 {
+  if (inMagIndex < 0 || inMagIndex >= MAX_MAGS || inCamera < 0 || inCamera >= MAX_CAMERAS)
+    return 0;
   return mMagTab[inMagIndex].pixelSize[inCamera];
 }
 

@@ -1082,7 +1082,7 @@ void CMultiTSTasks::MakeAutocenConset(AutocenParams * param)
     // Use the largest centered square that fits in the field
     sizeX = sizeY = B3DMIN(camParams->sizeX, camParams->sizeY) / param->binning;
     mCamera->CenteredSizes(sizeX, camParams->sizeX, camParams->moduloX, left, right,
-      sizeY, camParams->sizeY, camParams->moduloY, top, bottom, param->binning);
+      sizeY, camParams->sizeY, camParams->moduloY, top, bottom, param->binning, conSet);
     conSet->left = left * param->binning;
     conSet->top = top * param->binning;
     conSet->right = right * param->binning;
