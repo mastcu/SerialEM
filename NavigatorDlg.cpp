@@ -8990,6 +8990,8 @@ int CNavigatorDlg::LoadNavFile(bool checkAutosave, bool mergeFile, CString *inFi
           state->ldShiftOffsetX = (float)vals[34];
           state->ldShiftOffsetY = (float)vals[35];
           state->montMapConSet = B3DNINT(vals[36]) != 0;
+          if (ind2 > 37)
+            state->EDMPercent = (float)vals[37];
           if (state->lowDose) {
             ind2 = 0;
             ADOC_REQUIRED(AdocGetDoubleArray("StateParam", ind1, "LowDose", vals, &ind2,

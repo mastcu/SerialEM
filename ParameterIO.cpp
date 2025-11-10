@@ -1241,6 +1241,8 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
         }
         if (!itemEmpty[36])
           stateP->montMapConSet = itemInt[36] != 0;
+        if (!itemEmpty[37])
+          stateP->EDMPercent = itemFlt[37];
         // ADD NEW ITEMS TO NAV READING
  
       } else if (NAME_IS("StateName")) {
@@ -2625,7 +2627,7 @@ void CParameterIO::WriteLowDoseToString(LowDoseParams *ldp, int ldi, int ldj, CS
 void CParameterIO::WriteStateToString(StateParams *stateP, CString &str)
 {
   str.Format("%d %d %d %d %f %d %f %f %d %d %d %d %f %f "
-    "%d %d %d %f %d %d %d %d %d %d %d %d %d %d %d %d %d %f %f %f %f %d",
+    "%d %d %d %f %d %d %d %d %d %d %d %d %d %d %d %d %d %f %f %f %f %d %f",
     stateP->lowDose, stateP->camIndex, stateP->magIndex,
     stateP->spotSize, stateP->intensity, stateP->slitIn ? 1 : 0, stateP->energyLoss,
     stateP->slitWidth, stateP->zeroLoss ? 1 : 0, stateP->binning, stateP->xFrame,
@@ -2636,7 +2638,7 @@ void CParameterIO::WriteStateToString(StateParams *stateP, CString &str)
     stateP->readModeFocus, stateP->readModeTrial, stateP->readModePrev,
     stateP->readModeSrch, stateP->readModeMont, stateP->beamAlpha,
     stateP->targetDefocus, stateP->ldDefocusOffset, stateP->ldShiftOffsetX,
-    stateP->ldShiftOffsetY, stateP->montMapConSet ? 1 : 0);
+    stateP->ldShiftOffsetY, stateP->montMapConSet ? 1 : 0, stateP->EDMPercent);
 }
 
 #define HARD_CODED_FLAGS (NAA_FLAG_HAS_SETUP | NAA_FLAG_ALWAYS_HIDE | \

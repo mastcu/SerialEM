@@ -41,6 +41,7 @@
 #include "ComaVsISCalDlg.h"
 #include "AutoContouringDlg.h"
 #include "MultiGridDlg.h"
+#include "DoseModulator.h"
 #include "Utilities\XCorr.h"
 #include "Image\KStoreADOC.h"
 #include "Utilities\KGetOne.h"
@@ -2369,7 +2370,13 @@ void CNavHelper::StoreCurrentStateInParam(StateParams *param, int lowdose,
     param->spotSize = mScope->GetSpotSize();
     param->probeMode = mScope->ReadProbeMode();
     param->beamAlpha = mScope->GetAlpha();
-
+    if (mCamera->HasDoseModulator()) {
+      float edmPct;
+      CString errStr;
+      mCamera->mDoseModulator->GetDutyPercent(edmPct, errStr);
+      param->EDMPercent = edmPct;
+    }
+    
     // Store filter parameters unconditionally here; they will be set conditionally
     param->slitIn = filtParam->slitIn;
     param->slitWidth = filtParam->slitWidth;
@@ -2517,6 +2524,8 @@ void CNavHelper::StoreMapStateInParam(CMapDrawItem *item, MontParam *montP, int 
     param->yFrame = item->mMapHeight;
     param->binning = item->mMapBinning;
   }
+
+  param->EDMPercent = item->mEDMPercent;
 }
 
 // Set scope state and control set state from the given state param
@@ -2593,6 +2602,11 @@ void CNavHelper::SetStateFromParam(StateParams *param, ControlSet *conSet, int b
       if (!camP->STEMcamera)
         mScope->DelayedSetIntensity(param->intensity, GetTickCount(), param->spotSize,
           param->probeMode);
+
+      if (param->EDMPercent > 0 && mCamera->HasDoseModulator()) {
+        CString errStr;
+        mCamera->mDoseModulator->SetDutyPercent(param->EDMPercent, errStr);
+      }
     }
 
     // Modify filter parameters if they are present but don't update unless in filter mode

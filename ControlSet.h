@@ -372,6 +372,7 @@ struct StateParams {
     rotateAxis = false;
     axisRotation = 0;
     navID = 0;
+    EDMPercent = -1.f;
   }
   LowDoseParams ldParams;  // Low dose Record parameters if this is a low dose state
   int lowDose;            // Flag that it is a low dose state
@@ -415,6 +416,7 @@ struct StateParams {
   CString name;
   int navID;               // For keeping track of duplicates in merging navs
   int camForParams;        // Runtime: Camera index to which parameters should be restored
+  float EDMPercent;        // Dose modulator duty percent
 };
 
 struct FilterParams {
