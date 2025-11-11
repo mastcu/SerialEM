@@ -1704,7 +1704,7 @@ void CCameraController::InitializePluginCameras(int &numPlugListed, int *origina
             err = 1;
           }
         }
-        if (mPlugFuncs[i]->SetDebugMode)
+        if (!err && mPlugFuncs[i]->SetDebugMode)
           mPlugFuncs[i]->SetDebugMode(GetDebugOutput('Z') ? 1 : 0);
         if (!err && num > 1 && !mPlugFuncs[i]->SelectCamera) {
           AfxMessageBox("The camera plugin named " + mAllParams[i].pluginName +

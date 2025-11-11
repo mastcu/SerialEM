@@ -3627,13 +3627,15 @@ int CMacCmd::SetFileOptions()
   if (!mItemEmpty[11] && mItemInt[11] >= 0 && mItemInt[11] != 0 && mItemInt[11] != 3 && 
     mItemInt[11] != 5)
       ABORT_LINE("Montage file type must be 0, 3, or 5 in line\n\n:");
-  if (!mItemEmpty[9] && mItemInt[9] != COMPRESS_NONE && mItemInt[9] != COMPRESS_ZIP &&
-    mItemInt[9] != COMPRESS_LZW && mItemInt[9] != COMPRESS_JPEG) {
+  if (!mItemEmpty[9] && mItemInt[9] >= 0 && mItemInt[9] != COMPRESS_NONE && 
+    mItemInt[9] != COMPRESS_ZIP && mItemInt[9] != COMPRESS_LZW && 
+    mItemInt[9] != COMPRESS_JPEG) {
     mStrCopy.Format("TIFF compression must be %d, %d, %d, or %d in line:\n\n",
       COMPRESS_NONE, COMPRESS_LZW, COMPRESS_JPEG, COMPRESS_ZIP);
     ABORT_LINE(mStrCopy);
   }
-  if (!mItemEmpty[10] && mItemInt[10] != COMPRESS_NONE && mItemInt[10] != COMPRESS_ZIP) {
+  if (!mItemEmpty[10] && mItemInt[10] >= 0 && mItemInt[10] != COMPRESS_NONE && 
+    mItemInt[10] != COMPRESS_ZIP) {
     mStrCopy.Format("HDF compression must be %d or %d in line:\n\n",
       COMPRESS_NONE, COMPRESS_ZIP);
     ABORT_LINE(mStrCopy);
