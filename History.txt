@@ -3,6 +3,12 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+11/11/25: SEM_4-2-12
+11/11/25: Fixed ability to enter -1 for compression options to SetFileOptions
+(In 4.2).
+
+11/11/25: Fixed crash if camera plugin cannot load, broken 10/13/25. (In 4.2).
+
 11/7/25: Fixed camera setup to show only 3 size buttons for Ceta (In 4.2).
 
 11/6/25: Fixed index numbers in Navigator when items are deleted (In 4.2).
