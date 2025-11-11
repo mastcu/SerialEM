@@ -2371,10 +2371,9 @@ void CNavHelper::StoreCurrentStateInParam(StateParams *param, int lowdose,
     param->probeMode = mScope->ReadProbeMode();
     param->beamAlpha = mScope->GetAlpha();
     if (mCamera->HasDoseModulator()) {
-      float edmPct;
       CString errStr;
-      mCamera->mDoseModulator->GetDutyPercent(edmPct, errStr);
-      param->EDMPercent = edmPct;
+      if (mCamera->mDoseModulator->GetDutyPercent(param->EDMPercent, errStr))
+        mWinApp->AppendToLog("WARNING: Could not get EDM dose percentage: " + errStr);    
     }
     
     // Store filter parameters unconditionally here; they will be set conditionally
@@ -2605,7 +2604,8 @@ void CNavHelper::SetStateFromParam(StateParams *param, ControlSet *conSet, int b
 
       if (param->EDMPercent > 0 && mCamera->HasDoseModulator()) {
         CString errStr;
-        mCamera->mDoseModulator->SetDutyPercent(param->EDMPercent, errStr);
+        if (mCamera->mDoseModulator->SetDutyPercent(param->EDMPercent, errStr))
+          mWinApp->AppendToLog("WARNING: Could not set EDM dose percentage: " + errStr);
       }
     }
 
