@@ -3330,7 +3330,7 @@ void CCameraController::Capture(int inSet, bool retrying)
     conSet.processing = DARK_SUBTRACTED;
   mTD.Processing = conSet.processing;
   mTD.FrameTime = conSet.frameTime;
-  mTD.PluginAcquireFlags = 0;
+  mTD.PluginAcquireFlags = mTD.plugFuncs ? (mParam->balanceHalves & ~(1)) : 0;
   mTD.PluginFrameFlags = 0;
   mTD.ReadoutsPerFrame = 1;
 
@@ -4333,7 +4333,7 @@ void CCameraController::Capture(int inSet, bool retrying)
     mWinApp->UpdateBufferWindows();
     return;
   }
-  
+
   StartAcquire();
 }
 
