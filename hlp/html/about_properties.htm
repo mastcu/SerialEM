@@ -1745,7 +1745,8 @@
           <TD>The entry can enable use of a fast continuous acquisition mode for a Gatan,
             Direct Electron, or plugin
             camera where this mode is not enabled by default, or to modify or disable use of
-            the mode if default parameters are available.&nbsp; For a Gatan camera, follow with up to 4 numbers:
+            the mode if default parameters are available.&nbsp; The fourth entry can also be used to 
+            set flags for plugin camera acquisition.&nbsp; For a Gatan camera, follow with up to 4 numbers:
             1 to use the mode or 0 not to; 1 to specify continuous readout or 0 not to; a
             quality level from 1 to 7 or 0 not to set quality; and 1 to balance intensity
             between two halves of the field.&nbsp; If no property is entered, the defaults are &#39;1 1 1 1&#39; for Orius
@@ -1760,7 +1761,8 @@
             For Tietz F216/F416/F816/XF416 cameras, the first parameter is 1 by default.
             &nbsp; For a plugin camera, just the first parameter is used to indicate that a
             continuous mode should be used; the plugin must have the function StopContinuous
-            as well.</TD>
+            as well.&nbsp; The fourth parameter is used for JEOL cameras and needs to be set to 2 if 
+            continuous mode or frame saving or aligning gives twice as many counts as single-shot images.</TD>
         </TR>
         <TR VALIGN="top">
           <TD>BoundaryBetweenHalves</TD>
@@ -3649,6 +3651,11 @@
             'Erase periodic peaks in Autoalign'
             option in the Image Alignment &amp; Focus panel governs whether erasing is attempted.
           </TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style4">MinMagIndexForAutofocus</TD>
+          <TD>Minimum magnification index for using autofocus instead of a standard focus in LM,
+             if autofocus is calibrated.</TD>
         </TR>
         <TR VALIGN="top">
           <TD class="style4">FocusPadFraction</TD>

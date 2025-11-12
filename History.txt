@@ -3,6 +3,17 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+11/11/25: Added property to set magnification below which "autofocus" will set
+standard focus instead of autofocusing, even when calibrated.
+
+11/11/25: Implemented frame saving and aligning for JEOL cameras.
+
+11/11/25: SEM_4-2-12
+11/11/25: Fixed ability to enter -1 for compression options to SetFileOptions
+(In 4.2).
+
+11/11/25: Fixed crash if camera plugin cannot load, broken 10/13/25. (In 4.2).
+
 11/9/25: Added the ability to take subareas of arbitrary size and centering
 from Falcon and Ceta cameras.  Binning 8 now works on all Falcons and can be
 added to the camera properties.

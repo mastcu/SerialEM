@@ -84,6 +84,7 @@ public:
   GetMember(int, TiltDirection);
   GetSetMember(int, DDDminBinning);
   GetSetMember(float, SFcalRange);
+  GetSetMember(int, MinMagIndForFocus);
   void SetTiltDirection(int inVal);
   void SetSTEMdefocusToDelZ(float in1, float in2) {mSTEMdefocusToDelZ[0] = in1; if (in2) mSTEMdefocusToDelZ[1] = in2;};
   float GetSTEMdefocusToDelZ(int spotSize, int probeMode = -1, double absFocus = -1.);
@@ -264,6 +265,7 @@ private:
   int mNumNearZeroCorr;     // Number of correlations that wrer near 0 schift
   float mCumulFocusChange;  // Sum of focus changes made through iterations
   int mNumFullChangeIters;  // Number of iterations that made a full change
+  int mMinMagIndForFocus;   // Min mag index for using autofocus instead of standard focus
   float mRFTbkgdStart;      // Frequencies for start and end of background range
   float mRFTbkgdEnd;
   float mRFTtotPowStart;    // Frequency range for measuring total power

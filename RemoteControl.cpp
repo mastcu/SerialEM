@@ -240,6 +240,8 @@ BOOL CRemoteControl::OnInitDialog()
   m_butDelFocusMinus.EnableWindow(mFocusIncrementIndex > 0);
   SetupPanels(sIdTable, sLeftTable, sTopTable, sHeightTable);
   ManagePanels();
+  if (mScope->GetNoScope())
+    DropIDsAndResize();
   return TRUE;
 }
 
@@ -357,17 +359,7 @@ void CRemoteControl::Update(int inMagInd, int inCamLen, int inSpot, double inInt
   } else {
     //IDs are dropped here instead of in OnInitDialog because mCamera is initialized after
     // this control panel
-    if (!mPanelResized) {
-      mIDsToDrop.push_back(IDC_STAT_EDM_LABEL);
-      mIDsToDrop.push_back(IDC_STAT_EDM_PCT);
-      mIDsToDrop.push_back(IDC_STAT_EDM_DELTA_PCT);
-      mIDsToDrop.push_back(IDC_SPIN_EDM_PCT);
-      mIDsToDrop.push_back(IDC_DEL_EDM_PLUS);
-      mIDsToDrop.push_back(IDC_DEL_EDM_MINUS);
-      mPanelResized = true;
-      ManagePanels();
-      mWinApp->ManageDialogOptionsHiding();
-    }
+    DropIDsAndResize();
   }
 }
 
@@ -377,6 +369,21 @@ void CRemoteControl::UpdateSettings()
 {
   if (mInitialized)
     UpdateData(false);
+}
+
+void CRemoteControl::DropIDsAndResize()
+{
+  if (!mPanelResized) {
+    mIDsToDrop.push_back(IDC_STAT_EDM_LABEL);
+    mIDsToDrop.push_back(IDC_STAT_EDM_PCT);
+    mIDsToDrop.push_back(IDC_STAT_EDM_DELTA_PCT);
+    mIDsToDrop.push_back(IDC_SPIN_EDM_PCT);
+    mIDsToDrop.push_back(IDC_DEL_EDM_PLUS);
+    mIDsToDrop.push_back(IDC_DEL_EDM_MINUS);
+    mPanelResized = true;
+    ManagePanels();
+    mWinApp->ManageDialogOptionsHiding();
+  }
 }
 
 // Just disable everything when a task or shot starts, only re-enable some items

@@ -27,6 +27,7 @@ public:
   void Update(int inMag, int inCamLen, int inSpot, double inIntensity, int inProbe, int inGun, 
     int inSTEM, int inAlpha, int inScreenPos, BOOL beamBlanked, BOOL stageReady);
   void UpdateSettings();
+  void DropIDsAndResize();
   void UpdateEnables(void);
   void ChangeIntensityByIncrement(int delta);
   GetMember(float, BeamIncrement);

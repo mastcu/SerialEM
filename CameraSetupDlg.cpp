@@ -81,7 +81,7 @@ IDC_COMBOCHAN1,IDC_COMBOCHAN2, IDC_COMBOCHAN3, IDC_COMBOCHAN4, IDC_COMBOCHAN5,
 IDC_COMBOCHAN6, IDC_COMBOCHAN7, IDC_COMBOCHAN8, PANEL_END,
 IDC_DE_STEM_SAVE_FINAL, IDC_SAVE_4D_STACK, IDC_STEM_NAMING_OPTS, IDC_STEM_SAVE_FOLDER,
 PANEL_END,
-IDC_STAT_4D_STEM, IDC_DE_POINT_REPEATS, IDC_DE_STEM_GAIN_CORR, IDC_STAT_DE_PRESET, 
+IDC_STAT_4D_STEM, IDC_DE_STEM_GAIN_CORR, IDC_STAT_DE_PRESET, 
 IDC_COMBO_DE_PRESET, PANEL_END,
 IDC_STAT_K2MODE, IDC_RLINEAR, IDC_RCOUNTING, IDC_RSUPERRES, IDC_DOSE_FRAC_MODE, 
 IDC_STAT_FRAME_TIME, IDC_EDIT_FRAME_TIME, IDC_STAT_FRAME_SEC, IDC_ALIGN_DOSE_FRAC,
@@ -338,7 +338,6 @@ void CCameraSetupDlg::DoDataExchange(CDataExchange* pDX)
   DDX_Control(pDX, IDC_COMBO_PATTERN, m_comboPattern);
   DDX_Check(pDX, IDC_DE_STEM_SAVE_FINAL, m_bDeSTEMSaveFinal);
   DDX_Check(pDX, IDC_SAVE_4D_STACK, m_bSave4dSTEM);
-  DDX_Check(pDX, IDC_DE_POINT_REPEATS, m_bDePointRepeats);
   DDX_Check(pDX, IDC_DE_STEM_GAIN_CORR, m_bDeSTEMGainCorr);
 }
 
@@ -1363,7 +1362,7 @@ void CCameraSetupDlg::UnloadDialogToConset()
         m_bDeSTEMSaveFinal ? 1 : 0);
     }
     if (mDE_Type || mParam->DectrisType)
-      setOrClearFlags((b3dUInt32 *)(&conSet->saveFrames), DE_SAVE_MASTER,
+      setOrClearFlags((b3dUInt32 *)(&mCurSet->saveFrames), DE_SAVE_MASTER,
         m_bSave4dSTEM ? 1 : 0);
   } else {
     mCurSet->processing = m_iProcessing;
@@ -3255,9 +3254,10 @@ void CCameraSetupDlg::OnButFileOptions()
       mCamera->SetSaveInEERformat(optDlg.m_bOneFramePerFile);
       mWeCanAlignFalcon = mCamera->CanWeAlignFalcon(mParam, true, mFalconCanSave);
       ManageFalcon4FrameSpec();
-    } else if (mParam->DectrisType)
-      mCamera->SetDectrisSaveAsHDF(optDlg.m_bOneFramePerFile);
-    else
+    } else if (mParam->DectrisType) {
+      if (!mParam->STEMcamera)
+        mCamera->SetDectrisSaveAsHDF(optDlg.m_bOneFramePerFile);
+    } else
       mCamera->SetOneK2FramePerFile(optDlg.m_bOneFramePerFile);
     mCamera->SetSaveRawPacked((optDlg.m_bPackRawFrames ? 1 : 0) + 
       (optDlg.m_bPackCounting4Bit ? 2 : 0));

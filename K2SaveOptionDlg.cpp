@@ -175,7 +175,11 @@ BOOL CK2SaveOptionDlg::OnInitDialog()
       mIDsToDrop.push_back(IDC_FRAME_STACK_MDOC);
   } else if (mCamParams->DectrisType) {
     SetDlgItemText(IDC_ONE_FRAME_PER_FILE, "Save in native DECTRIS format (HDF5)");
-    m_bOneFramePerFile = mWinApp->mCamera->GetDectrisSaveAsHDF();
+    m_bOneFramePerFile = mCamParams->STEMcamera ||
+      mWinApp->mCamera->GetDectrisSaveAsHDF();
+    if (mCamParams->STEMcamera)
+      EnableDlgItem(IDC_ONE_FRAME_PER_FILE, false);
+
   } else if (!mK2Type)
     mIDsToDrop.push_back(IDC_ONE_FRAME_PER_FILE);
   AdjustPanels(states, idTable, leftTable, topTable, mNumInPanel, mPanelStart, 0);

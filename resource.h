@@ -1392,7 +1392,6 @@
 #define IDC_STAT_DE_WHERE_ALIGN         2377
 #define IDC_BUT_DE_SETUP_ALIGN          2378
 #define IDC_EDIT_ONE_LINE               2379
-#define IDC_STEM_SAVE_FOLDER            3645
 #define IDC_EDIT_ONE_LINE2              2380
 #define IDC_EDIT_ONE_LINE3              2381
 #define IDC_EDIT_ONE_LINE4              2382
@@ -2611,12 +2610,16 @@
 #define IDC_DE_STEM_GAIN_CORR           3642
 #define IDC_STAT_DE_PRESET              3643
 #define IDC_COMBO_DE_PRESET             3644
+#define IDC_STEM_SAVE_FOLDER            3645
 #define IDC_STAT_EDM_LABEL              3646
 #define IDC_STAT_EDM_PCT                3647
 #define IDC_SPIN_EDM_PCT                3648
 #define IDC_STAT_EDM_DELTA_PCT          3649
 #define IDC_DEL_EDM_PLUS                3650
 #define IDC_DEL_EDM_MINUS               3651
+#define IDC_STAT_POINT_REPEATS          3652
+#define IDC_EDIT_POINT_REPEATS          3653
+#define IDC_SPIN_POINT_REPEATS          3654
 #define ID_NEW_IMAGE                    32771
 #define IDM_FILE_SAVEOTHER              32772
 #define IDM_FILE_READ                   32773
@@ -3211,7 +3214,7 @@
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        300
 #define _APS_NEXT_COMMAND_VALUE         33559
-#define _APS_NEXT_CONTROL_VALUE         3652
+#define _APS_NEXT_CONTROL_VALUE         3655
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif

@@ -168,7 +168,7 @@
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#FalconGPU">To use a GPU for aligning Falcon or Ceta 2 frames in SerialEM</a>
       <br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#JeolCamera">For accessing
-         a JEOL camera or STEM signals</a>
+         a JEOL camera or STEM detectors</a>
         <br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#RemoteTietz">For accessing
          a Tietz camera remotely</a>
@@ -1613,7 +1613,7 @@
         computer, define environment variable FEISEMSERVER_PORT&nbsp; with the lower 
         port number (e.g., 48902).</p>
       <p>
-        <a name="JeolCamera"><i><b>For accessing a JEOL camera or STEM signals</b></i></a>,
+        <a name="JeolCamera"><i><b>For accessing a JEOL camera or STEM detectors</b></i></a>,
         copy the file JeolCamPlugin.dll from the package directory to the main SerialEM
         directory.&nbsp; (The file could be placed in a 'Plugins' folder inside
         C:\Program Files\SerialEM instead, but this is no longer necessary and could
@@ -1635,7 +1635,8 @@
         on the JEOL PC. You also need to add the properties (with the appropriate port
         number)<br />
 &nbsp;&nbsp;&nbsp; SocketServerIP 4 ip_address_of_JEOL_PC<br />
-&nbsp;&nbsp;&nbsp; SocketServerPort 4 48896</p><br />
+&nbsp;&nbsp;&nbsp; SocketServerPort 4 48896</p>
+      <br />
       On Windows 7 or above, the first time that you start this server, you need to run it
       as Administrator to guarantee that various JEOL DLLs can be copied to the folder where
       the server is located.&nbsp; Debugging output from the plugin can be obtained by 
@@ -1646,7 +1647,18 @@
       output or 4 to write output to a file &#39;C:\Program 
       Files\SerialEM\JeolSemServerDebug.txt&#39;; this would be needed to get debug output 
       while initializing.
-      <p><b><i>To run a second JEOL camera on a different computer through JEOL-SEMCamServer:</i></b></p>
+      <p>Frames from a single acquisition can be saved or aligned with or without a GPU provided that 
+        the camera works in continuous mode (live mode).&nbsp; To test and use this mode, add the
+         camera property<br />
+        &nbsp;&nbsp;
+        UseContinuousMode 1 0 0 0<br />
+        or change it to this if it is already present with a 0.&nbsp; Restart SerialEM 
+        if necessary, take a single-frame image, then switch to 'Continuous' in the Camera Setup dialog 
+        and start acquiring.&nbsp; If it works, you can add the property <br />&nbsp;&nbsp; 
+        CanTakeFrames 3<br />to enable saving and aligning frames.&nbsp; If the 
+        continuous mode image has twice as many counts as the single-frame image, change 
+        the fourth entry on the 'UseContinuousMode' line to 2.</p>
+        <p><b><i>To run a second JEOL camera on a different computer through JEOL-SEMCamServer:</i></b></p>
       <p>Running two cameras is possible with the following setup:</p>
       <ul>
         <li>Both cameras must be connected through the server interface, even if one is on the SerialEM computer.</li>
