@@ -172,6 +172,7 @@ CFocusManager::CFocusManager()
   mEucenMinDefocus = -20.f;
   mUseEucenAbsLimits = false;
   mTestOffsetEucenAbs = true;
+  mMinMagIndForFocus = 0;
   mRFTbkgdStart = 0.4f;
   mRFTbkgdEnd = 0.5f;
   mRFTtotPowStart = 0.0;
@@ -2017,7 +2018,7 @@ int CFocusManager::GetFocusCal(int inMag, int inCam, int probeMode, int inAlpha,
   int *activeList = mWinApp->GetActiveCameraList();
   bool debug = GetDebugOutput('C') && !mWinApp->GetInUpdateWindows();
 
-  if (inMag < 0)
+  if (inMag < mMinMagIndForFocus)
     return 0;
   if (mCamParams[inCam].STEMcamera)
     return 0;
