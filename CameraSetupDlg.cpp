@@ -1362,7 +1362,7 @@ void CCameraSetupDlg::UnloadDialogToConset()
         m_bDeSTEMSaveFinal ? 1 : 0);
     }
     if (mDE_Type || mParam->DectrisType)
-      setOrClearFlags((b3dUInt32 *)(&conSet->saveFrames), DE_SAVE_MASTER,
+      setOrClearFlags((b3dUInt32 *)(&mCurSet->saveFrames), DE_SAVE_MASTER,
         m_bSave4dSTEM ? 1 : 0);
   } else {
     mCurSet->processing = m_iProcessing;
@@ -3254,9 +3254,10 @@ void CCameraSetupDlg::OnButFileOptions()
       mCamera->SetSaveInEERformat(optDlg.m_bOneFramePerFile);
       mWeCanAlignFalcon = mCamera->CanWeAlignFalcon(mParam, true, mFalconCanSave);
       ManageFalcon4FrameSpec();
-    } else if (mParam->DectrisType)
-      mCamera->SetDectrisSaveAsHDF(optDlg.m_bOneFramePerFile);
-    else
+    } else if (mParam->DectrisType) {
+      if (!mParam->STEMcamera)
+        mCamera->SetDectrisSaveAsHDF(optDlg.m_bOneFramePerFile);
+    } else
       mCamera->SetOneK2FramePerFile(optDlg.m_bOneFramePerFile);
     mCamera->SetSaveRawPacked((optDlg.m_bPackRawFrames ? 1 : 0) + 
       (optDlg.m_bPackCounting4Bit ? 2 : 0));

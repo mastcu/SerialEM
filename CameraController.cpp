@@ -1786,16 +1786,18 @@ void CCameraController::InitializePluginCameras(int &numPlugListed, int *origina
         if (!err && mAllParams[i].canTakeFrames & FRAMES_CAN_BE_ALIGNED)
           mFalconHelper->Initialize(-2);
 
+        num = mAllParams[i].cameraNumber;
 
         // For a STEM camera, send the camera number plus number of additional channels
         // But subtract if they are going to same channel
-        num = mAllParams[i].cameraNumber;
-        if (mAllParams[i].STEMcamera)
-          num += mAllParams[i].numChannels - 1;
-        for (set = 0; set < mChannelSets.GetSize(); set++)
-          num -= mChannelSets[set].numChans - 1;
+        if (mAllParams[i].STEMcamera && !mAllParams[i].DectrisType) {
+          if (mAllParams[i].STEMcamera)
+            num += mAllParams[i].numChannels - 1;
+          for (set = 0; set < mChannelSets.GetSize(); set++)
+            num -= mChannelSets[set].numChans - 1;
+        }
 
-        if (!err && mPlugFuncs[i]->InitializeCamera &&
+        if (!err && mPlugFuncs[i]->InitializeCamera && 
           mPlugFuncs[i]->InitializeCamera(num) != 0) {
           report.Format("Failed to initialize camera %d %sin the plugin named %s",
             mAllParams[i].cameraNumber, mAllParams[i].STEMcamera ? "(STEM) " : "",
@@ -3330,7 +3332,9 @@ void CCameraController::Capture(int inSet, bool retrying)
     conSet.processing = DARK_SUBTRACTED;
   mTD.Processing = conSet.processing;
   mTD.FrameTime = conSet.frameTime;
-  mTD.PluginAcquireFlags = mTD.plugFuncs ? (mParam->balanceHalves & ~(1)) : 0;
+  mTD.PluginAcquireFlags = 0;
+  if (mParam->balanceHalves > 1 && mTD.plugFuncs)
+    mTD.PluginAcquireFlags = mParam->balanceHalves & ~(1);
   mTD.PluginFrameFlags = 0;
   mTD.ReadoutsPerFrame = 1;
 
@@ -4206,8 +4210,6 @@ void CCameraController::Capture(int inSet, bool retrying)
     mTD.PlugSTEMacquireFlags |= (mTietzSTEMflags << TIETZ_STEM_FLAG_SHIFT);
   if (mParam->STEMcamera && mParam->DectrisType && conSet.saveFrames != 0) {
     mTD.PlugSTEMacquireFlags |= PLUGCAM_SAVE_4D_STACK;
-    if (!mDectrisSaveAsHDF)
-      mTD.PlugSTEMacquireFlags |= PLUGCAM_SAVE_4D_AS_MRC;
   }
   
   if (mSingleContModeUsed == CONTINUOUS && mNeedShotToInsert < 0) {
@@ -13407,7 +13409,8 @@ bool CCameraController::CanSaveFrameStackMdoc(CameraParameters * param)
     CAN_PLUGIN_DO(CAN_SAVE_MDOC, param)) || (param->FEItype //&& !FCAM_CONTIN_SAVE(mParam)
       && !((IS_FALCON3_OR_4(param) || FCAM_CONTIN_SAVE(param)) &&
         mLocalFalconFramePath.IsEmpty())) ||
-      (param->DE_camType && mTD.DE_Cam->ServerIsLocal() || (!param->GatanCam && canSave));
+      (param->DE_camType && mTD.DE_Cam->ServerIsLocal() || (!param->GatanCam && canSave) 
+        || (param->DectrisType && param->STEMcamera));
 }
 
 // Returns true if all conditions are satisfied for saving binned frames from K3 camera
