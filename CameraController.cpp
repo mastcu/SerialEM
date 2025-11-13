@@ -5514,7 +5514,7 @@ void CCameraController::CapSetupShutteringTiming(ControlSet & conSet, int inSet,
 
     float tmpExp = mNeedShotToInsert >= 0 ? mInsertDetShotTime : conSet.exposure;
     ComputePixelTime(mParam, mTD.DMSizeX, mTD.DMSizeY, 
-      mParam->FEItype || mNeedShotToInsert >= 0 ? 0 : conSet.lineSync, 0., 0., tmpExp,
+      mParam->GatanCam ? conSet.lineSync : 0, 0., 0., tmpExp,
       mTD.PixelTime, scanRate);
     mExposure = tmpExp;
     if (mNeedShotToInsert < 0)
