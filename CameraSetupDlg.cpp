@@ -1312,7 +1312,8 @@ void CCameraSetupDlg::UnloadDialogToConset()
   }
   if (DECTRIS_WITH_COUNTING(mParam))
     mCurSet->K2ReadMode = m_bOvDrift_DeHwBin_DctSep ? 1 : 0;
-  mCurSet->lineSyncOrPattern = m_bLineSync ? 1 : 0;
+  if (mParam->GatanCam)
+    mCurSet->lineSyncOrPattern = m_bLineSync ? 1 : 0;
   mCurSet->dynamicFocus = m_bDynFocus ? 1 : 0;
   mCurSet->integration = m_iIntegration;
   if (mSTEMcamera) {
@@ -1487,7 +1488,7 @@ void CCameraSetupDlg::ManageDrift(bool useMinRate)
     if (useMinRate && mParam->maxScanRate)
       m_eExposure = 0.01f;
     mCamera->ComputePixelTime(mParam, right - left, bottom - top, 
-      (m_bLineSync && !mParam->FEItype) ? 1 : 0,
+      (m_bLineSync && mParam->GatanCam) ? 1 : 0,
       pixelSize, useMinRate ? mParam->maxScanRate : 0.f, m_eExposure, pixelTime,scanRate);
     if (pixelTime < 9.99)
       m_strSettling.Format("%.2f", pixelTime);
@@ -1506,7 +1507,7 @@ void CCameraSetupDlg::ManageDrift(bool useMinRate)
       0.001)
       m_strScanRate += " *";
     mCamera->ComputePixelTime(mParam, right - left, bottom - top, 
-      (m_bLineSync && !mParam->FEItype) ? 1 : 0,
+      (m_bLineSync && mParam->GatanCam) ? 1 : 0,
       pixelSize, mParam->maxScanRate, expTmp, pixelTime, scanRate);
     UpdateData(false);
   } else {
