@@ -201,6 +201,7 @@ CNavigatorDlg::CNavigatorDlg(CWnd* pParent /*=NULL*/)
   mReloadTableOnNextAdd = 0;
   mGridIndexOfMap = -1;
   mCurrentItem = -1;
+  mLastGridSetAcquire = false;
 }
 
 
@@ -2547,7 +2548,7 @@ void CNavigatorDlg::ShiftToMarker(void)
 {
   float delX, delY, ptX, ptY;
   float shiftX, shiftY;
-  int registration;
+  int registration, start, end;
   CMapDrawItem *map = NULL;
   CString mess;
   ScaleMat aMat;
@@ -2566,7 +2567,7 @@ void CNavigatorDlg::ShiftToMarker(void)
     ACCUM_MAX(dlg.m_iSaveType, 1);
   }
   if (dlg.mOKtoShift) {
-    if (!SetCurrentItem())
+    if (!SetCurrentItem(true))
       return;
 
     if (!BufferStageToImage(imBuf, aMat, delX, delY)) {
@@ -2611,6 +2612,9 @@ void CNavigatorDlg::ShiftToMarker(void)
       registration);
   } else {
     dlg.m_strMarkerShift = "No marker shift is available";
+    if (m_bCollapseGroups && GetCollapsedGroupLimits(mCurListSel, start, end) && 
+      end > start)
+      dlg.m_strMarkerShift += " (try uncollapsing groups)";
     dlg.m_strWhatShifts = "Dialog opened just for viewing and removing saved shifts";
   }
   if (dlg.DoModal() == IDCANCEL)
@@ -5801,6 +5805,7 @@ void CNavigatorDlg::AddGridOfPoints(bool likeLast)
     acquire = (AfxMessageBox("Do you want to turn on Acquire for all these new points?",
       MB_YESNO | MB_ICONQUESTION) == IDYES);
     refresh = true;
+    mLastGridSetAcquire = acquire;
   }
   if (refresh) {
     if (mDrawnOnMontBufInd >= 0)
@@ -12292,9 +12297,9 @@ BOOL CNavigatorDlg::SetCurrentItem(bool groupOK)
 }
 
 // Return the current item
-CMapDrawItem * CNavigatorDlg::GetCurrentItem(void)
+CMapDrawItem * CNavigatorDlg::GetCurrentItem(bool groupOK)
 {
-  if (SetCurrentItem())
+  if (SetCurrentItem(groupOK))
     return mItem;
   return NULL;
 }

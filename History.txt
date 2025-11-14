@@ -3,6 +3,14 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+11/14/25: Fixed adding grid of point "like last time" not setting items as
+Acquire (In 4.2).
+
+11/14/24: Added support for Tietz XF216 camera (In 4.2).
+
+11/14/24: Made Shift to Marker work with groups collapsed if current point is
+the only one in the group (In 4.2).
+
 11/11/25: SEM_4-2-12
 11/11/25: Fixed ability to enter -1 for compression options to SetFileOptions
 (In 4.2).

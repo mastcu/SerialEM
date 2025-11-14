@@ -3685,9 +3685,20 @@ void CNavHelper::ApplyBaseMarkerShift()
 // Centralized routine for testing the conditions for Shift to Marker
 bool CNavHelper::OKtoShiftToMarker()
 {
+  int start, end;
+  CMapDrawItem *item;
   EMimageBuffer *imBuf = mWinApp->mActiveView->GetActiveImBuf();
-  return (mNav && mNav->NoDrawing() && !mNav->GetAcquiring() &&
-    !mWinApp->DoingTasks() && imBuf && imBuf->mHasUserPt && mNav->GetItemType() >= 0);
+  if (!(mNav && mNav->NoDrawing() && !mNav->GetAcquiring() &&
+    !mWinApp->DoingTasks() && imBuf && imBuf->mHasUserPt))
+    return false;
+  item = mNav->GetCurrentItem(true);
+  if (!item)
+    return false;
+  if (item->mType >= 0 && (!mNav->m_bCollapseGroups || !item->mGroupID))
+    return true;
+  if (mNav->GetCollapsedGroupLimits(mNav->GetCurListSel(), start, end))
+    return end == start;
+  return false;
 }
 
 
