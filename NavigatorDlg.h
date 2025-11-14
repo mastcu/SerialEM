@@ -597,7 +597,7 @@ public:
   bool IsFrameNeeded(CMapDrawItem * item, int xFrame, int yFrame, float xOverlap, 
     float yOverlap, float xExtra, float yExtra, float xOffset, float yOffset, int ix, 
     int iy, int xNframes, int yNframes, float &xMid, float &yMid);
-  CMapDrawItem * GetCurrentItem(void);
+  CMapDrawItem * GetCurrentItem(bool groupOK = false);
   int RegistrationUseType(int reg);
   void ImportMap(void);
   void TransformOneItem(CMapDrawItem * item, ScaleMat aM, float * dxy, int fromReg, int toReg);

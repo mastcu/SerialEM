@@ -1642,10 +1642,11 @@
             13 for new TemCam-F816<br />
             15 or 16 for XF416 non-GPU version<br />
             17 or 18 for XF416 GPU version<br />
+            20 for XF216 (a GPU camera)<br />
             Entries of 8, 11, 12, and 13 imply a
             RestrictedSizeType of 4. For these cameras, make CameraSizeX and Y be the full
             size of 8200, 4100, or 2050, respectively, not 8192, 4096, or 2048.&nbsp; Entries
-            15 to 18 imply a RestrictedSizeType of 9.</TD>
+            15 to 20 imply a RestrictedSizeType of 9.</TD>
         </TR>
         <TR VALIGN="top">
           <TD>AMTcameraType</TD>
@@ -1780,8 +1781,8 @@
             SubareasAreBad to 2. Set to 3 if subareas must be centered. Set to 8 for DigiScan.&nbsp;
             It is automatically set to 4 for Tietz
             cameras with 1024-block readout on 1025-pixel boundaries (F416, etc), and
-            set to 9 for a Tietz XF416 camera, which allows sizes of 256, 512, 1024, 2048,
-            3072, and 4096 starting at any multiple of 256.</TD>
+            set to 9 for a Tietz XF216 or XF416 camera, which allows sizes of 256, 512, 1024, 2048 for both
+            cameras and 3072 and 4096 for XF416, starting at any multiple of 256.</TD>
         </TR>
         <TR VALIGN="top">
           <TD>TaskTargetSize</TD>
