@@ -7356,7 +7356,7 @@ int CMacCmd::GetApertureSizes()
   std::vector<ShortVec> *apertureLists = mScope->GetApertureLists();
 
   if (!JEOLscope) {
-    ABORT_LINE("Current miroscope must be a JEOL to run this command for line:\n\n");
+    ABORT_NOLINE("Current microscope must be a JEOL to run GetApertureSizes");
   }
 
   ConvertApertureNameToNum();
