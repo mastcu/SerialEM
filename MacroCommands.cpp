@@ -7348,6 +7348,44 @@ int CMacCmd::ReportApertureSize(void)
   return 0;
 }
 
+// GetApertureSizes
+int CMacCmd::GetApertureSizes() 
+{
+  CString arr, report;
+  int numSizes, ap;
+  std::vector<ShortVec> *apertureLists = mScope->GetApertureLists();
+
+  if (!JEOLscope) {
+    ABORT_NOLINE("Current microscope must be a JEOL to run GetApertureSizes");
+  }
+
+  ConvertApertureNameToNum();
+  for (ap = 0; ap < (int)apertureLists->size(); ap++) {
+    if ((int)apertureLists->at(ap)[0] == mItemInt[1]) {
+      numSizes = (int)apertureLists->at(ap).size() - 1;
+      if (numSizes == 0) {
+        mStrCopy.Format("No aperture sizes specified for aperture %d", mItemInt[1]);
+        ABORT_LINE(mStrCopy + " for line:\n\n");
+      }
+
+      // List of aperture sizes starts at second element of the vector
+      arr = mParamIO->EntryListToString(4, 0, numSizes, NULL, NULL, 
+        apertureLists->at(ap).data() + 1);
+      mLogRpt.Format("Aperture %d has sizes: %s", mItemInt[1], arr);
+      if (SetVariable(mStrItems[2], arr, VARTYPE_REGULAR, -1, false, &mStrCopy))
+        ABORT_LINE(mStrCopy + "for line:\n\n");
+      SetReportedValues(numSizes);
+      return 0;
+    }
+  }
+
+  // Return an error message if no aperture size list was found
+  mStrCopy.Format("There is no ApertureSizes property with a size list for aperture"
+    " %d", mItemInt[1]);
+  ABORT_LINE(mStrCopy + " for line:\n\n");
+  return 1;
+}
+
 // SetApertureSize
 int CMacCmd::SetApertureSize(void)
 {
