@@ -3313,7 +3313,7 @@ int CParameterIO::ReadProperties(CString strFileName)
             if (itemInt[1] == 8 || itemInt[1] == 11 || itemInt[1] == 12 ||
               itemInt[1] == 13)
               camP->TietzBlocks = 1024;
-            if (itemInt[1] >= 15 && itemInt[1] <= 18) {
+            if (itemInt[1] >= 15 && itemInt[1] <= 20) {
               camP->moduloX = -9;
               camP->moduloY = -9;
             }
