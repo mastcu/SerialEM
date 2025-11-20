@@ -4431,7 +4431,8 @@ int CCameraController::CapSetupSTEMChannelsDetectors(ControlSet &conSet, int inS
     mTD.NumChannels = 0;
     block = GetMaxChannels(mParam);
     block = B3DMIN(block, mMaxChannelsToGet);
-    if (mRequiredRoll > 0 || (mSingleContModeUsed == CONTINUOUS && !mParam->FEItype))
+    if (mRequiredRoll > 0 || (mSingleContModeUsed == CONTINUOUS && 
+      (!mParam->FEItype || mTD.UseUtapi)))
       block = 1;
     for (chan = 0; chan < mParam->numChannels && mTD.NumChannels < block; chan++) {
       ind = conSet.channelIndex[chan];
@@ -7890,13 +7891,13 @@ void CCameraController::AcquirePluginImage(CameraThreadData *td, void **array,
 
       // Set partial scan negative if it is over, signaled by negative numAcquired;
       // fix sign of numAcquired
-      if (td->ReturnPartialScan > 0 && numAcquired < 0) {
+      if (td->ReturnPartialScan > 0 && numAcquired < 0)
         td->ReturnPartialScan = -td->ReturnPartialScan;
 
-        // Get statistics back from focus ramp, make sure it ends
-      } else {
+      // Get statistics back from focus ramp, make sure it ends
+      if (&& td->ReturnPartialScan != 1)
         TestAndFinishRamp(td, rampStarted);
-      }
+
       numAcquired = B3DABS(numAcquired);
     } else
       retval = td->plugFuncs->AcquireImage(((short **)array)[0], arrSize, processing, 
