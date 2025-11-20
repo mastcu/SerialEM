@@ -7895,7 +7895,7 @@ void CCameraController::AcquirePluginImage(CameraThreadData *td, void **array,
         td->ReturnPartialScan = -td->ReturnPartialScan;
 
       // Get statistics back from focus ramp, make sure it ends
-      if (&& td->ReturnPartialScan != 1)
+      if (td->ReturnPartialScan != 1)
         TestAndFinishRamp(td, rampStarted);
 
       numAcquired = B3DABS(numAcquired);
