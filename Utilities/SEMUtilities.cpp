@@ -573,6 +573,13 @@ void UtilSplitString(CString fullStr, const char *delim,
   strList.push_back((LPCTSTR)fullStr);
 }
 
+void UtilSplitString(std::string stdStr, const char *delim, 
+  std::vector<std::string> &strList)
+{
+  CString fullStr = stdStr.c_str();
+  UtilSplitString(fullStr, delim, strList);
+}
+
 // Remove zeros from end of a string ending in a floating point number
 void UtilTrimTrailingZeros(CString & str)
 {
@@ -595,6 +602,14 @@ int CreateFrameDirIfNeeded(CString &directory, CString *errStr, char debug)
   CFileStatus status;
   CString parent, tmp;
   int len;
+  if (directory.IsEmpty()) {
+    tmp = "Directory name is empty in CreateFrameDirIfNeeded";
+    if (errStr)
+      *errStr = tmp;
+    else
+      SEMTrace(debug, "%s", (LPCTSTR)tmp);
+    return 1;
+  }
   if (!CFile::GetStatus((LPCTSTR)directory, status)) {
     SEMTrace(debug, "Directory %s does not exist, creating it", (LPCTSTR)directory);
     if (_mkdir((LPCTSTR)directory)) {

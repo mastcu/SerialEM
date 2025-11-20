@@ -36,6 +36,7 @@ bool UtilIsDirectoryUsable(CString &dir, int &error);
 BOOL UtilFileExists(CString filename);
 void UtilAppendWithSeparator(CString &filename, CString toAdd, const char* sep);
 void UtilSplitString(CString fullStr, const char *delim, std::vector<std::string> &strList);
+void UtilSplitString(std::string stdStr, const char *delim, std::vector<std::string> &strList);
 char UtilCheckIllegalChars(CString &filename, int slashOrDriveOK, CString descrip);
 void DLL_IM_EX UtilTrimTrailingZeros(CString &str);
 int CreateFrameDirIfNeeded(CString &directory, CString *errStr, char debug);
