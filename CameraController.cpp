@@ -264,6 +264,7 @@ CCameraController::CCameraController()
   mPlugInitialized = false;
   mOtherCamerasInTIA = false;
   mTD.DE_Cam = NULL;
+  mDE_Cam = NULL;
   mTD.errFlag = 0;
   mTD.NumChannels = 1;
   mTietzFilmSwitchTime = 2.0;
@@ -623,7 +624,8 @@ void CCameraController::KillUpdateTimer()
   if (mTD.DE_Cam)
     delete mTD.DE_Cam;
   mTD.DE_Cam = NULL;
-	mDEInitialized = false;
+  mDE_Cam = NULL;
+  mDEInitialized = false;
 }
 
 ///////////////////////////////////////////////////////
@@ -1610,45 +1612,71 @@ void CCameraController::InitializeFEIcameras(int &numFEIlisted, int *originalLis
 // Initialize Direct Electron cameras
 void CCameraController::InitializeDirectElectron(int *originalList, int numOrig)
 {
-  int ind, i;
+  int ind, i, j, STEMnum = -1, physNum = -1;
+  std::vector<std::string> virtList;
+  ShortVec enabled;
+
+  // Look for STEM camera and make sure it can be matched up with actual camera by name or
+  // property that it is same camera
+  for (ind = 0; ind < numOrig; ind++) {
+    i = originalList[ind];
+    if (mAllParams[i].DE_camType && mAllParams[i].STEMcamera) {
+      physNum = mAllParams[i].samePhysicalCamera;
+      if (physNum < 0) {
+        for (j = 0; j < numOrig; j++)
+          if (mAllParams[originalList[j]].DE_camType &&
+            !mAllParams[i].name.CompareNoCase(mAllParams[originalList[j]].name + " STEM"))
+            mAllParams[i].samePhysicalCamera = physNum = originalList[j];
+      }
+      if (physNum < 0) {
+        AfxMessageBox("The Direct Electron STEM camera must either have a "
+          "SamePhysicalCamera property or be named by the camera name plus \" STEM\"",
+          MB_EXCLAME);
+        mAllParams[i].failedToInitialize = true;
+      }
+      STEMnum = i;
+    }
+  }
 
   mNumDECameras = 0;
   for (ind = 0; ind < numOrig; ind++) {
     i = originalList[ind];
+    if (i == STEMnum)
+      continue;
     if (mAllParams[i].DE_camType) {
-      if (mAllParams[i].DE_camType){
-        if(!mTD.DE_Cam)
-          mTD.DE_Cam = new DirectElectronCamera(mAllParams[i].DE_camType,i);
-        // DNM: need to test for + return value
-        if (mTD.DE_Cam->initialize(mAllParams[i].name, i) > 0) {
-          SEMTrace('D', "successfully initialized the camera: %s", mAllParams[i].name);
-          mNumDECameras = mNumDECameras + 1;
-          mDEInitialized = true;
-          if (mAllParams[i].useContinuousMode < 0 && mAllParams[i].DE_camType >= 2) {
-            mAllParams[i].useContinuousMode = 1;
-            mAllParams[i].setContinuousReadout = 1;
-          }
-          if (mAllParams[i].name.Find("Survey") > 0)
-            mAllParams[i].CamFlags &= ~(DE_CAM_CAN_COUNT);
-          if (mAllParams[i].CamFlags & DE_WE_CAN_ALIGN)
-            mFalconHelper->Initialize(-1);
+      if (!mTD.DE_Cam)
+        mTD.DE_Cam = new DirectElectronCamera(mAllParams[i].DE_camType, i);
+      mDE_Cam = mTD.DE_Cam;
 
-          if (mTD.DE_Cam->GetServerVersion() >= DE_ROI_IS_ON_CHIP &&
-            (mAllParams[i].DE_ImageInvertX || mAllParams[i].DE_ImageRot)) {
-            AfxMessageBox("Properties DEImageRotation and DEImageInvertXAxis no longer "
-              "have any effect for DE cameras.\n"
-              "These operations should be done in the server.", MB_EXCLAME);
-            mAllParams[i].DE_ImageInvertX = mAllParams[i].DE_ImageRot = 0;
-          }
-          if ((mAllParams[i].CamFlags & DE_APOLLO_CAMERA) &&
-            !mAllParams[i].countsPerElectron)
-            mAllParams[i].countsPerElectron = 16.;
-        } else if (mWinApp->mPluginManager->GetDEplugIndex() >= 0) {
-          AfxMessageBox("FAILURE in Initializing Direct Electron camera", MB_EXCLAME);
-          mAllParams[i].failedToInitialize = true;
+      // DNM: need to test for + return value
+      if (mTD.DE_Cam->initialize(mAllParams[i].name, i) > 0) {
+        SEMTrace('D', "successfully initialized the camera: %s", mAllParams[i].name);
+        mNumDECameras = mNumDECameras + 1;
+        mDEInitialized = true;
+        if (mAllParams[i].useContinuousMode < 0 && mAllParams[i].DE_camType >= 2) {
+          mAllParams[i].useContinuousMode = 1;
+          mAllParams[i].setContinuousReadout = 1;
         }
-      } else
+        if (mAllParams[i].name.Find("Survey") > 0)
+          mAllParams[i].CamFlags &= ~(DE_CAM_CAN_COUNT);
+        if (mAllParams[i].CamFlags & DE_WE_CAN_ALIGN)
+          mFalconHelper->Initialize(-1);
+
+        if (mTD.DE_Cam->GetServerVersion() >= DE_ROI_IS_ON_CHIP &&
+          (mAllParams[i].DE_ImageInvertX || mAllParams[i].DE_ImageRot)) {
+          AfxMessageBox("Properties DEImageRotation and DEImageInvertXAxis no longer "
+            "have any effect for DE cameras.\n"
+            "These operations should be done in the server.", MB_EXCLAME);
+          mAllParams[i].DE_ImageInvertX = mAllParams[i].DE_ImageRot = 0;
+        }
+        if ((mAllParams[i].CamFlags & DE_APOLLO_CAMERA) &&
+          !mAllParams[i].countsPerElectron)
+          mAllParams[i].countsPerElectron = 16.;
+
+      } else if (mWinApp->mPluginManager->GetDEplugIndex() >= 0) {
+        AfxMessageBox("FAILURE in Initializing Direct Electron camera", MB_EXCLAME);
         mAllParams[i].failedToInitialize = true;
+      }
     }
   }
 
@@ -1656,6 +1684,32 @@ void CCameraController::InitializeDirectElectron(int *originalList, int numOrig)
   if (!mDEInitialized) {
     delete mTD.DE_Cam;
     mTD.DE_Cam = NULL;
+    mDE_Cam = NULL;
+  } else if (STEMnum >= 0) {
+
+    // Get the virtual detector names  and substitute for the ones in properties
+    // while keeping a list of which ones are virtual in properties
+    if (mTD.DE_Cam->GetVirtualDetectorNames(virtList, enabled)) {
+      AfxMessageBox("An error occurred getting virtual detector names from the DE"
+        " interface", MB_EXCLAME);
+      mAllParams[STEMnum].failedToInitialize = true;
+    } else if (!virtList.size()) {
+      mAllParams[STEMnum].failedToInitialize = true;
+
+    } else {
+      ind = 0;
+      mNumDECameras++;
+      for (i = 0; i < mAllParams[STEMnum].numChannels; i++) {
+        if (mAllParams[STEMnum].channelName[i].Find("Vi") == 0 ||
+          mAllParams[STEMnum].channelName[i].Find("Vr") == 0) {
+          mVirtualDEChannels.push_back(i);
+          if (ind < (int)virtList.size())
+            mAllParams[STEMnum].detectorName[i] = virtList[ind++].c_str();
+        } else {
+          mPhysicalDEChannels.push_back(i);
+        }
+      }
+    }
   }
 }
 
@@ -1870,8 +1924,10 @@ void CCameraController::SetDebugMode(BOOL inVal)
 void CCameraController::SetCurrentCamera(int currentCam, int activeCam)
 {
   float offsetX = 0., offsetY = 0., lastX, lastY;
+  int index;
   double shiftX, shiftY;
   BOOL wasSTEM = mParam->STEMcamera;
+  CString name;
   mParam = &mAllParams[currentCam];
   mFilmShutter = 1 - mParam->beamShutter;
   mTD.Camera = activeCam;
@@ -1922,11 +1978,16 @@ void CCameraController::SetCurrentCamera(int currentCam, int activeCam)
     }
   }
 
-  //Had to add this for DE camera switching TM.
-  //3_28_11 for DE12
-  if (mParam->DE_camType) {
-	  if(mTD.DE_Cam)
-		  mTD.DE_Cam->setCameraName(mParam->name);
+  // For DE camera switching.  If it is STEM, pass in the name and index of the physical
+  // camera instead to keep it as current
+  if (mParam->DE_camType && mTD.DE_Cam) {
+    name = mParam->name;
+    index = activeCam;
+    if (mParam->STEMcamera && mParam->samePhysicalCamera >= 0) {
+      name = mAllParams[mParam->samePhysicalCamera].name;
+      index = mParam->samePhysicalCamera;
+    }
+    mTD.DE_Cam->setCameraName(name, index, mParam->STEMcamera);
   }
   UtilModifyMenuItem("Camera", ID_CAMERA_ACQUIREGAINREF, (mParam->DE_camType && 
     !CanProcessHere(mParam)) ? "Ac&quire Ref in Server" : "Ac&quire Gain Ref");
@@ -2086,7 +2147,7 @@ void CCameraController::StopCapture(int ifNow)
   if (mParam->DE_camType && mTD.DE_Cam && (mParam->DE_camType < 2 || 
     mTD.DE_Cam->GetServerVersion() >= DE_ABORT_WORKS)) {
     mWinApp->AppendToLog("Going to try to stop acquisition of camera.");
-    mTD.DE_Cam->StopAcquistion();
+    mTD.DE_Cam->StopAcquisition();
     mHalting = true;
   }
 }
@@ -3154,8 +3215,10 @@ void CCameraController::Capture(int inSet, bool retrying)
   double intensity, exposure, megaVoxel, megaVoxPerSec = 0.15;
   float scaleFac;
   DectrisPlugFuncs *dectrisFuncs;
+  StringVec camPresets;
   std::string dirStr, nameStr;
   bool superRes, falconHasFrames, weCanAlignFalcon, aligningOnly, alignNotSave;
+  bool anyVirtualChan;
   BOOL retracting = inSet == RETRACT_BLOCKERS || inSet == RETRACT_ALL;
   mWinApp->CopyOptionalSetIfNeeded(inSet);
   ControlSet conSet = mConSetsp[retracting ? 0 : inSet]; // Copy the control set for ease
@@ -3234,20 +3297,12 @@ void CCameraController::Capture(int inSet, bool retrying)
     !(inSet == mRetainMagAndShift && mParam->STEMcamera))
     RestoreMagAndShift();
 
-  // Set partial scan to 2 the first time to signal that buffers need to be rolled
-  // This had to be moved up to handle dynamic focus correctly, so now ReturnPartialScan
-  // needs to be clear before any return that will come back in
-  // JEOL scope accesses need to be prevented when RPS is 1, and PostActionTime,
-  // DynFpcusInterval, and LineSyncAndFlags need to be protected from change
-  if (mParam->STEMcamera && (mParam->TietzType || mTD.UseUtapi) &&
-    conSet.exposure >= mPartialScanThreshExp && mSingleContModeUsed == SINGLE_FRAME) {
-    mTD.ReturnPartialScan = (mTD.ReturnPartialScan > 0) ? 1 : 2;
-  } else
-    mTD.ReturnPartialScan = 0;
 
   // For STEM camera, figure out detectors now in case it affects screen
   // Clear low dose area flag if returning just to be safe
-  if (CapSetupSTEMChannelsDetectors(conSet, inSet, retracting)) {
+  // Set up partial scan in here
+  // MUST CLEAR mTD.ReturnPartialScan FOR ANY RETURN THAT COMES BACK IN
+  if (CapSetupSTEMChannelsDetectors(conSet, inSet, retracting, anyVirtualChan)) {
     mLDwasSetToArea = -1;
     return;
   }
@@ -3540,7 +3595,8 @@ void CCameraController::Capture(int inSet, bool retrying)
     sumCount = B3DMAX(1, sumCount);
 
     // Turn on only the save master flag if aligning only and set flag to remove frames
-    if (conSet.alignFrames && !(conSet.saveFrames & DE_SAVE_MASTER)) {
+    if (!mParam->STEMcamera && conSet.alignFrames && 
+      !(conSet.saveFrames & DE_SAVE_MASTER)) {
       conSet.saveFrames = DE_SAVE_MASTER;
       mRemoveAlignedDEframes = true;
     }
@@ -3548,7 +3604,7 @@ void CCameraController::Capture(int inSet, bool retrying)
     if (conSet.saveFrames & DE_SAVE_MASTER) {
 
       // Set up the traditional frame/sum/final flags
-      if (mTD.DE_Cam->GetNormAllInServer()) {
+      if (!mParam->STEMcamera && mTD.DE_Cam->GetNormAllInServer()) {
 
         // New server: always set DE_SAVE_SUMS, set DE_SAVE_FRAMES for saving raw/single
         // also if summing
@@ -3556,7 +3612,7 @@ void CCameraController::Capture(int inSet, bool retrying)
         if ((sumCount > 1 || conSet.K2ReadMode > 0) &&
           (conSet.saveFrames & DE_SAVE_SINGLE))
           setState |= DE_SAVE_FRAMES;
-      } else {
+      } else if (!mParam->STEMcamera) {
 
         // Old server: set DE_SAVE_SUMS only for sums > 1; set DE_SAVE_FRAMES for sums = 1
         // or to save single also
@@ -3581,8 +3637,8 @@ void CCameraController::Capture(int inSet, bool retrying)
     } else if ((conSet.saveFrames & DE_SAVE_FINAL) && SetDEUsersFrameFolder())
       return;
 
-    if (mTD.DE_Cam->SetAllAutoSaves(setState, sumCount, mFrameFilename, mFrameFolder,
-      conSet.K2ReadMode > 0)) {
+    if (!mParam->STEMcamera && mTD.DE_Cam->SetAllAutoSaves(setState, sumCount,
+      mFrameFilename, mFrameFolder, conSet.K2ReadMode > 0)) {
       ErrorCleanup(1);
       return;
     }
@@ -3619,7 +3675,7 @@ void CCameraController::Capture(int inSet, bool retrying)
   mTD.useImageBeamTilt = FEIscope && mScope->GetUseImageBeamTilt();
 
   // Set up all the shuttering and timing parameters
-  CapSetupShutteringTiming(conSet, inSet, bEnsureDark);
+  CapSetupShutteringTiming(conSet, inSet, bEnsureDark, anyVirtualChan);
   
   // Copy flags and targets, clear the flags
   mTD.TietzType = mParam->TietzType;
@@ -3784,7 +3840,7 @@ void CCameraController::Capture(int inSet, bool retrying)
   mTD.AlignFrames = (mParam->K2Type && !conSet.doseFrac) ? 0 : conSet.alignFrames;
   mTD.UseFrameAlign = false;
   mDoingDEframeAlign = 0;
-  if (mParam->DE_camType) {
+  if (mParam->DE_camType && !mParam->STEMcamera) {
 
     // Set the frames per second and fix count scaling for no counting
     mTD.FramesPerSec = mParam->DE_FramesPerSec;
@@ -3929,7 +3985,10 @@ void CCameraController::Capture(int inSet, bool retrying)
         mTD.K2ParamFlags |= K2_SAVE_COM_AFTER_MDOC;
     }
   }
-  mTD.SaveFrames = conSet.saveFrames && (!mParam->K2Type || conSet.doseFrac);
+  if (mParam->DE_camType && mParam->STEMcamera)
+    mTD.SaveFrames = conSet.saveFrames;
+  else
+    mTD.SaveFrames = (conSet.saveFrames && (!mParam->K2Type || conSet.doseFrac)) ? 1 : 0;
   mTD.rotationFlip = mParam->rotationFlip;
   B3DCLAMP(conSet.filtTypeOrPreset, 0, mNumK2Filters - 1);
   if (mK2FilterNames[conSet.filtTypeOrPreset].GetLength() >= MAX_FILTER_NAME_LEN)
@@ -4223,8 +4282,8 @@ void CCameraController::Capture(int inSet, bool retrying)
       // For continuous mode in the plugin, set all the flags in the processing variable
       // This variable will serve as the flag that the mode is on
       if (((mParam->GatanCam && !mParam->STEMcamera && !conSet.doseFrac) ||
-        (mTD.plugFuncs && mTD.plugFuncs->StopContinuous) || 
-        (mParam->DE_camType >= 2 && !conSet.saveFrames) || 
+        (mTD.plugFuncs && mTD.plugFuncs->StopContinuous) || // TODO Dectris?
+        (mParam->DE_camType >= 2 && !conSet.saveFrames) || //  && !mParam->STEMcamera) || //TEMP
         (mParam->FEItype && (mParam->CamFlags & PLUGFEI_CAN_LIVE_MODE))) &&
         mParam->useContinuousMode > 0) {
           mTD.ProcessingPlus += CONTINUOUS_USE_THREAD + 
@@ -4269,6 +4328,20 @@ void CCameraController::Capture(int inSet, bool retrying)
   } else {
     mRepFlag = -1;
     mTD.ContinuousSTEM = 0;
+  }
+
+  // Set the first set of DE STEM parameters if single shot or initial call for 
+  // partial scan or continuous
+  if (mParam->DE_camType && mParam->STEMcamera && mTD.ReturnPartialScan != 1 &&
+    mTD.ContinuousSTEM >= 0 &&
+    mTD.DE_Cam->SetGeneralSTEMParams(mParam->sizeX / mTD.Binning,
+      mParam->sizeY / mTD.Binning, mTD.DMSizeX, mTD.DMSizeY, mTD.Left, mTD.Top,
+      mTD.STEMrotation, conSet.lineSyncOrPattern, conSet.saveFrames,
+      (conSet.saveFrames && DE_SAVE_MASTER) ? mFrameFilename : "", mFrameFolder,
+      conSet.filtTypeOrPreset, conSet.skipAfterOrPtRpt, conSet.processing > 0)) {
+    mTD.ReturnPartialScan = 0;
+    ErrorCleanup(1);
+    return;
   }
 
   // Drift correction actually seems to work in continuous mode so allow it
@@ -4346,10 +4419,12 @@ void CCameraController::Capture(int inSet, bool retrying)
 // Load the selected channels into TD, and manage selection of JEOL or setup insertion for
 // FEI detectors
 int CCameraController::CapSetupSTEMChannelsDetectors(ControlSet &conSet, int inSet, 
-                                                     BOOL retracting)
+    BOOL retracting, bool &anyVirt)
 {
   int block, ind, chan, i;
+  float expForPartial;
   mTD.NumChannels = 1;
+  anyVirt = false;;
   if (mParam->STEMcamera && !retracting) {
 
     // get the channel index and names into the thread data
@@ -4368,6 +4443,11 @@ int CCameraController::CapSetupSTEMChannelsDetectors(ControlSet &conSet, int inS
         mTD.ChanIndOrig[mTD.NumChannels] = ind;
         mTD.Array[mTD.NumChannels] = NULL;
         mTD.ChannelName[mTD.NumChannels++] = mParam->detectorName[ind];
+        if (mParam->DE_camType) {
+          for (i = 0; i < (int)mVirtualDEChannels.size(); i++)
+            if (mVirtualDEChannels[i] == ind)
+              anyVirt = true;
+        }
       }
     }
     if (!mTD.NumChannels) {
@@ -4376,6 +4456,26 @@ int CCameraController::CapSetupSTEMChannelsDetectors(ControlSet &conSet, int inS
       ErrorCleanup(1);
       return 1;
     }
+
+    // Set partial scan to 2 the first time to signal that buffers need to be rolled
+    // This had to be moved up to handle dynamic focus correctly, so now ReturnPartialScan
+    // needs to be clear before any return that will come back in
+    // JEOL scope accesses need to be prevented when RPS is 1, and PostActionTime,
+    // DynFpcusInterval, and LineSyncAndFlags need to be protected from change
+    expForPartial = conSet.exposure;
+    if (anyVirt) {
+      if (mTD.ReturnPartialScan != 1)
+        mFPSforVirtualSTEM = GetFPSforVirtualSTEM(conSet);
+      if (mFPSforVirtualSTEM)
+        expForPartial = (conSet.right - conSet.left) * (conSet.bottom - conSet.top) /
+        (conSet.binning * conSet.binning) / mFPSforVirtualSTEM;
+    }
+    if (mParam->STEMcamera && (mParam->TietzType || mTD.UseUtapi || mParam->DectrisType ||
+      mParam->DE_camType) &&
+      expForPartial >= mPartialScanThreshExp && mSingleContModeUsed == SINGLE_FRAME) {
+      mTD.ReturnPartialScan = (mTD.ReturnPartialScan > 0) ? 1 : 2;
+    } else
+      mTD.ReturnPartialScan = 0;
 
     // Select the detectors for JEOL
     if (mTD.ReturnPartialScan != 1) {
@@ -5603,12 +5703,12 @@ void CCameraController::CapManageCoordinates(ControlSet & conSet, int &gainXoffs
 }
 
 void CCameraController::CapSetupShutteringTiming(ControlSet & conSet, int inSet, 
-                                                 BOOL &bEnsureDark)
+                                                 BOOL &bEnsureDark, bool anyVirtual)
 {
   CString logmess;
   double scanRate;
   int reblankOrPostAction = 0;
-
+  static float fps;
   int iShuttering = conSet.shuttering;
   int currentCam = mWinApp->GetCurrentCamera();
   if (!CanPreExpose(mParam, iShuttering)) {
@@ -5644,13 +5744,23 @@ void CCameraController::CapSetupShutteringTiming(ControlSet & conSet, int inSet,
     // STEM CAMERA
 
     float tmpExp = mNeedShotToInsert >= 0 ? mInsertDetShotTime : conSet.exposure;
+
+    // Set exposure for virtual DE acquisition  based on image size and FPS
+    if (anyVirtual) {
+      if (mTD.ReturnPartialScan != 1) {
+        mFPSforVirtualSTEM = GetFPSforVirtualSTEM(conSet);
+      }
+      if (mFPSforVirtualSTEM)
+        tmpExp = mTD.DMSizeX * mTD.DMSizeY / mFPSforVirtualSTEM;
+    }
     ComputePixelTime(mParam, mTD.DMSizeX, mTD.DMSizeY, 
       mParam->GatanCam ? conSet.lineSyncOrPattern : 0, 0., 0., tmpExp,
       mTD.PixelTime, scanRate);
     mExposure = tmpExp;
     if (mNeedShotToInsert < 0)
       conSet.exposure = tmpExp;
-    conSet.processing = UNPROCESSED;
+    if (!mParam->DE_camType)
+      conSet.processing = UNPROCESSED;
     if (mParam->FEItype) {
       if (sRestrictedSizeIndex <= 0)
         mTD.restrictedSize = 0;
@@ -5672,7 +5782,7 @@ void CCameraController::CapSetupShutteringTiming(ControlSet & conSet, int inSet,
     SetNonGatanPostActionTime();
     mTD.DMsettling = 0.;
     if (mParam->TietzType)
-      mTD.UseHardwareROI = conSet.numSkipBefore;
+      mTD.UseHardwareROI = conSet.skipBeforeOrPrePix;
 
   } else if (mParam->GatanCam) {
 
@@ -6336,8 +6446,8 @@ int CCameraController::CapManageDarkGainRefs(ControlSet & conSet, int inSet,
           mConSetsp[inSet].averageOnce = 0;
           mCamConSets[inSet + mWinApp->GetCurrentCamera() * MAX_CONSETS].averageOnce = 0;
         }
-        if (conSet.averageDark && conSet.numAvgOrPtRpt > 1)
-          mNumAverageDark = conSet.numAvgOrPtRpt;
+        if (conSet.averageDark && conSet.numAverage > 1)
+          mNumAverageDark = conSet.numAverage;
       }
 
     } else if (mParam->GatanCam && !mParam->K2Type && !mParam->OneViewType) {
@@ -7765,14 +7875,9 @@ void CCameraController::AcquirePluginImage(CameraThreadData *td, void **array,
       td->TietzType, td->ShutterMode);
 
   // Start dynamic focus
-  if (!retval && FEIscope && td->STEMcamera && td->DynFocusInterval && 
-    td->PostActionTime && !td->UtapiForRamp) {
-    retval = StartFocusRamp(td, rampStarted);
-
-  } else if (!retval && blanker) {
-    StartBlankerThread(td);
-  }
-
+  if (!retval)
+    StartDynFocusOrBlanker(td, blanker, rampStarted, retval);
+ 
   // Get the image
   if (!retval) {
     numAcquired = 1;
@@ -7780,6 +7885,8 @@ void CCameraController::AcquirePluginImage(CameraThreadData *td, void **array,
       retval = td->plugFuncs->AcquireSTEMImage((short **)array, arrSize, td->NumChannels,
         td->ChannelIndex, td->STEMrotation, td->integration, &sizeX, &sizeY,
         &numAcquired);
+      if (retval)
+        td->ReturnPartialScan = 0;
 
       // Set partial scan negative if it is over, signaled by negative numAcquired;
       // fix sign of numAcquired
@@ -7787,9 +7894,8 @@ void CCameraController::AcquirePluginImage(CameraThreadData *td, void **array,
         td->ReturnPartialScan = -td->ReturnPartialScan;
 
         // Get statistics back from focus ramp, make sure it ends
-      } else if (FEIscope && td->DynFocusInterval && td->PostActionTime &&
-        !td->UtapiForRamp){
-        FinishFocusRamp(td, rampStarted);
+      } else {
+        TestAndFinishRamp(td, rampStarted);
       }
       numAcquired = B3DABS(numAcquired);
     } else
@@ -8334,12 +8440,9 @@ UINT CCameraController::AcquireProc(LPVOID pParam)
       if (!retval) {
         
         // Start dynamic focus ramper for FEI scope
-        if (FEIscope && td->STEMcamera && !td->UtapiForRamp && (td->UnblankTime != 0 || 
-          (td->DynFocusInterval && td->PostActionTime)) && td->ReturnPartialScan != 1) {
-            retval = StartFocusRamp(td, rampStarted);
-
         // Or start thread to do extra blanking
-        } else if ((startBlanker || td->ReblankTime || td->ScanTime > 0.) &&
+        if (!StartDynFocusOrBlanker(td, false, rampStarted, retval) &&
+          (startBlanker || td->ReblankTime || td->ScanTime > 0.) &&
           td->ReturnPartialScan != 1) {
           if (td->WaitUntilK2Ready) {
             try {
@@ -8394,10 +8497,7 @@ UINT CCameraController::AcquireProc(LPVOID pParam)
           }
  
           // Get statistics back from focus ramp, make sure it ends
-          if (FEIscope && td->DynFocusInterval && td->PostActionTime && 
-            td->STEMcamera && !td->UtapiForRamp) {
-              FinishFocusRamp(td, rampStarted);
-          }
+          TestAndFinishRamp(td, rampStarted);
 
           // If one channel is returned OK, cancel the error and set channel count
           if (retval && numCopied) {
@@ -8531,15 +8631,9 @@ UINT CCameraController::AcquireProc(LPVOID pParam)
     retval = GetArrayForImage(td, arrSize);
     if (!retval) {
 
-      // Start dynamic focus
-      if (td->STEMcamera && !td->UtapiForRamp && (td->UnblankTime != 0 || 
-        (td->DynFocusInterval && td->PostActionTime))) {
-          retval = StartFocusRamp(td, rampStarted);
-
-      // Or start thread to do post actions
-      } else if (startBlanker)
-        StartBlankerThread(td);
-
+      // Start dynamic focus or blanker
+      StartDynFocusOrBlanker(td, startBlanker, rampStarted, retval);
+ 
       if (!retval && td->STEMcamera)
         retval = AcquireFEIchannels(td, td->DMSizeX, td->DMSizeY);
       else if (!retval)
@@ -8551,71 +8645,91 @@ UINT CCameraController::AcquireProc(LPVOID pParam)
       }
 
       // Get statistics back from focus ramp, make sure it ends
-      if (td->DynFocusInterval && td->PostActionTime && td->STEMcamera &&
-        !td->UtapiForRamp) {
-        FinishFocusRamp(td, rampStarted);
-      }
+      TestAndFinishRamp(td, rampStarted);
       
     }
   } else if (td->DE_camType) {
     td->DE_Cam->SetLastErrorString("");
 
     // IMAGE from Direct Electron camera
-    retval = GetArrayForImage(td, arrSize);
+    numChan = (td->STEMcamera ? td->NumChannels : 1);
+    for (chan = 0; chan < numChan && !retval; chan++)
+      retval = GetArrayForImage(td, arrSize, chan);
 
     // DNM: skip if there is a memory problem
     if (!retval) {
+      if (td->STEMcamera) {
+        StartDynFocusOrBlanker(td, startBlanker, rampStarted, retval);
+        if (!retval) {
+          retval = td->DE_Cam->AcquireSTEMImage((unsigned short **)td->Array,
+            &td->ChannelIndex[0], td->NumChannels, td->DMSizeX, td->DMSizeY,
+            td->PixelTime, td->SaveFrames, td->PlugSTEMacquireFlags, numCopied);
+          if (retval)
+            td->ReturnPartialScan = 0;
+          if (td->ReturnPartialScan > 0 && numCopied < 0)
+            td->ReturnPartialScan = -td->ReturnPartialScan;
 
-      // Make sure live mode is off before setting up shot
-      if (td->DE_camType >= 2 && !(td->ProcessingPlus & CONTINUOUS_USE_THREAD))
-        retval = td->DE_Cam->SetLiveMode(0); 
+            // Get statistics back from focus ramp, make sure it ends
+          if (td->ReturnPartialScan <= 0)
+            TestAndFinishRamp(td, rampStarted);
+          numCopied = B3DABS(numCopied);
+        }
 
-      // Set the exposure and mode
-      if (!retval)
-        retval = td->DE_Cam->SetImageExposureAndMode((float)td->Exposure);
+      } else {
 
-      // Set the processing
-      if (!retval && td->DE_camType >= 2) 
-        retval = td->DE_Cam->setCorrectionMode(td->ProcessingPlus & 3, td->GatanReadMode);
+        // Make sure live mode is off before setting up shot
+        if (td->DE_camType >= 2 && !(td->ProcessingPlus & CONTINUOUS_USE_THREAD))
+          retval = td->DE_Cam->SetLiveMode(0);
 
-      // Set alignment in server if relevant
-      if (!retval && td->AlignFrames >= 0 && (td->CamFlags & DE_CAM_CAN_ALIGN))
-        retval = td->DE_Cam->SetAlignInServer(td->AlignFrames);
+        // Set the exposure and mode
+        if (!retval)
+          retval = td->DE_Cam->SetImageExposureAndMode((float)td->Exposure);
 
-      // Set the binning
-      if (!retval) 
-        retval = td->DE_Cam->setBinning(td->Binning, td->Binning, td->CallSizeX, 
-          td->CallSizeY, td->UseHardwareBinning);
+        // Set the processing
+        if (!retval && td->DE_camType >= 2)
+          retval = td->DE_Cam->setCorrectionMode(td->ProcessingPlus & 3, 
+            td->GatanReadMode);
 
-      // Set the preexposure time in milliseconds
-      if (!retval)
-        retval = td->DE_Cam->setPreExposureTime(1000. * td->DMsettling);
+        // Set alignment in server if relevant
+        if (!retval && td->AlignFrames >= 0 && (td->CamFlags & DE_CAM_CAN_ALIGN))
+          retval = td->DE_Cam->SetAlignInServer(td->AlignFrames);
 
-      // Calculate the proper ROI and set it. TM to support DE12 3_28_11
-      if (!retval)
-        retval = td->DE_Cam->setROI(td->Left * td->Binning, td->Top * td->Binning, 
-          td->CallSizeX * td->Binning, td->CallSizeY * td->Binning, td->UseHardwareROI);
+        // Set the binning
+        if (!retval)
+          retval = td->DE_Cam->setBinning(td->Binning, td->Binning, td->CallSizeX,
+            td->CallSizeY, td->UseHardwareBinning);
 
-      // Set the operating mode if relevant and the FPS
-      if (!retval)
-        retval = td->DE_Cam->SetCountingParams(td->GatanReadMode, td->CountScaling, 
-          td->FramesPerSec);
+        // Set the preexposure time in milliseconds
+        if (!retval)
+          retval = td->DE_Cam->setPreExposureTime(1000. * td->DMsettling);
 
-      // Start thread to do post actions
-      if (!retval && startBlanker) {
-        StartBlankerThread(td);
+        // Calculate the proper ROI and set it. TM to support DE12 3_28_11
+        if (!retval)
+          retval = td->DE_Cam->setROI(td->Left * td->Binning, td->Top * td->Binning,
+            td->CallSizeX * td->Binning, td->CallSizeY * td->Binning, td->UseHardwareROI);
+
+        // Set the operating mode if relevant and the FPS
+        if (!retval)
+          retval = td->DE_Cam->SetCountingParams(td->GatanReadMode, td->CountScaling,
+            td->FramesPerSec);
+
+        // Start thread to do post actions
+        if (!retval && startBlanker) {
+          StartBlankerThread(td);
+        }
+
+        // Turn on live mode if flag set
+        if (!retval && td->DE_camType >= 2 &&
+          (td->ProcessingPlus & CONTINUOUS_USE_THREAD))
+          retval = td->DE_Cam->SetLiveMode(1 +
+            B3DCHOICE(td->ProcessingPlus & CONTINUOUS_SET_MODE, 1, 0));
+
+        // Get the image
+        if (!retval)
+          retval = td->DE_Cam->AcquireImageData((unsigned short*)td->Array[0],
+            td->CallSizeX, td->CallSizeY, td->DivideBy2);
+        numCopied = 1;
       }
-
-      // Turn on live mode if flag set
-      if (!retval && td->DE_camType >= 2 && 
-        (td->ProcessingPlus & CONTINUOUS_USE_THREAD))
-        retval = td->DE_Cam->SetLiveMode(1 + 
-          B3DCHOICE(td->ProcessingPlus & CONTINUOUS_SET_MODE, 1, 0));
-
-      // Get the image
-      if (!retval)
-        retval = td->DE_Cam->AcquireImageData((unsigned short*)td->Array[0],
-          td->CallSizeX, td->CallSizeY, td->DivideBy2);
 
       // Try to recover from image size not being what was expected (e.g., DE developers
       // changing rotation properties on the fly)
@@ -8630,6 +8744,7 @@ UINT CCameraController::AcquireProc(LPVOID pParam)
       }
 
       if (retval) {
+        numCopied = 0;
         if (retval > 0) {
           str = td->DE_Cam->GetLastErrorString();
           report.Format("Error setting parameters or getting image from DE camera; %s",
@@ -8637,8 +8752,12 @@ UINT CCameraController::AcquireProc(LPVOID pParam)
             "Set Debug Output to D for details", (LPCTSTR)str));
           DeferMessage(td, report);
         }
-        delete [] td->Array[0];
-        td->Array[0] = NULL;
+      }
+
+      // Clean up unused arrays for error or partial return
+      for (chan = numCopied; chan < numChan; chan++) {
+        delete[] td->Array[chan];
+        td->Array[chan] = NULL;
       }
     }
 
@@ -8772,6 +8891,31 @@ UINT CCameraController::AcquireProc(LPVOID pParam)
   }
   CoUninitialize();
   return retval;
+}
+
+// Common routine to start either the focus ramp if conditions are set for that or
+// blanker thread if startBlanker is true.  returns 1 if ramper started
+int CCameraController::StartDynFocusOrBlanker(CameraThreadData *td, bool startBlanker, 
+  bool &rampStarted, int &retval)
+{
+  retval = 0;
+  if (FEIscope && td->STEMcamera && (td->UnblankTime != 0 || (td->DynFocusInterval &&
+    td->PostActionTime)) && !td->UtapiForRamp && td->ReturnPartialScan != 1) {
+    retval = StartFocusRamp(td, rampStarted);
+    return 1;
+  } else if (startBlanker && td->ReturnPartialScan != 1) {
+    StartBlankerThread(td);
+  }
+  return 0;
+}
+
+// Common call to finish the focus ramp if conditions were satisfied for starting it
+// Worry about where the td->UnblankTime != 0 fits in so added test for rampStarted
+void CCameraController::TestAndFinishRamp(CameraThreadData *td, bool rampStarted)
+{
+  if (FEIscope && td->STEMcamera && ((td->DynFocusInterval && td->PostActionTime) ||
+    rampStarted) && !td->UtapiForRamp)
+    FinishFocusRamp(td, rampStarted);
 }
 
 // Common place to start blanker proc and wait for mutex
@@ -10668,7 +10812,8 @@ void CCameraController::DisplayNewImage(BOOL acquired)
     }
 
     // Get special data for DE camera and report frame-saving there
-    if (mParam->DE_camType >= 2 && !(mTD.ProcessingPlus & CONTINUOUS_USE_THREAD)) {
+    if (mParam->DE_camType >= 2 && !(mTD.ProcessingPlus & CONTINUOUS_USE_THREAD) && 
+      !(mParam->STEMcamera && mTD.ReturnPartialScan > 0)) {
       if (!mStartedExtraForDEalign)
         mTD.DE_Cam->SetImageExtraData(extra, mDESetNameTimeoutUsed, 
           mDoingDEframeAlign < 2, nameConfirmed);
@@ -10877,9 +11022,10 @@ void CCameraController::DisplayNewImage(BOOL acquired)
     }
 
     // If there are more channels, roll the buffers
-    if (chan)
+    if (chan) {
       RollBuffers(B3DABS(mTD.ReturnPartialScan) == 1 ? mTD.NumChannels - 1 :
         mBufferManager->GetShiftsOnAcquire(), 0);
+    }
 
     // Delete image if it is a no-return shot
     if (mTD.NumAsyncSumFrames == 0)
@@ -10945,6 +11091,8 @@ void CCameraController::DisplayNewImage(BOOL acquired)
     mTD.plugFuncs->SetAcquireFlags(mTD.PlugSTEMacquireFlags);
     mTD.ReturnPartialScan = 0;
   }
+  if (mTD.ReturnPartialScan < 0)
+    mTD.ReturnPartialScan = 0;
 
   ErrorCleanup(errForCleanup);
   mInDisplayNewImage = false;
@@ -13401,6 +13549,38 @@ bool CCameraController::UsingUtapiForCamera(CameraParameters * param)
   return useUtapi;
 }
 
+// Refreshes the current list of virtual detectors from DE camera, updates their names
+// and whether they are available in camera param, and returns a list of virtual channels
+int CCameraController::UpdateDEVirtualDetectorNames(CameraParameters *param, 
+  ShortVec &virtChans)
+{
+  int virt;
+  ShortVec enabled;
+  std::vector<std::string> detNames;
+  if (!mTD.DE_Cam || mTD.DE_Cam->GetVirtualDetectorNames(detNames, enabled))
+    return 1;
+
+  // Get the current names for detectors 
+  for (virt = 0; virt < (int)mVirtualDEChannels.size(); virt++) {
+    if (virt < (int)detNames.size())
+      param->channelName[mVirtualDEChannels[virt]] = detNames[virt].c_str();
+    if (virt < (int)enabled.size())
+      param->availableChan[mVirtualDEChannels[virt]] = enabled[virt] != 0;
+  }
+  virtChans = mVirtualDEChannels;
+  return 0;
+}
+
+// Convenience function to get the camera and scan presets from DE
+void CCameraController::GetComboListsForDeSTEM(StringVec &camPresets,
+  StringVec &scanPresets)
+{
+  if (!mTD.DE_Cam)
+    return;
+  camPresets = mTD.DE_Cam->GetCamPresets();
+  scanPresets = mTD.DE_Cam->GetScanPresets();
+}
+
 // Returns whether we can save an mdoc for the frame stack
 bool CCameraController::CanSaveFrameStackMdoc(CameraParameters * param)
 {
@@ -13623,8 +13803,12 @@ void CCameraController::StopContinuousSTEM(void)
     return;
   }
 
-  // DE camera
+  // DE camera stop live mode or partial scan
   if (mParam->DE_camType >= 2) {
+    if (mParam->STEMcamera) {
+      mDE_Cam->StopAcquisition();
+      mTD.ReturnPartialScan = mTD.ReturnPartialScan > 0 ? -1 : 0;
+    }
     mTD.DE_Cam->SetLiveMode(0);
     return;
   }
@@ -13697,4 +13881,12 @@ void CCameraController::AdjustForShift(float adjustX, float adjustY)
 {
   mAdjustShiftX = adjustX;
   mAdjustShiftY = adjustY;
+}
+
+// Get DE to figure out what FPS applies for a STEM shot with virtual detectors
+float CCameraController::GetFPSforVirtualSTEM(ControlSet &conSet)
+{
+  StringVec camPresets = mDE_Cam->GetCamPresets();
+  B3DCLAMP(conSet.filtTypeOrPreset, 0, (int)camPresets.size() - 1);
+  return mDE_Cam->GetPresetOrCurrentFPS(camPresets[conSet.filtTypeOrPreset]);
 }

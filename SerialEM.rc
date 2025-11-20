@@ -1234,7 +1234,7 @@ BEGIN
     LTEXT           "usec",IDC_STAT_PREPIX_USEC,260,337,16,8
     EDITTEXT        IDC_EDIT_TILT_OFFSET,139,335,24,12,ES_AUTOHSCROLL
     LTEXT           "Pattern",IDC_STAT_PATTERN,181,337,22,8
-    COMBOBOX        IDC_COMBO_PATTERN,203,335,73,30,CBS_DROPDOWN | CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    COMBOBOX        IDC_COMBO_PATTERN,203,335,73,30,CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
     CONTROL         "Save final images",IDC_DE_STEM_SAVE_FINAL,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,381,64,10
     CONTROL         "Save 4D stack",IDC_SAVE_4D_STACK,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,81,381,56,10
     PUSHBUTTON      "Set Folder",IDC_STEM_SAVE_FOLDER,224,379,43,14
@@ -1242,7 +1242,7 @@ BEGIN
     LTEXT           "4D:",IDC_STAT_4D_STEM,2,398,11,8
     CONTROL         "Gain correction",IDC_DE_STEM_GAIN_CORR,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,221,397,55,10
     LTEXT           "Preset:",IDC_STAT_DE_PRESET,15,398,21,8
-    COMBOBOX        IDC_COMBO_DE_PRESET,37,396,98,30,CBS_DROPDOWN | CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    COMBOBOX        IDC_COMBO_DE_PRESET,37,396,98,30,CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
     LTEXT           "Point repeats",IDC_STAT_POINT_REPEATS,145,398,40,8
     EDITTEXT        IDC_EDIT_POINT_REPEATS,186,395,18,14,ES_AUTOHSCROLL
     CONTROL         "",IDC_SPIN_POINT_REPEATS,"msctls_updown32",UDS_ARROWKEYS,204,395,10,14
@@ -2992,7 +2992,7 @@ BEGIN
     LTEXT           "Detector(C):",IDC_STAT_DETECTOR,60,19,37,8
     LTEXT           "0",IDC_DDD_Temp,97,19,18,8
     LTEXT           "Auto save directory: ",IDC_STAT_AUTOSAVE_DIR,4,60,100,8
-    LTEXT           "0",ID_DE_saveDir,15,69,100,8
+    RTEXT           "0",ID_DE_saveDir,15,69,100,8
     LTEXT           "Frames/sec",IDC_STAT_FPSLABEL,4,95,37,8
     EDITTEXT        ID_DE_currfps,43,93,23,12
     LTEXT           "Max:",IDC_STAT_FPSMAX_LABEL,73,95,17,8
@@ -6651,6 +6651,10 @@ STRINGTABLE
 BEGIN
     IDC_BUT_ADVANCED_SET    "Open dialog for settings to control energy levels, interpolation, etc."
     IDC_CHECKCTF_DRIFT      "Use the drift settling time here instead of the time in the Record parameters"
+END
+
+STRINGTABLE
+BEGIN
     IDC_SPIN_EDM_PCT        "Set the electronic dose modulator dose percentage"
     IDC_DEL_EDM_PLUS        "Increase the increment used in adjusting the EDM dose percentage"
     IDC_DEL_EDM_MINUS       "Decrease the increment used in adjusting the EDM dose percentage"

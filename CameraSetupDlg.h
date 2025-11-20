@@ -49,6 +49,7 @@ public:
   BOOL mEighthForBitless;
   float mMinDualSettling;
   float mMinExposure;
+  float mMaxExposure;
   int mLastCamera;
   int *mActiveCameraList;
   int mNumCameras;
@@ -224,6 +225,9 @@ private:
   bool mUsingUtapi;
   bool mFlexibleSubareas;
   float mFrameTimeMsScale;
+  bool mDeCombosLoaded;
+  float mFPSfor4dSTEM;
+  bool mVirtChanSelected;
 
 public:
   afx_msg void OnAcquireReopen();
@@ -239,6 +243,7 @@ public:
   CButton m_butMatchIntensity;
   afx_msg void OnSwapXY();
   bool AdjustCoords(int binning, int updateIfNoSubarea = 0);
+  void FinishEditingCoords(BOOL update);
   CEdit m_editExposure;
   CButton m_butLineSync;
   BOOL m_bLineSync;
@@ -391,11 +396,17 @@ void ManageSuperResBinning(void);
   afx_msg void OnStemSaveFolder();
   BOOL m_bDeSTEMSaveFinal;
   BOOL m_bSave4dSTEM;
-  BOOL m_bDePointRepeats;
   BOOL m_bDeSTEMGainCorr;
   afx_msg void OnDeStemSaveFinal();
   afx_msg void OnSave4dStack();
   void ManageVirtualSTEM();
+  bool AnyVirtualDEChanSelected();
+  int m_iDePointRepeats;
+  afx_msg void OnKillfocusEditPointRepeats();
+  CSpinButtonCtrl m_sbcPointRepeats;
+  afx_msg void OnDeltaposSpinPointRepeats(NMHDR *pNMHDR, LRESULT *pResult);
+  afx_msg void OnSelendokComboDePreset();
+  void FindFPSfor4dSTEM();
 };
 
 //{{AFX_INSERT_LOCATION}}

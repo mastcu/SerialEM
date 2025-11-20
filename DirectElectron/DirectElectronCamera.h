@@ -3,16 +3,6 @@
 ///////////////////////////////////////////////////////////////////
 // file:  DirectElectronCamera.h
 //
-// This is the header file that defines the functions that 
-// will be implemented Spectral4kCamera.cpp.  The functions
-// wrap the estential 
-// 
-//
-// author of SerialEM: David Masternarde
-// 
-// LC1100 camera integration by Direct Electron
-// 2009
-// 
 ///////////////////////////////////////////////////////////////////
 
 
@@ -32,6 +22,7 @@ struct LiveThreadData {
   int divideBy2;
   bool quitLiveMode;
   int electronCounting;
+  int frameType;
   CString errString;
 };
 
@@ -40,8 +31,9 @@ struct LiveThreadData {
 #define DE_DARK_IMAGE 1
 #define DE_NORMAL_IMAGE 0
 
+#define NUM_VIRTUAL_DET 5
+
 // Strings needed in multiple places
-#define DE_LCNAME "LC1100"
 #define DE_CAM_STATE_RETRACTED "Retracted"
 #define DE_CAM_STATE_INSERTED "Extended"
 #define DE_KEEP_COVER_OPEN "Always Open During Operation"
@@ -71,6 +63,7 @@ struct LiveThreadData {
 #define DE_DETECTOR_TEMP_IS_INT 205380000
 #define DE_AUTOSAVE_RENAMES2    207000000
 #define DE_HAS_LICENSE_PROPS    207000000
+#define DE_CAN_AUTOSAVE_EXT_DET 207030000
 
 #include "afxmt.h"
 
@@ -83,21 +76,21 @@ public:
 	int setBinning(int x, int y, int sizex, int sizey, int hardwareBin);
 	int SetImageExposureAndMode(float seconds);
 	int SetDarkExposureAndMode(float seconds);
-	void StopAcquistion();
+	void StopAcquisition();
 	int setPreExposureTime(double preExpSeconds);
 	int setDebugMode();
 	int unInitialize();
 	int AcquireImageData(unsigned short *image4k, long &ImageSizeX, long &ImageSizeY, 
     int divideBy2);
+  int SetupLiveAndGetImage(unsigned short *image4k, int inSizeX, int inSizeY, int divideBy2, int operation);
 	float getCameraTemp();
 
-  //functions below added for DE12 and future
 	int initDEServer();
 	int initializeDECamera(CString camName, int camIndex);
   void FinishCameraSelection(bool initialCall, CameraParameters *camP);
 	int setROI(int offset_x, int offset_y, int xsize, int ysize, int hardwareROI);
-  int SetLiveMode(int mode);
-	void setCameraName(CString name);
+  int SetLiveMode(int mode, bool skipLock = false);
+	void setCameraName(CString name, int index, BOOL ifSTEM);
 	int insertCamera();
 	int retractCamera();
 	HRESULT setAutoSaveRaw(int state);
@@ -144,6 +137,8 @@ public:
   GetSetMember(CString, PathAndDatasetName);
   GetSetMember(CString, LastErrorString);
   SetMember(BOOL, TrustLastSettings);
+  GetMember(StringVec, ScanPresets);
+  GetMember(StringVec, CamPresets);
   void SetAndTraceErrorString(CString str);
 
   bool ServerIsLocal() {return mDE_SERVER_IP == "127.0.0.1" || mDE_SERVER_IP == "localhost";};
@@ -154,6 +149,7 @@ public:
   CString ErrorTrace(char *fmt, ...);
   bool CanIgnoreAutosaveFolder();
   void SetSoftwareAndServerVersion(std::string & propValue);
+  int GetVirtualDetectorNames(StringVec &strList, ShortVec &enabled);
   bool IsApolloCamera();
   bool CheckMapForValidState(int checksum, std::map<int, int> &map, int minuteNow);
   void AddValidStateToMap(int checksum, std::map<int, int> &map, int minuteNow);
@@ -163,6 +159,18 @@ public:
   void FormatFramesWritten(BOOL saveSums, CString &str);
   void VerifyLastSetNameIfPredicted(float timeout);
   float GetLastCountScaling();
+  int SetGeneralSTEMParams(int sizeX, int sizeY, int subSizeX, int subSizeY, int left, int top,
+    double rotation, int scanPreset, int saveFlags, CString &suffix, 
+    CString &saveDir, int presetInd, int pointRepeats, bool gainCorr);
+  int AcquireSTEMImage(unsigned short **arrays, long *channelIndex, int numChannels, int sizeX, int sizeY,
+    double pixelTime, int saveFlags, int flags, int &numReturned);
+  void RestoreVirtualShapes(bool skipLock);
+  int IsAcquiring(bool skipLock = false);
+  int GetSTEMresultImages(unsigned short **arrays, int sizeX, int sizeY, long *channelIndex, int numChannels,
+    bool partial, bool divideBy2);
+  int FrameTypeForChannelIndex(int chanInd);
+  float GetPresetOrCurrentFPS(std::string preset);
+
 
 private:
 	int mCamType;
@@ -254,6 +262,14 @@ private:
 
   // Maps of acquisition parameter checksum and minute time stamp at which validated
   std::map<int, int> mDarkChecks, mGainChecks, mCountGainChecks, mExpFPSchecks;
+  StringVec mScanPresets;               // Scan presets (patterns)
+  StringVec mCamPresets;                // Camera presets
+  StringVec mCurVirtShape;              // Current Shaoe values
+  IntVec mVirtChansToRestore;           // List of virtual channels that were turned off
+  BOOL mEnabledSTEM;                    // Flag that STEM was enabled, for switching back
+  bool mStartedScan;                    // Flag that scan was started for partial scan
+  IntVec mLineMeans;                    // Mean values with which to fill partial array
+  IntVec mLinesFound;                   // Number of non-zero lines found for the fill
 
 	CString m_Camera_InsertionState;      // Current description of state
 

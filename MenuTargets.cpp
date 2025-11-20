@@ -2397,12 +2397,14 @@ void CMenuTargets::OnUpdateCameraPostactions(CCmdUI* pCmdUI)
 // or restart last parameter set
 void CMenuTargets::OnCameratoggle() 
 {
+  CameraParameters *camP = mWinApp->GetActiveCamParam();
   if (DoingTasks() && (!mCamera->DoingContinuousAcquire() || 
     mCamera->GetPreventUserToggle()))
     return;
-  if (mCamera->CameraBusy())
-    mCamera->StopCapture(0);
-  else
+  if (mCamera->CameraBusy()) {
+    if (!camP->STEMcamera || mCamera->DoingContinuousAcquire())
+      mCamera->StopCapture(0);
+  } else
     mCamera->RestartCapture();
 }
 

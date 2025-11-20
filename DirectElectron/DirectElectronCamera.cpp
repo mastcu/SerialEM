@@ -67,6 +67,7 @@ static const char *psMotionCorNew = "Image Processing - Motion Correction";
 static const char *psCountsPerElec = "Electron Counting - Counts Per Electron";
 static const char *psCountsPerEvent = "Event Counting - Value Per Event";
 static const char *psADUsPerElectron = "ADUs Per Electron";
+static const char *psFramesPerSec = "Frames Per Second";
 
 // These are concatenated into multiple strings
 #define DE_PROP_COUNTING "Electron Counting"
@@ -108,6 +109,9 @@ DirectElectronCamera::DirectElectronCamera(int camType, int index)
   mAPI2Server = false;
   mRepeatForServerRef = 0;
   mSetNamePredictionAgeLimit = 300;
+  mEnabledSTEM = false;
+  mStartedScan = false;
+  m_STOPPING_ACQUISITION = false;
 
   // mDEsameCam eliminated, main controller manages all insertions/retractions sensibly
 
@@ -285,7 +289,7 @@ int DirectElectronCamera::initDEServer()
   }
 
   //Read out the possible list of cameras that have been setup:
-  std::vector<std::string> cameras;
+  StringVec cameras;
   if (!mDeServer->getCameraNames(&cameras)) {
     CString str = ErrorTrace("ERROR: Could NOT retrieve any of the DE camera names.");
     AfxMessageBox(str);
@@ -317,8 +321,8 @@ int DirectElectronCamera::initializeDECamera(CString camName, int camIndex)
     CString tmp, tmp2;
     std::string propValue;
     bool result, sawHWROI = false, sawHWbinning = false, hasHDRlicense = false;
-    bool hasCountingLicense = false;
-    BOOL debug = GetDebugOutput('D');
+    bool hasCountingLicense = false, noPreset = true;
+    BOOL debug = GetDebugOutput('D'), scanDebug = GetDebugOutput('!');
     const char *propsToCheck[] = {DE_PROP_COUNTING, psMotionCor, psMotionCorNew, 
       "Temperature Control - Setpoint (Celsius)", 
       "Temperature - Cool Down Setpoint (Celsius)", psReadoutDelay, psHardwareBin,
@@ -351,7 +355,7 @@ int DirectElectronCamera::initializeDECamera(CString camName, int camIndex)
     listProps += "\r\n\r\n";
 
     // read out all the possible properties and report when starting in Debug mode
-    std::vector<std::string> camProps;
+    StringVec camProps;
     if (!mDeServer->getProperties(&camProps)) {
       str = ErrorTrace("Could not get properties for the camera named : %s", 
         (LPCTSTR)camName);
@@ -381,10 +385,31 @@ int DirectElectronCamera::initializeDECamera(CString camName, int camIndex)
           propValue.find("Valid") == 0)
           hasHDRlicense = true;
       }
+      if (!camProps[i].compare("Preset - List") &&
+        mDeServer->getProperty(camProps[i], &propValue)) {
+        UtilSplitString(propValue, ",", mCamPresets);
+        if (!mWinApp->mScope->GetSimulationMode()) {
+          for (int j = 0; j < (int)mCamPresets.size(); j++)
+            if (mCamPresets[j] == "Custom")
+              VEC_REMOVE_AT(mCamPresets, j);
+        }
+      }
+      if (!camProps[i].compare("Scan - Preset List") &&
+        mDeServer->getProperty(camProps[i], &propValue)) {
+        UtilSplitString(propValue, ",", mScanPresets);
+      }
+      if (!camProps[i].compare("Preset - Current") &&
+        mDeServer->getProperty(camProps[i], &propValue)) {
+        noPreset = propValue == "Custom";
+      }
 
-      if (debug && camProps[i].find("Preset") != 0 && camProps[i].find("Scan") != 0) {
+      if (debug && (camProps[i].find("Scan") != 0 || scanDebug)) {
         listProps += camProps[i].c_str();
-        if (mDeServer->getProperty(camProps[i], &propValue))
+
+        // The one that crashes
+        if (camProps[i].find("Preset - Properties") == 0 && noPreset)
+          listProps += "\r\n";
+        else if (mDeServer->getProperty(camProps[i], &propValue))
           listProps += CString("    Value: ") + propValue.c_str() + "\r\n";
       }
     }
@@ -416,7 +441,7 @@ int DirectElectronCamera::initializeDECamera(CString camName, int camIndex)
     if (debug) {
       if (!GetDebugOutput('*')) {
         SEMAppendToLog("\r\nAdd * (asterisk) to DebugOutput to get full list of camera "
-          "properties\r\n");
+          "properties, ! for Scan too\r\n");
       } else {
         str += "\r\nProperties for : " + listProps;
         str += "\r\n\r\n";
@@ -492,7 +517,7 @@ int DirectElectronCamera::initializeDECamera(CString camName, int camIndex)
         getIntProperty(psADUsPerElectron, mElecCountsScaled);
       else
         mElecCountsScaled = 16;
-      getFloatProperty("Frames Per Second", mCamParams[camIndex].DE_FramesPerSec);
+      getFloatProperty(psFramesPerSec, mCamParams[camIndex].DE_FramesPerSec);
       mCamParams[camIndex].DE_CountingFPS = mCamParams[camIndex].DE_FramesPerSec;
     } else if (mCamParams[camIndex].CamFlags & DE_SCALES_ELEC_COUNTS)
       getIntProperty(mAPI2Server ? psCountsPerEvent : psCountsPerElec, mElecCountsScaled);
@@ -584,6 +609,40 @@ void DirectElectronCamera::SetSoftwareAndServerVersion(std::string &propValue)
   mAPI2Server = mServerVersion >= DE_HAS_API2;
 }
 
+// Return the current names of virtual detectors in a string vector, returns 1 if they
+// are not all findable
+int DirectElectronCamera::GetVirtualDetectorNames(StringVec &strList, ShortVec &enabled)
+{
+  int ind;
+  CString cstr, value, keys;
+  keys = mWinApp->GetDebugKeys();
+  if (keys.Find('D') >= 0)
+    mWinApp->SetDebugOutput('0');
+  strList.clear();
+  enabled.clear();
+  mCurVirtShape.clear();
+  for (ind = 0; ind < NUM_VIRTUAL_DET; ind++) {
+
+    // Get name for each
+    cstr.Format("Scan - Virtual Detector %d Name", ind);
+    if (getStringProperty(cstr, value))
+      strList.push_back((LPCTSTR)value);
+    else
+      break;
+
+    // Get the shape, set enabled if not Off and save current shape for restoring
+    cstr.Format("Scan - Virtual Detector %d Shape", ind);
+    if (getStringProperty(cstr, value)) {
+      enabled.push_back(value == "Off" ? 0 : 1);
+      mCurVirtShape.push_back((LPCTSTR)value);
+    } else
+      break;
+  }
+  if (keys.Find('D') >= 0)
+    mWinApp->SetDebugOutput(keys);
+  return ind < NUM_VIRTUAL_DET ? 1 : 0;
+}
+
 bool DirectElectronCamera::IsApolloCamera()
 {
   CameraParameters *camP = mCamParams +
@@ -620,13 +679,13 @@ int DirectElectronCamera::IsCameraInserted()
 //setCameraName() routine for selecting a camera after initialization
 
 ///////////////////////////////////////////////////////////////////
-void DirectElectronCamera::setCameraName(CString camName)
+void DirectElectronCamera::setCameraName(CString camName, int index, BOOL ifSTEM)
 {
 
   //Check to make sure we dont set camera name if its
   //already set.
 
-  CameraParameters *camP = &mCamParams[mWinApp->GetCurrentCamera()];
+  CameraParameters *camP = &mCamParams[index];
 
   //set to the current Values from the camera.
   //Just in case in the future we need to
@@ -635,6 +694,14 @@ void DirectElectronCamera::setCameraName(CString camName)
   mDE_WRITEPORT = camP->DE_ServerWritePort;
   m_DE_ImageRot = camP->DE_ImageRot;
   m_DE_ImageInvertX = camP->DE_ImageInvertX;
+
+  if (!BOOL_EQUIV(ifSTEM, mEnabledSTEM)) {
+    if (setStringWithError("Scan - Enable", ifSTEM ? "On" : "Off"))
+      mEnabledSTEM = ifSTEM;
+    else
+      PrintfToLog("WARNING: Could not %able Scan: %s", ifSTEM ? "en" : "dis", 
+      (LPCTSTR)mLastErrorString);
+  }
 
   if (m_DE_CurrentCamera == camName) {
     return;
@@ -816,92 +883,14 @@ int DirectElectronCamera::AcquireImageData(unsigned short *image4k, long &imageS
   // Need to take the negative of the rotation because of Y inversion, 90 with the CImg
     // library was producing clockwise rotation of image
   int operation = OperationForRotateFlip(m_DE_ImageRot, m_DE_ImageInvertX);
-  int inSizeX, inSizeY, outX, outY, status;
-  bool startedThread = false;
+  int inSizeX, inSizeY, outX, outY;
   inSizeX = imageSizeX;
   inSizeY = imageSizeY;
+
+  // CONTINUOUS (LIVE) MODE STARTUP OR ACQUISITION
   if (mLastLiveMode > 1) {
-    if (mLiveTD.outBufInd == -1) {
-
-      // Setup the thread data and allocate buffers
-      mLiveTD.DeServer = mDeServer;
-      mLiveTD.operation = operation;
-      mLiveTD.divideBy2 = divideBy2;
-      mLiveTD.inSizeX = inSizeX;
-      mLiveTD.inSizeY = inSizeY;
-      mLiveTD.quitLiveMode = false;
-      mLiveTD.electronCounting = mLastElectronCounting;
-      mLiveTD.returnedImage[0] = mLiveTD.returnedImage[1] = false;
-      NewArray2(mLiveTD.buffers[0], unsigned short, imageSizeX, imageSizeY);
-      NewArray2(mLiveTD.buffers[1], unsigned short, imageSizeX, imageSizeY);
-      if (operation)
-        NewArray2(mLiveTD.rotBuf, unsigned short, imageSizeX, imageSizeY);
-      if (!mLiveTD.buffers[0] || !mLiveTD.buffers[1] || (operation && !mLiveTD.rotBuf)) {
-        CleanupLiveMode(&mLiveTD);
-        SEMTrace('D', "Failed to get memory for live mode buffers");
-        return 1;
-      }
-      mLiveTD.errString = "";
-
-      // Start the thread as usual
-      mLiveThread = AfxBeginThread(LiveProc, &mLiveTD, THREAD_PRIORITY_NORMAL,
-        0, CREATE_SUSPENDED);
-      mLiveThread->m_bAutoDelete = false;
-      mLiveThread->ResumeThread();
-
-      // Loop until it has gotten an image: 
-      for (outX = 0; outX < 100; outX++) {
-        Sleep(100);
-        if (mLiveTD.outBufInd != -1)
-          break;
-      }
-      startedThread = true;
-    }
-
-    // Clean up if it didn't start correctly; or check status and error out
-    // if there is a problem
-    if (mLiveTD.outBufInd < 0) {
-      if (UtilThreadBusy(&mLiveThread) > 0)
-        UtilThreadCleanup(&mLiveThread);
-      status = -1;
-    } else
-      status = UtilThreadBusy(&mLiveThread);
-    if (status <= 0) {
-      if (mLiveTD.outBufInd == -1) {
-        SetAndTraceErrorString("Live mode did not get started in timely manner");
-      } else if (status < 0) {
-        mLastErrorString = "ERROR: Live mode ended with an error:\r\n" + 
-          mLiveTD.errString;
-      } else if (startedThread) {
-        SetAndTraceErrorString("Live mode ended without error right after being "
-          "started");
-      } else {
-        SetAndTraceErrorString("Live mode flag is set after thread was told to quit");
-      }
-      CleanupLiveMode(&mLiveTD);
-      return 1;
-    }
-
-    // Loop until the output buffer is new; let SEM kill this thread if it times out?
-    for (;;) {
-      WaitForSingleObject(sLiveMutex, LIVE_MUTEX_WAIT);
-      if (mLiveTD.outBufInd < 0) {
-        ReleaseMutex(sLiveMutex);
-        mLastErrorString = "ERROR: Live mode ended";
-        if (!mLiveTD.errString.IsEmpty())
-          mLastErrorString += " with an error:\r\n" + mLiveTD.errString;
-        CleanupLiveMode(&mLiveTD);
-        return 1;
-      }
-      if (!mLiveTD.returnedImage[mLiveTD.outBufInd]) {
-        memcpy(image4k, mLiveTD.buffers[mLiveTD.outBufInd], 2 * inSizeX * inSizeY);
-        mLiveTD.returnedImage[mLiveTD.outBufInd] = true;
-        ReleaseMutex(sLiveMutex);
-        return 0;
-      }
-      ReleaseMutex(sLiveMutex);
-      Sleep(10);
-    }
+    mLiveTD.frameType = (int)DE::FrameType::SUMTOTAL;
+    return SetupLiveAndGetImage(image4k, inSizeX, inSizeY, divideBy2, operation);
   }
 
   // Resume code for NORMAL SINGLE IMAGE ACQUISITION
@@ -1073,6 +1062,98 @@ int DirectElectronCamera::AcquireImageData(unsigned short *image4k, long &imageS
   return 0;
 }
 
+// Common operations for starting a live or continuous STEM mode and getting an image
+// from the buffer once it is started
+int DirectElectronCamera::SetupLiveAndGetImage(unsigned short *image4k, int inSizeX, 
+  int inSizeY, int divideBy2, int operation)
+{
+  int outX, status;
+  bool startedThread = false;
+  if (mLiveTD.outBufInd == -1) {
+
+    // Setup the thread data and allocate buffers
+    mLiveTD.DeServer = mDeServer;
+    mLiveTD.operation = operation;
+    mLiveTD.divideBy2 = divideBy2;
+    mLiveTD.inSizeX = inSizeX;
+    mLiveTD.inSizeY = inSizeY;
+    mLiveTD.quitLiveMode = false;
+    mLiveTD.electronCounting = mLastElectronCounting;
+    mLiveTD.returnedImage[0] = mLiveTD.returnedImage[1] = false;
+    NewArray2(mLiveTD.buffers[0], unsigned short, inSizeX, inSizeY);
+    NewArray2(mLiveTD.buffers[1], unsigned short, inSizeX, inSizeY);
+    if (operation)
+      NewArray2(mLiveTD.rotBuf, unsigned short, inSizeX, inSizeY);
+    if (!mLiveTD.buffers[0] || !mLiveTD.buffers[1] || (operation && !mLiveTD.rotBuf)) {
+      CleanupLiveMode(&mLiveTD);
+      SEMTrace('D', "Failed to get memory for live mode buffers");
+      return 1;
+    }
+    mLiveTD.errString = "";
+
+    // Start the thread as usual
+    mLiveThread = AfxBeginThread(LiveProc, &mLiveTD, THREAD_PRIORITY_NORMAL,
+      0, CREATE_SUSPENDED);
+    mLiveThread->m_bAutoDelete = false;
+    mLiveThread->ResumeThread();
+
+    // Loop until it has gotten an image: 
+    for (outX = 0; outX < 100; outX++) {
+      Sleep(100);
+      if (mLiveTD.outBufInd != -1)
+        break;
+    }
+    startedThread = true;
+  }
+
+  // Clean up if it didn't start correctly; or check status and error out
+  // if there is a problem
+  if (mLiveTD.outBufInd < 0) {
+    if (UtilThreadBusy(&mLiveThread) > 0)
+      UtilThreadCleanup(&mLiveThread);
+    status = -1;
+  } else
+    status = UtilThreadBusy(&mLiveThread);
+  if (status <= 0) {
+    if (mLiveTD.outBufInd == -1) {
+      SetAndTraceErrorString("Live mode did not get started in timely manner");
+    } else if (status < 0) {
+      mLastErrorString = "ERROR: Live mode ended with an error:\r\n" +
+        mLiveTD.errString;
+    } else if (startedThread) {
+      SetAndTraceErrorString("Live mode ended without error right after being "
+        "started");
+    } else {
+      SetAndTraceErrorString("Live mode flag is set after thread was told to quit");
+    }
+    CleanupLiveMode(&mLiveTD);
+    return 1;
+  }
+
+  // Loop until the output buffer is new; let SEM kill this thread if it times out?
+  for (;;) {
+    WaitForSingleObject(sLiveMutex, LIVE_MUTEX_WAIT);
+    if (mLiveTD.outBufInd < 0) {
+      ReleaseMutex(sLiveMutex);
+      mLastErrorString = "ERROR: Live mode ended";
+      if (!mLiveTD.errString.IsEmpty())
+        mLastErrorString += " with an error:\r\n" + mLiveTD.errString;
+      CleanupLiveMode(&mLiveTD);
+      return 1;
+    }
+    if (!mLiveTD.returnedImage[mLiveTD.outBufInd]) {
+      SEMTrace('D', "Returning new buffer %d", mLiveTD.outBufInd);
+      memcpy(image4k, mLiveTD.buffers[mLiveTD.outBufInd], 2 * inSizeX * inSizeY);
+      mLiveTD.returnedImage[mLiveTD.outBufInd] = true;
+      ReleaseMutex(sLiveMutex);
+      return 0;
+    }
+    ReleaseMutex(sLiveMutex);
+    Sleep(10);
+  }
+  return 0;
+}
+
 /*
  * Thread procedure for live mode
  */
@@ -1109,13 +1190,14 @@ UINT DirectElectronCamera::LiveProc(LPVOID pParam)
       attributes.stretchType = DE::ContrastStretchType::NONE;
       for (;;) {
         imageOK = td->DeServer->GetResult(useBuf, td->inSizeX * td->inSizeY * 2,
-          DE::FrameType::SUMTOTAL, &pixForm, &attributes);
+          (DE::FrameType)td->frameType, &pixForm, &attributes);
         if (!imageOK) {
           str2 = "GetResult failed";
           break;
         } else if (acqIndex != attributes.acqIndex || attributes.acqFinished) {
           break;
         }
+        Sleep(10);
       }
       needStart = attributes.acqIndex == numAcquis - 1 || attributes.acqFinished;
       acqIndex = attributes.acqIndex;
@@ -1146,8 +1228,8 @@ UINT DirectElectronCamera::LiveProc(LPVOID pParam)
     td->outBufInd = newInd;
     td->returnedImage[newInd] = false;
     ReleaseMutex(sLiveMutex);
-    SEMTrace('D', "Got frame - %.0f acquire, %.0f process, %.0f for mutex", getTime, 
-      procTime, SEMTickInterval(start));
+    SEMTrace('D', "Got frame index %d: %.0f acquire, %.0f process, %.0f for mutex", 
+      acqIndex, getTime, procTime, SEMTickInterval(start));
     Sleep(10);
   }
   if (retval) {
@@ -1548,7 +1630,8 @@ int DirectElectronCamera::SetExposureTimeAndMode(float seconds, int mode)
 }
 
 // Toggle the live mode: 0 is off, 1 is on with no thread, 2 is with thread
-int DirectElectronCamera::SetLiveMode(int mode)
+// This would work for STEM because there is no actual live call in API2
+int DirectElectronCamera::SetLiveMode(int mode, bool skipLock)
 {
   CSingleLock slock(&m_mutex);
   int status, ind;
@@ -1557,7 +1640,7 @@ int DirectElectronCamera::SetLiveMode(int mode)
   if (mode > 1 && !sLiveMutex)
     mode = 1;
 
-  if (slock.Lock(1000)) {
+  if (skipLock || slock.Lock(1000)) {
     if (!sUsingAPI2 && (mLastLiveMode < 0 || !mTrustLastSettings) && 
       mDeServer->getIsInLiveMode)
       mLastLiveMode = mDeServer->getIsInLiveMode() ? 1 : 0;
@@ -1606,15 +1689,19 @@ int DirectElectronCamera::SetLiveMode(int mode)
 
 
 ///////////////////////////////////////////////////////////////////
-//StopAcquistion() routine.  Function will stop the camera
+//StopAcquisition() routine.  Function will stop the camera
 //from continuing the acquistion.  This will also clear out the
 //the acquistion frame for future acquires.
 ///////////////////////////////////////////////////////////////////
-void DirectElectronCamera::StopAcquistion()
+void DirectElectronCamera::StopAcquisition()
 {
-  if (mServerVersion >= DE_ABORT_WORKS) {
+  if (mServerVersion >= DE_ABORT_WORKS || sUsingAPI2) {
     mDeServer->abortAcquisition();
     m_STOPPING_ACQUISITION = true;
+    if (mStartedScan) {
+      RestoreVirtualShapes(false);
+      mStartedScan = false;
+    }
   } 
 }
 
@@ -2039,6 +2126,8 @@ CString DirectElectronCamera::ErrorTrace(char *fmt, ...)
   va_end(args);
   if (mDeServer) {
     mDeServer->getLastErrorDescription(&stdStr);
+    if (mDeServer->getLastErrorCode() == 15 && stdStr == "OK")
+      stdStr = "Property may not exist, check spelling and case";
     str2.Format("\r\n   Error code %d%s%s", mDeServer->getLastErrorCode(), 
       stdStr.c_str() != NULL ? ": " : "", stdStr.c_str() != NULL ? stdStr.c_str() : "");
     str += str2;
@@ -2096,7 +2185,7 @@ int DirectElectronCamera::SetFramesPerSecond(double value)
   CSingleLock slock(&m_mutex);
   if (slock.Lock(1000)) {
     if (mDeServer) {
-      ret1 = justSetDoubleProperty("Frames Per Second", value);
+      ret1 = justSetDoubleProperty(psFramesPerSec, value);
       if (ret1) {
         mLastFPS = (float)value;
         if (mCurCamIndex >= 0 && !(camP->CamFlags && DE_CAM_CAN_COUNT))
@@ -2113,7 +2202,7 @@ int DirectElectronCamera::SetFramesPerSecond(double value)
           readoutDelay = -1;
         }
         if (ret1 && ret2) {
-          SEMTrace('D', "DE12 FPS set to %f, readout delay to %d", value, readoutDelay);
+          SEMTrace('D', "DE FPS set to %f, readout delay to %d", value, readoutDelay);
           mReadoutDelay = readoutDelay;
         } else {
           mLastErrorString = ErrorTrace("Error setting %s%s%s", !ret1 ? "FPS" : "", 
@@ -2265,7 +2354,7 @@ void DirectElectronCamera::SetImageExtraData(EMimageExtra *extra, float nameTime
         startTime = GetTickCount();
         while (SEMTickInterval(startTime) < 5000.) {
           mDeServer->getProperty("Autosave Status", &valStr);
-          if (valStr.find("Finished") == 0)
+          if (valStr.find("Finished") == 0 || valStr.find("Stopped") == 0)
             break;
           Sleep(50);
         }
@@ -2393,4 +2482,479 @@ float DirectElectronCamera::GetLastCountScaling()
   if (mLastNormCounting && mElecCountsScaled > 0)
     return mCountScaling / mElecCountsScaled;
   return mCountScaling;
+}
+
+/*
+ * Sets up as many parameters for STEM as are feasible in a call from the main thread
+ */
+int DirectElectronCamera::SetGeneralSTEMParams(int sizeX, int sizeY, int subSizeX, 
+  int subSizeY, int left, int top, double rotation, int patternInd, int saveFlags,
+  CString &suffix, CString &saveDir, int presetInd, int pointRepeats, bool gainCorr)
+{
+  bool ret1 = true, ret2 = true, ret3 = true, ret4 = true, ret5 = true, ret6 = true;
+  bool ret7 = true;
+  bool saveFinal = (saveFlags & DE_SAVE_FINAL) != 0;
+  bool saveFrames = (saveFlags & DE_SAVE_MASTER) != 0;
+  bool enable = subSizeX < sizeX || subSizeY < sizeY;
+  CSingleLock slock(&m_mutex);
+
+  if (slock.Lock(1000)) {
+    ret1 = justSetIntProperty("Scan - Size X", sizeX);
+    ret2 = justSetIntProperty("Scan - Size Y", sizeY);
+    ret3 = mDeServer->setProperty("Scan - ROI Enable", enable ? "On" : "Off");
+    if (enable) {
+      ret4 = justSetIntProperty("Scan - ROI Size X", subSizeX);
+      ret5 = justSetIntProperty("Scan - ROI Size Y", subSizeY);
+      ret6 = justSetIntProperty("Scan - ROI Offset X", left);
+      ret7 = justSetIntProperty("Scan - ROI Offset Y", top);
+    }
+    if (!ret1 || !ret2 || !ret3 || !ret4 || !ret5 || !ret6 || !ret7) {
+      SEMMessageBox("An error occurred trying to set STEM size and subarea selections");
+      return 1;
+    }
+    ret1 = justSetDoubleProperty("Scan - Rotation", rotation);
+    ret3 = mDeServer->setProperty("Scan - Preset Current", 
+      mScanPresets[patternInd].c_str());
+    if (!ret1 || !ret3) {
+      SEMMessageBox("An error occurred trying to set STEM rotation or preset");
+      return 1;
+    }
+
+    // Set up autosave location and 4D stack
+    if (saveFrames || saveFinal) {
+      ret1 = setStringWithError("Autosave Directory", (LPCTSTR)saveDir);
+      ret2 = setStringWithError("Autosave Filename Suffix", (LPCTSTR)suffix);
+    }
+     if (!ret1 || !ret2 || !ret3 || !ret4) {
+      SEMMessageBox("An error occurred setting autosave parameters:\n" + 
+        mLastErrorString);
+      return 1;
+    }
+
+    if (saveFrames) {
+      ret1 = justSetIntProperty("Scan - Camera Frames Per Point", pointRepeats);
+      if (presetInd < (int)mCamPresets.size())
+        ret2 = setStringWithError("Preset - Current", mCamPresets[presetInd].c_str());
+      ret3 = setStringWithError("Image Processing - Flatfield Correction", 
+        gainCorr ? "Dark and Gain" : "Dark");
+
+      if (!ret1 || !ret2 || !ret3) {
+        SEMMessageBox("An error occurred trying to set 4D STEM parameters");
+        return 1;
+      }
+    }
+
+    return 0;
+  }
+  SEMMessageBox("Failed to obtain mutex for setting STEM size and subarea properties");
+  return 1;
+}
+
+/*
+ * Call to get STEM images from an acquisition thread
+ */
+int DirectElectronCamera::AcquireSTEMImage(unsigned short **arrays, long *channelIndex,
+  int numChannels, int sizeX, int sizeY, double pixelTime, int saveFlags, int flags, 
+  int &numReturned)
+{
+  bool saveFinal = (saveFlags & DE_SAVE_FINAL) != 0;
+  bool saveFrames = (saveFlags & DE_SAVE_MASTER) != 0;
+  bool partialScan = (flags & PLUGCAM_PARTIAL_SCAN) != 0;
+  bool divideBy2 = (flags & PLUGCAM_DIVIDE_BY2) != 0;
+  bool continuous = (flags & PLUGCAM_CONTINUOUS) != 0;
+  bool ret1 = true, ret2 = true, ret3 = true, ret4 = true, ret5 = true, anyVirt = false;
+  int ind, acq, chanInd, acquiring, err;
+  CString str;
+  ShortVec virtChans = mWinApp->mCamera->GetVirtualDEChannels();
+  ShortVec extChans = mWinApp->mCamera->GetPhysicalDEChannels();
+  CSingleLock slock(&m_mutex);
+
+  acquiring = IsAcquiring();
+
+  // If continuous, first make sure the mutex exists and get frame type to return
+  // Continuous is not usable: all it does it return repeatedly with the partial image
+  // and set acqFinished, requiring another start
+  if (continuous) {
+    if (!sLiveMutex) {
+      mLastErrorString = "Failed to create the mutex for live mode, continuous mode"
+        " not available";
+      return 1;
+    }
+    mLiveTD.frameType = FrameTypeForChannelIndex(channelIndex[0]);
+
+    // If it's already running, get the next image
+    if (mLastLiveMode > 1) {
+      if (slock.Lock(1000)) {
+        err = SetupLiveAndGetImage(arrays[0], sizeX, sizeY, divideBy2 ? 1 : 0, 0);
+      } else {
+        mLastErrorString = "Failed to get lock for getting next continuous image";
+        err = 1;
+      }
+      if (err) {
+        RestoreVirtualShapes(false);
+        SetLiveMode(0);
+        return 1;
+      }
+    }
+  }
+
+  // If scan was started with partial return, get result
+  if (mStartedScan) {
+    if (GetSTEMresultImages(arrays, sizeX, sizeY, channelIndex, numChannels,
+      acquiring > 0, divideBy2)) {
+      numReturned = 0;
+      return 1;
+    }
+
+    // Finish up if done and return negative
+    numReturned = (acquiring ? 1 : -1) * numChannels;
+    if (!acquiring) {
+      mStartedScan = false;
+      RestoreVirtualShapes(false);
+    }
+    return 0;
+
+  } else if (acquiring > 0 && !continuous) {
+    if (slock.Lock(1000)) {
+      mDeServer->abortAcquisition();
+      slock.Unlock();
+    }
+  }
+
+  // Now set up all the parameters for a scan
+  mVirtChansToRestore.clear();
+  mLineMeans.clear();
+  mLineMeans.resize(numChannels, -99999);
+  mLinesFound.clear();
+  mLinesFound.resize(numChannels);
+
+  if (slock.Lock(1000)) {
+
+    if (!setStringWithError("Scan - Enable", "On")) {
+      mLastErrorString = "An error occurred making sure the Scan is enabled:\n" +
+        mLastErrorString;
+      return 1;
+    }
+
+    // Find out if any virtual channels
+    for (ind = 0; ind < (int)virtChans.size(); ind++) {
+      for (acq = 0; acq < numChannels; acq++)
+        if (virtChans[ind] == channelIndex[acq])
+          anyVirt = true;
+    }
+
+    // Set up for camera or not based on that
+    ret2 = setStringWithError("Scan - Trigger Source", anyVirt ? "Camera (Before Frame)" :
+      "DE-FreeScan");
+    ret1 = setStringWithError("Scan - Use DE Camera", anyVirt ? "Use Frame Time" : "Off");
+    if (!anyVirt) {
+      ret3 = justSetDoubleProperty("Scan - Dwell Time (microseconds)", pixelTime);
+    } else {
+      ret3 = setStringWithError("Autosave Movie", saveFrames ? "On" : "Off");
+      if (saveFrames)
+        ret4 = setStringWithError("Autosave 4D File Format", "MRC");
+      //mWinApp->mDEToolDlg.GetFormatForAutoSave() ? "MRC" : "TIFF");
+    }
+    ret5 = setStringWithError("Autosave Final Image", saveFinal ? "On" : "Off");
+    if (!ret1 || !ret2 || !ret3 || !ret4 || !ret5) {
+      mLastErrorString = "An error occurred setting up camera use, dwell time, or file"
+        " saving:\n" + mLastErrorString;
+      return 1;
+    }
+
+    // Set up virtual channels if any
+    if (anyVirt) {
+      for (ind = 0; ind < (int)virtChans.size(); ind++) {
+        chanInd = -1;
+        for (acq = 0; acq < numChannels; acq++) {
+          if (virtChans[ind] == channelIndex[acq])
+            chanInd = acq;
+        }
+        if (saveFinal) {
+          str.Format("Autosave Virtual Image %d", ind);
+          ret1 = setStringWithError((LPCTSTR)str, chanInd < 0 ? "Off" : "On");
+        }
+        if (chanInd < 0 && mCurVirtShape[ind] != "Off") {
+          mVirtChansToRestore.push_back(ind);
+          str.Format("Scan - Virtual Detector %d Shape", ind);
+          ret2 = setStringWithError((LPCTSTR)str, "Off");
+        }
+      }
+    }
+
+    // External detectors
+    for (ind = 0; ind < (int)extChans.size(); ind++) {
+      chanInd = -1;
+      for (acq = 0; acq < numChannels; acq++) {
+        if (extChans[ind] == channelIndex[acq])
+          chanInd = acq;
+      }
+      str.Format("Scan - External Detector %d Enable", ind + 1);
+      ret4 = setStringWithError((LPCTSTR)str, chanInd < 0 ? "Off" : "On");
+      if (saveFinal && mServerVersion >= DE_CAN_AUTOSAVE_EXT_DET) {
+        str.Format("Autosave External Image %d", ind + 1);
+        ret3 = setStringWithError((LPCTSTR)str, chanInd < 0 ? "Off" : "On");
+      }
+    }
+
+    if (!ret1 || !ret2 || !ret3 || !ret4) {
+      RestoreVirtualShapes(true);
+      mLastErrorString = "An error occurred setting up channels to acquire or autosave:\n"
+       + mLastErrorString;
+      return 1;
+    }
+
+    // Start continuous mode and get first image
+    if (continuous) {
+      if (SetLiveMode(2, true)) {
+        mLastErrorString = "Failed to get lock in SetLiveMode";
+        err = 1;
+      }
+      err = SetupLiveAndGetImage(arrays[0], sizeX, sizeY, divideBy2 ? 1 : 0, 0);
+      if (err) {
+        RestoreVirtualShapes(true);
+        SetLiveMode(0, true);
+      }
+      return err;
+    } 
+
+    // Or start acquiring one image
+    if (!mDeServer->StartAcquisition(1)) {
+      mLastErrorString = ErrorTrace("ERROR: Could not start STEM acquisition");
+      RestoreVirtualShapes(true);
+      return 1;
+    }
+  } else {
+    RestoreVirtualShapes(false);
+    mLastErrorString = "Failed to get lock for setting channel parameters and "
+      "starting acquire";
+    return 1;
+  }
+  slock.Unlock();
+
+  // Sleep a bit if partial or loop until done
+  double startTime = GetTickCount();
+  if (partialScan) {
+    mStartedScan = true;
+    Sleep(100);
+  } else {
+    while (IsAcquiring() > 0  && SEMTickInterval(startTime) < 70000)
+      Sleep(50);
+    SEMTrace('D', "Left Acquire loop after %.0f, %d", SEMTickInterval(startTime),
+      IsAcquiring());
+  }
+
+  // Get result; restore if not partial and no error
+  ind = GetSTEMresultImages(arrays, sizeX, sizeY, channelIndex, numChannels, partialScan,
+    divideBy2);
+  if (!ind && !partialScan)
+    RestoreVirtualShapes(false);
+  numReturned = numChannels;
+  return ind;
+}
+
+/*
+ * Renable any virtual detectors that were disabled by restoring the original Shape
+ */
+void DirectElectronCamera::RestoreVirtualShapes(bool skipLock)
+{
+  CString str, failStr;
+  CSingleLock slock(&m_mutex);
+  if (skipLock || slock.Lock(1000)) {
+    if (mVirtChansToRestore.size() && IsAcquiring(true))
+      mDeServer->abortAcquisition();
+    for (int ind = 0; ind < (int)mVirtChansToRestore.size(); ind++) {
+      if (mVirtChansToRestore[ind] < (int)mCurVirtShape.size()) {
+        str.Format("Scan - Virtual Detector %d Shape", mVirtChansToRestore[ind]);
+        if (!mDeServer->setProperty((LPCTSTR)str,
+          mCurVirtShape[mVirtChansToRestore[ind]].c_str())) {
+          str.Format(" %d", mVirtChansToRestore[ind]);
+          failStr += str;
+        } else
+          SEMTrace('D', "Set %s to %s", (LPCTSTR)str, mCurVirtShape[mVirtChansToRestore[ind]].c_str());
+
+      }
+    }
+    if (!failStr.IsEmpty())
+      SEMTrace('0', "WARNING: Failed to reenable virtual detector(s)%s", 
+      (LPCTSTR)failStr);
+  } else if (mVirtChansToRestore.size())
+    SEMTrace('0', "WARNING: Failed to get lock for reenabling virtual detector(s)");
+  mVirtChansToRestore.clear();
+}
+
+// Test the acquisition status for whether it is acquiring
+int DirectElectronCamera::IsAcquiring(bool skipLock)
+{
+  std::string value;
+  CSingleLock slock(&m_mutex);
+  if (skipLock || slock.Lock(1000)) {
+    if (mDeServer->getProperty("Acquisition Status", &value))
+      return (value == "Acquiring") ? 1 : 0;
+  }
+  return -1;
+}
+
+/*
+ * Get result from all the channels, determining how to fill partial scans and doing so
+ */
+int DirectElectronCamera::GetSTEMresultImages(unsigned short **arrays, int sizeX,
+  int sizeY, long *channelIndex, int numChannels, bool partial, bool divideBy2)
+{
+   int imType, spotCheck, base, sum, imX = 0, imY = 0;
+  int ind, chan, iy, delta = B3DMIN(sizeX / 5, 10);
+  unsigned short fill;
+  CSingleLock slock(&m_mutex);
+
+  /*getIntProperty("Image Size X (pixels)", imX);
+  getIntProperty("Image Size Y (pixels)", imY);
+  SEMTrace('D', "image %d %d  expected %d %d", imX, imY, sizeX, sizeY); */
+
+  if (slock.Lock(1000)) {
+
+    // Find out what channel each one is in turn and get its result 
+    for (chan = 0; chan < numChannels; chan++) {
+
+      // Look up channel in virtual then external detectors
+      imType = FrameTypeForChannelIndex(channelIndex[chan]);
+      if (imType < 0)
+        continue;
+
+      // Get the result into the array
+      if (partial)
+        memset(arrays[chan], 0, sizeX * sizeY * 2);
+      DE::ImageAttributes attributes;
+      DE::PixelFormat pixForm = DE::PixelFormat::UINT16;
+      attributes.stretchType = DE::ContrastStretchType::NONE;
+      if (!mDeServer->GetResult(arrays[chan], sizeX * sizeY * 2, (DE::FrameType)imType,
+        &pixForm, &attributes)) {
+        mLastErrorString = ErrorTrace("Error getting result from channel %d of the %d "
+          "selected", chan + 1, numChannels);
+        mDeServer->abortAcquisition();
+        RestoreVirtualShapes(true);
+        mStartedScan = false;
+        return 1;
+      }
+
+      if (partial) {
+        int lastSpot = 0;
+        // Search from last line found onwards, check a few pixels in middle
+        for (iy = mLinesFound[chan]; iy < sizeY; iy++) {
+          base = iy * sizeX + sizeX / 2;
+          spotCheck = (int)arrays[chan][base - 2 * delta] + arrays[chan][base - delta] +
+            arrays[chan][base] + arrays[chan][base + delta] +
+            arrays[chan][base + 2 * delta];
+          if (spotCheck == 0) {
+            mLinesFound[chan] = B3DMAX(0, iy - 1);
+            break;
+          }
+          lastSpot = spotCheck;
+        }
+
+        // Fill if it hasn't gotten to end
+        if (iy < sizeY) {
+
+          // If the mean hasn't been found yet and there are enough lines, go back one
+          // line and get mean
+          if (mLineMeans[chan] < -90000 && iy > B3DMAX(4, sizeY / 40) && 
+            mLinesFound[chan] > 1) {
+            sum = 0;
+            base = (mLinesFound[chan] - 1) * sizeX;
+            for (ind = 0; ind < sizeX; ind++)
+              sum += arrays[chan][base + ind];
+            if (sum / sizeX < 65534)
+            mLineMeans[chan] = sum / sizeX;
+          }
+
+          // If the mean exists, fill with it to the end
+          if (mLineMeans[chan] > -90000) {
+            fill = (unsigned short)mLineMeans[chan];
+            for (ind = mLinesFound[chan] * sizeX; ind < sizeX * sizeY; ind++)
+              arrays[chan][ind] = fill;
+          }
+        }
+      }
+      if (divideBy2) {
+        for (iy = 0; iy < sizeX * sizeY; iy++)
+          arrays[chan][iy] = arrays[chan][iy] >> 1;
+      }
+    }
+    return 0;
+  }
+  mLastErrorString = "Failed to get lock for getting result image";
+  return 1;
+}
+
+// Look up the channel index in virtual and external lists and return value to use in
+// getResult
+int DirectElectronCamera::FrameTypeForChannelIndex(int chanInd)
+{
+  ShortVec virtChans = mWinApp->mCamera->GetVirtualDEChannels();
+  ShortVec extChans = mWinApp->mCamera->GetPhysicalDEChannels();
+  int ind;
+  for (ind = 0; ind < virtChans.size(); ind++) {
+    if (virtChans[ind] == chanInd) {
+      return (int)DE::FrameType::VIRTUAL_IMAGE0 + ind;
+    }
+  }
+  for (ind = 0; ind < extChans.size(); ind++) {
+    if (extChans[ind] == chanInd) {
+      return (int)DE::FrameType::EXTERNAL_IMAGE1 + ind;
+    }
+  }
+  return -1;
+}
+
+/*
+ * Given the preset, find out what FPS it will have, return 0 on any errors
+ */
+float DirectElectronCamera::GetPresetOrCurrentFPS(std::string preset)
+{
+  CString current, value;
+  bool ok;
+  float fps = 0.;
+  int ind, colon;
+  StringVec propList;
+  const char *curStr = "Preset - Current";
+
+  // If the preset is Custom, it will be the current FPS, otherwise proceed
+  if (preset != "Custom") {
+
+    // Get the current preset - if IT is Custom, we need to save and restore the FPS
+    if (!getStringProperty(curStr, current))
+      return 0.0f;
+    if (current == "Custom" && !getFloatProperty(psFramesPerSec, fps))
+      return 0.;
+
+    // Go to the designated preset if needed
+    if (current != preset.c_str()) {
+      if (!setStringWithError(curStr, preset.c_str()))
+        return 0.;
+    }
+
+    // Get the properties and restore the current preset and FPS if it was custom
+    ok = getStringProperty("Preset - Properties", value);
+    if (current != preset.c_str())
+      setStringProperty(curStr, current);
+    if (current == "Custom")
+      justSetDoubleProperty(psFramesPerSec, fps);
+    if (!ok)
+      return 0.;
+
+    // Split up the comma-separated list, find FPS and colon, return converted value
+    UtilSplitString(value, ",", propList);
+    for (ind = 0; ind < (int)propList.size(); ind++) {
+      if (propList[ind].find(psFramesPerSec) == 0) {
+        colon = (int)propList[ind].find(':');
+        if (colon < 1)
+          return 0.;
+        return (float)atof(propList[ind].c_str() + colon + 1);
+      }
+    }
+  }
+
+  // Fall through to getting the FPS and returning it
+  if (!fps && !getFloatProperty(psFramesPerSec, fps))
+    return 0.;
+  return fps;
 }

@@ -72,6 +72,7 @@
 #include "Utilities\SEMUtilities.h"
 
 typedef std::set<std::string> StringSet;
+typedef std::vector<std::string> StringVec;
 
 class CMapDrawItem;
 typedef CArray<CMapDrawItem *, CMapDrawItem *> MapItemArray;

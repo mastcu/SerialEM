@@ -31,7 +31,7 @@ typedef void(*NewImCallback)(void);
 
 
 #define MAX_DARK_REFS   10
-#define MAX_CHANNELS     8
+#define MAX_CHANNELS     9
 #define MAX_RAMP_STEPS   32
 #define MAX_IGNORE_GATAN 10
 #define MAX_K2_FILTERS  8
@@ -380,6 +380,7 @@ class DLL_IM_EX CCameraController
 {
 public:
   CDoseModulator *mDoseModulator;   // Module for interface
+  DirectElectronCamera *mDE_Cam;    // Pointer to DE cal, more convenient than one in mTD
   void ClearOneShotFlags();
   void AcquiredSize(ControlSet *csp, int camera, int &sizeX, int &sizeY);
   void StartEnsureThread(DWORD timeout);
@@ -512,6 +513,8 @@ public:
   static UINT InsertProc(LPVOID pParam);
   static UINT EnsureProc(LPVOID pParam);
   static UINT AcquireProc(LPVOID pParam);
+  static int StartDynFocusOrBlanker(CameraThreadData *td, bool startBlanker, bool &rampStarted, int &retval);
+  static void TestAndFinishRamp(CameraThreadData *td, bool rampStarted);
   static UINT BlankerProc(LPVOID pParam);
   static UINT HWDarkRefProc(LPVOID pParam);
   int InsertBusy();
@@ -658,6 +661,8 @@ public:
   SetMember(NewImCallback, NewImageCallback);
   GetSetMember(BOOL, DectrisSaveAsHDF);
   GetSetMember(float, ExtraSTEMTimeout);
+  GetMember(ShortVec, VirtualDEChannels);
+  GetMember(ShortVec, PhysicalDEChannels);
   CameraThreadData *GetCamThreadData() { return &mTD; };
   bool DoingPartialScan() {return mTD.ReturnPartialScan > 0; };
   bool HasCEOSFilter() { return mCEOSFilter != NULL; }
@@ -1137,7 +1142,9 @@ public:
   NewImCallback mNewImageCallback;  // Function to call with new image in place
   BOOL mDectrisSaveAsHDF;         // Flag for plugin/cmera to save directly as HDF5
   float mExtraSTEMTimeout;         // Time to add to timeout in seconds for any STEM camera
-
+  ShortVec mVirtualDEChannels;    // List of which detectors had virtual names originally
+  ShortVec mPhysicalDEChannels;   // List of other ones
+  float mFPSforVirtualSTEM;       
 
 public:
   void SetNonGatanPostActionTime(void);
@@ -1199,6 +1206,7 @@ public:
   void CountSimultaneousChannels(CameraParameters * camParams, int * simultaneous, int maxSimul, int & numSimul, int & numAvail);
   void RestoreMagAndShift(void);
   void AdjustForShift(float adjustX, float adjustY);
+  float GetFPSforVirtualSTEM(ControlSet &conSet);
   bool CanPreExpose(CameraParameters * param, int shuttering);
   bool MutuallyExclusiveChannels(int chan1, int chan2);
   int ChannelMappedTo(int chan);
@@ -1210,7 +1218,8 @@ public:
   void InitializeDirectElectron(int *originalList, int numOrig);
   void InitializePluginCameras(int &numPlugListed, int *originalList, int numOrig);
   int RotateAndReplaceArray(int chan, int operation, int invertCon);
-  int CapSetupSTEMChannelsDetectors(ControlSet & conSet, int inSet, BOOL retracting);
+  int CapSetupSTEMChannelsDetectors(ControlSet & conSet, int inSet, BOOL retracting,
+    bool &anyVirt);
   int CapManageScreen(int inSet, BOOL retracting, int numActive);
 
   // ControlSet is const here because the routine is called only the first time when
@@ -1221,7 +1230,7 @@ public:
     CString *aliComRoot);
   int CapSetLDAreaFilterSettling(int inSet);
   void CapManageCoordinates(ControlSet &conSet, int &gainXoffset, int &gainYoffset);
-  void CapSetupShutteringTiming(ControlSet & conSet, int inSet, BOOL &bEnsureDark);
+  void CapSetupShutteringTiming(ControlSet & conSet, int inSet, BOOL &bEnsureDark, bool anyVirtual);
   int CapManageDarkGainRefs(ControlSet & conSet, int inSet, BOOL &bEnsureDark,
     int gainXoffset, int gainYoffset);
   int CapSaveStageMagSetupDynFocus(ControlSet & conSet, int inSet);
@@ -1287,6 +1296,8 @@ bool IsFEISubareaFlexible(CameraParameters *param, const ControlSet *conSet);
 bool IsFEISubareaFlexible(CameraParameters *param, BOOL saveFrames, BOOL alignFrames, int useFramealign,
   int readMode, int binning);
 bool UsingUtapiForCamera(CameraParameters *param);
+int UpdateDEVirtualDetectorNames(CameraParameters *param, ShortVec &virtChans);
+void GetComboListsForDeSTEM(std::vector<std::string> &camPresets, std::vector<std::string> &scanPresets);
 bool CanProcessHere(CameraParameters *param);
 int ReturningFloatImages(CameraParameters *param);
 void FixDirForFalconFrames(CameraParameters * param);

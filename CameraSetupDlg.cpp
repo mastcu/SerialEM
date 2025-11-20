@@ -11,6 +11,7 @@
 #include ".\CameraSetupDlg.h"
 #include "CameraController.h"
 #include "CalibCameraTiming.h"
+#include "DirectElectron\DirectElectronCamera.h"
 #include "EMscope.h"
 #include "Utilities\KGetOne.h"
 #include "GatanSocket.h"
@@ -34,6 +35,7 @@ static char THIS_FILE[] = __FILE__;
 #define SHIFT_FRACTION 64
 #define MAX_DARK_AVERAGE 20
 #define MAX_DE_SUM_COUNT 250
+#define MAX_POINT_REPEATS 100
 
 /* NOTE ON THE MESS BETWEEN PROCESSING BOX AND EXPOSURE TIME
   "Sum will be gain normalized" label IDC_STAT_NORM_DSDF
@@ -81,8 +83,8 @@ IDC_COMBOCHAN1,IDC_COMBOCHAN2, IDC_COMBOCHAN3, IDC_COMBOCHAN4, IDC_COMBOCHAN5,
 IDC_COMBOCHAN6, IDC_COMBOCHAN7, IDC_COMBOCHAN8, PANEL_END,
 IDC_DE_STEM_SAVE_FINAL, IDC_SAVE_4D_STACK, IDC_STEM_NAMING_OPTS, IDC_STEM_SAVE_FOLDER,
 PANEL_END,
-IDC_STAT_4D_STEM, IDC_DE_STEM_GAIN_CORR, IDC_STAT_DE_PRESET, 
-IDC_COMBO_DE_PRESET, PANEL_END,
+IDC_STAT_4D_STEM, IDC_STAT_POINT_REPEATS, IDC_EDIT_POINT_REPEATS, IDC_SPIN_POINT_REPEATS,
+IDC_DE_STEM_GAIN_CORR, IDC_STAT_DE_PRESET, IDC_COMBO_DE_PRESET, PANEL_END,
 IDC_STAT_K2MODE, IDC_RLINEAR, IDC_RCOUNTING, IDC_RSUPERRES, IDC_DOSE_FRAC_MODE, 
 IDC_STAT_FRAME_TIME, IDC_EDIT_FRAME_TIME, IDC_STAT_FRAME_SEC, IDC_ALIGN_DOSE_FRAC,
 IDC_BUT_SETUP_ALIGN, IDC_SAVE_FRAMES, IDC_SET_SAVE_FOLDER, IDC_BUT_FILE_OPTIONS,
@@ -138,8 +140,8 @@ CCameraSetupDlg::CCameraSetupDlg(CWnd* pParent /*=NULL*/)
   , m_fTiltOffset(0)
   , m_bDeSTEMSaveFinal(FALSE)
   , m_bSave4dSTEM(FALSE)
-  , m_bDePointRepeats(FALSE)
   , m_bDeSTEMGainCorr(FALSE)
+  , m_iDePointRepeats(1)
 {
   //{{AFX_DATA_INIT(CCameraSetupDlg)
   m_iBinning = -1;
@@ -168,8 +170,11 @@ CCameraSetupDlg::CCameraSetupDlg(CWnd* pParent /*=NULL*/)
 	//}}AFX_DATA_INIT
   mClosing = FALSE;
   mMinExposure = 0.0001f;
+  mMaxExposure = 1800.f;
   mFrameTimeMsScale = 1.f;
   mWarnedOnCDS = false;
+  mDeCombosLoaded = false;
+  mVirtChanSelected = false;
   mPlacement.rcNormalPosition.right = NO_PLACEMENT;
 }
 
@@ -220,7 +225,7 @@ void CCameraSetupDlg::DoDataExchange(CDataExchange* pDX)
   DDX_Text(pDX, IDC_EDITLEFT, m_eLeft);
   DDX_Text(pDX, IDC_EDITRIGHT, m_eRight);
   DDX_Text(pDX, IDC_EDITEXPOSURE, m_eExposure);
-  DDV_MinMaxFloat(pDX, m_eExposure, mMinExposure, 1800.f);
+  DDV_MinMaxFloat(pDX, m_eExposure, mMinExposure, mMaxExposure);
   DDX_Text(pDX, IDC_EDITSETTLING, m_strSettling);
   //DDV_MinMaxFloat(pDX, m_eSettling, 0.f, 10.f);
   DDX_Radio(pDX, IDC_RCAMERA1, m_iCamera);
@@ -339,6 +344,9 @@ void CCameraSetupDlg::DoDataExchange(CDataExchange* pDX)
   DDX_Check(pDX, IDC_DE_STEM_SAVE_FINAL, m_bDeSTEMSaveFinal);
   DDX_Check(pDX, IDC_SAVE_4D_STACK, m_bSave4dSTEM);
   DDX_Check(pDX, IDC_DE_STEM_GAIN_CORR, m_bDeSTEMGainCorr);
+  DDX_Text(pDX, IDC_EDIT_POINT_REPEATS, m_iDePointRepeats);
+  DDV_MinMaxInt(pDX, m_iDePointRepeats, 1, MAX_POINT_REPEATS);
+  DDX_Control(pDX, IDC_SPIN_POINT_REPEATS, m_sbcPointRepeats);
 }
 
 
@@ -454,6 +462,9 @@ BEGIN_MESSAGE_MAP(CCameraSetupDlg, CBaseDlg)
     ON_BN_CLICKED(IDC_STEM_SAVE_FOLDER, OnStemSaveFolder)
     ON_BN_CLICKED(IDC_DE_STEM_SAVE_FINAL, OnDeStemSaveFinal)
     ON_BN_CLICKED(IDC_SAVE_4D_STACK, OnSave4dStack)
+    ON_EN_KILLFOCUS(IDC_EDIT_POINT_REPEATS, OnKillfocusEditPointRepeats)
+    ON_NOTIFY(UDN_DELTAPOS, IDC_SPIN_POINT_REPEATS, OnDeltaposSpinPointRepeats)
+    ON_CBN_SELENDOK(IDC_COMBO_DE_PRESET, &CCameraSetupDlg::OnSelendokComboDePreset)
     END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -1002,15 +1013,18 @@ void CCameraSetupDlg::LoadConsetToDialog()
     mCurSet->useFrameAlign = 0;
 
   // Frame time
-  m_fFrameTime = mCurSet->frameTime;
-  if (mParam->K2Type || mParam->canTakeFrames || mFEItype == FALCON4_TYPE) {
-    mCamera->CropTietzSubarea(mParam, mCurSet->right, mCurSet->left,
-      mCurSet->bottom, mCurSet->top, mCurSet->processing, mCurSet->mode, special);
-    mCamera->ConstrainFrameTime(m_fFrameTime, mParam, binning,
-      (mParam->OneViewType && mCurSet->K2ReadMode != 0) ? 1 : special);
-  }
-  m_fFrameTime /= mFrameTimeMsScale;
-  m_fDEframeTime = m_fFrameTime = RoundedFrameTime(m_fFrameTime);
+  if (!mSTEMcamera) {
+    m_fFrameTime = mCurSet->frameTime;
+    if (mParam->K2Type || mParam->canTakeFrames || mFEItype == FALCON4_TYPE) {
+      mCamera->CropTietzSubarea(mParam, mCurSet->right, mCurSet->left,
+        mCurSet->bottom, mCurSet->top, mCurSet->processing, mCurSet->mode, special);
+      mCamera->ConstrainFrameTime(m_fFrameTime, mParam, binning,
+        (mParam->OneViewType && mCurSet->K2ReadMode != 0) ? 1 : special);
+    }
+    m_fFrameTime /= mFrameTimeMsScale;
+    m_fDEframeTime = m_fFrameTime = RoundedFrameTime(m_fFrameTime);
+  } else
+    m_fFrameTime = 0.1f;
   m_bAlignDoseFrac = mCurSet->alignFrames > 0 ||
     (mCurrentSet == RECORD_CONSET && mWinApp->mTSController->GetFrameAlignInIMOD());
   mUserSaveFrames = m_bSaveFrames = mCurSet->saveFrames > 0;
@@ -1046,14 +1060,14 @@ void CCameraSetupDlg::LoadConsetToDialog()
     m_bUseHwROI_OvDiff = mCurSet->magAllShotsOrHwROI != 0;
 
   mSummedFrameList = mCurSet->summedFrameList;
-  mNumSkipBefore = mCurSet->numSkipBefore;
-  mNumSkipAfter = mCurSet->numSkipAfter;
+  mNumSkipBefore = mCurSet->skipBeforeOrPrePix;
+  mNumSkipAfter = mCurSet->skipAfterOrPtRpt;
   mUserFrameFrac = mCurSet->userFrameFractions;
   mUserSubframeFrac = mCurSet->userSubframeFractions;
 
   // For DE camera, set checkboxes by the flags and the appropriate sum count and FPS
   // for the mode, and save the starting values of FPS
-  if (mWinApp->mDEToolDlg.CanSaveFrames(mParam)) {
+  if (mWinApp->mDEToolDlg.CanSaveFrames(mParam) && !mSTEMcamera) {
     if (mParam->CamFlags & DE_APOLLO_CAMERA)
       mCurSet->saveFrames &= ~DE_SAVE_SINGLE;
     m_bDEsaveMaster = (mCurSet->saveFrames & DE_SAVE_MASTER) != 0;
@@ -1098,16 +1112,16 @@ void CCameraSetupDlg::LoadConsetToDialog()
   m_bDynFocus = mCurSet->dynamicFocus > 0;
   m_iIntegration = mCurSet->integration;
   if (mTietzType && mSTEMcamera)
-    m_iPrepixel = mCurSet->numSkipBefore;
+    m_iPrepixel = mCurSet->skipBeforeOrPrePix;
   EnableDlgItem(IDC_STAT_TILT_OFFSET, m_bDynFocus);
   EnableDlgItem(IDC_STAT_TILT_DEG, m_bDynFocus);
   m_editTiltOffset.EnableWindow(m_bDynFocus);
   B3DCLAMP(m_iIntegration, 1, mMaxIntegration);
 
   // Initialize dark ref averaging to defaults if out of range
-  if (mCurSet->numAvgOrPtRpt < 2)
-    mCurSet->numAvgOrPtRpt = mCurrentSet == 3 ? 10 : 4;
-  m_iAverageTimes = mCurSet->numAvgOrPtRpt;
+  if (mCurSet->numAverage < 2)
+    mCurSet->numAverage = mCurrentSet == 3 ? 10 : 4;
+  m_iAverageTimes = mCurSet->numAverage;
   B3DCLAMP(m_iAverageTimes, 2, MAX_DARK_AVERAGE);
   m_spinAverage.SetRange(2, MAX_DARK_AVERAGE);
   m_spinAverage.SetPos(m_iAverageTimes);
@@ -1178,13 +1192,20 @@ void CCameraSetupDlg::LoadConsetToDialog()
 
   if (mSTEMcamera) {
     if (mDE_Type) {
-      m_bDePointRepeats = mCurSet->numAvgOrPtRpt > 0;
+      B3DCLAMP(mCurSet->skipAfterOrPtRpt, 1, MAX_POINT_REPEATS);
+      m_iDePointRepeats = mCurSet->skipAfterOrPtRpt;
+      m_sbcPointRepeats.SetPos(m_iDePointRepeats);
       m_bDeSTEMGainCorr = mCurSet->processing > 0;
       B3DCLAMP(mCurSet->lineSyncOrPattern, 0, m_comboPattern.GetCount() - 1);
       m_comboPattern.SetCurSel(mCurSet->lineSyncOrPattern);
       B3DCLAMP(mCurSet->filtTypeOrPreset, 0, m_comboDePreset.GetCount() - 1);
       m_comboDePreset.SetCurSel(mCurSet->filtTypeOrPreset);
+      FindFPSfor4dSTEM();
       m_bDeSTEMSaveFinal = (mCurSet->saveFrames & DE_SAVE_FINAL) != 0;
+      ShowDlgItem(IDC_STAT_DEFPS, false);
+      ShowDlgItem(IDC_EDIT_DE_FPS, false);
+      ShowDlgItem(IDC_DE_SAVE_FRAMES, false);
+      ShowDlgItem(IDC_STAT_NUM_DE_RAW, false);
     }
     if (mDE_Type || mParam->DectrisType)
       m_bSave4dSTEM = (mCurSet->saveFrames & DE_SAVE_MASTER) != 0;
@@ -1204,6 +1225,7 @@ void CCameraSetupDlg::LoadConsetToDialog()
       if (sel)
         numSel++;
     }
+    mVirtChanSelected = AnyVirtualDEChanSelected();
     ManageSTEMBinning(numSel);
     ManageVirtualSTEM();
   }
@@ -1245,6 +1267,8 @@ void CCameraSetupDlg::LoadConsetToDialog()
   ManageIntegration();
   ManageDarkRefs();
   DrawBox();
+  if (mSTEMcamera && mDE_Type)
+    ShowDlgItem(IDC_RUNPROCESSED, false);
 }
 
 // Unload the data in the dialog into the current control set
@@ -1270,7 +1294,7 @@ void CCameraSetupDlg::UnloadDialogToConset()
   mCurSet->forceDark = m_bDarkAlways ? 1 : 0;
   mCurSet->onceDark = m_bDarkNext ? 1 : 0;
   mCurSet->averageDark = m_bAverageDark ? 1 : 0;
-  mCurSet->numAvgOrPtRpt = m_iAverageTimes;
+  mCurSet->numAverage = m_iAverageTimes;
   mCurSet->K2ReadMode =  *modeP;
   if (mParam->K2Type || mParam->canTakeFrames)
     mCurSet->doseFrac = m_bDoseFracMode ? 1 : 0;
@@ -1279,9 +1303,9 @@ void CCameraSetupDlg::UnloadDialogToConset()
   if (!mWinApp->mDEToolDlg.CanSaveFrames(mParam))
     mCurSet->sumK2OrDeCntFrames = m_bSaveK2Sums ? 1 : 0;
   mCurSet->summedFrameList = mSummedFrameList;
-  mCurSet->numSkipBefore = (mTietzType && mSTEMcamera) ? m_iPrepixel:
+  mCurSet->skipBeforeOrPrePix = (mTietzType && mSTEMcamera) ? m_iPrepixel:
     mNumSkipBefore;
-  mCurSet->numSkipAfter = mNumSkipAfter;
+  mCurSet->skipAfterOrPtRpt = mNumSkipAfter;
   mCurSet->userFrameFractions = mUserFrameFrac;
   mCurSet->userSubframeFractions = mUserSubframeFrac;
 
@@ -1355,11 +1379,11 @@ void CCameraSetupDlg::UnloadDialogToConset()
       }
     }
     if (mDE_Type) {
-      conSet->numAvgOrPtRpt = m_bDePointRepeats ? 1 : 0;
-      conSet->processing = m_bDeSTEMGainCorr ? 1 : 0;
-      conSet->lineSyncOrPattern = m_comboPattern.GetCurSel();
-      conSet->filtTypeOrPreset = m_comboDePreset.GetCurSel();
-      setOrClearFlags((b3dUInt32 *)(&conSet->saveFrames), DE_SAVE_FINAL, 
+      mCurSet->skipAfterOrPtRpt = m_iDePointRepeats;
+      mCurSet->processing = m_bDeSTEMGainCorr ? 1 : 0;
+      mCurSet->lineSyncOrPattern = m_comboPattern.GetCurSel();
+      mCurSet->filtTypeOrPreset = m_comboDePreset.GetCurSel();
+      setOrClearFlags((b3dUInt32 *)(&mCurSet->saveFrames), DE_SAVE_FINAL,
         m_bDeSTEMSaveFinal ? 1 : 0);
     }
     if (mDE_Type || mParam->DectrisType)
@@ -1383,18 +1407,21 @@ float CCameraSetupDlg::ManageExposure(bool updateIfChange)
   float realExp = m_eExposure, realFrame = m_fFrameTime * mFrameTimeMsScale;
   int mode = mDE_Type ? m_iDEMode : m_iK2Mode;
   int special = 0;
+  BOOL changed = false;
   bool saySaving, savingDE = m_bDEsaveMaster || m_bDEalignFrames;
 
   // General call and computations
   mCamera->CropTietzSubarea(mParam, m_eRight, m_eLeft, m_eBottom, m_eTop,
     m_iProcessing, 1 - m_iContSingle, special);
-  BOOL changed = mCamera->ConstrainExposureTime(mParam, m_bDoseFracMode,
-    mParam->OneViewType ? m_bUseHwROI_OvDiff : mode,
-    mBinnings[m_iBinning], 
-    mCamera->MakeAlignSaveFlags(m_bSaveFrames, m_bAlignDoseFrac, mCurSet->useFrameAlign),
-    savingDE ? m_iSumCount : 1, realExp, realFrame, special, 
-    1 - m_iContSingle);
-  m_fFrameTime = realFrame / mFrameTimeMsScale;
+  if (!mSTEMcamera) {
+    changed = mCamera->ConstrainExposureTime(mParam, m_bDoseFracMode,
+      mParam->OneViewType ? m_bUseHwROI_OvDiff : mode,
+      mBinnings[m_iBinning],
+      mCamera->MakeAlignSaveFlags(m_bSaveFrames, m_bAlignDoseFrac, mCurSet->useFrameAlign),
+      savingDE ? m_iSumCount : 1, realExp, realFrame, special,
+      1 - m_iContSingle);
+    m_fFrameTime = realFrame / mFrameTimeMsScale;
+  }
   float roundFac = mCamera->ExposureRoundingFactor(mParam);
   if (roundFac) {
     m_eExposure = (float)(B3DNINT(realExp * roundFac) / roundFac);
@@ -1403,11 +1430,11 @@ float CCameraSetupDlg::ManageExposure(bool updateIfChange)
     m_eExposure = realExp;
 
   if (mParam->K2Type == K3_TYPE || (mParam->OneViewType && mParam->canTakeFrames) ||
-    mParam->DectrisType)
+    (mParam->DectrisType && !mSTEMcamera))
     m_fFrameTime = RoundedFrameTime(m_fFrameTime, mParam);
 
   // Special for DE
-  if (mWinApp->mDEToolDlg.CanSaveFrames(mParam)) {
+  if (mWinApp->mDEToolDlg.CanSaveFrames(mParam) && !mParam->STEMcamera) {
     m_fDEframeTime = RoundedFrameTime(m_fFrameTime * (savingDE ? 1 : m_iSumCount));
     int frames = (int)floor(realExp / m_fFrameTime) + 1;
     m_statNumDEraw.ShowWindow(savingDE ? SW_SHOW : SW_HIDE);
@@ -1418,6 +1445,8 @@ float CCameraSetupDlg::ManageExposure(bool updateIfChange)
         saySaving ? "saved" : "", saySaving && m_bDEalignFrames ? "/" : "",
         m_bDEalignFrames ? "aligned" : "");
   }
+  if (mDE_Type && mSTEMcamera && AnyVirtualDEChanSelected())
+    return mCurSet->exposure;
   if (changed && updateIfChange)
     ManageDose();
 
@@ -1440,7 +1469,7 @@ float CCameraSetupDlg::ManageExposure(bool updateIfChange)
 void CCameraSetupDlg::HandleFrameLongerThanExposure()
 {
   float maxFrame = m_eExposure * (mParam->TietzType ? 0.5f : 1.f);
-  if (mParam->DE_camType && m_fDEframeTime > maxFrame) {
+  if (mParam->DE_camType && !mParam->STEMcamera && m_fDEframeTime > maxFrame) {
     m_fDEframeTime = maxFrame;
     UpdateData(false);
     OnKillfocusDeFrameTime();
@@ -1464,6 +1493,7 @@ void CCameraSetupDlg::ManageDrift(bool useMinRate)
   BOOL recForTS = mWinApp->StartedTiltSeries() && tsParam->cameraIndex == mCurrentCamera
     && mCurrentSet == RECORD_CONSET;
   BOOL driftOK = !(recForTS && mWinApp->mTSController->GetTypeVaries(TS_VARY_DRIFT));
+  bool noVirtChan = true;
   bool tietzFrames = mParam->TietzType && mParam->canTakeFrames && m_bDoseFracMode;
   float frameTime, newSettling;
   mMinimumSettling = (m_iShuttering == USE_DUAL_SHUTTER || mTietzType > 0 || mAMTtype > 0
@@ -1484,12 +1514,19 @@ void CCameraSetupDlg::ManageDrift(bool useMinRate)
     right = m_eRight / binning;
     top = m_eTop / binning;
     bottom = m_eBottom / binning;
+    noVirtChan = !(AnyVirtualDEChanSelected() && mFPSfor4dSTEM > 0.);
+    if (noVirtChan) {
 
-    if (useMinRate && mParam->maxScanRate)
-      m_eExposure = 0.01f;
-    mCamera->ComputePixelTime(mParam, right - left, bottom - top, 
+      if (useMinRate && mParam->maxScanRate)
+        m_eExposure = 0.01f;
+    } else {
+      m_eExposure = (right - left) * (bottom - top) / mFPSfor4dSTEM;
+    }
+    mCamera->ComputePixelTime(mParam, right - left, bottom - top,
       (m_bLineSync && mParam->GatanCam) ? 1 : 0,
-      pixelSize, useMinRate ? mParam->maxScanRate : 0.f, m_eExposure, pixelTime,scanRate);
+      pixelSize, useMinRate ? mParam->maxScanRate : 0.f, m_eExposure, pixelTime,
+      scanRate);
+    m_driftEdit.EnableWindow(noVirtChan);
     if (pixelTime < 9.99)
       m_strSettling.Format("%.2f", pixelTime);
     else
@@ -1498,7 +1535,7 @@ void CCameraSetupDlg::ManageDrift(bool useMinRate)
     if (mParam->FEItype)
       GetFEIflybackTime(flyback);
     m_butDynFocus.EnableWindow(mCamera->DynamicFocusOK(m_eExposure, bottom - top,
-      mParam->flyback, itmp, pixelTime) > 0);
+      flyback, itmp, pixelTime) > 0);
     expTmp = 0.01f;
     m_strScanRate.Format("Scan rate = %.2f  um/msec", scanRate);
     if (mParam->maxScanRate > 0. && scanRate > mParam->maxScanRate + 0.001)
@@ -1565,7 +1602,7 @@ void CCameraSetupDlg::ManageDrift(bool useMinRate)
       radio->EnableWindow(mDMbeamShutterOK && m_eSettling == 0.0);
     }
   }
-  m_editExposure.EnableWindow(!(recForTS && 
+  m_editExposure.EnableWindow(noVirtChan && !(recForTS && 
     mWinApp->mTSController->GetTypeVaries(TS_VARY_EXPOSURE)));
   if (mParam->K2Type)
     m_editFrameTime.EnableWindow(m_bDoseFracMode && !(recForTS && 
@@ -1593,8 +1630,11 @@ void CCameraSetupDlg::ManageCamera()
   CStatic *stat;
   CWnd *win;
   CRect rect;
+  ShortVec virtChans;
+  StringVec camPresets, scanPresets;
   ControlSet *conSets = &mConSets[mActiveCameraList[mCurrentCamera] * MAX_CONSETS];
   CString title = "Camera Parameters   --   " + mParam->name;
+
   mDE_Type = mParam->DE_camType;
   mAMTtype = mParam->AMTtype;
   mFEItype = mParam->FEItype;
@@ -1616,7 +1656,7 @@ void CCameraSetupDlg::ManageCamera()
   states[7] = mSTEMcamera && mDE_Type;
   states[8] = mParam->K2Type || mFalconCanSave || mParam->canTakeFrames;
   states[9] = mParam->K2Type;
-  states[10] = mWinApp->mDEToolDlg.CanSaveFrames(mParam);
+  states[10] = mWinApp->mDEToolDlg.CanSaveFrames(mParam) && !mSTEMcamera;
   SetWindowText((LPCTSTR)title);
   mCameraSizeX = mParam->sizeX;
   mCameraSizeY = mParam->sizeY;
@@ -1636,15 +1676,25 @@ void CCameraSetupDlg::ManageCamera()
   }
 
   if (mSTEMcamera && mDE_Type) {
-    maxChan = mCamera->GetMaxChannels(mParam);
-    for (i = 0; i < maxChan; i++)
-      if (mParam->channelName[i].Find("Vi") == 0 ||
-        mParam->channelName[i].Find("Vr") == 0)
-        hasVirtual = true;
+    if (!mDeCombosLoaded) {
+      mCamera->GetComboListsForDeSTEM(camPresets, scanPresets);
+      for (i = 0; i < (int)camPresets.size(); i++)
+        m_comboDePreset.AddString(camPresets[i].c_str());
+      SetDropDownHeight(&m_comboDePreset, (int)camPresets.size());
+      for (i = 0; i < (int)scanPresets.size(); i++)
+        m_comboPattern.AddString(scanPresets[i].c_str());
+      SetDropDownHeight(&m_comboPattern, (int)scanPresets.size());
+      mDeCombosLoaded = true;
+    }
+
+    if (!mCamera->UpdateDEVirtualDetectorNames(mParam, virtChans) && virtChans.size())
+      hasVirtual = true;
+    
     if (!hasVirtual)
       states[7] = false;
   }
 
+  mMaxExposure = (mSTEMcamera && (mDE_Type || mParam->DectrisType)) ? 36000.f : 1800.f;
   mTietzCanPreExpose = mParam->TietzCanPreExpose;
   mCanAlignFrames = (mParam->canTakeFrames & FRAMES_CAN_BE_ALIGNED) != 0;
   mCanSaveFrames = (mParam->canTakeFrames & FRAMES_CAN_BE_SAVED) != 0;
@@ -1679,6 +1729,7 @@ void CCameraSetupDlg::ManageCamera()
   mMaxIntegration = B3DMAX(1, mParam->maxIntegration);
   m_spinIntegration.SetRange(1, 10000);
   m_spinIntegration.SetPos(5000);
+  m_sbcPointRepeats.SetRange(1, MAX_POINT_REPEATS);
 
   leftTable[mDoseFracTableInd] = mFalconCanSave ? mDoseFracLeftFalcon : mDoseFracLeftOrig;
   m_butDoseFracMode.SetWindowPos(NULL, 0, 0,
@@ -1924,6 +1975,7 @@ void CCameraSetupDlg::ManageCamera()
           strBin += ": NA";
         combo->AddString((LPCTSTR)strBin);
       }
+      SetDropDownHeight(combo, mParam->numChannels + (maxChan > 1 ? 1 : 0));
     }
   }
   m_statBinning.SetWindowText(mSTEMcamera ? "Sampling" : "Binning");
@@ -1963,13 +2015,15 @@ void CCameraSetupDlg::ManageCamera()
       mWinApp->mTSController->GetTypeVaries(TS_VARY_EXPOSURE)));
     SetDlgItemText(IDC_MINIMUM_DRIFT, "");
 
-    SetDlgItemText(IDC_STATPROC, "Mag for Autofocusing");
-    SetDlgItemText(IDC_RUNPROCESSED, "Unchanged");
-    SetDlgItemText(IDC_RDARKSUBTRACT, "Down 2x");
-    SetDlgItemText(IDC_RGAINNORMALIZED, "Up 2x");
-    SetDlgItemText(IDC_RBOOSTMAG3, "Up 3x");
-    SetDlgItemText(IDC_RBOOSTMAG4, "Up 4x");
-    SetDlgItemText(IDC_REMOVEXRAYS, "Do for all Focus shots");
+    if (mGatanType) {
+      SetDlgItemText(IDC_STATPROC, "Mag for Autofocusing");
+      SetDlgItemText(IDC_RUNPROCESSED, "Unchanged");
+      SetDlgItemText(IDC_RDARKSUBTRACT, "Down 2x");
+      SetDlgItemText(IDC_RGAINNORMALIZED, "Up 2x");
+      SetDlgItemText(IDC_RBOOSTMAG3, "Up 3x");
+      SetDlgItemText(IDC_RBOOSTMAG4, "Up 4x");
+      SetDlgItemText(IDC_REMOVEXRAYS, "Do for all Focus shots");
+    }
   } else {
     SetDlgItemText(IDC_STATPROC, "Processing");
     SetDlgItemText(IDC_RUNPROCESSED, "Unprocessed");
@@ -2390,13 +2444,7 @@ void CCameraSetupDlg::OnKillfocusLeft()
   }
   m_eLeft = Left / mCoordScaling;
   m_eRight = Right / mCoordScaling;
-  if (AdjustCoords(mBinnings[m_iBinning]))
-    update = true;
-  if (update) {
-    UpdateData(FALSE);
-    if (!mClosing)
-      DrawBox();
-  }
+  FinishEditingCoords(update);
 }
 
 void CCameraSetupDlg::OnKillfocusRight() 
@@ -2414,13 +2462,7 @@ void CCameraSetupDlg::OnKillfocusRight()
   }
   m_eLeft = Left / mCoordScaling;
   m_eRight = Right / mCoordScaling;
-  if (AdjustCoords(mBinnings[m_iBinning]))
-    update = true;
-  if (update) {
-    UpdateData(FALSE);
-    if (!mClosing)
-      DrawBox();
-  }
+  FinishEditingCoords(update);
 }
 
 void CCameraSetupDlg::OnKillfocusTop() 
@@ -2443,13 +2485,7 @@ void CCameraSetupDlg::OnKillfocusTop()
   }
   m_eTop = Top / mCoordScaling;
   m_eBottom = Bottom / mCoordScaling;
-  if (AdjustCoords(mBinnings[m_iBinning]))
-    update = true;
-  if (update) {
-    UpdateData(FALSE);
-    if (!mClosing)
-      DrawBox();
-  }
+  FinishEditingCoords(update);
 }
 
 void CCameraSetupDlg::OnKillfocusBottom() 
@@ -2467,13 +2503,7 @@ void CCameraSetupDlg::OnKillfocusBottom()
   }
   m_eTop = Top / mCoordScaling;
   m_eBottom = Bottom / mCoordScaling;
-  if (AdjustCoords(mBinnings[m_iBinning]))
-    update = true;
-  if (update) {
-    UpdateData(FALSE);
-    if (!mClosing)
-      DrawBox();
-  }
+  FinishEditingCoords(update);
 }
 
 void CCameraSetupDlg::OnKillfocusEditexposure() 
@@ -2583,18 +2613,20 @@ void CCameraSetupDlg::ManageDose()
   float realFrame = m_fFrameTime * mFrameTimeMsScale;
   mCamera->CropTietzSubarea(mParam, m_eRight, m_eLeft, m_eBottom, m_eTop,
     m_iProcessing, 1 - m_iContSingle, special);
-  mCamera->ConstrainExposureTime(mParam, m_bDoseFracMode,
-    mParam->OneViewType ? m_bUseHwROI_OvDiff : mode, mBinnings[m_iBinning],
-    mCamera->MakeAlignSaveFlags(m_bSaveFrames, mCurSet->alignFrames, 
-      mCurSet->useFrameAlign), m_bDEsaveMaster ? m_iSumCount : 1, realExp, 
-    realFrame, special, 1 - m_iContSingle);
-  m_fFrameTime = realFrame / mFrameTimeMsScale;
-  if (mParam->DE_camType)
-    m_fDEframeTime = RoundedFrameTime(m_fFrameTime * 
-    (m_bDEsaveMaster ? 1 : m_iSumCount));
-  if (mParam->K2Type || (mParam->OneViewType && mParam->canTakeFrames) || 
-    mParam->DectrisType)
-    m_fFrameTime = RoundedFrameTime(m_fFrameTime, mParam);
+  if (!mSTEMcamera) {
+    mCamera->ConstrainExposureTime(mParam, m_bDoseFracMode,
+      mParam->OneViewType ? m_bUseHwROI_OvDiff : mode, mBinnings[m_iBinning],
+      mCamera->MakeAlignSaveFlags(m_bSaveFrames, mCurSet->alignFrames,
+        mCurSet->useFrameAlign), m_bDEsaveMaster ? m_iSumCount : 1, realExp,
+      realFrame, special, 1 - m_iContSingle);
+    m_fFrameTime = realFrame / mFrameTimeMsScale;
+    if (mParam->DE_camType)
+      m_fDEframeTime = RoundedFrameTime(m_fFrameTime *
+      (m_bDEsaveMaster ? 1 : m_iSumCount));
+    if (mParam->K2Type || (mParam->OneViewType && mParam->canTakeFrames) ||
+      mParam->DectrisType)
+      m_fFrameTime = RoundedFrameTime(m_fFrameTime, mParam);
+  }
   if (IS_FALCON3_OR_4(mParam) && m_iK2Mode) {
     if (mCamera->IsSaveInEERMode(mParam, m_bSaveFrames, m_bAlignDoseFrac,
       mCurSet->useFrameAlign, m_iK2Mode))
@@ -2612,7 +2644,7 @@ void CCameraSetupDlg::ManageDose()
     m_strElecDose = "Dose: Not calibrated";
 
   // Do dose rate for a direct detector
-  if (mCamera->IsDirectDetector(mParam)) {
+  if (mCamera->IsDirectDetector(mParam) && !(mDE_Type && mSTEMcamera)) {
     m_strDosePerFrame = "";
     if (dose) {
       float pixel = 10000.f * BinDivisorF(mParam) * 
@@ -2703,6 +2735,20 @@ bool CCameraSetupDlg::AdjustCoords(int binning, int updateIfNoSubarea)
   return update;
 }
 
+// Common operations after a coordinate value is edited
+void CCameraSetupDlg::FinishEditingCoords(BOOL update)
+{
+  if (AdjustCoords(mBinnings[m_iBinning]))
+    update = true;
+  if (update) {
+    UpdateData(FALSE);
+    if (!mClosing)
+      DrawBox();
+  }
+  if (mVirtChanSelected)
+    ManageDrift();
+}
+
 /////////////////////////////////////////////
 // STEM
 /////////////////////////////////////////////
@@ -2720,6 +2766,7 @@ void CCameraSetupDlg::OnSelendokChan8() { NewChannelSel(7); }
 void CCameraSetupDlg::NewChannelSel(int which)
 {
   CComboBox *chgbox = (CComboBox *)GetDlgItem(IDC_COMBOCHAN1 + which);
+  bool newVirt;
   int newsel = chgbox->GetCurSel();
   int numSel = newsel ? 1 : 0;
   UpdateData(true);
@@ -2735,6 +2782,24 @@ void CCameraSetupDlg::NewChannelSel(int which)
     if (newsel && mCamera->MutuallyExclusiveChannels(sel - 1, newsel - 1)) {
       combo->SetCurSel(0);
       numSel--;
+    }
+  }
+
+  // Manage exposure when selection of virtual channels changes
+  newVirt = AnyVirtualDEChanSelected();
+  if (!BOOL_EQUIV(mVirtChanSelected, newVirt)) {
+    FindFPSfor4dSTEM();
+    if (mFPSfor4dSTEM > 0.) {
+
+      // Copy out real exposure to conset if it is becoming virtual, or copy conset in
+      // if it is no longer virtual
+      if (newVirt) {
+        mCurSet->exposure = m_eExposure;
+      } else {
+        m_eExposure = mCurSet->exposure;
+      }
+      mVirtChanSelected = newVirt;
+      ManageDrift();
     }
   }
   if (ManageSTEMBinning(numSel))
@@ -2800,6 +2865,105 @@ int CCameraSetupDlg::GetFEIflybackTime(float &flyback)
   int magIndex = GetMagIndexForCamAndSet();
   return mWinApp->mCalibTiming->FlybackTimeFromTable(binning, (m_eRight - m_eLeft) /
     binning, magIndex, m_eExposure, flyback, startup);
+}
+
+void CCameraSetupDlg::OnStemSaveFolder()
+{
+  if (mDE_Type)
+    OnDESetSaveFolder();
+  else
+    OnSetSaveFolder();
+}
+
+void CCameraSetupDlg::OnDeStemSaveFinal()
+{
+  UpdateData(true);
+  ManageVirtualSTEM();
+}
+
+void CCameraSetupDlg::OnSave4dStack()
+{
+  UpdateData(true);
+  ManageVirtualSTEM();
+}
+
+// Determines if a virtual DE STEM detector is selected and enables items appropriately
+void CCameraSetupDlg::ManageVirtualSTEM()
+{
+  bool de4Dopts = false, enable;
+  if (!mSTEMcamera || !(mDE_Type || mParam->DectrisType))
+    return;
+  if (mDE_Type) {
+    de4Dopts = AnyVirtualDEChanSelected();
+    EnableDlgItem(IDC_DE_STEM_GAIN_CORR, de4Dopts);
+    EnableDlgItem(IDC_DE_POINT_REPEATS, de4Dopts);
+    EnableDlgItem(IDC_STAT_DE_PRESET, de4Dopts);
+    EnableDlgItem(IDC_COMBO_DE_PRESET, de4Dopts);
+    EnableDlgItem(IDC_SAVE_4D_STACK, de4Dopts);
+    EnableDlgItem(IDC_STAT_POINT_REPEATS, de4Dopts);
+    EnableDlgItem(IDC_EDIT_POINT_REPEATS, de4Dopts);
+    EnableDlgItem(IDC_SPIN_POINT_REPEATS, de4Dopts);
+  }
+  enable = (mDE_Type && m_bDeSTEMSaveFinal) ||
+    (m_bSave4dSTEM && (mParam->DectrisType || de4Dopts));
+  EnableDlgItem(IDC_STEM_SAVE_FOLDER, enable);
+  EnableDlgItem(IDC_STEM_NAMING_OPTS, enable);
+}
+
+bool CCameraSetupDlg::AnyVirtualDEChanSelected()
+{
+  int sel, ind, virt, numChan = mCamera->GetMaxChannels(mParam);
+  if (mDE_Type) {
+    ShortVec virtChan = mCamera->GetVirtualDEChannels();
+    for (ind = 0; ind < numChan; ind++) {
+      CComboBox *combo = (CComboBox *)GetDlgItem(IDC_COMBOCHAN1 + ind);
+      sel = combo->GetCurSel();
+      if (sel == CB_ERR)
+        sel = -1;
+      else if (numChan > 1)
+        sel--;
+      B3DCLAMP(sel, -1, numChan - 1);
+      if (sel >= 0 && mParam->availableChan[sel]) {
+        for (virt = 0; virt < (int)virtChan.size(); virt++)
+          if (virtChan[virt] == sel)
+            return true;
+      }
+    }
+  }
+  return false;
+}
+
+
+void CCameraSetupDlg::OnKillfocusEditPointRepeats()
+{
+  UpdateData(true);
+}
+
+
+void CCameraSetupDlg::OnDeltaposSpinPointRepeats(NMHDR *pNMHDR, LRESULT *pResult)
+{
+  UpdateData(true);
+  if (NewSpinnerValue(pNMHDR, pResult, m_iDePointRepeats, 1, MAX_POINT_REPEATS,
+    m_iDePointRepeats))
+    return;
+  UpdateData(false);
+}
+
+
+void CCameraSetupDlg::OnSelendokComboDePreset()
+{
+  UpdateData(true);
+  mCurSet->filtTypeOrPreset = m_comboDePreset.GetCurSel();
+  FindFPSfor4dSTEM();
+  ManageDrift();
+}
+
+void CCameraSetupDlg::FindFPSfor4dSTEM()
+{
+  StringVec camPresets, scanPresets;
+  mCamera->GetComboListsForDeSTEM(camPresets, scanPresets);
+  mFPSfor4dSTEM = mCamera->mDE_Cam->GetPresetOrCurrentFPS(
+    camPresets[mCurSet->filtTypeOrPreset]);
 }
 
 /////////////////////////////////////////////
@@ -3717,6 +3881,8 @@ void CCameraSetupDlg::ManageDEpanel(void)
 // new frame time: adjust the sum count and then make sure it is legal
 void CCameraSetupDlg::OnKillfocusDeFrameTime()
 {
+  if (mSTEMcamera)
+    return;
   UpdateData(true);
   m_iSumCount = B3DNINT(m_fDEframeTime * m_fDEfps);
   B3DCLAMP(m_iSumCount, 1, MAX_DE_SUM_COUNT);
@@ -3764,56 +3930,3 @@ float CCameraSetupDlg::ActualFrameTime(float roundedTime)
 }
 
 
-void CCameraSetupDlg::OnStemSaveFolder()
-{
-  if (mDE_Type)
-    OnDESetSaveFolder();
-  else
-    OnSetSaveFolder();
-}
-
-
-void CCameraSetupDlg::OnDeStemSaveFinal()
-{
-  UpdateData(true);
-  ManageVirtualSTEM();
-}
-
-
-void CCameraSetupDlg::OnSave4dStack()
-{
-  UpdateData(true);
-  ManageVirtualSTEM();
-}
-
-// Determines if a virtual DE STEM detector is selected and enables items appropriately
-void CCameraSetupDlg::ManageVirtualSTEM()
-{
-  int sel, ind, numChan = mCamera->GetMaxChannels(mParam);
-  bool de4Dopts = false, enable;
-  if (!mSTEMcamera || !(mDE_Type || mParam->DectrisType))
-    return;
-  if (mDE_Type) {
-    for (ind = 0; ind < numChan; ind++) {
-      CComboBox *combo = (CComboBox *)GetDlgItem(IDC_COMBOCHAN1 + ind);
-      sel = combo->GetCurSel();
-      if (sel == CB_ERR)
-        sel = -1;
-      else if (numChan > 1)
-        sel--;
-      B3DCLAMP(sel, -1, numChan - 1);
-      if (sel >= 0 && (mParam->channelName[sel].Find("Vi") == 0 ||
-        mParam->channelName[sel].Find("Vr") == 0))
-        de4Dopts = true;
-    }
-    EnableDlgItem(IDC_DE_STEM_GAIN_CORR, de4Dopts);
-    EnableDlgItem(IDC_DE_POINT_REPEATS, de4Dopts);
-    EnableDlgItem(IDC_STAT_DE_PRESET, de4Dopts);
-    EnableDlgItem(IDC_COMBO_DE_PRESET, de4Dopts);
-    EnableDlgItem(IDC_SAVE_4D_STACK, de4Dopts);
-  }
-  enable = (mDE_Type && m_bDeSTEMSaveFinal) ||
-    (m_bSave4dSTEM && (mParam->DectrisType || de4Dopts));
-  EnableDlgItem(IDC_STEM_SAVE_FOLDER, enable);
-  EnableDlgItem(IDC_STEM_NAMING_OPTS, enable);
-}
