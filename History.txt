@@ -3,6 +3,9 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+11/20/25: Made it request insertion only once for Gatan cameras and then wait
+until inserted; repeated requests wasted time and caused timeouts with K3.
+
 11/20/25: Fixed SEMCCD plugin crashing DM when first saved raw images from K3
 are binned by 2 and from a subarea (In 4.2).
 

@@ -188,7 +188,7 @@ CCameraController::CCameraController()
   mSimulationMode = false;
   mRaisingScreen = 0;
   mAcquiring = false;
-  mInserting = false;
+  mInserting = 0;
   mEnsuringDark = false;
   mHalting = false;
   mShotIncomplete = false;
@@ -493,6 +493,7 @@ CCameraController::CCameraController()
   mExtraSTEMTimeout = 5.;
   for (l = 0; l < MAX_CHANNELS; l++)
     mTD.PartialArrays[l] = NULL;
+  mAskedDMtoInsert = false;
 }
 
 // Clear anything that might be set externally, or was cleared in constructor and cleanup
@@ -2840,7 +2841,7 @@ int CCameraController::ThreadBusy()
   CCameraController *cam = winApp->mCamera;
   if (cam->Raising())
     return winApp->mScope->ScreenBusy();
-  if (cam->Inserting())
+  if (cam->Inserting() == 1)
     return cam->InsertBusy();
   if (cam->Settling())
     return cam->GetHalting() ? -1 : 1;
@@ -3257,7 +3258,7 @@ void CCameraController::Capture(int inSet, bool retrying)
   if (mRaisingScreen > 0 && mParam->STEMcamera && mWinApp->DoSwitchSTEMwithScreen())
     mShiftManager->SetGeneralTimeOut(GetTickCount(), mScreenUpSTEMdelay);
   mRaisingScreen = 0;
-  mInserting = false;
+  mInserting = 0;
   mSuspendFilterUpdates = false;
 
   // If the halt flag is set, clear it and exit
@@ -3396,7 +3397,7 @@ void CCameraController::Capture(int inSet, bool retrying)
   // Make sure camera is inserted, blocking cameras are retracted, check temperature, and
   // set up saving from K2 camera;  Again clear low dose area flag to be safe
   // Only do this once, not if come back in from settling
-  if (mSettling < 0) {
+  if (mSettling < 0 || mAskedDMtoInsert) {
     mTD.NumAsyncSumFrames = -1;
     mNumSubsetAligned = 0;
     if (CapManageInsertTempK2Saving(conSet, inSet, retracting, numActive)) {
@@ -4652,7 +4653,7 @@ int CCameraController::CapManageInsertTempK2Saving(const ControlSet &conSet, int
                 // Set flag and setup thread parameters.  Blank if necessary
                 SEMTrace('R', "Camera # %d is %s it", iCam, 
                   insertingOther ? "retracted; inserting" : "inserted; retracting");
-                mInserting = true;
+                mInserting = 1;
                 mITD.camera = camP->cameraNumber;
                 mITD.DMindex = CAMP_DM_INDEX(camP);
                 mITD.DE_camType = camP->DE_camType;
@@ -4713,7 +4714,9 @@ int CCameraController::CapManageInsertTempK2Saving(const ControlSet &conSet, int
           inserted = 1;
           TestCameraInserted(mTD.Camera, inserted, false);
           if (!inserted) {
-            mInserting = true;
+
+            // Set this to 2 if insert request was already made
+            mInserting = (mAskedDMtoInsert && mParam->GatanCam) ? 2 : 1;
             mITD.camera = mTD.SelectCamera;
             mITD.DMindex = CAMP_DM_INDEX(mParam);
             mITD.DE_camType = mParam->DE_camType;
@@ -4726,19 +4729,32 @@ int CCameraController::CapManageInsertTempK2Saving(const ControlSet &conSet, int
             mITD.delay = (int)(1000. * mParam->insertDelay);
             mITD.insert = true;
             mWinApp->SetStatusText(SIMPLE_PANE, "INSERTING CAMERA");
+            mAskedDMtoInsert = mParam->GatanCam;
           }
         }
 
         // Start thread if needed
         if (mInserting) {
-          mSuspendFilterUpdates = mITD.FEItype && mWinApp->FilterIsSelectris();
-          mInsertThread = AfxBeginThread(InsertProc, &mITD,
-            THREAD_PRIORITY_NORMAL, 0, CREATE_SUSPENDED);
-          SEMTrace('R', "InsertProc created with ID 0x%0x",mInsertThread->m_nThreadID);
-          mInsertThread->m_bAutoDelete = false;
-          mInsertThread->ResumeThread();
-          mWinApp->AddIdleTask(ThreadBusy, ScreenOrInsertDone,
-            ScreenOrInsertError, inSet, 0);
+          if (mInserting == 2) {
+
+            // Just set up for settling after first request
+            mSettling = inSet;
+            mWinApp->SetStatusText(SIMPLE_PANE, "INSERTING CAMERA");
+            mWinApp->AddIdleTask(ThreadBusy, ScreenOrInsertDone,
+              ScreenOrInsertError, inSet, -2000);
+            SEMTrace('R', "Waiting another 2 sec");
+          } else {
+
+            // Or start thread with request
+            mSuspendFilterUpdates = mITD.FEItype && mWinApp->FilterIsSelectris();
+            mInsertThread = AfxBeginThread(InsertProc, &mITD,
+              THREAD_PRIORITY_NORMAL, 0, CREATE_SUSPENDED);
+            SEMTrace('R', "InsertProc created with ID 0x%0x", mInsertThread->m_nThreadID);
+            mInsertThread->m_bAutoDelete = false;
+            mInsertThread->ResumeThread();
+            mWinApp->AddIdleTask(ThreadBusy, ScreenOrInsertDone,
+              ScreenOrInsertError, inSet, 0);
+          }
           mWinApp->UpdateBufferWindows();
           justReturn = true;
         }
@@ -9805,7 +9821,7 @@ void CCameraController::ScreenOrInsertCleanup(int error)
   if (mInserting && !mITD.insert && mBlankWhenRetracting && !mParam->noShutter)
     mScope->BlankBeam(false, "ScreenOrInsertCleanup");
   mRaisingScreen = 0;
-  mInserting = false;
+  mInserting = 0;
   mSuspendFilterUpdates = false;
   mHalting = false;
   if (mWaitingForStacking > 0)  
@@ -11261,6 +11277,7 @@ void CCameraController::ErrorCleanup(int error)
   mRemoveFEIalignedFrames = false;
   mDoingDEframeAlign = 0;
   mSuspendFilterUpdates = false;
+  mAskedDMtoInsert = false;
 
   // clear flags for one-shot type items, mostly set from elsewhere
   ClearOneShotFlags();

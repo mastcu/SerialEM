@@ -687,7 +687,7 @@ public:
   BOOL Raising() {return mRaisingScreen != 0;};
   bool RunningScript() { return mScriptThread != NULL; };
   double GetScriptReturnVal() {return mITD.scriptRetval; };
-  BOOL Inserting() {return mInserting;};
+  int Inserting() {return mInserting;};
   BOOL EnsuringDark() {return mEnsuringDark;};
   BOOL Acquiring() {return mAcquiring;};
   BOOL DoingTiltSums() { return mTD.DoingTiltSums; };
@@ -746,7 +746,7 @@ public:
   BOOL mScreenDownMode;   // Flag to leave screen down during capture
   BOOL mSimulationMode;   // Flag to acquire through simulation
   int mRaisingScreen;
-  BOOL mInserting;
+  int mInserting;
   BOOL mAcquiring;
   BOOL mHalting;
   BOOL mEnsuringDark;
@@ -1140,6 +1140,7 @@ public:
   int mMinShotInterval;          // Interval in msec to sleep before a shot
   int mFalconWarningCount;       // Number of times falcon local path warning given
   NewImCallback mNewImageCallback;  // Function to call with new image in place
+  BOOL mAskedDMtoInsert;          // Flag to prevent multiple insertion requests
   BOOL mDectrisSaveAsHDF;         // Flag for plugin/cmera to save directly as HDF5
   float mExtraSTEMTimeout;         // Time to add to timeout in seconds for any STEM camera
   ShortVec mVirtualDEChannels;    // List of which detectors had virtual names originally
