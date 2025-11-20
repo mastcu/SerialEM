@@ -51,7 +51,7 @@ struct ControlSet {
   int top;
   int right;
   int bottom;
-  int numAvgOrPtRpt;      // # darks to average or point repeats option in DE STEM
+  int numAverage;      // # darks to average or
   int averageDark;
   int averageOnce;
   int removeXrays;
@@ -74,8 +74,8 @@ struct ControlSet {
   ShortVec summedFrameList;
   FloatVec userFrameFractions;
   FloatVec userSubframeFractions;
-  int numSkipBefore;  // Also used for prepixel time in microseconds in Tietz STEM
-  int numSkipAfter;
+  int skipBeforeOrPrePix;  // # frames to skip or prepixel time in microseconds in Tietz STEM
+  int skipAfterOrPtRpt;  // # frames to skip after or  point repeats option in DE STEM
   int DElinSumCount;     // DE sum count only for linear mode
 };
 

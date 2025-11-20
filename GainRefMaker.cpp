@@ -554,13 +554,13 @@ void CGainRefMaker::AcquiringRefNextTask(int param)
     mConSet->binning = mParam->gainRefBinning;
     mConSet->forceDark = 0;
     mConSet->onceDark = 1;
-    mConSet->numAvgOrPtRpt = mParam->gainRefNumDarkAvg;
+    mConSet->numAverage = mParam->gainRefNumDarkAvg;
     mConSet->averageOnce = mParam->gainRefAverageDark;
     if (mWinApp->mDEToolDlg.CanSaveFrames(mParam) && mParam->gainRefSaveRaw) {
       mConSet->saveFrames = DE_SAVE_SUMS;   // This will save a sum of all frames
       mConSet->DElinSumCount = 0;
     }
-    timeout = 120000 * (1 + (mConSet->averageOnce ? mConSet->numAvgOrPtRpt : 1));
+    timeout = 120000 * (1 + (mConSet->averageOnce ? mConSet->numAverage : 1));
     mTakingRefImages = true;
     break;
 

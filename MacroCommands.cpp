@@ -10611,7 +10611,7 @@ int CMacCmd::SetFrameTime(void)
   if (falconCanSave && !savingInEER) {
     exposure = (truth ? mItemFlt[2] : 1.f) * mCamSet->exposure;
     subframes = B3DNINT(exposure / mCamera->GetFalconFractionDivisor(mCamParams)
-      - (mCamSet->numSkipBefore + mCamSet->numSkipAfter));
+      - (mCamSet->skipBeforeOrPrePix + mCamSet->skipAfterOrPtRpt));
     if (truth && !mCamSet->summedFrameList.size()) {
       mCamSet->userFrameFractions.resize(1);
       mCamSet->userFrameFractions[0] = 1.;

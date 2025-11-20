@@ -1578,7 +1578,7 @@ BOOL CSerialEMApp::InitInstance()
           cs->alignFrames = 0;
       }
       if (IS_FALCON3_OR_4(&mCamParams[iCam]))
-        cs->numSkipBefore = cs->numSkipAfter = 0;
+        cs->skipBeforeOrPrePix = cs->skipAfterOrPtRpt = 0;
 
       // Transition DE saving flags to new form
       if (mCamParams[iCam].DE_camType) {

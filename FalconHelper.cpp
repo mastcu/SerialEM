@@ -267,7 +267,7 @@ int CFalconHelper::SetupConfigFile(ControlSet &conSet, int consNum, CString loca
     numFrames = numRawFrames;
     mReadouts[0] = numFrames;
   }
-  numSkipBefore = IS_FALCON3_OR_4(camParams) ? 0 : conSet.numSkipBefore;
+  numSkipBefore = IS_FALCON3_OR_4(camParams) ? 0 : conSet.skipBeforeOrPrePix;
   if (mDoingAdvancedFrames) {
     ind = -1;
     //if (camParams->FEItype == FALCON2_TYPE)
@@ -282,7 +282,7 @@ int CFalconHelper::SetupConfigFile(ControlSet &conSet, int consNum, CString loca
 
   } else {
     if (mPlugFuncs->FIFsetupConfigFile((LPCTSTR)localPath, stackingDeferred, 
-      saveFrames, temp, conSet.numSkipBefore, readPtr)) {
+      saveFrames, temp, conSet.skipBeforeOrPrePix, readPtr)) {
         str.Format("Error opening or writing to intermediate frame configuration file"
           " %s:\n%s", (LPCTSTR)configFile, mPlugFuncs->GetLastErrorString());
         SEMMessageBox(str);
@@ -1742,8 +1742,8 @@ float CFalconHelper::AdjustSumsForExposure(CameraParameters *camParams,
   if (falconCanSave || (mCamera->IsConSetSaving(conSet, consNum, camParams, true) && 
     conSet->sumK2OrDeCntFrames))
     return AdjustForExposure(conSet->summedFrameList, 
-      falconCanSave ? conSet->numSkipBefore : 0, falconCanSave ? conSet->numSkipAfter : 0, 
-      exposure,
+      falconCanSave ? conSet->skipBeforeOrPrePix : 0, falconCanSave ? 
+      conSet->skipAfterOrPtRpt : 0, exposure,
       falconCanSave ? mCamera->GetFalconFractionDivisor(camParams) : conSet->frameTime,
       conSet->userFrameFractions, conSet->userSubframeFractions, falconCanSave && 
       FCAM_CAN_ALIGN(camParams) && conSet->alignFrames && !conSet->useFrameAlign);

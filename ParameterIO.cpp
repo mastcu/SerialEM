@@ -298,7 +298,7 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
           else if (NAME_IS("AverageDarkReference"))
             cs->averageDark = itemInt[1];
           else if (NAME_IS("TimesToAverageDarkRef"))
-            cs->numAvgOrPtRpt = itemInt[1];
+            cs->numAverage = itemInt[1];
           else if (NAME_IS("RemoveXrays"))
             cs->removeXrays = itemInt[1];
           else if (NAME_IS("Binning"))
@@ -342,9 +342,9 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
           else if (NAME_IS("DEsumCount"))
             cs->DElinSumCount = itemInt[1];
           else if (NAME_IS("SkipFramesBefore"))
-            cs->numSkipBefore = (itemInt[1] < 0 || itemInt[1] > 10) ? 0 : itemInt[1];
+            cs->skipBeforeOrPrePix = (itemInt[1] < 0 || itemInt[1] > 10) ? 0 : itemInt[1];
           else if (NAME_IS("SkipFramesAfter"))
-            cs->numSkipAfter = (itemInt[1] < 0 || itemInt[1] > 10) ? 0 : itemInt[1];
+            cs->skipAfterOrPtRpt = (itemInt[1] < 0 || itemInt[1] > 10) ? 0 : itemInt[1];
           else if (NAME_IS("ReadoutsPerFrame")) {
 
             // Backward-compatibility: read old one entry per frame
@@ -1833,7 +1833,7 @@ void CParameterIO::WriteSettings(CString strFileName)
         WriteInt("Processing", cs->processing);
         WriteInt("DarkReferenceEveryTime", cs->forceDark);
         WriteInt("AverageDarkReference", cs->averageDark);
-        WriteInt("TimesToAverageDarkRef", cs->numAvgOrPtRpt);
+        WriteInt("TimesToAverageDarkRef", cs->numAverage);
         WriteInt("RemoveXrays", cs->removeXrays);
         WriteInt("Binning", cs->binning);
         WriteInt("ShutteringMode", cs->shuttering);
@@ -1860,10 +1860,10 @@ void CParameterIO::WriteSettings(CString strFileName)
         WriteIndexedInts("ChannelIndex", cs->channelIndex, MAX_STEM_CHANNELS);
         oneState.Format("BoostMag %d %d\n", cs->boostMagOrHwBin, cs->magAllShotsOrHwROI);
         mFile->WriteString(oneState);
-        if (cs->numSkipBefore)
-          WriteInt("SkipFramesBefore", cs->numSkipBefore);
-        if (cs->numSkipBefore)
-          WriteInt("SkipFramesAfter", cs->numSkipAfter);
+        if (cs->skipBeforeOrPrePix)
+          WriteInt("SkipFramesBefore", cs->skipBeforeOrPrePix);
+        if (cs->skipBeforeOrPrePix)
+          WriteInt("SkipFramesAfter", cs->skipAfterOrPtRpt);
         OutputVector("SummedFrameList", (int)cs->summedFrameList.size(),
           &cs->summedFrameList, NULL);
         OutputVector("UserFrameFracs", (int)cs->userFrameFractions.size(), NULL,
@@ -2240,11 +2240,11 @@ void CParameterIO::WriteSettings(CString strFileName)
     }
     mFile->WriteString(oneState + "\n");
 
-    oneState.Format("RemoteControlParams %d %f %f %d %d %d %d %d\n", 
-      mWinApp->GetShowRemoteControl() ? 1 : 0, mWinApp->mRemoteControl.GetBeamIncrement(), 
-      mWinApp->mRemoteControl.GetIntensityIncrement(), 
-      mWinApp->mRemoteControl.m_bMagIntensity ? 1: 0,
-      mWinApp->mRemoteControl.GetFocusIncrementIndex(), 
+    oneState.Format("RemoteControlParams %d %f %f %d %d %d %d %d\n",
+      mWinApp->GetShowRemoteControl() ? 1 : 0, mWinApp->mRemoteControl.GetBeamIncrement(),
+      mWinApp->mRemoteControl.GetIntensityIncrement(),
+      mWinApp->mRemoteControl.m_bMagIntensity ? 1 : 0,
+      mWinApp->mRemoteControl.GetFocusIncrementIndex(),
       0, mWinApp->mRemoteControl.GetStageIncIndex(),
       mWinApp->mRemoteControl.GetDutyPercentIncrementIndex());
     mFile->WriteString(oneState);
@@ -6283,7 +6283,7 @@ void CParameterIO::SetDefaultCameraControls(int which, ControlSet *cs,
     cs->binning = minBin;  
     cs->exposure = 1.0f;
     cs->shuttering = USE_BEAM_BLANK;
-    cs->numAvgOrPtRpt = 4;
+    cs->numAverage = 4;
     break;
 
   case MONT_USER_CONSET:
@@ -6321,7 +6321,7 @@ void CParameterIO::InitializeControlSet(ControlSet * cs, int sizeX, int sizeY)
   cs->bottom = sizeY;
   cs->averageDark = 0;
   cs->averageOnce = 0;
-  cs->numAvgOrPtRpt = 4;
+  cs->numAverage = 4;
   cs->removeXrays = 0;
   cs->K2ReadMode = K2_LINEAR_MODE;
   cs->doseFrac = 0;
@@ -6330,8 +6330,8 @@ void CParameterIO::InitializeControlSet(ControlSet * cs, int sizeX, int sizeY)
   cs->frameTime = 0.04f;
   cs->filtTypeOrPreset = 0;
   cs->sumK2OrDeCntFrames = 0;
-  cs->numSkipBefore = 0;
-  cs->numSkipAfter = 0;
+  cs->skipBeforeOrPrePix = 0;
+  cs->skipAfterOrPtRpt = 0;
   cs->DElinSumCount = 0;
 }
 
