@@ -3,6 +3,11 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+11/21/25: Fixed frame alignment for DE cameras to account for frames now being
+saved at requested subarea size and binning instead of full-sized.
+
+11/21/25: Added support for HDR Counting in DE cameras.
+
 11/20/25: Made it request insertion only once for Gatan cameras and then wait
 until inserted; repeated requests wasted time and caused timeouts with K3.
 

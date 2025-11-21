@@ -505,6 +505,10 @@ int DirectElectronCamera::initializeDECamera(CString camName, int camIndex)
         "Autosave Integrated Movie Pixel Format" : DE_PROP_AUTOMOVIE"Pixel Depth",
         "Auto");
 
+    // TODO - what defines this?
+    if (mServerVersion >= DE_FRAME_IS_IMAGE_SIZE)
+      mCamParams[camIndex].CamFlags |= DE_FRAMES_MATCH_IMAGE;
+
     getFloatProperty("Frames Per Second (Max)", mCamParams[camIndex].DE_MaxFrameRate);
     B3DCLAMP(mCamParams[camIndex].DE_MaxFrameRate, 1.f, 5000.f);
     if (mServerVersion >= DE_HAS_REPEAT_REF && mServerVersion < DE_AUTOSAVE_RENAMES2) {
@@ -916,8 +920,8 @@ int DirectElectronCamera::AcquireImageData(unsigned short *image4k, long &imageS
       return 1;
     }
     if (mLastFPS > maxFPS + 1) 
-      SEMTrace('0', "WARNING: The specified frames per second of %.2f has been truncated"
-        " to the maximum allowed under current conditions (%.2f)", mLastFPS, maxFPS);
+      SEMTrace('0', "WARNING: The specified frames/sec of %.2f has been truncated"
+        " to %.2f, the maximum allowed under current conditions", mLastFPS, maxFPS);
 
     AddValidStateToMap(checksum, mExpFPSchecks, minuteNow);
   }
@@ -1354,21 +1358,25 @@ int DirectElectronCamera::SetCountingParams(int readMode, double scaling, double
   CSingleLock slock(&m_mutex);
   CameraParameters *camP = mCamParams + mCurCamIndex;
   bool superRes = readMode == SUPERRES_MODE;
+  bool hasHDR = (camP->CamFlags & DE_HAS_HARDWARE_HDR) != 0;
   mCountScaling = (float)scaling;
   if (slock.Lock(1000)) {
     if (!IsApolloCamera() && (camP->CamFlags & DE_CAM_CAN_COUNT)) {
       if (((readMode == LINEAR_MODE && mLastElectronCounting != 0) ||
-        (readMode > 0 && mLastElectronCounting <= 0) || !mTrustLastSettings) &&
+        (readMode > 0 && mLastElectronCounting <= 0) || 
+        (hasHDR && !BOOL_EQUIV(superRes, mLastSuperResolution)) || !mTrustLastSettings) &&
         !mLiveThread) {
         if (mAPI2Server) {
-          if (!setStringWithError("Image Processing - Mode", readMode > 0 ? "Counting" :
-            "Integrating"))
+          if (!setStringWithError("Image Processing - Mode", B3DCHOICE(readMode > 0,
+            (hasHDR && superRes) ? "HDR Counting" : "Counting", "Integrating")))
             return 1;
         } else {
           if (!setStringWithError(DE_PROP_COUNTING, readMode > 0 ? psEnable : psDisable))
             return 1;
         }
         mLastElectronCounting = readMode > 0 ? 1 : 0;
+        if (hasHDR)
+          mLastSuperResolution = superRes ? 1 : 0;
       }
       if (((readMode == COUNTING_MODE && mLastSuperResolution != 0) ||
         (superRes && mLastSuperResolution <= 0) || !mTrustLastSettings) && !mLiveThread &&

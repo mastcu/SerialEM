@@ -1891,9 +1891,11 @@ void CCameraSetupDlg::ManageCamera()
       !(mParam->CamFlags & DE_APOLLO_CAMERA);
     ShowDlgItem(IDC_RDE_LINEAR, showDEmodes);
     ShowDlgItem(IDC_RDE_COUNTING, showDEmodes);
-    ShowDlgItem(IDC_RDE_SUPERRES, showDEmodes && 
-      (mParam->CamFlags & DE_CAN_SAVE_SUPERRES));
+    ShowDlgItem(IDC_RDE_SUPERRES, ((mParam->CamFlags & DE_CAN_SAVE_SUPERRES) || 
+      (mParam->CamFlags & DE_HAS_HARDWARE_HDR)) && showDEmodes);
     ShowDlgItem(IDC_STAT_DEMODE, showDEmodes);
+    if (mParam->CamFlags & DE_HAS_HARDWARE_HDR)
+      SetDlgItemText(IDC_RDE_SUPERRES, "HDR Counting");
 
     ShowDlgItem(IDC_STAT_DEFPS, !(mParam->CamFlags & DE_APOLLO_CAMERA));
     ShowDlgItem(IDC_EDIT_DE_FPS, !(mParam->CamFlags & DE_APOLLO_CAMERA));
@@ -3871,7 +3873,7 @@ void CCameraSetupDlg::ManageDEpanel(void)
   m_editDEframeTime.EnableWindow(saving);
   m_spinDEsumNum.EnableWindow(saving);
   m_butDEsetupAlign.EnableWindow(m_bDEalignFrames);
-  m_butDEsuperRes.EnableWindow(saving);
+  m_butDEsuperRes.EnableWindow(saving || (mParam->CamFlags & DE_HAS_HARDWARE_HDR));
   if (m_bDEalignFrames) {
     ComposeWhereAlign(str);
     SetDlgItemText(IDC_STAT_DE_WHERE_ALIGN, (LPCTSTR)str);

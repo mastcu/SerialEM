@@ -1378,14 +1378,16 @@ int CFalconHelper::AlignFramesFromFile(CString filename, ControlSet &conSet,
   CString str;
   char errStr[160];
   int hwSuperDiv = SuperResHardwareBinDivisor(camParam, &conSet);
-  int left, right, frameX, frameY, fullFileX;
+  int left, right, frameX, frameY, fullFileX, hwROItol = 8;
   bool hardwareROI = (camParam->CamFlags & DE_HAS_HARDWARE_ROI) && 
     conSet.magAllShotsOrHwROI;
+  bool framesMatch = (camParam->CamFlags & DE_FRAMES_MATCH_IMAGE) != 0;
   mAlignError = 0;
   mNumAligned = 0;
   mCamTD = td;
   mDoingAdvancedFrames = false;
   mAlignSubset = false;
+  mProcessingPlugin = false;
 
   // Open file, read header
   mFrameFP = iiFOpen((LPCTSTR)filename, "rb");
@@ -1410,15 +1412,19 @@ int CFalconHelper::AlignFramesFromFile(CString filename, ControlSet &conSet,
 
   GetSavedFrameSizes(camParam, &conSet, frameX, frameY, false);
   fullFileX = (camParam->sizeX * 2) / hwSuperDiv;
-  if (frameY != mNy || (!hardwareROI && frameX != mNx) || 
-    (hardwareROI && frameX != mNx && fullFileX != mNx)) {
+  if (((!hardwareROI && frameY != mNy) || 
+    (hardwareROI && framesMatch && (mNy > frameY || mNy < frameY - hwROItol)) || 
+    ((!hardwareROI || framesMatch) && ((!hardwareROI && frameX != mNx) ||
+      (hardwareROI && framesMatch && (mNx > frameX || mNx < frameX - hwROItol)))) ||
+    ((hardwareROI && !framesMatch) && fullFileX != mNx))) {
       str.Format("Saved frames are %d x %d, not the expected size of %d x %d; cannot "
-        "align the frames", mNx, mNy, hardwareROI ? fullFileX : frameX, frameY);
+        "align the frames", mNx, mNy, (hardwareROI && !framesMatch ) ? 
+        fullFileX : frameX, frameY);
       SEMMessageBox(str);
       iiFClose(mFrameFP);
       return 1;
   }
-  mDEframeNeedsTrim = hardwareROI && frameX < fullFileX;
+  mDEframeNeedsTrim = !framesMatch && hardwareROI && frameX < fullFileX;
 
   // Save many parameters including trim size and need to trim
   mNumFiles = mMrcHeader.nz;
@@ -1437,7 +1443,8 @@ int CFalconHelper::AlignFramesFromFile(CString filename, ControlSet &conSet,
   ComputeNativeTrimming(conSet, camParam, rotateFlip, left, right);
 
   mTrimDEsum = (conSet.left > 0 || conSet.right < camParam->sizeX ||
-    conSet.top > 0 || conSet.bottom < camParam->sizeY) && !hardwareROI;
+    conSet.top > 0 || conSet.bottom < camParam->sizeY) && !hardwareROI && 
+    !framesMatch;
 
   if (mDEframeNeedsTrim) {
     mFrameTrimStart = (2 * left) / hwSuperDiv;
@@ -1971,7 +1978,8 @@ void CFalconHelper::GetSavedFrameSizes(CameraParameters *camParams,
     superResDiv = SuperResHardwareBinDivisor(camParams, conSet);
     frameX = (camParams->sizeX * 2) / superResDiv;
     frameY = (camParams->sizeY * 2) / superResDiv;
-    if ((camParams->CamFlags & DE_HAS_HARDWARE_ROI) && conSet->magAllShotsOrHwROI) {
+    if (((camParams->CamFlags & DE_HAS_HARDWARE_ROI) && conSet->magAllShotsOrHwROI) ||
+      (camParams->CamFlags & DE_FRAMES_MATCH_IMAGE)) {
       frameX = 2 * (conSet->right - conSet->left) / superResDiv;
       frameY = 2 * (conSet->bottom - conSet->top) / superResDiv;
     }
@@ -1988,10 +1996,12 @@ void CFalconHelper::GetSavedFrameSizes(CameraParameters *camParams,
 int CFalconHelper::SuperResHardwareBinDivisor(CameraParameters *camParams, 
   const ControlSet *conSet)
 {
-  int superResDiv = B3DCHOICE((camParams->CamFlags & DE_CAM_CAN_COUNT) && 
+  int superResDiv = B3DCHOICE((camParams->CamFlags & DE_CAN_SAVE_SUPERRES) &&
     conSet->K2ReadMode == SUPERRES_MODE, 1, 2);
   int hwBin = B3DCHOICE((camParams->CamFlags & DE_HAS_HARDWARE_BIN) && 
     conSet->boostMagOrHwBin && conSet->binning > 1, 2, 1);
+  if (camParams->CamFlags & DE_FRAMES_MATCH_IMAGE)
+    return conSet->binning * 2;
   return superResDiv * hwBin;
 }
 

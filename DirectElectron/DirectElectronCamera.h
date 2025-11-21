@@ -64,6 +64,7 @@ struct LiveThreadData {
 #define DE_AUTOSAVE_RENAMES2    207000000
 #define DE_HAS_LICENSE_PROPS    207000000
 #define DE_CAN_AUTOSAVE_EXT_DET 207030000
+#define DE_FRAME_IS_IMAGE_SIZE  205000000   // Verified back to 2.5 with API1 or API2
 
 #include "afxmt.h"
 
