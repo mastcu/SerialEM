@@ -341,6 +341,8 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
             cs->sumK2OrDeCntFrames = itemInt[1];
           else if (NAME_IS("DEsumCount"))
             cs->DElinSumCount = itemInt[1];
+          else if (NAME_IS("Flags"))
+            cs->flags = (b3dUInt32)itemInt[1];
           else if (NAME_IS("SkipFramesBefore"))
             cs->skipBeforeOrPrePix = (itemInt[1] < 0 || itemInt[1] > 10) ? 0 : itemInt[1];
           else if (NAME_IS("SkipFramesAfter"))
@@ -1862,6 +1864,8 @@ void CParameterIO::WriteSettings(CString strFileName)
         mFile->WriteString(oneState);
         if (cs->skipBeforeOrPrePix)
           WriteInt("SkipFramesBefore", cs->skipBeforeOrPrePix);
+        if (cs->flags)
+          WriteInt("Flags", cs->flags);
         if (cs->skipBeforeOrPrePix)
           WriteInt("SkipFramesAfter", cs->skipAfterOrPtRpt);
         OutputVector("SummedFrameList", (int)cs->summedFrameList.size(),
@@ -6333,6 +6337,7 @@ void CParameterIO::InitializeControlSet(ControlSet * cs, int sizeX, int sizeY)
   cs->skipBeforeOrPrePix = 0;
   cs->skipAfterOrPtRpt = 0;
   cs->DElinSumCount = 0;
+  cs->flags = 0;
 }
 
 

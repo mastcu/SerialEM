@@ -77,6 +77,7 @@ struct ControlSet {
   int skipBeforeOrPrePix;  // # frames to skip or prepixel time in microseconds in Tietz STEM
   int skipAfterOrPtRpt;  // # frames to skip after or  point repeats option in DE STEM
   int DElinSumCount;     // DE sum count only for linear mode
+  b3dUInt32 flags;       // Flags for new boolean items
 };
 
 struct CameraParameters {
