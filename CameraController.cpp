@@ -1613,31 +1613,11 @@ void CCameraController::InitializeFEIcameras(int &numFEIlisted, int *originalLis
 // Initialize Direct Electron cameras
 void CCameraController::InitializeDirectElectron(int *originalList, int numOrig)
 {
-  int ind, i, j, STEMnum = -1, physNum = -1;
+  int ind, i, STEMnum = -1, physNum = -1;
   std::vector<std::string> virtList;
   ShortVec enabled;
 
-  // Look for STEM camera and make sure it can be matched up with actual camera by name or
-  // property that it is same camera
-  for (ind = 0; ind < numOrig; ind++) {
-    i = originalList[ind];
-    if (mAllParams[i].DE_camType && mAllParams[i].STEMcamera) {
-      physNum = mAllParams[i].samePhysicalCamera;
-      if (physNum < 0) {
-        for (j = 0; j < numOrig; j++)
-          if (mAllParams[originalList[j]].DE_camType &&
-            !mAllParams[i].name.CompareNoCase(mAllParams[originalList[j]].name + " STEM"))
-            mAllParams[i].samePhysicalCamera = physNum = originalList[j];
-      }
-      if (physNum < 0) {
-        AfxMessageBox("The Direct Electron STEM camera must either have a "
-          "SamePhysicalCamera property or be named by the camera name plus \" STEM\"",
-          MB_EXCLAME);
-        mAllParams[i].failedToInitialize = true;
-      }
-      STEMnum = i;
-    }
-  }
+  STEMnum = FindSTEMandPhysicalCamera(originalList, numOrig, false);
 
   mNumDECameras = 0;
   for (ind = 0; ind < numOrig; ind++) {
@@ -1714,6 +1694,36 @@ void CCameraController::InitializeDirectElectron(int *originalList, int numOrig)
   }
 }
 
+// Look for STEM camera and make sure it can be matched up with actual camera by name or
+// property that it is same camera
+int CCameraController::FindSTEMandPhysicalCamera(int * originalList, int numOrig, bool dectris)
+{
+  int ind, i, j, STEMnum = -1, physNum = -1;
+  for (ind = 0; ind < numOrig; ind++) {
+    i = originalList[ind];
+    if ((dectris ? mAllParams[i].DectrisType : mAllParams[i].DE_camType) != 0 && 
+      mAllParams[i].STEMcamera) {
+      physNum = mAllParams[i].samePhysicalCamera;
+      if (physNum < 0) {
+        for (j = 0; j < numOrig; j++)
+          if ((dectris ? mAllParams[originalList[j]].DectrisType : 
+            mAllParams[originalList[j]].DE_camType) != 0 &&
+            !mAllParams[i].name.CompareNoCase(mAllParams[originalList[j]].name + " STEM"))
+            mAllParams[i].samePhysicalCamera = physNum = originalList[j];
+      }
+      if (physNum < 0) {
+        AfxMessageBox(CString(dectris ? "The DECTRIS" : "Direct Electron") + 
+          " STEM camera must either have a SamePhysicalCamera property or be named by"
+          " the same camera name plus \" STEM\"", MB_EXCLAME);
+        mAllParams[i].failedToInitialize = true;
+      }
+      STEMnum = i;
+    }
+  }
+
+  return STEMnum;
+}
+
 // Initialize plugin cameras of all kinds
 void CCameraController::InitializePluginCameras(int &numPlugListed, int *originalList, 
                                                 int numOrig)
@@ -1722,6 +1732,8 @@ void CCameraController::InitializePluginCameras(int &numPlugListed, int *origina
   double minPixel, rotInc, ddum, pixelInc;
   char last;
   CString report, useName;
+
+  FindSTEMandPhysicalCamera(originalList, numOrig, true);
 
   numPlugListed = 0;
   for (ifSTEM = 1; ifSTEM >= 0; ifSTEM--) {
@@ -3899,7 +3911,8 @@ void CCameraController::Capture(int inSet, bool retrying)
 
   // Sanity check on other potential frame-saving cameras: make sure no illegal flags set
   if (mTD.plugFuncs || mParam->OneViewType) {
-    if (!(mParam->canTakeFrames & FRAMES_CAN_BE_SAVED))
+    if (!(mParam->canTakeFrames & FRAMES_CAN_BE_SAVED) && 
+      !(mParam->STEMcamera && mParam->DectrisType))
       conSet.saveFrames = 0;
     if (!(mParam->canTakeFrames & FRAMES_CAN_BE_ALIGNED))
       conSet.alignFrames = 0;
@@ -4994,8 +5007,15 @@ int CCameraController::SetupK2SavingAligning(const ControlSet &conSet, int inSet
       refFile = mParam->superResRefForK2;
     else if (conSet.K2ReadMode == COUNTING_MODE)
       refFile = mParam->countingRefForK2;
-    if (mUseK3CorrDblSamp && CanK3DoCorrDblSamp(mParam))
-      refFile.Replace(".m1.", ".m3.");
+    if (mUseK3CorrDblSamp && CanK3DoCorrDblSamp(mParam)) {
+      if (conSet.flags & CONS_FLAG_DARK_MODE && CanK3DoDarkMode(mParam, true))
+        refFile.Replace(".m1.", ".m11.");
+      else
+        refFile.Replace(".m1.", ".m3.");
+    } else if (conSet.flags & CONS_FLAG_DARK_MODE && CanK3DoDarkMode(mParam, false)) {
+      refFile.Replace(".m1.", ".m13.");
+    }
+
     if (mSaveRawPacked & 1)
       flags |= K2_SAVE_RAW_PACKED;
     if ((mSaveRawPacked & 1) && (mSaveRawPacked & 2) &&
@@ -5689,6 +5709,8 @@ void CCameraController::CapManageCoordinates(ControlSet & conSet, int &gainXoffs
       mTD.K2ParamFlags |= K2_TAKE_BINNED_FRAMES;
     if (mUseK3CorrDblSamp && CanK3DoCorrDblSamp(mParam))
       mTD.K2ParamFlags |= K3_USE_CORR_DBL_SAMP;
+    if (conSet.flags & CONS_FLAG_DARK_MODE && CanK3DoDarkMode(mParam, mUseK3CorrDblSamp))
+      mTD.K2ParamFlags |= K3_USE_DARK_MODE;
   }
   if (doubledBinning && !superRes)
     mTD.Binning /= 2;
@@ -7275,6 +7297,14 @@ bool CCameraController::CanK3DoCorrDblSamp(CameraParameters * param)
   return param->K2Type == K3_TYPE && mPluginVersion[DMind] >= PLUGIN_CAN_SET_CDS &&
     ((mDMversion[DMind] == DM_VERSION_WITH_CDS && mDMbuild[DMind] >= DM_BUILD_WITH_CDS) ||
       mDMversion[DMind] > DM_VERSION_WITH_CDS);
+}
+
+// The test for whether dark mode is available depending on CDS (default true) 
+bool CCameraController::CanK3DoDarkMode(CameraParameters *param, BOOL inCDS)
+{
+  int DMind = param->useSocket ? SOCK_IND : COM_IND;
+  return param->K2Type == K3_TYPE && mPluginVersion[DMind] >= PLUGIN_CAN_SET_DARK_MODE &&
+    mDMversion[DMind] >= (inCDS ? DM_VERSION_CDS_DARK : DM_VERSION_WITH_DARK);
 }
 
 // Returns minimum frame time for a K2/K3 OR for a generic frame-taking camera

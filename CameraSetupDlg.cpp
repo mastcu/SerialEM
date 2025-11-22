@@ -746,7 +746,7 @@ void CCameraSetupDlg::OnDynfocus()
   m_editTiltOffset.EnableWindow(m_bDynFocus);
 }
 
-// Use DE hardware ROI or Oneview Diffraction mode
+// Use DE hardware ROI or Oneview Diffraction mode or K3 dark mode
 void CCameraSetupDlg::OnUseHwROI_OvDiff()
 {
   UpdateData(true);
@@ -1052,10 +1052,13 @@ void CCameraSetupDlg::LoadConsetToDialog()
   if (mParam->OneViewType) {
     m_bOvDrift_DeHwBin_DctSep = mCurSet->correctDrift != 0;
     m_bUseHwROI_OvDiff = mCurSet->K2ReadMode != 0;
-  } else if (mDE_Type && (mParam->CamFlags & DE_HAS_HARDWARE_BIN))
+  } else if (mDE_Type && (mParam->CamFlags & DE_HAS_HARDWARE_BIN)) {
     m_bOvDrift_DeHwBin_DctSep = mCurSet->boostMagOrHwBin != 0;
-  else if (DECTRIS_WITH_COUNTING(mParam))
+  } else if (DECTRIS_WITH_COUNTING(mParam)) {
     m_bOvDrift_DeHwBin_DctSep = mCurSet->K2ReadMode != 0;
+  } else if (mCamera->CanK3DoDarkMode(mParam)) {
+    m_bUseHwROI_OvDiff = (mCurSet->flags & CONS_FLAG_DARK_MODE) != 0;
+  }
   if (mDE_Type && (mParam->CamFlags & DE_HAS_HARDWARE_ROI))
     m_bUseHwROI_OvDiff = mCurSet->magAllShotsOrHwROI != 0;
 
@@ -1334,6 +1337,8 @@ void CCameraSetupDlg::UnloadDialogToConset()
     mCurSet->correctDrift = m_bOvDrift_DeHwBin_DctSep ? 1 : 0;
     mCurSet->K2ReadMode = m_bUseHwROI_OvDiff ? 1 : 0;
   }
+  if (mCamera->CanK3DoDarkMode(mParam))
+    setOrClearFlags(&mCurSet->flags, CONS_FLAG_DARK_MODE, m_bUseHwROI_OvDiff ? 1 : 0);
   if (DECTRIS_WITH_COUNTING(mParam))
     mCurSet->K2ReadMode = m_bOvDrift_DeHwBin_DctSep ? 1 : 0;
   if (mParam->GatanCam)
@@ -1615,7 +1620,7 @@ void CCameraSetupDlg::ManageCamera()
   int i, j, dir, err, showbox, maxChan, visTop, lastTop, areaHeight = mAreaBaseHeight;
   int canConfig, state;
   BOOL states[NUM_CAMSETUP_PANELS] = {0, true, 0, 0, 0, 0, 0, 0, 0, 0, 0, true};
-  bool twoRowPos, otherSizesNoShutter, showDEmodes, hasVirtual = false;
+  bool twoRowPos, otherSizesNoShutter, showDEmodes, hasDarkMode, hasVirtual = false;
   bool alpine = IS_ALPINE(mParam) && !mCamera->GetShowLinearForAlpine();
   int hideForFalcon[] = {IDC_STAT_FRAME_TIME, IDC_EDIT_FRAME_TIME, IDC_STAT_FRAME_SEC,
     IDC_STAT_K2MODE, IDC_BUT_SETUP_ALIGN, IDC_RLINEAR, IDC_RCOUNTING, IDC_RSUPERRES, 
@@ -1926,11 +1931,12 @@ void CCameraSetupDlg::ManageCamera()
     "Single event processing", mParam->OneViewType ? "Correct drift" :
     "Use hardware binning"));
   SetDlgItemText(IDC_STAT_FRAME_SEC, mParam->DectrisType ? "msec" : "sec");
-
-  m_butUseHwROI_OvDiff.ShowWindow((ONEVIEW_NOT_CLEARVIEW(mParam) ||
+  hasDarkMode = mCamera->CanK3DoDarkMode(mParam);
+  m_butUseHwROI_OvDiff.ShowWindow((ONEVIEW_NOT_CLEARVIEW(mParam) || hasDarkMode ||
     (mDE_Type && (mParam->CamFlags & DE_HAS_HARDWARE_ROI))) ? SW_SHOW : SW_HIDE);
-  m_butUseHwROI_OvDiff.SetWindowText(mParam->OneViewType ? "Diffraction mode" :
-    "Use Hardware ROI");
+  m_butUseHwROI_OvDiff.SetWindowText(B3DCHOICE(hasDarkMode, "Dark Mode",
+    mParam->OneViewType ? "Diffraction mode" : "Use Hardware ROI"));
+  m_butUseHwROI_OvDiff.EnableWindow(mCamera->CanK3DoDarkMode(mParam, m_bUseCorrDblSamp));
 
   // Decide whether to convert A bit Less to Square
   showbox = B3DMAX(mCameraSizeX, mCameraSizeY);
@@ -3781,6 +3787,7 @@ void CCameraSetupDlg::OnUseCorrDblSamp()
   ManageDrift();
   ManageK2SaveSummary();
   ManageDose();
+  m_butUseHwROI_OvDiff.EnableWindow(mCamera->CanK3DoDarkMode(mParam, m_bUseCorrDblSamp)); 
   if (m_bUseCorrDblSamp && !mWarnedOnCDS) {
     AfxMessageBox("Check the other camera parameter sets; exposure or frame time may have"
       " changed", MB_OK | MB_ICONINFORMATION);

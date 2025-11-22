@@ -4,7 +4,7 @@
  */
 #ifndef SEMCCD_DEFINES_H
 
-#define SEMCCD_PLUGIN_VERSION    119
+#define SEMCCD_PLUGIN_VERSION    120
 
 // Error codes
 enum {IMAGE_NOT_FOUND = 1, WRONG_DATA_TYPE, DM_CALL_EXCEPTION, NO_STACK_ID, STACK_NOT_3D,
@@ -52,6 +52,7 @@ FRAMEDOC_OPEN_ERR, FRAMEDOC_WRITE_ERR, NULL_IMAGE, FRAMETS_NO_ANGLES, VIEW_IS_AC
 #define K2_USE_FRAMEALIGN      (1 << 4)    // 10
 #define K2_TAKE_BINNED_FRAMES  (1 << 5)    // 20
 #define K3_USE_CORR_DBL_SAMP   (1 << 6)    // 40
+#define K3_USE_DARK_MODE       (1 << 7)    // 80
 #define K2_MAKE_ALIGN_COM      (1 << 11)   // 800
 #define K2_SAVE_COM_AFTER_MDOC (1 << 13)   // 2000
 #define K2_OVW_SET_EXPOSURE    (1 << 14)   // 4000
@@ -112,6 +113,8 @@ FRAMEDOC_OPEN_ERR, FRAMEDOC_WRITE_ERR, NULL_IMAGE, FRAMETS_NO_ANGLES, VIEW_IS_AC
 // Version information needed in both places
 #define DM_VERSION_WITH_CDS   50301
 #define DM_BUILD_WITH_CDS      2270
+#define DM_VERSION_CDS_DARK   50500
+#define DM_VERSION_WITH_DARK  50600
 
 // Codes for the socket calls
 enum {GS_ExecuteScript = 1, GS_SetDebugMode, GS_SetDMVersion, GS_SetCurrentCamera,

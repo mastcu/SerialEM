@@ -2900,12 +2900,12 @@ int DirectElectronCamera::FrameTypeForChannelIndex(int chanInd)
   ShortVec virtChans = mWinApp->mCamera->GetVirtualDEChannels();
   ShortVec extChans = mWinApp->mCamera->GetPhysicalDEChannels();
   int ind;
-  for (ind = 0; ind < virtChans.size(); ind++) {
+  for (ind = 0; ind < (int)virtChans.size(); ind++) {
     if (virtChans[ind] == chanInd) {
       return (int)DE::FrameType::VIRTUAL_IMAGE0 + ind;
     }
   }
-  for (ind = 0; ind < extChans.size(); ind++) {
+  for (ind = 0; ind < (int)extChans.size(); ind++) {
     if (extChans[ind] == chanInd) {
       return (int)DE::FrameType::EXTERNAL_IMAGE1 + ind;
     }

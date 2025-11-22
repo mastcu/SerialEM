@@ -3,6 +3,8 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+11/21/25: Added support for Dark mode for K3 cameras.
+
 11/21/25: Fixed frame alignment for DE cameras to account for frames now being
 saved at requested subarea size and binning instead of full-sized.
 

@@ -38,6 +38,9 @@ typedef std::vector <float> FloatVec;
 #define MAX_SPOT_SIZE  13
 #define MAX_CAMLENS 60
 
+// Flags for the ControlSet flags entry
+#define CONS_FLAG_DARK_MODE 0x1
+
 struct ControlSet {
   int mode;
   int processing;      // Also for Gain correction in DE STEM

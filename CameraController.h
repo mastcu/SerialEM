@@ -75,6 +75,7 @@ typedef void(*NewImCallback)(void);
 #define PLUGIN_RETURNS_FISE_SUMS 117
 #define PLUGIN_CAN_SAVE_SUBAREAS 118
 #define PLUGIN_CAN_SET_EXPOSURE  119
+#define PLUGIN_CAN_SET_DARK_MODE 120
 
 #define CAN_PLUGIN_DO(c, p) CanPluginDo(PLUGIN_##c, p)
 
@@ -1218,6 +1219,7 @@ public:
   int InitializeTietz(int whichCameras, int *originalList, int numOrig, BOOL anyPreExp);
   void InitializeFEIcameras(int &numFEIlisted, int *originalList, int numOrig);
   void InitializeDirectElectron(int *originalList, int numOrig);
+  int FindSTEMandPhysicalCamera(int *originalList, int numOrig, bool dectris);
   void InitializePluginCameras(int &numPlugListed, int *originalList, int numOrig);
   int RotateAndReplaceArray(int chan, int operation, int invertCon);
   int CapSetupSTEMChannelsDetectors(ControlSet & conSet, int inSet, BOOL retracting,
@@ -1305,6 +1307,7 @@ int ReturningFloatImages(CameraParameters *param);
 void FixDirForFalconFrames(CameraParameters * param);
 bool CanPluginDo(int minVersion, CameraParameters * param);
 bool CanK3DoCorrDblSamp(CameraParameters * param);
+bool CanK3DoDarkMode(CameraParameters *param, BOOL inCDS = true);
 int NumAllVsAllFromFAparam(FrameAliParams &faParam, int numAliFrames, int &groupSize,
   int &refineIter, int &doSpline, int &numFilters, float *radius2);
 void AdjustCountsPerElecForScale(CameraParameters * param);
