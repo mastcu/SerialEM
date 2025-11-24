@@ -196,6 +196,8 @@ public:
   CString m_strNumEarlyFrames;
   CStatic m_statNumEarlyFrames;
   CStatic m_statFrameLabel;
+  BOOL m_bChangeEDMPct;
+  CButton m_butChangeEDMPct;
    
 	//}}AFX_DATA
 
@@ -358,6 +360,7 @@ float m_fIterThresh;
 CStatic m_statStarTilt;
 CStatic m_statStarBidir;
 CStatic m_statTargMicrons;
+afx_msg void OnChangeEDM();
 };
 
 //{{AFX_INSERT_LOCATION}}

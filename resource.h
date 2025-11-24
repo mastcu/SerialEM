@@ -2620,6 +2620,7 @@
 #define IDC_STAT_POINT_REPEATS          3652
 #define IDC_EDIT_POINT_REPEATS          3653
 #define IDC_SPIN_POINT_REPEATS          3654
+#define IDC_CHANGE_EDMPCT               3655
 #define ID_NEW_IMAGE                    32771
 #define IDM_FILE_SAVEOTHER              32772
 #define IDM_FILE_READ                   32773
@@ -3214,7 +3215,7 @@
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        300
 #define _APS_NEXT_COMMAND_VALUE         33559
-#define _APS_NEXT_CONTROL_VALUE         3655
+#define _APS_NEXT_CONTROL_VALUE         3656
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif

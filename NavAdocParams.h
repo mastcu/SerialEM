@@ -73,6 +73,7 @@ BOOL_SETT_ASSIGN("TSMakeLowTiltMap", tsParam->makeLowTiltMap)
 BOOL_SETT_ASSIGN("TSFilterLowTiltMap", tsParam->filterLowTiltMap)
 FLOAT_SETT_ASSIGN("TSMapFilterRadius2", tsParam->mapFilterRadius2)
 FLOAT_SETT_ASSIGN("TSMapFilteSigma2", tsParam->mapFilterSigma2)
+BOOL_SETT_ASSIGN("TiltSeriesChangeEDMPct", tsParam->changeEDMPct)
 #endif
 #ifdef NAV_OTHER_TS_PARAMS
 BOOL_SETT_ASSIGN("AnchorBidirWithView", tsParam->anchorBidirWithView)

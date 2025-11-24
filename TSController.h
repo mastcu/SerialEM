@@ -309,6 +309,7 @@ private:
   BOOL mChangeRecDrift;
   BOOL mChangeAllDrift;
   BOOL mUseExpForIntensity;   // Flag for whether changing exposure instead of intensity
+  BOOL mUseEDMForIntensity;   // Flag for changing the EDM dose % instead of intensity
   BOOL mVaryFilter;           // Flag for whether varying filter settings
   BOOL mVaryFrameTime;        // Flag for whether varying frame time
   bool mFrameAlignInIMOD;     // Flag to put out mdoc and com file to align TS frames
@@ -471,6 +472,9 @@ private:
   double mFirstExposure;
   float mExpSeriesStep;        // Exposure series setp factor for variations dialog
   BOOL mExpSeriesFixNumFrames; // Flag for fixed number of frames checkbox
+  bool mHasDoseModulator;      // Flag for whether there is an electronic dose modulator
+  float mFirstEDMPct;          // EDM dose percentage for the first image of tilt series
+  float mStartingEDMPct;       // EDM dose percentage before tilt series started
   double mDoseSums[5];        // The first one has task total, last one has task on-axis
   double mCurRecordDose;      // Dose when Record was taken
   BOOL mCloseValvesOnStop;    // Flag to close valves onnext stop
@@ -601,6 +605,7 @@ public:
   void SendEmailIfNeeded(BOOL terminating);
   void LeaveInitialChecks(void);
   void ChangeExposure(double &delFac, double angle, double limit = 1.e10);
+  void ChangeEDMPct(double &delFac, double limit = 1.e10);
   int ImposeVariations(double angle);
   void SetTrueStartTiltIfStarting(void);
   int MontageMagIntoTSparam(MontParam * montParam, TiltSeriesParam * tsParam);

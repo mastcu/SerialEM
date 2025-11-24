@@ -38,6 +38,7 @@
 #include "StateDlg.h"
 #include "FilterTasks.h"
 #include "ThreeChoiceBox.h"
+#include "DoseModulator.h"
 #include "Utilities\XCorr.h"
 #include "Utilities\KGetOne.h"
 #include "Shared\b3dutil.h"
@@ -816,6 +817,7 @@ int CTSController::StartTiltSeries(BOOL singleStep, int external)
   mErrorEmailSent = false;
   mUserStop = false;
   mErrorStop = false;
+  mHasDoseModulator = mCamera->HasDoseModulator();
 
  // Whether to postpone was set by dialog, but if coming in external, clear it
   if (external) {
@@ -857,6 +859,19 @@ int CTSController::StartTiltSeries(BOOL singleStep, int external)
     mStartingIntensity = mLowDoseMode ? mLDParam[3].intensity : mScope->GetIntensity();
     mOriginalIntensity = mStartingIntensity;
     mStartingExposure = mConSets[RECORD_CONSET].exposure;
+    if (mHasDoseModulator) {
+      if (mLowDoseMode)
+        mStartingEDMPct = mLDParam[RECORD_CONSET].EDMPercent;
+      else {
+        error = mCamera->mDoseModulator->GetDutyPercent(mStartingEDMPct, str);
+        if (error) {
+          message.Format("Error %d getting EDM dose percentage: %s", error, str);
+          TSMessageBox(message);
+          ErrorStop();
+          return 1;
+        }
+      }
+    }
   }
 
   // Check for binning change and issue warning and offer to abort
@@ -1180,6 +1195,7 @@ int CTSController::StartTiltSeries(BOOL singleStep, int external)
       mCamera->SetInterpDarkRefs(true);
     mUseExpForIntensity = (mTSParam.changeRecExposure || mSTEMindex) && 
       !(mTSParam.doVariations && mTypeVaries[TS_VARY_EXPOSURE]);
+    mUseEDMForIntensity = mTSParam.changeEDMPct && !mUseExpForIntensity;
     mVaryFrameTime = mCamParams->K2Type && mTSParam.doVariations && 
       mTypeVaries[TS_VARY_FRAME_TIME];
     mVaryFilter = (mTypeVaries[TS_VARY_ENERGY] || mTypeVaries[TS_VARY_SLIT]) && 
@@ -1249,6 +1265,7 @@ int CTSController::StartTiltSeries(BOOL singleStep, int external)
     mInExtraRecState = false;
     mFirstIntensity = 0.;
     mFirstExposure = 0.;
+    mFirstEDMPct = 0.f;
     mDidWalkup = false;
     mStartingOut = true;
     mSaveLowTiltMap = mTSParam.makeLowTiltMap ? 1 : 0;
@@ -1594,7 +1611,7 @@ void CTSController::NextAction(int param)
   double delFac, ISX, ISY, missingX, missingY, angleError;
   float anchorAngle, imageCrit, shiftX, shiftY, maxError, derate, plusFactor, minusFactor;
   int anchorBuf, nx, ny, delay, error, refBuf, bwIndex, conSet, maxImageFailures, dwErr;
-  int policy, extraSet, magIndex = mTSParam.magIndex[mSTEMindex];
+  int policy, extraSet, error2, magIndex = mTSParam.magIndex[mSTEMindex];
   int curCamera = mWinApp->GetCurrentCamera();
   float binRatio, refShiftX, refShiftY, delX, delY, shotExp;
   StageMoveInfo smi;
@@ -2674,6 +2691,19 @@ void CTSController::NextAction(int param)
       if (mTiltIndex == 1) {
         mFirstIntensity = mLowDoseMode ? mLDParam[3].intensity : mScope->GetIntensity();
         mFirstExposure = mConSets[RECORD_CONSET].exposure;
+        if (mHasDoseModulator) {
+          if (mLowDoseMode)
+            mFirstEDMPct = mLDParam[RECORD_CONSET].EDMPercent;
+          else {
+            error2 = mCamera->mDoseModulator->GetDutyPercent(mFirstEDMPct, message2);
+            if (error2) {
+              message.Format("Error %d getting EDM dose percentage: %s", error2, message2);
+              TSMessageBox(message);
+              ErrorStop();
+              return;
+            }
+          }
+        }
       }
       
       message.Format("Saved Z = %d  at %.2f min  Tilt = %.2f  Mean = %.0f  ",
@@ -2682,6 +2712,8 @@ void CTSController::NextAction(int param)
       if (mLowDoseMode) {
         if (mUseExpForIntensity)
           message2.Format("Exp = %.3f  ", shotExp);
+        else if (mUseEDMForIntensity)
+          message2.Format("EDM percent = %.2f   ", mFirstEDMPct);
         else
           message2.Format("%s = %.2f%s  ", mScope->GetC2Name(),
             mScope->GetC2Percent(spotSize, shotIntensity), mScope->GetC2Units());
@@ -3028,6 +3060,16 @@ void CTSController::NextAction(int param)
           if (mUseExpForIntensity) {
             delFac = 0.;
             ChangeExposure(delFac, angle);
+          } else if (mUseEDMForIntensity) {
+            error2 = mCamera->mDoseModulator->SetDutyPercent(mFirstEDMPct, message2);
+            if (error2) {
+              message.Format("Error %d setting EDM dose percentage: %s", error2, message2);
+              TSMessageBox(message);
+              ErrorStop();
+              return;
+            }
+            if (mLowDoseMode)
+              mLDParam[RECORD_CONSET].EDMPercent = mFirstEDMPct;
           } else if (!mSTEMindex) {
             mScope->SetIntensity(mFirstIntensity);
             if (mLowDoseMode)
@@ -3295,6 +3337,19 @@ void CTSController::NextAction(int param)
         mStartingIntensity = mLowDoseMode 
           ? mLDParam[RECORD_CONSET].intensity : mScope->GetIntensity();
         mStartingExposure = mConSets[RECORD_CONSET].exposure;
+        if (mHasDoseModulator) {
+          if (mLowDoseMode)
+            mStartingEDMPct = mLDParam[RECORD_CONSET].EDMPercent;
+          else {
+            error2 = mCamera->mDoseModulator->GetDutyPercent(mStartingEDMPct, message2);
+            if (error2) {
+              message.Format("Error %d getting EDM dose percentage: %s", error2, message2);
+              TSMessageBox(message);
+              ErrorStop();
+              return;
+            }
+          }
+        }
       }
 
       mCurrentTilt = angle;
@@ -3675,9 +3730,16 @@ BOOL CTSController::SetIntensity(double delFac, double angle)
     if (mSTEMindex)
       return false;
 
-    // In STEM, one or the other or neither of those exposure happened, but it's done
+  // In STEM, one or the other or neither of those exposure happened, but it's done
   } else if (mSTEMindex) {
     return false;
+
+  // Set the EDM dose percentage instead of intensity if desired
+  } else if (mUseEDMForIntensity) {
+    limit = 1.e10;
+    if (limitIntensity)
+      limit = mTSParam.limitToCurrent ? mStartingEDMPct : mFirstEDMPct;
+    ChangeEDMPct(delFac, limit);
 
   // If intensity is to be limited, first assess and just set to limit if necessary
   } else if (limitIntensity) {
@@ -3832,6 +3894,37 @@ void CTSController::ChangeExposure(double &delFac, double angle, double limit)
     }
   }
   mWinApp->CopyConSets(mActiveCameraList[mTSParam.cameraIndex]);
+}
+
+// Change the EDM % by the given factor, up to the given limit
+void CTSController::ChangeEDMPct(double &delFac, double limit)
+{
+  float currentPct;
+  double newPct;
+  CString errStr, mess;
+  int err = mCamera->mDoseModulator->GetDutyPercent(currentPct, errStr);
+  if (err) {
+    mess.Format("Error %d getting EDM dose percentage: %s", err, errStr);
+    TSMessageBox(mess);
+    ErrorStop();
+    return;
+  }
+  newPct = (double) currentPct * delFac;
+  if (newPct > limit) {
+    delFac = limit / (double) currentPct;
+    newPct = limit;
+  }
+
+  // Set the EDM % for Record if in low dose, or in general otherwise
+  err = mBeamAssessor->SetDoseRateWithEDM((float) delFac, mLowDoseMode ? RECORD_CONSET : -1);
+  if (err) {
+    mess.Format("Error %d setting EDM dose percentage to .2%f", err, newPct);
+    TSMessageBox(mess);
+    ErrorStop();
+    return;
+  }
+  SEMTrace('1', "Changing (ideal) Record EDM dose percentage by %.2f to %.2f", delFac, 
+    newPct);
 }
 
 // Handle all the variations that are not done during intensity changes

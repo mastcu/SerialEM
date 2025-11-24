@@ -59,12 +59,12 @@ static int idTable[] = {
   IDC_CENTER_FROM_TRIAL, IDC_AUTO_REFINE_ZLP, IDC_EDIT_ZLP_INTERVAL, IDC_STATMINUTES,
   IDC_AUTOCEN_AT_INTERVAL, IDC_EDIT_AC_INTERVAL, IDC_STAT_ACMINUTES, IDC_STAT_INTERSET,
   IDC_AUTOCEN_AT_CROSSING, IDC_EDIT_AC_ANGLE, IDC_STAT_ACDEGREES, PANEL_END,
-  IDC_TSS_PLUS3, 0, 0, IDC_TSS_TITLE3, IDC_TSS_LINE3, IDC_CHANGE_EXPOSURE,
-  IDC_RCONSTANTBEAM, IDC_RINTENSITYCOSINE, IDC_RINTENSITYMEAN, IDC_SPINCOSINEPOWER,
-  IDC_STATPOWER, IDC_EDITCOUNTS, IDC_STATCURRENTCOUNTS, IDC_RAMPBEAM, IDC_EDITTAPERCOUNTS
-  , IDC_STATTAPERFTA, IDC_EDITTAPERANGLE, IDC_STATTAPERDEG, IDC_LIMITTOCURRENT,
-  IDC_LIMITINTENSITY, IDC_USEINTENSITYATZERO, IDC_STATTOTALDOSE, IDC_CHANGE_ALL_EXP,
-  IDC_CHANGE_SETTLING, PANEL_END,
+  IDC_TSS_PLUS3, 0, 0, IDC_TSS_TITLE3, IDC_TSS_LINE3, IDC_CHANGE_EXPOSURE, 
+  IDC_CHANGE_EDMPCT, IDC_RCONSTANTBEAM, IDC_RINTENSITYCOSINE, IDC_RINTENSITYMEAN, 
+  IDC_SPINCOSINEPOWER, IDC_STATPOWER, IDC_EDITCOUNTS, IDC_STATCURRENTCOUNTS, IDC_RAMPBEAM, 
+  IDC_EDITTAPERCOUNTS, IDC_STATTAPERFTA, IDC_EDITTAPERANGLE, IDC_STATTAPERDEG, 
+  IDC_LIMITTOCURRENT, IDC_LIMITINTENSITY, IDC_USEINTENSITYATZERO, IDC_STATTOTALDOSE, 
+  IDC_CHANGE_ALL_EXP, IDC_CHANGE_SETTLING, PANEL_END,
   IDC_TSS_PLUS4, 0, 0, IDC_TSS_TITLE4, IDC_TSS_LINE4,
   IDC_RCAMERA1, IDC_RCAMERA2, IDC_RCAMERA3, IDC_RCAMERA4, IDC_RCAMERA5, IDC_RCAMERA6, 
   IDC_AVERAGERECREF, IDC_STAT_FRAME_LABEL, IDC_DO_EARLY_RETURN, IDC_SPIN_EARLY_FRAMES,
@@ -186,6 +186,7 @@ CTSSetupDialog::CTSSetupDialog(CWnd* pParent /*=NULL*/)
   if (mMaxTiltAngle < -900.)
     mMaxTiltAngle = 90.f;
   mMaxDelayAfterTilt = 15.f;
+  m_bChangeEDMPct = FALSE;
 	//}}AFX_DATA_INIT
 }
 
@@ -352,8 +353,10 @@ void CTSSetupDialog::DoDataExchange(CDataExchange* pDX)
   DDX_Control(pDX, IDC_CHANGE_ALL_EXP, m_butChangeAllExp);
   DDX_Control(pDX, IDC_CHANGE_SETTLING, m_butChangeSettling);
   DDX_Control(pDX, IDC_CHANGE_EXPOSURE, m_butChangeExposure);
+  DDX_Control(pDX, IDC_CHANGE_EDMPCT, m_butChangeEDMPct);
   DDX_Check(pDX, IDC_CHANGE_ALL_EXP, m_bChangeAllExp);
   DDX_Check(pDX, IDC_CHANGE_EXPOSURE, m_bChangeExposure);
+  DDX_Check(pDX, IDC_CHANGE_EDMPCT, m_bChangeEDMPct);
   DDX_Check(pDX, IDC_CHANGE_SETTLING, m_bChangeSettling);
   DDX_Control(pDX, IDC_CHECK_VARY_PARAMS, m_butVaryParams);
   DDX_Control(pDX, IDC_EDITFOCUSTARGET, m_editFocusTarget);
@@ -496,6 +499,7 @@ BEGIN_MESSAGE_MAP(CTSSetupDialog, CBaseDlg)
   ON_BN_CLICKED(IDC_BUT_SETUP_DOSE_SYM, OnButSetupDoseSym)
   ON_BN_CLICKED(IDC_TSWAITFORDRIFT, OnWaitForDrift)
   ON_BN_CLICKED(IDC_BUT_SETUP_DRIFT_WAIT, OnButSetupDriftWait)
+  ON_BN_CLICKED(IDC_CHANGE_EDMPCT, OnChangeEDM)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -567,6 +571,12 @@ BOOL CTSSetupDialog::OnInitDialog()
     m_butGo.SetWindowTextA("Set Up Extra Output");
     m_butGo.SetWindowPos(NULL, 0, 0, 2 * goRect.Width(), goRect.Height(), SWP_NOMOVE);
   }
+
+  if (!mWinApp->mCamera->HasDoseModulator()) {
+    mIDsToDrop.push_back(IDC_CHANGE_EDMPCT);
+    m_bChangeEDMPct = FALSE;
+  } else
+    m_bChangeEDMPct = mTSParam.changeEDMPct;
 
   ManagePanels();
 
@@ -722,8 +732,8 @@ BOOL CTSSetupDialog::OnInitDialog()
       ReplaceWindowText(&m_butCloseValves, "Close column valves", "Turn off filament");
     else
       ReplaceWindowText(&m_butCloseValves, "column valves", "gun valve");
-  }
-
+  } 
+  
   ManageNewTrackDiff();
   ManageTaperLine();
   SetPixelSize();
@@ -821,6 +831,10 @@ BOOL CTSSetupDialog::OnInitDialog()
   ReplaceWindowText(&m_butChangeExposure, "Record", modeNames[RECORD_CONSET]);
   ReplaceWindowText(&m_butChangeAllExp, "Record", modeNames[RECORD_CONSET]);
   ReplaceWindowText(&m_butPreviewBeforeRef, "Preview", modeNames[PREVIEW_CONSET]);
+  if (!mLowDoseMode)
+    ReplaceWindowText(&m_butChangeEDMPct, "Record ", "");
+  else
+    ReplaceWindowText(&m_butChangeEDMPct, "Record", modeNames[RECORD_CONSET]);
 
   // Fix buttons for future mode
   if (mFuture) {
@@ -1387,6 +1401,10 @@ void CTSSetupDialog::OnChangeAllExp()
 void CTSSetupDialog::OnChangeExposure()
 {
   UPDATE_DATA_TRUE;
+  if (m_bChangeEDMPct && m_bChangeExposure) {
+    m_bChangeEDMPct = FALSE;
+    UpdateData(false);
+  }
   ManageExposures();
   ManageTaperLine();
 }
@@ -1424,7 +1442,7 @@ void CTSSetupDialog::ManageTaperLine()
 // in place of intensity or being changed periodically
 void CTSSetupDialog::ManageExposures(void)
 {
-  CString from, to;
+  CString from, from2, to, str;
   bool expChange;
   int typeVaries[MAX_VARY_TYPES];
 
@@ -1432,21 +1450,38 @@ void CTSSetupDialog::ManageExposures(void)
     typeVaries, NULL);
   expChange = (m_bChangeExposure && m_iBeamControl > 0) || 
     (m_bVaryParams && typeVaries[TS_VARY_EXPOSURE]);
+  
   if (m_bChangeExposure && (mSTEMindex || 
     !(m_bVaryParams && typeVaries[TS_VARY_EXPOSURE]))) {
-      from = "intensity";
-      to = "exposure";
-      ReplaceDlgItemText(IDC_RCONSTANTBEAM, "beam intensity", "exposure time");
+    to = "exposure";
+    ReplaceDlgItemText(IDC_RCONSTANTBEAM, "beam intensity", "exposure time");
+    ReplaceDlgItemText(IDC_RCONSTANTBEAM, "EDM dose %", "exposure time");
+    from = "intensity";
+    from2 = "EDM %";
+  } else if (m_bChangeEDMPct && m_iBeamControl > 0) {
+    to = "EDM %";
+    ReplaceDlgItemText(IDC_RCONSTANTBEAM, "beam intensity", "EDM dose %");
+    ReplaceDlgItemText(IDC_RCONSTANTBEAM, "exposure time", "EDM dose %");
+    from = "intensity";
+    from2 = "exposure";
   } else {
     to = "intensity";
-    from = "exposure";
+    ReplaceDlgItemText(IDC_RCONSTANTBEAM, "EDM dose %", "beam intensity");
     ReplaceDlgItemText(IDC_RCONSTANTBEAM, "exposure time", "beam intensity");
+    from = "EDM %";
+    from2 = "exposure";
   }
   ReplaceDlgItemText(IDC_RINTENSITYCOSINE, from, to);
   ReplaceDlgItemText(IDC_RINTENSITYMEAN, from, to);
   ReplaceDlgItemText(IDC_LIMITTOCURRENT, from, to);
   ReplaceDlgItemText(IDC_LIMITINTENSITY, from, to);
   ReplaceDlgItemText(IDC_USEINTENSITYATZERO, from, to);
+  ReplaceDlgItemText(IDC_RINTENSITYCOSINE, from2, to);
+  ReplaceDlgItemText(IDC_RINTENSITYMEAN, from2, to);
+  ReplaceDlgItemText(IDC_LIMITTOCURRENT, from2, to);
+  ReplaceDlgItemText(IDC_LIMITINTENSITY, from2, to);
+  ReplaceDlgItemText(IDC_USEINTENSITYATZERO, from2, to);
+
   m_butChangeExposure.EnableWindow(!(m_bVaryParams && typeVaries[TS_VARY_EXPOSURE]) && 
     !mDoingTS && m_iBeamControl > 0 && !mSTEMindex);
   m_butChangeAllExp.EnableWindow(expChange && !mDoingTS); 
@@ -1458,6 +1493,7 @@ void CTSSetupDialog::ManageExposures(void)
     typeVaries[TS_VARY_EXPOSURE]));
   m_butIntensityCosine.EnableWindow(!(mSTEMindex && m_bVaryParams && 
     typeVaries[TS_VARY_EXPOSURE]));
+  m_butChangeEDMPct.EnableWindow(!mDoingTS && m_iBeamControl > 0);
 }
 
 void CTSSetupDialog::OnAligntrackonly() 
@@ -1733,14 +1769,19 @@ void CTSSetupDialog::ManageDriftWait()
 
 void CTSSetupDialog::ManageCosinePower()
 {
-  CString str;
+  CString str, varyStr;
   int typeVaries[MAX_VARY_TYPES];
 
   CTSVariationsDlg::ListVaryingTypes(mTSParam.varyArray, mTSParam.numVaryItems,
     typeVaries, NULL);
-  str.Format("Vary %s to be %.2f", m_bChangeExposure && (mSTEMindex ||
-    !(m_bVaryParams && typeVaries[TS_VARY_EXPOSURE])) ? "exposure" : "intensity", 
-    mCosMultipliers[mCosPowerInd]);
+  if (m_bChangeExposure && 
+    (mSTEMindex || !(m_bVaryParams && typeVaries[TS_VARY_EXPOSURE])))
+    varyStr = "exposure";
+  else if (m_bChangeEDMPct)
+    varyStr = "EDM %";
+  else
+    varyStr = "intensity";
+  str.Format("Vary %s to be %.2f", varyStr, mCosMultipliers[mCosPowerInd]);
   UtilTrimTrailingZeros(str);
   m_butIntensityCosine.SetWindowText(str);
   str.Format("%.2f", mCosinePowers[mCosPowerInd]);
@@ -1875,6 +1916,7 @@ void CTSSetupDialog::DoOK()
   mTSParam.cenBeamAngle = m_fAutocenAngle;
   mTSParam.waitForDrift = m_bWaitForDrift;
   mTSParam.doEarlyReturn = m_bDoEarlyReturn;
+  mTSParam.changeEDMPct = m_bChangeEDMPct;
   
   CDialog::OnOK();
 }
@@ -2125,4 +2167,16 @@ void CTSSetupDialog::InitializePanels(int type)
     else
       mPanelOpen[i] = 0;
   }
+}
+
+
+void CTSSetupDialog::OnChangeEDM()
+{
+  UPDATE_DATA_TRUE;
+  if (m_bChangeEDMPct && m_bChangeExposure) {
+    m_bChangeExposure = FALSE;
+    UpdateData(false);
+  }
+  ManageExposures();
+  ManageTaperLine();
 }
