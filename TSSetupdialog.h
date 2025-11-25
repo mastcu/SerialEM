@@ -360,7 +360,7 @@ float m_fIterThresh;
 CStatic m_statStarTilt;
 CStatic m_statStarBidir;
 CStatic m_statTargMicrons;
-afx_msg void OnChangeEDM();
+afx_msg void OnButChangeEDM();
 };
 
 //{{AFX_INSERT_LOCATION}}

@@ -127,6 +127,16 @@ void CBaseDlg::ReplaceDlgItemText(int nID, const char * fromText, CString toText
   SetDlgItemText(nID, str);
 }
 
+void CBaseDlg::ReplaceDlgItemText(int nID, const char * fromText, const char * fromText2, 
+  CString toText)
+{
+  CString str;
+  GetDlgItemText(nID, str);
+  str.Replace(fromText, (LPCTSTR)toText);
+  str.Replace(fromText2, (LPCTSTR)toText);
+  SetDlgItemText(nID, str);
+}
+
 // For enabling radio buttons particularly
 void CBaseDlg::EnableDlgItem(int nID, BOOL enable)
 {

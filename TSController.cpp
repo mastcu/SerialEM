@@ -859,18 +859,11 @@ int CTSController::StartTiltSeries(BOOL singleStep, int external)
     mStartingIntensity = mLowDoseMode ? mLDParam[3].intensity : mScope->GetIntensity();
     mOriginalIntensity = mStartingIntensity;
     mStartingExposure = mConSets[RECORD_CONSET].exposure;
-    if (mHasDoseModulator) {
-      if (mLowDoseMode)
-        mStartingEDMPct = mLDParam[RECORD_CONSET].EDMPercent;
-      else {
-        error = mCamera->mDoseModulator->GetDutyPercent(mStartingEDMPct, str);
-        if (error) {
-          message.Format("Error %d getting EDM dose percentage: %s", error, str);
-          TSMessageBox(message);
-          ErrorStop();
-          return 1;
-        }
-      }
+
+    if (GetEDMPercent(mStartingEDMPct, message)) {
+      TSMessageBox(message);
+      ErrorStop();
+      return 1;
     }
   }
 
@@ -2691,18 +2684,11 @@ void CTSController::NextAction(int param)
       if (mTiltIndex == 1) {
         mFirstIntensity = mLowDoseMode ? mLDParam[3].intensity : mScope->GetIntensity();
         mFirstExposure = mConSets[RECORD_CONSET].exposure;
-        if (mHasDoseModulator) {
-          if (mLowDoseMode)
-            mFirstEDMPct = mLDParam[RECORD_CONSET].EDMPercent;
-          else {
-            error2 = mCamera->mDoseModulator->GetDutyPercent(mFirstEDMPct, message2);
-            if (error2) {
-              message.Format("Error %d getting EDM dose percentage: %s", error2, message2);
-              TSMessageBox(message);
-              ErrorStop();
-              return;
-            }
-          }
+        
+        if (GetEDMPercent(mFirstEDMPct, message)) {
+          TSMessageBox(message);
+          ErrorStop();
+          return;
         }
       }
       
@@ -3337,18 +3323,11 @@ void CTSController::NextAction(int param)
         mStartingIntensity = mLowDoseMode 
           ? mLDParam[RECORD_CONSET].intensity : mScope->GetIntensity();
         mStartingExposure = mConSets[RECORD_CONSET].exposure;
-        if (mHasDoseModulator) {
-          if (mLowDoseMode)
-            mStartingEDMPct = mLDParam[RECORD_CONSET].EDMPercent;
-          else {
-            error2 = mCamera->mDoseModulator->GetDutyPercent(mStartingEDMPct, message2);
-            if (error2) {
-              message.Format("Error %d getting EDM dose percentage: %s", error2, message2);
-              TSMessageBox(message);
-              ErrorStop();
-              return;
-            }
-          }
+        
+        if (GetEDMPercent(mStartingEDMPct, message)) {
+          TSMessageBox(message);
+          ErrorStop();
+          return;
         }
       }
 
@@ -7324,6 +7303,28 @@ double CTSController::GetCumulativeDose()
     mComplexTasks->GetOnAxisDose();
 }
 
+int CTSController::GetEDMPercent(float &EDMPct, CString &message)
+{
+  int error;
+  CString str;
+  if (mHasDoseModulator) {
+    if (mLowDoseMode)
+      EDMPct = mLDParam[RECORD_CONSET].EDMPercent;
+    else {
+      error = mCamera->mDoseModulator->GetDutyPercent(EDMPct, str);
+      if (error) {
+        message.Format("Error %d getting EDM dose percentage: %s", error, str);
+        return 1;
+      }
+    }
+  }
+  else {
+    message.Format("There must be an EDM to get dose percentage");
+    return 1;
+  }
+  return 0;
+}
+
 // Modify parameters in master control record from other interfaces
 // Unconditionally get beam tilt, defocus target, tilt increment, cosine, delay
 void CTSController::SyncOtherModulesToParam(void)
@@ -7511,3 +7512,5 @@ bool CTSController::DoWaitForDrift(double angle)
   return (!((mTSParam.onlyWaitDriftAboveBelow < 0 && fang > mTSParam.waitDriftBelowAngle)
     || (mTSParam.onlyWaitDriftAboveBelow > 0 && fang < mTSParam.waitDriftAboveAngle)));
 }
+
+

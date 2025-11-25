@@ -499,7 +499,7 @@ BEGIN_MESSAGE_MAP(CTSSetupDialog, CBaseDlg)
   ON_BN_CLICKED(IDC_BUT_SETUP_DOSE_SYM, OnButSetupDoseSym)
   ON_BN_CLICKED(IDC_TSWAITFORDRIFT, OnWaitForDrift)
   ON_BN_CLICKED(IDC_BUT_SETUP_DRIFT_WAIT, OnButSetupDriftWait)
-  ON_BN_CLICKED(IDC_CHANGE_EDMPCT, OnChangeEDM)
+  ON_BN_CLICKED(IDC_CHANGE_EDMPCT, OnButChangeEDM)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -1409,6 +1409,17 @@ void CTSSetupDialog::OnChangeExposure()
   ManageTaperLine();
 }
 
+void CTSSetupDialog::OnButChangeEDM()
+{
+  UPDATE_DATA_TRUE;
+  if (m_bChangeEDMPct && m_bChangeExposure) {
+    m_bChangeExposure = FALSE;
+    UpdateData(false);
+  }
+  ManageExposures();
+  ManageTaperLine();
+}
+
 void CTSSetupDialog::OnStoponbigshift() 
 {
   UPDATE_DATA_TRUE;
@@ -1454,33 +1465,28 @@ void CTSSetupDialog::ManageExposures(void)
   if (m_bChangeExposure && (mSTEMindex || 
     !(m_bVaryParams && typeVaries[TS_VARY_EXPOSURE]))) {
     to = "exposure";
-    ReplaceDlgItemText(IDC_RCONSTANTBEAM, "beam intensity", "exposure time");
-    ReplaceDlgItemText(IDC_RCONSTANTBEAM, "EDM dose %", "exposure time");
+    ReplaceDlgItemText(IDC_RCONSTANTBEAM, "beam intensity", "EDM dose %", 
+      "exposure time");
     from = "intensity";
     from2 = "EDM %";
   } else if (m_bChangeEDMPct && m_iBeamControl > 0) {
     to = "EDM %";
-    ReplaceDlgItemText(IDC_RCONSTANTBEAM, "beam intensity", "EDM dose %");
-    ReplaceDlgItemText(IDC_RCONSTANTBEAM, "exposure time", "EDM dose %");
+    ReplaceDlgItemText(IDC_RCONSTANTBEAM, "beam intensity", "exposure time", 
+      "EDM dose %");
     from = "intensity";
     from2 = "exposure";
   } else {
     to = "intensity";
-    ReplaceDlgItemText(IDC_RCONSTANTBEAM, "EDM dose %", "beam intensity");
-    ReplaceDlgItemText(IDC_RCONSTANTBEAM, "exposure time", "beam intensity");
+    ReplaceDlgItemText(IDC_RCONSTANTBEAM, "EDM dose %", "exposure time", 
+      "beam intensity");
     from = "EDM %";
     from2 = "exposure";
   }
-  ReplaceDlgItemText(IDC_RINTENSITYCOSINE, from, to);
-  ReplaceDlgItemText(IDC_RINTENSITYMEAN, from, to);
-  ReplaceDlgItemText(IDC_LIMITTOCURRENT, from, to);
-  ReplaceDlgItemText(IDC_LIMITINTENSITY, from, to);
-  ReplaceDlgItemText(IDC_USEINTENSITYATZERO, from, to);
-  ReplaceDlgItemText(IDC_RINTENSITYCOSINE, from2, to);
-  ReplaceDlgItemText(IDC_RINTENSITYMEAN, from2, to);
-  ReplaceDlgItemText(IDC_LIMITTOCURRENT, from2, to);
-  ReplaceDlgItemText(IDC_LIMITINTENSITY, from2, to);
-  ReplaceDlgItemText(IDC_USEINTENSITYATZERO, from2, to);
+  ReplaceDlgItemText(IDC_RINTENSITYCOSINE, from, from2, to);
+  ReplaceDlgItemText(IDC_RINTENSITYMEAN, from, from2, to);
+  ReplaceDlgItemText(IDC_LIMITTOCURRENT, from, from2, to);
+  ReplaceDlgItemText(IDC_LIMITINTENSITY, from, from2, to);
+  ReplaceDlgItemText(IDC_USEINTENSITYATZERO, from, from2, to);
 
   m_butChangeExposure.EnableWindow(!(m_bVaryParams && typeVaries[TS_VARY_EXPOSURE]) && 
     !mDoingTS && m_iBeamControl > 0 && !mSTEMindex);
@@ -2169,14 +2175,3 @@ void CTSSetupDialog::InitializePanels(int type)
   }
 }
 
-
-void CTSSetupDialog::OnChangeEDM()
-{
-  UPDATE_DATA_TRUE;
-  if (m_bChangeEDMPct && m_bChangeExposure) {
-    m_bChangeExposure = FALSE;
-    UpdateData(false);
-  }
-  ManageExposures();
-  ManageTaperLine();
-}

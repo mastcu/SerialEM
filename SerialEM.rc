@@ -6661,6 +6661,7 @@ BEGIN
     IDC_SPIN_EDM_PCT        "Set the electronic dose modulator dose percentage"
     IDC_DEL_EDM_PLUS        "Increase the increment used in adjusting the EDM dose percentage"
     IDC_DEL_EDM_MINUS       "Decrease the increment used in adjusting the EDM dose percentage"
+    IDC_CHANGE_EDMPCT       "Control specimen exposure with EDM dose percentage, not beam intensity changes"
 END
 
 STRINGTABLE

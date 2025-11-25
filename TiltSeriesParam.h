@@ -116,7 +116,7 @@ struct TiltSeriesParam {
   BOOL changeRecExposure;         // Flag to change exposure time instead of beam intensity
   BOOL changeAllExposures;     // Flag to change all the exposure times not just Record
   BOOL changeSettling;         // Flag to change drift settling proportionally
-  BOOL changeEDMPct;           // Falg to change EDM dose percent instead of beam intensity
+  BOOL changeEDMPct;           // Flag to change EDM dose percent instead of beam intensity
   BOOL cenBeamPeriodically;    // Flag to recenter beam periodically
   int cenBeamInterval;         // Interval in minutes
   BOOL cenBeamAbove;           // Center beam going above an angle

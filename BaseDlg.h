@@ -103,6 +103,8 @@ public:
   CButton m_butHelp;
   void ReplaceWindowText(CWnd * wnd, const char * fromText, CString toText);
   void ReplaceDlgItemText(int nID, const char * fromText, CString toText);
+  void ReplaceDlgItemText(int nID, const char * fromText, const char * fromText2, 
+    CString toText);
   void SetupPanelTables(int * idTable, int * leftTable, int * topTable, int * numInPanel,
     int * panelStart, int *heightTable = NULL, int sortStart = 0);
   void SetupUnitsToAdd(int *idTable, int *leftTable, int *topTable, int *numInPanel,

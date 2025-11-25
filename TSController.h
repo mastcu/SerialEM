@@ -147,6 +147,7 @@ public:
   BOOL *GetExtraFileStarts() { return &mExtraFiles[0]; };
 
   double GetCumulativeDose();
+  int GetEDMPercent(float &EDMPct, CString &message);
 
   bool GetBidirStartAngle(float &outVal) {outVal = mTSParam.bidirAngle; return mStartedTS && mTSParam.doBidirectional; };
 
