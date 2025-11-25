@@ -781,6 +781,7 @@ BEGIN
         MENUITEM "&Stage Move Tool...",         ID_WINDOW_STAGE_MOVE_TOOL
         MENUITEM "S&how Scope Control",         ID_WINDOW_SHOWSCOPECONTROLPANEL
         MENUITEM "Take &Image Snapshot...",     ID_WINDOW_TAKESCREENSHOT
+        MENUITEM "&Multichannel Display...",    ID_WINDOW_MULTICHANNELSTEMDISPLAY
     END
     POPUP "&Help"
     BEGIN
@@ -8317,6 +8318,8 @@ BEGIN
     ID_CALIBRATION_LISTMAGISOFFSETS "List mag image shift offset distances"
     ID_TASKS_SETDOSERATEWITHEDM 
                             "Set dose rate on camera in e/pixel/sec with an electronic dose modulator"
+    ID_WINDOW_MULTICHANNELSTEMDISPLAY 
+                            "Enable and select STEM channels for multi-window display"
 END
 
 STRINGTABLE
