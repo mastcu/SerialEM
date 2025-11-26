@@ -211,6 +211,7 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
   CArray<BaseMarkerShift, BaseMarkerShift> *markerShiftArr =
     mWinApp->mNavHelper->GetMarkerShiftArray();
   BaseMarkerShift markerShift;
+  BOOL *chanInMultiView = mWinApp->GetShowChanInMultiView();
   MultiGridParams *mgParams = mWinApp->mMultiGridTasks->GetMultiGridParams();
   CFileStatus status;
   BOOL startingProg = mWinApp->GetStartingProgram();
@@ -1065,6 +1066,10 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
         mWinApp->mMacroProcessor->SetNumToolButtons(itemInt[1]);
         if (!itemEmpty[2])
           mWinApp->mMacroProcessor->SetToolButHeight(itemInt[2]);
+      } else if (NAME_IS("ShowChanInMultiView")) {
+        for (index = 0; index < MAX_STEM_CHANNELS; index++)
+          if (!itemEmpty[index])
+            chanInMultiView[index] = itemInt[index + 1];
       }
       else
         recognized2 = false;
@@ -1768,6 +1773,7 @@ void CParameterIO::WriteSettings(CString strFileName)
   CArray<FrameAliParams, FrameAliParams> *faParamArray =
     mWinApp->mCamera->GetFrameAliParams();
   FrameAliParams faParam;
+  int *chanInMultiView = mWinApp->GetShowChanInMultiView();
   BOOL *useGPU4K2Ali = mWinApp->mCamera->GetUseGPUforK2Align();
   CString *fKeyMapping = mWinApp->mMacroProcessor->GetFKeyMapping();
   MultiShotParams *msParams = mWinApp->mNavHelper->GetMultiShotParams();
@@ -2312,6 +2318,7 @@ void CParameterIO::WriteSettings(CString strFileName)
       mWinApp->mMacroProcessor->GetNumToolButtons(), 
       mWinApp->mMacroProcessor->GetToolButHeight());
     mFile->WriteString(oneState);
+    WriteIndexedInts("ShowChanInMultiView", chanInMultiView, MAX_STEM_CHANNELS);
 
     // Save stored states BEFORE low dose params
     for (i = 0; i < stateArray->GetSize(); i++) {

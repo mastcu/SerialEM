@@ -511,6 +511,7 @@ hid_window_tile									= SerialEM.chm::/html\menu_window.htm#hid_window_tile
 hid_window_stage_move_tool			= SerialEM.chm::/html\menu_window.htm#hid_window_stage_move_tool
 hid_window_showscopecontrolpanel	= SerialEM.chm::/html\menu_window.htm#hid_window_showscopecontrolpanel
 hid_window_takescreenshot       = SerialEM.chm::/html\menu_window.htm#hid_window_takescreenshot
+hid_window_multichannelstemdisplay = SerialEM.chm::/html\menu_window.htm#hid_window_multichannelstemdisplay
 hid_resize_main									= SerialEM.chm::/html\menu_window.htm#hid_resize_main
 hid_window_all									= SerialEM.chm::/html\menu_window.htm#hid_window_all
 hid_help_finder									= SerialEM.chm::/html\menu_help.htm#hid_help_finder

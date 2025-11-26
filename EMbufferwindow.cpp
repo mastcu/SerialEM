@@ -332,8 +332,10 @@ void CEMbufferWindow::UpdateSaveCopy()
 // If doing tasks, only the copy to new button should be active
   BOOL bEnable, noTasks, justNavAvq = mWinApp->GetJustNavAcquireOpen();
   int curStore, mbint, spinBuf;
+  if (!mWinApp->mActiveView)
+    return;
   EMimageBuffer *activeBuf = mWinApp->mActiveView->GetActiveImBuf();
-  if (!mInitialized)
+  if (!mInitialized || !activeBuf)
     return;
   spinBuf = m_sbcCopy.GetPos() & 255;
 

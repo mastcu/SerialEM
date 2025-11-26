@@ -82,9 +82,9 @@ END_MESSAGE_MAP()
 void CLogWindow::Append(CString & inString, int lineFlags, int red, int green, int blue,
   int style)
 {
-  bool deferring = (mWinApp->mMacroProcessor->DoingMacro() || 
+  bool deferring = (mWinApp->mMacroProcessor && (mWinApp->mMacroProcessor->DoingMacro() ||
     mWinApp->mMacroProcessor->GetNonMacroDeferring()) &&
-    mWinApp->mMacroProcessor->GetDeferLogUpdates();
+    mWinApp->mMacroProcessor->GetDeferLogUpdates());
   bool replacing = (lineFlags & 2) != 0;
 
   // Flush any deferred lines if it is not happening, if line replacement, or too many

@@ -3405,6 +3405,7 @@ void CCameraController::Capture(int inSet, bool retrying)
     mTD.PluginAcquireFlags = mParam->balanceHalves & ~(1);
   mTD.PluginFrameFlags = 0;
   mTD.ReadoutsPerFrame = 1;
+  mStoppedPartialScan = false;
 
   // Make sure camera is inserted, blocking cameras are retracted, check temperature, and
   // set up saving from K2 camera;  Again clear low dose area flag to be safe
@@ -11089,6 +11090,10 @@ void CCameraController::DisplayNewImage(BOOL acquired)
     }
   }
 
+  if (mParam->STEMcamera && !(mRepFlag >= 0 && mTD.ReturnPartialScan == 0))
+    mWinApp->DisplayNewMultiChannels(&mTD.ChanIndOrig[0], mTD.NumChannels, 
+      mStoppedPartialScan ? 1 : mTD.ReturnPartialScan);
+
   if (mTD.NumAsyncSumFrames != 0 && !(mDiscardImage && !mAligningFalconFrames)) {
 
     // Defer updates by any actions below - the update will be done on ErrorCleanup
@@ -13843,6 +13848,8 @@ void CCameraController::StopContinuousSTEM(void)
     return;
   if (mScope->GetCameraAcquiring())
     mScope->SetCameraAcquiring(false);
+
+  mStoppedPartialScan = B3DABS(mTD.ReturnPartialScan) == 1;
 
   // Plugin camera
   if (mTD.plugFuncs && mTD.plugFuncs->StopContinuous) {

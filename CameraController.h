@@ -1147,7 +1147,8 @@ public:
   float mExtraSTEMTimeout;         // Time to add to timeout in seconds for any STEM camera
   ShortVec mVirtualDEChannels;    // List of which detectors had virtual names originally
   ShortVec mPhysicalDEChannels;   // List of other ones
-  float mFPSforVirtualSTEM;       
+  float mFPSforVirtualSTEM;     
+  bool mStoppedPartialScan;       // Flag that partial STEM was stopped
 
 public:
   void SetNonGatanPostActionTime(void);

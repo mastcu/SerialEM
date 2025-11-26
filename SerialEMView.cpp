@@ -67,6 +67,14 @@ UINT_PTR CSerialEMView::mMovieTimerID = 0;
 int CSerialEMView::mMovieDir = 1;
 int CSerialEMView::mMovieInterval = 250;
 bool CSerialEMView::mNewMovieInterval = false;
+bool CSerialEMView::mAddedTask = false;
+int CSerialEMView::mResLeft;
+int CSerialEMView::mResTop;
+int CSerialEMView::mResWidth;
+int CSerialEMView::mResHeight;
+bool CSerialEMView::mInResizeTask = false;
+
+static CChildFrame *sResizedFrame;
 
 
 /////////////////////////////////////////////////////////////////////////////
@@ -119,6 +127,7 @@ CSerialEMView::CSerialEMView()
   mMainWindow = false;
   mStackWindow = false;
   mFFTWindow = false;
+  mMultiChanWindow = -1;
   mShiftPressed = false;
   mCtrlPressed = false;
   mPanning = false;  
@@ -141,6 +150,7 @@ CSerialEMView::CSerialEMView()
   mLastWinSizeX = 0;
   mLastWinSizeY = 0;
   mDoingMontSnapshot = 0;
+  mInResize = false;
 }
 
 CSerialEMView::~CSerialEMView()
@@ -155,9 +165,11 @@ CSerialEMView::~CSerialEMView()
 
 BOOL CSerialEMView::PreCreateWindow(CREATESTRUCT& cs)
 {
-  int iBordTop, iBordLeft, iBordBottom, iBordRight, type, width;
+  int iBordTop, iBordLeft, iBordBottom, iBordRight, type, width, ind, num = 0;
   static int windowNum = 1;
   CString str;
+  CameraParameters *camP;
+  int *chanInMulti = mWinApp->GetShowChanInMultiView();
 
   // The parent is good for getting the rect but it is not really the mainFrame - it is
   // the client window under the mainframe.  So we have to get menu from THE mainFrame
@@ -180,12 +192,29 @@ BOOL CSerialEMView::PreCreateWindow(CREATESTRUCT& cs)
     childFrame->SetStaticFrame();
     childFrame->SetWindowText("Main Window");
     mMainWindow = true;
-  } else if (type == 3) {
+  } else if (type >= 3) {
     width = (rect.Width() - iBordLeft - iBordRight);
+    //PrintfToLog("Rect %d x %d  width %d height %d left %d top %d", rect.Width(), rect.Height(), width,
+      //rect.Height() - iBordTop - iBordBottom, rect.left + iBordLeft, rect.top + iBordTop);
     childFrame->SetWindowPos(NULL, rect.left + iBordLeft, rect.top + iBordTop,
       width, rect.Height() - iBordTop - iBordBottom, SWP_NOZORDER);
-    childFrame->SetWindowText("FFT");
-    mFFTWindow = true;
+    if (type == 3) {
+      childFrame->SetWindowText("FFT");
+      mFFTWindow = true;
+    } else {
+      camP = mWinApp->GetSTEMcamParam();
+      mMultiChanWindow = type - 4;
+      for (ind = 0; ind < camP->numChannels; ind++) {
+        if (chanInMulti[ind]) {
+          if (num == mMultiChanWindow) {
+            childFrame->SetWindowText(camP->channelName[ind]);
+            break;
+          }
+          num++;
+        }
+      }
+      mImBufArraySize = mWinApp->GetMaxChannelBuffers();
+    }
   } else {
     //  Otherwise use the size that is passed in, put in lower right corner
     if (iBordRight > rect.Width() - iBordLeft)
@@ -215,7 +244,7 @@ BOOL CSerialEMView::PreCreateWindow(CREATESTRUCT& cs)
     //childFrame->SetChildView(this);
   }
 
-  if (mFFTWindow) {
+  if (type >= 3) {
     mCreateTime = GetTickCount();
     mFFTresizeCount = 0;
   }
@@ -258,10 +287,13 @@ CSerialEMDoc* CSerialEMView::GetDocument() // non-debug version is inline
 
 void CSerialEMView::OnDestroy()
 {
+  // If one multi-channel window is closed, close all the others too
+  if (mMultiChanWindow >= 0 && !mWinApp->GetClosingAllMultiChan())
+    mWinApp->CloseAllMultiChanWindows(mMultiChanWindow);
   if (mMainWindow)
     mWinApp->mMainView = NULL;
   else
-    mWinApp->ViewClosing(mStackWindow, mFFTWindow, this);
+    mWinApp->ViewClosing(mStackWindow, mFFTWindow, mMultiChanWindow, this);
   CView::OnDestroy();
 }
 
@@ -979,11 +1011,13 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
     CFont *def_font = cdc.SelectObject(useFont);
     int defMode = cdc.SetBkMode(TRANSPARENT);
     COLORREF defColor = cdc.SetTextColor(RGB(255, 0, 0));
-    if (mMainWindow || mFFTWindow) {
+    if (mMainWindow || mFFTWindow || mMultiChanWindow >= 0) {
       char letter = 'A' + mImBufIndex;
       letString = letter;
       if (mFFTWindow)
         letString += "F";
+      if (mMultiChanWindow >= 0)
+        letString += "S";
       cdc.TextOut(scaled5, scaled5, letString);
       if (imBuf->mCaptured > 0 && imBuf->mConSetUsed >= 0 && 
         imBuf->mConSetUsed < NUMBER_OF_USER_CONSETS && imBuf->mLowDoseArea) {
@@ -992,9 +1026,11 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
           cdc.TextOut(mWinApp->ScaleValueForDPI(25), scaled10, letString);
       }
       if (!mFFTWindow && !mStackWindow && scaleCrit > 0 &&
-        mImBufIndex <= mWinApp->mBufferManager->GetShiftsOnAcquire()) {
+        (mImBufIndex <= mWinApp->mBufferManager->GetShiftsOnAcquire()) || 
+        mMultiChanWindow >= 0) {
         cdc.SelectObject(useLabelFont);
-        cdc.TextOut(scaled5, mWinApp->ScaleValueForDPI(35), "Rolling");
+        cdc.TextOut(scaled5, mWinApp->ScaleValueForDPI(35), 
+          B3DCHOICE(mMultiChanWindow < 0, "Rolling", mChanBufIsNew ? "New" : "Old"));
       }
  
       // Dose rate output for direct detector and channel name for STEM
@@ -3193,7 +3229,7 @@ void CSerialEMView::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
   float fdx =0., fdy = 0.;
   EMimageBuffer *mainBufs = mWinApp->GetImBufs();
   char cChar = char(nChar);
-  bool mainOrFFT = mMainWindow || mFFTWindow;
+  bool mainOrFFT = mMainWindow || mFFTWindow || mMultiChanWindow >= 0;
   bool ctrl = GetAsyncKeyState(VK_CONTROL) / 2 != 0;
   bool shift = GetAsyncKeyState(VK_SHIFT) / 2 != 0;
   bool navCanProcess = mWinApp->mNavigator && !mWinApp->mNavigator->mNavAcquireDlg;
@@ -3368,8 +3404,10 @@ void CSerialEMView::OnActivateView(BOOL bActivate, CView* pActivateView,
   if (bActivate && !mWinApp->mMainFrame->GetClosingProgram()) {
     // Yes it can inform the App that it is in charge; also set scale
     mWinApp->SetActiveView(this);
-    NewImageScale();
-    NewZoom();
+    if (mImBufs) {
+      NewImageScale();
+      NewZoom();
+    }
     if (mWinApp->mBufferWindow)
       mWinApp->mBufferWindow.UpdateSaveCopy();
   }
@@ -3410,16 +3448,34 @@ void CSerialEMView::ResizeToFit(int iBordLeft, int iBordTop, int iBordRight,
   useWidth = fullWidth = rect.Width() - iBordLeft - iBordRight;
   useLeft = rect.left + iBordLeft;
   if (useHalf)
-    useWidth = (int)(useWidth * mWinApp->GetMainFFTsplitFrac());
+    useWidth = (int)(useWidth * 
+    (useHalf < -1 ? mWinApp->GetMainChansSplitFrac() : mWinApp->GetMainFFTsplitFrac()));
   if (useHalf > 0) {
     useLeft += useWidth;
     useWidth = fullWidth - useWidth;
   }
 
-  mResizingToFit = true;
-  childFrame->SetWindowPos(NULL, useLeft, rect.top + iBordTop, useWidth, 
+  //if (!mWinApp->GetStartingProgram())
+    //PrintfToLog("R2F %d  set to %d %d", mMultiChanWindow, useWidth,
+    //rect.Height() - iBordTop - iBordBottom);
+  // If this was called from the MainViewResizing routine, do not change size of window
+  // being changed by user, defer the new size by setting up a task to do it at end
+  if (mInResize) {
+    sResizedFrame = childFrame;
+    mResLeft = useLeft;
+    mResTop = rect.top + iBordTop;
+    mResWidth = useWidth;
+    mResHeight = rect.Height() - iBordTop - iBordBottom;
+    if (!mAddedTask) {
+      mWinApp->AddIdleTask(ResizeBusy, ResizeNextTask, ResizeCleanup, 0, 0);
+      mAddedTask = true;
+    }
+  } else {
+    mResizingToFit = true;
+    childFrame->SetWindowPos(NULL, useLeft, rect.top + iBordTop, useWidth,
       rect.Height() - iBordTop - iBordBottom, SWP_NOZORDER);
-  mResizingToFit = false;
+    mResizingToFit = false;
+  }
 }
 
 // Report a resize event other than one caused by ResizeToFit or one of the first two
@@ -3429,7 +3485,7 @@ void CSerialEMView::OnSize(UINT nType, int cx, int cy)
   CRect rect;
   float xRatio, yRatio;
   CView::OnSize(nType, cx, cy);
-  if (mFFTWindow)
+  if (mFFTWindow || mMultiChanWindow >= 0)
     mFFTresizeCount++;
 
   // Adjust zoom instead resizing to fit
@@ -3446,11 +3502,26 @@ void CSerialEMView::OnSize(UINT nType, int cx, int cy)
       mImBufs[ind].mZoom *= xRatio;
   }
   
-  if (!mResizingToFit && (mMainWindow || mFFTWindow) && 
-    !(mFFTWindow && SEMTickInterval(mCreateTime) < 1000. && mFFTresizeCount < 3)) {
+  // Report a resize event so borders and multi-window sizes can be adjusted, but not
+  // if this is the final resize after such adjustments
+  if (!mResizingToFit && (mMainWindow || mFFTWindow || mMultiChanWindow >= 0) &&
+    !((mFFTWindow || mMultiChanWindow >= 0) && SEMTickInterval(mCreateTime) < 1000. && 
+      mFFTresizeCount < 3) && !mInResizeTask) {
     GetWindowRect(&rect);
-    mWinApp->MainViewResizing(rect, mFFTWindow);
+    mInResize = true;
+    mWinApp->MainViewResizing(rect, mFFTWindow, mMultiChanWindow);
+    mInResize = false;
   }
+}
+
+// task to do deferring resize of panel being adjusted by user
+void CSerialEMView::ResizeNextTask(int param)
+{
+  mInResizeTask = true;
+  sResizedFrame->SetWindowPos(NULL, mResLeft, mResTop, mResWidth,
+    mResHeight, SWP_NOZORDER);
+  mInResizeTask = false;
+  mAddedTask = false;
 }
 
 // Try to change to the buffer iTrial, moving in direction iDir

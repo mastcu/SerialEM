@@ -23,7 +23,7 @@
       <TABLE BORDER cols="2">
         <TR VALIGN="top">
           <TD class="style1"><A HREF="#hid_window_new">New Window</A></TD>
-          <TD class="style2">Copies active image to a new image window</TD>
+          <TD class="style2">Copies active image to a new image window.</TD>
         </TR>
         <TR VALIGN="top">
           <TD class="style1"><A HREF="#hid_window_cascade">Cascade</A></TD>
@@ -39,18 +39,22 @@
         </TR>
         <TR VALIGN="top">
           <TD class="style1"><A HREF="#hid_window_stage_move_tool">Stage Move Tool...</A></TD>
-          <TD class="style2">Opens a panel for moving the stage</TD>
+          <TD class="style2">Opens a panel for moving the stage.</TD>
         </TR>
         <TR VALIGN="top">
           <TD class="style1"><a href="#hid_window_showscopecontrolpanel">Show Scope Control</a></TD>
           <TD class="style2">Toggles whether the Microscope Control panel is included in 
-            stack of panels</TD>
+            stack of panels.</TD>
         </TR>
         <TR VALIGN="top">
           <TD class="style1"><a href="#hid_window_takescreenshot">Take Image Snapshot</a></TD>
-          <TD class="style2">Opens a dialog for taking snapshots of the image window</TD>
+          <TD class="style2">Opens a dialog for taking snapshots of the image window.</TD>
         </TR>
-        <TR VALIGN="top">
+       <TR VALIGN="top">
+          <TD class="style1"><a href="#hid_window_multichannelstemdisplay">Multichannel Display...</a></TD>
+          <TD class="style2">Opens a dialog to control displaying STEM images from selected detectors in separate windows.</TD>
+        </TR>
+         <TR VALIGN="top">
           <TD class="style1"><A HREF="#hid_window_all">Window 1, 2, ...</A></TD>
           <TD class="style2">Goes to specified window.</TD>
         </TR>
@@ -79,6 +83,36 @@
     <P>Use this command to open the <a href="hidd_screenshot.htm">Image Snapshot</a> dialog and take
       a snapshot of the contents of an image window.
     </P>
+    <P><A NAME="hid_window_multichannelstemdisplay"></A><B>Multichannel Display command (Window menu)</B></P>
+      <p>Use this command to open a dialog with a set of checkboxes for controlling 
+        whether different STEM channels are displayed in separate windows.&nbsp; Use the 
+        first checkbox to control whether to use the multi-window display.&nbsp; The 
+        checkboxes below select which detectors will be displayed in separate windows.&nbsp; 
+        When this display is enabled, the windows will open on the next STEM 
+        acquisition, unless there is already a side-by-side FFT window open.&nbsp; A 
+        window will be opened for every channel selected in the dialog, with the name of 
+        the detector in the title bar.&nbsp;&nbsp; If the acquisition does not acquire 
+        from all of those channels, the rest of the windows will be left blank. A new 
+        acquisition will roll the existing images down in the buffer stack for each 
+        window, which can contain 3 images by default.&nbsp; The number of buffers can 
+        be set with the MaxMultiChannelBuffers property entry.&nbsp; Buffers are labeled 
+        as AS, BS, etc.&nbsp; They also have a label 'New' for a new addition to the 
+        stack.&nbsp; When a subsequent acquisition does not not include all of the 
+        currently displayed channels, that label will change to 'Old' for the channels 
+        not included.</p>
+    <p>The windows will be arranged in one or more columns to the right of the main 
+      image display so as to maximum the zoom.&nbsp; The behavior is similar to that 
+      with the side-by-side FFT.&nbsp; If the program window is resized, these windows 
+      will be resized and may be rearranged.&nbsp; Resizing the right edge of a window 
+      in the right-most or only column will change the amount of empty space to the 
+      right of the windows, and resizing the bottom edge of a window in the bottom 
+      row, or of the main window, will change the empty space below the windows.&nbsp; 
+      Resizing at the junction between the main window and the multi-channel windows 
+      will change the fractional allocation of available space between the two kinds 
+      of windows.</p>
+    <p>Closing any of the windows will close all of them.&nbsp; The windows will also 
+      be closed when this dialog is closed with OK, when an FFT is taken (if the 
+      option for side-by-side FFT display is on), and when settings are read in.</p>
       <P><A NAME="hid_window_all"></A><B>1, 2, ... command (Window menu)</B>
       <P>SerialEM displays a list of image windows at the bottom of the Window menu. A 
         check mark appears in front of the name of the active window. Choose a window 

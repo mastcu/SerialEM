@@ -2403,6 +2403,7 @@ void CSerialEMDoc::PostSettingsRead()
   mWinApp->CopyConSets(mWinApp->GetCurrentCamera());
 
   mWinApp->UpdateWindowSettings();
+  mWinApp->CloseAllMultiChanWindows(-1);
   if (mWinApp->mNavHelper->mStateDlg)
     mWinApp->mNavHelper->mStateDlg->UpdateSettings();
   if (mWinApp->mNavHelper->mMultiShotDlg)

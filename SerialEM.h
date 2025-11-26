@@ -609,6 +609,7 @@ public:
     GetMember(CameraParameters *, CamParams)
     GetSetMember(float, MemoryLimit)
     CameraParameters *GetActiveCamParam(int index = -1);
+  CameraParameters *GetSTEMcamParam();
   void UpdateStatusWindow();
   void DialogChangedState(CToolDlg *inDialog, int inState);
   void RestoreViewFocus();
@@ -706,6 +707,7 @@ public:
   GetSetMember(float, RightBorderFrac);
   GetSetMember(float, BottomBorderFrac);
   GetSetMember(float, MainFFTsplitFrac);
+  GetSetMember(float, MainChansSplitFrac);
   GetSetMember(int, AssumeCamForDummy);
   int *GetDlgColorIndex() { return &mDlgColorIndex[0]; };
   GetSetMember(bool, AbsoluteDlgIndex);
@@ -743,6 +745,11 @@ public:
   SetMember(BOOL, StartCameraInDebug);
   SetMember(int, BufToggleCount);
   GetSetMember(bool, AllowBkgdMacroTime);
+  GetMember(BOOL, EnableMultiChanView);
+  GetSetMember(int, MaxChannelBuffers);
+  void SetEnableMultiChanView(BOOL inVal);
+  int *GetShowChanInMultiView() { return &mShowChanInMultiView[0]; };
+  GetMember(bool, ClosingAllMultiChan);
   void RestoreFocusWhenIdle() { mRestoreFocusIdleCount = 4; };
   unsigned char *GetPaletteColors() {return &mPaletteColors[0][0] ; };
   void SetEnableExternalPython(BOOL inVal);
@@ -776,6 +783,7 @@ public:
   CSerialEMView *mStackView;          // The stack view window
   CSerialEMView *mLastStackView;     // The previous (detached) stack view window
   CSerialEMView *mFFTView;           // View for side-by-side FFT
+  CSerialEMView *mChannelViews[MAX_STEM_CHANNELS];   // Views for multichannel
   CMenuTargets mMenuTargets;
   CImageLevelDlg mImageLevel;
   CEMbufferWindow mBufferWindow;
@@ -880,6 +888,7 @@ private:
   EMimageBuffer *mStackViewImBuf;     // Buffer to pass to it on creation
   EMimageBuffer mImBufs[MAX_BUFFERS];
   EMimageBuffer mFFTBufs[MAX_FFT_BUFFERS];
+  EMimageBuffer *mChannelImBufs[MAX_STEM_CHANNELS];
   ControlSet   mConSets[MAX_CONSETS];
   ControlSet   mCamConSets[MAX_CAMERAS][MAX_CONSETS]; // order so can step through modes
   CameraParameters  mCamParams[MAX_CAMERAS];
@@ -1025,6 +1034,7 @@ private:
   float mRightBorderFrac;       // User's setting for right border of main as frac of area
   float mBottomBorderFrac;      // User's setting for bottom border of main as frac
   float mMainFFTsplitFrac;      // Fraction of right-left area taken by Main with FFT open
+  float mMainChansSplitFrac;    // Fraction of right-left area for Main with multi-chan
   int mRightFrameWidth;         // difference between main and frame right edge at startup
   int mBottomFrameWidth;        // difference between main and frame bottom edge at start
   int mAssumeCamForDummy;       // Camera to assume for dummy instance
@@ -1082,6 +1092,14 @@ private:
   double mLastToggleTime;       // Time of last toggle
   int mMaxTogglesLeft;          // Maximum number of toggles to skip
   bool mAllowBkgdMacroTime;     // flag to let background script run w/o being only task
+  int mNumChannelViews;         // Number of STEM channel views open (so far)
+  BOOL mEnableMultiChanView;    // Flag that the display is enabled
+  int mShowChanInMultiView[MAX_STEM_CHANNELS];
+  bool mClosingAllMultiChan;    // Flag that all are being closed
+  int mNeedMultiChan;           // Total # of multi channel windows needed
+  int mMaxChannelBuffers;       // # of buffers in a channel window
+  int mNumChanWindowRows;       // The number of rows and columns of multi-channel display
+  int mNumChanWindowCols;
 
 public:
   void UpdateAllEditers(void);
@@ -1089,7 +1107,7 @@ public:
   void InitializeOneLDParam(LowDoseParams &ldParam);
   CString GetDebugKeys(void);
   int AddToStackView(EMimageBuffer * imBuf, int angleOrder);
-  void ViewClosing(BOOL stackView, BOOL FFTview, CSerialEMView *view);
+  void ViewClosing(BOOL stackView, BOOL FFTview, int multiChan, CSerialEMView *view);
   void DetachStackView(void);
   BOOL UserAcquireOK(void);
   float GetGainFactor(int camera, int binning);
@@ -1140,7 +1158,7 @@ int GetBuildDayStamp(void);
 void CleanupAndReportCrash(CString &message);
 int GetIntegerVersion(CString verStr = "");
 void AdjustSizesForSuperResolution(int iCam);
-void MainViewResizing(CRect &winRect, bool FFTwin);
+void MainViewResizing(CRect &winRect, bool FFTwin, int multiChanInd);
 void OpenOrCloseMacroEditors(void);
 void ClearAllMacros(void);
 CFont * GetLittleFont(CWnd *stat);
@@ -1160,6 +1178,12 @@ afx_msg void OnSaveSecondaryLog();
 afx_msg void OnUpdateSaveSecondaryLog(CCmdUI *pCmdUI);
 afx_msg void OnOpenSecondaryLog();
 afx_msg void OnUpdateOpenSecondaryLog(CCmdUI *pCmdUI);
+afx_msg void OnMultiChannelStemDisplay();
+afx_msg void OnUpdateMultiChannelStemDisplay(CCmdUI *pCmdUI);
+void OpenMultiChanWindows();
+void CloseAllMultiChanWindows(int skipNum);
+void ComputeChannelPosition(int chanInd, int width, int height, int &bordLeft, int &bordTop, int &bordRight, int &bordBottom);
+void DisplayNewMultiChannels(int *channelInds, int numChan, int partialScan);
 };
 
 /////////////////////////////////////////////////////////////////////////////
