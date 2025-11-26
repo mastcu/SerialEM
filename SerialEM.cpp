@@ -71,6 +71,7 @@
 #include "AutoTuning.h"
 #include "ExternalTools.h"
 #include "PythonServer.h"
+#include "ManyChoiceDlg.h"
 #include "Shared\b3dutil.h"
 #include "XFolderDialog/XWinVer.h"
 
@@ -200,6 +201,8 @@ BEGIN_MESSAGE_MAP(CSerialEMApp, CWinApp)
   ON_UPDATE_COMMAND_UI(ID_LOGWINDOW_SAVESECONDARYLOG, OnUpdateSaveSecondaryLog)
   ON_COMMAND(ID_LOGWINDOW_OPENSECONDARYLOG, OnOpenSecondaryLog)
   ON_UPDATE_COMMAND_UI(ID_LOGWINDOW_OPENSECONDARYLOG, OnUpdateOpenSecondaryLog)
+  ON_COMMAND(ID_WINDOW_MULTICHANNELSTEMDISPLAY, OnMultiChannelStemDisplay)
+  ON_UPDATE_COMMAND_UI(ID_WINDOW_MULTICHANNELSTEMDISPLAY, OnUpdateMultiChannelStemDisplay)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -774,6 +777,7 @@ CSerialEMApp::CSerialEMApp()
   mRightBorderFrac = 0.;
   mBottomBorderFrac = 0.;
   mMainFFTsplitFrac = 0.5f;
+  mMainChansSplitFrac = 0.5f;
   mRightFrameWidth = 0;
   mBottomFrameWidth = 0;
   mReopenLog =  false;
@@ -837,6 +841,15 @@ CSerialEMApp::CSerialEMApp()
   mStartCameraInDebug = false;
   mBufToggleCount = 0;
   mAllowBkgdMacroTime = false;
+  mEnableMultiChanView = false;
+  mNumChannelViews = 0;
+  for (i = 0; i < MAX_STEM_CHANNELS; i++) {
+    mShowChanInMultiView[i] = false;
+    mChannelViews[i] = NULL;
+    mChannelImBufs[i] = NULL;
+  }
+  mNeedMultiChan = 0;
+  mMaxChannelBuffers = 3;
   traceMutexHandle = CreateMutex(0, 0, 0);
   sStartTime = GetTickCount();
   mLastIdleScriptTime = sStartTime;
@@ -2150,6 +2163,8 @@ void CSerialEMApp::SetCurrentBuffer(int index, bool fftBuf)
     if (mFFTView) {
       mFFTView->SetCurrentBuffer(index);
     } else {
+      if (mNumChannelViews)
+        CloseAllMultiChanWindows(-1);
       mNeedFFTWindow = true;
       DoResizeMain();
       ViewOpening();
@@ -2168,7 +2183,8 @@ void CSerialEMApp::SetImBufIndex(int inIndex, bool fftBuf)
 }
 
 
-// Tell a new view about its size and image buffer to use
+// Tell a new view about its size and image buffer to use; the return value is 1 for main
+// window, 2 for stack view, 3 for FFT, 4+ for multichannel window, 0 for "New window"
 int CSerialEMApp::GetNewViewProperties(CSerialEMView *inView, int &iBordLeft, 
                                        int &iBordTop, int &iBordRight, int &iBordBottom,
                                        EMimageBuffer *&imBufs, int &iImBufNumber, 
@@ -2190,22 +2206,50 @@ int CSerialEMApp::GetNewViewProperties(CSerialEMView *inView, int &iBordLeft,
     iImBufNumber = MAX_BUFFERS;
     iImBufIndex = mImBufIndex;
     mNeedStaticWindow = FALSE;
-  } else if (mNeedFFTWindow) {
-    m_pMainWnd->GetWindowRect(rect);
-    fullWidth = rect.Width() - mMaxDialogWidth - mRightFrameWidth;
-    if (CountOpenViews() > 1)
+  } else if (mNeedFFTWindow || (mNeedMultiChan && mNumChannelViews < mNeedMultiChan)) {
+
+    // 11/25/25: Switch from main window to main frame and don't adjust for extra frame 
+    // width to get sizes to come out close to right for multi channel
+    CChildFrame *childFrame = (CChildFrame *)mMainView->GetParent();
+    CMainFrame *mainFrame = (CMainFrame *)childFrame->GetParent();
+    mainFrame->GetClientRect(&rect);
+    //m_pMainWnd->GetWindowRect(rect);
+    fullWidth = rect.Width() - mMaxDialogWidth;// -mRightFrameWidth;
+    if (CountOpenViews() > 1 + (mNumChannelViews ? mNumChannelViews - 1 : 0))
       iBordRight += 30;
+
+    // Common computation of borders for available area
     userRight = B3DNINT(mRightBorderFrac * fullWidth);
     iBordRight = B3DMAX(iBordRight, userRight);
-    iBordLeft = mMaxDialogWidth + B3DNINT(mMainFFTsplitFrac * (fullWidth - iBordRight));
-    userBot = B3DNINT(mBottomBorderFrac * (rect.Height() - mBottomFrameWidth));
+    iBordLeft = mMaxDialogWidth + 
+      B3DNINT((mNeedFFTWindow ? mMainFFTsplitFrac : mMainChansSplitFrac) * 
+      (fullWidth - iBordRight));
+    userBot = B3DNINT(mBottomBorderFrac * (rect.Height()));// -mBottomFrameWidth));
     iBordBottom = B3DMAX(iBordBottom, userBot);
-    imBufs = &mFFTBufs[0];
-    iImBufNumber = MAX_FFT_BUFFERS;
-    iImBufIndex = 0;
-    needStatic = 3;
-    mFFTView = inView;
-    mNeedFFTWindow = false;
+    if (mNeedFFTWindow) {
+
+      // FFT: set appropriate vars and return with those borders
+      imBufs = &mFFTBufs[0];
+      iImBufNumber = MAX_FFT_BUFFERS;
+      iImBufIndex = 0;
+      needStatic = 3;
+      mFFTView = inView;
+      mNeedFFTWindow = false;
+    } else {
+
+      // Multi-channel: get the adjusted borders for one panel
+      ComputeChannelPosition(mNumChannelViews, rect.Width() - iBordLeft - iBordRight,
+        rect.Height() - iBordTop - iBordBottom, iBordLeft, iBordTop, iBordRight,
+        iBordBottom);
+      imBufs = mChannelImBufs[mNumChannelViews];
+      iImBufNumber = mMaxChannelBuffers;
+      iImBufIndex = 0;
+      needStatic = 4 + mNumChannelViews;
+      mChannelViews[mNumChannelViews++] = inView;
+      if (mNumChannelViews >= mNeedMultiChan)
+        mNeedMultiChan = 0;
+    }
+
   } else if (mStackViewImBuf) {
 
     // If we need a stack view window, send the imbuf and send size / 2
@@ -2289,7 +2333,8 @@ int CSerialEMApp::AddToStackView(EMimageBuffer * imBuf, int angleOrder)
 }
 
 // When a view is closing, if it is stack view clear out pointer, set flag, resize
-void CSerialEMApp::ViewClosing(BOOL stackView, BOOL FFTview, CSerialEMView *view)
+void CSerialEMApp::ViewClosing(BOOL stackView, BOOL FFTview, int multiChan,
+  CSerialEMView *view)
 {
   int nview;
   if (stackView) {
@@ -2311,9 +2356,20 @@ void CSerialEMApp::ViewClosing(BOOL stackView, BOOL FFTview, CSerialEMView *view
     }
     mBufferWindow.UpdateSaveCopy();
   }
+  if (multiChan >= 0) {
+    mChannelViews[multiChan] = NULL;
+    for (nview = 0; nview < mMaxChannelBuffers; nview++) {
+      mChannelImBufs[multiChan][nview].DeleteImage();
+      mChannelImBufs[multiChan][nview].DeleteOffsets();
+      delete mChannelImBufs[multiChan][nview].mPixMap;
+      mChannelImBufs[multiChan][nview].mPixMap = NULL;
+    }
+    mBufferWindow.UpdateSaveCopy();
+  }
   mViewClosing = true;
   nview = CountOpenViews();
-  if (mMainView && (nview < 2 + B3DCHOICE(mFFTView, 1, 0) || FFTview) && !mAppExiting)
+  if (mMainView && (nview < 2 + B3DCHOICE(mFFTView, 1, 0) || FFTview) && !mAppExiting &&
+    !mClosingAllMultiChan)
     DoResizeMain();
   mViewClosing = false;
 }
@@ -2349,32 +2405,60 @@ void CSerialEMApp::OnResizeMain()
 // whichBuf is 0 to do both, -1 for just main, 1 for just FFT
 void CSerialEMApp::DoResizeMain(int whichBuf) 
 {
+  int userRight, userBot, fullWidth, iBordLeft, iBordBottom, iBordTop, chan;
+  
   // ResizeToFit crashes on very small screens (<= 800x600) on some systems so skip during
   // startup and do at very end of startup
   if (mStartingProgram || mMainFrame->GetClosingProgram())
     return;
   CRect rect;
   m_pMainWnd->GetWindowRect(rect);
+
   int nview = CountOpenViews();
   int ifFFT = B3DCHOICE(mFFTView || mNeedFFTWindow, 1, 0);
+  if (mNeedMultiChan || mNumChannelViews)
+    ifFFT = B3DMAX(mNeedMultiChan, mNumChannelViews);
   int right = STATIC_BORDER_RIGHT + B3DCHOICE(nview > 1 + ifFFT, 30, 0);
-  int userRight = B3DNINT(mRightBorderFrac * (rect.Width() - mMaxDialogWidth - 
+  userRight = B3DNINT(mRightBorderFrac * (rect.Width() - mMaxDialogWidth - 
     mRightFrameWidth));
   int userBottom = B3DNINT(mBottomBorderFrac * (rect.Height() - mBottomFrameWidth));
   userBottom = B3DMAX(userBottom, STATIC_BORDER_BOTTOM);
   right = B3DMAX(userRight, right);
   if (whichBuf <= 0)
-    mMainView->ResizeToFit(mMaxDialogWidth, STATIC_BORDER_TOP, right, userBottom, -ifFFT);
+    mMainView->ResizeToFit(mMaxDialogWidth, STATIC_BORDER_TOP, right, userBottom, 
+      -ifFFT - (mNeedMultiChan + mNumChannelViews));
   if (mFFTView && whichBuf >= 0)
     mFFTView->ResizeToFit(mMaxDialogWidth, STATIC_BORDER_TOP, right, userBottom, 1);
+  if (mNumChannelViews && whichBuf >= 0) {
+
+    // For channel views, switch from main window to main frame.  This is NOT the same as
+    // mMainFrame!
+    CChildFrame *childFrame = (CChildFrame *)mMainView->GetParent();
+    CMainFrame *mainFrame = (CMainFrame *)childFrame->GetParent();
+    mainFrame->GetClientRect(&rect);
+    fullWidth = rect.Width() - mMaxDialogWidth;
+    userRight = B3DNINT(mRightBorderFrac * fullWidth);
+    userBot = B3DNINT(mBottomBorderFrac * (rect.Height()));// -mBottomFrameWidth));
+    for (chan = 0; chan < mNumChannelViews; chan++) {
+      right = STATIC_BORDER_RIGHT + B3DCHOICE(nview > 1 + mNumChannelViews, 30, 0);
+      right = B3DMAX(right, userRight);
+      iBordLeft = mMaxDialogWidth + B3DNINT(mMainChansSplitFrac * (fullWidth - right));
+      iBordBottom = B3DMAX(STATIC_BORDER_BOTTOM, userBot);
+      iBordTop = STATIC_BORDER_TOP;
+      ComputeChannelPosition(chan, rect.Width() - iBordLeft - right,
+        rect.Height() - iBordTop - iBordBottom, iBordLeft, iBordTop, right,
+        iBordBottom);
+      mChannelViews[chan]->ResizeToFit(iBordLeft, iBordTop, right, iBordBottom, 0);
+    }
+  }
 }
 
 // Either the main window or FFT window is resizing to the given rectangle: adjust border
 // fractions and possible the split between the two windows
-void CSerialEMApp::MainViewResizing(CRect &winRect, bool FFTwin)
+void CSerialEMApp::MainViewResizing(CRect &winRect, bool FFTwin, int multiChanInd)
 {
   CRect rect;
-  float usableWidth;
+  float usableWidth, newBotFrac, botFracTol = 0.0075f;
   m_pMainWnd->GetWindowRect(rect);
   if (mStartingProgram) {
     mRightFrameWidth = B3DMIN(30, rect.right - winRect.right);
@@ -2382,28 +2466,49 @@ void CSerialEMApp::MainViewResizing(CRect &winRect, bool FFTwin)
   } else {
     usableWidth = (float)(rect.Width() - mMaxDialogWidth);
 
-    // If FFT open, adjust right fraction only if this is FFT resizing
-    if (!mFFTView || FFTwin)
+    // If FFT open or multichannel, adjust right fraction only if this is FFT resizing or
+    // channel in right column
+    if ((!mFFTView && !mNumChannelViews) || FFTwin || (multiChanInd >= 0 && 
+      (multiChanInd % mNumChanWindowCols) == mNumChanWindowCols - 1))
       mRightBorderFrac = (float)(rect.right - mRightFrameWidth - winRect.right) / 
         usableWidth;
-    mBottomBorderFrac = (float)(rect.bottom - mBottomFrameWidth - winRect.bottom) / 
-      (float)rect.Height();
+
+    // Adjust bottom border if not multi chan or for channel in bottom row
+    if (multiChanInd < 0 || (multiChanInd / mNumChanWindowCols == mNumChanWindowRows - 1)) {
+      newBotFrac = (float)(rect.bottom - mBottomFrameWidth - winRect.bottom) /
+        (float)rect.Height();
+      if (fabs(newBotFrac - mBottomBorderFrac) > botFracTol) {
+        mBottomBorderFrac = newBotFrac;
+        //PrintfToLog("MBBF %f rcb %d wrcb %d  bfw %d  height %d", mBottomBorderFrac, 
+          //rect.bottom, winRect.bottom, mBottomFrameWidth, rect.Height());
+      }
+    }
     B3DCLAMP(mRightBorderFrac, 0.f, 0.9f);
     B3DCLAMP(mBottomBorderFrac, 0.f, 0.9f);
 
-    // If FFT open, adjust the split between main and FFT and resize windows
-    if (mFFTView) {
-      mMainFFTsplitFrac = (float)((B3DCHOICE(FFTwin, winRect.left, winRect.right) - 
-        (rect.left + mMaxDialogWidth)) / ((1. - mRightBorderFrac) * usableWidth));
-      B3DCLAMP(mMainFFTsplitFrac, 0.1f, 0.9f);
+    // If FFT or multi chan open, need to resize main
+    // Adjust the split between main and other windows and resize windows if it is main
+    // window, FFT window, or is channel in left column
+    if ((mFFTView || mNumChannelViews)) {
+      if (mFFTView) {
+        mMainFFTsplitFrac = (float)((B3DCHOICE(FFTwin, winRect.left, winRect.right) -
+          (rect.left + mMaxDialogWidth)) / ((1. - mRightBorderFrac) * usableWidth));
+        B3DCLAMP(mMainFFTsplitFrac, 0.1f, 0.9f);
+      } else if (multiChanInd < 0 || (multiChanInd % mNumChanWindowCols) == 0) {
+        mMainChansSplitFrac = (float)((B3DCHOICE(multiChanInd >= 0,
+          winRect.left, winRect.right) -
+          (rect.left + mMaxDialogWidth)) / ((1. - mRightBorderFrac) * usableWidth));
+        B3DCLAMP(mMainChansSplitFrac, 0.1f, 0.9f);
+      }
 
       // This resizes the currently resizing window, but seems to work and results in
-      // both windows having their zooms adjusted instead of just one
+      // both windows having their zooms adjusted instead of just one (old comment)
       DoResizeMain(0);
     }
   }
 }
 
+// Count the number of views
 int CSerialEMApp::CountOpenViews(void)
 {
   int nview = (mViewOpening ? 1 : 0) - (mViewClosing ? 1 : 0);
@@ -2431,6 +2536,182 @@ EMimageBuffer *CSerialEMApp::GetActiveNonStackImBuf(void)
   if (mStackView == mActiveView || mFFTView == mActiveView)
     return mMainView->GetActiveImBuf();
   return mActiveView->GetActiveImBuf();
+}
+
+// Open dialog for setting up multichannel display
+void CSerialEMApp::OnMultiChannelStemDisplay()
+{
+  CManyChoiceDlg dlg;
+  CameraParameters *camP = GetSTEMcamParam();
+  int ind, num = 0;
+  dlg.mIsRadio = false;
+  dlg.mNumChoices = camP->numChannels + 1;
+  dlg.mCheckboxVals[0] = mEnableMultiChanView;
+  for (ind = 0; ind < camP->numChannels; ind++) {
+    dlg.mCheckboxVals[ind + 1] = mShowChanInMultiView[ind] != 0;
+    dlg.mChoiceLabels[ind + 1] = camP->channelName[ind];
+  }
+  dlg.mChoiceLabels[0] = "Show selected channels in dedicated windows";
+  dlg.mHeader = "Select the first checkbox to enable multichannel display, and"
+    " select which channels to show in separate windows";
+  if (dlg.DoModal() != IDOK)
+    return;
+
+  // Any change requires dialog to close
+  CloseAllMultiChanWindows(-1);
+  for (ind = 0; ind < camP->numChannels; ind++) {
+    mShowChanInMultiView[ind] = dlg.mCheckboxVals[ind + 1] ? 1 : 0;
+    if (mShowChanInMultiView[ind])
+      num++;
+  }
+  mEnableMultiChanView = num > 0 && dlg.mCheckboxVals[0];
+}
+
+// Update dialog item: show a check if in use
+void CSerialEMApp::OnUpdateMultiChannelStemDisplay(CCmdUI *pCmdUI)
+{
+  pCmdUI->Enable(mFirstSTEMcamera >= 0 && !DoingTasks());
+  pCmdUI->SetCheck(mFirstSTEMcamera >= 0 && mEnableMultiChanView);
+}
+
+// Open all the windows that migt be needed for 
+void CSerialEMApp::OpenMultiChanWindows()
+{
+  int chan, num = 0;
+  CameraParameters *camP = GetSTEMcamParam();
+  for (chan = 0; chan < camP->numChannels; chan++) {
+    if (mShowChanInMultiView[chan]) {
+      mChannelImBufs[num++] = new EMimageBuffer[mMaxChannelBuffers];
+    }
+  }
+  mNeedMultiChan = num;
+  DoResizeMain();
+  for (chan = 0; chan < num; chan++) {
+    ViewOpening();
+    mMainFrame->OnWindowNew();
+  }
+}
+
+// Close multichannle windows if open, skipping the one triggering this if >= 0
+void CSerialEMApp::CloseAllMultiChanWindows(int skipNum)
+{
+  bool closedAny = false;
+  mClosingAllMultiChan = true;
+  for (int ind = 0; ind < mNumChannelViews; ind++) {
+    if (ind != skipNum && mChannelViews[ind]) {
+      mChannelViews[ind]->CloseFrame();
+      closedAny = true;
+    }
+  }
+  mNumChannelViews = 0;
+  mClosingAllMultiChan = false;
+  if (closedAny)
+    DoResizeMain();
+}
+
+// Get the position for one channel window in terms of the cumbersome borders, given the
+// available width and height
+void CSerialEMApp::ComputeChannelPosition(int chanInd, int width, int height, 
+  int &bordLeft, int &bordTop, int &bordRight, int &bordBottom)
+{
+  static int fullLeft, fullTop, fullRight, fullBottom, numRow, numCol, xSpacing, ySpacing;
+  CameraParameters *camP = GetSTEMcamParam();
+  int ind, numShow = 0, sizeX = camP->sizeX, sizeY = camP->sizeY;
+  float maxZoom = 0, zoom;
+  int xAvail, yAvail, rows, cols;
+
+  // For the first channel, determine what arrangement of rows/columns gives the biggest
+  // zoom factor
+  if (!chanInd) {
+    fullLeft = bordLeft;
+    fullRight = bordRight;
+    fullTop = bordTop;
+    fullBottom = bordBottom;
+    for (ind = 0; ind < camP->numChannels; ind++)
+      if (mShowChanInMultiView[ind])
+        numShow++;
+    for (cols = 1; cols <= numShow; cols++) {
+      rows = (numShow + cols - 1) / cols;
+      xAvail = width / cols;
+      yAvail = height / rows;
+      zoom = B3DMIN((float)xAvail / (float)sizeX, (float)yAvail / (float)sizeY);
+      if (zoom > maxZoom) {
+        maxZoom = zoom;
+        mNumChanWindowCols = cols;
+        mNumChanWindowRows = rows;
+      }
+    }
+
+    xSpacing = width / mNumChanWindowCols;
+    ySpacing = height / mNumChanWindowRows;
+  }
+
+  // From those saved values, get the borders for a particular channel
+  cols = chanInd % mNumChanWindowCols;
+  rows = chanInd / mNumChanWindowCols;
+  bordLeft = fullLeft + cols * xSpacing;
+  bordTop = fullTop + rows * ySpacing;
+  bordRight = fullRight + (mNumChanWindowCols - cols - 1) * xSpacing;
+  bordBottom = fullBottom + (mNumChanWindowRows - rows - 1) * ySpacing;
+}
+
+// Display new STEM images in multichannel windows if appropriate
+void CSerialEMApp::DisplayNewMultiChannels(int *channelInds, int numChan, int partialScan)
+{
+  CameraParameters *camP = GetActiveCamParam();
+  int mainInd, multInd, chan, ind, num = 0;
+  bool wasNew[MAX_STEM_CHANNELS];
+  if (mFFTView || !mEnableMultiChanView)
+    return;
+  if (!mNumChannelViews) {
+    OpenMultiChanWindows();
+  }
+
+  // Mark all windows as old
+  for (multInd = 0; multInd < mNumChannelViews; multInd++) {
+    wasNew[multInd] = mChannelViews[multInd]->GetChanBufIsNew();
+    mChannelViews[multInd]->SetChanBufIsNew(false);
+  }
+
+  // For each channel in main display, count through the channels to see which window
+  // it should be in, if any
+  for (mainInd = 0; mainInd < numChan; mainInd++) {
+    multInd = 0;
+    for (chan = 0; chan < camP->numChannels; chan++) {
+      if (mShowChanInMultiView[chan]) {
+        if (chan == channelInds[mainInd]) {
+
+          // If it is being shown, roll buffers unless partial scan, 
+          // copy the image buffer, set to new and display it
+          if (B3DABS(partialScan) != 1) {
+            for (ind = mMaxChannelBuffers - 1; ind > 0; ind--)
+              mBufferManager->CopyImBuf(&mChannelImBufs[multInd][ind - 1],
+                &mChannelImBufs[multInd][ind], false);
+          }
+          mBufferManager->CopyImBuf(&mImBufs[mainInd], &mChannelImBufs[multInd][0],
+            false);
+          mChannelViews[multInd]->SetChanBufIsNew(true);
+          mChannelViews[multInd]->SetCurrentBuffer(0);
+          break;
+        } else
+          multInd++;
+      }
+    }
+  }
+
+  // Now find ones not marked as new that were new and redisplay if on A
+  for (multInd = 0; multInd < mNumChannelViews; multInd++)
+   if (wasNew[multInd] && !mChannelViews[multInd]->GetChanBufIsNew() && 
+     !mChannelViews[multInd]->GetImBufIndex())
+     mChannelViews[multInd]->SetCurrentBuffer(0);
+}
+
+// External call for setting the value
+void CSerialEMApp::SetEnableMultiChanView(BOOL inVal)
+{
+  mEnableMultiChanView = inVal;
+  if (!mEnableMultiChanView)
+    CloseAllMultiChanWindows(-1);
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -5329,6 +5610,17 @@ CameraParameters *CSerialEMApp::GetActiveCamParam(int index)
   if (index < 0)
     index = mCurrentActiveCamera;
   return &mCamParams[mActiveCameraList[index]];
+}
+
+// Get camera parameters for active camera or first STEM camera if active one not STEM
+CameraParameters *CSerialEMApp::GetSTEMcamParam()
+{
+  if (mFirstSTEMcamera < 0)
+    return NULL;
+  CameraParameters *camP = GetActiveCamParam();
+  if (!camP->STEMcamera)
+    camP = &mCamParams[mActiveCameraList[mFirstSTEMcamera]];
+  return camP;
 }
 
 // Global functions for JEOL plugin

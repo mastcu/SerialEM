@@ -97,6 +97,7 @@ public:
   SetMember(COLORREF, FlashColor)
   GetMember(bool, DrewLDAreasAtNavPt);
   GetMember(int, ImBufNumber);
+  GetSetMember(bool, ChanBufIsNew);
   static GetMember(bool, TakingSnapshot);
   void SetOffsets(int inX, int inY) { m_iOffsetX = inX, m_iOffsetY = inY; };
   void GetCenterForLDAreas(float &xcen, float &ycen) { xcen = mNavLDAreasXcenter; ycen = mNavLDAreasYcenter; };
@@ -147,6 +148,7 @@ private:
   BOOL mMainWindow;              // Flag that this is the main window
   BOOL mStackWindow;             // Flag that this is THE active stack view
   bool mFFTWindow;               // Flag that this is the FFT window
+  int mMultiChanWindow;          // Index of multichannel window (-1 for not)
   bool mResizingToFit;           // Flag that a resize to fit is causing OnSize
   double mCreateTime;            // Timer for avoiding initial resizes of FFT
   int mFFTresizeCount;           // And counter
@@ -155,6 +157,7 @@ private:
   int mNonMapPanX, mNonMapPanY;  // Offset for non-map buffers
   int mImBufIndex;               // Index of current buffer
   int mImBufNumber;              // Number of image buffers
+  bool mChanBufIsNew;            // Flag that this multi0chan buffer has new image
   int mImBufArraySize;           // Size of array, if this is stack view
   double m_dPrevMX, m_dPrevMY;   // Double versions of previous mouse positions
   BOOL mMouseShifting;
@@ -195,6 +198,13 @@ private:
   float mNavLDAreasYcenter;
   int mDoingMontSnapshot;        // Flag that montage snapshot is being done, 2 for last
   static bool mTakingSnapshot;   // Flag set only when idle task occurs between calls
+  bool mInResize;                // Flag that it is in the resize routine
+  static bool mAddedTask;        // Flag that started final resize task in border changing
+  static int mResLeft;           // Saved values to use in that resize
+  static int mResTop;
+  static int mResWidth;
+  static int mResHeight;
+  static bool mInResizeTask;     // Flag the size is being set from that task
 
 protected:
 
@@ -220,6 +230,9 @@ protected:
 //}}AFX_MSG
   DECLARE_MESSAGE_MAP()
 public:
+  static void ResizeNextTask(int param);
+  static int ResizeBusy() { return 0; };
+  static void ResizeCleanup(int err) {};
   int AddBufferToStack(EMimageBuffer * imBuf, int angleOrder);
   double BufferMemoryUsage(CPtrArray *refArray);
   void ChangeAllRegistrations(int mapID, int fromReg, int toReg);
