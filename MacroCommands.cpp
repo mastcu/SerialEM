@@ -13769,6 +13769,20 @@ int CMacCmd::ReportLowDose(void)
   return 0;
 }
 
+// GetLowDoseAreaParams
+int CMacCmd::GetLowDoseAreaParams()
+{
+  int index, mode = mCamParams->GIF ? 1 : 0;
+  if (mCamParams->STEMcamera)
+    mode = 2;
+  if (CheckAndConvertLDAreaLetter(mStrItems[1], -1, index, mStrLine))
+    return 1;
+  mParamIO->WriteLowDoseToString(&mLdParam[index], index, mode, mStrCopy);
+  if (SetVariable(mStrItems[2], mStrCopy, VARTYPE_REGULAR, -1, false, &mStrItems[3]))
+    ABORT_LINE(mStrItems[3] + " in script line: \n\n");
+  return 0;
+}
+
 // CurrentSettingsToLDArea
 int CMacCmd::CurrentSettingsToLDArea(void)
 {
