@@ -2571,10 +2571,10 @@ int DirectElectronCamera::AcquireSTEMImage(unsigned short **arrays, long *channe
   bool divideBy2 = (flags & PLUGCAM_DIVIDE_BY2) != 0;
   bool continuous = (flags & PLUGCAM_CONTINUOUS) != 0;
   bool ret1 = true, ret2 = true, ret3 = true, ret4 = true, ret5 = true, anyVirt = false;
-  int ind, acq, chanInd, acquiring, err;
+  bool isVirt;
+  int ind, acq, chanInd, acquiring, err, chan, virtInd = 0, physInd = 0;
   CString str;
-  ShortVec virtChans = mWinApp->mCamera->GetVirtualDEChannels();
-  ShortVec extChans = mWinApp->mCamera->GetPhysicalDEChannels();
+  CameraParameters *camP = mWinApp->GetActiveCamParam();
   CSingleLock slock(&m_mutex);
 
   acquiring = IsAcquiring();
@@ -2645,11 +2645,9 @@ int DirectElectronCamera::AcquireSTEMImage(unsigned short **arrays, long *channe
     }
 
     // Find out if any virtual channels
-    for (ind = 0; ind < (int)virtChans.size(); ind++) {
-      for (acq = 0; acq < numChannels; acq++)
-        if (virtChans[ind] == channelIndex[acq])
-          anyVirt = true;
-    }
+    for (acq = 0; acq < numChannels; acq++)
+      if (DETECTOR_IS_VIRTUAL(camP, channelIndex[acq]))
+        anyVirt = true;
 
     // Set up for camera or not based on that
     ret2 = setStringWithError("Scan - Trigger Source", anyVirt ? "Camera (Before Frame)" :
@@ -2670,39 +2668,42 @@ int DirectElectronCamera::AcquireSTEMImage(unsigned short **arrays, long *channe
       return 1;
     }
 
-    // Set up virtual channels if any
-    if (anyVirt) {
-      for (ind = 0; ind < (int)virtChans.size(); ind++) {
-        chanInd = -1;
-        for (acq = 0; acq < numChannels; acq++) {
-          if (virtChans[ind] == channelIndex[acq])
-            chanInd = acq;
-        }
+    // set up the channels: loop on all possible ones to count physical and virtual
+    for (chan = 0; chan < camP->numChannels; chan++) {
+      isVirt = DETECTOR_IS_VIRTUAL(camP, chan);
+      chanInd = -1;
+      for (acq = 0; acq < numChannels; acq++)
+        if (chan == channelIndex[acq])
+          chanInd = acq;
+
+      // Operations for a virtual channel only if any virtual are included
+      if (isVirt && anyVirt) {
         if (saveFinal) {
-          str.Format("Autosave Virtual Image %d", ind);
+          str.Format("Autosave Virtual Image %d", virtInd);
           ret1 = setStringWithError((LPCTSTR)str, chanInd < 0 ? "Off" : "On");
         }
-        if (chanInd < 0 && mCurVirtShape[ind] != "Off") {
-          mVirtChansToRestore.push_back(ind);
-          str.Format("Scan - Virtual Detector %d Shape", ind);
+        if (chanInd < 0 && mCurVirtShape[virtInd] != "Off") {
+          mVirtChansToRestore.push_back(virtInd);
+          str.Format("Scan - Virtual Detector %d Shape", virtInd);
           ret2 = setStringWithError((LPCTSTR)str, "Off");
         }
       }
-    }
 
-    // External detectors
-    for (ind = 0; ind < (int)extChans.size(); ind++) {
-      chanInd = -1;
-      for (acq = 0; acq < numChannels; acq++) {
-        if (extChans[ind] == channelIndex[acq])
-          chanInd = acq;
+      // Operations for external channels
+      if (!isVirt) {
+        str.Format("Scan - External Detector %d Enable", physInd + 1);
+        ret4 = setStringWithError((LPCTSTR)str, chanInd < 0 ? "Off" : "On");
+        if (saveFinal && mServerVersion >= DE_CAN_AUTOSAVE_EXT_DET) {
+          str.Format("Autosave External Image %d", physInd + 1);
+          ret3 = setStringWithError((LPCTSTR)str, chanInd < 0 ? "Off" : "On");
+        }
       }
-      str.Format("Scan - External Detector %d Enable", ind + 1);
-      ret4 = setStringWithError((LPCTSTR)str, chanInd < 0 ? "Off" : "On");
-      if (saveFinal && mServerVersion >= DE_CAN_AUTOSAVE_EXT_DET) {
-        str.Format("Autosave External Image %d", ind + 1);
-        ret3 = setStringWithError((LPCTSTR)str, chanInd < 0 ? "Off" : "On");
-      }
+
+      // Maintain counts of each detector type
+      if (isVirt)
+        virtInd++;
+      else
+        physInd++;
     }
 
     if (!ret1 || !ret2 || !ret3 || !ret4) {
@@ -2897,20 +2898,17 @@ int DirectElectronCamera::GetSTEMresultImages(unsigned short **arrays, int sizeX
 // getResult
 int DirectElectronCamera::FrameTypeForChannelIndex(int chanInd)
 {
-  ShortVec virtChans = mWinApp->mCamera->GetVirtualDEChannels();
-  ShortVec extChans = mWinApp->mCamera->GetPhysicalDEChannels();
-  int ind;
-  for (ind = 0; ind < (int)virtChans.size(); ind++) {
-    if (virtChans[ind] == chanInd) {
-      return (int)DE::FrameType::VIRTUAL_IMAGE0 + ind;
-    }
+  CameraParameters *camP = mWinApp->GetActiveCamParam();
+  int jnd, virtInd = 0, physInd = 0;
+  for (jnd = 0; jnd < chanInd; jnd++) {
+    if (DETECTOR_IS_VIRTUAL(camP, jnd))
+      virtInd++;
+    else
+      physInd++;
   }
-  for (ind = 0; ind < (int)extChans.size(); ind++) {
-    if (extChans[ind] == chanInd) {
-      return (int)DE::FrameType::EXTERNAL_IMAGE1 + ind;
-    }
-  }
-  return -1;
+  if (DETECTOR_IS_VIRTUAL(camP, chanInd))
+    return (int)DE::FrameType::VIRTUAL_IMAGE0 + virtInd;
+  return (int)DE::FrameType::EXTERNAL_IMAGE1 + physInd;
 }
 
 /*

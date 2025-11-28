@@ -499,6 +499,12 @@ CSerialEMApp::CSerialEMApp()
     mCamParams[i].minPixelTime = -0.1f;
     mCamParams[i].maxPixelTime = 0.;
     mCamParams[i].pixelTimeIncrement = 0.;
+    mCamParams[i].minVirtualPixTime = -0.1f;
+    mCamParams[i].maxVirtualPixTime = 0.;
+    mCamParams[i].virtualPixTimeInc = 0.;
+    mCamParams[i].virtualChanFlags = 0;
+    mCamParams[i].maxVirtSizeX = 0;
+    mCamParams[i].maxVirtSizeY = 0;
     mCamParams[i].maxIntegration = 0;
     mCamParams[i].maxScanRate = 0.f;
     mCamParams[i].advisableScanRate = 0.f;

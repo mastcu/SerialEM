@@ -155,6 +155,7 @@ enum {K2_SUMMIT = 1, K2_BASE, K3_TYPE};
 #define PLUGFEI_FLEXIBLE_SUBAREAS 117
 #define DECTRIS_WITH_SUPER_RES(a) ((a)->DectrisType && !(a)->STEMcamera && ((a)->CamFlags & DECTRIS_HAS_SUPER_RES))
 #define DECTRIS_WITH_COUNTING(a) ((a)->DectrisType && !(a)->STEMcamera && ((a)->CamFlags & DECTRIS_HAS_SINGLE_EVENT))
+#define DETECTOR_IS_VIRTUAL(p, n) (((p)->virtualChanFlags & (1 << n)) != 0)
 
 struct DarkRef {
   int Left, Right, Top, Bottom;   // binned CCD coordinates of the image
@@ -663,8 +664,6 @@ public:
   SetMember(NewImCallback, NewImageCallback);
   GetSetMember(BOOL, DectrisSaveAsHDF);
   GetSetMember(float, ExtraSTEMTimeout);
-  GetMember(ShortVec, VirtualDEChannels);
-  GetMember(ShortVec, PhysicalDEChannels);
   CameraThreadData *GetCamThreadData() { return &mTD; };
   bool DoingPartialScan() {return mTD.ReturnPartialScan > 0; };
   bool HasCEOSFilter() { return mCEOSFilter != NULL; }
@@ -1145,8 +1144,6 @@ public:
   BOOL mAskedDMtoInsert;          // Flag to prevent multiple insertion requests
   BOOL mDectrisSaveAsHDF;         // Flag for plugin/cmera to save directly as HDF5
   float mExtraSTEMTimeout;         // Time to add to timeout in seconds for any STEM camera
-  ShortVec mVirtualDEChannels;    // List of which detectors had virtual names originally
-  ShortVec mPhysicalDEChannels;   // List of other ones
   float mFPSforVirtualSTEM;     
   bool mStoppedPartialScan;       // Flag that partial STEM was stopped
 
@@ -1221,6 +1218,7 @@ public:
   void InitializeFEIcameras(int &numFEIlisted, int *originalList, int numOrig);
   void InitializeDirectElectron(int *originalList, int numOrig);
   int FindSTEMandPhysicalCamera(int *originalList, int numOrig, bool dectris);
+  void AssignVirtualChannels(CameraParameters *camP);
   void InitializePluginCameras(int &numPlugListed, int *originalList, int numOrig);
   int RotateAndReplaceArray(int chan, int operation, int invertCon);
   int CapSetupSTEMChannelsDetectors(ControlSet & conSet, int inSet, BOOL retracting,

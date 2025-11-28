@@ -400,7 +400,7 @@ void ManageSuperResBinning(void);
   afx_msg void OnDeStemSaveFinal();
   afx_msg void OnSave4dStack();
   void ManageVirtualSTEM();
-  bool AnyVirtualDEChanSelected();
+  bool AnyVirtualChanSelected();
   int m_iDePointRepeats;
   afx_msg void OnKillfocusEditPointRepeats();
   CSpinButtonCtrl m_sbcPointRepeats;

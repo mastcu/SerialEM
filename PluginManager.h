@@ -14,13 +14,14 @@ typedef int (*CamThreeInt)(int, int, int);
 typedef int (*Cam5Int)(int, int, int, int, int);
 typedef int (*CamAcquire)(short *, int, int, int *, int *);
 typedef int (*CamSTEMAcq)(short **, int, int, long *, double, int, int *, int *, int *);
-typedef int (*CamSTEMProp)(int, int, double *, double *, double *, double *, double *, int *,int *);
+typedef int (*CamSTEMProp)(int, int, double *, double *, double *, double *, double *, int *, int *);
+typedef int (*CamVirtSTEMProp)(int *, int *, double *, double *, double *, double *, double *, int *, int *);
 typedef int (*CamGetTwoInt)(int *,int *);
 typedef int (*CamFourIntString)(int, int, int, int, const char *);
 typedef int (*CamSetupFrames)(double, int, int, int);
 typedef int (*CamGetFrame)(short *, int);
 typedef int (*CamGetFloat)(float *);
-typedef int(*CamGetFloatInt)(float *, int *);
+typedef int (*CamGetFloatInt)(float *, int *);
 
 
 // Camera plugin functions
@@ -45,6 +46,7 @@ struct CamPluginFuncs {
   GetErrStr GetLastErrorString;
   CamSTEMAcq AcquireSTEMImage;
   CamSTEMProp GetSTEMProperties;
+  CamVirtSTEMProp GetVirtualSTEMProperties;
   CamNoArg GetNumberOfGains;
   CamOneInt SetGainIndex;
   CamGetTwoInt GetCameraSize;

@@ -1680,15 +1680,10 @@ void CCameraController::InitializeDirectElectron(int *originalList, int numOrig)
     } else {
       ind = 0;
       mNumDECameras++;
+      AssignVirtualChannels(&mAllParams[STEMnum]);
       for (i = 0; i < mAllParams[STEMnum].numChannels; i++) {
-        if (mAllParams[STEMnum].channelName[i].Find("Vi") == 0 ||
-          mAllParams[STEMnum].channelName[i].Find("Vr") == 0) {
-          mVirtualDEChannels.push_back(i);
-          if (ind < (int)virtList.size())
+        if (DETECTOR_IS_VIRTUAL(&mAllParams[STEMnum], i) && ind < (int)virtList.size())
             mAllParams[STEMnum].detectorName[i] = virtList[ind++].c_str();
-        } else {
-          mPhysicalDEChannels.push_back(i);
-        }
       }
     }
   }
@@ -1696,7 +1691,8 @@ void CCameraController::InitializeDirectElectron(int *originalList, int numOrig)
 
 // Look for STEM camera and make sure it can be matched up with actual camera by name or
 // property that it is same camera
-int CCameraController::FindSTEMandPhysicalCamera(int * originalList, int numOrig, bool dectris)
+int CCameraController::FindSTEMandPhysicalCamera(int *originalList, int numOrig, 
+  bool dectris)
 {
   int ind, i, j, STEMnum = -1, physNum = -1;
   for (ind = 0; ind < numOrig; ind++) {
@@ -1724,14 +1720,23 @@ int CCameraController::FindSTEMandPhysicalCamera(int * originalList, int numOrig
   return STEMnum;
 }
 
+void CCameraController::AssignVirtualChannels(CameraParameters *camP)
+{
+  for (int i = 0; i < camP->numChannels; i++) {
+    if (camP->channelName[i].Find("Vi") == 0 || camP->channelName[i].Find("Vr") == 0)
+      camP->virtualChanFlags |= (1 << i);
+  }
+}
+
 // Initialize plugin cameras of all kinds
 void CCameraController::InitializePluginCameras(int &numPlugListed, int *originalList, 
                                                 int numOrig)
 {
   int ind, i, err, num, idum, numGain, flags, ifSTEM, set, plugNum;
-  double minPixel, rotInc, ddum, pixelInc;
+  double minPixel, rotInc, ddum, pixelInc, maxPixel;
   char last;
   CString report, useName;
+  CameraParameters *camP;
 
   FindSTEMandPhysicalCamera(originalList, numOrig, true);
 
@@ -1740,11 +1745,12 @@ void CCameraController::InitializePluginCameras(int &numPlugListed, int *origina
     for (ind = 0; ind < numOrig; ind++) {
       err = 0;
       i = originalList[ind];
-      if (!BOOL_EQUIV(mAllParams[i].STEMcamera, ifSTEM))
+      camP = &mAllParams[i];
+      if (!BOOL_EQUIV(camP->STEMcamera, ifSTEM))
         continue;
-      if (!mAllParams[i].pluginName.IsEmpty()) {
+      if (!camP->pluginName.IsEmpty()) {
         plugNum = 0;
-        useName = mAllParams[i].pluginName;
+        useName = camP->pluginName;
         idum = useName.GetLength();
         if (useName.ReverseFind('#') == idum) {
           last = useName.GetAt(idum - 1);
@@ -1758,143 +1764,163 @@ void CCameraController::InitializePluginCameras(int &numPlugListed, int *origina
           if (plugNum)
             AfxMessageBox("Not enough plugins with the plugin name " + useName +
               " were loaded, so the camera with property PluginName " + 
-              mAllParams[i].pluginName + " will be unavailable", MB_EXCLAME);
+              camP->pluginName + " will be unavailable", MB_EXCLAME);
           else
-            AfxMessageBox("The camera plugin with plugin name " + mAllParams[i].pluginName
+            AfxMessageBox("The camera plugin with plugin name " + camP->pluginName
               + " did not load, so that camera will be unavailable", MB_EXCLAME);
           err = 1;
         } else {
           num = mPlugFuncs[i]->GetNumberOfCameras();
           if (num <= 0) {
             AfxMessageBox("Error getting number of cameras from the camera plugin "
-              "named " + mAllParams[i].pluginName, MB_EXCLAME);
+              "named " + camP->pluginName, MB_EXCLAME);
             err = 1;
           }
         }
         if (!err && mPlugFuncs[i]->SetDebugMode)
           mPlugFuncs[i]->SetDebugMode(GetDebugOutput('Z') ? 1 : 0);
         if (!err && num > 1 && !mPlugFuncs[i]->SelectCamera) {
-          AfxMessageBox("The camera plugin named " + mAllParams[i].pluginName +
+          AfxMessageBox("The camera plugin named " + camP->pluginName +
             "reported more than one camera but has no CameraSelect function",
             MB_EXCLAME);
           err = 1;
         }
-        if (!err && mAllParams[i].cameraNumber >= num &&
-          mAllParams[i].pluginName.Find("Jeol") < 0) {
+        if (!err && camP->cameraNumber >= num &&
+          camP->pluginName.Find("Jeol") < 0) {
           report.Format("The PluginCameraIndex property for a plugin camera is %d but the"
             " plugin named %s only reports %d cameras",
-            mAllParams[i].cameraNumber, (LPCTSTR)mAllParams[i].pluginName, num);
+            camP->cameraNumber, (LPCTSTR)camP->pluginName, num);
           AfxMessageBox(report, MB_EXCLAME);
           err = 1;
         }
 
         // Test for shutter call if there is a second label and only one shutter not set
-        if (!err && !mAllParams[i].onlyOneShutter &&
-          !mAllParams[i].shutterLabel2.IsEmpty() && !mPlugFuncs[i]->SelectShutter) {
+        if (!err && !camP->onlyOneShutter &&
+          !camP->shutterLabel2.IsEmpty() && !mPlugFuncs[i]->SelectShutter) {
           AfxMessageBox("The properties for a plugin camera had a second shutter label "
-            "but the plugin named " + mAllParams[i].pluginName +
+            "but the plugin named " + camP->pluginName +
             "has no CameraShutter function", MB_EXCLAME);
           err = 1;
         }
 
         // Test for insertion functions if retractable
-        if (!err && mAllParams[i].retractable && (!mPlugFuncs[i]->IsCameraInserted ||
+        if (!err && camP->retractable && (!mPlugFuncs[i]->IsCameraInserted ||
           !mPlugFuncs[i]->SetCameraInsertion)) {
           AfxMessageBox("The \"Retractable\" property is set for a plugin camera but "
-            "the plugin named " + mAllParams[i].pluginName +
+            "the plugin named " + camP->pluginName +
             " has no insertion functions", MB_EXCLAME);
           err = 1;
         }
-        if (!err && mAllParams[i].rotationFlip && !mPlugFuncs[i]->SetRotationFlip) {
+        if (!err && camP->rotationFlip && !mPlugFuncs[i]->SetRotationFlip) {
           AfxMessageBox("The \"RotationAndFlip\" property is set for a plugin camera "
-            "but the plugin named " + mAllParams[i].pluginName +
+            "but the plugin named " + camP->pluginName +
             " has no SetRotationFlip function", MB_EXCLAME);
           err = 1;
         }
-        mAllParams[i].returnsFloats = (flags & PLUGFLAG_RETURNS_FLOATS) != 0;
+        camP->returnsFloats = (flags & PLUGFLAG_RETURNS_FLOATS) != 0;
         if (flags & PLUGFLAG_FLOATS_BY_FLAG)
-          mAllParams[i].CamFlags |= CAMFLAG_FLOATS_BY_FLAG;
+          camP->CamFlags |= CAMFLAG_FLOATS_BY_FLAG;
         if (flags & PLUGFLAG_NO_DIV_BY_2)
-          mAllParams[i].CamFlags |= CAMFLAG_NO_DIV_BY_2;
+          camP->CamFlags |= CAMFLAG_NO_DIV_BY_2;
         if (flags & PLUGFLAG_SINGLE_OK_IF_SAVE)
-          mAllParams[i].CamFlags |= CAMFLAG_SINGLE_OK_IF_SAVE;
-        if (!err && (flags & PLUGFLAG_DECTRIS) && !mAllParams[i].DectrisType) {
+          camP->CamFlags |= CAMFLAG_SINGLE_OK_IF_SAVE;
+        if (!err && (flags & PLUGFLAG_DECTRIS) && !camP->DectrisType) {
           AfxMessageBox("With the newer DECTRIS plugin that was loaded,\n"
             "additional features will be available if the properties\nfor the camera "
-            "named " + mAllParams[i].name + " include a DectrisCameraType entry");
-        } else if (!err && !(flags & PLUGFLAG_DECTRIS) && mAllParams[i].DectrisType) {
+            "named " + camP->name + " include a DectrisCameraType entry");
+        } else if (!err && !(flags & PLUGFLAG_DECTRIS) && camP->DectrisType) {
           AfxMessageBox("An older DECTRIS plugin was loaded and the properties\n"
-            "for the camera named " + mAllParams[i].name + " should NOT"
+            "for the camera named " + camP->name + " should NOT"
             " include a DectrisCameraType entry");
-          mAllParams[i].DectrisType = 0;
+          camP->DectrisType = 0;
         }
 
         // Send a gain index if that function exists and there is a non-negative value
         // Clamp it to the given range if the the plugin supplies a limit 
-        if (!err && mPlugFuncs[i]->SetGainIndex && mAllParams[i].TietzGainIndex >= 0) {
+        if (!err && mPlugFuncs[i]->SetGainIndex && camP->TietzGainIndex >= 0) {
           if (mPlugFuncs[i]->GetNumberOfGains) {
             numGain = mPlugFuncs[i]->GetNumberOfGains();
             if (numGain > 0)
-              B3DCLAMP(mAllParams[i].TietzGainIndex, 0, numGain);
+              B3DCLAMP(camP->TietzGainIndex, 0, numGain);
           }
-          if (mPlugFuncs[i]->SetGainIndex(mAllParams[i].TietzGainIndex)) {
+          if (mPlugFuncs[i]->SetGainIndex(camP->TietzGainIndex)) {
             AfxMessageBox("An error occurred sending the value of TietzGainIndex to the"
-              " plugin camera " + mAllParams[i].pluginName);
+              " plugin camera " + camP->pluginName);
           }
         }
 
-        if (!err && mAllParams[i].canTakeFrames &&
+        if (!err && camP->canTakeFrames &&
           !(mPlugFuncs[i]->SetupFrameAcquire && mPlugFuncs[i]->GetNextFrame)) {
           AfxMessageBox("The \"CanTakeFrames\" property is set for a plugin camera "
-            "but the plugin named " + mAllParams[i].pluginName +
+            "but the plugin named " + camP->pluginName +
             " is missing one of the required functions", MB_EXCLAME);
-          mAllParams[i].canTakeFrames = 0;
+          camP->canTakeFrames = 0;
         }
-        if (!err && mAllParams[i].canTakeFrames & FRAMES_CAN_BE_ALIGNED)
+        if (!err && camP->canTakeFrames & FRAMES_CAN_BE_ALIGNED)
           mFalconHelper->Initialize(-2);
 
-        num = mAllParams[i].cameraNumber;
+        num = camP->cameraNumber;
 
         // For a STEM camera, send the camera number plus number of additional channels
         // But subtract if they are going to same channel
-        if (mAllParams[i].STEMcamera && !mAllParams[i].DectrisType) {
-          if (mAllParams[i].STEMcamera)
-            num += mAllParams[i].numChannels - 1;
+        if (camP->STEMcamera && !camP->DectrisType) {
+          if (camP->STEMcamera)
+            num += camP->numChannels - 1;
           for (set = 0; set < mChannelSets.GetSize(); set++)
             num -= mChannelSets[set].numChans - 1;
         }
+        if (camP->STEMcamera && camP->DectrisType)
+          AssignVirtualChannels(camP);
 
         if (!err && mPlugFuncs[i]->InitializeCamera && 
           mPlugFuncs[i]->InitializeCamera(num) != 0) {
           report.Format("Failed to initialize camera %d %sin the plugin named %s",
-            mAllParams[i].cameraNumber, mAllParams[i].STEMcamera ? "(STEM) " : "",
-            (LPCTSTR)mAllParams[i].pluginName);
+            camP->cameraNumber, camP->STEMcamera ? "(STEM) " : "",
+            (LPCTSTR)camP->pluginName);
           AfxMessageBox(report, MB_EXCLAME);
           err = 1;
         }
         if (!err && mPlugFuncs[i]->SetRotationFlip)
-          mPlugFuncs[i]->SetRotationFlip(mAllParams[i].cameraNumber,
-            mAllParams[i].rotationFlip);
+          mPlugFuncs[i]->SetRotationFlip(camP->cameraNumber,
+            camP->rotationFlip);
         if (!err && mPlugFuncs[i]->SetSizeOfCamera)
-          mPlugFuncs[i]->SetSizeOfCamera(mAllParams[i].cameraNumber, mAllParams[i].sizeX,
-            mAllParams[i].sizeY);
+          mPlugFuncs[i]->SetSizeOfCamera(camP->cameraNumber, camP->sizeX,
+            camP->sizeY);
 
         // Send the STEM interface our desired size too so it doesn't have to rely on the
         // previous call being first
-        if (!err && mAllParams[i].STEMcamera && mPlugFuncs[i]->GetSTEMProperties) {
-          mPlugFuncs[i]->GetSTEMProperties(mAllParams[i].sizeX, mAllParams[i].sizeY,
-            &minPixel, &mAllParams[i].maxPixelTime, &pixelInc,
-            &rotInc, &ddum, &mAllParams[i].maxIntegration, &idum);
-          if (mAllParams[i].pixelTimeIncrement <= 0 && pixelInc > 0.)
-            mAllParams[i].pixelTimeIncrement = pixelInc;
-          if (mAllParams[i].minPixelTime <= 0.) {
+        if (!err && camP->STEMcamera && mPlugFuncs[i]->GetSTEMProperties) {
+          mPlugFuncs[i]->GetSTEMProperties(camP->sizeX, camP->sizeY,
+            &minPixel, &maxPixel, &pixelInc,
+            &rotInc, &ddum, &camP->maxIntegration, &idum);
+          camP->maxPixelTime = (float)maxPixel;
+          if (camP->pixelTimeIncrement <= 0 && pixelInc > 0.)
+            camP->pixelTimeIncrement = (float)pixelInc;
+          if (camP->minPixelTime <= 0.) {
             if (minPixel > 0)
-              mAllParams[i].minPixelTime = (float)minPixel;
+              camP->minPixelTime = (float)minPixel;
             else
-              mAllParams[i].minPixelTime = -mAllParams[i].minPixelTime;
+              camP->minPixelTime = -camP->minPixelTime;
           }
         }
-        mAllParams[i].failedToInitialize = err != 0;
+
+        // Virtual STEM properties
+        if (!err && camP->STEMcamera && mPlugFuncs[i]->GetVirtualSTEMProperties) {
+          mPlugFuncs[i]->GetVirtualSTEMProperties(&camP->maxVirtSizeX, &camP->maxVirtSizeY,
+            &minPixel, &maxPixel, &pixelInc,
+            &rotInc, &ddum, &camP->maxIntegration, &idum);
+          camP->maxVirtualPixTime = (float)maxPixel;
+          if (camP->virtualPixTimeInc <= 0 && pixelInc > 0.)
+            camP->virtualPixTimeInc = (float)pixelInc;
+          if (camP->minVirtualPixTime <= 0.) {
+            if (minPixel > 0)
+              camP->minVirtualPixTime = (float)minPixel;
+            else
+              camP->minVirtualPixTime = -camP->minVirtualPixTime;
+          }
+        }
+
+        camP->failedToInitialize = err != 0;
         if (!err)
           numPlugListed++;
       }
@@ -4459,11 +4485,8 @@ int CCameraController::CapSetupSTEMChannelsDetectors(ControlSet &conSet, int inS
         mTD.ChanIndOrig[mTD.NumChannels] = ind;
         mTD.Array[mTD.NumChannels] = NULL;
         mTD.ChannelName[mTD.NumChannels++] = mParam->detectorName[ind];
-        if (mParam->DE_camType) {
-          for (i = 0; i < (int)mVirtualDEChannels.size(); i++)
-            if (mVirtualDEChannels[i] == ind)
-              anyVirt = true;
-        }
+        if (mParam->virtualChanFlags && DETECTOR_IS_VIRTUAL(mParam, ind))
+          anyVirt = true;
       }
     }
     if (!mTD.NumChannels) {
@@ -4479,12 +4502,12 @@ int CCameraController::CapSetupSTEMChannelsDetectors(ControlSet &conSet, int inS
     // JEOL scope accesses need to be prevented when RPS is 1, and PostActionTime,
     // DynFpcusInterval, and LineSyncAndFlags need to be protected from change
     expForPartial = conSet.exposure;
-    if (anyVirt) {
+    if (anyVirt && mParam->DE_camType) {
       if (mTD.ReturnPartialScan != 1)
         mFPSforVirtualSTEM = GetFPSforVirtualSTEM(conSet);
       if (mFPSforVirtualSTEM)
         expForPartial = (conSet.right - conSet.left) * (conSet.bottom - conSet.top) /
-        (conSet.binning * conSet.binning) / mFPSforVirtualSTEM;
+        (conSet.binning * conSet.binning) * conSet.skipAfterOrPtRpt / mFPSforVirtualSTEM;
     }
     if (mParam->STEMcamera && (mParam->TietzType || mTD.UseUtapi || mParam->DectrisType ||
       mParam->DE_camType) &&
@@ -11892,7 +11915,7 @@ int CCameraController::LockInitializeTietz(BOOL firstTime)
 {
   int nlist = mWinApp->GetActiveCamListSize();
   int i, ind, err, chipX, chipY, idum;
-  double minPixel, rotInc, ddum, pixelInc;
+  double minPixel, rotInc, ddum, pixelInc, maxPixel;
   int numGain, xsize, ysize;
   CString report;
   CameraParameters *camP;
@@ -11920,15 +11943,16 @@ int CCameraController::LockInitializeTietz(BOOL firstTime)
         camP->failedToInitialize = true;
       } else if (camP->STEMcamera) {
         mPlugFuncs[ind]->GetSTEMProperties(camP->sizeX, mTietzScanCoordRange,
-          &minPixel, &camP->maxPixelTime, &pixelInc,
+          &minPixel, &maxPixel, &pixelInc,
           &rotInc, &ddum, &camP->maxIntegration, &idum);
+        camP->maxPixelTime = (float)maxPixel;
         if (camP->pixelTimeIncrement <= 0. && pixelInc > 0)
-            camP->pixelTimeIncrement = pixelInc;
+            camP->pixelTimeIncrement = (float)pixelInc;
         if (camP->minPixelTime <= 0.) {
           if (minPixel > 0)
             camP->minPixelTime = (float)minPixel;
           else
-            camP->minPixelTime = -mAllParams[i].minPixelTime;
+            camP->minPixelTime = -camP->minPixelTime;
         }
       } else {
         if (camP->LowestGainIndex < 0)
@@ -13607,20 +13631,24 @@ bool CCameraController::UsingUtapiForCamera(CameraParameters * param)
 int CCameraController::UpdateDEVirtualDetectorNames(CameraParameters *param, 
   ShortVec &virtChans)
 {
-  int virt;
+  int virt = 0, ind;
   ShortVec enabled;
   std::vector<std::string> detNames;
   if (!mTD.DE_Cam || mTD.DE_Cam->GetVirtualDetectorNames(detNames, enabled))
     return 1;
 
   // Get the current names for detectors 
-  for (virt = 0; virt < (int)mVirtualDEChannels.size(); virt++) {
-    if (virt < (int)detNames.size())
-      param->channelName[mVirtualDEChannels[virt]] = detNames[virt].c_str();
-    if (virt < (int)enabled.size())
-      param->availableChan[mVirtualDEChannels[virt]] = enabled[virt] != 0;
+  virtChans.clear();
+  for (ind = 0; ind < param->numChannels; ind++) {
+    if (DETECTOR_IS_VIRTUAL(param, ind)) {
+      if (virt < (int)detNames.size())
+        param->channelName[ind] = detNames[virt].c_str();
+      if (virt < (int)enabled.size())
+        param->availableChan[ind] = enabled[virt] != 0;
+      virt++;
+      virtChans.push_back(ind);
+    }
   }
-  virtChans = mVirtualDEChannels;
   return 0;
 }
 
