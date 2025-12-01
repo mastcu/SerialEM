@@ -229,6 +229,7 @@ int CPluginManager::LoadPlugins(void)
         CAMERA_PROC(GetErrStr, GetLastErrorString);
         CAMERA_PROC(CamSTEMAcq, AcquireSTEMImage);
         CAMERA_PROC(CamSTEMProp, GetSTEMProperties);
+        CAMERA_PROC(CamVirtSTEMProp, GetVirtualSTEMProperties);
         CAMERA_PROC(CamNoArg, GetNumberOfGains);
         CAMERA_PROC(CamOneInt, SetGainIndex);
         CAMERA_PROC(CamGetTwoInt, GetCameraSize);
