@@ -279,8 +279,14 @@ struct CameraParameters {
   BOOL needShotToInsert[MAX_STEM_CHANNELS];
   int maxChannels;            // Maximum channels at once
   float minPixelTime;         // Minimum pixel time in microseconds
-  double maxPixelTime;        // Maximum pixel time in microseconds (if non-zero)
-  double pixelTimeIncrement;  // Increment between pixel times in microseconds (if not 0)
+  float maxPixelTime;         // Maximum pixel time in microseconds (if non-zero)
+  float pixelTimeIncrement;   // Increment between pixel times in microseconds (if not 0)
+  float minVirtualPixTime;    // Corresponding values for virtual detectors
+  float maxVirtualPixTime;
+  float virtualPixTimeInc;
+  int virtualChanFlags;       // Flags for which channels are virtual
+  int maxVirtSizeX;           // Maximum size if less than physical scan allows
+  int maxVirtSizeY;
   int maxIntegration;         // Maximum integration level (0 for none available)
   float maxScanRate;          // Minimum scan rate in um / ms
   float advisableScanRate;    // Alternate advised minimum rate

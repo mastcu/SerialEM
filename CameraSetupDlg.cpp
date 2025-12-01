@@ -1228,7 +1228,7 @@ void CCameraSetupDlg::LoadConsetToDialog()
       if (sel)
         numSel++;
     }
-    mVirtChanSelected = AnyVirtualDEChanSelected();
+    mVirtChanSelected = AnyVirtualChanSelected();
     ManageSTEMBinning(numSel);
     ManageVirtualSTEM();
   }
@@ -1450,7 +1450,7 @@ float CCameraSetupDlg::ManageExposure(bool updateIfChange)
         saySaving ? "saved" : "", saySaving && m_bDEalignFrames ? "/" : "",
         m_bDEalignFrames ? "aligned" : "");
   }
-  if (mDE_Type && mSTEMcamera && AnyVirtualDEChanSelected())
+  if (mDE_Type && mSTEMcamera && AnyVirtualChanSelected())
     return mCurSet->exposure;
   if (changed && updateIfChange)
     ManageDose();
@@ -1519,13 +1519,13 @@ void CCameraSetupDlg::ManageDrift(bool useMinRate)
     right = m_eRight / binning;
     top = m_eTop / binning;
     bottom = m_eBottom / binning;
-    noVirtChan = !(AnyVirtualDEChanSelected() && mFPSfor4dSTEM > 0.);
+    noVirtChan = !(AnyVirtualChanSelected() && mFPSfor4dSTEM > 0.);
     if (noVirtChan) {
 
       if (useMinRate && mParam->maxScanRate)
         m_eExposure = 0.01f;
     } else {
-      m_eExposure = (right - left) * (bottom - top) / mFPSfor4dSTEM;
+      m_eExposure = (right - left) * (bottom - top) * m_iDePointRepeats / mFPSfor4dSTEM;
     }
     mCamera->ComputePixelTime(mParam, right - left, bottom - top,
       (m_bLineSync && mParam->GatanCam) ? 1 : 0,
@@ -2554,14 +2554,18 @@ void CCameraSetupDlg::OnKillfocusEditTiltOffset()
 void CCameraSetupDlg::OnKillfocusEditsettling() 
 {
   CString str = m_strSettling;
-  float topTime = (float)(mParam->maxPixelTime > 0 ? mParam->maxPixelTime : 100000.);
+  float minPixel = (mVirtChanSelected && mParam->minVirtualPixTime > 0) ? 
+    mParam->minVirtualPixTime : mParam->minPixelTime;
+  float maxPixel = (mVirtChanSelected && mParam->maxVirtualPixTime > 0) ?
+    mParam->maxVirtualPixTime : mParam->maxPixelTime;
+  float topTime = (float)(maxPixel > 0 ? maxPixel: 100000.);
   UpdateData(TRUE);
   float settling = (float)atof(m_strSettling);
   if (mSTEMcamera) {
 
     // Do not let the exposure time be revised unless the text here actually changed
     if (str != m_strSettling || mChangedBinning) {
-      B3DCLAMP(settling, mParam->minPixelTime, topTime);
+      B3DCLAMP(settling, minPixel, topTime);
       m_eExposure = (float)(settling * (m_eBottom - m_eTop) * (m_eRight - m_eLeft) / 
         (1.e6 * mBinnings[m_iBinning] * mBinnings[m_iBinning]));
       UpdateData(false);
@@ -2794,20 +2798,24 @@ void CCameraSetupDlg::NewChannelSel(int which)
   }
 
   // Manage exposure when selection of virtual channels changes
-  newVirt = AnyVirtualDEChanSelected();
+  newVirt = AnyVirtualChanSelected();
   if (!BOOL_EQUIV(mVirtChanSelected, newVirt)) {
-    FindFPSfor4dSTEM();
-    if (mFPSfor4dSTEM > 0.) {
+    mVirtChanSelected = newVirt;
+    if (mDE_Type) {
+      FindFPSfor4dSTEM();
+      if (mFPSfor4dSTEM > 0.) {
 
-      // Copy out real exposure to conset if it is becoming virtual, or copy conset in
-      // if it is no longer virtual
-      if (newVirt) {
-        mCurSet->exposure = m_eExposure;
-      } else {
-        m_eExposure = mCurSet->exposure;
+        // Copy out real exposure to conset if it is becoming virtual, or copy conset in
+        // if it is no longer virtual
+        if (newVirt) {
+          mCurSet->exposure = m_eExposure;
+        } else {
+          m_eExposure = mCurSet->exposure;
+        }
+        ManageDrift();
       }
-      mVirtChanSelected = newVirt;
-      ManageDrift();
+    } else {
+      ManageExposure();
     }
   }
   if (ManageSTEMBinning(numSel))
@@ -2818,12 +2826,17 @@ void CCameraSetupDlg::NewChannelSel(int which)
 // Disable non-allowed binnings and change binning for multiple channels
 bool CCameraSetupDlg::ManageSTEMBinning(int numSel)
 {
-  int binInd;
+  int binInd, minBinning = 0;
   bool retval = false;
   double settling;
+  if (AnyVirtualChanSelected() && mParam->maxVirtSizeX && mParam->maxVirtSizeY)
+    minBinning = B3DMAX((mParam->sizeX + mParam->maxVirtSizeX - 1) / mParam->maxVirtSizeX
+      , (mParam->sizeY + mParam->maxVirtSizeY - 1) / mParam->maxVirtSizeY);
+
   for (binInd = 0; binInd < mParam->numBinnings - 1; binInd++) {
     CButton *radio = (CButton *)GetDlgItem(IDC_RBIN1 + binInd);
-    bool valid = mParam->binnings[binInd] >= mParam->minMultiChanBinning[numSel - 1];
+    bool valid = mParam->binnings[binInd] >= mParam->minMultiChanBinning[numSel - 1] &&
+      mParam->binnings[binInd] >= minBinning;
     radio->EnableWindow(valid);
     if (!valid && m_iBinning <= binInd) {
       m_iBinning = binInd + 1;
@@ -2901,42 +2914,37 @@ void CCameraSetupDlg::ManageVirtualSTEM()
   bool de4Dopts = false, enable;
   if (!mSTEMcamera || !(mDE_Type || mParam->DectrisType))
     return;
+  de4Dopts = AnyVirtualChanSelected();
   if (mDE_Type) {
-    de4Dopts = AnyVirtualDEChanSelected();
     EnableDlgItem(IDC_DE_STEM_GAIN_CORR, de4Dopts);
     EnableDlgItem(IDC_DE_POINT_REPEATS, de4Dopts);
     EnableDlgItem(IDC_STAT_DE_PRESET, de4Dopts);
     EnableDlgItem(IDC_COMBO_DE_PRESET, de4Dopts);
-    EnableDlgItem(IDC_SAVE_4D_STACK, de4Dopts);
     EnableDlgItem(IDC_STAT_POINT_REPEATS, de4Dopts);
     EnableDlgItem(IDC_EDIT_POINT_REPEATS, de4Dopts);
     EnableDlgItem(IDC_SPIN_POINT_REPEATS, de4Dopts);
   }
-  enable = (mDE_Type && m_bDeSTEMSaveFinal) ||
-    (m_bSave4dSTEM && (mParam->DectrisType || de4Dopts));
+  EnableDlgItem(IDC_SAVE_4D_STACK, de4Dopts);
+  enable = (mDE_Type && m_bDeSTEMSaveFinal) || (m_bSave4dSTEM && de4Dopts);
   EnableDlgItem(IDC_STEM_SAVE_FOLDER, enable);
   EnableDlgItem(IDC_STEM_NAMING_OPTS, enable);
 }
 
-bool CCameraSetupDlg::AnyVirtualDEChanSelected()
+bool CCameraSetupDlg::AnyVirtualChanSelected()
 {
-  int sel, ind, virt, numChan = mCamera->GetMaxChannels(mParam);
-  if (mDE_Type) {
-    ShortVec virtChan = mCamera->GetVirtualDEChannels();
-    for (ind = 0; ind < numChan; ind++) {
-      CComboBox *combo = (CComboBox *)GetDlgItem(IDC_COMBOCHAN1 + ind);
-      sel = combo->GetCurSel();
-      if (sel == CB_ERR)
-        sel = -1;
-      else if (numChan > 1)
-        sel--;
-      B3DCLAMP(sel, -1, numChan - 1);
-      if (sel >= 0 && mParam->availableChan[sel]) {
-        for (virt = 0; virt < (int)virtChan.size(); virt++)
-          if (virtChan[virt] == sel)
-            return true;
-      }
-    }
+  int sel, ind, numChan = mCamera->GetMaxChannels(mParam);
+  if (!mParam->virtualChanFlags)
+    return false;
+  for (ind = 0; ind < numChan; ind++) {
+    CComboBox *combo = (CComboBox *)GetDlgItem(IDC_COMBOCHAN1 + ind);
+    sel = combo->GetCurSel();
+    if (sel == CB_ERR)
+      sel = -1;
+    else if (numChan > 1)
+      sel--;
+    B3DCLAMP(sel, -1, numChan - 1);
+    if (sel >= 0 && mParam->availableChan[sel] && DETECTOR_IS_VIRTUAL(mParam, sel))
+      return true;
   }
   return false;
 }
@@ -2954,6 +2962,7 @@ void CCameraSetupDlg::OnDeltaposSpinPointRepeats(NMHDR *pNMHDR, LRESULT *pResult
   if (NewSpinnerValue(pNMHDR, pResult, m_iDePointRepeats, 1, MAX_POINT_REPEATS,
     m_iDePointRepeats))
     return;
+  ManageDrift();
   UpdateData(false);
 }
 
