@@ -203,7 +203,7 @@ BOOL CK2SaveOptionDlg::OnInitDialog()
   m_bDatePrefix = (mNameFormat & FRAME_FILE_DATE_PREFIX) != 0;
   m_bOnlyWhenAcquire = (mNameFormat & FRAME_LABEL_IF_ACQUIRE) != 0;
   m_bMultiHolePos = (mNameFormat & FRAME_FILE_HOLE_AND_POS) != 0;
-  if (!mCanCreateDir && !mDEtype)
+  if (!mCanCreateDir && !mDEtype && !mCamParams->DectrisType)
     SetDlgItemText(IDC_STAT_MUST_EXIST, B3DCHOICE(mFalconType,
     "Subfolder set with \"Set Folder\" must be blank to create folders", 
     "Plugin to DigitalMicrograph must be upgraded to create folders"));

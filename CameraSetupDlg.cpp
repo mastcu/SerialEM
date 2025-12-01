@@ -1987,7 +1987,8 @@ void CCameraSetupDlg::ManageCamera()
     }
   }
   m_statBinning.SetWindowText(mSTEMcamera ? "Sampling" : "Binning");
-  SetDlgItemText(IDC_STATEXPTIME, mSTEMcamera ? "   Frame time" : "Exposure time");
+  SetDlgItemText(IDC_STATEXPTIME, B3DCHOICE(mSTEMcamera, mDE_Type || mParam->DectrisType ?
+    "Scan time" : "Frame time", "Exposure time"));
   showbox = mSTEMcamera ? SW_HIDE : SW_SHOW;
   stat = (CStatic *)GetDlgItem(IDC_STATPROC);
   stat->ShowWindow(showbox);
