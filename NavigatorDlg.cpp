@@ -1110,6 +1110,7 @@ void CNavigatorDlg::OnCheckrotate()
 // The checkbox for the dual map item
 void CNavigatorDlg::OnCheckDualMap()
 {
+  float borderDist, toEdge;
   if (UpdateIfItem())
     return;
   if (m_bDualMap) {
@@ -1121,6 +1122,23 @@ void CNavigatorDlg::OnCheckDualMap()
     mDualMapID = mItem->mMapID;
     if (mFoundItem >= 0)
       UpdateListString(mFoundItem);
+
+    // Give warning if it is too small
+    if (!mItem->mMapMontage) {
+      borderDist = 100000000.;
+      for (int ix = 0; ix < mItem->mNumPoints - 1; ix++) {
+        toEdge = mHelper->PointSegmentDistance(mItem->mStageX, mItem->mStageY,
+          mItem->mPtX[ix], mItem->mPtY[ix], mItem->mPtX[ix + 1], mItem->mPtY[ix + 1]);
+        ACCUM_MIN(borderDist, toEdge);
+      }
+      if (borderDist <= B3DMIN(mHelper->GetMinAnchorMargin(),
+        mHelper->GetMinMarginWanted())) {
+        PrintfToLog("WARNING: Anchor map is smaller than the criterion for realigning to"
+          " if it overlays a montage map.\r\n  Either lower the magnification or set "
+          "property RealignItemMinAnchorMargin\r\n  to %.1f micron or less to guarantee"
+          " realignment to anchor maps at this mag", borderDist - 0.06f);
+      }
+    }
   } else
     mDualMapID = -1;
   UpdateListString(mCurrentItem);

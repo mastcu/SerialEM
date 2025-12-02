@@ -4490,7 +4490,13 @@
             several reasons, but the distance to its edge must be bigger than this value.
             &nbsp; In particular, an anchor map taken at the same position as a higher mag map
             can be guaranteed to be picked for alignment if half of its shortest side is more
-            than this value.  The default is 5 microns.</TD>
+            than the minimum of this value and 'RealignItemMinAnchorMargin'.&nbsp The default is 5 microns.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>RealignItemMinAnchorMargin</TD>
+          <TD>When selecting a map for Realign to Item, an anchor map taken at the same position as a 
+            higher mag map can be guaranteed to be picked for alignment if half of its shortest side
+             is more than this value.&nbsp; The default is 2.5 microns.</TD>
         </TR>
         <TR>
           <TD height="20">RealignItemMaxIS</TD>

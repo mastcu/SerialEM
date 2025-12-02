@@ -3,6 +3,12 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+12/1/25: Added a separate property, RealignItemMinAnchorMargin, for the
+minimum distance to the edge of a map wanted for preferring an anchor map over
+a larger map.
+
+12/1/25: Fixed crash in startup when there is a plugin STEM camera.
+
 11/26/25: Added script command to get all parameters for a low dose area into
 an array variable.
 
