@@ -233,11 +233,12 @@ public:
   int RealignToItem(CMapDrawItem * item, BOOL restoreState, float resetISalignCrit,
     int maxNumResetAlign, int leaveZeroIS, int realiFlags, int setForScaled);
   float PointSegmentDistance(float ptX, float ptY, float x1, float y1, float x2, float y2);
-  GetMember(int, Realigning)
-  GetSetMember(float, RImaximumIS)
-  GetSetMember(float, MaxMarginNeeded)
-  GetSetMember(float, MinMarginNeeded)
-  GetSetMember(float, MinMarginWanted)
+  GetMember(int, Realigning);
+  GetSetMember(float, RImaximumIS);
+  GetSetMember(float, MaxMarginNeeded);
+  GetSetMember(float, MinMarginNeeded);
+  GetSetMember(float, MinMarginWanted);
+  GetSetMember(float, MinAnchorMargin);
   GetSetMember(int, TypeOfSavedState)
   GetMember(BOOL, AcquiringDual)
   GetSetMember(BOOL, SearchRotAlign)
@@ -430,6 +431,7 @@ private:
   float mMaxMarginNeeded;       // Maximum center to edge distance for preferring a map
   float mMinMarginWanted;
   float mMinMarginNeeded;       // Minimum center to edge distance for doing realign
+  float mMinAnchorMargin;       // Minimum center to edge dist wanted if same position map
   float mDistWeightThresh;      // Threshold for weighting CCC by distance
   float mStageErrX, mStageErrY; // Stage error of the last align
   float mLocalErrX, mLocalErrY; // Second round component of stage error

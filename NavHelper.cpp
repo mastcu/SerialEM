@@ -146,6 +146,7 @@ CNavHelper::CNavHelper(void)
   mAcquiringDual = false;
   mMaxMarginNeeded = 10.;
   mMinMarginWanted = 5.;
+  mMinAnchorMargin = 2.5;
   mMinMarginNeeded = 1.5f;
   mRImaxLMfield = 15.;
   mRegistrationAtErr = -1;
@@ -676,9 +677,9 @@ int CNavHelper::FindMapForRealigning(CMapDrawItem * inItem, BOOL restoreState)
         " mdr %d dmax %f bdis %.2f bmax %.2f", mapInd, samePosMap, maxSamePos, betterMap,
         distMin, mMinMarginWanted, alignedMap, maxAligned, drawnMap, maxDrawn, distMax,
         borderDist, borderMax);
-      if ((samePosMap && !maxSamePos && (betterMap || distMin >= mMinMarginWanted || 
-        (maxInLM && !mapInLM))) ||
-        ((!maxSamePos || distMin < mMinMarginWanted) &&
+      if ((samePosMap && !maxSamePos && (betterMap || 
+        distMin >= B3DMIN(mMinAnchorMargin, mMinMarginWanted) || (maxInLM && !mapInLM)))
+        || ((!maxSamePos || distMin < mMinMarginWanted) &&
         (((alignedMap == maxAligned || drawnMap == maxDrawn) && betterMap) ||
           (((alignedMap && !maxAligned) || (drawnMap && !maxDrawn)) &&
           (betterMap || distMin >= mMinMarginWanted || (maxInLM && !mapInLM))) ||

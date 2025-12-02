@@ -389,6 +389,7 @@ FLOAT_PROP_TEST("LDShiftOffsetMin2StepRatio", complexTasks->, LDSOTwoStepMinRati
 FLOAT_PROP_TEST("LDShiftOffsetMax2StepFocus", complexTasks->, LDSOMaxFocusForModArea)
 FLOAT_PROP_TEST("RealignItemMinMarginNeeded", navHelper->, MinMarginNeeded)
 FLOAT_PROP_TEST("RealignItemMinMarginWanted", navHelper->, MinMarginWanted)
+FLOAT_PROP_TEST("RealignItemMinAnchorMargin", navHelper->, MinAnchorMargin)
 FLOAT_PROP_TEST("RealignItemMaxMarginNeeded", navHelper->, MaxMarginNeeded)
 FLOAT_PROP_TEST("RealignItemMaxIS", navHelper->, RImaximumIS)
 FLOAT_PROP_TEST("RealignItemMaxLMfield", navHelper->, RImaxLMfield)
