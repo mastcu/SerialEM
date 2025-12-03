@@ -528,8 +528,8 @@ int DirectElectronCamera::initializeDECamera(CString camName, int camIndex)
 
     // Make sure that if an autosave dir can be set and one is in properties, it is there
     // or can be created
-    if (mServerVersion >= DE_CAN_SET_FOLDER && ServerIsLocal()) {
-      if (!mCamParams[camIndex].DE_AutosaveDir.IsEmpty() &&
+    if (mServerVersion >= DE_CAN_SET_FOLDER) {
+      if (ServerIsLocal() && !mCamParams[camIndex].DE_AutosaveDir.IsEmpty() &&
        CreateFrameDirIfNeeded(mCamParams[camIndex].DE_AutosaveDir, &str, 'D')) {
          PrintfToLog("WARNING: %s", (LPCTSTR)str);
          mCamParams[camIndex].DE_AutosaveDir = "";
