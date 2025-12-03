@@ -2021,7 +2021,7 @@ void CCameraController::SetCurrentCamera(int currentCam, int activeCam)
   // camera instead to keep it as current
   if (mParam->DE_camType && mTD.DE_Cam) {
     name = mParam->name;
-    index = activeCam;
+    index = mActiveList[activeCam];
     if (mParam->STEMcamera && mParam->samePhysicalCamera >= 0) {
       name = mAllParams[mParam->samePhysicalCamera].name;
       index = mParam->samePhysicalCamera;
@@ -13458,7 +13458,7 @@ int CCameraController::SetDEUsersFrameFolder()
       mFrameFolder += "\\" + mDirForDEFrames;
     }
   }
-  if (CreateFrameDirIfNeeded(mFrameFolder, &logmess, 'D')) {
+  if (mDE_Cam->ServerIsLocal() && CreateFrameDirIfNeeded(mFrameFolder, &logmess, 'D')) {
     SEMMessageBox(logmess);
     ErrorCleanup(1);
     return 1;
