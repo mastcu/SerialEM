@@ -561,6 +561,8 @@ void CMultiGridDlg::OnButMgGetNames()
       str = jcdEl.name;
       mMGTasks->ReplaceBadCharacters(str);
       jcdEl.userName = str;
+      if (jcdEl.station == JAL_STATION_STAGE)
+        onStage = ind;
     }
   }
 
