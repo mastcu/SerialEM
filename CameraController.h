@@ -1193,7 +1193,7 @@ public:
   void TestCameraInserted(int actIndex, long &inserted, bool needCreateDM);
   void ComputePixelTime(CameraParameters *camParams, int sizeX, int sizeY, int lineSync,
     float pixelSize, float maxScanRate, float &exposure, double &pixelTime,
-    double &scanRate);
+    double &scanRate, bool anyVirtual, int pointRepeats);
   void ConstrainDriftSettling(float drift);
   int DynamicFocusOK(float exposure, int sizeY, float flyback, int &interval,
     double &msPerLine);
@@ -1208,6 +1208,7 @@ public:
   void RestoreMagAndShift(void);
   void AdjustForShift(float adjustX, float adjustY);
   float GetFPSforVirtualSTEM(ControlSet &conSet);
+  bool AnyVirtualChannelsSelected(CameraParameters *param, ControlSet *conSet);
   bool CanPreExpose(CameraParameters * param, int shuttering);
   bool MutuallyExclusiveChannels(int chan1, int chan2);
   int ChannelMappedTo(int chan);

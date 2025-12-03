@@ -394,6 +394,7 @@ void CComplexTasks::MakeTrackingConSet(ControlSet *conSet, int targetSize,
 {
   int i;
   double dum1, dum2;
+  bool anyVirt;
   float exposure, frameTime, tryExp;
   CameraParameters *camParam = mWinApp->GetCamParams() + mWinApp->GetCurrentCamera();
 
@@ -448,8 +449,10 @@ void CComplexTasks::MakeTrackingConSet(ControlSet *conSet, int targetSize,
     int sizeY = (conSet->bottom - conSet->top) / conSet->binning;
     float pixel = (float)conSet->binning * mShiftManager->GetPixelSize(
       mWinApp->GetCurrentCamera(), mScope->FastMagIndex());
+    anyVirt = mCamera->AnyVirtualChannelsSelected(camParam, conSet);
     mCamera->ComputePixelTime(camParam, sizeX, sizeY, conSet->lineSyncOrPattern,
-        pixel, camParam->maxScanRate, conSet->exposure, dum1, dum2);
+        pixel, camParam->maxScanRate, conSet->exposure, dum1, dum2, 
+      anyVirt, (anyVirt && camParam->DE_camType) ? conSet->skipAfterOrPtRpt : 1);
   }
   SEMTrace('t', "MakeTrackingConset: binning %d from %d, exposure %f from %f, drift %f", 
     conSet->binning, mConSets[baseConset].binning, conSet->exposure, 
@@ -471,6 +474,7 @@ void CComplexTasks::LowerMagIfNeeded(int maxMagInd, float calIntSafetyFac,
   int error, sizeX, sizeY;
   float actualFac;
   float deadTime = camParam->deadTime;
+  bool anyVirt;
   BOOL realCamera = !mCamera->IsCameraFaux();
   BOOL inverted = mScope->GetUseInvertedMagRange() && UtilMagInInvertedRange(maxMagInd,
     camParam->GIF);
@@ -509,9 +513,11 @@ void CComplexTasks::LowerMagIfNeeded(int maxMagInd, float calIntSafetyFac,
       if (camParam->maxScanRate > 0.) {
         sizeX = (conSet->right - conSet->left) / conSet->binning;
         sizeY = (conSet->bottom - conSet->top) / conSet->binning;
+        anyVirt = mCamera->AnyVirtualChannelsSelected(camParam, conSet);
         mCamera->ComputePixelTime(camParam, sizeX, sizeY, conSet->lineSyncOrPattern,
           (float)conSet->binning * mShiftManager->GetPixelSize(camera, maxMagInd), 
-          camParam->maxScanRate, conSet->exposure, delBeam, newDelta);
+          camParam->maxScanRate, conSet->exposure, delBeam, newDelta,
+          anyVirt, (anyVirt && camParam->DE_camType) ? conSet->skipAfterOrPtRpt : 1);
         SEMTrace('t', "LowerMagIfNeeded: STEM exposure set to %.3f", conSet->exposure);
       }
       mScope->SetMagIndex(maxMagInd);

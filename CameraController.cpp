@@ -1905,9 +1905,16 @@ void CCameraController::InitializePluginCameras(int &numPlugListed, int *origina
         }
 
         // Virtual STEM properties
+        // TEMP
+        /*if (!err && camP->STEMcamera && camP->DectrisType) {
+          camP->minVirtualPixTime = 4. * camP->minPixelTime;
+          camP->virtualPixTimeInc = camP->pixelTimeIncrement;
+          camP->maxVirtSizeX = camP->sizeX / 4;
+          camP->maxVirtSizeY = camP->sizeY / 4;
+        }*/
         if (!err && camP->STEMcamera && mPlugFuncs[i]->GetVirtualSTEMProperties) {
-          mPlugFuncs[i]->GetVirtualSTEMProperties(&camP->maxVirtSizeX, &camP->maxVirtSizeY,
-            &minPixel, &maxPixel, &pixelInc,
+          mPlugFuncs[i]->GetVirtualSTEMProperties(&camP->maxVirtSizeX, 
+            &camP->maxVirtSizeY, &minPixel, &maxPixel, &pixelInc,
             &rotInc, &ddum, &camP->maxIntegration, &idum);
           camP->maxVirtualPixTime = (float)maxPixel;
           if (camP->virtualPixTimeInc <= 0 && pixelInc > 0.)
@@ -3979,7 +3986,8 @@ void CCameraController::Capture(int inSet, bool retrying)
     } else if (mPlugFuncs && mScope->GetSimulationMode()) {
       mTD.PluginFrameFlags = PLUGCAM_AVERAGE_FRAMES;
     }
-    if (mParam->DectrisType && (mDectrisSaveAsHDF || mParam->STEMcamera)) {
+    if (mParam->DectrisType && (mDectrisSaveAsHDF || 
+      (mParam->STEMcamera && mTD.ReturnPartialScan != 1))) {
       UtilSplitExtension(mFrameFilename, logmess, ext);
       dectrisFuncs = mWinApp->mPluginManager->GetDectrisFuncs();
       dirStr = (LPCTSTR)mFrameFolder;
@@ -5809,7 +5817,7 @@ void CCameraController::CapSetupShutteringTiming(ControlSet & conSet, int inSet,
     float tmpExp = mNeedShotToInsert >= 0 ? mInsertDetShotTime : conSet.exposure;
 
     // Set exposure for virtual DE acquisition  based on image size and FPS
-    if (anyVirtual) {
+    if (anyVirtual && mParam->DE_camType) {
       if (mTD.ReturnPartialScan != 1) {
         mFPSforVirtualSTEM = GetFPSforVirtualSTEM(conSet);
       }
@@ -5818,7 +5826,8 @@ void CCameraController::CapSetupShutteringTiming(ControlSet & conSet, int inSet,
     }
     ComputePixelTime(mParam, mTD.DMSizeX, mTD.DMSizeY, 
       mParam->GatanCam ? conSet.lineSyncOrPattern : 0, 0., 0., tmpExp,
-      mTD.PixelTime, scanRate);
+      mTD.PixelTime, scanRate, anyVirtual, 
+      (mParam->DE_camType && anyVirtual) ? conSet.skipAfterOrPtRpt : 1);
     mExposure = tmpExp;
     if (mNeedShotToInsert < 0)
       conSet.exposure = tmpExp;
@@ -13755,15 +13764,16 @@ bool CCameraController::DefectListHasEntries(CameraDefects * defp)
 
 // Get the pixel time and possibly revise the exposure time 
 void CCameraController::ComputePixelTime(CameraParameters *camParams, int sizeX, 
-                                         int sizeY, int lineSync, float pixelSize, 
-                                         float maxScanRate, float &exposure, 
-                                         double &pixelTime, double &scanRate)
+  int sizeY, int lineSync, float pixelSize, float maxScanRate, float &exposure, 
+  double &pixelTime, double &scanRate, bool anyVirtual, int pointRepeats)
 {
   double cycle;
   int nmult;
-  float minPixel = camParams->minPixelTime;
+  float minPixel = (anyVirtual && camParams->minVirtualPixTime > 0) ? 
+    camParams->minVirtualPixTime : camParams->minPixelTime;
   float flyback = camParams->flyback;
-  double increment = camParams->pixelTimeIncrement;
+  double increment = (anyVirtual && camParams->virtualPixTimeInc > 0) ? 
+    camParams->virtualPixTimeInc : camParams->pixelTimeIncrement;
 
   // If minimum scan rate and a pixel size are defined, make sure the exposure is long
   // enough
@@ -13774,7 +13784,7 @@ void CCameraController::ComputePixelTime(CameraParameters *camParams, int sizeX,
   }
 
   // Get the pixel time then adjust if line sync is on or if there is an increment
-  pixelTime = exposure * 1.e6 / (sizeX * sizeY);
+  pixelTime = exposure * 1.e6 / (sizeX * sizeY * pointRepeats);
   pixelTime = B3DMAX(minPixel, pixelTime);
   if (camParams->maxPixelTime > 0.)
     pixelTime = B3DMIN(camParams->maxPixelTime, pixelTime);
@@ -13791,7 +13801,7 @@ void CCameraController::ComputePixelTime(CameraParameters *camParams, int sizeX,
   }
 
   // Recompute exposure and 
-  exposure = (float)(pixelTime * sizeX * sizeY / 1.e6);
+  exposure = (float)(pointRepeats * pixelTime * sizeX * sizeY / 1.e6);
   if (pixelSize > 0)
     scanRate = 1.e-3 * sizeX * sizeY * pixelSize / exposure;
  }
@@ -13972,4 +13982,20 @@ float CCameraController::GetFPSforVirtualSTEM(ControlSet &conSet)
   StringVec camPresets = mDE_Cam->GetCamPresets();
   B3DCLAMP(conSet.filtTypeOrPreset, 0, (int)camPresets.size() - 1);
   return mDE_Cam->GetPresetOrCurrentFPS(camPresets[conSet.filtTypeOrPreset]);
+}
+
+// Look up if any selected detectors are virtual in a STEM camera
+bool CCameraController::AnyVirtualChannelsSelected(CameraParameters *param, 
+  ControlSet *conSet)
+{
+  int ind, chan;
+  if (!param->STEMcamera || !param->virtualChanFlags)
+    return false;
+  for (chan = 0; chan < param->numChannels; chan++) {
+    ind = conSet->channelIndex[chan];
+    if (ind >= 0 && ind < MAX_STEM_CHANNELS && param->availableChan[ind] && 
+      DETECTOR_IS_VIRTUAL(param, ind))
+      return true;
+  }
+  return false;
 }
