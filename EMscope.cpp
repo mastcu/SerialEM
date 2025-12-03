@@ -7939,6 +7939,8 @@ int CEMscope::FindApertureIndexFromSize(int apInd, int size, CString &errStr)
         " aperture %d; \r\n %d is probably an incorrect entry for the position index",
         apInd, size);
       index = -size;
+    } else {
+      index = size;
     }
   }
   return index;
