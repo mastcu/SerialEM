@@ -390,13 +390,16 @@ int DirectElectronCamera::initializeDECamera(CString camName, int camIndex)
         UtilSplitString(propValue, ",", mCamPresets);
         if (!mWinApp->mScope->GetSimulationMode()) {
           for (int j = 0; j < (int)mCamPresets.size(); j++)
-            if (mCamPresets[j] == "Custom")
+            if (mCamPresets[j] == "Custom" || mCamPresets[j] == "Last Used Parameters")
               VEC_REMOVE_AT(mCamPresets, j);
         }
       }
       if (!camProps[i].compare("Scan - Preset List") &&
         mDeServer->getProperty(camProps[i], &propValue)) {
         UtilSplitString(propValue, ",", mScanPresets);
+        for (int j = 0; j < (int)mScanPresets.size(); j++)
+          if (mScanPresets[j] == "Last Used Parameters")
+            VEC_REMOVE_AT(mScanPresets, j);
       }
       if (!camProps[i].compare("Preset - Current") &&
         mDeServer->getProperty(camProps[i], &propValue)) {
