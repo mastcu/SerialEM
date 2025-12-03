@@ -3,6 +3,9 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+12/3/25: Fixed setting of frame-saving subdirectory when SerialEM is not
+running on DE server computer (In 4.2).
+
 12/2/25: For JEOL, fixed setting aperture size by index and made Get Names in
 multigrid dialog recognize which grid is on the stage (In 4.2).
 
