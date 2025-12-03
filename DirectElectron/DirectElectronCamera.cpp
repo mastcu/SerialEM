@@ -390,13 +390,16 @@ int DirectElectronCamera::initializeDECamera(CString camName, int camIndex)
         UtilSplitString(propValue, ",", mCamPresets);
         if (!mWinApp->mScope->GetSimulationMode()) {
           for (int j = 0; j < (int)mCamPresets.size(); j++)
-            if (mCamPresets[j] == "Custom")
+            if (mCamPresets[j] == "Custom" || mCamPresets[j] == "Last Used Parameters")
               VEC_REMOVE_AT(mCamPresets, j);
         }
       }
       if (!camProps[i].compare("Scan - Preset List") &&
         mDeServer->getProperty(camProps[i], &propValue)) {
         UtilSplitString(propValue, ",", mScanPresets);
+        for (int j = 0; j < (int)mScanPresets.size(); j++)
+          if (mScanPresets[j] == "Last Used Parameters")
+            VEC_REMOVE_AT(mScanPresets, j);
       }
       if (!camProps[i].compare("Preset - Current") &&
         mDeServer->getProperty(camProps[i], &propValue)) {
@@ -528,8 +531,8 @@ int DirectElectronCamera::initializeDECamera(CString camName, int camIndex)
 
     // Make sure that if an autosave dir can be set and one is in properties, it is there
     // or can be created
-    if (mServerVersion >= DE_CAN_SET_FOLDER && ServerIsLocal()) {
-      if (!mCamParams[camIndex].DE_AutosaveDir.IsEmpty() &&
+    if (mServerVersion >= DE_CAN_SET_FOLDER) {
+      if (ServerIsLocal() && !mCamParams[camIndex].DE_AutosaveDir.IsEmpty() &&
        CreateFrameDirIfNeeded(mCamParams[camIndex].DE_AutosaveDir, &str, 'D')) {
          PrintfToLog("WARNING: %s", (LPCTSTR)str);
          mCamParams[camIndex].DE_AutosaveDir = "";

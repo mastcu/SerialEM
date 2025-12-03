@@ -1528,9 +1528,10 @@ void CCameraSetupDlg::ManageDrift(bool useMinRate)
       m_eExposure = (right - left) * (bottom - top) * m_iDePointRepeats / mFPSfor4dSTEM;
     }
     mCamera->ComputePixelTime(mParam, right - left, bottom - top,
-      (m_bLineSync && mParam->GatanCam) ? 1 : 0,
-      pixelSize, useMinRate ? mParam->maxScanRate : 0.f, m_eExposure, pixelTime,
-      scanRate);
+      (m_bLineSync && mParam->GatanCam) ? 1 : 0, pixelSize, 
+      useMinRate ? mParam->maxScanRate : 0.f, m_eExposure, pixelTime,
+      scanRate, mVirtChanSelected, 
+      (mDE_Type && mVirtChanSelected) ? m_iDePointRepeats : 1);
     m_driftEdit.EnableWindow(noVirtChan);
     if (pixelTime < 9.99)
       m_strSettling.Format("%.2f", pixelTime);
@@ -1549,8 +1550,9 @@ void CCameraSetupDlg::ManageDrift(bool useMinRate)
       0.001)
       m_strScanRate += " *";
     mCamera->ComputePixelTime(mParam, right - left, bottom - top, 
-      (m_bLineSync && mParam->GatanCam) ? 1 : 0,
-      pixelSize, mParam->maxScanRate, expTmp, pixelTime, scanRate);
+      (m_bLineSync && mParam->GatanCam) ? 1 : 0, pixelSize, mParam->maxScanRate, expTmp,
+      pixelTime, scanRate, mVirtChanSelected, 
+      (mDE_Type && mVirtChanSelected) ? m_iDePointRepeats : 1);
     UpdateData(false);
   } else {
 
@@ -2816,6 +2818,7 @@ void CCameraSetupDlg::NewChannelSel(int which)
         ManageDrift();
       }
     } else {
+      ManageDrift();
       ManageExposure();
     }
   }
