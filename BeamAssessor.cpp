@@ -980,15 +980,23 @@ int CBeamAssessor::SetDoseRateWithEDM(float inFactor, int lowDoseArea)
   CString msg;
   float currentPct, newPct;
   
-  if (!mCamera->HasDoseModulator() || 
-    mCamera->mDoseModulator->GetDutyPercent(currentPct, msg))
-    return BEAM_STRENGTH_SCOPE_ERROR;
-  if (currentPct <= 0)
-    return BEAM_STARTING_OUT_OF_RANGE;
+  //Get the current dose percentage, or if in low dose, get it from the low dose params
+  if (lowDoseArea < 0) {
+    if (!mCamera->HasDoseModulator() || 
+      mCamera->mDoseModulator->GetDutyPercent(currentPct, msg))
+      return BEAM_STRENGTH_SCOPE_ERROR;
+    if (currentPct <= 0)
+      return BEAM_STARTING_OUT_OF_RANGE;
+  } else {
+    currentPct = mLDParam[lowDoseArea].EDMPercent;
+  }
+
+  // Compute new percent and check if it is valid
   newPct = currentPct * inFactor;
   if (newPct > 100)
     return BEAM_ENDING_OUT_OF_RANGE;
-
+  
+  // Current percent is updated if not in low dose or the current area is lowDoseArea
   if (lowDoseArea < 0 || mScope->GetLowDoseArea() == lowDoseArea) {
     if (mCamera->mDoseModulator->SetDutyPercent(newPct, msg))
       return BEAM_STRENGTH_SCOPE_ERROR;

@@ -147,7 +147,7 @@ public:
   BOOL *GetExtraFileStarts() { return &mExtraFiles[0]; };
 
   double GetCumulativeDose();
-  int GetEDMPercent(float &EDMPct, CString &message);
+  int GetEDMPercent(float &EDMPct);
 
   bool GetBidirStartAngle(float &outVal) {outVal = mTSParam.bidirAngle; return mStartedTS && mTSParam.doBidirectional; };
 
@@ -476,6 +476,7 @@ private:
   bool mHasDoseModulator;      // Flag for whether there is an electronic dose modulator
   float mFirstEDMPct;          // EDM dose percentage for the first image of tilt series
   float mStartingEDMPct;       // EDM dose percentage before tilt series started
+  float mOriginalEDMPct;       // EDM dose percentage before anything happened
   double mDoseSums[5];        // The first one has task total, last one has task on-axis
   double mCurRecordDose;      // Dose when Record was taken
   BOOL mCloseValvesOnStop;    // Flag to close valves onnext stop
@@ -521,6 +522,7 @@ private:
   std::vector<double> mDosymSavedISX, mDosymSavedISY;     // Saved image shift
   std::vector<double> mDosymDefocuses;                    // Saved defocus
   std::vector<double> mDosymIntensities;                  // Saved intensities
+  FloatVec mDosymEDMPercents;                              // Saved EDM dose percentage
   FloatVec mDosymExposures[NUM_CHGD_CONSETS];             // Saved exposure times
   FloatVec mDosymDriftSettlings[NUM_CHGD_CONSETS];        // Saved drifts FWIW
   FloatVec mDosymRecFrameTimes;                           //  Saved frame times for Record
@@ -606,7 +608,7 @@ public:
   void SendEmailIfNeeded(BOOL terminating);
   void LeaveInitialChecks(void);
   void ChangeExposure(double &delFac, double angle, double limit = 1.e10);
-  void ChangeEDMPct(double &delFac, double limit = 1.e10);
+  int ChangeEDMPct(double &delFac, CString &mess, int lowDoseArea, double limit = 1.e10);
   int ImposeVariations(double angle);
   void SetTrueStartTiltIfStarting(void);
   int MontageMagIntoTSparam(MontParam * montParam, TiltSeriesParam * tsParam);
