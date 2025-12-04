@@ -1095,6 +1095,7 @@ public:
                                      double &rawIntensity, double &current,
                                      double &defocus, double &objective, float &alpha);
   BOOL CassetteSlotStatus(int slot, int &status, CString &names, int *numSlotsP = NULL);
+  BOOL GetCartridgeInfo(int index, JeolCartridgeData &jcd);
   int FindCartridgeWithID(int ID, CString &errStr);
   int LoadCartridge(int slot, CString &errStr);
   int UnloadCartridge(CString &errStr);

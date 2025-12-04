@@ -2375,8 +2375,8 @@ int CMultiGridTasks::StartGridRuns(int LMneedsLD, int MMMneedsLD, int finalNeeds
   }
 
   // Do final check for states
-  if (mParams.acquireLMMs && CheckStatesInRange(&mParams.LMMstateNum,
-    &mParams.LMMstateName, 1, "grid mapping"))
+  if (mParams.acquireLMMs && mParams.setLMMstate && CheckStatesInRange(
+    &mParams.LMMstateNum, &mParams.LMMstateName, 1, "grid mapping"))
     return 1;
   if (mParams.acquireMMMs && CheckStatesInRange(mParams.MMMstateNums,
     mParams.MMMstateNames, 4, "medium-mag mapping"))
@@ -3064,6 +3064,7 @@ int CMultiGridTasks::StartGridRuns(int LMneedsLD, int MMMneedsLD, int finalNeeds
   mRestoringOnError = false;
   mFailureRetry = 0;
   mRealignIteration = 0;
+  mJeolLoadIteration = 0;
   mExternalFailedStr = "";
   mExtErrorOccurred = -1;
   mSuspendedMulGrid = false;
@@ -3161,10 +3162,9 @@ void CMultiGridTasks::DoNextSequenceAction(int resume)
   CString errStr, str, label, str2, str3;
   int *stateNums = &mParams.MMMstateNums[0];
   StageMoveInfo moveInfo;
-  JeolCartridgeData jcd = mCartInfo->ElementAt(mJcdIndsToRun[B3DMIN(mCurrentGrid,
-    (int)mJcdIndsToRun.size() - 1)]);
-  JeolCartridgeData &jcdEl = mCartInfo->ElementAt(mJcdIndsToRun[B3DMIN(mCurrentGrid,
-    (int)mJcdIndsToRun.size() - 1)]);
+  int jcdIndex = mJcdIndsToRun[B3DMIN(mCurrentGrid, (int)mJcdIndsToRun.size() - 1)];
+  JeolCartridgeData jcdInfo, jcd = mCartInfo->ElementAt(jcdIndex);
+  JeolCartridgeData &jcdEl = mCartInfo->ElementAt(jcdIndex);
   AutoContourParams *acParam;
   MapItemArray *itemArr;
   CMapDrawItem *item;
@@ -3228,7 +3228,6 @@ void CMultiGridTasks::DoNextSequenceAction(int resume)
         return;
 
         // Skip to next grid
-      case MGACT_LOAD_GRID:
       case MGACT_TAKE_LMM:
       case MGACT_REALIGN_TO_LMM:
       case MGACT_REFINE_ALIGN:
@@ -3251,6 +3250,7 @@ void CMultiGridTasks::DoNextSequenceAction(int resume)
         break;
 
         // Retry then give up
+      case MGACT_LOAD_GRID:
       case MGACT_REMOVE_OBJ_AP:
       case MGACT_SET_CONDENSER_AP:
       case MGACT_REPLACE_OBJ_AP:
@@ -3566,6 +3566,29 @@ void CMultiGridTasks::DoNextSequenceAction(int resume)
           }
         }
         mWinApp->SetStatusText(SIMPLE_PANE, "");
+      }
+
+      // The loader can be flaky so make sure the grid is on the stage
+      if (JEOLscope && action == MGACT_LOAD_GRID) {
+        if (!mScope->GetCartridgeInfo(jcdIndex, jcdInfo)) {
+          PrintfToLog("WARNING: There was error trying to confirm that"
+            " grid %d is on the stage; going on anyway", jcd.id);
+        } else if (jcdInfo.station != JAL_STATION_STAGE) {
+          if (mJeolLoadIteration < 2) {
+            PrintfToLog("Grid %d is not on the stage, retrying the load", jcd.id);
+            mSeqIndex--;
+            mJeolLoadIteration++;
+            jcdEl.station = JAL_STATION_STORAGE;
+          } else {
+            ChangeStatusFlag(mCurrentGrid, MGSTAT_FLAG_FAILED, 1);
+            mJeolLoadIteration = 0;
+            errStr.Format("Marking grid %d as failed because it failed to load", jcd.id);
+            if (SkipToNextGrid(errStr))
+              return;
+          }
+        } else {
+          mJeolLoadIteration = 0;
+        }
       }
       break;
 
@@ -3959,6 +3982,7 @@ void CMultiGridTasks::DoNextSequenceAction(int resume)
     }
 
     mRealignIteration = 0;
+    mJeolLoadIteration = 0;
     err = OpenNavFileIfNeeded(jcd);
     if (err > 1)
       return;

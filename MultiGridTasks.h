@@ -414,6 +414,7 @@ private:
   bool mSkipEucentricity;        // Flag to skip rough eucentricty for low-tilt stage
   BOOL mSkipGridRealign;         // Property to skip realign after reload
   int mRealignIteration;         // Iteration number if it had to repeat realign
+  int mJeolLoadIteration;        // Iteration # after not finding loaded grid on stage
   double mRunStartTime;          // Time that run started
   double mRemainingTime;         // Estimate of remaining time after current grid is done
   int mSkipMarkerShifts;         // User response to query: 1 to skip or -1 to use markers

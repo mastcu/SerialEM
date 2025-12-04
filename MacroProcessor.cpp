@@ -4727,9 +4727,11 @@ bool CMacroProcessor::ConvertBufferLetter(CString strItem, int emptyDefault,
 void CMacroProcessor::ConvertApertureNameToNum()
 {
   char firstLet = mStrItems[1].GetAt(0);
-  if (firstLet == 'c' || firstLet == 'C')
+  if (firstLet == 'c' || firstLet == 'C') {
     mItemInt[1] = 1;
-  if (firstLet == 'o' || firstLet == 'O')
+    if (JEOLscope && mScope->GetJeolHasExtraApertures() && mStrItems[1].GetAt(1) == '1')
+      mItemInt[1] = 0;
+  } else if (firstLet == 'o' || firstLet == 'O')
     mItemInt[1] = 2;
   if (firstLet == 's' || firstLet == 'S')
     mItemInt[1] = 4;

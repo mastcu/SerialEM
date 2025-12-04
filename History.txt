@@ -3,8 +3,14 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
-12/3/25: Fixed a bug where SetDoseRate using an EDM did not use the correct dose 
+12/4/25: Fixed a bug where SetDoseRate using an EDM did not use the correct dose 
 percentage stored in low dose parameters.
+
+12/4/25: In multigrid, made it retry loading the grid on JEOL if it is not
+actually on the stage or if load ends with error.
+
+12/4/25: Allowed "C1" to be used in aperture commands instead of 0 for JEOL
+scopes with extra apertures.
 
 12/3/25: Fixed picking folder for DE frame saving when server is local, broken
 11/20, and prevented trying to create frame directory when SerialEM is not
