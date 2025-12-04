@@ -3676,7 +3676,8 @@ void CCameraController::Capture(int inSet, bool retrying)
       // Get full folder and suffix, using temporary name if aligning only
       // again make sure folder is OK
       ComposeFramePathAndName(mRemoveAlignedDEframes);
-      if (!mFrameFolder.IsEmpty() && CreateFrameDirIfNeeded(mFrameFolder, &logmess, 'D')) {
+      if (!mFrameFolder.IsEmpty() && mDE_Cam->ServerIsLocal() &&
+        CreateFrameDirIfNeeded(mFrameFolder, &logmess, 'D')) {
         SEMMessageBox(logmess);
         ErrorCleanup(1);
         return;
