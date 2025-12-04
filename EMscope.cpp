@@ -7338,6 +7338,33 @@ BOOL CEMscope::CassetteSlotStatus(int slot, int &status, CString &names, int *nu
   return success;
 }
 
+// Get info for one cartridge from the JEOL.  Supposedly inventories triggered by index
+// being 0 do not take more than a second or two
+BOOL CEMscope::GetCartridgeInfo(int index, JeolCartridgeData &jcd)
+{
+  BOOL retval = false;
+  if (!sInitialized || !JEOLscope || !mPlugFuncs->GetCartridgeInfo)
+    return false;
+  ScopeMutexAcquire("GetCartridgeInfo", true);
+  try {
+
+    // It looks like the info is not up to date after a load/unload and we need to make
+    // it get the info from the scope before checking this slot
+    jcd.name = mPlugFuncs->GetCartridgeInfo(0, &jcd.id, &jcd.station, &jcd.slot,
+      &jcd.rotation, &jcd.type);
+    if (index)
+      jcd.name = mPlugFuncs->GetCartridgeInfo(index, &jcd.id, &jcd.station, &jcd.slot,
+        &jcd.rotation, &jcd.type);
+    if (!jcd.name.IsEmpty())
+      retval = true;
+  }
+  catch (_com_error E) {
+    //SEMReportCOMError(E, _T("getting cartridge info for one grid "));
+  }
+  ScopeMutexRelease("GetCartridgeInfo");
+  return retval;
+}
+
 // Load a cartridge to the stage: slot # for FEI (from 1) or index + 1 in JEOL catalogue
 int CEMscope::LoadCartridge(int slot, CString &errStr)
 {
@@ -10524,9 +10551,9 @@ UINT CEMscope::LongOperationProc(LPVOID pParam)
         if (longOp == LONG_OP_PREPARE_NO_VIBRATE) {
           if (lod->plugFuncs->GetVibrationState(VIBMGR_QUERY_AVOIDING))
             lod->plugFuncs->SetVibrationAvoidance(VIBMGR_ACTION_ALLOW);
-          SEMTrace('0', "Prepare beingcalled");
+          SEMTrace('0', "Prepare being called");
           lod->plugFuncs->SetVibrationAvoidance(VIBMGR_ACTION_PREPARE);
-          SEMTrace('0', "Prepare fininshed");
+          SEMTrace('0', "Prepare finished");
           lod->plugFuncs->SetVibrationAvoidance(VIBMGR_ACTION_AVOID);
         }
 
