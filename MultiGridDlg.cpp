@@ -947,6 +947,9 @@ void CMultiGridDlg::NewGridOnStage(int jcdInd)
   }
   if (jcdInd < 0) {
     mMGTasks->SetLoadedGridIsAligned(0);
+    mSelGridOnStage = false;
+    UpdateEnables();
+    Invalidate();
     return;
   }
   for (ind = 0; ind < mNumUsedSlots; ind++) {
