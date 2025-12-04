@@ -752,7 +752,7 @@ void CAutoContouringDlg::OnHScroll(UINT nSBCode, UINT nPos, CScrollBar *pScrollB
     mParams.minSizeCutoff = (float)(m_intMinSize * (mStatMaxSize - mStatMinSize) /
       255. + mStatMinSize);
     m_strMinSize.Format("%.1f", mParams.minSizeCutoff);
-    wnd = GetDlgItem(IDC_EDIT_MIN_SIZE);
+    wnd = GetDlgItem(IDC_STAT_MIN_SIZE_LABEL);
     wnd->SetFont(dropping ? m_statShowGroups.GetFont() : mBoldFont);
   }
   if (pSlider == &m_sliderIrregular) {
