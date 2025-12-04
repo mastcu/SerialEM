@@ -5094,19 +5094,6 @@ void CTSController::DoFinalTerminationTasks()
     mLDParam[RECORD_CONSET].intensity = mOriginalIntensity;
   else if (!mSTEMindex)
     mScope->SetIntensity(mOriginalIntensity);
-  
-  // Restore dose percentage if there is an EDM
-  if (mUseEDMForIntensity) {
-    if (mLowDoseMode)
-      mLDParam[RECORD_CONSET].EDMPercent = mOriginalEDMPct;
-    else {
-      CString error, message;
-      if (mCamera->mDoseModulator->SetDutyPercent(mOriginalEDMPct, error)) {
-        message.Format("Error setting EDM dose percentage: %s", error);
-        TSMessageBox(message);
-      }
-    }
-  }
 
   if (startDef > EXTRA_VALUE_TEST)
     mScope->SetDefocus(startDef);
@@ -7141,6 +7128,7 @@ int CTSController::RestoreDoseSymmetricState(int newTiltInd, int restoreInd,
       if (ChangeEDMPct(delFac, error, RECORD_CONSET)) {
         mess.Format("Error setting EDM dose percentage: %s", error);
         TSMessageBox(mess);
+        return 1;
       }
     }        
   }
@@ -7252,18 +7240,21 @@ int CTSController::ManageDoseSymmetricOnTilt()
     mDosymRecFrameTimes[dosymInd] = cset[RECORD_CONSET].frameTime;
     mDosymCurrentTilts[dosymInd] = (float)mCurrentTilt;
     ACCUM_MAX(mHighestDosymStateInd, dosymInd);
-    if (mUseEDMForIntensity) {
+    if (mUseEDMForIntensity)
       mDosymEDMPercents[dosymInd] = mLDParam[RECORD_CONSET].EDMPercent;
-      SEMTrace('1', "Saved state %d at %.1f: def %.3f  IS %.3f %.3f  int %.5f  exp %.3f"
-        "  edm %.2f"
+    if (GetDebugOutput('1')) {
+      CString str, str2;
+      str.Format("Saved state %d at %.1f: def %.3f  IS %.3f %.3f  int %.5f  exp %.3f"
         , dosymInd, mCurrentTilt, mDosymDefocuses[dosymInd], mDosymSavedISX[dosymInd],
-        mDosymSavedISY[dosymInd], mDosymIntensities[dosymInd],
-        cset[RECORD_CONSET].exposure, mDosymEDMPercents[dosymInd]);
-    } else {
-      SEMTrace('1', "Saved state %d at %.1f: def %.3f  IS %.3f %.3f  int %.5f  exp %.3f"
-        , dosymInd, mCurrentTilt, mDosymDefocuses[dosymInd], mDosymSavedISX[dosymInd],
-        mDosymSavedISY[dosymInd], mDosymIntensities[dosymInd],
+        mDosymSavedISY[dosymInd], mDosymIntensities[dosymInd], 
         cset[RECORD_CONSET].exposure);
+      if (mUseEDMForIntensity) {
+        str2.Format("  edm %.2f", mDosymEDMPercents[dosymInd]);
+        SEMAppendToLog(str + str2);
+      }
+      else {
+        SEMAppendToLog(str);
+      }
     }
   }
 

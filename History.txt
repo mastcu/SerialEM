@@ -3,6 +3,9 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+12/4/25 Added option to use EDM dose percentage instead of beam intensity in
+tilt series.
+
 12/4/25: Fixed a bug where SetDoseRate using an EDM did not use the correct dose 
 percentage stored in low dose parameters.
 
