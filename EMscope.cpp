@@ -8804,7 +8804,7 @@ BOOL CEMscope::ScopeMutexRelease(const char *name) {
   } 
 
   // If the owner is lending it, copy its name to the lender string
-  if (!strcmp(mScopeMutexOwnerStr, "MutexLender")) {
+  if (!strcmp(name, "MutexLender")) {
     strcpy(mScopeMutexLenderStr, mScopeMutexOwnerStr);
   } else {
 
