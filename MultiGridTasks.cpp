@@ -2375,8 +2375,8 @@ int CMultiGridTasks::StartGridRuns(int LMneedsLD, int MMMneedsLD, int finalNeeds
   }
 
   // Do final check for states
-  if (mParams.acquireLMMs && CheckStatesInRange(&mParams.LMMstateNum,
-    &mParams.LMMstateName, 1, "grid mapping"))
+  if (mParams.acquireLMMs && mParams.setLMMstate && CheckStatesInRange(
+    &mParams.LMMstateNum, &mParams.LMMstateName, 1, "grid mapping"))
     return 1;
   if (mParams.acquireMMMs && CheckStatesInRange(mParams.MMMstateNums,
     mParams.MMMstateNames, 4, "medium-mag mapping"))
