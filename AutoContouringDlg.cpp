@@ -670,7 +670,7 @@ void CAutoContouringDlg::OnKillfocusEditMinSize()
 {
   UPDATE_DATA_TRUE;
   mWinApp->RestoreFocusWhenIdle();
-  mParams.minSizeCutoff = (float)atof(m_strUpperMean);
+  mParams.minSizeCutoff = (float)atof(m_strMinSize);
   m_strMinSize.Format("%.4g", mParams.minSizeCutoff);
   m_intMinSize = (int)(255. * (mParams.minSizeCutoff - mStatMinSize) /
     (mStatMaxSize - mStatMinSize));
