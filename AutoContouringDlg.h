@@ -2,6 +2,7 @@
 #include "NavHelper.h"
 #include "afxwin.h"
 #include "afxcmn.h"
+#include "XSliderCtrl.h"
 
 typedef struct Mod_Object Iobj;
 class CMapDrawItem;
@@ -195,12 +196,12 @@ public:
   float m_fACmaxSize;
   afx_msg void OnKillfocusEditACMinsize();
   afx_msg void OnKillfocusEditACMaxsize();
-  CSliderCtrl m_sliderUpperMean;
-  CSliderCtrl m_sliderMinSize;
-  CSliderCtrl m_sliderIrregular;
-  CSliderCtrl m_sliderSquareSD;
-  CSliderCtrl m_sliderLowerMean;
-  CSliderCtrl m_sliderBorderDist;
+  CXSliderCtrl m_sliderUpperMean;
+  CXSliderCtrl m_sliderMinSize;
+  CXSliderCtrl m_sliderIrregular;
+  CXSliderCtrl m_sliderSquareSD;
+  CXSliderCtrl m_sliderLowerMean;
+  CXSliderCtrl m_sliderBorderDist;
   int m_intUpperMean;
   int m_intMinSize;
   int m_intIrregular;

@@ -401,6 +401,9 @@ void CHoleFinderDlg::OnKillfocusEditLowerMean()
   m_intLowerMean = (int)(255. * (mParams.lowerMeanCutoff - mMeanMin) /
     (mMidMean - mMeanMin));
   B3DCLAMP(m_intLowerMean, 0, 255);
+
+  // Setting position before updateData makes it do a complete custom draw for the colors
+  m_sliderLowerMean.SetPos(m_intLowerMean);
   UpdateData(false);
   SetExclusionsAndDraw();
 }
@@ -414,6 +417,7 @@ void CHoleFinderDlg::OnKillfocusEditUpperMean()
   m_intUpperMean = (int)(255. * (mParams.upperMeanCutoff - mMidMean) /
     (mMeanMax - mMidMean));
   B3DCLAMP(m_intUpperMean, 0, 255);
+  m_sliderUpperMean.SetPos(m_intUpperMean);
   UpdateData(false);
   SetExclusionsAndDraw();
 }
@@ -426,6 +430,7 @@ void CHoleFinderDlg::OnKillfocusEditHullDist()
   m_strHullDist.Format("%.2f", mParams.edgeDistCutoff);
   m_intHullDist = (int)(255. * mParams.edgeDistCutoff / B3DMAX(1., mEdgeDistMax));
   B3DCLAMP(m_intHullDist, 0, 255);
+  m_sliderHullDist.SetPos(m_intHullDist);
   UpdateData(false);
   SetExclusionsAndDraw();
 }
@@ -726,6 +731,11 @@ void CHoleFinderDlg::ParamsToDialog()
   m_bUseBestSubset = mParams.useHexDiagonals;
   m_bShowExcluded = mParams.showExcluded;
   m_iLayoutType = mParams.layoutType;
+  m_sliderUpperMean.SetPos(m_intUpperMean);
+  m_sliderLowerMean.SetPos(m_intLowerMean);
+  m_sliderSDcutoff.SetPos(m_intSDcutoff);
+  m_sliderBlackPct.SetPos(m_intBlackPct);
+  m_sliderHullDist.SetPos(m_intHullDist);
   UpdateData(false);
 }
 
@@ -1296,8 +1306,8 @@ void CHoleFinderDlg::ScanningNextTask(int param)
     StopScanning();
     return;
   }
-  
-  for ( ;; ) {
+
+  for (;; ) {
     err = mHelper->mFindHoles->runSequence(mSigInd, sigUsed, mThreshInd,
       threshUsed, mXboundary, mYboundary, mBestSigInd, mBestThreshInd,
       mBestRadius, mTrueSpacing, mXcenters, mYcenters,
@@ -1366,7 +1376,7 @@ void CHoleFinderDlg::ScanningNextTask(int param)
             secIxAliPiece[ind] += mMiniOffsets->offsetX[ipc] * mFullBinning;
             secIyAliPiece[ind] -= mMiniOffsets->offsetY[ipc] * mFullBinning;
           }
-          secIyAliPiece[ind] = mFullYsize * mFullBinning - 
+          secIyAliPiece[ind] = mFullYsize * mFullBinning -
             (secIyAliPiece[ind] + montP->yFrame);
           pieceIndex[ixpc + montP->xNframes * iypc] = ind++;
         }
@@ -1484,9 +1494,9 @@ void CHoleFinderDlg::ScanningNextTask(int param)
   adjInv = MatInv(mAdjustedStageToCam);
   for (ind = 0; ind < (mLastWasHexGrid ? 3 : 2); ind++)
     ApplyScaleMatrix(adjInv, mBufBinning * mGridImXVecs[ind],
-    -mBufBinning * mGridImYVecs[ind], mGridStageXVecs[ind], mGridStageYVecs[ind]);
+      -mBufBinning * mGridImYVecs[ind], mGridStageXVecs[ind], mGridStageYVecs[ind]);
 
-// Get stage positions, save matrix for converting average vector later
+  // Get stage positions, save matrix for converting average vector later
   if (!mNav)
     return;
 
@@ -1503,7 +1513,7 @@ void CHoleFinderDlg::ScanningNextTask(int param)
     // It turns out that the pieceOn values from above are not quite right or consistent
     // with what is needed for proper display, so replace them
     if (mMontage && mPieceOn.size())
-      mWinApp->mNavHelper->AdjustMontImagePos(imBuf, ptX, ptY, &mPieceOn[ind], 
+      mWinApp->mNavHelper->AdjustMontImagePos(imBuf, ptX, ptY, &mPieceOn[ind],
         &mXinPiece[ind], &mYinPiece[ind]);
     ApplyScaleMatrix(aInv, ptX - delX, ptY - delY, mXstages[ind],
       mYstages[ind]);
@@ -1527,7 +1537,7 @@ void CHoleFinderDlg::ScanningNextTask(int param)
     ptY = yMissing[ind];
 
     if (mMontage && mPieceOn.size())
-      mWinApp->mNavHelper->AdjustMontImagePos(imBuf, ptX, ptY, &mMissPieceOn[ind], 
+      mWinApp->mNavHelper->AdjustMontImagePos(imBuf, ptX, ptY, &mMissPieceOn[ind],
         &mMissXinPiece[ind], &mMissYinPiece[ind]);
     ApplyScaleMatrix(aInv, ptX - delX, ptY - delY, mXmissStage[ind],
       mYmissStage[ind]);
@@ -1558,9 +1568,9 @@ void CHoleFinderDlg::ScanningNextTask(int param)
     mParams.lowerMeanCutoff = mMeanMin;
   if (mParams.upperMeanCutoff < EXTRA_VALUE_TEST)
     mParams.upperMeanCutoff = mMeanMax;
-  if (mParams.SDcutoff  < EXTRA_VALUE_TEST)
+  if (mParams.SDcutoff < EXTRA_VALUE_TEST)
     mParams.SDcutoff = mSDmax;
-  if (mParams.blackFracCutoff  < EXTRA_VALUE_TEST)
+  if (mParams.blackFracCutoff < EXTRA_VALUE_TEST)
     mParams.blackFracCutoff = mBlackFracMax;
   if (!mEdgeDistMax)
     mParams.edgeDistCutoff = 0.;
@@ -1586,7 +1596,7 @@ void CHoleFinderDlg::ScanningNextTask(int param)
     // Get the grid positions
     mHexSubset.resize(mXcenters.size());
     mMissHexSubset.resize(mXmissCen.size());
-    avgLen = -1.; 
+    avgLen = -1.;
     avgAngle = -999.;
     mHelper->mFindHoles->assignGridPositions(xMissing, yMissing, gridX, gridY, avgAngle,
       avgLen);

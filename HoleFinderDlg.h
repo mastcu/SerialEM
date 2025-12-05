@@ -3,6 +3,7 @@
 #include "afxcmn.h"
 #include "NavHelper.h"
 #include "MyButton.h"
+#include "XSliderCtrl.h"
 
 #define MAX_HOLE_TRIALS 16
 class CNavHelper;
@@ -174,26 +175,26 @@ public:
   CString m_strStatusOutput;
   CString m_strMinLowerMean;
   CString m_strMaxLowerMean;
-  CSliderCtrl m_sliderLowerMean;
+  CXSliderCtrl m_sliderLowerMean;
   CEdit m_editLowerMean;
   afx_msg void OnKillfocusEditLowerMean();
   CString m_strLowerMean;
   int m_intLowerMean;
   CString m_strMinUpperMean;
   CString m_strMaxUpperMean;
-  CSliderCtrl m_sliderUpperMean;
+  CXSliderCtrl m_sliderUpperMean;
   CEdit m_editUpperMean;
   afx_msg void OnKillfocusEditUpperMean();
   CString m_strUpperMean;
   int m_intUpperMean;
   CString m_strMinSDcutoff;
   CString m_strMaxSDcutoff;
-  CSliderCtrl m_sliderSDcutoff;
+  CXSliderCtrl m_sliderSDcutoff;
   int m_intSDcutoff;
   CString m_strSDcutoff;
   CString m_strMinBlackPct;
   CString m_strMaxBlackPct;
-  CSliderCtrl m_sliderBlackPct;
+  CXSliderCtrl m_sliderBlackPct;
   int m_intBlackPct;
   CString m_strBlackPct;
   CButton m_butShowIncluded;
@@ -232,7 +233,7 @@ public:
   CButton m_butHexArray;
   BOOL m_bHexArray;
   afx_msg void OnHexArray();
-  CSliderCtrl m_sliderHullDist;
+  CXSliderCtrl m_sliderHullDist;
   int m_intHullDist;
   CEdit m_editHullDist;
   CString m_strHullDist;

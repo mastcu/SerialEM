@@ -1043,6 +1043,7 @@
     <ClInclude Include="ReadFileDlg.h" />
     <ClInclude Include="RefPolicyDlg.h" />
     <ClInclude Include="Utilities\PathOptimizer.h" />
+    <ClInclude Include="XSliderCtrl.h" />
     <ClInclude Include="ZbyGSetupDlg.h" />
     <CustomBuild Include="Resource.h">
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Generating map file for help compiler...</Message>
@@ -3348,6 +3349,7 @@ echo.
     <ClCompile Include="XFolderDialog\XFolderDialog.cpp" />
     <ClCompile Include="XFolderDialog\XHistoryCombo.cpp" />
     <ClCompile Include="XFolderDialog\XWinVer.cpp" />
+    <ClCompile Include="XSliderCtrl.cpp" />
     <ClCompile Include="ZbyGSetupDlg.cpp" />
   </ItemGroup>
   <ItemGroup>

@@ -98,16 +98,24 @@
     <p><strong>Show groups</strong></p>
     <p>The checkboxes allow you to toggle the display of each group on or off and 
       control which groups are converted to Navigator polygons.</p>
+    <p><em>Sliders: Note that the top three sliders eliminate more contours when moved 
+      from left to right, and the bottom three do so when moved from right to left.</em></p>
+    <p><strong>Minimum size cutoff</strong></p>
+    <p>Use this slider or the edit box to set a lower limit on the size of the grid 
+      squares to be displayed; the size here is just the square root of the area 
+      within the contour.</p>
+    <p><strong>Edge distance cutoff</strong></p>
+    <p>Use this slider or the edit box to set a lower limit on the distance of 
+      contours from the edge of the area where there are contours.&nbsp; Specifically, 
+      the value is the distance from the center of each contours to the convex 
+      boundary of the centers of all the contours; thus, the outermost contours are at 
+      a distance of 0.</p>
     <p><strong>Lower mean cutoff</strong></p>
     <p>Use this slider or the edit box to set a lower limit on the mean intensity 
       within the grid squares to be displayed.</p>
     <p><strong>Upper mean cutoff</strong></p>
     <p>Use this slider or the edit&nbsp;box to set an upper limit on the mean intensity 
       within the grid squares to be displayed.</p>
-    <p><strong>Minimum size cutoff</strong></p>
-    <p>Use this slider or the edit box to set a lower limit on the size of the grid 
-      squares to be displayed; the size here is just the square root of the area 
-      within the contour.</p>
     <p><strong>Irregularity cutoff</strong></p>
     <p>Use this slider to set an upper limit on a measure of how much the contour 
       deviates from a square.&nbsp; The average angle of the lines between grid 
@@ -122,12 +130,6 @@
       contouring, which is heavily smoothed by a Gaussian kernel filter with a sigma 
       of 2.5 pixels.&nbsp; The SD should thus be dominated by the presence of larger 
       structures within the grid squares, rather than by noise.</p>
-    <p><strong>Edge distance cutoff</strong></p>
-    <p>Use this slider or the edit box to set a lower limit on the distance of 
-      contours from the edge of the area where there are contours.&nbsp; Specifically, 
-      the value is the distance from the center of each contours to the convex 
-      boundary of the centers of all the contours; thus, the outermost contours are at 
-      a distance of 0.</p>
     <p><strong>Make Navigator Polygons</strong></p>
     <p>Press this button to convert the currently displayed contours to Navigator 
       polygons.&nbsp; <em>What you see is what you get.</em>&nbsp; Only the groups 

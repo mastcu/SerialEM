@@ -647,6 +647,7 @@ void CAutoContouringDlg::OnKillfocusEditMinMean()
   m_intLowerMean = (int)(255. * (mParams.lowerMeanCutoff - mMedianMean) /
     (mMedianMean - mStatMinMean));
   B3DCLAMP(m_intLowerMean, 0, 255);
+  m_sliderLowerMean.SetPos(m_intLowerMean);
   UpdateData(false);
   SetExclusionsAndGroups();
 }
@@ -661,6 +662,7 @@ void CAutoContouringDlg::OnKillfocusEditMaxMean()
   m_intUpperMean = (int)(255. * (mParams.upperMeanCutoff - mMedianMean) /
     (mStatMaxMean - mMedianMean));
   B3DCLAMP(m_intUpperMean, 0, 255);
+  m_sliderUpperMean.SetPos(m_intUpperMean);
   UpdateData(false);
   SetExclusionsAndGroups();
 }
@@ -675,6 +677,7 @@ void CAutoContouringDlg::OnKillfocusEditMinSize()
   m_intMinSize = (int)(255. * (mParams.minSizeCutoff - mStatMinSize) /
     (mStatMaxSize - mStatMinSize));
   B3DCLAMP(m_intMinSize, 0, 255);
+  m_sliderMinSize.SetPos(m_intMinSize);
   UpdateData(false);
   SetExclusionsAndGroups();
 }
@@ -688,6 +691,7 @@ void CAutoContouringDlg::OnKillfocusEditBorderDist()
   m_strBorderDist.Format("%.4g", mParams.borderDistCutoff);
   m_intBorderDist = (int)(255. * mParams.borderDistCutoff / mStatMaxBoundDist);
   B3DCLAMP(m_intBorderDist, 0, 255);
+  m_sliderBorderDist.SetPos(m_intBorderDist);
   UpdateData(false);
   SetExclusionsAndGroups();
 }
@@ -939,8 +943,15 @@ void CAutoContouringDlg::ParamsToDialog()
     mParams.minSizeCutoff : 0.);
   m_strBorderDist.Format("%.1f", mParams.borderDistCutoff > EXTRA_VALUE_TEST ?
     mParams.borderDistCutoff : 0.);
-  if (mIsOpen)
+  if (mIsOpen) {
+    m_sliderLowerMean.SetPos(m_intLowerMean);
+    m_sliderUpperMean.SetPos(m_intUpperMean);
+    m_sliderMinSize.SetPos(m_intMinSize);
+    m_sliderBorderDist.SetPos(m_intBorderDist);
+    m_sliderSquareSD.SetPos(m_intSquareSD);
+    m_sliderIrregular.SetPos(m_intIrregular);
     UpdateData(false);
+  }
 }
 
 // Copy dialog variables to parameters
