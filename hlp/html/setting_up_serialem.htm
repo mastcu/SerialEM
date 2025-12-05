@@ -3347,6 +3347,32 @@ MoveStage 0 0 -$zRange / 2.
           1&#39; to ensure that the plugin or server is initialized with a single-channel 
           interface (add &#39;2&#39;, etc if there are more than two detectors.)&nbsp; 
           &#39;ImageDetectorID&#39; properties are also required with multiple detectors.</P>
+      <P><em>For TVIPS STEM</em>, there should be a &#39;ChannelName&#39; entry for each 
+        detector, with whatever name is desired.&nbsp; They must be in the order that is 
+        configured in the TVIPS software.</P>
+      <P><em>For DirectElectron STEM</em>, there should be a &#39;ChannelName&#39; entry for 
+        each detector, with whatever name is desired for physical detectors, and names 
+        starting with &#39;Vi&#39; or &#39;Vr&#39; for virtual detectors.&nbsp; The virtual detector 
+        names will be replaced by the names fetched from the DE server on startup and 
+        when the state of virtual detectors in re-assessed later.&nbsp; All 5 virtual 
+        detectors should be listed (unless some will never be used), in order from 0 to 
+        4.&nbsp; Physical detectors, if any, should be listed in the order that 
+        corresponds to &#39;External Detector&#39; 1, 2, 3, 4 as listed in the DE server 
+        properties.&nbsp; There is no requirement that all of one type precede ones of 
+        the other type.</P>
+      <P><em>For DECTRIS STEM,</em> there should be a &#39;ChannelName&#39; entry for each 
+        detector, with whatever name is desired.&nbsp; They must be in the order that is 
+        expected by the DECTRIS software, with the three physical detectors before the 
+        three virtual ones.</P>
+      <P><em><strong>Virtual STEM Imaging by Taking Camera Frames.</strong></em>&nbsp; 
+        When an imaging camera can provide a virtual detector by taking a camera frame 
+        at each scan point, there must be CameraProperties sections for both the imaging 
+        camera and the STEM system.&nbsp; Some of the camera properties may need to be 
+        included in the STEM camera section.&nbsp; The properties must indicate that the 
+        STEM camera is linked to the imaging camera; this can be done either by adding &#39; 
+        STEM&#39; to the camera &#39;Name&#39; entry, or by including the camera property 
+        &#39;SamePhysicalCamera&#39; with the index of the imaging camera (the number on its 
+        &#39;CameraProperties&#39; line).</P>
 <P><i><b>Screen and Camera Management Properties.</b></i> Because of the diversity
   of STEM setups, there are a host of confusing properties to control the behavior
   of the screen and CCD cameras, which may be selected by preference or by
@@ -3421,7 +3447,7 @@ MoveStage 0 0 -$zRange / 2.
           &nbsp;&nbsp;&nbsp; MinMultiChannelBinning 4 12 12<br />
           &nbsp;&nbsp;&nbsp; Binnings 3 4 6&nbsp; 8 12 16 24 32 48</P>
         <P>where you might not want all of those binning values.</P>
-      <P><strong>Using the Tietz scan generator.</strong>&nbsp; This STEM interface is 
+      <P><strong><em>Using the Tietz scan generator.&nbsp;</em></strong> This STEM interface is 
         identified with a &#39;TietzCameraType&#39; of -1 (the property &#39;STEMcamera&#39; is set 
         automatically).&nbsp; The scan generator uses an internal coordinate system with 
         a range of 65535.&nbsp; SerialEM scales the STEM coordinates that the user sees 

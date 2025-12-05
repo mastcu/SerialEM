@@ -21,7 +21,8 @@
       Some different features for DECTRIS cameras are described in <a href="#dectris">
       Modifications for DECTRIS Cameras</a>.&nbsp;Controls for STEM acquisition, and modifications of the existing
       controls, are described in
-      <A HREF="#STEMcontrols">Controls in STEM Mode.</A>
+      <A HREF="#STEMcontrols">Controls in STEM Mode</A>
+      and in <A HREF="#4DSTEM">4-D STEM and Virtual Detectors</A>&nbsp;
     </P>
     <P><B>Camera radio buttons</B></P>
     <P>If you have multiple cameras, each available camera will be listed here. Each
@@ -745,12 +746,14 @@
     <p>
       The duration of the exposure can be controlled by entering a number in either
       the <b>Frame time</b> text box (in seconds) or the <b>Pixel time</b> text box
-      (in microseconds).&nbsp; Entering a number in either box will change the value
+      (in microseconds).&nbsp; (For situations that support 4-D STEM with camera 
+      frames, <strong>Frame time</strong> is labeled <strong>Scan time</strong> to 
+      reduce confusion.)&nbsp; Entering a number in either box will change the value
       in the other box.&nbsp; There is only one underlying value that controls the
-      acquisition, the pixel dwell time.&nbsp; The exposure time is defined as the
+      acquisition, the pixel dwell time.&nbsp; The frame time is defined as the
       product of the time per pixel and the number of pixels; the actual acquisition
       time will be greater because of time spent between lines of the scan.&nbsp; When
-      a new exposure time is entered, it may be modified slightly because of
+      a new frame time is entered, it may be modified slightly because of
       constraints on the pixel time, or more extensively if <b>Line Sync</b> is
       checked with DigiScan.</p>
     <p>
@@ -816,6 +819,11 @@
       determines the number of such pixels.&nbsp; Values around 200 may be effective 
       for eliminating visible distortion at the starting edge of images.</p>
     <p>
+      <strong>Pattern (Direct Electron only)</strong></p>
+    <p>
+      This combo box allows you to select the scan pattern from the scan presets that 
+      are available.&nbsp; It is relevant both for physical and virtual detectors.</p>
+    <p>
       <b>Channels to acquire:</b></p>
     <p>
       If you have more than one STEM detector, the detector(s) to use are selected in
@@ -835,6 +843,84 @@
       detectors can be left as the choice for particular channels; the program will
       simply skip them when acquiring an image, as long as there is at least one
       available detector to acquire from.</p>
+    <p>
+      <P><i><A NAME="4DSTEM"></A><B><FONT size="3">4-D STEM and Virtual Detectors</FONT></B></i></P>
+    <p>
+      Acquiring STEM images from camera frames taken at each scan pixel, using 
+      &#39;virtual&#39; detectors based on sums over areas of each frame, and saving a stack 
+      of such frames (4-D STEM), is supported for Direct Electron and DECTRIS cameras.&nbsp; 
+      Both of these situations can have real STEM detectors as well as the virtual 
+      ones.&nbsp; All of the channel combo boxes will contain all of the detectors, 
+      and they can be selected in any order, as usual.&nbsp; Further controls related 
+      to taking camera frames are enabled only when the channel selections include at 
+      least one virtual detector.</p>
+    <p>
+      For DE STEM, the total 
+      scan time or pixel time can be set as usual for STEM 
+      when there are no virtual detectors, but with at least one virtual detector 
+      selected, they are determined by the frame rate of the camera and the size of 
+      scan images to be taken. Thus they are disabled in that case but do show the 
+      relevant values.&nbsp; When virtual detectors are unselected, the scan time will 
+      revert to the stored value for external detectors only.&nbsp; Virtual detectors 
+      that have the Shape set to 'Off' in the DE-MC interface will be shown as 'NA' in 
+      the combo box.&nbsp; The state of the virtual detectors is re-assessed when the 
+      dialog is opened or the DE STEM camera is switched to.</p>
+    <p>
+      For DECTRIS, the pixel and scan times can be changed freely when there are 
+      virtual detectors, but there may be different constraints on the pixel time and 
+      image size than when using only physical detectors.</p>
+    <p>
+      <strong>Save final images (DE only)</strong></p>
+    <p>
+      Use this option to have final images from the selected detectors saved by the DE 
+      server.&nbsp; Both the options set with the <a href="hidd_k2_save_options.htm">Frame File
+      Options dialog</a> and the folder selected with <strong>Set Folder</strong> will 
+      apply for these files.</p>
+    <p>
+      <strong>Save 4D stack</strong></p>
+    <p>
+      Use this option to control whether a 4-D STEM stack is saved.&nbsp; A virtual 
+      detector must be selected in order for this to be enabled.</p>
+    <p>
+      <strong>Set Naming Options</strong></p>
+    <p>
+      This button opens the <a href="hidd_k2_save_options.htm">Frame File
+      Options dialog</a> and lets you control the naming for files and possible 
+      subfolders of the main save folder.&nbsp; You can select to have a &#39;.mdoc&#39; file 
+      saved for each frame stack.&nbsp; For DECTRIS cameras, the frame stacks can only 
+      be in HDF format.</p>
+    <p>
+      <strong>Set Folder</strong></p>
+    <p>
+      This button opens a browser window to select and/or create the main folder in 
+      which frame stack will be saved.&nbsp; However, with a DE camera and SerialEM 
+      not running on the DE server computer, you can only type in a subfolder name.</p>
+    <p>
+      <em>Items on the 4D: line are present for DE cameras only and are enabled when 
+      there is a virtual detector:</em></p>
+    <p>
+      <strong>Preset</strong></p>
+    <p>
+      Use the combo box to select a preset with 
+      camera settings to be used for acquiring virtual images.&nbsp; It is required to 
+      have at least one camera preset available for this purpose.&nbsp; This preset will determine the 
+      frame rate and thus the pixel time and total scan time for an image of a 
+      given size.</p>
+    <p>
+      <strong>Point repeats</strong></p>
+    <p>
+      Enter a value in the text box or use the spinner to set the number of frames 
+      taken and summed at each scan pixel.&nbsp; The scan time will increase 
+      proportionally.</p>
+    <p>
+      <strong>Gain correction</strong></p>
+    <p>
+      Select this option to have camera frames be both gain and dark corrected; 
+      otherwise only a dark reference will be applied.</p>
+    <p>
+      &nbsp;</p>
+    <p>
+      &nbsp;</p>
     <p>
       &nbsp;</p>
       </basefont>
