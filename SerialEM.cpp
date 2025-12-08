@@ -2641,7 +2641,7 @@ void CSerialEMApp::ComputeChannelPosition(int chanInd, int width, int height,
       xAvail = width / cols;
       yAvail = height / rows;
       zoom = B3DMIN((float)xAvail / (float)sizeX, (float)yAvail / (float)sizeY);
-      if (zoom > maxZoom) {
+      if (zoom > maxZoom || maxZoom == 0) {
         maxZoom = zoom;
         mNumChanWindowCols = cols;
         mNumChanWindowRows = rows;
