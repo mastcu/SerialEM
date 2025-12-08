@@ -664,6 +664,7 @@ public:
   SetMember(NewImCallback, NewImageCallback);
   GetSetMember(BOOL, DectrisSaveAsHDF);
   GetSetMember(float, ExtraSTEMTimeout);
+  GetSetMember(float, FirstSTEMExtraTimeout);
   CameraThreadData *GetCamThreadData() { return &mTD; };
   bool DoingPartialScan() {return mTD.ReturnPartialScan > 0; };
   bool HasCEOSFilter() { return mCEOSFilter != NULL; }
@@ -1041,7 +1042,7 @@ public:
   int mPreventUserToggle;       // Flag not to let user toggle continuous mode
   bool mStoppedContinuous;      // Set when stop to prevent settling timeout from capture
   int mNumContinuousToAlign;    // Number of continuous frames to align and sum
-  bool mAverageContinAlign;     // Falg to average instead of summing
+  bool mAverageContinAlign;     // Flag to average instead of summing
   int mNumAlignedContinuous;    // Number already aligned
   bool mLastWasContinForTask;   // Flag that last image was continuous mode for task
   int mNumDropAtContinStart;    // Number of images to drop at start of continuous
@@ -1144,6 +1145,8 @@ public:
   BOOL mAskedDMtoInsert;          // Flag to prevent multiple insertion requests
   BOOL mDectrisSaveAsHDF;         // Flag for plugin/cmera to save directly as HDF5
   float mExtraSTEMTimeout;         // Time to add to timeout in seconds for any STEM camera
+  float mFirstSTEMExtraTimeout;    // Time to add to timeout for first STEM shot
+  bool mNoSTEMshotsYet;            // Flag to keep track of that shot
   float mFPSforVirtualSTEM;     
   bool mStoppedPartialScan;       // Flag that partial STEM was stopped
 

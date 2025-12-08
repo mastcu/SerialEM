@@ -491,6 +491,8 @@ CCameraController::CCameraController()
   mNewImageCallback = NULL;
   mDectrisSaveAsHDF = false;
   mExtraSTEMTimeout = 5.;
+  mNoSTEMshotsYet = true;
+  mFirstSTEMExtraTimeout = 25.;
   for (l = 0; l < MAX_CHANNELS; l++)
     mTD.PartialArrays[l] = NULL;
   mAskedDMtoInsert = false;
@@ -4215,8 +4217,13 @@ void CCameraController::Capture(int inSet, bool retrying)
   // Add 4 minutes if tilting in blanker thread
   if (mTD.TiltDuringDelay)
     mTD.cameraTimeout += 240000;
-  if (mParam->STEMcamera)
+  if (mParam->STEMcamera) {
     mTD.cameraTimeout += B3DNINT(1000. * mExtraSTEMTimeout);
+    if (mNoSTEMshotsYet) {
+      mTD.cameraTimeout += B3DNINT(1000. * mFirstSTEMExtraTimeout);
+      mNoSTEMshotsYet = false;
+    }
+  }
 
   // Save stage and mag before starting, setup drift with IS and dynamic focus
   if (CapSaveStageMagSetupDynFocus(conSet, inSet)) {

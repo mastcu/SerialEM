@@ -3,6 +3,11 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+12/8/25: Added property for extra timeout on the first shot from a STEM
+camera; improved way that detector chanegs are handled with Jeol STEM; and
+retained camera/STEM objects in JEOL-SEMcamServer between runs of SerialEM
+to avoid problems when restarting SerialEM.
+
 12/5/25: Made sliders have colored bars in Hole Finder and Autocontouring
 dialogs, rearranged sliders in the Autocontouring.
 
