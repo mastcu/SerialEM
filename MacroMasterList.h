@@ -850,6 +850,7 @@ MAC_SAME_FUNC_ARG(ReportSmallestHoleShift, 1, 4, GetItemHolesToAcquire, REPORTSM
 MAC_SAME_NAME_ARG(GetMapIndexes, 1, 0, GETMAPINDEXES, S)
 MAC_SAME_NAME_ARG(GetApertureSizes, 2, 0, GETAPERTURESIZES, IS)
 MAC_SAME_NAME_ARG(GetLowDoseAreaParams, 2, 4, GETLOWDOSEAREAPARAMS, SS)
+MAC_SAME_NAME_ARG(SetMultiGridRefCounts, 1, 4, SETMULTIGRIDREFCOUNTS, D)
 
 
 // new Python-only commands need to be added to pythonOnlyCmds in ::CMacroProcessor

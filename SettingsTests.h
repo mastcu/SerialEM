@@ -140,6 +140,7 @@ BOOL_SETT_GETSET("ZbyGUseViewInLD", mWinApp->mParticleTasks->, ZbyGUseViewInLD)
 INT_SETT_GETSET("MultishotPatternType", mWinApp->mParticleTasks->, MSHolePatternType)
 BOOL_SETT_GETSET("MultishotRunScript", mWinApp->mParticleTasks->, MSRunMacro)
 INT_SETT_GETSET("MultishotScriptToRun", mWinApp->mParticleTasks->, MSMacroToRun)
+FLOAT_SETT_GETSET("LastMulGridRefCounts", mWinApp->mMultiGridTasks->, LastRefCounts)
 
 #endif
 #ifdef SET_TEST_SECT2

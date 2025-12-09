@@ -11472,6 +11472,24 @@ int CMacCmd::ReportCurrentMulGridID()
   return 0;
 }
 
+// SetMultiGridRefCounts
+int CMacCmd::SetMultiGridRefCounts()
+{
+  float setVal = mItemFlt[1];
+  if (setVal <= 0.) {
+    setVal = mWinApp->mMultiGridTasks->GetLastRefCounts();
+    if (setVal > 0)
+      mLogRpt.Format("Reference counts for multigrid set to last known value, %.1f",
+        setVal);
+   else
+      mLogRpt = "No last value for multigrid reference counts is available";
+  }
+  if (setVal > 0)
+    mWinApp->mMultiGridTasks->SetReferenceCounts(setVal);
+  SetReportedValues(&mStrItems[2], B3DMAX(setVal, 0.), 0.);
+  return 0;
+}
+
 // SkipZMoveNextNavRealign
 int CMacCmd::SkipZMoveNextNavRealign(void)
 {
@@ -12369,7 +12387,6 @@ int CMacCmd::OpenDialog()
   if (mItem1upper.Find("MULTIS") == 0) {
     mNavHelper->OpenMultishotDlg();
   } else if (mItem1upper.Find("MULTIG") == 0) {
-    mWinApp->mMenuTargets.OpenNavigatorIfClosed();
     mNavHelper->OpenMultiGrid();
     if (mItemInt[2]) {
       if (mWinApp->mMultiGridTasks->LoadSessionFile(true, mStrCopy))

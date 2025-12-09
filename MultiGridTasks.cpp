@@ -131,6 +131,8 @@ CMultiGridTasks::CMultiGridTasks()
   mRefineOpenedMont = false;
   mRefineUseStageMont = false;
   mPostLoadDelay = 0;
+  mLastRefCounts = 0.;
+  mReferenceCounts = 0.;
 }
 
 
@@ -163,6 +165,8 @@ void CMultiGridTasks::InitOrClearSessionValues()
 {
   mInitializedGridMont = false;
   mInitializedMMMmont = false;
+  if (mReferenceCounts > 0)
+    mLastRefCounts = mReferenceCounts;
   mReferenceCounts = 0.;
   mLMMneedsLowDose = 0;
   mLMMusedStateNum = -1;
@@ -3312,6 +3316,7 @@ void CMultiGridTasks::DoNextSequenceAction(int resume)
       // After reference image, record the image mean as the reference counts
     case MGACT_REF_IMAGE:
       mReferenceCounts = (float)mWinApp->mProcessImage->WholeImageMean(mImBufs);
+      mLastRefCounts = mReferenceCounts;
       SEMTrace('q', "Reference counts: %.2f", mReferenceCounts);
       break;
 

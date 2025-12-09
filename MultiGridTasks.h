@@ -207,7 +207,8 @@ public:
   GetSetMember(float, RRGShiftLimitForXform);
   GetSetMember(float, RRGRotLimitForXform);
   GetSetMember(float, RRGResidLimitForXform);
-  GetMember(float, ReferenceCounts);
+  GetSetMember(float, ReferenceCounts);
+  GetSetMember(float, LastRefCounts);
   GetMember(double, RemainingTime);
   GetMember(int, CurrentGrid);
   GetMember(int, NumGridsToRun);
@@ -373,6 +374,7 @@ private:
   ShortVec mActSequence;         // Sequence of actions for all grids
   int mSeqIndex;                 // Index in the action sequence
   float mReferenceCounts;        // Counts in blank image at LMM acquire conditions
+  float mLastRefCounts;          // Last value of reference counts, saved in settings
   int mSurveyIndex;              // Index to survey position for eucentricity
   int mCurrentGrid;              // Index of current grid in list of ones to run
   bool mStateWasSet;             // Flag that a state was set

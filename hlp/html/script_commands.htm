@@ -5832,6 +5832,21 @@
             when a new grid has been started.&nbsp; Command added in 4.2, 23-Mar-25.
           </TD>
         </TR>
+
+         <TR>
+          <TD class="scriptcommand">SetMultiGridRefCounts #</TD>
+          <TD>Sets the reference counts that are needed for multi-grid operations, thus preventing the routine
+            from removing and replacing the grid in order to take a blank shot.&nbsp; The value in <b>#</b> must be the 
+            average counts in a blank shot with the imaging parameters that will be used to take grid maps.
+            &nbsp; However, if the value is 0 or less, then the reference counts will be set from the last value found
+            instead.&nbsp; This last value is store in settings, set when reference counts are measured, and saved
+             from the current value of reference counts, if any, when clearing a session.
+            &nbsp; The value set here is cleared if the multi-grid session is explicitly cleared and replaced if 
+            a session file is loaded.&nbsp; The command sets <I>reportedValue1</I> to the value set or 0 if none and
+             <I>reportedValue2</I> to 0, values
+            can be assigned to a variabled at the end of the command.&nbsp; Command added in 4.3, 8-Dec-25.
+          </TD>
+        </TR>
         <TR>
           <TD colspan="2"><A name="hole_square_finding"></A><B>Hole and Grid Square Finding Commands</B></TD>
         </TR>

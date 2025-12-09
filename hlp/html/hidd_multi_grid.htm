@@ -68,7 +68,11 @@
       grid on the stage, take this image, and load the first grid.&nbsp; When starting 
       the procedure on later phases, or doing more grid maps after the reference 
       counts have been measured, the routine will always start with the grid on the 
-      stage.</p>
+      stage.&nbsp; This procedure can be avoided by using the &#39;SetMultiGridRefCounts&#39; 
+      script command to set the value with a measured value or with the last known 
+      value of reference counts, which is stored in settings.&nbsp; The value will be 
+      invalid and procedures may fail if grid map imaging conditions are changed from 
+      those used when the value was found.</p>
     <p><em>Eucentricity:</em> Before taking a grid map, the program will initially examine up to four 
       candidate locations for running the coarse eucentricity to find a place that is 
       not too dark.&nbsp; If a suitable position is found, it runs the rough 
