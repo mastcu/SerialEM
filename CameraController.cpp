@@ -491,8 +491,6 @@ CCameraController::CCameraController()
   mNewImageCallback = NULL;
   mDectrisSaveAsHDF = false;
   mExtraSTEMTimeout = 5.;
-  mNoSTEMshotsYet = true;
-  mFirstSTEMExtraTimeout = 25.;
   for (l = 0; l < MAX_CHANNELS; l++)
     mTD.PartialArrays[l] = NULL;
   mAskedDMtoInsert = false;
@@ -3678,8 +3676,7 @@ void CCameraController::Capture(int inSet, bool retrying)
       // Get full folder and suffix, using temporary name if aligning only
       // again make sure folder is OK
       ComposeFramePathAndName(mRemoveAlignedDEframes);
-      if (!mFrameFolder.IsEmpty() && mDE_Cam->ServerIsLocal() &&
-        CreateFrameDirIfNeeded(mFrameFolder, &logmess, 'D')) {
+      if (!mFrameFolder.IsEmpty() && CreateFrameDirIfNeeded(mFrameFolder, &logmess, 'D')) {
         SEMMessageBox(logmess);
         ErrorCleanup(1);
         return;
@@ -3989,7 +3986,7 @@ void CCameraController::Capture(int inSet, bool retrying)
     } else if (mPlugFuncs && mScope->GetSimulationMode()) {
       mTD.PluginFrameFlags = PLUGCAM_AVERAGE_FRAMES;
     }
-    if (mParam->DectrisType && (mDectrisSaveAsHDF || 
+    if (mParam->DectrisType && ((!mParam->STEMcamera && mDectrisSaveAsHDF) ||
       (mParam->STEMcamera && mTD.ReturnPartialScan != 1))) {
       UtilSplitExtension(mFrameFilename, logmess, ext);
       dectrisFuncs = mWinApp->mPluginManager->GetDectrisFuncs();
@@ -4217,13 +4214,8 @@ void CCameraController::Capture(int inSet, bool retrying)
   // Add 4 minutes if tilting in blanker thread
   if (mTD.TiltDuringDelay)
     mTD.cameraTimeout += 240000;
-  if (mParam->STEMcamera) {
+  if (mParam->STEMcamera)
     mTD.cameraTimeout += B3DNINT(1000. * mExtraSTEMTimeout);
-    if (mNoSTEMshotsYet) {
-      mTD.cameraTimeout += B3DNINT(1000. * mFirstSTEMExtraTimeout);
-      mNoSTEMshotsYet = false;
-    }
-  }
 
   // Save stage and mag before starting, setup drift with IS and dynamic focus
   if (CapSaveStageMagSetupDynFocus(conSet, inSet)) {
@@ -11078,7 +11070,7 @@ void CCameraController::DisplayNewImage(BOOL acquired)
     // Save to frame stack mdoc if selected or if doing frame TS
     if (extra->mNumSubFrames > 0 && !mTD.GetDeferredSum && (mSaveFrameStackMdoc || 
       (mTD.FrameTStiltToAngle.size() > 0 && mTD.FrameTSactualAngle.size() > 0)) &&
-      CanSaveFrameStackMdoc(mParam)) {
+      CanSaveFrameStackMdoc(mParam) && mTD.ReturnPartialScan != 1) {
       if (IS_FALCON3_OR_4(mParam))
         WarnEmptyFalconFramePath(mLastLocalFramePath,
           "Cannot make frame stack mdoc file");
@@ -13393,7 +13385,7 @@ void CCameraController::ComposeFramePathAndName(bool temporary)
     } else {
 
       // Otherwise append the folder.  For DE, FrameFolder is set up by caller
-      if (mParam->canTakeFrames)
+      if (mParam->canTakeFrames || (mParam->DectrisType && mParam->STEMcamera))
         mFrameFolder = mParam->dirForFrameSaving;
       else if (!mParam->DE_camType)
         mFrameFolder = B3DCHOICE(IS_BASIC_FALCON2(mParam) || flexibleFEI,
