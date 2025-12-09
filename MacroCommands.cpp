@@ -12021,6 +12021,7 @@ int CMacCmd::OpenDialog()
   if (mItem1upper.Find("MULTIS") == 0) {
     mNavHelper->OpenMultishotDlg();
   } else if (mItem1upper.Find("MULTIG") == 0) {
+    mWinApp->mMenuTargets.OpenNavigatorIfClosed();
     mNavHelper->OpenMultiGrid();
     if (mItemInt[2]) {
       if (mWinApp->mMultiGridTasks->LoadSessionFile(true, mStrCopy))
