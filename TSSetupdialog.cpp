@@ -1652,18 +1652,22 @@ void CTSSetupDialog::ConstrainBidirAngle(bool warningIfShift, bool anglesChanged
       AfxMessageBox(mess, MB_EXCLAME);
     }
   }
-  maxAngle = mWinApp->mScope->GetMaxTiltAngle() -
-    (float)fabs(mWinApp->mComplexTasks->GetTiltBacklash());
-  dir = mWinApp->mTSController->GetFixedDosymBacklashDir();
-  limitEnd = !((dir > 0 && m_fStartAngle < m_fEndAngle) ||
-    (dir < 0 && m_fStartAngle > m_fEndAngle));
-  if (limitEnd && fabs(m_fEndAngle) > maxAngle) {
-    B3DCLAMP(m_fEndAngle, -maxAngle, maxAngle);
-    changed = true;
-  }
-  if (!limitEnd && fabs(m_fStartAngle) > maxAngle) {
-    B3DCLAMP(m_fStartAngle, -maxAngle, maxAngle);
-    changed = true;
+
+  // Limit backlashed side if dose-symmetric
+  if (mLowDoseMode && m_bUseDoseSym) {
+    maxAngle = mWinApp->mScope->GetMaxTiltAngle() -
+      (float)fabs(mWinApp->mComplexTasks->GetTiltBacklash());
+    dir = mWinApp->mTSController->GetFixedDosymBacklashDir();
+    limitEnd = !((dir > 0 && m_fStartAngle < m_fEndAngle) ||
+      (dir < 0 && m_fStartAngle > m_fEndAngle));
+    if (limitEnd && fabs(m_fEndAngle) > maxAngle) {
+      B3DCLAMP(m_fEndAngle, -maxAngle, maxAngle);
+      changed = true;
+    }
+    if (!limitEnd && fabs(m_fStartAngle) > maxAngle) {
+      B3DCLAMP(m_fStartAngle, -maxAngle, maxAngle);
+      changed = true;
+    }
   }
   if (changed)
     UpdateData(false);
