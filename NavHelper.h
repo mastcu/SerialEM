@@ -138,6 +138,8 @@ struct AutoContourParams
   float relThreshold;      // Relative threshold value
   float absThreshold;      // Absolute threshold
   int useAbsThresh;        // Flag to use absolute threshold
+  bool shrinkConts;        // Flag to shrink or expand contours
+  float expandDist;        // Distance in microns to expand or shrink contours
   int numGroups;           // Number of groups to split into
   int groupByMean;         // Flag to group by mean value, not size
   float lowerMeanCutoff;  // Cutoff for the excluding dark squares

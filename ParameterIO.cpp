@@ -704,16 +704,18 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
         contParams->relThreshold = itemFlt[6];
         contParams->absThreshold = itemFlt[7];
         contParams->useAbsThresh = itemInt[8] != 0;
-        contParams->numGroups = itemInt[9];
-        contParams->groupByMean = itemInt[10] != 0;
-        contParams->lowerMeanCutoff = itemFlt[11];
-        contParams->upperMeanCutoff = itemFlt[12];
-        contParams->minSizeCutoff = itemFlt[13];
-        contParams->SDcutoff = itemFlt[14];
-        contParams->irregularCutoff = itemFlt[15];
-        contParams->borderDistCutoff = itemFlt[16];
-        if (!itemEmpty[17])
-          contParams->useCurrentPolygon = itemInt[17] != 0;
+        contParams->shrinkConts = itemInt[9] != 0;
+        contParams->expandDist = itemFlt[10];
+        contParams->numGroups = itemInt[11];
+        contParams->groupByMean = itemInt[12] != 0;
+        contParams->lowerMeanCutoff = itemFlt[13];
+        contParams->upperMeanCutoff = itemFlt[14];
+        contParams->minSizeCutoff = itemFlt[15];
+        contParams->SDcutoff = itemFlt[16];
+        contParams->irregularCutoff = itemFlt[17];
+        contParams->borderDistCutoff = itemFlt[18];
+        if (!itemEmpty[19])
+          contParams->useCurrentPolygon = itemInt[19] != 0;
       } else if (NAME_IS("DriftWaitParams")) {
         dwParams->measureType = B3DMAX(0, B3DMIN(2, itemInt[1]));
         dwParams->driftRate = itemFlt[2];
@@ -2050,10 +2052,12 @@ void CParameterIO::WriteSettings(CString strFileName)
       mWinApp->mNavHelper->GetMHCthreshNumHoles(),
       mWinApp->mNavHelper->GetMHCskipAveragingPos() ? 1 : 0);
     mFile->WriteString(oneState);
-    oneState.Format("AutoContParams %d %f %d %f %f %f %f %d %d %d %f %f %f %f %f %f %d\n",
+    oneState.Format("AutoContParams %d %f %d %f %f %f %f %d %d %f %d %d %f %f %f %f %f %f"
+      " %d\n",
       contParams->targetSizePixels, contParams->targetPixSizeUm,
       contParams->usePixSize ? 1 : 0, contParams->minSize, contParams->maxSize,
       contParams->relThreshold, contParams->absThreshold, contParams->useAbsThresh ? 1 : 0,
+      contParams->shrinkConts ? 1 : 0, contParams->expandDist,
       contParams->numGroups, contParams->groupByMean ? 1 : 0, contParams->lowerMeanCutoff,
       contParams->upperMeanCutoff, contParams->minSizeCutoff, contParams->SDcutoff,
       contParams->irregularCutoff, contParams->borderDistCutoff, 

@@ -44,6 +44,8 @@ CAutoContouringDlg::CAutoContouringDlg(CWnd* pParent /*=NULL*/)
   , m_fReduceToPixSize(1.f)
   , m_fRelThresh(0.7f)
   , m_fAbsThresh(0)
+  , m_fExpandDist(0.f)
+  , m_iShrinkConts(0)
   , m_fACminSize(2.f)
   , m_fACmaxSize(100.f)
   , m_strShowGroups(_T(""))
@@ -100,6 +102,9 @@ void CAutoContouringDlg::DoDataExchange(CDataExchange* pDX)
     "Pixel size to reduce to");
   DDX_MM_FLOAT(pDX, IDC_EDIT_REL_THRESH, m_fRelThresh, 0.f, 1.f, "Relative threshold");
   DDX_FLOAT(pDX, IDC_EDIT_ABS_THRESH, m_fAbsThresh, "Absolute threshold");
+  DDX_Radio(pDX, IDC_REXPANDCONT, m_iShrinkConts);
+  DDX_MM_FLOAT(pDX, IDC_EDIT_EXPANDCONT, m_fExpandDist, 0.f, 20.f,
+    "Distance to expand or shrink contour");
   DDX_MM_FLOAT(pDX, IDC_EDIT_MINSIZE, m_fACminSize, 1.f, 500.f, "Minimum contour size");
   DDX_MM_FLOAT(pDX, IDC_EDIT_MAXSIZE, m_fACmaxSize, 2.f, 500.f, "Maximum contour size");
   DDX_Control(pDX, IDC_SLIDER_MIN_MEAN, m_sliderLowerMean);
@@ -153,6 +158,9 @@ BEGIN_MESSAGE_MAP(CAutoContouringDlg, CBaseDlg)
   ON_EN_KILLFOCUS(IDC_EDIT_MAXSIZE, OnKillfocusEditACMaxsize)
   ON_BN_CLICKED(IDC_CHECK_MAKE_ONE_POLY, OnCheckMakeOnePoly)
   ON_BN_CLICKED(IDC_CHECK_INSIDE_POLYGON, OnCheckInsidePolygon)
+  ON_BN_CLICKED(IDC_REXPANDCONT, OnButRExpandCont)
+  ON_BN_CLICKED(IDC_RSHRINKCONT, OnButRExpandCont)
+  ON_EN_KILLFOCUS(IDC_EDIT_EXPANDCONT, OnKillfocusEditExpandCont)
 END_MESSAGE_MAP()
 
 
@@ -473,6 +481,21 @@ void CAutoContouringDlg::ExternalSetGroups(int numGroups, int which, int *showGr
   mParams.numGroups = mNumGroups;
 }
 
+// Select to shrink or expand the contours
+void CAutoContouringDlg::OnButRExpandCont()
+{
+  UPDATE_DATA_TRUE;
+  ManageACEnables();
+  mWinApp->RestoreViewFocus();
+}
+
+// Set the distance by which the contours are shrunk or expanded
+void CAutoContouringDlg::OnKillfocusEditExpandCont()
+{
+  UPDATE_DATA_TRUE;
+  mWinApp->RestoreFocusWhenIdle();
+}
+
 // Start autocontouring
 void CAutoContouringDlg::OnButMakeContours()
 {
@@ -487,7 +510,7 @@ void CAutoContouringDlg::OnButMakeContours()
   AutoContourImage(imBuf, mParams.usePixSize ? mParams.targetPixSizeUm :
     mParams.targetSizePixels, mParams.minSize, mParams.maxSize, mParams.useAbsThresh ?
     0.f : mParams.relThreshold, mParams.useAbsThresh ? mParams.absThreshold : 0.f,
-    mParams.useCurrentPolygon);
+    mParams.useCurrentPolygon, mParams.expandDist * (mParams.shrinkConts ? -1.f : 1.f));
   mFindingFromDialog = false;
   ManageAll(false);
 }
@@ -874,6 +897,8 @@ void CAutoContouringDlg::ParamsToDialog()
   m_iReducePixels = mParams.targetSizePixels;
   m_fReduceToPixSize = mParams.targetPixSizeUm;
   m_iReduceToWhich = mParams.usePixSize;
+  m_fExpandDist = mParams.expandDist;
+  m_iShrinkConts = mParams.shrinkConts ? 1 : 0;
   m_fACminSize = mParams.minSize;
   m_fACmaxSize = mParams.maxSize;
   m_fRelThresh = mParams.relThreshold;
@@ -962,6 +987,8 @@ void CAutoContouringDlg::DialogToParams()
   mParams.targetSizePixels = m_iReducePixels;
   mParams.targetPixSizeUm = m_fReduceToPixSize;
   mParams.usePixSize = m_iReduceToWhich;
+  mParams.expandDist = m_fExpandDist;
+  mParams.shrinkConts = m_iShrinkConts == 1;
   mParams.minSize = m_fACminSize;
   mParams.maxSize = m_fACmaxSize;
   mParams.relThreshold = m_fRelThresh;
@@ -978,7 +1005,7 @@ void CAutoContouringDlg::DialogToParams()
 // Top function to start the process; all the error checking is in the thread
 void CAutoContouringDlg::AutoContourImage(EMimageBuffer *imBuf, float targetSizeOrPix,
   float minSize, float maxSize, float interPeakThresh, float useThresh, BOOL usePolygon, 
-  float xCenter, float yCenter)
+  float expandDist, float xCenter, float yCenter)
 {
   AutoContData *acd = &mAutoContData;
   ScaleMat aMat;
@@ -1004,6 +1031,8 @@ void CAutoContouringDlg::AutoContourImage(EMimageBuffer *imBuf, float targetSize
   acd->maxSize = maxSize;
   acd->interPeakThresh = interPeakThresh;
   acd->useThresh = useThresh;
+  acd->expandDist = B3DABS(expandDist);
+  acd->shrinkConts = expandDist < 0;
   acd->singleXcen = xCenter;
   acd->singleYcen = yCenter;
   acd->singleSizeFac = mSingleSizeFac;
@@ -1089,7 +1118,8 @@ void CAutoContouringDlg::MakeSinglePolygon(EMimageBuffer *imBuf, float xCenter,
   AutoContourImage(imBuf, mParams.usePixSize ? mParams.targetPixSizeUm :
     mParams.targetSizePixels, mParams.minSize, mParams.maxSize,
     mParams.useAbsThresh ? 0.f : mParams.relThreshold,
-    mParams.useAbsThresh ? mParams.absThreshold : 0.f, false, xCenter, yCenter);
+    mParams.useAbsThresh ? mParams.absThreshold : 0.f, false, 
+    mParams.expandDist * (mParams.shrinkConts ? -1.f : 1.f), xCenter, yCenter);
 
 }
 
@@ -1363,11 +1393,11 @@ UINT CAutoContouringDlg::AutoContProc(LPVOID pParam)
       }
     }
   }
-
+  
   // Do it!
   if (imodAutoContoursFromSlice(sigma, acd->useThresh, 0., -1, 1, (int)acd->minSize,
-    (int)acd->maxSize, 1, 0, 0., 0., 2, 3, NULL, 0, acd->obj, NULL, nxRed, nyRed,
-    acd->tdata, acd->idata, acd->fdata, acd->xlist, acd->ylist, acd->linePtrs, 0., 0,
+    (int)acd->maxSize, 1, 0, 0., 0., 2, 3, NULL, 0, acd->obj, NULL, nxRed, nyRed, 
+    acd->tdata, acd->idata, acd->fdata, acd->xlist, acd->ylist, acd->linePtrs, 0., 0, 
     listSize, numThreads)) {
     acd->errString = "Error allocating memory in autocontouring library routine";
     return 1;
@@ -1406,6 +1436,12 @@ UINT CAutoContouringDlg::AutoContProc(LPVOID pParam)
     }
     imodObjectDelete(acd->obj);
     acd->obj = objSingle;
+  }
+
+  //expand or shrink the contours if there is a distance given
+  if (acd->expandDist != 0 && ExpandContour(acd)) {
+    acd->errString = "Failed to expand or shrink contours";
+    return 1;
   }
 
   // If polygon, find contours fully inside it
@@ -1449,7 +1485,7 @@ UINT CAutoContouringDlg::AutoContProc(LPVOID pParam)
       }
     }
   }
-
+  
   return 0;
 }
 
@@ -1809,6 +1845,112 @@ void CAutoContouringDlg::SquareStatistics(AutoContData *acd, int nxRed, int nyRe
 
     FindDistancesFromHull(xCenters, yCenters, xBound, yBound, sizeScale, acd->boundDists);
   }
+}
+
+// Expands or shrinks contour by the given distance in the autocontour data. 
+int CAutoContouringDlg::ExpandContour(AutoContData *acd)
+{
+  Ipoint centroid, addPt;
+  Icont* cont;
+  Icont* contDup;
+  double contLen;
+  float dist, avgMinDistFromCen, distToSeg1, distToSeg2, distToSeg3;
+  float mat[6];
+  int coNum, pt, ind, pt1, pt2, pt3, npts, nptsAdded, nMin;
+  bool contFail;
+  float expandDistInPix = (acd->shrinkConts ? -1.f : 1.f) * acd->expandDist / acd->pixel;
+
+  // If there are no contours, do nothing. This error is handled in AutoContDone
+  if (!acd->obj || !acd->obj->contsize) {
+    return 0;
+  }
+
+  // Loop over contours in autocontour data
+  for (coNum = 0; coNum < acd->obj->contsize; coNum++) {
+    
+    // Initialize values used for tracking points added to the contour
+    nptsAdded = nMin = 0;
+    avgMinDistFromCen = 0.f;
+    distToSeg1 = distToSeg2 = distToSeg3 = -1.f;
+    contFail = false;
+    
+    // Find the contour length and centroid
+    cont = &acd->obj->cont[coNum];
+    if (imodContourCenterOfMass(cont, &centroid))
+      return 1;
+    contLen = imodel_contour_length(cont);
+    
+    // Create a duplicate of the contour
+    contDup = imodContourDup(cont);
+
+    // Loop over points in the contour and check for long line segments where extra points
+    // will be added.
+    for (pt = 0; pt < cont->psize; pt++) {
+
+      // Compute the distance of the line segment
+      pt1 = (pt + 1) % cont->psize;
+      dist = imodPointDistance(&cont->pts[pt], &cont->pts[pt1]);
+
+      // If line segment is longer than 1/20th the contour length, add some points 
+      // equispaced along the line segment.
+      npts = (int)(dist / (contLen / 20.));
+      if (npts) {
+        for (ind = 1; ind <= npts; ind++) {
+          xfUnit(mat, (float)ind / (float)(npts + 1), 2);
+          xfApply(mat, cont->pts[pt].x, cont->pts[pt].y,
+            cont->pts[pt1].x, cont->pts[pt1].y,
+            &addPt.x, &addPt.y, 2);
+          if (!imodPointAdd(contDup, &addPt, pt1 + nptsAdded))
+            return 1;
+          nptsAdded += 1;
+        }
+      }
+    }
+    for (ind = 0; ind <= contDup->psize + 1; ind++) {    
+      pt = ind % contDup->psize;
+      pt1 = (ind + 1) % contDup->psize;
+      pt2 = (ind + 2) % contDup->psize;
+      pt3 = (ind + 3) % contDup->psize;
+      if (distToSeg1 < 0)
+        distToSeg1 = imodPointLineSegDistance(&contDup->pts[pt], &contDup->pts[pt1], 
+          &centroid, &dist);
+      if (distToSeg2 < 0)
+        distToSeg2 = imodPointLineSegDistance(&contDup->pts[pt1], &contDup->pts[pt2], 
+          &centroid, &dist);
+      if (distToSeg3 < 0)
+        distToSeg3 = imodPointLineSegDistance(&contDup->pts[pt2], &contDup->pts[pt3], 
+          &centroid, &dist);
+      
+      //Check if local minimum found
+      if (distToSeg2 <= distToSeg1 && distToSeg2 < distToSeg3) {
+        nMin += 1;
+        avgMinDistFromCen += sqrtf(distToSeg2);
+      }
+
+      // Reset and reuse
+      distToSeg1 = distToSeg2;
+      distToSeg2 = distToSeg3;
+      distToSeg3 = -1.f;
+    }
+
+    // If somehow this fails (should be impossible in a closed contour) return error
+    if (nMin == 0 || avgMinDistFromCen == 0) {
+      return 1;
+    }
+
+    // average out all the distance-from-centroid values that have been tabulated
+    avgMinDistFromCen /= (float)nMin; 
+                        
+    // Scale the contour from the centroid, by the factor that achieves desired expansion
+    xfUnit(mat, (avgMinDistFromCen + expandDistInPix) / avgMinDistFromCen, 2);
+    for (pt = 0; pt < cont->psize; pt++) {
+      xfApply(mat, centroid.x, centroid.y,
+        cont->pts[pt].x, cont->pts[pt].y,
+        &cont->pts[pt].x, &cont->pts[pt].y, 2);
+    }
+  }
+  imodContourDelete(contDup);
+  return 0;
 }
 
 // General function to find convex boundary of a set of points and compute distance of

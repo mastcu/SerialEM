@@ -302,6 +302,8 @@ CNavHelper::CNavHelper(void)
   mAutoContourParams.targetPixSizeUm = 2.f;
   mAutoContourParams.targetSizePixels = 1500;
   mAutoContourParams.usePixSize = true;
+  mAutoContourParams.expandDist = 0.f;
+  mAutoContourParams.shrinkConts = false;
   mAutoContourParams.minSize = 30;
   mAutoContourParams.maxSize = 70;
   mAutoContourParams.relThreshold = 0.75f;

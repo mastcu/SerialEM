@@ -16,6 +16,8 @@ struct AutoContData {
   float maxSize;
   float interPeakThresh;
   float useThresh;
+  float expandDist;
+  bool shrinkConts;
   float pixel;
   float singleXcen, singleYcen;
   float singleSizeFac;
@@ -61,7 +63,7 @@ public:
   void UpdateSettings();
 
   void AutoContourImage(EMimageBuffer *imBuf, float targetSizeOrPix, float minSize, float maxSize,
-    float interPeakThresh, float useThresh, BOOL usePolygon, float xCenter = -1., float yCenter = -1.);
+    float interPeakThresh, float useThresh, BOOL usePolygon, float expandDist, float xCenter = -1., float yCenter = -1.);
   CMapDrawItem *EligibleBoundaryPolygon(float maxSize);
   static UINT AutoContProc(LPVOID pParam);
   static void FindSingleSubarea(int nbuf, int subSize, float singleCen, int &nsub, int &subStart, int &subEnd);
@@ -72,6 +74,7 @@ public:
   void StopAutoCont();
   static void SquareStatistics(AutoContData *acd, int nxRed, int nyRed, float minScale, float maxScale, 
     float redFac, float outlieCrit);
+  static int ExpandContour(AutoContData *acd);
   static int FindDistancesFromHull(FloatVec &xCenters, FloatVec & yCenters, FloatVec &xBound,
     FloatVec &yBound, float sizeScale, FloatVec &boundDists, bool useBound = false);
   GetMember(bool, AutoContFailed);
@@ -215,4 +218,8 @@ public:
   afx_msg void OnCheckMakeOnePoly();
   BOOL m_bInsidePolygon;
   afx_msg void OnCheckInsidePolygon();
+  afx_msg void OnButRExpandCont();
+  afx_msg void OnKillfocusEditExpandCont();
+  int m_iShrinkConts;
+  float m_fExpandDist;
 };

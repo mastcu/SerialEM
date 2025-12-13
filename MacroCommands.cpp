@@ -13408,6 +13408,7 @@ int CMacCmd::FindMultiMapHoles()
 {
   int numItems, ifAutoCont;
   float target =0., minSize = 0., maxSize = 0., relThresh= 0., absThresh = 0.;
+  float expandDist = 0.;
   BOOL usePoly = false;
   ABORT_NONAV;
   numItems = mNavigator->GetNumberOfItems();
@@ -13415,7 +13416,8 @@ int CMacCmd::FindMultiMapHoles()
     ABORT_LINE("The Navigator indexes are out of range or swapped in line:\n\n");
   ifAutoCont = mItemEmpty[4] ? 0 : mItemInt[4];
   if (ifAutoCont > 0)
-    GetAutocontourParams(5, target, minSize, maxSize, relThresh, absThresh, usePoly);
+    GetAutocontourParams(5, target, minSize, maxSize, relThresh, absThresh, usePoly, 
+      expandDist);
   if (mNavHelper->mHoleFinderDlg->ProcessMultipleMaps(mItemInt[1] - 1, mItemInt[2] - 1,
     mItemInt[3], ifAutoCont, target, minSize, maxSize, relThresh, absThresh)) {
     AbortMacro();
@@ -13478,13 +13480,14 @@ int CMacCmd::AutoContourGridSquares(void)
 {
   ABORT_NONAV;
   int index;
-  float target, minSize, maxSize, relThresh, absThresh;
+  float target, minSize, maxSize, relThresh, absThresh, expandDist;
   BOOL usePoly;
-  GetAutocontourParams(2, target, minSize, maxSize, relThresh, absThresh, usePoly);
+  GetAutocontourParams(2, target, minSize, maxSize, relThresh, absThresh, usePoly, 
+    expandDist);
   if (ConvertBufferLetter(mStrItems[1], 0, true, index, mStrCopy))
     ABORT_LINE(mStrCopy);
   mNavHelper->mAutoContouringDlg->AutoContourImage(&mImBufs[index], target, minSize, 
-    maxSize, relThresh, absThresh, usePoly);
+    maxSize, relThresh, absThresh, usePoly, expandDist);
   mAutoContouring = true;
   return 0;
 }

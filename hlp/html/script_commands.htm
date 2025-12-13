@@ -5998,7 +5998,8 @@
             negative number (as in ReportItemAcquire).&nbsp; If the item has no defined multishot pattern, the current
             pattern from the settings is used.&nbsp; Command added in 4.3, 23-Sep-25.</TR>
         <TR>
-          <TD class="scriptcommand">AutoContourGridSquares buf [#R] [#H] [#T] [#S] [#L] [#P]</TD>
+          <TD class="scriptcommand">AutoContourGridSquares buf [#R] [#H] [#T]<br />
+&nbsp;[#S] [#L] [#P] [#D]</TD>
           <TD>Finds areas above a threshold in the image in [buf] and makes contours around them, then divides them into groups
             that are displayed in different colors, depending on the elimination criteria and settings in the
             <a href="hidd_autocontour.htm">Autocontouring Grid Squares dialog</a>, which need not be open.&nbsp; The 
@@ -6022,7 +6023,10 @@
             &nbsp;&nbsp;&nbsp; <b>#L</b> - Largest size, in microns, for an area; again, the square is 
             used to set the maximum area to retain as a polygon.<br />
             &nbsp;&nbsp;&nbsp; <b>#P</b> - 1 to contour inside current polygon if any, or 0 not to.<br />
-            &nbsp; </TD>
+            &nbsp;&nbsp;&nbsp;
+              <strong>#D</strong> - Positive or negative distance in microns by which to 
+              expand or shrink the contours, respectively. Values are clamped between -20 and 
+              20 microns.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">SetAutocontourGroups #N #W [#O...]</TD>

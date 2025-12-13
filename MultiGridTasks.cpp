@@ -3922,7 +3922,7 @@ void CMultiGridTasks::DoNextSequenceAction(int resume)
       acParam->usePixSize ? acParam->targetPixSizeUm : acParam->targetSizePixels, 
       acParam->minSize, acParam->maxSize, acParam->useAbsThresh ? 0.f : 
       acParam->relThreshold, acParam->useAbsThresh ? acParam->absThreshold : 0.f,
-      false);
+      false, acParam->expandDist * (acParam->shrinkConts ? -1.f : 1.f));
     mAutoContouring = true;
     break;
 

@@ -2092,7 +2092,7 @@ void CHoleFinderDlg::MultiMapNextTask(int param)
         mWinApp->mProcessImage->GetCentroidOfBuffer(&imBufs[ind], xcen, ycen, shiftX, 
           shiftY, false, tmp1, tmp2, tmp3);
         mHelper->mAutoContouringDlg->AutoContourImage(&imBufs[ind], mPMMtarget,
-          mPMMminSize, mPMMmaxSize, mPMMrelThresh, mPMMabsThresh, false, xcen, ycen);
+          mPMMminSize, mPMMmaxSize, mPMMrelThresh, mPMMabsThresh, false, 0, xcen, ycen);
         mWinApp->AddIdleTask(TASK_MULTI_MAP_HOLES, 2, 0);
         return;
       } else {
