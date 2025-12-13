@@ -1730,6 +1730,8 @@ BOOL CSerialEMApp::InitInstance()
       "recommended minimum value of %d", mScope->GetInitializeJeolDelay(), iSet);
   mShiftManager->ReportFallbackRotations(!mAdministrator);
 
+  mDocWnd->ReportPeakEraseOptions();
+
   if (mLogWindow)
     mLogWindow->SetUnsaved(false);
   if (mDummyInstance)

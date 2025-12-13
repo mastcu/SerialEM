@@ -10235,6 +10235,7 @@ void CNavigatorDlg::AcquireAreas(int source, bool dlgClosing, bool useTempParams
   mNumDoneAcq = 0;
   mNumTotalShotsAcq = 0;
   mLastMontLeft = -1.;
+  mWinApp->mDocWnd->ReportPeakEraseOptions();
 
   if (mAcqParm->acquireType != ACQUIRE_RUN_MACRO) {
     mSaveAlignOnSave = mBufferManager->GetAlignOnSave();
