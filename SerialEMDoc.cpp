@@ -2429,6 +2429,25 @@ void CSerialEMDoc::PostSettingsRead()
       mWinApp->GetBasicLineHideIDs(), mWinApp->GetBasicIDsToDisable(),
       mWinApp->GetBasicHideStrings());
   ManageReadInCurrentDir();
+  ReportPeakEraseOptions();
+}
+
+void CSerialEMDoc::ReportPeakEraseOptions()
+{
+  CString str;
+  BOOL genErase = mWinApp->mShiftManager->GetErasePeriodicPeaks();
+  BOOL riErase = mWinApp->mNavHelper->GetRIErasePeriodicPeaks();
+  if (!genErase && !riErase)
+    return;
+  str = "NOTE: Erasing of periodic peaks is turned on for ";
+  if (genErase)
+    str += "general Align and Focus";
+  if (genErase && riErase)
+    str += " and ";
+  if (riErase)
+    str += "Realign to Item";
+  mWinApp->SetNextLogColorStyle(0, 1);
+  SEMAppendToLog(str);
 }
 
 // Set directory to the directory from settings and output bolded message to log

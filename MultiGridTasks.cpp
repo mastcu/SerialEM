@@ -780,14 +780,18 @@ int CMultiGridTasks::RealignReloadedGrid(CMapDrawItem *item, float expectedRot,
   int numPieces, numFull, ixMin, iyMin, ixMax, iyMax, midX, midY, delX, delY;
   int minInd[4], bestInd[5], minCenInd[4], pci, dir, indAng, numAngles = 18, bestAngInd;
   int numClose, ind, corn,  err = 0, ixpc, iypc, xTarg, yTarg, binning;
-  int meanIXcen, meanIYcen, pctlIXcen, pctlIYcen, numPctl, numAbove;
-  float useWidth, useHeight, radDist[4], bestDist[4], maxAxis = 0., ang;
-  float minDel, cenAngle, delAng, shortAxis, minAng, maxAng, rad, zStage;
-  float meanSXcen, meanSYcen, pctlSXcen, pctlSYcen;
+  int meanIXcen, meanIYcen, pctlIXcen, pctlIYcen, numPctl, numAbove, rotInd;
+  float useWidth, useHeight, radDist[4], bestDist[4], maxAxis = 0.;
+  float minDel, cenAngle, delAng, shortAxis, minAng, maxAng, rad, zStage, ang;
+  float meanSXcen, meanSYcen, pctlSXcen, pctlSYcen, rotX, rotY;
   double wxSum = 0., wySum = 0.;
   float stageXcen = 0., stageYcen = 0.;
-  bool indIsDup, bestIsDup, usePctls = true;
+  bool indIsDup, bestIsDup, skipPc, usePctls = true;
   IntVec ixVec, iyVec, pieceSavedAt;
+  float stageMinX = mScope->GetStageLimit(STAGE_MIN_X);
+  float stageMaxX = mScope->GetStageLimit(STAGE_MAX_X);
+  float stageMinY = mScope->GetStageLimit(STAGE_MIN_Y);
+  float stageMaxY = mScope->GetStageLimit(STAGE_MAX_Y);
   FloatVec xStage, yStage, meanVec, midFracs, rangeFracs;
   MiniOffsets *mini, myMini;
   MontParam *montP = &mRRGmontParam;
@@ -884,6 +888,22 @@ int CMultiGridTasks::RealignReloadedGrid(CMapDrawItem *item, float expectedRot,
       cenAngle = (float)((indAng * 90.) / numAngles + dir * 90.);
       for (pci = 0; pci < numFull; pci++) {
         if (pieceSavedAt[pci] < 0 || (usePctls && midFracs[pci] < mPctUsableFrac))
+          continue;
+
+        // Make sure that at maximum rotation and shift, the stage coordinate of the 
+        // piece center does not go out of range
+        skipPc = false;
+        for (rotInd = -1; rotInd <= 1; rotInd++) {
+          ang = (float)(DTOR * rotInd * mRRGMaxRotation);
+          rotX = xStage[pci] * cosf(ang) - yStage[pci] * sinf(ang);
+          rotY = xStage[pci] * sinf(ang) + yStage[pci] * cosf(ang);
+          if (rotX - mRRGmaxCenShift < stageMinX || rotX + mRRGmaxCenShift > stageMaxX ||
+            rotY - mRRGmaxCenShift < stageMinY || rotY + mRRGmaxCenShift > stageMaxY) {
+            skipPc = true;
+            break;
+          }
+        }
+        if (skipPc)
           continue;
 
         // Find angles of the 4 corners and their difference from the ray, get the 

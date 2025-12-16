@@ -63,6 +63,7 @@ public:
 	void LeaveCurrentFile();
 	void ReadNewSettingsFile(CString newSettings);
 	void PostSettingsRead();
+  void ReportPeakEraseOptions();
   void ManageReadInCurrentDir();
   CString GetCurrentSettingsDir();
   void DirFromCurrentOrSettingsFile(const CString &curFile, CString &direc);
