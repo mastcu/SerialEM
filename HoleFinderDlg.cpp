@@ -1956,7 +1956,7 @@ bool CHoleFinderDlg::CheckAndSetNav(const char *message)
  */
 int CHoleFinderDlg::ProcessMultipleMaps(int indStart, int indEnd, int minForCombine, 
   int ifAutoCont, float target, float minSize,
-  float maxSize, float relThresh, float absThresh)
+  float maxSize, float relThresh, float absThresh, float expandDist)
 {
   if (CheckAndSetNav("process multiple maps"))
     return 1;
@@ -2004,6 +2004,7 @@ int CHoleFinderDlg::ProcessMultipleMaps(int indStart, int indEnd, int minForComb
   mPMMmaxSize = maxSize;
   mPMMrelThresh = relThresh;
   mPMMabsThresh = absThresh;
+  mPMMexpandDist = expandDist;
   camera = B3DNINT((float)camList[mPMMmagIndex] / numMaps);
   B3DCLAMP(camera, 0, MAX_CAMERAS - 1);
   PrintfToLog("Processing %d maps at magnification %d", numMaps, 
@@ -2092,7 +2093,8 @@ void CHoleFinderDlg::MultiMapNextTask(int param)
         mWinApp->mProcessImage->GetCentroidOfBuffer(&imBufs[ind], xcen, ycen, shiftX, 
           shiftY, false, tmp1, tmp2, tmp3);
         mHelper->mAutoContouringDlg->AutoContourImage(&imBufs[ind], mPMMtarget,
-          mPMMminSize, mPMMmaxSize, mPMMrelThresh, mPMMabsThresh, false, 0, xcen, ycen);
+          mPMMminSize, mPMMmaxSize, mPMMrelThresh, mPMMabsThresh, false, 
+          mPMMexpandDist, xcen, ycen);
         mWinApp->AddIdleTask(TASK_MULTI_MAP_HOLES, 2, 0);
         return;
       } else {

@@ -5920,7 +5920,7 @@
             thresholds).&nbsp; </TD>
         </TR>
         <TR>
-          <TD class="scriptcommand">FindMultiMapHoles #S #E #C [#A] [#R] [#H] [#T] [#S] [#L]</TD>
+          <TD class="scriptcommand">FindMultiMapHoles #S #E #C [#A] [#R] [#H] [#T] [#S] [#L] [#D]</TD>
           <TD>Runs a routine to find holes for all maps at one magnification with Navigator table indexes
             between <b>#S</b> and <b>#E</b> inclusive, and combining the resulting points for Multiple Records 
             if there are at least <b>#C</b> points, or not combining if <b>#C</b> is 0.&nbsp; 
@@ -5931,7 +5931,7 @@
             marked as Acquire will be processed, and then Acquire will be turned off for them.&nbsp; The other
             optional parameters are the same as the ones described in detail for the 'AutoContourGridSquares' command
             (in brief, reduction target, histogram-based threshold, absolute threshold, smallest and largest 
-            sizes).&nbsp; Reduction to 100-200 pixels is useful to avoid a very ragged contour when 
+            sizes, and distance to expand or shrink contours).&nbsp; Reduction to 100-200 pixels is useful to avoid a very ragged contour when 
             contouring a single grid square.
           &nbsp; Command added in 4.2, 7-Aug-24; autocontouring added in 4.3, 6-Jun-25.</TD>
         </TR>
@@ -5998,8 +5998,7 @@
             negative number (as in ReportItemAcquire).&nbsp; If the item has no defined multishot pattern, the current
             pattern from the settings is used.&nbsp; Command added in 4.3, 23-Sep-25.</TR>
         <TR>
-          <TD class="scriptcommand">AutoContourGridSquares buf [#R] [#H] [#T]<br />
-&nbsp;[#S] [#L] [#P] [#D]</TD>
+          <TD class="scriptcommand">AutoContourGridSquares buf [#R] [#H] [#T] [#S] [#L] [#P] [#D]</TD>
           <TD>Finds areas above a threshold in the image in [buf] and makes contours around them, then divides them into groups
             that are displayed in different colors, depending on the elimination criteria and settings in the
             <a href="hidd_autocontour.htm">Autocontouring Grid Squares dialog</a>, which need not be open.&nbsp; The 

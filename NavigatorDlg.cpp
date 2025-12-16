@@ -2016,7 +2016,7 @@ void CNavigatorDlg::ProcessHKey(void)
     mParam->minPtsForCombineInPMM))
     return;
   mHelper->mHoleFinderDlg->ProcessMultipleMaps(start, end, mParam->minPtsForCombineInPMM,
-    0, 0., 0., 0., 0., 0.);
+    0, 0., 0., 0., 0., 0., 0.);
 }
 
 // Do common actions for selecting a range of contiguous items with collapse off

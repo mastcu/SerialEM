@@ -43,7 +43,7 @@ public:
   bool IsOpen() { return mIsOpen; };
   bool CheckAndSetNav(const char *message = NULL);
   int ProcessMultipleMaps(int indStart, int indEnd, int minForCombine, int ifAutoCont, float target, float minSize,
-    float maxSize, float relThresh, float absThresh);
+    float maxSize, float relThresh, float absThresh, float expandDist);
   int CountAcquirePointsDrawnOnMap(MapItemArray *itemArray, int mapID);
   void MultiMapNextTask(int param);
   int MultiMapBusy();
@@ -153,7 +153,7 @@ private:
   float mPMMmaxSize;
   float mPMMrelThresh;
   float mPMMabsThresh;
-
+  float mPMMexpandDist;
 
 public:
   float m_fHolesSize;

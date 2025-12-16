@@ -1871,7 +1871,7 @@ int CAutoContouringDlg::ExpandContour(AutoContData *acd)
     // Initialize values used for tracking points added to the contour
     nptsAdded = nMin = 0;
     avgMinDistFromCen = 0.f;
-    distToSeg1 = distToSeg2 = distToSeg3 = -1.f;
+    distToSeg1 = distToSeg2 = -1.f;
     contFail = false;
     
     // Find the contour length and centroid
@@ -1882,6 +1882,9 @@ int CAutoContouringDlg::ExpandContour(AutoContData *acd)
     
     // Create a duplicate of the contour
     contDup = imodContourDup(cont);
+    if (!contDup) {
+      return 1;
+    }  
 
     // Loop over points in the contour and check for long line segments where extra points
     // will be added.
@@ -1900,8 +1903,10 @@ int CAutoContouringDlg::ExpandContour(AutoContData *acd)
           xfApply(mat, cont->pts[pt].x, cont->pts[pt].y,
             cont->pts[pt1].x, cont->pts[pt1].y,
             &addPt.x, &addPt.y, 2);
-          if (!imodPointAdd(contDup, &addPt, pt1 + nptsAdded))
+          if (!imodPointAdd(contDup, &addPt, pt1 + nptsAdded)) {
+            imodContourDelete(contDup);
             return 1;
+          }
           nptsAdded += 1;
         }
       }
@@ -1917,9 +1922,8 @@ int CAutoContouringDlg::ExpandContour(AutoContData *acd)
       if (distToSeg2 < 0)
         distToSeg2 = imodPointLineSegDistance(&contDup->pts[pt1], &contDup->pts[pt2], 
           &centroid, &dist);
-      if (distToSeg3 < 0)
-        distToSeg3 = imodPointLineSegDistance(&contDup->pts[pt2], &contDup->pts[pt3], 
-          &centroid, &dist);
+      distToSeg3 = imodPointLineSegDistance(&contDup->pts[pt2], &contDup->pts[pt3], 
+        &centroid, &dist);
       
       //Check if local minimum found
       if (distToSeg2 <= distToSeg1 && distToSeg2 < distToSeg3) {
@@ -1930,11 +1934,11 @@ int CAutoContouringDlg::ExpandContour(AutoContData *acd)
       // Reset and reuse
       distToSeg1 = distToSeg2;
       distToSeg2 = distToSeg3;
-      distToSeg3 = -1.f;
     }
 
     // If somehow this fails (should be impossible in a closed contour) return error
     if (nMin == 0 || avgMinDistFromCen == 0) {
+      imodContourDelete(contDup);
       return 1;
     }
 
@@ -1948,8 +1952,8 @@ int CAutoContouringDlg::ExpandContour(AutoContData *acd)
         cont->pts[pt].x, cont->pts[pt].y,
         &cont->pts[pt].x, &cont->pts[pt].y, 2);
     }
+    imodContourDelete(contDup);
   }
-  imodContourDelete(contDup);
   return 0;
 }
 
