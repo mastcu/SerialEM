@@ -6084,8 +6084,10 @@ void CMacroProcessor::GetAutocontourParams(int fi, float &target, float &minSize
   int expInd = fi == 5 ? fi + 5 : fi + 6;
   if (mItemEmpty[expInd])
     expandDist = param->expandDist * (param->shrinkConts ? -1 : 1);
-  else
-    expandDist = B3DCLAMP(mItemFlt[expInd], -20, 20);
+  else {
+    expandDist = mItemFlt[expInd];
+    B3DCLAMP(expandDist, -20, 20);
+  }
   if (!mItemEmpty[fi] && mItemFlt[fi] >= 0)
     target = mItemFlt[fi];
   if (!mItemEmpty[fi + 1] && mItemFlt[fi + 1] >= 0)

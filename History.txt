@@ -3,6 +3,9 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+12/16/25: Added option to expand or shrink contours found by Autocontouring
+by a given distance.
+
 12/13/25: Made the routine for realigning to a reloaded grid not try to align
 to pieces that could rotate or shift to stage coordinates  out of range.
 

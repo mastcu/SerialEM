@@ -714,10 +714,10 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
         contParams->borderDistCutoff = itemFlt[16];
         if (!itemEmpty[17])
           contParams->useCurrentPolygon = itemInt[17] != 0;
-        if (!itemEmpty[18])
+        if (!itemEmpty[19]) {
           contParams->shrinkConts = itemInt[18] != 0;
-        if (!itemEmpty[19])
           contParams->expandDist = itemFlt[19];
+        }
       } else if (NAME_IS("DriftWaitParams")) {
         dwParams->measureType = B3DMAX(0, B3DMIN(2, itemInt[1]));
         dwParams->driftRate = itemFlt[2];
@@ -2059,11 +2059,11 @@ void CParameterIO::WriteSettings(CString strFileName)
       contParams->targetSizePixels, contParams->targetPixSizeUm,
       contParams->usePixSize ? 1 : 0, contParams->minSize, contParams->maxSize,
       contParams->relThreshold, contParams->absThreshold, contParams->useAbsThresh ? 1 : 0,
-      contParams->shrinkConts ? 1 : 0, contParams->expandDist,
       contParams->numGroups, contParams->groupByMean ? 1 : 0, contParams->lowerMeanCutoff,
       contParams->upperMeanCutoff, contParams->minSizeCutoff, contParams->SDcutoff,
       contParams->irregularCutoff, contParams->borderDistCutoff, 
-      contParams->useCurrentPolygon);
+      contParams->useCurrentPolygon, contParams->shrinkConts ? 1 : 0, 
+      contParams->expandDist);
     mFile->WriteString(oneState);
     oneState.Format("DriftWaitParams %d %f %d %f %f %d %d %f %d %d %d %f\n", 
       dwParams->measureType, dwParams->driftRate, dwParams->useAngstroms ? 1 :0, 
