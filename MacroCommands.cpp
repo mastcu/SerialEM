@@ -13415,18 +13415,9 @@ int CMacCmd::FindMultiMapHoles()
   if (mItemInt[1] < 1 || mItemInt[2] > numItems || mItemInt[1] > mItemInt[2])
     ABORT_LINE("The Navigator indexes are out of range or swapped in line:\n\n");
   ifAutoCont = mItemEmpty[4] ? 0 : mItemInt[4];
-  if (ifAutoCont > 0) {
+  if (ifAutoCont > 0)
     GetAutocontourParams(5, target, minSize, maxSize, relThresh, absThresh, usePoly, 
       expandDist);
-    
-    // There is no usePolygon option for this script command, so we have to manually get
-    // the expandDist since it's not in the position expected by GetAuotocontourParams
-    if (mItemEmpty[10]) {
-      AutoContourParams *param = mNavHelper->GetAutocontourParams();
-      expandDist = param->expandDist * (param->shrinkConts ? -1 : 1);
-    } else
-      expandDist = B3DCLAMP(mItemFlt[10], -20, 20);
-  }
   if (mNavHelper->mHoleFinderDlg->ProcessMultipleMaps(mItemInt[1] - 1, mItemInt[2] - 1,
     mItemInt[3], ifAutoCont, target, minSize, maxSize, relThresh, absThresh, 
     expandDist)) {

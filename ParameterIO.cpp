@@ -704,18 +704,20 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
         contParams->relThreshold = itemFlt[6];
         contParams->absThreshold = itemFlt[7];
         contParams->useAbsThresh = itemInt[8] != 0;
-        contParams->shrinkConts = itemInt[9] != 0;
-        contParams->expandDist = itemFlt[10];
-        contParams->numGroups = itemInt[11];
-        contParams->groupByMean = itemInt[12] != 0;
-        contParams->lowerMeanCutoff = itemFlt[13];
-        contParams->upperMeanCutoff = itemFlt[14];
-        contParams->minSizeCutoff = itemFlt[15];
-        contParams->SDcutoff = itemFlt[16];
-        contParams->irregularCutoff = itemFlt[17];
-        contParams->borderDistCutoff = itemFlt[18];
+        contParams->numGroups = itemInt[9];
+        contParams->groupByMean = itemInt[10] != 0;
+        contParams->lowerMeanCutoff = itemFlt[11];
+        contParams->upperMeanCutoff = itemFlt[12];
+        contParams->minSizeCutoff = itemFlt[13];
+        contParams->SDcutoff = itemFlt[14];
+        contParams->irregularCutoff = itemFlt[15];
+        contParams->borderDistCutoff = itemFlt[16];
+        if (!itemEmpty[17])
+          contParams->useCurrentPolygon = itemInt[17] != 0;
+        if (!itemEmpty[18])
+          contParams->shrinkConts = itemInt[18] != 0;
         if (!itemEmpty[19])
-          contParams->useCurrentPolygon = itemInt[19] != 0;
+          contParams->expandDist = itemFlt[19];
       } else if (NAME_IS("DriftWaitParams")) {
         dwParams->measureType = B3DMAX(0, B3DMIN(2, itemInt[1]));
         dwParams->driftRate = itemFlt[2];

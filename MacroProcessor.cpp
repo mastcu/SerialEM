@@ -6079,10 +6079,13 @@ void CMacroProcessor::GetAutocontourParams(int fi, float &target, float &minSize
   absThresh = param->useAbsThresh ? param->absThreshold : 0.f;
   usePoly = (mItemEmpty[fi + 5] || mItemInt[fi + 5] > 0) ?
     param->useCurrentPolygon : mItemInt[fi + 5] > 0;
-  if (mItemEmpty[fi + 6])
+  
+  // There is no usePoly option for FindMultiMapHoles, in which case fi = 5
+  int expInd = fi == 5 ? fi + 5 : fi + 6;
+  if (mItemEmpty[expInd])
     expandDist = param->expandDist * (param->shrinkConts ? -1 : 1);
   else
-    expandDist = B3DCLAMP(mItemFlt[fi + 6], -20, 20);
+    expandDist = B3DCLAMP(mItemFlt[expInd], -20, 20);
   if (!mItemEmpty[fi] && mItemFlt[fi] >= 0)
     target = mItemFlt[fi];
   if (!mItemEmpty[fi + 1] && mItemFlt[fi + 1] >= 0)
