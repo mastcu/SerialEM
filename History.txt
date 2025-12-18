@@ -3,6 +3,8 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+12/18/25: Fixed crash if variable not defined in FindSubstring (In 4.2).
+
 12/11/25: Stopped limiting bidirectional series angles by maximum angle minus
 backlash (In 4.2).
 

@@ -4625,10 +4625,10 @@
         </TR>
         <TR>
           <TD class="scriptcommand">ResetImageShift [#B] [#R]</TD>
-          <TD>Resets image shift and move stage to compensate.&nbsp; Follow with a 1 or 2 for
+          <TD>Resets image shift and move stage to compensate.&nbsp; Follow with a positive value for
             the optional <b>#B</b> to move the stage so as to retain or impose backlash, even if the user has not
             selected the option to do so in the Image Alignment &amp; Focus control panel.&nbsp;
-            With a value of 2, it will relax from the stage movement by the amount given in
+            With a value of 2 or more, it will relax from the stage movement by the amount given in
             the optional <b>#R</b>, or by the value of the StageRelaxation property (0.025 by
             default).</TD>
         </TR>
@@ -5456,10 +5456,10 @@
             corresponds to the fractional position of the slider in the dialog).
             <br />&nbsp;&nbsp;&nbsp; <b>#U</b> - Upper mean cutoff, either an absolute value > 1, or a value between
              0 and 1 for a relative cutoff, the fraction of the way between the median and maximum mean.
-            <br />&nbsp;&nbsp;&nbsp; <b>#</b> - Minimum size cutoff in microns.
-            <br />&nbsp;&nbsp;&nbsp; <b>#</b> - Maximum SD cutoff.
-            <br />&nbsp;&nbsp;&nbsp; <b>#</b> - Maximum irregularity cutoff.
-            <br />&nbsp;&nbsp;&nbsp; <b>#</b> - Minimum border distance, in microns.
+            <br />&nbsp;&nbsp;&nbsp; <b>#M</b> - Minimum size cutoff in microns.
+            <br />&nbsp;&nbsp;&nbsp; <b>#S</b> - Maximum SD cutoff.
+            <br />&nbsp;&nbsp;&nbsp; <b>#I</b> - Maximum irregularity cutoff.
+            <br />&nbsp;&nbsp;&nbsp; <b>#B</b> - Minimum border distance, in microns.
              &nbsp;</TD>
         </TR>
        <TR>

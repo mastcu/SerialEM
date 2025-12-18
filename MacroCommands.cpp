@@ -8940,6 +8940,8 @@ int CMacCmd::FindSubstring(void)
   int index, index2;
   CString val, substr;
   Variable *var = LookupVariable(mItem1upper, index2);
+  if (!var)
+    ABORT_LINE("The variable " + mStrItems[1] + " is not defined in line:\n\n");
   SubstituteLineStripItems(mStrLine, 3, mStrCopy);
   val = var->value;
   substr = mStrCopy;
