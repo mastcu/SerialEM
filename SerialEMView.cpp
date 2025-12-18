@@ -42,6 +42,7 @@
 #include "Shared\ctffind.h"
 #include "Utilities\KGetOne.h"
 #include "Shared\b3dutil.h"
+#include "Shared\ipoint.h"
 #include "XFolderDialog/XWinVer.h"
 
 #ifdef _DEBUG
@@ -99,8 +100,9 @@ BEGIN_MESSAGE_MAP(CSerialEMView, CView)
   ON_WM_ERASEBKGND()
   ON_WM_RBUTTONUP()
   ON_WM_HELPINFO()
-	ON_WM_DESTROY()
+  ON_WM_DESTROY()
   ON_WM_SIZE()
+  ON_WM_SETCURSOR()
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -151,6 +153,8 @@ CSerialEMView::CSerialEMView()
   mLastWinSizeY = 0;
   mDoingMontSnapshot = 0;
   mInResize = false;
+  mResizeMoveBoxLine = 0;
+  mDoingResizeMove = false;
 }
 
 CSerialEMView::~CSerialEMView()
@@ -623,7 +627,6 @@ void CSerialEMView::SnapshotNextTask(int shotNum)
   mWinApp->mBufferManager->CheckAsyncSaving();
   mWinApp->mBufferManager->StartAsyncSave(store, image, 0, 3);
 }
-
 
 // Entry point for a regular image draw to screen
 void CSerialEMView::DrawImage(void)
@@ -2501,6 +2504,9 @@ void CSerialEMView::OnLButtonDown(UINT nFlags, CPoint point)
   m_iPrevMY = point.y;
   mMouseDownTime = GetTickCount();  // Get start time and set flag
   mDrawingLine = false;   // that it may not be a or line draw
+  mResizeMoveBoxLine = mLastCursorType;
+  mRMBLCornerIndex = mNearCornerIndex;
+  mRMBLEdgeIndex = mNearEdgeIndex;
   CView::OnLButtonDown(nFlags, point);
 }
 
@@ -2567,7 +2573,7 @@ void CSerialEMView::OnLButtonUp(UINT nFlags, CPoint point)
   if (GetCapture() == this) {
     ReleaseCapture();
     if (mImBufs && !mPanning && !mDrawingLine &&
-      SEMTickInterval(mMouseDownTime) <= USER_PT_CLICK_TIME) {
+      SEMTickInterval(mMouseDownTime) <= USER_PT_CLICK_TIME && !mDoingResizeMove) {
       
       // If the up event is within the click time and we haven't started panning,
       // get the user point and redraw
@@ -2684,6 +2690,8 @@ void CSerialEMView::OnLButtonUp(UINT nFlags, CPoint point)
     mPanning = false;
   }
   CView::OnLButtonUp(nFlags, point);
+  mResizeMoveBoxLine = 0;
+  mDoingResizeMove = false;
 
   //Update AlignFocusWindow to potentailly enable/disable To Marker button
   mWinApp->mAlignFocusWindow.Update();
@@ -3002,16 +3010,19 @@ void CSerialEMView::OnMouseMove(UINT nFlags, CPoint point)
   int iDx, iDy, pDx, pDy;
   double zoomFac = mZoom < 1 ? mZoom : 1.;
   float shiftX, shiftY, prevX, prevY, angle, pixScale, crossLen;
+  float *xcorn[4], *ycorn[4];
   BOOL shiftKey = ::GetAsyncKeyState(VK_SHIFT) / 2 != 0;
   BOOL ctrlKey = ::GetAsyncKeyState(VK_CONTROL) / 2 != 0;
   bool navEdit = mWinApp->mNavigator && mWinApp->mNavigator->m_bEditMode;
   bool haveHoles = mWinApp->mNavHelper->mHoleFinderDlg->HaveHolesToDrawOrMakePts();
   bool dragSelect = (navEdit || haveHoles) && ctrlKey &&
     !shiftKey && (nFlags & MK_LBUTTON) && !mDrawingLine;
+  bool changeBoxOrLine;
   EMimageBuffer *imBuf;
   CRect rect;
   CString lenstr;
   if (mImBufs != NULL && GetCapture() == this && (!ctrlKey || shiftKey || dragSelect)) {
+    imBuf = &mImBufs[mImBufIndex];
     if (nFlags & MK_RBUTTON) {
 
       // Right button: if there is a change in position, and mouse shifting is either
@@ -3030,8 +3041,7 @@ void CSerialEMView::OnMouseMove(UINT nFlags, CPoint point)
               mShiftManager->StartMouseShifting(shiftKey, mImBufIndex);
               mMouseShifting = true;
             }
-            mShiftManager->SetAlignShifts((float)iDx, (float)iDy, true, 
-              &mImBufs[mImBufIndex]);
+            mShiftManager->SetAlignShifts((float)iDx, (float)iDy, true, imBuf);
           }
           m_iPrevMX = point.x;
           m_iPrevMY = point.y;
@@ -3046,19 +3056,19 @@ void CSerialEMView::OnMouseMove(UINT nFlags, CPoint point)
       iDx = B3DNINT(pDx / zoomFac);
       pDy = point.y - m_iPrevMY;
       iDy = -B3DNINT(pDy / zoomFac);
+      changeBoxOrLine = imBuf->mHasUserLine && mResizeMoveBoxLine > 0;
 
       // Take this as a panning move if there is a move, and either panning
       // has already started, or click time is expired, or the move is greater
       // than a threshold
-      if ((iDx || iDy) && (mPanning || mDrawingLine || dragSelect ||
+      if ((iDx || iDy) && (mPanning || mDrawingLine || dragSelect || changeBoxOrLine ||
         GetTickCount() - mMouseDownTime > USER_PT_CLICK_TIME || 
         pDx < -PAN_THRESH || pDx > PAN_THRESH || 
         pDy < -PAN_THRESH || pDy > PAN_THRESH)) {
 
         // Start or continue panning if panning already or no shift key
         GetClientRect(&rect);
-        imBuf = &mImBufs[mImBufIndex];
-        if (mPanning || (!mDrawingLine && !shiftKey && !dragSelect)) {
+        if (mPanning || (!mDrawingLine && !shiftKey && !dragSelect && !changeBoxOrLine)) {
           mPanning = true;
           m_iOffsetX += iDx;
           m_iOffsetY += iDy;
@@ -3078,7 +3088,7 @@ void CSerialEMView::OnMouseMove(UINT nFlags, CPoint point)
 
             // Otherwise start or continue drawing a line if point is within image
           } else if (!mDrawingLine && !(imBuf->mCaptured == BUFFER_FFT || 
-            imBuf->mCaptured == BUFFER_LIVE_FFT)) {
+            imBuf->mCaptured == BUFFER_LIVE_FFT) && !changeBoxOrLine) {
             CPoint prev(m_iPrevMX, m_iPrevMY);
             if (!ConvertMousePoint(&rect, imBuf->mImage, &prev, prevX, prevY)) {
               prevX = shiftX;
@@ -3095,11 +3105,65 @@ void CSerialEMView::OnMouseMove(UINT nFlags, CPoint point)
               mWinApp->mNavigator->UpdateAddMarker();
             mWinApp->mLowDoseDlg.Update();
           }
-          if (mDrawingLine) {
-            imBuf->mLineEndX = shiftX;
-            imBuf->mLineEndY = shiftY;
-            imBuf->mDrawUserBox = ctrlKey;
-            if (ctrlKey) {
+          if (mDrawingLine || changeBoxOrLine) {
+
+            // Drawing line: assign the shift to the endpoint
+            if (mDrawingLine) {
+              imBuf->mLineEndX = shiftX;
+              imBuf->mLineEndY = shiftY;
+              imBuf->mDrawUserBox = ctrlKey;
+            } else {
+
+              // Changing line or box: record previous point and scale by the zoom
+              m_iPrevMX = point.x;
+              m_iPrevMY = point.y;
+              shiftX = (float)(pDx / mZoom);
+              shiftY = (float)(pDy / mZoom);
+
+              // Shift of whole entity or one end of line: do each endpoint separately
+              if (mLastCursorType == 1 || (!imBuf->mDrawUserBox && !mRMBLCornerIndex)) {
+                imBuf->mUserPtX += shiftX;
+                imBuf->mUserPtY += shiftY;
+              }
+              if (mLastCursorType == 1 || (!imBuf->mDrawUserBox && mRMBLCornerIndex > 0)) {
+                imBuf->mLineEndX += shiftX;
+                imBuf->mLineEndY += shiftY;
+              }
+
+              // Adjusting a box
+              if (imBuf->mDrawUserBox && mLastCursorType > 1) {
+                mDoingResizeMove = true;
+
+                // Assign addresses to the corners
+                xcorn[0] = (imBuf->mUserPtX <= imBuf->mLineEndX) ? &(imBuf->mUserPtX) :
+                  &(imBuf->mLineEndX);
+                xcorn[2] = (imBuf->mUserPtX > imBuf->mLineEndX) ? &(imBuf->mUserPtX) :
+                  &(imBuf->mLineEndX);
+                ycorn[0] = (imBuf->mUserPtY <= imBuf->mLineEndY) ? &(imBuf->mUserPtY) :
+                  &(imBuf->mLineEndY);
+                ycorn[2] = (imBuf->mUserPtY > imBuf->mLineEndY) ? &(imBuf->mUserPtY) :
+                  &(imBuf->mLineEndY);
+                xcorn[1] = xcorn[2];
+                ycorn[1] = ycorn[0];
+                xcorn[3] = xcorn[0];
+                ycorn[3] = ycorn[2];
+
+                // Operate on the corner with X and Y
+                if (mRMBLCornerIndex >= 0) {
+                  *(xcorn[mRMBLCornerIndex]) += shiftX;
+                  *(ycorn[mRMBLCornerIndex]) += shiftY;
+
+                  // Or just shift X or Y for an edge
+                } else if (mRMBLEdgeIndex >= 0 && mRMBLEdgeIndex % 2) {
+                  *(xcorn[mRMBLEdgeIndex]) += shiftX;
+                } else if (mRMBLEdgeIndex >= 0) {
+                  *(ycorn[mRMBLEdgeIndex]) += shiftY;
+                }
+              }
+            }
+
+            // Report the current length or size
+            if ((mDrawingLine && ctrlKey) || imBuf->mDrawUserBox) {
               GetUserBoxSize(imBuf, iDx, iDy, shiftX, shiftY);
               if (shiftX) {
                 pixScale = B3DMIN(shiftX, shiftY) >= 1000. ? 0.001f : 1.f;
@@ -3217,6 +3281,99 @@ BOOL CSerialEMView::OnMouseWheel(UINT nFlags, short zDelta, CPoint pt)
     NewZoom();
   }
   return true;
+}
+
+// Set the cursor based on whether it is near a line or near/inside a box
+BOOL CSerialEMView::OnSetCursor(CWnd* pWnd, UINT nHitTest, UINT message)
+{
+  LPSTR cursors[6] = {IDC_ARROW, IDC_SIZEALL, IDC_SIZENESW, IDC_SIZEWE,
+    IDC_SIZENS, IDC_SIZENWSE};  
+  mLastCursorType = GetMoveOrSizeCursorIndex();
+  ::SetCursor(mWinApp->LoadStandardCursor(cursors[mLastCursorType]));
+  return true;
+}
+
+// Get the index for the cursor to use
+int CSerialEMView::GetMoveOrSizeCursorIndex()
+{
+  EMimageBuffer *imBuf = &mImBufs[mImBufIndex];
+  CPoint curPos, point1, point2;
+  Ipoint curPt, pt1, pt2, boxPts[4];
+  int cornerVals[4] = {5, 2, 5, 2}, edgeVals[4] = {4, 3, 4, 3};
+  CRect rect;
+  float tval, boxX[4], boxY[4];
+  int ind, next;
+  int critDist = mWinApp->ScaleValueForDPI(10), critSq = critDist * critDist;;
+  if (!imBuf->mImage || !imBuf->mHasUserLine)
+    return 0;
+
+  // Get cursor position and convert it
+  ::GetCursorPos(&curPos);
+  ScreenToClient(&curPos);
+  curPt.x = (float)curPos.x;
+  curPt.y = (float)curPos.y;
+  curPt.z = 0.;
+
+  // Get the start and end points
+  GetClientRect(rect);
+  MakeDrawPoint(&rect, imBuf->mImage, imBuf->mUserPtX, imBuf->mUserPtY, &point1);
+  MakeDrawPoint(&rect, imBuf->mImage, imBuf->mLineEndX, imBuf->mLineEndY, &point2);
+  pt1.x = (float)point1.x;
+  pt1.y = (float)point1.y;
+  pt2.x = (float)point2.x;
+  pt2.y = (float)point2.y;
+  pt1.z = pt2.z = 0.;
+
+  // Clear indexes then see if near endpoint of line or line
+  mNearCornerIndex = -1;
+  mNearEdgeIndex = -1;
+  if (!imBuf->mDrawUserBox) {
+    if (imodPointDistance(&pt1, &curPt) <= critDist + 1)
+      mNearCornerIndex = 0;
+    else if (imodPointDistance(&pt2, &curPt) <= critDist + 1)
+      mNearCornerIndex = 1;
+    if (mNearCornerIndex >= 0)
+      return 2;
+    if (imodPointLineSegDistance(&pt1, &pt2, &curPt, &tval) < critSq)
+      return 1;
+    return 0;
+  }
+
+  // Box: Get the corners in order into and array
+  boxPts[0].x = B3DMIN(pt1.x, pt2.x);
+  boxPts[0].y = B3DMIN(pt1.y, pt2.y);
+  boxPts[2].x = B3DMAX(pt1.x, pt2.x);
+  boxPts[2].y = B3DMAX(pt1.y, pt2.y);
+  boxPts[1].x = boxPts[2].x;
+  boxPts[1].y = boxPts[0].y;
+  boxPts[3].x = boxPts[0].x;
+  boxPts[3].y = boxPts[2].y;
+  boxPts[0].z = boxPts[1].z = boxPts[2].z = boxPts[3].z = 0.;
+
+  // Test for near a corner and fill arrays of X and Y
+  for (ind = 0; ind < 4; ind++) {
+    boxX[ind] = boxPts[ind].x;
+    boxY[ind] = boxPts[ind].y;
+    if (imodPointDistance(&boxPts[ind], &curPt) <= critDist + 1) {
+      mNearCornerIndex = ind;
+      return cornerVals[ind];
+    }
+  }
+
+  // Test if near an edge
+  for (ind = 0; ind < 4; ind++) {
+    next = (ind + 1) % 4;
+    if (imodPointLineSegDistance(&boxPts[ind], &boxPts[next], &curPt, &tval) < critSq) {
+      mNearEdgeIndex = ind;
+      return edgeVals[ind];
+    }
+  }
+
+  // Test if inside
+  if (InsideContour(&boxX[0], &boxY[0], 4, curPt.x, curPt.y))
+    return 1;
+
+  return 0;
 }
 
 #define VK_MINUS 189

@@ -123,6 +123,7 @@ public:
                          int *woff,       /* window offset in wpixels.        */
                          int *doff);       /* data offset in ipixels           */
   EMimageBuffer *GetActiveImBuf();
+  int GetMoveOrSizeCursorIndex();
   static SnapshotData *mSnapshotData;   // Structure for snapshot data,to be new/deleted
   static UINT_PTR mMovieTimerID;   // ID if running a movie
   static int mMovieDir;            // -1 or +1 for current direction
@@ -196,6 +197,13 @@ private:
   bool mDrewLDAreasAtNavPt;      // Flag that low dose areas were drawn at a Navigator pt
   float mNavLDAreasXcenter;      // Image position around which areas were drawn
   float mNavLDAreasYcenter;
+  int mLastCursorType;           // 0 for arrow or 1 to move, 2+ to modify
+  int mNearCornerIndex;          // Index of corner of box or end of line if near it
+  int mNearEdgeIndex;            // Index of edge of box if near it
+  int mResizeMoveBoxLine;        // Copy of mLastCursorType when mouse goes down
+  int mRMBLCornerIndex;          // Copies of corner and edge indexes then
+  int mRMBLEdgeIndex;            
+  bool mDoingResizeMove;         // Flag that any resize/move was done, inhibits mouse up
   int mDoingMontSnapshot;        // Flag that montage snapshot is being done, 2 for last
   static bool mTakingSnapshot;   // Flag set only when idle task occurs between calls
   bool mInResize;                // Flag that it is in the resize routine
@@ -227,7 +235,9 @@ protected:
   afx_msg void OnRButtonUp(UINT nFlags, CPoint point);
   afx_msg void OnDestroy();
 	afx_msg void OnSize(UINT nType, int cx, int cy);
-//}}AFX_MSG
+  afx_msg BOOL OnSetCursor(CWnd* pWnd, UINT nHitTest, UINT message);
+
+    //}}AFX_MSG
   DECLARE_MESSAGE_MAP()
 public:
   static void ResizeNextTask(int param);

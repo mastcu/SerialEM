@@ -14,6 +14,7 @@
 // But first get rid of the DE plugin and DLL
 // Did this ever work?  It didn't on 4/22/20 with v90 or v140, partially on 1/30/21
 // Worked great on 7/25/24 in debug Win 32, gave line defining leaked pointer
+// It works on malloc but not new?
 /*#define _CRTDBG_MAP_ALLOC
 #include <stdlib.h>
 #include <crtdbg.h>*/
