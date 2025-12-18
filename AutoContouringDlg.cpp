@@ -325,6 +325,10 @@ void CAutoContouringDlg::SetExclusionsAndGroups(int groupByMean, float lowerMean
     minSizeCutoff = mParams.minSizeCutoff;
   if (borderDistCutoff < 0.)
     borderDistCutoff = mParams.borderDistCutoff;
+  ACCUM_MAX(SDcutoff, 0.f);
+  ACCUM_MAX(irregularCutoff, 0.f);
+  ACCUM_MAX(minSizeCutoff, 0.f);
+  ACCUM_MAX(borderDistCutoff, 0.f);
 
   // Find ones excluded and get min/max of ones included
   mExcluded.resize(numCont);
