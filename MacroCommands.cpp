@@ -12395,10 +12395,14 @@ int CMacCmd::OpenDialog()
         ABORT_NOLINE("Loading of previous multi-grid session file gave error or "
           "warning:\r\n" + mStrCopy);
     }
-  } else if (mItem1upper.Find("H") == 0) {
+  } else if (mItem1upper.Find("HOLEF") == 0) {
     mNavHelper->OpenHoleFinder();
-  } else if (mItem1upper.Find("C") == 0) {
+  } else if (mItem1upper.Find("COMA") == 0) {
     mNavHelper->OpenComaVsISCal();
+  } else if (mItem1upper.Find("HOLEC") == 0) {
+    mNavHelper->OpenMultiCombiner();
+  } else if (mItem1upper.Find("AUTO") == 0) {
+    mNavHelper->OpenAutoContouring(false);
   } else
     ABORT_LINE("\"" + mStrItems[1] + "\" does not match any of the names for dialogs that "
       "can be opened for line:\n\n");

@@ -941,8 +941,6 @@ void CMenuTargets::OnNavigatorSetMultiShotParams()
 
 void CMenuTargets::OnMontagingGridsFindHoles()
 {
-  /*if (!mWinApp->mNavigator)
-    OnTasksNavigator();*/
   mNavHelper->OpenHoleFinder();
 }
 
@@ -953,8 +951,6 @@ void CMenuTargets::OnUpdateMontagingGridsFindHoles(CCmdUI *pCmdUI)
 
 void CMenuTargets::OnAutocontourGridSquares()
 {
-  if (!mWinApp->mNavigator)
-    OnTasksNavigator();
   mNavHelper->OpenAutoContouring(false);
 }
 

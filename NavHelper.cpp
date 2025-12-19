@@ -6739,6 +6739,7 @@ WINDOWPLACEMENT * CNavHelper::GetHoleFinderPlacement(void)
 
 void CNavHelper::OpenMultiCombiner(void)
 {
+  mWinApp->mMenuTargets.OpenNavigatorIfClosed();
   if (mMultiCombinerDlg) {
     mMultiCombinerDlg->BringWindowToTop();
     return;
@@ -6779,6 +6780,7 @@ WINDOWPLACEMENT * CNavHelper::GetComaVsISDlgPlacement()
 
 void CNavHelper::OpenAutoContouring(bool fromMulti)
 {
+  mWinApp->mMenuTargets.OpenNavigatorIfClosed();
   if (mAutoContouringDlg->IsOpen()) {
     mAutoContouringDlg->BringWindowToTop();
     return;
