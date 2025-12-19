@@ -6719,6 +6719,7 @@ int CNavHelper::UseNavPointsForVectors(int pattern, int numXholes, int numYholes
 
 void CNavHelper::OpenHoleFinder(void)
 {
+  mWinApp->mMenuTargets.OpenNavigatorIfClosed();
   if (mHoleFinderDlg->IsOpen()) {
     mHoleFinderDlg->BringWindowToTop();
     return;
@@ -6799,6 +6800,7 @@ WINDOWPLACEMENT *CNavHelper::GetAutoContDlgPlacement(void)
 void CNavHelper::OpenMultiGrid(void)
 {
   CArray<JeolCartridgeData, JeolCartridgeData> *cartInfo = mScope->GetJeolLoaderInfo();
+  mWinApp->mMenuTargets.OpenNavigatorIfClosed();
   if (mMultiGridDlg) {
     mMultiGridDlg->BringWindowToTop();
     return;

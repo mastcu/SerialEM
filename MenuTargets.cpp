@@ -751,13 +751,15 @@ void CMenuTargets::OnUpdatePolygonMontage(CCmdUI* pCmdUI)
 
 void CMenuTargets::OnNavigatorSetupfullmontage() 
 {
+  if (!mWinApp->mNavigator)
+    OnTasksNavigator();
   mNavigator->FullMontage(false, 0.);	
 }
 
 void CMenuTargets::OnUpdateNavigatorSetupfullmontage(CCmdUI* pCmdUI) 
 {
-  pCmdUI->Enable(mNavigator && mNavigator->NoDrawing() && !DoingTasks() &&
-    !mNavigator->GetAcquiring());	
+  pCmdUI->Enable(!mNavigator || (mNavigator && mNavigator->NoDrawing() && 
+    !mNavigator->GetAcquiring()) && !DoingTasks());
 }
 
 void CMenuTargets::OnMontageListFilesToOpen()
@@ -939,23 +941,25 @@ void CMenuTargets::OnNavigatorSetMultiShotParams()
 
 void CMenuTargets::OnMontagingGridsFindHoles()
 {
+  /*if (!mWinApp->mNavigator)
+    OnTasksNavigator();*/
   mNavHelper->OpenHoleFinder();
 }
 
 void CMenuTargets::OnUpdateMontagingGridsFindHoles(CCmdUI *pCmdUI)
 {
-  pCmdUI->Enable(!mWinApp->DoingTasks() && mWinApp->mNavigator);
+  pCmdUI->Enable(!mWinApp->DoingTasks());
 }
 
 void CMenuTargets::OnAutocontourGridSquares()
 {
+  if (!mWinApp->mNavigator)
+    OnTasksNavigator();
   mNavHelper->OpenAutoContouring(false);
 }
 
 void CMenuTargets::OnMultipleGridOperations()
 {
-  if (!mWinApp->mNavigator)
-    OnTasksNavigator();
   mNavHelper->OpenMultiGrid();
 }
 
@@ -1374,13 +1378,15 @@ void CMenuTargets::OnUpdateOptionsSearchPlusMinus(CCmdUI *pCmdUI)
 
 void CMenuTargets::OnNavigatorSetupAlign()
 {
+  if (!mWinApp->mNavigator)
+    OnTasksNavigator();
   CNavRealignDlg dlg;
   dlg.DoModal();
 }
 
 void CMenuTargets::OnUpdateNavigatorSetupAlign(CCmdUI * pCmdUI)
 {
-  pCmdUI->Enable(mWinApp->mNavigator && !DoingTasks());
+  pCmdUI->Enable(!DoingTasks());
 }
 
 void CMenuTargets::OnNavigatorErasePeriodicPeaks()
