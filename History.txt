@@ -3,6 +3,13 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+12/23/25: Enabled opening Hole Finder and Coma VS IS Calibration dialogs with
+OpenDialog script command.
+
+12/23/25: Navigator is automatically opened when opening hole finder, 
+multigrid, setup full montage, autocontouring, and setup align/realign 
+dialogs.
+
 12/18/25: Added ability to resize or move drawn line or box with left mouse
 button; the cursor changes to indicate what action is available.
 
