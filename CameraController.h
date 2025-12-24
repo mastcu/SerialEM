@@ -984,6 +984,7 @@ public:
 
   bool mSavingPluginFrames;     // Flags for saving or aligning frames from plugin camera
   bool mAligningPluginFrames;
+  bool mPluginSaving4DStack;    // Flag that a 4D stack is being saved by plugin
   BOOL mSkipNextReblank;        // Flag to not blank readout in next shot
   int mDefaultGIFCamera;        // Active camera number of "first GIF camera"
   int mDefaultRegularCamera;    // Active camera number of "first regular camera"
@@ -1211,7 +1212,7 @@ public:
   void RestoreMagAndShift(void);
   void AdjustForShift(float adjustX, float adjustY);
   float GetFPSforVirtualSTEM(ControlSet &conSet);
-  bool AnyVirtualChannelsSelected(CameraParameters *param, ControlSet *conSet);
+  bool AnyVirtualChannelsSelected(CameraParameters *param, const ControlSet *conSet);
   bool CanPreExpose(CameraParameters * param, int shuttering);
   bool MutuallyExclusiveChannels(int chan1, int chan2);
   int ChannelMappedTo(int chan);

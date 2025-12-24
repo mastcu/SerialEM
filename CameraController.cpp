@@ -162,6 +162,9 @@ static const char *sGetCamObjText = "Object manager = CM_GetCameraManager()\n"
 static VOID CALLBACK FilterUpdateProc(HWND hwnd, UINT uMsg, UINT_PTR idEvent, 
                                       DWORD dwTime);
 
+// TEMP
+//static int mFakePartialCount = 0;
+
 //////////////////////////////////////////////////////////////////////
 // Construction/Destruction
 //////////////////////////////////////////////////////////////////////
@@ -2681,6 +2684,9 @@ int CCameraController::SaveFrameStackMdoc(KImage *image, CString &localFramePath
   int iz, start, end;
   EMimageExtra *extra;
 
+  // TEMP
+  //PrintfToLog("Saving mdoc  rps %d ", mTD.ReturnPartialScan);
+
   // First build up the autodoc structure and convert to a string
   if (AdocAcquireMutex()) {
 
@@ -3957,22 +3963,24 @@ void CCameraController::Capture(int inSet, bool retrying)
   // Plugin camera: set up frames for saving or aligning
   // Tietz burst mode must be set to 1 if not taking frameas
   mSavingPluginFrames = false;
+  mPluginSaving4DStack = mTD.plugFuncs && mParam->STEMcamera && 
+    (conSet.saveFrames & DE_SAVE_MASTER) != 0 && anyVirtualChan;
   mAligningPluginFrames = false;
   if (mParam->TietzType && mParam->canTakeFrames)
     mTD.PluginAcquireFlags |= TIETZ_SET_BURST_MODE;
   if ((mTD.plugFuncs || (mParam->AMTtype && mParam->canTakeFrames)) && (conSet.doseFrac
-    || (mParam->STEMcamera && conSet.saveFrames != 0))) {
+    || mPluginSaving4DStack)) {
 
     // Set readouts per frame in case it is needed and meaningful
     if (!mParam->STEMcamera)
       mTD.ReadoutsPerFrame = B3DNINT(conSet.frameTime / GetK2ReadoutInterval(mParam,
         conSet.binning, 0));
-    mSavingPluginFrames = conSet.saveFrames != 0 ||
-      (conSet.alignFrames && conSet.useFrameAlign > 1);
+    mSavingPluginFrames = !mParam->STEMcamera && (conSet.saveFrames != 0 ||
+      (conSet.alignFrames && conSet.useFrameAlign > 1));
     mAligningPluginFrames = conSet.alignFrames && conSet.useFrameAlign == 1 &&
       !(mParam->DectrisType && mSavingPluginFrames && mDectrisSaveAsHDF) && 
       !mParam->STEMcamera;
-    if (mSavingPluginFrames) {
+    if (mSavingPluginFrames || mPluginSaving4DStack) {
       ComposeFramePathAndName(false);
       if (!mFrameFolder.IsEmpty() && CreateFrameDirIfNeeded(mFrameFolder, &logmess, '}'))
       {
@@ -3992,6 +4000,9 @@ void CCameraController::Capture(int inSet, bool retrying)
       dectrisFuncs = mWinApp->mPluginManager->GetDectrisFuncs();
       dirStr = (LPCTSTR)mFrameFolder;
       nameStr = (LPCTSTR)logmess;
+      // TEMP
+      /*PrintfToLog("RPS %d  Calling HDF5 %s %s", mTD.ReturnPartialScan, dirStr.c_str(),
+      nameStr.c_str());*/
       if (dectrisFuncs->SetHDF5FileSave(&dirStr, &nameStr)) {
         SEMMessageBox("The call to tell DECTRIS plugin to save in an HDF5 file returned"
           " with an error");
@@ -4002,6 +4013,10 @@ void CCameraController::Capture(int inSet, bool retrying)
   }
   mTD.NeedFrameDarkRef = mSavingPluginFrames || mAligningPluginFrames;
 
+  // TEMP 
+  /*if (mParam->DectrisType && mParam->STEMcamera && mTD.ReturnPartialScan != 1)
+    mFakePartialCount = 1 + B3DNINT(conSet.exposure / 4);*/
+  
   // Tietz camera needs the read mode set if it is an XF416, or there is flatfielding
   // possible, or there is frame-saving possible.  Set to 0 for beam blank or 1 for
   // rolling shutter here, let this be translated into mode and speed indexes in the call 
@@ -4319,6 +4334,8 @@ void CCameraController::Capture(int inSet, bool retrying)
   if (mParam->STEMcamera && mParam->DectrisType && conSet.saveFrames != 0) {
     mTD.PlugSTEMacquireFlags |= PLUGCAM_SAVE_4D_STACK;
   }
+  if (anyVirtualChan && mParam->STEMcamera)
+    mTD.PlugSTEMacquireFlags |= PLUGCAM_USING_VIRTUAL;
   
   if (mSingleContModeUsed == CONTINUOUS && mNeedShotToInsert < 0) {
     if (mParam->STEMcamera && (mParam->GatanCam || mTD.UseUtapi)) {
@@ -5713,7 +5730,7 @@ void CCameraController::CapManageCoordinates(ControlSet & conSet, int &gainXoffs
   if (oneViewTakingFrames)
     swapXYinAcquire = mParam->rotationFlip % 2;
 
-  if (mTD.ReturnPartialScan <= 0)
+  if (mTD.ReturnPartialScan != 1)
     SEMTrace('T', "Size & LRTB, user: %d %d %d %d %d %d\r\n     mTD: %d %d %d %d %d %d   "
       "gain offset %d %d", mDMsizeX, mDMsizeY, mLeft, mRight, mTop, mBottom, tsizeX, 
       tsizeY, tLeft, tRight, tTop, tBot, gainXoffset, gainYoffset);
@@ -7962,9 +7979,18 @@ void CCameraController::AcquirePluginImage(CameraThreadData *td, void **array,
   if (!retval) {
     numAcquired = 1;
     if (td->STEMcamera) {
-      retval = td->plugFuncs->AcquireSTEMImage((short **)array, arrSize, td->NumChannels,
-        td->ChannelIndex, td->STEMrotation, td->integration, &sizeX, &sizeY,
-        &numAcquired);
+      /*if (mFakePartialCount > 0) {
+        Sleep(1000);
+        mFakePartialCount--;
+        numAcquired = (mFakePartialCount > 0 ? 1 : -1) * td->NumChannels;
+        sizeX = td->DMSizeX;
+        sizeY = td->DMSizeY;
+      } else {*/
+
+        retval = td->plugFuncs->AcquireSTEMImage((short **)array, arrSize, td->NumChannels,
+          td->ChannelIndex, td->STEMrotation, td->integration, &sizeX, &sizeY,
+          &numAcquired);
+      //}
       if (retval)
         td->ReturnPartialScan = 0;
 
@@ -7978,6 +8004,7 @@ void CCameraController::AcquirePluginImage(CameraThreadData *td, void **array,
         TestAndFinishRamp(td, rampStarted);
 
       numAcquired = B3DABS(numAcquired);
+      //SEMTrace('0', "rps %d  retval %d", td->ReturnPartialScan, retval);
     } else
       retval = td->plugFuncs->AcquireImage(((short **)array)[0], arrSize, processing, 
         &sizeX, &sizeY);
@@ -10048,6 +10075,7 @@ void CCameraController::DisplayNewImage(BOOL acquired)
     mWinApp->mProcessImage->GetDiffractionPixelSize(curCam, pixelSize, camLen);
     pixelSize *= mBinning;
   }
+  //PrintfToLog("Saving plugin 4D %d  rps %d", mPluginSaving4DStack, mTD.ReturnPartialScan);
 
   // Process all the channels of data; do one-time actions on first channel to process
   // and only on first trip into here when aligning falcon frames
@@ -10212,17 +10240,23 @@ void CCameraController::DisplayNewImage(BOOL acquired)
     }
 
     // Similarly handle saving/aligning plugin frames
+    //PrintfToLog("Saving plugin 4D %d  rps %d", mPluginSaving4DStack, mTD.ReturnPartialScan);
    if ((mSavingPluginFrames ||
-      mAligningPluginFrames) && !mStartedFalconAlign) {
+      mAligningPluginFrames || mPluginSaving4DStack) && !mStartedFalconAlign) {
       darkScale = B3DNINT(mTD.Exposure / mTD.FrameTime);
-      if (mSavingPluginFrames) {
+      if (mSavingPluginFrames || mPluginSaving4DStack) {
         mPathForFrames.Format("%s%s%s%s", (LPCTSTR)mFrameFolder,
           mFrameFolder.IsEmpty() ? "" : "\\", (LPCTSTR)mFrameFilename, 
-          dectrisSavingHDF ? "_master.h5" : ".mrc");
-        mTD.NumFramesSaved = B3DNINT(mTD.Exposure / mTD.FrameTime);
+          (mPluginSaving4DStack || dectrisSavingHDF) ? "_master.h5" : ".mrc");
+        mTD.NumFramesSaved = mPluginSaving4DStack ? mTD.DMSizeX * mTD.DMSizeY :
+          B3DNINT(mTD.Exposure / mTD.FrameTime);
         mTD.ErrorFromSave = 0;
+        if (mPluginSaving4DStack && mTD.ReturnPartialScan <= 0 && 
+          chan == mTD.NumChannels - 1)
+          PrintfToLog("%d frames are being saved to %s", mTD.NumFramesSaved,
+          (LPCTSTR)mPathForFrames);
       }
-      if (!dectrisSavingHDF) {
+      if (!dectrisSavingHDF && !mPluginSaving4DStack) {
         mTD.ErrorFromSave = mFalconHelper->ProcessPluginFrames(mFrameFolder,
           mFrameFilename, mConSetsp[mLastConSet], mSavingPluginFrames,
           mAligningPluginFrames,
@@ -10891,6 +10925,12 @@ void CCameraController::DisplayNewImage(BOOL acquired)
         mWinApp->AppendToLog(message);
     }
 
+    // Handle 4D STEM from plugin
+    if (mPluginSaving4DStack) {
+      extra->mNumSubFrames = mTD.NumFramesSaved;
+      extra->mSubFramePath = mPathForFrames;
+    }
+
     // Get special data for DE camera and report frame-saving there
     if (mParam->DE_camType >= 2 && !(mTD.ProcessingPlus & CONTINUOUS_USE_THREAD) && 
       !(mParam->STEMcamera && mTD.ReturnPartialScan > 0)) {
@@ -11070,7 +11110,8 @@ void CCameraController::DisplayNewImage(BOOL acquired)
     // Save to frame stack mdoc if selected or if doing frame TS
     if (extra->mNumSubFrames > 0 && !mTD.GetDeferredSum && (mSaveFrameStackMdoc || 
       (mTD.FrameTStiltToAngle.size() > 0 && mTD.FrameTSactualAngle.size() > 0)) &&
-      CanSaveFrameStackMdoc(mParam) && mTD.ReturnPartialScan != 1) {
+      CanSaveFrameStackMdoc(mParam) && mTD.ReturnPartialScan <= 0 && 
+      (!mParam->STEMcamera || chan == mTD.NumChannels - 1)) {
       if (IS_FALCON3_OR_4(mParam))
         WarnEmptyFalconFramePath(mLastLocalFramePath,
           "Cannot make frame stack mdoc file");
@@ -11339,6 +11380,7 @@ void CCameraController::ErrorCleanup(int error)
   // Clear flags set by this shot setup
   mAligningPluginFrames = false;
   mSavingPluginFrames = false;
+  mPluginSaving4DStack = false;
   mSavingFalconFrames = false;
   mAligningFalconFrames = false;
   mRemoveFEIalignedFrames = false;
@@ -13548,6 +13590,7 @@ bool CCameraController::IsConSetSaving(const ControlSet *conSet, int setNum,
   BOOL DEcanSave = mWinApp->mDEToolDlg.CanSaveFrames(param);
   bool weCanAlignDE = DEcanSave && (param->CamFlags & DE_WE_CAN_ALIGN);
   bool K2Type = param->K2Type || (param->OneViewType && param->canTakeFrames);
+  bool noVirtual = param->STEMcamera && !AnyVirtualChannelsSelected(param, conSet);
 
   // Align is turned off during TS/script with these set, but need it for Record
   bool alignAnyway = setNum == RECORD_CONSET && 
@@ -13556,10 +13599,10 @@ bool CCameraController::IsConSetSaving(const ControlSet *conSet, int setNum,
 
   return (((K2Type && conSet->doseFrac) ||   // Saving possible for camera type
            ((falconCanSave || DEcanSave || 
-             ((!param->pluginName.IsEmpty() || param->TietzType) && 
+             ((!param->pluginName.IsEmpty() || param->TietzType) && !noVirtual &&
               (param->canTakeFrames | FRAMES_CAN_BE_SAVED))) && !K2only)) &&
-          (((!DEcanSave && conSet->saveFrames) ||   // Ordinary saving selected
-            (DEcanSave && (conSet->saveFrames & DE_SAVE_MASTER))) ||
+          (((!DEcanSave && conSet->saveFrames && !noVirtual) || // Ordinary saving selected
+            (DEcanSave && (conSet->saveFrames & DE_SAVE_MASTER) && !noVirtual)) ||
            (conSet->useFrameAlign > 1 &&            // Or forced saving is called for
             ((K2Type && CAN_PLUGIN_DO(CAN_ALIGN_FRAMES, param)) || 
              (!K2only && (weCanAlignFalcon || weCanAlignDE))) &&
@@ -13986,7 +14029,7 @@ float CCameraController::GetFPSforVirtualSTEM(ControlSet &conSet)
 
 // Look up if any selected detectors are virtual in a STEM camera
 bool CCameraController::AnyVirtualChannelsSelected(CameraParameters *param, 
-  ControlSet *conSet)
+  const ControlSet *conSet)
 {
   int ind, chan;
   if (!param->STEMcamera || !param->virtualChanFlags)
