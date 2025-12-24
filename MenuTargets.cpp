@@ -1028,13 +1028,14 @@ void CMenuTargets::OnCombinePointsIntoMultiShots()
 void CMenuTargets::OnReverseContourColors()
 {
   mNavHelper->SetReverseAutocontColors(!mNavHelper->GetReverseAutocontColors());
-  mWinApp->mMainView->RedrawWindow();
+  if (mWinApp->mNavigator)
+    mWinApp->mMainView->RedrawWindow();
 }
 
 void CMenuTargets::OnUpdateReverseContourColors(CCmdUI *pCmdUI)
 {
   pCmdUI->SetCheck(mNavHelper->GetReverseAutocontColors() ? 1 : 0);
-  pCmdUI->Enable(!mWinApp->DoingTasks() && mWinApp->mNavigator);
+  pCmdUI->Enable(!mWinApp->DoingTasks());
 }
 
 
@@ -1047,7 +1048,7 @@ void CMenuTargets::OnKeepColorsForPolygons()
 void CMenuTargets::OnUpdateKeepColorsForPolygons(CCmdUI *pCmdUI)
 {
   pCmdUI->SetCheck(mNavHelper->GetKeepColorsForPolygons() ? 1 : 0);
-  pCmdUI->Enable(!mWinApp->DoingTasks() && mWinApp->mNavigator);
+  pCmdUI->Enable(!mWinApp->DoingTasks());
 }
 
 void CMenuTargets::OnNavigatorRealignScaling()
