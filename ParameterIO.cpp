@@ -3493,6 +3493,9 @@ int CParameterIO::ReadProperties(CString strFileName)
           } else if (MatchNoCase("Name")) {
             StripItems(strLine, 1, camP->name);
 
+          } else if (MatchNoCase("UtapiName")) {
+            StripItems(strLine, 1, camP->UtapiName);
+
           } else if (MatchNoCase("DectrisSingleEventProcessing")) {
             if (itemInt[1] > 0)
               camP->CamFlags |= DECTRIS_HAS_SINGLE_EVENT;

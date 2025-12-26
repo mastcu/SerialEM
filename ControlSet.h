@@ -275,6 +275,7 @@ struct CameraParameters {
   int numChannels;
   CString channelName[MAX_STEM_CHANNELS];  // Detector or official camera names for FEI,
   CString detectorName[MAX_STEM_CHANNELS]; //   or memory mapping area name for Tietz
+  CString UtapiName;          // Separate name for UTAPI
   BOOL availableChan[MAX_STEM_CHANNELS];
   BOOL needShotToInsert[MAX_STEM_CHANNELS];
   int maxChannels;            // Maximum channels at once

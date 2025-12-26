@@ -148,8 +148,8 @@
             if connecting to the camera with UTAPI.&nbsp; With this property, you can turn 
             the use of UTAPI on and off, or change whether the camera service is skipped, 
             without having to change the DetectorName entry that is needed for UTAPI, 
-            provided that the CameraName entry is the full name for the camera in standard or 
-            Advanced scripting.</TD>
+            provided that the camera's Name entry is the full name for the camera in standard or 
+            Advanced scripting.&nbsp; If that is not the case, use the camera property UtapiName instead.</TD>
         </TR>
         <TR VALIGN="top">
           <TD>SimulationMode</TD>
@@ -1598,7 +1598,14 @@
           <TD>Name</TD>
           <TD>The name of the camera, which will appear in the camera, montaging, and tilt
             series setup dialogs. Spaces are allowed.&nbsp; For a Thermo/FEI camera, a required name
-            must be entered here unless it is entered with 'DetectorName'.</TD>
+            must be entered here unless it is entered with 'DetectorName' or 'UtapiName'.</TD>
+        </TR>
+       <TR VALIGN="top">
+          <TD>UtapiName</TD>
+          <TD>The complete name for a Thermo/FEI camera when using the UTAPI interface, which
+            can be determined by starting the program with the DebugOutput property set to 
+            1.&nbsp; This entry is likely to be more convenient that 'DetectorName' if you have to
+             switch back and forth between UTAPI and Advanced scripting.</TD>
         </TR>
         <TR VALIGN="top">
           <TD>DetectorName</TD>
@@ -1607,8 +1614,8 @@
             must be 'CCD' for Tecnai versions before 4.1, and names like 'BM-Ceta' and
             'BM-Falcon' thereafter, with either standard or Advanced scripting.&nbsp; With UTAPI, 
             set the DebugOutput property to 1 to see the camera names.&nbsp; These names
-            are more elaborate and you will definitely need to use a DetectorName entry in addition to
-            a shorter Name entry.&nbsp; 
+            are more elaborate and you will definitely need to use either a UtapiName or
+            DetectorName entry in addition to a shorter Name entry.&nbsp; 
           </TD>
         </TR>
         <TR VALIGN="top">
