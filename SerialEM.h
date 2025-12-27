@@ -276,6 +276,7 @@ struct JeolParams;
 #define PLUGFEI_DARK_CORR_ONLY    0x80
 #define PLUGFEI_USE_LIVE_MODE    0x100
 #define PLUGFEI_TAKE_BINNED_4    0x200
+#define PLUGFEI_SAVE_TIFF_LZW    0x400
 
 typedef _variant_t PLUGIN_BOOL;
 typedef void (*PlugStopFunc)(int);

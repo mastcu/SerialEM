@@ -10589,14 +10589,15 @@ int CMacCmd::SetFrameTime(void)
   int index, ix0, iy1, newSum, subframes;
   float fps, exposure;
   int *sumP;
-  bool savingInEER, alignInFalcon, falconCanSave = false;
+  bool savingEERorLZW, alignInFalcon, falconCanSave = false;
 
   if (CheckAndConvertCameraSet(mStrItems[1], mItemInt[1], index, mStrCopy))
     ABORT_LINE(mStrCopy);
   if (mCamParams->FEItype) {
     mCamera->CanWeAlignFalcon(mCamParams, true, falconCanSave,
       mCamSet->K2ReadMode);
-    savingInEER = mCamera->IsSaveInEERMode(mCamParams, mCamSet);
+    savingEERorLZW = mCamera->IsSaveInEERMode(mCamParams, mCamSet) ||
+      mCamera->IsFalconSaveAsLZW(mCamParams, mCamSet);
     alignInFalcon = IS_FALCON3_OR_4(mCamParams) && FCAM_CAN_ALIGN(mCamParams) &&
       mCamSet->alignFrames && !mCamSet->useFrameAlign;
     if (!(IS_FALCON3_OR_4(mCamParams) || mCamera->GetMaxFalconFrames() > 7))
@@ -10610,7 +10611,7 @@ int CMacCmd::SetFrameTime(void)
   truth = CMD_IS(CHANGEFRAMEANDEXPOSURE);
 
   // Falcon is handled separately for fractions
-  if (falconCanSave && !savingInEER) {
+  if (falconCanSave && !savingEERorLZW) {
     exposure = (truth ? mItemFlt[2] : 1.f) * mCamSet->exposure;
     subframes = B3DNINT(exposure / mCamera->GetFalconFractionDivisor(mCamParams)
       - (mCamSet->skipBeforeOrPrePix + mCamSet->skipAfterOrPtRpt));
@@ -10664,11 +10665,12 @@ int CMacCmd::SetFrameTime(void)
     mCamSet->bottom, mCamSet->top, mCamSet->processing,
     mCamSet->mode, iy1);
   mCamera->ConstrainFrameTime(mCamSet->frameTime, mCamParams,
-    mCamSet->binning, mCamParams->OneViewType ? mCamSet->K2ReadMode:iy1);
-  if ((!falconCanSave || savingInEER) && truth) {
+    mCamSet->binning, (mCamera->IsFalconSaveAsLZW(mCamParams, mCamSet) || 
+      mCamParams->OneViewType) ? mCamSet->K2ReadMode : iy1);
+  if ((!falconCanSave || savingEERorLZW) && truth) {
     mCamSet->exposure = mCamSet->frameTime * ix0;
     SetRepValsAndVars(3, mCamSet->frameTime, mCamSet->exposure);
-  } else if (!falconCanSave || savingInEER) {
+  } else if (!falconCanSave || savingEERorLZW) {
     SetRepValsAndVars(3, mCamSet->frameTime);
   }
   return 0;

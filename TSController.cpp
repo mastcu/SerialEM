@@ -3837,7 +3837,8 @@ void CTSController::ChangeExposure(double &delFac, double angle, double limit)
     recSet->bottom, recSet->top, recSet->processing, recSet->mode, special);
   mCamera->ConstrainExposureTime(mCamParams, recSet->doseFrac, recSet->K2ReadMode, 
     recSet->binning, mCamera->MakeAlignSaveFlags(recSet),
-    mCamera->DESumCountForConstraints(mCamParams, recSet), newExp, frameTime, special, 
+    mCamera->DESumCountForConstraints(mCamParams, recSet), newExp, frameTime, 
+    mCamera->IsFalconSaveAsLZW(mCamParams, recSet) ? 1 : special, 
     recSet->mode);
   newExp = mWinApp->mFalconHelper->AdjustSumsForExposure(mCamParams, recSet, newExp);
   if (oneFrame)

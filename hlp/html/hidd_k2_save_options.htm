@@ -25,11 +25,20 @@
       frames are saved.</p>
     <p>
       <b>Save counting frames in EER file instead of MRC file&nbsp;&nbsp; (Falcon 4 
-      only)</b></p>
+      only through Advanced Scripting)</b></p>
     <p>
       Select this option to have counting mode frames saved in EER format, namely with 
       a frame saved for every camera readout and every electron event recorded as a 
       count in a compressed TIFF file.</p>
+    <p>
+      <strong>File type for counting frames&nbsp;&nbsp; (Falcon 4 only though UTAPI 
+      interface)</strong></p>
+    <p>
+      When connecting to a Falcon 4 through UTAPI scripting, this set of radio buttons 
+      appears with the choice of saving in an MRC file, a TIFF file with LZW 
+      compression, or an EER file.&nbsp; The TIFF-LZW file contains electron counts in 
+      sums of raw frames ,with no super-resolution information, and needs 
+      normalization just like an EER file.</p>
     <p>
       <strong>Save in native DECTRIS format (HDF5)&nbsp;&nbsp; (DECTRIS only)</strong></p>
     <p>
@@ -46,7 +55,7 @@
       file menu, namely the one section in the file will be named &#39;Frameset&#39;.&nbsp; 
       For a&nbsp; K2/K3, it will also have the gain reference and defect file names if frames are taken 
       without normalization.&nbsp; The gain reference name will also appear for a 
-      Falcon 4 saving in EER format.&nbsp; Additional entries can be added to the file with 
+      Falcon 4 saving in EER or TIFF-LZW format.&nbsp; Additional entries can be added to the file with 
       the script commands &#39;StartNextFrameStackMdoc&#39; and &#39;AddToNextFrameStackMdoc&#39;, but 
       these commands must be given before acquisition.</p>
     <p>
@@ -65,7 +74,8 @@
       K2/K3 linear mode images, you should assess both 
       the compression factor and the acquisition time with the typical images for a 
       project when deciding which form to use on a routine basis.&nbsp; The best way 
-      to assess acquisition time is to turn on Debug Mode in the Camera menu.&nbsp; 
+      to assess acquisition time is to set debug output to Z, which will turn on 
+      camera debug mode.&nbsp; 
       With this on, the SerialEM log will show the total elapsed time for acquiring 
       each image.&nbsp; Also, when frame-saving is complete, the Results window in DM 
       will show a line reporting the time required to process and save all of the 

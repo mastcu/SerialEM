@@ -1018,8 +1018,9 @@ void CCameraSetupDlg::LoadConsetToDialog()
     if (mParam->K2Type || mParam->canTakeFrames || mFEItype == FALCON4_TYPE) {
       mCamera->CropTietzSubarea(mParam, mCurSet->right, mCurSet->left,
         mCurSet->bottom, mCurSet->top, mCurSet->processing, mCurSet->mode, special);
-      mCamera->ConstrainFrameTime(m_fFrameTime, mParam, binning,
-        (mParam->OneViewType && mCurSet->K2ReadMode != 0) ? 1 : special);
+      mCamera->ConstrainFrameTime(m_fFrameTime, mParam, binning, 
+        (mCamera->IsFalconSaveAsLZW(mParam, mCurSet) ||
+        (mParam->OneViewType && mCurSet->K2ReadMode != 0)) ? 1 : special);
     }
     m_fFrameTime /= mFrameTimeMsScale;
     m_fDEframeTime = m_fFrameTime = RoundedFrameTime(m_fFrameTime);
@@ -1435,7 +1436,7 @@ float CCameraSetupDlg::ManageExposure(bool updateIfChange)
     m_eExposure = realExp;
 
   if (mParam->K2Type == K3_TYPE || (mParam->OneViewType && mParam->canTakeFrames) ||
-    (mParam->DectrisType && !mSTEMcamera))
+    (mParam->DectrisType && !mSTEMcamera) || mParam->FEItype == FALCON4_TYPE)
     m_fFrameTime = RoundedFrameTime(m_fFrameTime, mParam);
 
   // Special for DE
@@ -2639,7 +2640,7 @@ void CCameraSetupDlg::ManageDose()
       m_fDEframeTime = RoundedFrameTime(m_fFrameTime *
       (m_bDEsaveMaster ? 1 : m_iSumCount));
     if (mParam->K2Type || (mParam->OneViewType && mParam->canTakeFrames) ||
-      mParam->DectrisType)
+      mParam->DectrisType || mParam->FEItype == FALCON4_TYPE)
       m_fFrameTime = RoundedFrameTime(m_fFrameTime, mParam);
   }
   if (IS_FALCON3_OR_4(mParam) && m_iK2Mode) {
@@ -3182,15 +3183,16 @@ void CCameraSetupDlg::OnKillfocusEditFrameTime()
 {
   int special;
   UpdateData(TRUE);
+  bool tiffLZW = mCamera->IsFalconSaveAsLZW(mParam, m_bSaveFrames, m_iK2Mode);
   float startFrame = m_fFrameTime;
   float realFrame = m_fFrameTime * mFrameTimeMsScale;
   if (mParam->K2Type || mParam->canTakeFrames || 
     mCamera->IsSaveInEERMode(mParam, m_bSaveFrames, m_bAlignDoseFrac,
-      mCurSet->useFrameAlign, m_iK2Mode)) {
+      mCurSet->useFrameAlign, m_iK2Mode) || tiffLZW) {
     mCamera->CropTietzSubarea(mParam, m_eRight, m_eLeft, m_eBottom, m_eTop,
       m_iProcessing, 1 - m_iContSingle, special);
     mCamera->ConstrainFrameTime(realFrame, mParam, mParam->binnings[m_iBinning],
-      (mParam->OneViewType && m_bUseHwROI_OvDiff) ? 1 : special);
+      tiffLZW || (mParam->OneViewType && m_bUseHwROI_OvDiff) ? 1 : special);
     m_fFrameTime = realFrame / mFrameTimeMsScale;
   }
   if (m_bSaveFrames && m_bSaveK2Sums)
@@ -3223,7 +3225,8 @@ void CCameraSetupDlg::ManageDoseFrac(void)
   }
   
   enable = (m_bDoseFracMode && mFEItype != FALCON4_TYPE ) || 
-    (mFEItype == FALCON4_TYPE && m_bAlignDoseFrac && mCurSet->useFrameAlign);
+    (mFEItype == FALCON4_TYPE && ((m_bAlignDoseFrac && mCurSet->useFrameAlign) ||
+    (m_bSaveFrames && mCamera->GetSaveInEERorLZW() < 0)));
   m_statFrameTime.EnableWindow(enable);
   m_statFrameSec.EnableWindow(enable);
   m_editFrameTime.EnableWindow(enable);
@@ -3243,7 +3246,7 @@ void CCameraSetupDlg::ManageDoseFrac(void)
   m_statSaveSummary.ShowWindow((m_bSaveFrames && m_bDoseFracMode && 
     (mParam->K2Type || mFalconCanSave || mCanSaveFrames)) ? SW_SHOW : SW_HIDE);
   m_statAlignSummary.ShowWindow(((!m_bSaveFrames || 
-    (mWeCanAlignFalcon && mCamera->GetSaveInEERformat() && m_iK2Mode)) && 
+    (mWeCanAlignFalcon && mCamera->GetSaveInEERorLZW() && m_iK2Mode)) && 
     m_bAlignDoseFrac && m_bDoseFracMode &&
     (mParam->K2Type || mWeCanAlignFalcon || mCanAlignFrames)) ? SW_SHOW : SW_HIDE);
   enable = m_bSaveFrames && m_bDoseFracMode && 
@@ -3251,7 +3254,7 @@ void CCameraSetupDlg::ManageDoseFrac(void)
   m_butSaveFrameSums.EnableWindow(enable);
   m_butSetupK2FrameSums.EnableWindow(enable && m_bSaveK2Sums);
   m_butSetupFalconFrames.EnableWindow(((m_bSaveFrames && !(m_iK2Mode > 0 && 
-    mCamera->GetSaveInEERformat())) ||
+    mCamera->GetSaveInEERorLZW())) ||
     (m_bAlignDoseFrac && mCurSet->useFrameAlign)) && m_bDoseFracMode);
   SetDlgItemText(IDC_SETUP_FALCON_FRAMES, (m_bAlignDoseFrac && mCurSet->useFrameAlign == 1
     && !m_bSaveFrames && mWeCanAlignFalcon) ? 
@@ -3282,7 +3285,8 @@ void CCameraSetupDlg::ManageDoseFrac(void)
 void CCameraSetupDlg::ManageFalcon4FrameSpec(void)
 {
   bool show = mCamera->IsSaveInEERMode(mParam, m_bSaveFrames, m_bAlignDoseFrac, 
-    mCurSet->useFrameAlign, m_iK2Mode);
+    mCurSet->useFrameAlign, m_iK2Mode) || mCamera->IsFalconSaveAsLZW(mParam,
+      m_bSaveFrames, m_iK2Mode);
   if (mFEItype != FALCON4_TYPE)
     return;
   ShowDlgItem(IDC_STAT_FRAME_TIME, show);
@@ -3383,11 +3387,17 @@ void CCameraSetupDlg::CheckFalconFrameSumList(void)
 void CCameraSetupDlg::OnButFileOptions()
 {
   CK2SaveOptionDlg optDlg;
-  if (mFEItype == FALCON4_TYPE)
-    optDlg.m_bOneFramePerFile = mCamera->GetSaveInEERformat();
-  else
+  int EERorLZW = mCamera->GetSaveInEERorLZW();
+  if (mFEItype == FALCON4_TYPE) {
+    if (mCamera->GetFalconCanDoTiffLZW()) {
+      optDlg.m_iFileType = B3DCHOICE(EERorLZW, EERorLZW > 0 ? 2 : 1, 0);
+    } else {
+      optDlg.m_bOneFramePerFile = EERorLZW > 0;
+    }
+  } else {
     optDlg.m_bOneFramePerFile = mCamera->GetOneK2FramePerFile();
-  optDlg.m_iFileType = mCamera->GetK2SaveAsTiff();
+    optDlg.m_iFileType = mCamera->GetK2SaveAsTiff();
+  }
   B3DCLAMP(optDlg.m_iFileType, 0, 2);
   optDlg.m_bPackRawFrames = (mCamera->GetSaveRawPacked() & 1) > 0;
   optDlg.m_bPackCounting4Bit = (mCamera->GetSaveRawPacked() & 2) > 0;
@@ -3437,7 +3447,12 @@ void CCameraSetupDlg::OnButFileOptions()
   optDlg.mSetIsGainNormalized = m_iProcessing == GAIN_NORMALIZED;
   if (optDlg.DoModal() == IDOK) {
     if (mFEItype == FALCON4_TYPE) {
-      mCamera->SetSaveInEERformat(optDlg.m_bOneFramePerFile);
+      if (mCamera->GetFalconCanDoTiffLZW()) {
+        mCamera->SetSaveInEERorLZW(B3DCHOICE(optDlg.m_iFileType > 0,
+          optDlg.m_iFileType > 1 ? 1 : -1, 0));
+      } else {
+        mCamera->SetSaveInEERorLZW(optDlg.m_bOneFramePerFile ? 1 : 0);
+      }
       mWeCanAlignFalcon = mCamera->CanWeAlignFalcon(mParam, true, mFalconCanSave);
       ManageFalcon4FrameSpec();
     } else if (mParam->DectrisType) {
@@ -3703,6 +3718,9 @@ void CCameraSetupDlg::ManageK2SaveSummary(void)
       if (m_bDoseFracMode && m_bSaveFrames)
         str.Format("%d raw to EER file", frames);
       frames = B3DNINT(realExp / realFrame);
+    } else if (mCamera->IsFalconSaveAsLZW(mParam, m_bSaveFrames, m_iK2Mode)) {
+      frames = B3DNINT(realExp / realFrame);
+      str.Format("%d raw to TIFF file", frames);
 
     } else {
       frames = mWinApp->mFalconHelper->GetFrameTotals(mSummedFrameList, dummy);
@@ -3712,7 +3730,7 @@ void CCameraSetupDlg::ManageK2SaveSummary(void)
     }
     SetDlgItemText(IDC_STAT_SAVE_SUMMARY, str);
     if (m_bDoseFracMode && m_bAlignDoseFrac && !mCurSet->useFrameAlign && 
-      (!m_bSaveFrames || (mCamera->GetSaveInEERformat() && m_iK2Mode))) {
+      (!m_bSaveFrames || (mCamera->GetSaveInEERorLZW() && m_iK2Mode))) {
       frames = B3DNINT(realExp / mCamera->FalconAlignFractionTime(mParam));
       str.Format("%d fractions", frames);
     } else if (mWeCanAlignFalcon && m_bAlignDoseFrac && m_bDoseFracMode) {

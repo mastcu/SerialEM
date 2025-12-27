@@ -516,7 +516,8 @@ bool CTSVariationsDlg::CheckItemValue(bool update)
       mWinApp->mCamera->CropTietzSubarea(camParam, conSet->right, conSet->left,
         conSet->bottom, conSet->top, conSet->processing, conSet->mode, special);
       changed = mWinApp->mCamera->ConstrainFrameTime(m_fValue, camParam, conSet->binning,
-        (camParam->OneViewType && camParam->canTakeFrames) ? conSet->K2ReadMode : 
+        (mWinApp->mCamera->IsFalconSaveAsLZW(camParam, conSet) || 
+        (camParam->OneViewType && camParam->canTakeFrames)) ? conSet->K2ReadMode : 
         special);
       break;
 

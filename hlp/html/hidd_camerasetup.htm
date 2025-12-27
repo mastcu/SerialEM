@@ -479,10 +479,11 @@
       frames that could be saved was originally quite limited, it is possible to
       use script commands to take multiple exposures whose frames are stacked into a
       single MRC file.</P>
-    <P>Under the new interface, frames are saved by Thermo/FEI software into an MRC stack
-      under a fixed location.&nbsp; If aligning of frames is selected to occur in
-      SerialEM, the frames are read in by its microscope plugin or server, passed to
-      SerialEM, and aligned there.&nbsp; If only aligning is selected without saving,
+    <P>With newer interfaces, frames are saved by Thermo/FEI software into a stack
+      under a fixed location, as an MRC file, an EER file for Falcon 4, or a TIFF file 
+      with LZW compression for a Falcon 4 when using the UTAPI interface.&nbsp; If aligning of frames is selected to occur in
+      SerialEM, the frames are read in by its microscope plugin or server and passed to
+      SerialEM, or read directly by SerialEM, and aligned there.&nbsp; If only aligning is selected without saving,
       SerialEM then deletes the frame stack.&nbsp; Some options will not be available
       if SerialEM does not have direct access to the frame storage location, however.&nbsp;
       See the help for the <a href="hidd_framealign.htm">Frame Alignment
@@ -521,7 +522,7 @@
       Use these radio buttons to select whether images are acquired from a Falcon 3
       or 4 in
       linear (normal) mode or in electron counting mode.&nbsp; If frame alignment is
-      being done with the Falcon 3 processor, switching to counting mode may change the
+      being done with the Falcon processor, switching to counting mode may change the
       exposure time to satisfy the minimum requirements for counting mode.</p>
     <P><b>Set Up Frames to Save (or Align)</b></P>
     <P>Press this button to open the <a href="hidd_falcon_frames.htm">Frame Summing Selector dialog</a>,
@@ -543,16 +544,20 @@
     <P>As of SerialEM 3.9 (1/28/21), this button is not enabled when just aligning in
       the Falcon processor without saving frames; the temporary saving of frames in
       this case in earlier versions was due to a misunderstanding.</P>
-    <P><b>Frame Time&nbsp;&nbsp;&nbsp;&nbsp; (Falcon 4 when saving EER files)</b></P>
-    <P>With a Falcon 4, a text box for a frame time to be used when aligning in
-      SerialEM or with Alignframes in IMOD will appear instead of the <strong>Set Up Frames to Save</strong>
-      button whenever frames would not be saved in an MRC file.&nbsp; Namely, it will
-      appear when counting mode is selected and either saving into EER files is
+    <P><b>Frame Time&nbsp;&nbsp;&nbsp;&nbsp; (Falcon 4 when saving EER or TIFF-LZW files)</b></P>
+    <P>With a Falcon 4, a text box for a frame time will appear instead of the <strong>Set Up Frames to Save</strong> 
+      button when saving frames as TIFF-LZW, or when aligning in SerialEM or with 
+      Alignframes in IMOD and not saving as MRC.&nbsp; Namely, it will
+      appear when counting mode and aligning are selected and either saving into EER 
+      or TIFF-LZW files is
       selected or saving is not selected at all, because in the latter case SerialEM
       is free to use a temporary EER file instead of an MRC for the frames to be
-      aligned.&nbsp; The frame time is constrained to be a multiple of the readout
+      aligned.&nbsp; When aligning with a saved or temporary EER file, the frame time is constrained to be a multiple of the readout
       time, and each frame being aligned will be the sum of that number of images in
-      the EER file.</P>
+      the EER file.&nbsp; When saving as TIFF-LZW, the frame time is constrained to be 
+      a multiple of 7 or 9 readout times for Falcon 4 or 4i, respectively, because 
+      this guarantees that when the exposure time is constrained to be a multiple of 
+      the frame time, it will also be a multiple of 7 or 9 readout times.</P>
     <P><b>Align Frames</b></P>
     <P>Select this checkbox to have summed frames aligned in SerialEM, or by the Falcon 3
       or 4 processor, or to write a command file for aligning

@@ -92,6 +92,7 @@ private:
   int mEERsumming;                      // Number of frames to sum if reading from EER
   int mEERsuperRes;                     // Super-resolution to read: 0, 1, or 2
   BOOL mReadEERantialiased;             // Flag to read EER files with antialiasing
+  bool mSavingTiffLZW;                  // Flag that it is saving TIFF LZW    
   bool mStackingFrames;                 // Flag that we are stacking frames
   int mUseImage2;                       // Flag to use the second buffer
   std::vector<long> mDeleteList;        // List of frames files to delete

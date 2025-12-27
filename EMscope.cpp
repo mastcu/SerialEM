@@ -9822,6 +9822,8 @@ int CEMscope::LookupScriptingCamera(CameraParameters *params, bool refresh,
   if (!params->detectorName[0].IsEmpty() &&
     (!mUseDetectorNameIfUtapi || UtapiSupportsService(UTSUP_CAM_SINGLE)))
     CCDname = params->detectorName[0];
+  if (!params->UtapiName.IsEmpty() && UtapiSupportsService(UTSUP_CAM_SINGLE))
+    CCDname = params->UtapiName;
 
   // It outputs a message only for error 3, COM error
   if (restoreShutter < -900 && mSkipAdvancedScripting > 0)
@@ -9923,6 +9925,9 @@ int CEMscope::LookupScriptingCamera(CameraParameters *params, bool refresh,
       if (UtapiSupportsService(UTSUP_CAM_CONTIN) && 
         (params->CamFlags & PLUGFEI_CAN_LIVE_MODE))
         params->useContinuousMode = 1;
+      if (params->FEItype == FALCON4_TYPE && mPluginVersion >= PLUGFEI_PLUG_CAN_SAVE_LZW
+        && (params->CamFlags & PLUGFEI_CAN_SAVE_TIFF))
+        mCamera->SetFalconCanDoTiffLZW(true);
     } else {
       params->minimumDrift = (float)B3DMAX(params->minimumDrift, minDrift);
     }

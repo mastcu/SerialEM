@@ -153,6 +153,7 @@ enum {K2_SUMMIT = 1, K2_BASE, K3_TYPE};
 #define PLUGFEI_CONTINUOUS_SAVE   112
 #define PLUGFEI_CAN_BIN_IMAGE     114
 #define PLUGFEI_FLEXIBLE_SUBAREAS 117
+#define PLUGFEI_PLUG_CAN_SAVE_LZW 118
 #define DECTRIS_WITH_SUPER_RES(a) ((a)->DectrisType && !(a)->STEMcamera && ((a)->CamFlags & DECTRIS_HAS_SUPER_RES))
 #define DECTRIS_WITH_COUNTING(a) ((a)->DectrisType && !(a)->STEMcamera && ((a)->CamFlags & DECTRIS_HAS_SINGLE_EVENT))
 #define DETECTOR_IS_VIRTUAL(p, n) (((p)->virtualChanFlags & (1 << n)) != 0)
@@ -642,7 +643,8 @@ public:
   GetSetMember(CString, EDMserverIP);
   GetSetMember(int, EDMfrequency);
   GetSetMember(BOOL, ConsetsShareChannelList);
-  SetMember(BOOL, SaveInEERformat);
+  SetMember(int, SaveInEERorLZW);
+  GetSetMember(bool, FalconCanDoTiffLZW);
   GetSetMember(int, RotFlipInFalcon3ComFile);
   GetSetMember(BOOL, SubdirsOkInFalcon3Save);
   GetSetMember(BOOL, RamperWaitForBlank);
@@ -665,11 +667,15 @@ public:
   GetSetMember(BOOL, DectrisSaveAsHDF);
   GetSetMember(float, ExtraSTEMTimeout);
   GetSetMember(float, FirstSTEMExtraTimeout);
+  GetMember(bool, FalconSavingEER);
+  GetMember(bool, FalconSavingLZW);
+
   CameraThreadData *GetCamThreadData() { return &mTD; };
   bool DoingPartialScan() {return mTD.ReturnPartialScan > 0; };
   bool HasCEOSFilter() { return mCEOSFilter != NULL; }
   bool HasDoseModulator() { return mDoseModulator != NULL; }
-  BOOL GetSaveInEERformat() { return mCanSaveEERformat > 0 && mSaveInEERformat; };
+  int GetSaveInEERorLZW() { return ((mCanSaveEERformat > 0 && mSaveInEERorLZW > 0) ||
+    (mFalconCanDoTiffLZW && mSaveInEERorLZW < 0)) ? mSaveInEERorLZW : 0; };
   void GetProcessingRefs(DarkRef **dark, DarkRef **gain) {*dark = mDarkp; *gain = mGainp; };
   void GetProcessingCoords(int &binning, int &top, int &left, int &bot, int &right) {
     binning = mBinning; top = mTop, left = mLeft; bot = mBottom; right = mRight; };
@@ -972,8 +978,9 @@ public:
   int mWaitingForStacking;      // Flag that we are waiting for Falcon stacking
   CString mDirForFalconFrames;  // Directory or subfolder to save Falcon frames in
   BOOL mOtherCamerasInTIA;      // Flag that FEI name needs to be checked before acquiring
-  BOOL mSaveInEERformat;        // Flag to save Falcon 4 frames as EER
+  int mSaveInEERorLZW;          // Flag + to save Falcon 4 frames as EER, - save TIFF LZW
   int mCanSaveEERformat;        // Flag that it is possible
+  bool mFalconCanDoTiffLZW;     // Flag that it can save TIFF LZW
   int mFalcon4RawSumSize;       // Size of initial sums that can go into fractions
   int mFalcon4iRawSumSize;      // Size of initial sums for Falcon 4i
   CString mFalconReferenceDir;  // Gain reference directory for counting gain
@@ -1150,6 +1157,8 @@ public:
   bool mNoSTEMshotsYet;            // Flag to keep track of that shot
   float mFPSforVirtualSTEM;     
   bool mStoppedPartialScan;       // Flag that partial STEM was stopped
+  bool mFalconSavingEER;          // Flags that it is saving EER or LZW: these are set
+  bool mFalconSavingLZW;          // early in capture before conSet is changed
 
 public:
   void SetNonGatanPostActionTime(void);
@@ -1300,6 +1309,8 @@ bool IsConSetSaving(const ControlSet *conSet, int setNum, CameraParameters *para
 bool CanWeAlignFalcon(CameraParameters *param, BOOL savingEnabled, bool &canSave, int readMode = -1);
 bool IsSaveInEERMode(CameraParameters *param, const ControlSet *conSet);
 bool IsSaveInEERMode(CameraParameters *param, BOOL saveFrames, BOOL alignFrames, int useFramealign, int readMode);
+bool IsFalconSaveAsLZW(CameraParameters *param, const ControlSet *conSet);
+bool IsFalconSaveAsLZW(CameraParameters *param, BOOL saveFrames, int readMode);
 bool IsFEISubareaFlexible(CameraParameters *param, const ControlSet *conSet);
 bool IsFEISubareaFlexible(CameraParameters *param, BOOL saveFrames, BOOL alignFrames, int useFramealign,
   int readMode, int binning);

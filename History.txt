@@ -3,6 +3,12 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+12/26/25: Added option to save Falcon 4 frames in TIFF files with LZW
+compression.
+
+12/26/25: Added camera property to specify full name of Thermo camera if
+connecting with UTAPI scripting.
+
 12/23/25: Enabled opening Hole Finder and Coma VS IS Calibration dialogs with
 OpenDialog script command.
 

@@ -387,8 +387,9 @@ CCameraController::CCameraController()
   mFalcon4RawSumSize = 7;
   mFalcon4iRawSumSize = 9;
   mFalconAlignsWithoutSave = true;
-  mSaveInEERformat = false;
+  mSaveInEERorLZW = 0;
   mCanSaveEERformat = -1;
+  mFalconCanDoTiffLZW = false;
   mFrameSavingEnabled = false;
   mCanUseFalconConfig = -1;
   mRestoreFalconConfig = false;
@@ -2533,8 +2534,10 @@ int CCameraController::MakeMdocFrameAlignCom(CString mdocPath)
       comDir = frameDir;
 
     mFalconHelper->GetSavedFrameSizes(mParam, conSet, frameX, frameY, false);
-    if (mParam->FEItype == FALCON4_TYPE && GetSaveInEERformat() && conSet->K2ReadMode) {
-      summing = B3DNINT(conSet->frameTime / GetFalconReadoutInterval(mParam));
+    if (mParam->FEItype == FALCON4_TYPE && GetSaveInEERorLZW() != 0 && conSet->K2ReadMode)
+    {
+      if (GetSaveInEERorLZW() > 0)
+        summing = B3DNINT(conSet->frameTime / GetFalconReadoutInterval(mParam));
       if (mWinApp->mStoreMRC)
         pixelSize = (float)(0.1 *mWinApp->mStoreMRC->GetPixelSpacing() / conSet->binning);
     } else if (IS_FALCON2_3_4(mParam) && mWinApp->mStoreMRC) {
@@ -2657,8 +2660,9 @@ void CCameraController::MakeOneFrameAlignCom(CString &localFramePath, ControlSet
   else
     root = mAlignFramesComPath + '\\' + root + ".pcm";
   mFalconHelper->GetSavedFrameSizes(mParam, conSet, frameX, frameY, false);
-  if (mParam->FEItype == FALCON4_TYPE && GetSaveInEERformat() && conSet->K2ReadMode) {
-    summing = B3DNINT(conSet->frameTime / GetFalconReadoutInterval(mParam));
+  if (mParam->FEItype == FALCON4_TYPE && GetSaveInEERorLZW() != 0 && conSet->K2ReadMode) {
+    if (GetSaveInEERorLZW() > 0)
+      summing = B3DNINT(conSet->frameTime / GetFalconReadoutInterval(mParam));
     pixelSize = 1000.f * mShiftManager->GetPixelSize(mWinApp->GetCurrentCamera(), 
       mMagBefore);
   } else if (IS_FALCON3_OR_4(mParam)) {
@@ -2725,7 +2729,7 @@ int CCameraController::SaveFrameStackMdoc(KImage *image, CString &localFramePath
     extra->mPixel = savePixel;
 
     // Add gain reference for Falcon 4
-    if (message.IsEmpty() && IsSaveInEERMode(mParam, conSet)) {
+    if (message.IsEmpty() && (mFalconSavingEER || mFalconSavingLZW)) { 
       str = mFalconHelper->GetFalconRefName();
       if (!str.IsEmpty() && AdocSetKeyValue("FrameSet", sectInd, "GainReference",
         (LPCTSTR)str))
@@ -3395,6 +3399,9 @@ void CCameraController::Capture(int inSet, bool retrying)
     mWinApp->AppendToLog(logmess);
     conSet.binning = mBinning;
   }
+  
+  mFalconSavingEER = IsSaveInEERMode(mParam, &conSet);
+  mFalconSavingLZW = IsFalconSaveAsLZW(mParam, &conSet);
 
   // For JEOL, need a reliable value of tilt.  Tilt is needed before frame saving setups
   mTiltBefore = (float)mScope->GetTiltAngle();
@@ -3551,28 +3558,35 @@ void CCameraController::Capture(int inSet, bool retrying)
     if (FCAM_ADVANCED(mParam) || mAligningFalconFrames)
       mDeferStackingFrames = false;
 
-    if (IsSaveInEERMode(mParam, &conSet)) {
-      mTD.FEIacquireFlags |= PLUGFEI_USE_EER_MODE;
+    if (mFalconSavingEER || mFalconSavingLZW) {
 
       // Set up for software binning in server if property is set for it
-      if ((conSet.binning > 1 || conSet.left > 0 || conSet.top > 0 || 
+      if ((conSet.binning > 1 || conSet.left > 0 || conSet.top > 0 ||
         conSet.right < mParam->sizeX || conSet.bottom < mParam->sizeY) &&
         mTakeUnbinnedIfSavingEER)
         mTD.FEIacquireFlags |= PLUGFEI_TAKE_UNBINNED;
-      if (mAligningFalconFrames) {
-        mFalconHelper->SetEERsumming(B3DNINT(conSet.frameTime /
-          GetFalconReadoutInterval(mParam)));
-        ind = conSet.faParamSetInd;
-        B3DCLAMP(ind, 0, (int)mFrameAliParams.GetSize() - 1);
+      
+      if (mFalconSavingEER) {
+        mTD.FEIacquireFlags |= PLUGFEI_USE_EER_MODE;
 
-        // With antialias reading, we read only at super-res 0
-        if (mFalconHelper->GetReadEERantialiased()) {
-          mFalconHelper->SetEERsuperRes(0);
-        } else {
-          faParam = mFrameAliParams.GetAt(ind);
-          B3DCLAMP(faParam.EERsuperRes, 0, 2);
-          mFalconHelper->SetEERsuperRes(faParam.EERsuperRes);
+        if (mAligningFalconFrames) {
+          mFalconHelper->SetEERsumming(B3DNINT(conSet.frameTime /
+            GetFalconReadoutInterval(mParam)));
+          ind = conSet.faParamSetInd;
+          B3DCLAMP(ind, 0, (int)mFrameAliParams.GetSize() - 1);
+
+          // With antialias reading, we read only at super-res 0
+          if (mFalconHelper->GetReadEERantialiased()) {
+            mFalconHelper->SetEERsuperRes(0);
+          } else {
+            faParam = mFrameAliParams.GetAt(ind);
+            B3DCLAMP(faParam.EERsuperRes, 0, 2);
+            mFalconHelper->SetEERsuperRes(faParam.EERsuperRes);
+          }
         }
+      } else {
+        mTD.FEIacquireFlags |= PLUGFEI_SAVE_TIFF_LZW;
+        mFalconHelper->SetEERsuperRes(0);
       }
     }
 
@@ -4089,15 +4103,15 @@ void CCameraController::Capture(int inSet, bool retrying)
       if (conSet.K2ReadMode) {
         if (mParam->falcon3ScalePower <= 0) {
           mTD.DivideBy2 -= mParam->falcon3ScalePower;
-          if (mTD.FEIacquireFlags & PLUGFEI_USE_EER_MODE)
+          if (mFalconSavingEER || mFalconSavingLZW)
             scaleFac = (float)(mParam->falconEventScaling / pow(2.,mTD.DivideBy2));
         } else {
           mTD.CountScaling = mParam->linear2CountingRatio /
             (float)pow(2., mTD.DivideBy2 + mParam->falcon3ScalePower);
-          if (mTD.FEIacquireFlags & PLUGFEI_USE_EER_MODE)
+          if (mFalconSavingEER || mFalconSavingLZW)
             scaleFac = (float)(mTD.CountScaling * mParam->falconEventScaling);
         }
-        if (mTD.FEIacquireFlags & PLUGFEI_USE_EER_MODE)
+        if (mFalconSavingEER || mFalconSavingLZW)
           mFalconHelper->SetLastEERcountScaling(scaleFac);
       } else {
         mTD.FEIacquireFlags |= (PLUGFEI_APPLY_PIX2COUNT | PLUGFEI_UNBIN_PIX2COUNT);
@@ -4292,13 +4306,16 @@ void CCameraController::Capture(int inSet, bool retrying)
   mTD.Exposure = mExposure;
   mAdjustedExpForDose = (float)mExposure;
   if (IS_FALCON3_OR_4(mParam) && FCAM_CAN_COUNT(mParam) && conSet.K2ReadMode > 0) {
-    if (IsSaveInEERMode(mParam, &conSet) && mParam->addToEERExposure > -1.)
+    if ((mFalconSavingEER || mFalconSavingLZW) && mParam->addToEERExposure > -1.)
       mTD.Exposure += mParam->addToEERExposure;
 
     // Make sure number of frames will be a multiple of constraint for Flacon 4
     sumCount = GetFalconRawSumSize(mParam);
     ind = sumCount * B3DNINT(mTD.Exposure / 
       (GetFalconReadoutInterval(mParam) * sumCount));
+    if (mFalconSavingLZW)
+      mTD.SaveFrames = -B3DNINT(ind / 
+        floor(conSet.frameTime / GetFalconReadoutInterval(mParam) + 0.5)) - 1;
 
     // This formula is wrong for Falcon 3 but the timings are based on it
     // In a message about Falcon 4 TFS used the formula ceil(n * 32 / 31)
@@ -7199,6 +7216,10 @@ bool CCameraController::ConstrainExposureTime(CameraParameters *camP, BOOL doseF
         // fractions or saving as EER, so multiply by that
         else if (saveFrames)
           baseTime *= GetFalconRawSumSize(camP);
+        if (IsFalconSaveAsLZW(camP, saveFrames, readMode)) {
+          ConstrainFrameTime(frameTime, camP, 0, 1);
+          baseTime = frameTime;
+        }
       }
     }
 
@@ -7366,7 +7387,7 @@ float CCameraController::GetMinK2FrameTime(CameraParameters *param, int binning,
   if (param->FEItype) {
     if (FCAM_CONTIN_SAVE(param))
       return mCeta2ReadoutInterval;
-    return GetFalconReadoutInterval(param);
+    return GetFalconReadoutInterval(param) * (special ? GetFalconRawSumSize(param) : 1);
   }
   if (param->canTakeFrames) {
     time = FindConstraintForBinning(param, binning, &param->minFrameTime[0]);
@@ -7397,7 +7418,7 @@ float CCameraController::GetK2ReadoutInterval(CameraParameters *param, int binni
   if (param->FEItype) {
     if (FCAM_CONTIN_SAVE(param))
       return mCeta2ReadoutInterval;
-    return GetFalconReadoutInterval(param);
+    return GetFalconReadoutInterval(param) * (special ? GetFalconRawSumSize(param) : 1);
   }
   if (param->canTakeFrames) {
     time = FindConstraintForBinning(param, binning, &param->frameTimeDivisor[0]);
@@ -10131,7 +10152,7 @@ void CCameraController::DisplayNewImage(BOOL acquired)
         // The frame path and name were composed in the setup step
         mPathForFrames.Format("%s%s%s.%s", (LPCTSTR)mFrameFolder, 
           mFrameFolder.IsEmpty() ? "" : "\\", (LPCTSTR)mFrameFilename, 
-          (mTD.FEIacquireFlags & PLUGFEI_USE_EER_MODE) ? "eer" : "mrc");
+          B3DCHOICE(mFalconSavingEER, "eer", mFalconSavingLZW ? "tiff" : "mrc"));
         localFramePath = mLocalFalconFramePath;
 
         // Adjust to full path for advanced scripting, but if there is a local path,
@@ -10161,8 +10182,7 @@ void CCameraController::DisplayNewImage(BOOL acquired)
 
           // Manage the gain reference for EER, including making sure a copy is there for
           // align in IMOD now or eventually
-          if (mParam->FEItype == FALCON4_TYPE &&
-            (mTD.FEIacquireFlags & PLUGFEI_USE_EER_MODE)) {
+          if (mFalconSavingEER || mFalconSavingLZW) {
             needRefCopy = (lastConSetp->alignFrames && lastConSetp->useFrameAlign > 1) ||
               mSavingFalconFrames || (mLastConSet == RECORD_CONSET &&
               (mWinApp->mTSController->GetFrameAlignInIMOD() ||
@@ -10912,8 +10932,8 @@ void CCameraController::DisplayNewImage(BOOL acquired)
               operation = mParam->rotationFlip;
               if (mParam->FEItype == FALCON3_TYPE && mRotFlipInFalcon3ComFile >= 0)
                 operation = mRotFlipInFalcon3ComFile;
-              if (mParam->FEItype == FALCON4_TYPE && 
-                !IsSaveInEERMode(mParam, lastConSetp))
+              if (mParam->FEItype == FALCON4_TYPE && !mFalconSavingEER && 
+                !mFalconSavingLZW)
                 operation = 0;
               mFalconHelper->SetRotFlipForComFile(operation);
               WarnEmptyFalconFramePath(localFramePath, 
@@ -11037,7 +11057,7 @@ void CCameraController::DisplayNewImage(BOOL acquired)
     // Get dose per frame and output list of doses and # of frames
     if (extra->mNumSubFrames > 0) {
       if (IS_FALCON2_3_4(mParam)) {
-        if (IsSaveInEERMode(mParam, lastConSetp)) {
+        if (mFalconSavingEER || mFalconSavingLZW) {
           summedList.push_back((short)mTD.NumFramesSaved);
           summedList.push_back(1);
         } else
@@ -12488,6 +12508,7 @@ int CCameraController::AcquireFEIimage(CameraThreadData *td, void *array, int co
   static bool needFalconShutter = true;
   bool advanced = (td->CamFlags & PLUGFEI_USES_ADVANCED) != 0;
   int saveFrames = -1, errorTimeout;
+  bool tiffLZW = (td->FEIacquireFlags & PLUGFEI_SAVE_TIFF_LZW) != 0;
   DWORD ticks = GetTickCount();
   if (td->SaveFrames && (td->CamFlags & PLUGFEI_CAM_CONTIN_SAVE))
     saveFrames = -1 - B3DNINT(td->Exposure / td->FrameTime);
@@ -12512,13 +12533,13 @@ int CCameraController::AcquireFEIimage(CameraThreadData *td, void *array, int co
     SEMTrace('E', "Calling ASIacquireFromcamera %p %d %d %f %d %d %d %d %d %d %d %d %d "
       "%x %f", array, sizeX, sizeY,  td->Exposure,  messInd, td->Binning, 
       td->restrictedSize, td->ImageType, td->DivideBy2, td->eagleIndex, 
-      (td->CamFlags & PLUGFEI_CAN_DOSE_FRAC) ? td->SaveFrames : saveFrames,
+      ((td->CamFlags & PLUGFEI_CAN_DOSE_FRAC) ||tiffLZW) ? td->SaveFrames : saveFrames,
       td->GatanReadMode, (td->CamFlags & PLUGFEI_CAM_CAN_ALIGN) ? td->AlignFrames : -1,
       td->FEIacquireFlags, td->CountScaling);
     retval = td->scopePlugFuncs->ASIacquireFromCamera(array, sizeX, sizeY,  
       td->Exposure,  messInd, td->Binning, td->restrictedSize, td->ImageType,
       td->DivideBy2, td->eagleIndex, 
-      (td->CamFlags & PLUGFEI_CAN_DOSE_FRAC) ? td->SaveFrames : saveFrames,
+      ((td->CamFlags & PLUGFEI_CAN_DOSE_FRAC) || tiffLZW) ? td->SaveFrames : saveFrames,
       td->GatanReadMode, (td->CamFlags & PLUGFEI_CAM_CAN_ALIGN) ? td->AlignFrames : -1, 
       td->FEIacquireFlags, 0, 0, td->CountScaling, 0.);
 
@@ -13638,8 +13659,21 @@ bool CCameraController::IsSaveInEERMode(CameraParameters *param, BOOL saveFrames
   BOOL alignFrames, int useFramealign, int readMode)
 {
   return param->FEItype == FALCON4_TYPE && mCanSaveEERformat && readMode > 0 &&
-    ((mSaveInEERformat && (saveFrames || (alignFrames && useFramealign > 1))) ||
+    ((mSaveInEERorLZW > 0 && (saveFrames || (alignFrames && useFramealign > 1))) ||
      (!saveFrames && alignFrames && useFramealign == 1));
+}
+
+bool CCameraController::IsFalconSaveAsLZW(CameraParameters *param, 
+  const ControlSet *conSet)
+{
+  return IsFalconSaveAsLZW(param, conSet->saveFrames != 0, conSet->K2ReadMode);
+}
+
+bool CCameraController::IsFalconSaveAsLZW(CameraParameters *param, BOOL saveFrames, 
+  int readMode)
+{
+  return param->FEItype == FALCON4_TYPE && mFalconCanDoTiffLZW && readMode > 0 && 
+    mSaveInEERorLZW < 0 && saveFrames;
 }
 
 // Return whether the plugin supports flexible subareas and if conditions are appropriate:
@@ -13657,7 +13691,8 @@ bool CCameraController::IsFEISubareaFlexible(CameraParameters *param, BOOL saveF
   return mScope->GetPluginVersion() >= PLUGFEI_FLEXIBLE_SUBAREAS && param->FEItype > 1 &&
     binning <= 8 && !param->STEMcamera && (!alignFrames || useFramealign != 1 || 
       param->FEItype == FALCON4_TYPE) && (!saveFrames ||
-      IsSaveInEERMode(param, saveFrames, alignFrames, useFramealign, readMode));
+        IsSaveInEERMode(param, saveFrames, alignFrames, useFramealign, readMode) ||
+        IsFalconSaveAsLZW(param, saveFrames, readMode));
 }
 
 // Returns true if camera is using Utapi interface, plus adjusts needed parameters

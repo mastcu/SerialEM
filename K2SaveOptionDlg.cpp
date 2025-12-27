@@ -167,12 +167,22 @@ BOOL CK2SaveOptionDlg::OnInitDialog()
   states[3] = mCamParams->GatanCam;
   states[5] = !mDEtype;
   if (mCamParams->FEItype == FALCON4_TYPE && mWinApp->mCamera->GetCanSaveEERformat() > 0) {
-    SetDlgItemText(IDC_ONE_FRAME_PER_FILE,
-      "Save counting frames in EER file instead of MRC file");
-    m_bOneFramePerFile = mWinApp->mCamera->GetSaveInEERformat();
-    states[1] = true;
-    if (!mCanSaveFrameStackMdoc)
-      mIDsToDrop.push_back(IDC_FRAME_STACK_MDOC);
+    if (mWinApp->mCamera->GetFalconCanDoTiffLZW()) {
+      states[1] = mCanSaveFrameStackMdoc;
+      states[0] = true;
+      mIDsToDrop.push_back(IDC_ONE_FRAME_PER_FILE);
+      mIDsToDrop.push_back(IDC_USE_EXTENSION_MRCS);
+      mIDsToDrop.push_back(IDC_STAT_CURSET1);
+      mIDsToDrop.push_back(IDC_STAT_CURSET2);
+      SetDlgItemText(IDC_STAT_FILETYPE, "File type for counting frames");
+      SetDlgItemText(IDC_TIFF_ZIP_COMPRESS, "EER file");
+    } else {
+      SetDlgItemText(IDC_ONE_FRAME_PER_FILE,
+        "Save counting frames in EER file instead of MRC file");
+      states[1] = true;
+      if (!mCanSaveFrameStackMdoc)
+        mIDsToDrop.push_back(IDC_FRAME_STACK_MDOC);
+    }
   } else if (mCamParams->DectrisType) {
     SetDlgItemText(IDC_ONE_FRAME_PER_FILE, "Save in native DECTRIS format (HDF5)");
     m_bOneFramePerFile = mCamParams->STEMcamera ||

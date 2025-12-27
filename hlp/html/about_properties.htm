@@ -239,13 +239,35 @@
         </TR>
         <TR VALIGN="top">
           <TD>PluginPath2-32</TD>
-          <TD>Sets PluginPath2 with this path only if running 32-bit.</TD>
+          <TD>Sets PluginPath2 with this path only if running 32-bit; will be overridden by a
+            'PluginPath2' entry after this one.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>PluginPath2-D32</TD>
+          <TD>Sets PluginPath2 with this path only if running 32-bit debug build; will be
+             overridden by a 'PluginPath2-32' or 'PluginPath2' entry after this one.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>PluginPath2-R32</TD>
+          <TD>Sets PluginPath2 with this path only if running 32-bit release build; will be
+             overridden by a 'PluginPath2-32' or 'PluginPath2' entry after this one.</TD>
         </TR>
         <TR VALIGN="top">
           <TD>PluginPath2-64</TD>
-          <TD>Sets PluginPath2 with this path only if running 64-bit.</TD>
+          <TD>Sets PluginPath2 with this path only if running 64-bit; will be overridden by a
+            'PluginPath2' entry after this one.</TD>
         </TR>
         <TR VALIGN="top">
+          <TD>PluginPath2-D64</TD>
+          <TD>Sets PluginPath2 with this path only if running 64-bit debug build; will be
+             overridden by a 'PluginPath2-64' or 'PluginPath2' entry after this one.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>PluginPath2-R64</TD>
+          <TD>Sets PluginPath2 with this path only if running 64-bit release build; will be
+             overridden by a 'PluginPath2-64' or 'PluginPath2' entry after this one.</TD>
+        </TR>
+         <TR VALIGN="top">
           <TD>StartupMessage</TD>
           <TD>This entry can be added to provide a message upon program startup. The entry
             must be all one line but the message can consist of multiple lines, separated by

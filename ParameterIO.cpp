@@ -4406,12 +4406,32 @@ int CParameterIO::ReadProperties(CString strFileName)
         StripItems(strLine, 1, message);
         mDocWnd->SetPluginPath2(message);
 #endif
+      } else if (MatchNoCase("PluginPath2-D32")) {
+#if !defined(_WIN64) && defined(_DEBUG)
+        StripItems(strLine, 1, message);
+        mDocWnd->SetPluginPath2(message);
+#endif
+      } else if (MatchNoCase("PluginPath2-R32")) {
+#if !defined(_WIN64) && defined(NDEBUG)
+        StripItems(strLine, 1, message);
+        mDocWnd->SetPluginPath2(message);
+#endif
       } else if (MatchNoCase("PluginPath2-64")) {
 #ifdef _WIN64
         StripItems(strLine, 1, message);
         mDocWnd->SetPluginPath2(message);
 #endif
 
+      } else if (MatchNoCase("PluginPath2-D64")) {
+#if defined(_WIN64) && defined(_DEBUG)
+        StripItems(strLine, 1, message);
+        mDocWnd->SetPluginPath2(message);
+#endif
+      } else if (MatchNoCase("PluginPath2-R64")) {
+#if defined(_WIN64) && defined(NDEBUG)
+        StripItems(strLine, 1, message);
+        mDocWnd->SetPluginPath2(message);
+#endif
       } else if (MatchNoCase("ExternalTool")) {
         StripItems(strLine, 1, message);
         mWinApp->mExternalTools->AddTool(message);

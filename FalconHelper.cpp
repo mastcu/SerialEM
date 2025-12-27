@@ -204,10 +204,11 @@ int CFalconHelper::SetupConfigFile(ControlSet &conSet, int consNum, CString loca
   CString str;
   long temp = 1;
   long *readPtr = &temp;
-  float frameInterval = mCamera->GetFalconReadoutInterval();
+  float frameInterval = mCamera->GetFalconReadoutInterval(camParams);
   int ind, block, numInFracs, numRawFrames = 0, numSkipBefore;
   bool saveFrames = conSet.saveFrames || (conSet.alignFrames && conSet.useFrameAlign);
   bool eerMode = mCamera->IsSaveInEERMode(camParams, &conSet);
+  mSavingTiffLZW = mCamera->GetFalconSavingLZW();
   mDoingAdvancedFrames = FCAM_ADVANCED(camParams) != 0;
   if (!mDoingAdvancedFrames) {
 
@@ -236,18 +237,21 @@ int CFalconHelper::SetupConfigFile(ControlSet &conSet, int consNum, CString loca
   // check that the summed frame list is consistent and fix it if not
   if (camParams->FEItype == FALCON4_TYPE) {
     ind = mCamera->GetFalconRawSumSize(camParams);
-    numRawFrames = ind * B3DNINT(conSet.exposure /
-      (mCamera->GetFalconReadoutInterval(camParams) * ind));
-    if (!eerMode && numRawFrames > 0) {
+    frameInterval *= (float)ind;
+    numRawFrames = ind * B3DNINT(conSet.exposure / frameInterval);
+    if (!eerMode && !mSavingTiffLZW && numRawFrames > 0) {
       GetFrameTotals(conSet.summedFrameList, numInFracs);
       if (numInFracs != numRawFrames / ind)
         AdjustSumsForExposure(camParams, &conSet, conSet.exposure, consNum);
     }
+    if (mSavingTiffLZW)
+      numRawFrames = B3DNINT(conSet.exposure / 
+      (frameInterval * B3DNINT(conSet.frameTime / frameInterval)));
   }
 
   // Build the list of readouts
   mReadouts.clear();
-  if (eerMode || FCAM_CONTIN_SAVE(camParams)) {
+  if (eerMode || mSavingTiffLZW || FCAM_CONTIN_SAVE(camParams)) {
     mReadouts.push_back(1);
   } else {
     mReadouts.clear();
@@ -263,7 +267,7 @@ int CFalconHelper::SetupConfigFile(ControlSet &conSet, int consNum, CString loca
   
   // For EER, replace numFrames and send it as the ending frame # so plugin can adjust
   // exposure
-  if (eerMode) {
+  if (eerMode || mSavingTiffLZW) {
     numFrames = numRawFrames;
     mReadouts[0] = numFrames;
   }
@@ -528,7 +532,7 @@ int CFalconHelper::SetupFrameAlignment(ControlSet &conSet, CameraParameters *cam
   param.multAliBinByEERfac = false;
   mAlignTruncation = 0.;
   if (camParams->FEItype) {
-    if (mEERsumming > 0) {
+    if (mEERsumming > 0 || mSavingTiffLZW) {
       superFac = GetEERsuperFactor(mEERsuperRes);
       nx = camParams->sizeX * superFac;
       ny = camParams->sizeY * superFac;
@@ -543,7 +547,7 @@ int CFalconHelper::SetupFrameAlignment(ControlSet &conSet, CameraParameters *cam
      
       mTrimDEsum = (conSet.left > 0 || conSet.right < camParams->sizeX ||
         conSet.top > 0 || conSet.bottom < camParams->sizeY);
-      param.multAliBinByEERfac = !mReadEERantialiased;
+      param.multAliBinByEERfac = !mReadEERantialiased && !mSavingTiffLZW;
       mLastUseOfFalconRef = mWinApp->MinuteTimeStamp();
 
     } else {
@@ -673,10 +677,10 @@ int CFalconHelper::StackFrames(CString localPath, CString &directory, CString &r
   mRotateFlip = rotateFlip;
 
   // Falcon 4 saves MRC reoriented, but rotation/flip is needed for EER
-  if (camTD->FEItype == FALCON4_TYPE && !mEERsumming)
+  if (camTD->FEItype == FALCON4_TYPE && !mEERsumming && !mSavingTiffLZW)
     aliSumRotFlip = 0;
   mRotFlipForComFile = aliSumRotFlip;
-  if (camTD->FEItype == FALCON4_TYPE && mEERsumming) {
+  if (camTD->FEItype == FALCON4_TYPE && (mEERsumming || mSavingTiffLZW)) {
     B3DCLAMP(aliSumRotFlip, 0, 7);
     aliSumRotFlip = sInvBeforeMap[aliSumRotFlip];
   }
@@ -725,13 +729,15 @@ int CFalconHelper::StackFrames(CString localPath, CString &directory, CString &r
   mNy = -1;
   mDeleteList.clear();
   mStartedAsyncSave = -1;
-  str = mDirectory + "\\" + mRootname + (mEERsumming ? ".eer" : ".mrc");
+  str = mDirectory + "\\" + mRootname + 
+    B3DCHOICE(mSavingTiffLZW, ".tiff", mEERsumming ? ".eer" : ".mrc");
   SEMTrace('E', "In stackFrames  local %d %s", readLocally ? 1 : 0, (LPCTSTR)localPath);
 
     // Open a file locally if flag set for that
   if (readLocally) {
-    if (mEERsumming > 0) {
+    if (mEERsumming > 0 || mSavingTiffLZW)
       mFloatScale = mLastEERcountScaling * powf((float)GetEERsuperFactor(mEERsuperRes), 2);
+    if (mEERsumming > 0) {
       eerFlags = mWinApp->mScope->GetSimulationMode() ? IIFLAG_IGNORE_BAD_EER_END : 0;
       if (mEERsuperRes < 2 && mReadEERantialiased) {
         eerFlags |= (IIFLAG_ANTIALIAS_EER | IIFLAG_EER_USE_LANCZOS);
@@ -739,14 +745,20 @@ int CFalconHelper::StackFrames(CString localPath, CString &directory, CString &r
       }
       tiffSetEERreadProperties(mEERsuperRes, mEERsumming, eerFlags);
     }
-    mFrameFP = iiFOpen((LPCTSTR)localPath, "rb");
+    //for (ind = 0; ind < (mSavingTiffLZW ? 50 : 2); ind++) {
+      mFrameFP = iiFOpen((LPCTSTR)localPath, "rb");
+      //if (mFrameFP)
+        //break;
+      //Sleep(100);
+    //}
     if (!mFrameFP) {
       _get_errno(&ind);
       strerror_s(errStr, 160, ind);
       SEMTrace('E', "Error opening frame stack at local path: %s\r\n    %s", 
         (LPCTSTR)localPath, errStr);
       return FIF_OPEN_OLD;
-    }
+    } //else
+      //SEMTrace('E', "Opened file on try %d", ind);
     if (mrc_head_read(mFrameFP, &mMrcHeader)) {
       SEMTrace('E', "Error reading frame stack header: %s", b3dGetError());
       iiFClose(mFrameFP);
@@ -877,7 +889,7 @@ void CFalconHelper::StackNextTask(int param)
         mImage->setType(kUSHORT);
     }
     mUseImage2 = 0;
-    if (mUseFrameAlign && !mEERsumming && 
+    if (mUseFrameAlign && !mEERsumming && !mSavingTiffLZW &&
       (mCamTD->DMSizeX != ((mAliSumRotFlip % 2) ? mNy : mNx) || 
       mCamTD->DMSizeY != ((mAliSumRotFlip % 2) ? mNx : mNy))) {
         mAlignError = FIF_ALIGN_SIZE_ERR;
@@ -892,7 +904,7 @@ void CFalconHelper::StackNextTask(int param)
     // the non-NULL when doing so.  If this is bad locally, could change to 
     // mUsePlugin && mPlugFuncs->FIFcleanUp2 && CBaseSocket::ServerIsRemote(FEI_SOCK_ID)
     if (saving && param && mWinApp->mBufferManager->GetSaveAsynchronously()) {
-      if (mEERsumming > 0) {
+      if (mEERsumming > 0 || mSavingTiffLZW) {
         mImage2 = (KImageShort *)(new KImage(mNx, mNy));
       } else {
         mImage2 = new KImageShort((mRotateFlip % 2) ? mNy : mNx,
@@ -975,7 +987,7 @@ void CFalconHelper::StackNextTask(int param)
   
   // Do alignment unless skipping that
   if (!mStackError && mUseFrameAlign && !mAlignError && !skipAlign) {
-    if (mEERsumming > 0) {
+    if (mEERsumming > 0 || mSavingTiffLZW) {
       useGainArr = mFalconGainRef;
       if (mFoundFalconDefects)
         useDefects = &mFalconDefects;
@@ -988,8 +1000,8 @@ void CFalconHelper::StackNextTask(int param)
       useDefects = &camParam->defects;
     }
     hasDefects = AreDefectsNonEmpty(useDefects);
-    ind = mFrameAli->nextFrame(outPtr, 
-      (mEERsumming > 0 && !mReadEERantialiased) ? MRC_MODE_BYTE : mImage->getMode(),
+    ind = mFrameAli->nextFrame(outPtr, ((mEERsumming > 0 && !mReadEERantialiased) ||
+      mSavingTiffLZW) ? MRC_MODE_BYTE : mImage->getMode(),
       useGainArr, useNxGain, useNyGain, mDarkp ? mDarkp->Array : NULL, mAlignTruncation,
       useDefects, hasDefects ? useNxGain : 0, hasDefects ? useNyGain : 0, 1, 0., 0.);
     if (ind) {
@@ -1873,6 +1885,8 @@ int CFalconHelper::WriteAlignComFile(CString inputFile, CString comName, int faP
   if (EERsumming > 0) {
     strTemp.Format("EERSuperResZSumPadding %d %d 1\n", param.EERsuperRes, EERsumming);
     comStr += strTemp;
+  }
+  if (EERsumming > 0 || mSavingTiffLZW) {
     if (!mFalconRefName.IsEmpty())
       comStr += "GainReferenceFile " + mFalconRefName + "\n";
     strTemp.Format("ScalingOfSum %f\n", camParams->EERscaleForIMODalign > 0 ?
@@ -1926,7 +1940,7 @@ int CFalconHelper::WriteAlignComFile(CString inputFile, CString comName, int faP
     UtilSplitExtension(temp, outputRoot, temp2);
     if (temp2.GetLength())
       outputExt = temp2;
-  } else if (outputExt == ".tif" || outputExt == ".mrcs" || outputExt == ".eer")
+  } else if (outputExt.Find(".tif") == 0 || outputExt == ".mrcs" || outputExt == ".eer")
     outputExt = ".mrc";
   comStr += "OutputImageFile " + outputRoot + "_ali" + outputExt + "\n";
 
@@ -1964,7 +1978,8 @@ void CFalconHelper::GetSavedFrameSizes(CameraParameters *camParams,
     frameY = (conSet->bottom - conSet->top) / conSet->binning;
     maybeSwap = FCAM_ADVANCED(camParams) && camParams->FEItype != FALCON4_TYPE &&
       !(camParams->FEItype == FALCON3_TYPE && mCamera->GetRotFlipInFalcon3ComFile() >= 0);
-    if (mCamera->IsSaveInEERMode(camParams, conSet)) {
+    if (mCamera->IsSaveInEERMode(camParams, conSet) || 
+      mCamera->IsFalconSaveAsLZW(camParams, conSet)) {
       frameX = camParams->sizeX;
       frameY = camParams->sizeY;
       maybeSwap = true;
