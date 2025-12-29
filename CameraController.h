@@ -669,6 +669,7 @@ public:
   GetSetMember(float, FirstSTEMExtraTimeout);
   GetMember(bool, FalconSavingEER);
   GetMember(bool, FalconSavingLZW);
+  GetSetMember(BOOL, SaveK3GainAsTIFF);
 
   CameraThreadData *GetCamThreadData() { return &mTD; };
   bool DoingPartialScan() {return mTD.ReturnPartialScan > 0; };
@@ -1159,6 +1160,7 @@ public:
   bool mStoppedPartialScan;       // Flag that partial STEM was stopped
   bool mFalconSavingEER;          // Flags that it is saving EER or LZW: these are set
   bool mFalconSavingLZW;          // early in capture before conSet is changed
+  BOOL mSaveK3GainAsTIFF;         // Flag to save K3 counting gain as TIFF not MRC
 
 public:
   void SetNonGatanPostActionTime(void);

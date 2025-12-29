@@ -45,6 +45,7 @@ FRAMEDOC_OPEN_ERR, FRAMEDOC_WRITE_ERR, NULL_IMAGE, FRAMETS_NO_ANGLES, VIEW_IS_AC
 #define K2_USE_TILT_ANGLES     (1 << 21) // 200000
 #define K2_USE_SAVE_THREAD     (1 << 22) // 400000
 #define K2_IMMEDIATE_RETURN    (1 << 23) // 800000
+#define K3_SAVE_GAIN_AS_TIFF   (1 << 24) // 1000000
 
 // Flags for SetK2Parameters
 #define K2_ANTIALIAS_MASK      7         

@@ -498,6 +498,7 @@ CCameraController::CCameraController()
   for (l = 0; l < MAX_CHANNELS; l++)
     mTD.PartialArrays[l] = NULL;
   mAskedDMtoInsert = false;
+  mSaveK3GainAsTIFF = false;
 }
 
 // Clear anything that might be set externally, or was cleared in constructor and cleanup
@@ -5363,6 +5364,8 @@ int CCameraController::SetupK2SavingAligning(const ControlSet &conSet, int inSet
       mK2GainRefTimeStamp[DMind][isSuperRes ? 1 : 0] = 
         mWinApp->MinuteTimeStamp();
   }
+  if (mSaveK3GainAsTIFF)
+    flags |= K3_SAVE_GAIN_AS_TIFF;
 
   // For new K2 API, determine whether to do asynchronous to RAM and how many
   // frames to grab into stack

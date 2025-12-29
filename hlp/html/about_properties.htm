@@ -139,8 +139,10 @@
           <TD>SkipUtapiServices</TD>
           <TD>Follow with a list of indexes to UTAPI services that should be marked as not 
             available.&nbsp; The indexes correspond to the values of the enum 
-            'UtapiSupportTypes' in SerialEM.h.  With the latest UTAPI server (April 2025), only 20 needs
-            to be used for cameras if you have a Ceta 2, and 28 to skip the vibration manager service.</TD>
+            'UtapiSupportTypes' in SerialEM.h.  With a UTAPI server from April 2025, only 20 needs
+            to be used for cameras if you have a Ceta 2; the vibration manager is supported for dewar 
+            and vacuum management as of 28-Dec-25 but you can use 28 to skip this service and use 
+            older scripting calls.</TD>
         </TR>
        <TR VALIGN="top">
           <TD>UseDetectorNameIfUtapi</TD>
@@ -418,25 +420,25 @@
             values from 0 to 255.</TD>
         </TR>
         <TR VALIGN="top">
-          <TD>ErrorColor</TD>
+          <TD>&nbsp;&nbsp;&nbsp; ErrorColor</TD>
           <TD>Color for error messages printed instead of popping up as message boxes in 
             scripts and Navigator acquisition (default 2).</TD>
         </TR>
         <TR VALIGN="top">
-          <TD>WarningColor</TD>
+          <TD>&nbsp;&nbsp;&nbsp; WarningColor</TD>
           <TD>Color for messages starting with WARNING: or Warning: (default 2).</TD>
         </TR>
         <TR VALIGN="top">
-          <TD>InsertedColor</TD>
+          <TD>&nbsp;&nbsp;&nbsp; InsertedColor</TD>
           <TD>Color for text manually written into the log window (default 4).&nbsp; This 
             text will not appear in color until the program writes new output to the log.</TD>
         </TR>
         <TR VALIGN="top">
-          <TD>DebugColor</TD>
+          <TD>&nbsp;&nbsp;&nbsp;&nbsp; DebugColor</TD>
           <TD>Color for output activated by setting the debug output keys (default 1).</TD>
         </TR>
         <TR VALIGN="top">
-          <TD>VerboseColor</TD>
+          <TD>&nbsp;&nbsp;&nbsp; VerboseColor</TD>
           <TD>Color for output that appears because of a Verbose menu setting (default 1).</TD>
         </TR>
         <TR VALIGN="top">
@@ -1263,6 +1265,11 @@
           <TD>Full path and name of super-resolution mode software gain reference on the K2 or K3
             computer, so that the reference can be saved along with data when taking dose
             fractionation images without gain normalization in super-resolution mode.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>SaveK3CountingGainAsTIFF</TD>
+          <TD>Set to 1 to have the gain reference for binned counting frames, which is 
+            synthesized by the SerialEMCCD plugin, saved in TIFF format instead of MRC.</TD>
         </TR>
         <TR VALIGN="top">
           <TD>K2MinStartupDelay</TD>

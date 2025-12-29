@@ -3,6 +3,9 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+12/28/25: Added property SaveK3CountingGainAsTiff to make the binned counting
+reference for K3 saved by SEMCCD be a TIFF file instead of MRC.
+
 12/28/25: Finalized support for using Vibration Manager in UTAPI for dewar and
 vacuum management process.
 
