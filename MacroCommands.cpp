@@ -11894,7 +11894,7 @@ int CMacCmd::EndAcquireAtItems(void)
   if (mNavigator->GetPausedAcquire())
     mNavigator->EndAcquireWithMessage();
   else if (mNavigator->GetAcquiring())
-    mNavigator->SetAcquireEnded(1);
+    mNavigator->SetAcquireEnded(state);
   else
     ABORT_LINE("Navigator acquisition has not been started for line:\n\n");
   return 0;
