@@ -30,6 +30,15 @@
       command, so timing is based on the same times when each operation was last run
       that are kept track of when running through script and stored in the short-term
       calibrations file between program sessions. </p>
+    <p> For Thermo/FEI scopes, the situation when using the UTAPI interface is very 
+      different from that with the old scripting interface.&nbsp; With UTAPI, there is 
+      no direct control of filling or of the autoloader turbo pump; instead there is a 
+      &#39;Vibration Manager&#39; that informs about whether the system is vibrating and can 
+      be directed to avoid vibrations and to prepare to avoid vibrations.&nbsp; 
+      Preparing to avoid vibrations seems to be the only reliable way to end up with 
+      the system reporting that it is not vibrating, so that call is used in the 
+      various cases covered by this dialog.</p>
+    <p> &nbsp;</p>
     <p> <em><strong>Vacuum Management</strong></em></p>
     <p>The top section of the dialog currently appears only for Thermo/FEI scopes.</p>
     <p><strong>Check for PVP running and wait until done</strong></p>
@@ -38,13 +47,15 @@
     <p><strong>Run buffer cycle every N minutes</strong></p>
     <p>Select this option to run the regular buffer cycle periodically, and fill in
       the text box with the number of minutes between runs (an integer).</p>
-    <p><strong>Run autoloader buffer cycle every N minutes</strong></p>
+    <p><strong>Run autoloader buffer cycle every N minutes&nbsp; (non-UTAPI only)</strong></p>
     <p>Select this option to run the autoloader buffer cycle periodically, and fill in
       the text box with the number of minutes between runs (an integer).&nbsp; Whether
       this option appears is governed by the first bit (1) of the property
       'DewarVacCapabilities', which is on by default for a Krios but must be explicitly
       provided for other scopes with autoloaders.</p>
-    <p><em><strong>Nitrogen Management</strong></em></p>
+    <p>&nbsp;</p>
+    <p><em><strong>Nitrogen Management&nbsp; (non-UTAPI)&nbsp;&nbsp;&nbsp;&nbsp; or&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+      Vibration Avoidance and&nbsp; Nitrogen Management&nbsp; (UTAPI)</strong></em></p>
     <p>The bottom section of the dialog appears if there is any way to control or
       monitor an automatic nitrogen filling system.&nbsp; For Thermo/FEI scopes, this is
       determined by the second bit (2) of the 'DewarVacCapabilities' property, which
@@ -53,23 +64,31 @@
       are treated together.&nbsp; For either type of scope, the section will also
       appear if the 'HasSimpleOrigin' property is set, and commands to the Simple
       Origin filling system will be used.</p>
-    <p><strong>Refill nitrogen every N hours</strong></p>
+    <p><strong>Refill nitrogen every N hours&nbsp; (non-UTAPI)&nbsp;&nbsp;&nbsp; or&nbsp;&nbsp;&nbsp; 
+      Prepare to avoid every N hours&nbsp; (UTAPI)</strong></p>
     <p>Select this option to refill dewars periodically and fill in the text box with
       the interval between filling in hours (a floating point entry is allowed).&nbsp;
       When the management routine is run with this option selected, the program will
       first check whether filling has already started.</p>
-    <p><strong>Check for ongoing filling and wait until done</strong></p>
+    <p><strong>Check for ongoing filling and wait until done&nbsp; (non-UTAPI)&nbsp;&nbsp;&nbsp; 
+      or&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Check for ongoing filling or vibrations and wait until done&nbsp; 
+      (UTAPI)</strong></p>
     <p>Select this option to check for whether filling has started and wait until it
       is done. Even if filling is specified to be done at an interval, it would be
       advisable to check this option too if there is some chance that it might occur
       spontaneously.</p>
-    <p><strong>Pause if time to next refill is below N minutes</strong></p>
+    <p><strong>Pause if time to next refill is below N minutes&nbsp;&nbsp; (non-UTAPI 
+      only)</strong></p>
     <p>This line and the next one appear if SerialEM can determine the time until the
       system plans to start a filling - with Thermo/FEI and Simple Origin but not with JEOL.&nbsp;
       When the program checks for ongoing filling, it also checks the time interval
       until the next filling.&nbsp; If that interval is below the time entered on this
-      line (a floating point value), the program will pause and wait for it to start.</p>
-    <p><strong>Start the refill if time to next refill is below N minutes</strong></p>
+      line (a floating point value), the program will pause and wait for it to start.&nbsp; 
+      With UTAPI, it is necessary to start the refill to end up in the desired state, 
+      so there is pausing.</p>
+    <p><strong>Start the refill if time to next refill is below N minutes&nbsp; 
+      (non-UTAPI)&nbsp;&nbsp;&nbsp; or&nbsp;&nbsp;&nbsp;&nbsp; Prepare to avoid if time to next refill is below N minutes&nbsp; 
+      (UTAPI)</strong></p>
     <p>If this option is selected, the program will start the filling immediately&nbsp;when
       the
       interval to the next filling is longer than the time on the previous line but below the time entered

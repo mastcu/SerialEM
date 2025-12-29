@@ -135,6 +135,9 @@ BOOL CManageDewarsDlg::OnInitDialog()
     SetDlgItemText(IDC_CHECK_DEWARS, "Check for ongoing filling or vibrations and wait"
       " until done");
     SetDlgItemText(IDC_START_REFILL, "Prepare to avoid if time to next refill is below");
+    mIDsToDrop.push_back(IDC_STAT_PAUSE_BEFORE);
+    mIDsToDrop.push_back(IDC_EDIT_PAUSE_BEFORE);
+    mIDsToDrop.push_back(IDC_STAT_BEFORE_MIN);
   }
 
   // Load data from master params

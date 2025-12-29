@@ -121,8 +121,9 @@ static CmdItem cmdList[] = {
 
 // Be sure to add an entry for longHasTime when adding long operation
 const char *CMacCmd::mLongKeys[MAX_LONG_OPERATIONS] =
-  {"BU", "RE", "IN", "LO", "$=", "DA", "UN", "$=", "RS", "RT", "FF", "RB", "PA"};
-int CMacCmd::mLongHasTime[MAX_LONG_OPERATIONS] = {1, 1, 0, 1, 0, 1, 0, 0, 1, 1, 1, 1, 1};
+  {"BU", "RE", "IN", "LO", "$=", "DA", "UN", "$=", "RS", "RT", "FF", "RB", "PA", "AV"};
+int CMacCmd::mLongHasTime[MAX_LONG_OPERATIONS] = {1, 1, 0, 1, 0, 1, 0, 0, 1, 1, 1, 1, 1,
+0};
 
 CMacCmd::CMacCmd(int index) : CMacroProcessor(index)
 {
@@ -10088,8 +10089,10 @@ int CMacCmd::QueryVibrationManager()
 // VibrationManagerRequest
 int CMacCmd::VibrationManagerRequest()
 {
-  if (mItemInt[1] < 0 || mItemInt[1] > 3)
-    ABORT_LINE("Action type must be between 0 and 3 for line:\n\n");
+  if (!mItemInt[1])
+    ABORT_LINE("Use LongOperation Av to avoid vibrations for line:\n\n");
+  if (mItemInt[1] < 1 || mItemInt[1] > 3)
+    ABORT_LINE("Action type must be between 1 and 3 for line:\n\n");
   if (!mScope->VibrationManagerAction(mItemInt[1]))
     ABORT_NOLINE("Script halted due to failure in VibrationManagerRequest");
   return 0;
@@ -13971,7 +13974,7 @@ int CMacCmd::LongOperation(void)
 
   ix1 = 0;
   iy1 = 1;
-  int used[] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+  int used[] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
   int operations[MAX_LONG_OPERATIONS + 1];
   float intervals[MAX_LONG_OPERATIONS + 1];
   for (index = 1; index < MAX_MACRO_TOKENS && !mItemEmpty[index]; index++) {

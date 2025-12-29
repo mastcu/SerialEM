@@ -4023,15 +4023,16 @@
           <TD class="scriptcommand">QueryVibrationManager #</TD>
           <TD>Reports the state of the Vibration Manager in the UTAPI interface.&nbsp; If <b>#</b> is 0,
             it reports the vibration state: 0 for unknown, 1 for not vibrating, 2 for vibrating soon
-             (within 10 minutes), or 3 for vibrating.&nbsp; With a 1 or 2 auto-vibration it reports whether avoidance is on and
+             (within 10 minutes), or 3 for vibrating.&nbsp; With a 1 or 2 it reports whether auto-avoidance is on and
             whether it is currently avoiding vibrations, repectively, with a 0 for off and 1 for on.&nbsp; The 
             value may be assigned to a variable at the end of the command.&nbsp; Command added in 4.3, 1-Sep-25.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">VibrationManagerRequest #</TD>
-          <TD>Makes one call to the Vibration Manager in the UTAPI interface: <b>#</b> can be 0 to avoid
-            vibrations, 1 to allow vibrations, or 2 or 3 to turn auto-vibration avoidance on or off, 
-            respectively&nbsp;  Command added in 4.3, 1-Sep-25.</TD>
+          <TD>Makes one call to the Vibration Manager in the UTAPI interface: <b>#</b> can be 
+             1 to allow vibrations, or 2 or 3 to turn auto-vibration avoidance on or off, 
+            respectively.&nbsp; Use 'LongOperation Pa #' to prepare to avoid vibrations and 
+            'LongOperation Av' to avoid vibrations.&nbsp; Command added in 4.3, 1-Sep-25.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">ReportVacuumGauge name</TD>
@@ -4077,11 +4078,12 @@
             or JEOL, Loader buffer cycle ('Lo'), Unload cartridge ('Un') on Thermo/FEI only, Dark
             reference update for K2 (or K3 with GMS 3.31+) ('Da'), Refill Stage tank ('RS'), Refill Transfer
             tank ('RT'), or Refill Both tanks 'RB' on JEOL, Flash FEG ('FF') on JEOL or 
-            Thermo/FEI, or Prepare to Avoid vibrations ('PA') on Thermo/FEI scopes with the 
+            Thermo/FEI, and Prepare to Avoid vibrations ('PA') or Avoid Vibrations ('AV') on Thermo/FEI scopes with the 
             UTAPI vibration manager supported.&nbsp; Operations are identified by the first two
-            letters of whatever full word you use (case insensitive).&nbsp; 
-            <br />&nbsp;&nbsp;&nbsp;&nbsp; Each operation
-            except Inventory and Unload cartridge must be followed by an interval in hours (<b>#</b>).&nbsp; If <b>#</b> is &gt;
+            letters of whatever full word you use (case insensitive); in cases where the required letters 
+            come from two words, you can add other text to clarify, e.g., 'RS-RefillStage'.&nbsp; 
+            <br />&nbsp;&nbsp;&nbsp;&nbsp; Operations other than Inventory, Unload cartridge, and 
+            Avoid Vibrations must be followed by an interval in hours (<b>#</b>).&nbsp; If <b>#</b> is &gt;
             0, the operation is done only if the time since the last such operation is
             greater than <b>#</b>; if <b>#</b> is 0, the operation is done unconditionally; if <b>#</b> is -1, it
             simply records the current time as the time of the last operation; if <b>#</b> is &lt; -1,
@@ -4110,7 +4112,11 @@
             6 elements described above as reported by 'ReportSlotStatus'.&nbsp; Both this array and the 
             internal program array are maintained with any changes resulting from 'LoadCartridge' and 
             'UnloadCartridge' commands, so it should not be necessary to run a new inventory unless the program is
-            restarted or there are external operations with the autoloader.
+            restarted or there are external operations with the autoloader.&nbsp; Preparing to Avoid Vibrations may 
+            fill dewars and run buffer cycles if necessary; after that completes, the operation will 
+            open valves if they are closed, and tell the scope to avoid vibrations.&nbsp; The Avoid Vibrations
+            operation is included for test purposes; it will also open valves if necessary but may trigger 
+            dewar-filling and can hang indefinitely if the scope cannot comply, so it will time out after 5 minutes.
           </TD>
         </TR>
         <TR>
