@@ -3543,7 +3543,8 @@ void CMultiGridTasks::DoNextSequenceAction(int resume)
       // After script:
     case MGACT_RUN_MACRO:
       mRunningMacro = false;
-      if (mWinApp->mMacroProcessor->GetLastAborted()) {
+      if (!mWinApp->mMacroProcessor->GetLastCompleted() && 
+        mWinApp->mMacroProcessor->GetLastAborted()) {
         ChangeStatusFlag(mCurrentGrid, MGSTAT_FLAG_FAILED, 1);
         errStr.Format("Marking grid %d as failed because script did not complete", 
           jcd.id);

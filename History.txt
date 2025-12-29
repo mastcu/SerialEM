@@ -3,6 +3,14 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+12/28/25: SEM_4-2-14
+12/28/25: Fixed use of argument 1 and 2 to EndAcquireAtItems to suppress
+message and allow a script to run, and also made value of 2 allow multigrid to
+proceed to next grid (In 4.2).
+
+12/28/25: Fixed multigrid makring grid as failed when running a script after
+the LMM is acquired (In 4.2).
+
 12/28/25: Added property SaveK3CountingGainAsTiff to make the binned counting
 reference for K3 saved by SEMCCD be a TIFF file instead of MRC.
 
@@ -11,6 +19,9 @@ vacuum management process.
 
 12/28/25: Made it stop trying to get names from autoloader on Thermo scopes if
 it fails once.
+
+12/27/25: Fixed getting spot size and defocus through UTAPI in STEM mode,
+initially disabled when it didn't work in Oct. 2024 (In 4.2).
 
 12/26/25: Added option to save Falcon 4 frames in TIFF files with LZW
 compression.
