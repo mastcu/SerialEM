@@ -7321,6 +7321,8 @@ BOOL CEMscope::CassetteSlotStatus(int slot, int &status, CString &names, int *nu
         success = false;
         names = "An error occurred getting names from the autoloader panel: \r\n";
         names += mPlugFuncs->GetLastErrorString();
+        if (names.Find("Could not find Workset tab") > 0)
+          mFEIcanGetLoaderNames = 0;
         names += "\r\n";
       }
     }
@@ -10381,7 +10383,8 @@ static char *longOpDescription[MAX_LONG_OPERATIONS] =
   "getting cassette inventory", "running autoloader buffer cycle", "showing message box",
   "updating hardware dark reference", "unloading a cartridge", "loading a cartridge",
   "refilling stage", "refilling transfer tank", "flashing FEG", 
-  "refilling stage and transfer tank", "preparing to avoid vibration"};
+  "refilling stage and transfer tank", "preparing to avoid vibration", 
+  "avoiding vibration"};
 
 // Start a thread for a long-running operation: returns 1 if thread busy, 
 // 2 if inappropriate in some other way, -1 if nothing was started
@@ -10392,8 +10395,8 @@ int CEMscope::StartLongOperation(int *operations, float *hoursSinceLast, int num
   bool needHWDR = false, startedThread = false, suspendFilter = false;
   int now = mWinApp->MinuteTimeStamp();
   // Change second one back to 0 to enable simpleorigin
-  short scopeType[MAX_LONG_OPERATIONS] = {1, 0, 1, 1, 1, 0, 1, 1, 2, 2, 0, 2, 1};
-  short blocksFilter[MAX_LONG_OPERATIONS] = {0, 4, 4, 4, 0, 0, 4, 4, 0, 0, 4, 0, 0};
+  short scopeType[MAX_LONG_OPERATIONS] = {1, 0, 1, 1, 1, 0, 1, 1, 2, 2, 0, 2, 1, 1};
+  short blocksFilter[MAX_LONG_OPERATIONS] = {0, 4, 4, 4, 0, 0, 4, 4, 0, 0, 4, 0, 0, 0};
   mDoingStoppableRefill = 0;
   mChangedLoaderInfo = false;
   mLongOpErrorToReport = 0;
@@ -10433,7 +10436,7 @@ int CEMscope::StartLongOperation(int *operations, float *hoursSinceLast, int num
           if (!FEIscope && !mHasSimpleOrigin)
             return 2;
         }
-        if (longOp == LONG_OP_PREPARE_NO_VIBRATE &&
+        if ((longOp == LONG_OP_PREPARE_NO_VIBRATE || longOp == LONG_OP_AVOID_VIBRATION) &&
           !(UtapiSupportsService(UTSUP_VIBRATION) && mPlugFuncs->SetVibrationAvoidance))
           return 3;
         if (FEIscope && blocksFilter[longOp] > 0 && mWinApp->FilterIsSelectris() &&
@@ -10552,14 +10555,23 @@ UINT CEMscope::LongOperationProc(LPVOID pParam)
             lod->plugFuncs->ForceRefill();
         }
         
-        // Prepare to avoid vibrations
+        // Prepare to avoid vibrations AND enter avoiding state
         if (longOp == LONG_OP_PREPARE_NO_VIBRATE) {
           if (lod->plugFuncs->GetVibrationState(VIBMGR_QUERY_AVOIDING))
             lod->plugFuncs->SetVibrationAvoidance(VIBMGR_ACTION_ALLOW);
-          SEMTrace('0', "Prepare being called");
           lod->plugFuncs->SetVibrationAvoidance(VIBMGR_ACTION_PREPARE);
-          SEMTrace('0', "Prepare finished");
+          if (!lod->plugFuncs->GetGunValve())
+            lod->plugFuncs->SetGunValve(true);
           lod->plugFuncs->SetVibrationAvoidance(VIBMGR_ACTION_AVOID);
+        }
+
+        // Avoiding vibrations - requires column valves to be open
+        if (longOp == LONG_OP_AVOID_VIBRATION) {
+          if (!lod->plugFuncs->GetVibrationState(VIBMGR_QUERY_AVOIDING)) {
+            if (!lod->plugFuncs->GetGunValve())
+              lod->plugFuncs->SetGunValve(true);
+            lod->plugFuncs->SetVibrationAvoidance(VIBMGR_ACTION_AVOID);
+          }
         }
 
         // Do the cassette inventory
@@ -10724,7 +10736,7 @@ int CEMscope::LongOperationBusy(int index)
   int now = mWinApp->MinuteTimeStamp();
   int errorOK[MAX_LONG_OPERATIONS] = {0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1};
   const char *errStringsOK[MAX_LONG_OPERATIONS] = {"", "Cannot force refill", "", "", "",
-    "", "", "", "", "", "", "", "Failure preparing to avoid vibrations"};
+    "", "", "", "", "", "", "", "Start timed out"};
   JeolCartridgeData jcData;
   bool throwErr = false, didError;
   CString excuse;
