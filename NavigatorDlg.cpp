@@ -11197,7 +11197,7 @@ void CNavigatorDlg::AcquireNextTask(int param)
     err = 0;
     if (mAcquireEnded || (err = FindAndSetupNextAcquireArea()) != 0) {
       if (mAcquireEnded && !err && mWinApp->mMultiGridTasks->GetDoingMulGridSeq() &&
-        !mWinApp->mMultiGridTasks->GetSuspendedMulGrid())
+        !mWinApp->mMultiGridTasks->GetSuspendedMulGrid() && mAcquireEnded != 3)
         mWinApp->mMultiGridTasks->SuspendMulGridSeq();
       if (mAcquireEnded < 0) {
         mAcquireEnded = 0;
