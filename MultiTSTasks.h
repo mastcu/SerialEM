@@ -38,6 +38,7 @@ private:
   int mCkMagInd;          // Saved values of mag, spot, intensity, tilt angle
   int mCkSpot;
   double mCkIntensity;
+  int mCkProbeOrAlpha;    // Probe mode (0 for nanoprobe, 1 for microprobe) or alpha value
   double mCkTiltAngle;
   double mDoseStart;      // Starting value of the cumulative dose
   double mDoseTime;       // Time at whoich started waiting

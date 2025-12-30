@@ -593,6 +593,7 @@ struct CookParams {
   int spotSize;
   int magIndex;
   double intensity;
+  int probeOrAlpha;
   int targetDose;
   BOOL trackImage;    // Flag to track position before and after
   BOOL cookAtTilt;    // Flag to cook at tilt

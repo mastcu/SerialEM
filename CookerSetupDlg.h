@@ -36,10 +36,12 @@ private:
   int mCurMagInd;
   double mCurIntensity;
   CFont mBigFont;
+  int mCurProbeOrAlpha;
 
 public:
   CString m_strMag;
   CString m_strSpot;
+  CString m_strProbeOrAlpha;
   CString m_strIntensity;
   CString m_strDoseRate;
   CString m_strTotalTime;
@@ -54,7 +56,7 @@ public:
   afx_msg void OnAligncooked();
   afx_msg void OnDeltaposSpincookdose(NMHDR *pNMHDR, LRESULT *pResult);
   afx_msg void OnKillfocusEditcookdose();
-  void LiveUpdate(int magInd, int spotSize, double intensity);
+  void LiveUpdate(int magInd, int spotSize, double intensity, int alpha, int probeMode);
   void UpdateDoseTime(void);
   void SetScopeState(void);
   void RestoreScopeState(void);

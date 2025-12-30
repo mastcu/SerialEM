@@ -721,6 +721,7 @@ CSerialEMApp::CSerialEMApp()
   mCookParams.intensity = -1.;
   mCookParams.magIndex = -1;
   mCookParams.spotSize = -1;
+  mCookParams.probeOrAlpha = -999;
   mCookParams.targetDose = 2000;
   mCookParams.trackImage = true;
   mCookParams.cookAtTilt = false;

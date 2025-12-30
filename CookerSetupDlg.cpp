@@ -26,6 +26,7 @@ CCookerSetupDlg::CCookerSetupDlg(CWnd* pParent /*=NULL*/)
 	: CBaseDlg(CCookerSetupDlg::IDD, pParent)
   , m_strMag(_T(""))
   , m_strSpot(_T(""))
+  , m_strProbeOrAlpha(_T(""))
   , m_strIntensity(_T(""))
   , m_strDoseRate(_T(""))
   , m_strTotalTime(_T(""))
@@ -51,6 +52,7 @@ void CCookerSetupDlg::DoDataExchange(CDataExchange* pDX)
   CBaseDlg::DoDataExchange(pDX);
   DDX_Text(pDX, IDC_COOKMAG, m_strMag);
   DDX_Text(pDX, IDC_COOKSPOT, m_strSpot);
+  DDX_Text(pDX, IDC_COOKPROBEORALPHA, m_strProbeOrAlpha);
   DDX_Text(pDX, IDC_COOKINTENSITY, m_strIntensity);
   DDX_Text(pDX, IDC_COOKDOSERATE, m_strDoseRate);
   DDX_Text(pDX, IDC_COOKTOTALTIME, m_strTotalTime);
@@ -112,11 +114,18 @@ BOOL CCookerSetupDlg::OnInitDialog()
     mCookP->spotSize = mScope->GetSpotSize();
   if (mCookP->intensity < 0)
     mCookP->intensity = mScope->GetIntensity();
+  if (mCookP->probeOrAlpha == -999) {
+    if (FEIscope)
+      mCookP->probeOrAlpha = mScope->ReadProbeMode();
+    else if (JEOLscope && !mScope->GetHasNoAlpha())
+      mCookP->probeOrAlpha = mScope->GetAlpha();
+  }
 
   m_bTrackState = false;
   mCurMagInd = mCookP->magIndex;
   mCurSpot = mCookP->spotSize;
   mCurIntensity = mCookP->intensity;
+  mCurProbeOrAlpha = mCookP->probeOrAlpha;
   m_bAlignCooked = mCookP->trackImage;
   m_iDose = mCookP->targetDose;
   m_fTime = mCookP->minutes;
@@ -146,6 +155,7 @@ void CCookerSetupDlg::OnOK()
   mCookP->magIndex = mCurMagInd;
   mCookP->spotSize = mCurSpot;
   mCookP->intensity = mCurIntensity;
+  mCookP->probeOrAlpha = mCurProbeOrAlpha;
   mCookP->trackImage = m_bAlignCooked;
   mCookP->targetDose = m_iDose;
   mCookP->cookAtTilt = m_bTiltForCook;
@@ -260,13 +270,19 @@ void CCookerSetupDlg::OnKillfocusEditcooktilt()
   UpdateData(true);
 }
 
-void CCookerSetupDlg::LiveUpdate(int magInd, int spotSize, double intensity)
+void CCookerSetupDlg::LiveUpdate(int magInd, int spotSize, double intensity, int alpha, 
+int probeMode)
 {
   if (!m_bTrackState)
     return;
   mCurMagInd = magInd;
   mCurSpot = spotSize;
   mCurIntensity = intensity;
+  if (FEIscope) {
+    mCurProbeOrAlpha = probeMode;
+  } else if (JEOLscope && !mScope->GetHasNoAlpha()) {
+    mCurProbeOrAlpha = alpha;
+  }
   UpdateMagBeam();
 }
 
@@ -306,6 +322,12 @@ void CCookerSetupDlg::UpdateMagBeam(void)
   MagTable *magTab = mWinApp->GetMagTable();
   m_strMag.Format("%d", magTab[mCurMagInd].screenMag);
   m_strSpot.Format("%d", mCurSpot);
+  if (FEIscope) {
+    m_strProbeOrAlpha.Format(mCurProbeOrAlpha ? "Probe Mode: uP" : "Probe Mode: nP");
+  }
+  else if (JEOLscope && !mScope->GetHasNoAlpha()) {
+    m_strProbeOrAlpha.Format("Alpha: %d", mCurProbeOrAlpha + 1);
+  }
   m_strIntensity.Format("%.2f%s %s", mScope->GetC2Percent(mCurSpot, mCurIntensity),
     mScope->GetC2Units(), mScope->GetC2Name());
   UpdateDoseTime();

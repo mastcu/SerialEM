@@ -57,6 +57,7 @@ CMultiTSTasks::CMultiTSTasks(void)
   mCkNumAlignSteps = 7;
   mCkAlignStep = 0.02f;
   mCkNumStepCuts = 2;
+  mCkProbeOrAlpha = -999;
   mAutoCentering = false;
   mAutoCenUseMagInd = 0;
   mRangeConsets[0] = TRIAL_CONSET;
@@ -164,6 +165,10 @@ int CMultiTSTasks::StartCooker(void)
   mCkIntensity = mScope->GetIntensity();
   mCkMagInd = mScope->GetMagIndex();
   mCkSpot = mScope->GetSpotSize();
+  if (FEIscope)
+    mCkProbeOrAlpha = mScope->ReadProbeMode();
+  else if (JEOLscope && !mScope->GetHasNoAlpha())
+    mCkProbeOrAlpha = mScope->GetAlpha();
   mCkDoTilted = false;
   if (mCkParams->cookAtTilt) {
     mCkTiltAngle = mScope->GetTiltAngle();
@@ -225,6 +230,10 @@ void CMultiTSTasks::CookerNextTask(int param)
       mScope->DelayedSetIntensity(mCkParams->intensity, GetTickCount(), 
         mCkParams->spotSize);
       mScope->SetSpotSize(mCkParams->spotSize);
+      if (FEIscope)
+        mScope->SetProbeMode(mCkParams->probeOrAlpha);
+      else if (JEOLscope && !mScope->GetHasNoAlpha())
+        mScope->SetAlpha(mCkParams->probeOrAlpha);
       if (mScope->GetScreenPos() != spDown) {
         TiltAndMoveScreen(false, mCkParams->tiltAngle, true, spDown);
         mWinApp->AddIdleTask(TASK_COOKER, mCkDoTilted ? SCREEN_DROPPED : START_WAITING,
@@ -627,6 +636,10 @@ void CMultiTSTasks::RestoreScopeState(void)
   postMag = GetTickCount();
   mScope->SetSpotSize(mCkSpot);
   mScope->DelayedSetIntensity(mCkIntensity, postMag);
+  if (FEIscope)
+    mScope->SetProbeMode(mCkProbeOrAlpha);
+  else if (JEOLscope && !mScope->GetHasNoAlpha())
+    mScope->SetAlpha(mCkProbeOrAlpha);
 }
 
 // Display time to go in simple pane
