@@ -207,13 +207,17 @@
 </p>
     <p>For Thermo/FEI scopes, the TEM User Interface must be open and an &#39;Autoloader 
       (User)&#39; panel must be included on some tab in the Workset area.&nbsp; If the 
-      interface is minimized, SerialEM should be able to raise it (as of 25-Jan-2024).</p>
-    <p><em>For Thermo/FEI scopes, it is not possible for SerialEM to determine if 
+      interface is minimized, SerialEM should be able to raise it (as of 25-Jan-2024).&nbsp; 
+      If you have Autoloader X, there is no such panel and it is not possible to get 
+      names from the MiCo interface.&nbsp; Define the property &#39;FEIcanGetLoaderNames 
+      0&#39; to keep this operation from failing the first time; otherwise, it should fail 
+      only once.</p>
+    <p><em>For Thermo/FEI scopes not using the UTAPI interface, it is not possible for SerialEM to determine if 
       there is a grid on the stage unless SerialEM loaded it.&nbsp; </em>The program 
       will ask you to enter the slot number of the grid on the stage, or 0 if there is 
       none.&nbsp; The entry box will default to an unoccupied slot that has a name, or 
       an unoccupied slot surrounded by filled ones, but only if there is just one such 
-      slot.</p>
+      slot.&nbsp; With UTAPI, this entry box should not appear.</p>
     <p><strong>Reset</strong></p>
     <p>Use this button to discard your name changes and revert to the names from the 
       microscope or the default names provided.&nbsp; The program will ask you to 
@@ -292,7 +296,9 @@
       each of those, assuming the rotation found initially.&nbsp; From all of these 
       alignment positions, it determines a more accurate rotation and shift, and uses 
       them to transform the Navigator coordinates of the map and any items at the same 
-      registration.</p>
+      registration.&nbsp; It will make the aperture changes currently specified for 
+      taking a grid map before starting, and restore the apertures at the end.&nbsp; 
+      If you press STOP to terminate the procedure, apertures will still be restored.</p>
     <p><strong>Params</strong></p>
     <p>Press this button to open the <a href="hidd_mulgrid_settings.htm">Multiple Grid Settings Manager</a> and store some 
       separate settings for the currently selected grid.&nbsp; Up to 5 kinds of 
@@ -576,15 +582,23 @@
     <p>Use this button to remove the separate states for the selected grid.&nbsp; </p>
     <p><strong>Make frame directories under session directory/grid directories</strong></p>
     <p>If camera frames are saved during final acquisition, they will be placed in a 
-      separate subdirectory for each grid.&nbsp; This option will be present if there 
-      is any camera available that can save frames in arbitrary locations (e.g., not 
-      for Falcon or DE cameras); select it if you are taking frames with such a camera 
+      separate subdirectory for each grid.&nbsp; This option allows those 
+      subdirectories to be under the session directory.&nbsp; It will be present if 
+      there is any camera available that can save frames under the session directory.&nbsp; 
+      Specifically, it will not appear for a DE camera running a fairly old server, or 
+      when SerialEM is not running on the DE server.&nbsp; It will not appear for 
+      Thermo/FEI cameras except Falcon 4 and Ceta 2, and only if a 
+      FalconLocalFramePath or LocalFalconFramePath property is defined.&nbsp; For the 
+      latter cameras, the option is enabled and has an effect only if the session 
+      directory is set under that path, i.e., within OffloadData on the storage 
+      server.&nbsp; </p>
+    <p>&nbsp;Select this option if you are taking frames with an eligible camera 
       and want the frames to be saved in subdirectories under the session or grid 
       directories.&nbsp;&nbsp; When the option is selected, and the actual camera 
       being used allows it, frames will be saved in a directory named &#39;frames&#39; under 
       the grid directory if <strong>Use subdirectories</strong> 
       is chosen, or in a directory &#39;gridRootName_frames&#39; under the session directory 
-      if not.&nbsp;&nbsp; Otherwise, frames will be saved in a directory 
+      if not.&nbsp;&nbsp; If this option is off, frames will be saved in a directory 
       &#39;gridRootName&#39; under the currently defined frame folder for the camera if the 
       camera allows that, or the frame folder will simply be defined as &#39;gridRootName&#39; 
       in a case where directories are allowed only directly under the frame storage 

@@ -3,6 +3,15 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+12/31/25: Added ability to save Falcon 3 frames in subdirectories under the
+multigrid session directory, provided that is on the storage server.
+
+12/31/25: Made multigrid get the grid loaded on stage from the scope if
+connecting through UTAPI, instead of asking for an entry.
+
+12/31/25: Made Realign Map button in multigrid change and restore apertures
+just as when running grids.
+
 12/28/25: SEM_4-2-14
 12/28/25: Fixed use of argument 1 and 2 to EndAcquireAtItems to suppress
 message and allow a script to run, and also made value of 2 allow multigrid to

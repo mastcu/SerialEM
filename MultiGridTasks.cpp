@@ -58,6 +58,7 @@ CMultiGridTasks::CMultiGridTasks()
   mAllowOptional = false;
   mUseCaretToReplace = false;
   mDoingMultiGrid = 0;
+  mRRGStopIsRestoring = false;
   mDoingMulGridSeq = false;
   mSuspendedMulGrid = false;
   mRRGcurDirection = -2;
@@ -133,6 +134,7 @@ CMultiGridTasks::CMultiGridTasks()
   mPostLoadDelay = 0;
   mLastRefCounts = 0.;
   mReferenceCounts = 0.;
+  mInStopMultiGrid = false;
 }
 
 
@@ -344,6 +346,9 @@ void CMultiGridTasks::MultiGridNextTask(int param)
   if ((!mDoingMultiGrid && !forMulGrid) || (!mDoingMulGridSeq && forMulGrid))
     return;
 
+  if (mRRGStopIsRestoring && param != MG_RRG_RESTORE_AP)
+    return;
+
   switch (param) {
 
     // Inventory or internal load or unload, just stop
@@ -391,6 +396,21 @@ void CMultiGridTasks::MultiGridNextTask(int param)
     StopMultiGrid();
     return;
 
+    // Realign set obj aperture: do condenser if that is left to do, or go to first target
+  case MG_RRG_SET_OBJ_AP:
+    if (mParams.setCondenserAp) {
+      ChangeCondenserAperture(0, MG_RRG_SET_COND_AP);
+    } else if (MoveStageToTargetPiece()) {
+      StopMultiGrid();
+    }
+    break;
+
+    // Realign set condenser, go to target
+  case MG_RRG_SET_COND_AP:
+    if (MoveStageToTargetPiece())
+      StopMultiGrid();
+    break;
+
     // Realign moved stage
   case MG_RRG_MOVED_STAGE:
     mWinApp->SetStatusText(SIMPLE_PANE, "");
@@ -418,6 +438,16 @@ void CMultiGridTasks::MultiGridNextTask(int param)
     // Realign took image
   case MG_RRG_TOOK_IMAGE:
     AlignNewReloadImage();
+    break;
+
+    // Realign restored aperture; restore condenser (may happend twice) or stop
+  case MG_RRG_RESTORE_AP:
+    if (mRestoreCondAp > 0) {
+      ChangeCondenserAperture(mRestoreCondAp, MG_RRG_RESTORE_AP);
+    } else {
+      StopMultiGrid();
+      return;
+    }
     break;
 
     // Refine took image or moved stage
@@ -468,15 +498,26 @@ void CMultiGridTasks::CleanupMultiGrid(int error)
  */
 void CMultiGridTasks::StopMultiGrid()
 {
-  if (!mDoingMultiGrid)
+  if (!mDoingMultiGrid || mInStopMultiGrid)
     return;
 
+  mInStopMultiGrid = true;
   if (mRefineOpenedMont)
     CMultiShotDlg::CloseTempPrevMontage(sTempMontName);
   mRefineOpenedMont = false;
 
   // Reset things from the reload realign
   if (mDoingMultiGrid == MG_REALIGN_RELOADED) {
+    if ((mReinsertObjAp || mRestoreCondAp > 0) && !mDoingMulGridSeq) {
+      if (mReinsertObjAp)
+        ChangeObjectiveAperture(true, MG_RRG_RESTORE_AP);
+      else
+        ChangeObjectiveAperture(true, mRestoreCondAp);
+      mWinApp->SetStatusText(MEDIUM_PANE, "RESTORING APERTURE");
+      mRRGStopIsRestoring = true;
+      mInStopMultiGrid = false;
+      return;
+    }
     if (mRRGcurStore < 0)
       B3DDELETE(mRRGstore);
     mCamera->SetRequiredRoll(0);
@@ -492,6 +533,8 @@ void CMultiGridTasks::StopMultiGrid()
   RestoreFromRefine();
 
   mDoingMultiGrid = 0;
+  mInStopMultiGrid = false;
+  mRRGStopIsRestoring = false;
   mWinApp->SetBufToggleCount(0);
   mWinApp->SetStatusText(MEDIUM_PANE, "");
   mWinApp->UpdateBufferWindows();
@@ -547,7 +590,7 @@ void CMultiGridTasks::StopMulGridSeq()
   mCamNumForFrameDir = -1;
 
   // Start restoring apertures, loop back in until done
-  if (mReinsertObjAp || mRestoreCondAp) {
+  if (mReinsertObjAp || mRestoreCondAp > 0) {
     mMovedAperture = true;
     mRestoringOnError = true;
     if (mReinsertObjAp) {
@@ -787,6 +830,7 @@ int CMultiGridTasks::RealignReloadedGrid(CMapDrawItem *item, float expectedRot,
   double wxSum = 0., wySum = 0.;
   float stageXcen = 0., stageYcen = 0.;
   bool indIsDup, bestIsDup, skipPc, usePctls = true;
+  bool handleApertures = jcdInd >= 0 && !mDoingMulGridSeq;
   IntVec ixVec, iyVec, pieceSavedAt;
   float stageMinX = mScope->GetStageLimit(STAGE_MIN_X);
   float stageMaxX = mScope->GetStageLimit(STAGE_MAX_X);
@@ -796,6 +840,7 @@ int CMultiGridTasks::RealignReloadedGrid(CMapDrawItem *item, float expectedRot,
   MiniOffsets *mini, myMini;
   MontParam *montP = &mRRGmontParam;
   MontParam *masterMont = mWinApp->GetMontParam();
+  JeolCartridgeData jcd;
   float distFrac = 0.75f, meanRatioCrit = 1.5f, pctlRatioCrit = 2.0;
   mNavigator = mWinApp->mNavigator;
 
@@ -816,6 +861,9 @@ int CMultiGridTasks::RealignReloadedGrid(CMapDrawItem *item, float expectedRot,
   }
   mBigRotation = fabs(expectedRot) > 1.;
 
+  if (handleApertures && GetInitialApertureStates(errStr))
+    return 1;
+  
   // If not doing big rotation, see if map is already available
   if (!mBigRotation) {
     if (LoadOrReloadMapIfNeeded(item, 2, errStr))
@@ -1069,7 +1117,20 @@ int CMultiGridTasks::RealignReloadedGrid(CMapDrawItem *item, float expectedRot,
   mRRGcurDirection = mBigRotation ? 0 : -1;
   mDoingMultiGrid = MG_REALIGN_RELOADED;
   mLoadedGridIsAligned = 0;
-  if (MoveStageToTargetPiece()) {
+  if (handleApertures) {
+    mReinsertObjAp = false;
+    mRestoreCondAp = 0;
+    mMovedAperture = false;
+  }
+
+  // Set the apertures if running from dialog
+  if (handleApertures && (mParams.removeObjectiveAp || mParams.setCondenserAp)) {
+    if (mParams.removeObjectiveAp)
+      ChangeObjectiveAperture(false, MG_RRG_SET_OBJ_AP);
+    else
+      ChangeCondenserAperture(0, MG_RRG_SET_COND_AP);
+
+  } else if (MoveStageToTargetPiece()) {
     StopMultiGrid();
     return 1;
   }
@@ -1343,7 +1404,14 @@ void CMultiGridTasks::AlignNewReloadImage()
     return;
   }
 
-  StopMultiGrid();
+  if ((mReinsertObjAp || mRestoreCondAp > 0) && !mDoingMulGridSeq) {
+    if (mReinsertObjAp)
+      ChangeObjectiveAperture(true, MG_RRG_RESTORE_AP);
+    else
+      ChangeCondenserAperture(mRestoreCondAp, MG_RRG_RESTORE_AP);
+  } else {
+    StopMultiGrid();
+  }
 
   // Get transformation
   bMat = FindReloadTransform(dxy, theta, resid);
@@ -2300,29 +2368,9 @@ int CMultiGridTasks::StartGridRuns(int LMneedsLD, int MMMneedsLD, int finalNeeds
   mActiveCameraList = mWinApp->GetActiveCameraList();
 
   // Get state of apertures if they are to be changed and error out if bad
-  if (mParams.removeObjectiveAp) {
-    apSize = mScope->GetApertureSize(OBJECTIVE_APERTURE);
-    mInitialObjApSize = apSize;
-
-  }
-  if (apSize >= 0 && mParams.setCondenserAp) {
-    apSize = mScope->GetApertureSize(mSingleCondenserAp);
-    mInitialCondApSize = apSize;
-    if (apSize && mUseTwoJeolCondAp)
-      mInitialC1CondSize = mScope->GetApertureSize(JEOL_C1_APERTURE);
-  }
-  if (apSize < 0) {
-    SEMMessageBox("Aperture control appears not to work on this scope");
+  if (GetInitialApertureStates(str)) {
+    SEMMessageBox(str);
     return 1;
-  }
-  if (mParams.setCondenserAp && JEOLscope) {
-    ind = mScope->FindApertureIndexFromSize(
-      (mUseTwoJeolCondAp && !mParams.C1orC2condenserAp) ?
-      JEOL_C1_APERTURE : mSingleCondenserAp, mParams.condenserApSize, str);
-    if ((mParams.condenserApSize && !ind) || ind < 0) {
-      SEMMessageBox("There is a problem with condenser aperture size: \r\n" + str);
-      return 1;
-    }
   }
 
   if (mSingleGridMode && !mReferenceCounts && mParams.acquireLMMs) {
@@ -2609,9 +2657,9 @@ int CMultiGridTasks::StartGridRuns(int LMneedsLD, int MMMneedsLD, int finalNeeds
       // There has to be/have been something!
       if (err == 0) {
         str.Format("To use grid map locations at higher magnification,\n"
-          "you must acquire maps with Low Dose View or Search with a\n"
-          "shift offset defined, or have a marker shift stored for magnification %d",
-          MagForCamera(mWinApp->GetCurrentCamera(), mLMMmagIndex));
+          "you must acquire grid maps with Low Dose View or Search\n"
+          "with a shift offset defined, or have a marker shift stored for magnification"
+          " %d", MagForCamera(mWinApp->GetCurrentCamera(), mLMMmagIndex));
         SEMMessageBox(str);
         return 1;
       }
@@ -2626,7 +2674,7 @@ int CMultiGridTasks::StartGridRuns(int LMneedsLD, int MMMneedsLD, int finalNeeds
           "used for the grid map, and a marker shift stored for the\n"
           "grid map magnification";
         if (!mParams.acquireLMMs)
-          str += " that has not been applied yto some maps yet";
+          str += " that has not been applied to some maps yet";
         str += ".\n\nDo you want to apply the marker shift?\n"
           "(Answer No if the LD shift offset supercedes the marker shift;\n"
           "or Yes if the marker shift is needed even with the LD shift offset.)";
@@ -3157,6 +3205,40 @@ void CMultiGridTasks::AddToSeqForRestoreFromLM(bool &apForLMM, bool &stateForLMM
     apForLMM = false;
   }
 }
+
+// Get state of apertures if they are to be changed and return error if bad
+int CMultiGridTasks::GetInitialApertureStates(CString &errStr)
+{
+  int apSize, ind;
+  CString str;
+
+  if (mParams.removeObjectiveAp) {
+    apSize = mScope->GetApertureSize(OBJECTIVE_APERTURE);
+    mInitialObjApSize = apSize;
+
+  }
+  if (apSize >= 0 && mParams.setCondenserAp) {
+    apSize = mScope->GetApertureSize(mSingleCondenserAp);
+    mInitialCondApSize = apSize;
+    if (apSize && mUseTwoJeolCondAp)
+      mInitialC1CondSize = mScope->GetApertureSize(JEOL_C1_APERTURE);
+  }
+  if (apSize < 0) {
+    errStr = "Aperture control appears not to work on this scope";
+    return 1;
+  }
+  if (mParams.setCondenserAp && JEOLscope) {
+    ind = mScope->FindApertureIndexFromSize(
+      (mUseTwoJeolCondAp && !mParams.C1orC2condenserAp) ?
+      JEOL_C1_APERTURE : mSingleCondenserAp, mParams.condenserApSize, str);
+    if ((mParams.condenserApSize && !ind) || ind < 0) {
+      errStr = "There is a problem with condenser aperture size: \r\n" + str;
+      return 1;
+    }
+  }
+  return 0;
+}
+
 // Check if a state number is out of range and issue message
 int CMultiGridTasks::CheckStatesInRange(int *stateNums, CString *names, int numStates,
   CString mess)
@@ -3180,7 +3262,7 @@ void CMultiGridTasks::DoNextSequenceAction(int resume)
 {
   int err, ind, nx, ny, setNum, fileType, timeout = 0, numPieces, meanIXcen, meanIYcen;
   int pctlIXcen, pctlIYcen, numPctl, numAbove, bestInd, firstInd, lastInd, groupInd;
-  int action, size, addIdleTask = 1;
+  int action, addIdleTask = 1;
   float lowMean, highMean, zStage, meanSXcen, meanSYcen, pctlSXcen, pctlSYcen;
   float dist, bestDist, avgFrac;
   CString errStr, str, label, str2, str3;
@@ -3699,40 +3781,27 @@ void CMultiGridTasks::DoNextSequenceAction(int resume)
 
     // Start removing objective aperture
   case MGACT_REMOVE_OBJ_AP:
-    mScope->SetApertureSize(OBJECTIVE_APERTURE, 0);
-    mMovedAperture = true;
-    mReinsertObjAp = true;
+    ChangeObjectiveAperture(false);
     break;
 
     // Start changing the condenser aperture
   case MGACT_SET_CONDENSER_AP:
-    ind = (mUseTwoJeolCondAp && !mParams.C1orC2condenserAp) ?
-      JEOL_C1_APERTURE : mSingleCondenserAp;
-    size = mScope->FindApertureIndexFromSize(ind, mParams.condenserApSize, str);
-    mScope->SetApertureSize(ind, size);
-    mMovedAperture = true;
-    mRestoreCondAp = mUseTwoJeolCondAp ? 2 : 1;
+    ChangeCondenserAperture(0);
     break;
 
     // Start putting objective aperture back in
   case MGACT_REPLACE_OBJ_AP:
-    mScope->SetApertureSize(OBJECTIVE_APERTURE, mInitialObjApSize);
-    mMovedAperture = true;
-    mReinsertObjAp = false;
+    ChangeObjectiveAperture(true);
     break;
 
     // Start getting back to original condenser aperture(s)
     // restore C1 first so a restore value of 1 always means restore condenser
   case MGACT_RESTORE_C1_AP:
-    mScope->SetApertureSize(JEOL_C1_APERTURE, mInitialC1CondSize);
-    mMovedAperture = true;
-    mRestoreCondAp--;
+    ChangeCondenserAperture(2);
     break;
 
   case MGACT_RESTORE_COND_AP:
-    mScope->SetApertureSize(mSingleCondenserAp, mInitialCondApSize);
-    mMovedAperture = true;
-    mRestoreCondAp--;
+    ChangeCondenserAperture(1);
     break;
 
     // Start unloading grid, allow for error if no grid loaded first time (?)
@@ -4146,13 +4215,19 @@ void CMultiGridTasks::DoNextSequenceAction(int resume)
     if (mCamNumForFrameDir >= 0) {
       mCamera->GetCameraFrameFolder(&camParams[mCamNumForFrameDir], noFrameSubs, movable);
       str = RootnameFromUsername(jcd);
+      if (CanFalconFramesMoveToSession(&camParams[mCamNumForFrameDir], &str2))
+        movable = true;
+      else
+        str2 = mWorkingDir;
+      if (!str2.IsEmpty() && str2.GetAt(str.GetLength() - 1) != '\\')
+        str2 += '\\';
       if (!noFrameSubs) {
         if (!movable || !mParams.framesUnderSession)
           str = mSavedDirForFrames + "\\" + str;
         else if (mUseSubdirs)
-          str = mWorkingDir + "\\" + str + "\\frames";
+          str = str2 + str + "\\frames";
         else
-          str = mWorkingDir + "\\" + str + "_frames";
+          str = str2 + str + "_frames";
       }
       mCamera->SetCameraFrameFolder(&camParams[mCamNumForFrameDir], str);
       if (!mSavedFrameBaseName.IsEmpty()) {
@@ -4666,6 +4741,66 @@ void CMultiGridTasks::ChangeStatusFlag(int gridInd, b3dUInt32 flag, int state)
   if (mNavHelper->mMultiGridDlg)
     mNavHelper->mMultiGridDlg->SetStatusText(jcdInd);
   mAdocChanged = true;
+}
+
+/*
+ * Either remove or restore the objective aperture
+ */
+void CMultiGridTasks::ChangeObjectiveAperture(bool restore, int param)
+{
+  mScope->SetApertureSize(OBJECTIVE_APERTURE, restore ? mInitialObjApSize : 0);
+  mMovedAperture = true;
+  mReinsertObjAp = !restore;
+  if (param >= 0)
+    mWinApp->AddIdleTask(CEMscope::TaskApertureBusy, TASK_MULTI_GRID, param, 30000);
+}
+
+/*
+ * Change the objective aperture to the size in the params or restore it (or possibly
+ * one of two apertures on JEOL)
+ */
+void CMultiGridTasks::ChangeCondenserAperture(int restore, int param)
+{
+  int ind, size;
+  CString str;
+  if (restore) {
+    mScope->SetApertureSize(restore > 1 ? JEOL_C1_APERTURE : mSingleCondenserAp,
+      restore > 1 ? mInitialC1CondSize : mInitialCondApSize);
+    mRestoreCondAp--;
+  } else {
+    ind = (mUseTwoJeolCondAp && !mParams.C1orC2condenserAp) ?
+      JEOL_C1_APERTURE : mSingleCondenserAp;
+    size = mScope->FindApertureIndexFromSize(ind, mParams.condenserApSize, str);
+    mScope->SetApertureSize(ind, size);
+    mRestoreCondAp = mUseTwoJeolCondAp ? 2 : 1;
+  }
+  if (param >= 0)
+    mWinApp->AddIdleTask(CEMscope::TaskApertureBusy, TASK_MULTI_GRID, param, 30000);
+  mMovedAperture = true;
+}
+
+/*
+ * Return true if the current/session dir is inside the Falcon local path, and
+ * return the relative frame path to use if framePath is not NULL
+ */
+bool CMultiGridTasks::CanFalconFramesMoveToSession(CameraParameters *camP, 
+  CString *frameDir)
+{
+  CString currentDir = mNamesLocked ? mWorkingDir : mWinApp->mDocWnd->GetInitialDir();
+  CString curCopy, localPath = camP->falconFramePath;
+  if (!(camP->FEItype == FALCON4_TYPE || FCAM_CONTIN_SAVE(camP)) || localPath.IsEmpty())
+    return false;
+  curCopy = currentDir;
+  currentDir.MakeUpper();
+  localPath.MakeUpper();
+  if (currentDir.Find(localPath) != 0)
+    return false;
+  if (frameDir) {
+    *frameDir = curCopy.Mid(localPath.GetLength());
+    while (frameDir->FindOneOf("/\\") == 0)
+      *frameDir = frameDir->Mid(1);
+  }
+  return true;
 }
 
 /* 
@@ -5818,7 +5953,7 @@ int CMultiGridTasks::LoadSessionFile(bool useLast, CString &errStr)
       mNavHelper->mMultiGridDlg->UpdateCurrentDir();
       mNavHelper->mMultiGridDlg->ManageInventory(mNamesLocked);
     }
-    IdentifyGridOnStage(stageID, stageInd);
+    IdentifyGridOnStage(stageID, stageInd, true);
     if (stageInd >= 0)
       mLoadedGridIsAligned = isAligned ? -1 : 0;
     mParams.appendNames = mAppendNames;
@@ -5868,16 +6003,24 @@ void CMultiGridTasks::UpdateDialogForSessionFile()
  * Function to let the user specify the grid on the stage; the ID and index are of what
  * is thought to be on the stage if anything
  */
-void CMultiGridTasks::IdentifyGridOnStage(int stageID, int &stageInd)
+void CMultiGridTasks::IdentifyGridOnStage(int stageID, int &stageInd, bool getLoaded)
 {
   CString direc;
-  int ind1, newID = stageID;
+  int ind1, newID = stageID, loaded = -1;
+  BOOL entryOK = true;
   if (!mScope->GetScopeHasAutoloader()) {
     stageInd = 0;
     return;
   }
-  direc.Format("Enter %s of grid on stage or -1 if none:", JEOLscope ? "ID" : "slot #");
-  if (KGetOneInt(direc, newID)) {
+  if (getLoaded && FEIscope && mScope->UtapiSupportsService(UTSUP_LOADER))
+    loaded = mScope->GetLoadedSlot();
+  if (loaded <= 0) {
+    direc.Format("Enter %s of grid on stage or -1 if none:", JEOLscope ? "ID" : "slot #");
+    entryOK = KGetOneInt(direc, newID);
+  } else {
+    newID = loaded;
+  }
+  if (entryOK) {
     stageInd = -1;
 
     // Make sure at most one grid is on the stage, fix any goofs no matter they happened

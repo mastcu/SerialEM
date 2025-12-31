@@ -4,7 +4,8 @@
 #include <map>
 
 enum { MG_INVENTORY = 1, MG_LOW_MAG_MAP, MG_REALIGN_RELOADED, MG_RRG_MOVED_STAGE, 
-  MG_RRG_TOOK_IMAGE, MG_LOAD_CART, MG_UNLOAD_CART, MG_USER_LOAD, MG_RUN_SEQUENCE,
+  MG_RRG_TOOK_IMAGE, MG_RRG_SET_OBJ_AP, MG_RRG_SET_COND_AP, MG_RRG_RESTORE_AP, 
+  MG_LOAD_CART, MG_UNLOAD_CART, MG_USER_LOAD, MG_RUN_SEQUENCE,
   MG_RESTORING, MG_SEQ_LOAD, MG_REFINE_REALIGNED, MG_REFINE_MOVED, MG_REFINE_IMAGE
 };
 enum MultiGridActions {
@@ -132,6 +133,7 @@ public:
   void AddToSeqForLMimaging(bool &apForLMM, bool &stateForLMM, int needsLD);
   void AddToSeqForReloadRealign(bool &apForLMM, bool &stateForLMM);
   void AddToSeqForRestoreFromLM(bool &apForLMM, bool &stateForLMM);
+  int GetInitialApertureStates(CString &errStr);
   int CheckStatesInRange(int *stateNums, CString *names, int numStates, CString mess);
   void DoNextSequenceAction(int resume);
   int SkipToAction(int mgAct);
@@ -162,6 +164,9 @@ public:
   MontParam *GetGridMontParam();
   MontParam *GetMMMmontParam();
   void ChangeStatusFlag(int gridInd, b3dUInt32 flag, int state);
+  void ChangeObjectiveAperture(bool restore, int param = -1);
+  void ChangeCondenserAperture(int restore, int param = -1);
+  bool CanFalconFramesMoveToSession(CameraParameters *camP, CString *frameDir);
   void CopyAutoContGroups();
   void GridToMultiShotSettings(MGridMultiShotParams &mgParam);
   void GridToMultiShotSettings(MGridMultiShotParams &mgParam, MultiShotParams *msParams);
@@ -186,7 +191,7 @@ public:
   void TurnOffSubset();
   int LoadSessionFile(bool useLast, CString &errStr);
   void UpdateDialogForSessionFile();
-  void IdentifyGridOnStage(int stageID, int &stageInd);
+  void IdentifyGridOnStage(int stageID, int &stageInd, bool getLoaded);
   GetSetMember(float, PctStatMidCrit);
   GetSetMember(float, PctStatRangeCrit);
   GetSetMember(CString, WorkingDir);
@@ -330,6 +335,7 @@ private:
   float mRRGmaxCenShift;         // Maximum allowed shift at center of grid
   float mRRGmaxInitShift;        // Actual shift allowed in initial correlation
   int mRRGjcdIndex;              // Index in table so multishot vectors can be rotated
+  bool mRRGStopIsRestoring;      // Flag that it is restoring apertures from StopMultiGrid
   bool mBigRotation;             // Flag if a big rotation is expected
   int mMapBuf;                   // Buffer the map is in
   int mMapCenX, mMapCenY;        // Center coordinate of center piece in loaded map
@@ -422,5 +428,6 @@ private:
   int mSkipMarkerShifts;         // User response to query: 1 to skip or -1 to use markers
   bool mNoMarkerShifts;          // Flag to skip in the run for whatever reason
   int mPostLoadDelay;            // Delay time in seconds after loading/unloading grid
+  bool mInStopMultiGrid;         // Prevent reentrance
 };
 
