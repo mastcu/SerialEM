@@ -1099,6 +1099,7 @@ public:
   int FindCartridgeWithID(int ID, CString &errStr);
   int LoadCartridge(int slot, CString &errStr);
   int UnloadCartridge(CString &errStr);
+  int GetLoadedSlot();
   int FindCartridgeAtStage(int &id);
   static ScopePluginFuncs *GetPlugFuncs() {return mPlugFuncs;};
   void SetValidXYbacklash(StageMoveInfo * info);
