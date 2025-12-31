@@ -999,7 +999,7 @@ void CMenuTargets::OnUpdateGridsClearSession(CCmdUI *pCmdUI)
 void CMenuTargets::OnIdentifyGridOnStage()
 {
   int stageInd = -1;
-  mWinApp->mMultiGridTasks->IdentifyGridOnStage(-1, stageInd);
+  mWinApp->mMultiGridTasks->IdentifyGridOnStage(-1, stageInd, false);
 }
 
 void CMenuTargets::OnUpdateIdentifyGridOnStage(CCmdUI *pCmdUI)

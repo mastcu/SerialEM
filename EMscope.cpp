@@ -7441,6 +7441,23 @@ int CEMscope::UnloadCartridge(CString &errStr)
   return err;
 }
 
+// Get the slot that is on the stage from UTAPI
+int CEMscope::GetLoadedSlot()
+{
+  int retval = -1;
+  if (!FEIscope || !sInitialized || !UtapiSupportsService(UTSUP_LOADER) ||
+    !mPlugFuncs->GetLoadedSlot)
+    return -1;
+  ScopeMutexAcquire("GetLoadedSlot", true);
+  try {
+    retval = mPlugFuncs->GetLoadedSlot();
+  }
+  catch (_com_error E) {
+  }
+  ScopeMutexRelease("GetLoadedSlot");
+  return retval;
+}
+
 // Lookup which cartridge is in the stage in the JEOL table, return the ID (slot # for 
 // FEI), return value index in jcd table
 int CEMscope::FindCartridgeAtStage(int &id)

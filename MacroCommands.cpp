@@ -10599,8 +10599,7 @@ int CMacCmd::SetFrameTime(void)
   if (mCamParams->FEItype) {
     mCamera->CanWeAlignFalcon(mCamParams, true, falconCanSave,
       mCamSet->K2ReadMode);
-    savingEERorLZW = mCamera->IsSaveInEERMode(mCamParams, mCamSet) ||
-      mCamera->IsFalconSaveAsLZW(mCamParams, mCamSet);
+    savingEERorLZW = mCamera->IsSaveAsEERorLZW(mCamParams, mCamSet);
     alignInFalcon = IS_FALCON3_OR_4(mCamParams) && FCAM_CAN_ALIGN(mCamParams) &&
       mCamSet->alignFrames && !mCamSet->useFrameAlign;
     if (!(IS_FALCON3_OR_4(mCamParams) || mCamera->GetMaxFalconFrames() > 7))

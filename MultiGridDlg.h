@@ -138,7 +138,9 @@ public:
   StateParams *GetOrRefindState(int &stateNum, CString &stateName, const char *descrip,
   CComboBox &combo);
   int CheckMultipleStates(CComboBox **comboArr, int *stateNums, CString *stateNames, 
-    CString descrip, int &numStates, int &camera, StateParams **states, int *lowDose, int *magInds);
+    CString descrip, int &numStates, int &camera, StateParams **states, int *lowDose, int *magInds,
+    CString *errStr = NULL);
+  int CheckFinalStates(int &numStates, int &camera, CString *errStr = NULL);
   void DeduceStateForMMM(int numStates, int camera, StateParams **states, int *lowDose, 
     int *magInds, bool &useLD, bool &useSearch, bool &useView, int &useMontMap, int &useCamera, 
     int &useMag, int &useBin, int &stateForMont);

@@ -7219,7 +7219,9 @@ bool CCameraController::ConstrainExposureTime(CameraParameters *camP, BOOL doseF
         // fractions or saving as EER, so multiply by that
         else if (saveFrames)
           baseTime *= GetFalconRawSumSize(camP);
-        if (IsFalconSaveAsLZW(camP, saveFrames, readMode)) {
+        if (IsFalconSaveAsLZW(camP, saveFrames, alignAtAll,
+          (alignAtAll ? 1 : 0) + ((alignSaveFlags & AS_FLAG_IMOD_ALIGN) ? 1 : 0), 
+          readMode)) {
           ConstrainFrameTime(frameTime, camP, 0, 1);
           baseTime = frameTime;
         }
@@ -13550,7 +13552,7 @@ CString CCameraController::GetCameraFrameFolder(CameraParameters *camParam,
     !DECanIgnoreAutosaveFolder()) || FCAM_ADVANCED(camParam) || (camParam->GatanCam &&
     camParam->useSocket && CBaseSocket::ServerIsRemote(GATAN_SOCK_ID)));
   noSubdirs = (mParam->FEItype == FALCON3_TYPE && !mSubdirsOkInFalcon3Save) ||
-    camParam->DE_camType;
+    (camParam->DE_camType && !DECanIgnoreAutosaveFolder());
   return *dirPtr;
 }
 
@@ -13666,17 +13668,33 @@ bool CCameraController::IsSaveInEERMode(CameraParameters *param, BOOL saveFrames
      (!saveFrames && alignFrames && useFramealign == 1));
 }
 
+// Return whether Falcon save will be as TIFF-LZW
 bool CCameraController::IsFalconSaveAsLZW(CameraParameters *param, 
   const ControlSet *conSet)
 {
-  return IsFalconSaveAsLZW(param, conSet->saveFrames != 0, conSet->K2ReadMode);
+  return IsFalconSaveAsLZW(param, conSet->saveFrames != 0, conSet->alignFrames != 0,
+    conSet->useFrameAlign, conSet->K2ReadMode);
 }
 
 bool CCameraController::IsFalconSaveAsLZW(CameraParameters *param, BOOL saveFrames, 
-  int readMode)
+  BOOL alignFrames, int useFramealign, int readMode)
 {
   return param->FEItype == FALCON4_TYPE && mFalconCanDoTiffLZW && readMode > 0 && 
-    mSaveInEERorLZW < 0 && saveFrames;
+    mSaveInEERorLZW < 0 && (saveFrames || (alignFrames && useFramealign > 1));
+}
+
+// Convenience function returns whether save is either EER or LZW
+bool CCameraController::IsSaveAsEERorLZW(CameraParameters *param,
+  const ControlSet *conSet)
+{
+  return IsSaveInEERMode(param, conSet) || IsFalconSaveAsLZW(param, conSet);
+}
+
+bool CCameraController::IsSaveAsEERorLZW(CameraParameters *param, BOOL saveFrames,
+  BOOL alignFrames, int useFramealign, int readMode)
+{
+  return IsSaveInEERMode(param, saveFrames, alignFrames, useFramealign, readMode) || 
+    IsFalconSaveAsLZW(param, saveFrames, alignFrames, useFramealign, readMode);
 }
 
 // Return whether the plugin supports flexible subareas and if conditions are appropriate:
@@ -13694,8 +13712,7 @@ bool CCameraController::IsFEISubareaFlexible(CameraParameters *param, BOOL saveF
   return mScope->GetPluginVersion() >= PLUGFEI_FLEXIBLE_SUBAREAS && param->FEItype > 1 &&
     binning <= 8 && !param->STEMcamera && (!alignFrames || useFramealign != 1 || 
       param->FEItype == FALCON4_TYPE) && (!saveFrames ||
-        IsSaveInEERMode(param, saveFrames, alignFrames, useFramealign, readMode) ||
-        IsFalconSaveAsLZW(param, saveFrames, readMode));
+        IsSaveAsEERorLZW(param, saveFrames, alignFrames, useFramealign, readMode));
 }
 
 // Returns true if camera is using Utapi interface, plus adjusts needed parameters

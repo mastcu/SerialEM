@@ -292,7 +292,7 @@ BOOL CMultiGridDlg::OnInitDialog()
   int *activeList = mWinApp->GetActiveCameraList();
   int cam;
   bool noSubdirs, movable;
-  CameraParameters *camParams = mWinApp->GetCamParams();
+  CameraParameters *camParams = mWinApp->GetCamParams(), *camP;
   mMGTasks = mWinApp->mMultiGridTasks;
   mMasterParams = mMGTasks->GetMultiGridParams();
 
@@ -331,11 +331,11 @@ BOOL CMultiGridDlg::OnInitDialog()
   // Determine if any frame-saving camera has movable frame directory, otherwise drop
   mDropFrameOption = true;
   for (cam = 0; cam < mWinApp->GetNumActiveCameras(); cam++) {
-    if (mWinApp->mCamera->IsDirectDetector(&camParams[activeList[cam]]) || 
-      (camParams[activeList[cam]].canTakeFrames & 1)) {
-      mWinApp->mCamera->GetCameraFrameFolder(&camParams[activeList[cam]], noSubdirs,
-        movable);
-      if (movable) {
+    camP = &camParams[activeList[cam]];
+    if (mWinApp->mCamera->IsDirectDetector(camP) || (camP->canTakeFrames & 1)) {
+      mWinApp->mCamera->GetCameraFrameFolder(camP, noSubdirs, movable);
+      if (movable || ((camP->FEItype == FALCON4_TYPE || FCAM_CONTIN_SAVE(camP)) &&
+        !camP->falconFramePath.IsEmpty())) {
         mDropFrameOption = false;
         break;
       }
@@ -458,7 +458,7 @@ void CMultiGridDlg::OnButMgGetNames()
   JeolCartridgeData jcd;
   ShortVec statVec;
   int status, numSlots = 1, slot = 1, highest = 0, ind, numEmpty = 0;
-  int maybeStage = -1, onStage = -1;
+  int maybeStage = -1, onStage = -1, loaded = -1;
   if (FEIscope) {
     for (slot = 1; slot <= numSlots; slot++) {
 
@@ -505,23 +505,31 @@ void CMultiGridDlg::OnButMgGetNames()
       }
     }
 
-    // Deal with figuring out what grid is on the stage, as this impacts how many slots
-    // to show
-    if (numEmpty == 1) {
-      str.Format("Is the grid from slot %d loaded on the stage?", maybeStage + 1);
-      if (AfxMessageBox(str, MB_QUESTION) != IDYES)
+    // This returns index from 1 if UTAPI
+    loaded = mScope->GetLoadedSlot();
+    if (loaded > 0) {
+      maybeStage = loaded - 1;
+
+    } else {
+
+      // Otherwise deal with figuring out what grid is on the stage, as this impacts how
+      // many slots to show
+      if (numEmpty == 1) {
+        str.Format("Is the grid from slot %d loaded on the stage?", maybeStage + 1);
+        if (AfxMessageBox(str, MB_QUESTION) != IDYES)
+          maybeStage = -1;
+      } else
         maybeStage = -1;
-    } else
-      maybeStage = -1;
-    if (maybeStage < 0) {
-      maybeStage = highest + 1;
-      if (KGetOneInt("If there is a grid on the stage, enter the slot it was loaded from;"
-        " if not, enter 0", maybeStage))
-        maybeStage--;
-      else
-        maybeStage = -1;
-      if (maybeStage >= numSlots)
-        maybeStage = -1;
+      if (maybeStage < 0) {
+        maybeStage = highest + 1;
+        if (KGetOneInt("If there is a grid on the stage, enter the slot it was loaded from;"
+          " if not, enter 0", maybeStage))
+          maybeStage--;
+        else
+          maybeStage = -1;
+        if (maybeStage >= numSlots)
+          maybeStage = -1;
+      }
     }
 
     mCartInfo->RemoveAll();
@@ -706,6 +714,7 @@ void CMultiGridDlg::OnButSetCurrentDir()
 {
   mWinApp->RestoreViewFocus();
   mWinApp->mDocWnd->OnFileSetCurrentDirectory();
+  UpdateEnables();
 }
 
 // Toggle refine after realign
@@ -1010,7 +1019,9 @@ void CMultiGridDlg::UpdateEnables()
 {
   ShortVec dlgInds, slotNums;
   JeolCartridgeData jcd;
-  int ind, noTaskList[] = {IDC_CHECK_RUN_LMMS, IDC_RLMM_SEARCH, IDC_RLMM_VIEW, 
+  CameraParameters *camP = mWinApp->GetCamParams();
+  int numStates, stateCamera;
+  int ind, noTaskList[] = {IDC_CHECK_RUN_LMMS, IDC_RLMM_SEARCH, IDC_RLMM_VIEW,
     IDC_RLMM_CUR_OR_STATE, IDC_CHECK_SET_LMM_STATE, IDC_CHECK_REMOVE_OBJ, 
     IDC_CHECK_SET_CONDENSER, IDC_RFULL_GRID_MONT, IDC_RNUM_MONT_PIECES, 
     IDC_CHECK_USE_OVERLAP, IDC_CHECK_AUTOCONTOUR, IDC_BUT_SETUP_LMM_MONT,
@@ -1020,7 +1031,7 @@ void CMultiGridDlg::UpdateEnables()
     IDC_CHECK_RUN_FINAL_ACQ, IDC_BUT_SETUP_FINAL_ACQ, IDC_COMBO_FINAL_STATE1,
     IDC_COMBO_FINAL_STATE2, IDC_COMBO_FINAL_STATE3, IDC_COMBO_FINAL_STATE4,
     IDC_CHECK_MG_REFINE, IDC_RVECTORS_FROM_MAPS, IDC_RVECTORS_FROM_SETTINGS};
-  bool locked = mMGTasks->GetNamesLocked() > 0;
+  bool enable, locked = mMGTasks->GetNamesLocked() > 0;
   BOOL justTasks = mWinApp->DoingTasks();
   bool suspended = mMGTasks->GetSuspendedMulGrid();
   BOOL tasks = justTasks || suspended || mSettingOrder;
@@ -1093,6 +1104,13 @@ void CMultiGridDlg::UpdateEnables()
   EnableDlgItem(IDC_CHECK_SET_FINAL_BY_GRID, !tasks && mNumUsedSlots > 0);
   EnableDlgItem(IDC_BUT_REVERT_TO_GLOBAL, 
     !tasks && mSelectedGrid >= 0 && m_bSetFinalByGrid && mNumUsedSlots > 0);
+  enable = true;
+  if (!CheckFinalStates(numStates, stateCamera, &filename)) {
+    if (stateCamera < 0)
+      stateCamera = mWinApp->GetCurrentCamera();
+    enable = mMGTasks->CanFalconFramesMoveToSession(&camP[stateCamera], NULL);
+  }
+  EnableDlgItem(IDC_CHECK_FRAMES_UNDER_SESSION, enable && !tasks);
 }
 
 /*
@@ -2615,10 +2633,11 @@ StateParams *CMultiGridDlg::GetOrRefindState(int &stateNum, CString &stateName,
  */
 int CMultiGridDlg::CheckMultipleStates(CComboBox **comboArr, int *stateNums,
   CString *stateNames, CString descrip, int &numStates, int &camera, StateParams **states,
-  int *lowDose, int *magInds)
+  int *lowDose, int *magInds, CString *errStr)
 {
   int retVal = 0, ind, jnd, numNon = 0, numLD = 0;
   StateParams *state;
+  CString str;
   camera = -1;
   numStates = 0;
   for (ind = 0; ind < 4; ind++) {
@@ -2632,8 +2651,12 @@ int CMultiGridDlg::CheckMultipleStates(CComboBox **comboArr, int *stateNums,
         magInds[numStates] = state->ldParams.magIndex;
         for (jnd = 0; jnd < numStates; jnd++) {
           if (state->lowDose == lowDose[jnd]) {
-            AfxMessageBox("You have selected more that one state of the same Low Dose "
-              "type for " + descrip + ", which makes no sense", MB_EXCLAME);
+            str = "You have selected more that one state of the same Low Dose "
+              "type for " + descrip + ", which makes no sense";
+            if (errStr)
+              *errStr = str;
+            else
+              AfxMessageBox(str, MB_EXCLAME);
             return 1;
           }
         }
@@ -2652,15 +2675,30 @@ int CMultiGridDlg::CheckMultipleStates(CComboBox **comboArr, int *stateNums,
   if (!(numNon > 1 || (numNon && numLD) || (camera >= 0 && camera != state->camIndex)))
     return 0;
   if (numNon > 1)
-    AfxMessageBox("Only one non-Low Dose state can be selected for " + descrip, 
-      MB_EXCLAME);
+    str = "Only one non-Low Dose state can be selected for " + descrip;
   else if (numNon && numLD)
-    AfxMessageBox("You cannot select both Low Dose and non-Low Dose states for " + 
-      descrip, MB_EXCLAME);
+    str = "You cannot select both Low Dose and non-Low Dose states for " + descrip;
   else
-    AfxMessageBox("All selected states for " + descrip + " must be for the same camera",
-      MB_EXCLAME);
+    str = "All selected states for " + descrip + " must be for the same camera";
+  if (errStr)
+    *errStr = str;
+  else
+    AfxMessageBox(str, MB_EXCLAME);
   return 1;
+}
+
+/*
+ * Convenience function to check final states and returning basic information
+ */
+int CMultiGridDlg::CheckFinalStates(int &numStates, int &camera, CString *errStr)
+{
+  CComboBox *comboArr[4] = {&m_comboFinalState1, &m_comboFinalState2, &m_comboFinalState3,
+    &m_comboFinalState4};
+  StateParams *stateArr[4];
+  int stateLowDose[4], stateMagInds[4];
+  return CheckMultipleStates(comboArr, mParams.finalStateNums, mParams.finalStateNames,
+    "final acquisition", numStates, camera, stateArr, stateLowDose, stateMagInds, errStr);
+  return 0;
 }
 
 /*
@@ -3113,12 +3151,9 @@ void CMultiGridDlg::DoStartRun(bool undoneOnly)
 {
   UPDATE_DATA_TRUE;
   int finalNeedsLowDose = mWinApp->LowDoseMode() ? 1 : -1;
-  CComboBox *comboArr[4] = {&m_comboFinalState1, &m_comboFinalState2, &m_comboFinalState3,
-    &m_comboFinalState4};
-  StateParams *stateArr[4];
   bool sizesMatch = true;
   MontParam *montP;
-  int stateLowDose[4], stateMagInds[4], numStates, stateCamera;
+  int numStates, stateCamera;
   mWinApp->RestoreViewFocus();
   DialogToParams();
   *mMasterParams = mParams;
@@ -3148,8 +3183,7 @@ void CMultiGridDlg::DoStartRun(bool undoneOnly)
   }
 
   if (m_bRunFinalAcq) {
-    if (CheckMultipleStates(comboArr, mParams.finalStateNums, mParams.finalStateNames,
-      "final acquisition", numStates, stateCamera, stateArr, stateLowDose, stateMagInds))
+    if (CheckFinalStates(numStates, stateCamera))
       return;
     if (numStates)
       finalNeedsLowDose = 0;
