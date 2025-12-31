@@ -1978,8 +1978,7 @@ void CFalconHelper::GetSavedFrameSizes(CameraParameters *camParams,
     frameY = (conSet->bottom - conSet->top) / conSet->binning;
     maybeSwap = FCAM_ADVANCED(camParams) && camParams->FEItype != FALCON4_TYPE &&
       !(camParams->FEItype == FALCON3_TYPE && mCamera->GetRotFlipInFalcon3ComFile() >= 0);
-    if (mCamera->IsSaveInEERMode(camParams, conSet) || 
-      mCamera->IsFalconSaveAsLZW(camParams, conSet)) {
+    if (mCamera->IsSaveAsEERorLZW(camParams, conSet)) {
       frameX = camParams->sizeX;
       frameY = camParams->sizeY;
       maybeSwap = true;
