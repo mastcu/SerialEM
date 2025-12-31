@@ -1483,7 +1483,7 @@ void CCameraSetupDlg::HandleFrameLongerThanExposure()
   }
   if (m_fFrameTime * mFrameTimeMsScale <= maxFrame || !(mParam->K2Type || 
     mParam->canTakeFrames ||
-    mCamera->IsSaveInEERMode(mParam, m_bSaveFrames, m_bAlignDoseFrac,
+    mCamera->IsSaveAsEERorLZW(mParam, m_bSaveFrames, m_bAlignDoseFrac,
       mCurSet->useFrameAlign, m_iK2Mode)))
     return;
   m_fFrameTime = maxFrame  / mFrameTimeMsScale;
@@ -3183,7 +3183,8 @@ void CCameraSetupDlg::OnKillfocusEditFrameTime()
 {
   int special;
   UpdateData(TRUE);
-  bool tiffLZW = mCamera->IsFalconSaveAsLZW(mParam, m_bSaveFrames, m_iK2Mode);
+  bool tiffLZW = mCamera->IsFalconSaveAsLZW(mParam, m_bSaveFrames, m_bAlignDoseFrac,
+    mCurSet->useFrameAlign, m_iK2Mode);
   float startFrame = m_fFrameTime;
   float realFrame = m_fFrameTime * mFrameTimeMsScale;
   if (mParam->K2Type || mParam->canTakeFrames || 
@@ -3284,9 +3285,8 @@ void CCameraSetupDlg::ManageDoseFrac(void)
 // Flip between the setup frames and the frame time for Falcon 4 depending on EER save
 void CCameraSetupDlg::ManageFalcon4FrameSpec(void)
 {
-  bool show = mCamera->IsSaveInEERMode(mParam, m_bSaveFrames, m_bAlignDoseFrac, 
-    mCurSet->useFrameAlign, m_iK2Mode) || mCamera->IsFalconSaveAsLZW(mParam,
-      m_bSaveFrames, m_iK2Mode);
+  bool show = mCamera->IsSaveAsEERorLZW(mParam, true, m_bAlignDoseFrac, 
+    mCurSet->useFrameAlign, m_iK2Mode);
   if (mFEItype != FALCON4_TYPE)
     return;
   ShowDlgItem(IDC_STAT_FRAME_TIME, show);
@@ -3365,7 +3365,7 @@ void CCameraSetupDlg::CheckFalconFrameSumList(void)
     ManageExposure();
     UpdateData(false);
   } else if (mFalconCanSave && (m_bSaveFrames || m_bAlignDoseFrac) &&
-    !mCamera->IsSaveInEERMode(mParam, m_bSaveFrames, m_bAlignDoseFrac,
+    !mCamera->IsSaveAsEERorLZW(mParam, m_bSaveFrames, m_bAlignDoseFrac,
     mCurSet->useFrameAlign, m_iK2Mode)) {
     if (!mSummedFrameList.size())
       OnSetupFalconFrames();
@@ -3718,7 +3718,8 @@ void CCameraSetupDlg::ManageK2SaveSummary(void)
       if (m_bDoseFracMode && m_bSaveFrames)
         str.Format("%d raw to EER file", frames);
       frames = B3DNINT(realExp / realFrame);
-    } else if (mCamera->IsFalconSaveAsLZW(mParam, m_bSaveFrames, m_iK2Mode)) {
+    } else if (mCamera->IsFalconSaveAsLZW(mParam, m_bSaveFrames, m_bAlignDoseFrac,
+      mCurSet->useFrameAlign, m_iK2Mode)) {
       frames = B3DNINT(realExp / realFrame);
       str.Format("%d raw to TIFF file", frames);
 

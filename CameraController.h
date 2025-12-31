@@ -1312,7 +1312,9 @@ bool CanWeAlignFalcon(CameraParameters *param, BOOL savingEnabled, bool &canSave
 bool IsSaveInEERMode(CameraParameters *param, const ControlSet *conSet);
 bool IsSaveInEERMode(CameraParameters *param, BOOL saveFrames, BOOL alignFrames, int useFramealign, int readMode);
 bool IsFalconSaveAsLZW(CameraParameters *param, const ControlSet *conSet);
-bool IsFalconSaveAsLZW(CameraParameters *param, BOOL saveFrames, int readMode);
+bool IsFalconSaveAsLZW(CameraParameters *param, BOOL saveFrames, BOOL alignFrames, int useFramealign, int readMode);
+bool IsSaveAsEERorLZW(CameraParameters *param, const ControlSet *conSet);
+bool IsSaveAsEERorLZW(CameraParameters *param, BOOL saveFrames, BOOL alignFrames, int useFramealign, int readMode);
 bool IsFEISubareaFlexible(CameraParameters *param, const ControlSet *conSet);
 bool IsFEISubareaFlexible(CameraParameters *param, BOOL saveFrames, BOOL alignFrames, int useFramealign,
   int readMode, int binning);
