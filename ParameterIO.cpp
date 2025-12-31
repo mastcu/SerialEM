@@ -849,7 +849,8 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
         cookParams->trackImage = itemInt[7] != 0;
         cookParams->cookAtTilt = itemInt[8] != 0;
         cookParams->tiltAngle = itemFlt[9];
-        cookParams->probeOrAlpha = itemInt[10];
+        if (!itemEmpty[10])
+          cookParams->probeOrAlpha = itemInt[10];
 
       } else if (NAME_IS("VppConditionParams")) {
         vppParams->magIndex = itemInt[1];

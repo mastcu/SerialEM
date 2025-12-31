@@ -165,10 +165,7 @@ int CMultiTSTasks::StartCooker(void)
   mCkIntensity = mScope->GetIntensity();
   mCkMagInd = mScope->GetMagIndex();
   mCkSpot = mScope->GetSpotSize();
-  if (FEIscope)
-    mCkProbeOrAlpha = mScope->ReadProbeMode();
-  else if (JEOLscope && !mScope->GetHasNoAlpha())
-    mCkProbeOrAlpha = mScope->GetAlpha();
+  GetProbeOrAlpha(mCkProbeOrAlpha);
   mCkDoTilted = false;
   if (mCkParams->cookAtTilt) {
     mCkTiltAngle = mScope->GetTiltAngle();
@@ -230,10 +227,7 @@ void CMultiTSTasks::CookerNextTask(int param)
       mScope->DelayedSetIntensity(mCkParams->intensity, GetTickCount(), 
         mCkParams->spotSize);
       mScope->SetSpotSize(mCkParams->spotSize);
-      if (FEIscope)
-        mScope->SetProbeMode(mCkParams->probeOrAlpha);
-      else if (JEOLscope && !mScope->GetHasNoAlpha())
-        mScope->SetAlpha(mCkParams->probeOrAlpha);
+      SetProbeOrAlpha(mCkParams->probeOrAlpha);
       if (mScope->GetScreenPos() != spDown) {
         TiltAndMoveScreen(false, mCkParams->tiltAngle, true, spDown);
         mWinApp->AddIdleTask(TASK_COOKER, mCkDoTilted ? SCREEN_DROPPED : START_WAITING,
@@ -450,6 +444,36 @@ void CMultiTSTasks::StopCooker(void)
   mCamera->SetRequiredRoll(0);
 }
 
+// Helper function to set alpha value or probe mode
+void CMultiTSTasks::SetProbeOrAlpha(int probe, int alpha)
+{
+  if (FEIscope)
+    mScope->SetProbeMode(probe);
+  if (!mScope->GetHasNoAlpha())
+    mScope->SetAlpha(alpha);
+}
+
+// Helper function to set alpha value or probe mode
+void CMultiTSTasks::SetProbeOrAlpha(int probeOrAlpha)
+{
+  SetProbeOrAlpha(probeOrAlpha, probeOrAlpha);
+}
+
+// Helper function to get alpha value or probe mode
+void CMultiTSTasks::GetProbeOrAlpha(int &probe, int &alpha)
+{
+  if (FEIscope)
+    probe = mScope->ReadProbeMode();
+  if (!mScope->GetHasNoAlpha())
+    alpha = mScope->GetAlpha();
+}
+
+// Helper function to get alpha value or probe mode
+void CMultiTSTasks::GetProbeOrAlpha(int &probeOrAlpha)
+{
+  GetProbeOrAlpha(probeOrAlpha, probeOrAlpha);
+}
+
 // Potentially start both screen move and stage tilt, but now both only on a stop, and
 // try to let the stage finish before starting the screen
 void CMultiTSTasks::TiltAndMoveScreen(bool tilt, double angle, bool move, int position)
@@ -636,10 +660,7 @@ void CMultiTSTasks::RestoreScopeState(void)
   postMag = GetTickCount();
   mScope->SetSpotSize(mCkSpot);
   mScope->DelayedSetIntensity(mCkIntensity, postMag);
-  if (FEIscope)
-    mScope->SetProbeMode(mCkProbeOrAlpha);
-  else if (JEOLscope && !mScope->GetHasNoAlpha())
-    mScope->SetAlpha(mCkProbeOrAlpha);
+  SetProbeOrAlpha(mCkProbeOrAlpha);
 }
 
 // Display time to go in simple pane
@@ -2416,10 +2437,7 @@ void CMultiTSTasks::SaveScopeStateInVppParams(VppConditionParams *params, bool s
     params->camLenIndex = mScope->GetCamLenIndex();
   params->spotSize = mScope->GetSpotSize();
   params->intensity = mScope->GetIntensity();
-  if (FEIscope)
-    params->probeMode = mScope->ReadProbeMode();
-  if (!mScope->GetHasNoAlpha())
-    params->alpha = mScope->GetAlpha();
+  GetProbeOrAlpha(params->probeMode, params->alpha);
 }
 
 // Set the scope state to values in the given parameter structure, or just set the low
@@ -2436,10 +2454,7 @@ void CMultiTSTasks::SetScopeStateFromVppParams(VppConditionParams *params, bool 
     mScope->SetMagIndex(params->magIndex);
   else
     mScope->SetCamLenIndex(params->camLenIndex);
-  if (FEIscope)
-    mScope->SetProbeMode(params->probeMode);
-  if (!mScope->GetHasNoAlpha())    
-    mScope->SetAlpha(params->alpha);
+  SetProbeOrAlpha(params->probeMode, params->alpha);
   mScope->SetSpotSize(params->spotSize);
   mScope->SetIntensity(params->intensity, params->spotSize);
 }

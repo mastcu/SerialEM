@@ -208,6 +208,11 @@ public:
   GetSetMember(int, AutoCenUseMagInd);
   GetMember(int, BfcSecZeroMapsTo);
 
+  void SetProbeOrAlpha(int probe, int alpha);
+  void GetProbeOrAlpha(int &probe, int &alpha);
+  void SetProbeOrAlpha(int probeOrAlpha);
+  void GetProbeOrAlpha(int &probeOrAlpha);
+
   VppConditionParams *GetVppConditionParams() { return &mVppParams; };
   BOOL BidirCopyPending() {return mBfcCopyIndex >= 0;};
   int DoingBidirCopy() {return mBfcDoingCopy;};
