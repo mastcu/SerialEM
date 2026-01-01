@@ -79,12 +79,12 @@
       the removal with Ccderaser in IMOD. The parameters controlling the X ray removal
       are adjusted through the <A HREF="menu_process.htm#hid_process_setimagecriteria">
         Set Image Criteria command</A> in the Processing menu.</P>
-    <P><b>Correct Drift</b></P>
+    <P><b>Correct Drift&nbsp;&nbsp; <strong>(OneView/Rio)</strong></b></P>
     <P>This checkbox is present for a OneView or Rio camera and turns on the real-time drift
       correction by that camera.&nbsp; Note that if this option is on and the image
       does not have enough features for alignment, the intensity of the image may be
       much less than expected.</P>
-      <P><strong>Diffraction mode</strong></P>
+      <P><strong>Diffraction mode&nbsp; (OneView/Rio)</strong></P>
       <P>This checkbox is present for a OneView or Rio camera and will make images be
           acquired in the camera's Diffraction mode instead of Imaging mode.</P>
     <P><B>Binning</B></P>
@@ -268,6 +268,15 @@
         Unnormalized data can be saved in less space and gain-normalized later.&nbsp;
         When saving such frames, the frame sum returned to SerialEM will be
         gain-normalized even though normalization is not selected.</ul>
+    <p>
+      <strong>Dark mode&nbsp;&nbsp; (K3 only, GMS 3.5+)</strong></p>
+    <p>
+      This checkbox appears for a K3 camera with GMS 3.5 or above and allows you to 
+      select the camera&#39;s Dark mode, which is apparently optimized for diffraction 
+      data.&nbsp; In GMS 3.5 it will work only in CDS mode so the option is only 
+      enabled then; in GMS 3.6 it works in non-CDS mode too.&nbsp; You need to prepare 
+      separate gain references in DigitalMicrograph with the Dark mode option on, and 
+      both out of and in CDS mode if you want to use both.</p>
     <P><b>Linear - Counting - Super-resolution Mode</b></P>
     <P>These radio buttons allow one to select one of the basic camera modes.&nbsp;
       For K2, the image size and binning selection are preserved when switching into
