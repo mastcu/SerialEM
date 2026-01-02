@@ -3,8 +3,9 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
-12/31/25: Added probe mode or alpha parameter to the cooker setup.
+1/2/26: Added probe mode or alpha parameter to the cooker setup.
 
+12/31/25: SEM_4-3-0beta3
 12/31/25: Added ability to save Falcon 3 frames in subdirectories under the
 multigrid session directory, provided that is on the storage server.
 
