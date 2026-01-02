@@ -12,6 +12,7 @@
 #include ".\CookerSetupDlg.h"
 #include "EMscope.h"
 #include "BeamAssessor.h"
+#include "MultiTSTasks.h"
 
 #define TARGET_MIN  1
 #define TARGET_MAX  30000
@@ -114,12 +115,8 @@ BOOL CCookerSetupDlg::OnInitDialog()
     mCookP->spotSize = mScope->GetSpotSize();
   if (mCookP->intensity < 0)
     mCookP->intensity = mScope->GetIntensity();
-  if (mCookP->probeOrAlpha == -999) {
-    if (FEIscope)
-      mCookP->probeOrAlpha = mScope->ReadProbeMode();
-    else if (JEOLscope && !mScope->GetHasNoAlpha())
-      mCookP->probeOrAlpha = mScope->GetAlpha();
-  }
+  if (mCookP->probeOrAlpha == -999)
+    mWinApp->mMultiTSTasks-> GetProbeOrAlpha(mCookP->probeOrAlpha);
 
   m_bTrackState = false;
   mCurMagInd = mCookP->magIndex;
