@@ -1,6 +1,6 @@
 // OneLineScript.cpp : Dialog for simple one-line scripts
 //
-// Copyright (C) 2018-2019 by the Regents of the University of
+// Copyright (C) 2018-2026 by the Regents of the University of
 // Colorado.  See Copyright.txt for full notice of copyright and limitations.
 //
 // Author: David Mastronarde
@@ -11,6 +11,10 @@
 #include "OneLineScript.h"
 #include "MacroEditer.h"
 #include "MacroProcessor.h"
+
+#if defined(_DEBUG) && defined(_CRTDBG_MAP_ALLOC)
+#define new DEBUG_NEW
+#endif
 
 // COneLineScript dialog
 
@@ -88,7 +92,7 @@ BOOL COneLineScript::OnInitDialog()
   int iXoffset = (wndRect.Width() - clientRect.Width()) / 2;
   for (ind = 0; ind < MAX_ONE_LINE_SCRIPTS; ind++) {
     m_butRun[ind].GetWindowRect(runRect);
-    m_iRunTop[ind] = (runRect.top - wndRect.top) - 
+    m_iRunTop[ind] = (runRect.top - wndRect.top) -
       (wndRect.Height() - clientRect.Height()) + iXoffset;
     if (!m_strOneLine[ind].IsEmpty())
       lastOne = ind;
@@ -107,13 +111,13 @@ BOOL COneLineScript::OnInitDialog()
   // Resize to a bit longer than the last non-empty string: this is overriden by the
   // placement once that exists in settings
   if (lastOne < MAX_ONE_LINE_SCRIPTS - 1) {
-    ind = wndRect.Height() + m_iRunTop[lastOne] - m_iRunTop[MAX_ONE_LINE_SCRIPTS - 1] + 
+    ind = wndRect.Height() + m_iRunTop[lastOne] - m_iRunTop[MAX_ONE_LINE_SCRIPTS - 1] +
       mWinApp->ScaleValueForDPI(5);
     SetWindowPos(NULL, 0, 0, wndRect.Width(), ind, SWP_NOMOVE);
   }
   UpdateData(false);
   mInitialized = true;
-  SetDefID(45678); 
+  SetDefID(45678);
   Invalidate();
   return FALSE;
 }
@@ -162,7 +166,7 @@ void COneLineScript::OnCancel()
 
 void COneLineScript::PostNcDestroy()
 {
-  delete this;  
+  delete this;
   CDialog::PostNcDestroy();
 }
 
@@ -178,13 +182,13 @@ void COneLineScript::OnSize(UINT nType, int cx, int cy)
   int delta = wndRect.Width() - m_iWinXorig;
   int newx = B3DMAX(5, m_iEditXorig + delta);
   for (ind = 0; ind < MAX_ONE_LINE_SCRIPTS; ind++) {
-    m_editOneLine[ind].SetWindowPos(NULL, 0, 0, newx, m_iEditHeight, 
+    m_editOneLine[ind].SetWindowPos(NULL, 0, 0, newx, m_iEditHeight,
       SWP_NOZORDER | SWP_NOMOVE);
     m_butRun[ind].SetWindowPos(NULL, B3DMAX(5, m_iRunLeftOrig + delta), m_iRunTop[ind], 0,
       0, SWP_NOZORDER | SWP_NOSIZE);
   }
   m_statCompletions.GetWindowRect(editRect);
-  m_statCompletions.SetWindowPos(NULL, m_iCompLeft, m_iCompOffset, 
+  m_statCompletions.SetWindowPos(NULL, m_iCompLeft, m_iCompOffset,
     m_iCompWidthOrig + delta, editRect.Height(), SWP_NOZORDER);
   m_statCompletions.RedrawWindow();
 }
@@ -262,7 +266,7 @@ void COneLineScript::OnEnChangeEditOneLine(UINT nID)
   bool setCompletions, completing;
   UpdateData(true);
   m_editOneLine[ind].GetSel(sel1, sel2);
-  CMacroEditer::HandleCompletionsAndIndent(m_strOneLine[ind], m_strCompletions, sel2, 
+  CMacroEditer::HandleCompletionsAndIndent(m_strOneLine[ind], m_strCompletions, sel2,
     setCompletions, completing, true, mLineForSignature, 0);
   if (setCompletions)
     SetDlgItemText(IDC_STAT_COMPLETIONS, m_strCompletions);

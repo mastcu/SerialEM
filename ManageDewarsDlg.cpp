@@ -1,7 +1,7 @@
 // ManageDewarsDlg.cpp : Dialog for specifying periodic actions and checks for nitrogen
 // dewars and vacuum pumps
 //
-// Copyright (C) 2021 by  the Regents of the University of
+// Copyright (C) 2021-2026 by  the Regents of the University of
 // Colorado.  See Copyright.txt for full notice of copyright and limitations.
 //
 // Author: David Mastronarde
@@ -13,12 +13,16 @@
 #include "EMscope.h"
 #include "ManageDewarsDlg.h"
 
+#if defined(_DEBUG) && defined(_CRTDBG_MAP_ALLOC)
+#define new DEBUG_NEW
+#endif
+
 static int sIdTable[] = {IDC_CHECK_PVP_RUNNING, IDC_RUN_BUFFER_CYCLE,
 IDC_EDIT_BUFFER_TIME, IDC_STAT_BUFFER_MIN, IDC_RUN_AUTOLOADER_CYCLE, IDC_STAT_LINE,
 IDC_EDIT_AUTOLOADER_TIME, IDC_STAT_AUTOLOADER_MIN, IDC_STAT_VACUUM_TITLE, PANEL_END,
 IDC_STAT_DEWAR_TITLE, IDC_REFILL_DEWARS, IDC_EDIT_REFILL_TIME, IDC_CHECK_DEWARS,
 IDC_STAT_REFILL_HOURS, PANEL_END,
-IDC_STAT_PAUSE_BEFORE, IDC_EDIT_PAUSE_BEFORE, IDC_STAT_BEFORE_MIN, 
+IDC_STAT_PAUSE_BEFORE, IDC_EDIT_PAUSE_BEFORE, IDC_STAT_BEFORE_MIN,
 IDC_START_REFILL, IDC_EDIT_START_IF_BELOW, IDC_STAT_START_BELOW_MIN, PANEL_END,
 IDC_STAT_WAIT_TIME, IDC_EDIT_WAIT_AFTER, IDC_STAT_AFTER_MIN, PANEL_END,
 IDC_DO_CHECKS_JUST_BEFORE, IDC_STAT_WHEN_OCCURS, PANEL_END,

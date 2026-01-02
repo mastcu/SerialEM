@@ -13,6 +13,10 @@
 #include "CameraController.h"
 #include "ShiftManager.h"
 
+#if defined(_DEBUG) && defined(_CRTDBG_MAP_ALLOC)
+#define new DEBUG_NEW
+#endif
+
 static int sIdTable[] = {IDC_BUT_ADDCURSTATE, IDC_BUT_ADD_MONT_MAP, IDC_BUT_ADDNAVSTATE,
 IDC_BUT_DELSTATE, IDC_BUT_SETIMSTATE, IDC_BUT_SETMAPSTATE, IDC_BUT_FORGETSTATE,
 IDC_STAT_STATE_NAME, IDC_STAT_TITLELINE, IDC_BUTHELP, IDC_BUT_SETSCHEDSTATE,
@@ -120,7 +124,7 @@ BOOL CStateDlg::OnInitDialog()
 
   tabs[0] = fields[0];
   for (i = 1; i < 12; i++)
-    tabs[i] = tabs[i - 1] + fields[i]; 
+    tabs[i] = tabs[i - 1] + fields[i];
   for (i = 0; i <= MAX_SAVED_STATE_IND; i++)
     mSetStateIndex[i] = -1;
   m_listViewer.SetTabStops(11, tabs);
@@ -138,7 +142,7 @@ BOOL CStateDlg::OnInitDialog()
 
   mInitialized = true;
   //UpdateData(false);
-   
+
   return TRUE;
 }
 
@@ -149,13 +153,13 @@ void CStateDlg::SetStaticPointers()
   mStateArray = mHelper->GetStateArray();
 }
 
-void CStateDlg::PostNcDestroy() 
+void CStateDlg::PostNcDestroy()
 {
-  delete this;  
+  delete this;
   CDialog::PostNcDestroy();
 }
 
-void CStateDlg::OnSize(UINT nType, int cx, int cy) 
+void CStateDlg::OnSize(UINT nType, int cx, int cy)
 {
   CRect rect, clientRect;
 	CDialog::OnSize(nType, cx, cy);
@@ -184,11 +188,11 @@ void CStateDlg::OnSize(UINT nType, int cx, int cy)
 // Returns come through here - needed to avoid closing window
 // can restore focus, but do not set up a kill focus handler that does
 // this because it makes other buttons unresponsive
-void CStateDlg::OnOK() 
+void CStateDlg::OnOK()
 {
   mWinApp->RestoreViewFocus();
 }
-	
+
 void CStateDlg::OnCancel()
 {
   // DO NOT call base class, it will leak memory
@@ -199,7 +203,7 @@ void CStateDlg::OnCancel()
 }
 
 // This doesn't work - there is a mouse up at end that sets focus to dialog
-void CStateDlg::OnMove(int x, int y) 
+void CStateDlg::OnMove(int x, int y)
 {
 	CDialog::OnMove(x, y);
   if (mInitialized)
@@ -245,7 +249,7 @@ void CStateDlg::Update(void)
     }
   }
   m_butAddCurState.EnableWindow(noTasks && (ldArea == -2 || ldArea != -1));
-  m_butAddMontMap.ShowWindow((mWinApp->GetUseRecordForMontage() || 
+  m_butAddMontMap.ShowWindow((mWinApp->GetUseRecordForMontage() ||
     mWinApp->IsIDinHideSet(IDC_BUT_ADD_MONT_MAP)) ? SW_HIDE : SW_SHOW);
   m_butAddMontMap.EnableWindow(noTasks);
   m_butAddNavItemState.EnableWindow(noTasks && mapItem);
@@ -255,17 +259,17 @@ void CStateDlg::Update(void)
     && (type == STATE_NONE || !mParam->lowDose || mCamOfSetState< 0 ||
       mCamOfSetState == mParam->camIndex));
   m_butSetMapState.EnableWindow(noTasks && noComplex && mapItem && type == STATE_NONE);
-  m_butSetSchedState.EnableWindow(noTasks && noComplex && schedItem && 
+  m_butSetSchedState.EnableWindow(noTasks && noComplex && schedItem &&
     type != STATE_MAP_ACQUIRE);
   m_butRestore.EnableWindow(noTasks && noComplex && type != STATE_NONE);
   m_butForget.EnableWindow(noTasks && noComplex && type != STATE_NONE);
   if (type != STATE_IMAGING)
     DisableUpdateButton();
-  m_butUpdate.EnableWindow(noTasks && noComplex && CurrentMatchesSetState() >= 0 && 
-    mgOK && ((ldArea == -2 && paramArea < 0) || 
+  m_butUpdate.EnableWindow(noTasks && noComplex && CurrentMatchesSetState() >= 0 &&
+    mgOK && ((ldArea == -2 && paramArea < 0) ||
     (ldArea == paramArea)) && imOK && curCam == mParam->camIndex);
   m_listViewer.EnableWindow(noTasks && noComplex && type != STATE_MAP_ACQUIRE);
-    
+
   if (mHelper->GetSavedPriorState(state)) {
     state.name = "";
     StateToListString(&state, summary, "  ", -1, mSetStateIndex, MAX_SAVED_STATE_IND + 1,
@@ -306,7 +310,7 @@ void CStateDlg::OnEnChangeStatename()
 {
   if (!SetCurrentParam())
     return;
-  UpdateData(true); 
+  UpdateData(true);
   mParam->name = m_strName;
   UpdateListString(mCurrentItem);
 }
@@ -352,7 +356,7 @@ void CStateDlg::OnButAddCurState()
     return;
   if (lowdose && area < 0)
     return;
-  mHelper->StoreCurrentStateInParam(state, lowdose, 
+  mHelper->StoreCurrentStateInParam(state, lowdose,
     B3DCHOICE(area == FOCUS_CONSET || area == TRIAL_CONSET, area == FOCUS_CONSET ? 1 : 2,
       0), -1, IS_AREA_VIEW_OR_SEARCH(area) ? area + 1 : 0);
   AddNewStateToList();
@@ -393,7 +397,7 @@ void CStateDlg::OnButDelState()
   mWinApp->RestoreViewFocus();
   if (!SetCurrentParam())
     return;
-  if (AfxMessageBox("Are you sure you want to delete this state?", 
+  if (AfxMessageBox("Are you sure you want to delete this state?",
     MB_YESNO | MB_ICONQUESTION) != IDYES)
     return;
   delete mParam;
@@ -522,8 +526,8 @@ int CStateDlg::DoSetImState(int stateNum, CString &errStr)
   }
   area = mHelper->AreaFromStateLowDoseValue(param, &setNum);
   PrintfToLog("%s%s parameters set from state # %d  %s %s", area < 0 ? "" : "Low dose ",
-    names[setNum], stateNum + 1, (LPCTSTR)param->name, 
-    (area >= 0 && !mRemindedToGoTo && !winApp->DoingTasks()) ? 
+    names[setNum], stateNum + 1, (LPCTSTR)param->name,
+    (area >= 0 && !mRemindedToGoTo && !winApp->DoingTasks()) ?
     " (Press the Go To button in Low Dose to set the scope state)" : "");
   if (area >= 0 && !winApp->DoingTasks())
     mRemindedToGoTo = true;
@@ -534,14 +538,14 @@ int CStateDlg::DoSetImState(int stateNum, CString &errStr)
       " parameters");
     mWarnedSharedParams = true;
   }
-  if (setNum == MONT_USER_CONSET && winApp->GetUseRecordForMontage() && 
+  if (setNum == MONT_USER_CONSET && winApp->GetUseRecordForMontage() &&
     !mWarnedNoMontMap) {
     winApp->AppendToLog("WARNING: Setting this state sets the Mont-map camera"
       " parameters, which are not currently in use");
     mWarnedNoMontMap = true;
   }
 
-  // Restore state when leaving low dose mode, which restores LD params, doesn't assert 
+  // Restore state when leaving low dose mode, which restores LD params, doesn't assert
   // prior state because calling with the skipScope flag, and end up in R state
   // Do not restore when entering, it is a needless change
   if (type == STATE_IMAGING && param->lowDose == 0 && winApp->LowDoseMode())
@@ -559,7 +563,7 @@ int CStateDlg::DoSetImState(int stateNum, CString &errStr)
   mHelper->SaveCurrentState(STATE_IMAGING, B3DCHOICE(area == FOCUS_CONSET ||
     area == TRIAL_CONSET, area == FOCUS_CONSET ? 1 : 2, 0), param->camIndex, saveTarg,
     param->montMapConSet, param->lowDose ? 0 : 1);
-  mHelper->SaveLowDoseAreaForState(area, param->camIndex, saveTarg > 0, 
+  mHelper->SaveLowDoseAreaForState(area, param->camIndex, saveTarg > 0,
     param->montMapConSet);
   mHelper->SetStateFromParam(param, conSet, setNum);
   areaInd = param->montMapConSet ? MAX_SAVED_STATE_IND : (area + 1);
@@ -586,7 +590,7 @@ void CStateDlg::OnButSetMapState()
   CMapDrawItem *item = mWinApp->mNavigator->GetCurrentItem();
   if (!item || item->IsNotMap())
     return;
-  mHelper->SetToMapImagingState(item, true, 
+  mHelper->SetToMapImagingState(item, true,
     !(mWinApp->LowDoseMode() && item->mMapLowDoseConSet < 0) ? -1 : 0, 1);
 }
 
@@ -595,9 +599,9 @@ void CStateDlg::OnButSetSchedState()
 {
   ScheduledFile *sched;
   ControlSet *conSet = mWinApp->GetConSets() + RECORD_CONSET;
-  CArray<ScheduledFile *, ScheduledFile *> *schedFiles = 
+  CArray<ScheduledFile *, ScheduledFile *> *schedFiles =
     mWinApp->mNavigator->GetScheduledFiles();
-  CArray<StateParams *, StateParams *> *stateArray = 
+  CArray<StateParams *, StateParams *> *stateArray =
     mWinApp->mNavigator->GetAcqStateArray();
   StateParams *state = NULL;
   int j, area, setNum;
@@ -619,7 +623,7 @@ void CStateDlg::OnButSetSchedState()
     area = mHelper->AreaFromStateLowDoseValue(state, &setNum);
     if (setNum == SEARCH_CONSET && mWinApp->GetUseViewForSearch())
       setNum = VIEW_CONSET;
-    mHelper->SaveCurrentState(STATE_IMAGING, 1, state->camIndex, 0, false, 
+    mHelper->SaveCurrentState(STATE_IMAGING, 1, state->camIndex, 0, false,
       state->lowDose ? 0 : 1);
     mHelper->SetStateFromParam(state, conSet + setNum, setNum);
     DisableUpdateButton();
@@ -762,7 +766,7 @@ void CStateDlg::StateToListString(int index, CString &string)
     m_bShowNumber);
 }
 
-void CStateDlg::StateToListString(StateParams *state, CString &string, const char *sep, 
+void CStateDlg::StateToListString(StateParams *state, CString &string, const char *sep,
   int index, int *setStateIndex, int numSet, BOOL showNumber)
 {
   int magInd = state->lowDose ? state->ldParams.magIndex : state->magIndex;
@@ -825,10 +829,10 @@ void CStateDlg::StateToListString(StateParams *state, CString &string, const cha
     numName.Format("%d: %s", index + 1, (LPCTSTR)state->name);
   else
     numName = state->name;
-  string.Format("%s%s%d%s%s%s%d%s%s%s%s%s%s%.2f%s%s%s%.1fx%.1f%s%s%c%s%s", (LPCTSTR)lds,  
+  string.Format("%s%s%d%s%s%s%d%s%s%s%s%s%s%.2f%s%s%s%.1fx%.1f%s%s%c%s%s", (LPCTSTR)lds,
     sep, active, sep, (LPCTSTR)magstr, sep, spot, (LPCTSTR)prbal, sep, intStr, sep,
     (LPCTSTR)defstr, sep, state->exposure, sep, winApp->BinningText(state->binning, camp)
-    , sep, state->xFrame / 1000., state->yFrame / 1000., state->montMapConSet ? "M" : "", 
+    , sep, state->xFrame / 1000., state->yFrame / 1000., state->montMapConSet ? "M" : "",
     sep, selected ? (char)0x86 : ' ', sep, (LPCTSTR)numName);
 }
 

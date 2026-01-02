@@ -6,6 +6,10 @@
 #include ".\MacroToolbar.h"
 #include "MacroProcessor.h"
 
+#if defined(_DEBUG) && defined(_CRTDBG_MAP_ALLOC)
+#define new DEBUG_NEW
+#endif
+
 
 // CMacroToolbar dialog
 
@@ -93,7 +97,7 @@ END_MESSAGE_MAP()
 
 
 // CMacroToolbar message handlers
-BOOL CMacroToolbar::OnInitDialog() 
+BOOL CMacroToolbar::OnInitDialog()
 {
   CRect winrect, butrect, clientRect;
   int ixOffset, top;
@@ -108,14 +112,14 @@ BOOL CMacroToolbar::OnInitDialog()
   mButWidthOrig = butrect.Width();
   mButHeightOrig = butrect.Height();
   mLeftPos = butrect.left - winrect.left - ixOffset;
-  mTopPos = (butrect.top - winrect.top) - (winrect.Height() - clientRect.Height()) + 
+  mTopPos = (butrect.top - winrect.top) - (winrect.Height() - clientRect.Height()) +
     ixOffset;
   top = butrect.top;
   mBaseWinHeight = (top - winrect.top) + 2;
   button = (CButton *)GetDlgItem(ID_MACRO_RUN2);
   button->GetWindowRect(&butrect);
   mGutterHeight = butrect.top - top - mButHeightOrig;
-  SetLength(mWinApp->mMacroProcessor->GetNumToolButtons(), 
+  SetLength(mWinApp->mMacroProcessor->GetNumToolButtons(),
     mWinApp->mMacroProcessor->GetToolButHeight());
   UpdateSettings();
 
@@ -149,7 +153,7 @@ void CMacroToolbar::UpdateSettings(void)
 {
   for (int i = 0; i < MAX_MACROS; i++)
     SetOneMacroLabel(i);
-  SetLength(mWinApp->mMacroProcessor->GetNumToolButtons(), 
+  SetLength(mWinApp->mMacroProcessor->GetNumToolButtons(),
     mWinApp->mMacroProcessor->GetToolButHeight());
   Update();
 }
@@ -217,7 +221,7 @@ void CMacroToolbar::SetLength(int num, int butHeight)
   width = B3DMAX(maxExtent + deltaForBut, mButWidthOrig);
   for (ind = 0; ind < MAX_MACROS; ind++) {
     button = (CButton *)GetDlgItem(ID_MACRO_RUN1 + ind);
-    button->SetWindowPos(NULL, mLeftPos, mTopPos + ind * (butHeight + gutter), 
+    button->SetWindowPos(NULL, mLeftPos, mTopPos + ind * (butHeight + gutter),
       width, butHeight, SWP_NOZORDER);
   }
   Invalidate();
@@ -230,9 +234,9 @@ void CMacroToolbar::OnCancel()
   DestroyWindow();
 }
 
-void CMacroToolbar::PostNcDestroy() 
+void CMacroToolbar::PostNcDestroy()
 {
-  delete this;  
+  delete this;
   CDialog::PostNcDestroy();
 }
 

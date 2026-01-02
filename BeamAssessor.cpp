@@ -1,8 +1,7 @@
 // BeamAssessor.cpp      Calibrates beam intensity, adjusts intensity using the
 //                          calibration, and calibrates beam movement
 //
-// Copyright (C) 2003 by Boulder Laboratory for 3-Dimensional Electron 
-// Microscopy of Cells ("BL3DEMC") and the Regents of the University of
+// Copyright (C) 2003-2026 by the Regents of the University of
 // Colorado.  See Copyright.txt for full notice of copyright and limitations.
 //
 // Author: David Mastronarde
@@ -25,9 +24,11 @@
 #include "Shared\b3dutil.h"
 #include "DoseModulator.h"
 
+#if defined(_DEBUG) && defined(_CRTDBG_MAP_ALLOC)
+#define new DEBUG_NEW
+#endif
+
 #ifdef _DEBUG
-#undef THIS_FILE
-static char THIS_FILE[]=__FILE__;
 #define new DEBUG_NEW
 #endif
 
@@ -36,7 +37,7 @@ static char THIS_FILE[]=__FILE__;
 #define SPOT_CAL_CONSET  2
 #define AUTO_PURGE_HOURS  12
 
-enum CalTasks {CAL_RANGE_SHOT, CAL_FIRST_SHOT, CAL_TEST_SHOT, CAL_MATCH_BEFORE, 
+enum CalTasks {CAL_RANGE_SHOT, CAL_FIRST_SHOT, CAL_TEST_SHOT, CAL_MATCH_BEFORE,
 CAL_MATCH_AFTER};
 enum CalChanges {CAL_CHANGE_MAG = 1, CAL_CHANGE_BIN, CAL_CHANGE_EXP};
 
@@ -136,15 +137,15 @@ void CBeamAssessor::CalIntensityCCD()
     AfxMessageBox("Beam intensity calibration cannot be done in Low Dose mode");
     return;
   }
-  
+
   if (mNumTables >= MAX_INTENSITY_TABLES || mFreeIndex > 0.9 * MAX_INTENSITY_ARRAYS) {
     AfxMessageBox("No more space for intensity calibrations", MB_EXCLAME);
     return;
   }
 
-  mCountingK2 = mCamParam->K2Type && mCamParam->K2Type != K2_BASE && 
+  mCountingK2 = mCamParam->K2Type && mCamParam->K2Type != K2_BASE &&
     mCamParam->countsPerElectron;
- 
+
   // To protect against Tecnai intensity problem, just get and set intensity
   mStartIntensity = mScope->GetIntensity();
   mScope->SetIntensity(mStartIntensity);
@@ -165,9 +166,9 @@ void CBeamAssessor::CalIntensityCCD()
   else if (FEIscope)
     message += "   (Check it now - it could have changed due to normalization or setting"
     " intensity.)";
-  
+
   if (mScope->GetCrossover(mCalSpotSize, probe) > 0.) {
-    message = message + "\n\nThe calibration will be done for intensities " + 
+    message = message + "\n\nThe calibration will be done for intensities " +
       (aboveCross ? "above" : "below") + " crossover.";
     if (IntensityCalibrated())
       message += "\nIt will replace an existing calibration there.";
@@ -181,7 +182,7 @@ void CBeamAssessor::CalIntensityCCD()
   if (!FEIscope && !(JEOLscope && mScope->GetJeolHasBrightnessZoom())) {
     message.Format("Make sure that Brightness %s is turned off",
       HitachiScope ? "Link" : "Zoom");
-    AfxMessageBox(message,  MB_EXCLAME); 
+    AfxMessageBox(message,  MB_EXCLAME);
   } else {
     mUsersIntensityZoom = mScope->GetIntensityZoom();
     mScope->SetIntensityZoom(false);
@@ -207,7 +208,7 @@ void CBeamAssessor::CalIntensityCCD()
         mNumExpectedCals--;
     } else if (mBeamTables[in].spotSize != mCalSpotSize ||
       mBeamTables[in].aboveCross != aboveCross || mBeamTables[in].probeMode != probe) {
-        SEMTrace('c', "Retaining table for spot %d  aboveCross %d  probeMode %d", 
+        SEMTrace('c', "Retaining table for spot %d  aboveCross %d  probeMode %d",
           mBeamTables[in].spotSize, mBeamTables[in].aboveCross,mBeamTables[in].probeMode);
       mBeamTables[out] = mBeamTables[in];
 
@@ -225,7 +226,7 @@ void CBeamAssessor::CalIntensityCCD()
       mFreeIndex += mBeamTables[in].numIntensities;
       out++;
     } else {
-      SEMTrace('c', "Deleting table for spot %d  aboveCross %d  probeMode %d", 
+      SEMTrace('c', "Deleting table for spot %d  aboveCross %d  probeMode %d",
           mBeamTables[in].spotSize, mBeamTables[in].aboveCross,mBeamTables[in].probeMode);
       mNumExpectedCals--;
     }
@@ -245,7 +246,7 @@ void CBeamAssessor::CalIntensityCCD()
   mCalTable->measuredAperture = 0;
   mCalTable->probeMode = probe;
   mCalTable->aboveCross = aboveCross;
-  
+
   // Get total range of intensity that needs to be covered to be able to work
   // at the minimum mag: based on pixel size and extra range desired
   ratio = mShiftManager->GetPixelSize(camera, mCalMagInd) /
@@ -284,14 +285,14 @@ void CBeamAssessor::CalIntensityCCD()
   MakeControlSet(fracField, false);
 
   // Get updated before requesting the shot because DE failed to set the protection cover
-  // to always open before the first shot, and this made it stay closed thereafter, 
+  // to always open before the first shot, and this made it stay closed thereafter,
   // Somehow this didn't happen in 3.8 and does now
   mCalibratingIntensity = true;
   mStoppingCal = false;
   mWinApp->SetStatusText(MEDIUM_PANE, "MEASURING BEAM");
   mWinApp->UpdateBufferWindows();
   mCamera->InitiateCapture(TRACK_CONSET);
-  mWinApp->AddIdleTask(CCameraController::TaskCameraBusy, TASK_CCD_CAL_INTENSITY, 
+  mWinApp->AddIdleTask(CCameraController::TaskCameraBusy, TASK_CCD_CAL_INTENSITY,
     CAL_RANGE_SHOT, 0);
 }
 
@@ -315,9 +316,9 @@ void CBeamAssessor::CalIntensityImage(int param)
   bufferMean = mWinApp->mProcessImage->WholeImageMean(imBuf);
   meanCounts = bufferMean *
     (mCamParam->unsignedImages && mCamera->GetDivideBy2() ? 2. : 1.);
-  if (mCountingK2 && 
+  if (mCountingK2 &&
     !mWinApp->mProcessImage->DoseRateFromMean(imBuf, (float)bufferMean, doseRate))
-      meanCounts = doseRate * mCamParam->countsPerElectron * mExposure * 
+      meanCounts = doseRate * mCamParam->countsPerElectron * mExposure *
         mBinning * mBinning / 4.;
 
   testCurrent = mMatchFactor * meanCounts / (mBinning * mBinning * mExposure);
@@ -325,9 +326,9 @@ void CBeamAssessor::CalIntensityImage(int param)
   /*report.Format("Task %d bin %d exp %f int %.5f mean %.0f current %.2f", param, mBinning,
     mExposure, mTestIntensity, meanCounts, testCurrent);
   mWinApp->AppendToLog(report, LOG_IF_ADMIN_OPEN_IF_CLOSED);*/
-  
+
   switch (param) {
-    
+
     // FIRST SHOT FOR FINDING RANGE
   case CAL_RANGE_SHOT:
 
@@ -355,20 +356,20 @@ void CBeamAssessor::CalIntensityImage(int param)
         doseRate, mCountingK2 ? "counting" : "linear");
       mWinApp->AppendToLog(report);
     }
-    
+
     // increase binning as much as possible within range of allowed counts
-    while (testCurrent * mExposure * mBinning * mBinning * 4 <= mUseMaxCounts && 
+    while (testCurrent * mExposure * mBinning * mBinning * 4 <= mUseMaxCounts &&
       CanDoubleBinning()) {
       mBinning *= 2;
       if (mCountingK2 && mBinning >= 8)
         break;
     }
-    
+
     // Set up for half-field image with this binning
     MakeControlSet(mCamParam->subareasBad > 1 ? 1 : 2, mCountingK2);
     task = CAL_FIRST_SHOT;
     break;
-    
+
     // FIRST SHOT FOR REAL; start the table
   case CAL_FIRST_SHOT:
     mStartCurrent = testCurrent;
@@ -384,7 +385,7 @@ void CBeamAssessor::CalIntensityImage(int param)
       extraDelta = 1.;
       if (mCamParam->countsPerElectron > 0. ) {
         SEMTrace('c', "Raw counts %.1f, counts and electrons per physical pixel / sec ="
-          " %.1f  %.3f", meanCounts, 4 * testCurrent, 
+          " %.1f  %.3f", meanCounts, 4 * testCurrent,
           4. * testCurrent / mCamParam->countsPerElectron);
         if (4. * testCurrent / mCamParam->countsPerElectron > 100.)
           extraDelta = 2.;
@@ -394,20 +395,20 @@ void CBeamAssessor::CalIntensityImage(int param)
     if (SetAndTestIntensity())
       task = CAL_TEST_SHOT;
     break;
-    
+
     // A SHOT IN THE TEST LOOP
   case CAL_TEST_SHOT:
 
     // Get the log interval and adjust the increment to hit target interval
     // After the first time, do not let increment change sign
     // and restrict how much it can change
-    testInterval = log((testCurrent + LOG_BASE) / 
+    testInterval = log((testCurrent + LOG_BASE) /
       (mCurrents[mNumIntensities - 1] + LOG_BASE));
-    
+
     ratio = targetInterval / testInterval;
     if (mNumIntensities == 1 && ratio < 0 && mCalTable->crossover >= 0.) {
-     SEMTrace('c', "%d %.1f %7.1f %8.3f %8.3f %8.5f %.5f %.5f %.5f %.5f %.5f", mBinning, 
-       mExposure, meanCounts, testCurrent, mCurrents[0], mTestIntensity, testInterval, 
+     SEMTrace('c', "%d %.1f %7.1f %8.3f %8.3f %8.5f %.5f %.5f %.5f %.5f %.5f", mBinning,
+       mExposure, meanCounts, testCurrent, mCurrents[0], mTestIntensity, testInterval,
        targetInterval, mTestIncrement, mCalIntensities[0], mCalTable->crossover);
      AfxMessageBox("The counts increased even though intensity was changed in the "
         "direction away from crossover.\r\n\r\nYou need to either redo the "
@@ -421,16 +422,16 @@ void CBeamAssessor::CalIntensityImage(int param)
       } else
         B3DCLAMP(ratio, 0.3, 3.);
     }
-    
+
     SEMTrace('c', "%d %d %d %.1f mc %7.1f dr %4.1f tc %8.3f int %8.5f ti %.5f inc %.5f",
-      mNumIntensities, mNumTry, mBinning, mExposure, meanCounts, doseRate, testCurrent, 
+      mNumIntensities, mNumTry, mBinning, mExposure, meanCounts, doseRate, testCurrent,
       mTestIntensity, testInterval, mTestIncrement);
-    
+
     // If interval acceptable, save values; otherwise repeat
     // Adjust the increment if successful
     if ((testInterval >= targetLo && testInterval <= targetHi) || mNumTry == 10) {
       mTestIncrement *= ratio;
-      
+
       // Count failures and quit on fifth one
       if (!(testInterval >= targetLo && testInterval <= targetHi)) {
         mNumFail++;
@@ -441,7 +442,7 @@ void CBeamAssessor::CalIntensityImage(int param)
           break;
         }
       }
-      
+
       // Save values; quit if enough change has been measured
       mTrials[mNumIntensities] = mNumTry + 1;
       mCalIntensities[mNumIntensities] = (float)mTestIntensity;
@@ -450,12 +451,12 @@ void CBeamAssessor::CalIntensityImage(int param)
       mWinApp->AppendToLog(report, LOG_IF_ADMIN_OPEN_IF_CLOSED);
       mNumTry = 0;
       mCalTable->numIntensities = mNumIntensities;
-      CheckCalForZeroIntensities(mBeamTables[mTableInd], "While doing the calibration", 
+      CheckCalForZeroIntensities(mBeamTables[mTableInd], "While doing the calibration",
         1);
-      
+
       if (testCurrent / mStartCurrent < mChangeNeeded)
         break;
-      
+
       // Test for changing the acquisition parameters:
       // If binning can be doubled;
       // If counts and current are below criteria for mag change; or for K2, if current is
@@ -466,55 +467,55 @@ void CBeamAssessor::CalIntensityImage(int param)
       if (meanCounts * 4 < mUseMaxCounts && CanDoubleBinning() && !mCountingK2)
         mCalChangeType = CAL_CHANGE_BIN;
       else if ((k2TooLow && testCurrent < mNextMagMaxCurrent) ||
-        (testCurrent < mMagChgMaxCurrent && (meanCounts < mMagChgMaxCounts || 
-        k2TooLow || (meanCounts  < mUseMinCounts && ((mCamParam->K2Type && 
+        (testCurrent < mMagChgMaxCurrent && (meanCounts < mMagChgMaxCounts ||
+        k2TooLow || (meanCounts  < mUseMinCounts && ((mCamParam->K2Type &&
         (!mCountingK2 || !doseRate)) || mFavorMagChanges))))) {
         mCalChangeType = CAL_CHANGE_MAG;
         mDropBinningOnMagChg = meanCounts > mMagChgMaxCounts && mBinning > 2;
-      } else if ((meanCounts * 10 < mMaxCounts && mExposure <= 0.25) || 
+      } else if ((meanCounts * 10 < mMaxCounts && mExposure <= 0.25) ||
         (meanCounts < mUseMinCounts && mExposure < mUseMaxExposure))
         mCalChangeType = CAL_CHANGE_EXP;
       if (mCalChangeType) {
-        SEMTrace('c', "Changing %s", mCalChangeType == CAL_CHANGE_BIN ? "binning" : 
+        SEMTrace('c', "Changing %s", mCalChangeType == CAL_CHANGE_BIN ? "binning" :
           (mCalChangeType == CAL_CHANGE_MAG ? "mag" : "exposure"));
         mMatchSum = testCurrent;
         mMatchInd = 1;
         task = CAL_MATCH_BEFORE;
         break;
       }
-      
+
     } else {
-      
+
       // If not successful, adjust increment if on the first
       // intensity, or on every other trial
       if (mNumIntensities <= 1 || mNumTry % 2)
         mTestIncrement *= ratio;
       mNumTry++;
     }
-    
+
     // Set up intensity for next round and test it for termination
     mTestIntensity = mCalIntensities[mNumIntensities - 1] + mTestIncrement;
     if (SetAndTestIntensity())
       task = CAL_TEST_SHOT;
     break;
-    
+
     // SHOT FOR GETTING AVERAGE BEFORE A CHANGE; accumulate value in sum
   case CAL_MATCH_BEFORE:
     mMatchSum += testCurrent;
     mMatchInd++;
-    SEMTrace('c', "Before change shot %d  counts %.1f current %.2f", mMatchInd, 
+    SEMTrace('c', "Before change shot %d  counts %.1f current %.2f", mMatchInd,
       meanCounts, testCurrent);
     if (mMatchInd < mNumMatchBefore) {
       task = CAL_MATCH_BEFORE;
       break;
     }
-   
+
     // If got enough, replace the value in the table with the mean and set up for
     // matching shots after change
     mCurrents[mNumIntensities - 1] = (float)(mMatchSum / mMatchInd);
     mMatchSum = 0.;
     mMatchInd = 0;
-    
+
     // Make the indicated change
     if (mCalChangeType == CAL_CHANGE_BIN)
       mBinning *= 2;
@@ -537,18 +538,18 @@ void CBeamAssessor::CalIntensityImage(int param)
     MakeControlSet(mCamParam->subareasBad > 1 ? 1 : 2, mCountingK2);
     task = CAL_MATCH_AFTER;
     break;
-    
+
     // SHOT FOR GETTING AVERAGE AFTER A CHANGE: accumulate for mean
   case CAL_MATCH_AFTER:
     mMatchSum += testCurrent;
     mMatchInd++;
-    SEMTrace('c', "After change shot %d  counts %.1f current %.2f", mMatchInd, 
+    SEMTrace('c', "After change shot %d  counts %.1f current %.2f", mMatchInd,
       meanCounts, testCurrent);
     if (mMatchInd < mNumMatchAfter) {
       task = CAL_MATCH_AFTER;
       break;
     }
-    
+
     // Adjust the match factor to make new numbers match old ones
     mMatchFactor *= mCurrents[mNumIntensities - 1] / (mMatchSum / mMatchInd);
     SEMTrace('c', "New matching factor %f", mMatchFactor);
@@ -558,17 +559,17 @@ void CBeamAssessor::CalIntensityImage(int param)
     break;
 
   }
-    
+
   // If task is set and user did not stop, take the next shot
   if (task && !mStoppingCal) {
     mCamera->InitiateCapture(TRACK_CONSET);
-    mWinApp->AddIdleTask(CCameraController::TaskCameraBusy, TASK_CCD_CAL_INTENSITY, 
+    mWinApp->AddIdleTask(CCameraController::TaskCameraBusy, TASK_CCD_CAL_INTENSITY,
       task, 0);
     return;
   }
-  
+
   CalIntensityCCDCleanup(0);
-    
+
 }
 
 // Finish CCD-based intensity calibration normally or upon error
@@ -581,15 +582,15 @@ void CBeamAssessor::CalIntensityCCDCleanup(int error)
     return;
 
   if (error == IDLE_TIMEOUT_ERROR)
-    AfxMessageBox(_T("Time out trying to get image for beam intensity calibration"), 
+    AfxMessageBox(_T("Time out trying to get image for beam intensity calibration"),
       MB_EXCLAME);
 
   if (mStoppingCal) {
     report.Format("Intensity cal stopped at %d x, %.4f%s %s, exposure %.3f, binning %f,"
-      "\r\n   binned image size %d and %d in X and Y", 
+      "\r\n   binned image size %d and %d in X and Y",
       MagForCamera(mCamParam, mScope->GetMagIndex()),
       mScope->GetC2Percent(mCalSpotSize, mScope->GetIntensity()), mScope->GetC2Units(),
-      mScope->GetC2Name(), mExposure, mBinning / BinDivisorF(mCamParam), 
+      mScope->GetC2Name(), mExposure, mBinning / BinDivisorF(mCamParam),
       (conSet->right - conSet->left) / mBinning,
       (conSet->bottom - conSet->top) / mBinning);
     mWinApp->AppendToLog(report);
@@ -605,7 +606,7 @@ void CBeamAssessor::CalIntensityCCDCleanup(int error)
       report.Format("Beam intensity calibration completed, covering a %d-fold change in"
         " intensity", B3DNINT(mCurrents[0] / mCurrents[mNumIntensities - 1]));
       mWinApp->AppendToLog(report, LOG_MESSAGE_IF_CLOSED);
-      if (CheckCalForZeroIntensities(mBeamTables[mTableInd], 
+      if (CheckCalForZeroIntensities(mBeamTables[mTableInd],
         "Right after running the calibration", 1)) {
         mCalTable->numIntensities = mNumIntensities = 0;
 
@@ -628,7 +629,7 @@ void CBeamAssessor::CalIntensityCCDCleanup(int error)
   // sort the table and take logs of currents
   if (mCalTable->numIntensities) {
     SortAndTakeLogs(mCalTable, true);
-    if (CheckCalForZeroIntensities(mBeamTables[mTableInd], 
+    if (CheckCalForZeroIntensities(mBeamTables[mTableInd],
       "After sorting the new calibration and taking logs", 2))
       mCalTable->numIntensities = mNumIntensities = 0;
   }
@@ -638,7 +639,7 @@ void CBeamAssessor::CalIntensityCCDCleanup(int error)
   if (newAp != mNumExpectedCals) {
     report.Format("After finishing or ending that beam calibration\r\n"
       "  there are %d calibrations, while %d were expected.\r\n  Please report this "
-      "situation and the steps leading up to it to the SerialEM developer.", newAp, 
+      "situation and the steps leading up to it to the SerialEM developer.", newAp,
       mNumExpectedCals);
     AfxMessageBox(report, MB_EXCLAME);
     mWinApp->AppendToLog("WARNING: " + report);
@@ -733,7 +734,7 @@ void CBeamAssessor::CalSetupNextMag(float extraDelta)
     }
   }
   // Exit with the biggest mag change that fits within range allowed
-  SEMTrace('c', "Next mag %d max current %f  max counts %f", 
+  SEMTrace('c', "Next mag %d max current %f  max counts %f",
     MagForCamera(camera, mNextMagInd), mMagChgMaxCurrent, mMagChgMaxCounts);
 }
 
@@ -804,7 +805,7 @@ void CBeamAssessor::SortAndTakeLogs(BeamTable *inTable, BOOL printLog)
       }
     }
   }
-  
+
   // Get min and max intensity
   if (intensities[0] < intensities[inTable->numIntensities - 1]) {
     inTable->minIntensity = (float)intensities[0];
@@ -841,7 +842,7 @@ int CBeamAssessor::GetAboveCrossover(int spotSize, double intensity, int probe)
     probe = mScope->GetProbeMode();
   if (!probe && mScope->GetConstantBrightInNano())
     return 1;
-  return (mScope->GetCrossover(spotSize, probe) > 0. && 
+  return (mScope->GetCrossover(spotSize, probe) > 0. &&
     intensity > mScope->GetCrossover(spotSize, probe)) ? 1 : 0;
 }
 
@@ -876,11 +877,11 @@ int CBeamAssessor::FindBestTable(int spotSize, double startIntensity, int probe)
         bestTable = index;
         break;
       }
-      if (startIntensity < btp->minIntensity && 
+      if (startIntensity < btp->minIntensity &&
         btp->minIntensity - startIntensity < minDist) {
         minDist = btp->minIntensity - startIntensity;
         bestTable = index;
-      } else if (startIntensity > btp->maxIntensity && 
+      } else if (startIntensity > btp->maxIntensity &&
         startIntensity - btp->maxIntensity < minDist) {
         minDist = startIntensity - btp->maxIntensity;
         bestTable = index;
@@ -893,7 +894,7 @@ int CBeamAssessor::FindBestTable(int spotSize, double startIntensity, int probe)
 
 // Set the mIntensities and mLogCurrents variables for the given table and compute
 // the extrapolation limits and the polarity of the table
-int CBeamAssessor::SetTableAccessAndLimits(int bestTable, double &leftExtrapLimit, 
+int CBeamAssessor::SetTableAccessAndLimits(int bestTable, double &leftExtrapLimit,
                                            double &rightExtrapLimit, double &diffSign)
 {
   int nExtrapolate = 4; // How far to extrapolate: number of intensity intervals
@@ -909,13 +910,13 @@ int CBeamAssessor::SetTableAccessAndLimits(int bestTable, double &leftExtrapLimi
   mLogCurrents = &mBeamTables[bestTable].logCurrents[0];
   rightIntensity = mIntensities[numIntensities - 1];
   leftExtrapLimit = 2. * mIntensities[0] - mIntensities[nExtrapLeft];
-  rightExtrapLimit = 2. * rightIntensity - 
+  rightExtrapLimit = 2. * rightIntensity -
     mIntensities[numIntensities - 1 - nExtrapRight];
   diffSign = rightIntensity > mIntensities[0] ? 1. : -1.;
   return numIntensities;
 }
 
-// Tests whether the given intensity is in calibrated range for the given spotsize 
+// Tests whether the given intensity is in calibrated range for the given spotsize
 // and returns the polarity of the table there.  Returns 0 or BEAM error code
 // If warnIfExtrap (default false) is true, it returns BEAM_ENDING_OUT_OF_RANGE if in the
 // extrapolation region
@@ -973,16 +974,16 @@ int CBeamAssessor::ChangeBeamStrength(double inFactor, int lowDoseArea)
   return err;
 }
 
-// Change the dose rate by the given inFactor by modifying the EDM dose percentage;         
+// Change the dose rate by the given inFactor by modifying the EDM dose percentage;
 // do it for given lowDoseArea or generally if lowDoseArea < 0
 int CBeamAssessor::SetDoseRateWithEDM(float inFactor, int lowDoseArea)
 {
   CString msg;
   float currentPct, newPct;
-  
+
   if (!mCamera->HasDoseModulator())
     return BEAM_STRENGTH_SCOPE_ERROR;
-  
+
   //Get the current dose percentage, or if in low dose, get it from the low dose params
   if (lowDoseArea < 0) {
     if (mCamera->mDoseModulator->GetDutyPercent(currentPct, msg))
@@ -997,7 +998,7 @@ int CBeamAssessor::SetDoseRateWithEDM(float inFactor, int lowDoseArea)
   newPct = currentPct * inFactor;
   if (newPct > 100)
     return BEAM_ENDING_OUT_OF_RANGE;
-  
+
   // Current percent is updated if not in low dose or the current area is lowDoseArea
   if (lowDoseArea < 0 || mScope->GetLowDoseArea() == lowDoseArea) {
     if (mCamera->mDoseModulator->SetDutyPercent(newPct, msg))
@@ -1016,9 +1017,9 @@ int CBeamAssessor::SetDoseRateWithEDM(float inFactor, int lowDoseArea)
 
 // Assess whether beam can be changed by inFactor for a low dose area or generally
 // (if lowDoseArea < 0).  The C2 intensity that can be achieved is returned in
-// newIntensity, and the remaining factor by which it failed to change intensity 
+// newIntensity, and the remaining factor by which it failed to change intensity
 // is returned in outFactor
-int CBeamAssessor::AssessBeamChange(double inFactor, double &newIntensity, 
+int CBeamAssessor::AssessBeamChange(double inFactor, double &newIntensity,
                   double &outFactor, int lowDoseArea)
 {
   double startIntensity;
@@ -1027,12 +1028,12 @@ int CBeamAssessor::AssessBeamChange(double inFactor, double &newIntensity,
   // Get spot size and intensity from scope unless in low dose, then use area value
   spotSize = lowDoseArea < 0 ? mScope->GetSpotSize() : mLDParam[lowDoseArea].spotSize;
   probe = lowDoseArea < 0 ? mScope->GetProbeMode() : mLDParam[lowDoseArea].probeMode;
-  startIntensity = 
+  startIntensity =
     lowDoseArea < 0 ? mScope->GetIntensity() : mLDParam[lowDoseArea].intensity;
   newIntensity = startIntensity;
   if (!startIntensity)
     return BEAM_STRENGTH_SCOPE_ERROR;
-  return AssessBeamChange(startIntensity, spotSize, probe, inFactor, newIntensity, 
+  return AssessBeamChange(startIntensity, spotSize, probe, inFactor, newIntensity,
     outFactor);
 }
 
@@ -1064,7 +1065,7 @@ int CBeamAssessor::AssessBeamChange(double startIntensity, int spotSize, int pro
   //CString report;
   //report.Format("STart intensity %.2f", 100. * startIntensity);
   //mWinApp->AppendToLog(report, LOG_OPEN_IF_CLOSED);
-  
+
   // First make sure there is a calibration at this spot size and find closest table
   if (!mNumTables)
     return BEAM_STRENGTH_NOT_CAL;
@@ -1077,7 +1078,7 @@ int CBeamAssessor::AssessBeamChange(double startIntensity, int spotSize, int pro
   // Enter a loop with starting intensity value, desired change and best table
   for (;;) {
 
-    numIntensities = SetTableAccessAndLimits(bestTable, leftExtrapLimit, 
+    numIntensities = SetTableAccessAndLimits(bestTable, leftExtrapLimit,
       rightExtrapLimit, diffSign);
 
     // Look up this intensity in the table
@@ -1091,7 +1092,7 @@ int CBeamAssessor::AssessBeamChange(double startIntensity, int spotSize, int pro
           return BEAM_STARTING_OUT_OF_RANGE;
         indStart = 0;
       } else {
-        
+
         // On right
         if (diffSign * (startIntensity - rightExtrapLimit) > 0.)
           return BEAM_STARTING_OUT_OF_RANGE;
@@ -1104,7 +1105,7 @@ int CBeamAssessor::AssessBeamChange(double startIntensity, int spotSize, int pro
     }
     newLog = startLog + log(inFactor);
 
-    // If the new log current is in range of this table, look it up 
+    // If the new log current is in range of this table, look it up
     if (newLog >= mLogCurrents[0] && newLog <= mLogCurrents[numIntensities - 1]) {
       for (index = 0; index < numIntensities - 1; index++) {
         left = mLogCurrents[index];
@@ -1112,7 +1113,7 @@ int CBeamAssessor::AssessBeamChange(double startIntensity, int spotSize, int pro
         if (newLog >= left && newLog <= right) {
           newIntensity = mIntensities[index] + (mIntensities[index + 1] -
             mIntensities[index]) * (newLog - left) / (right - left);
-          return 0; 
+          return 0;
         }
       }
     }
@@ -1142,7 +1143,7 @@ int CBeamAssessor::AssessBeamChange(double startIntensity, int spotSize, int pro
         && mBeamTables[index].aboveCross == aboveCross &&
         intensityLimit >= mBeamTables[index].minIntensity &&
         intensityLimit <= mBeamTables[index].maxIntensity) {
-        
+
         // Found a table: then set the intensity to the limit and reduce the
         // needed change, and loop on new table
         startIntensity = intensityLimit;
@@ -1161,7 +1162,7 @@ int CBeamAssessor::AssessBeamChange(double startIntensity, int spotSize, int pro
       indStart = 0;
     else
       indStart = numIntensities - nFit;
-      
+
     // Get parabola fit to endpoints and compute intensity at newLog
     FitIntensityCurve(indStart, nFit, a, b, con);
     newIntensity = a * newLog * newLog + b * newLog + con;
@@ -1179,7 +1180,7 @@ int CBeamAssessor::AssessBeamChange(double startIntensity, int spotSize, int pro
 
       // But if that takes it farther from where we started, then just stay at the
       // starting intensity
-      if ((inFactor >= 1. && outFactor > inFactor) || 
+      if ((inFactor >= 1. && outFactor > inFactor) ||
         (inFactor < 1. && outFactor < inFactor)) {
           newIntensity = startIntensity;
           outFactor = inFactor;
@@ -1217,7 +1218,7 @@ void CBeamAssessor::FitCurrentCurve(int indStart, int nFit, float &a, float &b,
 
 BOOL CBeamAssessor::IntensityCalibrated()
 {
-  // This could get fancy, but for now just make sure there is a table at 
+  // This could get fancy, but for now just make sure there is a table at
   // the current spot size on same side of crossover
   int spotSize, ldArea, aboveCross, probe;
   double intensity;
@@ -1249,7 +1250,7 @@ BOOL CBeamAssessor::LookupCurrent(int numIntensities, double inIntensity, double
   for (index = 0; index < numIntensities - 1; index++) {
     left = mIntensities[index];
     right = mIntensities[index + 1];
-    if (inIntensity >= left && inIntensity <= right || 
+    if (inIntensity >= left && inIntensity <= right ||
       inIntensity <= left && inIntensity >= right) {
       newLog = mLogCurrents[index] + (mLogCurrents[index + 1] - mLogCurrents[index])
         * (inIntensity - left) / (right - left);
@@ -1260,7 +1261,7 @@ BOOL CBeamAssessor::LookupCurrent(int numIntensities, double inIntensity, double
 }
 
 // Compute electron dose for the given spot size, intensity, and exposure time
-double CBeamAssessor::GetElectronDose(int inSpotSize, double inIntensity, 
+double CBeamAssessor::GetElectronDose(int inSpotSize, double inIntensity,
                                       float exposure, int probe, float EDMpct)
 {
   double cumFactor = 1.;
@@ -1281,11 +1282,11 @@ double CBeamAssessor::GetElectronDose(int inSpotSize, double inIntensity,
     cumFactor = FindCurrentRatio(dtp->intensity, inIntensity, inSpotSize, aboveCross,
       probe);
     if (!cumFactor)
-      SEMTrace('d', "(spot %d int. %f  aC. %d  pM %d)", inSpotSize, inIntensity, 
+      SEMTrace('d', "(spot %d int. %f  aC. %d  pM %d)", inSpotSize, inIntensity,
       aboveCross, probe);
     return cumFactor * exposure * dtp->dose * EDMpct / 100.;
   }
-        
+
   // To use calibration at another spot, first find proper spot table and give up
   // if none or no ratio for this spot size
   indTab = FindSpotTableIndex(aboveCross, probe);
@@ -1303,7 +1304,7 @@ double CBeamAssessor::GetElectronDose(int inSpotSize, double inIntensity,
   for (idiff = 1; idiff < mScope->GetNumSpotSizes() && spotSize < 0; idiff++) {
     for (idir = 1; idir >= -1; idir -= 2) {
       index = inSpotSize + idir * idiff;
-      if (index >= 1 && index <= mScope->GetNumSpotSizes() && 
+      if (index >= 1 && index <= mScope->GetNumSpotSizes() &&
         mSpotTables[indTab].ratio[index] && mSpotTables[indTab].ratio[inSpotSize] &&
         mDoseTables[index][aboveCross][probe].dose) {
         spotSize = index;
@@ -1319,7 +1320,7 @@ double CBeamAssessor::GetElectronDose(int inSpotSize, double inIntensity,
     return 0.;
   }
   if (!probe && mScope->GetConstantBrightInNano())
-    return cumFactor * exposure * mDoseTables[spotSize][aboveCross][probe].dose * 
+    return cumFactor * exposure * mDoseTables[spotSize][aboveCross][probe].dose *
     EDMpct / 100.;
 
   // Get the cumulative factor for going from calibrated intensity to intensity that
@@ -1331,15 +1332,15 @@ double CBeamAssessor::GetElectronDose(int inSpotSize, double inIntensity,
   cumFactor *= FindCurrentRatio(mSpotTables[indTab].intensity[inSpotSize], inIntensity,
     inSpotSize, aboveCross, probe);
   if (!cumFactor)
-    SEMTrace('d', "(spot %d int. %f  aC. %d  pM %d)", inSpotSize, inIntensity, 
+    SEMTrace('d', "(spot %d int. %f  aC. %d  pM %d)", inSpotSize, inIntensity,
       aboveCross, probe);
 
-  return cumFactor * exposure * mDoseTables[spotSize][aboveCross][probe].dose * 
+  return cumFactor * exposure * mDoseTables[spotSize][aboveCross][probe].dose *
     EDMpct / 100.;
 }
 
 // Return the factor for change in current from startIntensity to inIntensity
-double CBeamAssessor::FindCurrentRatio(double startIntensity, double inIntensity, 
+double CBeamAssessor::FindCurrentRatio(double startIntensity, double inIntensity,
                                        int spotSize, int aboveCross, int probe)
 {
   double cumFactor = 1.;
@@ -1358,7 +1359,7 @@ double CBeamAssessor::FindCurrentRatio(double startIntensity, double inIntensity
       mBeamTables[index].aboveCross == aboveCross && mBeamTables[index].probeMode == probe
       && startIntensity >= mBeamTables[index].minIntensity &&
       startIntensity <= mBeamTables[index].maxIntensity) {
-      
+
       // Found a table containing the start intensity
       // If it contains the target, this is the best table for sure
       if (inIntensity >= mBeamTables[index].minIntensity &&
@@ -1367,7 +1368,7 @@ double CBeamAssessor::FindCurrentRatio(double startIntensity, double inIntensity
         bestTable = index;
         break;
       }
-      
+
       // Otherwise get distance of target from endpoints of table, best table is
       // the one that is closest to the target
       dist = fabs(inIntensity - mBeamTables[index].minIntensity);
@@ -1380,16 +1381,16 @@ double CBeamAssessor::FindCurrentRatio(double startIntensity, double inIntensity
       }
     }
   }
-  
+
   if (bestTable < 0) {
-    SEMTrace('d', "FindCurrentRatio: no table for intensities %f %f", startIntensity, 
+    SEMTrace('d', "FindCurrentRatio: no table for intensities %f %f", startIntensity,
       inIntensity);
     return 0.;
   }
-  
+
   // Start a loop with best table, starting intensity and intensity to reach
   for (;;) {
-    numIntensities = SetTableAccessAndLimits(bestTable, leftExtrapLimit, 
+    numIntensities = SetTableAccessAndLimits(bestTable, leftExtrapLimit,
       rightExtrapLimit, diffSign);
 
     // Look up starting intensity in the table
@@ -1424,11 +1425,11 @@ double CBeamAssessor::FindCurrentRatio(double startIntensity, double inIntensity
     for (index = 0; index < mNumTables; index++) {
       if (index != bestTable && mBeamTables[index].numIntensities &&
         mBeamTables[index].spotSize == spotSize &&
-        mBeamTables[index].aboveCross == aboveCross && 
+        mBeamTables[index].aboveCross == aboveCross &&
         mBeamTables[index].probeMode == probe &&
         intensityLimit >= mBeamTables[index].minIntensity &&
         intensityLimit <= mBeamTables[index].maxIntensity) {
-        
+
         // Found a table: then set the intensity to the limit and accumulate the
         // change in current, and loop on new table
         startIntensity = intensityLimit;
@@ -1449,7 +1450,7 @@ double CBeamAssessor::FindCurrentRatio(double startIntensity, double inIntensity
         rightExtrapLimit);
       return 0.;
     }
-      
+
     // Get parabola fit to endpoints and compute current at target
     FitCurrentCurve(indStart, nFit, a, b, con);
     newLog = a * inIntensity * inIntensity + b * inIntensity + con;
@@ -1465,13 +1466,13 @@ double CBeamAssessor::GetCurrentElectronDose(int conSetNum)
   ControlSet *conSet = mWinApp->GetConSets() + conSetNum;
   int spotSize = mScope->GetSpotSize();
   double intensity = mScope->GetIntensity();
-  return GetElectronDose(spotSize, intensity, 
+  return GetElectronDose(spotSize, intensity,
     mCamera->SpecimenBeamExposure(mWinApp->GetCurrentCamera(), conSet));
 }
 
 // Return electron dose for the given camera and set number, at the current spotsize
 // and intensity, which are returned as well
-double CBeamAssessor::GetCurrentElectronDose(int camera, int setNum, int &spotSize, 
+double CBeamAssessor::GetCurrentElectronDose(int camera, int setNum, int &spotSize,
                                              double &intensity)
 {
   ControlSet *conSet = mWinApp->GetCamConSets() + setNum + camera * MAX_CONSETS;
@@ -1479,15 +1480,15 @@ double CBeamAssessor::GetCurrentElectronDose(int camera, int setNum, int &spotSi
     intensity);
 }
 
-double CBeamAssessor::GetCurrentElectronDose(int camera, int setNum, float csExposure, 
-                                             float csDrift, int &spotSize, 
+double CBeamAssessor::GetCurrentElectronDose(int camera, int setNum, float csExposure,
+                                             float csDrift, int &spotSize,
                                              double &intensity)
 {
   LowDoseParams *ldParam = mWinApp->GetCamLowDoseParams();
   int set, GIF, probe;
   CameraParameters *camParam = mWinApp->GetCamParams();
   float EDMpct = 100.;
-  
+
   // Need to synchronize back to camera LDP since we are accessing them
   mWinApp->CopyCurrentToCameraLDP();
   float exposure = mCamera->SpecimenBeamExposure(camera, csExposure, csDrift);
@@ -1520,7 +1521,7 @@ int CBeamAssessor::CalibrateElectronDose(BOOL interactive)
   CameraParameters *camParam = mWinApp->GetCamParams() + imBuf->mCamera;
   ControlSet *allConSets = mWinApp->GetCamConSets();
   int probe = mScope->ReadProbeMode();
-  int aboveCross = GetAboveCrossover(spotSize, intensity, probe); 
+  int aboveCross = GetAboveCrossover(spotSize, intensity, probe);
   DoseTable *dtp = &mDoseTables[spotSize][aboveCross][probe];
   double saveIntensity = dtp->intensity;
   double saveDose = dtp->dose;
@@ -1529,7 +1530,7 @@ int CBeamAssessor::CalibrateElectronDose(BOOL interactive)
   float doseRate;
   EMimageExtra *extra;
 
-  if (!(imBuf->mImage && imBuf->mBinning && (imBuf->mCaptured == 1 || 
+  if (!(imBuf->mImage && imBuf->mBinning && (imBuf->mCaptured == 1 ||
     imBuf->mCaptured == BUFFER_CALIBRATION) && imBuf->mMagInd)) {
     if (interactive)
       AfxMessageBox("To calibrate electron dose, Buffer A must contain an \n"
@@ -1566,7 +1567,7 @@ int CBeamAssessor::CalibrateElectronDose(BOOL interactive)
   mean = mWinApp->mProcessImage->WholeImageMean(imBuf);
   mWinApp->mProcessImage->DoseRateFromMean(imBuf, (float)mean, doseRate);
 
-  pixel = 10000. * BinDivisorI(camParam) * 
+  pixel = 10000. * BinDivisorI(camParam) *
     mShiftManager->GetPixelSize(imBuf->mCamera, imBuf->mMagInd);
   if (camParam->DE_camType && (camParam->CamFlags & DE_APOLLO_CAMERA))
     pixel *= 2.f;
@@ -1583,7 +1584,7 @@ int CBeamAssessor::CalibrateElectronDose(BOOL interactive)
       == IDYES) {
       message.Format("Dose rate calculated to be %.2f electrons/square Angstrom/sec "
         "for spot %d, %s %.2f%s", dtp->dose, spotSize,
-        mScope->GetC2Name(), mScope->GetC2Percent(spotSize, intensity, probe), 
+        mScope->GetC2Name(), mScope->GetC2Percent(spotSize, intensity, probe),
         mScope->GetC2Units());
       if (mCamera->IsDirectDetector(camParam)) {
         addon.Format("\r\n    %.2f electrons/physical pixel/sec", doseRate);
@@ -1591,12 +1592,12 @@ int CBeamAssessor::CalibrateElectronDose(BOOL interactive)
       }
       if (camParam->deadTime > 0.01) {
         addon.Format("\r\nAn exposure of %.3f sec is needed to match this dose because "
-          "this camera's shutter dead time is %.3f sec", 1. + camParam->deadTime, 
+          "this camera's shutter dead time is %.3f sec", 1. + camParam->deadTime,
           camParam->deadTime);
         message += addon;
       }
 
-      mWinApp->AppendToLog(message, 
+      mWinApp->AppendToLog(message,
         interactive ? LOG_MESSAGE_IF_CLOSED : LOG_SWALLOW_IF_CLOSED);
       int timeStamp = mWinApp->MinuteTimeStamp();
       dtp->timeStamp = timeStamp;
@@ -1617,8 +1618,8 @@ int CBeamAssessor::CalibrateElectronDose(BOOL interactive)
       if (indTab < 0 || !mSpotTables[indTab].ratio[spotSize])
         return 0;
       for (i = 0; i < mScope->GetNumSpotSizes(); i++)
-        if (i != spotSize && mSpotTables[indTab].ratio[i] && 
-          mDoseTables[i][aboveCross][probe].dose && 
+        if (i != spotSize && mSpotTables[indTab].ratio[i] &&
+          mDoseTables[i][aboveCross][probe].dose &&
           timeStamp - mDoseTables[i][aboveCross][probe].timeStamp > 60 * AUTO_PURGE_HOURS)
           mDoseTables[i][aboveCross][probe].dose = 0.;
 
@@ -1630,9 +1631,9 @@ int CBeamAssessor::CalibrateElectronDose(BOOL interactive)
     addon = '.';
     if (indTab >= 0) {
       mean = mScope->GetC2Percent(spotSize, mBeamTables[indTab].intensities[0], probe);
-      pixel = mScope->GetC2Percent(spotSize, 
+      pixel = mScope->GetC2Percent(spotSize,
         mBeamTables[indTab].intensities[mBeamTables[indTab].numIntensities - 1], probe);
-      addon.Format(" (%.2f to %.2f%s).", B3DMIN(mean, pixel), B3DMAX(mean, pixel), 
+      addon.Format(" (%.2f to %.2f%s).", B3DMIN(mean, pixel), B3DMAX(mean, pixel),
         mScope->GetC2Units());
     }
     if (interactive) {
@@ -1677,14 +1678,14 @@ void CBeamAssessor::CalibrateBeamShift()
     i = mScope->GetLowestMModeMagInd(true) - 1;
     str.Format("A calibration at this mag will not be handled correctly\n"
       "because of the mismatch in mag indexes between TEM and EFTEM.\n\n"
-      "Drop the mag to %d in EFTEM mode to do a calibration for LM", 
+      "Drop the mag to %d in EFTEM mode to do a calibration for LM",
       MagOrEFTEMmag(true, i));
     AfxMessageBox(str, MB_EXCLAME);
     return;
   }
 
   CString *modeNames = mWinApp->GetModeNames();
-  if (AfxMessageBox("Beam shift calibration takes pictures with the " 
+  if (AfxMessageBox("Beam shift calibration takes pictures with the "
     + modeNames[SHIFT_CAL_CONSET] + " parameter set.\n\n"
     "You must have the spot condensed so that its diameter is less\n"
     "than half of the size of a " + modeNames[SHIFT_CAL_CONSET] + " image.\n\n"
@@ -1692,7 +1693,7 @@ void CBeamAssessor::CalibrateBeamShift()
     "number of counts in a " + modeNames[SHIFT_CAL_CONSET] + " image.\n\n"
     "Are you ready to proceed?", MB_ICONQUESTION | MB_YESNO) == IDNO)
     return;
-    
+
   mScope->GetBeamShift(mBaseShiftX, mBaseShiftY);
   mShiftCalIndex = 0;
   mCamera->InitiateCapture(SHIFT_CAL_CONSET);
@@ -1751,7 +1752,7 @@ void CBeamAssessor::ShiftCalImage()
 
   // If not done, set up next shift and shot
   if (mShiftCalIndex < 6) {
-    mScope->SetBeamShift(mBaseShiftX + mBSCshiftX[mShiftCalIndex], 
+    mScope->SetBeamShift(mBaseShiftX + mBSCshiftX[mShiftCalIndex],
       mBaseShiftY + mBSCshiftY[mShiftCalIndex]);
     mShiftCalIndex++;
     mCamera->InitiateCapture(SHIFT_CAL_CONSET);
@@ -1765,7 +1766,7 @@ void CBeamAssessor::ShiftCalImage()
   bsToCam.ypx = (float)(0.5 * binning * (mBSCcenY[3] - mBSCcenY[4]) / mBSCshiftX[3]);
   bsToCam.xpy = (float)(0.5 * binning * (mBSCcenX[6] - mBSCcenX[5]) / mBSCshiftY[5]);
   bsToCam.ypy = (float)(0.5 * binning * (mBSCcenY[5] - mBSCcenY[6]) / mBSCshiftY[5]);
-  
+
   // Convert to a matrix for getting from image shift to beam shift
   ScaleMat bMat = mShiftManager->IStoCamera(magInd);
   ScaleMat camToBS = mShiftManager->MatInv(bsToCam);
@@ -1791,7 +1792,7 @@ int CBeamAssessor::FindCenterForShiftCal(int edgeDivisor, int &size)
   if (mUseEdgeForRefine) {
 
     // Find beam center when refining
-    err = mWinApp->mProcessImage->FindBeamCenter(imBuf, xcen, ycen, radius, xcenUse, 
+    err = mWinApp->mProcessImage->FindBeamCenter(imBuf, xcen, ycen, radius, xcenUse,
       ycenUse, radUse, fracUse, binning, ix0, shiftX, shiftY, fitErr);
     if (err) {
       if (err < 0)
@@ -1838,7 +1839,7 @@ int CBeamAssessor::FindCenterForShiftCal(int edgeDivisor, int &size)
       ProcCentroid(data, type, nx, ny, 0, nx - 1, 0, ny - 1, mBorderMean,
         mBSCcenX[mShiftCalIndex], mBSCcenY[mShiftCalIndex]);
     }
-    SEMTrace('1', "Position %d: center at %.0f %.0f", mShiftCalIndex, 
+    SEMTrace('1', "Position %d: center at %.0f %.0f", mShiftCalIndex,
       mBSCcenX[mShiftCalIndex], mBSCcenY[mShiftCalIndex]);
     image->UnLock();
   }
@@ -1920,11 +1921,11 @@ void CBeamAssessor::RefineBeamShiftCal()
   if (!KGetOneFloat("Enter maximum image shift to apply, in microns", mRBSCmaxShift, 1))
     return;
 
-  // 
+  //
   mScope->GetBeamShift(mBaseShiftX, mBaseShiftY);
   mScope->GetImageShift(mBaseISX, mBaseISY);
   SEMTrace('1', "Base IS %.2f %.2f  Base BS %.1f %.1f", mBaseISX, mBaseISY, mBaseShiftX, mBaseShiftY);
-  PrintfToLog("Starting IS to BS matrix %.4f %.4f %.4f %.4f", mIStoBScal.xpx, 
+  PrintfToLog("Starting IS to BS matrix %.4f %.4f %.4f %.4f", mIStoBScal.xpx,
     mIStoBScal.xpy, mIStoBScal.ypx, mIStoBScal.ypy);
   mShiftCalIndex = 0;
   mRefiningShiftCal = true;
@@ -1967,10 +1968,10 @@ void CBeamAssessor::RefineShiftCalImage()
     // Adjust image shift by the shift that would be needed to move the image by the
     // same amount as the beam has moved (Y inversion here)
     camToIS = mShiftManager->CameraToIS(magInd);
-    ApplyScaleMatrix(camToIS, 
+    ApplyScaleMatrix(camToIS,
       binning * (mBSCcenX[mShiftCalIndex] - mBSCcenX[0]),
       -binning * (mBSCcenY[mShiftCalIndex] - mBSCcenY[0]), delISX, delISY);
-    SEMTrace('1', "At IS %.2f %.2f, IS needed to center %.2f %.2f", mRBSCshiftISX[ind], 
+    SEMTrace('1', "At IS %.2f %.2f, IS needed to center %.2f %.2f", mRBSCshiftISX[ind],
       mRBSCshiftISY[ind], delISX, delISY);
     mRBSCshiftISX[ind] += delISX;
     mRBSCshiftISY[ind] += delISY;
@@ -2008,7 +2009,7 @@ void CBeamAssessor::RefineShiftCalImage()
     }
 
     mIStoBScal = newIStoBS;
-    
+
     // Finish up if done
     if (mShiftCalIndex == 12) {
       StoreBeamShiftCal(magInd, 1);
@@ -2047,7 +2048,7 @@ void CBeamAssessor::RefineShiftCalImage()
   }
 
   // For any shot, apply the IS, read out the BS, and adjust BS to be 0 on one axis
-  mScope->SetImageShift(mBaseISX + mRBSCshiftISX[mShiftCalIndex], 
+  mScope->SetImageShift(mBaseISX + mRBSCshiftISX[mShiftCalIndex],
     mBaseISY + mRBSCshiftISY[mShiftCalIndex]);
   if (mShiftCalIndex < 0) {
 
@@ -2065,11 +2066,11 @@ void CBeamAssessor::RefineShiftCalImage()
   if (GetDebugOutput('1'))
     mScope->GetBeamShift(dx, dy);
   if (fabs(delISX) < fabs(delISY)) {
-    SEMTrace('1', "Beam shift %.1f %.1f adjusting to %.1f %.1f",dx, dy, mBaseShiftX, 
+    SEMTrace('1', "Beam shift %.1f %.1f adjusting to %.1f %.1f",dx, dy, mBaseShiftX,
       mBaseShiftY + delISY);
     mScope->SetBeamShift(mBaseShiftX, mBaseShiftY + delISY);
   } else {
-    SEMTrace('1', "Beam shift  %.1f %.1f adjusting to %.1f %.1f", dx, dy, 
+    SEMTrace('1', "Beam shift  %.1f %.1f adjusting to %.1f %.1f", dx, dy,
       mBaseShiftX + delISX, mBaseShiftY);
     mScope->SetBeamShift(mBaseShiftX + delISX, mBaseShiftY);
   }
@@ -2098,13 +2099,13 @@ void CBeamAssessor::CalibrateSpotIntensity()
     return;
   }
 
-  message.Format("Spot intensity calibration takes pictures with the %s" 
+  message.Format("Spot intensity calibration takes pictures with the %s"
     " parameter set at a series of spot sizes.\n\n"
     "You must make sure that the beam is spread enough so that\nit will fill the frame"
     " of a %s image at all the spot sizes to be measured."
     "\n\nThe exposure time and brightness should be set so that\nyou get a high number"
     " of counts (~2/3 of saturation) in a %s"
-    " image at spot size %d.\n\nAre you ready to proceed?", 
+    " image at spot size %d.\n\nAre you ready to proceed?",
     (LPCTSTR)modeNames[SPOT_CAL_CONSET], (LPCTSTR)modeNames[SPOT_CAL_CONSET],
     (LPCTSTR)modeNames[SPOT_CAL_CONSET], HitachiScope ? mNumSpotsToCal : 1);
   if (AfxMessageBox(message, MB_ICONQUESTION | MB_YESNO) == IDNO)
@@ -2151,7 +2152,7 @@ void CBeamAssessor::SpotCalImage(int param)
   mTempIntensities[mSpotCalIndex] = mScope->GetIntensity();
   mTempCounts[mSpotCalIndex] = (float)mWinApp->mProcessImage->WholeImageMean(imBuf);
 
-  // See if there is another spot to do. 
+  // See if there is another spot to do.
   // Upon stop, mSpotCalIndex will now point to the end of the acquired data
   if (numDone >= mNumSpotsToCal) {
     StopSpotCalibration();
@@ -2171,7 +2172,7 @@ void CBeamAssessor::SpotCalImage(int param)
 void CBeamAssessor::SpotCalCleanup(int error)
 {
   if (error == IDLE_TIMEOUT_ERROR)
-    AfxMessageBox(_T("Time out trying to get image for spot intensity calibration"), 
+    AfxMessageBox(_T("Time out trying to get image for spot intensity calibration"),
       MB_EXCLAME);
   StopSpotCalibration();
   mWinApp->ErrorOccurred(error);
@@ -2191,7 +2192,7 @@ void CBeamAssessor::StopSpotCalibration()
   // Back up if it didn't actually do the last one
   if (!mTempIntensities[mSpotCalIndex] && !mTempCounts[mSpotCalIndex])
     mSpotCalIndex -= (HitachiScope ? -1 : 1);
-  
+
   firstSpot = 1;
   idir = 1;
   numDone = mSpotCalIndex + 1 - mFirstSpotToCal;
@@ -2203,10 +2204,10 @@ void CBeamAssessor::StopSpotCalibration()
     lastSpot = 1;
   }
   if (numDone > 1) {
-    
+
     if (numDone < mNumSpotsToCal)
       saveData = AfxMessageBox("Not all the spots were done.\n\nDo you want to replace"
-      " existing calibrations with the data that were acquired?", 
+      " existing calibrations with the data that were acquired?",
       MB_ICONQUESTION | MB_YESNO) != IDNO;
 
     // Find a table on the same side of crossover or use the next one (but not > 4)
@@ -2219,8 +2220,8 @@ void CBeamAssessor::StopSpotCalibration()
         indTab = mNumSpotTables - 1;
       }
       mSpotTables[indTab].probeMode = probe;
-    }  
-    
+    }
+
     report.Format("Spot  Counts  Ratio   %s %s", mScope->GetC2Units(),
       mScope->GetC2Name());
     mWinApp->AppendToLog(report, LOG_OPEN_IF_CLOSED);
@@ -2231,11 +2232,11 @@ void CBeamAssessor::StopSpotCalibration()
         mSpotTables[indTab].intensity[i] = mTempIntensities[i];
         mSpotTables[indTab].crossover[i] = mScope->GetCrossover(i, probe);
       }
-      report.Format("%4d    %6.1f    %.4f   %.2f", i, mTempCounts[i], ratio, 
+      report.Format("%4d    %6.1f    %.4f   %.2f", i, mTempCounts[i], ratio,
         mTempIntensities[i] * 100.);
       mWinApp->AppendToLog(report, LOG_OPEN_IF_CLOSED);
     }
-      
+
     // Wipe out the ratios at the rest of the spot sizes
     if (saveData) {
       for (; idir * i <= idir * lastSpot; i += idir)
@@ -2252,7 +2253,7 @@ void CBeamAssessor::StopSpotCalibration()
       mWinApp->mDocWnd->CalibrationWasDone(CAL_DONE_SPOT);
     }
   }
-  
+
   mScope->SetSpotSize(mSpotCalStartSpot, 1);
   mSpotCalIndex = 0;
   mWinApp->UpdateBufferWindows();
@@ -2297,20 +2298,20 @@ void CBeamAssessor::CalibrateCrossover(void)
     }
   }
 
-  // Look at the beam and spot calibrations and shift intensity values by change in 
+  // Look at the beam and spot calibrations and shift intensity values by change in
   //crossover.  First check if this shifts any beam tables out of range
   for (spot = minSpot; spot < spotSize; spot++) {
     crossover = mScope->GetCrossover(spot);
     for (i = 0; i < mNumTables; i++) {
       delCross = crossover - mBeamTables[i].crossover;
-      if (mBeamTables[i].spotSize == spot && mBeamTables[i].probeMode == probe && 
-        mBeamTables[i].crossover && 
-        fabs(delCross) > 1.e-6 && (mBeamTables[i].minIntensity + delCross <= 0. || 
+      if (mBeamTables[i].spotSize == spot && mBeamTables[i].probeMode == probe &&
+        mBeamTables[i].crossover &&
+        fabs(delCross) > 1.e-6 && (mBeamTables[i].minIntensity + delCross <= 0. ||
             mBeamTables[i].minIntensity + delCross >= 1. ||
-            mBeamTables[i].maxIntensity + delCross <= 0. || 
+            mBeamTables[i].maxIntensity + delCross <= 0. ||
             mBeamTables[i].maxIntensity + delCross >= 1.)) {
               message.Format("Cannot shift spot %d, old c/o %f new c/o %f delta %f old "
-                "min %f max %f", spot, mBeamTables[i].crossover, crossover, delCross, 
+                "min %f max %f", spot, mBeamTables[i].crossover, crossover, delCross,
                 mBeamTables[i].minIntensity, mBeamTables[i].maxIntensity);
               mWinApp->AppendToLog(message);
               numWarn++;
@@ -2322,14 +2323,14 @@ void CBeamAssessor::CalibrateCrossover(void)
   for (spot = minSpot; !numWarn && spot < spotSize; spot++) {
     crossover = mScope->GetCrossover(spot);
     for (i = 0; i < mNumSpotTables; i++) {
-      if (mSpotTables[i].ratio[spot] && mSpotTables[i].probeMode == probe && 
+      if (mSpotTables[i].ratio[spot] && mSpotTables[i].probeMode == probe &&
         mSpotTables[i].crossover[spot] && mSpotTables[i].crossover[spot] != crossover) {
         mSpotTables[i].intensity[spot] += crossover - mSpotTables[i].crossover[spot];
         mSpotTables[i].crossover[spot] = crossover;
         changed = true;
       }
     }
- 
+
     for (i = 0; i < mNumTables; i++) {
       delCross = crossover - mBeamTables[i].crossover;
       if (mBeamTables[i].spotSize == spot && mBeamTables[i].probeMode == probe &&
@@ -2418,7 +2419,7 @@ void CBeamAssessor::ScaleTablesForAperture(int currentAp, bool fromMeasured)
   // Scale beam tables
   for (i = 0; i < mNumTables; i++) {
     btp = &mBeamTables[i];
-    if (btp->numIntensities && CheckCalForZeroIntensities(mBeamTables[i], 
+    if (btp->numIntensities && CheckCalForZeroIntensities(mBeamTables[i],
       "Before scaling for an aperture size", 2))
       btp->numIntensities = 0;
     if (fromMeasured)
@@ -2429,7 +2430,7 @@ void CBeamAssessor::ScaleTablesForAperture(int currentAp, bool fromMeasured)
       btp->intensities[j] = mScope->IntensityAfterApertureChange(
         btp->intensities[j], fromAp, currentAp, btp->spotSize, btp->probeMode);
     mess.Format("After scaling for an aperture size from %d to %d", fromAp, currentAp);
-    if (btp->numIntensities && CheckCalForZeroIntensities(mBeamTables[i], 
+    if (btp->numIntensities && CheckCalForZeroIntensities(mBeamTables[i],
       (LPCTSTR)mess, 1))
       btp->numIntensities = 0;
     btp->minIntensity = (float)mScope->IntensityAfterApertureChange(
@@ -2443,16 +2444,16 @@ void CBeamAssessor::ScaleTablesForAperture(int currentAp, bool fromMeasured)
     for (probe = 0; probe < 2; probe++) {
       cross = mScope->GetCrossover(spot, probe);
       if (cross)
-        mScope->SetCrossover(spot, probe, mScope->IntensityAfterApertureChange(cross, 
-        fromMeasured ? mCrossCalAperture[probe] : mCurrentAperture, currentAp, spot, 
+        mScope->SetCrossover(spot, probe, mScope->IntensityAfterApertureChange(cross,
+        fromMeasured ? mCrossCalAperture[probe] : mCurrentAperture, currentAp, spot,
           probe));
 
       // Assign new current aperture for electron dose if old one was valid
       for (j = 0; j < 2; j++) {
         dtp = &mDoseTables[spot][j][probe];
         if (dtp->dose > 0. && dtp->currentAperture > 0) {
-          mScope->IntensityAfterApertureChange(dtp->intensity, 
-            fromMeasured ? dtp->currentAperture : mCurrentAperture, currentAp, spot, 
+          mScope->IntensityAfterApertureChange(dtp->intensity,
+            fromMeasured ? dtp->currentAperture : mCurrentAperture, currentAp, spot,
             probe);
           dtp->currentAperture = currentAp;
         }
@@ -2465,7 +2466,7 @@ void CBeamAssessor::ScaleTablesForAperture(int currentAp, bool fromMeasured)
       if (mSpotTables[i].ratio[spot]) {
         if (mSpotTables[i].crossover[spot])
           mSpotTables[i].crossover[spot] = mScope->IntensityAfterApertureChange(
-          mSpotTables[i].crossover[spot], fromAp, currentAp, spot, 
+          mSpotTables[i].crossover[spot], fromAp, currentAp, spot,
             mSpotTables[i].probeMode);
         mSpotTables[i].intensity[spot] = mScope->IntensityAfterApertureChange(
           mSpotTables[i].intensity[spot], fromAp, currentAp, spot,
@@ -2525,11 +2526,11 @@ int CBeamAssessor::RequestApertureSize(void)
     newAp = mCurrentAperture;
     if (!KGetOneInt("Enter the current C2 aperture size in microns:", newAp))
       break;
-    if ((!mNumC2Apertures && newAp >= 10 && newAp <= 500) || 
+    if ((!mNumC2Apertures && newAp >= 10 && newAp <= 500) ||
       numberInList(newAp, mC2Apertures, mNumC2Apertures, 0))
       return newAp;
     if (AfxMessageBox("That aperture size does not seem to be valid (check property "
-      "C2ApertureSizes)\n\nPress OK to try again or Cancel to skip entering an aperture", 
+      "C2ApertureSizes)\n\nPress OK to try again or Cancel to skip entering an aperture",
       MB_OKCANCEL | MB_ICONEXCLAMATION) == IDCANCEL)
       break;
   }
@@ -2601,7 +2602,7 @@ void CBeamAssessor::CalibrateIllumAreaLimits(void)
   }
 }
 
-// Next operation when calibrating illuminated area limits: 
+// Next operation when calibrating illuminated area limits:
 void CBeamAssessor::CalIllumAreaNextTask(void)
 {
   BeamTable *btp;
@@ -2623,7 +2624,7 @@ void CBeamAssessor::CalIllumAreaNextTask(void)
   mCalIAhighLimits[mCalIAlimitSpot][probe] = (float)mScope->GetIlluminatedArea();
   mScope->SetIlluminatedArea(-mCalIAtestValue);
   mCalIAlowLimits[mCalIAlimitSpot][probe] = (float)mScope->GetIlluminatedArea();
-  PrintfToLog("%s %d: %.4f %.4f", probe ? "uP" : "nP", mCalIAlimitSpot, 
+  PrintfToLog("%s %d: %.4f %.4f", probe ? "uP" : "nP", mCalIAlimitSpot,
     mCalIAlowLimits[mCalIAlimitSpot][probe], mCalIAhighLimits[mCalIAlimitSpot][probe]);
   mCalIAlimitSpot++;
   if (mCalIAlimitSpot > mScope->GetNumSpotSizes()) {
@@ -2735,7 +2736,7 @@ void CBeamAssessor::CalIllumAreaCleanup(int error)
 }
 
 // Scale various intensities in the user settings.  This is done both to the current
-// settings when the first cal is done, and the first time settings that haven't been 
+// settings when the first cal is done, and the first time settings that haven't been
 // scaled are read in.
 void CBeamAssessor::ConvertSettingsForFirstIALimitCal(bool skipLDcopy)
 {
@@ -2792,7 +2793,7 @@ void CBeamAssessor::ConvertSettingsForFirstIALimitCal(bool skipLDcopy)
 }
 
 // Convert one value given its spot size and probe mode for first-time cal
-// The conversion cannot use the routines in 
+// The conversion cannot use the routines in
 void CBeamAssessor::ConvertIntensityForIACal(double &intensity, int spot, int probe)
 {
   float lowMapTo, highMapTo, lowOld, highOld;
@@ -2805,13 +2806,13 @@ void CBeamAssessor::ConvertIntensityForIACal(double &intensity, int spot, int pr
 
   // Convert intensity to illuminated area with old fixed limits
   illum = (intensity - lowMapTo) * (highOld - lowOld) / (highMapTo - lowMapTo) + lowOld;
-  //SEMTrace('1',"i %f s %d p %d old %f %f map %f %f  illum %f", intensity, spot, probe, 
+  //SEMTrace('1',"i %f s %d p %d old %f %f map %f %f  illum %f", intensity, spot, probe,
   //  lowOld, highOld, lowMapTo, highMapTo, illum);
 
   // Convert illum to intensity with the first time calibration limits, columns 2 and 3
   intensity = (illum - lowCal[index]) * (highMapTo - lowMapTo) /
     (highCal[index] - lowCal[index]) + lowMapTo;
-  //SEMTrace('1', "cal ind %d  %f %f int %f", index, lowCal[index], highCal[index], 
+  //SEMTrace('1', "cal ind %d  %f %f int %f", index, lowCal[index], highCal[index],
   //  intensity);
 }
 
@@ -2834,7 +2835,7 @@ void CBeamAssessor::CalibrateAlphaBeamShifts(void)
   if (startAlpha < 0)
     return;
   if (!KGetOneInt("You will be asked to adjust beam shift and possibly tilt at each alpha"
-    " setting, starting with the lowest", 
+    " setting, starting with the lowest",
     "Enter number of alpha values at which to calibrate beam shift and tilt:", numToCal))
     return;
   if (numToCal <= 0) {
@@ -2879,7 +2880,7 @@ void CBeamAssessor::CalibrateSpotBeamShifts(void)
   else
     firstSpot = HitachiScope ? minSpot : maxSpot;
   if (!KGetOneInt("You will be asked to center the beam at each spot"
-    " size, going from dim to bright", 
+    " size, going from dim to bright",
     "Enter dimmest spot size at which to calibrate beam shift:", firstSpot))
     return;
   B3DCLAMP(firstSpot, 1, numSpots);
@@ -2889,7 +2890,7 @@ void CBeamAssessor::CalibrateSpotBeamShifts(void)
   for (spot = firstSpot; spot * iDir <= lastSpot * iDir; spot += iDir) {
     if (SetAndCheckSpotSize(spot))
       return;
-    if (AfxMessageBox("Center the beam at this spot size", 
+    if (AfxMessageBox("Center the beam at this spot size",
       MB_OKCANCEL | MB_ICONINFORMATION) != IDOK)
       break;
     mScope->GetBeamShift(shifts[spot][0], shifts[spot][1]);
@@ -2909,7 +2910,7 @@ void CBeamAssessor::CalibrateSpotBeamShifts(void)
     calShifts[calBase + 2 * spot + 1] = shifts[spot][1];
   }
   mScope->SetMinMaxBeamShiftSpots(secondary, minSpot, maxSpot);
-  PrintfToLog("Relative shifts will be applied between spots %d and %d", minSpot, 
+  PrintfToLog("Relative shifts will be applied between spots %d and %d", minSpot,
     maxSpot);
   mWinApp->SetCalibrationsNotSaved(true);
 }
@@ -2921,7 +2922,7 @@ int CBeamAssessor::SetAndCheckSpotSize(int newSize, BOOL normalize)
   BOOL OK = mScope->SetSpotSize(newSize, normalize);
   if (!OK || mScope->GetSpotSize() != newSize) {
     str.Format("Failed to set spot size %d\n\n%sheck the SerialEM property "
-      "NumberOfSpotSizes", newSize, 
+      "NumberOfSpotSizes", newSize,
       FEIscope ? "Check if the holder is in; if not, then\nc" : "C");
     AfxMessageBox(str, MB_EXCLAME);
     return 1;
@@ -2941,7 +2942,7 @@ int CBeamAssessor::CountNonEmptyBeamCals(void)
 
 // Check a beam calibration for all zero values and issue a message box and to log
 // Do not call this with an empty table unless you want the message to appear
-int CBeamAssessor::CheckCalForZeroIntensities(BeamTable &table, const char *message, 
+int CBeamAssessor::CheckCalForZeroIntensities(BeamTable &table, const char *message,
   int postMessType)
 {
   CString str, str2;
@@ -2951,7 +2952,7 @@ int CBeamAssessor::CheckCalForZeroIntensities(BeamTable &table, const char *mess
       return 0;
   str.Format("%s, the beam calibration table has all zero intensities\r\n"
     "  for spot %d, # values %d, starting mag %d, extrap flags %d\r\n"
-    "(table %p, calTable is %p, mInt %p tab->int %p)\r\n", message, 
+    "(table %p, calTable is %p, mInt %p tab->int %p)\r\n", message,
     table.spotSize, table.numIntensities, table.magIndex, table.dontExtrapFlags,
     &table, mCalTable, mCalIntensities, table.intensities);
   if (table.aboveCross / 2 == 0) {
@@ -3056,7 +3057,7 @@ void CBeamAssessor::ListParallelIlluminations()
       probeText = mParIllumArray[ind].probeOrAlpha ? "uP" : "nP";
     else if (JEOLscope && !mScope->GetHasNoAlpha())
       probeText.Format("%d", mParIllumArray[ind].probeOrAlpha + 1);
-    PrintfToLog("%.2f     %d     %s", mScope->GetC2Percent(mParIllumArray[ind].spotSize, 
+    PrintfToLog("%.2f     %d     %s", mScope->GetC2Percent(mParIllumArray[ind].spotSize,
       mParIllumArray[ind].intensity, FEIscope ? mParIllumArray[ind].probeOrAlpha : -1),
       mParIllumArray[ind].spotSize, (LPCTSTR)probeText);
   }

@@ -1,7 +1,7 @@
 // HoleFinderDlg.cpp : Calls HoleFinder to find holes and turns them into Nav points
 // There is a resident instance of this class, and the dialog can be created and closed
 //
-// Copyright (C) 2020 by  the Regents of the University of
+// Copyright (C) 2020-2026 by  the Regents of the University of
 // Colorado.  See Copyright.txt for full notice of copyright and limitations.
 //
 // Author: David Mastronarde
@@ -27,6 +27,10 @@
 #include "ParameterIO.h"
 #include "NavigatorDlg.h"
 #include "Shared\b3dutil.h"
+
+#if defined(_DEBUG) && defined(_CRTDBG_MAP_ALLOC)
+#define new DEBUG_NEW
+#endif
 #define FORMAT4OR5G(a) Format(((a) >= 1.e4 && (a) < 1.e5) ? "%.0f" : "%.4g", a)
 
 // CHoleFinderDlg dialog
@@ -529,7 +533,7 @@ void CHoleFinderDlg::OnButMakeNavPts()
 
 //Externally called routine.  Pass -1 to use the layout in params and EXTRA_NO_VALUE to
 // use the cutoffs in params
-int CHoleFinderDlg::DoMakeNavPoints(int layoutType, float lowerMeanCutoff, 
+int CHoleFinderDlg::DoMakeNavPoints(int layoutType, float lowerMeanCutoff,
   float upperMeanCutoff, float sdCutoff, float blackCutoff, float edgeDistCutoff,
   int useHexDiagonals)
 {
@@ -571,7 +575,7 @@ int CHoleFinderDlg::DoMakeNavPoints(int layoutType, float lowerMeanCutoff,
     layoutType = mParams.layoutType;
   if (useHexDiagonals < 0)
     useHexDiagonals = mParams.useHexDiagonals ? 1 : 0;
-  SetExclusionsAndDraw(lowerMeanCutoff, upperMeanCutoff, sdCutoff, blackCutoff, 
+  SetExclusionsAndDraw(lowerMeanCutoff, upperMeanCutoff, sdCutoff, blackCutoff,
     edgeDistCutoff, useHexDiagonals != 0);
   if (mIsOpen) {
     UpdateData(true);
@@ -599,10 +603,10 @@ int CHoleFinderDlg::DoMakeNavPoints(int layoutType, float lowerMeanCutoff,
   // Thus compute the stage vectors of the grid axes here and pass that in too
   mHelper->mFindHoles->assignGridPositions(mXcenters, mYcenters, gridX, gridY, avgAngle,
     avgLen);
-  ApplyScaleMatrix(mImToStage, 
+  ApplyScaleMatrix(mImToStage,
     avgLen * (float)cos(avgAngle * DTOR),
     avgLen * (float)sin(avgAngle * DTOR), incStageX1, incStageY1);
-  ApplyScaleMatrix(mImToStage, 
+  ApplyScaleMatrix(mImToStage,
     avgLen * (float)cos(DTOR *(avgAngle + 90.)),
     avgLen * (float)sin(DTOR * (avgAngle + 90.)), incStageX2, incStageY2);
   mAddedGroupID = mNav->AddFoundHoles(&mXstages, &mYstages, &mExcluded,
@@ -615,7 +619,7 @@ int CHoleFinderDlg::DoMakeNavPoints(int layoutType, float lowerMeanCutoff,
     mWinApp->mMainView->DrawImage();
     if (mIsOpen)
       m_butMakeNavPts.EnableWindow(false);
-    if (mPieceOn.size() && *std::min_element(mPieceOn.begin(), mPieceOn.end()) < 
+    if (mPieceOn.size() && *std::min_element(mPieceOn.begin(), mPieceOn.end()) <
       *std::max_element(mPieceOn.begin(), mPieceOn.end())) {
       int minpc = 1000;
       int maxpc = -1000;
@@ -701,7 +705,7 @@ void CHoleFinderDlg::ParamsToDialog()
     m_intUpperMean = (int)(255. * (mParams.upperMeanCutoff - mMidMean) /
       (mMeanMax - mMidMean));
     m_intSDcutoff = (int)(255. * (mParams.SDcutoff - mSDmin) / (mSDmax -mSDmin));
-    m_intBlackPct = (int)(255. * (mParams.blackFracCutoff - mBlackFracMin) / 
+    m_intBlackPct = (int)(255. * (mParams.blackFracCutoff - mBlackFracMin) /
       (mBlackFracMax - mBlackFracMin));
     m_intHullDist = (int)(255. * mParams.edgeDistCutoff / B3DMAX(1., mEdgeDistMax));
     B3DCLAMP(m_intLowerMean, 0, 255);
@@ -957,7 +961,7 @@ int CHoleFinderDlg::DoFindHoles(EMimageBuffer *imBuf, bool synchronous)
     return 1;
   }
 
-  if ((!hexArray && mParams.spacing < mParams.diameter + 0.5f) || 
+  if ((!hexArray && mParams.spacing < mParams.diameter + 0.5f) ||
     (hexArray && mParams.hexSpacing < mParams.hexDiameter + 0.15f)) {
     SEMMessageBox("The hole spacing is a center-to-center distance and must be at least "
       + CString(hexArray ? "0.15" : "0.5") + " micron bigger than the hole size");
@@ -967,11 +971,11 @@ int CHoleFinderDlg::DoFindHoles(EMimageBuffer *imBuf, bool synchronous)
 
   testSpacing = hexArray ? mParams.hexSpacing : mParams.spacing;
   autocorSpacing = testSpacing;
-  if (mFindingFromDialog && !mSkipAutoCor && 
-    image->getWidth() / testSpacing >= 4. && 
+  if (mFindingFromDialog && !mSkipAutoCor &&
+    image->getWidth() / testSpacing >= 4. &&
     image->getHeight() / testSpacing >= 4.) {
     if (!mWinApp->mProcessImage->FindPixelSize(0., 0., 0., 0., mBufInd,
-      FIND_ACPK_NO_WAFFLE | FIND_PIX_NO_DISPLAY | FIND_PIX_NO_TARGET | 
+      FIND_ACPK_NO_WAFFLE | FIND_PIX_NO_DISPLAY | FIND_PIX_NO_TARGET |
       (hexArray ? FIND_ACPK_HEX_GRID : 0), autocorSpacing, vectors)) {
       autocorSpacing *= mPixelSize;
       delX = fabsf(testSpacing - autocorSpacing) / testSpacing;
@@ -1039,7 +1043,7 @@ int CHoleFinderDlg::DoFindHoles(EMimageBuffer *imBuf, bool synchronous)
             break;
           reloadBinning--;
         }
-        
+
         // Save some params, get rid of store for now, and set params for reload
         overBinSave = masterMont->overviewBinning;
         loadUnbinSave = mHelper->GetLoadMapsUnbinned();
@@ -1068,7 +1072,7 @@ int CHoleFinderDlg::DoFindHoles(EMimageBuffer *imBuf, bool synchronous)
           mPixelSize = mWinApp->mShiftManager->GetPixelSize(imBuf);
           // This is deadly, uncomment to use it!
           /*if (mWinApp->mProcessImage->GetTestCtfPixelSize())
-            mPixelSize = 0.001f * mWinApp->mProcessImage->GetTestCtfPixelSize() * 
+            mPixelSize = 0.001f * mWinApp->mProcessImage->GetTestCtfPixelSize() *
             imBuf->mBinning;*/
           if (!mPixelSize) {
             SEMMessageBox("The image has no pixel size after reloading for finding "
@@ -1114,7 +1118,7 @@ int CHoleFinderDlg::DoFindHoles(EMimageBuffer *imBuf, bool synchronous)
 
   // Report failure, but go on
   if (mMontage && !noMontReason.IsEmpty()) {
-    mWinApp->AppendToLog("Cannot analyze montage pieces when finding holes: " + 
+    mWinApp->AppendToLog("Cannot analyze montage pieces when finding holes: " +
       noMontReason);
     mMontage = -1;
   }
@@ -1158,8 +1162,8 @@ int CHoleFinderDlg::DoFindHoles(EMimageBuffer *imBuf, bool synchronous)
         // But give preference to polygon drawn on map
         if ((float)numOnIm / item->mNumPoints >= minFracPtsOnImage) {
           area = mNav->ContourArea(item->mPtX, item->mPtY, item->mNumPoints);
-          if (minDrawnID != bufID && item->mDrawnOnMapID == bufID || 
-            (area < minArea && (!bufID || 
+          if (minDrawnID != bufID && item->mDrawnOnMapID == bufID ||
+            (area < minArea && (!bufID ||
               !(minDrawnID == bufID && item->mDrawnOnMapID != bufID)))) {
             minArea = area;
             minDrawnID = item->mDrawnOnMapID;
@@ -1172,7 +1176,7 @@ int CHoleFinderDlg::DoFindHoles(EMimageBuffer *imBuf, bool synchronous)
       }
     }
     if (!boundLabel.IsEmpty())
-      PrintfToLog("Points will be retained inside the polygon with label %s", 
+      PrintfToLog("Points will be retained inside the polygon with label %s",
       (LPCTSTR)boundLabel);
   }
 
@@ -1757,7 +1761,7 @@ int CHoleFinderDlg::ConvertHoleToISVectors(int index, bool setVecs, double *xVec
 
     // Then check if a rotation by one vector position matches last used vectors;
     // if so copy over the rotated vectors
-    if (mHelper->PermuteISvecsToMatchLastUsed(xFloat, yFloat, hexInd, bestRot, 
+    if (mHelper->PermuteISvecsToMatchLastUsed(xFloat, yFloat, hexInd, bestRot,
       maxAngDiff, maxScaleDiff, xTemp, yTemp)) {
       for (dir = 0; dir < numVecs; dir++) {
         xSpacing[dir] = xFloat[dir] = xTemp[dir];
@@ -1930,7 +1934,7 @@ bool CHoleFinderDlg::MouseSelectPoint(EMimageBuffer *imBuf, float inX, float inY
     // For regular point, toggle exclude and set to special values
     if (mExcluded[indMin] <= 0)
       mExcluded[indMin] = 3;   // User exclude
-    else 
+    else
       mExcluded[indMin] = -1;  // User include
     mLastUserSelectInd = indMin;
   }
@@ -1942,19 +1946,19 @@ bool CHoleFinderDlg::MouseSelectPoint(EMimageBuffer *imBuf, float inX, float inY
 }
 
 // Set pointers and make sure Nav is open, message defaults to NULL
-bool CHoleFinderDlg::CheckAndSetNav(const char *message) 
-{ 
-  mNav = mWinApp->mNavigator; 
+bool CHoleFinderDlg::CheckAndSetNav(const char *message)
+{
+  mNav = mWinApp->mNavigator;
   mHelper = mWinApp->mNavHelper;
   if (!mNav && message)
     SEMMessageBox(CString("The Navigator must be open to ") + message);
-  return mNav == NULL; 
+  return mNav == NULL;
 }
 
 /*
  * Find holes, make points, and optionally combine in a range of maps at one mag index
  */
-int CHoleFinderDlg::ProcessMultipleMaps(int indStart, int indEnd, int minForCombine, 
+int CHoleFinderDlg::ProcessMultipleMaps(int indStart, int indEnd, int minForCombine,
   int ifAutoCont, float target, float minSize,
   float maxSize, float relThresh, float absThresh, float expandDist)
 {
@@ -1994,7 +1998,7 @@ int CHoleFinderDlg::ProcessMultipleMaps(int indStart, int indEnd, int minForComb
     SEMMessageBox("There are no undone maps within the range of items");
     return 1;
   }
-  
+
   mPMMcurrentInd = indStart;
   mPMMendInd = indEnd;
   mPMMcombineMinPts = minForCombine;
@@ -2007,10 +2011,10 @@ int CHoleFinderDlg::ProcessMultipleMaps(int indStart, int indEnd, int minForComb
   mPMMexpandDist = expandDist;
   camera = B3DNINT((float)camList[mPMMmagIndex] / numMaps);
   B3DCLAMP(camera, 0, MAX_CAMERAS - 1);
-  PrintfToLog("Processing %d maps at magnification %d", numMaps, 
+  PrintfToLog("Processing %d maps at magnification %d", numMaps,
     MagForCamera(camera, mPMMmagIndex));
   SyncToMasterParams();
-    
+
   mWinApp->UpdateBufferWindows();
   MultiMapNextTask(0);
   return 0;
@@ -2067,7 +2071,7 @@ void CHoleFinderDlg::MultiMapNextTask(int param)
       }
       item = itemArray->GetAt(mPMMcurrentInd);
       mHelper->AssignNavItemHoleVectors(item);
-      
+
       // Combine: tell it number to use
       ind = mHelper->mCombineHoles->CombineItems(-numPts,
         mHelper->GetMHCturnOffOutsidePoly(), -9, -9);
@@ -2090,10 +2094,10 @@ void CHoleFinderDlg::MultiMapNextTask(int param)
       item->mAcquire = false;
       ind = mNav->FindBufferWithMapID(item->mMapID);
       if (ind >= 0) {
-        mWinApp->mProcessImage->GetCentroidOfBuffer(&imBufs[ind], xcen, ycen, shiftX, 
+        mWinApp->mProcessImage->GetCentroidOfBuffer(&imBufs[ind], xcen, ycen, shiftX,
           shiftY, false, tmp1, tmp2, tmp3);
         mHelper->mAutoContouringDlg->AutoContourImage(&imBufs[ind], mPMMtarget,
-          mPMMminSize, mPMMmaxSize, mPMMrelThresh, mPMMabsThresh, false, 
+          mPMMminSize, mPMMmaxSize, mPMMrelThresh, mPMMabsThresh, false,
           mPMMexpandDist, xcen, ycen);
         mWinApp->AddIdleTask(TASK_MULTI_MAP_HOLES, 2, 0);
         return;
@@ -2108,7 +2112,7 @@ void CHoleFinderDlg::MultiMapNextTask(int param)
     item = itemArray->GetAt(mPMMcurrentInd);
 
     // Same test as above except for the specific mag
-    if (item->IsMap() && item->mMapMagInd == mPMMmagIndex && 
+    if (item->IsMap() && item->mMapMagInd == mPMMmagIndex &&
       item->mColor != NAV_SKIP_COLOR && (item->mAcquire || mPMMifAutoCont < 2) &&
       ((!item->mXHoleISSpacing[0] && !item->mYHoleISSpacing[0]) ||
         CountAcquirePointsDrawnOnMap(itemArray, item->mMapID) < mPMMminPtsForSkipIfIS)) {

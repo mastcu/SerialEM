@@ -9,6 +9,10 @@
 #include "GatanSocket.h"
 #include "Shared\SEMCCDDefines.h"
 
+#if defined(_DEBUG) && defined(_CRTDBG_MAP_ALLOC)
+#define new DEBUG_NEW
+#endif
+
 static int sSind = 0;
 static int sInitialized = false;
 
@@ -85,10 +89,10 @@ int CGatanSocket::QueueScript(long size, long script[])
 }
 
 // GetAcquiredImage
-int CGatanSocket::GetAcquiredImage(short array[], long *arrSize, long *width, 
+int CGatanSocket::GetAcquiredImage(short array[], long *arrSize, long *width,
                                   long *height, long processing, double exposure,
-                                  long binning, long top, long left, long bottom, 
-                                  long right, long shutter, double settling, 
+                                  long binning, long top, long left, long bottom,
+                                  long right, long shutter, double settling,
                                   long shutterDelay, long divideBy2, long corrections)
 {
   InitializePacking(sSind, GS_GetAcquiredImage);
@@ -132,7 +136,7 @@ int CGatanSocket::GetDarkReference(short array[], long *arrSize, long *width, lo
   DOUBLE_ARG(sSind, settling);
   return SendAndReceiveForImage(sSind, array, arrSize, width, height, 2);
 }
- 
+
 // GetGainReference
 int CGatanSocket::GetGainReference(float array[], long *arrSize, long *width, long *height,
                                   long binning)
@@ -184,7 +188,7 @@ int CGatanSocket::SetK2Parameters(long readMode, double scaling, long hardwarePr
 int CGatanSocket::SetK2Parameters2(long readMode, double scaling, long hardwareProc,
                                    long doseFrac, double frameTime, long alignFrames,
                                    long saveFrames, long rotationFlip, long flags,
-                                   double dummy1, double dummy2, double dummy3, 
+                                   double dummy1, double dummy2, double dummy3,
                                    double dummy4, long filtSize, long filter[])
 {
   InitializePacking(sSind, GS_SetK2Parameters2);
@@ -210,7 +214,7 @@ int CGatanSocket::SetK2Parameters2(long readMode, double scaling, long hardwareP
 // SetupFileSaving
 int CGatanSocket::SetupFileSaving2(long rotationFlip, long filePerImage, double pixelSize,
                                    long flags, double dummy1, double dummy2,
-                                   double dummy3, double dummy4, long nameSize, 
+                                   double dummy3, double dummy4, long nameSize,
                                    long names[], long *error)
 {
   InitializePacking(sSind, GS_SetupFileSaving2);
@@ -264,33 +268,33 @@ int CGatanSocket::IsGpuAvailable(long gpuNum, long *available, double *gpuMemory
 }
 
 // SetupFrameAligning
-int CGatanSocket::SetupFrameAligning(long aliBinning, double rad2Filt1, 
-    double rad2Filt2, double rad2Filt3, double sigma2Ratio, 
-    double truncLimit, long alignFlags, long gpuFlags, long numAllVsAll, long groupSize, 
-    long shiftLimit, long antialiasType, long refineIter, double stopIterBelow, 
-    double refRad2, long nSumAndGrab, long frameStartEnd, long frameThreshes, 
+int CGatanSocket::SetupFrameAligning(long aliBinning, double rad2Filt1,
+    double rad2Filt2, double rad2Filt3, double sigma2Ratio,
+    double truncLimit, long alignFlags, long gpuFlags, long numAllVsAll, long groupSize,
+    long shiftLimit, long antialiasType, long refineIter, double stopIterBelow,
+    double refRad2, long nSumAndGrab, long frameStartEnd, long frameThreshes,
     double dumDbl1, long stringSize, long *strings, long *error)
 {
   InitializePacking(sSind, GS_SetupFrameAligning);
   LONG_ARG(sSind, aliBinning);
-  DOUBLE_ARG(sSind, rad2Filt1); 
-  DOUBLE_ARG(sSind, rad2Filt2); 
-  DOUBLE_ARG(sSind, rad2Filt3); 
-  DOUBLE_ARG(sSind, sigma2Ratio); 
-  DOUBLE_ARG(sSind, truncLimit); 
-  LONG_ARG(sSind, alignFlags); 
-  LONG_ARG(sSind, gpuFlags); 
-  LONG_ARG(sSind, numAllVsAll); 
-  LONG_ARG(sSind, groupSize); 
-  LONG_ARG(sSind, shiftLimit); 
-  LONG_ARG(sSind, antialiasType); 
-  LONG_ARG(sSind, refineIter); 
-  DOUBLE_ARG(sSind, stopIterBelow); 
-  DOUBLE_ARG(sSind, refRad2); 
-  LONG_ARG(sSind, nSumAndGrab); 
+  DOUBLE_ARG(sSind, rad2Filt1);
+  DOUBLE_ARG(sSind, rad2Filt2);
+  DOUBLE_ARG(sSind, rad2Filt3);
+  DOUBLE_ARG(sSind, sigma2Ratio);
+  DOUBLE_ARG(sSind, truncLimit);
+  LONG_ARG(sSind, alignFlags);
+  LONG_ARG(sSind, gpuFlags);
+  LONG_ARG(sSind, numAllVsAll);
+  LONG_ARG(sSind, groupSize);
+  LONG_ARG(sSind, shiftLimit);
+  LONG_ARG(sSind, antialiasType);
+  LONG_ARG(sSind, refineIter);
+  DOUBLE_ARG(sSind, stopIterBelow);
+  DOUBLE_ARG(sSind, refRad2);
+  LONG_ARG(sSind, nSumAndGrab);
   LONG_ARG(sSind, frameStartEnd);
   LONG_ARG(sSind, frameThreshes);
-  DOUBLE_ARG(sSind, dumDbl1); 
+  DOUBLE_ARG(sSind, dumDbl1);
   LONG_ARG(sSind, stringSize);
   mLongArray[sSind] = strings;
   mNumLongRecv[sSind] = 1;
@@ -300,9 +304,9 @@ int CGatanSocket::SetupFrameAligning(long aliBinning, double rad2Filt1,
  }
 
 // FrameAlignResults
-int CGatanSocket::FrameAlignResults(double *rawDist, double *smoothDist, 
-    double *resMean, double *maxResMax, double *meanRawMax, double *maxRawMax, 
-    long *crossHalf, long *crossQuarter, long *crossEighth, long *halfNyq, 
+int CGatanSocket::FrameAlignResults(double *rawDist, double *smoothDist,
+    double *resMean, double *maxResMax, double *meanRawMax, double *maxRawMax,
+    long *crossHalf, long *crossQuarter, long *crossEighth, long *halfNyq,
     long *dumInt1, double *dumDbl1, double *dumDbl2)
 {
   InitializePacking(sSind, GS_FrameAlignResults);
@@ -321,20 +325,20 @@ int CGatanSocket::FrameAlignResults(double *rawDist, double *smoothDist,
   *halfNyq = mLongArgs[sSind][4];
   *dumInt1 = mLongArgs[sSind][5];
   *dumDbl1 = mDoubleArgs[sSind][6];
-  *dumDbl2 = mDoubleArgs[sSind][7]; 
+  *dumDbl2 = mDoubleArgs[sSind][7];
   return mLongArgs[sSind][0];
 }
 
 // MakeAlignComFile
-int CGatanSocket::MakeAlignComFile(long flags, long dumInt1, double dumDbl1, 
+int CGatanSocket::MakeAlignComFile(long flags, long dumInt1, double dumDbl1,
   double dumDbl2, long stringSize, long *strings, long *error)
 {
   InitializePacking(sSind, GS_MakeAlignComFile);
   LONG_ARG(sSind, flags);
   LONG_ARG(sSind, dumInt1);
   LONG_ARG(sSind, stringSize);
-  DOUBLE_ARG(sSind, dumDbl1); 
-  DOUBLE_ARG(sSind, dumDbl2); 
+  DOUBLE_ARG(sSind, dumDbl1);
+  DOUBLE_ARG(sSind, dumDbl2);
   mLongArray[sSind] = strings;
   mNumLongRecv[sSind] = 1;
   SendAndReceiveArgs(sSind);
@@ -344,7 +348,7 @@ int CGatanSocket::MakeAlignComFile(long flags, long dumInt1, double dumDbl1,
 }
 
 // ReturnDeferredSum
-int CGatanSocket::ReturnDeferredSum(short array[], long *arrSize, long *width, 
+int CGatanSocket::ReturnDeferredSum(short array[], long *arrSize, long *width,
                                long *height)
 {
   InitializePacking(sSind, GS_ReturnDeferredSum);
@@ -476,7 +480,7 @@ int CGatanSocket::SetNoDMSettling(long camera)
 
 // GetDSProperties
 int CGatanSocket::GetDSProperties(long timeout, double addedFlyback, double margin,
-                                 double *flyback, double *lineFreq, 
+                                 double *flyback, double *lineFreq,
                                  double *rotOffset, long *doFlip)
 {
   InitializePacking(sSind, GS_GetDSProperties);
@@ -494,9 +498,9 @@ int CGatanSocket::GetDSProperties(long timeout, double addedFlyback, double marg
 }
 
 // AcquireDSImage
-int CGatanSocket::AcquireDSImage(short array[], long *arrSize, long *width, 
-                                long *height, double rotation, double pixelTime, 
-                                long lineSync, long continuous, long numChan, 
+int CGatanSocket::AcquireDSImage(short array[], long *arrSize, long *width,
+                                long *height, double rotation, double pixelTime,
+                                long lineSync, long continuous, long numChan,
                                 long channels[], long divideBy2)
 {
   InitializePacking(sSind, GS_AcquireDSImage);
@@ -514,7 +518,7 @@ int CGatanSocket::AcquireDSImage(short array[], long *arrSize, long *width,
 }
 
 // ReturnDSChannel
-int CGatanSocket::ReturnDSChannel(short array[], long *arrSize, long *width, 
+int CGatanSocket::ReturnDSChannel(short array[], long *arrSize, long *width,
                                  long *height, long channel, long divideBy2)
 {
   InitializePacking(sSind, GS_ReturnDSChannel);

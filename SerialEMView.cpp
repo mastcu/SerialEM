@@ -1,10 +1,9 @@
 //race('1' SerialEMView.cpp:      Standard MFC MDI component, does the image display;
-//                          one instance manages the main image window that 
+//                          one instance manages the main image window that
 //                          displays the stack of image buffers, and others
 //                          can be created for secondary image windows
 //
-// Copyright (C) 2003 by Boulder Laboratory for 3-Dimensional Electron 
-// Microscopy of Cells ("BL3DEMC") and the Regents of the University of
+// Copyright (C) 2003-2026 by the Regents of the University of
 // Colorado.  See Copyright.txt for full notice of copyright and limitations.
 //
 // Author: David Mastronarde
@@ -45,10 +44,8 @@
 #include "Shared\ipoint.h"
 #include "XFolderDialog/XWinVer.h"
 
-#ifdef _DEBUG
+#if defined(_DEBUG) && defined(_CRTDBG_MAP_ALLOC)
 #define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
 #endif
 
 static VOID CALLBACK MovieProc(HWND hwnd, UINT uMsg, UINT_PTR idEvent, DWORD dwTime);
@@ -132,7 +129,7 @@ CSerialEMView::CSerialEMView()
   mMultiChanWindow = -1;
   mShiftPressed = false;
   mCtrlPressed = false;
-  mPanning = false;  
+  mPanning = false;
   mViewEffectiveZoom = 0.;
   mSearchEffectiveZoom = 0.;
   mScaleParams.draw = true;
@@ -188,10 +185,10 @@ BOOL CSerialEMView::PreCreateWindow(CREATESTRUCT& cs)
     childFrame->SetSharedMenu(mWinApp->mMainFrame->GetRebuiltMenu());
   }
   if (type == 1) {
-  
+
     // If this is the static window, set the size to fill the client area
     childFrame->SetWindowPos(NULL, rect.left + iBordLeft, rect.top + iBordTop,
-      rect.Width() - iBordLeft - iBordRight, 
+      rect.Width() - iBordLeft - iBordRight,
       rect.Height() - iBordTop - iBordBottom, SWP_NOZORDER);
     childFrame->SetStaticFrame();
     childFrame->SetWindowText("Main Window");
@@ -328,7 +325,7 @@ int CSerialEMView::TakeSnapshot(float zoomBy, float sizeScaling, int skipExtra,
   int xyReduction;
   SnapshotData *sd;
   double wallStart = wallTime();
-  
+
   // Get window size
   GetClientRect(&rectWin);
   nxWin = rectWin.Width();
@@ -355,7 +352,7 @@ int CSerialEMView::TakeSnapshot(float zoomBy, float sizeScaling, int skipExtra,
   sd->fileOpt.jpegQuality = quality;
   sd->fileOpt.montageInMdoc = false;
   sd->fileOpt.typext = 0;
-  
+
   sd->fullBuf = NULL;
   sd->buffer = NULL;
   sd->oldBitmap = NULL;
@@ -390,7 +387,7 @@ int CSerialEMView::TakeSnapshot(float zoomBy, float sizeScaling, int skipExtra,
   if (sd->sizeScaling <= 0.)
     sizeScaling = sd->sizeScaling = (float)B3DMAX(1., sd->zoomUse / mZoom);
 
-  // The # of bytes in the bitmap is limited 
+  // The # of bytes in the bitmap is limited
   if ((size_t)sd->memBMX * sd->memBMY > pixelLimit) {
     if (sd->zoomUse != 1.)
       return 5;
@@ -400,15 +397,15 @@ int CSerialEMView::TakeSnapshot(float zoomBy, float sizeScaling, int skipExtra,
     sd->yReduction = (xyReduction + sd->xReduction - 1) / sd->xReduction;
     sd->nxFull = sd->memBMX;
     sd->nyFull = sd->memBMY;
-    SetupMontageStarts(sd->nxFull, sd->xReduction, sd->memBMX, sd->xStarts, 
+    SetupMontageStarts(sd->nxFull, sd->xReduction, sd->memBMX, sd->xStarts,
       sd->xOffsets, 1);
-    SetupMontageStarts(sd->nyFull, sd->yReduction, sd->memBMY, sd->yStarts, 
+    SetupMontageStarts(sd->nyFull, sd->yReduction, sd->memBMY, sd->yStarts,
       sd->yOffsets, -1);
   }
 
   // Get compatible device context to window
   sd->memDC.CreateCompatibleDC(&cdcWin);
- 
+
   // Get bitmap of the desired size and make sure it is 24 or 32 bit
   if (!sd->bitmap.CreateCompatibleBitmap(&cdcWin, sd->memBMX, sd->memBMY))
     err = 2;
@@ -418,7 +415,7 @@ int CSerialEMView::TakeSnapshot(float zoomBy, float sizeScaling, int skipExtra,
   if (!err && sd->bm.bmBitsPixel != 24 && sd->bm.bmBitsPixel != 32)
     err = 4;
 
-  // Get buffer to copy into 
+  // Get buffer to copy into
   if (!err && sd->nxFull) {
     NewArray2(sd->fullBuf, char, sd->nxFull, sd->nyFull * 3);
     if (!sd->fullBuf)
@@ -550,7 +547,7 @@ void CSerialEMView::SnapshotNextTask(int shotNum)
     m_iOffsetX = sd->xOffsets[ixShot];
     m_iOffsetY = sd->yOffsets[iyShot];
   }
-  drew = DrawToScreenOrBuffer(sd->memDC, sd->memDC.m_hDC, rect, sd->sizeScaling, 
+  drew = DrawToScreenOrBuffer(sd->memDC, sd->memDC.m_hDC, rect, sd->sizeScaling,
     sd->skipExtra, true);
   err = drew ? 0 : 1;
   mDoingMontSnapshot = 0;
@@ -571,7 +568,7 @@ void CSerialEMView::SnapshotNextTask(int shotNum)
   for (iy = 0; iy < (int)sd->memBMY; iy++) {
     bufIn = sd->buffer + iy * sd->bm.bmWidthBytes;
     if (sd->nxFull)
-      bufOut = sd->fullBuf + ((iy + sd->yStarts[iyShot]) * 
+      bufOut = sd->fullBuf + ((iy + sd->yStarts[iyShot]) *
       (size_t)sd->nxFull + sd->xStarts[ixShot]) * 3;
     for (ix = 0; ix < (int)sd->memBMX; ix++) {
       *bufOut++ = *(bufIn + 2);
@@ -631,7 +628,7 @@ void CSerialEMView::SnapshotNextTask(int shotNum)
 // Entry point for a regular image draw to screen
 void CSerialEMView::DrawImage(void)
 {
-  if (mWinApp->GetInRestoreViewFocus() || 
+  if (mWinApp->GetInRestoreViewFocus() ||
     (mWinApp->mNavHelper && mWinApp->mNavHelper->GetDoingMultipleFiles()))
     return;
   CRect rect;
@@ -647,7 +644,7 @@ void CSerialEMView::DrawImage(void)
 
 // Main drawing routine to screen or buffer.  Skipextra is one to skip some items plus
 // 2 to skip navigator items plus 4 to skip the scale bar
-bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect, 
+bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
   float sizeScaling, int skipExtra, bool toBuffer)
 {
   int iSrcWidth, iSrcHeight, iDestWidth, iDestHeight, crossLen, xSrc, ySrc, needWidth;
@@ -671,7 +668,7 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
   MapItemArray *polyArray;
   CMapDrawItem *item, *polygon;
   int *showGroup;
-  COLORREF contColors[MAX_AUTOCONT_GROUPS] = {RGB(220,0,0), RGB(245,160,0), 
+  COLORREF contColors[MAX_AUTOCONT_GROUPS] = {RGB(220,0,0), RGB(245,160,0),
     RGB(255,255,0), RGB(0,255,0), RGB(0,255,255), RGB(0,0,255), RGB(178,107,210),
     RGB(255,0,255)};
   FloatVec zeroRadii, zeroRadii2;
@@ -696,7 +693,7 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
 
   // If this is the first draw, set up the zoom optimally
   // 7/7/03: no longer need to fix main frame window title; set child titles
-  if (mFirstDraw && !(mWinApp->GetStartingProgram() && 
+  if (mFirstDraw && !(mWinApp->GetStartingProgram() &&
     (!mImBufs || !mImBufs[mImBufIndex].mImage))) {
     FindEffectiveZoom();
     CChildFrame *childFrame = (CChildFrame *)GetParent();
@@ -704,7 +701,7 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
     if (mFFTWindow)
       ((CMDIChildWnd *)(mWinApp->mMainView->GetParent()))->MDIActivate();
   }
- 
+
   EMimageBuffer *imBuf = NULL;
   KImage      *imageRect;
   if (mImBufs) {
@@ -730,7 +727,7 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
 
   // Get fonts for drawing letter in corner and other text on first real draw
   if (!mMadeFonts) {
-    
+
     fontName = Is2000OrGreater() ? "Microsoft Sans Serif" : "MS Sans Serif";
     mFont.CreateFont(mWinApp->ScaleValueForDPI(36), 0, 0, 0, FW_MEDIUM,
       0, 0, 0, DEFAULT_CHARSET, OUT_CHARACTER_PRECIS,
@@ -814,13 +811,13 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
   }
   mYDest += rect.top;  // but this is top-based in the call
   KImage *bitImage = pixMap->getImRectPtr();
-  
+
   // Set variables for draw from pixmap, then see if criteria for zoom filter are met
   iDestWidth = (int)floor(mZoom * iSrcWidth + 0.5);
   iDestHeight = (int)floor(mZoom * iSrcHeight + 0.5);
   xSrc = mXSrc;
   ySrc = mYSrc;
-  if (mZoom < 0.8 && mWinApp->mBufferManager->GetAntialias() && bitImage && 
+  if (mZoom < 0.8 && mWinApp->mBufferManager->GetAntialias() && bitImage &&
     bitImage->getRowData(0) && !mPanning) {
 
     // Get truncated width to avoid error from filter routine
@@ -834,7 +831,7 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
     // its type and size match, and if the zoom and pan match when it was created
     KImage *filtImage = imBuf->mFiltPixMap->getImRectPtr();
     needWidth = 4 * ((tmpWidth + 3) / 4);
-    bool sizeTypeOK = filtImage && filtImage->getType() == bitImage->getType() &&  
+    bool sizeTypeOK = filtImage && filtImage->getType() == bitImage->getType() &&
       filtImage->getWidth() == needWidth && filtImage->getHeight() == tmpHeight;
     bool byteMap = bitImage->getType() == kUBYTE;
     filtering = true;
@@ -853,7 +850,7 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
           mWinApp->AppendToLog("There is not enough memory for filtering array; "
             "delete some buffers");
         }
-      } else {  
+      } else {
         filtImage = new KImage(filtImage);
       }
 
@@ -868,12 +865,12 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
       // Get the line points and get the zoomed down image
       // The ySrc is from the bottom of the image, which works because of the negative
       // height in the BMI, but need to get it to be top line in image here
-      filtPtrs = makeLinePointers(bitImage->getRowData(0), bitImage->getWidth(), 
+      filtPtrs = makeLinePointers(bitImage->getRowData(0), bitImage->getWidth(),
         bitImage->getHeight(), byteMap ? 1 : 3);
       if (filtImage->getWidth() && filtPtrs && !ierr &&
-        !zoomWithFilter(filtPtrs, bitImage->getWidth(), bitImage->getHeight(), 
+        !zoomWithFilter(filtPtrs, bitImage->getWidth(), bitImage->getHeight(),
           (float)mXSrc, (float)(bitImage->getHeight() - 1 - (mYSrc + iSrcHeight - 1)),
-          tmpWidth, tmpHeight, needWidth, 0, byteMap ? SLICE_MODE_BYTE : SLICE_MODE_RGB, 
+          tmpWidth, tmpHeight, needWidth, 0, byteMap ? SLICE_MODE_BYTE : SLICE_MODE_RGB,
           filtImage->getRowData(0), NULL, NULL)) {
         imBuf->mFiltPixMap->useRect(filtImage, true);
       } else {
@@ -888,15 +885,15 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
       bitImage = imBuf->mFiltPixMap->getImRectPtr();
       pixMap = imBuf->mFiltPixMap;
       boost = 1.;
-      if (byteMap && !(imBuf->mCaptured == BUFFER_FFT || 
+      if (byteMap && !(imBuf->mCaptured == BUFFER_FFT ||
         imBuf->mCaptured == BUFFER_LIVE_FFT)) {
-          CorDefSampleMeanSD(bitImage->getRowData(0), SLICE_MODE_BYTE, needWidth, 
+          CorDefSampleMeanSD(bitImage->getRowData(0), SLICE_MODE_BYTE, needWidth,
             tmpWidth, tmpHeight, &filtMean, &filtSD);
           if (filtSD < targetSD)
             boost = targetSD / filtSD;
       }
-      pixMap->setLevels(imBuf->mImageScale->GetBrightness(), 
-        imBuf->mImageScale->GetContrast(), imBuf->mImageScale->GetInverted(), 
+      pixMap->setLevels(imBuf->mImageScale->GetBrightness(),
+        imBuf->mImageScale->GetContrast(), imBuf->mImageScale->GetInverted(),
         imBuf->mImageScale->GetFalseColor(), boost, filtMean);
       xSrc = 0;
       ySrc = 0;
@@ -933,16 +930,16 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
   if (mYDest > rect.top)
     cdc.FillSolidRect(rect.left, rect.top, rect.Width(), mYDest - rect.top, bkgColor);
   if (mYDest + iDestHeight < rect.bottom)
-    cdc.FillSolidRect(rect.left, mYDest + iDestHeight, rect.Width(), 
+    cdc.FillSolidRect(rect.left, mYDest + iDestHeight, rect.Width(),
       rect.bottom - (mYDest + iDestHeight), bkgColor);
   if (mXDest > rect.left)
     cdc.FillSolidRect(rect.left, mYDest, mXDest - rect.left, iDestHeight, bkgColor);
   if (mXDest + iDestWidth < rect.right)
     cdc.FillSolidRect(mXDest + iDestWidth, mYDest, rect.right - (mXDest + iDestWidth),
       iDestHeight, bkgColor);
-  
+
   // Draw crosshairs if mouse shifting is underway
-  if (!toBuffer&& (mMouseShifting || mWinApp->mBufferManager->GetDrawCrosshairs() || 
+  if (!toBuffer&& (mMouseShifting || mWinApp->mBufferManager->GetDrawCrosshairs() ||
     (navigator && navigator->MovingMapItem()))) {
     CPen pnSolidPen (PS_SOLID, thick1, mShiftManager->GetShiftingDefineArea() ?
       RGB(0, 255, 0) : RGB(255, 0, 0));
@@ -966,11 +963,11 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
       crossLen = 7;
 
       // Get the projection positions by referencing to center of each image
-      float projX = autoBuf->mUserPtX + shiftX - autoIm->getWidth() / 2 + 
+      float projX = autoBuf->mUserPtX + shiftX - autoIm->getWidth() / 2 +
         imBuf->mImage->getWidth() / 2;
-      float projY = autoBuf->mUserPtY + shiftY - autoIm->getHeight() / 2 + 
+      float projY = autoBuf->mUserPtY + shiftY - autoIm->getHeight() / 2 +
         imBuf->mImage->getHeight() / 2;
-      
+
       // the rest is from below
       float pixMapY = imBuf->mImage->getHeight() - projY;
       point.x = (int)((projX - mXSrc) * mZoom + mXDest);
@@ -987,7 +984,7 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
     CPoint point, point2;
     crossLen = DSB_DPI_SCALE(drawUserPt ? 7 : 1);
     MakeDrawPoint(&rect, imBuf->mImage, imBuf->mUserPtX, imBuf->mUserPtY, &point);
-    if (!imBuf->mDrawUserBox) 
+    if (!imBuf->mDrawUserBox)
       DrawCross(&cdc, &pnSolidPen, point, crossLen);
     if (!drawUserPt) {
       MakeDrawPoint(&rect, imBuf->mImage, imBuf->mLineEndX, imBuf->mLineEndY, &point2);
@@ -1022,25 +1019,25 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
       if (mMultiChanWindow >= 0)
         letString += "S";
       cdc.TextOut(scaled5, scaled5, letString);
-      if (imBuf->mCaptured > 0 && imBuf->mConSetUsed >= 0 && 
+      if (imBuf->mCaptured > 0 && imBuf->mConSetUsed >= 0 &&
         imBuf->mConSetUsed < NUMBER_OF_USER_CONSETS && imBuf->mLowDoseArea) {
           cdc.SelectObject(useLabelFont);
           letString = CString(" - ") + (mWinApp->GetModeNames())[imBuf->mConSetUsed];
           cdc.TextOut(mWinApp->ScaleValueForDPI(25), scaled10, letString);
       }
       if (!mFFTWindow && !mStackWindow && scaleCrit > 0 &&
-        (mImBufIndex <= mWinApp->mBufferManager->GetShiftsOnAcquire()) || 
+        (mImBufIndex <= mWinApp->mBufferManager->GetShiftsOnAcquire()) ||
         mMultiChanWindow >= 0) {
         cdc.SelectObject(useLabelFont);
-        cdc.TextOut(scaled5, mWinApp->ScaleValueForDPI(35), 
+        cdc.TextOut(scaled5, mWinApp->ScaleValueForDPI(35),
           B3DCHOICE(mMultiChanWindow < 0, "Rolling", mChanBufIsNew ? "New" : "Old"));
       }
- 
+
       // Dose rate output for direct detector and channel name for STEM
       bufferOK = !imBuf->IsProcessed() && (imBuf->mCaptured > 0 || imBuf->ImageWasReadIn()
         ||imBuf->mCaptured == BUFFER_CALIBRATION || imBuf->mCaptured == BUFFER_TRACKING ||
         imBuf->mCaptured == BUFFER_MONTAGE_CENTER || imBuf->mCaptured == BUFFER_ANCHOR ||
-        imBuf->mCaptured == BUFFER_MONTAGE_PIECE || 
+        imBuf->mCaptured == BUFFER_MONTAGE_PIECE ||
         (imBuf->mCaptured == BUFFER_MONTAGE_OVERVIEW && imBuf->mMapID));
       if (mMainWindow && imBuf->mCamera >= 0 && scaleCrit > 0 && !mDoingMontSnapshot &&
         (bufferOK || mWinApp->GetNumActiveCameras() > 1)) {
@@ -1053,7 +1050,7 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
                 letString.Format("%.2f e/physpix/s at camera", boost);
                 cdc.TextOut(scaled140, scaled10, letString);
               } else if (mWinApp->mScope->GetNoScope() && imBuf->mMagInd > 0) {
-                letString.Format("%.3f e/sq A at camera", boost / 
+                letString.Format("%.3f e/sq A at camera", boost /
                   pow(10000. * mShiftManager->GetPixelSize(imBuf), 2.));
                 cdc.TextOut(scaled140, scaled10, letString);
               }
@@ -1072,9 +1069,9 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
           // Image black-white and mean if available
           if (imBuf->mImageScale) {
             letString.Format("B - W: %s - %s",
-              (LPCTSTR)FormattedNumber(imBuf->mImageScale->GetMinScale(), "", 0, 3, 
+              (LPCTSTR)FormattedNumber(imBuf->mImageScale->GetMinScale(), "", 0, 3,
                 1.99f),
-              (LPCTSTR)FormattedNumber(imBuf->mImageScale->GetMaxScale(), "", 0, 3, 
+              (LPCTSTR)FormattedNumber(imBuf->mImageScale->GetMaxScale(), "", 0, 3,
                 1.99f));
             if (imBuf->mSampleMean > EXTRA_VALUE_TEST) {
               firstLabel.Format("  mean: %s", (LPCTSTR)FormattedNumber(imBuf->mSampleMean,
@@ -1083,14 +1080,14 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
             }
             if (mWinApp->mCamera->IsDirectDetector(camP) && imBuf->mK2ReadMode >= 0)
               letString += imBuf->mK2ReadMode > 0 ? "  counted" : "  linear";
-            cdc.TextOut(mWinApp->ScaleValueForDPI(25), 
+            cdc.TextOut(mWinApp->ScaleValueForDPI(25),
               rect.Height() - mWinApp->ScaleValueForDPI(40), letString);
           }
       }
     } else {
       cdc.SelectObject(useLabelFont);
       if (mImBufs[mImBufIndex].mSecNumber < 0)
-        letString.Format("%d: tilt = %.1f", mImBufIndex + 1, 
+        letString.Format("%d: tilt = %.1f", mImBufIndex + 1,
         mImBufs[mImBufIndex].mTiltAngleOrig);
       else
         letString.Format("%d: Z = %d", mImBufIndex + 1, mImBufs[mImBufIndex].mSecNumber);
@@ -1130,7 +1127,7 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
 
     // If this is a view image in low dose, draw record and trial/focus areas as long as
     // there won't be one around Nav point
-    bufferOK = (imBuf->mCaptured > 0 || imBuf->ImageWasReadIn() || 
+    bufferOK = (imBuf->mCaptured > 0 || imBuf->ImageWasReadIn() ||
       imBuf->mCaptured == BUFFER_MONTAGE_OVERVIEW) &&
       (imBuf->mConSetUsed == VIEW_CONSET || imBuf->mConSetUsed == SEARCH_CONSET) &&
       imBuf->mLowDoseArea && !(skipExtra & 1);
@@ -1139,14 +1136,14 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
     }
 
     // Draw tilt axis if option set or when defining LD area on View
-    if (((bufferOK && mWinApp->mLowDoseDlg.m_iDefineArea > 0) || 
-      (mWinApp->mBufferManager->GetDrawTiltAxis() && 
-      (imBuf->mCaptured > 0 || imBuf->ImageWasReadIn() || 
-        imBuf->mCaptured == BUFFER_MONTAGE_OVERVIEW || 
-        imBuf->mCaptured == BUFFER_MONTAGE_PRESCAN || 
+    if (((bufferOK && mWinApp->mLowDoseDlg.m_iDefineArea > 0) ||
+      (mWinApp->mBufferManager->GetDrawTiltAxis() &&
+      (imBuf->mCaptured > 0 || imBuf->ImageWasReadIn() ||
+        imBuf->mCaptured == BUFFER_MONTAGE_OVERVIEW ||
+        imBuf->mCaptured == BUFFER_MONTAGE_PRESCAN ||
         imBuf->mCaptured == BUFFER_MONTAGE_CENTER) && !(skipExtra & 1))) &&
-      imBuf->mCamera >= 0 && (imBuf->mMagInd > 0 || 
-      (imBuf->GetTimeStamp(ix) && imBuf->GetAxisAngle(tempY) && ix > 116846126 && 
+      imBuf->mCamera >= 0 && (imBuf->mMagInd > 0 ||
+      (imBuf->GetTimeStamp(ix) && imBuf->GetAxisAngle(tempY) && ix > 116846126 &&
         (!imBuf->ImageWasReadIn() || imBuf->mWrittenByVersion >= 40100)))) {
       tempX = (float)(0.75 * B3DMIN(rect.Width(), rect.Height()));
       CPoint point = rect.CenterPoint();
@@ -1187,10 +1184,10 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
       if (processImg->GetTestCtfPixelSize())
         pixel = processImg->GetTestCtfPixelSize();
       boost = processImg->GetDrawExtraCtfRings() > 0 ? imBuf->mMaxRingFreq : 0.f;
-      processImg->DefocusFromPointAndZeros(0., 0, pixel, boost, &zeroRadii, defocus, 
+      processImg->DefocusFromPointAndZeros(0., 0, pixel, boost, &zeroRadii, defocus,
         imBuf->mCtfPhase);
       defocus = imBuf->mCtfFocus2;
-      processImg->DefocusFromPointAndZeros(0., 0, pixel, boost, &zeroRadii2, defocus, 
+      processImg->DefocusFromPointAndZeros(0., 0, pixel, boost, &zeroRadii2, defocus,
         imBuf->mCtfPhase);
       cenX = imBuf->mImage->getWidth() / 2.f;
       cenY = imBuf->mImage->getHeight() / 2.f;
@@ -1198,8 +1195,8 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
       // Dashed lines can only be drawn with thickness 1: no DPI scaling
       CPen pnDashPen (PS_DASHDOT, 1, RGB(255, 255, 0));
       for (int zr = 0; zr < (int)B3DMIN(zeroRadii.size(), zeroRadii2.size()); zr++)
-        DrawEllipse(&cdc, &pnDashPen, &rect, imBuf->mImage, cenX, cenY, 
-        zeroRadii[zr] * cenX, zeroRadii2[zr] * cenX, imBuf->mCtfAngle, 
+        DrawEllipse(&cdc, &pnDashPen, &rect, imBuf->mImage, cenX, cenY,
+        zeroRadii[zr] * cenX, zeroRadii2[zr] * cenX, imBuf->mCtfAngle,
         zr >= processImg->GetNumFFTZeros());
 
 
@@ -1213,7 +1210,7 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
       // drawing to a buffer
       CPen pnDashPen (PS_DASHDOT, 1, RGB(0, 255, 0));
       for (int zr = 0; zr < (int)zeroRadii.size(); zr++)
-        DrawCircle(&cdc, &pnDashPen, &rect, imBuf->mImage, cenX, cenY, 
+        DrawCircle(&cdc, &pnDashPen, &rect, imBuf->mImage, cenX, cenY,
         zeroRadii[zr] * cenX);
 
   // Otherwise Draw circle on Live FFT
@@ -1226,14 +1223,14 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
       cenY = imBuf->mImage->getHeight() / 2.f;
       CPen pnDashPen (PS_DASHDOT, 1, RGB(0, 255, 0));
       if (defocus > 0 && pixel > 0.) {
-        processImg->DefocusFromPointAndZeros(0., 0, pixel, 0., &zeroRadii, 
+        processImg->DefocusFromPointAndZeros(0., 0, pixel, 0., &zeroRadii,
           defocus);
         for (int zr = 0; zr < (int)zeroRadii.size(); zr++)
-          DrawCircle(&cdc, &pnDashPen, &rect, imBuf->mImage, cenX, cenY, 
+          DrawCircle(&cdc, &pnDashPen, &rect, imBuf->mImage, cenX, cenY,
             zeroRadii[zr] * cenX);
       } else {
         for (int ir = 0; ir < processImg->GetNumCircles(); ir++)
-          DrawCircle(&cdc, &pnDashPen, &rect, imBuf->mImage, cenX, cenY, radii[ir] * 
+          DrawCircle(&cdc, &pnDashPen, &rect, imBuf->mImage, cenX, cenY, radii[ir] *
             cenX);
       }
   }
@@ -1241,13 +1238,13 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
   // Scale bar if window big enough
   if (scaleCrit > 0 && rect.Width() >= scaleCrit && !(skipExtra & 4) &&
     imBuf->mCamera >= 0 && imBuf->mMagInd && imBuf->mBinning && (!imBuf->IsProcessed()
-      || imBuf->mCaptured == BUFFER_PROCESSED) && mDoingMontSnapshot != 1 && 
-    (imBuf->mCaptured != 0 || (!imBuf->mCaptured && imBuf->GetSaveCopyFlag() >= 0)) && 
+      || imBuf->mCaptured == BUFFER_PROCESSED) && mDoingMontSnapshot != 1 &&
+    (imBuf->mCaptured != 0 || (!imBuf->mCaptured && imBuf->GetSaveCopyFlag() >= 0)) &&
     imBuf->mCaptured != BUFFER_STACK_IMAGE)
     DrawScaleBar(&cdc, &rect, imBuf, sizeScaling);
 
   // Draw coma vs IS cal locations
-  if (imBuf->mCaptured != BUFFER_FFT && imBuf->mCaptured != BUFFER_LIVE_FFT && 
+  if (imBuf->mCaptured != BUFFER_FFT && imBuf->mCaptured != BUFFER_LIVE_FFT &&
     mWinApp->mNavHelper->mComaVsISCalDlg && imBuf->mLowDoseArea &&
     mWinApp->LowDoseMode() && imBuf->mBinning > 0 && imBuf->mCamera >= 0 &&
     IS_SET_VIEW_OR_SEARCH(imBuf->mConSetUsed)) {
@@ -1272,7 +1269,7 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
         mWinApp->mNavHelper->mComaVsISCalDlg->m_iRotation, ix, tempX, tempY);
       mShiftManager->TransferGeneralIS(ldp->magIndex, tempX, tempY,
         imBuf->mMagInd, transX, transY);
-      ApplyScaleMatrix(isToCam, (float)transX, (float)transY, 
+      ApplyScaleMatrix(isToCam, (float)transX, (float)transY,
         ptX, ptY);
       ptX /= (float)imBuf->mBinning;
       ptY /= (float)imBuf->mBinning;
@@ -1285,7 +1282,7 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
   }
 
   // Various tests for skipping navigator display
-  if (!itemArray || (skipExtra & 2) || (imBuf->GetUncroppedSize(ix, iy, &ierr) && 
+  if (!itemArray || (skipExtra & 2) || (imBuf->GetUncroppedSize(ix, iy, &ierr) &&
     ix > 0 && ierr < 1)) {
     if (itemArray)
       delete mAcquireBox;
@@ -1324,7 +1321,7 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
     limCornX.push_back(minLimX);
     limCornY.push_back(maxLimY);
     CPen *pOldPen = cdc.SelectObject(&pnDashPen);
-    DrawVectorPolygon(cdc, &rect, NULL, imBuf, limCornX, limCornY, 0., 0., 0., 0., NULL, 
+    DrawVectorPolygon(cdc, &rect, NULL, imBuf, limCornX, limCornY, 0., 0., 0., 0., NULL,
       NULL);
     cdc.SelectObject(pOldPen);
   }
@@ -1355,7 +1352,7 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
   mStageErrX = mStageErrY = 0.;
 
   // Draw hole finder points in two colors
-  if (!bufIsFFT && mWinApp->mNavHelper->mHoleFinderDlg->GetHolePositions(&xHoleCens, 
+  if (!bufIsFFT && mWinApp->mNavHelper->mHoleFinderDlg->GetHolePositions(&xHoleCens,
     &yHoleCens, &pieceOn, &holeExcludes, drawIncluded, drawExcluded)) {
     CPen pnIncludePen(PS_SOLID, thick2, includeColor);
     CPen pnLowExclPen(PS_SOLID, thick2, lowExcludeColor);
@@ -1414,7 +1411,7 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
   // Now draw navigator items
   float lastStageX, lastStageY, tiltAngle, acquireRadii[2], labelDistThresh = 40.;
   int lastGroupID = -1, lastGroupSize, size, numPoints, pieceDrawnOn;
-  int regMatch = imBuf->mRegistration ? 
+  int regMatch = imBuf->mRegistration ?
     imBuf->mRegistration : navigator->GetCurrentRegistration();
   std::set<int> *selectedItems = navigator->GetSelectedItems();
   bool highlight, draw, doInHole, drawSkips;
@@ -1479,8 +1476,8 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
     }
     thick = DSB_DPI_SCALE(thick);
 
-    if (!item->mNumPoints || (!item->mDraw && iDraw >= 0) || 
-      (item->mRegistration != regMatch && !mDrawAllReg && iDraw >= 0) || 
+    if (!item->mNumPoints || (!item->mDraw && iDraw >= 0) ||
+      (item->mRegistration != regMatch && !mDrawAllReg && iDraw >= 0) ||
       !BOOL_EQUIV(bufIsFFT, (item->mFlags & NAV_FLAG_DRAWN_ON_FFT) != 0))
       continue;
     pieceDrawnOn = (imBuf->mMapID && item->mDrawnOnMapID == imBuf->mMapID) ?
@@ -1500,7 +1497,7 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
       StageToImage(imBuf, item->mPtX[0], item->mPtY[0], ptX, ptY, pieceDrawnOn);
 
       // Draw low dose areas around current point
-      if (mDrewLDAreasAtNavPt && (iDraw < 0 || 
+      if (mDrewLDAreasAtNavPt && (iDraw < 0 ||
         ((item->mAcquire || item->mTSparamIndex >= 0) && navigator->m_bShowAcquireArea))){
         cenX = imBuf->mImage->getWidth() / 2.f;
         cenY = imBuf->mImage->getHeight() / 2.f;
@@ -1520,7 +1517,7 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
 
       // For a map, find the adjust that applies to the center, turn off adjustment for
       // the corner points, and adjust them all by the center adjustment to get a square
-      if (item->IsMap() || (iDraw < 0 && !useMultiShot && !imBuf->mHasUserPt) || 
+      if (item->IsMap() || (iDraw < 0 && !useMultiShot && !imBuf->mHasUserPt) ||
         (item->IsPolygon() && item->mGroupID))
         GetSingleAdjustmentForItem(imBuf, item, delPtX, delPtY);
 
@@ -1534,7 +1531,7 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
         if (polygon && polygon->mDraw > 0) {
           CPen pnDashPen(PS_DASHDOT, 1, polygon->GetColor(false));
           cdc.SelectObject(&pnDashPen);
-          DrawMapItemBox(cdc, &rect, polygon, imBuf, polygon->mNumPoints, 
+          DrawMapItemBox(cdc, &rect, polygon, imBuf, polygon->mNumPoints,
             item->mStageX - polygon->mStageX, item->mStageY - polygon->mStageY,
             delPtX, delPtY, NULL, NULL);
           cdc.SelectObject(&pnSolidPen);
@@ -1545,7 +1542,7 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
       if (iDraw < 0 && useMultiShot && !mWinApp->mNavHelper->mComaVsISCalDlg) {
         float holeXoffset = 0, holeYoffset = 0;
         int inHoleEnd = item->mNumPoints - 2;
-        int inHoleStart = inHoleEnd - B3DCHOICE(doInHole, msParams->numShots[0] + 
+        int inHoleStart = inHoleEnd - B3DCHOICE(doInHole, msParams->numShots[0] +
           (msParams->doSecondRing ? msParams->numShots[1] : 0) , 0);
         GetSingleAdjustmentForItem(imBuf, item, delPtX, delPtY);
 
@@ -1556,9 +1553,9 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
 
           // Draw rectangles in the off-center positions, then center if needed
           for (int pt = inHoleStart; pt < inHoleEnd; pt++)
-            DrawMapItemBox(cdc, &rect, item, imBuf, numPoints, 
-              item->mPtX[pt] - item->mStageX + holeXoffset, 
-              item->mPtY[pt] - item->mStageY + holeYoffset, delPtX, delPtY, 
+            DrawMapItemBox(cdc, &rect, item, imBuf, numPoints,
+              item->mPtX[pt] - item->mStageX + holeXoffset,
+              item->mPtY[pt] - item->mStageY + holeYoffset, delPtX, delPtY,
               &drawnXinHole, &drawnYinHole);
           if (msParams->doCenter)
             DrawMapItemBox(cdc, &rect, item, imBuf, numPoints, holeXoffset, holeYoffset,
@@ -1594,8 +1591,8 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
               item->mPtY[pt], delPtX, delPtY, &drawnXallHole, &drawnYallHole);
         } else if (doMultiHole) {
           for (int pt = numPoints; pt < inHoleStart - 1; pt++)
-            DrawVectorPolygon(cdc, &rect, item, imBuf, convXinHole, convYinHole, 
-            item->mPtX[pt], item->mPtY[pt], delPtX, delPtY, &drawnXallHole, 
+            DrawVectorPolygon(cdc, &rect, item, imBuf, convXinHole, convYinHole,
+            item->mPtX[pt], item->mPtY[pt], delPtX, delPtY, &drawnXallHole,
             &drawnYallHole);
         }
 
@@ -1621,7 +1618,7 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
         StageToImage(imBuf, item->mStageX, item->mStageY, cenX, cenY);
         for (int pt = item->mNumPoints - 2; pt < item->mNumPoints; pt++) {
           StageToImage(imBuf, item->mPtX[pt], item->mPtY[pt], ptX, ptY);
-          acquireRadii[pt + 2 - item->mNumPoints] = sqrtf((ptX - cenX) * (ptX - cenX) + 
+          acquireRadii[pt + 2 - item->mNumPoints] = sqrtf((ptX - cenX) * (ptX - cenX) +
             (ptY - cenY) * (ptY - cenY));
         }
         CPen circlePen(PS_SOLID, thick1, COLORREF(
@@ -1646,13 +1643,13 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
                 tempX = tempY;
               }
             }
-          } 
+          }
           for (int pt = numPoints; pt < inHoleStart; pt++) {
             if (pt == ix)
               continue;
-            StageToImage(imBuf, item->mPtX[pt] + item->mStageX, 
+            StageToImage(imBuf, item->mPtX[pt] + item->mStageX,
               item->mPtY[pt] + item->mStageY, ptX, ptY);
-            DrawCircle(&cdc, &circlePen, &rect, imBuf->mImage, ptX + delPtX, ptY + delPtY, 
+            DrawCircle(&cdc, &circlePen, &rect, imBuf->mImage, ptX + delPtX, ptY + delPtY,
               doInHole ? acquireRadii[1] : acquireRadii[0]);
             if (pt >= size - 1 && pt < inHoleStart - 1)
               pt = inHoleStart - 2;
@@ -1662,7 +1659,7 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
         // Inside a hole, circle around each area
         if (doInHole && item->mDraw) {
           for (int pt = inHoleStart; pt < inHoleEnd; pt++) {
-            StageToImage(imBuf, item->mPtX[pt] + holeXoffset, 
+            StageToImage(imBuf, item->mPtX[pt] + holeXoffset,
               item->mPtY[pt] + holeYoffset, ptX, ptY);
             DrawCircle(&cdc, &circlePen, &rect, imBuf->mImage, ptX + delPtX, ptY + delPtY,
               acquireRadii[0]);
@@ -1682,7 +1679,7 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
     if (iDraw >= 0 && item->mAcquire && item->mNumPoints == 1 && mAcquireBox &&
       (showMultiOnAll &&
       (!showOnlyCombined || (item->mNumXholes != 0 && item->mNumYholes != 0) ||
-        (checkUndos && 
+        (checkUndos &&
           mWinApp->mNavHelper->mCombineHoles->IsItemInUndoList(item->mMapID))) ||
         (showCurPtAcquire && highlight && doMultiHole))) {
       GetSingleAdjustmentForItem(imBuf, item, delPtX, delPtY);
@@ -1751,7 +1748,7 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
           delISY = specialFullISY;
           holeIndex = fullHoleIndex;
 
-          // Keep track of skipped holes 
+          // Keep track of skipped holes
           acquireXhole.clear();
           acquireYhole.clear();
           skippedX.clear();
@@ -1817,7 +1814,7 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
 
           if (!drawSkips) {
 
-            // Subtract acquire box center so it works for drawing in-hole points and 
+            // Subtract acquire box center so it works for drawing in-hole points and
             // item box using acquire box
             for (int hole = 0; hole < numSpecHoles; hole++) {
               ptX = acquireXhole[hole] - mAcquireBox->mStageX;
@@ -1827,7 +1824,7 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
                   ptY, delPtX, delPtY, NULL, NULL);
               } else {
                 DrawMapItemBox(cdc, &rect, mAcquireBox, imBuf,
-                  B3DMIN(5, mAcquireBox->mNumPoints), ptX, ptY, delPtX, delPtY, NULL, 
+                  B3DMIN(5, mAcquireBox->mNumPoints), ptX, ptY, delPtX, delPtY, NULL,
                   NULL);
               }
             }
@@ -1842,11 +1839,11 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
         } else {
 
           // Otherwise,  the convex boundary of the ones being acquired
-          if (size > 2) 
+          if (size > 2)
             DrawVectorPolygon(cdc, &rect, item, imBuf, convXacquire, convYacquire,
               0., 0., delPtX, delPtY, NULL, NULL);
 
-          // Draw skipped points 
+          // Draw skipped points
           if (drawSkips) {
             CPen pnSkipped(PS_SOLID, thick1, RGB(0, 255, 255));
             cdc.SelectObject(&pnSkipped);
@@ -1878,7 +1875,7 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
       // point if the group is above the threshold size
       draw = true;
       if (groupThresh > 0 && !item->IsMap() && (iDraw < currentIndex - 2
-        || iDraw > currentIndex + 2 || item->mGroupID != currentGroup) && 
+        || iDraw > currentIndex + 2 || item->mGroupID != currentGroup) &&
         item->mGroupID > 0) {
         if (item->mGroupID == lastGroupID) {
           size = lastGroupSize;
@@ -1887,9 +1884,9 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
             firstLabel, lastLabel, ierr);
           lastGroupID = item->mGroupID;
         }
-        draw = size <= groupThresh || item->mLabel == firstLabel || 
+        draw = size <= groupThresh || item->mLabel == firstLabel ||
           item->mLabel == lastLabel || (iDraw > 0 && item->IsPoint() &&
-            sqrt(pow((double)lastStageX - item->mStageX, 2.) + 
+            sqrt(pow((double)lastStageX - item->mStageX, 2.) +
           pow((double)lastStageY - item->mStageY, 2.)) > labelDistThresh);
       }
       if (draw) {
@@ -1915,10 +1912,10 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
 }// end of  CSerialEMView::DrawImage
 
 
-// For drawing a map rectangle or other shape that should not be distorted by montage 
+// For drawing a map rectangle or other shape that should not be distorted by montage
 // adjusts at each point, get the adjustment, return it, and turn off further adjustments
 // for this item
-void CSerialEMView::GetSingleAdjustmentForItem(EMimageBuffer *imBuf, CMapDrawItem *item, 
+void CSerialEMView::GetSingleAdjustmentForItem(EMimageBuffer *imBuf, CMapDrawItem *item,
   float &delPtX, float &delPtY)
 {
   float ptX, ptY;
@@ -1933,8 +1930,8 @@ void CSerialEMView::GetSingleAdjustmentForItem(EMimageBuffer *imBuf, CMapDrawIte
 
 // Draw a box for a map item with a given stage offset from the item points and with a
 // common montage adjustment, potentially saving the points in vectors
-void CSerialEMView::DrawMapItemBox(CDC &cdc, CRect *rect, CMapDrawItem *item, 
-  EMimageBuffer *imBuf, int numPoints, float delXstage, float delYstage, float delPtX, 
+void CSerialEMView::DrawMapItemBox(CDC &cdc, CRect *rect, CMapDrawItem *item,
+  EMimageBuffer *imBuf, int numPoints, float delXstage, float delYstage, float delPtX,
   float delPtY, FloatVec *drawnX, FloatVec *drawnY)
 {
   CPoint point;
@@ -1960,7 +1957,7 @@ void CSerialEMView::DrawMapItemBox(CDC &cdc, CRect *rect, CMapDrawItem *item,
 // Draw a polygon from points in a vector, with the given adjustment to the stage
 // positions, a common montage adjustment, and potentially storing in more vectors
 void CSerialEMView::DrawVectorPolygon(CDC &cdc, CRect *rect, CMapDrawItem *item,
-  EMimageBuffer *imBuf, FloatVec &convX, FloatVec &convY, float delXstage,float delYstage, 
+  EMimageBuffer *imBuf, FloatVec &convX, FloatVec &convY, float delXstage,float delYstage,
   float delPtX, float delPtY, FloatVec *drawnX, FloatVec *drawnY)
 {
   CPoint point;
@@ -1986,7 +1983,7 @@ void CSerialEMView::DrawVectorPolygon(CDC &cdc, CRect *rect, CMapDrawItem *item,
   }
 }
 
-void CSerialEMView::MakeDrawPoint(CRect *rect, KImage *image, float inX, float inY, 
+void CSerialEMView::MakeDrawPoint(CRect *rect, KImage *image, float inX, float inY,
                                   CPoint *point, bool skipShift)
 {
   float shiftX = 0., shiftY = 0.;
@@ -2003,10 +2000,10 @@ void CSerialEMView::MakeDrawPoint(CRect *rect, KImage *image, float inX, float i
 }
 
 // Draw Record and area being defined for low dose
-void CSerialEMView::DrawLowDoseAreas(CDC &cdc, CRect &rect, EMimageBuffer *imBuf, 
+void CSerialEMView::DrawLowDoseAreas(CDC &cdc, CRect &rect, EMimageBuffer *imBuf,
   float xOffset, float yOffset, int thick, int curInd, int recOnly)
 {
-  COLORREF areaColors[6] = {RGB(255, 255, 0), RGB(255, 0, 0), RGB(0, 255, 0), 
+  COLORREF areaColors[6] = {RGB(255, 255, 0), RGB(255, 0, 0), RGB(0, 255, 0),
     RGB(255, 255, 0), RGB(255, 128, 0), RGB(255, 0, 0)};
   float cornerX[4], cornerY[4], cenX, cenY, radius;
   CPoint point;
@@ -2014,7 +2011,7 @@ void CSerialEMView::DrawLowDoseAreas(CDC &cdc, CRect &rect, EMimageBuffer *imBuf
   int newInd;
   bool useDash = mDrewLDAreasAtNavPt && recOnly < 0;
   state.camIndex = mWinApp->GetCurrentCamera();
-  if (mWinApp->mNavigator && mWinApp->mNavigator->GetSingleSelectedItem(&newInd) && 
+  if (mWinApp->mNavigator && mWinApp->mNavigator->GetSingleSelectedItem(&newInd) &&
     (curInd == -1 || curInd == newInd) && recOnly < 0) {
     curInd = newInd;
     useDash = false;
@@ -2026,11 +2023,11 @@ void CSerialEMView::DrawLowDoseAreas(CDC &cdc, CRect &rect, EMimageBuffer *imBuf
     int area = mWinApp->mLowDoseDlg.DrawAreaOnView(type + (recOnly >= 0 ? 1 : 0), imBuf,
       state, cornerX, cornerY, cenX, cenY, radius);
     if (area) {
-      CPen pnSolidPen(useDash ? PS_DASHDOT : PS_SOLID, mDrewLDAreasAtNavPt ? 1 : thick, 
+      CPen pnSolidPen(useDash ? PS_DASHDOT : PS_SOLID, mDrewLDAreasAtNavPt ? 1 : thick,
         areaColors[(recOnly >= 0 ? recOnly : 0) + area - 1]);
       CPen *pOldPen = cdc.SelectObject(&pnSolidPen);
       for (int pt = 0; pt < 5; pt++) {
-        MakeDrawPoint(&rect, imBuf->mImage, cornerX[pt % 4] + xOffset, 
+        MakeDrawPoint(&rect, imBuf->mImage, cornerX[pt % 4] + xOffset,
           cornerY[pt % 4] + yOffset, &point, true);
         if (pt)
           cdc.LineTo(point);
@@ -2041,7 +2038,7 @@ void CSerialEMView::DrawLowDoseAreas(CDC &cdc, CRect &rect, EMimageBuffer *imBuf
 
       // Draw circle around center for area being defined
       if ((!type || recOnly >= 0) && !mWinApp->GetSTEMMode())
-        DrawCircle(&cdc, &pnSolidPen, &rect, imBuf->mImage, cenX + xOffset, 
+        DrawCircle(&cdc, &pnSolidPen, &rect, imBuf->mImage, cenX + xOffset,
           cenY + yOffset, radius, true);
     }
   }
@@ -2085,7 +2082,7 @@ void CSerialEMView::SetStageErrIfRealignedOnMap(EMimageBuffer *imBuf, CMapDrawIt
 }
 
 // External call to get image coordinates after setting it up with call above
-void CSerialEMView::GetItemImageCoords(EMimageBuffer *imBuf, CMapDrawItem *item, 
+void CSerialEMView::GetItemImageCoords(EMimageBuffer *imBuf, CMapDrawItem *item,
                                        float &outX, float &outY, int pcInd)
 {
   SetStageErrIfRealignedOnMap(imBuf, item);
@@ -2153,7 +2150,7 @@ void CSerialEMView::StageToImage(EMimageBuffer *imBuf, float inX, float inY, flo
     }
     if (minDist >= 1000000)
       return;
-  } 
+  }
 
   // Compute center distance before offsetting and rotating back
   if (pcCenDist) {
@@ -2178,8 +2175,8 @@ void CSerialEMView::StageToImage(EMimageBuffer *imBuf, float inX, float inY, flo
 
 // External call for one conversion needs to be supplied with the transformation, which
 // is stored, then it sets up montage adjustments and can call StageToImage
-void CSerialEMView::ExternalStageToImage(EMimageBuffer *imBuf, ScaleMat &aMat, 
-  float delX, float delY, float inX, float inY, float &outX, float &outY, 
+void CSerialEMView::ExternalStageToImage(EMimageBuffer *imBuf, ScaleMat &aMat,
+  float delX, float delY, float inX, float inY, float &outX, float &outY,
   float *pcCenDist, bool adjust)
 {
   mStageErrX = mStageErrY = 0.;
@@ -2273,13 +2270,13 @@ void CSerialEMView::DrawScaleBar(CDC *cdc, CRect *rect, EMimageBuffer *imBuf,
     return;
   pixsize = mShiftManager->GetPixelSize(imBuf);
 
-  // Get minimum length in units, then reduce that to number between 0 and 1.   
+  // Get minimum length in units, then reduce that to number between 0 and 1.
   minlen = pixsize * mScaleParams.minLength / mZoom;
   loglen = log10(minlen);
   expon = floor(loglen);
   normlen = pow(10., loglen - expon);
 
-  // If a custom length is specified, just use it; adjust by 10 either way      
+  // If a custom length is specified, just use it; adjust by 10 either way
   if (mScaleParams.useCustom) {
     custlen = mScaleParams.customVal / 10.;
     if (custlen < normlen)
@@ -2289,7 +2286,7 @@ void CSerialEMView::DrawScaleBar(CDC *cdc, CRect *rect, EMimageBuffer *imBuf,
     normlen = custlen;
   } else {
 
-    // Otherwise set to next higher standard number                             
+    // Otherwise set to next higher standard number
     if (normlen < 2.)
       normlen = 2.;
     else if (normlen < 5.)
@@ -2298,7 +2295,7 @@ void CSerialEMView::DrawScaleBar(CDC *cdc, CRect *rect, EMimageBuffer *imBuf,
       normlen = 10.;
   }
 
-  // Get real length then pixel length, starting points                         
+  // Get real length then pixel length, starting points
   truelen = (float)(normlen * pow(10., expon));
   pixlen = B3DNINT(truelen * mZoom / pixsize);
   xsize = mScaleParams.vertical ? mScaleParams.thickness : pixlen;
@@ -2350,17 +2347,17 @@ void CSerialEMView::b3dSetImageOffset(int winsize,     /* window size in wpixels
     *woff     = (int)(( winsize - (imsize * zoom)) / 2);
     *doff     = 0;
     *offset   = 0;  // NEW: eliminate the shift if it fits
-    
+
   }else{
     /* Draw sub image. */
     *woff = 0;
     *drawsize = (int)(((double)winsize) / zoom);
     *doff = (int)((imsize / 2 ) - (winsize / zoom / 2));
     *doff -= *offset;
-    
+
     /* Offset in lower corner. */
     if (*doff < 0){
-      
+
       /* maxborder. */
       int maxwoff = 0;     // was winsize/6;
       *woff = (int)(-(*doff) * zoom);
@@ -2370,7 +2367,7 @@ void CSerialEMView::b3dSetImageOffset(int winsize,     /* window size in wpixels
       *drawsize = (int)(((double)(winsize - (*woff))) / zoom);
       *offset   = (int)(((float)imsize*0.5f) -
         ((((float)winsize*0.5f) - (float)*woff)/(float)zoom));
-      
+
       /* try and fill corners. */
       if (*drawsize < (imsize-1)) (*drawsize)++;
       //PrintfToLog("ds do offset wo %d %d %d %d", *drawsize, *doff, *offset, *woff);
@@ -2378,12 +2375,12 @@ void CSerialEMView::b3dSetImageOffset(int winsize,     /* window size in wpixels
     }
     /* Offset in upper corner */
     if ( (*doff + *drawsize) > (imsize - 1)){
-      
+
       /* The minimum drawsize. */
       int minds = (int)((winsize * 1.0)/zoom);  // was * 0.8333333
-      
+
       *drawsize = imsize - *doff;
-      
+
       if (*drawsize < minds){
         *drawsize = minds;
         *doff     = imsize - *drawsize;
@@ -2391,7 +2388,7 @@ void CSerialEMView::b3dSetImageOffset(int winsize,     /* window size in wpixels
           (((float)winsize*0.5f)/(float)zoom) - 2.0f);
       }
       //PrintfToLog("ds do offset wo %d %d %d %d", *drawsize, *doff, *offset, *woff);
-      
+
       return;
     }
     if (*drawsize < (imsize-1)) (*drawsize)++;
@@ -2405,7 +2402,7 @@ double CSerialEMView::b3dStepPixelZoom(double czoom, int step)
   double *zv = zoomvals;
   int i=0;
   int zoomi;
-  
+
   if (mWinApp->mBufferManager->GetFixedZoomStep()) {
     if (step < 0) {
       if (czoom < zv[0])
@@ -2423,14 +2420,14 @@ double CSerialEMView::b3dStepPixelZoom(double czoom, int step)
     for(i = 0; i < MAXZOOMI; i++)
       if ((float)zv[i] > (float)czoom) break;
       zoomi = (i - 1) + step;
-      
+
   } else {
-    
+
     for(i = MAXZOOMI; i >= 0; i--)
       if ((float)zv[i] < (float)czoom) break;
       zoomi = (i + 1) + step;
   }
-  
+
   if (zoomi < 0) zoomi = 0;
   if (zoomi > MAXZOOMI) zoomi = MAXZOOMI;
   /* printf ("%f %d %d %f\n", czoom, step, zoomi, zv[zoomi]); */
@@ -2475,7 +2472,7 @@ void CSerialEMView::NewZoom()
     DrawImage();
   if (mImBufs[mImBufIndex].mImageScale)
     mWinApp->mImageLevel.NewZoom(mZoom);
-  
+
   // Set effective zoom unless it is a map
   binning = GetBufferBinning();
   if (binning > 0. && !mImBufs[mImBufIndex].mMapID) {
@@ -2497,7 +2494,7 @@ void CSerialEMView::NewZoom()
 
 // Left button down
 // Capture the mouse; save the current point
-void CSerialEMView::OnLButtonDown(UINT nFlags, CPoint point) 
+void CSerialEMView::OnLButtonDown(UINT nFlags, CPoint point)
 {
   SetCapture();
   m_iPrevMX = point.x;  // Integer values for panning
@@ -2545,18 +2542,18 @@ void CSerialEMView::OnRButtonDblClk(UINT nFlags, CPoint point)
   float shiftX, shiftY;
   if (!imBuf->mImage || (mWinApp->DoingTasks() && !mWinApp->GetJustNavAcquireOpen()) ||
     !mMainWindow || !(!mImBufIndex || (mImBufIndex == 1 && imBuf->IsMontageOverview() &&
-    (mWinApp->Montaging() || imBuf->mCaptured == BUFFER_PRESCAN_OVERVIEW))) || 
-    imBuf->mConSetUsed < 0 || 
+    (mWinApp->Montaging() || imBuf->mCaptured == BUFFER_PRESCAN_OVERVIEW))) ||
+    imBuf->mConSetUsed < 0 ||
     !BOOL_EQUIV(imBuf->mLowDoseArea, mWinApp->LowDoseMode()))
     return;
   GetClientRect(&rect);
   ConvertMousePoint(&rect, imBuf->mImage, &point, shiftX, shiftY);
-  mShiftManager->AcquireAtRightDoubleClick(mImBufIndex, shiftX, shiftY, 
+  mShiftManager->AcquireAtRightDoubleClick(mImBufIndex, shiftX, shiftY,
     GetAsyncKeyState(VK_SHIFT) / 2 != 0);
 }
 
 // Release mouse if it was captured by this window
-void CSerialEMView::OnLButtonUp(UINT nFlags, CPoint point) 
+void CSerialEMView::OnLButtonUp(UINT nFlags, CPoint point)
 {
   float shiftX, shiftY, angle, pixScale, crossLen;
   int imX, imY;
@@ -2574,7 +2571,7 @@ void CSerialEMView::OnLButtonUp(UINT nFlags, CPoint point)
     ReleaseCapture();
     if (mImBufs && !mPanning && !mDrawingLine &&
       SEMTickInterval(mMouseDownTime) <= USER_PT_CLICK_TIME && !mDoingResizeMove) {
-      
+
       // If the up event is within the click time and we haven't started panning,
       // get the user point and redraw
       imBuf = &mImBufs[mImBufIndex];
@@ -2590,15 +2587,15 @@ void CSerialEMView::OnLButtonUp(UINT nFlags, CPoint point)
 
       // Navigator gets first crack if it is either a legal point or a valid hit for
       // selection
-      if (!mNavUsedLastLButtonUp && ((!mDrewLDAreasAtNavPt || (!shiftKey && ctrlKey)) && 
+      if (!mNavUsedLastLButtonUp && ((!mDrewLDAreasAtNavPt || (!shiftKey && ctrlKey)) &&
         mWinApp->mNavigator &&
         (legal || (!shiftKey && (ctrlKey || mWinApp->mNavigator->InEditMode())) ||
         (shiftKey && mWinApp->mNavigator->InEditMode()))))
           mNavUsedLastLButtonUp = mWinApp->mNavigator->UserMousePoint(imBuf, shiftX,
             shiftY, mPointNearImageCenter, VK_LBUTTON);
       if (legal && !mNavUsedLastLButtonUp) {
-          
-        // If the point is legal and was not used by navigator, commit it and output 
+
+        // If the point is legal and was not used by navigator, commit it and output
         // stats.  But first see if low dose needs to snap it to axis and act on it
         mWinApp->mLowDoseDlg.UserPointChange(shiftX, shiftY, imBuf);
         if ((mMainWindow || mFFTWindow) && !imBuf->mCtfFocus1)
@@ -2610,13 +2607,13 @@ void CSerialEMView::OnLButtonUp(UINT nFlags, CPoint point)
         imBuf->mUserPtX = shiftX;
         imBuf->mUserPtY = shiftY;
         mWinApp->mLowDoseDlg.Update();
-        if ((mMainWindow || mFFTWindow) && 
+        if ((mMainWindow || mFFTWindow) &&
           processImg->GetFFTZeroRadiiAndDefocus(imBuf, &radii, defocus)) {
             lenstr.Format("Defocus -%.2f um", defocus);
             imBuf->mCtfFocus1 = 0.;
             imX = 0;
             if (processImg->GetCtffindOnClick() &&
-              !mWinApp->mCamera->DoingContinuousAcquire()) { 
+              !mWinApp->mCamera->DoingContinuousAcquire()) {
               imX = FitCtfAtMarkedPoint(imBuf, lenstr, defocus, radii);
             }
             if (processImg->GetPlatePhase() > 0.001 || imX > 0)
@@ -2686,7 +2683,7 @@ void CSerialEMView::OnLButtonUp(UINT nFlags, CPoint point)
       // If we were panning and suspended antialias drawing, do antialias draw now
       mPanning = false;
       DrawImage();
-    } 
+    }
     mPanning = false;
   }
   CView::OnLButtonUp(nFlags, point);
@@ -2733,7 +2730,7 @@ int CSerialEMView::FitCtfAtMarkedPoint(EMimageBuffer *imBuf, CString &lenstr,
     astigPhase = 0;
   }
 
-  // Assumed phase is stored in radians, passed here in radians and 
+  // Assumed phase is stored in radians, passed here in radians and
   // the params to ctffind are in radians
   if (processImg->GetPlatePhase() > 0.001 || processImg->GetCtfFindPhaseOnClick()) {
     param.minimum_additional_phase_shift =
@@ -2862,7 +2859,7 @@ int CSerialEMView::FitCtfAtMarkedPoint(EMimageBuffer *imBuf, CString &lenstr,
 }
 
 // Convert a mouse point to an image coordinate, returning true if it is inside image
-BOOL CSerialEMView::ConvertMousePoint(CRect *rect, KImage *image, CPoint *point, 
+BOOL CSerialEMView::ConvertMousePoint(CRect *rect, KImage *image, CPoint *point,
                                       float &outX, float &outY)
 {
   float shiftX, shiftY;
@@ -2871,7 +2868,7 @@ BOOL CSerialEMView::ConvertMousePoint(CRect *rect, KImage *image, CPoint *point,
     return false;
 
   // The problem is that we want the point coordinates to be with inverted Y
-  // while the border-start (Src-Dest) equations are written in terms of 
+  // while the border-start (Src-Dest) equations are written in terms of
   // non-inverted coordinate system.  Thus, need to invert the Y mouse, compute and scale
   // offset and invert back.  Inversion of integer mouse coordinates uses height - 1,
   // but inversion of floating image coords uses height because they range from 0-height
@@ -2905,7 +2902,7 @@ void CSerialEMView::WindowCornersInImageCoords(EMimageBuffer *imBuf, float *xCor
 }
 
 // Middle button down: zoom up if control, or add a point in edit mode
-void CSerialEMView::OnMButtonDown(UINT nFlags, CPoint point) 
+void CSerialEMView::OnMButtonDown(UINT nFlags, CPoint point)
 {
   float shiftX, shiftY, pixel;
   EMimageBuffer *imBuf;
@@ -2922,11 +2919,11 @@ void CSerialEMView::OnMButtonDown(UINT nFlags, CPoint point)
     imBuf = &mImBufs[mImBufIndex];
     legal = ConvertMousePoint(&rect, imBuf->mImage, &point, shiftX, shiftY);
     isFFT = imBuf->mCaptured == BUFFER_FFT || imBuf->mCaptured == BUFFER_LIVE_FFT;
-    if (ctrl && shifted && legal && mMainWindow && 
+    if (ctrl && shifted && legal && mMainWindow &&
       mWinApp->mNavHelper->mAutoContouringDlg->SinglePolygonMode() &&
       !mWinApp->DoingTasks()) {
       mWinApp->mNavHelper->mAutoContouringDlg->MakeSinglePolygon(imBuf, shiftX, shiftY);
-    } else if (legal && (isFFT || (mWinApp->mNavigator && 
+    } else if (legal && (isFFT || (mWinApp->mNavigator &&
       ((mWinApp->mNavigator->TakingMousePoints() && !shifted) || (shifted && !ctrl))))) {
       if (isFFT) {
         pixel = mShiftManager->GetPixelSize(imBuf);
@@ -2952,7 +2949,7 @@ void CSerialEMView::OnMButtonDown(UINT nFlags, CPoint point)
 // Right button down: zoom down if control
 // Otherwise, store values for image shifting, and either start a clock in edit mode
 // or just start shifting; notify shifter if this is the A buffer
-void CSerialEMView::OnRButtonDown(UINT nFlags, CPoint point) 
+void CSerialEMView::OnRButtonDown(UINT nFlags, CPoint point)
 {
   BOOL shiftKey = ::GetAsyncKeyState(VK_SHIFT) / 2 != 0;
   BOOL ctrlKey = ::GetAsyncKeyState(VK_CONTROL) / 2 != 0;
@@ -2977,7 +2974,7 @@ void CSerialEMView::OnRButtonDown(UINT nFlags, CPoint point)
 }
 
 // Right button up: notify shifter that it is time to shift, or do nav edit mode move
-void CSerialEMView::OnRButtonUp(UINT nFlags, CPoint point) 
+void CSerialEMView::OnRButtonUp(UINT nFlags, CPoint point)
 {
   float shiftX, shiftY;
   EMimageBuffer *imBuf;
@@ -2993,11 +2990,11 @@ void CSerialEMView::OnRButtonUp(UINT nFlags, CPoint point)
         imBuf = &mImBufs[mImBufIndex];
         GetClientRect(&rect);
         if (ConvertMousePoint(&rect, imBuf->mImage, &point, shiftX, shiftY)) {
-          mWinApp->mNavigator->UserMousePoint(imBuf, shiftX, shiftY, 
+          mWinApp->mNavigator->UserMousePoint(imBuf, shiftX, shiftY,
             mPointNearImageCenter, VK_RBUTTON);
           DrawImage();
         }
-  
+
     }
   }
 
@@ -3005,7 +3002,7 @@ void CSerialEMView::OnRButtonUp(UINT nFlags, CPoint point)
 }
 
 // Mouse move: process many situations
-void CSerialEMView::OnMouseMove(UINT nFlags, CPoint point) 
+void CSerialEMView::OnMouseMove(UINT nFlags, CPoint point)
 {
   int iDx, iDy, pDx, pDy;
   double zoomFac = mZoom < 1 ? mZoom : 1.;
@@ -3029,10 +3026,10 @@ void CSerialEMView::OnMouseMove(UINT nFlags, CPoint point)
       // underway or the change is big enough or enough time has passed, then shift
       iDx = (int) floor((point.x - m_dPrevMX) / mZoom + 0.5);
       iDy = (int) floor((point.y - m_dPrevMY) / mZoom + 0.5);
-      if ((iDx || iDy) && (mMouseShifting || 
-        (mWinApp->mNavigator && mWinApp->mNavigator->TakingMousePoints() && 
+      if ((iDx || iDy) && (mMouseShifting ||
+        (mWinApp->mNavigator && mWinApp->mNavigator->TakingMousePoints() &&
         SEMTickInterval(mMouseDownTime) > USER_PT_CLICK_TIME) ||
-        iDx < -PAN_THRESH || iDx > PAN_THRESH || 
+        iDx < -PAN_THRESH || iDx > PAN_THRESH ||
         iDy < -PAN_THRESH || iDy > PAN_THRESH)) {
           if (mMainWindow) {
             if (!mMouseShifting) {
@@ -3048,7 +3045,7 @@ void CSerialEMView::OnMouseMove(UINT nFlags, CPoint point)
           m_dPrevMX += iDx * mZoom;
           m_dPrevMY += iDy * mZoom;
       }
-    
+
     } else {
 
       // Pan 1:1 with image for zooms below 1, and 1:1 with pixels for zooms above 1
@@ -3062,8 +3059,8 @@ void CSerialEMView::OnMouseMove(UINT nFlags, CPoint point)
       // has already started, or click time is expired, or the move is greater
       // than a threshold
       if ((iDx || iDy) && (mPanning || mDrawingLine || dragSelect || changeBoxOrLine ||
-        GetTickCount() - mMouseDownTime > USER_PT_CLICK_TIME || 
-        pDx < -PAN_THRESH || pDx > PAN_THRESH || 
+        GetTickCount() - mMouseDownTime > USER_PT_CLICK_TIME ||
+        pDx < -PAN_THRESH || pDx > PAN_THRESH ||
         pDy < -PAN_THRESH || pDy > PAN_THRESH)) {
 
         // Start or continue panning if panning already or no shift key
@@ -3075,7 +3072,7 @@ void CSerialEMView::OnMouseMove(UINT nFlags, CPoint point)
           m_iPrevMX += B3DNINT(zoomFac * iDx);
           m_iPrevMY -= B3DNINT(zoomFac * iDy);
           DrawImage();
-        } else if (ConvertMousePoint(&rect, imBuf->mImage, &point, shiftX, shiftY) || 
+        } else if (ConvertMousePoint(&rect, imBuf->mImage, &point, shiftX, shiftY) ||
           dragSelect) {
 
           if (dragSelect) {
@@ -3087,7 +3084,7 @@ void CSerialEMView::OnMouseMove(UINT nFlags, CPoint point)
               mWinApp->mNavigator->MouseDragSelectPoint(imBuf, shiftX, shiftY, crossLen);
 
             // Otherwise start or continue drawing a line if point is within image
-          } else if (!mDrawingLine && !(imBuf->mCaptured == BUFFER_FFT || 
+          } else if (!mDrawingLine && !(imBuf->mCaptured == BUFFER_FFT ||
             imBuf->mCaptured == BUFFER_LIVE_FFT) && !changeBoxOrLine) {
             CPoint prev(m_iPrevMX, m_iPrevMY);
             if (!ConvertMousePoint(&rect, imBuf->mImage, &prev, prevX, prevY)) {
@@ -3167,16 +3164,16 @@ void CSerialEMView::OnMouseMove(UINT nFlags, CPoint point)
               GetUserBoxSize(imBuf, iDx, iDy, shiftX, shiftY);
               if (shiftX) {
                 pixScale = B3DMIN(shiftX, shiftY) >= 1000. ? 0.001f : 1.f;
-                lenstr.Format("%d x %d: " + mWinApp->PixelFormat(shiftX, pixScale) + 
-                  " x " + mWinApp->PixelFormat(shiftY, pixScale), iDx, iDy, 
+                lenstr.Format("%d x %d: " + mWinApp->PixelFormat(shiftX, pixScale) +
+                  " x " + mWinApp->PixelFormat(shiftY, pixScale), iDx, iDy,
                   shiftX * pixScale, shiftY * pixScale);
               } else
                 lenstr.Format("%d x %d pixels", iDx, iDy);
             } else {
               GetLineLength(imBuf, shiftX, shiftY, angle);
-              if (shiftY) { 
+              if (shiftY) {
                 pixScale = shiftY >= 1000. ? 0.001f : 1.f;
-                lenstr.Format("%.1f pix, " + mWinApp->PixelFormat(shiftY, pixScale) + 
+                lenstr.Format("%.1f pix, " + mWinApp->PixelFormat(shiftY, pixScale) +
                   " at %.1f deg", shiftX, shiftY * pixScale, angle);
               } else
                 lenstr.Format("%.1f pix at %.1f deg", shiftX, angle);
@@ -3189,7 +3186,7 @@ void CSerialEMView::OnMouseMove(UINT nFlags, CPoint point)
     }
 
   // If not a specific action, do continuous update in complex pane
-  } else if (!mWinApp->DoingComplexTasks() || !mWinApp->DoingTasks() || 
+  } else if (!mWinApp->DoingComplexTasks() || !mWinApp->DoingTasks() ||
     mWinApp->GetJustChangingLDarea() || mWinApp->GetJustDoingSynchro()) {
     EMimageBuffer *imBuf = &mImBufs[mImBufIndex];
     CRect rect;
@@ -3199,11 +3196,11 @@ void CSerialEMView::OnMouseMove(UINT nFlags, CPoint point)
     if (ConvertMousePoint(&rect, imBuf->mImage, &point, shiftX, shiftY)) {
       imX = (int)shiftX;
       imY = (int)shiftY;
-      ShowImageValue(imBuf->mImage, imX, imY, 
+      ShowImageValue(imBuf->mImage, imX, imY,
         !mWinApp->DoingComplexTasks() ? COMPLEX_PANE : MEDIUM_PANE);
     }
   }
-  
+
   CView::OnMouseMove(nFlags, point);
 }
 
@@ -3264,12 +3261,12 @@ BOOL CSerialEMView::OnMouseWheel(UINT nFlags, short zDelta, CPoint pt)
 
      // Leave the difference pending and skip if at end of range
     mWheelDeltaPending -= numClicks * WHEEL_DELTA;
-    if ((mZoom <= zoomvals[0] && step * deltaSign < 0) || 
+    if ((mZoom <= zoomvals[0] && step * deltaSign < 0) ||
       (mZoom >= zoomvals[MAXZOOMI] && step * deltaSign > 0)) {
       mWheelDeltaPending = 0;
       return true;
     }
- 
+
     // Determine next step and previous one and make a zoom change that will give full
     // step in given number of clicks
     stepZoom = b3dStepPixelZoom(mZoom, step * deltaSign);
@@ -3287,7 +3284,7 @@ BOOL CSerialEMView::OnMouseWheel(UINT nFlags, short zDelta, CPoint pt)
 BOOL CSerialEMView::OnSetCursor(CWnd* pWnd, UINT nHitTest, UINT message)
 {
   LPSTR cursors[6] = {IDC_ARROW, IDC_SIZEALL, IDC_SIZENESW, IDC_SIZEWE,
-    IDC_SIZENS, IDC_SIZENWSE};  
+    IDC_SIZENS, IDC_SIZENWSE};
   mLastCursorType = GetMoveOrSizeCursorIndex();
   ::SetCursor(mWinApp->LoadStandardCursor(cursors[mLastCursorType]));
   return true;
@@ -3378,7 +3375,7 @@ int CSerialEMView::GetMoveOrSizeCursorIndex()
 
 #define VK_MINUS 189
 #define VK_EQUALS 187
-void CSerialEMView::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags) 
+void CSerialEMView::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
 {
   int iTrial, iDir, iBuf;
   float arrowInc = mWinApp->mRemoteControl.GetBeamIncrement();
@@ -3433,12 +3430,12 @@ void CSerialEMView::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
 
     // Change percent C2 with Ctrl arrow keys and increment with Ctrl , .
   } else if (mCtrlPressed && (nChar == VK_UP || nChar == VK_DOWN)) {
-    mWinApp->mRemoteControl.ChangeIntensityByIncrement(39 - nChar); 
+    mWinApp->mRemoteControl.ChangeIntensityByIncrement(39 - nChar);
 
   } else if ((ctrl && !shift) && (nChar == VK_OEM_COMMA || nChar == VK_OEM_PERIOD)) {
     brightInc *= (nChar == VK_OEM_COMMA ? 0.707107f : 1.414214f);
     mWinApp->mRemoteControl.SetIntensityIncrement(brightInc);
-     
+
     // If navigator open let arrows be used to move in list
   } else if (mWinApp->mNavigator && (nChar == VK_UP || nChar == VK_DOWN)) {
     mWinApp->mNavigator->MoveListSelection(nChar == VK_UP ? -1 : 1);
@@ -3523,7 +3520,7 @@ void CSerialEMView::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
     mWinApp->mLowDoseDlg.ToggleBlankWhenDown();
 
   // Start/stop movie in stack window, adjust speed
-  } else if (nChar == 'M' && ctrl && shift && 
+  } else if (nChar == 'M' && ctrl && shift &&
     (mWinApp->mStackView || mWinApp->mLastStackView)) {
     ToggleStackMovie();
   } else if (nChar == VK_OEM_PERIOD && ctrl && shift) {
@@ -3531,7 +3528,7 @@ void CSerialEMView::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
   } else if (nChar == VK_OEM_COMMA && ctrl && shift) {
     ChangeMovieInterval(1.414214f);
   }
-    
+
 
   CView::OnKeyDown(nChar, nRepCnt, nFlags);
 }
@@ -3541,12 +3538,12 @@ void CSerialEMView::OnSysKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
 {
   char cChar = char(nChar);
   SEMTrace('k', "SysKey code %u, char %c", nChar, cChar);
-  if (nChar != VK_MENU || 
+  if (nChar != VK_MENU ||
     (!mWinApp->DoingTasks() && !(mWinApp->mCamera && mWinApp->mCamera->CameraBusy())))
     CView::OnSysKeyDown(nChar, nRepCnt, nFlags);
 }
 
-void CSerialEMView::OnKeyUp(UINT nChar, UINT nRepCnt, UINT nFlags) 
+void CSerialEMView::OnKeyUp(UINT nChar, UINT nRepCnt, UINT nFlags)
 {
   bool ctrl = GetAsyncKeyState(VK_CONTROL) / 2 != 0;
   if (!BOOL_EQUIV(ctrl, mCtrlPressed))
@@ -3555,8 +3552,8 @@ void CSerialEMView::OnKeyUp(UINT nChar, UINT nRepCnt, UINT nFlags)
   CView::OnKeyUp(nChar, nRepCnt, nFlags);
 }
 
-void CSerialEMView::OnActivateView(BOOL bActivate, CView* pActivateView, 
-  CView* pDeactiveView) 
+void CSerialEMView::OnActivateView(BOOL bActivate, CView* pActivateView,
+  CView* pDeactiveView)
 {
   if (bActivate && !mWinApp->mMainFrame->GetClosingProgram()) {
     // Yes it can inform the App that it is in charge; also set scale
@@ -3573,7 +3570,7 @@ void CSerialEMView::OnActivateView(BOOL bActivate, CView* pActivateView,
 
 // Intercept the Erase Background messages and return TRUE to indicate that
 // no erasure is needed; we paint the whole window.
-BOOL CSerialEMView::OnEraseBkgnd(CDC* pDC) 
+BOOL CSerialEMView::OnEraseBkgnd(CDC* pDC)
 {
   return TRUE;
   // return CView::OnEraseBkgnd(pDC);
@@ -3594,7 +3591,7 @@ void CSerialEMView::NewImageScale()
 }
 
 // Resize to fit client area with borders - should only happen for main and FFT windows
-void CSerialEMView::ResizeToFit(int iBordLeft, int iBordTop, int iBordRight, 
+void CSerialEMView::ResizeToFit(int iBordLeft, int iBordTop, int iBordRight,
                 int iBordBottom, int useHalf)
 {
   CChildFrame *childFrame = (CChildFrame *)GetParent();
@@ -3605,7 +3602,7 @@ void CSerialEMView::ResizeToFit(int iBordLeft, int iBordTop, int iBordRight,
   useWidth = fullWidth = rect.Width() - iBordLeft - iBordRight;
   useLeft = rect.left + iBordLeft;
   if (useHalf)
-    useWidth = (int)(useWidth * 
+    useWidth = (int)(useWidth *
     (useHalf < -1 ? mWinApp->GetMainChansSplitFrac() : mWinApp->GetMainFFTsplitFrac()));
   if (useHalf > 0) {
     useLeft += useWidth;
@@ -3658,11 +3655,11 @@ void CSerialEMView::OnSize(UINT nType, int cx, int cy)
     for (int ind = 0; ind < MAX_BUFFERS; ind++)
       mImBufs[ind].mZoom *= xRatio;
   }
-  
+
   // Report a resize event so borders and multi-window sizes can be adjusted, but not
   // if this is the final resize after such adjustments
   if (!mResizingToFit && (mMainWindow || mFFTWindow || mMultiChanWindow >= 0) &&
-    !((mFFTWindow || mMultiChanWindow >= 0) && SEMTickInterval(mCreateTime) < 1000. && 
+    !((mFFTWindow || mMultiChanWindow >= 0) && SEMTickInterval(mCreateTime) < 1000. &&
       mFFTresizeCount < 3) && !mInResizeTask) {
     GetWindowRect(&rect);
     mInResize = true;
@@ -3748,10 +3745,10 @@ void CSerialEMView::SetCurrentBuffer(int inIndex)
     mWinApp->SetImBufIndex(mImBufIndex, mFFTWindow);
   NewImageScale();
   if (mMainWindow)
-    mWinApp->UpdateBufferWindows(); 
+    mWinApp->UpdateBufferWindows();
 }
 
-// The effective zoom is the zoom that would make a full-sized unbinned image from the 
+// The effective zoom is the zoom that would make a full-sized unbinned image from the
 // current camera fill the current window size
 void CSerialEMView::FindEffectiveZoom()
 {
@@ -3819,7 +3816,7 @@ void CSerialEMView::FindEffectiveZoom()
 }
 
 // Get the binning of the buffer to use when multiplying by effective zoom, which may or
-// may not be based on effective binning, and is adjusted by ratio between original 
+// may not be based on effective binning, and is adjusted by ratio between original
 // camera basis size and size of current camera
 float CSerialEMView::GetBufferBinning()
 {
@@ -3827,7 +3824,7 @@ float CSerialEMView::GetBufferBinning()
   EMimageBuffer *imBuf = &mImBufs[mImBufIndex];
   int iCam = imBuf->mCamera < 0 ? mWinApp->GetCurrentCamera() : imBuf->mCamera;
   CameraParameters *camP = mWinApp->GetCamParams();
-  bool useEffective = imBuf->IsMontageOverview() || 
+  bool useEffective = imBuf->IsMontageOverview() ||
     imBuf->mCaptured == BUFFER_AUTOCOR_OVERVIEW ||
     (mWinApp->mNavigator && mWinApp->mNavigator->ImBufIsImportedMap(imBuf)) ||
     (imBuf->mCamera && camP[iCam].STEMcamera && imBuf->mConSetUsed == FOCUS_CONSET &&
@@ -3953,7 +3950,7 @@ double CSerialEMView::BufferMemoryUsage(CPtrArray *refArray)
             byteSize = 4;
           size = byteSize * image->getWidth() * image->getHeight();
           sum += size;
-          /*SEMTrace('1', "buf %d iter %d ref %x type %d size %.2f", i, j, 
+          /*SEMTrace('1', "buf %d iter %d ref %x type %d size %.2f", i, j,
             image->getRefPtr(), type, size/1.e6); */
         }
       }
@@ -3996,7 +3993,7 @@ void CSerialEMView::GetLineLength(EMimageBuffer *imBuf, float &pixels, float &na
   double dy = imBuf->mUserPtY - imBuf->mLineEndY;
   float focusRot;
   pixels = (float)sqrt(dx * dx + dy * dy);
-  nanometers = (float)(1000. * mShiftManager->GetPixelSize(imBuf, &focusRot) * 
+  nanometers = (float)(1000. * mShiftManager->GetPixelSize(imBuf, &focusRot) *
     pixels);
   angle = 0.;
   if (pixels)
@@ -4065,7 +4062,7 @@ static VOID CALLBACK MovieProc(HWND hwnd, UINT uMsg, UINT_PTR idEvent, DWORD dwT
   }
   if (CSerialEMView::mNewMovieInterval) {
     CSerialEMView::KillMovieTimer();
-    CSerialEMView::mMovieTimerID = ::SetTimer(NULL, 1, CSerialEMView::mMovieInterval, 
+    CSerialEMView::mMovieTimerID = ::SetTimer(NULL, 1, CSerialEMView::mMovieInterval,
       MovieProc);
     CSerialEMView::mNewMovieInterval = false;
   }

@@ -10,6 +10,10 @@
 #include "MultiShotDlg.h"
 #include "StepAdjustISDlg.h"
 
+#if defined(_DEBUG) && defined(_CRTDBG_MAP_ALLOC)
+#define new DEBUG_NEW
+#endif
+
 
 // CStepAdjustISDlg dialog
 
@@ -95,7 +99,7 @@ BOOL CStepAdjustISDlg::OnInitDialog()
   mParam = mWinApp->mNavHelper->GetMultiShotParams();
   mOtherMagInd = mParam->stepAdjOtherMag;
   if (mOtherMagInd < 0)
-    mOtherMagInd = mParam->stepAdjLDarea == 2 ? ldp[RECORD_CONSET].magIndex - 1 : 
+    mOtherMagInd = mParam->stepAdjLDarea == 2 ? ldp[RECORD_CONSET].magIndex - 1 :
     mLowestM + 1;
   mDefocusOffset = mParam->stepAdjDefOffset;
   m_iAreaToUse = mParam->stepAdjLDarea;
@@ -117,7 +121,7 @@ BOOL CStepAdjustISDlg::OnInitDialog()
   m_sbcDefOffset.SetRange(0, 10000);
   m_sbcDefOffset.SetPos(5000);
   m_strDefOffset.Format("%d", mDefocusOffset);
-  str.Format("Mag where shifts were recorded, %dx", 
+  str.Format("Mag where shifts were recorded, %dx",
     MagForCamera(mWinApp->GetCurrentCamera(), mPrevMag));
   SetDlgItemText(IDC_STAA_PREV_MAG, str);
   mStartRoutine = false;

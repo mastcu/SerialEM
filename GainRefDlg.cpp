@@ -1,7 +1,6 @@
 // GainRefDlg.cpp:       To set parameters for taking gain references
 //
-// Copyright (C) 2003 by Boulder Laboratory for 3-Dimensional Electron 
-// Microscopy of Cells ("BL3DEMC") and the Regents of the University of
+// Copyright (C) 2003-2026 by the Regents of the University of
 // Colorado.  See Copyright.txt for full notice of copyright and limitations.
 //
 // Author: David Mastronarde
@@ -13,10 +12,8 @@
 #include "GainRefMaker.h"
 #include "EMscope.h"
 
-#ifdef _DEBUG
+#if defined(_DEBUG) && defined(_CRTDBG_MAP_ALLOC)
 #define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
 #endif
 
 #define FRAMES_MAX  100
@@ -98,25 +95,25 @@ END_MESSAGE_MAP()
 /////////////////////////////////////////////////////////////////////////////
 // CGainRefDlg message handlers
 
-void CGainRefDlg::OnKillfocusEditframes() 
+void CGainRefDlg::OnKillfocusEditframes()
 {
-  UpdateData(true); 
+  UpdateData(true);
   m_sbcFrames.SetPos(m_iFrames);
 }
 
-void CGainRefDlg::OnKillfocusEdittarget() 
+void CGainRefDlg::OnKillfocusEdittarget()
 {
-  UpdateData(true); 
+  UpdateData(true);
   m_sbcTarget.SetPos(m_iTarget);
 }
 
 // When binning changes, changes target by a factor of 4
-void CGainRefDlg::OnRadiobin() 
+void CGainRefDlg::OnRadiobin()
 {
   CSerialEMApp *winAp = (CSerialEMApp *)AfxGetApp();
   int oldBin = m_iBinning;
   float gainRatio = winAp->GetGainFactor(mCamera, 2) / winAp->GetGainFactor(mCamera, 1);
-  UpdateData(true); 
+  UpdateData(true);
   if (oldBin == m_iBinning)
     return;
   m_butCalDose.EnableWindow(m_iBinning < 2);
@@ -133,7 +130,7 @@ void CGainRefDlg::OnRadiobin()
 }
 
 // Change number of frames
-void CGainRefDlg::OnDeltaposSpinframes(NMHDR* pNMHDR, LRESULT* pResult) 
+void CGainRefDlg::OnDeltaposSpinframes(NMHDR* pNMHDR, LRESULT* pResult)
 {
   NM_UPDOWN* pNMUpDown = (NM_UPDOWN*)pNMHDR;
   UpdateData(true);
@@ -148,7 +145,7 @@ void CGainRefDlg::OnDeltaposSpinframes(NMHDR* pNMHDR, LRESULT* pResult)
 }
 
 // Change target as long as it stays in a legal range
-void CGainRefDlg::OnDeltaposSpintarget(NMHDR* pNMHDR, LRESULT* pResult) 
+void CGainRefDlg::OnDeltaposSpintarget(NMHDR* pNMHDR, LRESULT* pResult)
 {
   NM_UPDOWN* pNMUpDown = (NM_UPDOWN*)pNMHDR;
   int delta = pNMUpDown->iDelta;
@@ -167,9 +164,9 @@ void CGainRefDlg::OnDeltaposSpintarget(NMHDR* pNMHDR, LRESULT* pResult)
 }
 
 // Checkbox for calibrating dose
-void CGainRefDlg::OnCheckCalDose() 
+void CGainRefDlg::OnCheckCalDose()
 {
-  UpdateData(true);	
+  UpdateData(true);
 }
 
 // Checkbox for autosave DE frames
@@ -179,15 +176,15 @@ void CGainRefDlg::OnAutosaveRaw()
 }
 
 // Edit and spin box for averaging dark refs
-void CGainRefDlg::OnKillfocusGrEditaverage() 
+void CGainRefDlg::OnKillfocusGrEditaverage()
 {
   UpdateData(true);
   m_spinAverage.SetPos(m_iNumAverage);
 }
 
-void CGainRefDlg::OnDeltaposGrSpinaverage(NMHDR* pNMHDR, LRESULT* pResult) 
+void CGainRefDlg::OnDeltaposGrSpinaverage(NMHDR* pNMHDR, LRESULT* pResult)
 {
-  UpdateData(true);	
+  UpdateData(true);
 	NM_UPDOWN* pNMUpDown = (NM_UPDOWN*)pNMHDR;
   int newVal = m_iNumAverage + pNMUpDown->iDelta;
   if (newVal < 2 || newVal > MAX_DARK_AVERAGE) {
@@ -205,17 +202,17 @@ void CGainRefDlg::ManageExistLine()
   if (mRefExists[m_iBinning + mIndOffset])
     m_strExisting = "This new reference will replace an existing reference";
   else
-    m_strExisting.Format("There is no existing reference with binning %d", 
+    m_strExisting.Format("There is no existing reference with binning %d",
       mBinnings[m_iBinning + mIndOffset]);
   UpdateData(false);
 }
 
-BOOL CGainRefDlg::OnInitDialog() 
+BOOL CGainRefDlg::OnInitDialog()
 {
   CString title;
   CButton *radio;
   CBaseDlg::OnInitDialog();
-  
+
   // Make sure target and frame values are OK
   if (m_iTarget > TARGET_MAX)
     m_iTarget = TARGET_MAX;
@@ -229,7 +226,7 @@ BOOL CGainRefDlg::OnInitDialog()
   m_sbcFrames.SetPos(m_iFrames);
   m_sbcTarget.SetRange(0, TARGET_MAX / TARGET_INC + 10);
   m_sbcTarget.SetPos(m_iTarget);
- 
+
   m_spinAverage.SetRange(2, MAX_DARK_AVERAGE);
   m_spinAverage.SetPos(m_iNumAverage);
 

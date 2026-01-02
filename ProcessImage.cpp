@@ -1,9 +1,8 @@
 // ProcessImage.cpp:      Mostly has functions in the Process menu, also has
-//                          code for getting image means and for correcting 
+//                          code for getting image means and for correcting
 //                          image defects
 //
-// Copyright (C) 2003 by Boulder Laboratory for 3-Dimensional Electron 
-// Microscopy of Cells ("BL3DEMC") and the Regents of the University of
+// Copyright (C) 2003-2026 by the Regents of the University of
 // Colorado.  See Copyright.txt for full notice of copyright and limitations.
 //
 // Author: David Mastronarde
@@ -33,10 +32,8 @@
 #include "CtffindParamDlg.h"
 #include "ExternalTools.h"
 
-#ifdef _DEBUG
+#if defined(_DEBUG) && defined(_CRTDBG_MAP_ALLOC)
 #define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
 #endif
 
 #define KV_CHECK_SECONDS 60.
@@ -198,7 +195,7 @@ END_MESSAGE_MAP()
 /////////////////////////////////////////////////////////////////////////////
 // CProcessImage message handlers
 
-void CProcessImage::OnProcessMinmaxmean() 
+void CProcessImage::OnProcessMinmaxmean()
 {
   float min, max, mean, sd, pixel;
   int nx, ny, left, right, top, bottom;
@@ -207,7 +204,7 @@ void CProcessImage::OnProcessMinmaxmean()
   EMimageBuffer *imBuf = mWinApp->GetActiveNonStackImBuf();
   KImage *image = imBuf->mImage;
   CameraParameters *camP = mWinApp->GetCamParams() + imBuf->mCamera;
-  if (!image) 
+  if (!image)
     return;
   EMimageExtra *extra = (EMimageExtra *)image->GetUserData();
   nx = image->getWidth();
@@ -218,9 +215,9 @@ void CProcessImage::OnProcessMinmaxmean()
     right = (int)ceil((double)B3DMAX(imBuf->mUserPtX, imBuf->mLineEndX) - 1);
     top = (int)floor((double)B3DMIN(imBuf->mUserPtY, imBuf->mLineEndY) + 1);
     bottom = (int)ceil((double)B3DMAX(imBuf->mUserPtY, imBuf->mLineEndY) - 1);
-    ProcMinMaxMeanSD(image->getData(), image->getType(), nx, ny, left, right, top, 
+    ProcMinMaxMeanSD(image->getData(), image->getType(), nx, ny, left, right, top,
       bottom, &mean, &min, &max, &sd);
-    rep2.Format("  in %d x %d subarea, (%d,%d) to (%d,%d): ", right + 1 - left, 
+    rep2.Format("  in %d x %d subarea, (%d,%d) to (%d,%d): ", right + 1 - left,
       bottom + 1 - top, left, top, right, bottom);
   } else
     ProcMinMaxMeanSD(image->getData(), image->getType(), nx, ny, 0, nx - 1, 0, ny - 1,
@@ -235,22 +232,22 @@ void CProcessImage::OnProcessMinmaxmean()
   report += rep2;
 
   // Add the dose rate for a direct detector
-  if (imBuf->mCamera >= 0 && mCamera->IsDirectDetector(camP) &&  
+  if (imBuf->mCamera >= 0 && mCamera->IsDirectDetector(camP) &&
     !DoseRateFromMean(imBuf, mean, pixel)) {
-      sd = (float)(mean / (imBuf->mBinning * imBuf->mBinning * extra->mExposure / 
-        ((CamHasDoubledBinnings(camP) || 
+      sd = (float)(mean / (imBuf->mBinning * imBuf->mBinning * extra->mExposure /
+        ((CamHasDoubledBinnings(camP) ||
         (camP->DE_camType && (camP->CamFlags & DE_APOLLO_CAMERA))) ? 4. : 1.)));
-      rep2.Format("\r\n    %.3f electrons (%.2f counts) per physical pixel per second", 
+      rep2.Format("\r\n    %.3f electrons (%.2f counts) per physical pixel per second",
         pixel, sd);
       report += rep2;
   }
   mWinApp->AppendToLog(report, LOG_MESSAGE_IF_CLOSED);
 }
 
-void CProcessImage::OnUpdateProcessMinmaxmean(CCmdUI* pCmdUI) 
+void CProcessImage::OnUpdateProcessMinmaxmean(CCmdUI* pCmdUI)
 {
   EMimageBuffer *imBuf = mWinApp->GetActiveNonStackImBuf();
-  pCmdUI->Enable(imBuf->mImage != NULL && imBuf->mImage->getMode() == kGray);  
+  pCmdUI->Enable(imBuf->mImage != NULL && imBuf->mImage->getMode() == kGray);
 }
 
 // Set up the FFT with the given binning
@@ -287,36 +284,36 @@ void CProcessImage::GetFFT(EMimageBuffer *imBuf, int binning, int capFlag)
 
   image->Lock();
   BeginWaitCursor();
-  ProcFFT(image->getData(), image->getType(), nx, ny, binning, fftarray, brray, 
+  ProcFFT(image->getData(), image->getType(), nx, ny, binning, fftarray, brray,
     nPadSize, nFinalSize);
   image->UnLock();
   delete [] fftarray;
-  NewProcessedImage(imBuf, brray, kSHORT, nFinalSize, nFinalSize, binning, capFlag, 
+  NewProcessedImage(imBuf, brray, kSHORT, nFinalSize, nFinalSize, binning, capFlag,
     mSideBySideFFT);
   EndWaitCursor();
 }
 
 // Unbinned FFT
-void CProcessImage::OnProcessFft() 
+void CProcessImage::OnProcessFft()
 {
-  GetFFT(1, BUFFER_FFT);  
+  GetFFT(1, BUFFER_FFT);
 }
 
-void CProcessImage::OnUpdateProcess(CCmdUI* pCmdUI) 
+void CProcessImage::OnUpdateProcess(CCmdUI* pCmdUI)
 {
   EMimageBuffer *imBuf = mWinApp->GetActiveNonStackImBuf();
-  pCmdUI->Enable(imBuf->mImage && !mWinApp->DoingTasks());  
+  pCmdUI->Enable(imBuf->mImage && !mWinApp->DoingTasks());
 }
 
-void CProcessImage::OnUpdateProcessNoRGB(CCmdUI* pCmdUI) 
+void CProcessImage::OnUpdateProcessNoRGB(CCmdUI* pCmdUI)
 {
   EMimageBuffer *imBuf = mWinApp->GetActiveNonStackImBuf();
-  pCmdUI->Enable(imBuf->mImage && imBuf->mImage->getMode() == kGray && 
-    !mWinApp->DoingTasks());  
+  pCmdUI->Enable(imBuf->mImage && imBuf->mImage->getMode() == kGray &&
+    !mWinApp->DoingTasks());
 }
 
 // Bin to 1024 first, but limit binning to between 2 and 4
-void CProcessImage::OnProcessBinnedfft() 
+void CProcessImage::OnProcessBinnedfft()
 {
   int targetSize = 1024;
   EMimageBuffer *imBuf = mWinApp->GetActiveNonStackImBuf();
@@ -422,14 +419,14 @@ WINDOWPLACEMENT *CProcessImage::GetCtffindPlacement(void)
   return &mCtffindDlgPlace;
 }
 
-void CProcessImage::OnProcessRotateleft() 
+void CProcessImage::OnProcessRotateleft()
 {
-  RotateImage(true);  
+  RotateImage(true);
 }
 
-void CProcessImage::OnProcessRotateright() 
+void CProcessImage::OnProcessRotateright()
 {
-  RotateImage(false); 
+  RotateImage(false);
 }
 
 
@@ -459,7 +456,7 @@ void CProcessImage::RotateImage(BOOL bLeft)
     SEMMessageBox("Failed to get memory for rotated image", MB_EXCLAME);
     return;
   }
-  
+
   image->Lock();
   if (bLeft)
     ProcRotateLeft(image->getData(), type, nx, ny, brray);
@@ -485,12 +482,12 @@ int CProcessImage::FilterImage(EMimageBuffer *imBuf, int outBufNum, float sigma1
   float *brray;
   int newProc = imBuf->IsProcessedOKforMap() ? BUFFER_PROC_OK_FOR_MAP : -1;
   image->getSize(nx, ny);
-  
+
   err = FilterImage(image, &brray, sigma1, sigma2, radius1, radius2);
   if (err)
     return err;
 
-  // If the destination buffer has no image, copy the source first to keep 
+  // If the destination buffer has no image, copy the source first to keep
   // NewprocessedImage happy
   if (!mImBufs[outBufNum].mImage)
     mBufferManager->CopyImBuf(imBuf, &mImBufs[outBufNum], false);
@@ -500,7 +497,7 @@ int CProcessImage::FilterImage(EMimageBuffer *imBuf, int outBufNum, float sigma1
 }
 
 // Filter the image in the given KImage, allocating the output array
-int CProcessImage::FilterImage(KImage *image, float **outArray, float sigma1, 
+int CProcessImage::FilterImage(KImage *image, float **outArray, float sigma1,
   float sigma2, float radius1, float radius2)
 {
   int nx, ny, nxpad, nypad, nxdim, dir = 1;
@@ -668,7 +665,7 @@ int CProcessImage::CombineImages(int bufNum1, int bufNum2, int outBufNum, int op
 // by binned camera size)
 // otherScale and otherRotation are the high-defocus scaling and rotation to match
 // The IMOD-type transform is returned in xform
-int CProcessImage::TransformToOtherMag(EMimageBuffer *imBuf, int outBufNum, 
+int CProcessImage::TransformToOtherMag(EMimageBuffer *imBuf, int outBufNum,
   int magInd, CString &errStr, int camera, int binning, float xcen, float ycen, int xsize,
   int ysize, float otherScale, float otherRotation, float *xform)
 {
@@ -764,7 +761,7 @@ int CProcessImage::TransformToOtherMag(EMimageBuffer *imBuf, int outBufNum,
     cubYin = scaleYsize;
     err = selectZoomFilter(filtType, scaling, &width);
     if (err) {
-      errStr.Format("Error %d selecting  zoom filter type % for scaling %g", err, 
+      errStr.Format("Error %d selecting  zoom filter type % for scaling %g", err,
         filtType, scaling);
       return 1;
     }
@@ -810,7 +807,7 @@ int CProcessImage::TransformToOtherMag(EMimageBuffer *imBuf, int outBufNum,
     err = zoomFiltInterp(inArray, sclBuf, nx, ny, scaleXsize, scaleYsize,
         (float)(nx / 2.), (float)(ny / 2.), 0., 0., edgeMean);
     if (err) {
-      errStr.Format("Error %d from zoomFiltInterp to scale down image by %g", err, 
+      errStr.Format("Error %d from zoomFiltInterp to scale down image by %g", err,
         scaling);
     }
     inArray = sclBuf;
@@ -820,17 +817,17 @@ int CProcessImage::TransformToOtherMag(EMimageBuffer *imBuf, int outBufNum,
 
   // Apply interpolation for rotation and scaling up
   if (!err)
-    cubinterp(inArray, rotBuf, cubXin, cubYin, scaleXsize, scaleYsize, aMat, 
+    cubinterp(inArray, rotBuf, cubXin, cubYin, scaleXsize, scaleYsize, aMat,
       (float)(cubXin / 2.), (float)(cubYin / 2.), xfProd[4], xfProd[5], 1.f, edgeMean, 1);
   delete[] fltBuf;
   delete[] sclBuf;
   image->UnLock();
-  
+
   if (err) {
     delete[] rotBuf;
     return err;
   }
-  
+
   // Assign the buffer properties
   if (!mImBufs[outBufNum].mImage)
     mBufferManager->CopyImBuf(imBuf, &mImBufs[outBufNum], false);
@@ -847,8 +844,8 @@ int CProcessImage::TransformToOtherMag(EMimageBuffer *imBuf, int outBufNum,
 
 // Overloaded version that takes the other image buffer directly and supplies needed
 // values from it
-int CProcessImage::TransformToOtherMag(EMimageBuffer *imBuf, EMimageBuffer *otherBuf, 
-  int outBufNum, CString &errStr, float xcen, float ycen, int xsize, int ysize, 
+int CProcessImage::TransformToOtherMag(EMimageBuffer *imBuf, EMimageBuffer *otherBuf,
+  int outBufNum, CString &errStr, float xcen, float ycen, int xsize, int ysize,
   float *xform)
 {
   float otherScale = 1., otherRot = 0., axisAngle;
@@ -863,19 +860,19 @@ int CProcessImage::TransformToOtherMag(EMimageBuffer *imBuf, EMimageBuffer *othe
   // main routine will replace mag/camera value with this
   // Add rotate-on-load image rotation
   if (otherBuf->GetAxisAngle(axisAngle))
-    otherRot += axisAngle - (float)mShiftManager->GetImageRotation(otherBuf->mCamera, 
+    otherRot += axisAngle - (float)mShiftManager->GetImageRotation(otherBuf->mCamera,
       otherBuf->mMagInd);
   otherRot += otherBuf->mRotAngle;
   otherScale = (mShiftManager->GetPixelSize(otherBuf->mCamera, otherBuf->mMagInd) *
     (float)otherBuf->mBinning / otherScale) / mShiftManager->GetPixelSize(otherBuf);
-  return TransformToOtherMag(imBuf, outBufNum, otherBuf->mMagInd, errStr, 
+  return TransformToOtherMag(imBuf, outBufNum, otherBuf->mMagInd, errStr,
     mWinApp->LookupActiveCamera(otherBuf->mCamera), otherBuf->mBinning, xcen, ycen, xsize,
     ysize, otherScale, otherRot, xform);
 }
 
 // Multiply by a factor and add an offset to the image in imBuf, put in the indicated
 // output buffer, keeping the same type if retainType is true
-int CProcessImage::ScaleImage(EMimageBuffer *imBuf, int outBufNum, float factor, 
+int CProcessImage::ScaleImage(EMimageBuffer *imBuf, int outBufNum, float factor,
   float offset, bool retainType)
 {
   KImage *image = imBuf->mImage;
@@ -924,7 +921,7 @@ int CProcessImage::ScaleImage(EMimageBuffer *imBuf, int outBufNum, float factor,
 }
 
 // Copy two images into one side by side or top/bottom
-int CProcessImage::PasteImages(EMimageBuffer *imBuf1, EMimageBuffer *imBuf2, 
+int CProcessImage::PasteImages(EMimageBuffer *imBuf1, EMimageBuffer *imBuf2,
   int outBufNum, bool vertical)
 {
   EMimageBuffer copy1, copy2;
@@ -998,10 +995,10 @@ int CProcessImage::PasteImages(EMimageBuffer *imBuf1, EMimageBuffer *imBuf2,
   return 0;
 }
 
-// Common routine for putting a newly processed image based on the given buffer into 
+// Common routine for putting a newly processed image based on the given buffer into
 // buffer A or one specified by toBufNum
 void CProcessImage::NewProcessedImage(EMimageBuffer *imBuf, short *brray, int type,
-  int nx, int ny, double moreBinning, int capFlag, bool fftWindow, int toBufNum, 
+  int nx, int ny, double moreBinning, int capFlag, bool fftWindow, int toBufNum,
   bool display)
 {
   EMimageBuffer *toImBuf = B3DCHOICE(fftWindow, mWinApp->GetFFTBufs(), mImBufs) + toBufNum;
@@ -1094,7 +1091,7 @@ void CProcessImage::OnUpdateProcessCropimage(CCmdUI *pCmdUI)
 }
 
 // Crop the image in the given buffer given the inclusive coordinate limits
-int CProcessImage::CropImage(EMimageBuffer *imBuf, int top, int left, int bottom, 
+int CProcessImage::CropImage(EMimageBuffer *imBuf, int top, int left, int bottom,
   int right, bool display)
 {
   Islice slice;
@@ -1138,7 +1135,7 @@ int CProcessImage::CropImage(EMimageBuffer *imBuf, int top, int left, int bottom
   centered = fabs((left + right) / 2. - nx / 2.) < cenCrit &&
     fabs((top + bottom) / 2. - ny / 2.) < cenCrit;
   NewProcessedImage(imBuf, newsl->data.s, image->getType(), right + 1 - left,
-    bottom + 1 - top, 1, centered ? imBuf->mCaptured : BUFFER_PROCESSED, false, 0, 
+    bottom + 1 - top, 1, centered ? imBuf->mCaptured : BUFFER_PROCESSED, false, 0,
     display);
   free(newsl);
   extra = mImBufs->mImage->GetUserData();
@@ -1163,11 +1160,11 @@ void CProcessImage::OnProcessReduceimage()
     mReductionFactor, 1))
     return;
   mReductionFactor = B3DMAX(1.f, mReductionFactor);
-  
+
   ReduceImage(imBuf, mReductionFactor);
 }
 
-// Reduce the image in the given buffer by the given amount, returning an optional error 
+// Reduce the image in the given buffer by the given amount, returning an optional error
 // string or just putting up a message box
 int CProcessImage::ReduceImage(EMimageBuffer *imBuf, float factor, CString *errStr,
   int toBufInd, bool display)
@@ -1183,7 +1180,7 @@ int CProcessImage::ReduceImage(EMimageBuffer *imBuf, float factor, CString *errS
     "unsupported type of data",
     "failed to allocate memory for arrays",
     "error in zoomWithFilter"};
-  
+
   KImage *image = imBuf->mImage;
   if (errStr)
     *errStr = "";
@@ -1258,7 +1255,7 @@ int CProcessImage::ReduceImage(EMimageBuffer *imBuf, float factor, CString *errS
  * If the higher mag image is in A, xcen, ycen specify the point to align to in the lower
  * mag image; otherwise it is the center point of the image to extract from A for aligning
  * to the higher mag image, where the default is the center if values are negative
- * maxShiftUm is either the maximum shift in microns, in which correlation will be done 
+ * maxShiftUm is either the maximum shift in microns, in which correlation will be done
  * with a lower mag image big enough to allow full overlap at that shift if possible;
  * or it is the negative of the number of FOV (geometric mean size of higher mag image)
  * to add to the size of the higher mag image.
@@ -1268,7 +1265,7 @@ int CProcessImage::ReduceImage(EMimageBuffer *imBuf, float factor, CString *errS
  * doImShift true means to do the image shift
  * best scale and rotation are returned in scaleMax and rotation; error string in errStr
  */
-int CProcessImage::AlignBetweenMagnifications(int toBufNum, float xcen, float ycen, 
+int CProcessImage::AlignBetweenMagnifications(int toBufNum, float xcen, float ycen,
   float maxShiftUm, float scaleRange, float angleRange, bool doImShift, float &scaleMax,
   float &rotation, int corrFlags, CString &errStr)
 {
@@ -1300,7 +1297,7 @@ int CProcessImage::AlignBetweenMagnifications(int toBufNum, float xcen, float yc
       "information";
     return 1;
   }
-  if (!toPixel || !mImBufs[toBufNum].mMagInd || !mImBufs[toBufNum].mBinning || 
+  if (!toPixel || !mImBufs[toBufNum].mMagInd || !mImBufs[toBufNum].mBinning ||
     mImBufs[toBufNum].mCamera < 0) {
     errStr = "The reference image is missing pixel size, binning, mag, or camera "
       "information";
@@ -1308,7 +1305,7 @@ int CProcessImage::AlignBetweenMagnifications(int toBufNum, float xcen, float yc
   }
   sameMagCam = mImBufs->mMagInd == mImBufs[toBufNum].mMagInd &&
     mImBufs->mCamera == mImBufs[toBufNum].mCamera;
- 
+
   // Compare size of each image in microns and insist one be consistently bigger than
   // the other.
   mImBufs->mImage->getSize(nxAli, nyAli);
@@ -1318,7 +1315,7 @@ int CProcessImage::AlignBetweenMagnifications(int toBufNum, float xcen, float yc
     B3DSWAP(zoomInd, cropInd, err);
     aliBigger = true;
 
-  } else if (!(nxAli * fromPixel * nyAli * fromPixel <= nxRef * toPixel * nyRef * 
+  } else if (!(nxAli * fromPixel * nyAli * fromPixel <= nxRef * toPixel * nyRef *
     toPixel)) {
     errStr ="For images from the same mag and camera, the reference"
       " image must have a larger field of view";
@@ -1390,7 +1387,7 @@ int CProcessImage::AlignBetweenMagnifications(int toBufNum, float xcen, float yc
     // Pass the scaling that occurred to autoalign so it can adjust high frequency filter
     // to ignore empty resolution, setting this negative temporarily
     effBinSave = mImBufs[1].mEffectiveBin;
-    mImBufs[1].mEffectiveBin = -(float)sqrt(zoomXform[0] * zoomXform[0] + 
+    mImBufs[1].mEffectiveBin = -(float)sqrt(zoomXform[0] * zoomXform[0] +
       zoomXform[1] * zoomXform[1]);
 
     // Do the alignment, restore effective bin, make error messages, and leave
@@ -1604,7 +1601,7 @@ int CProcessImage::CorrelationToBufferA(float *array, int nxpad, int nypad, int 
     kyout = (ky + nypad / 2) % nypad;
     for (kx = 0; kx < nxpad; kx++) {
       kxout = (kx + nxpad / 2) % nxpad;
-      crray[kxout + kyout * nxpad] = (short)(32000. * 
+      crray[kxout + kyout * nxpad] = (short)(32000. *
         (array[kx + ky * (nxpad + 2)] - corMin) / (corMax - corMin));
     }
   }
@@ -1639,19 +1636,19 @@ float CProcessImage::ForeshortenedMean(int bufNum)
     if (fabs(tan(DTOR * mShiftManager->GetImageRotation(
       mWinApp->GetCurrentCamera(), mImBufs[bufNum].mMagInd))) > 1.)
       nxuse = (int)(nx * factor);
-    else 
+    else
       nyuse = (int)(ny * factor);
   }
   image->Lock();
-  retVal = ProcImageMean(image->getData(), image->getType(), nx, ny, 
+  retVal = ProcImageMean(image->getData(), image->getType(), nx, ny,
     (nx - nxuse) / 2, (nx + nxuse) / 2 - 1, (ny - nyuse) / 2, (ny + nyuse) / 2 - 1);
   image->UnLock();
   return (float)retVal;
 }
 
-// Compute a mean of a tilt-foreshortened subarea of a specified size or fraction of the 
+// Compute a mean of a tilt-foreshortened subarea of a specified size or fraction of the
 // field, optionally applying stored shift
-int CProcessImage::ForeshortenedSubareaMean(int bufNum, float fracOrSizeX, 
+int CProcessImage::ForeshortenedSubareaMean(int bufNum, float fracOrSizeX,
   float fracOrSizeY, bool useShift, float &mean, CString *message)
 {
   EMimageBuffer *imBuf = &mImBufs[bufNum];
@@ -1667,7 +1664,7 @@ int CProcessImage::ForeshortenedSubareaMean(int bufNum, float fracOrSizeX,
       *message = "There is no image in the buffer passed to ForeshortenedSubareaMean";
     return 1;
   }
-  if (imBuf->mCamera < 0 || imBuf->mMagInd <= 0 || 
+  if (imBuf->mCamera < 0 || imBuf->mMagInd <= 0 ||
     (imBuf->mBinning <= 0 && (fracOrSizeX <= 1. || fracOrSizeY <= 0.))) {
     if (message)
       *message = "The image buffer is missing information needed to get the foreshorted "
@@ -1722,13 +1719,13 @@ int CProcessImage::ForeshortenedSubareaMean(int bufNum, float fracOrSizeX,
   image->Lock();
   mean = (float)ProcImageMean(image->getData(), image->getType(), nx, ny, ix0, ix1, iy0,
     iy1);
-  SEMTrace('1',"ForeshortenedSubareaMean using %d x %d, at %d, %d", ix1 + 1 - ix0, 
+  SEMTrace('1',"ForeshortenedSubareaMean using %d x %d, at %d, %d", ix1 + 1 - ix0,
     iy1 + 1 - iy0, (ix0 + ix1) / 2, (iy0 + iy1) / 2);
   image->UnLock();
   return 0;
 }
 
-void CProcessImage::OnProcessZerotiltmean() 
+void CProcessImage::OnProcessZerotiltmean()
 {
   float mean;
   int bufNum = mWinApp->GetImBufIndex();
@@ -1740,13 +1737,13 @@ void CProcessImage::OnProcessZerotiltmean()
   mWinApp->AppendToLog(report, LOG_MESSAGE_IF_CLOSED);
 }
 
-void CProcessImage::OnUpdateProcessZerotiltmean(CCmdUI* pCmdUI) 
+void CProcessImage::OnUpdateProcessZerotiltmean(CCmdUI* pCmdUI)
 {
-  pCmdUI->Enable(mImBufs[mWinApp->GetImBufIndex()].mImage != NULL && 
-    mImBufs[mWinApp->GetImBufIndex()].mImage->getMode() == kGray);   
+  pCmdUI->Enable(mImBufs[mWinApp->GetImBufIndex()].mImage != NULL &&
+    mImBufs[mWinApp->GetImBufIndex()].mImage->getMode() == kGray);
 }
 
-void CProcessImage::OnProcessSetintensity() 
+void CProcessImage::OnProcessSetintensity()
 {
   DoSetIntensity(false, -1., false);
 }
@@ -1769,7 +1766,7 @@ int CProcessImage::DoSetIntensity(bool doseRate, float useFactor, bool useEDM)
 
   // Get mean of full image
   fullMean = (float)WholeImageMean(mImBufs);
-  ldArea = mWinApp->LowDoseMode() ? 
+  ldArea = mWinApp->LowDoseMode() ?
     mCamera->ConSetToLDArea(mImBufs->mConSetUsed) : -1;
 
   // For regular mode or Record/Preview in low dose, get zero-tilt mean and ask for
@@ -1792,7 +1789,7 @@ int CProcessImage::DoSetIntensity(bool doseRate, float useFactor, bool useEDM)
     }
   } else {
 
-    // For other areas in low dose, 
+    // For other areas in low dose,
     if (doseRate) {
       DoseRateFromMean(mImBufs, fullMean, fullMean);
       infoLine.Format("The dose rate of this %s image = %.2f electrons/physical pixel/sec"
@@ -1843,12 +1840,12 @@ int CProcessImage::DoSetIntensity(bool doseRate, float useFactor, bool useEDM)
   return error;
 }
 
-void CProcessImage::OnUpdateProcessSetintensity(CCmdUI* pCmdUI) 
+void CProcessImage::OnUpdateProcessSetintensity(CCmdUI* pCmdUI)
 {
   DoUpdateSetintensity(pCmdUI, false);
 }
 
-void CProcessImage::DoUpdateSetintensity(CCmdUI* pCmdUI, bool doseRate) 
+void CProcessImage::DoUpdateSetintensity(CCmdUI* pCmdUI, bool doseRate)
 {
   int ldArea, spot, junk, probe;
   double intensity;
@@ -1856,7 +1853,7 @@ void CProcessImage::DoUpdateSetintensity(CCmdUI* pCmdUI, bool doseRate)
   BOOL enable = false;
   if (mImBufs->mImage != NULL && mImBufs->mExposure && mImBufs->mBinning &&
     !mWinApp->GetSTEMMode() && (!doseRate || mImBufs->mCamera >= 0)) {
-    ldArea = mWinApp->LowDoseMode() ? 
+    ldArea = mWinApp->LowDoseMode() ?
       mCamera->ConSetToLDArea(mImBufs->mConSetUsed) : -1;
     if (ldArea < 0 || ldArea == 3) {
       spot = mScope->FastSpotSize();
@@ -1897,7 +1894,7 @@ void CProcessImage::OnUpdateSetDoseRateWithEDM(CCmdUI *pCmdUI)
   CameraParameters *camP = mWinApp->GetCamParams() + mImBufs->mCamera;
   BOOL enable = mCamera->IsDirectDetector(camP) && camP->countsPerElectron > 0. &&
     mImBufs->mExposure > 0.;
-    
+
   pCmdUI->Enable(enable);
 }
 
@@ -1920,7 +1917,7 @@ float CProcessImage::EquivalentRecordMean(int bufNum)
 /////////////////////////////////
 //  BEAM MOVING AND CENTERING
 /////////////////////////////////
-void CProcessImage::OnProcessMovebeam() 
+void CProcessImage::OnProcessMovebeam()
 {
   int nx, ny;
   float shiftX, shiftY;
@@ -1929,17 +1926,17 @@ void CProcessImage::OnProcessMovebeam()
   EMimageBuffer *imBuf = mWinApp->GetActiveNonStackImBuf();
   imBuf->mImage->getSize(nx, ny);
   imBuf->mImage->getShifts(shiftX, shiftY);
-  
+
   // Coordinates in field are sum of image align shift and user point coord
   shiftX += imBuf->mUserPtX - nx / 2;
   shiftY += imBuf->mUserPtY - ny / 2;
-  
+
   // Need negative, probably because we are undoing an existing shift
   MoveBeam(imBuf, -shiftX, -shiftY);
   mMoveBeamStamp = imBuf->mTimeStamp;
 }
 
-void CProcessImage::OnUpdateProcessMovebeam(CCmdUI* pCmdUI) 
+void CProcessImage::OnUpdateProcessMovebeam(CCmdUI* pCmdUI)
 {
   EnableMoveBeam(pCmdUI, false);
 }
@@ -1950,7 +1947,7 @@ void CProcessImage::OnTasksCenterbeam()
   CenterBeamFromActiveImage(0., 0.);
 }
 
-int CProcessImage::CenterBeamFromActiveImage(double maxRadius, double maxError, 
+int CProcessImage::CenterBeamFromActiveImage(double maxRadius, double maxError,
                                              BOOL useCentroid, double maxMicronShift)
 {
   float shiftX, shiftY, fitErr;
@@ -1966,10 +1963,10 @@ int CProcessImage::CenterBeamFromActiveImage(double maxRadius, double maxError,
   }
 
   // Or analyze from beam edges
-  err = FindBeamCenter(imBuf, xcen, ycen, radius, xcenUse, ycenUse, radUse, fracUse, 
+  err = FindBeamCenter(imBuf, xcen, ycen, radius, xcenUse, ycenUse, radUse, fracUse,
     binning, numQuadrant, shiftX, shiftY, fitErr);
   if (err < 0)
-    mWinApp->AppendToLog("No beam edges detectable in this image", 
+    mWinApp->AppendToLog("No beam edges detectable in this image",
       LOG_MESSAGE_IF_CLOSED);
   else if (err > 0)
     mWinApp->AppendToLog("Error analyzing image for beam edges", LOG_MESSAGE_IF_CLOSED);
@@ -2017,7 +2014,7 @@ void CProcessImage::GetCentroidOfBuffer(EMimageBuffer *imBuf, float &xcen, float
   mean = ProcImageMean(data, type, nx, ny, ix0, ix1 - 1, iy1, ny - 1);
   border = B3DMIN(border, mean);
 
-  // This had no merit.  It would work if the border could be defined to exclude 
+  // This had no merit.  It would work if the border could be defined to exclude
   // points outside the beam reliably, but without that it gives those points more
   // weight by downweighting the points inside the beam.
   /*KImageScale::PctStretch((char *)data, type, nx, ny, nSample, matt, 1.f, 1.f, &xcen,
@@ -2028,7 +2025,7 @@ void CProcessImage::GetCentroidOfBuffer(EMimageBuffer *imBuf, float &xcen, float
   ProcCentroid(data, type, nx, ny, 0, nx - 1, 0, ny - 1, border, xcen, ycen);
   if (doMoments) {
 
-    // For moments, we want to eliminate the periphery more reliably, so get a mean in 
+    // For moments, we want to eliminate the periphery more reliably, so get a mean in
     // the center, set a threshold halfway up, and get new centroid FWIW
     ix0 = B3DMIN(ix0, iy0) / 2;
     mean = ProcImageMean(data, type, nx, ny, B3DNINT(xcen) - ix0, B3DNINT(xcen) + ix0,
@@ -2058,8 +2055,8 @@ void CProcessImage::EnableMoveBeam(CCmdUI * pCmdUI, bool skipUserPt)
    mat = mShiftManager->IStoCamera(imBuf->mMagInd);
    mat2 = mShiftManager->GetBeamShiftCal(imBuf->mMagInd);
  }
- pCmdUI->Enable(!mWinApp->GetSTEMMode() && !mWinApp->DoingTasks() && 
-   !mCamera->CameraBusy() && mat.xpx != 0. 
+ pCmdUI->Enable(!mWinApp->GetSTEMMode() && !mWinApp->DoingTasks() &&
+   !mCamera->CameraBusy() && mat.xpx != 0.
    && mat2.xpx != 0 && imBuf->mImage != NULL && imBuf->mTimeStamp != mMoveBeamStamp &&
    (skipUserPt || imBuf->mHasUserPt) && imBuf->mMagInd && imBuf->mBinning);
 }
@@ -2068,7 +2065,7 @@ void CProcessImage::EnableMoveBeam(CCmdUI * pCmdUI, bool skipUserPt)
 // Y is inverted as typical for image pixels
 // Or if imBuf is NULL, move beam by given number of microns in camera coordinates, where
 // Y is NOT inverted
-int CProcessImage::MoveBeam(EMimageBuffer *imBuf, float shiftX, float shiftY, 
+int CProcessImage::MoveBeam(EMimageBuffer *imBuf, float shiftX, float shiftY,
   double maxMicronShift)
 {
   double bsTot;
@@ -2096,7 +2093,7 @@ int CProcessImage::MoveBeam(EMimageBuffer *imBuf, float shiftX, float shiftY,
     ScaleMat aInv = mShiftManager->CameraToSpecimen(magInd);
     if (mWinApp->mMultiTSTasks->GetAutoCentering())
       mWinApp->mMultiTSTasks->GetCenteringBeamShift(cenShiftX, cenShiftY);
-    ApplyScaleMatrix(aInv, shiftX + cenShiftX / pixel, 
+    ApplyScaleMatrix(aInv, shiftX + cenShiftX / pixel,
       shiftY + cenShiftY / pixel, bsX, bsY);
     bsTot = sqrt(bsX * bsX + bsY * bsY);
     CString message;
@@ -2173,9 +2170,9 @@ int CProcessImage::MoveBeamByCameraFraction(float shiftX, float shiftY, bool unc
 // coordinates binned by the factor, while the shift is in image coordinates
 #define MAX_CPTS 370
 int CProcessImage::FindBeamCenter(EMimageBuffer * imBuf, float & xcen, float & ycen,
-                                  float &radius, float &xcenUse, float &ycenUse, 
-                                  float &radUse, float &fracUse, int &binning, 
-                                  int &numQuadrant, float &shiftX, float &shiftY, 
+                                  float &radius, float &xcenUse, float &ycenUse,
+                                  float &radUse, float &fracUse, int &binning,
+                                  int &numQuadrant, float &shiftX, float &shiftY,
                                   float &rmsErr)
 {
   int targetSize = 512;
@@ -2219,7 +2216,7 @@ int CProcessImage::FindBeamCenter(EMimageBuffer * imBuf, float & xcen, float & y
   // Bin data into new array if necessary
   image->Lock();
   if (binning > 1) {
-    NewArray(data, short int, (type == kFLOAT ? 2 : 1) *((size_t)sizeX * sizeY ) / 
+    NewArray(data, short int, (type == kFLOAT ? 2 : 1) *((size_t)sizeX * sizeY ) /
       (binning * binning));
     if (!data)
       return 3;
@@ -2241,7 +2238,7 @@ int CProcessImage::FindBeamCenter(EMimageBuffer * imBuf, float & xcen, float & y
   outCrit = mFindBeamOutsideFrac * meanVal;
   edgeCrit = edgeFrac * meanVal;
   SEMTrace('p', "Centroid %.1f %.1f  mean %.0f  outside crit %.1f  edge crit %.1f", centX,
-    centY, meanVal, outCrit, edgeCrit); 
+    centY, meanVal, outCrit, edgeCrit);
 
   // Get points along edge then determine if one quadrant or more and get edge centroid
   numPts = ProcFindCircleEdges(data, type, sizeX, sizeY, centX, centY, border, angleInc,
@@ -2274,7 +2271,7 @@ int CProcessImage::FindBeamCenter(EMimageBuffer * imBuf, float & xcen, float & y
 
   numQuadrant = (nquad1 ? 1:0) + (nquad2 ? 1:0) + (nquad3 ? 1:0) + (nquad4 ? 1:0);
   oneQuadrant = numQuadrant == 1;
-  SEMTrace('p', "# of points in quadrants 1 to 4: %d %d %d %d", nquad1, nquad2, 
+  SEMTrace('p', "# of points in quadrants 1 to 4: %d %d %d %d", nquad1, nquad2,
     nquad3, nquad4);
 
   // If one quadrant, use the center point instead
@@ -2311,7 +2308,7 @@ int CProcessImage::FindBeamCenter(EMimageBuffer * imBuf, float & xcen, float & y
     }
 
     // DO the 3-point fit then the fit to all points
-    failed3Pt = circleThrough3Pts(xx[0], yy[0], xx[ipt1], yy[ipt1], xx[ipt2], yy[ipt2], 
+    failed3Pt = circleThrough3Pts(xx[0], yy[0], xx[ipt1], yy[ipt1], xx[ipt2], yy[ipt2],
       &radius, &xcen, &ycen);
 
     // If that failed for points from more than one quadrant, give up
@@ -2343,7 +2340,7 @@ int CProcessImage::FindBeamCenter(EMimageBuffer * imBuf, float & xcen, float & y
         for (i = 0; i < numPts; i++) {
           uu = resid[i] / (Ktune * MADN);
           if (uu < 1.)
-            weight[i] = (float)((1 - uu * uu) * (1 - uu * uu) * 
+            weight[i] = (float)((1 - uu * uu) * (1 - uu * uu) *
             pow((double)grad[i], gradPower2));
           else
             weight[i] = 0.;
@@ -2355,14 +2352,14 @@ int CProcessImage::FindBeamCenter(EMimageBuffer * imBuf, float & xcen, float & y
     }
   }
 
-  // For one quadrant and arc length below criterion compute a minimum radius based on 
+  // For one quadrant and arc length below criterion compute a minimum radius based on
   // two adjacent corners of the image
   if (oneQuadrant && (failed3Pt || arcLen < minArcToUseFit)) {
     if (nquad1 || nquad3)
-      failed = circleThrough3Pts(0., 0., (float)sizeX, (float)sizeY, edgeCenX, 
+      failed = circleThrough3Pts(0., 0., (float)sizeX, (float)sizeY, edgeCenX,
         edgeCenY, &radUse, &xcenUse, &ycenUse);
     else
-      failed = circleThrough3Pts((float)sizeX, 0., 0., (float)sizeY, edgeCenX, 
+      failed = circleThrough3Pts((float)sizeX, 0., 0., (float)sizeY, edgeCenX,
         edgeCenY, &radUse, &xcenUse, &ycenUse);
     if (failed)
       return 5;
@@ -2377,7 +2374,7 @@ int CProcessImage::FindBeamCenter(EMimageBuffer * imBuf, float & xcen, float & y
     minOut = minOutsideFrac * smallSize;
   } else {
 
-    // Otherwise copy the fitted values, and ramp outside fraction up to 0.5 for 
+    // Otherwise copy the fitted values, and ramp outside fraction up to 0.5 for
     // one quadrant and arc length up to 90
     radUse = radius;
     xcenUse = xcen;
@@ -2422,7 +2419,7 @@ int CProcessImage::FindBeamCenter(EMimageBuffer * imBuf, float & xcen, float & y
 }
 
 // Find the parameters of an elliptical area from the second moments
-int CProcessImage::FindEllipticalBeamParams(EMimageBuffer *imBuf, float &xcen, 
+int CProcessImage::FindEllipticalBeamParams(EMimageBuffer *imBuf, float &xcen,
   float &ycen, float &longAxis, float &shortAxis, float &axisAngle)
 {
   float shiftX, shiftY;
@@ -2457,8 +2454,8 @@ int CProcessImage::FindEllipticalBeamParams(EMimageBuffer *imBuf, float &xcen,
 
 #define MAX_REPLACED  40
 void CProcessImage::RemoveXRays(CameraParameters *param, void *array, int type,
-                                int binning, int top, int left, int bottom, int right, 
-                                float absCrit, float numSDCrit, int useBothCrit, 
+                                int binning, int top, int left, int bottom, int right,
+                                float absCrit, float numSDCrit, int useBothCrit,
                                 BOOL verbose)
 {
   int nReplaced, nPatches, nSkipped, nTruncated;
@@ -2504,7 +2501,7 @@ void CProcessImage::RemoveXRays(CameraParameters *param, void *array, int type,
   maxPixels = (int)(0.25 * 3.142 * maxSize * maxSize + 0.5);
 
   DWORD startTime = GetTickCount();
-  nPatches = ProcRemoveXRays(array, type, sizeX, sizeY, numHotColumns, hotColumn, 
+  nPatches = ProcRemoveXRays(array, type, sizeX, sizeY, numHotColumns, hotColumn,
     numHotPixels,
     hotPixelX, hotPixelY, maxPixels, mInnerXRayDistance, mOuterXRayDistance, absCrit,
     numSDCrit, useBothCrit, mXRayCritIterations, mXRayCritIncrease, &sdev, &nReplaced,
@@ -2513,7 +2510,7 @@ void CProcessImage::RemoveXRays(CameraParameters *param, void *array, int type,
   if (verbose) {
     CString report, fragment;
     report.Format("SD = %.2f  Time = %d  Replaced %d pixels in %d patches\r\n"
-      "Truncated %d patches, and skipped %d pixels in oversized patches", 
+      "Truncated %d patches, and skipped %d pixels in oversized patches",
       sdev, elapsed, nReplaced, nPatches, nTruncated, nSkipped);
     mWinApp->AppendToLog(report, LOG_OPEN_IF_CLOSED);
     if (nPatches > MAX_REPLACED)
@@ -2531,15 +2528,15 @@ void CProcessImage::RemoveXRays(CameraParameters *param, void *array, int type,
 }
 
 
-void CProcessImage::OnProcessFixdarkxrays() 
+void CProcessImage::OnProcessFixdarkxrays()
 {
-  FixXRaysInBuffer(false);  
+  FixXRaysInBuffer(false);
 }
 
 
-void CProcessImage::OnProcessFiximagexrays() 
+void CProcessImage::OnProcessFiximagexrays()
 {
-  FixXRaysInBuffer(true); 
+  FixXRaysInBuffer(true);
 }
 
 void CProcessImage::FixXRaysInBuffer(BOOL doImage)
@@ -2564,7 +2561,7 @@ void CProcessImage::FixXRaysInBuffer(BOOL doImage)
   image->Lock();
   memcpy(brray, image->getData(), 2 * nx * ny);
   image->UnLock();
-  
+
   if (!binning) {
     binning = 1;
     KGetOneInt("Binning is unknown for this image; enter binning:", binning);
@@ -2588,7 +2585,7 @@ void CProcessImage::FixXRaysInBuffer(BOOL doImage)
   NewProcessedImage(imBuf, brray, image->getType(), nx, ny, 1);
 }
 
-void CProcessImage::OnSetdarkcriteria() 
+void CProcessImage::OnSetdarkcriteria()
 {
   CameraParameters *param = mWinApp->GetCamParams() + mWinApp->GetCurrentCamera();
   KGetOneFloat("Absolute deviation from mean for X-ray in dark reference (0 to not use)",
@@ -2599,7 +2596,7 @@ void CProcessImage::OnSetdarkcriteria()
     param->darkXRayBothCrit);
 }
 
-void CProcessImage::OnSetimagecriteria() 
+void CProcessImage::OnSetimagecriteria()
 {
   CameraParameters *param = mWinApp->GetCamParams() + mWinApp->GetCurrentCamera();
   KGetOneFloat("Absolute deviation from mean for X-ray in image (0 to not use)",
@@ -2610,9 +2607,9 @@ void CProcessImage::OnSetimagecriteria()
     param->imageXRayBothCrit);
 }
 
-void CProcessImage::OnUpdateSetcriteria(CCmdUI* pCmdUI) 
+void CProcessImage::OnUpdateSetcriteria(CCmdUI* pCmdUI)
 {
-  pCmdUI->Enable(!mWinApp->DoingTasks() && !mCamera->CameraBusy()); 
+  pCmdUI->Enable(!mWinApp->DoingTasks() && !mCamera->CameraBusy());
 }
 
 
@@ -2642,10 +2639,10 @@ void CProcessImage::UpdateBWCriterion(EMimageBuffer *imBuf, float &crit, float d
   int ny = image->getHeight();
   double BWmean = derate * UnbinnedSpotMeanPerSec(imBuf);
   /*double BWmean = derate * imBuf->GetUnbinnedBWMeanPerSec();
-  
+
   // 2/12/04: make it base first criterion on a real mean; switch to foreshortened mean
   if (BWmean < 0.75 * crit || BWmean > 1.33 * crit) {
- //   BWmean = derate * ProcImageMean(image->getData(), image->getType(), nx, ny, 0, 
+ //   BWmean = derate * ProcImageMean(image->getData(), image->getType(), nx, ny, 0,
  //     nx - 1, 0, ny - 1);
     BWmean = derate * ForeshortenedMean((int)(imBuf - mImBufs));
     if (imBuf->mBinning && imBuf->mExposure)
@@ -2662,7 +2659,7 @@ float CProcessImage::UnbinnedSpotMeanPerSec(EMimageBuffer *imBuf)
   float bufFrac = 0.5f;
   double mean;
   KImage *image = imBuf->mImage;
-  if (!image || !imBuf->mBinning || imBuf->mExposure < 1.e-4 || 
+  if (!image || !imBuf->mBinning || imBuf->mExposure < 1.e-4 ||
     imBuf->IsProcessed() || imBuf->mConSetUsed < 0 ||
     imBuf->mConSetUsed >= MAX_CONSETS)
     return 0.;
@@ -2697,11 +2694,11 @@ float CProcessImage::UnbinnedSpotMeanPerSec(EMimageBuffer *imBuf)
   nxBuf = conSet->right - conSet->left;
   bufArea = nxBuf * nyBuf;
   selectArea = (bufBottom - bufTop) * (bufRight - bufLeft);
-  
+
   // If there is no intersection, or if its area is both less than a fraction
   // of the spot area and less than a fraction of the buffer area, compute
   // most centered fractional portion of buffer area
-  if (bufBottom <= bufTop || bufRight <= bufLeft || 
+  if (bufBottom <= bufTop || bufRight <= bufLeft ||
     (selectArea < spotFrac * (spotBottom - spotTop) * (spotRight - spotLeft) &&
     selectArea < bufFrac * bufArea)) {
     nxSpot = (int)sqrt(bufFrac * bufArea);
@@ -2752,7 +2749,7 @@ float CProcessImage::UnbinnedSpotMeanPerSec(EMimageBuffer *imBuf)
 
   image->Lock();
   mean = ProcImageMean(image->getData(), image->getType(), nx, ny, ix0, ix1, iy0, iy1) /
-    (imBuf->mBinning * imBuf->mBinning * imBuf->mExposure * 
+    (imBuf->mBinning * imBuf->mBinning * imBuf->mExposure *
     mWinApp->GetGainFactor(imBuf->mCamera, imBuf->mBinning));
   image->UnLock();
   return (float)mean;
@@ -2768,7 +2765,7 @@ double CProcessImage::WholeImageMean(EMimageBuffer *imBuf)
   int nx = image->getWidth();
   int ny = image->getHeight();
   image->Lock();
-  retval = ProcImageMean(image->getData(), image->getType(), 
+  retval = ProcImageMean(image->getData(), image->getType(),
     nx, ny, 0, nx - 1, 0, ny - 1);
   image->UnLock();
   return retval;
@@ -2842,16 +2839,16 @@ int CProcessImage::PatchPercentileStats(EMimageBuffer *imBuf, float lowPct, floa
   return 0;
 }
 
-void CProcessImage::OnProcessShowcrosscorr() 
+void CProcessImage::OnProcessShowcrosscorr()
 {
   mShiftManager->AutoAlign(0, 0, false, AUTOALIGN_SHOW_CORR);
 }
 
-void CProcessImage::OnUpdateProcessShowcrosscorr(CCmdUI* pCmdUI) 
+void CProcessImage::OnUpdateProcessShowcrosscorr(CCmdUI* pCmdUI)
 {
-  pCmdUI->Enable(mImBufs->mImage && !mWinApp->DoingTasks() && 
-    !(mBufferManager->GetAlignToB() && 
-    mBufferManager->GetShiftsOnAcquire() < 2)); 
+  pCmdUI->Enable(mImBufs->mImage && !mWinApp->DoingTasks() &&
+    !(mBufferManager->GetAlignToB() &&
+    mBufferManager->GetShiftsOnAcquire() < 2));
 }
 
 void CProcessImage::OnProcessAutocorrelation()
@@ -2874,9 +2871,9 @@ void CProcessImage::OnProcessAutocorrelation()
   mShiftManager->SetRadius2(radius2save);
 }
 
-void CProcessImage::OnUpdateProcessAutocorrelation(CCmdUI* pCmdUI) 
+void CProcessImage::OnUpdateProcessAutocorrelation(CCmdUI* pCmdUI)
 {
-  pCmdUI->Enable(mImBufs->mImage && !mWinApp->DoingTasks()); 
+  pCmdUI->Enable(mImBufs->mImage && !mWinApp->DoingTasks());
 }
 
 void CProcessImage::OnUpdateProcessMakecoloroverlay(CCmdUI *pCmdUI)
@@ -2891,7 +2888,7 @@ void CProcessImage::OnUpdateProcessMakecoloroverlay(CCmdUI *pCmdUI)
 void CProcessImage::OnProcessFindpixelsize()
 {
   float vectors[4], dist = 0.;
-  if (mImBufs->mCaptured == BUFFER_MONTAGE_CENTER && 
+  if (mImBufs->mCaptured == BUFFER_MONTAGE_CENTER &&
     mImBufs[1].mCaptured == BUFFER_MONTAGE_OVERVIEW)
     mBufferManager->CopyImageBuffer(1, 0);
   FindPixelSize(0., 0., 0., 0., 0, 0, dist, vectors);
@@ -2900,15 +2897,15 @@ void CProcessImage::OnProcessFindpixelsize()
 void CProcessImage::OnUpdateProcessFindpixelsize(CCmdUI *pCmdUI)
 {
   int cap = mImBufs->mCaptured;
-  pCmdUI->Enable(mImBufs->mImage && mImBufs->mImage->getMode() == kGray && 
+  pCmdUI->Enable(mImBufs->mImage && mImBufs->mImage->getMode() == kGray &&
     !mWinApp->DoingTasks() && cap != BUFFER_PROCESSED &&
-    cap != BUFFER_FFT && cap != BUFFER_LIVE_FFT && 
-    (cap != BUFFER_MONTAGE_CENTER || mImBufs[1].mCaptured == BUFFER_MONTAGE_OVERVIEW)); 
+    cap != BUFFER_FFT && cap != BUFFER_LIVE_FFT &&
+    (cap != BUFFER_MONTAGE_CENTER || mImBufs[1].mCaptured == BUFFER_MONTAGE_OVERVIEW));
 }
 
 void CProcessImage::OnProcessPixelsizefrommarker()
 {
-  float minScale = 0, maxScale = 0; 
+  float minScale = 0, maxScale = 0;
   float vectors[4], dist = 0.;
   KImage *image = mImBufs->mImage;
   float markedX = mImBufs->mUserPtX - (float)image->getWidth() / 2.f - 0.5f;
@@ -2924,16 +2921,16 @@ void CProcessImage::OnProcessPixelsizefrommarker()
 void CProcessImage::OnUpdateProcessPixelsizefrommarker(CCmdUI *pCmdUI)
 {
   int cap = mImBufs[1].mCaptured;
-  pCmdUI->Enable(mImBufs->mImage && !mWinApp->DoingTasks() && 
-    (mImBufs->mCaptured == BUFFER_PROCESSED || 
+  pCmdUI->Enable(mImBufs->mImage && !mWinApp->DoingTasks() &&
+    (mImBufs->mCaptured == BUFFER_PROCESSED ||
       mImBufs->mCaptured == BUFFER_AUTOCOR_OVERVIEW) && mImBufs->mHasUserPt &&
     mImBufs[1].mImage && mImBufs[1].mImage->getMode() == kGray && cap != BUFFER_PROCESSED &&
-    cap != BUFFER_FFT && cap != BUFFER_LIVE_FFT); 
+    cap != BUFFER_FFT && cap != BUFFER_LIVE_FFT);
 }
 
 void CProcessImage::OnProcessSetBinnedSize()
 {
-  KGetOneInt("Target size to bin images to for finding pixel size, ", 
+  KGetOneInt("Target size to bin images to for finding pixel size, ",
     "or 0 for automatic target size based on expected # of blocks:",
     mPixelTargetSize);
   B3DCLAMP(mPixelTargetSize, 0, 2048);
@@ -2962,7 +2959,7 @@ void CProcessImage::OnMeshForGridBars()
 
 // Find a pixel size either de novo or from point marked in autocorrelation
 // Pass in spacing non-zero to override catalase, grid mesh, and grid lines/mm
-int CProcessImage::FindPixelSize(float markedX, float markedY, float minScale, 
+int CProcessImage::FindPixelSize(float markedX, float markedY, float minScale,
   float maxScale, int bufInd, int findFlags, float &spacing, float *vectors)
 {
   void *data;
@@ -2999,7 +2996,7 @@ int CProcessImage::FindPixelSize(float markedX, float markedY, float minScale,
   int imType = image->getType();
   int needBin = 1;
   int targetSize = mPixelTargetSize;
-  float catalFac = (!spacing && mCatalaseForPixel) ? 
+  float catalFac = (!spacing && mCatalaseForPixel) ?
     2.f * mLongCatalaseNM / mShortCatalaseNM : 1.f;
   CameraParameters *param = mWinApp->GetCamParams();
   MagTable *magTab = mWinApp->GetMagTable();
@@ -3051,7 +3048,7 @@ int CProcessImage::FindPixelSize(float markedX, float markedY, float minScale,
   while (B3DMAX(nx, ny) > targetSize * needBin)
     needBin++;
   if (needBin > 1) {
-    NewArray2(temp, short int, (nx / needBin), (ny / needBin) * 
+    NewArray2(temp, short int, (nx / needBin), (ny / needBin) *
       (imType == kFLOAT ? 2 : 1));
     if (!temp) {
       SEMMessageBox("Failed to get memory for binned image", MB_EXCLAME);
@@ -3094,14 +3091,14 @@ int CProcessImage::FindPixelSize(float markedX, float markedY, float minScale,
   image->UnLock();
   if (needBin > 1)
     delete [] temp;
-  
+
   // Set up the filter and get the cross-correlation and find peaks
   XCorrSetCTF(sigma1, 0.f, 0.f, 0.f, CTF, nxPad, nyPad, &delta);
   XCorrCrossCorr(array, array, nxPad, nyPad, delta, CTF);
 
-  ind2 = findAutoCorrPeaks(array, nxPad, nyPad, &Xpeaks[0], &Ypeaks[0], &peak[0], 
-    numPeaks, doCatalase ? 16 : 64, catalFac, 
-    findFlags & (FIND_ACPK_NO_WAFFLE | FIND_ACPK_BOTH_GEOMS | FIND_ACPK_HEX_GRID), 
+  ind2 = findAutoCorrPeaks(array, nxPad, nyPad, &Xpeaks[0], &Ypeaks[0], &peak[0],
+    numPeaks, doCatalase ? 16 : 64, catalFac,
+    findFlags & (FIND_ACPK_NO_WAFFLE | FIND_ACPK_BOTH_GEOMS | FIND_ACPK_HEX_GRID),
     markedX, markedY,
     &dist1, &dist2, &angle, vectors, num, &ind1, &messBuf[0], MAX_MESS_BUF);
 
@@ -3167,17 +3164,17 @@ int CProcessImage::FindPixelSize(float markedX, float markedY, float minScale,
   mWinApp->AppendToLog(report, LOG_OPEN_IF_CLOSED);
   if (magInd && camera >= 0 && binningShown &&
     magTab[magInd].pixelSize[camera]) {
-      dist = 0.001 * pixel / 
+      dist = 0.001 * pixel /
         (mImBufs[1].mBinning * magTab[magInd].pixelSize[camera]);
-      PrintfToLog("   this is %.3f times previous %s pixel size", dist, 
+      PrintfToLog("   this is %.3f times previous %s pixel size", dist,
         magTab[magInd].pixDerived[camera] ? "derived" : "measured");
   }
 
   if (binningShown) {
     pixel /= binningShown;
-    ind1 = (magInd && camera >= 0) ? 
+    ind1 = (magInd && camera >= 0) ?
       MagForCamera(camera, magInd) : 0;
-    report.Format("Camera %d, %dx, %snbinned pixel = %.4g nm", camera, ind1, 
+    report.Format("Camera %d, %dx, %snbinned pixel = %.4g nm", camera, ind1,
       readIn ? "APPARENT u" : "U", pixel);
     if (doCatalase) {
       str.Format(" (%.4g nm short axis only)", pixel1 / binningShown);
@@ -3202,7 +3199,7 @@ int CProcessImage::FindPixelSize(float markedX, float markedY, float minScale,
         if (FEIscope && ind2 >= 0 && magInd > 0 && magTab[magInd - 1].mag > 0) {
           dist1 = angle - mGridRotations[ind2];
           if (fabs(dist1) < 45.) {
-            tryX = B3DCHOICE(param[camera].GIF, 
+            tryX = B3DCHOICE(param[camera].GIF,
               magTab[magInd].EFTEMtecnaiRotation - magTab[magInd - 1].EFTEMtecnaiRotation,
               magTab[magInd].tecnaiRotation - magTab[magInd - 1].tecnaiRotation);
             ind1 = 90 * B3DNINT(UtilGoodAngle(tryX - dist1) / 90.);
@@ -3218,7 +3215,7 @@ int CProcessImage::FindPixelSize(float markedX, float markedY, float minScale,
         if (FEIscope && ind2 >= 0 && magTab[magInd + 1].mag > 0 && !mAddedRotation[ind2]){
           dist1 = mGridRotations[ind2] - angle;
           if (fabs(dist1) < 45.) {
-            tryX = B3DCHOICE(param[camera].GIF, 
+            tryX = B3DCHOICE(param[camera].GIF,
               magTab[magInd + 1].EFTEMtecnaiRotation - magTab[magInd].EFTEMtecnaiRotation,
               magTab[magInd + 1].tecnaiRotation - magTab[magInd].tecnaiRotation);
             ind1 = 90 * B3DNINT(UtilGoodAngle(tryX - dist1) / 90.);
@@ -3254,13 +3251,13 @@ void CProcessImage::OnListRelativeRotations()
     lastInd = -1;
     for (mag = 1; mag < MAX_MAGS; mag++) {
       vecInd = LookupFoundPixelSize(cam, mag);
-      if (vecInd >= 0) { 
+      if (vecInd >= 0) {
         xmag = MagForCamera(cam, mag);
         if (lastInd >= 0) {
           diff = mGridRotations[vecInd] - mGridRotations[lastInd];
           if (diff < 45 && diff > -45) {
-            mess.Format("RotationAndPixel %2d %7.2f  999 %7.4g   # %d, p=%.0f", mag, 
-              UtilGoodAngle(diff + mAddedRotation[vecInd]), 
+            mess.Format("RotationAndPixel %2d %7.2f  999 %7.4g   # %d, p=%.0f", mag,
+              UtilGoodAngle(diff + mAddedRotation[vecInd]),
               mPixelSizes[vecInd], xmag, xmag * mPixelSizes[vecInd]);
           } else {
             if (diff > 45)
@@ -3269,13 +3266,13 @@ void CProcessImage::OnListRelativeRotations()
               alternate = diff + mAddedRotation[vecInd] + 90.f;
             mess.Format("# Verify ambiguous relative rotation between mags "
               "# %d and # %d and edit line below\r\n"
-              "RotationAndPixel  %2d  %.2f  (or %.2f?)  999  %.4g   # %d, p=%.0f", 
-              (mag - 1), mag, mag, UtilGoodAngle(diff + mAddedRotation[vecInd]), 
+              "RotationAndPixel  %2d  %.2f  (or %.2f?)  999  %.4g   # %d, p=%.0f",
+              (mag - 1), mag, mag, UtilGoodAngle(diff + mAddedRotation[vecInd]),
               UtilGoodAngle(alternate), mPixelSizes[vecInd], xmag,
               xmag * mPixelSizes[vecInd]);
-          } 
+          }
         } else {
-          mess.Format("RotationAndPixel %2d   999    999 %7.4g   # %d, p=%.0f", mag, 
+          mess.Format("RotationAndPixel %2d   999    999 %7.4g   # %d, p=%.0f", mag,
             mPixelSizes[vecInd], xmag, xmag * mPixelSizes[vecInd]);
         }
         if (!camMess.IsEmpty()) {
@@ -3304,13 +3301,13 @@ void CProcessImage::OnPixelsizeAddToRotation()
   if (!KGetOneInt("Magnification index at which the rotation occurs:", magInd))
     return;
   int vecInd = LookupFoundPixelSize(camera, magInd);
-  if (vecInd < 0) {  
+  if (vecInd < 0) {
     AfxMessageBox("The pixel size has not been measured for this camera and mag"
       " since the program was started", MB_EXCLAME);
     return;
   }
   if (!KGetOneInt("Enter approximate angle by which an image at this mag is rotated "
-    "relative to the next lower mag", 
+    "relative to the next lower mag",
     "I.e, enter a multiple of +/-90 to add to relative rotation:", angle))
     return;
   mAddedRotation[vecInd] = (B3DNINT(angle / 90.) * 90);
@@ -3318,7 +3315,7 @@ void CProcessImage::OnPixelsizeAddToRotation()
 
 // Return a pixel size from current calibrations if any, or 0
 float CProcessImage::GetFoundPixelSize(int camera, int magInd)
-{ 
+{
   int vecInd = LookupFoundPixelSize(camera, magInd);
   if (vecInd < 0)
     return 0.;
@@ -3340,7 +3337,7 @@ int CProcessImage::LookupFoundPixelSize(int camera, int magInd)
 
 // Combines 1-3 images into a single color image using their scaled pixmaps
 // returns false for an error
-bool CProcessImage::OverlayImages(EMimageBuffer *redBuf, EMimageBuffer *grnBuf, 
+bool CProcessImage::OverlayImages(EMimageBuffer *redBuf, EMimageBuffer *grnBuf,
                                   EMimageBuffer *bluBuf)
 {
   CString str;
@@ -3359,7 +3356,7 @@ bool CProcessImage::OverlayImages(EMimageBuffer *redBuf, EMimageBuffer *grnBuf,
   if (redBuf->IsProcessedOKforMap() && grnBuf->IsProcessedOKforMap() &&
     bluBuf->IsProcessedOKforMap())
     newProc = BUFFER_PROC_OK_FOR_MAP;
-  
+
   // Check the images for existence, gray scale, and matching sizes
   for (i = 0; i < 3; i++) {
     if (!imbufs[i])
@@ -3385,7 +3382,7 @@ bool CProcessImage::OverlayImages(EMimageBuffer *redBuf, EMimageBuffer *grnBuf,
       firstBuf = imbufs[i];
     } else if (xsize != imbufs[i]->mImage->getWidth() ||
       ysize != imbufs[i]->mImage->getHeight()) {
-      AfxMessageBox("Cannot overlay these images; they are not all the same size", 
+      AfxMessageBox("Cannot overlay these images; they are not all the same size",
         MB_EXCLAME);
       return false;
     }
@@ -3446,7 +3443,7 @@ void CProcessImage::OnProcessMakecoloroverlay()
     AfxMessageBox("You did not enter 3 letters or 0", MB_EXCLAME);
     if (i > 3)
       mOverlayChannels.Truncate(3);
-    else if (i == 2) 
+    else if (i == 2)
       mOverlayChannels += '0';
     else
       mOverlayChannels = "ABA";
@@ -3458,7 +3455,7 @@ void CProcessImage::OnProcessMakecoloroverlay()
     if (bufind == (int)'0' - (int)'A')
       imbuf[i] = NULL;
     else if (bufind < 0 || bufind >= MAX_BUFFERS) {
-      AfxMessageBox("You did not enter 3 letters in range of buffer numbers, or 0", 
+      AfxMessageBox("You did not enter 3 letters in range of buffer numbers, or 0",
         MB_EXCLAME);
       mOverlayChannels = "ABA";
       return;
@@ -3498,7 +3495,7 @@ void CProcessImage::OnProcessCropAverage()
   Islice bufSlice;
   Islice *boxSlice;
   CMapDrawItem *item;
-  MapItemArray *itemArray = 
+  MapItemArray *itemArray =
     mWinApp->mMainView->GetMapItemsForImageCoords(imBuf, true);
 
   if (!itemArray) {
@@ -3585,7 +3582,7 @@ void CProcessImage::OnProcessCropAverage()
     xShifts.clear();
     yShifts.clear();
     for (ind = 0; ind < numAvg; ind++) {
-      XCorrTaperInPad(boxSlices[ind]->data.f, MRC_MODE_FLOAT, boxXsize, 0, boxXsize - 1, 
+      XCorrTaperInPad(boxSlices[ind]->data.f, MRC_MODE_FLOAT, boxXsize, 0, boxXsize - 1,
         0, boxYsize - 1, boxArray, nxPad + 2, nxPad, nyPad, nxTaper, nyTaper);
 
       // First loop, copy padded box to reference array for first item
@@ -3596,10 +3593,10 @@ void CProcessImage::OnProcessCropAverage()
       if (loop) {
         for (i = 0; i < boxDim; i++)
           tmpArray[i] = sumArray[i] - xformSlices[ind]->data.f[i];
-        XCorrTaperInPad(tmpArray, MRC_MODE_FLOAT, boxXsize, 0, boxXsize - 1, 0, 
+        XCorrTaperInPad(tmpArray, MRC_MODE_FLOAT, boxXsize, 0, boxXsize - 1, 0,
           boxYsize - 1, refArray, nxPad + 2, nxPad, nyPad, nxTaper, nyTaper);
       }
-       
+
       // Prepare the reference once or each time
       if (loop || !ind) {
         XCorrMeanZero(refArray, nxPad + 2, nxPad, nyPad);
@@ -3635,8 +3632,8 @@ void CProcessImage::OnProcessCropAverage()
       // Transform the box into xform slice and add into sum
       edge = (float)sliceEdgeMean(boxSlices[ind]->data.f, boxXsize, 0, boxXsize - 1, 0,
         boxYsize - 1);
-      cubinterp(boxSlices[ind]->data.f, xformSlices[ind]->data.f, boxXsize, boxYsize, 
-        boxXsize, boxYsize, unitMat, boxXsize / 2.f, boxYsize / 2.f, 
+      cubinterp(boxSlices[ind]->data.f, xformSlices[ind]->data.f, boxXsize, boxYsize,
+        boxXsize, boxYsize, unitMat, boxXsize / 2.f, boxYsize / 2.f,
         xShifts[ind], yShifts[ind], 1., edge, 1);
       for (i = 0; i < boxDim; i++)
         sumArray[i] += xformSlices[ind]->data.f[i] / numAvg;
@@ -3668,7 +3665,7 @@ void CProcessImage::OnProcessCropAverage()
     sliceFree(xformSlices[ind]);
   }
  }
- 
+
 // Looks for bad stripes in an image at the specified correlation, returns the number of
 // transitions found; for K2/K3, finds out how many are close to expected locations
 int CProcessImage::CheckForBadStripe(EMimageBuffer *imBuf, int horizontal, int &numNear)
@@ -3687,7 +3684,7 @@ int CProcessImage::CheckForBadStripe(EMimageBuffer *imBuf, int horizontal, int &
   bool lastHigh = false, atFirstOrLastExpected = false;
   unsigned short *usdata, *usdata2;
   short *data, *data2;
-  CameraParameters *camParam; 
+  CameraParameters *camParam;
   ControlSet *cset, *conSets = mWinApp->GetCamConSets();
   std::set<int> nearExpected;
   numNear = 0;
@@ -3765,7 +3762,7 @@ int CProcessImage::CheckForBadStripe(EMimageBuffer *imBuf, int horizontal, int &
 
   // Get a mean and SD of the differences and get a Z score
   for (ix = 0; ix < numSums; ix++) {
-    sumsToAvgSD((float)intSums[ix], (float)intSumSq[ix], (horizontal ? nx : ny), &mean, 
+    sumsToAvgSD((float)intSums[ix], (float)intSumSq[ix], (horizontal ? nx : ny), &mean,
       &SD);
     colDiffs[ix] = (float)fabs(mean / B3DMAX(1.e-6, SD));
   }
@@ -3776,7 +3773,7 @@ int CProcessImage::CheckForBadStripe(EMimageBuffer *imBuf, int horizontal, int &
 
   // Sort them and exclude the expected number of higher points from 4 transitions
   // Without this the SD is horribly skewed upwards by a few transitions
-  // The MADN is actually close to the trimmed SD but usuing the SD may be more 
+  // The MADN is actually close to the trimmed SD but usuing the SD may be more
   // representative of the high end of the range below actual transitions
   memcpy(temp, colDiffs, 4 * numSums);
   rsSortFloats(temp, numSums);
@@ -3786,7 +3783,7 @@ int CProcessImage::CheckForBadStripe(EMimageBuffer *imBuf, int horizontal, int &
   // Search for Z scores above the criterion number SD's from the mean
   for (ix = indent; ix < numSums - indent; ix++) {
     if ((colDiffs[ix] - mean) > crit * SD) {
-      /*PrintfToLog("ix = %d, zdiff %.2f  Z of that %.2f", ix, colDiffs[ix], 
+      /*PrintfToLog("ix = %d, zdiff %.2f  Z of that %.2f", ix, colDiffs[ix],
         (colDiffs[ix] - mean) / SD);*/
       retInc = 1;
 
@@ -3831,7 +3828,7 @@ int CProcessImage::CheckForBadStripe(EMimageBuffer *imBuf, int horizontal, int &
             idiff = (firstExpected[k2Ind] + iy * deltaExpected[k2Ind]) / imBuf->mBinning;
             if (fabs((double)tLeft - idiff) < nearCrit) {
 
-              // Only count transitions near the same boundary once both here and in 
+              // Only count transitions near the same boundary once both here and in
               // number of transitions return value
               if (nearExpected.count(iy)) {
                 retInc = 0;
@@ -3880,12 +3877,12 @@ void CProcessImage::OnUpdateProcessCropAverage(CCmdUI *pCmdUI)
 // Returns the defocus of the user point, if the buffer is an FFT and parameters are
 // provided for drawing rings at zeros.  Returns ring radii as fractions of Nyquist if
 // radii is not NULL.
-bool CProcessImage::GetFFTZeroRadiiAndDefocus(EMimageBuffer *imBuf, FloatVec *radii, 
+bool CProcessImage::GetFFTZeroRadiiAndDefocus(EMimageBuffer *imBuf, FloatVec *radii,
   double &defocus, float phase)
 {
   double pointRad, xcen, ycen, dx, dy;
   int nx, ny;
-  if (!(imBuf->mCaptured == BUFFER_FFT || imBuf->mCaptured == BUFFER_LIVE_FFT) || 
+  if (!(imBuf->mCaptured == BUFFER_FFT || imBuf->mCaptured == BUFFER_LIVE_FFT) ||
     mSphericalAber <= 0. || !mNumFFTZeros || !imBuf->mHasUserPt || !imBuf->mImage)
     return false;
   float pixel = 1000.f * mShiftManager->GetPixelSize(imBuf);
@@ -3908,9 +3905,9 @@ bool CProcessImage::GetFFTZeroRadiiAndDefocus(EMimageBuffer *imBuf, FloatVec *ra
 
 // If there are already rings at zeros and en existing user point, takes the values for
 // a new mouse click and finds if it near an existing drawn ring; computes the new defocus
-// based on the click being at that zero, and adjusts the point to be at first zero for 
+// based on the click being at that zero, and adjusts the point to be at first zero for
 // that defocus
-void CProcessImage::ModifyFFTPointToFirstZero(EMimageBuffer *imBuf, float &shiftX, 
+void CProcessImage::ModifyFFTPointToFirstZero(EMimageBuffer *imBuf, float &shiftX,
   float &shiftY)
 {
   FloatVec radii, adjRadii;
@@ -3939,8 +3936,8 @@ void CProcessImage::ModifyFFTPointToFirstZero(EMimageBuffer *imBuf, float &shift
     if (ind < num - 1)
       critAbove = B3DMAX(2.5 / xcen, 0.4 * (radii[ind + 1] - radii[ind]));
     if ((pointRad >= radii[ind] - critBelow && pointRad <= radii[ind] + critAbove) ||
-      (ind == num - 1 && 
-      pointRad > B3DCHOICE(ind > 1, 0.5 * (lastRad + nextRad), lastRad) && 
+      (ind == num - 1 &&
+      pointRad > B3DCHOICE(ind > 1, 0.5 * (lastRad + nextRad), lastRad) &&
       pointRad < 2 * lastRad - nextRad) || ind == num - 2 && ind &&
       pointRad > nextRad && pointRad < 0.5 * (lastRad + nextRad)) {
       if (!DefocusFromPointAndZeros(pointRad, ind + 1, pixel, 0., &adjRadii, defocus))
@@ -3982,7 +3979,7 @@ bool CProcessImage::DefocusFromPointAndZeros(double pointRad, int zeroNum, float
     // Empirically, the defocus given by this equation is wrong when theta > 1
     if (theta > 1.)
       return false;
-    defocus = csOne * (pow(theta, 4.) + 2. * zeroNum - ampAngle - 2. * phase / PI) / 
+    defocus = csOne * (pow(theta, 4.) + 2. * zeroNum - ampAngle - 2. * phase / PI) /
       (2. * theta * theta);
   }
   if (!radii)
@@ -3999,7 +3996,7 @@ bool CProcessImage::DefocusFromPointAndZeros(double pointRad, int zeroNum, float
     // And if the first zero for the computed defocus does not regenerate
     if (zeroNum == 1 && !ind && fabs(thetaNew - theta) > 1.e-5 * theta)
       return false;
-    if (zeroNum <= 0 && maxRingFreq > 0 && 
+    if (zeroNum <= 0 && maxRingFreq > 0 &&
       thetaNew * pixel / (wavelength * csTwo) > maxRingFreq)
       break;
     radii->push_back((float)(thetaNew * pixel * 2.0 / (wavelength * csTwo)));
@@ -4128,29 +4125,29 @@ int CProcessImage::InitializeCtffindParams(EMimageBuffer *imBuf, CtffindParams &
 }
 
 // Set or adjust some more parameters with a known target defocus in positive microns
-void CProcessImage::SetCtffindParamsForDefocus(CtffindParams &param, double defocus, 
+void CProcessImage::SetCtffindParamsForDefocus(CtffindParams &param, double defocus,
   bool justMinRes)
 {
   FloatVec radii;
   if (!justMinRes) {
     param.minimum_defocus = (float)(10000. * B3DMAX(0.3, defocus / mCtfFitFocusRangeFac));
-    param.maximum_defocus = (float)(10000. * B3DMIN(defocus * mCtfFitFocusRangeFac, 
+    param.maximum_defocus = (float)(10000. * B3DMIN(defocus * mCtfFitFocusRangeFac,
       defocus + 5.));
   }
-  DefocusFromPointAndZeros(0., 0, param.pixel_size_of_input_image / 10.f, 0., &radii, 
+  DefocusFromPointAndZeros(0., 0, param.pixel_size_of_input_image / 10.f, 0., &radii,
     defocus);
-  
+
   // Make sure minimum resolution is below first zero, and if it gets lower than the
   // default, potentially lower the maximum resolution to limit fitting range
   if (radii.size() > 0)
-    ACCUM_MAX(param.minimum_resolution, param.pixel_size_of_input_image / 
+    ACCUM_MAX(param.minimum_resolution, param.pixel_size_of_input_image /
       (0.4f * radii[0]));
   if (param.minimum_resolution > 50.)
     ACCUM_MAX(param.maximum_resolution, param.minimum_resolution / 5.f);
   ACCUM_MAX(param.maximum_resolution, GetMaxCtfFitRes());
-  if (param.find_additional_phase_shift && mMinCtfFitResIfPhase > 0. && 
+  if (param.find_additional_phase_shift && mMinCtfFitResIfPhase > 0. &&
     mMinCtfFitResIfPhase < param.minimum_resolution)
-    param.minimum_resolution = B3DMAX(mMinCtfFitResIfPhase, 
+    param.minimum_resolution = B3DMAX(mMinCtfFitResIfPhase,
       1.5f * param.maximum_resolution);
 }
 
@@ -4187,9 +4184,9 @@ int CProcessImage::RunCtffind(EMimageBuffer *imBuf, CtffindParams &params,
   padSize = B3DMAX(image->getWidth(), image->getHeight());
   padSize = XCorrNiceFrame(padSize, 2, niceFFTlimit());
   image->flipY();
-  err = spectrumScaled(image->getData(), image->getType(), image->getWidth(), 
+  err = spectrumScaled(image->getData(), image->getType(), image->getWidth(),
     image->getHeight(), spectrum, -padSize, useBox, 0, 0., -1, twoDfft);
-  if (err) 
+  if (err)
     PrintfToLog("Error %d calling spectrumScaled", err);
   image->flipY();
   image->UnLock();
@@ -4214,7 +4211,7 @@ int CProcessImage::RunCtffind(EMimageBuffer *imBuf, CtffindParams &params,
                  NULL, NULL, numPoints, lastBinFreq)) {
     mBufIndForCtffind = -1;
     mess.Format("Ctffind: defocus: %.3f um,  astig: %.3f um,  angle: %.1f,  ",
-      -(results_array[0] + results_array[1]) / 20000., 
+      -(results_array[0] + results_array[1]) / 20000.,
       (results_array[0] - results_array[1]) / 10000., results_array[2]);
     if (params.find_additional_phase_shift) {
       str.Format("%s %.1f deg,  ", params.minimum_additional_phase_shift <
@@ -4250,7 +4247,7 @@ void CProcessImage::SaveCtffindCrashImage(CString &message)
   if (mBufIndForCtffind < 0)
     return;
   message += "\r\nThis occurred calling ctffind\r\n";
-  name.Format("%s\\ctffindCrash%02d%02d%02d.mrc", mWinApp->mDocWnd->GetSystemPath(), 
+  name.Format("%s\\ctffindCrash%02d%02d%02d.mrc", mWinApp->mDocWnd->GetSystemPath(),
     ctDateTime.GetHour(), ctDateTime.GetMinute(), ctDateTime.GetSecond());
   if (mWinApp->mDocWnd->SaveToOtherFile(mBufIndForCtffind, STORE_TYPE_MRC, 0, &name)) {
     message += "Failed to save image that crashed ctffind to file\r\n";
@@ -4389,8 +4386,8 @@ int CProcessImage::DoseRateFromMean(EMimageBuffer *imBuf, float mean, float &dos
   countsPerElectron = CountsPerElectronForImBuf(imBuf);
   if (!countsPerElectron)
     return 2;
-  doseRate = (float)(mean / (countsPerElectron * imBuf->mExposure * 
-    imBuf->mBinning * imBuf->mBinning / ((CamHasDoubledBinnings(camParam) || 
+  doseRate = (float)(mean / (countsPerElectron * imBuf->mExposure *
+    imBuf->mBinning * imBuf->mBinning / ((CamHasDoubledBinnings(camParam) ||
     (camParam->DE_camType && (camParam->CamFlags & DE_APOLLO_CAMERA))) ? 4. : 1.)));
   if ((camParam->K2Type || IS_FALCON3_OR_4(camParam)) && imBuf->mK2ReadMode > 0)
     doseRate = LinearizedDoseRate(imBuf->mCamera, doseRate);
@@ -4419,7 +4416,7 @@ float CProcessImage::CountsPerElectronForImBuf(EMimageBuffer * imBuf)
     return 0.;
 
   // Use the total divisions by 2 if available and large, but then skip the gain factors
-  // if they were imposed by autogain, since they are in the total divisions. 
+  // if they were imposed by autogain, since they are in the total divisions.
   // Otherwise, stick with the product of divided counts and gain factor
   if (extra->mDividedBy2 > 1)
     countsPerElectron /= powf(2.f, (float)extra->mDividedBy2);
@@ -4435,9 +4432,9 @@ float CProcessImage::CountsPerElectronForImBuf(EMimageBuffer * imBuf)
 float CProcessImage::LinearizedDoseRate(int camera, float rawRate)
 {
   CameraParameters *camParam = mWinApp->GetCamParams() + camera;
-  const float K2counts200KV[] = {1.010f, 2.093f, 3.112f, 4.520f, 6.355f, 8.095f, 9.902f, 
+  const float K2counts200KV[] = {1.010f, 2.093f, 3.112f, 4.520f, 6.355f, 8.095f, 9.902f,
     13.288f, 17.325f, 19.424f, 22.683f, 26.42f, 28.63f, 29.53f, 30.16f};
-  const float K2rates200KV[] = {0.909f, 1.950f, 2.984f, 4.491f, 6.583f, 8.705f, 11.071f, 
+  const float K2rates200KV[] = {0.909f, 1.950f, 2.984f, 4.491f, 6.583f, 8.705f, 11.071f,
     16.107f, 23.707f, 28.698f, 38.486f, 53.90f, 65.78f, 71.37f, 75.54f};
   const float K2counts300KV[] = {0.731f, 1.703f, 2.724f, 3.517f, 5.279f, 7.336f, 9.950f,
     13.014f, 16.514f, 21.21f, 25.32f, 28.20f, 29.25f};
@@ -4522,28 +4519,28 @@ float CProcessImage::LinearizedDoseRate(int camera, float rawRate)
         numVals = sizeof(Falcon4Counts200KV) / sizeof(float);
       }
     }
-    camParam->doseTabCounts.insert(camParam->doseTabCounts.end(), countsArr, 
+    camParam->doseTabCounts.insert(camParam->doseTabCounts.end(), countsArr,
       countsArr + numVals);
-    camParam->doseTabRates.insert(camParam->doseTabRates.end(), ratesArr, 
+    camParam->doseTabRates.insert(camParam->doseTabRates.end(), ratesArr,
       ratesArr + numVals);
   }
 
   // If fit has not been done yet, fit to the table
   if (!camParam->doseTabScale) {
-    FitRatesAndCounts(&camParam->doseTabCounts[0], &camParam->doseTabRates[0], 
-      (int)camParam->doseTabRates.size(), camParam->doseTabScale, 
+    FitRatesAndCounts(&camParam->doseTabCounts[0], &camParam->doseTabRates[0],
+      (int)camParam->doseTabRates.size(), camParam->doseTabScale,
       camParam->doseTabConst, camParam->doseTabBase);
   }
 
   // Call dose rate routine for lookup
-  FindDoseRate(rawRate, &camParam->doseTabCounts[0], &camParam->doseTabRates[0], 
-    (int)camParam->doseTabRates.size(), camParam->doseTabScale, 
+  FindDoseRate(rawRate, &camParam->doseTabCounts[0], &camParam->doseTabRates[0],
+    (int)camParam->doseTabRates.size(), camParam->doseTabScale,
       camParam->doseTabConst, camParam->doseTabBase, ratio, doseRate);
   return doseRate;
 }
 
 // Do an initial fit to the counts and dose rates in the table and store the values
-int CProcessImage::FitRatesAndCounts(float *counts, float *rates, int numVals, 
+int CProcessImage::FitRatesAndCounts(float *counts, float *rates, int numVals,
   float &scale, float &intercp, float &base)
 {
   float brackets[14];
@@ -4586,8 +4583,8 @@ int CProcessImage::FitRatesAndCounts(float *counts, float *rates, int numVals,
   return err;
 }
 
-// Find the linearized rate for the given count value, given the table and its fitting 
-// parameters.  Returns the dose rate and the attenuation ratio; return value is an error 
+// Find the linearized rate for the given count value, given the table and its fitting
+// parameters.  Returns the dose rate and the attenuation ratio; return value is an error
 // code from minimize1D
 int CProcessImage::FindDoseRate(float countVal, float *counts, float *rates, int numVals,
                   float scale, float intercp, float base,
@@ -4636,8 +4633,8 @@ int CProcessImage::FindDoseRate(float countVal, float *counts, float *rates, int
     resAfter = counts[indAfter] / rates[indAfter] -
       (expf(scale * rates[indAfter] + intercp) + base);
 
-    // For the current dose rate, estimate the attenuation ratio from the fit and an 
-    // interpolated residual value, then the error to minimize is the difference between 
+    // For the current dose rate, estimate the attenuation ratio from the fit and an
+    // interpolated residual value, then the error to minimize is the difference between
     // the implied and actual count value
     for (;;) {
       frac = (curRate - rates[indBefore]) / (rates[indAfter] - rates[indBefore]);
@@ -4658,7 +4655,7 @@ int CProcessImage::FindDoseRate(float countVal, float *counts, float *rates, int
     }
   }
   doseRate = countVal / ratioBest;
-  return err; 
+  return err;
 }
 
 // Return maximum resolution for fitting, in Angstroms

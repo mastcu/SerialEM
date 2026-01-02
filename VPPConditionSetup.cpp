@@ -7,6 +7,10 @@
 #include "EMscope.h"
 #include "MultiTSTasks.h"
 
+#if defined(_DEBUG) && defined(_CRTDBG_MAP_ALLOC)
+#define new DEBUG_NEW
+#endif
+
 #define MIN_COND_TIME  5
 #define MAX_COND_TIME 1000
 #define MIN_COND_CHARGE 5
@@ -59,11 +63,11 @@ void CVPPConditionSetup::DoDataExchange(CDataExchange* pDX)
   DDX_Text(pDX, IDC_STAT_PROBEMODE, m_strProbeMode);
   DDX_Control(pDX, IDC_EDITPPCONDTIME, m_editCookTime);
   DDX_Text(pDX, IDC_EDITPPCONDTIME, m_iCookTime);
-  MinMaxInt(IDC_EDITPPCONDTIME, m_iCookTime, MIN_COND_TIME, MAX_COND_TIME, 
+  MinMaxInt(IDC_EDITPPCONDTIME, m_iCookTime, MIN_COND_TIME, MAX_COND_TIME,
     "Exposure time");
   DDX_Control(pDX, IDC_EDITPPCONDDOSE, m_editCookCharge);
   DDX_Text(pDX, IDC_EDITPPCONDDOSE, m_iCharge);
-  MinMaxInt(IDC_EDITPPCONDDOSE, m_iCharge, MIN_COND_CHARGE, MAX_COND_CHARGE, 
+  MinMaxInt(IDC_EDITPPCONDDOSE, m_iCharge, MIN_COND_CHARGE, MAX_COND_CHARGE,
     "Exposure charge");
   DDX_Check(pDX, IDC_COND_AT_NAV_POINT, m_bCondAtNavPoint);
   DDX_Control(pDX, IDC_RWITHLABEL, m_butWithLabel);
@@ -317,7 +321,7 @@ void CVPPConditionSetup::DisplaySettings()
     return;
   m_strMag.Format("%d", mMagTab[mParams.magIndex].mag);
   m_strSpot.Format("%d", mParams.spotSize);
-  m_strIntensity.Format("%.2f%s %s", mScope->GetC2Percent(mParams.spotSize, 
+  m_strIntensity.Format("%.2f%s %s", mScope->GetC2Percent(mParams.spotSize,
     mParams.intensity, mParams.probeMode),
     mScope->GetC2Units(), mScope->GetC2Name());
   m_strAlpha.Format("%d", mParams.alpha + 1);
@@ -336,7 +340,7 @@ void CVPPConditionSetup::LiveUpdate(int magInd, int spotSize, int probe, double 
   }
   if (!m_bSetTrackState || !magInd)
     return;
-  if (magInd == mParams.magIndex && spotSize == mParams.spotSize && probe == 
+  if (magInd == mParams.magIndex && spotSize == mParams.spotSize && probe ==
     mParams.probeMode && intensity == mParams.intensity && alpha == mParams.alpha)
     return;
   mParams.magIndex = magInd;

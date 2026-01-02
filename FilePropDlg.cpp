@@ -1,6 +1,6 @@
 // FilePropDlg.cpp:      To set properties for saving images to files
 //
-// Copyright (C) 2003-2024 by the Regents of the University of
+// Copyright (C) 2003-2026 by the Regents of the University of
 // Colorado.  See Copyright.txt for full notice of copyright and limitations.
 //
 // Author: David Mastronarde
@@ -12,10 +12,8 @@
 #include ".\FilePropDlg.h"
 #include "Image\KStoreMRC.h"
 
-#ifdef _DEBUG
+#if defined(_DEBUG) && defined(_CRTDBG_MAP_ALLOC)
 #define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
 #endif
 
 #define SetFlag(a,b) \
@@ -26,7 +24,7 @@ static char THIS_FILE[] = __FILE__;
 
 static int sCompressions[] = {COMPRESS_NONE, COMPRESS_ZIP, COMPRESS_LZW, COMPRESS_JPEG};
 
-enum { RADIO_TYPE_MRC = 0, RADIO_TYPE_HDF, RADIO_TYPE_TIFF, RADIO_TYPE_ADOC, 
+enum { RADIO_TYPE_MRC = 0, RADIO_TYPE_HDF, RADIO_TYPE_TIFF, RADIO_TYPE_ADOC,
   RADIO_TYPE_JPEG };
 
 /////////////////////////////////////////////////////////////////////////////
@@ -140,14 +138,14 @@ END_MESSAGE_MAP()
 
 void CFilePropDlg::OnRbyte()
 {
-  UpdateData(TRUE); 
+  UpdateData(TRUE);
 
-  if ((m_iFileType == RADIO_TYPE_TIFF || m_iFileType == RADIO_TYPE_ADOC) && 
+  if ((m_iFileType == RADIO_TYPE_TIFF || m_iFileType == RADIO_TYPE_ADOC) &&
     mFileOpt.mode == MRC_MODE_FLOAT && m_iCompress == 3) {
     m_iCompress = 1;
     UpdateData(false);
   }
-  ManageStates(); 
+  ManageStates();
 }
 
 void CFilePropDlg::OnRfileType()
@@ -167,30 +165,30 @@ void CFilePropDlg::OnRfileType()
   ManageStates();
 }
 
-/*void CFilePropDlg::OnChangeMaxsectsedit() 
+/*void CFilePropDlg::OnChangeMaxsectsedit()
 {
-  UpdateData(TRUE); 
+  UpdateData(TRUE);
 }
 
-void CFilePropDlg::OnChangeTruncblackedit() 
+void CFilePropDlg::OnChangeTruncblackedit()
 {
-  UpdateData(TRUE); 
+  UpdateData(TRUE);
 }
 
-void CFilePropDlg::OnChangeTruncwhiteedit() 
+void CFilePropDlg::OnChangeTruncwhiteedit()
 {
-  UpdateData(TRUE); 
+  UpdateData(TRUE);
 }
 */
 // Enable or disable various items based on byte versus int
 // or whether any extra header info is being selected
 void CFilePropDlg::ManageStates()
 {
-  BOOL tiffFile = (mFileOpt.TIFFallowed && m_iFileType == RADIO_TYPE_TIFF) || 
+  BOOL tiffFile = (mFileOpt.TIFFallowed && m_iFileType == RADIO_TYPE_TIFF) ||
     m_iFileType == RADIO_TYPE_ADOC;
   BOOL jpegFile = m_iFileType == RADIO_TYPE_JPEG;
   BOOL notFloat = mFileOpt.mode != MRC_MODE_FLOAT;
-  BOOL bEnable = (m_iByteInt == 0 || (tiffFile && sCompressions[m_iCompress] == 
+  BOOL bEnable = (m_iByteInt == 0 || (tiffFile && sCompressions[m_iCompress] ==
     COMPRESS_JPEG) || jpegFile) && notFloat;
   m_groupTrunc.EnableWindow(bEnable);
   m_statTruncWhite.EnableWindow(bEnable);
@@ -236,7 +234,7 @@ void CFilePropDlg::ManageStates()
   m_butSaveMdoc.EnableWindow(!mFileOpt.montageInMdoc && !m_iFileType);
 }
 
-BOOL CFilePropDlg::OnInitDialog() 
+BOOL CFilePropDlg::OnInitDialog()
 {
   CBaseDlg::OnInitDialog();
   CButton *hdfBut = (CButton *)GetDlgItem(IDC_RHDFFILE);
@@ -262,7 +260,7 @@ BOOL CFilePropDlg::OnInitDialog()
   if ((mFileOpt.fileType == STORE_TYPE_TIFF ||  mFileOpt.fileType == STORE_TYPE_ADOC) &&
     mFileOpt.TIFFallowed)
     m_iFileType = RADIO_TYPE_TIFF;
-  else if ((mFileOpt.useMont() ? mFileOpt.montFileType : mFileOpt.fileType) == 
+  else if ((mFileOpt.useMont() ? mFileOpt.montFileType : mFileOpt.fileType) ==
     STORE_TYPE_ADOC)
     m_iFileType = RADIO_TYPE_ADOC;
   else if ((mFileOpt.useMont() ? mFileOpt.montFileType : mFileOpt.fileType) ==
@@ -300,12 +298,12 @@ void CFilePropDlg::SetCompressionFromFileOpt()
     m_iCompress = 1;
 }
 
-void CFilePropDlg::OnOK() 
+void CFilePropDlg::OnOK()
 {
   // Unload the data and then recode it into the FileOption
   int filety = STORE_TYPE_MRC;
-  UpdateData(TRUE); 
-  if (mFileOpt.mode != 2) 
+  UpdateData(TRUE);
+  if (mFileOpt.mode != 2)
     mFileOpt.mode = m_iByteInt < 2 ? m_iByteInt : MRC_MODE_USHORT;
   mFileOpt.maxSec = m_iMaxSects;
   mFileOpt.pctTruncLo = m_fTruncBlack;
@@ -346,19 +344,19 @@ void CFilePropDlg::OnOK()
   CDialog::OnOK();
 }
 
-void CFilePropDlg::OnKillfocusTruncblackedit() 
+void CFilePropDlg::OnKillfocusTruncblackedit()
 {
   UpdateData(TRUE);
 }
 
-void CFilePropDlg::OnKillfocusTruncwhiteedit() 
+void CFilePropDlg::OnKillfocusTruncwhiteedit()
 {
   UpdateData(TRUE);
 }
 
-void CFilePropDlg::OnKillfocusMaxsectsedit() 
+void CFilePropDlg::OnKillfocusMaxsectsedit()
 {
-  UpdateData(TRUE); 
+  UpdateData(TRUE);
 }
 
 void CFilePropDlg::OnSaveMdoc()

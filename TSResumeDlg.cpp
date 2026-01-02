@@ -1,7 +1,6 @@
-// TSResumeDlg.cpp:      To resume a tilt series at a specified action point 
+// TSResumeDlg.cpp:      To resume a tilt series at a specified action point
 //
-// Copyright (C) 2003 by Boulder Laboratory for 3-Dimensional Electron 
-// Microscopy of Cells ("BL3DEMC") and the Regents of the University of
+// Copyright (C) 2003-2026 by the Regents of the University of
 // Colorado.  See Copyright.txt for full notice of copyright and limitations.
 //
 // Author: David Mastronarde
@@ -11,10 +10,8 @@
 #include "SerialEM.h"
 #include "TSResumeDlg.h"
 
-#ifdef _DEBUG
+#if defined(_DEBUG) && defined(_CRTDBG_MAP_ALLOC)
 #define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
 #endif
 
 /////////////////////////////////////////////////////////////////////////////
@@ -62,29 +59,29 @@ END_MESSAGE_MAP()
 /////////////////////////////////////////////////////////////////////////////
 // CTSResumeDlg message handlers
 
-void CTSResumeDlg::OnSingleloop() 
+void CTSResumeDlg::OnSingleloop()
 {
-  m_iSingleStep = 1; 
-  OnOK(); 
-}
-
-void CTSResumeDlg::OnSinglestep() 
-{
-  m_iSingleStep = -1;   
+  m_iSingleStep = 1;
   OnOK();
 }
 
-void CTSResumeDlg::OnOK() 
+void CTSResumeDlg::OnSinglestep()
+{
+  m_iSingleStep = -1;
+  OnOK();
+}
+
+void CTSResumeDlg::OnOK()
 {
   UpdateData(true);
   CDialog::OnOK();
 }
 
-BOOL CTSResumeDlg::OnInitDialog() 
+BOOL CTSResumeDlg::OnInitDialog()
 {
   CString string, repString;
   CBaseDlg::OnInitDialog();
-  
+
   repString = m_bMontaging ? "montage" : m_strRecordName + " image";
 
   // This is one way to take care of the mode name in labels!
@@ -93,10 +90,10 @@ BOOL CTSResumeDlg::OnInitDialog()
   ReplaceWindowText(&m_butRadio5, "Record image", (LPCTSTR)repString);
   ReplaceWindowText(&m_butRadio6, "Record image", (LPCTSTR)repString);
   ReplaceWindowText(&m_butRadio7, "Record image", (LPCTSTR)repString);
-  
+
   // Disable button 3 if no record in A or montaging
   m_butRadio3.EnableWindow(m_bRecordInA && !m_bMontaging && m_bChangeOK);
-  
+
   // Enable button 2 only if one could go on
   m_butRadio2.EnableWindow(m_bTiltable && m_bChangeOK);
   m_butRadio7.EnableWindow(m_bLowMagAvailable && m_bChangeOK);
@@ -104,7 +101,7 @@ BOOL CTSResumeDlg::OnInitDialog()
   m_butRadio4.EnableWindow(m_bChangeOK);
   m_butRadio5.EnableWindow(m_bChangeOK);
   m_butRadio6.EnableWindow(m_bChangeOK);
-  
+
   return TRUE;  // return TRUE unless you set the focus to a control
                 // EXCEPTION: OCX Property Pages should return FALSE
 }

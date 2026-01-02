@@ -1,7 +1,6 @@
 // AlignFocusWindow.cpp:  Has image alignment and autofocusing controls
 //
-// Copyright (C) 2003 by Boulder Laboratory for 3-Dimensional Electron 
-// Microscopy of Cells ("BL3DEMC") and the Regents of the University of
+// Copyright (C) 2003-2026 by the Regents of the University of
 // Colorado.  See Copyright.txt for full notice of copyright and limitations.
 //
 // Author: David Mastronarde
@@ -22,10 +21,8 @@
 #include "TSController.h"
 #include "Utilities\KGetOne.h"
 
-#ifdef _DEBUG
+#if defined(_DEBUG) && defined(_CRTDBG_MAP_ALLOC)
 #define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
 #endif
 
 static int sIdTable[] = {IDC_BUTOPEN, IDC_BUTFLOATDOCK, IDC_STATTOPLINE, IDC_BUTHELP,
@@ -110,7 +107,7 @@ END_MESSAGE_MAP()
 /////////////////////////////////////////////////////////////////////////////
 // CAlignFocusWindow message handlers
 
-void CAlignFocusWindow::OnButalign() 
+void CAlignFocusWindow::OnButalign()
 {
   mWinApp->mMainView->SetFocus(); // Doesn't work?
   if (!mWinApp->DoingTasks())
@@ -133,33 +130,33 @@ void CAlignFocusWindow::OnButclearalign()
     !mWinApp->mScope->GetNoScope());
 }
 
-void CAlignFocusWindow::OnButresetshift() 
+void CAlignFocusWindow::OnButresetshift()
 {
   mWinApp->RestoreViewFocus();
   mWinApp->mShiftManager->ResetImageShift(true, false);
 }
 
-void CAlignFocusWindow::OnButfocus() 
+void CAlignFocusWindow::OnButfocus()
 {
   mWinApp->RestoreViewFocus();
-  if ((!mWinApp->DoingTasks() || mWinApp->GetJustNavAcquireOpen() ) && 
+  if ((!mWinApp->DoingTasks() || mWinApp->GetJustNavAcquireOpen() ) &&
     mWinApp->mFocusManager->FocusReady())
     mWinApp->mFocusManager->AutoFocusStart(1);
 }
 
-void CAlignFocusWindow::OnMousestage() 
+void CAlignFocusWindow::OnMousestage()
 {
   UpdateData(true);
   mWinApp->RestoreViewFocus();
   mWinApp->mShiftManager->SetMouseMoveStage(m_bMouseStage);
 }
 
-void CAlignFocusWindow::OnButstagethresh() 
+void CAlignFocusWindow::OnButstagethresh()
 {
-  float thresh = mWinApp->mShiftManager->GetMouseStageThresh();	
+  float thresh = mWinApp->mShiftManager->GetMouseStageThresh();
   if (!KGetOneFloat("Threshold fraction of camera field for moving stage instead of "
     "doing image shift:", thresh, 2)) {
-    mWinApp->RestoreViewFocus();  
+    mWinApp->RestoreViewFocus();
     return;
   }
   if (thresh < 0.)
@@ -175,16 +172,16 @@ void CAlignFocusWindow::OnButstagethresh()
       thresh = 0.;
     mWinApp->mShiftManager->SetMouseStageAbsThresh(thresh);
   }
-  mWinApp->RestoreViewFocus();  
+  mWinApp->RestoreViewFocus();
 }
 
-void CAlignFocusWindow::OnSetTrimFrac() 
+void CAlignFocusWindow::OnSetTrimFrac()
 {
   float frac = mWinApp->mShiftManager->GetTrimFrac();
-  if (!KGetOneFloat("This value will not be stored between SerialEM sessions.", 
-    "Fraction to trim off each side of image before aligning (range 0.04-0.4):", 
+  if (!KGetOneFloat("This value will not be stored between SerialEM sessions.",
+    "Fraction to trim off each side of image before aligning (range 0.04-0.4):",
     frac, 2)) {
-    mWinApp->RestoreViewFocus();  
+    mWinApp->RestoreViewFocus();
     return;
   }
   if (frac < 0.04)
@@ -192,7 +189,7 @@ void CAlignFocusWindow::OnSetTrimFrac()
   if (frac > 0.4)
     frac = 0.4f;
   mWinApp->mShiftManager->SetTrimFrac(frac);
-  mWinApp->RestoreViewFocus();  
+  mWinApp->RestoreViewFocus();
 }
 
 
@@ -200,10 +197,10 @@ void CAlignFocusWindow::OnCorrectBacklash()
 {
  	UpdateData(true);
   mWinApp->mShiftManager->SetBacklashMouseAndISR(m_bCorrectBacklash);
-  mWinApp->RestoreViewFocus();  
+  mWinApp->RestoreViewFocus();
 }
 
-void CAlignFocusWindow::OnCenteronaxis() 
+void CAlignFocusWindow::OnCenteronaxis()
 {
  	UpdateData(true);
   mWinApp->mScope->SetShiftToTiltAxis(m_bCenterOnAxis);
@@ -217,7 +214,7 @@ void CAlignFocusWindow::OnApplyISoffset()
   mWinApp->RestoreViewFocus();
 }
 
-void CAlignFocusWindow::OnTrimborders() 
+void CAlignFocusWindow::OnTrimborders()
 {
  	UpdateData(true);
   mWinApp->mShiftManager->SetTrimDarkBorders(m_bTrimBorders);
@@ -231,11 +228,11 @@ void CAlignFocusWindow::OnErasePeriodicPeaks()
   mWinApp->RestoreViewFocus();
 }
 
-BOOL CAlignFocusWindow::OnInitDialog() 
+BOOL CAlignFocusWindow::OnInitDialog()
 {
   CToolDlg::OnInitDialog();
   mInitialized = true;
-  UpdateSettings(); 
+  UpdateSettings();
   SetupPanels(sIdTable, sLeftTable, sTopTable, sHeightTable);
   mInitialized = true;
   return TRUE;  // return TRUE unless you set the focus to a control
@@ -253,7 +250,7 @@ void CAlignFocusWindow::UpdateSettings()
   m_bApplyISoffset = mWinApp->mScope->GetApplyISoffset();
   m_bTrimBorders = mWinApp->mShiftManager->GetTrimDarkBorders();
   m_bErasePeriodicPeaks = mWinApp->mShiftManager->GetErasePeriodicPeaks();
-  m_strDefTarget.Format("Def. target = %.2f um", 
+  m_strDefTarget.Format("Def. target = %.2f um",
     mWinApp->mFocusManager->GetTargetDefocus());
   UpdateData(false);
   Update();
@@ -264,7 +261,7 @@ void CAlignFocusWindow::UpdateHiding(void)
   SetOpenClosed(GetState());
 }
 
-void CAlignFocusWindow::OnCancelMode() 
+void CAlignFocusWindow::OnCancelMode()
 {
   CToolDlg::OnCancelMode();
 }
@@ -293,12 +290,12 @@ void CAlignFocusWindow::Update()
   SetDlgItemText(IDC_BUTALIGN, alignText);
 
   // Autoalign enabled if images in both buffers
-  bEnable = imBufs[0].mImage && 
+  bEnable = imBufs[0].mImage &&
     imBufs[mWinApp->mBufferManager->AutoalignBufferIndex()].mImage;
   m_butAlign.EnableWindow(bEnable && (!bTasks || justNavAcq));
-  
-  m_butToMarker.EnableWindow(imBufs[0].mImage && (!bTasks || justNavAcq) && 
-  (mWinApp->mMainView->GetImBufIndex() == 0) && 
+
+  m_butToMarker.EnableWindow(imBufs[0].mImage && (!bTasks || justNavAcq) &&
+  (mWinApp->mMainView->GetImBufIndex() == 0) &&
   (imBufs[0].mHasUserPt || imBufs[0].mIllegalUserPt));
 
   UpdateAutofocus(-1);
@@ -312,9 +309,9 @@ void CAlignFocusWindow::Update()
   // Reset shift shouldn't be done if camera busy or tilt series in action
   bEnable = !bTasks && !mWinApp->StartedTiltSeries();
   if (mWinApp->mCamera)
-    bEnable = (!mWinApp->mCamera->CameraBusy() || 
+    bEnable = (!mWinApp->mCamera->CameraBusy() ||
     mWinApp->mCamera->DoingContinuousAcquire()) && !bTasks;
-  m_butResetShift.EnableWindow(bEnable && 
+  m_butResetShift.EnableWindow(bEnable &&
     (!mWinApp->mScope || !mWinApp->mScope->GetMovingStage()));
 
   // Same for shift to tilt axis
@@ -345,8 +342,8 @@ void CAlignFocusWindow::Update()
 void CAlignFocusWindow::UpdateAutofocus(int magInd)
 {
   // Autofocus requires focus ready
-  m_butFocus.EnableWindow(mWinApp->mFocusManager->FocusReady(magInd) && 
-    (!mWinApp->DoingTasks() || mWinApp->GetJustNavAcquireOpen()) && 
+  m_butFocus.EnableWindow(mWinApp->mFocusManager->FocusReady(magInd) &&
+    (!mWinApp->DoingTasks() || mWinApp->GetJustNavAcquireOpen()) &&
     (!mWinApp->mScope || !mWinApp->mScope->GetMovingStage()));
 }
 

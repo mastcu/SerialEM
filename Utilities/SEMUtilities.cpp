@@ -15,6 +15,10 @@
 #include "..\Shared\iimage.h"
 #include "..\Shared\framealign.h"
 
+#if defined(_DEBUG) && defined(_CRTDBG_MAP_ALLOC)
+#define new DEBUG_NEW
+#endif
+
 
 static CSerialEMApp *sWinApp;
 
@@ -34,15 +38,15 @@ static int SEMCCDcodes[] =
   {IMAGE_NOT_FOUND, WRONG_DATA_TYPE, DM_CALL_EXCEPTION, NO_STACK_ID, STACK_NOT_3D,
    FILE_OPEN_ERROR, SEEK_ERROR, WRITE_DATA_ERROR, HEADER_ERROR, ROTBUF_MEMORY_ERROR,
    DIR_ALREADY_EXISTS, DIR_CREATE_ERROR, DIR_NOT_EXIST, SAVEDIR_IS_FILE, DIR_NOT_WRITABLE,
-   FILE_ALREADY_EXISTS, QUIT_DURING_SAVE, OPEN_DEFECTS_ERROR, WRITE_DEFECTS_ERROR, 
+   FILE_ALREADY_EXISTS, QUIT_DURING_SAVE, OPEN_DEFECTS_ERROR, WRITE_DEFECTS_ERROR,
    THREAD_ERROR, EARLY_RET_WITH_SYNC, CONTINUOUS_ENDED, BAD_SUM_LIST, BAD_ANTIALIAS_PARAM,
-   CLIENT_SCRIPT_ERROR, GENERAL_SCRIPT_ERROR, GETTING_DEFECTS_ERROR, 
-   DS_CHANNEL_NOT_ACQUIRED, NO_DEFERRED_SUM, NO_GPU_AVAILABLE, DEFECT_PARSE_ERROR, 
+   CLIENT_SCRIPT_ERROR, GENERAL_SCRIPT_ERROR, GETTING_DEFECTS_ERROR,
+   DS_CHANNEL_NOT_ACQUIRED, NO_DEFERRED_SUM, NO_GPU_AVAILABLE, DEFECT_PARSE_ERROR,
    GAIN_REF_LOAD_ERROR, BAD_FRAME_REDUCE_PARAM, FRAMEALI_INITIALIZE, FRAMEALI_NEXT_FRAME,
    FRAMEALI_FINISH_ALIGN, MAKECOM_BAD_PARAM, MAKECOM_NO_REL_PATH, OPEN_COM_ERROR,
-   WRITE_COM_ERROR, OPEN_MDOC_ERROR, WRITE_MDOC_ERROR, COPY_MDOC_ERROR, 
-   FRAMEALI_BAD_SUBSET, OPEN_SAVED_LIST_ERR, WRITE_SAVED_LIST_ERR, GRAB_AND_SKIP_ERR, 
-   FRAMEDOC_NO_SAVING, FRAMEDOC_OPEN_ERR, FRAMEDOC_WRITE_ERR, NULL_IMAGE, 
+   WRITE_COM_ERROR, OPEN_MDOC_ERROR, WRITE_MDOC_ERROR, COPY_MDOC_ERROR,
+   FRAMEALI_BAD_SUBSET, OPEN_SAVED_LIST_ERR, WRITE_SAVED_LIST_ERR, GRAB_AND_SKIP_ERR,
+   FRAMEDOC_NO_SAVING, FRAMEDOC_OPEN_ERR, FRAMEDOC_WRITE_ERR, NULL_IMAGE,
    FRAMETS_NO_ANGLES, VIEW_IS_ACTIVE, 0};
 
 static char *SEMCCDmessages[] =
@@ -107,11 +111,11 @@ const char *SEMCCDErrorMessage(int code)
   return FindMessage(code, SEMCCDcodes, SEMCCDmessages);
 }
 
-// Gets the montage control set for the given parameters.  
-// If trueSet is true return the true set index, otherwise the set to be used.  
+// Gets the montage control set for the given parameters.
+// If trueSet is true return the true set index, otherwise the set to be used.
 // lowDose should be 0 or > 0 and is optional, the default is the current state
 int MontageConSetNum(MontParam *param, bool trueSet, int lowDose)
-{ 
+{
   LowDoseParams *ldp = sWinApp->GetLowDoseParams();
   int set = RECORD_CONSET;
   if (lowDose < 0)
@@ -132,7 +136,7 @@ int MontageConSetNum(MontParam *param, bool trueSet, int lowDose)
 }
 
 // Returns the low dose area that would be used for a montage in low dose mode
-int MontageLDAreaIndex(MontParam *param) 
+int MontageLDAreaIndex(MontParam *param)
 {
   int set = MontageConSetNum(param, true, 1);
   return sWinApp->mCamera->ConSetToLDArea(set);
@@ -170,7 +174,7 @@ int UtilThreadBusy(CWinThread **threadpp, DWORD *exitPtr)
       *exitPtr = exitCode;
     if (exitCode == STILL_ACTIVE)
       return 1;
-    
+
     // If it is no longer active, delete it
     delete *threadpp;
     *threadpp = NULL;
@@ -210,7 +214,7 @@ KImageStore *UtilOpenOldMRCFile(CString filename)
     return NULL;
   }
   try {
-    file = new CFile(filename, CFile::modeReadWrite |CFile::shareDenyWrite | 
+    file = new CFile(filename, CFile::modeReadWrite |CFile::shareDenyWrite |
       CFile::modeNoInherit);
   }
   catch (CFileException *err) {
@@ -511,7 +515,7 @@ bool UtilIsDirectoryUsable(CString &dir, int &error)
 {
   CString tempFile = dir + "\\SEMtestWritableDir.txt";
   error = 0;
-  HANDLE tdir = CreateFile((LPCSTR)tempFile, GENERIC_READ | GENERIC_WRITE, 
+  HANDLE tdir = CreateFile((LPCSTR)tempFile, GENERIC_READ | GENERIC_WRITE,
     0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
   error = GetLastError();
   if (tdir == INVALID_HANDLE_VALUE)
@@ -561,7 +565,7 @@ char UtilCheckIllegalChars(CString &filename, int slashOrDriveOK, CString descri
 }
 
 // Split a CString into std::string vector
-void UtilSplitString(CString fullStr, const char *delim, 
+void UtilSplitString(CString fullStr, const char *delim,
   std::vector<std::string> &strList)
 {
   int ind, lenDelim = (int)strlen(delim);
@@ -573,7 +577,7 @@ void UtilSplitString(CString fullStr, const char *delim,
   strList.push_back((LPCTSTR)fullStr);
 }
 
-void UtilSplitString(std::string stdStr, const char *delim, 
+void UtilSplitString(std::string stdStr, const char *delim,
   std::vector<std::string> &strList)
 {
   CString fullStr = stdStr.c_str();
@@ -620,8 +624,8 @@ int CreateFrameDirIfNeeded(CString &directory, CString *errStr, char debug)
       UtilSplitPath(directory, parent, tmp);
       tmp.Format("An error occurred creating the directory:\r\n   %s\r\n"
         "   for saving frame images %s", (LPCTSTR)directory,
-        CFile::GetStatus((LPCTSTR)parent, status) ? 
-        "even though its parent directory exists" : 
+        CFile::GetStatus((LPCTSTR)parent, status) ?
+        "even though its parent directory exists" :
         "because its parent directory does not exist");
       if (errStr)
         *errStr = tmp;
@@ -633,10 +637,10 @@ int CreateFrameDirIfNeeded(CString &directory, CString *errStr, char debug)
   return 0;
 }
 
-// Compute inclusive limits "start" and "end" of group at index groupInd when dividing 
+// Compute inclusive limits "start" and "end" of group at index groupInd when dividing
 // a total of numTotal items into numGroups groups as evenly as possible, with remainder
 // distributed among the first groups
-void UtilBalancedGroupLimits(int numTotal, int numGroups, int groupInd, int &start, 
+void UtilBalancedGroupLimits(int numTotal, int numGroups, int groupInd, int &start,
                              int &end)
 {
   int base = numTotal / numGroups;
@@ -646,7 +650,7 @@ void UtilBalancedGroupLimits(int numTotal, int numGroups, int groupInd, int &sta
 }
 
 // Get an interpolated peak position after finishing a search with a given step size
-void UtilInterpolatePeak(FloatVec &vecPos, FloatVec &vecPeak, float step, 
+void UtilInterpolatePeak(FloatVec &vecPos, FloatVec &vecPeak, float step,
   float peakmax, float &posBest)
 {
   int ist;
@@ -709,12 +713,12 @@ int FindIndexForMagValue(int magval, int camera, int magInd)
     inverted = UtilMagInInvertedRange(magInd, camParams->GIF);
     if (inverted)
       UtilInvertedMagRangeLimits(camParams->GIF, limlo, limhi);
-  } 
+  }
 
   // Otherwise exclude the inverted top end Krios mags
   if (!secondary && !ifSTEM && !inverted) {
     for (i = limhi; i > scope->GetLowestMModeMagInd(); i--) {
-      if (MagOrEFTEMmag(camParams->GIF, i, ifSTEM) > 
+      if (MagOrEFTEMmag(camParams->GIF, i, ifSTEM) >
         MagOrEFTEMmag(camParams->GIF, i - 1, ifSTEM))
           break;
       limhi--;
@@ -871,8 +875,8 @@ void ConstrainWindowPlacement(int *left, int *top, int *right, int *bottom, bool
 // Constrain window to be on a desktop in the given placement
 void ConstrainWindowPlacement(WINDOWPLACEMENT *place, bool scale)
 {
-  ConstrainWindowPlacement((int *)&place->rcNormalPosition.left, 
-    (int *)&place->rcNormalPosition.top, (int *)&place->rcNormalPosition.right, 
+  ConstrainWindowPlacement((int *)&place->rcNormalPosition.left,
+    (int *)&place->rcNormalPosition.top, (int *)&place->rcNormalPosition.right,
     (int *)&place->rcNormalPosition.bottom, scale);
 }
 
@@ -880,8 +884,8 @@ void ConstrainWindowPlacement(WINDOWPLACEMENT *place, bool scale)
  * Evaluation needed for any frame alignmnet, base on code from alignframes.ccp in IMOD
  */
 float UtilEvaluateGpuCapability(int nx, int ny, int dataSize, bool gainNorm, bool defects,
-  int sumBinning, FrameAliParams &faParam, int numAllVsAll, int numAliFrames, 
-  int refineIter, int groupSize, int numFilt, int doSpline, double gpuMemory, 
+  int sumBinning, FrameAliParams &faParam, int numAllVsAll, int numAliFrames,
+  int refineIter, int groupSize, int numFilt, int doSpline, double gpuMemory,
   double maxMemory, int &gpuFlags, int &deferGpuSum, bool &gettingFRC)
 {
   float fullPadSize, sumPadSize, alignPadSize;
@@ -899,12 +903,12 @@ float UtilEvaluateGpuCapability(int nx, int ny, int dataSize, bool gainNorm, boo
   int aliBinning = UtilGetFrameAlignBinning(faParam, nx, ny);
 
   // Get memory for components then evaluate the GPU needs
-  FrameAlign::getPadSizesBytes(nx, ny, fullTaperFrac, sumBinning, aliBinning, 
+  FrameAlign::getPadSizesBytes(nx, ny, fullTaperFrac, sumBinning, aliBinning,
     fullPadSize, sumPadSize, alignPadSize);
   gettingFRC = sWinApp->mCamera->GetNumFrameAliLogLines() > 2;
 
   if (gpuMemory > 0) {
-    FrameAlign::gpuMemoryNeeds(fullPadSize, sumPadSize, alignPadSize, numAllVsAll, 
+    FrameAlign::gpuMemoryNeeds(fullPadSize, sumPadSize, alignPadSize, numAllVsAll,
       numAliFrames, refineIter, groupSize, needForGpuSum, needForGpuAli);
     gpuUnusable = B3DMAX(gpuUnusable, (float)gpuMemory * (1.f - gpuFracMem));
     gpuUsableMem = (float)gpuMemory - gpuUnusable;
@@ -920,16 +924,16 @@ float UtilEvaluateGpuCapability(int nx, int ny, int dataSize, bool gainNorm, boo
     }
 
     // Call this just to get number of frames that need to be held
-    FrameAlign::totalMemoryNeeds(fullPadSize, sizeof(float), sumPadSize, alignPadSize, 
-          numAllVsAll, numAliFrames, refineIter, 1, numFilt, faParam.hybridShifts, 
+    FrameAlign::totalMemoryNeeds(fullPadSize, sizeof(float), sumPadSize, alignPadSize,
+          numAllVsAll, numAliFrames, refineIter, 1, numFilt, faParam.hybridShifts,
           groupSize, doSpline, GPU_FOR_ALIGNING, 0, 0, -1, bdum, numHoldFull);
 
     // If summing is supposed to be done with align and alignment would fit but both
     // would not, get total memory needs and make sure THAT fits
     if (sumWithAlign && needForGpuAli < gpuUsableMem && needForGpuAli + needed >
       gpuUsableMem) {
-        totAliMem =  FrameAlign::totalMemoryNeeds(fullPadSize, sizeof(float), sumPadSize, 
-          alignPadSize, numAllVsAll, numAliFrames, refineIter, 1, numFilt, 
+        totAliMem =  FrameAlign::totalMemoryNeeds(fullPadSize, sizeof(float), sumPadSize,
+          alignPadSize, numAllVsAll, numAliFrames, refineIter, 1, numFilt,
           faParam.hybridShifts, groupSize, doSpline, GPU_FOR_ALIGNING, 1, 0, -1, bdum,
           numHoldFull);
         if (totAliMem < maxMemory) {
@@ -963,9 +967,9 @@ float UtilEvaluateGpuCapability(int nx, int ny, int dataSize, bool gainNorm, boo
 
     if (gpuFlags) {
       temp = needed;
-      needed += FrameAlign::findPreprocPadGpuFlags(nx, ny, dataSize, 
-        aliBinning, gainNorm, defects, doTrunc, 
-        B3DMAX(numHoldFull, 1), gpuUsableMem - needed, 
+      needed += FrameAlign::findPreprocPadGpuFlags(nx, ny, dataSize,
+        aliBinning, gainNorm, defects, doTrunc,
+        B3DMAX(numHoldFull, 1), gpuUsableMem - needed,
         0.5f * (1.f - gpuFracMem) * gpuUsableMem, gpuFlags, gpuFlags);
       SEMTrace('a', "GPU mem total %.1f  usable %.1f  need ali/sum %.1f  initial %.1f  "
         "total %.1f", gpuMemory/1.e6, gpuUsableMem/1.e6, temp/1.e6, (needed - temp)/1.e6,
@@ -988,12 +992,12 @@ float UtilEvaluateGpuCapability(int nx, int ny, int dataSize, bool gainNorm, boo
 
   }
   return FrameAlign::totalMemoryNeeds(fullPadSize, fullDataSize, sumPadSize, alignPadSize,
-    numAllVsAll, numAliFrames, refineIter, 1, numFilt, faParam.hybridShifts, groupSize, 
+    numAllVsAll, numAliFrames, refineIter, 1, numFilt, faParam.hybridShifts, groupSize,
     doSpline, gpuFlags, deferGpuSum, 0, -1, bdum, numHoldFull);
 }
 
 // Return the alignment binning for the given parameters and frame size
-int UtilGetFrameAlignBinning(FrameAliParams &param, int frameSizeX, 
+int UtilGetFrameAlignBinning(FrameAliParams &param, int frameSizeX,
   int frameSizeY)
 {
   int superFac = 1;
@@ -1018,7 +1022,7 @@ BOOL AdocAcquireMutex()
   if (!sAutodocMutex)
     return FALSE;
   if (WaitForSingleObject(sAutodocMutex, ADOC_MUTEX_WAIT) == WAIT_TIMEOUT) {
-    SEMTrace('y', "Failed to acquire adoc access mutex for thread %d", 
+    SEMTrace('y', "Failed to acquire adoc access mutex for thread %d",
       GetCurrentThreadId());
     return FALSE;
   }
@@ -1085,7 +1089,7 @@ void SetDropDownHeight(CComboBox* pMyComboBox, int itemsToShow)
   //Get rectangles
   CRect rctComboBox, rctDropDown;
   pMyComboBox->GetClientRect(&rctComboBox); //Combo rect
-  pMyComboBox->GetDroppedControlRect(&rctDropDown);  //DropDownList rect  
+  pMyComboBox->GetDroppedControlRect(&rctDropDown);  //DropDownList rect
   int itemHeight = pMyComboBox->GetItemHeight(-1); //Get Item height
   pMyComboBox->GetParent()->ScreenToClient(&rctDropDown); //Converts coordinates
   rctDropDown.bottom = rctDropDown.top + rctComboBox.Height() + itemHeight*itemsToShow; //Set height
@@ -1139,7 +1143,7 @@ void UtilGetMenuString(CMenu *menu, int position, CString &name, UINT nFlags)
   name.Replace("|", "&");
 }
 
-bool UtilCamRadiosNeedSmallFont(CButton *radio) 
+bool UtilCamRadiosNeedSmallFont(CButton *radio)
 {
   CameraParameters *camParam = sWinApp->GetCamParams();
   int *activeList = sWinApp->GetActiveCameraList();
@@ -1168,7 +1172,7 @@ double UtilGoodAngle(double angle)
 // Finds a frame alignment parameter that fits the given restriction on size and alignment
 // Return value is 0 if originally selected one or just one other one is valid, 1-3 if
 // none are valid, and -1 to -3 if new one is one of several that are valid
-int UtilFindValidFrameAliParams(CameraParameters *camParam, int readMode, 
+int UtilFindValidFrameAliParams(CameraParameters *camParam, int readMode,
   bool takeK3Binned, int whereAlign, int curIndex, int &newIndex, CString *message)
 {
   CString str;
@@ -1180,32 +1184,32 @@ int UtilFindValidFrameAliParams(CameraParameters *camParam, int readMode,
   if (!whereAlign || curIndex < 0 || curIndex >= (int)params->GetSize())
     return 0;
 
-  // The passed in boolean must combine whether the set is gain normalized, the setting of 
+  // The passed in boolean must combine whether the set is gain normalized, the setting of
   // taking K3 binned, and whether frames are to be saved unnormalized anyway
   if (camParam->K2Type == K3_TYPE && readMode != LINEAR_MODE)
     readMode = B3DCHOICE(takeK3Binned, COUNTING_MODE, SUPERRES_MODE);
 
   // First check, is the selected on valid with its restrictions
   sizeRestriction = camParam->canTakeFrames ? 0 : faParam->sizeRestriction;
-  if (sizeRestriction && sWinApp->GetAnySuperResMode() && 
+  if (sizeRestriction && sWinApp->GetAnySuperResMode() &&
     !BOOL_EQUIV(readMode != SUPERRES_MODE, sizeRestriction != SUPERRES_MODE)) {
       retval += 1;
       if (message) {
         str.Format("The camera parameters will give %sresolution frames but\r\n"
-          "the selected alignment parameters are marked as only for %sresolution frames.", 
+          "the selected alignment parameters are marked as only for %sresolution frames.",
           readMode == SUPERRES_MODE ? "super-" : "normal ",
           sizeRestriction == SUPERRES_MODE ? "super-" : "normal ");
         *message += str;
       }
   }
-  if (faParam->whereRestriction && 
+  if (faParam->whereRestriction &&
     !BOOL_EQUIV(whereAlign < 2, faParam->whereRestriction < 2)) {
       retval += 2;
       if (message) {
         if (!(*message).IsEmpty())
           *message += "\r\n\r\n";
         str.Format("The alignment is set to be done %s but the selected\r\n"
-          "alignment parameters are marked as only for alignment %s.", 
+          "alignment parameters are marked as only for alignment %s.",
           whereAlign < 2 ? "in the plugin" : "with IMOD",
           faParam->whereRestriction < 2 ? "in the plugin" : "with IMOD");
         *message += str;
@@ -1219,7 +1223,7 @@ int UtilFindValidFrameAliParams(CameraParameters *camParam, int readMode,
     sizeRestriction = camParam->canTakeFrames ? 0 : faParam->sizeRestriction;
     if ((!sizeRestriction || !sWinApp->GetAnySuperResMode() ||
       BOOL_EQUIV(readMode != SUPERRES_MODE, sizeRestriction != SUPERRES_MODE))
-      && (!faParam->whereRestriction || 
+      && (!faParam->whereRestriction ||
       BOOL_EQUIV(whereAlign < 2, faParam->whereRestriction < 2))) {
         numValid++;
         if (firstValid < 0)
@@ -1245,14 +1249,14 @@ int UtilFindValidFrameAliParams(CameraParameters *camParam, int readMode,
   return numValid > 1 ? -retval : 0;
 }
 
-// Writes text in a string to a text file, returning 1 on error opening or 2 on error 
+// Writes text in a string to a text file, returning 1 on error opening or 2 on error
 // writing
 int UtilWriteTextFile(CString fileName, CString text)
 {
   int retval = 1;
   CStdioFile *cFile = NULL;
   try {
-    cFile = new CStdioFile(fileName, CFile::modeCreate | 
+    cFile = new CStdioFile(fileName, CFile::modeCreate |
       CFile::modeWrite |CFile::shareDenyWrite);
     retval = 2;
     cFile->WriteString(text);
@@ -1261,7 +1265,7 @@ int UtilWriteTextFile(CString fileName, CString text)
   }
   catch(CFileException *perr) {
     perr->Delete();
-  } 
+  }
   if (cFile)
     delete cFile;
   return retval;
@@ -1316,7 +1320,7 @@ BOOL SleepMsg(DWORD dwTime_ms)
 
 // Establishes socket communication at the given address and port
 // Modified from HitachiPlugin
-SOCKET UtilConnectSocket(CString &ipAddress, int port, CString &errStr, 
+SOCKET UtilConnectSocket(CString &ipAddress, int port, CString &errStr,
   const char *className, const char *description)
 {
   SOCKET connectSocket;

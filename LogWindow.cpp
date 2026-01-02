@@ -1,7 +1,6 @@
 // LogWindow.cpp:        The log window
 //
-// Copyright (C) 2003 by Boulder Laboratory for 3-Dimensional Electron 
-// Microscopy of Cells ("BL3DEMC") and the Regents of the University of
+// Copyright (C) 2003-2026 by the Regents of the University of
 // Colorado.  See Copyright.txt for full notice of copyright and limitations.
 //
 // Author: David Mastronarde
@@ -15,10 +14,8 @@
 #include "MacroEditer.h"
 #include ".\LogWindow.h"
 
-#ifdef _DEBUG
+#if defined(_DEBUG) && defined(_CRTDBG_MAP_ALLOC)
 #define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
 #endif
 
 /////////////////////////////////////////////////////////////////////////////
@@ -139,7 +136,7 @@ int CLogWindow::SetNextLineColorStyle(int colorIndex, int style)
 
 int CLogWindow::SetNextLineColorStyle(int red, int green, int blue, int style)
 {
-  int retVal = (red < 0 || green < 0 || blue < 0 || red > 255 || green > 255 || 
+  int retVal = (red < 0 || green < 0 || blue < 0 || red > 255 || green > 255 ||
     blue > 255) ? 1 : 0;
   mNextRed = B3DMAX(0, B3DMIN(255, red));
   mNextGreen = B3DMAX(0, B3DMIN(255, green));
@@ -173,7 +170,7 @@ void CLogWindow::DoAppend(CString &inString, int lineFlags, int red, int green, 
   // to end and get the value
   m_editWindow.SetSel(-1, -1);
   m_editWindow.GetSel(sel1, sel1);
-  if (mLastAppendSel > 0 && sel1 > mLastAppendSel && 
+  if (mLastAppendSel > 0 && sel1 > mLastAppendSel &&
     (mPalette[ind] || mPalette[ind + 1] || mPalette[ind + 2])) {
     CHARFORMAT cf;
     m_editWindow.SetSel(mLastAppendSel, sel1);
@@ -235,7 +232,7 @@ void CLogWindow::DoAppend(CString &inString, int lineFlags, int red, int green, 
   UpdateAndScrollToEnd();
 
   // See if it is time to autoprune
-  if (pruneCrit > 0 && newLen > pruneCrit * 2 && mTypeOfFileSaved < 2 && 
+  if (pruneCrit > 0 && newLen > pruneCrit * 2 && mTypeOfFileSaved < 2 &&
     (mPrunedLength > 0 || !mWinApp->GetSaveLogAsRTF())) {
     lastPrune = 0;
     pruneInd = 0;
@@ -255,7 +252,7 @@ void CLogWindow::DoAppend(CString &inString, int lineFlags, int red, int green, 
       mPrunedLength += pruneInd;
       mPrunedPosition = mLastPosition;
 
-      // Need to operate on the internal string; replace what is being pruned with the 
+      // Need to operate on the internal string; replace what is being pruned with the
       // "See ..." text
       pruneSel = StringIndexToRichEditSel(m_strLog, pruneInd);
       m_editWindow.SetSel(0, pruneSel);
@@ -268,7 +265,7 @@ void CLogWindow::DoAppend(CString &inString, int lineFlags, int red, int green, 
   }
 
   if (mWinApp->GetContinuousSaveLog()) {
-    if (mSaveFile.IsEmpty() || newLen != mAppendedLength + mLastSavedLength - 
+    if (mSaveFile.IsEmpty() || newLen != mAppendedLength + mLastSavedLength -
       mPrunedLength)
       Save();
     else
@@ -488,7 +485,7 @@ int CLogWindow::UpdateSaveFile(BOOL createIfNone, CString stackName, BOOL replac
     mTypeOfFileSaved > 1)
     return (DoSave());
 
-  return (OpenAndWriteFile(CFile::modeWrite |CFile::shareDenyWrite, 
+  return (OpenAndWriteFile(CFile::modeWrite |CFile::shareDenyWrite,
     mAppendedLength, mLastSavedLength - mPrunedLength));
 }
 
@@ -525,7 +522,7 @@ int CLogWindow::OpenAndWriteFile(UINT flags, int length, int offset)
   mLastFilePath = "";
   CString warning, message = "Error opening " + saveFile;
   try {
-    // Open the file for writing 
+    // Open the file for writing
     cFile = new CFile(saveFile, flags);
     message = "Error seeking in file " + saveFile;
     if (mPrunedLength) {
@@ -561,7 +558,7 @@ int CLogWindow::OpenAndWriteFile(UINT flags, int length, int offset)
       // Modify internal string
       addSel = StringIndexToRichEditSel(m_strLog, addOff);
       m_editWindow.SetSel(0, addSel);
-      m_editWindow.ReplaceSel((LPCTSTR)("See " + 
+      m_editWindow.ReplaceSel((LPCTSTR)("See " +
         (mSaveFile.IsEmpty() ? mTempPruneName : mSaveFile) + sPruneEnding));
       UpdateData(true);
       mAppendedLength = m_strLog.GetLength();
@@ -614,7 +611,7 @@ int CLogWindow::ReadAndAppend(CString readFile)
 
   if (mSaveFile == oldSave)
     return 0;
-  if (readFile.IsEmpty() && mPrunedLength && 
+  if (readFile.IsEmpty() && mPrunedLength &&
     AfxMessageBox("The log window has already been pruned.\n"
     "The pruned part will not be included in the appended\n"
     "log and will stay in " + (oldSave.IsEmpty() ? mTempPruneName : oldSave) +
@@ -688,7 +685,7 @@ int CLogWindow::AskIfSave(CString strReason)
   if (!mUnsaved)
     return 0;
 
-  UINT action = MessageBox("Save Log Window before " + strReason, NULL, 
+  UINT action = MessageBox("Save Log Window before " + strReason, NULL,
     MB_YESNOCANCEL | MB_ICONQUESTION);
   if (action == IDCANCEL)
     return 1;
@@ -697,7 +694,7 @@ int CLogWindow::AskIfSave(CString strReason)
   return Save();
 }
 
-void CLogWindow::PostNcDestroy() 
+void CLogWindow::PostNcDestroy()
 {
   delete this;
   CDialog::PostNcDestroy();
@@ -714,10 +711,10 @@ void CLogWindow::OnCancel()
   DestroyWindow();
 }
 
-void CLogWindow::OnSize(UINT nType, int cx, int cy) 
+void CLogWindow::OnSize(UINT nType, int cx, int cy)
 {
   CBaseDlg::OnSize(nType, cx, cy);
-  
+
   if (!mInitialized)
     return;
 
@@ -730,8 +727,8 @@ void CLogWindow::OnSize(UINT nType, int cx, int cy)
   m_editWindow.SetWindowPos(NULL, 0, 0, newX, newY, SWP_NOZORDER | SWP_NOMOVE);
   mWinApp->RestoreViewFocus();
 }
-	
-void CLogWindow::OnMove(int x, int y) 
+
+void CLogWindow::OnMove(int x, int y)
 {
 	CBaseDlg::OnMove(x, y);
   if (mInitialized)
@@ -750,13 +747,13 @@ void CLogWindow::OnActivate(UINT nState, CWnd * pWndOther, BOOL bMinimized)
   }
 }
 
-BOOL CLogWindow::OnInitDialog() 
+BOOL CLogWindow::OnInitDialog()
 {
   CBaseDlg::OnInitDialog();
   CMacroEditer::MakeMonoFont(&m_editDummy);
   if (CMacroEditer::mHasMonoFont > 0 && mWinApp->GetMonospacedLog())
     m_editWindow.SetFont(&CMacroEditer::mMonoFont);
-  
+
   // Get initial size of client area and edit box to determine borders for resizing
   CRect wndRect, editRect;
   GetClientRect(wndRect);

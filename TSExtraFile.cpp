@@ -11,10 +11,8 @@
 #include "EMscope.h"
 #include "CameraController.h"
 
-#ifdef _DEBUG
+#if defined(_DEBUG) && defined(_CRTDBG_MAP_ALLOC)
 #define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
 #endif
 
 /////////////////////////////////////////////////////////////////////////////
@@ -146,28 +144,28 @@ END_MESSAGE_MAP()
 /////////////////////////////////////////////////////////////////////////////
 // CTSExtraFile message handlers
 
-void CTSExtraFile::OnDeltaposSpinfocus(NMHDR* pNMHDR, LRESULT* pResult) 
+void CTSExtraFile::OnDeltaposSpinfocus(NMHDR* pNMHDR, LRESULT* pResult)
 {
   DeltaposSpin(1, IDC_STATFOCUSNUM, pNMHDR, pResult);
 }
 
-void CTSExtraFile::OnDeltaposSpinpreview(NMHDR* pNMHDR, LRESULT* pResult) 
+void CTSExtraFile::OnDeltaposSpinpreview(NMHDR* pNMHDR, LRESULT* pResult)
 {
   DeltaposSpin(4, IDC_STATPREVIEWNUM, pNMHDR, pResult);
 }
 
-void CTSExtraFile::OnDeltaposSpinrecord(NMHDR* pNMHDR, LRESULT* pResult) 
+void CTSExtraFile::OnDeltaposSpinrecord(NMHDR* pNMHDR, LRESULT* pResult)
 {
   DeltaposSpin(3, IDC_STATRECORDNUM, pNMHDR, pResult);
   ManageExtraRecords();
 }
 
-void CTSExtraFile::OnDeltaposSpintrial(NMHDR* pNMHDR, LRESULT* pResult) 
+void CTSExtraFile::OnDeltaposSpintrial(NMHDR* pNMHDR, LRESULT* pResult)
 {
   DeltaposSpin(2, IDC_STATTRIALNUM, pNMHDR, pResult);
 }
 
-void CTSExtraFile::OnDeltaposSpinview(NMHDR* pNMHDR, LRESULT* pResult) 
+void CTSExtraFile::OnDeltaposSpinview(NMHDR* pNMHDR, LRESULT* pResult)
 {
   DeltaposSpin(0, IDC_STATVIEWNUM, pNMHDR, pResult);
 }
@@ -200,7 +198,7 @@ void CTSExtraFile::OnDeltaposSpinbinsize(NMHDR *pNMHDR, LRESULT *pResult)
     return;
   UpdateData(true);
   mMaxStackSizeXY = newVal;
-  m_strKBpImage.Format("%d KB/image (e.g., %d x %d)", 
+  m_strKBpImage.Format("%d KB/image (e.g., %d x %d)",
     mMaxStackSizeXY * mMaxStackSizeXY / 1024, mMaxStackSizeXY, mMaxStackSizeXY);
   UpdateData(false);
 	*pResult = 0;
@@ -261,14 +259,14 @@ void CTSExtraFile::OnKillfocusEditEntries()
 }
 
 // Make sure the text string is good before closing the dialog
-void CTSExtraFile::OnOK() 
+void CTSExtraFile::OnOK()
 {
   UpdateData(true);
   if (ValidateRecordEntries(m_iWhichRecord) > 0)
     return;
   if (m_strExposures.IsEmpty()) {
     mNumExtraExposures = 0;
-  } else if (mWinApp->mParamIO->StringToEntryList(1, m_strExposures, mNumExtraExposures, 
+  } else if (mWinApp->mParamIO->StringToEntryList(1, m_strExposures, mNumExtraExposures,
     NULL, &mExtraExposures[0], MAX_EXTRA_RECORDS)) {
       AfxMessageBox("There is a problem with the exposure time entry.\n"
         "It should consist of one or more numbers separated by spaces, not commas.\n\n"
@@ -283,7 +281,7 @@ void CTSExtraFile::OnOK()
 	CBaseDlg::OnOK();
 }
 
-BOOL CTSExtraFile::OnInitDialog() 
+BOOL CTSExtraFile::OnInitDialog()
 {
 	CBaseDlg::OnInitDialog();
   CString *modeNames = mWinApp->GetModeNames();
@@ -292,7 +290,7 @@ BOOL CTSExtraFile::OnInitDialog()
   m_sbcBinSize.SetPos(50);
   if (mMaxStackSizeXY > mWinApp->mBufferManager->GetStackWinMaxXY())
     mMaxStackSizeXY = mWinApp->mBufferManager->GetStackWinMaxXY();
-  m_strKBpImage.Format("%d KB/image (e.g., %d x %d)", 
+  m_strKBpImage.Format("%d KB/image (e.g., %d x %d)",
     mMaxStackSizeXY * mMaxStackSizeXY / 1024, mMaxStackSizeXY, mMaxStackSizeXY);
   m_butView.SetWindowText(modeNames[0]);
   m_butFocus.SetWindowText(modeNames[1]);
@@ -307,9 +305,9 @@ BOOL CTSExtraFile::OnInitDialog()
   ReplaceDlgItemText(IDC_CHECK_TRIAL_BIN, "Trial", modeNames[2]);
   ReplaceDlgItemText(IDC_STATEXTRAINSTR1, "Record", modeNames[3]);
   ReplaceDlgItemText(IDC_CONSECUTIVE_FILES, "Record", modeNames[3]);
-  m_bSaveView = mSaveOn[0];	
-  m_bSaveFocus = mSaveOn[1];	
-  m_bSaveTrial = mSaveOn[2];	
+  m_bSaveView = mSaveOn[0];
+  m_bSaveFocus = mSaveOn[1];
+  m_bSaveTrial = mSaveOn[2];
   m_bSavePreview = mSaveOn[4];
   m_sbcView.SetRange(0, MAX_STORES - 1);
   m_sbcFocus.SetRange(0, MAX_STORES - 1);
@@ -329,7 +327,7 @@ BOOL CTSExtraFile::OnInitDialog()
   m_sbcNewSpot.EnableWindow(m_bSetSpot);
   m_statNewSpot.EnableWindow(m_bSetSpot);
   m_editNewExposure.EnableWindow(m_bSetExposure);
-  m_strExposures = mWinApp->mParamIO->EntryListToString(1, 2, mNumExtraExposures, NULL, 
+  m_strExposures = mWinApp->mParamIO->EntryListToString(1, 2, mNumExtraExposures, NULL,
     &mExtraExposures[0]);
   mNumSpotSizes = mWinApp->mScope->GetNumSpotSizes(-1);
   m_sbcNewSpot.SetRange(1, mNumSpotSizes);
@@ -395,7 +393,7 @@ void CTSExtraFile::FormatNumAndName(int index, int statID)
 }
 
 // Respond to the extra record selection: validate before changing
-void CTSExtraFile::OnRecordRadio() 
+void CTSExtraFile::OnRecordRadio()
 {
   int oldWhich = m_iWhichRecord;
   UpdateData(true);
@@ -457,29 +455,29 @@ void CTSExtraFile::ManageExtraRecords()
       numExtra = 2;
     break;
   case TS_FOCUS_SERIES:
-    m_strEntries = mWinApp->mParamIO->EntryListToString(1, 2, mNumExtraFocus, NULL, 
+    m_strEntries = mWinApp->mParamIO->EntryListToString(1, 2, mNumExtraFocus, NULL,
       &mExtraFocus[0]);
     m_strInstruct2 = "Each entry is change in defocus from default";
     m_strInstruct1 = "";
     numExtra = mNumExtraFocus;
     break;
   case TS_FILTER_SERIES:
-    m_strEntries = mWinApp->mParamIO->EntryListToString(2, 1, mNumExtraFilter, 
+    m_strEntries = mWinApp->mParamIO->EntryListToString(2, 1, mNumExtraFilter,
       &mExtraSlits[0], &mExtraLosses[0]);
     m_strInstruct1 = "Each entry is 2 numbers: -1,0 for unfiltered,";
     m_strInstruct2 = "or slit width (0=default), change in loss";
     numExtra = mNumExtraFilter;
     break;
   case TS_OTHER_CHANNELS:
-    m_strEntries = mWinApp->mParamIO->EntryListToString(3, 0, mNumExtraChannels, 
+    m_strEntries = mWinApp->mParamIO->EntryListToString(3, 0, mNumExtraChannels,
       &mExtraChannels[0], NULL);
-    mWinApp->mCamera->CountSimultaneousChannels(mCamParam, simultaneous, 
+    mWinApp->mCamera->CountSimultaneousChannels(mCamParam, simultaneous,
       MAX_TS_SIMULTANEOUS_CHAN, numSimul, numAvail);
     if (!numSimul)
       m_strInstruct1.Format("No available detectors are selected in %s parameters",
         (LPCTSTR)modeNames[3]);
     else if (numSimul == 1)
-      m_strInstruct1.Format("Detector %d will be acquired in %s", 
+      m_strInstruct1.Format("Detector %d will be acquired in %s",
         simultaneous[0], (LPCTSTR)modeNames[3]);
     else {
       str = mWinApp->mParamIO->EntryListToString(3, 0, numSimul, &simultaneous[0], NULL);
@@ -497,7 +495,7 @@ void CTSExtraFile::ManageExtraRecords()
   m_butConsecutiveFiles.EnableWindow(numExtra > 1);
   if (m_bConsecutiveFiles && mFileIndex[RECORD_CONSET] + numExtra > MAX_STORES) {
     str.Format("There can be only %d open files, so it is not possible to save\n%d extra "
-      "%s to consecutive files starting with file #%d", MAX_STORES, numExtra, 
+      "%s to consecutive files starting with file #%d", MAX_STORES, numExtra,
       (LPCTSTR)modeNames[RECORD_CONSET], mFileIndex[RECORD_CONSET] + 1);
     AfxMessageBox(str, MB_EXCLAME);
     m_bConsecutiveFiles = false;
@@ -534,7 +532,7 @@ void CTSExtraFile::ManageExtraRecords()
       m_statConsecList += " not open yet";
     }
   }
-  
+
   UpdateData(false);
 }
 
@@ -549,19 +547,19 @@ int CTSExtraFile::ValidateRecordEntries(int whichRecord)
   case TS_OPPOSITE_TRIAL:
     break;
   case TS_FOCUS_SERIES:
-    err = mWinApp->mParamIO->StringToEntryList(1, m_strEntries, mNumExtraFocus, 
+    err = mWinApp->mParamIO->StringToEntryList(1, m_strEntries, mNumExtraFocus,
       NULL, &mExtraFocus[0], MAX_EXTRA_RECORDS);
     break;
   case TS_FILTER_SERIES:
-    err = mWinApp->mParamIO->StringToEntryList(2, m_strEntries, mNumExtraFilter, 
+    err = mWinApp->mParamIO->StringToEntryList(2, m_strEntries, mNumExtraFilter,
       mExtraSlits, mExtraLosses, MAX_EXTRA_RECORDS);
     break;
   case TS_OTHER_CHANNELS:
-    mWinApp->mCamera->CountSimultaneousChannels(mCamParam, simultaneous, 
+    mWinApp->mCamera->CountSimultaneousChannels(mCamParam, simultaneous,
       MAX_TS_SIMULTANEOUS_CHAN, numSimul, numAvail);
     mNumExtraChannels = 0;
     if (numAvail > B3DMAX(1, numSimul)) {
-      err = mWinApp->mParamIO->StringToEntryList(3, m_strEntries, mNumExtraChannels, 
+      err = mWinApp->mParamIO->StringToEntryList(3, m_strEntries, mNumExtraChannels,
         mExtraChannels, NULL, MAX_STEM_CHANNELS);
       if (!err) {
         for (int i = 0; i < mNumExtraChannels; i++) {
@@ -577,7 +575,7 @@ int CTSExtraFile::ValidateRecordEntries(int whichRecord)
     break;
   }
   if (err > 0) {
-    message = err == 1 ? "Each entry must have two comma-separated numbers.\n\n" 
+    message = err == 1 ? "Each entry must have two comma-separated numbers.\n\n"
       : "The list of entries is too long.\n\n";
     AfxMessageBox(message + "Correct or delete the list of entries before proceeding.",
       MB_EXCLAME);

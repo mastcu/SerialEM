@@ -2,7 +2,7 @@
 
    Set dialog DPI helper class
 
-   Copyright (C)2003 by George Yohng
+   Copyright (C)2003-2026 by George Yohng
 
    http://www.yohng.com
 
@@ -18,12 +18,16 @@
 // Needed to change IMAKEINTRESOURCE to MAKEINTRESOURCE in the calls to Attach
 // ABSOLUTELY need to maintain dialog as a DIALOGEX by adding an innocuous extended
 // property, either LEFTSCROLLBAR or TOOLWINDOW.
-// Control panels needed additional width and height defined in MainFrm.cpp  
+// Control panels needed additional width and height defined in MainFrm.cpp
 
 #include <stdafx.h>
 
 #include <windows.h>
 #include "setdpi.h"
+
+#if defined(_DEBUG) && defined(_CRTDBG_MAP_ALLOC)
+#define new DEBUG_NEW
+#endif
 
 //typedef unsigned long DWORD_PTR;
 
@@ -213,9 +217,9 @@ public:
 struct dialogdata_t
 {
     int       pt,has_menu;
-    unsigned  weight;    
+    unsigned  weight;
     BOOL      italic;
-    LPCWSTR    faceName;    
+    LPCWSTR    faceName;
 };
 
 // DNM Modified to return average width per character as floating point
@@ -225,13 +229,13 @@ static void getptsize( HDC &dc, HFONT &font, double *width, int *height )
     static char *sym = "abcdefghijklmnopqrstuvwxyz"
                        "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
     SIZE sz;
-    TEXTMETRICA t;      
+    TEXTMETRICA t;
     oldfont = (HFONT)SelectObject(dc,font);
     GetTextMetricsA(dc,&t);
     GetTextExtentPointA(dc,sym, 52, &sz);
     *height = t.tmHeight;
     *width = sz.cx / 52.;
-    SelectObject(dc,oldfont);    
+    SelectObject(dc,oldfont);
 }
 
 #define word_at(ptr)  (*(WORD *)(ptr))
@@ -239,8 +243,8 @@ static void getptsize( HDC &dc, HFONT &font, double *width, int *height )
 
 static void querydialogdata( LPCSTR data, dialogdata_t * result )
 {
-    WORD *p = (WORD *)data; 
-    unsigned long rstyle = dword_at(p); 
+    WORD *p = (WORD *)data;
+    unsigned long rstyle = dword_at(p);
     int dialogex=0;
 
     p += 2;
@@ -263,15 +267,15 @@ static void querydialogdata( LPCSTR data, dialogdata_t * result )
         result->has_menu=0;
         p++;
         break;
-    case 0xffff: // has menu        
+    case 0xffff: // has menu
         result->has_menu=1;
-        p += 2; 
+        p += 2;
         break;
     default:     // has menu
-        result->has_menu=1;     
+        result->has_menu=1;
         p+=wcslen((LPCWSTR)p)+1;
         break;
-    }    
+    }
 
     // skip class name
     switch(word_at(p))
@@ -279,7 +283,7 @@ static void querydialogdata( LPCSTR data, dialogdata_t * result )
     case 0x0000:
         p++;
         break;
-    case 0xffff:        
+    case 0xffff:
         p += 2;
         break;
     default:
@@ -290,7 +294,7 @@ static void querydialogdata( LPCSTR data, dialogdata_t * result )
     // skip the caption
     p+=wcslen((LPCWSTR)p)+1;
 
-    // get the font name 
+    // get the font name
 
     if (rstyle & DS_SETFONT)
     {
@@ -304,7 +308,7 @@ static void querydialogdata( LPCSTR data, dialogdata_t * result )
             result->weight = FW_DONTCARE;
             result->italic = FALSE;
         }
-        result->faceName = (LPCWSTR)p;              
+        result->faceName = (LPCWSTR)p;
         p += wcslen( result->faceName ) + 1;
     }else
     {
@@ -347,7 +351,7 @@ void CSetDPI::Attach(HINSTANCE hInst,HWND _hwnd,int _IDD,double dpi)
 
 	HRSRC hResource = ::FindResource(hInst, MAKEINTRESOURCE(IDD), RT_DIALOG);
 	HANDLE hDialogTemplate = LoadResource(hInst, hResource);
-	lpDialogTemplate = (helper::DLGTEMPLATEEX *)LockResource(hDialogTemplate);    
+	lpDialogTemplate = (helper::DLGTEMPLATEEX *)LockResource(hDialogTemplate);
 
 
 	dialogdata_t dd;
@@ -363,27 +367,27 @@ void CSetDPI::Attach(HINSTANCE hInst,HWND _hwnd,int _IDD,double dpi)
 
     font=CreateFontW(
 		-(int)(dd.pt*dpi/72.0 + 0.5), // negative makes it use "char size"
-    0,              // logical average character width 
-    0,              // angle of escapement 
-    0,              // base-line orientation angle 
+    0,              // logical average character width
+    0,              // angle of escapement
+    0,              // base-line orientation angle
     dd.weight,  // weight
     dd.italic,  // italic
-    FALSE,          // underline attribute flag 
-    FALSE,          // strikeout attribute flag 
-    DEFAULT_CHARSET,    // character set identifier 
-    OUT_DEFAULT_PRECIS, // output precision 
-    CLIP_DEFAULT_PRECIS,// clipping precision 
-    DEFAULT_QUALITY,    // output quality 
-    DEFAULT_PITCH,  // pitch and family 
-    dd.faceName  // pointer to typeface name string 
+    FALSE,          // underline attribute flag
+    FALSE,          // strikeout attribute flag
+    DEFAULT_CHARSET,    // character set identifier
+    OUT_DEFAULT_PRECIS, // output precision
+    CLIP_DEFAULT_PRECIS,// clipping precision
+    DEFAULT_QUALITY,    // output quality
+    DEFAULT_PITCH,  // pitch and family
+    dd.faceName  // pointer to typeface name string
     );
 
     oldfont=(HFONT)::SendMessage(hwnd, WM_GETFONT, 0, 0);
     SendMessage(hwnd, WM_SETFONT, (LPARAM)font, TRUE);
-  
+
 	//SIZE szf;
 
-	
+
     PAINTSTRUCT ps;
     HDC dc=BeginPaint(hwnd, &ps);
 
@@ -391,7 +395,7 @@ void CSetDPI::Attach(HINSTANCE hInst,HWND _hwnd,int _IDD,double dpi)
     // obtained with a reference DPI, plus a little extra
     getptsize(dc,font,&width, &height);
     EndPaint(hwnd, &ps);
-	
+
 
     double x_n=width * (8. / 7.79) * 1.02,
            x_d=4,
@@ -399,8 +403,8 @@ void CSetDPI::Attach(HINSTANCE hInst,HWND _hwnd,int _IDD,double dpi)
            y_d=8;
 
 	RECT rect;
-	GetClientRect(hwnd,&rect);	
-	
+	GetClientRect(hwnd,&rect);
+
 	rect.right=rect.left+(int)(lpDialogTemplate->cx*x_n/x_d+0.5);
 	rect.bottom=rect.top+(int)(lpDialogTemplate->cy*y_n/y_d+0.5);
 
@@ -423,27 +427,27 @@ void CSetDPI::Attach(HINSTANCE hInst,HWND _hwnd,int _IDD,double dpi)
 	    // TODO: check if it is the best implementation
 	    //       are we sure that controls will preserve the order?
 
-		if (!t) 
+		if (!t)
 			wnd=GetWindow(hwnd,GW_CHILD);
 		else
 			wnd=GetWindow(wnd,GW_HWNDNEXT);
-		
-		while ((wnd)&&(GetDlgCtrlID(wnd) != item->id)) 
+
+		while ((wnd)&&(GetDlgCtrlID(wnd) != item->id))
 			wnd=GetWindow(wnd,GW_HWNDNEXT);
 
 		if (!wnd) break;
-	    
+
 		MoveWindow(wnd,(int)(item->x*x_n/x_d+0.5),
 		               (int)(item->y*y_n/y_d+0.5),
 		               (int)(item->cx*x_n/x_d+0.5),
 		               (int)(item->cy*y_n/y_d+0.5), TRUE);
 
         SendMessage(wnd, WM_SETFONT, (LPARAM)font, TRUE);
-		
+
 		item=(helper::DLGITEMTEMPLATEEX *)helper::FindNextDlgItem((DLGITEMTEMPLATE *)item,TRUE);
 	}
 
-    UnlockResource(hDialogTemplate);    
+    UnlockResource(hDialogTemplate);
     FreeResource(hDialogTemplate);
 }
 
@@ -455,8 +459,8 @@ void CSetDPI::Detach()
 
 	HRSRC hResource = ::FindResource(inst, MAKEINTRESOURCE(IDD), RT_DIALOG);
 	HANDLE hDialogTemplate = LoadResource(inst, hResource);
-	helper::DLGTEMPLATEEX *lpDialogTemplate = 
-		(helper::DLGTEMPLATEEX *)LockResource(hDialogTemplate);    
+	helper::DLGTEMPLATEEX *lpDialogTemplate =
+		(helper::DLGTEMPLATEEX *)LockResource(hDialogTemplate);
 
 
 	helper::DLGITEMTEMPLATEEX *item=
@@ -471,21 +475,21 @@ void CSetDPI::Detach()
 	    // TODO: check if it is the best implementation
 	    //       are we sure that controls will preserve the order?
 
-		if (!t) 
+		if (!t)
 			wnd=GetWindow(hwnd,GW_CHILD);
 		else
 			wnd=GetWindow(wnd,GW_HWNDNEXT);
-		
-		while ((wnd)&&(GetDlgCtrlID(wnd) != item->id)) 
+
+		while ((wnd)&&(GetDlgCtrlID(wnd) != item->id))
 			wnd=GetWindow(wnd,GW_HWNDNEXT);
 
 		if (!wnd) break;
 
-        SendMessage(wnd, WM_SETFONT, (LPARAM)oldfont, TRUE);		
+        SendMessage(wnd, WM_SETFONT, (LPARAM)oldfont, TRUE);
 		item=(helper::DLGITEMTEMPLATEEX *)helper::FindNextDlgItem((DLGITEMTEMPLATE *)item,TRUE);
 	}
 
-    UnlockResource(hDialogTemplate);    
+    UnlockResource(hDialogTemplate);
     FreeResource(hDialogTemplate);
 
 

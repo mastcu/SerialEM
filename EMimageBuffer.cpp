@@ -1,14 +1,17 @@
 // EMimageBuffer.cpp     Image buffer class to hold images and associated scope
 //                          information
 //
-// Copyright (C) 2003 by Boulder Laboratory for 3-Dimensional Electron 
-// Microscopy of Cells ("BL3DEMC") and the Regents of the University of
+// Copyright (C) 2003-2026 by the Regents of the University of
 // Colorado.  See Copyright.txt for full notice of copyright and limitations.
 //
 // Author: David Mastronarde
 
 #include "stdafx.h"
 #include "SerialEM.h"
+
+#if defined(_DEBUG) && defined(_CRTDBG_MAP_ALLOC)
+#define new DEBUG_NEW
+#endif
 
 // When members are added, these are the places to fix:
 // CCameraController::DisplayNewImage
@@ -101,8 +104,8 @@ void EMimageBuffer::DeleteOffsets(void)
     delete mMiniOffsets;
   mMiniOffsets = NULL;
 }
-	
-// The save-copy flag is done in this weird way so that its value is shared by all the 
+
+// The save-copy flag is done in this weird way so that its value is shared by all the
 // buffers that hold a copy of the same image.  Increment is called:
 //   for a new single-frame image after clearing out previous flag
 //   when an image buffer is copied
@@ -132,7 +135,7 @@ void EMimageBuffer::DecrementSaveCopy()
 		(*mSaveCopyp)--;
 	else
 		(*mSaveCopyp)++;
-	
+
 	// If flag has reached zero, get rid of it
 	if (*mSaveCopyp == 0) {
 		delete mSaveCopyp;
@@ -165,7 +168,7 @@ int EMimageBuffer::GetSaveCopyFlag()
 
 // Returns true if an image was read in from file
 bool EMimageBuffer::ImageWasReadIn() {
-  return (!mCaptured && !GetSaveCopyFlag()); 
+  return (!mCaptured && !GetSaveCopyFlag());
 }
 
 // Delete the image in the buffer if it exists
@@ -229,7 +232,7 @@ BOOL EMimageBuffer::GetStagePosition(float &X, float &Y)
   X = extra->mStageX;
   Y = extra->mStageY;
   return true;
-} 
+}
 
 bool EMimageBuffer::GetStageZ(float &Z)
 {
@@ -335,7 +338,7 @@ BOOL EMimageBuffer::IsMontageCenter()
 
 BOOL EMimageBuffer::IsProcessed(void)
 {
-  return mCaptured == BUFFER_PROCESSED || mCaptured == BUFFER_FFT || 
+  return mCaptured == BUFFER_PROCESSED || mCaptured == BUFFER_FFT ||
     mCaptured == BUFFER_LIVE_FFT || mCaptured == BUFFER_AUTOCOR_OVERVIEW ||
     mCaptured == BUFFER_PROC_OK_FOR_MAP;
 }
@@ -362,7 +365,7 @@ BOOL EMimageBuffer::ConvertToByte(float minScale, float maxScale)
   }
 
   // If shifts are non-zero or scale does not match or no pixmap image, get a new pixmap
-  if (shiftX != 0. || shiftY != 0. || minScale != mLastScale.GetMinScale() 
+  if (shiftX != 0. || shiftY != 0. || minScale != mLastScale.GetMinScale()
     || maxScale != mLastScale.GetMaxScale() || !mPixMap->getImRectPtr()) {
     mImage->setShifts(0., 0.);
     mImageScale->SetMinMax(minScale, maxScale);
@@ -407,7 +410,7 @@ void EMimageBuffer::UpdatePixMap(void)
   // changed, refill the pixmap, invalidate filtered pixmap
   if (GetImageChanged() != 0 || mImageScale->GetMinScale() != mLastScale.GetMinScale() ||
     mImageScale->GetMaxScale() != mLastScale.GetMaxScale() || !mPixMap->getImRectPtr()) {
-    mPixMap->useRect(mImage); 
+    mPixMap->useRect(mImage);
     mFiltZoom = -1;
   }
 
@@ -417,7 +420,7 @@ void EMimageBuffer::UpdatePixMap(void)
 
 bool EMimageBuffer::IsImageDuplicate(EMimageBuffer *otherBuf)
 {
-  return IsImageDuplicate(otherBuf->mImage); 
+  return IsImageDuplicate(otherBuf->mImage);
 }
 
 bool EMimageBuffer::IsImageDuplicate(KImage *image)
@@ -448,6 +451,6 @@ bool EMimageBuffer::IsImageDuplicate(KImage *image)
 
 // Return a string to use for binning of the image buffer
 CString EMimageBuffer::BinningText(void)
-{ 
+{
   return ((CSerialEMApp *)AfxGetApp())->BinningText(mBinning, mDivideBinToShow);
 }

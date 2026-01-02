@@ -2,7 +2,7 @@
 //                          XCorr, Proc, or Stat generally.  This is the one
 //                          module that gets optimized for a debug build
 //
-// Copyright (C) 2003-2017 by the Regents of the University of
+// Copyright (C) 2003-2026 by the Regents of the University of
 // Colorado.  See Copyright.txt for full notice of copyright and limitations.
 //
 // Author: David Mastronarde
@@ -15,6 +15,10 @@
 #include "mrcslice.h"
 #include "cfft.h"
 #include "..\Shared\CorrectDefects.h"
+
+#if defined(_DEBUG) && defined(_CRTDBG_MAP_ALLOC)
+#define new DEBUG_NEW
+#endif
 
 
 void SEMTrace(char key, char *fmt, ...);
@@ -35,13 +39,13 @@ void twoDfft(float *array, int *nxpad, int *nypad, int *dir)
   todfftc(array, *nxpad, *nypad, *dir);
 }
 
-void XCorrCrossCorr(float *array, float *brray, int nxpad, int nypad, 
+void XCorrCrossCorr(float *array, float *brray, int nxpad, int nypad,
                     float deltap, float *ctfp, float *crray)
 {
-  
+
   /* set mean of one of the arrays to zero */
   XCorrMeanZero(array, nxpad+2, nxpad, nypad);
-  
+
   /* take forward transforms */
   todfftc(array, nxpad, nypad, 0);
   if (array != brray)
@@ -56,9 +60,9 @@ void XCorrCrossCorr(float *array, float *brray, int nxpad, int nypad,
   }
 
   /* multiply array by complex conjugate of brray, put back in array */
-  conjugateProduct(array, brray, nxpad, nypad);  
-  
-  
+  conjugateProduct(array, brray, nxpad, nypad);
+
+
   todfftc(array, nxpad, nypad, 1);
   if (crray) {
     todfftc(brray, nxpad, nypad, 1);
@@ -85,7 +89,7 @@ void XCorrRealCorr(float *array, float *brray, int nxpad, int nypad, int maxdist
   *peak = -1.e20f;
   for (dy = -maxdist; dy <= maxdist; dy++) {
     for (dx = -maxdist; dx <= maxdist; dx++) {
-      
+
       // Get means
       suma = 0.;
       sumb = 0.;
@@ -117,7 +121,7 @@ void XCorrRealCorr(float *array, float *brray, int nxpad, int nypad, int maxdist
           sumab += abar * bbar;
         }
       }
-      
+
       corr = sumab / sqrt(suma * sumb);
       if (corr > *peak)
         *peak = (float)corr;
@@ -125,36 +129,36 @@ void XCorrRealCorr(float *array, float *brray, int nxpad, int nypad, int maxdist
   }
 }
 
-void XCorrTripleCorr(float *array, float *brray, float *crray, int nxpad, int nypad, 
+void XCorrTripleCorr(float *array, float *brray, float *crray, int nxpad, int nypad,
   float deltap, float *ctfp)
 {
   float a, b, c, d;
   int jx, jp1;
-  
+
   /* set mean of the middle array to zero */
   XCorrMeanZero(brray, nxpad+2, nxpad, nypad);
-  
+
   /* take forward transforms */
   todfftc(array, nxpad, nypad, 0);
   todfftc(brray, nxpad, nypad, 0);
   todfftc(crray, nxpad, nypad, 0);
-  
+
   /* filter middle array if desired */
-  if(deltap != 0.) 
+  if(deltap != 0.)
     XCorrFilterPart(brray, brray, nxpad, nypad, ctfp, deltap);
-  
+
   /* multiply array by complex conjugate of brray, put back in array */
-  
+
   for (jx = 0; jx < nypad*(nxpad+2); jx += 2) {
     jp1 = jx + 1;
     a = array[jx];
     b = array[jp1];
     c = brray[jx];
     d = brray[jp1];
-    
+
     array[jx] = a * c + b * d;
     array[jp1] = b * c - a * d;
-    
+
     a = c;
     b = d;
     c = crray[jx];
@@ -162,16 +166,16 @@ void XCorrTripleCorr(float *array, float *brray, float *crray, int nxpad, int ny
     brray[jx] = a * c + b * d;
     brray[jp1] = b * c - a * d;
   }
-  
+
   /* take reverse transform */
-  
+
   todfftc(array, nxpad, nypad, 1);
   todfftc(brray, nxpad, nypad, 1);
 }
 
 /*
  * Function to analyze for periodic specimen and erase peaks from FFTs before correlating
- * The filter is tobe applied to the correlation; autocorrelation has a fixed low 
+ * The filter is tobe applied to the correlation; autocorrelation has a fixed low
  * frequency filter.
  * This function could go into IMOD with SEMTrace removed
  */
@@ -182,7 +186,7 @@ void XCorrTripleCorr(float *array, float *brray, float *crray, int nxpad, int ny
 #define MAX_PERIOD_THREADS 8
 
 bool XCorrPeriodicCorr(float *array, float *brray, float *crray, int nxPad, int nyPad,
-  float deltap, float *ctfp, float tiltAngles[2], float axisAngle, int eraseOnly, 
+  float deltap, float *ctfp, float tiltAngles[2], float axisAngle, int eraseOnly,
   float boostMinNums)
 {
   float Xpeaks[MAX_GRID_PEAKS], Ypeaks[MAX_GRID_PEAKS], peak[MAX_GRID_PEAKS];
@@ -222,7 +226,7 @@ bool XCorrPeriodicCorr(float *array, float *brray, float *crray, int nxPad, int 
   }
 
 
-  /* Times on K3 for bin 1/2/8 are: 
+  /* Times on K3 for bin 1/2/8 are:
   * initial FFT to autocorr: 14 ms (2 images)
   * peak finding             28 ms (2 images
   * filling   86.9 for 1 thread, 16.8 for 6 (86%), 13.7 for 8 (79%)  (two images)
@@ -324,7 +328,7 @@ bool XCorrPeriodicCorr(float *array, float *brray, float *crray, int nxPad, int 
       yyVec.clear();
       if (numFound[ind][2]) {
 
-        // Find longest vector 
+        // Find longest vector
         ixMax = 0;
         for (ixy = 0; ixy < 3; ixy++) {
           if (numFound[ind][ixy] > ixMax) {
@@ -381,7 +385,7 @@ bool XCorrPeriodicCorr(float *array, float *brray, float *crray, int nxPad, int 
         ACCUM_MAX(maxPix, pixFreq[ixy]);
         ACCUM_MAX(maxPix, pixFreq[ixy + 1]);
         if (!ind)
-          SEMTrace('a', "Periodic spacing %d: %.1f %.1f -> %.1f %.1f", ixy / 2 + 1, 
+          SEMTrace('a', "Periodic spacing %d: %.1f %.1f -> %.1f %.1f", ixy / 2 + 1,
             vectors[ind][ixy], vectors[ind][ixy + 1], pixFreq[ixy], pixFreq[ixy + 1]);
       }
 
@@ -561,14 +565,14 @@ bool XCorrPeriodicCorr(float *array, float *brray, float *crray, int nxPad, int 
   }
   wallNow = wallTime();
   if (doAutocorr)
-    SEMTrace('T', "Fill: %d threads, time %.1f", numThreads, 
+    SEMTrace('T', "Fill: %d threads, time %.1f", numThreads,
       1000. *(wallNow - wallStart));
   wallStart = wallNow;
   free(borderTemp);
 
   if (!eraseOnly) {
 
-    // Now filter the arrays  and get the copy in C 
+    // Now filter the arrays  and get the copy in C
     XCorrFilterPart(array, array, nxPad, nyPad, ctfp, deltap);
     XCorrFilterPart(brray, brray, nxPad, nyPad, ctfp, deltap);
     memcpy(crray, array, (nxPad + 2) * nyPad * sizeof(float));
@@ -589,7 +593,7 @@ bool XCorrPeriodicCorr(float *array, float *brray, float *crray, int nxPad, int 
 // Filters the image in array with the given type and size into the array brray, which
 // must be a (nxpad +2) * nypad float array, with the standard filter specified in ctf
 // and delta.  array can be the same as brray as long as it is big enough
-void XCorrFilter(float *array, int type, int nxin, int nyin, float *brray, int nxpad, 
+void XCorrFilter(float *array, int type, int nxin, int nyin, float *brray, int nxpad,
   int nypad, float delta, float *ctf)
 {
   float *inp, *outp = brray;
@@ -659,7 +663,7 @@ void XCorrBinBy2(void *array, int type, int nxin, int nyin, short int *brray)
   XCorrBinByN(array, type, nxin, nyin, 2, brray);
 }
 
-void XCorrBinByN(void *array, int type, int nxin, int nyin, int nbin, 
+void XCorrBinByN(void *array, int type, int nxin, int nyin, int nbin,
          short int *brray)
 {
   int nxr, nyr;
@@ -669,7 +673,7 @@ void XCorrBinByN(void *array, int type, int nxin, int nyin, int nbin,
 
 // For making a binned gain reference, need to bin the inverse
 // This is needed only for unsigned short and float
-void XCorrBinInverse(void *array, int type, int nxin, int nyin, int ixofs, int iyofs, 
+void XCorrBinInverse(void *array, int type, int nxin, int nyin, int ixofs, int iyofs,
                      int nbin, int nxout, int nyout, void *brray)
 {
   int i, j;
@@ -701,7 +705,7 @@ void XCorrBinInverse(void *array, int type, int nxin, int nyin, int ixofs, int i
   if (yofshi < 0)
     yofshi = 0;
 
-  switch (type) {  
+  switch (type) {
   case UNSIGNED_SHORT:
     for (iy = 0; iy < nyout; iy++) {
 
@@ -722,7 +726,7 @@ void XCorrBinInverse(void *array, int type, int nxin, int nyin, int ixofs, int i
           fsum = 0.;
           usline2 = usline1;
           for (j = 0; j < nbin; j++) {
-            for (i = 0; i < nbin; i++) 
+            for (i = 0; i < nbin; i++)
               fsum += 1. / usline2[i];
             usline2 += nxin;
           }
@@ -735,7 +739,7 @@ void XCorrBinInverse(void *array, int type, int nxin, int nyin, int ixofs, int i
       }
     }
     break;
-    
+
   case FLOAT:
     for (iy = 0; iy < nyout; iy++) {
       if (iy < yofslo || iy >= nyout - yofshi) {
@@ -751,7 +755,7 @@ void XCorrBinInverse(void *array, int type, int nxin, int nyin, int ixofs, int i
           fsum = 0.;
           fline2 = fline1;
           for (j = 0; j < nbin; j++) {
-            for (i = 0; i < nbin; i++) 
+            for (i = 0; i < nbin; i++)
               fsum += 1.f / fline2[i];
             fline2 += nxin;
           }
@@ -769,7 +773,7 @@ void XCorrBinInverse(void *array, int type, int nxin, int nyin, int ixofs, int i
 
 // Do the inverse binning at one pixel that requires checking of whether there are
 // input data at each input pixel
-float XCorrOneInverseBin(void *array, int type, int nxin, int nyin, int ixofs, int iyofs, 
+float XCorrOneInverseBin(void *array, int type, int nxin, int nyin, int ixofs, int iyofs,
                      int nbin, int ixout, int iyout)
 {
   int i, j, js, is;
@@ -780,7 +784,7 @@ float XCorrOneInverseBin(void *array, int type, int nxin, int nyin, int ixofs, i
 
   js = iyout * nbin + iyofs;
   is = ixout * nbin + ixofs;
-  switch (type) {  
+  switch (type) {
   case UNSIGNED_SHORT:
     for (j = js; j < js + nbin; j++) {
       for (i = is; i < is + nbin; i++) {
@@ -859,7 +863,7 @@ int XCorrNiceFrame(int num, int idnum, int limit)
 // the mean when they are within ntaper pixels of the edge of the data, where idirx and
 // idiry indicate the direction in which data lie (-1 to bottom/left, 1 to top/right)
 
-void XCorrFillTaperGap(short int *data, int type, int nx, int ny, float dmean, int ix0, 
+void XCorrFillTaperGap(short int *data, int type, int nx, int ny, float dmean, int ix0,
   int ix1, int idirx, int iy0, int iy1, int idiry, int ntaper)
 {
   int distx, disty;
@@ -940,10 +944,10 @@ void XCorrStretch(void *array, int type, int nx, int ny, float stretch, float ax
   XT,YT - The translation to add to the final image. The
       center of the output array is normally taken as
       NXB/2, NYB/2
-  
+
   Xo = a11(Xi - Xc) + a12(Yi - Yc) + NXB/2. + XT
   Yo = a21(Xi - Xc) + a22(Yi - Yc) + NYB/2. + YT
-    
+
     written in Fortran by DNM, April 2000.
     translated to C for SerialEM, 3/26/02
     incorporated bug fixes from revisions 3.1 and 3.3 in IMOD, 1/5/07
@@ -1006,7 +1010,7 @@ void XCorrFastInterp(void *array, int type, void *bray, int nxa, int nya,
   unsigned short int *ubray = (unsigned short int *)bray;
   unsigned char *bbray = (unsigned char *)bray;
   unsigned char *cdata = (unsigned char *)array;
-  short int smean = 0; 
+  short int smean = 0;
   unsigned char cmean = 0;
   unsigned short int usmean  = 0;
   float *fdata = (float *)array;
@@ -1020,7 +1024,7 @@ void XCorrFastInterp(void *array, int type, void *bray, int nxa, int nya,
   amat21 = -amat21;
 
   // Get a mean for fill
-  if (type == SLICE_MODE_RGB) 
+  if (type == SLICE_MODE_RGB)
     mean = 127.;
   else
     ProcSampleMeanSD(array, type, nxa, nya, &mean, &denom);
@@ -1074,7 +1078,7 @@ void XCorrFastInterp(void *array, int type, void *bray, int nxa, int nya,
       xst = nxb - 1;
       xnd = 0;
     }
-    
+
     /*    truncate the ending value down and the starting value up */
     ixnd = (int)B3DMAX(-1.e5, xnd);
     ixst = nxb + 1 - (int)(nxb + 1 -B3DMIN(xst, (float)(nxb + 1.)));
@@ -1084,7 +1088,7 @@ void XCorrFastInterp(void *array, int type, void *bray, int nxa, int nya,
       ixst = nxb / 2;
       ixnd = ixst - 1;
     }
-    
+
     /*    do fallback to testing */
     iqst = 0;
     iqnd = ixst - 1;
@@ -1110,14 +1114,14 @@ void XCorrFastInterp(void *array, int type, void *bray, int nxa, int nya,
             indbasey = indbase + 3 * nxa;
             indbasex = indbase + 3;
             indbasexy = indbasey + 3;
-            bbray[3 * (iybase + ix)] = (1. - dx) *(omdy * cdata[indbase] + 
-              dy * cdata[indbasey]) + dx * (omdy * cdata[indbasex] + 
+            bbray[3 * (iybase + ix)] = (1. - dx) *(omdy * cdata[indbase] +
+              dy * cdata[indbasey]) + dx * (omdy * cdata[indbasex] +
               dy * cdata[indbasexy]);
-            bbray[3 * (iybase + ix) + 1] = (1. - dx) *(omdy * cdata[indbase+1] + 
-              dy * cdata[indbasey+1]) + dx * (omdy * cdata[indbasex+1] + 
+            bbray[3 * (iybase + ix) + 1] = (1. - dx) *(omdy * cdata[indbase+1] +
+              dy * cdata[indbasey+1]) + dx * (omdy * cdata[indbasex+1] +
               dy * cdata[indbasexy+1]);
-            bbray[3 * (iybase + ix) + 2] = (1. - dx) *(omdy * cdata[indbase+2] + 
-              dy * cdata[indbasey+2]) + dx * (omdy * cdata[indbasex+2] + 
+            bbray[3 * (iybase + ix) + 2] = (1. - dx) *(omdy * cdata[indbase+2] +
+              dy * cdata[indbasey+2]) + dx * (omdy * cdata[indbasex+2] +
               dy * cdata[indbasexy+2]);
           } else {
             bbray[3 * (iybase + ix)] = cmean;
@@ -1130,7 +1134,7 @@ void XCorrFastInterp(void *array, int type, void *bray, int nxa, int nya,
       iqst = ixnd+1;
       iqnd = nxb-1;
     }
-    
+
     /* Now do the safe region */
     dxp = a11 * ixst + xbase;
     dyp = a21 * ixst + ybase;
@@ -1151,14 +1155,14 @@ void XCorrFastInterp(void *array, int type, void *bray, int nxa, int nya,
         indbasey = indbase + 3 * nxa;
         indbasex = indbase + 3;
         indbasexy = indbasey + 3;
-        bbray[3 * (iybase + ix)] = (1. - dx) *(omdy * cdata[indbase] + 
-          dy * cdata[indbasey]) + dx * (omdy * cdata[indbasex] + 
+        bbray[3 * (iybase + ix)] = (1. - dx) *(omdy * cdata[indbase] +
+          dy * cdata[indbasey]) + dx * (omdy * cdata[indbasex] +
           dy * cdata[indbasexy]);
-        bbray[3 * (iybase + ix) + 1] = (1. - dx) *(omdy * cdata[indbase+1] + 
-          dy * cdata[indbasey+1]) + dx * (omdy * cdata[indbasex+1] + 
+        bbray[3 * (iybase + ix) + 1] = (1. - dx) *(omdy * cdata[indbase+1] +
+          dy * cdata[indbasey+1]) + dx * (omdy * cdata[indbasex+1] +
           dy * cdata[indbasexy+1]);
-        bbray[3 * (iybase + ix) + 2] = (1. - dx) *(omdy * cdata[indbase+2] + 
-          dy * cdata[indbasey+2]) + dx * (omdy * cdata[indbasex+2] + 
+        bbray[3 * (iybase + ix) + 2] = (1. - dx) *(omdy * cdata[indbase+2] +
+          dy * cdata[indbasey+2]) + dx * (omdy * cdata[indbasex+2] +
           dy * cdata[indbasexy+2]);
          dxp += a11;
         dyp += a21;
@@ -1189,7 +1193,7 @@ double ProcImageMean(void *array, int type, int nx, int ny, int ix0, int ix1,
       for (ix = ix0; ix <= ix1; ix++)
         tsum += *bdata++;
       break;
-      
+
     case SIGNED_SHORT:
       sdata = (short int *)array + nx * iy + ix0;
       for (ix = ix0; ix <= ix1; ix++)
@@ -1325,7 +1329,7 @@ void ProcMinMaxMeanSD(void *array, int type, int nx, int ny, int ix0, int ix1,
         tsum += (ival - tmean) * (ival - tmean);
       }
       break;
-      
+
     case SIGNED_SHORT:
       sdata = (short int *)array + nx * iy + ix0;
       for (ix = ix0; ix <= ix1; ix++) {
@@ -1337,7 +1341,7 @@ void ProcMinMaxMeanSD(void *array, int type, int nx, int ny, int ix0, int ix1,
         tsum += (ival - tmean) * (ival - tmean);
       }
       break;
-      
+
     case UNSIGNED_SHORT:
       usdata = (unsigned short int *)array + nx * iy + ix0;
       for (ix = ix0; ix <= ix1; ix++) {
@@ -1349,7 +1353,7 @@ void ProcMinMaxMeanSD(void *array, int type, int nx, int ny, int ix0, int ix1,
         tsum += (ival - tmean) * (ival - tmean);
       }
       break;
-      
+
     case FLOAT:
       fdata = (float *)array + nx * iy + ix0;
       for (ix = ix0; ix <= ix1; ix++) {
@@ -1472,7 +1476,7 @@ void ProcRotateRight(void *array, int type, int nx, int ny, short int *brray)
         bdata -= nx;
       }
       break;
-      
+
     case UNSIGNED_SHORT:
     case SIGNED_SHORT:
       sdata = (short int *)array + nx * (ny - 1) + ix;
@@ -1521,7 +1525,7 @@ void ProcRotateLeft(void *array, int type, int nx, int ny, short int *brray)
         bdata += nx;
       }
       break;
-      
+
     case UNSIGNED_SHORT:
     case SIGNED_SHORT:
       sdata = (short int *)array + ix;
@@ -1563,7 +1567,7 @@ void ProcRotateLeft(void *array, int type, int nx, int ny, short int *brray)
       *out-- = *in--;     \
   }    \
   for (x = xFillStrt; x < xFillEnd; x++)     \
-    arr[yout * nx + x] = (typ)fill; 
+    arr[yout * nx + x] = (typ)fill;
 
 
 // Shift an integer, float or byte buffer in place by the given amounts
@@ -1642,11 +1646,11 @@ void ProcShiftInPlace(short int *array, int type, int nx, int ny, int shiftX, in
         array[yout * nx + x] = (short)fill;
 }
 
-// Perform any combination of rotation and Y flipping for a short array: 
-// operation = 0-3 for rotation by 90 * operation, plus 4 for flipping around Y axis 
+// Perform any combination of rotation and Y flipping for a short array:
+// operation = 0-3 for rotation by 90 * operation, plus 4 for flipping around Y axis
 // before rotation or 8 for flipping around Y after.  Also invert contrast between
 // existing min and max if invertCon is nonzero
-void ProcRotateFlip(short int *array, int type, int nx, int ny, int operation, 
+void ProcRotateFlip(short int *array, int type, int nx, int ny, int operation,
                     int invertCon, short int *brray, int *nxout, int *nyout)
 {
   rotateFlipImage(array, type, nx, ny, operation, 1, 0, invertCon, brray, nxout, nyout,0);
@@ -1673,7 +1677,7 @@ void ProcSimpleFlipY(void *array, int rowBytes, int height)
 
 }
 
-void ProcFFT(void *array, int type, int nx, int ny, int binning, float *fftarray, 
+void ProcFFT(void *array, int type, int nx, int ny, int binning, float *fftarray,
        short int *brray, int nPadSize, int nFinalSize)
 {
   float fracTaper = 0.025f;
@@ -1686,7 +1690,7 @@ void ProcFFT(void *array, int type, int nx, int ny, int binning, float *fftarray
      rfftwnd_plan plan;
      fftw_complex dumcomp;
 #endif
-  double val, cenMax;  
+  double val, cenMax;
   double scale, sum;
   int i, ixbase = 0, iyin, iyout, iyinBase;
   short int *sdata = NULL, *sdata2 = NULL;
@@ -1717,7 +1721,7 @@ void ProcFFT(void *array, int type, int nx, int ny, int binning, float *fftarray
   plan = rfftw2d_create_plan(nPadSize, nPadSize, FFTW_FORWARD, FFTW_IN_PLACE);
   rfftwnd_one_real_to_complex(plan, fftarray, &dumcomp);
   rfftwnd_destroy_plan(plan);
-#endif        
+#endif
   //PrintfToLog("Size %d  threads %d  time %.1f msec", nPadSize, numOMPthreads(16), (wallTime() - wallStart) * 1000.);
   wallStart = wallTime();
 
@@ -1765,13 +1769,13 @@ void ProcFFT(void *array, int type, int nx, int ny, int binning, float *fftarray
     ixbase = iyin * (nPadSize + 2);
     sdata = brray + iyout * nFinalSize + nFinalSize / 2;
     for (i = ixbase; i < ixbase + nFinalSize; i += 2) {
-      val = sqrt((double)(fftarray[i] * fftarray[i] + 
+      val = sqrt((double)(fftarray[i] * fftarray[i] +
               fftarray[i + 1] * fftarray[i + 1]));
       *sdata++ = (int)(scale * log(logScale * val + 1.));
     }
 
     // Stick the next value (which could be the extra pixel) on the left edge
-    val = sqrt((double)(fftarray[i] * fftarray[i] + 
+    val = sqrt((double)(fftarray[i] * fftarray[i] +
             fftarray[i + 1] * fftarray[i + 1]));
     brray[iyout * nFinalSize] = (int)(scale * log(logScale * val + 1.));
   }
@@ -1799,7 +1803,7 @@ double ProcFFTMagnitude(float *array, int nx, int ny, int ix, int iy)
 
 // Compute a rotationally averaged power spectrum
 void ProcRotAvFFT(void *array, int type, int nxdim, int ix0, int ix1, int iy0, int iy1,
-                  float *fftarray, int nxpad, int nypad, float *rotav, int *ninRing, 
+                  float *fftarray, int nxpad, int nypad, float *rotav, int *ninRing,
                   int numRotPts)
 {
   float fracTaper = 0.025f;
@@ -1829,7 +1833,7 @@ void ProcRotAvFFT(void *array, int type, int nxdim, int ix0, int ix1, int iy0, i
   rfftwnd_one_real_to_complex(plan, fftarray, &dumcomp);
   rfftwnd_destroy_plan(plan);
   scale = sqrt((double) nxpad * nypad);
-#endif        
+#endif
 
   // Compute rotationally averaged power spectrum as in fortran program rotavfft
   delRing = 0.5 / numRotPts;
@@ -1851,7 +1855,7 @@ void ProcRotAvFFT(void *array, int type, int nxdim, int ix0, int ix1, int iy0, i
       s = sqrt(x * x + y2);
       indf = s / delRing;
       if (indf < numRotPts && (ix || iy)) {
-        fmag = sqrt((double)(fftarray[2*ind] * fftarray[2*ind] + 
+        fmag = sqrt((double)(fftarray[2*ind] * fftarray[2*ind] +
           fftarray[2*ind + 1] * fftarray[2*ind + 1]));
         rotav[indf] += fmag;
         ninRing[indf]++;
@@ -1908,7 +1912,7 @@ int ProcTrimCircle(void *array, int type, int nx, int ny, float cenFrac, int tes
   trimX = trimXright = minTrimX;
   trimY = trimYtop = minTrimY;
   while (trimX <= ix0 && trimY <= iy0 && trimXright < nx - ix1 && trimYtop <  ny - iy1) {
-    if (ProcEvaluateTrim(array, type, nx, ny, testSize, trimX, trimY, trimXright, trimYtop, 
+    if (ProcEvaluateTrim(array, type, nx, ny, testSize, trimX, trimY, trimXright, trimYtop,
       critMean))
       break;
 
@@ -1965,7 +1969,7 @@ int ProcTrimCircle(void *array, int type, int nx, int ny, float cenFrac, int tes
       break;
 
     while (tryX >= minTrimX && tryXright >= minTrimX) {
-      if (!ProcEvaluateTrim(array, type, nx, ny, testSize, tryX, tryY, tryXright, tryYtop, 
+      if (!ProcEvaluateTrim(array, type, nx, ny, testSize, tryX, tryY, tryXright, tryYtop,
         critMean))
         break;
 
@@ -1989,16 +1993,16 @@ int ProcTrimCircle(void *array, int type, int nx, int ny, float cenFrac, int tes
 
   // If non-centered trimming is allowed, first find two directions that can be expanded
   xind = yind = -1;
-  if (trimX - delTrim >= minTrimX && ProcEvaluateTrim(array, type, nx, ny, testSize, 
+  if (trimX - delTrim >= minTrimX && ProcEvaluateTrim(array, type, nx, ny, testSize,
     trimX - delTrim, trimY, trimXright, trimYtop, critMean))
     xind = 0;
-  if (trimXright - delTrim >= minTrimX && ProcEvaluateTrim(array, type, nx, ny, testSize, 
+  if (trimXright - delTrim >= minTrimX && ProcEvaluateTrim(array, type, nx, ny, testSize,
     trimX, trimY, trimXright - delTrim, trimYtop, critMean))
     xind = 1;
-  if (trimY - delTrim >= minTrimY && ProcEvaluateTrim(array, type, nx, ny, testSize, 
+  if (trimY - delTrim >= minTrimY && ProcEvaluateTrim(array, type, nx, ny, testSize,
     trimX, trimY - delTrim, trimXright, trimYtop, critMean))
     yind = 0;
-  if (trimYtop - delTrim >= minTrimY && ProcEvaluateTrim(array, type, nx, ny, testSize, 
+  if (trimYtop - delTrim >= minTrimY && ProcEvaluateTrim(array, type, nx, ny, testSize,
     trimX, trimY, trimXright, trimYtop - delTrim, critMean))
     yind = 1;
 
@@ -2034,7 +2038,7 @@ int ProcTrimCircle(void *array, int type, int nx, int ny, float cenFrac, int tes
       xtry[0] = trimX;
 
     while (xtry[useXind] >= xlim) {
-      if (!ProcEvaluateTrim(array, type, nx, ny, testSize, xtry[0], ytry[0], xtry[1], 
+      if (!ProcEvaluateTrim(array, type, nx, ny, testSize, xtry[0], ytry[0], xtry[1],
         ytry[1], critMean))
         break;
 
@@ -2099,8 +2103,8 @@ int ProcEvaluateTrim(void *array, int type, int nx, int ny, int testSize, int tr
 
 // Find edges of beam
 int ProcFindCircleEdges(void *array, int type, int nx, int ny, float xcen, float ycen,
-                        int border, float angleInc, int boxLen, int boxWidth, 
-                        float outCrit, float edgeCrit, float *xx, float *yy, 
+                        int border, float angleInc, int boxLen, int boxWidth,
+                        float outCrit, float edgeCrit, float *xx, float *yy,
                         float *angle, float *grad)
 {
   int *idx = new int[2 * boxLen * boxWidth];
@@ -2113,13 +2117,13 @@ int ProcFindCircleEdges(void *array, int type, int nx, int ny, float xcen, float
   short int *sdata = (short int *)array;
   unsigned short int *usdata = (unsigned short int *)array;
   float *fdata = (float *)array;
-  
+
   xhi = nx - 1 - border;
   yhi = ny - 1 - border;
 
   // Loop on all angles
   for (rayAng = angleInc - 180.; rayAng <= 180.; rayAng += angleInc) {
-    
+
     // Make up the box increments
     gotCross =0;
     lastMean = mean2 = mean3 = -1.e10;
@@ -2136,7 +2140,7 @@ int ProcFindCircleEdges(void *array, int type, int nx, int ny, float xcen, float
     else if (yray < -0.01)
       iyray = (int)(border + boxWidth / 2. - ycen) / yray;
     rayst = B3DMIN(ixray, iyray);
- 
+
 
     // Loop from there back to the center
     for (iray = rayst; iray > 1; iray--) {
@@ -2241,7 +2245,7 @@ void MakeBoxIncrements(int boxLen, int boxWidth, double rayAng, int *idx, int *i
 // Compute means along the line connecting two points using the given box dimensions
 // perpendicular and parallel to the line, and taking numSteps
 void ProcBoxMeansAlongLine(void *array, int type, int nx, int ny, int border, int boxLen,
-  int boxWidth, int ixStart, int iyStart, int ixEnd, int iyEnd, int numSteps, 
+  int boxWidth, int ixStart, int iyStart, int ixEnd, int iyEnd, int numSteps,
   float *means)
 {
   int *idx = new int[2 * boxLen * boxWidth];
@@ -2266,7 +2270,7 @@ void ProcBoxMeansAlongLine(void *array, int type, int nx, int ny, int border, in
   for (iray = 0; iray < numSteps; iray++) {
     ixc = (int)(ixStart + iray * xray * stepSize);
     iyc = (int)(iyStart + iray * yray * stepSize);
- 
+
     // Get the box mean
     sum = 0.;
     npix = 0;
@@ -2284,7 +2288,7 @@ void ProcBoxMeansAlongLine(void *array, int type, int nx, int ny, int border, in
 
 // Perform dark subtraction on an image, interpolating between two dark references
 // if ref2 is non-NULL.
-int ProcDarkSubtract(void *image, int type, int nx, int ny, short int *ref1, 
+int ProcDarkSubtract(void *image, int type, int nx, int ny, short int *ref1,
   double exp1, short int *ref2, double exp2, double exp, int darkScale)
 {
   int i, f1, f2;
@@ -2308,7 +2312,7 @@ int ProcDarkSubtract(void *image, int type, int nx, int ny, short int *ref1,
   case SIGNED_SHORT:
     sdata = (short int *)image;
     for (i = 0; i < nx * ny; i++) {
-      srval = darkScale * (ref2 ? (short int)((f1 * *ref1++ + f2 * *ref2++ + roundFac) 
+      srval = darkScale * (ref2 ? (short int)((f1 * *ref1++ + f2 * *ref2++ + roundFac)
         >> darkBits) : *ref1++);
       *sdata++ -= srval;
     }
@@ -2320,7 +2324,7 @@ int ProcDarkSubtract(void *image, int type, int nx, int ny, short int *ref1,
       usrval = darkScale * (ref2 ? (unsigned short int)
         ((f1 * *usref1++ + f2 * *usref2++ + roundFac) >> darkBits) : *usref1++);
       *usdata = *usdata > usrval ? *usdata - usrval : 0;
-      usdata++; 
+      usdata++;
     }
     break;
 
@@ -2338,7 +2342,7 @@ int ProcDarkSubtract(void *image, int type, int nx, int ny, short int *ref1,
 
 #define SCALED_DARK_VAL(d1, d2) rval = \
   darkScale * (dark2 ? ((f1 * d1[ix] + f2 * d2[ix] + roundFac) >> darkBits) : d1[ix]);
-   
+
 
 // Perform gain normalization using either a float or scaled integer gain reference
 // and interpolating between two dark references.
@@ -2349,7 +2353,7 @@ int ProcDarkSubtract(void *image, int type, int nx, int ny, short int *ref1,
 // and compared speeds, on Core 2 Duo it is 5 ms slower for small images and somewhat
 // faster for large images; on Pentium 4 is faster all around (?).
 int ProcGainNormalize(void *image, int type, int nxFull, int top, int left, int bottom,
-  int right, short int *dark1, double exp1, short int *dark2, double exp2, double exp, 
+  int right, short int *dark1, double exp1, short int *dark2, double exp2, double exp,
   int darkScale, int darkByteSize, void *gainRef, int gainBytes, int gainBits)
 {
   float *gainp = NULL;
@@ -2504,7 +2508,7 @@ int ProcConvertGainRef(float *fGain, unsigned short *usGain, int arrSize, int sc
 
   // get factor, return error if too small
   *bits = (int)(log((double)(scaledMax / fMax)) / log(2.));
-  
+
   if (*bits < minBits)
     return 2;
 
@@ -2544,7 +2548,7 @@ int ProcConvertGainRef(float *fGain, unsigned short *usGain, int arrSize, int sc
   }
 
 int ProcRemoveXRays(void *array, int type, int nx, int ny, int nHotCol, int *hotCol,
-          int nHotPixel, int *hotX, int *hotY, int maxPixel, float minDist, float maxDist, 
+          int nHotPixel, int *hotX, int *hotY, int maxPixel, float minDist, float maxDist,
           float absCrit, float sdCrit, int eitherBoth, int critIterations, float critFac,
           float *sdev, int *nReplaced, int *nSkipped, int *nTruncated, int *replacedX,
             int *replacedY, int replacedSize)
@@ -2582,7 +2586,7 @@ int ProcRemoveXRays(void *array, int type, int nx, int ny, int nHotCol, int *hot
   if (!dxSample)
     dxSample = 1;
   nxSample = (nxUse -1) / dxSample + 1;
-  
+
   nyUse = ny - 2 * sampleIndent;
   iyStart = sampleIndent;
   if (nyUse < 4) {
@@ -2596,7 +2600,7 @@ int ProcRemoveXRays(void *array, int type, int nx, int ny, int nHotCol, int *hot
 
   // Sample the image to get mean and sd
   for (i = 0; i < nxSample; i++, ixSample += dxSample) {
-    
+
     // Skip a column if it is hot or has a hot pixel
     hot = 0;
     for (j = 0; j < nHotCol && !hot; j++)
@@ -2655,7 +2659,7 @@ int ProcRemoveXRays(void *array, int type, int nx, int ny, int nHotCol, int *hot
       crit = absCrit;
   } else if (absCrit > 0.)
     crit = absCrit;
-    
+
   intcrit = (int)(crit + mean);
 
   // Loop in natural order
@@ -2673,7 +2677,7 @@ int ProcRemoveXRays(void *array, int type, int nx, int ny, int nHotCol, int *hot
       break;
     }
  }
-  
+
   *nReplaced = totReplaced;
   return totPatches;
 }
@@ -2740,7 +2744,7 @@ int ProcReplacePixels(void *array, int type, int nx, int ny, int nHotCol, int *h
           continue;
 
           // Check pixel itself
-        if (ProcGetPixel(array, type, nx, ixc, iyc) <= crit) 
+        if (ProcGetPixel(array, type, nx, ixc, iyc) <= crit)
           continue;
 
        // check if already on list
@@ -2750,7 +2754,7 @@ int ProcReplacePixels(void *array, int type, int nx, int ny, int nHotCol, int *h
         }
         if (i < ninList)
           continue;
-        
+
         // check against hot list
         for (i = 0; i < nHotCol; i++) {
           if (ixc == hotCol[i])
@@ -2794,7 +2798,7 @@ int ProcReplacePixels(void *array, int type, int nx, int ny, int nHotCol, int *h
   dsum = 0.;
   for (iyc = miny - del; iyc <= maxy + del; iyc++) {
     for (ixc = minx - del; ixc <= maxx + del; ixc++) {
- 
+
       // check legality of coordinate
       if (ixc < 0 || ixc >= nx || iyc < 0 || iyc >= ny)
         continue;
@@ -2842,7 +2846,7 @@ int ProcReplacePixels(void *array, int type, int nx, int ny, int nHotCol, int *h
 }
 
 // Adjust two halves of an image to have the same intensity at a boundary line
-void ProcBalanceHalves(void *array, int type, int nx, int ny, int top, int left, 
+void ProcBalanceHalves(void *array, int type, int nx, int ny, int top, int left,
                        int boundary, int ifY)
 {
   int sumBelow = 0, sumAbove = 0, ix, iy, diff, diffUse;
@@ -2880,7 +2884,7 @@ void ProcBalanceHalves(void *array, int type, int nx, int ny, int top, int left,
         usdata = (unsigned short *)array + iy * nx;
         for (ix = 0; ix < nx; ix++)
           *usdata++ += diffUse;
-      }   
+      }
     }
 
   } else {
@@ -2918,12 +2922,12 @@ void ProcBalanceHalves(void *array, int type, int nx, int ny, int top, int left,
           *usdata++ += diff;
         for (; ix < nx; ix++)
           *usdata++ -= diff;
-      }   
+      }
     }
   }
 }
 
-void DLL_IM_EX ProcPasteByteImages(unsigned char *first, int nx1, int ny1, 
+void DLL_IM_EX ProcPasteByteImages(unsigned char *first, int nx1, int ny1,
   unsigned char *second, int nx2, int ny2, unsigned char *outImage, bool vertical)
 {
   int nxOut, nyOut, loop, iyOut, ix, iy, numLeft, numRight, numBot, numTop;
@@ -3014,7 +3018,7 @@ c rsq is r squared, f is anova f with mp-1 and ng-mp degrees of freedom
 c pass mpin as negative if there are weights in column mp+1
 
 5/16/02: translate to C for SerialEM.  Pass in xsiz, the first progressing
- dimension of the x matrix.  Keep xm and sd as arguments but make the 2-D 
+ dimension of the x matrix.  Keep xm and sd as arguments but make the 2-D
  matrices and sx and r12 all internally declared
  Also added argument invmat to receive the inverse matrix, if it is not NULL
 
@@ -3029,32 +3033,32 @@ so  a(i,j) -> a[i * msiz + j]
 
 //void printmat(char *text, float *mat, int msiz, int nrow, int ncol);
 
-int StatMultr(float *x, int *xsiz, int *mpin, int *ng, float *xm, float *sd, 
+int StatMultr(float *x, int *xsiz, int *mpin, int *ng, float *xm, float *sd,
      float *b, float *b1, float *c, float *rsq, float *f, float *invmat)
 {
 /* dimension x(msiz,*), sx(msiz), xm(msiz), sd(msiz)
 1, ss(msiz,msiz), ssd(msiz,msiz), d(msiz,msiz), r(msiz,msiz)
   2, r11(msiz,msiz), r12(msiz), b(msiz), b1(msiz) */
-  
+
   float ss[MSIZE][MSIZE], d[MSIZE][MSIZE], r[MSIZE][MSIZE];
   float ssd[MSIZE][MSIZE], r11[MSIZE][MSIZE], sx[MSIZE], r12[MSIZE];
   int mp, m, i, j, err;
   int msiz = MSIZE;
-  
+
   mp = *mpin;
   if (mp < 0)
     mp = -mp;
-  
+
   StatCorrel(x, *xsiz, mp, MSIZE, ng, sx, &ss[0][0], &ssd[0][0], &d[0][0],
     &r[0][0], xm, sd, mpin);
-  
+
     /* printmat("SS matrix", &ss[0][0], msiz, mp, mp);
     printmat("SSD matrix", &ssd[0][0], msiz, mp, mp);
     printmat("D matrix", &d[0][0], msiz, mp, mp);
     printmat("R matrix", &r[0][0], msiz, mp, mp);
     printmat("XM", xm, msiz, 1, mp);
   printmat("SD", sd, msiz, 1, mp); */
-  
+
   m = mp - 1;
   for (i = 0; i< m; i++) {
     r12[i] = r[i][m];
@@ -3066,15 +3070,15 @@ int StatMultr(float *x, int *xsiz, int *mpin, int *ng, float *xm, float *sd,
   if ((err = StatGaussj(&r11[0][0], m, msiz, b, 1, 1)))
     //printf("Error %d from gaussj\n", err);
     return err;
-  
+
   *rsq=0.;
   for (i = 0; i< m; i++)
     *rsq += b[i] * r12[i];
-  
+
   *f = 10000.;
   if(*rsq < 1.)
     *f = *rsq * (*ng - mp) / (m * (1. - *rsq));
-  
+
   *c = xm[m];
   for (i = 0; i< m; i++) {
     b1[i] = b[i]*sd[m] / sd[i];
@@ -3113,7 +3117,7 @@ c sx, xm, sd = sum, mean and sd of each column
 c ss, ssd = raw and deviation sums of squares and cross products
 c d, r = dispersion and correlation matrices, compute if ifdisp>0
 c IF ifdisp <0, then compute ssd with weights in column m+1
-c   
+c
 c   4/30/92: rewrote to calculate means first then form SSD from the
 c   deviations from means; this is slower, but the old formula was
 c   too inaccurate when fitting high-order polynomials.
@@ -3138,14 +3142,14 @@ void StatCorrel(float *x, int xsiz, int m, int msiz, int *ng, float *sx,
   int ns = 1;
   float eng, den, weight, wsum;
   int i, j, k;
-  
+
   if (*ng > 10000) {
     ns = *ng / 10000;
     *ng = *ng - 10000 * ns;
   }
-  
+
   eng = *ng + 1 - ns;
-  
+
   for (i = 0; i< m; i++) {
     sx[i] = 0.;
     for (j = 0; j < m; j++) {
@@ -3153,7 +3157,7 @@ void StatCorrel(float *x, int xsiz, int m, int msiz, int *ng, float *sx,
       r[msiz * i + j] = 0.;
     }
   }
-  
+
   if (*ifdisp >= 0) {
     for (i = 0; i< m; i++) {
       for (k = ns - 1; k < *ng; k++)
@@ -3170,17 +3174,17 @@ void StatCorrel(float *x, int xsiz, int m, int msiz, int *ng, float *sx,
       xm[i] = sx[i]/wsum;
     }
   }
-  
+
   for (k = ns - 1; k < *ng; k++) {
     weight = 1.;
     if(*ifdisp < 0)
       weight = x[m + k * xsiz];
     for (i = 0; i< m; i++)
       for (j = 0; j < m; j++)
-        ssd[i * msiz + j] += (x[i + k * xsiz] - xm[i]) * 
+        ssd[i * msiz + j] += (x[i + k * xsiz] - xm[i]) *
         (x[j + k * xsiz] - xm[j]) * weight;
   }
-  
+
   for (i = 0; i< m; i++) {
     sd[i] = (float)sqrt((double)(ssd[i * msiz + i]/(eng-1.)));
     for (j = 0; j < m; j++) {

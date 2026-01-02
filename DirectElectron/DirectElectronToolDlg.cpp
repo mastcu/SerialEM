@@ -9,9 +9,13 @@
 #include "..\MacroProcessor.h"
 #include "..\PluginManager.h"
 
+#if defined(_DEBUG) && defined(_CRTDBG_MAP_ALLOC)
+#define new DEBUG_NEW
+#endif
+
 // DirectElectronToolDlg dialog
 
-static VOID CALLBACK StatusUpdateProc(HWND hwnd, UINT uMsg, UINT_PTR idEvent, 
+static VOID CALLBACK StatusUpdateProc(HWND hwnd, UINT uMsg, UINT_PTR idEvent,
                                       DWORD dwTime);
 
 static const char *sSetpointOld = "Temperature Control - Setpoint (Celsius)";
@@ -79,7 +83,7 @@ void DirectElectronToolDlg::updateDEToolDlgPanel(bool initialCall)
     BOOL isSurvey = mDECamera->CurrentIsSurvey();
     BOOL isEither = isDE12 || isSurvey;
     SetDlgItemText(ID_DE_camName, value);
-    EnableDlgItem(ID_DE_currfps, !isDE12); 
+    EnableDlgItem(ID_DE_currfps, !isDE12);
     float temp_float = 0.0;
     int temp_int = 1;
 
@@ -113,7 +117,7 @@ void DirectElectronToolDlg::updateDEToolDlgPanel(bool initialCall)
 
       // read "Camera Position Status"
       if (mDECamera->getStringProperty("Camera Position Status", value))
-        ((CButton *) GetDlgItem(IDC_DE_insertCam))->SetCheck(value == 
+        ((CButton *) GetDlgItem(IDC_DE_insertCam))->SetCheck(value ==
           DE_CAM_STATE_INSERTED ? 1 : 0);
 
       // Update Auto save address either from the camera properties or the server
@@ -195,7 +199,7 @@ BOOL DirectElectronToolDlg::HasFrameTime(CameraParameters *param)
 }
 
 // The status update procedure run on a timer
-static VOID CALLBACK StatusUpdateProc(HWND hwnd, UINT uMsg, UINT_PTR idEvent, 
+static VOID CALLBACK StatusUpdateProc(HWND hwnd, UINT uMsg, UINT_PTR idEvent,
                                       DWORD dwTime)
 {
   CSerialEMApp *winApp = (CSerialEMApp *)AfxGetApp();
@@ -265,7 +269,7 @@ void DirectElectronToolDlg::ApplyUserSettings()
   if ((isDE12 || isSurvey) && mFormatForAutoSave >= 0) {
     B3DCLAMP(mFormatForAutoSave, 0, 1);
     ((CComboBox *) GetDlgItem(ID_DE_autosaveF))->SetCurSel(mFormatForAutoSave);
-    mDECamera->setStringProperty(FileFormatProperty(), mFormatForAutoSave ? 
+    mDECamera->setStringProperty(FileFormatProperty(), mFormatForAutoSave ?
       mHdfMrcSaveOption : "TIFF");
   }
   if (camParam->DE_FramesPerSec > 0) {
@@ -320,8 +324,8 @@ void DirectElectronToolDlg::Update()
   EnableDlgItem(ID_DE_protectMode, !thisCamBusy && isDE12);
 
   // Handle protection cover, open it for tasks that take images
-  if (((mWinApp->DoingImagingTasks() || (mWinApp->mMacroProcessor->DoingMacro() && 
-    mWinApp->mMacroProcessor->GetOpenDE12Cover())) && thisCamBusy) || 
+  if (((mWinApp->DoingImagingTasks() || (mWinApp->mMacroProcessor->DoingMacro() &&
+    mWinApp->mMacroProcessor->GetOpenDE12Cover())) && thisCamBusy) ||
     (mWinApp->mCamera->DoingContinuousAcquire() && camParam->DE_camType > 0))
     protCoverNeed = 0;
   if (isDE12 && (!mDECamera->GetLastLiveMode() || !protCoverNeed))
@@ -435,13 +439,13 @@ void DirectElectronToolDlg::OnBnClickedCoolcam()
   if (mDECamera) {
     mDECamera->getStringProperty("Temperature Control", value);
     if (state && value.Compare("Cool Down") != 0) {
-      if (AfxMessageBox("You are about to COOL down the camera. Are you sure?", 
+      if (AfxMessageBox("You are about to COOL down the camera. Are you sure?",
         MB_YESNO | MB_ICONWARNING) == IDYES)
           hr = mDECamera->CoolDownCamera();
       else
         newState = 0;
     } else if (!state && value.Compare("Warm Up") != 0) {
-      if (AfxMessageBox("You are about to WARM up the camera. Are you sure?", 
+      if (AfxMessageBox("You are about to WARM up the camera. Are you sure?",
         MB_YESNO | MB_ICONWARNING) == IDYES)
           hr = mDECamera->WarmUPCamera();
       else
@@ -459,7 +463,7 @@ void DirectElectronToolDlg::OnBnClickedCoolcam()
   mChangingCooling = false;
 }
 
-// Insert or retract camera 
+// Insert or retract camera
 void DirectElectronToolDlg::OnBnClickedinsert()
 {
   CString value = "";

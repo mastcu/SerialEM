@@ -5,10 +5,8 @@
 #include "SerialEM.h"
 #include "DummyDlg.h"
 
-#ifdef _DEBUG
+#if defined(_DEBUG) && defined(_CRTDBG_MAP_ALLOC)
 #define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
 #endif
 
 static VOID CALLBACK UpdateProc(
@@ -52,10 +50,10 @@ END_MESSAGE_MAP()
 /////////////////////////////////////////////////////////////////////////////
 // CDummyDlg message handlers
 
-BOOL CDummyDlg::OnInitDialog() 
+BOOL CDummyDlg::OnInitDialog()
 {
 	CDialog::OnInitDialog();
-#ifdef USE_SDK_FILEDLG	
+#ifdef USE_SDK_FILEDLG
 #ifdef USE_THREAD
   // Run SDK file dialog in thread
   ShowWindow(SW_HIDE);
@@ -72,7 +70,7 @@ BOOL CDummyDlg::OnInitDialog()
   // Or show dialog directly
   EndDialog(RunSdkFileDlg(mfdTDp));
 #endif
-#endif  
+#endif
 	return TRUE;  // return TRUE unless you set the focus to a control
 	              // EXCEPTION: OCX Property Pages should return FALSE
 }

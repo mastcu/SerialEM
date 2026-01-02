@@ -2,6 +2,10 @@
 #include <math.h>
 #include ".\EMimageExtra.h"
 
+#if defined(_DEBUG) && defined(_CRTDBG_MAP_ALLOC)
+#define new DEBUG_NEW
+#endif
+
 #define MDOC_FLOAT(nam, ini, tst, sym, str) \
   nam = ini;
 #define MDOC_INTEGER(nam, ini, sym, str) \
@@ -41,7 +45,7 @@ EMimageExtra::EMimageExtra()
 // Convert a float to two shorts: the number is converted to an integer between
 // 327600 and 3276000 and an exponent as a power of 10;
 // the low word is this number divided by 100 times the sign of the value
-// the high word is this number modulo 100 plus 100 * |exponent|, with the sign of 
+// the high word is this number modulo 100 plus 100 * |exponent|, with the sign of
 // the exponent
 int EMimageExtra::FloatToShorts(float inVal, short int &outLo, short int &outHi)
 {

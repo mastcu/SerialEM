@@ -1,6 +1,6 @@
 // CMultiGridDlg.cpp : Dialog for controlling multiple grid operations
 //
-// Copyright (C) 2024 by the Regents of the University of
+// Copyright (C) 2024-2026 by the Regents of the University of
 // Colorado.  See Copyright.txt for full notice of copyright and limitations.
 //
 // Author: David Mastronarde
@@ -22,6 +22,10 @@
 #include "Shared\b3dutil.h"
 #include "Utilities\KGetOne.h"
 
+#if defined(_DEBUG) && defined(_CRTDBG_MAP_ALLOC)
+#define new DEBUG_NEW
+#endif
+
 #define MAX_DLG_SLOTS 13
 
 static int sIdTable[] = {IDC_STAT_RUN, IDC_STAT_NAME, IDC_BUT_CLOSE_ALL, PANEL_END,
@@ -29,7 +33,7 @@ static int sIdTable[] = {IDC_STAT_RUN, IDC_STAT_NAME, IDC_BUT_CLOSE_ALL, PANEL_E
   IDC_CHECK_MULGRID_RUN4, IDC_CHECK_MULGRID_RUN5, IDC_CHECK_MULGRID_RUN6,
   IDC_CHECK_MULGRID_RUN7, IDC_CHECK_MULGRID_RUN8, IDC_CHECK_MULGRID_RUN9,
   IDC_CHECK_MULGRID_RUN10, IDC_CHECK_MULGRID_RUN11, IDC_CHECK_MULGRID_RUN12,
-  IDC_CHECK_MULGRID_RUN13, IDC_RADIO_MULGRID_SEL1, IDC_RADIO_MULGRID_SEL2, 
+  IDC_CHECK_MULGRID_RUN13, IDC_RADIO_MULGRID_SEL1, IDC_RADIO_MULGRID_SEL2,
   IDC_RADIO_MULGRID_SEL3, IDC_STAT_NOTE, IDC_EDIT_GRID_NOTE,
   IDC_RADIO_MULGRID_SEL4, IDC_RADIO_MULGRID_SEL5, IDC_RADIO_MULGRID_SEL6,
   IDC_RADIO_MULGRID_SEL7, IDC_RADIO_MULGRID_SEL8, IDC_RADIO_MULGRID_SEL9,
@@ -38,7 +42,7 @@ static int sIdTable[] = {IDC_STAT_RUN, IDC_STAT_NAME, IDC_BUT_CLOSE_ALL, PANEL_E
   IDC_EDIT_MULGRID_NAME3, IDC_EDIT_MULGRID_NAME4, IDC_EDIT_MULGRID_NAME5,
   IDC_EDIT_MULGRID_NAME6, IDC_EDIT_MULGRID_NAME7, IDC_EDIT_MULGRID_NAME8,
   IDC_EDIT_MULGRID_NAME9, IDC_EDIT_MULGRID_NAME10, IDC_EDIT_MULGRID_NAME11,
-  IDC_EDIT_MULGRID_NAME12, IDC_EDIT_MULGRID_NAME13, IDC_BUT_LOAD_GRID, 
+  IDC_EDIT_MULGRID_NAME12, IDC_EDIT_MULGRID_NAME13, IDC_BUT_LOAD_GRID,
   IDC_STAT_MULGRID_STATUS1, IDC_STAT_MULGRID_STATUS6, IDC_STAT_MULGRID_STATUS10,
   IDC_STAT_MULGRID_STATUS2, IDC_STAT_MULGRID_STATUS7, IDC_STAT_MULGRID_STATUS11,
   IDC_STAT_MULGRID_STATUS3, IDC_STAT_MULGRID_STATUS8, IDC_STAT_MULGRID_STATUS12,
@@ -46,7 +50,7 @@ static int sIdTable[] = {IDC_STAT_RUN, IDC_STAT_NAME, IDC_BUT_CLOSE_ALL, PANEL_E
   IDC_STAT_MULGRID_STATUS5, IDC_CHECK_TOGGLE_ALL, IDC_STAT_NOTE, IDC_EDIT_GRID_NOTE,
   IDC_BUT_SET_ORDER, IDC_BUT_RESET_ORDER, IDC_BUT_OPEN_LOGS, IDC_RREFINE_VIEW,
   IDC_RREFINE_SEARCH, IDC_RREFINE_STATE, IDC_CHECK_MG_REFINE, IDC_COMBO_REFINE_STATE,
-  IDC_BUT_REALIGN_TO_GRID_MAP, IDC_BUT_OPEN_NAV, IDC_BUT_SET_GRID_TYPE, 
+  IDC_BUT_REALIGN_TO_GRID_MAP, IDC_BUT_OPEN_NAV, IDC_BUT_SET_GRID_TYPE,
   IDC_STAT_REFINE_FOV, PANEL_END,
   IDC_BUT_MG_SETUP, IDC_STAT_MG_GRID_SETUP, IDC_TSS_LINE4, PANEL_END,
   IDC_BUT_MG_GET_NAMES, IDC_BUT_MG_INVENTORY, IDC_STAT_MG_PREFIX,
@@ -69,7 +73,7 @@ static int sIdTable[] = {IDC_STAT_RUN, IDC_STAT_NAME, IDC_BUT_CLOSE_ALL, PANEL_E
   IDC_BUT_SETUP_MAPPING,  IDC_COMBO_MMM_STATE4, IDC_RFIXED_MONT, PANEL_END,
   IDC_BUT_MG_FINAL_ACQ, IDC_CHECK_RUN_FINAL_ACQ, IDC_TSS_LINE8, PANEL_END,
   IDC_COMBO_FINAL_STATE3, IDC_COMBO_FINAL_STATE2, IDC_COMBO_FINAL_STATE1,
-  IDC_COMBO_FINAL_STATE4, IDC_STAT_SET_FINAL_STATES, IDC_BUT_SETUP_FINAL_ACQ, 
+  IDC_COMBO_FINAL_STATE4, IDC_STAT_SET_FINAL_STATES, IDC_BUT_SETUP_FINAL_ACQ,
   IDC_CHECK_SET_FINAL_BY_GRID, IDC_BUT_REVERT_TO_GLOBAL, IDC_CHECK_FRAMES_UNDER_SESSION,
   IDC_STAT_VECTOR_SOURCE, IDC_RVECTORS_FROM_MAPS, IDC_RVECTORS_FROM_SETTINGS, PANEL_END,
   IDC_BUT_START_RUN, IDC_TSS_LINE2, IDCANCEL, IDOK, IDC_BUTHELP, IDC_STAT_SPACER,
@@ -478,7 +482,7 @@ void CMultiGridDlg::OnButMgGetNames()
       return;
     }
     for (slot = 0; slot < numSlots; slot++) {
-      
+
       if (!names.IsEmpty()) {
 
       // Copy the names into the array
@@ -649,7 +653,7 @@ void CMultiGridDlg::ReloadTable(int resetOrClear, int checkRuns)
         jcdEl.userName = str;
         mMGTasks->SetAdocChanged(true);
       }
-      SetDlgItemText(IDC_EDIT_MULGRID_NAME1 + slot, UserNameWithNote(jcdEl.userName, 
+      SetDlgItemText(IDC_EDIT_MULGRID_NAME1 + slot, UserNameWithNote(jcdEl.userName,
         jcdEl.note));
       SetStatusText(ind);
     }
@@ -686,7 +690,7 @@ void CMultiGridDlg::OnButMgInventory()
 void CMultiGridDlg::OnButMgResetNames()
 {
   if (!mNamesChanged || (mNamesChanged && AfxMessageBox("Resetting to names from scope "
-    "will lose your name changes\n\nAre you sure you want to do this?", MB_QUESTION) == 
+    "will lose your name changes\n\nAre you sure you want to do this?", MB_QUESTION) ==
     IDYES))
     ReloadTable(1, 0);
   mWinApp->RestoreViewFocus();
@@ -835,7 +839,7 @@ void CMultiGridDlg::DefaultRunDlgIndexes(IntVec &dlgInds)
 /*
  * Set the run checkbox labels with the order numbers for ones to be run
  */
-void CMultiGridDlg::DisplayRunOrder() 
+void CMultiGridDlg::DisplayRunOrder()
 {
   IntVec dlgInds;
   int ind, run;
@@ -912,7 +916,7 @@ void CMultiGridDlg::SetStatusText(int jcdInd)
     if (mDlgIndToJCDindex[dlin] == jcdInd) {
       str += jcd.separateState ? 'S' : (const char)0x97;
       str += (jcd.multiShotParamIndex >= 0 || jcd.holeFinderParamIndex >= 0 ||
-        jcd.autoContParamIndex >= 0 || jcd.generalParamIndex >= 0 || 
+        jcd.autoContParamIndex >= 0 || jcd.generalParamIndex >= 0 ||
         jcd.focusPosParamIndex >= 0 || jcd.finalDataParamIndex >= 0) ?
         'P' : (const char)0x97;
       str += ":";
@@ -1022,8 +1026,8 @@ void CMultiGridDlg::UpdateEnables()
   CameraParameters *camP = mWinApp->GetCamParams();
   int numStates, stateCamera;
   int ind, noTaskList[] = {IDC_CHECK_RUN_LMMS, IDC_RLMM_SEARCH, IDC_RLMM_VIEW,
-    IDC_RLMM_CUR_OR_STATE, IDC_CHECK_SET_LMM_STATE, IDC_CHECK_REMOVE_OBJ, 
-    IDC_CHECK_SET_CONDENSER, IDC_RFULL_GRID_MONT, IDC_RNUM_MONT_PIECES, 
+    IDC_RLMM_CUR_OR_STATE, IDC_CHECK_SET_LMM_STATE, IDC_CHECK_REMOVE_OBJ,
+    IDC_CHECK_SET_CONDENSER, IDC_RFULL_GRID_MONT, IDC_RNUM_MONT_PIECES,
     IDC_CHECK_USE_OVERLAP, IDC_CHECK_AUTOCONTOUR, IDC_BUT_SETUP_LMM_MONT,
     IDC_CHECK_TAKE_MMMS, IDC_RMMM_SEARCH, IDC_RMMM_VIEW, IDC_RMMM_CUR_OR_STATE,
     IDC_COMBO_MMM_STATE1, IDC_COMBO_MMM_STATE2, IDC_COMBO_MMM_STATE3, IDC_RFIXED_MONT,
@@ -1035,7 +1039,7 @@ void CMultiGridDlg::UpdateEnables()
   BOOL justTasks = mWinApp->DoingTasks();
   bool suspended = mMGTasks->GetSuspendedMulGrid();
   BOOL tasks = justTasks || suspended || mSettingOrder;
-  bool acqStatesEnabled = !tasks && (mSelectedGrid >= 0 || !m_bSetFinalByGrid) && 
+  bool acqStatesEnabled = !tasks && (mSelectedGrid >= 0 || !m_bSetFinalByGrid) &&
     mNumUsedSlots > 0;
   CString filename;
   EnableDlgItem(IDC_BUT_MG_GET_NAMES, (FEIscope || mCartInfo->GetSize() > 0) && !tasks &&
@@ -1051,7 +1055,7 @@ void CMultiGridDlg::UpdateEnables()
   EnableDlgItem(IDC_BUT_SET_ORDER, mNumUsedSlots > 0 && !justTasks && !suspended);
   EnableDlgItem(IDC_BUT_RESET_ORDER, mNumUsedSlots > 0 && !justTasks && !suspended &&
     mMGTasks->GetUseCustomOrder());
-  EnableDlgItem(IDC_EDIT_GRID_NOTE, mNumUsedSlots > 0 && !justTasks && locked && 
+  EnableDlgItem(IDC_EDIT_GRID_NOTE, mNumUsedSlots > 0 && !justTasks && locked &&
     mSelectedGrid >= 0);
   EnableDlgItem(IDC_BUT_LOAD_GRID, mNumUsedSlots > 0 && !tasks && mSelectedGrid >= 0 &&
     !mSelGridOnStage);
@@ -1061,7 +1065,7 @@ void CMultiGridDlg::UpdateEnables()
   EnableDlgItem(IDC_BUT_SET_GRID_TYPE, mNumUsedSlots > 0 && !tasks && mSelectedGrid >= 0);
   if (mNumUsedSlots > 0 && !tasks && mSelectedGrid >= 0 && mSelGridOnStage) {
     jcd = FindCartDataForDlgIndex(mSelectedGrid);
-    EnableDlgItem(IDC_BUT_REALIGN_TO_GRID_MAP, 
+    EnableDlgItem(IDC_BUT_REALIGN_TO_GRID_MAP,
       jcd.slot >= 0 && (jcd.status & MGSTAT_FLAG_LM_MAPPED));
   } else
     EnableDlgItem(IDC_BUT_REALIGN_TO_GRID_MAP, false);
@@ -1079,22 +1083,22 @@ void CMultiGridDlg::UpdateEnables()
   EnableDlgItem(IDC_BUT_SETUP_AUTOCONT2, m_bAutocontour && !tasks);
   EnableDlgItem(IDC_BUT_SETUP_POLYMONT, m_iSingleVsPolyMont > 0 && !tasks);
   EnableDlgItem(IDC_BUT_START_RUN, ((m_bTakeLMMs || m_bTakeMMMs || m_bRunFinalAcq) &&
-    !tasks && GetListOfGridsToRun(dlgInds, slotNums) > 0 && 
+    !tasks && GetListOfGridsToRun(dlgInds, slotNums) > 0 &&
     (!mSingleGridMode || !m_strPrefix.IsEmpty())) || (suspended && !justTasks));
   SetDlgItemText(IDC_BUT_START_RUN, suspended ? "End Run" : "Start Run");
   SetDlgItemText(IDC_BUT_RUN_UNDONE, suspended ? "Resume Run" : "Run Undone");
-  EnableDlgItem(IDC_BUT_RUN_UNDONE, (mEnableRunUndone || suspended) && !justTasks && 
+  EnableDlgItem(IDC_BUT_RUN_UNDONE, (mEnableRunUndone || suspended) && !justTasks &&
     !mSettingOrder);
   EnableDlgItem(IDC_EDIT_OVERLAP, m_bUseMontOverlap && !tasks);
   for (ind = 0; ind < sizeof(noTaskList) / sizeof(int); ind++)
     EnableDlgItem(noTaskList[ind], !tasks);
   for (ind = 0; ind < mNumUsedSlots; ind++) {
     jcd = FindCartDataForDlgIndex(ind);
-    EnableDlgItem(IDC_EDIT_MULGRID_NAME1 + ind, !tasks && 
+    EnableDlgItem(IDC_EDIT_MULGRID_NAME1 + ind, !tasks &&
       (!locked || (jcd.status & MGSTAT_FLAG_NEW_GRID)) && !mSingleGridMode);
-    EnableDlgItem(IDC_RADIO_MULGRID_SEL1 + ind, !justTasks && !suspended && 
+    EnableDlgItem(IDC_RADIO_MULGRID_SEL1 + ind, !justTasks && !suspended &&
       !mSingleGridMode);
-    EnableDlgItem(IDC_CHECK_MULGRID_RUN1 + ind, !justTasks && !suspended && 
+    EnableDlgItem(IDC_CHECK_MULGRID_RUN1 + ind, !justTasks && !suspended &&
       !mSingleGridMode);
   }
   EnableDlgItem(IDC_COMBO_FINAL_STATE1, acqStatesEnabled);
@@ -1102,7 +1106,7 @@ void CMultiGridDlg::UpdateEnables()
   EnableDlgItem(IDC_COMBO_FINAL_STATE3, acqStatesEnabled);
   EnableDlgItem(IDC_COMBO_FINAL_STATE4, acqStatesEnabled);
   EnableDlgItem(IDC_CHECK_SET_FINAL_BY_GRID, !tasks && mNumUsedSlots > 0);
-  EnableDlgItem(IDC_BUT_REVERT_TO_GLOBAL, 
+  EnableDlgItem(IDC_BUT_REVERT_TO_GLOBAL,
     !tasks && mSelectedGrid >= 0 && m_bSetFinalByGrid && mNumUsedSlots > 0);
   enable = true;
   if (!CheckFinalStates(numStates, stateCamera, &filename)) {
@@ -1180,7 +1184,7 @@ void CMultiGridDlg::UpdateCurrentDir()
 
 void CMultiGridDlg::ManageInventory(int locked)
 {
-  SetDlgItemText(IDC_BUT_MG_INVENTORY, (JEOLscope && locked > 0) ? 
+  SetDlgItemText(IDC_BUT_MG_INVENTORY, (JEOLscope && locked > 0) ?
     "Refresh List" : "Run Inventory");
 }
 
@@ -1193,10 +1197,10 @@ void CMultiGridDlg::ManagePanels()
   int ind;
   UINT singleDrops[] = {IDC_BUT_SET_GRID_TYPE, IDC_BUT_LOAD_GRID, IDC_BUT_MG_INVENTORY,
     IDC_BUT_MG_GET_NAMES, IDC_CHECK_MG_APPEND_NAME, IDC_BUT_MG_RESET_NAMES,
-    IDC_BUT_MG_CLEAR, IDC_CHECK_SET_FINAL_BY_GRID, IDC_BUT_REVERT_TO_GLOBAL, 
+    IDC_BUT_MG_CLEAR, IDC_CHECK_SET_FINAL_BY_GRID, IDC_BUT_REVERT_TO_GLOBAL,
     IDC_CHECK_TOGGLE_ALL, IDC_BUT_RESET_ORDER, IDC_BUT_SET_ORDER, IDC_STAT_NOTE,
   IDC_EDIT_GRID_NOTE};
-  UINT refineIDs[] = {IDC_CHECK_MG_REFINE, IDC_RREFINE_SEARCH, IDC_RREFINE_VIEW, 
+  UINT refineIDs[] = {IDC_CHECK_MG_REFINE, IDC_RREFINE_SEARCH, IDC_RREFINE_VIEW,
     IDC_RREFINE_STATE, IDC_COMBO_REFINE_STATE, IDC_STAT_REFINE_FOV};
   UINT MMMcomboIDs[4] = {IDC_COMBO_MMM_STATE1, IDC_COMBO_MMM_STATE2, IDC_COMBO_MMM_STATE3,
     IDC_COMBO_MMM_STATE4};
@@ -1309,7 +1313,7 @@ void CMultiGridDlg::DialogToParams()
   mParams.macroToRun = mMacNumAtEnd;
   mParams.refineAfterRealign = m_bRefineRealign;
   mParams.refineImageType = m_iRefineRealign;
-  GetStateFromComboBox(m_comboRefineState, mParams.refineStateNum, 
+  GetStateFromComboBox(m_comboRefineState, mParams.refineStateNum,
     mParams.refineStateName, 0);
   GetStateFromComboBox(m_comboMMMstate1, mParams.MMMstateNums[0],
     mParams.MMMstateNames[0], 1);
@@ -1327,7 +1331,7 @@ void CMultiGridDlg::DialogToParams()
 /*
  * Get final states from combo boxes into param or grid jcd arrays
  */
-void CMultiGridDlg::GetFinalStateFomCombos(int *stateNums, CString *stateNames, 
+void CMultiGridDlg::GetFinalStateFomCombos(int *stateNums, CString *stateNames,
   int skipInd)
 {
   if (skipInd != 0)
@@ -1359,7 +1363,7 @@ void CMultiGridDlg::SyncToMasterParams()
  */
 void CMultiGridDlg::SetAllComboBoxesFromNameOrNum()
 {
-  SetComboBoxFromNameOrNum(m_comboRefineState, mParams.refineStateNum, 
+  SetComboBoxFromNameOrNum(m_comboRefineState, mParams.refineStateNum,
     mParams.refineStateName, 0);
   SetComboBoxFromNameOrNum(m_comboLMMstate, mParams.LMMstateNum, mParams.LMMstateName, 0);
   SetComboBoxFromNameOrNum(m_comboMMMstate1, mParams.MMMstateNums[0],
@@ -1503,7 +1507,7 @@ int CMultiGridDlg::FindUniqueStateFromName(CString &name)
 /*
  * Get selected state index and name from a combo box
  */
-void CMultiGridDlg::GetStateFromComboBox(CComboBox &combo, int &num, CString &name, 
+void CMultiGridDlg::GetStateFromComboBox(CComboBox &combo, int &num, CString &name,
   int addForNone)
 {
   StateParams *state;
@@ -2105,7 +2109,7 @@ void CMultiGridDlg::OnButRealignToGridMap()
       AfxMessageBox("Failed to refine grid map alignment:\n" + errStr, MB_EXCLAME);
 
     // Otherwise regular realign
-  } else if (mMGTasks->RealignToGridMap(mDlgIndToJCDindex[mSelectedGrid], true, true, 
+  } else if (mMGTasks->RealignToGridMap(mDlgIndToJCDindex[mSelectedGrid], true, true,
     errStr) > 0) {
       AfxMessageBox("Failed to realign to grid map: " + errStr, MB_EXCLAME);
   }
@@ -2158,7 +2162,7 @@ void CMultiGridDlg::OnEnKillfocusEditCondenser()
   mWinApp->RestoreViewFocus();
 }
 
-// Select autocontouring 
+// Select autocontouring
 void CMultiGridDlg::OnCheckAutocontour()
 {
   UPDATE_DATA_TRUE;
@@ -2230,7 +2234,7 @@ void CMultiGridDlg::OnRfullGridMont()
 void CMultiGridDlg::OnSelendokComboRefineState()
 {
   mWinApp->RestoreViewFocus();
-  GetStateFromComboBox(m_comboRefineState, mParams.refineStateNum, 
+  GetStateFromComboBox(m_comboRefineState, mParams.refineStateNum,
     mParams.refineStateName, 0);
   ManageRefineFOV();
 }
@@ -2422,14 +2426,14 @@ int CMultiGridDlg::DoSetupLMMmont(bool skipDlg)
     montP->minMicronsOverlap = 1.f;
     montP->minOverlapFactor = (float)(m_iMontOverlap / 100.);
   }
-  
+
   // If  there is a state, first make sure its still where it should be
   if (m_bSetLMMstate) {
-    state = GetOrRefindState(mParams.LMMstateNum, mParams.LMMstateName, 
+    state = GetOrRefindState(mParams.LMMstateNum, mParams.LMMstateName,
       "the state for grid mapping", m_comboLMMstate);
     if (!state)
       return 1;
- 
+
     // Set low dose and its area from state
     lowDose = state->lowDose != 0;
     ldArea = -1;
@@ -2441,7 +2445,7 @@ int CMultiGridDlg::DoSetupLMMmont(bool skipDlg)
       (m_iLMMacquireType == 1 && ldArea != VIEW_CONSET)) {
       str.Format("You selected to acquire with %s but to set a %s.\n"
         "Resolve this discrepancy before setting up the montage",
-        m_iLMMacquireType ? "View" : "Search", 
+        m_iLMMacquireType ? "View" : "Search",
         lowDose ? "state for a different Low Dose area" : "non-Low Dose state");
       AfxMessageBox(str, MB_EXCLAME);
       return 1;
@@ -2454,12 +2458,12 @@ int CMultiGridDlg::DoSetupLMMmont(bool skipDlg)
     } else {
       montP->magIndex = state->magIndex;
       montP->useMontMapParams = state->montMapConSet;
-    } 
+    }
     camera = state->camIndex;
     montP->binning = state->binning;
     stateMag = montP->magIndex;
     mLMneedsLowDose = 0;
- 
+
   } else {
 
     // No state: View or Search means low dose, otherwise current mode determines if LD
@@ -2471,7 +2475,7 @@ int CMultiGridDlg::DoSetupLMMmont(bool skipDlg)
       lowDose = true;
     } else if (lowDose) {
 
-      // If current mode is LD, 
+      // If current mode is LD,
       ldArea = mScope->GetLowDoseArea();
       if (ldArea < 0) {
         if (montP->useSearchInLowDose)
@@ -2582,7 +2586,7 @@ int CMultiGridDlg::DoSetupLMMmont(bool skipDlg)
  * Look for state by its index, and if name doesn't matc, look for it by name
  * and correct the index
  */
-StateParams *CMultiGridDlg::GetOrRefindState(int &stateNum, CString &stateName, 
+StateParams *CMultiGridDlg::GetOrRefindState(int &stateNum, CString &stateName,
   const char *descrip, CComboBox &combo)
 {
   StateParams *state;
@@ -2606,7 +2610,7 @@ StateParams *CMultiGridDlg::GetOrRefindState(int &stateNum, CString &stateName,
 
     // Bail out if can't identify it with confidence
     if (ind < 0) {
-      str.Format("The set of states seems to have changed since state # %d ", 
+      str.Format("The set of states seems to have changed since state # %d ",
         stateNum + 1);
       if (!stateName.IsEmpty())
         str += "(" + stateName + ") ";
@@ -2706,7 +2710,7 @@ int CMultiGridDlg::CheckFinalStates(int &numStates, int &camera, CString *errStr
  * montaging, low dose state, and the mag and binning for it
  */
 void CMultiGridDlg::DeduceStateForMMM(int numStates, int camera, StateParams **states,
-  int *lowDose, int *magInd, bool &useLD, bool &useSearch, bool &useView, 
+  int *lowDose, int *magInd, bool &useLD, bool &useSearch, bool &useView,
   int &useMontMap, int &useCamera, int &useMag, int &useBin, int &stateForMont)
 {
   LowDoseParams *ldParams;
@@ -2726,11 +2730,11 @@ void CMultiGridDlg::DeduceStateForMMM(int numStates, int camera, StateParams **s
   useLD = m_iMMMacquireType < 2 || (m_iMMMacquireType == 2 && ((curLD && !numStates) ||
     (numStates && lowDose[0])));
 
-  // Use search if specified or if doing montage and it is that way in dialog; 
+  // Use search if specified or if doing montage and it is that way in dialog;
   // same way with View
-  useSearch = m_iMMMacquireType == 0 || (useLD && m_iMMMacquireType != 1 && 
+  useSearch = m_iMMMacquireType == 0 || (useLD && m_iMMMacquireType != 1 &&
     montP->useSearchInLowDose && m_iSingleVsPolyMont);
-  useView = m_iMMMacquireType == 1 || (useLD && m_iMMMacquireType != 2 && 
+  useView = m_iMMMacquireType == 1 || (useLD && m_iMMMacquireType != 2 &&
     montP->useViewInLowDose && m_iSingleVsPolyMont);
 
   // Leave mont-map flag alone outside low dose unless there is a state being set, either
@@ -2789,7 +2793,7 @@ void CMultiGridDlg::DeduceStateForMMM(int numStates, int camera, StateParams **s
     useBin = states[0]->binning;
     stateForMont = 0;
   } else {
-    useBin = conSets[(useMontMap > 0 || (m_iSingleVsPolyMont && useMontMap == 0 && 
+    useBin = conSets[(useMontMap > 0 || (m_iSingleVsPolyMont && useMontMap == 0 &&
       montP->useMontMapParams)) ? MONT_USER_CONSET : RECORD_CONSET].binning;
   }
 }
@@ -2924,11 +2928,11 @@ int CMultiGridDlg::SetupMMMacquire(bool skipDlg)
       montP->ignoreSkipList = true;
       if (stateForMont >= 0) {
         mWinApp->mDocWnd->MontParamInitFromFrame(montP, useCamera,
-          stateArr[stateForMont]->xFrame, stateArr[stateForMont]->yFrame, 0., 
-          stateArr[stateForMont]->saveFrames, stateArr[stateForMont]->alignFrames, 
+          stateArr[stateForMont]->xFrame, stateArr[stateForMont]->yFrame, 0.,
+          stateArr[stateForMont]->saveFrames, stateArr[stateForMont]->alignFrames,
           stateArr[stateForMont]->useFrameAlign, stateArr[stateForMont]->K2ReadMode);
       } else {
-        mWinApp->mDocWnd->MontParamInitFromConSet(montP, 
+        mWinApp->mDocWnd->MontParamInitFromConSet(montP,
           MontageConSetNum(montP, true, useLD), 0.);
       }
       err = 0;
@@ -2964,7 +2968,7 @@ int CMultiGridDlg::SetupMMMacquire(bool skipDlg)
 }
 
 // Look up the control set used by the montage and save size in given variables
-void CMultiGridDlg::SaveMontSetupSize(MontParam *montP, BOOL lowDose, int &setupSizeX, 
+void CMultiGridDlg::SaveMontSetupSize(MontParam *montP, BOOL lowDose, int &setupSizeX,
   int &setupSizeY)
 {
   int consNum = MontageConSetNum(montP, true, lowDose ? 1 : 0);
@@ -2975,13 +2979,13 @@ void CMultiGridDlg::SaveMontSetupSize(MontParam *montP, BOOL lowDose, int &setup
 }
 
 // Check current size in control set for whether it matches size in last setup
-bool CMultiGridDlg::MontSetupSizesMatch(MontParam *montP, BOOL lowDose, int setupSizeX, 
+bool CMultiGridDlg::MontSetupSizesMatch(MontParam *montP, BOOL lowDose, int setupSizeX,
   int setupSizeY)
 {
   int consNum = MontageConSetNum(montP, true, lowDose ? 1 : 0);
   ControlSet *conSet = mWinApp->GetCamConSets() + montP->cameraIndex * MAX_CONSETS +
     consNum;
-  return (setupSizeX == conSet->right - conSet->left && 
+  return (setupSizeX == conSet->right - conSet->left &&
     setupSizeY == conSet->bottom - conSet->top);
 }
 
@@ -2989,7 +2993,7 @@ bool CMultiGridDlg::MontSetupSizesMatch(MontParam *montP, BOOL lowDose, int setu
  * Make sure the image type or state options are valid for the refine operation and
  * that the FOV is big enough
  */
-int CMultiGridDlg::CheckRefineOptions(float &FOV, int &ldArea, int &setNum, 
+int CMultiGridDlg::CheckRefineOptions(float &FOV, int &ldArea, int &setNum,
   StateParams **state, int &numXpiece, int &numYpiece, CString errStr)
 {
   LowDoseParams *ldp = mWinApp->GetLowDoseParams();
@@ -3108,7 +3112,7 @@ void CMultiGridDlg::ManageCondenserUnits()
 {
   int ind, apNum = mMGTasks->GetSingleCondenserAp();
   std::vector<ShortVec> *apList = mScope->GetApertureLists();
-  
+
   if (!JEOLscope)
     return;
   if (mMGTasks->GetUseTwoJeolCondAp())
@@ -3177,7 +3181,7 @@ void CMultiGridDlg::DoStartRun(bool undoneOnly)
 
   if (m_bTakeMMMs) {
     montP = mMGTasks->GetMMMmontParam();
-    if (SetupMMMacquire(MontSetupSizesMatch(montP, 
+    if (SetupMMMacquire(MontSetupSizesMatch(montP,
       montP->setupInLowDose, mMontSetupSizesXY[2], mMontSetupSizesXY[3])))
       return;
   }

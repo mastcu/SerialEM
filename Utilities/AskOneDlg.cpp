@@ -1,7 +1,6 @@
 // AskOneDlg.cpp:         A modal dialog box for getting a one-line entry
 //
-// Copyright (C) 2003 by Boulder Laboratory for 3-Dimensional Electron 
-// Microscopy of Cells ("BL3DEMC") and the Regents of the University of
+// Copyright (C) 2003-2026 by the Regents of the University of
 // Colorado.  See Copyright.txt for full notice of copyright and limitations.
 //
 // Author: David Mastronarde
@@ -12,10 +11,8 @@
 #include "AskOneDlg.h"
 #include "..\XFolderDialog\XFolderDialog.h"
 
-#ifdef _DEBUG
+#if defined(_DEBUG) && defined(_CRTDBG_MAP_ALLOC)
 #define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
 #endif
 
 /////////////////////////////////////////////////////////////////////////////
@@ -61,20 +58,20 @@ END_MESSAGE_MAP()
 /////////////////////////////////////////////////////////////////////////////
 // CAskOneDlg message handlers
 
-void CAskOneDlg::OnOK() 
+void CAskOneDlg::OnOK()
 {
   UpdateData(TRUE);
-  
+
   CDialog::OnOK();
 }
 
-void CAskOneDlg::OnCancel() 
+void CAskOneDlg::OnCancel()
 {
-  
+
   CDialog::OnCancel();
 }
 
-BOOL CAskOneDlg::OnInitDialog() 
+BOOL CAskOneDlg::OnInitDialog()
 {
   CSerialEMApp *winApp = (CSerialEMApp *)AfxGetApp();
   if (!winApp->GetDisplayNotTruly120DPI())
@@ -84,7 +81,7 @@ BOOL CAskOneDlg::OnInitDialog()
   bool showBrowse = !m_strBrowserTitle.IsEmpty();
   CString str = m_sEditString;
   WINDOWPLACEMENT winPlace;
-  
+
   CRect rectNeed, rectWnd, rectOK, rectCancel, rectText, rectInfo, rectEdit, rectClient;
   int editWidth;
   int widthLimit = winApp->ScaleValueForDPI(1000.);
@@ -98,7 +95,7 @@ BOOL CAskOneDlg::OnInitDialog()
   if (textWidth < rectNeed.Width() + 5)
     textWidth = rectNeed.Width() + 5;
   m_statText.ReleaseDC(pDC);
-  
+
   // Get lots of rectangles for everything
   GetWindowRect(&rectWnd);
   GetClientRect(&rectClient);
@@ -107,7 +104,7 @@ BOOL CAskOneDlg::OnInitDialog()
   m_pEditBox.GetWindowRect(&rectEdit);
   editWidth = rectEdit.Width() + m_iExtraWidth;
   /*  if (m_iExtraWidth) {
-    m_pEditBox.SetWindowPos(NULL, 0, 0, 
+    m_pEditBox.SetWindowPos(NULL, 0, 0,
       rectEdit.Width() + m_iExtraWidth, rectEdit.Height(), SWP_NOZORDER | SWP_NOMOVE);
     m_pEditBox.GetWindowRect(&rectEdit);
   } */
@@ -142,22 +139,22 @@ BOOL CAskOneDlg::OnInitDialog()
   // Doing this breaks positioning somehow, so set it in middle of SerialEM area
   ((CSerialEMApp *)AfxGetApp())->GetWindowPlacement(&winPlace);
   ConstrainWindowPlacement(&winPlace, false);
-  SetWindowPos(NULL, (winPlace.rcNormalPosition.right + winPlace.rcNormalPosition.left - 
-    clientWidth) / 2, (winPlace.rcNormalPosition.bottom + winPlace.rcNormalPosition.top - 
+  SetWindowPos(NULL, (winPlace.rcNormalPosition.right + winPlace.rcNormalPosition.left -
+    clientWidth) / 2, (winPlace.rcNormalPosition.bottom + winPlace.rcNormalPosition.top -
     rectWnd.Height()) / 2, clientWidth + 2 * iXoffset, rectWnd.Height(), SWP_NOZORDER);
   m_statText.SetWindowPos(NULL, borderX + textOffset, textTop, textWidth, rectText.Height(),
     SWP_NOZORDER);
   m_statInfoLine.SetWindowPos(NULL, borderX + textOffset, infoTop, textWidth, rectText.Height(),
     SWP_NOZORDER);
-  m_pEditBox.SetWindowPos(NULL, clientWidth - editWidth - borderX - textOffset, 
+  m_pEditBox.SetWindowPos(NULL, clientWidth - editWidth - borderX - textOffset,
     editTop, editWidth, rectEdit.Height(), SWP_NOZORDER);
-  m_butOK.SetWindowPos(NULL, clientWidth / 2 - (showBrowse ? 8 : 5) * 
+  m_butOK.SetWindowPos(NULL, clientWidth / 2 - (showBrowse ? 8 : 5) *
     rectCancel.Width() / 4, OKTop, 0, 0, SWP_NOZORDER | SWP_NOSIZE);
-  m_butCancel.SetWindowPos(NULL, clientWidth / 2 + (showBrowse ? -2 : 1) * 
+  m_butCancel.SetWindowPos(NULL, clientWidth / 2 + (showBrowse ? -2 : 1) *
     rectCancel.Width() / 4, OKTop, 0, 0, SWP_NOZORDER | SWP_NOSIZE);
   if (showBrowse) {
     m_butBrowse.ShowWindow(SW_SHOW);
-    m_butBrowse.SetWindowPos(NULL, clientWidth / 2 + rectCancel.Width(), OKTop, 0, 0, 
+    m_butBrowse.SetWindowPos(NULL, clientWidth / 2 + rectCancel.Width(), OKTop, 0, 0,
       SWP_NOZORDER | SWP_NOSIZE);
   }
 
@@ -167,7 +164,7 @@ BOOL CAskOneDlg::OnInitDialog()
   m_sEditString = str;
   UpdateData(FALSE);
 
-  
+
   return TRUE;  // return TRUE unless you set the focus to a control
                 // EXCEPTION: OCX Property Pages should return FALSE
 }

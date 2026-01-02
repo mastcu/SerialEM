@@ -1,7 +1,6 @@
 // EMstatusWindow.cpp:    Shows a summary of the contents of 3 or 4 buffers
 //
-// Copyright (C) 2003 by Boulder Laboratory for 3-Dimensional Electron 
-// Microscopy of Cells ("BL3DEMC") and the Regents of the University of
+// Copyright (C) 2003-2026 by the Regents of the University of
 // Colorado.  See Copyright.txt for full notice of copyright and limitations.
 //
 // Author: David Mastronarde
@@ -15,10 +14,8 @@
 #include "ShiftManager.h"
 #include "ShiftCalibrator.h"
 
-#ifdef _DEBUG
+#if defined(_DEBUG) && defined(_CRTDBG_MAP_ALLOC)
 #define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
 #endif
 
 /////////////////////////////////////////////////////////////////////////////
@@ -62,11 +59,11 @@ END_MESSAGE_MAP()
 /////////////////////////////////////////////////////////////////////////////
 // EMstatusWindow message handlers
 
-void EMstatusWindow::OnDeltaposSpin(NMHDR* pNMHDR, LRESULT* pResult) 
+void EMstatusWindow::OnDeltaposSpin(NMHDR* pNMHDR, LRESULT* pResult)
 {
   NM_UPDOWN* pNMUpDown = (NM_UPDOWN*)pNMHDR;
 
-  mWinApp->mMainView->TryToChangeBuffer(mWinApp->GetImBufIndex() + 
+  mWinApp->mMainView->TryToChangeBuffer(mWinApp->GetImBufIndex() +
     pNMUpDown->iDelta, pNMUpDown->iDelta);
   mWinApp->RestoreViewFocus();
   *pResult = 1; // Better forbid the change to keep it from running out
@@ -107,7 +104,7 @@ void EMstatusWindow::Update()
 		    width = buf->mImage->getWidth();
 		    height = buf->mImage->getHeight();
 		    spaceIt = width < 10000 && height < 10000;
-        m_sSizeText.Format("Size: %d%sx%s%d  %s %s", width, spaceIt ? " " : "", 
+        m_sSizeText.Format("Size: %d%sx%s%d  %s %s", width, spaceIt ? " " : "",
           spaceIt ? " " : "", height, STEM ? "sam" : "bin", (LPCTSTR)buf->BinningText());
         if (!mShowDefocus && buf->mMagInd)
           m_strDefocus.Format("MagInd: %d", buf->mMagInd);
@@ -132,11 +129,11 @@ void EMstatusWindow::Update()
                 m_strDefocus.Format("%dx", extra->m_iMag);
             }
           }
-          if (buf->mConSetUsed == MONTAGE_CONSET && 
-            (buf->mCaptured > 0 || buf->mCaptured == BUFFER_MONTAGE_PRESCAN) && 
+          if (buf->mConSetUsed == MONTAGE_CONSET &&
+            (buf->mCaptured > 0 || buf->mCaptured == BUFFER_MONTAGE_PRESCAN) &&
             !mWinApp->mShiftCalibrator->CalibratingIS()) {
             MontParam *param = mWinApp->GetMontParam();
-            int xpc = param->xFrame ? extra->m_iMontageX / 
+            int xpc = param->xFrame ? extra->m_iMontageX /
               (param->xFrame - param->xOverlap) + 1 : 1;
             int ypc = param->xFrame ? extra->m_iMontageY /
               (param->yFrame - param->yOverlap) + 1 : 1;
@@ -147,7 +144,7 @@ void EMstatusWindow::Update()
 
 
         }
-      } 
+      }
     } else if (indStat < MAX_STATUS) {
       BOOL doFill = true;
       if (!buf->mImage) {
@@ -185,8 +182,8 @@ void EMstatusWindow::SetStatusText(int indStat, int whichBuf)
     // If unsaved, say so and include name of camera mode
     if (saveFlag && capt  > 0)
       string.Format("%c: %s%s", letter, "UNSAVED, ", mModeNames[setUsed]);
-    else if (capt  == BUFFER_PROCESSED || 
-      capt  == BUFFER_PROC_OK_FOR_MAP || 
+    else if (capt  == BUFFER_PROCESSED ||
+      capt  == BUFFER_PROC_OK_FOR_MAP ||
       capt  == BUFFER_AUTOCOR_OVERVIEW)
       string.Format("%c: %s%s", letter, "Processed, ", mModeNames[setUsed]);
     else if (capt  == BUFFER_CROPPED)
@@ -213,25 +210,25 @@ void EMstatusWindow::SetStatusText(int indStat, int whichBuf)
       string.Format("%c: %s", letter, "Anchor image");
     else
       string.Format("%c: %s%s", letter, "Continuous, ", mModeNames[setUsed]);
-    
+
   } else {
     // Otherwise say it's saved, or read in from file
-    if (saveFlag < 0 && setUsed == MONTAGE_CONSET) 
+    if (saveFlag < 0 && setUsed == MONTAGE_CONSET)
       string.Format("%c: Saved to File, frame %d", letter, buf->mSecNumber);
-    else if (saveFlag < 0) 
+    else if (saveFlag < 0)
       string.Format("%c: Saved to File, sec. %d", letter, buf->mSecNumber);
     else if (buf->mSecNumber >= 0)
       string.Format("%c: Read from File, sec. %d", letter, buf->mSecNumber);
-    else  
+    else
       string.Format("%c: From Other File, sec. %d", letter, -buf->mSecNumber-1);
   }
   mBufText[indStat]->SetWindowText(string);
 }
 
-BOOL EMstatusWindow::OnInitDialog() 
+BOOL EMstatusWindow::OnInitDialog()
 {
   CToolDlg::OnInitDialog();
-  
+
   mBufferManager = mWinApp->mBufferManager;
   mImBufs = mWinApp->GetImBufs();
 
@@ -246,9 +243,9 @@ BOOL EMstatusWindow::OnInitDialog()
                 // EXCEPTION: OCX Property Pages should return FALSE
 }
 
-void EMstatusWindow::OnCancelMode() 
+void EMstatusWindow::OnCancelMode()
 {
   CToolDlg::OnCancelMode();
-  
-  
+
+
 }

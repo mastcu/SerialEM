@@ -6,12 +6,16 @@
 #include "DectrisSettingsDlg.h"
 #include "PluginManager.h"
 
+#if defined(_DEBUG) && defined(_CRTDBG_MAP_ALLOC)
+#define new DEBUG_NEW
+#endif
+
 // Each energy list MUST end in a 0 for auto
 static float sIncidentEnergies[3][10] = {{30, 40, 60, 80, 100, 120, 160, 200, 300, 0},
 {60, 80, 100, 120, 160, 200, 300, 0}, {0}};
 static int sIncidentMap[MAX_DECTRIS_TYPES] = {0, 0, 0, 2, 0, 1};
 
-static float sThresholdEnergies[3][9] = {{2.7f, 3.0f, 3.5f, 4.0f, 4.5f, 5.0f, 10.f, 
+static float sThresholdEnergies[3][9] = {{2.7f, 3.0f, 3.5f, 4.0f, 4.5f, 5.0f, 10.f,
 25.f, 0}, {10.f, 17.5f, 43.f, 0}, {0}};
 static int sThresholdMap[MAX_DECTRIS_TYPES] = {2, 2, 2, 0, 2, 1};
 
@@ -56,7 +60,7 @@ BOOL CDectrisSettingsDlg::OnInitDialog()
     &sThresholdEnergies[sThresholdMap[mDectrisTypeInd]][0]);
 
   // Get the settings
-  if (mDectrisPlugFuncs->GetDectrisAdvancedSettings(&mSettings, 
+  if (mDectrisPlugFuncs->GetDectrisAdvancedSettings(&mSettings,
     sizeof(DectrisAdvancedSettings))) {
     AfxMessageBox("The request to the plugin for the current advanced settings returned"
       " with an error", MB_EXCLAME);

@@ -10,6 +10,10 @@
 #include "ShiftManager.h"
 #include "BeamAssessor.h"
 
+#if defined(_DEBUG) && defined(_CRTDBG_MAP_ALLOC)
+#define new DEBUG_NEW
+#endif
+
 // CAutocenSetupDlg dialog
 
 CAutocenSetupDlg::CAutocenSetupDlg(CWnd* pParent /*=NULL*/)
@@ -206,7 +210,7 @@ BOOL CAutocenSetupDlg::OnInitDialog()
   return TRUE;
 }
 
-void CAutocenSetupDlg::OnOK() 
+void CAutocenSetupDlg::OnOK()
 {
   UpdateIfExposureChanged();
   mMultiTasks->SetAutoCenIterate(m_bIterate);
@@ -218,7 +222,7 @@ void CAutocenSetupDlg::OnOK()
   mMultiTasks->AutocenClosing();
 }
 
-void CAutocenSetupDlg::OnCancel() 
+void CAutocenSetupDlg::OnCancel()
 {
   if (!mEnableAll)
     return;
@@ -536,7 +540,7 @@ void CAutocenSetupDlg::LiveUpdate(int magInd, int spotSize, int probe, double in
     m_bUseTrialSmaller)
     return;
   if (mLowDoseMode) {
-    mismatch = magInd != ldp->magIndex || spotSize != ldp->spotSize || 
+    mismatch = magInd != ldp->magIndex || spotSize != ldp->spotSize ||
       probe != ldp->probeMode;
     magInd = ldp->magIndex;
     spotSize = ldp->spotSize;
@@ -666,7 +670,7 @@ void CAutocenSetupDlg::UpdateMagSpot(void)
   LowDoseParams *ldParam = mWinApp->GetLowDoseParams() + TRIAL_CONSET;
   bool easyTrial = mLowDoseMode && m_bUseTrialSmaller;
   m_strSpot.Format("%d", easyTrial ? ldParam->spotSize : mCurSpot);
-  m_strMag.Format("%d", MagOrEFTEMmag(mCamParams->GIF, 
+  m_strMag.Format("%d", MagOrEFTEMmag(mCamParams->GIF,
     easyTrial ? ldParam->magIndex : mCurMagInd));
   m_statNanoprobe.SetWindowText(B3DCHOICE((easyTrial ? ldParam->probeMode : mCurProbe) >
     0, "uPr", "nPr"));
@@ -688,7 +692,7 @@ void CAutocenSetupDlg::MagOrSpotChanged(int magInd, int spot, int probe)
   if (mMultiTasks->AutocenTrackingState()) {
     if (mMultiTasks->AutocenMatchingIntensity()) {
       if (mParam->intensity >= 0.)
-        mScope->DelayedSetIntensity(mParam->intensity, GetTickCount(), mCurSpot, 
+        mScope->DelayedSetIntensity(mParam->intensity, GetTickCount(), mCurSpot,
           mCurProbe);
       else
         mParam->intensity = mScope->GetIntensity();
@@ -761,8 +765,8 @@ BOOL CAutocenSetupDlg::UpdateIfExposureChanged(void)
 void CAutocenSetupDlg::UpdateEnables()
 {
   CButton *button;
-  mEnableAll = (!mWinApp->DoingTasks() || mWinApp->GetJustNavAcquireOpen())&& 
-    !(mWinApp->mCamera->GetInitialized() && 
+  mEnableAll = (!mWinApp->DoingTasks() || mWinApp->GetJustNavAcquireOpen())&&
+    !(mWinApp->mCamera->GetInitialized() &&
     mWinApp->mCamera->CameraBusy() && !mWinApp->mCamera->DoingContinuousAcquire());
   bool canAcquire = mEnableAll && (m_bSetState || mLowDoseMode);
   bool smallTrial = mLowDoseMode && m_bUseTrialSmaller;
@@ -824,7 +828,7 @@ void CAutocenSetupDlg::ManageLDtrackText(bool tracking)
 {
   if (mOpening)
     return;
-  m_statLdTrackScope.SetWindowText(tracking ? "Tracking intensity on scope" : 
+  m_statLdTrackScope.SetWindowText(tracking ? "Tracking intensity on scope" :
     "NOT tracking intensity on scope");
 }
 

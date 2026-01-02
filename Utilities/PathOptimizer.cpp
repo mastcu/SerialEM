@@ -13,6 +13,10 @@
 #include <algorithm>
 #include <unordered_set>
 
+#if defined(_DEBUG) && defined(_CRTDBG_MAP_ALLOC)
+#define new DEBUG_NEW
+#endif
+
 // Error reporting
 enum {
   ERR_MISMATCH_SIZES = 1, ERR_MATCHING_HULL_POINTS
@@ -58,19 +62,19 @@ const char *PathOptimizer::returnErrorString(int err)
 }
 
 //Checks that the x and y coordinates of two points match within a relative error
-bool PathOptimizer::IsSamePoint(double x1, double y1, float x2, float y2, 
+bool PathOptimizer::IsSamePoint(double x1, double y1, float x2, float y2,
   float tol = 1.e-12) {
-  return (B3DABS((x1 - x2)) / B3DMIN(B3DABS(x1), B3DABS(x2)) < tol && 
+  return (B3DABS((x1 - x2)) / B3DMIN(B3DABS(x1), B3DABS(x2)) < tol &&
    B3DABS((y1 -y2)) / B3DMIN(B3DABS(y1), B3DABS(y2)) < tol);
 }
 
 //Sort the interior point indices in the desired order for the insertion algorithm
-void PathOptimizer::SortInteriorVertices(IntVec &indices, IntVec vertexDeg, 
+void PathOptimizer::SortInteriorVertices(IntVec &indices, IntVec vertexDeg,
  DoubleVec vertEdgeSum) {
   std::vector<vertex> vertices;
   int i;
   vertex vi;
-  
+
   //Set up vector of each vertex, with index, degree, and edge length sum.
   for (i = 0; i < (int) indices.size(); i++) {
     vi.index = indices[i];
@@ -105,7 +109,7 @@ int PathOptimizer::OptimizePath(FloatVec &xCen, FloatVec &yCen, IntVec &tourInd)
   float xcen, ycen;
   std::vector<bool> nearCenter;
   double distToHull, distToCenter;
-  
+
   //Initialize and resize vectors
   tourInd.clear();
   if (nPts < 3) {
@@ -144,7 +148,7 @@ int PathOptimizer::OptimizePath(FloatVec &xCen, FloatVec &yCen, IntVec &tourInd)
       }
     }
   }
-  
+
   //Find convex hull of the points, which will be used for the initial tour
   convexBound(&xCen[0], &yCen[0], nPts, 0., 0., &xHull[0], &yHull[0],
     &nHull, &xcen, &ycen, nPts);
@@ -154,7 +158,7 @@ int PathOptimizer::OptimizePath(FloatVec &xCen, FloatVec &yCen, IntVec &tourInd)
     inHull = false;
     numMatches = 0;
     for (j = 0; j < nPts; j++) {
-      if (IsSamePoint(mTriangulation->points[j].x, mTriangulation->points[j].y, 
+      if (IsSamePoint(mTriangulation->points[j].x, mTriangulation->points[j].y,
        xHull[i], yHull[i])) {
         pid = j;
         tourInd.push_back(j);
@@ -164,9 +168,9 @@ int PathOptimizer::OptimizePath(FloatVec &xCen, FloatVec &yCen, IntVec &tourInd)
     }
 
     // After convexBound point matched with DT point, remove from interior points
-    if (inHull && numMatches == 1) 
+    if (inHull && numMatches == 1)
       interiorInd.erase(find(interiorInd.begin(), interiorInd.end(), pid));
-    else 
+    else
       return ERR_MATCHING_HULL_POINTS;
   }
 
@@ -226,24 +230,24 @@ int PathOptimizer::OptimizePath(FloatVec &xCen, FloatVec &yCen, IntVec &tourInd)
 
   //Sort the interior points into order of insertion
   SortInteriorVertices(interiorInd, vertexDeg, vertEdgeSum);
-  
+
   for (i = 0; i < (int)interiorInd.size(); i++) {
     //Get the index from the sorted list of interior points
     pid = interiorInd[i];
-    
+
     // Initialize by inserting the point between the last and first in the tour
     insertInd = 0;
-    minChange = mDistMatrix[pid][tourInd[0]] + mDistMatrix[pid][tourInd.back()] 
+    minChange = mDistMatrix[pid][tourInd[0]] + mDistMatrix[pid][tourInd.back()]
       - mDistMatrix[tourInd[0]][tourInd.back()];
-    
+
     //Try inserting the current interior point between each pair of consecutive points
     //in the current tour.
     for (j = 0; j < (int)tourInd.size() - 1; j++) {
-      
+
       //Insert point from the interior between point [j] and [j+1] in the tour
       //Compute the distance fromthe current point to point [j] then to point [j+1]
       //subtract the old edge from point [j] to point [j+1]
-      changeInLength = mDistMatrix[pid][tourInd[j]] + mDistMatrix[pid][tourInd[j+1]] 
+      changeInLength = mDistMatrix[pid][tourInd[j]] + mDistMatrix[pid][tourInd[j+1]]
         - mDistMatrix[tourInd[j]][tourInd[j+1]];
 
       if (changeInLength <  minChange) {
@@ -259,14 +263,14 @@ int PathOptimizer::OptimizePath(FloatVec &xCen, FloatVec &yCen, IntVec &tourInd)
   //Delete the longest edge inside the center region of points to find the start point
   longestEdgeLength = 0;
   for (i = 0; i < (int) tourInd.size() - 1; i++) {
-    
+
     //Ensure at least one edge point near center, unless there are no points near center
-    if ((noPtsNearCenter || nearCenter[tourInd[i]] || nearCenter[tourInd[i + 1]]) && 
+    if ((noPtsNearCenter || nearCenter[tourInd[i]] || nearCenter[tourInd[i + 1]]) &&
      mDistMatrix[tourInd[i]][tourInd[i + 1]] > longestEdgeLength) {
       longestEdgeLength = mDistMatrix[tourInd[i]][tourInd[i + 1]];
       startInd = i + 1;
 
-      //Reverse the order so that the starting point will be near the center 
+      //Reverse the order so that the starting point will be near the center
       if (!nearCenter[tourInd[i + 1]])
         reverse = true;
     }

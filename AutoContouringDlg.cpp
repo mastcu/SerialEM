@@ -2,7 +2,7 @@
 // groups of polygons
 // There is a resident instance of this class, and the dialog can be created and closed
 //
-// Copyright (C) 2022 by  the Regents of the University of
+// Copyright (C) 2022-2026 by  the Regents of the University of
 // Colorado.  See Copyright.txt for full notice of copyright and limitations.
 //
 // Author: David Mastronarde
@@ -20,6 +20,10 @@
 #include "NavigatorDlg.h"
 #include "ShiftManager.h"
 #include "Shared\holefinder.h"
+
+#if defined(_DEBUG) && defined(_CRTDBG_MAP_ALLOC)
+#define new DEBUG_NEW
+#endif
 
 
 // CAutoContouringDlg dialog
@@ -305,7 +309,7 @@ void CAutoContouringDlg::UpdateSettings()
 void CAutoContouringDlg::SetExclusionsAndGroups()
 {
   SetExclusionsAndGroups(mParams.groupByMean, mParams.lowerMeanCutoff,
-    mParams.upperMeanCutoff, mParams.minSizeCutoff, mParams.SDcutoff, 
+    mParams.upperMeanCutoff, mParams.minSizeCutoff, mParams.SDcutoff,
     mParams.irregularCutoff, mParams.borderDistCutoff);
 }
 
@@ -366,7 +370,7 @@ void CAutoContouringDlg::SetExclusionsAndGroups(int groupByMean, float lowerMean
     if (mExcluded[ind]) {
       mGroupNums[ind] = 0;
     } else {
-      group = (int)(((groupByMean ? acd->sqrMeans[ind] : acd->sqrSizes[ind]) - 
+      group = (int)(((groupByMean ? acd->sqrMeans[ind] : acd->sqrSizes[ind]) -
         minIncl) / groupInc);
       B3DCLAMP(group, 0, mNumGroups - 1);
       mGroupNums[ind] = group;
@@ -567,8 +571,8 @@ void CAutoContouringDlg::OnButCreatePolys()
 }
 
 // External call to create the polygons with possible replcement cutoff values
-int CAutoContouringDlg::ExternalCreatePolys(float lowerMeanCutoff, float upperMeanCutoff, 
-  float minSizeCutoff, float SDcutoff, float irregularCutoff, float borderDistCutoff, 
+int CAutoContouringDlg::ExternalCreatePolys(float lowerMeanCutoff, float upperMeanCutoff,
+  float minSizeCutoff, float SDcutoff, float irregularCutoff, float borderDistCutoff,
   CString &mess)
 {
   if (!mHaveConts) {
@@ -639,8 +643,8 @@ void CAutoContouringDlg::OnButUndoPolys()
   }
 
   // Get things added back in and pop the undo stack
-  mWinApp->mNavigator->UndoAutocontPolyAddition(mPolyArray, 
-    mLastConvertedIndex[vecInd] + 1 - mFirstConvertedIndex[vecInd], 
+  mWinApp->mNavigator->UndoAutocontPolyAddition(mPolyArray,
+    mLastConvertedIndex[vecInd] + 1 - mFirstConvertedIndex[vecInd],
     mConvertedInds[vecInd]);
   mConvertedInds.pop_back();
   mFirstConvertedIndex.pop_back();
@@ -653,7 +657,7 @@ void CAutoContouringDlg::OnButUndoPolys()
 }
 
 // Return some of the statistics
-int CAutoContouringDlg::GetSquareStats(float &minMean, float &maxMean, 
+int CAutoContouringDlg::GetSquareStats(float &minMean, float &maxMean,
   float &medianMean)
 {
   if (!mHaveConts)
@@ -759,21 +763,21 @@ void CAutoContouringDlg::OnHScroll(UINT nSBCode, UINT nPos, CScrollBar *pScrollB
 
   // Compute cutoff from integer value of slider; set bold while adjusting
   if (pSlider == &m_sliderLowerMean) {
-    mParams.lowerMeanCutoff = (float)(m_intLowerMean * (mMedianMean - mStatMinMean) / 
+    mParams.lowerMeanCutoff = (float)(m_intLowerMean * (mMedianMean - mStatMinMean) /
       255. + mStatMinMean);
     m_strLowerMean.Format("%.4g", mParams.lowerMeanCutoff);
     wnd = GetDlgItem(IDC_STAT_MIN_MEAN_LABEL);
     wnd->SetFont(dropping ? m_statShowGroups.GetFont() : mBoldFont);
   }
   if (pSlider == &m_sliderUpperMean) {
-    mParams.upperMeanCutoff = (float)(m_intUpperMean * (mStatMaxMean - mMedianMean) / 
+    mParams.upperMeanCutoff = (float)(m_intUpperMean * (mStatMaxMean - mMedianMean) /
       255. + mMedianMean);
     m_strUpperMean.Format("%.4g", mParams.upperMeanCutoff);
     wnd = GetDlgItem(IDC_STAT_MAX_MEAN_LABEL2);
     wnd->SetFont(dropping ? m_statShowGroups.GetFont() : mBoldFont);
   }
   if (pSlider == &m_sliderSquareSD) {
-    mParams.SDcutoff = (float)(m_intSquareSD * (mStatMaxSD - mStatMinSD) / 255. + 
+    mParams.SDcutoff = (float)(m_intSquareSD * (mStatMaxSD - mStatMinSD) / 255. +
       mStatMinSD);
     m_strSquareSD.Format("%.4g", mParams.SDcutoff);
     wnd = GetDlgItem(IDC_STAT_PCT_BLACK_LABEL);
@@ -1008,7 +1012,7 @@ void CAutoContouringDlg::DialogToParams()
 //
 // Top function to start the process; all the error checking is in the thread
 void CAutoContouringDlg::AutoContourImage(EMimageBuffer *imBuf, float targetSizeOrPix,
-  float minSize, float maxSize, float interPeakThresh, float useThresh, BOOL usePolygon, 
+  float minSize, float maxSize, float interPeakThresh, float useThresh, BOOL usePolygon,
   float expandDist, float xCenter, float yCenter)
 {
   AutoContData *acd = &mAutoContData;
@@ -1083,7 +1087,7 @@ CMapDrawItem *CAutoContouringDlg::EligibleBoundaryPolygon(float maxSize)
   return NULL;
 }
 
-void CAutoContouringDlg::MakeSinglePolygon(EMimageBuffer *imBuf, float xCenter, 
+void CAutoContouringDlg::MakeSinglePolygon(EMimageBuffer *imBuf, float xCenter,
   float yCenter)
 {
   ScaleMat aInv;
@@ -1122,7 +1126,7 @@ void CAutoContouringDlg::MakeSinglePolygon(EMimageBuffer *imBuf, float xCenter,
   AutoContourImage(imBuf, mParams.usePixSize ? mParams.targetPixSizeUm :
     mParams.targetSizePixels, mParams.minSize, mParams.maxSize,
     mParams.useAbsThresh ? 0.f : mParams.relThreshold,
-    mParams.useAbsThresh ? mParams.absThreshold : 0.f, false, 
+    mParams.useAbsThresh ? mParams.absThreshold : 0.f, false,
     mParams.expandDist * (mParams.shrinkConts ? -1.f : 1.f), xCenter, yCenter);
 
 }
@@ -1397,11 +1401,11 @@ UINT CAutoContouringDlg::AutoContProc(LPVOID pParam)
       }
     }
   }
-  
+
   // Do it!
   if (imodAutoContoursFromSlice(sigma, acd->useThresh, 0., -1, 1, (int)acd->minSize,
-    (int)acd->maxSize, 1, 0, 0., 0., 2, 3, NULL, 0, acd->obj, NULL, nxRed, nyRed, 
-    acd->tdata, acd->idata, acd->fdata, acd->xlist, acd->ylist, acd->linePtrs, 0., 0, 
+    (int)acd->maxSize, 1, 0, 0., 0., 2, 3, NULL, 0, acd->obj, NULL, nxRed, nyRed,
+    acd->tdata, acd->idata, acd->fdata, acd->xlist, acd->ylist, acd->linePtrs, 0., 0,
     listSize, numThreads)) {
     acd->errString = "Error allocating memory in autocontouring library routine";
     return 1;
@@ -1489,12 +1493,12 @@ UINT CAutoContouringDlg::AutoContProc(LPVOID pParam)
       }
     }
   }
-  
+
   return 0;
 }
 
 // Get start and end coordinates of subarea around single point
-void CAutoContouringDlg::FindSingleSubarea(int nbuf, int subSize, float singleCen, 
+void CAutoContouringDlg::FindSingleSubarea(int nbuf, int subSize, float singleCen,
   int &nsub, int &subStart, int &subEnd)
 {
   int subCen = B3DNINT(singleCen - 0.5);;
@@ -1505,7 +1509,7 @@ void CAutoContouringDlg::FindSingleSubarea(int nbuf, int subSize, float singleCe
 }
 
 // Get start and end coordinates of subarea for polygon
-void CAutoContouringDlg::FindPolySubarea(float polyMin, float polyMax, int nbuf, 
+void CAutoContouringDlg::FindPolySubarea(float polyMin, float polyMax, int nbuf,
   int subSize, int &nsub, int &subStart, int &subEnd)
 {
   int pmin = B3DMAX((int)polyMin, 1);
@@ -1534,8 +1538,8 @@ void CAutoContouringDlg::AutoContDone()
   if (!DoingAutoContour())
     return;
   if (!acd->obj || !acd->obj->contsize) {
-    SEMMessageBox("No contours found " + CString(doSingle ? "around the point clicked " 
-      "- was the point outside the grid square or" : " - ") + 
+    SEMMessageBox("No contours found " + CString(doSingle ? "around the point clicked "
+      "- was the point outside the grid square or" : " - ") +
       " is the \"Range of sizes\" too narrow?");
     StopAutoCont();
     return;
@@ -1549,9 +1553,9 @@ void CAutoContouringDlg::AutoContDone()
     mStatMaxSize = *std::max_element(acd->sqrSizes.begin(), acd->sqrSizes.end());
     mStatMinSD = *std::min_element(acd->sqrSDs.begin(), acd->sqrSDs.end());
     mStatMaxSD = *std::max_element(acd->sqrSDs.begin(), acd->sqrSDs.end());
-    mStatMinSquareness = *std::min_element(acd->squareness.begin(), 
+    mStatMinSquareness = *std::min_element(acd->squareness.begin(),
       acd->squareness.end());
-    mStatMaxSquareness = *std::max_element(acd->squareness.begin(), 
+    mStatMaxSquareness = *std::max_element(acd->squareness.begin(),
       acd->squareness.end());
     mStatMaxBoundDist = *std::max_element(acd->boundDists.begin(), acd->boundDists.end());
     if (acd->spacing) {
@@ -1618,7 +1622,7 @@ void CAutoContouringDlg::StopAutoCont()
   stillRunning = UtilThreadBusy(&mAutoContThread);
   if (stillRunning) {
 
-    // Cannot even suspend the thread without things going whacky 
+    // Cannot even suspend the thread without things going whacky
     mAutoContThread = NULL;
     mWinApp->AppendToLog("Autocontouring thread did not end on signal, cannot free "
       "memory");
@@ -1652,7 +1656,7 @@ void CAutoContouringDlg::StopAutoCont()
 }
 
 // Get various statistic about the contours for selection
-void CAutoContouringDlg::SquareStatistics(AutoContData *acd, int nxRed, int nyRed, 
+void CAutoContouringDlg::SquareStatistics(AutoContData *acd, int nxRed, int nyRed,
   float minScale, float maxScale, float redFac, float outlieCrit)
 {
   int ind, ix, iy, ixStart, iyStart, ixEnd, iyEnd, nsum, numConts, xbase, numBelow;
@@ -1851,7 +1855,7 @@ void CAutoContouringDlg::SquareStatistics(AutoContData *acd, int nxRed, int nyRe
   }
 }
 
-// Expands or shrinks contour by the given distance in the autocontour data. 
+// Expands or shrinks contour by the given distance in the autocontour data.
 int CAutoContouringDlg::ExpandContour(AutoContData *acd)
 {
   Ipoint centroid, addPt;
@@ -1871,24 +1875,24 @@ int CAutoContouringDlg::ExpandContour(AutoContData *acd)
 
   // Loop over contours in autocontour data
   for (coNum = 0; coNum < acd->obj->contsize; coNum++) {
-    
+
     // Initialize values used for tracking points added to the contour
     nptsAdded = nMin = 0;
     avgMinDistFromCen = 0.f;
     distToSeg1 = distToSeg2 = -1.f;
     contFail = false;
-    
+
     // Find the contour length and centroid
     cont = &acd->obj->cont[coNum];
     if (imodContourCenterOfMass(cont, &centroid))
       return 1;
     contLen = imodel_contour_length(cont);
-    
+
     // Create a duplicate of the contour
     contDup = imodContourDup(cont);
     if (!contDup) {
       return 1;
-    }  
+    }
 
     // Loop over points in the contour and check for long line segments where extra points
     // will be added.
@@ -1898,7 +1902,7 @@ int CAutoContouringDlg::ExpandContour(AutoContData *acd)
       pt1 = (pt + 1) % cont->psize;
       dist = imodPointDistance(&cont->pts[pt], &cont->pts[pt1]);
 
-      // If line segment is longer than 1/20th the contour length, add some points 
+      // If line segment is longer than 1/20th the contour length, add some points
       // equispaced along the line segment.
       npts = (int)(dist / (contLen / 20.));
       if (npts) {
@@ -1915,20 +1919,20 @@ int CAutoContouringDlg::ExpandContour(AutoContData *acd)
         }
       }
     }
-    for (ind = 0; ind <= contDup->psize + 1; ind++) {    
+    for (ind = 0; ind <= contDup->psize + 1; ind++) {
       pt = ind % contDup->psize;
       pt1 = (ind + 1) % contDup->psize;
       pt2 = (ind + 2) % contDup->psize;
       pt3 = (ind + 3) % contDup->psize;
       if (distToSeg1 < 0)
-        distToSeg1 = imodPointLineSegDistance(&contDup->pts[pt], &contDup->pts[pt1], 
+        distToSeg1 = imodPointLineSegDistance(&contDup->pts[pt], &contDup->pts[pt1],
           &centroid, &dist);
       if (distToSeg2 < 0)
-        distToSeg2 = imodPointLineSegDistance(&contDup->pts[pt1], &contDup->pts[pt2], 
+        distToSeg2 = imodPointLineSegDistance(&contDup->pts[pt1], &contDup->pts[pt2],
           &centroid, &dist);
-      distToSeg3 = imodPointLineSegDistance(&contDup->pts[pt2], &contDup->pts[pt3], 
+      distToSeg3 = imodPointLineSegDistance(&contDup->pts[pt2], &contDup->pts[pt3],
         &centroid, &dist);
-      
+
       //Check if local minimum found
       if (distToSeg2 <= distToSeg1 && distToSeg2 < distToSeg3) {
         nMin += 1;
@@ -1947,8 +1951,8 @@ int CAutoContouringDlg::ExpandContour(AutoContData *acd)
     }
 
     // average out all the distance-from-centroid values that have been tabulated
-    avgMinDistFromCen /= (float)nMin; 
-                        
+    avgMinDistFromCen /= (float)nMin;
+
     // Scale the contour from the centroid, by the factor that achieves desired expansion
     xfUnit(mat, (avgMinDistFromCen + expandDistInPix) / avgMinDistFromCen, 2);
     for (pt = 0; pt < cont->psize; pt++) {
@@ -1963,8 +1967,8 @@ int CAutoContouringDlg::ExpandContour(AutoContData *acd)
 
 // General function to find convex boundary of a set of points and compute distance of
 // each point from the hull
-int CAutoContouringDlg::FindDistancesFromHull(FloatVec &xCenters, FloatVec &yCenters, 
-  FloatVec &xBound, FloatVec &yBound, float sizeScale, FloatVec &boundDists, 
+int CAutoContouringDlg::FindDistancesFromHull(FloatVec &xCenters, FloatVec &yCenters,
+  FloatVec &xBound, FloatVec &yBound, float sizeScale, FloatVec &boundDists,
   bool useBound)
 {
   int numConts = (int)xCenters.size();

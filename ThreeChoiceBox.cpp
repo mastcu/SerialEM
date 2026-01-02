@@ -1,6 +1,6 @@
 // ThreeChoiceBox.cpp : Presents message box equivalent with configurable buttons
 //
-// Copyright (C) 2016 by  the Regents of the University of
+// Copyright (C) 2016-2026 by  the Regents of the University of
 // Colorado.  See Copyright.txt for full notice of copyright and limitations.
 //
 // Author: David Mastronarde
@@ -11,6 +11,10 @@
 #include "SerialEM.h"
 #include "MacroEditer.h"
 #include "ThreeChoiceBox.h"
+
+#if defined(_DEBUG) && defined(_CRTDBG_MAP_ALLOC)
+#define new DEBUG_NEW
+#endif
 
 
 // CThreeChoiceBox dialog
@@ -122,10 +126,10 @@ BOOL CThreeChoiceBox::OnInitDialog()
   allButWidth = hasCancel ? cancelWidth + gutter : 0;
   allButWidth += yesWidth + (hasNo ? gutter + noWidth : 0);
   addedWidth = B3DMAX(0, allButWidth - (rightEdge - messLeft));
-  allButTop = (butRect.top - winRect.top) - (winRect.Height() - clientRect.Height()) + 
+  allButTop = (butRect.top - winRect.top) - (winRect.Height() - clientRect.Height()) +
     ixOffset;
   m_statGrayPanel.GetWindowRect(&panelRect);
-  panelTop = (panelRect.top - winRect.top) - (winRect.Height() - clientRect.Height()) + 
+  panelTop = (panelRect.top - winRect.top) - (winRect.Height() - clientRect.Height()) +
     ixOffset;
 
   // Count lines of text included estimate of wrapped lines needed for long lines
@@ -150,19 +154,19 @@ BOOL CThreeChoiceBox::OnInitDialog()
       numWrap = 1 + size.cx / ((9 * statRect.Width()) / 10);
     totLines += numWrap;
   } while (endInd >= 0);
-  
+
   // Set up all the components to the right size and position
   addedHeight = pixPerLine * B3DMAX(0, totLines + 1 - numLinesOrig);
   SetWindowPos(NULL, 0, 0, winRect.Width() + addedWidth, winRect.Height() + addedHeight,
     SWP_NOMOVE);
-  m_statMessage.SetWindowPos(NULL, 0, 0, statRect.Width() + 
+  m_statMessage.SetWindowPos(NULL, 0, 0, statRect.Width() +
     (mNoLineWrap ? addedWidth : 0), statRect.Height() + addedHeight, SWP_NOMOVE);
-  m_statGrayPanel.SetWindowPos(&wndBottom, panelRect.left - winRect.left - ixOffset, 
-    panelTop + addedHeight, panelRect.Width() + addedWidth, panelRect.Height(), 
+  m_statGrayPanel.SetWindowPos(&wndBottom, panelRect.left - winRect.left - ixOffset,
+    panelTop + addedHeight, panelRect.Width() + addedWidth, panelRect.Height(),
     0);
   butRight = rightEdge + addedWidth;
   if (hasCancel) {
-    m_butCancel.SetWindowPos(&m_statGrayPanel, butRight - cancelWidth, allButTop + addedHeight, 
+    m_butCancel.SetWindowPos(&m_statGrayPanel, butRight - cancelWidth, allButTop + addedHeight,
       cancelWidth, butHeight, 0);
     butRight -= gutter + cancelWidth;
   }
@@ -171,7 +175,7 @@ BOOL CThreeChoiceBox::OnInitDialog()
       noWidth, butHeight, 0);
     butRight -= gutter + noWidth;
   }
-  m_butOK.SetWindowPos(&m_statGrayPanel,  butRight - yesWidth, allButTop + addedHeight, 
+  m_butOK.SetWindowPos(&m_statGrayPanel,  butRight - yesWidth, allButTop + addedHeight,
       yesWidth, butHeight, 0);
 
   // Take care of default button
@@ -190,7 +194,7 @@ BOOL CThreeChoiceBox::OnInitDialog()
                 // EXCEPTION: OCX Property Pages should return FALSE
 }
 
-void CThreeChoiceBox::OnOK() 
+void CThreeChoiceBox::OnOK()
 {
   if (mChoice < 0)
     mChoice = IDYES;
@@ -198,7 +202,7 @@ void CThreeChoiceBox::OnOK()
 }
 
 // Cancel: do not do it (on Esc) if there is no third button
-void CThreeChoiceBox::OnCancel() 
+void CThreeChoiceBox::OnCancel()
 {
   if ((mDlgType & MB_YESNOCANCEL) == 0)
     return;
@@ -229,9 +233,9 @@ BOOL CThreeChoiceBox::OnEraseBkgnd(CDC* pDC)
 HBRUSH CThreeChoiceBox::OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor)
 {
   if (pWnd->GetDlgCtrlID() == IDC_STAT_MESSAGE) {
-    pDC->SetTextColor(RGB(0, 0, 0));   
-    pDC->SetBkColor(mBkgdColor);// for text background   
-    return (HBRUSH)(mBkgdBrush.GetSafeHandle());//your brush   
+    pDC->SetTextColor(RGB(0, 0, 0));
+    pDC->SetBkColor(mBkgdColor);// for text background
+    return (HBRUSH)(mBkgdBrush.GetSafeHandle());//your brush
   } else {
     return CDialog::OnCtlColor(pDC, pWnd, nCtlColor);
   }

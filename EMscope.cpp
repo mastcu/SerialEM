@@ -2,7 +2,7 @@
 //                         microscope except ones by threads that need their
 //                         own instance of the Tecnai
 //
-// Copyright (C) 2003-2021 by the Regents of the University of
+// Copyright (C) 2003-2026 by the Regents of the University of
 // Colorado.  See Copyright.txt for full notice of copyright and limitations.
 //
 // Author: David Mastronarde
@@ -35,9 +35,11 @@
 #include <assert.h>
 #include "Shared\b3dutil.h"
 
+#if defined(_DEBUG) && defined(_CRTDBG_MAP_ALLOC)
+#define new DEBUG_NEW
+#endif
+
 #ifdef _DEBUG
-#undef THIS_FILE
-static char THIS_FILE[]=__FILE__;
 #define new DEBUG_NEW
 #endif
 
@@ -49,7 +51,7 @@ static char THIS_FILE[]=__FILE__;
 // getting mutex because update routine should finish quickly
 #define MAG_MUTEX_WAIT   500
 
-// Scope plugin version that is good enough if there are no FEI cameras, and if there 
+// Scope plugin version that is good enough if there are no FEI cameras, and if there
 // are cameras.  This allows odd features to be added without harrassing other users
 #define FEISCOPE_NOCAM_VERSION 115
 #define FEISCOPE_CAM_VERSION   117
@@ -176,7 +178,7 @@ int CEMscope::mScopeCallFromPlugin = 0;
 
 #define ALL_INSTRUMENT_LENSES 99
 
-static bool SimpleOriginStatus(CRegKey &key, int &numRefills, 
+static bool SimpleOriginStatus(CRegKey &key, int &numRefills,
   int &secToNextRefill, int &refilling, int &active, float &sensor, CString &mess);
 
 
@@ -270,7 +272,7 @@ CEMscope::CEMscope()
   mNumAlphas = 3;
   mMinSpotSize = 1;
   for (i = 0; i <= MAX_SPOT_SIZE; i++) {
-    mC2SpotOffset[i][0] = mC2SpotOffset[i][1] = 0.; 
+    mC2SpotOffset[i][0] = mC2SpotOffset[i][1] = 0.;
     mCrossovers[i][0] = mCrossovers[i][1] = 0.;
     for (j = 0; j < 4; j++)
       mCalLowIllumAreaLim[i][j] = mCalHighIllumAreaLim[i][j] = 0.;
@@ -346,11 +348,11 @@ CEMscope::CEMscope()
   mJeolSD.magRingIndex = 0;
   for (int j = 0; j < IS_RING_MAX; j++)
     mJeolSD.ringMagTime[j] = mJeolSD.ringISTime[j] = -1.;
-  
+
   mJeolSD.bDataIsGood = 0;
   mJeolSD.updateByEvent = false;
   mJeolSD.comReady = false;
-  
+
   mJeolSD.baseFocus = 32 * 0x8000 + 0x8000;
   mJeolSD.coarseBaseFocus = 0x8000;
   mJeolSD.fineBaseFocus = 0x8000;
@@ -588,7 +590,7 @@ CEMscope::~CEMscope()
 // Kill the timer so it doesn't try to update dying windows
 void CEMscope::KillUpdateTimer()
 {
-  if (mUpdateID) 
+  if (mUpdateID)
     ::KillTimer(NULL, mUpdateID);
 
   // scope uninitialize is called by pluginManager from ExitInstance which is late...
@@ -779,7 +781,7 @@ int CEMscope::Initialize()
       mJeolSD.Jeol1230 = mJeol1230;
       if (mJeol1230)
         mHasNoAlpha = 1;
-      
+
       sTiltReversalThresh = 0.2f;
       if (mNumSpotSizes <= 0)
         mNumSpotSizes = 5;
@@ -841,7 +843,7 @@ int CEMscope::Initialize()
 
     // More general initialization
     mC2Units = mUseIllumAreaForC2 ? "um" : "%";
-    sTiltReversalThresh = B3DMAX(sTiltReversalThresh, 
+    sTiltReversalThresh = B3DMAX(sTiltReversalThresh,
       mWinApp->mTSController->GetMaxTiltError());
     if (mMaxTiltAngle < -100.)
       mMaxTiltAngle = mUseIllumAreaForC2 ? 69.9f : 79.9f;
@@ -960,7 +962,7 @@ int CEMscope::Initialize()
     startCall++;
 
     // Set the flags for initial update call and default for following calls
-    mJeolSD.highFlags = JUPD_STAGE_POS | JUPD_STAGE_STAT | JUPD_STAGE_STAT 
+    mJeolSD.highFlags = JUPD_STAGE_POS | JUPD_STAGE_STAT | JUPD_STAGE_STAT
       | JUPD_MAG | JUPD_CURRENT | JUPD_INTENSITY | JUPD_SPOT | JUPD_IS | JUPD_FOCUS;
     if (mReportsLargeScreen > 0 && !mJeol1230)
       mJeolSD.highFlags |= JUPD_SCREEN;
@@ -979,7 +981,7 @@ int CEMscope::Initialize()
     if (!mHasNoAlpha)
       mJeolSD.highFlags |= JUPD_ALPHA;
     if (mHasOmegaFilter)
-      mJeolSD.highFlags |= JUPD_ENERGY | JUPD_ENERGY_ON | JUPD_SLIT_IN | 
+      mJeolSD.highFlags |= JUPD_ENERGY | JUPD_ENERGY_ON | JUPD_SLIT_IN |
       JUPD_SLIT_WIDTH | JUPD_SPECTRUM;
     if (mJeolSD.numDetectors)
       mJeolSD.highFlags |= JUPD_DET_INSERTED | JUPD_DET_SELECTED;
@@ -1011,7 +1013,7 @@ int CEMscope::Initialize()
 
       // Set lower flags as all the current flags minus all the new flags
       // The items coming by event will be checked once per full cycle of the rest
-      mJeolSD.lowerFlags = mJeolSD.highFlags & 
+      mJeolSD.lowerFlags = mJeolSD.highFlags &
         ~(mJeolSD.highFlagsNew | mJeolSD.lowFlagsNew);
 
       // Would now need to set flags in highFlags for initial update of values coming by
@@ -1057,7 +1059,7 @@ int CEMscope::Initialize()
 
     if (startErr)
       AfxMessageBox("Errors occurred on initial calls to microscope", MB_EXCLAME);
-    
+
     // No longer put it in Photo MDS mode if requested, just turn MDS off
     if (mJeolForceMDSmode < 0) {
       if (GetMDSMode() != JEOL_MDS_OFF) {
@@ -1070,7 +1072,7 @@ int CEMscope::Initialize()
 
   if (mFiltParam->positiveLossOnly < 0)
    mFiltParam->positiveLossOnly = 0;
-  
+
   if (firstTime) {
 
     // Check for KV if warning set up, check for MAG/SAMAG mode unconditionally
@@ -1109,7 +1111,7 @@ int CEMscope::Initialize()
       for (ind = 0; ind < mWinApp->GetActiveCamListSize(); ind++)
         if (camParam[activeList[ind]].FEItype)
           needVers = FEISCOPE_CAM_VERSION;
-      if (!mPlugFuncs->GetPluginVersions || 
+      if (!mPlugFuncs->GetPluginVersions ||
         !mPlugFuncs->GetPluginVersions(&plugVers, &servVers)) {
           mPluginVersion = plugVers;
           if (servVers >= 0 && servVers < plugVers)
@@ -1129,15 +1131,15 @@ int CEMscope::Initialize()
                 "(FEI-SEMserver.exe)\nis version %d and should be upgraded to the "
                 "current version (%d)\n\n"
                 "Copy the file from a current SerialEM installation package\n"
-                "(normally in a folder C:\\Program Files\\SerialEM\\SerialEM_4-x-x...)\n" 
-                "to the microscope computer, replacing the version there", 
+                "(normally in a folder C:\\Program Files\\SerialEM\\SerialEM_4-x-x...)\n"
+                "to the microscope computer, replacing the version there",
                 servVers, FEISCOPE_PLUGIN_VERSION);
             else
               message.Format("The scope server (FEI-SEMserver.exe) is version %d\n"
                 "and should be upgraded to the current version (%d)\n\n"
                 "Copy the file from a current SerialEM installation package\n"
-                "(normally in a folder C:\\Program Files\\SerialEM\\SerialEM_4-x-x...)\n" 
-                "and replace the version that you are now running", 
+                "(normally in a folder C:\\Program Files\\SerialEM\\SerialEM_4-x-x...)\n"
+                "and replace the version that you are now running",
                 servVers, FEISCOPE_PLUGIN_VERSION);
             AfxMessageBox(message, MB_ICONINFORMATION | MB_OK);
           }
@@ -1339,7 +1341,7 @@ void CEMscope::ScopeUpdate(DWORD dwTime)
   }
 
   if (mNoScope) {
-    mWinApp->mScopeStatus.Update(0., mFakeMagIndex, 0., 0., 0., 0., 0., 0., 
+    mWinApp->mScopeStatus.Update(0., mFakeMagIndex, 0., 0., 0., 0., 0., 0.,
       mFakeScreenPos == spUp, false, false, false, 0, 1, 0., 0., 0., 0, 0., 1, -1, -999);
     return;
   }
@@ -1390,7 +1392,7 @@ void CEMscope::ScopeUpdate(DWORD dwTime)
 
     // Get the mag and determine if it has changed
     lastMag = mLastMagIndex;
-    if (JEOLscope) { 
+    if (JEOLscope) {
       if (mJeolSD.magInvalid)
         magIndex = GetMagIndex();
       else
@@ -1456,7 +1458,7 @@ void CEMscope::ScopeUpdate(DWORD dwTime)
             SEMTrace('g', "ScopeUpdate: probe mode change seen, wait for a bit");
             sProbeChangedTime = GetTickCount();
           } else if (SEMTickInterval(sProbeChangedTime) > mProbeChangeWait) {
-            SEMTrace('g', "ScopeUpdate: probe mode change %d to %d accepted", 
+            SEMTrace('g', "ScopeUpdate: probe mode change %d to %d accepted",
               mProbeMode, probe);
             mProbeMode = probe;
             sProbeChangedTime = -1.;
@@ -1507,7 +1509,7 @@ void CEMscope::ScopeUpdate(DWORD dwTime)
         }
         CHECK_TIME(4);
 
-        if (FEIscope && magIndex < GetLowestMModeMagInd() && 
+        if (FEIscope && magIndex < GetLowestMModeMagInd() &&
           (magIndex > 0 || subMode == psmLAD))
           probe = 1;
         if (returnedProbe != mReturnedProbeMode) {
@@ -1537,8 +1539,8 @@ void CEMscope::ScopeUpdate(DWORD dwTime)
       // For Hitachi, the old mag can show up in update after an internal mag change, so
       // if the old mag matches and the change was recent enough, switch to new mag that
       // was set as last mag index
-      if (HitachiScope && lastMag && magIndex && lastMag != magIndex && 
-        magIndex == mInternalPrevMag && mInternalMagTime >= 0. && 
+      if (HitachiScope && lastMag && magIndex && lastMag != magIndex &&
+        magIndex == mInternalPrevMag && mInternalMagTime >= 0. &&
         SEMTickInterval(mInternalMagTime) < mHitachiMagChgSeeTime) {
           SEMTrace('g', "Update: Still see mag %d after %.0f msec, switch to mag %d",
             magIndex, SEMTickInterval(mInternalMagTime), lastMag);
@@ -1554,11 +1556,11 @@ void CEMscope::ScopeUpdate(DWORD dwTime)
       // This flag is solely to indicate on the next round that previous rather than
       // last IS should be used for transfers; but do not do that when crossing boundary
       if (BothLMorNotLM(lastMag, mLastSTEMmode != 0, magIndex, STEMmode != 0) &&
-        !(HitachiScope && mInternalMagTime >= 0. && 
-        SEMTickInterval(mInternalMagTime) < 2 * mHitachiMagChgSeeTime && 
+        !(HitachiScope && mInternalMagTime >= 0. &&
+        SEMTickInterval(mInternalMagTime) < 2 * mHitachiMagChgSeeTime &&
         !BothLMorNotLM(mLastMagIndex, false, mInternalPrevMag, false)))
         newISseen = rawISX != mLastISX || rawISY != mLastISY;
-      else 
+      else
         mLastMagModeChgTime = GetTickCount();
     }
     checkpoint = "mag";
@@ -1574,15 +1576,15 @@ void CEMscope::ScopeUpdate(DWORD dwTime)
       changedJeolEFTEM = mNeutralIndex != (mWinApp->GetEFTEMMode() ? 1 : 0);
       newOffCalInd = mNeutralIndex;
       if (changedJeolEFTEM)
-        toCam = mActiveCamList[B3DMAX(0, mNeutralIndex ? mFiltParam->firstGIFCamera : 
+        toCam = mActiveCamList[B3DMAX(0, mNeutralIndex ? mFiltParam->firstGIFCamera :
         mFiltParam->firstRegularCamera)];
     }
 
     delISX = 0.;
     delISY = 0.;
-    handleMagChange = (magIndex != lastMag || changedJeolEFTEM) && 
+    handleMagChange = (magIndex != lastMag || changedJeolEFTEM) &&
       mCalNeutralStartMag < 0 && !sScanningMags;
-    deferISchange = JEOLscope && mJeolExternalMagDelay > 0 && 
+    deferISchange = JEOLscope && mJeolExternalMagDelay > 0 &&
       SEMTickInterval(mUpdateSawMagTime) < mJeolExternalMagDelay;
     if (handleMagChange && !deferISchange) {
       mMagChanged = true;
@@ -1607,15 +1609,15 @@ void CEMscope::ScopeUpdate(DWORD dwTime)
 
       // Manage IS across a mag change either if staying in LM or M, or if the offsets
       // are turned on by user
-      manageISonMagChg = !STEMmode && lastMag && magIndex && 
+      manageISonMagChg = !STEMmode && lastMag && magIndex &&
         (!HitachiScope || mLastMagModeChgTime < 0 || temProbeChanged ||
         SEMTickInterval(mLastMagModeChgTime) > mHitachiModeChgDelay) &&
-        (BothLMorNotLM(lastMag, mLastSTEMmode != 0, magIndex, STEMmode != 0) || 
+        (BothLMorNotLM(lastMag, mLastSTEMmode != 0, magIndex, STEMmode != 0) ||
         GetApplyISoffset() || changedJeolEFTEM);
 
-      if (JEOLscope) {  
+      if (JEOLscope) {
         SEMSetStageTimeout();
-        BOOL crossedLM = BothLMorNotLM(lastMag, mLastSTEMmode != 0, magIndex, 
+        BOOL crossedLM = BothLMorNotLM(lastMag, mLastSTEMmode != 0, magIndex,
           STEMmode != 0);
 
         // First see if need to save the image shift for the old mag for later restore
@@ -1625,7 +1627,7 @@ void CEMscope::ScopeUpdate(DWORD dwTime)
             mSavedISX = mJeolSD.ringISX[indOldIS];
             mSavedISY = mJeolSD.ringISY[indOldIS];
             mMagIndSavedIS = lastMag;
-            SEMTrace('i', "Update saved raw IS %.3f %.3f, going from %d to %d", 
+            SEMTrace('i', "Update saved raw IS %.3f %.3f, going from %d to %d",
               mSavedISX, mSavedISY, lastMag, magIndex);
           }
         }
@@ -1638,15 +1640,15 @@ void CEMscope::ScopeUpdate(DWORD dwTime)
           indOldIS = LookupRingIS(lastMag, changedJeolEFTEM, crossedLM);
           // However it is gotten, adjust the IS stored on the ring
           if (indOldIS >= 0) {
-            ISX = mJeolSD.ringISX[indOldIS] - (oldTab->neutralISX[oldNeutralInd] + 
+            ISX = mJeolSD.ringISX[indOldIS] - (oldTab->neutralISX[oldNeutralInd] +
               mDetectorOffsetX);
-            ISY = mJeolSD.ringISY[indOldIS] - (oldTab->neutralISY[oldNeutralInd] + 
-              mDetectorOffsetY); 
+            ISY = mJeolSD.ringISY[indOldIS] - (oldTab->neutralISY[oldNeutralInd] +
+              mDetectorOffsetY);
             if (mApplyISoffset) {
               ISX -= oldTab->calOffsetISX[oldOffCalInd];
               ISY -= oldTab->calOffsetISY[oldOffCalInd];
             }
-          } 
+          }
         }
       } else {  // FEI-like
 
@@ -1662,10 +1664,10 @@ void CEMscope::ScopeUpdate(DWORD dwTime)
           mSavedISX = rawISX;
           mSavedISY = rawISY;
           mMagIndSavedIS = lastMag;
-          SEMTrace('i', "Update saved raw IS %.3f %.3f, going from %d to %d", 
+          SEMTrace('i', "Update saved raw IS %.3f %.3f, going from %d to %d",
             mSavedISX, mSavedISY, lastMag, magIndex);
         }
-      }  
+      }
 
       // Test for whether restoring, get the raw IS back for this mag
       restoreIS = temProbeChanged || (!STEMmode && !changedJeolEFTEM &&
@@ -1678,9 +1680,9 @@ void CEMscope::ScopeUpdate(DWORD dwTime)
 
         // I think this is for non-JEOL because it was already done for JEOL
         if (!JEOLscope) {
-          ISX = mLastISX - (oldTab->neutralISX[mNeutralIndex] + oldTab->offsetISX + 
+          ISX = mLastISX - (oldTab->neutralISX[mNeutralIndex] + oldTab->offsetISX +
             mDetectorOffsetX);
-          ISY = mLastISY - (oldTab->neutralISY[mNeutralIndex] + oldTab->offsetISY + 
+          ISY = mLastISY - (oldTab->neutralISY[mNeutralIndex] + oldTab->offsetISY +
             mDetectorOffsetY);
         }
 
@@ -1696,7 +1698,7 @@ void CEMscope::ScopeUpdate(DWORD dwTime)
 
       // Do it if adjustment is needed or mag changes reset IS, as long as
       // we should be managing across this change and an IS was found
-      if ((delISX || delISY || MagChgResetsIS(magIndex) || temProbeChanged) && 
+      if ((delISX || delISY || MagChgResetsIS(magIndex) || temProbeChanged) &&
         ((manageISonMagChg && indOldIS >= 0) || restoreIS)) {
         if (JEOLscope) {
           if (!restoreIS) {
@@ -1720,7 +1722,7 @@ void CEMscope::ScopeUpdate(DWORD dwTime)
             rawISY = mLastISY + delISY;
           }
 
-            
+
           // Probably need to do beam shift too, so update the mage variable and get the
           // new tilt axis offset and call the regular IS routine
           mLastMagIndex = magIndex;
@@ -1761,16 +1763,16 @@ void CEMscope::ScopeUpdate(DWORD dwTime)
       mLastISY = rawISY;
     }
     mISwasNewLastUpdate = newISseen;
-    
+
     // Get current, screen pos, focus
-    UpdateScreenBeamFocus(STEMmode, screenPos, smallScreen, spotSize, rawIntensity, 
+    UpdateScreenBeamFocus(STEMmode, screenPos, smallScreen, spotSize, rawIntensity,
       current, defocus, objective, alpha);
     checkpoint = "defocus";
     CHECK_TIME(7);
 
     // Handle adjusting focus on a probe mode change, record first focus of mode
     if (temProbeChanged) {
-      if (mAdjustFocusForProbe && mFirstFocusForProbe > EXTRA_VALUE_TEST && 
+      if (mAdjustFocusForProbe && mFirstFocusForProbe > EXTRA_VALUE_TEST &&
         mLastFocusInUpdate != mFirstFocusForProbe) {
         defocus += mLastFocusInUpdate - mFirstFocusForProbe;
         PLUGSCOPE_SET(Defocus, defocus * 1.e-6);
@@ -1813,7 +1815,7 @@ void CEMscope::ScopeUpdate(DWORD dwTime)
 
     // Take care of screen-dependent changes in low dose and update low dose panel
     needBlank = NeedBeamBlanking(screenPos, STEMmode != 0, gotoArea);
-    UpdateLowDose(screenPos, needBlank, gotoArea, magIndex, diffFocus, 
+    UpdateLowDose(screenPos, needBlank, gotoArea, magIndex, diffFocus,
       alpha, spotSize, rawIntensity, ISX, ISY, bReady);
 
     checkpoint = "low dose";
@@ -1822,7 +1824,7 @@ void CEMscope::ScopeUpdate(DWORD dwTime)
     // If screen changed, tell an AMT camera to change its blanking
     // If screen changed or STEM changed, manage blanking for shutterless camera when not
     // in low dose and STEM-dependent blanking
-    if (mLastScreen != screenPos || changedSTEM || 
+    if (mLastScreen != screenPos || changedSTEM ||
       mLastSkipLDBlank != mSkipBlankingInLowDose) {
       if (mLastScreen != screenPos)
         mCamera->SetAMTblanking(screenPos == spUp);
@@ -1846,8 +1848,8 @@ void CEMscope::ScopeUpdate(DWORD dwTime)
         mProbeMode, gunState, STEMmode, (int)alpha, screenPos, mBeamBlanked, bReady);
     }
     mWinApp->mScopeStatus.Update(current, magIndex, defocus, ISX, ISY, stageX, stageY,
-      stageZ, screenPos == spUp, smallScreen != 0, mBeamBlanked, EFTEM, STEMmode,spotSize, 
-      rawIntensity, intensity, objective, vacStatus, mLastCameraLength, mProbeMode, 
+      stageZ, screenPos == spUp, smallScreen != 0, mBeamBlanked, EFTEM, STEMmode,spotSize,
+      rawIntensity, intensity, objective, vacStatus, mLastCameraLength, mProbeMode,
       gunState, (int)alpha);
 
     if (mWinApp->mStageMoveTool)
@@ -1859,7 +1861,7 @@ void CEMscope::ScopeUpdate(DWORD dwTime)
     CHECK_TIME(10);
 
     // Update the last mags/focus seen in a mode and change mode if indicated
-    UpdateLastMagEftemStem(magIndex, defocus, screenPos, EFTEM, STEMmode);    
+    UpdateLastMagEftemStem(magIndex, defocus, screenPos, EFTEM, STEMmode);
 
     mLastLowDose = mLowDoseMode;
     mLastScreen = screenPos;
@@ -1872,12 +1874,12 @@ void CEMscope::ScopeUpdate(DWORD dwTime)
      // Disable trying to get vaccuum if it fails once
      if (checkpoint == "defocus")
        mNumGauges = 0;
-    
+
     // Report first error and then multiple errors every 10 seconds
-    if ((dwTime  > 10000 + mLastReport && !mReportingErr) || (mDisconnected && 
+    if ((dwTime  > 10000 + mLastReport && !mReportingErr) || (mDisconnected &&
       mPlugFuncs->ScopeIsDisconnected && mPlugFuncs->ScopeIsDisconnected())) {
       mReportingErr = true;
-      if (mPlugFuncs->ScopeIsDisconnected && 
+      if (mPlugFuncs->ScopeIsDisconnected &&
         mPlugFuncs->ScopeIsDisconnected()) {
         probe = (int)(1000. * (wallTime() - wallStart));
         B3DCLAMP(probe, 2000, 5000);
@@ -1889,12 +1891,12 @@ void CEMscope::ScopeUpdate(DWORD dwTime)
               message += "\n\nIt can probably be restored if you restart FEI-SEMserver";
             SEMMessageBox(message);
           }
- 
+
       } else if (!mErrCount) {
         message = "getting scope update after " + checkpoint + " ";
         SEMReportCOMError(E, message);
       } else {
-        message.Format("getting scope update %d times after %s ", mErrCount, 
+        message.Format("getting scope update %d times after %s ", mErrCount,
           LPCTSTR(checkpoint));
         SEMReportCOMError(E, message);
         mErrCount = 0;
@@ -1918,7 +1920,7 @@ void CEMscope::ScopeUpdate(DWORD dwTime)
   }
 
   // Check if valves should be closed due to message box up
-  if (sCloseValvesInterval > 0. && 
+  if (sCloseValvesInterval > 0. &&
     SEMTickInterval(sCloseValvesStart) > sCloseValvesInterval) {
     if (GetColumnValvesOpen() > 0) {
       SetColumnValvesOpen(false);
@@ -1938,7 +1940,7 @@ void CEMscope::ScopeUpdate(DWORD dwTime)
           ctdt.GetHour(), ctdt.GetMinute(), ctdt.GetSecond(), mIdleTimeToCloseValves);
       else
         PrintfToLog("%02d:%02d:%02d: Closed valve%s after %d minutes of inactivity",
-          ctdt.GetHour(), ctdt.GetMinute(), ctdt.GetSecond(), JEOLscope ? "" : "s", 
+          ctdt.GetHour(), ctdt.GetMinute(), ctdt.GetSecond(), JEOLscope ? "" : "s",
           mIdleTimeToCloseValves);
     }
     mClosedValvesAfterIdle = true;
@@ -1962,10 +1964,10 @@ void CEMscope::ScopeUpdate(DWORD dwTime)
      mPlugFuncs->DoingUpdate(0);
      sGettingValuesFast = false;
   }
-  if (JEOLscope) 
+  if (JEOLscope)
     SEMReleaseJeolDataMutex();
   else
-    ScopeMutexRelease("UpdateProc"); 
+    ScopeMutexRelease("UpdateProc");
   if (reportTime) {
     /*
     0: stage pos & tilt & readiness
@@ -1983,7 +1985,7 @@ void CEMscope::ScopeUpdate(DWORD dwTime)
     10: EFTEM mode, column valve
     */
     PrintfToLog("Update time %.1f msec", 1000. * cumWall);
-    PrintfToLog("Components %.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f", 
+    PrintfToLog("Components %.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f",
       1000.*wallTimes[0],1000.*wallTimes[1], 1000.*wallTimes[2],1000.*wallTimes[3],
       1000.*wallTimes[4],1000.*wallTimes[5],1000.*wallTimes[6],
       1000.*wallTimes[7],1000.*wallTimes[8],1000.*wallTimes[9],1000.*wallTimes[10]);
@@ -2024,8 +2026,8 @@ void CEMscope::UpdateStage(double &stageX, double &stageY, double &stageZ, BOOL 
 
 // Get the other items for the scope status window
 // Screen position, intensity, spotsize, image beam shift, and current
-void CEMscope::UpdateScreenBeamFocus(int STEMmode, int &screenPos, int &smallScreen, 
-                                     int &spotSize, double &rawIntensity, double &current, 
+void CEMscope::UpdateScreenBeamFocus(int STEMmode, int &screenPos, int &smallScreen,
+                                     int &spotSize, double &rawIntensity, double &current,
                                      double &defocus, double &objective, float &alpha)
 {
   if (JEOLscope) {
@@ -2086,14 +2088,14 @@ void CEMscope::UpdateGauges(int &vacStatus)
             mLastGaugeStatus = gaugeStatus;
             mLastPressure = gaugePressure;
             statIndex = 0;
-            if (gaugeStatus == gsInvalid || gaugeStatus == gsOverflow || 
+            if (gaugeStatus == gsInvalid || gaugeStatus == gsOverflow ||
               gaugePressure > mRedThresh[gauge])
               statIndex = 2;
-            else if (gaugeStatus != gsUnderflow && 
+            else if (gaugeStatus != gsUnderflow &&
               gaugePressure > mYellowThresh[gauge])
               statIndex = 1;
 
-            SEMTrace('V', "Gauge %d, status %d,  pressure %f  SEMstatus %d  took %.0f", 
+            SEMTrace('V', "Gauge %d, status %d,  pressure %f  SEMstatus %d  took %.0f",
               gauge, gaugeStatus, gaugePressure, statIndex, SEMTickInterval(startTime));
 
             // Report maximum of all status values
@@ -2118,7 +2120,7 @@ void CEMscope::UpdateLowDose(int screenPos, BOOL needBlank, BOOL gotoArea, int m
     // If low dose mode or screen position has changed:
     if (mLastLowDose != mLowDoseMode || mLastScreen != screenPos) {
 
-      // First apply a blank if needed, regardless of screen            
+      // First apply a blank if needed, regardless of screen
       if (needBlank)
         BlankBeam(true, "UpdateLowDose");
 
@@ -2147,7 +2149,7 @@ void CEMscope::UpdateLowDose(int screenPos, BOOL needBlank, BOOL gotoArea, int m
 
     // After those potential changes, send update to low dose window
     mWinApp->mLowDoseDlg.ScopeUpdate(magIndex, spotSize, rawIntensity, ISX, ISY,
-      screenPos == spDown, mLowDoseSetArea, mLastCamLenIndex, diffFocus, alpha, 
+      screenPos == spDown, mLowDoseSetArea, mLastCamLenIndex, diffFocus, alpha,
       mProbeMode, stageReady);
 
     // Subtract the current image shift from the IS sent to scope window
@@ -2156,7 +2158,7 @@ void CEMscope::UpdateLowDose(int screenPos, BOOL needBlank, BOOL gotoArea, int m
       delISX = ldParams->ISX;
       delISY = ldParams->ISY;
       if (ldParams->magIndex != magIndex)
-        mWinApp->mShiftManager->TransferGeneralIS(ldParams->magIndex, delISX, delISY, 
+        mWinApp->mShiftManager->TransferGeneralIS(ldParams->magIndex, delISX, delISY,
         magIndex, delISX, delISY);
 
       ISX -= mLastLDpolarity * delISX;
@@ -2177,7 +2179,7 @@ void CEMscope::updateEFTEMSpectroscopy(BOOL &EFTEM)
         if (mLastSpectroscopy) {
           mCamera->SetupFilter();
 
-        } else if (!mCamera->GetIgnoreFilterDiffs() && 
+        } else if (!mCamera->GetIgnoreFilterDiffs() &&
           (fabs(mFiltParam->slitWidth - mJeolSD.slitWidth) > 0.1 ||
           (mFiltParam->slitIn ? 1 : 0) != (mJeolSD.slitIn ? 1 : 0))) {
             mFiltParam->slitIn = mJeolSD.slitIn;
@@ -2200,7 +2202,7 @@ void CEMscope::updateEFTEMSpectroscopy(BOOL &EFTEM)
   }
 }
 
-void CEMscope::UpdateLastMagEftemStem(int magIndex, double defocus, int screenPos, 
+void CEMscope::UpdateLastMagEftemStem(int magIndex, double defocus, int screenPos,
                                       BOOL EFTEM, int STEMmode)
 {
   BOOL needed;
@@ -2213,10 +2215,10 @@ void CEMscope::UpdateLastMagEftemStem(int magIndex, double defocus, int screenPo
     mLastEFTEMmag = magIndex;
     mLastRegularFocus = defocus;
 
-  } else if (!EFTEM && 
+  } else if (!EFTEM &&
     (!mWinApp->GetEFTEMMode() || (screenPos == spDown && mFiltParam->autoMag))
     && !STEMmode &&
-    (!mWinApp->GetSTEMMode() || (screenPos == spDown && mWinApp->GetScreenSwitchSTEM())) 
+    (!mWinApp->GetSTEMMode() || (screenPos == spDown && mWinApp->GetScreenSwitchSTEM()))
     && magIndex) {
       if (mLastRegularMag != magIndex)
         SEMTrace('g', "ScopeUpdate: not in EFTEM or STEM, changing last regular mag %d "
@@ -2247,7 +2249,7 @@ void CEMscope::UpdateLastMagEftemStem(int magIndex, double defocus, int screenPo
     else if (mWinApp->GetEFTEMMode() && mCanControlEFTEM && !mUseFilterInTEMMode) {
       needed = (screenPos == spUp || !mFiltParam->autoMag ||
         mWinApp->mMultiTSTasks->AutocenTrackingState());
-      if (needed && !EFTEM || !needed && EFTEM) 
+      if (needed && !EFTEM || !needed && EFTEM)
         SetEFTEM(needed);
     }
 
@@ -2281,7 +2283,7 @@ void CEMscope::UpdateLastMagEftemStem(int magIndex, double defocus, int screenPo
 // Takes care of the reversal, extreme and direction variables given current tilt angle
 void CEMscope::ManageTiltReversalVars()
 {
-  if (sTiltDirection * (mTiltAngle - sExtremeTilt) > 0) 
+  if (sTiltDirection * (mTiltAngle - sExtremeTilt) > 0)
 
     // Moving in the same direction: replace the extreme value
     sExtremeTilt = mTiltAngle;
@@ -2323,7 +2325,7 @@ double CEMscope::GetTiltAngle(BOOL forceGet)
       GetValuesFast(-1);
   }
   catch (_com_error E) {
-    SEMReportCOMError(E, _T("getting tilt angle "));    
+    SEMReportCOMError(E, _T("getting tilt angle "));
   }
   if (!getFast)
     ScopeMutexRelease("GetTiltAngle");
@@ -2375,14 +2377,14 @@ void CEMscope::TiltTo(double inVal, double restoreX, double restoreY)
   MoveStage(info, false, false, false, false, restore);
 }
 
-DWORD CEMscope::GetLastTiltTime() 
+DWORD CEMscope::GetLastTiltTime()
 {
   // Make sure the time is unloaded after the movement but trust JEOL state
   StageBusy(-1);
   return mLastTiltTime;
 }
 
-DWORD CEMscope::GetLastStageTime() 
+DWORD CEMscope::GetLastStageTime()
 {
   // Make sure the time is unloaded after the movement
   StageBusy(-1);
@@ -2402,7 +2404,7 @@ double CEMscope::GetStageBAxis(void)
     retval = mPlugFuncs->GetStageBAxis() / DTOR;
   }
   catch (_com_error E) {
-    SEMReportCOMError(E, _T("getting B axis of stage "));    
+    SEMReportCOMError(E, _T("getting B axis of stage "));
   }
   ScopeMutexRelease("GetStageBAxis");
   return retval;
@@ -2418,7 +2420,7 @@ BOOL CEMscope::SetStageBAxis(double inVal)
 }
 
 // External call to move stage
-BOOL CEMscope::MoveStage(StageMoveInfo info, BOOL doBacklash, BOOL useSpeed, 
+BOOL CEMscope::MoveStage(StageMoveInfo info, BOOL doBacklash, BOOL useSpeed,
   int inBackground, BOOL doRelax, BOOL doRestore)
 {
   // This call is not supposed to happen unless stage is ready, so don't wait long
@@ -2433,7 +2435,7 @@ BOOL CEMscope::MoveStage(StageMoveInfo info, BOOL doBacklash, BOOL useSpeed,
     SEMMessageBox(_T("Stage not ready"));
     return false;
   }
-  if (inBackground > 0 && FEIscope && CBaseSocket::LookupTypeID(FEI_SOCK_ID) >= 0 
+  if (inBackground > 0 && FEIscope && CBaseSocket::LookupTypeID(FEI_SOCK_ID) >= 0
     && SEMNumFEIChannels() < 4) {
     SEMMessageBox("The stage cannot be moved in the background.\n"
       "You must have the property BackgroundSocketToFEI set to\n"
@@ -2442,7 +2444,7 @@ BOOL CEMscope::MoveStage(StageMoveInfo info, BOOL doBacklash, BOOL useSpeed,
     return false;
   }
 
-  if (((mTiltSpeedFactor > 0. && info.axisBits == axisA) || (mStageXYSpeedFactor > 0 && 
+  if (((mTiltSpeedFactor > 0. && info.axisBits == axisA) || (mStageXYSpeedFactor > 0 &&
     (info.axisBits & axisXY) != 0 && !(info.axisBits & ~axisXY))) && !useSpeed) {
     useSpeed = true;
     info.speed = B3DCHOICE(info.axisBits == axisA, mTiltSpeedFactor, mStageXYSpeedFactor);
@@ -2491,7 +2493,7 @@ BOOL CEMscope::MoveStage(StageMoveInfo info, BOOL doBacklash, BOOL useSpeed,
     //TEMCON selection
     // Update is too slow to disable the buttons so do it explicitly
     // Also set ready flag false since thread may hang on timeout
-    USE_DATA_MUTEX(mJeolSD.stageStatus = ((info.axisBits & axisX) ? 1 : 0) + 
+    USE_DATA_MUTEX(mJeolSD.stageStatus = ((info.axisBits & axisX) ? 1 : 0) +
       ((info.axisBits & axisY) ? 10 : 0) + ((info.axisBits & axisZ) ? 100 : 0) +
       ((info.axisBits & axisA) ? 1000 : 0));
     mWinApp->mTiltWindow.TiltUpdate(mJeolSD.tiltAngle, false);
@@ -2625,7 +2627,7 @@ int CEMscope::StageBusy(int ignoreOrTrustState)
   catch (_com_error E) {
     // SEMReportCOMError(E, _T("getting Stage Status "));
     retval = -1;
-  } 
+  }
   if (!getFast)
     ScopeMutexRelease("StageBusy");
   return retval;
@@ -2652,10 +2654,10 @@ UINT CEMscope::StageMoveProc(LPVOID pParam)
   // stage thread to wait for this to expire
   while (JEOLscope && SEMCheckStageTimeout())
     Sleep(100);
-  
+
   ScopeMutexAcquire("StageMoveProc", true);
   if (FEIscope) {
-    if (info->plugFuncs->BeginThreadAccess(info->inBackground ? 3 : 1, 
+    if (info->plugFuncs->BeginThreadAccess(info->inBackground ? 3 : 1,
       PLUGFEI_MAKE_STAGE)) {
       sThreadErrString = "Error creating second instance of microscope object for"
         " moving stage";
@@ -2687,7 +2689,7 @@ UINT CEMscope::StageMoveProc(LPVOID pParam)
 }
 
 // Common function for getting the string for the stage move
-void CEMscope::StageMovingToMessage(double destX, double destY, double destZ, 
+void CEMscope::StageMovingToMessage(double destX, double destY, double destZ,
   double destAlpha, int axisBits, CString &toStr)
 {
   CString str;
@@ -2723,7 +2725,7 @@ void CEMscope::StageMovingToMessage(double destX, double destY, double destZ,
   }
 
 // Underlying stage move procedure, callable in try block from scope or blanker threads
-void CEMscope::StageMoveKernel(StageThreadData *std, BOOL fromBlanker, BOOL async, 
+void CEMscope::StageMoveKernel(StageThreadData *std, BOOL fromBlanker, BOOL async,
   double &destX, double &destY, double &destZ, double &destAlpha)
 {
   StageMoveInfo *info = std->info;
@@ -2748,7 +2750,7 @@ void CEMscope::StageMoveKernel(StageThreadData *std, BOOL fromBlanker, BOOL asyn
     relax = step == 1 ? 1 : 0;
     restore = step == 3 ? 1 : 0;
     axisBitsUse = restore ? axisXY : info->axisBits;
-    if ((back && !info->doBacklash) || (relax && !info->doRelax) || 
+    if ((back && !info->doBacklash) || (relax && !info->doRelax) ||
       (restore && !info->doRestoreXY))
       continue;
     if (restore)
@@ -2770,14 +2772,14 @@ void CEMscope::StageMoveKernel(StageThreadData *std, BOOL fromBlanker, BOOL asyn
       SEMTrace('S', "BlankerProc stage move to %.2f %.2f", xpos, ypos);
     if (info->doRelax || info->doBacklash || info->doRestoreXY)
       if (axisBitsUse & (axisA | axisZ))
-        SEMTrace('n', "Step %d, %s move to %.3f", step + 1, 
+        SEMTrace('n', "Step %d, %s move to %.3f", step + 1,
         (axisBitsUse & axisA) ? "A" : "Z", (axisBitsUse & axisA) ? alpha : zpos);
       else
         SEMTrace('n', "Step %d, move to %.3f %.3f", step + 1, xpos, ypos);
-     
+
     // destX, destY are used to decide on "stage near end of range" message upon error
-    // They are supposed to be in meters; leave at 0 to disable 
-    if ((info->useSpeed || (info->axisBits & axisB)) && 
+    // They are supposed to be in meters; leave at 0 to disable
+    if ((info->useSpeed || (info->axisBits & axisB)) &&
       info->plugFuncs->SetStagePositionExtra) {
       beta = (info->axisBits & axisB) ? info->beta : 0.;
       if (info->useSpeed) {
@@ -2821,7 +2823,7 @@ void CEMscope::StageMoveKernel(StageThreadData *std, BOOL fromBlanker, BOOL asyn
     if (async && (JEOLscope || FEIscope))
       return;
     if (HitachiScope || JEOLscope)
-      WaitForStageDone(info, fromBlanker ? "BlankerProc" : "StageMoveProc");         
+      WaitForStageDone(info, fromBlanker ? "BlankerProc" : "StageMoveProc");
     mTiltAngle = info->plugFuncs->GetTiltAngle() / DTOR;
     ManageTiltReversalVars();
     if ((step == 2 && !info->doRestoreXY) || (restore && step == 3)) {
@@ -2878,7 +2880,7 @@ BOOL CEMscope::GetStagePosition(double &X, double &Y, double &Z)
   catch (_com_error E) {
     SEMReportCOMError(E, _T("getting stage position "));
     success = false;
-  } 
+  }
   if (needMutex)
     ScopeMutexRelease("GetStagePosition");
   return success;
@@ -2976,7 +2978,7 @@ BOOL CEMscope::GetImageShift(double &shiftX, double &shiftY)
     sGettingValuesFast));
   if (needMutex)
     ScopeMutexAcquire("GetImageShift", true);
-  
+
   try {
     mPlugFuncs->GetImageShift(&shiftX, &shiftY);
     shiftX -= axisISX;
@@ -2985,7 +2987,7 @@ BOOL CEMscope::GetImageShift(double &shiftX, double &shiftY)
   catch (_com_error E) {
     SEMReportCOMError(E, _T("getting Image Shift "));
     success = false;
-  } 
+  }
   if (needMutex)
     ScopeMutexRelease("GetImageShift");
   return success;
@@ -3038,8 +3040,8 @@ BOOL CEMscope::ChangeImageShift(double shiftX, double shiftY, BOOL bInc)
     if (bInc) {
       shiftX += plugISX;
       shiftY += plugISY;
-    } else { 
-      
+    } else {
+
       // Absolute change, get the delta from last position
       // absolute change needs to account for tilt axis offset
       GetTiltAxisIS(axisISX, axisISY);
@@ -3058,9 +3060,9 @@ BOOL CEMscope::ChangeImageShift(double shiftX, double shiftY, BOOL bInc)
           //Sleep(500);  Should no longer be necessary 2/9/22
           mPlugFuncs->GetImageShift(&neutISX, &neutISY);
           mCheckedNeutralIS[magIndex] = 1;
-          neutXold = NINT8000(mMagTab[magIndex].neutralISX[mNeutralIndex] / 
+          neutXold = NINT8000(mMagTab[magIndex].neutralISX[mNeutralIndex] /
             Jeol_IS1X_to_um);
-          neutYold = NINT8000(mMagTab[magIndex].neutralISY[mNeutralIndex] / 
+          neutYold = NINT8000(mMagTab[magIndex].neutralISY[mNeutralIndex] /
             Jeol_IS1Y_to_um);
           neutXnew = NINT8000(neutISX / Jeol_IS1X_to_um);
           neutYnew = NINT8000(neutISY / Jeol_IS1Y_to_um);
@@ -3069,7 +3071,7 @@ BOOL CEMscope::ChangeImageShift(double shiftX, double shiftY, BOOL bInc)
             mess.Format("The neutral image shift calibration appears to be off at "
               "this magnification.\r\n(Stored value 0x%x  0x%x,  value now 0x%x, 0x%x)"
               "\r\n\r\nYou should run \"Neutral IS Values\" in the "
-                "Calibration menu and save calibrations", neutXold, neutYold, neutXnew, 
+                "Calibration menu and save calibrations", neutXold, neutYold, neutXnew,
                 neutYnew);
             mWinApp->AppendToLog(mess);
             SEMMessageBox(mess);
@@ -3092,7 +3094,7 @@ BOOL CEMscope::ChangeImageShift(double shiftX, double shiftY, BOOL bInc)
       shiftY = plugISY;
     }
     magIndex = -1;
-    needBeamShift = (JEOLscope || (HitachiNeedsBSforIS(magIndex))) && 
+    needBeamShift = (JEOLscope || (HitachiNeedsBSforIS(magIndex))) &&
       !(mWinApp->ScopeHasSTEM() && mPlugFuncs->GetSTEMMode && mPlugFuncs->GetSTEMMode());
     if (needBeamShift && magIndex < 0)
       magIndex = mPlugFuncs->GetMagnificationIndex();
@@ -3178,15 +3180,15 @@ void CEMscope::GetTiltAxisIS(double &ISX, double &ISY, int magInd)
     ISX = mSTEMneutralISX;
     ISY = mSTEMneutralISY;
   }
-  
+
   // 12/24/06, shift to axis in low mag too, for consistency in maps
   if (!mShiftToTiltAxis || !mTiltAxisOffset)
     return;
 
-  // If shifting to axis, now convert axis offset to image shift, but set camera if 
+  // If shifting to axis, now convert axis offset to image shift, but set camera if
   // JEOL EFTEM is changing
   if (jeolEFTEM && (mWinApp->GetEFTEMMode() ? 1 : 0) != mNeutralIndex)
-    toCam = mActiveCamList[B3DMAX(0, mNeutralIndex ? mFiltParam->firstGIFCamera : 
+    toCam = mActiveCamList[B3DMAX(0, mNeutralIndex ? mFiltParam->firstGIFCamera :
         mFiltParam->firstRegularCamera)];
   ScaleMat aMat = mShiftManager->IStoSpecimen(magInd, toCam);
   if (!aMat.xpx)
@@ -3224,7 +3226,7 @@ void CEMscope::ResetSTEMneutral(void)
   if (!JEOLscope || !GetSTEMmode())
     return;
   GetImageShift(ISX, ISY);
-  SEMTrace('1', "Change STEM neutral from %f %f to %f %f", mSTEMneutralISX, 
+  SEMTrace('1', "Change STEM neutral from %f %f to %f %f", mSTEMneutralISX,
     mSTEMneutralISY, mSTEMneutralISX+ISX, mSTEMneutralISY+ISY);
   mSTEMneutralISX = (float)(mSTEMneutralISX + ISX);
   mSTEMneutralISY = (float)(mSTEMneutralISY + ISY);
@@ -3244,7 +3246,7 @@ BOOL CEMscope::GetBeamShift(double &shiftX, double &shiftY)
   catch (_com_error E) {
     SEMReportCOMError(E, _T("getting Beam Shift "));
     success = false;
-  } 
+  }
   ScopeMutexRelease("GetBeamShift");
   return success;
 }
@@ -3266,7 +3268,7 @@ BOOL CEMscope::ChangeBeamShift(double shiftX, double shiftY, BOOL bInc)
 
   if (!sInitialized)
     return false;
-  
+
   ScopeMutexAcquire("ChangeBeamShift", true);
   try {
     if (bInc) {  // incremental
@@ -3279,7 +3281,7 @@ BOOL CEMscope::ChangeBeamShift(double shiftX, double shiftY, BOOL bInc)
   catch (_com_error E) {
     SEMReportCOMError(E, _T("setting Beam Shift "));
     success = false;
-  } 
+  }
   ScopeMutexRelease("ChangeBeamShift");
   return success;
 }
@@ -3293,7 +3295,7 @@ BOOL CEMscope::GetBeamTilt(double &tiltX, double &tiltY)
     return false;
 
   ScopeMutexAcquire("GetBeamTilt", true);
-  
+
   try {
     if (FEIscope && mUseImageBeamTilt)
       mPlugFuncs->GetImageBeamTilt(&tiltX, &tiltY);
@@ -3347,7 +3349,7 @@ BOOL CEMscope::ChangeBeamTilt(double tiltX, double tiltY, BOOL bInc)
   catch (_com_error E) {
     SEMReportCOMError(E, _T("setting Beam Tilt "));
     success = false;
-  } 
+  }
   ScopeMutexRelease("ChangeBeamTilt");
   return success;
 }
@@ -3400,12 +3402,12 @@ BOOL CEMscope::GetDarkFieldTilt(int &mode, double &tiltX, double &tiltY)
 
   tiltX = tiltY = 0.;
   mode = 0;
-  if (!mPlugFuncs->GetDarkFieldTilt || !mPlugFuncs->GetDarkFieldMode || 
+  if (!mPlugFuncs->GetDarkFieldTilt || !mPlugFuncs->GetDarkFieldMode ||
     mPluginVersion < FEI_PLUGIN_DARK_FIELD)
     return true;
 
   ScopeMutexAcquire("GetDarkFieldTilt", true);
-  
+
   try {
     mode = mPlugFuncs->GetDarkFieldMode();
     if (mode)
@@ -3428,14 +3430,14 @@ BOOL CEMscope::SetDarkFieldTilt(int mode, double tiltX, double tiltY)
   if (!sInitialized)
     return false;
 
-  if (!mPlugFuncs->SetDarkFieldTilt || !mPlugFuncs->GetDarkFieldMode || 
+  if (!mPlugFuncs->SetDarkFieldTilt || !mPlugFuncs->GetDarkFieldMode ||
     !mPlugFuncs->GetDarkFieldMode || mPluginVersion < FEI_PLUGIN_DARK_FIELD)
     return true;
 
   ScopeMutexAcquire("SetDarkFieldTilt", true);
   if (tiltX == 0. && tiltY == 0.)
     mode = 0;
-  
+
   try {
     curMode = mPlugFuncs->GetDarkFieldMode();
     if (mode != curMode)
@@ -3483,7 +3485,7 @@ BOOL CEMscope::SetDiffractionShift(double shiftX, double shiftY)
   ScopeMutexAcquire("SetDiffractionShift", true);
 
   try {
-    mPlugFuncs->SetDiffractionShift(shiftX * mDiffShiftScaling, 
+    mPlugFuncs->SetDiffractionShift(shiftX * mDiffShiftScaling,
       shiftY * mDiffShiftScaling);
   }
   catch (_com_error E) {
@@ -3686,7 +3688,7 @@ double CEMscope::GetScreenCurrent()
 
   if (!sInitialized)
     return 0.;
-  
+
   ScopeMutexAcquire("GetScreenCurrent",true);
 
   try {
@@ -3709,11 +3711,11 @@ BOOL CEMscope::SmallScreenIn()
   BOOL result = false;
 
   // Plugin will use state value if update by event or getting fast
-  bool needMutex = !(JEOLscope && ((mScreenByEvent && mJeolSD.eventDataIsGood) || 
+  bool needMutex = !(JEOLscope && ((mScreenByEvent && mJeolSD.eventDataIsGood) ||
     sGettingValuesFast));
   if (!sInitialized)
     return false;
-  
+
   if (!mReportsSmallScreen)
     return false;
 
@@ -3742,7 +3744,7 @@ int CEMscope::GetScreenPos()
     return spUnknown;
 
   // Plugin will use state value if update by event or getting fast
-  bool needMutex = !(JEOLscope && ((mScreenByEvent && mJeolSD.eventDataIsGood) || 
+  bool needMutex = !(JEOLscope && ((mScreenByEvent && mJeolSD.eventDataIsGood) ||
     sGettingValuesFast || !mReportsLargeScreen));
   if (needMutex)
     ScopeMutexAcquire("GetScreenPos", true);
@@ -3793,7 +3795,7 @@ BOOL CEMscope::SetScreenPos(int inPos)
       mWinApp->mMultiTSTasks->AutocenTrackingState());
     SetEFTEM(needed);
   }
-  
+
   mMoveInfo.axisBits = inPos;
   mMoveInfo.finishedTick = (inPos == spUp) ? mScreenRaiseDelay : 0;
   mScreenThread = AfxBeginThread(ScreenMoveProc, &mMoveInfo,
@@ -3996,7 +3998,7 @@ double CEMscope::GetMagnification()
     return 0.;
 
   // Plugin will use state value if update by event or getting fast, and not scanning
-  bool needMutex = !(JEOLscope && (mJeolSD.eventDataIsGood || sGettingValuesFast) && 
+  bool needMutex = !(JEOLscope && (mJeolSD.eventDataIsGood || sGettingValuesFast) &&
     !sScanningMags);
   if (needMutex)
     ScopeMutexAcquire("GetMagnification", true);
@@ -4036,7 +4038,7 @@ int CEMscope::GetMagIndex(BOOL forceGet)
     return -1;
 
   // Plugin will use state value only if getting fast and mag is valid
-  if (JEOLscope && (mJeolSD.eventDataIsGood || sGettingValuesFast) && !forceGet && 
+  if (JEOLscope && (mJeolSD.eventDataIsGood || sGettingValuesFast) && !forceGet &&
     !mJeolSD.magInvalid)
     gettingFast = 1;
 
@@ -4053,7 +4055,7 @@ int CEMscope::GetMagIndex(BOOL forceGet)
       GetValuesFast(gettingFast);
       PLUGSCOPE_GET(MagnificationIndex, result, 1);
       GetValuesFast(-1);
-    
+
     } else {  // FEI-like
       if (GetSTEMmode()) {     // STEM mode
         double minDiff, curMag;
@@ -4099,10 +4101,10 @@ int CEMscope::LookupSTEMmagFEI(double curMag, int curMode, double & minDiff)
   }
 
   // If we are using only one STEM LM mag range, transpose to other range
-  if (mFeiSTEMprobeModeInLM == 1 && result >= mLowestMicroSTEMmag && 
+  if (mFeiSTEMprobeModeInLM == 1 && result >= mLowestMicroSTEMmag &&
     result < mLowestSTEMnonLMmag[1])
     result -= mLowestMicroSTEMmag - 1;
-  else if (mFeiSTEMprobeModeInLM > 1 && result < mLowestSTEMnonLMmag[0] && 
+  else if (mFeiSTEMprobeModeInLM > 1 && result < mLowestSTEMnonLMmag[0] &&
     mLowestSTEMnonLMmag[1] > mLowestMicroSTEMmag)
     result += mLowestMicroSTEMmag - 1;
   return result;
@@ -4146,9 +4148,9 @@ BOOL CEMscope::SetMagIndex(int inIndex)
     if (!BOOL_EQUIV(inIndex < mLowestMicroSTEMmag, currentIndex < mLowestMicroSTEMmag))
       newLowestM = mLowestSTEMnonLMmag[1 - mProbeMode];
   }
-      
 
-  // There is no way to set the projection submode (which is psmLAD in STEM low mag and 
+
+  // There is no way to set the projection submode (which is psmLAD in STEM low mag and
   // psmD in nonLM) so we cannot go between LM and nonLM
   if (FEIscope && ifSTEM && !BOOL_EQUIV(inIndex < newLowestM, currentIndex < lowestM)) {
     if (!UtapiSupportsService(UTSUP_MAGNIFICATION))
@@ -4194,7 +4196,7 @@ BOOL CEMscope::SetMagIndex(int inIndex)
   mSynchroTD.normalize = (mSkipNormalizations & 1) ? 0 : 1;
   mSynchroTD.newProbeMode = mProbeMode;
 
-  // JEOL STEM dies if mag is changed too soon after last image; 
+  // JEOL STEM dies if mag is changed too soon after last image;
   if (JEOLscope && ifSTEM && !camParam->pluginName.IsEmpty()) {
     ticks = (int)SEMTickInterval(1000. * mCamera->GetLastImageTime());
     mSynchroTD.initialSleep = B3DMAX(0, mJeolSTEMPreMagDelay - ticks);
@@ -4315,7 +4317,7 @@ BOOL CEMscope::SetMagKernel(SynchroThreadData *sytd)
         // Hitachi needs to poll and make sure associated changes are done
         if (HitachiScope) {
           startTime = GetTickCount();
-          ISchanged = inIndex >= sytd->lowestMModeMagInd && 
+          ISchanged = inIndex >= sytd->lowestMModeMagInd &&
             inIndex < sytd->lowestSecondaryMag;
           while (1) {
             if (SEMTickInterval(startTime) > sytd->HitachiMagFocusDelay ||
@@ -4349,9 +4351,9 @@ BOOL CEMscope::SetMagKernel(SynchroThreadData *sytd)
       // Normalize all lenses if going in or out of LM, or if in LM and option is 1,
       // or always if option is 2.  This used to do condenser in addition, but now
       // it does "all", which adds objective
-      normAll = (!BOOL_EQUIV(sytd->curIndex < sytd->lowestM, 
+      normAll = (!BOOL_EQUIV(sytd->curIndex < sytd->lowestM,
         sytd->newIndex < sytd->lowestM) ||
-        (inIndex < sytd->lowestM && sytd->normAllOnMagChange > 0) || 
+        (inIndex < sytd->lowestM && sytd->normAllOnMagChange > 0) ||
         sytd->normAllOnMagChange > 1);
       if (normAll && FEIscope) {
         mPlugFuncs->NormalizeLens(ALL_INSTRUMENT_LENSES);
@@ -4388,7 +4390,7 @@ BOOL CEMscope::SetMagOrAdjustLDArea(int inIndex)
 }
 
 // Set a parameter (mag or probe mode) by changing low dose area and going to the area if
-// continuous mode is on and crossing LM boundary or changing probe mode for View or 
+// continuous mode is on and crossing LM boundary or changing probe mode for View or
 // Search, returning true. Otherwise return false.  Allows defocus offset to be managed
 bool CEMscope::AdjustLDAreaForItem(int which, int inItem)
 {
@@ -4430,7 +4432,7 @@ bool CEMscope::SetSTEMMagnification(double magVal)
   if (!sInitialized || !mPlugFuncs->SetSTEMMagnification)
     return false;
   ScopeMutexAcquire("SetSTEMMagnification", true);
-  
+
   try {
     mPlugFuncs->SetSTEMMagnification(magVal);
   }
@@ -4443,8 +4445,8 @@ bool CEMscope::SetSTEMMagnification(double magVal)
 
 }
 // Assesses the IS change for a change in mag from fromInd to toInd, returns new RAW IS
-// (including the axis, etc, offsets) and the axis offsets for the current mag.  
-BOOL CEMscope::AssessMagISchange(int fromInd, int toInd, BOOL STEMmode, double &newISX, 
+// (including the axis, etc, offsets) and the axis offsets for the current mag.
+BOOL CEMscope::AssessMagISchange(int fromInd, int toInd, BOOL STEMmode, double &newISX,
                                  double &newISY)
 {
   double delISX, delISY, oldISX, oldISY, realISX, realISY, tranISX, tranISY;
@@ -4459,7 +4461,7 @@ BOOL CEMscope::AssessMagISchange(int fromInd, int toInd, BOOL STEMmode, double &
     (mMagTab[fromInd].neutralISX[mNeutralIndex] + mMagTab[fromInd].offsetISX);
   delISY = mMagTab[toInd].neutralISY[mNeutralIndex] + mMagTab[toInd].offsetISY -
     (mMagTab[fromInd].neutralISY[mNeutralIndex] + mMagTab[fromInd].offsetISY);
-  convertIS = (bothLMnonLM || mApplyISoffset || mLowDoseMode) && 
+  convertIS = (bothLMnonLM || mApplyISoffset || mLowDoseMode) &&
     !mShiftManager->CanTransferIS(fromInd, toInd, STEMmode);
   if (delISX || delISY || MagChgResetsIS(toInd) || convertIS) {
     GetImageShift(oldISX, oldISY);
@@ -4498,13 +4500,13 @@ BOOL CEMscope::AssessRestoreIS(int fromInd, int toInd, double &newISX, double &n
     return false;
   realISX = mSavedISX - (mMagTab[mMagIndSavedIS].neutralISX[mNeutralIndex] +
     mDetectorOffsetX) - mMagTab[mMagIndSavedIS].offsetISX;
-  realISY = mSavedISY - (mMagTab[mMagIndSavedIS].neutralISY[mNeutralIndex] + 
+  realISY = mSavedISY - (mMagTab[mMagIndSavedIS].neutralISY[mNeutralIndex] +
     mDetectorOffsetY) - mMagTab[mMagIndSavedIS].offsetISY;
-  mShiftManager->TransferGeneralIS(mMagIndSavedIS, realISX, realISY, toInd, newISX, 
+  mShiftManager->TransferGeneralIS(mMagIndSavedIS, realISX, realISY, toInd, newISX,
     newISY);
-  newISX += mMagTab[toInd].neutralISX[mNeutralIndex] + mDetectorOffsetX + 
+  newISX += mMagTab[toInd].neutralISX[mNeutralIndex] + mDetectorOffsetX +
     mMagTab[toInd].offsetISX;
-  newISY += mMagTab[toInd].neutralISY[mNeutralIndex] + mDetectorOffsetY + 
+  newISY += mMagTab[toInd].neutralISY[mNeutralIndex] + mDetectorOffsetY +
     mMagTab[toInd].offsetISY;
   mMagIndSavedIS = -1;
   SEMTrace('i', "Restoring raw IS %.3f %.3f, going from %d to %d", newISX, newISY,
@@ -4608,7 +4610,7 @@ BOOL CEMscope::ScanMagnifications()
         baseIndex = magInd;
         if (curMode) {
           PLUGSCOPE_SET(ProbeMode, imMicroProbe);
-          AfxMessageBox("Go to the lowest LM magnification again for microprobe mode", 
+          AfxMessageBox("Go to the lowest LM magnification again for microprobe mode",
             MB_EXCLAME);
         }
 
@@ -4641,7 +4643,7 @@ BOOL CEMscope::ScanMagnifications()
       }
       mScanningMags = 0;
       mWinApp->UpdateBufferWindows();
-      report.Format("Set:\r\n LowestMicroSTEMmag %d\r\n", baseIndex);  
+      report.Format("Set:\r\n LowestMicroSTEMmag %d\r\n", baseIndex);
       if (lowestNonLM[0] > 0 && lowestNonLM[1] > 0)
         str.Format(" LowestSTEMnonLMmag  %d %d\r\n", lowestNonLM[0], lowestNonLM[1]);
       else
@@ -4666,7 +4668,7 @@ BOOL CEMscope::ScanMagnifications()
 
 
   if (!JeolGIF) {
-    startingMag = GetMagIndex(); 
+    startingMag = GetMagIndex();
 
     if (startingMag < 0) {
       TRACE("Error: ScanMagnifications: Couldn't get initial magnification!\n");
@@ -4693,7 +4695,7 @@ BOOL CEMscope::ScanMagnifications()
       lastMag = -1;
       for (magInd = 1; magInd < MAX_MAGS; magInd++) {
         if (JEOLscope) {
-          if (magInd == mHighestLMindexToScan + 1 && 
+          if (magInd == mHighestLMindexToScan + 1 &&
             functionModes[mode] == JEOL_LOWMAG_MODE)
             break;
 
@@ -4732,8 +4734,8 @@ BOOL CEMscope::ScanMagnifications()
         else if (!JeolGIF && mode && mode == numModes - 1)
           report.Format("%d %8d", magInd, magVal);
         else if (FEIscope && GetEFTEM())
-          report.Format("%d %8d %5d %8d %8d %5d", magInd, mMagTab[magInd].mag, 
-            B3DNINT(mMagTab[magInd].tecnaiRotation), mMagTab[magInd].screenMag, magVal, 
+          report.Format("%d %8d %5d %8d %8d %5d", magInd, mMagTab[magInd].mag,
+            B3DNINT(mMagTab[magInd].tecnaiRotation), mMagTab[magInd].screenMag, magVal,
             rot);
         else if (JeolGIF)
           report.Format("%d %8d %5d %8d %8d %5d", trueInd, mMagTab[trueInd].mag,
@@ -4750,7 +4752,7 @@ BOOL CEMscope::ScanMagnifications()
         for (; magInd < MAX_MAGS; magInd++) {
           if (!mMagTab[magInd].mag)
             break;
-          PrintfToLog("%d %8d %5d %8d %8d %5d", magInd, mMagTab[magInd].mag, 
+          PrintfToLog("%d %8d %5d %8d %8d %5d", magInd, mMagTab[magInd].mag,
             B3DNINT(mMagTab[magInd].tecnaiRotation), mMagTab[magInd].screenMag, 0, 0);
         }
       }
@@ -4761,11 +4763,11 @@ BOOL CEMscope::ScanMagnifications()
       } else if (STEMmode || mode == numModes - 2) {
         if (STEMmode)
           report.Format("Set:\r\n LowestSTEMnonLMmag %d",  baseIndex + 1);
-        else if (numModes == 4) 
+        else if (numModes == 4)
           report.Format("Set:\r\n LowestMModeMagIndex %d\r\nSet:\r\n LowestSecondaryMag"
           "%d\r\nCameraLengthTable:", firstBase, baseIndex + 1);
         else
-          report.Format("Set:\r\n LowestMModeMagIndex %d\r\n\r\nCameraLengthTable:", 
+          report.Format("Set:\r\n LowestMModeMagIndex %d\r\n\r\nCameraLengthTable:",
             baseIndex + 1);
         mWinApp->AppendToLog(report, LOG_OPEN_IF_CLOSED);
       }
@@ -4830,7 +4832,7 @@ BOOL CEMscope::SetCamLenIndex(int inIndex)
 
   if (!sInitialized)
     return false;
-  
+
   int magInd, lowestM, currentIndex = GetCamLenIndex();
   if (currentIndex == inIndex)
     return true;
@@ -4839,11 +4841,11 @@ BOOL CEMscope::SetCamLenIndex(int inIndex)
     SaveISifNeeded(GetMagIndex(), 0);
 
   try {
-    
+
     if (FEIscope) {  // FEI
 
       // If we are already in diffraction but in wrong mode, need to go to imaging mode
-      if (currentIndex && (currentIndex - LAD_INDEX_BASE) * (inIndex - LAD_INDEX_BASE) 
+      if (currentIndex && (currentIndex - LAD_INDEX_BASE) * (inIndex - LAD_INDEX_BASE)
         < 0) {
           if (mPlugFuncs->SetImagingMode)
             mPlugFuncs->SetImagingMode(pmImaging);
@@ -4928,17 +4930,17 @@ void CEMscope::CalNeutralNextMag(int magInd)
 
         if (HitachiScope) {
           if (mCalNeutralType == CAL_NTRL_FOCUS) {
-            hParams->baseFocus[magInd] = 
+            hParams->baseFocus[magInd] =
               B3DNINT(mPlugFuncs->GetAbsFocus() * HITACHI_LENS_MAX);
 
           } else if (mCalNeutralType == CAL_NTRL_RESTORE) {
-            mPlugFuncs->SetImageShift(mMagTab[magInd].neutralISX[mNeutralIndex], 
+            mPlugFuncs->SetImageShift(mMagTab[magInd].neutralISX[mNeutralIndex],
               mMagTab[magInd].neutralISY[mNeutralIndex]);
 
           } else {
             mPlugFuncs->GetImageShift(&oldISX, &oldISY);
             SEMTrace('1', "%d Old values  %f %f   New values  %f %f", magInd,
-            mMagTab[magInd].neutralISX[mNeutralIndex], 
+            mMagTab[magInd].neutralISX[mNeutralIndex],
             mMagTab[magInd].neutralISY[mNeutralIndex], oldISX, oldISY);
             mMagTab[magInd].neutralISX[mNeutralIndex] = (float)oldISX;
             mMagTab[magInd].neutralISY[mNeutralIndex] = (float)oldISY;
@@ -4964,7 +4966,7 @@ void CEMscope::CalNeutralNextMag(int magInd)
           mWinApp->SetCalibrationsNotSaved(true);
       }
       catch (_com_error E) {
-        SEMReportCOMError(E, _T(HitachiScope ? "Calibrating base focus values" : 
+        SEMReportCOMError(E, _T(HitachiScope ? "Calibrating base focus values" :
           "calibrating neutral image shift "));
         magInd = MAX_MAGS;
       }
@@ -4979,7 +4981,7 @@ void CEMscope::CalNeutralNextMag(int magInd)
   }
 
   // For Hitachi, skip over HC mags except when doing base focus
-  if (HitachiScope && mCalNeutralType != CAL_NTRL_FOCUS && 
+  if (HitachiScope && mCalNeutralType != CAL_NTRL_FOCUS &&
     magInd == mLowestMModeMagInd - 1 && mLowestSecondaryMag > 0)
     magInd = mLowestSecondaryMag - 1;
 
@@ -4992,12 +4994,12 @@ void CEMscope::CalNeutralNextMag(int magInd)
   // Visit lowest mag in HR mode so the scope will go to that mag when entering HR mode
   if (HitachiScope)
     SetMagIndex(mLowestSecondaryMag);
-  StopCalNeutralIS();  
+  StopCalNeutralIS();
 }
 
 // Stop calibration of Neutral IS and reset windows
 void CEMscope::StopCalNeutralIS()
-{ 
+{
   static bool stopping = false;
   if (mCalNeutralStartMag < 0 || stopping)
     return;
@@ -5067,7 +5069,7 @@ BOOL CEMscope::NormalizeProjector()
   }
 
   ScopeMutexRelease(routine);
-  return result; 
+  return result;
 }
 
 // Normalize the condenser lenses
@@ -5194,7 +5196,7 @@ LensRelaxData *SEMLookupJeolRelaxData(int normInd)
 
 /* Return Defocus in Microns */
 double CEMscope::GetDefocus()
-{ 
+{
   double result;
 
   if (!sInitialized)
@@ -5275,7 +5277,7 @@ BOOL CEMscope::ResetDefocus(BOOL assumeInit) {
 
   BOOL success = true;
 
-  if (!assumeInit && !sInitialized) 
+  if (!assumeInit && !sInitialized)
     return false;
 
   ScopeMutexAcquire("ResetDefocus", true);
@@ -5413,14 +5415,14 @@ BOOL CEMscope::SetDiffractionFocus(double inVal)
   }
   ScopeMutexRelease("SetDiffractionFocus");
   return success;
-  
+
 }
 
 // Return a standard LM focus appropriate for an LM mag, and a focus in nonLM if in nonLM
 double CEMscope::GetStandardLMFocus(int magInd, int probe)
 {
   int i, dist, distmin = 1000, nearInd = -1;
-  
+
   // USE THIS SO EFTEM FINDS A VALUE SET AT HIGHEST LM FOR TEM
   // SWITCH BACK TO GET FUNCTION IF SEPARATE EFTEM VALUES GET STORED
   int lowestM = mLowestMModeMagInd;
@@ -5440,7 +5442,7 @@ double CEMscope::GetStandardLMFocus(int magInd, int probe)
     }
   }
   if (HitachiScope && focus != -999. && nearInd > 0)
-    focus += (hParams->baseFocus[magInd] - hParams->baseFocus[nearInd]) / 
+    focus += (hParams->baseFocus[magInd] - hParams->baseFocus[nearInd]) /
     (double)HITACHI_LENS_MAX;
   if (!mInScopeUpdate)
     SEMTrace('c', "GetStandardLMFocus: mag %d, nearest mag %d, focus %f", magInd, nearInd,
@@ -5488,7 +5490,7 @@ void CEMscope::SetShutterlessCamera(int inVal)
 {
   CameraParameters *camParam = mWinApp->GetCamParams() + mWinApp->GetCurrentCamera();
   mShutterlessCamera = inVal;
-  BlankBeam(NeedBeamBlanking(GetScreenPos(), camParam->STEMcamera), 
+  BlankBeam(NeedBeamBlanking(GetScreenPos(), camParam->STEMcamera),
     "SetShutterlessCamera");
 }
 
@@ -5517,7 +5519,7 @@ void CEMscope::BlankBeam(BOOL inVal, const char *fromWhere)
   ScopeMutexAcquire("BlankBeam", true);
   try {
     PLUGSCOPE_SET(BeamBlank, VAR_BOOL(inVal));
-    SEMTrace('B', "%s Set beam blank %s", fromWhere ? fromWhere : "", 
+    SEMTrace('B', "%s Set beam blank %s", fromWhere ? fromWhere : "",
       inVal ? "ON" : "OFF");
   }
   catch (_com_error E) {
@@ -5547,7 +5549,7 @@ BOOL CEMscope::GetBeamBlanked()
 // Blanks beam for a routine creating transients if the flag is set, returns true if it
 // did.  This and the unblank function no longer need to be called from a try block
 bool CEMscope::BlankTransientIfNeeded(const char *routine)
-{   
+{
   if ((mBlankTransients || mCamera->DoingContinuousAcquire()) && !mBeamBlanked &&
     mPlugFuncs->SetBeamBlank != NULL) {
     BlankBeam(true, routine);
@@ -5619,14 +5621,14 @@ void CEMscope::GotoLowDoseArea(int newArea)
   enteringLowMag = !STEMmode && ((oldArea < 0 && curMagInd >= lowestM) ||
     (oldArea >= 0 && mLdsaParams->magIndex >= lowestM)) && ldArea->magIndex &&
     ldArea->magIndex < lowestM;
-  removeAddDefocus = leavingLowMag || enteringLowMag || 
+  removeAddDefocus = leavingLowMag || enteringLowMag ||
     (ldArea->probeMode >= 0 && ldArea->probeMode != mProbeMode);
   deferJEOLspot = !mJeol1230 && JEOLscope && (leavingLowMag || enteringLowMag);
   toViewOK = toView && ldArea->magIndex > 0;
   toSearchOK = toSearch && ldArea->magIndex > 0;
   fromViewOK = fromView && mLdsaParams->magIndex > 0;
   fromSearchOK = fromSearch && mLdsaParams->magIndex > 0;
-  adjForFocus = 
+  adjForFocus =
     (((mLowDoseSetArea == VIEW_CONSET || newArea == VIEW_CONSET) && mLDViewDefocus) ||
     ((mLowDoseSetArea == SEARCH_AREA || newArea == SEARCH_AREA) && mSearchDefocus)) &&
     mLowDoseSetArea != newArea && mShiftManager->GetFocusISCals()->GetSize() > 0 &&
@@ -5639,7 +5641,7 @@ void CEMscope::GotoLowDoseArea(int newArea)
   if (GetDebugOutput('L'))
     GetImageShift(curISX, curISY);
   if (bDebug || lDebug)
-    PrintfToLog("\r\nGotoLowDoseArea: %d: focus at start %.2f  update count %d", newArea, 
+    PrintfToLog("\r\nGotoLowDoseArea: %d: focus at start %.2f  update count %d", newArea,
       GetDefocus(), mAutosaveCount);
   if (bDebug && lDebug && !STEMmode) {
     GetBeamShift(startBeamX, startBeamY);
@@ -5655,7 +5657,7 @@ void CEMscope::GotoLowDoseArea(int newArea)
     mWinApp->mLowDoseDlg.AreaChanging(newArea);
 
   // Keep track of whether Focus is being reached after View
-  if (mWinApp->mLowDoseDlg.SameAsFocusArea(newArea) && 
+  if (mWinApp->mLowDoseDlg.SameAsFocusArea(newArea) &&
     !mWinApp->mLowDoseDlg.SameAsFocusArea(oldArea))
     mFocusCameFromView = fromView;
 
@@ -5667,7 +5669,7 @@ void CEMscope::GotoLowDoseArea(int newArea)
   if (!STEMmode && mLDNormalizeBeam && !toView && !toSearch) {
     sameIntensity = oldArea >= 0 && ldArea->spotSize == mLdsaParams->spotSize &&
       ldArea->intensity == mLdsaParams->intensity &&
-      ldArea->probeMode == mLdsaParams->probeMode && 
+      ldArea->probeMode == mLdsaParams->probeMode &&
       ldArea->beamAlpha == mLdsaParams->beamAlpha;
     if (mUseNormForLDNormalize) {
 
@@ -5691,10 +5693,10 @@ void CEMscope::GotoLowDoseArea(int newArea)
 
   // If we are not at the mag of the current area, just go back so the image shift gets
   // set appropriately before the coming changes
-  if (oldArea >= 0 && FastMagIndex() != mLdsaParams->magIndex && 
+  if (oldArea >= 0 && FastMagIndex() != mLdsaParams->magIndex &&
     mLdsaParams->magIndex > 0)
     SetMagIndex(mLdsaParams->magIndex);
-  
+
   // If changing area at zero IS, get the current centered shift and reset it, and
   // reinitialize the cumulative change, since IS is put back after the cumulative change
   if (changingAtZeroIS || adjForFocus)
@@ -5715,37 +5717,37 @@ void CEMscope::GotoLowDoseArea(int newArea)
   // If mags are equal and alpha differs, do IS now when going to a higher alpha so the
   // beam shift will be done at the same alpha
   // However, when using PLA, do it at the mag of a trial/focus area when either leaving
-  // or going to a trial/focus area.  The problem is that the PLA needed for area 
-  // separation may be out of range at a higher mag where a bigger projector shift is 
+  // or going to a trial/focus area.  The problem is that the PLA needed for area
+  // separation may be out of range at a higher mag where a bigger projector shift is
   // needed for the given IS offset
   if (GetUsePLforIS(ldArea->magIndex) && ((fromFocTrial && !toFocTrial) ||
     (!fromFocTrial && toFocTrial && mLdsaParams && mLdsaParams->magIndex) ||
     fromSearchOK || toSearch))
-    ISdone = oldArea >= 0 && (fromFocTrial || fromSearch || 
+    ISdone = oldArea >= 0 && (fromFocTrial || fromSearch ||
     (!ldArea->magIndex && ldArea->camLenIndex));
   else
     ISdone = oldArea >= 0 && (((ldArea->magIndex || ldArea->camLenIndex) &&
-    ((ldArea->magIndex < mLdsaParams->magIndex && !toSearch)) || 
+    ((ldArea->magIndex < mLdsaParams->magIndex && !toSearch)) ||
       fromSearchOK) ||
     (ldArea->magIndex == mLdsaParams->magIndex && !mHasNoAlpha &&
     mLdsaParams->beamAlpha >= 0 && ldArea->beamAlpha > mLdsaParams->beamAlpha));
   if (ISdone)
-    DoISforLowDoseArea(newArea, mLdsaParams->magIndex, delISX, delISY, 
-      oldArea >= 0 && mLdsaParams->magIndex == ldArea->magIndex, adjForFocus, 
+    DoISforLowDoseArea(newArea, mLdsaParams->magIndex, delISX, delISY,
+      oldArea >= 0 && mLdsaParams->magIndex == ldArea->magIndex, adjForFocus,
       centeredISX, centeredISY);
 
   // If leaving view or search area, set defocus back first
-  if (!STEMmode && mLDViewDefocus && fromViewOK && 
+  if (!STEMmode && mLDViewDefocus && fromViewOK &&
     (!toView || (toViewOK && removeAddDefocus)))
       IncDefocus(-(double)mLDViewDefocus);
-  if (!STEMmode && mSearchDefocus && fromSearchOK && 
+  if (!STEMmode && mSearchDefocus && fromSearchOK &&
     (!toSearch || (toSearchOK && removeAddDefocus)))
       IncDefocus(-(double)mSearchDefocus);
 
   // Pull off the beam shift if leaving an area and going between LM and nonLM
   if (splitBeamShift && oldArea >= 0 &&
     (mLdsaParams->beamDelX || mLdsaParams->beamDelY))
-      IncOrAccumulateBeamShift(-mLdsaParams->beamDelX, -mLdsaParams->beamDelY, 
+      IncOrAccumulateBeamShift(-mLdsaParams->beamDelX, -mLdsaParams->beamDelY,
         "Go2LD pull off BS");
 
   // Set probe mode if any.  This will simply save and restore IS across the change,
@@ -5756,7 +5758,7 @@ void CEMscope::GotoLowDoseArea(int newArea)
   Sleep(2);
   if (ldArea->probeMode >= 0) {
     if (mProbeMode != ldArea->probeMode || (leavingLowMag && oldArea < 0)) {
-      if (oldArea >= 0 && (mLdsaParams->beamDelX || mLdsaParams->beamDelY) && 
+      if (oldArea >= 0 && (mLdsaParams->beamDelX || mLdsaParams->beamDelY) &&
         mProbeMode == mLdsaParams->probeMode && !splitBeamShift)
         IncOrAccumulateBeamShift(-mLdsaParams->beamDelX, -mLdsaParams->beamDelY,
           "Go2LD pull off BS");
@@ -5782,11 +5784,11 @@ void CEMscope::GotoLowDoseArea(int newArea)
   SleepMsg(2);
 
   // Set alpha before mag if it is changing to a lower mag since scope can impose a beam
-  // shift in the mag change that may depend on alpha  The reason for doing THIS at a 
+  // shift in the mag change that may depend on alpha  The reason for doing THIS at a
   // higher mag is that there is hopefully only one mode at a lower mag, so the change
   // of alpha will always be able to happen in the upper mag range
   curAlpha = GetAlpha();
-  alphaDone = curAlpha >= 0 && ldArea->beamAlpha >= 0. && !STEMmode && 
+  alphaDone = curAlpha >= 0 && ldArea->beamAlpha >= 0. && !STEMmode &&
     ((oldArea >= 0 && (ldArea->magIndex || ldArea->camLenIndex) &&
     ldArea->magIndex < mLdsaParams->magIndex) || enteringLowMag);
   if (!mHasNoAlpha)
@@ -5800,11 +5802,11 @@ void CEMscope::GotoLowDoseArea(int newArea)
     SetMagIndex(ldArea->magIndex);
   else if (!ldArea->camLenIndex)
     ldArea->magIndex = GetMagIndex();
- 
+
   if (!ldArea->magIndex) {
     if (ldArea->camLenIndex)
       SetCamLenIndex(ldArea->camLenIndex);
-    else 
+    else
       ldArea->camLenIndex = GetCamLenIndex();
 
     if (ldArea->diffFocus > -990.)
@@ -5820,7 +5822,7 @@ void CEMscope::GotoLowDoseArea(int newArea)
     SetProbeMode(ldArea->probeMode, true);
   SleepMsg(2);
 
-  // For FEI, set spot size (if it isn't right) again because mag range change can set 
+  // For FEI, set spot size (if it isn't right) again because mag range change can set
   // spot size; afraid to just move spot size change down here because of note above
   if (!JEOLscope || deferJEOLspot)
     SetSpotSize(ldArea->spotSize);
@@ -5836,18 +5838,18 @@ void CEMscope::GotoLowDoseArea(int newArea)
   // changes; and if there is a calibrated beam shift change, apply that
   if (ldArea->beamAlpha >= 0. && !STEMmode && !alphaDone && !mHasNoAlpha) {
     ChangeAlphaAndBeam(curAlpha, (int)ldArea->beamAlpha,
-      (oldArea >= 0 && mLdsaParams->magIndex > 0) ? mLdsaParams->magIndex : -1, 
+      (oldArea >= 0 && mLdsaParams->magIndex > 0) ? mLdsaParams->magIndex : -1,
       ldArea->magIndex);
   } else if (!STEMmode && !alphaDone)
     ldArea->beamAlpha = (float)curAlpha;
 
   // If going to view or search area, set defocus offset incrementally
-  if (!STEMmode && mLDViewDefocus && toViewOK && 
+  if (!STEMmode && mLDViewDefocus && toViewOK &&
     (!fromView || (fromViewOK  && removeAddDefocus))) {
     IncDefocus((double)mLDViewDefocus);
     mCurDefocusOffset = mLDViewDefocus;
   }
-  if (!STEMmode && mSearchDefocus && toSearchOK && 
+  if (!STEMmode && mSearchDefocus && toSearchOK &&
     (!fromSearch || (fromSearchOK && removeAddDefocus))) {
     IncDefocus((double)mSearchDefocus);
     mCurDefocusOffset = mSearchDefocus;
@@ -5870,11 +5872,11 @@ void CEMscope::GotoLowDoseArea(int newArea)
       filterChanged = true;
     mFiltParam->energyLoss = ldArea->energyLoss;
 
-    if (ldArea->zeroLoss && !mFiltParam->zeroLoss || 
+    if (ldArea->zeroLoss && !mFiltParam->zeroLoss ||
       !ldArea->zeroLoss && mFiltParam->zeroLoss)
       filterChanged = true;
     mFiltParam->zeroLoss = ldArea->zeroLoss;
-      
+
     // Send out values if any changed - need to set actual filter on the JEOL because
     // with an energy offset, it adjusts intensity
     // Yes, let camera set filter and this will put the proper delays in
@@ -5885,7 +5887,7 @@ void CEMscope::GotoLowDoseArea(int newArea)
       mWinApp->mFilterControl.UpdateSettings();
     }
   }
-  
+
   // Now set intensity after all the changes JEOL might have imposed from spot or filter
   intensity = ldArea->intensity;
   if (!STEMmode && intensity) {
@@ -5942,7 +5944,7 @@ void CEMscope::GotoLowDoseArea(int newArea)
     }
 
     // Do absolute dark field beam tilt if it differs from current value
-    if (ldArea->darkFieldMode != mLdsaParams->darkFieldMode || 
+    if (ldArea->darkFieldMode != mLdsaParams->darkFieldMode ||
       fabs(ldArea->dfTiltX - mLdsaParams->dfTiltX) > 1.e-6 ||
       fabs(ldArea->dfTiltY - mLdsaParams->dfTiltY) > 1.e-6)
       SetDarkFieldTilt(ldArea->darkFieldMode, ldArea->dfTiltX, ldArea->dfTiltY);
@@ -5963,7 +5965,7 @@ void CEMscope::GotoLowDoseArea(int newArea)
     mShiftManager->TransferGeneralIS(mLdsaParams->magIndex, centeredISX, centeredISY,
       ldArea->magIndex, newISX, newISY);
     SetLDCenteredShift(newISX, newISY);
-    SEMTrace('l', "LD centered IS before: %.3f, %.3f; after: %.3f, %.3f", centeredISX, 
+    SEMTrace('l', "LD centered IS before: %.3f, %.3f; after: %.3f, %.3f", centeredISX,
       centeredISY, newISX, newISY);
   }
 
@@ -5991,7 +5993,7 @@ void CEMscope::GotoLowDoseArea(int newArea)
   mWinApp->SetStatusText(SIMPLE_PANE, "");
   mWinApp->UpdateBufferWindows();
   mWinApp->mAlignFocusWindow.UpdateAutofocus(ldArea->magIndex);
-  if (mWinApp->mParticleTasks->mZbyGsetupDlg && 
+  if (mWinApp->mParticleTasks->mZbyGsetupDlg &&
     !BOOL_EQUIV(oldArea == VIEW_CONSET, newArea == VIEW_CONSET))
     mWinApp->mParticleTasks->mZbyGsetupDlg->OnButUpdateState();
 
@@ -6015,7 +6017,7 @@ void CEMscope::DoISforLowDoseArea(int inArea, int curMag, double &delISX, double
     mWinApp->mLowDoseDlg.GoToPiezoPosForLDarea(inArea);
   }
 
-  // Convert the image shift at the new area mag to the current mag unconditionally, 
+  // Convert the image shift at the new area mag to the current mag unconditionally,
   // or only for View area if using piezo
   if (!inArea || !mUsePiezoForLDaxis) {
     useISX = ldParams[inArea].ISX;
@@ -6038,31 +6040,31 @@ void CEMscope::DoISforLowDoseArea(int inArea, int curMag, double &delISX, double
         mNextLDpolarity * (useISX - vsXshift), mNextLDpolarity * (useISY - vsYshift),
         curMag, posChgX, posChgY);
     }
-    /*PrintfToLog("useIS %.3f %.3f  posChg %.3f  %.3f del %.3f %.3f", useISX, useISY, 
+    /*PrintfToLog("useIS %.3f %.3f  posChg %.3f  %.3f del %.3f %.3f", useISX, useISY,
     posChgX, posChgY, delISX, delISY);*/
   }
   if (mLowDoseSetArea >= 0 && (!mLowDoseSetArea || !mUsePiezoForLDaxis)) {
 
-    // Also convert the existing image shift to the current mag (which is one or the 
+    // Also convert the existing image shift to the current mag (which is one or the
     // other), but also only for View if using piezo
     mShiftManager->TransferGeneralIS(mLdsaParams->magIndex,
-      mLastLDpolarity * mLdsaParams->ISX, 
+      mLastLDpolarity * mLdsaParams->ISX,
       mLastLDpolarity * mLdsaParams->ISY, curMag, oldISX, oldISY);
     delISX -= oldISX;
     delISY -= oldISY;
 
     // And get the change for JEOL with view/search offset excluded
-    if (JEOLscope) { 
+    if (JEOLscope) {
       vsXshift = vsYshift = 0.;
       if (IS_AREA_VIEW_OR_SEARCH(mLowDoseSetArea))
         mWinApp->mLowDoseDlg.GetEitherViewShift(vsXshift, vsYshift, mLowDoseSetArea);
       mShiftManager->TransferGeneralIS(mLdsaParams->magIndex,
         mLastLDpolarity * (mLdsaParams->ISX - vsXshift),
-        mLastLDpolarity * (mLdsaParams->ISY - vsYshift), 
+        mLastLDpolarity * (mLdsaParams->ISY - vsYshift),
         curMag, oldISX, oldISY);
       posChgX -= oldISX;
       posChgY -= oldISY;
-      /*PrintfToLog("oldIS %.3f %.3f  posChg %.3f  %.3f del %.3f %.3f", oldISX, oldISY, 
+      /*PrintfToLog("oldIS %.3f %.3f  posChg %.3f  %.3f del %.3f %.3f", oldISX, oldISY,
       posChgX, posChgY, delISX, delISY);*/
     }
   }
@@ -6070,7 +6072,7 @@ void CEMscope::DoISforLowDoseArea(int inArea, int curMag, double &delISX, double
 
   // If going in or out of View or Search with defocus offset, try to correct an
   // existing image shift for the defocus : need both kinds of calibrations
-  if (adjForFocus) { 
+  if (adjForFocus) {
 
     // Use  centered IS to avoid being fooled by offsets, and only do it if it is nonzero
     doAdj = fabs(cenISX) > 0.01 || fabs(cenISY) > 0.01;
@@ -6090,7 +6092,7 @@ void CEMscope::DoISforLowDoseArea(int inArea, int curMag, double &delISX, double
 
       // If the mag has already changed, transfer the adjustment to the new mag
       if (curMag == ldParams[inArea].magIndex) {
-        mShiftManager->TransferGeneralIS(mLdsaParams->magIndex, adjISX - cenISX, 
+        mShiftManager->TransferGeneralIS(mLdsaParams->magIndex, adjISX - cenISX,
           adjISY - cenISY, ldParams[inArea].magIndex, transISX, transISY);
        } else {
         transISX = adjISX - cenISX;
@@ -6112,7 +6114,7 @@ void CEMscope::DoISforLowDoseArea(int inArea, int curMag, double &delISX, double
       // Entering either area, transfer the image shift, transform to camera, rotate and
       // scale for defocus, tranform back to IS, again add the change
       defocus = inArea == SEARCH_AREA ? mSearchDefocus : mLDViewDefocus;
-        mShiftManager->TransferGeneralIS(mLdsaParams->magIndex, cenISX, cenISY, 
+        mShiftManager->TransferGeneralIS(mLdsaParams->magIndex, cenISX, cenISY,
           ldParams[inArea].magIndex, curISX, curISY);
       mShiftManager->GetDefocusMagAndRot(ldParams[inArea].spotSize,
         ldParams[inArea].probeMode, ldParams[inArea].intensity, defocus, scale, rotation);
@@ -6285,7 +6287,7 @@ void CEMscope::ChangeAlphaAndBeam(int oldAlpha, int newAlpha, int oldMag, int ne
   if (oldAlpha != newAlpha) {
 
     // If beam calibrations differ (and they should), translate the beam shift needed for
-    // position-changing part of IS, but do it with IS appropriate for each mag if there 
+    // position-changing part of IS, but do it with IS appropriate for each mag if there
     // are two
     bsmOld = mShiftManager->GetBeamShiftCal(oldMag, oldAlpha);
     bsmNew = mShiftManager->GetBeamShiftCal(newMag, newAlpha);
@@ -6296,7 +6298,7 @@ void CEMscope::ChangeAlphaAndBeam(int oldAlpha, int newAlpha, int oldMag, int ne
       PositionChangingPartOfIS(curISX, curISY, posChangingISX, posChangingISY);
       pcOldISX = pcNewISX = posChangingISX;
       pcOldISY = pcNewISY = posChangingISY;
-      /*PrintfToLog("cur %d old %d new %d  posChg %.3f %.3f", magInd, oldMag, newMag, 
+      /*PrintfToLog("cur %d old %d new %d  posChg %.3f %.3f", magInd, oldMag, newMag,
       pcOldISX, pcOldISY);*/
       if (oldMag != magInd)
         mShiftManager->TransferGeneralIS(newMag, pcNewISX, pcNewISY, oldMag, pcOldISX,
@@ -6490,7 +6492,7 @@ BOOL CEMscope::SetIntensity(double inVal, int spot, int probe)
   if (camParam->postIntensityTimeout > 0.) {
     if (fabs(GetIntensity() - inVal) < 1.e-6)
       return true;
-    mShiftManager->SetGeneralTimeOut(GetTickCount(), 
+    mShiftManager->SetGeneralTimeOut(GetTickCount(),
       (int)(1000. * camParam->postIntensityTimeout));
   }
 
@@ -6544,7 +6546,7 @@ float CEMscope::GetC2SpotOffset(int spotSize, int probe)
   return mC2SpotOffset[spotSize][probe];
 }
 
-double CEMscope::GetCrossover(int spotSize, int probe) 
+double CEMscope::GetCrossover(int spotSize, int probe)
 {
   static int numOut = 0;
   static CString outVals = "BUG: GetCrossover values out of range in startup:\r\n";
@@ -6635,7 +6637,7 @@ double CEMscope::IntensityToIllumArea(double intensity, int spot, int probe)
 
 // Return illuminated area limits either from the calibration at the given spot and
 // probe or from the property, return false if none
-bool CEMscope::GetAnyIllumAreaLimits(int spot, int probe, float &lowLimit, 
+bool CEMscope::GetAnyIllumAreaLimits(int spot, int probe, float &lowLimit,
   float &highLimit)
 {
   if (mCalHighIllumAreaLim[1][1] > mCalLowIllumAreaLim[1][1]) {
@@ -6663,7 +6665,7 @@ double CEMscope::IntensityAfterApertureChange(double intensity, int oldAper, int
 {
   if (!mUseIllumAreaForC2 || !oldAper || !newAper || oldAper == newAper)
     return intensity;
-  return IllumAreaToIntensity((newAper * IntensityToIllumArea(intensity, spot, probe)) / 
+  return IllumAreaToIntensity((newAper * IntensityToIllumArea(intensity, spot, probe)) /
     oldAper, spot, probe);
 }
 
@@ -6700,7 +6702,7 @@ BOOL CEMscope::SetImageDistanceOffset(double inVal)
   return result;
 }
 
-//Get the convergence angle on a Titan 
+//Get the convergence angle on a Titan
 double CEMscope::GetConvergenceAngle()
 {
   double result = -999.;
@@ -6725,7 +6727,7 @@ int CEMscope::GetSpotSize()
     return 0;
 
   // Plugin will use state value if update by event, getting fast, or Jeol 1230
-  bool needMutex = !(JEOLscope && (mJeolSD.eventDataIsGood || mJeol1230 || 
+  bool needMutex = !(JEOLscope && (mJeolSD.eventDataIsGood || mJeol1230 ||
     sGettingValuesFast));
   if (needMutex)
     ScopeMutexAcquire("GetSpotSize", true);
@@ -6748,7 +6750,7 @@ int CEMscope::FastSpotSize()
   FAST_GET(int, GetSpotSize);
 }
 
-// Set the spot size with optional normalization (> 0) or preventation of 
+// Set the spot size with optional normalization (> 0) or preventation of
 // autonormalization (< 0)
 BOOL CEMscope::SetSpotSize(int inIndex, int normalize)
 {
@@ -6776,7 +6778,7 @@ BOOL CEMscope::SetSpotSize(int inIndex, int normalize)
 
   unblankAfter = BlankTransientIfNeeded(routine);
 
-  // Change the spot size.  
+  // Change the spot size.
   if (mSkipNormalizations & 2)
     normalize = 0;
   mSynchroTD.normalize = normalize;
@@ -6813,10 +6815,10 @@ BOOL CEMscope::SetSpotKernel(SynchroThreadData *sytd)
   try {
 
     // If normalization requested(or forbidden), disable autonorm,
-    // then later normalize, and set normalization time to give some delay 
+    // then later normalize, and set normalization time to give some delay
     if (sytd->normalize)
       AUTONORMALIZE_SET(*vFalse);
-    
+
     // Hitachi hysteresis is ferocious.  Things are somewhat stable by always going up
     // from spot 1 instead of down.
     if (HitachiScope) {
@@ -7192,7 +7194,7 @@ BOOL CEMscope::IsPVPRunning(BOOL & state)
 BOOL CEMscope::GetIsFlashingAdvised(int high, int &answer)
 {
   BOOL result = true;
-  if (!sInitialized || !FEIscope || !mPlugFuncs->GetFlashingAdvised || 
+  if (!sInitialized || !FEIscope || !mPlugFuncs->GetFlashingAdvised ||
     mAdvancedScriptVersion < ASI_FILTER_FEG_LOAD_TEMP)
     return false;
   ScopeMutexAcquire("GetIsFlashingAdvised", true);
@@ -7335,7 +7337,7 @@ BOOL CEMscope::CassetteSlotStatus(int slot, int &status, CString &names, int *nu
     else
       SEMReportCOMError(E, _T("getting status of autoloader cassette slot "));
   }
-  SEMTrace('W', "CassetteSlotStatus returning %s, status %d", 
+  SEMTrace('W', "CassetteSlotStatus returning %s, status %d",
     success ? "success" : "failure", status);
   return success;
 }
@@ -7458,7 +7460,7 @@ int CEMscope::GetLoadedSlot()
   return retval;
 }
 
-// Lookup which cartridge is in the stage in the JEOL table, return the ID (slot # for 
+// Lookup which cartridge is in the stage in the JEOL table, return the ID (slot # for
 // FEI), return value index in jcd table
 int CEMscope::FindCartridgeAtStage(int &id)
 {
@@ -7566,7 +7568,7 @@ bool CEMscope::GetRefrigerantLevel(int which, double &level)
   int time;
   if (JEOLscope && mJeolHasNitrogenClass > 1 && mPlugFuncs->GetNitrogenInfo) {
     return GetNitrogenInfo(which, time, level);
-  } 
+  }
   return GetTemperatureInfo(2, busy, time, which, level);
 }
 
@@ -7620,7 +7622,7 @@ bool CEMscope::GetNitrogenInfo(int which, int & time, double & level)
 }
 
 // Read the registry to access information on SimpleOrigin system
-bool CEMscope::GetSimpleOriginStatus(int & numRefills, int & secToNextRefill, 
+bool CEMscope::GetSimpleOriginStatus(int & numRefills, int & secToNextRefill,
   int &filling, int &active, float *sensor)
 {
   CRegKey key;
@@ -7630,7 +7632,7 @@ bool CEMscope::GetSimpleOriginStatus(int & numRefills, int & secToNextRefill,
     SEMMessageBox("The property for a SimpleOrigin system is not set");
     return false;
   }
-  if (!SimpleOriginStatus(key, numRefills, secToNextRefill, filling, active, temp, 
+  if (!SimpleOriginStatus(key, numRefills, secToNextRefill, filling, active, temp,
     mess)) {
     SEMMessageBox(mess);
     return false;
@@ -7642,7 +7644,7 @@ bool CEMscope::GetSimpleOriginStatus(int & numRefills, int & secToNextRefill,
 }
 
 // Static function to be called from long op as well as GetSimpleOriginStatus
-static bool SimpleOriginStatus(CRegKey &key, int &numRefills, int &secToNextRefill, 
+static bool SimpleOriginStatus(CRegKey &key, int &numRefills, int &secToNextRefill,
   int &filling, int &active, float &sensor, CString &mess)
 {
   LONG nResult;
@@ -7677,7 +7679,7 @@ static bool SimpleOriginStatus(CRegKey &key, int &numRefills, int &secToNextRefi
       sensor = (float)atof(buffer);
   }
   if (nResult != ERROR_SUCCESS) {
-    mess.Format("Error %d %s%s for SimpleOrigin system", nResult, 
+    mess.Format("Error %d %s%s for SimpleOrigin system", nResult,
       ind < 0 ? "opening top registry key" : "getting ", ind < 0 ? "" : keys[ind]);
     return false;
   }
@@ -7712,7 +7714,7 @@ int CEMscope::RefillSimpleOrigin(CString &errString)
     nResult = key.SetDWORDValue("REMOTE_FILL_NOW_START", 1);
 
     if (nResult != ERROR_SUCCESS) {
-      errString.Format("Error %d setting REMOTE_FILL_NOW_START for SimpleOrigin", 
+      errString.Format("Error %d setting REMOTE_FILL_NOW_START for SimpleOrigin",
         nResult);
       return 1;
     }
@@ -7755,7 +7757,7 @@ bool CEMscope::SetSimpleOriginActive(int active, CString & errString)
   LONG nResult;
   float sensor;
   int remaining, secToNext, isActive, filling;
-  if (!SimpleOriginStatus(key, remaining, secToNext, filling, isActive, sensor, 
+  if (!SimpleOriginStatus(key, remaining, secToNext, filling, isActive, sensor,
     errString))
     return false;
   if (BOOL_EQUIV(isActive != 0, active != 0))
@@ -7772,12 +7774,12 @@ bool CEMscope::SetSimpleOriginActive(int active, CString & errString)
 }
 
 // Common function to reduce boilerplate
-bool CEMscope::GetTemperatureInfo(int type, BOOL &busy, int &time, int which, 
+bool CEMscope::GetTemperatureInfo(int type, BOOL &busy, int &time, int which,
                                   double &level)
 {
-  int levelNames[3] = {RefrigerantLevel_AutoloaderDewar, 
+  int levelNames[3] = {RefrigerantLevel_AutoloaderDewar,
     RefrigerantLevel_ColumnDewar, RefrigerantLevel_HeliumDewar};
-  const char *messages[3] = {"determining if dewars are busy ", 
+  const char *messages[3] = {"determining if dewars are busy ",
     "determining remaining dewar time ", "determining refrigerant level "};
   bool success = false;
   if (!sInitialized || !FEIscope || type < 0 || type > 2)
@@ -7861,7 +7863,7 @@ int CEMscope::CheckApertureKind(int kind)
       return 1;
     }
   }
-  if (JEOLscope && (kind < 0 || kind > 11 || (!mJeolHasExtraApertures && 
+  if (JEOLscope && (kind < 0 || kind > 11 || (!mJeolHasExtraApertures &&
     (kind < 1 || kind > 6)))) {
     str.Format("Aperture number %d is out of range, it must be between %d and %d", kind,
       mJeolHasExtraApertures ? 0 : 1, mJeolHasExtraApertures ? 11 : 6);
@@ -8054,7 +8056,7 @@ int CEMscope::FindApertureIndexFromSize(int apInd, int size, CString &errStr)
     if (!index) {
       errStr.Format("Size %d is not in the list from the AperturesSizes property for "
         "aperture %d in line:\n\n", size, apInd);
-      
+
     } else if (index < 0 && size > 4) {
       errStr.Format("There is no ApertureSizes property with a size list for"
         " aperture %d; \r\n %d is probably an incorrect entry for the position index",
@@ -8155,7 +8157,7 @@ void CEMscope::ApertureCleanup(int error)
 {
   UtilThreadCleanup(&mApertureThread);
   if (error)
-    SEMMessageBox(_T(error == IDLE_TIMEOUT_ERROR ? "Time out " : "An error occurred ") + 
+    SEMMessageBox(_T(error == IDLE_TIMEOUT_ERROR ? "Time out " : "An error occurred ") +
       mApertureTD.description);
   mWinApp->ErrorOccurred(error);
   mMovingAperture = false;
@@ -8186,7 +8188,7 @@ UINT CEMscope::ApertureMoveProc(LPVOID pParam)
         td->plugFuncs->SetApertureSize(td->apIndex, td->sizeOrIndex);
       }
       if (td->actionFlags & APERTURE_SET_POS) {
-        td->plugFuncs->SetAperturePosition(td->apIndex, (double)td->posX, 
+        td->plugFuncs->SetAperturePosition(td->apIndex, (double)td->posX,
           (double)td->posY);
       }
       if (td->actionFlags & APERTURE_NEXT_PP_POS) {
@@ -8407,7 +8409,7 @@ bool CEMscope::SetSTEM(BOOL inState)
   int jeolSleep = mJeolSwitchSTEMsleep;
   if (!inState && mJeolSwitchTEMsleep)
     jeolSleep = mJeolSwitchTEMsleep;
-  SEMTrace('g', "SetSTEM: requested %d, scope %d, mSelected %d", mode, 
+  SEMTrace('g', "SetSTEM: requested %d, scope %d, mSelected %d", mode,
     curMode, mSelectedSTEM ? 1 : 0);
   if (mode == curMode && mode == mSelectedSTEM)
     return true;
@@ -8445,7 +8447,7 @@ bool CEMscope::SetSTEM(BOOL inState)
     // Set the probe mode after it is confirmed to be in the mode
     if (LikeFEIscope)
       PLUGSCOPE_SET(ProbeMode, ((!inState || mProbeMode) ? imMicroProbe :imNanoProbe));
- 
+
     // Now analyze for pixel matching
     fromCam = inState ? regCam : mWinApp->GetFirstSTEMcamera();
     toCam = !inState ? regCam : mWinApp->GetFirstSTEMcamera();
@@ -8454,7 +8456,7 @@ bool CEMscope::SetSTEM(BOOL inState)
       toCam = mActiveCamList[toCam];
       oldMag = inState ? mLastRegularMag : mLastSTEMmag;
       toFactor = camP[toCam].matchFactor / camP[fromCam].matchFactor;
-      FindMatchingMag(fromCam, toCam, toFactor, oldMag, curMag, newMag, fromPixel, 
+      FindMatchingMag(fromCam, toCam, toFactor, oldMag, curMag, newMag, fromPixel,
           toPixel, mSTEMfromMatchMag, mSTEMtoMatchMag, true);
       SEMTrace('g', "Match from %d  %f  to %d  %f", oldMag, fromPixel, newMag, toPixel);
       if (newMag)
@@ -8486,12 +8488,12 @@ BOOL CEMscope::GetEFTEM()
   int lvalue;
   if (JEOLscope)
     return mJeolSD.JeolEFTEM > 0;
-  
+
   if (!sInitialized)
     return false;
 
   ScopeMutexAcquire("GetEFTEM", true);
-  
+
   try {
     PLUGSCOPE_GET(EFTEMMode, lvalue , 1);
     result = (lvalue == lpEFTEM);
@@ -8522,7 +8524,7 @@ BOOL CEMscope::SetEFTEM(BOOL inState)
   if (oldMag < 0)
     return false;
   curMag = oldMag;
-  
+
   ScopeMutexAcquire("SetEFTEM", true);
 
   try {
@@ -8560,17 +8562,17 @@ BOOL CEMscope::SetEFTEM(BOOL inState)
         fromCam = mActiveCamList[fromCam];
         toCam = mActiveCamList[toCam];
         toFactor = inState ? mFiltParam->binFactor : 1.f / mFiltParam->binFactor;
-        FindMatchingMag(fromCam, toCam, toFactor, oldMag, curMag, newMag, fromPixel, 
+        FindMatchingMag(fromCam, toCam, toFactor, oldMag, curMag, newMag, fromPixel,
           toPixel, mFromPixelMatchMag, mToPixelMatchMag, mFiltParam->matchPixel);
         if (mFiltParam->matchPixel)
           SEMTrace('g', "SetEFTEM: from old mag %d, cur mag %d, to mag %d;"
-            " pixel %.3f -> %.3ff", oldMag, curMag, newMag, 1000. * fromPixel, 
+            " pixel %.3f -> %.3ff", oldMag, curMag, newMag, 1000. * fromPixel,
             1000. * toPixel);
 
         // Now change intensity if that option is selected and it is not a STEM camera
         if (mFiltParam->matchIntensity && !mLowDoseMode && !regIsSTEM) {
           ratio = (fromPixel * fromPixel) / (toPixel * toPixel);
-          if (!mWinApp->mBeamAssessor->AssessBeamChange(ratio, newIntensity, 
+          if (!mWinApp->mBeamAssessor->AssessBeamChange(ratio, newIntensity,
             factor, -1)) {
               savedIntensityZoom = GetIntensityZoom();
               if (savedIntensityZoom)
@@ -8617,7 +8619,7 @@ BOOL CEMscope::SetEFTEM(BOOL inState)
       // If intensity zoom was disabled, reenable it
       if (savedIntensityZoom)
         SetIntensityZoom(true);
-      
+
       // set so that normalizations will not be repeated
       mMagChanged = false;
       mLastNormalization = GetTickCount();
@@ -8637,10 +8639,10 @@ BOOL CEMscope::SetEFTEM(BOOL inState)
 }
 
 // Find matching mag if doMatchPixel is true, or in any case find the from and to pixel
-// sizes.  Supply fromCam, toCam, toFactor, oldMag, and curMag.  fromMatchMag and 
+// sizes.  Supply fromCam, toCam, toFactor, oldMag, and curMag.  fromMatchMag and
 // toMatchMag should be member variables for going back to the same mag.
-void CEMscope::FindMatchingMag(int fromCam, int toCam, float toFactor, int oldMag, 
-                               int curMag, int &newMag, float &fromPixel, float &toPixel, 
+void CEMscope::FindMatchingMag(int fromCam, int toCam, float toFactor, int oldMag,
+                               int curMag, int &newMag, float &fromPixel, float &toPixel,
                                int &fromMatchMag, int &toMatchMag, BOOL doMatchPixel)
 {
   int mag, iDir, limlo, limhi, lowestFrom, lowestTo;
@@ -8677,7 +8679,7 @@ void CEMscope::FindMatchingMag(int fromCam, int toCam, float toFactor, int oldMa
 
           // Skip if no mag is defined or if candidate is not on same side
           // of LM-M boundary
-          if ((!toSTEM && !mMagTab[mag].mag) || (toSTEM && !mMagTab[mag].STEMmag) || 
+          if ((!toSTEM && !mMagTab[mag].mag) || (toSTEM && !mMagTab[mag].STEMmag) ||
             !BothLMorNotLM(oldMag, camP[fromCam].STEMcamera, mag, toSTEM))
             continue;
 
@@ -8705,7 +8707,7 @@ void CEMscope::MatchPixelAndIntensity(int fromCam, int toCam, float toFactor,
   float fromPixel, toPixel;
   double ratio, factor, newIntensity;
   oldMag = GetMagIndex();
-  FindMatchingMag(fromCam, toCam, toFactor, oldMag, oldMag, newMag, fromPixel, 
+  FindMatchingMag(fromCam, toCam, toFactor, oldMag, oldMag, newMag, fromPixel,
     toPixel, mNonGIFfromMatchMag, mNonGIFtoMatchMag, matchPixel);
   if (!newMag)
     return;
@@ -8725,7 +8727,7 @@ void CEMscope::HandleNewMag(int inMag)
   BOOL lensProg;
   int lvalue;
   try {
-    if (JEOLscope) 
+    if (JEOLscope)
       lensProg = mHasOmegaFilter || mJeolSD.JeolEFTEM > 0; //mWinApp->GetEFTEMMode();
     else {  // FEI-like
       PLUGSCOPE_GET(EFTEMMode, lvalue, 1);
@@ -8744,13 +8746,13 @@ void CEMscope::HandleNewMag(int inMag)
 /* If we attempt to acquire a mutex
    that is already owned by this thread, then the acquisition will succeed
    immediately. In
-   contrast, I think a POSIX mutex would deadlock if you tried to acquire it 
-   twice.  
-   
-   The following ScopeMutexAcquire and ScopeMutexRelease functions 
+   contrast, I think a POSIX mutex would deadlock if you tried to acquire it
+   twice.
+
+   The following ScopeMutexAcquire and ScopeMutexRelease functions
    implement a sort of semaphore.   A given thread is allowed to acquire the
    mutex multiple times.  To release the mutex, the release function must be
-   called as many times as the Acquire function was called. 
+   called as many times as the Acquire function was called.
 
    (It turns out that this is basically the inherent behavior of mutexes in
     Win32, but I was thinking that mutex acquisition was idempotent.. so, much
@@ -8791,19 +8793,19 @@ BOOL CEMscope::ScopeMutexAcquire(const char *name, BOOL retry) {
     useName = mScopeMutexLenderStr;
 
   if (TRACE_MUTEX) SEMTrace('1', "%s waiting for Mutex",useName);
-  
+
   // This wait does not seem to allow enough time for threads to run properly, so set
   // the timeout low when not retrying.  It should loop and sleep instead...
-  while ((mutex_status = WaitForSingleObject(mScopeMutexHandle, 
+  while ((mutex_status = WaitForSingleObject(mScopeMutexHandle,
     retry ? MUTEX_TIMEOUT_MS : 20)) == WAIT_TIMEOUT) {
     if (retry) {
-      if (TRACE_MUTEX) 
+      if (TRACE_MUTEX)
         SEMTrace('1', "%s timed out getting mutex, currently held by %s.. trying again.",
         useName, mScopeMutexOwnerStr);
       continue;
     } else {
-      if (TRACE_MUTEX) 
-        SEMTrace('1', "%s failed to get the mutex, currently held by %s. giving up!", 
+      if (TRACE_MUTEX)
+        SEMTrace('1', "%s failed to get the mutex, currently held by %s. giving up!",
         useName, mScopeMutexOwnerStr);
       return false;
     }
@@ -8826,14 +8828,14 @@ BOOL CEMscope::ScopeMutexAcquire(const char *name, BOOL retry) {
 
   strcpy(mScopeMutexOwnerStr,useName);
   mScopeMutexOwnerId = GetCurrentThreadId();
-  if (TRACE_MUTEX) SEMTrace('1', "%s got Mutex",mScopeMutexOwnerStr);   
+  if (TRACE_MUTEX) SEMTrace('1', "%s got Mutex",mScopeMutexOwnerStr);
 
   return true;
 }
 
 
 BOOL CEMscope::ScopeMutexRelease(const char *name) {
-  
+
   if (!mScopeMutexHandle)
     return true;
 
@@ -8844,10 +8846,10 @@ BOOL CEMscope::ScopeMutexRelease(const char *name) {
   mScopeMutexOwnerCount --;
 
   if (mScopeMutexOwnerCount) {
-    //if (TRACE_MUTEX) 
+    //if (TRACE_MUTEX)
     //  SEMTrace('1', "%s released the mutex, but it is not the primary owner\n",name);
     return true;
-  } 
+  }
 
   // If the owner is lending it, copy its name to the lender string
   if (!strcmp(name, "MutexLender")) {
@@ -8861,7 +8863,7 @@ BOOL CEMscope::ScopeMutexRelease(const char *name) {
   }
   if (TRACE_MUTEX) SEMTrace('1', "%s released the Mutex.",name);
 
-  strcpy(mScopeMutexOwnerStr,"NOBODY"); 
+  strcpy(mScopeMutexOwnerStr,"NOBODY");
   mScopeMutexOwnerId = 0;
 
   ReleaseMutex(mScopeMutexHandle);
@@ -8884,7 +8886,7 @@ float CEMscope::ConvertJEOLStage(double inMove, float &outRem)
 {
   float rounded = sJEOLstageRounding * (int)floor(inMove / sJEOLstageRounding + 0.5);
   if (sJEOLpiezoRounding)
-    outRem = 1.e3f * sJEOLpiezoRounding * 
+    outRem = 1.e3f * sJEOLpiezoRounding *
       (int)floor((inMove - rounded) / sJEOLpiezoRounding + 0.5);
   else
     outRem = 0.;
@@ -8907,15 +8909,15 @@ void CEMscope::SetSimCartridgeLoaded(int inVal)
   sSimLoadedCartridge = inVal;
 }
 
-// Central place to change the offset and make sure that scope defocus is changed in 
+// Central place to change the offset and make sure that scope defocus is changed in
 // tandem and maintain the currently set offset value
 void CEMscope::SetLDViewDefocus(float inVal, int area)
 {
-  if (area) 
-    mSearchDefocus = inVal; 
-  else 
+  if (area)
+    mSearchDefocus = inVal;
+  else
     mLDViewDefocus = inVal;
-  if (mWinApp->mLowDoseDlg.GetTrulyLowDose() && 
+  if (mWinApp->mLowDoseDlg.GetTrulyLowDose() &&
     mLowDoseSetArea == (area ? SEARCH_AREA : VIEW_CONSET) &&
     fabs(mCurDefocusOffset - inVal) > 1.e-3) {
     IncDefocus(inVal - mCurDefocusOffset);
@@ -9059,7 +9061,7 @@ BOOL CEMscope::SetMDSMode(int which)
     SEMReportCOMError(E, _T("Setting MDS mode "));
     retval = false;
   }
-  
+
   ScopeMutexRelease("SetMDSMode");
   return retval;
 }
@@ -9141,7 +9143,7 @@ int CEMscope::WaitForLensRelaxation(int type, double earliestTime)
   }
   if (!state) {
     SEMTrace('0', "%.3f: WARNING: Lens relaxation event on %s not detected within %d msec"
-      " timeout, going on", SEMSecondsSinceStart(), names[B3DMIN(2, type - 1)], 
+      " timeout, going on", SEMSecondsSinceStart(), names[B3DMIN(2, type - 1)],
       sJeolStartRelaxTimeout);
     return 1;
   }
@@ -9178,9 +9180,9 @@ float CEMscope::GetMaxJeolImageShift(int magInd)
   SEMAcquireJeolDataMutex();
 
   // Convert maximum deflector value just as in plugin, subtract axis component
-  maxISX = 0x3FFF * (sJeolSD->JeolSTEM ? mJeolParams.CLA1_to_um : Jeol_IS1X_to_um) - 
+  maxISX = 0x3FFF * (sJeolSD->JeolSTEM ? mJeolParams.CLA1_to_um : Jeol_IS1X_to_um) -
     fabs(axisISX);
-  maxISY = 0x3FFF * (sJeolSD->JeolSTEM ? mJeolParams.CLA1_to_um : Jeol_IS1Y_to_um) - 
+  maxISY = 0x3FFF * (sJeolSD->JeolSTEM ? mJeolParams.CLA1_to_um : Jeol_IS1Y_to_um) -
     fabs(axisISY);
   SEMReleaseJeolDataMutex();
 
@@ -9232,7 +9234,7 @@ BOOL CEMscope::GetISwasClipped()
   return sISwasClipped;
 }
 
-void CEMscope::SetISwasClipped(BOOL val) 
+void CEMscope::SetISwasClipped(BOOL val)
 {
   sISwasClipped = val;
 }
@@ -9300,7 +9302,7 @@ void SEMReleaseJeolDataMutex()
 }
 
 // Give the plugin the addresses of the structures and of their last members here
-void SEMGetJeolStructures(JeolStateData **jsd, int **lastState, JeolParams **params, 
+void SEMGetJeolStructures(JeolStateData **jsd, int **lastState, JeolParams **params,
   int **lastParam)
 {
   CSerialEMApp *winApp = (CSerialEMApp *)AfxGetApp();
@@ -9329,7 +9331,7 @@ void SEMSetJeolStateMag(int magIndex, BOOL needMutex)
 
 BOOL CEMscope::GetUsePLforIS(int magInd)
 {
-  return (JEOLscope && mJeolSD.usePLforIS) || (HitachiScope && 
+  return (JEOLscope && mJeolSD.usePLforIS) || (HitachiScope &&
     magInd >= mLowestSecondaryMag);
 }
 
@@ -9411,7 +9413,7 @@ void CEMscope::SetManualExposure(double time)
 }
 
 // Initiate the exposure
-BOOL CEMscope::TakeFilmExposure(BOOL useAda, double loadDelay, double preExpose, 
+BOOL CEMscope::TakeFilmExposure(BOOL useAda, double loadDelay, double preExpose,
                                 BOOL screenOn)
 {
   if (FilmBusy() > 0) {
@@ -9423,12 +9425,12 @@ BOOL CEMscope::TakeFilmExposure(BOOL useAda, double loadDelay, double preExpose,
       AfxMessageBox(_T("Special exposure sequence not available on JEOL"));
       return false;
     }
-  
+
   } else if (FEIscope) {  // FEI
     if (useAda) {
       if (mAdaExists < 0) {
         ITAdaExpPtr myAda;
-        HRESULT hr = CoCreateInstance(__uuidof(TAdaExp), 0, CLSCTX_ALL, 
+        HRESULT hr = CoCreateInstance(__uuidof(TAdaExp), 0, CLSCTX_ALL,
           __uuidof(ITAdaExp), (void **)&myAda);
         mAdaExists = SUCCEEDED(hr) ? 1 : 0;
       }
@@ -9457,7 +9459,7 @@ BOOL CEMscope::TakeFilmExposure(BOOL useAda, double loadDelay, double preExpose,
     mCameraAcquiring = true;
   else
     SetCameraAcquiring(true);
-  
+
   mMoveInfo.x = mManualExposure;
   mMoveInfo.y = loadDelay;
   mMoveInfo.z = preExpose;
@@ -9536,7 +9538,7 @@ UINT CEMscope::FilmExposeProc(LPVOID pParam)
       retval = 1;
     }
     if (!retval && info->doBacklash) {
-      hr = CoCreateInstance(__uuidof(TAdaExp), 0, CLSCTX_ALL, __uuidof(ITAdaExp), 
+      hr = CoCreateInstance(__uuidof(TAdaExp), 0, CLSCTX_ALL, __uuidof(ITAdaExp),
         ( void **)&myAda);
       if(SEMTestHResult(hr, " creating instance of adaexp server for"
         "film exposure")) {
@@ -9646,7 +9648,7 @@ UINT CEMscope::FilmExposeProc(LPVOID pParam)
     }
     catch (int errnum) {
       CString message;
-      message.Format("Error %d doing special film exposure (err %d shStat %d exStat %d)", 
+      message.Format("Error %d doing special film exposure (err %d shStat %d exStat %d)",
         errnum, err, shutterStatus, externalStatus);
       AfxMessageBox(message, MB_EXCLAME);
       SEMTrace('1', "%s", (LPCTSTR)message);
@@ -9680,7 +9682,7 @@ UINT CEMscope::FilmExposeProc(LPVOID pParam)
   return retval;
 }
 
-BOOL CEMscope::BothLMorNotLM(int mag1, BOOL stem1, int mag2, BOOL stem2) 
+BOOL CEMscope::BothLMorNotLM(int mag1, BOOL stem1, int mag2, BOOL stem2)
 {
   int lowest1 = GetLowestMModeMagInd();
   int lowest2 = lowest1;
@@ -9689,11 +9691,11 @@ BOOL CEMscope::BothLMorNotLM(int mag1, BOOL stem1, int mag2, BOOL stem2)
   if (stem2)
     lowest2 = mLowestSTEMnonLMmag[(FEIscope && mag2 >= mLowestMicroSTEMmag) ? 1 : 0];
   if (!mag1 || !mag2 || ((stem1 ? 1 : 0) != (stem2 ? 1 : 0)) ||
-    !((mag1 < lowest1 && mag2 < lowest2) || 
+    !((mag1 < lowest1 && mag2 < lowest2) ||
     (mag1 >= lowest1 && mag2 >= lowest2)))
       return false;
-  return (stem1 || stem2 || mLowestSecondaryMag == 0 || 
-    ((mag1 < mLowestSecondaryMag && mag2 < mLowestSecondaryMag) || 
+  return (stem1 || stem2 || mLowestSecondaryMag == 0 ||
+    ((mag1 < mLowestSecondaryMag && mag2 < mLowestSecondaryMag) ||
     (mag1 >= mLowestSecondaryMag && mag2 >= mLowestSecondaryMag)));
 }
 
@@ -9731,7 +9733,7 @@ BOOL CEMscope::SaveOrRestoreIS(int saveMag, int otherMag)
 // Returns true if IS is/may be reset on a mag change: JEOL or Hitachi in LM/HR
 bool CEMscope::MagChgResetsIS(int toInd)
 {
-  return JEOLscope || (HitachiScope && (toInd < mLowestMModeMagInd || 
+  return JEOLscope || (HitachiScope && (toInd < mLowestMModeMagInd ||
     (mLowestSecondaryMag > 0 && toInd >= mLowestSecondaryMag) || (mHitachiResetsISinHC &&
      toInd >= mLowestMModeMagInd && toInd < mLowestSecondaryMag)));
 }
@@ -9752,7 +9754,7 @@ int CEMscope::LookupRingIS(int lastMag, BOOL changedEFTEM, BOOL crossedLM)
     // If update by event, find the first mag change away from the old mag by
     // looking back until old mag and saving index for every mag but the old mag
     while (ind != mJeolSD.magRingIndex && mJeolSD.ringMagTime[ind] >= 0.) {
-      SEMTrace('i', "%.3f mag %i  crossInd %d", mJeolSD.ringMagTime[ind] / 1000., 
+      SEMTrace('i', "%.3f mag %i  crossInd %d", mJeolSD.ringMagTime[ind] / 1000.,
         mJeolSD.ringMag[ind], mJeolSD.ringCrossInd[ind]);
 
       if (mJeolSD.ringMag[ind] == lastMag) {
@@ -9772,7 +9774,7 @@ int CEMscope::LookupRingIS(int lastMag, BOOL changedEFTEM, BOOL crossedLM)
 
     // If update by poll, look back and find the old mag in the list
     while (ind != mJeolSD.magRingIndex && mJeolSD.ringMagTime[ind] >= 0.) {
-      SEMTrace('i', "%.3f mag %i  crossInd %d", mJeolSD.ringMagTime[ind] / 1000., 
+      SEMTrace('i', "%.3f mag %i  crossInd %d", mJeolSD.ringMagTime[ind] / 1000.,
         mJeolSD.ringMag[ind], mJeolSD.ringCrossInd[ind]);
 
       if (mJeolSD.ringMag[ind] == lastMag) {
@@ -9798,8 +9800,8 @@ int CEMscope::LookupRingIS(int lastMag, BOOL changedEFTEM, BOOL crossedLM)
     while (ind != mJeolSD.ISRingIndex && mJeolSD.ringISTime[ind] >= 0.) {
       timeDiff = timeRef - mJeolSD.ringISTime[ind];
 
-      SEMTrace('i', "%.3f diff %.3f  IS %.3f %.3f", 
-        mJeolSD.ringISTime[ind] / 1000., timeDiff, mJeolSD.ringISX[ind], 
+      SEMTrace('i', "%.3f diff %.3f  IS %.3f %.3f",
+        mJeolSD.ringISTime[ind] / 1000., timeDiff, mJeolSD.ringISX[ind],
         mJeolSD.ringISY[ind]);
 
       if (timeDiff >= 0. || timeDiff < -2000000000) {
@@ -9814,7 +9816,7 @@ int CEMscope::LookupRingIS(int lastMag, BOOL changedEFTEM, BOOL crossedLM)
 
 // Look up a camera in the FEI acquisition object interface, optionally refreshing the
 // microscope object first; or restore shutter to an original stage
-int CEMscope::LookupScriptingCamera(CameraParameters *params, bool refresh, 
+int CEMscope::LookupScriptingCamera(CameraParameters *params, bool refresh,
                                     int restoreShutter)
 {
   CString CCDname = params->name;
@@ -9857,10 +9859,10 @@ int CEMscope::LookupScriptingCamera(CameraParameters *params, bool refresh,
     if (mPluginVersion >= FEI_PLUGIN_DOES_FALCON3) {
 
       // Entries for testing the interface for advanced scripting cameras
-      if ((params->FEItype == 10 + FALCON3_TYPE || params->FEItype == 10 + FALCON4_TYPE) 
+      if ((params->FEItype == 10 + FALCON3_TYPE || params->FEItype == 10 + FALCON4_TYPE)
         && mSimulationMode) {
         params->eagleIndex |= (PLUGFEI_USES_ADVANCED | PLUGFEI_CAN_DOSE_FRAC |
-          PLUGFEI_CAM_CAN_ALIGN | PLUGFEI_CAM_CAN_COUNT | 
+          PLUGFEI_CAM_CAN_ALIGN | PLUGFEI_CAM_CAN_COUNT |
           (40000 << PLUGFEI_MAX_FRAC_SHIFT));
         params->FEItype -= 10;
       }
@@ -9870,13 +9872,13 @@ int CEMscope::LookupScriptingCamera(CameraParameters *params, bool refresh,
         params->FEItype -= 10;
       }
       params->CamFlags = (params->eagleIndex & ~PLUGFEI_INDEX_MASK);
-      SEMTrace('E', "index ret %x  flags %x  mind %f  maxd %f", params->eagleIndex, 
+      SEMTrace('E', "index ret %x  flags %x  mind %f  maxd %f", params->eagleIndex,
         params->CamFlags, minDrift, maxDrift);
       if (params->CamFlags & PLUGFEI_USES_ADVANCED)
         mCamera->SetOtherCamerasInTIA(false);
       if (doMessage) {
         mWinApp->AppendToLog(CString("Connected to ") +
-          B3DCHOICE(params->CamFlags & PLUGFEI_USES_ADVANCED, 
+          B3DCHOICE(params->CamFlags & PLUGFEI_USES_ADVANCED,
             UtapiSupportsService(UTSUP_CAM_SINGLE) ? "UTAPI" : "Advanced", "Standard") +
           " Scripting interface for FEI camera access" + B3DCHOICE(
           mSkipAdvancedScripting > 0, " because property SkipAdvancedScripting is set!",
@@ -9895,7 +9897,7 @@ int CEMscope::LookupScriptingCamera(CameraParameters *params, bool refresh,
       }
 
       // Promote a Falcon 2 to 3 automatically, and adjust the frame time if low
-      if (params->FEItype == FALCON2_TYPE && (params->CamFlags & PLUGFEI_CAM_CAN_COUNT) && 
+      if (params->FEItype == FALCON2_TYPE && (params->CamFlags & PLUGFEI_CAM_CAN_COUNT) &&
         (params->CamFlags & PLUGFEI_CAM_CAN_ALIGN))
         params->FEItype = FALCON3_TYPE;
 
@@ -9941,7 +9943,7 @@ int CEMscope::LookupScriptingCamera(CameraParameters *params, bool refresh,
         else
           params->canTakeFrames = 0;
       }
-      if (UtapiSupportsService(UTSUP_CAM_CONTIN) && 
+      if (UtapiSupportsService(UTSUP_CAM_CONTIN) &&
         (params->CamFlags & PLUGFEI_CAN_LIVE_MODE))
         params->useContinuousMode = 1;
       if (params->FEItype == FALCON4_TYPE && mPluginVersion >= PLUGFEI_PLUG_CAN_SAVE_LZW
@@ -9967,7 +9969,7 @@ int CEMscope::GetFEIChannelList(CameraParameters * params, bool refresh)
   for (chan = 0; chan < params->numChannels; chan++)
     detNames[chan] = _strdup((LPCTSTR)params->detectorName[chan]);
   err = mPlugFuncs->GetFEIChannelList(params->numChannels, params->numOrigBinnings,
-    (long *)(&params->origBinnings[0]), (const char **)&detNames[0], (BOOL)refresh, 
+    (long *)(&params->origBinnings[0]), (const char **)&detNames[0], (BOOL)refresh,
     (long *)(&params->numBinnings), (long *)(&params->binnings[0]),
     params->availableChan);
   for (chan = 0; chan < params->numChannels; chan++)
@@ -10004,7 +10006,7 @@ bool CEMscope::TestSTEMshift(int type, int delx, int dely)
 
   if (!sInitialized || !JEOLscope|| type < 1 || type > 5)
     return false;
-  
+
   ScopeMutexAcquire("TestSTEMshift", true);
 
   try {
@@ -10013,7 +10015,7 @@ bool CEMscope::TestSTEMshift(int type, int delx, int dely)
   catch (_com_error E) {
     SEMReportCOMError(E, _T("setting weird Shift "));
     success = false;
-  } 
+  }
   ScopeMutexRelease("TestSTEMshift");
   return success;
 }
@@ -10066,7 +10068,7 @@ bool CEMscope::SelectJeolDetectors(int *detInd, int numDet)
           if (mBlockedChannels[j].mappedTo != i)
             continue;
           for (k = 0; k < numDet; k++) {
-            if (numberInList(detInd[k], mBlockedChannels[j].channels, 
+            if (numberInList(detInd[k], mBlockedChannels[j].channels,
               mBlockedChannels[j].numChans, 0))
               allIn = true;
           }
@@ -10145,7 +10147,7 @@ bool CEMscope::SelectJeolDetectors(int *detInd, int numDet)
   catch (_com_error E) {
     SEMReportCOMError(E, _T("selecting/inserting detector(s) "));
     retval = false;
-  } 
+  }
   ScopeMutexRelease("SelectJeolDetectors");
   if (needScreenUp) {
     SEMTrace('R', "Raising screen for detector %d", mJeolSD.detectorIDs[detOrScreen]);
@@ -10201,9 +10203,9 @@ BOOL CEMscope::NeedBeamBlanking(int screenPos, BOOL STEMmode, BOOL &goToLDarea)
   if (mCameraAcquiring && B3DABS(mShutterlessCamera) < 2)
     return false;
   if (screenPos == spUp)
-    return mShutterlessCamera || (!mSkipBlankingInLowDose && 
+    return mShutterlessCamera || (!mSkipBlankingInLowDose &&
     (mLowDoseMode || mWinApp->mLowDoseDlg.m_bLowDoseMode));
-   
+
   // In Stem mode, when the screen is down, low dose rules the blanking and whether to
   // go to a low dose area unless the screen has to be down, in which case the
   // shutterless flag also means it should blank
@@ -10225,7 +10227,7 @@ BOOL CEMscope::NeedBeamBlanking(int screenPos, BOOL STEMmode, BOOL &goToLDarea)
   // TEM mode for sure: low dose governs, blank if flag set to blank when down; but if
   // in the start of Realign to Item where hiding low dose off, blank unconditionally
   goToLDarea = mLowDoseMode;
-  return (mShutterlessCamera < 0 && !mLowDoseMode) || (mLowDoseMode && mBlankWhenDown) || 
+  return (mShutterlessCamera < 0 && !mLowDoseMode) || (mLowDoseMode && mBlankWhenDown) ||
     (!mLowDoseMode && mWinApp->mLowDoseDlg.m_bLowDoseMode);
 }
 
@@ -10262,18 +10264,18 @@ bool CEMscope::GetGettingValuesFast()
 void CEMscope::SetValidXYbacklash(StageMoveInfo *info)
 {
   bool old = mXYbacklashValid;
-  bool didBacklash = info->doBacklash && (info->axisBits & axisXY) && 
+  bool didBacklash = info->doBacklash && (info->axisBits & axisXY) &&
     (info->backX || info->backY);
 
-  // tests below result in retaining X/Y backlash state for a Z-only move 
+  // tests below result in retaining X/Y backlash state for a Z-only move
   bool zOnly = (info->axisBits & ~axisZ) == 0;
   double movedFromPosX = info->x - mPosForBacklashX;
   double movedFromPosY = info->y - mPosForBacklashY;
-  bool kept = (zOnly && old) || (mBacklashValidAtStart && 
-    ((movedFromPosX * mLastBacklashX <= 0. && movedFromPosY * mLastBacklashY <= 0.) || 
+  bool kept = (zOnly && old) || (mBacklashValidAtStart &&
+    ((movedFromPosX * mLastBacklashX <= 0. && movedFromPosY * mLastBacklashY <= 0.) ||
     (fabs(movedFromPosX) < mBacklashTolerance &&
       fabs(movedFromPosY) < mBacklashTolerance)));
-  bool established = mMinMoveForBacklash > 0. && 
+  bool established = mMinMoveForBacklash > 0. &&
     fabs(info->x - mStartForMinMoveX) >= mMinMoveForBacklash &&
     fabs(info->y - mStartForMinMoveY) >= mMinMoveForBacklash;
   mXYbacklashValid = didBacklash || kept || established;
@@ -10310,7 +10312,7 @@ void CEMscope::SetValidZbacklash(StageMoveInfo * info)
   bool didBacklash = info->doBacklash && (info->axisBits & axisZ) && info->backZ;
   bool xyOnly = (info->axisBits & ~(axisX | axisY)) == 0;
   double movedFromPosZ = info->z - mPosForBacklashZ;
-  bool kept = (xyOnly && old) || (mZBacklashValidAtStart && 
+  bool kept = (xyOnly && old) || (mZBacklashValidAtStart &&
     (movedFromPosZ * mLastBacklashZ <= 0 || fabs(movedFromPosZ) < mBacklashTolerance));
   bool established = mMinZMoveForBacklash > 0. &&
     fabs(info->z - mStartForMinMoveZ) >= mMinZMoveForBacklash;
@@ -10339,7 +10341,7 @@ void CEMscope::SetValidZbacklash(StageMoveInfo * info)
 }
 
 // Return true and return backlash values if backlash is still valid for given position
-bool CEMscope::GetValidXYbacklash(double stageX, double stageY, float &backX, 
+bool CEMscope::GetValidXYbacklash(double stageX, double stageY, float &backX,
                                   float &backY)
 {
   bool atSamePos = fabs(stageX - mPosForBacklashX) < mBacklashTolerance &&
@@ -10378,12 +10380,12 @@ bool CEMscope::GetValidZbacklash(double stageZ, float & backZ)
 
 // Return true if stage is still at given position within tolerance and if the request
 // matches the last requested move
-bool CEMscope::StageIsAtSamePos(double stageX, double stageY, float requestedX, 
+bool CEMscope::StageIsAtSamePos(double stageX, double stageY, float requestedX,
                                 float requestedY)
 {
   return mStageAtLastPos && fabs(stageX - mPosForBacklashX) < mBacklashTolerance &&
     fabs(stageY - mPosForBacklashY) < mBacklashTolerance &&
-    fabs((double)(requestedX - mRequestedStageX)) < 1.e-5 && 
+    fabs((double)(requestedX - mRequestedStageX)) < 1.e-5 &&
     fabs((double)(requestedY - mRequestedStageY)) < 1.e-5;
 }
 
@@ -10395,15 +10397,15 @@ bool CEMscope::StageIsAtSameZPos(double stageZ, float requestedZ)
 }
 
 // Descriptions of the long-running operations
-static char *longOpDescription[MAX_LONG_OPERATIONS] = 
+static char *longOpDescription[MAX_LONG_OPERATIONS] =
 {"running buffer cycle", "refilling refrigerant",
   "getting cassette inventory", "running autoloader buffer cycle", "showing message box",
   "updating hardware dark reference", "unloading a cartridge", "loading a cartridge",
-  "refilling stage", "refilling transfer tank", "flashing FEG", 
-  "refilling stage and transfer tank", "preparing to avoid vibration", 
+  "refilling stage", "refilling transfer tank", "flashing FEG",
+  "refilling stage and transfer tank", "preparing to avoid vibration",
   "avoiding vibration"};
 
-// Start a thread for a long-running operation: returns 1 if thread busy, 
+// Start a thread for a long-running operation: returns 1 if thread busy,
 // 2 if inappropriate in some other way, -1 if nothing was started
 int CEMscope::StartLongOperation(int *operations, float *hoursSinceLast, int numOps)
 {
@@ -10427,11 +10429,11 @@ int CEMscope::StartLongOperation(int *operations, float *hoursSinceLast, int num
   for (ind = 0; ind < numOps; ind++) {
     longOp = operations[ind];
     sinceLast = hoursSinceLast[ind];
-    if (longOp == LONG_OP_MESSAGE_BOX && (!FEIscope || 
-      mPluginVersion < FEI_PLUGIN_MESSAGE_BOX || sMessageBoxTitle.IsEmpty() || 
+    if (longOp == LONG_OP_MESSAGE_BOX && (!FEIscope ||
+      mPluginVersion < FEI_PLUGIN_MESSAGE_BOX || sMessageBoxTitle.IsEmpty() ||
       sMessageBoxText.IsEmpty()))
       return 2;
-    if (sinceLast >= 0. && !(mLastLongOpTimes[longOp] > 0 && sinceLast > 0 && 
+    if (sinceLast >= 0. && !(mLastLongOpTimes[longOp] > 0 && sinceLast > 0 &&
       now - mLastLongOpTimes[longOp] < 60. * sinceLast)) {
         if (UtilThreadBusy(&mLongOpThreads[sLongThreadMap[longOp]]) > 0)
           return 1;
@@ -10439,7 +10441,7 @@ int CEMscope::StartLongOperation(int *operations, float *hoursSinceLast, int num
           needHWDR = true;
         } else {
           scopeOps[numScopeOps++] = longOp;
-          if ((scopeType[longOp] == 1 && !FEIscope) || 
+          if ((scopeType[longOp] == 1 && !FEIscope) ||
             (scopeType[longOp] == 2 && !JEOLscope))
             return 2;
           if (JEOLscope && !mPlugFuncs->FlashFEG)
@@ -10563,15 +10565,15 @@ UINT CEMscope::LongOperationProc(LPVOID pParam)
         if (longOp == LONG_OP_BUFFER) {
           lod->plugFuncs->RunBufferCycle();
         }
-        
+
         // Refill refrigerant
         if (longOp == LONG_OP_REFILL) {
           if (lod->flags & LONGOP_SIMPLE_ORIGIN)
             retval = RefillSimpleOrigin(lod->errString);
-          else 
+          else
             lod->plugFuncs->ForceRefill();
         }
-        
+
         // Prepare to avoid vibrations AND enter avoiding state
         if (longOp == LONG_OP_PREPARE_NO_VIBRATE) {
           if (lod->plugFuncs->GetVibrationState(VIBMGR_QUERY_AVOIDING))
@@ -10641,7 +10643,7 @@ UINT CEMscope::LongOperationProc(LPVOID pParam)
 
         // Put up message box
         if (longOp == LONG_OP_MESSAGE_BOX) {
-          sMessageBoxReturn = lod->plugFuncs->ShowMessageBox(sMessageBoxType, 
+          sMessageBoxReturn = lod->plugFuncs->ShowMessageBox(sMessageBoxType,
             (LPCTSTR)sMessageBoxTitle, (LPCTSTR)sMessageBoxText);
         }
 
@@ -10692,7 +10694,7 @@ UINT CEMscope::LongOperationProc(LPVOID pParam)
           } else if (error > 2) {
             lod->errString.Format("Error starting refill for %s tank%s",
               B3DCHOICE(error == 5, "both", error == 3 ? "stage" : "transfer"),
-              B3DCHOICE(error == 5, "s", 
+              B3DCHOICE(error == 5, "s",
                 longOp == LONG_OP_FILL_BOTH ? " (the other one filled OK)" : ""));
             if (lod->plugFuncs->GetLastErrorString) {
               lod->errString += ": ";
@@ -10722,7 +10724,7 @@ UINT CEMscope::LongOperationProc(LPVOID pParam)
           SEMTestHResult(hr,  _T(descrip), &lod->errString, &error, true);
           retval = 1;
         } else
-          lod->finished[ind] = (longOp != LONG_OP_REFILL && longOp != LONG_OP_FILL_BOTH) 
+          lod->finished[ind] = (longOp != LONG_OP_REFILL && longOp != LONG_OP_FILL_BOTH)
           || retval == 0;
       }
 
@@ -10748,7 +10750,7 @@ UINT CEMscope::LongOperationProc(LPVOID pParam)
 // Test if one or any long operation is busy; return 1 if any is busy regardless of
 // whether others have errors, or if there is an error on one and none other are busy
 int CEMscope::LongOperationBusy(int index)
-{ 
+{
   int thread, op, longOp, busy, indStart, indEnd, retval = 0;
   int now = mWinApp->MinuteTimeStamp();
   int errorOK[MAX_LONG_OPERATIONS] = {0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1};
@@ -10773,15 +10775,15 @@ int CEMscope::LongOperationBusy(int index)
         // matches the allowed one; issue completion messages in either case
         if (busy < 0 && errorOK[longOp] && errStringsOK[longOp][0] != 0x00 &&
           mLongOpData[thread].errString.Find(errStringsOK[longOp]) >= 0) {
-            mWinApp->AppendToLog("Call for " + CString(longOpDescription[longOp]) + 
-              " probably finished successfully with misleading error message:\r\n     " + 
+            mWinApp->AppendToLog("Call for " + CString(longOpDescription[longOp]) +
+              " probably finished successfully with misleading error message:\r\n     " +
               mLongOpData[thread].errString);
             mLongOpData[thread].finished[op] = true;
             busy = 0;
         } else {
-          if ((longOp == LONG_OP_REFILL || longOp == LONG_OP_FILL_STAGE || 
-            longOp == LONG_OP_FILL_TRANSFER || longOp == LONG_OP_FILL_BOTH) && 
-            !mLongOpData[thread].errString.IsEmpty()) 
+          if ((longOp == LONG_OP_REFILL || longOp == LONG_OP_FILL_STAGE ||
+            longOp == LONG_OP_FILL_TRANSFER || longOp == LONG_OP_FILL_BOTH) &&
+            !mLongOpData[thread].errString.IsEmpty())
           {
             mWinApp->AppendToLog("WARNING: " + mLongOpData[thread].errString);
             if (mLongOpData[thread].errString.Find("imeout") > 0)
@@ -10814,7 +10816,7 @@ int CEMscope::LongOperationBusy(int index)
                 jcData.station = JAL_STATION_STORAGE;
                 mJeolLoaderInfo.SetAt(mUnloadedCartridge, jcData);
               }
-              if (mLoadedCartridge >= 0 && 
+              if (mLoadedCartridge >= 0 &&
                 mLoadedCartridge < (int)mJeolLoaderInfo.GetSize()) {
                 jcData = mJeolLoaderInfo.GetAt(mLoadedCartridge);
                 jcData.station = JAL_STATION_STAGE;
@@ -10829,7 +10831,7 @@ int CEMscope::LongOperationBusy(int index)
           didError = busy && (!mLongOpData[thread].finished[op] || thread == 1);
           if (didError || mLongOpErrorToReport || !mWinApp->GetSuppressSomeMessages())
             mWinApp->AppendToLog("Call for " + CString(longOpDescription[longOp]) +
-            B3DCHOICE(didError || mLongOpErrorToReport, " ended with error" + excuse, 
+            B3DCHOICE(didError || mLongOpErrorToReport, " ended with error" + excuse,
               " finished successfully"));
           if (!excuse.IsEmpty())
             busy = 0;
@@ -10899,7 +10901,7 @@ int CEMscope::StopLongOperation(bool exiting, int index)
   for (op = indStart; op <= indEnd; op++) {
     if (UtilThreadBusy(&mLongOpThreads[op]) > 0) {
       mess.Format("There is a thread running for %s\n\nAre you sure you want to terminate"
-        " this thread in the middle of that operation%s?", sLongOpDescriptions[op], 
+        " this thread in the middle of that operation%s?", sLongOpDescriptions[op],
         exiting ? " and exit the program" : "");
       ok = SEMMessageBox(mess, exiting ? MB_OKCANCEL : MB_YESNO);
       if (ok == IDOK || ok == IDYES) {
@@ -10929,8 +10931,8 @@ BOOL CEMscope::RunSynchronousThread(int action, int newIndex, int curIndex,
   if (routine)
     CEMscope::ScopeMutexRelease(routine);
 
-  // Fill the thread data.  Callers are responsible for setting normalize, ifSTEM, 
-  // STEMmag, initialSleep and lowestM is relevant, and setting 
+  // Fill the thread data.  Callers are responsible for setting normalize, ifSTEM,
+  // STEMmag, initialSleep and lowestM is relevant, and setting
   // mLastNormalization and mProbeMode afterwards when appropriate
   mSynchroTD.actionType = action;
   mSynchroTD.newIndex = newIndex;
@@ -10996,7 +10998,7 @@ UINT CEMscope::SynchronousProc(LPVOID pParam)
   CoInitializeEx(NULL, COINIT_MULTITHREADED);
   CEMscope::ScopeMutexAcquire("SynchronousProc", true);
 
-  if (FEIscope && mPlugFuncs->BeginThreadAccess(1, 
+  if (FEIscope && mPlugFuncs->BeginThreadAccess(1,
     PLUGFEI_MAKE_ILLUM | PLUGFEI_MAKE_PROJECT)) {
     SEMMessageBox("Error creating second instance of microscope object for synchronous "
       "thread");

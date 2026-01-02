@@ -1,10 +1,9 @@
-// MenuTargets.cpp : A centralized place for command targets, to avoid 
+// MenuTargets.cpp : A centralized place for command targets, to avoid
 //                   cluttering up SerialEM.cpp and avoid making modules
 //                   with just a few targets be CmdTargets
-// 
 //
-// Copyright (C) 2003 by Boulder Laboratory for 3-Dimensional Electron 
-// Microscopy of Cells ("BL3DEMC") and the Regents of the University of
+//
+// Copyright (C) 2003-2026 by the Regents of the University of
 // Colorado.  See Copyright.txt for full notice of copyright and limitations.
 //
 // Author: David Mastronarde
@@ -55,10 +54,8 @@
 #include "ScreenShotDialog.h"
 #include "Shared\\SEMCCDDefines.h"
 
-#ifdef _DEBUG
+#if defined(_DEBUG) && defined(_CRTDBG_MAP_ALLOC)
 #define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
 #endif
 
 /////////////////////////////////////////////////////////////////////////////
@@ -553,13 +550,13 @@ BOOL CMenuTargets::DoingTasks()
   return mWinApp->DoingTasks();
 }
 
-void CMenuTargets::OnUpdateNoTasks(CCmdUI* pCmdUI) 
+void CMenuTargets::OnUpdateNoTasks(CCmdUI* pCmdUI)
 {
-  pCmdUI->Enable(!mWinApp->DoingTasks());  
+  pCmdUI->Enable(!mWinApp->DoingTasks());
 }
-void CMenuTargets::OnUpdateNoTasksNoTS(CCmdUI* pCmdUI) 
+void CMenuTargets::OnUpdateNoTasksNoTS(CCmdUI* pCmdUI)
 {
-  pCmdUI->Enable(!mWinApp->DoingTasks() && !mWinApp->StartedTiltSeries());  
+  pCmdUI->Enable(!mWinApp->DoingTasks() && !mWinApp->StartedTiltSeries());
 }
 
 void CMenuTargets::OnUpdateNoTasksNoSTEM(CCmdUI *pCmdUI)
@@ -569,14 +566,14 @@ void CMenuTargets::OnUpdateNoTasksNoSTEM(CCmdUI *pCmdUI)
 
 void CMenuTargets::OnUpdateNoTasksNoTSnoSTEM(CCmdUI *pCmdUI)
 {
-  pCmdUI->Enable(!mWinApp->DoingTasks() && !mWinApp->GetSTEMMode() && 
+  pCmdUI->Enable(!mWinApp->DoingTasks() && !mWinApp->GetSTEMMode() &&
     !mWinApp->StartedTiltSeries());
 }
 
 
 // NAVIGATOR WINDOW
 
-void CMenuTargets::OnTasksNavigator() 
+void CMenuTargets::OnTasksNavigator()
 {
   WINDOWPLACEMENT *placement = mWinApp->GetNavPlacement();
   WINDOWPLACEMENT curPlace;
@@ -622,20 +619,20 @@ void CMenuTargets::OpenNavigatorIfClosed(void)
     OnTasksNavigator();
 }
 
-void CMenuTargets::OnUpdateTasksNavigator(CCmdUI* pCmdUI) 
+void CMenuTargets::OnUpdateTasksNavigator(CCmdUI* pCmdUI)
 {
-  pCmdUI->Enable(mNavigator == NULL); 
+  pCmdUI->Enable(mNavigator == NULL);
 }
 
-void CMenuTargets::OnUpdateLoadNavFile(CCmdUI* pCmdUI) 
+void CMenuTargets::OnUpdateLoadNavFile(CCmdUI* pCmdUI)
 {
   BOOL bEnable = !DoingTasks();
   if (mNavigator)
     bEnable = bEnable && mNavigator->NoDrawing()  && !mNavigator->GetAcquiring();
-  pCmdUI->Enable(bEnable);	
+  pCmdUI->Enable(bEnable);
 }
 
-void CMenuTargets::OnLoadNavFile() 
+void CMenuTargets::OnLoadNavFile()
 {
   NavParams *param = mWinApp->GetNavParams();
   bool opened = !mNavigator;
@@ -653,9 +650,9 @@ void CMenuTargets::OnNavigatorMergefile()
 void CMenuTargets::OnUpdateNavigatorMergefile(CCmdUI *pCmdUI)
 {
   int navState = mWinApp->mCameraMacroTools.GetNavigatorState();
-  pCmdUI->Enable(!DoingTasks() && mNavigator && mNavigator->NoDrawing() && 
-    (!mNavigator->GetAcquiring() || navState == NAV_PAUSED || 
-    navState == NAV_SCRIPT_STOPPED || navState == NAV_TS_STOPPED || 
+  pCmdUI->Enable(!DoingTasks() && mNavigator && mNavigator->NoDrawing() &&
+    (!mNavigator->GetAcquiring() || navState == NAV_PAUSED ||
+    navState == NAV_SCRIPT_STOPPED || navState == NAV_TS_STOPPED ||
     navState == NAV_PRE_TS_STOPPED));
 }
 
@@ -676,38 +673,38 @@ void CMenuTargets::OnNavigatorImportmap()
   mNavigator->ImportMap();
 }
 
-void CMenuTargets::OnSaveNavFile() 
+void CMenuTargets::OnSaveNavFile()
 {
-  mNavigator->DoSave(false);	
+  mNavigator->DoSave(false);
 }
 
-void CMenuTargets::OnSaveasNavFile() 
+void CMenuTargets::OnSaveasNavFile()
 {
-  mNavigator->DoSaveAs();	
+  mNavigator->DoSaveAs();
 }
 
-void CMenuTargets::OnUpdateSaveNavFile(CCmdUI* pCmdUI) 
+void CMenuTargets::OnUpdateSaveNavFile(CCmdUI* pCmdUI)
 {
   pCmdUI->Enable(mNavigator && mNavigator->GetNumberOfItems() > 0 &&
-    !DoingTasks());  	
+    !DoingTasks());
 }
 
-void CMenuTargets::OnNavigatorClose() 
+void CMenuTargets::OnNavigatorClose()
 {
   mNavigator->DoClose();
 }
 
-void CMenuTargets::OnUpdateNavigatorClose(CCmdUI* pCmdUI) 
+void CMenuTargets::OnUpdateNavigatorClose(CCmdUI* pCmdUI)
 {
   pCmdUI->Enable(mNavigator && mNavigator->OKtoCloseNav());
 }
 
-void CMenuTargets::OnNavigatorAutosave() 
+void CMenuTargets::OnNavigatorAutosave()
 {
-  mWinApp->mDocWnd->SetAutoSaveNav(!mWinApp->mDocWnd->GetAutoSaveNav());  	
+  mWinApp->mDocWnd->SetAutoSaveNav(!mWinApp->mDocWnd->GetAutoSaveNav());
 }
 
-void CMenuTargets::OnUpdateNavigatorAutosave(CCmdUI* pCmdUI) 
+void CMenuTargets::OnUpdateNavigatorAutosave(CCmdUI* pCmdUI)
 {
   pCmdUI->SetCheck(mWinApp->mDocWnd->GetAutoSaveNav());
 }
@@ -719,18 +716,18 @@ void CMenuTargets::OnNavigatorWriteAsXmlFile()
 
 void CMenuTargets::OnUpdateNavigatorWriteAsXmlFile(CCmdUI *pCmdUI)
 {
-  pCmdUI->SetCheck(mNavHelper->GetWriteNavAsXML()); 
+  pCmdUI->SetCheck(mNavHelper->GetWriteNavAsXML());
 }
 
-void CMenuTargets::OnCornerMontage() 
+void CMenuTargets::OnCornerMontage()
 {
-  mNavigator->CornerMontage();	
+  mNavigator->CornerMontage();
 }
 
-void CMenuTargets::OnUpdateCornerMontage(CCmdUI* pCmdUI) 
+void CMenuTargets::OnUpdateCornerMontage(CCmdUI* pCmdUI)
 {
-  pCmdUI->Enable(mNavigator && mNavigator->CornerMontageOK() && mNavigator->NoDrawing() 
-    && !DoingTasks() && !mNavigator->GetAcquiring());	
+  pCmdUI->Enable(mNavigator && mNavigator->CornerMontageOK() && mNavigator->NoDrawing()
+    && !DoingTasks() && !mNavigator->GetAcquiring());
 }
 
 void CMenuTargets::OnNavigatorPolygonFromCorners()
@@ -738,27 +735,27 @@ void CMenuTargets::OnNavigatorPolygonFromCorners()
   mNavigator->PolygonFromCorners();
 }
 
-void CMenuTargets::OnPolygonMontage() 
+void CMenuTargets::OnPolygonMontage()
 {
-  mNavigator->PolygonMontage(NULL, false);	
+  mNavigator->PolygonMontage(NULL, false);
 }
 
-void CMenuTargets::OnUpdatePolygonMontage(CCmdUI* pCmdUI) 
+void CMenuTargets::OnUpdatePolygonMontage(CCmdUI* pCmdUI)
 {
   pCmdUI->Enable(mNavigator && mNavigator->GetItemType() == ITEM_TYPE_POLYGON &&
-    mNavigator->NoDrawing() && !DoingTasks() && !mNavigator->GetAcquiring());	
+    mNavigator->NoDrawing() && !DoingTasks() && !mNavigator->GetAcquiring());
 }
 
-void CMenuTargets::OnNavigatorSetupfullmontage() 
+void CMenuTargets::OnNavigatorSetupfullmontage()
 {
   if (!mWinApp->mNavigator)
     OnTasksNavigator();
-  mNavigator->FullMontage(false, 0.);	
+  mNavigator->FullMontage(false, 0.);
 }
 
-void CMenuTargets::OnUpdateNavigatorSetupfullmontage(CCmdUI* pCmdUI) 
+void CMenuTargets::OnUpdateNavigatorSetupfullmontage(CCmdUI* pCmdUI)
 {
-  pCmdUI->Enable(!mNavigator || (mNavigator && mNavigator->NoDrawing() && 
+  pCmdUI->Enable(!mNavigator || (mNavigator && mNavigator->NoDrawing() &&
     !mNavigator->GetAcquiring()) && !DoingTasks());
 }
 
@@ -767,19 +764,19 @@ void CMenuTargets::OnMontageListFilesToOpen()
   mNavHelper->ListFilesToOpen();
 }
 
-void CMenuTargets::OnNavigatorAcquire() 
+void CMenuTargets::OnNavigatorAcquire()
 {
   mNavigator->AcquireAreas(NAVACQ_SRC_MENU, false, false);
 }
 
-void CMenuTargets::OnUpdateNavigatorAcquire(CCmdUI* pCmdUI) 
+void CMenuTargets::OnUpdateNavigatorAcquire(CCmdUI* pCmdUI)
 {
   int navState = mWinApp->mCameraMacroTools.GetNavigatorState();
   pCmdUI->Enable(mNavigator && mNavigator->NoDrawing() && (mNavigator->AcquireOK(false)
-    || mNavigator->AcquireOK(true)) && (!mNavigator->GetAcquiring() || 
-      navState == NAV_PAUSED) && !mNavigator->StartedMacro() && 
-      (!DoingTasks() || mWinApp->GetJustNavAcquireOpen()) && 
-    !mWinApp->StartedTiltSeries() && !mCamera->CameraBusy());	
+    || mNavigator->AcquireOK(true)) && (!mNavigator->GetAcquiring() ||
+      navState == NAV_PAUSED) && !mNavigator->StartedMacro() &&
+      (!DoingTasks() || mWinApp->GetJustNavAcquireOpen()) &&
+    !mWinApp->StartedTiltSeries() && !mCamera->CameraBusy());
 }
 
 void CMenuTargets::OnNavigatorEndacquire()
@@ -795,15 +792,15 @@ void CMenuTargets::OnUpdateNavigatorEndacquire(CCmdUI *pCmdUI)
   pCmdUI->Enable(mNavigator && mNavigator->GetAcquiring());
 }
 
-void CMenuTargets::OnNewMap() 
+void CMenuTargets::OnNewMap()
 {
-  mNavigator->NewMap();	
+  mNavigator->NewMap();
 }
 
-void CMenuTargets::OnUpdateNewMap(CCmdUI* pCmdUI) 
+void CMenuTargets::OnUpdateNewMap(CCmdUI* pCmdUI)
 {
   pCmdUI->Enable(mNavigator && mNavigator->NoDrawing() &&
-    !DoingTasks() && mWinApp->mStoreMRC && !mNavigator->GetAcquiring());	
+    !DoingTasks() && mWinApp->mStoreMRC && !mNavigator->GetAcquiring());
 }
 
 void CMenuTargets::OnNavigatorAdjustBacklash()
@@ -813,7 +810,7 @@ void CMenuTargets::OnNavigatorAdjustBacklash()
 
 void CMenuTargets::OnUpdateNavigatorAdjustBacklash(CCmdUI *pCmdUI)
 {
-  pCmdUI->Enable(mNavigator && mNavigator->NoDrawing() && !mNavigator->StartedMacro() && 
+  pCmdUI->Enable(mNavigator && mNavigator->NoDrawing() && !mNavigator->StartedMacro() &&
     !DoingTasks() && !mWinApp->StartedTiltSeries() && !mCamera->CameraBusy() &&
     !mNavigator->GetAcquiring() && mNavigator->OKtoAdjustBacklash(true));
 }
@@ -829,15 +826,15 @@ void CMenuTargets::OnNavigatorBacklashSettings()
   }
 }
 
-void CMenuTargets::OnTransformPts() 
+void CMenuTargets::OnTransformPts()
 {
-  mNavigator->TransformPts();	
+  mNavigator->TransformPts();
 }
 
-void CMenuTargets::OnUpdateTransformPts(CCmdUI* pCmdUI) 
+void CMenuTargets::OnUpdateTransformPts(CCmdUI* pCmdUI)
 {
   pCmdUI->Enable(mNavigator && !mNavigator->GetAcquiring() &&
-    mNavigator->NoDrawing()	&& mNavigator->TransformOK()); 
+    mNavigator->NoDrawing()	&& mNavigator->TransformOK());
 }
 
 void CMenuTargets::OnNavigatorUndotransformation()
@@ -848,27 +845,27 @@ void CMenuTargets::OnNavigatorUndotransformation()
 void CMenuTargets::OnUpdateNavigatorUndotransformation(CCmdUI *pCmdUI)
 {
   pCmdUI->Enable(mNavigator && !mNavigator->GetAcquiring() &&
-    mNavigator->NoDrawing()	&& mNavigator->GetNumSavedRegXforms()); 
+    mNavigator->NoDrawing()	&& mNavigator->GetNumSavedRegXforms());
 }
 
-void CMenuTargets::OnDeleteitem() 
+void CMenuTargets::OnDeleteitem()
 {
-  mNavigator->DeleteItem();	
+  mNavigator->DeleteItem();
 }
 
-void CMenuTargets::OnUpdateDeleteitem(CCmdUI* pCmdUI) 
+void CMenuTargets::OnUpdateDeleteitem(CCmdUI* pCmdUI)
 {
-  pCmdUI->Enable(mNavigator && !mNavigator->GetAcquiring() && 
+  pCmdUI->Enable(mNavigator && !mNavigator->GetAcquiring() &&
     !mNavHelper->GetRealigning() && !mNavigator->GetLoadingMap() &&
-    mNavigator->NoDrawing()	&& mNavigator->GetItemType() >= 0);	
+    mNavigator->NoDrawing()	&& mNavigator->GetItemType() >= 0);
 }
 
-void CMenuTargets::OnNavigatorConvertmaps() 
+void CMenuTargets::OnNavigatorConvertmaps()
 {
   mNavHelper->SetConvertMaps(!mNavHelper->GetConvertMaps());
 }
 
-void CMenuTargets::OnUpdateNavigatorConvertmaps(CCmdUI* pCmdUI) 
+void CMenuTargets::OnUpdateNavigatorConvertmaps(CCmdUI* pCmdUI)
 {
   pCmdUI->Enable(true);
   pCmdUI->SetCheck(mNavHelper->GetConvertMaps() ? 1 : 0);
@@ -1004,7 +1001,7 @@ void CMenuTargets::OnIdentifyGridOnStage()
 
 void CMenuTargets::OnUpdateIdentifyGridOnStage(CCmdUI *pCmdUI)
 {
-  pCmdUI->Enable(!DoingTasks() && mNavHelper->mMultiGridDlg && 
+  pCmdUI->Enable(!DoingTasks() && mNavHelper->mMultiGridDlg &&
     mNavHelper->mMultiGridDlg->GetNumUsedSlots());
 }
 
@@ -1066,17 +1063,17 @@ void CMenuTargets::OnUpdateNavigatorRealignScaling(CCmdUI *pCmdUI)
   pCmdUI->SetCheck(mNavHelper->GetTryRealignScaling() ? 1 : 0);
 }
 
-void CMenuTargets::OnNavigatorAlignedsupermontage() 
+void CMenuTargets::OnNavigatorAlignedsupermontage()
 {
   mNavigator->SetupSuperMontage(false);
 }
 
-void CMenuTargets::OnNavigatorSkewedsupermontage() 
+void CMenuTargets::OnNavigatorSkewedsupermontage()
 {
   mNavigator->SetupSuperMontage(true);
 }
 
-void CMenuTargets::OnUpdateNavigatorSkewedsupermontage(CCmdUI* pCmdUI) 
+void CMenuTargets::OnUpdateNavigatorSkewedsupermontage(CCmdUI* pCmdUI)
 {
  	EMimageBuffer *imBuf = mWinApp->mActiveView->GetActiveImBuf();
   pCmdUI->Enable(mNavigator && mNavigator->NoDrawing()	&& !mNavigator->GetAcquiring() &&
@@ -1092,7 +1089,7 @@ void CMenuTargets::OnUpdatePolygonsupermontage(CCmdUI *pCmdUI)
 {
   pCmdUI->Enable(mNavigator && mNavigator->GetItemType() == ITEM_TYPE_POLYGON &&
     mNavigator->NoDrawing() && !DoingTasks() && mWinApp->Montaging()  &&
-    !mNavigator->GetAcquiring());	
+    !mNavigator->GetAcquiring());
 }
 
 void CMenuTargets::OnNavigatorAddcirclepolygon()
@@ -1199,8 +1196,8 @@ void CMenuTargets::OnNavigatorAligntoitem()
 
 void CMenuTargets::OnUpdateNavigatorAligntoitem(CCmdUI *pCmdUI)
 {
-  pCmdUI->Enable(mNavigator && mNavigator->NoDrawing() && 
-    mNavigator->GetItemType() >= 0 && !DoingTasks() && !mCamera->CameraBusy());	
+  pCmdUI->Enable(mNavigator && mNavigator->NoDrawing() &&
+    mNavigator->GetItemType() >= 0 && !DoingTasks() && !mCamera->CameraBusy());
 }
 
 void CMenuTargets::OnNavigatorForceCenterAlign()
@@ -1262,13 +1259,13 @@ void CMenuTargets::OnNavigatorSetacquirestate()
   CMapDrawItem *item;
   if (mNavigator->GetCurrentOrAcquireItem(item) < 0)
     return;
-  mNavHelper->SetToMapImagingState(item, true, 
+  mNavHelper->SetToMapImagingState(item, true,
     (mWinApp->LowDoseMode() && item->mMapLowDoseConSet >= 0) ? -1 : 0, 1);
 }
 
 void CMenuTargets::OnUpdateNavigatorSetacquirestate(CCmdUI *pCmdUI)
 {
-  pCmdUI->Enable(mNavigator && mNavigator->NoDrawing()	&& !DoingTasks() && 
+  pCmdUI->Enable(mNavigator && mNavigator->NoDrawing()	&& !DoingTasks() &&
     !mNavigator->GetAcquiring() && !mNavigator->CurrentIsImported() &&
     !mWinApp->StartedTiltSeries() && mNavigator->GetItemType() == ITEM_TYPE_MAP &&
     mNavHelper->GetTypeOfSavedState() == STATE_NONE);
@@ -1284,13 +1281,13 @@ void CMenuTargets::OnNavigatorRestorestate()
 
 void CMenuTargets::OnUpdateNavigatorRestorestate(CCmdUI *pCmdUI)
 {
-  pCmdUI->Enable(mNavigator && mNavigator->NoDrawing()	&& !DoingTasks() && 
+  pCmdUI->Enable(mNavigator && mNavigator->NoDrawing()	&& !DoingTasks() &&
     !mNavigator->GetAcquiring() &&
     !mWinApp->StartedTiltSeries() && mNavHelper->GetTypeOfSavedState() !=
     STATE_NONE);
 }
 
-// Deleted group acquire and delete from menu because to the extent they are not 
+// Deleted group acquire and delete from menu because to the extent they are not
 // redundant to the delete button with collapsed groups, the difference is confusing
 void CMenuTargets::OnNavigatorGroupAcquire()
 {
@@ -1303,7 +1300,7 @@ void CMenuTargets::OnUpdateNavigatorGroupAcquire(CCmdUI *pCmdUI)
   CMapDrawItem *item;
   BOOL enable = false;
   BOOL checked = false;
-  if (mNavigator && mNavigator->NoDrawing() && !DoingTasks() && 
+  if (mNavigator && mNavigator->NoDrawing() && !DoingTasks() &&
     !mWinApp->DoingComplexTasks() && mNavigator->GetItemType() != ITEM_TYPE_POLYGON &&
     mNavigator->GetCurrentOrGroupItem(item) >= 0 && !mNavigator->GetAcquiring()) {
     enable = item->mGroupID > 0;
@@ -1423,30 +1420,30 @@ void CMenuTargets::OnNavSetScriptToRun()
 }
 
 // DISTORTION
-void CMenuTargets::OnCalibrationDistortion() 
+void CMenuTargets::OnCalibrationDistortion()
 {
   mWinApp->mDistortionTasks->CalibrateDistortion();
 }
 
-void CMenuTargets::OnCalibrationSetoverlaps() 
+void CMenuTargets::OnCalibrationSetoverlaps()
 {
-  mWinApp->mDistortionTasks->SetOverlaps();	
+  mWinApp->mDistortionTasks->SetOverlaps();
 }
 
 // FILTER TASKS
-void CMenuTargets::OnCalibrationMagenergyshifts() 
+void CMenuTargets::OnCalibrationMagenergyshifts()
 {
-  mWinApp->mFilterTasks->CalibrateMagShift();  
+  mWinApp->mFilterTasks->CalibrateMagShift();
 }
 
-void CMenuTargets::OnUpdateCalibrationMagenergyshifts(CCmdUI* pCmdUI) 
+void CMenuTargets::OnUpdateCalibrationMagenergyshifts(CCmdUI* pCmdUI)
 {
-  pCmdUI->Enable(mWinApp->GetFilterMode() && !mWinApp->LowDoseMode() && 
+  pCmdUI->Enable(mWinApp->GetFilterMode() && !mWinApp->LowDoseMode() &&
     !DoingTasks() && !mCamera->CameraBusy());
 }
 
 // GAIN REF MAKER
-void CMenuTargets::OnAcquiregainref() 
+void CMenuTargets::OnAcquiregainref()
 {
   CameraParameters *params = mWinApp->GetActiveCamParam();
   if (params->DE_camType && !mCamera->CanProcessHere(params))
@@ -1455,24 +1452,24 @@ void CMenuTargets::OnAcquiregainref()
     mWinApp->mGainRefMaker->AcquireGainRef();
 }
 
-void CMenuTargets::OnUpdateAcquiregainref(CCmdUI* pCmdUI) 
+void CMenuTargets::OnUpdateAcquiregainref(CCmdUI* pCmdUI)
 {
   CameraParameters *params = mWinApp->GetActiveCamParam();
   pCmdUI->Enable(!DoingTasks() && !mCamera->CameraBusy() && !mWinApp->GetSTEMMode() &&
-    (mCamera->GetProcessHere() || 
+    (mCamera->GetProcessHere() ||
     (params->DE_camType && !mCamera->CanProcessHere(params))));
 }
 
 // BEAM ASSESSOR
-void CMenuTargets::OnCalibrationBeamintensity() 
+void CMenuTargets::OnCalibrationBeamintensity()
 {
-  mWinApp->mBeamAssessor->CalIntensityCCD();  
+  mWinApp->mBeamAssessor->CalIntensityCCD();
 }
 
-void CMenuTargets::OnUpdateCalibrationBeamintensity(CCmdUI* pCmdUI) 
+void CMenuTargets::OnUpdateCalibrationBeamintensity(CCmdUI* pCmdUI)
 {
   pCmdUI->Enable(!DoingTasks() && !mCamera->CameraBusy() && !mScope->GetJeol1230() &&
-    !mWinApp->GetSTEMMode());  
+    !mWinApp->GetSTEMMode());
 }
 
 void CMenuTargets::OnCalibrationSetApertureSize()
@@ -1484,19 +1481,19 @@ void CMenuTargets::OnCalibrationSetApertureSize()
 
 void CMenuTargets::OnUpdateCalibrationSetApertureSize(CCmdUI *pCmdUI)
 {
-  pCmdUI->Enable(!DoingTasks() && mScope->GetUseIllumAreaForC2() && 
+  pCmdUI->Enable(!DoingTasks() && mScope->GetUseIllumAreaForC2() &&
     mScope->GetMonitorC2ApertureSize() <= 1);
 }
 
-void CMenuTargets::OnCalibrationBeamshift() 
+void CMenuTargets::OnCalibrationBeamshift()
 {
-  mWinApp->mBeamAssessor->CalibrateBeamShift();  
+  mWinApp->mBeamAssessor->CalibrateBeamShift();
 }
 
-void CMenuTargets::OnUpdateCalibrationBeamshift(CCmdUI* pCmdUI) 
+void CMenuTargets::OnUpdateCalibrationBeamshift(CCmdUI* pCmdUI)
 {
   ScaleMat mat = mShiftManager->IStoCamera(mScope->FastMagIndex());
-  pCmdUI->Enable(!DoingTasks() && !mCamera->CameraBusy() && 
+  pCmdUI->Enable(!DoingTasks() && !mCamera->CameraBusy() &&
     mat.xpx != 0. && !mScope->GetJeol1230() && !mWinApp->GetSTEMMode());
 }
 
@@ -1513,22 +1510,22 @@ void CMenuTargets::OnUpdateBeamspotRefineBeamShift(CCmdUI *pCmdUI)
   ScaleMat isMat = mShiftManager->IStoSpecimen(magInd);
   ScaleMat camMat = mShiftManager->CameraToIS(magInd);
   pCmdUI->Enable(!DoingTasks() && !mCamera->CameraBusy() && isMat.xpx != 0. &&
-    mat.xpx != 0. && camMat.xpx != 0. && !FEIscope && !mScope->GetJeol1230() && 
+    mat.xpx != 0. && camMat.xpx != 0. && !FEIscope && !mScope->GetJeol1230() &&
     !mWinApp->GetSTEMMode());
 }
 
 void CMenuTargets::OnCalibrationElectrondose()
 {
-  mWinApp->mBeamAssessor->CalibrateElectronDose(true);  
+  mWinApp->mBeamAssessor->CalibrateElectronDose(true);
 }
 
-void CMenuTargets::OnCalibrationSpotintensity() 
+void CMenuTargets::OnCalibrationSpotintensity()
 {
   mWinApp->mBeamAssessor->CalibrateSpotIntensity();
 }
 
 // Remove all dose calibrations from before program startup
-void CMenuTargets::OnCalibrationPurgeoldcalibs() 
+void CMenuTargets::OnCalibrationPurgeoldcalibs()
 {
   DoseTable *doseTables = mWinApp->mBeamAssessor->GetDoseTables();
   int index;
@@ -1541,16 +1538,16 @@ void CMenuTargets::OnCalibrationPurgeoldcalibs()
 }
 
 // SHIFT MANAGER AND CALIBRATOR
-void CMenuTargets::OnCalibrationImageshift() 
+void CMenuTargets::OnCalibrationImageshift()
 {
   mWinApp->mShiftCalibrator->CalibrateIS(0, false, false);
 }
-void CMenuTargets::OnCalibrationIsfromscratch() 
+void CMenuTargets::OnCalibrationIsfromscratch()
 {
   mWinApp->mShiftCalibrator->CalibrateIS(-1, false, false);
 }
 
-void CMenuTargets::OnCalibrationStageshift() 
+void CMenuTargets::OnCalibrationStageshift()
 {
   mWinApp->mShiftCalibrator->CalibrateIS(0, true, false);
 }
@@ -1604,7 +1601,7 @@ void CMenuTargets::OnUpdateUseTrialSize(CCmdUI *pCmdUI)
 
 void CMenuTargets::OnCalibrationMagisoffsets()
 {
-  mWinApp->mShiftCalibrator->CalibrateISoffset(); 
+  mWinApp->mShiftCalibrator->CalibrateISoffset();
 }
 
 void CMenuTargets::OnCalibrationEftemISoffset()
@@ -1615,11 +1612,11 @@ void CMenuTargets::OnCalibrationEftemISoffset()
 void CMenuTargets::OnUpdateCalibrationEftemISoffset(CCmdUI *pCmdUI)
 {
   FilterParams *filtParam = mWinApp->GetFilterParams();
-  pCmdUI->Enable(!DoingTasks() && filtParam->firstGIFCamera >= 0 && 
+  pCmdUI->Enable(!DoingTasks() && filtParam->firstGIFCamera >= 0 &&
     filtParam->firstRegularCamera >= 0 && !mWinApp->GetSTEMMode());
 }
 
-void CMenuTargets::OnAutoalign() 
+void CMenuTargets::OnAutoalign()
 {
   mShiftManager->AutoAlign(0, 0);
 }
@@ -1674,7 +1671,7 @@ void CMenuTargets::DoListISVectors(BOOL useCalPixel)
         if (camP[iCam].STEMcamera)
           rough = mShiftManager->GetSTEMRoughISscale();
         else
-          rough = i < mScope->GetLowestMModeMagInd() ? 
+          rough = i < mScope->GetLowestMModeMagInd() ?
           mShiftManager->GetLMRoughISscale() : mShiftManager->GetRoughISscale();
         if (useCalPixel && magTab[i].pixelSize[iCam] > 0.0 && !magTab[i].pixDerived[iCam])
           pixel = magTab[i].pixelSize[iCam];
@@ -1683,7 +1680,7 @@ void CMenuTargets::DoListISVectors(BOOL useCalPixel)
 
         // Get fallback or calibrated rotation angle
         rotation = (camP[iCam].GIF ?
-          magTab[i].EFTEMtecnaiRotation : magTab[i].tecnaiRotation) + 
+          magTab[i].EFTEMtecnaiRotation : magTab[i].tecnaiRotation) +
           mShiftManager->GetGlobalExtraRotation() + camP[iCam].extraRotation;
         calRot = mShiftManager->GetCalibratedImageRotation(iCam, i);
         if (calRot < 900. && useCalPixel)
@@ -1703,7 +1700,7 @@ void CMenuTargets::DoListISVectors(BOOL useCalPixel)
         yvec = pixel * sqrt((double)(mat.xpy * mat.xpy + mat.ypy * mat.ypy)) / rough;
         xang = atan2(mat.xpx, mat.ypx) / DTOR;
         yang = atan2(mat.xpy, mat.ypy) / DTOR;
-        str.Format("  %2d %7d   %10.3f     %10.3f   %8.1f    %8.1f", 
+        str.Format("  %2d %7d   %10.3f     %10.3f   %8.1f    %8.1f",
           i, mag, xvec, yvec, xang, yang);
         if (mCamForNextVectorSave == actCam) {
           graphValues->at(0).push_back((float)i);
@@ -1752,21 +1749,21 @@ void CMenuTargets::DoListStageCals()
         if (needCam)
           mWinApp->AppendToLog(str);
         needCam = false;
-        mat = MatMul(mShiftManager->FallbackSpecimenToStage(1., 1.), 
+        mat = MatMul(mShiftManager->FallbackSpecimenToStage(1., 1.),
           magTab[iMag].matStage[iCam]);
         xtheta = atan2(mat.ypx, mat.xpx) / DTOR;
         ytheta = atan2(-mat.xpy, mat.ypy) / DTOR;
         angle = UtilGoodAngle(xtheta + 0.5 * UtilGoodAngle(ytheta - xtheta));
-        mat = mShiftManager->MatMul(mShiftManager->SpecimenToCamera(iCam, iMag), 
+        mat = mShiftManager->MatMul(mShiftManager->SpecimenToCamera(iCam, iMag),
           mShiftManager->MatInv(magTab[iMag].matStage[iCam]));
-        str.Format("    %2d %7d   %9.5f  %9.5f  %9.5f  %9.5f   %7.2f deg", iMag, 
+        str.Format("    %2d %7d   %9.5f  %9.5f  %9.5f  %9.5f   %7.2f deg", iMag,
           MagForCamera(iCam, iMag), mat.xpx, mat.xpy, mat.ypx, mat.ypy, angle);
         mWinApp->AppendToLog(str, LOG_OPEN_IF_CLOSED);
       }
     }
   }
   mat = mShiftManager->SpecimenToStage(1., 1.);
-  str.Format("Average:   %9.5f  %9.5f  %9.5f  %9.5f", 
+  str.Format("Average:   %9.5f  %9.5f  %9.5f  %9.5f",
     mat.xpx, mat.xpy, mat.ypx, mat.ypy);
   mWinApp->AppendToLog(str, LOG_OPEN_IF_CLOSED);
 }
@@ -1785,7 +1782,7 @@ void CMenuTargets::DoListMagISOffsets()
   ScaleMat mat;
   CString str;
   double offsetISX, offsetISY, x, y, offset;
-  
+
   str.Format("\r\nMag image shift offset calibration %s", ind ? "(EFTEM mode)" : "");
   mWinApp->SetNextLogColorStyle(0, 1);
   mWinApp->AppendToLog(str, LOG_OPEN_IF_CLOSED);
@@ -1798,12 +1795,12 @@ void CMenuTargets::DoListMagISOffsets()
     for (int i = limlo; i <= limhi; i++) {
       offsetISX = magTab[i].calOffsetISX[ind];
       offsetISY = magTab[i].calOffsetISY[ind];
-      
+
       mat = mShiftManager->IStoSpecimen(i, camera);
 
       if (!mat.xpx || (!offsetISX && !offsetISY))
         continue;
-      
+
       mag = MagForCamera(camera, i);
       ApplyScaleMatrix(mat, offsetISX, offsetISY, x, y);
       offset = sqrt(x * x + y * y);
@@ -1844,7 +1841,7 @@ void CMenuTargets::RemoveOneCal(bool doStage)
   }
   magTab = mWinApp->GetMagTable() + magInd;
   mat = B3DCHOICE(doStage, &magTab->matStage[camera], &magTab->matIS[camera]);
-  calibrated = B3DCHOICE(doStage, &magTab->stageCalibrated[camera], 
+  calibrated = B3DCHOICE(doStage, &magTab->stageCalibrated[camera],
     &magTab->calibrated[camera]);
   if (!mat->xpx) {
     AfxMessageBox("That magnification is not calibrated for this camera", MB_EXCLAME);
@@ -1890,7 +1887,7 @@ void CMenuTargets::OnRemoveMagISOffsetCals()
     return;
 
   mWinApp->GetNumMagRanges(camera, numRanges, lowestMicro);
-  
+
   for (int range = 0; range < numRanges; range++) {
     mWinApp->GetMagRangeLimits(camera, range * lowestMicro, limlo, limhi);
     for (int magInd = limlo; magInd <= limhi; magInd++) {
@@ -1912,56 +1909,56 @@ void CMenuTargets::OnCalibrationSetIsDelayFactor()
 
 // SCOPE
 
-void CMenuTargets::OnTiltup() 
+void CMenuTargets::OnTiltup()
 {
-  mScope->TiltUp();   
+  mScope->TiltUp();
   mWinApp->AddIdleTask(CEMscope::TaskStageBusy, -1, 0, 0);
 }
 
-void CMenuTargets::OnTiltdown() 
+void CMenuTargets::OnTiltdown()
 {
-  mScope->TiltDown(); 
+  mScope->TiltDown();
   mWinApp->AddIdleTask(CEMscope::TaskStageBusy, -1, 0, 0);
 }
 
-void CMenuTargets::OnUpdateTiltdown(CCmdUI* pCmdUI) 
+void CMenuTargets::OnUpdateTiltdown(CCmdUI* pCmdUI)
 {
-  pCmdUI->Enable(!DoingTasks() && !mCamera->CameraBusy() 
-    && mScope->StageBusy() <= 0); 
-    
+  pCmdUI->Enable(!DoingTasks() && !mCamera->CameraBusy()
+    && mScope->StageBusy() <= 0);
+
 }
 
-void CMenuTargets::OnCalibrationListmags() 
+void CMenuTargets::OnCalibrationListmags()
 {
-  mScope->ScanMagnifications();	
+  mScope->ScanMagnifications();
 }
 
-void CMenuTargets::OnUpdateCalibrationListmags(CCmdUI* pCmdUI) 
-{ 
+void CMenuTargets::OnUpdateCalibrationListmags(CCmdUI* pCmdUI)
+{
   pCmdUI->Enable(!DoingTasks() && !HitachiScope);
 }
 
 // CAMERA
 
 // Menu or toolbar buttons to start a capture: go through common routine
-void CMenuTargets::OnCameraView() 
+void CMenuTargets::OnCameraView()
 {
   mWinApp->UserRequestedCapture(VIEW_CONSET);
 }
-void CMenuTargets::OnCameraFocus() 
+void CMenuTargets::OnCameraFocus()
 {
   mWinApp->UserRequestedCapture(FOCUS_CONSET);
 }
-void CMenuTargets::OnCameraTrial() 
+void CMenuTargets::OnCameraTrial()
 {
   mWinApp->UserRequestedCapture(TRIAL_CONSET);
 }
-void CMenuTargets::OnCameraRecord() 
+void CMenuTargets::OnCameraRecord()
 {
   mWinApp->UserRequestedCapture(RECORD_CONSET);
 }
 
-void CMenuTargets::OnCameraPreview() 
+void CMenuTargets::OnCameraPreview()
 {
   mWinApp->UserRequestedCapture(PREVIEW_CONSET);
 }
@@ -2120,13 +2117,13 @@ void CMenuTargets::OnUpdateNoUserShots(CCmdUI* pCmdUI)
 }
 
 // Manage the Screen down mode and simulation mode, and post-action menu entries
-void CMenuTargets::OnCameraScreendown() 
+void CMenuTargets::OnCameraScreendown()
 {
-  mCamera->SetScreenDownMode(!mCamera->GetScreenDownMode());  
+  mCamera->SetScreenDownMode(!mCamera->GetScreenDownMode());
   mCamera->SetAMTblanking();
 }
 
-void CMenuTargets::OnUpdateCameraScreendown(CCmdUI* pCmdUI) 
+void CMenuTargets::OnUpdateCameraScreendown(CCmdUI* pCmdUI)
 {
   pCmdUI->Enable(!mWinApp->StartedTiltSeries());
   pCmdUI->SetCheck(mCamera->GetScreenDownMode() ? 1 : 0);
@@ -2134,45 +2131,45 @@ void CMenuTargets::OnUpdateCameraScreendown(CCmdUI* pCmdUI)
 
 // Process stop-acquire messages; enable if busy and not doing tasks
 // Thus this will not stop other tasks
-void CMenuTargets::OnCameraStopacquire() 
+void CMenuTargets::OnCameraStopacquire()
 {
   mCamera->StopCapture(1);
 }
 
-void CMenuTargets::OnUpdateCameraStopacquire(CCmdUI* pCmdUI) 
+void CMenuTargets::OnUpdateCameraStopacquire(CCmdUI* pCmdUI)
 {
   pCmdUI->Enable(mCamera->CameraBusy() && !DoingTasks());
 }
 
 // Set timing parameters for finding properties
-void CMenuTargets::OnCameraSettiming() 
+void CMenuTargets::OnCameraSettiming()
 {
   CameraParameters *param = mWinApp->GetCamParams() + mWinApp->GetCurrentCamera();
-  KGetOneFloat("Delay time for starting to take picture (seconds):", 
+  KGetOneFloat("Delay time for starting to take picture (seconds):",
     param->startupDelay, 3);
   if (param->STEMcamera) {
     KGetOneFloat("Total flyback time (microseconds):", param->flyback, 0);
     return;
   }
 
-  KGetOneFloat("Minimum drift settling (half of startup jitter, seconds):", 
+  KGetOneFloat("Minimum drift settling (half of startup jitter, seconds):",
     param->minimumDrift, 3);
-  KGetOneFloat("Extra beam time before blanking after exposure (seconds):", 
+  KGetOneFloat("Extra beam time before blanking after exposure (seconds):",
     param->extraBeamTime, 3);
 }
 
-void CMenuTargets::OnUpdateCameraSettiming(CCmdUI* pCmdUI) 
+void CMenuTargets::OnUpdateCameraSettiming(CCmdUI* pCmdUI)
 {
-  pCmdUI->Enable(!DoingTasks() && !mCamera->CameraBusy() && 
-    mWinApp->GetAdministrator());  
+  pCmdUI->Enable(!DoingTasks() && !mCamera->CameraBusy() &&
+    mWinApp->GetAdministrator());
 }
 
-void CMenuTargets::OnCameraSetscanning() 
+void CMenuTargets::OnCameraSetscanning()
 {
   float width = mCamera->GetBeamWidth();
   int margin = mCamera->GetScanMargin();
   int sleep = mCamera->GetScanSleep();
-  KGetOneFloat("Width of slit beam in unbinned pixels (0 for no scanning):", 
+  KGetOneFloat("Width of slit beam in unbinned pixels (0 for no scanning):",
     width, 1);
   mCamera->SetBeamWidth(width);
   if (width <= 0.)
@@ -2184,7 +2181,7 @@ void CMenuTargets::OnCameraSetscanning()
   mCamera->SetScanSleep(sleep);
 }
 
-void CMenuTargets::OnCameraDebugmode() 
+void CMenuTargets::OnCameraDebugmode()
 {
   mWinApp->AdjustKeysForCameraDebug(!GetDebugOutput('Z'));
   SEMAppendToLog("The Camera menu entry Set Debug Mode is being phased out; set Debug "
@@ -2192,23 +2189,23 @@ void CMenuTargets::OnCameraDebugmode()
   mCamera->SetDebugMode(GetDebugOutput('Z'));
 }
 
-void CMenuTargets::OnUpdateCameraDebugmode(CCmdUI* pCmdUI) 
+void CMenuTargets::OnUpdateCameraDebugmode(CCmdUI* pCmdUI)
 {
   BOOL bEnable = !DoingTasks() && !mCamera->CameraBusy();
   pCmdUI->Enable(bEnable);
   pCmdUI->SetCheck(GetDebugOutput('Z') ? 1 : 0);
 }
 
-void CMenuTargets::OnCameraDivideby2() 
+void CMenuTargets::OnCameraDivideby2()
 {
-  mCamera->SetDivideBy2(mCamera->GetDivideBy2() > 0 ? 0 : 1);	
+  mCamera->SetDivideBy2(mCamera->GetDivideBy2() > 0 ? 0 : 1);
 }
 
-void CMenuTargets::OnUpdateCameraDivideby2(CCmdUI* pCmdUI) 
+void CMenuTargets::OnUpdateCameraDivideby2(CCmdUI* pCmdUI)
 {
   CameraParameters *param = mWinApp->GetActiveCamParam();
-  BOOL bEnable = !DoingTasks() && !mCamera->CameraBusy() && 
-    !mWinApp->StartedTiltSeries() && 
+  BOOL bEnable = !DoingTasks() && !mCamera->CameraBusy() &&
+    !mWinApp->StartedTiltSeries() &&
     (param->FEItype || (param->CamFlags & CAMFLAG_NO_DIV_BY_2) == 0);
   pCmdUI->Enable(bEnable);
   pCmdUI->SetCheck(mCamera->GetDivideBy2() > 0 ? 1 : 0);
@@ -2252,32 +2249,32 @@ void CMenuTargets::OnCameraShowgainref()
   mCamera->ShowReference(GAIN_REFERENCE);
 }
 
-void CMenuTargets::OnCameraShowdarkref() 
+void CMenuTargets::OnCameraShowdarkref()
 {
   mCamera->ShowReference(DARK_REFERENCE);
 }
 
-void CMenuTargets::OnUpdateCameraShowref(CCmdUI* pCmdUI) 
+void CMenuTargets::OnUpdateCameraShowref(CCmdUI* pCmdUI)
 {
-  BOOL bEnable = mCamera->GetProcessHere() && !DoingTasks() && 
+  BOOL bEnable = mCamera->GetProcessHere() && !DoingTasks() &&
     !mCamera->CameraBusy();
   pCmdUI->Enable(bEnable);
 }
 
-void CMenuTargets::OnCameraNormalizehere() 
+void CMenuTargets::OnCameraNormalizehere()
 {
   mCamera->SetProcessHere(!mCamera->GetProcessHere());
 }
 
-void CMenuTargets::OnUpdateCameraNormalizehere(CCmdUI* pCmdUI) 
+void CMenuTargets::OnUpdateCameraNormalizehere(CCmdUI* pCmdUI)
 {
   CameraParameters *param = mWinApp->GetCamParams() + mWinApp->GetCurrentCamera();
   pCmdUI->SetCheck(mCamera->GetProcessHere() ? 1 : 0);
-  pCmdUI->Enable(!param->STEMcamera && (!param->TietzType || 
-    (param->TietzType && param->pluginCanProcess)) && (!param->AMTtype || 
-    (param->AMTtype && mCamera->GetDMversion(2) >= AMT_VERSION_CAN_NORM)) && 
-    (!param->DE_camType || param->DE_camType >= 2) && 
-    mCamera->CanProcessHere(param) && (param->pluginName.IsEmpty() || 
+  pCmdUI->Enable(!param->STEMcamera && (!param->TietzType ||
+    (param->TietzType && param->pluginCanProcess)) && (!param->AMTtype ||
+    (param->AMTtype && mCamera->GetDMversion(2) >= AMT_VERSION_CAN_NORM)) &&
+    (!param->DE_camType || param->DE_camType >= 2) &&
+    mCamera->CanProcessHere(param) && (param->pluginName.IsEmpty() ||
      param->pluginCanProcess) && !DoingTasks() && !mCamera->CameraBusy());
 }
 
@@ -2290,23 +2287,23 @@ void CMenuTargets::OnUpdateCameraInterpolateDarkRefs(CCmdUI *pCmdUI)
 {
   CameraParameters *param = mWinApp->GetCamParams() + mWinApp->GetCurrentCamera();
   pCmdUI->SetCheck(mCamera->GetInterpDarkRefs() ? 1 : 0);
-  pCmdUI->Enable(mCamera->GetProcessHere() && !DoingTasks() && 
-    !mCamera->ReturningFloatImages(param) && !mCamera->CameraBusy() && 
+  pCmdUI->Enable(mCamera->GetProcessHere() && !DoingTasks() &&
+    !mCamera->ReturningFloatImages(param) && !mCamera->CameraBusy() &&
     !(mWinApp->StartedTiltSeries() && mWinApp->mTSController->GetChangeRecExp()));
 }
 
-void CMenuTargets::OnCameraSetcorrections() 
+void CMenuTargets::OnCameraSetcorrections()
 {
   CameraParameters *param = mWinApp->GetCamParams() + mWinApp->GetCurrentCamera();
   KGetOneInt("Enter sum of 1 for defect, 16 for bias, and 32 for",
-    "linearization correction, or -1 for default corrections:", 
+    "linearization correction, or -1 for default corrections:",
     param->corrections);
 }
 
-void CMenuTargets::OnUpdateCameraSetcorrections(CCmdUI* pCmdUI) 
+void CMenuTargets::OnUpdateCameraSetcorrections(CCmdUI* pCmdUI)
 {
   CameraParameters *param = mWinApp->GetCamParams() + mWinApp->GetCurrentCamera();
-  pCmdUI->Enable(mWinApp->GetAdministrator() && param->GatanCam && !DoingTasks() && 
+  pCmdUI->Enable(mWinApp->GetAdministrator() && param->GatanCam && !DoingTasks() &&
     !mCamera->CameraBusy());
 }
 
@@ -2358,39 +2355,39 @@ void CMenuTargets::OnUpdateCameraAlwaysAntialiasK23(CCmdUI *pCmdUI)
   pCmdUI->Enable(!DoingTasks() && !mCamera->CameraBusy());
 }
 
-void CMenuTargets::OnCameraMontage() 
+void CMenuTargets::OnCameraMontage()
 {
   mWinApp->RestoreViewFocus();
-  mWinApp->StartMontageOrTrial(false); 
+  mWinApp->StartMontageOrTrial(false);
 }
 
-void CMenuTargets::OnCameraMontagetrial() 
+void CMenuTargets::OnCameraMontagetrial()
 {
   mWinApp->RestoreViewFocus();
   mWinApp->StartMontageOrTrial(true);
 }
 
-void CMenuTargets::OnUpdateCameraMontage(CCmdUI* pCmdUI) 
+void CMenuTargets::OnUpdateCameraMontage(CCmdUI* pCmdUI)
 {
-  BOOL bEnable = (!mWinApp->mStoreMRC || mWinApp->Montaging()) && !DoingTasks() 
-    && !mWinApp->StartedTiltSeries() && !mCamera->CameraBusy() && 
+  BOOL bEnable = (!mWinApp->mStoreMRC || mWinApp->Montaging()) && !DoingTasks()
+    && !mWinApp->StartedTiltSeries() && !mCamera->CameraBusy() &&
     !mScope->GetMovingStage();
   pCmdUI->Enable(bEnable);
 }
 
-void CMenuTargets::OnUpdateCameraMontagetrial(CCmdUI* pCmdUI) 
+void CMenuTargets::OnUpdateCameraMontagetrial(CCmdUI* pCmdUI)
 {
   BOOL bEnable = (!mWinApp->mStoreMRC || mWinApp->Montaging()) && !DoingTasks()
     && !mCamera->CameraBusy() && !mScope->GetMovingStage();
   pCmdUI->Enable(bEnable);
 }
 
-void CMenuTargets::OnCameraPostactions() 
+void CMenuTargets::OnCameraPostactions()
 {
-  mWinApp->SetActPostExposure(!mWinApp->ActPostExposure(NULL, true)); 
+  mWinApp->SetActPostExposure(!mWinApp->ActPostExposure(NULL, true));
 }
 
-void CMenuTargets::OnUpdateCameraPostactions(CCmdUI* pCmdUI) 
+void CMenuTargets::OnUpdateCameraPostactions(CCmdUI* pCmdUI)
 {
   pCmdUI->Enable(mCamera->PostActionsOK(NULL, true));
   pCmdUI->SetCheck(mWinApp->ActPostExposure(NULL, true) ? 1 : 0);
@@ -2398,10 +2395,10 @@ void CMenuTargets::OnUpdateCameraPostactions(CCmdUI* pCmdUI)
 
 // Toggle camera with spacebar: either stop a continuous capture,
 // or restart last parameter set
-void CMenuTargets::OnCameratoggle() 
+void CMenuTargets::OnCameratoggle()
 {
   CameraParameters *camP = mWinApp->GetActiveCamParam();
-  if (DoingTasks() && (!mCamera->DoingContinuousAcquire() || 
+  if (DoingTasks() && (!mCamera->DoingContinuousAcquire() ||
     mCamera->GetPreventUserToggle()))
     return;
   if (mCamera->CameraBusy()) {
@@ -2413,12 +2410,12 @@ void CMenuTargets::OnCameratoggle()
 
 void CMenuTargets::OnpdateCameratoggle(CCmdUI* pCmdUI)
 {
-  pCmdUI->Enable(!DoingTasks() || (mCamera->DoingContinuousAcquire() && 
-    !mCamera->GetPreventUserToggle())); 
+  pCmdUI->Enable(!DoingTasks() || (mCamera->DoingContinuousAcquire() &&
+    !mCamera->GetPreventUserToggle()));
 }
 
 // Escape key is a general stop
-void CMenuTargets::OnEscape() 
+void CMenuTargets::OnEscape()
 {
   if (DoingTasks() || mCamera->CameraBusy()) {
     mCamera->StopCapture(1);
@@ -2428,13 +2425,13 @@ void CMenuTargets::OnEscape()
     mWinApp->mNavigator->ClearRangeKeys();
 }
 
-void CMenuTargets::OnUpdateEscape(CCmdUI* pCmdUI) 
+void CMenuTargets::OnUpdateEscape(CCmdUI* pCmdUI)
 {
-  pCmdUI->Enable(true);  
+  pCmdUI->Enable(true);
 }
 
 // The user enters the values for C2 in TUI
-void CMenuTargets::OnCalibrationC2factor() 
+void CMenuTargets::OnCalibrationC2factor()
 {
   float intensity, C2Val, intLast, C2last, C2fac;
   int spotSize;
@@ -2447,7 +2444,7 @@ void CMenuTargets::OnCalibrationC2factor()
     "The program will go to each spot size and ask you to enter the C2 reading.\n",
     MB_OKCANCEL | MB_ICONINFORMATION) != IDOK)
     return;
-   
+
   // Set intensity here just for first time
   mScope->SetIntensity(0.3);
   for (spotSize = 0; spotSize <= mScope->GetNumSpotSizes(); spotSize++) {
@@ -2478,13 +2475,13 @@ void CMenuTargets::OnCalibrationC2factor()
   mScope->SetIntensity(intSave);
 }
 
-void CMenuTargets::OnUpdateCalibrationC2factor(CCmdUI* pCmdUI) 
+void CMenuTargets::OnUpdateCalibrationC2factor(CCmdUI* pCmdUI)
 {
-  pCmdUI->Enable(FEIscope && !mWinApp->DoingTasks() && !mWinApp->GetSTEMMode() && 
-    !mScope->GetUseIllumAreaForC2());  
+  pCmdUI->Enable(FEIscope && !mWinApp->DoingTasks() && !mWinApp->GetSTEMMode() &&
+    !mScope->GetUseIllumAreaForC2());
 }
 
-void CMenuTargets::OnCalibrationNeutralISvalues() 
+void CMenuTargets::OnCalibrationNeutralISvalues()
 {
   if (HitachiScope) {
     if (AfxMessageBox("This command will go to each magnification in LM and HR\n"
@@ -2497,29 +2494,29 @@ void CMenuTargets::OnCalibrationNeutralISvalues()
   mScope->CalibrateNeutralIS(CAL_NTRL_FIND);
 }
 
-void CMenuTargets::OnUpdateCalibrationNeutralISvalues(CCmdUI* pCmdUI) 
+void CMenuTargets::OnUpdateCalibrationNeutralISvalues(CCmdUI* pCmdUI)
 {
-  pCmdUI->Enable((JEOLscope || HitachiScope) && !DoingTasks() && !mCamera->CameraBusy() && 
+  pCmdUI->Enable((JEOLscope || HitachiScope) && !DoingTasks() && !mCamera->CameraBusy() &&
     !mWinApp->GetSTEMMode());
 }
 
-void CMenuTargets::OnCalibrationRestoreNeutralIS() 
+void CMenuTargets::OnCalibrationRestoreNeutralIS()
 {
   mScope->CalibrateNeutralIS(CAL_NTRL_RESTORE);
 }
 
-void CMenuTargets::OnCalibrationBaseFocusValues() 
+void CMenuTargets::OnCalibrationBaseFocusValues()
 {
   mScope->CalibrateNeutralIS(CAL_NTRL_FOCUS);
 }
 
-void CMenuTargets::OnUpdateCalibrationRestoreNeutralIS(CCmdUI* pCmdUI) 
+void CMenuTargets::OnUpdateCalibrationRestoreNeutralIS(CCmdUI* pCmdUI)
 {
-  pCmdUI->Enable(HitachiScope && !DoingTasks() && !mCamera->CameraBusy() && 
+  pCmdUI->Enable(HitachiScope && !DoingTasks() && !mCamera->CameraBusy() &&
     !mWinApp->GetSTEMMode());
 }
 
-void CMenuTargets::OnCalibrationBeamcrossover() 
+void CMenuTargets::OnCalibrationBeamcrossover()
 {
   mWinApp->mBeamAssessor->CalibrateCrossover();
 }
@@ -2608,14 +2605,14 @@ void CMenuTargets::OnTasksTiltseries()
   mTSController->SetupTiltSeries();
 }
 
-void CMenuTargets::OnUpdateTasksTiltseries(CCmdUI* pCmdUI) 
+void CMenuTargets::OnUpdateTasksTiltseries(CCmdUI* pCmdUI)
 {
   pCmdUI->Enable(!mWinApp->DoingTasks() && !(mNavigator && mNavigator->StartedMacro()));
 }
 
-void CMenuTargets::OnTiltseriesExtraoutput() 
+void CMenuTargets::OnTiltseriesExtraoutput()
 {
-  mTSController->SetExtraOutput();  	
+  mTSController->SetExtraOutput();
 }
 
 void CMenuTargets::OnTiltseriesResetpoleangle()
@@ -2661,7 +2658,7 @@ void CMenuTargets::OnTiltseriesSetMacroToRun()
     ", 4 for Record", "Enter number of step that the script will be run before:", macNum))
     return;
   B3DCLAMP(macNum, 1, TSMACRO_PRE_RECORD);
-  mTSController->SetStepAfterMacro(macNum);  
+  mTSController->SetStepAfterMacro(macNum);
 }
 
 void CMenuTargets::OnTiltseriesCallTsPlugin()
@@ -2682,7 +2679,7 @@ void CMenuTargets::OnTiltseriesSendemail()
 
 void CMenuTargets::OnUpdateTiltseriesSendemail(CCmdUI *pCmdUI)
 {
-  pCmdUI->Enable(mWinApp->mMailer->GetInitialized() && 
+  pCmdUI->Enable(mWinApp->mMailer->GetInitialized() &&
     !(mWinApp->mMailer->GetSendTo()).IsEmpty());
   pCmdUI->SetCheck(mTSController->GetSendEmail() != 0);
 }
@@ -2715,59 +2712,59 @@ void CMenuTargets::OnTiltseriesSetBidirReturnDelay()
     mTSController->SetPostBidirReturnDelay(delay);
 }
 
-void CMenuTargets::OnTiltseriesBackup() 
+void CMenuTargets::OnTiltseriesBackup()
 {
-  mTSController->BackUpSeries(); 
+  mTSController->BackUpSeries();
 }
 
-void CMenuTargets::OnUpdateTiltseriesBackup(CCmdUI* pCmdUI) 
+void CMenuTargets::OnUpdateTiltseriesBackup(CCmdUI* pCmdUI)
 {
-  pCmdUI->Enable(mTSController->CanBackUp());  
+  pCmdUI->Enable(mTSController->CanBackUp());
 }
 
-void CMenuTargets::OnTiltseriesStop() 
+void CMenuTargets::OnTiltseriesStop()
 {
   mWinApp->mCameraMacroTools.SetUserStop(TRUE);
   mTSController->ExternalStop(0);
   mWinApp->mCameraMacroTools.SetUserStop(FALSE);
 }
 
-void CMenuTargets::OnUpdateTiltseriesStop(CCmdUI* pCmdUI) 
+void CMenuTargets::OnUpdateTiltseriesStop(CCmdUI* pCmdUI)
 {
-  pCmdUI->Enable(mTSController->DoingTiltSeries()); 
+  pCmdUI->Enable(mTSController->DoingTiltSeries());
 }
 
-void CMenuTargets::OnTiltseriesEndloop() 
+void CMenuTargets::OnTiltseriesEndloop()
 {
-  mTSController->EndLoop();  
+  mTSController->EndLoop();
 }
 
-void CMenuTargets::OnTiltseriesResume() 
+void CMenuTargets::OnTiltseriesResume()
 {
   mTSController->Resume();
 }
 
-void CMenuTargets::OnUpdateTiltseriesResume(CCmdUI* pCmdUI) 
+void CMenuTargets::OnUpdateTiltseriesResume(CCmdUI* pCmdUI)
 {
-  pCmdUI->Enable(mTSController->IsResumable());  
+  pCmdUI->Enable(mTSController->IsResumable());
 }
 
-void CMenuTargets::OnTiltseriesOneloop() 
+void CMenuTargets::OnTiltseriesOneloop()
 {
   mTSController->CommonResume(1, 0);
 }
 
-void CMenuTargets::OnTiltseriesOnestep() 
+void CMenuTargets::OnTiltseriesOnestep()
 {
   mTSController->CommonResume(-1, 0);
 }
 
-void CMenuTargets::OnTiltseriesTerminate() 
+void CMenuTargets::OnTiltseriesTerminate()
 {
-  mTSController->Terminate();  
+  mTSController->Terminate();
 }
 
-void CMenuTargets::OnTiltseriesVerbose() 
+void CMenuTargets::OnTiltseriesVerbose()
 {
   mTSController->SetVerbose(!mTSController->GetVerbose());
 }
@@ -2793,39 +2790,39 @@ void CMenuTargets::OnUpdateTiltseriesAutosaveXYZ(CCmdUI *pCmdUI)
   pCmdUI->SetCheck(mTSController->GetAutosaveXYZ() ? 1 : 0);
 }
 
-void CMenuTargets::OnUpdateTiltseriesVerbose(CCmdUI* pCmdUI) 
+void CMenuTargets::OnUpdateTiltseriesVerbose(CCmdUI* pCmdUI)
 {
   pCmdUI->Enable();
   pCmdUI->SetCheck(mTSController->GetVerbose() ? 1 : 0);
 }
 
-void CMenuTargets::OnTiltseriesAutosavelog() 
+void CMenuTargets::OnTiltseriesAutosavelog()
 {
   mTSController->SetAutosaveLog(!mTSController->GetAutosaveLog());
 }
 
-void CMenuTargets::OnUpdateTiltseriesAutosavelog(CCmdUI* pCmdUI) 
+void CMenuTargets::OnUpdateTiltseriesAutosavelog(CCmdUI* pCmdUI)
 {
   pCmdUI->Enable();
   pCmdUI->SetCheck(mTSController->GetAutosaveLog() ? 1 : 0);
 }
 
-void CMenuTargets::OnTiltseriesDebugmode() 
+void CMenuTargets::OnTiltseriesDebugmode()
 {
   mTSController->SetDebugMode(!mTSController->GetDebugMode());
   if (mTSController->GetDebugMode())
     mTSController->DebugDump("Turned on debug mode");
 }
 
-void CMenuTargets::OnUpdateTiltseriesDebugmode(CCmdUI* pCmdUI) 
+void CMenuTargets::OnUpdateTiltseriesDebugmode(CCmdUI* pCmdUI)
 {
   pCmdUI->Enable();
   pCmdUI->SetCheck(mTSController->GetDebugMode() ? 1 : 0);
 }
 
-void CMenuTargets::OnCalibrationCameratiming() 
+void CMenuTargets::OnCalibrationCameratiming()
 {
-  mWinApp->mCalibTiming->CalibrateTiming(-1, -1., true);	
+  mWinApp->mCalibTiming->CalibrateTiming(-1, -1., true);
 }
 
 void CMenuTargets::OnCalibrationQuickFlybackTime()
@@ -2844,7 +2841,7 @@ void CMenuTargets::OnCalibrationQuickFlybackTime()
     mFlybackSet = mFlybackSet.Left(1).MakeUpper();
   for (i = 0; i < 5; i++) {
     if (mFlybackSet == modeNames[i].Left(1).MakeUpper()) {
-      mWinApp->mCalibTiming->CalibrateTiming(i, -1., true);	
+      mWinApp->mCalibTiming->CalibrateTiming(i, -1., true);
       return;
     }
   }
@@ -2857,9 +2854,9 @@ void CMenuTargets::OnUpdateCalibrationQuickFlybackTime(CCmdUI *pCmdUI)
   pCmdUI->Enable(param->STEMcamera && param->FEItype && !mWinApp->DoingTasks());
 }
 
-void CMenuTargets::OnCalibrationShutterdeadtime() 
+void CMenuTargets::OnCalibrationShutterdeadtime()
 {
-  mWinApp->mCalibTiming->CalibrateDeadTime(); 	
+  mWinApp->mCalibTiming->CalibrateDeadTime();
 }
 
 void CMenuTargets::OnUpdateCalibrationShutterdeadtime(CCmdUI *pCmdUI)
@@ -2895,8 +2892,8 @@ int CMenuTargets::DoCalibrateStandardLMfocus(bool fromMacro)
     return 1;
   }
   focTab[2 * magInd + probe] = mScope->GetFocus();
-  message.Format("Eucentric focus value of %.5f saved for mag %dx%s", 
-    focTab[2 * magInd + probe], MagForCamera(mWinApp->GetCurrentCamera(), magInd), 
+  message.Format("Eucentric focus value of %.5f saved for mag %dx%s",
+    focTab[2 * magInd + probe], MagForCamera(mWinApp->GetCurrentCamera(), magInd),
     probe ? "" : " nanoprobe");
   mWinApp->AppendToLog(message);
   mWinApp->SetCalibrationsNotSaved(true);
@@ -2960,7 +2957,7 @@ void CMenuTargets::OnTasksSetupAutocenter()
 
 void CMenuTargets::OnUpdateTasksSetupAutocenter(CCmdUI *pCmdUI)
 {
-  pCmdUI->Enable(!mWinApp->mAutocenDlg && !mWinApp->DoingTasks() && 
+  pCmdUI->Enable(!mWinApp->mAutocenDlg && !mWinApp->DoingTasks() &&
     !mWinApp->GetSTEMMode());
 }
 
@@ -2995,7 +2992,7 @@ void CMenuTargets::OnUpdateTasksAutocenterbeam(CCmdUI *pCmdUI)
   }
   param = mWinApp->mMultiTSTasks->GetAutocenSettings(mWinApp->GetCurrentCamera(), mag,
     spot, probe, roughInt, synth, bestm, bests);
-  pCmdUI->Enable(!mWinApp->DoingTasks() && param->intensity >= 0. && 
+  pCmdUI->Enable(!mWinApp->DoingTasks() && param->intensity >= 0. &&
     !mScope->GetMovingStage());
 }
 
@@ -3011,7 +3008,7 @@ void CMenuTargets::OnTasksAssessIntersetShifts()
 
 void CMenuTargets::OnUpdateTasksAssessIntersetShifts(CCmdUI *pCmdUI)
 {
-  pCmdUI->Enable(!mWinApp->DoingTasks() && mWinApp->GetSTEMMode()); 
+  pCmdUI->Enable(!mWinApp->DoingTasks() && mWinApp->GetSTEMMode());
 }
 
 void CMenuTargets::OnTasksReviseCancel()
@@ -3026,7 +3023,7 @@ void CMenuTargets::OnUpdateTasksReviseCancel(CCmdUI *pCmdUI)
   for (int i = 0; i < 5; i++)
     if (isShifts->binning[i] && (isShifts->shiftX[i] || isShifts->shiftY[i]))
       anyset = true;
-  pCmdUI->Enable(anyset || (mWinApp->GetImBufs())->mTimeStamp == 
+  pCmdUI->Enable(anyset || (mWinApp->GetImBufs())->mTimeStamp ==
     mWinApp->mShiftCalibrator->GetISStimeStampLast());
 }
 
@@ -3096,7 +3093,7 @@ void CMenuTargets::OnSpecialPiezoForLdAxisShift()
 void CMenuTargets::OnUpdateSpecialPiezoForLdAxisShift(CCmdUI *pCmdUI)
 {
   pCmdUI->SetCheck(mScope->GetUsePiezoForLDaxis());
-  pCmdUI->Enable(mWinApp->mLowDoseDlg.GetAxisPiezoPlugNum() >= 0 && 
+  pCmdUI->Enable(mWinApp->mLowDoseDlg.GetAxisPiezoPlugNum() >= 0 &&
     mWinApp->mLowDoseDlg.GetAxisPiezoNum() &&
     !mWinApp->DoingTasks() && !mWinApp->StartedTiltSeries() && !mWinApp->LowDoseMode());
 }
@@ -3116,21 +3113,21 @@ void CMenuTargets::OnSpecialDisableDarkTrimInAlign()
 {
   int disable = mWinApp->mShiftManager->GetDisableAutoTrim();
   if (!SetTwoFlags("Enter 0 for automatic trimming of dark borders in Autoalign in Low "
-    "Dose","   or 1 to disable it in tilt series, or 2 to disable it always", 
+    "Dose","   or 1 to disable it in tilt series, or 2 to disable it always",
     NOTRIM_LOWDOSE_TS, NOTRIM_LOWDOSE_ALL, disable))
     return;
   if (SetTwoFlags("Enter 0 for automatic trimming of dark borders in lower mag tasks",
-    "   or 1 to disable it in tilt series, or 2 to disable it always", 
+    "   or 1 to disable it in tilt series, or 2 to disable it always",
     NOTRIM_TASKS_TS, NOTRIM_TASKS_ALL, disable)) {
       SetTwoFlags("Enter 0 for automatic trimming in first two rounds of Realign to Item",
-        "   and after IS resets in Align to Template, or 1 to disable it", 
+        "   and after IS resets in Align to Template, or 1 to disable it",
         NOTRIM_REALIGN_ITEM, 0,disable);
   }
   mWinApp->mShiftManager->SetDisableAutoTrim(disable);
 }
 
 // Manage two flags in the "disable" variable after asking for an entry of 1 or 2
-int CMenuTargets::SetTwoFlags(CString mess1, CString mess2, int flag1, int flag2, 
+int CMenuTargets::SetTwoFlags(CString mess1, CString mess2, int flag1, int flag2,
                               int &disable)
 {
   int value = (disable & flag1) ? 1 : 0;
@@ -3214,8 +3211,8 @@ void CMenuTargets::OnCloseValvesAfterLongInactivity()
 
 void CMenuTargets::OnUpdateCloseValvesAfterLongInactivity(CCmdUI *pCmdUI)
 {
-  pCmdUI->SetCheck((mScope->GetIdleTimeToCloseValves() > 0 || 
-    (JEOLscope && mScope->GetAllowStopEmissionIfIdle() && 
+  pCmdUI->SetCheck((mScope->GetIdleTimeToCloseValves() > 0 ||
+    (JEOLscope && mScope->GetAllowStopEmissionIfIdle() &&
       mScope->GetIdleTimeToStopEmission()> 0)) ? 1 : 0);
   pCmdUI->Enable(!mWinApp->DoingTasks() && !HitachiScope && !mScope->GetNoScope());
 }
@@ -3239,7 +3236,7 @@ void CMenuTargets::OnFocusCorrectAstigmatism()
 
 void CMenuTargets::OnUpdateFocusCorrectAstigmatism(CCmdUI *pCmdUI)
 {
-  pCmdUI->Enable(!mWinApp->DoingTasks() && !mWinApp->GetSTEMMode() && 
+  pCmdUI->Enable(!mWinApp->DoingTasks() && !mWinApp->GetSTEMMode() &&
     mWinApp->mAutoTuning->LookupAstigCal(mScope->GetProbeMode(), mScope->FastAlpha(),
     mScope->FastMagIndex()) >= 0
      && CamToSpecimenExists());
@@ -3254,7 +3251,7 @@ void CMenuTargets::OnFocusComaFree()
 
 void CMenuTargets::OnUpdateFocusComaFree(CCmdUI *pCmdUI)
 {
-  pCmdUI->Enable(!mWinApp->DoingTasks() && !mWinApp->GetSTEMMode() && 
+  pCmdUI->Enable(!mWinApp->DoingTasks() && !mWinApp->GetSTEMMode() &&
     mWinApp->mAutoTuning->LookupComaCal(mScope->GetProbeMode(), mScope->FastAlpha(),
     mScope->FastMagIndex()) >= 0 && CamToSpecimenExists() && !mWinApp->LowDoseMode());
 }
@@ -3280,10 +3277,10 @@ void CMenuTargets::OnUpdateFocusRunAnotherIteration(CCmdUI *pCmdUI)
   int magInd = mScope->FastMagIndex();
   int alpha = mScope->FastAlpha();
   int probe = mScope->GetProbeMode();
-  pCmdUI->Enable(!mWinApp->DoingTasks() && !mWinApp->GetSTEMMode() && 
-    mWinApp->mAutoTuning->LookupComaCal(probe, alpha, magInd) >= 0 && 
+  pCmdUI->Enable(!mWinApp->DoingTasks() && !mWinApp->GetSTEMMode() &&
+    mWinApp->mAutoTuning->LookupComaCal(probe, alpha, magInd) >= 0 &&
     CamToSpecimenExists() && !mWinApp->LowDoseMode() &&
-    mWinApp->mAutoTuning->GetNumComaItersDone() > 0 && 
+    mWinApp->mAutoTuning->GetNumComaItersDone() > 0 &&
     magInd == mWinApp->mAutoTuning->GetLastComaMagInd() &&
     probe == mWinApp->mAutoTuning->GetLastComaProbe() &&
     alpha == mWinApp->mAutoTuning->GetLastComaAlpha());
@@ -3451,7 +3448,7 @@ void CMenuTargets::OnFocusSetCtfComaBt()
 
 void CMenuTargets::OnCalFocusTuningCtfAstig()
 {
-  if (mWinApp->mAutoTuning->CheckAndSetupCtfAcquireParams("calibrating astigmatism", 
+  if (mWinApp->mAutoTuning->CheckAndSetupCtfAcquireParams("calibrating astigmatism",
     false))
     return;
   mWinApp->mAutoTuning->CtfBasedAstigmatismComa(0, true, 0, 0, false);
@@ -3459,7 +3456,7 @@ void CMenuTargets::OnCalFocusTuningCtfAstig()
 
 void CMenuTargets::OnFocusComaByCtf()
 {
-  if (mWinApp->mAutoTuning->CheckAndSetupCtfAcquireParams("correcting coma", 
+  if (mWinApp->mAutoTuning->CheckAndSetupCtfAcquireParams("correcting coma",
     false))
     return;
   mWinApp->mAutoTuning->CtfBasedAstigmatismComa
@@ -3473,7 +3470,7 @@ void CMenuTargets::OnFocusSetCtfAcquireParams()
 
 void CMenuTargets::OnFocusCorrectAstigmatismWithFfts()
 {
-  if (mWinApp->mAutoTuning->CheckAndSetupCtfAcquireParams("correcting astigmatism", 
+  if (mWinApp->mAutoTuning->CheckAndSetupCtfAcquireParams("correcting astigmatism",
     false))
     return;
   mWinApp->mAutoTuning->CtfBasedAstigmatismComa(0, false, 0, 0, false);
@@ -3481,7 +3478,7 @@ void CMenuTargets::OnFocusCorrectAstigmatismWithFfts()
 
 void CMenuTargets::OnUpdateFocusCorrectAstigmatismWithFfts(CCmdUI *pCmdUI)
 {
-  pCmdUI->Enable(mWinApp->mAutoTuning->LookupCtfBasedCal(false, mScope->GetMagIndex(), 
+  pCmdUI->Enable(mWinApp->mAutoTuning->LookupCtfBasedCal(false, mScope->GetMagIndex(),
     false) >= 0 && !mWinApp->DoingTasks() && !mWinApp->GetSTEMMode());
 }
 

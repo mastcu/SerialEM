@@ -1,8 +1,7 @@
 // ChildFrm.cpp          Standard MFC MDI component, contains an individual
 //                         instance of a CSerialEMView window
 //
-// Copyright (C) 2003 by Boulder Laboratory for 3-Dimensional Electron 
-// Microscopy of Cells ("BL3DEMC") and the Regents of the University of
+// Copyright (C) 2003-2026 by the Regents of the University of
 // Colorado.  See Copyright.txt for full notice of copyright and limitations.
 //
 // Author: David Mastronarde
@@ -12,10 +11,8 @@
 
 #include "ChildFrm.h"
 
-#ifdef _DEBUG
+#if defined(_DEBUG) && defined(_CRTDBG_MAP_ALLOC)
 #define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
 #endif
 
 /////////////////////////////////////////////////////////////////////////////
@@ -35,7 +32,7 @@ END_MESSAGE_MAP()
 CChildFrame::CChildFrame()
 {
   SEMBuildTime(__DATE__, __TIME__);
-  mStaticFrame = false; 
+  mStaticFrame = false;
 }
 
 CChildFrame::~CChildFrame()
@@ -48,7 +45,7 @@ BOOL CChildFrame::PreCreateWindow(CREATESTRUCT& cs)
   //  the CREATESTRUCT cs
 
   // This gave the wrong size ClientRect, which included the status and toolbars
-  /* 
+  /*
   RECT rect;
   if (::GetClientRect(cs.hwndParent, &rect)) {
     cs.y = rect.top;
@@ -102,7 +99,7 @@ void CChildFrame::OnClose()
 {
   // If this is frame for the static window, cancel the close
   if (mStaticFrame)
-    return; 
+    return;
 
   // Otherwise, need to tell view to destroy its image buffer
 

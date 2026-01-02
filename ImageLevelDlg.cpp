@@ -1,8 +1,7 @@
 // ImageLevelDlg.cpp:     Shows information about and allows control of image
 //                           display
 //
-// Copyright (C) 2003 by Boulder Laboratory for 3-Dimensional Electron 
-// Microscopy of Cells ("BL3DEMC") and the Regents of the University of
+// Copyright (C) 2003-2026 by the Regents of the University of
 // Colorado.  See Copyright.txt for full notice of copyright and limitations.
 //
 // Author: David Mastronarde
@@ -17,10 +16,8 @@
 #include "Utilities\KGetOne.h"
 #include ".\imageleveldlg.h"
 
-#ifdef _DEBUG
+#if defined(_DEBUG) && defined(_CRTDBG_MAP_ALLOC)
 #define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
 #endif
 
 /////////////////////////////////////////////////////////////////////////////
@@ -113,7 +110,7 @@ END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
 // CImageLevelDlg message handlers
-BOOL CImageLevelDlg::OnInitDialog() 
+BOOL CImageLevelDlg::OnInitDialog()
 {
   CToolDlg::OnInitDialog();
 
@@ -174,7 +171,7 @@ void CImageLevelDlg::UpdateSettings()
     UpdateData(false);
 }
 
-void CImageLevelDlg::OnTruncation() 
+void CImageLevelDlg::OnTruncation()
 {
   float oldPctLo = mPctLo;
   float oldPctHi = mPctHi;
@@ -186,7 +183,7 @@ void CImageLevelDlg::OnTruncation()
     oldFFTtrunc, 3);
   KGetOneInt("Mean gray level (0-255) for low frequencies in FFT, or to disable special"
     " FFT scaling:", oldFFTgray);
-  if (mPctLo != oldPctLo || mPctHi != oldPctHi || 
+  if (mPctLo != oldPctLo || mPctHi != oldPctHi ||
     oldFFTgray != mWinApp->GetBkgdGrayOfFFT() ||
     oldFFTtrunc != mWinApp->GetTruncDiamOfFFT()) {
       mWinApp->SetDisplayTruncation(mPctLo, mPctHi);
@@ -197,7 +194,7 @@ void CImageLevelDlg::OnTruncation()
   mWinApp->RestoreViewFocus();
 }
 
-void CImageLevelDlg::OnAreafraction() 
+void CImageLevelDlg::OnAreafraction()
 {
   float oldAreaFrac = mAreaFrac;
   KGetOneFloat("Fraction of area's linear extent to analyze for white/black:", mAreaFrac, 2);
@@ -214,7 +211,7 @@ void CImageLevelDlg::AnalyzeImage()
   if (!imBuf->mImage || !imBuf->mImageScale)
     return;
   imBuf->mImageScale->FindPctStretch(imBuf->mImage, mPctLo, mPctHi, mAreaFrac,
-    B3DCHOICE(imBuf->mCaptured == BUFFER_FFT || imBuf->mCaptured == BUFFER_LIVE_FFT, 
+    B3DCHOICE(imBuf->mCaptured == BUFFER_FFT || imBuf->mCaptured == BUFFER_LIVE_FFT,
     mWinApp->GetBkgdGrayOfFFT(), 0), mWinApp->GetTruncDiamOfFFT());
   mWinApp->mActiveView->DrawImage();
 
@@ -228,7 +225,7 @@ void CImageLevelDlg::AnalyzeImage()
 
 
 
-void CImageLevelDlg::OnClose() 
+void CImageLevelDlg::OnClose()
 {
   MessageBox("Got to Close");
   //CDialog::OnClose();
@@ -243,12 +240,12 @@ void CImageLevelDlg::OnClose()
 void CImageLevelDlg::OnOK()
 {
   m_butAntialias.SetFocus();
-  ProcessEditBoxes(); 
+  ProcessEditBoxes();
 }
 
-void CImageLevelDlg::OnKillfocusBW() 
+void CImageLevelDlg::OnKillfocusBW()
 {
-  ProcessEditBoxes(); 
+  ProcessEditBoxes();
 }
 
 void CImageLevelDlg::SetEditBoxes()
@@ -347,7 +344,7 @@ void CImageLevelDlg::NewImageScale(KImageScale *inImageScale)
 {
   // There are a lot of repeated calls here sometimes... so ignore them
   if (mBrightSlider == inImageScale->mBrightness &&
-    mContrastSlider == inImageScale->mContrast && 
+    mContrastSlider == inImageScale->mContrast &&
     mBlackLevel == inImageScale->GetMinScale() &&
     mWhiteLevel == inImageScale->GetMaxScale() &&
     mSampleMin == inImageScale->GetSampleMin() &&
@@ -387,7 +384,7 @@ void CImageLevelDlg::ToggleFalseColor(void)
 }
 
 // The spin control for zoom
-void CImageLevelDlg::OnDeltaposSpinzoom(NMHDR* pNMHDR, LRESULT* pResult) 
+void CImageLevelDlg::OnDeltaposSpinzoom(NMHDR* pNMHDR, LRESULT* pResult)
 {
   NM_UPDOWN* pNMUpDown = (NM_UPDOWN*)pNMHDR;
   if (pNMUpDown->iDelta > 0)
@@ -399,7 +396,7 @@ void CImageLevelDlg::OnDeltaposSpinzoom(NMHDR* pNMHDR, LRESULT* pResult)
 }
 
 // The edit window for zoom
-void CImageLevelDlg::OnKillfocusEditzoom() 
+void CImageLevelDlg::OnKillfocusEditzoom()
 {
   UpdateData(TRUE);
   double fVal = atof((LPCTSTR)m_editZoom);
@@ -424,7 +421,7 @@ void CImageLevelDlg::NewZoom(double inZoom)
   UpdateData(FALSE);
 }
 
-void CImageLevelDlg::OnFalseColor() 
+void CImageLevelDlg::OnFalseColor()
 {
   if (mInitialized)
     UpdateData(true);
@@ -449,7 +446,7 @@ void CImageLevelDlg::OnScalebar()
 
 void CImageLevelDlg::ToggleExtraInfo(void)
 {
-  mWinApp->mBufferManager->SetDrawScaleBar(mWinApp->mBufferManager->GetDrawScaleBar() ? 
+  mWinApp->mBufferManager->SetDrawScaleBar(mWinApp->mBufferManager->GetDrawScaleBar() ?
     0 : 192);
   UpdateSettings();
   if (mWinApp->mActiveView)
@@ -459,7 +456,7 @@ void CImageLevelDlg::ToggleExtraInfo(void)
 void CImageLevelDlg::OnCrosshairs()
 {
   UpdateData(true);
-  mWinApp->mBufferManager->SetDrawCrosshairs(m_bCrosshairs); 
+  mWinApp->mBufferManager->SetDrawCrosshairs(m_bCrosshairs);
   if (mWinApp->mActiveView)
     mWinApp->mActiveView->DrawImage();
   mWinApp->RestoreViewFocus();

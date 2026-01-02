@@ -6,6 +6,10 @@
 #include "TaskAreaOptionDlg.h"
 #include "ComplexTasks.h"
 
+#if defined(_DEBUG) && defined(_CRTDBG_MAP_ALLOC)
+#define new DEBUG_NEW
+#endif
+
 
 // CTaskAreaOptionDlg dialog
 
@@ -85,7 +89,7 @@ void CTaskAreaOptionDlg::OnRrefineTrial()
       "is much smaller than this and if the stage is not well-behaved.\n\n"
       "Also, the eucentricity will not be set well if the Trial area\n"
       "is not at about the same height as the Record area.\n\n"
-      "Are you sure you want to use the Trial area?", 
+      "Are you sure you want to use the Trial area?",
       mWinApp->mComplexTasks->GetMinFEFineField());
     if (AfxMessageBox(message, MB_YESNO | MB_ICONQUESTION) == IDNO) {
       m_iRefine = 1;
@@ -103,7 +107,7 @@ void CTaskAreaOptionDlg::OnResetisTrial()
     message.Format("The minimum field of view for reliable Reset and Realign is\n%.1f "
       "microns.  The procedure could fail and lose positioning\nif the field of view of"
       " a Trial image is much smaller than this and if the stage is not well-behaved.\n\n"
-      "Are you sure you want to use the Trial area?", 
+      "Are you sure you want to use the Trial area?",
       mWinApp->mComplexTasks->GetMinRSRAField());
     if (AfxMessageBox(message, MB_YESNO | MB_ICONQUESTION) == IDNO) {
       m_iResetIS = 1;

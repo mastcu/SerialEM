@@ -1,8 +1,7 @@
 // FocusManager.cpp:      Measures beam-tilt dependent image shifts, calibrates and
 //                         does autofocusing
 //
-// Copyright (C) 2003 by Boulder Laboratory for 3-Dimensional Electron 
-// Microscopy of Cells ("BL3DEMC") and the Regents of the University of
+// Copyright (C) 2003-2026 by the Regents of the University of
 // Colorado.  See Copyright.txt for full notice of copyright and limitations.
 //
 // Author: David Mastronarde
@@ -29,9 +28,11 @@
 #include "AutoTuning.h"
 #include "Utilities\STEMfocus.h"
 
+#if defined(_DEBUG) && defined(_CRTDBG_MAP_ALLOC)
+#define new DEBUG_NEW
+#endif
+
 #ifdef _DEBUG
-#undef THIS_FILE
-static char THIS_FILE[]=__FILE__;
 #define new DEBUG_NEW
 #endif
 
@@ -217,7 +218,7 @@ void CFocusManager::SetBeamTilt(float inVal, const char * from)
 {
   if (fabs(inVal) < 0.02)
     PrintfToLog("WARNING: Autofocus beam tilt being set to %.2f in call %s\r\n"
-      "   leaving value at %.2f.  Please report this.", inVal, 
+      "   leaving value at %.2f.  Please report this.", inVal,
       from ? from : "from unidentified source", mBeamTilt);
   else
     mBeamTilt = inVal;
@@ -240,17 +241,17 @@ void CFocusManager::Initialize()
 // FOCUS MESSAGES
 /////////////////////////////////////////////////////////////////////////////
 
-void CFocusManager::OnUpdateNoTasks(CCmdUI* pCmdUI) 
+void CFocusManager::OnUpdateNoTasks(CCmdUI* pCmdUI)
 {
   pCmdUI->Enable(!mWinApp->DoingTasks());
 }
 
-void CFocusManager::OnUpdateNoTasksNoSTEM(CCmdUI* pCmdUI) 
+void CFocusManager::OnUpdateNoTasksNoSTEM(CCmdUI* pCmdUI)
 {
   pCmdUI->Enable(!mWinApp->DoingTasks() && !mWinApp->GetSTEMMode());
 }
 
-void CFocusManager::OnCalibrationAutofocus() 
+void CFocusManager::OnCalibrationAutofocus()
 {
   CalFocusStart(false);
 }
@@ -265,25 +266,25 @@ void CFocusManager::OnFocusAutofocus()
   AutoFocusStart(1);
 }
 
-void CFocusManager::OnUpdateFocusAutofocus(CCmdUI* pCmdUI) 
+void CFocusManager::OnUpdateFocusAutofocus(CCmdUI* pCmdUI)
 {
-  pCmdUI->Enable(!mWinApp->DoingTasks() && FocusReady() && !mScope->GetMovingStage());   
+  pCmdUI->Enable(!mWinApp->DoingTasks() && FocusReady() && !mScope->GetMovingStage());
 }
 
 void CFocusManager::OnUpdateMeasureDefocus(CCmdUI * pCmdUI)
 {
   bool calibrated;
   BOOL ready = FocusReady(-1, &calibrated);
-  pCmdUI->Enable(!mWinApp->DoingTasks() && ready && calibrated && 
+  pCmdUI->Enable(!mWinApp->DoingTasks() && ready && calibrated &&
     !mScope->GetMovingStage());
 }
 
-void CFocusManager::OnFocusDriftprotection() 
+void CFocusManager::OnFocusDriftprotection()
 {
   mTripleMode = !mTripleMode;
 }
 
-void CFocusManager::OnUpdateFocusDriftprotection(CCmdUI* pCmdUI) 
+void CFocusManager::OnUpdateFocusDriftprotection(CCmdUI* pCmdUI)
 {
   pCmdUI->SetCheck(mTripleMode ? 1 : 0);
   pCmdUI->Enable(!mWinApp->DoingTasks() && !mWinApp->GetSTEMMode());
@@ -342,7 +343,7 @@ void CFocusManager::OnFocusSetAbsoluteLimits()
 
 void CFocusManager::OnFocusUseAbsoluteLimits()
 {
-  mUseEucenAbsLimits = !mUseEucenAbsLimits; 
+  mUseEucenAbsLimits = !mUseEucenAbsLimits;
 }
 
 void CFocusManager::OnUpdateFocusUseAbsoluteLimits(CCmdUI *pCmdUI)
@@ -361,26 +362,26 @@ void CFocusManager::OnUpdateLimitOffsetDefocus(CCmdUI *pCmdUI)
 {
   bool haveLimits = mEucenMinAbsFocus || mEucenMaxAbsFocus;
   pCmdUI->SetCheck((mTestOffsetEucenAbs && haveLimits) ? 1 : 0);
-  pCmdUI->Enable(!mWinApp->DoingTasks() && !mWinApp->GetSTEMMode() && haveLimits && 
+  pCmdUI->Enable(!mWinApp->DoingTasks() && !mWinApp->GetSTEMMode() && haveLimits &&
     mUseEucenAbsLimits);
 }
 
-void CFocusManager::OnFocusMeasuredefocus() 
+void CFocusManager::OnFocusMeasuredefocus()
 {
   AutoFocusStart(0);
 }
 
-void CFocusManager::OnFocusCheckautofocus() 
+void CFocusManager::OnFocusCheckautofocus()
 {
-  CheckAccuracy(LOG_MESSAGE_IF_CLOSED); 
+  CheckAccuracy(LOG_MESSAGE_IF_CLOSED);
 }
 
-void CFocusManager::OnFocusReportshiftdrift() 
+void CFocusManager::OnFocusReportshiftdrift()
 {
   DetectFocus(FOCUS_REPORT);
 }
 
-void CFocusManager::OnFocusReportonexisting() 
+void CFocusManager::OnFocusReportonexisting()
 {
  if (mWinApp->GetSTEMMode()) {
     float focus;
@@ -408,26 +409,26 @@ void CFocusManager::OnFocusReportonexisting()
     StopSTEMfocus();
 
   } else
-    DetectFocus(FOCUS_EXISTING);	
+    DetectFocus(FOCUS_EXISTING);
 }
 
 void CFocusManager::OnFocusShowexistingcorr()
 {
-  DetectFocus(FOCUS_SHOW_CORR);	
+  DetectFocus(FOCUS_SHOW_CORR);
 }
 
 // Make sure all needed images exist and are the same size
-void CFocusManager::OnUpdateFocusReportonexisting(CCmdUI* pCmdUI)  
+void CFocusManager::OnUpdateFocusReportonexisting(CCmdUI* pCmdUI)
 {
   int nx, ny;
-  BOOL enable = !mWinApp->DoingTasks() && mImBufs[0].mImage && mImBufs[1].mImage && 
+  BOOL enable = !mWinApp->DoingTasks() && mImBufs[0].mImage && mImBufs[1].mImage &&
     (!(mTripleMode || mWinApp->GetSTEMMode()) || mImBufs[2].mImage);
   if (enable) {
      mImBufs[0].mImage->getSize(nx, ny);
-     enable &= (mImBufs[1].mImage->getWidth() == nx) && 
+     enable &= (mImBufs[1].mImage->getWidth() == nx) &&
        (mImBufs[1].mImage->getHeight() == ny);
      if (mTripleMode || mWinApp->GetSTEMMode())
-       enable &= (mImBufs[2].mImage->getWidth() == nx) && 
+       enable &= (mImBufs[2].mImage->getWidth() == nx) &&
        (mImBufs[2].mImage->getHeight() == ny);
   }
   pCmdUI->Enable(enable);
@@ -435,7 +436,7 @@ void CFocusManager::OnUpdateFocusReportonexisting(CCmdUI* pCmdUI)
 
 void CFocusManager::OnShowExistingStretch()
 {
-  DetectFocus(FOCUS_SHOW_STRETCH);	
+  DetectFocus(FOCUS_SHOW_STRETCH);
 }
 
 void CFocusManager::OnUpdateFocusCheckautofocus(CCmdUI *pCmdUI)
@@ -451,7 +452,7 @@ void CFocusManager::OnUpdateFocusShowexistingcorr(CCmdUI *pCmdUI)
     OnUpdateFocusReportonexisting(pCmdUI);
 }
 
-void CFocusManager::OnFocusSetbeamtilt() 
+void CFocusManager::OnFocusSetbeamtilt()
 {
   CString message = !FEIscope ? "Beam tilt for autofocus, as % of full scale:" :
     "Beam tilt for autofocus, in milliradians:";
@@ -471,23 +472,23 @@ void CFocusManager::OnFocusSetbeamtilt()
   mLMBeamTilt = oldVal;
 }
 
-void CFocusManager::OnFocusResetdefocus() 
+void CFocusManager::OnFocusResetdefocus()
 {
-  mScope->ResetDefocus();	
+  mScope->ResetDefocus();
 }
 
-void CFocusManager::OnFocusVerbose() 
+void CFocusManager::OnFocusVerbose()
 {
-  mVerbose = !mVerbose; 
+  mVerbose = !mVerbose;
 }
 
-void CFocusManager::OnUpdateFocusVerbose(CCmdUI* pCmdUI) 
+void CFocusManager::OnUpdateFocusVerbose(CCmdUI* pCmdUI)
 {
   pCmdUI->Enable();
   pCmdUI->SetCheck(mVerbose ? 1 : 0);
 }
 
-void CFocusManager::OnFocusSettarget() 
+void CFocusManager::OnFocusSettarget()
 {
   float oldVal = GetTargetDefocus();
   KGetOneFloat("Target defocus in microns:", oldVal, 2);
@@ -498,11 +499,11 @@ void CFocusManager::OnUpdateFocusSettarget(CCmdUI *pCmdUI)
 {
   TiltSeriesParam *tsParam = mWinApp->mTSController->GetTiltSeriesParam();
   pCmdUI->Enable(!mWinApp->DoingTasks() && !mWinApp->GetSTEMMode() &&
-    !(mWinApp->StartedTiltSeries() && 
+    !(mWinApp->StartedTiltSeries() &&
     tsParam->doVariations && mWinApp->mTSController->GetTypeVaries(TS_VARY_FOCUS)));
 }
 
-void CFocusManager::OnFocusSetthreshold() 
+void CFocusManager::OnFocusSetthreshold()
 {
   float oldVal = GetRefocusThreshold();
   if (!KGetOneFloat("Threshold change for doing another autofocus run:", oldVal, 2))
@@ -515,13 +516,13 @@ void CFocusManager::OnFocusSetthreshold()
   SetAbortThreshold(B3DABS(oldVal));
 }
 
-void CFocusManager::OnFocusSetoffset() 
+void CFocusManager::OnFocusSetoffset()
 {
   KGetOneFloat("Amount to change focus before taking autofocus pictures:", mDefocusOffset,
     2);
 }
 
-void CFocusManager::OnCalibrationSetfocusrange() 
+void CFocusManager::OnCalibrationSetfocusrange()
 {
   CString info;
   CameraParameters *camParam = mWinApp->GetCamParams() + mWinApp->GetCurrentCamera();
@@ -572,22 +573,22 @@ void CFocusManager::OnFocusSetTiltDirection()
 
 // Change the focus so that it would move center of focus from the user's
 // specified point to the center of the field
-void CFocusManager::OnFocusMovecenter() 
+void CFocusManager::OnFocusMovecenter()
 {
   int nx, ny;
   float shiftX, shiftY, specY, angle, focusFac;
   double newFocus;
-  focusFac = mShiftManager->GetDefocusZFactor() * 
+  focusFac = mShiftManager->GetDefocusZFactor() *
     (mShiftManager->GetStageInvertsZAxis() ? -1 : 1);
   EMimageBuffer *imBuf = mWinApp->mActiveView->GetActiveImBuf();
   ScaleMat aInv = mShiftManager->CameraToSpecimen(imBuf->mMagInd);
   if (!aInv.xpx)
     return;
-  SEMTrace('1', "Camera to Specimen %f  %f  %f  %f", aInv.xpx, aInv.xpy, aInv.ypx, 
+  SEMTrace('1', "Camera to Specimen %f  %f  %f  %f", aInv.xpx, aInv.xpy, aInv.ypx,
     aInv.ypy);
   imBuf->mImage->getSize(nx, ny);
   imBuf->mImage->getShifts(shiftX, shiftY);
-  
+
   // Coordinates in field are sum of image align shift and user point coord
   shiftX += imBuf->mUserPtX - nx / 2;
   shiftY += imBuf->mUserPtY - ny / 2;
@@ -599,7 +600,7 @@ void CFocusManager::OnFocusMovecenter()
   if (mWinApp->GetSTEMMode())
      focusFac = -1.f / GetSTEMdefocusToDelZ(-1);;
   newFocus = imBuf->mDefocus + specY * tan(DTOR * angle) * focusFac;
-  if (!mWinApp->GetSTEMMode() && mWinApp->LowDoseMode() && imBuf->mLowDoseArea && 
+  if (!mWinApp->GetSTEMMode() && mWinApp->LowDoseMode() && imBuf->mLowDoseArea &&
     IS_SET_VIEW_OR_SEARCH(imBuf->mConSetUsed))
     newFocus -= mScope->GetLDViewDefocus(imBuf->mConSetUsed);
   SEMTrace('1', "Shift %.1f %.1f  specY %.2f focusFac  %f  newFocus %.2f", shiftX, shiftY,
@@ -609,11 +610,11 @@ void CFocusManager::OnFocusMovecenter()
 
 // For this operation, require that active image exist and have a user point,
 // binning and a mag index
-void CFocusManager::OnUpdateFocusMovecenter(CCmdUI* pCmdUI) 
+void CFocusManager::OnUpdateFocusMovecenter(CCmdUI* pCmdUI)
 {
   EMimageBuffer *imBuf = mWinApp->mActiveView->GetActiveImBuf();
-  pCmdUI->Enable(!mWinApp->DoingTasks() && imBuf->mImage != NULL && 
-    imBuf->mHasUserPt && imBuf->mMagInd && imBuf->mBinning);  
+  pCmdUI->Enable(!mWinApp->DoingTasks() && imBuf->mImage != NULL &&
+    imBuf->mHasUserPt && imBuf->mMagInd && imBuf->mBinning);
 }
 
 void CFocusManager::OnAutofocusListCalibrations()
@@ -627,7 +628,7 @@ void CFocusManager::OnAutofocusListCalibrations()
   CArray <ComaCalib, ComaCalib> *comaCal = mWinApp->mAutoTuning->GetComaCals();
   CArray <CtfBasedCalib, CtfBasedCalib> *ctfAstigCals =
     mWinApp->mAutoTuning->GetCtfBasedCals();
-  CArray<STEMFocusZTable, STEMFocusZTable> *focusZtables = 
+  CArray<STEMFocusZTable, STEMFocusZTable> *focusZtables =
     mWinApp->mFocusManager->GetSFfocusZtables();
   STEMFocusZTable sfzTable;
   CtfBasedCalib ctfCal;
@@ -644,7 +645,7 @@ void CFocusManager::OnAutofocusListCalibrations()
       for (ind = 0; ind < (int)mFocTab.GetSize(); ind++) {
         if (mFocTab[ind].camera == iCam && mFocTab[ind].magInd == iMag) {
           str.Format("%s   %d      %d      %d      %.0f to %.0f     %s", (LPCTSTR)camP[iCam].name,
-            MagForCamera(iCam, iMag), iMag, mFocTab[ind].direction, 
+            MagForCamera(iCam, iMag), iMag, mFocTab[ind].direction,
             mFocTab[ind].defocus[0], mFocTab[ind].defocus[mFocTab[ind].numPoints - 1],
             mFocTab[ind].probeMode ? "" : "nanoprobe");
           if (!mScope->GetHasNoAlpha() || mFocTab[ind].alpha >= 0) {
@@ -692,7 +693,7 @@ void CFocusManager::OnAutofocusListCalibrations()
     mWinApp->AppendToLog("Mag  Index  Stigmator delta");
     for (ind = 0; ind < ctfAstigCals->GetSize(); ind++) {
       ctfCal = ctfAstigCals->GetAt(ind);
-       PrintfToLog("%d   %d   %.3f", magTab[ctfCal.magInd].mag, ctfCal.magInd, 
+       PrintfToLog("%d   %d   %.3f", magTab[ctfCal.magInd].mag, ctfCal.magInd,
         ctfCal.amplitude);
     }
   }
@@ -705,7 +706,7 @@ void CFocusManager::OnAutofocusListCalibrations()
       B3DCHOICE(JEOLscope && !mScope->GetHasNoAlpha(), "Alpha", ""));
     for (ind = 0; ind < astigCal->GetSize(); ind++) {
       astig = astigCal->GetAt(ind);
-      str.Format("%d   %d   %.2f    %.1f", magTab[astig.magInd].mag, astig.magInd, 
+      str.Format("%d   %d   %.2f    %.1f", magTab[astig.magInd].mag, astig.magInd,
         astig.beamTilt, astig.defocus);
       if (JEOLscope  && !mScope->GetHasNoAlpha()) {
         str2.Format("    %d", astig.alpha + 1);
@@ -725,7 +726,7 @@ void CFocusManager::OnAutofocusListCalibrations()
       B3DCHOICE(JEOLscope && !mScope->GetHasNoAlpha(), "Alpha", ""));
     for (ind = 0; ind < comaCal->GetSize(); ind++) {
       coma = comaCal->GetAt(ind);
-      str.Format("%6d   %d   %.2f    %.1f", magTab[coma.magInd].mag, coma.magInd, 
+      str.Format("%6d   %d   %.2f    %.1f", magTab[coma.magInd].mag, coma.magInd,
         coma.beamTilt, coma.defocus);
       if (JEOLscope  && !mScope->GetHasNoAlpha()) {
         str2.Format("    %d", coma.alpha + 1);
@@ -751,7 +752,7 @@ void CFocusManager::OnUpdateNormalizeViaView(CCmdUI* pCmdUI)
 
 //////////////////////////////////////////////////////////////////
 // FOCUS CALIBRATION AND AUTOFOCUS
-  
+
 // Entry for starting a focus calibration
 void CFocusManager::CalFocusStart(bool doSparse)
 {
@@ -766,7 +767,7 @@ void CFocusManager::CalFocusStart(bool doSparse)
     CalSTEMfocus();
     return;
   }
-  if ((camParam->FEItype == FALCON2_TYPE || camParam->FEItype == FALCON3_TYPE) && 
+  if ((camParam->FEItype == FALCON2_TYPE || camParam->FEItype == FALCON3_TYPE) &&
     mCalOffset + mCalRange / 2. > mFalconCalLimit) {
     str.Format("With the current defocus range and offset, the calibration\n"
       "may run into the Falcon Dose Protector unless you are currently\n"
@@ -865,7 +866,7 @@ void CFocusManager::CalFocusData(float inX, float inY)
   mNewCal.shiftX[mFCindex] = inX / mWorkingBT;
   mNewCal.shiftY[mFCindex] = inY / mWorkingBT;
   if (mFCindex) {
-    normScale = (mCalDelta / (mCalDefocus - mNewCal.defocus[mFCindex - 1])) * 
+    normScale = (mCalDelta / (mCalDefocus - mNewCal.defocus[mFCindex - 1])) *
       (mCalSavedBeamTilt / mWorkingBT);
   } else {
     mWinApp->AppendToLog("Differences in extended region are adjusted for interval and"
@@ -897,15 +898,15 @@ void CFocusManager::CalFocusData(float inX, float inY)
 
   iCen = belowInd + mNumCalLevels / 2;
   numBad = 0;
-  cenAng = atan2((double)(mNewCal.shiftY[iCen + 1] - mNewCal.shiftY[iCen]), 
+  cenAng = atan2((double)(mNewCal.shiftY[iCen + 1] - mNewCal.shiftY[iCen]),
     (double)(mNewCal.shiftX[iCen + 1] - mNewCal.shiftX[iCen])) / DTOR;
   for (i = 0; i < mNumCalLevels - 1; i++) {
-    oneAng = atan2((double)(mNewCal.shiftY[i + 1] - mNewCal.shiftY[i]), 
+    oneAng = atan2((double)(mNewCal.shiftY[i + 1] - mNewCal.shiftY[i]),
       (double)(mNewCal.shiftX[i + 1] - mNewCal.shiftX[i])) / DTOR;
     oneAng = UtilGoodAngle(oneAng - cenAng);
     if (fabs(oneAng) > 70. || (i >= belowInd && i < belowInd + mNumCalLevels
       && fabs(oneAng) > 40.)) {
-      oneAng = atan2((double)(mNewCal.shiftY[i + 1] - mNewCal.shiftY[i]), 
+      oneAng = atan2((double)(mNewCal.shiftY[i + 1] - mNewCal.shiftY[i]),
         (double)(mNewCal.shiftX[i + 1] - mNewCal.shiftX[i])) / DTOR;
       report.Format("Curve slope is %.0f deg at point %d vs. %.0f deg at center",
         oneAng, i + 1, cenAng);
@@ -940,10 +941,10 @@ void CFocusManager::CalFocusData(float inX, float inY)
 
   // copy the structure or append if this is a new calibration
   // First look for matching alpha then for one with no alpha defined, to replace
-  if ((focInd = LookupFocusCal(mFocusMag, camera, mTiltDirection, mFocusProbe, 
+  if ((focInd = LookupFocusCal(mFocusMag, camera, mTiltDirection, mFocusProbe,
     mFocusAlpha, false)) >= 0) {
       mFocTab[focInd] = mNewCal;
-  } else if (mFocusAlpha >= 0 && (focInd = LookupFocusCal(mFocusMag, camera, 
+  } else if (mFocusAlpha >= 0 && (focInd = LookupFocusCal(mFocusMag, camera,
     mTiltDirection, mFocusAlpha, mFocusProbe, true)) >= 0) {
       mFocTab[focInd] = mNewCal;
   } else {
@@ -996,7 +997,7 @@ void CFocusManager::CalFocusData(float inX, float inY)
   if (wasCalibrated) {
     double lenSqr = slopeX * slopeX + slopeY * slopeY;
     double delLength = sqrt(lenSqr / (oldSlopeX * oldSlopeX + oldSlopeY * oldSlopeY));
-    double delDefocus = (lenSqr / (slopeX * oldSlopeX + slopeY * oldSlopeY) - 1.) 
+    double delDefocus = (lenSqr / (slopeX * oldSlopeX + slopeY * oldSlopeY) - 1.)
       * 100.;
     double vectorRot = (atan2(slopeY, slopeX) - atan2(oldSlopeY, oldSlopeX)) / DTOR;
     if (vectorRot <= - 180.)
@@ -1014,11 +1015,11 @@ void CFocusManager::CalFocusData(float inX, float inY)
 
     // Ask admin whether to modify old calibrations, provided this is the first
     // calibration and the number of points and interval match the old one
-    if (mWinApp->GetAdministrator() && !oldCal.calibrated && 
-      oldCal.numPoints == mNewCal.numPoints && 
+    if (mWinApp->GetAdministrator() && !oldCal.calibrated &&
+      oldCal.numPoints == mNewCal.numPoints &&
       delDelta > -0.01 && delDelta < 0.01) {
       if (AfxMessageBox("Do you want to modify all old focus calibration\r\n"
-        "tables for this camera and tilt direction by these changes?", 
+        "tables for this camera and tilt direction by these changes?",
         MB_YESNO | MB_ICONQUESTION) == IDYES) {
         ScaleMat delMat;
         delMat.xpx = (float)(delLength * cos(DTOR * vectorRot));
@@ -1062,12 +1063,12 @@ BOOL CFocusManager::FocusReady(int magInd, bool *calibrated)
     *calibrated = hasCal != 0;
   if (hasCal)
     return true;
-  return magInd < mScope->GetLowestMModeMagInd() && 
+  return magInd < mScope->GetLowestMModeMagInd() &&
     magInd > 0 && mScope->GetStandardLMFocus(magInd) > -900.;
 }
 
 // Call to start autofocus or measurement of defocus
-void CFocusManager::AutoFocusStart(int inChange, int useViewInLD, int iterNum) 
+void CFocusManager::AutoFocusStart(int inChange, int useViewInLD, int iterNum)
 {
   float slope, shiftX, shiftY;
   FocusTable focTmp;
@@ -1077,7 +1078,7 @@ void CFocusManager::AutoFocusStart(int inChange, int useViewInLD, int iterNum)
   mFocusSetNum = areaNum = FOCUS_CONSET;
   mAutofocusIterNum = iterNum;
   if (useViewInLD && mWinApp->LowDoseMode() && !mWinApp->GetSTEMMode()) {
-    mFocusSetNum = B3DCHOICE(useViewInLD > 0, useViewInLD < 3 ? VIEW_CONSET : 
+    mFocusSetNum = B3DCHOICE(useViewInLD > 0, useViewInLD < 3 ? VIEW_CONSET :
       SEARCH_CONSET, RECORD_CONSET);
     areaNum = mCamera->ConSetToLDArea(mFocusSetNum);
     mScope->GotoLowDoseArea(areaNum);
@@ -1124,7 +1125,7 @@ void CFocusManager::AutoFocusStart(int inChange, int useViewInLD, int iterNum)
     mNumFullChangeIters = 0;
   }
 
-  if (!mWinApp->GetSTEMMode()) { 
+  if (!mWinApp->GetSTEMMode()) {
 
     // Regular
     if (mWinApp->LowDoseMode() && ldParm[mFocusSetNum].magIndex) {
@@ -1179,12 +1180,12 @@ void CFocusManager::AutoFocusStart(int inChange, int useViewInLD, int iterNum)
       mCamera->AdjustForShift(shiftX, shiftY);
     mModeWasContinuous = mConSets[FOCUS_CONSET].mode == CONTINUOUS;
     mConSets[FOCUS_CONSET].mode = SINGLE_FRAME;
-    if (mCamera->CameraBusy()) 
+    if (mCamera->CameraBusy())
       mCamera->StopCapture(0);
     mSFbaseFocus = mScope->GetDefocus();
 
     if (mConSets[FOCUS_CONSET].boostMagOrHwBin && !mWinApp->LowDoseMode())
-      mFocusMag = mShiftManager->FindBoostedMagIndex(mFocusMag, 
+      mFocusMag = mShiftManager->FindBoostedMagIndex(mFocusMag,
         mConSets[FOCUS_CONSET].boostMagOrHwBin);
     slope /= conSet->binning * mShiftManager->GetPixelSize(mWinApp->GetCurrentCamera(),
       mFocusMag);
@@ -1196,7 +1197,7 @@ void CFocusManager::AutoFocusStart(int inChange, int useViewInLD, int iterNum)
       mSFbestImBuf = new EMimageBuffer;
     mSFtask = STEM_FOCUS_COARSE1;
     mCamera->SetRetainMagAndShift(FOCUS_CONSET);
-    SEMTrace('f', "STEM focus starting %.3f  step %.2f with shift %.2f %.2f", 
+    SEMTrace('f', "STEM focus starting %.3f  step %.2f with shift %.2f %.2f",
       mSFbaseFocus, mCalDelta, shiftX, shiftY);
   }
   if (mWinApp->GetNoCameras())
@@ -1204,7 +1205,7 @@ void CFocusManager::AutoFocusStart(int inChange, int useViewInLD, int iterNum)
   if (mDoChangeFocus > 0)
     mWinApp->SetStatusText(MEDIUM_PANE, "AUTOFOCUSING");
   else if (mWinApp->mParticleTasks->DoingZbyG())
-    mWinApp->SetStatusText(MEDIUM_PANE, mWinApp->mParticleTasks->GetZBGMeasuringFocus() 
+    mWinApp->SetStatusText(MEDIUM_PANE, mWinApp->mParticleTasks->GetZBGMeasuringFocus()
       > 1 ? "Calibrating EUCEN BY FOCUS" : "EUCENTRICITY BY FOCUS");
   else
     mWinApp->SetStatusText(MEDIUM_PANE, "MEASURING DEFOCUS");
@@ -1261,8 +1262,8 @@ void CFocusManager::AutoFocusData(float inX, float inY)
     mCumulFocusChange += (float)diff;
     if (fabs(rawDefocus) < B3DMAX(0.15, 0.1 * diff))
       mNumNearZeroCorr++;
-      
-    // Approach from below: if it is a positive change, do it; 
+
+    // Approach from below: if it is a positive change, do it;
     // Otherwise overshoot then go back (THIS DIDN'T HELP)
     if (diff > 0. || overShoot == 0.)
       mScope->IncDefocus(diff);
@@ -1274,7 +1275,7 @@ void CFocusManager::AutoFocusData(float inX, float inY)
     testDelta = mUseMinDeltaFocus != 0. || mUseMaxDeltaFocus != 0.;
     testAbs = mUseMinAbsFocus != 0. || mUseMaxAbsFocus != 0.;
     if (refocus || testAbs || testDelta) {
-      if (refocus && mAutofocusIterNum > 1 && fabs(diff) > mAbortThreshold && 
+      if (refocus && mAutofocusIterNum > 1 && fabs(diff) > mAbortThreshold &&
         mAbortThreshold > 0.) {
           lastFullDiff = lastDiff = mTargetDefocus - lastDefocus;
           B3DCLAMP(lastDiff, -changeLimit, changeLimit);
@@ -1288,7 +1289,7 @@ void CFocusManager::AutoFocusData(float inX, float inY)
             // On second try, if it is on opposite side, try the middle point.  Undo
             // the move that was just done and an interpolated fraction of the last one
             mScope->IncDefocus(-diff + lastDiff * fullDiff / (lastFullDiff - fullDiff));
-          } else if (opposite || 
+          } else if (opposite ||
             fabs(lastDefocus - mCurrentDefocus) < closerCrit * fabs(lastDiff)) {
 
               // Or abort if it is on opposite side after second try or if the measured
@@ -1302,7 +1303,7 @@ void CFocusManager::AutoFocusData(float inX, float inY)
         addon = "focus change would exceed limits";
         diff = mScope->GetDefocus() - mOriginalDefocus;
         abort = B3DCHOICE((mUseMinDeltaFocus != 0. && diff < mUseMinDeltaFocus) ||
-          (mUseMinDeltaFocus != 0 && diff > mUseMaxDeltaFocus), FOCUS_ABORT_DELTA_LIMIT, 
+          (mUseMinDeltaFocus != 0 && diff > mUseMaxDeltaFocus), FOCUS_ABORT_DELTA_LIMIT,
           0);
       }
       if (!abort && testAbs) {
@@ -1311,7 +1312,7 @@ void CFocusManager::AutoFocusData(float inX, float inY)
         abort = B3DCHOICE((mUseMinAbsFocus != 0. && diff < mUseMinAbsFocus) ||
           (mUseMinAbsFocus != 0. && diff > mUseMaxAbsFocus), FOCUS_ABORT_ABS_LIMIT, 0);
       }
-      if (!abort && mAutofocusIterNum > 2 && fabs(mCumulFocusChange) > mAbortThreshold && 
+      if (!abort && mAutofocusIterNum > 2 && fabs(mCumulFocusChange) > mAbortThreshold &&
         mAbortThreshold > 0. && mNumNearZeroCorr >= ceil(0.75 * mAutofocusIterNum)) {
           abort = FOCUS_ABORT_NEAR_ZERO;
           addon = "correlation was near zero too many times";
@@ -1320,7 +1321,7 @@ void CFocusManager::AutoFocusData(float inX, float inY)
         abort = FOCUS_ABORT_TOO_MANY_ITERS;
         addon = "too many iterations have been run";
       }
-      mWinApp->AppendToLog(report + (abort ? "" : changeText) + driftText, 
+      mWinApp->AppendToLog(report + (abort ? "" : changeText) + driftText,
         LOG_SWALLOW_IF_CLOSED);
       if (abort) {
         mLastAborted = abort;
@@ -1339,10 +1340,10 @@ void CFocusManager::AutoFocusData(float inX, float inY)
       mLastScopeFocus = (float)mScope->GetDefocus();
     }
   } else if (!mDoChangeFocus && !mWinApp->mLogWindow) {
-    report.Format("The current defocus is computed to be %6.2f microns", 
+    report.Format("The current defocus is computed to be %6.2f microns",
       mCurrentDefocus);
     mWinApp->AppendToLog(report, LOG_MESSAGE_IF_CLOSED);
-  } 
+  }
   FocusTasksFinished();
   SEMTrace('M', "Autofocus Done");
 }
@@ -1368,7 +1369,7 @@ int CFocusManager::CurrentDefocusFromShift(float inX, float inY, float &defocus,
   if (!GetFocusCal(magInd, mCurrentCamera, mFocusProbe, mFocusAlpha, useCal))
     return 1;
   aInv = mShiftManager->CameraToSpecimen(magInd);
-  defocus = DefocusFromCal(&useCal, inX / (float)mWorkingBT, inY / (float)mWorkingBT, 
+  defocus = DefocusFromCal(&useCal, inX / (float)mWorkingBT, inY / (float)mWorkingBT,
     minDist);
   rawDefocus = defocus;
 
@@ -1376,7 +1377,7 @@ int CFocusManager::CurrentDefocusFromShift(float inX, float inY, float &defocus,
   // unless measuring with script argument 1 instead of 2
   if (mFCindex < 0)
     defocus -= (float)mDefocusOffset;
-  if ((mFocusSetNum == VIEW_CONSET || mFocusSetNum == SEARCH_CONSET) && 
+  if ((mFocusSetNum == VIEW_CONSET || mFocusSetNum == SEARCH_CONSET) &&
     !(mDoChangeFocus == -1 && mUseViewInLD > 0 && (mUseViewInLD % 2) == 1))
     defocus -= mScope->GetLDViewDefocus(mUseViewInLD < 3 ? VIEW_CONSET : SEARCH_CONSET);
 
@@ -1388,9 +1389,9 @@ int CFocusManager::CurrentDefocusFromShift(float inX, float inY, float &defocus,
   specY = aInv.ypx * shiftX - aInv.ypy * shiftY;
 
   // And if the low dose axis is rotated, add Y component of the rotated axis separation
-  if (mWinApp->LowDoseMode() && mWinApp->mLowDoseDlg.m_bRotateAxis && 
+  if (mWinApp->LowDoseMode() && mWinApp->mLowDoseDlg.m_bRotateAxis &&
     mWinApp->mLowDoseDlg.m_iAxisAngle && mFocusSetNum == FOCUS_CONSET)
-    specY += (float)((ldParm[1].axisPosition - ldParm[3].axisPosition) * 
+    specY += (float)((ldParm[1].axisPosition - ldParm[3].axisPosition) *
       sin(DTOR * mWinApp->mLowDoseDlg.m_iAxisAngle));
   if (!mImBufs->GetTiltAngle(angle))
     angle = (float)mScope->GetTiltAngle();
@@ -1400,7 +1401,7 @@ int CFocusManager::CurrentDefocusFromShift(float inX, float inY, float &defocus,
 
 
 // Starting point for measuring defocus with 2 or 3 pictures
-void CFocusManager::DetectFocus(int inWhere, int useViewInLD) 
+void CFocusManager::DetectFocus(int inWhere, int useViewInLD)
 {
   LowDoseParams *ldParm = mWinApp->GetLowDoseParams();
   bool setLowDose = false;
@@ -1417,7 +1418,7 @@ void CFocusManager::DetectFocus(int inWhere, int useViewInLD)
   set->mode = SINGLE_FRAME;
   mFocusWhere = inWhere;
   mUseViewInLD = useViewInLD;
-  mUsingExisting = inWhere == FOCUS_EXISTING || inWhere == FOCUS_SHOW_CORR || 
+  mUsingExisting = inWhere == FOCUS_EXISTING || inWhere == FOCUS_SHOW_CORR ||
     inWhere == FOCUS_SHOW_STRETCH;
   if (mUsingExisting && mImBufs->mMagInd > 0)
     mFocusMag = mImBufs->mMagInd;
@@ -1437,7 +1438,7 @@ void CFocusManager::DetectFocus(int inWhere, int useViewInLD)
     mFocusProbe = mScope->ReadProbeMode();
     mFocusAlpha = mScope->GetAlpha();
   }
-  if (mCamera->CameraBusy()) 
+  if (mCamera->CameraBusy())
     mCamera->StopCapture(0);
 
   // Enforce drift correction any calibration and for coma-free alignment
@@ -1451,8 +1452,8 @@ void CFocusManager::DetectFocus(int inWhere, int useViewInLD)
     mCamera->OppositeLDAreaNextShot();
 
   // Normalize through view in Low Dose if selected and it is not already done
-  if (mNormalizeViaView && mFocusSetNum == FOCUS_CONSET && mWinApp->LowDoseMode() && 
-    !mUsingExisting && (!mScope->GetFocusCameFromView() || 
+  if (mNormalizeViaView && mFocusSetNum == FOCUS_CONSET && mWinApp->LowDoseMode() &&
+    !mUsingExisting && (!mScope->GetFocusCameFromView() ||
     !mWinApp->mLowDoseDlg.SameAsFocusArea(mScope->GetLowDoseArea()))) {
       mScope->GotoLowDoseArea(VIEW_CONSET);
       mScope->ScopeUpdate(GetTickCount());
@@ -1466,15 +1467,15 @@ void CFocusManager::DetectFocus(int inWhere, int useViewInLD)
   // change and that could change beam tilt; also if not in area!  Gave up on this on
   // 5/25/17 because original focus has to be recorded after getting out of View
   if (!mUsingExisting && mWinApp->LowDoseMode() && mAutofocusIterNum == 1 &&
-    (mScope->GetLDBeamTiltShifts() || !mScope->GetHasNoAlpha() || 
-    mScope->GetProbeMode() != mFocusProbe || 
+    (mScope->GetLDBeamTiltShifts() || !mScope->GetHasNoAlpha() ||
+    mScope->GetProbeMode() != mFocusProbe ||
     !mWinApp->mLowDoseDlg.SameAsFocusArea(mScope->GetLowDoseArea()))) {
       mScope->GotoLowDoseArea(mCamera->ConSetToLDArea(mFocusSetNum));
       setLowDose = !mUseOppositeLDArea;
   }
   if (mAutofocusIterNum == 1)
     mOriginalDefocus = mScope->GetDefocus();
-  
+
   // Apply offset if nonzero and not calibrating: then test against absolute limits if
   // flag set for that
   mAppliedOffset = 0.;
@@ -1503,14 +1504,14 @@ void CFocusManager::DetectFocus(int inWhere, int useViewInLD)
   for (int k = 0; k < 5; k++)
     mFocusBuf[k] = NULL;
   mScope->GetBeamTilt(mBaseTiltX, mBaseTiltY);
-  //PrintfToLog("Set beam tilt to %.2f, %.2f", mBaseTiltX + mNextXtiltOffset - mFracTiltX * mWorkingBT, 
+  //PrintfToLog("Set beam tilt to %.2f, %.2f", mBaseTiltX + mNextXtiltOffset - mFracTiltX * mWorkingBT,
   //  mBaseTiltY + mNextYtiltOffset - mFracTiltY * mWorkingBT);
-  mScope->SetBeamTilt(mBaseTiltX + mNextXtiltOffset - mFracTiltX * mWorkingBT, 
+  mScope->SetBeamTilt(mBaseTiltX + mNextXtiltOffset - mFracTiltX * mWorkingBT,
     mBaseTiltY + mNextYtiltOffset - mFracTiltY * mWorkingBT);
   if (mPostTiltDelay > 0)
     Sleep(mPostTiltDelay);
 
-  mWinApp->AddIdleTask(CCameraController::TaskCameraBusy, TaskFocusDone, 
+  mWinApp->AddIdleTask(CCameraController::TaskCameraBusy, TaskFocusDone,
     TaskFocusError, 0, 0);
   if (!mUsingExisting) {
     if (setLowDose)
@@ -1578,7 +1579,7 @@ void CFocusManager::FocusDone()
     binning = mImBufs[bufnum].mBinning;
 
   // If a required level is registered, test the image scale against it
-  if (mRequiredBWMean > 0. && 
+  if (mRequiredBWMean > 0. &&
     mWinApp->mProcessImage->ImageTooWeak(mImBufs, mRequiredBWMean)) {
     StopFocusing();
     return;
@@ -1593,7 +1594,7 @@ void CFocusManager::FocusDone()
 
   // See if binning is needed, or at least scaling of filter parameters
   minBinning = mDDDminBinning * BinDivisorI(camParam);
-  if ((mCamera->IsDirectDetector(camParam) || camParam->useMinDDDBinning) && 
+  if ((mCamera->IsDirectDetector(camParam) || camParam->useMinDDDBinning) &&
     binning > 0 && binning < minBinning) {
 
     // Get needed achievable binning then scale the filter down the rest of the way
@@ -1603,7 +1604,7 @@ void CFocusManager::FocusDone()
     if (needBin > 1) {
       imA->Lock();
       data = imA->getData();
-      NewArray(temp, short int, (type == kFLOAT ? 2 : 1) * ((size_t)nxframe * nyframe) / 
+      NewArray(temp, short int, (type == kFLOAT ? 2 : 1) * ((size_t)nxframe * nyframe) /
         (needBin * needBin));
       if (!temp) {
         SEMMessageBox(_T("Error getting buffer for binning - focus aborted"));
@@ -1669,7 +1670,7 @@ void CFocusManager::FocusDone()
     data = imA->getData();
   }
 
-  // Beam tilt should stretch the image if tilt is high. 
+  // Beam tilt should stretch the image if tilt is high.
   if (doStretch) {
     imRot = mShiftManager->GetImageRotation(iCam, mFocusMag);
     pixel = mShiftManager->GetPixelSize(iCam, mFocusMag);
@@ -1682,7 +1683,7 @@ void CFocusManager::FocusDone()
     a12 = focCal.slopeX * cosphi * tanTilt * pixel;
     a21 = -focCal.slopeY * sinphi * tanTilt * pixel;
     a22 = 1.f + focCal.slopeY * cosphi * tanTilt * pixel;
-    XCorrFastInterp(data, type, stretchData, nxframe, nyframe, nxframe, 
+    XCorrFastInterp(data, type, stretchData, nxframe, nyframe, nxframe,
       nyframe, a11, a12, a21, a22, nxframe / 2.f, nyframe / 2.f, 0.f, 0.f);
     if (type == kUBYTE)
       type = kSHORT;
@@ -1714,7 +1715,7 @@ void CFocusManager::FocusDone()
     }
  }
 
-  XCorrTaperInPad(data, type, nxframe, ix0, ix1, iy0, iy1, 
+  XCorrTaperInPad(data, type, nxframe, ix0, ix1, iy0, iy1,
           mFocusBuf[mFocusIndex],
           nxpad + 2, nxpad, nypad, nxTaper, nyTaper);
   if (removeData)
@@ -1723,7 +1724,7 @@ void CFocusManager::FocusDone()
     imA->UnLock();
   if (mFocusIndex < 2)
     memcpy(mFocusBuf[mFocusIndex + 3], mFocusBuf[mFocusIndex], 4 * nypad * (nxpad + 2));
-  
+
   mFocusIndex++;
   if (mFocusIndex < mNumShots) {
     int sign = 3 - 2 * mFocusIndex;
@@ -1740,7 +1741,7 @@ void CFocusManager::FocusDone()
       if (interval > elapsed + 1.)
         mShiftManager->SetGeneralTimeOut(tickTime, (int)(interval - elapsed));
     }
-    mWinApp->AddIdleTask(CCameraController::TaskCameraBusy, TaskFocusDone, 
+    mWinApp->AddIdleTask(CCameraController::TaskCameraBusy, TaskFocusDone,
       TaskFocusError, 0, 0);
     if (!mUsingExisting && mUseOppositeLDArea)
       mCamera->OppositeLDAreaNextShot();
@@ -1752,7 +1753,7 @@ void CFocusManager::FocusDone()
     return;
   }
 
-  //  All three shots done, get the triple correlation  
+  //  All three shots done, get the triple correlation
   XCorrSetCTF(mSigma1, sigma2use, 0., radius2use, mCTFa, nxpad, nypad, &delta);
 
   if (erasePeaks) {
@@ -1762,10 +1763,10 @@ void CFocusManager::FocusDone()
     if (mImBufs->GetTiltAngle(tiltA) && mImBufs->GetAxisAngle(axisAngle))
       tiltAngles[0] = tiltAngles[1] = tiltA;
   }
-  
+
   if (mNumShots == 3) {
     if (erasePeaks) {
-      XCorrPeriodicCorr(mFocusBuf[0], mFocusBuf[1], cArray, nxpad, nypad, delta, mCTFa, 
+      XCorrPeriodicCorr(mFocusBuf[0], mFocusBuf[1], cArray, nxpad, nypad, delta, mCTFa,
         tiltAngles, axisAngle, 0, 0.);
       memcpy(mFocusBuf[1], mFocusBuf[4], 4 * nypad * (nxpad + 2));
       XCorrPeriodicCorr(mFocusBuf[1], mFocusBuf[2], cArray, nxpad, nypad, delta, mCTFa,
@@ -1780,7 +1781,7 @@ void CFocusManager::FocusDone()
     XCorrPeakFind(mFocusBuf[1], nxpad+2, nypad, xPeak2, yPeak2, peak2, 2);
     ind1 = CheckZeroPeak(xPeak1, yPeak1, peak1, binning);
     ind2 = CheckZeroPeak(xPeak2, yPeak2, peak2, -binning);
-    
+
     // INVERT THOSE Y VALUES to make shifts properly rotatable
     xShift = binning * (xPeak1[ind1] - xPeak2[ind2]) / 2;
     yShift = binning * (yPeak2[ind2] - yPeak1[ind1]) / 2;
@@ -1788,7 +1789,7 @@ void CFocusManager::FocusDone()
     yDrift = -binning * (yPeak2[ind2] + yPeak1[ind1]) / 2;
   } else {
     if (erasePeaks) {
-      XCorrPeriodicCorr(mFocusBuf[0], mFocusBuf[1], cArray, nxpad, nypad, delta, mCTFa, 
+      XCorrPeriodicCorr(mFocusBuf[0], mFocusBuf[1], cArray, nxpad, nypad, delta, mCTFa,
         tiltAngles, axisAngle, 0, 0.);
     } else {
       XCorrCrossCorr(mFocusBuf[0], mFocusBuf[1], nxpad, nypad, delta, mCTFa);
@@ -1809,7 +1810,7 @@ void CFocusManager::FocusDone()
   }
 
   // Compute unfiltered normalized CCC
-  CCC = XCorrCCCoefficient(mFocusBuf[3], mFocusBuf[4], nxpad + 2, nxpad, nypad, 
+  CCC = XCorrCCCoefficient(mFocusBuf[3], mFocusBuf[4], nxpad + 2, nxpad, nypad,
     -xPeak1[ind1], -yPeak1[ind1], (nxpad + 1 - nxuse) / 2, (nypad + 1 - nyuse) /2, &ix0);
 
   for (int ibuf = 0; ibuf < 5; ibuf++) {
@@ -1852,7 +1853,7 @@ void CFocusManager::FocusDone()
     case FOCUS_CALIBRATE:
       CalFocusData(xShift, yShift);
       break;
-  
+
     case FOCUS_AUTOFOCUS:
       if (mVerbose && !mWinApp->mParticleTasks->GetWaitingForDrift())
         mWinApp->VerboseAppendToLog(true, report);
@@ -1933,7 +1934,7 @@ void CFocusManager::CheckAccuracy(int logging)
   mAccuracyMeasured = false;
   report.Format("Checking accuracy of autofocus by measuring defocus at\r\n"
     "current value and at %.1f microns above and below current defocus", mCalDelta);
-  mWinApp->AppendToLog(report, 
+  mWinApp->AppendToLog(report,
     logging == LOG_OPEN_IF_CLOSED ? logging : LOG_SWALLOW_IF_CLOSED);
   AutoFocusStart(-1);
   mWinApp->AddIdleTask(TaskCheckBusy, TaskCheckDone, TaskFocusError, 0, 0);
@@ -1946,7 +1947,7 @@ void CFocusManager::CheckDone(int param)
   CString report;
   if (mFCindex < 0)
     return;
-  
+
   switch (mFCindex) {
 
     // First time, save defocus, change in plus direction and start again
@@ -1968,7 +1969,7 @@ void CFocusManager::CheckDone(int param)
     mAccuracyMeasured = true;
     report.Format("Measured defocus change was:\r\n   %.2f times actual change"
         " of +%.2f"" micron,\r\n   %.2f times actual change of %.2f micron\r\n"
-        "Returning to original defocus value", 
+        "Returning to original defocus value",
         mPlusAccuracy, mCalDelta, mMinusAccuracy, -mCalDelta);
     mWinApp->AppendToLog(report, mCheckLogging);
     return;
@@ -2005,7 +2006,7 @@ BOOL CFocusManager::GetAccuracyFactors(float &outPlus, float &outMinus)
 
 
 //////////////////////////////////////////////////////////////////////
-// ROUTINES TO WORK WITH FOCUS CALIBRATIONS 
+// ROUTINES TO WORK WITH FOCUS CALIBRATIONS
 
 // Get the calibration for given mag and camera and currently selected direction
 int CFocusManager::GetFocusCal(int inMag, int inCam, int probeMode, int inAlpha,
@@ -2047,17 +2048,17 @@ int CFocusManager::GetFocusCal(int inMag, int inCam, int probeMode, int inAlpha,
             for (iDelMag = 0; iDelMag < MAX_MAGS; iDelMag++) {
               for (iDir = -1; iDir <= 1; iDir += 2) {
                 iMag = inMag + iDelMag * iDir;
-                if (iMag < 1 || iMag >= MAX_MAGS || 
+                if (iMag < 1 || iMag >= MAX_MAGS ||
                   !mScope->BothLMorNotLM(inMag, false, iMag, false))
                   continue;
 
                 // On first pass, insist that both image shifts be calibrated
                 if (!iPass && (mMagTab[iMag].matIS[iCamTry].xpx == 0. ||
-                  mMagTab[inMag].matIS[inCam].xpx == 0. || 
-                  !mShiftManager->CanTransferIS(iMag, inMag, false, 
+                  mMagTab[inMag].matIS[inCam].xpx == 0. ||
+                  !mShiftManager->CanTransferIS(iMag, inMag, false,
                     mCamParams[iCamTry].GIF ? 1 : 0)))
                   continue;
-                if ((focInd = LookupFocusCal(iMag, iCamTry, mTiltDirection, probeMode, 
+                if ((focInd = LookupFocusCal(iMag, iCamTry, mTiltDirection, probeMode,
                   inAlpha, alphaPass > 0)) < 0)
                   continue;
 
@@ -2074,7 +2075,7 @@ int CFocusManager::GetFocusCal(int inMag, int inCam, int probeMode, int inAlpha,
                 TransformFocusCal(&mFocTab[focInd], &focCal, delMat);
                 if (debug)
                   PrintfToLog("Using transformed focus cal on pass %d from mag-cam-a "
-                  "%d-%d-%d to %d-%d-%d", iPass, iMag, iCamTry, mFocTab[focInd].alpha, 
+                  "%d-%d-%d to %d-%d-%d", iPass, iMag, iCamTry, mFocTab[focInd].alpha,
                   inMag, inCam, inAlpha);
                 return iPass + 2;
               }
@@ -2083,7 +2084,7 @@ int CFocusManager::GetFocusCal(int inMag, int inCam, int probeMode, int inAlpha,
         }
       }
     }
-  } 
+  }
   return 0;
 }
 
@@ -2094,7 +2095,7 @@ int CFocusManager::LookupFocusCal(int magInd, int camera, int direction, int pro
   for (int ind = 0; ind < mFocTab.GetSize(); ind++) {
     if (mFocTab[ind].magInd == magInd && mFocTab[ind].camera == camera &&
       mFocTab[ind].direction == direction && mFocTab[ind].probeMode == probeMode &&
-      ((!matchNoAlpha && (alpha < 0 || alpha == mFocTab[ind].alpha)) || 
+      ((!matchNoAlpha && (alpha < 0 || alpha == mFocTab[ind].alpha)) ||
       (matchNoAlpha &&  mFocTab[ind].alpha < 0) || mScope->GetHasNoAlpha()))
       return ind;
   }
@@ -2102,19 +2103,19 @@ int CFocusManager::LookupFocusCal(int magInd, int camera, int direction, int pro
 }
 
 // Transform the input focus calibration by the delta scale matrix
-void CFocusManager::TransformFocusCal(FocusTable *inCal, FocusTable *outCal, 
+void CFocusManager::TransformFocusCal(FocusTable *inCal, FocusTable *outCal,
                     ScaleMat delMat)
 {
   *outCal = *inCal;
   outCal->slopeX = delMat.xpx * inCal->slopeX + delMat.xpy * inCal->slopeY;
   outCal->slopeY = delMat.ypx * inCal->slopeX + delMat.ypy * inCal->slopeY;
   for (int i = 0; i < inCal->numPoints; i++) {
-    outCal->shiftX[i] = delMat.xpx * inCal->shiftX[i] + 
+    outCal->shiftX[i] = delMat.xpx * inCal->shiftX[i] +
       delMat.xpy * inCal->shiftY[i];
-    outCal->shiftY[i] = delMat.ypx * inCal->shiftX[i] + 
+    outCal->shiftY[i] = delMat.ypx * inCal->shiftX[i] +
       delMat.ypy * inCal->shiftY[i];
-  } 
-  
+  }
+
 }
 
 // Change all old (not newly calibrated) focus tables by the same scaling matrix
@@ -2123,7 +2124,7 @@ void CFocusManager::ModifyAllCalibrations(ScaleMat delMat, int iCam, int directi
 {
   int focInd;
   for (focInd = 0; focInd < mFocTab.GetSize(); focInd++) {
-    if (!mFocTab[focInd].calibrated && mFocTab[focInd].camera == iCam && 
+    if (!mFocTab[focInd].calibrated && mFocTab[focInd].camera == iCam &&
       (direction < 0 || mFocTab[focInd].direction == direction)) {
         TransformFocusCal(&mFocTab[focInd], &mNewCal, delMat);
         mFocTab[focInd] = mNewCal;
@@ -2131,7 +2132,7 @@ void CFocusManager::ModifyAllCalibrations(ScaleMat delMat, int iCam, int directi
   }
 }
 
-float CFocusManager::DefocusFromCal(FocusTable *focCal, float inX, float inY, 
+float CFocusManager::DefocusFromCal(FocusTable *focCal, float inX, float inY,
                   float &minDist)
 {
   float slopeX, slopeY, minDefocus, defocus, df1, df2, minSlope, zeroSlope = 0.;
@@ -2164,7 +2165,7 @@ float CFocusManager::DefocusFromCal(FocusTable *focCal, float inX, float inY,
     delY = focCal->shiftY[i] + slopeY * (defocus - df1) - inY;
     lineDist = sqrt(delX * delX + delY * delY);
 
-    // maintain defocus at minimum distance 
+    // maintain defocus at minimum distance
     if (lineDist < minDist) {
       minDist = (float)lineDist;
       minDefocus = defocus;
@@ -2188,7 +2189,7 @@ float CFocusManager::DefocusFromCal(FocusTable *focCal, float inX, float inY,
 // Checks for whether the primary peak is at 0,0 and if so, tests whether the second peak
 // is closer to target defocus and and strong enough relative to main peak.
 // binning can be negative for second beam tilted shot.  Returns index of peak to use
-int CFocusManager::CheckZeroPeak(float * xPeak, float * yPeak, float * peakVal, 
+int CFocusManager::CheckZeroPeak(float * xPeak, float * yPeak, float * peakVal,
   int binning)
 {
   // Amount by which 0 peak must be closer to target than second peak
@@ -2196,7 +2197,7 @@ int CFocusManager::CheckZeroPeak(float * xPeak, float * yPeak, float * peakVal,
   float distance0, distance1, defocus0, defocus1, ratio;
   CString report;
 
-  // But the expected defocus is the cal focus, not the target defocus, when doing either 
+  // But the expected defocus is the cal focus, not the target defocus, when doing either
   // cal or checking autofocus
   // And it should include the autofocus offset and View defocus offset
   float expected = mTargetDefocus;
@@ -2212,7 +2213,7 @@ int CFocusManager::CheckZeroPeak(float * xPeak, float * yPeak, float * peakVal,
     return 0;
 
   // The second value returned is the unadjusted defocus derived from the shifts
-  if (CurrentDefocusFromShift(binning * xPeak[0], -binning * yPeak[0], ratio, defocus0) || 
+  if (CurrentDefocusFromShift(binning * xPeak[0], -binning * yPeak[0], ratio, defocus0) ||
     CurrentDefocusFromShift(binning * xPeak[1], -binning * yPeak[1], ratio, defocus1))
     return 0;
 
@@ -2221,7 +2222,7 @@ int CFocusManager::CheckZeroPeak(float * xPeak, float * yPeak, float * peakVal,
   if (distance1 > distance0 * mMaxPeakDistanceRatio)
     return 0;
 
-  // The allowed ratio between peaks decreases from 1 at the max distance ratio to 
+  // The allowed ratio between peaks decreases from 1 at the max distance ratio to
   // smaller ratios (smaller 2nd peaks) at smaller distance ratios
   ratio = distance1 / (distance0 * mMaxPeakDistanceRatio);
   if (ratio < peakRatioLimit)
@@ -2268,7 +2269,7 @@ void CFocusManager::SetTiltDirection(int inVal)
 
 // Gets a rotationally averaged power spectrum and returns background power and
 // total power with defined ranges
-int CFocusManager::RotationAveragedSpectrum(EMimageBuffer * imBuf, float * rotav, 
+int CFocusManager::RotationAveragedSpectrum(EMimageBuffer * imBuf, float * rotav,
                                             float & background, float & totPower)
 {
   KImage *image = imBuf->mImage;
@@ -2309,7 +2310,7 @@ int CFocusManager::RotationAveragedSpectrum(EMimageBuffer * imBuf, float * rotav
   nxpad = XCorrNiceFrame(ix1 + 1 - ix0, 2, 19);
   nypad = XCorrNiceFrame(iy1 + 1 - iy0, 2, 19);
   if (!mNumRotavs)
-    SEMTrace('f', "Analyzing %d x %d, X %d to %d, Y %d to %d", nxpad, nypad, ix0, ix1, 
+    SEMTrace('f', "Analyzing %d x %d, X %d to %d, Y %d to %d", nxpad, nypad, ix0, ix1,
     iy0, iy1);
 
   // Get memory for the real FFT
@@ -2324,20 +2325,20 @@ int CFocusManager::RotationAveragedSpectrum(EMimageBuffer * imBuf, float * rotav
 
   // Get transform and rotational average
   image->Lock();
-  ProcRotAvFFT(image->getData(), image->getType(), nx, ix0, ix1, iy0, iy1, fftarray, 
+  ProcRotAvFFT(image->getData(), image->getType(), nx, ix0, ix1, iy0, iy1, fftarray,
     nxpad, nypad, rotav, ninRing, mRFTnumPoints);
   image->UnLock();
 
   delete [] fftarray;
   delete [] ninRing;
-  totalSubtractedPower(rotav, mRFTnumPoints, mRFTbkgdStart, mRFTbkgdEnd, mRFTtotPowStart, 
+  totalSubtractedPower(rotav, mRFTnumPoints, mRFTbkgdStart, mRFTbkgdEnd, mRFTtotPowStart,
     mRFTtotPowEnd, &background, &totPower);
 
   // Get the background and power
   return 0;
 }
 
-float CFocusManager::GetAdjustedSFnormalizedSlope(int probeMode) 
+float CFocusManager::GetAdjustedSFnormalizedSlope(int probeMode)
 {
   float slope = mSFnormalizedSlope[probeMode];
   if (mScope->GetIlluminatedArea() && mSFconvAngle[probeMode] !=0) {
@@ -2367,7 +2368,7 @@ void CFocusManager::CalSTEMfocus(void)
   mSFtask = STEM_FOCUS_CAL;
   mModeWasContinuous = mConSets[FOCUS_CONSET].mode == CONTINUOUS;
   mConSets[FOCUS_CONSET].mode = SINGLE_FRAME;
-  if (mCamera->CameraBusy()) 
+  if (mCamera->CameraBusy())
     mCamera->StopCapture(0);
   mWinApp->UpdateBufferWindows();
   StartSTEMfocusShot();
@@ -2407,9 +2408,9 @@ void CFocusManager::STEMfocusShot(int param)
 
   // Get the power spectrum
   NewArray(mRFTrotavs[mNumRotavs], float, mRFTnumPoints);
-  if (!mRFTrotavs[mNumRotavs] || RotationAveragedSpectrum(&mImBufs[bufInd], 
+  if (!mRFTrotavs[mNumRotavs] || RotationAveragedSpectrum(&mImBufs[bufInd],
     mRFTrotavs[mNumRotavs], mRFTbackgrounds[mNumRotavs], mRFTpowers[mNumRotavs])) {
-      SEMMessageBox("Failed to get array for power spectrum in STEM focusing", 
+      SEMMessageBox("Failed to get array for power spectrum in STEM focusing",
         MB_EXCLAME);
       StopSTEMfocus();
       return;
@@ -2457,7 +2458,7 @@ void CFocusManager::STEMfocusShot(int param)
         3, 0, 1.);
       findDefocusSizes(&sizes[i], &ro1, &ro2, 0);
       str.Format("%8.2f  %12.2f  %8.2f", mRFTdefocus[i] + mSFbaseFocus, mRFTpowers[i],
-        sizes[i]); 
+        sizes[i]);
       mWinApp->AppendToLog(str);
       fitFocus[i] = (float)fabs(mRFTdefocus[i] - mRFTdefocus[mSFmaxPowerInd]);
       if (sizes[i] > maxUsableSize) {
@@ -2495,7 +2496,7 @@ void CFocusManager::STEMfocusShot(int param)
 
     str.Format("Slopes of fits below and above are %.2f and %.2f pixel/um (CCs %.4f and "
       "%.4f)\r\nWeighted mean slope is %.2f pixel/um, %f um/um\r\n"
-      "Best focus should be at %.2f um", slope1, slope2, ro1, ro2, meanSlope, 
+      "Best focus should be at %.2f um", slope1, slope2, ro1, ro2, meanSlope,
       mSFnormalizedSlope[ind], bestFocus);
     mWinApp->AppendToLog(str);
     if (fit1Start > 0 || fit2End < mNumRotavs - 1) {
@@ -2522,7 +2523,7 @@ void CFocusManager::STEMfocusShot(int param)
       mBufferManager->CopyImBuf(&mImBufs[bufInd], mSFbestImBuf, false);
     step = 0.;
     if (mSFtask == STEM_FOCUS_COARSE1 || mSFtask == STEM_FOCUS_COARSE2) {
-  
+
       // In coarse phase, take a step in same direction if the current point is maximum
       if (mSFmaxPowerInd == mNumRotavs - 1) {
         step = 2. * mCalDelta;
@@ -2555,17 +2556,17 @@ void CFocusManager::STEMfocusShot(int param)
     }
 
     if (step) {
-      SEMTrace('f', "Power %.1f  at %.2f   taking type %d step of %.2f", 
+      SEMTrace('f', "Power %.1f  at %.2f   taking type %d step of %.2f",
         mRFTpowers[mNumRotavs-1], mCalDefocus, mSFtask, step);
 
       // Going to another step, make sure limit is not exceeded
-      if (((mSFtask == STEM_FOCUS_COARSE1 || mSFtask == STEM_FOCUS_COARSE2) && 
-           (mNumRotavs >= MAX_STEMFOC_STEPS - 6 || (mNumRotavs >= mSFstepLimit && 
-            mRFTpowers[mNumRotavs-1] / mRFTpowers[mNumRotavs-5] < 1.5))) || 
+      if (((mSFtask == STEM_FOCUS_COARSE1 || mSFtask == STEM_FOCUS_COARSE2) &&
+           (mNumRotavs >= MAX_STEMFOC_STEPS - 6 || (mNumRotavs >= mSFstepLimit &&
+            mRFTpowers[mNumRotavs-1] / mRFTpowers[mNumRotavs-5] < 1.5))) ||
         mNumRotavs >= MAX_STEMFOC_STEPS) {
           i = IDNO;
           if (mWinApp->DoingTiltSeries() || mWinApp->mMontageController->DoingMontage() ||
-            mWinApp->mMacroProcessor->DoingMacro() || 
+            mWinApp->mMacroProcessor->DoingMacro() ||
             mWinApp->mComplexTasks->DoingTasks()) {
               SEMMessageBox("Too many focus steps have been taken\r\n"
                 "without finding a maximum power", MB_EXCLAME);
@@ -2606,8 +2607,8 @@ void CFocusManager::STEMfocusShot(int param)
     }
     slope1 = GetAdjustedSFnormalizedSlope(GetSTEMFocusProbeOrIndex()) /
       mShiftManager->GetPixelSize(&mImBufs[bufInd]);
-    i = findFocus(fitRotavs, numpts1, mRFTnumPoints, fitFocus, 
-      fitPowers, fitBackgrounds, slope1, mRFTfitStart, mRFTfitEnd, 
+    i = findFocus(fitRotavs, numpts1, mRFTnumPoints, fitFocus,
+      fitPowers, fitBackgrounds, slope1, mRFTfitStart, mRFTfitEnd,
       mSincCurve, mNumSincPts, mNumSincNodes, 0, 0, 1., &paraFocus, &bestFocus, &slope1);
     if (i > 0) {
       str.Format("findFocus gave an unexpected error %d", i);
@@ -2615,7 +2616,7 @@ void CFocusManager::STEMfocusShot(int param)
       StopSTEMfocus();
       return;
     }
-    SEMTrace('f', "Power %.1f  at %.2f  n=%d parabolic = %.2f   best = %.2f  slope = %.2f", 
+    SEMTrace('f', "Power %.1f  at %.2f  n=%d parabolic = %.2f   best = %.2f  slope = %.2f",
       mRFTpowers[mNumRotavs-1], mCalDefocus, numpts1, paraFocus, bestFocus, slope1);
     mCurrentDefocus = -bestFocus;
     str.Format("Measured defocus = %.2f microns", mCurrentDefocus);
@@ -2806,7 +2807,7 @@ void CFocusManager::FocusVsZnextTask(int param)
   mSFVZtable.stageZ[mSFVZindex++] = (float)stageZ;
   mSFVZtable.numPoints++;
   if (mSFVZindex < mSFVZnumLevels) {
-    ChangeZandDefocus(-mSFVZrangeInZ / 2. + mSFVZindex * mSFVZrangeInZ / 
+    ChangeZandDefocus(-mSFVZrangeInZ / 2. + mSFVZindex * mSFVZrangeInZ /
       (mSFVZnumLevels - 1), 0.);
     return;
   }
@@ -2815,7 +2816,7 @@ void CFocusManager::FocusVsZnextTask(int param)
   StopFocusVsZ();
   mWinApp->AppendToLog("\r\n   Z   defocus   Abs Focus   Before smoothing");
   for (iCen = 0; iCen < mSFVZnumLevels; iCen++) {
-    report.Format("%2d %8.2f  %8.2f  %8.5f", iCen, mSFVZtable.stageZ[iCen], 
+    report.Format("%2d %8.2f  %8.2f  %8.5f", iCen, mSFVZtable.stageZ[iCen],
       mSFVZtable.defocus[iCen], mSFVZtable.absFocus[iCen]);
     mWinApp->AppendToLog(report);
     iFitStr = iCen - smoothFit / 2;
@@ -2829,7 +2830,7 @@ void CFocusManager::FocusVsZnextTask(int param)
   }
   mWinApp->AppendToLog("\r\n   Z   defocus   Abs Focus   After smoothing");
   for (iCen = 0; iCen < mSFVZnumLevels; iCen++) {
-    report.Format("%2d %8.2f  %8.2f  %8.5f", iCen, mSFVZtable.stageZ[iCen], 
+    report.Format("%2d %8.2f  %8.2f  %8.5f", iCen, mSFVZtable.stageZ[iCen],
       mSFVZtable.defocus[iCen], mSFVZtable.absFocus[iCen]);
     mWinApp->AppendToLog(report);
   }
@@ -2945,7 +2946,7 @@ float CFocusManager::LookupZFromAbsFocus(int tableInd, float absFocus)
   for (i = 1; i < mSFfocusZtables[tableInd].numPoints - 1; i++)
     if (absvals[i] > absFocus)
       break;
-  return (zvals[i-1] + (absFocus - absvals[i-1]) * (zvals[i] - zvals[i-1]) / 
+  return (zvals[i-1] + (absFocus - absvals[i-1]) * (zvals[i] - zvals[i-1]) /
     (absvals[i] - absvals[i-1]));
 }
 
@@ -2960,7 +2961,7 @@ float CFocusManager::LookupDefocusFromZ(int tableInd, float Z)
   for (i = 1; i < mSFfocusZtables[tableInd].numPoints - 1; i++)
     if (zvals[i] > Z)
       break;
-  return (defvals[i-1] + (Z - zvals[i-1]) * (defvals[i] - defvals[i-1]) / 
+  return (defvals[i-1] + (Z - zvals[i-1]) * (defvals[i] - defvals[i-1]) /
     (zvals[i] - zvals[i-1]));
 }
 
@@ -3017,8 +3018,8 @@ float CFocusManager::EstimatedBeamTiltScaling(void)
   for (loop = 0; loop < (mScope->GetHasNoAlpha() ? 1 : 2); loop++) {
     for (ind = 0; ind < mFocTab.GetSize(); ind++) {
       camera = mFocTab[ind].camera;
-      if (mWinApp->LookupActiveCamera(camera) >= 0 && 
-        mFocTab[ind].probeMode == mScope->GetProbeMode() && 
+      if (mWinApp->LookupActiveCamera(camera) >= 0 &&
+        mFocTab[ind].probeMode == mScope->GetProbeMode() &&
         (loop || alpha < 0 || alpha == mFocTab[ind].alpha)) {
           pixel = mWinApp->mShiftManager->GetPixelSize(camera, mFocTab[ind].magInd);
           scaleSum += (float)sqrt((double)mFocTab[ind].slopeX * mFocTab[ind].slopeX

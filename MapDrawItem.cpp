@@ -7,17 +7,19 @@
 #include "MapDrawItem.h"
 #include "AutoContouringDlg.h"
 
+#if defined(_DEBUG) && defined(_CRTDBG_MAP_ALLOC)
+#define new DEBUG_NEW
+#endif
+
 #ifdef _DEBUG
-#undef THIS_FILE
-static char THIS_FILE[]=__FILE__;
 #define new DEBUG_NEW
 #endif
 
 #define POINT_CHUNK  5
 
 static COLORREF colors[] = {RGB(255,0,0), RGB(0,255,0), RGB(0,150,255), RGB(255,255,0),
-  RGB(255,0,255), RGB(0,0,64), RGB(128,128,128), RGB(220,0,0), RGB(245,160,0), 
-  RGB(255,255,0), RGB(0,255,0), RGB(0,255,255), RGB(0,0,255), RGB(178,107,210), 
+  RGB(255,0,255), RGB(0,0,64), RGB(128,128,128), RGB(220,0,0), RGB(245,160,0),
+  RGB(255,255,0), RGB(0,255,0), RGB(0,255,255), RGB(0,0,255), RGB(178,107,210),
   RGB(255,0,255), RGB(255,0,170), RGB(0,220,255), RGB(240,170,0), RGB(229, 209, 94)};
 
 //////////////////////////////////////////////////////////////////////

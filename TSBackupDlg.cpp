@@ -1,7 +1,6 @@
 // TSBackupDlg.cpp:      To select a section to back up to in a tilt series
 //
-// Copyright (C) 2003 by Boulder Laboratory for 3-Dimensional Electron 
-// Microscopy of Cells ("BL3DEMC") and the Regents of the University of
+// Copyright (C) 2003-2026 by the Regents of the University of
 // Colorado.  See Copyright.txt for full notice of copyright and limitations.
 //
 // Author: David Mastronarde
@@ -11,10 +10,8 @@
 #include "SerialEM.h"
 #include "TSBackupDlg.h"
 
-#ifdef _DEBUG
+#if defined(_DEBUG) && defined(_CRTDBG_MAP_ALLOC)
 #define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
 #endif
 
 /////////////////////////////////////////////////////////////////////////////
@@ -48,17 +45,17 @@ END_MESSAGE_MAP()
 /////////////////////////////////////////////////////////////////////////////
 // CTSBackupDlg message handlers
 
-void CTSBackupDlg::OnDblclkListztilt() 
+void CTSBackupDlg::OnDblclkListztilt()
 {
-  OnOK(); 
+  OnOK();
 }
 
-BOOL CTSBackupDlg::OnInitDialog() 
+BOOL CTSBackupDlg::OnInitDialog()
 {
   CString item;
   int i;
   int assumedShown = 8; // Have to guess how many fit in the box!
-  
+
   CBaseDlg::OnInitDialog();
   m_listZTilt.ResetContent();
   m_listZTilt.SetTabStops(15);
@@ -72,7 +69,7 @@ BOOL CTSBackupDlg::OnInitDialog()
   int topLine = m_iNumEntries - assumedShown;
   if (topLine < 0)
     topLine = 0;
-  
+
   // And try to make the selection be in the middle
   int topLine2 = m_iSelection - assumedShown / 2;
   if (topLine2 < 0)
@@ -82,14 +79,14 @@ BOOL CTSBackupDlg::OnInitDialog()
   if (topLine > topLine2)
     topLine = topLine2;
   m_listZTilt.SetTopIndex(topLine);
-  
+
   return TRUE;  // return TRUE unless you set the focus to a control
                 // EXCEPTION: OCX Property Pages should return FALSE
 }
 
-void CTSBackupDlg::OnOK() 
+void CTSBackupDlg::OnOK()
 {
   m_iSelection = m_listZTilt.GetCurSel();
-    
+
   CDialog::OnOK();
 }

@@ -12,9 +12,11 @@
 #include "Utilities\KGetOne.h"
 #include "Utilities\XCorr.h"
 
+#if defined(_DEBUG) && defined(_CRTDBG_MAP_ALLOC)
+#define new DEBUG_NEW
+#endif
+
 #ifdef _DEBUG
-#undef THIS_FILE
-static char THIS_FILE[]=__FILE__;
 #define new DEBUG_NEW
 #endif
 
@@ -91,7 +93,7 @@ void CCalibCameraTiming::CalibrateTiming(int setNum, float exposure, bool confir
     mConSet->bottom = trialSet->bottom;
     mExposure = exposure > 0. ? exposure : trialSet->exposure;
     mConSet->binning = trialSet->binning;
-    
+
   } else {
 
     // Find biggest binning where both dimensions exceed target size
@@ -184,7 +186,7 @@ void CCalibCameraTiming::CalibrateTiming(int setNum, float exposure, bool confir
   // and set up the increments for the quick flyback
     mNumRangeShots = mExposure > mLowHighThreshold ? mHighQuickShots : mLowQuickShots;
     mNumQuickDelays = mExposure > mLowHighThreshold ? mHighQuickDelays : mLowQuickDelays;
-    ind = FlybackTimeFromTable(mConSet->binning, 
+    ind = FlybackTimeFromTable(mConSet->binning,
       (mConSet->right - mConSet->left) / mConSet->binning, mWinApp->mScope->GetMagIndex(),
       mExposure, flyback, startup);
     if (ind == FLYBACK_ERROR || ind == FLYBACK_NONE || ind == FLYBACK_SINGLE) {
@@ -195,7 +197,7 @@ void CCalibCameraTiming::CalibrateTiming(int setNum, float exposure, bool confir
       mConSet->binning);
     mStartupIncrement = (float)(0.7 * fullexp / (mNumQuickDelays - 1));
     mFirstQuickStartup = startup + 0.15f * fullexp;
-    SEMTrace('c', "Assuming flyback %f  first  %.2f  increment %.2f", flyback, 
+    SEMTrace('c', "Assuming flyback %f  first  %.2f  increment %.2f", flyback,
       mFirstQuickStartup, mStartupIncrement);
   }
   if (mNumTestShots <= mNumRefShots)
@@ -203,7 +205,7 @@ void CCalibCameraTiming::CalibrateTiming(int setNum, float exposure, bool confir
   if (mExposure < 0.1)
     mExposure = 0.1f;
   mConSet->exposure = mExposure;
-  mConSet->binning = B3DMAX(mCamParam->binnings[0], 
+  mConSet->binning = B3DMAX(mCamParam->binnings[0],
     B3DMIN(mCamParam->binnings[mCamParam->numBinnings-1], mConSet->binning));
   mConSet->doseFrac = trialSet->doseFrac;
   mConSet->K2ReadMode = (mCamParam->K2Type == K2_SUMMIT || mCamParam->K2Type == K3_TYPE) ?
@@ -233,7 +235,7 @@ void CCalibCameraTiming::CalibrateTiming(int setNum, float exposure, bool confir
     mWinApp->AppendToLog(report, LOG_OPEN_IF_CLOSED);
     if (mBlankCycleTime > 0.025) {
       mCamera->SetMinBlankingTime(mBlankCycleTime);
-      mWinApp->AppendToLog("This time will be used while running this routine", 
+      mWinApp->AppendToLog("This time will be used while running this routine",
         LOG_OPEN_IF_CLOSED);
     }
   }
@@ -250,7 +252,7 @@ void CCalibCameraTiming::CalibrateTiming(int setNum, float exposure, bool confir
   mBlankMean = 0.;
 
   mCamera->InitiateCapture(TRACK_CONSET);
-  mWinApp->AddIdleTask(CCameraController::TaskCameraBusy, TASK_CAL_CAM_TIMING, 0, 0); 
+  mWinApp->AddIdleTask(CCameraController::TaskCameraBusy, TASK_CAL_CAM_TIMING, 0, 0);
   mWinApp->SetStatusText(MEDIUM_PANE, "CALIBRATING CAMERA TIMING");
   mWinApp->UpdateBufferWindows();
   mWinApp->AppendToLog("Doing reference exposures:", LOG_OPEN_IF_CLOSED);
@@ -290,13 +292,13 @@ void CCalibCameraTiming::CalTimeNextTask()
       nx = image->getWidth();
       ny = image->getHeight();
       if (mWinApp->mScope->GetSimulationMode()) {
-        iy = (int)((mCamParam->startupDelay - mStartupSave) / 
+        iy = (int)((mCamParam->startupDelay - mStartupSave) /
           (mExposure / ny + mCamParam->flyback / 1.e6));
         B3DCLAMP(iy, 1, ny - 1);
       } else {
         image->Lock();
         for (iy = 0; iy < ny; iy++) {
-          line = ProcImageMean(image->getData(), image->getType(), nx, ny, 0, nx - 1, iy, 
+          line = ProcImageMean(image->getData(), image->getType(), nx, ny, 0, nx - 1, iy,
             iy);
           if (line > mBlankMean + 0.5 * mMeanReference)
             break;
@@ -312,8 +314,8 @@ void CCalibCameraTiming::CalTimeNextTask()
   // Add value to line string, output string if appropriate
   mLineString += oneVal;
   mCalIndex++;
-  if (mCalIndex % 8 == 0 || (mCalIndex == mNumTestShots && !mDoingRefs && 
-    mRangeIndex < 0) || (mCalIndex >= mNumRefShots && mDoingRefs) || 
+  if (mCalIndex % 8 == 0 || (mCalIndex == mNumTestShots && !mDoingRefs &&
+    mRangeIndex < 0) || (mCalIndex >= mNumRefShots && mDoingRefs) ||
     (mRangeIndex >= 0 && (mCalIndex == mNumRangeShots || meanRatio > 0.99))) {
     mWinApp->AppendToLog(mLineString, LOG_OPEN_IF_CLOSED);
     mLineString = "";
@@ -364,7 +366,7 @@ void CCalibCameraTiming::CalTimeNextTask()
     }
     if (mSTEMcamera) {
       oneVal.Format("Measuring timing for %.2f sec, binning %d, size %dx%d, mag %d",
-        mExposure, mConSet->binning, image->getWidth(), image->getHeight(), 
+        mExposure, mConSet->binning, image->getWidth(), image->getHeight(),
         MagForCamera(mCamParam, mWinApp->mScope->FastMagIndex()));
       mWinApp->AppendToLog(oneVal);
     } else
@@ -404,8 +406,8 @@ void CCalibCameraTiming::CalTimeNextTask()
       mRangeStartups[mRangeIndex++] = mCamParam->startupDelay;
     }
     if (adjFactor < 0.04 || (mSTEMcamera && mExposure > 4. && mCamParam->startupDelay >=
-      mExposure + image->getHeight() * mCamParam->flyback / 1.e6) || 
-      (mQuickFlyback && (mCamParam->startupDelay - mFirstQuickStartup) / 
+      mExposure + image->getHeight() * mCamParam->flyback / 1.e6) ||
+      (mQuickFlyback && (mCamParam->startupDelay - mFirstQuickStartup) /
       mStartupIncrement >= mNumQuickDelays - 1.1)) {
 
       // Image is blanked - find delay in midpoint of range
@@ -422,15 +424,15 @@ void CCalibCameraTiming::CalTimeNextTask()
       if (mRangeIndex > 3) {
 
         // If there are enough points, see if first one is an outlier
-        StatLSFitPred(&mRangeStartups[1], &mRangeMeans[1], mRangeIndex - 1, &slope2, 
+        StatLSFitPred(&mRangeStartups[1], &mRangeMeans[1], mRangeIndex - 1, &slope2,
           &intcp2, &rostat, mRangeStartups[0], &ypred, &prederr);
        SEMTrace('c', "Slope %f  intcp %f zero %.3f from restricted fit, rm0 %.4f  pred "
-         "%.4f prederr %.4f", slope2, intcp2, -slope2 / intcp2, mRangeMeans[0], ypred, 
+         "%.4f prederr %.4f", slope2, intcp2, -slope2 / intcp2, mRangeMeans[0], ypred,
          prederr);
        if (fabs((double)(ypred - mRangeMeans[0])) > 2. * prederr) {
           slope = slope2;
           intcp = intcp2;
-          mWinApp->AppendToLog("Dropping first point from fit as an outlier", 
+          mWinApp->AppendToLog("Dropping first point from fit as an outlier",
             LOG_OPEN_IF_CLOSED);
         }
       }
@@ -472,10 +474,10 @@ void CCalibCameraTiming::CalTimeNextTask()
         }
 
         // Get a new fit if anything was dropped
-        if (nfit < mRangeIndex) 
+        if (nfit < mRangeIndex)
           StatLSFit(&mRangeStartups[fitStart], &mRangeMeans[fitStart], nfit, slope,intcp);
         mFlyback = -(float)(1.e6 * (1. / slope + mExposure) / image->getHeight());
-        mCamParam->startupDelay = mStartupDelay = (0.5f - intcp) / slope + 
+        mCamParam->startupDelay = mStartupDelay = (0.5f - intcp) / slope +
           mCamera->GetMinBlankingTime() / 2.f;
         estStartup = (1.f - intcp) / slope + mCamera->GetMinBlankingTime() / 2.f;
         oneVal.Format("Flyback %.1f usec, startup delay %.3f sec computed using slope %f,"
@@ -525,7 +527,7 @@ void CCalibCameraTiming::CalTimeNextTask()
     } else {
 
       // Image not blanked yet - increment and bail if gone too far
-      if (mRangeIndex >= MAX_RANGE || mCamParam->startupDelay > 
+      if (mRangeIndex >= MAX_RANGE || mCamParam->startupDelay >
         B3DMAX(1., mExposure) * MAX_RANGE / 10.) {
         oneVal.Format("Cannot get a blanked image even with initial blanking up to %.1f"
           " seconds\r\nSomething is wrong - giving up", mCamParam->startupDelay);
@@ -563,9 +565,9 @@ void CCalibCameraTiming::CalTimeNextTask()
   if (!mStartupOnly)
     adjFactor = mMinimumDrift + mBuiltInSave - mCamParam->builtInSettling;
 
-  minDelay = mStartupDelay - (adjFactor + 
+  minDelay = mStartupDelay - (adjFactor +
     (1. - minCounts / mMeanReference) * mExposure);
-  maxDelay = mStartupDelay - (adjFactor + 
+  maxDelay = mStartupDelay - (adjFactor +
     (1. - maxCounts / mMeanReference) * mExposure);
   if (mSTEMcamera) {
     minDelay -= 1.e-6 * mFlyback * image->getHeight() / 2.;
@@ -597,13 +599,13 @@ void CCalibCameraTiming::CalTimeNextTask()
     if (mCamParam->K2Type == 1 && newDelay < mCamera->GetK2MinStartupDelay()) {
       oneVal.Format("This StartupDelay is less than the currently allowed minimum\r\n"
         "delay for the K2, %.2f, and would not be safe to use.\r\n"
-        "Just set StartupDelay to %.2f\r\n", 
+        "Just set StartupDelay to %.2f\r\n",
         mCamera->GetK2MinStartupDelay(), mCamera->GetK2MinStartupDelay() + 0.1);
       mWinApp->AppendToLog(oneVal, LOG_OPEN_IF_CLOSED);
     }
 
   } else {
-    
+
     if (newDelay < 0.01) {
       delBIS = 0.01 - newDelay;
       newDelay = 0.01;
@@ -617,7 +619,7 @@ void CCalibCameraTiming::CalTimeNextTask()
         " something is wrong", LOG_OPEN_IF_CLOSED);
     } else {
       oneVal.Format("In SerialEMproperties.txt, for this camera, set:\r\n"
-        "StartupDelay  %.3f \r\nMinimumDriftSettling  %.2f \r\nExtraBeamTime  %.2f", 
+        "StartupDelay  %.3f \r\nMinimumDriftSettling  %.2f \r\nExtraBeamTime  %.2f",
         newDelay, newMinDrift, newMinDrift);
       mWinApp->AppendToLog(oneVal, LOG_OPEN_IF_CLOSED);
       if (delBIS > 0.) {
@@ -677,12 +679,12 @@ void CCalibCameraTiming::CalibrateDeadTime()
   mCamParam = mWinApp->GetCamParams() + mWinApp->GetCurrentCamera();
   ControlSet *trialSet = mWinApp->GetConSets() + 2;
   CString *modeNames = mWinApp->GetModeNames();
-  
+
   // Copy trial parameters
   *mConSet = *trialSet;
   report.Format("This procedure will take %d pictures at a series of exposure\n"
     "times, based on the " + modeNames[2] + " parameter set.\n\n"
-    "The beam and the binning should be set up so that a " + modeNames[2] + 
+    "The beam and the binning should be set up so that a " + modeNames[2] +
     "\nimage with 0.1 second exposure gives moderate counts.\n\n"
     "Are you ready to proceed?", mNumDeadExp * 2);
   if (AfxMessageBox(report, MB_YESNO | MB_ICONQUESTION) == IDNO)
@@ -726,7 +728,7 @@ void CCalibCameraTiming::CalDeadNextTask()
 
     // Do second round unless start is clode to 0.01 past the dead time
     StatLSFit(mDeadCounts, mDeadExposure, mDeadIndex, slope, intcp);
-    if (!mDoingRefs || 
+    if (!mDoingRefs ||
       (mDeadStartExp >= intcp + 0.005 &&  mDeadStartExp <= intcp + 0.015)) {
       StopCalDead();
       return;
@@ -751,7 +753,7 @@ void CCalibCameraTiming::CalDeadNextTask()
 void CCalibCameraTiming::CalDeadCleanup(int param)
 {
   if (param == IDLE_TIMEOUT_ERROR)
-    AfxMessageBox(_T("Time out trying to get image for measuring shutter dead time"), 
+    AfxMessageBox(_T("Time out trying to get image for measuring shutter dead time"),
       MB_EXCLAME);
   StopCalDead();
   mWinApp->ErrorOccurred(param);
@@ -779,8 +781,8 @@ void CCalibCameraTiming::StopCalDead()
 
 // Look up flyback times in the table that match the binning and size and return an
 // exact, interpolated, or extrapolated value
-int CCalibCameraTiming::FlybackTimeFromTable(int binning, int xSize, int magIndex, 
-                                             float exposure, float &flyback, 
+int CCalibCameraTiming::FlybackTimeFromTable(int binning, int xSize, int magIndex,
+                                             float exposure, float &flyback,
                                              float &startup, CString *message)
 {
   int i, j, indi, indrp, last, dropInd;
@@ -812,7 +814,7 @@ int CCalibCameraTiming::FlybackTimeFromTable(int binning, int xSize, int magInde
         ACCUM_MAX(maxExposure, mFlybackArray[i].exposure);
     }
   }
-  SEMTrace('c', "FlybackTimeFromTable: table size %d, numFittable %d exposure %f", 
+  SEMTrace('c', "FlybackTimeFromTable: table size %d, numFittable %d exposure %f",
     mFlybackArray.GetSize(), numFittable, exposure);
   if (message)
     *message = "No calibrated flyback times are available for this binning and "
@@ -866,7 +868,7 @@ int CCalibCameraTiming::FlybackTimeFromTable(int binning, int xSize, int magInde
           yfit[j++] = mFlybackArray[indi].flybackTime;
         }
       }
-      StatLSFitPred(&xfit[0], &yfit[0], j, &slope, &intcp, &roCorr, 
+      StatLSFitPred(&xfit[0], &yfit[0], j, &slope, &intcp, &roCorr,
         mFlybackArray[indrp].exposure, &predY, &errOfPred);
     SEMTrace('c', "Fit with drop %d: slope %f intcp %f ro %f err %f  predY %f table %f",
     idrop, slope, intcp, roCorr, errOfPred, predY, mFlybackArray[indrp].flybackTime);
@@ -890,13 +892,13 @@ int CCalibCameraTiming::FlybackTimeFromTable(int binning, int xSize, int magInde
       SEMTrace('c', "%d %f %f %f", j, xfit[j-1], yfit[j-1], prederr[j-1]);
     }
   }
-  StatLSFitPred(&xfit[0], &yfit[0], j, &slope, &intcp, &roCorr, exposure, &flyback, 
+  StatLSFitPred(&xfit[0], &yfit[0], j, &slope, &intcp, &roCorr, exposure, &flyback,
     &errOfPred);
   SEMTrace('c', "Fit to %d flybacks, drop %d: slope %f intcp %f ro %f flyback %f",
     j, dropInd, slope, intcp, roCorr, flyback);
-  StatLSFitPred(&xfit[0], &prederr[0], j, &slope, &intcp, &roCorr, exposure, &startup, 
+  StatLSFitPred(&xfit[0], &prederr[0], j, &slope, &intcp, &roCorr, exposure, &startup,
     &errOfPred);
-  SEMTrace('c', "Fit to SUDs: slope %f intcp %f ro %f SUD %f", slope, intcp, roCorr, 
+  SEMTrace('c', "Fit to SUDs: slope %f intcp %f ro %f SUD %f", slope, intcp, roCorr,
     startup);
   if (message)
     message->Format("%spolating from fit to %d calibrated flyback times, nearest one at "
@@ -905,6 +907,6 @@ int CCalibCameraTiming::FlybackTimeFromTable(int binning, int xSize, int magInde
   delete [] distInd;
   delete [] tableInd;
   delete [] distances;
-  return ((exposure < minExposure || exposure > maxExposure) ? FLYBACK_EXTRAP : 
+  return ((exposure < minExposure || exposure > maxExposure) ? FLYBACK_EXTRAP :
     FLYBACK_INTERP);
 }

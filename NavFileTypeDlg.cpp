@@ -5,6 +5,10 @@
 #include "SerialEM.h"
 #include ".\NavFileTypeDlg.h"
 
+#if defined(_DEBUG) && defined(_CRTDBG_MAP_ALLOC)
+#define new DEBUG_NEW
+#endif
+
 
 // CNavFileTypeDlg dialog
 
@@ -58,7 +62,7 @@ END_MESSAGE_MAP()
 // CNavFileTypeDlg message handlers
 
 
-void CNavFileTypeDlg::OnOK() 
+void CNavFileTypeDlg::OnOK()
 {
   UpdateData(true);
 	CBaseDlg::OnOK();

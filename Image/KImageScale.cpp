@@ -1,8 +1,7 @@
 // KImageScale.cpp:       A class with methods for determining and keeping track of
 //                          image scaling
 //
-// Copyright (C) 2003 by Boulder Laboratory for 3-Dimensional Electron 
-// Microscopy of Cells ("BL3DEMC") and the Regents of the University of
+// Copyright (C) 2003-2026 by the Regents of the University of
 // Colorado.  See Copyright.txt for full notice of copyright and limitations.
 //
 // Authors: David Mastronarde and James Kremer
@@ -13,6 +12,10 @@
 #include "..\Shared\mrcslice.h"
 #include "..\SerialEM.h"
 
+#if defined(_DEBUG) && defined(_CRTDBG_MAP_ALLOC)
+#define new DEBUG_NEW
+#endif
+
 KImageScale::KImageScale()
 {
   mBrightness  = 0;
@@ -21,12 +24,12 @@ KImageScale::KImageScale()
   mFalseColor  = 0;
   mBoostContrast = 1.;
   mMeanForBoost = 128.;
-  
+
   mMinScale    = 0.;
   mMaxScale    = 255.;
   mSampleMin   = 0.;
   mSampleMax   = 255.;
-  
+
 }
 
 
@@ -63,12 +66,12 @@ void KImageScale::GetScaleFactors(float &outMin, float &outRange)
 void KImageScale::DoRamp(unsigned int *inRamp, int inRampSize)
 {
   short gLevel;
-  
-  
+
+
   int   scale, offset;
   int   c = mContrast + 128;
-  
-  
+
+
   if (c < 129) {
     scale = c;
   } else {
@@ -84,18 +87,18 @@ void KImageScale::DoRamp(unsigned int *inRamp, int inRampSize)
     offset += B3DNINT((1. - mBoostContrast) * mMeanForBoost * scale / 128.);
     scale = B3DNINT(mBoostContrast * scale);
   }
-  
+
   for (int i = 0; i < inRampSize; i++) {
     // ((i + mBrightness - 128) * scale) / 128 + 128
     gLevel = ((i * scale) / 128) + offset;
-    
+
     if (gLevel < 0) gLevel = 0;
     if (gLevel > 255) gLevel = 255;
-    
+
     if (mInverted)
-      inRamp[inRampSize - 1 - i] = gLevel;     
-    else  
-      inRamp[i] = gLevel;     
+      inRamp[inRampSize - 1 - i] = gLevel;
+    else
+      inRamp[i] = gLevel;
   }
 }
 
@@ -211,9 +214,9 @@ void KImageScale::FindPctStretch(KImage *inImage, float pctLo, float pctHi, floa
         }
 
         // Autocorrelations have a single pixel sharp peak, so just get center point and
-        // include it in the max range, 
+        // include it in the max range,
         // Or, get 8 points around the center and include second-highest in scale
-        valMax = -1.e37f;  
+        valMax = -1.e37f;
         valSecond = -1.e37f;
         if (nx > 3 && ny > 3) {
           for (iy = -1; iy <= 1; iy++) {
@@ -292,7 +295,7 @@ void KImageScale::FindPctStretch(KImage *inImage, float pctLo, float pctHi, floa
   mBoostContrast = 1.;
 }
 
-float KImageScale::GetImageValue(unsigned char **linePtrs, int type, int nx, int ny, 
+float KImageScale::GetImageValue(unsigned char **linePtrs, int type, int nx, int ny,
   int ix, int iy)
 {
   float val;

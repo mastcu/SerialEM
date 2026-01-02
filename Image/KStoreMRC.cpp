@@ -1,7 +1,6 @@
 // KStoreMRC.cpp:         A class for saving and reading MRC image files
 // //
-// Copyright (C) 2003 by Boulder Laboratory for 3-Dimensional Electron 
-// Microscopy of Cells ("BL3DEMC") and the Regents of the University of
+// Copyright (C) 2003-2026 by the Regents of the University of
 // Colorado.  See Copyright.txt for full notice of copyright and limitations.
 //
 // Authors: David Mastronarde and James Kremer
@@ -14,6 +13,10 @@
 #include "..\Shared\autodoc.h"
 #include "..\Shared\iimage.h"
 #include "KStoreADOC.h"
+
+#if defined(_DEBUG) && defined(_CRTDBG_MAP_ALLOC)
+#define new DEBUG_NEW
+#endif
 
 const int MRCheadSize = 1024;
 
@@ -38,7 +41,7 @@ HeaderMRC::HeaderMRC()
   extType[2] = 'R';
   extType[3] = 'I';
   // File is conforming because it has 0 origin, but this has to get zeroed for BYTE/RGB
-  nversion = 20140;    
+  nversion = 20140;
   nbytext  = 0;
   typext = 0;
   type = lensid = n1 = n2 = v1 = v2 = 0;
@@ -69,20 +72,20 @@ void HeaderMRC::Init(int inX, int inY, int inZ, int inMode)
     mx = nx = inX;
     my = ny = inY;
     mz = nz = inZ;
-     
+
     mode = inMode;
     if (mode == MRC_MODE_BYTE || mode == MRC_MODE_RGB)
       nversion = 0;
-     
+
     dx = (float)nx;
     dy = (float)ny;
     dz = (float)nz;
-     
-    
+
+
     amin  = 1.e38f;
     amean = 0.0f;
     amax  = -1.e38f;
-     
+
 }
 
 // Check whether  a file is MRC based upon nx, ny, nz, mode and filesize
@@ -91,29 +94,29 @@ BOOL KStoreMRC::IsMRC(CFile *inFile)
   double fileSize, imageSize;
   BOOL sizeError = false;
   if (inFile == NULL) return false;
-  
+
   try {
     fileSize = (double)inFile->GetLength();
-    if (fileSize < MRCheadSize) 
+    if (fileSize < MRCheadSize)
       return false;
-      
+
     Int32 nx, ny, nz, mode, mapc, mapr, maps;
-    inFile->Read(&nx, 4);   
-    inFile->Read(&ny, 4);   
-    inFile->Read(&nz, 4);   
+    inFile->Read(&nx, 4);
+    inFile->Read(&ny, 4);
+    inFile->Read(&nz, 4);
     inFile->Read(&mode, 4);
     inFile->Seek(48, CFile::current);
     inFile->Read(&mapc, 4);
     inFile->Read(&mapr, 4);
     inFile->Read(&maps, 4);
 
-  
-    if ((nx <= 0) || (ny <= 0) || (nz <= 0) 
-      || (mode < 0) || (mode > 16) || 
+
+    if ((nx <= 0) || (ny <= 0) || (nz <= 0)
+      || (mode < 0) || (mode > 16) ||
       (nx > 65535 && ny > 65535 && nz > 65535) ||
       mapc < 0 || mapc > 4 || mapr < 0 || mapr > 4 || maps < 0 || maps > 4)
         return false;
-  
+
     int pixSize = lookupPixSize(mode);
     imageSize = (double)nx * ny * pixSize;
     if (fileSize < imageSize * nz + MRCheadSize) {
@@ -123,16 +126,16 @@ BOOL KStoreMRC::IsMRC(CFile *inFile)
         return false;
     }
     return true;
-  
+
   }
-  
+
   catch(CFileException *perr) {
     perr->Delete();
     return false;
-  } 
+  }
 }
 
-// Create a new file.  Create a blank header and  allow 
+// Create a new file.  Create a blank header and  allow
 // for extra information past regular header
 KStoreMRC::KStoreMRC(CString inFilename , FileOptions inFileOpt)
   : KImageStore()
@@ -180,7 +183,7 @@ KStoreMRC::KStoreMRC(CString inFilename , FileOptions inFileOpt)
       mHead->nversion = 0;
     mFilename = inFilename;
     mPixSize = lookupPixSize(mMode);
-  
+
     // Open file with creation and truncation
     // The user has already confirmed that it is OK to overwrite
     mFile = new CFile(inFilename, CFile::modeCreate | CFile::modeNoInherit |
@@ -217,7 +220,7 @@ KStoreMRC::KStoreMRC(CString inFilename , FileOptions inFileOpt)
     Close();
     perr->Delete();
     return;
-  } 
+  }
 }
 
 // Create a storage from an existing file.
@@ -238,9 +241,9 @@ KStoreMRC::KStoreMRC(CFile *inFile)
   double fileSize;
 
   try{
-    if (mFile == NULL) 
+    if (mFile == NULL)
       throw (-1);
-    if (head == NULL) 
+    if (head == NULL)
       throw (-1);
     fileSize = (double)mFile->GetLength();
     if (fileSize <= (unsigned int)MRCheadSize)
@@ -252,13 +255,13 @@ KStoreMRC::KStoreMRC(CFile *inFile)
     ny = head->ny;
     nz = head->nz;
     mMode = head->mode;
-    
+
     mMin = head->amin;
     mMax = head->amax;
     mHeadSize += head->next;
     mNumWritten = nz;
     mMeanSum = nz * head->amean;
-    
+
     // Make sure files aren't byte-swapped
     if (nx <= 0 || ny <= 0 || nz <= 0  || (nx > 65535 &&  ny > 65535 && nz > 65535)
       || (mMode < 0) || (mMode > 16))
@@ -278,13 +281,13 @@ KStoreMRC::KStoreMRC(CFile *inFile)
       head->nz = mDepth;
     } else
       mDepth = nz;
-    
+
     mWidth  = nx;
     mHeight = ny;
-    
+
     if (head->next) {
       NewArray(mExtra, char, head->next);
-      if (mExtra == NULL) 
+      if (mExtra == NULL)
         throw(-1);
       Read(mExtra, head->next);
     }
@@ -330,8 +333,8 @@ KStoreMRC::KStoreMRC(CFile *inFile)
       }
       AdocReleaseMutex();
     }
-  } 
-  
+  }
+
   catch(CFileException *perr) {
     mPixSize = mWidth = mHeight = mDepth = 0;
     delete head;
@@ -339,7 +342,7 @@ KStoreMRC::KStoreMRC(CFile *inFile)
     Close();
     perr->Delete();
     return;
-  } 
+  }
   catch( int ) {
     mPixSize = mWidth = mHeight = mDepth = 0;
     delete head;
@@ -377,7 +380,7 @@ const char *KStoreMRC::GetTitle(int index)
   return &mHead->labels[index][0];
 };
 
-  
+
 int KStoreMRC::setMode(int inMode)
 {
   if (mDepth > 0)
@@ -389,15 +392,15 @@ int KStoreMRC::setMode(int inMode)
 int KStoreMRC::AppendImage(KImage *inImage)
 {
   int err;
-  if (inImage == NULL) 
+  if (inImage == NULL)
     return 1;
-   
+
   // If this is a new image init everything.
   if ((mHead->nx == 0) && (mHead->ny == 0) && (mHead->nz == 0) ){
-    inImage->getSize(mWidth, mHeight);  
-/*    int mode = 0;   
+    inImage->getSize(mWidth, mHeight);
+/*    int mode = 0;
     int dataType = inImage->getType();
-*/    
+*/
     // If it is RGB, fix the mode, otherwise it was set from mFileOpt before
     if (inImage->getType() == kRGB) {
       mMode = MRC_MODE_RGB;
@@ -420,8 +423,8 @@ int KStoreMRC::AppendImage(KImage *inImage)
 
   }
   mCur.z = mHead->nz;
-  
-    
+
+
   // Write image data to end of file.
   err = WriteSection(inImage, mHead->nz);
   mDepth = mHead->nz;
@@ -436,9 +439,9 @@ int KStoreMRC::WriteSection (KImage *inImage, int inSect)
   bool needToReflip, needToDelete, needNewSect, gotMutex = false;
   int retval = 5;
 
-  if (inImage == NULL) 
+  if (inImage == NULL)
     return 1;
-  if (mFile == NULL) 
+  if (mFile == NULL)
     return 2;
 
   if ((inSect + 1) * mHead->nbytext >  mHead->next)
@@ -446,13 +449,13 @@ int KStoreMRC::WriteSection (KImage *inImage, int inSect)
 
   if (mWidth != inImage->getWidth() || mHeight != inImage->getHeight())
     return 17;
-  
+
   inImage->Lock();
 
   EMimageExtra *extra = (EMimageExtra *)inImage->GetUserData();
   int dataSize = mWidth * mHeight * mPixSize;
   int headSize = MRCheadSize;
-  
+
   idata   = convertForWriting(inImage, true, needToReflip, needToDelete);
   if (!idata) {
     inImage->UnLock();
@@ -465,12 +468,12 @@ int KStoreMRC::WriteSection (KImage *inImage, int inSect)
     Write(idata, dataSize);
 
     // Test for whether need new autodoc section before changing depth
-    needNewSect = CheckNewSectionManageMMM(inImage, inSect, idata, mHead->nz, 
+    needNewSect = CheckNewSectionManageMMM(inImage, inSect, idata, mHead->nz,
       mHead->amin, mHead->amax, mHead->amean);
 
     mHead->mz = mHead->nz;
     mHead->dz = (float)mHead->nz * mPixelSpacing;
-    
+
     // ReWrite header information.
     retval++;      // Error 7 on head write
     Seek(0, CFile::begin);
@@ -478,14 +481,14 @@ int KStoreMRC::WriteSection (KImage *inImage, int inSect)
 
     if (mHead->next) {
       // Write extended header information.
-      
+
       char *edata = (char *)inImage->GetUserData();
       int offset = inSect * mHead->nbytext;
       char *pExtra = mExtra + offset;
       for (i = 0; i < EXTRA_NTYPES; i++) {
         if (((1 << i) & mHead->typext) != 0) {
           for ( j = 0; j < EMimageExtra::Bytes[i]; j++) {
-            if (edata) 
+            if (edata)
               *pExtra++ = *edata++;
             else
               *pExtra++ = 0;
@@ -549,18 +552,18 @@ KImage *KStoreMRC::getRect(void)
   int height = mHeight;
   char *theData;
   size_t secSize = (size_t)width * height * mPixSize;
-  
+
   if (mCur.z < 0 || mCur.z >= mDepth || mFile == NULL)
-    return NULL; 
+    return NULL;
   //Int32 offset  = secSize * mCur.z;
-  
+
   if ((mMode < 0 || mMode > 2) && mMode != MRC_MODE_USHORT && mMode != MRC_MODE_RGB)
     return NULL;
   NewArray(theData, char, secSize);
-  if (!theData) 
+  if (!theData)
     return NULL;
 
-  try{  
+  try{
     BigSeek(mHeadSize, width, height * mPixSize * mCur.z, CFile::begin);
     KImage *retVal;
     KImageShort *theSImage;
@@ -569,27 +572,27 @@ KImage *KStoreMRC::getRect(void)
     switch(mMode){
       case 0:
         retVal = new KImage();
-        retVal->useData(theData, width, height); 
+        retVal->useData(theData, width, height);
         break;
       case 1:
       case MRC_MODE_USHORT:
         theSImage = new KImageShort();
         theSImage->setType(mMode == 1 ? kSHORT : kUSHORT);
-        theSImage->useData(theData, width, height); 
+        theSImage->useData(theData, width, height);
         retVal = (KImage *)theSImage;
         break;
       case 2:
         theFImage = new KImageFloat();
-        theFImage->useData(theData, width, height); 
+        theFImage->useData(theData, width, height);
         retVal = (KImage *)theFImage;
         break;
       case MRC_MODE_RGB:
         theCImage = new KImageRGB();
-        theCImage->useData(theData, width, height); 
+        theCImage->useData(theData, width, height);
         retVal = (KImage *)theCImage;
         break;
     }
-    
+
     Read( theData , (DWORD)secSize);
     retVal->flipY();
 
@@ -597,14 +600,14 @@ KImage *KStoreMRC::getRect(void)
 
       // Get extra header info into the record
       EMimageExtra *theExtra = new EMimageExtra;
-      if (theExtra == NULL) 
+      if (theExtra == NULL)
         throw (-1);
       retVal->SetUserData(theExtra);
       if (getExtraData(theExtra, mCur.z))
         throw(-1);
     }
     return retVal;
-    
+
   }
   catch(CFileException *perr) {
     perr->Delete();
@@ -654,7 +657,7 @@ float KStoreMRC::getPixel(KCoord &inCoord)
   Int32 offset  = secSize * inCoord.z;
   offset = width * inCoord.y * mPixSize;
   offset += inCoord.x * mPixSize;
-  
+
   try {
     BigSeek(mHeadSize + offset, secSize, inCoord.z, CFile::begin);
     switch(mMode){
@@ -680,7 +683,7 @@ float KStoreMRC::getPixel(KCoord &inCoord)
       break;
     default:
       return 0;
-      break;  
+      break;
     }
   }
   catch(CFileException *perr) {
@@ -697,9 +700,9 @@ int KStoreMRC::CheckMontage(MontParam *inParam)
 {
   if (iiMRCcheckPCoord((MrcHeader *)mHead) == 0 && !mMontCoordsInMdoc)
     return 0;
-  if (mMontCoordsInMdoc && !CheckAdocForMontage(inParam)) 
+  if (mMontCoordsInMdoc && !CheckAdocForMontage(inParam))
     return 0;
-  return KImageStore::CheckMontage(inParam, mHead->nx, mHead->ny, mHead->nz);  
+  return KImageStore::CheckMontage(inParam, mHead->nx, mHead->ny, mHead->nz);
 }
 
 // There are elusive reports of files marked as montage when they should not be; this is
@@ -726,7 +729,7 @@ int KStoreMRC::getPcoord(int inSect, int &outX, int &outY, int &outZ, bool gotMu
     if (GetPCoordFromAdoc(ADOC_ZVALUE, inSect, outX, outY, outZ, gotMutex))
       return -1;
   } else {
-    if ((mHead->typext & TILT_MASK) != 0) 
+    if ((mHead->typext & TILT_MASK) != 0)
       offset +=   EMimageExtra::Bytes[0];
     if (inSect < 0 || offset >= mHead->next)
       return -1;
@@ -759,7 +762,7 @@ int KStoreMRC::ReorderPieceZCoords(int *sectOrder)
     // Extended header is supposed to have montage: make sure the flag is set
     if (!(mHead->typext & MONTAGE_MASK))
       return 1;
-    if ((mHead->typext & TILT_MASK) != 0) 
+    if ((mHead->typext & TILT_MASK) != 0)
       idata +=   EMimageExtra::Bytes[0];
 
     // Loop through the extra data, fetch out a Z value, map it, put it back
@@ -780,7 +783,7 @@ int KStoreMRC::ReorderPieceZCoords(int *sectOrder)
     catch(CFileException *perr) {
       perr->Delete();
       return 2;
-    } 
+    }
   }
 
   // If there is an autodoc, now loop through it

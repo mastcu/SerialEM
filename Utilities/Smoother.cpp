@@ -1,8 +1,7 @@
 // Smoother.cpp:          A class for smoothing a noisy data stream, used for
 //                          the screen meter
 //
-// Copyright (C) 2003 by Boulder Laboratory for 3-Dimensional Electron 
-// Microscopy of Cells ("BL3DEMC") and the Regents of the University of
+// Copyright (C) 2003-2026 by the Regents of the University of
 // Colorado.  See Copyright.txt for full notice of copyright and limitations.
 //
 // Author: David Mastronarde
@@ -10,6 +9,10 @@
 #include "stdafx.h"
 #include "smoother.h"
 #include <math.h>
+
+#if defined(_DEBUG) && defined(_CRTDBG_MAP_ALLOC)
+#define new DEBUG_NEW
+#endif
 
 Smoother::Smoother()
 {

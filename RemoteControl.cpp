@@ -12,6 +12,10 @@
 #include "ShiftCalibrator.h"
 #include "DoseModulator.h"
 
+#if defined(_DEBUG) && defined(_CRTDBG_MAP_ALLOC)
+#define new DEBUG_NEW
+#endif
+
 #define MIN_BEAM_DELTA  0.00625f
 #define MAX_BEAM_DELTA  0.81f
 #define MIN_PCTC2_DELTA 0.015625f
@@ -28,14 +32,14 @@ static VOID CALLBACK TimerProc(HWND hwnd, UINT uMsg, UINT_PTR idEvent, DWORD dwT
 
 static int sIdTable[] = { IDC_BUTOPEN, IDC_BUTFLOATDOCK, IDC_STATTOPLINE, IDC_BUTHELP,
 PANEL_END,
-IDC_BUT_VALVES, IDC_BLANK_UNBLANK, IDC_BUT_SCREEN_UPDOWN, IDC_BUT_NANO_MICRO, 
+IDC_BUT_VALVES, IDC_BLANK_UNBLANK, IDC_BUT_SCREEN_UPDOWN, IDC_BUT_NANO_MICRO,
 IDC_SPIN_RCMAG, IDC_SPIN_RCSPOT, IDC_SPIN_RCBEAM, IDC_SPIN_RCINTENSITY,
-IDC_BUT_DELBEAMMINUS, IDC_BUT_DELBEAMPLUS, IDC_BUT_DELC2MINUS, IDC_BUT_DELC2PLUS, 
-IDC_STAT_BEAMDELTA, IDC_STAT_C2DELTA, IDC_SPIN_BEAM_LEFT_RIGHT, IDC_STAT_RCC2IA, 
-IDC_STAT_ALPHA, IDC_SPIN_ALPHA, IDC_STAT_FOCUS_STEP, IDC_SPIN_FOCUS, 
+IDC_BUT_DELBEAMMINUS, IDC_BUT_DELBEAMPLUS, IDC_BUT_DELC2MINUS, IDC_BUT_DELC2PLUS,
+IDC_STAT_BEAMDELTA, IDC_STAT_C2DELTA, IDC_SPIN_BEAM_LEFT_RIGHT, IDC_STAT_RCC2IA,
+IDC_STAT_ALPHA, IDC_SPIN_ALPHA, IDC_STAT_FOCUS_STEP, IDC_SPIN_FOCUS,
 IDC_BUT_DELFOCUSMINUS, IDC_BUT_DELFOCUSPLUS, IDC_SPIN_STAGE_UP_DOWN,
 IDC_SPIN_STAGE_LEFT_RIGHT, IDC_DELSTAGE_MINUS, IDC_DELSTAGE_PLUS, IDC_STAT_DELSTAGE,
-IDC_STAT_DELSTAGE, IDC_STAT_WITH_C2, IDC_STAT_BEAM_LABEL, IDC_STAT_BEAMDELTA, 
+IDC_STAT_DELSTAGE, IDC_STAT_WITH_C2, IDC_STAT_BEAM_LABEL, IDC_STAT_BEAMDELTA,
 IDC_STAT_FOCUS_LABEL, IDC_STAT_FOCUS_STEP, IDC_STAT_EDM_PCT, IDC_STAT_EDM_LABEL,
 IDC_STAT_EDM_DELTA_PCT, IDC_SPIN_EDM_PCT, IDC_DEL_EDM_PLUS, IDC_DEL_EDM_MINUS,
 PANEL_END, TABLE_END};
@@ -165,7 +169,7 @@ BOOL CRemoteControl::OnInitDialog()
   CRect rect;
   if (mWinApp->GetSystemDPI() >= 120 && !mWinApp->GetDisplayNotTruly120DPI()) {
     m_statBeamDelta.GetClientRect(rect);
-    mDeltaFont.CreateFont(B3DNINT((mWinApp->GetSystemDPI() > 130 ? 0.87 : 0.82) 
+    mDeltaFont.CreateFont(B3DNINT((mWinApp->GetSystemDPI() > 130 ? 0.87 : 0.82)
       * rect.Height()), 0, 0, 0, FW_MEDIUM,
       0, 0, 0, DEFAULT_CHARSET, OUT_CHARACTER_PRECIS,
       CLIP_CHARACTER_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH |
@@ -233,8 +237,8 @@ BOOL CRemoteControl::OnInitDialog()
   SetBeamOrStageIncrement(1., 0, 1);
   SetIncrementFromIndex(mFocusIncrement, mFocusIncrementIndex, mFocusIncrementIndex,
     MAX_FOCUS_INDEX, MAX_FOCUS_DECIMALS, m_strFocusStep);
-  SetIncrementFromIndex(mDutyPercentIncrement, mDutyPercentIncrementIndex, 
-    mDutyPercentIncrementIndex, MAX_DUTY_PCT_INDEX, MAX_DUTY_PCT_DECIMALS, 
+  SetIncrementFromIndex(mDutyPercentIncrement, mDutyPercentIncrementIndex,
+    mDutyPercentIncrementIndex, MAX_DUTY_PCT_INDEX, MAX_DUTY_PCT_DECIMALS,
     m_strEDMdeltaPct, "%");
   m_butDelFocusPlus.EnableWindow(mFocusIncrementIndex < MAX_FOCUS_INDEX);
   m_butDelFocusMinus.EnableWindow(mFocusIncrementIndex > 0);
@@ -249,7 +253,7 @@ BOOL CRemoteControl::OnInitDialog()
 
 // Called from scope update with current values; keeps track of last values seen and
 // acts on changes only
-void CRemoteControl::Update(int inMagInd, int inCamLen, int inSpot, double inIntensity, 
+void CRemoteControl::Update(int inMagInd, int inCamLen, int inSpot, double inIntensity,
   int inProbe, int inGunOn, int inSTEM, int inAlpha, int inScreenPos, BOOL beamBlanked,
   BOOL stageReady)
 {
@@ -258,10 +262,10 @@ void CRemoteControl::Update(int inMagInd, int inCamLen, int inSpot, double inInt
   CString str;
   if (!mInitialized)
     return;
-  BOOL doingOffset = mWinApp->mShiftCalibrator && 
+  BOOL doingOffset = mWinApp->mShiftCalibrator &&
     mWinApp->mShiftCalibrator->CalibratingOffset();
-  bool baseEnable = !((mWinApp->DoingTasks() && !doingOffset && 
-    !mWinApp->GetJustNavAcquireOpen()) || (mWinApp->mCamera && 
+  bool baseEnable = !((mWinApp->DoingTasks() && !doingOffset &&
+    !mWinApp->GetJustNavAcquireOpen()) || (mWinApp->mCamera &&
     mWinApp->mCamera->CameraBusy() && !mWinApp->mCamera->DoingContinuousAcquire()));
   bool stageBusy = !stageReady;
 
@@ -277,9 +281,9 @@ void CRemoteControl::Update(int inMagInd, int inCamLen, int inSpot, double inInt
       && !stageBusy);
     if (!mWinApp->mCamera->DoingContinuousAcquire())
     m_butNanoMicro.EnableWindow(((inSTEM && !mScope->MagIsInFeiLMSTEM(inMagInd)) ||
-      (!inSTEM && inMagInd >= mScope->GetLowestMModeMagInd()) || 
+      (!inSTEM && inMagInd >= mScope->GetLowestMModeMagInd()) ||
       (!inMagInd && inCamLen < LAD_INDEX_BASE)) && baseEnable && !stageBusy);
-    m_sbcAlpha.EnableWindow(inMagInd >= mScope->GetLowestMModeMagInd() && baseEnable && 
+    m_sbcAlpha.EnableWindow(inMagInd >= mScope->GetLowestMModeMagInd() && baseEnable &&
       !stageBusy);
   }
 
@@ -320,13 +324,13 @@ void CRemoteControl::Update(int inMagInd, int inCamLen, int inSpot, double inInt
   if (inSTEM != mLastSTEMmode)
     m_sbcSpot.SetRange(mScope->GetMinSpotSize(), mScope->GetNumSpotSizes(inSTEM));
 
-  if (inIntensity != mLastIntensity || inProbe != mLastProbeMode || 
-    inSTEM != mLastSTEMmode || inSpot != mLastSpot || inMagInd != mLastMagInd || 
+  if (inIntensity != mLastIntensity || inProbe != mLastProbeMode ||
+    inSTEM != mLastSTEMmode || inSpot != mLastSpot || inMagInd != mLastMagInd ||
     inCamLen != mLastCamLenInd) {
       if (inSTEM || inMagInd== 0)
         mMagIntensityOK = false;
       else
-        mMagIntensityOK = mWinApp->mBeamAssessor->OutOfCalibratedRange(inIntensity, 
+        mMagIntensityOK = mWinApp->mBeamAssessor->OutOfCalibratedRange(inIntensity,
           inSpot, inProbe, junk) == 0;
       //m_checkMagIntensity.EnableWindow(enable);
   }
@@ -400,8 +404,8 @@ void CRemoteControl::UpdateEnables(void)
     mWinApp->mShiftCalibrator->CalibratingOffset();
   BOOL continuous = mWinApp->mCamera->DoingContinuousAcquire();
   bool stageBusy = mScope->StageBusy(-2) > 0;
-  bool enable = !((mWinApp->DoingTasks() && !doingOffset && 
-    !mWinApp->GetJustNavAcquireOpen()) || (mWinApp->mCamera && 
+  bool enable = !((mWinApp->DoingTasks() && !doingOffset &&
+    !mWinApp->GetJustNavAcquireOpen()) || (mWinApp->mCamera &&
     mWinApp->mCamera->CameraBusy() && !continuous));
   m_sbcIntensity.EnableWindow(enable);
   m_sbcSpot.EnableWindow(enable && !stageBusy);
@@ -509,7 +513,7 @@ void CRemoteControl::OnDeltaposSpinMag(NMHDR *pNMHDR, LRESULT *pResult)
         index == mScope->GetLowestSTEMnonLMmag(1) && pNMUpDown->iDelta < 0))))
       index2 = -1;
   } else if (mLastCamLenInd > 0) {
-    mScope->GetNumCameraLengths(numRegCamLens, numLADCamLens); 
+    mScope->GetNumCameraLengths(numRegCamLens, numLADCamLens);
     if (mMagClicked)
       index = mNewCamLenIndex;
     else
@@ -522,7 +526,7 @@ void CRemoteControl::OnDeltaposSpinMag(NMHDR *pNMHDR, LRESULT *pResult)
         index2 = -1;
       else if (index2 > numRegCamLens && index2 <= LAD_INDEX_BASE)
         index2 = pNMUpDown->iDelta > 0 ? LAD_INDEX_BASE + 1 : numRegCamLens;
-    } 
+    }
   } else {
     return;
   }
@@ -551,7 +555,7 @@ void CRemoteControl::OnDeltaposSpinMag(NMHDR *pNMHDR, LRESULT *pResult)
   *pResult = 0;
 }
 
-// Spot size 
+// Spot size
 void CRemoteControl::OnDeltaposSpinSpot(NMHDR *pNMHDR, LRESULT *pResult)
 {
   int oldVal;
@@ -593,7 +597,7 @@ void CRemoteControl::SetMagOrSpot(void)
     ::KillTimer(NULL, mTimerID);
   mTimerID = NULL;
 
-  // If Ctrl is down, extend the timeout for ~2 seconds 
+  // If Ctrl is down, extend the timeout for ~2 seconds
   if (mCtrlPressed && !mDidExtendedTimeout) {
     mTimerID = ::SetTimer(NULL, mTimerID, 6 * mMaxClickInterval, TimerProc);
     if (mTimerID) {
@@ -636,7 +640,7 @@ void CRemoteControl::SetMagOrSpot(void)
 }
 
 // Returns the mag and/or spot that it will be changed to when the timer expires
-void CRemoteControl::GetPendingMagOrSpot(int &pendingMag, int &pendingSpot, 
+void CRemoteControl::GetPendingMagOrSpot(int &pendingMag, int &pendingSpot,
   int &pendingCamLen)
 {
   pendingMag = pendingSpot = pendingCamLen = -1;
@@ -743,7 +747,7 @@ void CRemoteControl::MoveStageByMicronsOnCamera(double delCamX, double delCamY)
     if (area == VIEW_CONSET || area == SEARCH_AREA)
       defocus = mScope->GetLDViewDefocus(area);
   }
-  bMat = mShiftManager->FocusAdjustedStageToCamera(camera, magIndex, 
+  bMat = mShiftManager->FocusAdjustedStageToCamera(camera, magIndex,
     mLastSpot, mLastProbeMode, mScope->GetIntensity(), defocus);
   bInv = MatInv(bMat);
   delStageX = -(bInv.xpx * delX + bInv.xpy * delY);
@@ -751,13 +755,13 @@ void CRemoteControl::MoveStageByMicronsOnCamera(double delCamX, double delCamY)
   angle = DTOR * mScope->GetTiltAngle();
 
   // If transformation exists, try to zero image shift too
-  mShiftManager->AdjustStageMoveAndClearIS(camera, magIndex, delStageX, 
+  mShiftManager->AdjustStageMoveAndClearIS(camera, magIndex, delStageX,
     delStageY, bInv);
 
   // Get the stage position and change it.  Set a flag and update state
   // to prevent early pictures, use reset shift task handlers
   mScope->GetStagePosition(moveInfo.x, moveInfo.y, moveInfo.z);
-  mShiftManager->MaintainOrImposeBacklash(&moveInfo, delStageX, 
+  mShiftManager->MaintainOrImposeBacklash(&moveInfo, delStageX,
     delStageY / cos(angle),
     mShiftManager->GetBacklashMouseAndISR() && fabs(angle / DTOR) < 10.);
   moveInfo.axisBits = axisXY;
@@ -820,7 +824,7 @@ void CRemoteControl::SetBeamIncrement(float inVal)
 // Set increment for stage shift and update display if it is open and stage is selected
 void CRemoteControl::SetStageIncrementIndex(int inVal)
 {
-  SetIncrementFromIndex(mStageIncrement, mStageIncIndex, inVal, 
+  SetIncrementFromIndex(mStageIncrement, mStageIncIndex, inVal,
     MAX_STAGE_INDEX, MAX_STAGE_DECIMALS, m_strStageDelta);
 }
 
@@ -850,7 +854,7 @@ void CRemoteControl::SetIntensityIncrement(float inVal)
   mIntensityIncrement = inVal;
   if (!mInitialized)
     return;
-  m_strC2Delta.Format("%c%s%s", 0xB1, FormattedNumber(mIntensityIncrement, "", 1, 3, 1.f, 
+  m_strC2Delta.Format("%c%s%s", 0xB1, FormattedNumber(mIntensityIncrement, "", 1, 3, 1.f,
     true), mScope->GetC2Units());
  UpdateData(false);
 }
@@ -862,7 +866,7 @@ void CRemoteControl::ChangeIntensityByIncrement(int delta)
   double oldVal = mWinApp->mScope->GetIntensity();
   if (mWinApp->mScope->GetUseIllumAreaForC2()) {
     illum = mWinApp->mScope->IntensityToIllumArea(oldVal);
-    newVal = mWinApp->mScope->IllumAreaToIntensity(illum + 0.01 * mIntensityIncrement * 
+    newVal = mWinApp->mScope->IllumAreaToIntensity(illum + 0.01 * mIntensityIncrement *
       delta);
   } else {
     newVal = mScope->GetIntensity() + 0.01 * mIntensityIncrement * delta /
@@ -922,7 +926,7 @@ void CRemoteControl::SetDutyPercentIncrementIndex(int inVal)
 }
 
 // Set an increment via its index
-void CRemoteControl::SetIncrementFromIndex(float &incrVal, int &incrInd, int newInd, 
+void CRemoteControl::SetIncrementFromIndex(float &incrVal, int &incrInd, int newInd,
   int maxIndex, int maxDecimals, CString &str, const char *units)
 {
   CString unitStr;
@@ -966,7 +970,7 @@ void CRemoteControl::TaskDone(int param)
 void CRemoteControl::TaskCleanup(int error)
 {
   if (error == IDLE_TIMEOUT_ERROR)
-    SEMMessageBox(mDoingTask > 1 ? _T("Time out moving stage") : 
+    SEMMessageBox(mDoingTask > 1 ? _T("Time out moving stage") :
       _T("Time out setting screen position"));
   TaskDone(0);
   mWinApp->ErrorOccurred(1);
@@ -1021,7 +1025,7 @@ void CRemoteControl::OnDeltaposSpinEdmPct(NMHDR *pNMHDR, LRESULT *pResult)
   CString err;
   float oldVal = mWinApp->mCamera->mDoseModulator->GetRecentDutyPercent();
   float delta = mDutyPercentIncrement * pNMUpDown->iDelta;
-  
+
   float newVal = oldVal + delta;
   if (newVal <= 0 && delta < 0)
     newVal = oldVal;

@@ -6,6 +6,10 @@
 #include ".\Mailer.h"
 #include "BaseSocket.h"
 
+#if defined(_DEBUG) && defined(_CRTDBG_MAP_ALLOC)
+#define new DEBUG_NEW
+#endif
+
 #define CRLF "\r\n"
 
 CMailer::CMailer(void)
@@ -35,7 +39,7 @@ bool CMailer::Initialize()
   if (mServer.IsEmpty() || mMailFrom.IsEmpty())
     return false;
 
-  // Attempt to intialize WinSock (1.1 or later). 
+  // Attempt to intialize WinSock (1.1 or later).
   if (SEMInitializeWinsock())
     return false;
 
@@ -75,7 +79,7 @@ bool CMailer::SendMail(CString subject, CString message)
   bool acceptedForDelivery = false;
   fd_set write, err;
   SOCKET hServer;
-  char szBuffer[4096], szMsgLine[1024]; 
+  char szBuffer[4096], szMsgLine[1024];
   TIMEVAL timeout;
   u_long iMode = 1;
   int retVal;
@@ -95,7 +99,7 @@ bool CMailer::SendMail(CString subject, CString message)
   }
 
   if (sendTo.IsEmpty()) {
-    mWinApp->AppendToLog("Mailer: No address to send to has been defined", 
+    mWinApp->AppendToLog("Mailer: No address to send to has been defined",
       LOG_OPEN_IF_CLOSED);
     return false;
   }
@@ -172,7 +176,7 @@ bool CMailer::SendMail(CString subject, CString message)
     while (!report.IsEmpty()) {
       sprintf(szMsgLine, "RCPT TO:<%s>%s", (LPCTSTR)report, CRLF);
       Check(send(hServer, szMsgLine, (int)strlen(szMsgLine), 0), "send() RCPT TO");
-      Check(recv(hServer, szBuffer, sizeof(szBuffer), 0), "recv() RCPT TO");  
+      Check(recv(hServer, szBuffer, sizeof(szBuffer), 0), "recv() RCPT TO");
       report = sendTo.Tokenize(", ",curPos);
     }
 
@@ -183,13 +187,13 @@ bool CMailer::SendMail(CString subject, CString message)
 
     sprintf(szMsgLine, "%s%s%s%s%s%s%s%s%s", "To: ", (LPCTSTR)sendTo, CRLF, "Subject: ",
       (LPCTSTR)subject, CRLF, CRLF, (LPCTSTR)message, CRLF);
-    Check(send(hServer, szMsgLine, (int)strlen(szMsgLine), 0), "send() message-line"); 
+    Check(send(hServer, szMsgLine, (int)strlen(szMsgLine), 0), "send() message-line");
 
     // Send blank line and a period.
     sprintf(szMsgLine, "%s.%s", CRLF, CRLF);
     Check(send(hServer, szMsgLine, (int)strlen(szMsgLine), 0), "send() end-message");
     Check(recv(hServer, szBuffer, sizeof(szBuffer), 0), "recv() end-message");
-    
+
     acceptedForDelivery = (strncmp("250", szBuffer, B3DMIN(3, strlen(szBuffer))) == 0);
 
     // Send QUIT.
@@ -201,7 +205,7 @@ bool CMailer::SendMail(CString subject, CString message)
       mWinApp->AppendToLog("Mailer: Mail not accepted for delivery", LOG_OPEN_IF_CLOSED);
       mWinApp->AppendToLog(subject, LOG_OPEN_IF_CLOSED);
       mWinApp->AppendToLog(message, LOG_OPEN_IF_CLOSED);
-    }      
+    }
   }
   catch (int) {
   }
@@ -216,7 +220,7 @@ bool CMailer::SendMail(CString subject, CString message)
 void CMailer::Check(int iStatus, char *szFunction)
 {
   CString report;
-  if(iStatus != SOCKET_ERROR && iStatus != 0) 
+  if(iStatus != SOCKET_ERROR && iStatus != 0)
     return;
   report.Format("Error during call to %s: status %d - error %d", szFunction, iStatus,
     GetLastError());

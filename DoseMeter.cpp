@@ -5,10 +5,8 @@
 #include "SerialEM.h"
 #include "DoseMeter.h"
 
-#ifdef _DEBUG
+#if defined(_DEBUG) && defined(_CRTDBG_MAP_ALLOC)
 #define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
 #endif
 
 /////////////////////////////////////////////////////////////////////////////
@@ -44,17 +42,17 @@ END_MESSAGE_MAP()
 /////////////////////////////////////////////////////////////////////////////
 // CDoseMeter message handlers
 
-void CDoseMeter::OnButreset() 
+void CDoseMeter::OnButreset()
 {
   mCumDose = 0.;
   mWinApp->mScopeStatus.OutputDose();
   mWinApp->RestoreViewFocus();
 }
 
-BOOL CDoseMeter::OnInitDialog() 
+BOOL CDoseMeter::OnInitDialog()
 {
 	CBaseDlg::OnInitDialog();
-	
+
   CRect rect;
   m_statDose.GetWindowRect(&rect);
   mFont.CreateFont((rect.Height()), 0, 0, 0, FW_MEDIUM,
@@ -62,7 +60,7 @@ BOOL CDoseMeter::OnInitDialog()
       CLIP_CHARACTER_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH |
       FF_DONTCARE, m_strFontName);
   m_statDose.SetFont(&mFont);
-	
+
 	return TRUE;  // return TRUE unless you set the focus to a control
 	              // EXCEPTION: OCX Property Pages should return FALSE
 }
@@ -73,7 +71,7 @@ void CDoseMeter::OnCancel()
   DestroyWindow();
 }
 
-void CDoseMeter::PostNcDestroy() 
+void CDoseMeter::PostNcDestroy()
 {
 	delete this;
 	CDialog::PostNcDestroy();

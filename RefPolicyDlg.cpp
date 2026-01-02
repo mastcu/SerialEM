@@ -5,6 +5,10 @@
 #include "SerialEM.h"
 #include "./RefPolicyDlg.h"
 
+#if defined(_DEBUG) && defined(_CRTDBG_MAP_ALLOC)
+#define new DEBUG_NEW
+#endif
+
 
 // CRefPolicyDlg dialog
 
@@ -40,13 +44,13 @@ END_MESSAGE_MAP()
 
 
 // CRefPolicyDlg message handlers
-void CRefPolicyDlg::OnOK() 
+void CRefPolicyDlg::OnOK()
 {
   UpdateData(true);
 	CBaseDlg::OnOK();
 }
 
-BOOL CRefPolicyDlg::OnInitDialog() 
+BOOL CRefPolicyDlg::OnInitDialog()
 {
 	CBaseDlg::OnInitDialog();
   m_statDMgroup.EnableWindow(mAnyGatan);

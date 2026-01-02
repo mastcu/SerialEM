@@ -1,6 +1,6 @@
-// MyButton.cpp : A button that can 
+// MyButton.cpp : A button that can
 // 1) notify of its selected state when it is drawn, thus allowing responses to press and
-// release 
+// release
 // 2) Notify of right mouse up event (right click)
 // 3) Draw a background color when a flag is set
 // To use in place of a regular button, make a dialog member variable for the button as
@@ -13,7 +13,7 @@
 //   ON_NOTIFY(NM_LDOWN, IDC_BUT_XXX, OnXXXDraw)
 // and
 //   void CYYYDlg::OnXXXDraw(NMHDR *pNotifyStruct, LRESULT *result)
-// the code will be NM_LDOWN regardless.  
+// the code will be NM_LDOWN regardless.
 // m_bRightWasClicked is set after a right click and m_bSelected is true if the button is
 // down
 //
@@ -21,6 +21,10 @@
 #include "stdafx.h"
 #include "SerialEM.h"
 #include "MyButton.h"
+
+#if defined(_DEBUG) && defined(_CRTDBG_MAP_ALLOC)
+#define new DEBUG_NEW
+#endif
 
 
 // CMyButton
@@ -118,7 +122,7 @@ void CMyButton::PreSubclassWindow()
   ModifyStyle(0, BS_OWNERDRAW);	// make the button owner drawn
 }
 
-// On right button up, this sets a flag that there was a right-click, which should be 
+// On right button up, this sets a flag that there was a right-click, which should be
 // cleared by the receiver if it is tracking right clicks and not presses, and it sends
 // a WM_NOTIFY with the SAME code as for a draw, because that is the only code that works!
 void CMyButton::OnRButtonUp(UINT nFlags, CPoint point)

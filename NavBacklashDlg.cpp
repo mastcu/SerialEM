@@ -5,6 +5,10 @@
 #include "SerialEM.h"
 #include "NavBacklashDlg.h"
 
+#if defined(_DEBUG) && defined(_CRTDBG_MAP_ALLOC)
+#define new DEBUG_NEW
+#endif
+
 
 // CNavBacklashDlg dialog
 
@@ -49,7 +53,7 @@ BOOL CNavBacklashDlg::OnInitDialog()
 
 // CNavBacklashDlg message handlers
 
-void CNavBacklashDlg::OnOK() 
+void CNavBacklashDlg::OnOK()
 {
   UpdateData(true);
 	CBaseDlg::OnOK();

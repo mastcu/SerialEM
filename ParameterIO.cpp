@@ -1,8 +1,7 @@
 // ParameterIO.cpp:       Reads property file, reads and writes settings and
 //                          calibration files
 //
-// Copyright (C) 2003 by Boulder Laboratory for 3-Dimensional Electron 
-// Microscopy of Cells ("BL3DEMC") and the Regents of the University of
+// Copyright (C) 2003-2026 by the Regents of the University of
 // Colorado.  See Copyright.txt for full notice of copyright and limitations.
 //
 // Author: David Mastronarde
@@ -66,9 +65,11 @@
 #include <set>
 #include <string>
 
+#if defined(_DEBUG) && defined(_CRTDBG_MAP_ALLOC)
+#define new DEBUG_NEW
+#endif
+
 #ifdef _DEBUG
-#undef THIS_FILE
-static char THIS_FILE[]=__FILE__;
 #define new DEBUG_NEW
 #endif
 
@@ -243,12 +244,12 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
     // Open the file for reading, verify that it is a settings file
     mFile = new CStdioFile(strFileName,
       CFile::modeRead |CFile::shareDenyWrite);
-    
+
     err = ReadSuperParse(strLine, strItems, itemEmpty, itemInt, itemDbl, itemFlt,
                          MAX_TOKENS);
     if (err)
       retval = 1;
-    else if (CheckForByteOrderMark(strItems[0], "SerialEMSettings", strFileName, 
+    else if (CheckForByteOrderMark(strItems[0], "SerialEMSettings", strFileName,
       "settings")) {
         retval = 1;
     }
@@ -266,7 +267,7 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
       recognized3 = true;
       if (NAME_IS("SystemPath")) {
 
-        // There could be multiple words - have to assume 
+        // There could be multiple words - have to assume
         // separated by spaces
         CString path = strItems[1];
         index = 2;
@@ -400,7 +401,7 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
             cs->boostMagOrHwBin = itemInt[1];
             cs->magAllShotsOrHwROI = itemInt[2];
           } else {
-            // Unrecognized camera parameter      
+            // Unrecognized camera parameter
             message.Format("For camera parameter set %d: %s\n", iset, strLine);
             unrecognized += message;
           }
@@ -530,19 +531,19 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
           AfxMessageBox(strCopy, MB_OK | MB_ICONINFORMATION);
         }
       } else if (NAME_IS("AutofocusEucenAbsParams")) {
-        mWinApp->mFocusManager->SetEucenAbsFocusParams(itemDbl[1], itemDbl[2], 
+        mWinApp->mFocusManager->SetEucenAbsFocusParams(itemDbl[1], itemDbl[2],
         itemFlt[3], itemFlt[4], itemInt[5] != 0, itemInt[6] != 0);
       } else if (NAME_IS("AssessMultiplePeaksInAlign") || NAME_IS("AutoZoom")) {
-      } 
+      }
 #define SET_TEST_SECT1
 #include "SettingsTests.h"
 #undef SET_TEST_SECT1
       else
         recognized = false;
-    
+
       if (recognized) {
-      
-      } 
+
+      }
 #define SET_TEST_SECT15
 #include "SettingsTests.h"
 #undef SET_TEST_SECT15
@@ -555,7 +556,7 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
 #define SET_TEST_SECT2
 #include "SettingsTests.h"
 #undef SET_TEST_SECT2
-        
+
       else if (NAME_IS("AutosaveNavigator")) {
         if (!itemInt[1])
           AfxMessageBox("It is now the default to autosave a Navigator file\n"
@@ -569,7 +570,7 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
         mWinApp->mNavHelper->SetCollapseGroups(itemInt[1] != 0);
       } else if (NAME_IS("MultiShotParams")) {
         msParams->beamDiam = itemFlt[1];
-        msParams->spokeRad[0] = itemFlt[2]; 
+        msParams->spokeRad[0] = itemFlt[2];
         msParams->numShots[0] =  itemInt[3];
         msParams->doCenter =  itemInt[4];
         msParams->doEarlyReturn =  itemInt[5];
@@ -602,7 +603,7 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
           msParams->tiltOfCustomHoles = itemFlt[27];
           msParams->holeFinderAngle = itemFlt[28];
         }
- 
+
       } else if (NAME_IS("MultiHexParams")) {
         msParams->doHexArray = itemInt[1] != 0;
         msParams->numHexRings = itemInt[2];
@@ -773,8 +774,8 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
       } else if (NAME_IS("NavAcquireParams")) {
         index = itemInt[1];
         B3DCLAMP(index, 0, 1);
-        ReadNavAcqParams(mWinApp->GetNavAcqParams(index), 
-          mWinApp->mNavHelper->GetAcqActions(index), 
+        ReadNavAcqParams(mWinApp->GetNavAcqParams(index),
+          mWinApp->mNavHelper->GetAcqActions(index),
           mWinApp->mNavHelper->GetAcqActCurrentOrder(index), unrecognized);
 
       } else if (NAME_IS("NavAlignParams")) {
@@ -1010,7 +1011,7 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
         mWinApp->mProcessImage->SetCtffindOnClick(itemInt[1] != 0);
         mWinApp->mProcessImage->SetSlowerCtfFit(itemInt[2]);
         mWinApp->mProcessImage->SetExtraCtfStats(itemInt[3]);
-        mWinApp->mProcessImage->SetDrawExtraCtfRings(itemInt[4]); 
+        mWinApp->mProcessImage->SetDrawExtraCtfRings(itemInt[4]);
         mWinApp->mProcessImage->SetCtfFitFocusRangeFac(itemFlt[5]);
         if (!itemEmpty[6]) {
           mWinApp->mProcessImage->SetCtfFindPhaseOnClick(itemInt[6] != 0);
@@ -1048,7 +1049,7 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
             AfxMessageBox("Error in panel placement line in settings file "
               + strFileName + " :\n" + strLine, MB_EXCLAME);
         } else {
-          ConstrainWindowPlacement(&itemInt[2], &itemInt[3], &itemInt[4], &itemInt[5], 
+          ConstrainWindowPlacement(&itemInt[2], &itemInt[3], &itemInt[4], &itemInt[5],
             !startingProg);
           dlgPlacements[index].left = itemInt[2];
           dlgPlacements[index].top = itemInt[3];
@@ -1091,7 +1092,7 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
         mWinApp->GetWindowPlacement(&winPlace);
         winPlace.showCmd = itemInt[1];
         if (err = ReadSuperParse(strLine, strItems, itemEmpty, itemInt, itemDbl, itemFlt,
-                                 MAX_TOKENS)) 
+                                 MAX_TOKENS))
           break;
         winPlace.ptMaxPosition.x = itemInt[0];
         winPlace.ptMaxPosition.y = itemInt[1];
@@ -1108,7 +1109,7 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
 
       } else if (strItems[0].Find("Placement") == strItems[0].GetLength() - 9) {
         index = NAME_IS("OneEditerPlacement") ? 1 : 0;
-        if (strItems[index + 10].IsEmpty() || 
+        if (strItems[index + 10].IsEmpty() ||
           (index && (itemInt[1] < 0 || itemInt[1] >= MAX_MACROS))) {
           if (index && itemInt[1] < 0)
             AfxMessageBox("Error in window placement line in settings file "
@@ -1166,7 +1167,7 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
           } else if (NAME_IS("LogPlacement")) {
             mWinApp->SetReopenLog(itemInt[1] != 0);
             place = mWinApp->GetLogPlacement();
-          } 
+          }
           place->showCmd = itemInt[index + 2];
           place->ptMaxPosition.x = itemInt[index + 3];
           place->ptMaxPosition.y = itemInt[index + 4];
@@ -1214,7 +1215,7 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
         stateP = mWinApp->mNavHelper->NewStateParam(false);
         stateP->lowDose = itemInt[1];;
         if (stateP->lowDose)    // Add 100 until low dose params found
-          stateP->lowDose += 100;    
+          stateP->lowDose += 100;
         stateP->camIndex = itemInt[2];
         stateP->magIndex = itemInt[3];
         stateP->spotSize = itemInt[4];
@@ -1257,7 +1258,7 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
         if (!itemEmpty[37])
           stateP->EDMPercent = itemFlt[37];
         // ADD NEW ITEMS TO NAV READING
- 
+
       } else if (NAME_IS("StateName")) {
         index = itemInt[1];
         if (index < 0 || index >= stateArray->GetSize()) {
@@ -1321,7 +1322,7 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
             ldp->slitWidth = itemFlt[8];
             ldp->energyLoss = itemFlt[9];
           }
-          if (!itemEmpty[10]) 
+          if (!itemEmpty[10])
             ldp->zeroLoss = itemInt[10] != 0;
           if (!itemEmpty[11]) {
             ldp->beamDelX = itemDbl[11];
@@ -1422,7 +1423,7 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
         mTSParam->lowMagIndex[0] = itemInt[1];
         mTSParam->lowMagIndex[1] = itemInt[2];
         mTSParam->lowMagIndex[2] = itemInt[3];
-      
+
       // Retired 2/13/04 - moved to properties
       // Dose cal moved to short term cal 12/21/05
       // Retired shoot after autofocus 12/22/06
@@ -1456,7 +1457,7 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
           AfxMessageBox("Extra Record series line badly formatted or too long in settings"
             " file " + strFileName + " :\n" + strLine, MB_EXCLAME);
       } else if (NAME_IS("TiltSeriesVariation")) {
-        if (itemInt[4] < 0 || itemInt[4] >= MAX_VARY_TYPES || 
+        if (itemInt[4] < 0 || itemInt[4] >= MAX_VARY_TYPES ||
           mTSParam->numVaryItems >= MAX_TS_VARIES) {
           AfxMessageBox("Invalid type of change or too many changes for array in settings"
             " file " + strFileName + " :\n" + strLine, MB_EXCLAME);
@@ -1498,7 +1499,7 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
           mTSParam->bidirAnchorMagInd[index] = itemInt[index + 1];
       } else if (NAME_IS("TiltSeriesRunMacro")) {
         mWinApp->mTSController->SetRunMacroInTS(itemInt[1] != 0);
-        mWinApp->mTSController->SetMacroToRun(itemInt[2]), 
+        mWinApp->mTSController->SetMacroToRun(itemInt[2]),
         mWinApp->mTSController->SetStepAfterMacro(itemInt[3]);
       } else if (NAME_IS("TSTermOnHighExposure")) {
         mWinApp->mTSController->SetTermOnHighExposure(itemInt[1] != 0);
@@ -1535,20 +1536,20 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
         faLastFileIndex = itemInt[1];
         faData->strategy = itemInt[2];
         faData->aliBinning = itemInt[3];
-        faData->numAllVsAll = itemInt[4]; 
+        faData->numAllVsAll = itemInt[4];
         faData->rad2Filt1 = itemFlt[5];
         faData->rad2Filt2 = itemFlt[6];
         faData->rad2Filt3 = itemFlt[7];
-        faData->rad2Filt4 = itemFlt[8]; 
+        faData->rad2Filt4 = itemFlt[8];
         faData->hybridShifts = itemInt[9] != 0;
         faData->sigmaRatio = itemFlt[10];
-        faData->refRadius2 = itemFlt[11]; 
+        faData->refRadius2 = itemFlt[11];
         faData->doRefine = itemInt[12] != 0;
         faData->refineIter = itemInt[13];
         faData->useGroups = itemInt[14] != 0;
         faData->groupSize = itemInt[15];
         faData->doSmooth = itemInt[16] != 0;
-        faData->smoothThresh = itemInt[17]; 
+        faData->smoothThresh = itemInt[17];
         faData->shiftLimit = itemInt[18];
 
       } else if (NAME_IS("FrameAlignParams2") || NAME_IS("FrameAliSetName")) {
@@ -1561,7 +1562,7 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
           if (NAME_IS("FrameAlignParams2")) {
             faData->truncate = itemInt[2] != 0;
             faData->truncLimit = itemFlt[3];
-            faData->antialiasType = itemInt[4]; 
+            faData->antialiasType = itemInt[4];
             faData->stopIterBelow = itemFlt[5];
             faData->groupRefine = itemInt[6] != 0;
             faData->keepPrecision = itemInt[7] != 0;
@@ -1613,24 +1614,24 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
     }
     if (err > 0)
       retval = err;
-      
+
     mFile->Close();
   }
   catch(CFileException *perr) {
     perr->Delete();
     retval = 1;
-  } 
+  }
   if (mFile) {
     delete mFile;
     mFile = NULL;
   }
   if (!unrecognized.IsEmpty())
-    AfxMessageBox("Unrecognized entries in settings file " + strFileName 
+    AfxMessageBox("Unrecognized entries in settings file " + strFileName
       + " :\n" + unrecognized , MB_EXCLAME);
 
   // If there are no frame align params, set up default sets
   mWinApp->mCamera->AddFrameAliDefaultsIfNone();
-  
+
   // Remove state params that are supposed to be low dose but don't have LD param
   err = 0;
   for (index = (int)stateArray->GetSize() - 1; index >= 0; index--) {
@@ -1681,7 +1682,7 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
       message = strLine;
       message.Replace("-scripts.txt", "-scripts-saved.txt");
       if (CopyFile((LPCTSTR)strLine, (LPCTSTR)message, true))
-        AfxMessageBox("Existing copy of " + strLine + "\r\nwas saved as " + message + 
+        AfxMessageBox("Existing copy of " + strLine + "\r\nwas saved as " + message +
           "\r\nto keep it from being overwritten by scripts from the settings file");
     }
   }
@@ -1763,7 +1764,7 @@ void CParameterIO::WriteSettings(CString strFileName)
   DoseTable *doseTables = mWinApp->mBeamAssessor->GetDoseTables();
   NavParams *navParams = mWinApp->GetNavParams();
   CookParams *cookParams = mWinApp->GetCookParams();
-  CArray<AutocenParams *, AutocenParams *> *autocenArray = 
+  CArray<AutocenParams *, AutocenParams *> *autocenArray =
     mWinApp->mMultiTSTasks->GetAutocenParams();
   CArray<ZbyGParams> *zbgArray = mWinApp->mParticleTasks->GetZbyGcalArray();
   ZbyGParams zbgParam;
@@ -1804,7 +1805,7 @@ void CParameterIO::WriteSettings(CString strFileName)
   mWinApp->SyncNonModalsToMasterParams();
 
   try {
-    // Open the file for writing, 
+    // Open the file for writing,
     mFile = new CStdioFile(strFileName, CFile::modeCreate |
       CFile::modeWrite | CFile::shareDenyWrite);
 
@@ -1993,7 +1994,7 @@ void CParameterIO::WriteSettings(CString strFileName)
       mWinApp->mNavHelper->GetAutoBacklashNewMap(),
       mWinApp->mNavHelper->GetAutoBacklashMinField());
     mFile->WriteString(oneState);
-    WriteInt("NavCollapseGroups", B3DCHOICE(mWinApp->mNavigator, 
+    WriteInt("NavCollapseGroups", B3DCHOICE(mWinApp->mNavigator,
       mWinApp->mNavigator->m_bCollapseGroups, mWinApp->mNavHelper->GetCollapseGroups()) ?
       1 : 0);
     oneState.Format("MultiShotParams %f %f %d %d %d %d %d %f %d %d %d %d %f %f %f %f %f "
@@ -2025,7 +2026,7 @@ void CParameterIO::WriteSettings(CString strFileName)
     oneState.Format("HoleAdjustXform %d %d %d %d %d %f %f %f %f %d\n",
       msParams->origMagOfArray[0], msParams->origMagOfArray[1], msParams->origMagOfCustom,
       msParams->xformFromMag, msParams->xformToMag, msParams->adjustingXform.xpx,
-      msParams->adjustingXform.xpy, msParams->adjustingXform.ypx, 
+      msParams->adjustingXform.xpy, msParams->adjustingXform.ypx,
       msParams->adjustingXform.ypy, msParams->xformMinuteTime);
     mFile->WriteString(oneState);
     if (msParams->customHoleX.size()) {
@@ -2034,11 +2035,11 @@ void CParameterIO::WriteSettings(CString strFileName)
       OutputVector("CustomHoleY", (int)msParams->customHoleY.size(), NULL,
         &msParams->customHoleY);
     }
-    oneState.Format("HoleFinderParams %f %f %d %f %f %f %f %d %d %d %d %f %f %f %d\n", 
-      hfParams->spacing, hfParams->diameter, hfParams->useBoundary ? 1 : 0, 
-      hfParams->lowerMeanCutoff, hfParams->upperMeanCutoff, hfParams->SDcutoff, 
-      hfParams->blackFracCutoff, hfParams->showExcluded ? 1 : 0, hfParams->layoutType, 
-      hfParams->bracketLast ? 1 : 0, hfParams->hexagonalArray ? 1 : 0, 
+    oneState.Format("HoleFinderParams %f %f %d %f %f %f %f %d %d %d %d %f %f %f %d\n",
+      hfParams->spacing, hfParams->diameter, hfParams->useBoundary ? 1 : 0,
+      hfParams->lowerMeanCutoff, hfParams->upperMeanCutoff, hfParams->SDcutoff,
+      hfParams->blackFracCutoff, hfParams->showExcluded ? 1 : 0, hfParams->layoutType,
+      hfParams->bracketLast ? 1 : 0, hfParams->hexagonalArray ? 1 : 0,
       hfParams->hexSpacing, hfParams->hexDiameter, hfParams->edgeDistCutoff,
       hfParams->useHexDiagonals);
     mFile->WriteString(oneState);
@@ -2048,11 +2049,11 @@ void CParameterIO::WriteSettings(CString strFileName)
     if (hfParams->thresholds.size())
       OutputVector("HoleEdgeThresholds", (int)hfParams->thresholds.size(), NULL,
         &hfParams->thresholds);
-    oneState.Format("HoleCombinerParams %d %d %d %d %d %d\n", 
+    oneState.Format("HoleCombinerParams %d %d %d %d %d %d\n",
       mWinApp->mNavHelper->GetMHCcombineType(),
-      mWinApp->mNavHelper->GetMHCenableMultiDisplay() ? 1 : 0, 
+      mWinApp->mNavHelper->GetMHCenableMultiDisplay() ? 1 : 0,
       mWinApp->mNavHelper->GetMHCturnOffOutsidePoly() ? 1 : 0,
-      mWinApp->mNavHelper->GetMHCdelOrTurnOffIfFew(), 
+      mWinApp->mNavHelper->GetMHCdelOrTurnOffIfFew(),
       mWinApp->mNavHelper->GetMHCthreshNumHoles(),
       mWinApp->mNavHelper->GetMHCskipAveragingPos() ? 1 : 0);
     mFile->WriteString(oneState);
@@ -2063,15 +2064,15 @@ void CParameterIO::WriteSettings(CString strFileName)
       contParams->relThreshold, contParams->absThreshold, contParams->useAbsThresh ? 1 : 0,
       contParams->numGroups, contParams->groupByMean ? 1 : 0, contParams->lowerMeanCutoff,
       contParams->upperMeanCutoff, contParams->minSizeCutoff, contParams->SDcutoff,
-      contParams->irregularCutoff, contParams->borderDistCutoff, 
-      contParams->useCurrentPolygon, contParams->shrinkConts ? 1 : 0, 
+      contParams->irregularCutoff, contParams->borderDistCutoff,
+      contParams->useCurrentPolygon, contParams->shrinkConts ? 1 : 0,
       contParams->expandDist);
     mFile->WriteString(oneState);
-    oneState.Format("DriftWaitParams %d %f %d %f %f %d %d %f %d %d %d %f\n", 
-      dwParams->measureType, dwParams->driftRate, dwParams->useAngstroms ? 1 :0, 
+    oneState.Format("DriftWaitParams %d %f %d %f %f %d %d %f %d %d %d %f\n",
+      dwParams->measureType, dwParams->driftRate, dwParams->useAngstroms ? 1 :0,
       dwParams->interval, dwParams->maxWaitTime, dwParams->failureAction,
-      dwParams->setTrialParams ? 1 : 0, dwParams->exposure, dwParams->binning, 
-      dwParams->changeIS ? 1 : 0, dwParams->usePriorAutofocus ? 1 : 0, 
+      dwParams->setTrialParams ? 1 : 0, dwParams->exposure, dwParams->binning,
+      dwParams->changeIS ? 1 : 0, dwParams->usePriorAutofocus ? 1 : 0,
       dwParams->priorAutofocusRate);
     mFile->WriteString(oneState);
 
@@ -2079,9 +2080,9 @@ void CParameterIO::WriteSettings(CString strFileName)
       WriteNavAcqParams(i, mWinApp->GetNavAcqParams(i),
       mWinApp->mNavHelper->GetAcqActions(i),
       mWinApp->mNavHelper->GetAcqActCurrentOrder(i), false);
-    oneState.Format("NavAlignParams %d %f %d %f %d %f %f %f %d %d\n", 
+    oneState.Format("NavAlignParams %d %f %d %f %d %f %f %f %d %d\n",
       navAliParm->loadAndKeepBuf, navAliParm->maxAlignShift, navAliParm->maxNumResetIS,
-      navAliParm->resetISthresh, navAliParm->leaveISatZero ? 1 : 0, 
+      navAliParm->resetISthresh, navAliParm->leaveISatZero ? 1 : 0,
       navAliParm->scaledAliMaxRot, navAliParm->scaledAliPctChg, navAliParm->scaledAliExtraFOV,
       navAliParm->scaledAliLoadBuf, navAliParm->applyInteractive ? 1 : 0);
     mFile->WriteString(oneState);
@@ -2103,16 +2104,16 @@ void CParameterIO::WriteSettings(CString strFileName)
     mFile->WriteString(oneState);
 
     oneState.Format("CookerParams %d %d %f %d %d %f %d %d %f -999 -999\n",
-      cookParams->magIndex, cookParams->spotSize, cookParams->intensity, 
+      cookParams->magIndex, cookParams->spotSize, cookParams->intensity,
       cookParams->targetDose, cookParams->timeInstead ? 1 : 0, cookParams->minutes,
-      cookParams->trackImage ? 1 : 0, 
+      cookParams->trackImage ? 1 : 0,
       cookParams->cookAtTilt ? 1 : 0, cookParams->tiltAngle, cookParams->probeOrAlpha);
     mFile->WriteString(oneState);
     oneState.Format("VppConditionParams %d %d %f %d %d %d %d %d %d %d %d %d -999 -999\n",
       vppParams->magIndex, vppParams->spotSize, vppParams->intensity, vppParams->alpha,
       vppParams->probeMode, vppParams->seconds, vppParams->nanoCoulombs,
       vppParams->timeInstead ? 1 : 0, vppParams->whichSettings,
-      vppParams->useNearestNav ? 1 : 0, vppParams->useNavNote ? 1 : 0, 
+      vppParams->useNearestNav ? 1 : 0, vppParams->useNavNote ? 1 : 0,
       vppParams->postMoveDelay);
     mFile->WriteString(oneState);
     mFile->WriteString("VppCondNavText " + vppParams->navText + "\n");
@@ -2127,12 +2128,12 @@ void CParameterIO::WriteSettings(CString strFileName)
       mgParams->LMMstateType, mgParams->removeObjectiveAp ? 1 : 0,
       mgParams->setCondenserAp ? 1 : 0, mgParams->condenserApSize, mgParams->LMMmontType,
       mgParams->LMMnumXpieces, mgParams->LMMnumYpieces, mgParams->setLMMoverlap ? 1 : 0,
-      mgParams->LMMoverlapPct, mgParams->autocontour ? 1 : 0, 
+      mgParams->LMMoverlapPct, mgParams->autocontour ? 1 : 0,
       mgParams->acquireMMMs ? 1 : 0,
       mgParams->MMMstateType, mgParams->MMMimageType, mgParams->acquireLMMs ? 1 : 0,
       mgParams->runFinalAcq ? 1 : 0, mgParams->MMMnumXpieces, mgParams->MMMnumYpieces,
       mgParams->framesUnderSession ? 1 : 0, mgParams->runMacroAfterLMM ? 1 : 0,
-      mgParams->macroToRun, mgParams->refineAfterRealign ? 1 : 0, 
+      mgParams->macroToRun, mgParams->refineAfterRealign ? 1 : 0,
       mgParams->refineImageType, mgParams->C1orC2condenserAp, mgParams->msVectorSource);
     mFile->WriteString(oneState);
     oneState.Format("MGLMMstate %d %s\n", mgParams->LMMstateNum,
@@ -2155,7 +2156,7 @@ void CParameterIO::WriteSettings(CString strFileName)
     }
     oneState.Format("CtfAcqSetFlags %d\n", mWinApp->mAutoTuning->GetCtfAcqSetFlags());
     mFile->WriteString(oneState);
-    
+
     oneState = mWinApp->mMultiGridTasks->GetLastSessionFile();
     if (!oneState.IsEmpty())
       mFile->WriteString("MGSessionFile " + oneState + "\n");
@@ -2166,13 +2167,13 @@ void CParameterIO::WriteSettings(CString strFileName)
     for (i = 0; i < autocenArray->GetSize(); i++) {
       acParams = autocenArray->GetAt(i);
       if (acParams->intensity >= 0. || acParams->camera == -1) {
-        acParmP = mWinApp->mMultiTSTasks->LookupAutocenParams(acParams->camera, 
-          acParams->magIndex, acParams->spotSize, acParams->probeMode, 
+        acParmP = mWinApp->mMultiTSTasks->LookupAutocenParams(acParams->camera,
+          acParams->magIndex, acParams->spotSize, acParams->probeMode,
           acParams->intensity, j);
         if (j == i) {
-          oneState.Format("AutocenterParams %d %d %d %f %d %f %d %d %d %f %f %f -999\n", 
+          oneState.Format("AutocenterParams %d %d %d %f %d %f %d %d %d %f %f %f -999\n",
             acParams->camera, acParams->magIndex, acParams->spotSize, acParams->intensity,
-            acParams->binning, acParams->exposure, acParams->useCentroid ? 1 : 0, 
+            acParams->binning, acParams->exposure, acParams->useCentroid ? 1 : 0,
             acParams->probeMode, acParams->shiftBeamForCen ? 1 : 0, acParams->beamShiftUm,
             acParams->addedShiftX, acParams->addedShiftY);
           mFile->WriteString(oneState);
@@ -2189,30 +2190,30 @@ void CParameterIO::WriteSettings(CString strFileName)
     }
     if (comaVsIS->magInd >= 0) {
       oneState.Format("ComaVsISCal %d %d %d %d %d %f %f %f %f %f %f %f %f %f\n",
-        comaVsIS->magInd, comaVsIS->spotSize, comaVsIS->probeMode, comaVsIS->alpha, 
-        comaVsIS->aperture, comaVsIS->intensity, comaVsIS->matrix.xpx, 
-        comaVsIS->matrix.xpy, comaVsIS->matrix.ypx, comaVsIS->matrix.ypy, 
-        comaVsIS->astigMat.xpx, comaVsIS->astigMat.xpy, comaVsIS->astigMat.ypx, 
+        comaVsIS->magInd, comaVsIS->spotSize, comaVsIS->probeMode, comaVsIS->alpha,
+        comaVsIS->aperture, comaVsIS->intensity, comaVsIS->matrix.xpx,
+        comaVsIS->matrix.xpy, comaVsIS->matrix.ypx, comaVsIS->matrix.ypy,
+        comaVsIS->astigMat.xpx, comaVsIS->astigMat.xpy, comaVsIS->astigMat.ypx,
         comaVsIS->astigMat.ypy);
       mFile->WriteString(oneState);
     }
     for (i = 0; i < 2; i++) {
       oneState.Format("RangeFinderParams %d %d %d %d %d %f %f %f %d -999 -999\n", i,
-        tsrParams[i].eucentricity ? 1:0, tsrParams[i].walkup ? 1:0, 
+        tsrParams[i].eucentricity ? 1:0, tsrParams[i].walkup ? 1:0,
         tsrParams[i].autofocus ? 1:0, tsrParams[i].imageType, tsrParams[i].startAngle,
         tsrParams[i].endAngle, tsrParams[i].angleInc, tsrParams[i].direction);
       mFile->WriteString(oneState);
     }
     oneState.Format("ImportOverlayChannels %s\n", navParams->overlayChannels);
     mFile->WriteString(oneState);
-    oneState.Format("ProcessOverlayChannels %s\n", 
+    oneState.Format("ProcessOverlayChannels %s\n",
       mWinApp->mProcessImage->GetOverlayChannels());
     mFile->WriteString(oneState);
-    oneState.Format("CtffindParams %d %d %d %d %f %d %d %d %d\n", 
+    oneState.Format("CtffindParams %d %d %d %d %f %d %d %d %d\n",
       mWinApp->mProcessImage->GetCtffindOnClick() ? 1 : 0,
       mWinApp->mProcessImage->GetSlowerCtfFit(),
       mWinApp->mProcessImage->GetExtraCtfStats(),
-      mWinApp->mProcessImage->GetDrawExtraCtfRings(), 
+      mWinApp->mProcessImage->GetDrawExtraCtfRings(),
       mWinApp->mProcessImage->GetCtfFitFocusRangeFac(),
       mWinApp->mProcessImage->GetCtfFindPhaseOnClick(),
       mWinApp->mProcessImage->GetCtfFixAstigForPhase(),
@@ -2242,7 +2243,7 @@ void CParameterIO::WriteSettings(CString strFileName)
         } else {
           dlgRect = dlgPlacements[i];
         }
-        oneState.Format("ToolDialogPlacement %d %d %d %d %d\n", i, 
+        oneState.Format("ToolDialogPlacement %d %d %d %d %d\n", i,
           dlgRect.left, dlgRect.top, dlgRect.right, dlgRect.bottom);
         mFile->WriteString(oneState);
       }
@@ -2272,7 +2273,7 @@ void CParameterIO::WriteSettings(CString strFileName)
       if (winPlace.showCmd == SW_SHOWMINIMIZED)
         winPlace.showCmd = SW_SHOWNORMAL;
       WriteInt("WindowPlacement", winPlace.showCmd);
-      oneState.Format("%d %d %d %d %d %d %d %d\n", 
+      oneState.Format("%d %d %d %d %d %d %d %d\n",
         winPlace.ptMaxPosition.x, winPlace.ptMaxPosition.y,
         winPlace.ptMinPosition.x, winPlace.ptMinPosition.y,
         winPlace.rcNormalPosition.left, winPlace.rcNormalPosition.top,
@@ -2295,7 +2296,7 @@ void CParameterIO::WriteSettings(CString strFileName)
     // Write screen meter placement
     WritePlacement("MeterPlacement", 0, meterPlace);
     WritePlacement("DosePlacement", 0, dosePlace);
-    WritePlacement("StatePlacement", (mWinApp->GetOpenStateWithNav() || 
+    WritePlacement("StatePlacement", (mWinApp->GetOpenStateWithNav() ||
       (mWinApp->mNavigator && mWinApp->mNavHelper->mStateDlg)) ? 1 : 0, statePlace);
     WritePlacement("RotAlignPlacement", 0, rotAlignPlace);
     WritePlacement("MultiShotPlacement", 0, multiShotPlace);
@@ -2307,23 +2308,23 @@ void CParameterIO::WriteSettings(CString strFileName)
     WritePlacement("ZbyGSetupPlacement", 0, zbgPlace);
     WritePlacement("NavAcqPlacement", 0, navAcqPlace);
     WritePlacement("SnapshotPlacement", 0, mWinApp->GetScreenShotPlacement());
-    WritePlacement("HoleFinderPlacement", 0, 
+    WritePlacement("HoleFinderPlacement", 0,
       mWinApp->mNavHelper->GetHoleFinderPlacement());
-    WritePlacement("MultiCombinerPlacement", 0, 
+    WritePlacement("MultiCombinerPlacement", 0,
       mWinApp->mNavHelper->GetMultiCombinerPlacement());
-    WritePlacement("AutoContPlacement", 0, 
+    WritePlacement("AutoContPlacement", 0,
       mWinApp->mNavHelper->GetAutoContDlgPlacement());
     WritePlacement("MultiGridPlacement", 0, mWinApp->mNavHelper->GetMultiGridPlacement());
     WritePlacement("MacroToolPlacement", mWinApp->mMacroToolbar ? 1 : 0, toolPlace);
-    WritePlacement("OneLinePlacement", mWinApp->mMacroProcessor->mOneLineScript ? 1 : 0, 
+    WritePlacement("OneLinePlacement", mWinApp->mMacroProcessor->mOneLineScript ? 1 : 0,
       oneLinePlace);
     for (i = 0; i < MAX_MACROS; i++) {
       oneState.Format("OneEditerPlacement %d", i);
       WritePlacement((LPCTSTR)oneState, mWinApp->mMacroEditer[i] != NULL ? 1 : 0,
         mWinApp->mMacroProcessor->FindEditerPlacement(i));
     }
-    oneState.Format("MacroToolbarButtons %d %d\n", 
-      mWinApp->mMacroProcessor->GetNumToolButtons(), 
+    oneState.Format("MacroToolbarButtons %d %d\n",
+      mWinApp->mMacroProcessor->GetNumToolButtons(),
       mWinApp->mMacroProcessor->GetToolButHeight());
     mFile->WriteString(oneState);
     WriteIndexedInts("ShowChanInMultiView", chanInMultiView, MAX_STEM_CHANNELS);
@@ -2367,18 +2368,18 @@ void CParameterIO::WriteSettings(CString strFileName)
         mFile->WriteString(oneState);
       }
     }
-    oneState.Format("LowDoseViewShift %f %f\n", mWinApp->mLowDoseDlg.mViewShiftX[0], 
-      mWinApp->mLowDoseDlg.mViewShiftY[0]); 
+    oneState.Format("LowDoseViewShift %f %f\n", mWinApp->mLowDoseDlg.mViewShiftX[0],
+      mWinApp->mLowDoseDlg.mViewShiftY[0]);
     mFile->WriteString(oneState);
-    oneState.Format("LDSearchShift %f %f\n", mWinApp->mLowDoseDlg.mViewShiftX[1], 
-      mWinApp->mLowDoseDlg.mViewShiftY[1]); 
+    oneState.Format("LDSearchShift %f %f\n", mWinApp->mLowDoseDlg.mViewShiftX[1],
+      mWinApp->mLowDoseDlg.mViewShiftY[1]);
     mFile->WriteString(oneState);
     pctLo = mWinApp->mComplexTasks->GetRSRAUserCriterion();
     if (pctLo >= 0.)
       WriteFloat("ResetRealignIterationCriterion", pctLo);
 
     // Save Tilt Series Params
-    oneState.Format("TiltSeriesLowMagIndex %d %d %d\n", mTSParam->lowMagIndex[0], 
+    oneState.Format("TiltSeriesLowMagIndex %d %d %d\n", mTSParam->lowMagIndex[0],
       mTSParam->lowMagIndex[1], mTSParam->lowMagIndex[2]);
     mFile->WriteString(oneState);
     if (mTSParam->numExtraFocus) {
@@ -2386,17 +2387,17 @@ void CParameterIO::WriteSettings(CString strFileName)
       WriteString("TiltSeriesFocusSeries", oneState);
     }
     if (mTSParam->numExtraExposures) {
-      oneState = EntryListToString(1, 2, mTSParam->numExtraExposures, NULL, 
+      oneState = EntryListToString(1, 2, mTSParam->numExtraExposures, NULL,
         mTSParam->extraExposures);
       WriteString("TiltSeriesExtraExposure", oneState);
     }
     if (mTSParam->numExtraFilter) {
-      oneState = EntryListToString(2, 2, mTSParam->numExtraFilter, mTSParam->extraSlits, 
+      oneState = EntryListToString(2, 2, mTSParam->numExtraFilter, mTSParam->extraSlits,
         mTSParam->extraLosses);
       WriteString("TiltSeriesFilterSeries", oneState);
     }
     if (mTSParam->numExtraChannels) {
-      oneState = EntryListToString(3, 2, mTSParam->numExtraChannels, 
+      oneState = EntryListToString(3, 2, mTSParam->numExtraChannels,
         mTSParam->extraChannels, NULL);
       WriteString("TiltSeriesExtraChannels", oneState);
     }
@@ -2405,37 +2406,37 @@ void CParameterIO::WriteSettings(CString strFileName)
     }
     for (i = 0; i < mTSParam->numVaryItems; i++) {
       oneState.Format("TiltSeriesVariation %f %d %d %d %f\n", mTSParam->varyArray[i].angle,
-        mTSParam->varyArray[i].plusMinus ? 1 : 0, mTSParam->varyArray[i].linear ? 1 : 0, 
+        mTSParam->varyArray[i].plusMinus ? 1 : 0, mTSParam->varyArray[i].linear ? 1 : 0,
         mTSParam->varyArray[i].type, mTSParam->varyArray[i].value);
       mFile->WriteString(oneState);
     }
-    oneState.Format("%d %f %d %d %d", mTSParam->doBidirectional ? 1 : 0, 
-      mTSParam->bidirAngle, mTSParam->anchorBidirWithView ? 1 : 0, 
+    oneState.Format("%d %f %d %d %d", mTSParam->doBidirectional ? 1 : 0,
+      mTSParam->bidirAngle, mTSParam->anchorBidirWithView ? 1 : 0,
       mTSParam->walkBackForBidir ? 1 : 0, mTSParam->retainBidirAnchor ? 1 : 0);
     WriteString("TiltSeriesBidirParams", oneState);
-    oneState.Format("%d %d %d %f %d %d %d %f %d %d %f %d %d %d", 
-      mTSParam->doDoseSymmetric ? 1 : 0, mTSParam->dosymBaseGroupSize, 
+    oneState.Format("%d %d %d %f %d %d %d %f %d %d %f %d %d %d",
+      mTSParam->doDoseSymmetric ? 1 : 0, mTSParam->dosymBaseGroupSize,
       mTSParam->dosymIncreaseGroups ? 1 : 0,
-      mTSParam->dosymIncStartAngle, mTSParam->dosymGroupIncAmount, 
-      mTSParam->dosymGroupIncInterval, mTSParam->dosymDoRunToEnd ? 1 : 0, 
+      mTSParam->dosymIncStartAngle, mTSParam->dosymGroupIncAmount,
+      mTSParam->dosymGroupIncInterval, mTSParam->dosymDoRunToEnd ? 1 : 0,
       mTSParam->dosymRunToEndAngle, mTSParam->dosymAnchorIfRunToEnd ? 1 : 0,
-      mTSParam->dosymMinUniForAnchor, mTSParam->dosymStartingISLimit, 
+      mTSParam->dosymMinUniForAnchor, mTSParam->dosymStartingISLimit,
       mTSParam->dosymSkipBacklash, mTSParam->dosymTrackBigReversal ? 1 : 0,
       mTSParam->dosymBigTiltToTrack);
     WriteString("TiltSeriesDoseSymParams", oneState);
     WriteIndexedInts("TiltSeriesBDAnchorMags", mTSParam->bidirAnchorMagInd, 6);
     oneState.Format("%d %d %d", mWinApp->mTSController->GetRunMacroInTS() ? 1 : 0,
-      mWinApp->mTSController->GetMacroToRun(), 
+      mWinApp->mTSController->GetMacroToRun(),
       mWinApp->mTSController->GetStepAfterMacro());
     WriteString("TiltSeriesRunMacro", oneState);
-    oneState.Format("%d %f", mWinApp->mTSController->GetTermOnHighExposure() ? 1 : 0, 
+    oneState.Format("%d %f", mWinApp->mTSController->GetTermOnHighExposure() ? 1 : 0,
       mWinApp->mTSController->GetMaxExposureIncrease());
     WriteString("TSTermOnHighExposure", oneState);
     oneState.Format("%d %d %d", mWinApp->mTSController->GetEndOnHighDimImage() ? 1 : 0,
-      mWinApp->mTSController->GetDimEndsAbsAngle(), 
+      mWinApp->mTSController->GetDimEndsAbsAngle(),
       mWinApp->mTSController->GetDimEndsAngleDiff());
     WriteString("TiltSeriesBidirDimPolicy", oneState);
-    oneState.Format("CloseValvesDuringMessageBox %d %f\n", 
+    oneState.Format("CloseValvesDuringMessageBox %d %f\n",
       mWinApp->mTSController->GetMessageBoxCloseValves() ? 1 : 0,
       mWinApp->mTSController->GetMessageBoxValveTime());
     mFile->WriteString(oneState);
@@ -2444,16 +2445,16 @@ void CParameterIO::WriteSettings(CString strFileName)
       WriteString("EmailAddress", oneState);
     WriteIndexedInts("TSSetupPanelStates", tssPanelStates, NUM_TSS_PANELS - 1);
     //WriteFloat("AddedSTEMrotation", mWinApp->GetAddedSTEMrotation());
-    oneState.Format("NonGIFMatchPixelIntensity %d %d\n", 
+    oneState.Format("NonGIFMatchPixelIntensity %d %d\n",
       mWinApp->GetNonGIFMatchPixel(), mWinApp->GetNonGIFMatchIntensity());
     mFile->WriteString(oneState);
 
     for (i = 0; i < MAX_CAMERAS; i++) {
       if (mCamParam[i].gainRefBinning) {
-        oneState.Format("GainReferenceTarget %d %d %d %d %d %d %d %d\n", i, 
-          mCamParam[i].gainRefBinning, mCamParam[i].gainRefTarget, 
+        oneState.Format("GainReferenceTarget %d %d %d %d %d %d %d %d\n", i,
+          mCamParam[i].gainRefBinning, mCamParam[i].gainRefTarget,
           mCamParam[i].gainRefFrames, mCamParam[i].gainRefAverageDark,
-          mCamParam[i].gainRefNumDarkAvg, mCamParam[i].TSAverageDark, 
+          mCamParam[i].gainRefNumDarkAvg, mCamParam[i].TSAverageDark,
           mCamParam[i].gainRefSaveRaw);
         mFile->WriteString(oneState);
       }
@@ -2464,7 +2465,7 @@ void CParameterIO::WriteSettings(CString strFileName)
     WriteIndexedFloats("GridMapLimits", gridLim, 4);
     WriteIndexedInts("DErefNumRepeats", deNumRepeats, MAX_DE_REF_TYPES);
     WriteIndexedFloats("DErefExposures", deExposures, MAX_DE_REF_TYPES);
-    oneState.Format("DElastRefParams %d %d %d %d\n", 
+    oneState.Format("DElastRefParams %d %d %d %d\n",
       mWinApp->mGainRefMaker->GetDElastProcessType(),
       mWinApp->mGainRefMaker->GetDElastReferenceType(),
       mWinApp->mGainRefMaker->GetDEuseHardwareBin(),
@@ -2474,15 +2475,15 @@ void CParameterIO::WriteSettings(CString strFileName)
     for (i = 0; i < (int)faParamArray->GetSize(); i++) {
       faParam = faParamArray->GetAt(i);
       oneState.Format("FrameAlignParams1 %d %d %d %d %f %f %f %f %d %f %f %d %d %d %d %d"
-        " %d %d\n", i, faParam.strategy, faParam.aliBinning, faParam.numAllVsAll, 
-        faParam.rad2Filt1, faParam.rad2Filt2, faParam.rad2Filt3, faParam.rad2Filt4, 
-        faParam.hybridShifts ? 1 : 0, faParam.sigmaRatio, faParam.refRadius2, 
-        faParam.doRefine ? 1 : 0, faParam.refineIter, faParam.useGroups ? 1 : 0, 
+        " %d %d\n", i, faParam.strategy, faParam.aliBinning, faParam.numAllVsAll,
+        faParam.rad2Filt1, faParam.rad2Filt2, faParam.rad2Filt3, faParam.rad2Filt4,
+        faParam.hybridShifts ? 1 : 0, faParam.sigmaRatio, faParam.refRadius2,
+        faParam.doRefine ? 1 : 0, faParam.refineIter, faParam.useGroups ? 1 : 0,
         faParam.groupSize, faParam.doSmooth ? 1 : 0, faParam.smoothThresh,
         faParam.shiftLimit);
       mFile->WriteString(oneState);
       oneState.Format("FrameAlignParams2 %d %d %f %d %f %d %d %d %d %d %d %d %d %d %d "
-        "%d\n", i, faParam.truncate ? 1 : 0, faParam.truncLimit, faParam.antialiasType, 
+        "%d\n", i, faParam.truncate ? 1 : 0, faParam.truncLimit, faParam.antialiasType,
         faParam.stopIterBelow, faParam.groupRefine ? 1 : 0, faParam.keepPrecision ? 1 : 0,
         faParam.outputFloatSums ? 1 : 0, faParam.alignSubset ? 1 : 0, faParam.subsetStart,
         faParam.subsetEnd, faParam.sizeRestriction, faParam.whereRestriction,
@@ -2491,10 +2492,10 @@ void CParameterIO::WriteSettings(CString strFileName)
       oneState.Format("FrameAliSetName %d %s\n", i, (LPCTSTR)faParam.name);
       mFile->WriteString(oneState);
     }
-    oneState.Format("FrameAliGlobals %d %d %d %d %d\n", useGPU4K2Ali[0] ? 1 : 0, 
-      useGPU4K2Ali[1] ? 1 : 0, useGPU4K2Ali[2] ? 1 : 0, 
+    oneState.Format("FrameAliGlobals %d %d %d %d %d\n", useGPU4K2Ali[0] ? 1 : 0,
+      useGPU4K2Ali[1] ? 1 : 0, useGPU4K2Ali[2] ? 1 : 0,
       mWinApp->GetFrameAlignMoreOpen() ? 1 : 0,
-      mWinApp->mCamera->GetAlignWholeSeriesInIMOD() ? 1 : 0); 
+      mWinApp->mCamera->GetAlignWholeSeriesInIMOD() ? 1 : 0);
     mFile->WriteString(oneState);
     oneState.Format("FalconAliUseGPU %d %d\n", mWinApp->mFalconHelper->GetUseGpuForAlign(
       0), mWinApp->mFalconHelper->GetUseGpuForAlign(1));
@@ -2509,7 +2510,7 @@ void CParameterIO::WriteSettings(CString strFileName)
     perr->Delete();
     CString message = "Error writing settings to file " + strFileName;
     AfxMessageBox(message, MB_EXCLAME);
-  } 
+  }
   if (mFile) {
     delete mFile;
     mFile = NULL;
@@ -2565,8 +2566,8 @@ int CParameterIO::ReadMacrosFromFile(CString &filename, const CString &curSettin
   try {
     mFile = new CStdioFile(filename, CFile::modeRead | CFile::shareDenyWrite);
 
-    while (retval == 0 && 
-      (err = ReadSuperParse(strLine, strItems, itemEmpty, itemInt, itemDbl, 
+    while (retval == 0 &&
+      (err = ReadSuperParse(strLine, strItems, itemEmpty, itemInt, itemDbl,
       MAX_TOKENS)) == 0) {
         if (NAME_IS("Macro")) {
           err = ReadOneMacro(itemInt[1], strLine, strItems, maxMacros);
@@ -2580,13 +2581,13 @@ int CParameterIO::ReadMacrosFromFile(CString &filename, const CString &curSettin
     }
     if (err > 0)
       retval = err;
-      
+
     mFile->Close();
   }
   catch(CFileException *perr) {
     perr->Delete();
     retval = 1;
-  } 
+  }
   if (mFile) {
     delete mFile;
     mFile = NULL;
@@ -2610,8 +2611,8 @@ void CParameterIO::WriteMacrosToFile(CString filename, int maxMacros)
 {
   try {
 
-    // Open the file for writing, 
-    mFile = new CStdioFile(filename, CFile::modeCreate | CFile::modeWrite | 
+    // Open the file for writing,
+    mFile = new CStdioFile(filename, CFile::modeCreate | CFile::modeWrite |
       CFile::shareDenyWrite);
     WriteAllMacros(maxMacros);
   }
@@ -2619,7 +2620,7 @@ void CParameterIO::WriteMacrosToFile(CString filename, int maxMacros)
     perr->Delete();
     CString message = "Error writing scripts to file " + filename;
     AfxMessageBox(message, MB_EXCLAME);
-  } 
+  }
   if (mFile) {
     delete mFile;
     mFile = NULL;
@@ -2629,7 +2630,7 @@ void CParameterIO::WriteMacrosToFile(CString filename, int maxMacros)
 // Write low dose parameters to a string without \n for use here and in Navigator
 void CParameterIO::WriteLowDoseToString(LowDoseParams *ldp, int ldi, int ldj, CString &str)
 {
-  // Set number or - state # + 1, mag or -cam length, spot, intensity, axis offset, 
+  // Set number or - state # + 1, mag or -cam length, spot, intensity, axis offset,
   // 0-2 for regular/GIF/STEM or 0 for state, slit in, slit width, energy loss,
   // zero loss, beam X offset, beam Y offset, alpha, diffraction focus, beam tilt X,
   // beam tilt Y, probe mode, dark field, dark field tilt X and Y
@@ -2664,7 +2665,7 @@ void CParameterIO::WriteStateToString(StateParams *stateP, CString &str)
 NAA_FLAG_ONLY_BEFORE | NAA_FLAG_EVERYN_ONLY | NAA_FLAG_ANY_SITE_OK)
 
 // Reads navigator acquire params from the current file, settings or other file
-int CParameterIO::ReadNavAcqParams(NavAcqParams *navParams, NavAcqAction *navActions, 
+int CParameterIO::ReadNavAcqParams(NavAcqParams *navParams, NavAcqAction *navActions,
   int *actOrder, CString &unrecognized)
 {
   int err, index, ind2, numActions = mWinApp->mNavHelper->GetNumAcqActions();
@@ -2678,7 +2679,7 @@ int CParameterIO::ReadNavAcqParams(NavAcqParams *navParams, NavAcqAction *navAct
   for (index = 0; index < numActions; index++)
     included[index] = false;
 
-  while ((err = ReadSuperParse(strLine, strItems, itemEmpty, itemInt, itemDbl, 
+  while ((err = ReadSuperParse(strLine, strItems, itemEmpty, itemInt, itemDbl,
     itemFlt, MAX_TOKENS)) == 0) {
     if (NAME_IS("NavAcquireParams"))
       continue;
@@ -2765,7 +2766,7 @@ int CParameterIO::ReadNavAcqParams(NavAcqParams *navParams, NavAcqAction *navAct
     } else if (strItems[0].Find("NavAcqAction") == 0) {
       index = atoi((LPCTSTR)strItems[0].Mid(12));
       if (index >= 0 && index < NAA_MAX_ACTIONS) {
-        navActions[index].flags = (navActions[index].flags & HARD_CODED_FLAGS) | 
+        navActions[index].flags = (navActions[index].flags & HARD_CODED_FLAGS) |
           (itemInt[1] & ~HARD_CODED_FLAGS);
         navActions[index].timingType = itemInt[2];
         navActions[index].everyNitems = itemInt[3];
@@ -2841,7 +2842,7 @@ void CParameterIO::WriteNavAcqParams(int which, NavAcqParams *navParams,
     navParams->hybridRealign ? 1 : 0, navParams->hideUnselectedOpts ? 1 : 0,
     navParams->mapWithViewSearch, navParams->retractCameras ? 1 : 0,
     navParams->runHoleCombiner ? 1 : 0, navParams->useMapHoleVectors ? 1 : 0,
-    navParams->endMacroInd, navParams->runEndMacro ? 1 : 0, 
+    navParams->endMacroInd, navParams->runEndMacro ? 1 : 0,
     navParams->realignToScaledMap ? 1 : 0, navParams->conSetForScaledAli,
     navParams->multiGridSubset, navParams->mulGridSubsetFrom,
     navParams->mulGridItemsOrShots);
@@ -2863,7 +2864,7 @@ void CParameterIO::WriteNavAcqParams(int which, NavAcqParams *navParams,
 }
 
 // read acquire params from the given file
-int CParameterIO::ReadAcqParamsFromFile(NavAcqParams *navParams, 
+int CParameterIO::ReadAcqParamsFromFile(NavAcqParams *navParams,
   NavAcqAction *acqActions, int *actOrder, CString & filename, CString &errStr)
 {
   CString strLine, strItems[2];
@@ -2925,11 +2926,11 @@ int CParameterIO::ReadAcqParamsFromFile(NavAcqParams *navParams,
 }
 
 // Write acquire params to the given file
-void CParameterIO::WriteAcqParamsToFile(NavAcqParams *navParams, 
+void CParameterIO::WriteAcqParamsToFile(NavAcqParams *navParams,
   NavAcqAction *acqActions, int *actOrder, CString & filename)
 {
   try {
-    // Open the file for writing, 
+    // Open the file for writing,
     mFile = new CStdioFile(filename, CFile::modeCreate |
       CFile::modeWrite | CFile::shareDenyWrite);
     WriteNavAcqParams(0, navParams, acqActions, actOrder, false);
@@ -2949,11 +2950,11 @@ void CParameterIO::WriteAcqParamsToFile(NavAcqParams *navParams,
 int CParameterIO::WriteMulGridAcqParams(CString &filename, CString &errStr)
 {
   int ind, retval = 0;
-  CArray<MGridAcqItemsParams, MGridAcqItemsParams> *paramArr = 
+  CArray<MGridAcqItemsParams, MGridAcqItemsParams> *paramArr =
     mWinApp->mMultiGridTasks->GetMGAcqItemsParamArray();
-  
+
   try {
-    // Open the file for writing, 
+    // Open the file for writing,
     mFile = new CStdioFile(filename, CFile::modeCreate |
       CFile::modeWrite | CFile::shareDenyWrite);
     for (ind = 0; ind < (int)paramArr->GetSize(); ind++) {
@@ -3118,16 +3119,16 @@ int CParameterIO::ReadProperties(CString strFileName)
   ShortVec *bsBoundaries = mShiftManager->GetBeamShiftBoundaries();
 #define PROP_MODULES
 #include "PropertyTests.h"
-#undef PROP_MODULES  
+#undef PROP_MODULES
   NavParams *navParams = mWinApp->GetNavParams();
   RelRotations *relRotations = mShiftManager->GetRelRotations();
-  CArray<RotStretchXform, RotStretchXform> *rotXformArray = 
+  CArray<RotStretchXform, RotStretchXform> *rotXformArray =
     mShiftManager->GetRotXforms();
   CArray<ChannelSet, ChannelSet> *channelSets = camera->GetChannelSets();
   CArray<ChannelSet, ChannelSet> *blockSets = scope->GetBlockedChannels();
-  CArray<PiezoScaling, PiezoScaling> *piezoScalings = 
+  CArray<PiezoScaling, PiezoScaling> *piezoScalings =
     mWinApp->mPiezoControl->GetScalings();
-  CArray<MontLimits, MontLimits> *montLimits = 
+  CArray<MontLimits, MontLimits> *montLimits =
     mWinApp->mMontageController->GetMontageLimits();
   CArray<LensRelaxData, LensRelaxData> *relaxData = scope->GetLensRelaxProgs();
   CArray<FreeLensSequence, FreeLensSequence> *FLCsequences = scope->GetFLCSequences();
@@ -3149,11 +3150,11 @@ int CParameterIO::ReadProperties(CString strFileName)
   int camEntered[MAX_CAMERAS];
   std::set<std::string> genPropSet;
   std::set<std::string> camPropSets[MAX_CAMERAS];
-  std::string tmpg[] = {"cameraproperties", "importstagetoimage", "importtiffxfield", 
-    "importtiffyfield", "importtiffidfield", "k2filtername", "controlsetname", 
-    "othershiftboundaries", "watchgauge", "mappedtodschannel", "detectorblocks", 
-    "mutuallyexcludedetectors", "socketserverip", "socketserveripif64", 
-    "socketserverport", "socketserverportif64", "externaltool", "toolcommand", 
+  std::string tmpg[] = {"cameraproperties", "importstagetoimage", "importtiffxfield",
+    "importtiffyfield", "importtiffidfield", "k2filtername", "controlsetname",
+    "othershiftboundaries", "watchgauge", "mappedtodschannel", "detectorblocks",
+    "mutuallyexcludedetectors", "socketserverip", "socketserveripif64",
+    "socketserverport", "socketserverportif64", "externaltool", "toolcommand",
     "toolarguments", "pathtopython", "endifversionbelow", "globalautodocentry",
     "aperturesizes", "jeollowdoseflcseries"};
   std::set<std::string> dupOKgenProps(tmpg, tmpg + sizeof(tmpg) / sizeof(tmpg[0]));
@@ -3802,7 +3803,7 @@ int CParameterIO::ReadProperties(CString strFileName)
 #else
       else if (MatchNoCase("SocketServerIPif64")) {
       } else if (MatchNoCase("SocketServerIP")) {
-#endif 
+#endif
         if (itemInt[1] < 0 || itemEmpty[2])
           AfxMessageBox("The SocketServerIP property needs two values: a socket"
             " ID and the IP address", MB_EXCLAME);
@@ -3954,9 +3955,9 @@ int CParameterIO::ReadProperties(CString strFileName)
       } else if (MatchNoCase("UseTEMScripting")) {
         scope->SetUseTEMScripting(itemInt[1]);
         //JEOLscope = false;
-      } else 
+      } else
         recognized15 = false;
-      
+
       if (recognized || recognized15) {
         recognized = true;
       }
@@ -4025,7 +4026,7 @@ int CParameterIO::ReadProperties(CString strFileName)
 
       } else if (MatchNoCase("WatchGauge")) {
         if (strItems[3].IsEmpty()) {
-          AfxMessageBox("Missing threshold values in properties file " + strFileName 
+          AfxMessageBox("Missing threshold values in properties file " + strFileName
             + " : " + strLine , MB_EXCLAME);
           break;
         }
@@ -4043,7 +4044,7 @@ int CParameterIO::ReadProperties(CString strFileName)
       }
       else if (MatchNoCase("PiezoScaling")) {
         if (itemEmpty[6]) {
-          AfxMessageBox("Not enough values on line in properties file " + strFileName 
+          AfxMessageBox("Not enough values on line in properties file " + strFileName
             + " : " + strLine , MB_EXCLAME);
         } else {
           pzScale.plugNum = itemInt[1];
@@ -4106,14 +4107,14 @@ int CParameterIO::ReadProperties(CString strFileName)
         mWinApp->mMontageController->SetMaxStageError(itemFlt[1]);
         mWinApp->mMontageController->SetStopOnStageError(itemInt[2] != 0);
       }
-      else if (MatchNoCase("MontageFilterR1R2S1S2") || 
+      else if (MatchNoCase("MontageFilterR1R2S1S2") ||
         MatchNoCase("MontFilterSet2R1R2S1S2")) {
           index = MatchNoCase("MontageFilterR1R2S1S2") ? 0 : 1;
           if (itemEmpty[4])
-            AfxMessageBox("Four numbers are required in properties file " + strFileName 
+            AfxMessageBox("Four numbers are required in properties file " + strFileName
             + " for line: " + strLine , MB_EXCLAME);
           else
-            mWinApp->mMontageController->SetXcorrFilter(index, itemFlt[1], 
+            mWinApp->mMontageController->SetXcorrFilter(index, itemFlt[1],
             itemFlt[2], itemFlt[3], itemFlt[4]);
       } else
         recognized2 = false;
@@ -4207,7 +4208,7 @@ int CParameterIO::ReadProperties(CString strFileName)
         while (!itemEmpty[index])
           scope->AddImageDetector(itemInt[index++]);
       }
-      else if (MatchNoCase("MappedToDSchannel") || MatchNoCase("DetectorBlocks") || 
+      else if (MatchNoCase("MappedToDSchannel") || MatchNoCase("DetectorBlocks") ||
         MatchNoCase("MutuallyExcludeDetectors")) {
           index = 1;
           chanSet.mappedTo = -1;
@@ -4374,7 +4375,7 @@ int CParameterIO::ReadProperties(CString strFileName)
         mWinApp->SetStartupMessage(message);
 
       } else if (MatchNoCase("ErrorColor") || MatchNoCase("WarningColor") ||
-        MatchNoCase("InsertedColor") || MatchNoCase("DebugColor") || 
+        MatchNoCase("InsertedColor") || MatchNoCase("DebugColor") ||
         MatchNoCase("VerboseColor")) {
         ind = ERROR_COLOR_IND;
         if (MatchNoCase("WarningColor"))
@@ -4437,7 +4438,7 @@ int CParameterIO::ReadProperties(CString strFileName)
       } else if (MatchNoCase("ExternalTool")) {
         StripItems(strLine, 1, message);
         mWinApp->mExternalTools->AddTool(message);
-      
+
       } else if (MatchNoCase("ToolCommand")) {
         if (itemEmpty[2]) {
           AfxMessageBox("ToolCommand property entry must have a number then a command");
@@ -4492,11 +4493,11 @@ int CParameterIO::ReadProperties(CString strFileName)
          navParams->numImportXforms++;
        }
 
-     } else if (MatchNoCase("ImportTiffXField") || MatchNoCase("ImportTiffYField") || 
+     } else if (MatchNoCase("ImportTiffXField") || MatchNoCase("ImportTiffYField") ||
        MatchNoCase("ImportTiffIDField")) {
        index = itemInt[1];
        if (index < 0 || index >= MAX_IMPORT_XFORMS) {
-         AfxMessageBox("Import transform # in Tiff Field definition is out of range", 
+         AfxMessageBox("Import transform # in Tiff Field definition is out of range",
            MB_EXCLAME);
        } else {
          if (MatchNoCase("ImportTiffXField"))
@@ -4553,7 +4554,7 @@ int CParameterIO::ReadProperties(CString strFileName)
        nMags = itemInt[1];
        col = MatchNoCase("MagnificationTable") ? 1 : 0;
        for (int line = 0; line < nMags; line++) {
-         err = ReadSuperParse(strLine, strItems, itemEmpty, itemInt, itemDbl, itemFlt, 
+         err = ReadSuperParse(strLine, strItems, itemEmpty, itemInt, itemDbl, itemFlt,
            MAX_TOKENS);
          if (err)
            break;
@@ -4589,7 +4590,7 @@ int CParameterIO::ReadProperties(CString strFileName)
      } else if (MatchNoCase("CameraLengthTable")) {
        nMags = itemInt[1];
        for (int line = 0; line < nMags; line++) {
-         err = ReadSuperParse(strLine, strItems, itemEmpty, itemInt, itemDbl, itemFlt, 
+         err = ReadSuperParse(strLine, strItems, itemEmpty, itemInt, itemDbl, itemFlt,
            MAX_TOKENS);
          if (err)
            break;
@@ -4615,13 +4616,13 @@ int CParameterIO::ReadProperties(CString strFileName)
          mWinApp->mScope->SetNumCameraLengths(nMags, -1);
 
      } else if (MatchNoCase("NumberOfCameraLengths")) {
-       mWinApp->mScope->SetNumCameraLengths(itemInt[1], 
+       mWinApp->mScope->SetNumCameraLengths(itemInt[1],
          strItems[2].IsEmpty() ? -1 : itemInt[2]);
 
      } else if (MatchNoCase("FocusTickTable")) {
        nMags = itemInt[1];
        for (int line = 0; line < nMags; line++) {
-         err = ReadSuperParse(strLine, strItems, itemEmpty, itemInt, itemDbl, itemFlt, 
+         err = ReadSuperParse(strLine, strItems, itemEmpty, itemInt, itemDbl, itemFlt,
            MAX_TOKENS);
          if (err)
            break;
@@ -4651,7 +4652,7 @@ int CParameterIO::ReadProperties(CString strFileName)
        float *ISmoved = mShiftManager->GetISmoved();
        float *ISdelay = mShiftManager->GetISdelayNeeded();
        for (int line = 0; line < nMags; line++) {
-         err = ReadSuperParse(strLine, strItems, itemEmpty, itemInt, itemDbl, itemFlt, 
+         err = ReadSuperParse(strLine, strItems, itemEmpty, itemInt, itemDbl, itemFlt,
            MAX_TOKENS);
          if (err)
            break;
@@ -4683,7 +4684,7 @@ int CParameterIO::ReadProperties(CString strFileName)
   catch(CFileException *perr) {
     perr->Delete();
     retval = 1;
-  } 
+  }
   if (mFile) {
     delete mFile;
     mFile = NULL;
@@ -4755,7 +4756,7 @@ int CParameterIO::ReadCalibration(CString strFileName)
     // Open the file for reading, verify that it is a calibration file
     mFile = new CStdioFile(strFileName,
       CFile::modeRead |CFile::shareDenyWrite);
-    
+
     err = ReadAndParse(strLine, strItems, MAX_TOKENS);
     if (err)
       retval = 1;
@@ -4764,7 +4765,7 @@ int CParameterIO::ReadCalibration(CString strFileName)
       retval = 1;
     }
 
-    while (retval == 0 && 
+    while (retval == 0 &&
            (err = ReadSuperParse(strLine, strItems, itemEmpty, itemInt, itemDbl, itemFlt,
                                  MAX_TOKENS)) == 0) {
       // A stub for something complex
@@ -4774,7 +4775,7 @@ int CParameterIO::ReadCalibration(CString strFileName)
           if (NAME_IS("EndCameraProperties"))
             break;
           else {
-            // Unrecognized camera parameter      
+            // Unrecognized camera parameter
           }
 
         }
@@ -4792,7 +4793,7 @@ int CParameterIO::ReadCalibration(CString strFileName)
             break;
           index = itemInt[0];
           camera = itemInt[1];
-          if (index < 1 || index >= MAX_MAGS || camera < 0 
+          if (index < 1 || index >= MAX_MAGS || camera < 0
             || camera >= MAX_CAMERAS) {
             err = 1;
             break;
@@ -4813,7 +4814,7 @@ int CParameterIO::ReadCalibration(CString strFileName)
       } else if (NAME_IS("StageToCameraMatrix")) {
         index = itemInt[1];
         camera = itemInt[2];
-        if (index < 1 || index >= MAX_MAGS || camera < 0 
+        if (index < 1 || index >= MAX_MAGS || camera < 0
           || camera >= MAX_CAMERAS || strItems[6].IsEmpty()) {
           err = 1;
         } else {
@@ -4878,7 +4879,7 @@ int CParameterIO::ReadCalibration(CString strFileName)
         crossCalAper[1] = itemInt[1];
         if (!itemEmpty[2])
           crossCalAper[0] = itemInt[2];
- 
+
       } else if (NAME_IS("FocusCalibration")) {
         index = itemInt[1];
         camera = itemInt[2];
@@ -4892,7 +4893,7 @@ int CParameterIO::ReadCalibration(CString strFileName)
           freeInd = itemInt[8];
         if (!strItems[10].IsEmpty())
           spot = itemInt[9];
-        if (index < 1 || index >= MAX_MAGS || camera < 0 
+        if (index < 1 || index >= MAX_MAGS || camera < 0
           || camera >= MAX_CAMERAS || beamInd < 0 || beamInd > 3) {
           nCal = 0;
           err = 1;
@@ -4966,7 +4967,7 @@ int CParameterIO::ReadCalibration(CString strFileName)
         astig.magInd = itemInt[1];
         astig.probeMode = itemInt[2];
         astig.alpha = itemInt[3];
-        astig.defocus = itemFlt[4]; 
+        astig.defocus = itemFlt[4];
         astig.beamTilt = itemFlt[5];
         astig.focusMat.xpx = itemFlt[6];
         astig.focusMat.xpy = itemFlt[7];
@@ -4981,12 +4982,12 @@ int CParameterIO::ReadCalibration(CString strFileName)
         astig.astigYmat.ypx = itemFlt[16];
         astig.astigYmat.ypy = itemFlt[17];
         astigCals->Add(astig);
- 
+
       } else if (NAME_IS("ComaCalib")) {
         coma.magInd = itemInt[1];
         coma.probeMode = itemInt[2];
         coma.alpha = itemInt[3];
-        coma.defocus = itemFlt[4]; 
+        coma.defocus = itemFlt[4];
         coma.beamTilt = itemFlt[5];
         coma.comaXmat.xpx = itemFlt[6];
         coma.comaXmat.xpy = itemFlt[7];
@@ -5024,7 +5025,7 @@ int CParameterIO::ReadCalibration(CString strFileName)
         probe = 1;
         if (!itemEmpty[8])
           probe = itemInt[7];
-        if (index < 1 || index >= MAX_MAGS || spot < 1 || nCal < 1 || probe < 0 || 
+        if (index < 1 || index >= MAX_MAGS || spot < 1 || nCal < 1 || probe < 0 ||
           probe > 1) {
             nCal = 0;
             err = 1;
@@ -5054,7 +5055,7 @@ int CParameterIO::ReadCalibration(CString strFileName)
             intensity = itemDbl[5];
             // 3/26/07: fix for bad forward migration: it was testing for 5 (the mag)
             // and putting it in crossover, so now test for 5 = 6 and repair to 0
-            if (strItems[6].IsEmpty() || 
+            if (strItems[6].IsEmpty() ||
               (int)floor(intensity + 0.5) == itemInt[6])
               beamTab->crossover = 0.;
             else
@@ -5081,7 +5082,7 @@ int CParameterIO::ReadCalibration(CString strFileName)
           retval = err;
           break;
         }
-        if (mWinApp->mBeamAssessor->CheckCalForZeroIntensities(beamTables[beamInd], 
+        if (mWinApp->mBeamAssessor->CheckCalForZeroIntensities(beamTables[beamInd],
           "After reading in from the calibration file", 2))
           beamTab->numIntensities = 0;
         mWinApp->mBeamAssessor->SortAndTakeLogs(beamTab, false);
@@ -5108,7 +5109,7 @@ int CParameterIO::ReadCalibration(CString strFileName)
         if (!strItems[9].IsEmpty())
           focInd = atoi((LPCTSTR)strItems[8]);
         mShiftManager->SetBeamShiftCal(IStoBS, index, nCal, beamInd, focInd);
-        
+
        } else if (NAME_IS("StageStretchXform")) {
          IStoBS.xpx = itemFlt[1];
          IStoBS.xpy = itemFlt[2];
@@ -5138,7 +5139,7 @@ int CParameterIO::ReadCalibration(CString strFileName)
           break;
         }
 
-      } else if (NAME_IS("NeutralImageShifts") || NAME_IS("GIFNeutralIS") || 
+      } else if (NAME_IS("NeutralImageShifts") || NAME_IS("GIFNeutralIS") ||
         NAME_IS("HitachiBaseFocus")) {
         nCal = itemInt[1];
         focInd = (NAME_IS("GIFNeutralIS")) ? 1 : 0;
@@ -5169,7 +5170,7 @@ int CParameterIO::ReadCalibration(CString strFileName)
           retval = err;
           break;
         }
- 
+
       } else if (NAME_IS("AlphaBeamShifts") || NAME_IS("AlphaBeamTilts")) {
         nCal = itemInt[1];
         index = NAME_IS("AlphaBeamShifts") ? 1 : 0;
@@ -5254,7 +5255,7 @@ int CParameterIO::ReadCalibration(CString strFileName)
       } else if (NAME_IS("GIFShiftOffset")) {
         index = itemInt[1];
         camera = itemInt[2];
-        if (index < 2 || index >= MAX_MAGS || camera < 2 || camera >= MAX_MAGS || 
+        if (index < 2 || index >= MAX_MAGS || camera < 2 || camera >= MAX_MAGS ||
           strItems[4].IsEmpty()) {
             retval = 1;
             AfxMessageBox("Error reading GIF image shift offset, line\n" +
@@ -5342,7 +5343,7 @@ int CParameterIO::ReadCalibration(CString strFileName)
           tmpAper[3] = itemInt[4];
         }
         gotSpotAper = true;
-        
+
       } else if (NAME_IS("IllumAreaLimits")) {
         nCal = itemInt[1];
         for (i = 1; i <= B3DMIN(nCal, MAX_SPOT_SIZE); i++) {
@@ -5381,20 +5382,20 @@ int CParameterIO::ReadCalibration(CString strFileName)
           LMfocTab[2 * index] = itemDbl[3];
 
       } else if (!strItems[0].IsEmpty())
-        AfxMessageBox("Unrecognized entry in calibration file " + strFileName 
+        AfxMessageBox("Unrecognized entry in calibration file " + strFileName
         + " : " + strLine , MB_EXCLAME);
     }
     if (err > 0)
       retval = err;
 
-    
-      
+
+
     mFile->Close();
   }
   catch(CFileException *perr) {
     perr->Delete();
     retval = 1;
-  } 
+  }
   if (mFile) {
     delete mFile;
     mFile = NULL;
@@ -5456,8 +5457,8 @@ void CParameterIO::WriteCalibration(CString strFileName)
   FocusTable focTable;
 
   try {
-    // Open the file for writing, 
-    mFile = new CStdioFile(strFileName, CFile::modeCreate | 
+    // Open the file for writing,
+    mFile = new CStdioFile(strFileName, CFile::modeCreate |
       CFile::modeWrite |CFile::shareDenyWrite);
 
     mFile->WriteString("SerialEMCalibrations\n");
@@ -5474,21 +5475,21 @@ void CParameterIO::WriteCalibration(CString strFileName)
       for (i = 1; i < MAX_MAGS; i++)
         for (j = 0; j < MAX_CAMERAS; j++) {
           if (mMagTab[i].matIS[j].xpx != 0. || mMagTab[i].matIS[j].xpy != 0.) {
-            string.Format("%d %d %f %f %f %f   %d\n", i, j, 
+            string.Format("%d %d %f %f %f %f   %d\n", i, j,
               mMagTab[i].matIS[j].xpx, mMagTab[i].matIS[j].xpy,
               mMagTab[i].matIS[j].ypx, mMagTab[i].matIS[j].ypy, MagForCamera(j, i));
             mFile->WriteString(string);
           }
         }
     }
-  
+
     // Write stage calibrations if any
     for (i = 1; i < MAX_MAGS; i++)
       for (j = 0; j < MAX_CAMERAS; j++) {
         if (mMagTab[i].matStage[j].xpx != 0. || mMagTab[i].matStage[j].xpy != 0.) {
-          string.Format("StageToCameraMatrix %d %d %f %f %f %f   %f   %d\n", i, j, 
+          string.Format("StageToCameraMatrix %d %d %f %f %f %f   %f   %d\n", i, j,
             mMagTab[i].matStage[j].xpx, mMagTab[i].matStage[j].xpy,
-            mMagTab[i].matStage[j].ypx, mMagTab[i].matStage[j].ypy, 
+            mMagTab[i].matStage[j].ypx, mMagTab[i].matStage[j].ypy,
             mMagTab[i].stageCalFocus[j], MagForCamera(j, i));
           mFile->WriteString(string);
         }
@@ -5525,7 +5526,7 @@ void CParameterIO::WriteCalibration(CString strFileName)
       mWinApp->mScope->GetC2IntensityFactor(0));
     mFile->WriteString(string);
     for (i = 1; i <= mWinApp->mScope->GetNumSpotSizes(); i++) {
-      string.Format("C2SpotOffset %d %f %f\n", i, 
+      string.Format("C2SpotOffset %d %f %f\n", i,
         mWinApp->mScope->GetC2SpotOffset(i, 1), mWinApp->mScope->GetC2SpotOffset(i, 0));
       mFile->WriteString(string);
     }
@@ -5555,22 +5556,22 @@ void CParameterIO::WriteCalibration(CString strFileName)
         focTable.alpha, MagForCamera(focTable.camera, focTable.magInd));
       mFile->WriteString(string);
       for (k = 0; k < focTable.numPoints; k++) {
-        string.Format("%f %f %f\n", focTable.defocus[k], focTable.shiftX[k], 
+        string.Format("%f %f %f\n", focTable.defocus[k], focTable.shiftX[k],
           focTable.shiftY[k]);
         mFile->WriteString(string);
       }
     }
-    
-    string.Format("STEMnormalizedSlope %f %f\n", 
+
+    string.Format("STEMnormalizedSlope %f %f\n",
       mWinApp->mFocusManager->GetSFnormalizedSlope(0),
       mWinApp->mFocusManager->GetSFnormalizedSlope(1));
     mFile->WriteString(string);
-    
+
     string.Format("STEMconvAngle %f %f\n",
       mWinApp->mFocusManager->GetSFconvAngle(0),
       mWinApp->mFocusManager->GetSFconvAngle(1));
     mFile->WriteString(string);
-    
+
     // Write focus versus Z tables
     for (i = 0; i < focusZtables->GetSize(); i++) {
       STEMFocusZTable sfZtable = focusZtables->GetAt(i);
@@ -5588,10 +5589,10 @@ void CParameterIO::WriteCalibration(CString strFileName)
     for (i = 0; i < astigCals->GetSize(); i++) {
       astig = astigCals->GetAt(i);
       string.Format("AstigmatismCalib %d %d %d %f %f %f %f %f %f %f %f %f %f %f %f %f %f"
-        "   %d\n", astig.magInd, astig.probeMode, astig.alpha, astig.defocus, 
-        astig.beamTilt, astig.focusMat.xpx, astig.focusMat.xpy, astig.focusMat.ypx, 
-        astig.focusMat.ypy, astig.astigXmat.xpx, astig.astigXmat.xpy, astig.astigXmat.ypx, 
-        astig.astigXmat.ypy, astig.astigYmat.xpx, astig.astigYmat.xpy, 
+        "   %d\n", astig.magInd, astig.probeMode, astig.alpha, astig.defocus,
+        astig.beamTilt, astig.focusMat.xpx, astig.focusMat.xpy, astig.focusMat.ypx,
+        astig.focusMat.ypy, astig.astigXmat.xpx, astig.astigXmat.xpy, astig.astigXmat.ypx,
+        astig.astigXmat.ypy, astig.astigYmat.xpx, astig.astigYmat.xpy,
         astig.astigYmat.ypx, astig.astigYmat.ypy, mMagTab[astig.magInd].mag);
       mFile->WriteString(string);
     }
@@ -5599,10 +5600,10 @@ void CParameterIO::WriteCalibration(CString strFileName)
     // Write coma calibrations
     for (i = 0; i < comaCals->GetSize(); i++) {
       coma = comaCals->GetAt(i);
-      string.Format("ComaCalib %d %d %d %f %f %f %f %f %f %f %f %f %f   %d\n", 
-        coma.magInd, coma.probeMode, coma.alpha, coma.defocus, 
-        coma.beamTilt, coma.comaXmat.xpx, coma.comaXmat.xpy, coma.comaXmat.ypx, 
-        coma.comaXmat.ypy, coma.comaYmat.xpx, coma.comaYmat.xpy, 
+      string.Format("ComaCalib %d %d %d %f %f %f %f %f %f %f %f %f %f   %d\n",
+        coma.magInd, coma.probeMode, coma.alpha, coma.defocus,
+        coma.beamTilt, coma.comaXmat.xpx, coma.comaXmat.xpy, coma.comaXmat.ypx,
+        coma.comaXmat.ypy, coma.comaYmat.xpx, coma.comaYmat.xpy,
         coma.comaYmat.ypx, coma.comaYmat.ypy, mMagTab[coma.magInd].mag);
       mFile->WriteString(string);
     }
@@ -5612,10 +5613,10 @@ void CParameterIO::WriteCalibration(CString strFileName)
       ctfCal = ctfAstigCals->GetAt(i);
       if (ctfCal.comaType)
         continue;
-      string.Format("CtfAstigCalib %d %f %f %f %f %f %f %f %f %f %f %f %f %f   %d\n", 
-        ctfCal.magInd, ctfCal.amplitude, ctfCal.fitValues[0], ctfCal.fitValues[1], 
-        ctfCal.fitValues[2], ctfCal.fitValues[3], ctfCal.fitValues[4],ctfCal.fitValues[5], 
-        ctfCal.fitValues[6], ctfCal.fitValues[7], ctfCal.fitValues[8],ctfCal.fitValues[9], 
+      string.Format("CtfAstigCalib %d %f %f %f %f %f %f %f %f %f %f %f %f %f   %d\n",
+        ctfCal.magInd, ctfCal.amplitude, ctfCal.fitValues[0], ctfCal.fitValues[1],
+        ctfCal.fitValues[2], ctfCal.fitValues[3], ctfCal.fitValues[4],ctfCal.fitValues[5],
+        ctfCal.fitValues[6], ctfCal.fitValues[7], ctfCal.fitValues[8],ctfCal.fitValues[9],
         ctfCal.fitValues[10], ctfCal.fitValues[11], mMagTab[ctfCal.magInd].mag);
       mFile->WriteString(string);
     }
@@ -5629,16 +5630,16 @@ void CParameterIO::WriteCalibration(CString strFileName)
       if (btp->numIntensities) {
         cross[0] = btp->crossover;
         if (cross[0])
-          cross[0] = mWinApp->mScope->IntensityAfterApertureChange(cross[0], curAperture, 
+          cross[0] = mWinApp->mScope->IntensityAfterApertureChange(cross[0], curAperture,
             btp->measuredAperture, btp->spotSize, btp->probeMode);
-        string.Format("BeamIntensityTable %d %d %d %d %f %d %d   %d\n", 
+        string.Format("BeamIntensityTable %d %d %d %d %f %d %d   %d\n",
           btp->numIntensities, btp->magIndex,
           btp->spotSize, btp->dontExtrapFlags, cross[0],
           btp->measuredAperture, btp->probeMode, mMagTab[btp->magIndex].mag);
         mFile->WriteString(string);
         nCal = 0;
         for (k = 0; k < btp->numIntensities; k++) {
-          intScaled = mWinApp->mScope->IntensityAfterApertureChange(btp->intensities[k], 
+          intScaled = mWinApp->mScope->IntensityAfterApertureChange(btp->intensities[k],
             curAperture, btp->measuredAperture, btp->spotSize, btp->probeMode);
           string.Format("%f %f\n", btp->currents[k], intScaled);
           mFile->WriteString(string);
@@ -5647,7 +5648,7 @@ void CParameterIO::WriteCalibration(CString strFileName)
         }
         if (!nCal) {
           nCal = btp->numIntensities;
-          mWinApp->mBeamAssessor->CheckCalForZeroIntensities(beamTables[i], 
+          mWinApp->mBeamAssessor->CheckCalForZeroIntensities(beamTables[i],
             "After scaling back to the original aperture size and writing to file", 1);
           btp->numIntensities = nCal;
         }
@@ -5655,20 +5656,20 @@ void CParameterIO::WriteCalibration(CString strFileName)
     }
 
     for (i = 0; i < mShiftManager->GetNumBeamShiftCals(); i++) {
-      nCal = beamMags->at(i) < 0 ? mMagTab[-beamMags->at(i)].EFTEMmag : 
+      nCal = beamMags->at(i) < 0 ? mMagTab[-beamMags->at(i)].EFTEMmag :
         mMagTab[beamMags->at(i)].mag;
       string.Format("BeamShiftCalibration %d %f %f %f %f %d %d %d  %d\n",
-        beamMags->at(i), IStoBS[i].xpx, IStoBS[i].xpy, IStoBS[i].ypx, IStoBS[i].ypy, 
+        beamMags->at(i), IStoBS[i].xpx, IStoBS[i].xpy, IStoBS[i].ypx, IStoBS[i].ypy,
         beamAlphas->at(i), beamProbes->at(i), beamRetains->at(i), nCal);
       mFile->WriteString(string);
     }
 
     if (stageStr.xpx) {
-      string.Format("StageStretchXform %f %f %f %f\n", stageStr.xpx, stageStr.xpy, 
+      string.Format("StageStretchXform %f %f %f %f\n", stageStr.xpx, stageStr.xpy,
         stageStr.ypx, stageStr.ypy);
       mFile->WriteString(string);
     }
-      
+
     // Write any filter mag shifts
     nCal = 0;
     for (i = 1; i < MAX_MAGS; i++)
@@ -5700,7 +5701,7 @@ void CParameterIO::WriteCalibration(CString strFileName)
         WriteInt(ind ? "GIFNeutralIS" : "NeutralImageShifts", nCalN[ind]);
         for (i = 1; i < MAX_MAGS; i++)
           if (mMagTab[i].neutralISX[ind] || mMagTab[i].neutralISY[ind]) {
-            string.Format("%d %f %f\n", i, mMagTab[i].neutralISX[ind], 
+            string.Format("%d %f %f\n", i, mMagTab[i].neutralISX[ind],
               mMagTab[i].neutralISY[ind]);
             mFile->WriteString(string);
           }
@@ -5711,15 +5712,15 @@ void CParameterIO::WriteCalibration(CString strFileName)
       for (ind = 0; ind < 2; ind++)
         for (i = 1; i < MAX_MAGS; i++)
           if (mMagTab[i].calOffsetISX[ind] || mMagTab[i].calOffsetISY[ind]) {
-            string.Format("%d %d %f %f\n", i, ind, mMagTab[i].calOffsetISX[ind], 
+            string.Format("%d %d %f %f\n", i, ind, mMagTab[i].calOffsetISX[ind],
               mMagTab[i].calOffsetISY[ind]);
             mFile->WriteString(string);
         }
     }
     nCal = mWinApp->mShiftCalibrator->GetGIFofsFromMag();
     if (nCal) {
-      string.Format("GIFShiftOffset %d %d %f %f\n", nCal, 
-        mWinApp->mShiftCalibrator->GetGIFofsToMag(), 
+      string.Format("GIFShiftOffset %d %d %f %f\n", nCal,
+        mWinApp->mShiftCalibrator->GetGIFofsToMag(),
         mWinApp->mShiftCalibrator->GetGIFofsISX(),
         mWinApp->mShiftCalibrator->GetGIFofsISY());
       mFile->WriteString(string);
@@ -5735,7 +5736,7 @@ void CParameterIO::WriteCalibration(CString strFileName)
         string.Format("%d %d\n", i, hParams->baseFocus[i]);
         mFile->WriteString(string);
       }
-    } 
+    }
 
     // Write alpha beam shifts and tilts
     nCal = mWinApp->mScope->GetNumAlphaBeamShifts();
@@ -5766,14 +5767,14 @@ void CParameterIO::WriteCalibration(CString strFileName)
     mWinApp->mScope->GetMinMaxBeamShiftSpots(0, minSpot[0], maxSpot[0]);
     mWinApp->mScope->GetMinMaxBeamShiftSpots(1, minSpot[1], maxSpot[1]);
     if (maxSpot[0] > minSpot[0]) {
-      string.Format("SpotBeamShifts %d %d %d %d\n", minSpot[0], maxSpot[0], minSpot[1], 
+      string.Format("SpotBeamShifts %d %d %d %d\n", minSpot[0], maxSpot[0], minSpot[1],
         maxSpot[1]);
       mFile->WriteString(string);
       for (nCal = 0; nCal < 2; nCal++) {
         k = 2 * nCal * (MAX_SPOT_SIZE + 1);
         if (maxSpot[nCal] > minSpot[nCal]) {
           for (ind = minSpot[nCal]; ind <= maxSpot[nCal]; ind++) {
-            string.Format("%f %f\n", spotBeamShifts[k + 2 * ind], 
+            string.Format("%f %f\n", spotBeamShifts[k + 2 * ind],
               spotBeamShifts[k + 2 * ind + 1]);
             mFile->WriteString(string);
           }
@@ -5813,7 +5814,7 @@ void CParameterIO::WriteCalibration(CString strFileName)
             ratio[j] = spotTables[ind].ratio[i];
             cross[j] = spotTables[ind].crossover[i];
             if (cross[j])
-              cross[j] = mWinApp->mScope->IntensityAfterApertureChange(cross[j], 
+              cross[j] = mWinApp->mScope->IntensityAfterApertureChange(cross[j],
               curAperture, spotCalAper[ind], i, j);
             intensity[j] = mWinApp->mScope->IntensityAfterApertureChange(
               spotTables[ind].intensity[i], curAperture, spotCalAper[ind], i, j);
@@ -5823,7 +5824,7 @@ void CParameterIO::WriteCalibration(CString strFileName)
 
         // Write line if either is nonzero
         if (ratio[0] || ratio[1]) {
-          string.Format("%d %f %f %f %f %f %f\n", i, ratio[0], intensity[0], cross[0], 
+          string.Format("%d %f %f %f %f %f %f\n", i, ratio[0], intensity[0], cross[0],
             ratio[1], intensity[1], cross[1]);
           mFile->WriteString(string);
         }
@@ -5854,7 +5855,7 @@ void CParameterIO::WriteCalibration(CString strFileName)
     mFile->WriteString(string);
     for (i = 1; i <= mWinApp->mScope->GetNumSpotSizes(); i++) {
       string.Format("%f %f %f %f %f %f %f %f\n", lowIAlims[4 * i], highIAlims[4 * i],
-        lowIAlims[4 * i + 1], highIAlims[4 * i + 1], lowIAlims[4 * i + 2], 
+        lowIAlims[4 * i + 1], highIAlims[4 * i + 1], lowIAlims[4 * i + 2],
         highIAlims[4 * i + 2], lowIAlims[4 * i + 3], highIAlims[4 * i + 3]);
       mFile->WriteString(string);
     }
@@ -5862,8 +5863,8 @@ void CParameterIO::WriteCalibration(CString strFileName)
     // Write any Standard LM Focus entries
     for (i = 1; i < MAX_MAGS; i++) {
       if (LMfocTab[2 * i] > -900. || LMfocTab[2 * i + 1] > -900.) {
-        string.Format("StandardLMFocus %d %f %f %d\n", i, LMfocTab[2 * i + 1], 
-          LMfocTab[2 * i], mMagTab[i].mag); 
+        string.Format("StandardLMFocus %d %f %f %d\n", i, LMfocTab[2 * i + 1],
+          LMfocTab[2 * i], mMagTab[i].mag);
         mFile->WriteString(string);
       }
     }
@@ -5875,7 +5876,7 @@ void CParameterIO::WriteCalibration(CString strFileName)
     CString message = "Error writing calibrations to file " + strFileName;
     AfxMessageBox(message, MB_EXCLAME);
     err = 1;
-  } 
+  }
   if (mFile) {
     delete mFile;
     mFile = NULL;
@@ -5914,7 +5915,7 @@ int CParameterIO::ReadShortTermCal(CString strFileName, BOOL ignoreCals)
     // Open the file for reading, verify that it is a calibration file
     mFile = new CStdioFile(strFileName,
       CFile::modeRead |CFile::shareDenyWrite);
-    
+
     err = ReadAndParse(strLine, strItems, MAX_TOKENS);
     if (err)
       retval = 1;
@@ -5922,8 +5923,8 @@ int CParameterIO::ReadShortTermCal(CString strFileName, BOOL ignoreCals)
       "short term calibration")) {
       retval = 1;
     }
-    while (retval == 0 && 
-           (err = ReadSuperParse(strLine, strItems, itemEmpty, itemInt, itemDbl, itemFlt, 
+    while (retval == 0 &&
+           (err = ReadSuperParse(strLine, strItems, itemEmpty, itemInt, itemDbl, itemFlt,
                             MAX_TOKENS)) == 0) {
 
         // Save the nav autosave filename if it belongs to this user
@@ -5977,12 +5978,12 @@ int CParameterIO::ReadShortTermCal(CString strFileName, BOOL ignoreCals)
         }
 
       } else if (NAME_IS("FilterAlignment")) {
-        filtP->cumulNonRunTime = itemInt[5] + timeStamp - 
+        filtP->cumulNonRunTime = itemInt[5] + timeStamp -
           itemInt[6];
 
         // To use a filter alignment, the cumulative non run time must be less than
         // the limit and it should either be the same user or an omega filter
-        if (filtP->cumulNonRunTime < FILTER_LIFETIME_MINUTES && 
+        if (filtP->cumulNonRunTime < FILTER_LIFETIME_MINUTES &&
           (mWinApp->mScope->GetHasOmegaFilter() || strItems[7] == getenv("USERNAME"))) {
           filtP->refineZLPOffset = itemFlt[1];
           filtP->alignedSlitWidth = itemFlt[2];
@@ -6033,18 +6034,18 @@ int CParameterIO::ReadShortTermCal(CString strFileName, BOOL ignoreCals)
         }
 
       } else if (!strItems[0].IsEmpty())
-        mWinApp->AppendToLog("Unrecognized entry in short term calibration file " + 
+        mWinApp->AppendToLog("Unrecognized entry in short term calibration file " +
           strFileName + " : " + strLine);
     }
     if (err > 0)
       retval = err;
-      
+
     mFile->Close();
   }
   catch(CFileException *perr) {
     perr->Delete();
     retval = 1;
-  } 
+  }
   if (mFile) {
     delete mFile;
     mFile = NULL;
@@ -6074,8 +6075,8 @@ void CParameterIO::WriteShortTermCal(CString strFileName)
     &pixelSizes, &gridRotations);
 
   try {
-    // Open the file for writing, 
-    mFile = new CStdioFile(strFileName, CFile::modeCreate | 
+    // Open the file for writing,
+    mFile = new CStdioFile(strFileName, CFile::modeCreate |
       CFile::modeWrite |CFile::shareDenyWrite);
 
     mFile->WriteString("SerialEMShortTermCal\n");
@@ -6084,8 +6085,8 @@ void CParameterIO::WriteShortTermCal(CString strFileName)
         for (k = 0; k < 2; k++) {
           index = i * 4 + j * 2 + k;
           if (doseTables[index].dose) {
-            oneState.Format("DoseCalibration %d %d %f %f %d %d %d\n", i, j, 
-              doseTables[index].intensity, doseTables[index].dose, 
+            oneState.Format("DoseCalibration %d %d %f %f %d %d %d\n", i, j,
+              doseTables[index].intensity, doseTables[index].dose,
               doseTables[index].timeStamp, k, doseTables[index].currentAperture);
             mFile->WriteString(oneState);
           }
@@ -6107,16 +6108,16 @@ void CParameterIO::WriteShortTermCal(CString strFileName)
     for (i = 1; i < MAX_MAGS; i++) {
       for (j = 0; j < MAX_CAMERAS; j++) {
         if (mMagTab[i].calibrated[j]) {
-          oneState.Format("ImageShiftMatrix %d %d %d %f %f %f %f\n", 
-            mMagTab[i].calibrated[j], 
+          oneState.Format("ImageShiftMatrix %d %d %d %f %f %f %f\n",
+            mMagTab[i].calibrated[j],
             i, j, mMagTab[i].matIS[j].xpx, mMagTab[i].matIS[j].xpy,
             mMagTab[i].matIS[j].ypx, mMagTab[i].matIS[j].ypy);
           mFile->WriteString(oneState);
         }
         if (mMagTab[i].stageCalibrated[j]) {
-          oneState.Format("StageCalibration %d %d %d %f %f %f %f %f\n",  
-            mMagTab[i].stageCalibrated[j], i, j, mMagTab[i].matStage[j].xpx, 
-            mMagTab[i].matStage[j].xpy, mMagTab[i].matStage[j].ypx, 
+          oneState.Format("StageCalibration %d %d %d %f %f %f %f %f\n",
+            mMagTab[i].stageCalibrated[j], i, j, mMagTab[i].matStage[j].xpx,
+            mMagTab[i].matStage[j].xpy, mMagTab[i].matStage[j].ypx,
             mMagTab[i].matStage[j].ypy, mMagTab[i].stageCalFocus[j]);
           mFile->WriteString(oneState);
         }
@@ -6125,7 +6126,7 @@ void CParameterIO::WriteShortTermCal(CString strFileName)
 
     for (i = 0; i < (int)pixSizCamera->size(); i++) {
       oneState.Format("FoundPixelSize %d %d %d %d %f %f\n", foundPix, pixSizCamera->at(i),
-        pixSizMagInd->at(i), addedRotation->at(i), pixelSizes->at(i), 
+        pixSizMagInd->at(i), addedRotation->at(i), pixelSizes->at(i),
         gridRotations->at(i));
       mFile->WriteString(oneState);
     }
@@ -6160,7 +6161,7 @@ void CParameterIO::WriteShortTermCal(CString strFileName)
 
     if (mWinApp->mScope->GetScopeCanFlashFEG())
       WriteInt("FEGFlashCount", mWinApp->mScope->GetFegFlashCounter());
-    
+
     for (std::map<std::string, int>::iterator it = customTimes->begin();
       it != customTimes->end(); it++) {
       oneState.Format("LastCustomTime %s %d\n", it->first.c_str(), it->second);
@@ -6179,14 +6180,14 @@ void CParameterIO::WriteShortTermCal(CString strFileName)
     CString message = "Error writing short-term calibrations to file " + strFileName;
     AfxMessageBox(message, MB_EXCLAME);
     err = 1;
-  } 
+  }
   if (mFile) {
     delete mFile;
     mFile = NULL;
   }
 }
 
-  
+
 int CParameterIO::ReadFlybackTimes(CString & fileName)
 {
   CArray<FlybackTime, FlybackTime> *fbArray = mWinApp->mCalibTiming->GetFlybackArray();
@@ -6203,7 +6204,7 @@ int CParameterIO::ReadFlybackTimes(CString & fileName)
     // Open the file for reading, verify that it is a flyback time file
     mFile = new CStdioFile(fileName,
       CFile::modeRead |CFile::shareDenyWrite);
-    
+
     err = ReadAndParse(strLine, strItems, MAX_TOKENS);
     if (err)
       retval = 1;
@@ -6211,8 +6212,8 @@ int CParameterIO::ReadFlybackTimes(CString & fileName)
       retval = 1;
       AfxMessageBox("File not recognized as a flyback time file", MB_EXCLAME);
     }
-    while (retval == 0 && 
-      (err = ReadSuperParse(strLine, strItems, itemEmpty, itemInt, itemDbl, 
+    while (retval == 0 &&
+      (err = ReadSuperParse(strLine, strItems, itemEmpty, itemInt, itemDbl,
                             MAX_TOKENS)) == 0) {
         if (itemInt[2] <= 0 || itemInt[3] <= 0 || itemEmpty[7]) {
           AfxMessageBox("Incorrect entry in flyback time file "
@@ -6229,17 +6230,17 @@ int CParameterIO::ReadFlybackTimes(CString & fileName)
           fbTime.startupDelay = (float)itemDbl[7];
           fbArray->Add(fbTime);
         }
-      
+
     }
     if (err > 0)
       retval = err;
-      
+
     mFile->Close();
   }
   catch(CFileException *perr) {
     perr->Delete();
     retval = 1;
-  } 
+  }
   delete mFile;
   mFile = NULL;
   return retval;
@@ -6256,13 +6257,13 @@ void CParameterIO::WriteFlybackTimes(CString & fileName)
   try {
 
     // Open the file for writing, and wrire each line
-    mFile = new CStdioFile(fileName, CFile::modeCreate | 
+    mFile = new CStdioFile(fileName, CFile::modeCreate |
       CFile::modeWrite |CFile::shareDenyWrite);
     mFile->WriteString("SerialEMFlybackTimes\n");
     for (int i = 0; i < fbArray->GetSize(); i++) {
       fbTime = fbArray->GetAt(i);
-      strn.Format("%s %d %4d %2d %6.3f %6.1f %.3f\n", fbTime.dateTime, fbTime.binning, 
-        fbTime.xSize, fbTime.magIndex, fbTime.exposure, fbTime.flybackTime, 
+      strn.Format("%s %d %4d %2d %6.3f %6.1f %.3f\n", fbTime.dateTime, fbTime.binning,
+        fbTime.xSize, fbTime.magIndex, fbTime.exposure, fbTime.flybackTime,
         fbTime.startupDelay);
       mFile->WriteString(strn);
     }
@@ -6272,7 +6273,7 @@ void CParameterIO::WriteFlybackTimes(CString & fileName)
     perr->Delete();
     CString message = "Error writing measured flyback times to file " + fileName;
     AfxMessageBox(message, MB_EXCLAME);
-  } 
+  }
   delete mFile;
   mFile = NULL;
 }
@@ -6298,7 +6299,7 @@ void CParameterIO::SetDefaultCameraControls(int which, ControlSet *cs,
     cs->exposure = 0.3f;
     cs->shuttering = USE_BEAM_BLANK;
     break;
-    
+
   case FOCUS_CONSET:
     // Default values for focus Control Set
     InitializeControlSet(cs, cameraSizeX, cameraSizeY);
@@ -6310,7 +6311,7 @@ void CParameterIO::SetDefaultCameraControls(int which, ControlSet *cs,
     cs->right =cameraSizeX * 3 / 4;
     cs->bottom = cameraSizeY * 3 / 4;
     break;
-    
+
   case TRIAL_CONSET:
     // Default values for Trial Control Set
     InitializeControlSet(cs, cameraSizeX, cameraSizeY);
@@ -6318,11 +6319,11 @@ void CParameterIO::SetDefaultCameraControls(int which, ControlSet *cs,
     cs->exposure = 0.2f;
     cs->shuttering = USE_BEAM_BLANK;
     break;
-    
+
   case RECORD_CONSET:
     // Default values for Record 2 Control Set
     InitializeControlSet(cs, cameraSizeX, cameraSizeY);
-    cs->binning = minBin;  
+    cs->binning = minBin;
     cs->exposure = 1.0f;
     cs->shuttering = USE_BEAM_BLANK;
     cs->numAverage = 4;
@@ -6335,7 +6336,7 @@ void CParameterIO::SetDefaultCameraControls(int which, ControlSet *cs,
     cs->exposure = 0.8f;
     cs->shuttering = USE_BEAM_BLANK;
     break;
-    
+
   case PREVIEW_CONSET:
     // Default values for Preview Control Set
     InitializeControlSet(cs, cameraSizeX, cameraSizeY);
@@ -6344,7 +6345,7 @@ void CParameterIO::SetDefaultCameraControls(int which, ControlSet *cs,
     cs->shuttering = USE_BEAM_BLANK;
     break;
   }
-  mWinApp->mCamera->FindNearestBinning(cs->binning, camParams->binnings, 
+  mWinApp->mCamera->FindNearestBinning(cs->binning, camParams->binnings,
     camParams->numBinnings, binInd, realBin);
   cs->binning = realBin;
 }
@@ -6382,15 +6383,15 @@ void CParameterIO::InitializeControlSet(ControlSet * cs, int sizeX, int sizeY)
 ///////////////////////////////////////////////////////////////////////////////////
 // UTILITIES
 
-int CParameterIO::ReadAndParse(CString &strLine, CString *strItems, int maxItems, 
+int CParameterIO::ReadAndParse(CString &strLine, CString *strItems, int maxItems,
   bool useQuotes)
 {
   return ReadAndParse(mFile, strLine, strItems, maxItems, useQuotes);
 }
 
-// Read a line from the given file into strLine and parse into strItems, at most maxItems 
+// Read a line from the given file into strLine and parse into strItems, at most maxItems
 // Returns 0 for something read, -1 for EOF, and 1 for error
-int CParameterIO::ReadAndParse(CStdioFile *file, CString &strLine, CString *strItems, 
+int CParameterIO::ReadAndParse(CStdioFile *file, CString &strLine, CString *strItems,
   int maxItems, bool useQuotes)
 {
   try {
@@ -6413,7 +6414,7 @@ int CParameterIO::ReadSuperParse(CString &strLine, CString *strItems, BOOL *item
   return ReadSuperParse(strLine, strItems, itemEmpty, itemInt, itemDbl, NULL, maxItems);
 }
 
-int CParameterIO::ReadSuperParse(CString &strLine, CString *strItems, BOOL *itemEmpty, 
+int CParameterIO::ReadSuperParse(CString &strLine, CString *strItems, BOOL *itemEmpty,
   int *itemInt, double *itemDbl, float *itemFlt, int maxItems)
 {
   int err = ReadAndParse(strLine, strItems, maxItems);
@@ -6433,7 +6434,7 @@ int CParameterIO::ReadSuperParse(CString &strLine, CString *strItems, BOOL *item
 
 // Parse a string into separate items in an array of CStrings
 // AllowComment = 1 allows comment in first token, > 1 allows any comment
-int CParameterIO::ParseString(CString strLine, CString *strItems, int maxItems, 
+int CParameterIO::ParseString(CString strLine, CString *strItems, int maxItems,
   bool useQuotes, int allowComment)
 {
   int i;
@@ -6478,7 +6479,7 @@ void CParameterIO::FindToken(CString &strCopy, CString &strItem, bool useQuotes,
   // If parsing quotes, see if there is one before this space and not at end of line
   if (useQuotes) {
     quoteInd = strCopy.Find(quoteChar);
-    if (quoteInd >= 0 && (quoteInd < index || index < 0) && 
+    if (quoteInd >= 0 && (quoteInd < index || index < 0) &&
       quoteInd < strCopy.GetLength() - 1) {
 
       // Get closing quote: ignore if none
@@ -6546,13 +6547,13 @@ int CParameterIO::CheckForByteOrderMark(CString &item0, const char * tag,
   CString mess;
   int len = item0.GetLength();
   unsigned char first = (unsigned char)item0.GetAt(0);
-  if (len >= 3 && first == 0xEF && (unsigned char)item0.GetAt(1) == 0xBB && 
+  if (len >= 3 && first == 0xEF && (unsigned char)item0.GetAt(1) == 0xBB &&
     (unsigned char)item0.GetAt(2) == 0xBF)
     item0 = item0.Mid(3);
   if (item0 == tag)
     return 0;
   if (first == 0xFE || first == 0xFF || first == 0xF7 || first == 0xDD || first == 0x0E
-    || first == 0xFB || first == 0x84 || 
+    || first == 0xFB || first == 0x84 ||
     (!first && len > 1 && (unsigned char)item0.GetAt(2) == 0xFE))
     mess.Format("%s is in a strange encoding and cannot be read as a %s file",
     (LPCTSTR)filename, descrip);
@@ -6597,7 +6598,7 @@ void CParameterIO::WritePlacement(const char *string, int open, WINDOWPLACEMENT 
 }
 
 // Read one macro after "Macro" has been found
-int CParameterIO::ReadOneMacro(int iset, CString &strLine, CString *strItems, 
+int CParameterIO::ReadOneMacro(int iset, CString &strLine, CString *strItems,
   int maxMacros)
 {
   int err;
@@ -6605,7 +6606,7 @@ int CParameterIO::ReadOneMacro(int iset, CString &strLine, CString *strItems,
     return 1;
   CString *macros = mWinApp->GetMacros();
 
-  // If the set number is past the max in the version that wrote the file, it is a 
+  // If the set number is past the max in the version that wrote the file, it is a
   // one-line script and should be shifted to be in same relative spot here
   if (mMaxReadInMacros && iset >= mMaxReadInMacros)
     iset += MAX_MACROS - mMaxReadInMacros;
@@ -6685,9 +6686,9 @@ void CParameterIO::WriteDouble(CString format, double dVal)
 }
 
 
-// Convert an entry list to a single string.  Type = 1 for a set of doubles, 
+// Convert an entry list to a single string.  Type = 1 for a set of doubles,
 // 2 for int,double, 3 for int, 4 for short.  precision is # of decimal places
-CString CParameterIO::EntryListToString(int type, int precision, int numVals, int *iVals, 
+CString CParameterIO::EntryListToString(int type, int precision, int numVals, int *iVals,
                                         double *dVals, short *sVals)
 {
   char format[10];
@@ -6716,10 +6717,10 @@ CString CParameterIO::EntryListToString(int type, int precision, int numVals, in
   return str;
 }
 
-// Convert a string containing an entry list to list of values.  Type = 1 for doubles 
+// Convert a string containing an entry list to list of values.  Type = 1 for doubles
 // only, 2 for int,double, 3 for int.  Returns 2 for too many entries, 1 for format error
 // such as too few values in entry, -1 for format warning (possibly extra values)
-int CParameterIO::StringToEntryList(int type, CString str, int &numVals, int *iVals, 
+int CParameterIO::StringToEntryList(int type, CString str, int &numVals, int *iVals,
   double *dVals, int maxVals, bool splitCommas, short *sVals)
 {
   int err, ind, ind2;
@@ -6775,7 +6776,7 @@ int CParameterIO::StringToEntryList(int type, CString str, int &numVals, int *iV
   return err ? err: twocomma;
 }
 
-void CParameterIO::ReadBadColumns(CString *strItems, UShortVec &badColumnStart, 
+void CParameterIO::ReadBadColumns(CString *strItems, UShortVec &badColumnStart,
                                   ShortVec &badColumnWidth)
 {
   CString message;
@@ -6787,8 +6788,8 @@ void CParameterIO::ReadBadColumns(CString *strItems, UShortVec &badColumnStart,
   }
 }
 
-void CParameterIO::ReadPartialBad(CString *strItems, int *itemInt, UShortVec &partialBadCol, 
-                                  ShortVec &partialBadWidth, UShortVec &partialBadStartY, 
+void CParameterIO::ReadPartialBad(CString *strItems, int *itemInt, UShortVec &partialBadCol,
+                                  ShortVec &partialBadWidth, UShortVec &partialBadStartY,
                                   UShortVec &partialBadEndY,
                                   const char *colText, CString &strLine)
 {
@@ -6833,8 +6834,8 @@ void CParameterIO::ReportSpecialOptions(void)
     PrintAnOption(any, "Special option is set NOT to use antialiased reduction instead"
       " of binning for all K2/K3 shots");
   if (mWinApp->mScope->GetNormAllOnMagChange())
-    PrintfToLog("Special option is set to normalize all lenses on %s", 
-    mWinApp->mScope->GetNormAllOnMagChange() > 1 ? "all mag changes" : 
+    PrintfToLog("Special option is set to normalize all lenses on %s",
+    mWinApp->mScope->GetNormAllOnMagChange() > 1 ? "all mag changes" :
     "mag changes within LM");
   if (mWinApp->mScope->GetSkipBlankingInLowDose())
     PrintAnOption(any, "Special option is set to skip blanking in Low Dose when the "
@@ -6865,7 +6866,7 @@ void CParameterIO::PrintAnOption(bool &anyDone, const char * mess)
 }
 
 // Outputs a short or float vector in as many lines as it takes
-void CParameterIO::OutputVector(const char *key, int size, ShortVec *shorts, 
+void CParameterIO::OutputVector(const char *key, int size, ShortVec *shorts,
   FloatVec *floats)
 {
   CString oneState, entry;
@@ -6911,7 +6912,7 @@ void CParameterIO::StoreFloatsPerBinning(CString *strItems, const char *descrip,
   CString message, cam;
   int index = 0;
   while (!strItems[index + 1].IsEmpty() && index < MAX_BINNINGS) {
-    values[index] = 
+    values[index] =
       (float)atof((LPCTSTR)strItems[index + 1]);
     if (values[index] <= 0.) {
       if (iset >= 0)
@@ -6950,9 +6951,9 @@ int CParameterIO::MacroSetProperty(CString name, double value)
 #define PROP_TEST_SECT1
 #include "PropertyTests.h"
 #undef PROP_TEST_SECT1
-  else 
+  else
     recognized = false;
-      
+
   if (recognized) {
   }
 #define PROP_TEST_SECT12
@@ -6966,9 +6967,9 @@ int CParameterIO::MacroSetProperty(CString name, double value)
 #define PROP_TEST_SECT2
 #include "PropertyTests.h"
 #undef PROP_TEST_SECT2
-  else 
+  else
     recognized2 = false;
-      
+
   if (recognized || recognized2) {
     recognized = true;
   }
@@ -7059,9 +7060,9 @@ void CParameterIO::UserSetProperty(void)
 #define PROP_TEST_SECT1
 #include "PropertyTests.h"
 #undef PROP_TEST_SECT1
-  else 
+  else
     recognized = false;
-      
+
   if (recognized) {
   }
 #define PROP_TEST_SECT12
@@ -7074,9 +7075,9 @@ void CParameterIO::UserSetProperty(void)
 #define PROP_TEST_SECT2
 #include "PropertyTests.h"
 #undef PROP_TEST_SECT2
-  else 
+  else
     recognized2 = false;
-      
+
   if (recognized || recognized2) {
     recognized = true;
   }
@@ -7176,9 +7177,9 @@ int CParameterIO::MacroGetProperty(CString name, double &value)
 #define PROP_TEST_SECT1
 #include "PropertyTests.h"
 #undef PROP_TEST_SECT1
-  else 
+  else
     recognized = false;
-      
+
   if (recognized) {
   }
 #define PROP_TEST_SECT12
@@ -7192,9 +7193,9 @@ int CParameterIO::MacroGetProperty(CString name, double &value)
 #define PROP_TEST_SECT2
 #include "PropertyTests.h"
 #undef PROP_TEST_SECT2
-  else 
+  else
     recognized2 = false;
-      
+
   if (recognized || recognized2) {
     recognized = true;
   }
@@ -7239,7 +7240,7 @@ int CParameterIO::MacroGetProperty(CString name, double &value)
   else if (name.CompareNoCase(a) == 0) \
     value = camP->b;
 
-int CParameterIO::MacroGetCamProperty(CameraParameters *camP, CString &name, 
+int CParameterIO::MacroGetCamProperty(CameraParameters *camP, CString &name,
   double &value)
 {
   bool recognized = true;
@@ -7300,9 +7301,9 @@ int CParameterIO::MacroGetSetting(CString name, double &value)
 #define SET_TEST_SECT1
 #include "SettingsTests.h"
 #undef SET_TEST_SECT1
-  else 
+  else
     recognized = false;
-      
+
   if (recognized) {
   }
 #define SET_TEST_SECT15
@@ -7317,9 +7318,9 @@ int CParameterIO::MacroGetSetting(CString name, double &value)
 #define SET_TEST_SECT2
 #include "SettingsTests.h"
 #undef SET_TEST_SECT2
-  else 
+  else
     recognized2 = false;
-      
+
   if (recognized || recognized2) {
     recognized = true;
   }
@@ -7387,9 +7388,9 @@ int CParameterIO::MacroSetSetting(CString name, double value)
 #define SET_TEST_SECT1
 #include "SettingsTests.h"
 #undef SET_TEST_SECT1
-  else 
+  else
     recognized = false;
-      
+
   if (recognized) {
   }
 #define SET_TEST_SECT15

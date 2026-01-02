@@ -6,6 +6,10 @@
 #include "RadioChoiceDlg.h"
 #include "afxdialogex.h"
 
+#if defined(_DEBUG) && defined(_CRTDBG_MAP_ALLOC)
+#define new DEBUG_NEW
+#endif
+
 
 // CRadioChoiceDlg dialog
 

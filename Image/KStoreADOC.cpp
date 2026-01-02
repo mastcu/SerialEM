@@ -6,6 +6,10 @@
 #include "..\Shared\iimage.h"
 #include "..\EMimageExtra.h"
 
+#if defined(_DEBUG) && defined(_CRTDBG_MAP_ALLOC)
+#define new DEBUG_NEW
+#endif
+
 #define MDOC_FLOAT(nam, ini, tst, sym, str) const char *sym = str;
 #define MDOC_INTEGER(nam, ini, sym, str) const char *sym = str;
 #define MDOC_TWO_FLOATS(nam1, nam2, ini, tst, sym, str) const char *sym = str;
@@ -33,7 +37,7 @@ KStoreADOC::KStoreADOC(CString filename)
   // Read the Adoc - make sure it is an image series again
   if (AdocAcquireMutex()) {
     mAdocIndex = AdocRead((char *)(LPCTSTR)filename);
-    if (mAdocIndex >= 0 && AdocGetInteger(ADOC_GLOBAL, 0, ADOC_SERIES, &value) || 
+    if (mAdocIndex >= 0 && AdocGetInteger(ADOC_GLOBAL, 0, ADOC_SERIES, &value) ||
       value <= 0) {
         AdocClear(mAdocIndex);
         mAdocIndex = -1;
@@ -42,7 +46,7 @@ KStoreADOC::KStoreADOC(CString filename)
     // If there is depth, there must be a size and a mode
     if (mAdocIndex >= 0) {
       mDepth = AdocGetNumberOfSections(ADOC_IMAGE);
-      if (mDepth > 0 && (AdocGetTwoIntegers(ADOC_GLOBAL, 0, ADOC_SIZE, &mWidth, &mHeight) 
+      if (mDepth > 0 && (AdocGetTwoIntegers(ADOC_GLOBAL, 0, ADOC_SIZE, &mWidth, &mHeight)
         || AdocGetInteger(ADOC_GLOBAL, 0, ADOC_MODE, &mMode))) {
           AdocClear(mAdocIndex);
           mAdocIndex = -1;
@@ -75,7 +79,7 @@ KStoreADOC::KStoreADOC(CString inFilename , FileOptions inFileOpt)
     } else {
 
       // Just to get the path!  Create and remove the file.
-      cFile = new CFile((LPCTSTR)inFilename, CFile::modeCreate | 
+      cFile = new CFile((LPCTSTR)inFilename, CFile::modeCreate |
         CFile::modeWrite |CFile::shareDenyWrite);
       mFilename = cFile->GetFilePath();
       cFile->Close();
@@ -112,7 +116,7 @@ CString KStoreADOC::IsADOC(CString filename)
   CStdioFile *cFile = NULL;
   CString retval = "";
   try {
-    cFile = new CStdioFile(filename, CFile::modeRead |CFile::shareDenyWrite | 
+    cFile = new CStdioFile(filename, CFile::modeRead |CFile::shareDenyWrite |
       CFile::modeNoInherit);
     if (cFile->ReadString(str)) {
       str = str.Trim();
@@ -125,10 +129,10 @@ CString KStoreADOC::IsADOC(CString filename)
         }
       }
     }
-  } 
+  }
   catch(CFileException *perr) {
     perr->Delete();
-  } 
+  }
   if (cFile) {
     cFile->Close();
     delete cFile;
@@ -172,7 +176,7 @@ int KStoreADOC::setMode(int inMode)
 int KStoreADOC::AppendImage(KImage *inImage)
 {
   int err;
-  if (inImage == NULL) 
+  if (inImage == NULL)
     return 1;
   if (AdocGetMutexSetCurrent(mAdocIndex) < 0)
     return 14;
@@ -186,7 +190,7 @@ int KStoreADOC::AppendImage(KImage *inImage)
   }
   mCur.z = mDepth;
   AdocReleaseMutex();
-    
+
   // Write image data to end of file.
   err = WriteSection(inImage, mDepth);
   if (AdocAcquireMutex()) {
@@ -205,7 +209,7 @@ int KStoreADOC::WriteSection (KImage *inImage, int inSect)
   CString fullname;
   int dirInd, extInd, err, appended = 0;
 
-  if (inImage == NULL) 
+  if (inImage == NULL)
     return 1;
   if (inSect > mDepth)
     return 12;
@@ -340,7 +344,7 @@ int KStoreADOC::SetValuesFromExtra(KImage *inImage, char *sectName, int index)
 
   // BE SURE TO ADD NEW VALUES TO THE LOAD FUNCTION SO THEY AREN'T LOST IN BIDIR SERIES
   if (extra->m_iMontageX >= 0) {
-    if (AdocSetThreeIntegers(sectName, index, ADOC_PCOORD, 
+    if (AdocSetThreeIntegers(sectName, index, ADOC_PCOORD,
       extra->m_iMontageX, extra->m_iMontageY, extra->m_iMontageZ))
       return 1;
     if (extra->mSuperMontX >= 0 && AdocSetTwoIntegers(sectName, index, ADOC_SUPER,
@@ -366,7 +370,7 @@ int KStoreADOC::SetValuesFromExtra(KImage *inImage, char *sectName, int index)
 // Get values from the Adoc and populate an extra structure, creating one if needed
 // typext is returned with the masks for the values gotten
 // Assumes current adoc is set and mutex is claimed
-int KStoreADOC::LoadExtraFromValues(KImage *inImage, int &typext, char *sectName, 
+int KStoreADOC::LoadExtraFromValues(KImage *inImage, int &typext, char *sectName,
                                     int index)
 {
   EMimageExtra *extra = (EMimageExtra *)inImage->GetUserData();
@@ -397,13 +401,13 @@ int KStoreADOC::LoadExtraFromValues(KImage *inImage, int &typext, char *sectName
     free(frameDir);                     \
   }
 
-int KStoreADOC::LoadExtraFromValues(EMimageExtra *extra, int &typext, char *sectName, 
+int KStoreADOC::LoadExtraFromValues(EMimageExtra *extra, int &typext, char *sectName,
                                     int index)
 {
   char *frameDir;
   if (!AdocGetFloat(sectName, index, ADOC_TILT, &extra->m_fTilt))
     typext |= TILT_MASK;
-  if (!AdocGetThreeIntegers(sectName, index, ADOC_PCOORD, &extra->m_iMontageX, 
+  if (!AdocGetThreeIntegers(sectName, index, ADOC_PCOORD, &extra->m_iMontageX,
     &extra->m_iMontageY, &extra->m_iMontageZ))
     typext |= MONTAGE_MASK;
   if (!AdocGetTwoFloats(sectName, index, ADOC_STAGE, &extra->mStageX, &extra->mStageY))
@@ -418,7 +422,7 @@ int KStoreADOC::LoadExtraFromValues(EMimageExtra *extra, int &typext, char *sect
     &extra->mMean);
 
 #include "MdocDefines.h"
-  
+
   return 0;
 }
 #undef MDOC_FLOAT

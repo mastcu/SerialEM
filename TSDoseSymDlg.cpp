@@ -1,6 +1,6 @@
 // TSDoseSymDlg.cpp : Dialog to set parameters for dose-symmetric tilting
 //
-// Copyright (C) 2003-2019 by  the Regents of the University of
+// Copyright (C) 2003-2026 by  the Regents of the University of
 // Colorado.  See Copyright.txt for full notice of copyright and limitations.
 //
 // Author: David Mastronarde
@@ -12,6 +12,10 @@
 #include "TSController.h"
 #include "EMbufferManager.h"
 #include "CameraController.h"
+
+#if defined(_DEBUG) && defined(_CRTDBG_MAP_ALLOC)
+#define new DEBUG_NEW
+#endif
 
 FloatVec CTSDoseSymDlg::mIdealAnglesToUse;
 bool CTSDoseSymDlg::mIgnoreAnglesToUse = false;
@@ -258,7 +262,7 @@ void CTSDoseSymDlg::ManageSummary()
   ShortVec directions;
   int ind, final, numReversals = 0;
   float sumDiffs = 0.;
-  FindDoseSymmetricAngles(mTSparam, idealAngles, directions, ind, final, 
+  FindDoseSymmetricAngles(mTSparam, idealAngles, directions, ind, final,
     &m_strAngleSummary);
   for (ind = 2; ind < (int)idealAngles.size(); ind++) {
     if (!BOOL_EQUIV(idealAngles[ind] < mTSparam.bidirAngle,
@@ -325,7 +329,7 @@ void CTSDoseSymDlg::FindDoseSymmetricAngles(TiltSeriesParam &tsParam,
       } else
         secondDone = true;
     }
-    
+
     // Manage summary
     if (summary && !str.IsEmpty() && (addedSecond || addedFirst)) {
       if (uniStarted) {
@@ -337,7 +341,7 @@ void CTSDoseSymDlg::FindDoseSymmetricAngles(TiltSeriesParam &tsParam,
             *summary += ", ";
           *summary += str;
       } else {
-        str.Format(" -- unidirectional from %.1f deg", 
+        str.Format(" -- unidirectional from %.1f deg",
           (float)curInd * tsParam.tiltIncrement);
         *summary += str;
         uniStarted = true;
@@ -381,7 +385,7 @@ void CTSDoseSymDlg::FindDoseSymmetricAngles(TiltSeriesParam &tsParam,
     for (ind = anchorIndex + 2; ind < (int)idealAngles.size(); ind++)
       if (!BOOL_EQUIV(idealAngles[ind] < tsParam.bidirAngle,
         idealAngles[ind - 1] < tsParam.bidirAngle)) {
-        if (ind - anchorIndex <= lastRealGroup || 
+        if (ind - anchorIndex <= lastRealGroup ||
           ind - anchorIndex < tsParam.dosymMinUniForAnchor)
           anchorIndex = -1;
         else
@@ -393,7 +397,7 @@ void CTSDoseSymDlg::FindDoseSymmetricAngles(TiltSeriesParam &tsParam,
 }
 
 // Given a list of angles, check its validity and set it as list to use
-int CTSDoseSymDlg::SetAnglesToUse(TiltSeriesParam &tsParam, FloatVec &angles, 
+int CTSDoseSymDlg::SetAnglesToUse(TiltSeriesParam &tsParam, FloatVec &angles,
   CString &mess)
 {
   FloatVec idealAngles;

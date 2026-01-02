@@ -7,6 +7,10 @@
 #include "EMscope.h"
 #include "TSController.h"
 
+#if defined(_DEBUG) && defined(_CRTDBG_MAP_ALLOC)
+#define new DEBUG_NEW
+#endif
+
 
 // CTSPolicyDlg dialog
 
@@ -86,7 +90,7 @@ END_MESSAGE_MAP()
 
 
 // CTSPolicyDlg message handlers
-void CTSPolicyDlg::OnOK() 
+void CTSPolicyDlg::OnOK()
 {
   UpdateData(true);
   mTSController->SetLDDimRecordPolicy(m_iDimRecord);
@@ -105,7 +109,7 @@ void CTSPolicyDlg::OnOK()
 	CBaseDlg::OnOK();
 }
 
-BOOL CTSPolicyDlg::OnInitDialog() 
+BOOL CTSPolicyDlg::OnInitDialog()
 {
 	CBaseDlg::OnInitDialog();
   mTSController = mWinApp->mTSController;

@@ -8,9 +8,13 @@
 #include "CameraController.h"
 #include "PiezoAndPPControl.h"
 
+#if defined(_DEBUG) && defined(_CRTDBG_MAP_ALLOC)
+#define new DEBUG_NEW
+#endif
+
 typedef int (*InfoFunc)(const char **, int *, int *);
 typedef int (*CallFunc)(int, const char **, int *, int *, int *);
-typedef int (*CallFuncEx)(int, const char **, int *, int *, int *, int *, int *, 
+typedef int (*CallFuncEx)(int, const char **, int *, int *, int *, int *, int *,
                           double *, double *, double *, double *, const char **);
 typedef void (*AppPtrFunc)(CSerialEMApp *);
 
@@ -362,8 +366,8 @@ int CPluginManager::LoadPlugins(void)
           "Uninitialize");
         if (!newPlug->scriptLangFuncs->RunScript || (newPlug->scriptLangFuncs->Initialize
           && newPlug->scriptLangFuncs->Initialize())) {
-          mess.Format("Tried to load %s as a script language plugin but %s", 
-            FindFileData.cFileName, newPlug->scriptLangFuncs->RunScript ? 
+          mess.Format("Tried to load %s as a script language plugin but %s",
+            FindFileData.cFileName, newPlug->scriptLangFuncs->RunScript ?
             "its Initialize function gave an error" :
             "could not resolve a RunScript function");
           mWinApp->AppendToLog(mess, action);
@@ -372,7 +376,7 @@ int CPluginManager::LoadPlugins(void)
           continue;
         }
       }
-      
+
       // Get piezo plugin functions
       if (flags & PLUGFLAG_PIEZO) {
         newPlug->piezoFuncs = new PiezoPluginFuncs;
@@ -395,7 +399,7 @@ int CPluginManager::LoadPlugins(void)
         }
       }
 
-      for (i = 0; i < numFuncs; i++) { 
+      for (i = 0; i < numFuncs; i++) {
         if (flags & PLUGFLAG_INFOEX)
           err = getCallEx(i, &namep, &newCall.numInts, &newCall.numDbls, &newCall.ifString,
           &newCall.flags, &j, &dum1, &dum2, &dum3, &dum4, &actionp);
@@ -407,7 +411,7 @@ int CPluginManager::LoadPlugins(void)
         newCall.func = (PluginFunction)GetProcAddress(module, (LPCSTR)newCall.name);
 
         // Look up tilt series action and warn if it doesn't match
-        if (newCall.func && (flags & PLUGFLAG_TSCALLS) && 
+        if (newCall.func && (flags & PLUGFLAG_TSCALLS) &&
           (newCall.flags & PLUGCALL_TSACTION)) {
             mAnyTSplugins = true;
             newCall.beforeTSaction = mWinApp->mTSController->LookupActionFromText(actionp);
@@ -415,13 +419,13 @@ int CPluginManager::LoadPlugins(void)
               mess.Format("WARNING: For plugin %s, function %s:\r\n   the string %s does "
                 "not match a TS action", newPlug->shortName, namep, actionp);
               mWinApp->AppendToLog(mess, action);
-            } else if (newCall.ifString || newCall.numInts > 1 || newCall.numDbls > 2 || 
+            } else if (newCall.ifString || newCall.numInts > 1 || newCall.numDbls > 2 ||
               (newCall.numInts && newCall.numDbls)) {
                 mess.Format("WARNING: For plugin %s, function %s:\r\n   the number or type "
-                  "of arguments does not allow it to be called as a TS action", 
+                  "of arguments does not allow it to be called as a TS action",
                   newPlug->shortName, namep);
                 mWinApp->AppendToLog(mess, action);
-                newCall.beforeTSaction = -1; 
+                newCall.beforeTSaction = -1;
             }
         }
         if (newCall.func)
@@ -435,12 +439,12 @@ int CPluginManager::LoadPlugins(void)
         typeStr = "piezo ";
       if (numFuncs)
         mess.Format("Loaded %splugin %s (named %s, flags %x) and resolved %d of %d script-callable "
-        "functions", (LPCTSTR)typeStr, FindFileData.cFileName, 
+        "functions", (LPCTSTR)typeStr, FindFileData.cFileName,
         newPlug->shortName, flags, newPlug->calls.GetSize(), numFuncs);
       else
         mess.Format("Loaded %splugin %s (named %s, flags %x)%s", (LPCTSTR)typeStr,
         FindFileData.cFileName, newPlug->shortName, flags,
-        (flags & (PLUGFLAG_CAMERA | PLUGFLAG_SCOPE)) ? 
+        (flags & (PLUGFLAG_CAMERA | PLUGFLAG_SCOPE)) ?
         "" : " with no script-callable functions");
       SEMTrace('1', "%s", (LPCTSTR)mess);
 
@@ -449,15 +453,15 @@ int CPluginManager::LoadPlugins(void)
     DWORD dwError = GetLastError();
     FindClose(hFind);
     if (dwError != ERROR_NO_MORE_FILES)
-      mWinApp->AppendToLog(CString("An error occurred getting filenames in the ") + 
+      mWinApp->AppendToLog(CString("An error occurred getting filenames in the ") +
       CString(dirLoop ? "Plugins" : "SerialEM executable") + "directory", action);
   }
   if (twoScopes)
     mScopePlugIndex = -1;
-   
+
   return (int)mPlugins.GetSize();
 }
-  
+
 CString CPluginManager::GetScopePluginName()
 {
   PluginData *plugin;
@@ -488,7 +492,7 @@ void CPluginManager::ReleasePlugins(void)
 }
 
 double CPluginManager::ExecuteCommand(CString strLine, int *itemInt, double *itemDbl,
-  BOOL *itemEmpty, CString &report, double &outD1, double &outD2, double &outD3, 
+  BOOL *itemEmpty, CString &report, double &outD1, double &outD2, double &outD3,
   int &numOut, CString &retString, int &err, CString *strItems)
 {
   CString mess;
@@ -518,7 +522,7 @@ double CPluginManager::ExecuteCommand(CString strLine, int *itemInt, double *ite
     AfxMessageBox(mess + strLine, MB_OK);
     return 0.;
   }
-    
+
   for (ind = 0; ind < plugin->calls.GetSize(); ind++) {
     call = plugin->calls[ind];
     if (call.name == strItems[2])
@@ -553,7 +557,7 @@ double CPluginManager::ExecuteCommand(CString strLine, int *itemInt, double *ite
     mWinApp->mMacroProcessor->JustStripItems(strLine, 2 + args, mess);
 
   if (call.ifString >= 0)
-    args = 100 * (call.ifString ? 1 : 0) + 10 * B3DMAX(0,call.numInts) + 
+    args = 100 * (call.ifString ? 1 : 0) + 10 * B3DMAX(0,call.numInts) +
       B3DMAX(0,call.numDbls);
   else {
     args = -call.numDbls;
@@ -705,7 +709,7 @@ ScriptLangPlugFuncs *CPluginManager::GetScriptLangFuncs(CString name)
   for (int plug = 0; plug < mPlugins.GetSize(); plug++) {
     plugin = mPlugins[plug];
     if ((plugin->flags & PLUGFLAG_SCRIPT_LANG) && plugin->shortName.Find(name) == 0) {
-      if (plugin->shortName.GetLength() == name.GetLength() || 
+      if (plugin->shortName.GetLength() == name.GetLength() ||
         (plugin->shortName.Mid(name.GetLength())).FindOneOf("-_.,0123456789") == 0)
         return plugin->scriptLangFuncs;
     }

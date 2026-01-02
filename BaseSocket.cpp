@@ -8,6 +8,10 @@
 #include <time.h>
 #include "BaseSocket.h"
 
+#if defined(_DEBUG) && defined(_CRTDBG_MAP_ALLOC)
+#define new DEBUG_NEW
+#endif
+
 // Stupid double-declaration for class statics in C++
 CSerialEMApp *CBaseSocket::mWinApp;
 bool CBaseSocket::mWSAinitialized = false;
@@ -78,7 +82,7 @@ int CBaseSocket::InitializeOneSocket(int sockInd, const char *message)
 }
 
 // New form with typeID and assigned socket index
-int CBaseSocket::InitializeSocketByID(int typeID, int *sockInd, int addToPort, 
+int CBaseSocket::InitializeSocketByID(int typeID, int *sockInd, int addToPort,
                                       const char *message)
 {
   CString report;
@@ -108,7 +112,7 @@ int CBaseSocket::InitializeSocketByID(int typeID, int *sockInd, int addToPort,
 
   // Make sure the index isn't already assigned
   if (mIPaddress[indSock]) {
-    SEMMessageBox(CString("Cannot use a fixed socket index for the ") + message + 
+    SEMMessageBox(CString("Cannot use a fixed socket index for the ") + message +
       CString("\n\nGet an updated version of the plugin that uses a socket ID"));
     return 1;
   }
@@ -133,7 +137,7 @@ int CBaseSocket::InitializeSocketByID(int typeID, int *sockInd, int addToPort,
   mIPaddress[indSock] = mIPaddrByID[indID];
   mPort[indSock] = mPortByID[indID] + addToPort;
   mIdIndexToSockIndMap[indID] = indSock;
-  SEMTrace('K', "Initializing for socket at IP %s  port %d", mIPaddress[indSock], 
+  SEMTrace('K', "Initializing for socket at IP %s  port %d", mIPaddress[indSock],
     (int)mPort[indSock]);
   if (sockInd)
     *sockInd = indSock;
@@ -258,7 +262,7 @@ void CBaseSocket::CloseBeforeNextUse(int typeID)
 // 11/17/22: This is to disable deprecation warning on inet_addr that says to use
 // inet_pton or InetPton (unicode version).  Neither of these is defined even when
 // including Ws2tcpip.h as instructed.  Maybe later...
-#pragma warning(disable:4996) 
+#pragma warning(disable:4996)
 
 // Open the socket and connect it to the server
 int CBaseSocket::OpenServerSocket(int sockInd)
@@ -269,7 +273,7 @@ int CBaseSocket::OpenServerSocket(int sockInd)
   int retVal;
   double startTime;
 
-  mSockAddr[sockInd].sin_addr.S_un.S_addr = inet_addr(mIPaddress[sockInd]); 
+  mSockAddr[sockInd].sin_addr.S_un.S_addr = inet_addr(mIPaddress[sockInd]);
   mSockAddr[sockInd].sin_family = AF_INET;
   mSockAddr[sockInd].sin_port = htons(mPort[sockInd]);     // short, network byte order
   memset(mSockAddr[sockInd].sin_zero, '\0', sizeof(mSockAddr[sockInd].sin_zero));
@@ -381,9 +385,9 @@ int CBaseSocket::ExchangeMessages(int sockInd, int *numExtraBytes)
     }
 
     // Make sure everything was sent; if this fails give up
-    if (FinishSendingBuffer(sockInd, mArgsBuffer[sockInd], mNumBytesSend[sockInd], 
+    if (FinishSendingBuffer(sockInd, mArgsBuffer[sockInd], mNumBytesSend[sockInd],
       nbytes)) {
-      SEMTrace('K', "BaseSocket: send error %d when finishing sending buffer", 
+      SEMTrace('K', "BaseSocket: send error %d when finishing sending buffer",
         WSAGetLastError());
       CloseServer(sockInd);
       return 1;
@@ -398,9 +402,9 @@ int CBaseSocket::ExchangeMessages(int sockInd, int *numExtraBytes)
       // and try again
       err = WSAGetLastError();
       timeDiff = SEMTickInterval(startTime);
-      if ((numReceived == 0 || err == WSAECONNABORTED || err == WSAECONNRESET) && 
+      if ((numReceived == 0 || err == WSAECONNABORTED || err == WSAECONNRESET) &&
         timeDiff < 200.) {
-        SEMTrace('K', "BaseSocket: recv error %d after %.0f, retry %d", err, 
+        SEMTrace('K', "BaseSocket: recv error %d after %.0f, retry %d", err,
           timeDiff, 1 - trial);
         CloseServer(sockInd);
         if (trial || OpenServerSocket(sockInd)) {
@@ -417,20 +421,20 @@ int CBaseSocket::ExchangeMessages(int sockInd, int *numExtraBytes)
   ReallocArgsBufIfNeeded(sockInd, numExpected);
   if (numReceived > numExpected && numExtraBytes)
     *numExtraBytes = numReceived - numExpected;
-  if (FinishGettingBuffer(sockInd, mArgsBuffer[sockInd], numReceived, numExpected, 
+  if (FinishGettingBuffer(sockInd, mArgsBuffer[sockInd], numReceived, numExpected,
                           mArgBufSize[sockInd])) {
     CloseServer(sockInd);
-    SEMTrace('K', "BaseSocket: recv error %d when finishing getting args buffer", 
+    SEMTrace('K', "BaseSocket: recv error %d when finishing getting args buffer",
       WSAGetLastError()); //want
     return 1;
   }
   if (numExpected > mArgBufSize[sockInd]) {
-    SEMTrace('K', "BaseSocket: received message too big (%d bytes) for arg buffer", 
+    SEMTrace('K', "BaseSocket: received message too big (%d bytes) for arg buffer",
       numExpected);  //want
     return 1;
   }
-  
-  needed = sizeof(int) + mNumLongRecv[sockInd] * sizeof(long) + mNumBoolRecv[sockInd] * 
+
+  needed = sizeof(int) + mNumLongRecv[sockInd] * sizeof(long) + mNumBoolRecv[sockInd] *
     sizeof(BOOL) + mNumDblRecv[sockInd] * sizeof(double);
 
   if ((!mRecvLongArray[sockInd] && needed != numExpected) ||
@@ -440,7 +444,7 @@ int CBaseSocket::ExchangeMessages(int sockInd, int *numExtraBytes)
 }
 
 // Make sure the entire message has been received, based on initial byte count
-int CBaseSocket::FinishGettingBuffer(int sockInd, char *buffer, int numReceived, 
+int CBaseSocket::FinishGettingBuffer(int sockInd, char *buffer, int numReceived,
                                       int numExpected, int bufSize)
 {
   int numNew, ind;
@@ -520,7 +524,7 @@ void CBaseSocket::SendAndReceiveArgs(int sockInd, int *numExtraBytes)
    return;
  }
  if (mLongArgs[sockInd][0] < 0) {
-   SEMTrace('K', "BaseSocket: Server return code %d on chan %d", mLongArgs[sockInd][0], 
+   SEMTrace('K', "BaseSocket: Server return code %d on chan %d", mLongArgs[sockInd][0],
      sockInd);
    return;
  }
@@ -555,7 +559,7 @@ const char *CBaseSocket::GetOneString(int sock, int funcCode)
 
 // Adds a string as a long array after copying it into the supplied array; this should be
 // called AFTER all long arguments are added
-void CBaseSocket::AddStringAsLongArray(int sock, const char *name, long *longArr, 
+void CBaseSocket::AddStringAsLongArray(int sock, const char *name, long *longArr,
                                               int maxLen)
 {
   int len = ((int)strlen(name) + 4) / 4;
@@ -568,13 +572,13 @@ void CBaseSocket::AddStringAsLongArray(int sock, const char *name, long *longArr
 
 // Adds an optional array of longs then an optional collection of strings by allocating
 // an array and returning it; this should be called AFTER all long arguments are added
-long *CBaseSocket::AddLongsAndStrings(int sock, long *longVals, int numLongs, 
+long *CBaseSocket::AddLongsAndStrings(int sock, long *longVals, int numLongs,
                                       const char **strings, int numStrings)
 {
   int ind, len, charsLeft, lenTot = numLongs * sizeof(long);
   long *longArr;
   char *nameStr;
-  for (ind = 0; ind < numStrings; ind++) 
+  for (ind = 0; ind < numStrings; ind++)
     lenTot += (int)strlen(strings[ind]) + 1;
   lenTot = (lenTot + 5) / 4;
   longArr = (long *)malloc(lenTot * sizeof(long));
@@ -603,7 +607,7 @@ long *CBaseSocket::AddLongsAndStrings(int sock, long *longVals, int numLongs,
 // Exchanges messages for an image acquisition then, if all is good, acquires the image
 // buffer of the expected size
 int CBaseSocket::SendAndReceiveForImage(int sockInd, short *imArray, long *arrSize,
-                                         long *width, 
+                                         long *width,
                                          long *height, int bytesPerPixel)
 {
   int numBytes, numChunks, nsent, chunkSize, numToGet, chunk, totalRecv = 0;
@@ -647,7 +651,7 @@ int CBaseSocket::SendAndReceiveForImage(int sockInd, short *imArray, long *arrSi
       }
     }
     numToGet = B3DMIN(numBytes - totalRecv, chunkSize);
-    if (FinishGettingBuffer(sockInd, (char *)imArray + totalRecv, 0, numToGet, 
+    if (FinishGettingBuffer(sockInd, (char *)imArray + totalRecv, 0, numToGet,
       numToGet)) {
         SEMTrace('K', "BaseSocket: Error %d while receiving image (chunk # %d) from "
           "server", WSAGetLastError(), chunk);
@@ -656,7 +660,7 @@ int CBaseSocket::SendAndReceiveForImage(int sockInd, short *imArray, long *arrSi
     }
     totalRecv += numToGet;
   }
-  SEMTrace('K',"Transfer rate %.1f MB/s", numBytes / 
+  SEMTrace('K',"Transfer rate %.1f MB/s", numBytes /
     (1000. * B3DMAX(1., SEMTickInterval(startTicks))));
   return 0;
 }
@@ -666,7 +670,7 @@ int CBaseSocket::UnpackReceivedData(int sockInd, int limitedNum)
 {
   int numBytes, numUnpacked = sizeof(int);
 
-  if (mNumLongRecv[sockInd] > MAX_LONG_ARGS || mNumBoolRecv[sockInd] > MAX_BOOL_ARGS || 
+  if (mNumLongRecv[sockInd] > MAX_LONG_ARGS || mNumBoolRecv[sockInd] > MAX_BOOL_ARGS ||
     mNumDblRecv[sockInd] > MAX_DBL_ARGS)
     return 1;
 
@@ -692,7 +696,7 @@ int CBaseSocket::UnpackReceivedData(int sockInd, int limitedNum)
     memcpy(mDoubleArgs[sockInd], &mArgsBuffer[sockInd][numUnpacked], numBytes);
   numUnpacked += numBytes;
 
-  // If receiving a long array, size is in last long arg; copy address 
+  // If receiving a long array, size is in last long arg; copy address
   if (mRecvLongArray[sockInd] && mNumLongRecv[sockInd] > 0) {
     mLongArray[sockInd] = (long *)(&mArgsBuffer[sockInd][numUnpacked]);
     numUnpacked += sizeof(long) * mLongArgs[sockInd][mNumLongRecv[sockInd] - 1];

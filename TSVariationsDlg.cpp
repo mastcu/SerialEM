@@ -7,6 +7,10 @@
 #include "CameraController.h"
 #include ".\TSVariationsDlg.h"
 
+#if defined(_DEBUG) && defined(_CRTDBG_MAP_ALLOC)
+#define new DEBUG_NEW
+#endif
+
 
 // CTSVariationsDlg dialog
 
@@ -93,7 +97,7 @@ BOOL CTSVariationsDlg::OnInitDialog()
   int fields[6] = {16,24,24,36,24,8};
   int tabs[6], i;
   CBaseDlg::OnInitDialog();
- 
+
   // Get initial size of client area and list box to determine borders for resizing
   CRect wndRect, listRect, OKRect, clientRect;
   GetClientRect(clientRect);
@@ -116,7 +120,7 @@ BOOL CTSVariationsDlg::OnInitDialog()
 
   tabs[0] = fields[0];
   for (i = 1; i < 6; i++)
-    tabs[i] = tabs[i - 1] + fields[i]; 
+    tabs[i] = tabs[i - 1] + fields[i];
   m_listViewer.SetTabStops(6, tabs);
 
   mInitialized = true;
@@ -135,7 +139,7 @@ BOOL CTSVariationsDlg::OnInitDialog()
   return TRUE;
 }
 
-void CTSVariationsDlg::OnOK() 
+void CTSVariationsDlg::OnOK()
 {
   UnloadToCurrentItem();
   PurgeVariations(mVaries, mNumVaries, mCurrentItem);
@@ -145,15 +149,15 @@ void CTSVariationsDlg::OnOK()
     mParam->varyArray[i] = mVaries[i];
 }
 
-void CTSVariationsDlg::OnCancel() 
+void CTSVariationsDlg::OnCancel()
 {
   CBaseDlg::OnCancel();
 }
 
-void CTSVariationsDlg::OnSize(UINT nType, int cx, int cy) 
+void CTSVariationsDlg::OnSize(UINT nType, int cx, int cy)
 {
   CDialog::OnSize(nType, cx, cy);
-  
+
   if (!mInitialized)
     return;
 
@@ -168,7 +172,7 @@ void CTSVariationsDlg::OnSize(UINT nType, int cx, int cy)
   newY += m_iOKoffset;
   m_butCancel.SetWindowPos(NULL, m_iCancelLeft, newY, 0, 0, SWP_NOZORDER | SWP_NOSIZE);
   m_butOK.SetWindowPos(NULL, m_iOKLeft, newY, 0, 0, SWP_NOZORDER | SWP_NOSIZE);
-  m_butHelp.SetWindowPos(NULL, m_iHelpLeft, newY - m_iOKoffset + m_iHelpOffset, 0, 0, 
+  m_butHelp.SetWindowPos(NULL, m_iHelpLeft, newY - m_iOKoffset + m_iHelpOffset, 0, 0,
     SWP_NOZORDER | SWP_NOSIZE);
 }
 
@@ -267,7 +271,7 @@ void CTSVariationsDlg::OnButTsvAddSeries()
   int i, j, special;
   double angle, fps, factor = 1.;
   int *active = mWinApp->GetActiveCameraList();
-  ControlSet *conSet = mWinApp->GetCamConSets() + active[mParam->cameraIndex] * 
+  ControlSet *conSet = mWinApp->GetCamConSets() + active[mParam->cameraIndex] *
     MAX_CONSETS + RECORD_CONSET;
   CameraParameters *camParam = mWinApp->GetCamParams() + active[mParam->cameraIndex];
   float newExp, baseTime = 0.001f, recExp = conSet->exposure;
@@ -275,7 +279,7 @@ void CTSVariationsDlg::OnButTsvAddSeries()
   bool fixedFrames = camParam->K2Type && conSet->doseFrac && m_bNumFramesFixed;
   bool oneFrame = false;
   UpdateData(true);
-  
+
   // Constrain the exposure time
   mWinApp->mCamera->CropTietzSubarea(camParam, conSet->right, conSet->left,
     conSet->bottom, conSet->top, conSet->processing, conSet->mode, special);
@@ -289,7 +293,7 @@ void CTSVariationsDlg::OnButTsvAddSeries()
       oneFrame = true;
       fixedFrames = false;
     } else if (fixedFrames) {
-      baseTime = (recExp / frameTime) * 
+      baseTime = (recExp / frameTime) *
         mWinApp->mCamera->GetK2ReadoutInterval(camParam);
     } else {
       baseTime = mWinApp->mCamera->GetLastK2BaseTime();
@@ -314,7 +318,7 @@ void CTSVariationsDlg::OnButTsvAddSeries()
 
   // Remove any existing exposure entries, and frame entries if doing dose fraac at all
   for (i = 0, j = 0; i < mNumVaries; i++)
-    if (mVaries[i].type != TS_VARY_EXPOSURE && 
+    if (mVaries[i].type != TS_VARY_EXPOSURE &&
       (!conSet->doseFrac || mVaries[i].type != TS_VARY_FRAME_TIME))
       mVaries[j++] = mVaries[i];
   mNumVaries = j;
@@ -387,16 +391,16 @@ void CTSVariationsDlg::OnSelchangeListTsvTable()
 void CTSVariationsDlg::Update(void)
 {
   int *active = mWinApp->GetActiveCameraList();
-  ControlSet *conSet = mWinApp->GetCamConSets() + active[mParam->cameraIndex] * 
+  ControlSet *conSet = mWinApp->GetCamConSets() + active[mParam->cameraIndex] *
     MAX_CONSETS + RECORD_CONSET;
 
   m_butPlusMinus.EnableWindow(mCurrentItem >= 0);
   m_editAngle.EnableWindow(mCurrentItem >= 0);
   m_editValue.EnableWindow(mCurrentItem >= 0);
   m_butExposure.EnableWindow(mCurrentItem >= 0 && !mDoingTS);
-  m_butFrameTime.EnableWindow(mCurrentItem >= 0 && !mDoingTS && mK2Selected && 
+  m_butFrameTime.EnableWindow(mCurrentItem >= 0 && !mDoingTS && mK2Selected &&
     conSet->doseFrac);
-  m_butNumFamesFixed.EnableWindow(mCurrentItem >= 0 && !mDoingTS && mK2Selected && 
+  m_butNumFamesFixed.EnableWindow(mCurrentItem >= 0 && !mDoingTS && mK2Selected &&
     conSet->doseFrac);
   m_butFixed.EnableWindow(mCurrentItem >= 0);
   m_butLinear.EnableWindow(mCurrentItem >= 0);
@@ -439,10 +443,10 @@ void CTSVariationsDlg::ItemToListString(int index, CString &string)
   CString format, valstr;
   format.Format("%%.%df", numDec[type]);
   valstr.Format(format, mVaries[index].value);
-  string.Format("%s\t%.1f\t%s\t%s\t", mVaries[index].plusMinus ? "+/-" : " ", 
+  string.Format("%s\t%.1f\t%s\t%s\t", mVaries[index].plusMinus ? "+/-" : " ",
     mVaries[index].angle, mVaries[index].linear ? "linear" : "fixed", typeNames[type]);
   string += valstr;
-  if ((!mFilterExists && (type == TS_VARY_SLIT || type == TS_VARY_ENERGY)) || 
+  if ((!mFilterExists && (type == TS_VARY_SLIT || type == TS_VARY_ENERGY)) ||
     (mSTEMmode && (type == TS_VARY_FOCUS || type == TS_VARY_DRIFT)))
     string += "\tNA";
 }
@@ -516,8 +520,8 @@ bool CTSVariationsDlg::CheckItemValue(bool update)
       mWinApp->mCamera->CropTietzSubarea(camParam, conSet->right, conSet->left,
         conSet->bottom, conSet->top, conSet->processing, conSet->mode, special);
       changed = mWinApp->mCamera->ConstrainFrameTime(m_fValue, camParam, conSet->binning,
-        (mWinApp->mCamera->IsFalconSaveAsLZW(camParam, conSet) || 
-        (camParam->OneViewType && camParam->canTakeFrames)) ? conSet->K2ReadMode : 
+        (mWinApp->mCamera->IsFalconSaveAsLZW(camParam, conSet) ||
+        (camParam->OneViewType && camParam->canTakeFrames)) ? conSet->K2ReadMode :
         special);
       break;
 
@@ -531,7 +535,7 @@ bool CTSVariationsDlg::CheckItemValue(bool update)
         changed = true;
       }
       break;
-        
+
     case TS_VARY_ENERGY:
       if (m_fValue < filtp->minLoss) {
         m_fValue = filtp->minLoss;
@@ -553,7 +557,7 @@ bool CTSVariationsDlg::CheckItemValue(bool update)
 
 // Remove or resolve duplicate entries in scheduled changes, maintain a current item
 // if any.  Return true if changes were made.  Also sorts them and retains sort
-bool CTSVariationsDlg::PurgeVariations(VaryInSeries *varies, int &numVaries, 
+bool CTSVariationsDlg::PurgeVariations(VaryInSeries *varies, int &numVaries,
                                     int &currentItem)
 {
   int i, j, k;
@@ -566,7 +570,7 @@ bool CTSVariationsDlg::PurgeVariations(VaryInSeries *varies, int &numVaries,
       angle1 = varies[i].angle;
       angle2 = varies[j].angle;
       if (fabs(fabs(angle1) - fabs(angle2)) < 0.9 && varies[i].type == varies[j].type) {
-        if (varies[j].plusMinus || (!varies[i].plusMinus && !varies[j].plusMinus && 
+        if (varies[j].plusMinus || (!varies[i].plusMinus && !varies[j].plusMinus &&
           (angle1 < 0. && angle2 < 0. || angle1 >= 0. && angle2 >= 0.))) {
 
           // Delete the first item if the later one is +/- or if neither is and their
@@ -580,7 +584,7 @@ bool CTSVariationsDlg::PurgeVariations(VaryInSeries *varies, int &numVaries,
           changed = true;
           break;
         } else if (varies[i].plusMinus) {
-          
+
           // Otherwise if the earlier one is +/- (later one is not) modify earlier one
           varies[i].plusMinus = false;
           if (angle1 < 0 && angle2 < 0 || angle1 >= 0. && angle2 >= 0.)
@@ -598,7 +602,7 @@ bool CTSVariationsDlg::PurgeVariations(VaryInSeries *varies, int &numVaries,
 }
 
 // Resort the variations by angle, maintaining a current item if any
-void CTSVariationsDlg::SortVariations(VaryInSeries *varies, int &numVaries, 
+void CTSVariationsDlg::SortVariations(VaryInSeries *varies, int &numVaries,
                                    int &currentItem)
 {
   float angle1, angle2;
@@ -641,7 +645,7 @@ bool CTSVariationsDlg::ListVaryingTypes(VaryInSeries *varyArray, int numVaries,
     return false;
   for (i = 0; i < numVaries; i++) {
     type = varyArray[i].type;
-    if ((!EFTEM && (type == TS_VARY_SLIT || type == TS_VARY_ENERGY)) || 
+    if ((!EFTEM && (type == TS_VARY_SLIT || type == TS_VARY_ENERGY)) ||
       (STEM && (type == TS_VARY_FOCUS || type == TS_VARY_DRIFT)))
       continue;
     typeVaries[type] = 1;
@@ -708,11 +712,11 @@ bool CTSVariationsDlg::FindValuesToSet(VaryInSeries *varyArray, int numVaries,
       if (fabs(angAbove - angBelow) < 0.1)
         outValues[itype] = valBelow;
       else
-        outValues[itype] = (float)(valBelow + (angle - angBelow) * 
+        outValues[itype] = (float)(valBelow + (angle - angBelow) *
         (varyArray[indAbove].value - valBelow) / (angAbove - angBelow));
       typeVaries[itype] = -1;
     } else {
-        
+
       // Otherwise, use the fixed value below
       if (indBelow < 0)
         outValues[itype] = zeroDegValues[itype];

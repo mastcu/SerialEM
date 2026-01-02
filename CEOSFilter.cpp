@@ -1,6 +1,6 @@
 // CEOSFilter.cpp:    Interface to CEOS energy filter
 //
-// Copyright (C) 2003-2023 by the Regents of the University of
+// Copyright (C) 2003-2026 by the Regents of the University of
 // Colorado.  See Copyright.txt for full notice of copyright and limitations.
 //
 // Author: David Mastronarde
@@ -13,6 +13,10 @@
 #include <winsock2.h>
 #include <ws2tcpip.h>
 #include "Utilities\json.h"
+
+#if defined(_DEBUG) && defined(_CRTDBG_MAP_ALLOC)
+#define new DEBUG_NEW
+#endif
 
 CCEOSFilter::CCEOSFilter()
 {
@@ -33,7 +37,7 @@ CCEOSFilter::~CCEOSFilter()
 // Modified from HitachiPlugin
 int CCEOSFilter::Connect(CString &ipAddress, int port, CString &errStr)
 {
-  mConnectSocket = UtilConnectSocket(ipAddress, port, errStr, "CEOSFilter", 
+  mConnectSocket = UtilConnectSocket(ipAddress, port, errStr, "CEOSFilter",
     "CEOS filter");
   return mConnectSocket == INVALID_SOCKET ? 1 : 0;
 }
@@ -77,7 +81,7 @@ int CCEOSFilter::SendAndReceiveCmd(std::string &cmdstr, std::string &responseStr
         colonInd = (int)(strchr(buffer, ':') - buffer);
         msgSz = atoi(buffer);
       }
-      
+
       // If there is a , at the end, see if the length is enough
       if (buffer[sizeRec - 1] == ',' && msgSz) {
         if (err && sizeCum + sizeRec >= colonInd + msgSz + 2)
@@ -88,8 +92,8 @@ int CCEOSFilter::SendAndReceiveCmd(std::string &cmdstr, std::string &responseStr
           return 0;
         }
       }
- 
-      // If buffer is now full, reset to beginning to try to get the rest of the 
+
+      // If buffer is now full, reset to beginning to try to get the rest of the
       // message and set error
       if (sizeRec >= SOCK_BUF_SIZE) {
         sizeCum += sizeRec;
@@ -111,7 +115,7 @@ int CCEOSFilter::SendAndReceiveCmd(std::string &cmdstr, std::string &responseStr
 
 // Higher level function takes parameter object, composes message to call method, and
 // extracts result object from response
-int CCEOSFilter::PackSendReceiveAndUnpack(json::jobject &params, const char *method, 
+int CCEOSFilter::PackSendReceiveAndUnpack(json::jobject &params, const char *method,
   json::jobject &result)
 {
   int err = 0, code = 0;
@@ -258,7 +262,7 @@ int CCEOSFilter::GetEnergyLoss(float &offset)
     return err;
   err = PackSendReceiveAndUnpack(params, "getLinerTubeVoltage", result2);
   if (err)
-    return err; 
+    return err;
   try {
     mLastHToffset = (float)result["value"];
     mLastLinerTubeOffset = (float)result2["value"];
@@ -270,7 +274,7 @@ int CCEOSFilter::GetEnergyLoss(float &offset)
   return 0;
 }
 
-// Set energy loss: change just liner tube if possible, or change just HT if 
+// Set energy loss: change just liner tube if possible, or change just HT if
 // NoSpectrumOffset is set
 int CCEOSFilter::SetEnergyLoss(float offset)
 {
@@ -297,7 +301,7 @@ int CCEOSFilter::SetEnergyLoss(float offset)
     params["value"] = HToffsetToSet;
     err = PackSendReceiveAndUnpack(params, "setHighTensionOffset", result);
 
-  } 
+  }
   if (linerTubeToSet > EXTRA_VALUE_TEST) {
     params["value"] = linerTubeToSet;
     err = PackSendReceiveAndUnpack(params, "setLinerTubeVoltage", result);

@@ -1,6 +1,6 @@
 // NavAcquireDlg.cpp : Sets parameters for Navigator Acquire at Items
 //
-// Copyright (C) 2024 by the Regents of the University of
+// Copyright (C) 2024-2026 by the Regents of the University of
 // Colorado.  See Copyright.txt for full notice of copyright and limitations.
 //
 // Author: David Mastronarde
@@ -28,6 +28,10 @@
 #include "Utilities\KGetOne.h"
 #include "Shared\b3dutil.h"
 
+#if defined(_DEBUG) && defined(_CRTDBG_MAP_ALLOC)
+#define new DEBUG_NEW
+#endif
+
 #define MIN_CYCLE_FOCUS -30.f
 #define MAX_CYCLE_FOCUS 3.f
 #define MAX_EVERY_N   300
@@ -47,7 +51,7 @@ IDC_STAT_SAVING_FATE, IDC_STAT_FILE_SAVING_INTO, IDC_NA_DO_SUBSET, IDC_STAT_TASK
 IDC_STAT_SUBSET_TO, IDC_NA_SKIP_INITIAL_MOVE, IDC_NA_SKIP_Z_MOVES, IDC_STAT_GEN_OPTIONS,
 IDC_NA_CYCLE_DEFOCUS, IDC_NA_SETUP_MULTISHOT, IDC_STAT_CYCLE_STEPS,IDC_RACQUISITION,
 IDC_STAT_CYCLE_TO, IDC_STAT_CYCLE_UM, IDC_SPIN_CYCLE_DEF, IDC_NA_EARLY_RETURN,
-IDC_STAT_FRAMES, IDC_NA_NO_MBOX_ON_ERROR,  IDC_NA_SENDEMAIL, IDC_RMAPPING, 
+IDC_STAT_FRAMES, IDC_NA_NO_MBOX_ON_ERROR,  IDC_NA_SENDEMAIL, IDC_RMAPPING,
 IDC_NA_ADJUST_BT_FOR_IS, IDC_STAT_ACTION_OPTIONS, IDC_STAT_PARAM_FOR, IDC_RREALI_REC,
 IDC_NA_REALIGN_SCALED_MAP, IDC_RREALI_VIEW, IDC_RREALI_PREV, IDC_RREALI_SEARCH,
 IDC_NA_APPLY_REALIGN_ERR, IDC_NA_RELAX_STAGE, IDC_TSS_LINE1, IDC_TSS_LINE2, IDC_TSS_LINE3,
@@ -354,8 +358,8 @@ BOOL CNavAcquireDlg::OnInitDialog()
   ComaVsISCalib *comaVsIS = mWinApp->mAutoTuning->GetComaVsIScal();
   MultiShotParams *msParams = mWinApp->mNavHelper->GetMultiShotParams();
   int navState = mWinApp->mCameraMacroTools.GetNavigatorState();
-  int ind, groupIDsToBold[] = {IDC_STAT_PRIMARY_GROUP, IDC_STAT_GEN_OPTIONS, 
-    IDC_STAT_TASK_OPTIONS, IDC_STAT_ACTION_OPTIONS, IDC_STAT_ACTION_GROUP, 
+  int ind, groupIDsToBold[] = {IDC_STAT_PRIMARY_GROUP, IDC_STAT_GEN_OPTIONS,
+    IDC_STAT_TASK_OPTIONS, IDC_STAT_ACTION_OPTIONS, IDC_STAT_ACTION_GROUP,
     IDC_STAT_SELECTED_GROUP, IDC_STAT_PRIMARY_LINE};
   mNumActions = mWinApp->mNavHelper->GetNumAcqActions();
   mNumShownActs = 0;
@@ -394,7 +398,7 @@ BOOL CNavAcquireDlg::OnInitDialog()
 
   wnd = GetDlgItem(IDC_STAT_SAVING_FATE);
   wnd->GetWindowRect(rect);
-  SetupUnitsToAdd(idTable, sLeftTable, sTopTable, mNumInPanel, mPanelStart, 
+  SetupUnitsToAdd(idTable, sLeftTable, sTopTable, mNumInPanel, mPanelStart,
     -3 * rect.Height() / 4);
   boldFont = mWinApp->GetBoldFont(wnd);
 
@@ -479,7 +483,7 @@ BOOL CNavAcquireDlg::OnInitDialog()
   EnableDlgItem(IDC_RACQUISITION, navState != NAV_PAUSED);
   EnableDlgItem(IDC_NA_RETRACT_CAMS, mWinApp->GetAnyRetractableCams());
   EnableDlgItem(IDC_NA_RUN_SCRIPT_AT_END, navState != NAV_PAUSED);
- 
+
   if (!msParams->xformFromMag || !msParams->adjustingXform.xpx)
     ReplaceWindowText(&m_butUseMapHoles, ", with adjustment", " (no adjustment)");
 
@@ -619,8 +623,8 @@ int CNavAcquireDlg::CheckActionOrder(int * order)
 
       if ((act == NAACT_ROUGH_EUCEN || act == NAACT_EUCEN_BY_FOCUS) && realigned >= 0) {
         if (AfxMessageBox("It is illogical to have " + mActions[act].name + " after\n"
-          + mActions[realigned].name + " because the " + mActions[act].name + 
-          "\nwill undo the alignment established by the " + mActions[realigned].name + 
+          + mActions[realigned].name + " because the " + mActions[act].name +
+          "\nwill undo the alignment established by the " + mActions[realigned].name +
           ".\n\n"
           "Are you sure you want to proceed?", MB_QUESTION) == IDNO)
           return 1;
@@ -866,9 +870,9 @@ void CNavAcquireDlg::OnNaAcquiremap()
 // Include the action for maximum clarity
 void CNavAcquireDlg::ManagePrimaryLine()
 {
-  const char *actions[4] = {"Acquire Image", "Main Script", "Tilt Series", 
+  const char *actions[4] = {"Acquire Image", "Main Script", "Tilt Series",
     "Multiple Records"};
-  SetDlgItemText(IDC_STAT_PRIMARY_LINE, "Primary Action (" + 
+  SetDlgItemText(IDC_STAT_PRIMARY_LINE, "Primary Action (" +
     CString(actions[m_iAcquireChoice]) + ") occurs here");
 }
 
@@ -1043,9 +1047,9 @@ void CNavAcquireDlg::ManageOutputFile(void)
       else
         m_strFileSavingInto = "Make a single-frame file be the current one";
     } else {
-      m_strSavingFate.Format("%s will%s be saved into the file:", 
-        (!multiSaving && mIfMontOutput) ? "MONTAGES" : "IMAGES", 
-        ((mNumAcqBeforeFile && mNumFilesToOpen) || mNumFilesToOpen > 1) ? 
+      m_strSavingFate.Format("%s will%s be saved into the file:",
+        (!multiSaving && mIfMontOutput) ? "MONTAGES" : "IMAGES",
+        ((mNumAcqBeforeFile && mNumFilesToOpen) || mNumFilesToOpen > 1) ?
         " initially" : "");
       UtilSplitPath(mOutputFile, dir, m_strFileSavingInto);
     }
@@ -1070,15 +1074,15 @@ void CNavAcquireDlg::ManageEnables(bool rebuilding)
   MultiShotParams *msParams = mWinApp->mNavHelper->GetMultiShotParams();
   bool cycleOK = acquireType == ACQUIRE_DO_TS || acquireType == ACQUIRE_RUN_MACRO ||
     DOING_ACTION(NAACT_RUN_POSTMACRO) || DOING_ACTION(NAACT_RUN_PREMACRO) ||
-    DOING_ACTION(NAACT_AUTOFOCUS) || 
+    DOING_ACTION(NAACT_AUTOFOCUS) ||
     (DOING_ACTION(NAACT_WAIT_DRIFT) && dwParam->measureType == WFD_WITHIN_AUTOFOC);
-  bool consetOK = mWinApp->LowDoseMode() && 
+  bool consetOK = mWinApp->LowDoseMode() &&
     (acquireType == ACQUIRE_TAKE_MAP || acquireType == ACQUIRE_IMAGE_ONLY);
   bool hybridOK = DOING_ACTION(NAACT_REALIGN_ITEM) && DOING_ACTION(NAACT_ALIGN_TEMPLATE)
     && mActions[NAACT_ALIGN_TEMPLATE].timingType == NAA_EVERY_N_ITEMS &&
     mActions[NAACT_ALIGN_TEMPLATE].everyNitems == 1;
   bool skipMoveOK = mWinApp->mNavigator->OKtoSkipStageMove(mActions, acquireType) != 0;
-  bool useMapEnabled = (acquireType == ACQUIRE_MULTISHOT || 
+  bool useMapEnabled = (acquireType == ACQUIRE_MULTISHOT ||
     acquireType == ACQUIRE_RUN_MACRO)&& !msParams->useCustomHoles;
   bool mulGridForMapping = mOpenedFromMultiGrid && !m_iCurParamSet;
   bool mulGridForFinal = mOpenedFromMultiGrid && m_iCurParamSet;
@@ -1092,7 +1096,7 @@ void CNavAcquireDlg::ManageEnables(bool rebuilding)
   EnableDlgItem(IDC_STAT_SUBSET_FROM_ITEM, m_bDoSubset);
   m_butAcquireTS.EnableWindow(mAnyTSpoints && !mulGridForMapping);
   m_butAcquireMap.EnableWindow(mAnyAcquirePoints && !mulGridForMapping);
-  m_butSaveAsMap.EnableWindow(mAnyAcquirePoints && !m_iAcquireChoice && 
+  m_butSaveAsMap.EnableWindow(mAnyAcquirePoints && !m_iAcquireChoice &&
     !mulGridForMapping);
   m_butDoMultishot.EnableWindow(mAnyAcquirePoints && !mulGridForMapping);
   m_butRunMacro.EnableWindow(mAnyAcquirePoints && !mulGridForMapping);
@@ -1127,11 +1131,11 @@ void CNavAcquireDlg::ManageEnables(bool rebuilding)
   m_butUseMapHoles.EnableWindow(useMapEnabled);
   RebuildIfEnabled(useMapEnabled, mUseMapHolesEnabled, doBuild);
 
-  EnableDlgItem(IDC_STAT_WHICH_CONSET, (consetOK && !mulGridForMapping) || 
+  EnableDlgItem(IDC_STAT_WHICH_CONSET, (consetOK && !mulGridForMapping) ||
     mulGridForFinal);
   EnableDlgItem(IDC_RMAP_WITH_REC, (consetOK && !mulGridForMapping) || mulGridForFinal);
   EnableDlgItem(IDC_RMAP_WITH_VIEW, (consetOK && !mulGridForMapping) || mulGridForFinal);
-  EnableDlgItem(IDC_RMAP_WITH_SEARCH, (consetOK && !mulGridForMapping) || 
+  EnableDlgItem(IDC_RMAP_WITH_SEARCH, (consetOK && !mulGridForMapping) ||
     mulGridForFinal);
   RebuildIfEnabled(consetOK, mSetTypeEnabled, doBuild);
 
@@ -1145,7 +1149,7 @@ void CNavAcquireDlg::ManageEnables(bool rebuilding)
   for (pos = 0; pos < mNumShownActs; pos++) {
     if (mShownPosToIndex[pos] == NAACT_HOLE_FINDER) {
       EnableDlgItem(IDC_CHECK_NAVACQ_RUN1 + pos, acquireType == ACQUIRE_TAKE_MAP);
-      EnableDlgItem(IDC_STAT_NAVACQ_WHEN1 + pos, acquireType == ACQUIRE_TAKE_MAP && 
+      EnableDlgItem(IDC_STAT_NAVACQ_WHEN1 + pos, acquireType == ACQUIRE_TAKE_MAP &&
         (mActions[NAACT_HOLE_FINDER].flags & NAA_FLAG_RUN_IT));
       EnableDlgItem(IDC_BUT_NAVACQ_SETUP1 + pos, acquireType == ACQUIRE_TAKE_MAP &&
         (mActions[NAACT_HOLE_FINDER].flags & NAA_FLAG_RUN_IT));
@@ -1210,7 +1214,7 @@ void CNavAcquireDlg::HijackByMultiGrid(int paramSet)
 // For disabling/enabling action buttons when something else happens
 void CNavAcquireDlg::ExternalUpdate()
 {
-  BOOL enable = (!mWinApp->DoingTasks() || mWinApp->GetJustNavAcquireOpen()) && 
+  BOOL enable = (!mWinApp->DoingTasks() || mWinApp->GetJustNavAcquireOpen()) &&
     !mWinApp->mCamera->CameraBusy();
   EnableDlgItem(IDOK, enable);
   EnableDlgItem(IDC_BUT_POSTPONE, enable);
@@ -1306,7 +1310,7 @@ void CNavAcquireDlg::BuildActionSection(bool unhiding)
       mAddAfterIDSet.insert(ind);
     }
   }
-    
+
   // Drop the rest of the buttons etc
   mNumShownActs = pos;
   for (; pos < mNumActions; pos++) {
@@ -1320,7 +1324,7 @@ void CNavAcquireDlg::BuildActionSection(bool unhiding)
   NewActionSelected(m_iSelectedPos);
 
   // Add any permanently dropped items now
-  if (!mWinApp->GetHasK2OrK3Camera() || (m_bHideUnselectedOpts && 
+  if (!mWinApp->GetHasK2OrK3Camera() || (m_bHideUnselectedOpts &&
     (!m_bEarlyReturn || !mEarlyRetEnabled))) {
     mIDsToDrop.push_back(IDC_NA_EARLY_RETURN);
     mIDsToDrop.push_back(IDC_STAT_FRAMES);
@@ -1515,9 +1519,9 @@ void CNavAcquireDlg::ManageTimingEnables()
   m_editAfterMinutes.EnableWindow(act->timingType == NAA_AFTER_TIME && notOnlyEveryN);
   m_editWhenMoved.EnableWindow(act->timingType == NAA_IF_SEPARATED && notOnlyEveryN);
   m_editGotoItem.EnableWindow(notOnlyEveryN && !anywhere);
-  m_butMoveUp.EnableWindow(m_iSelectedPos > 0 && 
+  m_butMoveUp.EnableWindow(m_iSelectedPos > 0 &&
     !(afterOnly && m_iSelectedPos == mFirstPosAfterTask));
-  m_butMoveDown.EnableWindow(m_iSelectedPos < mNumShownActs - 1 && 
+  m_butMoveDown.EnableWindow(m_iSelectedPos < mNumShownActs - 1 &&
     !(m_iSelectedPos == mFirstPosAfterTask - 1 && (act->flags & NAA_FLAG_ONLY_BEFORE)));
   EnableDlgItem(IDC_RNAVACQ_EVERY_N, runIt);
   EnableDlgItem(IDC_RNAVACQ_GROUP_START, notOnlyEveryN);
@@ -1605,7 +1609,7 @@ void CNavAcquireDlg::OnEnKillfocusEditWhenMoved()
 void CNavAcquireDlg::OnNaRunAtOther()
 {
   UPDATE_DATA_TRUE;
-  setOrClearFlags(&mActions[mCurActSelected].flags, NAA_FLAG_OTHER_SITE, 
+  setOrClearFlags(&mActions[mCurActSelected].flags, NAA_FLAG_OTHER_SITE,
     m_bRunAtOther ? 1 : 0);
   ManageTimingEnables();
 }
@@ -1619,12 +1623,12 @@ void CNavAcquireDlg::OnEnKillfocusEditGotoItem()
 
 // Make sure there is some text if needed
 int CNavAcquireDlg::CheckNearestItemText()
-{ 
-  if (!m_bRunAtOther || !m_strGotoItem.IsEmpty() || 
+{
+  if (!m_bRunAtOther || !m_strGotoItem.IsEmpty() ||
     !(mActions[mCurActSelected].flags & NAA_FLAG_RUN_IT))
     return 0;
-  AfxMessageBox("You must fill in the starting text for the " + 
-    CString(m_iGotoLabelNote ? "note" : "label") + 
+  AfxMessageBox("You must fill in the starting text for the " +
+    CString(m_iGotoLabelNote ? "note" : "label") +
     "\nor turn off \"Run at nearest item\"", MB_EXCLAME);
   return 1;
 }
@@ -1780,8 +1784,8 @@ void CNavAcquireDlg::OnButSetupAction(UINT nID)
     // Astigmatism
   case NAACT_ASTIGMATISM:
     boolVal = mParam->astigByBTID ? 1 : 0;
-    if (!KGetOneChoice("", "What method do you want to use for correcting astigmatism?", 
-      boolVal, "Use CTF fitting to a single image", 
+    if (!KGetOneChoice("", "What method do you want to use for correcting astigmatism?",
+      boolVal, "Use CTF fitting to a single image",
       "Use the displacement of beam-tilted images (the BTID method)"))
       break;
     mParam->astigByBTID = boolVal != 0;
@@ -1817,8 +1821,8 @@ void CNavAcquireDlg::OnButSetupAction(UINT nID)
     dlg.DoModal();
   }
   break;
-  
-  // Realign to item    
+
+  // Realign to item
   case NAACT_REALIGN_ITEM:
   {
     CNavRealignDlg dlg;
@@ -1826,7 +1830,7 @@ void CNavAcquireDlg::OnButSetupAction(UINT nID)
     dlg.DoModal();
   }
   break;
-  
+
   // Flash FEG, for FEI
   case NAACT_FLASH_FEG:
     if (FEIscope) {
@@ -1858,7 +1862,7 @@ void CNavAcquireDlg::OnButSetupAction(UINT nID)
       mWinApp->mGainRefMaker->MakeRefInDEserver(true);
     }
     break;
-  
+
     // Check scope stuff
   case NAACT_CHECK_DEWARS:
   {

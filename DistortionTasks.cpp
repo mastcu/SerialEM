@@ -10,10 +10,8 @@
 #include "CameraController.h"
 #include "Utilities\KGetOne.h"
 
-#ifdef _DEBUG
+#if defined(_DEBUG) && defined(_CRTDBG_MAP_ALLOC)
 #define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
 #endif
 
 #define USER_CONSET 3
@@ -86,7 +84,7 @@ void CDistortionTasks::SetOverlaps()
     mDiagonalMaxOverlap, 2);
 }
 
-void CDistortionTasks::CalibrateDistortion() 
+void CDistortionTasks::CalibrateDistortion()
 {
   ControlSet *conSet = mConSets + USER_CONSET;
   float sizeX, sizeY;
@@ -96,7 +94,7 @@ void CDistortionTasks::CalibrateDistortion()
   CString report;
   mShiftManager->GetStageTiltFactors(xTiltFac, yTiltFac);
 
-  ScaleMat aMat = mShiftManager->StageToCamera(mWinApp->GetCurrentCamera(), 
+  ScaleMat aMat = mShiftManager->StageToCamera(mWinApp->GetCurrentCamera(),
     mScope->GetMagIndex());
 
   mBinning = conSet->binning;
@@ -106,7 +104,7 @@ void CDistortionTasks::CalibrateDistortion()
   mAInv.ypx /= yTiltFac;
   mAInv.ypy /= yTiltFac;
 
-  if (!KGetOneInt("Direction to move (0-7; 0=right, 1=45 deg, 2=up, etc):", 
+  if (!KGetOneInt("Direction to move (0-7; 0=right, 1=45 deg, 2=up, etc):",
     mDirectionIndex))
     return;
   if (mDirectionIndex < 0)
@@ -126,14 +124,14 @@ void CDistortionTasks::CalibrateDistortion()
     mMinShiftX = sizeX * (1.f - mMajorDimMaxOverlap);
     mMaxShiftX = sizeX * (1.f - mMajorDimMinOverlap);
     break;
-    
+
   case 4:
     mMaxShiftY = sizeY * (1.f - mMinorDimMinOverlap);
     mMinShiftY = - mMaxShiftY;
     mMinShiftX = -sizeX * (1.f - mMajorDimMinOverlap);
     mMaxShiftX = -sizeX * (1.f - mMajorDimMaxOverlap);
     break;
-    
+
   case 2:
     mMaxShiftX = sizeX * (1.f - mMinorDimMinOverlap);
     mMinShiftX = - mMaxShiftX;
@@ -146,7 +144,7 @@ void CDistortionTasks::CalibrateDistortion()
     mMinShiftY = -sizeY * (1.f - mMajorDimMinOverlap);
     mMaxShiftY = -sizeY * (1.f - mMajorDimMaxOverlap);
     break;
-    
+
   case 1:
     mMinShiftX = sizeX * (1.f - mDiagonalMaxOverlap);
     mMaxShiftX = sizeX * (1.f - mDiagonalMinOverlap);
@@ -183,7 +181,7 @@ void CDistortionTasks::CalibrateDistortion()
       "Press:\n\"Reset IS\" to reset the image shift to zero and move stage to "
       "compensate,\n\n"
       "\"Leave IS Nonzero\" to leave image shift where it is, or\n\n\"Cancel\" to abort"
-      " the procedure", "Reset IS", "Leave IS Nonzero", "Cancel", 
+      " the procedure", "Reset IS", "Leave IS Nonzero", "Cancel",
       MB_YESNOCANCEL | MB_ICONQUESTION);
     if (which == IDCANCEL)
       return;
@@ -202,7 +200,7 @@ void CDistortionTasks::CalibrateDistortion()
   }
 
   report.Format("Allowed range for shift: %.0f to %.0f in X; %.0f to %.0f in Y",
-    mMinShiftX, mMaxShiftX, mMinShiftY, mMaxShiftY); 
+    mMinShiftX, mMaxShiftX, mMinShiftY, mMaxShiftY);
   mWinApp->AppendToLog(report, LOG_OPEN_IF_CLOSED);
 
   // Get target image shift as center of ranges, and target stage move
@@ -248,7 +246,7 @@ void CDistortionTasks::SPNextTask(int param)
 
   if (!mIterCount)
     return;
-  
+
   switch (param) {
 
   case SP_FIRST_MOVE:
@@ -260,7 +258,7 @@ void CDistortionTasks::SPNextTask(int param)
     if (mStageDelay > 0)
       mWinApp->mShiftManager->SetStageDelayToUse(mStageDelay);
     mCamera->InitiateCapture(SHOT_CONSET);
-    mWinApp->AddIdleTask(SEMStageCameraBusy, TASK_DISTORTION_STAGEPAIR, SP_FIRST_SHOT, 
+    mWinApp->AddIdleTask(SEMStageCameraBusy, TASK_DISTORTION_STAGEPAIR, SP_FIRST_SHOT,
       0);
     return;
 
@@ -269,7 +267,7 @@ void CDistortionTasks::SPNextTask(int param)
     mMoveInfo.x += mStageMoveX;
     mMoveInfo.y += mStageMoveY;
     mScope->MoveStage(mMoveInfo, false);
-    mWinApp->AddIdleTask(SEMStageCameraBusy, TASK_DISTORTION_STAGEPAIR, 
+    mWinApp->AddIdleTask(SEMStageCameraBusy, TASK_DISTORTION_STAGEPAIR,
         SP_SECOND_MOVE, 60000);
     return;
 
@@ -277,7 +275,7 @@ void CDistortionTasks::SPNextTask(int param)
     if (mStageDelay > 0)
       mWinApp->mShiftManager->SetStageDelayToUse(mStageDelay);
     mCamera->InitiateCapture(SHOT_CONSET);
-    mWinApp->AddIdleTask(SEMStageCameraBusy, TASK_DISTORTION_STAGEPAIR, 
+    mWinApp->AddIdleTask(SEMStageCameraBusy, TASK_DISTORTION_STAGEPAIR,
         SP_SECOND_SHOT, 0);
     return;
 
@@ -295,7 +293,7 @@ void CDistortionTasks::SPNextTask(int param)
     mWinApp->mMainView->DrawImage();
     shiftY = -shiftY;
 
-    report.Format("Trial %d: shift between images is %.0f in X, %.0f in Y", 
+    report.Format("Trial %d: shift between images is %.0f in X, %.0f in Y",
       mIterCount, shiftX, shiftY);
     mWinApp->AppendToLog(report, LOG_OPEN_IF_CLOSED);
 
@@ -369,7 +367,7 @@ void CDistortionTasks::StopStagePairs()
 void CDistortionTasks::SPDoFirstMove()
 {
   mScope->MoveStage(mCenterInfo, true);
-  mWinApp->AddIdleTask(SEMStageCameraBusy, TASK_DISTORTION_STAGEPAIR, SP_FIRST_MOVE, 
+  mWinApp->AddIdleTask(SEMStageCameraBusy, TASK_DISTORTION_STAGEPAIR, SP_FIRST_MOVE,
     60000);
 }
 

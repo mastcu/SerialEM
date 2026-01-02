@@ -1,7 +1,7 @@
 // KGetOne.cpp:           Has routines for getting one integer, float, or string
 //                          using AskOneDlg
 //
-// Copyright (C) 2003 by the Regents of the University of
+// Copyright (C) 2003-2026 by the Regents of the University of
 // Colorado.  See Copyright.txt for full notice of copyright and limitations.
 //
 // Author: David Mastronarde
@@ -11,6 +11,10 @@
 #include "AskOneDlg.h"
 #include "KGetOne.h"
 #include "..\RadioChoiceDlg.h"
+
+#if defined(_DEBUG) && defined(_CRTDBG_MAP_ALLOC)
+#define new DEBUG_NEW
+#endif
 
 // Gets an integer with no info line; return true for OK
 BOOL KGetOneInt(CString inText, int &iVal)

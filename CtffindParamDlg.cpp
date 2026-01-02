@@ -1,6 +1,6 @@
 // CtffindParamDlg.cpp:      Dialog for ctffind parameters
 //
-// Copyright (C) 2019 by  the Regents of the University of
+// Copyright (C) 2019-2026 by  the Regents of the University of
 // Colorado.  See Copyright.txt for full notice of copyright and limitations.
 //
 // Author: David Mastronarde
@@ -12,6 +12,10 @@
 #include "SerialEMView.h"
 #include "CtffindParamDlg.h"
 #include "ProcessImage.h"
+
+#if defined(_DEBUG) && defined(_CRTDBG_MAP_ALLOC)
+#define new DEBUG_NEW
+#endif
 
 
 // CCtffindParamDlg dialog
@@ -115,7 +119,7 @@ void CCtffindParamDlg::ManageForCtfplotter()
 {
   EnableDlgItem(IDC_CHECK_SLOW_SEARCH, !m_bPlotterFitOnClick);
   EnableDlgItem(IDC_CHECK_EXTRA_STATS, !m_bPlotterFitOnClick);
-  SetDlgItemText(IDC_CHECK_DRAW_RINGS, m_bPlotterFitOnClick ? 
+  SetDlgItemText(IDC_CHECK_DRAW_RINGS, m_bPlotterFitOnClick ?
     "Draw rings to end of fitting range" : "Draw rings to computed resolution");
   SetDlgItemText(IDC_CHECK_FIND_PHASE, m_bPlotterFitOnClick ?
     "Find phase with expected phase" : "Find phase with search limits");

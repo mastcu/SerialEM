@@ -8,22 +8,26 @@
 #include "CameraController.h"
 #include "DirectElectron\DirectElectronCamera.h"
 
+#if defined(_DEBUG) && defined(_CRTDBG_MAP_ALLOC)
+#define new DEBUG_NEW
+#endif
+
 
 // CK2SaveOptionDlg dialog
 
-static int idTable[] = {IDC_STAT_FILETYPE, IDC_SAVE_MRC, IDC_COMPRESSED_TIFF, 
+static int idTable[] = {IDC_STAT_FILETYPE, IDC_SAVE_MRC, IDC_COMPRESSED_TIFF,
   IDC_TIFF_ZIP_COMPRESS, IDC_STAT_CURSET2, IDC_STAT_CURSET1,
   IDC_USE_EXTENSION_MRCS, PANEL_END,
   IDC_ONE_FRAME_PER_FILE, IDC_FRAME_STACK_MDOC, IDC_TSS_LINE2, PANEL_END,
-  IDC_SAVE_UNNORMALIZED, IDC_PACK_COUNTING_4BIT, IDC_USE_4BIT_MRC_MODE, 
-  IDC_SAVE_TIMES_100, IDC_PACK_RAW_FRAME, IDC_CHECK_REDUCE_SUPERRES, PANEL_END, 
-  IDC_SKIP_ROTFLIP, IDC_TSS_LINE1, PANEL_END, 
+  IDC_SAVE_UNNORMALIZED, IDC_PACK_COUNTING_4BIT, IDC_USE_4BIT_MRC_MODE,
+  IDC_SAVE_TIMES_100, IDC_PACK_RAW_FRAME, IDC_CHECK_REDUCE_SUPERRES, PANEL_END,
+  IDC_SKIP_ROTFLIP, IDC_TSS_LINE1, PANEL_END,
   IDC_STAT_COMPTITLE, IDC_STAT_USE_COMP, IDC_STAT_FOLDER, IDC_STAT_FILE,
   IDC_CHECK_ROOT_FOLDER, IDC_EDIT_BASENAME, IDC_CHECK_ROOT_FILE,
-  IDC_CHECK_SAVEFILE_FILE, IDC_CHECK_SAVEFILE_FOLDER, IDC_CHECK_NAVLABEL_FOLDER, 
+  IDC_CHECK_SAVEFILE_FILE, IDC_CHECK_SAVEFILE_FOLDER, IDC_CHECK_NAVLABEL_FOLDER,
   IDC_CHECK_NAVLABEL_FILE, IDC_CHECK_NUMBER, IDC_EDIT_START_NUMBER, IDC_STAT_DIGITS,
   IDC_SPIN_DIGITS, IDC_CHECK_ONLY_ACQUIRE, IDC_CHECK_TILT_ANGLE, PANEL_END,
-  IDC_CHECK_MONTHDAY, IDC_CHECK_HOUR_MIN_SEC, IDC_CHECK_DATE_PREFIX, PANEL_END, 
+  IDC_CHECK_MONTHDAY, IDC_CHECK_HOUR_MIN_SEC, IDC_CHECK_DATE_PREFIX, PANEL_END,
   IDC_CHECK_HOLE_POS, IDC_STAT_EXAMPLE, IDC_STAT_MUST_EXIST, IDC_STAT_MUST_EXIST2,
   PANEL_END,
   IDOK, IDCANCEL, IDC_BUTHELP, PANEL_END, TABLE_END};
@@ -194,7 +198,7 @@ BOOL CK2SaveOptionDlg::OnInitDialog()
     mIDsToDrop.push_back(IDC_ONE_FRAME_PER_FILE);
   AdjustPanels(states, idTable, leftTable, topTable, mNumInPanel, mPanelStart, 0);
   m_butSavesTimes100.ShowWindow(mK2Type == K2_SUMMIT);
-  m_butPackCounting4Bits.ShowWindow(mK2Type == K2_SUMMIT || 
+  m_butPackCounting4Bits.ShowWindow(mK2Type == K2_SUMMIT ||
     (mK2Type == K3_TYPE && mWinApp->mCamera->CAN_PLUGIN_DO(CAN_BIN_K3_REF, mCamParams)));
   if (mK2Type == K3_TYPE) {
     m_butPackRawFrame.SetWindowText("Pack unnormalized data as 4-bit");
@@ -215,7 +219,7 @@ BOOL CK2SaveOptionDlg::OnInitDialog()
   m_bMultiHolePos = (mNameFormat & FRAME_FILE_HOLE_AND_POS) != 0;
   if (!mCanCreateDir && !mDEtype && !mCamParams->DectrisType)
     SetDlgItemText(IDC_STAT_MUST_EXIST, B3DCHOICE(mFalconType,
-    "Subfolder set with \"Set Folder\" must be blank to create folders", 
+    "Subfolder set with \"Set Folder\" must be blank to create folders",
     "Plugin to DigitalMicrograph must be upgraded to create folders"));
   else if (mFalconType && (mCamFlags & PLUGFEI_USES_ADVANCED)) {
     SetDlgItemText(IDC_STAT_MUST_EXIST, "Folder will be created if necessary inside "
@@ -315,11 +319,11 @@ void CK2SaveOptionDlg::UpdateFormat(void)
   char digHash[6] = "#####";
   CTime ctDateTime = CTime::GetCurrentTime();
   mWinApp->mDocWnd->DateTimeComponents(date, time, m_bDatePrefix);
-  m_strExample = (m_bRootFolder && !m_strBasename.IsEmpty() && mCanCreateDir) ? 
+  m_strExample = (m_bRootFolder && !m_strBasename.IsEmpty() && mCanCreateDir) ?
     "Base" : "";
   if (mFalconType && (mCamFlags & PLUGFEI_USES_ADVANCED) && !mCanCreateDir)
     m_strExample = "Subfolder";
-  if (m_bSavefileFolder && mCanCreateDir) 
+  if (m_bSavefileFolder && mCanCreateDir)
     UtilAppendWithSeparator(m_strExample, "File", "_");
   if (m_bNavLabelFolder && mCanCreateDir)
     UtilAppendWithSeparator(m_strExample, "Label", "_");
@@ -327,15 +331,15 @@ void CK2SaveOptionDlg::UpdateFormat(void)
     m_strExample += "\\";
   if (mCanCreateDir)
     folders = m_strExample;
-  m_statMustExist.ShowWindow((m_strExample.IsEmpty() && mCanCreateDir) 
+  m_statMustExist.ShowWindow((m_strExample.IsEmpty() && mCanCreateDir)
     ? SW_HIDE : SW_SHOW);
-  m_statMustExist2.ShowWindow(((!mDEtype && (m_strExample.IsEmpty() || !mCanCreateDir)) || 
+  m_statMustExist2.ShowWindow(((!mDEtype && (m_strExample.IsEmpty() || !mCanCreateDir)) ||
     (mDEtype && mCanCreateDir)) ? SW_HIDE : SW_SHOW);
   if (m_bRootFile && !m_strBasename.IsEmpty())
     filename = "Base";
   if (m_bSavefileFile)
     UtilAppendWithSeparator(filename, "File", "_");
-  if (m_bNavLabelFile) 
+  if (m_bNavLabelFile)
     UtilAppendWithSeparator(filename, "Label", "_");
   if (m_bNumber)
     UtilAppendWithSeparator(filename, &digHash[5 - mNumberDigits], "_");
@@ -356,7 +360,7 @@ void CK2SaveOptionDlg::UpdateFormat(void)
   if (mDEtype) {
     if (!filename.IsEmpty())
       filename += "_";
-    m_strExample.Format("Format: %s%d%02d%02d_00001_%sRawImages", folders, 
+    m_strExample.Format("Format: %s%d%02d%02d_00001_%sRawImages", folders,
       ctDateTime.GetYear(), ctDateTime.GetMonth(), ctDateTime.GetDay(), filename);
   } else
     m_strExample = CString("Format: ") + m_strExample + filename;
@@ -366,15 +370,15 @@ void CK2SaveOptionDlg::UpdateFormat(void)
 
 void CK2SaveOptionDlg::ManagePackOptions(void)
 {
-  bool unNormed = !mSetIsGainNormalized || 
+  bool unNormed = !mSetIsGainNormalized ||
     (mCanGainNormSum && m_bSaveUnnormalized && mK2Type);
   m_butPackRawFrame.EnableWindow(unNormed);
   bool binning = mWinApp->mCamera->IsK3BinningSuperResFrames(mCamParams, 1, mSaveSetting,
-    mAlignSetting, mUseFrameAlign, unNormed ? DARK_SUBTRACTED : GAIN_NORMALIZED, 
+    mAlignSetting, mUseFrameAlign, unNormed ? DARK_SUBTRACTED : GAIN_NORMALIZED,
     mK2mode, mTakingK3Binned);
   bool reducing = !unNormed && (mK2Type == K3_TYPE || mK2mode == K2_SUPERRES_MODE) &&
     mK2mode > 0 && !binning && mCanReduceSuperres && m_bReduceSuperres && mK2Type;
-  m_butPackCounting4Bits.EnableWindow(unNormed && m_bPackRawFrames && 
+  m_butPackCounting4Bits.EnableWindow(unNormed && m_bPackRawFrames &&
     mCan4BitModeAndCounting);
   m_butUse4BitMode.EnableWindow(unNormed && m_bPackRawFrames && !m_iFileType &&
     mCan4BitModeAndCounting);
@@ -383,7 +387,7 @@ void CK2SaveOptionDlg::ManagePackOptions(void)
   m_butUseExtensionMRCS.EnableWindow(!m_iFileType && mCanUseExtMRCS);
   m_butSaveFrameStackMdoc.EnableWindow(mCanSaveFrameStackMdoc > 0);
   m_strCurSetSaves.Format("%s to %s%s%s%s", unNormed ? "raw" : "norm",
-      m_iFileType > 0 ? (m_iFileType > 1 ? "TIF-ZIP" : "TIF-LZW") : "MRC", 
+      m_iFileType > 0 ? (m_iFileType > 1 ? "TIF-ZIP" : "TIF-LZW") : "MRC",
       (reducing || binning) ? "" : (m_bOneFramePerFile ? " files" : " stack"),
       (unNormed && mK2mode > 0 && m_bPackRawFrames && mK2Type)? ", packed" : "",
       reducing ? ", reduced" : (binning ? ", binned" : ""));

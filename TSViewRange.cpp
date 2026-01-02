@@ -8,6 +8,10 @@
 #include "SerialEMView.h"
 #include "ChildFrm.h"
 
+#if defined(_DEBUG) && defined(_CRTDBG_MAP_ALLOC)
+#define new DEBUG_NEW
+#endif
+
 
 // CTSViewRange dialog
 
@@ -41,13 +45,13 @@ BOOL CTSViewRange::OnInitDialog()
   return FALSE;
 }
 
-void CTSViewRange::PostNcDestroy() 
+void CTSViewRange::PostNcDestroy()
 {
-  delete this;  
+  delete this;
   CDialog::PostNcDestroy();
 }
 
-void CTSViewRange::OnOK() 
+void CTSViewRange::OnOK()
 {
   CloseWindow(true);
 }

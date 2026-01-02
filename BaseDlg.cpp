@@ -1,6 +1,6 @@
 // BaseDlg.cpp:    Base class to handle tool tips, help button, panels, other utilities
 //
-// Copyright (C) 2003-2021 by the Regents of the University of
+// Copyright (C) 2003-2026 by the Regents of the University of
 // Colorado.  See Copyright.txt for full notice of copyright and limitations.
 //
 // Author: David Mastronarde
@@ -12,10 +12,8 @@
 #include ".\BaseDlg.h"
 #include "Shared\b3dutil.h"
 
-#ifdef _DEBUG
+#if defined(_DEBUG) && defined(_CRTDBG_MAP_ALLOC)
 #define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
 #endif
 
 /////////////////////////////////////////////////////////////////////////////
@@ -69,7 +67,7 @@ END_MESSAGE_MAP()
 /////////////////////////////////////////////////////////////////////////////
 // CBaseDlg message handlers
 
-BOOL CBaseDlg::OnInitDialog() 
+BOOL CBaseDlg::OnInitDialog()
 {
   if (!mWinApp->GetDisplayNotTruly120DPI())
     mSetDPI.Attach(AfxFindResourceHandle(MAKEINTRESOURCE(mIDD), RT_DIALOG),
@@ -102,9 +100,9 @@ BOOL CBaseDlg::OnToolTipNotify( UINT id, NMHDR * pNMHDR, LRESULT * pResult )
   return(FALSE);
 }
 
-void CBaseDlg::OnButhelp() 
+void CBaseDlg::OnButhelp()
 {
-  mWinApp->OnHelp(); 
+  mWinApp->OnHelp();
   FixButtonFocus(m_butHelp);
   if (mNonModal)
     mWinApp->RestoreViewFocus();
@@ -127,7 +125,7 @@ void CBaseDlg::ReplaceDlgItemText(int nID, const char * fromText, CString toText
   SetDlgItemText(nID, str);
 }
 
-void CBaseDlg::ReplaceDlgItemText(int nID, const char * fromText, const char * fromText2, 
+void CBaseDlg::ReplaceDlgItemText(int nID, const char * fromText, const char * fromText2,
   CString toText)
 {
   CString str;
@@ -195,55 +193,55 @@ void CBaseDlg::DrawButtonOutline(CPaintDC &dc, CWnd *but, int thickness,
 }
 
 // If nonModal, capture all the stray mouse events not on a control and yield focus
-void CBaseDlg::OnLButtonDown(UINT nFlags, CPoint point) 
+void CBaseDlg::OnLButtonDown(UINT nFlags, CPoint point)
 {
   CDialog::OnLButtonDown(nFlags, point);
   if (mNonModal)
     mWinApp->RestoreViewFocus();
 }
-void CBaseDlg::OnMButtonDown(UINT nFlags, CPoint point) 
+void CBaseDlg::OnMButtonDown(UINT nFlags, CPoint point)
 {
   CDialog::OnMButtonDown(nFlags, point);
   if (mNonModal)
     mWinApp->RestoreViewFocus();
 }
-void CBaseDlg::OnRButtonDown(UINT nFlags, CPoint point) 
+void CBaseDlg::OnRButtonDown(UINT nFlags, CPoint point)
 {
   CDialog::OnRButtonDown(nFlags, point);
   if (mNonModal)
     mWinApp->RestoreViewFocus();
 }
-void CBaseDlg::OnLButtonUp(UINT nFlags, CPoint point) 
+void CBaseDlg::OnLButtonUp(UINT nFlags, CPoint point)
 {
   CDialog::OnLButtonUp(nFlags, point);
   if (mNonModal)
     mWinApp->RestoreViewFocus();
 }
-void CBaseDlg::OnMButtonUp(UINT nFlags, CPoint point) 
+void CBaseDlg::OnMButtonUp(UINT nFlags, CPoint point)
 {
   CDialog::OnMButtonUp(nFlags, point);
   if (mNonModal)
     mWinApp->RestoreViewFocus();
 }
-void CBaseDlg::OnRButtonUp(UINT nFlags, CPoint point) 
+void CBaseDlg::OnRButtonUp(UINT nFlags, CPoint point)
 {
   CDialog::OnRButtonUp(nFlags, point);
   if (mNonModal)
     mWinApp->RestoreViewFocus();
 }
-void CBaseDlg::OnLButtonDblClk(UINT nFlags, CPoint point) 
+void CBaseDlg::OnLButtonDblClk(UINT nFlags, CPoint point)
 {
   CDialog::OnLButtonDblClk(nFlags, point);
   if (mNonModal)
     mWinApp->RestoreViewFocus();
 }
-void CBaseDlg::OnMButtonDblClk(UINT nFlags, CPoint point) 
+void CBaseDlg::OnMButtonDblClk(UINT nFlags, CPoint point)
 {
   CDialog::OnMButtonDblClk(nFlags, point);
   if (mNonModal)
     mWinApp->RestoreViewFocus();
 }
-void CBaseDlg::OnRButtonDblClk(UINT nFlags, CPoint point) 
+void CBaseDlg::OnRButtonDblClk(UINT nFlags, CPoint point)
 {
   CDialog::OnRButtonDblClk(nFlags, point);
   if (mNonModal)
@@ -322,7 +320,7 @@ BOOL CBaseDlg::Ddx_MinMaxFloat(CDataExchange *pDX, UINT nID, float &member, floa
 }
 
 // Replacement function for DDX_Text with an int variable and optional call to MinMaxInt
-BOOL CBaseDlg::Ddx_MinMaxInt(CDataExchange *pDX, UINT nID, int &member, int minVal, 
+BOOL CBaseDlg::Ddx_MinMaxInt(CDataExchange *pDX, UINT nID, int &member, int minVal,
   int maxVal, const char *descrip)
 {
   char *endPtr;
@@ -378,10 +376,10 @@ void CBaseDlg::FillDialogItemRectangle(CPaintDC &dc, CRect &winRect, CWnd *wnd,
   dc.FillSolidRect(&dcRect, color);
 }
 
-// Return top, left coordinates that can be used in a SetWindowPos call for the 
+// Return top, left coordinates that can be used in a SetWindowPos call for the
 // given element; will set window and client rect only if necessary
 // See Navigator for an example
-void CBaseDlg::TopLeftForSetWindowPos(CWnd *wnd, CRect &wndRect, CRect &clientRect, 
+void CBaseDlg::TopLeftForSetWindowPos(CWnd *wnd, CRect &wndRect, CRect &clientRect,
   int &left, int &top)
 {
   int ixOffset;
@@ -404,7 +402,7 @@ void CBaseDlg::TopLeftForSetWindowPos(CWnd *wnd, CRect &wndRect, CRect &clientRe
 // Setup call for the panel tables
 // The first item in the section for panel is recorded as the panelStart so it better be
 // the top item; probably best to end panel section with the bottom item too
-void CBaseDlg::SetupPanelTables(int *idTable, int *leftTable, int *topTable, 
+void CBaseDlg::SetupPanelTables(int *idTable, int *leftTable, int *topTable,
   int *numInPanel, int *panelStart, int *heightTable, int sortStart)
 {
   CRect wndRect, clientRect, idRect;
@@ -462,7 +460,7 @@ void CBaseDlg::SetupPanelTables(int *idTable, int *leftTable, int *topTable,
 
 // Analyze list of "units" of IDs to add after certain other IDs and find other sizes
 // needed to addthem properly
-void CBaseDlg::SetupUnitsToAdd(int *idTable, int *leftTable, int *topTable, 
+void CBaseDlg::SetupUnitsToAdd(int *idTable, int *leftTable, int *topTable,
   int *numInPanel, int *panelStart, int groupAdjust)
 {
   int ii, jj, unit, temp, index, diff, unitTop, prevTop, left, back;
@@ -520,7 +518,7 @@ void CBaseDlg::SetupUnitsToAdd(int *idTable, int *leftTable, int *topTable,
     }
 
     // And get the next item after the unit not in add list
-    index = FindIDinTable(mAddItemIDs[mAddUnitStartInds[unit + 1] - 1], idTable, 
+    index = FindIDinTable(mAddItemIDs[mAddUnitStartInds[unit + 1] - 1], idTable,
       numInPanel, panelStart);
     diff = 0;
     back = 0;
@@ -532,7 +530,7 @@ void CBaseDlg::SetupUnitsToAdd(int *idTable, int *leftTable, int *topTable,
       back++;
     }
 
-    if (index + back == 0 || index + back + 1 >= panelStart[mNumPanels - 1] + 
+    if (index + back == 0 || index + back + 1 >= panelStart[mNumPanels - 1] +
       numInPanel[mNumPanels - 1])
       mWinApp->AppendToLog("PROGRAM ERROR: unit to add ends at end of table");
     else if (prevTop >= 0)
@@ -577,7 +575,7 @@ int CBaseDlg::FindIDinTable(int ID, int *idTable, int *numInPanel, int *panelSta
 }
 
 // Rebuild the dialog given the panel states and other information stored in members
-void CBaseDlg::AdjustPanels(BOOL *states, int *idTable, int *leftTable, int *topTable, 
+void CBaseDlg::AdjustPanels(BOOL *states, int *idTable, int *leftTable, int *topTable,
   int *numInPanel, int *panelStart, int numCameras, int *heightTable)
 {
   bool draw, drop, droppingLine, doingAtEnd;
@@ -709,7 +707,7 @@ void CBaseDlg::AdjustPanels(BOOL *states, int *idTable, int *leftTable, int *top
         /*CRect tempRect;
         wnd->GetClientRect(tempRect);
         if (heightTable && tempRect.Height() < heightTable[index])
-          PrintfToLog("ID %d  table %d  now %d", thisID, heightTable[index], 
+          PrintfToLog("ID %d  table %d  now %d", thisID, heightTable[index],
           tempRect.Height());*/
         if (mNumUnitsToAdd > 0 && mAddAfterIDSet.count(thisID) > 0) {
           topDiff = 0;
@@ -739,7 +737,7 @@ void CBaseDlg::AdjustPanels(BOOL *states, int *idTable, int *leftTable, int *top
       } else if (specialDrops.count(thisID) == 0)
 
         // Or hide
-        positions = DeferWindowPos(positions, wnd->m_hWnd, NULL, 0, 0, 0, 0, 
+        positions = DeferWindowPos(positions, wnd->m_hWnd, NULL, 0, 0, 0, 0,
           SWP_NOZORDER | SWP_NOSIZE | SWP_NOMOVE | SWP_HIDEWINDOW);
     }
 
@@ -765,7 +763,7 @@ void CBaseDlg::AdjustPanels(BOOL *states, int *idTable, int *leftTable, int *top
       topPos = savedNextTop[3 * jj + 1];
       wnd = GetDlgItem(mIDsToAdjustHeight[jj]);
       wnd->GetWindowRect(rect);
-      positions = DeferWindowPos(positions, wnd->m_hWnd, NULL, savedNextTop[3 * jj], 
+      positions = DeferWindowPos(positions, wnd->m_hWnd, NULL, savedNextTop[3 * jj],
         topPos, rect.Width(), mAdjustmentToTopDiff[jj] + savedNextTop[3 * jj + 2] - topPos
         , SWP_NOZORDER | SWP_SHOWWINDOW);
       if (mSecondColPanel > 0) {
@@ -780,7 +778,7 @@ void CBaseDlg::AdjustPanels(BOOL *states, int *idTable, int *leftTable, int *top
   lastWnd->GetWindowRect(rect);
   GetWindowRect(winRect);
   mSetToHeight = rect.bottom + 8 - winRect.top;
-  SetWindowPos(NULL, 0, 0, (mSecondColPanel > 0 && maxRight < 0.75 * mBasicWidth) ? 
+  SetWindowPos(NULL, 0, 0, (mSecondColPanel > 0 && maxRight < 0.75 * mBasicWidth) ?
     maxRight + mBasicWidth - mBasicMaxRight : mBasicWidth, mSetToHeight, SWP_NOMOVE);
 }
 
@@ -804,11 +802,11 @@ void CBaseDlg::ManageDropping(int *topTable, int index, int nID, int topAtLastDr
   if (drop || lineDrop || (firstDropped >= 0 && droppingLine &&
     B3DABS(topTable[index] - topTable[firstDropped]) <= mSameLineCrit)) {
 
-    // But if there is already dropping in play from a previous line, add to 
+    // But if there is already dropping in play from a previous line, add to
     // cumulative drop distance and reset index to this one
     if ((drop || lineDrop) && firstDropped >= 0) {
       if (lineDrop || (topTable[index] - topTable[firstDropped] > mSameLineCrit &&
-        (!firstDropped || B3DABS(topTable[firstDropped] - topAtLastDraw) > 
+        (!firstDropped || B3DABS(topTable[firstDropped] - topAtLastDraw) >
         mSameLineCrit))) {
         cumulDrop += topTable[index] - topTable[firstDropped];
         firstDropped = -1;
@@ -821,7 +819,7 @@ void CBaseDlg::ManageDropping(int *topTable, int index, int nID, int topAtLastDr
       firstDropped = index;
       droppingLine = lineDrop;
     }
-    /*PrintfToLog("ID %d ind %d drop %d line %d first %d cumul %d", nID, index, 
+    /*PrintfToLog("ID %d ind %d drop %d line %d first %d cumul %d", nID, index,
     drop ? 1 : 0, droppingLine ? 1 : 0, firstDropped, cumulDrop);*/
   }
 
@@ -836,8 +834,8 @@ void CBaseDlg::ManageDropping(int *topTable, int index, int nID, int topAtLastDr
 }
 
 // Call if this ID is in the set to grow: this function finds the neighbor ID and window
-// and gets its width and position.  A positive width is returned if the 
-// neighbor is hidden and the item currently ends before the neighbor's left edge; or 
+// and gets its width and position.  A positive width is returned if the
+// neighbor is hidden and the item currently ends before the neighbor's left edge; or
 // a negative value is returned if the neighbor is present and this item is too long
 int CBaseDlg::WidthToGrowIfNbrHidden(int thisID)
 {

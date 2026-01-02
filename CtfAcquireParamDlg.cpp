@@ -1,6 +1,6 @@
 // CtfAcquireParamDlg.cpp : Sets parameters for images and defocus handling in CTF tuning
 //
-// Copyright (C) 2025 by  the Regents of the University of
+// Copyright (C) 2025-2026 by  the Regents of the University of
 // Colorado.  See Copyright.txt for full notice of copyright and limitations.
 //
 // Author: David Mastronarde
@@ -11,6 +11,10 @@
 #include "SerialEM.h"
 #include "CtfAcquireParamDlg.h"
 #include "CameraController.h"
+
+#if defined(_DEBUG) && defined(_CRTDBG_MAP_ALLOC)
+#define new DEBUG_NEW
+#endif
 
 
 // CCtfAcquireParamDlg dialog
@@ -72,9 +76,9 @@ void CCtfAcquireParamDlg::DoDataExchange(CDataExchange* pDX)
   DDV_MinMaxFloat(pDX, m_fMinAdd, DDV_MIN_ADD, DDV_MAX_ADD);
   DDX_Check(pDX, IDC_CHECK_USE_ALI_SET, m_bUseAliSet);
   DDX_Text(pDX, IDC_EDIT_ALIGN_SET, m_iAlignSet);
-  DDV_MinMaxInt(pDX, m_iAlignSet, 1, 
+  DDV_MinMaxInt(pDX, m_iAlignSet, 1,
     (int)(mWinApp->mCamera->GetFrameAliParams())->GetSize());
-  
+
 }
 
 

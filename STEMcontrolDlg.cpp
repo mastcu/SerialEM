@@ -8,6 +8,10 @@
 #include "EMscope.h"
 #include "ShiftManager.h"
 
+#if defined(_DEBUG) && defined(_CRTDBG_MAP_ALLOC)
+#define new DEBUG_NEW
+#endif
+
 
 // CSTEMcontrolDlg dialog
 
@@ -70,7 +74,7 @@ END_MESSAGE_MAP()
 
 // CSTEMcontrolDlg message handlers
 
-BOOL CSTEMcontrolDlg::OnInitDialog() 
+BOOL CSTEMcontrolDlg::OnInitDialog()
 {
   CRect rect, rect2, winRect;
   CToolDlg::OnInitDialog();
@@ -85,7 +89,7 @@ BOOL CSTEMcontrolDlg::OnInitDialog()
     GetWindowRect(&winRect);
     m_butSetISneutral.GetWindowRect(&rect);
     m_editAddedRot.GetWindowRect(&rect2);
-    SetWindowPos(NULL, 0, 0, 
+    SetWindowPos(NULL, 0, 0,
       winRect.Width(), winRect.Height() - (rect.bottom - rect2.bottom), SWP_NOMOVE);
   }
   UpdateSettings();
@@ -101,7 +105,7 @@ BOOL CSTEMcontrolDlg::OnInitDialog()
 void CSTEMcontrolDlg::OnStemMode()
 {
   UpdateData(true);
-  mWinApp->RestoreViewFocus(); 
+  mWinApp->RestoreViewFocus();
   mWinApp->SetSTEMMode(m_bStemMode);
 }
 
@@ -114,7 +118,7 @@ void CSTEMcontrolDlg::OnScreenSwitchStem()
   }
   UpdateData(true);
   mWinApp->SetScreenSwitchSTEM(m_bScreenSwitches);
-  mWinApp->RestoreViewFocus(); 
+  mWinApp->RestoreViewFocus();
   mWinApp->mLowDoseDlg.Update();
 }
 
@@ -122,7 +126,7 @@ void CSTEMcontrolDlg::OnMatchStemPixel()
 {
   UpdateData(true);
   mWinApp->SetSTEMmatchPixel(m_bMatchPixel);
-  mWinApp->RestoreViewFocus(); 
+  mWinApp->RestoreViewFocus();
 }
 
 void CSTEMcontrolDlg::OnInvertContrast()
@@ -135,7 +139,7 @@ void CSTEMcontrolDlg::OnInvertContrast()
 void CSTEMcontrolDlg::OnBlankInStem()
 {
   UpdateData(true);
-  mWinApp->RestoreViewFocus();  
+  mWinApp->RestoreViewFocus();
   mWinApp->SetBlankBeamInSTEM(m_bBlankInStem);
   mWinApp->ManageSTEMBlanking();
 }
@@ -143,13 +147,13 @@ void CSTEMcontrolDlg::OnBlankInStem()
 void CSTEMcontrolDlg::OnRetractToUnblank()
 {
   UpdateData(true);
-  mWinApp->RestoreViewFocus();  
+  mWinApp->RestoreViewFocus();
   mWinApp->SetRetractToUnblankSTEM(m_bRetractToUnblank);
 }
 
 void CSTEMcontrolDlg::OnUnblankStem()
 {
-  mWinApp->RestoreViewFocus();  
+  mWinApp->RestoreViewFocus();
   mWinApp->mScope->BlankBeam(!mLastBlanked);
   BlankingUpdate(!mLastBlanked);
 }
@@ -206,7 +210,7 @@ void CSTEMcontrolDlg::UpdateSettings(void)
   m_bInvertContrast = mWinApp->GetInvertSTEMimages();
   m_strAddedRot.Format("%.1f", mWinApp->GetAddedSTEMrotation());
   m_bBlankInStem = mWinApp->GetBlankBeamInSTEM();
-  m_bRetractToUnblank = mWinApp->GetRetractToUnblankSTEM() && 
+  m_bRetractToUnblank = mWinApp->GetRetractToUnblankSTEM() &&
     !mWinApp->GetMustUnblankWithScreen();
   UpdateData(false);
 }

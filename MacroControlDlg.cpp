@@ -1,7 +1,6 @@
 // MacroControlDlg.cpp:  To set parameters for controlling macros
 //
-// Copyright (C) 2003 by Boulder Laboratory for 3-Dimensional Electron 
-// Microscopy of Cells ("BL3DEMC") and the Regents of the University of
+// Copyright (C) 2003-2026 by the Regents of the University of
 // Colorado.  See Copyright.txt for full notice of copyright and limitations.
 //
 // Author: David Mastronarde
@@ -11,10 +10,8 @@
 #include "SerialEM.h"
 #include "MacroControlDlg.h"
 
-#ifdef _DEBUG
+#if defined(_DEBUG) && defined(_CRTDBG_MAP_ALLOC)
 #define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
 #endif
 
 /////////////////////////////////////////////////////////////////////////////
@@ -89,10 +86,10 @@ END_MESSAGE_MAP()
 /////////////////////////////////////////////////////////////////////////////
 // CMacroControlDlg message handlers
 
-BOOL CMacroControlDlg::OnInitDialog() 
+BOOL CMacroControlDlg::OnInitDialog()
 {
   CBaseDlg::OnInitDialog();
-  
+
   // Load the check boxes
   m_bTiltUp = mControl.limitTiltUp;
   m_bTiltDown = mControl.limitTiltDown;
@@ -122,7 +119,7 @@ BOOL CMacroControlDlg::OnInitDialog()
                 // EXCEPTION: OCX Property Pages should return FALSE
 }
 
-void CMacroControlDlg::OnOK() 
+void CMacroControlDlg::OnOK()
 {
   UpdateData(true);
 
@@ -136,12 +133,12 @@ void CMacroControlDlg::OnOK()
   mControl.limitRuns = m_bRuns;
   mControl.limitMontError = m_bMontError;
   mControl.limitIS = m_bImageShift;
-  
+
   CDialog::OnOK();
 }
 
 // For each edit box, unload data; process floats
-void CMacroControlDlg::OnKillfocusEditImageshift() 
+void CMacroControlDlg::OnKillfocusEditImageshift()
 {
   UpdateData(true);
   mControl.ISlimit = (float)atof((LPCTSTR)m_strImageShift);
@@ -149,7 +146,7 @@ void CMacroControlDlg::OnKillfocusEditImageshift()
     m_editImageShift.SetWindowText("0.0");
 }
 
-void CMacroControlDlg::OnKillfocusEditMonterror() 
+void CMacroControlDlg::OnKillfocusEditMonterror()
 {
   UpdateData(true);
   mControl.montErrorLimit = (float)atof((LPCTSTR)m_strMontError);
@@ -157,12 +154,12 @@ void CMacroControlDlg::OnKillfocusEditMonterror()
     m_editMontError.SetWindowText("0.0");
 }
 
-void CMacroControlDlg::OnKillfocusEditRuns() 
+void CMacroControlDlg::OnKillfocusEditRuns()
 {
   UpdateData(true);
 }
 
-void CMacroControlDlg::OnKillfocusEditTiltdown() 
+void CMacroControlDlg::OnKillfocusEditTiltdown()
 {
   UpdateData(true);
   mControl.tiltDownLimit = (float)atof((LPCTSTR)m_strTiltDown);
@@ -170,7 +167,7 @@ void CMacroControlDlg::OnKillfocusEditTiltdown()
     m_editTiltDown.SetWindowText("0.0");
 }
 
-void CMacroControlDlg::OnKillfocusEditTiltup() 
+void CMacroControlDlg::OnKillfocusEditTiltup()
 {
   UpdateData(true);
   mControl.tiltUpLimit = (float)atof((LPCTSTR)m_strTiltUp);
@@ -178,43 +175,43 @@ void CMacroControlDlg::OnKillfocusEditTiltup()
     m_editTiltUp.SetWindowText("0.0");
 }
 
-void CMacroControlDlg::OnKillfocusEditWhitelevel() 
+void CMacroControlDlg::OnKillfocusEditWhitelevel()
 {
   UpdateData(true);
 }
 
 // For each check box, enable or disable edit window
-void CMacroControlDlg::OnLimitImageshift() 
+void CMacroControlDlg::OnLimitImageshift()
 {
   UpdateData(true);
   m_editImageShift.EnableWindow(m_bImageShift);
 }
 
-void CMacroControlDlg::OnLimitMonterror() 
+void CMacroControlDlg::OnLimitMonterror()
 {
   UpdateData(true);
   m_editMontError.EnableWindow(m_bMontError);
 }
 
-void CMacroControlDlg::OnLimitRuns() 
+void CMacroControlDlg::OnLimitRuns()
 {
   UpdateData(true);
   m_editRuns.EnableWindow(m_bRuns);
 }
 
-void CMacroControlDlg::OnLimitTiltdown() 
+void CMacroControlDlg::OnLimitTiltdown()
 {
   UpdateData(true);
   m_editTiltDown.EnableWindow(m_bTiltDown);
 }
 
-void CMacroControlDlg::OnLimitTiltup() 
+void CMacroControlDlg::OnLimitTiltup()
 {
   UpdateData(true);
   m_editTiltUp.EnableWindow(m_bTiltUp);
 }
 
-void CMacroControlDlg::OnLimitWhitelevel() 
+void CMacroControlDlg::OnLimitWhitelevel()
 {
   UpdateData(true);
   m_editWhiteLevel.EnableWindow(m_bWhiteLevel);

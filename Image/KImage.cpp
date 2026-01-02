@@ -1,7 +1,6 @@
 // KImage.cpp:            Has the basic image class and KImageShort and KImageFloat
 //
-// Copyright (C) 2003 by Boulder Laboratory for 3-Dimensional Electron 
-// Microscopy of Cells ("BL3DEMC") and the Regents of the University of
+// Copyright (C) 2003-2026 by the Regents of the University of
 // Colorado.  See Copyright.txt for full notice of copyright and limitations.
 //
 // Authors: David Mastronarde and James Kremer
@@ -10,6 +9,10 @@
 #include "KImage.h"
 #include "..\Utilities\XCorr.h"
 #include "..\SerialEM.h"
+
+#if defined(_DEBUG) && defined(_CRTDBG_MAP_ALLOC)
+#define new DEBUG_NEW
+#endif
 
 KImage::KImage()
 {
@@ -24,11 +27,11 @@ KImage::KImage(KImage *inRect)
   *this = *inRect;
 
   // Increment the reference count
-  if (mReference) 
+  if (mReference)
     (*mReference)++;
 
   // If there is extra data, make a new copy
-  // Notice this is building in the assumption that the 
+  // Notice this is building in the assumption that the
   // the user data is an EMimageExtra!
   if (mUserData) {
     EMimageExtra *theExtra = new EMimageExtra();
@@ -43,15 +46,15 @@ KImage::KImage(int inWidth, int inHeight)
   CommonInit(kUBYTE, inWidth, inHeight);
   mRowBytes = inWidth;
 
-  // DNM 2/15/02: make the calling program set the size 
+  // DNM 2/15/02: make the calling program set the size
   // to multiple of 4 if needed; don't do it here
   // if (inWidth%4) mRowBytes += (4 - (inWidth%4));
-  
+
   if (((size_t)mRowWidth * inHeight) <= 0){
     mWidth = mHeight = mRowBytes = mRowWidth = 0;
     return;
   }
-  
+
   NewArray2(mData, unsigned char, mRowWidth, inHeight);
   if (mData == NULL){
     mRowWidth = mRowBytes = mWidth = 0;
@@ -60,7 +63,7 @@ KImage::KImage(int inWidth, int inHeight)
   };
   mReference = new int;
   *mReference = 1;
-  
+
 }
 
 // Dereference data; Unlock and destroy SAFEARRAY or just delete mData
@@ -89,7 +92,7 @@ void KImage::CommonInit(int inType, int inWidth, int inHeight)
 {
   mType        = inType;
   mMode        = kGray;
-  mXshift        = 0.f; 
+  mXshift        = 0.f;
   mYshift        = 0.f;
   mWidth       = inWidth;
   mHeight      = inHeight;
@@ -170,7 +173,7 @@ char *KImage::getRowData(int inRow)
 
 float KImage::getPixel(int inX, int inY)
 {
-  if ((inX < 0) || (inY < 0) || 
+  if ((inX < 0) || (inY < 0) ||
     (inX >= mWidth) || (inY >= mHeight))
       return(0.);
   return((float)mData[inX + ((size_t)inY * mRowWidth)]);
@@ -178,7 +181,7 @@ float KImage::getPixel(int inX, int inY)
 
 int KImage::setPixel(int inX, int inY, int inValue)
 {
-  if ((inX < 0) || (inY < 0) || 
+  if ((inX < 0) || (inY < 0) ||
     (inX >= mWidth) || (inY >= mHeight))
   return(1);
   mData[inX + ((size_t)inY * mRowWidth)] = inValue;
@@ -202,7 +205,7 @@ void KImage::applyPad()
   int mrow = mWidth;
   int mcol = mHeight/2;
   int x, y;
-  
+
   if (mWidth != mRowWidth)
   for(y = mHeight - 1; y > 0; y--){
     from = to = mData;
@@ -210,7 +213,7 @@ void KImage::applyPad()
     to   += mRowBytes * (size_t)y;
     for(x = mrow-1; x > 0; x--)
       to[x] = from[x];
-  } 
+  }
 }
 
 void KImage::flipY()
@@ -223,7 +226,7 @@ void KImage::Lock()
 {
   if (mHData != NULL) {
     mHR = SafeArrayAccessData(mHData, (void **)(&mData));
-    TestHResult("accessing/locking SafeArray data"); 
+    TestHResult("accessing/locking SafeArray data");
     mIsLocked = true;     // Set flag
   }
 }
@@ -231,8 +234,8 @@ void KImage::Lock()
 void KImage::UnLock()
 {
   if (mIsLocked) {
-    mHR = SafeArrayUnaccessData(mHData);    
-    TestHResult("unaccessing/unlocking SafeArray data"); 
+    mHR = SafeArrayUnaccessData(mHData);
+    TestHResult("unaccessing/unlocking SafeArray data");
     mIsLocked = false;      // Clear flag
   }
 }
@@ -263,7 +266,7 @@ void KImage::setType(int inType)
 ////////////////////////////////////////////////////////
 //
 //
-KImageShort::KImageShort() 
+KImageShort::KImageShort()
   : KImage()
 {
   mType     = kSHORT;
@@ -276,12 +279,12 @@ KImageShort::KImageShort(KImage *inRect)
 }
 
 KImageShort::KImageShort(int inWidth, int inHeight)
-{ 
+{
   CommonInit(kSHORT, inWidth, inHeight);
 
   // Again, leave this to calling routine
   // if (inWidth %  2) mRowWidth += 1;
-  
+
   if (((size_t)mRowWidth * inHeight) == 0){
     mDataShort  = NULL;
     mWidth = mHeight = mRowBytes = mRowWidth = 0;
@@ -292,24 +295,24 @@ KImageShort::KImageShort(int inWidth, int inHeight)
 
   mData = (unsigned char *)mDataShort;
   mRowBytes = mRowWidth * sizeof(short);
-  
+
   if (mDataShort == NULL){
-    mRowWidth = mRowBytes = mWidth = 0; 
+    mRowWidth = mRowBytes = mWidth = 0;
     mHeight = 0;
     return;
-  } 
+  }
   mReference = new int;
   *mReference = 1;
 }
 
 KImageShort::~KImageShort()
 {
- 
+
 }
 
 float KImageShort::getPixel(int inX, int inY)
 {
-  if ((inX < 0) || (inY < 0) || 
+  if ((inX < 0) || (inY < 0) ||
     (inX >= mWidth) || (inY >= mHeight))
       return(0.);
   if (mType == kSHORT)
@@ -319,14 +322,14 @@ float KImageShort::getPixel(int inX, int inY)
 }
 
 // 7/5/10: Nothing calls these setPixel functions
-int KImageShort::setPixel(int inX, int inY, 
+int KImageShort::setPixel(int inX, int inY,
 unsigned char red, unsigned char green, unsigned char blue)
 {
-  
-  if ((inX < 0) || (inY < 0) || 
+
+  if ((inX < 0) || (inY < 0) ||
     (inX >= mWidth) || (inY >= mHeight))
   return(1);
-  
+
   short inValue = 0;
   short r, g, b;
   r = red >> 3;
@@ -339,7 +342,7 @@ unsigned char red, unsigned char green, unsigned char blue)
 
 int KImageShort::setPixel(int inX, int inY, int inValue)
 {
-  if ((inX < 0) || (inY < 0) || 
+  if ((inX < 0) || (inY < 0) ||
     (inX >= mWidth) || (inY >= mHeight))
       return(1);
   mDataShort[inX + ((size_t)inY * mRowWidth)] = (short)inValue;
@@ -372,7 +375,7 @@ void KImageShort::Lock()
 ////////////////////////////////////////////////////////
 //
 //
-KImageFloat::KImageFloat() 
+KImageFloat::KImageFloat()
   : KImage()
 {
   mType     = kFLOAT;
@@ -385,7 +388,7 @@ KImageFloat::KImageFloat(KImage *inRect)
 }
 
 KImageFloat::KImageFloat(int inWidth, int inHeight)
-{ 
+{
   CommonInit(kFLOAT, inWidth, inHeight);
 
   if (((size_t)mRowWidth * inHeight) == 0){
@@ -397,19 +400,19 @@ KImageFloat::KImageFloat(int inWidth, int inHeight)
 
   mData = (unsigned char *)mDataFloat;
   mRowBytes = mRowWidth * sizeof(float);
-  
+
   if (mDataFloat == NULL){
-    mRowWidth = mRowBytes = mWidth = 0; 
+    mRowWidth = mRowBytes = mWidth = 0;
     mHeight = 0;
     return;
-  } 
+  }
   mReference = new int;
   *mReference = 1;
 }
 
 KImageFloat::~KImageFloat()
 {
- 
+
 }
 
 void KImageFloat::useData(char * inData, int inWidth, int inHeight)
@@ -427,7 +430,7 @@ void KImageFloat::Lock()
 
 float KImageFloat::getPixel(int inX, int inY)
 {
-  if ((inX < 0) || (inY < 0) || 
+  if ((inX < 0) || (inY < 0) ||
     (inX >= mWidth) || (inY >= mHeight))
       return(0.);
   return(mDataFloat[inX + ((size_t)inY * mWidth)]);
@@ -437,20 +440,20 @@ float KImageFloat::getPixel(int inX, int inY)
 // RGB IMAGE DATA
 ///////////////////////////////////
 //
-KImageRGB::KImageRGB() 
+KImageRGB::KImageRGB()
   : KImage()
 {
   mType     = kRGB;
   mMode     = kRGBmode;
 }
 
-KImageRGB::KImageRGB(KImage *inRect) 
+KImageRGB::KImageRGB(KImage *inRect)
   : KImage(inRect)
 {
 }
 
 KImageRGB::KImageRGB(int inWidth, int inHeight)
-{ 
+{
   CommonInit(kRGB, inWidth, inHeight);
   mMode     = kRGBmode;
 
@@ -462,17 +465,17 @@ KImageRGB::KImageRGB(int inWidth, int inHeight)
   NewArray2(mData, unsigned char, mRowBytes, inHeight);
 
   if (mData == NULL){
-    mRowWidth = mRowBytes = mWidth = 0; 
+    mRowWidth = mRowBytes = mWidth = 0;
     mHeight = 0;
     return;
-  } 
+  }
   mReference = new int;
   *mReference = 1;
 }
 
 KImageRGB::~KImageRGB()
 {
- 
+
 }
 
 void KImageRGB::useData(char * inData, int inWidth, int inHeight)
@@ -484,7 +487,7 @@ void KImageRGB::useData(char * inData, int inWidth, int inHeight)
 void KImageRGB::getPixel(int inX, int inY, int &red, int &green, int &blue)
 {
   red = green = blue = 0;
-  if ((inX < 0) || (inY < 0) || 
+  if ((inX < 0) || (inY < 0) ||
     (inX >= mWidth) || (inY >= mHeight))
       return;
   unsigned char *datap = &mData[3 * inX + mRowBytes * (size_t)inY];

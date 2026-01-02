@@ -1,7 +1,6 @@
 // KImageBase.cpp:        A base class for image collections/files
 //
-// Copyright (C) 2003 by Boulder Laboratory for 3-Dimensional Electron 
-// Microscopy of Cells ("BL3DEMC") and the Regents of the University of
+// Copyright (C) 2003-2026 by the Regents of the University of
 // Colorado.  See Copyright.txt for full notice of copyright and limitations.
 //
 // Authors: David Mastronarde and James Kremer
@@ -10,11 +9,15 @@
 #include "stdafx.h"
 #include "KImageBase.h"
 
+#if defined(_DEBUG) && defined(_CRTDBG_MAP_ALLOC)
+#define new DEBUG_NEW
+#endif
+
 KImageBase::KImageBase()
 {
   mOrigin.x = mOrigin.y = mOrigin.z = mOrigin.t = 0;
   mCur = mOrigin;
-  
+
   mWidth  = 0;
   mHeight = 0;
   mDepth  = 0;

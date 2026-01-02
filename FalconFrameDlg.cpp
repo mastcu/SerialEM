@@ -9,6 +9,10 @@
 #include "CameraController.h"
 #include "MacroProcessor.h"
 
+#if defined(_DEBUG) && defined(_CRTDBG_MAP_ALLOC)
+#define new DEBUG_NEW
+#endif
+
 static int sIdTable[] = {
   IDOK, IDCANCEL, IDC_STAT_EXPOSURE, IDC_EDIT_EXPOSURE, IDC_STAT_NUM_SUM_LABEL,
   IDC_STAT_NUM_FRAMES, IDC_SPIN_NUM_FRAMES, IDC_STAT_STARTLABEL, IDC_STAT_SKIP_START,
@@ -150,20 +154,20 @@ BOOL CFalconFrameDlg::OnInitDialog()
   if (OKbut && groupBox) {
     OKbut->GetWindowRect(OKrect);
     groupBox->GetWindowRect(boxRect);
-    groupBox->SetWindowPos(NULL, 0, 0, boxWidth, 
+    groupBox->SetWindowPos(NULL, 0, 0, boxWidth,
       boxHeight - (topDiff - (OKrect.top - boxRect.top)), SWP_NOMOVE);
   }
 
   SetDefID(45678);    // Disable OK from being default button
   return TRUE;
 }
-void CFalconFrameDlg::OnOK() 
+void CFalconFrameDlg::OnOK()
 {
   SetFocus();
 	CBaseDlg::OnOK();
 }
 
-void CFalconFrameDlg::OnCancel() 
+void CFalconFrameDlg::OnCancel()
 {
   CBaseDlg::OnCancel();
 }
@@ -172,7 +176,7 @@ void CFalconFrameDlg::OnCancel()
 void CFalconFrameDlg::OnKillfocusEditExposure()
 {
   UpdateData(TRUE);
-  mWinApp->mCamera->ConstrainExposureTime(mCamParams, true, mReadMode, 1, 
+  mWinApp->mCamera->ConstrainExposureTime(mCamParams, true, mReadMode, 1,
     mAligningInFalcon ? AS_FLAG_ALIGN : 0, 1, m_fExposure, m_fSubframeTime);
   mHelper->AdjustForExposure(mSummedFrameList, mNumSkipBefore, mNumSkipAfter,
     m_fExposure, mReadoutInterval, mUserFrameFrac, mUserSubframeFrac, mAligningInFalcon);
@@ -223,7 +227,7 @@ void CFalconFrameDlg::OnKillfocusEditReadouts()
   // If not all 1's, constrain the counts to the proper multiple when aligning in Falcon
   if (mAligningInFalcon && !allOnes) {
     for (ind = 0; ind < (int)newList.size() / 2; ind++)
-      newList[ind * 2 + 1] = alignFraction * 
+      newList[ind * 2 + 1] = alignFraction *
         B3DMAX(1, B3DNINT((float)newList[ind * 2 + 1] / alignFraction));
   }
 
@@ -248,17 +252,17 @@ void CFalconFrameDlg::OnKillfocusEditReadouts()
 
       // Make sure the exposure time is valid and if it changes, redistribute frames
       if (mCamParams->K2Type)
-        mWinApp->mCamera->ConstrainFrameTime(realFrame, mCamParams); 
+        mWinApp->mCamera->ConstrainFrameTime(realFrame, mCamParams);
       m_fExposure = realFrame * totSubframes;
-      if (mWinApp->mCamera->ConstrainExposureTime(mCamParams, true, mReadMode, 1, 
+      if (mWinApp->mCamera->ConstrainExposureTime(mCamParams, true, mReadMode, 1,
         mAligningInFalcon ? AS_FLAG_ALIGN : 0, 1, m_fExposure, realFrame))
-          mHelper->DistributeSubframes(mSummedFrameList, 
-            B3DNINT(m_fExposure / realFrame), totFrames, mUserFrameFrac, 
+          mHelper->DistributeSubframes(mSummedFrameList,
+            B3DNINT(m_fExposure / realFrame), totFrames, mUserFrameFrac,
             mUserSubframeFrac, mAligningInFalcon);
       m_fSubframeTime = .0005f * B3DNINT(2000. * realFrame);
     }
   }
-   
+
   UpdateAllDisplays();
 }
 
@@ -332,7 +336,7 @@ void CFalconFrameDlg::OnDeltaposSpinTotalSave(NMHDR *pNMHDR, LRESULT *pResult)
       mWinApp->mCamera->GetMinAlignFractionsLinear();
     maxFrames /= alignFraction;
   }
-  if (NewSpinnerValue(pNMHDR, pResult, totSub, minFrames, mMaxFrames * mMaxPerFrame, 
+  if (NewSpinnerValue(pNMHDR, pResult, totSub, minFrames, mMaxFrames * mMaxPerFrame,
     newval))
       return;
   if (mAligningInFalcon)
@@ -375,7 +379,7 @@ void CFalconFrameDlg::UpdateAllDisplays(void)
   float roundFac = mWinApp->mCamera->ExposureRoundingFactor(mCamParams);
   m_strReadouts = "";
   for (i = 0; i < (int)mSummedFrameList.size() / 2; i++) {
-    oneval.Format("%d              %d\r\n", mSummedFrameList[2 * i], 
+    oneval.Format("%d              %d\r\n", mSummedFrameList[2 * i],
       mSummedFrameList[2 * i + 1]);
     m_strReadouts += oneval;
     ACCUM_MIN(minFrames, mSummedFrameList[2 * i + 1]);

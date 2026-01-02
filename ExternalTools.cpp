@@ -1,6 +1,6 @@
 // ExternalTools.cpp:  Maintains menu and runs commands for starting an external process
 //
-// Copyright (C) 2003-2019 by the Regents of the University of
+// Copyright (C) 2003-2026 by the Regents of the University of
 // Colorado.  See Copyright.txt for full notice of copyright and limitations.
 //
 // Author: David Mastronarde
@@ -21,6 +21,10 @@
 #include "Shared/b3dutil.h"
 #include "Shared/ctfutils.h"
 #include "Shared/autodoc.h"
+
+#if defined(_DEBUG) && defined(_CRTDBG_MAP_ALLOC)
+#define new DEBUG_NEW
+#endif
 
 #define MAX_LINE 100
 #define DEFOCUS_FILE "single.defocus"
@@ -124,7 +128,7 @@ int CExternalTools::RunToolCommand(int index)
 }
 
 // Run a command by its title if it can be found
-int CExternalTools::RunToolCommand(CString &title, CString extraArgs, int extraPlace, 
+int CExternalTools::RunToolCommand(CString &title, CString extraArgs, int extraPlace,
   CString inputStr)
 {
   int strVal = atoi((LPCTSTR)title);
@@ -152,7 +156,7 @@ int CExternalTools::RunCreateProcess(CString &command, CString argString,
   bool leaveHandles, CString inputString, bool pipeOutput, CString *errString)
 {
   STARTUPINFO sinfo;
-  bool isBatch = (command.Right(4)).CompareNoCase(".bat") == 0 || 
+  bool isBatch = (command.Right(4)).CompareNoCase(".bat") == 0 ||
     (command.Right(4)).CompareNoCase(".cmd") == 0;
   TCHAR systemDirPath[MAX_PATH];
   CString report, outFile, inFile;
@@ -391,7 +395,7 @@ int CExternalTools::RunCreateProcess(CString &command, CString argString,
       saveAutodoc = getenv("AUTODOC_DIR");
     _putenv((LPCTSTR)("AUTODOC_DIR=" + B3DCHOICE(localCtfplot, mLocalCtfplotPath,
       m3dmodAutodocDir)));
-    if (!m3dmodAutodocDir.IsEmpty() && m3dmodAutodocDir.Find("3dmod") > 
+    if (!m3dmodAutodocDir.IsEmpty() && m3dmodAutodocDir.Find("3dmod") >
       m3dmodAutodocDir.GetLength() - 7 && getenv("IMOD_DIR")) {
       saveIMODdir = getenv("IMOD_DIR");
       _putenv("IMOD_DIR=");
@@ -405,7 +409,7 @@ int CExternalTools::RunCreateProcess(CString &command, CString argString,
     (isBatch ? 0 : DETACHED_PROCESS) | (mAllowWindow ? 0 : CREATE_NO_WINDOW), NULL, NULL,
     &sinfo, &mExtProcInfo);
 
-  // Restore 
+  // Restore
   if (!saveAutodoc.IsEmpty()) {
     _putenv((LPCTSTR)("AUTODOC_DIR=" + saveAutodoc));
   }
@@ -436,7 +440,7 @@ int CExternalTools::RunCreateProcess(CString &command, CString argString,
     if (pipeInput) {
       CloseHandle(hChildStd_IN_Rd);
       dwWrite = inputString.GetLength();
-      retval = WriteFile(hChildStd_IN_Wr, (LPCTSTR)inputString, dwWrite, &dwWritten, 
+      retval = WriteFile(hChildStd_IN_Wr, (LPCTSTR)inputString, dwWrite, &dwWritten,
         NULL);
       CloseHandle(hChildStd_IN_Wr);
       if (!retval) {
@@ -479,7 +483,7 @@ void CExternalTools::CloseFileHandles(HANDLE &hInFile, HANDLE &hOutFile)
   hInFile = NULL;
 }
 
-// Substitute every occurrence of the keyword in the argumnet string, quoting the whole 
+// Substitute every occurrence of the keyword in the argumnet string, quoting the whole
 // word that it is embedded in if it does not already have a quote at either end, and
 // if doQuotes (default true) allows this.
 void CExternalTools::SubstituteAndQuote(CString &argString, const char *keyword,
@@ -519,7 +523,7 @@ void CExternalTools::SubstituteAndQuote(CString &argString, const char *keyword,
 }
 
 // Wait the given timeout for the process to be done, then get the pipe output
-// Returns -1 for error trying to get output, in which case a message will be placed 
+// Returns -1 for error trying to get output, in which case a message will be placed
 // output.  Otherwise returns exit status of process
 int CExternalTools::WaitForDoneGetPipeOutput(CString &output, int timeout)
 {
@@ -555,7 +559,7 @@ int CExternalTools::WaitForDoneGetPipeOutput(CString &output, int timeout)
 // name; returns the full name in filename and the iiFile for the shared memory object,
 // which must be deleted after finishing the process using the file.  "reduction" makes
 // it save an image reduced by that amount (> 1).
-ImodImageFile *CExternalTools::SaveBufferToSharedMemory(int bufInd, 
+ImodImageFile *CExternalTools::SaveBufferToSharedMemory(int bufInd,
   CString nameSuffix, CString &filename, float reduction)
 {
   ImodImageFile *iiFile;
@@ -621,13 +625,13 @@ ImodImageFile *CExternalTools::SaveBufferToSharedMemory(int bufInd,
 // CTFPLOTTER FUNCTIONS
 //////////////////////////////////////////////////
 
-// Compose a command for running Ctfplotter with the given set of parameters and the 
+// Compose a command for running Ctfplotter with the given set of parameters and the
 // shared memory file whose full name is in memFile, returns the arguments in memFile or
 // an error string on error; returns the ctfplotter command in command.  All defocus
 // arguments are negative.  Set defStart = defEnd to skip scan and set expected focus to
 // that; set defExpact to set expected focus with a scan
 int CExternalTools::MakeCtfplotterCommand(CString &memFile, float reduction, int bufInd,
-  float tiltOffset, float defStart, float defEnd, float defExpect, int astigPhase, 
+  float tiltOffset, float defStart, float defEnd, float defExpect, int astigPhase,
   float phase, int resolTune, float cropPixel, float fitStart, float fitEnd, int saveType,
   CString &saveName, CString &command)
 {
@@ -671,8 +675,8 @@ int CExternalTools::MakeCtfplotterCommand(CString &memFile, float reduction, int
   // Start the arguments with the required ones
   args.Format("-save -autoFit 0,0 -truncate 1 -defFn %s -single %.2f "
     "-aAngle %.2f -taOffset %.2f -degPhase %.2f -find %d,%d,0 -volt %d"
-    " -cs %.3f -ampContrast %.3f -input %s", DEFOCUS_FILE, tiltAngle, 
-    axisAngle, 
+    " -cs %.3f -ampContrast %.3f -input %s", DEFOCUS_FILE, tiltAngle,
+    axisAngle,
     tiltOffset, phase, (astigPhase & 1) ? 1 : 0, (astigPhase & 2) ? 1 : 0,
     B3DNINT(mWinApp->mProcessImage->GetRecentVoltage()),
     mWinApp->mProcessImage->GetSphericalAber(), mWinApp->mProcessImage->GetAmpRatio(),
@@ -712,7 +716,7 @@ int CExternalTools::MakeCtfplotterCommand(CString &memFile, float reduction, int
       }
       resolTune = mLastPSresol;
     } else if (!cropPixel && reduction > 1) {
-      
+
       // If cropping not specifed here, scale passed in 1/pixel values by reduction
       if (fitStart > 0 && fitStart < 1.)
         fitStart *= reduction;
@@ -751,8 +755,8 @@ int CExternalTools::MakeCtfplotterCommand(CString &memFile, float reduction, int
 }
 
 // Get the results from running Ctfplotter and compose a string and warning or error mess
-int CExternalTools::ReadCtfplotterResults(float &defocus, float &astig, float &angle, 
-  float &phase, int &ifAstigPhase, float &fitToFreq, float &CCC, CString &results, 
+int CExternalTools::ReadCtfplotterResults(float &defocus, float &astig, float &angle,
+  float &phase, int &ifAstigPhase, float &fitToFreq, float &CCC, CString &results,
   CString &errString)
 {
   int defVersion, versFlags, adocInd, err = 0, cropSpec;
@@ -862,7 +866,7 @@ void CExternalTools::CheckForIMODPath()
 
   if (mCheckedForIMOD)
     return;
-  
+
   mCheckedForIMOD = true;
 
   path = mWinApp->GetExePath();
@@ -1260,7 +1264,7 @@ int CExternalTools::StartGraph(std::vector<FloatVec> &values, IntVec &types,
     AddSingleValueLine(input, -8);
   //mWinApp->AppendToLog(input);
 
-  // Make the command 
+  // Make the command
   if (mCtfplotterPath.IsEmpty())
     line = "genhstplt.exe";
   else

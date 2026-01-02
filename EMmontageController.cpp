@@ -1,7 +1,6 @@
 // EMmontageController.cpp:  The montage routine
 //
-// Copyright (C) 2003 by Boulder Laboratory for 3-Dimensional Electron 
-// Microscopy of Cells ("BL3DEMC") and the Regents of the University of
+// Copyright (C) 2003-2026 by the Regents of the University of
 // Colorado.  See Copyright.txt for full notice of copyright and limitations.
 //
 // Author: David Mastronarde
@@ -33,22 +32,24 @@
 #include "Shared\autodoc.h"
 #include "Image\KStoreADOC.h"
 
+#if defined(_DEBUG) && defined(_CRTDBG_MAP_ALLOC)
+#define new DEBUG_NEW
+#endif
+
 #ifdef _DEBUG
-#undef THIS_FILE
-static char THIS_FILE[]=__FILE__;
 #define new DEBUG_NEW
 #endif
 
 #pragma warning ( disable : 4244 )
 
 static char *montMessage[5] = {
-  "THIS IS GREAT!", "THIS IS GOOD", 
+  "THIS IS GREAT!", "THIS IS GOOD",
   "THIS IS NOT VERY GOOD - you might want to fix it in Midas",
   "THIS IS BAD - YOU SHOULD FIX IT IN MIDAS",
   "THIS IS TERRIBLE - YOU MAY NEED TO REDO IT" };
 
 // The actions in exact sequence, to avoid the complexity of TSC
-enum {SET_PANE = 0, REALIGN_ANCHOR, ALIGN_EXISTING, MOVE_TO_FOCUS_BLOCK, BLOCK_FOCUS, 
+enum {SET_PANE = 0, REALIGN_ANCHOR, ALIGN_EXISTING, MOVE_TO_FOCUS_BLOCK, BLOCK_FOCUS,
   MOVE_STAGE, CHECK_STAGE, ACQUIRE_ANCHOR, FOCUS_AT_PIECE, CHECK_DRIFT, ALIGN_WITH_IS,
   SET_IMAGE_SHIFT, QUEUE_NEXT, ACQUIRE_PIECE, CHECK_ACQUIRE, DWELL_TO_COOK, RUN_MACRO,
   SAVE_PIECE};
@@ -245,14 +246,14 @@ void EMmontageController::SetupOverlapBoxes()
     sigma2 = radius2 / 8.f;
   }
   for (ix = 0; ix < 2; ix++) {
-    montXCBasicSizes(ix, mXCorrBinning, indentXC, mXYpieceSize, mXYoverlap, aspectMax, 
-      extraWidth, padFrac, 19, &indentUse, &mXYbox[ix][0], &mNumExtra[ix][0], &mXpad[ix], 
+    montXCBasicSizes(ix, mXCorrBinning, indentXC, mXYpieceSize, mXYoverlap, aspectMax,
+      extraWidth, padFrac, 19, &indentUse, &mXYbox[ix][0], &mNumExtra[ix][0], &mXpad[ix],
       &mYpad[ix], &mMaxLongShift[ix]);
 
-    montXCIndsAndCTF(ix, mXYpieceSize, mXYoverlap, &mXYbox[ix][0], mXCorrBinning, 
-      indentUse, &mNumExtra[ix][0], mXpad[ix], mYpad[ix], numSmooth, 
+    montXCIndsAndCTF(ix, mXYpieceSize, mXYoverlap, &mXYbox[ix][0], mXCorrBinning,
+      indentUse, &mNumExtra[ix][0], mXpad[ix], mYpad[ix], numSmooth,
       sigma1, sigma2, radius1, radius2, mVerySloppy ? 1 : 0, &mLowerInd0[ix][0],
-      &mLowerInd1[ix][0], &mUpperInd0[ix][ix], &mUpperInd1[ix][ix], &mXsmooth[ix], 
+      &mLowerInd1[ix][0], &mUpperInd0[ix][ix], &mUpperInd1[ix][ix], &mXsmooth[ix],
       &mYsmooth[ix], mCTFp[ix], &mDelta[ix]);
 
     // Copy long direction limits from lower to upper piece and then invert Y, swap limits
@@ -276,9 +277,9 @@ float EMmontageController::TreatAsGridMap()
   int nx = (mParam->xNframes - 1) * (mParam->xFrame - mParam->xOverlap) + mParam->xFrame;
   int ny = (mParam->yNframes - 1) * (mParam->yFrame - mParam->yOverlap) + mParam->yFrame;
   int *activeList = mWinApp->GetActiveCameraList();
-  float pixel = mShiftManager->GetPixelSize(activeList[mParam->cameraIndex], 
+  float pixel = mShiftManager->GetPixelSize(activeList[mParam->cameraIndex],
     mParam->magIndex) * mParam->binning;
-  if (mGridMapMinSizeMm <= 0. || 
+  if (mGridMapMinSizeMm <= 0. ||
     sqrt((double)nx * ny) * pixel / 1000. < mGridMapMinSizeMm)
     return 0.;
   return pixel * mGridMapCutoffInvUm;
@@ -302,7 +303,7 @@ void EMmontageController::SetMontaging(BOOL inVal)
     mVerySloppy = mParam->verySloppy;
     mUseExpectedShifts = mParam->evalMultiplePeaks;
     SetupOverlapBoxes();
-    if (!mMagTab[mParam->magIndex].calibrated[iCam] && 
+    if (!mMagTab[mParam->magIndex].calibrated[iCam] &&
       mParam->magIndex >= mScope->GetLowestNonLMmag() &&
       (!mParam->moveStage  || CalNeededForISrealign(mParam)) &&
       !mParam->warnedCalOpen)
@@ -348,7 +349,7 @@ void EMmontageController::SetMontaging(BOOL inVal)
 ///////////////////////////////////
 
 // Recompose overview by doing fake montage: get a legal section # and proceed
-int EMmontageController::ReadMontage(int inSect, MontParam *inParam, 
+int EMmontageController::ReadMontage(int inSect, MontParam *inParam,
                                           KImageStore *inStoreMRC, BOOL centerOnly,
                                           BOOL synchronous, int bufToCopyTo)
 {
@@ -429,7 +430,7 @@ int EMmontageController::ReadMontage(int inSect, MontParam *inParam,
   mParam->zCurrent = newZ;
   mCenterOnly = centerOnly;
   mSynchronous = synchronous || centerOnly;
-  mBufToCopyTo = (bufToCopyTo >= 0 && bufToCopyTo < MAX_BUFFERS) ? 
+  mBufToCopyTo = (bufToCopyTo >= 0 && bufToCopyTo < MAX_BUFFERS) ?
     bufToCopyTo : mBufferManager->GetBufToReadInto();
 
   StartMontage(MONT_NOT_TRIAL, true);
@@ -500,12 +501,12 @@ int EMmontageController::StartMontage(int inTrial, BOOL inReadMont, float cookDw
     } else if (mBlockSizeInX * blockSizeInY == 1)
       SEMTrace('1', "No image shift will be used");
     else
-      SEMTrace('1', "Image shifting will be done in %d x %d blocks", mBlockSizeInX, 
+      SEMTrace('1', "Image shifting will be done in %d x %d blocks", mBlockSizeInX,
         blockSizeInY);
   }
   mImShiftInBlocks = mDoStageMoves && mParam->imShiftInBlocks &&
     mBlockSizeInX * blockSizeInY > 1 && !preCooking && !mReadingMontage;
-  useHQ = mDoStageMoves && mParam->useHqParams && (!mWinApp->LowDoseMode() || 
+  useHQ = mDoStageMoves && mParam->useHqParams && (!mWinApp->LowDoseMode() ||
     mAllowHQMontInLD);
   mUsingImageShift = !mDoStageMoves || mImShiftInBlocks;
   mDefinedCenterFrames = false;
@@ -561,7 +562,7 @@ int EMmontageController::StartMontage(int inTrial, BOOL inReadMont, float cookDw
         mParam->setupInLowDose = mWinApp->LowDoseMode();
       } else {
 
-        // Change is never allowed here if View in LD is on, but can be achieved in 
+        // Change is never allowed here if View in LD is on, but can be achieved in
         // dialog if no data yet
         mess.Format("This montage file was set up in %s mode and cannot be used\n"
           "in %s mode", mParam->setupInLowDose ? "Low Dose" : "regular",
@@ -591,7 +592,7 @@ int EMmontageController::StartMontage(int inTrial, BOOL inReadMont, float cookDw
       if (mReadStoreMRC->getDepth() &&
         !BOOL_EQUIV(mExpectingFloats, mReadStoreMRC->getMode() == MRC_MODE_FLOAT)) {
         mess.Format("You cannot take this montage with %sfloat images, the output file is"
-          " a %sfloat file", mExpectingFloats ? "" : "non-", 
+          " a %sfloat file", mExpectingFloats ? "" : "non-",
           mExpectingFloats ? "non-" : "");
         SEMMessageBox(mess);
         return 1;
@@ -643,7 +644,7 @@ int EMmontageController::StartMontage(int inTrial, BOOL inReadMont, float cookDw
         return 1;
     }
 
-    // 4/2/09: Wait for stage ready (can be moved by navigator for starting full 
+    // 4/2/09: Wait for stage ready (can be moved by navigator for starting full
     // montage) - but not too long since UI is dead.
     if (mDoStageMoves && mScope->WaitForStageReady(5000)) {
       SEMMessageBox("The stage is busy or not ready; montage aborted");
@@ -790,7 +791,7 @@ int EMmontageController::StartMontage(int inTrial, BOOL inReadMont, float cookDw
           "You must calibrate stage shift to take this montage");
         return 1;
       }
-      if (!mShiftManager->GetDefocusMagAndRot(ix, iy, delISX, mDefocusForCal, 
+      if (!mShiftManager->GetDefocusMagAndRot(ix, iy, delISX, mDefocusForCal,
         mAdjustmentScale, mAdjustmentRotation))
         mAdjustmentScale = 0.;
 
@@ -1016,14 +1017,14 @@ int EMmontageController::StartMontage(int inTrial, BOOL inReadMont, float cookDw
 
   // Check disk space unless doing tilt series
   if (!mTrialMontage && !preCooking && !mReadingMontage && !mWinApp->DoingTiltSeries()) {
-    if (UtilCheckDiskFreeSpace((mParam->xFrame * mParam->yFrame * 
+    if (UtilCheckDiskFreeSpace((mParam->xFrame * mParam->yFrame *
       (mExpectingFloats ? 4. : 2.)) * (mNumPieces - (mNumToSkip + already)), "montage"))
       return 1;
   }
 
   // Set flag for whether doing IS realignment
   mDoISrealign = false;
-  if (useHQ && !mReadingMontage && !mTrialMontage && mParam->ISrealign && 
+  if (useHQ && !mReadingMontage && !mTrialMontage && mParam->ISrealign &&
     !mImShiftInBlocks) {
     bMat = mShiftManager->CameraToIS(mParam->magIndex);
     if (!bMat.xpx) {
@@ -1058,7 +1059,7 @@ int EMmontageController::StartMontage(int inTrial, BOOL inReadMont, float cookDw
   }
 
   // For reading montage, set up sequence from center outward so errors at edge don't
-  // propagate.  
+  // propagate.
   // For realign with anchor, use same sequence in X so there is one "seam" in middle
   icx1 = (mParam->xNframes + 1) / 2;
   ind = 0;
@@ -1084,7 +1085,7 @@ int EMmontageController::StartMontage(int inTrial, BOOL inReadMont, float cookDw
             }
           }
 
-          // If found them, now find piece nearest to middle that has a neighbor in 
+          // If found them, now find piece nearest to middle that has a neighbor in
           // column that was already done and use that to replace the center Y
           for (j = 0; j < mParam->yNframes && first >= 0; j++) {
             for (iDir = 1; iDir >= -1; iDir -= 2) {
@@ -1146,7 +1147,7 @@ int EMmontageController::StartMontage(int inTrial, BOOL inReadMont, float cookDw
   focusFeasible = useHQ && mParam->magIndex >= mScope->GetLowestNonLMmag()
     && !mReadingMontage && !mTrialMontage && !preCooking;
   mFocusAfterStage = focusFeasible && mParam->focusAfterStage;
-  mFocusInBlocks = focusFeasible && mBlockSizeInX * blockSizeInY > 1 && 
+  mFocusInBlocks = focusFeasible && mBlockSizeInX * blockSizeInY > 1 &&
     mParam->focusInBlocks && mNumPieces > 1 && !mFocusAfterStage && !mDoISrealign;
   icx1 = 1;
   if (mFocusInBlocks || mImShiftInBlocks) {
@@ -1218,7 +1219,7 @@ int EMmontageController::StartMontage(int inTrial, BOOL inReadMont, float cookDw
       }
       for (iyBlock = yBlockSt; yDir * (iyBlock - yBlockEnd) <= 0; iyBlock += yDir) {
         balancedGroupLimits(mParam->yNframes, numBlocksY, iyBlock, &iybst, &iybEnd);
-        
+
         // Loop on pieces in block in usual order, add to sequence, keep track of index
         // of first included piece and min and max positions of each included piece
         firstInd = -1;
@@ -1268,13 +1269,13 @@ int EMmontageController::StartMontage(int inTrial, BOOL inReadMont, float cookDw
   if (!mTrialMontage && !mReadingMontage) {
     external = mWinApp->DoingTiltSeries() || (mWinApp->mNavigator &&
       mWinApp->mNavigator->GetAcquiring());
-    
+
     // Confirm if not under external control and Z is not in order
     if (!already && !external && mParam->zCurrent != mParam->zMax + 1)
       if (AfxMessageBox("The current Z value is not the next Z value for this file.\n\n"
         "Are you sure you want to continue with this Z value?",
         MB_OKCANCEL | MB_ICONQUESTION) == IDCANCEL)
-        return 1;      
+        return 1;
 
     // If some pieces exist determine first if it is restartable midway through
     if (already) {
@@ -1292,7 +1293,7 @@ int EMmontageController::StartMontage(int inTrial, BOOL inReadMont, float cookDw
 
                 // For image shift align, try to get stage position for every piece
                 // and also IS although that is optional, and set the acquired positions
-                alignable = !mWinApp->mStoreMRC->getStageCoord(mPieceSavedAt[ind], 
+                alignable = !mWinApp->mStoreMRC->getStageCoord(mPieceSavedAt[ind],
                   delISX, delISY);
                 if (alignable) {
                   mWinApp->mStoreMRC->getImageShift(mPieceSavedAt[ind], ISX, ISY);
@@ -1329,7 +1330,7 @@ int EMmontageController::StartMontage(int inTrial, BOOL inReadMont, float cookDw
             delISX = mAnchorStageX - mMoveInfo.x;
             delISY = mAnchorStageY - mMoveInfo.y;
             if (sqrt(delISX * delISX + delISY * delISY) > 0.2 * mShiftManager->GetPixelSize
-              (mWinApp->GetCurrentCamera(), mParam->magIndex) * mParam->binning * 
+              (mWinApp->GetCurrentCamera(), mParam->magIndex) * mParam->binning *
               B3DMIN(mParam->xFrame, mParam->yFrame)) {
               mWinApp->AppendToLog("Cannot resume this montage because there is not an "
                 "anchor image taken at the right stage coordinates");
@@ -1343,9 +1344,9 @@ int EMmontageController::StartMontage(int inTrial, BOOL inReadMont, float cookDw
       if (firstUndone <= lastDone) {
         if (!external && AfxMessageBox(
           "There are already pieces in the file at the current Z value.\n\n"
-          "Are you sure you want to overwrite these pieces?", 
+          "Are you sure you want to overwrite these pieces?",
           MB_OKCANCEL | MB_ICONQUESTION) == IDCANCEL)
-          return 1; 
+          return 1;
         firstUndone = -1;
       } else {
 
@@ -1416,7 +1417,7 @@ int EMmontageController::StartMontage(int inTrial, BOOL inReadMont, float cookDw
     if (cam->K2Type && mConSets[setNum].doseFrac && mCamera->GetPluginVersion(cam) < PLUGIN_CAN_SAVE_SUBAREAS) {
       ix = cam->sizeX / mParam->binning;
       iy = cam->sizeY / mParam->binning;
-      mCamera->CenteredSizes(ix, cam->sizeX, cam->moduloX, left, right, 
+      mCamera->CenteredSizes(ix, cam->sizeX, cam->moduloX, left, right,
       iy, cam->sizeY, cam->moduloY, top, bottom, mParam->binning);
       if (mParam->xFrame != ix || mParam->yFrame != iy) {
         mess.Format("Turn off Dose Fractionation in the %s parameters or\r\n"
@@ -1427,10 +1428,10 @@ int EMmontageController::StartMontage(int inTrial, BOOL inReadMont, float cookDw
         mWinApp->AppendToLog(mess);
         return 1;
       }
-    } 
+    }
     mConSets[MONTAGE_CONSET] = mConSets[setNum];
-    mCamera->CenteredSizes(mParam->xFrame, cam->sizeX, cam->moduloX, left, right, 
-      mParam->yFrame, cam->sizeY, cam->moduloY, top, bottom, mParam->binning, 
+    mCamera->CenteredSizes(mParam->xFrame, cam->sizeX, cam->moduloX, left, right,
+      mParam->yFrame, cam->sizeY, cam->moduloY, top, bottom, mParam->binning,
       &mConSets[MONTAGE_CONSET]);
     mConSets[MONTAGE_CONSET].left = left * mParam->binning;
     mConSets[MONTAGE_CONSET].right = right * mParam->binning;
@@ -1445,7 +1446,7 @@ int EMmontageController::StartMontage(int inTrial, BOOL inReadMont, float cookDw
     }
     if (mUseContinuousMode) {
       mConSets[MONTAGE_CONSET].mode = CONTINUOUS;
-      mNumDropAtContinStart = B3DNINT(mConSets[MONTAGE_CONSET].drift / 
+      mNumDropAtContinStart = B3DNINT(mConSets[MONTAGE_CONSET].drift /
         mConSets[MONTAGE_CONSET].exposure);
       mConSets[MONTAGE_CONSET].drift = 0.;
       mCamera->ChangePreventToggle(1);
@@ -1465,9 +1466,9 @@ int EMmontageController::StartMontage(int inTrial, BOOL inReadMont, float cookDw
 
     if (cam->OneViewType && (useHQ ? mParam->noHQDriftCorr : mParam->noDriftCorr))
       mConSets[MONTAGE_CONSET].alignFrames = 0;
-    
+
     // Adjust exposure, try to do something about reducing drift settling if exposure is
-    // now very short.  This is not obsoleted by the binning lock - it is applied in 
+    // now very short.  This is not obsoleted by the binning lock - it is applied in
     // navigator acquire with new file at item, keep NavHelper AssessAcquireProblems syncd
     // But it does also set the prescan exposure
     float binRatio = (float)mConSets[setNum].binning / mParam->binning;
@@ -1484,7 +1485,7 @@ int EMmontageController::StartMontage(int inTrial, BOOL inReadMont, float cookDw
 
     // "Use up" the once dark settings in the control sets, per camera and master
     mConSets[useSetNum].onceDark = 0;
-    (mWinApp->GetCamConSets() + useSetNum + mWinApp->GetCurrentCamera() * 
+    (mWinApp->GetCamConSets() + useSetNum + mWinApp->GetCurrentCamera() *
       MAX_CONSETS)->onceDark = 0;
   }
 
@@ -1494,17 +1495,17 @@ int EMmontageController::StartMontage(int inTrial, BOOL inReadMont, float cookDw
   // Try to get edge shifts and piece shift solution if reading in and doing correlation
   mAlreadyHaveShifts = false;
   if (mReadingMontage && mDoCorrelations) {
-    mAlreadyHaveShifts = !mRedoCorrOnRead && 
+    mAlreadyHaveShifts = !mRedoCorrOnRead &&
       AutodocShiftStorage(false, &mUpperShiftX[0], &mUpperShiftY[0]) == 0;
     if (mAlreadyHaveShifts)
-      mAlreadyHaveShifts = FindBestShifts(mNumPieces - mNumToSkip, &mUpperShiftX[0], 
-      &mUpperShiftY[0], &mBmat[0], mBefErrMean, mBefErrMax, mAftErrMean, mAftErrMax, 
+      mAlreadyHaveShifts = FindBestShifts(mNumPieces - mNumToSkip, &mUpperShiftX[0],
+      &mUpperShiftY[0], &mBmat[0], mBefErrMean, mBefErrMax, mAftErrMean, mAftErrMax,
       mWgtErrMean, mWgtErrMax, false) == 0;
   }
 
   // Allocate center piece and bail out if that fails
   if (!preCooking) {
-    NewArray2(mCenterData, short int, mParam->xFrame, mParam->yFrame * 
+    NewArray2(mCenterData, short int, mParam->xFrame, mParam->yFrame *
       (mExpectingFloats ? 2 : 1));
     if (!mCenterData) {
       SEMMessageBox("Cannot get memory for composing center piece");
@@ -1527,12 +1528,12 @@ int EMmontageController::StartMontage(int inTrial, BOOL inReadMont, float cookDw
   }
 
   // That was the last return, so start the new log here and trace output
-  if (!mReadingMontage && !preCooking && mAutosaveLog && 
+  if (!mReadingMontage && !preCooking && mAutosaveLog &&
     mWinApp->mLogWindow && !mWinApp->DoingTiltSeries() &&
     mWinApp->mLogWindow->SaveFileNotOnStack(mWinApp->mStoreMRC->getName())) {
       mWinApp->mLogWindow->DoSave();
       mWinApp->mLogWindow->CloseLog();
-      mess.Format("%.3f: Log restarted %s", SEMSecondsSinceStart(), 
+      mess.Format("%.3f: Log restarted %s", SEMSecondsSinceStart(),
         mWinApp->mDocWnd->DateTimeForTitle());
       mWinApp->AppendToLog(mess);
       mWinApp->AppendToLog(mWinApp->GetStartupMessage(true));
@@ -1546,7 +1547,7 @@ int EMmontageController::StartMontage(int inTrial, BOOL inReadMont, float cookDw
   if (memoryLimit)
     currentUsage = mWinApp->mBufferWindow.MemorySummary();
 
-  borderTry = ((mDoCorrelations || mUsingMultishot) && mParam->shiftInOverview && 
+  borderTry = ((mDoCorrelations || mUsingMultishot) && mParam->shiftInOverview &&
     !mAlreadyHaveShifts && mNumPieces > 1) ? 10 : -1;
 
   // Enter loop to try to get minizoom with different border strategies and zooms
@@ -1585,10 +1586,10 @@ int EMmontageController::StartMontage(int inTrial, BOOL inReadMont, float cookDw
     // The needed amount is 2 * size for short array, + size for pixmap
     // unless it is converted to bytes
     if (memoryLimit) {
-      needed = (mExpectingFloats ? 5. : 3.) * mMiniArrayX * mMiniArrayY + 
+      needed = (mExpectingFloats ? 5. : 3.) * mMiniArrayX * mMiniArrayY +
         mMiniSizeX * mMiniSizeY;
       if (mConvertMini)
-        needed =  mMiniArrayX * mMiniArrayY; 
+        needed =  mMiniArrayX * mMiniArrayY;
       tryForMemory = currentUsage + needed < memoryLimit;
     } else
       tryForMemory = true;
@@ -1599,7 +1600,7 @@ int EMmontageController::StartMontage(int inTrial, BOOL inReadMont, float cookDw
         NewArray2(mMiniByte, unsigned char, mMiniArrayX, mMiniArrayY);
         mMiniData = (short int *) mMiniByte;
       } else
-        NewArray2(mMiniData, short int, mMiniArrayX, mMiniArrayY * 
+        NewArray2(mMiniData, short int, mMiniArrayX, mMiniArrayY *
         (mExpectingFloats ? 2 : 1));
     }
     mMiniUshort = (unsigned short *)mMiniData;
@@ -1611,7 +1612,7 @@ int EMmontageController::StartMontage(int inTrial, BOOL inReadMont, float cookDw
         NextMiniZoomAndBorder(borderTry);
       } else {
         if (mTrialMontage)
-          mWinApp->AppendToLog("Not enough memory for overview image", 
+          mWinApp->AppendToLog("Not enough memory for overview image",
             LOG_OPEN_IF_CLOSED);
         else if (mMiniZoom == mParam->overviewBinning)
           mWinApp->AppendToLog("Not enough memory for overview image with the current "
@@ -1629,8 +1630,8 @@ int EMmontageController::StartMontage(int inTrial, BOOL inReadMont, float cookDw
       "for the overview image", LOG_OPEN_IF_CLOSED);
     if (!mReadingMontage)
       mWinApp->AppendToLog("You will probably be able to see it at full resolution "
-        "by\r\n making it a map and loading the map with conversion to bytes", 
-        LOG_OPEN_IF_CLOSED); 
+        "by\r\n making it a map and loading the map with conversion to bytes",
+        LOG_OPEN_IF_CLOSED);
   }
 
   // Put parameters in the mini offset structure; compute a base and delta for
@@ -1639,7 +1640,7 @@ int EMmontageController::StartMontage(int inTrial, BOOL inReadMont, float cookDw
      mParam->yNframes, mMiniFrameY, mMiniDeltaY);
 
   // Clear out arrays if pieces are being skipped, or clear overview if shifting
-  mNeedToFillMini = mMiniData && (mNumToSkip || mParam->shiftInOverview || 
+  mNeedToFillMini = mMiniData && (mNumToSkip || mParam->shiftInOverview ||
     firstUndone > 0 || mMiniFrameX + (mParam->xNframes - 1) * mMiniDeltaX < mMiniSizeX);
   mNeedToFillCenter = mNumToSkip > 0;
   mMiniFillVal = 0;
@@ -1666,10 +1667,10 @@ int EMmontageController::StartMontage(int inTrial, BOOL inReadMont, float cookDw
 
   // Compute effective binning for mini view that makes it no bigger than camera size
 
-  mMiniEffectiveBin = B3DMAX((float)cam->sizeX / mMiniSizeX, 
+  mMiniEffectiveBin = B3DMAX((float)cam->sizeX / mMiniSizeX,
     (float)cam->sizeY / mMiniSizeY);
-  
-  if (mCamera->CameraBusy()) 
+
+  if (mCamera->CameraBusy())
     mCamera->StopCapture(0);
 
   // If adjusting focus, get the matrix to convert from camera coordinates
@@ -1681,7 +1682,7 @@ int EMmontageController::StartMontage(int inTrial, BOOL inReadMont, float cookDw
   if (mParam->adjustFocus && !mReadingMontage && mUsingImageShift &&
     !mUsingMultishot) {
     double angle = DTOR * mScope->GetTiltAngle();
-    float defocusFac = mShiftManager->GetDefocusZFactor() * 
+    float defocusFac = mShiftManager->GetDefocusZFactor() *
       (mShiftManager->GetStageInvertsZAxis() ? -1 : 1);
     if (mWinApp->GetSTEMMode())
       defocusFac = -1. / mWinApp->mFocusManager->GetSTEMdefocusToDelZ(-1);
@@ -1756,7 +1757,7 @@ int EMmontageController::StartMontage(int inTrial, BOOL inReadMont, float cookDw
   // If testing duplicates and the existing image is a montage, copy C to A so the last
   // record will always be in B
   mDuplicateRetryCount = 0;
-  if (!mReadingMontage && !preCooking && mDuplicateRetryLimit >= 0 
+  if (!mReadingMontage && !preCooking && mDuplicateRetryLimit >= 0
     && mCamParams[mWinApp->GetCurrentCamera()].FEItype && mImBufs[2].mImage &&
     mImBufs[1].mCaptured == BUFFER_MONTAGE_OVERVIEW)
     mBufferManager->CopyImageBuffer(2, 0);
@@ -1841,7 +1842,7 @@ int EMmontageController::DoNextPiece(int param)
   }
 
   // If already stopped, redo the image shift in case camera did it after stop
-  // Or do the stage move in case it was blocked before or camera was busy 
+  // Or do the stage move in case it was blocked before or camera was busy
   // (dubious if run from macro etc)
   if (mPieceIndex < 0) {
     if (mReadingMontage)
@@ -1849,7 +1850,7 @@ int EMmontageController::DoNextPiece(int param)
     if (mDoStageMoves) {
       if (!mScope->StageBusy())
         StartStageRestore();
-    } 
+    }
     if (mUsingImageShift) {
       mScope->SetImageShift(mBaseISX, mBaseISY);
       mShiftManager->SetISTimeOut(mShiftManager->GetLastISDelay());
@@ -1868,8 +1869,8 @@ int EMmontageController::DoNextPiece(int param)
       adocInd = mReadStoreMRC->GetAdocIndex();
       nameInd = mReadStoreMRC->getStoreType() == STORE_TYPE_ADOC ? 1 : 0;
       if (adocInd >= 0 && !AdocGetMutexSetCurrent(adocInd)) {
-        if (!AdocGetThreeFloats(names[nameInd], mPieceSavedAt[mPieceIndex], 
-          ADOC_MINMAXMEAN, &expMin, &expMax, &expMean) && 
+        if (!AdocGetThreeFloats(names[nameInd], mPieceSavedAt[mPieceIndex],
+          ADOC_MINMAXMEAN, &expMin, &expMax, &expMean) &&
           !AdocGetThreeFloats(names[nameInd], mLastSavedAtZ,
             ADOC_MINMAXMEAN, &lastMin, &lastMax, &lastMean))
           checkStats = true;
@@ -1891,7 +1892,7 @@ int EMmontageController::DoNextPiece(int param)
         mImBufs->mImage->getSize(iDelX, iDelY);
         fullArrayMinMaxMean(mImBufs->mImage->getData(), mImBufs->mImage->getType(), iDelX,
           iDelY, &amin, &amax, &amean);
-        if (fabs(lastMin - amin) < fabs(expMin - amin) && 
+        if (fabs(lastMin - amin) < fabs(expMin - amin) &&
           fabs(lastMax - amax) < fabs(expMax - amax) &&
           fabs(lastMean - amean) < fabs(expMean - amean)) {
           if (readLoop < 2) {
@@ -1929,7 +1930,7 @@ int EMmontageController::DoNextPiece(int param)
       mNumDoing, mNumPieces - mNumToSkip);
     AddRemainingTime(report);
     mWinApp->SetStatusText(MEDIUM_PANE, report);
-  }    
+  }
 
   mMovingStage = false;
   mFocusing = false;
@@ -1941,13 +1942,13 @@ int EMmontageController::DoNextPiece(int param)
     ComputeMoveToPiece(mPieceIndex, false, iDelX, iDelY, adjISX, adjISY);
     nextPieceBlockCen = nextPiece < mNumPieces && mFocusBlockInd[nextPiece] >= 0;
     if (mAction == SET_PANE) {
-      report.Format("%s, %d/%d", B3DCHOICE(precooking, "PRECOOKING", 
+      report.Format("%s, %d/%d", B3DCHOICE(precooking, "PRECOOKING",
         mNumPieces - mNumToSkip > 1000 ? "MONTAGE" : "MONTAGING"),
         mNumDoing, mNumPieces - mNumToSkip);
       AddRemainingTime(report);
       mWinApp->SetStatusText(MEDIUM_PANE, report);
 
-    } else if (mAction == REALIGN_ANCHOR && mNeedRealignToAnchor && 
+    } else if (mAction == REALIGN_ANCHOR && mNeedRealignToAnchor &&
       mSeqIndex >= mSecondHalfStartSeq) {
       return RealignToAnchor();
 
@@ -1957,14 +1958,14 @@ int EMmontageController::DoNextPiece(int param)
       mNumSinceRealign = 0;
       if (PieceStartsColumn(mPieceIndex))
         mNumDoneInColumn = 0;
-    
-    } else if (mAction == MOVE_TO_FOCUS_BLOCK && moveStage && 
+
+    } else if (mAction == MOVE_TO_FOCUS_BLOCK && moveStage &&
       (mFocusBlockInd[mPieceIndex] >= 0 || mPieceIndex == mFirstResumePiece)) {
       if (mUseContinuousMode && mFocusInBlocks)
         mCamera->StopCapture(-1);
       if (!mPreMovedStage) {
 
-        // For block focusing, reset the image shift for hybrid montage, 
+        // For block focusing, reset the image shift for hybrid montage,
         // then start the stage move and return
         if (mImShiftInBlocks)
           mScope->SetImageShift(mBaseISX, mBaseISY);
@@ -1980,13 +1981,13 @@ int EMmontageController::DoNextPiece(int param)
       }
 
     } else if (((mAction == FOCUS_AT_PIECE && (mFocusAfterStage || mDriftRepeatCount)) ||
-      (mAction == BLOCK_FOCUS && mFocusInBlocks && 
+      (mAction == BLOCK_FOCUS && mFocusInBlocks &&
       (mFocusBlockInd[mPieceIndex] >= 0 || mPieceIndex == mFirstResumePiece)))) {
-        
+
       // Do the focus next, make it respect the extra delay
       delay = 1000. * mParam->hqDelayTime;
       if (mDriftRepeatCount)
-        mShiftManager->SetGeneralTimeOut(GetTickCount(), 
+        mShiftManager->SetGeneralTimeOut(GetTickCount(),
         (int)(1000. * mDriftRepeatDelay));
       else if (delay > mShiftManager->GetStageMovedDelay())
         mShiftManager->SetStageDelayToUse(delay);
@@ -1995,7 +1996,7 @@ int EMmontageController::DoNextPiece(int param)
       mFocusing = true;
       return 0;
 
-    } else if (mAction == CHECK_DRIFT && mParam->repeatFocus && (mFocusAfterStage || 
+    } else if (mAction == CHECK_DRIFT && mParam->repeatFocus && (mFocusAfterStage ||
       (mFocusInBlocks && mFocusBlockInd[mPieceIndex] >= 0 && mImShiftInBlocks))) {
       mWinApp->mFocusManager->GetLastDrift(ISX, ISY);
       ISX = sqrt(ISX * ISX + ISY * ISY);
@@ -2012,7 +2013,7 @@ int EMmontageController::DoNextPiece(int param)
       } else
         mDriftRepeatCount = 0;
 
-    } else if (mAction == MOVE_STAGE && moveStage && !mPreMovedStage && 
+    } else if (mAction == MOVE_STAGE && moveStage && !mPreMovedStage &&
       !mImShiftInBlocks) {
 
       // Stage was not moved: need to move it.  Do image shift first
@@ -2027,7 +2028,7 @@ int EMmontageController::DoNextPiece(int param)
         } else
           mNeedISforRealign = true;
       }
-        
+
       // Invert the backlash for zigzag for an even X index (numbered from 1)
       mNeedBacklash = mNeedBacklash && !precooking;
       invertBacklash = mNeedBacklash && mDoZigzagStage && !(mPieceX % 2);
@@ -2052,7 +2053,7 @@ int EMmontageController::DoNextPiece(int param)
       mWinApp->AddIdleTask(CEMscope::TaskStageBusy, TASK_MONTAGE, 0, timeOut);
       mMovingStage = true;
       return 0;
-    
+
     } else if (mAction == CHECK_STAGE && moveStage && !precooking) {
       if (mDidBlockIS > 0) {
         mDidBlockIS = 0;
@@ -2104,7 +2105,7 @@ int EMmontageController::DoNextPiece(int param)
       RealignNextTask(ANCHOR_ACQUIRE);
       return 0;
 
-    } else if (mAction == ALIGN_WITH_IS && moveStage && mDoISrealign && 
+    } else if (mAction == ALIGN_WITH_IS && moveStage && mDoISrealign &&
       mAdjacentForIS[mPieceIndex] >= 0) {
       startsCol = PieceStartsColumn(mPieceIndex);
       if (startsCol > 0 || mISrealignInterval < 2 || (startsCol == 0 &&
@@ -2139,7 +2140,7 @@ int EMmontageController::DoNextPiece(int param)
       if (!moveStage || mImShiftInBlocks) {
 
         // Set up next image shift if allowed
-        if (mImShiftInBlocks && ((nextPieceBlockCen && mFocusInBlocks) || 
+        if (mImShiftInBlocks && ((nextPieceBlockCen && mFocusInBlocks) ||
           nextPiece >= mNumPieces)) {
           postISX = mBaseISX;
           postISY = mBaseISY;
@@ -2160,7 +2161,7 @@ int EMmontageController::DoNextPiece(int param)
 
       // Or Queue stage move if these conditions are met
       if (moveStage && (!mImShiftInBlocks || (mImShiftInBlocks && nextPieceBlockCen)) &&
-        !(PieceNeedsRealigning(nextPiece, true) || 
+        !(PieceNeedsRealigning(nextPiece, true) ||
         (nextPieceBlockCen && !mImShiftInBlocks)
           || (mNeedRealignToAnchor && mNextSeqInd >= mSecondHalfStartSeq))) {
 
@@ -2172,16 +2173,16 @@ int EMmontageController::DoNextPiece(int param)
           SetAcquiredStagePos(mPieceIndex, stageX, stageY, ISX, ISY);
         }
         ComputeMoveToPiece(nextPiece, nextPieceBlockCen, iDelX, iDelY, adjISX, adjISY);
-        doBacklash = nextPiece < mNumPieces && 
+        doBacklash = nextPiece < mNumPieces &&
           mParam->yNframes > 1 && mPieceX != nextPiece / mParam->yNframes + 1;
         startsCol = PieceStartsColumn(nextPiece);
         if (mUsingAnchor && nextPiece < mNumPieces)
           doBacklash = startsCol != 0;
-        if (mDoISrealign && !mFocusAfterStage && (startsCol > 0 || 
-          mISrealignInterval < 2 || 
+        if (mDoISrealign && !mFocusAfterStage && (startsCol > 0 ||
+          mISrealignInterval < 2 ||
           (startsCol == 0 && (mNumDoneInColumn + 1) % mISrealignInterval == 0))) {
-          delay = (int)(1000. * alignISDelayFac * 
-            mShiftManager->ComputeISDelay(adjISX - ISX, adjISY - ISY)); 
+          delay = (int)(1000. * alignISDelayFac *
+            mShiftManager->ComputeISDelay(adjISX - ISX, adjISY - ISY));
           mCamera->QueueImageShift(adjISX, adjISY, delay);
           SEMTrace('S', "Queueing image shift for realign of %.3f, %.3f", adjISX, adjISY);
         }
@@ -2202,15 +2203,15 @@ int EMmontageController::DoNextPiece(int param)
           mMoveInfo.backY *= -1.;
         }
         mPreMovedStage = true;
-        SEMTrace('S', "Piece %d, queueing stage move to %.3f, %.3f%s", 
-          mPieceIndex, mMoveInfo.x, mMoveInfo.y, doBacklash ? 
+        SEMTrace('S', "Piece %d, queueing stage move to %.3f, %.3f%s",
+          mPieceIndex, mMoveInfo.x, mMoveInfo.y, doBacklash ?
           (invertBacklash ? " with inverted backlash" : " with backlash") : "");
       }
 
     } else if (mAction == ACQUIRE_PIECE && !precooking) {
       if (mCamera->CameraBusy())
         timeOut += 60000;
-      SEMTrace('M', "DoNextPiece Starting capture%s", B3DCHOICE(mPreMovedStage,  
+      SEMTrace('M', "DoNextPiece Starting capture%s", B3DCHOICE(mPreMovedStage,
         mDidBlockIS ? " with image shift" : " with stage move", ""));
       if (mWinApp->GetSTEMMode() && !(mMacroToRun > 0 && mMacroToRun <= MAX_MACROS))
         mCamera->SetMaxChannelsToGet(1);
@@ -2240,7 +2241,7 @@ int EMmontageController::DoNextPiece(int param)
       if (mTrialMontage)
         mImBufs->mCaptured = BUFFER_MONTAGE_PRESCAN;
 
-      /* //For testing what happens with a dim image 
+      /* //For testing what happens with a dim image
       if (mWinApp->mStoreMRC->getDepth() > 4) {
       KImage *image = mImBufs->mImage;
       int nx = image->getWidth();
@@ -2252,15 +2253,15 @@ int EMmontageController::DoNextPiece(int param)
       data[i] /= 100;
       image->UnLock();
       } */
-      
+
 
       // If a required level is registered, test the image scale against it
       // and fail if more than half of the pieces are too dim
-      if (mRequiredBWMean > 0. && 
+      if (mRequiredBWMean > 0. &&
         mWinApp->mProcessImage->ImageTooWeak(mImBufs, mRequiredBWMean)) {
         mNumTooDim++;
         if (mNumTooDim > (mNumPieces - mNumToSkip) / 2) {
-          StopMontage();  
+          StopMontage();
           return 1;
         }
       }
@@ -2285,19 +2286,19 @@ int EMmontageController::DoNextPiece(int param)
             mShootingFilm = true;
             mAction = ACQUIRE_PIECE - 1;
             mWinApp->AddIdleTask(CEMscope::TaskFilmBusy, TASK_MONTAGE, 0, 100000);
-            mWinApp->AppendToLog("Taking film exposure to try to unstick the shutter", 
+            mWinApp->AppendToLog("Taking film exposure to try to unstick the shutter",
               LOG_OPEN_IF_CLOSED);
             return 0;
           }
-      
-          if (mShootFilmIfDark) 
+
+          if (mShootFilmIfDark)
             mScope->SetColumnValvesOpen(false);
           report.Format("The mean counts of this image are below your minimum value.\n\n"
             "Press:\n"
             "\"Retry\" to try again with this piece,\n\n\"Save && Go On\" to save this"
-            " image and go on,\n\n\"Cancel\" to stop the montage.%s", 
+            " image and go on,\n\n\"Cancel\" to stop the montage.%s",
             mShootFilmIfDark ? "\n\nBe sure to turn the beam on again first!" : "");
-          ix = SEMThreeChoiceBox(report, "Retry", "Save && Go On", "Cancel", 
+          ix = SEMThreeChoiceBox(report, "Retry", "Save && Go On", "Cancel",
             MB_YESNOCANCEL | MB_ICONQUESTION);
           if (ix != IDNO) {
             if (ix == IDYES) {
@@ -2352,7 +2353,7 @@ int EMmontageController::DoNextPiece(int param)
         } else
           mDuplicateRetryCount = 0;
       }
-        
+
     } else if (mAction == DWELL_TO_COOK && precooking) {
       mDwellStartTime = GetTickCount();
       mWinApp->AddIdleTask(TASK_MONTAGE_DWELL, 0, 1000 + 3 * mDwellTimeMsec);
@@ -2383,7 +2384,7 @@ int EMmontageController::DoNextPiece(int param)
           StartStageRestore();
           mLastFailed = false;
           CleanPatches();
-        }          
+        }
       }
       if (mPieceIndex < 0 || mRestoringStage)
         return 0;
@@ -2501,7 +2502,7 @@ int EMmontageController::SavePiece()
       }
     }
 
-    // Get actual stage X,Y adjusting for image shift; 
+    // Get actual stage X,Y adjusting for image shift;
     // get stage offset and add to autodoc if they are being used
     extra0 = (EMimageExtra *)mImBufs[0].mImage->GetUserData();
     SetAcquiredStagePos(mPieceIndex, extra0->mStageX, extra0->mStageY, extra0->mISX,
@@ -2516,7 +2517,7 @@ int EMmontageController::SavePiece()
       AutodocStageOffsetIO(true, mPieceIndex);
     }
   }
-    
+
   image->Lock();
   data = image->getData();
   mActualErrorX[mPieceIndex]  = 0.;
@@ -2532,7 +2533,7 @@ int EMmontageController::SavePiece()
       if (lower >= 0) {
         idir = 1;
         upper = mPieceIndex;
-      } 
+      }
       xPeak = yPeak = 0.;
       if (idir && camToSpec.xpx) {
         specToCam = MatInv(camToSpec);
@@ -2574,7 +2575,7 @@ int EMmontageController::SavePiece()
       MaintainErrorSums(nSum, mXCTD.pieceIndex);
     }
 
-    // Extract the patches in the edges and correlate whatever is 
+    // Extract the patches in the edges and correlate whatever is
     // available to get displacements from neighboring pieces
     for (int ixy = 0; ixy < 2; ixy++) {
       double wallstart = wallTime();
@@ -2654,7 +2655,7 @@ int EMmontageController::SavePiece()
       if (debugLevel > 1) {
         mWinApp->mMacroProcessor->SetNonMacroDeferLog(true);
       }
-      if (mMiniBorderY && !mNoMontXCorrThread && 
+      if (mMiniBorderY && !mNoMontXCorrThread &&
         !(mParam->correctDrift && !mDoStageMoves && !mUsingMultishot &&
         mMagTab[mParam->magIndex].calibrated[mWinApp->GetCurrentCamera()]) && !debugLevel
         && NextPieceIndex() / mParam->yNframes < mParam->xNframes) {
@@ -2821,11 +2822,11 @@ int EMmontageController::SavePiece()
     if (!needSample && xstrt < xend && ystrt < yend) {
       if (type == kUBYTE)
         keepByte = mConvertMini ? 1 : -1;
-      outx = extractAndBinIntoArray(data, type, 
-        image->getRowBytes() / dataSize, 
+      outx = extractAndBinIntoArray(data, type,
+        image->getRowBytes() / dataSize,
         xstrt * mMiniZoom + subZoomX, xend * mMiniZoom + subZoomX - 1,
-        ystrt * mMiniZoom + subZoomY, yend * mMiniZoom + subZoomY - 1, mMiniZoom, 
-        mMiniData, mMiniArrayX, miniBaseX + xstrt, miniBaseY + ystrt, keepByte, &outx, 
+        ystrt * mMiniZoom + subZoomY, yend * mMiniZoom + subZoomY - 1, mMiniZoom,
+        mMiniData, mMiniArrayX, miniBaseX + xstrt, miniBaseY + ystrt, keepByte, &outx,
         &outy);
       if (outx) {
         needSample = true;
@@ -2865,7 +2866,7 @@ int EMmontageController::SavePiece()
 
         case kUBYTE:
           byte = (unsigned char *)image->getRowData(outy * mMiniZoom + subZoomY);
-          if (mConvertMini) 
+          if (mConvertMini)
             for (outx = xstrt; outx < xend; outx++) {
               mMiniByte[indout++] = byte[indin];
               indin += mMiniZoom;
@@ -2927,7 +2928,7 @@ int EMmontageController::SavePiece()
       mCamera->ChangePreventToggle(-1);
     }
 
-    // Restore shifts to center plus any accumulated error 
+    // Restore shifts to center plus any accumulated error
     int iDelX = mDoISrealign ? 0 : (mParam->binning * mPredictedErrorX);
     int iDelY = mDoISrealign ? 0 : (mParam->binning * mPredictedErrorY);
     if (mDoStageMoves) {
@@ -2937,8 +2938,8 @@ int EMmontageController::SavePiece()
       if (mUsingAnchor)
           UtilRemoveFile(mAnchorFilename);
 
-    } 
-    
+    }
+
     if (mUsingImageShift && !mUsingMultishot) {
       if (mImShiftInBlocks)
         mScope->SetImageShift(mBaseISX, mBaseISY);
@@ -2967,19 +2968,19 @@ int EMmontageController::SavePiece()
         isave = 0;
       else
         isave = FindBestShifts(nVar, &mUpperFirstX[0], &mUpperFirstY[0], &bMat1[0],
-          mBefErrMean, mBefErrMax, aMeanFirst, aMaxFirst, wMeanFirst, wMaxFirst, 
+          mBefErrMean, mBefErrMax, aMeanFirst, aMaxFirst, wMeanFirst, wMaxFirst,
           mNumXcorrPeaks > 1 && nVar > 3);
 
-      if (!isave) 
-        isave = FindBestShifts(nVar, &mUpperShiftX[0], &mUpperShiftY[0], &mBmat[0], 
-          mBefErrMean, mBefErrMax, mAftErrMean, mAftErrMax, mWgtErrMean, mWgtErrMax, 
+      if (!isave)
+        isave = FindBestShifts(nVar, &mUpperShiftX[0], &mUpperShiftY[0], &mBmat[0],
+          mBefErrMean, mBefErrMax, mAftErrMean, mAftErrMax, mWgtErrMean, mWgtErrMax,
           false);
     }
 
     if (mAlreadyHaveShifts || !isave) {
 
       // Take the method that makes the product of mean and max be a minimum
-      if (!mAlreadyHaveShifts && !mUsingMultishot && 
+      if (!mAlreadyHaveShifts && !mUsingMultishot &&
         mWgtErrMax * mWgtErrMean > wMaxFirst * wMeanFirst) {
         mAftErrMax = aMaxFirst;
         mAftErrMean = aMeanFirst;
@@ -2995,19 +2996,19 @@ int EMmontageController::SavePiece()
       if (!mAlreadyHaveShifts) {
         i = StoreAlignedCoordsInAdoc();
         if (i > 0)
-          PrintfToLog("WARNING: Error %d saving aligned piece coordinates into autodoc", 
+          PrintfToLog("WARNING: Error %d saving aligned piece coordinates into autodoc",
           i);
       }
 
       // Save the center shifts
       for (isave = 0; isave < mNumCenterSaved; isave++)
         for (ixy = 0; ixy < 2; ixy++)
-          mCenterShift[isave][ixy] = 
+          mCenterShift[isave][ixy] =
           (int)floor(mBmat[ixy + 2 * mPieceToVar[mCenterPiece[isave]]] + 0.5);
 
       // Derate the maximum error by the cos of the tilt angle for tests and messages
       aMaxCos = mWgtErrMax * pow(cos((double)(DTOR * angle)), 2.);
-      mWinApp->mMacroProcessor->SetMontageError(aMaxCos);     
+      mWinApp->mMacroProcessor->SetMontageError(aMaxCos);
       int mess = 0;
       if (aMaxCos > 1.)
         mess = 1;
@@ -3021,7 +3022,7 @@ int EMmontageController::SavePiece()
       CString strZ = "";
       CString strRtn = "\r\n";
       CString badMess = "";
-      if ((!mReadingMontage || mWinApp->GetAdministrator()) && 
+      if ((!mReadingMontage || mWinApp->GetAdministrator()) &&
         !CMultiShotDlg::DoingAutoStepAdj()) {
         int logWhere = LOG_MESSAGE_IF_CLOSED;
         if (mWinApp->mMacroProcessor->DoingMacro() || mWinApp->DoingTiltSeries() ||
@@ -3088,7 +3089,7 @@ int EMmontageController::SavePiece()
   }
 
   // Move the mini data into buffer B
-  int miniType = 
+  int miniType =
     mConvertMini ? kUBYTE : (image->getType() == kUSHORT ? kUSHORT : kSHORT);
   if (!mConvertMini && mExpectingFloats)
     miniType = kFLOAT;
@@ -3102,7 +3103,7 @@ int EMmontageController::SavePiece()
     } else if (mParam->shiftInOverview && mNumErrSum > 1 && !mAlreadyHaveShifts) {
       shiftX = B3DNINT((mErrorSumX / mNumErrSum) / mMiniZoom);
       shiftY = -B3DNINT((mErrorSumY / mNumErrSum) / mMiniZoom);
-      ProcShiftInPlace(mMiniData, miniType, mMiniSizeX, mMiniSizeY, 
+      ProcShiftInPlace(mMiniData, miniType, mMiniSizeX, mMiniSizeY,
         shiftX, shiftY, mMiniFillVal);
       for (i = 0; i < mNumPieces; i++) {
         if (mMiniOffsets.offsetX[i] != MINI_NO_PIECE) {
@@ -3113,7 +3114,7 @@ int EMmontageController::SavePiece()
     }
 
     if (mBufferManager->ReplaceImage((char *)mMiniData, miniType, mMiniSizeX, mMiniSizeY,
-      1, mTrialMontage ? BUFFER_PRESCAN_OVERVIEW : BUFFER_MONTAGE_OVERVIEW, 
+      1, mTrialMontage ? BUFFER_PRESCAN_OVERVIEW : BUFFER_MONTAGE_OVERVIEW,
       MONTAGE_CONSET, B3DCHOICE(mReadingMontage && mImBufs->mBinning > 0,
         mImBufs->mBinning, mParam->binning) * mMiniZoom, false, !mNoDrawOnRead)) {
       delete [] mMiniData;
@@ -3122,14 +3123,14 @@ int EMmontageController::SavePiece()
       // At this point buffer A still has the last read-in image, so get these parameters
       // from it if possible
       int bufCam = mImBufs->mCamera;
-      mImBufs[1].mMagInd = B3DCHOICE(mReadingMontage && mImBufs->mMagInd > 0, 
+      mImBufs[1].mMagInd = B3DCHOICE(mReadingMontage && mImBufs->mMagInd > 0,
         mImBufs->mMagInd, mParam->magIndex);
       mImBufs[1].mCamera = B3DCHOICE(mReadingMontage && bufCam >= 0,
         bufCam, mWinApp->GetCurrentCamera());
       mImBufs[1].mEffectiveBin = mMiniEffectiveBin;
       mImBufs[1].mDivideBinToShow = mImBufs->mDivideBinToShow;
       if (mReadingMontage && bufCam >= 0)
-        mImBufs[1].mEffectiveBin = B3DMAX((float)mCamParams[bufCam].sizeX / mMiniSizeX, 
+        mImBufs[1].mEffectiveBin = B3DMAX((float)mCamParams[bufCam].sizeX / mMiniSizeX,
           (float)mCamParams[bufCam].sizeY / mMiniSizeY);
       mImBufs[1].mSecNumber = mParam->zCurrent;
       if (mParam->shiftInOverview) {
@@ -3164,7 +3165,7 @@ int EMmontageController::SavePiece()
         if (!extra1) {
           extra1 = new EMimageExtra;
           mImBufs[1].mImage->SetUserData(extra1);
-        } 
+        }
       }
 
       // If this is a captured montage, copy extra data from buffer A if it exists
@@ -3177,7 +3178,7 @@ int EMmontageController::SavePiece()
         extra1->mStageY = mBaseStageY + adjBaseY;
         extra1->mISX = B3DCHOICE(mDoStageMoves && !mHaveStageOffsets && !mImShiftInBlocks,
           mImBufs[0].mISX, mBaseISX);
-        extra1->mISY = B3DCHOICE(mDoStageMoves && !mHaveStageOffsets && !mImShiftInBlocks, 
+        extra1->mISY = B3DCHOICE(mDoStageMoves && !mHaveStageOffsets && !mImShiftInBlocks,
           mImBufs[0].mISY, mBaseISY);
         extra1->ValuesIntoShorts();
         mImBufs[1].mISX = mHaveStageOffsets ? 0 : extra1->mISX;
@@ -3255,7 +3256,7 @@ int EMmontageController::SavePiece()
         }
       }
     }
-    
+
     if (goodCenterPair) {
 
       // For two pieces in Y, center first piece in X, shift second same
@@ -3296,7 +3297,7 @@ int EMmontageController::SavePiece()
     endX = B3DMIN(mMontCenterX, mCenterCoordX[isave]) + mParam->xFrame - 1;
     startY = B3DMAX(mMontCenterY, mCenterCoordY[isave]);
     endY = B3DMIN(mMontCenterY, mCenterCoordY[isave]) + mParam->yFrame - 1;
-    
+
     image = mCenterImage[isave];
     image->Lock();
     short int *sShort = (short int *)image->getData();
@@ -3310,8 +3311,8 @@ int EMmontageController::SavePiece()
       outy = (mParam->yFrame - 1) - (iy - mMontCenterY);
       indin = iny * mParam->xFrame + startX - mCenterCoordX[isave];
       indout = outy * mParam->xFrame + startX - mMontCenterX;
-      
-      tSum = 0; 
+
+      tSum = 0;
       fSum = 0.;
       switch (cenType) {
       case kSHORT:
@@ -3403,11 +3404,11 @@ int EMmontageController::SavePiece()
   if (extra0) {
     extra1 = new EMimageExtra;
     *extra1 = *extra0;
-  } 
+  }
 
-  if (mBufferManager->ReplaceImage((char *)mCenterData, 
+  if (mBufferManager->ReplaceImage((char *)mCenterData,
     cenType == kUBYTE ? kSHORT : cenType,  mParam->xFrame, mParam->yFrame, 0,
-    mTrialMontage ? BUFFER_PRESCAN_CENTER : BUFFER_MONTAGE_CENTER, 
+    mTrialMontage ? BUFFER_PRESCAN_CENTER : BUFFER_MONTAGE_CENTER,
     mImBufs[0].mConSetUsed, mReadingMontage ? 1 : mParam->binning, // Why not set in read
     false, !mNoDrawOnRead)) {
       delete [] mCenterData;
@@ -3430,7 +3431,7 @@ int EMmontageController::SavePiece()
 
   if (!mReadingMontage && !mTrialMontage) {
 
-    // Autoalign if function is selected 
+    // Autoalign if function is selected
     if (mBufferManager->GetAlignOnSave() && mParam->zCurrent > 0)
       mShiftManager->AutoAlign(0, 1);
 
@@ -3484,7 +3485,7 @@ void EMmontageController::ProcessXCorrResult()
     upper = mXCTD.upper[ixy];
 
 
-    // Get the max SD and alternative shifts; apply same operation to them as to 
+    // Get the max SD and alternative shifts; apply same operation to them as to
     // xfirst, yfirst and hope its right
     mMaxSDToIxyOfEdge[mTrimmedMaxSDs.size()] = ixy;
     mMaxSDToPieceNum[mTrimmedMaxSDs.size()] = lower;
@@ -3586,7 +3587,7 @@ UINT EMmontageController::XCorrProc(LPVOID param)
         useExtra[0], useExtra[1], td->XCorrBinning, ixy,
         td->maxLongShift[ixy]);
     }
-    montXCorrEdge(td->lowerPatch[ixy], td->upperPatch[ixy], td->XYbox[ixy], 
+    montXCorrEdge(td->lowerPatch[ixy], td->upperPatch[ixy], td->XYbox[ixy],
       td->XYpieceSize, td->XYoverlap, td->Xsmooth[ixy], td->Ysmooth[ixy], td->Xpad[ixy],
       td->Ypad[ixy], td->lowerPad, td->upperPad, td->lowerCopy, td->numXcorrPeaks, 0,
       td->CTFp[ixy], td->delta[ixy], &useExtra[0], td->XCorrBinning, ixy,
@@ -3626,7 +3627,7 @@ UINT EMmontageController::XCorrProc(LPVOID param)
   return 0;
 }
 
-// Wait for the XCorrProc thread to finish and return 0, 
+// Wait for the XCorrProc thread to finish and return 0,
 // if it doesn't finish, kill it and clean up, return 1
 int EMmontageController::WaitForXCorrProc(int timeout)
 {
@@ -3668,7 +3669,7 @@ void EMmontageController::StopMontage(int error)
   }
   if (mXCorrThread)
     WaitForXCorrProc(5000);
-  
+
   // Just return to starting position of image shifts or stage
   if (!mReadingMontage)
     mCamera->StopCapture(1);
@@ -3685,7 +3686,7 @@ void EMmontageController::StopMontage(int error)
         StartStageRestore();
       else
         StageRestoreDone(-1);
-    } 
+    }
     if (mUsingImageShift) {
       if (mParam->adjustFocus)
         mScope->SetDefocus(mBaseFocus);
@@ -3761,7 +3762,7 @@ int EMmontageController::LowerIndex(int inIndex, int inDir)
 {
   int ix = inIndex / mParam->yNframes;
   int iy =  inIndex % mParam->yNframes;
-  
+
   if (!inDir)
     ix--;
   else
@@ -3813,7 +3814,7 @@ void EMmontageController::CleanPatches()
 }
 
 // Extract overlap data from image into a patch
-void EMmontageController::extractPatch(void *data, int type, int ixy, int *ind0, 
+void EMmontageController::extractPatch(void *data, int type, int ixy, int *ind0,
                                        int *ind1, float **patch)
 {
   int ix, iy, nx = mXYbox[ixy][0];
@@ -3821,7 +3822,7 @@ void EMmontageController::extractPatch(void *data, int type, int ixy, int *ind0,
   NewArray(*patch, float, mBoxPixels[ixy]);
   if (*patch) {
     if (mXCorrBinning > 1) {
-      extractWithBinning(data, type, mParam->xFrame, ind0[0], ind1[0], ind0[1], ind1[1], 
+      extractWithBinning(data, type, mParam->xFrame, ind0[0], ind1[0], ind0[1], ind1[1],
         mXCorrBinning, mBinTemp, 1, &ix, &iy);
       XCorrTaperInPad(mBinTemp, type, nx, 0, nx - 1, 0, ny - 1, *patch, nx, nx, ny, 0, 0);
     } else {
@@ -3852,7 +3853,7 @@ void EMmontageController::SetNextPieceIndexXY()
   mPieceIndex = NextPieceIndex();
   mNeedBacklash = (mParam->yNframes > 1 && mPieceX != mPieceIndex / mParam->yNframes + 1
     && mPieceIndex < mNumPieces);
-  mNeedBacklash =  mSeqIndex < 0 || (mNeedBacklash && !mUsingAnchor) || 
+  mNeedBacklash =  mSeqIndex < 0 || (mNeedBacklash && !mUsingAnchor) ||
     (mUsingAnchor && PieceStartsColumn(mPieceIndex));
   mSeqIndex = mNextSeqInd;
   mPieceX = mPieceIndex / mParam->yNframes + 1;
@@ -3887,12 +3888,12 @@ bool EMmontageController::CameraNotFeasible(MontParam *param)
     param = mWinApp->GetMontParam();
   int camera = mWinApp->GetCurrentCamera();
   setNum = MontageConSetNum(param, false);
-  if (param->binning * param->xFrame > mCamParams[camera].sizeX || 
+  if (param->binning * param->xFrame > mCamParams[camera].sizeX ||
     param->binning * param->yFrame > mCamParams[camera].sizeY)
     return true;
   xFrame = param->xFrame;
   yFrame = param->yFrame;
-  mCamera->CenteredSizes(xFrame, mCamParams[camera].sizeX, mCamParams[camera].moduloX, 
+  mCamera->CenteredSizes(xFrame, mCamParams[camera].sizeX, mCamParams[camera].moduloX,
     left, right, yFrame, mCamParams[camera].sizeY, mCamParams[camera].moduloY, top, bot,
     param->binning, mWinApp->GetConSets() + setNum);
   return xFrame != param->xFrame || yFrame != param->yFrame;
@@ -3916,7 +3917,7 @@ void EMmontageController::GetLastBacklash(float &outX, float &outY)
 // Return the backlash that would be used for going up columns at current conditions
 void EMmontageController::GetColumnBacklash(float & backlashX, float & backlashY)
 {
-  ScaleMat bInv = MatInv(mShiftManager->StageToCamera(mWinApp->GetCurrentCamera(), 
+  ScaleMat bInv = MatInv(mShiftManager->StageToCamera(mWinApp->GetCurrentCamera(),
     mScope->FastMagIndex()));
   backlashX = backlashY = mStageBacklash;
   if (bInv.xpy > 0)
@@ -3947,7 +3948,7 @@ int EMmontageController::SetMaxPrescanBinning()
     mParam->xOverlap * (mParam->xNframes - 1));
   fullY = mParam->binning * (mParam->yFrame * mParam->yNframes -
     mParam->yOverlap * (mParam->yNframes - 1));
-  
+
   // Find the binning that reduces it below target
   for (i = 0; i < cam->numBinnings; i++) {
     binning = cam->binnings[i];
@@ -3973,9 +3974,9 @@ int EMmontageController::SetPrescanBinning(int tryVal, int dir)
     tryVal = mParam->binning;
   if (tryVal > mParam->maxPrescanBin)
     tryVal = mParam->maxPrescanBin;
-  
+
   // Change the binning in the given direction until it is valid for the camera
-  while (!mWinApp->BinningIsValid(iCam, tryVal, false) && tryVal > mParam->binning && 
+  while (!mWinApp->BinningIsValid(iCam, tryVal, false) && tryVal > mParam->binning &&
     tryVal < mParam->maxPrescanBin)
     tryVal += dir;
   mParam->prescanBinning = tryVal;
@@ -3998,9 +3999,9 @@ void EMmontageController::GetCurrentCoords(int &outX, int &outY, int &outZ)
 // and also clear and reallocate the vector pieceSavedAt
 // Optionally return piece coordinates if ixVec, iyVec non-NULL, and stage coordinates
 // if there is an autodoc and xStage, yStage are non-NULL
-int EMmontageController::ListMontagePieces(KImageStore *storeMRC, MontParam *param, 
+int EMmontageController::ListMontagePieces(KImageStore *storeMRC, MontParam *param,
   int zValue, IntVec &pieceSavedAt, IntVec *ixVec, IntVec *iyVec, FloatVec *xStage,
-  FloatVec *yStage, FloatVec *meanVec, float *zStage, FloatVec *midFrac, 
+  FloatVec *yStage, FloatVec *meanVec, float *zStage, FloatVec *midFrac,
   FloatVec *rangeFrac)
 {
   int already, nsec, ind, ix, iy, iz, fullNum = param->xNframes * param->yNframes;
@@ -4013,7 +4014,7 @@ int EMmontageController::ListMontagePieces(KImageStore *storeMRC, MontParam *par
     || param->yFrame - param->yOverlap <= 0 || param->xNframes >= 10000 ||
     param->yNframes >= 10000 || param->xFrame > 17000 || param->yFrame > 17000) {
     PrintfToLog("BAD PARAMETERS PASSED TO ListMontagePieces: xynf %d %d xyf %d %d ov %d "
-      "%d", param->xNframes, param->yNframes, param->xFrame, param->yFrame, 
+      "%d", param->xNframes, param->yNframes, param->xFrame, param->yFrame,
       param->xOverlap, param->yOverlap);
     return -1;
   }
@@ -4045,7 +4046,7 @@ int EMmontageController::ListMontagePieces(KImageStore *storeMRC, MontParam *par
     *zStage = EXTRA_NO_VALUE;
   for (int isec = 0; isec <  nsec ; isec++) {
     if (!storeMRC->getPcoord(isec, ix, iy, iz, gotMutex) && iz == zValue) {
-      ind = (ix / (param->xFrame - param->xOverlap) ) * 
+      ind = (ix / (param->xFrame - param->xOverlap) ) *
         param->yNframes + iy / (param->yFrame - param->yOverlap);
       pieceSavedAt[ind] = isec;
       if (ixVec && iyVec) {
@@ -4070,13 +4071,13 @@ int EMmontageController::ListMontagePieces(KImageStore *storeMRC, MontParam *par
           already = 0;
           break;
         }
-        if (zStage && *zStage < EXTRA_VALUE_TEST && AdocGetFloat(names[nameInd], isec, 
+        if (zStage && *zStage < EXTRA_VALUE_TEST && AdocGetFloat(names[nameInd], isec,
           ADOC_STAGEZ, zStage)) {
           already = 0;
           break;
         }
 
-        if (midFrac && rangeFrac && AdocGetThreeFloats(names[nameInd], isec, 
+        if (midFrac && rangeFrac && AdocGetThreeFloats(names[nameInd], isec,
           ADOC_PCTL_STATS, &amax, &midFrac->at(ind), &rangeFrac->at(ind)) < 0) {
           already = 0;
           break;
@@ -4092,7 +4093,7 @@ int EMmontageController::ListMontagePieces(KImageStore *storeMRC, MontParam *par
 
 // Compute and save the effective stage position at which piece was acquired, adjusting
 // for image shift
-void EMmontageController::SetAcquiredStagePos(int piece, double stageX, double stageY, 
+void EMmontageController::SetAcquiredStagePos(int piece, double stageX, double stageY,
                                               double ISX, double ISY)
 {
   ScaleMat dMat = MatMul(mShiftManager->IStoCamera(mParam->magIndex), MatInv(
@@ -4107,7 +4108,7 @@ void EMmontageController::SetAcquiredStagePos(int piece, double stageX, double s
 int EMmontageController::PieceIndexFromXY(int ix, int iy)
 {
   int ind = (ix - 1) * mParam->yNframes + iy - 1;
-  if (ix > 0 && ix <= mParam->xNframes && iy > 0 && iy <= mParam->yNframes && 
+  if (ix > 0 && ix <= mParam->xNframes && iy > 0 && iy <= mParam->yNframes &&
     mPieceToVar[ind] >= 0)
     return ind;
   return -1;
@@ -4154,32 +4155,32 @@ bool EMmontageController::PieceNeedsRealigning(int index, bool nextPiece)
       numDone = 1;
   }
 
-  return (ifcol > 0 && (numDone >= mRealignInterval || 
+  return (ifcol > 0 && (numDone >= mRealignInterval ||
     numDone > mParam->yNframes / 3)) ||
-    (!ifcol && mNumSinceRealign + np >= mRealignInterval && 
+    (!ifcol && mNumSinceRealign + np >= mRealignInterval &&
     (!mFocusInBlocks || mFocusBlockInd[index] >= 0));
 }
 
 // Limit the X and Y sizes if necessary to be within usable area
-void EMmontageController::LimitSizesToUsable(CameraParameters *cam, int camNum, 
+void EMmontageController::LimitSizesToUsable(CameraParameters *cam, int camNum,
   int magInd, int &xsize, int &ysize, int binning)
 {
   int ind, div;
   if (mLimitMontToUsable && cam->defects.usableRight)
-    LimitOneSizeToUsable(xsize, cam->sizeX, cam->defects.usableLeft, 
+    LimitOneSizeToUsable(xsize, cam->sizeX, cam->defects.usableLeft,
     cam->defects.usableRight, binning, cam->moduloX);
   if (mLimitMontToUsable && cam->defects.usableBottom)
-    LimitOneSizeToUsable(ysize, cam->sizeY, cam->defects.usableTop, 
+    LimitOneSizeToUsable(ysize, cam->sizeY, cam->defects.usableTop,
     cam->defects.usableBottom, binning, cam->moduloY);
   for (ind = 0; ind < (int)mMontageLimits.GetSize(); ind++) {
-    if (mMontageLimits[ind].camera == camNum && 
+    if (mMontageLimits[ind].camera == camNum &&
       (mMontageLimits[ind].magInd == magInd || !mMontageLimits[ind].magInd)) {
       div = BinDivisorI(cam);
       if (mMontageLimits[ind].right)
-        LimitOneSizeToUsable(xsize, cam->sizeX, div * mMontageLimits[ind].left, 
+        LimitOneSizeToUsable(xsize, cam->sizeX, div * mMontageLimits[ind].left,
           div * mMontageLimits[ind].right, binning, cam->moduloX);
       if (mMontageLimits[ind].bottom)
-        LimitOneSizeToUsable(ysize, cam->sizeY, div * mMontageLimits[ind].top, 
+        LimitOneSizeToUsable(ysize, cam->sizeY, div * mMontageLimits[ind].top,
          div *  mMontageLimits[ind].bottom, binning, cam->moduloY);
       break;
     }
@@ -4187,7 +4188,7 @@ void EMmontageController::LimitSizesToUsable(CameraParameters *cam, int camNum,
 }
 
 // Compute centered size that is within usable area in one dimension
-void EMmontageController::LimitOneSizeToUsable(int &size, int camSize, int start, int end, 
+void EMmontageController::LimitOneSizeToUsable(int &size, int camSize, int start, int end,
                                          int binning, int modulo)
 {
   int border = B3DMAX(start, camSize - 1 - end);
@@ -4197,7 +4198,7 @@ void EMmontageController::LimitOneSizeToUsable(int &size, int camSize, int start
 }
 
 // Set the frames for loading a "center" from selected pieces
-void EMmontageController::SetFramesForCenterOnly(int indX1, int indX2, int indY1, 
+void EMmontageController::SetFramesForCenterOnly(int indX1, int indX2, int indY1,
                                                  int indY2)
 {
   mDefinedCenterFrames = true;
@@ -4208,7 +4209,7 @@ void EMmontageController::SetFramesForCenterOnly(int indX1, int indX2, int indY1
 }
 
 // Set the values of the given minioffset structure
-void EMmontageController::SetMiniOffsetsParams(MiniOffsets &mini, int xNframes, 
+void EMmontageController::SetMiniOffsetsParams(MiniOffsets &mini, int xNframes,
   int xFrame, int xDelta, int yNframes, int yFrame, int yDelta)
 {
   mini.xBase = mini.yBase = 0;
@@ -4247,7 +4248,7 @@ void EMmontageController::AddRemainingTime(CString & report)
 }
 
 // Compute number of pieces in a block in X and Y that gives closest to a square size
-void EMmontageController::BlockSizesForNearSquare(int xSize, int ySize, int xOverlap, 
+void EMmontageController::BlockSizesForNearSquare(int xSize, int ySize, int xOverlap,
   int yOverlap, int blockSize, int &numInX, int &numInY)
 {
   int xFull = blockSize * xSize - (blockSize - 1) * xOverlap;
@@ -4262,7 +4263,7 @@ void EMmontageController::BlockSizesForNearSquare(int xSize, int ySize, int xOve
 }
 
 // Get "blockSize" number and number of pieces in X and Y with less than the allowed IS
-void EMmontageController::ImageShiftBlockSizes(int sizeX, int sizeY, int xOverlap, 
+void EMmontageController::ImageShiftBlockSizes(int sizeX, int sizeY, int xOverlap,
   int yOverlap, float pixelSize, float maxISallowed, int &numInX, int &numInY)
 {
   int xExtent, yExtent, xNum, yNum;
@@ -4280,13 +4281,13 @@ void EMmontageController::ImageShiftBlockSizes(int sizeX, int sizeY, int xOverla
 }
 
 // Retrun information on piece to script run during montage
-int EMmontageController::GetCurrentPieceInfo(bool next, int &xPc, int &yPc, int &ixPc, 
+int EMmontageController::GetCurrentPieceInfo(bool next, int &xPc, int &yPc, int &ixPc,
   int &iyPc)
 {
   int ind = mPieceIndex;
   if (mPieceIndex < 0)
     return 1;
-  
+
   if (next)
     ind = NextPieceIndex();
   xPc = ind / mParam->yNframes;
@@ -4302,7 +4303,7 @@ int EMmontageController::GetCurrentPieceInfo(bool next, int &xPc, int &yPc, int 
 
 // When Navigator Realigns to item, this adjusts a shift for correlating to
 // the composed center??
-void EMmontageController::AdjustShiftInCenter(MontParam *param, float &shiftX, 
+void EMmontageController::AdjustShiftInCenter(MontParam *param, float &shiftX,
                                               float &shiftY)
 {
 
@@ -4315,13 +4316,13 @@ void EMmontageController::AdjustShiftInCenter(MontParam *param, float &shiftX,
   // Loop on the center pieces finding the closest one
   minDist = 100000000;
   for (isave = 0; isave < mNumCenterSaved; isave++) {
-    
+
     // Find limits of copy, in montage coordinates
     xst = B3DMAX(mMontCenterX, mCenterCoordX[isave]);
     xnd = B3DMIN(mMontCenterX, mCenterCoordX[isave]) + param->xFrame - 1;
     yst = B3DMAX(mMontCenterY, mCenterCoordY[isave]);
     ynd = B3DMIN(mMontCenterY, mCenterCoordY[isave]) + param->yFrame - 1;
- 
+
     // Get the "distance" from point to piece, negative if inside
     if (xTest < xst)
       xDist = xst - xTest;
@@ -4336,7 +4337,7 @@ void EMmontageController::AdjustShiftInCenter(MontParam *param, float &shiftX,
     else
       yDist = -B3DMIN(yTest - yst, ynd - yTest);
     xDist = B3DMAX(xDist, yDist);
-    
+
     // Keep track of closest piece
     if (xDist < minDist) {
       minDist = xDist;
@@ -4399,7 +4400,7 @@ void EMmontageController::ComputeMoveToPiece(int pieceInd, BOOL focusBlock, int 
   }
 
   // This is relevant only for post-action moves
-  moveInfo->distanceMoved = B3DMAX(fabs(postISX - moveInfo->x), 
+  moveInfo->distanceMoved = B3DMAX(fabs(postISX - moveInfo->x),
     fabs(postISY - moveInfo->y));
   moveInfo->x = postISX;
   moveInfo->y = postISY;
@@ -4408,7 +4409,7 @@ void EMmontageController::ComputeMoveToPiece(int pieceInd, BOOL focusBlock, int 
 // Compute the adjustment to nominal stage position when doing an IS realign, the image
 // shift for doing the alignment to an adjacent piece, and the expected image offset
 // for autoalign to adjacent piece, in unbinned pixels
-void EMmontageController::GetAdjustmentsForISrealign(int piece, double & stageAdjX, 
+void EMmontageController::GetAdjustmentsForISrealign(int piece, double & stageAdjX,
                                                      double & stageAdjY, double & adjISX,
                                                      double & adjISY, int & ubpixOffX,
                                                      int &ubpixOffY)
@@ -4439,14 +4440,14 @@ void EMmontageController::GetAdjustmentsForISrealign(int piece, double & stageAd
     stageAdjX = mAddedSubbedBacklash * mBacklashAdjustX;
     stageAdjY = mAddedSubbedBacklash * mBacklashAdjustY;
   }
-  
+
   // Get nominal stage position of adjacent piece; adjustment is actual position minus
   // that.
   iDelX = mParam->binning * (mMontageX[adj] - mMontCenterX);
   iDelY = mParam->binning * (mMontageY[adj] - mMontCenterY);
-  stageAdjX += mAcquiredStageX[adj] - 
+  stageAdjX += mAcquiredStageX[adj] -
     (mBinv.xpx * iDelX + mBinv.xpy * iDelY + mBaseStageX);
-  stageAdjY += mAcquiredStageY[adj] - 
+  stageAdjY += mAcquiredStageY[adj] -
     (mBinv.ypx * iDelX + mBinv.ypy * iDelY + mBaseStageY);
 
   // Determine pixel distance between this piece and adjacent one, and total
@@ -4490,7 +4491,7 @@ int EMmontageController::RealignToExistingPiece(void)
   if (mDoISrealign) {
     mRealignInd = mAdjacentForIS[mPieceIndex];
     if (mAddedSubbedBacklash)
-      SEMTrace('S', "%s backlash to position adjustment", 
+      SEMTrace('S', "%s backlash to position adjustment",
       mAddedSubbedBacklash > 0 ? "Added" : "Subtracted");
   } else
     mRealignInd = FindPieceForRealigning(mPieceX, mPieceY);
@@ -4503,10 +4504,10 @@ int EMmontageController::RealignToExistingPiece(void)
   }
 
   // Read it in if it is not the previous piece already in A
-  if (!(mImBufs->GetSaveCopyFlag() < 0 && mImBufs->mCaptured && 
-    mImBufs->mConSetUsed == MONTAGE_CONSET && 
+  if (!(mImBufs->GetSaveCopyFlag() < 0 && mImBufs->mCaptured &&
+    mImBufs->mConSetUsed == MONTAGE_CONSET &&
     mImBufs->mSecNumber == mPieceSavedAt[mRealignInd])) {
-    if (mBufferManager->ReadFromFile(mWinApp->mStoreMRC, mPieceSavedAt[mRealignInd], 0, 
+    if (mBufferManager->ReadFromFile(mWinApp->mStoreMRC, mPieceSavedAt[mRealignInd], 0,
       true)) {
       mess.Format("Failed to read piece selected for realigning to before piece"
         " %d, %d; just continuing", mPieceX, mPieceY);
@@ -4524,7 +4525,7 @@ int EMmontageController::RealignToExistingPiece(void)
   ComputeMoveToPiece(mRealignInd, false, iDelX, iDelY, adjISX, adjISY);
   mScope->MoveStage(mMoveInfo, true);
   SEMTrace('S', "RealignToPiece moving stage to %.3f %.3f", mMoveInfo.x, mMoveInfo.y);
-  mWinApp->AddIdleTask(CEMscope::TaskStageBusy, TASK_MONTAGE_REALIGN, 
+  mWinApp->AddIdleTask(CEMscope::TaskStageBusy, TASK_MONTAGE_REALIGN,
     EXIST_CHECKPOS_ACQUIRE, timeout);
   return 0;
 }
@@ -4545,7 +4546,7 @@ int EMmontageController::RealignToAnchor(void)
   mMoveInfo.y = mAnchorStageY;
   mScope->MoveStage(mMoveInfo, true);
   SEMTrace('S', "RealignToAnchor moving stage to %.3f %.3f", mMoveInfo.x, mMoveInfo.y);
-  mWinApp->AddIdleTask(CEMscope::TaskStageBusy, TASK_MONTAGE_REALIGN, 
+  mWinApp->AddIdleTask(CEMscope::TaskStageBusy, TASK_MONTAGE_REALIGN,
     ANCHALI_CHECK_ACQUIRE, timeout);
   return 0;
 }
@@ -4555,7 +4556,7 @@ void EMmontageController::RealignNextTask(int param)
 {
   int targetSize = B3DMAX(1024, mCamera->TargetSizeForTasks());
   float shiftX, shiftY;
-  int i, extraWait = 200, expectX = 0, expectY = 0; 
+  int i, extraWait = 200, expectX = 0, expectY = 0;
   double ISX, ISY, sterr, stageAdjX, stageAdjY, adjISX, adjISY;
   int timeOut = 120000;
   bool stageErr = false;
@@ -4563,7 +4564,7 @@ void EMmontageController::RealignNextTask(int param)
   CFileStatus status;
   CString mess;
   ControlSet *conSet = mWinApp->GetConSets() + TRACK_CONSET;
-  int consNum = (param == ISALIGN_ACQUIRE && mUseTrialSetInISrealign) ? 
+  int consNum = (param == ISALIGN_ACQUIRE && mUseTrialSetInISrealign) ?
     TRIAL_CONSET : TRACK_CONSET;
 
   if (mPieceIndex < 0) {
@@ -4597,20 +4598,20 @@ void EMmontageController::RealignNextTask(int param)
   mNumStageErrors = 0;
 
   // Do all kinds of shots as long as there is not a stage error
-  if ((param == EXIST_CHECKPOS_ACQUIRE || param == ISALIGN_ACQUIRE || 
-    param == ANCHOR_ACQUIRE || param == BACKLASH_CHECK_ACQUIRE || 
+  if ((param == EXIST_CHECKPOS_ACQUIRE || param == ISALIGN_ACQUIRE ||
+    param == ANCHOR_ACQUIRE || param == BACKLASH_CHECK_ACQUIRE ||
     param == ANCHALI_CHECK_ACQUIRE) && !stageErr) {
       if (mUseContinuousMode && param != ISALIGN_ACQUIRE)
         mCamera->StopCapture(-1);
 
       // Take a shot based on Record area
       // 9/5/11: This was ANCHALI_CHECK_ACQUIRE but couldn't figure out why - backlash
-      // shot does immediately follow the ANCHOR_ACQUIRE and surely doesn't need a new 
+      // shot does immediately follow the ANCHOR_ACQUIRE and surely doesn't need a new
       // conset
       if (param != BACKLASH_CHECK_ACQUIRE)
         mWinApp->mComplexTasks->MakeTrackingConSet(conSet, targetSize, RECORD_CONSET);
       if (param == ANCHOR_ACQUIRE || param == ANCHALI_CHECK_ACQUIRE) {
-        mWinApp->mComplexTasks->LowerMagIfNeeded(mParam->anchorMagInd, 0.75f, 0.5f, 
+        mWinApp->mComplexTasks->LowerMagIfNeeded(mParam->anchorMagInd, 0.75f, 0.5f,
           TRACK_CONSET);
         mLoweredMag = true;
       }
@@ -4627,17 +4628,17 @@ void EMmontageController::RealignNextTask(int param)
         mCamera->InitiateCapture(consNum);
         mWinApp->AddIdleTask(SEMStageCameraBusy, TASK_MONTAGE_REALIGN, param + 1, 0);
       }
-      return;    
+      return;
   }
 
   // Process the alignment to existing piece with or without IS if there is no stage
   // error, if there is an error fall through and return to the normal flow
-  if (param == EXIST_CHECKPOS_ACQUIRE || param == EXIST_ALIGN_SHOT || 
+  if (param == EXIST_CHECKPOS_ACQUIRE || param == EXIST_ALIGN_SHOT ||
     param == ISALIGN_SHOT) {
     if (!stageErr) {
       mImBufs->mCaptured = BUFFER_TRACKING;
       if (param == ISALIGN_SHOT) {
-        GetAdjustmentsForISrealign(mPieceIndex, stageAdjX, stageAdjY, adjISX, adjISY, 
+        GetAdjustmentsForISrealign(mPieceIndex, stageAdjX, stageAdjY, adjISX, adjISY,
           expectX, expectY);
         expectX /= mImBufs->mBinning;
         expectY /= -mImBufs->mBinning;
@@ -4655,7 +4656,7 @@ void EMmontageController::RealignNextTask(int param)
       mImBufs->mImage->getShifts(shiftX, shiftY);
       shiftX *= ((float)mImBufs->mBinning) / mParam->binning;
       shiftY *= ((float)mImBufs->mBinning) / mParam->binning;
-      if (fabs((double)shiftX) > mParam->maxAlignFrac * mParam->xFrame || 
+      if (fabs((double)shiftX) > mParam->maxAlignFrac * mParam->xFrame ||
         fabs((double)shiftY) > mParam->maxAlignFrac * mParam->yFrame) {
           mess.Format("Realignment shift of %.0f,%.0f is greater than maximum allowed "
             "shift;\r\n the position adjustment is not being changed", shiftX, shiftY);
@@ -4669,13 +4670,13 @@ void EMmontageController::RealignNextTask(int param)
           mess.Format("The position adjustment is being changed by a realignment shift "
             "of %.0f,%.0f", shiftX, shiftY);
         } else {
-          bInv = mShiftManager->CameraToIS(mParam->magIndex);    
+          bInv = mShiftManager->CameraToIS(mParam->magIndex);
           adjISX = -mParam->binning * (bInv.xpx * shiftX - bInv.xpy * shiftY);
           adjISY = -mParam->binning * (bInv.ypx * shiftX - bInv.ypy * shiftY);
           mScope->SetImageShift(adjISX, adjISY);
           mShiftManager->SetISTimeOut(mShiftManager->GetLastISDelay());
           mess.Format("Shift realigning %d %d to %d %d is %.0f,%.0f",
-            mPieceX, mPieceY, mAdjacentForIS[mPieceIndex] / mParam->yNframes + 1, 
+            mPieceX, mPieceY, mAdjacentForIS[mPieceIndex] / mParam->yNframes + 1,
             mAdjacentForIS[mPieceIndex] % mParam->yNframes + 1, shiftX, shiftY);
         }
         mWinApp->AppendToLog(mess);
@@ -4708,14 +4709,14 @@ void EMmontageController::RealignNextTask(int param)
     }
 
     // Set up for move down column and back up
-    mMoveInfo.backX = -3. * mBinv.xpy * mParam->binning * 
+    mMoveInfo.backX = -3. * mBinv.xpy * mParam->binning *
       (mParam->yFrame - mParam->yOverlap);
-    mMoveInfo.backY = -3. * mBinv.ypy * mParam->binning * 
+    mMoveInfo.backY = -3. * mBinv.ypy * mParam->binning *
       (mParam->yFrame - mParam->yOverlap);
     mScope->MoveStage(mMoveInfo, true);
-    SEMTrace('S', "RealignNext doing backlash of %.3f %.3f", mMoveInfo.backX, 
+    SEMTrace('S', "RealignNext doing backlash of %.3f %.3f", mMoveInfo.backX,
       mMoveInfo.backY);
-    mWinApp->AddIdleTask(CEMscope::TaskStageBusy, TASK_MONTAGE_REALIGN, 
+    mWinApp->AddIdleTask(CEMscope::TaskStageBusy, TASK_MONTAGE_REALIGN,
       BACKLASH_CHECK_ACQUIRE, timeOut);
     return;
   }
@@ -4727,7 +4728,7 @@ void EMmontageController::RealignNextTask(int param)
     // The binnings need to be equalized because a read-in image gets record binning
     mImBufs[1].mBinning = mImBufs->mBinning;
     mShiftManager->AutoAlign(1, 0, false);
-    bInv = MatInv(mShiftManager->StageToCamera(mWinApp->GetCurrentCamera(), 
+    bInv = MatInv(mShiftManager->StageToCamera(mWinApp->GetCurrentCamera(),
       mParam->anchorMagInd));
 
     // Compute the stage move required to realign from this shift (invert Y)
@@ -4747,16 +4748,16 @@ void EMmontageController::RealignNextTask(int param)
       // If this is a resume and we only need backlash, then we need to set the
       // backlash flag for moving to a piece in lower have but not in upper
       if (!mNeedAnchor)
-        mNeedBacklash = mPieceIndex % mParam->yNframes <= 
+        mNeedBacklash = mPieceIndex % mParam->yNframes <=
         mColumnStartY[mPieceIndex / mParam->yNframes];
       mNeedColumnBacklash = false;
       mNeedAnchor = false;
       mAction = B3DMIN(mAction, MOVE_STAGE - 1);
-      SEMTrace('1', "RealignNext: backlash adjustment is %.3f %.3f", adjISX, adjISY); 
+      SEMTrace('1', "RealignNext: backlash adjustment is %.3f %.3f", adjISX, adjISY);
     } else {
 
       // For anchor realignment, need to adjust the acquired locations
-      SEMTrace('1', "RealignNext: Adjusting acquired by %.3f %.3f", adjISX, adjISY); 
+      SEMTrace('1', "RealignNext: Adjusting acquired by %.3f %.3f", adjISX, adjISY);
       for (i = 0; i < mNumPieces; i++) {
         if (mPieceSavedAt[i] >= 0) {
           mAcquiredStageX[i] += adjISX;
@@ -4778,10 +4779,10 @@ bool EMmontageController::CalNeededForISrealign(MontParam * param)
   float overlapTol = 0.1f;  // Tolerance as fraction of overlap zone
   float maxISerr = 0.025f;    // Maximum expected IS cal error
   int *activeList = mWinApp->GetActiveCameraList();
-  if (!param->moveStage || !param->useHqParams || !param->ISrealign || 
+  if (!param->moveStage || !param->useHqParams || !param->ISrealign ||
     param->setupInLowDose)
     return false;
-  pixel = mShiftManager->GetPixelSize(activeList[param->cameraIndex], 
+  pixel = mShiftManager->GetPixelSize(activeList[param->cameraIndex],
     param->magIndex) * param->binning;
   shiftX = B3DMIN(pixel * param->xFrame, param->maxRealignIS);
   shiftY = B3DMIN(pixel * param->yFrame, param->maxRealignIS);
@@ -4877,7 +4878,7 @@ int EMmontageController::FindPieceForRealigning(int pieceX, int pieceY)
         if (ix == pieceX - 1)
           break;
 
-        // If there is a piece 2 to left, as well as 2 below and above (sort of), 
+        // If there is a piece 2 to left, as well as 2 below and above (sort of),
         // this column is OK; otherwise go try next.
         if (iy > 0 && iy - first > 1 && last - iy > 1) {
           ind = PieceIndexFromXY(ix - 2, iy);
@@ -4889,7 +4890,7 @@ int EMmontageController::FindPieceForRealigning(int pieceX, int pieceY)
   }
   if (iy < 0)
     return -1;
-  SEMTrace('1', "Realigning to piece %d %d for piece %d %d (adjusted X %d)", ix, iy, 
+  SEMTrace('1', "Realigning to piece %d %d for piece %d %d (adjusted X %d)", ix, iy,
     xorig, pieceY, pieceX);
   return PieceIndexFromXY(ix, iy);
 }
@@ -4950,7 +4951,7 @@ void EMmontageController::FindAdjacentForISrealign(void)
         mAdjacentForIS[ipc] = adjPiece[1];
       else
         mAdjacentForIS[ipc] = adjPiece[(pcx + pcy) % 2];
-      //SEMTrace('1', "For %d %d  align to %d %d", pcx, pcy, mAdjacentForIS[ipc] / 
+      //SEMTrace('1', "For %d %d  align to %d %d", pcx, pcy, mAdjacentForIS[ipc] /
         //mParam->yNframes + 1, mAdjacentForIS[ipc] % mParam->yNframes + 1);
     } //else
       //SEMTrace('1', "No realign for %d %d", pcx, pcy);
@@ -4964,8 +4965,8 @@ void EMmontageController::FindAdjacentForISrealign(void)
 
 // Call the IMOD library routine to find piece shifts, return various error measures
 int EMmontageController::FindBestShifts(int nvar, float *upperShiftX, float *upperShiftY,
-                                        float *bMat, float &bMean, float &bMax, 
-                                        float &aMean, float &aMax, float &wMean, 
+                                        float *bMat, float &bMean, float &bMax,
+                                        float &aMean, float &aMax, float &wMean,
                                         float &wMax, bool tryAltern)
 {
   int *ixpclist, *iypclist, *pieceLower, *pieceUpper, *edgeLower, *edgeUpper;
@@ -5046,7 +5047,7 @@ int EMmontageController::FindBestShifts(int nvar, float *upperShiftX, float *upp
           dyedge[2 * inde + ixy] = upperShiftY[2 * lower + ixy];
           if (tryAltern) {
             for (j = 0; j < 4; j++)
-              alternShifts[4 * inde + altIxy * ixy + j] = 
+              alternShifts[4 * inde + altIxy * ixy + j] =
               mAlternShifts[4 * (2 * lower + ixy) + j];
           }
           inde++;
@@ -5059,14 +5060,14 @@ int EMmontageController::FindBestShifts(int nvar, float *upperShiftX, float *upp
     // Get the median max SD and analyze for outliers
     if (mTrimmedMaxSDs.size() > 5) {
       rsMedian(&mTrimmedMaxSDs[0], (int)mTrimmedMaxSDs.size(), outlier, &median);
-      rsMadMedianOutliers(&mTrimmedMaxSDs[0], (int)mTrimmedMaxSDs.size(), sdOutlierCrit, 
+      rsMadMedianOutliers(&mTrimmedMaxSDs[0], (int)mTrimmedMaxSDs.size(), sdOutlierCrit,
         outlier);
       for (i = 0; i < (int)mTrimmedMaxSDs.size(); i++) {
         if (outlier[i] < 0. && mTrimmedMaxSDs[i] <= sdMedianRatio * median) {
           ixy = mMaxSDToIxyOfEdge[i];
           inde = edgeUpper[2 * mMaxSDToPieceNum[i] + ixy];
           ifSkipEdge[2 * inde + ixy] = 1;
-          SEMTrace('a', "Skipping edge with SD %f: %d pc %d ixy %d", mTrimmedMaxSDs[i], 
+          SEMTrace('a', "Skipping edge with SD %f: %d pc %d ixy %d", mTrimmedMaxSDs[i],
             inde, mMaxSDToPieceNum[i], ixy);
         }
       }
@@ -5085,7 +5086,7 @@ int EMmontageController::FindBestShifts(int nvar, float *upperShiftX, float *upp
           if (upper >= 0) {
 
             // Skip an edge if it is an outlier or if its CCC is very low
-            if (!ifSkipEdge[2 * inde + ixy] && ((outlier[numEdge] < 0. && ccc[numEdge] < 
+            if (!ifSkipEdge[2 * inde + ixy] && ((outlier[numEdge] < 0. && ccc[numEdge] <
               upperMedRatio * median) || ccc[numEdge] < 0.01 + lowerMedRatio * median)) {
               SEMTrace('a', "Skipping %d, %d %c edge, outlier %.0f  ccc %.4f  medcrit "
                 "%.4f", lower / mParam->yNframes + 1, lower % mParam->yNframes + 1, 'X'+
@@ -5111,7 +5112,7 @@ int EMmontageController::FindBestShifts(int nvar, float *upperShiftX, float *upp
     // Do the fit
     retval = findPieceShifts(ivarpc, nvar, indvar, ixpclist, iypclist, dxedge, dyedge,
       1, pieceLower, pieceUpper, ifSkipEdge, 1, bMat, 1, edgeLower, edgeUpper, 1, work,
-      0, -1, 1, robustCrit, critMaxMove, critMoveDiff, maxIter, numAvgForTest, 
+      0, -1, 1, robustCrit, critMaxMove, critMoveDiff, maxIter, numAvgForTest,
       intervalForTest, &numIter, &wMean, &wMax);
     if (!retval) {
 
@@ -5166,7 +5167,7 @@ int EMmontageController::FindBestShifts(int nvar, float *upperShiftX, float *upp
 }
 
 // Read or write the edge shifts from/to an autodoc file if one exists
-int EMmontageController::AutodocShiftStorage(bool write, float * upperShiftX, 
+int EMmontageController::AutodocShiftStorage(bool write, float * upperShiftX,
                                              float * upperShiftY)
 {
   char *keys[8] = {ADOC_XEDGE, ADOC_YEDGE, ADOC_XEDGEVS, ADOC_YEDGEVS, ADOC_EDGEX_MAXSD,
@@ -5190,19 +5191,19 @@ int EMmontageController::AutodocShiftStorage(bool write, float * upperShiftX,
       if (UpperIndex(ipc, ixy) >= 0) {
         if (mNumXcorrPeaks > 1) {
           if (write)
-            retval = AdocSetThreeFloats(names[nameInd], iz, keys[keyInd], 
+            retval = AdocSetThreeFloats(names[nameInd], iz, keys[keyInd],
             upperShiftX[2*ipc + ixy], upperShiftY[2*ipc + ixy], mPatchCCC[2 * ipc + ixy]);
           else
-            retval = AdocGetThreeFloats(names[nameInd], iz, keys[keyInd], 
-            &upperShiftX[2*ipc + ixy], &upperShiftY[2*ipc + ixy], 
+            retval = AdocGetThreeFloats(names[nameInd], iz, keys[keyInd],
+            &upperShiftX[2*ipc + ixy], &upperShiftY[2*ipc + ixy],
               &mPatchCCC[2 * ipc + ixy]);
 
         } else {
           if (write)
-            retval = AdocSetTwoFloats(names[nameInd], iz, keys[keyInd], 
+            retval = AdocSetTwoFloats(names[nameInd], iz, keys[keyInd],
             upperShiftX[2*ipc + ixy], upperShiftY[2*ipc + ixy]);
           else
-            retval = AdocGetTwoFloats(names[nameInd], iz, keys[keyInd], 
+            retval = AdocGetTwoFloats(names[nameInd], iz, keys[keyInd],
             &upperShiftX[2*ipc + ixy], &upperShiftY[2*ipc + ixy]);
         }
         if (retval) {
@@ -5243,7 +5244,7 @@ int EMmontageController::AutodocShiftStorage(bool write, float * upperShiftX,
       return 3;
     if (AdocGetMutexSetCurrent(adocInd) < 0)
       return 1;
-    if (store->getStoreType() != STORE_TYPE_HDF && 
+    if (store->getStoreType() != STORE_TYPE_HDF &&
       AdocWrite((char *)(LPCTSTR)store->getAdocName()) < 0)
       retval = 3;
   }
@@ -5285,7 +5286,7 @@ int EMmontageController::AutodocStageOffsetIO(bool write, int pieceInd)
     // This may now be unneeded
     if (mBufferManager->CheckAsyncSaving())
       return 3;
-    if (store->getStoreType() != STORE_TYPE_HDF && 
+    if (store->getStoreType() != STORE_TYPE_HDF &&
       AdocWrite((char *)(LPCTSTR)store->getAdocName()) < 0)
       retval = 3;
   }
@@ -5318,7 +5319,7 @@ int EMmontageController::StoreAlignedCoordsInAdoc(void)
     varInd = mPieceToVar[ipc] * 2;
     retval = AdocGetThreeIntegers(names[nameInd], iz, ADOC_PCOORD, &pcX, &pcY, &pcZ);
     if (!retval)
-      retval = AdocSetThreeIntegers(names[nameInd], iz, keys[keyInd], 
+      retval = AdocSetThreeIntegers(names[nameInd], iz, keys[keyInd],
       pcX + B3DNINT(mBmat[varInd]), pcY + B3DNINT(mBmat[varInd + 1]), pcZ);
     if (retval) {
       AdocReleaseMutex();
@@ -5326,7 +5327,7 @@ int EMmontageController::StoreAlignedCoordsInAdoc(void)
     }
   }
 
-  if (store->getStoreType() != STORE_TYPE_HDF && 
+  if (store->getStoreType() != STORE_TYPE_HDF &&
     AdocWrite((char *)(LPCTSTR)store->getAdocName()) < 0)
     retval = 3;
   AdocReleaseMutex();
@@ -5349,7 +5350,7 @@ int EMmontageController::StorePercentileStats(int pieceInd, float meanHigh, floa
   if (AdocGetMutexSetCurrent(adocInd) < 0)
     return 1;
   nameInd = mWinApp->mStoreMRC->getStoreType() == STORE_TYPE_ADOC ? 1 : 0;
-  retval = AdocSetThreeFloats(names[nameInd], mPieceSavedAt[pieceInd], 
+  retval = AdocSetThreeFloats(names[nameInd], mPieceSavedAt[pieceInd],
     ADOC_PCTL_STATS, meanHigh, midFrac, rangeFrac);
   AdocReleaseMutex();
   return retval;
@@ -5392,13 +5393,13 @@ int EMmontageController::MapParamsToAutodoc(void)
   errSum -= AdocSetTwoFloats(ADOC_MONT_SECT, index, ADOC_BUF_ISXY, mImBufs[1].mISX,
     mImBufs[1].mISY);
   errSum -= AdocSetInteger(ADOC_MONT_SECT, index, ADOC_PROBEMODE, mImBufs[1].mProbeMode);
-  errSum -= AdocSetInteger(ADOC_MONT_SECT, index, ADOC_STAGE_MONT, 
+  errSum -= AdocSetInteger(ADOC_MONT_SECT, index, ADOC_STAGE_MONT,
     mDoStageMoves ? 1 : 0);
-  errSum -= AdocSetTwoIntegers(ADOC_MONT_SECT, index, ADOC_CONSET_USED, 
+  errSum -= AdocSetTwoIntegers(ADOC_MONT_SECT, index, ADOC_CONSET_USED,
     mImBufs[1].mConSetUsed, mImBufs[1].mLowDoseArea ? 1 : 0);
   GetLastBacklash(backX, backY);
   errSum -= AdocSetTwoFloats(ADOC_MONT_SECT, index, ADOC_MONT_BACKLASH, backX, backY);
-  errSum -= AdocSetTwoFloats(ADOC_MONT_SECT, index, ADOC_VALID_BACKLASH, 
+  errSum -= AdocSetTwoFloats(ADOC_MONT_SECT, index, ADOC_VALID_BACKLASH,
     mImBufs[1].mBacklashX, mImBufs[1].mBacklashY);
   errSum -= AdocSetFloat(ADOC_MONT_SECT, index, ADOC_DRIFT, conSet->drift);
   errSum -= AdocSetTwoIntegers(ADOC_MONT_SECT, index, ADOC_CAM_MODES, conSet->shuttering,
@@ -5407,17 +5408,17 @@ int EMmontageController::MapParamsToAutodoc(void)
     CMapDrawItem item;
     item.mMapMagInd = mImBufs[1].mMagInd;
     item.mMapCamera = mImBufs[1].mCamera;
-    errSum -= AdocSetFloat(ADOC_MONT_SECT, index, ADOC_FOCUS_OFFSET, 
+    errSum -= AdocSetFloat(ADOC_MONT_SECT, index, ADOC_FOCUS_OFFSET,
       mImBufs[1].mViewDefocus);
-    mWinApp->mNavHelper->GetViewOffsets(&item, netShiftX, netShiftY, beamShiftX, 
+    mWinApp->mNavHelper->GetViewOffsets(&item, netShiftX, netShiftY, beamShiftX,
       beamShiftY, beamTiltX, beamTiltY, mCamera->ConSetToLDArea(mImBufs[1].mConSetUsed));
-    errSum -= AdocSetTwoFloats(ADOC_MONT_SECT, index, ADOC_NET_VIEW_SHIFT, netShiftX, 
+    errSum -= AdocSetTwoFloats(ADOC_MONT_SECT, index, ADOC_NET_VIEW_SHIFT, netShiftX,
       netShiftY);
-    errSum -= AdocSetTwoFloats(ADOC_MONT_SECT, index, ADOC_VIEW_BEAM_SHIFT, beamShiftX, 
+    errSum -= AdocSetTwoFloats(ADOC_MONT_SECT, index, ADOC_VIEW_BEAM_SHIFT, beamShiftX,
       beamShiftY);
-    errSum -= AdocSetTwoFloats(ADOC_MONT_SECT, index, ADOC_VIEW_BEAM_TILT, beamTiltX, 
+    errSum -= AdocSetTwoFloats(ADOC_MONT_SECT, index, ADOC_VIEW_BEAM_TILT, beamTiltX,
       beamTiltY);
-    errSum -= AdocSetFloat(ADOC_MONT_SECT, index, ADOC_VIEW_DEFOCUS, 
+    errSum -= AdocSetFloat(ADOC_MONT_SECT, index, ADOC_VIEW_DEFOCUS,
       mImBufs[1].mViewDefocus);
   }
   errSum -= AdocSetInteger(ADOC_MONT_SECT, index, ADOC_ALPHA, mScope->GetAlpha());
@@ -5444,7 +5445,7 @@ int EMmontageController::MapParamsToAutodoc(void)
 
   // SetValue returns 1 for error, all the Adoc sets return -1
 
-  if (mWinApp->mStoreMRC->getStoreType() != STORE_TYPE_HDF && 
+  if (mWinApp->mStoreMRC->getStoreType() != STORE_TYPE_HDF &&
     AdocWrite((char *)(LPCTSTR)mWinApp->mStoreMRC->getAdocName()) < 0)
     errSum -= 1000;
   AdocReleaseMutex();
@@ -5469,19 +5470,19 @@ int EMmontageController::AccessMontSectInAdoc(KImageStore *store, int secNum)
 
 // Get any parameters from the MontSection data that can go into the imBuf
 void EMmontageController::MapParamsToOverview(int sectInd)
-{ 
+{
   int typext;
   float ISX, ISY;
-  KStoreADOC::LoadExtraFromValues(mImBufs[1].mImage->GetUserData(), typext, 
+  KStoreADOC::LoadExtraFromValues(mImBufs[1].mImage->GetUserData(), typext,
     ADOC_MONT_SECT, sectInd);
   AdocGetTwoFloats(ADOC_MONT_SECT, sectInd, ADOC_BUF_ISXY, &ISX, &ISY);
   mImBufs[1].mISX = ISX;
   mImBufs[1].mISY = ISY;
   AdocGetInteger(ADOC_MONT_SECT, sectInd, ADOC_PROBEMODE, &mImBufs[1].mProbeMode);
-  AdocGetTwoIntegers(ADOC_MONT_SECT, sectInd, ADOC_CONSET_USED, 
+  AdocGetTwoIntegers(ADOC_MONT_SECT, sectInd, ADOC_CONSET_USED,
     &mImBufs[1].mConSetUsed, &typext);
   mImBufs[1].mLowDoseArea = typext != 0;
-  AdocGetTwoFloats(ADOC_MONT_SECT, sectInd, ADOC_VALID_BACKLASH, 
+  AdocGetTwoFloats(ADOC_MONT_SECT, sectInd, ADOC_VALID_BACKLASH,
     &mImBufs[1].mBacklashX, &mImBufs[1].mBacklashY);
   AdocGetFloat(ADOC_MONT_SECT, sectInd, ADOC_VIEW_DEFOCUS, &mImBufs[1].mViewDefocus);
 }
@@ -5542,7 +5543,7 @@ void EMmontageController::RetilePieces(int miniType)
   for (iy = mParam->yNframes; iy > 0; iy--) {
 
     // Fill from the last line not filled to the bottom of this row of stored tiles
-    bottom = (int)((((mParam->yNframes - iy) * (size_t)mMiniFrameY + mMiniBorderY) * 
+    bottom = (int)((((mParam->yNframes - iy) * (size_t)mMiniFrameY + mMiniBorderY) *
       mMiniArrayX) / mMiniSizeX);
     bottom = B3DMIN(bottom, mMiniSizeY);
     for (outy = unfilled; outy < (size_t)bottom; outy++) {
@@ -5582,7 +5583,7 @@ void EMmontageController::RetilePieces(int miniType)
         if (iy < mParam->yNframes)
           ystrt += ytrim;
         miniBaseX = ix * mMiniDeltaX;
-        miniBaseY = (mParam->yNframes - iy) * mMiniDeltaY; 
+        miniBaseY = (mParam->yNframes - iy) * mMiniDeltaY;
 
         // Get the final offset, set the minioffsets, then adjust for shift
         useMat = (mDoCorrelations || mUsingMultishot) ? mBmat[2 * ivar] : 0.;
@@ -5594,7 +5595,7 @@ void EMmontageController::RetilePieces(int miniType)
         yofset -= shiftY;
         miniBaseX += xofset;
         miniBaseY += yofset;
- 
+
         // If a base is negative, limit the start of the copy
         // If a base is beyond the limit for the composed montage, limit end of copy
         if (miniBaseX < 0)
@@ -5629,7 +5630,7 @@ void EMmontageController::RetilePieces(int miniType)
 
   // Shift to recenter if needed
   if (shiftY)
-    ProcShiftInPlace(mMiniData, mConvertMini ? kUBYTE : miniType, mMiniSizeX, mMiniSizeY, 
+    ProcShiftInPlace(mMiniData, mConvertMini ? kUBYTE : miniType, mMiniSizeX, mMiniSizeY,
        0, shiftY, mMiniFillVal);
 }
 
@@ -5645,7 +5646,7 @@ void EMmontageController::AdjustFilter(int index)
   mSloppyRadius1[index] = value;
   value = mSloppyRadius1[index];
   value = mRadius2[index];
-  if (!KGetOneFloat("Radius at which high frequency filter starts to fall off:", value, 
+  if (!KGetOneFloat("Radius at which high frequency filter starts to fall off:", value,
     2))
     return;
   B3DCLAMP(value, 0.01, 0.5);
@@ -5684,7 +5685,7 @@ double EMmontageController::GetRemainingTime()
   return  interval * (numTot / (numDone - 1.) - 1.);
 }
 
-// Test for whether the stage position is sufficiently close to the target; if not 
+// Test for whether the stage position is sufficiently close to the target; if not
 // increment error count then try getting the position again after a wait; put out message
 // and return -1 if that succeeds, or return 1 if that fails or count reaches 3
 int EMmontageController::TestStageError(double ISX, double ISY, double &sterr)

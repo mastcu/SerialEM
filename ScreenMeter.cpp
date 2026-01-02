@@ -1,7 +1,6 @@
 // ScreenMeter.cpp:      A system-model screen meter with control on averaging
 //
-// Copyright (C) 2003 by Boulder Laboratory for 3-Dimensional Electron 
-// Microscopy of Cells ("BL3DEMC") and the Regents of the University of
+// Copyright (C) 2003-2026 by the Regents of the University of
 // Colorado.  See Copyright.txt for full notice of copyright and limitations.
 //
 // Author: David Mastronarde
@@ -11,10 +10,8 @@
 #include "SerialEM.h"
 #include "ScreenMeter.h"
 
-#ifdef _DEBUG
+#if defined(_DEBUG) && defined(_CRTDBG_MAP_ALLOC)
 #define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
 #endif
 
 /////////////////////////////////////////////////////////////////////////////
@@ -52,16 +49,16 @@ END_MESSAGE_MAP()
 /////////////////////////////////////////////////////////////////////////////
 // CScreenMeter message handlers
 
-void CScreenMeter::PostNcDestroy() 
+void CScreenMeter::PostNcDestroy()
 {
-  delete this;  
+  delete this;
   CDialog::PostNcDestroy();
 }
 
-BOOL CScreenMeter::OnInitDialog() 
+BOOL CScreenMeter::OnInitDialog()
 {
   CBaseDlg::OnInitDialog();
-  
+
   CRect rect;
   m_statCurrent.GetWindowRect(&rect);
   mFont.CreateFont((rect.Height()), 0, 0, 0, FW_MEDIUM,
@@ -69,7 +66,7 @@ BOOL CScreenMeter::OnInitDialog()
       CLIP_CHARACTER_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH |
       FF_DONTCARE, m_strFontName);
   m_statCurrent.SetFont(&mFont);
-  
+
   return TRUE;  // return TRUE unless you set the focus to a control
                 // EXCEPTION: OCX Property Pages should return FALSE
 }
@@ -81,9 +78,9 @@ void CScreenMeter::OnCancel()
   DestroyWindow();
 }
 
-void CScreenMeter::OnSmoothed() 
+void CScreenMeter::OnSmoothed()
 {
   CSerialEMApp *winApp = (CSerialEMApp *)AfxGetApp();
   winApp->RestoreViewFocus();
-  UpdateData(TRUE); 
+  UpdateData(TRUE);
 }

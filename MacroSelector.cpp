@@ -5,6 +5,10 @@
 #include "SerialEM.h"
 #include "MacroSelector.h"
 
+#if defined(_DEBUG) && defined(_CRTDBG_MAP_ALLOC)
+#define new DEBUG_NEW
+#endif
+
 
 // CMacroSelector dialog
 

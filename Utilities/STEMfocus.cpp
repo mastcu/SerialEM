@@ -5,6 +5,10 @@
 #include "..\Shared\b3dutil.h"
 #include "STEMfocus.h"
 
+#if defined(_DEBUG) && defined(_CRTDBG_MAP_ALLOC)
+#define new DEBUG_NEW
+#endif
+
 static void getSizes(float *y, float *size1, float *size2);
 static void sincErr(float *y, float *error);
 
@@ -56,7 +60,7 @@ void sincLikeFunction(int numPts, int numNodes, float *curve)
     }
     cum /= (ixend - ixlast);
     for (i = ixlast + 1; i <= ixnext; i++)
-      curve[i] = (float)(curveLast + (cum - curveLast) * (i - ixlast) / 
+      curve[i] = (float)(curveLast + (cum - curveLast) * (i - ixlast) /
                          (ixnext - ixlast));
     curveLast = curve[ixnext];
     ixlast = ixnext;
@@ -111,14 +115,14 @@ static float sErrMin;
 // Size type 1 = find both sizes, 2 = vary both sizes with a constant difference,
 // 3 = find the larger one (must be the first) - the only one that works
 void setupDefocusFit(float *rotav1, float *rotav2, int numRotPts, float bkgd1,
-                     float bkgd2, float fitStart, float fitEnd, float *sincCurve, 
+                     float bkgd2, float fitStart, float fitEnd, float *sincCurve,
                      int numSincPts, int numSincNodes, float expected1, float expected2,
                      int sizeType, int varyBkgd, float weightPow)
 {
-  sRotav1 = rotav1;  
+  sRotav1 = rotav1;
   sBkgd1 = bkgd1;
   sExpected1 = expected1;
-  sRotav2 = rotav2;  
+  sRotav2 = rotav2;
   sBkgd2 = bkgd2;
   sExpected2 = expected2;
   sSincCurve = sincCurve;
@@ -180,7 +184,7 @@ void findDefocusSizes(float *size1, float *size2, float *errmin, int trace)
   amoeba(&pp[0][0], yy, MAXVAR + 1, nvar, ftol2, sincErr, &iter, ptol, &jmin);
   for (i = 0; i < nvar; i++)
     a[i] = pp[i][jmin];
-  
+
   amoebaInit(&pp[0][0], yy, MAXVAR + 1, nvar, delfac, ptol1, a, da, sincErr, ptol);
   amoeba(&pp[0][0], yy, MAXVAR + 1, nvar, ftol1, sincErr, &iter, ptol, &jmin);
   for (i = 0; i < nvar; i++)
@@ -203,10 +207,10 @@ void findDefocusSizes(float *size1, float *size2, float *errmin, int trace)
 // If this focus is unreasonable (outside 80% of range around peak) it returns -2 and
 // the parabolic focus
 //
-int findFocus(float **rotavs, int numRotavs, int numRotPts, float *focusVals, 
+int findFocus(float **rotavs, int numRotavs, int numRotPts, float *focusVals,
               float *powers, float *bkgds, float estSlope, float fitStart, float fitEnd,
               float *sincCurve, int numSincPts, int numSincNodes, int varyBkgd,
-              int varyScale, float weightPow, float *paraFocus, float *fitFocus, 
+              int varyScale, float weightPow, float *paraFocus, float *fitFocus,
               float *fitSlope)
 {
   float xx[MAXCURVES], yy[MAXCURVES], zz[MAXCURVES];
@@ -260,7 +264,7 @@ int findFocus(float **rotavs, int numRotavs, int numRotPts, float *focusVals,
                  0.f, powers[indLow], 1.f,
                  minAbove * minAbove, powers[indAbove], 1.f);
   *paraFocus = (float)(num2 / (-2. * num1) + focusVals[indLow]);
-  B3DCLAMP(*paraFocus, focusVals[indLow] - 0.5f * minBelow, 
+  B3DCLAMP(*paraFocus, focusVals[indLow] - 0.5f * minBelow,
            focusVals[indLow] + 0.5f * minAbove);
 
   if (numRotavs < 4) {
@@ -305,9 +309,9 @@ int findFocus(float **rotavs, int numRotavs, int numRotPts, float *focusVals,
       //printf("%d %f\n", i, expected2);
       lsFit2(xx, yy, zz, ndat, fitSlope, &bb, &size0);
       *fitFocus = bb / *fitSlope + focusVals[indLow];
-      
+
     } else {
-      
+
       // fit to two slopes otherwise
       lsFit(xx, zz, numBelow, &slopeBelow, &intBelow, &roBel);
       lsFit(&xx[numBelow], &zz[numBelow], numAbove, &slopeAbove, &intAbove, &roAbo);
@@ -315,7 +319,7 @@ int findFocus(float **rotavs, int numRotavs, int numRotPts, float *focusVals,
       *fitFocus = (intBelow - intAbove) / (slopeBelow + slopeAbove);
       size0 = slopeAbove * *fitFocus + intAbove;
       *fitFocus += focusVals[indLow];
-      /*printf("below %f %f %f  above %f %f %f\n", slopeBelow, intBelow, roBel, 
+      /*printf("below %f %f %f  above %f %f %f\n", slopeBelow, intBelow, roBel,
         slopeAbove, intAbove, roAbo); */
     }
 
@@ -337,7 +341,7 @@ int findFocus(float **rotavs, int numRotavs, int numRotPts, float *focusVals,
       maxSizeIter = sizeIter + 1;
     }
   }
-  if (*fitFocus < focusVals[indBelow] + 0.2 * minBelow || 
+  if (*fitFocus < focusVals[indBelow] + 0.2 * minBelow ||
       *fitFocus > focusVals[indAbove] - 0.2 * minAbove) {
     /* printf("Replacing %.2f  %.2f\n", *fitFocus,  *fitSlope);
        fflush(stdout); */
@@ -367,7 +371,7 @@ static void getSizes(float *y, float *size1, float *size2)
   } else
     *size2 = sExpected2;
 }
-                 
+
 // The error function called by the simplex routine
 static void sincErr(float *y, float *error)
 {
@@ -449,13 +453,13 @@ void totalsubtractedpower_(float *rotav, int *numPts, float *backStart, float *b
 }
 
 void setupdefocusfit_(float *rotav1, float *rotav2, int *numRotPts, float *bkgd1,
-                     float *bkgd2, float *fitStart, float *fitEnd, float *sincCurve, 
-                     int *numSincPts, int *numSincNodes, float *expected1, 
+                     float *bkgd2, float *fitStart, float *fitEnd, float *sincCurve,
+                     int *numSincPts, int *numSincNodes, float *expected1,
                       float *expected2,
                      int *sizeType, int *varyBkgd, float *weightPow)
 {
   setupDefocusFit(rotav1, rotav2, *numRotPts, *bkgd1,
-                     *bkgd2, *fitStart, *fitEnd, sincCurve, 
+                     *bkgd2, *fitStart, *fitEnd, sincCurve,
                      *numSincPts, *numSincNodes, *expected1, *expected2,
                   *sizeType, *varyBkgd, *weightPow);
 }
@@ -465,9 +469,9 @@ void finddefocussizes_(float *size1, float *size2, float *errmin, int *trace)
   findDefocusSizes(size1, size2, errmin, *trace);
 }
 
-int findfocus_(float *rotavs, int *xdim, int *numRotavs, int *numRotPts, 
+int findfocus_(float *rotavs, int *xdim, int *numRotavs, int *numRotPts,
                float *focusVals, float *powers, float *bkgds, float *estSlope,
-               float *fitStart, float *fitEnd, float *sincCurve, int *numSincPts, 
+               float *fitStart, float *fitEnd, float *sincCurve, int *numSincPts,
                int *numSincNodes, int *varyBkgd, int *varyScale, float *weightPow,
                float *paraFocus, float *fitFocus, float *fitSlope)
 {
@@ -477,7 +481,7 @@ int findfocus_(float *rotavs, int *xdim, int *numRotavs, int *numRotPts,
     return 1;
   for (i = 0; i < *numRotavs; i++)
     rotavp[i] = rotavs + i * *xdim;
-  return findFocus(rotavp, *numRotavs, *numRotPts, focusVals, 
+  return findFocus(rotavp, *numRotavs, *numRotPts, focusVals,
                    powers, bkgds, *estSlope, *fitStart, *fitEnd,
                    sincCurve, *numSincPts, *numSincNodes, *varyBkgd,
                    *varyScale, *weightPow, paraFocus, fitFocus, fitSlope);

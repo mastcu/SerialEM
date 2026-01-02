@@ -1,7 +1,6 @@
 // FilterControlDlg.cpp:  Has controls for working with the energy filter
 //
-// Copyright (C) 2003 by Boulder Laboratory for 3-Dimensional Electron 
-// Microscopy of Cells ("BL3DEMC") and the Regents of the University of
+// Copyright (C) 2003-2026 by the Regents of the University of
 // Colorado.  See Copyright.txt for full notice of copyright and limitations.
 //
 // Author: David Mastronarde
@@ -17,10 +16,8 @@
 #include "Utilities\KGetOne.h"
 #include ".\filtercontroldlg.h"
 
-#ifdef _DEBUG
+#if defined(_DEBUG) && defined(_CRTDBG_MAP_ALLOC)
 #define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
 #endif
 
 #define DELTA_WIDTH   5.0f
@@ -129,14 +126,14 @@ END_MESSAGE_MAP()
 /////////////////////////////////////////////////////////////////////////////
 // CFilterControlDlg message handlers
 
-void CFilterControlDlg::OnEftemmode() 
+void CFilterControlDlg::OnEftemmode()
 {
   mWinApp->RestoreViewFocus();
   UpdateData(true);
   mWinApp->SetEFTEMMode(m_bEFTEMMode);
 }
 
-void CFilterControlDlg::OnSlitin() 
+void CFilterControlDlg::OnSlitin()
 {
   mWinApp->RestoreViewFocus();
   UpdateData(true);
@@ -152,14 +149,14 @@ void CFilterControlDlg::OnOK()
   OnKillfocusEdits();
 }
 
-void CFilterControlDlg::OnKillfocusEdits() 
+void CFilterControlDlg::OnKillfocusEdits()
 {
   float width, loss;
   mWinApp->RestoreViewFocus();
   UpdateData(true);
   width = (float)atof((LPCTSTR)m_strWidth);
   loss = (float)atof((LPCTSTR)m_strLoss);
-  if (width < mParam->minWidth || width > mParam->maxWidth || loss < mParam->minLoss || 
+  if (width < mParam->minWidth || width > mParam->maxWidth || loss < mParam->minLoss ||
     loss > mParam->maxLoss) {
     if (width < mParam->minWidth)
       width = mParam->minWidth;
@@ -179,17 +176,17 @@ void CFilterControlDlg::OnKillfocusEdits()
   mWinApp->mCamera->SetupFilter();
 }
 
-void CFilterControlDlg::OnOptionButton() 
+void CFilterControlDlg::OnOptionButton()
 {
   mWinApp->RestoreViewFocus();
   UpdateData(true);
-  mParam->autoCamera = m_bAutoCamera; 
-  mParam->autoMag = m_bAutoMag; 
+  mParam->autoCamera = m_bAutoCamera;
+  mParam->autoMag = m_bAutoMag;
   mParam->matchPixel = m_bMatchPixel;
   mParam->matchIntensity = m_bMatchIntensity;
 }
 
-void CFilterControlDlg::OnDeltaposSpinwidth(NMHDR* pNMHDR, LRESULT* pResult) 
+void CFilterControlDlg::OnDeltaposSpinwidth(NMHDR* pNMHDR, LRESULT* pResult)
 {
   mWinApp->RestoreViewFocus();
   NM_UPDOWN* pNMUpDown = (NM_UPDOWN*)pNMHDR;
@@ -207,7 +204,7 @@ void CFilterControlDlg::OnDeltaposSpinwidth(NMHDR* pNMHDR, LRESULT* pResult)
   *pResult = 1;
 }
 
-void CFilterControlDlg::OnDeltaposSpinloss(NMHDR* pNMHDR, LRESULT* pResult) 
+void CFilterControlDlg::OnDeltaposSpinloss(NMHDR* pNMHDR, LRESULT* pResult)
 {
   mWinApp->RestoreViewFocus();
   NM_UPDOWN* pNMUpDown = (NM_UPDOWN*)pNMHDR;
@@ -225,13 +222,13 @@ void CFilterControlDlg::OnDeltaposSpinloss(NMHDR* pNMHDR, LRESULT* pResult)
   *pResult = 1;
 }
 
-BOOL CFilterControlDlg::OnInitDialog() 
+BOOL CFilterControlDlg::OnInitDialog()
 {
   CRect rect, wndRect, magRect, clientRect;
   int leftOfs, leftPos, topOfs, topPos;
 
   CToolDlg::OnInitDialog();
-  
+
   m_statOnOff.GetWindowRect(&rect);
   mFont.CreateFont((rect.Height() - 4), 0, 0, 0, FW_HEAVY,
       0, 0, 0, DEFAULT_CHARSET, OUT_CHARACTER_PRECIS,
@@ -256,7 +253,7 @@ BOOL CFilterControlDlg::OnInitDialog()
     leftPos = magRect.left - wndRect.left - leftOfs;
     topPos = magRect.top - wndRect.top - topOfs;
     m_butAutoMag.ShowWindow(SW_HIDE);
-    m_butDoMagShifts.SetWindowPos(NULL, leftPos, topPos, 0, 0, 
+    m_butDoMagShifts.SetWindowPos(NULL, leftPos, topPos, 0, 0,
       SWP_NOZORDER | SWP_NOSIZE);
 
     // Couldn't figure out why this hiding  doesn't work - repeated it in Update
@@ -267,12 +264,12 @@ BOOL CFilterControlDlg::OnInitDialog()
     if (mParam->positiveLossOnly)
       m_butOffsetSlit.ShowWindow(SW_SHOW);
   } else {
-    m_butAutoMag.ShowWindow((mWinApp->mScope->GetCanControlEFTEM() && 
+    m_butAutoMag.ShowWindow((mWinApp->mScope->GetCanControlEFTEM() &&
       !mWinApp->IsIDinHideSet(IDC_AUTOMAG)) ? SW_SHOW : SW_HIDE);
     EnableDlgItem(IDC_REFINE_WITH_TRIAL, !JEOLscope);
   }
 
-  UpdateSettings(); 
+  UpdateSettings();
   ManageHideableItems(sHideableIDs, sizeof(sHideableIDs) / sizeof(UINT));
   mInitialized = true;
 
@@ -299,13 +296,13 @@ void CFilterControlDlg::Update()
     bEnable = bEnable && !mWinApp->mCamera->CameraBusy();
     noControl = mWinApp->mCamera->GetNoFilterControl();
   }
-  if (mWinApp->mTSController && mWinApp->mScope && mWinApp->StartedTiltSeries() && 
+  if (mWinApp->mTSController && mWinApp->mScope && mWinApp->StartedTiltSeries() &&
     (!mWinApp->LowDoseMode() || mWinApp->mScope->GetLowDoseArea() == RECORD_CONSET)) {
     slitOK = !mWinApp->mTSController->GetTypeVaries(TS_VARY_SLIT);
     lossOK = !mWinApp->mTSController->GetTypeVaries(TS_VARY_ENERGY);
   }
-  m_butEFTEMMode.EnableWindow(!mWinApp->DoingTasks() && !bOmega && 
-    (mWinApp->mScope->GetCanControlEFTEM() || (JEOLscope && 
+  m_butEFTEMMode.EnableWindow(!mWinApp->DoingTasks() && !bOmega &&
+    (mWinApp->mScope->GetCanControlEFTEM() || (JEOLscope &&
     (mWinApp->mScope->FastMagIndex() < mWinApp->mScope->GetLowestMModeMagInd()) ||
       mWinApp->mCamera->HasCEOSFilter())));
   m_butDoMagShifts.EnableWindow(bEnable && !noControl);
@@ -322,9 +319,9 @@ void CFilterControlDlg::Update()
   bEnable = bEnable && m_bSlitIn && !m_bZeroLoss && lossOK;
   m_editLoss.EnableWindow(bEnable);
   m_sbcLoss.EnableWindow(bEnable);
-  m_butAutoCamera.EnableWindow(!mWinApp->DoingComplexTasks() && 
+  m_butAutoCamera.EnableWindow(!mWinApp->DoingComplexTasks() &&
     mWinApp->GetAdministrator() && !bOmega);
-  bEnable = !bOmega && !mWinApp->DoingTasks() && mParam->firstRegularCamera >= 0 && 
+  bEnable = !bOmega && !mWinApp->DoingTasks() && mParam->firstRegularCamera >= 0 &&
     !bUseTEM;
   m_butMatchIntensity.EnableWindow(bEnable && !mWinApp->LowDoseMode());
   m_butMatchPixel.EnableWindow(bEnable);
@@ -364,7 +361,7 @@ void CFilterControlDlg::UpdateHiding(void)
     return;
   ManageHideableItems(sHideableIDs, sizeof(sHideableIDs) / sizeof(UINT));
   m_butAutoMag.ShowWindow((!mWinApp->mScope->GetHasOmegaFilter() &&
-    mWinApp->mScope->GetCanControlEFTEM() && !mWinApp->IsIDinHideSet(IDC_AUTOMAG)) ? 
+    mWinApp->mScope->GetCanControlEFTEM() && !mWinApp->IsIDinHideSet(IDC_AUTOMAG)) ?
     SW_SHOW : SW_HIDE);
 }
 
@@ -375,8 +372,8 @@ void CFilterControlDlg::NewMagUpdate(int inMag, BOOL EFTEM)
   int lowestM = mWinApp->mScope->GetLowestMModeMagInd();
   int inLM = inMag < lowestM ? 1 : 0;
 
-  // Update the dialog to enable or disable the EFTEM button 
-  if (JEOLscope && !mWinApp->mScope->GetHasOmegaFilter() && inLM != mLastMagInLM 
+  // Update the dialog to enable or disable the EFTEM button
+  if (JEOLscope && !mWinApp->mScope->GetHasOmegaFilter() && inLM != mLastMagInLM
     && mWinApp->mScope->GetUseJeolGIFmodeCalls() <= 0) {
     Update();
     if (inLM && !mWarnedJeolLM && !mWinApp->mScope->GetUseFilterInTEMMode()) {
@@ -404,7 +401,7 @@ void CFilterControlDlg::NewMagUpdate(int inMag, BOOL EFTEM)
 // If user says ZLP was aligned, then set the reference mag for shifts, take care
 // of finding shift, and set filter if slit is in
 // Do not try to set filter if program detects a ZLP align
-void CFilterControlDlg::OnZlpaligned() 
+void CFilterControlDlg::OnZlpaligned()
 {
   SetFocus();
   mWinApp->RestoreViewFocus();
@@ -426,7 +423,7 @@ void CFilterControlDlg::AdjustForZLPAlign()
 }
 
 // If Do mag shifts changes, manage enables and adjust filter if necessary
-void CFilterControlDlg::OnDomagshifts() 
+void CFilterControlDlg::OnDomagshifts()
 {
   mWinApp->RestoreViewFocus();
   UpdateData(true);
@@ -449,8 +446,8 @@ void CFilterControlDlg::ManageMagShift()
   curShift = LookUpShift(curMag);
   if (curShift > -900. && refShift > -900.)
     shift = curShift - refShift;
-  
-  // Include the adjustment for slit width in the mag shift, but always apply 
+
+  // Include the adjustment for slit width in the mag shift, but always apply
   // refine offset
   if (mParam->alignedSlitWidth && mParam->adjustForSlitWidth)
     shift -= (mParam->slitWidth - mParam->alignedSlitWidth) / 2.f;
@@ -459,7 +456,7 @@ void CFilterControlDlg::ManageMagShift()
   // VS2015 did not want to concatenate these strings
   m_strMagShift.Format("Adjustment = " LOSS_FORMAT, (m_bDoMagShifts ? shift : 0) +
     mParam->refineZLPOffset);
-  m_strOffset.Format("Net %s = " LOSS_FORMAT, 
+  m_strOffset.Format("Net %s = " LOSS_FORMAT,
     mWinApp->mScope->GetHasOmegaFilter() ? "Shift" : "Offset", loss);
   UpdateData(false);
 }
@@ -520,7 +517,7 @@ void CFilterControlDlg::ManageZLPAligned()
   m_statOffset.EnableWindow(!STEM && mLensEFTEM);
 }
 
-void CFilterControlDlg::OnZeroloss() 
+void CFilterControlDlg::OnZeroloss()
 {
   mWinApp->RestoreViewFocus();
   UpdateData(true);
@@ -531,7 +528,7 @@ void CFilterControlDlg::OnZeroloss()
 }
 
 // Entry to call the align ZLP function
-void CFilterControlDlg::OnRefineZlp() 
+void CFilterControlDlg::OnRefineZlp()
 {
   mWinApp->RestoreViewFocus();
   mWinApp->mFilterTasks->RefineZLP(true);
@@ -545,7 +542,7 @@ void CFilterControlDlg::OnRefineWithTrial()
 }
 
 // For JEOL, need to offset slit and energy loss from zero
-void CFilterControlDlg::OnOffsetSlit() 
+void CFilterControlDlg::OnOffsetSlit()
 {
   if (!JEOLscope)
     return;
@@ -573,7 +570,7 @@ void CFilterControlDlg::OnOffsetSlit()
   // Restore imaging mode if it was on
   if (spectMode != 1)
     mWinApp->mScope->SetSpectroscopyMode(0);
- 
+
   *mParam = paramSave;
   AdjustForZLPAlign();
   mParam->refineZLPOffset = mSlitOffset;

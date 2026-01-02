@@ -7,6 +7,10 @@
 #include "CameraController.h"
 #include "TiltSeriesParam.h"
 
+#if defined(_DEBUG) && defined(_CRTDBG_MAP_ALLOC)
+#define new DEBUG_NEW
+#endif
+
 // CDriftWaitSetupDlg dialog
 static int idTable[] = {IDC_RWD_TRIAL, IDC_RWD_FOCUS, IDC_RWD_WITHIN_AF,IDC_STAT_TYPE_BOX,
   IDC_STAT_INTERVAL, IDC_EDIT_INTERVAL, IDC_STAT_SEC1, IDC_CHECK_USE_ANGSTROMS,
@@ -197,7 +201,7 @@ void CDriftWaitSetupDlg::OnCheckSetTrial()
 
 void CDriftWaitSetupDlg::OnDeltaposSpinTrialBin(NMHDR *pNMHDR, LRESULT *pResult)
 {
-  if (NewSpinnerValue(pNMHDR, pResult, mBinIndex, mBinDivisor - 1, 
+  if (NewSpinnerValue(pNMHDR, pResult, mBinIndex, mBinDivisor - 1,
     mCamParam->numBinnings - 1, mBinIndex))
     return;
   m_strTrialBinning.Format("Binning %d", mCamParam->binnings[mBinIndex] / mBinDivisor);

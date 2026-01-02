@@ -1,6 +1,6 @@
 // ShiftToMarkerDlg.cpp : choose what items to shift and whether to save shifts
 //
-// Copyright (C) 2021 by  the Regents of the University of
+// Copyright (C) 2021-2026 by  the Regents of the University of
 // Colorado.  See Copyright.txt for full notice of copyright and limitations.
 //
 // Author: David Mastronarde
@@ -12,6 +12,10 @@
 #include "ShiftToMarkerDlg.h"
 #include "NavHelper.h"
 #include "Utilities\KGetOne.h"
+
+#if defined(_DEBUG) && defined(_CRTDBG_MAP_ALLOC)
+#define new DEBUG_NEW
+#endif
 
 
 // CShiftToMarkerDlg dialog

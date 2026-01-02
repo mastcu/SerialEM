@@ -1,6 +1,6 @@
 // ScreenShotDialog.cpp : Take and saves a screen shot or zoomed shot with user settings
 //
-// Copyright (C) 2020 by  the Regents of the University of
+// Copyright (C) 2020-2026 by  the Regents of the University of
 // Colorado.  See Copyright.txt for full notice of copyright and limitations.
 //
 // Author: David Mastronarde
@@ -15,6 +15,10 @@
 #include "ScreenShotDialog.h"
 #include "NavHelper.h"
 #include "EMbufferManager.h"
+
+#if defined(_DEBUG) && defined(_CRTDBG_MAP_ALLOC)
+#define new DEBUG_NEW
+#endif
 
 #define MAX_SCALING 8
 #define MIN_JPEG_QUALITY 20
@@ -74,7 +78,7 @@ void CScreenShotDialog::DoDataExchange(CDataExchange* pDX)
 }
 
 BEGIN_MESSAGE_MAP(CScreenShotDialog, CBaseDlg)
-	
+
   ON_BN_CLICKED(IDC_RADIO_UNZOOMED, OnImageScaling)
   ON_BN_CLICKED(IDC_RADIO_INCREASE_BY, OnImageScaling)
   ON_BN_CLICKED(IDC_RADIO_WHOLE_IMAGE, OnImageScaling)
@@ -246,19 +250,19 @@ void CScreenShotDialog::OnTakeSnapshot()
     UtilSplitExtension(newName, root, ext);
     if ((!ext.CompareNoCase(".tif") || !ext.CompareNoCase(".tiff")) && mParams.fileType)
       newName = root + ".jpg";
-    else if ((!ext.CompareNoCase(".jpg") || !ext.CompareNoCase(".jpeg")) && 
+    else if ((!ext.CompareNoCase(".jpg") || !ext.CompareNoCase(".jpeg")) &&
       !mParams.fileType)
       newName = root + ".tif";
     newName = mWinApp->mNavHelper->NextAutoFilename(newName);
   }
-  if (mWinApp->mDocWnd->FilenameForSaveFile(storeType, 
+  if (mWinApp->mDocWnd->FilenameForSaveFile(storeType,
     newName.IsEmpty() ? NULL : (LPCTSTR)newName, mParams.lastFilePath))
     return;
   if (mParams.imageScaleType)
     imScale = mParams.imageScaleType == 1 ? mParams.imageScaling : -1.f;
   if (mParams.ifScaleSizes)
     sizeScale = mParams.sizeScaling;
-  err = mWinApp->mActiveView->TakeSnapshot(imScale, sizeScale, mParams.skipOverlays, 
+  err = mWinApp->mActiveView->TakeSnapshot(imScale, sizeScale, mParams.skipOverlays,
     storeType, compressions[mParams.compression], m_iJpegQuality, mParams.lastFilePath);
   if (GetSnapshotError(err, root))
     SEMMessageBox("Error taking image snapshot: " + root);

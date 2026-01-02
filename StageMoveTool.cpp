@@ -8,6 +8,10 @@
 #include "EMscope.h"
 #include "ShiftManager.h"
 
+#if defined(_DEBUG) && defined(_CRTDBG_MAP_ALLOC)
+#define new DEBUG_NEW
+#endif
+
 
 // CStageMoveTool dialog
 
@@ -58,13 +62,13 @@ BOOL CStageMoveTool::OnInitDialog()
   return FALSE;
 }
 
-void CStageMoveTool::PostNcDestroy() 
+void CStageMoveTool::PostNcDestroy()
 {
-  delete this;  
+  delete this;
   CDialog::PostNcDestroy();
 }
 
-void CStageMoveTool::OnCancel() 
+void CStageMoveTool::OnCancel()
 {
   mWinApp->GetStageToolPlacement();
   mWinApp->mStageMoveTool = NULL;
@@ -101,10 +105,10 @@ void CStageMoveTool::OnPaint()
   GetClientRect(&clientRect);
   m_butImageAfterMove.GetWindowRect(&statRect);
   boxWidth = clientRect.Width();
-  boxHeight = statRect.top - winRect.top - 
+  boxHeight = statRect.top - winRect.top -
     (winRect.Height() - clientRect.Height());
   xcen = boxWidth / 2;
-  ycen = boxHeight / 2; 
+  ycen = boxHeight / 2;
   boxWidth = boxHeight = B3DMIN(boxWidth, boxHeight) - 10;
 
   // Define pens and a brush
@@ -132,7 +136,7 @@ void CStageMoveTool::OnPaint()
       dc.Ellipse(xcen - delx, ycen - dely, xcen + delx, ycen + dely);
       dc.SelectObject(oldBrush);
       mInnerRadius = delx;
-    } else 
+    } else
       dc.Arc(xcen - delx, ycen - dely, xcen + delx, ycen + dely, xcen - delx, ycen,
         xcen - delx, ycen);
   }
@@ -148,7 +152,7 @@ void CStageMoveTool::OnPaint()
   dc.MoveTo(xcen, ycen - lastDely - 1);
   dc.LineTo(xcen, ycen - dely);
   dc.SelectObject(oldPen);
-  //SEMTrace('1',"cen %d %d  del %d %d last %d %d", xcen, ycen, delx, dely, lastDelx, 
+  //SEMTrace('1',"cen %d %d  del %d %d last %d %d", xcen, ycen, delx, dely, lastDelx,
     //lastDely);
 
   // Save coordinates
@@ -169,7 +173,7 @@ void CStageMoveTool::OnLButtonDown(UINT nFlags, CPoint point)
   int frameSize = B3DMIN(camParam->sizeX, camParam->sizeY);
   CDialog::OnLButtonDown(nFlags, point);
   mWinApp->RestoreViewFocus();
-  
+
   //SEMTrace('1', "DOWN  %d %d", point.x, point.y);
   if (TooBusyToMove())
     return;
@@ -216,7 +220,7 @@ void CStageMoveTool::UpdateStage(double stageX, double stageY)
 
 bool CStageMoveTool::TooBusyToMove(void)
 {
-  return (!mGoingToAcquire && mWinApp->DoingTasks()) || mWinApp->StartedTiltSeries() || 
+  return (!mGoingToAcquire && mWinApp->DoingTasks()) || mWinApp->StartedTiltSeries() ||
     (mCamera->CameraBusy() && !mCamera->DoingContinuousAcquire()) ||
     mWinApp->mScope->StageBusy();
 }

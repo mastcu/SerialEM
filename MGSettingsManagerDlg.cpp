@@ -1,6 +1,6 @@
 // MGSettingsManagerDlg.cpp : For storing settings for individual grids
 //
-// Copyright (C) 2024 by the Regents of the University of
+// Copyright (C) 2024-2026 by the Regents of the University of
 // Colorado.  See Copyright.txt for full notice of copyright and limitations.
 //
 // Author: David Mastronarde
@@ -15,6 +15,10 @@
 #include "NavigatorDlg.h"
 #include "MultiGridDlg.h"
 #include "ShiftManager.h"
+
+#if defined(_DEBUG) && defined(_CRTDBG_MAP_ALLOC)
+#define new DEBUG_NEW
+#endif
 
 
 // CMGSettingsManagerDlg dialog
@@ -288,7 +292,7 @@ void CMGSettingsManagerDlg::OnButRestoreCur##brev##()  \
   RESTORE_CURRENT(typ, brev);
 
 void CMGSettingsManagerDlg::OnButApplyAC()
-{ 
+{
   APPLY_GRID(AutoCont, autoContParamIndex, AC);
   mNavHelper->OpenAutoContouring(true);
 }
@@ -326,7 +330,7 @@ void CMGSettingsManagerDlg::OnButApplyFP()
 ON_THREE_BUTTONS(FocusPos, focusPosParamIndex, FP);
 
 /*
- *  Corresponding functions (not quite) for Final data parameters 
+ *  Corresponding functions (not quite) for Final data parameters
  */
 
 // Set up a new set of stored parameters old load with an existing one
@@ -393,9 +397,9 @@ void CMGSettingsManagerDlg::OnButRestoreCurFinal()
   mWinApp->RestoreViewFocus();
   if (!mSavedAcqItemsParam)
     return;
-  mNavHelper->CopyAcqParamsAndActions(mSavedAcqItemsParam->actions, 
-    &mSavedAcqItemsParam->params, mSavedAcqItemsParam->actOrder, 
-    mNavHelper->GetAcqActions(1), mWinApp->GetNavAcqParams(1), 
+  mNavHelper->CopyAcqParamsAndActions(mSavedAcqItemsParam->actions,
+    &mSavedAcqItemsParam->params, mSavedAcqItemsParam->actOrder,
+    mNavHelper->GetAcqActions(1), mWinApp->GetNavAcqParams(1),
     mNavHelper->GetAcqActCurrentOrder(1));
   EnableDlgItem(IDC_BUT_RESTORE_CURFINAL, false);
   delete mSavedAcqItemsParam;
@@ -405,20 +409,20 @@ void CMGSettingsManagerDlg::OnButRestoreCurFinal()
 // Or restore params when dialog closes: but first copy them into grid's structure
 void CMGSettingsManagerDlg::RestorePreDlgParams(int postponed)
 {
-  
+
   if (!mDidSavePreDlgParams)
     return;
   if (postponed >= 0 && mJcdIndex >= 0) {
     JeolCartridgeData jcd = mCartInfo->GetAt(mJcdIndex);
-    MGridAcqItemsParams &mgParam = 
+    MGridAcqItemsParams &mgParam =
       mMGAcqItemsParamArray->ElementAt(jcd.finalDataParamIndex);
     mNavHelper->CopyAcqParamsAndActions(mNavHelper->GetAcqActions(1),
       mWinApp->GetNavAcqParams(1), mNavHelper->GetAcqActCurrentOrder(1),
       mgParam.actions, &mgParam.params, mgParam.actOrder);
   }
-  mNavHelper->CopyAcqParamsAndActions(mPreDlgAcqItemsParam.actions, 
+  mNavHelper->CopyAcqParamsAndActions(mPreDlgAcqItemsParam.actions,
     &mPreDlgAcqItemsParam.params, mPreDlgAcqItemsParam.actOrder,
-    mNavHelper->GetAcqActions(1), mWinApp->GetNavAcqParams(1), 
+    mNavHelper->GetAcqActions(1), mWinApp->GetNavAcqParams(1),
     mNavHelper->GetAcqActCurrentOrder(1));
   mDidSavePreDlgParams = false;
 }
@@ -450,7 +454,7 @@ void CMGSettingsManagerDlg::ManageEnables()
   ENABLE_FOUR_BUTS(General, generalParamIndex, GEN);
   ENABLE_FOUR_BUTS(FocusPos, focusPosParamIndex, FP);
   EnableDlgItem(IDC_BUT_SET_VIEW_FINAL, !tasks && mJcdIndex >= 0);
-  EnableDlgItem(IDC_BUT_APPLY_FINAL, !tasks && mJcdIndex >= 0 && 
+  EnableDlgItem(IDC_BUT_APPLY_FINAL, !tasks && mJcdIndex >= 0 &&
     jcd.finalDataParamIndex >= 0);
   EnableDlgItem(IDC_BUT_REVERT_FINAL, !tasks && mJcdIndex >= 0 &&
     jcd.finalDataParamIndex >= 0);
@@ -497,7 +501,7 @@ void CMGSettingsManagerDlg::UpdateAcqItemsGrid()
     return;
   }
   JeolCartridgeData jcd = mCartInfo->GetAt(mJcdIndex);
-  SetDlgItemText(IDC_STAT_ACQ_ITEMS, jcd.finalDataParamIndex < 0 ? 
+  SetDlgItemText(IDC_STAT_ACQ_ITEMS, jcd.finalDataParamIndex < 0 ?
     "NO stored settings for grid" : "Grid has separate settings stored");
 }
 
@@ -505,10 +509,10 @@ void CMGSettingsManagerDlg::UpdateAcqItemsGrid()
 void CMGSettingsManagerDlg::FormatAutoContSettings(MGridAutoContParams &param,
   CString &str)
 {
-  str.Format("Size %.1f - %.1f um, rel thresh %.2f, mean cutoffs %s - %s, edge %.1f um", 
+  str.Format("Size %.1f - %.1f um, rel thresh %.2f, mean cutoffs %s - %s, edge %.1f um",
     param.values[AC_minSize], param.values[AC_maxSize], param.values[AC_relThreshold],
     FormatValueOrNone(param.values[AC_lowerMeanCutoff]),
-    FormatValueOrNone(param.values[AC_upperMeanCutoff]), 
+    FormatValueOrNone(param.values[AC_upperMeanCutoff]),
     param.values[AC_borderDistCutoff]);
 }
 
@@ -520,7 +524,7 @@ void CMGSettingsManagerDlg::FormatHoleFinderSettings(MGridHoleFinderParams &para
   int ind;
   float *vals = param.values;
   str.Format("%s %.2f @ %.2f um, cutoffs: mean %s - %s, SD %s, black %s, edge %.1f, "
-    "sigmas", vals[HF_hexagonalArray] ? "Hex" : "Sqr", vals[HF_diameter], 
+    "sigmas", vals[HF_hexagonalArray] ? "Hex" : "Sqr", vals[HF_diameter],
     vals[HF_spacing], FormatValueOrNone(vals[HF_lowerMeanCutoff]),
     FormatValueOrNone(vals[HF_upperMeanCutoff]), FormatValueOrNone(vals[HF_SDcutoff]),
     FormatValueOrNone(vals[HF_blackFracCutoff]), vals[HF_edgeDistCutoff]);
@@ -562,7 +566,7 @@ void CMGSettingsManagerDlg::FormatMultiShotSettings(MGridMultiShotParams &param,
       one.Format(";  Multi-hole: %d rings of hex pattern", B3DNINT(vals[MS_numHexRings]));
     else
       one.Format(";  Multi-hole: %d by %d %s pattern", nxHoles, nyHoles,
-        (B3DNINT(vals[MS_skipCornersOf3x3]) &&  nxHoles == 3 && nyHoles == 3 ) ? 
+        (B3DNINT(vals[MS_skipCornersOf3x3]) &&  nxHoles == 3 && nyHoles == 3 ) ?
         "cross" : "rectangle");
     str += one;
     if (vals[MS_origMagOfArray]) {
@@ -586,14 +590,14 @@ void CMGSettingsManagerDlg::FormatGeneralSettings(MGridGeneralParams &param,
   str.Format("Disable dark border trim in align %d && %d && %d,\n"
     "Erase periodic peaks %s in Realign to Item, %s generally",
     disable & (NOTRIM_LOWDOSE_TS | NOTRIM_LOWDOSE_ALL),
-    (disable & (NOTRIM_TASKS_TS | NOTRIM_TASKS_ALL)) >> 2, 
+    (disable & (NOTRIM_TASKS_TS | NOTRIM_TASKS_ALL)) >> 2,
     (disable & NOTRIM_REALIGN_ITEM) >> 4,
     param.values[GP_RIErasePeriodicPeaks] ? "ON" : "OFF",
     param.values[GP_erasePeriodicPeaks] ? "ON" : "OFF");
 }
 
 // Format summary of focus position
-void CMGSettingsManagerDlg::FormatFocusPosSettings(MGridFocusPosParams &param, 
+void CMGSettingsManagerDlg::FormatFocusPosSettings(MGridFocusPosParams &param,
   CString &str)
 {
   float *vals = param.values;

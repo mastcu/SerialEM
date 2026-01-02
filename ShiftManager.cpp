@@ -1,9 +1,8 @@
 // ShiftManager.cpp:      Does autoalignment, mouse moving, reset image shift, and has
-//                          all the routines for getting coordinate 
+//                          all the routines for getting coordinate
 //                          transformation matrices
 //
-// Copyright (C) 2003 by Boulder Laboratory for 3-Dimensional Electron 
-// Microscopy of Cells ("BL3DEMC") and the Regents of the University of
+// Copyright (C) 2003-2026 by the Regents of the University of
 // Colorado.  See Copyright.txt for full notice of copyright and limitations.
 //
 // Author: David Mastronarde
@@ -37,9 +36,11 @@
 #include "Shared\b3dutil.h"
 #include "Shared\\cfft.h"
 
+#if defined(_DEBUG) && defined(_CRTDBG_MAP_ALLOC)
+#define new DEBUG_NEW
+#endif
+
 #ifdef _DEBUG
-#undef THIS_FILE
-static char THIS_FILE[]=__FILE__;
 #define new DEBUG_NEW
 #endif
 
@@ -156,7 +157,7 @@ void CShiftManager::Initialize()
         }
       }
     }
-    
+
     // IF not, see if they are the new default
     if (mNumISdelays == 4 && !stillOldDflt) {
       stillNewDflt = true;
@@ -220,7 +221,7 @@ void CShiftManager::SetPeaksToEvaluate(int maxPeaks, float minStrength)
     mMaxNumPeaksToEval = 10;
   if (minStrength > 0.)
     mPeakStrengthToEval = minStrength;
-  else 
+  else
     mPeakStrengthToEval = 0.33f;
 }
 
@@ -267,17 +268,17 @@ int CShiftManager::SetAlignShifts(float newX, float newY, BOOL incremental,
       return 2;
   }
 
-  // reject the change unless it is for buffer A, montage 
+  // reject the change unless it is for buffer A, montage
   // overview, the autoalign buffer, or a reset  to 0,0., or an anchor buffer
   if (!(!shiftedBuf || (shiftedBuf == alignBuf)
-    || (mWinApp->LowDoseMode() && shiftedBuf == alignBuf + 1) || 
+    || (mWinApp->LowDoseMode() && shiftedBuf == alignBuf + 1) ||
     (newX == 0. && newY == 0.) || montOverview || imBuf->mCaptured == BUFFER_ANCHOR))
     return 1;
 
   // Apply a change in scope image shift if this is the A buffer or overview
   // of montage with user shift.  Do not apply for processed buffer
-  if (doImShift && (!shiftedBuf || (montOverview && !incremental)) && 
-    imBuf->mCaptured != BUFFER_PROCESSED) { 
+  if (doImShift && (!shiftedBuf || (montOverview && !incremental)) &&
+    imBuf->mCaptured != BUFFER_PROCESSED) {
     if (!mShiftPressed)
       mShiftingDefineArea = mWinApp->mLowDoseDlg.ImageAlignmentChange(newX, newY, oldX,
         oldY, mMouseShifting);
@@ -298,11 +299,11 @@ int CShiftManager::SetAlignShifts(float newX, float newY, BOOL incremental,
     }
 
     // If conditions for stage move are not met, continue with image shift logic
-    if (!((mMouseShifting || mMouseEnding) && (mShiftPressed || 
-         (mMouseMoveStage && (fieldFrac >= mMouseStageThresh || 
+    if (!((mMouseShifting || mMouseEnding) && (mShiftPressed ||
+         (mMouseMoveStage && (fieldFrac >= mMouseStageThresh ||
            absMove >= mMouseStageAbsThresh)) ||
          (montOverview && montParam->moveStage)))) {
-      imposeShift = ImposeImageShiftOnScope(imBuf, delX, delY, magInd, camera, 
+      imposeShift = ImposeImageShiftOnScope(imBuf, delX, delY, magInd, camera,
         incremental, mMouseShifting) && imposeOnImage;
 
       // Otherwise, proceed with stage move if at end of shift
@@ -315,7 +316,7 @@ int CShiftManager::SetAlignShifts(float newX, float newY, BOOL incremental,
 
       // Get the stage movement based on nearest calibration, negative needed here
       // as for image shift
-      if (imBuf->mLowDoseArea && IS_SET_VIEW_OR_SEARCH(imBuf->mConSetUsed) && 
+      if (imBuf->mLowDoseArea && IS_SET_VIEW_OR_SEARCH(imBuf->mConSetUsed) &&
         magInd >= mScope->GetLowestNonLMmag() &&
         imBuf->GetSpotSize(spot) && imBuf->GetIntensity(intensity))
         defocus = imBuf->mViewDefocus;
@@ -330,7 +331,7 @@ int CShiftManager::SetAlignShifts(float newX, float newY, BOOL incremental,
 
       // If transformation exists, try to zero image shift too
       AdjustStageMoveAndClearIS(camera, magInd, delISX, delISY, bInv);
-      
+
       // Get the stage position and change it.  Set a flag and update state
       // to prevent early pictures, use reset shift task handlers
       mScope->GetStagePosition(mMoveInfo.x, mMoveInfo.y, mMoveInfo.z);
@@ -359,7 +360,7 @@ int CShiftManager::SetAlignShifts(float newX, float newY, BOOL incremental,
 }
 
 // If transformation exists, zero image shift and adjust stage move to compensate
-void CShiftManager::AdjustStageMoveAndClearIS(int camera, int magInd, double &delStageX, 
+void CShiftManager::AdjustStageMoveAndClearIS(int camera, int magInd, double &delStageX,
   double &delStageY, ScaleMat bInv)
 {
   double fracX, fracY, roughScale;
@@ -370,7 +371,7 @@ void CShiftManager::AdjustStageMoveAndClearIS(int camera, int magInd, double &de
     if (mWinApp->GetSTEMMode())
       roughScale = mSTEMRoughISscale;
     else
-      roughScale = (magInd < mScope->GetLowestNonLMmag(&mCamParams[camera]) && 
+      roughScale = (magInd < mScope->GetLowestNonLMmag(&mCamParams[camera]) &&
       mLMRoughISscale) ? mLMRoughISscale : mRoughISscale;
     mScope->GetLDCenteredShift(fracX, fracY);
     SEMTrace('i', "Base stage shift of %.2f %.2f with IS of %.2f %.2f",
@@ -464,8 +465,8 @@ void CShiftManager::EndMouseShifting(int index)
 void CShiftManager::AlignmentShiftToMarker(BOOL forceStage)
 {
   EMimageBuffer *imBuf = mWinApp->mMainView->GetActiveImBuf();
-  if (!(imBuf->mHasUserPt || imBuf->mIllegalUserPt) || !imBuf->mImage || 
-    (mWinApp->DoingTasks() && !mWinApp->GetJustNavAcquireOpen() 
+  if (!(imBuf->mHasUserPt || imBuf->mIllegalUserPt) || !imBuf->mImage ||
+    (mWinApp->DoingTasks() && !mWinApp->GetJustNavAcquireOpen()
     && !mWinApp->mMacroProcessor->DoingMacro()))
     return;
   mMouseEnding = true;
@@ -477,7 +478,7 @@ void CShiftManager::AlignmentShiftToMarker(BOOL forceStage)
 }
 
 // Higher-level operation: start shift to clicked position then acquire image there
-void CShiftManager::AcquireAtRightDoubleClick(int bufInd, float shiftX, 
+void CShiftManager::AcquireAtRightDoubleClick(int bufInd, float shiftX,
   float shiftY, BOOL forceStage)
 {
   EMimageBuffer *imBuf = &mImBufs[bufInd];
@@ -524,7 +525,7 @@ void CShiftManager::DoAlignDblClickImage()
   if (mBufferManager->GetShiftsOnAcquire() < (mRDCclickedBufInd == 1 ? 2 : 1) ||
     !aliBuf->mImage && !aliBuf->mBinning || (aliBuf->mBinning < mImBufs->mBinning &&
     (mImBufs->mBinning % aliBuf->mBinning) != 0) ||
-      (aliBuf->mBinning > mImBufs->mBinning && 
+      (aliBuf->mBinning > mImBufs->mBinning &&
     (aliBuf->mBinning % mImBufs->mBinning) != 0) ||
     fabs(mRDCexpectedXshift) > aliBuf->mImage->getWidth() / 2. ||
     fabs(mRDCexpectedYshift) > aliBuf->mImage->getHeight() / 2.)
@@ -560,9 +561,9 @@ void AlignRightDblClickImage()
 // inSmallPad can be 1 for padding by only a small fraction, 0 for default padding by
 //            by 0.45, or -1 for full padding by 0.9; a value > 1 indicates template corr
 // doImShift (default true) controls whether it does scope image shift
-// corrFlags (default 0) can be set 1 to put cross-correlation in A plus 2 to try to 
+// corrFlags (default 0) can be set 1 to put cross-correlation in A plus 2 to try to
 // eliminate peaks in FFT from periodic structures
-// peakVal is returned with the raw correlation peak value if non-NULL 
+// peakVal is returned with the raw correlation peak value if non-NULL
 // expectedXshift, expectedYshift are the expected shifts so that correlation is over the
 //                                region of overlap (default 0,0)
 // conical non-zero makes it do a conical tilt alignment with the given rotation
@@ -578,7 +579,7 @@ void AlignRightDblClickImage()
 int CShiftManager::AutoAlign(int bufIndex, int inSmallPad, BOOL doImShift, int corrFlags,
                              float *peakVal, float expectedXshift, float expectedYshift,
                              float conical, float scaling, float rotation, float *CCC,
-                             float *fracPix, BOOL trimOutput, float *xShiftOut, 
+                             float *fracPix, BOOL trimOutput, float *xShiftOut,
                              float *yShiftOut, float probSigma)
 {
   BOOL doTrim, swapStretch;
@@ -596,7 +597,7 @@ int CShiftManager::AutoAlign(int bufIndex, int inSmallPad, BOOL doImShift, int c
   bool centered = true;
   int numPeaks = mMaxNumPeaksToEval;
   int xInd, yInd;
-  int iPeak, indMaxPeak, numRealPeaks; 
+  int iPeak, indMaxPeak, numRealPeaks;
   float fracPad = 0.45f;    // 11/2/10: Make this "half-padded"
   float trimFrac = mTrimFrac;
   if (mWinApp->mNavHelper->GetRealigning() || mWinApp->mShiftCalibrator->CalibratingIS())
@@ -640,9 +641,9 @@ int CShiftManager::AutoAlign(int bufIndex, int inSmallPad, BOOL doImShift, int c
   float *CCCptr = CCC, *fracPtr = fracPix;
   double overlapPow = 0.166667;
   BOOL autoCorr = bufIndex < 0;
-  bool disableLDtrim = (mDisableAutoTrim & NOTRIM_LOWDOSE_ALL) || 
+  bool disableLDtrim = (mDisableAutoTrim & NOTRIM_LOWDOSE_ALL) ||
     ((mDisableAutoTrim & NOTRIM_LOWDOSE_TS) && mWinApp->DoingTiltSeries());
-  bool disableTaskTrim = (mDisableAutoTrim & NOTRIM_TASKS_ALL) || 
+  bool disableTaskTrim = (mDisableAutoTrim & NOTRIM_TASKS_ALL) ||
     ((mDisableAutoTrim & NOTRIM_TASKS_TS) && mWinApp->DoingTiltSeries());
   bool disableItemTrim = (mDisableAutoTrim & NOTRIM_REALIGN_ITEM) != 0;
   double startTime, time1, time2, time3, time4, time5;
@@ -747,7 +748,7 @@ int CShiftManager::AutoAlign(int bufIndex, int inSmallPad, BOOL doImShift, int c
     sizeC = B3DMAX(heightC, widthC) / needBinC;
     size = B3DMIN(size, sizeC);
 
-    // If the images are less than half the target and this is not the 
+    // If the images are less than half the target and this is not the
     // first try, quit
     if (size < targetSize / 2 && commonBin > maxBin) {
       SEMMessageBox(_T("Image binnings cannot be matched up - cannot autoalign"));
@@ -758,7 +759,7 @@ int CShiftManager::AutoAlign(int bufIndex, int inSmallPad, BOOL doImShift, int c
     if (size <= targetSize)
       break;
   }
-  
+
   if (size > targetSize) {
     SEMMessageBox(_T("Images are too large to bin for autoalign"));
     return 1;
@@ -772,7 +773,7 @@ int CShiftManager::AutoAlign(int bufIndex, int inSmallPad, BOOL doImShift, int c
   mDataA = (void *)mImA->getData();
   mImC->Lock();
   mDataC = (void *)mImC->getData();
-  
+
   if (needBinA > 1) {
     NewArray(tempA, short int, (typeA == kFLOAT ? 2 : 1) * (size_t)heightA * widthA /
       (needBinA * needBinA));
@@ -790,11 +791,11 @@ int CShiftManager::AutoAlign(int bufIndex, int inSmallPad, BOOL doImShift, int c
     mDeleteA = true;
 
     // A negative value here signals that image was scaled up by this amount, so it is
-    // appropriate to scale the filters by this divided by the binning here 
+    // appropriate to scale the filters by this divided by the binning here
     if (mImBufs[0].mEffectiveBin < 0)
       hiFreqScale = B3DMIN(1.f, -1.f / (mImBufs[0].mEffectiveBin / (float)needBinA));
   }
-  
+
   if (needBinC > 1) {
     NewArray(tempC, short int, (typeC == kFLOAT ? 2 : 1) * (size_t)heightC * widthC /
       (needBinC * needBinC));
@@ -811,7 +812,7 @@ int CShiftManager::AutoAlign(int bufIndex, int inSmallPad, BOOL doImShift, int c
     mDataC = (void *)tempC;
     mDeleteC = true;
     if (mImBufs[toBuf].mEffectiveBin < 0)
-      hiFreqScale = B3DMIN(hiFreqScale, -1.f / (mImBufs[toBuf].mEffectiveBin / 
+      hiFreqScale = B3DMIN(hiFreqScale, -1.f / (mImBufs[toBuf].mEffectiveBin /
       (float)needBinC));
   }
 
@@ -942,7 +943,7 @@ int CShiftManager::AutoAlign(int bufIndex, int inSmallPad, BOOL doImShift, int c
       //typeC = kSHORT;
     mDeleteC = true;
 
-    
+
   }
   strInv = MatInv(str);
 
@@ -954,7 +955,7 @@ int CShiftManager::AutoAlign(int bufIndex, int inSmallPad, BOOL doImShift, int c
       toBuf, 1, 2);
     mImC = mImBufs[toBuf].mImage;
     mImC->Lock();
-  */ 
+  */
 
   // To erase peaks from periodic signals, take the full-sized image with minimal padding
   // and standard tapering
@@ -1009,7 +1010,7 @@ int CShiftManager::AutoAlign(int bufIndex, int inSmallPad, BOOL doImShift, int c
   nxTrimA = nyTrimA = nxTrimC = nyTrimC = (int)(trimFrac * size + 1);
   nxTrimAright = nyTrimAtop = nxTrimCright = nyTrimCtop = nxTrimA;
 
-  // Whether to trim: it is disallowed completely if doing template correlation, 
+  // Whether to trim: it is disallowed completely if doing template correlation,
   // calibrating IS, or script has disabled it
   // Otherwise the choice for realign governs it for realign;
   // the choice for tasks governs it for tasks
@@ -1019,12 +1020,12 @@ int CShiftManager::AutoAlign(int bufIndex, int inSmallPad, BOOL doImShift, int c
   if (!(tmplCorr || mWinApp->mShiftCalibrator->CalibratingIS() ||
     mWinApp->mParticleTasks->DoingTemplateAlign() == 1 ||
     mWinApp->mMultiGridTasks->GetDoingMultiGrid() ||
-    (mWinApp->mMacroProcessor->DoingMacro() && 
+    (mWinApp->mMacroProcessor->DoingMacro() &&
     mWinApp->mMacroProcessor->GetDisableAlignTrim()))) {
       if (mWinApp->mNavHelper->GetRealigning() == 1 ||
         mWinApp->mParticleTasks->DoingTemplateAlign() > 1)
         doTrim = !disableItemTrim;
-      else if (mWinApp->mComplexTasks->InLowerMag()) 
+      else if (mWinApp->mComplexTasks->InLowerMag())
         doTrim = !disableTaskTrim;
       else if (mWinApp->LowDoseMode())
         doTrim = !disableLDtrim;
@@ -1063,7 +1064,7 @@ int CShiftManager::AutoAlign(int bufIndex, int inSmallPad, BOOL doImShift, int c
         yy = heightA / 2. - ytrim;
         minx = widthA / 2. - nxTrimA;
         for (j = 0; j < 4; j++) {
-          xx = fabs(xcorn[j] + (yy - ycorn[j]) * (xcorn[j+1] - xcorn[j]) / 
+          xx = fabs(xcorn[j] + (yy - ycorn[j]) * (xcorn[j+1] - xcorn[j]) /
             (ycorn[j+1] - ycorn[j]));
           minx = B3DMIN(minx, xx);
         }
@@ -1078,28 +1079,28 @@ int CShiftManager::AutoAlign(int bufIndex, int inSmallPad, BOOL doImShift, int c
     }
     nxTrimAright = nxTrimA;
     nyTrimAtop = nyTrimA;
-  
-    // If flag set, low dose mode, or low mag, or first round of realign, 
+
+    // If flag set, low dose mode, or low mag, or first round of realign,
     // find needed trimming to avoid bad corners
   } else if (doTrim) {
     int nTrim = nxTrimA;
     centered = fabs(stretch - 1.) > 0.0005;
     CString report;
-    ProcTrimCircle(mDataA, typeA, widthA, heightA, trimCenFrac, 
-      trimTestSize, trimDelta, nxTrimA, nyTrimA, trimPassRatio, centered, nxTrimA, 
+    ProcTrimCircle(mDataA, typeA, widthA, heightA, trimCenFrac,
+      trimTestSize, trimDelta, nxTrimA, nyTrimA, trimPassRatio, centered, nxTrimA,
       nyTrimA, nxTrimAright, nyTrimAtop);
-    ProcTrimCircle(mDataC, typeC, widthC, heightC, trimCenFrac, 
-      trimTestSize, trimDelta, nxTrimC, nyTrimC, trimPassRatio, centered, nxTrimC, 
+    ProcTrimCircle(mDataC, typeC, widthC, heightC, trimCenFrac,
+      trimTestSize, trimDelta, nxTrimC, nyTrimC, trimPassRatio, centered, nxTrimC,
       nyTrimC, nxTrimCright, nyTrimCtop);
-    if (nTrim != nxTrimA || nTrim != nxTrimC || nTrim != nxTrimAright || 
-      nTrim != nxTrimCright || nTrim != nyTrimA || nTrim != nyTrimC || 
+    if (nTrim != nxTrimA || nTrim != nxTrimC || nTrim != nxTrimAright ||
+      nTrim != nxTrimCright || nTrim != nyTrimA || nTrim != nyTrimC ||
       nTrim != nyTrimAtop || nTrim != nyTrimCtop) {
         if (centered)
           report.Format("Trimming A by %d  %d,  reference by %d  %d", nxTrimA, nyTrimA,
           nxTrimC, nyTrimC);
         else
-          report.Format("Trimming A by %d  %d  %d  %d,  reference by %d  %d  %d  %d", 
-          nxTrimA, nxTrimAright, nyTrimA, nyTrimAtop, 
+          report.Format("Trimming A by %d  %d  %d  %d,  reference by %d  %d  %d  %d",
+          nxTrimA, nxTrimAright, nyTrimA, nyTrimAtop,
           nxTrimC, nxTrimCright, nyTrimC, nyTrimCtop);
         if ((!scaling && trimOutput) || GetDebugOutput('a'))
           mWinApp->AppendToLog(report, LOG_SWALLOW_IF_CLOSED);
@@ -1163,12 +1164,12 @@ int CShiftManager::AutoAlign(int bufIndex, int inSmallPad, BOOL doImShift, int c
     nxPad = B3DMAX(nxPad, nyPad);
     nyPad = nxPad;
   }
-  XCorrSetCTF(mSigma1 * freqScale, mSigma2 * freqScale * hiFreqScale, 0.f, 
+  XCorrSetCTF(mSigma1 * freqScale, mSigma2 * freqScale * hiFreqScale, 0.f,
     mRadius2 * freqScale * hiFreqScale, mCTFa, nxPad, nyPad, &delta);
   if (delta)
     for (int jj = 0; jj < 8193; jj++)
       mCTFa[jj] = (float)sqrt((double)mCTFa[jj]);
-  
+
   NewArray2(mArray, float, nyPad, (nxPad + 2));
   NewArray2(mBrray, float, nyPad, (nxPad + 2));
   NewArray2(mCrray, float, nyPad, (nxPad + 2));
@@ -1186,7 +1187,7 @@ int CShiftManager::AutoAlign(int bufIndex, int inSmallPad, BOOL doImShift, int c
   frac = mTaperFrac / (1.f - 2.f * trimFrac);
   nxTaper = (int)(frac * nxUseA);
   nyTaper = (int)(frac * nyUseA);
-  XCorrTaperInPad(fillArray ? fillArray : mDataA, fillArray ? SLICE_MODE_FLOAT : typeA, 
+  XCorrTaperInPad(fillArray ? fillArray : mDataA, fillArray ? SLICE_MODE_FLOAT : typeA,
     widthA, ix0A, ix1A, iy0A, iy1A, mArray, nxPad + 2, nxPad, nyPad, nxTaper, nyTaper);
 
   if (tmplCorr) {
@@ -1203,7 +1204,7 @@ int CShiftManager::AutoAlign(int bufIndex, int inSmallPad, BOOL doImShift, int c
     time3 = wallTime() * 1000.;
 
   XCorrCrossCorr(mBrray, mArray, nxPad, nyPad, delta, mCTFa, mCrray);
-  
+
   DELETE_ARR(fillArray);
   DELETE_ARR(fillBrray);
   if (debugTime)
@@ -1284,16 +1285,16 @@ int CShiftManager::AutoAlign(int bufIndex, int inSmallPad, BOOL doImShift, int c
           fracHere = (float)numPixel / (B3DMIN(nxUseA, nxUseC) * B3DMIN(nyUseA, nyUseC));
           wgtCCC = CCChere * pow((double)fracHere, overlapPow);
           if (probSigma > 0) {
-            distsq = (float)((pow((double)xPeak[ix] + peakXoffset, 2.) + 
+            distsq = (float)((pow((double)xPeak[ix] + peakXoffset, 2.) +
               pow((double)yPeak[iy] + peakYoffset, 2.)) * needBinA * needBinA);
             probFac = (float)exp(-0.5 * distsq / (probSigma * probSigma));
             wgtCCC *= probFac;
             SEMTrace('a', "%.1f %.1f Peak %g  CCC %.4f  frac %.2f  prob %.3f, wgtCCC "
-              "%.4f%s", xPeak[ix], yPeak[iy], peak[iPeak], CCChere, fracHere, probFac, 
+              "%.4f%s", xPeak[ix], yPeak[iy], peak[iPeak], CCChere, fracHere, probFac,
               wgtCCC, wgtCCC > bestWgtCCC ? "*" : "");
           } else {
-            SEMTrace('a', "%.1f %.1f Peak %g  CCC %.4f  frac %.2f  wgtCCC %.4f%s", 
-              xPeak[ix], yPeak[iy], peak[iPeak], CCChere, fracHere, wgtCCC, 
+            SEMTrace('a', "%.1f %.1f Peak %g  CCC %.4f  frac %.2f  wgtCCC %.4f%s",
+              xPeak[ix], yPeak[iy], peak[iPeak], CCChere, fracHere, wgtCCC,
               wgtCCC > bestWgtCCC ? "*" : "");
           }
 
@@ -1330,7 +1331,7 @@ int CShiftManager::AutoAlign(int bufIndex, int inSmallPad, BOOL doImShift, int c
 
   *fracPtr = fracBest;
   *CCCptr = CCCbest;
-  if (mWinApp->mScope->GetSimulationMode() && nxPad > 128 && nyPad > 128 && 
+  if (mWinApp->mScope->GetSimulationMode() && nxPad > 128 && nyPad > 128 &&
     (mImBufs->GetSaveCopyFlag() != 0 || mImBufs->mCaptured)) {
     tempX = (float)(0.02 * B3DMIN(nxUseA, nxUseC));
     tempY = (float)(0.02 * B3DMIN(nyUseA, nyUseC));
@@ -1362,7 +1363,7 @@ int CShiftManager::AutoAlign(int bufIndex, int inSmallPad, BOOL doImShift, int c
         for (int ix = 0; ix < nxPad; ix++)
           tmpArr[ix + iy * nxPad] = (short)imArr[ix + iy * (nxPad + 2)];
       mWinApp->mProcessImage->NewProcessedImage((corrFlags & AUTOALIGN_SHOW_FILTA) ?
-        mImBufs : &mImBufs[bufIndex], tmpArr, kSHORT, nxPad, nyPad, 
+        mImBufs : &mImBufs[bufIndex], tmpArr, kSHORT, nxPad, nyPad,
         commonBin / mImBufs->mBinning);
     } else {
       mWinApp->mProcessImage->CorrelationToBufferA(mBrray, nxPad, nyPad,
@@ -1414,7 +1415,7 @@ int CShiftManager::AutoAlign(int bufIndex, int inSmallPad, BOOL doImShift, int c
     time1 - startTime, time2 - time1, time3 - time2, time4 - time3,
     time5 - time4, numRealPeaks);
 
-  // If shift values are desired, set them and skip the rest of this, but apply the 
+  // If shift values are desired, set them and skip the rest of this, but apply the
   // adjustement to the expected shift for scaling
   if (xShiftOut && yShiftOut) {
     *xShiftOut = Xpeaks[indMaxPeak];
@@ -1478,11 +1479,11 @@ int CShiftManager::AutoAlign(int bufIndex, int inSmallPad, BOOL doImShift, int c
 
     // Have to make sure A is the current buffer : but this doesn't work, so pass
     // the A buffer to SetAlignShifts so it knows who to modify
-    retval = SetAlignShifts(cshiftX, cshiftY, false, mImBufs, doImShift && 
+    retval = SetAlignShifts(cshiftX, cshiftY, false, mImBufs, doImShift &&
       !mScope->GetNoScope());
 
     // If montaging and this is montage center and overview is in B, shift
-    // overview also, 
+    // overview also,
     if (mWinApp->Montaging() && mImBufs->IsMontageCenter() &&
       mImBufs[1].mImage && mImBufs[1].IsMontageOverview()) {
         binC = mImBufs[1].mBinning;
@@ -1494,21 +1495,21 @@ int CShiftManager::AutoAlign(int bufIndex, int inSmallPad, BOOL doImShift, int c
         if (!(mWinApp->GetMontParam()->showOverview && lookingAtB))
           mWinApp->SetCurrentBuffer(0);
       }
-  }    
+  }
 
   // Something in here (not SetCurrentBuffer or DrawImage) is making the mini-tilt series
   // window lose keyboard focus with no messages detectable: so set focus to the window
   // that should have it
   ((CMainFrame *)(mWinApp->m_pMainWnd))->MDIGetActive(NULL)->SetFocus();
   AutoalignCleanup();
-  
+
   return retval;
 }
 
 
 // Adjust coordinates to be correlated when there is an expected shift so that the
 // region correlated is the overlap zone plus some extra amount
-void CShiftManager::ShiftCoordinatesToOverlap(int widthA, int widthC, int extra, 
+void CShiftManager::ShiftCoordinatesToOverlap(int widthA, int widthC, int extra,
                                               int & baseXshift, int & ix0A, int & ix1A,
                                               int & ix0C, int & ix1C)
 {
@@ -1559,7 +1560,7 @@ BOOL CShiftManager::MemoryError(BOOL inTest)
 {
   if (inTest) {
     mWinApp->mTSController->TSMessageBox(_T("Error getting image memory - "
-      "cannot autoalign")); 
+      "cannot autoalign"));
     AutoalignCleanup();
   }
   return inTest;
@@ -1598,7 +1599,7 @@ int CShiftManager::ResetImageShift(BOOL bDoBacklash, BOOL bAdjustScale, int wait
   StageMoveInfo smi;
   ScaleMat aMat, dMat;
 
-  // Wait used to be 2000; it said not to wait long since this is not supposed to be 
+  // Wait used to be 2000; it said not to wait long since this is not supposed to be
   // called unless stage is ready, but that doesn't work from macros.  Default is 5000
   if (mScope->WaitForStageReady(waitTime)) {
     SEMMessageBox(_T("Reset shift aborted - stage not ready"));
@@ -1685,9 +1686,9 @@ int CShiftManager::ResetImageShift(BOOL bDoBacklash, BOOL bAdjustScale, int wait
   mResetStageAdjustY = adjustY;
 
   mScope->GetStagePosition(smi.x, smi.y, smi.z);
-  SEMTrace('i', "Stage at %.2f, %.2f  moving to %.2f %.2f", smi.x, smi.y, 
+  SEMTrace('i', "Stage at %.2f, %.2f  moving to %.2f %.2f", smi.x, smi.y,
     smi.x + delX, smi.y + delY);
-  setBacklash = bDoBacklash && (mBacklashMouseAndISR || 
+  setBacklash = bDoBacklash && (mBacklashMouseAndISR ||
     mWinApp->mNavHelper->GetRealigning() || mWinApp->mParticleTasks->DoingTemplateAlign())
     && fabs(angle / DTOR) < 10.;
   smi.relaxX = smi.relaxY = 0.;
@@ -1700,14 +1701,14 @@ int CShiftManager::ResetImageShift(BOOL bDoBacklash, BOOL bAdjustScale, int wait
     if (smi.backY)
       smi.relaxY = (smi.backY > 0. ? relaxation : -relaxation);
   }
-  SEMTrace('n', "RIS: backlash %.2f  %.2f  relax %.3f  %.3f", smi.backX, smi.backY, 
+  SEMTrace('n', "RIS: backlash %.2f  %.2f  relax %.3f  %.3f", smi.backX, smi.backY,
     smi.relaxX, smi.relaxY);
 
   // Do scope actions
   mResettingIS = true;
   mWinApp->UpdateBufferWindows();
   mWinApp->SetStatusText(SIMPLE_PANE, "RESETTING SHIFT");
-  
+
   // Adjust focus, but only on first iteration
   // Do all scope actions before moving stage because of single Tecnai problem
   if (mWinApp->GetSTEMMode())
@@ -1715,7 +1716,7 @@ int CShiftManager::ResetImageShift(BOOL bDoBacklash, BOOL bAdjustScale, int wait
   if (!bAdjustScale  && magInd >= mScope->GetLowestNonLMmag())
     mScope->IncDefocus(specY * defocusFac * tan(angle));
   mScope->IncImageShift(-shiftX, -shiftY);
-  mScope->MoveStage(smi, smi.backX != 0. || smi.backY != 0., false, 0, 
+  mScope->MoveStage(smi, smi.backX != 0. || smi.backY != 0., false, 0,
     smi.relaxX != 0. || smi.relaxY != 0.);
   SetISTimeOut(GetLastISDelay());
   mWinApp->AddIdleTask(CEMscope::TaskStageBusy, TASK_RESET_SHIFT, 0, 30000);
@@ -1786,7 +1787,7 @@ void CShiftManager::MaintainOrImposeBacklash(StageMoveInfo *smi, double delX, do
 // 1) Tecnai specimen coordinates.  The X axis points to the tip of the rod, the
 //    Y axis to the front of the microscope, and positive tilt is a CCW rotation around
 //    the X axis in this orientation.
-// 
+//
 // 2) Camera coordinates in unbinned pixels.  The Tecnai rotation angle is a correct
 //    estimate of the rotation from the specimen to the camera coordinate system; namely
 //    at mid-range mags the X axis is at 77-86 degrees.  The basis for getting from
@@ -1801,7 +1802,7 @@ void CShiftManager::MaintainOrImposeBacklash(StageMoveInfo *smi, double delX, do
 //    IS to camera coordinates.
 //
 // 5) Stage coordinates.  The stage coordinate of a point is the Tecnai stage readout
-//    when the point is in the center of the field.  The stage calibration is a true 
+//    when the point is in the center of the field.  The stage calibration is a true
 //    mapping from stage to camera coordinates.  However, an increase in stage X moves
 //    the specimen to its positive X axis, and an increase in stage Y moves it to its
 //    positive Y axis, which implies that positive X or Y stage coordinates are near the
@@ -1881,7 +1882,7 @@ ScaleMat CShiftManager::IStoGivenCamera(int inMagInd, int inCamera)
   // not involving any STEM
   for (iAct = 0; iAct < mWinApp->GetNumReadInCameras(); iAct++) {
     iCam = mActiveCameraList[iAct];
-    if (iCam != inCamera && !mCamParams[iCam].STEMcamera && !STEMcamera && 
+    if (iCam != inCamera && !mCamParams[iCam].STEMcamera && !STEMcamera &&
       (mCamParams[iCam].GIF ? 1 : 0) == EFTEM ) {
         if (mMagTab[inMagInd].matIS[iCam].xpx != 0.) {
           mat = AdjustedISmatrix(iCam, inMagInd, inCamera, inMagInd);
@@ -1902,7 +1903,7 @@ ScaleMat CShiftManager::IStoGivenCamera(int inMagInd, int inCamera)
       if (iMag < limlo || iMag > limhi)
         continue;
       if (mMagTab[iMag].matIS[inCamera].xpx != 0.) {
-        if (!STEMcamera && mScope->GetUsePLforIS() && 
+        if (!STEMcamera && mScope->GetUsePLforIS() &&
           mScope->BothLMorNotLM(iMag, false, inMagInd, false)) {
             if (debug)
               SEMTrace('c', "IStoGivenCamera at cam %d mag %d by direct copy of PLA cal "
@@ -1965,10 +1966,10 @@ ScaleMat CShiftManager::IStoSpecimen(int inMagInd, int toCam)
 
   // These traces make it give output during updates
   /*SEMTrace('c', "Mag %d: camera to specimen %.5g %.5g %.5g %.5g\r\n    IS to camera "
-  "%.5g %.5g %.5g %.5g", inMagInd, aInv.xpx, aInv.xpy, aInv.ypx, aInv.ypy, bMat.xpx, 
+  "%.5g %.5g %.5g %.5g", inMagInd, aInv.xpx, aInv.xpy, aInv.ypx, aInv.ypy, bMat.xpx,
   bMat.xpy, bMat.ypx, bMat.ypy); */
   mat = MatMul(bMat, aInv);
-  //SEMTrace('c', "     IS to specimen %.5g %.5g %.5g %.5g", mat.xpx, mat.xpy, mat.ypx, 
+  //SEMTrace('c', "     IS to specimen %.5g %.5g %.5g %.5g", mat.xpx, mat.xpy, mat.ypx,
   //mat.ypy);
   return mat;
 }
@@ -1996,7 +1997,7 @@ ScaleMat CShiftManager::StageToCamera(int inCamera, int inMagInd, int specOnly)
    // If the stage is calibrated here, return matrix
   if (magtab->matStage[inCamera].xpx != 0. && (specOnly & 2) == 0)
     return magtab->matStage[inCamera];
- 
+
   // Use this image shift to convert from another calibration on first round,
   // only from same camera with transferrable IS
   // On second round use specimen to camera transformation
@@ -2015,7 +2016,7 @@ ScaleMat CShiftManager::StageToCamera(int inCamera, int inMagInd, int specOnly)
         if ((iDirC && iCam != inCamera && source) || (!iDirC && iCam == inCamera)) {
 
           // Not between cameras if either is STEM
-          if (iCam != inCamera && (mCamParams[iCam].STEMcamera || 
+          if (iCam != inCamera && (mCamParams[iCam].STEMcamera ||
             mCamParams[inCamera].STEMcamera))
             continue;
           mWinApp->GetMagRangeLimits(iCam, inMagInd, limlo, limhi);
@@ -2025,9 +2026,9 @@ ScaleMat CShiftManager::StageToCamera(int inCamera, int inMagInd, int specOnly)
               if (iMag < limlo || iMag > limhi)
                 continue;
               if (mMagTab[iMag].matStage[iCam].xpx != 0.) {
-                if (!source && CanTransferIS(iMag, inMagInd, mCamParams[iCam].STEMcamera, 
+                if (!source && CanTransferIS(iMag, inMagInd, mCamParams[iCam].STEMcamera,
                   mCamParams[iCam].GIF ? 1 : 0)) {
-                  
+
                   // Transform the other stage to camera calibration via the
                   // inverse of the IS cal times this mag/cam IS cal
                   ISotherCam = IStoGivenCamera(iMag, iCam);
@@ -2036,11 +2037,11 @@ ScaleMat CShiftManager::StageToCamera(int inCamera, int inMagInd, int specOnly)
                   mat = MatMul(prod, ISthisCam);
                   if (doTrace)
                     SEMTrace('c', "StageToCamera at cam %d mag %d by IS transfer from mag"
-                      " %d: %.5g %.5g %.5g %.5g", inCamera, inMagInd, iMag, mat.xpx, 
+                      " %d: %.5g %.5g %.5g %.5g", inCamera, inMagInd, iMag, mat.xpx,
                       mat.xpy, mat.ypx, mat.ypy);
                   return mat;
                 } else if (source) {
-                  
+
                   // Or do the same thing with Specimen to Camera
                   ISotherCam = SpecimenToCamera(iCam, iMag);
                   ISinv = MatInv(ISotherCam);
@@ -2110,7 +2111,7 @@ ScaleMat CShiftManager::SpecimenToStage(double adjustX, double adjustY)
       }
     }
   }
-  
+
   // Return the average of this matrix, with the X and Y scaling (?)
   if (nCum) {
     mat.xpx = adjustX * cum.xpx / nCum;
@@ -2248,10 +2249,10 @@ void CShiftManager::PropagatePixelSizes(void)
   derived = 1;
   if (!anyCal) {
     PickMagForFallback(-1, calMag, regCam);
-    magT[calMag].pixelSize[regCam] = camP[regCam].pixelMicrons / 
+    magT[calMag].pixelSize[regCam] = camP[regCam].pixelMicrons /
       (MagForCamera(regCam, calMag) * camP[regCam].magRatio);
     magT[calMag].pixDerived[regCam] = derived++;
-    SEMTrace('c', "Set initial pixel fallback %f for mag %d camera %d", 
+    SEMTrace('c', "Set initial pixel fallback %f for mag %d camera %d",
       magT[calMag].pixelSize[regCam] * 1000., calMag, regCam);
   }
   mAnyCalPixelSizes = anyCal;
@@ -2273,9 +2274,9 @@ void CShiftManager::PropagatePixelSizes(void)
 
             // If the other mag has a calibrated pixel at a lower level of derivation
             // and it has an image shift cal that can transfer, get the pixel size
-            if (mag2 >= limlo && mag2 <= limhi && 
+            if (mag2 >= limlo && mag2 <= limhi &&
               magT[mag2].pixDerived[iCam] < derived &&
-              magT[mag2].matIS[iCam].xpx && 
+              magT[mag2].matIS[iCam].xpx &&
               CanTransferIS(mag2, iMag, camP[iCam].STEMcamera, camP[iCam].GIF ? 1 : 0)) {
                 magT[iMag].pixelSize[iCam] = TransferPixelSize(
                   mag2, iCam, iMag, iCam);
@@ -2339,11 +2340,11 @@ void CShiftManager::PropagatePixelSizes(void)
 
             // Find closest previously calibrated mag
             anyCal = false;
-            for (delta = 1; delta < MAX_MAGS && !anyCal && !camP[iCam].STEMcamera; 
+            for (delta = 1; delta < MAX_MAGS && !anyCal && !camP[iCam].STEMcamera;
               delta++) {
                 for (iDir = -1; iDir <= 1; iDir += 2) {
                   mag2 = iMag + delta * iDir;
-                  if (mag2 >= limlo && mag2 <= limhi && 
+                  if (mag2 >= limlo && mag2 <= limhi &&
                     magT[mag2].pixDerived[iCam] < derived) {
 
                       // Look for a camera with both mags calibrated
@@ -2351,14 +2352,14 @@ void CShiftManager::PropagatePixelSizes(void)
                         iCam2 = mActiveCameraList[iAct2];
 
                         if (iCam2 != iCam && magT[iMag].pixDerived[iCam2] < derived &&
-                          magT[mag2].pixDerived[iCam2] < derived && 
+                          magT[mag2].pixDerived[iCam2] < derived &&
                           !camP[iCam2].STEMcamera &&
                           (camP[iCam].GIF ? 1 : 0) == (camP[iCam2].GIF ? 1 : 0)) {
                             magT[iMag].pixelSize[iCam] = magT[mag2].pixelSize[iCam] *
                               magT[iMag].pixelSize[iCam2] / magT[mag2].pixelSize[iCam2];
                             magT[iMag].pixDerived[iCam] = derived;
                             SEMTrace('c', "Mag %d Cam %d  Pixel = %.3f by ratio to mag %d"
-                              " in cam %d", iMag, iCam, 
+                              " in cam %d", iMag, iCam,
                               magT[iMag].pixelSize[iCam] * 1000., mag2, iCam2);
                             break;
                         }
@@ -2372,7 +2373,7 @@ void CShiftManager::PropagatePixelSizes(void)
             // Now fallback using mean of nearby film to camera ratios
             if (!magT[iMag].pixelSize[iCam]) {
               ratio = NearbyFilmCameraRatio(iMag, iCam, derived);
-              magT[iMag].pixelSize[iCam] = camP[iCam].pixelMicrons / 
+              magT[iMag].pixelSize[iCam] = camP[iCam].pixelMicrons /
                 (MagForCamera(iCam, iMag) * ratio);
               magT[iMag].pixDerived[iCam] = derived + 1;
               SEMTrace('c', "Mag %d Cam %d  Pixel = %.4f by fallback with nearby ratio %f"
@@ -2390,7 +2391,7 @@ void CShiftManager::PropagatePixelSizes(void)
     iCam = mActiveCameraList[iAct];
     for (iMag = 1; iMag < MAX_MAGS; iMag++) {
       if (!magT[iMag].pixelSize[iCam] && MagForCamera(iCam, iMag)) {
-         magT[iMag].pixelSize[iCam] = camP[iCam].pixelMicrons / 
+         magT[iMag].pixelSize[iCam] = camP[iCam].pixelMicrons /
             (MagForCamera(iCam, iMag) * camP[iCam].magRatio);
          magT[iMag].pixDerived[iCam] = derived;
          SEMTrace('c', "Mag %d Cam %d  Pixel = %.3f by fallback",
@@ -2409,8 +2410,8 @@ double CShiftManager::TransferPixelSize(int fromMag, int fromCam, int toMag, int
   ScaleMat aInv, aProd;
   aInv = MatInv(mMagTab[toMag].matIS[toCam]);
   aProd = MatMul(aInv, mMagTab[fromMag].matIS[fromCam]);
-  return mMagTab[fromMag].pixelSize[fromCam] * 0.5 * 
-    (sqrt(aProd.xpx * aProd.xpx + aProd.xpy * aProd.xpy) + 
+  return mMagTab[fromMag].pixelSize[fromCam] * 0.5 *
+    (sqrt(aProd.xpx * aProd.xpx + aProd.xpy * aProd.xpy) +
     sqrt(aProd.ypx * aProd.ypx + aProd.ypy * aProd.ypy));
 }
 
@@ -2488,10 +2489,10 @@ void CShiftManager::PropagateRotations(void)
       magT[calMag].rotation[regCam] = 0.;
     else
       magT[calMag].rotation[regCam] = GoodAngle((camP[regCam].GIF ?
-        magT[calMag].EFTEMtecnaiRotation : magT[calMag].tecnaiRotation) + 
+        magT[calMag].EFTEMtecnaiRotation : magT[calMag].tecnaiRotation) +
         mGlobalExtraRotation + camP[regCam].extraRotation);
     magT[calMag].rotDerived[regCam] = derived++;
-    SEMTrace('c', "Set initial rotation fallback %f for mag %d camera %d", 
+    SEMTrace('c', "Set initial rotation fallback %f for mag %d camera %d",
       magT[calMag].rotation[regCam], calMag, regCam);
   }
 
@@ -2585,7 +2586,7 @@ void CShiftManager::PropagateRotations(void)
     }
 
   }
-  
+
   // Make lists of mags relying on nominal rotation differences for other cameras
   for (iAct = 0; iAct < numCam; iAct++) {
     iCam = mActiveCameraList[iAct];
@@ -2696,7 +2697,7 @@ void CShiftManager::PropagateCalibratedRotations(int actCamToDo, int & derived)
     derived++;
 
     // Propagate calibrations between mags with image shifts
-    // Skip STEM camera because 1) image shift needs to be calibrated after relative 
+    // Skip STEM camera because 1) image shift needs to be calibrated after relative
     // angles are stabilized; 2) not sure of the sign
     for (iAct = actStart; iAct <= actEnd; iAct++) {
       iCam = mActiveCameraList[iAct];
@@ -2710,8 +2711,8 @@ void CShiftManager::PropagateCalibratedRotations(int actCamToDo, int & derived)
           for (iDir = -1; iDir <= 1; iDir += 2) {
             mag2 = iMag + delta * iDir;
 
-            // If the other mag has a calibrated rotation at a lower level of 
-            // derivation and it has an image shift cal that can transfer, get the 
+            // If the other mag has a calibrated rotation at a lower level of
+            // derivation and it has an image shift cal that can transfer, get the
             // rotation
             if (mag2 >= 1 && mag2 < MAX_MAGS && magT[mag2].rotDerived[iCam] <
               derived && magT[mag2].matIS[iCam].xpx && CanTransferIS(mag2, iMag, false,
@@ -3063,7 +3064,7 @@ int CShiftManager::CheckStageToCamConsistency(float rotCrit, float magCrit, bool
                   else
                     mWinApp->AppendToLog("\r\nThere are inconsistencies between stage to "
                       "camera matrices derived from image shift cals\r\n and ones derived"
-                      " from rotation and pixel information for camera " + 
+                      " from rotation and pixel information for camera " +
                       mCamParams[iCam].name);
                   mWinApp->AppendToLog("Index Mag   rotation  scaling   stretch  between "
                     "matrices");
@@ -3072,13 +3073,13 @@ int CShiftManager::CheckStageToCamConsistency(float rotCrit, float magCrit, bool
                 str.Format("%3d %8d  %7.1f  %6.2f  %6.2f", ind, MagForCamera(iCam, ind),
                   theta, smag, strtch);
                 if (direct)
-                  str += loop ? "  (derived from rotation/pixel)" : 
+                  str += loop ? "  (derived from rotation/pixel)" :
                   "  (derived from IS cals)";
                 mWinApp->AppendToLog(str);
                 if (debug) {
                   mWinApp->SetDebugOutput("c");
                   if (direct) {
-                    PrintfToLog("Calibrated matrix  %.5g  %.5g  %.5g  %.5g", 
+                    PrintfToLog("Calibrated matrix  %.5g  %.5g  %.5g  %.5g",
                       mMagTab[ind].matStage[iCam].xpx, mMagTab[ind].matStage[iCam].xpy,
                       mMagTab[ind].matStage[iCam].ypx, mMagTab[ind].matStage[iCam].ypy);
                       StageToCamera(iCam, ind, loop + 2);
@@ -3108,7 +3109,7 @@ double CShiftManager::TransferImageRotation(double fromAngle, int fromCam, int f
   double xtheta = atan2(aProd.ypx, aProd.xpx) / DTOR;
   double ytheta = atan2(-aProd.xpy, aProd.ypy) / DTOR;
   double ydtheta = GoodAngle(ytheta - xtheta);
-  
+
   xtheta = GoodAngle(fromAngle + (xtheta + 0.5 * ydtheta));
   return xtheta;
 }
@@ -3155,7 +3156,7 @@ float CShiftManager::GetCalibratedImageRotation(int inCamera, int inMagIndex)
     else
       break;
 
-    if (mMagTab[iFor].rotDerived[inCamera] < 900. && 
+    if (mMagTab[iFor].rotDerived[inCamera] < 900. &&
       !mMagTab[iFor].rotDerived[inCamera]) {
       backAngle = mMagTab[iFor].rotation[inCamera] - cumAngle;
       break;
@@ -3178,7 +3179,7 @@ float CShiftManager::GetCalibratedImageRotation(int inCamera, int inMagIndex)
 }
 
 // Adjust the image shift matrix from one mag/camera combination to the desired one
-ScaleMat CShiftManager::AdjustedISmatrix(int iCamCal, int iMagCal, int iCamWant, 
+ScaleMat CShiftManager::AdjustedISmatrix(int iCamCal, int iMagCal, int iCamWant,
                      int iMagWant)
 {
   ScaleMat bCal, aCal, aInv, aWant, prod1, prod2;
@@ -3238,7 +3239,7 @@ void CShiftManager::TransferGeneralIS(int fromMag, double fromX, double fromY, i
   ScaleMat cMat, cTo, cProd;
   static int lastFrom = 0, lastTo = 0;
   static double lastX = 0., lastY = 0.;
-  bool diffFromLast = fromMag != lastFrom || toMag != lastTo || fromX != lastX || 
+  bool diffFromLast = fromMag != lastFrom || toMag != lastTo || fromX != lastX ||
     fromY != lastY;
   int iCam = mWinApp->GetCurrentCamera();
   toX = toY = 0;
@@ -3282,8 +3283,8 @@ int CShiftManager::NearestIScalMag(int inMag, int iCam, BOOL crossBorders)
       iMag = inMag + delta * iDir;
       if (iMag < limlo || iMag > limhi)
         continue;
-      if (mMagTab[iMag].matIS[iCam].xpx && 
-        (CanTransferIS(iMag, inMag, mCamParams[iCam].STEMcamera, 
+      if (mMagTab[iMag].matIS[iCam].xpx &&
+        (CanTransferIS(iMag, inMag, mCamParams[iCam].STEMcamera,
           mCamParams[iCam].GIF ? 1 : 0) || crossBorders))
         return iMag;
     }
@@ -3322,7 +3323,7 @@ void CShiftManager::SetBeamShiftCal(ScaleMat inMat, int inMag, int inAlpha, int 
       continue;
     for (i = 0; i < numBound; i++) {
       mag = boundaries[i];
-      if ((sign * calMag < mag && sign * inMag >= mag) || 
+      if ((sign * calMag < mag && sign * inMag >= mag) ||
         (sign * calMag >= mag && sign * inMag < mag))
         break;
     }
@@ -3377,7 +3378,7 @@ ScaleMat CShiftManager::GetBeamShiftCal(int magInd, int inAlpha, int inProbe)
 
   // Loop through this twice if alpha; first try to match alpha
   // First look through calibrations, and if there is one that can transfer IS, use its
-  // matrix directly; then fall back to specimen transformations 
+  // matrix directly; then fall back to specimen transformations
   for (loop = 1; loop <= numLoop; loop++) {
 
     // And loop through this twice if there are boundaries: first obey the boundaries,
@@ -3453,7 +3454,7 @@ ScaleMat CShiftManager::GetBeamShiftCal(int magInd, int inAlpha, int inProbe)
                 mat2 = MatMul(calSpecToIS, mIStoBS[j]);
                 mat = MatMul(currIStoSpec, mat2);
                 SEMTrace('c', "For mag %d  alpha %d using specimen transfer of BS cal"
-                    " from mag %d alpha %d", magInd, inAlpha + 1, calMag, 
+                    " from mag %d alpha %d", magInd, inAlpha + 1, calMag,
                   mBeamCalAlpha[j] + 1);
                 return mat;
               }
@@ -3463,7 +3464,7 @@ ScaleMat CShiftManager::GetBeamShiftCal(int magInd, int inAlpha, int inProbe)
       }
     }
   }
-  
+
   return mat;
 }
 
@@ -3525,7 +3526,7 @@ void CShiftManager::ListBeamShiftCals()
     specToIS = MatInv(IStoSpecimen(useMag));
     if (specToIS.xpx) {
       prod = MatMul(specToIS, mIStoBS[ind]);
-      str2.Format(" %9.3f %9.3f %9.3f %9.3f  %12d", prod.xpx, prod.xpy, prod.ypx, 
+      str2.Format(" %9.3f %9.3f %9.3f %9.3f  %12d", prod.xpx, prod.xpy, prod.ypx,
         prod.ypy, mMagTab[useMag].mag);
       if (JEOLscope)
         str2 += mBeamCalRetain[ind] ? "   1" : "   0";
@@ -3661,7 +3662,7 @@ ScaleMat CShiftManager::MatScaleRotate(ScaleMat aMat, float scale, float rotatio
 }
 
 // Sets up an IMOD-style transform qith scale, rotation, and shift
-void CShiftManager::MakeScaleRotTransXform(float xf[6], float scale, float rot, 
+void CShiftManager::MakeScaleRotTransXform(float xf[6], float scale, float rot,
   float dx, float dy)
 {
   xf[0] = scale * (float)cos(rot * DTOR);
@@ -3707,15 +3708,15 @@ BOOL CShiftManager::ImageShiftIsOK(double newX, double newY, BOOL incremental)
   ScaleMat cMat;
   float specX, specY;
   int magInd = mScope->FastMagIndex();
-  float limit = magInd >= mScope->GetLowestNonLMmag() 
+  float limit = magInd >= mScope->GetLowestNonLMmag()
     ? mRegularShiftLimit : mLowMagShiftLimit;
-  
+
   if (incremental) {
     mScope->FastImageShift(oldX, oldY);
     newX += oldX;
     newY += oldY;
   }
-  
+
   if (mUseSquareShiftLimits) {
     cMat = IStoSpecimen(magInd);
     if (cMat.xpx == 0.)
@@ -3781,7 +3782,7 @@ float CShiftManager::ComputeISDelay(double delX, double delY)
   float delSpecY = (float)sqrt(pow(delY * aMat.xpy, 2) + pow(delY * aMat.ypy, 2));
   if (delSpecY > delSpecX)
     delSpecX = delSpecY;
-  
+
   // In low mag mode the effective distance is much less because lower coil setting
   // is needed for a given movement
   if (ind < mScope->GetLowestMModeMagInd())
@@ -3805,7 +3806,7 @@ float CShiftManager::ComputeISDelay(double delX, double delY)
 
   // Increase delay logarithmically for smaller Record pixel sizes than 1 nm
   if (mDelayPerMagDoubling) {
-    float pixel = GetPixelSize(mWinApp->GetCurrentCamera(), ind) * 
+    float pixel = GetPixelSize(mWinApp->GetCurrentCamera(), ind) *
       mConSets[RECORD_CONSET].binning;
     delSpecX = 0.001 / pixel;
     if (delSpecX > 1.)
@@ -3918,8 +3919,8 @@ UINT CShiftManager::GetNormalizationTimeOut(bool leavingLMalso)
   CameraParameters *camP = mWinApp->GetActiveCamParam();
   int normDelay = mNormalizationDelay;
   if (mLowMagNormDelay > 0 && mScope->GetLastNormMagIndex() > 0 &&
-    (mScope->GetLastNormMagIndex() < mScope->GetLowestNonLMmag(camP) || 
-      (leavingLMalso && mScope->GetPrevNormMagIndex() > 0 && 
+    (mScope->GetLastNormMagIndex() < mScope->GetLowestNonLMmag(camP) ||
+      (leavingLMalso && mScope->GetPrevNormMagIndex() > 0 &&
         mScope->GetPrevNormMagIndex() < mScope->GetLowestNonLMmag(camP))))
     normDelay = mLowMagNormDelay;
   UINT normTimeOut = AddIntervalToTickTime(mScope->GetLastNormalization(), normDelay);
@@ -3970,7 +3971,7 @@ ScaleMat CShiftManager::StretchCorrectedRotation(int camera, int magInd, float r
     rotXform = mRotXforms[i];
     if (camera == rotXform.camera && ((magInd < lowestM && rotXform.magInd < lowestM) ||
       (magInd >= lowestM && rotXform.magInd >= lowestM))) {
-      
+
       dist = magInd - rotXform.magInd;
       if (dist < 0)
         dist = -dist;
@@ -3990,7 +3991,7 @@ ScaleMat CShiftManager::StretchCorrectedRotation(int camera, int magInd, float r
   return mat;
 }
 
-// Return a matrix for rotating stage coordinates that is corrected for underlying 
+// Return a matrix for rotating stage coordinates that is corrected for underlying
 // stretch if a transformation matrix has been saved as a calibration
 ScaleMat CShiftManager::StretchCorrectedRotation(float rotation)
 {
@@ -4012,7 +4013,7 @@ ScaleMat CShiftManager::StretchCorrectedRotation(float rotation)
   return mat;
 }
 
-// Given a transformation between rotated images or coordinates, return the underlying 
+// Given a transformation between rotated images or coordinates, return the underlying
 // no-mag stretch transformation, mean mag, actual rotation, stretch and axis of stretch
 ScaleMat CShiftManager::UnderlyingStretch(ScaleMat raMat, float &smagMean, double &thetad
                                           , float &str, double &alpha)
@@ -4031,7 +4032,7 @@ ScaleMat CShiftManager::UnderlyingStretch(ScaleMat raMat, float &smagMean, doubl
   // Get underlying rotation angle and derive underlying stretch
   thetad = acos(0.5 * (bb.xpx + bb.ypy)) * (bb.xpy - bb.ypx >= 0 ? 1. : -1.);
   bfac = (bb.ypx - bb.xpy) / sin(thetad);
-  if (fabs(bfac) < 2.) 
+  if (fabs(bfac) < 2.)
     ssqr = -bfac / 2.;
   else
     ssqr = (-bfac + sqrt(bfac * bfac - 4.)) / 2.;
@@ -4039,8 +4040,8 @@ ScaleMat CShiftManager::UnderlyingStretch(ScaleMat raMat, float &smagMean, doubl
 
   sinsqa = (bb.xpy / sin(thetad) - ssqr) / (1. / ssqr - ssqr);
   alpha = 0.;
-  if (sinsqa >= 0.) 
-    alpha = asin(sqrt(sinsqa)) * 
+  if (sinsqa >= 0.)
+    alpha = asin(sqrt(sinsqa)) *
       ((cos(thetad) - bb.ypy) / (sin(thetad) * (1. / ssqr - ssqr)) >= 0. ? 1. : -1.);
 
   // convert str and alpha to a transformation matrix
@@ -4054,7 +4055,7 @@ ScaleMat CShiftManager::UnderlyingStretch(ScaleMat raMat, float &smagMean, doubl
 
 // Find the mag index needed for autofocusing with boosted mag, starting at given magInd
 int CShiftManager::FindBoostedMagIndex(int magInd, int boostMag)
-{ 
+{
   int lowerMag, upperMag, ind, curcam = mWinApp->GetCurrentCamera();
   int retval = magInd;
   double pixDiff, wantPixel, minPdiff = 1.e30;
@@ -4078,9 +4079,9 @@ int CShiftManager::FindBoostedMagIndex(int magInd, int boostMag)
 
 // Find the shift adjustment for a given set conSet at the mag magInd, provided that
 // it is appropriate and the shift measurement matches
-bool CShiftManager::ShiftAdjustmentForSet(int conSet, int magInd, float &shiftX, 
+bool CShiftManager::ShiftAdjustmentForSet(int conSet, int magInd, float &shiftX,
                                           float &shiftY, int camera, int recBin)
-{ 
+{
   LowDoseParams *ldp = mWinApp->GetLowDoseParams();
   int setMag = magInd;
   int recMag = magInd;
@@ -4095,7 +4096,7 @@ bool CShiftManager::ShiftAdjustmentForSet(int conSet, int magInd, float &shiftX,
   shiftX = shiftY = 0.;
 
   // Require STEM mode and measurements for both sets
-  if (!mWinApp->GetSTEMMode() || conSet > 4 || !mInterSetShifts.binning[conSet] || 
+  if (!mWinApp->GetSTEMMode() || conSet > 4 || !mInterSetShifts.binning[conSet] ||
     !mInterSetShifts.binning[recSet])
     return false;
 
@@ -4108,31 +4109,31 @@ bool CShiftManager::ShiftAdjustmentForSet(int conSet, int magInd, float &shiftX,
   }
 
   // For focus, find the higher mag if appropriate
-  if (conSet == FOCUS_CONSET && !mWinApp->LowDoseMode() && 
+  if (conSet == FOCUS_CONSET && !mWinApp->LowDoseMode() &&
     camSets[conSet].boostMagOrHwBin)
     setMag = FindBoostedMagIndex(magInd, camSets[conSet].boostMagOrHwBin);
   if (mInterSetShifts.binning[conSet] != camSets[conSet].binning ||
     mInterSetShifts.binning[recSet] != recBin ||
     mInterSetShifts.magInd[conSet] != setMag || mInterSetShifts.magInd[recSet] != recMag
-    || fabs((double)(mInterSetShifts.sizeX[conSet] * camSets[conSet].binning - 
+    || fabs((double)(mInterSetShifts.sizeX[conSet] * camSets[conSet].binning -
     (camSets[conSet].right - camSets[conSet].left))) > 10. ||
-    fabs((double)(mInterSetShifts.sizeY[conSet] * camSets[conSet].binning - 
+    fabs((double)(mInterSetShifts.sizeY[conSet] * camSets[conSet].binning -
     (camSets[conSet].bottom - camSets[conSet].top))) > 10. ||
-    fabs((double)(mInterSetShifts.sizeX[recSet] * recBin - 
+    fabs((double)(mInterSetShifts.sizeX[recSet] * recBin -
     (camSets[recSet].right - camSets[recSet].left))) > 10. ||
-    fabs((double)(mInterSetShifts.sizeY[recSet] * recBin - 
+    fabs((double)(mInterSetShifts.sizeY[recSet] * recBin -
     (camSets[recSet].bottom - camSets[recSet].top))) > 10.) {
-      SEMTrace('s', "%d %d %d %d %d %d %d %d %.5g %.5g %.5g %.5g", 
+      SEMTrace('s', "%d %d %d %d %d %d %d %d %.5g %.5g %.5g %.5g",
         mInterSetShifts.binning[conSet], camSets[conSet].binning,
         mInterSetShifts.binning[recSet], recBin,
         mInterSetShifts.magInd[conSet], setMag , mInterSetShifts.magInd[recSet] , recMag,
-        fabs((double)(mInterSetShifts.sizeX[conSet] * camSets[conSet].binning - 
-        (camSets[conSet].right - camSets[conSet].left))), 
-        fabs((double)(mInterSetShifts.sizeY[conSet] * camSets[conSet].binning - 
+        fabs((double)(mInterSetShifts.sizeX[conSet] * camSets[conSet].binning -
+        (camSets[conSet].right - camSets[conSet].left))),
+        fabs((double)(mInterSetShifts.sizeY[conSet] * camSets[conSet].binning -
         (camSets[conSet].bottom - camSets[conSet].top))) ,
-        fabs((double)(mInterSetShifts.sizeX[recSet] * recBin - 
+        fabs((double)(mInterSetShifts.sizeX[recSet] * recBin -
         (camSets[recSet].right - camSets[recSet].left))) ,
-        fabs((double)(mInterSetShifts.sizeY[recSet] * recBin - 
+        fabs((double)(mInterSetShifts.sizeY[recSet] * recBin -
         (camSets[recSet].bottom - camSets[recSet].top))));
       return false;
   }
@@ -4150,7 +4151,7 @@ bool CShiftManager::ShiftAdjustmentForSet(int conSet, int magInd, float &shiftX,
 
 // Get interpolated values for scaling and rotation at the given conditions from the
 // nearest calibrations.  Returns number  if interpolated values are provided
-int CShiftManager::GetDefocusMagAndRot(int spot, int probeMode, double intensity, 
+int CShiftManager::GetDefocusMagAndRot(int spot, int probeMode, double intensity,
   float defocus, float &scale, float &rotation, float &nearestFocus,
   double nearC2Dist[2], int nearC2ind[2], int &numNearC2, int magIndForIS)
 {
@@ -4201,7 +4202,7 @@ int CShiftManager::GetDefocusMagAndRot(int spot, int probeMode, double intensity
       for (ind = 0; ind < focusCals->GetSize(); ind++) {
         HighFocusMagCal& cal = focusCals->ElementAt(ind);
         if (cal.probeMode == probeMode && aboveCross ==
-          (mWinApp->mBeamAssessor->GetAboveCrossover(cal.spot, cal.intensity, 
+          (mWinApp->mBeamAssessor->GetAboveCrossover(cal.spot, cal.intensity,
           cal.probeMode) ? 1 : 0)) {
             intDiff = cal.intensity - intensity;
             focDiff = cal.defocus - defocus;
@@ -4259,7 +4260,7 @@ int CShiftManager::GetDefocusMagAndRot(int spot, int probeMode, double intensity
       }
     }
 
-    // If still two left, interpolate 
+    // If still two left, interpolate
     if (minInd[indFoc][0] >= 0 && minInd[indFoc][1] >= 0) {
       HighFocusMagCal& cal0 = focusCals->ElementAt(minInd[indFoc][0]);
       HighFocusMagCal& cal1 = focusCals->ElementAt(minInd[indFoc][1]);
@@ -4318,7 +4319,7 @@ int CShiftManager::GetDefocusMagAndRot(int spot, int probeMode, double intensity
 }
 
 // Version for those who don't care about details
-int CShiftManager::GetDefocusMagAndRot(int spot, int probeMode, double intensity, 
+int CShiftManager::GetDefocusMagAndRot(int spot, int probeMode, double intensity,
   float defocus, float &scale, float &rotation)
 {
   double nearC2dist[2];
@@ -4329,7 +4330,7 @@ int CShiftManager::GetDefocusMagAndRot(int spot, int probeMode, double intensity
 }
 
 // Add one calibration to the array
-void CShiftManager::AddHighFocusMagCal(int spot, int probeMode, double intensity, 
+void CShiftManager::AddHighFocusMagCal(int spot, int probeMode, double intensity,
   float defocus, float scale, float rotation, int magIndForIS)
 {
   double focTol = 5.;
@@ -4395,20 +4396,20 @@ void CShiftManager::AddHighFocusMagCal(int spot, int probeMode, double intensity
 }
 
 // Return a stage to camera matrix adjusted for the given conditions
-ScaleMat CShiftManager::FocusAdjustedStageToCamera(int inCamera, int inMagInd, int spot, 
+ScaleMat CShiftManager::FocusAdjustedStageToCamera(int inCamera, int inMagInd, int spot,
   int probe, double intensity, float defocus, bool forIS)
 {
-  float scale, rotation, nearFoc; 
+  float scale, rotation, nearFoc;
   double nearC2dist[2];
   int nearC2Ind[2], numNearC2;
   ScaleMat aMat = forIS ? IStoGivenCamera(inMagInd, inCamera) :
     StageToCamera(inCamera, inMagInd);
-  if (defocus >= 0. || inMagInd < mScope->GetLowestMModeMagInd() || 
-    !GetDefocusMagAndRot(spot, probe, intensity, defocus, scale, 
+  if (defocus >= 0. || inMagInd < mScope->GetLowestMModeMagInd() ||
+    !GetDefocusMagAndRot(spot, probe, intensity, defocus, scale,
     rotation, nearFoc, nearC2dist, nearC2Ind, numNearC2, forIS ? inMagInd : 0))
     return aMat;
   aMat = MatScaleRotate(aMat, scale, rotation);
-  SEMTrace('c', "Adjusted %s cal %.5g %.5g %.5g %.5g", forIS ? "IS" : "stage", 
+  SEMTrace('c', "Adjusted %s cal %.5g %.5g %.5g %.5g", forIS ? "IS" : "stage",
     aMat.xpx, aMat.xpy, aMat.ypx, aMat.ypy);
   return aMat;
 }
@@ -4422,7 +4423,7 @@ ScaleMat CShiftManager::FocusAdjustedStageToCamera(EMimageBuffer *imBuf, bool fo
   ScaleMat aMat = {0., 0., 0., 1.};
   if (imBuf->mCamera < 0 || !imBuf->mMagInd)
     return aMat;
-  if (imBuf->mLowDoseArea && imBuf->mMagInd >= mScope->GetLowestNonLMmag() && 
+  if (imBuf->mLowDoseArea && imBuf->mMagInd >= mScope->GetLowestNonLMmag() &&
     IS_SET_VIEW_OR_SEARCH(imBuf->mConSetUsed)) {
       defocus = imBuf->mViewDefocus;
       if (!imBuf->GetSpotSize(spot) || !imBuf->GetIntensity(intensity))
@@ -4435,14 +4436,14 @@ ScaleMat CShiftManager::FocusAdjustedStageToCamera(EMimageBuffer *imBuf, bool fo
 
 // Return scale and rotation values for an image buffer, returns number of focus cals
 // involved if any returned
-int CShiftManager::GetScaleAndRotationForFocus(EMimageBuffer *imBuf, float &scale, 
+int CShiftManager::GetScaleAndRotationForFocus(EMimageBuffer *imBuf, float &scale,
   float &rotation)
 {
   double intensity;
   int spot;
   scale = 1.;
   rotation = 0.;
-  if (imBuf->mLowDoseArea && IS_SET_VIEW_OR_SEARCH(imBuf->mConSetUsed) && 
+  if (imBuf->mLowDoseArea && IS_SET_VIEW_OR_SEARCH(imBuf->mConSetUsed) &&
       imBuf->GetSpotSize(spot) && imBuf->GetIntensity(intensity))
      return GetDefocusMagAndRot(spot, imBuf->mProbeMode, intensity, imBuf->mViewDefocus,
           scale, rotation);

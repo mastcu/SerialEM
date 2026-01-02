@@ -10,6 +10,10 @@
 #include "EMmontageController.h"
 #include "EMbufferManager.h"
 
+#if defined(_DEBUG) && defined(_CRTDBG_MAP_ALLOC)
+#define new DEBUG_NEW
+#endif
+
 
 // CReadFileDlg dialog
 
@@ -52,18 +56,18 @@ BOOL CReadFileDlg::OnInitDialog()
   UpdateData(false);
   m_editSection.SetFocus();
   m_editSection.SetSel(0, -1);
-   
+
   return FALSE;
 }
 
-void CReadFileDlg::PostNcDestroy() 
+void CReadFileDlg::PostNcDestroy()
 {
-  delete this;  
+  delete this;
   CDialog::PostNcDestroy();
 }
 
 // When closing, get docwnd to record placement and then set pointer to NULL
-void CReadFileDlg::OnOK() 
+void CReadFileDlg::OnOK()
 {
   ReadSection(0);
   mWinApp->mDocWnd->GetReadDlgPlacement();
@@ -71,7 +75,7 @@ void CReadFileDlg::OnOK()
   DestroyWindow();
 }
 
-void CReadFileDlg::OnCancel() 
+void CReadFileDlg::OnCancel()
 {
   mWinApp->mDocWnd->GetReadDlgPlacement();
   mWinApp->mDocWnd->mReadFileDlg = NULL;
@@ -85,7 +89,7 @@ void CReadFileDlg::OnButReadsec()
 }
 
 void CReadFileDlg::OnButNextSec()
-{ 
+{
   ReadSection(1);
 }
 
@@ -97,7 +101,7 @@ void CReadFileDlg::OnButPrevSec()
 // Disable buttons when busy
 void CReadFileDlg::Update(void)
 {
-  BOOL enable = !mWinApp->DoingTasks() && !mWinApp->mCamera->CameraBusy() && 
+  BOOL enable = !mWinApp->DoingTasks() && !mWinApp->mCamera->CameraBusy() &&
     mWinApp->mStoreMRC != NULL;
   m_butRead.EnableWindow(enable);
   m_butNext.EnableWindow(enable);
@@ -107,7 +111,7 @@ void CReadFileDlg::Update(void)
 
 // Read a section if legal
 void CReadFileDlg::ReadSection(int delta)
-{ 
+{
   int newsec, limit;
   bool readOK = false;
   MontParam *param = mWinApp->GetMontParam();

@@ -1,6 +1,6 @@
 // ZbyGSetupDlg.cpp : Set parameters for calibrating and running a focus by eucentricity
 //
-// Copyright (C) 2021 by  the Regents of the University of
+// Copyright (C) 2021-2026 by  the Regents of the University of
 // Colorado.  See Copyright.txt for full notice of copyright and limitations.
 //
 // Author: David Mastronarde
@@ -13,6 +13,10 @@
 #include "EMscope.h"
 #include "CameraController.h"
 #include "FocusManager.h"
+
+#if defined(_DEBUG) && defined(_CRTDBG_MAP_ALLOC)
+#define new DEBUG_NEW
+#endif
 
 
 // ZbyGSetupDlg dialog
@@ -247,7 +251,7 @@ void CZbyGSetupDlg::StartCalibration(int which)
 }
 
 // Wasted a lot of time trying to have one function do this for both columns, so here
-// is a macro 
+// is a macro
 #define STATE_TO_DIALOG(a, b) \
   m_str##a##Mag.Format("%d", MagForCamera(b##camera, b##magIndex)); \
   m_str##a##C2.Format("%.2f%s %s", mScope->GetC2Percent(b##spotSize,  \
@@ -320,7 +324,7 @@ void CZbyGSetupDlg::UpdateCalStateForMag()
     if (nearest < 0)
       m_strCalMag = "No cals for cam and LD";
     else
-      m_strCalMag.Format("No cal, nearest at %d", MagForCamera(mCurParams.camera, 
+      m_strCalMag.Format("No cal, nearest at %d", MagForCamera(mCurParams.camera,
         nearest));
     m_strCalC2 = "";
     m_strCalSpot = "";
@@ -351,7 +355,7 @@ void CZbyGSetupDlg::UpdateSettings()
 void CZbyGSetupDlg::UpdateEnables()
 {
   CameraParameters *camP = mWinApp->GetActiveCamParam();
-  bool enable = !((mWinApp->DoingTasks() && !mWinApp->GetJustNavAcquireOpen()) || 
+  bool enable = !((mWinApp->DoingTasks() && !mWinApp->GetJustNavAcquireOpen()) ||
     mWinApp->mCamera->CameraBusy());
   m_butUseToRecal.EnableWindow(mRecalEnabled && enable);
   m_butUseToCal.EnableWindow(enable && FocusCalExistsForParams(&mCurParams));

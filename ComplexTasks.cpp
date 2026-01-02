@@ -2,8 +2,7 @@
 //                         stage movement: finding eucentricity, resetting image
 //                         shift, reversing tilt direction and walking up.
 //
-// Copyright (C) 2003 by Boulder Laboratory for 3-Dimensional Electron 
-// Microscopy of Cells ("BL3DEMC") and the Regents of the University of
+// Copyright (C) 2003-2026 by the Regents of the University of
 // Colorado.  See Copyright.txt for full notice of copyright and limitations.
 //
 // Author: David Mastronarde
@@ -26,9 +25,11 @@
 #include "Utilities\XCorr.h"
 #include "Utilities\KGetOne.h"
 
+#if defined(_DEBUG) && defined(_CRTDBG_MAP_ALLOC)
+#define new DEBUG_NEW
+#endif
+
 #ifdef _DEBUG
-#undef THIS_FILE
-static char THIS_FILE[]=__FILE__;
 #define new DEBUG_NEW
 #endif
 
@@ -173,7 +174,7 @@ CComplexTasks::CComplexTasks()
   mTiltingBack = 0;
   mEucenRestoreStageXY = -1;
   mStageXtoRestore =  mStageYtoRestore = EXTRA_NO_VALUE;
-  
+
   // Default minimum field of view
   mMinRSRAField = 7.0;
   mMinRTField = 4.5f;
@@ -207,21 +208,21 @@ void CComplexTasks::Initialize()
 }
 
 // MESSAGE HANDLERS
-void CComplexTasks::OnUpdateNoTasks(CCmdUI* pCmdUI) 
+void CComplexTasks::OnUpdateNoTasks(CCmdUI* pCmdUI)
 {
   pCmdUI->Enable(!mWinApp->DoingTasks() && !mCamera->CameraBusy());
 }
 
-void CComplexTasks::OnUpdateNoTasksNoTS(CCmdUI* pCmdUI) 
+void CComplexTasks::OnUpdateNoTasksNoTS(CCmdUI* pCmdUI)
 {
-  pCmdUI->Enable(!mWinApp->DoingTasks() && !mWinApp->StartedTiltSeries() && 
+  pCmdUI->Enable(!mWinApp->DoingTasks() && !mWinApp->StartedTiltSeries() &&
     !mCamera->CameraBusy());
 }
 
-void CComplexTasks::OnEucentricity(UINT nID) 
+void CComplexTasks::OnEucentricity(UINT nID)
 {
   int index = nID - ID_EUCENTRICITY_COARSE;
-  int flags = (index % 2 == 0 ? FIND_EUCENTRICITY_COARSE : 0) | 
+  int flags = (index % 2 == 0 ? FIND_EUCENTRICITY_COARSE : 0) |
     (index > 0 ? FIND_EUCENTRICITY_FINE : 0);
   FindEucentricity(flags);
 }
@@ -233,29 +234,29 @@ void CComplexTasks::OnTasksFinerealign()
 
 void CComplexTasks::OnUpdateNoTasksNoTSNoHitachi(CCmdUI *pCmdUI)
 {
-  pCmdUI->Enable(!mWinApp->DoingTasks() && !mWinApp->StartedTiltSeries() && 
-    !mHitachiWithoutZ && !mCamera->CameraBusy());  
+  pCmdUI->Enable(!mWinApp->DoingTasks() && !mWinApp->StartedTiltSeries() &&
+    !mHitachiWithoutZ && !mCamera->CameraBusy());
 }
 
-void CComplexTasks::OnReverseTilt() 
+void CComplexTasks::OnReverseTilt()
 {
   int iDir = (mScope->GetReversalTilt() > mScope->GetTiltAngle()) ? 1 : -1;
   ReverseTilt(iDir);
 }
 
-void CComplexTasks::OnWalkup() 
+void CComplexTasks::OnWalkup()
 {
   if (KGetOneFloat("Angle to walk up to:", mWalkTarget, 2))
     WalkUp(mWalkTarget, -1, 0.);
 }
 
-void CComplexTasks::OnTasksWalkupanchor() 
+void CComplexTasks::OnTasksWalkupanchor()
 {
   TiltSeriesParam *tsParam = mWinApp->mTSController->GetTiltSeriesParam();
   float anchor = (float)fabs((double)tsParam->anchorTilt);
   char letter = 'A' + MAX_BUFFERS - 1;
   double angle = mScope->GetTiltAngle();
-  CString string = "Angle at which to take anchor (it will be stored in buffer " 
+  CString string = "Angle at which to take anchor (it will be stored in buffer "
     + CString(letter) + "):";
   if (!KGetOneFloat("Angle to walk up to:", mWalkTarget, 2))
     return;
@@ -263,7 +264,7 @@ void CComplexTasks::OnTasksWalkupanchor()
     anchor = -anchor;
   if (!KGetOneFloat(string, anchor, 2))
     return;
-  if (fabs(angle - mWalkTarget) < 2. || 
+  if (fabs(angle - mWalkTarget) < 2. ||
     (angle < mWalkTarget && (anchor < angle || anchor > mWalkTarget - 2.)) ||
     (angle > mWalkTarget && (anchor > angle || anchor < mWalkTarget + 2.))) {
     mTSController->TSMessageBox("An anchor picture would not be taken with this\n"
@@ -301,13 +302,13 @@ void CComplexTasks::OnTasksSetincrements()
   }
 }
 
-void CComplexTasks::OnResetRealign() 
+void CComplexTasks::OnResetRealign()
 {
-  ResetShiftRealign();  
+  ResetShiftRealign();
 }
 
-// Allow user to set tilt axis offset, provide last 
-void CComplexTasks::OnTasksSettiltaxisoffset() 
+// Allow user to set tilt axis offset, provide last
+void CComplexTasks::OnTasksSettiltaxisoffset()
 {
   CString infoLine;
   float currentOffset = mScope->GetTiltAxisOffset();
@@ -328,18 +329,18 @@ void CComplexTasks::OnTasksSettiltaxisoffset()
     "center image shift on the tilt axis in the Align&Focus control panel", MB_EXCLAME);
 }
 
-void CComplexTasks::OnTasksVerbose() 
+void CComplexTasks::OnTasksVerbose()
 {
-  mVerbose = !mVerbose; 
+  mVerbose = !mVerbose;
 }
 
-void CComplexTasks::OnUpdateTasksVerbose(CCmdUI* pCmdUI) 
+void CComplexTasks::OnUpdateTasksVerbose(CCmdUI* pCmdUI)
 {
   pCmdUI->Enable();
   pCmdUI->SetCheck(mVerbose ? 1 : 0);
 }
 
-void CComplexTasks::OnTasksSetiterationlimit() 
+void CComplexTasks::OnTasksSetiterationlimit()
 {
   float limit = mRSRAUserCriterion >= 0. ? mRSRAUserCriterion : mRSRACriterion;
   if (KGetOneFloat("Enter minimum image shift in microns for doing another "
@@ -370,11 +371,11 @@ BOOL CComplexTasks::DoingTasks()
 {
   CMultiTSTasks *tsTasks = mWinApp->mMultiTSTasks;
   CParticleTasks *particle = mWinApp->mParticleTasks;
-  return mDoingRSRA || mReversingTilt || mWalkIndex >= 0 || mDoingEucentricity || 
-    mDoingTASM || mDoingBASP || tsTasks->GetAutoCentering() || tsTasks->GetCooking() || 
-    tsTasks->GetAssessingRange() || tsTasks->DoingAnchorImage() || 
+  return mDoingRSRA || mReversingTilt || mWalkIndex >= 0 || mDoingEucentricity ||
+    mDoingTASM || mDoingBASP || tsTasks->GetAutoCentering() || tsTasks->GetCooking() ||
+    tsTasks->GetAssessingRange() || tsTasks->DoingAnchorImage() ||
     tsTasks->GetConditioningVPP() || particle->DoingZbyG() ||
-    particle->DoingTemplateAlign() || particle->DoingMultiShot() || 
+    particle->DoingTemplateAlign() || particle->DoingMultiShot() ||
     particle->GetWaitingForDrift() || mDoingLDSO || particle->GetDoingPrevPrescan();
 }
 
@@ -389,7 +390,7 @@ BOOL CComplexTasks::DoingComplexTasks()
 ////////////////////////////////////////////////////////////////////////
 
 // Make a control set for tracking shots
-void CComplexTasks::MakeTrackingConSet(ControlSet *conSet, int targetSize, 
+void CComplexTasks::MakeTrackingConSet(ControlSet *conSet, int targetSize,
                                        int baseConset)
 {
   int i;
@@ -428,10 +429,10 @@ void CComplexTasks::MakeTrackingConSet(ControlSet *conSet, int targetSize,
       exposure = (conSet->exposure - camParam->deadTime) / 4.0f + camParam->deadTime;
       exposure = B3DMAX(exposure, mMinTaskExposure);
       tryExp = exposure;
-      mCamera->ConstrainExposureTime(camParam, false, conSet->K2ReadMode, 
+      mCamera->ConstrainExposureTime(camParam, false, conSet->K2ReadMode,
         conSet->binning * 2, mCamera->MakeAlignSaveFlags(false, conSet->alignFrames > 0,
           conSet->useFrameAlign), 1, exposure, frameTime);
-      if (exposure < 0.9 * mMinTaskExposure || exposure > 1.25 * tryExp || 
+      if (exposure < 0.9 * mMinTaskExposure || exposure > 1.25 * tryExp ||
         exposure < 0.75 * tryExp)
         break;
       conSet->exposure = exposure;
@@ -451,15 +452,15 @@ void CComplexTasks::MakeTrackingConSet(ControlSet *conSet, int targetSize,
       mWinApp->GetCurrentCamera(), mScope->FastMagIndex());
     anyVirt = mCamera->AnyVirtualChannelsSelected(camParam, conSet);
     mCamera->ComputePixelTime(camParam, sizeX, sizeY, conSet->lineSyncOrPattern,
-        pixel, camParam->maxScanRate, conSet->exposure, dum1, dum2, 
+        pixel, camParam->maxScanRate, conSet->exposure, dum1, dum2,
       anyVirt, (anyVirt && camParam->DE_camType) ? conSet->skipAfterOrPtRpt : 1);
   }
-  SEMTrace('t', "MakeTrackingConset: binning %d from %d, exposure %f from %f, drift %f", 
-    conSet->binning, mConSets[baseConset].binning, conSet->exposure, 
+  SEMTrace('t', "MakeTrackingConset: binning %d from %d, exposure %f from %f, drift %f",
+    conSet->binning, mConSets[baseConset].binning, conSet->exposure,
     mConSets[baseConset].exposure, conSet->drift);
 }
 
-void CComplexTasks::LowerMagIfNeeded(int maxMagInd, float calIntSafetyFac, 
+void CComplexTasks::LowerMagIfNeeded(int maxMagInd, float calIntSafetyFac,
                                      float intZoomSafetyFac, int conSetNum)
 {
   // If we need to drop the mag, save the current mag and set intensity zoom
@@ -491,7 +492,7 @@ void CComplexTasks::LowerMagIfNeeded(int maxMagInd, float calIntSafetyFac,
   // If low dose mode, skip out, it is handled there
   if (mWinApp->LowDoseMode()) {
     mLowMagConSet = VIEW_CONSET;
-    if (!mTasksUseViewNotSearch && ldParam[VIEW_CONSET].magIndex > maxMagInd && 
+    if (!mTasksUseViewNotSearch && ldParam[VIEW_CONSET].magIndex > maxMagInd &&
       ldParam[SEARCH_AREA].magIndex < ldParam[VIEW_CONSET].magIndex &&
       ldParam[SEARCH_AREA].magIndex >= mScope->GetLowestMModeMagInd()) {
       SEMTrace('1', "Using Search instead of View for this task");
@@ -507,7 +508,7 @@ void CComplexTasks::LowerMagIfNeeded(int maxMagInd, float calIntSafetyFac,
     mSavedExposure[mMagStackInd] = conSet->exposure;
     mConSetModified[mMagStackInd] = conSetNum;
 
-    // For STEM, lower the mag, adjust exposure for scan rate limitation, and increment 
+    // For STEM, lower the mag, adjust exposure for scan rate limitation, and increment
     // stack index
     if (camParam->STEMcamera) {
       if (camParam->maxScanRate > 0.) {
@@ -515,7 +516,7 @@ void CComplexTasks::LowerMagIfNeeded(int maxMagInd, float calIntSafetyFac,
         sizeY = (conSet->bottom - conSet->top) / conSet->binning;
         anyVirt = mCamera->AnyVirtualChannelsSelected(camParam, conSet);
         mCamera->ComputePixelTime(camParam, sizeX, sizeY, conSet->lineSyncOrPattern,
-          (float)conSet->binning * mShiftManager->GetPixelSize(camera, maxMagInd), 
+          (float)conSet->binning * mShiftManager->GetPixelSize(camera, maxMagInd),
           camParam->maxScanRate, conSet->exposure, delBeam, newDelta,
           anyVirt, (anyVirt && camParam->DE_camType) ? conSet->skipAfterOrPtRpt : 1);
         SEMTrace('t', "LowerMagIfNeeded: STEM exposure set to %.3f", conSet->exposure);
@@ -528,7 +529,7 @@ void CComplexTasks::LowerMagIfNeeded(int maxMagInd, float calIntSafetyFac,
 
     if (realCamera)
       mUsersIntensityZoom[mMagStackInd] = mScope->GetIntensityZoom();
-    
+
     // Divide the given safety factor by the cumulative safety factor to get
     // remaining factor to change
     safetyFactor = calIntSafetyFac / mCumulSafetyFactor;
@@ -536,9 +537,9 @@ void CComplexTasks::LowerMagIfNeeded(int maxMagInd, float calIntSafetyFac,
       safetyFactor = 1.;
 
     // Do we need to open the GIF slit more?
-    if (mWinApp->GetFilterMode() && filtParams->slitIn && 
+    if (mWinApp->GetFilterMode() && filtParams->slitIn &&
       filtParams->slitWidth < mMinLMSlitWidth) {
-      
+
       // Save the slit width, set up an intensity change factor that is
       // the product of slit width ratio and a safety factor
       mSavedSlitWidth[mMagStackInd] = filtParams->slitWidth;
@@ -547,12 +548,12 @@ void CComplexTasks::LowerMagIfNeeded(int maxMagInd, float calIntSafetyFac,
       mWinApp->mFilterControl.UpdateSettings();
       mCamera->SetupFilter();
     }
-    
+
     // Can it be done with beam intensity calibration?
     delBeam = mShiftManager->GetPixelSize(camera, magInd) /
       mShiftManager->GetPixelSize(camera, maxMagInd);
     delBeam *= delBeam * safetyFactor * slitFactor;
-    error = mWinApp->mBeamAssessor->AssessBeamChange(delBeam, newIntensity, 
+    error = mWinApp->mBeamAssessor->AssessBeamChange(delBeam, newIntensity,
       newDelta, -1);
     if (!error || error == BEAM_ENDING_OUT_OF_RANGE) {
 
@@ -583,7 +584,7 @@ void CComplexTasks::LowerMagIfNeeded(int maxMagInd, float calIntSafetyFac,
         safetyFactor = 1.;
       newDelta = safetyFactor * slitFactor;
     }
-    
+
     mCumulSafetyFactor *= safetyFactor;
 
     // Scale down exposure, adjusting by dead time.  Also apply minima and constraints
@@ -592,7 +593,7 @@ void CComplexTasks::LowerMagIfNeeded(int maxMagInd, float calIntSafetyFac,
     exposure = (float)newDelta * (conSet->exposure - deadTime) + deadTime;
     exposure = B3DMAX(exposure, mMinTaskExposure);
     tryExp = exposure;
-    mCamera->ConstrainExposureTime(camParam, false, conSet->K2ReadMode, conSet->binning, 
+    mCamera->ConstrainExposureTime(camParam, false, conSet->K2ReadMode, conSet->binning,
       mCamera->MakeAlignSaveFlags(false, conSet->alignFrames > 0, conSet->useFrameAlign),
       1, exposure, frameTime);
 
@@ -608,13 +609,13 @@ void CComplexTasks::LowerMagIfNeeded(int maxMagInd, float calIntSafetyFac,
       conSet->exposure = exposure;
     actualFac = conSet->exposure / mSavedExposure[mMagStackInd];
     if (deadTime < mSavedExposure[mMagStackInd] - 0.0001)
-      actualFac = (conSet->exposure - deadTime) / 
+      actualFac = (conSet->exposure - deadTime) /
       (mSavedExposure[mMagStackInd] - deadTime);
-    
+
     SEMTrace('t', "Total intensity change of %.3f needed; exposure change by %.3f needed\r\n"
       "effective exposure changed by %.3f to %.3f\r\n"
       "safety factor %.3f; cumulative safety factor %.3f; slit factor %.3f",
-      delBeam, newDelta, actualFac, 
+      delBeam, newDelta, actualFac,
       conSet->exposure, safetyFactor, mCumulSafetyFactor, slitFactor);
   }
 
@@ -653,7 +654,7 @@ void CComplexTasks::RestoreMagIfNeeded()
       filtParams->slitWidth = mSavedSlitWidth[mMagStackInd];
       mWinApp->mFilterControl.UpdateSettings();
       mCamera->SetupFilter();
-    }  
+    }
   }
 }
 
@@ -676,7 +677,7 @@ int CComplexTasks::FindMaxMagInd(float inField, int curMag)
   if (curMag == -2)
     curMag = mScope->FastMagIndex();
 
-  if (curMag > 0 && mScope->GetUseInvertedMagRange() && 
+  if (curMag > 0 && mScope->GetUseInvertedMagRange() &&
     UtilMagInInvertedRange(curMag, camParam->GIF)) {
       UtilInvertedMagRangeLimits(camParam->GIF, limlo, limhi);
       for (iMag = limlo; iMag < limhi; iMag++) {
@@ -689,9 +690,9 @@ int CComplexTasks::FindMaxMagInd(float inField, int curMag)
 
   mWinApp->GetMagRangeLimits(iCam, lowestInd, limlo, limhi);
   for (iMag = limhi; iMag > lowestInd; iMag--) {
-    thisMag = B3DCHOICE(camParam->GIF, magTab[iMag].EFTEMmag, 
+    thisMag = B3DCHOICE(camParam->GIF, magTab[iMag].EFTEMmag,
       camParam->STEMcamera ? magTab[iMag].STEMmag : magTab[iMag].mag);
-    prevMag = B3DCHOICE(camParam->GIF, magTab[iMag - 1].EFTEMmag, 
+    prevMag = B3DCHOICE(camParam->GIF, magTab[iMag - 1].EFTEMmag,
       camParam->STEMcamera ? magTab[iMag - 1].STEMmag : magTab[iMag - 1].mag);
     if (!thisMag || thisMag < prevMag)
       continue;
@@ -735,7 +736,7 @@ void CComplexTasks::StartCaptureAddDose(int conSet)
     EDMpct = mCamera->LastEDMDutyPercent();
   }
 
-  dose = mWinApp->mBeamAssessor->GetElectronDose(spotSize, intensity, 
+  dose = mWinApp->mBeamAssessor->GetElectronDose(spotSize, intensity,
     mCamera->SpecimenBeamExposure(mWinApp->GetCurrentCamera(), &mConSets[conSet]), probe,
     mCamera->HasDoseModulator() ? EDMpct : 100.f);
   mTotalDose += dose;
@@ -767,7 +768,7 @@ void CComplexTasks::ResetShiftRealign()
 
   // Increase mag if shift is small enough
   mScope->GetLDCenteredShift(ISX, ISY);
-  if (mShiftManager->RadialShiftOnSpecimen(ISX, ISY, 
+  if (mShiftManager->RadialShiftOnSpecimen(ISX, ISY,
     mScope->GetMagIndex()) < mRSRAHigherMagCriterion)
     newMagInd++;
 
@@ -798,7 +799,7 @@ void CComplexTasks::RSRANextTask(int param)
   int stackInd = mMagStackInd > 0 ? mMagStackInd - 1 : 0;
   if (!mDoingRSRA)
     return;
-  
+
   switch (param) {
   case RSRA_FIRST_SHOT:
     mImBufs->mCaptured = BUFFER_TRACKING;
@@ -813,7 +814,7 @@ void CComplexTasks::RSRANextTask(int param)
 
   case RSRA_RESETTING:
     // Change the mag after exposure if set for that, and this is last chance
-    if (mRSRAActPostExposure && mSavedMagInd[stackInd] && 
+    if (mRSRAActPostExposure && mSavedMagInd[stackInd] &&
       mRSRAIteration == mMaxRSRAIterations)
       mCamera->QueueMagChange(mSavedMagInd[stackInd]);
     StartCaptureAddDose(mLowMagConSet);
@@ -829,7 +830,7 @@ void CComplexTasks::RSRANextTask(int param)
       // If still able to iterate, find radial image shift distance and
       // iterate if it is greater than criterion
       mScope->GetLDCenteredShift(ISX, ISY);
-      radialIS = mShiftManager->RadialShiftOnSpecimen(ISX, ISY, 
+      radialIS = mShiftManager->RadialShiftOnSpecimen(ISX, ISY,
         mScope->GetMagIndex());
       if (radialIS > mRSRACriterion ||
         (mRSRAUserCriterion >= 0. && radialIS > mRSRAUserCriterion)) {
@@ -844,13 +845,13 @@ void CComplexTasks::RSRANextTask(int param)
           return;
         }
         mWinApp->AddIdleTask(TaskRSRABusy, TASK_RESET_REALIGN, RSRA_RESETTING, 0);
-        
+
         // Copy back to A so it is correlated against
         mBufferManager->CopyImageBuffer(1, 0);
         return;
       }
     }
-    
+
     StopResetShiftRealign();
     return;
   }
@@ -861,7 +862,7 @@ void CComplexTasks::StopResetShiftRealign()
   if (!mDoingRSRA)
     return;
   RestoreMagIfNeeded();
-  
+
   mDoingRSRA = false;
   mSkipNextBeamShift = false;
   mCamera->SetRequiredRoll(0);
@@ -873,7 +874,7 @@ void CComplexTasks::StopResetShiftRealign()
 int CComplexTasks::TaskRSRABusy()
 {
   CSerialEMApp *winApp = (CSerialEMApp *)AfxGetApp();
-  return (winApp->mCamera->CameraBusy() || winApp->mShiftManager->ResettingIS()) ? 
+  return (winApp->mCamera->CameraBusy() || winApp->mShiftManager->ResettingIS()) ?
     1 : 0;
 }
 
@@ -906,7 +907,7 @@ BOOL CComplexTasks::WalkUp(float targetAngle, int anchorBuf, float anchorAngle)
       "tilt angle");
     return false;
   }
- 
+
   // Don't do it if too close to target
   if (fabs(targetAngle - mWalkStartAngle) < 0.5 * mMinWalkInterval) {
     mScope->TiltTo(targetAngle);
@@ -918,11 +919,11 @@ BOOL CComplexTasks::WalkUp(float targetAngle, int anchorBuf, float anchorAngle)
   mWalkAngles = new double[maxSteps];
   double cumAngle = mWalkStartAngle;
   int iDir = targetAngle > mWalkStartAngle ? 1 : -1;
-  
+
   // Have to align to buffer past the roll except in bidir series return phase
   mWalkAlignBuffer = mBufferManager->GetShiftsOnAcquire() + 1;
   mWUSavedShiftsOnAcquire = -1;
-  if (mWalkAlignBuffer == 1 || (mWinApp->DoingTiltSeries() && 
+  if (mWalkAlignBuffer == 1 || (mWinApp->DoingTiltSeries() &&
     mWinApp->mTSController->GetBidirSeriesPhase() == BIDIR_RETURN_PHASE)) {
     mWalkAlignBuffer = 2;
     mWUSavedShiftsOnAcquire = mBufferManager->GetShiftsOnAcquire();
@@ -962,7 +963,7 @@ BOOL CComplexTasks::WalkUp(float targetAngle, int anchorBuf, float anchorAngle)
       if (fabs(mWalkAngles[i] - anchorAngle) < interval) {
         interval = fabs(mWalkAngles[i] - anchorAngle);
         mWUAnchorIndex = i + 1;
-      } 
+      }
     }
   }
 
@@ -1007,7 +1008,7 @@ void CComplexTasks::WalkUpNextTask(int param)
   switch (param) {
   case WALKUP_REVERSED:
     mCamera->SetRequiredRoll(1);
-    
+
     // Start the first picture, but first queue the tilt
     mPretilted = mWUActPostExposure;
     if (mWUActPostExposure) {
@@ -1021,7 +1022,7 @@ void CComplexTasks::WalkUpNextTask(int param)
     mWinApp->AddIdleTask(TaskWalkUpBusy, TASK_WALKUP, WALKUP_IMAGE, 0);
     return;
 
-  
+
   case WALKUP_RESET:
 
     // When reset is done, do tilt if necessary
@@ -1033,7 +1034,7 @@ void CComplexTasks::WalkUpNextTask(int param)
         TiltAfterStageMove((float)mWalkAngles[mWalkIndex], false);
       else
         mScope->TiltTo(mWalkAngles[mWalkIndex]);
-      mWinApp->AddIdleTask(TaskWalkUpBusy, TASK_WALKUP, WALKUP_TILTED, 
+      mWinApp->AddIdleTask(TaskWalkUpBusy, TASK_WALKUP, WALKUP_TILTED,
         mNeedTiltAfterReset ? 0 : 60000);
       mNeedTiltAfterReset = false;
       return;
@@ -1041,16 +1042,16 @@ void CComplexTasks::WalkUpNextTask(int param)
     break;
 
   case WALKUP_IMAGE:
-    
+
     mImBufs->mCaptured = BUFFER_TRACKING;
-    
+
     // If got an anchor at regular mag, save the anchor and lower mag again
     if (mWUGettingAnchor) {
       mBufferManager->CopyImageBuffer(0, mWUAnchorBuf);
       mImBufs[mWUAnchorBuf].mCaptured = BUFFER_ANCHOR;
       mWUGettingAnchor = false;
       LowerMagIfNeeded(mWalkMagInd, 0.8f, 0.6f, TRACK_CONSET);
-    
+
     } else {
 
       // Align image to previous if past first
@@ -1061,7 +1062,7 @@ void CComplexTasks::WalkUpNextTask(int param)
 
       // Copy image to align buffer
       mBufferManager->CopyImageBuffer(0, mWalkAlignBuffer);
-    
+
       // If this is anchor, copy it to requested buffer if we are at regular mag
       if (mWUAnchorBuf >= 0 && mWalkIndex == mWUAnchorIndex) {
         if (!InLowerMag() && !(mWinApp->LowDoseMode() && mWalkUseViewInLD)) {
@@ -1083,7 +1084,7 @@ void CComplexTasks::WalkUpNextTask(int param)
     // Test the image shift for out of range (???) and reset if needed
     mScope->GetLDCenteredShift(shiftX, shiftY);
     if (mWalkIndex < mNumWalkAngles && mShiftManager->RadialShiftOnSpecimen
-      (shiftX, shiftY, mScope->FastMagIndex()) > 
+      (shiftX, shiftY, mScope->FastMagIndex()) >
       (mWinApp->LowDoseMode() ? mWULowDoseISLimit : mWalkShiftLimit)) {
       ResetShiftRealign();
       mWalkDidResetShift = true;
@@ -1097,13 +1098,13 @@ void CComplexTasks::WalkUpNextTask(int param)
         TiltAfterStageMove((float)mWalkAngles[mWalkIndex], false);
       else
         mScope->TiltTo(mWalkAngles[mWalkIndex]);
-      mWinApp->AddIdleTask(TaskWalkUpBusy, TASK_WALKUP, WALKUP_TILTED, 
+      mWinApp->AddIdleTask(TaskWalkUpBusy, TASK_WALKUP, WALKUP_TILTED,
         mNeedTiltAfterReset ? 0 : 60000);
       mNeedTiltAfterReset = false;
       return;
     }
     break;
-    
+
   case WALKUP_TILTED:
     if (mWinApp->GetSTEMMode() && !mScope->GetProbeMode() && mWalkIndex < mNumWalkAngles
       && fabs(mWalkAngles[mWalkIndex] - mWULastFocusAngle) >= mWalkSTEMfocusInterval &&
@@ -1121,7 +1122,7 @@ void CComplexTasks::WalkUpNextTask(int param)
 
     // Queue a tilt if appropriate
     if (mWUActPostExposure && mWalkIndex < mNumWalkAngles && !mNeedTiltAfterReset &&
-      !(mWalkIndex == mWUAnchorIndex &&  
+      !(mWalkIndex == mWUAnchorIndex &&
       (InLowerMag() || (mWinApp->LowDoseMode() && mWalkUseViewInLD)))) {
       smi.axisBits = axisA;
       smi.alpha = mWalkAngles[mWalkIndex];
@@ -1157,10 +1158,10 @@ int CComplexTasks::TaskWalkUpBusy()
   int stage = winApp->mScope->StageBusy();
   if (stage < 0)
     return -1;
-  return (stage > 0 || winApp->mComplexTasks->DoingResetShiftRealign() || 
+  return (stage > 0 || winApp->mComplexTasks->DoingResetShiftRealign() ||
     winApp->mCamera->CameraBusy() || winApp->mComplexTasks->ReversingTilt() ||
     winApp->mComplexTasks->DoingTiltAfterMove() || winApp->mFocusManager->DoingFocus()) ?
-    1 : 0; 
+    1 : 0;
 }
 
 
@@ -1220,7 +1221,7 @@ BOOL CComplexTasks::ReverseTilt(int inDirection)
       return false;
   }
   SEMTrace('1', "Doing reverse tilt to %.2f at %.2f", mRTReverseAngle, mRTStartAngle);
-    
+
   // Set flag and states now in case of mag change
   mReversingTilt = true;
   mWinApp->UpdateBufferWindows();
@@ -1277,7 +1278,7 @@ void CComplexTasks::ReverseTiltNextTask(int param)
       mScope->SetSkipNextBeamShift(true);
     mShiftManager->AutoAlign(1, 0);
     mScope->SetSkipNextBeamShift(false);
-    
+
     StopReverseTilt();
     return;
   }
@@ -1330,7 +1331,7 @@ void CComplexTasks::FindEucentricity(int coarseFine)
     if (mHitachiWithoutZ) {
       mess.Format("If you want to adjust for backlash, turn the Z knob\n"
         "%d grooves left, then right by about\n"
-        "the same amount, stopping at the nearest groove", 
+        "the same amount, stopping at the nearest groove",
         B3DNINT(mManualHitachiBacklash / mZMicronsPerDialMark));
       AfxMessageBox(mess, MB_OK | MB_ICONINFORMATION);
     }
@@ -1361,7 +1362,7 @@ void CComplexTasks::FindEucentricity(int coarseFine)
           curAngle = firstAngle;
           numSteps = 1;
           for (;;) {
-            increm = B3DMAX(mMaxFEFineInterval * (float)cos(DTOR * curAngle), 
+            increm = B3DMAX(mMaxFEFineInterval * (float)cos(DTOR * curAngle),
               mMinWalkInterval);
             numSteps++;
             if (curAngle + increm >= mMaxFEFineAngle)
@@ -1419,7 +1420,7 @@ void CComplexTasks::FindEucentricity(int coarseFine)
 
 
     // Make a conset for tracking unless another routine did
-    if ((!mMagStackInd || mConSetModified[mMagStackInd - 1] != TRACK_CONSET) && 
+    if ((!mMagStackInd || mConSetModified[mMagStackInd - 1] != TRACK_CONSET) &&
       !((coarseFine & FIND_EUCENTRICITY_COARSE) && mFENextCoarseConSet >= 0))
       MakeTrackingConSet(conSet, targetSize);
     mFEIterationCount = 0;
@@ -1464,9 +1465,9 @@ void CComplexTasks::FindEucentricity(int coarseFine)
     // change the mag if the saved mag index is bigger than the fine one or if in Low Dose
     // to give it a chance to switch between S and V
     // Have to do it the long way to keep beam intensity happy
-    if (!(mFECoarseFine & REFINE_EUCENTRICITY_ALIGN) && 
+    if (!(mFECoarseFine & REFINE_EUCENTRICITY_ALIGN) &&
       (((mSavedMagInd[stackInd] > mMaxFEFineMagInd || mWinApp->LowDoseMode()) &&
-      mMaxFEFineMagInd != mMaxFECoarseMagInd) || 
+      mMaxFEFineMagInd != mMaxFECoarseMagInd) ||
       (mFEUseTrialInLD && mWinApp->LowDoseMode()))) {
       if (mFENextCoarseConSet >= 0)
         mFENextCoarseConSet = -1;
@@ -1502,10 +1503,10 @@ void CComplexTasks::FindEucentricity(int coarseFine)
     mWinApp->AddIdleTask(TASK_EUCENTRICITY, action, 0);
     return;
   }
-  
+
   // If image shift is too big, reset it
   mScope->GetLDCenteredShift(ISX, ISY);
-  if (mShiftManager->RadialShiftOnSpecimen(ISX, ISY, mScope->GetMagIndex()) > 
+  if (mShiftManager->RadialShiftOnSpecimen(ISX, ISY, mScope->GetMagIndex()) >
     mFEResetISThreshold) {
     if (mShiftManager->ResetImageShift(true, false)) {
       EucentricityCleanup(1);
@@ -1558,7 +1559,7 @@ void CComplexTasks::EucentricityNextTask(int param)
       DoubleMoveStage(mFECurrentZ, mFEBacklashZ, true, mFEInitialAngle, backlashTilt,
         true, FE_COARSE_MOVED);
     return;
-    
+
   case FE_COARSE_RESTORE_Z:
     StopEucentricity();
     return;
@@ -1587,7 +1588,7 @@ void CComplexTasks::EucentricityNextTask(int param)
       if (mDebugRoughEucen && mFEDebugBuffer < MAX_BUFFERS - 2) {
         mImBufs[0].GetTiltAngle(delZ);
         mImBufs[1].GetTiltAngle(delY);
-        PrintfToLog("Copying image %.1f to %c, ref %.1f to %c", delZ, 
+        PrintfToLog("Copying image %.1f to %c, ref %.1f to %c", delZ,
           (char)'A' + mFEDebugBuffer, delY, (char)'A' + mFEDebugBuffer + 1);
         mBufferManager->CopyImageBuffer(0, mFEDebugBuffer++);
         mBufferManager->CopyImageBuffer(1, mFEDebugBuffer++);
@@ -1600,7 +1601,7 @@ void CComplexTasks::EucentricityNextTask(int param)
       imShiftY = shiftY - mFECurRefShiftY;
 
       aInv = mShiftManager->CameraToSpecimen(mScope->FastMagIndex());
-      movedY = mConSets[mLowMagConSet].binning * 
+      movedY = mConSets[mLowMagConSet].binning *
         (aInv.ypx * shiftX - aInv.ypy * shiftY);
 
       // Use actual angle and increment to accommodate sloppiness of JEOL
@@ -1611,10 +1612,10 @@ void CComplexTasks::EucentricityNextTask(int param)
       mWinApp->VerboseAppendToLog(mVerbose, report);
 
       // If not close to target move, and not at max tilt, and not at max increment
-      // then tilt again, setting increment that will reach target but not 
+      // then tilt again, setting increment that will reach target but not
       // changing it too much
       // No point going less than 0.5 degree, though
-      if (fabs(movedY) < 0.75 * mFETargetShift && 
+      if (fabs(movedY) < 0.75 * mFETargetShift &&
         mFECurrentAngle < mFEMaxTilt - 0.5 &&
         mFECoarseIncrement < mFEMaxIncrement - 0.5) {
         deltaInc = mFETargetShift / fabs(movedY);
@@ -1646,7 +1647,7 @@ void CComplexTasks::EucentricityNextTask(int param)
     if (needTilt) {
       mFECurrentAngle = mFEReferenceAngle + mFECoarseIncrement;
       mScope->TiltTo(mFECurrentAngle, mStageXtoRestore, mStageYtoRestore);
-      mWinApp->AddIdleTask(TASK_EUCENTRICITY, FE_COARSE_MOVED, 
+      mWinApp->AddIdleTask(TASK_EUCENTRICITY, FE_COARSE_MOVED,
         B3DNINT(mStageTimeoutFactor * 30000));
       return;
     }
@@ -1657,7 +1658,7 @@ void CComplexTasks::EucentricityNextTask(int param)
     if (increment < 2. * mFEInitialIncrement)
       increment = 2. * mFEInitialIncrement;
     // SIGN?
-    delZ = (float)(-movedY * (mShiftManager->GetStageInvertsZAxis() ? -1. : 1.) / 
+    delZ = (float)(-movedY * (mShiftManager->GetStageInvertsZAxis() ? -1. : 1.) /
       (sin(DTOR * (mFEInitialAngle + increment)) - sin(DTOR * mFEInitialAngle)));
     if (mFENextCoarseConSet >= 0 && mScope->GetSimulationMode())
       B3DCLAMP(delZ, -20.f, 20.f);
@@ -1674,7 +1675,7 @@ void CComplexTasks::EucentricityNextTask(int param)
       mWinApp->AppendToLog(report, mVerbose ? LOG_OPEN_IF_CLOSED : LOG_SWALLOW_IF_CLOSED);
       mFELastCoarseFailed = true;
       if (fabs(mFECurrentZ - mFEOriginalZ) > 0.1 && !mHitachiWithoutZ)
-        DoubleMoveStage(mFEOriginalZ, mFEBacklashZ, true, 0., 0., false, 
+        DoubleMoveStage(mFEOriginalZ, mFEBacklashZ, true, 0., 0., false,
           FE_COARSE_RESTORE_Z);
       else
         StopEucentricity();
@@ -1686,7 +1687,7 @@ void CComplexTasks::EucentricityNextTask(int param)
 
     // If the increment is sufficiently less than the maximum, and also less
     // than the remaining distance to the maximum tilt, then set up to go again
-    if (mFECoarseIncrement < 0.75 * mFEMaxIncrement && 
+    if (mFECoarseIncrement < 0.75 * mFEMaxIncrement &&
       mFECoarseIncrement < mFEMaxTilt - mFECurrentAngle &&
       !(mFENextCoarseConSet >= 0 && mScope->GetSimulationMode()))
       action = FE_COARSE_MOVED;
@@ -1719,16 +1720,16 @@ void CComplexTasks::EucentricityNextTask(int param)
     }
     StopEucentricity();
     return;
-  
+
   case FE_FINE_ALIGNSHOT1:
-    
+
     // Save the image in a protected buffer, do reset if needed, otherwise
     // fall through to the setup steps
     mBufferManager->CopyImageBuffer(0, mWalkAlignBuffer);
     mScope->GetLDCenteredShift(ISX, ISY);
     if (mFEUseTrialInLD && mWinApp->LowDoseMode())
       mLowMagConSet = 2;
-    if (mShiftManager->RadialShiftOnSpecimen(ISX, ISY, mScope->GetMagIndex()) > 
+    if (mShiftManager->RadialShiftOnSpecimen(ISX, ISY, mScope->GetMagIndex()) >
       mFEResetISThreshold) {
       if (mShiftManager->ResetImageShift(true, false)) {
         EucentricityCleanup(1);
@@ -1739,7 +1740,7 @@ void CComplexTasks::EucentricityNextTask(int param)
     }
 
   case FE_FINE_RESET:
-    
+
     // Setup the fine steps
     mWinApp->SetStatusText(MEDIUM_PANE, "REFINING EUCENTRICITY");
     mFEFineIndex = 0;
@@ -1771,9 +1772,9 @@ void CComplexTasks::EucentricityNextTask(int param)
       aInv = mShiftManager->CameraToSpecimen(mScope->GetMagIndex());
 
       // More Y inversion
-      movedX = mConSets[mLowMagConSet].binning * 
+      movedX = mConSets[mLowMagConSet].binning *
         (aInv.xpx * shiftX - aInv.xpy * shiftY);
-      movedY = mConSets[mLowMagConSet].binning * 
+      movedY = mConSets[mLowMagConSet].binning *
         (aInv.ypx * shiftX - aInv.ypy * shiftY);
     }
     cMat = mShiftManager->IStoSpecimen(mScope->GetMagIndex());
@@ -1802,15 +1803,15 @@ void CComplexTasks::EucentricityNextTask(int param)
     mAngleCosines[mFEFineIndex++] = (float)cos(radians);
 
     // Test for terminating
-    if (mFEFineIndex < mFENumFineSteps && 
+    if (mFEFineIndex < mFENumFineSteps &&
       fabs((double)(mFEFineShifts[mFEFineIndex - 1] - mFEFineShifts[0])) < mFEMaxFineIS) {
-      
+
       // Not terminating yet: go to next tilt or get next picture
       if (mFEActPostExposure)
         EucentricityFineCapture();
       else {
         mScope->TiltTo(mFETargetAngles[mFEFineIndex], mStageXtoRestore, mStageYtoRestore);
-        mWinApp->AddIdleTask(TASK_EUCENTRICITY, FE_FINE_TILTED, 
+        mWinApp->AddIdleTask(TASK_EUCENTRICITY, FE_FINE_TILTED,
           B3DNINT(mStageTimeoutFactor * 30000));
       }
       return;
@@ -1828,7 +1829,7 @@ void CComplexTasks::EucentricityNextTask(int param)
         mFEFineIndex, &delZ, &delY, &intcp);
       yZeroGen = delY + intcp;
       delY = -intcp;
-        
+
       // 3/18/04: This is all useless but can't bear to delete it yet - the general
       // solution gave slightly more consistent fits for lateral offset; the offset
       // is quite sensitive to the assume yzero and so it looks like the error in the
@@ -1841,8 +1842,8 @@ void CComplexTasks::EucentricityNextTask(int param)
         }
         if ((mFEFineAngles[i] < 0. && mFEFineAngles[i - 1] > 0.) ||
           (mFEFineAngles[i] > 0. && mFEFineAngles[i - 1] < 0.)) {
-          yZero = (float)((mFEFineAngles[i] * mFEFineShifts[i - 1] - 
-            mFEFineAngles[i - 1] * mFEFineShifts[i]) / 
+          yZero = (float)((mFEFineAngles[i] * mFEFineShifts[i - 1] -
+            mFEFineAngles[i - 1] * mFEFineShifts[i]) /
             (mFEFineAngles[i] - mFEFineAngles[i - 1]));
           break;
         }
@@ -1874,15 +1875,15 @@ void CComplexTasks::EucentricityNextTask(int param)
     if (mShiftManager->GetStageInvertsZAxis())
       delZ = -delZ;
     report.Format("Refining eucentricity: Fit to %d positions gives tilt axis Z"
-      " displacement\r\n of %.2f microns and lateral displacement of %.2f microns", 
+      " displacement\r\n of %.2f microns and lateral displacement of %.2f microns",
       mFEFineIndex, delZ, delY);
     mFEIterationCount++;
-    mRepeatFine = (float)mFEFineIndex / mFENumFineSteps < 0.74 && 
+    mRepeatFine = (float)mFEFineIndex / mFENumFineSteps < 0.74 &&
       mFEIterationCount < mFEIterationLimit;
-    
+
     // Save the dely as the last axis offset if really finished
     if (!mRepeatFine)
-      mLastAxisOffset = delY + 
+      mLastAxisOffset = delY +
         (float)(mScope->GetShiftToTiltAxis() ? mScope->GetTiltAxisOffset() : 0.);
     action = mVerbose ? LOG_OPEN_IF_CLOSED : LOG_SWALLOW_IF_CLOSED;
     if (mVerbose || !mRepeatFine || mHitachiWithoutZ)
@@ -1903,13 +1904,13 @@ void CComplexTasks::EucentricityNextTask(int param)
     }
 
     mScope->GetStagePosition(stageX, stageY, mFECurrentZ);
-    
+
     backlashZ = 0;
     if (-delZ * mFEBacklashZ > 0)
       backlashZ = mFEBacklashZ;
     if (mWinApp->GetSTEMMode())
       mScope->IncDefocus(-delZ / mWinApp->mFocusManager->GetSTEMdefocusToDelZ(-1));
-    DoubleMoveStage(mFECurrentZ - delZ, backlashZ, true, 0., 0., false, 
+    DoubleMoveStage(mFECurrentZ - delZ, backlashZ, true, 0., 0., false,
       FE_FINE_LAST_MOVE);
     return;
 
@@ -1920,7 +1921,7 @@ void CComplexTasks::EucentricityNextTask(int param)
       FindEucentricity(FIND_EUCENTRICITY_FINE);
     else if (mFECoarseFine & REFINE_EUCENTRICITY_ALIGN) {
       mScope->TiltTo(mFEUsersAngle, mStageXtoRestore, mStageYtoRestore);
-      mWinApp->AddIdleTask(TASK_EUCENTRICITY, FE_FINE_ALIGNTILT, 
+      mWinApp->AddIdleTask(TASK_EUCENTRICITY, FE_FINE_ALIGNTILT,
         B3DNINT(mStageTimeoutFactor * 30000));
     } else
       StopEucentricity();
@@ -1955,8 +1956,8 @@ void CComplexTasks::EucentricityFineCapture()
     smi.x = mStageXtoRestore;
     smi.y = mStageYtoRestore;
     mCamera->QueueStageMove(smi, delay, false, mStageXtoRestore > EXTRA_VALUE_TEST);
-  } 
-  
+  }
+
   // Start capture and return
   StartCaptureAddDose(mLowMagConSet);
   mWinApp->AddIdleTask(TASK_EUCENTRICITY, FE_FINE_SHOT, 0);
@@ -1976,7 +1977,7 @@ void CComplexTasks::DoubleMoveStage(double finalZ, float backlashZ, BOOL doZ,
     mWinApp->ErrorOccurred(1);
     return;
   }
-  
+
   smi.axisBits = 0;
   if (doZ) {
     smi.axisBits |= axisZ;
@@ -1992,7 +1993,7 @@ void CComplexTasks::DoubleMoveStage(double finalZ, float backlashZ, BOOL doZ,
   smi.y = mStageYtoRestore;
   mScope->MoveStage(smi, backlashZ != 0. || backlashTilt != 0., false, 0, false,
     mStageXtoRestore > EXTRA_VALUE_TEST);
-  mWinApp->AddIdleTask(TASK_EUCENTRICITY, nextAction, 
+  mWinApp->AddIdleTask(TASK_EUCENTRICITY, nextAction,
     B3DNINT(mStageTimeoutFactor * (HitachiScope ? 120000 : 30000)));
 }
 
@@ -2026,7 +2027,7 @@ void CComplexTasks::StopEucentricity()
     if (!mScope->WaitForStageReady(10000)) {
       mScope->TiltTo(mFEUsersAngle, mStageXtoRestore, mStageYtoRestore);
       mTiltingBack = 1;
-      mWinApp->AddIdleTask(TASK_EUCENTRICITY, 0, 
+      mWinApp->AddIdleTask(TASK_EUCENTRICITY, 0,
         B3DNINT(mStageTimeoutFactor * (HitachiScope ? 120000 : 30000)));
       return;
     }
@@ -2049,7 +2050,7 @@ void CComplexTasks::ReportManualZChange(float delZ, const char *roughFine)
   int overshoot;
   int backlash = B3DNINT(mManualHitachiBacklash / mZMicronsPerDialMark);
   mess.Format("%s eucentricity: Z change of %.2f microns is needed: %.1f grooves"
-    " on knob %s", roughFine, delZ, fabs(delZ / mZMicronsPerDialMark), 
+    " on knob %s", roughFine, delZ, fabs(delZ / mZMicronsPerDialMark),
     delZ > 0 ? "left" : "right");
   mWinApp->AppendToLog(mess);
   delZ /= mZMicronsPerDialMark;
@@ -2059,7 +2060,7 @@ void CComplexTasks::ReportManualZChange(float delZ, const char *roughFine)
     overshoot = (int)ceil(fabs(delZ));
     mess.Format("Turn Z knob left %.1f grooves\n\n"
     "Or, if you adjusted for backlash, turn it\n"
-    " left %d grooves then right %.1f grooves", fabs(delZ), 
+    " left %d grooves then right %.1f grooves", fabs(delZ),
     backlash + overshoot, backlash + overshoot - fabs(delZ));
   }
   AfxMessageBox(mess, MB_OK | MB_ICONINFORMATION);
@@ -2082,7 +2083,7 @@ void CComplexTasks::TiltAfterStageMove(float angle, bool reverseTilt)
   // Set flag and states now in case of mag change
   mDoingTASM = true;
   mWinApp->UpdateBufferWindows();
-  mWinApp->SetStatusText(MEDIUM_PANE, reverseTilt ? "TILT AFTER REVERSAL" : 
+  mWinApp->SetStatusText(MEDIUM_PANE, reverseTilt ? "TILT AFTER REVERSAL" :
     "TILT AFTER STAGE MOVE");
 
   // Make a conset for tracking unless another routine did
@@ -2102,7 +2103,7 @@ void CComplexTasks::TiltAfterStageMove(float angle, bool reverseTilt)
   }
 
   StartCaptureAddDose(mLowMagConSet);
-  mWinApp->AddIdleTask(SEMStageCameraBusy, TASK_TILT_AFTER_MOVE, 
+  mWinApp->AddIdleTask(SEMStageCameraBusy, TASK_TILT_AFTER_MOVE,
     actionStarted, 0);
 }
 
@@ -2112,7 +2113,7 @@ void CComplexTasks::TASMNextTask(int param)
   int stackInd = mMagStackInd > 0 ? mMagStackInd - 1 : 0;
   if (!mDoingTASM)
     return;
-  
+
   mImBufs->mCaptured = BUFFER_TRACKING;
   switch (param) {
   case TASM_FIRST_SHOT:
@@ -2124,7 +2125,7 @@ void CComplexTasks::TASMNextTask(int param)
     if (mRTActPostExposure && mSavedMagInd[stackInd])
       mCamera->QueueMagChange(mSavedMagInd[stackInd]);
     StartCaptureAddDose(mLowMagConSet);
-    mWinApp->AddIdleTask(SEMStageCameraBusy, TASK_TILT_AFTER_MOVE, 
+    mWinApp->AddIdleTask(SEMStageCameraBusy, TASK_TILT_AFTER_MOVE,
       TASM_SECOND_SHOT, 0);
     return;
 
@@ -2133,7 +2134,7 @@ void CComplexTasks::TASMNextTask(int param)
       mScope->SetSkipNextBeamShift(true);
     mShiftManager->AutoAlign(1, 0);
     mScope->SetSkipNextBeamShift(false);
-    
+
     StopTiltAfterMove();
     return;
   }
@@ -2166,7 +2167,7 @@ void CComplexTasks::StopTiltAfterMove()
 
 // Start the routine with the given backlash to apply, and flags to call Navigator at
 // end and to show buffer C when done
-void CComplexTasks::BacklashAdjustStagePos(float backX, float backY, bool callNav, 
+void CComplexTasks::BacklashAdjustStagePos(float backX, float backY, bool callNav,
                                            bool showC)
 {
   int targetSize = B3DMAX(512, mCamera->TargetSizeForTasks());
@@ -2176,7 +2177,7 @@ void CComplexTasks::BacklashAdjustStagePos(float backX, float backY, bool callNa
   // Set flag and states now in case of mag change
   mDoingBASP = 1 + (callNav ? 2 : 0) + (showC ? 4 : 0);
   mWinApp->UpdateBufferWindows();
-  mWinApp->SetStatusText(MEDIUM_PANE, "ADJUSTING FOR BACKLASH"); 
+  mWinApp->SetStatusText(MEDIUM_PANE, "ADJUSTING FOR BACKLASH");
 
   // Make a conset for tracking
   MakeTrackingConSet(conSet, targetSize);
@@ -2186,7 +2187,7 @@ void CComplexTasks::BacklashAdjustStagePos(float backX, float backY, bool callNa
   mBASPBackX = backX;
   mBASPBackY = backY;
   StartCaptureAddDose(mLowMagConSet);
-  mWinApp->AddIdleTask(SEMStageCameraBusy, TASK_BACKLASH_ADJUST, BASP_FIRST_SHOT, 0); 
+  mWinApp->AddIdleTask(SEMStageCameraBusy, TASK_BACKLASH_ADJUST, BASP_FIRST_SHOT, 0);
 }
 
 // Next task for backlash adjust
@@ -2195,12 +2196,12 @@ void CComplexTasks::BASPNextTask(int param)
   float shiftX, shiftY;
   CString report;
   StageMoveInfo smi;
-  ScaleMat bMat = mShiftManager->StageToCamera(mWinApp->GetCurrentCamera(), 
+  ScaleMat bMat = mShiftManager->StageToCamera(mWinApp->GetCurrentCamera(),
     mScope->FastMagIndex());
   ScaleMat bInv = MatInv(bMat);
   if (!mDoingBASP)
     return;
-  
+
   mImBufs->mCaptured = BUFFER_TRACKING;
   switch (param) {
   case BASP_FIRST_SHOT:
@@ -2224,11 +2225,11 @@ void CComplexTasks::BASPNextTask(int param)
     mScope->GetStagePosition(smi.x, smi.y, smi.z);
 
     // Get the change in stage position since the start.  This is the right sign because
-    // if the 
+    // if the
     mBASPDeltaX = (float)(smi.x - mBASPDeltaX);
     mBASPDeltaY = (float)(smi.y - mBASPDeltaY);
 
-    // Get the alignment shift, convert to a stage shift and subtract it from 
+    // Get the alignment shift, convert to a stage shift and subtract it from
     // overall negative is used as in NavHelper and ShiftManager mouse shifting
     // negative is used for Y component because of Y inversion of image as in NavHelper
     mImBufs->mImage->getShifts(shiftX, shiftY);
@@ -2276,7 +2277,7 @@ void CComplexTasks::StopBacklashAdjust()
 
 // Start the procedure: which type to use, maximum shift or negative fraction of FOV
 // and the search limits
-int CComplexTasks::FindLowDoseShiftOffset(bool searchToView, float maxMicrons, 
+int CComplexTasks::FindLowDoseShiftOffset(bool searchToView, float maxMicrons,
   float maxPctCng, float maxRot)
 {
   float bigPixel, camSize, field, highPixel, splitRatio, pixel, ratio, lastRatio = 1.;
@@ -2307,7 +2308,7 @@ int CComplexTasks::FindLowDoseShiftOffset(bool searchToView, float maxMicrons,
   bigPixel = mShiftManager->GetPixelSize(camera, bigParams->magIndex);
 
   // Test for whether a two-step procedure should be used
-  if (bigParams->magIndex >= mScope->GetLowestMModeMagInd() && 
+  if (bigParams->magIndex >= mScope->GetLowestMModeMagInd() &&
     mLDSOHigherConsNum == PREVIEW_CONSET) {
     highPixel = mShiftManager->GetPixelSize(camera, highParams->magIndex);
     if (bigPixel / highPixel >= mLDSOTwoStepMinRatio) {
@@ -2338,7 +2339,7 @@ int CComplexTasks::FindLowDoseShiftOffset(bool searchToView, float maxMicrons,
         pixel = mShiftManager->GetPixelSize(camera, mag);
         ratio = bigPixel / pixel;
         if (lastRatio < splitRatio && ratio >= splitRatio) {
-          if (splitRatio - lastRatio < 0.2 * (ratio - splitRatio) || 
+          if (splitRatio - lastRatio < 0.2 * (ratio - splitRatio) ||
             ratio >= mLDSOTwoStepMinRatio) {
             mLDSOMiddleMag = mag - 1;
           } else if (0.2 * (splitRatio - lastRatio) > ratio - splitRatio) {
@@ -2351,7 +2352,7 @@ int CComplexTasks::FindLowDoseShiftOffset(bool searchToView, float maxMicrons,
         }
         lastRatio = ratio;
       }
-      SEMTrace('1', "split %.2f ratio %.2f last %.2f mag %d cons %d area %d", splitRatio, 
+      SEMTrace('1', "split %.2f ratio %.2f last %.2f mag %d cons %d area %d", splitRatio,
         ratio, lastRatio, mLDSOMiddleMag, mLDSOModifyConsNum, mLDSOModifiedArea);
 
       // Figure out the intensity change and bail out of two-step if it can't be done
@@ -2482,9 +2483,9 @@ void CComplexTasks::LDSONextTask(int param)
       mImBufs->mImage->getShifts(xShift, yShift);
       mImBufs[2].mImage->getSize(nx, ny);
       mImBufs[2].mImage->Lock();
-      fillVal = imageEdgeMean(mImBufs[2].mImage->getData(), mImBufs[2].mImage->getType(), 
+      fillVal = imageEdgeMean(mImBufs[2].mImage->getData(), mImBufs[2].mImage->getType(),
         nx, 0, nx - 1, 0, ny - 1);
-      ProcShiftInPlace((short *)mImBufs[2].mImage->getData(), 
+      ProcShiftInPlace((short *)mImBufs[2].mImage->getData(),
         mImBufs[2].mImage->getType(), nx, ny, B3DNINT(xShift), B3DNINT(yShift), fillVal);
 
       // Copy full middle shot to A to align lower mag to it, copy zoomed down high mag to

@@ -1,7 +1,6 @@
 // TiltWindow.cpp:        Has controls for tilting and setting increments
 //
-// Copyright (C) 2003 by Boulder Laboratory for 3-Dimensional Electron 
-// Microscopy of Cells ("BL3DEMC") and the Regents of the University of
+// Copyright (C) 2003-2026 by the Regents of the University of
 // Colorado.  See Copyright.txt for full notice of copyright and limitations.
 //
 // Author: David Mastronarde
@@ -15,10 +14,8 @@
 #include "CameraController.h"
 #include "ShiftManager.h"
 
-#ifdef _DEBUG
+#if defined(_DEBUG) && defined(_CRTDBG_MAP_ALLOC)
 #define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
 #endif
 
 /////////////////////////////////////////////////////////////////////////////
@@ -69,52 +66,52 @@ END_MESSAGE_MAP()
 /////////////////////////////////////////////////////////////////////////////
 // CTiltWindow message handlers
 
-void CTiltWindow::OnTiltUp() 
+void CTiltWindow::OnTiltUp()
 {
   mWinApp->mScope->TiltUp();
   mWinApp->AddIdleTask(CEMscope::TaskStageBusy, -1, 0, 0);
-  mWinApp->RestoreViewFocus();  
+  mWinApp->RestoreViewFocus();
 }
 
-void CTiltWindow::OnTiltDown() 
+void CTiltWindow::OnTiltDown()
 {
   mWinApp->mScope->TiltDown();
   mWinApp->AddIdleTask(CEMscope::TaskStageBusy, -1, 0, 0);
-  mWinApp->RestoreViewFocus();  
+  mWinApp->RestoreViewFocus();
 }
 
-void CTiltWindow::OnTiltTo() 
+void CTiltWindow::OnTiltTo()
 {
   float angle = 0.;
   if (KGetOneFloat("Tilt to: ", angle, 2)) {
     mWinApp->mScope->TiltTo((double)angle);
     mWinApp->AddIdleTask(CEMscope::TaskStageBusy, -1, 0, 0);
   }
-  mWinApp->RestoreViewFocus();  
+  mWinApp->RestoreViewFocus();
 }
 
-void CTiltWindow::OnTiltIncrement() 
+void CTiltWindow::OnTiltIncrement()
 {
   float increment = mWinApp->mScope->GetBaseIncrement();
   if (KGetOneFloat("Tilt increment (degrees):", increment, 2))
     mWinApp->mScope->SetIncrement(increment);
-  mWinApp->RestoreViewFocus();  
+  mWinApp->RestoreViewFocus();
 }
 
-void CTiltWindow::OnTiltDelay() 
+void CTiltWindow::OnTiltDelay()
 {
   float delay = mWinApp->mShiftManager->GetTiltDelay();
   if (KGetOneFloat("Delay time after tilting by the basic increment for tasks and general"
     " tilting (sec): ", delay, 2))
     mWinApp->mShiftManager->SetTiltDelay(delay);
-  mWinApp->RestoreViewFocus();  
+  mWinApp->RestoreViewFocus();
 }
 
-void CTiltWindow::OnCosineTilt() 
+void CTiltWindow::OnCosineTilt()
 {
   UpdateData(TRUE);
   mWinApp->mScope->SetCosineTilt(m_bCosineTilt);
-  mWinApp->RestoreViewFocus();  
+  mWinApp->RestoreViewFocus();
 }
 
 // Update the tilt angle display with the given value,
@@ -135,10 +132,10 @@ void CTiltWindow::TiltUpdate(double inTilt, BOOL bReady)
   }
 }
 
-BOOL CTiltWindow::OnInitDialog() 
+BOOL CTiltWindow::OnInitDialog()
 {
   CToolDlg::OnInitDialog();
-  
+
     // Set the font for the angle display
   CRect rect;
   CStatic *statTilt = (CStatic *)GetDlgItem(IDC_TILT_TEXT);
@@ -165,7 +162,7 @@ void CTiltWindow::UpdateEnables()
   if (mWinApp->mCamera && mWinApp->mCamera->CameraBusy())
     mProgramReady = false;
   EnableTiltButtons();
-  
+
   // Allow changes of increment and cosine if no complex task underway
   m_butSetIncrement.EnableWindow(!mWinApp->DoingComplexTasks());
   m_butSetDelay.EnableWindow(!mWinApp->DoingTasks());

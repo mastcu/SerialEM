@@ -1,7 +1,6 @@
 // FalconHelper.cpp:  Routines for intermediate frame saving from Falcon camera
 //
-// Copyright (C) 2013 by Boulder Laboratory for 3-Dimensional Electron 
-// Microscopy of Cells ("BL3DEMC") and the Regents of the University of
+// Copyright (C) 2013-2026 by the Regents of the University of
 // Colorado.  See Copyright.txt for full notice of copyright and limitations.
 //
 // Author: David Mastronarde
@@ -25,11 +24,15 @@
 #include "Shared\CorrectDefects.h"
 #include "Shared\SEMCCDDefines.h"
 
+#if defined(_DEBUG) && defined(_CRTDBG_MAP_ALLOC)
+#define new DEBUG_NEW
+#endif
+
 enum {FIF_COMM_ERR = 1, FIF_NO_FILES, FIF_NO_NEW_FILES, FIF_OPEN_OLD, FIF_READ_ERR,
-FIF_BAD_SIZE, FIF_MEMORY, FIF_OPEN_NEW, FIF_MISMATCH, FIF_WRITE_ERR, FIF_REMOVE_ERR, 
-FIF_NO_MORE_FILES, FIF_BAD_MODE, FIF_CONF_NOT_EXIST, FIF_CONF_OPEN_ERR, 
-FIF_CONF_READ_ERR, FIF_CONF_NO_MODE_LINE, FIF_CONF_NOT_INIT, FIF_CONF_BAD_MODE, 
-FIF_CONF_WRITE_ERR, FIF_BACKUP_EXISTS, FIF_BACKUP_ERR, FIF_ALIGN_SIZE_ERR, 
+FIF_BAD_SIZE, FIF_MEMORY, FIF_OPEN_NEW, FIF_MISMATCH, FIF_WRITE_ERR, FIF_REMOVE_ERR,
+FIF_NO_MORE_FILES, FIF_BAD_MODE, FIF_CONF_NOT_EXIST, FIF_CONF_OPEN_ERR,
+FIF_CONF_READ_ERR, FIF_CONF_NO_MODE_LINE, FIF_CONF_NOT_INIT, FIF_CONF_BAD_MODE,
+FIF_CONF_WRITE_ERR, FIF_BACKUP_EXISTS, FIF_BACKUP_ERR, FIF_ALIGN_SIZE_ERR,
 FIF_ALIGN_FRAME_ERR, FIF_FINISH_ALIGN_ERR, FIF_DE_READ_ERR, FIF_ERR_PLUGIN_FRAME,
 FIF_NO_MORE_FRAMES, RARF_NOT_EXIST, RARF_BUF_TOO_SMALL, RARF_OPEN_ERR, RARF_READ_ERR,
 FIF_LAST_CODE};
@@ -113,8 +116,8 @@ void CFalconHelper::InitializePointers(void)
 }
 
 // Read the configuration file and save its essential features
-// This is now used for Falcon (skipConfigs 0 or 1) or  for setting up frame alignment 
-// for DE (-1) or plugin cameras (-2) or continuous mode images (-3).  
+// This is now used for Falcon (skipConfigs 0 or 1) or  for setting up frame alignment
+// for DE (-1) or plugin cameras (-2) or continuous mode images (-3).
 // This is safe to call multiple times with skipConfig != 0
 void CFalconHelper::Initialize(int skipConfigs)
 {
@@ -128,14 +131,14 @@ void CFalconHelper::Initialize(int skipConfigs)
   if (!mPlugFuncs && skipConfigs >= 0)
     return;
   if (skipConfigs == -3) {
-    mCamera->SetFrameAliDefaults(mContinuousAliParam, "Continuous mode set", 
+    mCamera->SetFrameAliDefaults(mContinuousAliParam, "Continuous mode set",
       mContinuousAliParam.aliBinning, mContinuousAliParam.rad2Filt1, 0);
     mContinuousAliParam.binToTarget = 0;
     mContinuousAliParam.numAllVsAll = saveNumAVA;
   }
   mReadoutInterval = mCamera->GetFalconReadoutInterval();
   if (!mFrameAli) {
-    sFrameDebugOutput = GetDebugOutput('E') || GetDebugOutput('D') || 
+    sFrameDebugOutput = GetDebugOutput('E') || GetDebugOutput('D') ||
       GetDebugOutput('T') || GetDebugOutput('M') || GetDebugOutput('j') ||
       GetDebugOutput('X');
     mFrameAli = new FrameAlign();
@@ -193,11 +196,11 @@ int CFalconHelper::CheckFalconConfig(int setState, int &state, const char *messa
   return error;
 }
 
-// Call the plugin/server to modify the configuration file to save the desired frames, or 
+// Call the plugin/server to modify the configuration file to save the desired frames, or
 // put out a dummy file if no frame-saving is selected, or just save the list of readouts
 // for advanced interface.  Also set up frame alignment
 int CFalconHelper::SetupConfigFile(ControlSet &conSet, int consNum, CString localPath,
-  CString &directory, CString &filename, CString &configFile, BOOL stackingDeferred, 
+  CString &directory, CString &filename, CString &configFile, BOOL stackingDeferred,
   CameraParameters *camParams, long &numFrames)
 {
   CFileStatus status;
@@ -225,7 +228,7 @@ int CFalconHelper::SetupConfigFile(ControlSet &conSet, int consNum, CString loca
       SEMTrace('E', "Directory %s does not exist, creating it", (LPCTSTR)directory);
       if (_mkdir((LPCTSTR)directory)) {
         str.Format("An error occurred creating the directory:\n%s\n"
-          "for saving frame images.  Does its parent directory exist?", 
+          "for saving frame images.  Does its parent directory exist?",
           (LPCTSTR)directory);
         SEMMessageBox(str);
         return 1;
@@ -233,7 +236,7 @@ int CFalconHelper::SetupConfigFile(ControlSet &conSet, int consNum, CString loca
     }
   }
 
-  // Get number of raw frames, constrained to the sum size, and for MRC saving, 
+  // Get number of raw frames, constrained to the sum size, and for MRC saving,
   // check that the summed frame list is consistent and fix it if not
   if (camParams->FEItype == FALCON4_TYPE) {
     ind = mCamera->GetFalconRawSumSize(camParams);
@@ -245,7 +248,7 @@ int CFalconHelper::SetupConfigFile(ControlSet &conSet, int consNum, CString loca
         AdjustSumsForExposure(camParams, &conSet, conSet.exposure, consNum);
     }
     if (mSavingTiffLZW)
-      numRawFrames = B3DNINT(conSet.exposure / 
+      numRawFrames = B3DNINT(conSet.exposure /
       (frameInterval * B3DNINT(conSet.frameTime / frameInterval)));
   }
 
@@ -264,7 +267,7 @@ int CFalconHelper::SetupConfigFile(ControlSet &conSet, int consNum, CString loca
     temp = numFrames;
     readPtr = &mReadouts[0];
   }
-  
+
   // For EER, replace numFrames and send it as the ending frame # so plugin can adjust
   // exposure
   if (eerMode || mSavingTiffLZW) {
@@ -278,14 +281,14 @@ int CFalconHelper::SetupConfigFile(ControlSet &conSet, int consNum, CString loca
       //ind = stackingDeferred ? 1 : 0;
     if (mPlugFuncs->ASIsetupFrames(camParams->eagleIndex, ind, temp, numSkipBefore,
       readPtr, (LPCTSTR)directory, (LPCTSTR)filename, 0, 0.)) {
-      str.Format("Error setting up for frame saving from %s:\n%s", 
+      str.Format("Error setting up for frame saving from %s:\n%s",
         FCAM_CONTIN_SAVE(camParams) ? "Ceta" : "Falcon",mPlugFuncs->GetLastErrorString());
       SEMMessageBox(str);
       return 1;
     }
 
   } else {
-    if (mPlugFuncs->FIFsetupConfigFile((LPCTSTR)localPath, stackingDeferred, 
+    if (mPlugFuncs->FIFsetupConfigFile((LPCTSTR)localPath, stackingDeferred,
       saveFrames, temp, conSet.skipBeforeOrPrePix, readPtr)) {
         str.Format("Error opening or writing to intermediate frame configuration file"
           " %s:\n%s", (LPCTSTR)configFile, mPlugFuncs->GetLastErrorString());
@@ -296,7 +299,7 @@ int CFalconHelper::SetupConfigFile(ControlSet &conSet, int consNum, CString loca
 
   // Save frame alignment information and set up aligning if doing here
   mUseFrameAlign = 0;
-  mJustAlignNotSave = !conSet.saveFrames && conSet.alignFrames && 
+  mJustAlignNotSave = !conSet.saveFrames && conSet.alignFrames &&
     conSet.useFrameAlign == 1;
   if (conSet.alignFrames && conSet.useFrameAlign == 1) {
     temp = eerMode ? B3DNINT(conSet.exposure / conSet.frameTime) : numFrames;
@@ -309,7 +312,7 @@ int CFalconHelper::SetupConfigFile(ControlSet &conSet, int consNum, CString loca
 }
 
 // Take care of finding, copying, and reading in the Falcon 4 EER gain reference
-int CFalconHelper::ManageFalconReference(bool saving, bool aligning, 
+int CFalconHelper::ManageFalconReference(bool saving, bool aligning,
   CString localFrameFolder)
 {
   CString str, refName, refDir, mess;
@@ -491,12 +494,12 @@ CString CFalconHelper::FindEERGainReference()
 
 // Set up for frame alignment given the control set, camera parameters, gpu flags, and
 // expected number of frames
-int CFalconHelper::SetupFrameAlignment(ControlSet &conSet, CameraParameters *camParams, 
+int CFalconHelper::SetupFrameAlignment(ControlSet &conSet, CameraParameters *camParams,
   float gpuMemory, int *useGPU, int numFrames)
 {
   CString str;
   int nx, ny, superFac, numFilters = 0, ind, deferGpuSum = 0;
-  float radius2[4], sigma2[4], sigma1 = 0.03f; 
+  float radius2[4], sigma2[4], sigma1 = 0.03f;
   float fullTaperFrac = 0.02f;
   float trimFrac = fullTaperFrac;
   float taperFrac = 0.1f;
@@ -508,7 +511,7 @@ int CFalconHelper::SetupFrameAlignment(ControlSet &conSet, CameraParameters *cam
   int rotFlip = camParams->rotationFlip;
   int numAliFrames, numAllVsAll, groupSize, refineIter, doSpline, gpuFlags = 0;
   FrameAliParams param;
-  CArray<FrameAliParams, FrameAliParams> *faParams = 
+  CArray<FrameAliParams, FrameAliParams> *faParams =
     mCamera->GetFrameAliParams();
   if (mFAparamSetInd < 0) {
     param = mContinuousAliParam;
@@ -544,7 +547,7 @@ int CFalconHelper::SetupFrameAlignment(ControlSet &conSet, CameraParameters *cam
       // May have to trim the full-sized EER sum
       B3DCLAMP(rotFlip, 0, 7);
       ComputeNativeTrimming(conSet, camParams, sInvBeforeMap[rotFlip], left, right);
-     
+
       mTrimDEsum = (conSet.left > 0 || conSet.right < camParams->sizeX ||
         conSet.top > 0 || conSet.bottom < camParams->sizeY);
       param.multAliBinByEERfac = !mReadEERantialiased && !mSavingTiffLZW;
@@ -586,9 +589,9 @@ int CFalconHelper::SetupFrameAlignment(ControlSet &conSet, CameraParameters *cam
       bottom = camParams->defects.usableBottom;
     xTrim = right - left;
     yTrim = bottom - top;
-    CorDefUserToRotFlipCCD(mAliSumRotFlip, 1, sizeX, sizeY, xTrim, yTrim, top, left, 
+    CorDefUserToRotFlipCCD(mAliSumRotFlip, 1, sizeX, sizeY, xTrim, yTrim, top, left,
       bottom, right);
-    
+
     xTrim = B3DMAX(left, sizeX - right);
     yTrim = B3DMAX(top, sizeY - bottom);
     ACCUM_MAX(trimFrac, (float)xTrim / (float)sizeX);
@@ -606,7 +609,7 @@ int CFalconHelper::SetupFrameAlignment(ControlSet &conSet, CameraParameters *cam
   }
 
   // Get some other parameters
-  numAllVsAll = mCamera->NumAllVsAllFromFAparam(param, numAliFrames, groupSize, 
+  numAllVsAll = mCamera->NumAllVsAllFromFAparam(param, numAliFrames, groupSize,
     refineIter, doSpline, numFilters, radius2);
   for (ind = 0; ind < numFilters; ind++)
     sigma2[ind] = (float)(0.001 * B3DNINT(1000. * param.sigmaRatio * radius2[ind]));
@@ -624,17 +627,17 @@ int CFalconHelper::SetupFrameAlignment(ControlSet &conSet, CameraParameters *cam
 
   // Evaluate all memory needs. PROBLEM: binned data and alignment binning
   totAliMem = UtilEvaluateGpuCapability(nx, ny, sizeof(short int), false, false,
-    mSumBinning, param, numAllVsAll, numAliFrames, refineIter, groupSize, numFilters, 
+    mSumBinning, param, numAllVsAll, numAliFrames, refineIter, groupSize, numFilters,
     doSpline, useGPU[0] ? mGpuMemory : 0., maxMemory, gpuFlags, deferGpuSum, mGettingFRC);
   if (totAliMem > maxMemory)
     PrintfToLog("WARNING: With current parameters, memory needed for aligning "
     "(%.1f GB) exceeds allowed\r\n  memory usage (%.1f GB), controlled by MemoryLimit"
     " property if it is set", totAliMem, maxMemory);
-  ind = mFrameAli->initialize(mSumBinning, UtilGetFrameAlignBinning(param, nx, ny), 
-    trimFrac, numAllVsAll, refineIter, 
-    param.hybridShifts, (deferGpuSum | doSpline) ? 1 : 0, groupSize, nx, ny, 
-    fullTaperFrac, taperFrac, param.antialiasType, 0., radius2, sigma1, sigma2, 
-    numFilters, param.shiftLimit, kFactor, maxMaxWeight, 0, numFrames, 0, gpuFlags, 
+  ind = mFrameAli->initialize(mSumBinning, UtilGetFrameAlignBinning(param, nx, ny),
+    trimFrac, numAllVsAll, refineIter,
+    param.hybridShifts, (deferGpuSum | doSpline) ? 1 : 0, groupSize, nx, ny,
+    fullTaperFrac, taperFrac, param.antialiasType, 0., radius2, sigma1, sigma2,
+    numFilters, param.shiftLimit, kFactor, maxMaxWeight, 0, numFrames, 0, gpuFlags,
     sFrameDebugOutput ? 11 : 0);
   if (ind) {
     str.Format("The framealign routine failed to initialize (error %d)", ind);
@@ -649,11 +652,11 @@ int CFalconHelper::SetupFrameAlignment(ControlSet &conSet, CameraParameters *cam
 
 // Stack the frames, possibly located in localPath, into a file with the given root name
 // the given directory, with potential division by a factor, rotation, and flip
-// For advanced interface, this is called for aligning only, and localPath should be the 
+// For advanced interface, this is called for aligning only, and localPath should be the
 // full path to the input stack file
-int CFalconHelper::StackFrames(CString localPath, CString &directory, CString &rootname, 
-  long divideBy2, int divideBy, float floatScale, int rotateFlip, int aliSumRotFlip, 
-  float pixel, BOOL doAsync, bool readLocally, int aliParamInd, long &numStacked, 
+int CFalconHelper::StackFrames(CString localPath, CString &directory, CString &rootname,
+  long divideBy2, int divideBy, float floatScale, int rotateFlip, int aliSumRotFlip,
+  float pixel, BOOL doAsync, bool readLocally, int aliParamInd, long &numStacked,
   CameraThreadData *camTD)
 {
   int ind, eerFlags, totalSubframes = 0, start, end, retval = 0;
@@ -729,7 +732,7 @@ int CFalconHelper::StackFrames(CString localPath, CString &directory, CString &r
   mNy = -1;
   mDeleteList.clear();
   mStartedAsyncSave = -1;
-  str = mDirectory + "\\" + mRootname + 
+  str = mDirectory + "\\" + mRootname +
     B3DCHOICE(mSavingTiffLZW, ".tiff", mEERsumming ? ".eer" : ".mrc");
   SEMTrace('E', "In stackFrames  local %d %s", readLocally ? 1 : 0, (LPCTSTR)localPath);
 
@@ -754,7 +757,7 @@ int CFalconHelper::StackFrames(CString localPath, CString &directory, CString &r
     if (!mFrameFP) {
       _get_errno(&ind);
       strerror_s(errStr, 160, ind);
-      SEMTrace('E', "Error opening frame stack at local path: %s\r\n    %s", 
+      SEMTrace('E', "Error opening frame stack at local path: %s\r\n    %s",
         (LPCTSTR)localPath, errStr);
       return FIF_OPEN_OLD;
     } //else
@@ -768,7 +771,7 @@ int CFalconHelper::StackFrames(CString localPath, CString &directory, CString &r
     mHeadNums[0] = mMrcHeader.nx;
     mHeadNums[1] = mMrcHeader.ny;
 
-    // This builds in the assumption that the FEI file IS inverted AND that we want 
+    // This builds in the assumption that the FEI file IS inverted AND that we want
     // inverted images in here anyway, in case it is eventually recognized as inverted
     mMrcHeader.yInverted = 0;
   } else {
@@ -804,7 +807,7 @@ int CFalconHelper::StackFrames(CString localPath, CString &directory, CString &r
   // Loop on images; stop on fatal errors or on no more files
   while (mFileInd < mNumFiles) {
     StackNextTask(0);
-    if (!mNumStacked && !mNumAligned && 
+    if (!mNumStacked && !mNumAligned &&
       (mStackError == FIF_MEMORY || mStackError == FIF_OPEN_NEW)) {
         retval = mStackError;
         break;
@@ -859,7 +862,7 @@ void CFalconHelper::StackNextTask(int param)
     skipAlign = -1;
   if (mUseFrameAlign && mAlignSubset && mFileInd > mAlignEnd - 1)
     skipAlign = 1;
-  
+
   // Termination conditions if running asynchronously, including a possible external stop:
   // out of files, past the subset for advanced frames, or aligning and stopped
   if (param && (mFileInd >= mNumFiles || (mDoingAdvancedFrames && skipAlign > 0) ||
@@ -890,7 +893,7 @@ void CFalconHelper::StackNextTask(int param)
     }
     mUseImage2 = 0;
     if (mUseFrameAlign && !mEERsumming && !mSavingTiffLZW &&
-      (mCamTD->DMSizeX != ((mAliSumRotFlip % 2) ? mNy : mNx) || 
+      (mCamTD->DMSizeX != ((mAliSumRotFlip % 2) ? mNy : mNx) ||
       mCamTD->DMSizeY != ((mAliSumRotFlip % 2) ? mNx : mNy))) {
         mAlignError = FIF_ALIGN_SIZE_ERR;
         mFrameAli->cleanup();
@@ -901,7 +904,7 @@ void CFalconHelper::StackNextTask(int param)
     }
 
     // Here is the test for whether to save asynchronously also, hereafter mImage2 is
-    // the non-NULL when doing so.  If this is bad locally, could change to 
+    // the non-NULL when doing so.  If this is bad locally, could change to
     // mUsePlugin && mPlugFuncs->FIFcleanUp2 && CBaseSocket::ServerIsRemote(FEI_SOCK_ID)
     if (saving && param && mWinApp->mBufferManager->GetSaveAsynchronously()) {
       if (mEERsumming > 0 || mSavingTiffLZW) {
@@ -914,7 +917,7 @@ void CFalconHelper::StackNextTask(int param)
       }
       mUseImage2 = -1;
     }
-    if (!mImage->getData() || (mImage2 && !mImage2->getData()) || 
+    if (!mImage->getData() || (mImage2 && !mImage2->getData()) ||
       (rotateForSave && !mRotData)) {
         mStackError = FIF_MEMORY;
 
@@ -932,7 +935,7 @@ void CFalconHelper::StackNextTask(int param)
       if (mStoreMRC == NULL || !mStoreMRC->FileOK()) {
         mStackError = FIF_OPEN_NEW;
       } else {
-        mWinApp->mDocWnd->MakeSerialEMTitle(CString(mProcessingPlugin ? 
+        mWinApp->mDocWnd->MakeSerialEMTitle(CString(mProcessingPlugin ?
           "Frame images" : "Falcon intermediate images"), title);
         mStoreMRC->AddTitle(title);
         mStoreMRC->SetPixelSpacing(mPixel);
@@ -941,7 +944,7 @@ void CFalconHelper::StackNextTask(int param)
     if (mStackError) {
       CleanupStacking();
       if (param)
-        PrintfToLog("Error %d occurred trying to stack frames: %s", mStackError, 
+        PrintfToLog("Error %d occurred trying to stack frames: %s", mStackError,
         errMess[mStackError - 1]);
       return;
     }
@@ -973,7 +976,7 @@ void CFalconHelper::StackNextTask(int param)
       if (!skipAlign && mrc_read_slice(outPtr, mFrameFP, &mMrcHeader, mFileInd, 'Z'))
         mStackError = FIF_READ_ERR;
     } else if (!(mDoingAdvancedFrames && skipAlign > 0)) {
-      mStackError = mPlugFuncs->FIFgetNextFrame(outPtr, mDivideBy2, mDivideBy, 
+      mStackError = mPlugFuncs->FIFgetNextFrame(outPtr, mDivideBy2, mDivideBy,
         mDeletePrev);
     }
     mDeletePrev = false;
@@ -981,10 +984,10 @@ void CFalconHelper::StackNextTask(int param)
 
   if (mProcessingPlugin && mNeedNormHere)
     mCamera->ProcessImageOrFrame(outPtr, mImage->getType(), mProcessing, mRemoveXrays, 1,
-      mNormParam, mNormDark, NULL, NULL, mNormGain, mNormDMSizeX, mNormDMSizeY, 
-      mNormBinning, mNormTop, mNormLeft, mNormBot, mNormRight, mNormImageType, 
+      mNormParam, mNormDark, NULL, NULL, mNormGain, mNormDMSizeX, mNormDMSizeY,
+      mNormBinning, mNormTop, mNormLeft, mNormBot, mNormRight, mNormImageType,
       mProcessing);
-  
+
   // Do alignment unless skipping that
   if (!mStackError && mUseFrameAlign && !mAlignError && !skipAlign) {
     if (mEERsumming > 0 || mSavingTiffLZW) {
@@ -1023,7 +1026,7 @@ void CFalconHelper::StackNextTask(int param)
   // Write the image
   if (!mStackError && saving) {
     if (mRotateFlip) {
-      ProcRotateFlip((short *)mRotData, mDivideBy2 ? kSHORT : kUSHORT, mNx, mNy, 
+      ProcRotateFlip((short *)mRotData, mDivideBy2 ? kSHORT : kUSHORT, mNx, mNy,
         mRotateFlip, 0, outData, &ind, &val);
     }
     if (mImage2) {
@@ -1032,7 +1035,7 @@ void CFalconHelper::StackNextTask(int param)
       CheckAsyncSave();
       // then Start a new async save and swap to other image
       mStartedAsyncSave = mFileInd;
-      mWinApp->mBufferManager->StartAsyncSave(mStoreMRC, 
+      mWinApp->mBufferManager->StartAsyncSave(mStoreMRC,
         mUseImage2 > 0 ? mImage2 : mImage, -1, 0);
       mUseImage2 = -mUseImage2;
       ind = 0;
@@ -1049,14 +1052,14 @@ void CFalconHelper::StackNextTask(int param)
         mNumStacked++;
         mDeletePrev = true;
       }
-      SEMTrace('1', "Frame %d %s added to stack", mFileInd + 1, 
+      SEMTrace('1', "Frame %d %s added to stack", mFileInd + 1,
         mImage2 ? "started being" : "");
     }
   }
 
   // For errors beside no more files, report the error and go for the next frame
   if (mStackError && mStackError != FIF_NO_MORE_FILES)
-    SEMTrace('1', "Error dealing with frame %d: %s", mFileInd + 1, 
+    SEMTrace('1', "Error dealing with frame %d: %s", mFileInd + 1,
       errMess[mStackError - 1]);
   mFileInd++;
   if (!saving && skipAlign > 1)
@@ -1096,9 +1099,9 @@ void CFalconHelper::CleanupAndFinishAlign(bool saving, int async)
     if (async)
       mCamera->DisplayNewImage(true);
   } else if (mAliComParamInd >= 0 && mNumStacked > 1) {
-    comPath = (mCamera->GetComPathIsFramePath() ? mDirectory : 
+    comPath = (mCamera->GetComPathIsFramePath() ? mDirectory :
       mCamera->GetAlignFramesComPath()) + '\\' + mRootname + ".pcm";
-    err = WriteAlignComFile(mDirectory + "\\" + mRootname + ".mrc", comPath, 
+    err = WriteAlignComFile(mDirectory + "\\" + mRootname + ".mrc", comPath,
       mAliComParamInd, mUseGpuForAlign[1], false, mNx, mNy, 0, 0.);
   }
   if (saving && !(mUseFrameAlign && async))
@@ -1152,21 +1155,21 @@ void CFalconHelper::FinishFrameAlignment(int binning)
     mCamTD->FaRawDist = rawDist[bestFilt];
     mCamTD->FaSmoothDist = smoothDist[bestFilt];
     if (mGettingFRC) {
-      mFrameAli->analyzeFRCcrossings(ringCorrs, frcDelta, crossHalf, crossQuarter, 
+      mFrameAli->analyzeFRCcrossings(ringCorrs, frcDelta, crossHalf, crossQuarter,
         crossEighth, halfNyq);
-      mCamTD->FaCrossHalf = B3DNINT(K2FA_FRC_INT_SCALE * crossHalf); 
+      mCamTD->FaCrossHalf = B3DNINT(K2FA_FRC_INT_SCALE * crossHalf);
       mCamTD->FaCrossQuarter = B3DNINT(K2FA_FRC_INT_SCALE * crossQuarter);
       mCamTD->FaCrossEighth = B3DNINT(K2FA_FRC_INT_SCALE * crossEighth);
       mCamTD->FaHalfNyq = B3DNINT(K2FA_FRC_INT_SCALE * halfNyq);
     } else {
-      mCamTD->FaCrossHalf = mCamTD->FaCrossQuarter = mCamTD->FaCrossEighth = 
+      mCamTD->FaCrossHalf = mCamTD->FaCrossQuarter = mCamTD->FaCrossEighth =
         mCamTD->FaHalfNyq = 0;
     }
 
     // Only old Falcon 2 frames were divided, the advanced scripting frames were
     // just read in and still need that treatment.  In any case, data needs to be clamped
     // and cast as appropropriate for the return type
-    if (((mDoingAdvancedFrames || mFAparamSetInd < 0) && mFloatScale > 0) || 
+    if (((mDoingAdvancedFrames || mFAparamSetInd < 0) && mFloatScale > 0) ||
       mCamTD->DE_camType) {
       if (mDivideBy2) {
         for (ind = 0; ind < numPix; ind++) {
@@ -1218,8 +1221,8 @@ void CFalconHelper::FinishFrameAlignment(int binning)
 
     // Trim and get modified nx, ny
     if (mTrimDEsum)
-      extractWithBinning(sAliSum, mDivideBy2 ? kSHORT : kUSHORT, nxBin, mTrimXstart, 
-        mTrimXend, mTrimYstart, mTrimYend, 1, 
+      extractWithBinning(sAliSum, mDivideBy2 ? kSHORT : kUSHORT, nxBin, mTrimXstart,
+        mTrimXend, mTrimYstart, mTrimYend, 1,
         mSumNeedsRotFlip ? sAliSum : mCamTD->Array[0], 1, &rotNx, &rotNy);
 
     // If rotating, that last operation was done in place and now rotate into array
@@ -1236,7 +1239,7 @@ void CFalconHelper::FinishFrameAlignment(int binning)
 // "Busy" test for whether waiting before stacking next frame
 int CFalconHelper::StackingWaiting()
 {
-  if (mProcessingPlugin || SEMTickInterval(mWaitStart) > mWaitInterval || 
+  if (mProcessingPlugin || SEMTickInterval(mWaitStart) > mWaitInterval ||
     mWaitCount > mWaitMaxCount)
     return 0;
   mWaitCount++;
@@ -1256,7 +1259,7 @@ void CFalconHelper::CheckAsyncSave(void)
   mWinApp->mBufferManager->CheckAsyncSaving();
   if (mStartedAsyncSave >= 0) {
     if (mWinApp->mBufferManager->GetImageAsyncFailed())
-      SEMTrace('1', "Error in asynchronous save for frame %d", 
+      SEMTrace('1', "Error in asynchronous save for frame %d",
       mStartedAsyncSave + 1);
     else {
       if (!mProcessingPlugin)
@@ -1283,7 +1286,7 @@ void CFalconHelper::CleanupStacking(void)
   } else {
 
     // If asynchronous save was used, then need to check on it and then do special cleanup
-    // of all files that were saved successfully  
+    // of all files that were saved successfully
     if (mImage2) {
       CheckAsyncSave();
       if (!mProcessingPlugin)
@@ -1307,7 +1310,7 @@ void CFalconHelper::CleanupStacking(void)
 
 // Start processing frames from a plugin.  This is most like Falcon 2 so it will stack and
 // align through StackNextTask
-int CFalconHelper::ProcessPluginFrames(CString &directory, CString &rootname, 
+int CFalconHelper::ProcessPluginFrames(CString &directory, CString &rootname,
   ControlSet &conSet, bool save, bool align, int aliParamInd, int divideBy2, float pixel,
   CameraThreadData *camTD)
 {
@@ -1348,7 +1351,7 @@ int CFalconHelper::ProcessPluginFrames(CString &directory, CString &rootname,
   mUseFrameAlign = align ? 1 : 0;
   if (align) {
     mFAparamSetInd = conSet.faParamSetInd;
-    if ((err = SetupFrameAlignment(conSet, camParam, mGpuMemory, mUseGpuForAlign, 
+    if ((err = SetupFrameAlignment(conSet, camParam, mGpuMemory, mUseGpuForAlign,
       mNumFiles)) != 0)
       return err;
   }
@@ -1361,7 +1364,7 @@ int CFalconHelper::ProcessPluginFrames(CString &directory, CString &rootname,
   if (mNeedNormHere && align && !save) {
     mNeedNormHere = !mCamera->CanFramealignProcessSubarea(&conSet, &mDarkp,
       &mGainp);
-    SEMTrace('1',"Frames will be normalized %s", mNeedNormHere ? "in cam controller" : 
+    SEMTrace('1',"Frames will be normalized %s", mNeedNormHere ? "in cam controller" :
       "in framealign");
   }
 
@@ -1382,7 +1385,7 @@ int CFalconHelper::ProcessPluginFrames(CString &directory, CString &rootname,
 
 
 // Do frame alignment by reading a file: just for DE right now
-int CFalconHelper::AlignFramesFromFile(CString filename, ControlSet &conSet, 
+int CFalconHelper::AlignFramesFromFile(CString filename, ControlSet &conSet,
   int rotateFlip, int divideBy2, float scaling, int &numFrames, CameraThreadData *td)
 {
   CameraParameters *camParam = mWinApp->GetActiveCamParam();
@@ -1391,7 +1394,7 @@ int CFalconHelper::AlignFramesFromFile(CString filename, ControlSet &conSet,
   char errStr[160];
   int hwSuperDiv = SuperResHardwareBinDivisor(camParam, &conSet);
   int left, right, frameX, frameY, fullFileX, hwROItol = 8;
-  bool hardwareROI = (camParam->CamFlags & DE_HAS_HARDWARE_ROI) && 
+  bool hardwareROI = (camParam->CamFlags & DE_HAS_HARDWARE_ROI) &&
     conSet.magAllShotsOrHwROI;
   bool framesMatch = (camParam->CamFlags & DE_FRAMES_MATCH_IMAGE) != 0;
   mAlignError = 0;
@@ -1418,19 +1421,19 @@ int CFalconHelper::AlignFramesFromFile(CString filename, ControlSet &conSet,
   mNx = mMrcHeader.nx;
   mNy = mMrcHeader.ny;
 
-  // This builds in the assumption that the DE file IS inverted AND that we want 
+  // This builds in the assumption that the DE file IS inverted AND that we want
   // inverted images in here anyway, in case it is eventually recognized as inverted
   mMrcHeader.yInverted = 0;
 
   GetSavedFrameSizes(camParam, &conSet, frameX, frameY, false);
   fullFileX = (camParam->sizeX * 2) / hwSuperDiv;
-  if (((!hardwareROI && frameY != mNy) || 
-    (hardwareROI && framesMatch && (mNy > frameY || mNy < frameY - hwROItol)) || 
+  if (((!hardwareROI && frameY != mNy) ||
+    (hardwareROI && framesMatch && (mNy > frameY || mNy < frameY - hwROItol)) ||
     ((!hardwareROI || framesMatch) && ((!hardwareROI && frameX != mNx) ||
       (hardwareROI && framesMatch && (mNx > frameX || mNx < frameX - hwROItol)))) ||
     ((hardwareROI && !framesMatch) && fullFileX != mNx))) {
       str.Format("Saved frames are %d x %d, not the expected size of %d x %d; cannot "
-        "align the frames", mNx, mNy, (hardwareROI && !framesMatch ) ? 
+        "align the frames", mNx, mNy, (hardwareROI && !framesMatch ) ?
         fullFileX : frameX, frameY);
       SEMMessageBox(str);
       iiFClose(mFrameFP);
@@ -1446,7 +1449,7 @@ int CFalconHelper::AlignFramesFromFile(CString filename, ControlSet &conSet,
   B3DCLAMP(rotateFlip, 0, 7);
   mAliSumRotFlip = rotateFlip;
 
-  /*// DE frames are read in right-handed and require inversion after.  rotateflip first 
+  /*// DE frames are read in right-handed and require inversion after.  rotateflip first
   // maps r/f through the right-handed map that maps 6 to 6, then through the invertAfter
   // map that maps 6 to 0.  So 6 needs no operation*/
   mSumNeedsRotFlip = mAliSumRotFlip != 0;
@@ -1455,7 +1458,7 @@ int CFalconHelper::AlignFramesFromFile(CString filename, ControlSet &conSet,
   ComputeNativeTrimming(conSet, camParam, rotateFlip, left, right);
 
   mTrimDEsum = (conSet.left > 0 || conSet.right < camParam->sizeX ||
-    conSet.top > 0 || conSet.bottom < camParam->sizeY) && !hardwareROI && 
+    conSet.top > 0 || conSet.bottom < camParam->sizeY) && !hardwareROI &&
     !framesMatch;
 
   if (mDEframeNeedsTrim) {
@@ -1528,15 +1531,15 @@ void CFalconHelper::AlignNextFrameTask(int param)
 
   // Align if no error
   if (!mAlignError) {
-    ind = mFrameAli->nextFrame(mRotData, mMrcHeader.mode, NULL, mNx, mNy, 
+    ind = mFrameAli->nextFrame(mRotData, mMrcHeader.mode, NULL, mNx, mNy,
       NULL, 0.,  // Truncation limit...
       NULL, 0, 0, 1, 0., 0.);
     if (ind) {
-      SEMTrace('1', "Error %d calling framealign nextFrame on frame %d", ind, 
+      SEMTrace('1', "Error %d calling framealign nextFrame on frame %d", ind,
         mFileInd + 1);
       mAlignError = FIF_ALIGN_FRAME_ERR;
     }
-  } 
+  }
 
   // Go on to next if no error
   if (!mAlignError) {
@@ -1561,7 +1564,7 @@ void CFalconHelper::AlignNextFrameTask(int param)
 }
 
 // Set up frame alignment for continuous mode images
-int CFalconHelper::SetupContinuousAlign(ControlSet &conSet, CameraThreadData *camTD, 
+int CFalconHelper::SetupContinuousAlign(ControlSet &conSet, CameraThreadData *camTD,
   int divideBy2, int numExpected)
 {
   CameraParameters *camParam = mWinApp->GetActiveCamParam();
@@ -1586,14 +1589,14 @@ int CFalconHelper::SetupContinuousAlign(ControlSet &conSet, CameraThreadData *ca
     mContinuousAliParam.strategy = FRAMEALI_PAIRWISE_NUM;
   else
     mContinuousAliParam.strategy = FRAMEALI_ACCUM_REF;
-  return SetupFrameAlignment(conSet, camParam, mGpuMemory, &mGpuForContinuousAli, 
+  return SetupFrameAlignment(conSet, camParam, mGpuMemory, &mGpuForContinuousAli,
     numExpected);
 }
 
 // Pass the next continuous image to framealign
 int CFalconHelper::NextContinuousFrame()
 {
-  int ind = mFrameAli->nextFrame(mCamTD->Array[0], 
+  int ind = mFrameAli->nextFrame(mCamTD->Array[0],
     mDivideBy2 ? MRC_MODE_SHORT : MRC_MODE_USHORT, NULL, mNx, mNy, NULL, 0.,
     NULL, 0, 0, 1, 0., 0.);
   if (ind)
@@ -1622,7 +1625,7 @@ const char * CFalconHelper::GetErrorString(int code)
 }
 
 // Divide the given number of readouts among the current number of frames
-void CFalconHelper::DistributeSubframes(ShortVec &summedFrameList, int numReadouts, 
+void CFalconHelper::DistributeSubframes(ShortVec &summedFrameList, int numReadouts,
   int newFrames, FloatVec &userFrameFrac, FloatVec &userSubframeFrac,
   bool aligningInFalcon)
 {
@@ -1642,7 +1645,7 @@ void CFalconHelper::DistributeSubframes(ShortVec &summedFrameList, int numReadou
     for (ind = 0; ind < (int)summedFrameList.size(); ind += 2) {
       if (summedFrameList[ind + 1] != 1)
         extra = 1;
-      summedFrameList[ind + 1] = B3DMAX(1, B3DNINT((float)summedFrameList[ind + 1]) / 
+      summedFrameList[ind + 1] = B3DMAX(1, B3DNINT((float)summedFrameList[ind + 1]) /
         alignFraction);
     }
     if (!extra) {
@@ -1690,7 +1693,7 @@ void CFalconHelper::DistributeSubframes(ShortVec &summedFrameList, int numReadou
   framesLeft = numFrames;
   subframesLeft = numReadouts;
   for (ind = 0; ind < numBlocks; ind++) {
-    frames = B3DNINT(B3DMAX(framesPerBlock[ind], userSubframeFrac[ind] * subframesLeft / 
+    frames = B3DNINT(B3DMAX(framesPerBlock[ind], userSubframeFrac[ind] * subframesLeft /
       fracLeft));
     framesLeft -= framesPerBlock[ind];
     if (subframesLeft - frames < framesLeft)
@@ -1699,7 +1702,7 @@ void CFalconHelper::DistributeSubframes(ShortVec &summedFrameList, int numReadou
     fracLeft -= userSubframeFrac[ind];
     subframesLeft -= frames;
   }
- 
+
   // Now there are one or two list entries per block
   summedFrameList.clear();
   for (ind = 0; ind < numBlocks; ind++) {
@@ -1737,34 +1740,34 @@ void CFalconHelper::DistributeSubframes(ShortVec &summedFrameList, int numReadou
 }
 
 float CFalconHelper::AdjustForExposure(ShortVec &summedFrameList, int numSkipBefore,
-    int numSkipAfter, float exposure, float readoutInterval, FloatVec &userFrameFrac, 
+    int numSkipAfter, float exposure, float readoutInterval, FloatVec &userFrameFrac,
     FloatVec &userSubframeFrac, bool aligningInFalcon)
 {
   int newFrames, curTotal = 0;
-  int numFrames = B3DMAX(1, B3DNINT(exposure / readoutInterval) - 
+  int numFrames = B3DMAX(1, B3DNINT(exposure / readoutInterval) -
     (numSkipBefore + numSkipAfter));
   newFrames = GetFrameTotals(summedFrameList, curTotal);
   if (numFrames != curTotal || aligningInFalcon)
-    DistributeSubframes(summedFrameList, numFrames, newFrames, userFrameFrac, 
+    DistributeSubframes(summedFrameList, numFrames, newFrames, userFrameFrac,
     userSubframeFrac, aligningInFalcon);
   return (numFrames + numSkipBefore + numSkipAfter) * readoutInterval;
 }
 
 // Adjusts frame sums for exposure if appropriate
 // This should be called only for RECORD or an argument added
-float CFalconHelper::AdjustSumsForExposure(CameraParameters *camParams, 
+float CFalconHelper::AdjustSumsForExposure(CameraParameters *camParams,
   ControlSet *conSet, float exposure, int consNum)
 {
-  bool falconCanSave = IS_FALCON2_3_4(camParams) && 
-    mCamera->GetMaxFalconFrames(camParams) && 
+  bool falconCanSave = IS_FALCON2_3_4(camParams) &&
+    mCamera->GetMaxFalconFrames(camParams) &&
     (mCamera->GetFrameSavingEnabled() || FCAM_ADVANCED(camParams));
-  if (falconCanSave || (mCamera->IsConSetSaving(conSet, consNum, camParams, true) && 
+  if (falconCanSave || (mCamera->IsConSetSaving(conSet, consNum, camParams, true) &&
     conSet->sumK2OrDeCntFrames))
-    return AdjustForExposure(conSet->summedFrameList, 
-      falconCanSave ? conSet->skipBeforeOrPrePix : 0, falconCanSave ? 
+    return AdjustForExposure(conSet->summedFrameList,
+      falconCanSave ? conSet->skipBeforeOrPrePix : 0, falconCanSave ?
       conSet->skipAfterOrPtRpt : 0, exposure,
       falconCanSave ? mCamera->GetFalconFractionDivisor(camParams) : conSet->frameTime,
-      conSet->userFrameFractions, conSet->userSubframeFractions, falconCanSave && 
+      conSet->userFrameFractions, conSet->userSubframeFractions, falconCanSave &&
       FCAM_CAN_ALIGN(camParams) && conSet->alignFrames && !conSet->useFrameAlign);
   return exposure;
 }
@@ -1791,7 +1794,7 @@ int CFalconHelper::GetFrameTotals(ShortVec &summedFrameList, int &totalSubframes
 
 // When aligning a subset of summed frames, count up actual frames in the range of the
 // subset and compute their exposure time
-float CFalconHelper::AlignedSubsetExposure(ShortVec &summedFrameList, float frameTime, 
+float CFalconHelper::AlignedSubsetExposure(ShortVec &summedFrameList, float frameTime,
   int subsetStart, int subsetEnd, int maxFrames)
 {
   int ind, sumf, alignedTot = 0, frameTot = 0, totalSubframes = 0;
@@ -1809,19 +1812,19 @@ float CFalconHelper::AlignedSubsetExposure(ShortVec &summedFrameList, float fram
         return (float)(alignedTot * frameTime);
     }
   }
-  return (float)(alignedTot * frameTime);     
+  return (float)(alignedTot * frameTime);
 }
 
 /*
  * Write a com file for alignment with alignframes
  */
-int CFalconHelper::WriteAlignComFile(CString inputFile, CString comName, int faParamInd, 
+int CFalconHelper::WriteAlignComFile(CString inputFile, CString comName, int faParamInd,
   int useGPU, bool ifMdoc, int frameX, int frameY, int EERsumming, float pixelSize)
 {
   CString comStr, strTemp, aliHead, inputPath, relPath, outputRoot, outputExt, temp,temp2;
-  CArray<FrameAliParams, FrameAliParams> *faParams = 
+  CArray<FrameAliParams, FrameAliParams> *faParams =
     mCamera->GetFrameAliParams();
-  FrameAliParams param; 
+  FrameAliParams param;
   int ind, superFac = 1, error = 0;
   float fSuperFac = 1.f, radius2[4];
   CameraParameters *camParams = mWinApp->GetActiveCamParam();
@@ -1836,7 +1839,7 @@ int CFalconHelper::WriteAlignComFile(CString inputFile, CString comName, int faP
     frameY *= superFac;
     pixelSize /= superFac;
   }
-  numAllVsAll = mCamera->NumAllVsAllFromFAparam(param, mNumStacked, groupSize, 
+  numAllVsAll = mCamera->NumAllVsAllFromFAparam(param, mNumStacked, groupSize,
     refineIter, doSpline, numFilters, radius2);
   radius2[0] /= fSuperFac;
 
@@ -1859,12 +1862,12 @@ int CFalconHelper::WriteAlignComFile(CString inputFile, CString comName, int faP
     "MinForSplineSmoothing %d\n"
     "FilterRadius2 %f\n"
     "FilterSigma2 %f\n"
-    "VaryFilter %f", useGPU ? 0 : -1, numAllVsAll, param.useGroups ? param.groupSize : 1, 
-    UtilGetFrameAlignBinning(param, frameX, frameY), superFac > 2 ? 2 : 1, 
+    "VaryFilter %f", useGPU ? 0 : -1, numAllVsAll, param.useGroups ? param.groupSize : 1,
+    UtilGetFrameAlignBinning(param, frameX, frameY), superFac > 2 ? 2 : 1,
     param.antialiasType, refineIter, param.stopIterBelow * fSuperFac,
-    param.shiftLimit * superFac, param.doSmooth ? param.smoothThresh : 0, radius2[0], 
+    param.shiftLimit * superFac, param.doSmooth ? param.smoothThresh : 0, radius2[0],
     radius2[0] * param.sigmaRatio, radius2[0]);
-  comStr = strTemp;  
+  comStr = strTemp;
   for (ind = 1; ind < numFilters; ind++) {
     if (radius2[ind] > 0) {
       strTemp.Format(" %f", radius2[ind] / fSuperFac);
@@ -1918,7 +1921,7 @@ int CFalconHelper::WriteAlignComFile(CString inputFile, CString comName, int faP
     inputFile = temp2;
   }
 
-  // get the relative path and make sure it is OK   
+  // get the relative path and make sure it is OK
   UtilSplitPath(comName, aliHead, temp);
   SEMTrace('E', "com %s  alihead %s  lastframe %s", (LPCTSTR)comName, (LPCTSTR)aliHead,
     (LPCTSTR)mLastFrameDir);
@@ -1956,14 +1959,14 @@ int CFalconHelper::WriteAlignComFile(CString inputFile, CString comName, int faP
 // Return the size that frames will be saved for the given camera and parameters
 // For K2/K3, acquiredSize should be true to get the size in the plugin instead of the
 // one actually saved, if they differ
-void CFalconHelper::GetSavedFrameSizes(CameraParameters *camParams, 
+void CFalconHelper::GetSavedFrameSizes(CameraParameters *camParams,
   const ControlSet *conSet, int &frameX, int &frameY, bool acquiredSize)
 {
-  int superResDiv = (IS_SUPERRES(camParams, conSet->K2ReadMode) && 
+  int superResDiv = (IS_SUPERRES(camParams, conSet->K2ReadMode) &&
     !mCamera->IsK3BinningSuperResFrames(conSet, camParams)) ? 1 : 2;
   BOOL maybeSwap = false;
   if (camParams->K2Type) {
-    if (!acquiredSize && conSet->processing == GAIN_NORMALIZED && 
+    if (!acquiredSize && conSet->processing == GAIN_NORMALIZED &&
       !mCamera->GetSaveUnnormalizedFrames() && mCamera->GetSaveSuperResReduced())
       superResDiv = 2;
     frameX = camParams->sizeX / superResDiv;
@@ -2007,12 +2010,12 @@ void CFalconHelper::GetSavedFrameSizes(CameraParameters *camParams,
 }
 
 // For a DE camera, returns a binning divisor to apply to coordinates and sizes times 2
-int CFalconHelper::SuperResHardwareBinDivisor(CameraParameters *camParams, 
+int CFalconHelper::SuperResHardwareBinDivisor(CameraParameters *camParams,
   const ControlSet *conSet)
 {
   int superResDiv = B3DCHOICE((camParams->CamFlags & DE_CAN_SAVE_SUPERRES) &&
     conSet->K2ReadMode == SUPERRES_MODE, 1, 2);
-  int hwBin = B3DCHOICE((camParams->CamFlags & DE_HAS_HARDWARE_BIN) && 
+  int hwBin = B3DCHOICE((camParams->CamFlags & DE_HAS_HARDWARE_BIN) &&
     conSet->boostMagOrHwBin && conSet->binning > 1, 2, 1);
   if (camParams->CamFlags & DE_FRAMES_MATCH_IMAGE)
     return conSet->binning * 2;
@@ -2030,8 +2033,8 @@ int CFalconHelper::GetEERsuperFactor(int superRes)
 // Returns true if the defects are non-NULL and have any bad items or nonzero "usable's"
 bool CFalconHelper::AreDefectsNonEmpty(CameraDefects *defects)
 {
-  return (defects && (defects->usableBottom || defects->usableTop || defects->usableLeft 
-    || defects->usableRight || defects->badColumnStart.size() || 
-    defects->badRowStart.size() || defects->badPixelX.size() || 
+  return (defects && (defects->usableBottom || defects->usableTop || defects->usableLeft
+    || defects->usableRight || defects->badColumnStart.size() ||
+    defects->badRowStart.size() || defects->badPixelX.size() ||
     defects->partialBadCol.size() || defects->partialBadRow.size()));
 }

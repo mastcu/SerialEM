@@ -8,6 +8,10 @@
 #include "MultiHoleCombiner.h"
 #include "MultiCombinerDlg.h"
 
+#if defined(_DEBUG) && defined(_CRTDBG_MAP_ALLOC)
+#define new DEBUG_NEW
+#endif
+
 #define MAX_HOLE_THRESH 20
 
 // CMultiCombinerDlg dialog

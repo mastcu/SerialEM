@@ -4,12 +4,16 @@
 #include "BaseSocket.h"
 #include "MacroProcessor.h"
 
+#if defined(_DEBUG) && defined(_CRTDBG_MAP_ALLOC)
+#define new DEBUG_NEW
+#endif
+
 enum { PSS_RegularCommand = 1, PSS_ChunkHandshake, PSS_OKtoRunExternalScript,
   PSS_GetBufferImage, PSS_PutImageInBuffer};
 
 // Table of functions, with # of incoming long, bool, and double, # of outgoing
 // long, bool and double.  The final number is the sum of 1 if there is a long array at
-// the end, whose size is in the last long argument (include that size in the number of 
+// the end, whose size is in the last long argument (include that size in the number of
 // incoming long's), plus 2 if a long array is to be returned, whose size must be in the
 // last returned long (include that size in the number of outgoing long's).
 static ArgDescriptor sFuncTable[] = {
@@ -71,7 +75,7 @@ int CPythonServer::StartServerIfNeeded(int sockInd)
     err = 1;
   }
   if (err) {
-    mess.Format("Cannot run %s Python scripts due to previous startup errors", 
+    mess.Format("Cannot run %s Python scripts due to previous startup errors",
       serverInd ? "external " : "");
     mWinApp->AppendToLog(mess);
     return 1;
@@ -99,7 +103,7 @@ int CPythonServer::StartServerIfNeeded(int sockInd)
     if (mess.IsEmpty()) {
       if (!QueryInformationJobObject(mJobObject, JobObjectExtendedLimitInformation,
         &jobInfo, sizeof(JOBOBJECT_EXTENDED_LIMIT_INFORMATION), NULL))
-        mess.Format("calling QueryInformationJobObject: error code %d", 
+        mess.Format("calling QueryInformationJobObject: error code %d",
           GetLastError);
     }
     if (mess.IsEmpty()) {
@@ -110,7 +114,7 @@ int CPythonServer::StartServerIfNeeded(int sockInd)
     }
     if (mess.IsEmpty()) {
       if (!AssignProcessToJobObject(mJobObject, GetCurrentProcess()))
-        mess.Format("calling AssignProcessToJobObject: error code %d", 
+        mess.Format("calling AssignProcessToJobObject: error code %d",
           GetLastError);
     }
 
@@ -192,7 +196,7 @@ int CPythonServer::ProcessCommand(int sockInd, int numBytes)
       sScriptData[pnd]->strItems[ind] = strArr;
       strArr += strlen(strArr) + 1;
     }
-    SEMTrace('[', "Command ready to execute, wait for done event  EC %d", 
+    SEMTrace('[', "Command ready to execute, wait for done event  EC %d",
       sScriptData[pnd]->externalControl);
     sScriptData[pnd]->commandReady = 1;
     while (WaitForSingleObject(CMacroProcessor::mScrpLangDoneEvent[pnd], 1000)) {
@@ -286,7 +290,7 @@ long *CPythonServer::AddReturnArrays(int &lenTot, int pnd)
 
   for (ind = 0; ind < numLongs; ind++) {
     if (sScriptData[pnd]->repValIsString[ind]) {
-      strncpy_s(nameStr, charsLeft, (LPCTSTR)sScriptData[pnd]->reportedStrs[ind], 
+      strncpy_s(nameStr, charsLeft, (LPCTSTR)sScriptData[pnd]->reportedStrs[ind],
         _TRUNCATE);
       len = (int)sScriptData[pnd]->reportedStrs[ind].GetLength() + 1;
       nameStr += len;

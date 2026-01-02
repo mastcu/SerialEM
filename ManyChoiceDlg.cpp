@@ -5,7 +5,11 @@
 #include "SerialEM.h"
 #include "ManyChoiceDlg.h"
 
-static int sIdTable[] = { IDC_MANYCHOICEHEADER, 
+#if defined(_DEBUG) && defined(_CRTDBG_MAP_ALLOC)
+#define new DEBUG_NEW
+#endif
+
+static int sIdTable[] = { IDC_MANYCHOICEHEADER,
 IDC_GENERIC_RADIO1, IDC_GENERIC_CHECK1, IDC_GENERIC_RADIO2, IDC_GENERIC_CHECK2,
 IDC_GENERIC_RADIO3, IDC_GENERIC_CHECK3, IDC_GENERIC_RADIO4, IDC_GENERIC_CHECK4,
 IDC_GENERIC_RADIO5, IDC_GENERIC_CHECK5, IDC_GENERIC_RADIO6, IDC_GENERIC_CHECK6,
@@ -13,7 +17,7 @@ IDC_GENERIC_RADIO7, IDC_GENERIC_CHECK7, IDC_GENERIC_RADIO8, IDC_GENERIC_CHECK8,
 IDC_GENERIC_RADIO9, IDC_GENERIC_CHECK9, IDC_GENERIC_RADIO10, IDC_GENERIC_CHECK10,
 IDC_GENERIC_RADIO11, IDC_GENERIC_CHECK11, IDC_GENERIC_RADIO12, IDC_GENERIC_CHECK12,
 IDC_GENERIC_RADIO13, IDC_GENERIC_CHECK13, IDC_GENERIC_RADIO14, IDC_GENERIC_CHECK14,
-IDC_GENERIC_RADIO15, IDC_GENERIC_CHECK15, PANEL_END, IDOK, IDCANCEL, IDC_BUTHELP, 
+IDC_GENERIC_RADIO15, IDC_GENERIC_CHECK15, PANEL_END, IDOK, IDCANCEL, IDC_BUTHELP,
 PANEL_END, TABLE_END };
 
 static int sTopTable[sizeof(sIdTable) / sizeof(int)];
@@ -64,14 +68,14 @@ BOOL CManyChoiceDlg::OnInitDialog()
   CBaseDlg::OnInitDialog();
   BOOL states[2] = { true, true };
   int IDstart, otherIDstart;
-  
+
   SetupPanelTables(sIdTable, sLeftTable, sTopTable, mNumInPanel, mPanelStart,
     sHeightTable);
   mIDsToDrop.push_back(IDC_BUTHELP);
   if (mIsRadio) {
     IDstart = IDC_GENERIC_RADIO1;
     otherIDstart = IDC_GENERIC_CHECK1;
-  }  
+  }
   else {
     IDstart = IDC_GENERIC_CHECK1;
     otherIDstart = IDC_GENERIC_RADIO1;
@@ -89,7 +93,7 @@ BOOL CManyChoiceDlg::OnInitDialog()
       // Hide extra options that will be unused
       mIDsToDrop.push_back(i);
   }
-  
+
   AdjustPanels(states, sIdTable, sLeftTable, sTopTable, mNumInPanel, mPanelStart, 0,
    sHeightTable);
   return TRUE;

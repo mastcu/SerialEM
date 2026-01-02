@@ -6,6 +6,10 @@
 #include ".\TSRangeDlg.h"
 #include "MultiTSTasks.h"
 
+#if defined(_DEBUG) && defined(_CRTDBG_MAP_ALLOC)
+#define new DEBUG_NEW
+#endif
+
 
 // CTSRangeDlg dialog
 
@@ -77,14 +81,14 @@ void CTSRangeDlg::ManageImageTypes(void)
   m_butPreview.ShowWindow(m_iLowDose > 0 ? SW_SHOW : SW_HIDE);
 }
 
-void CTSRangeDlg::OnOK() 
+void CTSRangeDlg::OnOK()
 {
   UpdateData(true);
   UnloadParameters(m_iLowDose);
 	CBaseDlg::OnOK();
 }
 
-void CTSRangeDlg::OnCancel() 
+void CTSRangeDlg::OnCancel()
 {
   CBaseDlg::OnCancel();
 }

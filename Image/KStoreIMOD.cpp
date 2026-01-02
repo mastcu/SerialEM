@@ -8,6 +8,10 @@
 #include "..\Shared\autodoc.h"
 #include "KStoreADOC.h"
 
+#if defined(_DEBUG) && defined(_CRTDBG_MAP_ALLOC)
+#define new DEBUG_NEW
+#endif
+
 // Opens an IMOD type file for reading
 KStoreIMOD::KStoreIMOD(CString filename)
   : KImageStore()
@@ -138,36 +142,36 @@ KImage  *KStoreIMOD::getRect(void)
   int i;
   mPixSize = lookupPixSize(mMode);
   size_t secSize = (size_t)mWidth * mHeight * mPixSize;
-  
+
   if (mCur.z < 0 || mCur.z >= mDepth || mIIfile == NULL)
-    return NULL; 
-  
+    return NULL;
+
   if ((mMode < 0 || mMode > 2) && mMode != MRC_MODE_USHORT && mMode != MRC_MODE_RGB)
     return NULL;
   NewArray(theData, char, secSize);
-  if (!theData) 
+  if (!theData)
     return NULL;
 
   switch(mMode){
     case 0:
       retVal = new KImage();
-      retVal->useData(theData, mWidth, mHeight); 
+      retVal->useData(theData, mWidth, mHeight);
       break;
     case 1:
     case MRC_MODE_USHORT:
       theSImage = new KImageShort();
       theSImage->setType(mMode == 1 ? kSHORT : kUSHORT);
-      theSImage->useData(theData, mWidth, mHeight); 
+      theSImage->useData(theData, mWidth, mHeight);
       retVal = (KImage *)theSImage;
       break;
     case 2:
       theFImage = new KImageFloat();
-      theFImage->useData(theData, mWidth, mHeight); 
+      theFImage->useData(theData, mWidth, mHeight);
       retVal = (KImage *)theFImage;
       break;
     case MRC_MODE_RGB:
       theCImage = new KImageRGB();
-      theCImage->useData(theData, mWidth, mHeight); 
+      theCImage->useData(theData, mWidth, mHeight);
       retVal = (KImage *)theCImage;
       break;
   }
@@ -232,7 +236,7 @@ void KStoreIMOD::Close(void)
       str.Format("Error writing header to shared memory file:\n%s", b3dGetError());
       SEMMessageBox(str);
     }
-    if (mIIfile->file == IIFILE_MRC && mrc_head_write(mIIfile->fp, 
+    if (mIIfile->file == IIFILE_MRC && mrc_head_write(mIIfile->fp,
       (MrcHeader *)mIIfile->header)) {
       str.Format("Error writing header of MRC file:\n%s", b3dGetError());
       SEMMessageBox(str);
@@ -246,7 +250,7 @@ void KStoreIMOD::Close(void)
   KImageStore::Close();
 }
 
-int KStoreIMOD::getTiffField(int tag, void *value) 
+int KStoreIMOD::getTiffField(int tag, void *value)
 {
   if (!mIIfile || mIIfile->file != IIFILE_TIFF)
    return -1;
@@ -255,7 +259,7 @@ int KStoreIMOD::getTiffField(int tag, void *value)
 
 // Here's the scoop: you need to call it with a count argument, but it does not get
 // returned with a usable count
-int KStoreIMOD::getTiffArray(int tag, b3dUInt32 *count, void *value) 
+int KStoreIMOD::getTiffArray(int tag, b3dUInt32 *count, void *value)
 {
   if (!mIIfile || mIIfile->file != IIFILE_TIFF)
     return -1;
@@ -263,7 +267,7 @@ int KStoreIMOD::getTiffArray(int tag, b3dUInt32 *count, void *value)
 }
 
 // Extract either a double or a string from a TIFF field
-int KStoreIMOD::getTiffValue(int tag, int type, int tokenNum, double &dvalue, 
+int KStoreIMOD::getTiffValue(int tag, int type, int tokenNum, double &dvalue,
                              CString &valstring)
 {
   unsigned short usval = 0;
@@ -360,7 +364,7 @@ int KStoreIMOD::WriteSection(KImage * inImage)
   } else
     mMode = inImage->getMode() == kGray ? mFileOpt.mode : MRC_MODE_RGB;
   mPixSize = lookupPixSize(mMode);
-  if (!isMrc) 
+  if (!isMrc)
     mIIfile->file = isJpeg ? IIFILE_JPEG : IIFILE_TIFF;
   int dataSize = mWidth * mHeight * mPixSize;
 

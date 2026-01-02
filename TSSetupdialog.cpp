@@ -1,7 +1,6 @@
 // TSSetupdialog.cpp:    To set lots of parameters for a tilt series
 //
-// Copyright (C) 2003 by Boulder Laboratory for 3-Dimensional Electron 
-// Microscopy of Cells ("BL3DEMC") and the Regents of the University of
+// Copyright (C) 2003-2026 by the Regents of the University of
 // Colorado.  See Copyright.txt for full notice of copyright and limitations.
 //
 // Author: David Mastronarde
@@ -21,10 +20,8 @@
 #include "TSDoseSymDlg.h"
 #include "DriftWaitSetupDlg.h"
 
-#ifdef _DEBUG
+#if defined(_DEBUG) && defined(_CRTDBG_MAP_ALLOC)
 #define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
 #endif
 
 #define NUM_LEFT_PANELS 3
@@ -47,30 +44,30 @@ static int idTable[] = {
   IDC_TSS_PLUS1, 0, 0, IDC_TSS_TITLE1, IDC_TSS_LINE1,
   IDC_STATSTARTAT, IDC_EDITSTARTANGLE, IDC_STATENDAT, IDC_EDITENDANGLE, IDC_STATBASICINC,
   IDC_EDITINCREMENT, IDC_COSINEINC, IDC_STATTOTALTILT, IDC_STATDELAY, IDC_EDITTILTDELAY,
-  IDC_STATDELSEC, IDC_CHECK_VARY_PARAMS, IDC_BUT_SET_CHANGES, IDC_BUT_SWAP_ANGLES, 
+  IDC_STATDELSEC, IDC_CHECK_VARY_PARAMS, IDC_BUT_SET_CHANGES, IDC_BUT_SWAP_ANGLES,
   IDC_DO_BIDIR, IDC_BIDIR_ANGLE, IDC_BIDIR_WALK_BACK, IDC_STAT_BDMAG_LABEL,
   IDC_STAT_BIDIR_MAG, IDC_SPIN_BIDIR_MAG, IDC_BIDIR_USE_VIEW, IDC_STAT_BIDIR_FIELD_SIZE,
   IDC_USE_DOSE_SYM, IDC_BUT_SETUP_DOSE_SYM, IDC_STAT_STAR_TILT, IDC_STAT_STAR_BIDIR,
   PANEL_END,
   IDC_TSS_PLUS2, 0, 0, IDC_TSS_TITLE2, IDC_TSS_LINE2,
-  IDC_STATMAGLABEL, IDC_STATRECORDMAG,IDC_SPINRECORDMAG,  IDC_STATBINLABEL, 
+  IDC_STATMAGLABEL, IDC_STATRECORDMAG,IDC_SPINRECORDMAG,  IDC_STATBINLABEL,
   IDC_STATBINNING, IDC_SPINBIN, IDC_STATPIXEL, IDC_LOWMAGTRACK, IDC_STATLOWMAG,
   IDC_SPINTRACKMAG, IDC_STATLIMITIS, IDC_STATISMICRONS, IDC_EDITLIMITIS,
   IDC_CENTER_FROM_TRIAL, IDC_AUTO_REFINE_ZLP, IDC_EDIT_ZLP_INTERVAL, IDC_STATMINUTES,
   IDC_AUTOCEN_AT_INTERVAL, IDC_EDIT_AC_INTERVAL, IDC_STAT_ACMINUTES, IDC_STAT_INTERSET,
   IDC_AUTOCEN_AT_CROSSING, IDC_EDIT_AC_ANGLE, IDC_STAT_ACDEGREES, PANEL_END,
-  IDC_TSS_PLUS3, 0, 0, IDC_TSS_TITLE3, IDC_TSS_LINE3, IDC_CHANGE_EXPOSURE, 
-  IDC_CHANGE_EDMPCT, IDC_RCONSTANTBEAM, IDC_RINTENSITYCOSINE, IDC_RINTENSITYMEAN, 
-  IDC_SPINCOSINEPOWER, IDC_STATPOWER, IDC_EDITCOUNTS, IDC_STATCURRENTCOUNTS, IDC_RAMPBEAM, 
-  IDC_EDITTAPERCOUNTS, IDC_STATTAPERFTA, IDC_EDITTAPERANGLE, IDC_STATTAPERDEG, 
-  IDC_LIMITTOCURRENT, IDC_LIMITINTENSITY, IDC_USEINTENSITYATZERO, IDC_STATTOTALDOSE, 
+  IDC_TSS_PLUS3, 0, 0, IDC_TSS_TITLE3, IDC_TSS_LINE3, IDC_CHANGE_EXPOSURE,
+  IDC_CHANGE_EDMPCT, IDC_RCONSTANTBEAM, IDC_RINTENSITYCOSINE, IDC_RINTENSITYMEAN,
+  IDC_SPINCOSINEPOWER, IDC_STATPOWER, IDC_EDITCOUNTS, IDC_STATCURRENTCOUNTS, IDC_RAMPBEAM,
+  IDC_EDITTAPERCOUNTS, IDC_STATTAPERFTA, IDC_EDITTAPERANGLE, IDC_STATTAPERDEG,
+  IDC_LIMITTOCURRENT, IDC_LIMITINTENSITY, IDC_USEINTENSITYATZERO, IDC_STATTOTALDOSE,
   IDC_CHANGE_ALL_EXP, IDC_CHANGE_SETTLING, PANEL_END,
   IDC_TSS_PLUS4, 0, 0, IDC_TSS_TITLE4, IDC_TSS_LINE4,
-  IDC_RCAMERA1, IDC_RCAMERA2, IDC_RCAMERA3, IDC_RCAMERA4, IDC_RCAMERA5, IDC_RCAMERA6, 
+  IDC_RCAMERA1, IDC_RCAMERA2, IDC_RCAMERA3, IDC_RCAMERA4, IDC_RCAMERA5, IDC_RCAMERA6,
   IDC_AVERAGERECREF, IDC_STAT_FRAME_LABEL, IDC_DO_EARLY_RETURN, IDC_SPIN_EARLY_FRAMES,
   IDC_STAT_NUM_EARLY_FRAMES, PANEL_END,
   IDC_TSS_PLUS5, 0, 0, IDC_TSS_TITLE5, IDC_TSS_LINE5,
-  IDC_STATDEFTARG, IDC_STATTARGMICRONS, IDC_STATBEAMTILT, IDC_STATFOCUSOFFSET, 
+  IDC_STATDEFTARG, IDC_STATTARGMICRONS, IDC_STATBEAMTILT, IDC_STATFOCUSOFFSET,
   IDC_STATOFFSETMICRONS, IDC_STAT_ITER_THRESH, IDC_STATTHRESHMICRONS, IDC_EDIT_ITER_THRESH
   , IDC_EDITFOCUSTARGET, IDC_EDITBEAMTILT, IDC_STATMILLIRAD, IDC_EDITFOCUSOFFSET,
   IDC_SKIPAUTOFOCUS, IDC_STATCHECKEVERY, IDC_EDITCHECKFOCUS, IDC_STATCHECKDEG,
@@ -82,16 +79,16 @@ static int idTable[] = {
   IDC_TSS_PLUS6, 0, 0, IDC_TSS_TITLE6, IDC_TSS_LINE6,
   IDC_REFINEEUCEN, IDC_LEAVEANCHOR, IDC_EDITANCHOR, IDC_STATANCHORDEG,IDC_USEAFORREF,
   IDC_USEANCHOR, IDC_STATANCHORBUF, IDC_SPINANCHOR, IDC_CLOSE_VALVES, PANEL_END,
-  IDC_TSS_PLUS7, 0, 0, IDC_TSS_TITLE7, IDC_TSS_LINE7, 
+  IDC_TSS_PLUS7, 0, 0, IDC_TSS_TITLE7, IDC_TSS_LINE7,
   IDC_TSWAITFORDRIFT, IDC_BUT_SETUP_DRIFT_WAIT,
   IDC_REPEATRECORD, IDC_EDITREPEATRECORD, IDC_CONFIRM_LOWDOSE_REPEAT,
   IDC_EDITPREDICTERRORXY, IDC_RTRACKBEFORE, IDC_STAT_DW_DEGREES,
   IDC_RTRACKAFTER, IDC_RTRACKBOTH, IDC_ALIGNTRACKONLY, IDC_PREVIEWBEFOREREF,
-  IDC_STATNEWTRACK, IDC_EDITNEWTRACKDIFF, IDC_STATPERCENT, IDC_STOPONBIGSHIFT, 
+  IDC_STATNEWTRACK, IDC_EDITNEWTRACKDIFF, IDC_STATPERCENT, IDC_STOPONBIGSHIFT,
   IDC_EDITBIGSHIFT, IDC_MANUAL_TRACKING, IDC_STATPCTIMAGE, IDC_STATGETTRACK,
   IDC_STATPCTFIELD, IDC_STATTRACKWHEN, PANEL_END,
-  IDC_BUT_TSS_PREV, IDC_BUT_TSS_NEXT, IDC_BUT_TSS_LEFT, IDC_BUT_TSS_RIGHT, 
-  IDC_BUT_TSS_FULL, IDC_TSGO, IDC_SINGLESTEP, IDC_POSTPONE, IDCANCEL, 
+  IDC_BUT_TSS_PREV, IDC_BUT_TSS_NEXT, IDC_BUT_TSS_LEFT, IDC_BUT_TSS_RIGHT,
+  IDC_BUT_TSS_FULL, IDC_TSGO, IDC_SINGLESTEP, IDC_POSTPONE, IDCANCEL,
   IDC_BUTHELP, PANEL_END, TABLE_END};
 
 static int topTable[sizeof(idTable) / sizeof(int)];
@@ -262,10 +259,10 @@ void CTSSetupDialog::DoDataExchange(CDataExchange* pDX)
   DDX_Check(pDX, IDC_CHECK_LIMIT_DELTA_FOCUS, m_bLimitDeltaFocus);
   DDX_Control(pDX, IDC_STAT_DELTA_MICRONS, m_statDeltaMicrons);
   DDX_Control(pDX, IDC_EDIT_FOCUS_MAX_DELTA, m_editFocusMaxDelta);
-  DDX_MM_FLOAT(pDX, IDC_EDIT_FOCUS_MAX_DELTA, m_fFocusMaxDelta, 0.1f, 100.f, 
+  DDX_MM_FLOAT(pDX, IDC_EDIT_FOCUS_MAX_DELTA, m_fFocusMaxDelta, 0.1f, 100.f,
     "Maximum autofocus change");
   DDX_Check(pDX, IDC_COSINEINC, m_bCosineInc);
-  DDX_MM_FLOAT(pDX, IDC_EDITANCHOR, m_fAnchorAngle, -80.f, 80.f, 
+  DDX_MM_FLOAT(pDX, IDC_EDITANCHOR, m_fAnchorAngle, -80.f, 80.f,
     "Angle to leave mid-tilt anchor near");
   DDX_FLOAT(pDX, IDC_EDITBEAMTILT, m_fBeamTilt, "Beam tilt for autofocus");
   DDX_FLOAT(pDX, IDC_EDITCHECKFOCUS, m_fCheckFocus,
@@ -277,7 +274,7 @@ void CTSSetupDialog::DoDataExchange(CDataExchange* pDX)
   DDX_Control(pDX, IDC_STATLIMITIS, m_statLimitIS);
   DDX_Control(pDX, IDC_EDITLIMITIS, m_editLimitIS);
   DDX_MM_FLOAT(pDX, IDC_EDITLIMITIS, m_fLimitIS, 0.f, 25.f, "Image shift limit");
-  DDX_MM_FLOAT(pDX, IDC_EDITREPEATFOCUS, m_fRepeatFocus, 0.f, 20.f, 
+  DDX_MM_FLOAT(pDX, IDC_EDITREPEATFOCUS, m_fRepeatFocus, 0.f, 20.f,
     "Difference from prediction for repeating autofocus");
   DDX_MM_FLOAT(pDX, IDC_EDITSTARTANGLE, m_fStartAngle, -mMaxTiltAngle, mMaxTiltAngle,
     "Starting or Tilt to tilt angle");
@@ -296,14 +293,14 @@ void CTSSetupDialog::DoDataExchange(CDataExchange* pDX)
   DDX_Text(pDX, IDC_STATTOTALTILT, m_strTotalTilt);
   DDX_Text(pDX, IDC_STATPOWER, m_strCosPower);
   DDX_Check(pDX, IDC_USEANCHOR, m_bUseAnchor);
-  DDX_MM_FLOAT(pDX, IDC_EDITREPEATRECORD, m_fRepeatRecord, 0.f, 99.f, 
+  DDX_MM_FLOAT(pDX, IDC_EDITREPEATRECORD, m_fRepeatRecord, 0.f, 99.f,
     "Percentage of field loss for repeating Record");
   DDX_MM_FLOAT(pDX, IDC_EDITFOCUSTARGET, m_fTargetDefocus, -25.f, 25.f, "Defocus target");
   DDX_Check(pDX, IDC_USEAFORREF, m_bUseAForRef);
   DDX_Check(pDX, IDC_ALWAYSFOCUS, m_bAlwaysFocus);
   DDX_FLOAT(pDX, IDC_EDITALWAYSFOCUS, m_fAlwaysAngle, "Angle to focus every time above");
   DDX_Check(pDX, IDC_RAMPBEAM, m_bRampBeam);
-  DDX_MM_FLOAT(pDX, IDC_EDITTAPERANGLE, m_fTaperAngle, 0.f, 90.f, 
+  DDX_MM_FLOAT(pDX, IDC_EDITTAPERANGLE, m_fTaperAngle, 0.f, 90.f,
     "Angle above which to taper counts");
   DDX_MM_INT(pDX, IDC_EDITTAPERCOUNTS, m_iTaperCounts, 0, 60000, "Counts to taper to");
   DDX_MM_FLOAT(pDX, IDC_EDITNEWTRACKDIFF, m_fNewTrackDiff, 0.2f, 100.f,
@@ -311,7 +308,7 @@ void CTSSetupDialog::DoDataExchange(CDataExchange* pDX)
   DDX_Check(pDX, IDC_ALIGNTRACKONLY, m_bAlignTrackOnly);
   DDX_MM_FLOAT(pDX, IDC_EDITPREDICTERRORXY, m_fPredictErrorXY, 0.f, 100.f,
     "Error in X/Y predicting for getting track reference");
-  DDX_MM_FLOAT(pDX, IDC_EDITPREDICTERRORZ, m_fPredictErrorZ, 0.f, 10.f, 
+  DDX_MM_FLOAT(pDX, IDC_EDITPREDICTERRORZ, m_fPredictErrorZ, 0.f, 10.f,
     "Prediction error for doing autofocus");
   DDX_Radio(pDX, IDC_RCAMERA1, m_iCamera);
   DDX_Check(pDX, IDC_CHECKAUTOFOCUS, m_bCheckAutofocus);
@@ -326,7 +323,7 @@ void CTSSetupDialog::DoDataExchange(CDataExchange* pDX)
   DDX_Text(pDX, IDC_STATTOTALDOSE, m_strTotalDose);
   DDX_Check(pDX, IDC_USEINTENSITYATZERO, m_bIntensitySetAtZero);
   DDX_Check(pDX, IDC_AUTO_REFINE_ZLP, m_bRefineZLP);
-  DDX_MM_INT(pDX, IDC_EDIT_ZLP_INTERVAL, m_iZlpInterval, 0, 600, 
+  DDX_MM_INT(pDX, IDC_EDIT_ZLP_INTERVAL, m_iZlpInterval, 0, 600,
     "Interval for refining ZLP");
   DDX_Text(pDX, IDC_STATMILLIRAD, m_statMilliRad);
   DDX_Check(pDX, IDC_STOPONBIGSHIFT, m_bStopOnBigShift);
@@ -368,9 +365,9 @@ void CTSSetupDialog::DoDataExchange(CDataExchange* pDX)
   DDX_Control(pDX, IDC_EDIT_AC_ANGLE, m_editAutocenAngle);
   DDX_Check(pDX, IDC_AUTOCEN_AT_INTERVAL, m_bAutocenInterval);
   DDX_Check(pDX, IDC_AUTOCEN_AT_CROSSING, m_bAutocenCrossing);
-  DDX_MM_INT(pDX, IDC_EDIT_AC_INTERVAL, m_iAutocenInterval, 1, 600, 
+  DDX_MM_INT(pDX, IDC_EDIT_AC_INTERVAL, m_iAutocenInterval, 1, 600,
     "Autocenter beam interval");
-  DDX_MM_FLOAT(pDX, IDC_EDIT_AC_ANGLE, m_fAutocenAngle, 1.f, 100.f, 
+  DDX_MM_FLOAT(pDX, IDC_EDIT_AC_ANGLE, m_fAutocenAngle, 1.f, 100.f,
     "Angle for autocentering beam in 2nd half of series");
   DDX_Control(pDX, IDC_BUT_SWAP_ANGLES, m_butSwapAngles);
   DDX_Control(pDX, IDC_EDITFOCUSOFFSET, m_editFocusOffset);
@@ -505,7 +502,7 @@ END_MESSAGE_MAP()
 /////////////////////////////////////////////////////////////////////////////
 // CTSSetupDialog message handlers
 
-BOOL CTSSetupDialog::OnInitDialog() 
+BOOL CTSSetupDialog::OnInitDialog()
 {
   CRect idRect, goRect;
   CWnd *wnd;
@@ -521,14 +518,14 @@ BOOL CTSSetupDialog::OnInitDialog()
   mSTEMindex = mCamParams[mCurrentCamera].STEMcamera ? 1 + mProbeMode : 0;
   CString *modeNames = mWinApp->GetModeNames();
   mWinApp->mBufferManager->CheckAsyncSaving();
-  BOOL fileWritten = !mFuture && (mWinApp->mStoreMRC != NULL && 
+  BOOL fileWritten = !mFuture && (mWinApp->mStoreMRC != NULL &&
     mWinApp->mStoreMRC->getDepth() > 0);
   BOOL enable;
   CString str, str2;
   mPostpone = false;
   mSingleStep = false;
 
-  SetupPanelTables(idTable, leftTable, topTable, mNumInPanel, mPanelStart, heightTable, 
+  SetupPanelTables(idTable, leftTable, topTable, mNumInPanel, mPanelStart, heightTable,
     5);
 
   // The +/- bold used to work without a member variable, but not for high DPI
@@ -635,7 +632,7 @@ BOOL CTSSetupDialog::OnInitDialog()
   m_sbcRecordMag.SetRange(1, MAX_MAGS);
   m_sbcRecordMag.SetPos(mMagIndex[mSTEMindex]);
   mBinning = mTSParam.binning;
-  m_strBinning.Format("%s", (LPCTSTR)mWinApp->BinningText(mBinning, 
+  m_strBinning.Format("%s", (LPCTSTR)mWinApp->BinningText(mBinning,
     &mCamParams[mCurrentCamera]));
   m_sbcBin.SetRange(0, 100);
   m_sbcBin.SetPos(50);
@@ -732,8 +729,8 @@ BOOL CTSSetupDialog::OnInitDialog()
       ReplaceWindowText(&m_butCloseValves, "Close column valves", "Turn off filament");
     else
       ReplaceWindowText(&m_butCloseValves, "column valves", "gun valve");
-  } 
-  
+  }
+
   ManageNewTrackDiff();
   ManageTaperLine();
   SetPixelSize();
@@ -757,7 +754,7 @@ BOOL CTSSetupDialog::OnInitDialog()
       CButton *radio = (CButton *)GetDlgItem(i + IDC_RCAMERA1);
       radio->SetFont(littleFont);
     }
-  } 
+  }
 
   // Turn off the rest of the camera buttons
   for (; i < MAX_DLG_CAMERAS; i++) {
@@ -796,7 +793,7 @@ BOOL CTSSetupDialog::OnInitDialog()
     m_butConfirmLowDoseRepeat.EnableWindow(false);
   }
 
-  m_butRefineEucen.EnableWindow(!mDoingTS && mCanFindEucentricity && 
+  m_butRefineEucen.EnableWindow(!mDoingTS && mCanFindEucentricity &&
     !mWinApp->mComplexTasks->GetHitachiWithoutZ());
 
   // Now disable lots of things if doing series
@@ -816,7 +813,7 @@ BOOL CTSSetupDialog::OnInitDialog()
     m_butLimitToCurrent.SetWindowText(
       "Keep intensity below value before series was started");
   }
-  m_butSwapAngles.EnableWindow(!mDoingTS && mFuture >= 0 && 
+  m_butSwapAngles.EnableWindow(!mDoingTS && mFuture >= 0 &&
     (mFuture > 0 || fabs(mCurrentAngle) < 20.));
   ManageBidirectional();
   ManageDriftWait();
@@ -867,7 +864,7 @@ void CTSSetupDialog::ManageCameras()
   // loop through the cameras, making sure the current binning exists
   for (iCamInd = 0; iCamInd < mNumCameras; iCamInd++) {
     iCam = mActiveCameraList[iCamInd];
-    binToEval = BinDivisorI(&mCamParams[iCam]) * mBinning / 
+    binToEval = BinDivisorI(&mCamParams[iCam]) * mBinning /
       BinDivisorI(&mCamParams[mCurrentCamera]);
     BOOL binOK = mWinApp->BinningIsValid(binToEval, iCam, true);
     CButton *radio = (CButton *)GetDlgItem(iCamInd + IDC_RCAMERA1);
@@ -878,7 +875,7 @@ void CTSSetupDialog::ManageCameras()
 }
 
 // The camera selection is switched
-void CTSSetupDialog::OnRcamera() 
+void CTSSetupDialog::OnRcamera()
 {
   int lastSTEM = mSTEMindex;
   int lastCam = mCurrentCamera;
@@ -895,15 +892,15 @@ void CTSSetupDialog::OnRcamera()
     mMagIndex[mSTEMindex] = MagIndWithClosestFieldSize(lastCam, mMagIndex[lastSTEM],
     mCurrentCamera, mSTEMindex);
   if (!mBidirMagInd[index])
-    mBidirMagInd[index] = MagIndWithClosestFieldSize(lastCam, 
+    mBidirMagInd[index] = MagIndWithClosestFieldSize(lastCam,
       mBidirMagInd[2 * lastSTEM + (mLowDoseMode ? 1 : 0)], mCurrentCamera, mSTEMindex);
   if (!mLowMagIndex[mSTEMindex])
-    mLowMagIndex[mSTEMindex] = MagIndWithClosestFieldSize(lastCam, 
+    mLowMagIndex[mSTEMindex] = MagIndWithClosestFieldSize(lastCam,
     mLowMagIndex[lastSTEM], mCurrentCamera, mSTEMindex);
   m_strRecordMag.Format("%d", RegularOrEFTEMMag(mMagIndex[mSTEMindex]));
   m_strLowMag.Format("%d", RegularOrEFTEMMag(mLowMagIndex[mSTEMindex]));
   ManageAnchorMag(mCurrentCamera);
-  m_butLowMagTrack.EnableWindow(mLowMagIndex[mSTEMindex] < mMagIndex[mSTEMindex] && 
+  m_butLowMagTrack.EnableWindow(mLowMagIndex[mSTEMindex] < mMagIndex[mSTEMindex] &&
     !mLowDoseMode);
   m_bAverageDark = mCamParams[mCurrentCamera].TSAverageDark > 0;
   if (mSTEMindex && m_iBeamControl == 2) {
@@ -955,7 +952,7 @@ void CTSSetupDialog::OnDoEarlyReturn()
 
 void CTSSetupDialog::OnDeltaposSpinEarlyFrames(NMHDR *pNMHDR, LRESULT *pResult)
 {
-  if (NewSpinnerValue(pNMHDR, pResult, mTSParam.earlyReturnNumFrames, 1, 99, 
+  if (NewSpinnerValue(pNMHDR, pResult, mTSParam.earlyReturnNumFrames, 1, 99,
     mTSParam.earlyReturnNumFrames))
     return;
   m_strNumEarlyFrames.Format("%d", mTSParam.earlyReturnNumFrames);
@@ -996,12 +993,12 @@ void CTSSetupDialog::ManageIntersetStatus(void)
   CString *modeNames = mWinApp->GetModeNames();
  if (!mSTEMindex)
     return;
-  trialOK = mWinApp->mShiftManager->ShiftAdjustmentForSet(TRIAL_CONSET, 
-    mMagIndex[mSTEMindex], shiftX, shiftY, mCurrentCamera, mBinning); 
-  focusOK = mWinApp->mShiftManager->ShiftAdjustmentForSet(FOCUS_CONSET, 
+  trialOK = mWinApp->mShiftManager->ShiftAdjustmentForSet(TRIAL_CONSET,
+    mMagIndex[mSTEMindex], shiftX, shiftY, mCurrentCamera, mBinning);
+  focusOK = mWinApp->mShiftManager->ShiftAdjustmentForSet(FOCUS_CONSET,
     mMagIndex[mSTEMindex], shiftX, shiftY, mCurrentCamera, mBinning);
   if (mWinApp->LowDoseMode())
-    previewOK = mWinApp->mShiftManager->ShiftAdjustmentForSet(PREVIEW_CONSET, 
+    previewOK = mWinApp->mShiftManager->ShiftAdjustmentForSet(PREVIEW_CONSET,
       mMagIndex[mSTEMindex], shiftX, shiftY, mCurrentCamera, mBinning);
   if (trialOK || focusOK || previewOK) {
     m_strInterset = "Interset shifts WILL BE USED for ";
@@ -1067,7 +1064,7 @@ void CTSSetupDialog::SetTotalTilts()
   if (mSTEMindex) {
     m_strTotalDose = "";
   } else if (totalDose) {
-    curDose = mWinApp->mBeamAssessor->GetCurrentElectronDose(mCurrentCamera, 
+    curDose = mWinApp->mBeamAssessor->GetCurrentElectronDose(mCurrentCamera,
       RECORD_CONSET, spotSize, intensity);
     if (curDose) {
 
@@ -1100,7 +1097,7 @@ void CTSSetupDialog::SetTotalTilts()
 
 // This is called on KillFocus of the start, end and increment
 // boxes and anchor angle box and on a change of the cosine tilt button
-void CTSSetupDialog::OnAngleChanges() 
+void CTSSetupDialog::OnAngleChanges()
 {
   float oldStart = m_fStartAngle;
   float oldEnd = m_fEndAngle;
@@ -1133,9 +1130,9 @@ void CTSSetupDialog::OnButSwapAngles()
 }
 
 // For other edit fields, validate data when they lose focus
-void CTSSetupDialog::OnKillfocus() 
+void CTSSetupDialog::OnKillfocus()
 {
-  UpdateData(true); 
+  UpdateData(true);
 }
 
 void CTSSetupDialog::OnButSetChanges()
@@ -1144,7 +1141,7 @@ void CTSSetupDialog::OnButSetChanges()
   FixButtonStyle(IDC_BUT_SET_CHANGES);
   dlg.mParam = &mTSParam;
   mTSParam.cameraIndex = m_iCamera;
-  dlg.mFilterExists = !mSTEMindex && (mCamParams[mCurrentCamera].GIF || 
+  dlg.mFilterExists = !mSTEMindex && (mCamParams[mCurrentCamera].GIF ||
     mWinApp->mScope->GetHasOmegaFilter());
   dlg.mK2Selected = mCamParams[mCurrentCamera].K2Type;
   dlg.mDoingTS = mDoingTS;
@@ -1169,7 +1166,7 @@ void CTSSetupDialog::OnCheckVaryParams()
   ManageTaperLine();
 }
 
-void CTSSetupDialog::OnDeltaposSpinanchor(NMHDR* pNMHDR, LRESULT* pResult) 
+void CTSSetupDialog::OnDeltaposSpinanchor(NMHDR* pNMHDR, LRESULT* pResult)
 {
   NM_UPDOWN* pNMUpDown = (NM_UPDOWN*)pNMHDR;
   int newVal = mAnchorBuf + pNMUpDown->iDelta;
@@ -1182,7 +1179,7 @@ void CTSSetupDialog::OnDeltaposSpinanchor(NMHDR* pNMHDR, LRESULT* pResult)
   *pResult = 0;
 }
 
-void CTSSetupDialog::OnDeltaposSpinbin(NMHDR* pNMHDR, LRESULT* pResult) 
+void CTSSetupDialog::OnDeltaposSpinbin(NMHDR* pNMHDR, LRESULT* pResult)
 {
   int newVal;
   CameraParameters *cam = &mCamParams[mCurrentCamera];
@@ -1201,7 +1198,7 @@ void CTSSetupDialog::OnDeltaposSpinbin(NMHDR* pNMHDR, LRESULT* pResult)
   *pResult = 0;
 }
 
-void CTSSetupDialog::OnDeltaposSpinrecordmag(NMHDR* pNMHDR, LRESULT* pResult) 
+void CTSSetupDialog::OnDeltaposSpinrecordmag(NMHDR* pNMHDR, LRESULT* pResult)
 {
   int newVal;
   NM_UPDOWN* pNMUpDown = (NM_UPDOWN*)pNMHDR;
@@ -1209,7 +1206,7 @@ void CTSSetupDialog::OnDeltaposSpinrecordmag(NMHDR* pNMHDR, LRESULT* pResult)
 
   // Move in given direction until an index is reached with a listed
   // mag or until the end of the table
-  newVal = mWinApp->FindNextMagForCamera(mCurrentCamera, mMagIndex[mSTEMindex], 
+  newVal = mWinApp->FindNextMagForCamera(mCurrentCamera, mMagIndex[mSTEMindex],
     pNMUpDown->iDelta);
   if (newVal <= 0)
     return;
@@ -1217,7 +1214,7 @@ void CTSSetupDialog::OnDeltaposSpinrecordmag(NMHDR* pNMHDR, LRESULT* pResult)
   m_strRecordMag.Format("%d", RegularOrEFTEMMag(newVal));
   ManageIntersetStatus();
   SetPixelSize();
-  m_butLowMagTrack.EnableWindow(mLowMagIndex[mSTEMindex] < mMagIndex[mSTEMindex] && 
+  m_butLowMagTrack.EnableWindow(mLowMagIndex[mSTEMindex] < mMagIndex[mSTEMindex] &&
     !mLowDoseMode);
   ManageNewTrackDiff();
   ManageAutocen();
@@ -1225,7 +1222,7 @@ void CTSSetupDialog::OnDeltaposSpinrecordmag(NMHDR* pNMHDR, LRESULT* pResult)
   *pResult = 0;
 }
 
-void CTSSetupDialog::OnDeltaposSpintrackmag(NMHDR* pNMHDR, LRESULT* pResult) 
+void CTSSetupDialog::OnDeltaposSpintrackmag(NMHDR* pNMHDR, LRESULT* pResult)
 {
   int newVal;
   NM_UPDOWN* pNMUpDown = (NM_UPDOWN*)pNMHDR;
@@ -1233,7 +1230,7 @@ void CTSSetupDialog::OnDeltaposSpintrackmag(NMHDR* pNMHDR, LRESULT* pResult)
 
   // Get the next mag in the given direction but stay out of low mag
   newVal = mWinApp->FindNextMagForCamera(mCurrentCamera, mLowMagIndex[mSTEMindex],
-    pNMUpDown->iDelta, 
+    pNMUpDown->iDelta,
     true);
   if (newVal <= 0)
     return;
@@ -1247,7 +1244,7 @@ void CTSSetupDialog::OnDeltaposSpintrackmag(NMHDR* pNMHDR, LRESULT* pResult)
 }
 
 // Change in cosine power button
-void CTSSetupDialog::OnDeltaposSpincosinepower(NMHDR* pNMHDR, LRESULT* pResult) 
+void CTSSetupDialog::OnDeltaposSpincosinepower(NMHDR* pNMHDR, LRESULT* pResult)
 {
   NM_UPDOWN* pNMUpDown = (NM_UPDOWN*)pNMHDR;
   UpdateData(true);
@@ -1263,13 +1260,13 @@ void CTSSetupDialog::OnDeltaposSpincosinepower(NMHDR* pNMHDR, LRESULT* pResult)
 }
 
 // Low mag button: Enable the tracking difference buttons
-void CTSSetupDialog::OnLowmagtrack() 
+void CTSSetupDialog::OnLowmagtrack()
 {
   UPDATE_DATA_TRUE;
   ManageNewTrackDiff();
 }
 
-void CTSSetupDialog::OnAutoRefineZlp() 
+void CTSSetupDialog::OnAutoRefineZlp()
 {
   UPDATE_DATA_TRUE;
   ManageRefineZLP();
@@ -1284,7 +1281,7 @@ void CTSSetupDialog::OnAutocenAtCrossing()
 void CTSSetupDialog::ManageAutocen(void)
 {
   LowDoseParams *ldp = mWinApp->GetLowDoseParams();
-  int probe = mLowDoseMode ? ldp[TRIAL_CONSET].probeMode : 
+  int probe = mLowDoseMode ? ldp[TRIAL_CONSET].probeMode :
     mWinApp->mScope->GetProbeMode();
   int magInd = mWinApp->mMultiTSTasks->GetAutoCenUseMagInd();
   if (!magInd || mLowDoseMode)
@@ -1300,37 +1297,37 @@ void CTSSetupDialog::ManageAutocen(void)
   m_statACdegrees.EnableWindow(enable && m_bAutocenCrossing && !doingDosym);
 }
 
-void CTSSetupDialog::OnCheckautofocus() 
+void CTSSetupDialog::OnCheckautofocus()
 {
   UPDATE_DATA_TRUE;
-  m_editMinFocusAccuracy.EnableWindow(m_bCheckAutofocus);   
+  m_editMinFocusAccuracy.EnableWindow(m_bCheckAutofocus);
 }
 
-void CTSSetupDialog::OnLeaveanchor() 
-{
-  UPDATE_DATA_TRUE;
-  ManageInitialActions();
-}
-
-void CTSSetupDialog::OnUseanchor() 
+void CTSSetupDialog::OnLeaveanchor()
 {
   UPDATE_DATA_TRUE;
   ManageInitialActions();
 }
 
-void CTSSetupDialog::OnRepeatrecord() 
+void CTSSetupDialog::OnUseanchor()
 {
   UPDATE_DATA_TRUE;
-  m_editRepeatRecord.EnableWindow(m_bRepeatRecord); 
+  ManageInitialActions();
 }
 
-void CTSSetupDialog::OnRepeatfocus() 
+void CTSSetupDialog::OnRepeatrecord()
+{
+  UPDATE_DATA_TRUE;
+  m_editRepeatRecord.EnableWindow(m_bRepeatRecord);
+}
+
+void CTSSetupDialog::OnRepeatfocus()
 {
   UPDATE_DATA_TRUE;
   m_editRepeatFocus.EnableWindow(m_bRepeatFocus);
 }
 
-void CTSSetupDialog::OnRintensitymean() 
+void CTSSetupDialog::OnRintensitymean()
 {
   UPDATE_DATA_TRUE;
   ManageExposures();
@@ -1338,26 +1335,26 @@ void CTSSetupDialog::OnRintensitymean()
   SetTotalTilts();
 }
 
-void CTSSetupDialog::OnLimittocurrent() 
+void CTSSetupDialog::OnLimittocurrent()
 {
   UPDATE_DATA_TRUE;
   ManageTaperLine();
   SetTotalTilts();
 }
 
-void CTSSetupDialog::OnSkipautofocus() 
+void CTSSetupDialog::OnSkipautofocus()
 {
   UPDATE_DATA_TRUE;
-  ManageFocusIntervals();   	
+  ManageFocusIntervals();
 }
 
-void CTSSetupDialog::OnAlwaysfocus() 
+void CTSSetupDialog::OnAlwaysfocus()
 {
   UPDATE_DATA_TRUE;
   m_editAlwaysAngle.EnableWindow(m_bAlwaysFocus);
 }
 
-void CTSSetupDialog::OnAveragerecref() 
+void CTSSetupDialog::OnAveragerecref()
 {
   UPDATE_DATA_TRUE;
   mCamParams[mCurrentCamera].TSAverageDark = m_bAverageDark ? 1 : 0;
@@ -1385,7 +1382,7 @@ void CTSSetupDialog::OnCheckLimitDeltaFocus()
   ManageFocusIntervals();
 }
 
-void CTSSetupDialog::OnRampbeam() 
+void CTSSetupDialog::OnRampbeam()
 {
   UPDATE_DATA_TRUE;
   ManageTaperLine();
@@ -1420,7 +1417,7 @@ void CTSSetupDialog::OnButChangeEDM()
   ManageTaperLine();
 }
 
-void CTSSetupDialog::OnStoponbigshift() 
+void CTSSetupDialog::OnStoponbigshift()
 {
   UPDATE_DATA_TRUE;
  	m_editBigShift.EnableWindow(m_bStopOnBigShift);
@@ -1431,7 +1428,7 @@ void CTSSetupDialog::ManageTaperLine()
   bool expChange;
   int typeVaries[MAX_VARY_TYPES];
   BOOL bEnable = m_iBeamControl == 2; // && !mLowDoseMode;
-  CTSVariationsDlg::ListVaryingTypes(mTSParam.varyArray, mTSParam.numVaryItems, 
+  CTSVariationsDlg::ListVaryingTypes(mTSParam.varyArray, mTSParam.numVaryItems,
     typeVaries, NULL);
   expChange = m_bVaryParams && typeVaries[TS_VARY_EXPOSURE];
   m_editCounts.EnableWindow(bEnable);
@@ -1442,10 +1439,10 @@ void CTSSetupDialog::ManageTaperLine()
   m_editTaperAngle.EnableWindow(bEnable && m_bRampBeam);
   m_butLimitToCurrent.EnableWindow(m_iBeamControl != 0 && !expChange && !m_bDoBidir &&
     (m_iBeamControl != 1 || !m_bIntensitySetAtZero));
-  m_butLimitIntensity.EnableWindow(m_iBeamControl != 0 && !m_bLimitToCurrent && 
+  m_butLimitIntensity.EnableWindow(m_iBeamControl != 0 && !m_bLimitToCurrent &&
     !expChange && !m_bDoBidir);
   m_sbcCosinePower.EnableWindow(m_iBeamControl == 1);
-  m_butIntensitySetAtZero.EnableWindow(m_iBeamControl == 1 && fabs(mCurrentAngle) > 10. 
+  m_butIntensitySetAtZero.EnableWindow(m_iBeamControl == 1 && fabs(mCurrentAngle) > 10.
     && (!m_bLimitToCurrent || expChange) && !mFuture && !(expChange && mSTEMindex));
 }
 
@@ -1457,27 +1454,27 @@ void CTSSetupDialog::ManageExposures(void)
   bool expChange;
   int typeVaries[MAX_VARY_TYPES];
 
-  CTSVariationsDlg::ListVaryingTypes(mTSParam.varyArray, mTSParam.numVaryItems, 
+  CTSVariationsDlg::ListVaryingTypes(mTSParam.varyArray, mTSParam.numVaryItems,
     typeVaries, NULL);
-  expChange = (m_bChangeExposure && m_iBeamControl > 0) || 
+  expChange = (m_bChangeExposure && m_iBeamControl > 0) ||
     (m_bVaryParams && typeVaries[TS_VARY_EXPOSURE]);
-  
-  if (m_bChangeExposure && (mSTEMindex || 
+
+  if (m_bChangeExposure && (mSTEMindex ||
     !(m_bVaryParams && typeVaries[TS_VARY_EXPOSURE]))) {
     to = "exposure";
-    ReplaceDlgItemText(IDC_RCONSTANTBEAM, "beam intensity", "EDM dose %", 
+    ReplaceDlgItemText(IDC_RCONSTANTBEAM, "beam intensity", "EDM dose %",
       "exposure time");
     from = "intensity";
     from2 = "EDM %";
   } else if (m_bChangeEDMPct && m_iBeamControl > 0) {
     to = "EDM %";
-    ReplaceDlgItemText(IDC_RCONSTANTBEAM, "beam intensity", "exposure time", 
+    ReplaceDlgItemText(IDC_RCONSTANTBEAM, "beam intensity", "exposure time",
       "EDM dose %");
     from = "intensity";
     from2 = "exposure";
   } else {
     to = "intensity";
-    ReplaceDlgItemText(IDC_RCONSTANTBEAM, "EDM dose %", "exposure time", 
+    ReplaceDlgItemText(IDC_RCONSTANTBEAM, "EDM dose %", "exposure time",
       "beam intensity");
     from = "EDM %";
     from2 = "exposure";
@@ -1488,21 +1485,21 @@ void CTSSetupDialog::ManageExposures(void)
   ReplaceDlgItemText(IDC_LIMITINTENSITY, from, from2, to);
   ReplaceDlgItemText(IDC_USEINTENSITYATZERO, from, from2, to);
 
-  m_butChangeExposure.EnableWindow(!(m_bVaryParams && typeVaries[TS_VARY_EXPOSURE]) && 
+  m_butChangeExposure.EnableWindow(!(m_bVaryParams && typeVaries[TS_VARY_EXPOSURE]) &&
     !mDoingTS && m_iBeamControl > 0 && !mSTEMindex);
-  m_butChangeAllExp.EnableWindow(expChange && !mDoingTS); 
+  m_butChangeAllExp.EnableWindow(expChange && !mDoingTS);
   m_butChangeSettling.EnableWindow(expChange && !mDoingTS && !mSTEMindex &&
     (m_bChangeAllExp || !(m_bVaryParams && typeVaries[TS_VARY_DRIFT])));
-  m_editFocusTarget.EnableWindow(!(m_bVaryParams && typeVaries[TS_VARY_FOCUS] && 
+  m_editFocusTarget.EnableWindow(!(m_bVaryParams && typeVaries[TS_VARY_FOCUS] &&
     mDoingTS) && !mSTEMindex);
-  m_butConstantBeam.EnableWindow(!(mSTEMindex && m_bVaryParams && 
+  m_butConstantBeam.EnableWindow(!(mSTEMindex && m_bVaryParams &&
     typeVaries[TS_VARY_EXPOSURE]));
-  m_butIntensityCosine.EnableWindow(!(mSTEMindex && m_bVaryParams && 
+  m_butIntensityCosine.EnableWindow(!(mSTEMindex && m_bVaryParams &&
     typeVaries[TS_VARY_EXPOSURE]));
   m_butChangeEDMPct.EnableWindow(!mDoingTS && m_iBeamControl > 0);
 }
 
-void CTSSetupDialog::OnAligntrackonly() 
+void CTSSetupDialog::OnAligntrackonly()
 {
   UPDATE_DATA_TRUE;
   ManageNewTrackDiff();
@@ -1523,16 +1520,16 @@ void CTSSetupDialog::ManageInitialActions()
 {
   BOOL useAnchor = m_bUseAnchor && !mFuture;
   BOOL bEnable = !mDoingTS && !useAnchor && !m_bDoBidir &&
-    mWinApp->mTSController->WalkupCanTakeAnchor(mCurrentAngle, m_fAnchorAngle, 
+    mWinApp->mTSController->WalkupCanTakeAnchor(mCurrentAngle, m_fAnchorAngle,
     m_fStartAngle);
-  m_butUseAforRef.EnableWindow(!mDoingTS && !mFuture && 
+  m_butUseAforRef.EnableWindow(!mDoingTS && !mFuture &&
     (mWinApp->mTSController->UsableRefInA(
     (double)(m_bDoBidir ? m_fBidirAngle : m_fStartAngle), mMagIndex[mSTEMindex]) ||
     mWinApp->mTSController->UsableRefInA(mCurrentAngle, mMagIndex[mSTEMindex])));
   m_butLeaveAnchor.EnableWindow(bEnable);
   m_editAnchor.EnableWindow(!mDoingTS && !useAnchor && !m_bDoBidir);
   m_statAnchorDeg.EnableWindow(bEnable);
-  m_statAnchorBuf.EnableWindow(!mDoingTS && useAnchor && !m_bDoBidir);   
+  m_statAnchorBuf.EnableWindow(!mDoingTS && useAnchor && !m_bDoBidir);
   m_sbcAnchor.EnableWindow(!mDoingTS && useAnchor && !m_bDoBidir);
   m_butUseAnchor.EnableWindow(!m_bDoBidir);
 }
@@ -1563,7 +1560,7 @@ void CTSSetupDialog::OnDeltaposSpinBidirMag(NMHDR *pNMHDR, LRESULT *pResult)
   mWinApp->GetMagRangeLimits(mCurrentCamera, lowLim, lower, hiLim);
   if (mLowDoseMode)
     hiLim = ldp->magIndex;
-  if (NewSpinnerValue(pNMHDR, pResult, mBidirMagInd[index], lowLim, hiLim, 
+  if (NewSpinnerValue(pNMHDR, pResult, mBidirMagInd[index], lowLim, hiLim,
     mBidirMagInd[index]))
     return;
   UPDATE_DATA_TRUE;
@@ -1579,7 +1576,7 @@ void CTSSetupDialog::ManageBidirectional(void)
   m_butCosineInc.EnableWindow(!mDoingTS && !doingDosym);
   m_butDoBidir.EnableWindow(!mDoingTS);
   m_editBidirAngle.EnableWindow(enable);
-  m_butBidirWalkBack.EnableWindow((enable || mBidirStage == BIDIR_FIRST_PART) && 
+  m_butBidirWalkBack.EnableWindow((enable || mBidirStage == BIDIR_FIRST_PART) &&
     !doingDosym);
   m_butBidirUseView.EnableWindow(enable && mLowDoseMode && !doingDosym);
   m_statBidirFieldSize.EnableWindow(enable && (!doingDosym || (mTSParam.dosymDoRunToEnd &&
@@ -1628,19 +1625,19 @@ void CTSSetupDialog::ConstrainBidirAngle(bool warningIfShift, bool anglesChanged
   }
 
   // Angles are actively being edited and one is still zero, let it go
-  if (anglesChanged && fabs((double)m_fBidirAngle) < 0.1 && 
+  if (anglesChanged && fabs((double)m_fBidirAngle) < 0.1 &&
     (fabs((double)m_fStartAngle) < 0.1 || fabs((double)m_fEndAngle) < 0.1))
     return;
 
   // Otherwise if the range is less than 20, set bidir to the midpoint
   if (maxAngle - minAngle < 2. * minSegment) {
-    changed = fabs(m_fBidirAngle - 0.5 * (maxAngle + minAngle)) > 
+    changed = fabs(m_fBidirAngle - 0.5 * (maxAngle + minAngle)) >
       B3DMIN(0.5, maxAngle - minAngle);
     if (changed)
       m_fBidirAngle = 0.5f * (maxAngle + minAngle);
 
     // Otherwise move it in so it is 10 degrees from one end
-  } else if (m_fBidirAngle < minAngle + (minSegment - 0.01) || 
+  } else if (m_fBidirAngle < minAngle + (minSegment - 0.01) ||
     m_fBidirAngle > maxAngle - (minSegment - 0.01)) {
     changed = true;
     B3DCLAMP(m_fBidirAngle, minAngle + minSegment, maxAngle - minSegment);
@@ -1784,7 +1781,7 @@ void CTSSetupDialog::ManageCosinePower()
 
   CTSVariationsDlg::ListVaryingTypes(mTSParam.varyArray, mTSParam.numVaryItems,
     typeVaries, NULL);
-  if (m_bChangeExposure && 
+  if (m_bChangeExposure &&
     (mSTEMindex || !(m_bVaryParams && typeVaries[TS_VARY_EXPOSURE])))
     varyStr = "exposure";
   else if (m_bChangeEDMPct)
@@ -1797,7 +1794,7 @@ void CTSSetupDialog::ManageCosinePower()
   str.Format("%.2f", mCosinePowers[mCosPowerInd]);
   UtilTrimTrailingZeros(str);
   m_strCosPower.Format("x higher at 60 deg (1/cos to 1/%s power)", (LPCTSTR)str);
-    
+
   UpdateData(false);
 }
 
@@ -1807,7 +1804,7 @@ int CTSSetupDialog::RegularOrEFTEMMag(int magIndex)
 }
 
 // Find mag index with field size closest to the current upon camera change
-int CTSSetupDialog::MagIndWithClosestFieldSize(int oldCam, int oldMag, int newCam, 
+int CTSSetupDialog::MagIndWithClosestFieldSize(int oldCam, int oldMag, int newCam,
                                                int newSTEM)
 {
   int lower, upper, ind, minInd, lowest;
@@ -1927,18 +1924,18 @@ void CTSSetupDialog::DoOK()
   mTSParam.waitForDrift = m_bWaitForDrift;
   mTSParam.doEarlyReturn = m_bDoEarlyReturn;
   mTSParam.changeEDMPct = m_bChangeEDMPct;
-  
+
   CDialog::OnOK();
 }
 
 // Set the postpone flag then treat same as OK
-void CTSSetupDialog::OnPostpone() 
+void CTSSetupDialog::OnPostpone()
 {
   mPostpone = true;
   DoOK();
 }
 
-void CTSSetupDialog::OnSinglestep() 
+void CTSSetupDialog::OnSinglestep()
 {
   mSingleStep = true;
   DoOK();
@@ -1971,13 +1968,13 @@ void CTSSetupDialog::ManagePanels(void)
 
   for (panel = 0; panel < mNumPanels; panel++) {
     panelTop = topTable[mPanelStart[panel]];
-    
+
     // Draw the first 4 unconditionally
     for (index = mPanelStart[panel]; index < mPanelStart[panel] +  4; index++) {
       id = idTable[index];
       if (id > 0) {
         wnd = GetDlgItem(id);
-        positions = DeferWindowPos(positions, wnd->m_hWnd, NULL, leftTable[index] + 
+        positions = DeferWindowPos(positions, wnd->m_hWnd, NULL, leftTable[index] +
           ixOffset, curTop + topTable[index] - panelTop, 0,0, SWP_NOZORDER | SWP_NOSIZE);
       }
       if (index == mPanelStart[panel] && panel < mNumPanels - 1)
@@ -1988,7 +1985,7 @@ void CTSSetupDialog::ManagePanels(void)
     // set top from full height of this panel
     if (!mPanelOpen[panel]) {
       wnd = GetDlgItem(idTable[index]);
-      positions = DeferWindowPos(positions, wnd->m_hWnd, NULL, leftTable[index] + 
+      positions = DeferWindowPos(positions, wnd->m_hWnd, NULL, leftTable[index] +
         ixOffset, curTop + buttonHigh + 2, 0, 0, SWP_NOZORDER | SWP_NOSIZE);
       nextTop = curTop + buttonHigh + 2 + topTable[mPanelStart[panel+1]] - topTable[index];
     } else if (panel < mNumPanels - 1) {
@@ -2014,7 +2011,7 @@ void CTSSetupDialog::ManagePanels(void)
       }
       if (mFuture > 0 && idTable[index] == IDC_SINGLESTEP)
         draw = false;
-      if (mSTEMindex && idTable[index] == IDC_CENTER_FROM_TRIAL || 
+      if (mSTEMindex && idTable[index] == IDC_CENTER_FROM_TRIAL ||
         !mSTEMindex && idTable[index] == IDC_STAT_INTERSET)
         draw = false;
 
@@ -2159,7 +2156,7 @@ int CTSSetupDialog::PanelDisplayType(void)
     else if (mPanelOpen[i])
       numRight++;
   }
-  if (numLeft == NUM_LEFT_PANELS && numRight || 
+  if (numLeft == NUM_LEFT_PANELS && numRight ||
     numRight == NUM_TSS_PANELS - 1 - NUM_LEFT_PANELS && numLeft)
     type = 2;
   else if (numLeft == NUM_LEFT_PANELS || numRight == NUM_TSS_PANELS - 1 - NUM_LEFT_PANELS)

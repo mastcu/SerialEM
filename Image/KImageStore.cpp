@@ -1,7 +1,6 @@
 // KImageStore.cpp:       A base class for image storage, inherits KImageBase
 //
-// Copyright (C) 2003 by Boulder Laboratory for 3-Dimensional Electron 
-// Microscopy of Cells ("BL3DEMC") and the Regents of the University of
+// Copyright (C) 2003-2026 by the Regents of the University of
 // Colorado.  See Copyright.txt for full notice of copyright and limitations.
 //
 // Authors: David Mastronarde and James Kremer
@@ -14,6 +13,10 @@
 #include "../SerialEM.h"
 #include "..\Shared\autodoc.h"
 #include "..\Shared\b3dutil.h"
+
+#if defined(_DEBUG) && defined(_CRTDBG_MAP_ALLOC)
+#define new DEBUG_NEW
+#endif
 
 
 KImageStore::KImageStore(CString inFilename)
@@ -160,7 +163,7 @@ int KImageStore::MarkAsOpenWithFile(const char *extension)
 }
 
 // Set the global items in an autodoc if one is defined
-int KImageStore::InitializeAdocGlobalItems(bool needMutex, BOOL isMontage, 
+int KImageStore::InitializeAdocGlobalItems(bool needMutex, BOOL isMontage,
   const char *filename)
 {
   if (mAdocIndex >= 0) {
@@ -244,7 +247,7 @@ bool KImageStore::CheckNewSectionManageMMM(KImage *inImage, int inSect, char *id
 
   ACCUM_MIN(amin, fMin);
   ACCUM_MAX(amax, fMax);
-  
+
   // Adjust file size for section past the end of current size, and update the depth
   if (inSect >= nz)
     nz = inSect + 1;
@@ -260,7 +263,7 @@ bool KImageStore::CheckNewSectionManageMMM(KImage *inImage, int inSect, char *id
 
 // Common function for adding a section to autodoc when necessary, keeping sections in
 // order, putting data in the autodoc from extra, and writing the autodoc if not HDF
-int KImageStore::AddExtraValuesToAdoc(KImage *inImage, int inSect, bool needNewSect, 
+int KImageStore::AddExtraValuesToAdoc(KImage *inImage, int inSect, bool needNewSect,
   bool &gotMutex)
 {
   char sectext[10];
@@ -330,7 +333,7 @@ int KImageStore::CheckAdocForMontage(MontParam * inParam)
   int ifmont;
   if (AdocGetMutexSetCurrent(mAdocIndex) < 0)
     return 0;
-  if ((AdocGetInteger(ADOC_GLOBAL, 0, ADOC_ISMONT, &ifmont) && 
+  if ((AdocGetInteger(ADOC_GLOBAL, 0, ADOC_ISMONT, &ifmont) &&
     AdocGetInteger(ADOC_GLOBAL, 0, "IMOD." ADOC_ISMONT, &ifmont)) || ifmont <= 0)
     ifmont = 0;
   else
@@ -433,7 +436,7 @@ int KImageStore::ReorderZCoordsInAdoc(const char *sectName, int *sectOrder, int 
   return retval;
 }
 
-void KImageStore::AddTitleToLabelArray(char *label, int &numTitle, 
+void KImageStore::AddTitleToLabelArray(char *label, int &numTitle,
   const char *inTitle)
 {
   int len = (int)strlen(inTitle);
@@ -530,7 +533,7 @@ int KImageStore::lookupPixSize(int inMode)
 }
 
 // Get the min, max, and mean of the data in a buffer
-void KImageStore::minMaxMean(char * idata, float & fMin, 
+void KImageStore::minMaxMean(char * idata, float & fMin,
                              float & fMax, double & outMean)
 {
   float fVal, fSum;
@@ -558,8 +561,8 @@ void KImageStore::minMaxMean(char * idata, float & fMin,
     switch (mMode) {
       case 0:
         for (i = 0; i < mWidth; i++) {
-          theVal = *bdata++; 
-          if (theVal < theMin) 
+          theVal = *bdata++;
+          if (theVal < theMin)
             theMin = theVal;
           if (theVal > theMax)
             theMax = theVal;
@@ -570,8 +573,8 @@ void KImageStore::minMaxMean(char * idata, float & fMin,
 
       case 1:
         for (i = 0; i < mWidth; i++) {
-          theVal = *sdata++; 
-          if (theVal < theMin) 
+          theVal = *sdata++;
+          if (theVal < theMin)
             theMin = theVal;
           if (theVal > theMax)
             theMax = theVal;
@@ -583,8 +586,8 @@ void KImageStore::minMaxMean(char * idata, float & fMin,
       case 2:
         fSum = 0.;
         for (i = 0; i < mWidth; i++) {
-          fVal = *fdata++; 
-          if (fVal < fMin) 
+          fVal = *fdata++;
+          if (fVal < fMin)
             fMin = fVal;
           if (fVal > fMax)
             fMax = fVal;
@@ -595,8 +598,8 @@ void KImageStore::minMaxMean(char * idata, float & fMin,
 
       case MRC_MODE_USHORT:
         for (i = 0; i < mWidth; i++) {
-          theVal = *usdata++; 
-          if (theVal < theMin) 
+          theVal = *usdata++;
+          if (theVal < theMin)
             theMin = theVal;
           if (theVal > theMax)
             theMax = theVal;
@@ -626,7 +629,7 @@ void KImageStore::minMaxMean(char * idata, float & fMin,
 // flipped for storage; needToReflip is set true if the image itself needs to
 // be reflipped when done; needToDelete is set true if a new array is made
 // The image should be locked before calling this routine
-char *KImageStore::convertForWriting(KImage *inImage, bool needFlipped, 
+char *KImageStore::convertForWriting(KImage *inImage, bool needFlipped,
                                      bool &needToReflip, bool &needToDelete)
 {
   unsigned short *usdata;
@@ -636,7 +639,7 @@ char *KImageStore::convertForWriting(KImage *inImage, bool needFlipped,
   int i, j, jstart, jend, jdir, numTrunc = 0;
   int theVal;
   size_t dataSize = (size_t)mWidth * mHeight * mPixSize;
-  
+
   int theType = inImage->getType();
   char *idata   = (char *)inImage->getData();
   needToReflip = false;
@@ -652,8 +655,8 @@ char *KImageStore::convertForWriting(KImage *inImage, bool needFlipped,
   }
 
   if ( (theType == kUBYTE && mMode == 0) ||
-    (theType == kSHORT && mMode == 1) || 
-    (theType == kUSHORT && mMode == MRC_MODE_USHORT) || 
+    (theType == kSHORT && mMode == 1) ||
+    (theType == kUSHORT && mMode == MRC_MODE_USHORT) ||
     (theType == kFLOAT && mMode == 2) ||
     (theType == kRGB && mMode == MRC_MODE_RGB) ) {
 
@@ -751,7 +754,7 @@ char *KImageStore::convertForWriting(KImage *inImage, bool needFlipped,
       mFileOpt.pctTruncLo, mFileOpt.pctTruncHi, &scaleLo, &scaleHi);
     free(lines);
 
-    // Again, flip data while scaling it 
+    // Again, flip data while scaling it
     int theMin = (int)scaleLo;
     int theRange = (int)(scaleHi - scaleLo);
     NewArray(idata, char, dataSize);
@@ -765,7 +768,7 @@ char *KImageStore::convertForWriting(KImage *inImage, bool needFlipped,
           theVal =  ( (sdata[i] - theMin) * 256) / theRange;
           if (theVal < 0) theVal =0;
           if (theVal > 255) theVal = 255;
-          *bdata++ = theVal; 
+          *bdata++ = theVal;
         }
 
       } else {
@@ -774,7 +777,7 @@ char *KImageStore::convertForWriting(KImage *inImage, bool needFlipped,
           theVal =  ( (usdata[i] - theMin) * 256) / theRange;
           if (theVal < 0) theVal =0;
           if (theVal > 255) theVal = 255;
-          *bdata++ = theVal; 
+          *bdata++ = theVal;
         }
       }
     }
@@ -798,7 +801,7 @@ int KImageStore::CheckMontage(MontParam *inParam, int nx, int ny, int nz)
   if (gotMutex && AdocGetMutexSetCurrent(mAdocIndex) < 0)
     return -1;
 
-  // Find absolute minimum, and minimum above zero  
+  // Find absolute minimum, and minimum above zero
   xMin = 1000000;
   xNonZeroMin = 1000000;
   yMin = xMin;
@@ -829,8 +832,8 @@ int KImageStore::CheckMontage(MontParam *inParam, int nx, int ny, int nz)
     if (izp > zMax)
       zMax = izp;
   }
-    
-  
+
+
   // Scan all values to make sure they are multiples of the non-zero minima
   // or an even divisor of the minima, in the latter case that is the basic interval
   xOK = yOK = false;
@@ -868,7 +871,7 @@ int KImageStore::CheckMontage(MontParam *inParam, int nx, int ny, int nz)
 
   if (!xOK || !yOK)
     return -1;
-  
+
   // Passed all the tests: return the values in the Montage parameter set
   inParam->xFrame = nx;
   inParam->yFrame = ny;
@@ -895,7 +898,7 @@ int KImageStore::getImageShift(int inSect, double &outISX, double &outISY)
   outISX = outISY = 0.;
   if (AdocGetMutexSetCurrent(mAdocIndex) < 0)
     return(-1);
-  if (AdocGetTwoFloats(mStoreType == STORE_TYPE_ADOC ? ADOC_IMAGE : ADOC_ZVALUE, inSect, 
+  if (AdocGetTwoFloats(mStoreType == STORE_TYPE_ADOC ? ADOC_IMAGE : ADOC_ZVALUE, inSect,
     ADOC_IMAGESHIFT, &ISX, &ISY))
     retval = -1;
   AdocReleaseMutex();

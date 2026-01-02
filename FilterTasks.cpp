@@ -1,8 +1,7 @@
 // FilterTasks.cpp       GIF-related tasks, specfically calibrating mag-dependent
 //                         energy shifts
 //
-// Copyright (C) 2003 by Boulder Laboratory for 3-Dimensional Electron 
-// Microscopy of Cells ("BL3DEMC") and the Regents of the University of
+// Copyright (C) 2003-2026 by the Regents of the University of
 // Colorado.  See Copyright.txt for full notice of copyright and limitations.
 //
 // Author: David Mastronarde
@@ -22,10 +21,8 @@
 #include "Utilities\KGetOne.h"
 #include "Utilities\XCorr.h"
 
-#ifdef _DEBUG
+#if defined(_DEBUG) && defined(_CRTDBG_MAP_ALLOC)
 #define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
 #endif
 
 /////////////////////////////////////////////////////////////////////////////
@@ -106,7 +103,7 @@ void CFilterTasks::MagShiftCalNewMag(int inMag)
   delBeam = mShiftManager->GetPixelSize(camera, mSavedMagInd) /
     mShiftManager->GetPixelSize(camera, inMag);
   delBeam *= delBeam;
-  error = mWinApp->mBeamAssessor->AssessBeamChange(delBeam, newIntensity, 
+  error = mWinApp->mBeamAssessor->AssessBeamChange(delBeam, newIntensity,
     newDelta, -1);
   if (!error || error == BEAM_ENDING_OUT_OF_RANGE) {
 
@@ -169,7 +166,7 @@ int CFilterTasks::InitializeRegularScan()
   return 0;
 }
 
-// Initialize energy and other variables for a scan  
+// Initialize energy and other variables for a scan
 void CFilterTasks::InitializeScan(float startEnergy)
 {
   mEnergyCount = 0;
@@ -207,7 +204,7 @@ void CFilterTasks::CalibrateMagShift()
   // This index can vary if there is a secondary mode
   mLowestMagInd = mWinApp->mComplexTasks->FindMaxMagInd(mCMSMinField);
   int highestMag = mMagTab[mLowestMagInd + mNumMags - 1].EFTEMmag;
- 
+
   CString message = "To calibrate the mag-dependent energy shifts, dozens of\n"
           "pictures will be taken with the " + modeNames[2] + " parameter set\n";
 
@@ -247,13 +244,13 @@ void CFilterTasks::CalibrateMagShift()
     return;
 
   // Get the parameters: cancel means cancel procedure
-  message.Format("Highest mag to calibrate, starting from %d", 
+  message.Format("Highest mag to calibrate, starting from %d",
     mMagTab[mLowestMagInd].EFTEMmag);
   if (!KGetOneInt(message, highestMag))
     return;
   mWinApp->GetMagRangeLimits(mWinApp->GetCurrentCamera(), mLowestMagInd, limlo, limhi);
   for (i = mLowestMagInd + 1; i <= limhi; i++)
-    if (mMagTab[i].EFTEMmag > highestMag || 
+    if (mMagTab[i].EFTEMmag > highestMag ||
       mMagTab[i].EFTEMmag <= mMagTab[i - 1].EFTEMmag)
       break;
   mNumMags = i - mLowestMagInd;
@@ -263,7 +260,7 @@ void CFilterTasks::CalibrateMagShift()
   if (mCMSEnergyRange > 200.)
     mCMSEnergyRange = 200.;
 
-  if (mFiltParams->positiveLossOnly && 
+  if (mFiltParams->positiveLossOnly &&
     mFiltParams->refineZLPOffset < mCMSEnergyRange / 2.) {
     AfxMessageBox("This filter only allows positive energy shifts.\n"
       "The current energy offset is less than half of the energy range you specified,\n"
@@ -323,12 +320,12 @@ void CFilterTasks::CalibrateMagShift()
   mMagCount = 0;
   mDirInd = 0;
   mOverallPeak = 0.;
-  
+
   mWinApp->SetStatusText(MEDIUM_PANE, "MEASURING ENERGY SHIFTS");
   mWinApp->UpdateBufferWindows();
   if (InitializeRegularScan())
     return;
-  mCamera->SetIgnoreFilterDiffs(true);        
+  mCamera->SetIgnoreFilterDiffs(true);
   mWinApp->mFilterControl.UpdateSettings();
   mWinApp->mCamera->SetupFilter();
 
@@ -379,7 +376,7 @@ void CFilterTasks::CalMagShiftNextTask()
   // been high enough and the current value is below threshold, or if no peak was
   // found and we reached the scan limit
   finished = mEnergyCount >= mNumEnergies || (foundPeak && curMean < tailCrit) ||
-    (!foundPeak && mEnergyCount >= mNumScan); 
+    (!foundPeak && mEnergyCount >= mNumScan);
 
   // If we never found a peak high enough, quit
   if (finished && (mScanPeak < mMinPeakSize || mOverallPeak > 0. && !foundPeak)) {
@@ -390,7 +387,7 @@ void CFilterTasks::CalMagShiftNextTask()
   }
 
   // But need to restart if we are done and the end was too high and the peak is too
-  // close to the end of the range, 
+  // close to the end of the range,
   // or if the peak has been found or scan is finished and the start is too high and
   // whatever peak occurred is too close to the start of the range
   if ((finished && curMean >= tailCrit && integralEnd > mEnergies[mEnergyCount - 1])
@@ -411,7 +408,7 @@ void CFilterTasks::CalMagShiftNextTask()
       InitializeScan(integralStart);
       mRedoing = true;
       StartAcquisition(mBigEnergyShiftDelay, TRACK_CONSET, TASK_CAL_MAGSHIFT);
-      return; 
+      return;
     }
   }
 
@@ -434,14 +431,14 @@ void CFilterTasks::CalMagShiftNextTask()
   if (mOverallPeak < mScanPeak)
     mOverallPeak = mScanPeak;
 
-  report.Format("Mag %d:  shift = %.1f", mMagTab[mCurMag].EFTEMmag, 
+  report.Format("Mag %d:  shift = %.1f", mMagTab[mCurMag].EFTEMmag,
     mEnergyShifts[mDirInd][mCurMag]);
   mWinApp->AppendToLog(report, LOG_SWALLOW_IF_CLOSED);
 
   // Increment mag counter and test if at end of mag loop
   mMagCount++;
   if (mMagCount >= mNumMags) {
-    
+
     // Increment direction index and stop if we are really done
     mDirInd++;
     if (mDirInd > mWinApp->GetAdministrator() ? 1 : 0) {
@@ -462,7 +459,7 @@ void CFilterTasks::CalMagShiftNextTask()
   if (mIntensityZoom) {
     mScope->SetMagIndex(mCurMag);
   } else {
-  
+
     // If not, restore intensity and exposure before going into routine
     mScope->SetIntensity(mSavedIntensity);
     mConSets[TRACK_CONSET].exposure = mFullExposure;
@@ -548,7 +545,7 @@ void CFilterTasks::StopCalMagShift()
         report.Format("Mag %6d   shift %7.1f", mMagTab[i].EFTEMmag, newShift);
       mWinApp->AppendToLog(report, LOG_SWALLOW_IF_CLOSED);
     } else if (mFiltParams->magShifts[i] > -900.) {
-      
+
       // If no new value but there is an old one, find nearest difference and
       // apply it
       for (int iDel = 1; iDel < MAX_MAGS; iDel++) {
@@ -566,7 +563,7 @@ void CFilterTasks::StopCalMagShift()
           }
         }
       }
-    } 
+    }
     mFiltParams->magShifts[i] = newShift;
   }
   mCamera->SetupFilter();
@@ -606,7 +603,7 @@ BOOL CFilterTasks::RefineZLP(bool interactive, int useTrial)
   mRZlpUserLoss = 0.;
   if (interactive) {
     if (mLowDoseMode) {
-      
+
       // In low dose mode, take the current area if it has slit in, otherwise take
       // the Record area if its slit is in
       mRZlpCancelLDArea = mScope->GetLowDoseArea();
@@ -619,21 +616,21 @@ BOOL CFilterTasks::RefineZLP(bool interactive, int useTrial)
         mRZlpUserLoss = mLDPcancel->energyLoss;
         cancelSlit = mLDPcancel->slitWidth;
       }
-      
+
     } else if (mFiltParams->slitIn && !mFiltParams->zeroLoss) {
       mRZlpUserLoss = mFiltParams->energyLoss;
       cancelSlit = mFiltParams->slitWidth;
     }
-    
+
     // If loss is too big, ignore it; if it is above threshold fraction, ask
     if (mRZlpUserLoss > cancelSlit)
       mRZlpUserLoss = 0.;
     else if (mRZlpUserLoss != 0. && mRZlpUserLoss > mRZlpUserCancelFrac * cancelSlit) {
       CString message;
       if (mLowDoseMode)
-        message.Format("The energy loss for the %s area is currently %.1f", 
+        message.Format("The energy loss for the %s area is currently %.1f",
         modeNames[mRZlpCancelLDArea], mRZlpUserLoss);
-      else 
+      else
         message.Format("The energy loss is currently %.1f", mRZlpUserLoss);
       message += " eV.\n\nDo you want to use this loss as a starting offset\n"
         "and set the loss to zero when done?";
@@ -678,7 +675,7 @@ BOOL CFilterTasks::RefineZLP(bool interactive, int useTrial)
     conSet->processing = DARK_SUBTRACTED;
 
   // Turn off CDS mode, dark images have too much signal
-  mRZlpRestoreCDSmode = mRZlpLeaveCDSmode && camParams->K2Type == K3_TYPE && 
+  mRZlpRestoreCDSmode = mRZlpLeaveCDSmode && camParams->K2Type == K3_TYPE &&
     mCamera->GetUseK3CorrDblSamp();
   if (mRZlpRestoreCDSmode)
     mCamera->SetUseK3CorrDblSamp(false);
@@ -689,9 +686,9 @@ BOOL CFilterTasks::RefineZLP(bool interactive, int useTrial)
     camParams->deadTime;
   conSet->exposure = B3DMAX(conSet->exposure, mRZlpMinExposure);
   mCamera->ConstrainExposureTime(camParams, conSet);
-  
+
   // If exposure dropped by at least 4, try to increase binning by 2
-  if ((mFullExposure - camParams->deadTime) >= 
+  if ((mFullExposure - camParams->deadTime) >=
     (conSet->exposure - camParams->deadTime) * 4.) {
     for (int i = 1; i < camParams->numBinnings; i++) {
       if (camParams->binnings[i] == 2 * conSet->binning) {
@@ -725,9 +722,9 @@ void CFilterTasks::RefineZLPNextTask()
   float curMean, delta, cy, cx, meanRatio, deltaRatio;
   float b2wMeanRatio, b2wDeltaRatio;
   CString report;
-  BOOL badEnergy = (mFiltParams->positiveLossOnly && 
+  BOOL badEnergy = (mFiltParams->positiveLossOnly &&
     mWinApp->mFilterControl.LossToApply() < 0.);
-  BOOL lastEnergy = (mFiltParams->positiveLossOnly && 
+  BOOL lastEnergy = (mFiltParams->positiveLossOnly &&
     mWinApp->mFilterControl.LossToApply() < mRZlpStepSize);
   bool allowFail = mAllowNextRZlpFailure;
   bool posPasses, negPasses;
@@ -743,7 +740,7 @@ void CFilterTasks::RefineZLPNextTask()
   if (mRZlpIndex > 0) {
     delta = mMeanCounts[mRZlpIndex - 1] - curMean;
     mDeltaCounts[mRZlpIndex - 1] = delta;
-    
+
     // Keep track of peak and its position
     if (mPeakDelta < delta) {
       mPeakDelta = delta;
@@ -785,7 +782,7 @@ void CFilterTasks::RefineZLPNextTask()
   posPasses = mPeakIndex > 0 && mPeakIndex < mRZlpIndex - 1 && mPeakDelta > mB2WpeakDelta
     && ((delta < mPeakDelta * mRZlpDeltaCrit && curMean < mPeakMean * mRZlpMeanCrit) ||
       deltaRatio * meanRatio < mRZlpDeltaCrit * mRZlpMeanCrit);
-  negPasses = mB2WpeakIndex > 0 && mB2WpeakIndex < mRZlpIndex - 1 && 
+  negPasses = mB2WpeakIndex > 0 && mB2WpeakIndex < mRZlpIndex - 1 &&
     mB2WpeakDelta > mPeakDelta && ((-delta < mB2WpeakDelta * mRZlpDeltaCrit &&
       mMeanCounts[0] < mPeakMean * mRZlpMeanCrit) ||
       b2wDeltaRatio * b2wMeanRatio < mRZlpDeltaCrit * mRZlpMeanCrit);
@@ -810,17 +807,17 @@ void CFilterTasks::RefineZLPNextTask()
       0.5f *(mEnergies[mPeakIndex] + mEnergies[mPeakIndex + 1]),
       0.5f *(mEnergies[mB2WpeakIndex] + mEnergies[mB2WpeakIndex + 1]), cx,
       -cx * mRZlpStepSize);*/
-    
+
     // Implement by adding to saved parameter value, then restore and quit
     mSavedParams.refineZLPOffset += cy;
     mSavedParams.alignZLPTimeStamp = 0.001 * GetTickCount();
     mSavedParams.cumulNonRunTime = 0;
     mSavedParams.usedOldAlign = false;
     mWinApp->mDocWnd->SetShortTermNotSaved();
-    report.Format("Refine ZLP: additional offset = %7.1f eV; total offset = %7.1f eV", cy, 
+    report.Format("Refine ZLP: additional offset = %7.1f eV; total offset = %7.1f eV", cy,
       mSavedParams.refineZLPOffset);
     mWinApp->AppendToLog(report, LOG_SWALLOW_IF_CLOSED);
-    
+
     // Set an energy loss to zero: in the Low dose set, in the saved set if that is
     // the record set, and in the filter params if that is low dose area
     if (mRZlpUserLoss) {
@@ -842,12 +839,12 @@ void CFilterTasks::RefineZLPNextTask()
 
   // Need to restart if limit of index is reached, or if the peak is at the first point
   // and either delta or mean value has fallen below criterion fraction of its peak
-  if (lastEnergy || badEnergy || mRZlpIndex >= mNumEnergies || 
+  if (lastEnergy || badEnergy || mRZlpIndex >= mNumEnergies ||
     (mRZlpIndex > 1 && ((!mPeakIndex &&
     delta < mPeakDelta * mRZlpDeltaCrit && curMean < mPeakMean * mRZlpMeanCrit) ||
       (!mB2WpeakIndex &&  -delta < mB2WpeakDelta * mRZlpDeltaCrit &&
         mMeanCounts[0] < mPeakMean * mRZlpMeanCrit)))) {
-    
+
     // Third time or low dose mode, give up
     if (mRZlpTrial >= 3 || (mLowDoseMode && !mRZlpRedoInLowDose && !mNextRZlpRedoInLD)) {
       StopRefineZLP();
@@ -866,7 +863,7 @@ void CFilterTasks::RefineZLPNextTask()
 
     // 3/27/25: it used to go to negative first with the comment
     // "It is safer to go to the left first then go right on the last trial"
-    // Not sure what that meant but now that it can catch a peak with negative offset 
+    // Not sure what that meant but now that it can catch a peak with negative offset
     // in the B2W transition, make it go positive first
     if (mRZlpTrial++ == 1) {
       mCurEnergy = mRZlpUserLoss + mRZlpSlitWidth;
@@ -897,7 +894,7 @@ void CFilterTasks::RefineZLPNextTask()
 void CFilterTasks::RefineZLPCleanup(int error)
 {
   if (error == IDLE_TIMEOUT_ERROR)
-    mWinApp->mTSController->TSMessageBox(_T("Time out refining ZLP")); 
+    mWinApp->mTSController->TSMessageBox(_T("Time out refining ZLP"));
   StopRefineZLP();
   mWinApp->ErrorOccurred(error);
 }

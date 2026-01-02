@@ -9,10 +9,14 @@
 #include "Utilities\KGetOne.h"
 #include "XFolderDialog\XFolderDialog.h"
 
+#if defined(_DEBUG) && defined(_CRTDBG_MAP_ALLOC)
+#define new DEBUG_NEW
+#endif
+
 #define MIN_TARGET_SIZE 250
 #define MAX_TARGET_SIZE 4000
 
-static int idTable[] = {IDC_STAT_WHERE_ALIGN, IDC_USE_FRAME_ALIGN, IDC_RALIGN_IN_DM, 
+static int idTable[] = {IDC_STAT_WHERE_ALIGN, IDC_USE_FRAME_ALIGN, IDC_RALIGN_IN_DM,
   IDC_RWITH_IMOD, PANEL_END,
   IDC_STAT_FILTER, IDC_COMBOFILTER, PANEL_END,
   IDC_USE_GPU, IDC_BUT_NEW_PARAMS, IDC_LIST_SET_NAMES, IDC_STAT_PARAM_NAME,
@@ -25,14 +29,14 @@ static int idTable[] = {IDC_STAT_WHERE_ALIGN, IDC_USE_FRAME_ALIGN, IDC_RALIGN_IN
   IDC_STAT_ALIGN_METHOD, IDC_STAT_CUTOFF_LABEL, IDC_EDIT_CUTOFF,
   IDC_RPAIRWISE_NUM, IDC_RPAIRWISE_HALF, IDC_RPAIRWISE_ALL, IDC_RACCUM_REF,
   IDC_SPIN_PAIRWISE_NUM, IDC_STAT_PAIRWISE_NUM, IDC_STAT_FRAME_LABEL,
-  IDC_STAT_ALIGN_BIN, IDC_SPIN_ALIGN_BIN, IDC_REFINE_ALIGNMENT, 
+  IDC_STAT_ALIGN_BIN, IDC_SPIN_ALIGN_BIN, IDC_REFINE_ALIGNMENT,
   IDC_SPIN_REFINE_ITER, IDC_STAT_REFINE_ITER, IDC_STAT_ITER_LABEL, IDC_ALIGN_SUBSET,
   IDC_GROUP_FRAMES, IDC_STAT_GROUP_SIZE, IDC_SPIN_GROUP_SIZE, IDC_STAT_SUBSET_TO,
   IDC_STAT_GROUP_NEEDS, IDC_SMOOTH_SHIFTS, IDC_STAT_SMOOTH_CRIT, IDC_STAT_SUBSET_PAREN,
   IDC_STAT_MAX_SHIFT, IDC_EDIT_MAX_SHIFT, IDC_STAT_PIXEL_LABEL, IDC_FA_EDIT_SUB_START,
   IDC_SPIN_SMOOTH_CRIT, IDC_STAT_SMOOTH_LABEL, IDC_FA_EDIT_SUB_END, IDC_BUTMORE,
   IDC_STAT_MORE_PARAMS, IDC_STAT_EER_SUPER_LABEL, IDC_RSUPER_NONE, IDC_RSUPER_2X,
-  IDC_SPIN_BIN_TO, IDC_STAT_ALIBIN_PIX, IDC_STAT_ALIBIN, IDC_RALIBIN_BY_FAC, 
+  IDC_SPIN_BIN_TO, IDC_STAT_ALIBIN_PIX, IDC_STAT_ALIBIN, IDC_RALIBIN_BY_FAC,
   IDC_RSUPER_4X, IDC_RBIN_TO_SIZE, IDC_STAT_ALIGN_TARGET, PANEL_END,
   IDC_REFINE_GROUPS, IDC_STAT_REFINE_CUTOFF, IDC_EDIT_REFINE_CUTOFF,
   IDC_EDIT_CUTOFF2, IDC_EDIT_CUTOFF3, IDC_HYBRID_SHIFTS, IDC_EDIT_SIGMA_RATIO,
@@ -278,7 +282,7 @@ BOOL CFrameAlignDlg::OnInitDialog()
     }
   }
   m_butDeleteSet.EnableWindow(mParams->GetSize() > 1);
-  EnableDlgItem(IDC_RALIGN_IN_DM, mEnableWhere && 
+  EnableDlgItem(IDC_RALIGN_IN_DM, mEnableWhere &&
     (mCamParams->K2Type || mFalconCanAlign || mDEcanAlign));
   EnableDlgItem(IDC_USE_FRAME_ALIGN, mEnableWhere);
   EnableDlgItem(IDC_RWITH_IMOD, mEnableWhere);
@@ -332,7 +336,7 @@ BOOL CFrameAlignDlg::OnInitDialog()
   return TRUE;
 }
 
-void CFrameAlignDlg::OnOK() 
+void CFrameAlignDlg::OnOK()
 {
   int stayIn, newIndex, oldInd = mCurParamInd;
   CString mess, mess2;
@@ -353,7 +357,7 @@ void CFrameAlignDlg::OnOK()
 	CBaseDlg::OnOK();
 }
 
-void CFrameAlignDlg::OnCancel() 
+void CFrameAlignDlg::OnCancel()
 {
   int newIndex;
   if (CheckConditionsOnClose(-1, -1, newIndex))
@@ -373,8 +377,8 @@ int CFrameAlignDlg::CheckConditionsOnClose(int whereAlign, int curIndex, int &ne
     whereAlign = conSet->useFrameAlign;
   if (curIndex < 0)
     curIndex = conSet->faParamSetInd;
-  notOK = UtilFindValidFrameAliParams(mCamParams, mReadMode, mTakingK3Binned && 
-    (mWinApp->mCamera->CAN_PLUGIN_DO(CAN_BIN_K3_REF, 
+  notOK = UtilFindValidFrameAliParams(mCamParams, mReadMode, mTakingK3Binned &&
+    (mWinApp->mCamera->CAN_PLUGIN_DO(CAN_BIN_K3_REF,
       mWinApp->GetCamParams() + mCameraSelected) ||
       !(whereAlign > 1 && mWinApp->mCamera->GetSaveUnnormalizedFrames())),
     whereAlign, curIndex, newIndex, &mess);
@@ -389,7 +393,7 @@ int CFrameAlignDlg::CheckConditionsOnClose(int whereAlign, int curIndex, int &ne
     } else
       mess += "\"Use Other Set\" to use this other parameter set";
     mess += "\n\n\"Stay in Dialog\" to adjust parameters or restrictions in this dialog";
-    if (SEMThreeChoiceBox(mess, notOK > 0 ? "Use Set Anyway" : "Use Other Set", 
+    if (SEMThreeChoiceBox(mess, notOK > 0 ? "Use Set Anyway" : "Use Other Set",
       "Stay in Dialog", "", MB_YESNO | MB_ICONQUESTION) == IDNO)
       return 1;
   }
@@ -399,7 +403,7 @@ int CFrameAlignDlg::CheckConditionsOnClose(int whereAlign, int curIndex, int &ne
 }
 
 void CFrameAlignDlg::OnAlignInDM()
-{ 
+{
   int whereBefore = m_iWhereAlign;
   int notOK, newIndex;
   UpdateData(true);
@@ -407,8 +411,8 @@ void CFrameAlignDlg::OnAlignInDM()
     return;
   UnloadCurrentPanel(whereBefore);
   if (m_iWhereAlign > 0) {
-    notOK = UtilFindValidFrameAliParams(mCamParams, mReadMode, mTakingK3Binned  && 
-      !(m_iWhereAlign > 1 && mWinApp->mCamera->GetSaveUnnormalizedFrames()), 
+    notOK = UtilFindValidFrameAliParams(mCamParams, mReadMode, mTakingK3Binned  &&
+      !(m_iWhereAlign > 1 && mWinApp->mCamera->GetSaveUnnormalizedFrames()),
       m_iWhereAlign, mCurParamInd, newIndex, NULL);
     if (!notOK && mCurParamInd != newIndex) {
       mCurParamInd = newIndex;
@@ -444,7 +448,7 @@ void CFrameAlignDlg::ManagePanels(void)
   states[7] = states[2] && mMoreParamsOpen;
   m_butSetFolder.EnableWindow(m_iWhereAlign == 2 && !m_bUseFrameFolder);
   m_butUseFrameFolder.EnableWindow(m_iWhereAlign == 2);
-  m_butKeepPrecision.EnableWindow(m_iWhereAlign == 1 && mNewerK2API && 
+  m_butKeepPrecision.EnableWindow(m_iWhereAlign == 1 && mNewerK2API &&
     mCamParams->K2Type == K2_SUMMIT);
   m_butSaveFloatSums.EnableWindow(m_iWhereAlign == 2);
   m_butWholeSeries.EnableWindow(m_iWhereAlign == 2);
@@ -535,9 +539,9 @@ void CFrameAlignDlg::OnButDeleteSet()
       else
         consp = &camConSets[set + cam * MAX_CONSETS];
       if (consp->faParamSetInd >= mCurParamInd) {
-        if (consp->faParamSetInd == mCurParamInd && consp->alignFrames && 
-          consp->useFrameAlign && 
-          !(set == mConSetSelected && ((act < 0 && mCameraSelected == curCamera) || 
+        if (consp->faParamSetInd == mCurParamInd && consp->alignFrames &&
+          consp->useFrameAlign &&
+          !(set == mConSetSelected && ((act < 0 && mCameraSelected == curCamera) ||
           (act >= 0 && mCameraSelected == cam))))
           anyChanged = true;
         consp->faParamSetInd--;
@@ -559,8 +563,8 @@ void CFrameAlignDlg::OnButSetFolder()
   CString str = mWinApp->mCamera->GetAlignFramesComPath();
   CString title = "SELECT folder for Alignframes com files (typing name may not work)";
   if (mServerIsRemote) {
-    if (KGetOneString("Enter folder on Gatan server for saving Alignframes com files:", 
-      str, 250, mWinApp->mCamera->GetNoK2SaveFolderBrowse() ? "" : 
+    if (KGetOneString("Enter folder on Gatan server for saving Alignframes com files:",
+      str, 250, mWinApp->mCamera->GetNoK2SaveFolderBrowse() ? "" :
       "SELECT (do not type in) folder accessible on Gatan server for saving Alignframes "
       "com files"))
       mWinApp->mCamera->SetAlignFramesComPath(str);
@@ -677,7 +681,7 @@ void CFrameAlignDlg::OnDeltaposSpinPairwiseNum(NMHDR *pNMHDR, LRESULT *pResult)
 
 void CFrameAlignDlg::OnDeltaposSpinAlignBin(NMHDR *pNMHDR, LRESULT *pResult)
 {
-  FormattedSpinnerValue(pNMHDR, pResult, 2, 16, mAlignBin, m_strAlignBin, 
+  FormattedSpinnerValue(pNMHDR, pResult, 2, 16, mAlignBin, m_strAlignBin,
     "%d");
 }
 
@@ -714,10 +718,10 @@ void CFrameAlignDlg::OnKillfocusEditSubsetStart()
       "and at least 2 frames must be aligned";
   int oldStart = m_iSubsetStart, oldEnd = m_iSubsetEnd;
   UpdateData(true);
-  if (m_iSubsetStart < 1 || m_iSubsetStart > K2FA_SUB_START_MASK || 
+  if (m_iSubsetStart < 1 || m_iSubsetStart > K2FA_SUB_START_MASK ||
     m_iSubsetStart > m_iSubsetEnd - 1) {
       if (m_iSubsetStart > K2FA_SUB_START_MASK)
-        mess.Format("The starting frame to align must be no more than %d", 
+        mess.Format("The starting frame to align must be no more than %d",
           K2FA_SUB_START_MASK);
       m_iSubsetStart = oldStart;
       m_iSubsetEnd = oldEnd;
@@ -800,8 +804,8 @@ void CFrameAlignDlg::ManageAlignBinning(void)
   m_statAlibinPix.EnableWindow(m_iBinByOrTo > 0);
   m_statAlignTarget.EnableWindow(m_iBinByOrTo > 0);
   m_sbcBinTo.EnableWindow(m_iBinByOrTo > 0);
-  if (m_iBinByOrTo > 0 && (!mAlignTargetSize || 
-    (mAlignTargetSize && mAlignTargetSize < MIN_TARGET_SIZE))) { 
+  if (m_iBinByOrTo > 0 && (!mAlignTargetSize ||
+    (mAlignTargetSize && mAlignTargetSize < MIN_TARGET_SIZE))) {
       if (!mAlignTargetSize)
         mAlignTargetSize = 1000;
       B3DCLAMP(mAlignTargetSize, MIN_TARGET_SIZE, MAX_TARGET_SIZE);
@@ -819,7 +823,7 @@ void CFrameAlignDlg::ManageRefinement(void)
   m_statStopIter.EnableWindow(m_bRefineAlignment);
   m_statStopLabel.EnableWindow(m_bRefineAlignment);
   m_editStopIter.EnableWindow(m_bRefineAlignment);
-  m_butRefineGroups.EnableWindow(m_bGroupFrames && m_bRefineAlignment && 
+  m_butRefineGroups.EnableWindow(m_bGroupFrames && m_bRefineAlignment &&
     m_iAlignStrategy != FRAMEALI_ACCUM_REF);
 }
 

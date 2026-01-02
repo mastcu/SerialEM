@@ -1,7 +1,7 @@
 // NavHelper.cpp : Helper class for Navigator for task-oriented routines
 //
 //
-// Copyright (C) 2007 by the Regents of the University of
+// Copyright (C) 2007-2026 by the Regents of the University of
 // Colorado.  See Copyright.txt for full notice of copyright and limitations.
 //
 // Author: David Mastronarde
@@ -48,7 +48,11 @@
 #include "Shared\autodoc.h"
 #include "Shared\b3dutil.h"
 
-enum HelperTasks {TASK_FIRST_MOVE = 1, TASK_FIRST_SHOT, TASK_SECOND_MOVE, 
+#if defined(_DEBUG) && defined(_CRTDBG_MAP_ALLOC)
+#define new DEBUG_NEW
+#endif
+
+enum HelperTasks {TASK_FIRST_MOVE = 1, TASK_FIRST_SHOT, TASK_SECOND_MOVE,
 TASK_SECOND_SHOT, TASK_FINAL_SHOT, TASK_RESET_IS, TASK_RESET_SHOT};
 
 // Default order for task list (actions) in acquire
@@ -68,9 +72,9 @@ int CNavHelper::mAcqActDefaultOrder[NAA_MAX_ACTIONS + 1] = {
   NAACT_COOK_SPEC,
   NAACT_FINE_EUCEN,
   NAACT_ALIGN_TEMPLATE,
-  NAACT_AUTOFOCUS, 
+  NAACT_AUTOFOCUS,
   NAACT_WAIT_DRIFT,
-  NAACT_RUN_PREMACRO, 
+  NAACT_RUN_PREMACRO,
   NAACT_HOLE_FINDER,
   NAACT_RUN_POSTMACRO,
   NAACT_RUN_EX_MACRO,
@@ -110,7 +114,7 @@ CNavHelper::CNavHelper(void)
     {"Flash FEG", NAA_FLAG_ANY_SITE_OK, 0, 1, 15, 40.},
     {"Manage Dewars/Vacuum", NAA_FLAG_HAS_SETUP | NAA_FLAG_EVERYN_ONLY |
     NAA_FLAG_ANY_SITE_OK, 0, 1, 15, 40.},
-    {"Hole Finder && Combiner", NAA_FLAG_AFTER_ITEM | NAA_FLAG_HAS_SETUP | 
+    {"Hole Finder && Combiner", NAA_FLAG_AFTER_ITEM | NAA_FLAG_HAS_SETUP |
     NAA_FLAG_EVERYN_ONLY | NAA_FLAG_HERE_ONLY, 0, 1, 15, 40.},
     {"Extra Run Script", 0, 0, 1, 15,40.},
     {"Extra Autocenter Beam", 0, 0, 1, 15, 40.},
@@ -137,7 +141,7 @@ CNavHelper::CNavHelper(void)
   for (mNumAcqActions = 0; mNumAcqActions < NAA_MAX_ACTIONS; mNumAcqActions++) {
     if (mAcqActDefaultOrder[mNumAcqActions] < 0)
       break;
-    mAcqActCurrentOrder[0][mNumAcqActions] = mAcqActCurrentOrder[1][mNumAcqActions] = 
+    mAcqActCurrentOrder[0][mNumAcqActions] = mAcqActCurrentOrder[1][mNumAcqActions] =
       mAcqActDefaultOrder[mNumAcqActions];
     mAllAcqActions[0][mNumAcqActions] = actions[mNumAcqActions];
     mAllAcqActions[1][mNumAcqActions] = actions[mNumAcqActions];
@@ -278,10 +282,10 @@ CNavHelper::CNavHelper(void)
   mNavAlignParams.scaledAliLoadBuf = MAX_BUFFERS - 1;
   mNavAlignParams.applyInteractive = false;
   float thresholds[] = {2.4f, 3.6f, 4.8f};
-  mHoleFinderParams.thresholds.insert(mHoleFinderParams.thresholds.begin(), 
+  mHoleFinderParams.thresholds.insert(mHoleFinderParams.thresholds.begin(),
     &thresholds[0], &thresholds[3]);
   float sigmas[] = {1.5f, 2.f, 3.f, -3.f};
-  mHoleFinderParams.sigmas.insert(mHoleFinderParams.sigmas.begin(), &sigmas[0], 
+  mHoleFinderParams.sigmas.insert(mHoleFinderParams.sigmas.begin(), &sigmas[0],
     &sigmas[4]);
   mHoleFinderParams.spacing = 2.;
   mHoleFinderParams.diameter = 1.;
@@ -456,7 +460,7 @@ void CNavHelper::InitAcqActionFlags(bool opening)
         setOrClearFlags(&actions[NAACT_FLASH_FEG].flags, NAA_FLAG_RUN_IT, 0);
 
       // Manage Check dewars
-      setFlag = !(FEIscope || (JEOLscope && mScope->GetJeolHasNitrogenClass() && 
+      setFlag = !(FEIscope || (JEOLscope && mScope->GetJeolHasNitrogenClass() &&
         mScope->GetDewarVacCapabilities() > 0) || mScope->GetHasSimpleOrigin());
       setOrClearFlags(&actions[NAACT_CHECK_DEWARS].flags, NAA_FLAG_ALWAYS_HIDE,
         setFlag ? 1 : 0);
@@ -512,7 +516,7 @@ void CNavHelper::UpdateSettings()
  */
 int CNavHelper::FindMapForRealigning(CMapDrawItem * inItem, BOOL restoreState)
 {
-  int mapInd, magMax, ix, iy, ixPiece, iyPiece, ixSafer, iySafer, xFrame, yFrame, binning; 
+  int mapInd, magMax, ix, iy, ixPiece, iyPiece, ixSafer, iySafer, xFrame, yFrame, binning;
   CMapDrawItem *item;
   int maxAligned, alignedMap, maxDrawn, drawnMap, samePosMap, maxSamePos;
   float toEdge, netViewShiftX, netViewShiftY;
@@ -524,7 +528,7 @@ int CNavHelper::FindMapForRealigning(CMapDrawItem * inItem, BOOL restoreState)
   float delX, delY, distMin, distMax, firstDelX, firstDelY;
   int magIndex = mScope->GetMagIndex();
 
-  // Look at all maps that point is inside and find one with most distance from a frame 
+  // Look at all maps that point is inside and find one with most distance from a frame
   // center to the borders, since we will go to the center point for initial localization
   distMax = 0.;
   maxAligned = 0;
@@ -558,8 +562,8 @@ int CNavHelper::FindMapForRealigning(CMapDrawItem * inItem, BOOL restoreState)
     alignedMap = 0;
     differentMap = inItem->IsMap() && inItem->mMapID != item->mMapID;
     incHighX = incHighY = incLowX = incLowY = 0.;
-    if (differentMap || ((restoreState || mWinApp->LowDoseMode()) && 
-      !(mWinApp->LowDoseMode() && 
+    if (differentMap || ((restoreState || mWinApp->LowDoseMode()) &&
+      !(mWinApp->LowDoseMode() &&
       (item->mNetViewShiftX != 0 || item->mNetViewShiftY != 0)))) {
 
       // Get potential adjustment for mag change if either the input item is a different
@@ -591,14 +595,14 @@ int CNavHelper::FindMapForRealigning(CMapDrawItem * inItem, BOOL restoreState)
     // And if there is a recorded error when aligning to this map, set flag
     // Also subtract from target to get back to the original stage position that was
     // aligned to in map and presumably marked.
-    if (inItem->IsMap() && inItem->mRealignedID == item->mMapID && 
+    if (inItem->IsMap() && inItem->mRealignedID == item->mMapID &&
       inItem->mRealignReg == item->mRegistration) {
       targetX -= inItem->mRealignErrX;
       targetY -= inItem->mRealignErrY;
       alignedMap = 1;
     }
     drawnMap = inItem->mDrawnOnMapID == item->mMapID ? 1 : 0;
-    samePosMap = (differentMap && inItem->mAtSamePosID > 0 && 
+    samePosMap = (differentMap && inItem->mAtSamePosID > 0 &&
       inItem->mAtSamePosID == item->mAtSamePosID) ? 1 : 0;
 
     if (InsideContour(item->mPtX, item->mPtY, item->mNumPoints, targetX, targetY)) {
@@ -606,7 +610,7 @@ int CNavHelper::FindMapForRealigning(CMapDrawItem * inItem, BOOL restoreState)
       // Get minimum distance to the border
       borderDist = 100000000.;
       for (ix = 0; ix < item->mNumPoints - 1; ix++) {
-        toEdge = PointSegmentDistance(targetX, targetY, item->mPtX[ix], item->mPtY[ix], 
+        toEdge = PointSegmentDistance(targetX, targetY, item->mPtX[ix], item->mPtY[ix],
           item->mPtX[ix+1], item->mPtY[ix+1]);
         borderDist = B3DMIN(borderDist, toEdge);
       }
@@ -615,18 +619,18 @@ int CNavHelper::FindMapForRealigning(CMapDrawItem * inItem, BOOL restoreState)
       // farther from edge of a montage; distMin is minimum distance from center of that
       // piece to edge of map
       if (DistAndPiecesForRealign(item, targetX, targetY, inItem->mPieceDrawnOn, mapInd,
-        aMat, delX, delY, distMin, ixPiece, iyPiece, ixSafer, iySafer, ix, iy, false, 
+        aMat, delX, delY, distMin, ixPiece, iyPiece, ixSafer, iySafer, ix, iy, false,
         xFrame, yFrame, binning))
         continue;
 
       // Now can determine net view shift and adjust initial stage delta
-      stayInLD = CanStayInLowDose(item, xFrame, yFrame, binning, ix, netViewShiftX, 
+      stayInLD = CanStayInLowDose(item, xFrame, yFrame, binning, ix, netViewShiftX,
         netViewShiftY, false);
 
       // If realigning to a second map at record mag, need to adjust the target by the
       // calibration shift unless staying in low dose, in which case need to clear out
       // the initial image shift.  Sadly, this is all empirical.
-      if (differentMap && ((mWinApp->LowDoseMode() || item->mNetViewShiftX || 
+      if (differentMap && ((mWinApp->LowDoseMode() || item->mNetViewShiftX ||
         item->mNetViewShiftY) && (inItem->mMapMagInd == ldp[RECORD_CONSET].magIndex ||
         inItem->mMapMagInd == ldp[VIEW_CONSET].magIndex))) {
           if (stayInLD && (item->mNetViewShiftX || item->mNetViewShiftY)) {
@@ -637,9 +641,9 @@ int CNavHelper::FindMapForRealigning(CMapDrawItem * inItem, BOOL restoreState)
             targetY += mRIcalShiftY;
           }
 
-          // If the user changed the view shift and this map was taken at the same 
+          // If the user changed the view shift and this map was taken at the same
           // position (and presumably all under the old shift), revise the target by the
-          // change in the view shift.  
+          // change in the view shift.
           if (samePosMap) {
             targetX += mRIviewShiftChangeX;
             targetY += mRIviewShiftChangeY;
@@ -647,7 +651,7 @@ int CNavHelper::FindMapForRealigning(CMapDrawItem * inItem, BOOL restoreState)
       }
       firstDelX += netViewShiftX;
       firstDelY += netViewShiftY;
-      SEMTrace('h', "net shift %.2f %.2f  target %.2f %.2f firstDel %.2f %.2f", 
+      SEMTrace('h', "net shift %.2f %.2f  target %.2f %.2f firstDel %.2f %.2f",
         netViewShiftX, netViewShiftY, targetX, targetY, firstDelX, firstDelY);
 
       // Convert the net stage shift to an image shift to apply instead
@@ -655,11 +659,11 @@ int CNavHelper::FindMapForRealigning(CMapDrawItem * inItem, BOOL restoreState)
         MatInv(mShiftManager->IStoGivenCamera(item->mMapMagInd, item->mMapCamera)));
       firstISX = firstDelX * bMat.xpx + firstDelY * bMat.xpy;
       firstISY = firstDelX * bMat.ypx + firstDelY * bMat.ypy;
- 
+
       // Treat any edge distance larger than this margin equally
       distMin = B3DMIN(distMin, mMaxMarginNeeded);
 
-      // A map is "better" if has a bigger edge distance, or if it is at a higher mag 
+      // A map is "better" if has a bigger edge distance, or if it is at a higher mag
       // for the same effective distance, or if the target is more interior for same
       // effective distance
       betterMap = distMin > distMax || (distMin == distMax && magMax < item->mMapMagInd)
@@ -671,7 +675,7 @@ int CNavHelper::FindMapForRealigning(CMapDrawItem * inItem, BOOL restoreState)
       // pos or it was not quite good enough.  In this case:
       // If both or neither are aligned, take the better map
       // If new one is aligned and old one isn't, take it if it is beyond wanted dist
-      // or better.  If new one is better and not aligned, take it unless old one is 
+      // or better.  If new one is better and not aligned, take it unless old one is
       // aligned and beyond wanted distance or if the target is more interior
       // Treat drawn on map same way as aligned to map - maybe it should count for more
       // but there is no criterion for "enough" border to apply here
@@ -679,7 +683,7 @@ int CNavHelper::FindMapForRealigning(CMapDrawItem * inItem, BOOL restoreState)
         " mdr %d dmax %f bdis %.2f bmax %.2f", mapInd, samePosMap, maxSamePos, betterMap,
         distMin, mMinMarginWanted, alignedMap, maxAligned, drawnMap, maxDrawn, distMax,
         borderDist, borderMax);
-      if ((samePosMap && !maxSamePos && (betterMap || 
+      if ((samePosMap && !maxSamePos && (betterMap ||
         distMin >= B3DMIN(mMinAnchorMargin, mMinMarginWanted) || (maxInLM && !mapInLM)))
         || ((!maxSamePos || distMin < mMinMarginWanted) &&
         (((alignedMap == maxAligned || drawnMap == maxDrawn) && betterMap) ||
@@ -711,7 +715,7 @@ int CNavHelper::FindMapForRealigning(CMapDrawItem * inItem, BOOL restoreState)
       }
     }
   }
-  
+
   if (distMax < mMinMarginNeeded)
     return distMax ? 5 : 4;
 
@@ -723,7 +727,7 @@ int CNavHelper::FindMapForRealigning(CMapDrawItem * inItem, BOOL restoreState)
  * target alignments
  */
 int CNavHelper::DistAndPiecesForRealign(CMapDrawItem *item, float targetX, float targetY,
-  int pcDrawnOn, int mapInd, ScaleMat &aMat, float &delX, float &delY, float &distMin, 
+  int pcDrawnOn, int mapInd, ScaleMat &aMat, float &delX, float &delY, float &distMin,
   int &ixPiece, int &iyPiece, int &ixSafer, int &iySafer, int &imageX, int &imageY,
   bool keepStore, int &xFrame, int &yFrame, int &binning)
 {
@@ -746,7 +750,7 @@ int CNavHelper::DistAndPiecesForRealign(CMapDrawItem *item, float targetX, float
     loadWidth = (float)(montP->xFrame + (montP->xNframes - 1) * xFrameDel);
     yFrameDel =  (montP->yFrame - montP->yOverlap);
     loadHeight = (float)(montP->yFrame + (montP->yNframes - 1) * yFrameDel);
-    mWinApp->mMontageController->ListMontagePieces(imageStore, montP, 
+    mWinApp->mMontageController->ListMontagePieces(imageStore, montP,
       item->mMapSection, mPieceSavedAt);
     xFrame = montP->xFrame;
     yFrame = montP->yFrame;
@@ -773,11 +777,11 @@ int CNavHelper::DistAndPiecesForRealign(CMapDrawItem *item, float targetX, float
   aMat.xpy *= loadWidth / useWidth;
   aMat.ypx *= loadHeight / useHeight;
   aMat.ypy *= loadHeight / useHeight;
-  delX = (item->mMapWidth / useWidth) * loadWidth / 2.f - 
+  delX = (item->mMapWidth / useWidth) * loadWidth / 2.f -
     aMat.xpx * item->mStageX - aMat.xpy * item->mStageY;
-  delY = (2.f - item->mMapHeight / useHeight) * loadHeight / 2.f - 
+  delY = (2.f - item->mMapHeight / useHeight) * loadHeight / 2.f -
     aMat.ypx * item->mStageX - aMat.ypy * item->mStageY;
-  pixel = mShiftManager->GetPixelSize(item->mMapCamera, item->mMapMagInd) * 
+  pixel = mShiftManager->GetPixelSize(item->mMapCamera, item->mMapMagInd) *
     binning;
 
   // For single frame, distance is just half the minimum frame size
@@ -791,7 +795,7 @@ int CNavHelper::DistAndPiecesForRealign(CMapDrawItem *item, float targetX, float
     // right-handed coordinates.  Find piece with center closest to point but far
     // enough away from edge
     imX = (int)(aMat.xpx * targetX + aMat.xpy * targetY + delX);
-    imY = (int)(loadHeight - (aMat.ypx * targetX + 
+    imY = (int)(loadHeight - (aMat.ypx * targetX +
       aMat.ypy * targetY + delY));
     if (imX < 0 || imY < 0 || imX > loadWidth || imY > loadHeight)
       return 2;
@@ -888,7 +892,7 @@ int CNavHelper::RealignToDrawnOnMap(CMapDrawItem * item, BOOL restoreState)
 /*
  * REALIGN TO ITEM: Realign to the coordinates in the given item by correlating with maps
  */
-int CNavHelper::RealignToItem(CMapDrawItem *inItem, BOOL restoreState, 
+int CNavHelper::RealignToItem(CMapDrawItem *inItem, BOOL restoreState,
   float resetISalignCrit, int maxNumResetAlign, int leaveZeroIS, int realiFlags,
   int setForScaled)
 {
@@ -921,7 +925,7 @@ int CNavHelper::RealignToItem(CMapDrawItem *inItem, BOOL restoreState,
   mRIresetISAfter3rdRound = false;
   mRISetNumForScaledAlign = -1;
   mRIResetISmagInd = item->mMapMagInd;
-  if (inItem->IsMap() && item->mMapID != inItem->mMapID && 
+  if (inItem->IsMap() && item->mMapID != inItem->mMapID &&
     inItem->mColor != NO_REALIGN_COLOR)
     mThirdRoundID = inItem->mMapID;
   else if (mRIdrawnTargetItem)
@@ -946,7 +950,7 @@ int CNavHelper::RealignToItem(CMapDrawItem *inItem, BOOL restoreState,
       if (field >= mRISkipItemPosMinField)
         justMoveIfSkipCen = true;
       if (resetISalignCrit > 0 && (field > mWinApp->mComplexTasks->GetMinRSRAField() ||
-      (mWinApp->LowDoseMode() && setForScaled != PREVIEW_CONSET && 
+      (mWinApp->LowDoseMode() && setForScaled != PREVIEW_CONSET &&
         setForScaled != RECORD_CONSET)))
         mRIresetISAfter3rdRound = true;
     }
@@ -954,9 +958,9 @@ int CNavHelper::RealignToItem(CMapDrawItem *inItem, BOOL restoreState,
   SEMTrace('1', "(Initial) alignment to map %d (%s)", mRIitemInd, (LPCTSTR)item->mLabel);
 
   // Use the passed-in values for resetting IS and leaving IS at 0 if no thirs round
-  mRIresetISCritForAlign = (mThirdRoundID && !mRIresetISAfter3rdRound) ? 
+  mRIresetISCritForAlign = (mThirdRoundID && !mRIresetISAfter3rdRound) ?
     0.f : resetISalignCrit;
-  mRIresetISmaxNumAlign = (mThirdRoundID && !mRIresetISAfter3rdRound) ? 
+  mRIresetISmaxNumAlign = (mThirdRoundID && !mRIresetISAfter3rdRound) ?
     0 : maxNumResetAlign;
   mRIresetISleaveZero = (mThirdRoundID && !mRIresetISAfter3rdRound) ? 0 : leaveZeroIS;
   mRIresetISnumDone = 0;
@@ -980,11 +984,11 @@ int CNavHelper::RealignToItem(CMapDrawItem *inItem, BOOL restoreState,
   if (item->mMapMontage) {
     mUseMontStageError = (mRealignTestOptions & 2) != 0 &&
       item->mRegistration == item->mOriginalReg;
-    mWinApp->mMontageController->ListMontagePieces(mMapStore, mMapMontP, 
+    mWinApp->mMontageController->ListMontagePieces(mMapStore, mMapMontP,
       item->mMapSection, mPieceSavedAt);
   }
 
-  // Set the initial component of previous error so it can now be applied to frame 
+  // Set the initial component of previous error so it can now be applied to frame
   // positions, and adjust the target position to be in same shifted coordinates
   // But previous error only works if we are in the same registration...
   mPreviousErrX = mPreviousErrY = 0.;
@@ -992,7 +996,7 @@ int CNavHelper::RealignToItem(CMapDrawItem *inItem, BOOL restoreState,
   mLocalErrX = mLocalErrY = 0.;
   if (inItem->mRealignedID == item->mMapID && inItem->mRealignReg == item->mRegistration){
     if (mUseMontStageError)
-      InterpMontStageOffset(mMapStore, mMapMontP, ItemStageToCamera(item), mPieceSavedAt, 
+      InterpMontStageOffset(mMapStore, mMapMontP, ItemStageToCamera(item), mPieceSavedAt,
         mRItargetX - item->mStageX, mRItargetY - item->mStageY, montErrX, montErrY);
     mPreviousErrX = inItem->mRealignErrX - inItem->mLocalRealiErrX - montErrX;
     mPreviousErrY = inItem->mRealignErrY - inItem->mLocalRealiErrY - montErrY;
@@ -1009,7 +1013,7 @@ int CNavHelper::RealignToItem(CMapDrawItem *inItem, BOOL restoreState,
   if (item->mMapMontage) {
 
     // Get stage position of final piece
-    StagePositionOfPiece(mMapMontP, mRImat, mRIdelX, mRIdelY, mRIix, mRIiy, finalX, 
+    StagePositionOfPiece(mMapMontP, mRImat, mRIdelX, mRIdelY, mRIix, mRIiy, finalX,
       finalY, montErrX, montErrY);
 
     // Test for whether a montage center exists in its entirety
@@ -1017,12 +1021,12 @@ int CNavHelper::RealignToItem(CMapDrawItem *inItem, BOOL restoreState,
     iy = (mMapMontP->yNframes - 1) / 2;
     ind = iy + ix * mMapMontP->yNframes;
     mUseMontCenter = false;
-    if (mPieceSavedAt[ind] >= 0 && 
+    if (mPieceSavedAt[ind] >= 0 &&
       ((!(montP->xNframes % 2) && !(montP->yNframes % 2) && mPieceSavedAt[ind + 1] >= 0 &&
-      mPieceSavedAt[ind + montP->yNframes] >= 0 && 
+      mPieceSavedAt[ind + montP->yNframes] >= 0 &&
       mPieceSavedAt[ind + montP->yNframes + 1] >= 0) ||
       ((montP->xNframes % 2) && !(montP->yNframes % 2) && mPieceSavedAt[ind + 1] >= 0) ||
-      (!(montP->xNframes % 2) && (montP->yNframes % 2) && 
+      (!(montP->xNframes % 2) && (montP->yNframes % 2) &&
       mPieceSavedAt[ind + montP->yNframes] >= 0))) {
 
         // Then see if the target is closer to the montage center than to piece center
@@ -1034,7 +1038,7 @@ int CNavHelper::RealignToItem(CMapDrawItem *inItem, BOOL restoreState,
     mUseMontCenter = false;
 
     // Get stage position of safer piece
-    StagePositionOfPiece(mMapMontP, mRImat, mRIdelX, mRIdelY, mRIixSafer, mRIiySafer, 
+    StagePositionOfPiece(mMapMontP, mRImat, mRIdelX, mRIdelY, mRIixSafer, mRIiySafer,
       stageX, stageY, montErrX, montErrY);
     SEMTrace('1', "First round alignment to piece %d %d at %.2f %.2f, montErr %.2f %.2f",
       mRIixSafer, mRIiySafer, stageX, stageY, montErrX, montErrY);
@@ -1051,7 +1055,7 @@ int CNavHelper::RealignToItem(CMapDrawItem *inItem, BOOL restoreState,
   // Set up to use scaling in first if option selected and not low dose
   mRItryScaling = mTryRealignScaling && !mWinApp->LowDoseMode();
   mRIautoAlignFlags = ((!mWinApp->LowDoseMode() && mShiftManager->GetErasePeriodicPeaks()) ||
-    (mWinApp->LowDoseMode() && mRIErasePeriodicPeaks)) ? 
+    (mWinApp->LowDoseMode() && mRIErasePeriodicPeaks)) ?
     AUTOALIGN_FILL_SPOTS : AUTOALIGN_KEEP_SPOTS;
 
   // Save state if desired; which will only work by forgetting prior state
@@ -1071,7 +1075,7 @@ int CNavHelper::RealignToItem(CMapDrawItem *inItem, BOOL restoreState,
     InterpMontStageOffset(mMapStore, mMapMontP, ItemStageToCamera(item), mPieceSavedAt,
       mRItargetX - (item->mStageX + mPreviousErrX),
       mRItargetY - (item->mStageY + mPreviousErrY), mRItargMontErrX, mRItargMontErrY);
-  
+
   // If the mapID doesn't match, clear the center skip list; otherwise look up this
   // position in the list, and if time is within limit, skip first round
   firstDelX = firstDelY = 0.;
@@ -1166,12 +1170,12 @@ int CNavHelper::RealignToItem(CMapDrawItem *inItem, BOOL restoreState,
   // Add the view shift just to the coordinates being moved to, all the evaluations
   // of error below depend on comparisons to original first stage pos without it
   SEMTrace('h', "first stage %.2f %.2f  net view shift %.2f %.2f  firstdel %.2f %.2f"
-    " VS change %.2f %.2f firstIS %.2f %.2f", mRIfirstStageX ,mRIfirstStageY, 
+    " VS change %.2f %.2f firstIS %.2f %.2f", mRIfirstStageX ,mRIfirstStageY,
     mRInetViewShiftX, mRInetViewShiftY, firstDelX, firstDelY, mRIviewShiftChangeX,
     mRIviewShiftChangeY, mRIfirstISX, mRIfirstISY);
   mNav->AdjustAndMoveStage(mRIfirstStageX + mRInetViewShiftX + firstDelX -
-    mRIviewShiftChangeX, mRIfirstStageY + mRInetViewShiftY + firstDelY - 
-    mRIviewShiftChangeY, inItem->mStageZ, axes, itemBackX, itemBackY, 
+    mRIviewShiftChangeX, mRIfirstStageY + mRInetViewShiftY + firstDelY -
+    mRIviewShiftChangeY, inItem->mStageZ, axes, itemBackX, itemBackY,
     mRIfirstISX + mRIleaveISX, mRIfirstISY + mRIleaveISY, mapAngle);
 
   mWinApp->AddIdleTask(SEMStageCameraBusy, TASK_NAV_REALIGN, action, 30000);
@@ -1224,7 +1228,7 @@ void CNavHelper::RealignNextTask(int param)
     case TASK_FIRST_MOVE:
       StartRealignCapture(mRIContinuousMode != 0, TASK_FIRST_SHOT);
       return;
-  
+
     case TASK_FIRST_SHOT:
       scaling = 0.;
       if (item->mMapMontage) {
@@ -1242,7 +1246,7 @@ void CNavHelper::RealignNextTask(int param)
           iyCen = iyNew;
           for (ix = ixCen - 1; ix <= ixCen + 1; ix++) {
             for (iy = iyCen - 1; iy <= iyCen + 1; iy++) {
-              if (ix < 0 || ix >= mMapMontP->xNframes || iy < 0 || 
+              if (ix < 0 || ix >= mMapMontP->xNframes || iy < 0 ||
                 iy >= mMapMontP->yNframes)
                 continue;
               ind = iy + ix * mMapMontP->yNframes;
@@ -1258,30 +1262,30 @@ void CNavHelper::RealignNextTask(int param)
 
                 // Align without shifting image
                 mShiftManager->AutoAlign(1, -1, false, mRIautoAlignFlags, &peakVal, 0.,
-                  0., 0., 0., 0., &CCC, &overlap, GetDebugOutput('1'), &pcShiftX, 
+                  0., 0., 0., 0., &CCC, &overlap, GetDebugOutput('1'), &pcShiftX,
                   &pcShiftY);
                 pieceDone[ind] = true;
 
                 // Compute the change in position that this correlation implies and
                 // disparity from original stage position for this move
-                StagePositionOfPiece(mMapMontP, mRImat, mRIdelX, mRIdelY, ix, iy, 
+                StagePositionOfPiece(mMapMontP, mRImat, mRIdelX, mRIdelY, ix, iy,
                   pcStageX, pcStageY, pcMontErrX, pcMontErrY);
                 pcErrX = -mImBufs->mBinning * (bInv.xpx * pcShiftX - bInv.xpy * pcShiftY);
                 pcErrY = -mImBufs->mBinning * (bInv.ypx * pcShiftX - bInv.ypy * pcShiftY);
-                pcDelX = pcErrX + mPrevLocalErrX + mRItargetX + mRItargMontErrX - 
+                pcDelX = pcErrX + mPrevLocalErrX + mRItargetX + mRItargMontErrX -
                   (pcStageX + pcMontErrX);
-                pcDelY = pcErrY + mPrevLocalErrY + mRItargetY + mRItargMontErrY - 
+                pcDelY = pcErrY + mPrevLocalErrY + mRItargetY + mRItargMontErrY -
                   (pcStageY + pcMontErrY);
-                pcErrX += mRIfirstStageX - (pcStageX + pcMontErrX), 
+                pcErrX += mRIfirstStageX - (pcStageX + pcMontErrX),
                 pcErrY += mRIfirstStageY - (pcStageY + pcMontErrY);
                 pcErrX = (float)sqrt(pcErrX * pcErrX + pcErrY * pcErrY);
                 wgtPeakVal = (float)(CCC * pow((double)overlap, overlapPow)) *
                   mDistWeightThresh / B3DMAX(mDistWeightThresh, pcErrX);
 
                 // If this position is essentially the same as the best one, take it if
-                // the CCC is sufficiently higher, reject if it is sufficiently lower, 
+                // the CCC is sufficiently higher, reject if it is sufficiently lower,
                 // and otherwise pick the one with the biggest overlap
-                if (fabs((double)(pcDelX - bestDelX)) < samePosCrit && 
+                if (fabs((double)(pcDelX - bestDelX)) < samePosCrit &&
                   fabs((double)(pcDelY - bestDelY)) < samePosCrit) {
                   if (peakMax <= 1.e-20 || peakMax / CCC < closeCCCcrit)
                     betterPeak = true;
@@ -1295,10 +1299,10 @@ void CNavHelper::RealignNextTask(int param)
                   betterPeak = wgtPeakVal > wgtPeakMax;
                 }
                 SEMTrace('n', "Align to %d %d, peak= %.6g   CCC= %.4f  frac= "
-                  "%.2f  delXY= %.2f, %.2f  err= %.2f  wgtCCC= %.4f%s", ix, iy, peakVal, 
+                  "%.2f  delXY= %.2f, %.2f  err= %.2f  wgtCCC= %.4f%s", ix, iy, peakVal,
                   CCC, overlap, pcDelX, pcDelY, pcErrX, wgtPeakVal, betterPeak? "*" : "");
 
-                // If a new maximum is found, record position of peak and get the 
+                // If a new maximum is found, record position of peak and get the
                 // stage position and alignment shifts for this piece
                 if (betterPeak) {
                   peakMax = CCC;
@@ -1309,7 +1313,7 @@ void CNavHelper::RealignNextTask(int param)
                   indBest = ind;
                   bestDelX = pcDelX;
                   bestDelY = pcDelY;
-                  StagePositionOfPiece(mMapMontP, mRImat, mRIdelX, mRIdelY, ix, iy, 
+                  StagePositionOfPiece(mMapMontP, mRImat, mRIdelX, mRIdelY, ix, iy,
                     stageX, stageY, cenMontErrX, cenMontErrY);
                   shiftX = pcShiftX;
                   shiftY = pcShiftY;
@@ -1372,12 +1376,12 @@ void CNavHelper::RealignNextTask(int param)
       mRegistrationAtErr = mNav->GetCurrentRegistration();
       mRImapID = item->mMapID;
       report.Format("Disparity in stage position after aligning to center of map frame: "
-        "%.2f %.2f", mStageErrX + mRIfirstStageX - (stageX + cenMontErrX), 
+        "%.2f %.2f", mStageErrX + mRIfirstStageX - (stageX + cenMontErrX),
         mStageErrY + mRIfirstStageY - (stageY + cenMontErrY));
       mWinApp->AppendToLog(report, LOG_SWALLOW_IF_CLOSED);
-      mCenterSkipArray[mCenSkipIndex].baseDelX = mStageErrX + mPrevLocalErrX - 
+      mCenterSkipArray[mCenSkipIndex].baseDelX = mStageErrX + mPrevLocalErrX -
         (stageX + cenMontErrX);
-      mCenterSkipArray[mCenSkipIndex].baseDelY = mStageErrY + mPrevLocalErrY - 
+      mCenterSkipArray[mCenSkipIndex].baseDelY = mStageErrY + mPrevLocalErrY -
         (stageY + cenMontErrY);
       stageDelX = mCenterSkipArray[mCenSkipIndex].baseDelX + mRItargetX + mRItargMontErrX;
       stageDelY = mCenterSkipArray[mCenSkipIndex].baseDelY + mRItargetY + mRItargMontErrY;
@@ -1393,7 +1397,7 @@ void CNavHelper::RealignNextTask(int param)
       mRInumRounds++;
 
       // If shift can be done with image shift, do that then go to second round
-      if (sqrt(stageDelX * stageDelX + stageDelY * stageDelY) < mRImaximumIS && 
+      if (sqrt(stageDelX * stageDelX + stageDelY * stageDelY) < mRImaximumIS &&
         !(mRIresetISleaveZero > 0 || mRIresetISmaxNumAlign > 0)) {
           aMat = mShiftManager->FocusAdjustedISToCamera(mImBufs);
           bInv = MatMul(bMat, MatInv(aMat));
@@ -1417,7 +1421,7 @@ void CNavHelper::RealignNextTask(int param)
           mImBufs->SetImageChanged(1);
           mNav->Redraw();
 
-          // 1/31/24: Gave up on revising the error from adjusted stage position and 
+          // 1/31/24: Gave up on revising the error from adjusted stage position and
           // offsets, it just didn't work
           StartThirdRound();
           return;
@@ -1434,8 +1438,8 @@ void CNavHelper::RealignNextTask(int param)
       // Finally, move the stage, relative to the first stage move, adding the view shift
       // because it is not in the adjustment applied to the stage position
       mNav->BacklashForItem(item, shiftX, shiftY);
-      mNav->AdjustAndMoveStage(mRIfirstStageX + mRInetViewShiftX + stageDelX - 
-        mRIviewShiftChangeX, mRIfirstStageY + mRInetViewShiftY + stageDelY - 
+      mNav->AdjustAndMoveStage(mRIfirstStageX + mRInetViewShiftX + stageDelX -
+        mRIviewShiftChangeX, mRIfirstStageY + mRInetViewShiftY + stageDelY -
         mRIviewShiftChangeY, 0., axisXY, shiftX, shiftY,
         mRIfirstISX + mRIleaveISX, mRIfirstISY + mRIleaveISY);
       mWinApp->AddIdleTask(CEMscope::TaskStageBusy, TASK_NAV_REALIGN, TASK_SECOND_MOVE,
@@ -1443,7 +1447,7 @@ void CNavHelper::RealignNextTask(int param)
       return;
 
     case TASK_SECOND_MOVE:
-      if (mRIresetISleaveZero > 0 && mRIresetISmaxNumAlign <= 0) 
+      if (mRIresetISleaveZero > 0 && mRIresetISmaxNumAlign <= 0)
         StartThirdRound();
       else
         StartRealignCapture(mRIContinuousMode != 0, TASK_SECOND_SHOT);
@@ -1455,7 +1459,7 @@ void CNavHelper::RealignNextTask(int param)
       SEMTrace('h', "Aligning with expected shift %.1f %.1f  sigma %1f", mExpectedXshift,
         mExpectedYshift, mRIweightSigma / imagePixelSize);
       mShiftManager->AutoAlign(1, -1, true, mRIautoAlignFlags, &peakVal, mExpectedXshift,
-        mExpectedYshift, 0., mRIscaling, 0., NULL, NULL, GetDebugOutput('1'), NULL, NULL, 
+        mExpectedYshift, 0., mRIscaling, 0., NULL, NULL, GetDebugOutput('1'), NULL, NULL,
         mRIweightSigma / imagePixelSize);
       mImBufs[1].mImage->setShifts(-mExpectedXshift, -mExpectedYshift);
       mImBufs[1].SetImageChanged(1);
@@ -1463,7 +1467,7 @@ void CNavHelper::RealignNextTask(int param)
       mLocalErrX = -mImBufs->mBinning * (bInv.xpx * shiftX - bInv.xpy * shiftY);
       mLocalErrY = -mImBufs->mBinning * (bInv.ypx * shiftX - bInv.ypy * shiftY);
       SEMTrace('1', "Aligned to target with image shift of %.1f %.1f pixels\r\n"
-        "    local stage err %.2f %.2f, implied total err %.2f %.2f", shiftX, shiftY, 
+        "    local stage err %.2f %.2f, implied total err %.2f %.2f", shiftX, shiftY,
         mLocalErrX, mLocalErrY, mLocalErrX + mStageErrX, mLocalErrY + mStageErrY);
       mRInumRounds++;
 
@@ -1478,10 +1482,10 @@ void CNavHelper::RealignNextTask(int param)
 
       // Evaluate whether center alignment can be re-used
       // Cancel re-use if error is bigger than a fraction of field size or if an error
-      // crit is set and the error is above that; 
+      // crit is set and the error is above that;
       // otherwise if an error crit is set, renew the time stamp
       shiftX = (float)sqrt(mLocalErrX * mLocalErrX + mLocalErrY * mLocalErrY);
-      if (shiftX > 0.17 * imagePixelSize * 
+      if (shiftX > 0.17 * imagePixelSize *
         B3DMIN(mImBufs->mImage->getWidth(), mImBufs->mImage->getHeight()) ||
         (mRIskipCenErrorCrit > 0. && shiftX > mRIskipCenErrorCrit)) {
           mCenterSkipArray[mCenSkipIndex].timeStamp = 0;
@@ -1504,13 +1508,13 @@ void CNavHelper::RealignNextTask(int param)
       }
 
       if (mRISetNumForScaledAlign >= 0) {
-        mWinApp->mMainView->GetMapItemsForImageCoords(&mImBufs[mRIbufWithMapToScale], 
+        mWinApp->mMainView->GetMapItemsForImageCoords(&mImBufs[mRIbufWithMapToScale],
           true);
         mWinApp->mMainView->GetItemImageCoords(&mImBufs[mRIbufWithMapToScale], item,
           shiftX, shiftY, item->mPieceDrawnOn);
         if (mWinApp->mProcessImage->AlignBetweenMagnifications(mRIbufWithMapToScale,
-          shiftX, shiftY, -mNavAlignParams.scaledAliExtraFOV, 
-          GetScaledRealignPctChg() / 100.f, GetScaledRealignMaxRot() * 2.f, true, scaling, 
+          shiftX, shiftY, -mNavAlignParams.scaledAliExtraFOV,
+          GetScaledRealignPctChg() / 100.f, GetScaledRealignMaxRot() * 2.f, true, scaling,
           overlap, mRIautoAlignFlags, report)) {
           SEMMessageBox("Failure aligning to scaled map: " + report);
           StopRealigning();
@@ -1521,7 +1525,7 @@ void CNavHelper::RealignNextTask(int param)
           NULL, NULL, GetDebugOutput('1'));
       }
       mImBufs->mImage->getShifts(shiftX, shiftY);
-      SEMTrace('1', "Realigned to %s with image shift of %.1f %.1f pixels", 
+      SEMTrace('1', "Realigned to %s with image shift of %.1f %.1f pixels",
         mRISetNumForScaledAlign >= 0 ? "scaled map" : "map item itself",
         shiftX, shiftY);
       mRInumRounds++;
@@ -1599,10 +1603,10 @@ void CNavHelper::StartResetISorFinish(int magInd)
   float backlashX, backlashY;
   mScope->GetLDCenteredShift(delISX, delISY);
   delISX = mShiftManager->RadialShiftOnSpecimen(delISX, delISY, magInd);
-  mRIresetISneedsAlign = delISX >= mRIresetISCritForAlign && mRIresetISnumDone < 
+  mRIresetISneedsAlign = delISX >= mRIresetISCritForAlign && mRIresetISnumDone <
     mRIresetISmaxNumAlign;
   if (mRIresetISneedsAlign || mRIresetISleaveZero > 0) {
-    SEMTrace('1', "Starting Reset IS%s, IS dist = %.2f", 
+    SEMTrace('1', "Starting Reset IS%s, IS dist = %.2f",
       mRIresetISneedsAlign ? " and realign" : "", delISX);
     mScope->GetStagePosition(delISX, delISY, stz);
     mShiftManager->ResetImageShift(mScope->GetValidXYbacklash(delISX, delISY, backlashX,
@@ -1610,7 +1614,7 @@ void CNavHelper::StartResetISorFinish(int magInd)
     mWinApp->AddIdleTask(TaskRealignBusy, TASK_NAV_REALIGN, TASK_RESET_IS, 0);
     return;
   }
-  SEMTrace('1', "Leaving final IS dist = %.2f", delISX); 
+  SEMTrace('1', "Leaving final IS dist = %.2f", delISX);
   if (!mRIresetISAfter3rdRound)
     StartThirdRound();
   else
@@ -1618,7 +1622,7 @@ void CNavHelper::StartResetISorFinish(int magInd)
 }
 
 
-// Load the image needed for second round alignment, rotate if needed, and compute 
+// Load the image needed for second round alignment, rotate if needed, and compute
 // expected shift for aligning
 int CNavHelper::LoadForAlignAtTarget(CMapDrawItem *item)
 {
@@ -1640,7 +1644,7 @@ int CNavHelper::LoadForAlignAtTarget(CMapDrawItem *item)
       retval = mBufferManager->ReadFromFile(mMapStore, mPieceSavedAt[ind], 0, true);
       StagePositionOfPiece(mMapMontP, mRImat, mRIdelX, mRIdelY, mRIix, mRIiy, shiftX,
         shiftY, tmpX, tmpY);
-      SEMTrace('1', "Second round alignment to piece %d %d at %.2f %.2f", mRIix, 
+      SEMTrace('1', "Second round alignment to piece %d %d at %.2f %.2f", mRIix,
         mRIiy,  shiftX, shiftY);
     }
 
@@ -1702,7 +1706,7 @@ void CNavHelper::StopRealigning(void)
     mCamera->StopCapture(0);
   if (mRIContinuousMode > 1)
     conSet->mode = CONTINUOUS;
- 
+
   mCamera->SetRequiredRoll(0);
   mWinApp->SetStatusText(MEDIUM_PANE, "");
   mRIdrawnTargetItem = NULL;
@@ -1734,7 +1738,7 @@ void CNavHelper::RestoreForStopOrScaledAlign()
 }
 
 /*
- * If aligning to a map item or scaled up image after the two rounds at lower mag, 
+ * If aligning to a map item or scaled up image after the two rounds at lower mag,
  * set up conditions
  */
 void CNavHelper::StartThirdRound(void)
@@ -1815,7 +1819,7 @@ void CNavHelper::StartThirdRound(void)
   if (mCurStoreInd < 0)
     delete mMapStore;
   mMapStore = NULL;
-  if (mNav->AccessMapFile(item, imageStore, mCurStoreInd, mMapMontP, useWidth, 
+  if (mNav->AccessMapFile(item, imageStore, mCurStoreInd, mMapMontP, useWidth,
     useHeight)) {
     SEMMessageBox("Failed to access map file of item being aligned to");
     RealignCleanup(1);
@@ -1877,7 +1881,7 @@ void CNavHelper::StartRealignCapture(bool useContinuous, int nextTask)
 }
 
 // Set scope and filter parameters and set up a control set imaging a map area
-void CNavHelper::PrepareToReimageMap(CMapDrawItem *item, MontParam *param, 
+void CNavHelper::PrepareToReimageMap(CMapDrawItem *item, MontParam *param,
   ControlSet *conSet, int baseNum, int hideLDoff, int noFrames)
 {
   ControlSet *conSets = mWinApp->GetConSets();
@@ -1928,7 +1932,7 @@ void CNavHelper::PrepareToReimageMap(CMapDrawItem *item, MontParam *param,
       bottom = mSavedConset.bottom / binning;
       right = mSavedConset.right / binning;
       mCamera->AdjustSizes(xFrame, camP->sizeX, camP->moduloX, left, right, yFrame,
-        camP->sizeY, camP->moduloY, top, bottom, binning, item->mMapCamera, 
+        camP->sizeY, camP->moduloY, top, bottom, binning, item->mMapCamera,
         mRIuseCurrentLDparams ? mSavedConset.saveFrames : 0, mSavedConset.alignFrames,
         mSavedConset.useFrameAlign, mSavedConset.K2ReadMode);
       conSets[mRIconSetNum].top = top * binning;
@@ -1974,7 +1978,7 @@ void CNavHelper::PrepareToReimageMap(CMapDrawItem *item, MontParam *param,
   }
 
   SEMTrace('I', "PrepareToReimageMap set intensity to %.5f  %.3f%%", stateParam.intensity
-    , mScope->GetC2Percent(stateParam.spotSize, stateParam.intensity, 
+    , mScope->GetC2Percent(stateParam.spotSize, stateParam.intensity,
       stateParam.probeMode));
   SetStateFromParam(&stateParam, conSet, baseNum, hideLDoff);
 
@@ -2031,25 +2035,25 @@ bool CNavHelper::CanStayInLowDose(CMapDrawItem *item, int xFrame, int yFrame, in
     ldp = mWinApp->GetLowDoseParams() + area;
 
     // Check mag/spot/alpha and filter
-    if (item->mMapCamera != mWinApp->GetCurrentCamera() || 
-      item->mMapMagInd != ldp->magIndex || 
-      (item->mMapProbeMode >= 0 && item->mMapProbeMode != ldp->probeMode) || 
-      (hasAlpha && (item->mMapAlpha >= 0 || ldp->beamAlpha >= 0) &&  
+    if (item->mMapCamera != mWinApp->GetCurrentCamera() ||
+      item->mMapMagInd != ldp->magIndex ||
+      (item->mMapProbeMode >= 0 && item->mMapProbeMode != ldp->probeMode) ||
+      (hasAlpha && (item->mMapAlpha >= 0 || ldp->beamAlpha >= 0) &&
       item->mMapAlpha != ldp->beamAlpha) || item->mMapBinning <= 0) {
         if (forReal)
           SEMTrace('1', "Leaving LD, map bin %d map/LD cam %d/%d mag %d/%d"
-            " probe %d/%d alpha %d/%.0f", 
-            item->mMapMontage ? item->mMontBinning : item->mMapBinning, item->mMapCamera, 
-            mWinApp->GetCurrentCamera(), item->mMapMagInd, ldp->magIndex, 
-            item->mMapProbeMode >= 0 ? item->mMapProbeMode : -1, 
-            item->mMapProbeMode >= 0 ? ldp->probeMode : -1, 
+            " probe %d/%d alpha %d/%.0f",
+            item->mMapMontage ? item->mMontBinning : item->mMapBinning, item->mMapCamera,
+            mWinApp->GetCurrentCamera(), item->mMapMagInd, ldp->magIndex,
+            item->mMapProbeMode >= 0 ? item->mMapProbeMode : -1,
+            item->mMapProbeMode >= 0 ? ldp->probeMode : -1,
             hasAlpha ? item->mMapAlpha : -1, hasAlpha ? ldp->beamAlpha : -1.);
         match = false;
     }
 
     // Check for defocus offset change if a limit is set as a trap-door
-    if (match && IS_SET_VIEW_OR_SEARCH(item->mMapLowDoseConSet) && 
-      mRIdefocusChangeLimit > 0. && fabs(item->mDefocusOffset - 
+    if (match && IS_SET_VIEW_OR_SEARCH(item->mMapLowDoseConSet) &&
+      mRIdefocusChangeLimit > 0. && fabs(item->mDefocusOffset -
       mScope->GetLDViewDefocus(area)) > mRIdefocusChangeLimit) {
         if (forReal)
           SEMTrace('1', "Leaving LD, defocus offset map %.1f  LD %.1f",
@@ -2119,14 +2123,14 @@ void CNavHelper::RestoreMapOffsets()
 
   // Then restore alpha.  Do alpha and other beam changes in the same order as when
   // changing low dose areas, since that is what this mimics
-  SEMTrace('b', "RestoreMapOffsets restore alpha %d to %d",mRIalphaSet + 1, 
+  SEMTrace('b', "RestoreMapOffsets restore alpha %d to %d",mRIalphaSet + 1,
       mRIalphaSaved + 1);
   if (mRIalphaSet >= 0 && mRIalphaSaved >= 0)
     mScope->ChangeAlphaAndBeam(mRIalphaSet, mRIalphaSaved);
   mRIalphaSet = -999;
 
   // Restore beam shift/tilt
-  SEMTrace('b', "RestoreMapOffsets restore bs %f %f  bt %f %f", mRIbeamShiftSetX, 
+  SEMTrace('b', "RestoreMapOffsets restore bs %f %f  bt %f %f", mRIbeamShiftSetX,
     mRIbeamShiftSetY, mRIbeamTiltSetX, mRIbeamTiltSetY);
   if (mRIbeamShiftSetX || mRIbeamShiftSetY)
     mScope->IncBeamShift(-mRIbeamShiftSetX, -mRIbeamShiftSetY);
@@ -2158,7 +2162,7 @@ void CNavHelper::RestoreSavedState(bool skipScope)
       // For added LD states:  Restore the LD Params for THIS camera
       // First set the existing params if those are master and in this area
       ldp = mWinApp->GetLDParamsForCamera(destCam);
-      if (mWinApp->LowDoseMode() && mScope->GetLowDoseArea() == area && 
+      if (mWinApp->LowDoseMode() && mScope->GetLowDoseArea() == area &&
         ldp == mWinApp->GetLowDoseParams()) {
         ldsaParams = ldp[area];
         mScope->SetLdsaParams(&ldsaParams);
@@ -2166,17 +2170,17 @@ void CNavHelper::RestoreSavedState(bool skipScope)
 
         // But if this is trial or focus and the axis position is changing, or if it view
         // or search and the offset is changing, have to go
-        // to Record to avoid changing the position or offset while in the area 
+        // to Record to avoid changing the position or offset while in the area
         ifse = area == SEARCH_AREA ? 1 : 0;
-        /*PrintfToLog("cur shift %f %f  param %f %f", 
+        /*PrintfToLog("cur shift %f %f  param %f %f",
         mWinApp->mLowDoseDlg.mViewShiftX[ifse],
           mWinApp->mLowDoseDlg.mViewShiftY[ifse], mSavedStates[ind].ldShiftOffsetX,
           mSavedStates[ind].ldShiftOffsetY);*/
         if (((area == FOCUS_CONSET || area == TRIAL_CONSET) &&
           (fabs(ldp[area].ISX - mSavedStates[ind].ldParams.ISX) > 1.e-4 ||
             fabs(ldp[area].ISY - mSavedStates[ind].ldParams.ISY) > 1.e-4)) ||
-          ((area == VIEW_CONSET || ifse) && 
-            (fabs(mWinApp->mLowDoseDlg.mViewShiftX[ifse] - 
+          ((area == VIEW_CONSET || ifse) &&
+            (fabs(mWinApp->mLowDoseDlg.mViewShiftX[ifse] -
               mSavedStates[ind].ldShiftOffsetX) > 1.e-4 ||
               fabs(mWinApp->mLowDoseDlg.mViewShiftY[ifse] -
                 mSavedStates[ind].ldShiftOffsetY) > 1.e-4)))
@@ -2235,7 +2239,7 @@ int CNavHelper::SetToMapImagingState(CMapDrawItem * item, bool setCurFile, int h
     mMapMontP = &mMapMontParam;
 
     // Open the file or get the store # if it is currently open
-    err = mNav->AccessMapFile(item, imageStore, curStore, mMapMontP, width, height, 
+    err = mNav->AccessMapFile(item, imageStore, curStore, mMapMontP, width, height,
       setCurFile);
     if (err) {
       SEMMessageBox("The file for that map item can no longer be accessed", MB_EXCLAME);
@@ -2251,7 +2255,7 @@ int CNavHelper::SetToMapImagingState(CMapDrawItem * item, bool setCurFile, int h
       // Change to the file if it is already open
       if (curStore >= 0 && mDocWnd->GetCurrentStore() != curStore)
         mDocWnd->SetCurrentStore(curStore);
-    
+
       // Otherwise define it as new open store if there is enough space
       if (curStore < 0) {
         if (mDocWnd->GetNumStores() < MAX_STORES) {
@@ -2320,7 +2324,7 @@ int CNavHelper::RestoreFromMapState(void)
 
 // Store the current scope state or a set of low dose params into the state param
 // 0 for non-lowdose, 1 for current state, or < 0 for specific state
-void CNavHelper::StoreCurrentStateInParam(StateParams *param, int lowdose, 
+void CNavHelper::StoreCurrentStateInParam(StateParams *param, int lowdose,
   int saveLDfocusPos, int camNum, int saveTargOffs, int saveReadModes)
 {
   LowDoseParams *ldp;
@@ -2376,9 +2380,9 @@ void CNavHelper::StoreCurrentStateInParam(StateParams *param, int lowdose,
     if (mCamera->HasDoseModulator()) {
       CString errStr;
       if (mCamera->mDoseModulator->GetDutyPercent(param->EDMPercent, errStr))
-        mWinApp->AppendToLog("WARNING: Could not get EDM dose percentage: " + errStr);    
+        mWinApp->AppendToLog("WARNING: Could not get EDM dose percentage: " + errStr);
     }
-    
+
     // Store filter parameters unconditionally here; they will be set conditionally
     param->slitIn = filtParam->slitIn;
     param->slitWidth = filtParam->slitWidth;
@@ -2425,11 +2429,11 @@ void CNavHelper::StoreCurrentStateInParam(StateParams *param, int lowdose,
 // Save the low dose focus area for the current camera in the given parameters
 // The returned axisPos is the full R to F offset, not the net offset stored in low dose
 // parameters
-void CNavHelper::SaveLDFocusPosition(int saveIt, float &axisPos, BOOL &rotateAxis, 
+void CNavHelper::SaveLDFocusPosition(int saveIt, float &axisPos, BOOL &rotateAxis,
   int &axisRotation, int &xOffset, int &yOffset, bool traceIt)
 {
   ControlSet *conSet = mWinApp->GetConSets() + FOCUS_CONSET;
-  LowDoseParams *ldp = mWinApp->GetLowDoseParams() + 
+  LowDoseParams *ldp = mWinApp->GetLowDoseParams() +
     (saveIt > 1 ? TRIAL_CONSET : FOCUS_CONSET);
   LowDoseParams *ldrec = mWinApp->GetLowDoseParams() + RECORD_CONSET;
   CameraParameters *camParam = mWinApp->GetActiveCamParam();
@@ -2463,7 +2467,7 @@ void CNavHelper::SaveLDFocusPosition(int saveIt, float &axisPos, BOOL &rotateAxi
 
 }
 
-// Store the acquire state defined in a map item into a state param, accessing the 
+// Store the acquire state defined in a map item into a state param, accessing the
 // montage param if non-NULL, or the camera conset specified by baseNum for some values
 void CNavHelper::StoreMapStateInParam(CMapDrawItem *item, MontParam *montP, int baseNum,
                                       StateParams *param)
@@ -2485,7 +2489,7 @@ void CNavHelper::StoreMapStateInParam(CMapDrawItem *item, MontParam *montP, int 
     param->camForParams = item->mMapCamera;
   }
   param->slitWidth = 0.;
-  if ((mCamParams[param->camIndex].GIF || mWinApp->ScopeHasFilter()) && 
+  if ((mCamParams[param->camIndex].GIF || mWinApp->ScopeHasFilter()) &&
     item->mMapSlitWidth) {
     param->slitIn = item->mMapSlitIn;
     param->slitWidth = item->mMapSlitWidth;
@@ -2514,7 +2518,7 @@ void CNavHelper::StoreMapStateInParam(CMapDrawItem *item, MontParam *montP, int 
       if (baseNum == SEARCH_CONSET && mWinApp->GetUseViewForSearch())
         baseNum = VIEW_CONSET;
 
-      // If no param is entered, take current frame size, adjust for binning 
+      // If no param is entered, take current frame size, adjust for binning
       // Use the indicated conset from camera sets as the base for this info
       conSet = &camSets[param->camIndex * MAX_CONSETS + baseNum];
       param->binning = item->mMontBinning ? item->mMontBinning : conSet->binning;
@@ -2619,7 +2623,7 @@ void CNavHelper::SetStateFromParam(StateParams *param, ControlSet *conSet, int b
       filtParam->zeroLoss = param->zeroLoss;
       filtParam->energyLoss = param->energyLoss;
       if (mWinApp->GetFilterMode()) {
-        mCamera->SetIgnoreFilterDiffs(true);        
+        mCamera->SetIgnoreFilterDiffs(true);
         mWinApp->mFilterControl.UpdateSettings();
 
         // Do setup on JEOL for same reasons as it is done when changing low dose area
@@ -2653,7 +2657,7 @@ void CNavHelper::SetConsetsFromParam(StateParams *param, ControlSet *conSet, int
   int montInd = baseNum == MONT_USER_CONSET ? RECORD_CONSET : MONT_USER_CONSET;
 
   // Set the working sets to either the current ones or ones in the master.  The caller
-  // was responsible for passing in conSet as current or master depending on whether 
+  // was responsible for passing in conSet as current or master depending on whether
   // the camera was the current one
   if (destCam == curCam)
     workSets = mWinApp->GetConSets();
@@ -2693,7 +2697,7 @@ void CNavHelper::SetConsetsFromParam(StateParams *param, ControlSet *conSet, int
   // Set axis position and subarea of focus area if it was stored in param
   if (param->lowDose && param->focusAxisPos > EXTRA_VALUE_TEST) {
     SetLDFocusPosition(param->camIndex, param->focusAxisPos, param->rotateAxis,
-      param->axisRotation, param->focusXoffset, param->focusYoffset, "state", 
+      param->axisRotation, param->focusXoffset, param->focusYoffset, "state",
       param->lowDose == -1 - TRIAL_CONSET);
   }
 
@@ -2717,7 +2721,7 @@ void CNavHelper::SetConsetsFromParam(StateParams *param, ControlSet *conSet, int
 }
 
 // Set the low dose axis position and Focus area offset from given parameters
-void CNavHelper::SetLDFocusPosition(int camIndex, float axisPos, BOOL rotateAxis, 
+void CNavHelper::SetLDFocusPosition(int camIndex, float axisPos, BOOL rotateAxis,
   int axisRotation, int xOffset, int yOffset, const char *descrip, bool forTrial)
 {
   int area = forTrial ? TRIAL_CONSET : FOCUS_CONSET;
@@ -2748,7 +2752,7 @@ void CNavHelper::SetLDFocusPosition(int camIndex, float axisPos, BOOL rotateAxis
 
   // The passed-in position is the full offset from R to F, but the axis position stored
   // in low-dose params is the net offset from the center
-  ldp->axisPosition = axisPos + B3DCHOICE(fabs(ldRec->axisPosition) > 1.e-5, 
+  ldp->axisPosition = axisPos + B3DCHOICE(fabs(ldRec->axisPosition) > 1.e-5,
     ldRec->axisPosition, 0.);
   if (needConversions)
     mWinApp->mLowDoseDlg.ConvertOneAxisToIS(ldp->magIndex, ldp->axisPosition, ldp->ISX,
@@ -2764,7 +2768,7 @@ void CNavHelper::SetLDFocusPosition(int camIndex, float axisPos, BOOL rotateAxis
     focusSet->top, focusSet->right, focusSet->bottom);
   if (subChanged || changed)
     PrintfToLog("%s area changed from stored %s, axis position %.2f angle %d, subarea"
-      " offset %d %d", forTrial ? "Trial" : "Focus", descrip, axisPos, rotateAxis ? axisRotation : 0, 
+      " offset %d %d", forTrial ? "Trial" : "Focus", descrip, axisPos, rotateAxis ? axisRotation : 0,
       xOffset / focusSet->binning, yOffset / focusSet->binning);
   camSets[camIndex * MAX_CONSETS + area] = *focusSet;
 
@@ -2780,11 +2784,11 @@ void CNavHelper::SaveCurrentState(int type, int saveLDfocusPos, int camNum,
   state.montMapConSet = montMap;
   mTypeOfSavedState = type;
   mPriorState.montMapConSet = montMap;
-  StoreCurrentStateInParam(&mPriorState, mWinApp->LowDoseMode() ? 1 : 0, 0, 
+  StoreCurrentStateInParam(&mPriorState, mWinApp->LowDoseMode() ? 1 : 0, 0,
     mWinApp->GetCurrentCamera(), 0, saveReadModes);
-  StoreCurrentStateInParam(&state, mWinApp->LowDoseMode() ? 1 : 0, saveLDfocusPos, 
+  StoreCurrentStateInParam(&state, mWinApp->LowDoseMode() ? 1 : 0, saveLDfocusPos,
     camNum, saveTargOffs, saveReadModes);
-  SEMTrace('I', "SaveCurrentState saved intensity %.5f", mWinApp->LowDoseMode() ? 
+  SEMTrace('I', "SaveCurrentState saved intensity %.5f", mWinApp->LowDoseMode() ?
     state.ldParams.intensity : state.intensity);
   mSavedStates.Add(state);
   mSavedLowDoseArea = mScope->GetLowDoseArea();
@@ -2812,7 +2816,7 @@ void CNavHelper::SaveLowDoseAreaForState(int area, int camNum, bool saveTargOffs
   mSavedStates.Add(state);
 }
 
-// Return the low dose area (-1 for none) and optionally the control set number from the 
+// Return the low dose area (-1 for none) and optionally the control set number from the
 // lowDose value in a state
 int CNavHelper::AreaFromStateLowDoseValue(StateParams *param, int *setNum)
 {
@@ -2957,12 +2961,12 @@ BOOL CNavHelper::ConvertIStoStageIncrement(int magInd, int camera, double ISX,
 
 // Get the stage position of the center of a montage piece, adding previously found error
 void CNavHelper::StagePositionOfPiece(MontParam * param, ScaleMat aMat, float delX,
-                                      float delY, int ix, int iy, float &stageX, 
+                                      float delY, int ix, int iy, float &stageX,
                                       float & stageY, float &montErrX, float &montErrY)
 {
   int retval;
   int imX = ix * (param->xFrame - param->xOverlap) + param->xFrame / 2;
-  int imY = (param->yNframes - 1 - iy) * (param->yFrame - param->yOverlap) + 
+  int imY = (param->yNframes - 1 - iy) * (param->yFrame - param->yOverlap) +
     param->yFrame / 2;
   ScaleMat aInv = MatInv(aMat);
   stageX = aInv.xpx * (imX - delX) + aInv.xpy * (imY - delY) + mPreviousErrX;
@@ -3170,14 +3174,14 @@ int CNavHelper::OffsetMontImagePos(MiniOffsets *mini, int xPcStart, int xPcEnd,
 
 // Get the montage stage offset for the given piece; assumes the autodoc index has been
 // set successfully and mutex is held
-int CNavHelper::LookupMontStageOffset(KImageStore *storeMRC, MontParam *param, int ix, 
-                                      int iy, std::vector<int> &pieceSavedAt, 
+int CNavHelper::LookupMontStageOffset(KImageStore *storeMRC, MontParam *param, int ix,
+                                      int iy, std::vector<int> &pieceSavedAt,
                                       float &montErrX, float &montErrY)
 {
   int iz = pieceSavedAt[iy + ix * param->yNframes];
   if (iz < 0)
     return 1;
-  if (AdocGetTwoFloats(storeMRC->getStoreType() == STORE_TYPE_ADOC ? ADOC_IMAGE : 
+  if (AdocGetTwoFloats(storeMRC->getStoreType() == STORE_TYPE_ADOC ? ADOC_IMAGE :
     ADOC_ZVALUE, iz, ADOC_STAGEOFF, &montErrX, &montErrY))
     return 1;
   return 0;
@@ -3186,8 +3190,8 @@ int CNavHelper::LookupMontStageOffset(KImageStore *storeMRC, MontParam *param, i
 // Finds a value for stage offset for the given position delX, delY relative to the
 // center of the montage by interpolating from 4 surrounding piece centers
 void CNavHelper::InterpMontStageOffset(KImageStore *imageStore, MontParam *montP,
-                                       ScaleMat aMat,std::vector<int> &pieceSavedAt, 
-                                       float delX, float delY, float &montErrX, 
+                                       ScaleMat aMat,std::vector<int> &pieceSavedAt,
+                                       float delX, float delY, float &montErrX,
                                        float &montErrY)
 {
   int adocInd, pcxlo, pcxhi, pcylo, pcyhi;
@@ -3226,22 +3230,22 @@ void CNavHelper::InterpMontStageOffset(KImageStore *imageStore, MontParam *montP
   // Try to get the 4 mont errors and interpolate
   adocInd = imageStore->GetAdocIndex();
   if (adocInd >= 0 && AdocGetMutexSetCurrent(adocInd) >= 0) {
-    if (!LookupMontStageOffset(imageStore, montP, pcxlo, pcylo, pieceSavedAt, errX00, 
-      errY00) && !LookupMontStageOffset(imageStore, montP, pcxhi, pcylo, pieceSavedAt, 
+    if (!LookupMontStageOffset(imageStore, montP, pcxlo, pcylo, pieceSavedAt, errX00,
+      errY00) && !LookupMontStageOffset(imageStore, montP, pcxhi, pcylo, pieceSavedAt,
       errX10, errY10) &&
       !LookupMontStageOffset(imageStore, montP, pcxlo, pcyhi, pieceSavedAt, errX01, errY01)
       && !LookupMontStageOffset(imageStore, montP, pcxhi, pcyhi, pieceSavedAt, errX11,
       errY11)) {
-        montErrX = (1.f - fy) * ((1.f - fx) * errX00 + fx * errX10) + 
+        montErrX = (1.f - fy) * ((1.f - fx) * errX00 + fx * errX10) +
           fy * ((1.f - fx) * errX01 + fx * errX11);
-        montErrY = (1.f - fy) * ((1.f - fx) * errY00 + fx * errY10) + 
+        montErrY = (1.f - fy) * ((1.f - fx) * errY00 + fx * errY10) +
           fy * ((1.f - fx) * errY01 + fx * errY11);
     }
     AdocReleaseMutex();
   }
 }
 
-// Rotating the image in the given buffer by current rotation matrix, or skip if identity 
+// Rotating the image in the given buffer by current rotation matrix, or skip if identity
 int CNavHelper::RotateForAligning(int bufNum, ScaleMat *useMat)
 {
   int width, height, err;
@@ -3249,7 +3253,7 @@ int CNavHelper::RotateForAligning(int bufNum, ScaleMat *useMat)
   EMimageBuffer *imBuf = &mImBufs[bufNum];
   if (useMat)
     mRIrMat = *useMat;
-  if (fabs(mRIrMat.xpx - 1.) < 1.e-6 && fabs(mRIrMat.xpy) < 1.e-6 && 
+  if (fabs(mRIrMat.xpx - 1.) < 1.e-6 && fabs(mRIrMat.xpy) < 1.e-6 &&
     fabs(mRIrMat.ypx) < 1.e-6 && fabs(mRIrMat.ypy - 1.) < 1.e-6)
     return 0;
 
@@ -3264,7 +3268,7 @@ int CNavHelper::RotateForAligning(int bufNum, ScaleMat *useMat)
 // Transforms the image in imBuf by the matrix in rMat.  Determines the size of the new
 // image by applying the matrix in sizingMat to the sizes in sizingWidth and sizingHeight
 // and then allowing the fraction sizingFrac of the implied increase in size
-int CNavHelper::TransformBuffer(EMimageBuffer * imBuf, ScaleMat sizingMat, 
+int CNavHelper::TransformBuffer(EMimageBuffer * imBuf, ScaleMat sizingMat,
                                 int sizingWidth, int sizingHeight, float sizingFrac,
                                 ScaleMat rMat)
 {
@@ -3325,7 +3329,7 @@ int CNavHelper::TransformBuffer(EMimageBuffer * imBuf, ScaleMat sizingMat,
 }
 
 // Returns distance from ptX,ptY to line segment between x1,y1 and x2,y2
-float CNavHelper::PointSegmentDistance(float ptX, float ptY, float x1, float y1, 
+float CNavHelper::PointSegmentDistance(float ptX, float ptY, float x1, float y1,
                                           float x2, float y2)
 {
   float tmin, distsq, dx, dy;
@@ -3343,7 +3347,7 @@ float CNavHelper::PointSegmentDistance(float ptX, float ptY, float x1, float y1,
 // piece.  Requires that mPieceSavedAt already be filled in for the section
 float CNavHelper::PieceToEdgeDistance(MontParam * montP, int ixPiece, int iyPiece)
 {
-  int ind, j, xFrameDel, yFrameDel, ix, iy; 
+  int ind, j, xFrameDel, yFrameDel, ix, iy;
   float xpcen, ypcen, xCen, yCen, x1, x2, y1, halfX, halfY, dist, distMin, y2;
   int ixDir[] = {-1, 0, 1, 0};
   int iyDir[] = {0, -1, 0, 1};
@@ -3367,7 +3371,7 @@ float CNavHelper::PieceToEdgeDistance(MontParam * montP, int ixPiece, int iyPiec
         // Loop over the 4 directions; if there is no piece in a direction,
         // compose the coordinates of the edge and get distance to edge segment
         ind = iy + iyDir[j] + (ix + ixDir[j]) * montP->yNframes;
-        if (ix + ixDir[j] < 0 || ix + ixDir[j] >= montP->xNframes || 
+        if (ix + ixDir[j] < 0 || ix + ixDir[j] >= montP->xNframes ||
           iy + iyDir[j] < 0 || iy + iyDir[j] >= montP->yNframes ||
           mPieceSavedAt[ind] < 0) {
             if (ixDir[j]) {
@@ -3421,8 +3425,8 @@ void CNavHelper::ChangeAllBufferRegistrations(int mapID, int fromReg, int toReg)
 }
 
 // Get the image and beam shift and beam tilt for View or search from current parameters
-void CNavHelper::GetViewOffsets(CMapDrawItem * item, float &netShiftX, 
-  float &netShiftY, float &beamShiftX, float & beamShiftY, float &beamTiltX, 
+void CNavHelper::GetViewOffsets(CMapDrawItem * item, float &netShiftX,
+  float &netShiftY, float &beamShiftX, float & beamShiftY, float &beamTiltX,
   float &beamTiltY, int area)
 {
   double shiftX, shiftY;
@@ -3435,16 +3439,16 @@ void CNavHelper::GetViewOffsets(CMapDrawItem * item, float &netShiftX,
   beamShiftX = (float)(ldParm[area].beamDelX - ldParm[RECORD_CONSET].beamDelX);
   beamShiftY = (float)(ldParm[area].beamDelY - ldParm[RECORD_CONSET].beamDelY);
   if (mScope->GetLDBeamTiltShifts()) {
-    beamTiltX = (float)(ldParm[area].beamTiltDX - 
+    beamTiltX = (float)(ldParm[area].beamTiltDX -
       ldParm[RECORD_CONSET].beamTiltDX);
-    beamTiltY = (float)(ldParm[area].beamTiltDY - 
+    beamTiltY = (float)(ldParm[area].beamTiltDY -
       ldParm[RECORD_CONSET].beamTiltDY);
   }
 }
 
 // Convert IS to a stage position: for the callers to this, it works better to use 0-focus
 // stage calibration instead of defocused one
-void CNavHelper::SimpleIStoStage(CMapDrawItem * item, double ISX, double ISY, 
+void CNavHelper::SimpleIStoStage(CMapDrawItem * item, double ISX, double ISY,
   float &stageX, float &stageY)
 {
   ScaleMat aMat, bMat;
@@ -3476,11 +3480,11 @@ ScaleMat CNavHelper::ItemStageToCamera(CMapDrawItem * item)
 }
 
 // Get the coordinates for a camera set from the state parameters
-void CNavHelper::StateCameraCoords(StateParams *param, int camIndex, int xFrame, 
+void CNavHelper::StateCameraCoords(StateParams *param, int camIndex, int xFrame,
   int yFrame, int binning, int &left, int &right, int &top, int &bottom)
 {
   CameraParameters *camP = mWinApp->GetCamParams() + camIndex;
-  mCamera->CenteredSizes(xFrame, camP->sizeX, camP->moduloX, left, right, 
+  mCamera->CenteredSizes(xFrame, camP->sizeX, camP->moduloX, left, right,
     yFrame, camP->sizeY, camP->moduloY, top, bottom, binning, camIndex, param->saveFrames,
     param->alignFrames, param->useFrameAlign, param->K2ReadMode);
   left *= binning;
@@ -3516,7 +3520,7 @@ bool CNavHelper::GetNumHolesFromParam(int &xnum, int &ynum, int &numTotal)
 }
 
 // Return the number of holes that would be acquired for the current item, or the given
-// default if no items 
+// default if no items
 int CNavHelper::GetNumHolesForItem(CMapDrawItem *item, int numDefault)
 {
   int nx, ny, numForItem = numDefault;
@@ -3548,7 +3552,7 @@ void CNavHelper::ClearSavedMapMarkerShifts()
 }
 
 // Save existing cohort ID and marker shifts for a map and apply new ones
-void CNavHelper::SaveMapMarkerShiftToLists(CMapDrawItem * item, int cohortID, 
+void CNavHelper::SaveMapMarkerShiftToLists(CMapDrawItem * item, int cohortID,
   float newXshift, float newYshift)
 {
   if (item->IsNotMap())
@@ -3598,7 +3602,7 @@ BaseMarkerShift *CNavHelper::FindNearestBaseShift(int fromMag, int toMag)
   return &mMarkerShiftArray[minInd];
 }
 
-// Test if it is possible to apply store marker shift: there must be at least on marker 
+// Test if it is possible to apply store marker shift: there must be at least on marker
 // shift for which an unshifted map at the fromMag exists
 bool CNavHelper::OKtoApplyBaseMarkerShift()
 {
@@ -3611,7 +3615,7 @@ bool CNavHelper::OKtoApplyBaseMarkerShift()
     for (itInd = 0; itInd < (int)mItemArray->GetSize(); itInd++) {
       item = mItemArray->GetAt(itInd);
       if (item->IsMap() && item->mRegistration == reg &&
-        item->mMapMagInd == mMarkerShiftArray[shInd].fromMagInd && 
+        item->mMapMagInd == mMarkerShiftArray[shInd].fromMagInd &&
         (!item->mShiftCohortID || item->mMarkerShiftX < EXTRA_VALUE_TEST))
         return true;
     }
@@ -3658,7 +3662,7 @@ void CNavHelper::ApplyBaseMarkerShift()
       shiftToMags.push_back(MagForCamera(camera, mMarkerShiftArray[ind].toMagInd));
     }
   }
-  
+
   // If none, bail out
   if (!shiftInds.size()) {
     str.Format("There are no stored shifts at magnification %dx", magVal);
@@ -3698,7 +3702,7 @@ void CNavHelper::ApplyBaseMarkerShift()
 
   // Do the shift; it saves parameters for undo
   mNav->ShiftCohortOfItems(mMarkerShiftArray[useInd].shiftX,
-    mMarkerShiftArray[useInd].shiftY, mNav->GetCurrentRegistration(), magInd, 
+    mMarkerShiftArray[useInd].shiftY, mNav->GetCurrentRegistration(), magInd,
     mNav->MakeUniqueID(), false, false, 1);
 }
 
@@ -3724,7 +3728,7 @@ bool CNavHelper::OKtoShiftToMarker()
 
 /////////////////////////////////////////////////////
 /////  SETTING FILES, TS PARAMS, STATES FOR ACQUIRES
-///////////////////////////////////////////////////// 
+/////////////////////////////////////////////////////
 
 // Generate the next filename in a series given a filename
 // The rules are that digits before an extension or at the end of the filename,
@@ -3766,10 +3770,10 @@ CString CNavHelper::NextAutoFilename(CString inStr, CString oldLabel, CString ne
   return str;
 }
 
-// Splits a name into an unnumbered root, a number if any, an optional character between 
+// Splits a name into an unnumbered root, a number if any, an optional character between
 // the number and extension, and the extension including its dot, if any.  Also returns
 // the number of digits, or 0 if there is no number.
-CString CNavHelper::DecomposeNumberedName(CString inStr, CString &ext, int &curnum, 
+CString CNavHelper::DecomposeNumberedName(CString inStr, CString &ext, int &curnum,
   int &numdig, CString &extra)
 {
   int dirInd, extInd, numroot, digInd;
@@ -3807,7 +3811,7 @@ CString CNavHelper::DecomposeNumberedName(CString inStr, CString &ext, int &curn
 
 // Checks a given filename for whether its unnumbered root, extension, and extra character
 // match the given ones
-void CNavHelper::CheckForSameRootAndNumber(CString &root, CString &ext, 
+void CNavHelper::CheckForSameRootAndNumber(CString &root, CString &ext,
   CString &extra, CString name, int &maxNum, int &numDig)
 {
   CString ext2, extra2;
@@ -3842,7 +3846,7 @@ bool CNavHelper::NameToOpenUsed(CString name)
 }
 
 // Set up a new file to open for an item or group.  Returns -1 if user cancels, or >0
-// for other errors; cleans up references in either case 
+// for other errors; cleans up references in either case
 int CNavHelper::NewAcquireFile(int itemNum, int listType, ScheduledFile *sched)
 {
   CMapDrawItem *item = mItemArray->GetAt(itemNum);
@@ -3871,7 +3875,7 @@ int CNavHelper::NewAcquireFile(int itemNum, int listType, ScheduledFile *sched)
       item2 = mItemArray->GetAt(i);
       if (item2->mTSparamIndex >= 0 && item2->mStateIndex >= 0) {
         state = mAcqStateArray->GetAt(item2->mStateIndex);
-        if (state->lowDose && !mWinApp->LowDoseMode() || 
+        if (state->lowDose && !mWinApp->LowDoseMode() ||
           !state->lowDose && mWinApp->LowDoseMode()) {
           autoName.Format("Low dose mode is currently %s but it is %s in the imaging "
             "state\nparameters of a previous item selected for a tilt series.\n\n"
@@ -3898,8 +3902,8 @@ int CNavHelper::NewAcquireFile(int itemNum, int listType, ScheduledFile *sched)
       }
     } else if (item2->mTSparamIndex < 0) {
       if (item2->mFilePropIndex >= 0) {
-        
-        // Force a new parameter set if last one is fitting to polygon and this is a 
+
+        // Force a new parameter set if last one is fitting to polygon and this is a
         // polygon item - otherwise let it inherit the fit
         autoName = NextAutoFilename(item2->mFileToOpen, item2->mLabel, item->mLabel);
         if (item2->mMontParamIndex >= 0) {
@@ -3922,7 +3926,7 @@ int CNavHelper::NewAcquireFile(int itemNum, int listType, ScheduledFile *sched)
     // If succeeded, increment the remaining reference counts
     if (*propIndexp >= 0) {
       ChangeRefCount(NAVARRAY_FILEOPT, *propIndexp, 1);
-      if (*montIndexp >= 0) 
+      if (*montIndexp >= 0)
         ChangeRefCount(NAVARRAY_MONTPARAM, *montIndexp, 1);
 
       // Check for uniqueness of filenames
@@ -3936,7 +3940,7 @@ int CNavHelper::NewAcquireFile(int itemNum, int listType, ScheduledFile *sched)
   }
 
   // If nothing found, need to create file options and filename
-  index = SetFileProperties(itemNum, listType, sched, false, 
+  index = SetFileProperties(itemNum, listType, sched, false,
     (breakForFit && mSkipMontFitDlgs) || mDoingMultipleFiles > 2 || mDoingMultiGridFiles);
   if (index) {
     *propIndexp = *montIndexp = -1;
@@ -4057,7 +4061,7 @@ int CNavHelper::SetTSParams(int itemNum)
     mTSparamArray->Add(tsp);
     tsp->refCount = 0;
     tsp->navID = mNav->MakeUniqueID();
- 
+
     // For this item and all following ones with the same original index, assign to the
     // new index and adjust the reference counts
     for (i = itemNum; i < mItemArray->GetSize(); i++) {
@@ -4177,7 +4181,7 @@ int CNavHelper::SetFileProperties(int itemNum, int listType, ScheduledFile *sche
 
     // Need to make a new param if there is not one in array, or if the reference count
     // was greater than 1 and it is shared with earlier ones
-    if (prevIndex < 0 || (montDlg.mParam.refCount > 1 && 
+    if (prevIndex < 0 || (montDlg.mParam.refCount > 1 &&
       EarlierItemSharesRef(itemNum, prevIndex, NAVARRAY_MONTPARAM, sharedInd))) {
           newMontp = new MontParam;
         *newMontp = montDlg.mParam;
@@ -4188,7 +4192,7 @@ int CNavHelper::SetFileProperties(int itemNum, int listType, ScheduledFile *sche
           NoLongerInheritMessage(itemNum, sharedInd, "montage parameters");
         for (i = itemNum; i < mItemArray->GetSize(); i++) {
           item2 = mItemArray->GetAt(i);
-          
+
           // Adjust indices of inheriting items and item itself if not doing a group file
           if (item2->mMontParamIndex == prevIndex && (prevIndex >= 0 ||
             (i == itemNum && listType != NAVFILE_GROUP))) {
@@ -4241,7 +4245,7 @@ int CNavHelper::SetFileProperties(int itemNum, int listType, ScheduledFile *sche
   // Now do file options dialog but create a new copy first if needed
   newFileOpt = fileOptSrc;
   prevIndex = *propIndexp;
-  if (prevIndex < 0 || (fileOptSrc->refCount > 1 && 
+  if (prevIndex < 0 || (fileOptSrc->refCount > 1 &&
     EarlierItemSharesRef(itemNum, prevIndex, NAVARRAY_FILEOPT, sharedInd))) {
     newFileOpt = new FileOptions;
     mDocWnd->SetFileOptsForSTEM();
@@ -4270,7 +4274,7 @@ int CNavHelper::SetFileProperties(int itemNum, int listType, ScheduledFile *sche
       newFileOpt->typext |= VOLT_XY_MASK;
   }
 
-  if (mDocWnd->FilePropForSaveFile(newFileOpt, B3DCHOICE(skipFitDlgs, 
+  if (mDocWnd->FilePropForSaveFile(newFileOpt, B3DCHOICE(skipFitDlgs,
     mDoingMultiGridFiles ? -2 : -1, fromFilePropButton ? 1 : 0))) {
     if (madeNewOpt)
       delete newFileOpt;
@@ -4281,7 +4285,7 @@ int CNavHelper::SetFileProperties(int itemNum, int listType, ScheduledFile *sche
     NoLongerInheritMessage(itemNum, sharedInd, "file properties");
   AddInheritingItems(itemNum, prevIndex, NAVARRAY_FILEOPT, inheritors);
 
-  // For a new file option, add it to the array and dereference this item and any 
+  // For a new file option, add it to the array and dereference this item and any
   // following ones that shared it from the old options and point them to the new one
   if (madeNewOpt) {
     newFileOpt->navID = mNav->MakeUniqueID();
@@ -4322,7 +4326,7 @@ int CNavHelper::SetFileProperties(int itemNum, int listType, ScheduledFile *sche
   }
   BeInheritedByMessage(itemNum, inheritors, "Changes in file properties");
 
-  // A successful pass through the dialog should (?) update the program master 
+  // A successful pass through the dialog should (?) update the program master
   mDocWnd->CopyMasterFileOpts(newFileOpt, COPY_TO_MASTER);
   return 0;
 }
@@ -4411,7 +4415,7 @@ void CNavHelper::NoLongerInheritMessage(int itemNum, int sharedInd, char * typeT
   CMapDrawItem *item2 = mItemArray->GetAt(sharedInd);
   if (mDoingMultipleFiles != 1)
     return;
-  str.Format("Item # %d (%s) no longer inherits changes in %s from item # %d (%s)", 
+  str.Format("Item # %d (%s) no longer inherits changes in %s from item # %d (%s)",
     itemNum + 1, (LPCTSTR)item1->mLabel, typeText, sharedInd + 1, (LPCTSTR)item2->mLabel);
   mWinApp->AppendToLog(str);
 }
@@ -4441,13 +4445,13 @@ void CNavHelper::BeInheritedByMessage(int itemNum, CString & listStr, char * typ
   CMapDrawItem *item = mItemArray->GetAt(itemNum);
   if (listStr.IsEmpty())
     return;
-  str.Format("%s for item # %d (%s) are being inherited by these items:", 
+  str.Format("%s for item # %d (%s) are being inherited by these items:",
     typeText, itemNum + 1, (LPCTSTR)item->mLabel);
   mWinApp->AppendToLog(str);
   mWinApp->AppendToLog("     " + listStr);
 }
 
-// Remove a param from one of the arrays and delete it, and decrease any references to 
+// Remove a param from one of the arrays and delete it, and decrease any references to
 // ones above it
 void CNavHelper::RemoveFromArray(int which, int index)
 {
@@ -4661,7 +4665,7 @@ void CNavHelper::EndAcquireOrNewFile(CMapDrawItem * item, bool endGroupFile)
   } else {
     index = mNav->GroupScheduledIndex(item->mGroupID);
     if (index >= 0) {
-      
+
       // Are there other acquire items with the same group ID?
       for (i = 0; i < mItemArray->GetSize(); i++) {
         item2 = mItemArray->GetAt(i);
@@ -4734,32 +4738,32 @@ void CNavHelper::DeleteArrays(void)
   for (i = 0; i < mItemArray->GetSize(); i++) {
     item = mItemArray->GetAt(i);
     delete item;
-  }   
+  }
   mItemArray->RemoveAll();
   for (i = 0; i < mGroupFiles->GetSize(); i++) {
     sched = mGroupFiles->GetAt(i);
     delete sched;
-  }   
+  }
   mGroupFiles->RemoveAll();
   for (i = 0; i < mFileOptArray->GetSize(); i++) {
     opt = mFileOptArray->GetAt(i);
     delete opt;
-  }   
+  }
   mFileOptArray->RemoveAll();
   for (i = 0; i < mMontParArray->GetSize(); i++) {
     montp = mMontParArray->GetAt(i);
     delete montp;
-  }   
+  }
   mMontParArray->RemoveAll();
   for (i = 0; i < mTSparamArray->GetSize(); i++) {
     tsp = mTSparamArray->GetAt(i);
     delete tsp;
-  }   
+  }
   mTSparamArray->RemoveAll();
   for (i = 0; i < mAcqStateArray->GetSize(); i++) {
     state = mAcqStateArray->GetAt(i);
     delete state;
-  }   
+  }
   mAcqStateArray->RemoveAll();
 }
 
@@ -4834,7 +4838,7 @@ int CNavHelper::MakeDualMap(CMapDrawItem *item)
       MB_EXCLAME);
     return 1;
   }
-  
+
   // Make a map if it is not already one and it is suitable
   imBuf = &mImBufs[bufInd];
   if (!imBuf->mMapID && imBuf->mMagInd > item->mMapMagInd) {
@@ -5035,7 +5039,7 @@ int CNavHelper::AssessAcquireForParams(NavAcqParams *navParam, NavAcqAction *acq
   double holeDist, dists[3], angle;
   bool seen;
   bool checkingMulGrd = !prefix.IsEmpty();
-  BOOL savingMulti = navParam->acquireType == ACQUIRE_MULTISHOT && 
+  BOOL savingMulti = navParam->acquireType == ACQUIRE_MULTISHOT &&
     IsMultishotSaving(NULL, &MSparams);
   int *seenGroups;
 
@@ -5139,7 +5143,7 @@ int CNavHelper::AssessAcquireForParams(NavAcqParams *navParam, NavAcqAction *acq
     }
   }
 
-  // Check for problems if map holes are to be used 
+  // Check for problems if map holes are to be used
   if (navParam->acquireType == ACQUIRE_MULTISHOT && !MSparams.useCustomHoles &&
     navParam->useMapHoleVectors && !mWinApp->mMultiGridTasks->GetDoingMulGridSeq()) {
     numNoMap = 0;
@@ -5191,7 +5195,7 @@ int CNavHelper::AssessAcquireForParams(NavAcqParams *navParam, NavAcqAction *acq
       }
       mess += "\nPress \"Yes - Stop\" to stop and address the problems\n\n"
         "Press \"No - Go On\" to ignore this and continue with acquisition";
-      if (SEMThreeChoiceBox(prefix + mess, "Yes - Stop", "No - Go On", "", MB_YESNO, 0, 
+      if (SEMThreeChoiceBox(prefix + mess, "Yes - Stop", "No - Go On", "", MB_YESNO, 0,
         false) == IDYES)
         return 1;
     }
@@ -5298,7 +5302,7 @@ int CNavHelper::AssessAcquireForParams(NavAcqParams *navParam, NavAcqAction *acq
 
         if (!checkingMulGrd) {
 
-          // Get camera and binning from state first 
+          // Get camera and binning from state first
           stateCam = -1;
           if (stateInd >= 0) {
             state = mAcqStateArray->GetAt(stateInd);
@@ -5446,7 +5450,7 @@ int CNavHelper::CheckForBadParamIndexes(CString prefix)
     mess += str + badMontList + "\r\n\r\n";
   }
   if (numBadProp) {
-    str.Format("%d items had file property parameter indexes out of range:\r\n", 
+    str.Format("%d items had file property parameter indexes out of range:\r\n",
       numBadProp);
     mess += str + badPropList + "\r\n\r\n";
   }
@@ -5470,7 +5474,7 @@ int CNavHelper::GetAcqParamIndexToUse(bool starting)
 }
 
 // Test if multishot would save with current params and set allZero if it is because
-// it is set for all empty early returns 
+// it is set for all empty early returns
 BOOL CNavHelper::IsMultishotSaving(bool *allZeroER, MultiShotParams *params)
 {
   if (!params)
@@ -5487,7 +5491,7 @@ BOOL CNavHelper::IsMultishotSaving(bool *allZeroER, MultiShotParams *params)
   return params->saveRecord;
 }
 
-void CNavHelper::GetMultishotDistAndAngles(MultiShotParams *params, BOOL hexGrid, 
+void CNavHelper::GetMultishotDistAndAngles(MultiShotParams *params, BOOL hexGrid,
   double dists[3], double &avgDist, double &angle)
 {
   int dir, numDir = hexGrid ? 3 : 2, hexInd = hexGrid ? 1 : 0;
@@ -5578,7 +5582,7 @@ void CNavHelper::ListFilesToOpen(void)
   for (i = 0; i < mItemArray->GetSize(); i++) {
     needed = true;
     item = mItemArray->GetAt(i);
-    if (item->mRegistration == mNav->GetCurrentRegistration() && 
+    if (item->mRegistration == mNav->GetCurrentRegistration() &&
       (item->mAcquire || item->mTSparamIndex >= 0)) {
 
       namep = NULL;
@@ -5631,7 +5635,7 @@ void CNavHelper::ListFilesToOpen(void)
           }
           mess.Format("Tilt series with camera %d,   binning %d,   %s "
             "deg%s,  item # %d,  label %s\r\n", tsp->cameraIndex + 1,
-            tsp->binning / BinDivisorI(camp), (LPCTSTR)mess2, 
+            tsp->binning / BinDivisorI(camp), (LPCTSTR)mess2,
             item->mTSstartAngle > EXTRA_VALUE_TEST ? "*" : "", i, (LPCTSTR)item->mLabel);
           single = true;
         } else {
@@ -5677,7 +5681,7 @@ void CNavHelper::ListFilesToOpen(void)
           mWinApp->AppendToLog(mess, LOG_OPEN_IF_CLOSED);
         }
       }
-      if (item->mFocusAxisPos > EXTRA_VALUE_TEST || 
+      if (item->mFocusAxisPos > EXTRA_VALUE_TEST ||
         item->mTargetDefocus > EXTRA_VALUE_TEST) {
         mess = "";
         if (!single)
@@ -5726,7 +5730,7 @@ void CNavHelper::CountAcquireItems(int startInd, int endInd, int &numAcquire, in
 
 // Return number of positions and number of holes to be acquired with current or item
 // multishot parameters, excluding ones that would acquire fewer than minHoles.
-void CNavHelper::CountHoleAcquires(int startInd, int endInd, int minHoles, 
+void CNavHelper::CountHoleAcquires(int startInd, int endInd, int minHoles,
   int &numCenters, int &numHoles, int &numRecs)
 {
   CMapDrawItem *item;
@@ -5760,12 +5764,12 @@ void CNavHelper::CountHoleAcquires(int startInd, int endInd, int minHoles,
   }
   xt = 1;
   if (mMultiShotParams.inHoleOrMultiHole & 1)
-    xt = (mMultiShotParams.doCenter ? 1 : 0) + mMultiShotParams.numShots[0] + 
+    xt = (mMultiShotParams.doCenter ? 1 : 0) + mMultiShotParams.numShots[0] +
     (mMultiShotParams.doSecondRing ? mMultiShotParams.numShots[1] : 0);
   numRecs = numHoles * xt;
 }
 
-// Return true if there are any montage maps 
+// Return true if there are any montage maps
 bool CNavHelper::AnyMontageMapsInNavTable()
 {
   CMapDrawItem *item;
@@ -5818,7 +5822,7 @@ void CNavHelper::ModifyMontsForReusability(IntVec &montInds)
     // Loop on rest to accumulate limits from eligible ones
     for (check = checkStart; check < numMont; check++) {
       param = mMontParArray->GetAt(montInds[check]);
-      if (param->reusability || numXpiece != param->xNframes || 
+      if (param->reusability || numXpiece != param->xNframes ||
         numYpiece != param->yNframes || magIndex != param->magIndex ||
         binning != param->binning || camera != param->cameraIndex)
         continue;
@@ -5953,7 +5957,7 @@ int CNavHelper::CheckTiltSeriesAngles(int paramInd, float start, float end, floa
       "Navigator item do not have enough range", start, end);
     return 1;
   }
-  if (bidir > EXTRA_VALUE_TEST && tsp->doBidirectional && 
+  if (bidir > EXTRA_VALUE_TEST && tsp->doBidirectional &&
     (bidir < minAng + minSep || bidir > maxAng - minSep)) {
     errMess.Format("The bidirectional starting angle (%.1f) stored in the "
       "Navigator item is too close to one end of the range (%.1f to %.1f)", bidir, start,
@@ -5993,8 +5997,8 @@ int CNavHelper::GetUserValue(CMapDrawItem *item, int number, CString &value)
 }
 
 // Align an image, searching for best rotation, with possible scaling as well
-int CNavHelper::AlignWithRotation(int buffer, float centerAngle, float angleRange, 
-  float &rotBest, float &shiftXbest, float &shiftYbest, float scaling, int doPart, 
+int CNavHelper::AlignWithRotation(int buffer, float centerAngle, float angleRange,
+  float &rotBest, float &shiftXbest, float &shiftYbest, float scaling, int doPart,
   float *maxPtr, float shiftLimit, int corrFlags)
 {
   float step = 1.5f;
@@ -6035,7 +6039,7 @@ int CNavHelper::AlignWithRotation(int buffer, float centerAngle, float angleRang
     } else {
       if (shiftLimit > 0)
         mShiftManager->SetNextAutoalignLimit(shiftLimit);
-      if (mShiftManager->AutoAlign(buffer, smallPad, false, 
+      if (mShiftManager->AutoAlign(buffer, smallPad, false,
         (corrFlags & AUTOALIGN_SEARCH_KEEP) ?
         ((corrFlags & ~AUTOALIGN_FILL_SPOTS) | AUTOALIGN_KEEP_SPOTS) : corrFlags, &peak,
         0., 0., 0., scaling, rotation, CCCp, fracPixP, true, &shiftX, &shiftY)) {
@@ -6074,7 +6078,7 @@ int CNavHelper::AlignWithRotation(int buffer, float centerAngle, float angleRang
   if (doPart == 1)
     return 0;
 
-  // Cut the step and look on either side of the peak 
+  // Cut the step and look on either side of the peak
   if (numSteps > 2 && !(istMax == 0 || istMax == numSteps - 1) && doPart >= 0) {
     for (ist = 0; ist < numStepCuts; ist++) {
       step /= 2.f;
@@ -6083,8 +6087,8 @@ int CNavHelper::AlignWithRotation(int buffer, float centerAngle, float angleRang
         rotation = curMax + idir * step;
         if (shiftLimit > 0)
           mShiftManager->SetNextAutoalignLimit(shiftLimit);
-        if (mShiftManager->AutoAlign(buffer, smallPad, false, 
-          (corrFlags & AUTOALIGN_SEARCH_KEEP) ? 
+        if (mShiftManager->AutoAlign(buffer, smallPad, false,
+          (corrFlags & AUTOALIGN_SEARCH_KEEP) ?
           ((corrFlags & ~AUTOALIGN_FILL_SPOTS) | AUTOALIGN_KEEP_SPOTS) : corrFlags, &peak,
           0., 0., 0., scaling, rotation, CCCp, fracPixP, true, &shiftX, &shiftY)) {
           if (shiftLimit > 0)
@@ -6104,7 +6108,7 @@ int CNavHelper::AlignWithRotation(int buffer, float centerAngle, float angleRang
           shiftXbest = shiftX;
           shiftYbest = shiftY;
         }
-        SEMTrace('p', "Rotation %.2f  peak  %g  frac %.3f  shift %.1f %.1f", rotation, 
+        SEMTrace('p', "Rotation %.2f  peak  %g  frac %.3f  shift %.1f %.1f", rotation,
           peak, fracPix, shiftX, shiftY);
       }
     }
@@ -6121,7 +6125,7 @@ int CNavHelper::AlignWithRotation(int buffer, float centerAngle, float angleRang
 }
 
 // Top-level call for aligning with both scaling and rotation
-int CNavHelper::AlignWithScaleAndRotation(int buffer, bool doImShift, float scaleRange, 
+int CNavHelper::AlignWithScaleAndRotation(int buffer, bool doImShift, float scaleRange,
   float angleRange, float &scaleMax, float &rotation, float shiftLimit, int corrFlags)
 {
   float startScale = -1.;
@@ -6131,7 +6135,7 @@ int CNavHelper::AlignWithScaleAndRotation(int buffer, bool doImShift, float scal
   scaleMax = 1.;
   if (scaleRange > 0.) {
     err = mWinApp->mMultiTSTasks->AlignWithScaling(buffer, doImShift, scaleMax, -1.,
-      rotation, scaleRange, angleRange > 0 ? 1 : 0, &maxPeak, shiftLimit, 
+      rotation, scaleRange, angleRange > 0 ? 1 : 0, &maxPeak, shiftLimit,
       corrFlags | AUTOALIGN_SEARCH_KEEP);
     if (err || angleRange <= 0.)
       return err;
@@ -6162,8 +6166,8 @@ int CNavHelper::OKtoAlignWithRotation(void)
     delY) || mImBufs[topBuf].mCaptured == BUFFER_PROCESSED ||
     mImBufs[topBuf].mCaptured == BUFFER_FFT)
     return 0;
-  if (!mImBufs[readBuf].mImage || !mImBufs[readBuf].mMapID || 
-    mImBufs[readBuf].mRegistration == registration || 
+  if (!mImBufs[readBuf].mImage || !mImBufs[readBuf].mMapID ||
+    mImBufs[readBuf].mRegistration == registration ||
     !mNav->FindItemWithMapID(mImBufs[readBuf].mMapID))
     return 0;
   return 1;
@@ -6204,7 +6208,7 @@ int CNavHelper::BufferForRotAlign(int &registration)
 
 int CNavHelper::AlignWithScaling(float & shiftX, float & shiftY, float & scaling)
 {
-  if (mWinApp->mMultiTSTasks->AlignWithScaling(1, false, scaling, 
+  if (mWinApp->mMultiTSTasks->AlignWithScaling(1, false, scaling,
     mPlusMinusRIScaling ? -1.f : 0.f)) {
     scaling = 0;
     return 1;
@@ -6250,7 +6254,7 @@ void CNavHelper::UpdateMultishotIfOpen(bool draw)
 }
 
 // Rotate either the regular or custom pattern in the given parameters by the given angle
-int CNavHelper::RotateMultiShotVectors(MultiShotParams *params, float angle, 
+int CNavHelper::RotateMultiShotVectors(MultiShotParams *params, float angle,
   int customOrHex)
 {
   ScaleMat aMat, aProd, rotMat;
@@ -6374,7 +6378,7 @@ void CNavHelper::TransformMultiShotVectors(MultiShotParams *params, int customOr
 
 // Transforms image shift vectors given a transform defined in specimen or stage space
 // at the given mag, with optional camera specification too.  return 1 if no xform
-int CNavHelper::XformISVecsWithSpecOrStage(float *xVecIn, float *yVecIn, int numVec, 
+int CNavHelper::XformISVecsWithSpecOrStage(float *xVecIn, float *yVecIn, int numVec,
   ScaleMat mat, bool stage, int magInd, int camera, float *xVecOut, float *yVecOut)
 {
   ScaleMat IS2space, IS2cam, stage2cam, prod;
@@ -6397,7 +6401,7 @@ int CNavHelper::XformISVecsWithSpecOrStage(float *xVecIn, float *yVecIn, int num
     ApplyScaleMatrix(prod, xVecIn[dir], yVecIn[dir], transX, transY);
     xVecOut[dir] = transX;
     yVecOut[dir] = transY;
-  } 
+  }
   return 0;
 }
 
@@ -6419,7 +6423,7 @@ void CNavHelper::AssignNavItemHoleVectors(CMapDrawItem * item, MultiShotParams *
     xSpacing[dir] = xFloat[dir] = item->mXHoleISSpacing[dir];
     ySpacing[dir] = yFloat[dir] = item->mYHoleISSpacing[dir];
   }
-  if (PermuteISvecsToMatchLastUsed(xFloat, yFloat, hexInd, bestRot, maxAngDiff, 
+  if (PermuteISvecsToMatchLastUsed(xFloat, yFloat, hexInd, bestRot, maxAngDiff,
     maxScaleDiff, xTemp, yTemp)) {
     for (dir = 0; dir < 2 + hexInd; dir++) {
       xSpacing[dir] = xFloat[dir] = xTemp[dir];
@@ -6495,7 +6499,7 @@ int CNavHelper::PermuteISvecsToMatchLastUsed(float *xVecIn, float *yVecIn, int h
 
   // return 0 if nothing passes both criteria, or of no rotation is best
   // otherwise transform the vector, set angle and return 1
-  if (maxAngDiff > mMaxISvecMatchRotDiff || maxScaleDiff > mMaxISvecMatchScaleDiff || 
+  if (maxAngDiff > mMaxISvecMatchRotDiff || maxScaleDiff > mMaxISvecMatchScaleDiff ||
     !bestRotInd)
     return 0;
   bestRot = (float)bestRotInd * delAngle;
@@ -6535,7 +6539,7 @@ void CNavHelper::SetLastUsedHoleISVecs(float *xVecs, float *yVecs, bool setChang
 
 // If OK to use the current navigator group to define hole vectors, return 1 for regular/
 // hex or 2 for custom, 0 if not.  Return limits of group, transform matrix, and reason if
-// it is not OK.  Pattern should be 0 for regular, 1 for hex, 2 for custom from script 
+// it is not OK.  Pattern should be 0 for regular, 1 for hex, 2 for custom from script
 // (i.e., force custom), 3 for custom from dialog
 int CNavHelper::OKtoUseNavPtsForVectors(int pattern, int &groupStart, int &groupEnd,
   ScaleMat *ISmat, CString *reason)
@@ -6871,11 +6875,11 @@ void CNavHelper::UpdateAcquireDlgForFileChanges()
 // Copy a set of params into temp set for possible modification
 void CNavHelper::CopyAcqParamsAndActionsToTemp(int which)
 {
-  CopyAcqParamsAndActionsToTemp(&mAllAcqActions[which][0], 
+  CopyAcqParamsAndActionsToTemp(&mAllAcqActions[which][0],
     mWinApp->GetNavAcqParams(which), &mAcqActCurrentOrder[which][0]);
 }
 
-void CNavHelper::CopyAcqParamsAndActionsToTemp(NavAcqAction *useAct, 
+void CNavHelper::CopyAcqParamsAndActionsToTemp(NavAcqAction *useAct,
   NavAcqParams *useParam, int *useOrder)
 {
   NavAcqAction *actions = &mAllAcqActions[2][0];
@@ -6890,7 +6894,7 @@ void CNavHelper::CopyAcqParamsAndActionsToTemp(NavAcqAction *useAct,
     params->nonTSacquireType = ACQUIRE_IMAGE_ONLY;
 }
 
-void CNavHelper::CopyAcqParamsAndActions(NavAcqAction *useAct, NavAcqParams *useParam, 
+void CNavHelper::CopyAcqParamsAndActions(NavAcqAction *useAct, NavAcqParams *useParam,
   int *useOrder, NavAcqAction *actions, NavAcqParams *params, int *order)
 {
   *params = *useParam;
@@ -6910,7 +6914,7 @@ int CNavHelper::LoadPieceContainingPoint(CMapDrawItem *ptItem, int mapIndex)
   float useShiftedRatio = 1.25;
   CMapDrawItem *map = mItemArray->GetAt(mapIndex);
   mWinApp->RestoreViewFocus();
-  err = DistAndPiecesForRealign(map, ptItem->mStageX, ptItem->mStageY, 
+  err = DistAndPiecesForRealign(map, ptItem->mStageX, ptItem->mStageY,
     ptItem->mPieceDrawnOn, mapIndex, aMat, delX, delY, distMin, cenX[0], cenY[0], cenX[1],
     cenY[1], imageX, imageY, true, xFrame, yFrame, binning);
   if (err > 1 && mCurStoreInd < 0)
@@ -6922,35 +6926,35 @@ int CNavHelper::LoadPieceContainingPoint(CMapDrawItem *ptItem, int mapIndex)
   xOverlap = mMapMontP->xOverlap;
   yOverlap = mMapMontP->yOverlap;
   yNframes = mMapMontP->yNframes;
-  
+
   // Adjust coordinate relative to edge of frame then shift to using two frames
-  // if it is possible and the distance to the edge in shifted frame is enough bigger 
+  // if it is possible and the distance to the edge in shifted frame is enough bigger
   // than the distance in the real frame
   imageX -= cenX[0] * (xFrame - xOverlap);
   if (cenX[0] > 0 && (xFrame + xOverlap) / 2. - imageX > useShiftedRatio * imageX)
     cenX[0]--;
-  else if (cenX[0] < mMapMontP->xNframes - 1 && 
+  else if (cenX[0] < mMapMontP->xNframes - 1 &&
     imageX - (xFrame - xOverlap) / 2. > useShiftedRatio * (xFrame - imageX))
     cenX[1]++;
   imageY -= cenY[0] * (yFrame - yOverlap);
   if (cenY[0] > 0 && (yFrame + yOverlap) / 2. - imageY > useShiftedRatio * imageY)
     cenY[0]--;
-  else if (cenY[0] < yNframes - 1 && 
+  else if (cenY[0] < yNframes - 1 &&
     imageY - (yFrame - yOverlap) / 2. > useShiftedRatio * (yFrame - imageY))
     cenY[1]++;
 
   // But make sure the added piece exists, or at least one of two added ones, and if
   // they don't, then revert the index back to the main piece
-  if (cenX[0] < cenX[1] && mPieceSavedAt[cenY[0] + cenX[0] * yNframes] < 0 && 
+  if (cenX[0] < cenX[1] && mPieceSavedAt[cenY[0] + cenX[0] * yNframes] < 0 &&
     mPieceSavedAt[cenY[1] + cenX[0] * yNframes] < 0)
     cenX[0]++;
-  if (cenX[0] < cenX[1] && mPieceSavedAt[cenY[0] + cenX[1] * yNframes] < 0 && 
+  if (cenX[0] < cenX[1] && mPieceSavedAt[cenY[0] + cenX[1] * yNframes] < 0 &&
     mPieceSavedAt[cenY[1] + cenX[1] * yNframes] < 0)
     cenX[1]--;
-  if (cenY[0] < cenY[1] && mPieceSavedAt[cenY[0] + cenX[0] * yNframes] < 0 && 
+  if (cenY[0] < cenY[1] && mPieceSavedAt[cenY[0] + cenX[0] * yNframes] < 0 &&
     mPieceSavedAt[cenY[0] + cenX[1] * yNframes] < 0)
     cenY[0]++;
-  if (cenY[0] < cenX[1] && mPieceSavedAt[cenY[1] + cenX[0] * yNframes] < 0 && 
+  if (cenY[0] < cenX[1] && mPieceSavedAt[cenY[1] + cenX[0] * yNframes] < 0 &&
     mPieceSavedAt[cenY[1] + cenX[1] * yNframes] < 0)
     cenY[1]--;
 
@@ -6968,7 +6972,7 @@ int CNavHelper::LoadPieceContainingPoint(CMapDrawItem *ptItem, int mapIndex)
   mUseMontStageError = false;
   for (ix = 0; ix < 2; ix++) {
     for (iy = 0; iy < 2; iy++) {
-      StagePositionOfPiece(mMapMontP, aMat, delX, delY, cenX[ix], cenY[iy], tmpX, 
+      StagePositionOfPiece(mMapMontP, aMat, delX, delY, cenX[ix], cenY[iy], tmpX,
         tmpY, montErrX, montErrY);
       stageX += tmpX / 4.f;
       stageY += tmpY / 4.f;
@@ -6977,9 +6981,9 @@ int CNavHelper::LoadPieceContainingPoint(CMapDrawItem *ptItem, int mapIndex)
 
   // Adjust buffer properties
   mImBufs->mStage2ImMat = aMat;
-  mImBufs->mStage2ImDelX = mImBufs->mImage->getWidth() / 2.f - 
+  mImBufs->mStage2ImDelX = mImBufs->mImage->getWidth() / 2.f -
     aMat.xpx * stageX - aMat.xpy * stageY;
-  mImBufs->mStage2ImDelY = mImBufs->mImage->getHeight() / 2.f - 
+  mImBufs->mStage2ImDelY = mImBufs->mImage->getHeight() / 2.f -
     aMat.ypx * stageX - aMat.ypy * stageY;
   mImBufs->mLoadWidth = mImBufs->mImage->getWidth();
   mImBufs->mLoadHeight = mImBufs->mImage->getHeight();
@@ -7028,7 +7032,7 @@ int CNavHelper::ProcessExternalItem(CMapDrawItem *item, int extType)
     mCurStoreInd = 0;
     if (mapItem->mMapMontage) {
       adocSave = AdocGetCurrentIndex();
-      if (mNav->AccessMapFile(mapItem, mMapStore, mCurStoreInd, mMapMontP, 
+      if (mNav->AccessMapFile(mapItem, mMapStore, mCurStoreInd, mMapMontP,
         mExtUseWidth, mExtUseHeight))
         return NEXERR_ACCESS_FILE;
       mExtDrawnOnID = item->mDrawnOnMapID;
@@ -7056,9 +7060,9 @@ int CNavHelper::ProcessExternalItem(CMapDrawItem *item, int extType)
     aMat.xpy *= mExtLoadWidth / mExtUseWidth;
     aMat.ypx *= -mExtLoadHeight / mExtUseHeight;
     aMat.ypy *= -mExtLoadHeight / mExtUseHeight;
-    mExtDelX = (mExtLoadWidth * mapItem->mMapWidth / mExtUseWidth) / 2.f - 
+    mExtDelX = (mExtLoadWidth * mapItem->mMapWidth / mExtUseWidth) / 2.f -
       (aMat.xpx * mapItem->mStageX + aMat.xpy * mapItem->mStageY);
-    mExtDelY = (mExtLoadHeight * mapItem->mMapHeight / mExtUseHeight) / 2.f - 
+    mExtDelY = (mExtLoadHeight * mapItem->mMapHeight / mExtUseHeight) / 2.f -
       (aMat.ypx * mapItem->mStageX + aMat.ypy * mapItem->mStageY);
     mExtInv = MatInv(aMat);
   }
@@ -7073,7 +7077,7 @@ int CNavHelper::ProcessExternalItem(CMapDrawItem *item, int extType)
   if (retval)
     return retval;
   for (ind = 0; ind < item->mNumPoints; ind++) {
-    retval = TransformExternalCoords(item, extType, mapItem, item->mPtX[ind], 
+    retval = TransformExternalCoords(item, extType, mapItem, item->mPtX[ind],
       item->mPtY[ind], drawnOn, xInPc, yInPc);
     if (retval)
       return retval;
@@ -7084,8 +7088,8 @@ int CNavHelper::ProcessExternalItem(CMapDrawItem *item, int extType)
 
 // Convert the pixel coordinates in fx, fy to stage coordinates for the item of the given
 // type on the given map; returns pieceDrawnOn for cases of aligned montages
-int CNavHelper::TransformExternalCoords(CMapDrawItem *item, int extType, 
-  CMapDrawItem *mapItem, float &fx, float &fy, int &pieceDrawnOn, float &xInPc, 
+int CNavHelper::TransformExternalCoords(CMapDrawItem *item, int extType,
+  CMapDrawItem *mapItem, float &fx, float &fy, int &pieceDrawnOn, float &xInPc,
   float &yInPc)
 {
   int pcX, pcY, adocInd, adocSave, numPieces, xPiece, yPiece, ipc, nameInd, iz;
@@ -7121,7 +7125,7 @@ int CNavHelper::TransformExternalCoords(CMapDrawItem *item, int extType,
 
       // Get pieceSavedAt of montage if not loaded yet
       if (mExtTypeOfOffsets < 0) {
-        mWinApp->mMontageController->ListMontagePieces(mMapStore, mMapMontP, 
+        mWinApp->mMontageController->ListMontagePieces(mMapStore, mMapMontP,
           mapItem->mMapSection, mPieceSavedAt);
       }
 
@@ -7149,10 +7153,10 @@ int CNavHelper::TransformExternalCoords(CMapDrawItem *item, int extType,
         if (AdocGetThreeIntegers(names[nameInd], iz, ADOC_PCOORD, &pcX, &pcY, &pcZ))
           retval = EXTERR_NO_PC_COORD;
 
-        if (!retval && AdocGetThreeIntegers(names[nameInd], iz, keys[extType - 1], 
+        if (!retval && AdocGetThreeIntegers(names[nameInd], iz, keys[extType - 1],
           &adjX, &adjY, &adjZ))
           retval = EXTERR_NO_ALI_COORDS;
-        if (retval) 
+        if (retval)
           break;
         mExtOffsets.offsetX[ipc] = (short)(adjX - pcX);
         mExtOffsets.offsetY[ipc] = (short)(pcY - adjY);
@@ -7173,7 +7177,7 @@ int CNavHelper::TransformExternalCoords(CMapDrawItem *item, int extType,
 
     // Adjust the Y-inverted position and get piece it is on
     fy = mExtLoadHeight - fy;
-    OffsetMontImagePos(&mExtOffsets, 0, mMapMontP->xNframes - 1, 0, 
+    OffsetMontImagePos(&mExtOffsets, 0, mMapMontP->xNframes - 1, 0,
       mMapMontP->yNframes - 1, fx, fy, pieceDrawnOn, xInPc, yInPc);
     fy = mExtLoadHeight - fy;
   }
@@ -7221,7 +7225,7 @@ bool CNavHelper::ModifySubareaForOffset(int camera, int xOffset, int yOffset, in
 
 // Get the focus position for the current item based on its state or the focus position
 // stored in it, or the state or stored focus position for a previous acquire item of the
-// type.  If there is no current or prior setting, or Nav is not open or there is no 
+// type.  If there is no current or prior setting, or Nav is not open or there is no
 // current item, it returns the defined Low Dose focus position
 void CNavHelper::FindFocusPosForCurrentItem(StateParams &state, bool justLDstate,
   int registration, int curInd)
@@ -7245,11 +7249,11 @@ void CNavHelper::FindFocusPosForCurrentItem(StateParams &state, bool justLDstate
     return;
   item = mItemArray->GetAt(curInd);
   tilts = item->mTSparamIndex >= 0;
-  
+
   // Look back for last state if any
   for (ind = curInd; ind >= 0; ind--) {
     item = mItemArray->GetAt(ind);
-    if (item->mRegistration == registration && (BOOL_EQUIV(item->mAcquire, !tilts) || 
+    if (item->mRegistration == registration && (BOOL_EQUIV(item->mAcquire, !tilts) ||
       BOOL_EQUIV(item->mTSparamIndex >= 0, tilts))) {
       if (item->mFilePropIndex >= 0 && item->mStateIndex >= 0) {
         statePtr = mAcqStateArray->GetAt(item->mStateIndex);

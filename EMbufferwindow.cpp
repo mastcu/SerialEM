@@ -1,8 +1,7 @@
 // EMbufferwindow.cpp:    Has buttons for copying and saving buffers and controls
 //                           to govern the behavior of buffers
 //
-// Copyright (C) 2003 by Boulder Laboratory for 3-Dimensional Electron 
-// Microscopy of Cells ("BL3DEMC") and the Regents of the University of
+// Copyright (C) 2003-2026 by the Regents of the University of
 // Colorado.  See Copyright.txt for full notice of copyright and limitations.
 //
 // Author: David Mastronarde
@@ -19,10 +18,8 @@
 #include "CameraController.h"
 #include "BaseDlg.h"
 
-#ifdef _DEBUG
+#if defined(_DEBUG) && defined(_CRTDBG_MAP_ALLOC)
 #define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
 #endif
 
 static BOOL protectBuffer[MAX_BUFFERS];
@@ -106,46 +103,46 @@ void CEMbufferWindow::DoCopyBuffer(int iWhich)
   mWinApp->RestoreViewFocus();
 }
 
-void CEMbufferWindow::OnBcopya() 
+void CEMbufferWindow::OnBcopya()
 {
   DoCopyBuffer(0);
 }
 
-void CEMbufferWindow::OnBcopyb() 
+void CEMbufferWindow::OnBcopyb()
 {
   DoCopyBuffer(1);
 }
 
-void CEMbufferWindow::OnBcopyc() 
+void CEMbufferWindow::OnBcopyc()
 {
-  DoCopyBuffer(2);  
+  DoCopyBuffer(2);
 }
 
-void CEMbufferWindow::OnBcopyd() 
+void CEMbufferWindow::OnBcopyd()
 {
-  DoCopyBuffer(3);  
+  DoCopyBuffer(3);
 }
 
-void CEMbufferWindow::OnBcopyany() 
+void CEMbufferWindow::OnBcopyany()
 {
   DoCopyBuffer(mBufferManager->GetFifthCopyToBuf());
 }
 
 /* This sends a direct message for new window
-void CEMbufferWindow::OnBcopynew() 
+void CEMbufferWindow::OnBcopynew()
 {
   mWinApp->RestoreViewFocus();
 } */
 
-void CEMbufferWindow::OnBsavea() 
+void CEMbufferWindow::OnBsavea()
 {
-  mWinApp->mDocWnd->SaveRegularBuffer();  
+  mWinApp->mDocWnd->SaveRegularBuffer();
   mWinApp->RestoreViewFocus();
 }
 
-void CEMbufferWindow::OnBsaveactive() 
+void CEMbufferWindow::OnBsaveactive()
 {
-  mWinApp->mDocWnd->SaveActiveBuffer(); 
+  mWinApp->mDocWnd->SaveActiveBuffer();
   mWinApp->RestoreViewFocus();
 }
 
@@ -158,7 +155,7 @@ void CEMbufferWindow::SetSpinText(UINT inID, int newVal)
 }
 
 // The spin button for variable copy button
-void CEMbufferWindow::OnDeltaposSpincopy(NMHDR* pNMHDR, LRESULT* pResult) 
+void CEMbufferWindow::OnDeltaposSpincopy(NMHDR* pNMHDR, LRESULT* pResult)
 {
   mWinApp->RestoreViewFocus();
   int newVal;
@@ -173,12 +170,12 @@ void CEMbufferWindow::OnDeltaposSpincopy(NMHDR* pNMHDR, LRESULT* pResult)
     (mWinApp->mShiftCalibrator->CalibratingOffset() && mWinApp->mCamera->CameraReady()))
     && activeBuf != NULL && activeBuf->mImage != NULL && !protectBuffer[newVal]);
   m_butCopyAny.EnableWindow(bEnable && mImBufs + newVal != activeBuf );
-  
+
   *pResult = 0;
 }
 
 // Spin button for the buffers to roll
-void CEMbufferWindow::OnDeltaposSpinroll(NMHDR* pNMHDR, LRESULT* pResult) 
+void CEMbufferWindow::OnDeltaposSpinroll(NMHDR* pNMHDR, LRESULT* pResult)
 {
   mWinApp->RestoreViewFocus();
   int newVal;
@@ -190,7 +187,7 @@ void CEMbufferWindow::OnDeltaposSpinroll(NMHDR* pNMHDR, LRESULT* pResult)
   SetSpinText(IDC_ROLLBUF, newVal);
   int oldRoll = mBufferManager->GetShiftsOnAcquire();
   int oldRead = mBufferManager->GetBufToReadInto();
-  mBufferManager->SetShiftsOnAcquire(newVal); 
+  mBufferManager->SetShiftsOnAcquire(newVal);
 
   // If the buffer to read into is still 2 past the roll buffer, maintain
   // that relationship to the new roll buffer
@@ -221,14 +218,14 @@ void CEMbufferWindow::ManageCopyOnSave(int inVal)
 }
 
 // Spin button for buffer to read into
-void CEMbufferWindow::OnDeltaposSpinread(NMHDR* pNMHDR, LRESULT* pResult) 
+void CEMbufferWindow::OnDeltaposSpinread(NMHDR* pNMHDR, LRESULT* pResult)
 {
   mWinApp->RestoreViewFocus();
   int newVal;
   if (NewSpinnerValue(pNMHDR, pResult, 0, MAX_BUFFERS - 1, newVal))
     return;
   SetSpinText(IDC_READBUF, newVal);
-  mBufferManager->SetBufToReadInto(newVal); 
+  mBufferManager->SetBufToReadInto(newVal);
   *pResult = 0;
 }
 
@@ -246,7 +243,7 @@ void CEMbufferWindow::OnSelendokComboOutfile()
 }
 
 // Confirm Record before destroy checkbox
-void CEMbufferWindow::OnConfirmdestroy() 
+void CEMbufferWindow::OnConfirmdestroy()
 {
   UpdateData(true);
   mWinApp->RestoreViewFocus();
@@ -254,7 +251,7 @@ void CEMbufferWindow::OnConfirmdestroy()
 }
 
 // When align to B is checked, modify align-focus window
-void CEMbufferWindow::OnAligntob() 
+void CEMbufferWindow::OnAligntob()
 {
   UpdateData(true);
   mWinApp->RestoreViewFocus();
@@ -262,7 +259,7 @@ void CEMbufferWindow::OnAligntob()
   mWinApp->mAlignFocusWindow.UpdateSettings();
 }
 
-BOOL CEMbufferWindow::OnInitDialog() 
+BOOL CEMbufferWindow::OnInitDialog()
 {
   CToolDlg::OnInitDialog();
 
@@ -286,7 +283,7 @@ BOOL CEMbufferWindow::OnInitDialog()
 
   // Do everything else the same if external settings change
   UpdateSettings();
-  
+
   return TRUE;  // return TRUE unless you set the focus to a control
                 // EXCEPTION: OCX Property Pages should return FALSE
 }
@@ -302,7 +299,7 @@ void CEMbufferWindow::UpdateSettings()
   if (!mInitialized)
     return;
 
-  // Load variables 
+  // Load variables
   m_bAlignOnSave = (mBufferManager->GetAlignOnSave() != 0);
   m_bConfirmDestroy = (mBufferManager->GetConfirmBeforeDestroy(3) != 0);
   m_bCopyOnSave = (mBufferManager->GetCopyOnSave() != 0);
@@ -339,7 +336,7 @@ void CEMbufferWindow::UpdateSaveCopy()
     return;
   spinBuf = m_sbcCopy.GetPos() & 255;
 
-  noTasks = !mWinApp->DoingTasks() || 
+  noTasks = !mWinApp->DoingTasks() ||
     (mWinApp->mShiftCalibrator->CalibratingOffset() && mWinApp->mCamera->CameraReady());
   bEnable = (noTasks || justNavAvq) && activeBuf != NULL && activeBuf->mImage != NULL;
   m_butCopyA.EnableWindow(bEnable && mImBufs != activeBuf && !protectBuffer[0]);
@@ -349,7 +346,7 @@ void CEMbufferWindow::UpdateSaveCopy()
   m_butCopyAny.EnableWindow(bEnable && mImBufs + spinBuf != activeBuf
      && !protectBuffer[spinBuf]);
   m_butDelete.EnableWindow(bEnable && ActiveBufNumIfDeletable() >= 0);
-  
+
   //m_butCopyNew.EnableWindow(bEnable);
   CButton *bNew = (CButton *)GetDlgItem(ID_WINDOW_NEW);
   bNew->EnableWindow(activeBuf != NULL && activeBuf->mImage != NULL);
@@ -369,7 +366,7 @@ void CEMbufferWindow::UpdateSaveCopy()
 
   // Update the file spin button
   curStore = B3DMAX(0, mWinApp->mDocWnd->GetCurrentStore());
-  m_comboOutFile.EnableWindow(mWinApp->mDocWnd->GetNumStores() > 1 && 
+  m_comboOutFile.EnableWindow(mWinApp->mDocWnd->GetNumStores() > 1 &&
     (noTasks || justNavAvq));
   m_comboOutFile.SetCurSel(curStore);
 

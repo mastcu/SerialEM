@@ -1,8 +1,8 @@
-// SerialEMDoc.cpp:       Standard MFC MDI component, which contains all the 
+// SerialEMDoc.cpp:       Standard MFC MDI component, which contains all the
 //                          message handlers for opening, reading and writing
 //                          image files and settings files
 //
-// Copyright (C) 2003-2020 by the Regents of the University of
+// Copyright (C) 2003-2026 by the Regents of the University of
 // Colorado.  See Copyright.txt for full notice of copyright and limitations.
 //
 // Author: David Mastronarde
@@ -52,10 +52,8 @@
 #include "Shared\\iimage.h"
 #include "Shared\b3dutil.h"
 
-#ifdef _DEBUG
+#if defined(_DEBUG) && defined(_CRTDBG_MAP_ALLOC)
 #define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
 #endif
 
 #define DEFAULT_SYSTEM_PATH "C:\\Program Files\\SerialEM\\"
@@ -288,7 +286,7 @@ void CSerialEMDoc::Dump(CDumpContext& dc) const
 // CSerialEMDoc commands
 
 // Open new file: just call OpenSaveFile with current options
-void CSerialEMDoc::OnFileOpennew() 
+void CSerialEMDoc::OnFileOpennew()
 {
   DoOpenNewFile();
 }
@@ -322,7 +320,7 @@ int CSerialEMDoc::DoOpenNewFile(CString filename)
   }
 }
 
-void CSerialEMDoc::OnUpdateFileOpennew(CCmdUI* pCmdUI) 
+void CSerialEMDoc::OnUpdateFileOpennew(CCmdUI* pCmdUI)
 {
   pCmdUI->Enable((!mWinApp->DoingTasks() || mWinApp->GetJustNavAcquireOpen ()) &&
     mNumStores < MAX_STORES);
@@ -380,12 +378,12 @@ int CSerialEMDoc::OpenOldMrcCFile(CFile **file, CString cFilename, bool imodOK)
   char buffer[256];
   if (mBufferManager->CheckAsyncSaving())
     return MRC_OPEN_CANCEL;
-  if (FileAlreadyOpen(cFilename, 
+  if (FileAlreadyOpen(cFilename,
     "To operate on it, you need to make it be the current file"))
     return MRC_OPEN_ALREADY_OPEN;
-  
+
   try {
-    *file = new CFile(cFilename, CFile::modeReadWrite |CFile::shareDenyWrite | 
+    *file = new CFile(cFilename, CFile::modeReadWrite |CFile::shareDenyWrite |
       CFile::modeNoInherit);
   }
   catch (CFileException *err) {
@@ -475,7 +473,7 @@ int CSerialEMDoc::OpenOldFile(CFile *file, CString cFilename, int err, bool skip
         if (adocInd >= 0) {
           AdocGetInteger(ADOC_MONT_SECT, 0, ADOC_STAGE_MONT, &stage);
           AdocGetTwoIntegers(ADOC_MONT_SECT, 0, ADOC_CONSET_USED, &conSet, &lowDose);
-          if (!AdocGetInteger(ADOC_ZVALUE, 0, ADOC_CAMERA, &ind) && 
+          if (!AdocGetInteger(ADOC_ZVALUE, 0, ADOC_CAMERA, &ind) &&
             !AdocGetInteger(ADOC_ZVALUE, 0, ADOC_BINNING, &binning) &&
             !AdocGetInteger(ADOC_ZVALUE, 0, ADOC_MAGIND, &magInd)) {
               camInd = mWinApp->LookupActiveCamera(ind);
@@ -504,7 +502,7 @@ int CSerialEMDoc::OpenOldFile(CFile *file, CString cFilename, int err, bool skip
             camInd = ind < 0 ? mWinApp->GetCurrentActiveCamera() : ind;
             cam = mWinApp->GetCamParams() + activeList[camInd];
             for (binInd = cam->numBinnings - 1; binInd >= 0; binInd--) {
-              if (mWinApp->mStoreMRC->getWidth() * cam->binnings[binInd] <= cam->sizeX && 
+              if (mWinApp->mStoreMRC->getWidth() * cam->binnings[binInd] <= cam->sizeX &&
                 mWinApp->mStoreMRC->getHeight() * cam->binnings[binInd] <= cam->sizeY) {
                   param->binning = cam->binnings[binInd];
                   magInd = mWinApp->mScope->GetMagIndex();
@@ -545,8 +543,8 @@ int CSerialEMDoc::OpenOldFile(CFile *file, CString cFilename, int err, bool skip
             param->moveStage = stage > 0;
           else
             param->moveStage = FieldAboveStageMoveThreshold(param, lowDose > 0,
-              activeList[camInd]); 
-          
+              activeList[camInd]);
+
           if (!skipMontDlg)
             OpenMontageDialog(true);
           ManageExposure(skipMontDlg);
@@ -554,20 +552,20 @@ int CSerialEMDoc::OpenOldFile(CFile *file, CString cFilename, int err, bool skip
 
           if (numMissing)
             PrintfToLog("WARNING: This file is missing %d image%s; the last complete "
-              "montage is at Z %d", numMissing, numMissing > 1 ? "s" : "", 
-              mWinApp->mStoreMRC->GetIncompleteMontZ() > 0 ? 
+              "montage is at Z %d", numMissing, numMissing > 1 ? "s" : "",
+              mWinApp->mStoreMRC->GetIncompleteMontZ() > 0 ?
               mWinApp->mStoreMRC->GetIncompleteMontZ() - 1 : param->zMax);
         } else
           SEMMessageBox("This is a montaged file but there is no\r"
           "camera that can produce such large images."
-          "\r\rMontaging not activated", MB_EXCLAME); 
+          "\r\rMontaging not activated", MB_EXCLAME);
 
       } else if (err < 0) {
         SEMMessageBox("This is a montaged file but the piece list is corrupted."
           "\r\rMontaging not activated", MB_EXCLAME);
 
       } else if (numMissing) {
-        PrintfToLog("WARNING: This file is missing %d image%s; the last usable Z is %d", 
+        PrintfToLog("WARNING: This file is missing %d image%s; the last usable Z is %d",
           numMissing, numMissing > 1 ? "s" : "", mWinApp->mStoreMRC->getDepth() - 1);
       }
     } else {
@@ -584,13 +582,13 @@ int CSerialEMDoc::OpenOldFile(CFile *file, CString cFilename, int err, bool skip
   return MRC_OPEN_NOERR;
 }
 
-void CSerialEMDoc::OnUpdateFileOpenold(CCmdUI* pCmdUI) 
+void CSerialEMDoc::OnUpdateFileOpenold(CCmdUI* pCmdUI)
 {
-  pCmdUI->Enable((!mWinApp->DoingTasks() || mWinApp->GetJustNavAcquireOpen()) && 
+  pCmdUI->Enable((!mWinApp->DoingTasks() || mWinApp->GetJustNavAcquireOpen()) &&
     mNumStores < MAX_STORES);
 }
 
-void CSerialEMDoc::OnFileMontagesetup() 
+void CSerialEMDoc::OnFileMontagesetup()
 {
   bool locked;
   int xNframes, yNframes, xFrame, yFrame, xOverlap, yOverlap;
@@ -607,7 +605,7 @@ void CSerialEMDoc::OnFileMontagesetup()
     if (!OpenMontageDialog(locked)) {
       ManageExposure(false);
       if (!locked && (xNframes != param->xNframes || yNframes != param->yNframes ||
-        xFrame != param->xFrame || yFrame != param->yFrame || 
+        xFrame != param->xFrame || yFrame != param->yFrame ||
         xOverlap != param->xOverlap || yOverlap != param->yOverlap)) {
         mWinApp->mMontageController->SetMontaging(false);
         mWinApp->mMontageController->SetMontaging(true);
@@ -620,20 +618,20 @@ void CSerialEMDoc::OnFileMontagesetup()
   mBufferWindow->UpdateSaveCopy();
 }
 
-void CSerialEMDoc::OnUpdateFileMontagesetup(CCmdUI* pCmdUI) 
+void CSerialEMDoc::OnUpdateFileMontagesetup(CCmdUI* pCmdUI)
 {
   pCmdUI->Enable(/*!mWinApp->LowDoseMode() && */(
     (!mWinApp->DoingTasks() && mNumStores < MAX_STORES) || mWinApp->Montaging()));
 }
 
-void CSerialEMDoc::OnFileNewmontage() 
+void CSerialEMDoc::OnFileNewmontage()
 {
   GetMontageParamsAndFile(0);
   mBufferWindow->UpdateSaveCopy();
   mWinApp->mNavHelper->UpdateAcquireDlgForFileChanges();
 }
 
-void CSerialEMDoc::OnUpdateFileNewmontage(CCmdUI* pCmdUI) 
+void CSerialEMDoc::OnUpdateFileNewmontage(CCmdUI* pCmdUI)
 {
   pCmdUI->Enable((!mWinApp->DoingTasks() || mWinApp->GetJustNavAcquireOpen()) &&
     mNumStores < MAX_STORES);
@@ -665,13 +663,13 @@ int CSerialEMDoc::GetMontageParamsAndFile(int frameSet, int xNframes, int yNfram
   if (nextSetNum)
     mWinApp->mMontageController->ChangeParamSetToUse(param, nextSetNum);
   InitMontParamsForDialog(param, frameSet, xNframes, yNframes, filename);
-  
+
   if (filename.IsEmpty() && OpenMontageDialog(false)) {
     param->overviewBinning = 1;
     RestoreCurrentFile();
     return 1;
   }
-  
+
   // Now open file
   SetFileOptsForSTEM();
   mFileOpt.mode = B3DMAX(mFileOpt.mode, 1);
@@ -708,7 +706,7 @@ int CSerialEMDoc::GetMontageParamsAndFile(int frameSet, int xNframes, int yNfram
 // frameSet indicates if the frame is already set up.
 // If frameset is false, the number of frames will be set from xNframes, yNframes, which
 // default to -1, in which case the default number of montage pieces are used
-void CSerialEMDoc::InitMontParamsForDialog(MontParam *param, int frameSet, int xNframes, 
+void CSerialEMDoc::InitMontParamsForDialog(MontParam *param, int frameSet, int xNframes,
                                            int yNframes, CString filename)
 {
   int setNum = MontageConSetNum(param, false);
@@ -751,7 +749,7 @@ void CSerialEMDoc::InitMontParamsForDialog(MontParam *param, int frameSet, int x
 
 // Do the part of the initialization that depends on the control set
 // setNum should be the conset number that will be used unless true conset has been synced
-void CSerialEMDoc::MontParamInitFromConSet(MontParam *param, int setNum, 
+void CSerialEMDoc::MontParamInitFromConSet(MontParam *param, int setNum,
   float overlapFrac)
 {
   int curCam = mWinApp->GetCurrentCamera();
@@ -769,8 +767,8 @@ void CSerialEMDoc::MontParamInitFromConSet(MontParam *param, int setNum,
 }
 
 // This variant takes the binned frame size and a specified camera and overlap
-void CSerialEMDoc::MontParamInitFromFrame(MontParam *param, int camNum, int xFrame, 
-  int yFrame, float overlapFrac, int saveFrames, int alignFrames, int useFrameAli, 
+void CSerialEMDoc::MontParamInitFromFrame(MontParam *param, int camNum, int xFrame,
+  int yFrame, float overlapFrac, int saveFrames, int alignFrames, int useFrameAli,
   int readMode)
 {
   CameraParameters *camParam = mWinApp->GetCamParams() + camNum;
@@ -789,7 +787,7 @@ void CSerialEMDoc::MontParamInitFromFrame(MontParam *param, int camNum, int xFra
 }
 
 // Tests whether montage is in LM or if a 2x2 montage will trip the maximum IS message
-bool CSerialEMDoc::FieldAboveStageMoveThreshold(MontParam *param, BOOL lowDose, 
+bool CSerialEMDoc::FieldAboveStageMoveThreshold(MontParam *param, BOOL lowDose,
   int camInd)
 {
   NavParams *navp = mWinApp->GetNavParams();
@@ -800,8 +798,8 @@ bool CSerialEMDoc::FieldAboveStageMoveThreshold(MontParam *param, BOOL lowDose,
   if (lowDose)
     magInd = ldp[MontageLDAreaIndex(param)].magIndex;
   return magInd < mWinApp->mScope->GetLowestNonLMmag() ||
-    0.7 * (B3DMAX(param->xFrame, param->yFrame) - param->xOverlap) * 
-    param->binning * mWinApp->mShiftManager->GetPixelSize(camInd, magInd) > 
+    0.7 * (B3DMAX(param->xFrame, param->yFrame) - param->xOverlap) *
+    param->binning * mWinApp->mShiftManager->GetPixelSize(camInd, magInd) >
     navp->maxMontageIS;
 }
 
@@ -815,10 +813,10 @@ int CSerialEMDoc::OpenMontageDialog(BOOL locked)
   CMontageSetupDlg montDlg;
   MontParam *param = mWinApp->GetMontParam();
   montDlg.mParam = *param;
-  if (mWinApp->LowDoseMode() && (!ldp[VIEW_CONSET].magIndex && 
+  if (mWinApp->LowDoseMode() && (!ldp[VIEW_CONSET].magIndex &&
     !ldp[RECORD_CONSET].magIndex)) {
       mess.Format("Low dose parameters need to be set up for either the %s\n"
-        "or the %s area before starting a montage in Low Dose mode", 
+        "or the %s area before starting a montage in Low Dose mode",
         (LPCTSTR)modeName[RECORD_CONSET], (LPCTSTR)modeName[VIEW_CONSET]);
       SEMMessageBox(mess);
       return 1;
@@ -826,7 +824,7 @@ int CSerialEMDoc::OpenMontageDialog(BOOL locked)
 
   // Lock sizes if already montaging
   montDlg.mSizeLocked = locked;
-  montDlg.mConstrainSize = mWinApp->Montaging() && 
+  montDlg.mConstrainSize = mWinApp->Montaging() &&
     !mWinApp->mStoreMRC->montCoordsInAdoc();
   if (montDlg.DoModal() != IDOK)
     return 1;
@@ -857,13 +855,13 @@ void CSerialEMDoc::ManageExposure(bool noMessage)
          "the binning (%g) in the %s parameter set\r\n"
          "   Because this is a %s, the parameter set will be left as it was,"
          "\r\n   and the exposure time there will be assumed to work with both binnings",
-         param->binning / binDiv, cs->binning / binDiv, modeName[setNum], 
+         param->binning / binDiv, cs->binning / binDiv, modeName[setNum],
          noMessage ? "montage opened from script" : "low-dose montage");
     } else {
       float ratio = (float)param->binning / cs->binning;
       cs->binning = param->binning;
       cs->exposure = B3DMAX(cs->exposure / (ratio * ratio), camParam->minExposure);
-      SEMMessageBox("The binning in the " + modeName[setNum] 
+      SEMMessageBox("The binning in the " + modeName[setNum]
         + " parameter set has been changed\n"
         "to match your selection, and the exposure time has been\n"
         "changed to give the same number of counts per binned pixel.\n\n"
@@ -871,13 +869,13 @@ void CSerialEMDoc::ManageExposure(bool noMessage)
         "needed to obtain good images.", MB_EXCLAME);
     }
     if (camera == mWinApp->GetCurrentCamera())
-      mWinApp->CopyConSets(camera); 
+      mWinApp->CopyConSets(camera);
   }
 
 }
 
 // Close file by deleting it and managing the store list
-void CSerialEMDoc::OnFileClose() 
+void CSerialEMDoc::OnFileClose()
 {
   DoCloseFile();
 }
@@ -908,7 +906,7 @@ void CSerialEMDoc::DoCloseFile()
 
   // If there are other files still, fix store index if < 0 and switch to it
   if (mNumStores) {
-    if (mCurrentStore < 0) 
+    if (mCurrentStore < 0)
       mCurrentStore = 0;
     SwitchToFile(mCurrentStore);
   } else {
@@ -919,11 +917,11 @@ void CSerialEMDoc::DoCloseFile()
   mWinApp->mNavHelper->UpdateAcquireDlgForFileChanges();
 }
 
-void CSerialEMDoc::OnUpdateFileClose(CCmdUI* pCmdUI) 
+void CSerialEMDoc::OnUpdateFileClose(CCmdUI* pCmdUI)
 {
-  pCmdUI->Enable((!mWinApp->DoingTasks() || mWinApp->GetJustNavAcquireOpen()) && 
+  pCmdUI->Enable((!mWinApp->DoingTasks() || mWinApp->GetJustNavAcquireOpen()) &&
     !mWinApp->mMacroProcessor->DoingMacro() &&
-    mWinApp->mStoreMRC != NULL && mStoreList[mCurrentStore].protectNum < 0);  
+    mWinApp->mStoreMRC != NULL && mStoreList[mCurrentStore].protectNum < 0);
 }
 
 // Close all open files if none are protected
@@ -971,7 +969,7 @@ void CSerialEMDoc::ManageSaveSingle(void)
 }
 
 // Regular save of regular buffer
-void CSerialEMDoc::OnFileSave() 
+void CSerialEMDoc::OnFileSave()
 {
   EMimageBuffer *imBuf = mWinApp->GetImBufs();
   KImageStore *store = GetStoreForSaving(imBuf->mImage->getType());
@@ -989,15 +987,15 @@ void CSerialEMDoc::OnFileSave()
 }
 
 // Check whether regular file save can occur
-void CSerialEMDoc::OnUpdateFileSave(CCmdUI* pCmdUI) 
+void CSerialEMDoc::OnUpdateFileSave(CCmdUI* pCmdUI)
 {
-  BOOL bEnable = !mWinApp->DoingComplexTasks() && !mWinApp->Montaging() && 
+  BOOL bEnable = !mWinApp->DoingComplexTasks() && !mWinApp->Montaging() &&
     mBufferManager->IsBufferSavable(mWinApp->GetImBufs());
   pCmdUI->Enable(bEnable);
 }
 
 // Save of active view
-void CSerialEMDoc::OnFileSaveactive() 
+void CSerialEMDoc::OnFileSaveactive()
 {
   EMimageBuffer *imBuf = mWinApp->mActiveView->GetActiveImBuf();
   KImageStore *store = GetStoreForSaving(imBuf->mImage->getType());
@@ -1010,14 +1008,14 @@ void CSerialEMDoc::OnFileSaveactive()
   mBufferManager->SaveImageBuffer(store);
   mBufferManager->SetBufToSave(bufOld);
   // Update buffer status window
-  mWinApp->UpdateBufferWindows(); 
+  mWinApp->UpdateBufferWindows();
   if (store->getStoreType() == STORE_TYPE_IMOD)
     delete store;
 }
 
 // Returns the current store or a new one, which can be a TIFF store
 KImageStore *CSerialEMDoc::GetStoreForSaving(int type)
-{ 
+{
   KImageStore *store;
   int modeSave;
   if (mBufferManager->CheckAsyncSaving())
@@ -1039,7 +1037,7 @@ KImageStore *CSerialEMDoc::GetStoreForSaving(int type)
   RestoreFileOptsFromSTEM();
   if (!store)
     return NULL;
-  if (store->getStoreType() == STORE_TYPE_MRC || 
+  if (store->getStoreType() == STORE_TYPE_MRC ||
     store->getStoreType() == STORE_TYPE_ADOC || store->getStoreType() == STORE_TYPE_HDF) {
     mWinApp->mStoreMRC = store;
     AddCurrentStore();
@@ -1047,15 +1045,15 @@ KImageStore *CSerialEMDoc::GetStoreForSaving(int type)
   return store;
 }
 
-void CSerialEMDoc::OnUpdateFileSaveactive(CCmdUI* pCmdUI) 
+void CSerialEMDoc::OnUpdateFileSaveactive(CCmdUI* pCmdUI)
 {
-  BOOL bEnable = !mWinApp->DoingComplexTasks() && !mWinApp->Montaging() && 
+  BOOL bEnable = !mWinApp->DoingComplexTasks() && !mWinApp->Montaging() &&
     mBufferManager->IsBufferSavable(mWinApp->mActiveView->GetActiveImBuf());
   pCmdUI->Enable(bEnable);
 }
 
 // Overwrite existing image in file
-void CSerialEMDoc::OnFileOverwrite() 
+void CSerialEMDoc::OnFileOverwrite()
 {
   CString str;
   int numPiece = mWinApp->mMontageController->GetNumOverwritePieces();
@@ -1064,21 +1062,21 @@ void CSerialEMDoc::OnFileOverwrite()
   if (mWinApp->Montaging()) {
     str.Format("Enter %d or higher to start the next montage from the beginning even"
       " if it is resumable", mWinApp->mMontageController->GetNumPieces());
-    if (KGetOneInt("Number of pieces to overwrite if the next montage is resumable:", 
+    if (KGetOneInt("Number of pieces to overwrite if the next montage is resumable:",
       numPiece))
       mWinApp->mMontageController->SetNumOverwritePieces(numPiece);
     return;
   }
   if (mBufferManager->GetAlignOnSave() && mWinApp->mStoreMRC->getDepth() > 0)
     mWinApp->mShiftManager->AutoAlign(0, 1);
-  mBufferManager->OverwriteImage(mWinApp->mStoreMRC); 
+  mBufferManager->OverwriteImage(mWinApp->mStoreMRC);
   mWinApp->UpdateBufferWindows();
 }
 
-void CSerialEMDoc::OnUpdateFileOverwrite(CCmdUI* pCmdUI) 
+void CSerialEMDoc::OnUpdateFileOverwrite(CCmdUI* pCmdUI)
 {
   MontParam *montp = mWinApp->GetMontParam();
-  BOOL bEnable = !mWinApp->DoingTasks() && !mWinApp->DoingComplexTasks() && 
+  BOOL bEnable = !mWinApp->DoingTasks() && !mWinApp->DoingComplexTasks() &&
     mWinApp->mStoreMRC && (!mWinApp->Montaging() || montp->moveStage);
   if (bEnable)
     bEnable = mWinApp->mStoreMRC->getDepth() > 0 && (mWinApp->Montaging() ||
@@ -1087,14 +1085,14 @@ void CSerialEMDoc::OnUpdateFileOverwrite(CCmdUI* pCmdUI)
 }
 
 // Save active view into another file
-void CSerialEMDoc::OnFileSaveother() 
+void CSerialEMDoc::OnFileSaveother()
 {
   SaveToOtherFile(USE_ACTIVE_BUF, -1, -1, NULL);
 }
 
 // Saves a single image in given buffer to a file of the specified type
 // Returns 1 on no image or async save error, 2 on fail to open, 3 on fail to write
-int CSerialEMDoc::SaveToOtherFile(int buffer, int fileType, int compression, 
+int CSerialEMDoc::SaveToOtherFile(int buffer, int fileType, int compression,
   CString *fileName)
 {
   int compSave, typeSave, modeSave, err;
@@ -1153,17 +1151,17 @@ int CSerialEMDoc::SaveToOtherFile(int buffer, int fileType, int compression,
   mWinApp->SetSavingOther(false);
   mBufferManager->SetBufToSave(bufOld);
   mBufferManager->SetCopyOnSave(copyOld);
-  mWinApp->UpdateBufferWindows(); 
+  mWinApp->UpdateBufferWindows();
   return err ? 3 : 0;
 }
 
-void CSerialEMDoc::OnUpdateFileSaveother(CCmdUI* pCmdUI) 
+void CSerialEMDoc::OnUpdateFileSaveother(CCmdUI* pCmdUI)
 {
   EMimageBuffer *imBuf = mWinApp->mActiveView->GetActiveImBuf();
-  pCmdUI->Enable(!mWinApp->DoingTasks() && imBuf->mImage); 
+  pCmdUI->Enable(!mWinApp->DoingTasks() && imBuf->mImage);
 }
 
-void CSerialEMDoc::OnFileTruncation() 
+void CSerialEMDoc::OnFileTruncation()
 {
   float number = mFileOpt.pctTruncLo;
   if (KGetOneFloat("Percent of pixels to truncate as black:", number, 2)) {
@@ -1179,13 +1177,13 @@ void CSerialEMDoc::OnFileTruncation()
   }
 }
 
-void CSerialEMDoc::OnUpdateFileTruncation(CCmdUI* pCmdUI) 
+void CSerialEMDoc::OnUpdateFileTruncation(CCmdUI* pCmdUI)
 {
-  pCmdUI->Enable(mWinApp->mStoreMRC != NULL && mFileOpt.mode ==0);  
+  pCmdUI->Enable(mWinApp->mStoreMRC != NULL && mFileOpt.mode ==0);
 }
 
 // Change the treatment of unsigned integers, needed if file is reopened
-void CSerialEMDoc::OnFileSet16bitpolicy() 
+void CSerialEMDoc::OnFileSet16bitpolicy()
 {
   SetFileOptsForSTEM();
   if (!KGetOneInt("Enter 0 to truncate unsigned integers at 32767, 1 to divide by 2, "
@@ -1198,10 +1196,10 @@ void CSerialEMDoc::OnFileSet16bitpolicy()
 
 // Enable the option if there are any 16-bit cameras and not dividing by 2, or
 // if there are any unsigned buffers even if a file is not open
-void CSerialEMDoc::OnUpdateFileSet16bitpolicy(CCmdUI* pCmdUI) 
+void CSerialEMDoc::OnUpdateFileSet16bitpolicy(CCmdUI* pCmdUI)
 {
   EMimageBuffer *imBufs = mWinApp->GetImBufs();
-  BOOL bEnable = mWinApp->mStoreMRC && mWinApp->GetAny16BitCameras() && 
+  BOOL bEnable = mWinApp->mStoreMRC && mWinApp->GetAny16BitCameras() &&
     mWinApp->mCamera->GetDivideBy2() <= 0;
   for (int i = 0; i < MAX_BUFFERS && !bEnable; i++)
     bEnable = imBufs[i].mImage != NULL && imBufs[i].mImage->getType() == kUSHORT;
@@ -1209,7 +1207,7 @@ void CSerialEMDoc::OnUpdateFileSet16bitpolicy(CCmdUI* pCmdUI)
 }
 
 // Change the treatment of signed data saved to unsigned files
-void CSerialEMDoc::OnFileSetsignedpolicy() 
+void CSerialEMDoc::OnFileSetsignedpolicy()
 {
   if (!KGetOneInt("Enter 0 to truncate negative numbers at 0, or 1 to "
     "add 32768, when saving to unsigned mode file:", mFileOpt.signToUnsignOpt))
@@ -1218,8 +1216,8 @@ void CSerialEMDoc::OnFileSetsignedpolicy()
   mWinApp->mStoreMRC->SetSignedOption(mFileOpt.signToUnsignOpt);
 }
 
-// Enable if there is a currently open file 
-void CSerialEMDoc::OnUpdateFileSetsignedpolicy(CCmdUI* pCmdUI) 
+// Enable if there is a currently open file
+void CSerialEMDoc::OnUpdateFileSetsignedpolicy(CCmdUI* pCmdUI)
 {
   BOOL bEnable = mWinApp->mStoreMRC && mWinApp->mStoreMRC->getMode() == MRC_MODE_USHORT;
   pCmdUI->Enable(bEnable);
@@ -1237,13 +1235,13 @@ void CSerialEMDoc::OnUpdateSkipFilePropertiesDlg(CCmdUI *pCmdUI)
 }
 
 // Reading from either the current file or a random file
-void CSerialEMDoc::OnFileRead() 
+void CSerialEMDoc::OnFileRead()
 {
   MontParam *param = mWinApp->GetMontParam();
   int section;
   if (mBufferManager->CheckAsyncSaving())
     return;
-  
+
   // If no current file is open, treat this like reading other file
   if (!mWinApp->mStoreMRC) {
     OnFileReadother();
@@ -1271,7 +1269,7 @@ void CSerialEMDoc::OnFileRead()
   if (mReadDlgPlace.rcNormalPosition.right != NO_PLACEMENT)
     mWinApp->SetPlacementFixSize(mReadFileDlg, &mReadDlgPlace);
   else
-    mReadFileDlg->SetWindowPos(&CWnd::wndTopMost, 500, 400, 100, 100, 
+    mReadFileDlg->SetWindowPos(&CWnd::wndTopMost, 500, 400, 100, 100,
       SWP_NOSIZE | SWP_SHOWWINDOW);
 }
 
@@ -1282,28 +1280,28 @@ WINDOWPLACEMENT * CSerialEMDoc::GetReadDlgPlacement(void)
   return &mReadDlgPlace;
 }
 
-void CSerialEMDoc::OnUpdateFileRead(CCmdUI* pCmdUI) 
+void CSerialEMDoc::OnUpdateFileRead(CCmdUI* pCmdUI)
 {
-  pCmdUI->Enable(!mWinApp->DoingTasks() && !mWinApp->mCamera->CameraBusy() && 
+  pCmdUI->Enable(!mWinApp->DoingTasks() && !mWinApp->mCamera->CameraBusy() &&
     (!mWinApp->mStoreMRC || mWinApp->mStoreMRC->getDepth() > 0));
 }
 
 // This will read a single frame from a file, montaged or not
-void CSerialEMDoc::OnFileReadpiece() 
+void CSerialEMDoc::OnFileReadpiece()
 {
   mBufferManager->ReadFromFile(mWinApp->mStoreMRC);
   mWinApp->DrawReadInImage();
 }
 
 // Condition for reading a piece: montage file with data in it
-void CSerialEMDoc::OnUpdateFileReadpiece(CCmdUI* pCmdUI) 
+void CSerialEMDoc::OnUpdateFileReadpiece(CCmdUI* pCmdUI)
 {
   MontParam *param = mWinApp->GetMontParam();
   pCmdUI->Enable(!mWinApp->DoingTasks() && mWinApp->Montaging() && param->zMax >= 0 &&
     !mWinApp->mCamera->CameraBusy());
 }
 
-void CSerialEMDoc::OnFileReadother() 
+void CSerialEMDoc::OnFileReadother()
 {
   int err = mBufferManager->ReadOtherFile();
   if (err != READ_MONTAGE_OK) {
@@ -1313,10 +1311,10 @@ void CSerialEMDoc::OnFileReadother()
   mWinApp->RestoreViewFocus();
 }
 
-void CSerialEMDoc::OnUpdateFileReadother(CCmdUI* pCmdUI) 
+void CSerialEMDoc::OnUpdateFileReadother(CCmdUI* pCmdUI)
 {
-  pCmdUI->Enable(!mWinApp->DoingTasks() && mWinApp->mStoreMRC != NULL && 
-    !mWinApp->mCamera->CameraBusy()); 
+  pCmdUI->Enable(!mWinApp->DoingTasks() && mWinApp->mStoreMRC != NULL &&
+    !mWinApp->mCamera->CameraBusy());
 }
 
 // Open a new file to save into
@@ -1329,12 +1327,12 @@ KImageStore * CSerialEMDoc::OpenSaveFile(FileOptions *fileOptp)
     return NULL;
   }
 
-  err = FilenameForSaveFile(fileOptp->useMont() ? 
+  err = FilenameForSaveFile(fileOptp->useMont() ?
     fileOptp->montFileType : fileOptp->fileType, NULL, cFilename);
   mWinApp->RestoreViewFocus();
   if (err)
     return NULL;
-  
+
   return OpenNewFileByName(cFilename, fileOptp);
 }
 
@@ -1351,11 +1349,11 @@ int CSerialEMDoc::FilePropForSaveFile(FileOptions * fileOptp, int openAnyway)
   propDlg.mShowDlgThisTime = (mShowFileDlgOnce || openAnyway > 0) && openAnyway > -2;
   propDlg.m_bSkipFileDlg = mSkipFileDlg || openAnyway < 0;
   mShowFileDlgOnce = false;
-  propDlg.mAny16Bit = mWinApp->GetAny16BitCameras() && 
+  propDlg.mAny16Bit = mWinApp->GetAny16BitCameras() &&
     (mWinApp->mCamera->GetDivideBy2() <= 0);
   for (int i = 0; i < MAX_BUFFERS && !propDlg.mAny16Bit; i++)
     propDlg.mAny16Bit = imBufs[i].mImage && imBufs[i].mImage->getType() == kUSHORT;
-  
+
   // Reset the mode to 1 if the unsigned mode option will not be available
   if (!propDlg.mAny16Bit && propDlg.mFileOpt.mode == MRC_MODE_USHORT)
     propDlg.mFileOpt.mode = 1;
@@ -1405,16 +1403,16 @@ void CSerialEMDoc::CopyMasterFileOpts(FileOptions *fileOptp, int fromTo)
 
 // Get a save file name with filters/extension set from the fileType member of file
 // fileOpts and with given starting filename (NULL for none), returns -1 if user cancels
-int CSerialEMDoc::FilenameForSaveFile(int fileType, LPCTSTR lpszFileName, 
+int CSerialEMDoc::FilenameForSaveFile(int fileType, LPCTSTR lpszFileName,
                                       CString & cFilename)
 {
-  static char BASED_CODE szFilter[] = 
+  static char BASED_CODE szFilter[] =
     "MRC image stacks (*.mrc, *.st, *.map)|*.mrc; *.st; *.map|All files (*.*)|*.*||";
-  static char BASED_CODE tiffFilter[] = 
+  static char BASED_CODE tiffFilter[] =
     "TIFF files (*.tif)|*.tif|All files (*.*)|*.*||";
-  static char BASED_CODE jpegFilter[] = 
+  static char BASED_CODE jpegFilter[] =
     "JPEG files (*.jpg)|*.jpg|All files (*.*)|*.*||";
-  static char BASED_CODE adocFilter[] = 
+  static char BASED_CODE adocFilter[] =
     "Image Autodoc files (*.idoc)|*.idoc|All files (*.*)|*.*||";
   static char BASED_CODE hdfFilter[] =
     "HDF image stacks (*.hdf)|*.hdf|All files (*.*)|*.*||";
@@ -1445,7 +1443,7 @@ int CSerialEMDoc::FilenameForSaveFile(int fileType, LPCTSTR lpszFileName,
     filter);
   if (fileDlg.DoModal() != IDOK)
     return -1;
-  
+
   // Thus strip the .mrc if one of the exceptions is entered
   cFilename = fileDlg.GetPathName();
   if (fileType == STORE_TYPE_MRC && ext) {
@@ -1470,7 +1468,7 @@ KImageStore *CSerialEMDoc::OpenNewFileByName(CString cFilename, FileOptions *fil
   int fileType = fileOptp->useMont() ? fileOptp->montFileType : fileOptp->fileType;
   CString str = "Error Opening File";
   int ind, numErr = 0;
-  if (FileAlreadyOpen(cFilename, 
+  if (FileAlreadyOpen(cFilename,
     "A new file was not opened; you need to close the existing one first."))
     return NULL;
 
@@ -1489,9 +1487,9 @@ KImageStore *CSerialEMDoc::OpenNewFileByName(CString cFilename, FileOptions *fil
     store = (KImageStore *)tiffStore;
     if (fileOptp->fileType == STORE_TYPE_TIFF)
       store->AddTitle(title);
-    
+
   } else {
-    
+
     if (fileType == STORE_TYPE_ADOC) {
 
       // ADOC series
@@ -1535,7 +1533,7 @@ KImageStore *CSerialEMDoc::OpenNewFileByName(CString cFilename, FileOptions *fil
             (LPCTSTR)mGlobalAdocValues[ind]))
             numErr++;
         if (numErr)
-          PrintfToLog("WARNING: Error adding %d entries to global section of autodoc", 
+          PrintfToLog("WARNING: Error adding %d entries to global section of autodoc",
             numErr);
         AdocReleaseMutex();
       } else
@@ -1559,13 +1557,13 @@ CString CSerialEMDoc::DateTimeForFrameSaving(void)
 }
 
 // Return the two components for date-time based filenames
-void CSerialEMDoc::DateTimeComponents(CString &date, CString &time, BOOL numericDate, 
+void CSerialEMDoc::DateTimeComponents(CString &date, CString &time, BOOL numericDate,
   bool unique)
 {
   static CTime lastDateTime = CTime::GetCurrentTime();
   CTime ctDateTime = CTime::GetCurrentTime();
-  if (unique && ctDateTime.GetHour() == lastDateTime.GetHour() && 
-    ctDateTime.GetMinute() == lastDateTime.GetMinute() && 
+  if (unique && ctDateTime.GetHour() == lastDateTime.GetHour() &&
+    ctDateTime.GetMinute() == lastDateTime.GetMinute() &&
     ctDateTime.GetSecond() == lastDateTime.GetSecond())
     ctDateTime += CTimeSpan(0, 0, 0, 1);
   lastDateTime = ctDateTime;
@@ -1614,10 +1612,10 @@ void CSerialEMDoc::SaveActiveBuffer()
   OnFileSaveactive();
 }
 
-void CSerialEMDoc::OnUpdateWindowNew(CCmdUI* pCmdUI) 
+void CSerialEMDoc::OnUpdateWindowNew(CCmdUI* pCmdUI)
 {
   BOOL bEnable = (mWinApp->mActiveView->GetActiveImBuf()->mImage != NULL);
-  pCmdUI->Enable(bEnable);      
+  pCmdUI->Enable(bEnable);
 }
 
 // MULTIPLE FILE ROUTINES
@@ -1855,7 +1853,7 @@ int CSerialEMDoc::SaveBufferToFile(int bufNum, int fileNum, int inSect)
     mWinApp->mTSController->TSMessageBox(str);
     return 1;
   }
-  if (!imBufs[useBuf].mImage || (mStoreList[useFile].store->getWidth() && 
+  if (!imBufs[useBuf].mImage || (mStoreList[useFile].store->getWidth() &&
     (imBufs[useBuf].mImage->getWidth() != mStoreList[useFile].store->getWidth() ||
     imBufs[useBuf].mImage->getHeight() != mStoreList[useFile].store->getHeight()))) {
     str.Format("Buffer %c either has no image in it or cannot be saved to file #%d",
@@ -1905,7 +1903,7 @@ void CSerialEMDoc::ReadSetPropCalFiles()
   char *cwd = _getcwd(NULL, _MAX_PATH);
   if (cwd) {
     CString strCwd = cwd;
-    
+
     // append \ if necessary
     if (strCwd.GetAt(strCwd.GetLength() - 1) != '\\')
       strCwd += '\\';
@@ -1919,7 +1917,7 @@ void CSerialEMDoc::ReadSetPropCalFiles()
       mCurrentSettingsPath = strCwd + "\\" + SETTINGS_NAME;
     }
     if (CFile::GetStatus((LPCTSTR)mCurrentSettingsPath, status)) {
-      
+
       // If OK, try to read file: if get -1, only system path was read
       err = mParamIO->ReadSettings(mCurrentSettingsPath);
       mSettingsReadable = !err;
@@ -2015,7 +2013,7 @@ void CSerialEMDoc::ReadSetPropCalFiles()
   // Set the file options from defaults; set other file options EXCEPT the managed ones
   mFileOpt = mDefFileOpt;
   CopyDefaultToOtherFileOpts();
-    
+
   // Read calibrations
   strSys = mSystemPath + "\\" + mCalibrationName;
   if (CFile::GetStatus((LPCTSTR)strSys, status)) {
@@ -2041,7 +2039,7 @@ void CSerialEMDoc::ReadSetPropCalFiles()
   // Read basic mode file if non-empty
   if (!mBasicModeFile.IsEmpty())
     mParamIO->ReadDisableOrHideFile(mBasicModeFile, mWinApp->GetBasicIDsToHide(),
-      mWinApp->GetBasicLineHideIDs(), mWinApp->GetBasicIDsToDisable(), 
+      mWinApp->GetBasicLineHideIDs(), mWinApp->GetBasicIDsToDisable(),
       mWinApp->GetBasicHideStrings());
 
   // Fix intensities in settings
@@ -2058,9 +2056,9 @@ void CSerialEMDoc::FixSettingsForIALimitCal()
 }
 
 // Set the flag for whether to use an mdoc or not and copy to file options
-void CSerialEMDoc::SetDfltUseMdoc(int value) 
+void CSerialEMDoc::SetDfltUseMdoc(int value)
 {
-  mDfltUseMdoc = value; 
+  mDfltUseMdoc = value;
   mDefFileOpt.useMdoc = value > 0;
   mFileOpt = mDefFileOpt;
   CopyDefaultToOtherFileOpts();
@@ -2113,7 +2111,7 @@ void CSerialEMDoc::SetSystemPath(CString sysPath)
 // SETTINGS FILE HANDLING
 
 // Open a new settings file
-void CSerialEMDoc::OnSettingsOpen() 
+void CSerialEMDoc::OnSettingsOpen()
 {
   if (CheckBgkdScript())
     return;
@@ -2123,7 +2121,7 @@ void CSerialEMDoc::OnSettingsOpen()
   }
 
   CString newSettings, curDir = GetCurrentSettingsDir();
-  if (GetTextFileName(true, true, newSettings, NULL, &curDir)) 
+  if (GetTextFileName(true, true, newSettings, NULL, &curDir))
     return;
 
   ReadNewSettingsFile(newSettings);
@@ -2136,7 +2134,7 @@ int CSerialEMDoc::GetTextFileName(bool openOld, bool originalDir, CString &pathn
   static char szFilter[] = "Text files (*.txt)|*.txt|All files (*.*)|*.*||";
   if (!filter)
     filter = &szFilter[0];
-  MyFileDialog fileDlg(openOld, ".txt", NULL, 
+  MyFileDialog fileDlg(openOld, ".txt", NULL,
     OFN_HIDEREADONLY | (allowOverwrite ? 0 : OFN_OVERWRITEPROMPT),
     filter, NULL, !(originalDir || initialDir));
 
@@ -2163,15 +2161,15 @@ void CSerialEMDoc::ReadNewSettingsFile(CString newSettings)
 
   int err = mParamIO->ReadSettings(newSettings);
 
-  // If error, leave things as they were 
+  // If error, leave things as they were
   if (err > 0) {
-    AfxMessageBox("Error reading settings file; retaining previous file if any", 
+    AfxMessageBox("Error reading settings file; retaining previous file if any",
         MB_EXCLAME);
   } else {
     // Commit to change. if just sparse, mark as open but unreadable
     mSettingsReadable = true;
     mRecentSettings->Add(newSettings);
-    mSettingsOpen = err <= 0; 
+    mSettingsOpen = err <= 0;
     mCurrentSettingsPath = newSettings;
     mSettingsBackedUp = false;
   }
@@ -2179,14 +2177,14 @@ void CSerialEMDoc::ReadNewSettingsFile(CString newSettings)
   PostSettingsRead();
 }
 
-void CSerialEMDoc::OnUpdateSettingsOpen(CCmdUI* pCmdUI) 
+void CSerialEMDoc::OnUpdateSettingsOpen(CCmdUI* pCmdUI)
 {
-  pCmdUI->Enable(!mWinApp->DoingComplexTasks() && !(mWinApp->mNavigator && 
+  pCmdUI->Enable(!mWinApp->DoingComplexTasks() && !(mWinApp->mNavigator &&
     mWinApp->mNavigator->mNavAcquireDlg));
 }
 
 // Reread settings file
-void CSerialEMDoc::OnSettingsReadagain() 
+void CSerialEMDoc::OnSettingsReadagain()
 {
   if (CheckBgkdScript())
     return;
@@ -2200,16 +2198,16 @@ void CSerialEMDoc::OnSettingsReadagain()
   PostSettingsRead();
 }
 
-void CSerialEMDoc::OnUpdateSettingsReadagain(CCmdUI* pCmdUI) 
+void CSerialEMDoc::OnUpdateSettingsReadagain(CCmdUI* pCmdUI)
 {
   pCmdUI->Enable(!mWinApp->DoingComplexTasks() && mSettingsReadable && mSettingsOpen &&
   !(mWinApp->mNavigator &&mWinApp->mNavigator->mNavAcquireDlg));
-  UtilModifyMenuItem("Settings", ID_SETTINGS_READAGAIN, "&Reload " + 
+  UtilModifyMenuItem("Settings", ID_SETTINGS_READAGAIN, "&Reload " +
     (mSettingsReadable && mSettingsOpen ? mCurrentSettingsPath : "settings"));
 }
 
 // Save command, which can be save as if no file is open
-void CSerialEMDoc::OnSettingsSave() 
+void CSerialEMDoc::OnSettingsSave()
 {
   if (!mSettingsOpen) {
       OnSettingsSaveas();
@@ -2228,14 +2226,14 @@ void CSerialEMDoc::OnSettingsSaveas()
   SettingsSaveAs();
 }
 
-int CSerialEMDoc::SettingsSaveAs() 
+int CSerialEMDoc::SettingsSaveAs()
 {
   CString newFile, setDir = GetCurrentSettingsDir();
   if (GetTextFileName(false, true, newFile, NULL, &setDir, NULL, true))
     return 1;
 
   // Force a backup if it exists
-  mSettingsBackedUp = false;    
+  mSettingsBackedUp = false;
   ManageBackupFile(newFile, mSettingsBackedUp);
   ManageBackupFile(mCurScriptPackPath, mScriptPackBackedUp);
   mAbandonSettings = false;
@@ -2260,7 +2258,7 @@ int CSerialEMDoc::ExtSaveSettings()
 }
 
 // Close just means mark as not open for saving
-void CSerialEMDoc::OnSettingsClose() 
+void CSerialEMDoc::OnSettingsClose()
 {
   if (mSettingsOpen) {
     if (OfferToSaveSettings("close this settings file?") > 0)
@@ -2270,12 +2268,12 @@ void CSerialEMDoc::OnSettingsClose()
   mCurrentSettingsPath = "";
 }
 
-void CSerialEMDoc::OnUpdateSettingsClose(CCmdUI* pCmdUI) 
+void CSerialEMDoc::OnUpdateSettingsClose(CCmdUI* pCmdUI)
 {
   pCmdUI->Enable(mSettingsOpen);
 }
 
-void CSerialEMDoc::OnSettingsReaddefaults() 
+void CSerialEMDoc::OnSettingsReaddefaults()
 {
   if (CheckBgkdScript())
     return;
@@ -2290,17 +2288,17 @@ void CSerialEMDoc::OnSettingsReaddefaults()
   PostSettingsRead();
 }
 
-void CSerialEMDoc::OnUpdateSettingsReaddefaults(CCmdUI* pCmdUI) 
+void CSerialEMDoc::OnUpdateSettingsReaddefaults(CCmdUI* pCmdUI)
 {
-  pCmdUI->Enable(mSysSettingsReadable && !mWinApp->DoingComplexTasks());  
+  pCmdUI->Enable(mSysSettingsReadable && !mWinApp->DoingComplexTasks());
 }
 
-void CSerialEMDoc::OnSettingsAutosave() 
+void CSerialEMDoc::OnSettingsAutosave()
 {
-  mAutoSaveSettings = !mAutoSaveSettings;	
+  mAutoSaveSettings = !mAutoSaveSettings;
 }
 
-void CSerialEMDoc::OnUpdateSettingsAutosave(CCmdUI* pCmdUI) 
+void CSerialEMDoc::OnUpdateSettingsAutosave(CCmdUI* pCmdUI)
 {
  	pCmdUI->SetCheck(mAutoSaveSettings);
 }
@@ -2410,7 +2408,7 @@ void CSerialEMDoc::PostSettingsRead()
     mWinApp->mNavHelper->mMultiShotDlg->UpdateSettings();
   if (!mWinApp->GetStartingProgram()) {
     mWinApp->SetShowRemoteControl(saveRemote);
-    ((CMainFrame *)(mWinApp->m_pMainWnd))->InitializeDialogPositions(initialState, 
+    ((CMainFrame *)(mWinApp->m_pMainWnd))->InitializeDialogPositions(initialState,
       dlgPlacements, colorIndex);
     mWinApp->OpenOrCloseMacroEditors();
   }
@@ -2490,7 +2488,7 @@ void CSerialEMDoc::ManageBackupFile(CString strFile, BOOL &bBackedUp)
   CFileStatus status;
   if (bBackedUp || strFile.IsEmpty())
     return;
-  
+
   // Mark as backed up regardless of the outcome of these actions
   bBackedUp = true;
 
@@ -2524,7 +2522,7 @@ void CSerialEMDoc::ManageScriptPackBackup()
 int CSerialEMDoc::SaveSettingsOnExit()
 {
   int result, ind;
-  const char *calType[NUM_CAL_DONE_TYPES] = {"image shift", "stage shift", "focus", 
+  const char *calType[NUM_CAL_DONE_TYPES] = {"image shift", "stage shift", "focus",
     "beam intensity", "spot intensity", "high-focus mag or IS"};
   CString str, str2;
   SaveShortTermCal();
@@ -2574,7 +2572,7 @@ int CSerialEMDoc::SaveSettingsOnExit()
 }
 
 // Save the calibrations
-void CSerialEMDoc::OnSettingsSavecalibrations() 
+void CSerialEMDoc::OnSettingsSavecalibrations()
 {
 	SaveCalibrations();
 }
@@ -2600,12 +2598,12 @@ void CSerialEMDoc::SaveCalibrations()
 	}
 }
 
-void CSerialEMDoc::OnUpdateSettingsSavecalibrations(CCmdUI* pCmdUI) 
+void CSerialEMDoc::OnUpdateSettingsSavecalibrations(CCmdUI* pCmdUI)
 {
-  pCmdUI->Enable(mWinApp->GetAdministrator());  
+  pCmdUI->Enable(mWinApp->GetAdministrator());
 }
 
-// Keep track of 
+// Keep track of
 void CSerialEMDoc::CalibrationWasDone(int type)
 {
   if (type == CAL_DONE_CLEAR_ALL)
@@ -2676,7 +2674,7 @@ int CSerialEMDoc::AppendToLogBook(CString inString, CString title)
   CString name = mLogBook;
 
   try {
-    // Open the file for writing 
+    // Open the file for writing
     cFile = new CStdioFile(name, CFile::modeCreate | CFile::modeNoTruncate |
       CFile::modeWrite | CFile::shareDenyWrite);
     cFile->SeekToEnd();
@@ -2690,7 +2688,7 @@ int CSerialEMDoc::AppendToLogBook(CString inString, CString title)
     CString message = "Error writing to logbook: " + name;
     AfxMessageBox(message, MB_EXCLAME);
     retval = -1;
-  } 
+  }
   if (cFile) {
     cFile->Close();
     delete cFile;
@@ -2701,7 +2699,7 @@ int CSerialEMDoc::AppendToLogBook(CString inString, CString title)
 // Periodically save navigator, log, and settings, if user selected; save short term cal
 void CSerialEMDoc::AutoSaveFiles()
 {
-  CArray<JeolCartridgeData, JeolCartridgeData> *cartInfo = 
+  CArray<JeolCartridgeData, JeolCartridgeData> *cartInfo =
     mWinApp->mScope->GetJeolLoaderInfo();
   CString str;
   BOOL saveAuto = mWinApp->GetSaveAutosaveLog();
@@ -2711,14 +2709,14 @@ void CSerialEMDoc::AutoSaveFiles()
     !mWinApp->mTSController->StartedTiltSeries() && !mWinApp->mScope->GetDisconnected())
     OnSettingsSave();
   if (mWinApp->mLogWindow && saveAuto) {
-    if (saveAuto && (mWinApp->mLogWindow->GetSaveFile()).IsEmpty() && 
+    if (saveAuto && (mWinApp->mLogWindow->GetSaveFile()).IsEmpty() &&
       !mWinApp->DoingTasks())
       mWinApp->mLogWindow->SaveAndOfferName();
     else
       mWinApp->mLogWindow->UpdateSaveFile(saveAuto);
   }
   SaveShortTermCal();
-  if (mWinApp->mNavHelper->GetOpenedMultiGrid() && 
+  if (mWinApp->mNavHelper->GetOpenedMultiGrid() &&
     mWinApp->mMultiGridTasks->GetAdocChanged() && cartInfo->GetSize() > 0) {
     mWinApp->mMultiGridTasks->SaveSessionFile(str);
   }
@@ -2734,19 +2732,19 @@ void CSerialEMDoc::AppendToProgramLog(BOOL starting)
   CTimeSpan ts;
 
   if (starting) {
-    string.Format("%4d/%02d/%02d %02d:%02d:%02d %s start\n", ctdt.GetYear(), 
+    string.Format("%4d/%02d/%02d %02d:%02d:%02d %s start\n", ctdt.GetYear(),
       ctdt.GetMonth(), ctdt.GetDay(), ctdt.GetHour(), ctdt.GetMinute(), ctdt.GetSecond(),
       getenv("USERNAME"));
     mStartupTime = ctdt;
   } else {
     ts = ctdt - mStartupTime;
-    string.Format("%4d/%02d/%02d %02d:%02d:%02d exit\t%d\n", ctdt.GetYear(), 
-      ctdt.GetMonth(), ctdt.GetDay(), ctdt.GetHour(), ctdt.GetMinute(), ctdt.GetSecond(), 
+    string.Format("%4d/%02d/%02d %02d:%02d:%02d exit\t%d\n", ctdt.GetYear(),
+      ctdt.GetMonth(), ctdt.GetDay(), ctdt.GetHour(), ctdt.GetMinute(), ctdt.GetSecond(),
       ts.GetTotalSeconds());
   }
 
   try {
-    // Open the file for writing 
+    // Open the file for writing
     cFile = new CStdioFile(name, CFile::modeCreate | CFile::modeNoTruncate |
       CFile::modeWrite | CFile::shareDenyWrite);
     cFile->SeekToEnd();
@@ -2754,7 +2752,7 @@ void CSerialEMDoc::AppendToProgramLog(BOOL starting)
   }
   catch(CFileException *perr) {
     perr->Delete();
-  } 
+  }
   if (cFile) {
     cFile->Close();
     delete cFile;
@@ -2806,7 +2804,7 @@ void CSerialEMDoc::SaveShortTermCal()
 // Opens the file: gets the name and gets a new adoc
 void CSerialEMDoc::OnFileOpenMdoc()
 {
-  static char BASED_CODE szFilter[] = 
+  static char BASED_CODE szFilter[] =
     "Mdoc files (*.mdoc)|*.mdoc|All files (*.*)|*.*||";
   MyFileDialog fileDlg(FALSE, ".mdoc", NULL, OFN_HIDEREADONLY, szFilter);
   int result = fileDlg.DoModal();
@@ -2854,7 +2852,7 @@ int CSerialEMDoc::AddTitlesToFrameMdoc(CString &message)
   int ind, tInd = 1;
   MakeSerialEMTitle(mTitle, title);
   if (AdocSetKeyValue(ADOC_GLOBAL, 0, "T", title)) {
-    message = "adding title to autodoc";  
+    message = "adding title to autodoc";
     return 1;
   }
   str = mFrameTitle;
@@ -2870,14 +2868,14 @@ int CSerialEMDoc::AddTitlesToFrameMdoc(CString &message)
       sprintf(title, "T%d", tInd);
       tInd++;
       if (AdocSetKeyValue(ADOC_GLOBAL, 0, title, (LPCTSTR)line)) {
-        message = "adding title to autodoc";  
+        message = "adding title to autodoc";
         return 1;
       }
     }
   }
-  if (AdocSetFloat(ADOC_GLOBAL, 0, ADOC_VOLTAGE, 
+  if (AdocSetFloat(ADOC_GLOBAL, 0, ADOC_VOLTAGE,
     (float)mWinApp->mProcessImage->GetRecentVoltage())) {
-      message = "adding voltage to autodoc";  
+      message = "adding voltage to autodoc";
       return 1;
   }
   return 0;
@@ -2965,7 +2963,7 @@ int CSerialEMDoc::AddValueToFrameMdoc(CString key, CString value)
     return 1;
   if (AdocGetMutexSetCurrent(mFrameAdocIndex) < 0)
     return 2;
-  if (AdocSetKeyValue(mLastFrameSect < 0 ? ADOC_GLOBAL : "FrameSet", 
+  if (AdocSetKeyValue(mLastFrameSect < 0 ? ADOC_GLOBAL : "FrameSet",
     mLastFrameSect < 0 ? 0 : mLastFrameSect, (LPCTSTR)key, (LPCTSTR)value))
     retval = 4;
   AdocReleaseMutex();
@@ -3014,7 +3012,7 @@ const char * CSerialEMDoc::GetInitialDir()
 
 static char emptyString[] = "";
 
-MyFileDialog::MyFileDialog(BOOL bOpenFileDialog, LPCTSTR lpszDefExt, 
+MyFileDialog::MyFileDialog(BOOL bOpenFileDialog, LPCTSTR lpszDefExt,
     LPCTSTR lpszFileName, DWORD dwFlags,
     LPCTSTR lpszFilter, CWnd* pParentWnd, BOOL setCurrentDir)
 {
@@ -3109,7 +3107,7 @@ BOOL MyFileDlgThread::InitInstance()
   mfdTDp->done = true;
   return true;
 }
-  
+
 // Common routine to run the SDK file dialog
 int RunSdkFileDlg(MyFileDlgThreadData *mfdTDp)
 {
@@ -3119,7 +3117,7 @@ int RunSdkFileDlg(MyFileDlgThreadData *mfdTDp)
   char szFilter[100];       // buffer for filters
   BOOL retval;
   unsigned int i = 0;
-  
+
   // Replace | characters with nulls as required by file dialog
   if (mfdTDp->lpszFilter) {
     for (i = 0; i < strlen(mfdTDp->lpszFilter); i++) {
@@ -3140,21 +3138,21 @@ int RunSdkFileDlg(MyFileDlgThreadData *mfdTDp)
   ofn.lpstrFile = szFile;
   ofn.nMaxFile = sizeof(szFile);
   ofn.lpstrFilter = szFilter;
-    
+
   ofn.lpstrDefExt = mfdTDp->lpszDefExt;
-  
-  if (mfdTDp->lpszFileName != NULL) 
+
+  if (mfdTDp->lpszFileName != NULL)
     lstrcpyn(szFile, mfdTDp->lpszFileName, sizeof(szFile));
-  else 
+  else
     szFile[0] = 0x00;
-  
+
   ofn.lpstrFileTitle = szFileTitle;
   ofn.nMaxFileTitle = sizeof(szFileTitle);
   ofn.lpstrInitialDir = mfdTDp->lpstrInitialDir;
   ofn.Flags = mfdTDp->dwFlags;
-  
-  // Display the Open dialog box. 
-  
+
+  // Display the Open dialog box.
+
   if (mfdTDp->bOpenFileDialog)
     retval = ::GetOpenFileName(&ofn);
   else
@@ -3163,7 +3161,7 @@ int RunSdkFileDlg(MyFileDlgThreadData *mfdTDp)
     mfdTDp->pathName = szFile;
     mfdTDp->fileName = szFileTitle;
   }
-  
+
   return retval ? IDOK : IDCANCEL;
 }
 #endif

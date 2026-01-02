@@ -1,7 +1,6 @@
 // ScopeStatusDlg.cpp:    Shows various critical microscope parameters
 //
-// Copyright (C) 2003 by Boulder Laboratory for 3-Dimensional Electron 
-// Microscopy of Cells ("BL3DEMC") and the Regents of the University of
+// Copyright (C) 2003-2026 by the Regents of the University of
 // Colorado.  See Copyright.txt for full notice of copyright and limitations.
 //
 // Author: David Mastronarde
@@ -18,10 +17,8 @@
 #include "CameraController.h"
 #include "ComplexTasks.h"
 
-#ifdef _DEBUG
+#if defined(_DEBUG) && defined(_CRTDBG_MAP_ALLOC)
 #define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
 #endif
 
 /////////////////////////////////////////////////////////////////////////////
@@ -146,7 +143,7 @@ END_MESSAGE_MAP()
 /////////////////////////////////////////////////////////////////////////////
 // CScopeStatusDlg message handlers
 
-BOOL CScopeStatusDlg::OnInitDialog() 
+BOOL CScopeStatusDlg::OnInitDialog()
 {
   CToolDlg::OnInitDialog();
   HitachiParams *hitachi = mWinApp->GetHitachiParams();
@@ -172,7 +169,7 @@ BOOL CScopeStatusDlg::OnInitDialog()
     0, 0, 0, DEFAULT_CHARSET, OUT_CHARACTER_PRECIS,
     CLIP_CHARACTER_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH |
     FF_DONTCARE, mBigFontName);
-  
+
   // Set the fonts
   //m_statCurrent.SetFont(&mMedFont);
   m_statEMmode.SetFont(&mBigFont);
@@ -213,7 +210,7 @@ BOOL CScopeStatusDlg::OnInitDialog()
       SetDlgItemText(IDC_STATISORPS, "PLA");
       SEMTrace('1',"Setting label to PLA");
     }
-  } 
+  }
   if (mWinApp->mComplexTasks->GetHitachiWithoutZ()) {
     m_statStageZ.ShowWindow(SW_HIDE);
     m_statZlabel.ShowWindow(SW_HIDE);
@@ -223,7 +220,7 @@ BOOL CScopeStatusDlg::OnInitDialog()
     m_butFloat.ShowWindow(SW_HIDE);
     //m_statNano.ShowWindow(SW_HIDE);
   }
- 
+
   mCurrentSmoother.Setup(5, mSmootherThreshold1, mSmootherThreshold2);
   mInitialized = true;
 
@@ -239,7 +236,7 @@ BOOL CScopeStatusDlg::OnInitDialog()
   Update(0., 1, 0., 0., 0., 0., 0., 0., true, false, false, false, 0, 1, 0., 0., 0., -1,
     0., 1, -1, -999);
   mIntCalStatus = -1;
-    
+
   return TRUE;  // return TRUE unless you set the focus to a control
                 // EXCEPTION: OCX Property Pages should return FALSE
 }
@@ -253,11 +250,11 @@ int CScopeStatusDlg::DoseHeightAdjustment(void)
   return rect2.bottom - rect1.bottom;
 }
 
-void CScopeStatusDlg::Update(double inCurrent, int inMagInd, double inDefocus, 
+void CScopeStatusDlg::Update(double inCurrent, int inMagInd, double inDefocus,
                              double inISX, double inISY, double inStageX, double inStageY,
-                             double inStageZ, BOOL screenUp, BOOL smallScreen, 
-                             BOOL blanked, BOOL EFTEM, int STEM, int inSpot, 
-                             double rawIntensity, double inIntensity, double inObjective, 
+                             double inStageZ, BOOL screenUp, BOOL smallScreen,
+                             BOOL blanked, BOOL EFTEM, int STEM, int inSpot,
+                             double rawIntensity, double inIntensity, double inObjective,
                              int inVacStatus, double cameraLength, int inProbeMode,
                              int gunState, int inAlpha)
 {
@@ -309,7 +306,7 @@ void CScopeStatusDlg::Update(double inCurrent, int inMagInd, double inDefocus,
     inSpot = pendingSpot;
 
   // Update Image shift first since it depends on mag too
-  if (!noScope && (inISX != mISX || inISY != mISY || inMagInd != mMagInd || 
+  if (!noScope && (inISX != mISX || inISY != mISY || inMagInd != mMagInd ||
     mWinApp->GetCurrentCamera() != mCameraIndex)) {
       double specTotal = 0.;
       if (inMagInd)
@@ -326,7 +323,7 @@ void CScopeStatusDlg::Update(double inCurrent, int inMagInd, double inDefocus,
   }
 
   // Update align-focus window with select items
-  if (!noScope && mIntCalStatus > -2 && (inMagInd != mMagInd || inAlpha != mBeamAlpha || 
+  if (!noScope && mIntCalStatus > -2 && (inMagInd != mMagInd || inAlpha != mBeamAlpha ||
     tNanoChanged))
     mWinApp->mAlignFocusWindow.UpdateAutofocus(inMagInd);
   if (!noScope && mIntCalStatus > -2 && (inMagInd != mMagInd ||
@@ -337,7 +334,7 @@ void CScopeStatusDlg::Update(double inCurrent, int inMagInd, double inDefocus,
   if (STEM != mSTEM && JEOLscope && !mWinApp->GetStartingProgram()) {
     SetDlgItemText(IDC_STATISORPS, B3DCHOICE(STEM, "CLA",
       mWinApp->mScope->GetUsePLforIS() ? "PLA" : "IS"));
-    mWinApp->mAlignFocusWindow.SetDlgItemText(IDC_BUTRESETSHIFT, B3DCHOICE(STEM, 
+    mWinApp->mAlignFocusWindow.SetDlgItemText(IDC_BUTRESETSHIFT, B3DCHOICE(STEM,
       "Reset CLA", mWinApp->mScope->GetUsePLforIS() ? "Reset PLA" : "Reset IS"));
   }
 
@@ -350,7 +347,7 @@ void CScopeStatusDlg::Update(double inCurrent, int inMagInd, double inDefocus,
     if (STEM)
       inMag = B3DNINT(magTab[inMagInd].STEMmag);
     mCamLength = 0.;
-    if (inMag != mMag || mMagInd != inMagInd || STEM != mSTEM || 
+    if (inMag != mMag || mMagInd != inMagInd || STEM != mSTEM ||
       pendingMag != mPendingMag) {
         changed = true;
         if (STEM) {
@@ -405,7 +402,7 @@ void CScopeStatusDlg::Update(double inCurrent, int inMagInd, double inDefocus,
         }
       }
       if (cameraLength < 10.) {
-        m_strMag.Format("%s%.0f", showPending ? "->" : "D ",  
+        m_strMag.Format("%s%.0f", showPending ? "->" : "D ",
           cameraLength * (JEOLscope ? 100. : 1000.));
         m_statXLM.SetWindowText(JEOLscope ? "cm" : "mm");
       } else {
@@ -475,13 +472,13 @@ void CScopeStatusDlg::Update(double inCurrent, int inMagInd, double inDefocus,
   }
 
   // Update others
-  if (mWinApp->mCookerDlg && (!mLastCooker || magChanged || rawIntensity != mRawIntensity 
+  if (mWinApp->mCookerDlg && (!mLastCooker || magChanged || rawIntensity != mRawIntensity
     || inSpot != mSpot || inAlpha != mBeamAlpha || tNanoChanged))
     mWinApp->mCookerDlg->LiveUpdate(inMagInd, inSpot, rawIntensity, inAlpha, inProbeMode);
   mLastCooker = mWinApp->mCookerDlg != NULL;
 
   if (mWinApp->mAutocenDlg && (!mLastAutocen || magChanged ||
-    rawIntensity != mRawIntensity || inSpot != mSpot || 
+    rawIntensity != mRawIntensity || inSpot != mSpot ||
     tNanoChanged))
     mWinApp->mAutocenDlg->LiveUpdate(inMagInd, inSpot, inProbeMode, rawIntensity);
 
@@ -575,7 +572,7 @@ void CScopeStatusDlg::Update(double inCurrent, int inMagInd, double inDefocus,
 
   // Spot
   if (inSpot != mSpot || pendingSpot != mPendingSpot) {
-    m_strSpotSize.Format("%s%s%d", pendingSpot > 0 && inSpot < 10 ? "-" : "", 
+    m_strSpotSize.Format("%s%s%d", pendingSpot > 0 && inSpot < 10 ? "-" : "",
       pendingSpot > 0 ? ">" : " ", inSpot);
     m_statSpotSize.SetWindowText(m_strSpotSize);
     mSpot = inSpot;
@@ -652,7 +649,7 @@ void CScopeStatusDlg::Update(double inCurrent, int inMagInd, double inDefocus,
     mWinApp->SetLastActivityTime(curTime);
 }
 
-void CScopeStatusDlg::OnButfloat() 
+void CScopeStatusDlg::OnButfloat()
 {
   if (mScreenMeter)
     return;
@@ -667,7 +664,7 @@ void CScopeStatusDlg::OnButfloat()
   mWinApp->RestoreViewFocus();
 }
 
-void CScopeStatusDlg::MeterClosing() 
+void CScopeStatusDlg::MeterClosing()
 {
   mScreenMeter->GetWindowPlacement(&mMeterPlace);
   mScreenMeter = NULL;
@@ -681,12 +678,12 @@ WINDOWPLACEMENT *CScopeStatusDlg::GetMeterPlacement()
   return &mMeterPlace;
 }
 
-void CScopeStatusDlg::OnPaint() 
+void CScopeStatusDlg::OnPaint()
 {
   int border;
   CRect winRect, dcRect;
   COLORREF vacColors[3] = {RGB(0,255,0), RGB(255, 255, 0), RGB(255, 0, 0)};
-  COLORREF intColors[5] = {RGB(0,192,255), RGB(128, 255, 255), RGB(255,128,0),  
+  COLORREF intColors[5] = {RGB(0,192,255), RGB(128, 255, 255), RGB(255,128,0),
     RGB(255, 0, 255), RGB(212, 208, 200)};
   CPaintDC dc(this); // device context for painting
   DrawSideBorders(dc);
@@ -696,7 +693,7 @@ void CScopeStatusDlg::OnPaint()
 
   border = TopOffsetForFillingRectangle(winRect);
   if (mIntCalStatus >= 0) {
-    FillDialogItemRectangle(dc, winRect, &m_statSpotLabel, border, 
+    FillDialogItemRectangle(dc, winRect, &m_statSpotLabel, border,
       intColors[mIntCalStatus], dcRect);
     dc.SelectObject(&mProbeFont);
     dc.DrawText("Spot", &dcRect, DT_SINGLELINE | DT_CENTER | DT_VCENTER);
@@ -706,7 +703,7 @@ void CScopeStatusDlg::OnPaint()
     FillDialogItemRectangle(dc, winRect, mShowVacInEMmode ? &m_statEMmode : &m_statVacuum,
       border, mVacStatus >= 0 ? vacColors[mVacStatus] : RGB(210, 210, 210), dcRect);
     dc.SelectObject(&mProbeFont);
-    dc.DrawText(mShowVacInEMmode ? m_strEMmode : "VAC", &dcRect, 
+    dc.DrawText(mShowVacInEMmode ? m_strEMmode : "VAC", &dcRect,
       DT_SINGLELINE | DT_CENTER | DT_VCENTER);
   }
 
@@ -729,7 +726,7 @@ void CScopeStatusDlg::OnRspecVsCamDose()
   mWinApp->RestoreViewFocus();
 }
 
-void CScopeStatusDlg::OnButdose() 
+void CScopeStatusDlg::OnButdose()
 {
   if (mDoseMeter)
     return;

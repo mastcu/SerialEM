@@ -1,6 +1,6 @@
 // MacroProcessor.cpp:    Runs macros
 //
-// Copyright (C) 2003-2018 by the Regents of the University of
+// Copyright (C) 2003-2026 by the Regents of the University of
 // Colorado.  See Copyright.txt for full notice of copyright and limitations.
 //
 // Author: David Mastronarde
@@ -46,10 +46,12 @@
 #include "Utilities\KGetOne.h"
 #include "Shared\iimage.h"
 
+#if defined(_DEBUG) && defined(_CRTDBG_MAP_ALLOC)
+#define new DEBUG_NEW
+#endif
+
 
 #ifdef _DEBUG
-#undef THIS_FILE
-static char THIS_FILE[]=__FILE__;
 #define new DEBUG_NEW
 #endif
 
@@ -224,7 +226,7 @@ CMacroProcessor::CMacroProcessor(int index)
   mReservedWords.insert(tmpOp1, tmpOp1 + sizeof(tmpOp1) / sizeof(std::string));
   mReservedWords.insert(tmpOp2, tmpOp2 + sizeof(tmpOp2) / sizeof(std::string));
   mReservedWords.insert(keywords, keywords + sizeof(keywords) / sizeof(std::string));
-  mPythonOnlyCmdSet.insert(pythonOnlyCmds, pythonOnlyCmds + sizeof(pythonOnlyCmds) / 
+  mPythonOnlyCmdSet.insert(pythonOnlyCmds, pythonOnlyCmds + sizeof(pythonOnlyCmds) /
     sizeof(int));
   mDocWnd = mWinApp->mDocWnd;
   mMaxCmdToLoopOnIdle = 100;
@@ -311,7 +313,7 @@ void CMacroProcessor::ShutdownScrpLangScripting()
 {
   TerminateScrpLangProcess(mProcessorIndex);
   if (mWinApp->mPythonServer)
-    mWinApp->mPythonServer->ShutdownSocketIfOpen(mProcessorIndex ? 
+    mWinApp->mPythonServer->ShutdownSocketIfOpen(mProcessorIndex ?
       BKGD_PYTH_SOCK_ID : RUN_PYTH_SOCK_ID);
 }
 
@@ -561,14 +563,14 @@ void CMacroProcessor::OnUpdateClearPersistentVars(CCmdUI *pCmdUI)
 
 void CMacroProcessor::OnScriptSetIndentSize()
 {
-  KGetOneInt("Number of spaces for automatic indentation, or 0 to disable:", 
+  KGetOneInt("Number of spaces for automatic indentation, or 0 to disable:",
     mAutoIndentSize);
 }
 
 void CMacroProcessor::OntShowIndentButtons()
 {
   mShowIndentButtons = !mShowIndentButtons;
-  AfxMessageBox("Resize open script editor(s) to make this change take effect", 
+  AfxMessageBox("Resize open script editor(s) to make this change take effect",
     MB_ICONINFORMATION | MB_OK);
 }
 
@@ -587,7 +589,7 @@ void CMacroProcessor::SetUseMonoFont(BOOL inVal)
   mUseMonoFont = inVal;
   for (int ind = 0; ind < MAX_MACROS; ind++)
     if (mMacroEditer[ind])
-      mMacroEditer[ind]->m_editMacro.SetFont(mUseMonoFont ? 
+      mMacroEditer[ind]->m_editMacro.SetFont(mUseMonoFont ?
         &CMacroEditer::mMonoFont : &CMacroEditer::mDefaultFont);
 }
 
@@ -791,7 +793,7 @@ void CMacroProcessor::OnMacroListFunctions()
       mWinApp->AppendToLog(title);
       for (fun = 0; fun < (int)mFuncArray[index].GetSize(); fun++) {
         funcP = mFuncArray[index].GetAt(fun);
-        PrintfToLog("%s %d %d", (LPCTSTR)funcP->name, funcP->numNumericArgs, 
+        PrintfToLog("%s %d %d", (LPCTSTR)funcP->name, funcP->numNumericArgs,
           funcP->ifStringArg ? 1 : 0);
       }
     }
@@ -1009,7 +1011,7 @@ void CMacroProcessor::OnRunIfProgramIdle()
 void CMacroProcessor::OnUpdateRunIfProgramIdle(CCmdUI *pCmdUI)
 {
   pCmdUI->Enable(!mWinApp->DoingTasks());
-  pCmdUI->SetCheck(mWinApp->GetScriptToRunOnIdle().IsEmpty() ? 0 : 1 && 
+  pCmdUI->SetCheck(mWinApp->GetScriptToRunOnIdle().IsEmpty() ? 0 : 1 &&
     mWinApp->GetIdleScriptIntervalSec() > 0);
 }
 
@@ -1179,7 +1181,7 @@ int CMacroProcessor::TaskBusy()
       return 0;
     }
     if (mScrpLangData[pnd].commandReady) {
-      //SEMTrace('[', "Got ready, EC %d  RSL %d EO %d", mScrpLangData[pnd].externalControl, 
+      //SEMTrace('[', "Got ready, EC %d  RSL %d EO %d", mScrpLangData[pnd].externalControl,
       //mRunningScrpLang ? 1 : 0, mScrpLangData[pnd].errorOccurred);
       return 0;
     }
@@ -1216,8 +1218,8 @@ int CMacroProcessor::TaskBusy()
   // If waiting for marker, evaluate whether a new one is present on the proper image
   if (mWaitingForMarker) {
     imBuf = mWinApp->GetActiveNonStackImBuf();
-    if (imBuf->mTimeStamp == mMarkerTimeStamp && 
-      imBuf->mCaptured == mMarkerImageCapFlag && imBuf->mHasUserPt && 
+    if (imBuf->mTimeStamp == mMarkerTimeStamp &&
+      imBuf->mCaptured == mMarkerImageCapFlag && imBuf->mHasUserPt &&
       (!mStartedWithMarker || fabs(imBuf->mUserPtX - mOldMarkerX) > 0.01 ||
         fabs(imBuf->mUserPtY - mOldMarkerY) > 0.01)) {
       mWaitingForMarker = false;
@@ -1312,27 +1314,27 @@ int CMacroProcessor::TaskBusy()
     (mMakingDualMap && mNavHelper->GetAcquiringDual()) ||
     (mAutoContouring && mNavHelper->mAutoContouringDlg->DoingAutoContour()) ||
     mWinApp->mShiftCalibrator->CalibratingIS() ||
-    (mCamera->GetInitialized() && mCamera->CameraBusy() && 
-    (mCamera->GetTaskWaitingForFrame() || 
+    (mCamera->GetInitialized() && mCamera->CameraBusy() &&
+    (mCamera->GetTaskWaitingForFrame() ||
     !(mUsingContinuous && mCamera->DoingContinuousAcquire()))) ||
     (mWinApp->mMontageController->DoingMontage() &&
       !mWinApp->mMontageController->GetRunningMacro()) ||
     mWinApp->mParticleTasks->GetDVDoingDewarVac() ||
     mFocusManager->DoingFocus() || mWinApp->mAutoTuning->DoingAutoTune() ||
     mShiftManager->ResettingIS() || mWinApp->mCalibTiming->Calibrating() ||
-    mWinApp->mFilterTasks->RefiningZLP() || 
+    mWinApp->mFilterTasks->RefiningZLP() ||
     (mSavedMultiShot && CMultiShotDlg::DoingAutoStepAdj()) ||
     mNavHelper->mHoleFinderDlg->DoingMultiMapHoles() ||
     mNavHelper->mHoleFinderDlg->GetFindingHoles() || mNavHelper->GetRealigning() ||
-    (mWinApp->mComplexTasks->DoingTasks() && 
-      !mWinApp->mParticleTasks->GetMSRunningMacro()) || 
+    (mWinApp->mComplexTasks->DoingTasks() &&
+      !mWinApp->mParticleTasks->GetMSRunningMacro()) ||
     mWinApp->mMultiGridTasks->GetDoingMultiGrid() ||
     mWinApp->DoingRegisteredPlugCall()) ? 1 : 0;
 }
 
 bool CMacroProcessor::StartedTask()
 {
-  return DoingMacro() && (mStartedOtherTask || mMovedStage || mExposedFilm || 
+  return DoingMacro() && (mStartedOtherTask || mMovedStage || mExposedFilm ||
     mMovedScreen || mMovedAperture || mRanGatanScript || mStartedLongOp || mMovedPiezo ||
     mLoadingMap || mMakingDualMap || mAutoContouring || mTestScale);
 }
@@ -1357,7 +1359,7 @@ void CMacroProcessor::CleanupExternalProcess()
 // If the program is not busy, set the flag for running an external script and start it
 void CMacroProcessor::CheckAndSetupExternalControl(void)
 {
-  if (mWinApp->DoingTasks() || (mCamera->CameraBusy() && 
+  if (mWinApp->DoingTasks() || (mCamera->CameraBusy() &&
     !mCamera->DoingContinuousAcquire())) {
     mScrpLangData[0].externalControl = 0;
     return;
@@ -1753,7 +1755,7 @@ void CMacroProcessor::Stop(BOOL ifNow)
       mScrpLangData[pnd].disconnected = true;
       mScrpLangData[pnd].errorOccurred = SCRIPT_USER_STOP;
     }
-      
+
     if (mDoingMacro && mLastIndex >= 0)
       mAskRedoOnResume = true;
     SuspendMacro(mScrpLangData[pnd].disconnected);
@@ -1801,7 +1803,7 @@ int CMacroProcessor::TestTryLevelAndSkip(CString *mess)
       }
     }
 
-    // If the error is occurring in a statement that starts a block, then raise the 
+    // If the error is occurring in a statement that starts a block, then raise the
     // blocklevel before dropping it by number of pops
     if (mInInitialSubEval) {
       if (!mStrItems[0].CompareNoCase("IF") || !mStrItems[0].CompareNoCase("LOOP") ||
@@ -1852,14 +1854,14 @@ void CMacroProcessor::SuspendMacro(int abort)
   mLoopInOnIdle = false;
   if (!mDoingMacro)
     return;
-  //SEMTrace('[', "In abort %d  RSM %d EC %d disc %d", abort, mRunningScrpLang?1:0,  
+  //SEMTrace('[', "In abort %d  RSM %d EC %d disc %d", abort, mRunningScrpLang?1:0,
   //mScrpLangData.externalControl, mScrpLangData.disconnected ?1:0);
 
   // Intercept abort when doing external script, set error flag and set wait for command
   // Process user stop like any other exit, not like disconnect happened
-  if ((mRunningScrpLang || mCalledFromScrpLang) && 
+  if ((mRunningScrpLang || mCalledFromScrpLang) &&
     (!mScrpLangData[pnd].threadDone || mScrpLangData[pnd].externalControl)) {
-    if (mScrpLangData[pnd].disconnected && 
+    if (mScrpLangData[pnd].disconnected &&
       !(mScrpLangData[pnd].errorOccurred == SCRIPT_USER_STOP &&
         mScrpLangData[pnd].commandReady)) {
       mScrpLangData[pnd].externalControl = 0;
@@ -1924,7 +1926,7 @@ void CMacroProcessor::SuspendMacro(int abort)
 
   // restore user settings
   for (ind = 0; ind < (int)mSavedSettingNames.size(); ind++)
-    mParamIO->MacroSetSetting(CString(mSavedSettingNames[ind].c_str()), 
+    mParamIO->MacroSetSetting(CString(mSavedSettingNames[ind].c_str()),
       mSavedSettingValues[ind]);
   if (mSavedSettingNames.size() || mDeferSettingsUpdate)
     mWinApp->UpdateWindowSettings();
@@ -1954,7 +1956,7 @@ void CMacroProcessor::SuspendMacro(int abort)
   mScope->SetDoNextFEGFlashHigh(false);
 
   // Restore other things and make it non-resumable as they have no mechanism to resume
-  if (abort || mNumStatesToRestore > 0 || restoreArea || mFileOptToRestore || 
+  if (abort || mNumStatesToRestore > 0 || restoreArea || mFileOptToRestore ||
     mOtherFileOptToRestore) {
     mCurrentMacro = -1;
     mLastAborted = !mLastCompleted;
@@ -1971,14 +1973,14 @@ void CMacroProcessor::SuspendMacro(int abort)
       if (mBeamTiltXtoRestore[probe] > EXTRA_VALUE_TEST) {
         mScope->SetBeamTilt(mBeamTiltXtoRestore[probe], mBeamTiltYtoRestore[probe]);
         if (mFocusManager->DoingFocus())
-          mFocusManager->SetBaseBeamTilt(mBeamTiltXtoRestore[probe], 
+          mFocusManager->SetBaseBeamTilt(mBeamTiltXtoRestore[probe],
           mBeamTiltYtoRestore[probe]);
-        if (mWinApp->mAutoTuning->DoingZemlin() || 
+        if (mWinApp->mAutoTuning->DoingZemlin() ||
           mWinApp->mAutoTuning->GetDoingCtfBased())
-          mWinApp->mAutoTuning->SetBaseBeamTilt(mBeamTiltXtoRestore[probe], 
+          mWinApp->mAutoTuning->SetBaseBeamTilt(mBeamTiltXtoRestore[probe],
           mBeamTiltYtoRestore[probe]);
         if (mWinApp->mParticleTasks->DoingMultiShot())
-          mWinApp->mParticleTasks->SetBaseBeamTilt(mBeamTiltXtoRestore[probe], 
+          mWinApp->mParticleTasks->SetBaseBeamTilt(mBeamTiltXtoRestore[probe],
           mBeamTiltYtoRestore[probe]);
       }
       if (mAstigXtoRestore[probe] > EXTRA_VALUE_TEST) {
@@ -1987,7 +1989,7 @@ void CMacroProcessor::SuspendMacro(int abort)
           mWinApp->mParticleTasks->SetBaseAstig(mAstigXtoRestore[probe],
             mAstigYtoRestore[probe]);
       }
-      if (mBeamTiltXtoRestore[1 - probe] > EXTRA_VALUE_TEST || 
+      if (mBeamTiltXtoRestore[1 - probe] > EXTRA_VALUE_TEST ||
         mAstigXtoRestore[1 - probe] > EXTRA_VALUE_TEST) {
         mWinApp->AppendToLog("Switching probe modes to restore beam tilt and/or "
           "astigmatism value");
@@ -1996,7 +1998,7 @@ void CMacroProcessor::SuspendMacro(int abort)
           mScope->SetBeamTilt(mBeamTiltXtoRestore[1 - probe],
             mBeamTiltYtoRestore[1 - probe]);
         if (mAstigXtoRestore[1 - probe] > EXTRA_VALUE_TEST)
-          mScope->SetObjectiveStigmator(mAstigXtoRestore[1 - probe], 
+          mScope->SetObjectiveStigmator(mAstigXtoRestore[1 - probe],
             mAstigYtoRestore[1 - probe]);
         mScope->SetProbeMode(probe);
       }
@@ -2056,7 +2058,7 @@ void CMacroProcessor::SuspendMacro(int abort)
   mScrpLangData[pnd].externalControl = 0;
   mWinApp->UpdateBufferWindows();
   mWinApp->SetStatusText(mWinApp->DoingTiltSeries() &&
-    mWinApp->mTSController->GetRunningMacro() ? MEDIUM_PANE : COMPLEX_PANE, 
+    mWinApp->mTSController->GetRunningMacro() ? MEDIUM_PANE : COMPLEX_PANE,
     (IsResumable() && mWinApp->mNavigator && mWinApp->mNavigator->GetAcquiring()) ?
     "STOPPED NAV SCRIPT" : "");
   if (!mCamera->CameraBusy())
@@ -2096,7 +2098,7 @@ int CMacroProcessor::PythonErrorMessageBox()
   return MacMessageBox(str + "Python script; see log for information");
 }
 
-// Actual functions called by the various abort/suspend macros, to reduce the amount of 
+// Actual functions called by the various abort/suspend macros, to reduce the amount of
 // code compiled repeatedly
 void CMacroProcessor::LineAbort(CString str)
 {
@@ -2154,7 +2156,7 @@ void CMacroProcessor::SetIntensityFactor(int iDir)
 }
 
 // Get the next line or multiple lines if they end with backslash
-void CMacroProcessor::GetNextLine(CString * macro, int & currentIndex, CString &strLine, 
+void CMacroProcessor::GetNextLine(CString * macro, int & currentIndex, CString &strLine,
   bool commentOK)
 {
   int index, testInd;
@@ -2250,10 +2252,10 @@ int CMacroProcessor::ScanForName(int macroNumber, CString *macro)
       // Put all the functions in there that won't be eliminated by minimum argument
       // requirement and let pre-checking complain about details
       } else if (strItem[0].CompareNoCase(prefix + "ReadOnlyUnlessAdmin") == 0 ||
-        (strItem[0] == "#" && strItem[1].CompareNoCase("ReadOnlyUnlessAdmin")  
+        (strItem[0] == "#" && strItem[1].CompareNoCase("ReadOnlyUnlessAdmin")
           == 0)) {
         mReadOnlyStart[macroNumber] = lastIndex;
-      } else if (strItem[0].CompareNoCase("Function") == 0 && !strItem[1].IsEmpty() && 
+      } else if (strItem[0].CompareNoCase("Function") == 0 && !strItem[1].IsEmpty() &&
         !scriptLang) {
         funcP = new MacroFunction;
         funcP->name = strItem[1];
@@ -2360,7 +2362,7 @@ void CMacroProcessor::ScanMacroIfNeeded(int index, bool scanning)
 
 // Given the parsed line that calls a function, find the macro it is in and the function
 // structure in that macro's array, and index of first argument if any
-MacroFunction *CMacroProcessor::FindCalledFunction(CString strLine, bool scanning, 
+MacroFunction *CMacroProcessor::FindCalledFunction(CString strLine, bool scanning,
   int &macroNum, int &argInd, int currentMac)
 {
   int colonLineInd = strLine.Find("::");
@@ -2448,7 +2450,7 @@ MacroFunction *CMacroProcessor::FindCalledFunction(CString strLine, bool scannin
     if (!loop && retFunc)
       break;
   }
-  if (!retFunc) 
+  if (!retFunc)
     AfxMessageBox("No function has a matching name for this call:\n\n" + strLine,
           MB_EXCLAME);
   return retFunc;
@@ -2458,7 +2460,7 @@ MacroFunction *CMacroProcessor::FindCalledFunction(CString strLine, bool scannin
 // of -1 to assign it the current macro index.
 // The variable must not exist if mustBeNew is true; returns true for error and fills
 // in errStr if it is non-null
-bool CMacroProcessor::SetVariable(CString name, CString value, int type, 
+bool CMacroProcessor::SetVariable(CString name, CString value, int type,
   int index, bool mustBeNew, CString *errStr, CArray<ArrayRow, ArrayRow> *rowsFor2d)
 {
   int ind, leftInd, rightInd, rightInd2, arrInd, rowInd, numElements;
@@ -2494,12 +2496,12 @@ bool CMacroProcessor::SetVariable(CString name, CString value, int type,
   if (leftInd > 0 && FindAndCheckArrayIndexes(name, leftInd, rightInd, rightInd2, errStr)
     < 0)
       return true;
-    
+
   if ((leftInd < 0 && rightInd >= 0) || leftInd == 0 ||
-    (rightInd >= 0 && ((rightInd2 <= 0 && rightInd < name.GetLength() - 1) || 
+    (rightInd >= 0 && ((rightInd2 <= 0 && rightInd < name.GetLength() - 1) ||
     (rightInd2 > 0 && rightInd2 < name.GetLength() - 1)))) {
       if (errStr)
-        errStr->Format("Illegal use or placement of [ and/or ] in variable name %s", 
+        errStr->Format("Illegal use or placement of [ and/or ] in variable name %s",
           (LPCTSTR)name);
       return true;
   }
@@ -2513,7 +2515,7 @@ bool CMacroProcessor::SetVariable(CString name, CString value, int type,
     var = NULL;
   if (leftInd > 0 && !var) {
     if (errStr)
-      errStr->Format("Variable %s must be defined to assign to an array element", 
+      errStr->Format("Variable %s must be defined to assign to an array element",
       (LPCTSTR)temp);
     return true;
   }
@@ -2549,7 +2551,7 @@ bool CMacroProcessor::SetVariable(CString name, CString value, int type,
   }
   if (type != VARTYPE_INDEX && var->type == VARTYPE_INDEX) {
     if (errStr)
-      errStr->Format("Variable %s is a loop index variable and cannot be assigned to", 
+      errStr->Format("Variable %s is a loop index variable and cannot be assigned to",
       (LPCTSTR)name);
     return true;
   }
@@ -2557,7 +2559,7 @@ bool CMacroProcessor::SetVariable(CString name, CString value, int type,
     (type != VARTYPE_PERSIST && var->type == VARTYPE_PERSIST)) {
       if (errStr)
         errStr->Format("Variable %s is already defined as %spersistent and cannot"
-          " be reassigned as %spersistent", (LPCTSTR)name, 
+          " be reassigned as %spersistent", (LPCTSTR)name,
           (type != VARTYPE_PERSIST) ? "" : "non-", type == VARTYPE_PERSIST ? "" : "non-");
     return true;
   }
@@ -2569,7 +2571,7 @@ bool CMacroProcessor::SetVariable(CString name, CString value, int type,
 
     // For 2D array assignment, get row index, element and value pointers for that row
     if (rightInd2 > 0) {
-      rowInd = ConvertArrayIndex(name, leftInd, rightInd, var->name, 
+      rowInd = ConvertArrayIndex(name, leftInd, rightInd, var->name,
         (int)var->rowsFor2d->GetSize(), errStr);
       if (!rowInd)
         return true;
@@ -2578,11 +2580,11 @@ bool CMacroProcessor::SetVariable(CString name, CString value, int type,
       oldValuePtr = &arrRow.value;
       leftInd = rightInd + 1;
       rightInd = rightInd2;
-    } 
+    }
 
-    // If assigning to an array element, get the index value 
-    arrInd = ConvertArrayIndex(name, leftInd, rightInd, var->name, 
-      (var->rowsFor2d && rightInd2 <= 0) ? (int)var->rowsFor2d->GetSize() : 
+    // If assigning to an array element, get the index value
+    arrInd = ConvertArrayIndex(name, leftInd, rightInd, var->name,
+      (var->rowsFor2d && rightInd2 <= 0) ? (int)var->rowsFor2d->GetSize() :
       *oldNumElemPtr, errStr);
     if (!arrInd)
       return true;
@@ -2627,7 +2629,7 @@ bool CMacroProcessor::SetVariable(CString name, CString value, int type,
 }
 
 // Overloaded function can be passed a double instead of string value
-bool CMacroProcessor::SetVariable(CString name, double value, int type,  
+bool CMacroProcessor::SetVariable(CString name, double value, int type,
   int index, bool mustBeNew, CString *errStr, CArray<ArrayRow, ArrayRow> *rowsFor2d)
 {
   CString str;
@@ -2666,7 +2668,7 @@ bool SEMSetVariableWithStr(CString name, CString value, bool persistent, bool mu
       *errStr = "A script must be running to define a variable";
     return true;
   }
-  return winApp->mMacroProcessor->SetVariable(name, value, 
+  return winApp->mMacroProcessor->SetVariable(name, value,
     persistent ? VARTYPE_PERSIST : VARTYPE_REGULAR, -1, mustBeNew, errStr);
 }
 
@@ -2683,7 +2685,7 @@ bool SEMSetVariableWithDbl(CString name, double value, bool persistent, bool mus
     persistent ? VARTYPE_PERSIST : VARTYPE_REGULAR, -1, mustBeNew, errStr);
 }
 
-// Test whether a local variable is already defined as global, issue message and 
+// Test whether a local variable is already defined as global, issue message and
 // return 1 if it is, return 0 if not defined, -1 if already local
 int CMacroProcessor::LocalVarAlreadyDefined(CString & item, CString &strLine)
 {
@@ -2714,10 +2716,10 @@ Variable *CMacroProcessor::LookupVariable(CString name, int &ind)
   for (global = 0; global < 2; global++) {
     for (ind = 0; ind < mVarArray.GetSize(); ind++) {
       var = mVarArray[ind];
-      localVar = var->type == VARTYPE_LOCAL || 
+      localVar = var->type == VARTYPE_LOCAL ||
         (mLoopIndsAreLocal && var->type == VARTYPE_INDEX);
-      if ((global && !localVar) || (!global && localVar && var->callLevel == mCallLevel && 
-        (var->index == mCurrentMacro || var->type == VARTYPE_INDEX) && 
+      if ((global && !localVar) || (!global && localVar && var->callLevel == mCallLevel &&
+        (var->index == mCurrentMacro || var->type == VARTYPE_INDEX) &&
         var->definingFunc == mCallFunction[mCallLevel])) {
           if (var->name == name)
             return var;
@@ -2765,13 +2767,13 @@ void CMacroProcessor::ListVariables(int type)
           row = var->rowsFor2d->ElementAt(j);
           v = row.value;
           v.Replace("\n", " ");
-          s += "{ " + v + " }" + ((j == var->rowsFor2d->GetSize() - 1) ? " }" : "") + 
+          s += "{ " + v + " }" + ((j == var->rowsFor2d->GetSize() - 1) ? " }" : "") +
             "\r\n";
         }
       }
       else if (var->numElements > 1) {
         v = var->value;
-        // TODO DNM Separation with spaces not unambiguous if arrays contain string 
+        // TODO DNM Separation with spaces not unambiguous if arrays contain string
         // values with spaces
         v.Replace("\n", " ");
         s.Format("%s%s = { %s }", var->name, t, v);
@@ -2784,8 +2786,8 @@ void CMacroProcessor::ListVariables(int type)
 }
 
 // Removes all variables of the given type (or any type except persistent by default) AND
-// at the given level unless level < 0 (the default) AND with the given index value 
-// (or any index by default) 
+// at the given level unless level < 0 (the default) AND with the given index value
+// (or any index by default)
 void CMacroProcessor::ClearVariables(int type, int level, int index)
 {
   Variable *var;
@@ -2814,9 +2816,9 @@ void CMacroProcessor::ClearVariables(int type, int level, int index)
 
 // Given a variable reference that could include an array subscript, look up the variable
 // and row of a 2D array return pointers to the value and numElements elements, or return
-// NULL for those pointers for a 2D array without subscript.  Returns NULL for the 
+// NULL for those pointers for a 2D array without subscript.  Returns NULL for the
 // variable for any error condition
-Variable * CMacroProcessor::GetVariableValuePointers(CString & name, CString **valPtr, 
+Variable * CMacroProcessor::GetVariableValuePointers(CString & name, CString **valPtr,
   int **numElemPtr, const char *action, CString & errStr)
 {
   CString strCopy = name;
@@ -3021,7 +3023,7 @@ int CMacroProcessor::SubstituteVariables(CString * strItems, int maxItems, CStri
 }
 
 //  Get an array of floats from a variable
-float *CMacroProcessor::FloatArrayFromVariable(CString name, int &numVals, 
+float *CMacroProcessor::FloatArrayFromVariable(CString name, int &numVals,
   CString &report)
 {
   int index, index2, ix0, ix1, numRows = 1;
@@ -3105,7 +3107,7 @@ int CMacroProcessor::GetPairedFloatArrays(int itemInd, float **xArray, float **y
 }
 
 // Get a float or integer vector from a 1D array
-void CMacroProcessor::FillVectorFromArrayVariable(FloatVec *fvec, IntVec *ivec, 
+void CMacroProcessor::FillVectorFromArrayVariable(FloatVec *fvec, IntVec *ivec,
   Variable *var)
 {
   int index, ix0, ix1;
@@ -3167,7 +3169,7 @@ int CMacroProcessor::CheckForArrayAssignment(CString *strItems, int &firstInd)
 
 // Finds array indexes, if any, starting at position leftInd in item.  Returns 0 if there
 // is no index there or it is beyond end of string; 1 for an index, and -1 for various
-// errors.  Returns right1 with the index of the first right bracket or 0 for no index, 
+// errors.  Returns right1 with the index of the first right bracket or 0 for no index,
 // returns right2 with the index a second right brack or 0 if there is no 2nd index
 int CMacroProcessor::FindAndCheckArrayIndexes(CString &item, int leftIndex, int &right1,
   int &right2, CString *errStr)
@@ -3241,7 +3243,7 @@ int CMacroProcessor::ConvertArrayIndex(CString strItem, int leftInd, int rightIn
 // For a variable with possible multiple elements, find element at index arrInd
 // (numbered from 1, must be legal) and return starting index and index of terminator
 // which is null or \n
-void CMacroProcessor::FindValueAtIndex(CString &value, int arrInd, int &beginInd, 
+void CMacroProcessor::FindValueAtIndex(CString &value, int arrInd, int &beginInd,
   int &endInd)
 {
   endInd = -1;
@@ -3405,11 +3407,11 @@ int CMacroProcessor::EvaluateExpression(CString *strItems, int maxItems, CString
       strItems[left + 1 + ind] = strItems[right + 1 + ind];
     numItems -= right - left;
   }
-  return 0;  
+  return 0;
 }
 
 // Evaluates one arithmetic clause possibly inside parentheses
-int CMacroProcessor::EvaluateArithmeticClause(CString * strItems, int maxItems, 
+int CMacroProcessor::EvaluateArithmeticClause(CString * strItems, int maxItems,
                                               CString line, int &numItems)
 {
   int ind, dig, loop;
@@ -3559,7 +3561,7 @@ int CMacroProcessor::EvaluateArithmeticClause(CString * strItems, int maxItems,
         format = strItems[ind + 1];
         conv = format.GetAt(format.GetLength() - 1);
         if (allowedConv.Find(conv) < 0) {
-          MacMessageBox("The format string " + format + " does not end in one of: " + 
+          MacMessageBox("The format string " + format + " does not end in one of: " +
             allowedConv);
           return 1;
         }
@@ -3579,7 +3581,7 @@ int CMacroProcessor::EvaluateArithmeticClause(CString * strItems, int maxItems,
             gotDec = true;
 
           } else if (let < '0' || let > '9') {
-            MacMessageBox("The format string " + format + 
+            MacMessageBox("The format string " + format +
               " has a non-numeric character before the end");
             return 1;
           }
@@ -3613,7 +3615,7 @@ int CMacroProcessor::EvaluateIfStatement(CString *strItems, int maxItems, CStrin
   // Loop on parenthesis pairs containing one or more booleans
   for (;;) {
 
-    // Find the highest level with a boolean and the index of ( and ) for the first 
+    // Find the highest level with a boolean and the index of ( and ) for the first
     // occurrence of it.  Keep track of open paren index by level for this
     maxLevel = level = 0;
     left = right = -1;
@@ -3627,7 +3629,7 @@ int CMacroProcessor::EvaluateIfStatement(CString *strItems, int maxItems, CStrin
           right = ind;
         level--;
       }
-      if ((!strItems[ind].CompareNoCase("AND") || !strItems[ind].CompareNoCase("OR")) && 
+      if ((!strItems[ind].CompareNoCase("AND") || !strItems[ind].CompareNoCase("OR")) &&
         level > maxLevel) {
         maxLevel = level;
         left = leftInds[level];
@@ -3657,7 +3659,7 @@ int CMacroProcessor::EvaluateIfStatement(CString *strItems, int maxItems, CStrin
       strItems[left + 3 + ind] = strItems[right + 1 + ind];
     numItems -= right - left - 2;
   }
-  return 1; 
+  return 1;
 }
 
 // Evaluates a unit of an IF statement containing one or more boolean operators at one
@@ -3841,7 +3843,7 @@ void CMacroProcessor::SetReportedValues(CString *strItems, double val1, double v
     SetOneReportedValue(strItems, val6, 6);
 }
 
-void CMacroProcessor::SetRepValsAndVars(int firstInd, double val1, double val2, 
+void CMacroProcessor::SetRepValsAndVars(int firstInd, double val1, double val2,
   double val3, double val4, double val5, double val6)
 {
   SetReportedValues(&mStrItems[firstInd], val1, val2, val3, val4, val5, val6);
@@ -3851,7 +3853,7 @@ void CMacroProcessor::SetRepValsAndVars(int firstInd, double val1, double val2,
 // Pass the address of the FIRST optional variable
 // Clears all report variables when index is 1 and then requires report variables to
 // be new, so call with 1 first
-void CMacroProcessor::SetOneReportedValue(CString *strItems, CString *valStr, 
+void CMacroProcessor::SetOneReportedValue(CString *strItems, CString *valStr,
   double value, int index)
 {
   CString num, str;
@@ -4042,9 +4044,9 @@ int CMacroProcessor::CheckBlockNesting(int macroNum, int startLevel, int &tryLev
         labelSubBlock[numLabels++] = subBlockNum[1 + blockLevel];
         continue;
       }
-        
+
       // Repeat and DoMacro may not be called from inside any nest or called macro
-      if ((CMD_IS(REPEAT) || CMD_IS(DOMACRO) || CMD_IS(DOSCRIPT)) && 
+      if ((CMD_IS(REPEAT) || CMD_IS(DOMACRO) || CMD_IS(DOSCRIPT)) &&
         (blockLevel >= 0 || mCallLevel))
         FAIL_CHECK_LINE("Repeat, DoMacro, or DoScript statement cannot be used\n"
         "inside a called script, an IF block, or a loop,");
@@ -4092,7 +4094,7 @@ int CMacroProcessor::CheckBlockNesting(int macroNum, int startLevel, int &tryLev
         }
 
         // For calling a macro, check that it is not too deep and that it's not circular
-        // There is no good way to check circular function calls, so this relies on 
+        // There is no good way to check circular function calls, so this relies on
         // run-time testing
         if (!(CMD_IS(DOMACRO) || CMD_IS(DOSCRIPT))) {
           mCallLevel++;
@@ -4158,8 +4160,8 @@ int CMacroProcessor::CheckBlockNesting(int macroNum, int startLevel, int &tryLev
         FAIL_CHECK_NOLINE("EndPythonScript line with no preceding PythonScript line");
 
       // Examine loops
-      } else if ((CMD_IS(LOOP) && !strItems[1].IsEmpty()) || 
-        (CMD_IS(DOLOOP) && !strItems[3].IsEmpty()) || 
+      } else if ((CMD_IS(LOOP) && !strItems[1].IsEmpty()) ||
+        (CMD_IS(DOLOOP) && !strItems[3].IsEmpty()) ||
         (isIF && !strItems[3].IsEmpty()) || isTRY) {
         blockLevel++;
         subBlockNum[1 + blockLevel]++;
@@ -4287,11 +4289,11 @@ int CMacroProcessor::CheckBlockNesting(int macroNum, int startLevel, int &tryLev
       }
 
       // Check commands where arithmetic is allowed
-      if (ArithmeticIsAllowed(strItems[0]) && 
+      if (ArithmeticIsAllowed(strItems[0]) &&
         CheckBalancedParentheses(strItems, MAX_MACRO_TOKENS, strLine, errmess,
           mCheckingParseQuotes))
         return 99;
-      
+
       if (CMD_IS(SKIPIFVERSIONLESSTHAN) && currentIndex < macro->GetLength())
         GetNextLine(macro, currentIndex, strLine);
     }
@@ -4351,13 +4353,13 @@ int CMacroProcessor::CheckLegalCommandAndArgNum(CString * strItems, int cmdIndex
 }
 
 // Check a line for balanced parentheses and no empty clauses
-int CMacroProcessor::CheckBalancedParentheses(CString *strItems, int maxItems, 
+int CMacroProcessor::CheckBalancedParentheses(CString *strItems, int maxItems,
   CString &strLine, CString &errmess, bool useQuotes)
 {
   int ind, level = 0;
   if (SeparateParentheses(strItems, maxItems, useQuotes))
     FAIL_CHECK_LINE("Too many items in line after separating out parentheses")
-    
+
   for (ind = 0; ind < maxItems && !strItems[ind].IsEmpty(); ind++) {
     if (strItems[ind] == "(") {
       level++;
@@ -4393,7 +4395,7 @@ int CMacroProcessor::SeparateParentheses(CString *strItems, int maxItems, bool u
 
     // Expand an item with more than one character
     if (length > 1 && (strItems[ind].GetAt(0) == '(' ||
-      (strItems[ind].GetAt(length - 1) == ')' && 
+      (strItems[ind].GetAt(length - 1) == ')' &&
         !(useQuotes && strItems[ind].Find('(') > 0)))) {
         if (numItems >= maxItems)
           return 1;
@@ -4436,7 +4438,7 @@ bool CMacroProcessor::IsMacroBeingUsed(int which)
 
 // Skips to the end of a block or to a catch or else statement, leaves current index
 // at start of statement to be processed (the end statement, or past an else or catch)
-int CMacroProcessor::SkipToBlockEnd(int type, CString line, int *numPops, 
+int CMacroProcessor::SkipToBlockEnd(int type, CString line, int *numPops,
   int *delTryLevel)
 {
   CString *macro = &mMacros[mCurrentMacro];
@@ -4482,7 +4484,7 @@ int CMacroProcessor::SkipToBlockEnd(int type, CString line, int *numPops,
       if ((!ifLevel && ((type == SKIPTO_ELSE_ENDIF && (CMD_IS(ELSE) || CMD_IS(ELSEIF)))
         || ((type == SKIPTO_ENDIF || type == SKIPTO_ELSE_ENDIF) && CMD_IS(ENDIF))) ||
         (!loopLevel && type == SKIPTO_ENDLOOP && CMD_IS(ENDLOOP))) ||
-        (!popTry && type == SKIPTO_CATCH && isCATCH) || 
+        (!popTry && type == SKIPTO_CATCH && isCATCH) ||
         (!popTry && type == SKIPTO_ENDTRY && CMD_IS(ENDTRY))) {
         if (CMD_IS(ELSE) || isCATCH)
           mCurrentIndex = nextIndex;
@@ -4517,7 +4519,7 @@ int CMacroProcessor::SkipToBlockEnd(int type, CString line, int *numPops,
 }
 
 // Skip to a label and return the number of blocks levels to descend
-int CMacroProcessor::SkipToLabel(CString label, CString line, int &numPops, 
+int CMacroProcessor::SkipToLabel(CString label, CString line, int &numPops,
   int &delTryLevel)
 {
   CString *macro = &mMacros[mCurrentMacro];
@@ -4555,12 +4557,12 @@ int CMacroProcessor::SkipToLabel(CString label, CString line, int &numPops,
         delTryLevel--;
     }
   }
-  AfxMessageBox("No label found to skip forward to from script line:\n\n" + line, 
+  AfxMessageBox("No label found to skip forward to from script line:\n\n" + line,
     MB_EXCLAME);
   return 1;
 }
 
-// Performs all changes needed when leaving a call level (script or function) and 
+// Performs all changes needed when leaving a call level (script or function) and
 // returning to the caller
 void CMacroProcessor::LeaveCallLevel(bool popBlocks)
 {
@@ -4601,7 +4603,7 @@ BOOL CMacroProcessor::WordIsReserved(CString str)
 bool CMacroProcessor::ArithmeticIsAllowed(CString &str)
 {
   std::string sstr = (LPCTSTR)str;
-  return ((str.Find("SET") == 0 && mArithDenied.count(sstr) <= 0) || 
+  return ((str.Find("SET") == 0 && mArithDenied.count(sstr) <= 0) ||
     mArithAllowed.count(sstr) > 0);
 }
 
@@ -4750,7 +4752,7 @@ bool CMacroProcessor::CheckCameraBinning(double binDblIn, int &binning, CString 
   return true;
 }
 
-// Takes incoming set number or letter in strItem and itemInt, checks its validity, and 
+// Takes incoming set number or letter in strItem and itemInt, checks its validity, and
 // puts a set number converted from a letter in itemInt and copy the number to index
 // Returns true with message on error.  Also assigns conset pointer to mCamSet
 bool CMacroProcessor::CheckAndConvertCameraSet(CString &strItem, int &itemInt, int &index,
@@ -4873,7 +4875,7 @@ int CMacroProcessor::TestIncrementalImageShift(double delX, double delY)
 {
   CString str;
   if (!mShiftManager->ImageShiftIsOK(delX, delY, true)) {
-    str.Format("Image shift by %.3f %.3f would exceed the limit and is not being done", 
+    str.Format("Image shift by %.3f %.3f would exceed the limit and is not being done",
       delX, delY);
     mWinApp->AppendToLog(str, mLogAction);
     SetReportedValues(1.);
@@ -4895,7 +4897,7 @@ void CMacroProcessor::SaveControlSet(int index)
 
 // Restores a single control set given by index, or all control sets if index is < 0
 // Erases the corresponding saved set if erase is true; otherwise (and if index is < 0)
-// 
+//
 bool CMacroProcessor::RestoreCameraSet(int index, BOOL erase)
 {
   bool retval = true;
@@ -4972,12 +4974,12 @@ CMapDrawItem *CMacroProcessor::CurrentOrIndexedNavItem(int &index, CString &strL
 
 // Computes number of montage pieces needed to achieve the minimum size in microns given
 // the camera number of pixels in camSize and fractional overlap
-int CMacroProcessor::PiecesForMinimumSize(float minMicrons, int camSize, 
+int CMacroProcessor::PiecesForMinimumSize(float minMicrons, int camSize,
   float fracOverlap)
 {
   int binning = mConSets[RECORD_CONSET].binning;
   int magInd = mScope->GetMagIndex();
-  float pixel = mShiftManager->GetPixelSize(mWinApp->GetCurrentCamera(), magInd) * 
+  float pixel = mShiftManager->GetPixelSize(mWinApp->GetCurrentCamera(), magInd) *
     binning;
   int minPixels = (int)(minMicrons / pixel);
   camSize /= binning;
@@ -4998,7 +5000,7 @@ int CMacroProcessor::EnsureMacroRunnable(int macnum)
       nam.Format("# %d", macnum + 1);
     SEMMessageBox(("The script you selected to run (" + nam) + ") is empty", MB_EXCLAME);
     return 1;
-  } 
+  }
   PrepareForMacroChecking(macnum);
   err = CheckForScriptLanguage(macnum, false);
   mMacroForScrpLang = "";
@@ -5059,7 +5061,7 @@ int CMacroProcessor::CheckForScriptLanguage(int macNum, bool justCheckStart, int
   isPython = line.Find("pyth") == 0;
   mScrpLangData[pnd].strItems[0] = "";
   if (isPython) {
-    if (mWinApp->mPythonServer->StartServerIfNeeded(pnd ? BKGD_PYTH_SOCK_ID : 
+    if (mWinApp->mPythonServer->StartServerIfNeeded(pnd ? BKGD_PYTH_SOCK_ID :
       RUN_PYTH_SOCK_ID))
       return 1;
 
@@ -5068,7 +5070,7 @@ int CMacroProcessor::CheckForScriptLanguage(int macNum, bool justCheckStart, int
     if (line.Find("python") == 0) {
       line = line.Mid(6).Trim();
       for (ind = 0; ind < (int)mPathsToPython.size(); ind++) {
-        if ((line.IsEmpty() && !ind) || (!line.IsEmpty() && 
+        if ((line.IsEmpty() && !ind) || (!line.IsEmpty() &&
           mVersionsOfPython[ind].find((LPCTSTR)line) == 0)) {
           mScrpLangData[pnd].strItems[0] = mPathsToPython[ind].c_str();
           mScrpLangData[pnd].strItems[0] += "\\";
@@ -5085,7 +5087,7 @@ int CMacroProcessor::CheckForScriptLanguage(int macNum, bool justCheckStart, int
           " matching " + name);
         return 1;
       }
-      mScrpLangData[pnd].strItems[0] = "\"" + mScrpLangData[pnd].strItems[0] + 
+      mScrpLangData[pnd].strItems[0] = "\"" + mScrpLangData[pnd].strItems[0] +
         "python.exe\"";
     }
   } else {
@@ -5107,7 +5109,7 @@ int CMacroProcessor::CheckForScriptLanguage(int macNum, bool justCheckStart, int
   if (isPython) {
     startLine += 27;
     name.Format("sys.path.insert(0, \"%s\")\r\n", modulePath);
-    line.Format("ConnectToSEM(%d)\r\n", CBaseServer::GetPortForSocketIndex(pnd ? 
+    line.Format("ConnectToSEM(%d)\r\n", CBaseServer::GetPortForSocketIndex(pnd ?
       BKGD_PYSOCK_IND : REGULAR_PYSOCK_IND));
     mMacroForScrpLang = "import sys\r\n" +
       name +
@@ -5294,7 +5296,7 @@ int CMacroProcessor::CheckForScriptLanguage(int macNum, bool justCheckStart, int
     mMacNumAtScrpLine.push_back(includeInd);
     mMacStartLineInScrp.push_back((int)mLineInSrcMacro.size());
     mIncludedFiles.push_back(includeInd < 0 ? (LPCTSTR)fileName : "");
-    IndentAndAppendToScript(includeInd < 0 ? fileStr : mMacros[includeInd], 
+    IndentAndAppendToScript(includeInd < 0 ? fileStr : mMacros[includeInd],
       mMacroForScrpLang, indentStr, isPython);
 
     // Start new block of main script
@@ -5331,7 +5333,7 @@ int CMacroProcessor::CheckForScriptLanguage(int macNum, bool justCheckStart, int
 
 // Copy lines from source to copy, indenting by indentStr and keeping track of first real
 // line
-void CMacroProcessor::IndentAndAppendToScript(CString &source, CString &copy, 
+void CMacroProcessor::IndentAndAppendToScript(CString &source, CString &copy,
   CString &indentStr, bool isPython)
 {
   int currentInd = 0, lineNum = 0, length = source.GetLength();
@@ -5381,9 +5383,9 @@ void CMacroProcessor::DoReplacementsInPythonLine(CString & line)
   }
 }
 
-// Test whether an embedded script can be run by looking for the End line, and return the 
+// Test whether an embedded script can be run by looking for the End line, and return the
 // index of that lineplus the index past that line
-bool CMacroProcessor::IsEmbeddedPythonOK(int macNum, int currentInd, int &lastInd, 
+bool CMacroProcessor::IsEmbeddedPythonOK(int macNum, int currentInd, int &lastInd,
   int &newCurrentInd)
 {
   CString line, strItems[2];
@@ -5401,7 +5403,7 @@ bool CMacroProcessor::IsEmbeddedPythonOK(int macNum, int currentInd, int &lastIn
   return false;
 }
 
-// Return the number of lines through the current index 
+// Return the number of lines through the current index
 int CMacroProcessor::CountLinesToCurIndex(int macNum, int curIndex)
 {
   int currentInd = 0, lineNum = 0;
@@ -5471,7 +5473,7 @@ void CMacroProcessor::EnhancedExceptionToLog(CString &str)
       continue;
     }
 
-    // Search the vectors for which script block this occurs in and 
+    // Search the vectors for which script block this occurs in and
     for (ind = (int)mMacStartLineInScrp.size() - 1; ind >= 0; ind--) {
       if (lineNum >= mMacStartLineInScrp[ind]) {
         lineInSrc = mLineInSrcMacro[lineNum];
@@ -5501,8 +5503,8 @@ void CMacroProcessor::EnhancedExceptionToLog(CString &str)
           if (mMacNumAtScrpLine[ind - 1] == mMacNumAtScrpLine[0])
             line += "   (or maybe just before #include " + name + ")";
           else
-            line += "   (or maybe right at the end of " + 
-            (mMacNumAtScrpLine[ind - 1] < 0 ? CString(mIncludedFiles[ind - 1].c_str()) : 
+            line += "   (or maybe right at the end of " +
+            (mMacNumAtScrpLine[ind - 1] < 0 ? CString(mIncludedFiles[ind - 1].c_str()) :
               mMacNames[mMacNumAtScrpLine[ind - 1]]) + ")";
         }
         mWinApp->AppendToLog(line);
@@ -5523,7 +5525,7 @@ void CMacroProcessor::EnhancedExceptionToLog(CString &str)
 
   // Try to show error
   if (macNum >= 0 && macNum < MAX_MACROS && mLastPythonErrorLine > 0 &&
-    mMacroEditer[macNum]) 
+    mMacroEditer[macNum])
     mMacroEditer[macNum]->SelectAndShowLine(mLastPythonErrorLine);
 }
 
@@ -5645,7 +5647,7 @@ UINT CMacroProcessor::RunScriptLangProc(LPVOID pParam)
       &piProcInfo);  // receives PROCESS_INFORMATION
 
     // Close handles to the stdin and stdout pipes no longer needed by the child process
-    // If they are not explicitly closed, there is no way to recognize that the child 
+    // If they are not explicitly closed, there is no way to recognize that the child
     // process has ended.
     CloseHandle(hChildStd_OUT_Wr);
     CloseHandle(hChildStd_ERR_Wr);
@@ -5727,12 +5729,12 @@ UINT CMacroProcessor::RunScriptLangProc(LPVOID pParam)
 }
 
 // Function for the boilerplate in creating a pipe
-int CMacroProcessor::CreateOnePipe(HANDLE * childRd, HANDLE * childWr, 
+int CMacroProcessor::CreateOnePipe(HANDLE * childRd, HANDLE * childWr,
   SECURITY_ATTRIBUTES * saAttr, bool setForWrite, int pnd, const char *descrip)
 {
   // Create a pipe for the child process's STDOUT.
   if (!CreatePipe(childRd, childWr, saAttr, 0)) {
-    mScrpLangData[pnd].strItems[0].Format("Error creating %s pipe for Python process", 
+    mScrpLangData[pnd].strItems[0].Format("Error creating %s pipe for Python process",
       descrip);
     return 1;
   }
@@ -5832,9 +5834,9 @@ int CMacroProcessor::LookupCommandIndex(CString & item)
   return CME_NOTFOUND;
 }
 
-// Find a text file given the ID, performing a check on its existent specified by 
+// Find a text file given the ID, performing a check on its existent specified by
 // checkType and returning its index in the array
-FileForText *CMacroProcessor::LookupFileForText(CString &ID, int checkType, 
+FileForText *CMacroProcessor::LookupFileForText(CString &ID, int checkType,
   CString &strLine, int &index)
 {
   FileForText *tfile;
@@ -5853,7 +5855,7 @@ FileForText *CMacroProcessor::LookupFileForText(CString &ID, int checkType,
       return tfile;
     }
   }
-  if (errStr.IsEmpty() && checkType != TXFILE_MUST_NOT_EXIST && 
+  if (errStr.IsEmpty() && checkType != TXFILE_MUST_NOT_EXIST &&
     checkType != TXFILE_QUERY_ONLY)
       errStr = "There is no open file with identifier " + ID;
   if (!errStr.IsEmpty())
@@ -5942,7 +5944,7 @@ int CMacroProcessor::RunScriptFromFile(CString &filename, bool deleteFile, CStri
     mCalledFromSEMmacro = true;
     StartRunningScrpLang();
   }
-  
+
   // Set it up like callScript
   mCallIndex[mCallLevel++] = mCurrentIndex;
   mCurrentMacro = index;
@@ -5959,7 +5961,7 @@ int CMacroProcessor::RunScriptFromFile(CString &filename, bool deleteFile, CStri
 // Extract part of entered line after substituting variables
 // No longer a convenience!  You must use these instead of StripItems to get the final
 // string argument for external scripting
-void CMacroProcessor::SubstituteLineStripItems(CString & strLine, int numStrip, 
+void CMacroProcessor::SubstituteLineStripItems(CString & strLine, int numStrip,
   CString &strCopy)
 {
   if (!mRunningScrpLang)
@@ -5985,7 +5987,7 @@ int CMacroProcessor::CheckAndConvertLDAreaLetter(CString &item, int needOnOrOff,
   int &index, CString &strLine)
 {
   if (needOnOrOff && !BOOL_EQUIV(mWinApp->LowDoseMode(), needOnOrOff > 0)) {
-    ABORT_NORET_LINE("You must" + CString(needOnOrOff > 0 ? "" : " NOT") + 
+    ABORT_NORET_LINE("You must" + CString(needOnOrOff > 0 ? "" : " NOT") +
       " be in low dose mode to use this command:\n\n");
     return 1;
   }
@@ -6065,8 +6067,8 @@ void CMacroProcessor::UpdateLDAreaIfSaved()
 }
 
 // Get all the optional arguments needed for autocontouring starting at index fi
-void CMacroProcessor::GetAutocontourParams(int fi, float &target, float &minSize, 
-  float &maxSize, float &relThresh, float &absThresh, BOOL &usePoly, 
+void CMacroProcessor::GetAutocontourParams(int fi, float &target, float &minSize,
+  float &maxSize, float &relThresh, float &absThresh, BOOL &usePoly,
   float &expandDist)
 {
   mNavHelper->mAutoContouringDlg->SyncToMasterParams();
@@ -6079,7 +6081,7 @@ void CMacroProcessor::GetAutocontourParams(int fi, float &target, float &minSize
   absThresh = param->useAbsThresh ? param->absThreshold : 0.f;
   usePoly = (mItemEmpty[fi + 5] || mItemInt[fi + 5] > 0) ?
     param->useCurrentPolygon : mItemInt[fi + 5] > 0;
-  
+
   // There is no usePoly option for FindMultiMapHoles, in which case fi = 5
   int expInd = fi == 5 ? fi + 5 : fi + 6;
   if (mItemEmpty[expInd])
@@ -6161,7 +6163,7 @@ int CMacroProcessor::MakeNewTempMacro(CString &strVar, CString &strIndex, bool t
 
 // Test whether a stage restore is specified in the first passed item, and use the current
 // stage position if the next passed items do not have one
-bool CMacroProcessor::SetupStageRestoreAfterTilt(CString *strItems, double &stageX, 
+bool CMacroProcessor::SetupStageRestoreAfterTilt(CString *strItems, double &stageX,
   double &stageY)
 {
   double stageZ;
@@ -6177,7 +6179,7 @@ bool CMacroProcessor::SetupStageRestoreAfterTilt(CString *strItems, double &stag
   return true;
 }
 
-// DO stage relaxation if backlash is valid.  Returns 1 for failure to get stage 
+// DO stage relaxation if backlash is valid.  Returns 1 for failure to get stage
 // position, 0 if a move was started, -1 if backlash not valid
 int CMacroProcessor::DoStageRelaxation(double delX)
 {
@@ -6200,7 +6202,7 @@ int CMacroProcessor::DoStageRelaxation(double delX)
   return -1;
 }
 
-ScriptLangData *SEMGetScriptLangData() 
+ScriptLangData *SEMGetScriptLangData()
 {
-  return &CMacroProcessor::mScrpLangData[0]; 
+  return &CMacroProcessor::mScrpLangData[0];
 }

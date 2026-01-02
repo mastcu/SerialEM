@@ -1,6 +1,10 @@
 #include "stdafx.h"
 #include "XWinVer.h"
 
+#if defined(_DEBUG) && defined(_CRTDBG_MAP_ALLOC)
+#define new DEBUG_NEW
+#endif
+
 // DNM 3/11/15: GetVersionEx is now deprecated in VS2013, so I added the IsVersion
 // function and made all of these call it
 BOOL Is2000OrGreater()
@@ -13,7 +17,7 @@ BOOL Is2000OrGreater()
 	DWORD dwPlatformId   = osinfo.dwPlatformId;
 	DWORD dwMajorVersion = osinfo.dwMajorVersion;
 
-	return ((dwPlatformId == 2) && 
+	return ((dwPlatformId == 2) &&
 			(dwMajorVersion >= 5)); */
   return IsVersion(5, VER_GREATER_EQUAL, 0, VER_GREATER_EQUAL);
 }
@@ -29,8 +33,8 @@ BOOL Is2000()
 	DWORD dwMajorVersion = osinfo.dwMajorVersion;
 	DWORD dwMinorVersion = osinfo.dwMinorVersion;
 
-	return ((dwPlatformId == 2) && 
-			(dwMajorVersion == 5) && 
+	return ((dwPlatformId == 2) &&
+			(dwMajorVersion == 5) &&
 			(dwMinorVersion == 0)); */
   return IsVersion(5, VER_EQUAL, 0, VER_EQUAL);
 }
@@ -46,8 +50,8 @@ BOOL IsXP()
 	DWORD dwMajorVersion = osinfo.dwMajorVersion;
 	DWORD dwMinorVersion = osinfo.dwMinorVersion;
 
-	return ((dwPlatformId == 2) && 
-			(dwMajorVersion == 5) && 
+	return ((dwPlatformId == 2) &&
+			(dwMajorVersion == 5) &&
 			(dwMinorVersion >= 1)); */
   return IsVersion(5, VER_EQUAL, 1, VER_GREATER_EQUAL);
 }
@@ -62,7 +66,7 @@ BOOL IsVista()
 	DWORD dwPlatformId   = osinfo.dwPlatformId;
 	DWORD dwMajorVersion = osinfo.dwMajorVersion;
 
-	return ((dwPlatformId == 2) && 
+	return ((dwPlatformId == 2) &&
 			(dwMajorVersion >= 6)); */
   return IsVersion(6, VER_GREATER_EQUAL, 0, VER_GREATER_EQUAL);
 }
@@ -87,6 +91,6 @@ BOOL IsVersion(int major, int opMajor, int minor, int opMinor)
    VER_SET_CONDITION( dwlConditionMask, VER_PLATFORMID, op);
 
    // Perform the test.
-   return VerifyVersionInfo(&osvi, VER_MAJORVERSION | VER_MINORVERSION | VER_PLATFORMID, 
+   return VerifyVersionInfo(&osvi, VER_MAJORVERSION | VER_MINORVERSION | VER_PLATFORMID,
       dwlConditionMask);
 }

@@ -10,6 +10,10 @@
 #include "NavHelper.h"
 #include "AutoTuning.h"
 
+#if defined(_DEBUG) && defined(_CRTDBG_MAP_ALLOC)
+#define new DEBUG_NEW
+#endif
+
 #define MIN_EXTENT 0.f
 #define MAX_EXTENT 18.f
 #define EXTENT_INCREMENT 0.2f

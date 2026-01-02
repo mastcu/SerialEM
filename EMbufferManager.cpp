@@ -1,7 +1,6 @@
 // EMbufferManager.cpp   Manages buffer copying, saving, and reading from file
 //
-// Copyright (C) 2003 by Boulder Laboratory for 3-Dimensional Electron 
-// Microscopy of Cells ("BL3DEMC") and the Regents of the University of
+// Copyright (C) 2003-2026 by the Regents of the University of
 // Colorado.  See Copyright.txt for full notice of copyright and limitations.
 //
 // Author: David Mastronarde
@@ -15,6 +14,10 @@
 #include ".\EMbufferManager.h"
 #include "Image\KStoreIMOD.h"
 #include "Image\KStoreADOC.h"
+
+#if defined(_DEBUG) && defined(_CRTDBG_MAP_ALLOC)
+#define new DEBUG_NEW
+#endif
 //#include "EMmontageWindow.h"
 #include "EMmontageController.h"
 #include "SerialEMDoc.h"
@@ -93,10 +96,10 @@ int EMbufferManager::CopyImageBuffer(int inFrom, int inTo, BOOL display)
 }
 
 // Copy from one ImBuf to another
-int EMbufferManager::CopyImBuf(EMimageBuffer *fromBuf, EMimageBuffer *toBuf, 
+int EMbufferManager::CopyImBuf(EMimageBuffer *fromBuf, EMimageBuffer *toBuf,
                                BOOL display)
 {
-  if (fromBuf->mImage == NULL || fromBuf == toBuf) 
+  if (fromBuf->mImage == NULL || fromBuf == toBuf)
     return 1;
 
   int inTo = MainImBufIndex(toBuf);
@@ -105,7 +108,7 @@ int EMbufferManager::CopyImBuf(EMimageBuffer *fromBuf, EMimageBuffer *toBuf,
 
   // Dismiss the pixmap image if the new image is a different size, dismiss the filtered
   // pixmap image regardless, then delete the destination image
-  if (toBuf->mImage && toBuf->mPixMap && 
+  if (toBuf->mImage && toBuf->mPixMap &&
     (toBuf->mImage->getWidth() != fromBuf->mImage->getWidth() ||
     toBuf->mImage->getHeight() != fromBuf->mImage->getHeight()))
     toBuf->mPixMap->doneWithRect();
@@ -156,13 +159,13 @@ int EMbufferManager::CopyImBuf(EMimageBuffer *fromBuf, EMimageBuffer *toBuf,
   if (fromExtra) {
     EMimageExtra *extra = new EMimageExtra;
     toBuf->mImage->SetUserData((char *) extra);
-    *extra = *fromExtra; 
+    *extra = *fromExtra;
   } */
 
   // Now create a new KImageScale if needed, copy over unless something is being added to
   // the FFT stack from elsewhere
-  if (fromBuf->mImageScale != NULL && (toBuf->mImageScale == NULL || 
-    !(mWinApp->mFFTView && !mWinApp->mFFTView->IsBufferInStack(fromBuf) && 
+  if (fromBuf->mImageScale != NULL && (toBuf->mImageScale == NULL ||
+    !(mWinApp->mFFTView && !mWinApp->mFFTView->IsBufferInStack(fromBuf) &&
     mWinApp->mFFTView->IsBufferInStack(toBuf)))) {
       if (toBuf->mImageScale == NULL)
         toBuf->mImageScale = new KImageScale;
@@ -224,15 +227,15 @@ BOOL EMbufferManager::IsBufferSavable(EMimageBuffer *toBuf, KImageStore *inStore
     return true;
   if (inStoreMRC == mWinApp->mStoreMRC && mWinApp->Montaging())
     return false;
-  return (inStoreMRC->getWidth() == 0 && !((toBuf->mImage->getType() == kFLOAT && 
-    (inStoreMRC->getStoreType() == STORE_TYPE_TIFF || 
+  return (inStoreMRC->getWidth() == 0 && !((toBuf->mImage->getType() == kFLOAT &&
+    (inStoreMRC->getStoreType() == STORE_TYPE_TIFF ||
     inStoreMRC->getStoreType() == STORE_TYPE_ADOC) &&
-    inStoreMRC->GetCompression() == COMPRESS_JPEG))) || 
+    inStoreMRC->GetCompression() == COMPRESS_JPEG))) ||
     (toBuf->mImage->getWidth() == inStoreMRC->getWidth() &&
     toBuf->mImage->getHeight() == inStoreMRC->getHeight() &&
     ((toBuf->mImage->getMode() == kGray && inStoreMRC->getMode() != MRC_MODE_RGB) ||
     (toBuf->mImage->getMode() == kRGBmode && inStoreMRC->getMode() == MRC_MODE_RGB)) &&
-    ((toBuf->mImage->getType() == kFLOAT ? 1 : 0) == 
+    ((toBuf->mImage->getType() == kFLOAT ? 1 : 0) ==
     (inStoreMRC->getMode() == MRC_MODE_FLOAT ? 1 : 0)));
 }
 
@@ -255,7 +258,7 @@ BOOL EMbufferManager::OKtoDestroy(int inWhich, char *inMessage)
       " see \"Options\" in the Buffer Manager Window.)",
       buf, mModeNames[toBuf->mConSetUsed], inMessage);
   return (AfxMessageBox(text, MB_YESNO | MB_ICONQUESTION) == IDYES);
-} 
+}
 
 BOOL EMbufferManager::DoesBufferExist (int inWhich)
 {
@@ -268,7 +271,7 @@ int EMbufferManager::CheckSaveConditions(KImageStore *inStoreMRC, EMimageBuffer 
   bool cropped = toBuf->GetUncroppedSize(uncroppedX, uncroppedY) && uncroppedX > 0;
   if (CheckAsyncSaving())
     return 1;
-  if (inStoreMRC == NULL) { 
+  if (inStoreMRC == NULL) {
     SEMMessageBox("Error saving image: no file open");
     return 1;
   }
@@ -281,7 +284,7 @@ int EMbufferManager::CheckSaveConditions(KImageStore *inStoreMRC, EMimageBuffer 
       "Are you sure you want to save it again?", MB_YESNO | MB_ICONQUESTION) == IDNO)
       return -1;
   }
-  if (!mWinApp->mMontageController->DoingMontage() && toBuf->GetSaveCopyFlag() == 0 && 
+  if (!mWinApp->mMontageController->DoingMontage() && toBuf->GetSaveCopyFlag() == 0 &&
     (toBuf->mCaptured > 0)) {
       if(AfxMessageBox("This image was from a continuous capture.\r\r"
         "Are you sure you want to save it?", MB_YESNO | MB_ICONQUESTION) == IDNO)
@@ -325,7 +328,7 @@ int EMbufferManager::SaveImageBuffer(KImageStore *inStore, bool skipCheck, int i
     if (!mag) {
       mWinApp->mProcessImage->GetDiffractionPixelSize(cam, pixel, camLen);
     } else {
-      refinedPix = mWinApp->mShiftManager->GetRefinedPixel(toBuf->mCamera, 
+      refinedPix = mWinApp->mShiftManager->GetRefinedPixel(toBuf->mCamera,
         toBuf->mMagInd);
     }
 
@@ -334,8 +337,8 @@ int EMbufferManager::SaveImageBuffer(KImageStore *inStore, bool skipCheck, int i
       (refinedPix ? refinedPix : pixel));
     inStore->SetPixelSpacing(angSpacing);
 
-    // 11/6/06: Removed 180 degree rotations for angles beyond 90!  Preserve true 
-    // polarity. But 12/4/06: needed to subtract not add the 90 degrees to represent 
+    // 11/6/06: Removed 180 degree rotations for angles beyond 90!  Preserve true
+    // polarity. But 12/4/06: needed to subtract not add the 90 degrees to represent
     // Y axis rotation
     if (toBuf->GetAxisAngle(axis)) {
       axisRot = axis - 90.;
@@ -352,9 +355,9 @@ int EMbufferManager::SaveImageBuffer(KImageStore *inStore, bool skipCheck, int i
     axisRot = UtilGoodAngle(axisRot);
 
     // Separate with spaces because etomo would end up with a comma after the binning
-    // Worst case of -xxx.x axis angle, binning 0.5 and bidir -xx.x gives 79 char with 
+    // Worst case of -xxx.x axis angle, binning 0.5 and bidir -xx.x gives 79 char with
     // only one space before bidir
-    str.Format("    Tilt axis angle = %.1f, binning = %s  spot = %d  camera = %d", 
+    str.Format("    Tilt axis angle = %.1f, binning = %s  spot = %d  camera = %d",
       axisRot, toBuf->BinningText(), spot, cam);
     if (mWinApp->mTSController->GetBidirStartAngle(bidirAngle)) {
       bidir.Format(" %s = %.1f", mWinApp->mTSController->GetDoingDoseSymmetric() ?
@@ -376,7 +379,7 @@ int EMbufferManager::SaveImageBuffer(KImageStore *inStore, bool skipCheck, int i
 
     cam = inStore->GetAdocIndex();
     if (cam >= 0 && !CheckAsyncSaving() && !AdocGetMutexSetCurrent(cam)) {
-      AdocSetFloat(ADOC_GLOBAL, 0, ADOC_VOLTAGE, 
+      AdocSetFloat(ADOC_GLOBAL, 0, ADOC_VOLTAGE,
         (float)mWinApp->mProcessImage->GetRecentVoltage());
       AdocSetKeyValue(ADOC_GLOBAL, 0, ADOC_PROG_VERS,
         (LPCTSTR)mWinApp->GetVersionString());
@@ -402,7 +405,7 @@ int EMbufferManager::SaveImageBuffer(KImageStore *inStore, bool skipCheck, int i
 
   // Set flags before saving so mDivided can be in the mdoc
   extra = SetChangeWhenSaved(toBuf, inStore, oldDivided);
-  if (inStore->getStoreType() != STORE_TYPE_IMOD && 
+  if (inStore->getStoreType() != STORE_TYPE_IMOD &&
     inStore->getStoreType() != STORE_TYPE_IIMRC) {
     err = 1;
     int secnum = inStore->getDepth();
@@ -460,7 +463,7 @@ int EMbufferManager::SaveImageBuffer(KImageStore *inStore, bool skipCheck, int i
         mWinApp->mCameraMacroTools.DoUserStop();
 
     }
-    if (!err && !(toBuf->GetSaveCopyFlag() < 0 && savingOther) && 
+    if (!err && !(toBuf->GetSaveCopyFlag() < 0 && savingOther) &&
       !inStore->fileIsShrMem())
       toBuf->mSecNumber = 0;
   }
@@ -484,7 +487,7 @@ int EMbufferManager::SaveImageBuffer(KImageStore *inStore, bool skipCheck, int i
   if (mCopyOnSave > 0 && !mWinApp->Montaging() && !savingOther && check >= 0)
     CopyImageBuffer(check, mCopyOnSave);
   mWinApp->UpdateBufferWindows();
-  if (inStore->getLastIntTruncation() > mUnsignedTruncLimit && 
+  if (inStore->getLastIntTruncation() > mUnsignedTruncLimit &&
     toBuf->mImage->getType() == kUSHORT) {
       CString message;
       message.Format("%.1f%% of pixel values were truncated when saving\r\n"
@@ -530,9 +533,9 @@ int EMbufferManager::OverwriteImage(KImageStore *inStoreMRC, int inSect)
       AfxMessageBox("Illegal section number; image not saved.", MB_EXCLAME);
       return 1;
     }
-  } else 
+  } else
     return -1;
-  
+
   int err = 1;
   extra = SetChangeWhenSaved(toBuf, inStoreMRC, oldDivided);
   if (mSaveAsynchronously && !mWinApp->SavingOther())
@@ -555,15 +558,15 @@ int EMbufferManager::OverwriteImage(KImageStore *inStoreMRC, int inSect)
 
 // Set flag for type of modification that occurred to the data when saved
 // Returns an extra structure and previous value if mDividedBy2 was set
-EMimageExtra *EMbufferManager::SetChangeWhenSaved(EMimageBuffer *imBuf, 
+EMimageExtra *EMbufferManager::SetChangeWhenSaved(EMimageBuffer *imBuf,
   KImageStore *inStore, int &oldDivided)
 {
   EMimageExtra *extra = NULL;
   imBuf->mChangeWhenSaved = 0;
-  if (inStore->getStoreType() != STORE_TYPE_MRC && 
+  if (inStore->getStoreType() != STORE_TYPE_MRC &&
     inStore->getStoreType() != STORE_TYPE_IMOD)
     return NULL;
-  if (imBuf->mImage->getType() == kSHORT && inStore->getMode() == MRC_MODE_USHORT && 
+  if (imBuf->mImage->getType() == kSHORT && inStore->getMode() == MRC_MODE_USHORT &&
     inStore->getSignToUnsignOpt() == SHIFT_SIGNED) {
       imBuf->mChangeWhenSaved = SIGNED_SHIFTED;
   } else if (imBuf->mImage->getType() == kUSHORT && inStore->getMode() == MRC_MODE_SHORT){
@@ -573,7 +576,7 @@ EMimageExtra *EMbufferManager::SetChangeWhenSaved(EMimageBuffer *imBuf,
       imBuf->mChangeWhenSaved = DIVIDE_UNSIGNED;
       extra = imBuf->mImage->GetUserData();
       if (extra) {
-        oldDivided = extra->mDividedBy2; 
+        oldDivided = extra->mDividedBy2;
         extra->mDividedBy2 = 1;
       }
     }
@@ -597,7 +600,7 @@ int EMbufferManager::ReadOtherFile()
   MyFileDialog fileDlg(TRUE, NULL, lpszFileName, OFN_HIDEREADONLY, szFilter);
   if (fileDlg.DoModal() == IDOK) {
     mOtherFile = fileDlg.GetPathName();
-    if (mWinApp->mDocWnd->FileAlreadyOpen(mOtherFile, 
+    if (mWinApp->mDocWnd->FileAlreadyOpen(mOtherFile,
       "To read from it, you need to make it be the current file."))
       return -1;
     err = RereadOtherFile(mess);
@@ -744,14 +747,14 @@ int EMbufferManager::ReadFromFile(KImageStore *inStore, int inSect, int inToBuf,
   if (!readPiece) {
 
     // IF not reading piece, need to check if this file is a montage;
-    if (inStore->getStoreType() == STORE_TYPE_MRC || 
-      inStore->getStoreType() == STORE_TYPE_ADOC || 
+    if (inStore->getStoreType() == STORE_TYPE_MRC ||
+      inStore->getStoreType() == STORE_TYPE_ADOC ||
       inStore->getStoreType() == STORE_TYPE_HDF) {
       param = *masterMont;
       montErr = inStore->CheckMontage(&param);
-      if (montErr > 0 && inStore->GetAdocIndex() >= 0 && 
+      if (montErr > 0 && inStore->GetAdocIndex() >= 0 &&
         !AdocGetMutexSetCurrent(inStore->GetAdocIndex())) {
-        if (!AdocGetTwoIntegers(ADOC_MONT_SECT, 0, ADOC_MONT_FRAMES, &xPc, &yPc) && 
+        if (!AdocGetTwoIntegers(ADOC_MONT_SECT, 0, ADOC_MONT_FRAMES, &xPc, &yPc) &&
           xPc > 0 && yPc > 0) {
           ACCUM_MAX(param.xNframes, xPc);
           ACCUM_MAX(param.yNframes, yPc);
@@ -762,7 +765,7 @@ int EMbufferManager::ReadFromFile(KImageStore *inStore, int inSect, int inToBuf,
       // New behavior 2/3/04: unless this is the current file, read whole montage
       // from a montaged file; return code to prevent read buffer from being displayed
       if (montErr > 0 && inStore != mWinApp->mStoreMRC) {
-        montErr = mWinApp->mMontageController->ReadMontage(inSect, &param, 
+        montErr = mWinApp->mMontageController->ReadMontage(inSect, &param,
           inStore, false, synchronous, inToBuf);
         if (montErr)
           return montErr;
@@ -786,7 +789,7 @@ int EMbufferManager::ReadFromFile(KImageStore *inStore, int inSect, int inToBuf,
           }
         } else
           return -1;
-      } 
+      }
 
       // If montage, ask for piece numbers
       if (montErr > 0) {
@@ -812,7 +815,7 @@ int EMbufferManager::ReadFromFile(KImageStore *inStore, int inSect, int inToBuf,
             return -1;
           }
           number = sec;
-      } 
+      }
     }
   }
 
@@ -827,11 +830,11 @@ int EMbufferManager::ReadFromFile(KImageStore *inStore, int inSect, int inToBuf,
     else
       SEMMessageBox("Error reading from file.");
     return 1;
-  }  
+  }
 
   // Get the scaling
   toBuf->mCaptured = 0;
-  FindScaling(toBuf);  
+  FindScaling(toBuf);
   toBuf->SetImageChanged(1);
 
   toBuf->mSaveCopyp = NULL;
@@ -923,7 +926,7 @@ int EMbufferManager::ReadFromFile(KImageStore *inStore, int inSect, int inToBuf,
     }
   }
 
-  // Otherwise assign camera from current camera, set divide flag, and get internal 
+  // Otherwise assign camera from current camera, set divide flag, and get internal
   // binning back
   if (toBuf->mCamera < 0)
     toBuf->mCamera = mWinApp->GetCurrentCamera();
@@ -935,7 +938,7 @@ int EMbufferManager::ReadFromFile(KImageStore *inStore, int inSect, int inToBuf,
   if (!toBuf->mBinning) {
 
     // If this is read from montage, set the binning to montage binning
-    if (mWinApp->mMontageController->DoingMontage() || 
+    if (mWinApp->mMontageController->DoingMontage() ||
       (mWinApp->Montaging() && montErr > 0 )) {
         MontParam *master = mWinApp->GetMontParam();
         toBuf->mBinning = master->binning;
@@ -957,10 +960,10 @@ int EMbufferManager::ReadFromFile(KImageStore *inStore, int inSect, int inToBuf,
 
   // Now handle mag if it is available in an older file; look up the mag value as long
   // as there are no secondary modes
-  if (extra && extra->mMagIndex < 0 && extra->m_iMag > 0 && 
+  if (extra && extra->mMagIndex < 0 && extra->m_iMag > 0 &&
     !mWinApp->mScope->GetLowestSecondaryMag()) {
       for (int ind = MAX_MAGS - 1; ind > 0; ind--) {
-        if (fabs((double)extra->m_iMag - MagOrEFTEMmag(camParam[toBuf->mCamera].GIF, ind, 
+        if (fabs((double)extra->m_iMag - MagOrEFTEMmag(camParam[toBuf->mCamera].GIF, ind,
           camParam[toBuf->mCamera].STEMcamera)) < 1.) {
             toBuf->mMagInd = ind;
             break;
@@ -993,7 +996,7 @@ int EMbufferManager::FindSectionForPiece(KImageStore *inStore, MontParam &param,
 }
 
 // Replace the image in an image buffer, assigning some of the buffer variables here
-int EMbufferManager::ReplaceImage(char *inData, int inType, int inX, int inY, 
+int EMbufferManager::ReplaceImage(char *inData, int inType, int inX, int inY,
               int inBuf, int inCap, int inConSet, int bufBin, bool fftBuf, bool display)
 {
   EMimageBuffer *toBuf = B3DCHOICE(fftBuf, mWinApp->GetFFTBufs(), mImBufsp) + inBuf;
@@ -1021,14 +1024,14 @@ int EMbufferManager::ReplaceImage(char *inData, int inType, int inX, int inY,
   toBuf->mImage->useData(inData, inX, inY);
 
   toBuf->mCaptured = inCap;
-  FindScaling(toBuf);  
+  FindScaling(toBuf);
   toBuf->SetImageChanged(1);
 
   toBuf->mSaveCopyp = NULL;
   toBuf->mConSetUsed = inConSet;
   toBuf->mSecNumber = 0;
 
-  // Callers have to supply binning because UpdateBufferWindows calls multishot 
+  // Callers have to supply binning because UpdateBufferWindows calls multishot
   // ManagePanels which triggers a draw
   toBuf->mBinning = bufBin;
   toBuf->mHasUserPt = false;
@@ -1125,7 +1128,7 @@ int EMbufferManager::AddToStackWindow(int bufNum, int maxSize, int secNum, bool 
   // Make pixmap and convert to byte
   if (convert) {
     newBuf->mPixMap = new KPixMap();
-    newBuf->ConvertToByte(newBuf->mImageScale->GetMinScale(), 
+    newBuf->ConvertToByte(newBuf->mImageScale->GetMinScale(),
     newBuf->mImageScale->GetMaxScale());
   }
 
@@ -1135,15 +1138,15 @@ int EMbufferManager::AddToStackWindow(int bufNum, int maxSize, int secNum, bool 
 
 #define NUM_MESSAGES 21
 static char *messages[NUM_MESSAGES] = {
-  "No image data", "No file open", "Extended header full", 
+  "No image data", "No file open", "Extended header full",
   "Memory error getting temporary array", "Error seeking to file position",
   "Error while writing image data", "Error while writing header",
   "Error while writing extended header info", "Mismatch between data type and file mode",
-  "Saving as TIFF to wrong file type", "Unsupported data type", 
-  "Trying to skip section number in TIFF series", "Error opening new TIFF file", 
-  "Error setting current Adoc index", "Error adding values to autodoc", 
-  "Error writing autodoc file", "Image is the wrong size to save into this file", 
-  "Timeout trying to save to file", "Error reading from first-half file", 
+  "Saving as TIFF to wrong file type", "Unsupported data type",
+  "Trying to skip section number in TIFF series", "Error opening new TIFF file",
+  "Error setting current Adoc index", "Error adding values to autodoc",
+  "Error writing autodoc file", "Image is the wrong size to save into this file",
+  "Timeout trying to save to file", "Error reading from first-half file",
   "Floating point data cannot be saved to a JPEG file", "Unknown error"
 };
 
@@ -1171,7 +1174,7 @@ int EMbufferManager::MainImBufIndex(EMimageBuffer *imBuf)
     if (imBuf == &mImBufsp[i])
       return i;
   return -1;
-} 
+}
 
 // Get the index of the buffer that is the default for autoalign
 int EMbufferManager::AutoalignBufferIndex()
@@ -1181,7 +1184,7 @@ int EMbufferManager::AutoalignBufferIndex()
     return 1;
   if (mWinApp->LowDoseMode() && mWinApp->StartedTiltSeries())
     buf = mWinApp->mTSController->GetAlignBuf();
-  if (mWinApp->LowDoseMode() && mImBufsp->mCaptured && mImBufsp->mImage && 
+  if (mWinApp->LowDoseMode() && mImBufsp->mCaptured && mImBufsp->mImage &&
     (mImBufsp->mConSetUsed + 1) / 2 != 2)
     return buf + 1;
   return buf;
@@ -1202,8 +1205,8 @@ void EMbufferManager::FindScaling(EMimageBuffer * imBuf, int partialScan)
     return;
   mWinApp->GetDisplayTruncation(pctLo, pctHi);
   imBuf->mImageScale->FindPctStretch(imBuf->mImage, pctLo, pctHi,
-    mWinApp->GetPctAreaFraction(), 
-    B3DCHOICE(imBuf->mCaptured == BUFFER_FFT || imBuf->mCaptured == BUFFER_LIVE_FFT, 
+    mWinApp->GetPctAreaFraction(),
+    B3DCHOICE(imBuf->mCaptured == BUFFER_FFT || imBuf->mCaptured == BUFFER_LIVE_FFT,
     mWinApp->GetBkgdGrayOfFFT(), 0), mWinApp->GetTruncDiamOfFFT(), partialScan);
 }
 
@@ -1238,7 +1241,7 @@ int EMbufferManager::StartAsyncSave(KImageStore *store, EMimageBuffer *buf, int 
 }
 
 // Start an asynchronous save of an image not in an image buffer
-int EMbufferManager::StartAsyncSave(KImageStore *store, KImage *image, int section, 
+int EMbufferManager::StartAsyncSave(KImageStore *store, KImage *image, int section,
   int deleteFlags)
 {
   int numBytes = image->getRowBytes() * image->getHeight();
@@ -1252,7 +1255,7 @@ int EMbufferManager::StartAsyncSave(KImageStore *store, KImage *image, int secti
 }
 
 // Start an asynchronous or synchronous copy from one store/section to another
-int EMbufferManager::StartAsyncCopy(KImageStore *fromStore, KImageStore *toStore, 
+int EMbufferManager::StartAsyncCopy(KImageStore *fromStore, KImageStore *toStore,
                                      int fromSection, int toSection, bool synchronous)
 {
   mSaveTD.fromSection = fromSection;
@@ -1270,7 +1273,7 @@ int EMbufferManager::StartAsyncCopy(KImageStore *fromStore, KImageStore *toStore
 }
 
 // Start the thread for either kind of asynchronous file I/O, or do synchronous copy
-void EMbufferManager::StartAsyncThread(KImageStore *fromStore, KImageStore *store, 
+void EMbufferManager::StartAsyncThread(KImageStore *fromStore, KImageStore *store,
                                        int section, bool synchronous)
 {
   // Set up thread data
@@ -1318,7 +1321,7 @@ UINT EMbufferManager::SavingProc(LPVOID pParam)
       saveTD->error = saveTD->store->WriteSection(image, saveTD->section);
       delete image;
     }
-    
+
   } else {
 
     // Save
@@ -1364,7 +1367,7 @@ void EMbufferManager::AsyncSaveDone(void)
   }
 }
 
-// Clean up from an ansynchronous save 
+// Clean up from an ansynchronous save
 void EMbufferManager::AsyncSaveCleanup(int error)
 {
   CString message;
@@ -1397,19 +1400,19 @@ void EMbufferManager::AsyncSaveCleanup(int error)
       mBufferAsyncFailed = true;
     message = ComposeErrorMessage(mSaveTD.error, "in the background ");
     if (!mSaveTD.fromStore && !mAsyncFromImage)
-      message += "\r\n\r\nThe unsaved image is now in buffer " + 
+      message += "\r\n\r\nThe unsaved image is now in buffer " +
         CString((char)('A' + mBufToReadInto)) +
         "\r\nAfter fixing the problem if possible, save this image with the"
-        " \"Save Active\" button or\r\n" + 
+        " \"Save Active\" button or\r\n" +
         "\"Save Active\" or  \"Save to Other/Save Single\" commands in the File menu";
     mWinApp->AppendToLog(message);
 
     SEMMessageBox(message);
     mWinApp->ErrorOccurred(error);
   } else {
-    
+
   }
-  
+
   // Clean up the image buffer
   if (!mAsyncFromImage || (mAsyncImageDeleteFlags & 1))
     mImBufForSave.DeleteImage();
@@ -1430,7 +1433,7 @@ int EMbufferManager::CheckAsyncSaving(void)
     return 0;
 
   // Loop on checking busy.  Inform of wait after a couple of seconds
-  mess.Format("Waiting up to %.0f seconds for background saving to finish...", 
+  mess.Format("Waiting up to %.0f seconds for background saving to finish...",
     (mAsyncTimeout + SEMTickInterval(mAsyncStartTime)) / 1000.);
   while (SEMTickInterval(mAsyncStartTime) < mAsyncTimeout + extraWait || numChecks < 20) {
     int busy = AsyncSaveBusy();
@@ -1451,7 +1454,7 @@ int EMbufferManager::CheckAsyncSaving(void)
       mWinApp->AppendToLog(mess);
     Sleep(100);
   }
-  
+
   // If drop out of loop, call the timeout so its message will be first
   AsyncSaveCleanup(IDLE_TIMEOUT_ERROR);
   mWinApp->RemoveIdleTask(TASK_ASYNC_SAVE);

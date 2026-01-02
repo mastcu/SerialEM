@@ -1,6 +1,6 @@
 // MultiTSTasks.cpp  - module for more complex tasks related to multiple tilt series
 //
-// Copyright (C) 2008-2109 by the Regents of the University of
+// Copyright (C) 2008-2109-2026 by the Regents of the University of
 // Colorado.  See Copyright.txt for full notice of copyright and limitations.
 //
 // Author: David Mastronarde
@@ -29,7 +29,11 @@
 #include "Shared\b3dutil.h"
 #include "Shared\autodoc.h"
 
-enum {TRACK_SHOT_DONE, SCREEN_DROPPED, START_WAITING, DOSE_DONE, TILT_RESTORED, 
+#if defined(_DEBUG) && defined(_CRTDBG_MAP_ALLOC)
+#define new DEBUG_NEW
+#endif
+
+enum {TRACK_SHOT_DONE, SCREEN_DROPPED, START_WAITING, DOSE_DONE, TILT_RESTORED,
   SCREEN_RESTORED, ALIGN_TRACK_SHOT, RESET_SHIFT_DONE};
 
 enum {TSR_ZERO_SHOT_DONE, TSR_EUCEN_DONE, TSR_AUTOFOCUS, TSR_TAKE_IMAGE, TSR_IMAGE_DONE,
@@ -146,7 +150,7 @@ int CMultiTSTasks::StartCooker(void)
   }
 
   if (!mCkParams->timeInstead) {
-    dose = mWinApp->mBeamAssessor->GetElectronDose(mCkParams->spotSize, 
+    dose = mWinApp->mBeamAssessor->GetElectronDose(mCkParams->spotSize,
       mCkParams->intensity, 1.);
     if (!dose) {
       SEMMessageBox("Dose is not calibrated for the selected spot size and intensity"
@@ -193,7 +197,7 @@ int CMultiTSTasks::StartCooker(void)
     StartTrackingShot(true, TRACK_SHOT_DONE);
     return 0;
   }
-  
+
   // Check screen and see if tilt needed
   if (mScope->GetScreenPos() != spDown || mCkDoTilted)
     CookerNextTask(TRACK_SHOT_DONE);
@@ -224,7 +228,7 @@ void CMultiTSTasks::CookerNextTask(int param)
 
       // Set state before dropping the screen
       mScope->SetMagIndex(mCkParams->magIndex);
-      mScope->DelayedSetIntensity(mCkParams->intensity, GetTickCount(), 
+      mScope->DelayedSetIntensity(mCkParams->intensity, GetTickCount(),
         mCkParams->spotSize);
       mScope->SetSpotSize(mCkParams->spotSize);
       SetProbeOrAlpha(mCkParams->probeOrAlpha);
@@ -302,7 +306,7 @@ void CMultiTSTasks::CookerNextTask(int param)
       }
       if (!mDidReset) {
         mScope->GetImageShift(shiftX, shiftY);
-        if (mShiftManager->RadialShiftOnSpecimen(shiftX, shiftY, 
+        if (mShiftManager->RadialShiftOnSpecimen(shiftX, shiftY,
           mScope->FastMagIndex()) > mCkISLimit) {
           if (mShiftManager->ResetImageShift(true, false)) {
             CookerCleanup(1);
@@ -383,12 +387,12 @@ int CMultiTSTasks::TaskCookerBusy(void)
         diff = SEMTickInterval(mDoseTime);
         if (dose > 0. && diff > 0.) {
           togo = (mCkParams->targetDose - dose) * (diff / dose) / 60000.;
-          if (mExpectedMin && togo < mExpectedMin && 
+          if (mExpectedMin && togo < mExpectedMin &&
             B3DNINT(10. * mExpectedMin) != B3DNINT(10. * togo))
             TimeToSimplePane(togo);
         }
         if (dose >= mDoseNextReport) {
-          report.Format("Dose so far %.1f electrons/A2, time remaining ~%.1f minutes", 
+          report.Format("Dose so far %.1f electrons/A2, time remaining ~%.1f minutes",
             dose, togo);
           mWinApp->AppendToLog(report, LOG_OPEN_IF_CLOSED);
           TimeToSimplePane(togo);
@@ -431,7 +435,7 @@ void CMultiTSTasks::StopCooker(void)
   // Restore mag if still lowered; otherwise restore state
   if (mLoweredMag)
     mComplexTasks->RestoreMagIfNeeded();
-  else 
+  else
     RestoreScopeState();
   mCooking = false;
   if (mCkLowDose)
@@ -503,7 +507,7 @@ void CMultiTSTasks::TiltAndMoveScreen(bool tilt, double angle, bool move, int po
 // doPart can be 1 to do just the scan, and 2 to resume from that and do search after
 // simple bracketing of the incoming scale value
 int CMultiTSTasks::AlignWithScaling(int buffer, bool doImShift, float &scaleMax,
-  float startScale, float rotation, float scaleRange, int doPart, float *maxPtr, 
+  float startScale, float rotation, float scaleRange, int doPart, float *maxPtr,
   float shiftLimit, int corrFlags)
 {
   int numSteps, baseSteps = mCkNumAlignSteps;
@@ -542,13 +546,13 @@ int CMultiTSTasks::AlignWithScaling(int buffer, bool doImShift, float &scaleMax,
   for (ist = 0; ist < numSteps; ist++) {
     scale = startScale + (float)ist * step;
 
-    // It did not work to use passed in max for middle of search on restart, 
+    // It did not work to use passed in max for middle of search on restart,
     // rotation used CCC
     if (shiftLimit > 0)
       mShiftManager->SetNextAutoalignLimit(shiftLimit);
     if (mShiftManager->AutoAlign(buffer, smallPad, false,
-      (corrFlags & AUTOALIGN_SEARCH_KEEP) ? 
-      (corrFlags & ~AUTOALIGN_FILL_SPOTS) | AUTOALIGN_KEEP_SPOTS : corrFlags, &peak, 0., 
+      (corrFlags & AUTOALIGN_SEARCH_KEEP) ?
+      (corrFlags & ~AUTOALIGN_FILL_SPOTS) | AUTOALIGN_KEEP_SPOTS : corrFlags, &peak, 0.,
       0., 0., scale, rotation, CCCp, fracPixP, true, &shiftX, &shiftY)) {
       if (shiftLimit > 0)
         continue;
@@ -584,7 +588,7 @@ int CMultiTSTasks::AlignWithScaling(int buffer, bool doImShift, float &scaleMax,
     return 0;
   }
 
-  // Cut the step and look on either side of the peak 
+  // Cut the step and look on either side of the peak
   for (ist = 0; ist < mCkNumStepCuts; ist++) {
     step /= 2.f;
     curMax = scaleMax;
@@ -592,8 +596,8 @@ int CMultiTSTasks::AlignWithScaling(int buffer, bool doImShift, float &scaleMax,
       scale = curMax + idir * step;
       if (shiftLimit > 0)
         mShiftManager->SetNextAutoalignLimit(shiftLimit);
-      if (mShiftManager->AutoAlign(buffer, smallPad, false, 
-        (corrFlags & AUTOALIGN_SEARCH_KEEP) ? 
+      if (mShiftManager->AutoAlign(buffer, smallPad, false,
+        (corrFlags & AUTOALIGN_SEARCH_KEEP) ?
         ((corrFlags & ~AUTOALIGN_FILL_SPOTS) | AUTOALIGN_KEEP_SPOTS): corrFlags, &peak,
         0., 0., 0., scale, rotation, CCCp, fracPixP, true, &shiftX, &shiftY)) {
         if (shiftLimit > 0)
@@ -612,7 +616,7 @@ int CMultiTSTasks::AlignWithScaling(int buffer, bool doImShift, float &scaleMax,
         SEMTrace('p', "Scale %.3f  peak  %g  CCC %.4f  frac %.3f  shift %.1f %.1f", scale,
           peak, CCC, fracPix, shiftX, shiftY);
       } else {
-        report.Format("Scale %.3f  peak  %g  shift %.1f %.1f", scale, peak, shiftX, 
+        report.Format("Scale %.3f  peak  %g  shift %.1f %.1f", scale, peak, shiftX,
           shiftY);
         if (mComplexTasks->GetVerbose())
           mWinApp->AppendToLog(report, LOG_OPEN_IF_CLOSED);
@@ -717,14 +721,14 @@ AutocenParams *CMultiTSTasks::GetAutocenSettings(int camera, int magInd, int spo
   acParams.spotSize = spot;
   acParams.intensity = -1.;
   acParams.binning = conSet->binning;
-  acParams.exposure = ((mWinApp->LowDoseMode() ? 1.f : 0.25f) * conSet->exposure - 
+  acParams.exposure = ((mWinApp->LowDoseMode() ? 1.f : 0.25f) * conSet->exposure -
     deadTime) + deadTime;
   acParams.exposure = B3DMAX(acParams.exposure, minExposure);
   mCamera->ConstrainExposureTime(camParam, false, conSet->K2ReadMode, conSet->binning,
     0, 2, acParams.exposure, conSet->frameTime);
   roundFac = mCamera->ExposureRoundingFactor(camParam);
   if (roundFac)
-    acParams.exposure = (float)(B3DNINT(acParams.exposure * roundFac) / roundFac); 
+    acParams.exposure = (float)(B3DNINT(acParams.exposure * roundFac) / roundFac);
   acParams.useCentroid = false;
   acParams.probeMode = probe;
   acParams.shiftBeamForCen = false;
@@ -743,10 +747,10 @@ AutocenParams *CMultiTSTasks::GetAutocenSettings(int camera, int magInd, int spo
 
     // skip if no camera match, or no spot match and spot has matched, or other side of
     // crossover
-    if (parmP->camera != camera || (parmP->spotSize != spot && minSpotChg == 1.) || 
+    if (parmP->camera != camera || (parmP->spotSize != spot && minSpotChg == 1.) ||
       parmP->intensity < 0. || parmP->probeMode != probe)
       continue;
-    aboveCross = mBeamAssessor->GetAboveCrossover(parmP->spotSize, parmP->intensity, 
+    aboveCross = mBeamAssessor->GetAboveCrossover(parmP->spotSize, parmP->intensity,
       parmP->probeMode);
     if (aboveCross != aboveNeeded)
       continue;
@@ -757,7 +761,7 @@ AutocenParams *CMultiTSTasks::GetAutocenSettings(int camera, int magInd, int spo
 
       // If spot doesn't match, first find ratio of intensities
       indTab = mBeamAssessor->FindSpotTableIndex(aboveCross, probe);
-      if (indTab < 0 || !tables[indTab].ratio[spot] || 
+      if (indTab < 0 || !tables[indTab].ratio[spot] ||
         !tables[indTab].ratio[parmP->spotSize])
         continue;
       intChg = tables[indTab].ratio[spot] / tables[indTab].ratio[parmP->spotSize];
@@ -789,14 +793,14 @@ AutocenParams *CMultiTSTasks::GetAutocenSettings(int camera, int magInd, int spo
         // Brighter beam, decrease exposure time first, then binning
         newexp = (parmP->exposure - deadTime) / intChg + deadTime;
         if (newexp <  minExposure) {
-          
+
           // Search for a binning that allows an exposure above limits
           for (j = camParam->numBinnings - 1; j >= 0; j--) {
             bin = camParam->binnings[j];
             if (bin >= parmP->binning)
               continue;
-            ratio = (float)(bin * bin * mWinApp->GetGainFactor(camera, bin)) / 
-              (float)(parmP->binning * parmP->binning * 
+            ratio = (float)(bin * bin * mWinApp->GetGainFactor(camera, bin)) /
+              (float)(parmP->binning * parmP->binning *
                 mWinApp->GetGainFactor(camera, parmP->binning));
             newexp = (parmP->exposure - deadTime) / (intChg * ratio) + deadTime;
             if (newexp >= minExposure) {
@@ -806,7 +810,7 @@ AutocenParams *CMultiTSTasks::GetAutocenSettings(int camera, int magInd, int spo
           }
           if (newbin == parmP->binning)
             continue;
-             
+
         }
       }
     } else
@@ -821,10 +825,10 @@ AutocenParams *CMultiTSTasks::GetAutocenSettings(int camera, int magInd, int spo
 
       // Skip it if outside limits, or spot is same as best spot and it is worse than
       // best change due to mag so far
-      if (posMagChg > maxMagChg || 
+      if (posMagChg > maxMagChg ||
         (posSpotChg >= lowestSpotChg && posMagChg > lowestMagChg))
         continue;
-      if (mBeamAssessor->AssessBeamChange(parmP->intensity, spot, probe, intChg, 
+      if (mBeamAssessor->AssessBeamChange(parmP->intensity, spot, probe, intChg,
         newIntensity, outFactor))
         continue;
     } else
@@ -863,7 +867,7 @@ void CMultiTSTasks::AddAutocenParams(AutocenParams *params)
 }
 
 // Delete matching params from the array
-int CMultiTSTasks::DeleteAutocenParams(int camera, int magInd, int spot, int probe, 
+int CMultiTSTasks::DeleteAutocenParams(int camera, int magInd, int spot, int probe,
   double roughInt)
 {
   int index;
@@ -881,13 +885,13 @@ AutocenParams * CMultiTSTasks::LookupAutocenParams(int camera, int magInd, int s
 {
   int aboveCross, aboveNeeded;
   AutocenParams *parmP;
-  aboveNeeded = spot > MAX_SPOT_SIZE || 
+  aboveNeeded = spot > MAX_SPOT_SIZE ||
     mBeamAssessor->GetAboveCrossover(spot, roughInt, probe);
   for (index = 0; index < mAcParamArray.GetSize(); index++) {
     parmP = mAcParamArray[index];
     aboveCross = parmP->spotSize > MAX_SPOT_SIZE || mBeamAssessor->GetAboveCrossover
     (parmP->spotSize, parmP->intensity, parmP->probeMode);
-    if (parmP->camera == camera && (camera < 0 || (parmP->magIndex == magInd && 
+    if (parmP->camera == camera && (camera < 0 || (parmP->magIndex == magInd &&
       parmP->spotSize == spot && aboveCross == aboveNeeded && parmP->probeMode == probe)))
       return parmP;
   }
@@ -901,7 +905,7 @@ bool CMultiTSTasks::AutocenParamExists(int camera, int magInd, int probe)
   AutocenParams *parmP;
   for (int index = 0; index < mAcParamArray.GetSize(); index++) {
     parmP = mAcParamArray[index];
-    if (parmP->camera == camera && (camera < 0 || 
+    if (parmP->camera == camera && (camera < 0 ||
       (parmP->magIndex == magInd && parmP->probeMode == probe)))
       return true;
   }
@@ -981,8 +985,8 @@ WINDOWPLACEMENT *CMultiTSTasks::GetAutocenPlacement(void)
 // Trial or we are going to Trial in Low dose
 bool CMultiTSTasks::AutocenTrackingState(int changing)
 {
-  return mWinApp->mAutocenDlg && (!mWinApp->DoingTasks() || 
-    mWinApp->GetJustChangingLDarea() || mWinApp->GetJustDoingSynchro()) && 
+  return mWinApp->mAutocenDlg && (!mWinApp->DoingTasks() ||
+    mWinApp->GetJustChangingLDarea() || mWinApp->GetJustDoingSynchro()) &&
     ((!mWinApp->LowDoseMode() && mWinApp->mAutocenDlg->m_bSetState) ||
     (mWinApp->LowDoseMode() && !mUseEasyAutocen &&
       (mScope->GetLowDoseArea() == TRIAL_CONSET || changing == ACTRACK_TO_TRIAL)));
@@ -996,7 +1000,7 @@ bool CMultiTSTasks::AutocenMatchingIntensity(int changing)
   return AutocenTrackingState(changing) && (!mWinApp->LowDoseMode() ||
     (!mWinApp->mLowDoseDlg.m_bContinuousUpdate && (mCamera->DoingContinuousAcquire() ||
       changing == ACTRACK_START_CONTIN || mScope->FastScreenPos() == spDown) &&
-      (changing || (ldParm->magIndex == mScope->FastMagIndex() && ldParm->spotSize == 
+      (changing || (ldParm->magIndex == mScope->FastMagIndex() && ldParm->spotSize ==
         mScope->FastSpotSize() && ldParm->probeMode == mScope->GetProbeMode()))));
 }
 
@@ -1093,7 +1097,7 @@ void CMultiTSTasks::MakeAutocenConset(AutocenParams * param)
   // or in the low dose param, so the threshold is determined by finding the intensity
   // of a beam weaker than what was set
   if (mCamera->IsDirectDetector(camParams) && conSet->K2ReadMode > 0) {
-    err = mWinApp->mBeamAssessor->AssessBeamChange(linearThresh, threshIntensity, 
+    err = mWinApp->mBeamAssessor->AssessBeamChange(linearThresh, threshIntensity,
       outFactor,
       B3DCHOICE(mWinApp->LowDoseMode(), useView ? VIEW_CONSET : TRIAL_CONSET, -1));
     if (mWinApp->LowDoseMode()) {
@@ -1142,7 +1146,7 @@ int CMultiTSTasks::NextLowerNonSuperResBinning(int binning)
 // Apply a beam shift for autocentering if one is specified and beam edges are being used
 // or if there is a shift after centering defined.  Call with 0 to skip the shift after
 // centering (for restoring the shift when iterating), 1 to apply the post-shift but not
-// include it in stored shift values (for initial shift before centering), 2 to set the 
+// include it in stored shift values (for initial shift before centering), 2 to set the
 // stored shift values to the total moved (for testing)
 void CMultiTSTasks::ShiftBeamForCentering(AutocenParams *param, int fullInitial)
 {
@@ -1189,7 +1193,7 @@ int CMultiTSTasks::AutocenterBeam(float maxShift, int pctSmallerView)
   mAcMaxShift = maxShift;
   mAcLDarea = TRIAL_CONSET;
   mAcConset = TRACK_CONSET;
-    
+
   mAcSavedMagInd = 0;
   if (mWinApp->LowDoseMode()) {
     smallerTrial = mUseEasyAutocen || pctSmallerView >= 0;
@@ -1225,7 +1229,7 @@ int CMultiTSTasks::AutocenterBeam(float maxShift, int pctSmallerView)
     mAcSavedIntensity = mScope->GetIntensity();
     probe = mScope->ReadProbeMode();
   }
-  SEMTrace('I', "AutocenBeam saving intensity %.5f  %.3f%%", mAcSavedIntensity, 
+  SEMTrace('I', "AutocenBeam saving intensity %.5f  %.3f%%", mAcSavedIntensity,
     mScope->GetC2Percent(spotSize, mAcSavedIntensity, probe));
   mAcSavedProbe = probe;
   mAcSavedSpot = spotSize;
@@ -1241,7 +1245,7 @@ int CMultiTSTasks::AutocenterBeam(float maxShift, int pctSmallerView)
   if (!smallerTrial && bestSpot != spotSize) {
     report.Format("Warning: using intensity setting for spot %d to center beam at spot"
       " %d", bestSpot, spotSize);
-    mWinApp->AppendToLog(report, LOG_OPEN_IF_CLOSED); 
+    mWinApp->AppendToLog(report, LOG_OPEN_IF_CLOSED);
   }
 
   // Zero image shift except in low dose, set the intensity and get an image
@@ -1254,14 +1258,14 @@ int CMultiTSTasks::AutocenterBeam(float maxShift, int pctSmallerView)
 
   // Have to raise screen before setting intensity if in EFTEM with auto mag changes
   // Otherwise set it now or set LD intensity
-  raise = !mWinApp->LowDoseMode() && mWinApp->GetEFTEMMode() && filtParm->autoMag && 
+  raise = !mWinApp->LowDoseMode() && mWinApp->GetEFTEMMode() && filtParm->autoMag &&
     mScope->GetScreenPos() == spDown;
   if (mWinApp->LowDoseMode()) {
     if (smallerTrial) {
       if (pctSmallerView >= 0)
         param->spotSize = pctSmallerView;
       if (param->spotSize > 0) {
-        err = mWinApp->mBeamAssessor->AssessChangeForSmallerBeam(param->spotSize, 
+        err = mWinApp->mBeamAssessor->AssessChangeForSmallerBeam(param->spotSize,
           ldParm->intensity, pctDone, mAcLDarea);
         if ((!err || err == BEAM_ENDING_OUT_OF_RANGE) && synth && pctSmallerView < 0)
           PrintfToLog("WARNING: No parameters found for autocentering with %s,"
@@ -1270,7 +1274,7 @@ int CMultiTSTasks::AutocenterBeam(float maxShift, int pctSmallerView)
           PrintfToLog("WARNING: Autocentering reached the end of calibrated beam "
             "intensity with a size change of only %.1f%%, not %d%%", pctDone);
         else if (err) {
-          SEMMessageBox("Cannot autocenter beam with smaller " + names[mAcLDarea] + 
+          SEMMessageBox("Cannot autocenter beam with smaller " + names[mAcLDarea] +
             " beam.\n" + names[mAcLDarea] + " intensity is not in the calibrated range");
           return 1;
         }
@@ -1278,7 +1282,7 @@ int CMultiTSTasks::AutocenterBeam(float maxShift, int pctSmallerView)
     } else
       ldParm->intensity = param->intensity;
   } else if (!raise) {
-    SEMTrace('I', "AutocenBeam setting intensity to %.5f  %.3f%%", param->intensity, 
+    SEMTrace('I', "AutocenBeam setting intensity to %.5f  %.3f%%", param->intensity,
       mScope->GetC2Percent(spotSize, param->intensity, param->probeMode));
     mScope->SetIntensity(param->intensity, spotSize, param->probeMode);
     Sleep(mAcPostSettingDelay);
@@ -1446,7 +1450,7 @@ void CMultiTSTasks::RangeFinder()
   // Allow a large field in case there is a pole touch that moves X/Y
   mMinTrZeroDegField = mComplexTasks->GetMinRSRAField();
   if (mTrParams[mLowDose].eucentricity)
-    mMinTrZeroDegField = B3DMAX(mMinTrZeroDegField, 
+    mMinTrZeroDegField = B3DMAX(mMinTrZeroDegField,
     mComplexTasks->GetMinFEFineAlignField());
 
   mTrZeroRefBuf = 2;
@@ -1488,7 +1492,7 @@ void CMultiTSTasks::TiltRangeNextTask(int param)
   KImage *image;
   StageMoveInfo smi;
   double shiftX, shiftY;
-  bool convert = mRangeConsets[3 * mLowDose + mTrParams[mLowDose].imageType] == 
+  bool convert = mRangeConsets[3 * mLowDose + mTrParams[mLowDose].imageType] ==
     RECORD_CONSET;
   if (!mAssessingRange)
     return;
@@ -1498,7 +1502,7 @@ void CMultiTSTasks::TiltRangeNextTask(int param)
     nx = image->getWidth();
     ny = image->getHeight();
     image->Lock();
-    curMean = (float)ProcImageMean(image->getData(), image->getType(), 
+    curMean = (float)ProcImageMean(image->getData(), image->getType(),
       nx, ny, nx / 4, 3 * nx / 4, ny / 4, 3 * ny / 4);
     image->UnLock();
   }
@@ -1551,7 +1555,7 @@ void CMultiTSTasks::TiltRangeNextTask(int param)
 
     case TSR_IMAGE_DONE:
       mAcquiring = false;
-      
+
       // For Record, do not limit size but convert to bytes; otherwise limit to 1024
       // and leave as integers
       if (convert)
@@ -1559,11 +1563,11 @@ void CMultiTSTasks::TiltRangeNextTask(int param)
       mBufferManager->AddToStackWindow(0, maxsize, -1, convert, 0);
 
       // Autoalign if did walkup and it is past the first image and shift is not too big
-      if (mTrParams[mLowDose].walkup && fabs(mImBufs->mTiltAngleOrig) - 
+      if (mTrParams[mLowDose].walkup && fabs(mImBufs->mTiltAngleOrig) -
         mTrParams[mLowDose].startAngle > mTrParams[mLowDose].angleInc / 2.) {
         mScope->GetLDCenteredShift(shiftX, shiftY);
-        if (mShiftManager->RadialShiftOnSpecimen(shiftX, shiftY, mScope->FastMagIndex()) 
-          < (mWinApp->LowDoseMode() ? 
+        if (mShiftManager->RadialShiftOnSpecimen(shiftX, shiftY, mScope->FastMagIndex())
+          < (mWinApp->LowDoseMode() ?
           mComplexTasks->GetWULowDoseISLimit() : mComplexTasks->GetWalkShiftLimit()))
           mShiftManager->AutoAlign(1, 0);
       }
@@ -1611,7 +1615,7 @@ void CMultiTSTasks::TiltRangeNextTask(int param)
 
     case TSR_ALIGN_ZERO_SHOT:
 
-      // After aligning zero shot, start other direction 
+      // After aligning zero shot, start other direction
       mImBufs->mCaptured = BUFFER_TRACKING;
       mAcquiring = false;
       mShiftManager->AutoAlign(mTrZeroRefBuf, 0);
@@ -1685,7 +1689,7 @@ void CMultiTSTasks::FinishTiltRange(void)
     mRangeViewer = new CTSViewRange();
     mRangeViewer->Create(IDD_TSSETANGLE);
     mWinApp->GetMainRect(&rect, dialogOffset);
-    mRangeViewer->SetWindowPos(&CWnd::wndTopMost, rect.left + dialogOffset + 70, 
+    mRangeViewer->SetWindowPos(&CWnd::wndTopMost, rect.left + dialogOffset + 70,
       rect.top + 60, 100, 100, SWP_NOSIZE | SWP_SHOWWINDOW);
     mWinApp->mStackView->SetFocus();
   }
@@ -1766,11 +1770,11 @@ BOOL CMultiTSTasks::IsTiltNeeded(float curMean)
   }
 
   // Test in order so lowest angle will show up in stop message
-  if (MeansDropped(curMean) || fabs(mTrCurTilt) + 0.75 * mTrParams[mLowDose].angleInc > 
+  if (MeansDropped(curMean) || fabs(mTrCurTilt) + 0.75 * mTrParams[mLowDose].angleInc >
     mTrParams[mLowDose].endAngle ||
     fabs(mTrCurTilt) - fabs(curAngle) > mTrMaxAngleErr) {
     if (fabs(mTrCurTilt) - fabs(curAngle) > mTrMaxAngleErr) {
-      str.Format("Stopped at %.1f because the stage failed to tilt to %.1f", 
+      str.Format("Stopped at %.1f because the stage failed to tilt to %.1f",
         curAngle, mTrCurTilt);
       mNeedStageRestore = true;
       LogStopMessage(str);
@@ -1790,7 +1794,7 @@ bool CMultiTSTasks::MeansDropped(float curMean)
   if ((mTrCenterMean > -1.e6 && curMean / mTrCenterMean < mTrMeanCrit) ||
       (mTrPreviousMean > -1.e6 && curMean / mTrPreviousMean < mTrPrevMeanCrit) ||
       (!mTrLastTilt && curMean > -1.e6 &&  // Only compare first shot for same image type
-      ((mLowDose && mRangeConsets[3 + mTrParams[1].imageType] == 0) || 
+      ((mLowDose && mRangeConsets[3 + mTrParams[1].imageType] == 0) ||
       (!mLowDose && mRangeConsets[mTrParams[0].imageType] == TRIAL_CONSET)) &&
       curMean / mTrZeroMean < mTrFirstMeanCrit * cos(DTOR * mTrCurTilt))) {
     if (!mTrLastTilt) {
@@ -1802,7 +1806,7 @@ bool CMultiTSTasks::MeansDropped(float curMean)
       StoreLimitAngle(true, mTrLastTilt);
     } else {
       str.Format("Stopped because center mean dropped from %.0f to %.0f over two tilts; "
-        "last good tilt = %.1f or %.1f", mTrPreviousMean, curMean, mTrPrevTilt, 
+        "last good tilt = %.1f or %.1f", mTrPreviousMean, curMean, mTrPrevTilt,
         mTrLastTilt);
       StoreLimitAngle(true, mTrPrevTilt);
     }
@@ -1881,7 +1885,7 @@ void CMultiTSTasks::StoreLimitAngle(bool userAuto, float angle)
 
 // Top-level routine starts file inversion for single-frame and inverts piece list Z for
 // montage
-int CMultiTSTasks::InvertFileInZ(int zmax, float *tiltAngles, bool synchronous, 
+int CMultiTSTasks::InvertFileInZ(int zmax, float *tiltAngles, bool synchronous,
   CString *errStr)
 {
   int ind, err = 0;
@@ -1980,7 +1984,7 @@ int CMultiTSTasks::SetupBidirFileCopy(int zmax)
 
   // Close the file, rename it, and reopen it by new name, then open new file in current
   // store.  This leaves the store system in a bad state!  If the file rename fails, try
-  // to rename it back and restore mStoreMC 
+  // to rename it back and restore mStoreMC
   // If anything else goes wrong, we simply have to close the current file and bail, but
   // it is going to crash unless there is another file open because a lot of things assume
   // mStoreMRC is nonnull
@@ -2078,7 +2082,7 @@ int CMultiTSTasks::StartBidirFileCopy(bool synchronous)
       mBfcDoingCopy = 1;
       if (!wasDoing)
         mWinApp->UpdateBufferWindows();
-    } 
+    }
 
     // Launch or do the copy
     err = mBufferManager->StartAsyncCopy(mBfcStoreFirstHalf, mBfcSortedStore,
@@ -2202,7 +2206,7 @@ int CMultiTSTasks::ReorderMontageByTilt(CString &errStr)
     ixPiece.resize(numSect);
     iyPiece.resize(numSect);
     izPiece.resize(numSect);
-    if (getMetadataPieces(adocInd, sectType, numSect, &ixPiece[0], &iyPiece[0], 
+    if (getMetadataPieces(adocInd, sectType, numSect, &ixPiece[0], &iyPiece[0],
       &izPiece[0], numSect, &numFound)) {
       errStr = b3dGetError();
       err = 1;
@@ -2228,7 +2232,7 @@ int CMultiTSTasks::ReorderMontageByTilt(CString &errStr)
   if (!err && mWinApp->mStoreMRC->getStoreType() == STORE_TYPE_HDF) {
     ((KStoreIMOD *)(mWinApp->mStoreMRC))->UpdateHdfMrcHeader();
   }
-    
+
   AdocReleaseMutex();
   return err;
 }
@@ -2238,7 +2242,7 @@ int CMultiTSTasks::ReorderMontageByTilt(CString &errStr)
 //////////////////////////////////////////////////////////
 
 // Start getting an anchor image or an image to align to the anchor
-int CMultiTSTasks::BidirAnchorImage(int magInd, BOOL useView, bool alignNotSave, 
+int CMultiTSTasks::BidirAnchorImage(int magInd, BOOL useView, bool alignNotSave,
                                      bool setImageShifts)
 {
   LowDoseParams *ldParm = mWinApp->GetLowDoseParams() + VIEW_CONSET;
@@ -2247,7 +2251,7 @@ int CMultiTSTasks::BidirAnchorImage(int magInd, BOOL useView, bool alignNotSave,
   int err, setNum = TRACK_CONSET;
   int camera = mWinApp->GetCurrentCamera();
   double outFactor, inFactor;
-  if (alignNotSave && UtilOpenFileReadImage(mWinApp->mTSController->GetBidirAnchorName(), 
+  if (alignNotSave && UtilOpenFileReadImage(mWinApp->mTSController->GetBidirAnchorName(),
     "bidirectional anchor")) {
       mSkipNextBeamShift = false;
       return 1;
@@ -2265,7 +2269,7 @@ int CMultiTSTasks::BidirAnchorImage(int magInd, BOOL useView, bool alignNotSave,
   mBaiSavedViewMag = -1;
   if (mWinApp->LowDoseMode()) {
 
-    // In low dose, if not using View per se and the indicated mag is lower than the 
+    // In low dose, if not using View per se and the indicated mag is lower than the
     // view mag, save the mag and intensity and change the intensity for the new mag
     setNum = VIEW_CONSET;
     if (!useView && magInd < ldParm->magIndex) {
@@ -2279,7 +2283,7 @@ int CMultiTSTasks::BidirAnchorImage(int magInd, BOOL useView, bool alignNotSave,
     }
     mScope->GotoLowDoseArea(VIEW_CONSET);
   } else {
-    mComplexTasks->MakeTrackingConSet(conSet, 
+    mComplexTasks->MakeTrackingConSet(conSet,
       B3DMAX(1024, mCamera->TargetSizeForTasks()));
     mComplexTasks->LowerMagIfNeeded(magInd, 0.75f, 0.5f, TRACK_CONSET);
   }
@@ -2344,7 +2348,7 @@ void CMultiTSTasks::BidirAnchorNextTask(int param)
   }
   if (err)
     BidirAnchorCleanup(1);
-  else  
+  else
     StopAnchorImage();
 }
 
@@ -2413,7 +2417,7 @@ void CMultiTSTasks::VPPConditionClosing(int OKorGo)
 }
 
 // Get the window placement
-WINDOWPLACEMENT *CMultiTSTasks::GetConditionPlacement(void) 
+WINDOWPLACEMENT *CMultiTSTasks::GetConditionPlacement(void)
 {
   if (mWinApp->mVPPConditionSetup) {
     mWinApp->mVPPConditionSetup->GetWindowPlacement(&mVPPConditionPlace);
@@ -2526,7 +2530,7 @@ int CMultiTSTasks::ConditionPhasePlate(bool movePlate)
     // and it has done a realign
     if (mVppNearPosIndex >= 0) {
       mVppAcquireIndex = mWinApp->mNavigator->GetAcquireIndex();
-      mVppNeedRealign = mVppAcquireIndex >= 0 && 
+      mVppNeedRealign = mVppAcquireIndex >= 0 &&
         mWinApp->mNavigator->GetRealignedInAcquire();
     }
   }
@@ -2673,7 +2677,7 @@ void CMultiTSTasks::VppConditionNextTask(int param)
     if (mVppWhichSettings == VPPCOND_SETTINGS)
       SetScopeStateFromVppParams(&mVppParams, false);
     else
-      mScope->GotoLowDoseArea(mVppWhichSettings == VPPCOND_TRIAL ? 
+      mScope->GotoLowDoseArea(mVppWhichSettings == VPPCOND_TRIAL ?
         TRIAL_CONSET : RECORD_CONSET);
 
     // Unblank and get start time; set  up what to do when it is over
@@ -2757,7 +2761,7 @@ void CMultiTSTasks::VppConditionNextTask(int param)
     StopVppCondition();
     break;
   }
-  
+
 }
 
 // The busy function is used only for the settling/exposing steps, it tests remaining time
@@ -2800,13 +2804,13 @@ void CMultiTSTasks::VppConditionCleanup(int error)
   mWinApp->ErrorOccurred(error);
 }
 
-// Normal, error, or user stop: 
+// Normal, error, or user stop:
 void CMultiTSTasks::StopVppCondition(void)
 {
   if (!mConditioningVPP)
     return;
 
-  // Reserve the value of 1 for a true end: if error or stop comes in, set it to 2 and 
+  // Reserve the value of 1 for a true end: if error or stop comes in, set it to 2 and
   // try to go on with finishing, unless STOP pressed 2 more times (unique, give it a try)
   if (mVppFinishing != 1) {
     mVppFinishing = B3DMAX(2, mVppFinishing + 1);

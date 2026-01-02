@@ -1,6 +1,6 @@
 // ParticleTasks.cpp:      Performs tasks primarily for single-particle acquisition
 //
-// Copyright (C) 2017 by  the Regents of the University of
+// Copyright (C) 2017-2026 by  the Regents of the University of
 // Colorado.  See Copyright.txt for full notice of copyright and limitations.
 //
 // Author: David Mastronarde
@@ -25,6 +25,10 @@
 #include "CameraController.h"
 #include "EMmontageController.h"
 #include "ZbyGSetupDlg.h"
+
+#if defined(_DEBUG) && defined(_CRTDBG_MAP_ALLOC)
+#define new DEBUG_NEW
+#endif
 
 
 CParticleTasks::CParticleTasks(void)
@@ -104,8 +108,8 @@ void CParticleTasks::Initialize(void)
  * Returns positive for an error or negative of the number of positions being done
  * Call with numPeripheral -1 to do a multishot montage
  */
-int CParticleTasks::StartMultiShot(int numPeripheral, int doCenter, float spokeRad, 
-  int numSecondRing, float spokeRad2, float extraDelay, BOOL saveRec, int ifEarlyReturn, 
+int CParticleTasks::StartMultiShot(int numPeripheral, int doCenter, float spokeRad,
+  int numSecondRing, float spokeRad2, float extraDelay, BOOL saveRec, int ifEarlyReturn,
   int earlyRetFrames, BOOL adjustBT, int inHoleOrMulti)
 {
   float pixel, xTiltFac, yTiltFac;
@@ -182,7 +186,7 @@ int CParticleTasks::StartMultiShot(int numPeripheral, int doCenter, float spokeR
     mMSDoCenter = -1;
   }
   mMSSkipAstigBT = mWinApp->mNavHelper->GetSkipAstigAdjustment();
-  mMSAdjustAstig = mMSAdjustBeamTilt && comaVsIS->astigMat.xpx != 0. && 
+  mMSAdjustAstig = mMSAdjustBeamTilt && comaVsIS->astigMat.xpx != 0. &&
     mMSSkipAstigBT <= 0;
 
   mMSDoStartMacro = false;
@@ -226,7 +230,7 @@ int CParticleTasks::StartMultiShot(int numPeripheral, int doCenter, float spokeR
     RESTORE_MSP_RETURN(1);
   }
   if (multiHoles && !((mMSUseCustomHoles && mMSParams->customHoleX.size() > 0) ||
-    (!mMSUseCustomHoles && (mMSParams->holeMagIndex[0] > 0 || 
+    (!mMSUseCustomHoles && (mMSParams->holeMagIndex[0] > 0 ||
       mMSParams->holeMagIndex[1] > 0)))) {
       SEMMessageBox("Hole positions have not been defined for doing multiple Records");
       RESTORE_MSP_RETURN(1);
@@ -263,7 +267,7 @@ int CParticleTasks::StartMultiShot(int numPeripheral, int doCenter, float spokeR
     numXholes = item->mNumXholes;
     numYholes = item->mNumYholes;
     if (ItemIsEmptyMultishot(item)) {
-      PrintfToLog("Item %s has all holes set to be skipped, so it is being skipped", 
+      PrintfToLog("Item %s has all holes set to be skipped, so it is being skipped",
         (LPCTSTR)item->mLabel);
       RESTORE_MSP_RETURN(openingFiles ? -1 : 0);
     }
@@ -286,7 +290,7 @@ int CParticleTasks::StartMultiShot(int numPeripheral, int doCenter, float spokeR
   } else {
 
     // This is the opposite sign from Reset Image Shift because that is taking away the
-    // defocus at the given IS because the stage is sliding up to the 0 IS point, 
+    // defocus at the given IS because the stage is sliding up to the 0 IS point,
     // here we need to impose that defocus for the given IS
     mMSDefocusTanFac = -(float)tan(DTOR * angle) * mShiftManager->GetDefocusZFactor() *
       (mShiftManager->GetStageInvertsZAxis() ? -1.f : 1.f);
@@ -308,7 +312,7 @@ int CParticleTasks::StartMultiShot(int numPeripheral, int doCenter, float spokeR
     mMSDoingHexGrid = numYholes == -1;
   else if (multiHoles)
     mMSDoingHexGrid = mMSParams->doHexArray && !mMSUseCustomHoles;
-  if (multiHoles && !mMSUseCustomHoles && 
+  if (multiHoles && !mMSUseCustomHoles &&
     !mMSParams->holeMagIndex[mMSDoingHexGrid ? 1 : 0]) {
     SEMMessageBox("Hole positions have not been defined for doing this type of "
       "multiple Records");
@@ -316,7 +320,7 @@ int CParticleTasks::StartMultiShot(int numPeripheral, int doCenter, float spokeR
   }
 
   if (multiHoles) {
-     mMSNumHoles = GetHolePositions(mMSHoleISX, mMSHoleISY, mMSPosIndex, mMagIndex, 
+     mMSNumHoles = GetHolePositions(mMSHoleISX, mMSHoleISY, mMSPosIndex, mMagIndex,
        mWinApp->GetCurrentCamera(), numXholes, numYholes, (float)angle, true);
      mMSUseHoleDelay = true;
      useXholes = B3DABS(numXholes ? numXholes : mMSParams->numHoles[0]);
@@ -357,12 +361,12 @@ int CParticleTasks::StartMultiShot(int numPeripheral, int doCenter, float spokeR
 
   if (!testRun || GetDebugOutput('W')) {
     str.Format("Starting multiple Records (%d position%s in %d hole%s) %s %s%s%s "
-      "compensation", mMSNumPeripheral + (mMSDoCenter ? 1 : 0), mMSNumPeripheral + 
+      "compensation", mMSNumPeripheral + (mMSDoCenter ? 1 : 0), mMSNumPeripheral +
       mMSDoCenter > 1 ? "s" : "", mMSNumHoles, mMSNumHoles > 1 ? "s" : "",
-      mMSAdjustBeamTilt? "WITH" : "WITHOUT", 
+      mMSAdjustBeamTilt? "WITH" : "WITHOUT",
       mMSSkipAstigBT >= 0 ? "beam tilt" : "",
-      !mMSSkipAstigBT && mMSAdjustAstig ? "/" : "", 
-      (mMSAdjustAstig || (!mMSAdjustBeamTilt && mMSSkipAstigBT < 0)) ? 
+      !mMSSkipAstigBT && mMSAdjustAstig ? "/" : "",
+      (mMSAdjustAstig || (!mMSAdjustBeamTilt && mMSSkipAstigBT < 0)) ?
       "astigmatism" : "");
     mWinApp->AppendToLog(str);
   }
@@ -382,7 +386,7 @@ int CParticleTasks::StartMultiShot(int numPeripheral, int doCenter, float spokeR
 
     // If script hasn't already compensated for IS, get the IS to compensate and, compute
     // the beam tilt to apply, and set it as base for compensating position IS's
-    if (!(mWinApp->mMacroProcessor->DoingMacro() && 
+    if (!(mWinApp->mMacroProcessor->DoingMacro() &&
       mWinApp->mMacroProcessor->GetCompensatedBTforIS())) {
       mScope->GetLDCenteredShift(delISX, delISY);
       mShiftManager->TransferGeneralIS(mMagIndex, delISX, delISY, comaVsIS->magInd,
@@ -405,12 +409,12 @@ int CParticleTasks::StartMultiShot(int numPeripheral, int doCenter, float spokeR
         delBTY = comaVsIS->astigMat.ypx * transISX + comaVsIS->astigMat.ypy * transISY;
         mCenterAstigX = mBaseAstigX + delBTX;
         mCenterAstigY = mBaseAstigY + delBTY;
-        mWinApp->mAutoTuning->BacklashedStigmator(mCenterAstigX, mCenterAstigY, 
+        mWinApp->mAutoTuning->BacklashedStigmator(mCenterAstigX, mCenterAstigY,
           mScope->GetAdjustForISSkipBacklash() <= 0);
         str2.Format("  setting stig  %.3f  %.3f", delBTX, delBTY);
         str += str2;
       }
-      
+
       if (GetDebugOutput('1'))
         mWinApp->AppendToLog(str);
     }
@@ -549,13 +553,13 @@ void CParticleTasks::MultiShotNextTask(int param)
   } else {
     SetUpMultiShotShift(mMSCurIndex, mMSHoleIndex, false);
   }
-  StartOneShotOfMulti(); 
+  StartOneShotOfMulti();
 }
 
 int CParticleTasks::MultiShotBusy(void)
 {
-  return (DoingMultiShot() && (mWinApp->mCamera->CameraBusy() || 
-    (mWinApp->mMontageController->DoingMontage() && !mMSsaveToMontage) || 
+  return (DoingMultiShot() && (mWinApp->mCamera->CameraBusy() ||
+    (mWinApp->mMontageController->DoingMontage() && !mMSsaveToMontage) ||
     mWinApp->mAutoTuning->GetDoingCtfBased()) ||
     (mMSRunningMacro && mWinApp->mMacroProcessor->DoingMacro())) ? 1 : 0;
 }
@@ -569,7 +573,7 @@ void CParticleTasks::MultiShotCleanup(int error)
   mWinApp->ErrorOccurred(error);
 }
 
-// Stop call: restore image shift 
+// Stop call: restore image shift
 void CParticleTasks::StopMultiShot(void)
 {
   if (mMSCurIndex < -1)
@@ -625,7 +629,7 @@ void CParticleTasks::SetUpMultiShotShift(int shotIndex, int holeIndex, BOOL queu
       ring = 1;
       indBase = mMSNumInRing[0];
     }
-    angle = DTOR * ((shotIndex -indBase) * 360. / mMSNumInRing[ring] + 
+    angle = DTOR * ((shotIndex -indBase) * 360. / mMSNumInRing[ring] +
       mPeripheralRotation);
     ApplyScaleMatrix(mCamToIS, mMSRadiusOnCam[ring] * (float)cos(angle),
       mMSRadiusOnCam[ring] * (float)sin(angle), delISX, delISY);
@@ -637,10 +641,10 @@ void CParticleTasks::SetUpMultiShotShift(int shotIndex, int holeIndex, BOOL queu
   delISY += mMSHoleISY[holeIndex];
   ISX = mBaseISX + delISX;
   ISY = mBaseISY + delISY;
-  if (debug || mMSTestRun) 
+  if (debug || mMSTestRun)
    str.Format("For hole %d shot %d  %s  delIS  %.3f %.3f", holeIndex, shotIndex,
     queueIt ? "Queuing" : "Setting", delISX, delISY);
-  
+
   if (mMSDefocusTanFac != 0.) {
     delFocus = (float)(mIStoSpec.ypx * delISX + mIStoSpec.ypy * delISY) *mMSDefocusTanFac;
   }
@@ -691,7 +695,7 @@ void CParticleTasks::SetUpMultiShotShift(int shotIndex, int holeIndex, BOOL queu
   if (queueIt) {
     mCamera->QueueImageShift(ISX, ISY, B3DNINT(1000. * delay));
     if (mMSAdjustBeamTilt && mMSSkipAstigBT >= 0)
-      mCamera->QueueBeamTilt(mCenterBeamTiltX + delBTX, mCenterBeamTiltY + delBTY, 
+      mCamera->QueueBeamTilt(mCenterBeamTiltX + delBTX, mCenterBeamTiltY + delBTY,
         doBacklash ? BTdelay : 0);
     if (mMSAdjustAstig)
       mCamera->QueueStigmator(mCenterAstigX + delAstigX, mCenterAstigY + delAstigY,
@@ -738,7 +742,7 @@ int CParticleTasks::StartOneShotOfMulti(void)
   CameraParameters *camParams = mWinApp->GetActiveCamParam();
   bool earlyRet = ((mMSIfEarlyReturn == 1 && !GetNextShotAndHole(nextShot, nextHole)) ||
     mMSIfEarlyReturn == 2 || (mMSIfEarlyReturn > 2 && (mMSHoleIndex > 0 ||
-      mMSCurIndex > (mMSDoCenter < 0 ? -1 : 0)))) && camParams->K2Type && 
+      mMSCurIndex > (mMSDoCenter < 0 ? -1 : 0)))) && camParams->K2Type &&
     !mMSDoStartMacro;
   if (earlyRet && mCamera->SetNextAsyncSumFrames(mMSEarlyRetFrames < 0 ? 65535 :
     mMSEarlyRetFrames, false, GetNextShotAndHole(nextShot, nextHole))) {
@@ -776,7 +780,7 @@ int CParticleTasks::StartOneShotOfMulti(void)
  * mag and camera
  */
 int CParticleTasks::GetHolePositions(FloatVec &delISX, FloatVec &delISY, IntVec &posIndex,
-  int magInd, int camera, int numXholes, int numYholes, float tiltAngle, 
+  int magInd, int camera, int numXholes, int numYholes, float tiltAngle,
   bool startingMulti)
 {
   int numHoles = 0, ind, ix, iy, direction[2], startInd[2], endInd[2], fromMag, jump[2];
@@ -800,7 +804,7 @@ int CParticleTasks::GetHolePositions(FloatVec &delISX, FloatVec &delISY, IntVec 
   holeAngle = mMSParams->tiltOfHoleArray[hexInd];
   fromMag = mMSParams->holeMagIndex[hexInd];
   origMag = mMSParams->origMagOfArray[hexInd];
-  if (((!startingMulti && mMSParams->useCustomHoles) || 
+  if (((!startingMulti && mMSParams->useCustomHoles) ||
     (startingMulti && mMSUseCustomHoles)) && mMSParams->customHoleX.size() > 0 &&
     !(numXholes || numYholes)) {
 
@@ -813,8 +817,8 @@ int CParticleTasks::GetHolePositions(FloatVec &delISX, FloatVec &delISY, IntVec 
     fromMag = mMSParams->customMagIndex;
     holeAngle = mMSParams->tiltOfCustomHoles;
     origMag = mMSParams->origMagOfCustom;
-  } else if (mMSParams->holeMagIndex[hexInd] > 0 && 
-    ((mMSParams->doHexArray && !(numXholes && numYholes)) || 
+  } else if (mMSParams->holeMagIndex[hexInd] > 0 &&
+    ((mMSParams->doHexArray && !(numXholes && numYholes)) ||
     (numXholes > 0 && numYholes == -1))) {
 
     // Hex positions: start at center
@@ -841,9 +845,9 @@ int CParticleTasks::GetHolePositions(FloatVec &delISX, FloatVec &delISY, IntVec 
 
         // Add each position along side
         for (ix = 0; ix < ring; ix++) {
-          fromISX.push_back(ring * mMSParams->hexISXspacing[mainDir] * mainSign + 
+          fromISX.push_back(ring * mMSParams->hexISXspacing[mainDir] * mainSign +
             ix * mMSParams->hexISXspacing[sideDir] * sideSign);
-          fromISY.push_back(ring * mMSParams->hexISYspacing[mainDir] * mainSign + 
+          fromISY.push_back(ring * mMSParams->hexISYspacing[mainDir] * mainSign +
             ix * mMSParams->hexISYspacing[sideDir] * sideSign);
           posIndex.push_back(ring);
           posIndex.push_back(ind * ring + ix);
@@ -879,7 +883,7 @@ int CParticleTasks::GetHolePositions(FloatVec &delISX, FloatVec &delISY, IntVec 
     endInd[0] = numXholes - 1;
     endInd[1] = numYholes - 1;
     jump[0] = jump[1] = 1;
-     
+
     if (mMSsaveToMontage) {
       for (ix = 0; ix < numXholes; ix++) {
         for (iy = 0; iy < numYholes; iy++) {
@@ -937,8 +941,8 @@ int CParticleTasks::GetHolePositions(FloatVec &delISX, FloatVec &delISY, IntVec 
     }
   }
 
-  mLastHolesWereAdjusted = origMag > 0 && mMSParams->adjustingXform.xpx != 0. && 
-    magInd == fromMag && origMag == mMSParams->xformFromMag && 
+  mLastHolesWereAdjusted = origMag > 0 && mMSParams->adjustingXform.xpx != 0. &&
+    magInd == fromMag && origMag == mMSParams->xformFromMag &&
     fromMag == mMSParams->xformToMag;
 
   // Transfer the image shifts and add to return vectors
@@ -946,9 +950,9 @@ int CParticleTasks::GetHolePositions(FloatVec &delISX, FloatVec &delISY, IntVec 
     mWinApp->mShiftManager->TransferGeneralIS(fromMag, fromISX[ind], fromISY[ind],
       magInd, transISX, transISY, camera);
     if (adjustForTilt) {
-      ApplyScaleMatrix(IStoSpec, (float)transISX, (float)transISY, specX, 
+      ApplyScaleMatrix(IStoSpec, (float)transISX, (float)transISY, specX,
         specY);
-      ApplyScaleMatrix(specToIS, specX, cosRatio * specY, transISX, 
+      ApplyScaleMatrix(specToIS, specX, cosRatio * specY, transISX,
         transISY);
     }
     delISX.push_back((float)transISX);
@@ -1138,7 +1142,7 @@ bool CParticleTasks::CurrentHoleAndPosition(CString &strCurPos)
     strCurPos.Format("R%dH%d-%d", mMSPosIndex[2 * mMSHoleIndex],
       mMSPosIndex[2 * mMSHoleIndex + 1] + 1, curPos);
   } else if (mMSPosIndex.size() > 0) {
-    strCurPos.Format("X%+dY%+d-%d", mMSPosIndex[2 * mMSHoleIndex], 
+    strCurPos.Format("X%+dY%+d-%d", mMSPosIndex[2 * mMSHoleIndex],
       mMSPosIndex[2 * mMSHoleIndex + 1], curPos);
   } else {
     strCurPos.Format("%d-%d", curHole, curPos);
@@ -1225,7 +1229,7 @@ void CParticleTasks::CloseSeparateMultiFiles()
 
 // The routine to start it with given parameters.  Returns 0 if it starts routine, -1
 // if it just goes on because of prior autofocus, there are no error (1) returns yet
-int CParticleTasks::WaitForDrift(DriftWaitParams &param, bool useImageInA, 
+int CParticleTasks::WaitForDrift(DriftWaitParams &param, bool useImageInA,
   float requiredMean, float changeLimit)
 {
   ControlSet *conSets = mWinApp->GetConSets();
@@ -1294,7 +1298,7 @@ int CParticleTasks::WaitForDrift(DriftWaitParams &param, bool useImageInA,
     mWDInitialStartTime = mWDLastStartTime = lastAcquireTime;
   } else {
     if (mWinApp->LowDoseMode())
-      mScope->GotoLowDoseArea(param.measureType == WFD_USE_TRIAL ? 
+      mScope->GotoLowDoseArea(param.measureType == WFD_USE_TRIAL ?
         TRIAL_CONSET : FOCUS_CONSET);
     tickTime = GetTickCount();
     genTimeOut = mShiftManager->GetGeneralTimeOut(shotType);
@@ -1338,7 +1342,7 @@ void CParticleTasks::WaitForDriftNextTask(int param)
 
     // If sleeping, now start the next measurement
     if (mWDParm.measureType == WFD_USE_TRIAL || mWDParm.measureType == WFD_USE_FOCUS)
-      mCamera->InitiateCapture(mWDParm.measureType == WFD_USE_TRIAL ? 
+      mCamera->InitiateCapture(mWDParm.measureType == WFD_USE_TRIAL ?
         TRACK_CONSET : FOCUS_CONSET);
     else
       mFocusManager->AutoFocusStart(1);
@@ -1367,7 +1371,7 @@ void CParticleTasks::WaitForDriftNextTask(int param)
 
         // From autofocus itself
         if (mFocusManager->GetLastDrift(driftX, driftY)) {
-          DriftWaitFailed(DW_FAILED_NO_INFO, 
+          DriftWaitFailed(DW_FAILED_NO_INFO,
             "no drift value available from last autofocus");
           return;
         }
@@ -1416,7 +1420,7 @@ void CParticleTasks::WaitForDriftNextTask(int param)
 
       // Or is the time up?
       if (elapsed + mWDParm.interval / 3. > mWDParm.maxWaitTime) {
-        str.Format("drift is still %s after %.0f sec", 
+        str.Format("drift is still %s after %.0f sec",
           (LPCTSTR)FormatDrift(mWDLastDriftRate), elapsed);
         DriftWaitFailed(DW_FAILED_TOO_LONG, str);
         return;
@@ -1429,7 +1433,7 @@ void CParticleTasks::WaitForDriftNextTask(int param)
     str = "";
     if (mWDLastDriftRate > 0) {
       str = FormatDrift(mWDLastDriftRate);
-      if (mWinApp->mComplexTasks->GetVerbose() && 
+      if (mWinApp->mComplexTasks->GetVerbose() &&
         mWDParm.measureType != WFD_WITHIN_AUTOFOC)
         PrintfToLog("Elapsed time %.1f sec: drift %s", elapsed, (LPCTSTR)str);
     }
@@ -1462,7 +1466,7 @@ void CParticleTasks::WaitForDriftCleanup(int error)
   mWinApp->ErrorOccurred(error);
 }
 
-// Stop call 
+// Stop call
 void CParticleTasks::StopWaitForDrift(void)
 {
   if (!mWaitingForDrift)
@@ -1605,7 +1609,7 @@ void CParticleTasks::ZbyGNextTask(int param)
           else
             mZbyGcalArray[mZBGIndexOfCal] = mZBGCalParam;
           PrintfToLog("Eucentricity by focus calibration done: measured defocus = %.2f"
-            " at absolute focus %.6f", mZBGCalParam.targetDefocus, 
+            " at absolute focus %.6f", mZBGCalParam.targetDefocus,
             mZBGCalParam.standardFocus);
           StopZbyG();
           if (mZbyGsetupDlg)
@@ -1660,7 +1664,7 @@ void CParticleTasks::ZbyGNextTask(int param)
 
         } else {
 
-          // If no calibrations, scale by factor from autofocus curve: the ratio of the 
+          // If no calibrations, scale by factor from autofocus curve: the ratio of the
           // slope where the focus was measured to slope at 0
           if (mFocusManager->GetRatioOfCalSlopes() > 0)
             scaling = mFocusManager->GetRatioOfCalSlopes();
@@ -1675,7 +1679,7 @@ void CParticleTasks::ZbyGNextTask(int param)
           scaling *= oldScale;
           SEMTrace('1', "Change scale to %f for being past AF calibration", scaling);
         }
-        
+
         delZ *= scaling / mShiftManager->GetDefocusZFactor();
 
         // compute an error factor
@@ -1692,7 +1696,7 @@ void CParticleTasks::ZbyGNextTask(int param)
           fabs(mZBGLastChange) > mZBGMinMoveForErrFac &&
           (errFac > mZBGMaxErrorFactor || errFac < mZBGMinErrorFactor)) {
           mZBGErrorMess.Format("Error in Eucentricity by Focus: the last implied Z change"
-            "\r\nof %.1f um was too inconsistent with the previous change of %.1f um", 
+            "\r\nof %.1f um was too inconsistent with the previous change of %.1f um",
             delZ, mZBGLastChange);
         }
       }
@@ -1843,7 +1847,7 @@ void CParticleTasks::ZbyGSetupClosing()
 
 // Look for a Z by G calibration that matches the mag, low dose area, and camera, return
 // Null if none, return index of calibration if find it, mag index of nearest mag if not
-ZbyGParams *CParticleTasks::FindZbyGCalForMagAndArea(int magInd, int ldArea, int camera, 
+ZbyGParams *CParticleTasks::FindZbyGCalForMagAndArea(int magInd, int ldArea, int camera,
   int &paramInd, int &nearest)
 {
   int ind;
@@ -1866,7 +1870,7 @@ ZbyGParams *CParticleTasks::FindZbyGCalForMagAndArea(int magInd, int ldArea, int
 // Look for a Z by G calibration that matches the low dose area to be used, mag and camera
 // plus require a match to probe/alpha and spot if not in low dose, and return an error
 // code along with a NULL for error
-ZbyGParams * CParticleTasks::GetZbyGCalAndCheck(int useVinLD, int &magInd, int &ldArea, 
+ZbyGParams * CParticleTasks::GetZbyGCalAndCheck(int useVinLD, int &magInd, int &ldArea,
   int &paramInd, int &nearest, int &error)
 {
   LowDoseParams *ldp = mWinApp->GetLowDoseParams();
@@ -1884,7 +1888,7 @@ ZbyGParams * CParticleTasks::GetZbyGCalAndCheck(int useVinLD, int &magInd, int &
   if (magInd <= 0)// || mWinApp->GetSTEMMode())  // For Jaap to try
     return NULL;
 
-  zbgParams = FindZbyGCalForMagAndArea(magInd, ldArea, mWinApp->GetCurrentCamera(), 
+  zbgParams = FindZbyGCalForMagAndArea(magInd, ldArea, mWinApp->GetCurrentCamera(),
     paramInd, nearest);
   error = 2;
   if (!zbgParams)
@@ -1895,7 +1899,7 @@ ZbyGParams * CParticleTasks::GetZbyGCalAndCheck(int useVinLD, int &magInd, int &
     (FEIscope && zbgParams->probeOrAlpha != mScope->GetProbeMode()) || (JEOLscope &&
       !mScope->GetHasNoAlpha() && zbgParams->probeOrAlpha != mScope->FastAlpha())))
     return NULL;
- 
+
   error = 0;
   return zbgParams;
 }
@@ -1948,7 +1952,7 @@ void CParticleTasks::PrepareAutofocusForZbyG(ZbyGParams &param, bool saveAndSetL
   mFocusManager->SetBeamTilt(param.beamTilt, "from PrepareAutofocusForZbyG");
   mZBGSavedOffset = mFocusManager->GetDefocusOffset();
 
-  // For View area, make the offset value be the view defocus 
+  // For View area, make the offset value be the view defocus
   // zero the offset for all cases; it will applied below on one-time basis
   if (param.lowDoseArea == VIEW_CONSET) {
     mZBGSavedViewDefocus = mScope->GetLDViewDefocus();
@@ -2054,7 +2058,7 @@ int CParticleTasks::AlignToTemplate(NavAlignParams & aliParams)
     mNavHelper->SetTypeOfSavedState(STATE_NONE);
     mNavHelper->SaveCurrentState(STATE_MAP_ACQUIRE, 0, map->mMapCamera, 0);
   }
-  mNavHelper->PrepareToReimageMap(map, &montParm, conSet, TRIAL_CONSET, (mATDidSaveState 
+  mNavHelper->PrepareToReimageMap(map, &montParm, conSet, TRIAL_CONSET, (mATDidSaveState
     || !(mWinApp->LowDoseMode() && map->mMapLowDoseConSet < 0)) ? 1 : 0, 1);
   if (!mNavHelper->GetRIstayingInLD())
     mNavHelper->SetMapOffsetsIfAny(map);
@@ -2119,8 +2123,8 @@ void CParticleTasks::TemplateAlignNextTask(int param)
       mImBufs[mATParams.loadAndKeepBuf].mImage->getSize(mATsizeX, mATsizeY);
     cropping = nxIm > mATsizeX && nyIm > mATsizeY;
     mWinApp->mShiftManager->SetNextAutoalignLimit(mATParams.maxAlignShift);
-    alignErr = mWinApp->mShiftManager->AutoAlign(B3DCHOICE(mATIterationNum, 
-      cropping ? 2 : 1, mATParams.loadAndKeepBuf), 1, true, AUTOALIGN_KEEP_SPOTS, NULL, 
+    alignErr = mWinApp->mShiftManager->AutoAlign(B3DCHOICE(mATIterationNum,
+      cropping ? 2 : 1, mATParams.loadAndKeepBuf), 1, true, AUTOALIGN_KEEP_SPOTS, NULL,
       0., 0., 0., 0., 0., NULL, NULL, GetDebugOutput('1'));
     if (alignErr) {
       SEMMessageBox(alignErr < 0 ? "Template autoalignment failed to find a peak within"
@@ -2274,7 +2278,7 @@ int CParticleTasks::ManageDewarsVacuum(DewarVacParams & params, int skipOrDoChec
       SetupRefillLongOp(longOps, hours, numLongOps, 0.);
 
     // If not already filling and we can get time to next filling, do so
-  } else if (((doNonChecks && mDVParams.refillAtInterval) || doChecks) && 
+  } else if (((doNonChecks && mDVParams.refillAtInterval) || doChecks) &&
     mDVParams.checkDewars && canGetTimeToFill) {
     if (mScope->GetDewarsRemainingTime(0, secToStart)) {
 
@@ -2304,7 +2308,7 @@ int CParticleTasks::ManageDewarsVacuum(DewarVacParams & params, int skipOrDoChec
 
   // If none of that resulted in waiting or starting, set up to do long operation if it
   // is time for it.
-  if ((doNonChecks && mDVParams.refillAtInterval) && !mDVAlreadyFilling && 
+  if ((doNonChecks && mDVParams.refillAtInterval) && !mDVAlreadyFilling &&
     !mDVWaitForFilling && !numLongOps) {
     SetupRefillLongOp(longOps, hours, numLongOps, params.dewarTimeHours);
   }
@@ -2350,7 +2354,7 @@ int CParticleTasks::ManageDewarsVacuum(DewarVacParams & params, int skipOrDoChec
   return 0;
 }
 
-// Set the operation entries for a refill appropriate for the scope type with the given 
+// Set the operation entries for a refill appropriate for the scope type with the given
 // value for the hours entry
 void CParticleTasks::SetupRefillLongOp(int *longOps, float *hours, int &numLongOps,
   float hourVal)
@@ -2474,7 +2478,7 @@ int CParticleTasks::DewarsVacBusy()
   if (mDVStartedRefill || mDVStartedCycle) {
     longBusy = mScope->LongOperationBusy();
 
-    // If it finished but we just saw filling, this is probably because of a collision 
+    // If it finished but we just saw filling, this is probably because of a collision
     // and timeout starting the fill, so start new long op to catch the end of filling
     if (!longBusy && mDVUseVibManager && callOK && busy) {
       longOps[0] = LONG_OP_PREPARE_NO_VIBRATE;

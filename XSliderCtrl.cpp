@@ -10,6 +10,10 @@
 #include "SerialEM.h"
 #include "XSliderCtrl.h"
 
+#if defined(_DEBUG) && defined(_CRTDBG_MAP_ALLOC)
+#define new DEBUG_NEW
+#endif
+
 CXSliderCtrl::CXSliderCtrl()
 {
   mIdleCR = RGB(0, 80, 200);
@@ -46,7 +50,7 @@ afx_msg void CXSliderCtrl::OnCustomDraw(NMHDR * pNotifyStruct, LRESULT* result)
   NMCUSTOMDRAW nmcd = *(LPNMCUSTOMDRAW)pNotifyStruct;
   //PrintfToLog("%p stage %x item %x", this, nmcd.dwDrawStage, nmcd.dwItemSpec);
   if (nmcd.dwDrawStage == CDDS_PREPAINT) {
-    // return CDRF_NOTIFYITEMDRAW so that we will get subsequent 
+    // return CDRF_NOTIFYITEMDRAW so that we will get subsequent
     // CDDS_ITEMPREPAINT notifications
     *result = CDRF_NOTIFYITEMDRAW;
     return;

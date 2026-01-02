@@ -1,6 +1,6 @@
 // MultiShotDlg.cpp:      Dialog for multiple Record parameters
 //
-// Copyright (C) 2017 by  the Regents of the University of
+// Copyright (C) 2017-2026 by  the Regents of the University of
 // Colorado.  See Copyright.txt for full notice of copyright and limitations.
 //
 // Author: David Mastronarde
@@ -27,6 +27,10 @@
 #include "NavHelper.h"
 #include "HoleFinderDlg.h"
 #include "NavAcquireDlg.h"
+
+#if defined(_DEBUG) && defined(_CRTDBG_MAP_ALLOC)
+#define new DEBUG_NEW
+#endif
 
 CSerialEMApp *CMultiShotDlg::mWinApp;
 BOOL CMultiShotDlg::m_bHexGrid;
@@ -58,13 +62,13 @@ bool CMultiShotDlg::mAutoAdjDoCenter;
 static const char *sStepAdjFileName = "stepAndAdjustTemp.mrc";
 
 static int idTable[] = {IDC_CHECK_DO_SHOTS_IN_HOLE, PANEL_END,
-IDC_SPIN_NUM_SHOTS, IDC_RNO_CENTER, IDC_RCENTER_AFTER, IDC_RCENTER_BEFORE, 
+IDC_SPIN_NUM_SHOTS, IDC_RNO_CENTER, IDC_RCENTER_AFTER, IDC_RCENTER_BEFORE,
 IDC_STAT_CENTER_GROUP, IDC_STAT_NUM_PERIPHERAL, IDC_STAT_NUM_SHOTS, IDC_STAT_CENTER_DIST,
 IDC_EDIT_SPOKE_DIST, IDC_STAT_CENTER_UM, IDC_EDIT_RING2_DIST, IDC_CHECK_SECOND_RING,
-IDC_STAT_NUM2_SHOTS, IDC_SPIN_RING2_NUM, IDC_STAT_RING2_SHOTS, IDC_STAT_RING2_UM, 
+IDC_STAT_NUM2_SHOTS, IDC_SPIN_RING2_NUM, IDC_STAT_RING2_SHOTS, IDC_STAT_RING2_UM,
 PANEL_END,
 IDC_TSS_LINE1, IDC_CHECK_DO_MULTIPLE_HOLES, PANEL_END,
-IDC_EDIT_HOLE_DELAY_FAC, IDC_STAT_REGULAR, IDC_STAT_NUM_X_HOLES, IDC_SPIN_NUM_X_HOLES, 
+IDC_EDIT_HOLE_DELAY_FAC, IDC_STAT_REGULAR, IDC_STAT_NUM_X_HOLES, IDC_SPIN_NUM_X_HOLES,
 IDC_SPIN_NUM_Y_HOLES, IDC_STAT_SPACING, IDC_STAT_MEASURE_BOX, IDC_STAT_SAVE_INSTRUCTIONS,
 IDC_BUT_SET_REGULAR, IDC_CHECK_USE_CUSTOM, IDC_BUT_SAVE_IS, IDC_CHECK_OMIT_3X3_CORNERS,
 IDC_BUT_ABORT, IDC_BUT_END_PATTERN, IDC_BUT_IS_TO_PT, IDC_BUT_USE_LAST_HOLE_VECS,
@@ -74,7 +78,7 @@ IDC_BUT_APPLY_ADJUSTMENT, IDC_STAT_USE_VECS, IDC_BUT_UNDO_AUTO, PANEL_END,
 IDC_TSS_LINE2, IDC_CHECK_SAVE_RECORD, PANEL_END,
 IDC_RNO_EARLY, IDC_RLAST_EARLY, IDC_RALL_EARLY, IDC_RFIRST_FULL, IDC_STAT_NUM_EARLY,
 IDC_STAT_EARLY_GROUP, IDC_EDIT_EARLY_FRAMES, PANEL_END,
-IDC_EDIT_EXTRA_DELAY, IDC_STAT_BEAM_DIAM, IDC_EDIT_BEAM_DIAM, IDC_TSS_LINE3, 
+IDC_EDIT_EXTRA_DELAY, IDC_STAT_BEAM_DIAM, IDC_EDIT_BEAM_DIAM, IDC_TSS_LINE3,
 IDC_STAT_BEAM_UM, IDC_CHECK_USE_ILLUM_AREA, IDC_STAT_EXTRA_DELAY, IDC_STAT_SEC,
 IDC_CHECK_ADJUST_BEAM_TILT, IDC_STAT_COMA_IS_CAL, IDC_TSS_LINE4, IDC_BUTCAL_BT_VS_IS,
 IDC_BUT_TEST_MULTISHOT,
@@ -341,14 +345,14 @@ void CMultiShotDlg::UpdateSettings(void)
   mWinApp->mMainView->DrawImage();
 }
 
-void CMultiShotDlg::PostNcDestroy() 
+void CMultiShotDlg::PostNcDestroy()
 {
-  delete this;  
+  delete this;
   CDialog::PostNcDestroy();
 }
 
 // OK, Cancel, handling returns in text fields
-void CMultiShotDlg::OnOK() 
+void CMultiShotDlg::OnOK()
 {
   UPDATE_DATA_TRUE;
   UpdateAndUseMSparams();
@@ -360,7 +364,7 @@ void CMultiShotDlg::OnOK()
   DestroyWindow();
 }
 
-void CMultiShotDlg::OnCancel() 
+void CMultiShotDlg::OnCancel()
 {
   if (mDisabledDialog)
     return;
@@ -391,7 +395,7 @@ void CMultiShotDlg::ManagePanels(bool adjust)
   states[1] = m_bDoShotsInHoles;
   states[3] = m_bDoMultipleHoles;
   states[5] = mCanReturnEarly;
-  if ((mWinApp->mNavigator && mWinApp->mNavigator->GetAcquiring()) || 
+  if ((mWinApp->mNavigator && mWinApp->mNavigator->GetAcquiring()) ||
     mWinApp->mParticleTasks->DoingMultiShot() || mWinApp->mMacroProcessor->DoingMacro()) {
       for (ind = 0; ind < numStates - 1; ind++)
         states[ind] = false;
@@ -429,7 +433,7 @@ void CMultiShotDlg::OnDoShotsInHole()
 // Number of shots spinner
 void CMultiShotDlg::OnDeltaposSpinNumShots(NMHDR *pNMHDR, LRESULT *pResult)
 {
-  FormattedSpinnerValue(pNMHDR, pResult, 2, MAX_PERIPHERAL_SHOTS, 
+  FormattedSpinnerValue(pNMHDR, pResult, 2, MAX_PERIPHERAL_SHOTS,
     mActiveParams->numShots[0], m_strNumShots, "%d");
   UpdateAndUseMSparams();
 }
@@ -459,7 +463,7 @@ void CMultiShotDlg::OnDoSecondRing()
 // Spinner for second ring
 void CMultiShotDlg::OnDeltaposSpinRing2Num(NMHDR *pNMHDR, LRESULT *pResult)
 {
-  FormattedSpinnerValue(pNMHDR, pResult, 2, MAX_PERIPHERAL_SHOTS, 
+  FormattedSpinnerValue(pNMHDR, pResult, 2, MAX_PERIPHERAL_SHOTS,
     mActiveParams->numShots[1], m_strNum2Shots, "%d");
   UpdateAndUseMSparams();
 }
@@ -513,7 +517,7 @@ void CMultiShotDlg::OnDeltaposSpinNumXHoles(NMHDR *pNMHDR, LRESULT *pResult)
 void CMultiShotDlg::OnDeltaposSpinNumYHoles(NMHDR *pNMHDR, LRESULT *pResult)
 {
   int minNum = mActiveParams->numHoles[0] == 1 ? 2 : 1;
-  FormattedSpinnerValue(pNMHDR, pResult, minNum, MAX_HOLE_SPINNERS, 
+  FormattedSpinnerValue(pNMHDR, pResult, minNum, MAX_HOLE_SPINNERS,
     mActiveParams->numHoles[1], m_strNumYholes, "by %2d");
   ManageEnables();
   UpdateAndUseMSparams();
@@ -555,7 +559,7 @@ void CMultiShotDlg::OnButStepAdjust()
   CStepAdjustISDlg dlg;
   bool custom = m_bUseCustom && mActiveParams->customHoleX.size() > 0;
   if (mWinApp->LowDoseMode()) {
-    dlg.mPrevMag = custom ? mActiveParams->customMagIndex : 
+    dlg.mPrevMag = custom ? mActiveParams->customMagIndex :
       mActiveParams->holeMagIndex[m_bHexGrid ? 1 : 0];
     dlg.mHexGrid = m_bHexGrid;
     dlg.mUseCustom = custom;
@@ -640,7 +644,7 @@ int CMultiShotDlg::DoStartRecording()
       else if (params->stepAdjLDarea == 1)
         mAreaSaved = VIEW_CONSET;
       if (params->stepAdjWhichMag != 1)
-        prevMag = params->stepAdjWhichMag ? params->stepAdjOtherMag : 
+        prevMag = params->stepAdjWhichMag ? params->stepAdjOtherMag :
         ldp[mAreaSaved].magIndex;
 
       if (params->stepAdjLDarea > 1 && params->stepAdjSetPrevExp) {
@@ -658,12 +662,12 @@ int CMultiShotDlg::DoStartRecording()
           10))
           return 1;
       }
-      
+
       // Set up automatic stepping
-      if (params->doAutoAdjustment && CanDoAutoAdjust(params->stepAdjWhichMag, 
-        params->stepAdjLDarea, params->stepAdjOtherMag, 
+      if (params->doAutoAdjustment && CanDoAutoAdjust(params->stepAdjWhichMag,
+        params->stepAdjLDarea, params->stepAdjOtherMag,
         params->holeMagIndex[params->doHexArray ? 1 : 0],
-          params->autoAdjHoleSize, params->doHexArray, 
+          params->autoAdjHoleSize, params->doHexArray,
         params->useCustomHoles && params->customMagIndex, mAutoAdjCropSize, str)) {
         mDoingAutoStepAdj = true;
         mWinApp->mBufferManager->SetShiftsOnAcquire(0);
@@ -800,7 +804,7 @@ void CMultiShotDlg::StopRecording(void)
 void CMultiShotDlg::OnButIsToPt()
 {
   CNavigatorDlg *nav = mWinApp->mNavigator;
-  CString mess;  
+  CString mess;
   int answer, itemInd, numInGroup, groupStart, groupEnd;
   if (nav->m_bCollapseGroups) {
     AfxMessageBox("This function will not work right if groups are collapsed\n\n"
@@ -815,7 +819,7 @@ void CMultiShotDlg::OnButIsToPt()
         "You will be reponsible for selecting the next point\n"
         "BEFORE pressing this button again");
       mNavPointIncrement = 0;
-    } else if (groupStart == itemInd || 
+    } else if (groupStart == itemInd ||
       (mRecordingRegular && numInGroup == (m_bHexGrid ? 6 : 4))) {
       mNavPointIncrement = 1;
       if (groupStart != itemInd) {
@@ -880,7 +884,7 @@ int CMultiShotDlg::DoSaveIS(CString &str)
     mShiftManager->GetFocusMagCals()->GetSize() > 0;
   int dir, area, ind, origMag, numSteps[2], size = (int)mSavedISX.size() + 1;
   int lastInd, lastDir, magInd, hexInd = m_bHexGrid ? 1 : 0;
-  int startInd1[2] = {0, 0}, endInd1[2] = {1, 3}, startInd2[2] = {3, 1}, 
+  int startInd1[2] = {0, 0}, endInd1[2] = {1, 3}, startInd2[2] = {3, 1},
     endInd2[2] = {2, 2};
   ScaleMat newVec, oldVecInv = {0., 0., 0., 0.};
   double *xSpacing = m_bHexGrid ? &params->hexISXspacing[0] :
@@ -894,7 +898,7 @@ int CMultiShotDlg::DoSaveIS(CString &str)
   area = mWinApp->mScope->GetLowDoseArea();
   if (size == 1 && !mDoingAutoStepAdj) {
     mWinApp->mScope->GetStagePosition(mRecordStageX, mRecordStageY, stageZ);
-    if (!canAdjustIS && ((imBufs->mLowDoseArea && (imBufs->mConSetUsed == VIEW_CONSET || 
+    if (!canAdjustIS && ((imBufs->mLowDoseArea && (imBufs->mConSetUsed == VIEW_CONSET ||
       imBufs->mConSetUsed == SEARCH_CONSET) && imBufs->mViewDefocus < focusLim) ||
       (mWinApp->LowDoseMode() && IS_AREA_VIEW_OR_SEARCH(area) &&
       mWinApp->mScope->GetLDViewDefocus(area) < focusLim))) {
@@ -909,7 +913,7 @@ int CMultiShotDlg::DoSaveIS(CString &str)
 
     // After that, check for stage moved
     mWinApp->mScope->GetStagePosition(stageX, stageY, stageZ);
-    if (fabs(stageX - mRecordStageX) > ISlimit || 
+    if (fabs(stageX - mRecordStageX) > ISlimit ||
       fabs(stageY - mRecordStageY) > ISlimit) {
         str.Format("The stage appears to have moved by %.3f in X and %.3f in Y\n"
           "(more than ISoffsetCalStageLimit = %f).\n\n"
@@ -945,7 +949,7 @@ int CMultiShotDlg::DoSaveIS(CString &str)
       // vector matrix for refining it
       if (mSteppingAdjusting && (params->origMagOfArray[hexInd] < 0 ||
         (params->xformFromMag > 0 && ((magInd == params->xformToMag &&
-          params->origMagOfArray[hexInd] == params->xformFromMag)) || 
+          params->origMagOfArray[hexInd] == params->xformFromMag)) ||
           (params->xformToMag == params->holeMagIndex[hexInd])))) {
 
         // This is the point at which we can save the previous state for undoability
@@ -1009,7 +1013,7 @@ int CMultiShotDlg::DoSaveIS(CString &str)
 
       // Save negative of mag as original when recording from scratch
       // Vectors adjusted this way are not eligible for transform, set to 0
-      params->origMagOfArray[hexInd] = mSteppingAdjusting ? 
+      params->origMagOfArray[hexInd] = mSteppingAdjusting ?
         B3DABS(params->origMagOfArray[hexInd]) : -magInd;
       StopRecording();
       return 1;
@@ -1043,7 +1047,7 @@ int CMultiShotDlg::DoSaveIS(CString &str)
 
       // Recording regular or hex: Set up the instruction label
       if (m_bHexGrid) {
-        str.Format("Shift by %d holes to corner # %d in the hex array", 
+        str.Format("Shift by %d holes to corner # %d in the hex array",
           params->numHexRings, size + 1);
       } else {
         if (size == 1 || size == 3)
@@ -1061,9 +1065,9 @@ int CMultiShotDlg::DoSaveIS(CString &str)
       return 1;
     } else if (size > 1) {
       str.Format("Adjust shift for position # %d in the pattern", size);
-      ISXorig = params->customHoleX[size - 1] - 
+      ISXorig = params->customHoleX[size - 1] -
         params->customHoleX[size - 2];
-      ISYorig = params->customHoleY[size - 1] - 
+      ISYorig = params->customHoleY[size - 1] -
         params->customHoleY[size - 2];
     } else {
       str = "Adjust shift for first acquire position in the pattern";
@@ -1108,9 +1112,9 @@ void CMultiShotDlg::AutoStepAdjNextTask(int param)
   // Get the index of the buffer being used, the "alignBuf" which may be aligned to be
   // is at least the end of the stack, and the buffer to copy this one to
   bufInd = mActiveParams->stepAdjLDarea > 2 ? 1 : 0;
-  alignBuf = 3 + bufInd + (mAutoAdjDoCenter ? 1 : 0) + 
+  alignBuf = 3 + bufInd + (mAutoAdjDoCenter ? 1 : 0) +
     (mActiveParams->doHexArray ? 2 : 0);
-  copyToBuf = alignBuf + (deferred ? 1 : 0) - (int)mSavedISX.size() - 
+  copyToBuf = alignBuf + (deferred ? 1 : 0) - (int)mSavedISX.size() -
     (mAutoAdjDoCenter ? 1 : 0);
   imBuf = mWinApp->GetImBufs() + bufInd;
 
@@ -1127,12 +1131,12 @@ void CMultiShotDlg::AutoStepAdjNextTask(int param)
   // Hole centering
   if (mActiveParams->autoAdjMethod) {
     if (mWinApp->mNavHelper->mHoleFinderDlg->FindAndCenterOneHole(
-      mWinApp->GetImBufs() + bufInd, mActiveParams->autoAdjHoleSize, 30, 
+      mWinApp->GetImBufs() + bufInd, mActiveParams->autoAdjHoleSize, 30,
       mDeferredISX ? 0.9f : mActiveParams->autoAdjLimitFrac, xcen, ycen)) {
       StopRecording();
       return;
     }
- 
+
     // Of cross-correlation
   } else if (mSavedISX.size()) {
     if (bufInd)
@@ -1168,7 +1172,7 @@ void CMultiShotDlg::AutoStepAdjNextTask(int param)
 // Busy function for task when doing autostep
 int CMultiShotDlg::AutoStepBusy()
 {
-  return (mWinApp->mCamera->CameraBusy() || 
+  return (mWinApp->mCamera->CameraBusy() ||
     mWinApp->mMontageController->DoingMontage()) ? 1 : 0;
 }
 
@@ -1401,8 +1405,8 @@ void CMultiShotDlg::OnButEndPattern()
     B3DABS(mActiveParams->origMagOfCustom) : -mActiveParams->customMagIndex;
 
   // Accept the current position if it is different from the last
-  if (!mSteppingAdjusting && 
-    mShiftManager->RadialShiftOnSpecimen(ISX - mSavedISX[size], 
+  if (!mSteppingAdjusting &&
+    mShiftManager->RadialShiftOnSpecimen(ISX - mSavedISX[size],
     ISY - mSavedISY[size], mActiveParams->customMagIndex) > 0.05) {
     mSavedISX.push_back(ISX);
     mSavedISY.push_back(ISY);
@@ -1520,7 +1524,7 @@ void CMultiShotDlg::OnRnoEarly()
     mWinApp->mNavigator->mNavAcquireDlg->ManageOutputFile();
 }
 
-// Early return frames: manage 
+// Early return frames: manage
 void CMultiShotDlg::OnKillfocusEditEarlyFrames()
 {
   UPDATE_DATA_TRUE;
@@ -1618,7 +1622,7 @@ void CMultiShotDlg::ManageEnables(void)
   m_butAdjustBeamTilt.EnableWindow(comaVsIS->magInd > 0 && !mDisabledDialog);
   m_statNumEarly.EnableWindow(m_iEarlyReturn > 0);
   m_editEarlyFrames.EnableWindow(m_iEarlyReturn > 0);
-  m_butSaveRecord.EnableWindow(m_iEarlyReturn != 2 || m_iEarlyFrames != 0 || 
+  m_butSaveRecord.EnableWindow(m_iEarlyReturn != 2 || m_iEarlyFrames != 0 ||
     !camParams->K2Type);
   EnableDlgItem(IDC_RNO_EARLY, camParams->K2Type);
   EnableDlgItem(IDC_RLAST_EARLY, camParams->K2Type);
@@ -1654,7 +1658,7 @@ void CMultiShotDlg::ManageEnables(void)
   m_sbcNumXholes.EnableWindow(enable);
   m_sbcNumYholes.EnableWindow(enable);
   m_butHexGrid.EnableWindow(enable);
-  m_butOmit3x3Corners.EnableWindow(enable && ((mActiveParams->numHoles[0] == 3 && 
+  m_butOmit3x3Corners.EnableWindow(enable && ((mActiveParams->numHoles[0] == 3 &&
     mActiveParams->numHoles[1] == 3 && !m_bHexGrid) || m_bHexGrid));
   m_butUseCustom.EnableWindow(m_bDoMultipleHoles && mActiveParams->customHoleX.size() >0);
   m_butSetRegular.EnableWindow(enable && notRecording &&
@@ -1670,7 +1674,7 @@ void CMultiShotDlg::ManageEnables(void)
   m_butTestMultishot.EnableWindow(notRecording && !mSteppingAdjusting && !mDisabledDialog
     && (m_bDoMultipleHoles || m_bDoShotsInHoles) && comaVsIS->magInd > 0);
   if (mActiveParams->customHoleX.size() > 0)
-    str.Format("Use custom pattern (%d positions defined)", 
+    str.Format("Use custom pattern (%d positions defined)",
     mActiveParams->customHoleX.size());
   m_butUseCustom.SetWindowText(str);
   enable = enable && lowDose &&
@@ -1691,7 +1695,7 @@ void CMultiShotDlg::ManageEnables(void)
 
   if (m_bUseCustom)
     pattern = 3;
-  enable = notRecording && m_bDoMultipleHoles && 
+  enable = notRecording && m_bDoMultipleHoles &&
     mWinApp->mNavHelper->OKtoUseNavPtsForVectors(pattern, gst, gnd) > 0;
   m_butUseNavPts.EnableWindow(enable);
   enable = notRecording && !mDisabledDialog;
@@ -1702,8 +1706,8 @@ void CMultiShotDlg::ManageEnables(void)
   SetDlgItemText(IDC_STAT_ADJUST_STATUS, m_strAdjustStatus);
   m_butApplyAdjustment.EnableWindow(enable);
   if (notRecording)
-    m_statSaveInstructions.SetWindowText(canAdjustIS ? 
-      "Measuring image shift on defocused View may work" : 
+    m_statSaveInstructions.SetWindowText(canAdjustIS ?
+      "Measuring image shift on defocused View may work" :
       "Image shift should be measured near focus");
   str = "No regular pattern defined";
 
@@ -1736,7 +1740,7 @@ void CMultiShotDlg::ManageEnables(void)
       "Coma versus image shift was calibrated at:" :
       "Astigmatism versus image shift was calibrated at:");
     str.Format("%.4g%s %s, spot %d", mWinApp->mScope->GetC2Percent(comaVsIS->spotSize,
-      comaVsIS->intensity, comaVsIS->probeMode), mWinApp->mScope->GetC2Units(), 
+      comaVsIS->intensity, comaVsIS->probeMode), mWinApp->mScope->GetC2Units(),
       mWinApp->mScope->GetC2Name(),
       comaVsIS->spotSize);
     if (!mWinApp->mScope->GetHasNoAlpha() && comaVsIS->alpha >= 0) {
@@ -1787,7 +1791,7 @@ void CMultiShotDlg::UpdateMultiDisplay(int magInd, double intensity)
   // This reproduces logic in NavigatorDlg::GetMapDrawItems for whether drawing and how to
   // get magInd
   bool showMulti = mWinApp->mNavigator && mActiveParams->inHoleOrMultiHole &&
-    ((mWinApp->mNavigator->m_bShowAcquireArea && 
+    ((mWinApp->mNavigator->m_bShowAcquireArea &&
     (mWinApp->mNavHelper->GetEnableMultiShot() & 1)) || !RecordingISValues());
   if (!showMulti)
     return;

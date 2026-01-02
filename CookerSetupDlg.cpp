@@ -1,7 +1,6 @@
 // CookerSetupDlg.cpp:   To set parameters for specimen pre-exposure
 //
-// Copyright (C) 2008 by Boulder Laboratory for 3-Dimensional Electron 
-// Microscopy of Cells ("BL3DEMC") and the Regents of the University of
+// Copyright (C) 2008-2026 by the Regents of the University of
 // Colorado.  See Copyright.txt for full notice of copyright and limitations.
 //
 // Author: David Mastronarde
@@ -13,6 +12,10 @@
 #include "EMscope.h"
 #include "BeamAssessor.h"
 #include "MultiTSTasks.h"
+
+#if defined(_DEBUG) && defined(_CRTDBG_MAP_ALLOC)
+#define new DEBUG_NEW
+#endif
 
 #define TARGET_MIN  1
 #define TARGET_MAX  30000
@@ -146,7 +149,7 @@ BOOL CCookerSetupDlg::OnInitDialog()
   return TRUE;
 }
 
-void CCookerSetupDlg::OnOK() 
+void CCookerSetupDlg::OnOK()
 {
   UpdateData(true);
   mCookP->magIndex = mCurMagInd;
@@ -159,7 +162,7 @@ void CCookerSetupDlg::OnOK()
   mCookP->tiltAngle = m_fTiltAngle;
   mCookP->minutes = m_fTime;
   mCookP->timeInstead = m_iTimeInstead;
-  
+
   if (m_bTrackState)
     RestoreScopeState();
   m_bTrackState = false;
@@ -172,7 +175,7 @@ void CCookerSetupDlg::OnCookgo()
   OnOK();
 }
 
-void CCookerSetupDlg::OnCancel() 
+void CCookerSetupDlg::OnCancel()
 {
   if (m_bTrackState)
     RestoreScopeState();
@@ -267,7 +270,7 @@ void CCookerSetupDlg::OnKillfocusEditcooktilt()
   UpdateData(true);
 }
 
-void CCookerSetupDlg::LiveUpdate(int magInd, int spotSize, double intensity, int alpha, 
+void CCookerSetupDlg::LiveUpdate(int magInd, int spotSize, double intensity, int alpha,
 int probeMode)
 {
   if (!m_bTrackState)

@@ -14,12 +14,12 @@
 //
 //     Version 1.3 - 2008 February 22
 //     - Fixed problems related to compiling under recent versions of VS.
-//     - Fixed bug when new folder is created and OK pressed, reported 
+//     - Fixed bug when new folder is created and OK pressed, reported
 //       by McLyndon and Super Garrison.
-//     - Fixed bug when new path entered in mru combo, reported by Brad Bruce, 
+//     - Fixed bug when new path entered in mru combo, reported by Brad Bruce,
 //       with fix suggested by Manfred Drasch.
 //     - Fixed bug when used in dll, reported by k-mommos.
-//     - Fixed bug where you click My Computer then select folder, with fix 
+//     - Fixed bug where you click My Computer then select folder, with fix
 //       suggested by Wade Ledbetter.
 //     - Added ability to set/save list view mode, requested by Aetschmaen.
 //
@@ -66,10 +66,8 @@
 #include "dlgs.h"
 #include "xWinVer.h"
 
-#ifdef _DEBUG
+#if defined(_DEBUG) && defined(_CRTDBG_MAP_ALLOC)
 #define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
 #endif
 
 
@@ -148,7 +146,7 @@ BEGIN_MESSAGE_MAP(CXFolderDialog, CFileDialog)
 	//{{AFX_MSG_MAP(CXFolderDialog)
 	ON_WM_SIZE()
 	ON_CBN_SELENDOK(IDC_MRU_COMBO, OnSelendokMruCombo)
-	ON_CBN_KILLFOCUS(IDC_MRU_COMBO, OnCbnKillfocusMruCombo)	
+	ON_CBN_KILLFOCUS(IDC_MRU_COMBO, OnCbnKillfocusMruCombo)
 	ON_WM_TIMER()
 	ON_WM_DESTROY()
 	//}}AFX_MSG_MAP
@@ -191,7 +189,7 @@ CXFolderDialog::~CXFolderDialog()
 	TRACE(_T("in CXFolderDialog::~CXFolderDialog\n"));
 	if (m_bUseRegistry && m_bPersist)
 	{
-		TRACE(_T("writing view mode to registry:  0x%X\n"), 
+		TRACE(_T("writing view mode to registry:  0x%X\n"),
 			m_wndListView.m_lastViewMode);
 
 		AfxGetApp()->WriteProfileInt(PROFILE_SETTINGS, PROFILE_VIEWMODE,
@@ -322,7 +320,7 @@ INT_PTR CXFolderDialog::DoModal()
   // DNM 6/7/15: Make it the foreground window before resetting focus since it is dropping
   // behind other windows on Vista and Win 7 but not XP
   CWinApp *winApp = AfxGetApp();
-  if (IsVersion(6, VER_GREATER_EQUAL, 0, VER_GREATER_EQUAL) && winApp->m_pMainWnd && 
+  if (IsVersion(6, VER_GREATER_EQUAL, 0, VER_GREATER_EQUAL) && winApp->m_pMainWnd &&
     winApp->m_pMainWnd->m_hWnd)
     ::SetForegroundWindow(winApp->m_pMainWnd->m_hWnd);
 
@@ -410,7 +408,7 @@ BOOL CXFolderDialog::OnInitDialog()
 //=============================================================================
 void CXFolderDialog::SetViewMode(int cmd)
 //=============================================================================
-{ 
+{
 	TRACE(_T("in CXFolderDialog::SetViewMode:  0x%X\n"), cmd);
 
 	m_nViewMode = cmd;
@@ -608,7 +606,7 @@ BOOL CXFolderDialog::OnNotify(WPARAM wParam, LPARAM lParam, LRESULT* pResult)
 	if (pNmhdr->code == CDN_SELCHANGE)
 	{
 		TRACE(_T("XFolderDialog::OnNotify() CDN_SELCHANGE ===============\n"));
-		
+
 		m_strPath = GetPath(CDM_GETFILEPATH);
 		if (!m_strPath.IsEmpty())
 			m_cmbRecentFolders.SetWindowText(m_strPath);
@@ -634,8 +632,8 @@ BOOL CXFolderDialog::OnNotify(WPARAM wParam, LPARAM lParam, LRESULT* pResult)
 
 			VERIFY(m_wndListView.SubclassDlgItem(lst2, GetParent()));
 
-			if (m_bFirstTime) 
-			{ 
+			if (m_bFirstTime)
+			{
 				TRACE(_T("first-time init: %d\n"), m_bUseRegistry);
 				// if first-time init:
 				// Set view mode based on value saved in profile settings.
@@ -729,7 +727,7 @@ void CXFolderDialog::OnCbnKillfocusMruCombo()
 {
 	CString strFolder = _T("");
 	m_cmbRecentFolders.GetWindowText(strFolder);
-	
+
 	if (!strFolder.IsEmpty() && (_taccess(strFolder, 00) == 0))
 	{
 		CWnd *pWnd = GetParent();
@@ -746,7 +744,7 @@ void CXFolderDialog::OnCbnKillfocusMruCombo()
 				(LPARAM)GetDlgItem(IDOK)->GetSafeHwnd());
 			pWnd->SendMessage(CDM_SETCONTROLTEXT, m_nIdFileNameCombo,
 				(LPARAM)szText);
-			
+
 			m_strPath = strFolder;
 		}
 	}
@@ -820,7 +818,7 @@ void CXFolderDialog::OnTimer(UINT_PTR nIDEvent)
 }
 
 //=============================================================================
-void CXFolderDialog::OnDestroy() 
+void CXFolderDialog::OnDestroy()
 //=============================================================================
 {
 	TRACE(_T("in CXFolderDialog::OnDestroy\n"));

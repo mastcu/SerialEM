@@ -4,8 +4,8 @@
 //          hdietrich@gmail.com
 //
 // Description:
-//     XFileOpenListView implements CXFileOpenListView, a folder browsing 
-//     dialog that uses the new Windows 2000-style dialog.  Please see article 
+//     XFileOpenListView implements CXFileOpenListView, a folder browsing
+//     dialog that uses the new Windows 2000-style dialog.  Please see article
 //     at www.codeproject.com.
 //
 // History
@@ -25,6 +25,10 @@
 #include "stdafx.h"
 #include "XFileOpenListView.h"
 #include "xwinver.h"
+
+#if defined(_DEBUG) && defined(_CRTDBG_MAP_ALLOC)
+#define new DEBUG_NEW
+#endif
 
 // definitions from commctrl.h
 #ifndef LV_VIEW_ICON
@@ -70,12 +74,12 @@ BOOL CXFileOpenListView::SetViewMode(int cmd)
 {
 	TRACE(_T("in CXFileOpenListView::SetViewMode:  0x%X\n"), cmd);
 
-	if (IsWindow(m_hWnd)) 
+	if (IsWindow(m_hWnd))
 	{
 		// SHELLDLL_DefView window found: send it the command.
 		if (cmd == 0)
 		{
-			if (IsXP())	
+			if (IsXP())
 				cmd = XLVM_XP_LIST;
 			else if (IsVista())
 				cmd = XLVM_VISTA_LIST;
@@ -120,7 +124,7 @@ int CXFileOpenListView::GetViewMode()
 
 				TRACE(_T("lView=%X\n"), lView);
 
-				if (IsXP())	
+				if (IsXP())
 					nViewMode = GetXpViewMode(lView, plc);
 				else if (IsVista())
 					nViewMode = GetVistaViewMode(lView, plc);
@@ -137,7 +141,7 @@ int CXFileOpenListView::GetXpViewMode(long lView, CListCtrl* plc)
 {
 	int nViewMode = 0;
 
-	if (lView == LV_VIEW_ICON) 
+	if (lView == LV_VIEW_ICON)
 	{
 		// If list view is in ICON mode, look at icon spacing to determine
 		// whether Thumbnail or Icon mode.
@@ -146,24 +150,24 @@ int CXFileOpenListView::GetXpViewMode(long lView, CListCtrl* plc)
 			sz = CSize((DWORD)plc->SendMessage(LVM_GETITEMSPACING));
 		TRACE(_T("sz.cx = %d\n"), sz.cx);
 
-		if (sz.cx > GetSystemMetrics(SM_CXICONSPACING)) 
+		if (sz.cx > GetSystemMetrics(SM_CXICONSPACING))
 		{
 			nViewMode = XLVM_XP_THUMBNAILS;
-		} 
-		else 
+		}
+		else
 		{
 			nViewMode = XLVM_XP_ICONS;
 		}
-	} 
-	else if (lView == LV_VIEW_DETAILS) 
+	}
+	else if (lView == LV_VIEW_DETAILS)
 	{
 		nViewMode = XLVM_XP_DETAILS;
-	} 
-	else if (lView == LV_VIEW_LIST) 
+	}
+	else if (lView == LV_VIEW_LIST)
 	{
 		nViewMode = XLVM_XP_LIST;
-	} 
-	else if (lView == LV_VIEW_TILE) 
+	}
+	else if (lView == LV_VIEW_TILE)
 	{
 		nViewMode = XLVM_XP_TILES;
 	}
@@ -181,7 +185,7 @@ int CXFileOpenListView::GetVistaViewMode(long lView, CListCtrl* plc)
 	{
 		nViewMode = XLVM_VISTA_SMALL_ICONS;
 	}
-	else if (lView == LV_VIEW_ICON) 
+	else if (lView == LV_VIEW_ICON)
 	{
 		// If list view is in ICON mode, look at icon spacing to determine
 		// whether Thumbnail or Icon mode.
@@ -193,30 +197,30 @@ int CXFileOpenListView::GetVistaViewMode(long lView, CListCtrl* plc)
 		//s.Format(_T("item spacing = (%d, %d), nIconSpacing = %d"), sz.cx, sz.cy, nIconSpacing);
 		//::MessageBox(NULL, s, _T("item spacing"), MB_OK);
 
-		if (sz.cx == nIconSpacing) 
+		if (sz.cx == nIconSpacing)
 		{
 			nViewMode = XLVM_VISTA_MEDIUM_ICONS;
 		}
-		else if (sz.cx > nIconSpacing*2) 
+		else if (sz.cx > nIconSpacing*2)
 		{
 			nViewMode = XLVM_VISTA_EXTRA_LARGE_ICONS;
-		} 
-		else 
+		}
+		else
 		{
 			nViewMode = XLVM_VISTA_LARGE_ICONS;
 		}
-	} 
-	else if (lView == LV_VIEW_DETAILS) 
+	}
+	else if (lView == LV_VIEW_DETAILS)
 	{
 		nViewMode = XLVM_VISTA_DETAILS;
 
-	} 
-	else if (lView == LV_VIEW_LIST) 
+	}
+	else if (lView == LV_VIEW_LIST)
 	{
 		nViewMode = XLVM_VISTA_LIST;
 
-	} 
-	else if (lView == LV_VIEW_TILE) 
+	}
+	else if (lView == LV_VIEW_TILE)
 	{
 		nViewMode = XLVM_VISTA_TILES;
 	}
@@ -235,7 +239,7 @@ int CXFileOpenListView::GetVistaViewMode(long lView, CListCtrl* plc)
 LRESULT CXFileOpenListView::WindowProc(UINT msg, WPARAM, LPARAM)
 //=============================================================================
 {
-	if (msg == WM_DESTROY) 
+	if (msg == WM_DESTROY)
 	{
 		m_lastViewMode = GetViewMode();				// save current view mode
 		UnsubclassWindow();							// unsubclass myself

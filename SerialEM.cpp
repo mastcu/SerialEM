@@ -1,7 +1,7 @@
 // SerialEM.cpp          The main module, has top level routines and
 //                          miscellaneous message handlers
 //
-// Copyright (C) 2003-2025 by the Regents of the University of
+// Copyright (C) 2003-2026 by the Regents of the University of
 // Colorado.  See Copyright.txt for full notice of copyright and limitations.
 //
 // Author: David Mastronarde
@@ -75,10 +75,8 @@
 #include "Shared\b3dutil.h"
 #include "XFolderDialog/XWinVer.h"
 
-#ifdef _DEBUG
+#if defined(_DEBUG) && defined(_CRTDBG_MAP_ALLOC)
 #define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
 #endif
 
 #define VERSION_STRING  "SerialEM Version 4.3.0beta"
@@ -115,17 +113,17 @@ typedef BOOL(WINAPI *LPFN_ISWOW64PROCESS) (HANDLE, PBOOL);
 typedef USHORT(WINAPI *BackTraceFunc)(ULONG, ULONG, PVOID *, PULONG);
 
 // Initial state of tool dialogs
-static int  initialDlgState[MAX_TOOL_DLGS] = 
+static int  initialDlgState[MAX_TOOL_DLGS] =
   {3, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
 // Tool dialog colors
 static COLORREF dlgBorderColors[] =
-{RGB(255,0,0), RGB(0,0,170), RGB(0,255,0), RGB(255,128,0), RGB(255,183,120), 
-RGB(0,128,255), RGB(0,140,60), RGB(255,255,0), RGB(255,0,255), RGB(128,64,64), 
+{RGB(255,0,0), RGB(0,0,170), RGB(0,255,0), RGB(255,128,0), RGB(255,183,120),
+RGB(0,128,255), RGB(0,140,60), RGB(255,255,0), RGB(255,0,255), RGB(128,64,64),
 RGB(0,255,255), RGB(127,0,192), RGB(150,160,0), RGB(150,160,0), RGB(255,170,255),
 RGB(75,75,0), RGB(0,0,0), RGB(255,255,255)};
 
-static UINT sToolDlgIDs[] = 
+static UINT sToolDlgIDs[] =
 {IDD_BUFFERSTATUS, IDD_BUFFERCONTROL, IDD_IMAGELEVEL, IDD_SCOPESTATUS, IDD_REMOTE_CONTROL,
 IDD_TILTCONTROL, IDD_CAMERA_MACRO, IDD_ALIGNFOCUS, IDD_LOWDOSE, IDD_MONTAGECONTROL,
 IDD_STEMCONTROL, IDD_FILTERCONTROL, IDD_DETOOLDLG, IDD_DECTRIS_TOOLDLG};
@@ -269,7 +267,7 @@ CSerialEMApp::CSerialEMApp()
     for (j = 0; j < MAX_STOCK_COLORS; j++)
       mPaletteColors[j][i] = palette[j][i];
     mPaletteColors[ERROR_COLOR_IND][i] = palette[2][i];  // red
-    mPaletteColors[WARNING_COLOR_IND][i] = palette[2][i];  // red 
+    mPaletteColors[WARNING_COLOR_IND][i] = palette[2][i];  // red
     mPaletteColors[INSERTED_COLOR_IND][i] = palette[4][i];  // blue
     mPaletteColors[DEBUG_COLOR_IND][i] = palette[1][i];    // gray
     mPaletteColors[VERBOSE_COLOR_IND][i] = palette[1][i];    // gray
@@ -297,7 +295,7 @@ CSerialEMApp::CSerialEMApp()
   mModeName[5] = "Search";
   mModeName[6] = "Mont-map";
   mModeName[7] = "Track";
-  
+
   mPctLo = 0.1f;
   mPctHi = 0.1f;
   mPctAreaFraction = 0.8f;
@@ -1005,7 +1003,7 @@ BOOL CSerialEMApp::InitInstance()
         if (indSpace > 0)
           dropCameras = dropCameras.Left(indSpace);
 
-      } else if (mSysSubpath.Find("/Settings=") == 0 && (indSpace > 10 || 
+      } else if (mSysSubpath.Find("/Settings=") == 0 && (indSpace > 10 ||
         (indSpace < 0 && mSysSubpath.GetLength() > 10))) {
         settingsFile = mSysSubpath;
         if (indSpace > 0)
@@ -1077,7 +1075,7 @@ BOOL CSerialEMApp::InitInstance()
   // create main MDI Frame window
   CMainFrame* pMainFrame = new CMainFrame;
 
-  
+
   if (!pMainFrame->LoadFrame(IDR_MAINFRAME))
     return FALSE;
   m_pMainWnd = pMainFrame;
@@ -1090,8 +1088,8 @@ BOOL CSerialEMApp::InitInstance()
   // Dispatch commands specified on the command line
   if (!ProcessShellCommand(cmdInfo))
     return FALSE;
-  
-  // Try to find the document 
+
+  // Try to find the document
   mDocWnd = NULL;
   POSITION pos = GetFirstDocTemplatePosition();
   if (pos) {
@@ -1109,11 +1107,11 @@ BOOL CSerialEMApp::InitInstance()
   }
   if (!settingsFile.IsEmpty())
     mDocWnd->SetSettingsName(settingsFile);
-  
+
   // Initialize the buffer manager
   mBufferManager = new EMbufferManager(mModeName, mImBufs);
   mMacroProcessor = new CMacCmd(0);
-  
+
   // Get the various task managers
   // Don't forget to add new ones to the destructor
   mShiftCalibrator = new CShiftCalibrator();
@@ -1225,8 +1223,8 @@ BOOL CSerialEMApp::InitInstance()
     mToolTitleHeight = mSystemDPI <= 120 ? 24 : 40;
 
     // This is based on a post about what is used in Firefox for a resizeable window,
-    // where a commenter found that scaling the resizing frame by a dpi ratio worked 
-    mag = (int)ceil(GetSystemMetrics(SM_CYCAPTION) + GetSystemMetrics(SM_CYFIXEDFRAME) * 
+    // where a commenter found that scaling the resizing frame by a dpi ratio worked
+    mag = (int)ceil(GetSystemMetrics(SM_CYCAPTION) + GetSystemMetrics(SM_CYFIXEDFRAME) *
       mSystemDPI / 96.);
     mToolTitleHeight = B3DMAX(mToolTitleHeight, mag);
     if (mSystemDPI < 120) {
@@ -1246,7 +1244,7 @@ BOOL CSerialEMApp::InitInstance()
     iSet = 0;
     for (iAct = 0; iAct < mActiveCamListSize; iAct++) {
       message.Format("%d", mActiveCameraList[iAct]);
-      if (dropCameras.Find(message) < 0) 
+      if (dropCameras.Find(message) < 0)
         mActiveCameraList[iSet++] = mActiveCameraList[iAct];
     }
     if (!iSet) {
@@ -1271,7 +1269,7 @@ BOOL CSerialEMApp::InitInstance()
       mHasFEIcamera = true;
     if (mCamParams[iCam].K2Type) {
       iSet++;
-      if (mCamParams[iCam].countsPerElectron > 0. && 
+      if (mCamParams[iCam].countsPerElectron > 0. &&
         mCamParams[iCam].countsPerElectron < 2.) {
           message.Format("The camera property CountsPerElectron is set to %1.f for camera"
             " %d\n\nFor a K2 camera, it needs to be the number of\nlinear mode counts per"
@@ -1283,9 +1281,9 @@ BOOL CSerialEMApp::InitInstance()
 
     // Check for transposed usable area limits
     CameraDefects *def = &mCamParams[iCam].defects;
-    bool longInY = def->usableBottom > mCamParams[iCam].sizeY + 4 && 
+    bool longInY = def->usableBottom > mCamParams[iCam].sizeY + 4 &&
       def->usableRight < mCamParams[iCam].sizeX - 4;
-    if (longInY || (def->usableBottom < mCamParams[iCam].sizeY - 4 && 
+    if (longInY || (def->usableBottom < mCamParams[iCam].sizeY - 4 &&
       def->usableRight > mCamParams[iCam].sizeX + 4)) {
         message.Format("The camera property UsableArea for camera %d extends beyond\r\n"
           "the camera size in %s and is less than the size in %s\r\n"
@@ -1297,19 +1295,19 @@ BOOL CSerialEMApp::InitInstance()
     }
   }
 
-  if (iSet > 0 && mCamera->GetScalingForK2Counts() > 0. && 
+  if (iSet > 0 && mCamera->GetScalingForK2Counts() > 0. &&
     mCamera->GetScalingForK2Counts() < 2.) {
       message.Format("The general property ScalingForK2Counts is set to %1.f\n\n"
         "It needs to be close to the number of linear mode\ncounts per"
         " electron, not a value near 1.", mCamera->GetScalingForK2Counts());
       AfxMessageBox(message, MB_EXCLAME);
   }
-  
+
   // Double sizes for K2 camera and define the DM and Gatan camera flags
   iAct = 0;
   for (iCam = 0; iCam < MAX_CAMERAS; iCam++) {
     mCamParams[iCam].DMCamera = !(mCamParams[iCam].TietzType ||
-      mCamParams[iCam].FEItype || mCamParams[iCam].DE_camType || 
+      mCamParams[iCam].FEItype || mCamParams[iCam].DE_camType ||
       !mCamParams[iCam].pluginName.IsEmpty());
     mCamParams[iCam].GatanCam = mCamParams[iCam].DMCamera && !mCamParams[iCam].AMTtype;
     if (!mCamParams[iCam].GatanCam)
@@ -1348,7 +1346,7 @@ BOOL CSerialEMApp::InitInstance()
   for (iCam = 0; iCam < MAX_CAMERAS; iCam++) {
     if (mCamParams[iCam].restoreBBmode < 0)
       mCamParams[iCam].restoreBBmode = JEOLscope ? 1 : 0;
-    if (mCamParams[iCam].FEItype && !mCamParams[iCam].STEMcamera && 
+    if (mCamParams[iCam].FEItype && !mCamParams[iCam].STEMcamera &&
       !mCamParams[iCam].minExposure)
         mCamParams[iCam].minExposure = DEFAULT_FEI_MIN_EXPOSURE;
   }
@@ -1361,7 +1359,7 @@ BOOL CSerialEMApp::InitInstance()
     if (mCamParams[iCam].sizeX <= 0 || mCamParams[iCam].sizeY <= 0 ||
       mCamParams[iCam].pixelMicrons <= 0) {
       message.Format("%s is not defined for camera %d",
-        mCamParams[iCam].pixelMicrons <= 0 ? "Pixel size" : "Camera size in X and Y" , 
+        mCamParams[iCam].pixelMicrons <= 0 ? "Pixel size" : "Camera size in X and Y" ,
         iCam);
       AfxMessageBox(message, MB_EXCLAME);
       return false;
@@ -1399,7 +1397,7 @@ BOOL CSerialEMApp::InitInstance()
     numMontSearchCopy += camMScopied;
 
     // 10/1/13: subareas no longer need to be square with rotations; but needs testing
-    /*if (mCamParams[iCam].TietzType && mCamParams[iCam].TietzImageGeometry > 0 && 
+    /*if (mCamParams[iCam].TietzType && mCamParams[iCam].TietzImageGeometry > 0 &&
       (mCamParams[iCam].TietzImageGeometry & 20))
       mCamParams[iCam].squareSubareas = true; */
 
@@ -1506,14 +1504,14 @@ BOOL CSerialEMApp::InitInstance()
   if (mDEcamCount > 0)
 	  mDEToolDlg.setUpDialogNames(DE_camNames,mDEcamCount);
 
-  pMainFrame->InitializeDialogTable(mDialogTable, initialDlgState, mNumToolDlg, 
+  pMainFrame->InitializeDialogTable(mDialogTable, initialDlgState, mNumToolDlg,
     dlgBorderColors, mDlgColorIndex, mDlgPlacements);
   SetMaxDialogWidth();
 
   pMainFrame->InitializeStatusBar();
 
   RestoreViewFocus();
-  if (mMainView) 
+  if (mMainView)
     DoResizeMain();
 
   // More initializations
@@ -1527,7 +1525,7 @@ BOOL CSerialEMApp::InitInstance()
   }
 
   mDocWnd->AppendToProgramLog(true);
-  
+
   // INITIALIZE THE CAMERAS
   if (mCamera->Initialize(INIT_ALL_CAMERAS) < 0)
     return false;
@@ -1540,13 +1538,13 @@ BOOL CSerialEMApp::InitInstance()
   // Build the calibrations of rotation and pixel size
   mShiftManager->PropagatePixelSizes();
   mShiftManager->PropagateRotations();
-  
+
   // Make sure low dose parameters get copied in
   CopyCameraToCurrentLDP();
   bool inSTEM = mScopeHasSTEM && mScope->GetInitialized() && mScope->GetSTEMmode();
 
   // set default startup camera as non GIF camera if possible
-  iCam = mFilterParams.firstRegularCamera >= 0 ? 
+  iCam = mFilterParams.firstRegularCamera >= 0 ?
     mFilterParams.firstRegularCamera : mFilterParams.firstGIFCamera;
   if (iCam < 0)
     iCam = 0;
@@ -1582,17 +1580,17 @@ BOOL CSerialEMApp::InitInstance()
       mCamParams[iCam].unscaledCountsPerElec = mCamParams[iCam].countsPerElectron;
       mCamera->AdjustCountsPerElecForScale(&mCamParams[iCam]);
     }
-    if (mCamParams[iCam].K2Type || (mCamParams[iCam].DE_camType && 
+    if (mCamParams[iCam].K2Type || (mCamParams[iCam].DE_camType &&
       (mCamParams[iCam].CamFlags & DE_CAN_SAVE_SUPERRES)))
       mAnySuperResMode = true;
     if (mCamParams[iCam].K2Type)
       mHasK2OrK3Camera = true;
 
-    // For Falcon 2 or DE that can't align, if align is ON without using framealign, 
+    // For Falcon 2 or DE that can't align, if align is ON without using framealign,
     // turn it off
     for (iSet = 0; iSet < NUMBER_OF_USER_CONSETS; iSet++) {
       ControlSet *cs = &mCamConSets[iCam][iSet];
-      if (mCamParams[iCam].FEItype == FALCON2_TYPE || (mCamParams[iCam].DE_camType && 
+      if (mCamParams[iCam].FEItype == FALCON2_TYPE || (mCamParams[iCam].DE_camType &&
         !(mCamParams[iCam].CamFlags & DE_CAM_CAN_ALIGN))) {
         if (!cs->useFrameAlign && cs->alignFrames > 0)
           cs->alignFrames = 0;
@@ -1617,8 +1615,8 @@ BOOL CSerialEMApp::InitInstance()
       }
 
       // Make sure there are valid binnings
-      if (!BinningIsValid(cs->binning, iCam, 
-        (mCamParams[iCam].K2Type && cs->K2ReadMode == SUPERRES_MODE) || 
+      if (!BinningIsValid(cs->binning, iCam,
+        (mCamParams[iCam].K2Type && cs->K2ReadMode == SUPERRES_MODE) ||
         (mCamParams[iCam].K2Type == K3_TYPE && cs->K2ReadMode > LINEAR_MODE))) {
           int newBin = NextValidBinning(cs->binning, -1, iCam, false);
           if (newBin == cs->binning)
@@ -1664,7 +1662,7 @@ BOOL CSerialEMApp::InitInstance()
 
   // Initialize continuous aligning and assess GPU for it
   mFalconHelper->Initialize(-3);
-  
+
   pMainFrame->SetWindowText("SerialEM");
   if (!mStartupMessage.IsEmpty()) {
     SetNextLogColorStyle(0, 1);
@@ -1686,7 +1684,7 @@ BOOL CSerialEMApp::InitInstance()
   mParamIO->ReportSpecialOptions();
   for (iAct = 0; iAct < mActiveCamListSize; iAct++) {
     iCam = mActiveCameraList[iAct];
-    if (mCamParams[iCam].K2Type == 1 && mCamParams[iCam].startupDelay >= 1.46 && 
+    if (mCamParams[iCam].K2Type == 1 && mCamParams[iCam].startupDelay >= 1.46 &&
       mCamParams[iCam].startupDelay < mCamera->GetK2MinStartupDelay())
         PrintfToLog("WARNING: Post-exposure actions will be disabled for camera %d "
           "because the\r\n  camera property StartupDelay is too short.  To enable "
@@ -1714,7 +1712,7 @@ BOOL CSerialEMApp::InitInstance()
         "in the stable release of SerialEM 4.2");
   }
   if (!message.IsEmpty())
-    AppendToLog("Paths are defined for Python version(s) " + message, 
+    AppendToLog("Paths are defined for Python version(s) " + message,
       mMinimizedStartup ? LOG_SWALLOW_IF_CLOSED : LOG_OPEN_IF_CLOSED);
 
   message = mDocWnd->GetTitle();
@@ -1764,7 +1762,7 @@ BOOL CSerialEMApp::InitInstance()
   message = mParamIO->GetPropsWithComments();
   if (!message.IsEmpty())
     AppendToLog("WARNING: The following lines in SerialEMproperties.txt appear to \r\n"
-      "have comments after a string entry; if so, the comments MUST be removed:" + 
+      "have comments after a string entry; if so, the comments MUST be removed:" +
       message);
 
   float *gridLimits = mNavHelper->GetGridLimits();
@@ -1808,7 +1806,7 @@ BOOL CSerialEMApp::InitInstance()
   return TRUE;
 }
 
-// Enable or disable 
+// Enable or disable
 void CSerialEMApp::SetEnableExternalPython(BOOL inVal)
 {
   mEnableExternalPython = inVal;
@@ -1839,7 +1837,7 @@ void CSerialEMApp::AdjustSizesForSuperResolution(int iCam)
       iSet--)
       camP->binnings[iSet + 1] = camP->binnings[iSet] * 2;
     camP->binnings[0] = 1;
-    camP->numBinnings = B3DMIN(camP->numBinnings + 1, 
+    camP->numBinnings = B3DMIN(camP->numBinnings + 1,
       MAX_BINNINGS);
   }
   camP->sizeX = B3DNINT(camP->sizeX * pixelDiv);
@@ -1907,7 +1905,7 @@ int CSerialEMApp::GetIntegerVersion(CString verStr)
   return 10000 * gen + 100 * major + minor;
 }
 
-int CSerialEMApp::ExitInstance() 
+int CSerialEMApp::ExitInstance()
 {
   // Destructors have already been called for document...
   // Put checks for whether to exit in MainFrm OnClose
@@ -1923,7 +1921,7 @@ int CSerialEMApp::ExitInstance()
     delete mScope;
   if (mCamera)
     delete mCamera;
-  
+
   if (mComModuleInited)
   	_Module.Term();
   return CWinApp::ExitInstance();
@@ -1941,7 +1939,7 @@ static LONG WINAPI SEMExceptionFilter(struct _EXCEPTION_POINTERS* ExceptionInfo)
   // It comes in twice; returning this only the second time allows the application error
   // box to come up once instead of twice
   if (!first)
-    return (winApp->GetNoExceptionHandler() ? EXCEPTION_EXECUTE_HANDLER : 
+    return (winApp->GetNoExceptionHandler() ? EXCEPTION_EXECUTE_HANDLER :
       EXCEPTION_CONTINUE_SEARCH);
   try {
     func = winApp->mCamera->GetNewFunctionCalled();
@@ -1959,9 +1957,9 @@ static LONG WINAPI SEMExceptionFilter(struct _EXCEPTION_POINTERS* ExceptionInfo)
       message.Format("%s is crashing due to an unhandled exception\r\n(Exception "
         "code 0x%x, address 0x%x, SEMTrace is 0x%x)", startInd > 0 ?
         (LPCTSTR)winApp->mStartupMessage.Left(startInd) : "SerialEM",
-        ExceptionInfo->ExceptionRecord->ExceptionCode, 
+        ExceptionInfo->ExceptionRecord->ExceptionCode,
         ExceptionInfo->ExceptionRecord->ExceptionAddress, SEMTrace);
-    
+
       AddBackTraceToMessage(message);
     }
   }
@@ -2006,7 +2004,7 @@ void AddBackTraceToMessage(CString &message)
   HMODULE module = AfxLoadLibrary("Kernel32.dll");
   CString str;
   if (module) {
-    
+
     // This requires WIN32_WINNT=0x0600 in preprocessor defs so we try to load it instead
     btFunc = (BackTraceFunc)GetProcAddress(module, "RtlCaptureStackBackTrace");
     if (btFunc) {
@@ -2093,13 +2091,13 @@ int SEMInitializeWinsock(void)
   if (CBaseSocket::GetWSAinitialized())
     return 0;
 
-  // Attempt to initialize WinSock (1.1 or later). 
+  // Attempt to initialize WinSock (1.1 or later).
   if (WSAStartup(MAKEWORD(VERSION_MAJOR, VERSION_MINOR), &WSData)) {
-    report.Format("SEMInitializeWinsock: Cannot find Winsock v%d.%d or later!", 
+    report.Format("SEMInitializeWinsock: Cannot find Winsock v%d.%d or later!",
       VERSION_MAJOR, VERSION_MINOR);
     winApp->AppendToLog(report, LOG_OPEN_IF_CLOSED);
     return 1;
-  } 
+  }
   CBaseSocket::SetWSAinitialized(true);
   return 0;
 }
@@ -2194,9 +2192,9 @@ void CSerialEMApp::SetImBufIndex(int inIndex, bool fftBuf)
 
 // Tell a new view about its size and image buffer to use; the return value is 1 for main
 // window, 2 for stack view, 3 for FFT, 4+ for multichannel window, 0 for "New window"
-int CSerialEMApp::GetNewViewProperties(CSerialEMView *inView, int &iBordLeft, 
+int CSerialEMApp::GetNewViewProperties(CSerialEMView *inView, int &iBordLeft,
                                        int &iBordTop, int &iBordRight, int &iBordBottom,
-                                       EMimageBuffer *&imBufs, int &iImBufNumber, 
+                                       EMimageBuffer *&imBufs, int &iImBufNumber,
                                        int &iImBufIndex)
 {
   CRect rect;
@@ -2207,7 +2205,7 @@ int CSerialEMApp::GetNewViewProperties(CSerialEMView *inView, int &iBordLeft,
   iBordRight = STATIC_BORDER_RIGHT;
   iBordTop = STATIC_BORDER_TOP;
   iBordBottom = STATIC_BORDER_BOTTOM;
-  
+
   // If this is the static window, send border sizes
   // If it is not the static window, iBordRight and iBordBottom are used as sizes
   if (needStatic) {
@@ -2217,7 +2215,7 @@ int CSerialEMApp::GetNewViewProperties(CSerialEMView *inView, int &iBordLeft,
     mNeedStaticWindow = FALSE;
   } else if (mNeedFFTWindow || (mNeedMultiChan && mNumChannelViews < mNeedMultiChan)) {
 
-    // 11/25/25: Switch from main window to main frame and don't adjust for extra frame 
+    // 11/25/25: Switch from main window to main frame and don't adjust for extra frame
     // width to get sizes to come out close to right for multi channel
     CChildFrame *childFrame = (CChildFrame *)mMainView->GetParent();
     CMainFrame *mainFrame = (CMainFrame *)childFrame->GetParent();
@@ -2230,8 +2228,8 @@ int CSerialEMApp::GetNewViewProperties(CSerialEMView *inView, int &iBordLeft,
     // Common computation of borders for available area
     userRight = B3DNINT(mRightBorderFrac * fullWidth);
     iBordRight = B3DMAX(iBordRight, userRight);
-    iBordLeft = mMaxDialogWidth + 
-      B3DNINT((mNeedFFTWindow ? mMainFFTsplitFrac : mMainChansSplitFrac) * 
+    iBordLeft = mMaxDialogWidth +
+      B3DNINT((mNeedFFTWindow ? mMainFFTsplitFrac : mMainChansSplitFrac) *
       (fullWidth - iBordRight));
     userBot = B3DNINT(mBottomBorderFrac * (rect.Height()));// -mBottomFrameWidth));
     iBordBottom = B3DMAX(iBordBottom, userBot);
@@ -2316,7 +2314,7 @@ void CSerialEMApp::SetActiveView(CSerialEMView *inActiveView)
    mActiveView = inActiveView;
   if (mMainView == NULL) {
     mMainView = inActiveView;
-    mMainFrame->SetDialogOffset(mMainView);   
+    mMainFrame->SetDialogOffset(mMainView);
   }
   if (mScreenShotDialog)
     mScreenShotDialog->UpdateActiveView();
@@ -2403,7 +2401,7 @@ void CSerialEMApp::ResizeStackView(int extraBordLeft, int bordTop)
 
 // This is the handler for the resize menu entry/shortcut, which resets the border
 // fractions to resize to the full area
-void CSerialEMApp::OnResizeMain() 
+void CSerialEMApp::OnResizeMain()
 {
   mRightBorderFrac = 0.;
   mBottomBorderFrac = 0.;
@@ -2412,10 +2410,10 @@ void CSerialEMApp::OnResizeMain()
 
 // Tell the main window to resize itself to fill space; come in a bit if other windows
 // whichBuf is 0 to do both, -1 for just main, 1 for just FFT
-void CSerialEMApp::DoResizeMain(int whichBuf) 
+void CSerialEMApp::DoResizeMain(int whichBuf)
 {
   int userRight, userBot, fullWidth, iBordLeft, iBordBottom, iBordTop, chan;
-  
+
   // ResizeToFit crashes on very small screens (<= 800x600) on some systems so skip during
   // startup and do at very end of startup
   if (mStartingProgram || mMainFrame->GetClosingProgram())
@@ -2428,13 +2426,13 @@ void CSerialEMApp::DoResizeMain(int whichBuf)
   if (mNeedMultiChan || mNumChannelViews)
     ifFFT = B3DMAX(mNeedMultiChan, mNumChannelViews);
   int right = STATIC_BORDER_RIGHT + B3DCHOICE(nview > 1 + ifFFT, 30, 0);
-  userRight = B3DNINT(mRightBorderFrac * (rect.Width() - mMaxDialogWidth - 
+  userRight = B3DNINT(mRightBorderFrac * (rect.Width() - mMaxDialogWidth -
     mRightFrameWidth));
   int userBottom = B3DNINT(mBottomBorderFrac * (rect.Height() - mBottomFrameWidth));
   userBottom = B3DMAX(userBottom, STATIC_BORDER_BOTTOM);
   right = B3DMAX(userRight, right);
   if (whichBuf <= 0)
-    mMainView->ResizeToFit(mMaxDialogWidth, STATIC_BORDER_TOP, right, userBottom, 
+    mMainView->ResizeToFit(mMaxDialogWidth, STATIC_BORDER_TOP, right, userBottom,
       -ifFFT - (mNeedMultiChan + mNumChannelViews));
   if (mFFTView && whichBuf >= 0)
     mFFTView->ResizeToFit(mMaxDialogWidth, STATIC_BORDER_TOP, right, userBottom, 1);
@@ -2477,9 +2475,9 @@ void CSerialEMApp::MainViewResizing(CRect &winRect, bool FFTwin, int multiChanIn
 
     // If FFT open or multichannel, adjust right fraction only if this is FFT resizing or
     // channel in right column
-    if ((!mFFTView && !mNumChannelViews) || FFTwin || (multiChanInd >= 0 && 
+    if ((!mFFTView && !mNumChannelViews) || FFTwin || (multiChanInd >= 0 &&
       (multiChanInd % mNumChanWindowCols) == mNumChanWindowCols - 1))
-      mRightBorderFrac = (float)(rect.right - mRightFrameWidth - winRect.right) / 
+      mRightBorderFrac = (float)(rect.right - mRightFrameWidth - winRect.right) /
         usableWidth;
 
     // Adjust bottom border if not multi chan or for channel in bottom row
@@ -2488,7 +2486,7 @@ void CSerialEMApp::MainViewResizing(CRect &winRect, bool FFTwin, int multiChanIn
         (float)rect.Height();
       if (fabs(newBotFrac - mBottomBorderFrac) > botFracTol) {
         mBottomBorderFrac = newBotFrac;
-        //PrintfToLog("MBBF %f rcb %d wrcb %d  bfw %d  height %d", mBottomBorderFrac, 
+        //PrintfToLog("MBBF %f rcb %d wrcb %d  bfw %d  height %d", mBottomBorderFrac,
           //rect.bottom, winRect.bottom, mBottomFrameWidth, rect.Height());
       }
     }
@@ -2583,7 +2581,7 @@ void CSerialEMApp::OnUpdateMultiChannelStemDisplay(CCmdUI *pCmdUI)
   pCmdUI->SetCheck(mFirstSTEMcamera >= 0 && mEnableMultiChanView);
 }
 
-// Open all the windows that migt be needed for 
+// Open all the windows that migt be needed for
 void CSerialEMApp::OpenMultiChanWindows()
 {
   int chan, num = 0;
@@ -2620,7 +2618,7 @@ void CSerialEMApp::CloseAllMultiChanWindows(int skipNum)
 
 // Get the position for one channel window in terms of the cumbersome borders, given the
 // available width and height
-void CSerialEMApp::ComputeChannelPosition(int chanInd, int width, int height, 
+void CSerialEMApp::ComputeChannelPosition(int chanInd, int width, int height,
   int &bordLeft, int &bordTop, int &bordRight, int &bordBottom)
 {
   static int fullLeft, fullTop, fullRight, fullBottom, numRow, numCol, xSpacing, ySpacing;
@@ -2690,7 +2688,7 @@ void CSerialEMApp::DisplayNewMultiChannels(int *channelInds, int numChan, int pa
       if (mShowChanInMultiView[chan]) {
         if (chan == channelInds[mainInd]) {
 
-          // If it is being shown, roll buffers unless partial scan, 
+          // If it is being shown, roll buffers unless partial scan,
           // copy the image buffer, set to new and display it
           if (B3DABS(partialScan) != 1) {
             for (ind = mMaxChannelBuffers - 1; ind > 0; ind--)
@@ -2710,7 +2708,7 @@ void CSerialEMApp::DisplayNewMultiChannels(int *channelInds, int numChan, int pa
 
   // Now find ones not marked as new that were new and redisplay if on A
   for (multInd = 0; multInd < mNumChannelViews; multInd++)
-   if (wasNew[multInd] && !mChannelViews[multInd]->GetChanBufIsNew() && 
+   if (wasNew[multInd] && !mChannelViews[multInd]->GetChanBufIsNew() &&
      !mChannelViews[multInd]->GetImBufIndex())
      mChannelViews[multInd]->SetCurrentBuffer(0);
 }
@@ -2733,7 +2731,7 @@ void CSerialEMApp::AddIdleTask(int (__cdecl *busyFunc)(void), void (__cdecl *nex
   AddIdleTask(busyFunc, nextFunc, errorFunc, 0, param, timeOut);
 }
 
-void CSerialEMApp::AddIdleTask(int (__cdecl *busyFunc)(void), int source, int param, 
+void CSerialEMApp::AddIdleTask(int (__cdecl *busyFunc)(void), int source, int param,
                                int timeOut)
 {
   AddIdleTask(busyFunc, NULL, NULL, source, param, timeOut);
@@ -2791,8 +2789,8 @@ void CSerialEMApp::ReviseIdleTaskTimeout(void(__cdecl *nextFunc)(int), int sourc
 {
   sReviseITOFunc = nextFunc;
   sReviseITOSource = source;
-  sRevisedIdleTimeout = 
-    ((CSerialEMApp *)AfxGetApp())->mShiftManager->AddIntervalToTickTime(GetTickCount(), 
+  sRevisedIdleTimeout =
+    ((CSerialEMApp *)AfxGetApp())->mShiftManager->AddIntervalToTickTime(GetTickCount(),
       newTimeOut);
 }
 
@@ -2844,7 +2842,7 @@ BOOL CSerialEMApp::CheckIdleTasks()
 
   if (mIdleArray.GetSize())
     mLastActivityTime = time;
-  
+
   // Act on request for external control
   if (mMacroProcessor->mScrpLangData[0].externalControl < 0) {
     mMacroProcessor->CheckAndSetupExternalControl();
@@ -2871,8 +2869,8 @@ BOOL CSerialEMApp::CheckIdleTasks()
   }
 
   // Check for idle script
-  if ((!mIdleArray.GetSize() || bkgdMacroIsOnlyTask) && !mScriptToRunOnIdle.IsEmpty() && 
-    mIdleScriptIntervalSec > 0 && 
+  if ((!mIdleArray.GetSize() || bkgdMacroIsOnlyTask) && !mScriptToRunOnIdle.IsEmpty() &&
+    mIdleScriptIntervalSec > 0 &&
     SEMTickInterval(time, mLastIdleScriptTime) > 1000. * mIdleScriptIntervalSec) {
     i = mMacroProcessor->FindMacroByNameOrTextNum(mScriptToRunOnIdle);
     if (i >= 0) {
@@ -2901,7 +2899,7 @@ BOOL CSerialEMApp::CheckIdleTasks()
     bRtn = TRUE;
     idc = mIdleArray[i];
     busy = 0;
-    if (idc->source == TASK_BKGD_MACRO && RunningBkgdMacro() && 
+    if (idc->source == TASK_BKGD_MACRO && RunningBkgdMacro() &&
       !(mAllowBkgdMacroTime || bkgdMacroIsOnlyTask))
       continue;
     if (idc->busyFunc)
@@ -2997,7 +2995,7 @@ BOOL CSerialEMApp::CheckIdleTasks()
         // Delete task from array now, to prevent multiple deletion
         mIdleArray.RemoveAt(i);
 
-      // Otherwise, if OK, call next func with parameter, 
+      // Otherwise, if OK, call next func with parameter,
       // or if error, call error function with return code if it exists
       // or if timeout, call error function with that code
       if (!busy) {
@@ -3227,7 +3225,7 @@ BOOL CSerialEMApp::CheckIdleTasks()
         else if (idc->source == TASK_REFINE_ZLP)
           mFilterTasks->RefineZLPCleanup(busy);
         else if (idc->source == TASK_MONTAGE || idc->source == TASK_MONTAGE_RESTORE ||
-          idc->source == TASK_MONTAGE_FOCUS || idc->source == TASK_MONTAGE_REALIGN || 
+          idc->source == TASK_MONTAGE_FOCUS || idc->source == TASK_MONTAGE_REALIGN ||
           idc->source == TASK_MONTAGE_DWELL || idc->source == TASK_MONT_MULTISHOT ||
           idc->source == TASK_MONT_MACRO)
           mMontageController->PieceCleanup(busy);
@@ -3292,14 +3290,14 @@ BOOL CSerialEMApp::CheckIdleTasks()
 }
 
 // On idle entry if timer not being used
-BOOL CSerialEMApp::OnIdle(LONG lCount) 
+BOOL CSerialEMApp::OnIdle(LONG lCount)
 {
   BOOL bIdle = CWinApp::OnIdle(lCount);
 #ifdef TASK_TIMER_INTERVAL
   return bIdle;
 #else
   // Let the base class finish its tasks, as recommended usage
-  // Except occasionally, sneak a cycle 
+  // Except occasionally, sneak a cycle
   // (but when camera acquire is already done, it sets the count high to go right away)
   mIdleBaseCount++;
   if (bIdle && mIdleBaseCount < 100)
@@ -3477,7 +3475,7 @@ void SEMReportCOMError(_com_error E, CString inString, CString *outStr, bool ski
   ScopePluginFuncs *plugFuncs;
   if (CEMscope::GetScopeCallFromPlugin())
     return;
-  if (E.Error() == JEOL_FAKE_HRESULT || E.Error() == PLUGIN_FAKE_HRESULT || 
+  if (E.Error() == JEOL_FAKE_HRESULT || E.Error() == PLUGIN_FAKE_HRESULT ||
     E.Error() == NOFUNC_FAKE_HRESULT) {
     if (E.Error() == JEOL_FAKE_HRESULT) {
       sDescription = _T("ERROR in call to JEOL ") + inString;
@@ -3485,7 +3483,7 @@ void SEMReportCOMError(_com_error E, CString inString, CString *outStr, bool ski
       if (plugFuncs->GetLastErrorString)
         sDescription += CString(":\r\n") + plugFuncs->GetLastErrorString();
     } else if (E.Error() == NOFUNC_FAKE_HRESULT)
-        sDescription = _T("ERROR ") + inString + 
+        sDescription = _T("ERROR ") + inString +
         _T(": function not defined in microscope plugin");
       else {
         sDescription = _T("ERROR in call to microscope ") + inString;
@@ -3518,7 +3516,7 @@ void SEMReportCOMError(_com_error E, CString inString, CString *outStr, bool ski
     } else if (E.ErrorMessage() != NULL){
       sDescription.Format(E.ErrorMessage());
     }
-    sDescription = _T("COM error ") + inString + _T(": ") + sDescription; 
+    sDescription = _T("COM error ") + inString + _T(": ") + sDescription;
     if (outStr)
       *outStr = sDescription;
     else
@@ -3528,7 +3526,7 @@ void SEMReportCOMError(_com_error E, CString inString, CString *outStr, bool ski
     SEMErrorOccurred(1);
 }
 
-BOOL SEMTestHResult(HRESULT hr, CString inString, CString *outStr, int *errFlag, 
+BOOL SEMTestHResult(HRESULT hr, CString inString, CString *outStr, int *errFlag,
   bool skipErr)
 {
   if (SUCCEEDED(hr))
@@ -3566,7 +3564,7 @@ void SEMBuildTime(char *dateStr, char *timeStr)
     return;
   month = (int)(monPtr - stdMonth) / 3 + 1;
   CTime thisDate = CTime(year, month, day, hour, min, sec);
-  if (thisDate < latestDate) 
+  if (thisDate < latestDate)
     return;
   latestDate = thisDate;
   sBuildDate = dateStr;
@@ -3626,7 +3624,7 @@ void DLL_IM_EX SEMSetUtapiConnected(unsigned int flags, bool *supportsService)
 
 // For the given set of modes (coming from UTAPI), return the offset in the appropriate
 // mag or camera length table, either 1 or the starting index of a mode
-int DLL_IM_EX SEMGetTableOffsetForMode(int STEM, int EFTEM, int probe, int lowMag, 
+int DLL_IM_EX SEMGetTableOffsetForMode(int STEM, int EFTEM, int probe, int lowMag,
   int diffrac)
 {
   CEMscope *scope = ((CSerialEMApp *)AfxGetApp())->mScope;
@@ -3679,7 +3677,7 @@ CString DLL_IM_EX SEMLastNoBoxMessage()
 
 // Return an image from a specified buffer number, or NULL if the number is out of
 // or there is no image there.  Return the type (an MRC mode) bytes per line and size
-void DLL_IM_EX *SEMGetBufferImage(int bufInd, int ifFFT, int &imType, int &rowBytes, 
+void DLL_IM_EX *SEMGetBufferImage(int bufInd, int ifFFT, int &imType, int &rowBytes,
   int &sizeX, int &sizeY)
 {
   EMimageBuffer *imBufs;
@@ -3700,7 +3698,7 @@ void DLL_IM_EX *SEMGetBufferImage(int bufInd, int ifFFT, int &imType, int &rowBy
 
 // Check if the image in the given array still exists in one of the buffers with those
 // specifications
-bool DLL_IM_EX SEMIsBufferImageValid(void *array, int imType, int rowBytes, int sizeX, 
+bool DLL_IM_EX SEMIsBufferImageValid(void *array, int imType, int rowBytes, int sizeX,
   int sizeY, int &bufInd, int &ifFFT)
 {
   int maxBuf = MAX_BUFFERS;
@@ -3726,7 +3724,7 @@ BOOL DLL_IM_EX SEMUseAPI2ForDE()
 }
 
 // And global function for accessing ThreeChoiceBox through TSMessageBox
-int SEMThreeChoiceBox(CString message, CString yesText, CString noText, 
+int SEMThreeChoiceBox(CString message, CString yesText, CString noText,
   CString cancelText, UINT type, int setDefault, BOOL terminate, int retval,
   bool noLineWrap, bool monofont)
 {
@@ -3818,8 +3816,8 @@ void SEMTrace(char key, char *fmt, ...)
   CSerialEMApp *winApp = (CSerialEMApp *)AfxGetApp();
   int special = winApp->GetSpecialDebugLevel();
   int keyInd = specKeys.Find(key);
-  if ((debugOutput.IsEmpty() || debugOutput == "0" || 
-    (key != '1' && debugOutput.Find(key) < 0)) && key != '0' && 
+  if ((debugOutput.IsEmpty() || debugOutput == "0" ||
+    (key != '1' && debugOutput.Find(key) < 0)) && key != '0' &&
     (keyInd < 0 || special <= keyInd))
     return;
   if (WaitForSingleObject(traceMutexHandle, TRACE_MUTEX_WAIT) != WAIT_OBJECT_0)
@@ -3827,7 +3825,7 @@ void SEMTrace(char key, char *fmt, ...)
 
   if (sNumTraceMsg >= MAX_TRACE_LIST)
     sNumTraceMsg = MAX_TRACE_LIST - 1;
-  
+
   sTraceIsDebug[sNumTraceMsg] = key != '0';
   if (key == '0')
     sTraceMsg[sNumTraceMsg] = "";
@@ -3860,7 +3858,7 @@ void VarArgToCString(CString &str, char *fmt, va_list args)
   char buf[TRACE_BUF_SIZE];
   char *useBuf = &buf[0];
   char *bigBuf = NULL;
-  
+
   int len;
   len = _vscprintf(fmt, args);
   if (len >= TRACE_BUF_SIZE) {
@@ -3991,7 +3989,7 @@ void CSerialEMApp::ManageBlinkingPane(DWORD time)
   }
 
   // Toggle if time has elapsed
-  if (mBufToggleCount > 0 && SEMTickInterval(time, mLastToggleTime) > mBufToggleInterval) 
+  if (mBufToggleCount > 0 && SEMTickInterval(time, mLastToggleTime) > mBufToggleInterval)
   {
     SetCurrentBuffer(mMainView->GetImBufIndex() > 0 ? 0 : mBufToToggle);
     mBufToggleCount--;
@@ -4136,7 +4134,7 @@ void CSerialEMApp::UpdateWindowSettings()
 
 BOOL CSerialEMApp::DoingImagingTasks()
 {
-  return (mShiftCalibrator->CalibratingIS() || 
+  return (mShiftCalibrator->CalibratingIS() ||
     mShiftCalibrator->CalibratingOffset() || mShiftCalibrator->DoingInterSetShift() ||
     mMontageController->GetPieceIndex() >= 0 ||
     mFocusManager->DoingFocus() || mFocusManager->DoingSTEMfocus() ||
@@ -4151,7 +4149,7 @@ BOOL CSerialEMApp::DoingImagingTasks()
     mDistortionTasks->DoingStagePairs() || mDectrisToolDlg.DoingInitialize() ||
     mCalibTiming->Calibrating() || CMultiShotDlg::DoingAutoStepAdj() ||
     mCalibTiming->DoingDeadTime() || mMultiGridTasks->GetDoingMulGridSeq() ||
-    (mNavigator && ((mNavigator->GetAcquiring() && !mNavigator->GetStartedTS() && 
+    (mNavigator && ((mNavigator->GetAcquiring() && !mNavigator->GetStartedTS() &&
     !mNavigator->StartedMacro() && !mNavigator->GetPausedAcquire()) ||
     mNavHelper->GetRealigning() || mMultiGridTasks->GetDoingMultiGrid() ||
     mNavHelper->GetAcquiringDual())) || mAutoTuning->DoingAutoTune() ||
@@ -4175,10 +4173,10 @@ BOOL CSerialEMApp::DoingTasks()
     (mShowRemoteControl && mRemoteControl.GetDoingTask()) ||
     (mNavHelper->mHoleFinderDlg && mNavHelper->mHoleFinderDlg->GetFindingHoles()) ||
     (mPlugDoingFunc && mPlugDoingFunc()) || CSerialEMView::GetTakingSnapshot() ||
-    mScope->GetScanningMags() || mCamera->GetFilterWaiting() || 
+    mScope->GetScanningMags() || mCamera->GetFilterWaiting() ||
     mNavHelper->mHoleFinderDlg->DoingMultiMapHoles();
   mJustChangingLDarea = !trulyBusy && mScope->GetChangingLDArea() != 0;
-  mJustDoingSynchro = !trulyBusy && (mScope->DoingSynchroThread() || 
+  mJustDoingSynchro = !trulyBusy && (mScope->DoingSynchroThread() ||
     mBufferManager->DoingSychroThread());
   mJustNavAcquireOpen = !trulyBusy && mNavigator && mNavigator->mNavAcquireDlg;
   mJustMontRestoringStage = !trulyBusy && mMontageController->GetRestoringStage();
@@ -4186,7 +4184,7 @@ BOOL CSerialEMApp::DoingTasks()
     mJustMontRestoringStage;
 }
 
-// Register a stop function of form "void stopFunc(int error)" to be called by 
+// Register a stop function of form "void stopFunc(int error)" to be called by
 // ErrorOccurred, with error value 0 for a user stop.  Returns previous function if any;
 // call with NULL or previous function to stop being called
 PlugStopFunc CSerialEMApp::RegisterPlugStopFunc(PlugStopFunc func)
@@ -4197,10 +4195,10 @@ PlugStopFunc CSerialEMApp::RegisterPlugStopFunc(PlugStopFunc func)
 }
 
 // Registers a function of form "bool doingFunc(void)" to be called by DoingTasks(), or
-// by DoingImagingTasks() if imaging is true.  Returns previous function if any and 
-// whether it was imaging function; call with NULL or previous function to stop being 
+// by DoingImagingTasks() if imaging is true.  Returns previous function if any and
+// whether it was imaging function; call with NULL or previous function to stop being
 // called
-PlugDoingFunc CSerialEMApp::RegisterPlugDoingFunc(PlugDoingFunc func, bool imaging, 
+PlugDoingFunc CSerialEMApp::RegisterPlugDoingFunc(PlugDoingFunc func, bool imaging,
                                                   bool &wasImaging)
 {
   PlugDoingFunc temp = mPlugDoingFunc;
@@ -4227,7 +4225,7 @@ BOOL CSerialEMApp::UserAcquireOK(void)
 BOOL CSerialEMApp::DoingComplexTasks()
 {
   return mMacroProcessor->DoingMacro() || mNavHelper->GetAcquiringDual() ||
-    mComplexTasks->DoingComplexTasks() || StartedTiltSeries() || 
+    mComplexTasks->DoingComplexTasks() || StartedTiltSeries() ||
     (mNavigator && mNavigator->GetAcquiring() && !mNavigator->StartedMacro() ||
       mMultiGridTasks->GetDoingMulGridSeq());
 }
@@ -4271,7 +4269,7 @@ BOOL CSerialEMApp::ActPostExposure(ControlSet *conSet, bool alignHereOK)
 
 // Pass the command to any command targets that we have created, excluding ones
 // where we moved the target functions to MenuTargets
-BOOL CSerialEMApp::OnCmdMsg(UINT nID, int nCode, void* pExtra, AFX_CMDHANDLERINFO* pHandlerInfo) 
+BOOL CSerialEMApp::OnCmdMsg(UINT nID, int nCode, void* pExtra, AFX_CMDHANDLERINFO* pHandlerInfo)
 {
   if (mMenuTargets.OnCmdMsg(nID, nCode, pExtra, pHandlerInfo))
     return TRUE;
@@ -4283,16 +4281,16 @@ BOOL CSerialEMApp::OnCmdMsg(UINT nID, int nCode, void* pExtra, AFX_CMDHANDLERINF
     return TRUE;
   if (mMacroProcessor && mMacroProcessor->OnCmdMsg(nID, nCode, pExtra, pHandlerInfo))
     return TRUE;
-  
+
   return CWinApp::OnCmdMsg(nID, nCode, pExtra, pHandlerInfo);
 }
 
-void CSerialEMApp::OnUpdateNoTasks(CCmdUI* pCmdUI) 
+void CSerialEMApp::OnUpdateNoTasks(CCmdUI* pCmdUI)
 {
-  pCmdUI->Enable(!DoingTasks());  
+  pCmdUI->Enable(!DoingTasks());
 }
 
-void CSerialEMApp::OnCameraParameters() 
+void CSerialEMApp::OnCameraParameters()
 {
   CCameraSetupDlg camDlg;
   if (mNoCameras)
@@ -4313,7 +4311,7 @@ void CSerialEMApp::OnCameraParameters()
   camDlg.mMontaging = mMontaging;
   camDlg.mStartedTS = StartedTiltSeries();
   if (mNumActiveCameras > 1 && mLastCamera == mCurrentActiveCamera)
-    mLastCamera = 
+    mLastCamera =
       mCurrentActiveCamera ? mCurrentActiveCamera - 1 : mCurrentActiveCamera + 1;
   camDlg.mLastCamera = mLastCamera;
   camDlg.mAcquireAndReopen = false;
@@ -4347,10 +4345,10 @@ void CSerialEMApp::OnCameraParameters()
   }
 }
 
-void CSerialEMApp::OnUpdateCameraParameters(CCmdUI* pCmdUI) 
+void CSerialEMApp::OnUpdateCameraParameters(CCmdUI* pCmdUI)
 {
-  pCmdUI->Enable(UserAcquireOK() && !mCamera->CameraBusy());  
-	
+  pCmdUI->Enable(UserAcquireOK() && !mCamera->CameraBusy());
+
 }
 
 void CSerialEMApp::ReopenCameraSetup(void)
@@ -4364,23 +4362,23 @@ void CSerialEMApp::UserRequestedCapture(int whichMode)
   RestoreViewFocus();
   if (!UserAcquireOK() )
     return;
-  
+
   // If busy, set a pending capture; otherwise initiate a capture
   if (mCamera->CameraBusy()) {
     mCamera->StopCapture(0);
     mCamera->SetPending(whichMode);
   } else
-    mCamera->InitiateCapture(whichMode); 
+    mCamera->InitiateCapture(whichMode);
 }
 
 // Simulation mode: inform camera, allow all camera with properties if in simulation
-void CSerialEMApp::OnCameraSimulation() 
+void CSerialEMApp::OnCameraSimulation()
 {
   mCamera->SetSimulationMode(!mCamera->GetSimulationMode());
   SetNumberOfActiveCameras(mNumAvailCameras, mNumReadInCameras);
 }
 
-void CSerialEMApp::OnUpdateCameraSimulation(CCmdUI* pCmdUI) 
+void CSerialEMApp::OnUpdateCameraSimulation(CCmdUI* pCmdUI)
 {
   pCmdUI->Enable(!StartedTiltSeries());
   pCmdUI->SetCheck(mCamera->GetSimulationMode() ? 1 : 0);
@@ -4411,16 +4409,16 @@ void CSerialEMApp::SetAdministratorMode(int inVal)
   mAdministratorMode = inVal;
 }
 
-void CSerialEMApp::OnCalibrationAdministrator() 
+void CSerialEMApp::OnCalibrationAdministrator()
 {
-  mAdministrator = !mAdministrator; 
+  mAdministrator = !mAdministrator;
   mAdministratorMode = mAdministrator ? 1 : 0;
   if (mFilterParams.firstGIFCamera >= 0)
     mFilterControl.Update();
   UpdateAllEditers();
 }
 
-void CSerialEMApp::OnUpdateCalibrationAdministrator(CCmdUI* pCmdUI) 
+void CSerialEMApp::OnUpdateCalibrationAdministrator(CCmdUI* pCmdUI)
 {
   pCmdUI->Enable(mAdministratorMode >= 0);
   pCmdUI->SetCheck(mAdministrator ? 1 : 0);
@@ -4431,15 +4429,15 @@ void CSerialEMApp::OnShowScopeControlPanel()
   int useInd;
   if (!mShowRemoteControl) {
     mRemoteControl.Create(IDD_REMOTE_CONTROL);
-    mMainFrame->InsertOneDialog((CToolDlg *)(&mRemoteControl), 
+    mMainFrame->InsertOneDialog((CToolDlg *)(&mRemoteControl),
       REMOTE_PANEL_INDEX, dlgBorderColors, &mDlgPlacements[REMOTE_PANEL_INDEX]);
     useInd = LookupToolDlgIndex(REMOTE_PANEL_INDEX);
     if (useInd >= 0)
-      mMainFrame->InitializeOnePosition(useInd, REMOTE_PANEL_INDEX, 
+      mMainFrame->InitializeOnePosition(useInd, REMOTE_PANEL_INDEX,
         initialDlgState[REMOTE_PANEL_INDEX], &mDlgPlacements[REMOTE_PANEL_INDEX]);
     mMainFrame->SetDialogPositions();
   } else {
-    if (mMainFrame->RemoveOneDialog(REMOTE_PANEL_INDEX, 
+    if (mMainFrame->RemoveOneDialog(REMOTE_PANEL_INDEX,
       &mDlgPlacements[REMOTE_PANEL_INDEX], false))
       return;
     mRemoteControl.mInitialized = false;
@@ -4455,12 +4453,12 @@ void CSerialEMApp::OnUpdateShowScopeControlPanel(CCmdUI *pCmdUI)
   pCmdUI->SetCheck(mShowRemoteControl ? 1 : 0);
 }
 
-void CSerialEMApp::OnHelp() 
+void CSerialEMApp::OnHelp()
 {
-  CWinApp::OnHelp();  
+  CWinApp::OnHelp();
 }
 
-void CSerialEMApp::OnHelpUsing() 
+void CSerialEMApp::OnHelpUsing()
 {
   if (m_eHelpType == afxHTMLHelp)
     HtmlHelp(0x10000 + ID_HELP_USING);
@@ -4473,7 +4471,7 @@ void CSerialEMApp::OnHelpUsing()
 /////////////////////////////////////////////////////
 
 // Open the log window
-void CSerialEMApp::OnFileOpenlog() 
+void CSerialEMApp::OnFileOpenlog()
 {
   mLogWindow = new CLogWindow();
   mLogWindow->Create(IDD_LOGWINDOW);
@@ -4484,9 +4482,9 @@ void CSerialEMApp::OnFileOpenlog()
   mNavOrLogHadFocus = -1;
 }
 
-void CSerialEMApp::OnUpdateFileOpenlog(CCmdUI* pCmdUI) 
+void CSerialEMApp::OnUpdateFileOpenlog(CCmdUI* pCmdUI)
 {
-  pCmdUI->Enable(mLogWindow == NULL); 
+  pCmdUI->Enable(mLogWindow == NULL);
 }
 
 // Reset the position and size of the log window
@@ -4585,7 +4583,7 @@ void CSerialEMApp::AppendToLog(CString inString, int inAction, int lineFlags)
         mLogWindow->SetNextLineColorStyle(color, style);
       str.Format("%.3f: ", SEMSecondsSinceStart());
       mLogWindow->Append(str, 0);
-    } 
+    }
     break;
 
   case LOG_IGNORE:
@@ -4595,13 +4593,13 @@ void CSerialEMApp::AppendToLog(CString inString, int inAction, int lineFlags)
     break;
   }
 
-  
+
   if (inAction == MESSAGE_ONLY ||
     (!mLogWindow && inAction == LOG_MESSAGE_IF_CLOSED)) {
       AfxMessageBox(inString, MB_EXCLAME);
       return;
   }
-  
+
   if (!mLogWindow) {
     if (inAction == LOG_SWALLOW_IF_CLOSED)
       return;
@@ -4652,24 +4650,24 @@ void PrintfToLog(char *format, ...)
 }
 
 // To save the log file: save to new or existing file
-void CSerialEMApp::OnFileSavelog() 
+void CSerialEMApp::OnFileSavelog()
 {
   mLogWindow->Save();
 }
 
 // Save to a new file even if one has been defined
-void CSerialEMApp::OnFileSavelogas() 
+void CSerialEMApp::OnFileSavelogas()
 {
   mLogWindow->SaveAs();
 }
 
-void CSerialEMApp::OnUpdateFileSavelog(CCmdUI* pCmdUI) 
+void CSerialEMApp::OnUpdateFileSavelog(CCmdUI* pCmdUI)
 {
-  pCmdUI->Enable(mLogWindow != NULL); 
+  pCmdUI->Enable(mLogWindow != NULL);
 }
 
 // Read in existing log and set up to append to it
-void CSerialEMApp::OnFileReadappend() 
+void CSerialEMApp::OnFileReadappend()
 {
   if (!mLogWindow)
     OnFileOpenlog();
@@ -4720,7 +4718,7 @@ void CSerialEMApp::OnFileAutopruneLogWindow()
 
 void CSerialEMApp::OnUpdateFileAutopruneLogWindow(CCmdUI *pCmdUI)
 {
-  pCmdUI->Enable(!DoingTasks() && !mSaveLogAsRTF && 
+  pCmdUI->Enable(!DoingTasks() && !mSaveLogAsRTF &&
     !(mLogWindow && mLogWindow->GetTypeOfFileSaved() > 1));
   pCmdUI->SetCheck(mAutoPruneLogLines > 0 ? 1 : 0);
 }
@@ -4927,7 +4925,7 @@ void CSerialEMApp::OpenStageMoveTool()
   if (mStageToolPlacement.rcNormalPosition.right != NO_PLACEMENT)
     SetPlacementFixSize(mStageMoveTool, &mStageToolPlacement);
   else
-    mStageMoveTool->SetWindowPos(&CWnd::wndTopMost, 500, 400, 100, 100, 
+    mStageMoveTool->SetWindowPos(&CWnd::wndTopMost, 500, 400, 100, 100,
       SWP_NOSIZE | SWP_SHOWWINDOW);
 }
 
@@ -5031,7 +5029,7 @@ void CSerialEMApp::SetActiveCameraNumber(int inNum)
     SetEFTEMMode(false);
   if (mSTEMMode && mCamParams[mCurrentCamera].GIF)
     SetSTEMMode(false);
-  if (!mSettingEFTEM && !mSettingSTEM && 
+  if (!mSettingEFTEM && !mSettingSTEM &&
     (mCamParams[mCurrentCamera].STEMcamera || !mAllowCameraInSTEMmode))
     SetSTEMMode(mCamParams[mCurrentCamera].STEMcamera);
   if ((mFilterParams.autoCamera || eitherSTEM) && !mSettingEFTEM && !mSettingSTEM) {
@@ -5042,7 +5040,7 @@ void CSerialEMApp::SetActiveCameraNumber(int inNum)
   matchPixel = (!eitherSTEM && mNonGIFMatchPixel);
   matchIntensity = !eitherSTEM && mNonGIFMatchIntensity;
   if (!LowDoseMode() && (matchPixel || matchIntensity) &&
-    !mCamParams[oldCam].GIF && !mCamParams[mCurrentCamera].GIF && 
+    !mCamParams[oldCam].GIF && !mCamParams[mCurrentCamera].GIF &&
     oldCam != mCurrentCamera) {
     toFactor = mCamParams[mCurrentCamera].matchFactor / mCamParams[oldCam].matchFactor;
     mScope->MatchPixelAndIntensity(oldCam, mCurrentCamera, toFactor, matchPixel,
@@ -5057,7 +5055,7 @@ void CSerialEMApp::RestoreCameraForExit(void)
   CameraParameters *initP = &mCamParams[mInitialCurrentCamera];
   CameraParameters *curP = &mCamParams[mCurrentCamera];
   int iCam = LookupActiveCamera(mInitialCurrentCamera);
-  if (mNonGIFMatchPixel && !curP->GIF && !curP->STEMcamera && !initP->GIF && 
+  if (mNonGIFMatchPixel && !curP->GIF && !curP->STEMcamera && !initP->GIF &&
     !initP->STEMcamera && mInitialCurrentCamera != mCurrentCamera && iCam >= 0)
     SetActiveCameraNumber(iCam);
 }
@@ -5092,7 +5090,7 @@ void CSerialEMApp::SetEFTEMMode(BOOL inState)
     if (mFilterParams.autoCamera || fromSTEM || toSTEM) {
       if (inState && !mCamParams[mCurrentCamera].GIF)
         SetActiveCameraNumber(mFilterParams.firstGIFCamera);
-      else if (!inState && toCamera >= 0 && mCamParams[mCurrentCamera].GIF && 
+      else if (!inState && toCamera >= 0 && mCamParams[mCurrentCamera].GIF &&
         !(toSTEM && JEOLscope))
         SetActiveCameraNumber(toCamera);
     }
@@ -5107,7 +5105,7 @@ void CSerialEMApp::SetEFTEMMode(BOOL inState)
       mCamera->SetBlankWhenRetracting(true);
       mCamera->Capture(RETRACT_BLOCKERS);
     }
-    
+
     // If in low dose mode, turn off defining area and set the current parameters as the
     // "set area" params, since parameters get changed before the call to set the area
     if (LowDoseMode()) {
@@ -5141,7 +5139,7 @@ void CSerialEMApp::SetEFTEMMode(BOOL inState)
 
     // Switch EFTEM lens mode if needed
     needed = mEFTEMMode && (!mScope->GetCanControlEFTEM() ||
-      (mScope->GetScreenPos() == spUp || !mFilterParams.autoMag)) && 
+      (mScope->GetScreenPos() == spUp || !mFilterParams.autoMag)) &&
       !mScope->GetUseFilterInTEMMode();
     mScope->SetEFTEM(needed);
 
@@ -5188,7 +5186,7 @@ void CSerialEMApp::SetSTEMMode(BOOL inState)
     mLowDoseDlg.SetLowDoseMode(false);
 
   if (!mSettingEFTEM) {
-      
+
     // Switch camera if necessary.  If came here from a camera switch, it is already right
     if (inState && mEFTEMMode)
       SetEFTEMMode(false);
@@ -5369,7 +5367,7 @@ void CSerialEMApp::DrawReadInImage(void)
   mMainView->DrawImage();
   SetImBufIndex(mBufferManager->GetBufToReadInto());
   mMainView->SetCurrentBuffer(mBufferManager->GetBufToReadInto());
-  UpdateBufferWindows(); 
+  UpdateBufferWindows();
 }
 
 // Return a format for printing pixel size in nm
@@ -5434,7 +5432,7 @@ void CSerialEMApp::FixInitialPlacements(bool startMinimized)
   }
   for (ind = 0; ind < MAX_TOOL_DLGS; ind++) {
     dlgRect = &mDlgPlacements[ind];
-    ConstrainWindowPlacement((int *)&dlgRect->left, (int *)&dlgRect->top, 
+    ConstrainWindowPlacement((int *)&dlgRect->left, (int *)&dlgRect->top,
       (int *)&dlgRect->right, (int *)&dlgRect->bottom, true);
   }
   place = &appPlace;
@@ -5469,7 +5467,7 @@ void CSerialEMApp::GetNumMagRanges(int camera, int &numRanges, int &lowestMicro)
 
 // Returns the lower and upper limits of the mag range including the given mag index
 // for the given camera.  The upper limit IS included in the mag range; loop with <=
-void CSerialEMApp::GetMagRangeLimits(int camera, int magInd, int &lowerLimit, 
+void CSerialEMApp::GetMagRangeLimits(int camera, int magInd, int &lowerLimit,
                                      int &upperLimit)
 {
   int lowest;
@@ -5499,7 +5497,7 @@ int CSerialEMApp::FindNextMagForCamera(int camera, int magInd, int delta, BOOL n
   bool inSecondary = !ifSTEM && secondary && magInd >= secondary;
   bool inDualLM = !ifSTEM && secondary && magInd < lowestM && mScope->GetSecondaryMode();
   GetMagRangeLimits(mCurrentCamera, magInd, limlo, limhi);
-  if (mScope->GetUseInvertedMagRange() && 
+  if (mScope->GetUseInvertedMagRange() &&
     UtilMagInInvertedRange(magInd, mCamParams[mCurrentCamera].GIF))
     delta = -delta;
   numChange = delta > 0 ? delta : -delta;
@@ -5527,14 +5525,14 @@ int CSerialEMApp::FindNextMagForCamera(int camera, int magInd, int delta, BOOL n
     }
     if (magInd < limlo || magInd > limhi)
       return -1;
-    if ((!ifSTEM && !ifEFTEM && mMagTab[magInd].mag > 0) || (ifEFTEM && 
+    if ((!ifSTEM && !ifEFTEM && mMagTab[magInd].mag > 0) || (ifEFTEM &&
       mMagTab[magInd].EFTEMmag > 0) || (ifSTEM && mMagTab[magInd].STEMmag > 0))
       index++;
   }
   return magInd;
 }
 
-// Take care of changing noShutter property of STEM cameras and setting scope flag 
+// Take care of changing noShutter property of STEM cameras and setting scope flag
 // if in STEM mode
 void CSerialEMApp::ManageSTEMBlanking(void)
 {
@@ -5553,18 +5551,18 @@ int CSerialEMApp::DoDropScreenForSTEM(void)
 {
   if (mCamera->GetLowerScreenForSTEM() < 0)
     return 0;
-  return mCamera->GetLowerScreenForSTEM() * 
+  return mCamera->GetLowerScreenForSTEM() *
     ((!mRetractToUnblankSTEM || mMustUnblankWithScreen) ? 1 : 0);
 }
 
 BOOL CSerialEMApp::DoSwitchSTEMwithScreen(void)
-{ 
+{
   return mScreenSwitchSTEM && !LowDoseMode();
 }
 
 // Return the next valid binning in the given direction from the current one for the
 // given camera and given whether 1 is allowed for K2 camera
-int CSerialEMApp::NextValidBinning(int curBinning, int direction, int camera, 
+int CSerialEMApp::NextValidBinning(int curBinning, int direction, int camera,
                                    bool allowFractional)
 {
   CameraParameters *cam = &mCamParams[camera];
@@ -5589,7 +5587,7 @@ bool CSerialEMApp::BinningIsValid(int binning, int camera, bool allowFractional)
   for (int i = 0; i < cam->numBinnings; i++) {
     if (binning == cam->binnings[i] && (i > 0 || !cam->K2Type || (allowFractional &&
       (mCamConSets[camera][RECORD_CONSET].K2ReadMode == SUPERRES_MODE ||
-      (cam->K2Type == K3_TYPE && mCamConSets[camera][RECORD_CONSET].K2ReadMode > 
+      (cam->K2Type == K3_TYPE && mCamConSets[camera][RECORD_CONSET].K2ReadMode >
       LINEAR_MODE)))))
       return true;
   }
@@ -5743,11 +5741,11 @@ void CSerialEMApp::SetBasicMode(BOOL inVal)
         mMainFrame->RemoveOneDialog(ind, &mDlgPlacements[ind], true);
       } else {
         mToolDlgs[ind]->Create(sToolDlgIDs[ind]);
-        mMainFrame->InsertOneDialog(mToolDlgs[ind], ind, dlgBorderColors, 
+        mMainFrame->InsertOneDialog(mToolDlgs[ind], ind, dlgBorderColors,
           &mDlgPlacements[ind]);
         useInd = LookupToolDlgIndex(ind);
         if (useInd >= 0)
-          mMainFrame->InitializeOnePosition(useInd, ind, initialDlgState[ind], 
+          mMainFrame->InitializeOnePosition(useInd, ind, initialDlgState[ind],
             &mDlgPlacements[ind]);
       }
     }
@@ -5781,7 +5779,7 @@ void CSerialEMApp::SyncNonModalsToMasterParams()
     mNavHelper->mMultiGridDlg->SyncToMasterParams();
 }
 
-// Show or hide the options sections in control panels AND take care of calling 
+// Show or hide the options sections in control panels AND take care of calling
 // UpdateHiding if there is no adjustment from the option section to do that
 // This will manage both panels with tables and ones with simple hideable ID list
 void CSerialEMApp::ManageDialogOptionsHiding(void)
@@ -5822,7 +5820,7 @@ void CSerialEMApp::OpenOrCloseMacroEditors(void)
   if (!mMacroProcessor->GetRestoreMacroEditors())
     return;
   for (int ind = 0; ind < MAX_MACROS; ind++) {
-    if (mReopenMacroEditor[ind] && !mMacroEditer[ind]) 
+    if (mReopenMacroEditor[ind] && !mMacroEditer[ind])
       mMacroProcessor->OpenMacroEditor(ind);
     else if (!mReopenMacroEditor[ind] && mMacroEditer[ind]) {
       mMacroEditer[ind]->JustCloseWindow();

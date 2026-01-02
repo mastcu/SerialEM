@@ -1,7 +1,6 @@
 // MontageWindow.cpp:     Has controls for montaging
 //
-// Copyright (C) 2003 by Boulder Laboratory for 3-Dimensional Electron 
-// Microscopy of Cells ("BL3DEMC") and the Regents of the University of
+// Copyright (C) 2003-2026 by the Regents of the University of
 // Colorado.  See Copyright.txt for full notice of copyright and limitations.
 //
 // Author: David Mastronarde
@@ -14,10 +13,8 @@
 #include "CameraController.h"
 
 
-#ifdef _DEBUG
+#if defined(_DEBUG) && defined(_CRTDBG_MAP_ALLOC)
 #define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
 #endif
 
 static UINT sHideableIDs[] = {IDC_BTRIAL};
@@ -93,7 +90,7 @@ END_MESSAGE_MAP()
 /////////////////////////////////////////////////////////////////////////////
 // CMontageWindow message handlers
 
-void CMontageWindow::OnBstart() 
+void CMontageWindow::OnBstart()
 {
   mWinApp->RestoreViewFocus();
   if (mMontageController->DoingMontage())
@@ -101,7 +98,7 @@ void CMontageWindow::OnBstart()
   mWinApp->StartMontageOrTrial(false);
 }
 
-void CMontageWindow::OnBtrial() 
+void CMontageWindow::OnBtrial()
 {
   mWinApp->RestoreViewFocus();
   if (mMontageController->DoingMontage())
@@ -109,7 +106,7 @@ void CMontageWindow::OnBtrial()
   mWinApp->StartMontageOrTrial(true);
 }
 
-void CMontageWindow::OnBstop() 
+void CMontageWindow::OnBstop()
 {
   mWinApp->RestoreViewFocus();
   if (!mMontageController->DoingMontage())
@@ -117,7 +114,7 @@ void CMontageWindow::OnBstop()
   mMontageController->StopMontage();
 }
 
-void CMontageWindow::OnFocusOrDrift() 
+void CMontageWindow::OnFocusOrDrift()
 {
   mWinApp->RestoreViewFocus();
   // If doing a montage, restore previous value
@@ -130,7 +127,7 @@ void CMontageWindow::OnFocusOrDrift()
   mParam->correctDrift = m_bCorrectDrift;
 }
 
-void CMontageWindow::OnDeltaposSpinz(NMHDR* pNMHDR, LRESULT* pResult) 
+void CMontageWindow::OnDeltaposSpinz(NMHDR* pNMHDR, LRESULT* pResult)
 {
   mWinApp->RestoreViewFocus();
   NM_UPDOWN* pNMUpDown = (NM_UPDOWN*)pNMHDR;
@@ -145,7 +142,7 @@ void CMontageWindow::OnDeltaposSpinz(NMHDR* pNMHDR, LRESULT* pResult)
   *pResult = 0;
 }
 
-void CMontageWindow::OnKillfocusEditz() 
+void CMontageWindow::OnKillfocusEditz()
 {
   mWinApp->RestoreViewFocus();
   if (mMontageController->DoingMontage()) {
@@ -157,21 +154,21 @@ void CMontageWindow::OnKillfocusEditz()
   mParam->zCurrent = m_iCurrentZ;
 }
 
-void CMontageWindow::OnShowOverview() 
+void CMontageWindow::OnShowOverview()
 {
   UpdateData(true);
   mParam->showOverview = m_bShowOverview;
   mWinApp->RestoreViewFocus();
 }
 
-void CMontageWindow::OnShiftInOverview() 
+void CMontageWindow::OnShiftInOverview()
 {
   UpdateData(true);
   mParam->shiftInOverview = m_bShiftOverview;
   mWinApp->RestoreViewFocus();
 }
 
-void CMontageWindow::OnVerySloppy() 
+void CMontageWindow::OnVerySloppy()
 {
   UpdateData(true);
   mParam->verySloppy = m_bVerySloppy;
@@ -200,7 +197,7 @@ void CMontageWindow::OnDeltaposSpinscanbin(NMHDR* pNMHDR, LRESULT* pResult)
 	*pResult = 0;
 }
 
-void CMontageWindow::OnDeltaposSpinviewbin(NMHDR* pNMHDR, LRESULT* pResult) 
+void CMontageWindow::OnDeltaposSpinviewbin(NMHDR* pNMHDR, LRESULT* pResult)
 {
   mWinApp->RestoreViewFocus();
 	NM_UPDOWN* pNMUpDown = (NM_UPDOWN*)pNMHDR;
@@ -210,22 +207,22 @@ void CMontageWindow::OnDeltaposSpinviewbin(NMHDR* pNMHDR, LRESULT* pResult)
     return;
   }
   mParam->overviewBinning = newVal;
-	
+
   ManageBinning();
 	*pResult = 0;
 }
 
 // Returns come through to here
-void CMontageWindow::OnOK() 
+void CMontageWindow::OnOK()
 {
   m_butAdjustFocus.SetFocus();
   OnKillfocusEditz();
 }
 
-BOOL CMontageWindow::OnInitDialog() 
+BOOL CMontageWindow::OnInitDialog()
 {
   CToolDlg::OnInitDialog();
-  
+
   mMontageController = mWinApp->mMontageController;
   mParam = mWinApp->GetMontParam();
   m_sbcZ.SetRange(0,1500);
@@ -280,20 +277,20 @@ void CMontageWindow::Update()
   m_statCurrentZ.EnableWindow(bEnable);
   m_editCurrentZ.EnableWindow(bEnable);
   m_sbcZ.EnableWindow(bEnable);
-  
+
   bEnable = (mWinApp->Montaging() || !mWinApp->mStoreMRC) && !mWinApp->DoingTasks() &&
     (!mWinApp->mScope || !mWinApp->mScope->GetMovingStage());
   m_butStart.EnableWindow(bEnable && !mWinApp->StartedTiltSeries() &&
     !mWinApp->mCamera->CameraBusy());
   m_butTrial.EnableWindow(bEnable && !mWinApp->mCamera->CameraBusy() && !usingMS);
-  
+
   bEnable = !mMontageController->DoingMontage() && !mWinApp->DoingComplexTasks();
   m_butShiftOverview.EnableWindow(bEnable && !noShift);
   m_butVerySloppy.EnableWindow(bEnable && !noShift && !usingMS);
-  m_butEvalMultiple.EnableWindow(bEnable && !noShift && !usingMS && 
+  m_butEvalMultiple.EnableWindow(bEnable && !noShift && !usingMS &&
     (!mWinApp->Montaging() || !mMontageController->TreatAsGridMap()));
   m_butCorrectDrift.EnableWindow(bEnable && !mParam->moveStage && !noShift && !usingMS);
-  m_butAdjustFocus.EnableWindow(bEnable && (!mParam->moveStage || 
+  m_butAdjustFocus.EnableWindow(bEnable && (!mParam->moveStage ||
     (mParam->imShiftInBlocks && mParam->focusBlockSize > 1)) && !usingMS);
 
   // If montaging is on, fix the prescan maximum and actual values

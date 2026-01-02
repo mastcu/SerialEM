@@ -1,6 +1,6 @@
 // ToolDlg.cpp:    Base class for common features of control panels, inherits CBaseDlg
 //
-// Copyright (C) 2003-2021 by the Regents of the University of
+// Copyright (C) 2003-2026 by the Regents of the University of
 // Colorado.  See Copyright.txt for full notice of copyright and limitations.
 //
 // Author: David Mastronarde
@@ -13,10 +13,8 @@
 #include "ToolDlg.h"
 #include "XFolderDialog/XWinVer.h"
 
-#ifdef _DEBUG
+#if defined(_DEBUG) && defined(_CRTDBG_MAP_ALLOC)
 #define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
 #endif
 
 // In order to measure title bar height the first time a panel floats
@@ -33,7 +31,7 @@ CToolDlg::CToolDlg(UINT inIDD, CWnd* pParent /*=NULL*/)
     // NOTE: the ClassWizard will add member initialization here
   //}}AFX_DATA_INIT
   mMidHeight = 0;
-  mState = TOOL_OPENCLOSED | TOOL_FULLOPEN; 
+  mState = TOOL_OPENCLOSED | TOOL_FULLOPEN;
   mWinApp = (CSerialEMApp *)AfxGetApp();
   mBorderColor = RGB(192, 192, 192);
   mIDD = inIDD;
@@ -79,7 +77,7 @@ void CToolDlg::SetOpenClosed(int inState)
   }
 
   if (GetDlgItem(IDC_BUTMORE) != NULL) {
-    if (mState & TOOL_FULLOPEN) 
+    if (mState & TOOL_FULLOPEN)
       SetDlgItemText(IDC_BUTMORE, "-");
     else
       SetDlgItemText(IDC_BUTMORE, "+");
@@ -149,19 +147,19 @@ void CToolDlg::ToggleState(int inFlag)
 
 // When the open - close button is pushed, change state of button and
 // inform the tool dialog manager
-void CToolDlg::OnButopen() 
+void CToolDlg::OnButopen()
 {
   ToggleState(TOOL_OPENCLOSED);
 }
 
 // When the more button is pushed, change state of button and
 // inform the tool dialog manager
-void CToolDlg::OnButmore() 
+void CToolDlg::OnButmore()
 {
   ToggleState(TOOL_FULLOPEN);
 }
 
-void CToolDlg::OnButfloat() 
+void CToolDlg::OnButfloat()
 {
   ToggleState(TOOL_FLOATDOCK);
 }
@@ -245,9 +243,9 @@ void CToolDlg::SetupPanels(int *idTable, int *leftTable, int *topTable,
   mHeightTable = heightTable;
 }
 
-BOOL CToolDlg::OnInitDialog() 
+BOOL CToolDlg::OnInitDialog()
 {
-  
+
   CBaseDlg::OnInitDialog();
 
   // Make the font smaller for the title and "more" message
@@ -281,25 +279,25 @@ BOOL CToolDlg::OnInitDialog()
 
 // Tool windows can be closed by escape if they get focus!
 // Include an invisible cancel button to get this message
-void CToolDlg::OnCancel() 
+void CToolDlg::OnCancel()
 {
-  
+
   // CDialog::OnCancel();
 }
 
-void CToolDlg::OnMove(int x, int y) 
+void CToolDlg::OnMove(int x, int y)
 {
   CBaseDlg::OnMove(x, y);
-  
+
   if (mState & TOOL_FLOATDOCK)
-    mWinApp->RestoreViewFocus();  
+    mWinApp->RestoreViewFocus();
 }
 
-void CToolDlg::OnPaint() 
+void CToolDlg::OnPaint()
 {
   CPaintDC dc(this); // device context for painting
   DrawSideBorders(dc);
-  
+
   // Do not call CDialog::OnPaint() for painting messages
 }
 

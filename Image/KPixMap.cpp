@@ -1,8 +1,7 @@
 // KPixMap.cpp:           A class that builds and holds a byte pixmap for an image
 //                          being displayed and sets up color tables and ramps
 //
-// Copyright (C) 2003 by Boulder Laboratory for 3-Dimensional Electron 
-// Microscopy of Cells ("BL3DEMC") and the Regents of the University of
+// Copyright (C) 2003-2026 by the Regents of the University of
 // Colorado.  See Copyright.txt for full notice of copyright and limitations.
 //
 // Authors: David Mastronarde and James Kremer
@@ -12,6 +11,10 @@
 #include "..\Shared\b3dutil.h"
 #include "..\Utilities\SEMUtilities.h"
 #include <math.h>
+
+#if defined(_DEBUG) && defined(_CRTDBG_MAP_ALLOC)
+#define new DEBUG_NEW
+#endif
 
 
 KPixMap::KPixMap()
@@ -23,21 +26,21 @@ KPixMap::KPixMap()
   BITMAPINFO *pbmi = mBMInfo;
   if (pbmi == NULL)
       return;
-    pbmi->bmiHeader.biSize = sizeof(BITMAPINFOHEADER); 
-    pbmi->bmiHeader.biWidth = 0; 
+    pbmi->bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+    pbmi->bmiHeader.biWidth = 0;
     pbmi->bmiHeader.biHeight = 0;
-    pbmi->bmiHeader.biPlanes = 1; 
-    pbmi->bmiHeader.biBitCount = 8; 
-    pbmi->bmiHeader.biClrUsed = 256; 
+    pbmi->bmiHeader.biPlanes = 1;
+    pbmi->bmiHeader.biBitCount = 8;
+    pbmi->bmiHeader.biClrUsed = 256;
 
-    // If the bitmap is not compressed, set the BI_RGB flag. 
-    pbmi->bmiHeader.biCompression = BI_RGB; 
+    // If the bitmap is not compressed, set the BI_RGB flag.
+    pbmi->bmiHeader.biCompression = BI_RGB;
 
-     // Set biClrImportant to 0, indicating that all of the 
-    // device colors are important. 
-  pbmi->bmiHeader.biClrImportant = 0; 
+     // Set biClrImportant to 0, indicating that all of the
+    // device colors are important.
+  pbmi->bmiHeader.biClrImportant = 0;
 
-  
+
   // setLevels(0,0);
 }
 
@@ -80,18 +83,18 @@ int KPixMap::useRect(KImage *inRect, bool keepBGRorder)
   int endFillY = theShiftY > 0 ? height : height + theShiftY;
   int nCopyX = theShiftX > 0 ? width - theShiftX : width + theShiftX;
   int theOffset = theShiftX > 0 ? 0 : -theShiftX;
-  
+
   // Height is negative to indicate top-down image
   mBMInfo->bmiHeader.biWidth = 4 *((width + 3) / 4);
   mBMInfo->bmiHeader.biHeight = -height;
   mBMInfo->bmiHeader.biSizeImage = height * mBMInfo->bmiHeader.biWidth;
   if (theMode == kRGBmode || theMode == kBGRmode) {
-    mBMInfo->bmiHeader.biBitCount = 24; 
+    mBMInfo->bmiHeader.biBitCount = 24;
     mBMInfo->bmiHeader.biClrUsed = 0;
     fillFac = 3;
   } else {
-    mBMInfo->bmiHeader.biBitCount = 8; 
-    mBMInfo->bmiHeader.biClrUsed = 256; 
+    mBMInfo->bmiHeader.biBitCount = 8;
+    mBMInfo->bmiHeader.biClrUsed = 256;
     fillFac = 1;
   }
 
@@ -100,22 +103,22 @@ int KPixMap::useRect(KImage *inRect, bool keepBGRorder)
   theMin = B3DNINT(fMin);
   theRange = B3DNINT(fRange);
   inRect->Lock();
-  
+
   // If there's no scaling and the image is already the right size for
   // display, use it as is after deleting current image if any
-  if ((theType == kUBYTE || theMode == kBGRmode) && theMin == 0 && theRange == 255 && 
+  if ((theType == kUBYTE || theMode == kBGRmode) && theMin == 0 && theRange == 255 &&
     (inRect->getRowBytes() % 4) == 0 && !theShiftX && !theShiftY) {
      doneWithRect();
      mRect = new KImage(inRect);
-       
+
   } else {
     // Otherwise, need to create a new image or reuse existing image of the right
     // size (unless it is a copy), and copy it over with scaling
-    if (mRect && (mRect->getWidth() != mBMInfo->bmiHeader.biWidth || 
-      mRect->getHeight() != height || mRect->getRefCount() > 1 || 
+    if (mRect && (mRect->getWidth() != mBMInfo->bmiHeader.biWidth ||
+      mRect->getHeight() != height || mRect->getRefCount() > 1 ||
       mRect->getMode() != theMode))
       doneWithRect();
-    if (!mRect && UtilOKtoAllocate((theMode == kGray ? 1 : 3) * 
+    if (!mRect && UtilOKtoAllocate((theMode == kGray ? 1 : 3) *
       mBMInfo->bmiHeader.biWidth * height)) {
         if (theMode == kGray) {
           mRect = new KImage(mBMInfo->bmiHeader.biWidth, height);
@@ -128,11 +131,11 @@ int KPixMap::useRect(KImage *inRect, bool keepBGRorder)
       inRect->UnLock();
       return 1;
     }
-    
+
     if (theType != kFLOAT && theType != kRGB)
       SetLut(theType, theMin, B3DMAX(1, theRange));
-    
-    // Copy data row by row with look-up    
+
+    // Copy data row by row with look-up
     for (j = 0; j < startFillY; j++) {
       bdata = (unsigned char *)mRect->getRowData(j);
       for (i = 0; i < fillFac * width; i++)
@@ -143,26 +146,26 @@ int KPixMap::useRect(KImage *inRect, bool keepBGRorder)
       bdata = (unsigned char *)mRect->getRowData(j);
       for (i = 0; i < fillFac * theShiftX; i++)
         *bdata++ = 127;
-      
+
       switch(theType){
       case kUBYTE:
         ucdata = (unsigned char *)inRect->getRowData(j - theShiftY) + theOffset;
         for(i = 0; i < nCopyX; i++)
           *bdata++ = mLut[*ucdata++];
         break;
-        
+
       case kSHORT:
         sdata = (short *)inRect->getRowData(j - theShiftY) + theOffset;
-        for(i = 0; i < nCopyX; i++) 
+        for(i = 0; i < nCopyX; i++)
           *bdata++ = mLut[*sdata++ + 32768];
         break;
-        
+
       case kUSHORT:
         usdata = (unsigned short *)inRect->getRowData(j - theShiftY) + theOffset;
-        for(i = 0; i < nCopyX; i++) 
+        for(i = 0; i < nCopyX; i++)
           *bdata++ = mLut[*usdata++];
         break;
-        
+
       case kFLOAT:
         fdata = (float *)inRect->getRowData(j - theShiftY) + theOffset;
         for(i = 0; i < nCopyX; i++) {
@@ -197,11 +200,11 @@ int KPixMap::useRect(KImage *inRect, bool keepBGRorder)
       bdata = (unsigned char *)mRect->getRowData(j);
       for (i = 0; i < fillFac * width; i++)
         bdata[i] = 127;
-    }             
+    }
   }
-  
+
   inRect->UnLock();
-  
+
   return 0;
 }
 
@@ -223,7 +226,7 @@ KPixMap::~KPixMap()
 
 // Set up the LUT for getting from image to bitmap values
 void KPixMap::SetLut(int inType, int inMin, int inRange)
-{ 
+{
   int theVal, i;
   int loVal = 0;
   int hiVal = 256;
@@ -246,14 +249,14 @@ void KPixMap::SetLut(int inType, int inMin, int inRange)
       mLut = new unsigned char [hiVal - loVal];
       mLutType = inType;
     }
-        
+
     // Fill the table
     for (i = loVal; i< hiVal; i++) {
       theVal =  ( (i - inMin) * 256) / inRange;
       if (theVal < 0) theVal =0;
       if (theVal > 255) theVal = 255;
-      mLut[i - loVal] = (unsigned char)theVal; 
-    } 
+      mLut[i - loVal] = (unsigned char)theVal;
+    }
     mLutMin = inMin;
     mLutRange = inRange;
   }
@@ -262,14 +265,14 @@ void KPixMap::SetLut(int inType, int inMin, int inRange)
 
 // takes the incoming brightness and contrast, transfers them to the brightness and
 // contrast of THIS pixmap, and computes a ramp and sets the color table from it.
-void KPixMap::setLevels(int inBrightness, int inContrast, int inInverted, 
+void KPixMap::setLevels(int inBrightness, int inContrast, int inInverted,
   int inFalseColor, float boostContrast, float mean)
 {
   if (mHasScaled && (inBrightness == mScale.mBrightness) &&
     (inContrast == mScale.mContrast) && inInverted == mScale.mInverted &&
     mScale.mFalseColor == inFalseColor &&
-    fabs(boostContrast - mScale.mBoostContrast) < 1.e-3 && 
-    fabs(mean - mScale.mMeanForBoost) < 1.e-3) 
+    fabs(boostContrast - mScale.mBoostContrast) < 1.e-3 &&
+    fabs(mean - mScale.mMeanForBoost) < 1.e-3)
     return;
   mScale.mBrightness = inBrightness;  // -127 to 128
   mScale.mContrast = inContrast;
@@ -287,7 +290,7 @@ void KPixMap::setLevels(KImageScale &inScale)
 {
   // If the pixmap isn't mutable we don't have to
   // do anything.
-  
+
   // If the levels have already been set
   // we don't have to set them again.
   if (&inScale == NULL)
@@ -298,11 +301,11 @@ void KPixMap::setLevels(KImageScale &inScale)
   setLevels();
 }
 
-// gets a ramp based upon the contrast and brightness from KImageScale, then converts 
+// gets a ramp based upon the contrast and brightness from KImageScale, then converts
 // that to RGBs and changes the color table
 
 void KPixMap::setLevels()
-{ 
+{
   // Get the ramp from the image scale.
   unsigned int ramp[256];
   unsigned char table[3][256];
@@ -330,6 +333,6 @@ void KPixMap::setLevels()
     }
   }
 
-  mHasScaled = true;  
+  mHasScaled = true;
 }
 

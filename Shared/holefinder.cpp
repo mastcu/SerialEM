@@ -3,7 +3,7 @@
  *
  *  Author: David Mastronarde   email: mast@colorado.edu
  *
- *  Copyright (C) 2023 by the Regents of the University of 
+ *  Copyright (C) 2023-2026 by the Regents of the University of
  *  Colorado.  See dist/COPYRIGHT for full copyright notice.
  *
  *  Holefinder was started from Hough transform code obtained from
@@ -21,6 +21,10 @@
 #include "holefinder.h"
 #include "cfft.h"
 
+#if defined(_DEBUG) && defined(_CRTDBG_MAP_ALLOC)
+#define new DEBUG_NEW
+#endif
+
 #define DISTANCE(a, b) sqrt((a) * (a) + (b) * (b))
 
 #define SIDES_ANGLE_ERROR(len1, len2, ang) \
@@ -28,12 +32,12 @@
 
 #define RETURN_IF_ERR(a) err = (a); if (err) return err;
 
-enum {ERR_MEMORY = 1, ERR_SELECT, ERR_BAD_MODE, ERR_ZOOM_RANGE, ERR_NOT_INIT, 
+enum {ERR_MEMORY = 1, ERR_SELECT, ERR_BAD_MODE, ERR_ZOOM_RANGE, ERR_NOT_INIT,
       ERR_NO_TEMPLATE, ERR_TEMPLATE_PARAM, ERR_NO_CUTOFFS};
 
-static const char *errStrings[] = 
+static const char *errStrings[] =
   {"Unknown error from HoleFinder", "Allocating memory", "Selecting zoom-down filter",
-   "Data mode of input must be byte, integer, or float", 
+   "Data mode of input must be byte, integer, or float",
    "Coordinates for image reduction are out of range", "Initialize was not called first",
    "No average template was made", "Radius does not match for making template or # "
    "radii is not 1", "NULL cutoff pointers passed to removeOutliers"};
@@ -62,7 +66,7 @@ HoleFinder::HoleFinder()
   mMinNumForAvg = 5;
   // 6: Fraction of points to average if there enough; more will be done if < minimum
   mFracToAvg = 0.5;
-  // 7: Maximum change between nominal and found diameter allowed; above this it do next 
+  // 7: Maximum change between nominal and found diameter allowed; above this it do next
   // set of circles at the nominal diameter instead of the found one
   mMaxDiamErrFrac = 0.2f;
   // 8: Criterion for omitting positive outliers in mean value from the raw average
@@ -73,25 +77,25 @@ HoleFinder::HoleFinder()
   mFinalNegOutlieCrit = 9.0;
   // 11: Fraction of radius to take pixels from for this outlier removal
   mFinalOutlieRadFrac = 0.9f;
-  // 12: Fraction of average spacing below which points found on separate montage pieces  
+  // 12: Fraction of average spacing below which points found on separate montage pieces
   // are considered to be the same
   mPcToPcSameFrac = 0.5;
   // 13: Fraction of average spacing below which a point found on a montage piece is
   // considered to be the same as a point found in the full image
   mPcToFullSameFrac = 0.5;
-  // 14: Fraction of radius used as criterion distance from edge of overlap zone for 
+  // 14: Fraction of radius used as criterion distance from edge of overlap zone for
   // substituting a point found on a piece for the same point on the full image; 0 means
   // a point right on edge qualifies, a positive value admits points not in overlap
   mSubstOverlapDistFrac = 0.;
-  // 15: Fraction of radius used as criterion distance from edge of image for using a 
+  // 15: Fraction of radius used as criterion distance from edge of image for using a
   // point found only on a piece (adding or substituting it)
   mUsePieceEdgeDistFrac = 0.25;
-  // 16: Maximum fractional extent into overlap for adding a point from a piece not found 
-  // on the full image (and not eliminated because the it was identified as the same as 
+  // 16: Maximum fractional extent into overlap for adding a point from a piece not found
+  // on the full image (and not eliminated because the it was identified as the same as
   // one on the overlapping piece)
   mAddOverlapFrac = 0.75;
 
-  // Minimum increase from # of points from edge average correlation to # of points 
+  // Minimum increase from # of points from edge average correlation to # of points
   // from raw average correlation required to make new average and iterate (no entry)
   mMinBoostToIter = 1.05f;
   mLastCutoffsValid = false;
@@ -144,7 +148,7 @@ void HoleFinder::clearAll()
   B3DFREE(mRawAverage);
   B3DFREE(mEdgeAverage);
   mXpadSize = 0;
-  mWallFFT = mWallPeak = mWallFilter = 0.;  
+  mWallFFT = mWallPeak = mWallFilter = 0.;
   mWallCanny = mWallCircle = mWallConj = 0;
 }
 
@@ -156,12 +160,12 @@ const char *HoleFinder::returnErrorString(int err)
 }
 
 /*
- * Initialize the finder for a new image in inputData, with MRC/SLICE_MODE in mode, 
+ * Initialize the finder for a new image in inputData, with MRC/SLICE_MODE in mode,
  * size in nxIn, nyIn, and reduction to be applied (value >= 1).
  * maxRadToAnalyze is the maximum radius that will ever be analyzed, which determines th
  * padded size for FFTs.  It is in reduced pixels.
  * keepCache would be 1 to keep basic intermediate images between calls to findCircles,
- * 2 to keep FFTs of circles as well (when the retain flag is also passed on a call to 
+ * 2 to keep FFTs of circles as well (when the retain flag is also passed on a call to
  * findCircles), plus 4 to keep a median filter image.
  */
 int HoleFinder::initialize(void *inputData, int mode, int nxIn, int nyIn, float reduction,
@@ -179,8 +183,8 @@ int HoleFinder::initialize(void *inputData, int mode, int nxIn, int nyIn, float 
   if (reducing) {
     nx = (int)(nxIn / reduction);
     ny = (int)(nyIn / reduction);
-    mRedXoffset = int((nxIn - nx * reduction) / 2.); 
-    mRedYoffset = int((nyIn - ny * reduction) / 2.); 
+    mRedXoffset = int((nxIn - nx * reduction) / 2.);
+    mRedYoffset = int((nyIn - ny * reduction) / 2.);
     if (mVerbose)
       PRINT3(reduction, nx, ny);
     if (selectZoomFilter(4, 1. / reduction, &chan))
@@ -224,7 +228,7 @@ int HoleFinder::initialize(void *inputData, int mode, int nxIn, int nyIn, float 
         mSobelDir = B3DMALLOC(unsigned char, nx * ny);
       if (keepMedian)
         mFiltData = B3DMALLOC(float, nx * ny);
-      if (!mEdgeData || !mSobelGrad || (keepCache && !mSobelDir) || 
+      if (!mEdgeData || !mSobelGrad || (keepCache && !mSobelDir) ||
           (keepMedian && !mFiltData))
         err = ERR_MEMORY;
     }
@@ -233,7 +237,7 @@ int HoleFinder::initialize(void *inputData, int mode, int nxIn, int nyIn, float 
     B3DFREE(mSobelDir);
   if (!keepMedian)
     B3DFREE(mFiltData);
-  
+
   // Clear out pad-dependent items if that size has changed
   if (!err && (xPadSize != mXpadSize || yPadSize != mYpadSize)) {
     clearCircleCache();
@@ -256,7 +260,7 @@ int HoleFinder::initialize(void *inputData, int mode, int nxIn, int nyIn, float 
     B3DFREE(mCrossCorr);
   if (keepCache < 2)
     clearCircleCache();
-  
+
   // If not reducing, either copy float data or convert the raw data to float and assign
   if (!err && !reducing) {
     if (mode == MRC_MODE_FLOAT) {
@@ -275,7 +279,7 @@ int HoleFinder::initialize(void *inputData, int mode, int nxIn, int nyIn, float 
     if (!linePtrs) {
       err = ERR_MEMORY;
     } else {
-      err = zoomWithFilter(linePtrs, nxIn, nyIn, (float)mRedXoffset, (float)mRedYoffset, 
+      err = zoomWithFilter(linePtrs, nxIn, nyIn, (float)mRedXoffset, (float)mRedYoffset,
                            nx, ny, nx, 0, mode, mRawData, NULL, NULL);
       free(linePtrs);
 
@@ -295,7 +299,7 @@ int HoleFinder::initialize(void *inputData, int mode, int nxIn, int nyIn, float 
   if (mDebugImages)
     mrcWriteImageToFile("reduced.mrc", mRawData, MRC_MODE_FLOAT, nx, ny);
 
-  // Bail out if error, or 
+  // Bail out if error, or
   if (err) {
     clearAll();
     return err;
@@ -326,7 +330,7 @@ int HoleFinder::initialize(void *inputData, int mode, int nxIn, int nyIn, float 
  */
 void HoleFinder::setSequenceParams
 (float diameter, float spacing, bool hexGrid, bool retain, float maxError, float fracAvg,
- int minForAvg, float maxDiamErrFrac, float avgOutlieCrit, float finalNegOutlieCrit, 
+ int minForAvg, float maxDiamErrFrac, float avgOutlieCrit, float finalNegOutlieCrit,
  float finalPosOutlieCrit, float finalOutlieRadFrac)
 {
   mSpacing = spacing;
@@ -374,7 +378,7 @@ void HoleFinder::setRunsInSequence
 
 /*
  * Run a sequence of edge correlations with different thicknesses to find best radius and
- * initial positions followed by correlating with a template based on averaging the edge 
+ * initial positions followed by correlating with a template based on averaging the edge
  * or the raw image, analyzing positions and angle to find the regular grid of points.
  * Do this at an array of sigma and threshold values and pick the best one for the final
  * correlations and analysis.
@@ -382,7 +386,7 @@ void HoleFinder::setRunsInSequence
  * returns a -1.  sigUsed and threshUsed are returned with the values used on the
  * call, or the final values.
  * xBoundary, yBoundary have a possible boundary contour
- * bestSigInd and bestThreshInd are returned with the index of the best sigma and 
+ * bestSigInd and bestThreshInd are returned with the index of the best sigma and
  * threshold values
  * bestRadius is returned in reduced pixels
  * trueSpacing is returned in original pixels
@@ -414,11 +418,11 @@ int HoleFinder::runSequence
     xCenClose.clear();
     bestSigInd = -1;
   }
-  
+
   midRadius = mDiameter / 2.f;
-      
+
   // Get the edges
-  err = cannyEdge(mSigmas[iSig], 1.f - 0.02f * mThresholds[iThresh], 
+  err = cannyEdge(mSigmas[iSig], 1.f - 0.02f * mThresholds[iThresh],
                   1.f - 0.01f * mThresholds[iThresh]);
   if (err)
     return err;
@@ -426,8 +430,8 @@ int HoleFinder::runSequence
   // Find the circles in series of scans
   for (scan = 0; scan < mNumScans; scan++) {
     radInc = mIncrements[scan];
-    err = findCircles(midRadius, radInc, mWidths[scan], mNumCircles[scan], 
-                      mRetainFFTs && !scan, 0.75f * mSpacing, 0, 
+    err = findCircles(midRadius, radInc, mWidths[scan], mNumCircles[scan],
+                      mRetainFFTs && !scan, 0.75f * mSpacing, 0,
                       xBoundary, yBoundary, bestRadius, xCenters,
                       yCenters, peakVals);
     if (err)
@@ -448,14 +452,14 @@ int HoleFinder::runSequence
     PRINT4(mSigmas[iSig], mThresholds[iThresh], xCenters.size(), xMissing.size());
   threshUsed = mThresholds[iThresh];
   sigUsed = mSigmas[iSig];
-  if (bestSigInd < 0 || (int)xCenters.size() > mMaxFound || 
+  if (bestSigInd < 0 || (int)xCenters.size() > mMaxFound ||
       (xCenters.size() == mMaxFound && (int)xMissing.size() < mMinMissing)) {
     mMaxFound = (int)xCenters.size();
     mMinMissing = (int)xMissing.size();
     bestSigInd = iSig;
     bestThreshInd = iThresh;
     mRadAtBest = bestRadius;
-  } 
+  }
   iThresh++;
   if (iThresh < mNumThresh)
     return -1;
@@ -472,7 +476,7 @@ int HoleFinder::runSequence
 
   // Get the edges and repeat final analysis unless the last one made is for best values
   if (bestSigInd != mNumSigmas - 1 || bestThreshInd != mNumThresh - 1) {
-    err = cannyEdge(mSigmas[bestSigInd], 1.f - 0.02f * mThresholds[bestThreshInd], 
+    err = cannyEdge(mSigmas[bestSigInd], 1.f - 0.02f * mThresholds[bestThreshInd],
                     1.f - 0.01f * mThresholds[bestThreshInd]);
     if (err)
       return err;
@@ -485,7 +489,7 @@ int HoleFinder::runSequence
 
     //  do template and sort out neighbors
     err = templateAndAnalyze(midRadius, mRetainFFTs, madeAverage, usedRaw, xBoundary,
-                             yBoundary, xCenters, yCenters, peakVals, trueSpacing, 
+                             yBoundary, xCenters, yCenters, peakVals, trueSpacing,
                              xMissing, yMissing);
     if (err)
       return err;
@@ -494,7 +498,7 @@ int HoleFinder::runSequence
   numMissAdded = 0;
   if (madeAverage) {
     if (mVerbose)
-      printf("Finding circles with weak edges for rescue (%d missing)\n", 
+      printf("Finding circles with weak edges for rescue (%d missing)\n",
              (int)xMissing.size());
     err = findCircles(midRadius, 1., -1, 1, false, 0.75f * mSpacing, 1, xBoundary,
                     yBoundary, bestRadius, xCenClose, yCenClose, peakClose);
@@ -507,14 +511,14 @@ int HoleFinder::runSequence
 
   if (mVerbose)
     printf("Added %d points, still %d missing\n", numMissAdded, (int)xMissing.size());
-  
+
   // Get rid of outliers again
   mLastCutoffsValid = false;
   if (xCenters.size() >= 10 && (mFinalPosOutlieCrit > 0. || mFinalNegOutlieCrit > 0.)) {
     holeIntensityStats(mFinalOutlieRadFrac * bestRadius, xCenters, yCenters, false,
                        false, &holeMeans, NULL, NULL);
-    RETURN_IF_ERR(removeOutliers(xCenters, yCenters, &peakVals, holeMeans, 
-                                 mFinalNegOutlieCrit, mFinalPosOutlieCrit, numNeg, 
+    RETURN_IF_ERR(removeOutliers(xCenters, yCenters, &peakVals, holeMeans,
+                                 mFinalNegOutlieCrit, mFinalPosOutlieCrit, numNeg,
                                  numPos, false, &mLastNegCutoffVal, &mLastPosCutoffVal));
     if (mVerbose)
       printf("%d positive and %d negative outliers removed\n", numPos, numNeg);
@@ -524,7 +528,7 @@ int HoleFinder::runSequence
 }
 
 /*
- * Makes an average from the edge image finds circles from that, and runs the grid 
+ * Makes an average from the edge image finds circles from that, and runs the grid
  * analysis to get the real set of points.  Then it tries to get an average from the raw
  * image and find circles with that, followed by grid analysis.  Merges the output of
  * those two approaches and analyzes again to get the best of both worlds.
@@ -533,7 +537,7 @@ int HoleFinder::runSequence
  * madeAverage is returned with whether and average was made, and usedRaw if one was made
  * from raw images.
  * xBoundary, yBoundary have the possible boundary contour
- * xCenters, yCenters, peakVals are passed in with the previously found peaks and their 
+ * xCenters, yCenters, peakVals are passed in with the previously found peaks and their
  * correlation strengths and returned with the resulting points
  * xMissing, yMissing are returned with predicted positions that have no point
  * trueSpacing is returned with the found spacing in original pixels
@@ -581,7 +585,7 @@ int HoleFinder::templateAndAnalyze
     peakFCedge = peakVals;
   }
   //printf("Analyzing neighbors %s making average\n", madeAverage? "after" : "without");
-  
+
   // Analyze for regular grid
   //dumpPoints("edgeorig.txt", xCenters, yCenters, peakVals);
   if (xCenters.size() < 2) {
@@ -618,7 +622,7 @@ int HoleFinder::templateAndAnalyze
         if ((int)xCenRawCorr.size() >= B3DMAX(10, 2 * mMinNumForAvg)) {
           holeIntensityStats(bestRadius * 0.9f, xForTemplate, yForTemplate, false,
                              false, &holeMeans, NULL, NULL);
-          RETURN_IF_ERR(removeOutliers(xForTemplate, yForTemplate, NULL, holeMeans, 0., 
+          RETURN_IF_ERR(removeOutliers(xForTemplate, yForTemplate, NULL, holeMeans, 0.,
                                        mAvgOutlieCrit, dom, numPos));
           if (mVerbose && numPos)
             printf("Removed %d outliers for template\n", numPos);
@@ -660,10 +664,10 @@ int HoleFinder::templateAndAnalyze
     if (mVerbose)
       PRINT3(domInd, xCenRawCorr.size(), xCenters.size());
 
-    // Now merge the two original lists from before the analysis, 
+    // Now merge the two original lists from before the analysis,
     // merge into the dominant list if not too close to an existing point
     domSize = (int)xcenPtr[domInd]->size();
-    mergeAlternateLists(xcenPtr, ycenPtr, peakPtr, altInds, domInd, minSpacing, 
+    mergeAlternateLists(xcenPtr, ycenPtr, peakPtr, altInds, domInd, minSpacing,
                         mMaxError);
 
     // If nothing merged in, take the dominant set, namely copy the data if it is 1
@@ -688,7 +692,7 @@ int HoleFinder::templateAndAnalyze
       //dumpPoints("mergeorig.txt", *xcenPtr[domInd], *ycenPtr[domInd], *peakPtr[domInd]);
       RETURN_IF_ERR(analyzeNeighbors(*xcenPtr[domInd], *ycenPtr[domInd], *peakPtr[domInd],
                                      altInds, *xcenPtr[1 - domInd], *ycenPtr[1 - domInd],
-                                     *peakPtr[1 - domInd], maxSpacing, mMaxError, 0, 
+                                     *peakPtr[1 - domInd], maxSpacing, mMaxError, 0,
                                      trueSpacing, xMissing, yMissing));
       //dumpPoints("mergeana.txt", *xcenPtr[domInd], *ycenPtr[domInd], *peakPtr[domInd]);
       //printf("Analyzed merged, got %d\n", xcenPtr[domInd]->size());
@@ -704,7 +708,7 @@ int HoleFinder::templateAndAnalyze
 
 /*
  * Merges the "alternate" list of points into the "dominant" one that is being accepted as
- * best, by adding points that are farther than the minSpacing (in reduced pixels). 
+ * best, by adding points that are farther than the minSpacing (in reduced pixels).
  * Points that are sufficiently close (within 4 times maxError, which is in the same
  * pixels as the points) are indexed in altInd for access as alternatives during analysis
  */
@@ -759,7 +763,7 @@ void HoleFinder::mergeAlternateLists(FloatVec **xcenPtr, FloatVec **ycenPtr,
  */
 void HoleFinder::setMontPieceVectors
 (FloatVecArray *pieceXcenVec, FloatVecArray *pieceYcenVec, FloatVecArray *piecePeakVec,
- FloatVecArray *pieceMeanVec, FloatVecArray *pieceSDsVec, 
+ FloatVecArray *pieceMeanVec, FloatVecArray *pieceSDsVec,
  FloatVecArray *pieceOutlieVec, IntVec *xpcAliCoords, IntVec *ypcAliCoords,
  IntVec *pieceIndex, IntVec *tileXnum, IntVec *tileYnum)
 {
@@ -783,7 +787,7 @@ void HoleFinder::setMontPieceVectors
  */
 void HoleFinder::setMontageParams
 (int numXpieces, int numYpieces, int rawXsize, int rawYsize, int fullBinning,
- float pcToPcSameFrac, float pcToFullSameFrac, float substOverlapDistFrac, 
+ float pcToPcSameFrac, float pcToFullSameFrac, float substOverlapDistFrac,
  float usePieceEdgeDistFrac, float addOverlapFrac)
 {
   mPieceXsize = rawXsize;
@@ -848,15 +852,15 @@ int HoleFinder::processMontagePiece
 
   // Get edges and find circles from edge average, then from raw average if done before
   RETURN_IF_ERR(cannyEdge(sigma, 1.f - 0.02f * threshold, 1.f - 0.01f * threshold));
-  
-  RETURN_IF_ERR(findCircles(mRadiusForEdgeAvg, 1., -1., 1, retain, minSpacing, 0, 
+
+  RETURN_IF_ERR(findCircles(mRadiusForEdgeAvg, 1., -1., 1, retain, minSpacing, 0,
                             xBoundOnPc, yBoundOnPc, bestRadius, xCenFCedge, yCenFCedge,
                             peakFCedge));
   if (domInd >= 0) {
-    RETURN_IF_ERR(findCircles(mRadiusForEdgeAvg, 1., -2., 1, retain, minSpacing, 2, 
+    RETURN_IF_ERR(findCircles(mRadiusForEdgeAvg, 1., -2., 1, retain, minSpacing, 2,
                               xBoundOnPc, yBoundOnPc, bestRadius, xCenFCraw, yCenFCraw,
                               peakFCraw));
-    mergeAlternateLists(xcenPtr, ycenPtr, peakPtr, altInds, domInd, minSpacing, 
+    mergeAlternateLists(xcenPtr, ycenPtr, peakPtr, altInds, domInd, minSpacing,
                         mMaxError * mFullBinning);
   } else
     domInd = 0;
@@ -865,25 +869,25 @@ int HoleFinder::processMontagePiece
   numFromCorr = (int)xcenPtr[domInd]->size();
   RETURN_IF_ERR(analyzeNeighbors(*xcenPtr[domInd], *ycenPtr[domInd], *peakPtr[domInd],
                                  altInds, *xcenPtr[1 - domInd], *ycenPtr[1 - domInd],
-                                 *peakPtr[1 - domInd], maxSpacing, 
-                                 mMaxError * mFullBinning, 
+                                 *peakPtr[1 - domInd], maxSpacing,
+                                 mMaxError * mFullBinning,
                                  mFullBinning, trueSpacing, xMissing, yMissing));
 
   // Apply same cutoffs for outliers as in global image
   if (mLastCutoffsValid && xcenPtr[domInd]->size()) {
     holeMeans.resize(xcenPtr[domInd]->size());
-    holeIntensityStats(mFinalOutlieRadFrac * mRadiusForEdgeAvg, *xcenPtr[domInd], 
+    holeIntensityStats(mFinalOutlieRadFrac * mRadiusForEdgeAvg, *xcenPtr[domInd],
                        *ycenPtr[domInd], false, false, &holeMeans, NULL, NULL);
     RETURN_IF_ERR(removeOutliers(*xcenPtr[domInd], *ycenPtr[domInd], peakPtr[domInd],
                                  holeMeans, mFinalNegOutlieCrit, mFinalPosOutlieCrit,
-                                 numNeg, numPos, true, &mLastNegCutoffVal, 
+                                 numNeg, numPos, true, &mLastNegCutoffVal,
                                  &mLastPosCutoffVal));
   }
 
   domSize = (int)xcenPtr[domInd]->size();
   if (!domSize)
     return 0;
-    
+
   // resize all the vectors, convert to global unbinned coordinates and get stats
   mPieceXcenVec->at(pieceNum).resize(domSize);
   mPieceYcenVec->at(pieceNum).resize(domSize);
@@ -958,7 +962,7 @@ void HoleFinder::resolvePiecePositions
       if (eligible[piece][ind]) {
         xpos = mPieceXcenVec->at(piece)[ind];
         ypos = mPieceYcenVec->at(piece)[ind];
-        
+
         // Loop over adjacent tiles
         for (yt = B3DMAX(0, mTileYnum->at(piece) - 1); eligible[piece][ind] &&
                yt <= (B3DMIN(mNumYpieces - 1, mTileYnum->at(piece) + 1)); yt++) {
@@ -970,7 +974,7 @@ void HoleFinder::resolvePiecePositions
 
             // Get distance from overlap zone with each neighbor: if it is too big, there
             // is nothing to test
-            distancesFromOverlap(xpos, ypos, piece, neigh, xZoneDist, yZoneDist, 
+            distancesFromOverlap(xpos, ypos, piece, neigh, xZoneDist, yZoneDist,
                                  zoneXwidth, zoneYwidth);
             if (xZoneDist > radius && yZoneDist > radius)
               continue;
@@ -980,12 +984,12 @@ void HoleFinder::resolvePiecePositions
               if (eligible[neigh][jnd]) {
                 xneigh = mPieceXcenVec->at(neigh)[jnd];
                 yneigh = mPieceYcenVec->at(neigh)[jnd];
-                if (pointsCloseInBox(xpos, ypos, xneigh, yneigh, pcToPcSameCrit, 
+                if (pointsCloseInBox(xpos, ypos, xneigh, yneigh, pcToPcSameCrit,
                                         critSq)) {
-                  
+
                   // The points are ostensibly the same: see which is more interior
                   // and eliminate the other
-                  if (minDistanceFromEdge(xpos, ypos, piece) >= 
+                  if (minDistanceFromEdge(xpos, ypos, piece) >=
                       minDistanceFromEdge(xneigh, yneigh, neigh)) {
                     eligible[neigh][jnd] = false;
                     if (mVerbose)
@@ -1029,7 +1033,7 @@ void HoleFinder::resolvePiecePositions
 
             // Substitute the point if it is in overlap zone by given criterion (0?)
             // and not past halfway into overlap zone and inside the piece
-            if (minZoneDist < substOverlapDist && maxZoneFrac < 0.5 && 
+            if (minZoneDist < substOverlapDist && maxZoneFrac < 0.5 &&
                 minDistanceFromEdge(xpos, ypos, piece) > useEdgeDist) {
               xCenters[jnd] = xpos;
               yCenters[jnd] = ypos;
@@ -1052,7 +1056,7 @@ void HoleFinder::resolvePiecePositions
 
         // If no close point found, need to add it if it is not past criterion fraction
         // into an overlap and inside the piece
-        if (notClose && maxZoneFrac < mAddOverlapFrac && 
+        if (notClose && maxZoneFrac < mAddOverlapFrac &&
             minDistanceFromEdge(xpos, ypos, piece) > useEdgeDist) {
 
           // Insist that there be an adjacent point before doing this
@@ -1149,7 +1153,7 @@ void HoleFinder::resolvePiecePositions
   scalePositionVectors(xCenClose, yCenClose, (float)(1. / mFullBinning));
 }
 
-bool HoleFinder::pointsCloseInBox(float xpos, float ypos, float xneigh, float yneigh, 
+bool HoleFinder::pointsCloseInBox(float xpos, float ypos, float xneigh, float yneigh,
                                      float crit, float circleCritSq)
 {
   float xposRot, yposRot, xnRot, ynRot, rsin, rcos;
@@ -1190,7 +1194,7 @@ void HoleFinder::distancesFromOverlap(float xpos, float ypos, int piece, int nei
 
 // Find minimum distance to an overlap zone and whether it is less than
 // halfway into any
-void HoleFinder::minDistToOverlapZone(float xpos, float ypos, int piece, 
+void HoleFinder::minDistToOverlapZone(float xpos, float ypos, int piece,
                                       float &minZoneDist, float &maxZoneFrac)
 {
   int neigh, xt, yt, zoneXwidth, zoneYwidth;
@@ -1198,14 +1202,14 @@ void HoleFinder::minDistToOverlapZone(float xpos, float ypos, int piece,
 
   minZoneDist = (float)mPieceXsize;
   maxZoneFrac = -1.;
-  for (yt = B3DMAX(0, mTileYnum->at(piece) - 1); 
+  for (yt = B3DMAX(0, mTileYnum->at(piece) - 1);
        yt <= (B3DMIN(mNumYpieces - 1, mTileYnum->at(piece) + 1)); yt++) {
-    for (xt = B3DMAX(0, mTileXnum->at(piece) - 1); 
+    for (xt = B3DMAX(0, mTileXnum->at(piece) - 1);
          xt <= (B3DMIN(mNumXpieces - 1, mTileXnum->at(piece) + 1)); xt++) {
       neigh = mPieceIndex->at(xt + yt * mNumXpieces);
       if (neigh == piece || neigh < 0)
         continue;
-      distancesFromOverlap(xpos, ypos, piece, neigh, xZoneDist, yZoneDist, 
+      distancesFromOverlap(xpos, ypos, piece, neigh, xZoneDist, yZoneDist,
                            zoneXwidth, zoneYwidth);
       ACCUM_MIN(minZoneDist, xZoneDist);
       ACCUM_MIN(minZoneDist, yZoneDist);
@@ -1241,13 +1245,13 @@ void HoleFinder::scalePositionVectors(FloatVec &xpos, FloatVec &ypos, float scal
    3) highlight edges with non-maximum suppression using gradient direction
    4) Mark edges as strong or weak using thresholds
    5) Make weak points adjacent to strong ones also strong (hysteresis)
-       
+
    sigma: the sigma for the Gaussian blur
    f1: the lower fraction of pixels to be excluded (<1.0)
    f2: the higher fraction of pixels to be excluded (<1.0, f2 > f1)
      --------------------------------------------------------------------------
 */
-int HoleFinder::cannyEdge(float sigma, float f1, float f2) 
+int HoleFinder::cannyEdge(float sigma, float f1, float f2)
 {
   float t1, t2, num1, num2, sobelMax;
   int cumul, newCumul, bin, ix, iy, ind, i, numIter, lastIter, iter;
@@ -1272,7 +1276,7 @@ int HoleFinder::cannyEdge(float sigma, float f1, float f2)
 
   mSampleX.clear();
   mSampleY.clear();
-  
+
   // apply Gaussian filter
   mWallStart = wallTime();
   if (sigma > 0)
@@ -1294,7 +1298,7 @@ int HoleFinder::cannyEdge(float sigma, float f1, float f2)
       sliceInit(&outSlice, mXsize, mYsize, SLICE_MODE_FLOAT, mDataFFT);
       if (mFiltData) {
 
-        // If there is a dedicated buffer, start with the raw data and filter between 
+        // If there is a dedicated buffer, start with the raw data and filter between
         // the buffer and mDataFTT
         if (lastIter <= 0 || numIter <= lastIter) {
           inSlice.data.f = mRawData;
@@ -1342,17 +1346,17 @@ int HoleFinder::cannyEdge(float sigma, float f1, float f2)
       sprintf(gaussBuf, "median-%d-%d.mrc", lastIter, numIter);
     }
     mWallFilter += wallTime() - mWallStart;
-    
+
     if (mDebugImages)
       mrcWriteImageToFile(gaussBuf, mDataFFT, SLICE_MODE_FLOAT, mXsize, mYsize);
-    
+
     // find edges using Sobel operator
     sobelEdge(sobelIn, sobelDir, mSobelMin, sobelMax);
     if (mDebugImages) {
       mrcWriteImageToFile("sobel.mrc", mSobelGrad, SLICE_MODE_FLOAT, mXsize, mYsize);
       mrcWriteImageToFile("sobelDir.mrc", sobelDir, SLICE_MODE_BYTE, mXsize, mYsize);
     }
-    
+
     // Expand the min/max to avoid clamping bin after histogram scaling
     t1 = (sobelMax - mSobelMin) / SOBEL_HIST_DIM;
     mSobelMin -= t1;
@@ -1360,7 +1364,7 @@ int HoleFinder::cannyEdge(float sigma, float f1, float f2)
     mHistScale = SOBEL_HIST_DIM / (sobelMax - mSobelMin);
     if (mVerbose)
       PRINT3(mSobelMin, sobelMax, mHistScale);
-    
+
     memset(mHistogram, 0, SOBEL_HIST_DIM * sizeof(int));
     for (i = 0; i < mRawDataSize; i++) {
       bin = (int)((mSobelGrad[i] - mSobelMin) * mHistScale);
@@ -1413,7 +1417,7 @@ int HoleFinder::cannyEdge(float sigma, float f1, float f2)
 
   numThreads = B3DMIN(maxThreads, B3DNINT(0.0022 * sqrt((double)mXsize * mYsize)));
   numThreads = numOMPthreads(maxThreads);
-                 
+
   // highlight edges with non-maximum suppression
 #pragma omp parallel for default (none) num_threads(numThreads)         \
   shared(filterRadius, xsize, ysize, sobelGrad, sobelDir, edgeData, t1, t2, weak, \
@@ -1455,7 +1459,7 @@ int HoleFinder::cannyEdge(float sigma, float f1, float f2)
           } else {
             edgeData[ind] = (weak + 255) / 2;
           }
-        } else { 
+        } else {
           edgeData[ind] = weak;   // or mark as weak for hysteresis
         }
       }
@@ -1470,31 +1474,31 @@ int HoleFinder::cannyEdge(float sigma, float f1, float f2)
     for (ind = 0; ind < ix; ind++)
       addToSampleAndQueue(threadSX[threadNum][ind], threadSY[threadNum][ind]);
   }
-  
+
   // Hysteresis: grow the strong edge by adding weak neighbors
   while (mStrongQueue.size() > 0) {
     bin = mStrongQueue.front();
     mStrongQueue.pop();
     ix = mSampleX[bin];
-    iy = mSampleY[bin]; 
+    iy = mSampleY[bin];
     ind = mXsize * iy + ix;
 
     // check if neighbors are weak
     if (mEdgeData[(ind - mXsize) - 1] == weak)
       addToSampleAndQueue(ix - 1, iy - 1);
-    if (mEdgeData[(ind - mXsize)] == weak) 
+    if (mEdgeData[(ind - mXsize)] == weak)
       addToSampleAndQueue(ix, iy - 1);
-    if (mEdgeData[(ind - mXsize) + 1] == weak) 
+    if (mEdgeData[(ind - mXsize) + 1] == weak)
       addToSampleAndQueue(ix + 1, iy - 1);
-    if (mEdgeData[ind - 1] == weak)  
+    if (mEdgeData[ind - 1] == weak)
       addToSampleAndQueue(ix - 1, iy);
-    if (mEdgeData[ind + 1] == weak) 
+    if (mEdgeData[ind + 1] == weak)
       addToSampleAndQueue(ix + 1, iy);
-    if (mEdgeData[ind + mXsize - 1] == weak) 
+    if (mEdgeData[ind + mXsize - 1] == weak)
       addToSampleAndQueue(ix - 1, iy + 1);
-    if (mEdgeData[ind + mXsize] == weak) 
+    if (mEdgeData[ind + mXsize] == weak)
       addToSampleAndQueue(ix, iy + 1);
-    if (mEdgeData[ind + mXsize + 1] == weak) 
+    if (mEdgeData[ind + mXsize + 1] == weak)
       addToSampleAndQueue(ix + 1, iy + 1);
   }
 
@@ -1567,7 +1571,7 @@ void HoleFinder::sobelEdge(float *inputData, unsigned char *sobelDir, float &sob
       newData[ind] = sqrtf(ysum * ysum + xsum * xsum);
       ACCUM_MIN(tmin, newData[ind]);
       ACCUM_MAX(tmax, newData[ind]);
-      
+
       // classify edge
       tempTheta = (float)(atan2f(ysum, xsum) / RADIANS_PER_DEGREE);
       sobelDir[ind] = (((int)((tempTheta + 202.5) / 45.)) % 4) * 45;
@@ -1639,7 +1643,7 @@ int HoleFinder::findCircles(float midRadius, float radiusInc, float width, int n
   maxXpeakFind = mXpadSize - 2;
   minYpeakFind = 1;
   maxYpeakFind = mYpadSize - 2;
-  
+
   // Adjust limits for boundary contours
   if (xBoundary.size()) {
     boundXmin = *std::min_element(xBoundary.begin(), xBoundary.end());
@@ -1666,7 +1670,7 @@ int HoleFinder::findCircles(float midRadius, float radiusInc, float width, int n
   edgeThresh = useWeak ? 120 : 250;
   if (useWeak != mUsedWeakEdges)
     mHaveDataFFT = false;
-  
+
   // Set up vectors to hold the points and to hold the biggest possible number of
   // search positions
   tempXcenters.resize(maxPoints);
@@ -1710,7 +1714,7 @@ int HoleFinder::findCircles(float midRadius, float radiusInc, float width, int n
         if ((useRawAvg && !mHaveRawAvgFFT) || (useEdgeAvg && !mHaveEdgeAvgFFT))
           break;
       }
-      if (fabs(mCircleRadii[ind] - radius) <= cacheTol && 
+      if (fabs(mCircleRadii[ind] - radius) <= cacheTol &&
           fabs(mCircleWidths[ind] - width) <= cacheTol) {
         free(circTemplate);
         circTemplate = mCircleFFTs[ind];
@@ -1767,7 +1771,7 @@ int HoleFinder::findCircles(float midRadius, float radiusInc, float width, int n
       mWallFFT += wallTime() - mWallStart;
     }
 
-    // If the FFT haven't been taken of the data, do that now 
+    // If the FFT haven't been taken of the data, do that now
     if (!mHaveDataFFT) {
       if (useWeak > 1) {
         sliceTaperOutPad(mRawData, SLICE_MODE_FLOAT, mXsize, mYsize, mDataFFT, mPadXdim,
@@ -1787,13 +1791,13 @@ int HoleFinder::findCircles(float midRadius, float radiusInc, float width, int n
       mHaveDataFFT = true;
       mUsedWeakEdges = useWeak;
     }
-    
+
     // If keeping FFT array, copy the data FFT to that and use it, otherwise mark
     // data as consumed
     if (mKeepCache) {
       memcpy(mCrossCorr, mDataFFT, mPadXdim * mYpadSize * sizeof(float));
       crossCorr = mCrossCorr;
-    } else 
+    } else
       mHaveDataFFT = false;
 
     // Finish the cross-correlation
@@ -1823,12 +1827,12 @@ int HoleFinder::findCircles(float midRadius, float radiusInc, float width, int n
     fp = fopen("spaced.txt", "w");
     for (ind = 0; ind < numPoints; ind++) {
       if (tempPeaks[ind] >= -1.e29)
-        fprintf(fp, "%.2f %.2f 0 %g\n", tempXcenters[ind], tempYcenters[ind], 
+        fprintf(fp, "%.2f %.2f 0 %g\n", tempXcenters[ind], tempYcenters[ind],
                 tempPeaks[ind]);
     }
     fclose(fp);
     }*/
-    
+
     mWallPeak += wallTime() - mWallStart;
     if (((width > 0 && mDebugImages == 1) || (useRawAvg && mDebugImages == 3)
          || (useEdgeAvg && mDebugImages == 2)) && useWeak != 1) {
@@ -1847,12 +1851,12 @@ int HoleFinder::findCircles(float midRadius, float radiusInc, float width, int n
       }
 
     } else if (numPoints > 3) {
-      
+
       // Or eliminate outside the original image
       for (ind = 0; ind < numPoints; ind++) {
         if (tempPeaks[ind] >= -1.e29) {
           if (tempXcenters[ind] < mPadXoffset || tempXcenters[ind] >= mXsize + mPadXoffset
-              || tempYcenters[ind] < mPadYoffset || 
+              || tempYcenters[ind] < mPadYoffset ||
               tempYcenters[ind] >= mYsize + mPadYoffset)
             tempPeaks[ind] = -1.e30f;
         }
@@ -1880,7 +1884,7 @@ int HoleFinder::findCircles(float midRadius, float radiusInc, float width, int n
         xCenVec[vecInd][numAdd] = tempXcenters[ind];
         yCenVec[vecInd][numAdd] = tempYcenters[ind];
         peakVec[vecInd][numAdd++] = tempPeaks[ind];
-      } 
+      }
     }
 
     // Eliminate intensity outliers
@@ -1895,7 +1899,7 @@ int HoleFinder::findCircles(float midRadius, float radiusInc, float width, int n
       numStrong = 0;
       weakDims.resize(numAdd);
       for (ind = 0; ind < numAdd; ind++) {
-        weakDims[ind] = (float)pow(fabs((double)peakVec[vecInd][ind] * holeMeans[ind] * 
+        weakDims[ind] = (float)pow(fabs((double)peakVec[vecInd][ind] * holeMeans[ind] *
                                  holeSDs[ind]), 0.3333);
         ACCUM_MAX(norm, weakDims[ind]);
       }
@@ -1926,7 +1930,7 @@ int HoleFinder::findCircles(float midRadius, float radiusInc, float width, int n
         peakVec[vecInd].resize(numStrong);
         numAdd = sumInd;
       }
-      
+
       // Now proceed with outlier removal
       RETURN_IF_ERR(removeOutliers(xCenVec[vecInd], yCenVec[vecInd], &peakVec[vecInd],
                                    holeMeans, 4.5f, 0., numFromMean, ind));
@@ -1987,13 +1991,13 @@ int HoleFinder::findCircles(float midRadius, float radiusInc, float width, int n
       nextDir = -1;
     } else       {
       nextDir = 1;
-    } 
+    }
     radInd = B3DCHOICE(nextDir > 0, maxIndDone + 1, minIndDone - 1) - vecOffset;
   }
 
   if (mVerbose) {
     for (vecInd = minIndDone; vecInd <= maxIndDone; vecInd++)
-      printf("Radius %.1f  peaks %d  corr sum %f\n", radii[vecInd], 
+      printf("Radius %.1f  peaks %d  corr sum %f\n", radii[vecInd],
              (int)peakVec[vecInd].size(), peakSums[vecInd]);
   }
 
@@ -2006,7 +2010,7 @@ int HoleFinder::findCircles(float midRadius, float radiusInc, float width, int n
     PRINT3(minRadPoints, maxRadPoints, numPoints);
 
   if (bestInd > minIndDone && bestInd < maxIndDone) {
-    sum = (float)parabolicFitPosition(peakSums[bestInd - 1], peakSums[bestInd], 
+    sum = (float)parabolicFitPosition(peakSums[bestInd - 1], peakSums[bestInd],
                                peakSums[bestInd + 1]);
     bestRadius += sum * radiusInc;
   }
@@ -2110,8 +2114,8 @@ int HoleFinder::analyzeNeighbors
     }
   }
 
-  // If need to find spacing, get median of nearest neighbor distance, then mean of 
-  // all distances 
+  // If need to find spacing, get median of nearest neighbor distance, then mean of
+  // all distances
   if (justFindSpacing) {
     for (ind = 0; ind < numAvgAngs; ind++) {
       saveLengths[ind] = mAvgLengths[ind];
@@ -2153,7 +2157,7 @@ int HoleFinder::analyzeNeighbors
     maxSpacing = 1.33f * spacing;
     lengths.clear();
   }
-  
+
   // Make list of connections within the maximum spacing
   maxSpaceSq = maxSpacing * maxSpacing;
   for (ind = 0; ind < numPoints - 1; ind++) {
@@ -2196,7 +2200,7 @@ int HoleFinder::analyzeNeighbors
     }
 
     coarseDelta = hexGrid ? 6.f : 10.f;
-    
+
     // Find peak of that histogram
     maxInBin = 0;
     for (ind = 0; ind < 10; ind++) {
@@ -2206,12 +2210,12 @@ int HoleFinder::analyzeNeighbors
       }
     }
 
-    // Do a simple mean of angles within some distance of this peak or the one 90 degrees 
-    // away, iterating to work from an angle more refined than that initial bin estimate 
+    // Do a simple mean of angles within some distance of this peak or the one 90 degrees
+    // away, iterating to work from an angle more refined than that initial bin estimate
     if (hexGrid) {
       if (coarseAngle < 30.)
         mPeakAngles[0] = coarseAngle - 60.f;
-      else 
+      else
         mPeakAngles[0] = coarseAngle - 120.f;
       mPeakAngles[1] = mPeakAngles[0] + 60.f;
       mPeakAngles[2] = mPeakAngles[1] + 60.f;
@@ -2219,11 +2223,11 @@ int HoleFinder::analyzeNeighbors
       mPeakAngles[1] = coarseAngle;
       mPeakAngles[0] = coarseAngle - 90.f;
     }
-    refineAnglesGetLengths(connReducedAng, connLengths, mPeakAngles, 
+    refineAnglesGetLengths(connReducedAng, connLengths, mPeakAngles,
       mAvgLengths, numAngles, hexGrid);
 
     if (!hexGrid) {
-      
+
       // Do the same thing for the angle 45 degrees away
       if (mPeakAngles[1] >= 45.f) {
         altAngles[1] = mPeakAngles[1] - 45.f;
@@ -2234,9 +2238,9 @@ int HoleFinder::analyzeNeighbors
       }
       refineAnglesGetLengths(connReducedAng, connLengths, altAngles,
                              altLengths, numAltAngles, hexGrid);
-      
-      // An ad hoc test for when the 45-degree peak, if any, is the one to use: it has 
-      // more points and is not much farther away, or it has enough points and is closer 
+
+      // An ad hoc test for when the 45-degree peak, if any, is the one to use: it has
+      // more points and is not much farther away, or it has enough points and is closer
       // by roughly sqrt(2)
       avgLen = 0.5f * (mAvgLengths[0] + mAvgLengths[1]);
       altLen = 0.5f * (altLengths[0] + altLengths[1]);
@@ -2292,7 +2296,7 @@ int HoleFinder::analyzeNeighbors
     // Test alternative connections, but assume the angle choice is correct
     if (testAlt && (altInds[connPt1] >= 0 || altInds[connPt2] >= 0)) {
       if (altInds[connPt1] >= 0) {
-        altLen = lengthAndAngle(angForAlt, xCenAlt[altInds[connPt1]] - xCenVec[connPt2], 
+        altLen = lengthAndAngle(angForAlt, xCenAlt[altInds[connPt1]] - xCenVec[connPt2],
                                 yCenAlt[altInds[connPt1]] - yCenVec[connPt2], angle);
         errAlt = SIDES_ANGLE_ERROR(altLen, lenForAlt, angle);
         //if (bestError > maxConnError * maxConnError && sqrt(errAlt) <= maxConnError)
@@ -2300,16 +2304,16 @@ int HoleFinder::analyzeNeighbors
         ACCUM_MIN(bestError, errAlt);
       }
       if (altInds[connPt2] >= 0) {
-        altLen = lengthAndAngle(angForAlt, xCenVec[connPt1] - xCenAlt[altInds[connPt2]],  
+        altLen = lengthAndAngle(angForAlt, xCenVec[connPt1] - xCenAlt[altInds[connPt2]],
                                 yCenVec[connPt1] - yCenAlt[altInds[connPt2]], angle);
         errAlt = SIDES_ANGLE_ERROR(altLen, lenForAlt, angle);
         //if (bestError > maxConnError * maxConnError && sqrt(errAlt) <= maxConnError)
         //PRINT2(bestError, errAlt);
         ACCUM_MIN(bestError, errAlt);
         if (altInds[connPt1] >= 0) {
-          altLen = lengthAndAngle(angForAlt, 
-                                  xCenAlt[altInds[connPt1]] - xCenAlt[altInds[connPt2]],  
-                                  yCenAlt[altInds[connPt1]] - yCenAlt[altInds[connPt2]], 
+          altLen = lengthAndAngle(angForAlt,
+                                  xCenAlt[altInds[connPt1]] - xCenAlt[altInds[connPt2]],
+                                  yCenAlt[altInds[connPt1]] - yCenAlt[altInds[connPt2]],
                                   angle);
           errAlt = SIDES_ANGLE_ERROR(altLen, lenForAlt, angle);
           //if (bestError > maxConnError * maxConnError && sqrt(errAlt) <= maxConnError)
@@ -2324,7 +2328,7 @@ int HoleFinder::analyzeNeighbors
       angle = goodAngle(connAngles[ind] + 30.f - mPeakAngles[1], 180.f);
       jnd = (int)((angle + 180.) / 60.);
       B3DCLAMP(jnd, 0, 5);
-      
+
     } else {
       angle = goodAngle(connAngles[ind] + 45 - mPeakAngles[1], 180);
       jnd = (int)((angle + 180.) / 90.);
@@ -2338,10 +2342,10 @@ int HoleFinder::analyzeNeighbors
       ptConnLists[connPoint2[ind]].push_back(ind);
     }
   }
-    
+
   ptGridX.resize(numPoints, noGridVal);
   ptGridY.resize(numPoints, noGridVal);
-  
+
   // Loop to find next point that has connectors and is not assigned
   for (ind = 0; ind < numPoints; ind++) {
     if (ptConnLists[ind].size() && ptGridX[ind] == noGridVal) {
@@ -2364,12 +2368,12 @@ int HoleFinder::analyzeNeighbors
         //printf("process conn %d\n", con);
 
         // If one point is unassigned, determine the from, to and sign for propagating
-        if (ptGridX[connPoint1[con]] < hadGridVal && 
+        if (ptGridX[connPoint1[con]] < hadGridVal &&
             ptGridX[connPoint2[con]] == noGridVal) {
           ptFrom = connPoint1[con];
           ptTo = connPoint2[con];
           sign = 1;
-        } else if (ptGridX[connPoint1[con]] == noGridVal && 
+        } else if (ptGridX[connPoint1[con]] == noGridVal &&
                    ptGridX[connPoint2[con]] < hadGridVal) {
           ptFrom = connPoint2[con];
           ptTo = connPoint1[con];
@@ -2385,7 +2389,7 @@ int HoleFinder::analyzeNeighbors
           ACCUM_MAX(maxGridX, ptGridX[ptTo]);
           ACCUM_MAX(maxGridY, ptGridY[ptTo]);
           //printf("Assign %d,%d to %d\n", ptGridX[ptTo], ptGridY[ptTo], ptTo);
-      
+
           for (jnd = 0; jnd < (int)ptConnLists[ptTo].size(); jnd++) {
             if (ptConnLists[ptTo][jnd] != con) {
               connQueue.push(ptConnLists[ptTo][jnd]);
@@ -2396,7 +2400,7 @@ int HoleFinder::analyzeNeighbors
         }
       }
 
-      // The queue is empty, all possible connections have been made from that starting 
+      // The queue is empty, all possible connections have been made from that starting
       // point.  Set up the grid if there are enough points, otherwise reset the points
       if (numInGroup < minGroupSize) {
         setGridVal = rejectGridVal;
@@ -2408,7 +2412,7 @@ int HoleFinder::analyzeNeighbors
         gridVec.resize(gridXdim * gridYdim, -1);
         if (mVerbose > 1)
           PRINT3(numInGroup, gridXdim, gridYdim);
-        
+
         // Fill the grid with indexes
         for (jnd = 0; jnd < numPoints; jnd++) {
           if (ptGridX[jnd] < hadGridVal) {
@@ -2423,7 +2427,7 @@ int HoleFinder::analyzeNeighbors
           for (ix = 0; ix < gridXdim; ix++) {
             doFit = true;
             if (gridVec[ix + iy * gridXdim] < 0) {
-              
+
               // Empty position: count neighbors and fit if at least 3
               num = 0;
               if ((ix > 0 && gridVec[ix + iy * gridXdim - 1] >= 0) ||
@@ -2459,7 +2463,7 @@ int HoleFinder::analyzeNeighbors
 
             // Fitting: First evaluate the best center that contains the most points
             if (doFit) {
-              
+
               bestNum = -1;
               for (jyCen = iy - fitLen / 2; jyCen <= iy + fitLen / 2; jyCen++) {
                 for (jxCen = ix - fitLen / 2; jxCen <= ix + fitLen / 2; jxCen++) {
@@ -2531,28 +2535,28 @@ int HoleFinder::analyzeNeighbors
 
               jnd = 1;
               if (numFit >= minForRobust) {
-                jnd = robustRegress(&xmat[0][0], maxFit, 0, 2, numFit, 2, 
+                jnd = robustRegress(&xmat[0][0], maxFit, 0, 2, numFit, 2,
                                     &solution[0][0], maxCol, fitConst, fitMean, fitSD,
-                                    fitWork, kFactor, &numIter, maxIter, numFit / 6, 
+                                    fitWork, kFactor, &numIter, maxIter, numFit / 6,
                                     maxChange, maxOscill);
                 if (!jnd) {
-                  xPred = solution[0][0] * (ix - bestXcen) + 
+                  xPred = solution[0][0] * (ix - bestXcen) +
                     solution[0][1] * (iy - bestYcen) + fitConst[0];
-                  yPred = solution[1][0] * (ix - bestXcen) + 
+                  yPred = solution[1][0] * (ix - bestXcen) +
                     solution[1][1] * (iy - bestYcen) + fitConst[1];
                 }
               }
               if (jnd) {
-                lsFit2Pred(fitDelIX, fitDelIY, fitX, numFit, &aFit, &bFit, &cFit, 
+                lsFit2Pred(fitDelIX, fitDelIY, fitX, numFit, &aFit, &bFit, &cFit,
                   (float)(ix - bestXcen), (float)(iy - bestYcen), &xPred, &predErr);
-                lsFit2Pred(fitDelIX, fitDelIY, fitY, numFit, &aFit, &bFit, &cFit, 
+                lsFit2Pred(fitDelIX, fitDelIY, fitY, numFit, &aFit, &bFit, &cFit,
                   (float)(ix - bestXcen), (float)(iy - bestYcen), &yPred, &predErr);
               }
               jnd = gridVec[ix + iy * gridXdim];
               if (jnd >= 0) {
                 bestError = DISTANCE(xCenVec[jnd] - xPred, yCenVec[jnd] - yPred);
                 if (testAlt && altInds[jnd] >= 0) {
-                  spacing = DISTANCE(xCenAlt[altInds[jnd]] - xPred, 
+                  spacing = DISTANCE(xCenAlt[altInds[jnd]] - xPred,
                                      yCenAlt[altInds[jnd]] - yPred);
                   if (spacing < bestError && spacing <= maxError) {
                     xCenVec[jnd] = xCenAlt[altInds[jnd]];
@@ -2779,8 +2783,8 @@ int HoleFinder::makeTemplate(FloatVec &xCenVec, FloatVec &yCenVec,
   memset(boxAverage, 0, 4 * boxSq);
   float amat[2][2] = {{1., 0.}, {0., 1.}};
   for (ind = 0; ind < numAverage; ind++) {
-    cubinterp(tempData, tempBox, mXsize, mYsize, imgBoxSize, imgBoxSize, amat, 
-              (xCenVec[ind] - mRedXoffset) / mReduction, 
+    cubinterp(tempData, tempBox, mXsize, mYsize, imgBoxSize, imgBoxSize, amat,
+              (xCenVec[ind] - mRedXoffset) / mReduction,
               (yCenVec[ind] - mRedYoffset) / mReduction , 0., 0., 1., 0., 0);
     for (jnd = 0; jnd < boxSq; jnd++)
       boxAverage[jnd] += tempBox[jnd];
@@ -2791,7 +2795,7 @@ int HoleFinder::makeTemplate(FloatVec &xCenVec, FloatVec &yCenVec,
   sliceTaperOutPad(boxAverage, SLICE_MODE_FLOAT, imgBoxSize, imgBoxSize, boxAverage,
                    mAvgBoxSize, mAvgBoxSize, mAvgBoxSize, 0, 0.);
   if (mDebugImages)
-    mrcWriteImageToFile(rawAverage ? "rawavg.mrc" : "edgeavg.mrc", boxAverage, 2, 
+    mrcWriteImageToFile(rawAverage ? "rawavg.mrc" : "edgeavg.mrc", boxAverage, 2,
                         mAvgBoxSize, mAvgBoxSize);
   mRadiusForEdgeAvg = mLastBestRadius;
   if (rawAverage)
@@ -2804,9 +2808,9 @@ int HoleFinder::makeTemplate(FloatVec &xCenVec, FloatVec &yCenVec,
 
 
 /*
- * Takes a set of points found by correlating with an edge image including the weak edge 
+ * Takes a set of points found by correlating with an edge image including the weak edge
  * points and matches them with a list of missing points.  If one is below the error
- * limit, it add the weak point to the main set of points and removes it from the 
+ * limit, it add the weak point to the main set of points and removes it from the
  * missing lists
  * xCenOrig, yCenOrig, peakOrig  are the original detected points
  * xMissing, yMissing  are list of missing points
@@ -2816,7 +2820,7 @@ int HoleFinder::makeTemplate(FloatVec &xCenVec, FloatVec &yCenVec,
  * numAdded is returned with the number added
  */
 int HoleFinder::rescueMissingPoints(FloatVec &xCenOrig, FloatVec &yCenOrig,
-                                    FloatVec &peakOrig, FloatVec &xMissing, 
+                                    FloatVec &peakOrig, FloatVec &xMissing,
                                     FloatVec &yMissing, FloatVec &xCenWeak,
                                     FloatVec &yCenWeak, FloatVec &peakWeak,
                                     float maxError, int &numAdded)
@@ -2839,7 +2843,7 @@ int HoleFinder::rescueMissingPoints(FloatVec &xCenOrig, FloatVec &yCenOrig,
         numAdded++;
         break;
       } else if (dist < 2 * maxError) {
-        
+
         fartherInds.push_back(weak);
         break;
       }
@@ -2848,13 +2852,13 @@ int HoleFinder::rescueMissingPoints(FloatVec &xCenOrig, FloatVec &yCenOrig,
 
   // Repack the weak peak vectors that are close but not close enough
   if (fartherInds.size())
-    std::sort(fartherInds.begin(), fartherInds.end()); 
+    std::sort(fartherInds.begin(), fartherInds.end());
   for (ind = 0; ind < (int)fartherInds.size(); ind++) {
     miss = fartherInds[ind];
     xCenWeak[ind] = xCenWeak[miss];
     yCenWeak[ind] = yCenWeak[miss];
     peakWeak[ind] = peakWeak[miss];
-  } 
+  }
   xCenWeak.resize(ind);
   yCenWeak.resize(ind);
   peakWeak.resize(ind);
@@ -2863,7 +2867,7 @@ int HoleFinder::rescueMissingPoints(FloatVec &xCenOrig, FloatVec &yCenOrig,
 
 
 /*
- * Computes mean, SD and/or fraction of outlying black pixels within a circle around 
+ * Computes mean, SD and/or fraction of outlying black pixels within a circle around
  * each given position
  * Radius is the actual radius around each point to include in analysis, in reduced pixels
  * xCenters, yCenters are the points to analyze
@@ -2878,7 +2882,7 @@ int HoleFinder::rescueMissingPoints(FloatVec &xCenOrig, FloatVec &yCenOrig,
  */
 int HoleFinder::holeIntensityStats(float radius, FloatVec &xCenters, FloatVec &yCenters,
                                    bool reduced, bool smoothedSD, FloatVec *means,
-                                   FloatVec *SDs, FloatVec *outliers, float outlieCrit) 
+                                   FloatVec *SDs, FloatVec *outliers, float outlieCrit)
 {
   int ind, ix, iy, ixStart, iyStart, ixEnd, iyEnd, nsum, numPoints, xbase, numBelow;
   float xcen, ycen, avg, sd, val, sem, fracLow;
@@ -2923,7 +2927,7 @@ int HoleFinder::holeIntensityStats(float radius, FloatVec &xCenters, FloatVec &y
           if (outliers || (SDs && smoothedSD)) {
             val += mRawData[xbase - 1] + mRawData[xbase + 1] + mRawData[xbase + mXsize] +
               mRawData[xbase + mXsize - 1] + mRawData[xbase + mXsize + 1] +
-              mRawData[xbase - mXsize] + mRawData[xbase - mXsize - 1] + 
+              mRawData[xbase - mXsize] + mRawData[xbase - mXsize - 1] +
               mRawData[xbase - mXsize + 1];
             val /= 9;
             valVec.push_back(val);
@@ -2940,7 +2944,7 @@ int HoleFinder::holeIntensityStats(float radius, FloatVec &xCenters, FloatVec &y
       if (smoothedSD && nsum)
         avgSD(&valVec[0], nsum, &avg, &sd, &sem);
       (*SDs)[ind] = sd;
-   } 
+   }
     if (outliers) {
       fracLow = 0.;
       if (nsum >= 10) {
@@ -2961,7 +2965,7 @@ int HoleFinder::holeIntensityStats(float radius, FloatVec &xCenters, FloatVec &y
 
 /*
  * Removes points that have outlying values for the give set of values
- * xCenters, yCenters are the positions of the points, and peakVals are their 
+ * xCenters, yCenters are the positions of the points, and peakVals are their
  * correlation peak values, or can be NULL if there are none
  * values has the mean, SD, or other statistic
  * crit is the criterion for rsMadMedianOutliers
@@ -2997,7 +3001,7 @@ int HoleFinder::removeOutliers
     if (posCutVal)
       *posCutVal = posCutoff;
   }
-      
+
   outInd = 0;
   for (ind = 0; ind < numPoints; ind++) {
     if (doPos && values[ind] > posCutoff) {
@@ -3022,7 +3026,7 @@ int HoleFinder::removeOutliers
  * Write a text file with points.  Can be sent a Z argument, or the default iz can be
  * changed in holefinder.h
  */
-void HoleFinder::dumpPoints(const char *filename, FloatVec &xCenters, FloatVec &yCenters, 
+void HoleFinder::dumpPoints(const char *filename, FloatVec &xCenters, FloatVec &yCenters,
                             FloatVec &peakVals, int iz)
 {
  FILE *fp = fopen(filename, "w");
@@ -3036,7 +3040,7 @@ void HoleFinder::dumpPoints(const char *filename, FloatVec &xCenters, FloatVec &
 /*
  * Given a collection of positions, determines their indexes on a regular grid, given the
  * angle and spacing of the grid.  Pass the angle as -999 or the spacing as -1 to use
- * and return the average positive angle or spacing from analyzeNeighbors.  GridX and 
+ * and return the average positive angle or spacing from analyzeNeighbors.  GridX and
  * gridY are returned with indexes numbered from 0
  */
 #define ASSIGN_ADD_TO_QUEUE(nd, x, y) \
@@ -3046,7 +3050,7 @@ void HoleFinder::dumpPoints(const char *filename, FloatVec &xCenters, FloatVec &
   neighQueue.push(nd);
 
 void HoleFinder::assignGridPositions
-(FloatVec &xCenters, FloatVec &yCenters, ShortVec &gridX, ShortVec &gridY, 
+(FloatVec &xCenters, FloatVec &yCenters, ShortVec &gridX, ShortVec &gridY,
  float &avgAngle, float &avgLen, int hexGrid, std::set<int> *worsePoints)
 {
   FloatVec xrot, yrot;
@@ -3101,7 +3105,7 @@ void HoleFinder::assignGridPositions
     xfInvert(stretch, restore, 2);
   }
   xfMult(rotMat, stretch, transMat, 2);
-  
+
   // Rotate the points to be square to the grid
   xrot.resize(numPoints);
   yrot.resize(numPoints);
@@ -3158,7 +3162,7 @@ void HoleFinder::assignGridPositions
     iyCen = gridY[cenInd];
     xcen = xrot[cenInd];
     ycen = yrot[cenInd];
-    
+
     // Phase 1: use prelim index to find neighboring points and check each one to see
     // if it a nearest neighbor of current point
     for (iy = B3DMAX(0, iyCen - 2); iy <= B3DMIN(ydim - 1, iyCen + 2); iy++) {
@@ -3201,7 +3205,7 @@ void HoleFinder::assignGridPositions
       for (ix = B3DMAX(0, ixCen - 1); ix <= B3DMIN(xdim - 1, ixCen + 1); ix++) {
         if (crossInd[ix + xdim * iy] < 0) {
           for (ind = 0; ind < numPoints; ind++) {
-            if (gridX[ind] < 0 && B3DABS(ix - xPrelim[ind]) <= 2 && 
+            if (gridX[ind] < 0 && B3DABS(ix - xPrelim[ind]) <= 2 &&
                 B3DABS(iy - yPrelim[ind]) <= 2) {
               idx = B3DNINT((xrot[ind] - xcen) / avgLen);
               idy = B3DNINT((yrot[ind] - ycen) / avgLen);

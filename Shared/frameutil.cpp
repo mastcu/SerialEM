@@ -3,7 +3,7 @@
  *
  *  Author: David Mastronarde   email: mast@colorado.edu
  *
- *  Copyright (C) 2016 by the Regents of the University of 
+ *  Copyright (C) 2016-2026 by the Regents of the University of
  *  Colorado.  See dist/COPYRIGHT for full copyright notice.
  *
  *  $Id$
@@ -16,6 +16,10 @@
 #include "b3dutil.h"
 #include "cfft.h"
 #include "frameutil.h"
+
+#if defined(_DEBUG) && defined(_CRTDBG_MAP_ALLOC)
+#define new DEBUG_NEW
+#endif
 
 static int sDumpInd = 0;
 static CharArgType sPrintFunc = NULL;
@@ -46,7 +50,7 @@ void utilCoordsForWrap(int nxFrom, int nyFrom, int nxTo, int nyTo, int xOffset,
   num = iyFrom1[0] + 1 - iyFrom0[0];
   iyTo1[0] = iyTo1[1] = nyTo - 1;
   iyTo0[0] = iyTo0[1] = nyTo - num;
-  
+
   ixFrom0[1] = ixFrom0[2] = xOffset + nxFrom - nxTo / 2;
   ixFrom1[1] = ixFrom1[2] = B3DMIN(nxFrom - 1, ixFrom0[1] + nxTo - 1);
   num = ixFrom1[1] + 1 - ixFrom0[1];
@@ -69,7 +73,7 @@ void utilRollSavedFrames(std::vector<float *> &savedVec, int numFrames)
     savedVec[ind] = savedVec[ind + 1];
   savedVec[numFrames - 1] = tempBin;
 }
-  
+
 /*
  * Output an FFT, or convert to image and dump that and convert back.
  */
@@ -129,7 +133,7 @@ void utilDumpImage(float *buf, int nxDim, int nxPad, int nyPad, int ifCorr,
   int mode = MRC_MODE_FLOAT;
   Islice slice;
   checkDumpDir();
-  if (ifCorr < 0) 
+  if (ifCorr < 0)
     mode = -ifCorr - 1;
   if (dataSizeForMode(mode, &dataSize, &csize) < 0)
     return;
@@ -148,7 +152,7 @@ void utilDumpImage(float *buf, int nxDim, int nxPad, int nyPad, int ifCorr,
       }
       iyIn = (iyIn + 1) % nyPad;
     }
-      
+
   } else {
     for (int iy = 0; iy < nyPad; iy++)
       memcpy((char *)temp + iy * nxPad * dataSize, (char *)buf + iy * nxDim * dataSize,
@@ -202,7 +206,7 @@ void utilPrint(const char *format, ...)
     sPrintFunc(errorMess);
   } else {
     printf("%s", errorMess);
-    fflush(stdout);  
+    fflush(stdout);
     fflush(stdout);
   }
   va_end(args);

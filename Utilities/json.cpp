@@ -6,8 +6,12 @@
 #include <string.h>
 #include <assert.h>
 
+#if defined(_DEBUG) && defined(_CRTDBG_MAP_ALLOC)
+#define new DEBUG_NEW
+#endif
+
 /*! \brief Checks for an empty string
- * 
+ *
  * @param str The string to check
  * @return True if the string is empty, false if the string is not empty
  * @warning The string must be null-terminated for this macro to work
@@ -21,7 +25,7 @@
 #define SKIP_WHITE_SPACE(str) { const char *next = json::parsing::tlws(str); str = next; }
 
 /*! \brief Determines if the end character of serialized JSON is encountered
- * 
+ *
  * @param obj The JSON object or array that is being written to
  * @param index The pointer to the character to be checked
  */
@@ -101,7 +105,7 @@ json::jtype::jtype json::jtype::detect(const char *input)
 
 void json::reader::clear()
 {
-    std::string::clear(); 
+    std::string::clear();
     if(this->sub_reader != NULL) {
         delete this->sub_reader;
         this->sub_reader = NULL;
@@ -568,7 +572,7 @@ json::reader::push_result json::reader::push_boolean(const char next)
 }
 
 json::reader::push_result json::reader::push_null(const char next)
-{    
+{
     switch (this->length())
     {
     case 0:

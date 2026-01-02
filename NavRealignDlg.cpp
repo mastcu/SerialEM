@@ -1,7 +1,7 @@
 // NavRealignDlg.cpp : Set parameters for template align and for clearing image shift
 //                     after template align and realign to item
 //
-// Copyright (C) 2021 by  the Regents of the University of
+// Copyright (C) 2021-2026 by  the Regents of the University of
 // Colorado.  See Copyright.txt for full notice of copyright and limitations.
 //
 // Author: David Mastronarde
@@ -18,6 +18,10 @@
 #include "Utilities\KGetOne.h"
 #include "Shared\b3dutil.h"
 
+#if defined(_DEBUG) && defined(_CRTDBG_MAP_ALLOC)
+#define new DEBUG_NEW
+#endif
+
 
 static int sIdTable[] = {IDC_STAT_DISABLE_TRIM, IDC_CHECK_DISABLE_TRIM, IDC_STAT_LINE2,
 PANEL_END,
@@ -29,9 +33,9 @@ IDC_STAT_RESET_IS_TITLE, IDC_CHECK_RESET_IS, IDC_STAT_PARAMS_SHARED, IDC_STAT_ON
 IDC_EDIT_RESET_IS, IDC_STAT_RESET_UM, IDC_STAT_REPEAT_RESET, IDC_STAT_RESET_TIMES,
 IDC_SPIN_RESET_TIMES, IDC_CHECK_LEAVE_IS_ZERO, IDC_CHECK_APPLY_INTERACTIVE, PANEL_END,
 IDC_STAT_SCALED_TITLE, IDC_STAT_EXTRA_AREA,
-IDC_EDIT_EXTRA_FOVS, IDC_STAT_X_FOVS, IDC_STAT_SIZE_CHANGE, IDC_EDIT_MAX_PCT_CHANGE, 
+IDC_EDIT_EXTRA_FOVS, IDC_STAT_X_FOVS, IDC_STAT_SIZE_CHANGE, IDC_EDIT_MAX_PCT_CHANGE,
 IDC_STAT_PCT, IDC_STAT_ROTATION, IDC_EDIT_MAX_ROTATION, IDC_STAT_DEG, IDC_STAT_LINE3,
-IDC_STAT_REF_MAP_LABEL, IDC_STAT_REF_MAP_BUF, IDC_SPIN_REF_MAP_BUF, 
+IDC_STAT_REF_MAP_LABEL, IDC_STAT_REF_MAP_BUF, IDC_SPIN_REF_MAP_BUF,
 IDC_STAT_REF_BUF_ROLLS, PANEL_END,
 IDOK, IDCANCEL, IDC_BUTHELP, IDC_STAT_SPACER, PANEL_END, TABLE_END};
 
@@ -218,7 +222,7 @@ void CNavRealignDlg::OnMakeTemplateMap()
   int answer = IDNO;
   EMimageBuffer *imBuf = mWinApp->GetImBufs();
   bool notCropped = !(imBuf->GetUncroppedSize(uncroppedX, uncroppedY) && uncroppedX > 0);
-  
+
   // If not saved yet, open a file and save it
   if (imBuf->GetSaveCopyFlag() >= 0) {
     if (mWinApp->mBufferManager->CheckAsyncSaving())
@@ -312,7 +316,7 @@ void CNavRealignDlg::OnCheckResetIs()
 // New # of iterations
 void CNavRealignDlg::OnDeltaposSpinResetTimes(NMHDR *pNMHDR, LRESULT *pResult)
 {
-  FormattedSpinnerValue(pNMHDR, pResult, 1, 5, mMaxNumResets, m_strRepeatReset, 
+  FormattedSpinnerValue(pNMHDR, pResult, 1, 5, mMaxNumResets, m_strRepeatReset,
     "Reset IS up to %d");
 }
 
@@ -376,7 +380,7 @@ void CNavRealignDlg::ManageMap()
   CString str = "The image in A ";
   CMapDrawItem *map;
   bool exists = true, notMap = false, isMont = false, badBin, isMap, noMeta;
-  
+
   if (!m_strMapLabel.IsEmpty()) {
     map = mWinApp->mNavigator->FindItemWithString(m_strMapLabel, false, true);
     exists = map && map->IsMap() && !map->mMapMontage;

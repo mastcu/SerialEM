@@ -1,8 +1,7 @@
 // CameraMacroTools.cpp:  Has buttons for taking pictures, running macros,
 //                           and controlling tilt series.  Has general STOP.
 //
-// Copyright (C) 2003 by Boulder Laboratory for 3-Dimensional Electron 
-// Microscopy of Cells ("BL3DEMC") and the Regents of the University of
+// Copyright (C) 2003-2026 by the Regents of the University of
 // Colorado.  See Copyright.txt for full notice of copyright and limitations.
 //
 // Author: David Mastronarde
@@ -24,23 +23,21 @@
 #include "NavigatorDlg.h"
 #include "ShiftCalibrator.h"
 
-#ifdef _DEBUG
+#if defined(_DEBUG) && defined(_CRTDBG_MAP_ALLOC)
 #define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
 #endif
 static int sIdTable[] = {IDC_BUTFLOATDOCK, IDC_STAT_CAMNAME, IDC_BUTOPEN, IDC_STATTOPLINE,
-IDC_BUTHELP, PANEL_END, IDC_BUT_SETUP_CAM, IDC_BUT_VIEW, IDC_BUT_FOCUS, 
+IDC_BUTHELP, PANEL_END, IDC_BUT_SETUP_CAM, IDC_BUT_VIEW, IDC_BUT_FOCUS,
 IDC_BUT_TRIAL, IDC_BUT_RECORD, IDC_BUTMONTAGE, IDC_BUTMACRO1, IDC_BUTMACRO2,
 IDC_SPINMACRO2, IDC_SPINMACRO1, IDC_BUTSTOP, IDC_BUTEND, IDC_BUTRESUME,
-IDC_BUTMACRO3, IDC_SPINMACRO3, PANEL_END, 
+IDC_BUTMACRO3, IDC_SPINMACRO3, PANEL_END,
 IDC_BUTMACRO4, IDC_BUTMACRO5, IDC_BUTMACRO6, IDC_SPINMACRO4, IDC_SPINMACRO5,
 IDC_SPINMACRO6, PANEL_END,
 IDC_BUTMACRO7, IDC_BUTMACRO8, IDC_BUTMACRO9, IDC_SPINMACRO7, IDC_SPINMACRO8,
 IDC_SPINMACRO9, PANEL_END,
 IDC_BUTMACRO10, IDC_BUTMACRO11, IDC_BUTMACRO12, IDC_SPINMACRO10, IDC_SPINMACRO11,
-IDC_SPINMACRO12, PANEL_END, 
-IDC_STAT_MESSAGE_LINE1, IDC_STAT_MESSAGE_LINE2, IDC_STAT_MESSAGE_LINE3, 
+IDC_SPINMACRO12, PANEL_END,
+IDC_STAT_MESSAGE_LINE1, IDC_STAT_MESSAGE_LINE2, IDC_STAT_MESSAGE_LINE3,
 IDC_STAT_MESSAGE_LINE4, IDC_STAT_MESSAGE_LINE5, IDC_STAT_MESSAGE_LINE6, PANEL_END,
 TABLE_END};
 
@@ -118,7 +115,7 @@ END_MESSAGE_MAP()
 /////////////////////////////////////////////////////////////////////////////
 // CCameraMacroTools message handlers
 
-BOOL CCameraMacroTools::OnInitDialog() 
+BOOL CCameraMacroTools::OnInitDialog()
 {
   CToolDlg::OnInitDialog();
   int ind;
@@ -162,7 +159,7 @@ BOOL CCameraMacroTools::OnInitDialog()
     mIDsToGrowWidth.push_back(IDC_BUTMACRO1 + ind);
     mIDsTakeWidthFrom.push_back(IDC_SPINMACRO1 + ind);
   }
-  SetupPanelTables(sIdTable, sLeftTable, sTopTable, mNumInPanel, mPanelStart, 
+  SetupPanelTables(sIdTable, sLeftTable, sTopTable, mNumInPanel, mPanelStart,
     sHeightTable);
   mLastRowsShown = mMacProcessor->GetNumCamMacRows();
   mLastLinesShown = mMacProcessor->GetNumStatusLines();
@@ -328,7 +325,7 @@ void CCameraMacroTools::UpdateSettings()
 }
 
 // Process a spin button, given the ID of the macro button
-void CCameraMacroTools::DeltaposSpin(NMHDR *pNMHDR, LRESULT *pResult, UINT nID, 
+void CCameraMacroTools::DeltaposSpin(NMHDR *pNMHDR, LRESULT *pResult, UINT nID,
                    int iMacro)
 {
   NM_UPDOWN* pNMUpDown = (NM_UPDOWN*)pNMHDR;
@@ -341,21 +338,21 @@ void CCameraMacroTools::DeltaposSpin(NMHDR *pNMHDR, LRESULT *pResult, UINT nID,
   mMacroNumber[iMacro] = newVal - 1;
   SetOneMacroLabel(iMacro, nID);
   Update();
-  
+
   *pResult = 0;
 }
 
-void CCameraMacroTools::OnDeltaposSpinmacro1(NMHDR* pNMHDR, LRESULT* pResult) 
+void CCameraMacroTools::OnDeltaposSpinmacro1(NMHDR* pNMHDR, LRESULT* pResult)
 {
   DeltaposSpin(pNMHDR, pResult, IDC_BUTMACRO1, 0);
 }
 
-void CCameraMacroTools::OnDeltaposSpinmacro2(NMHDR* pNMHDR, LRESULT* pResult) 
+void CCameraMacroTools::OnDeltaposSpinmacro2(NMHDR* pNMHDR, LRESULT* pResult)
 {
   DeltaposSpin(pNMHDR, pResult, IDC_BUTMACRO2, 1);
 }
 
-void CCameraMacroTools::OnDeltaposSpinmacro3(NMHDR* pNMHDR, LRESULT* pResult) 
+void CCameraMacroTools::OnDeltaposSpinmacro3(NMHDR* pNMHDR, LRESULT* pResult)
 {
   DeltaposSpin(pNMHDR, pResult, IDC_BUTMACRO3, 2);
 }
@@ -388,7 +385,7 @@ void CCameraMacroTools::DoMacro(int inMacro)
 }
 
 // Handlers for individual buttons
-void CCameraMacroTools::OnButmacro1() 
+void CCameraMacroTools::OnButmacro1()
 {
   if (mDoingTS) {
     mWinApp->RestoreViewFocus();
@@ -401,14 +398,14 @@ void CCameraMacroTools::OnButmacro1()
     DoMacro(mMacroNumber[0]);
 }
 
-void CCameraMacroTools::OnButmacro2() 
+void CCameraMacroTools::OnButmacro2()
 {
   int navState = GetNavigatorState();
   if (mDoingTS) {
     mWinApp->RestoreViewFocus();
     if (!mWinApp->DoingTiltSeries())
       mWinApp->mTSController->CommonResume(-1, 0);
-  } else if (navState == NAV_SCRIPT_RUNNING || navState == NAV_SCRIPT_STOPPED || 
+  } else if (navState == NAV_SCRIPT_RUNNING || navState == NAV_SCRIPT_STOPPED ||
     navState == NAV_RUNNING_NO_SCRIPT_TS) {
     mWinApp->RestoreViewFocus();
     if (mWinApp->mMultiGridTasks->GetSuspendedMulGrid())
@@ -424,7 +421,7 @@ void CCameraMacroTools::OnButmacro2()
   }
 }
 
-void CCameraMacroTools::OnButmacro3() 
+void CCameraMacroTools::OnButmacro3()
 {
   if (mDoingTS) {
     mWinApp->RestoreViewFocus();
@@ -449,8 +446,8 @@ void CCameraMacroTools::OnMacBut1Draw(NMHDR *pNotifyStruct, LRESULT *result)
 void CCameraMacroTools::OnMacBut2Draw(NMHDR *pNotifyStruct, LRESULT *result)
 {
   int navState = GetNavigatorState();
-  HandleMacroRightClick(&m_butMacro2, 1, !mDoingTS && !(navState == NAV_SCRIPT_RUNNING || 
-    navState == NAV_SCRIPT_STOPPED || navState == NAV_RUNNING_NO_SCRIPT_TS || 
+  HandleMacroRightClick(&m_butMacro2, 1, !mDoingTS && !(navState == NAV_SCRIPT_RUNNING ||
+    navState == NAV_SCRIPT_STOPPED || navState == NAV_RUNNING_NO_SCRIPT_TS ||
     navState == NAV_PAUSED));
 }
 
@@ -480,7 +477,7 @@ void CCameraMacroTools::HandleMacroRightClick(CMyButton *but, int index, bool op
 
 
 // The Stop button calls camera and general error stop
-void CCameraMacroTools::OnButstop() 
+void CCameraMacroTools::OnButstop()
 {
   CNavigatorDlg *nav = mWinApp->mNavigator;
   CString str;
@@ -513,8 +510,8 @@ void CCameraMacroTools::DoUserStop(void)
   mDeferredUserStop = false;
 }
 
-// The End button 
-void CCameraMacroTools::OnButend() 
+// The End button
+void CCameraMacroTools::OnButend()
 {
   int navState = GetNavigatorState();
   mWinApp->RestoreViewFocus();
@@ -522,7 +519,7 @@ void CCameraMacroTools::OnButend()
     mWinApp->mScope->SetScanningMags(-1);
   else if (mWinApp->NavigatorStartedTS() && mWinApp->mTSController->GetPostponed())
     mWinApp->mTSController->Terminate();
-  else if (mDoingTS) 
+  else if (mDoingTS)
     mWinApp->mTSController->EndLoop();
   else if (mDoingCalISO)
     mWinApp->mShiftCalibrator->CalISoffsetDone(false);
@@ -540,11 +537,11 @@ void CCameraMacroTools::OnButend()
 }
 
 // The Resume button
-void CCameraMacroTools::OnButresume() 
+void CCameraMacroTools::OnButresume()
 {
   int err, navState = GetNavigatorState();
   mWinApp->RestoreViewFocus();
-  if (mWinApp->NavigatorStartedTS() && !mWinApp->StartedTiltSeries() && 
+  if (mWinApp->NavigatorStartedTS() && !mWinApp->StartedTiltSeries() &&
     mWinApp->mTSController->GetPostponed())
     mWinApp->mTSController->SetupTiltSeries(0);
   else if (navState == NAV_TS_RUNNING || navState == NAV_PRE_TS_RUNNING)
@@ -600,7 +597,7 @@ void CCameraMacroTools::Update()
     continuous = mWinApp->mCamera->DoingContinuousAcquire();
   }
   BOOL noTasks = !mWinApp->DoingTasks();
-  BOOL idle = (noTasks || mWinApp->GetJustNavAcquireOpen()) && 
+  BOOL idle = (noTasks || mWinApp->GetJustNavAcquireOpen()) &&
     !(mNav && mNav->StartedMacro());
   BOOL shotOK = mWinApp->UserAcquireOK();
   BOOL postponed = mNav && mNav->GetStartedTS() && mWinApp->mTSController->GetPostponed();
@@ -614,21 +611,21 @@ void CCameraMacroTools::Update()
   if (!mWinApp->Montaging())
     m_butMontage.EnableWindow(shotOK || doingMulGrid || (idle && suspendedMG));
   else
-    m_butMontage.EnableWindow((idle && ((!mDoingTS && !postponed && !camBusy) || 
+    m_butMontage.EnableWindow((idle && ((!mDoingTS && !postponed && !camBusy) ||
       suspendedMG)) || doingMulGrid);
-  
+
   if (mDoingTS) {
-    
+
     // If doing a tilt series, enable single step and backup buttons if idle
     // check for resumability, and enable End if actually active
     m_butMacro1.EnableWindow(idle && tsResumable);
     m_butMacro2.EnableWindow(idle && tsResumable);
     m_butMacro3.EnableWindow(idle && tsResumable && mWinApp->mTSController->CanBackUp());
-    m_butResume.EnableWindow((idle && (tsResumable || postponed)) || 
+    m_butResume.EnableWindow((idle && (tsResumable || postponed)) ||
       navState == NAV_TS_RUNNING);
     m_butEnd.EnableWindow(mWinApp->DoingTiltSeries() || postponed);
   } else {
-    
+
     // If no tilt series
     // Enable buttons if the macros are non empty or being edited
     if (mDoingCalISO)
@@ -636,27 +633,27 @@ void CCameraMacroTools::Update()
     else
       m_butMacro1.EnableWindow(idle && mMacProcessor->MacroRunnable(mMacroNumber[0]));
     m_butMacro2.EnableWindow((idle && mMacProcessor->MacroRunnable(mMacroNumber[1])) ||
-      navState == NAV_SCRIPT_STOPPED || navState == NAV_SCRIPT_RUNNING || 
+      navState == NAV_SCRIPT_STOPPED || navState == NAV_SCRIPT_RUNNING ||
       navState == NAV_RUNNING_NO_SCRIPT_TS || navState == NAV_PAUSED);
     SetOneMacroLabel(1, IDC_BUTMACRO2);
     m_butMacro3.EnableWindow(idle && mMacProcessor->MacroRunnable(mMacroNumber[2]));
-    m_butResume.EnableWindow((noTasks && mMacProcessor->IsResumable()) || (navState == NAV_PAUSED && 
+    m_butResume.EnableWindow((noTasks && mMacProcessor->IsResumable()) || (navState == NAV_PAUSED &&
       idle) || navState == NAV_SCRIPT_RUNNING || navState == NAV_RUNNING_NO_SCRIPT_TS ||
       (noTasks && mWinApp->mMultiGridTasks->GetSuspendedMulGrid()));
   }
 
-  // Keep STOP enabled during continuous acquires: the press event gets lost in repeated 
-  // enable/disables 
+  // Keep STOP enabled during continuous acquires: the press event gets lost in repeated
+  // enable/disables
   stopEnabled = (mWinApp->DoingTasks() && !mWinApp->GetJustChangingLDarea() &&
-    !mWinApp->GetJustDoingSynchro() && !mWinApp->GetJustNavAcquireOpen() && 
+    !mWinApp->GetJustDoingSynchro() && !mWinApp->GetJustNavAcquireOpen() &&
     !mWinApp->mScope->DoingSynchroThread() && !(mNav && mNav->DoingNewFileRange()) &&
     !mWinApp->mCamera->GetFilterWaiting()) ||
     camBusy || mWinApp->mScope->GetMovingStage() || continuous ||
-    navState == NAV_TS_STOPPED || navState == NAV_PRE_TS_STOPPED || 
+    navState == NAV_TS_STOPPED || navState == NAV_PRE_TS_STOPPED ||
     navState == NAV_SCRIPT_STOPPED;
   m_butStop.EnableWindow(stopEnabled);
   m_butStop.m_bShowSpecial = stopEnabled;
-  m_butSetup.EnableWindow((!mWinApp->DoingTasks() || mWinApp->GetJustNavAcquireOpen() || 
+  m_butSetup.EnableWindow((!mWinApp->DoingTasks() || mWinApp->GetJustNavAcquireOpen() ||
     mDoingCalISO) && (!camBusy || continuous));
 
   // Set the End button
@@ -667,11 +664,11 @@ void CCameraMacroTools::Update()
   else if (mNav && mNav->StartedMacro() && mMacProcessor->IsResumable())
     SetDlgItemText(IDC_BUTEND, "End Script");
   else if (!mWinApp->mMultiTSTasks->GetAssessingRange() && !mDoingCalISO &&
-    (mWinApp->LowDoseMode() || !mWinApp->GetUseViewForSearch()) && 
+    (mWinApp->LowDoseMode() || !mWinApp->GetUseViewForSearch()) &&
     !mWinApp->mScope->GetScanningMags()) {
       SetDlgItemText(IDC_BUTEND, "Search");
       mEnabledSearch = true;
-  } else 
+  } else
     SetDlgItemText(IDC_BUTEND, "End");
 
   // Set the Resume button
@@ -697,7 +694,7 @@ void CCameraMacroTools::Update()
     SetDlgItemText(IDC_BUTSTOP, "End All");
   else
     SetDlgItemText(IDC_BUTSTOP, "STOP");
-    
+
   // Set the Montage/Preview button
   if (doingMulGrid || suspendedMG)
     SetDlgItemText(IDC_BUTMONTAGE, doingMulGrid ? "PauseMG" : "EndMGrid");
@@ -707,10 +704,10 @@ void CCameraMacroTools::Update()
   } else
     SetDlgItemText(IDC_BUTMONTAGE, "Montage");
   if (!mDoingTS)
-    m_butEnd.EnableWindow((mMacProcessor->DoingMacro() && 
-      !mMacProcessor->GetRunningScrpLang()) || mDoingCalISO || 
-      (mEnabledSearch && shotOK) || (navState != NO_NAV_RUNNING && 
-      navState != NAV_RUNNING_NO_SCRIPT_TS && !(navState == NAV_PAUSED && idle)) || 
+    m_butEnd.EnableWindow((mMacProcessor->DoingMacro() &&
+      !mMacProcessor->GetRunningScrpLang()) || mDoingCalISO ||
+      (mEnabledSearch && shotOK) || (navState != NO_NAV_RUNNING &&
+      navState != NAV_RUNNING_NO_SCRIPT_TS && !(navState == NAV_PAUSED && idle)) ||
       mWinApp->mMultiTSTasks->GetAssessingRange() || mWinApp->mScope->GetScanningMags());
 
   // Manage camera name
@@ -767,13 +764,13 @@ int CCameraMacroTools::GetNavigatorState(void)
     return NAV_PAUSED;
   if (!mNav->StartedMacro() && !mNav->GetStartedTS() && !idle)
     return NAV_RUNNING_NO_SCRIPT_TS;
-  if (idle && !mNav->GetStartedTS() && (!mNav->StartedMacro() || 
+  if (idle && !mNav->GetStartedTS() && (!mNav->StartedMacro() ||
     !mMacProcessor->IsResumable()))
     return NAV_PAUSED;
 
   // Should this test if postponed instead of idle?
   if (mNav->GetStartedTS())
-    return (idle ? NAV_TS_STOPPED : NAV_TS_RUNNING);  
+    return (idle ? NAV_TS_STOPPED : NAV_TS_RUNNING);
   if (param->acquireType == ACQUIRE_DO_TS && mMacProcessor->DoingMacro())
     return NAV_PRE_TS_RUNNING;
   if (idle && param->acquireType == ACQUIRE_DO_TS && mNav->StartedMacro())

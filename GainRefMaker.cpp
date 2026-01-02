@@ -1,8 +1,7 @@
 // GainRefMaker.cpp:      Acquires a gain reference and makes gain references
 //                         for the camera controller from stored gain references
 //
-// Copyright (C) 2003 by Boulder Laboratory for 3-Dimensional Electron 
-// Microscopy of Cells ("BL3DEMC") and the Regents of the University of
+// Copyright (C) 2003-2026 by the Regents of the University of
 // Colorado.  See Copyright.txt for full notice of copyright and limitations.
 //
 // Author: David Mastronarde
@@ -20,10 +19,8 @@
 #include "DirectElectron\DirectElectronCamera.h"
 #include "Utilities\XCorr.h"
 
-#ifdef _DEBUG
+#if defined(_DEBUG) && defined(_CRTDBG_MAP_ALLOC)
 #define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
 #endif
 
 #define BINNING_SIZE 4000
@@ -49,7 +46,7 @@ CGainRefMaker::CGainRefMaker()
   mDMRefPath = "";
   mRemoteRefPath = "";
 
-  InitializeRefArrays(); 
+  InitializeRefArrays();
   mFrameCount = 0;
   mStartingServerFrames = 0;
   mBackedUp = false;
@@ -129,7 +126,7 @@ END_MESSAGE_MAP()
 // CGainRefMaker message handlers
 
 // Acquire a new gain reference
-void CGainRefMaker::AcquireGainRef() 
+void CGainRefMaker::AcquireGainRef()
 {
   int fracField, tsizeX, tsizeY;
   int i, numOdd = 0, numUsableOdd = 0;
@@ -139,14 +136,14 @@ void CGainRefMaker::AcquireGainRef()
 
   // Get the control set and parameters for this work; check for KV change
   mConSet = mWinApp->GetConSets() + TRACK_CONSET;
-  mCurrentCamera = mWinApp->GetCurrentCamera(); 
-  mParam = mWinApp->GetCamParams() + mCurrentCamera;  
+  mCurrentCamera = mWinApp->GetCurrentCamera();
+  mParam = mWinApp->GetCamParams() + mCurrentCamera;
   mCamera = mWinApp->mCamera;
   fracField = mParam->subareasBad ? 1 : 8;
   CheckChangedKV();
   mSearchedRefs = false;
   FindExistingReferences();
-  
+
   // Open the gain ref dialog to determine parameters
   CGainRefDlg dlg;
 
@@ -183,7 +180,7 @@ void CGainRefMaker::AcquireGainRef()
   for (i = 0; i < mParam->numBinnings; i++) {
     if (mParam->binnings[i] % 2) {
       numOdd++;
-      if ((mRefExists[mCurrentCamera][0] && mParam->binnings[0] == 1) || 
+      if ((mRefExists[mCurrentCamera][0] && mParam->binnings[0] == 1) ||
         mRefExists[mCurrentCamera][i])
         numUsableOdd++;
     }
@@ -193,18 +190,18 @@ void CGainRefMaker::AcquireGainRef()
   if (numOdd == numUsableOdd) {
     if (mNumBinnings[mCurrentCamera] > 2 && numOdd > 1)
       dlg.m_strOddRef = "will use an existing reference)";
-    else  
+    else
       dlg.m_strOddRef = "will use the existing unbinned reference)";
   } else if (numUsableOdd) {
     if (!mParam->GatanCam)
       dlg.m_strOddRef = "cannot be taken for some binnings";
-    else 
+    else
       dlg.m_strOddRef = "will use a DM reference for some binnings";
   }
 
   // If not done before, set binning, and set it to two for large camera or if no 1
   if (dlg.m_iBinning < 0)
-    dlg.m_iBinning = mParam->sizeX > BINNING_SIZE || mParam->sizeY > BINNING_SIZE || 
+    dlg.m_iBinning = mParam->sizeX > BINNING_SIZE || mParam->sizeY > BINNING_SIZE ||
     mParam->binnings[0] != 1 ? 1 : 0;
   dlg.m_iBinning = B3DMIN(dlg.m_iBinning, mNumBinnings[mCurrentCamera] - 1);
   if (dlg.DoModal() != IDOK)
@@ -221,7 +218,7 @@ void CGainRefMaker::AcquireGainRef()
   mParam->gainRefNumDarkAvg = dlg.m_iNumAverage;
   mParam->gainRefSaveRaw = dlg.m_bAutosaveRaw ? 1 : 0;
 
-  if (FEIscope && mCalibrateDose && dlg.m_bGainCalibrated && 
+  if (FEIscope && mCalibrateDose && dlg.m_bGainCalibrated &&
     mParam->gainRefBinning <= 2) {
     mWinApp->mScope->NormalizeCondenser();
     if (!mWinApp->GetSkipGainRefWarning())
@@ -246,13 +243,13 @@ void CGainRefMaker::AcquireGainRef()
   // Get the coordinates and size right before modifying the modulo values for full frame
   tsizeX = mConSet->right - mConSet->left;
   tsizeY = mConSet->bottom - mConSet->top;
-  mCamera->AdjustSizes(tsizeX, mParam->sizeX, mParam->moduloX, mConSet->left, 
+  mCamera->AdjustSizes(tsizeX, mParam->sizeX, mParam->moduloX, mConSet->left,
     mConSet->right, tsizeY, mParam->sizeY, mParam->moduloY, mConSet->top, mConSet->bottom,
     1);
 
   mModuloSaveX = mParam->moduloX;
   mModuloSaveY = mParam->moduloY;
-  arrSize = (size_t)mParam->sizeX * mParam->sizeY / 
+  arrSize = (size_t)mParam->sizeX * mParam->sizeY /
     (mParam->gainRefBinning * mParam->gainRefBinning);
   NewArray(mArray,float,arrSize);
   if (!mArray) {
@@ -269,7 +266,7 @@ void CGainRefMaker::AcquireGainRef()
     if (UtilRenameFile(mFileName, mBackupName)) {
       StopAcquiringRef();
       return;
-    } 
+    }
     mBackedUp = true;
   }
 
@@ -326,8 +323,8 @@ void CGainRefMaker::MakeRefInDEserver(bool setupRecDark)
 {
   CDERefMakerDlg dlg;
   int ind;
-  mCurrentCamera = mWinApp->GetCurrentCamera(); 
-  mParam = mWinApp->GetCamParams() + mCurrentCamera;  
+  mCurrentCamera = mWinApp->GetCurrentCamera();
+  mParam = mWinApp->GetCamParams() + mCurrentCamera;
   dlg.m_iProcessingType = mDElastProcessType;
   dlg.m_iReferenceType = mDElastReferenceType;
   dlg.m_bUseHardwareBin = mDEuseHardwareBin > 0;
@@ -369,8 +366,8 @@ void CGainRefMaker::StartDEserverRef(int processType, int referenceType)
   mConSet = mWinApp->GetConSets() + TRACK_CONSET;
   ControlSet *recSet = mWinApp->GetConSets() + RECORD_CONSET;
   mCamera = mWinApp->mCamera;
-  mCurrentCamera = mWinApp->GetCurrentCamera(); 
-  mParam = mWinApp->GetCamParams() + mCurrentCamera;  
+  mCurrentCamera = mWinApp->GetCurrentCamera();
+  mParam = mWinApp->GetCamParams() + mCurrentCamera;
   bool useHardwareBin = (mParam->CamFlags & DE_HAS_HARDWARE_BIN) && mDEuseHardwareBin;
   bool useHardwareROI = (mParam->CamFlags & DE_HAS_HARDWARE_BIN) && mDEuseHardwareROI;
 
@@ -381,7 +378,7 @@ void CGainRefMaker::StartDEserverRef(int processType, int referenceType)
     }
     useHardwareBin = (mParam->CamFlags & DE_HAS_HARDWARE_BIN) && recSet->boostMagOrHwBin
       && recSet->binning > 1;
-    useHardwareROI = (mParam->CamFlags & DE_HAS_HARDWARE_BIN) && 
+    useHardwareROI = (mParam->CamFlags & DE_HAS_HARDWARE_BIN) &&
       recSet->magAllShotsOrHwROI;
     processType = B3DMIN(1, recSet->K2ReadMode);
   }
@@ -441,11 +438,11 @@ void CGainRefMaker::StartDEserverRef(int processType, int referenceType)
 // External call for making new DE dark refexrence of the given type, unconditionally
 // if hoursSinceLast is 0, or if elapsed time since last is greater than hoursSinceLast
 // Or just update time if it is < 0
-int CGainRefMaker::MakeDEdarkRefIfNeeded(int processType, float hoursSinceLast, 
+int CGainRefMaker::MakeDEdarkRefIfNeeded(int processType, float hoursSinceLast,
   CString &message)
 {
-  mCurrentCamera = mWinApp->GetCurrentCamera(); 
-  mParam = mWinApp->GetCamParams() + mCurrentCamera;  
+  mCurrentCamera = mWinApp->GetCurrentCamera();
+  mParam = mWinApp->GetCamParams() + mCurrentCamera;
   int now = mWinApp->MinuteTimeStamp();
   if (!mWinApp->mDEToolDlg.CanSaveFrames(mParam)) {
     message = "The current camera is not a DE camera";
@@ -485,7 +482,7 @@ void CGainRefMaker::AcquiringRefNextTask(int param)
   float *fdata;
 
   if (param == REF_SERVER_SHOTS) {
-    if (mStartingServerFrames && !mDEcurReferenceType && mDEcurProcessType < 2 && 
+    if (mStartingServerFrames && !mDEcurReferenceType && mDEcurProcessType < 2 &&
       !mFrameCount)
         mLastDEdarkRefTime[mDEcurProcessType] = mWinApp->MinuteTimeStamp();
     StopAcquiringRef();
@@ -500,7 +497,7 @@ void CGainRefMaker::AcquiringRefNextTask(int param)
 
   switch (param) {
   case REF_FIRST_SHOT:
-  
+
     curMean = (float)mWinApp->mProcessImage->WholeImageMean(mImBufs);
     if (curMean < 5) {
       BeamTooWeak();
@@ -509,7 +506,7 @@ void CGainRefMaker::AcquiringRefNextTask(int param)
     targetExposure = mConSet->exposure * mParam->gainRefTarget / curMean;
     if (targetExposure > EXPOSURE_MAX)
       targetExposure = EXPOSURE_MAX;
-  
+
     // Find a binning that is big but will keep the exposure above 0.1 sec
     binning = mConSet->binning;
     exposure = targetExposure;
@@ -523,7 +520,7 @@ void CGainRefMaker::AcquiringRefNextTask(int param)
     }
 
     SEMTrace('r', "First shot exposure %.3f, mean %.1f; target exposure %.3f\r\n"
-      " second shot exposure %.3f at binning %d", mConSet->exposure, curMean, 
+      " second shot exposure %.3f at binning %d", mConSet->exposure, curMean,
       targetExposure, exposure, binning);
     mConSet->left = 0;
     mConSet->right = mParam->sizeX;
@@ -536,9 +533,9 @@ void CGainRefMaker::AcquiringRefNextTask(int param)
     return;
 
   case REF_SECOND_SHOT:
-  
+
     // Binned image: adjust the exposure again for the results
-    curMean = (float)mWinApp->mProcessImage->WholeImageMean(mImBufs) * 
+    curMean = (float)mWinApp->mProcessImage->WholeImageMean(mImBufs) *
       mWinApp->GetGainFactor(mCurrentCamera, mParam->gainRefBinning) /
       mWinApp->GetGainFactor(mCurrentCamera, mConSet->binning);
     binRat = (float)mConSet->binning / (float)mParam->gainRefBinning;
@@ -612,7 +609,7 @@ void CGainRefMaker::AcquiringRefNextTask(int param)
     mWinApp->AddIdleTask(TASK_GAIN_REF, REAL_FRAME_SHOT, 0);
     return;
   }
-                                            
+
   // Try to calibrate the dose if selected and binning <= 2
   if (mCalibrateDose && mParam->countsPerElectron > 0. && mParam->gainRefBinning <= 2)
     mWinApp->mBeamAssessor->CalibrateElectronDose(false);
@@ -731,7 +728,7 @@ int CGainRefMaker::GainRefBusy()
   int numLeft = mCamera->GetServerFramesLeft();
   if (numLeft != mFrameCount) {
     mFrameCount = numLeft;
-    str.Format("%d OF %d SHOTS DONE", mStartingServerFrames - mFrameCount, 
+    str.Format("%d OF %d SHOTS DONE", mStartingServerFrames - mFrameCount,
       mStartingServerFrames);
     mWinApp->SetStatusText(MEDIUM_PANE, str);
   }
@@ -828,8 +825,8 @@ CString CGainRefMaker::ComposeRefName(int binning)
 // in  byteSize and gainRefBits, and ownership 1 if the caller is responsible for
 // deleting it.  Returns 0 for success, 1 if a reference could be sought from DM,
 // or -1 if at a different KV
-int CGainRefMaker::GetReference(int binning, void *&gainRef, int &byteSize, 
-                                int &gainRefBits, int &ownership, int xOffset, 
+int CGainRefMaker::GetReference(int binning, void *&gainRef, int &byteSize,
+                                int &gainRefBits, int &ownership, int xOffset,
                                 int yOffset, bool needFloat)
 {
   int needInd = -1, needBin, errval;
@@ -843,8 +840,8 @@ int CGainRefMaker::GetReference(int binning, void *&gainRef, int &byteSize,
   short int *sdata;
   CString report;
 
-  mCurrentCamera = mWinApp->GetCurrentCamera(); 
-  mParam = mWinApp->GetCamParams() + mCurrentCamera;  
+  mCurrentCamera = mWinApp->GetCurrentCamera();
+  mParam = mWinApp->GetCamParams() + mCurrentCamera;
   mCamera = mWinApp->mCamera;
   mDMind = mNumBinnings[mCurrentCamera];
   mSearchedRefs = false;
@@ -867,7 +864,7 @@ int CGainRefMaker::GetReference(int binning, void *&gainRef, int &byteSize,
           // Seek out own reference: if not loaded, make sure it exists, and if it
           // exists, set up to use it
           if (!mGainRef[mCurrentCamera][i])
-            FindExistingReferences(); 
+            FindExistingReferences();
           if (mRefExists[mCurrentCamera][i])
             needInd = i;
         }
@@ -883,7 +880,7 @@ int CGainRefMaker::GetReference(int binning, void *&gainRef, int &byteSize,
       return errval;
 
     // ODD BINNING needs unbinned reference regardless; binning offset can be used to
-    // force even binning to use it also; first reference (bin 2 but index 0) is also 
+    // force even binning to use it also; first reference (bin 2 but index 0) is also
     // needed if there is no binning 1
     if (binning % 2 || NeedsUnbinnedRef(binning) || mParam->binnings[0] > 1 || xOffset ||
       yOffset) {
@@ -907,7 +904,7 @@ int CGainRefMaker::GetReference(int binning, void *&gainRef, int &byteSize,
     // If the unbinned reference is loaded or it is already identified that DM ref should
     // be used, and either it is the only one that exists, or it is younger than bin x 2
     // and the bin x2 is not preferred, then use it
-    else if ((mGainRef[mCurrentCamera][0] || mUseDMRef[mCurrentCamera][0] > 0) && 
+    else if ((mGainRef[mCurrentCamera][0] || mUseDMRef[mCurrentCamera][0] > 0) &&
       (!mRefExists[mCurrentCamera][1] ||
       (mRefTime[mCurrentCamera][0] > mRefTime[mCurrentCamera][1] && !mUseOlderBinned2)))
       needInd = 0;
@@ -925,9 +922,9 @@ int CGainRefMaker::GetReference(int binning, void *&gainRef, int &byteSize,
       // Again, unbinned exists and either the other does not or is older and not
       // preferred, use unbinned
       if (mRefExists[mCurrentCamera][0] && (!mRefExists[mCurrentCamera][1] ||
-        (mRefTime[mCurrentCamera][0] > mRefTime[mCurrentCamera][1] && 
+        (mRefTime[mCurrentCamera][0] > mRefTime[mCurrentCamera][1] &&
         !mUseOlderBinned2)))
-        needInd = 0; 
+        needInd = 0;
 
       // Otherwise, if binned ref exists, use it
       else if (mRefExists[mCurrentCamera][1])
@@ -938,7 +935,7 @@ int CGainRefMaker::GetReference(int binning, void *&gainRef, int &byteSize,
         needInd = 0;
 
       // Out of luck
-      else 
+      else
         return errval;
     }
 
@@ -957,10 +954,10 @@ int CGainRefMaker::GetReference(int binning, void *&gainRef, int &byteSize,
   ny = ((mParam->sizeY / needBin) / i) * i;
 
   // Load the needed gain reference if it is  not
-  if (!mGainRef[mCurrentCamera][needInd] || 
+  if (!mGainRef[mCurrentCamera][needInd] ||
     (needFloat && mByteSize[mCurrentCamera][needInd] == 2)) {
     SEMTrace('r', "Loading gain reference for binning %d", needBin);
-    mFileName = ComposeRefName(needBin);  
+    mFileName = ComposeRefName(needBin);
     try {
       file = new CFile(mFileName, CFile::modeRead |CFile::shareDenyWrite);
     }
@@ -970,7 +967,7 @@ int CGainRefMaker::GetReference(int binning, void *&gainRef, int &byteSize,
       return errval;
     }
     if (!KStoreMRC::IsMRC(file)) {
-      AfxMessageBox("Gain reference file does not appear to be MRC:\n" + mFileName, 
+      AfxMessageBox("Gain reference file does not appear to be MRC:\n" + mFileName,
         MB_EXCLAME);
       delete file;
       return errval;
@@ -985,7 +982,7 @@ int CGainRefMaker::GetReference(int binning, void *&gainRef, int &byteSize,
     }
 
     storeMRC->setSection(0);
-    image = (KImageFloat *)storeMRC->getRect();      
+    image = (KImageFloat *)storeMRC->getRect();
     delete storeMRC;
     if (!image) {
       AfxMessageBox("Error reading gain reference file:\n" + mFileName, MB_EXCLAME);
@@ -995,13 +992,13 @@ int CGainRefMaker::GetReference(int binning, void *&gainRef, int &byteSize,
     // Convert to unsigned short if possible
     image->Lock();
     usdata = NULL;
-    if (mCamera->GetScaledGainRefMax() && !mCamera->ReturningFloatImages(mParam) && 
+    if (mCamera->GetScaledGainRefMax() && !mCamera->ReturningFloatImages(mParam) &&
       !needFloat)
       NewArray2(usdata, unsigned short int, nx, ny);
 
     // This returns error for usdata NULL allowing assignment if float needed or if error
-    if (ProcConvertGainRef((float *)image->getData(), usdata, nx * ny, 
-      mCamera->GetScaledGainRefMax(), mCamera->GetMinGainRefBits(), 
+    if (ProcConvertGainRef((float *)image->getData(), usdata, nx * ny,
+      mCamera->GetScaledGainRefMax(), mCamera->GetMinGainRefBits(),
       &mGainRefBits[mCurrentCamera][needInd])) {
 
       // error or no conversion: delete int array and detach float array from image
@@ -1055,7 +1052,7 @@ int CGainRefMaker::GetReference(int binning, void *&gainRef, int &byteSize,
   // Bin it down
   XCorrBinInverse(mGainRef[mCurrentCamera][needInd], byteSize == 4 ? kFLOAT : kUSHORT,
     nx, ny, xOffset, yOffset, moreBin, nxBinned, nyBinned, sdata);
-  
+
   // If it was shorts, we are all set; return the scaling factor too
   if (byteSize == 2) {
     gainRef = sdata;
@@ -1068,7 +1065,7 @@ int CGainRefMaker::GetReference(int binning, void *&gainRef, int &byteSize,
     if (mCamera->GetScaledGainRefMax() && !mCamera->ReturningFloatImages(mParam) &&
       !needFloat)
       NewArray(usdata,unsigned short int,binnedSize);
-    if (ProcConvertGainRef((float *)sdata, usdata, (int)binnedSize, 
+    if (ProcConvertGainRef((float *)sdata, usdata, (int)binnedSize,
       mCamera->GetScaledGainRefMax(), mCamera->GetMinGainRefBits(), &scaleBits)) {
 
       // Failure or not needed: delete int array and return floats
@@ -1132,7 +1129,7 @@ BOOL CGainRefMaker::CheckDMReference(int binInd, BOOL optional)
     // Otherwise, if always asking, then ask for this binning
     if (mDMrefAskPolicy == DMREF_ASK_ALWAYS) {
       name.Format("Do you want to use the DigitalMicrograph gain reference\n"
-        "instead of a less binned SerialEM gain reference for binning %d?", 
+        "instead of a less binned SerialEM gain reference for binning %d?",
         mParam->binnings[binInd]);
       if (AfxMessageBox(name, MB_YESNO | MB_ICONQUESTION) == IDYES) {
         mUseDMRef[mCurrentCamera][binInd] = 1;
@@ -1148,14 +1145,14 @@ BOOL CGainRefMaker::CheckDMReference(int binInd, BOOL optional)
   mUseDMRef[mCurrentCamera][binInd] = 0;
 
   // If the SEM reference is newer than the DM reference, or not asking, just use it
-  if ((mRefTime[mCurrentCamera][binInd] > mRefTime[mCurrentCamera][mDMind] && 
+  if ((mRefTime[mCurrentCamera][binInd] > mRefTime[mCurrentCamera][mDMind] &&
     mDMrefAskPolicy == DMREF_ASK_IF_NEWER) || mDMrefAskPolicy == DMREF_ASK_NEVER)
     return false;
 
   // Finally, get the user choice of what to do if DM is newer or always asking
   if (mDMrefAskPolicy == DMREF_ASK_ALWAYS) {
     name.Format("Do you want to use the DigitalMicrograph gain reference\n"
-      "instead of the SerialEM gain reference for binning %d?", 
+      "instead of the SerialEM gain reference for binning %d?",
       mParam->binnings[binInd]);
   } else {
     name = "The unbinned";
@@ -1187,7 +1184,7 @@ void CGainRefMaker::UpdateDMReferenceTimes(void)
   __time64_t mtime;
   BOOL exists;
   int i, cdsInd, numLoop = mCamera->CanK3DoCorrDblSamp(mParam) ? 2 : 1;
-  if (mParam->useSocket && CBaseSocket::ServerIsRemote(GATAN_SOCK_ID) && 
+  if (mParam->useSocket && CBaseSocket::ServerIsRemote(GATAN_SOCK_ID) &&
     !mRemoteRefPath.IsEmpty())
     refPath = mRemoteRefPath;
 
@@ -1273,19 +1270,19 @@ bool CGainRefMaker::IsDMReferenceNew(int camNum)
   BOOL didExist = mRefExists[mCurrentCamera][refInd];
   CTime oldTime = mRefTime[mCurrentCamera][refInd];
   UpdateDMReferenceTimes();
-  str.Format("IsDMReferenceNew: didexist %d exist %d  times", didExist ? 1 : 0, 
+  str.Format("IsDMReferenceNew: didexist %d exist %d  times", didExist ? 1 : 0,
     mRefExists[camNum][refInd] ? 1:0);
-  str += oldTime.Format(" %B %d, %Y %H:%M:%S") + "   " + 
+  str += oldTime.Format(" %B %d, %Y %H:%M:%S") + "   " +
     mRefTime[camNum][refInd].Format("%B %d, %Y %H:%M:%S");
   SEMTrace('r', "%s", (LPCTSTR)str);
 
   // This does not really need to be restored...
-  mCurrentCamera = mWinApp->GetCurrentCamera(); 
+  mCurrentCamera = mWinApp->GetCurrentCamera();
   return (mRefExists[camNum][refInd] && (!didExist || mRefTime[camNum][refInd] > oldTime));
 }
 
 // If maximum gain ref age is set, check for reference too old of the given type
-void CGainRefMaker::CheckForAgeWarning(CameraParameters *param, bool DMref, 
+void CGainRefMaker::CheckForAgeWarning(CameraParameters *param, bool DMref,
   CString &refName, CTime &mtime, bool *warned)
 {
   CString str;
@@ -1305,7 +1302,7 @@ void CGainRefMaker::CheckForAgeWarning(CameraParameters *param, bool DMref,
 
 // Return the binning offsets for the given camera, for going from a reference
 // binning to the given binning
-void CGainRefMaker::GetBinningOffsets(CameraParameters *param, int refBinning, 
+void CGainRefMaker::GetBinningOffsets(CameraParameters *param, int refBinning,
                                       int binning, int &xOffset, int &yOffset)
 {
   int i;
@@ -1332,7 +1329,7 @@ void CGainRefMaker::GetBinningOffsets(CameraParameters *param, int refBinning,
 // Check for a change in the KV setting and re-initialize if it changes
 void CGainRefMaker::CheckChangedKV(void)
 {
-  // If there is a list of KVs at which to keep a separate gain reference, 
+  // If there is a list of KVs at which to keep a separate gain reference,
   // First get a KV value if interval has expired, then check if close to one on list
   double curKV;
   int newHT;

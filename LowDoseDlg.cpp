@@ -1,7 +1,6 @@
 // LowDoseDlg.cpp:        Has controls for working in low dose mode
 //
-// Copyright (C) 2003 by Boulder Laboratory for 3-Dimensional Electron 
-// Microscopy of Cells ("BL3DEMC") and the Regents of the University of
+// Copyright (C) 2003-2026 by the Regents of the University of
 // Colorado.  See Copyright.txt for full notice of copyright and limitations.
 //
 // Author: David Mastronarde
@@ -31,10 +30,8 @@
 #include "ZbyGSetupDlg.h"
 #include "Utilities\KGetOne.h"
 
-#ifdef _DEBUG
+#if defined(_DEBUG) && defined(_CRTDBG_MAP_ALLOC)
 #define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
 #endif
 
 #define MAX_VIEW_DEFOCUS  0
@@ -249,8 +246,8 @@ void CLowDoseDlg::OnBlankbeam()
 // External entry for toggling that state
 void CLowDoseDlg::ToggleBlankWhenDown(void)
 {
-  m_bBlankWhenDown = !m_bBlankWhenDown;   
-  mScope->SetBlankWhenDown(m_bBlankWhenDown);  
+  m_bBlankWhenDown = !m_bBlankWhenDown;
+  mScope->SetBlankWhenDown(m_bBlankWhenDown);
   UpdateData(false);
 }
 
@@ -271,7 +268,7 @@ void CLowDoseDlg::SetLowDoseMode(BOOL inVal, BOOL hideOffState)
     return;
   }
 
-  // Set a one-shot flag for hiding the off state; only set the variable for 
+  // Set a one-shot flag for hiding the off state; only set the variable for
   // the checkbox if it is not being hidden
   mHideOffState = hideOffState;
   if (inVal || !hideOffState)
@@ -293,10 +290,10 @@ void CLowDoseDlg::ConvertAxisPosition(BOOL axisToIS)
     if (!mag)
       continue;
     if (axisToIS)
-      ConvertOneAxisToIS(mag, mLDParams[i].axisPosition, mLDParams[i].ISX, 
+      ConvertOneAxisToIS(mag, mLDParams[i].axisPosition, mLDParams[i].ISX,
         mLDParams[i].ISY);
     else
-      mLDParams[i].axisPosition = ConvertOneIStoAxis(mag, mLDParams[i].ISX, 
+      mLDParams[i].axisPosition = ConvertOneIStoAxis(mag, mLDParams[i].ISX,
         mLDParams[i].ISY);
   }
 
@@ -309,7 +306,7 @@ void CLowDoseDlg::ConvertAxisPosition(BOOL axisToIS)
       TransferISonAxis(mag, mLDParams[RECORD_CONSET].ISX, mLDParams[RECORD_CONSET].ISY,
         magv, mLDParams[area].ISX, mLDParams[area].ISY);
       if ((mViewShiftX[i] != 0. || mViewShiftY[i] != 0.) && mag && magv) {
-        delX = mViewShiftX[i];      
+        delX = mViewShiftX[i];
         delY = mViewShiftY[i];
 
         // If offsets are being applied, use the net offset instead
@@ -323,7 +320,7 @@ void CLowDoseDlg::ConvertAxisPosition(BOOL axisToIS)
     }
   }
   for (i = 0; i < MAX_LOWDOSE_SETS; i++)
-    SEMTrace('l', "%d: mag %d  axisPos %.2f  IS  %f  %f", i, mLDParams[i].magIndex, 
+    SEMTrace('l', "%d: mag %d  axisPos %.2f  IS  %f  %f", i, mLDParams[i].magIndex,
       mLDParams[i].axisPosition, mLDParams[i].ISX, mLDParams[i].ISY);
 }
 
@@ -338,7 +335,7 @@ void CLowDoseDlg::GetNetViewShift(double &shiftX, double &shiftY, int area)
   shiftX = shiftY = 0.;
   if ((!mViewShiftX[areaInd] && !mViewShiftY[areaInd]) || !mag || !magv)
     return;
-  mShiftManager->TransferGeneralIS(mag, magTab[mag].calOffsetISX[camp->GIF], 
+  mShiftManager->TransferGeneralIS(mag, magTab[mag].calOffsetISX[camp->GIF],
     magTab[mag].calOffsetISY[camp->GIF], magv, shiftX, shiftY);
   shiftX += mViewShiftX[areaInd] - magTab[magv].calOffsetISX[camp->GIF];
   shiftY += mViewShiftY[areaInd] - magTab[magv].calOffsetISY[camp->GIF];
@@ -408,7 +405,7 @@ void CLowDoseDlg::ConvertOneAxisToIS(int mag, double axis, double &ISX, double &
 
 // Transfer an image shift from one mag to another: copy if IS is congruent, otherwise
 // convert to axis position and back
-void CLowDoseDlg::TransferISonAxis(int fromMag, double fromX, double fromY, int toMag, 
+void CLowDoseDlg::TransferISonAxis(int fromMag, double fromX, double fromY, int toMag,
                              double &toX, double &toY)
 {
   toX = toY = 0;
@@ -435,7 +432,7 @@ void CLowDoseDlg::TransferBaseIS(int mag, double &ISX, double &ISY)
 }
 
 // Switching the mode: inform the scope, and update the enables
-void CLowDoseDlg::OnLowdosemode() 
+void CLowDoseDlg::OnLowdosemode()
 {
   BOOL saveTruly, saveLDmode, saveHideOff;
 
@@ -458,7 +455,7 @@ void CLowDoseDlg::OnLowdosemode()
 
   // Restore an imaging state if there is a change in low dose; handle this being rentered
   if (mWinApp->mNavHelper->GetTypeOfSavedState() == STATE_IMAGING &&
-    !BOOL_EQUIV(mTrulyLowDose, mWinApp->LowDoseMode()) && 
+    !BOOL_EQUIV(mTrulyLowDose, mWinApp->LowDoseMode()) &&
     !mWinApp->mNavHelper->GetSettingState()) {
     saveTruly = mTrulyLowDose;
     saveLDmode = m_bLowDoseMode;
@@ -492,7 +489,7 @@ void CLowDoseDlg::OnLowdosemode()
     m_bContinuousUpdate = false;
     mScope->SetLDContinuousUpdate(false);
   }
-  
+
   // Turn off define function in either direction to keep things simple
   if (m_iDefineArea > 0)
     TurnOffDefine();
@@ -524,20 +521,20 @@ void CLowDoseDlg::OnLowdosemode()
 }
 
 // Switching beam normalization - set the scope parameter
-void CLowDoseDlg::OnLdNormalizeBeam() 
+void CLowDoseDlg::OnLdNormalizeBeam()
 {
-  mWinApp->RestoreViewFocus();  
+  mWinApp->RestoreViewFocus();
   UpdateData(true);
   mScope->SetLDNormalizeBeam(m_bNormalizeBeam);
 }
 
 // Changing the define area: just update the area and let scope update drive the rest
-void CLowDoseDlg::OnRdefine() 
+void CLowDoseDlg::OnRdefine()
 {
   double ISX, ISY;
   int lastArea = mScope->GetLowDoseArea();
   UpdateData(true);
-  mWinApp->RestoreViewFocus();  
+  mWinApp->RestoreViewFocus();
   EMimageBuffer *imBuf = mWinApp->mMainView->GetActiveImBuf();
 
   // Get the base image shift and matching mag
@@ -546,7 +543,7 @@ void CLowDoseDlg::OnRdefine()
     mScope->GetImageShift(mBaseISX, mBaseISY);
     mBaseMag = mScope->GetMagIndex();
     if (lastArea >= 0) {
-      mShiftManager->TransferGeneralIS(mLDParams[lastArea].magIndex, 
+      mShiftManager->TransferGeneralIS(mLDParams[lastArea].magIndex,
         mLDParams[lastArea].ISX, mLDParams[lastArea].ISY, mBaseMag, ISX, ISY);
       mBaseISX -= ISX;
       mBaseISY -= ISY;
@@ -602,7 +599,7 @@ void CLowDoseDlg::OnGotoArea(UINT nID)
 }
 
 // If focus or trial is selected when this is turned on, copy the parameters
-void CLowDoseDlg::OnTiefocustrial() 
+void CLowDoseDlg::OnTiefocustrial()
 {
   UpdateData(true);
 
@@ -616,7 +613,7 @@ void CLowDoseDlg::OnTiefocustrial()
 }
 
 // Split shifts evenly between Record and Focus/Trial
-void CLowDoseDlg::OnBalanceshifts() 
+void CLowDoseDlg::OnBalanceshifts()
 {
   double delAxis, meanFTaxis, newViewAxis;
   if (ShiftsBalanced()) {
@@ -624,12 +621,12 @@ void CLowDoseDlg::OnBalanceshifts()
     return;
   }
 
-  mWinApp->RestoreViewFocus();  
+  mWinApp->RestoreViewFocus();
   ConvertAxisPosition(false);
 
   // Average of focus/trial position
   meanFTaxis = 0.5 * (mLDParams[1].axisPosition + mLDParams[2].axisPosition);
-  
+
   // new view/record position is displaced by half of distance between view and F/T
   newViewAxis = 0.5 * (mLDParams[3].axisPosition - meanFTaxis);
 
@@ -639,9 +636,9 @@ void CLowDoseDlg::OnBalanceshifts()
 }
 
 // Set center of View/Record to zero and put all the shifts in focus/trial
-void CLowDoseDlg::OnCenterunshifted() 
+void CLowDoseDlg::OnCenterunshifted()
 {
-  mWinApp->RestoreViewFocus();  
+  mWinApp->RestoreViewFocus();
   ConvertAxisPosition(false);
   ChangeAllShifts(-mLDParams[3].axisPosition);
 }
@@ -673,7 +670,7 @@ void CLowDoseDlg::ChangeAllShifts(double delAxis)
     FixUserPoint(1);
   }*/
   mWinApp->mNavHelper->ForceCenterRealign();
-  mWinApp->RestoreViewFocus();  
+  mWinApp->RestoreViewFocus();
   Update();
 }
 
@@ -683,13 +680,13 @@ bool CLowDoseDlg::ShiftsBalanced(void)
   return fabs(mLDParams[3].ISX) > 1.e-5 || fabs(mLDParams[3].ISY) > 1.e-5;
 }
 
-void CLowDoseDlg::OnContinuousupdate() 
+void CLowDoseDlg::OnContinuousupdate()
 {
   double intensity = 0.;
   bool manage = false;
   int lowestM, area = mScope->GetLowDoseArea();
-  UpdateData(true); 
-  mWinApp->RestoreViewFocus();  
+  UpdateData(true);
+  mWinApp->RestoreViewFocus();
   m_statMagSpot.EnableWindow(m_bContinuousUpdate);
   if (IS_AREA_VIEW_OR_SEARCH(area) && !mWinApp->GetSTEMMode()) {
     lowestM = mScope->GetLowestMModeMagInd();
@@ -729,7 +726,7 @@ void CLowDoseDlg::SetContinuousUpdate(BOOL state)
 
 
 // Copy active area to another one
-void CLowDoseDlg::OnCopyArea(UINT nID) 
+void CLowDoseDlg::OnCopyArea(UINT nID)
 {
   CString *modeNames = mWinApp->GetModeNames();
   CButton *button = (CButton *)GetDlgItem(nID);
@@ -745,7 +742,7 @@ void CLowDoseDlg::OnCopyArea(UINT nID)
   if (area < 0 || area >= MAX_LOWDOSE_SETS || from < 0 || area == from)
     return;
 
-  if (AfxMessageBox("Are you sure you want to copy parameters from the " +  
+  if (AfxMessageBox("Are you sure you want to copy parameters from the " +
     mModeNames[fromCons] + " area to the " + mModeNames[consInd] + " area?",
     MB_YESNO | MB_ICONQUESTION) == IDNO)
     return;
@@ -805,19 +802,19 @@ void CLowDoseDlg::DoCopyArea(int from, int area)
 }
 
 // Unblank the beam temporarily
-void CLowDoseDlg::OnUnblank() 
+void CLowDoseDlg::OnUnblank()
 {
   mWinApp->RestoreViewFocus();
   mScope->BlankBeam(!mLastBlanked, "low dose dialog");
   BlankingUpdate(!mLastBlanked);
 }
 
-// Reset beam shift of current area to zero 
-void CLowDoseDlg::OnResetBeamShift() 
+// Reset beam shift of current area to zero
+void CLowDoseDlg::OnResetBeamShift()
 {
   int area = mScope->GetLowDoseArea();
   bool focusTrial = (area + 1) / 2 == 1;
-  mWinApp->RestoreViewFocus();  
+  mWinApp->RestoreViewFocus();
 
   // First finish setting current shift if it was happening
   if (m_bSetBeamShift)
@@ -833,7 +830,7 @@ void CLowDoseDlg::OnResetBeamShift()
     mScope->IncBeamTilt(-mLDParams[area].beamTiltDX, -mLDParams[area].beamTiltDY);
     mLDParams[area].beamTiltDX = 0.;
     mLDParams[area].beamTiltDY = 0.;
-    mWinApp->AppendToLog(CString("Incremental beam tilt for ") + 
+    mWinApp->AppendToLog(CString("Incremental beam tilt for ") +
       mModeNames[area == SEARCH_AREA ? SEARCH_CONSET : area] + " area reset to 0.,0.");
   }
   // TODO: should it zero dark field tilt beam shift?
@@ -841,10 +838,10 @@ void CLowDoseDlg::OnResetBeamShift()
 }
 
 // Either start or terminate setting of beam shift
-void CLowDoseDlg::OnSetBeamShift() 
+void CLowDoseDlg::OnSetBeamShift()
 {
   UpdateData(true);
-  mWinApp->RestoreViewFocus();  
+  mWinApp->RestoreViewFocus();
   if (m_bSetBeamShift) {
     mScope->GetBeamShift(mStartingBeamX, mStartingBeamY);
     if (mScope->GetLDBeamTiltShifts())
@@ -856,7 +853,7 @@ void CLowDoseDlg::OnSetBeamShift()
 // External call for manipulating recording of beam shift
 void CLowDoseDlg::SetBeamShiftButton(BOOL state)
 {
-  if (!m_bLowDoseMode || BOOL_EQUIV(state, m_bSetBeamShift) || 
+  if (!m_bLowDoseMode || BOOL_EQUIV(state, m_bSetBeamShift) ||
     mScope->GetLowDoseArea() < 0)
     return;
   m_bSetBeamShift = state;
@@ -875,7 +872,7 @@ void CLowDoseDlg::OnDeltaposSpinDefocus(NMHDR *pNMHDR, LRESULT *pResult, int are
   LPNMUPDOWN pNMUpDown = reinterpret_cast<LPNMUPDOWN>(pNMHDR);
   int newval, curVal = B3DNINT(mScope->GetLDViewDefocus(area));
   int delta = 1;
-  bool less = BOOL_EQUIV(pNMUpDown->iDelta > 0, curVal > 0); 
+  bool less = BOOL_EQUIV(pNMUpDown->iDelta > 0, curVal > 0);
   if (B3DABS(curVal) >= B3DCHOICE(less, 110, 100))
     delta = 10;
   else if (B3DABS(curVal) >= B3DCHOICE(pNMUpDown->iDelta < 0, 55, 50))
@@ -884,7 +881,7 @@ void CLowDoseDlg::OnDeltaposSpinDefocus(NMHDR *pNMHDR, LRESULT *pResult, int are
     delta = 2;
 
   newval = -delta * ((-(curVal - delta * pNMUpDown->iDelta)) / delta);
-  mWinApp->RestoreViewFocus();  
+  mWinApp->RestoreViewFocus();
   *pResult = 1;
   if (newval < mMinVSDefocus[area] || newval> mMaxVSDefocus[area])
     return;
@@ -910,7 +907,7 @@ void CLowDoseDlg::AreaChanging(int inArea)
     FinishSettingBeamShift(false);
 }
 
-// End of beam setting: turn off checkbox, get shift and add change in shift to 
+// End of beam setting: turn off checkbox, get shift and add change in shift to
 // existing shift for the area.
 void CLowDoseDlg::FinishSettingBeamShift(BOOL toggled)
 {
@@ -920,7 +917,7 @@ void CLowDoseDlg::FinishSettingBeamShift(BOOL toggled)
   bool focusTrial = (area + 1) / 2 == 1;
   CString mess;
   m_bSetBeamShift = false;
-  if (!toggled) 
+  if (!toggled)
     UpdateData(false);
   if (area < 0)
     return;
@@ -931,7 +928,7 @@ void CLowDoseDlg::FinishSettingBeamShift(BOOL toggled)
     mScope->GetBeamTilt(beamX, beamY);
     mLDParams[area].beamTiltDX += beamX - mStartingBTiltX;
     mLDParams[area].beamTiltDY += beamY - mStartingBTiltY;
-    mess.Format("Incremental beam tilt for %s area set to %.3f, %.3f", 
+    mess.Format("Incremental beam tilt for %s area set to %.3f, %.3f",
       (LPCTSTR)mModeNames[nameInd], mLDParams[area].beamTiltDX,
       mLDParams[area].beamTiltDY);
     mWinApp->AppendToLog(mess);
@@ -940,7 +937,7 @@ void CLowDoseDlg::FinishSettingBeamShift(BOOL toggled)
     mScope->GetDarkFieldTilt(mLDParams[area].darkFieldMode, mLDParams[area].dfTiltX,
     mLDParams[area].dfTiltY);
    if (mLDParams[area].darkFieldMode)
-     PrintfToLog("Dark field beam tilt for %s area set to %.3f, %.3f", 
+     PrintfToLog("Dark field beam tilt for %s area set to %.3f, %.3f",
        (LPCTSTR)mModeNames[nameInd], mLDParams[area].dfTiltX, mLDParams[area].dfTiltY);
   }
   SyncFocusAndTrial(area);
@@ -949,7 +946,7 @@ void CLowDoseDlg::FinishSettingBeamShift(BOOL toggled)
 // Select which area offsets are controlled
 void CLowDoseDlg::OnRadioShowOffset()
 {
-  mWinApp->RestoreViewFocus();  
+  mWinApp->RestoreViewFocus();
   UpdateData(true);
   UpdateSettings();
 }
@@ -1053,12 +1050,12 @@ int CLowDoseDlg::DoSetViewShift(int automatic)
 
   mag = mLDParams[RECORD_CONSET].magIndex;
   magv = mLDParams[area].magIndex;
-  if (mScope->GetApplyISoffset() && mag && !mViewShiftX[ifSearch] && 
+  if (mScope->GetApplyISoffset() && mag && !mViewShiftX[ifSearch] &&
     !mViewShiftY[ifSearch]) {
 
     // If IS offsets are being applied and V offset is still zero, start with the view IS
     // offset minus the transferred Record offset to end  up with the full stored offset
-    mShiftManager->TransferGeneralIS(mag, magTab[mag].offsetISX, 
+    mShiftManager->TransferGeneralIS(mag, magTab[mag].offsetISX,
       magTab[mag].offsetISY, magv, delX, delY);
     mViewShiftX[ifSearch] = magTab[magv].offsetISX - delX;
     mViewShiftY[ifSearch] = magTab[magv].offsetISY - delY;
@@ -1067,7 +1064,7 @@ int CLowDoseDlg::DoSetViewShift(int automatic)
   if (shiftType > 0) {
 
     // Y inversion for deltas, then subtract the image shift just as negative is taken
-    // when mouse shifting  
+    // when mouse shifting
     // Fixed 10/14/12, Y was "= -" not "-=", PLUS the applied offset was added repeatedly
     delX = mImBufs->mBinning * shiftX;
     delY = -mImBufs->mBinning * shiftY;
@@ -1075,12 +1072,12 @@ int CLowDoseDlg::DoSetViewShift(int automatic)
     mViewShiftY[ifSearch] -= (bInv.ypx * delX + bInv.ypy * delY);
   } else {
 
-    // Convert image point to image shift in main buffer and add it; 
-    SEMTrace('1', "Starting shift %.3f %.3f", mViewShiftX[ifSearch], 
+    // Convert image point to image shift in main buffer and add it;
+    SEMTrace('1', "Starting shift %.3f %.3f", mViewShiftX[ifSearch],
       mViewShiftY[ifSearch]);
-    delX = mImBufs[topInd].mBinning * (mImBufs[topInd].mUserPtX - 
+    delX = mImBufs[topInd].mBinning * (mImBufs[topInd].mUserPtX -
       mImBufs[topInd].mImage->getWidth() / 2.);
-    delY = -mImBufs[topInd].mBinning * (mImBufs[topInd].mUserPtY - 
+    delY = -mImBufs[topInd].mBinning * (mImBufs[topInd].mUserPtY -
       mImBufs[topInd].mImage->getHeight() / 2.);
     mViewShiftX[ifSearch] += (bInv.xpx * delX + bInv.xpy * delY);
     mViewShiftY[ifSearch] += (bInv.ypx * delX + bInv.ypy * delY);
@@ -1090,9 +1087,9 @@ int CLowDoseDlg::DoSetViewShift(int automatic)
     // Convert image point in reference buffer to IS and transfer IS to main mag, subtract
     bMat = mShiftManager->FocusAdjustedISToCamera(&mImBufs[1 - topInd]);
     bInv = MatInv(bMat);
-    delX = mImBufs[1 - topInd].mBinning * (mImBufs[1 - topInd].mUserPtX - 
+    delX = mImBufs[1 - topInd].mBinning * (mImBufs[1 - topInd].mUserPtX -
       mImBufs[1 - topInd].mImage->getWidth() / 2.);
-    delY = -mImBufs[1 - topInd].mBinning * (mImBufs[1 - topInd].mUserPtY - 
+    delY = -mImBufs[1 - topInd].mBinning * (mImBufs[1 - topInd].mUserPtY -
       mImBufs[1 - topInd].mImage->getHeight() / 2.);
     ISX = (bInv.xpx * delX + bInv.xpy * delY);
     ISY = (bInv.ypx * delX + bInv.ypy * delY);
@@ -1114,7 +1111,7 @@ int CLowDoseDlg::DoSetViewShift(int automatic)
     if (mImBufs->mStageShiftedByMouse) {
       mess.Format("The stage was shifted away from the area centered in the %s image.  "
         "To recover from this and check the offset, press \"Reset Image Shift\", then "
-        "take a new %s image and center a feature, then take a new %s image.", 
+        "take a new %s image and center a feature, then take a new %s image.",
         refText, refText, areaText);
       AfxMessageBox(mess, MB_EXCLAME);
     } else if (mWinApp->mCamera->CameraReady()) {
@@ -1140,7 +1137,7 @@ int CLowDoseDlg::DoSetViewShift(int automatic)
 // Reset the shift
 void CLowDoseDlg::OnZeroViewShift()
 {
-  mWinApp->RestoreViewFocus();  
+  mWinApp->RestoreViewFocus();
   if (mLastAutoShiftType == 1) {
     RevertLastAutoViewShift();
     Update();
@@ -1204,7 +1201,7 @@ int CLowDoseDlg::OKtoSetViewShift(int area)
   search0 = mImBufs[0].mConSetUsed == SEARCH_CONSET;
   view0 = mImBufs[0].mConSetUsed == VIEW_CONSET;
   if (!mImBufs->mImage || !mImBufs->mBinning || !mImBufs->mMagInd ||
-    mStampViewShift[area] == mImBufs->mTimeStamp ||!mImBufs->mLowDoseArea || 
+    mStampViewShift[area] == mImBufs->mTimeStamp ||!mImBufs->mLowDoseArea ||
     mImBufs->mCamera != mWinApp->GetCurrentCamera())
     return 0;
   mImBufs->mImage->getShifts(xx, yy);
@@ -1216,9 +1213,9 @@ int CLowDoseDlg::OKtoSetViewShift(int area)
     mImBufs[1].mMagInd  && mImBufs->mHasUserPt && mImBufs[1].mHasUserPt) {
       mImBufs[1].mImage->getShifts(xx1, yy1);
       bShift = (xx1 != 0. || yy1 != 0.);
-      recOrPrev0 = mImBufs[0].mConSetUsed == RECORD_CONSET || 
+      recOrPrev0 = mImBufs[0].mConSetUsed == RECORD_CONSET ||
         mImBufs[0].mConSetUsed == PREVIEW_CONSET;
-      recOrPrev1 = mImBufs[1].mConSetUsed == RECORD_CONSET || 
+      recOrPrev1 = mImBufs[1].mConSetUsed == RECORD_CONSET ||
         mImBufs[1].mConSetUsed == PREVIEW_CONSET;
       search1 = mImBufs[1].mConSetUsed == SEARCH_CONSET;
       view1 = mImBufs[1].mConSetUsed == VIEW_CONSET;
@@ -1226,7 +1223,7 @@ int CLowDoseDlg::OKtoSetViewShift(int area)
       // For valid pair of images, 3 cases: ambiguous
       // if A shifted, bad but repairable if anything shifted, good for marker method
       if ((area && (((view1 || recOrPrev1) && search0) ||
-        ((view0 || recOrPrev0) && search1))) || 
+        ((view0 || recOrPrev0) && search1))) ||
         (!area && ((recOrPrev1 && view0) || (recOrPrev0 && view1)))) {
           if (shiftOK)
             return 2;
@@ -1342,15 +1339,15 @@ int CLowDoseDlg::NewAxisPosition(int area, double position, int angle, bool setA
   return 0;
 }
 
-void CLowDoseDlg::OnPaint() 
+void CLowDoseDlg::OnPaint()
 {
   CPaintDC dc(this); // device context for painting
- 
+
   DrawSideBorders(dc);
 }
 
 // DIALOG INITALIZATION
-BOOL CLowDoseDlg::OnInitDialog() 
+BOOL CLowDoseDlg::OnInitDialog()
 {
   CToolDlg::OnInitDialog();
   mLDParams = mWinApp->GetLowDoseParams();
@@ -1487,7 +1484,7 @@ void CLowDoseDlg::Update(BOOL stageReady)
   if (!mInitialized)
     return;
   BOOL bCentered = fabs(mLDParams[3].ISX) < 1.e-5 && fabs(mLDParams[3].ISY) < 1.e-5;
-  BOOL defined = mLDParams[0].magIndex && mLDParams[1].magIndex && 
+  BOOL defined = mLDParams[0].magIndex && mLDParams[1].magIndex &&
     mLDParams[2].magIndex && mLDParams[3].magIndex;
   BOOL STEMmode = mWinApp->GetSTEMMode();
   BOOL camBusy = mWinApp->mCamera->CameraBusy();
@@ -1499,7 +1496,7 @@ void CLowDoseDlg::Update(BOOL stageReady)
   // Enable unblank button if blanked and no tasks, and camera not busy
   BOOL bEnable = mTrulyLowDose && !mWinApp->DoingTasks();
   BOOL justNavAcq = mWinApp->GetJustNavAcquireOpen();
-  BOOL enableIfNavAcq = mTrulyLowDose && !camBusy && 
+  BOOL enableIfNavAcq = mTrulyLowDose && !camBusy &&
     (!mWinApp->DoingTasks() || justNavAcq);
   m_butZeroViewShift.EnableWindow(!STEMmode && enableIfNavAcq && !camBusy &&
     (mViewShiftX[0] != 0. || mViewShiftY[0] != 0.));
@@ -1538,17 +1535,17 @@ void CLowDoseDlg::Update(BOOL stageReady)
   m_statLDArea.ShowWindow(mTrulyLowDose ? SW_SHOW : SW_HIDE);
   m_statElecDose.ShowWindow(mTrulyLowDose ? SW_SHOW : SW_HIDE);
   m_statBeamShift.ShowWindow(mTrulyLowDose ? SW_SHOW : SW_HIDE);
-   
+
   // Disable low dose, if tasks or TS; montaging compatibility no longer checked here
   // Disable continuous update, tying focus/trial and shifting center if tasks
   bEnable = !mWinApp->DoingTasks();
   enableIfNavAcq = (bEnable || justNavAcq);
   m_butLowDoseMode.EnableWindow(bEnable && !mWinApp->DoingComplexTasks() &&
-    !mScope->GetJeol1230() && !mWinApp->mAutocenDlg && !stageBusy && 
+    !mScope->GetJeol1230() && !mWinApp->mAutocenDlg && !stageBusy &&
     (!mWinApp->GetSTEMMode() || !mWinApp->DoSwitchSTEMwithScreen()));
   m_butContinuousUpdate.EnableWindow(enableIfNavAcq);
   m_butNormalizeBeam.EnableWindow(!STEMmode && enableIfNavAcq);
-  m_butBalanceShifts.EnableWindow(!STEMmode && bEnable && mTrulyLowDose && defined && 
+  m_butBalanceShifts.EnableWindow(!STEMmode && bEnable && mTrulyLowDose && defined &&
     !usePiezo);
   m_butTieFocusTrial.EnableWindow(bEnable && !usePiezo);
 
@@ -1586,7 +1583,7 @@ void CLowDoseDlg::ManageMagSpot(int inSetArea, BOOL screenDown)
   float beamX, beamY;
   ScaleMat IStoBS;
   LowDoseParams *ldArea = &mLDParams[inSetArea];
-  ControlSet *conSet = mWinApp->GetConSets() + 
+  ControlSet *conSet = mWinApp->GetConSets() +
     (inSetArea == SEARCH_AREA ? SEARCH_CONSET : inSetArea);
   BOOL needUpdate = false;
   CString str;
@@ -1622,13 +1619,13 @@ void CLowDoseDlg::ManageMagSpot(int inSetArea, BOOL screenDown)
   intensity = ldArea->intensity;
   dose = 0.;
   //if (inSetArea != SEARCH_AREA)
-    dose = mWinApp->mBeamAssessor->GetElectronDose(spotSize, intensity, 
-      mWinApp->mCamera->SpecimenBeamExposure(mWinApp->GetCurrentCamera(), conSet), 
-      ldArea->probeMode, 
+    dose = mWinApp->mBeamAssessor->GetElectronDose(spotSize, intensity,
+      mWinApp->mCamera->SpecimenBeamExposure(mWinApp->GetCurrentCamera(), conSet),
+      ldArea->probeMode,
       mWinApp->mCamera->HasDoseModulator() ? ldArea->EDMPercent : 100.f);
 
   // Compute beam shift in specimen units if it is calibrated
-  IStoBS = mShiftManager->GetBeamShiftCal(B3DMAX(1, ldArea->magIndex), 
+  IStoBS = mShiftManager->GetBeamShiftCal(B3DMAX(1, ldArea->magIndex),
     B3DNINT(ldArea->beamAlpha), B3DCHOICE(ldArea->probeMode < 0, 1, ldArea->probeMode));
   if (mWinApp->GetSTEMMode()) {
     if (m_strBeamShift != "") {
@@ -1637,7 +1634,7 @@ void CLowDoseDlg::ManageMagSpot(int inSetArea, BOOL screenDown)
     }
   } else {
     if (IStoBS.xpx && ldArea->magIndex) {
-      if (mShiftManager->BeamShiftToSpecimenShift(IStoBS, ldArea->magIndex, 
+      if (mShiftManager->BeamShiftToSpecimenShift(IStoBS, ldArea->magIndex,
         ldArea->beamDelX, ldArea->beamDelY, beamX, beamY)) {
         if (inSetArea != mLastSetArea || beamX != mLastBeamX || beamY != mLastBeamY) {
           m_strBeamShift.Format("%.2f, %.2f", beamX, beamY);
@@ -1656,11 +1653,11 @@ void CLowDoseDlg::ManageMagSpot(int inSetArea, BOOL screenDown)
     ManageDefines(inSetArea);
 
   if (mag != mLastMag || spotSize != mLastSpot || dose != mLastDose ||
-    intensity != mLastIntensity || inSetArea != mLastSetArea || 
+    intensity != mLastIntensity || inSetArea != mLastSetArea ||
     ldArea->probeMode != mLastProbe || ldArea->beamAlpha != mLastAlpha) {
     m_strLDArea = (inSetArea < 4 ? mModeNames[inSetArea] : mSearchName) + ":";
     if (!mag && ldArea->camLenIndex)
-      m_strMagSpot.Format("DIFF   Sp %d   %s %.2f%s", spotSize, mScope->GetC2Name(), 
+      m_strMagSpot.Format("DIFF   Sp %d   %s %.2f%s", spotSize, mScope->GetC2Name(),
         mScope->GetC2Percent(spotSize, intensity, ldArea->probeMode), (LPCTSTR)C2units);
     else {
       for (int silly = 0; silly < 2; silly++) {
@@ -1671,8 +1668,8 @@ void CLowDoseDlg::ManageMagSpot(int inSetArea, BOOL screenDown)
         else
           str.Format("%dx", mag);
         m_strMagSpot.Format("%s   %s %d   %s %.2f%s", (LPCTSTR)str,
-          ldArea->probeMode == 0 && !mWinApp->GetSTEMMode() ? "nP" : "Sp", spotSize, 
-          mScope->GetC2Name(), mScope->GetC2Percent(spotSize, intensity, 
+          ldArea->probeMode == 0 && !mWinApp->GetSTEMMode() ? "nP" : "Sp", spotSize,
+          mScope->GetC2Name(), mScope->GetC2Percent(spotSize, intensity,
             ldArea->probeMode),
           (LPCTSTR)C2units);
 
@@ -1730,7 +1727,7 @@ void CLowDoseDlg::ManageDefines(int area)
 }
 
 // Regular update of scope parameters when in low dose mode
-void CLowDoseDlg::ScopeUpdate(int magIndex, int spotSize, double intensity, 
+void CLowDoseDlg::ScopeUpdate(int magIndex, int spotSize, double intensity,
                 double ISX, double ISY, BOOL screenDown, int inSetArea, int camLenIndex,
                 double focus, float alpha, int probeMode, BOOL stageReady)
 {
@@ -1751,7 +1748,7 @@ void CLowDoseDlg::ScopeUpdate(int magIndex, int spotSize, double intensity,
   // If the area has changed, update the enables
   if (mLastSetArea != inSetArea)
     Update(stageReady ? 1 : 0);
-  
+
   // If continuous update and no tasks, update the text if anything has changed, and
   // modify the current set mode unconditionally
   // Disable changes in spectroscopy mode
@@ -1789,10 +1786,10 @@ void CLowDoseDlg::ScopeUpdate(int magIndex, int spotSize, double intensity,
 
     if (inSetArea == RECORD_CONSET && mWinApp->mNavigator &&
       ((mWinApp->mNavigator->m_bShowAcquireArea &&
-      (mWinApp->mNavHelper->GetEnableMultiShot() & 1)) || 
+      (mWinApp->mNavHelper->GetEnableMultiShot() & 1)) ||
       mWinApp->mNavHelper->mMultiShotDlg) &&
       fabs(ldArea->intensity - intensity) > 1.e-6 && mScope->GetUseIllumAreaForC2() &&
-      ((mWinApp->mMainView->GetActiveImBuf())->mHasUserPt || 
+      ((mWinApp->mMainView->GetActiveImBuf())->mHasUserPt ||
       (mWinApp->mMainView->GetActiveImBuf())->mHasUserLine)) {
         msParams = mWinApp->mNavHelper->GetMultiShotParams();
         ldArea->intensity = intensity;
@@ -1825,13 +1822,13 @@ void CLowDoseDlg::ScopeUpdate(int magIndex, int spotSize, double intensity,
   // we have not been instructed to ignore the next shift change, process change
   if (m_iDefineArea) {
     if ((ISX != mLastISX || ISY != mLastISY) && !mIgnoreIS && screenDown &&
-      !mScope->GetClippingIS() && !mWinApp->GetSTEMMode() && 
+      !mScope->GetClippingIS() && !mWinApp->GetSTEMMode() &&
       !mScope->GetUsePiezoForLDaxis()) {
       ldArea = &mLDParams[m_iDefineArea];
       SEMTrace('W', "ScopeUpdate setting axis, IS change %.4f, %.4f to %.4f, %.4f, "
-        "ignore %d  screen %d", mLastISX, mLastISY, ISX, ISY, mIgnoreIS ? 1: 0, 
+        "ignore %d  screen %d", mLastISX, mLastISY, ISX, ISY, mIgnoreIS ? 1: 0,
         screenDown ? 1: 0);
-    
+
       // Convert the base image shift to the current mag
       // Get the implied shifted IS, convert to specimen and back to snap to axis
       TransferBaseIS(magIndex, baseTransX, baseTransY);
@@ -1869,7 +1866,7 @@ void CLowDoseDlg::ScopeUpdate(int magIndex, int spotSize, double intensity,
         FixUserPoint(imBuf, shiftedA);
         ManageAxisPosition();
       }
-    
+
     } else {
       CheckSeparationChange(magIndex);
     }
@@ -1902,14 +1899,14 @@ void CLowDoseDlg::BlankingUpdate(BOOL blanked)
 }
 
 // Process a change in alignment shift of image in buffer A
-BOOL CLowDoseDlg::ImageAlignmentChange(float &newX, float &newY, 
+BOOL CLowDoseDlg::ImageAlignmentChange(float &newX, float &newY,
                      float oldX, float oldY, BOOL mouseShifting)
 {
   ScaleMat bInv;
   float shiftX, shiftY;
   double delISX, delISY;
   LowDoseParams *ldArea = &mLDParams[m_iDefineArea];
-  
+
   if (!mTrulyLowDose || !m_iDefineArea || !UsefulImageInA())
     return false;
   bInv = mShiftManager->CameraToIS(mImBufs->mMagInd);
@@ -1917,7 +1914,7 @@ BOOL CLowDoseDlg::ImageAlignmentChange(float &newX, float &newY,
     return false;
   shiftX = newX - oldX;
   shiftY = newY - oldY;
-  
+
   // If this is image from define area, constrain shift to axis and revise the
   // alignment values
   if (UsefulImageInA() > 0) {
@@ -2068,7 +2065,7 @@ void CLowDoseDlg::OnOK()
 }
 
 // The user has entered a value for position in the edit box
-void CLowDoseDlg::OnKillfocusEditposition() 
+void CLowDoseDlg::OnKillfocusEditposition()
 {
   double newAxis, specX, maxRange;
   int shiftedA;
@@ -2087,10 +2084,10 @@ void CLowDoseDlg::OnKillfocusEditposition()
     B3DCLAMP(specX, -maxRange, maxRange);
   }
   newAxis = specX + mLDParams[3].axisPosition;
-  
+
   // If define area is in buffer A, shift it by the change in mode shift
   shiftedA = (UsefulImageInA() > 0 && imBuf == mImBufs) ? 1 : 0;
-  if (shiftedA) 
+  if (shiftedA)
     ShiftImageInA(newAxis - ldArea->axisPosition);
 
   // Set the axis position and image shift
@@ -2116,7 +2113,7 @@ void CLowDoseDlg::ApplyNewISifDefineArea(void)
   int curArea = mScope->GetLowDoseArea();
   if (mScope->GetUsePiezoForLDaxis()) {
     GoToPiezoPosForLDarea(curArea);
-  } else if (curArea == m_iDefineArea || ((m_bTieFocusTrial || mTieFocusTrialPos) && 
+  } else if (curArea == m_iDefineArea || ((m_bTieFocusTrial || mTieFocusTrialPos) &&
     curArea == 3 - m_iDefineArea)) {
       TransferBaseIS(ldArea->magIndex, delISX, delISY);
       mScope->SetImageShift(ldArea->ISX + delISX, ldArea->ISY + delISY);
@@ -2168,7 +2165,7 @@ void CLowDoseDlg::FixUserPoint(EMimageBuffer *imBuf, int needDraw)
         aMat = mShiftManager->MatScaleRotate(aMat, scale, rotation);
       }
       conSet = mWinApp->mCamera->ConSetToLDArea(imBuf->mConSetUsed);
-      mWinApp->mNavHelper->FindFocusPosForCurrentItem(state, !navArea, 
+      mWinApp->mNavHelper->FindFocusPosForCurrentItem(state, !navArea,
         imBuf->mRegistration);
       delAxis = state.focusAxisPos;
       delX = delAxis;
@@ -2184,9 +2181,9 @@ void CLowDoseDlg::FixUserPoint(EMimageBuffer *imBuf, int needDraw)
     }
     imBuf->mUserPtX = offsetX + xcen - shiftX;
     imBuf->mUserPtY = -offsetY + ycen - shiftY;
-    if (!needDraw) 
+    if (!needDraw)
       needDraw = 1;
-  } 
+  }
 
   // Draw if set a point or if asked to by caller, but not if asked not to (-1)
   if (needDraw > 0) {
@@ -2202,10 +2199,10 @@ void CLowDoseDlg::FixUserPoint(EMimageBuffer *imBuf, int needDraw)
 int CLowDoseDlg::UsefulImageInA()
 {
   int conSet = mWinApp->mCamera->ConSetToLDArea(mImBufs->mConSetUsed);
-  if (!mImBufs->mBinning || !mImBufs->mCaptured || !mImBufs->mMagInd || 
+  if (!mImBufs->mBinning || !mImBufs->mCaptured || !mImBufs->mMagInd ||
     conSet == RECORD_CONSET)
     return 0;
-  if (m_iDefineArea && (conSet == m_iDefineArea || 
+  if (m_iDefineArea && (conSet == m_iDefineArea ||
     ((m_bTieFocusTrial || mTieFocusTrialPos) && conSet == 3 - m_iDefineArea)))
     return 1;
   return -1;
@@ -2230,7 +2227,7 @@ bool CLowDoseDlg::ViewImageOKForEditingFocus(EMimageBuffer * imBuf)
 
 // Given a shift on camera, get the X coordinate on specimen and convert that
 // back to a shift on the camera along the tilt axis or interarea axis
-void CLowDoseDlg::SnapCameraShiftToAxis(EMimageBuffer *imBuf, float &shiftX, 
+void CLowDoseDlg::SnapCameraShiftToAxis(EMimageBuffer *imBuf, float &shiftX,
   float &shiftY, bool viewImage, int camIndex, BOOL &rotateAxis, int &axisAngle)
 {
   ScaleMat aMat, aInv;
@@ -2245,7 +2242,7 @@ void CLowDoseDlg::SnapCameraShiftToAxis(EMimageBuffer *imBuf, float &shiftX,
     aMat = mShiftManager->MatScaleRotate(aMat, scale, rotation);
   }
   aInv = mShiftManager->MatInv(aMat);
-  
+
   // We can ignore the binning.  But we do need to invert Y going in and out
   specX = aInv.xpx * shiftX - aInv.xpy * shiftY;
   specY = aInv.ypx * shiftX - aInv.ypy * shiftY;
@@ -2294,20 +2291,20 @@ void CLowDoseDlg::ManageAxisPosition()
   m_strPosition.Format("%.2f", specX);
 
   if (!m_iDefineArea && !m_bTieFocusTrial) {
-    if (fabs(mLDParams[3 - area].axisPosition - mLDParams[3].axisPosition - specX) > 
+    if (fabs(mLDParams[3 - area].axisPosition - mLDParams[3].axisPosition - specX) >
       0.005)
       m_strPosition = "";
     m_strOverlap = "";
     UpdateData(false);
     return;
   }
- 
+
   // Update the separation and save the last size values
   GetAreaSizes(recSize, defSize, angle);
   if (!recSize || !mLDParams[3].magIndex || !mLDParams[area].magIndex)
     return;
   recUm = (float)(recSize * mShiftManager->GetPixelSize(curCam, mLDParams[3].magIndex));
-  defUm = (float)(defSize * mShiftManager->GetPixelSize(curCam, 
+  defUm = (float)(defSize * mShiftManager->GetPixelSize(curCam,
     mLDParams[area].magIndex));
   rh = recUm / 2.f;
   cenX = (float)(fabs(specX) * cos(DTOR * angle));
@@ -2315,7 +2312,7 @@ void CLowDoseDlg::ManageAxisPosition()
   if (cenX < rh && cenY < rh)
     cenX = cenY = rh;
   sep1 = mWinApp->mNavHelper->PointSegmentDistance(cenX, cenY, rh, -rh, rh, rh);
-  sep2 = mWinApp->mNavHelper->PointSegmentDistance(cenX, cenY, -rh, rh, rh, rh); 
+  sep2 = mWinApp->mNavHelper->PointSegmentDistance(cenX, cenY, -rh, rh, rh, rh);
   double maxSep = B3DMIN(sep1, sep2) - sqrt(2.) * defUm / 2.;
   m_strOverlap.Format("Maximum area separation:  %.2f um", maxSep);
   UpdateData(false);
@@ -2335,7 +2332,7 @@ void CLowDoseDlg::GetAreaSizes(int &recSize, int &defSize, double &angle)
     mLDParams[3].magIndex);
   if (m_bRotateAxis)
     angle += m_iAxisAngle;
-  
+
   while (angle < -90.)
     angle += 180.;
   while (angle > 90.)
@@ -2374,7 +2371,7 @@ void CLowDoseDlg::CheckSeparationChange(int magIndex)
   if (recSize != mLastRecordSize || defSize != mLastDefineSize ||
     magIndex != mLastMagIndex) {
     SEMTrace('W', "ScopeUpdate setting axis, rec %d to %d, def %d to %d, mag %d to"
-      " %d", mLastRecordSize, recSize, mLastDefineSize, defSize, mLastMagIndex, 
+      " %d", mLastRecordSize, recSize, mLastDefineSize, defSize, mLastMagIndex,
       magIndex);
     ManageAxisPosition();
   }
@@ -2441,7 +2438,7 @@ void CLowDoseDlg::SyncFilterSettings(int inArea, FilterParams *filtParam)
 // Compute corner points for drawing an area on a view image, if an area is
 // being defined.  type = 0 for the area, 1 for Record.  Binning and sizeX, sizeY
 // describe the View image.  Four corner points in image coordinates are returned
-// in corner[XY], and for the define area, 
+// in corner[XY], and for the define area,
 int CLowDoseDlg::DrawAreaOnView(int type, EMimageBuffer *imBuf, StateParams &state,
                                 float * cornerX, float * cornerY,
                                 float & cenX, float & cenY, float &radius)
@@ -2481,18 +2478,18 @@ int CLowDoseDlg::DrawAreaOnView(int type, EMimageBuffer *imBuf, StateParams &sta
     mWinApp->mNavHelper->ModifySubareaForOffset(curCam, state.focusXoffset,
       state.focusYoffset, left, top, right, bottom);
 
-  AreaAcqCoordToView(boxArea, binning, sizeX, sizeY, aMat, vMat, 
+  AreaAcqCoordToView(boxArea, binning, sizeX, sizeY, aMat, vMat,
     left, top, state, cornerX[0], cornerY[0]);
-  AreaAcqCoordToView(boxArea, binning, sizeX, sizeY, aMat, vMat, 
+  AreaAcqCoordToView(boxArea, binning, sizeX, sizeY, aMat, vMat,
     right, top, state, cornerX[1], cornerY[1]);
-  AreaAcqCoordToView(boxArea, binning, sizeX, sizeY, aMat, vMat, 
+  AreaAcqCoordToView(boxArea, binning, sizeX, sizeY, aMat, vMat,
     right, bottom, state, cornerX[2], cornerY[2]);
-  AreaAcqCoordToView(boxArea, binning, sizeX, sizeY, aMat, vMat, 
+  AreaAcqCoordToView(boxArea, binning, sizeX, sizeY, aMat, vMat,
     left, bottom, state, cornerX[3], cornerY[3]);
 
   if (type > 0 && type < 2)
     return boxArea;
-  
+
   // Get squared diameter of area for radius
   cenArea = boxArea;
   delX = right - left;
@@ -2501,7 +2498,7 @@ int CLowDoseDlg::DrawAreaOnView(int type, EMimageBuffer *imBuf, StateParams &sta
   camXcen = (left + right) / 2;
   camYcen = (bottom + top) / 2;
 
-  // If focus/trial tied, find which one has bigger radius, set the center from the 
+  // If focus/trial tied, find which one has bigger radius, set the center from the
   // bigger one too
   if (type < 2 && (m_bTieFocusTrial || mTieFocusTrialPos)) {
     delX = conSets[3 - boxArea].right - conSets[3 - boxArea].left;
@@ -2524,9 +2521,9 @@ int CLowDoseDlg::DrawAreaOnView(int type, EMimageBuffer *imBuf, StateParams &sta
   pixel = mShiftManager->GetPixelSize(imBuf);
   if (!pixel)
     pixel = binning * mShiftManager->GetPixelSize(curCam, mLDParams[0].magIndex);
-  radius = (float)(sqrt(0.25 * diamSq) * 
+  radius = (float)(sqrt(0.25 * diamSq) *
     mShiftManager->GetPixelSize(curCam, mLDParams[cenArea].magIndex) / pixel);
-  AreaAcqCoordToView(boxArea, binning, sizeX, sizeY, aMat, vMat, 
+  AreaAcqCoordToView(boxArea, binning, sizeX, sizeY, aMat, vMat,
     camXcen, camYcen, state, cenX, cenY);
 
   return boxArea;
@@ -2535,7 +2532,7 @@ int CLowDoseDlg::DrawAreaOnView(int type, EMimageBuffer *imBuf, StateParams &sta
 // Convert from camera acquisition coordinates (inverted Y) in the given inArea to
 // image coordinates in the View image with given sizeX, sizeY and binning
 void CLowDoseDlg::AreaAcqCoordToView(int inArea, int binning, int sizeX, int sizeY,
-  ScaleMat aMat, ScaleMat vMat, int acqX, int acqY, StateParams &state, float &imX, 
+  ScaleMat aMat, ScaleMat vMat, int acqX, int acqY, StateParams &state, float &imX,
   float &imY)
 {
   CameraParameters *camP = mWinApp->GetCamParams() + state.camIndex;
@@ -2579,7 +2576,7 @@ void CLowDoseDlg::CheckAndActivatePiezoShift(void)
   float minUse, maxUse, backoff, range, backoffFrac = 0.02f;
 
   // Look up a scaling and turn off if there is not one
-  if (!mWinApp->mPiezoControl->LookupScaling(mAxisPiezoPlugNum, 
+  if (!mWinApp->mPiezoControl->LookupScaling(mAxisPiezoPlugNum,
     mAxisPiezoNum, true, scaling)) {
       mess.Format("A PiezoScaling property must be entered for piezo # %d%s\n"
         "in order to use it for on-axis shift in Low Dose\n\n"
@@ -2654,7 +2651,7 @@ bool CLowDoseDlg::GoToPiezoPosForLDarea(int area)
     offset = mLDParams[2].axisPosition;
 
   // Select in case have to get the position
-  if (mWinApp->mPiezoControl->SelectPiezo(mAxisPiezoPlugNum, mAxisPiezoNum) || 
+  if (mWinApp->mPiezoControl->SelectPiezo(mAxisPiezoPlugNum, mAxisPiezoNum) ||
     mWinApp->mPiezoControl->GetZPosition(currentZ))
     return true;
 
@@ -2734,7 +2731,7 @@ void CLowDoseDlg::SetTieFocusTrialPos(BOOL inVal)
 void CLowDoseDlg::SyncPosOfFocusAndTrial(int fromArea)
 {
   int toArea = B3DCHOICE(fromArea == FOCUS_CONSET, TRIAL_CONSET, FOCUS_CONSET);
-  if ((fromArea == FOCUS_CONSET || fromArea == TRIAL_CONSET) && 
+  if ((fromArea == FOCUS_CONSET || fromArea == TRIAL_CONSET) &&
     (mTieFocusTrialPos || m_bTieFocusTrial)) {
     if (mTrulyLowDose)
       mLDParams[fromArea].axisPosition = ConvertOneIStoAxis(mLDParams[fromArea].magIndex,

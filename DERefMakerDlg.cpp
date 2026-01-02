@@ -1,7 +1,7 @@
 //////////////////////////////////////////////////////////////////////
 // DERefMakerDlg.cpp:      Acquires dark and gain references to be used in the DE server
 //
-// Copyright (C) 2017 by  the Regents of the University of
+// Copyright (C) 2017-2026 by  the Regents of the University of
 // Colorado.  See Copyright.txt for full notice of copyright and limitations.
 //
 // Author: David Mastronarde
@@ -13,6 +13,10 @@
 #include "DERefMakerDlg.h"
 #include "CameraController.h"
 #include "DirectElectron\DirectElectronCamera.h"
+
+#if defined(_DEBUG) && defined(_CRTDBG_MAP_ALLOC)
+#define new DEBUG_NEW
+#endif
 
 #define MAX_REPEATS 1000
 
@@ -84,7 +88,7 @@ BOOL CDERefMakerDlg::OnInitDialog()
   int version = mWinApp->mCamera->GetDEServerVersion();
   ShowDlgItem(IDC_USE_HARDWARE_BIN, (mCamParams->CamFlags & DE_HAS_HARDWARE_BIN) != 0);
   ShowDlgItem(IDC_USE_REC_HARDWARE_ROI, hasHardwareROI);
-  mEnableROI = hasHardwareROI && (mRecSet->left > 0 || mRecSet->right < mCamParams->sizeX 
+  mEnableROI = hasHardwareROI && (mRecSet->left > 0 || mRecSet->right < mCamParams->sizeX
     || mRecSet->top > 0 || mRecSet->bottom < mCamParams->sizeY);
   m_butUseRecHardwareROI.EnableWindow(mEnableROI);
   if (!mEnableROI && hasHardwareROI)
@@ -159,7 +163,7 @@ void CDERefMakerDlg::LoadListItemsToDialog(void)
 }
 
 // When starting, only the exposure and repeats need to be moved into the arrays
-void CDERefMakerDlg::OnOK() 
+void CDERefMakerDlg::OnOK()
 {
   UpdateData(true);
   mExposureList[mCurListInd] = m_fExposureTime;
@@ -178,7 +182,7 @@ void CDERefMakerDlg::OnButSaveClose()
 }
 
 // Not needed...
-void CDERefMakerDlg::OnCancel() 
+void CDERefMakerDlg::OnCancel()
 {
   CBaseDlg::OnCancel();
 }
@@ -227,7 +231,7 @@ void CDERefMakerDlg::OnHardwareChange()
   if (!m_bUseRecHardwareROI) {
     m_strRecArea = "";
   } else {
-    m_strRecArea.Format("(%d x %d%s)", (mRecSet->right - mRecSet->left) / bin, 
+    m_strRecArea.Format("(%d x %d%s)", (mRecSet->right - mRecSet->left) / bin,
       (mRecSet->bottom - mRecSet->top) / bin, m_bUseHardwareBin ? " binned pixels" : "");
   }
   UpdateData(false);

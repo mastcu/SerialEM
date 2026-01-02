@@ -13,7 +13,7 @@
 // you continue to acknowledge me as the original author in this source code,
 // or any code derived from it.
 //
-// If you use this code, or use it as a base for your own code, it would be 
+// If you use this code, or use it as a base for your own code, it would be
 // nice to hear from you simply so I know it's not been a waste of time!
 //
 // Copyright (c) 2001-2002 Paul S. Vickery
@@ -26,7 +26,7 @@
 // Produced new version with changes as below:
 // * removed CBS_SORT on creation if specified
 // * added option to allow the sort style to be set if required
-// * fixed SetMaxHistoryItems, so it removes old entries from the list to 
+// * fixed SetMaxHistoryItems, so it removes old entries from the list to
 //   ensure that there are no more than the maximum. Also made SaveHistory
 //   remove redundant profile entries above the maximum.
 // * use WriteProfileString to remove profile entries rather than CRegKey.
@@ -34,12 +34,12 @@
 // Version 1 - 12-Apr-2001
 // =======================
 // Initial version
-// 
+//
 ////////////////////////////////////////////////////////////////////////////
 // PLEASE LEAVE THIS HEADER INTACT
 ////////////////////////////////////////////////////////////////////////////
 //
-// Modified 20-Jun-2003 by Hans Dietrich - see "+++hd" lines for details.  
+// Modified 20-Jun-2003 by Hans Dietrich - see "+++hd" lines for details.
 // Changed name to XHistoryCombo to avoid confusion with original.
 //
 ////////////////////////////////////////////////////////////////////////////
@@ -48,10 +48,8 @@
 #include "XHistoryCombo.h"
 #include "io.h"		// needed for _taccess		//+++hd
 
-#ifdef _DEBUG
+#if defined(_DEBUG) && defined(_CRTDBG_MAP_ALLOC)
 #define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
 #endif
 
 #ifndef __noop
@@ -85,14 +83,14 @@ CHistoryCombo::CHistoryCombo(BOOL bAllowSortStyle/*=FALSE*/)
 	m_nDropSize               = MAX_DROPDOWN_ITEMS;			//+++hd
 }
 
-BOOL CHistoryCombo::PreCreateWindow(CREATESTRUCT& cs) 
+BOOL CHistoryCombo::PreCreateWindow(CREATESTRUCT& cs)
 {
 	if (! m_bAllowSortStyle)  // turn off CBS_SORT style
 		cs.style &= ~CBS_SORT;
 	return CComboBox::PreCreateWindow(cs);
 }
 
-void CHistoryCombo::PreSubclassWindow() 
+void CHistoryCombo::PreSubclassWindow()
 {
 	// warn if creating with CBS_SORT style
 	// (unfortunately we can't turn it off)
@@ -172,13 +170,13 @@ CString CHistoryCombo::LoadHistory(CRecentFileList* pListMRU, BOOL bSelectMostRe
   return sText;
 }
 
-// loads the history from the specified profile area, and returns the 
+// loads the history from the specified profile area, and returns the
 // text selected
 // the profile area is kept so that in doesn't need to specified again
 // when saving the history
-CString CHistoryCombo::LoadHistory(LPCTSTR lpszSection, 
-								   LPCTSTR lpszKeyPrefix,    
-								   BOOL bSaveRestoreLastCurrent/*=TRUE*/,    
+CString CHistoryCombo::LoadHistory(LPCTSTR lpszSection,
+								   LPCTSTR lpszKeyPrefix,
+								   BOOL bSaveRestoreLastCurrent/*=TRUE*/,
 								   LPCTSTR lpszKeyCurItem/*=NULL*/)
 {
 	if (lpszSection == NULL || lpszKeyPrefix == NULL || *lpszSection == _T('\0'))
@@ -355,8 +353,8 @@ void CHistoryCombo::StoreValue(BOOL bIgnoreIfEmpty/*=TRUE*/)
   AddString(sValue);
 }
 
-// +++hd:  set size of dropdown list 
-void CHistoryCombo::OnDropdown() 
+// +++hd:  set size of dropdown list
+void CHistoryCombo::OnDropdown()
 {
 	CRect rect;
 	GetWindowRect(&rect);

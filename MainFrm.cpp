@@ -1,8 +1,8 @@
-// MainFrm.cpp:           Standard MFC MDI component, manages the main program 
+// MainFrm.cpp:           Standard MFC MDI component, manages the main program
 //                          window and has code for program shutdown, control
 //                          panel management and status line entries
 //
-// Copyright (C) 2003-2025 by the Regents of the University of
+// Copyright (C) 2003-2026 by the Regents of the University of
 // Colorado.  See Copyright.txt for full notice of copyright and limitations.
 //
 // Author: David Mastronarde
@@ -33,10 +33,8 @@
 
 #include ".\MainFrm.h"
 
-#ifdef _DEBUG
+#if defined(_DEBUG) && defined(_CRTDBG_MAP_ALLOC)
 #define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
 #endif
 
 #define DIALOG_TOP_OFFSET 46
@@ -98,7 +96,7 @@ int CMainFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
   mWinApp = (CSerialEMApp *)AfxGetApp();
   if (CMDIFrameWnd::OnCreate(lpCreateStruct) == -1)
     return -1;
-  
+
   // Can't delete this without handling more things...
   if (!m_wndToolBar.CreateEx(this, TBSTYLE_FLAT, WS_CHILD | WS_VISIBLE | CBRS_TOP
     | CBRS_GRIPPER | CBRS_TOOLTIPS | CBRS_FLYBY | CBRS_SIZE_DYNAMIC) ||
@@ -156,11 +154,11 @@ void CMainFrame::Dump(CDumpContext& dc) const
 /////////////////////////////////////////////////////////////////////////////
 // CMainFrame message handlers
 
-void CMainFrame::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags) 
+void CMainFrame::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
 {
   char cChar = char(nChar);
   SEMTrace('1', "MainFrame OnKeyDown received Code %u, char %c", nChar, cChar);
-  
+
   CMDIFrameWnd::OnKeyDown(nChar, nRepCnt, nFlags);
 }
 
@@ -179,9 +177,9 @@ void CMainFrame::DialogChangedState(CToolDlg *inDialog, int inState)
 }
 
 
-// Finish initializing dialogs and set up the dialog table by finding out 
+// Finish initializing dialogs and set up the dialog table by finding out
 // the initial full size of each one
-void CMainFrame::InitializeDialogTable(DialogTable *inTable, int *initialState, 
+void CMainFrame::InitializeDialogTable(DialogTable *inTable, int *initialState,
                      int numDialog, COLORREF *borderColors, int *colorIndex,
                      RECT *dlgPlacements)
 {
@@ -194,7 +192,7 @@ void CMainFrame::InitializeDialogTable(DialogTable *inTable, int *initialState,
 }
 
 // Do operations to finish initializing one dialog and its table entry
-void CMainFrame::InitializeOneDialog(DialogTable &inTable, int colorIndex, 
+void CMainFrame::InitializeOneDialog(DialogTable &inTable, int colorIndex,
   COLORREF *borderColors)
 {
   CRect rect;
@@ -262,7 +260,7 @@ void CMainFrame::InsertOneDialog(CToolDlg *dlg, int colorInd, COLORREF *borderCo
 }
 
 // Set up initial dialog positions
-void CMainFrame::InitializeDialogPositions(int *initialState, RECT *dlgPlacements, 
+void CMainFrame::InitializeDialogPositions(int *initialState, RECT *dlgPlacements,
   int *colorIndex)
 {
   int useInd, state;
@@ -283,13 +281,13 @@ void CMainFrame::InitializeDialogPositions(int *initialState, RECT *dlgPlacement
     state = useInd < 0 ? 0 : initialState[useInd];
     InitializeOnePosition(i, useInd, state, &dlgPlacements[useInd]);
   }
-  
+
   //  This will call back into SetDialogPositions
   mWinApp->ManageDialogOptionsHiding();
 }
 
 // Set one position, on startup or later, including setting state and floated position
-void CMainFrame::InitializeOnePosition(int tableInd, int absInd, int state, 
+void CMainFrame::InitializeOnePosition(int tableInd, int absInd, int state,
   RECT *dlgPlacement)
 {
   CToolDlg *dlg;
@@ -320,7 +318,7 @@ void CMainFrame::SetDialogPositions()
   GetWindowRect(&rect);
   xoff = rect.left + mLeftDialogOffset;
   yoff = rect.top + (mDialogOffset ? mDialogOffset : DIALOG_TOP_OFFSET);
-  
+
   // If the toolbar is on, add its height
   if (m_wndToolBar.IsWindowVisible()) {
     m_wndToolBar.GetWindowRect(&rect);
@@ -364,7 +362,7 @@ void CMainFrame::SetDialogPositions()
       mDialogTable[i].pDialog->BringWindowToTop();
   }
 
-  mWinApp->RestoreViewFocus();    
+  mWinApp->RestoreViewFocus();
 }
 
 // The first time the main window appears, set up the dialog offset
@@ -378,17 +376,17 @@ void CMainFrame::SetDialogOffset(CSerialEMView *mainView)
 //  SetDialogPositions();
 }
 
-void CMainFrame::OnMove(int x, int y) 
+void CMainFrame::OnMove(int x, int y)
 {
   CMDIFrameWnd::OnMove(x, y);
-  
-  SetDialogPositions(); 
+
+  SetDialogPositions();
 }
 
 // The old View Menu had Toolbar generating ID_VIEW_TOOLBAR
 // and Status Bar generating ID_VIEW_STATUS_BAR
 
-//void CMainFrame::OnViewToolbar() 
+//void CMainFrame::OnViewToolbar()
 //{
 //  CMDIFrameWnd::OnViewToolbar();
 /*  if (m_wndToolBar.IsWindowVisible())
@@ -453,7 +451,7 @@ void CMainFrame::DoClose(bool afterScript)
     // Auto save files, may save some inquiries
     mWinApp->mDocWnd->AutoSaveFiles();
 
-    if (mWinApp->mAutocenDlg && !wasLD && mWinApp->mAutocenDlg->m_bSetState && 
+    if (mWinApp->mAutocenDlg && !wasLD && mWinApp->mAutocenDlg->m_bSetState &&
       !disconnected)
       mWinApp->mAutocenDlg->RestoreScopeState();
 
@@ -527,7 +525,7 @@ void CMainFrame::DoClose(bool afterScript)
       mWinApp->mFalconHelper->CheckFalconConfig(-3, magInd, "Failed to restore initial "
       "state of Intermediate frame saving; check the FEI dialog");
     else if (!mWinApp->mCamera->IsCameraFaux())
-      AfxMessageBox("Remember to turn off Intermediate frame saving in the FEI dialog", 
+      AfxMessageBox("Remember to turn off Intermediate frame saving in the FEI dialog",
         MB_EXCLAME);
   }
 
@@ -538,7 +536,7 @@ void CMainFrame::DoClose(bool afterScript)
     mWinApp->mScope->SetTiltAxisOffset(0.);
     if (HitachiScope) {
       magInd = mWinApp->mScope->GetMagIndex();
-      skipReset = magInd < mWinApp->mScope->GetLowestMModeMagInd() || 
+      skipReset = magInd < mWinApp->mScope->GetLowestMModeMagInd() ||
         magInd >= mWinApp->mScope->GetLowestSecondaryMag();
     }
     if (!mWinApp->mScope->StageBusy() && !(JEOLscope && mWinApp->mScope->GetSTEMmode())
@@ -563,7 +561,7 @@ void CMainFrame::DoClose(bool afterScript)
   // If frame width is too narrow, make it wider to avoid crash bug when
   // exiting (i.e. if menu line is wrapped)
   GetWindowPlacement(&winPlace);
-  if (winPlace.rcNormalPosition.right - winPlace.rcNormalPosition.left < 
+  if (winPlace.rcNormalPosition.right - winPlace.rcNormalPosition.left <
     MIN_WIDTH_FOR_EXIT) {
     winPlace.rcNormalPosition.left = 10;
     winPlace.rcNormalPosition.right = 10 + MIN_WIDTH_FOR_EXIT;
@@ -576,14 +574,14 @@ void CMainFrame::DoClose(bool afterScript)
   CMDIFrameWnd::OnClose();
 }
 
-void CMainFrame::OnSize(UINT nType, int cx, int cy) 
+void CMainFrame::OnSize(UINT nType, int cx, int cy)
 {
   CMDIFrameWnd::OnSize(nType, cx, cy);
   if (mClosingProgram)
     return;
   if (cx > 0 && cy > 0)
     mWinApp->DoResizeMain();
-  mWinApp->RestoreViewFocus();    
+  mWinApp->RestoreViewFocus();
 }
 
 void CMainFrame::SetStatusText(int iPane, CString strText)
@@ -618,15 +616,15 @@ void CMainFrame::InitializeStatusBar()
       FF_DONTCARE, "Microsoft Sans Serif");
   m_wndStatusBar.SetFont(&mFont);
   pDC->SelectObject(m_wndStatusBar.GetFont());
-  
+
   // Use the longest expected text
-  pDC->DrawText(_T("STOPPED TILT SERIES  "), -1, rectArea, 
+  pDC->DrawText(_T("STOPPED TILT SERIES  "), -1, rectArea,
     DT_SINGLELINE | DT_CALCRECT);
   m_wndStatusBar.SetPaneInfo(1, uID, uStyle, rectArea.Width());
-  pDC->DrawText(_T("CORRECTING TILT BACKLASH  "), -1, rectArea, 
+  pDC->DrawText(_T("CORRECTING TILT BACKLASH  "), -1, rectArea,
     DT_SINGLELINE | DT_CALCRECT);
   m_wndStatusBar.SetPaneInfo(2, uID, uStyle, rectArea.Width());
-  pDC->DrawText(_T("INSERTING CAMERA  "), -1, rectArea, 
+  pDC->DrawText(_T("INSERTING CAMERA  "), -1, rectArea,
     DT_SINGLELINE | DT_CALCRECT);
   m_wndStatusBar.SetPaneInfo(3, uID, uStyle, rectArea.Width());
   m_wndStatusBar.ReleaseDC(pDC);
@@ -705,7 +703,7 @@ BOOL CMainFrame::NewTask()
   return m_nTimer != 0;
 }
 
-void CMainFrame::OnTimer(UINT_PTR nIDEvent) 
+void CMainFrame::OnTimer(UINT_PTR nIDEvent)
 {
   // Chek the idle tasks, kill timer if there are no more
   if (!mWinApp->CheckIdleTasks()) {

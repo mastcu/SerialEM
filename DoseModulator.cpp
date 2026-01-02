@@ -1,6 +1,6 @@
 // DoseModulator.cpp:    Interface to IDES dose modulator
 //
-// Copyright (C) 2003-2024 by the Regents of the University of
+// Copyright (C) 2003-2026 by the Regents of the University of
 // Colorado.  See Copyright.txt for full notice of copyright and limitations.
 //
 // Author: David Mastronarde
@@ -12,6 +12,10 @@
 #include "CameraController.h"
 #include "ExternalTools.h"
 #include "MacroProcessor.h"
+
+#if defined(_DEBUG) && defined(_CRTDBG_MAP_ALLOC)
+#define new DEBUG_NEW
+#endif
 
 #define PCT_CHECK_SECONDS 5.
 
@@ -106,7 +110,7 @@ int CDoseModulator::GetDutyPercent(float & pct, CString & errStr)
 }
 
 // Runs a command with the given option to be appended to the url, and optional data
-// returns err > 0 for true error, error < 0 (minus the exit code of curl) if there is 
+// returns err > 0 for true error, error < 0 (minus the exit code of curl) if there is
 // valid output but curl exits with error
 int CDoseModulator::RunCommand(const char *urlOpt, const char *data, CString &errStr,
   CString &output)
@@ -162,8 +166,8 @@ float CDoseModulator::GetRecentDutyPercent()
 {
   float pct;
   CString str;
-  
-  if (mDutyPercentTime < 0 || 
+
+  if (mDutyPercentTime < 0 ||
     SEMTickInterval(mDutyPercentTime) > 1000 * PCT_CHECK_SECONDS) {
     if (!GetDutyPercent(pct, str)) {
       pct = mLastDutyPctSet;

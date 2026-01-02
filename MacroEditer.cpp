@@ -1,6 +1,6 @@
 // MacroEditer.cpp:      Macro editing window
 //
-// Copyright (C) 2003-2024 by the Regents of the University of
+// Copyright (C) 2003-2026 by the Regents of the University of
 // Colorado.  See Copyright.txt for full notice of copyright and limitations.
 //
 // Author: David Mastronarde
@@ -17,10 +17,8 @@
 #include "ParameterIO.h"
 #include "Utilities\KGetOne.h"
 
-#ifdef _DEBUG
+#if defined(_DEBUG) && defined(_CRTDBG_MAP_ALLOC)
 #define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
 #endif
 
 CFont CMacroEditer::mMonoFont;
@@ -106,15 +104,15 @@ END_MESSAGE_MAP()
 /////////////////////////////////////////////////////////////////////////////
 // CMacroEditer message handlers
 
-BOOL CMacroEditer::OnInitDialog() 
+BOOL CMacroEditer::OnInitDialog()
 {
   WINDOWPLACEMENT *place = mProcessor->GetEditerPlacement() + m_iMacroNumber;
   CBaseDlg::OnInitDialog();
-  
+
   // Get initial size of client area and edit box to determine borders for resizing
   CRect wndRect, editRect, OKRect, clientRect;
   GetClientRect(clientRect);
-  
+
   MakeMonoFont(&m_editMacro);
   if (mHasMonoFont > 0 && mProcessor->GetUseMonoFont())
     m_editMacro.SetFont(&mMonoFont);
@@ -140,7 +138,7 @@ BOOL CMacroEditer::OnInitDialog()
   m_iRunLeft = OKRect.left - wndRect.left - iXoffset;
   m_butHelp.GetWindowRect(OKRect);
   m_iHelpLeft = OKRect.left - wndRect.left - iXoffset;
-  
+
   m_butLoad.GetWindowRect(OKRect);
   m_iLoadLeft = OKRect.left - wndRect.left - iXoffset;
   m_butSave.GetWindowRect(OKRect);
@@ -155,7 +153,7 @@ BOOL CMacroEditer::OnInitDialog()
   m_iCompOffset = (OKRect.top - wndRect.top) - (wndRect.Height() - clientRect.Height())
     + iXoffset;
   m_iCompLeft = OKRect.left - wndRect.left - iXoffset;
- 
+
   mInitialized = true;
   mMyMacro = mWinApp->GetMacros() + m_iMacroNumber;
   CEdit *editBox = (CEdit *)GetDlgItem(IDC_EDITMACRO);
@@ -186,7 +184,7 @@ void CMacroEditer::MakeMonoFont(CWnd *edit)
   if (!winApp->mMacroProcessor)
     return;
   CString exePath, str,propFont = winApp->mMacroProcessor->GetMonoFontName();
-  const char *tryNames[] = {"NanumGothicCoding", "Lucida Console", "Consolas", 
+  const char *tryNames[] = {"NanumGothicCoding", "Lucida Console", "Consolas",
     "Lucida Sans Typewriter", "Courier New"};
   int ind, height, lastFont = sizeof(tryNames) / sizeof(const char *) - 1;
 
@@ -250,7 +248,7 @@ void CMacroEditer::MakeMonoFont(CWnd *edit)
   }
 }
 
-void CMacroEditer::OnSize(UINT nType, int cx, int cy) 
+void CMacroEditer::OnSize(UINT nType, int cx, int cy)
 {
   CDialog::OnSize(nType, cx, cy);
   CRect rect;
@@ -258,7 +256,7 @@ void CMacroEditer::OnSize(UINT nType, int cx, int cy)
   //int showFlag = dropIndents ? SWP_HIDEWINDOW : SWP_SHOWWINDOW;
   int showFlag = dropIndents ? SW_HIDE : SW_SHOW;
   int dropAdjust = dropIndents ? m_iSaveOffset - m_iOKoffset : 0;
-  
+
   if (!mInitialized)
     return;
 
@@ -271,10 +269,10 @@ void CMacroEditer::OnSize(UINT nType, int cx, int cy)
   if (newY < 1)
     newY = 1;
   // An offset is not a top....
-  m_editMacro.SetWindowPos(NULL, m_iEditLeft, m_iEditOffset - dropAdjust, newX, newY, 
+  m_editMacro.SetWindowPos(NULL, m_iEditLeft, m_iEditOffset - dropAdjust, newX, newY,
     SWP_NOZORDER);
   m_statCompletions.GetWindowRect(rect);
-  m_statCompletions.SetWindowPos(NULL, m_iCompLeft, m_iCompOffset - dropAdjust, newX, 
+  m_statCompletions.SetWindowPos(NULL, m_iCompLeft, m_iCompOffset - dropAdjust, newX,
     rect.Height(), SWP_NOZORDER);
   m_statCompletions.RedrawWindow();
 
@@ -286,7 +284,7 @@ void CMacroEditer::OnSize(UINT nType, int cx, int cy)
   m_butHelp.SetWindowPos(NULL, m_iHelpLeft, newY, 0, 0, SWP_NOZORDER | SWP_NOSIZE);
   newY += m_iSaveOffset - m_iOKoffset;
   m_butFindInMacro.SetWindowPos(NULL, m_iRunLeft, newY, 0, 0, SWP_NOZORDER | SWP_NOSIZE);
-  m_butToMacroLine.SetWindowPos(NULL, m_iToLineLeft, newY, 0, 0, 
+  m_butToMacroLine.SetWindowPos(NULL, m_iToLineLeft, newY, 0, 0,
     SWP_NOZORDER | SWP_NOSIZE);
   m_butSave.SetWindowPos(NULL, m_iSaveLeft, newY, 0, 0, SWP_NOZORDER | SWP_NOSIZE);
   m_butSaveAs.SetWindowPos(NULL, m_iSaveAsLeft, newY, 0, 0, SWP_NOZORDER | SWP_NOSIZE);
@@ -297,17 +295,17 @@ void CMacroEditer::OnSize(UINT nType, int cx, int cy)
 }
 
 
-void CMacroEditer::PostNcDestroy() 
+void CMacroEditer::PostNcDestroy()
 {
   mEditer[m_iMacroNumber] = NULL;
   if (!mWinApp->GetAppExiting())
     mWinApp->UpdateAllEditers();
-  delete this;  
+  delete this;
   CDialog::PostNcDestroy();
 }
 
 // For these two overrides, do not call the base class, and destroy the window
-void CMacroEditer::OnOK() 
+void CMacroEditer::OnOK()
 {
   // Copy the macro back as long as there isn't a macro being done
   // (this button should get disabled in that case)
@@ -321,7 +319,7 @@ void CMacroEditer::OnOK()
   DestroyWindow();
 }
 
-void CMacroEditer::OnCancel() 
+void CMacroEditer::OnCancel()
 {
   if (mProcessor->ScanForName(m_iMacroNumber))
     mWinApp->mCameraMacroTools.MacroNameChanged(m_iMacroNumber);
@@ -335,7 +333,7 @@ void CMacroEditer::OnCancel()
   DestroyWindow();
 }
 
-// Set pointer to NULL and close window: this is called when reading new settings and 
+// Set pointer to NULL and close window: this is called when reading new settings and
 // the old state has already been saved or abandoned
 void CMacroEditer::JustCloseWindow(void)
 {
@@ -358,7 +356,7 @@ BOOL CMacroEditer::PreTranslateMessage(MSG* pMsg)
   }
   if (pMsg->message == WM_KEYUP && pMsg->wParam == VK_CONTROL)
     ctrlPressed = false;
-  if (pMsg->message == WM_KEYUP && pMsg->wParam == 'A' && ctrlPressed && 
+  if (pMsg->message == WM_KEYUP && pMsg->wParam == 'A' && ctrlPressed &&
     SEMTickInterval(ctrlTime) < expireTime)
     m_editMacro.SetSel(0, -1);
   if (pMsg->message == WM_KEYDOWN && pMsg->wParam == VK_RETURN && ctrlPressed &&
@@ -371,7 +369,7 @@ BOOL CMacroEditer::PreTranslateMessage(MSG* pMsg)
 
 // Run the macro
 // As long as no tasks are being done, pass text into macro and run it
-void CMacroEditer::OnRunmacro() 
+void CMacroEditer::OnRunmacro()
 {
   mWinApp->RestoreViewFocus();
   if (!mProcessor->MacroRunnable(m_iMacroNumber)) {
@@ -406,7 +404,7 @@ void CMacroEditer::OnShiftMacroDown()
   ShiftMacro(1);
 }
 
-void CMacroEditer::OnSavemacro() 
+void CMacroEditer::OnSavemacro()
 {
   if (mSaveFile[m_iMacroNumber].IsEmpty())
     OnSavemacroas();
@@ -415,7 +413,7 @@ void CMacroEditer::OnSavemacro()
   mWinApp->RestoreViewFocus();
 }
 
-void CMacroEditer::OnSavemacroas() 
+void CMacroEditer::OnSavemacroas()
 {
   CString direc;
   UpdateData(true);
@@ -434,8 +432,8 @@ void CMacroEditer::DoSave()
   if (mProcessor->ScanForName(m_iMacroNumber, &m_strMacro))
     mWinApp->mCameraMacroTools.MacroNameChanged(m_iMacroNumber);
   try {
-    // Open the file for writing, 
-    cFile = new CFile(mSaveFile[m_iMacroNumber], CFile::modeCreate | 
+    // Open the file for writing,
+    cFile = new CFile(mSaveFile[m_iMacroNumber], CFile::modeCreate |
       CFile::modeWrite |CFile::shareDenyWrite);
 
     cFile->Write((void *)(LPCTSTR)m_strMacro, m_strMacro.GetLength());
@@ -447,13 +445,13 @@ void CMacroEditer::DoSave()
     AfxMessageBox(message, MB_EXCLAME);
     mSaveFile[m_iMacroNumber] = "";
     mFileName[m_iMacroNumber] = "";
-  } 
+  }
   if (cFile)
     delete cFile;
   SetTitle();
 }
 
-void CMacroEditer::OnLoadmacro() 
+void CMacroEditer::OnLoadmacro()
 {
   CFile *file = NULL;
   unsigned char *buffer = NULL;
@@ -473,7 +471,7 @@ void CMacroEditer::OnLoadmacro()
   if (mWinApp->mDocWnd->GetTextFileName(true, true, cPathname, &filename, &direc,
     &szFilter[0]))
     return;
-  
+
   try {
     file = new CFile(cPathname, CFile::modeRead | CFile::shareDenyWrite);
     int size = (int)file->GetLength();
@@ -506,7 +504,7 @@ void CMacroEditer::OnLoadmacro()
   }
   if (memErr)
     AfxMessageBox("Error getting memory for strings", MB_EXCLAME);
-      
+
   if (buffer)
     delete buffer;
 
@@ -519,7 +517,7 @@ void CMacroEditer::OnFindInMacro()
 {
   int sel1, sel2;
   CString macro, find;
-  if (!KGetOneString("Text is not case-sensitive", "Text to find in script:", 
+  if (!KGetOneString("Text is not case-sensitive", "Text to find in script:",
     mLastFindString) || mLastFindString.IsEmpty())
     return;
   m_editMacro.GetSel(sel1, sel2);
@@ -541,7 +539,7 @@ void CMacroEditer::OnFindInMacro()
   }
   sel2 = sel1 + mLastFindString.GetLength();
   m_editMacro.SetSel(sel1, sel2);
-  
+
   EnsureLineVisible(m_editMacro.LineFromChar(sel1));
 }
 
@@ -704,15 +702,15 @@ void CMacroEditer::UpdateButtons()
       inactive = false;
   }
   m_butOK.EnableWindow(inactive);
-  m_butRun.EnableWindow(!mWinApp->DoingTasks() && !mWinApp->StartedTiltSeries() && 
+  m_butRun.EnableWindow(!mWinApp->DoingTasks() && !mWinApp->StartedTiltSeries() &&
     !mWinApp->mScope->GetMovingStage() && !inUse);
   m_editMacro.EnableWindow(inactive);
   m_butLoad.EnableWindow(inactive);
-  m_butPrevMacro.EnableWindow(inactive && AdjacentMacro(-1) >= 0 && 
+  m_butPrevMacro.EnableWindow(inactive && AdjacentMacro(-1) >= 0 &&
     AdjacentMacro(-1) != navScript);
   m_butNextMacro.EnableWindow(inactive && AdjacentMacro(1) >= 0 &&
     AdjacentMacro(1) != navScript);
-  inactive = inactive && (!mWinApp->GetShiftScriptOnlyInAdmin() || 
+  inactive = inactive && (!mWinApp->GetShiftScriptOnlyInAdmin() ||
     mWinApp->GetAdministrator()) && navScript < 0;
   m_butShiftDown.EnableWindow(inactive && m_iMacroNumber < MAX_MACROS - 1);
   m_butShiftUp.EnableWindow(inactive && m_iMacroNumber > 0);
@@ -829,7 +827,7 @@ void CMacroEditer::ShiftMacro(int dir)
   tempStr = mSaveFile[m_iMacroNumber];
   mSaveFile[m_iMacroNumber] = mSaveFile[newNum];
   mSaveFile[newNum] = tempStr;
- 
+
   // Fix up each editor: m_iMacroNumber now refers to the other macro
   if (mEditer[m_iMacroNumber])
     mEditer[m_iMacroNumber]->AdjustForNewNumber(m_iMacroNumber);
@@ -904,7 +902,7 @@ void CMacroEditer::HandleCompletionsAndIndent(CString &strMacro, CString &strCom
   CString substr, importName, nameSpace;
   const char *first, *other;
   char *pythKeywords[] = {"FOR", "IF", "ELSE:", "ELIF", "TRY:", "WHILE", "DEF", "RETURN",
-    "GLOBAL", "BREAK", "CONTINUE", "EXCEPT:", "PASS", "WITH", "FINALLY", "CLASS", 
+    "GLOBAL", "BREAK", "CONTINUE", "EXCEPT:", "PASS", "WITH", "FINALLY", "CLASS",
     "RAISE", "PRINT", "LISTTOSEMARRAY", "SEMARRAYTOFLOATS", "SEMARRAYTOINTS"};
   int numPythKeywords = sizeof(pythKeywords) / sizeof(const char *);
   CSerialEMApp *winApp = (CSerialEMApp *)AfxGetApp();
@@ -1170,7 +1168,7 @@ void CMacroEditer::HandleCompletionsAndIndent(CString &strMacro, CString &strCom
     }
 
 
-    // Indentation: 
+    // Indentation:
     IndentCurrentLine(strMacro, sel2, isPython);
   }
   delete [] matchList;
@@ -1208,7 +1206,7 @@ int CMacroEditer::IndentCurrentLine(CString &strMacro, int &sel2, bool isPython)
   }
 
   // Find start of previous non-continuation line with text
-  // Keep track of number of previous continuation lines, whether previous 
+  // Keep track of number of previous continuation lines, whether previous
   // nonblank line ends with a : for python, and whether previous line is blank
   isBlank = GetPrevLineIndexes(strMacro, lineStart, isPython, prevStart, prevEnd,
     isContinued);
@@ -1300,13 +1298,13 @@ bool CMacroEditer::CheckForPythonAndImport(CString &strMacro, CString &importNam
         return false;
       continue;
     }
- 
+
     // Skip comments or includes
     strItems[0] = strLine;
     strItems[0].TrimLeft();
     strItems[0].TrimRight(" \r\n");
     if (strItems[0].Find("#") == 0 || strItems[0].IsEmpty()) {
-      if (strItems[0].Find("#serialemPrefix") < 0 && 
+      if (strItems[0].Find("#serialemPrefix") < 0 &&
         strItems[0].Find("# serialemPrefix") < 0)
         continue;
       winApp->mParamIO->ParseString(strLine, strItems, 4, false, true);
@@ -1334,7 +1332,7 @@ bool CMacroEditer::CheckForPythonAndImport(CString &strMacro, CString &importNam
   return isPython;
 }
 
-// Get the starting and ending indexes of the text on line before curStart, set 
+// Get the starting and ending indexes of the text on line before curStart, set
 // isContinued if line ends with " \" or "\" if Python, and return true if the line
 // is blank
 bool CMacroEditer::GetPrevLineIndexes(CString &strMacro, int curStart, bool isPython,
@@ -1382,7 +1380,7 @@ bool CMacroEditer::GetPrevLineIndexes(CString &strMacro, int curStart, bool isPy
       break;
     }
   }
-  isContinued = indEnd > indStart && strMacro.GetAt(indEnd) == '\\' && (isPython || 
+  isContinued = indEnd > indStart && strMacro.GetAt(indEnd) == '\\' && (isPython ||
     strMacro.GetAt(indEnd - 1) == ' ');
   return isBlank;
 }
@@ -1395,7 +1393,7 @@ void CMacroEditer::ListDebugKeyLetters()
 
 // Finds the number of current spaces indenting the line at lineStart and looks for a
 // match of the first word with one of the keywords
-bool CMacroEditer::FindIndentAndMatch(CString &strMacro, int lineStart, int limit, 
+bool CMacroEditer::FindIndentAndMatch(CString &strMacro, int lineStart, int limit,
   const char **keywords, int numKeys, int &curIndent)
 {
   char ch;
@@ -1423,7 +1421,7 @@ bool CMacroEditer::FindIndentAndMatch(CString &strMacro, int lineStart, int limi
   // Extract and test for match
   token = strMacro.Mid(indStart, indEnd - indStart);
   token.MakeUpper();
-  for (indEnd = 0; indEnd < numKeys; indEnd++) 
+  for (indEnd = 0; indEnd < numKeys; indEnd++)
     if (!token.Compare(keywords[indEnd]))
       return true;
   return false;

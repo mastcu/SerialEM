@@ -2,7 +2,7 @@
 //                    all tasks associated with it
 //
 //
-// Copyright (C) 2003-2020 by the Regents of the University of
+// Copyright (C) 2003-2026 by the Regents of the University of
 // Colorado.  See Copyright.txt for full notice of copyright and limitations.
 //
 // Author: David Mastronarde
@@ -49,6 +49,10 @@
 #include "LogWindow.h"
 #include "CameraMacroTools.h"
 #include "MontageSetupDlg.h"
+
+#if defined(_DEBUG) && defined(_CRTDBG_MAP_ALLOC)
+#define new DEBUG_NEW
+#endif
 //#include "TiltSeriesParam.h"
 #include "TSController.h"
 #include "DoseModulator.h"
@@ -337,7 +341,7 @@ END_MESSAGE_MAP()
 /////////////////////////////////////////////////////////////////////////////
 // INITIALIZATION AND WINDOW-RELATED MESSAGES
 
-BOOL CNavigatorDlg::OnInitDialog() 
+BOOL CNavigatorDlg::OnInitDialog()
 {
 	CBaseDlg::OnInitDialog();
   mDocWnd = mWinApp->mDocWnd;
@@ -403,7 +407,7 @@ BOOL CNavigatorDlg::OnInitDialog()
 }
 
 // Respond to new size by fitting note edit and list box to window
-void CNavigatorDlg::OnSize(UINT nType, int cx, int cy) 
+void CNavigatorDlg::OnSize(UINT nType, int cx, int cy)
 {
   CRect rect;
 	CBaseDlg::OnSize(nType, cx, cy);
@@ -422,7 +426,7 @@ void CNavigatorDlg::OnSize(UINT nType, int cx, int cy)
   m_editPtNote.SetWindowPos(NULL, 0, 0, newX, mNoteHeight, SWP_NOZORDER | SWP_NOMOVE);
   m_statFilename.GetClientRect(rect);
   newX = cx - mHeaderBorderX;
-  m_statListHeader.SetWindowPos(NULL, 0, 0, newX, mHeaderHeight, 
+  m_statListHeader.SetWindowPos(NULL, 0, 0, newX, mHeaderHeight,
     SWP_NOZORDER | SWP_NOMOVE);
   m_statFilename.SetWindowPos(NULL, 0, 0, cx - mFilenameBorderX, rect.Height(),
     SWP_NOZORDER | SWP_NOMOVE);
@@ -431,7 +435,7 @@ void CNavigatorDlg::OnSize(UINT nType, int cx, int cy)
 }
 
 // Clean up when window is being destroyed
-void CNavigatorDlg::PostNcDestroy() 
+void CNavigatorDlg::PostNcDestroy()
 {
   mHelper->DeleteArrays();
   delete this;
@@ -460,7 +464,7 @@ void CNavigatorDlg::OnCancel()
 // Central place to test for whether it is OK to close the dialog
 bool CNavigatorDlg::OKtoCloseNav()
 {
-  return !(mLoadingMap || mAcquireIndex >= 0 || 
+  return !(mLoadingMap || mAcquireIndex >= 0 ||
     mWinApp->mMultiGridTasks->GetDoingMulGridSeq() ||
     mWinApp->mMultiGridTasks->GetDoingMultiGrid());
 }
@@ -468,12 +472,12 @@ bool CNavigatorDlg::OKtoCloseNav()
 // Returns come through here - needed to avoid closing window
 // can restore focus, but do not set up a kill focus handler that does
 // this because it makes other buttons unresponsive
-void CNavigatorDlg::OnOK() 
+void CNavigatorDlg::OnOK()
 {
     mWinApp->RestoreViewFocus();
 }
-	
-void CNavigatorDlg::OnMove(int x, int y) 
+
+void CNavigatorDlg::OnMove(int x, int y)
 {
 	CBaseDlg::OnMove(x, y);
   if (mInitialized)
@@ -580,7 +584,7 @@ void CNavigatorDlg::ManageCurrentControls()
   exists = exists && !mNavAcquireDlg;
   m_butCorner.EnableWindow(exists && mItem->IsPoint());
   m_butRotate.EnableWindow(exists && mItem->IsMap());
-  m_checkDualMap.EnableWindow(exists && (m_bDualMap || 
+  m_checkDualMap.EnableWindow(exists && (m_bDualMap ||
     (mItem->IsMap() && !mItem->mImported)));
   m_editPtNote.EnableWindow(exists && mAcquireIndex < 0);
   m_editPtLabel.EnableWindow(exists && mAcquireIndex < 0);
@@ -612,7 +616,7 @@ void CNavigatorDlg::Update()
   BOOL justAcqOpen = mWinApp->DoingTasks() && mWinApp->GetJustNavAcquireOpen();
   BOOL curExists = SetCurrentItem();
   BOOL noDrawing = !(mAddingPoints || mAddingPoly || mMovingItem || mLoadingMap);
-  BOOL stageMoveOK = curExists && noTasks && noDrawing && 
+  BOOL stageMoveOK = curExists && noTasks && noDrawing &&
     RegistrationUseType(mItem->mRegistration) != NAVREG_IMPORT;
   BOOL fileOK = curExists && noTasks;
   BOOL groupOK = false, anyAcqInGroup = false;
@@ -643,7 +647,7 @@ void CNavigatorDlg::Update()
     str = FormatProgress(mNumDoneAcq, mInitialNumAcquire, numLeft,
       multishot ? "items" : "done");
     if (multishot)
-      str += ";  " + FormatProgress(mNumTotalShotsAcq, mInitialTotalShots, numShots, 
+      str += ";  " + FormatProgress(mNumTotalShotsAcq, mInitialTotalShots, numShots,
         "shots");
     if (mWinApp->mMontageController->DoingMontage())
       montLeft = mWinApp->mMontageController->GetRemainingTime();
@@ -674,11 +678,11 @@ void CNavigatorDlg::Update()
         timePerItem = (mElapsedAcqTime + sinceLastDone) / (mNumDoneAcq + 1);
       remaining = timePerItem * (mInitialNumAcquire - mNumDoneAcq) -
         B3DMIN(sinceLastDone, timePerItem);
-      if (mNumDoneAcq && (mNumDoneAcq % 2) == 0 && 
+      if (mNumDoneAcq && (mNumDoneAcq % 2) == 0 &&
         mWinApp->mMultiGridTasks->GetDoingMulGridSeq() &&
         mWinApp->mMultiGridTasks->GetRemainingTime() >= 0. ) {
-        str.Format("Doing grid %d/%d. Estimate for finishing all grids", 
-          mWinApp->mMultiGridTasks->GetCurrentGrid() + 1, 
+        str.Format("Doing grid %d/%d. Estimate for finishing all grids",
+          mWinApp->mMultiGridTasks->GetCurrentGrid() + 1,
           mWinApp->mMultiGridTasks->GetNumGridsToRun());
         remaining += mWinApp->mMultiGridTasks->GetRemainingTime();
       }
@@ -734,7 +738,7 @@ void CNavigatorDlg::Update()
 
   m_butNewMap.EnableWindow(noDrawing && noTasks && mWinApp->mStoreMRC != NULL);
   m_butDualMap.EnableWindow(noDrawing && noTasks && mDualMapID >= 0);
-  m_butDeleteItem.EnableWindow((curExists || grpExists) && noDrawing && 
+  m_butDeleteItem.EnableWindow((curExists || grpExists) && noDrawing &&
     mAcquireIndex < 0 && !mHelper->GetAcquiringDual() && !mWinApp->DoingComplexTasks() &&
     !mNavAcquireDlg && mFRangeIndex < 0);
   m_butRealign.EnableWindow(curExists && noDrawing && mAcquireIndex < 0 && noTasks &&
@@ -744,7 +748,7 @@ void CNavigatorDlg::Update()
 
   if (curExists || grpExists)
     index = GroupScheduledIndex(mItem->mGroupID);
-  m_butAcquire.EnableWindow(!mNavAcquireDlg && ((fileOK && mItem->mTSparamIndex < 0) || 
+  m_butAcquire.EnableWindow(!mNavAcquireDlg && ((fileOK && mItem->mTSparamIndex < 0) ||
     (grpExists && noTasks && !numTS)));
   m_butTiltSeries.EnableWindow(fileOK && !mItem->mAcquire);
   m_butFileAtItem.EnableWindow(((fileOK && mItem->mAcquire && mItem->mTSparamIndex < 0) ||
@@ -770,7 +774,7 @@ void CNavigatorDlg::Update()
 }
 
 // Compose a compact progress string with number done, left , and rate
-CString CNavigatorDlg::FormatProgress(int numDone, int numTot, int numLeft, 
+CString CNavigatorDlg::FormatProgress(int numDone, int numTot, int numLeft,
   const char *text)
 {
   CString str, str2;
@@ -877,7 +881,7 @@ BOOL CNavigatorDlg::AcquireOK(bool tiltSeries, int startInd, int endInd)
   endInd = B3DMIN((int)mItemArray.GetSize() - 1, endInd);
   for (int i = startInd; i <= endInd; i++) {
      item = mItemArray[i];
-     if (item->mRegistration == mCurrentRegistration && 
+     if (item->mRegistration == mCurrentRegistration &&
        (!tiltSeries && item->mAcquire || tiltSeries && item->mTSparamIndex >= 0))
        return true;
   }
@@ -933,7 +937,7 @@ int CNavigatorDlg::OKtoAverageCrops(void)
 
 // Registration change is OK as long as it is not a registration point
 BOOL CNavigatorDlg::RegistrationChangeOK(void)
-{ 
+{
   if (!SetCurrentItem())
     return false;
   return (mItem->mRegPoint <= 0);
@@ -1005,7 +1009,7 @@ int CNavigatorDlg::ChangeItemRegistration(int index, int newReg, CString &str)
 
 // Invokes the realign routine for the current item, or for the item being acquired
 // if a macro is being run at acquire points
-int CNavigatorDlg::RealignToCurrentItem(BOOL restore, float resetISalignCrit, 
+int CNavigatorDlg::RealignToCurrentItem(BOOL restore, float resetISalignCrit,
     int maxNumResetAlign, int leaveZeroIS, int realiFlags, int setForScaled)
 {
   if (!GetAcquiring()) {
@@ -1019,7 +1023,7 @@ int CNavigatorDlg::RealignToCurrentItem(BOOL restore, float resetISalignCrit,
 }
 
 // Or, aligns to another item by index
-int CNavigatorDlg::RealignToOtherItem(int index, BOOL restore, float resetISalignCrit, 
+int CNavigatorDlg::RealignToOtherItem(int index, BOOL restore, float resetISalignCrit,
     int maxNumResetAlign, int leaveZeroIS, int realiFlags, int setForScaled)
 {
   if (!GetOtherNavItem(index)) {
@@ -1031,15 +1035,15 @@ int CNavigatorDlg::RealignToOtherItem(int index, BOOL restore, float resetISalig
 }
 
 // The actual routine for calling the helper and giving error messages
-int CNavigatorDlg::RealignToAnItem(CMapDrawItem * item, BOOL restore, 
+int CNavigatorDlg::RealignToAnItem(CMapDrawItem * item, BOOL restore,
   float resetISalignCrit, int maxNumResetAlign, int leaveZeroIS, int realiFlags,
   int setForScaled)
 {
-  int err = mHelper->RealignToItem(item, restore, resetISalignCrit, maxNumResetAlign, 
+  int err = mHelper->RealignToItem(item, restore, resetISalignCrit, maxNumResetAlign,
     leaveZeroIS, realiFlags, setForScaled);
-  if (err && err < 4) 
+  if (err && err < 4)
     SEMMessageBox("An error occurred trying to access a map image file", MB_EXCLAME);
-  if (err == 4 || err == 5) 
+  if (err == 4 || err == 5)
     SEMMessageBox(err == 4 ? "There is no appropriate map image to align to"
     : "The only available map image is too small to align to", MB_EXCLAME);
   return err;
@@ -1066,29 +1070,29 @@ void CNavigatorDlg::OnRealigntoitem()
   NavAlignParams *params = mHelper->GetNavAlignParams();
   BOOL apply = params->applyInteractive;
   mWinApp->RestoreViewFocus();
-  RealignToCurrentItem(true, apply ? params->resetISthresh : 0.f, 
-    apply ? params->maxNumResetIS : 0 , apply ? params->leaveISatZero : 0, 
+  RealignToCurrentItem(true, apply ? params->resetISthresh : 0.f,
+    apply ? params->maxNumResetIS : 0 , apply ? params->leaveISatZero : 0,
     0, -1);
 }
 
 /////////////////////////////////////////////////////////////////////
 // RESPONSES TO USER CHANGE OF ITEM STATE CONTROLS
-void CNavigatorDlg::OnDrawNone() 
+void CNavigatorDlg::OnDrawNone()
 {
-  UpdateData(true);	
+  UpdateData(true);
   mWinApp->RestoreViewFocus();
   Redraw();
 }
 
 void CNavigatorDlg::OnDrawLabels()
 {
-  UpdateData(true);	
+  UpdateData(true);
   mWinApp->RestoreViewFocus();
   Redraw();
 }
 
 // The corner checkbox
-void CNavigatorDlg::OnCheckcorner() 
+void CNavigatorDlg::OnCheckcorner()
 {
   if (UpdateIfItem())
     return;
@@ -1146,7 +1150,7 @@ void CNavigatorDlg::OnCheckDualMap()
 }
 
 // Registration point number spin button
-void CNavigatorDlg::OnDeltaposSpinRegptNum(NMHDR* pNMHDR, LRESULT* pResult) 
+void CNavigatorDlg::OnDeltaposSpinRegptNum(NMHDR* pNMHDR, LRESULT* pResult)
 {
 	NM_UPDOWN* pNMUpDown = (NM_UPDOWN*)pNMHDR;
   CMapDrawItem *item;
@@ -1165,7 +1169,7 @@ void CNavigatorDlg::OnDeltaposSpinRegptNum(NMHDR* pNMHDR, LRESULT* pResult)
       if (maxPtNum < item->mRegPoint)
         maxPtNum = item->mRegPoint;
     }
-    
+
     // Do not allow it to go one past the maximum
     if (newPos > maxPtNum + 1 || newPos > MAX_REGPT_NUM)
       return;
@@ -1184,7 +1188,7 @@ void CNavigatorDlg::OnDeltaposSpinRegptNum(NMHDR* pNMHDR, LRESULT* pResult)
 }
 
 // Current registration spin button
-void CNavigatorDlg::OnDeltaposSpincurrentReg(NMHDR* pNMHDR, LRESULT* pResult) 
+void CNavigatorDlg::OnDeltaposSpincurrentReg(NMHDR* pNMHDR, LRESULT* pResult)
 {
 	NM_UPDOWN* pNMUpDown = (NM_UPDOWN*)pNMHDR;
   int newPos = mCurrentRegistration;
@@ -1194,7 +1198,7 @@ void CNavigatorDlg::OnDeltaposSpincurrentReg(NMHDR* pNMHDR, LRESULT* pResult)
     if (newPos < 1 || newPos > MAX_CURRENT_REG) {
       *pResult = 1;
       return;
-    } 
+    }
   } while (RegistrationUseType(newPos) == NAVREG_IMPORT);
   mCurrentRegistration = newPos;
   m_strCurrentReg.Format("%d", mCurrentRegistration);
@@ -1205,13 +1209,13 @@ void CNavigatorDlg::OnDeltaposSpincurrentReg(NMHDR* pNMHDR, LRESULT* pResult)
 }
 
 // Registration point number is turned on or off
-void CNavigatorDlg::OnCheckRegpoint() 
+void CNavigatorDlg::OnCheckRegpoint()
 {
   if (UpdateIfItem())
     return;
   if (m_bRegPoint) {
     mItem->mRegPoint = GetFreeRegPtNum(mItem->mRegistration, mRegPointNum);
-    SetRegPtNum(mItem->mRegPoint); 
+    SetRegPtNum(mItem->mRegPoint);
     UpdateData(false);
   } else {
     mItem->mRegPoint = 0;
@@ -1222,7 +1226,7 @@ void CNavigatorDlg::OnCheckRegpoint()
 }
 
 // Color change
-void CNavigatorDlg::OnSelendokCombocolor() 
+void CNavigatorDlg::OnSelendokCombocolor()
 {
   if (UpdateIfItem())
     return;
@@ -1233,7 +1237,7 @@ void CNavigatorDlg::OnSelendokCombocolor()
 }
 
 // Label change
-void CNavigatorDlg::OnChangeEditPtlabel() 
+void CNavigatorDlg::OnChangeEditPtlabel()
 {
   if (!SetCurrentItem())
     return;
@@ -1245,7 +1249,7 @@ void CNavigatorDlg::OnChangeEditPtlabel()
 }
 
 // Note change
-void CNavigatorDlg::OnChangeEditPtnote() 
+void CNavigatorDlg::OnChangeEditPtnote()
 {
   if (!SetCurrentItem())
     return;
@@ -1262,12 +1266,12 @@ void CNavigatorDlg::OnKillfocusEditBox()
 }
 
 // Draw flag changed
-void CNavigatorDlg::OnDrawOne() 
+void CNavigatorDlg::OnDrawOne()
 {
    CMapDrawItem *item;
  int start, end, ind;
   mWinApp->RestoreViewFocus();
-  if (!SetCurrentItem(true)) 
+  if (!SetCurrentItem(true))
     return;
   UpdateData(true);
   if (m_bCollapseGroups && mListToItem[mCurListSel] < 0) {
@@ -1346,10 +1350,10 @@ void CNavigatorDlg::AddFocusAreaPoint(bool drawFirst)
 }
 
 // Flag to acquire changed
-void CNavigatorDlg::OnCheckAcquire() 
+void CNavigatorDlg::OnCheckAcquire()
 {
   mWinApp->RestoreViewFocus();
-  if (!SetCurrentItem(true)) 
+  if (!SetCurrentItem(true))
     return;
   UpdateData(true);
   if (m_bCollapseGroups && mListToItem[mCurListSel] < 0) {
@@ -1371,7 +1375,7 @@ void CNavigatorDlg::ToggleGroupAcquire(bool collapsedGroup)
   CMapDrawItem *item;
   BOOL acquire, needFocusArea = false;
   int start = 0, end = (int)mItemArray.GetSize() - 1;
-  if (!SetCurrentItem(true)) 
+  if (!SetCurrentItem(true))
     return;
   if (!mItem->mGroupID || mItem->mTSparamIndex >= 0)
     return;
@@ -1381,7 +1385,7 @@ void CNavigatorDlg::ToggleGroupAcquire(bool collapsedGroup)
 
   for (int i = start; i <= end; i++) {
     item = mItemArray[i];
-    if (item->mGroupID == mItem->mGroupID && 
+    if (item->mGroupID == mItem->mGroupID &&
       mItem->mTSparamIndex < 0) {
       if (acquire) {
         if (!item->mAcquire)
@@ -1476,7 +1480,7 @@ void CNavigatorDlg::OnButFileprops()
   StateParams *state;
   int fileType, montInd, stateInd, lowdose;
   mWinApp->RestoreViewFocus();
-  if (!SetCurrentItem(true) || (m_bCollapseGroups && mListToItem[mCurListSel] < 0 && 
+  if (!SetCurrentItem(true) || (m_bCollapseGroups && mListToItem[mCurListSel] < 0 &&
     GroupScheduledIndex(mItem->mGroupID) < 0))
     return;
   sched = mHelper->GetFileTypeAndSchedule(mItem, fileType);
@@ -1514,7 +1518,7 @@ void CNavigatorDlg::OnButState()
   int camNum = -1;
   int *indexp;
   mWinApp->RestoreViewFocus();
-  if (!SetCurrentItem(true) || (m_bCollapseGroups && mListToItem[mCurListSel] < 0 && 
+  if (!SetCurrentItem(true) || (m_bCollapseGroups && mListToItem[mCurListSel] < 0 &&
     GroupScheduledIndex(mItem->mGroupID) < 0))
     return;
   indexp = &mItem->mStateIndex;
@@ -1531,7 +1535,7 @@ void CNavigatorDlg::OnButState()
     if (!state)
       AfxMessageBox("Existing stored state for this item could not be found, creating"
       " a new one", MB_EXCLAME);
-  } 
+  }
   if (!state) {
     str.Format("Stored imaging state in a new parameter set for item # %d, label %s",
       mCurrentItem + 1, (LPCTSTR)mItem->mLabel);
@@ -1577,7 +1581,7 @@ void CNavigatorDlg::OnButFilename()
   ScheduledFile *sched;
   int fileType;
   mWinApp->RestoreViewFocus();
-  if (!SetCurrentItem(true) || (m_bCollapseGroups && mListToItem[mCurListSel] < 0 && 
+  if (!SetCurrentItem(true) || (m_bCollapseGroups && mListToItem[mCurListSel] < 0 &&
     GroupScheduledIndex(mItem->mGroupID) < 0))
     return;
   sched = mHelper->GetFileTypeAndSchedule(mItem, fileType);
@@ -1608,7 +1612,7 @@ void CNavigatorDlg::OnCollapseGroups()
   UpdateData(true);
   mCurListSel = -1;
   mHelper->SetCollapseGroups(m_bCollapseGroups);
-  
+
   // Tell FillListBox not to manage controls because current item needs to be restored
   if (m_bCollapseGroups) {
     MakeListMappings();
@@ -1641,7 +1645,7 @@ void CNavigatorDlg::OnTableIndexes()
 // LIST BOX MESSAGE RESPONSES AND ROUTINES TO MANAGE LIST BOX TEXT
 
 // The selection is changed in the viewer
-void CNavigatorDlg::OnSelchangeListviewer() 
+void CNavigatorDlg::OnSelchangeListviewer()
 {
   // Turn off moving of current item
   if (mMovingItem)
@@ -1700,7 +1704,7 @@ void CNavigatorDlg::OnListItemDrag(int oldIndex, int newIndex)
       moveInc = 1;
       IndexOfSingleOrFirstInGroup(newIndex, toInd);
     }
-    
+
     for (i = 0; i < num; i++) {
       item = mItemArray[fromInd];
       RemoveFromArray(fromInd);
@@ -1734,7 +1738,7 @@ void CNavigatorDlg::OnListItemDrag(int oldIndex, int newIndex)
 }
 
 // Load a map if it is double clicked and conditions are right
-void CNavigatorDlg::OnDblclkListviewer() 
+void CNavigatorDlg::OnDblclkListviewer()
 {
   if (!SetCurrentItem() || (mWinApp->DoingTasks() && !mWinApp->GetJustNavAcquireOpen()) ||
     mAddingPoints || mAddingPoly || mMovingItem || !(mItem->IsMap() ||
@@ -1855,7 +1859,7 @@ void CNavigatorDlg::ProcessDKey(void)
     (numMap > 0 && !numPoly && !numMap)) {
 
     // For one kind of item, just do a simple confirmation
-    str.Format("Do you really want to delete the %d %s from index %d to %d?", 
+    str.Format("Do you really want to delete the %d %s from index %d to %d?",
       B3DCHOICE(numPt, numPt, numPoly ? numPoly : numMap),
       B3DCHOICE(numPt, "points", numPoly ? "polygons" : "maps"),
       start + 1, end + 1);
@@ -1931,7 +1935,7 @@ void CNavigatorDlg::ProcessTKey(void)
   // Here and in next loop, ignore a map if there is a higher mag map in range
   for (ind = start; ind <= end; ind++) {
     item = mItemArray[ind];
-    if (item->mTSparamIndex < 0 && !item->mAcquire && 
+    if (item->mTSparamIndex < 0 && !item->mAcquire &&
       !AtSamePosAsHigherMagMapInRange(ind, start, end)) {
       allOn = false;
       break;
@@ -2145,7 +2149,7 @@ void CNavigatorDlg::NewFileRangeNextTask(int synchronous)
   item = mItemArray[ind];
   if (item->mAcquire && item->mFilePropIndex < 0) {
     mFRangeNumOff++;
-    if ((mFRangeNumOff >= mFRangeInterval && !mFileRangeForMultiGrid) || 
+    if ((mFRangeNumOff >= mFRangeInterval && !mFileRangeForMultiGrid) ||
       item->IsPolygon()) {
       mItem = item;
       err = mHelper->NewAcquireFile(ind, NAVFILE_ITEM, NULL);
@@ -2215,7 +2219,7 @@ void CNavigatorDlg::ItemToListString(int index, CString &string)
   ScheduledFile *sched = NULL;
   int j, start, end, numAcq = 0, numTS = 0;
   CMapDrawItem *item = mItemArray[index];
-  int type = (item->mImported == 1 || item->mImported == -1) ? 
+  int type = (item->mImported == 1 || item->mImported == -1) ?
     ITEM_TYPE_MAP + 1 : item->mType;
   j = GroupScheduledIndex(item->mGroupID);
   if (j >= 0)
@@ -2250,7 +2254,7 @@ void CNavigatorDlg::ItemToListString(int index, CString &string)
     }
 
   } else {
-    if (item->IsMap() && item->mMapID == mDualMapID) 
+    if (item->IsMap() && item->mMapID == mDualMapID)
       type = ITEM_TYPE_MAP + 2;
     string = "";
     if (mNumDigitsForIndex)
@@ -2348,7 +2352,7 @@ void CNavigatorDlg::FillListBox(bool skipManage, bool keepSel)
   }
 
   // If it has changed, compute the first field width for the index and the offset to
-  // apply to the label positions, both empirically done by finding offsets for 
+  // apply to the label positions, both empirically done by finding offsets for
   // different digits and DPI scalings
   if (numDig != mNumDigitsForIndex) {
     m_statListHeader.GetWindowText(string);
@@ -2434,7 +2438,7 @@ CString CNavigatorDlg::FormatCoordinate(float inVal, int maxLen)
 // STAGE-RELATED AND ITEM DELETION MESSAGE HANDLERS
 
 // Add a point at the current stage position
-void CNavigatorDlg::OnAddStagePos() 
+void CNavigatorDlg::OnAddStagePos()
 {
 	CMapDrawItem *item = MakeNewItem(0);
   SetCurrentStagePos(mCurrentItem);
@@ -2442,14 +2446,14 @@ void CNavigatorDlg::OnAddStagePos()
   item->mRawStageX = (float)mLastScopeStageX;
   item->mRawStageY = (float)mLastScopeStageY;
   CheckRawStageMatches();
-  mScope->GetValidXYbacklash(mLastScopeStageX, mLastScopeStageY, item->mBacklashX, 
+  mScope->GetValidXYbacklash(mLastScopeStageX, mLastScopeStageY, item->mBacklashX,
     item->mBacklashY);
   UpdateForCurrentItemChange();
   mWinApp->RestoreViewFocus();
 }
 
 // Update the current point with the current stage position
-/*void CNavigatorDlg::OnUpdateStagePos() 
+/*void CNavigatorDlg::OnUpdateStagePos()
 {
   float origX, origY;
   mWinApp->RestoreViewFocus();
@@ -2477,7 +2481,7 @@ void CNavigatorDlg::ShiftItemPoints(CMapDrawItem *item, float delX, float delY)
 }
 
 // Shift non-imported items at a registration
-int CNavigatorDlg::ShiftItemsAtRegistration(float shiftX, float shiftY, int reg, 
+int CNavigatorDlg::ShiftItemsAtRegistration(float shiftX, float shiftY, int reg,
   int saveOrRestore)
 {
   int i, numShift = 0, cohortID;
@@ -2505,7 +2509,7 @@ int CNavigatorDlg::ShiftItemsAtRegistration(float shiftX, float shiftY, int reg,
 
 // Shift a subset of items matching the mag index and either the cohort ID or the fact
 // that they are not shifted.  Select maps and points/polygons marked on them
-int CNavigatorDlg::ShiftCohortOfItems(float shiftX, float shiftY, int reg, 
+int CNavigatorDlg::ShiftCohortOfItems(float shiftX, float shiftY, int reg,
   int magInd, int cohortID, bool useAll, bool wasShifted, int saveOrRestore)
 {
   int i, numShift = 0;
@@ -2632,7 +2636,7 @@ void CNavigatorDlg::ShiftToMarker(void)
       registration);
   } else {
     dlg.m_strMarkerShift = "No marker shift is available";
-    if (m_bCollapseGroups && GetCollapsedGroupLimits(mCurListSel, start, end) && 
+    if (m_bCollapseGroups && GetCollapsedGroupLimits(mCurListSel, start, end) &&
       end > start)
       dlg.m_strMarkerShift += " (try uncollapsing groups)";
     dlg.m_strWhatShifts = "Dialog opened just for viewing and removing saved shifts";
@@ -2678,7 +2682,7 @@ void CNavigatorDlg::UndoShiftToMarker(void)
   if (!mMarkerShiftType) {
     ShiftItemsAtRegistration(-mMarkerShiftX, -mMarkerShiftY, mMarkerShiftReg, -1);
   } else {
-    ShiftCohortOfItems(-mMarkerShiftX, -mMarkerShiftY, mMarkerShiftReg, 
+    ShiftCohortOfItems(-mMarkerShiftX, -mMarkerShiftY, mMarkerShiftReg,
       mMarkerShiftMagInd, mMarkerShiftCohortID, false, true, -1);
   }
   mMarkerShiftReg = 0;
@@ -2752,18 +2756,18 @@ int CNavigatorDlg::DoUpdateZ(int index, int ifGroup)
     start = 0;
     end = (int)mItemArray.GetSize() - 1;
     num = CountItemsInGroup(groupID, label, lastlab, i);
-    mess.Format("Changing Z value of %d items (labels %s - %s) to %.2f", num, 
+    mess.Format("Changing Z value of %d items (labels %s - %s) to %.2f", num,
       label, lastlab, stageZ);
     mWinApp->AppendToLog(mess);
   } else if (ifGroup < 0 && m_bCollapseGroups && mListToItem[mCurListSel] < 0) {
     GetCollapsedGroupLimits(mCurListSel, start, end);
-    mess.Format("Changing Z value of %d items (# %d - %d) to %.2f", end + 1 - start, 
+    mess.Format("Changing Z value of %d items (# %d - %d) to %.2f", end + 1 - start,
       start, end, stageZ);
     mWinApp->AppendToLog(mess);
   }
   for (i = start; i <= end; i++) {
     item = mItemArray[i];
-    if (!groupID || item->mGroupID == groupID) { 
+    if (!groupID || item->mGroupID == groupID) {
       item->mStageZ = (float)stageZ;
       if (i == end || ifGroup > 0)
         UpdateListString(i);
@@ -2799,9 +2803,9 @@ bool CNavigatorDlg::OKtoAddMarkerPoint(bool justAdd, bool fromMacro)
   float delX, delY;
   ScaleMat aMat;
   EMimageBuffer *imBuf = mWinApp->mActiveView->GetActiveImBuf();
-  if ((!imBuf->mHasUserPt && justAdd) || (!justAdd && !imBuf->mHasUserPt && 
+  if ((!imBuf->mHasUserPt && justAdd) || (!justAdd && !imBuf->mHasUserPt &&
     !imBuf->mIllegalUserPt) || !BufferStageToImage(imBuf, aMat, delX, delY) ||
-    RegistrationUseType(imBuf->mRegistration) == NAVREG_IMPORT || 
+    RegistrationUseType(imBuf->mRegistration) == NAVREG_IMPORT ||
     (mWinApp->DoingTasks() && !fromMacro) ||
     mAcquireIndex >= 0 || mAddingPoly || mAddingPoints || mMovingItem || mLoadingMap)
     return false;
@@ -2809,7 +2813,7 @@ bool CNavigatorDlg::OKtoAddMarkerPoint(bool justAdd, bool fromMacro)
 }
 
 // Go to point in X,Y,Z
-void CNavigatorDlg::OnGotoPoint() 
+void CNavigatorDlg::OnGotoPoint()
 {
   mWinApp->RestoreViewFocus();
   if (!SetCurrentItem())
@@ -2819,7 +2823,7 @@ void CNavigatorDlg::OnGotoPoint()
 }
 
 // Go to point in X,Y only
-void CNavigatorDlg::OnGotoXy() 
+void CNavigatorDlg::OnGotoXy()
 {
   mWinApp->RestoreViewFocus();
   if (!SetCurrentItem())
@@ -2828,7 +2832,7 @@ void CNavigatorDlg::OnGotoXy()
 }
 
 // Go to the position of the user point in the active window
-void CNavigatorDlg::OnGotoMarker() 
+void CNavigatorDlg::OnGotoMarker()
 {
   float delX, delY;
   CMapDrawItem *item;
@@ -2863,8 +2867,8 @@ void CNavigatorDlg::OnGotoMarker()
 }
 
 // Return the image marker as a stage position
-void CNavigatorDlg::MarkerStagePosition(EMimageBuffer * imBuf, ScaleMat aMat, float delX, 
-  float delY, float & stageX, float & stageY, int useLineEnd, int *pcInd, 
+void CNavigatorDlg::MarkerStagePosition(EMimageBuffer * imBuf, ScaleMat aMat, float delX,
+  float delY, float & stageX, float & stageY, int useLineEnd, int *pcInd,
   float *xInPiece, float *yInPiece)
 {
   float ptX, ptY;
@@ -2884,7 +2888,7 @@ void CNavigatorDlg::MarkerStagePosition(EMimageBuffer * imBuf, ScaleMat aMat, fl
 }
 
 // Overload that handles getting transform too
-BOOL CNavigatorDlg::MarkerStagePosition(EMimageBuffer *imBuf, float &stageX, 
+BOOL CNavigatorDlg::MarkerStagePosition(EMimageBuffer *imBuf, float &stageX,
   float &stageY)
 {
   float delX, delY;
@@ -2928,9 +2932,9 @@ int CNavigatorDlg::MoveStage(int axisBits, bool justCheck)
   return 0;
 }
 
-// Reset image shift or set it to value in leaveISX,Y and move stage to adjusted 
+// Reset image shift or set it to value in leaveISX,Y and move stage to adjusted
 // coordinates for current settings
-void CNavigatorDlg::AdjustAndMoveStage(float stageX, float stageY, float stageZ, 
+void CNavigatorDlg::AdjustAndMoveStage(float stageX, float stageY, float stageZ,
                                        int axisBits, float backX, float backY,
                                        double leaveISX, double leaveISY,
                                        float tiltAngle)
@@ -2945,21 +2949,21 @@ void CNavigatorDlg::AdjustAndMoveStage(float stageX, float stageY, float stageZ,
 
   // This compensates for the IS being imposed
   mScope->GetLDCenteredShift(shiftX, shiftY);
-  
+
   // So this gets it back to a 0 IS readout as long as there is an IS calibration
   if (aMat.xpx)
     mScope->IncImageShift(leaveISX - shiftX, leaveISY - shiftY);
 
   AdjustISandMagForStageConversion(magInd, leaveISX, leaveISY);
- 
+
   // If scope not applying mag offsets, this adjusts actual stage position to compensate
-  mHelper->ConvertIStoStageIncrement(magInd, mWinApp->GetCurrentCamera(), leaveISX, 
+  mHelper->ConvertIStoStageIncrement(magInd, mWinApp->GetCurrentCamera(), leaveISX,
     leaveISY, (float)mScope->FastTiltAngle(), stageDx, stageDy);
   smi.x = stageX - stageDx;
   smi.y = stageY - stageDy;
   smi.z = stageZ;
   SEMTrace('n', "Nominal pos %.2f %.2f  leave IS %.2f %.2f  LDcenIS %.2f %.2f\r\ndelta"
-    " %.2f  %.2f  final %.2f %.2f", stageX, stageY, leaveISX, leaveISY, shiftX, shiftY, 
+    " %.2f  %.2f  final %.2f %.2f", stageX, stageY, leaveISX, leaveISY, shiftX, shiftY,
     stageDx, stageDy, smi.x, smi.y);
   smi.axisBits = axisBits;
   if (mWinApp->mComplexTasks->GetHitachiWithoutZ())
@@ -2986,7 +2990,7 @@ void CNavigatorDlg::AdjustAndMoveStage(float stageX, float stageY, float stageZ,
         if (fabs(moveX) >= fabs(backX) && fabs(moveY) >= fabs(backY)) {
           SEMTrace('n', "Cancel because direction is right and move is big enough");
           doBacklash = false;
-          mScope->SetBacklashFromNextMove(curStageX, curStageY, 
+          mScope->SetBacklashFromNextMove(curStageX, curStageY,
             (float)B3DMAX(B3DABS(smi.backX), B3DABS(smi.backY)));
         } else if (validBack && validX * smi.backX > 0 && validY * smi.backY > 0) {
           doBacklash = false;
@@ -3031,13 +3035,13 @@ void CNavigatorDlg::MoveStageOrDoImageShift(int axisBits)
       mScope->IncImageShift(delISX + areaX, delISY + areaY);
     }
   } else {
-    MoveStage(axisXY);  
+    MoveStage(axisXY);
     mWinApp->AddIdleTask(CEMscope::TaskStageBusy, -1, 0, 0);
   }
 }
 
 // Delete an item or portion of collapsed group on one line
-void CNavigatorDlg::OnDeleteitem() 
+void CNavigatorDlg::OnDeleteitem()
 {
   int start, end, delIndex = mCurrentItem;
   bool multipleInGroup = false;
@@ -3060,7 +3064,7 @@ void CNavigatorDlg::OnDeleteitem()
   }
 
   // Non-backspace case: Go to group deletion if groups collapsed or multiple
-  if (!mRemoveItemOnly && ((m_bCollapseGroups && mListToItem[mCurListSel] < 0) || 
+  if (!mRemoveItemOnly && ((m_bCollapseGroups && mListToItem[mCurListSel] < 0) ||
     mSelectedItems.size() > 1)) {
     DeleteGroup(true);
     return;
@@ -3075,7 +3079,7 @@ void CNavigatorDlg::OnDeleteitem()
    FinishSingleDeletion(mItem, delIndex, mCurListSel, multipleInGroup, 0);
 
   delIndex = B3DMAX(0, delIndex - 1);
-  if (m_bCollapseGroups && m_bEditMode && mRemoveItemOnly && !mAddingPoints && 
+  if (m_bCollapseGroups && m_bEditMode && mRemoveItemOnly && !mAddingPoints &&
     mCurrentItem >= 0 && mItemToList[delIndex] == mItemToList[mCurrentItem])
     mSelectedItems.insert(delIndex);
 
@@ -3094,7 +3098,7 @@ void CNavigatorDlg::OnDeleteitem()
 // DRAWING POINTS AND POLYGONS OR MOVING ITEMS WITH MOUSE
 
 // Initiate point drawing
-void CNavigatorDlg::OnDrawPoints() 
+void CNavigatorDlg::OnDrawPoints()
 {
   m_butDrawPts.SetWindowText(mAddingPoints ? "Add Points" : "Stop Adding");
   mAddingPoints = !mAddingPoints;
@@ -3122,7 +3126,7 @@ void CNavigatorDlg::OnDrawPoints()
 }
 
 // Initiate polygon drawing
-void CNavigatorDlg::OnDrawPolygon() 
+void CNavigatorDlg::OnDrawPolygon()
 {
   bool addedPoints = mAddingPoly > 1;
 
@@ -3165,7 +3169,7 @@ void CNavigatorDlg::OnDrawPolygon()
 }
 
 // Initiate moving an item; check if it a map and if it possible to revise raw stage pos
-void CNavigatorDlg::OnMoveItem() 
+void CNavigatorDlg::OnMoveItem()
 {
   CString mess;
   if (!mMovingItem) {
@@ -3183,11 +3187,11 @@ void CNavigatorDlg::OnMoveItem()
   } else if (mRawStageIsMovable && SetCurrentItem()) {
     mItem->mRawStageX = mMovedRawStageX;
     mItem->mRawStageY = mMovedRawStageY;
-    mess.Format("Raw stage position of map was revised to %.2f, %.2f", mMovedRawStageX, 
+    mess.Format("Raw stage position of map was revised to %.2f, %.2f", mMovedRawStageX,
       mMovedRawStageY);
     mWinApp->AppendToLog(mess);
   }
-      
+
   m_butMoveItem.SetWindowText(mMovingItem ? "Move Item" : "Stop Moving");
   mMovingItem = !mMovingItem;
   if (!mMovingItem)
@@ -3196,7 +3200,7 @@ void CNavigatorDlg::OnMoveItem()
   mWinApp->RestoreViewFocus();
 }
 
-// Determine whether the raw stage of a map can be changed: stage is at same position as 
+// Determine whether the raw stage of a map can be changed: stage is at same position as
 // current image and item already has raw stage position
 bool CNavigatorDlg::RawStageIsRevisable(bool fastStage)
 {
@@ -3232,7 +3236,7 @@ bool CNavigatorDlg::MovingMapItem(void)
 }
 
 // Respond to a mouse point from the user
-BOOL CNavigatorDlg::UserMousePoint(EMimageBuffer *imBuf, float inX, float inY, 
+BOOL CNavigatorDlg::UserMousePoint(EMimageBuffer *imBuf, float inX, float inY,
                                    BOOL nearCenter, int button)
 {
   ScaleMat aInv;
@@ -3243,7 +3247,7 @@ BOOL CNavigatorDlg::UserMousePoint(EMimageBuffer *imBuf, float inX, float inY,
   BOOL acquire = false;
   bool ctrlKey = GetAsyncKeyState(VK_CONTROL) / 2 != 0;
   bool shiftKey = GetAsyncKeyState(VK_SHIFT) / 2 != 0;
-  bool selecting = button == VK_LBUTTON && (!shiftKey || m_bEditMode) && 
+  bool selecting = button == VK_LBUTTON && (!shiftKey || m_bEditMode) &&
     (m_bEditMode || ctrlKey) && !mAddingPoints && !mAddingPoly;
   bool startingMultiDel = button == VK_LBUTTON && shiftKey && m_bEditMode &&
     !mAddingPoints && !mAddingPoly && mCurItemHoleXYpos.size();
@@ -3253,12 +3257,12 @@ BOOL CNavigatorDlg::UserMousePoint(EMimageBuffer *imBuf, float inX, float inY,
   bool movingOne = (m_bEditMode || mAddingPoints) && button == VK_RBUTTON && !mAddingPoly;
 
   mLastSelectWasCurrent = false;
-  if (!(mAddingPoints || mAddingPoly || mMovingItem || selecting || movingOne || 
+  if (!(mAddingPoints || mAddingPoly || mMovingItem || selecting || movingOne ||
     addingOne || startingMultiDel || startingMapDblClick))
     return false;
   if (mMovingItem && button == VK_MBUTTON)
     return false;
-  if (!ConvertMousePoint(imBuf, inX, inY, stageX, stageY, aInv, delX, delY, xInPiece, 
+  if (!ConvertMousePoint(imBuf, inX, inY, stageX, stageY, aInv, delX, delY, xInPiece,
     yInPiece, pieceIndex))
     return false;
 
@@ -3306,9 +3310,9 @@ BOOL CNavigatorDlg::UserMousePoint(EMimageBuffer *imBuf, float inX, float inY,
     }
     UpdateListString(mCurrentItem);
     SetChanged(true);
-    mRawStageIsMovable = mItem->IsMap() && nearCenter && 
+    mRawStageIsMovable = mItem->IsMap() && nearCenter &&
       RawStageIsRevisable(false);
-  
+
     // Adding points or the first point of a polygon
   } else if ((mAddingPoints || mAddingPoly == 1 || addingOne) && button != VK_RBUTTON) {
 
@@ -3322,12 +3326,12 @@ BOOL CNavigatorDlg::UserMousePoint(EMimageBuffer *imBuf, float inX, float inY,
         return false;
       acquire = mItem->mAcquire;
       groupID = mItem->mGroupID;
-    } else if (SetCurrentItem() && mItemArray.GetSize() > mNumberBeforeAdd && 
+    } else if (SetCurrentItem() && mItemArray.GetSize() > mNumberBeforeAdd &&
       mAddingPoints)
       acquire = mItem->mAcquire;
     if (CheckIfMapIsInMultigridNav(imBuf->mMapID))
       return false;
-    item = AddPointMarkedOnBuffer(imBuf, stageX, stageY, 
+    item = AddPointMarkedOnBuffer(imBuf, stageX, stageY,
       mAddingPoints ? mAddPointID : groupID);
     item->mAcquire = acquire;
     if (mAddingPoly) {
@@ -3367,7 +3371,7 @@ BOOL CNavigatorDlg::UserMousePoint(EMimageBuffer *imBuf, float inX, float inY,
 }
 
 // Initial operations for adjusting a mouse point and converting it to stage coords
-bool CNavigatorDlg::ConvertMousePoint(EMimageBuffer *imBuf, float &inX, float &inY, 
+bool CNavigatorDlg::ConvertMousePoint(EMimageBuffer *imBuf, float &inX, float &inY,
   float &stageX, float &stageY, ScaleMat &aInv, float &delX, float &delY, float &xInPiece,
   float &yInPiece, int &pieceIndex)
 {
@@ -3382,7 +3386,7 @@ bool CNavigatorDlg::ConvertMousePoint(EMimageBuffer *imBuf, float &inX, float &i
 }
 
 // Selects or adds to selection the nearest point within the given distance limit
-bool CNavigatorDlg::SelectNearestPoint(EMimageBuffer *imBuf, float stageX, float stageY, 
+bool CNavigatorDlg::SelectNearestPoint(EMimageBuffer *imBuf, float stageX, float stageY,
   ScaleMat aInv, float delX, float delY, bool ctrlKey, float distLim)
 {
   std::set<int>::iterator iter;
@@ -3401,7 +3405,7 @@ bool CNavigatorDlg::SelectNearestPoint(EMimageBuffer *imBuf, float stageX, float
     mItem->IsMap())
     mSelectedItems.clear();
 
-  GetSelectionLimits(imBuf, aInv, delX, delY, selXlimit, selYlimit, selXwindow, 
+  GetSelectionLimits(imBuf, aInv, delX, delY, selXlimit, selYlimit, selXwindow,
     selYwindow);
 
   // Loop on items; skip ones that should not be visible or are outside region
@@ -3426,7 +3430,7 @@ bool CNavigatorDlg::SelectNearestPoint(EMimageBuffer *imBuf, float stageX, float
       minIsPolyInGroup = item->mGroupID > 0 && item->IsPolygon();
     }
   }
-  if (distMin > B3DCHOICE(dragging && minIsPolyInGroup, 10., 1.) * distLim || 
+  if (distMin > B3DCHOICE(dragging && minIsPolyInGroup, 10., 1.) * distLim ||
     (dragging && distNext < 1.e9 && distMin > 0.5 * distNext))
     return false;
 
@@ -3470,7 +3474,7 @@ bool CNavigatorDlg::SelectNearestPoint(EMimageBuffer *imBuf, float stageX, float
 // Determines a region around the image and around the window for limiting selection with
 // the mouse; also used by holefinder
 void CNavigatorDlg::GetSelectionLimits(EMimageBuffer *imBuf, ScaleMat aInv, float delX,
-  float delY, float selXlimit[4], float selYlimit[4], float selXwindow[4], 
+  float delY, float selXlimit[4], float selYlimit[4], float selXwindow[4],
   float selYwindow[4])
 {
   float selXLimitFrac[4] = {-0.03f, 1.03f, 1.03f, -0.03f};
@@ -3493,7 +3497,7 @@ void CNavigatorDlg::GetSelectionLimits(EMimageBuffer *imBuf, ScaleMat aInv, floa
 }
 
 // Select point under mouse in edit mode
-bool CNavigatorDlg::MouseDragSelectPoint(EMimageBuffer * imBuf, float inX, float inY, 
+bool CNavigatorDlg::MouseDragSelectPoint(EMimageBuffer * imBuf, float inX, float inY,
   float imDistLim)
 {
   ScaleMat aInv;
@@ -3528,7 +3532,7 @@ void CNavigatorDlg::MouseDoubleClick(int button)
 
       // Get interhole distance and distance to nearest
       for (ind = 0; ind < numHoles; ind++) {
-        dist = sqrt(pow(mMultiDelStageX - mCurItemHoleXYpos[2 * ind], 2.f) + 
+        dist = sqrt(pow(mMultiDelStageX - mCurItemHoleXYpos[2 * ind], 2.f) +
           pow(mMultiDelStageY - mCurItemHoleXYpos[2 * ind + 1], 2.f));
         if (dist < minDist) {
           minDist = dist;
@@ -3623,9 +3627,9 @@ bool CNavigatorDlg::GetHolePositionVectors(FloatVec **xypos, IntVec **index)
 }
 
 // Do common operations for adding a point marked on an image
-CMapDrawItem *CNavigatorDlg::AddPointMarkedOnBuffer(EMimageBuffer *imBuf, float stageX, 
+CMapDrawItem *CNavigatorDlg::AddPointMarkedOnBuffer(EMimageBuffer *imBuf, float stageX,
                                                     float stageY, int groupID)
-{ 
+{
   CMapDrawItem *item;
   item = MakeNewItem(groupID);
   item->mStageX = stageX;
@@ -3671,14 +3675,14 @@ void CNavigatorDlg::SetupItemMarkedOnBuffer(EMimageBuffer *imBuf, CMapDrawItem *
 }
 
 // Add a point item from a position on an image
-int CNavigatorDlg::AddImagePositionOnBuffer(EMimageBuffer *imBuf, float imageX, 
+int CNavigatorDlg::AddImagePositionOnBuffer(EMimageBuffer *imBuf, float imageX,
   float imageY, float stageZ, int groupID)
 {
   CMapDrawItem *item;
   ScaleMat aInv;
   float delX, delY, stageX, stageY, xInPiece, yInPiece;
   int pieceIndex;
-  if (!ConvertMousePoint(imBuf, imageX, imageY, stageX, stageY, aInv, delX, delY, 
+  if (!ConvertMousePoint(imBuf, imageX, imageY, stageX, stageY, aInv, delX, delY,
     xInPiece, yInPiece, pieceIndex))
     return 1;
   if (CheckIfMapIsInMultigridNav(imBuf->mMapID))
@@ -3693,7 +3697,7 @@ int CNavigatorDlg::AddImagePositionOnBuffer(EMimageBuffer *imBuf, float imageX,
 }
 
 // Add a polygon from an array of positions on an image
-int CNavigatorDlg::AddPolygonFromImagePositions(EMimageBuffer *imBuf, float *imageX, 
+int CNavigatorDlg::AddPolygonFromImagePositions(EMimageBuffer *imBuf, float *imageX,
   float *imageY, int numPts, float stageZ)
 {
   CMapDrawItem *item;
@@ -3741,7 +3745,7 @@ void CNavigatorDlg::AddItemFromStagePositions(float *stageX, float *stageY, int 
 }
 
 // Convert a set of polygons from an IMOD model object to a set of items in polyArray
-int CNavigatorDlg::ImodObjectToPolygons(EMimageBuffer *imBuf, Iobj *obj, 
+int CNavigatorDlg::ImodObjectToPolygons(EMimageBuffer *imBuf, Iobj *obj,
   MapItemArray &polyArray)
 {
   ScaleMat aMat, aInv;
@@ -3789,8 +3793,8 @@ int CNavigatorDlg::ImodObjectToPolygons(EMimageBuffer *imBuf, Iobj *obj,
 }
 
 // Add the non-excluded items in the selected groups to the Naviigator array
-void CNavigatorDlg::AddAutocontPolygons(MapItemArray &polyArray, 
-  ShortVec &excluded, ShortVec &groupNums, int *groupShown, int numGroups, int &firstID, 
+void CNavigatorDlg::AddAutocontPolygons(MapItemArray &polyArray,
+  ShortVec &excluded, ShortVec &groupNums, int *groupShown, int numGroups, int &firstID,
   int &lastID, IntVec &indsInPoly)
 {
   int ind, group, numOut = 0, numPolys = (int)polyArray.GetSize();
@@ -3921,7 +3925,7 @@ BOOL CNavigatorDlg::BackspacePressed()
 
 // The call for SerialEMView to get the items to draw
 MapItemArray *CNavigatorDlg::GetMapDrawItems(
-  EMimageBuffer *imBuf, ScaleMat &aMat, float &delX, float &delY, BOOL &drawAllReg, 
+  EMimageBuffer *imBuf, ScaleMat &aMat, float &delX, float &delY, BOOL &drawAllReg,
   CMapDrawItem **acquireBox)
 {
   float angle, tiltAngle;
@@ -3942,8 +3946,8 @@ MapItemArray *CNavigatorDlg::GetMapDrawItems(
 
   // Show multishot somehow if one or other type is on, and either the dialog is open
   // or acquire is on and "Show shots when show acquire" is checked
-  showMulti = ((msParams->inHoleOrMultiHole & MULTI_IN_HOLE) || 
-    mHelper->MultipleHolesAreSelected()) && 
+  showMulti = ((msParams->inHoleOrMultiHole & MULTI_IN_HOLE) ||
+    mHelper->MultipleHolesAreSelected()) &&
     ((m_bShowAcquireArea && (mHelper->GetEnableMultiShot() & 1)) ||
     (mHelper->mMultiShotDlg && !mHelper->mMultiShotDlg->RecordingISValues()));
 
@@ -3961,7 +3965,7 @@ MapItemArray *CNavigatorDlg::GetMapDrawItems(
     (*acquireBox)->AppendPoint(mItem->mStageX, mItem->mStageY);
 
   } else if (!mShowingLDareas && (imBuf->mHasUserPt || showCurPtAcquire) &&
-    (m_bShowAcquireArea || showMulti) && 
+    (m_bShowAcquireArea || showMulti) &&
     RegistrationUseType(imBuf->mRegistration) != NAVREG_IMPORT) {
 
       // If there is a user point and the box is on to draw acquire area, get needed
@@ -3991,7 +3995,7 @@ MapItemArray *CNavigatorDlg::GetMapDrawItems(
       } else
         magInd = mScope->FastMagIndex();
 
-      // Get the camera to stage matrix, determine the frame size, and make an item 
+      // Get the camera to stage matrix, determine the frame size, and make an item
       // with stage coordinates in the corners of that frame
       s2c = mShiftManager->StageToCamera(camera, magInd);
       if (s2c.xpx) {
@@ -4013,9 +4017,9 @@ MapItemArray *CNavigatorDlg::GetMapDrawItems(
         sizeX = conSet->right - conSet->left;
         sizeY = conSet->bottom - conSet->top;
         if (montaging && !showMulti) {
-          sizeX = montp->binning * (montp->xFrame + (montp->xFrame - montp->xOverlap) * 
+          sizeX = montp->binning * (montp->xFrame + (montp->xFrame - montp->xOverlap) *
             (montp->xNframes - 1));
-          sizeY = montp->binning * (montp->yFrame + (montp->yFrame - montp->yOverlap) * 
+          sizeY = montp->binning * (montp->yFrame + (montp->yFrame - montp->yOverlap) *
             (montp->yNframes - 1));
         }
         for (ind = 0; ind < 5; ind++) {
@@ -4026,7 +4030,7 @@ MapItemArray *CNavigatorDlg::GetMapDrawItems(
           box->AppendPoint(ptX, ptY);
         }
 
-        // If showing circles, then get the parameters and compute stage coordinates for 
+        // If showing circles, then get the parameters and compute stage coordinates for
         // each circle from camera coordinates; add more points to box
         if (showMulti) {
           float inHoleRadius = 0., beamRadius;
@@ -4035,7 +4039,7 @@ MapItemArray *CNavigatorDlg::GetMapDrawItems(
           IntVec holeIndex;
           CameraParameters *camParam = mWinApp->GetCamParams() + camera;
           bool custom = msParams->useCustomHoles && msParams->customHoleX.size() > 0;
-          magForHoles = custom ? msParams->customMagIndex : 
+          magForHoles = custom ? msParams->customMagIndex :
             msParams->holeMagIndex[msParams->doHexArray ? 1 : 0];
 
           // This is the inverse of the conversion of hole vectors to image shifts
@@ -4072,7 +4076,7 @@ MapItemArray *CNavigatorDlg::GetMapDrawItems(
               for (ring = 0; ring < (msParams->doSecondRing ? 2 : 1); ring++) {
                 inHoleRadius = msParams->spokeRad[ring] / pixel;
                 for (ind = 0; ind < msParams->numShots[ring]; ind++) {
-                  angle = (float)(DTOR * (ind * 360. / msParams->numShots[ring] + 
+                  angle = (float)(DTOR * (ind * 360. / msParams->numShots[ring] +
                     rotation));
                   cornX = inHoleRadius * (float)cos(angle);
                   cornY = inHoleRadius * (float)sin(angle);
@@ -4085,9 +4089,9 @@ MapItemArray *CNavigatorDlg::GetMapDrawItems(
 
             // Add one more point with beam radius as a position in X in camera coords
             beamRadius = 0.5f * msParams->beamDiam / pixel;
-            if (msParams->useIllumArea && mWinApp->mScope->GetUseIllumAreaForC2() && 
+            if (msParams->useIllumArea && mWinApp->mScope->GetUseIllumAreaForC2() &&
               asIfLowDose)
-              beamRadius = (float)(50. * 
+              beamRadius = (float)(50. *
               mWinApp->mScope->IntensityToIllumArea(ldp[RECORD_CONSET].intensity,
                 ldp[RECORD_CONSET].spotSize, ldp[RECORD_CONSET].probeMode) / pixel);
             ptX = box->mStageX + c2s.xpx * beamRadius;
@@ -4103,7 +4107,7 @@ MapItemArray *CNavigatorDlg::GetMapDrawItems(
         box->mRegistration = mCurrentRegistration;
         box->mType = ITEM_TYPE_POLYGON;
         box->mColor = POINT_ACQUIRE_COLOR;
-        box->mDraw = ((mItem && mItem->mDraw && !mItem->mNumSkipHoles) || 
+        box->mDraw = ((mItem && mItem->mDraw && !mItem->mNumSkipHoles) ||
           imBuf->mHasUserPt);
         if (mItem)
           box->mPieceDrawnOn = mItem->mPieceDrawnOn;
@@ -4151,13 +4155,13 @@ void CNavigatorDlg::AddHolePositionsToItemPts(FloatVec &delISX, FloatVec &delISY
 }
 
 // Compute the scale transformation from stage to image in given buffer
-BOOL CNavigatorDlg::BufferStageToImage(EMimageBuffer *imBuf, ScaleMat &aMat, 
+BOOL CNavigatorDlg::BufferStageToImage(EMimageBuffer *imBuf, ScaleMat &aMat,
                                     float &delX, float &delY)
 {
   float stageX, stageY, tmpX, tmpY;
   int uncropX, uncropY, centered;
   ScaleMat rMat;
-  if (!imBuf->mImage || (imBuf->GetUncroppedSize(uncropX, uncropY, &centered) && 
+  if (!imBuf->mImage || (imBuf->GetUncroppedSize(uncropX, uncropY, &centered) &&
     uncropX > 0 && centered < 1))
     return false;
   float width = (float)imBuf->mImage->getWidth();
@@ -4179,21 +4183,21 @@ BOOL CNavigatorDlg::BufferStageToImage(EMimageBuffer *imBuf, ScaleMat &aMat,
       aMat.xpy *= imBuf->mLoadWidth / imBuf->mUseWidth;
       aMat.ypx *= imBuf->mLoadHeight / imBuf->mUseHeight;
       aMat.ypy *= imBuf->mLoadHeight / imBuf->mUseHeight;
-      delX = (item->mMapWidth / imBuf->mUseWidth) * imBuf->mLoadWidth / 2.f - 
+      delX = (item->mMapWidth / imBuf->mUseWidth) * imBuf->mLoadWidth / 2.f -
         aMat.xpx * item->mStageX - aMat.xpy * item->mStageY;
-      delY = (2.f - item->mMapHeight / imBuf->mUseHeight) * imBuf->mLoadHeight / 2.f - 
+      delY = (2.f - item->mMapHeight / imBuf->mUseHeight) * imBuf->mLoadHeight / 2.f -
         aMat.ypx * item->mStageX - aMat.ypy * item->mStageY;
-      /*SEMTrace('n', "Transform for map %s at %.3f %.3f: %f %f %f %f %.2f %.2f", 
-      (LPCTSTR)item->mLabel, item->mStageX, 
+      /*SEMTrace('n', "Transform for map %s at %.3f %.3f: %f %f %f %f %.2f %.2f",
+      (LPCTSTR)item->mLabel, item->mStageX,
       item->mStageY, aMat.xpx, aMat.xpy, aMat.ypx, aMat.ypy, delX, delY);
-      SEMTrace('n', "W/H for im: %.0f %.0f  load: %d %d  use: %.0f %.0f  map: %d %d", width, 
+      SEMTrace('n', "W/H for im: %.0f %.0f  load: %d %d  use: %.0f %.0f  map: %d %d", width,
       height, imBuf->mLoadWidth, imBuf->mLoadHeight, imBuf->mUseWidth, imBuf->mUseHeight,
       item->mMapWidth, item->mMapHeight); */
     }
 
     // Rotate the transformation if the map has been rotated.
     // But the cross-terms of rotation matrix need to be negated to operate on inverted Y
-    if (imBuf->mRotAngle || imBuf->mInverted || width != imBuf->mLoadWidth || 
+    if (imBuf->mRotAngle || imBuf->mInverted || width != imBuf->mLoadWidth ||
       height != imBuf->mLoadHeight) {
       rMat = mHelper->GetRotationMatrix(imBuf->mRotAngle, false);
       rMat.xpy *= -1.;
@@ -4207,12 +4211,12 @@ BOOL CNavigatorDlg::BufferStageToImage(EMimageBuffer *imBuf, ScaleMat &aMat,
       tmpY = delY - imBuf->mLoadHeight / 2.f;
       delX = rMat.xpx * tmpX + rMat.xpy * tmpY + width / 2.f;
       delY = rMat.ypx * tmpX + rMat.ypy * tmpY + height / 2.f;
-      /*SEMTrace('n', "Transform after rotation (%.2f %d): %f %f %f %f %.2f %.2f", 
-        imBuf->mRotAngle, imBuf->mInverted?1:0, aMat.xpx, aMat.xpy, aMat.ypx, aMat.ypy, 
+      /*SEMTrace('n', "Transform after rotation (%.2f %d): %f %f %f %f %.2f %.2f",
+        imBuf->mRotAngle, imBuf->mInverted?1:0, aMat.xpx, aMat.xpy, aMat.ypx, aMat.ypy,
         delX, delY); */
     }
-    /*SEMTrace('n', "Map polygon: %.3f,%.3f  %.3f,%.3f  %.3f,%.3f  %.3f,%.3f", 
-      item->mPtX[0], item->mPtY[0], item->mPtX[1], item->mPtY[1], 
+    /*SEMTrace('n', "Map polygon: %.3f,%.3f  %.3f,%.3f  %.3f,%.3f  %.3f,%.3f",
+      item->mPtX[0], item->mPtY[0], item->mPtX[1], item->mPtY[1],
       item->mPtX[2], item->mPtY[2], item->mPtX[3], item->mPtY[3]); */
     return true;
   }
@@ -4230,7 +4234,7 @@ BOOL CNavigatorDlg::BufferStageToImage(EMimageBuffer *imBuf, ScaleMat &aMat,
 // MONTAGE SETUP
 
 // Setup a montage from corner points
-void CNavigatorDlg::CornerMontage() 
+void CNavigatorDlg::CornerMontage()
 {
 
   // Make a temporary item to put points in, and use to set up montage
@@ -4308,7 +4312,7 @@ void CNavigatorDlg::PolygonFromCorners(void)
         }
       }
   } else {
-        
+
     // Turn off the corner setting for all these points to avoid errors if command
     // is used with new points
     for (int i = (int)mItemArray.GetSize() - 1; i >= 0; i--) {
@@ -4321,7 +4325,7 @@ void CNavigatorDlg::PolygonFromCorners(void)
 }
 
 // Setup a montage from a polygon
-int CNavigatorDlg::PolygonMontage(CMontageSetupDlg *montDlg, bool skipSetupDlg, 
+int CNavigatorDlg::PolygonMontage(CMontageSetupDlg *montDlg, bool skipSetupDlg,
   int itemInd, float overlapFac, int source)
 {
 	CMapDrawItem *item, *itmp;
@@ -4341,7 +4345,7 @@ int CNavigatorDlg::PolygonMontage(CMontageSetupDlg *montDlg, bool skipSetupDlg,
       return 1;
     item = mItemArray.GetAt(itemInd);
   }
-  if (item->IsNotPolygon())	
+  if (item->IsNotPolygon())
     return 1;
   itmp = new CMapDrawItem;
   for (int i = 0; i < item->mNumPoints; i++)
@@ -4446,7 +4450,7 @@ int CNavigatorDlg::FullMontage(bool skipDlg, float overlapFac, int source)
     delete itmp;
     return 1;
   }
-  
+
   itmp->AppendPoint(minX, midY);
   itmp->AppendPoint(minCornerX, maxCornerY);
   itmp->AppendPoint(midX, maxY);
@@ -4461,12 +4465,12 @@ int CNavigatorDlg::FullMontage(bool skipDlg, float overlapFac, int source)
   if (mWinApp->LowDoseMode()) {
     inView = mScope->GetLowDoseArea() == VIEW_CONSET;
     inSearch = mScope->GetLowDoseArea() == SEARCH_AREA;
-    viewPix = mShiftManager->GetPixelSize(mWinApp->GetCurrentCamera(), 
+    viewPix = mShiftManager->GetPixelSize(mWinApp->GetCurrentCamera(),
       ldp[VIEW_CONSET].magIndex);
     if (ldp[SEARCH_AREA].magIndex > 0)
       searchPix = mShiftManager->GetPixelSize(mWinApp->GetCurrentCamera(),
         ldp[SEARCH_AREA].magIndex);
-    if ((inView && (!searchPix || viewPix > 5. * searchPix)) || 
+    if ((inView && (!searchPix || viewPix > 5. * searchPix)) ||
       (inSearch && searchPix > 5. * viewPix)) {
       montp->useViewInLowDose = inView;
       montp->useSearchInLowDose = inSearch;
@@ -4474,7 +4478,7 @@ int CNavigatorDlg::FullMontage(bool skipDlg, float overlapFac, int source)
   }
 
   mSettingUpFullMont = true;
-  err = SetupMontage(itmp, (forMultigrid && !skipDlg) ? &montDlg : NULL, skipDlg, 
+  err = SetupMontage(itmp, (forMultigrid && !skipDlg) ? &montDlg : NULL, skipDlg,
     overlapFac, source);
   mSettingUpFullMont = false;
   if (!err && (mWinApp->Montaging() || forMultigrid)) {
@@ -4489,7 +4493,7 @@ int CNavigatorDlg::FullMontage(bool skipDlg, float overlapFac, int source)
 }
 
 // Common routine to set up a montage
-int CNavigatorDlg::SetupMontage(CMapDrawItem *item, CMontageSetupDlg *montDlg, 
+int CNavigatorDlg::SetupMontage(CMapDrawItem *item, CMontageSetupDlg *montDlg,
   bool skipSetupDlg, float overlapFac, int source)
 {
   ScaleMat aInv;
@@ -4543,7 +4547,7 @@ int CNavigatorDlg::SetupMontage(CMapDrawItem *item, CMontageSetupDlg *montDlg,
   // Leave the current file before touching the montage parameters
   if (!montDlg)
     mDocWnd->LeaveCurrentFile();
-  if (mWinApp->mMacroProcessor->DoingMacro() && 
+  if (mWinApp->mMacroProcessor->DoingMacro() &&
     mWinApp->mMacroProcessor->GetNextParamSetForMont()) {
     mWinApp->mMontageController->ChangeParamSetToUse(montParam,
       mWinApp->mMacroProcessor->GetNextParamSetForMont());
@@ -4586,10 +4590,10 @@ int CNavigatorDlg::SetupMontage(CMapDrawItem *item, CMontageSetupDlg *montDlg,
     mFrameLimitX = camParam->sizeX;
     mFrameLimitY = camParam->sizeY;
     mConSetWithFrameLimit = -1;
-    mWinApp->mMontageController->LimitSizesToUsable(camParam, iCam, magIndex, 
+    mWinApp->mMontageController->LimitSizesToUsable(camParam, iCam, magIndex,
       mFrameLimitX, mFrameLimitY, 1);
     if (!skipSetupDlg && (conSet->right - conSet->left < askLimitRatio * mFrameLimitX ||
-      conSet->bottom - conSet->top < askLimitRatio * mFrameLimitY) && 
+      conSet->bottom - conSet->top < askLimitRatio * mFrameLimitY) &&
       AfxMessageBox("The " + modeNames[consetNum] + " area is significantly smaller than "
       "the camera frame size."
       "\n\nDo you want to keep the montage frame size from being bigger than this area?"
@@ -4602,7 +4606,7 @@ int CNavigatorDlg::SetupMontage(CMapDrawItem *item, CMontageSetupDlg *montDlg,
 
     //montParam->minOverlapFactor = overlapFactor;  ??  HUH??
     montParam->usePrevInLowDose = false;
-    if ((err = FitMontageToItem(montParam, binning, magIndex, forceStage, overlapFac, 
+    if ((err = FitMontageToItem(montParam, binning, magIndex, forceStage, overlapFac,
       iCam, lowDose))) {
 
       // If it fails and there are more trials, switch from View to Search or vice-versa,
@@ -4655,7 +4659,7 @@ int CNavigatorDlg::SetupMontage(CMapDrawItem *item, CMontageSetupDlg *montDlg,
     err = 0;
   } else {
     if (forMacro && mWinApp->mMacroProcessor->DoingMacro())
-      err = mDocWnd->GetMontageParamsAndFile(1, montParam->xFrame, montParam->yFrame, 
+      err = mDocWnd->GetMontageParamsAndFile(1, montParam->xFrame, montParam->yFrame,
         mWinApp->mMacroProcessor->GetEnteredName());
     else
       err = mDocWnd->GetMontageParamsAndFile(1);
@@ -4687,7 +4691,7 @@ int CNavigatorDlg::SetupMontage(CMapDrawItem *item, CMontageSetupDlg *montDlg,
     mWinApp->UpdateBufferWindows();
   }
   return 0;
-} 
+}
 
 
 // Find the smallest montage framing that covers the region of the polygon
@@ -4756,11 +4760,11 @@ int CNavigatorDlg::FitMontageToItem(MontParam *montParam, int binning, int magIn
   camSize = B3DMAX(mFrameLimitX, mFrameLimitY);
   overlap = binx2 * ((int)(overlapFac * camSize) / binx2);
   pixel = mShiftManager->GetPixelSize(iCam, magIndex);
-  maxIS = magIndex < mScope->GetLowestNonLMmag(&mCamParams[iCam]) ? 
+  maxIS = magIndex < mScope->GetLowestNonLMmag(&mCamParams[iCam]) ?
     mParam->maxLMMontageIS : mParam->maxMontageIS;
 
   // Use stage cal if no image shift cal
-  if (magIndex < mScope->GetLowestNonLMmag(&mCamParams[iCam]) && 
+  if (magIndex < mScope->GetLowestNonLMmag(&mCamParams[iCam]) &&
     !(mShiftManager->CameraToIS(magIndex)).xpx)
     forceStage = true;
 
@@ -4768,14 +4772,14 @@ int CNavigatorDlg::FitMontageToItem(MontParam *montParam, int binning, int magIn
   for (which = forceStage ? 1 : 0; which < 2; which++) {
     xNframes = 0;
     yNframes = 0;
- 
+
     // If have to do stage, adjust overlap upward and bail out if it is too high
     if (which && overlap < montParam->minMicronsOverlap / pixel) {
       overlap = binx2 * ((int)(montParam->minMicronsOverlap / pixel) / binx2);
       if (overlap > maxOverlap)
         return 2;
     }
- 
+
     for (i = 1; i <= 65536 && (!xNframes || !yNframes); i++) {
       if (!xNframes && (xx + (i - 1) * overlap) / i <= mFrameLimitX)
         xNframes = i;
@@ -4785,7 +4789,7 @@ int CNavigatorDlg::FitMontageToItem(MontParam *montParam, int binning, int magIn
 
     if (!(xNframes * yNframes))
       continue;
-  
+
     xFrame = (int)(xx + (xNframes - 1 ) * overlap) / (xNframes * binning);
     yFrame = (int)(yy + (yNframes - 1 ) * overlap) / (yNframes * binning);
     saveOverlap = overlap;
@@ -4822,7 +4826,7 @@ int CNavigatorDlg::FitMontageToItem(MontParam *montParam, int binning, int magIn
 
   // Adjust the sizes properly, set up parameters
   montParam->binning = binning;
-  mCamera->CenteredSizes(xFrame, camParam->sizeX, camParam->moduloX, left, 
+  mCamera->CenteredSizes(xFrame, camParam->sizeX, camParam->moduloX, left,
     right, yFrame, camParam->sizeY, camParam->moduloY, top, bot, binning, conSet, iCam);
 
   montParam->xFrame = xFrame;
@@ -4858,8 +4862,8 @@ void CNavigatorDlg::PolygonToCameraCoords(CMapDrawItem * item, int iCam, int mag
   float xx, yy;
   mPolyToCamMat = mShiftManager->StageToCamera(iCam, magIndex);
   if (adjustForFocusSet && magIndex >= mScope->GetLowestNonLMmag())
-    mPolyToCamMat = mShiftManager->FocusAdjustedStageToCamera(iCam, magIndex, 
-      mScope->FastSpotSize(), mScope->GetProbeMode(), mScope->FastIntensity(), 
+    mPolyToCamMat = mShiftManager->FocusAdjustedStageToCamera(iCam, magIndex,
+      mScope->FastSpotSize(), mScope->GetProbeMode(), mScope->FastIntensity(),
       mScope->GetLDViewDefocus(adjustForFocusSet));
   if (item->mMapTiltAngle > RAW_STAGE_TEST && fabs((double)item->mMapTiltAngle) > 1)
     mShiftManager->AdjustStageToCameraForTilt(mPolyToCamMat, item->mMapTiltAngle);
@@ -4907,9 +4911,9 @@ void CNavigatorDlg::SetupSkipList(MontParam * montParam)
 
   for (iy = 0; iy < yNframes; iy++) {
     for (ix = 0; ix < xNframes; ix++) {
-      
-      if (!IsFrameNeeded(item, xFrame, yFrame, xOverlap, yOverlap, mExtraX, mExtraY, 
-        mCamCenX - montCenX, mCamCenY- montCenY, ix, iy, xNframes, yNframes, xMid, 
+
+      if (!IsFrameNeeded(item, xFrame, yFrame, xOverlap, yOverlap, mExtraX, mExtraY,
+        mCamCenX - montCenX, mCamCenY- montCenY, ix, iy, xNframes, yNframes, xMid,
         yMid)) {
         if ((int)montParam->skipPieceX.capacity() < montParam->numToSkip + 1) {
           size = (int)montParam->skipPieceX.capacity() + (xNframes * yNframes + 4) / 5;
@@ -4925,10 +4929,10 @@ void CNavigatorDlg::SetupSkipList(MontParam * montParam)
 }
 
 // Test whether a given frame is needed
-bool CNavigatorDlg::IsFrameNeeded(CMapDrawItem * item, int xFrame, int yFrame, 
-                                  float xOverlap, float yOverlap, float xExtra, 
+bool CNavigatorDlg::IsFrameNeeded(CMapDrawItem * item, int xFrame, int yFrame,
+                                  float xOverlap, float yOverlap, float xExtra,
                                   float yExtra, float xOffset, float yOffset, int ix,
-                                  int iy, int xNframes, int yNframes, float &xMid, 
+                                  int iy, int xNframes, int yNframes, float &xMid,
                                   float &yMid)
 {
   float xStart, yStart, xEnd, yEnd, xCen, yCen;
@@ -4956,15 +4960,15 @@ bool CNavigatorDlg::IsFrameNeeded(CMapDrawItem * item, int xFrame, int yFrame,
   SEMTrace('n', "%d%d %.2f %.2f\r\n%d%d %.2f %.2f\r\n%d%d %.2f %.2f\r\n%d%d %.2f %.2f",
     ix, iy, xStart, yStart, ix, iy, xStart, yEnd, ix, iy, xEnd, yEnd, ix, iy,xEnd,yStart);
 
-  // Check for each edge line and each diagonal point a fraction cornf from center to 
+  // Check for each edge line and each diagonal point a fraction cornf from center to
   // corner for being inside contours
-  return (LineInsideContour(item->mPtX, item->mPtY, item->mNumPoints, xStart, yStart, 
+  return (LineInsideContour(item->mPtX, item->mPtY, item->mNumPoints, xStart, yStart,
     xStart, yEnd) ||
-    LineInsideContour(item->mPtX, item->mPtY, item->mNumPoints, xStart, yEnd, xEnd, 
+    LineInsideContour(item->mPtX, item->mPtY, item->mNumPoints, xStart, yEnd, xEnd,
     yEnd) ||
-    LineInsideContour(item->mPtX, item->mPtY, item->mNumPoints, xEnd, yEnd, xEnd, 
+    LineInsideContour(item->mPtX, item->mPtY, item->mNumPoints, xEnd, yEnd, xEnd,
     yStart) ||
-    LineInsideContour(item->mPtX, item->mPtY, item->mNumPoints, xEnd, yStart, xStart, 
+    LineInsideContour(item->mPtX, item->mPtY, item->mNumPoints, xEnd, yStart, xStart,
     yStart) || InsideContour(item->mPtX, item->mPtY, item->mNumPoints, xCen, yCen) ||
     InsideContour(item->mPtX, item->mPtY, item->mNumPoints, cenf * xCen + cornf * xStart,
     cenf * yCen + cornf * yStart) ||
@@ -4977,7 +4981,7 @@ bool CNavigatorDlg::IsFrameNeeded(CMapDrawItem * item, int xFrame, int yFrame,
 }
 
 // Determine if a line segment crosses inside a contour by sampling
-bool CNavigatorDlg::LineInsideContour(float * ptsX, float * ptsY, int numPoints, 
+bool CNavigatorDlg::LineInsideContour(float * ptsX, float * ptsY, int numPoints,
                                       float xStart, float yStart, float xEnd, float yEnd)
 {
   float x, y;
@@ -5008,7 +5012,7 @@ void CNavigatorDlg::SetupSuperMontage(BOOL skewed)
   int *activeList = mWinApp->GetActiveCameraList();
   int camInd = activeList[montP->cameraIndex];
   double stageZ;
- 
+
   // Get the stage position and current montage size
   mScope->GetStagePosition(mLastScopeStageX, mLastScopeStageY, stageZ);
   montSizeX = montP->xNframes * montP->xFrame - (montP->xNframes - 1) * montP->xOverlap;
@@ -5171,7 +5175,7 @@ void CNavigatorDlg::PolygonSupermontage(void)
   int superID, polyID;
   if (!SetCurrentItem())
     return;
- 
+
   // Get the stage position and current montage size and default overlap
   mScope->GetStagePosition(mLastScopeStageX, mLastScopeStageY, stageZ);
   montSizeX = montP->xNframes * montP->xFrame - (montP->xNframes - 1) * montP->xOverlap;
@@ -5218,12 +5222,12 @@ void CNavigatorDlg::PolygonSupermontage(void)
   // Get needed size with an extra allowance, compute number of supers and half coord
   extra = (float)(extraFactor * B3DMAX(montP->xFrame, montP->yFrame));
   fullXsize = extra + xMax - xMin;
-  superXnum = (int)((fullXsize - overlap + montSizeX - overlap - 1) / 
+  superXnum = (int)((fullXsize - overlap + montSizeX - overlap - 1) /
     (montSizeX - overlap));
   halfX = (float)(superXnum * (montSizeX - overlap) + overlap) / 2.f;
   xCen = 0.5f * (xMax + xMin);
   fullYsize = extra + yMax - yMin;
-  superYnum = (int)((fullYsize - overlap + montSizeY - overlap - 1) / 
+  superYnum = (int)((fullYsize - overlap + montSizeY - overlap - 1) /
     (montSizeY - overlap));
   halfY = (float)(superYnum * (montSizeY - overlap) + overlap) /2.f;
   yCen = 0.5f * (yMax + yMin);
@@ -5234,8 +5238,8 @@ void CNavigatorDlg::PolygonSupermontage(void)
   aInv = MatInv(aMat);
   for (iy = 0; iy < superYnum; iy++) {
     for (ix = 0; ix < superXnum; ix++) {
-      if (IsFrameNeeded(mMontItemCam, montSizeX, montSizeY, (float)overlap, 
-        (float)overlap, extra / 2.f, extra / 2.f, xCen - halfX, yCen - halfY, 
+      if (IsFrameNeeded(mMontItemCam, montSizeX, montSizeY, (float)overlap,
+        (float)overlap, extra / 2.f, extra / 2.f, xCen - halfX, yCen - halfY,
         ix, iy, superXnum, superYnum, xMid, yMid)) {
         item = MakeNewItem(superID);
         mNewItemNum--;
@@ -5288,7 +5292,7 @@ void CNavigatorDlg::DeleteGroup(bool collapsedGroup)
   curID = mItem->mGroupID;
   if (!curID && !doSelection)
     return;
-  
+
   if (doSelection) {
     num = (int)mSelectedItems.size();
     message.Format("Are you sure you want to delete the %d selected items?", num);
@@ -5300,15 +5304,15 @@ void CNavigatorDlg::DeleteGroup(bool collapsedGroup)
   } else {
     num = CountItemsInGroup(curID, label, lastlab, i);
     message.Format("Are you sure you want to delete the %d items in this group?\n\n"
-      "(The labels of the first and last items in the group are %s and %s)", num, 
+      "(The labels of the first and last items in the group are %s and %s)", num,
       (LPCTSTR)label, (LPCTSTR)lastlab);
   }
-  if ((!doSelection || num > 2) && 
+  if ((!doSelection || num > 2) &&
     AfxMessageBox(message, MB_ICONQUESTION | MB_YESNO) != IDYES)
     return;
   for (i = end; i >= start; i--) {
     item = mItemArray[i];
-    if ((!doSelection && item->mGroupID == curID) || 
+    if ((!doSelection && item->mGroupID == curID) ||
       (doSelection && mSelectedItems.count(i))) {
       if (item->mAcquire) {
         item->mAcquire = false;
@@ -5345,7 +5349,7 @@ void CNavigatorDlg::AddCirclePolygon(float radius)
     SEMMessageBox(mess);
 }
 
-int CNavigatorDlg::DoAddCirclePolygon(float radius, float stageX, float stageY, 
+int CNavigatorDlg::DoAddCirclePolygon(float radius, float stageX, float stageY,
   BOOL useMarker, CString &mess)
 {
   float delX, delY, ptX, ptY;
@@ -5578,7 +5582,7 @@ void CNavigatorDlg::AddGridOfPoints(bool likeLast)
       if (likeLast) {
         if (mLastGridFillItem) {
 
-          // Search for smallest polygon or map that either center point or current point 
+          // Search for smallest polygon or map that either center point or current point
           // is in.  Loop on corner ([0]) then center ([1])
           for (j = 0; j < 2; j++) {
             searchPoly[j] = NULL;
@@ -5606,7 +5610,7 @@ void CNavigatorDlg::AddGridOfPoints(bool likeLast)
             return;
           }
 
-          // If both points are in different polygons, see if one point is in both 
+          // If both points are in different polygons, see if one point is in both
           // polygons, and if so its smallest polygon is the right one
           if (searchPoly[0] && searchPoly[1] && searchPoly[0] != searchPoly[1]) {
             if (InsideContour(searchPoly[1]->mPtX, searchPoly[1]->mPtY,
@@ -5883,7 +5887,7 @@ void CNavigatorDlg::AddGridOfPoints(bool likeLast)
 
   // Call common routine to add points
   MakeGridOrFoundPoints(jstart, jend, jdir, kstart, kend, dir, poly, spacing, jSpacing,
-    kSpacing, registration, stageZ, xcen, ycen, delX, delY, acquire, aInv, groupExtent, 
+    kSpacing, registration, stageZ, xcen, ycen, delX, delY, acquire, aInv, groupExtent,
     awayFromFocus, drawnOnID, likeLast);
 }
 
@@ -5893,8 +5897,8 @@ void CNavigatorDlg::AddGridOfPoints(bool likeLast)
 // for adding found holes
 int CNavigatorDlg::MakeGridOrFoundPoints(int jstart, int jend, int jdir, int kstart,
   int kend, int dir, CMapDrawItem *poly, float spacing, float jSpacing, float kSpacing,
-  int registration, float stageZ, float xcen, float ycen, 
-  float delX, float delY, bool acquire, ScaleMat &aInv, float groupExtent, 
+  int registration, float stageZ, float xcen, float ycen,
+  float delX, float delY, bool acquire, ScaleMat &aInv, float groupExtent,
   bool awayFromFocus, int drawnOnID, bool likeLast)
 {
   int startnum, num, jmin, jmax, kmin, kmax, j, k, jrange, krange, numInJgroup;
@@ -5997,7 +6001,7 @@ int CNavigatorDlg::MakeGridOrFoundPoints(int jstart, int jend, int jdir, int kst
       }
 
       // If point out there is acceptable distance, then record group extents
-      if (sqrt(j * jSpacing * j * jSpacing + kmin * kSpacing * kmin * kSpacing) < 
+      if (sqrt(j * jSpacing * j * jSpacing + kmin * kSpacing * kmin * kSpacing) <
         groupExtent) {
           numInJgroup = 1 + 2 * j;
           numInKgroup = 1 + 2 * kmin;
@@ -6035,14 +6039,14 @@ int CNavigatorDlg::MakeGridOrFoundPoints(int jstart, int jend, int jdir, int kst
           // Set up to add points, add the center point, then add all the other points
           startnum = mNewItemNum;
           num = 1;
-          AddPointOnGrid(midj, midk, poly, registration, groupID, startnum, num, 
+          AddPointOnGrid(midj, midk, poly, registration, groupID, startnum, num,
             drawnOnID, stageZ, spacing, delX, delY, acquire, aInv);
           firstCurItem = mCurrentItem;
           kdir = dir;
           for (j = jmin; jdir * (j - jmax) <= 0; j += jdir) {
             for (k = kmin; kdir * (k - kmax) <= 0; k += kdir) {
               if (k != midk || j != midj)
-                AddPointOnGrid(j, k, poly, registration, groupID, startnum, num, 
+                AddPointOnGrid(j, k, poly, registration, groupID, startnum, num,
                 drawnOnID, stageZ, spacing, delX, delY, acquire, aInv);
             }
 
@@ -6192,7 +6196,7 @@ int CNavigatorDlg::MakeGridOrFoundPoints(int jstart, int jend, int jdir, int kst
 
             num = (int)jIncluded[jgroup].size();
             bestCenters[jgroup] = 0;
-              
+
             // Either an empty or a 1-point group is OK
             if (num <= 1)
               continue;
@@ -6252,14 +6256,14 @@ int CNavigatorDlg::MakeGridOrFoundPoints(int jstart, int jend, int jdir, int kst
         num = 1;
         midj = jIncluded[jgroup][bestCenters[jgroup]];
         midk = kIncluded[jgroup][bestCenters[jgroup]];
-        AddPointOnGrid(midj, midk, poly, registration, groupID, startnum, num, drawnOnID,  
+        AddPointOnGrid(midj, midk, poly, registration, groupID, startnum, num, drawnOnID,
           stageZ, spacing, delX, delY, acquire, aInv);
         firstCurItem = mCurrentItem;
         for (i = 0; i < (int)jIncluded[jgroup].size(); i++) {
           j = jIncluded[jgroup][i];
           k = kIncluded[jgroup][i];
           if (k != midk || j != midj)
-            AddPointOnGrid(j, k, poly, registration, groupID, startnum, num, drawnOnID,  
+            AddPointOnGrid(j, k, poly, registration, groupID, startnum, num, drawnOnID,
               stageZ, spacing, delX, delY, acquire, aInv);
         }
 
@@ -6275,7 +6279,7 @@ int CNavigatorDlg::MakeGridOrFoundPoints(int jstart, int jend, int jdir, int kst
     if (numJgroups && !likeLast && !mMacroProcessor->DoingMacro() && mAcquireIndex < 0) {
      Redraw();
      label.Format("There are %d groups with %.1f points per group\n\n"
-       "Do you want to keep this set of groups?", numJgroups, 
+       "Do you want to keep this set of groups?", numJgroups,
        (float)(mItemArray.GetSize() - mNumberBeforeAdd) / numJgroups);
       if (AfxMessageBox(label, MB_QUESTION) == IDNO) {
         for (k = mNumberBeforeAdd; k < mItemArray.GetSize(); k++) {
@@ -6310,8 +6314,8 @@ int CNavigatorDlg::MakeGridOrFoundPoints(int jstart, int jend, int jdir, int kst
 }
 
 // Add one point on the grid given the index and other parameters
-void CNavigatorDlg::AddPointOnGrid(int j, int k, CMapDrawItem *poly, int registration, 
-                                   int groupID, int startnum, int &num, int drawnOnID, 
+void CNavigatorDlg::AddPointOnGrid(int j, int k, CMapDrawItem *poly, int registration,
+                                   int groupID, int startnum, int &num, int drawnOnID,
                                    float stageZ, float spacing, float delX, float delY,
                                    bool acquire, ScaleMat &aInv)
 {
@@ -6344,10 +6348,10 @@ void CNavigatorDlg::AddPointOnGrid(int j, int k, CMapDrawItem *poly, int registr
 
 // Test whether the given point is outside the polygon or close to being so
 // by simply testing if any corners of a box around point are outside it
-bool CNavigatorDlg::BoxedPointOutsidePolygon(CMapDrawItem *poly, float xx, float yy, 
+bool CNavigatorDlg::BoxedPointOutsidePolygon(CMapDrawItem *poly, float xx, float yy,
                                              float spacing)
 {
-  float corn = 0.5f  * spacing * 
+  float corn = 0.5f  * spacing *
     (mAddingFoundHoles ? mParam->holeInPolyBoxFrac : mParam->gridInPolyBoxFrac);
   if (mAddingFoundHoles && xx < EXTRA_VALUE_TEST)
     return true;
@@ -6378,8 +6382,8 @@ void CNavigatorDlg::InterPointVectors(CMapDrawItem **gitem, float *vecx, float *
 
 // Given stage increments in the two directions, set the starts and ends and directions
 // for moving away from the focus area
-void CNavigatorDlg::SetupForAwayFromFocus(float incStageX1, float incStageY1, 
-  float incStageX2, float incStageY2, int &jstart, int &jend, int &jdir, int &kstart, 
+void CNavigatorDlg::SetupForAwayFromFocus(float incStageX1, float incStageY1,
+  float incStageX2, float incStageY2, int &jstart, int &jend, int &jdir, int &kstart,
   int &kend, int &dir)
 {
   double specX, specY, stageX, stageY, dot1, dot2;
@@ -6394,7 +6398,7 @@ void CNavigatorDlg::SetupForAwayFromFocus(float incStageX1, float incStageY1,
     specX = -axis * cos(DTOR * mLowDoseDlg->m_iAxisAngle);
     specY = -axis * sin(DTOR * mLowDoseDlg->m_iAxisAngle);
   }
-  
+
   stageX = cInv.xpx * specX + cInv.xpy * specY;
   stageY = cInv.ypx * specX + cInv.ypy * specY;
 
@@ -6415,9 +6419,9 @@ void CNavigatorDlg::SetupForAwayFromFocus(float incStageX1, float incStageY1,
   mSwapAxesAddingPoints = jdir * dot1 > dir * dot2;
 }
 
-// Compute stage position of one item in grid, or get position of a found hole at that 
+// Compute stage position of one item in grid, or get position of a found hole at that
 // grid position
-void CNavigatorDlg::GridStagePos(int j, int k, float delX, float delY, ScaleMat &aInv, 
+void CNavigatorDlg::GridStagePos(int j, int k, float delX, float delY, ScaleMat &aInv,
                                  float &xx, float &yy)
 {
   if (mAddingFoundHoles) {
@@ -6426,11 +6430,11 @@ void CNavigatorDlg::GridStagePos(int j, int k, float delX, float delY, ScaleMat 
 
     // Look for matching grid index for non-excluded point
     for (int ind = 0; ind < (int)mHFgridXpos->size(); ind++) {
-      if (mHFgridXpos->at(ind) == j && mHFgridYpos->at(ind) == k && 
+      if (mHFgridXpos->at(ind) == j && mHFgridYpos->at(ind) == k &&
         (!mHFexclude->at(ind) || mHFexclude->at(ind) == -1)){
         xx = mHFxCenters->at(ind);
         yy = mHFyCenters->at(ind);
-        if (mDrawnOnMontBufInd >= 0 && mHFpieceOn->size() > 0 && 
+        if (mDrawnOnMontBufInd >= 0 && mHFpieceOn->size() > 0 &&
           mHFpieceOn->at(ind) >= 0) {
           mPieceGridPointOn = mHFpieceOn->at(ind);
           mGridPtXinPiece = mHFxInPiece->at(ind);
@@ -6454,7 +6458,7 @@ void CNavigatorDlg::StageOrImageCoords(CMapDrawItem *item, float &posX, float &p
     posX = item->mStageX;
     posY = item->mStageY;
   } else {
-    mWinApp->mMainView->GetItemImageCoords(&mImBufs[mDrawnOnMontBufInd], item, posX, 
+    mWinApp->mMainView->GetItemImageCoords(&mImBufs[mDrawnOnMontBufInd], item, posX,
       posY, item->mPieceDrawnOn);
   }
 }
@@ -6468,7 +6472,7 @@ void CNavigatorDlg::GridImageToStage(ScaleMat aInv, float delX, float delY, floa
     mPieceGridPointOn = -1;
     mGridPtXinPiece = mGridPtYinPiece = -1.;
   } else {
-    mHelper->AdjustMontImagePos(&mImBufs[mDrawnOnMontBufInd], posX, posY, 
+    mHelper->AdjustMontImagePos(&mImBufs[mDrawnOnMontBufInd], posX, posY,
       &mPieceGridPointOn, &mGridPtXinPiece, &mGridPtYinPiece);
     stageX = aInv.xpx * (posX - delX) + aInv.xpy * (posY - delY);
     stageY = aInv.ypx * (posX - delX) + aInv.ypy * (posY - delY);
@@ -6479,7 +6483,7 @@ void CNavigatorDlg::GridImageToStage(ScaleMat aInv, float delX, float delY, floa
 // The map ID should be the negative of the mag index if there was no map ID, this
 // will make it save the mag in mMapMagInd
 int CNavigatorDlg::AddFoundHoles(FloatVec *xCenters, FloatVec *yCenters,
-  std::vector<short> *exclude, FloatVec *xInPiece, FloatVec *yInPiece, IntVec *pieceOn, 
+  std::vector<short> *exclude, FloatVec *xInPiece, FloatVec *yInPiece, IntVec *pieceOn,
   ShortVec *gridXpos, ShortVec *gridYpos, float spacing, float diameter, float incStageX1,
   float incStageY1, float incStageX2, float incStageY2,
   int registration, int mapID, float stageZ, CMapDrawItem *poly, int layoutType)
@@ -6512,8 +6516,8 @@ int CNavigatorDlg::AddFoundHoles(FloatVec *xCenters, FloatVec *yCenters,
 
   // This returns the first group ID added, which is used to determine if original points
   // should still be displayed
-  ind = MakeGridOrFoundPoints(jstart, jend, jdir, kstart, kend, dir, poly, diameter, 
-    spacing, spacing, registration, stageZ, xcen, ycen, delX, delY, true, aInv, 
+  ind = MakeGridOrFoundPoints(jstart, jend, jdir, kstart, kend, dir, poly, diameter,
+    spacing, spacing, registration, stageZ, xcen, ycen, delX, delY, true, aInv,
     groupExtent, layoutType == 1, mapID, false);
   mAddingFoundHoles = false;
   return ind;
@@ -6525,7 +6529,7 @@ int CNavigatorDlg::AddFoundHoles(FloatVec *xCenters, FloatVec *yCenters,
 
 #define MSIZE 5
 #define XSIZE 5
-void CNavigatorDlg::TransformPts() 
+void CNavigatorDlg::TransformPts()
 {
   CMapDrawItem *item, *item1, *item2;
   int maxRegis = 0, maxPtNum = 0;
@@ -6558,7 +6562,7 @@ void CNavigatorDlg::TransformPts()
        maxPtNum = item->mRegPoint;
   }
   mNumSavedRegXforms = 0;
-  
+
   // Loop on all registrations besides the current one
   for (reg = 1; reg <= maxRegis; reg++) {
 
@@ -6570,7 +6574,7 @@ void CNavigatorDlg::TransformPts()
     nPairs = 0;
     numDone = 0;
     regDrawnOn = curDrawnOn = -1;
-  
+
     // Brute force approach - loop on all possible reg pt numbers and find pairs
     for (pt = 1; pt <= maxPtNum; pt++) {
       item1 = NULL;
@@ -6601,7 +6605,7 @@ void CNavigatorDlg::TransformPts()
        }
 
         // Count up items that need transforming too (1/12/07, count maps too)
-        if (item->mRegistration == reg && !item->mRegPoint) 
+        if (item->mRegistration == reg && !item->mRegPoint)
           numDone++;
       }
 
@@ -6665,9 +6669,9 @@ void CNavigatorDlg::TransformPts()
           for (ixy = 0; ixy < 2; ixy++) {
             for (i = 0; i < nPairs; i++)
               x[i][2] = x[i][3 + ixy];
-            StatMultr(&x[0][0], &xsiz, &nCol, &nPairs, xm, sd, b, &a[ixy][0], &dxy[ixy], 
+            StatMultr(&x[0][0], &xsiz, &nCol, &nPairs, xm, sd, b, &a[ixy][0], &dxy[ixy],
               &rsq, &f, NULL);
-          } 
+          }
           aM.xpx = a[0][0];
           aM.xpy = a[0][1];
           aM.ypx = a[1][0];
@@ -6682,7 +6686,7 @@ void CNavigatorDlg::TransformPts()
           if (fabs(ydtheta) > 90.)
             sign = -1.;
       }
-      
+
       // If 2 or 3 points, replace with rotation/translation solution
       if (nPairs < minNumLinear) {
         fitText = "rotation/translation";
@@ -6698,7 +6702,7 @@ void CNavigatorDlg::TransformPts()
 
           // With 3 points, get a scale factor as well
           fitText = "magnification/rotation/translation";
-          gmag = ((ssd[0][3] + sign * ssd[1][4]) * costh - 
+          gmag = ((ssd[0][3] + sign * ssd[1][4]) * costh -
             (sign * ssd[1][3] - ssd[0][4]) * sinth) / (ssd[0][0] + ssd[1][1]);
           sinth *= gmag;
           costh *= gmag;
@@ -6747,7 +6751,7 @@ void CNavigatorDlg::TransformPts()
       curDrawnOn = i;
     }
 
-    amatToRotmagstr(aM.xpx, aM.xpy, aM.ypx, aM.ypy, &rotAngle, 
+    amatToRotmagstr(aM.xpx, aM.xpy, aM.ypx, aM.ypy, &rotAngle,
       &smag, &stretch, &phi);
     absStr = fabs(stretch);
     SEMTrace('1', "Matrix %.5f %.5f %.5f %.5f; rot %.1f mag %.4f str %.4f at %.1f axis",
@@ -6756,7 +6760,7 @@ void CNavigatorDlg::TransformPts()
     // Test against criteria
     fromImport = RegistrationUseType(reg) == NAVREG_IMPORT;
     magFarOff = smag < magCrit || 1. / smag < magCrit;
-    if (devMax > maxDevCrit || devSum > meanDevCrit || (!fromImport && magFarOff) || 
+    if (devMax > maxDevCrit || devSum > meanDevCrit || (!fromImport && magFarOff) ||
       absStr < strCrit || 1. / absStr < strCrit) {
       report.Format("The fit from registration %d to the current registration is based\n"
         "on %d points with a mean deviation of %.2f um\n"
@@ -6790,7 +6794,7 @@ void CNavigatorDlg::TransformPts()
     }
 
     // See if coming from an import reg and all points are drawn on a pair of maps
-    if (fromImport && regDrawnOn > 0 && curDrawnOn > 0 && 
+    if (fromImport && regDrawnOn > 0 && curDrawnOn > 0 &&
       (item = FindItemWithMapID(regDrawnOn)) != NULL) {
         item->mOldRegToID = item->mRegisteredToID;
         item->mRegisteredToID = curDrawnOn;
@@ -6975,7 +6979,7 @@ int CNavigatorDlg::RotateMap(EMimageBuffer *imBuf, BOOL redraw)
   CMapDrawItem *item = FindItemWithMapID(imBuf->mMapID);
   if (!item && !imBuf->mStage2ImMat.xpx)
     return 1;
-  if (item && item->mMapTiltAngle > RAW_STAGE_TEST && 
+  if (item && item->mMapTiltAngle > RAW_STAGE_TEST &&
     fabs((double)item->mMapTiltAngle) > 2.5) {
       SEMMessageBox("You cannot rotate a map taken at a tilt higher than 2.5 degrees");
       return 1;
@@ -6999,7 +7003,7 @@ int CNavigatorDlg::RotateMap(EMimageBuffer *imBuf, BOOL redraw)
   } else {
 
     // Compute the angle for this image, and new total angle and inversion of imbuf
-    curMat = mShiftManager->StageToCamera(mWinApp->GetCurrentCamera(), 
+    curMat = mShiftManager->StageToCamera(mWinApp->GetCurrentCamera(),
       mScope->GetMagIndex());
     BufferStageToImage(imBuf, aMat, delX, delY);
     rotAngle = RotationFromStageMatrices(curMat, aMat, inverted);
@@ -7014,7 +7018,7 @@ int CNavigatorDlg::RotateMap(EMimageBuffer *imBuf, BOOL redraw)
   rMat.ypy = invertSign * rMat.ypy;
 
   mWinApp->SetStatusText(SIMPLE_PANE, "ROTATING MAP");
-  err = mHelper->TransformBuffer(imBuf, aMat, imBuf->mLoadWidth, 
+  err = mHelper->TransformBuffer(imBuf, aMat, imBuf->mLoadWidth,
     imBuf->mLoadHeight, sizingFrac, rMat);
   mWinApp->SetStatusText(SIMPLE_PANE, "");
   if (err) {
@@ -7062,13 +7066,13 @@ ScaleMat *CNavigatorDlg::XformForStageStretch(bool usingIt)
 // MAKING AND LOADING MAPS
 
 // Make a new map image
-void CNavigatorDlg::OnNewMap() 
+void CNavigatorDlg::OnNewMap()
 {
   NewMap();
 }
 
 // Defaults are unsuitableOK = false, addOrReplaceNote = 0, newNote = NULL
-int CNavigatorDlg::NewMap(bool unsuitableOK, int addOrReplaceNote, CString *newNote) 
+int CNavigatorDlg::NewMap(bool unsuitableOK, int addOrReplaceNote, CString *newNote)
 {
   EMimageBuffer *imBuf, *readBuf;
   EMimageExtra *imExtra;
@@ -7094,7 +7098,7 @@ int CNavigatorDlg::NewMap(bool unsuitableOK, int addOrReplaceNote, CString *newN
       MB_EXCLAME);
     return 1;
   }
-  imBuf = &mImBufs[(mWinApp->Montaging() && 
+  imBuf = &mImBufs[(mWinApp->Montaging() &&
     mImBufs[1].mCaptured == BUFFER_MONTAGE_OVERVIEW) ? 1 : 0];
   cropped = imBuf->GetUncroppedSize(uncroppedX, uncroppedY) && uncroppedX > 0 &&
     uncroppedY > 0;
@@ -7105,10 +7109,10 @@ int CNavigatorDlg::NewMap(bool unsuitableOK, int addOrReplaceNote, CString *newN
       return 2;
   }
 
-  singleBufSaved = imBuf->GetSaveCopyFlag() < 0 && (imBuf->IsProcessedOKforMap() || 
+  singleBufSaved = imBuf->GetSaveCopyFlag() < 0 && (imBuf->IsProcessedOKforMap() ||
     cropped);
   singleBufReadIn = !imBuf->mCaptured && imBuf->mSecNumber >= 0;
-  if ((mWinApp->Montaging() || singleBufSaved || singleBufReadIn) && 
+  if ((mWinApp->Montaging() || singleBufSaved || singleBufReadIn) &&
     imBuf->mCurStoreChecksum != mWinApp->mStoreMRC->getChecksum()) {
       if (unsuitableOK)
         return -1;
@@ -7120,11 +7124,11 @@ int CNavigatorDlg::NewMap(bool unsuitableOK, int addOrReplaceNote, CString *newN
       return 1;
   }
 
-  SEMTrace('n', "NewMap montaging %d  image %d  captured %d  BMO %d secno %d", 
+  SEMTrace('n', "NewMap montaging %d  image %d  captured %d  BMO %d secno %d",
     mWinApp->Montaging() ? 1 : 0, imBuf->mImage, imBuf->mCaptured, BUFFER_MONTAGE_OVERVIEW
     , imBuf->mSecNumber);
   if (mWinApp->Montaging()) {
-    
+
     // Montaged images
     if (!imBuf->mImage || imBuf->mCaptured != BUFFER_MONTAGE_OVERVIEW ||
       imBuf->mSecNumber < 0) {
@@ -7150,13 +7154,13 @@ int CNavigatorDlg::NewMap(bool unsuitableOK, int addOrReplaceNote, CString *newN
     }
 
     // Get the adoc section with montage data, be sure to release mutex if return early
-    montSect = mWinApp->mMontageController->AccessMontSectInAdoc(mWinApp->mStoreMRC, 
+    montSect = mWinApp->mMontageController->AccessMontSectInAdoc(mWinApp->mStoreMRC,
       imBuf->mSecNumber);
   } else {
 
     // Regular images
     imBuf = mImBufs;
-    if (!imBuf->mImage || (imBuf->mCaptured < 0 && !cropped && 
+    if (!imBuf->mImage || (imBuf->mCaptured < 0 && !cropped &&
       imBuf->mCaptured != BUFFER_PROC_OK_FOR_MAP)) {
       if (unsuitableOK)
         return -1;
@@ -7175,13 +7179,13 @@ int CNavigatorDlg::NewMap(bool unsuitableOK, int addOrReplaceNote, CString *newN
           "Use it for a map only if it is a full field image read in from the\n"
           " current open file, and if the %scamera selection and\n"
           "magnification are the same as when the image was taken.\n\n"
-          "Are you sure you want to create a map from this image?", 
+          "Are you sure you want to create a map from this image?",
           hasStage ? "" : "stage position, ");
-        if (!cropped && !mWinApp->mMacroProcessor->DoingMacro() && 
+        if (!cropped && !mWinApp->mMacroProcessor->DoingMacro() &&
           SEMMessageBox(report, MB_QUESTION) == IDNO)
           return 2;
       } else if (!mBufferManager->IsBufferSavable(imBuf)) {
-        
+
         // Next complain if it can't be saved
         if (unsuitableOK)
           return -1;
@@ -7191,7 +7195,7 @@ int CNavigatorDlg::NewMap(bool unsuitableOK, int addOrReplaceNote, CString *newN
         return 1;
       } else {
 
-        if (!(mMacroProcessor->DoingMacro() && (mHelper->GetAcquiringDual() || 
+        if (!(mMacroProcessor->DoingMacro() && (mHelper->GetAcquiringDual() ||
           GetAcquiring()))) {
 
           //If it can be saved, and they haven't been asked before, ask about auto save
@@ -7206,7 +7210,7 @@ int CNavigatorDlg::NewMap(bool unsuitableOK, int addOrReplaceNote, CString *newN
           // Even if they don't want auto save, ask if they want to save this one
           if (!mDocWnd->GetSaveOnNewMap()) {
             if (SEMMessageBox("This image is not saved yet.\n\n"
-              "Do you want to save it into the current file?", 
+              "Do you want to save it into the current file?",
               MB_QUESTION) == IDNO)
               return 2;
           }
@@ -7221,7 +7225,7 @@ int CNavigatorDlg::NewMap(bool unsuitableOK, int addOrReplaceNote, CString *newN
   imExtra = imBuf->mImage->GetUserData();
 
   // Now check that the image isn't a map reduced to bytes
-  if (imBuf->mImage->getType() == kUBYTE && mWinApp->mStoreMRC->getMode() != 
+  if (imBuf->mImage->getType() == kUBYTE && mWinApp->mStoreMRC->getMode() !=
     MRC_MODE_BYTE && !cropped) {
       SEMMessageBox("It seems that the image being displayed has been converted to\n"
         "bytes, so its scaling will not be correct when read in as a map.\n"
@@ -7248,7 +7252,7 @@ int CNavigatorDlg::NewMap(bool unsuitableOK, int addOrReplaceNote, CString *newN
   if (!imBuf->GetStageZ(delX))
     item->mStageZ = delX;
   CheckRawStageMatches();
-  
+
   item->mMapBinning = imBuf->mBinning;
   item->mMapCamera = imBuf->mCamera;
   item->mMapMagInd = imBuf->mMagInd;
@@ -7261,7 +7265,7 @@ int CNavigatorDlg::NewMap(bool unsuitableOK, int addOrReplaceNote, CString *newN
   item->mImageType = mWinApp->mStoreMRC->getStoreType();
   trimCount = item->mMapFile.GetLength() - (item->mMapFile.ReverseFind('\\') + 1);
   item->mTrimmedName = item->mMapFile.Right(trimCount);
-  mHelper->ComputeStageToImage(imBuf, item->mStageX, item->mStageY, hasStage, 
+  mHelper->ComputeStageToImage(imBuf, item->mStageX, item->mStageY, hasStage,
     item->mMapScaleMat, delX, delY);
   item->mMapWidth = cropped ? uncroppedX : imBuf->mImage->getWidth();
   item->mMapHeight = cropped ? uncroppedY : imBuf->mImage->getHeight();
@@ -7292,12 +7296,12 @@ int CNavigatorDlg::NewMap(bool unsuitableOK, int addOrReplaceNote, CString *newN
     if (imBuf->mConSetUsed <= RECORD_CONSET)
       setNum = imBuf->mConSetUsed;
     if (imExtra && imExtra->mBinning > 0 && imExtra->mCamera >= 0)
-      item->mMontBinning = B3DNINT(imExtra->mBinning * 
+      item->mMontBinning = B3DNINT(imExtra->mBinning *
       BinDivisorI(&mCamParams[imExtra->mCamera]));
     else
       item->mMontBinning = conSets[setNum].binning;
 
-    // This is the protocol: set information the old way then overlay it with MontSection 
+    // This is the protocol: set information the old way then overlay it with MontSection
     // value, so it falls back to old way if there is an error
     item->mMontUseStage = montp->moveStage ? 1 : 0;
     if (montSect >= 0)
@@ -7310,7 +7314,7 @@ int CNavigatorDlg::NewMap(bool unsuitableOK, int addOrReplaceNote, CString *newN
 
       // If read in from file, this convoluted logic checks for match against record,
       // trial, then view sizes; if none found it leaves it as record
-      mCamera->AcquiredSize(&conSets[RECORD_CONSET], imBuf->mCamera, sizeX, 
+      mCamera->AcquiredSize(&conSets[RECORD_CONSET], imBuf->mCamera, sizeX,
         sizeY);
       if (sizeX != item->mMapWidth || sizeY != item->mMapWidth) {
         mCamera->AcquiredSize(&conSets[2], imBuf->mCamera, sizeX, sizeY);
@@ -7327,7 +7331,7 @@ int CNavigatorDlg::NewMap(bool unsuitableOK, int addOrReplaceNote, CString *newN
   if (item->mMapMontage && item->mMontUseStage) {
     mWinApp->mMontageController->GetLastBacklash(item->mBacklashX, item->mBacklashY);
     if (montSect >= 0)
-      AdocGetTwoFloats(ADOC_MONT_SECT, montSect, ADOC_MONT_BACKLASH, &item->mBacklashX, 
+      AdocGetTwoFloats(ADOC_MONT_SECT, montSect, ADOC_MONT_BACKLASH, &item->mBacklashX,
         &item->mBacklashY);
   } else {
     item->mBacklashX = imBuf->mBacklashX;
@@ -7349,16 +7353,16 @@ int CNavigatorDlg::NewMap(bool unsuitableOK, int addOrReplaceNote, CString *newN
   if (!imBuf->GetSpotSize(item->mMapSpotSize))
     item->mMapSpotSize = mScope->GetSpotSize();
   item->mMapProbeMode = imBuf->mProbeMode;
-  if (imBuf->mLowDoseArea || (item->mMapMontage && 
+  if (imBuf->mLowDoseArea || (item->mMapMontage &&
     IS_SET_VIEW_OR_SEARCH(imBuf->mConSetUsed)))
     item->mMapLowDoseConSet = imBuf->mConSetUsed;
 
-  if (mCamera->HasDoseModulator() && 
+  if (mCamera->HasDoseModulator() &&
     !mCamera->mDoseModulator->GetDutyPercent(edmPct, report)) {
     item->mEDMPercent = edmPct;
   }
 
-  // For a LD View image, store the defocus offset, and get the net view IS shift and 
+  // For a LD View image, store the defocus offset, and get the net view IS shift and
   // convert it to a stage position for use in realign to item
   if (IS_SET_VIEW_OR_SEARCH(item->mMapLowDoseConSet)) {
     area = mCamera->ConSetToLDArea(item->mMapLowDoseConSet);
@@ -7368,18 +7372,18 @@ int CNavigatorDlg::NewMap(bool unsuitableOK, int addOrReplaceNote, CString *newN
       item->mViewBeamTiltX, item->mViewBeamTiltY, area);
     if (montSect >= 0) {
       AdocGetFloat(ADOC_MONT_SECT, montSect, ADOC_FOCUS_OFFSET, &item->mDefocusOffset);
-      AdocGetTwoFloats(ADOC_MONT_SECT, montSect, ADOC_NET_VIEW_SHIFT, 
+      AdocGetTwoFloats(ADOC_MONT_SECT, montSect, ADOC_NET_VIEW_SHIFT,
         &item->mNetViewShiftX, &item->mNetViewShiftY);
-      AdocGetTwoFloats(ADOC_MONT_SECT, montSect, ADOC_VIEW_BEAM_SHIFT, 
+      AdocGetTwoFloats(ADOC_MONT_SECT, montSect, ADOC_VIEW_BEAM_SHIFT,
         &item->mViewBeamShiftX, &item->mViewBeamShiftY);
-      AdocGetTwoFloats(ADOC_MONT_SECT, montSect, ADOC_VIEW_BEAM_TILT, 
+      AdocGetTwoFloats(ADOC_MONT_SECT, montSect, ADOC_VIEW_BEAM_TILT,
         &item->mViewBeamTiltX, &item->mViewBeamTiltY);
     }
   }
 
   // For any low dose image, store the alpha value so beam adjustments can be applied in
   // realign to item
-  if (imBuf->mLowDoseArea || (item->mMapMontage && 
+  if (imBuf->mLowDoseArea || (item->mMapMontage &&
     IS_SET_VIEW_OR_SEARCH(imBuf->mConSetUsed))) {
       item->mMapAlpha = mScope->GetAlpha();
       if (montSect >= 0)
@@ -7407,7 +7411,7 @@ int CNavigatorDlg::NewMap(bool unsuitableOK, int addOrReplaceNote, CString *newN
   if (hasStage)
     mHelper->ConvertIStoStageIncrement(imBuf->mMagInd, imBuf->mCamera, imBuf->mISX,
       imBuf->mISY, item->mMapTiltAngle, item->mStageX, item->mStageY, imBuf);
-  SEMTrace('n', "Raw stage %.3f %.3f   adjusted %.3f %.3f", item->mRawStageX, 
+  SEMTrace('n', "Raw stage %.3f %.3f   adjusted %.3f %.3f", item->mRawStageX,
     item->mRawStageY, item->mStageX, item->mStageY);
 
   // Switch image to current registration and give it the map ID, clear out rotation info
@@ -7423,7 +7427,7 @@ int CNavigatorDlg::NewMap(bool unsuitableOK, int addOrReplaceNote, CString *newN
     readBuf->mUseHeight = (float)item->mMapHeight;
     readBuf->mUseWidth = (float)item->mMapWidth;
     readBuf = &mImBufs[mWinApp->mBufferManager->GetBufToReadInto()];
-    if (!(readBuf->mImage && readBuf->mSecNumber == imBuf->mSecNumber && 
+    if (!(readBuf->mImage && readBuf->mSecNumber == imBuf->mSecNumber &&
       readBuf->mCurStoreChecksum == imBuf->mCurStoreChecksum))
       break;
   }
@@ -7456,15 +7460,15 @@ int CNavigatorDlg::NewMap(bool unsuitableOK, int addOrReplaceNote, CString *newN
 
   // Set the realign error if this point is within the bounding box of the last map
   // aligned to and also, for montage, within 10 microns of aligned point
-  if (mHelper->GetLastStageError(stageErrX, stageErrY, localErrX, localErrY) == 
+  if (mHelper->GetLastStageError(stageErrX, stageErrY, localErrX, localErrY) ==
     mCurrentRegistration) {
     i = mHelper->GetLastErrorTarget(imX, imY);
     item2 = FindItemWithMapID(i);
     stageX = item->mStageX - stageErrX;
     stageY = item->mStageY - stageErrY;
-    if (item2 && InsideContour(&item2->mPtX[0], &item2->mPtY[0], item2->mNumPoints, 
+    if (item2 && InsideContour(&item2->mPtX[0], &item2->mPtY[0], item2->mNumPoints,
       stageX, stageY) && (!item2->mMapMontage ||
-      (fabs((double)(imX - stageX)) < 10. && 
+      (fabs((double)(imX - stageX)) < 10. &&
       fabs((double)(imY - stageY)) < 10.))) {
       item->mRealignedID = i;
       item->mRealignErrX = stageErrX;
@@ -7477,7 +7481,7 @@ int CNavigatorDlg::NewMap(bool unsuitableOK, int addOrReplaceNote, CString *newN
       mWinApp->AppendToLog(report, LOG_SWALLOW_IF_CLOSED);
     }
   }
-  
+
   mWinApp->UpdateBufferWindows();
   mWinApp->mActiveView->NewImageScale();
   UpdateForCurrentItemChange();
@@ -7486,8 +7490,8 @@ int CNavigatorDlg::NewMap(bool unsuitableOK, int addOrReplaceNote, CString *newN
   delX = mShiftManager->GetPixelSize(item->mMapCamera, item->mMapMagInd) *
     item->mMapBinning;
   delY = (float)sqrt(delX * item->mMapWidth * delX * item->mMapHeight);
-  if (item->mBacklashX == 0. && mHelper->GetAutoBacklashNewMap() > mSkipBacklashType && 
-    delY >= mHelper->GetAutoBacklashMinField() && 
+  if (item->mBacklashX == 0. && mHelper->GetAutoBacklashNewMap() > mSkipBacklashType &&
+    delY >= mHelper->GetAutoBacklashMinField() &&
     item->mMapMagInd >= mScope->GetLowestMModeMagInd()) {
       i = 1;
       if (mHelper->GetAutoBacklashNewMap() == 1) {
@@ -7590,7 +7594,7 @@ void CNavigatorDlg::ImportMap(void)
       tfield->tokenNum, dval, stringval) > 0)
       stageX = (float)(dval - mParam->importXbase);
     tfield = &mParam->yField[idMatch];
-    if (tfield->tag && storeIMOD->getTiffValue(tfield->tag, tfield->type, 
+    if (tfield->tag && storeIMOD->getTiffValue(tfield->tag, tfield->type,
       tfield->tokenNum, dval, stringval) > 0)
       stageY = (float)(dval - mParam->importYbase);
     err = 0;
@@ -7612,7 +7616,7 @@ void CNavigatorDlg::ImportMap(void)
       err = 1;
     } else if (storeMRC->CheckMontage(&montP)) {
       AfxMessageBox("This file is a montage and cannot be imported at this time.\n\n"
-        "Try opening it, reading the image under a new registration, and making a map.", 
+        "Try opening it, reading the image under a new registration, and making a map.",
         MB_EXCLAME);
       err = 1;
     } else {
@@ -7630,8 +7634,8 @@ void CNavigatorDlg::ImportMap(void)
     importDlg.m_fStageY = stageY;
     importDlg.mXformNum = lastXformNum;
     importDlg.mOverlayOK = SetCurrentItem();
-    if (importDlg.mOverlayOK) 
-      importDlg.mOverlayOK = mItem->mImported == 1 && 
+    if (importDlg.mOverlayOK)
+      importDlg.mOverlayOK = mItem->mImported == 1 &&
       imageStore->getMode() != MRC_MODE_RGB && mItem->mMapWidth == imageStore->getWidth()
       && mItem->mMapHeight == imageStore->getHeight();
     oldItem = mItem;
@@ -7702,7 +7706,7 @@ void CNavigatorDlg::ImportMap(void)
         item->AppendPoint(stageX, stageY);
       }
       UpdateListString(mCurrentItem);
-      
+
       // If an overlay is requested, need to load maps synchronously
       if (importDlg.m_bOverlay) {
         overfail = DoLoadMap(true, NULL, -1) ? -1 : 0;
@@ -7778,7 +7782,7 @@ void CNavigatorDlg::ImportMap(void)
 
     }
   }
-  if (imageStore && imageStore->getStoreType() == STORE_TYPE_IMOD) 
+  if (imageStore && imageStore->getStoreType() == STORE_TYPE_IMOD)
     delete storeIMOD;
   else if (storeMRC && curStore < 0)
     delete storeMRC;
@@ -7798,7 +7802,7 @@ int CNavigatorDlg::DoMakeDualMap()
 }
 
 // Load a map image
-void CNavigatorDlg::OnLoadMap() 
+void CNavigatorDlg::OnLoadMap()
 {
   if (!SetCurrentItem()) {
     mItem = GetSingleSelectedItem();
@@ -7832,7 +7836,7 @@ int CNavigatorDlg::DoLoadMap(bool synchronous, CMapDrawItem *item, int bufToRead
   // Get the pointers to file, open if necessary
   err = AccessMapFile(mItem, mLoadStoreMRC, mCurStore, montP, mUseWidth, mUseHeight);
   if (err) {
-    if (err == 1) 
+    if (err == 1)
       SEMMessageBox("The map file was not found (or just could not be opened) either\n"
         "under its original full path name or in the current directory.", MB_EXCLAME);
     else
@@ -7897,7 +7901,7 @@ void CNavigatorDlg::FinishLoadMap(void)
 
   LoadMapCleanup();
   if (mLoadItem->mMapMontage && mWinApp->mMontageController->GetLastFailed()) {
-    mWinApp->UpdateBufferWindows(); 
+    mWinApp->UpdateBufferWindows();
     return;
   }
   if (mReadingOther)
@@ -7921,7 +7925,7 @@ void CNavigatorDlg::FinishLoadMap(void)
 
   // Copy defocus offset and set other items needed to evaluate defocus adjustment
   needDefocusData = mLoadItem->mMapLowDoseConSet == VIEW_CONSET ||
-    mLoadItem->mMapLowDoseConSet == SEARCH_CONSET; 
+    mLoadItem->mMapLowDoseConSet == SEARCH_CONSET;
   if (needDefocusData && mLoadItem->mDefocusOffset) {
     imBuf->mViewDefocus = mLoadItem->mDefocusOffset;
     if (mLoadItem->mMapProbeMode >= 0)
@@ -8020,7 +8024,7 @@ void CNavigatorDlg::LoadMapCleanup(void)
 // Set up access to the map file for the given item: return a KImageStore, the store
 // number if it is a current store, montage params, and the useWidth and useHeight values
 // Supply a pointer to a valid montage param structure, it may be replaced or used
-int CNavigatorDlg::AccessMapFile(CMapDrawItem *item, KImageStore *&imageStore, 
+int CNavigatorDlg::AccessMapFile(CMapDrawItem *item, KImageStore *&imageStore,
   int &curStore, MontParam *&montP, float &useWidth, float &useHeight, bool readWrite)
 {
   CFile *file;
@@ -8033,9 +8037,9 @@ int CNavigatorDlg::AccessMapFile(CMapDrawItem *item, KImageStore *&imageStore,
   CString fullpath, navPathName, str;
 
   // If opening read-only, set the share permission to DenyNone so it will not try to
-  // change the file's read/write status, which would be locked if a process has it open 
+  // change the file's read/write status, which would be locked if a process has it open
   // read/write
-  UINT openFlags = (readWrite ? (CFile::modeReadWrite | CFile::shareDenyWrite) : 
+  UINT openFlags = (readWrite ? (CFile::modeReadWrite | CFile::shareDenyWrite) :
     (CFile::modeRead | CFile::shareDenyNone)) | CFile::modeNoInherit;
 
   // Get the path/name of the file if it is located in the same directory as the nav file,
@@ -8044,7 +8048,7 @@ int CNavigatorDlg::AccessMapFile(CMapDrawItem *item, KImageStore *&imageStore,
   navPathName += item->mTrimmedName;
 
   curStore = -1;
-  if (item->mImageType == STORE_TYPE_MRC || item->mImageType == STORE_TYPE_ADOC || 
+  if (item->mImageType == STORE_TYPE_MRC || item->mImageType == STORE_TYPE_ADOC ||
     item->mImageType == STORE_TYPE_HDF) {
     curStore = mDocWnd->StoreIndexFromName(item->mMapFile);
 
@@ -8132,7 +8136,7 @@ int CNavigatorDlg::AccessMapFile(CMapDrawItem *item, KImageStore *&imageStore,
         cam = &mCamParams[item->mMapCamera];
         montP->binning = 1;
         for (binInd = cam->numBinnings - 1; binInd >= 0; binInd--) {
-          if (montP->xFrame * cam->binnings[binInd] <= cam->sizeX && 
+          if (montP->xFrame * cam->binnings[binInd] <= cam->sizeX &&
             montP->yFrame * cam->binnings[binInd] <= cam->sizeY) {
               montP->binning = cam->binnings[binInd];
               break;
@@ -8170,7 +8174,7 @@ int CNavigatorDlg::AccessMapFile(CMapDrawItem *item, KImageStore *&imageStore,
       (item->mMapFramesY - 1) * montP->yOverlap;
     if (!xNframe || !yNframe) {
       PrintfToLog("PROGRAM ERROR (please report): #FX %d XF %d XOV %d -> XFN %d; #FY %d "
-        "YF %d YOV %d -> YFN %d", item->mMapFramesX, montP->xFrame, montP->xOverlap, 
+        "YF %d YOV %d -> YFN %d", item->mMapFramesX, montP->xFrame, montP->xOverlap,
         xNframe, item->mMapFramesY, montP->yFrame, montP->yOverlap, yNframe);
       delete imageStore;
       return 1;
@@ -8234,7 +8238,7 @@ int CNavigatorDlg::AskIfSave(CString reason)
   if (mChanged && !mNavFilename.IsEmpty() && mWinApp->mDocWnd->GetAutoSaveNav())
     return DoSave(false);
 
-  PrintfToLog("Navigator Changed %d  filename %s  autosave %d  autofile %d", 
+  PrintfToLog("Navigator Changed %d  filename %s  autosave %d  autofile %d",
     mChanged ? 1 : 0, (LPCTSTR)mNavFilename, mWinApp->mDocWnd->GetAutoSaveNav() ? 1 : 0,
     mParam->autosaveFile.IsEmpty() ? 0 : 1);
   reason = "Save Navigator entries before " + reason;
@@ -8263,7 +8267,7 @@ void CNavigatorDlg::AutoSave()
     if (mParam->autosaveFile.IsEmpty()) {
       CString strCwd = mDocWnd->GetOriginalCwd();
       CTime ctdt = CTime::GetCurrentTime();
-      mParam->autosaveFile.Format("AUTOSAVE%02d%02d%02d%02d.nav", ctdt.GetMonth(), 
+      mParam->autosaveFile.Format("AUTOSAVE%02d%02d%02d%02d.nav", ctdt.GetMonth(),
         ctdt.GetDay(), ctdt.GetHour(), ctdt.GetMinute());
       if (!strCwd.IsEmpty()) {
 
@@ -8373,7 +8377,7 @@ void CNavigatorDlg::OpenAndWriteFile(bool autosave)
 
     // If writing as XML, need to go through the autodoc structure, get mutex, etc
     if (!AdocAcquireMutex()) {
-      AfxMessageBox("Could not acquire mutex for writing Navigator file as XML", 
+      AfxMessageBox("Could not acquire mutex for writing Navigator file as XML",
         MB_EXCLAME);
       return;
     }
@@ -8407,7 +8411,7 @@ void CNavigatorDlg::OpenAndWriteFile(bool autosave)
       }
     }
 
-#define BOOL_SETT_ASSIGN(a, b) ADOC_PUT(Integer(ADOC_ARG, a, b ? 1 : 0)); 
+#define BOOL_SETT_ASSIGN(a, b) ADOC_PUT(Integer(ADOC_ARG, a, b ? 1 : 0));
 #define INT_SETT_ASSIGN(a, b) ADOC_PUT(Integer(ADOC_ARG, a, b));
 #define FLOAT_SETT_ASSIGN(a, b) ADOC_PUT(Float(ADOC_ARG, a, b));
 #define DOUBLE_SETT_ASSIGN(a, b) ADOC_PUT(Float(ADOC_ARG, a, (float)b));
@@ -8446,7 +8450,7 @@ void CNavigatorDlg::OpenAndWriteFile(bool autosave)
     }
 #undef NAV_MONT_PARAMS
 
-    // Save file options  
+    // Save file options
 #undef ADOC_ARG
 #define ADOC_ARG "FileOptions",sectInd
 #define NAV_FILE_OPTS
@@ -8670,7 +8674,7 @@ void CNavigatorDlg::OpenAndWriteFile(bool autosave)
 
 
 // Loading a file
-int CNavigatorDlg::LoadNavFile(bool checkAutosave, bool mergeFile, CString *inFilename) 
+int CNavigatorDlg::LoadNavFile(bool checkAutosave, bool mergeFile, CString *inFilename)
 {
   CString str, str2, navRoot, ext, extra, root, lastSavedRoot, name = "";
   CStdioFile *cFile = NULL;
@@ -8682,10 +8686,10 @@ int CNavigatorDlg::LoadNavFile(bool checkAutosave, bool mergeFile, CString *inFi
   int numToGet, numItemLack = 0, numItemErr = 0, numExtErr = 0;
   int extErrCounts[16] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
   const char *extErrMess[16] = {
-    "an entry for StageXYZ or more than one entry for a CoordsIn... key", 
+    "an entry for StageXYZ or more than one entry for a CoordsIn... key",
     "no map ID entry for DrawnOn", "no map matching the ID given in DrawnOn",
     "a CoordsIn... key indicating a montage, but the DrawnOn map is not a montage",
-    "an error accessing the montage map file", 
+    "an error accessing the montage map file",
     "a CoordsInPiece entry but no PieceDrawnOn entry",
     "a montage map missing aligned piece coordinates in the mdoc file",
     "a montage map missing nominal piece coordinates in the mdoc file",
@@ -8915,7 +8919,7 @@ int CNavigatorDlg::LoadNavFile(bool checkAutosave, bool mergeFile, CString *inFi
         // Varying items
         if (tsParam->numVaryItems) {
           numToGet = tsParam->numVaryItems * NUM_VARY_ELEMENTS;
-          ADOC_REQUIRED(AdocGetFloatArray("TSParam", ind1, "VaryArray", varyVals, 
+          ADOC_REQUIRED(AdocGetFloatArray("TSParam", ind1, "VaryArray", varyVals,
             &numToGet, MAX_TS_VARIES * NUM_VARY_ELEMENTS));
           if (!retval) {
             i = 0;
@@ -9091,7 +9095,7 @@ int CNavigatorDlg::LoadNavFile(bool checkAutosave, bool mergeFile, CString *inFi
           &item->mStageY, &item->mStageZ));
         hasStage = retval == 0;
         for (i = 0; i < 4; i++) {
-          ADOC_OPTIONAL(AdocGetThreeFloats("Item", sectInd, externalKeys[i], 
+          ADOC_OPTIONAL(AdocGetThreeFloats("Item", sectInd, externalKeys[i],
             &item->mStageX, &item->mStageY, &item->mStageZ));
           if (retval == 0) {
             numExternal++;
@@ -9124,7 +9128,7 @@ int CNavigatorDlg::LoadNavFile(bool checkAutosave, bool mergeFile, CString *inFi
         ADOC_OPTIONAL(AdocGetTwoFloats("Item", sectInd, "BklshXY",
           &item->mBacklashX, &item->mBacklashY));
         ADOC_OPTIONAL(AdocGetInteger("Item", sectInd, "SamePosId", &item->mAtSamePosID));
-        ADOC_OPTIONAL(AdocGetInteger("Item", sectInd, "FitToPolygonID", 
+        ADOC_OPTIONAL(AdocGetInteger("Item", sectInd, "FitToPolygonID",
           &item->mFitToPolygonID));
         ADOC_OPTIONAL(AdocGetTwoFloats("Item", sectInd, "RawStageXY",
           &item->mRawStageX, &item->mRawStageY));
@@ -9133,10 +9137,10 @@ int CNavigatorDlg::LoadNavFile(bool checkAutosave, bool mergeFile, CString *inFi
 
         // No need to subtract 1, it should be saved as is
         ADOC_OPTIONAL(AdocGetInteger("Item", sectInd, "PieceOn", &item->mPieceDrawnOn));
-        ADOC_OPTIONAL(AdocGetTwoFloats("Item", sectInd, "XYinPc", &item->mXinPiece, 
+        ADOC_OPTIONAL(AdocGetTwoFloats("Item", sectInd, "XYinPc", &item->mXinPiece,
           &item->mYinPiece));
         ADOC_OPTIONAL(AdocGetFloat("Item", sectInd, "FocusAxisPos",&item->mFocusAxisPos));
-        ADOC_OPTIONAL(AdocGetTwoIntegers("Item", sectInd, "LDAxisAngle", 
+        ADOC_OPTIONAL(AdocGetTwoIntegers("Item", sectInd, "LDAxisAngle",
           &item->mRotateFocusAxis, &item->mFocusAxisAngle));
         ADOC_OPTIONAL(AdocGetTwoFloats("Item", sectInd, "TSstartEndAngles",
           &item->mTSstartAngle, &item->mTSendAngle));
@@ -9151,7 +9155,7 @@ int CNavigatorDlg::LoadNavFile(bool checkAutosave, bool mergeFile, CString *inFi
         item->mNumXholes = ind1;
         item->mNumYholes = ind2;
         numToGet = 0;
-        ADOC_OPTIONAL(AdocGetIntegerArray("Item", sectInd, "SkipHoles", &holeSkips[0], 
+        ADOC_OPTIONAL(AdocGetIntegerArray("Item", sectInd, "SkipHoles", &holeSkips[0],
           &numToGet, 2000));
         if (numToGet) {
           item->mSkipHolePos = new unsigned char[numToGet];
@@ -9159,17 +9163,17 @@ int CNavigatorDlg::LoadNavFile(bool checkAutosave, bool mergeFile, CString *inFi
             item->mSkipHolePos[ind1] = holeSkips[ind1];
           item->mNumSkipHoles = numToGet / 2;
         }
-        ADOC_OPTIONAL(AdocGetThreeFloats("Item", sectInd, "HoleISXspacing", 
-          &item->mXHoleISSpacing[0], &item->mXHoleISSpacing[1], 
+        ADOC_OPTIONAL(AdocGetThreeFloats("Item", sectInd, "HoleISXspacing",
+          &item->mXHoleISSpacing[0], &item->mXHoleISSpacing[1],
           &item->mXHoleISSpacing[2]));
         ADOC_OPTIONAL(AdocGetThreeFloats("Item", sectInd, "HoleISYspacing",
-          &item->mYHoleISSpacing[0], &item->mYHoleISSpacing[1], 
+          &item->mYHoleISSpacing[0], &item->mYHoleISSpacing[1],
           &item->mYHoleISSpacing[2]));
-        ADOC_OPTIONAL(AdocGetTwoFloats("Item", sectInd, "HoleSizeSpacing", 
+        ADOC_OPTIONAL(AdocGetTwoFloats("Item", sectInd, "HoleSizeSpacing",
           &item->mFoundHoleSize, &item->mFoundHoleSpacing));
         ADOC_OPTIONAL(AdocGetTwoFloats("Item", sectInd, "MarkerShift",
           &item->mMarkerShiftX, &item->mMarkerShiftY));
-        ADOC_OPTIONAL(AdocGetInteger("Item", sectInd, "ShiftCohortID", 
+        ADOC_OPTIONAL(AdocGetInteger("Item", sectInd, "ShiftCohortID",
           &item->mShiftCohortID));
         for (ind1 = 1; ind1 <= MAX_NAV_USER_VALUES; ind1++) {
           str.Format("UserValue%d", ind1);
@@ -9183,7 +9187,7 @@ int CNavigatorDlg::LoadNavFile(bool checkAutosave, bool mergeFile, CString *inFi
         ADOC_STR_ASSIGN(item->mFileToOpen);
 
         // Adjust name to be unique
-        if (!retval && (mHelper->NameToOpenUsed(item->mFileToOpen) || 
+        if (!retval && (mHelper->NameToOpenUsed(item->mFileToOpen) ||
             mDocWnd->StoreIndexFromName(item->mFileToOpen) >= 0)) {
           root = mHelper->DecomposeNumberedName(item->mFileToOpen, ext, curNum, numDig,
             extra);
@@ -9223,10 +9227,10 @@ int CNavigatorDlg::LoadNavFile(bool checkAutosave, bool mergeFile, CString *inFi
           &item->mStateIndex));
         if (item->mTSparamIndex >= 0 && item->mTSparamIndex < (int)newTSparamInds.size())
           item->mTSparamIndex = newTSparamInds[item->mTSparamIndex];
-        if (item->mMontParamIndex >= 0 && item->mMontParamIndex < 
+        if (item->mMontParamIndex >= 0 && item->mMontParamIndex <
           (int)newMontParamInds.size())
           item->mMontParamIndex = newMontParamInds[item->mMontParamIndex];
-        if (item->mFilePropIndex >= 0 && item->mFilePropIndex < 
+        if (item->mFilePropIndex >= 0 && item->mFilePropIndex <
           (int)newFileOptInds.size())
           item->mFilePropIndex = newFileOptInds[item->mFilePropIndex];
         if (item->mStateIndex >= 0 && item->mStateIndex < (int)newStateInds.size())
@@ -9235,7 +9239,7 @@ int CNavigatorDlg::LoadNavFile(bool checkAutosave, bool mergeFile, CString *inFi
         if (item->IsMap()) {
           ADOC_REQUIRED(AdocGetString("Item", sectInd, "MapFile", &adocStr));
           ADOC_STR_ASSIGN(item->mMapFile);
-          if (!retval) 
+          if (!retval)
             UtilSplitPath(item->mMapFile, str, item->mTrimmedName);
 
           ADOC_REQUIRED(AdocGetInteger("Item", sectInd, "MapID", &item->mMapID));
@@ -9246,7 +9250,7 @@ int CNavigatorDlg::LoadNavFile(bool checkAutosave, bool mergeFile, CString *inFi
           ADOC_REQUIRED(AdocGetInteger("Item", sectInd, "MapMagInd", &item->mMapMagInd));
           ADOC_REQUIRED(AdocGetInteger("Item", sectInd, "MapCamera", &item->mMapCamera));
           numToGet = 4;
-          ADOC_REQUIRED(AdocGetFloatArray("Item", sectInd, "MapScaleMat", &fvals[0], 
+          ADOC_REQUIRED(AdocGetFloatArray("Item", sectInd, "MapScaleMat", &fvals[0],
             &numToGet, 4));
           if (!retval) {
             item->mMapScaleMat.xpx = fvals[0];
@@ -9280,15 +9284,15 @@ int CNavigatorDlg::LoadNavFile(bool checkAutosave, bool mergeFile, CString *inFi
             &item->mMapMinScale, &item->mMapMaxScale));
           ADOC_OPTIONAL(AdocGetTwoIntegers("Item", sectInd, "MapFramesXY",
             &item->mMapFramesX, &item->mMapFramesY));
-          ADOC_OPTIONAL(AdocGetInteger("Item", sectInd, "MontBinning", 
+          ADOC_OPTIONAL(AdocGetInteger("Item", sectInd, "MontBinning",
             &item->mMontBinning));
           ADOC_OPTIONAL(AdocGetFloat("Item", sectInd, "MapExposure",&item->mMapExposure));
           ADOC_OPTIONAL(AdocGetFloat("Item", sectInd, "MapSettling",&item->mMapSettling));
-          ADOC_OPTIONAL(AdocGetInteger("Item", sectInd, "ShutterMode", 
+          ADOC_OPTIONAL(AdocGetInteger("Item", sectInd, "ShutterMode",
             &item->mShutterMode));
-          ADOC_OPTIONAL(AdocGetInteger("Item", sectInd, "MapSpotSize", 
+          ADOC_OPTIONAL(AdocGetInteger("Item", sectInd, "MapSpotSize",
             &item->mMapSpotSize));
-          
+
           ADOC_OPTIONAL(AdocGetFloat("Item", sectInd, "EDMPercent", &item->mEDMPercent));
 
           // Preserve double precision if it is there
@@ -9299,13 +9303,13 @@ int CNavigatorDlg::LoadNavFile(bool checkAutosave, bool mergeFile, CString *inFi
           }
           ADOC_OPTIONAL(AdocGetInteger("Item", sectInd, "MapSlitIn", &index));
           ADOC_BOOL_ASSIGN(item->mMapSlitIn);
-          ADOC_OPTIONAL(AdocGetFloat("Item", sectInd, "MapSlitWidth", 
+          ADOC_OPTIONAL(AdocGetFloat("Item", sectInd, "MapSlitWidth",
             &item->mMapSlitWidth));
           ADOC_OPTIONAL(AdocGetInteger("Item", sectInd, "RotOnLoad", &index));
           ADOC_BOOL_ASSIGN(item->mRotOnLoad);
-          ADOC_OPTIONAL(AdocGetInteger("Item", sectInd, "RealignedID", 
+          ADOC_OPTIONAL(AdocGetInteger("Item", sectInd, "RealignedID",
             &item->mRealignedID));
-          ADOC_OPTIONAL(AdocGetInteger("Item", sectInd, "RegisteredToID", 
+          ADOC_OPTIONAL(AdocGetInteger("Item", sectInd, "RegisteredToID",
             &item->mRegisteredToID));
           ADOC_OPTIONAL(AdocGetTwoFloats("Item", sectInd, "RealignErrXY",
             &item->mRealignErrX, &item->mRealignErrX));
@@ -9313,7 +9317,7 @@ int CNavigatorDlg::LoadNavFile(bool checkAutosave, bool mergeFile, CString *inFi
             &item->mLocalRealiErrX, &item->mLocalRealiErrX));
           ADOC_OPTIONAL(AdocGetInteger("Item", sectInd, "RealignReg",&item->mRealignReg));
           ADOC_OPTIONAL(AdocGetInteger("Item", sectInd, "ImageType", &item->mImageType));
-          ADOC_OPTIONAL(AdocGetInteger("Item", sectInd, "MontUseStage", 
+          ADOC_OPTIONAL(AdocGetInteger("Item", sectInd, "MontUseStage",
             &item->mMontUseStage));
 
           // mBacklashX/Y was being saved twice since it was already in map when added
@@ -9345,10 +9349,10 @@ int CNavigatorDlg::LoadNavFile(bool checkAutosave, bool mergeFile, CString *inFi
           item->mNumPoints = numPoints;
           item->mMaxPoints = numPoints;
           numToGet = numPoints;
-          ADOC_REQUIRED(AdocGetFloatArray("Item", sectInd, "PtsX", &item->mPtX[0], 
+          ADOC_REQUIRED(AdocGetFloatArray("Item", sectInd, "PtsX", &item->mPtX[0],
             &numToGet, numPoints));
           numToGet = numPoints;
-          ADOC_REQUIRED(AdocGetFloatArray("Item", sectInd, "PtsY", &item->mPtY[0], 
+          ADOC_REQUIRED(AdocGetFloatArray("Item", sectInd, "PtsY", &item->mPtY[0],
             &numToGet, numPoints));
         } else if (numExternal && item->IsPoint()) {
           item->AppendPoint(item->mStageX, item->mStageY);
@@ -9581,11 +9585,11 @@ int CNavigatorDlg::LoadNavFile(bool checkAutosave, bool mergeFile, CString *inFi
           highestLabel = -1;
           for (i = 0; i < mItemArray.GetSize(); i++) {
             prev = mItemArray.GetAt(i);
-            if (prev->mMapID == item->mMapID && (item->mMapID || 
+            if (prev->mMapID == item->mMapID && (item->mMapID ||
               (fabs((double)prev->mStageX - item->mStageX) < 1.e-5 &&
               fabs((double)prev->mStageY - item->mStageY) < 1.e-5))) {
                 index = 0;
-                if (item->mMapID && prev->mGridMapXform && 
+                if (item->mMapID && prev->mGridMapXform &&
                   item->mRegistration < prev->mRegistration) {
                   numMapXforms++;
                   dupReg = item->mRegistration;
@@ -9644,7 +9648,7 @@ int CNavigatorDlg::LoadNavFile(bool checkAutosave, bool mergeFile, CString *inFi
     str = "Error reading from file " + mNavFilename + ":" + szCause;
     SEMMessageBox(str, MB_EXCLAME);
     returnVal = 1;
-  } 
+  }
   if (adocIndex >= 0) {
     AdocClear(adocIndex);
     AdocReleaseMutex();
@@ -9658,7 +9662,7 @@ int CNavigatorDlg::LoadNavFile(bool checkAutosave, bool mergeFile, CString *inFi
   if (numItemErr + numItemLack + numExtErr > 0) {
     str.Format("%d items could not be read in from Navigator file:\r\n"
       "   %d items gave an error getting the data\r\n"
-      "   %d items were missing a required piece of data", numItemErr + numItemLack + 
+      "   %d items were missing a required piece of data", numItemErr + numItemLack +
       numExtErr, numItemErr, numItemLack);
     if (numExtErr > 0) {
       str2.Format("\r\n   %d externally added items with a processing error (see log for"
@@ -9672,7 +9676,7 @@ int CNavigatorDlg::LoadNavFile(bool checkAutosave, bool mergeFile, CString *inFi
         PrintfToLog(" ");
       else
         PrintfToLog("Set Debug Output to \"n\" for details on each item\r\n");
-    } 
+    }
     SEMMessageBox(str, MB_EXCLAME);
     returnVal = 1;
   }
@@ -9748,7 +9752,7 @@ void CNavigatorDlg::FinishMontParamLoad(MontParam *montParam, int ind1, int &num
   montParam->zCurrent = 0;
   montParam->byteMinScale = 0.;
   montParam->byteMaxScale = 0.;
-  
+
   // Take care of skip list
   if (montParam->numToSkip > 0) {
     montParam->skipPieceX.resize(montParam->numToSkip);
@@ -9776,7 +9780,7 @@ void CNavigatorDlg::FinishMontParamLoad(MontParam *montParam, int ind1, int &num
 int CNavigatorDlg::GetNavFilename(BOOL openFile, DWORD flags, bool mergeFile)
 {
   CString str, str2;
-  static char BASED_CODE szFilter[] = 
+  static char BASED_CODE szFilter[] =
     "Navigator files (*.nav)|*.nav|All files (*.*)|*.*||";
   if (mHelper->mMultiGridDlg && !openFile && !mNavFilename.IsEmpty()) {
     UtilSplitPath(mNavFilename, str, str2);
@@ -9800,7 +9804,7 @@ int CNavigatorDlg::GetNavFilename(BOOL openFile, DWORD flags, bool mergeFile)
 // Get a filename for reading stock items; initialize to last file
 int CNavigatorDlg::GetStockFilename(void)
 {
-  static char BASED_CODE szFilter[] = 
+  static char BASED_CODE szFilter[] =
     "Navigator files (*.nav)|*.nav|All files (*.*)|*.*||";
   LPCTSTR lpszFileName = NULL;
   if (!mParam->stockFile.IsEmpty())
@@ -9913,16 +9917,16 @@ void CNavigatorDlg::AcquireAreas(int source, bool dlgClosing, bool useTempParams
         dlg->mAnyAcquirePoints = true;
       }
       mNavAcquireDlg->Create(IDD_NAVACQUIRE);
-      mWinApp->SetPlacementFixSize(mNavAcquireDlg, 
+      mWinApp->SetPlacementFixSize(mNavAcquireDlg,
         mHelper->GetAcquireDlgPlacement(false));
       mWinApp->RestoreViewFocus();
       ManageCurrentControls();
       mWinApp->UpdateBufferWindows();
       return;
-    
+
     } else {
 
-      // Or auto-switch to TS when acquiring from multigrid or starting from script 
+      // Or auto-switch to TS when acquiring from multigrid or starting from script
       // without temp params
       if (!useTempParams || source == NAVACQ_SRC_MG_RUN_ACQ)
         mAcqParm->acquireType = dlg->mAnyTSpoints ? ACQUIRE_DO_TS :
@@ -9964,17 +9968,17 @@ void CNavigatorDlg::AcquireAreas(int source, bool dlgClosing, bool useTempParams
       return;
     }
   }
- 
+
   // Set up to run script at end if it is legal index
   mScriptToRunAtEnd = -1;
   if (!mResumedFromPause) {
-    if (mAcqParm->runEndMacro && mAcqParm->endMacroInd >= 0 && 
+    if (mAcqParm->runEndMacro && mAcqParm->endMacroInd >= 0 &&
       mAcqParm->endMacroInd < MAX_MACROS)
       mScriptToRunAtEnd = mAcqParm->endMacroInd - 1;
     else if (mRunScriptAfterNextAcq >= 0 && mRunScriptAfterNextAcq < MAX_MACROS)
       mScriptToRunAtEnd = mRunScriptAfterNextAcq;
     mRunScriptAfterNextAcq = -1;
-    if (mScriptToRunAtEnd >= 0 && 
+    if (mScriptToRunAtEnd >= 0 &&
       mMacroProcessor->EnsureMacroRunnable(mScriptToRunAtEnd)) {
       ManageAcquireDlgCleanup(fromMenu, dlgClosing);
       return;
@@ -9991,19 +9995,19 @@ void CNavigatorDlg::AcquireAreas(int source, bool dlgClosing, bool useTempParams
   runPostmacro = mAcqParm->runPostmacro;
   if (!mUseTSprePostMacros)
     runPostmacro = mAcqParm->runPostmacroNonTS;
-  runExtramacro = mHelper->IsExtraTaskIncluded(NAACT_RUN_EX_MACRO) && 
+  runExtramacro = mHelper->IsExtraTaskIncluded(NAACT_RUN_EX_MACRO) &&
     mAcqParm->runExtramacro;
   setOrClearFlags(&mAcqActions[NAACT_RUN_PREMACRO].flags, NAA_FLAG_RUN_IT, runPremacro);
   setOrClearFlags(&mAcqActions[NAACT_RUN_POSTMACRO].flags, NAA_FLAG_RUN_IT, runPostmacro);
   setOrClearFlags(&mAcqActions[NAACT_RUN_EX_MACRO].flags, NAA_FLAG_RUN_IT, runExtramacro);
 
-  if (mAcqParm->skipInitialMove && OKtoSkipStageMove(mAcqParm) != 0 && 
+  if (mAcqParm->skipInitialMove && OKtoSkipStageMove(mAcqParm) != 0 &&
     (fromMenu || dlgClosing)) {
     loop = IDYES;
     if (mParam->warnedOnSkipMove)
       mWinApp->AppendToLog("WARNING: Skipping stage move when possible; relying on your"
         " script to move stage or run Realign to Item");
-    else 
+    else
       loop = AfxMessageBox("WARNING: You have selected to skip the stage move to "
       "item when possible.  Your script must either run Realign to Item or do the stage "
         "move explicitly.\n\nAre you sure you want to proceed?", MB_QUESTION);
@@ -10040,8 +10044,8 @@ void CNavigatorDlg::AcquireAreas(int source, bool dlgClosing, bool useTempParams
 
     // Set to nonresumable so it will not look like it is paused and we can go on
     mMacroProcessor->SetNonResumable();
-  } 
-  
+  }
+
   // Set convenience flag for early return and check conditions
   takingMap = mAcqParm->acquireType == ACQUIRE_TAKE_MAP;
   takingImage = mAcqParm->acquireType == ACQUIRE_IMAGE_ONLY;
@@ -10056,11 +10060,11 @@ void CNavigatorDlg::AcquireAreas(int source, bool dlgClosing, bool useTempParams
   }
   mHelper->UpdateMultishotIfOpen(false);
 
-  // If there is no file open for regular acquire, make sure one will be opened on 
+  // If there is no file open for regular acquire, make sure one will be opened on
   // first item
   mSkippingSave = (mDoingEarlyReturn && !mAcqParm->numEarlyFrames) ||
     (mAcqParm->skipSaving && mAcqParm->acquireType == ACQUIRE_IMAGE_ONLY);
-  if (dlg->mNumAcqBeforeFile && ((!mWinApp->mStoreMRC && !mSkippingSave && 
+  if (dlg->mNumAcqBeforeFile && ((!mWinApp->mStoreMRC && !mSkippingSave &&
     (takingMap || takingImage)) || ((!mWinApp->mStoreMRC || mWinApp->Montaging()) &&
         doingMultishot && mHelper->IsMultishotSaving()))) {
     loop = 1;
@@ -10138,7 +10142,7 @@ void CNavigatorDlg::AcquireAreas(int source, bool dlgClosing, bool useTempParams
         // Just items: shift start if the number would go past end
         if (fromItem + dlg->m_iSubsetNum > totalNum)
           fromItem = totalNum - dlg->m_iSubsetNum;
-       
+
         // Then count to the from point and the end point
         loop = 0;
         acqIndex = -1;
@@ -10191,7 +10195,7 @@ void CNavigatorDlg::AcquireAreas(int source, bool dlgClosing, bool useTempParams
   }
   mAcqCycleDefocus = mAcqParm->cycleDefocus && (mAcqParm->acquireType == ACQUIRE_DO_TS ||
     mAcqParm->acquireType == ACQUIRE_RUN_MACRO || DOING_ACTION(NAACT_RUN_POSTMACRO) ||
-    DOING_ACTION(NAACT_RUN_PREMACRO) || DOING_ACTION(NAACT_RUN_EX_MACRO) || 
+    DOING_ACTION(NAACT_RUN_PREMACRO) || DOING_ACTION(NAACT_RUN_EX_MACRO) ||
     DOING_ACTION(NAACT_AUTOFOCUS) ||
     (DOING_ACTION(NAACT_WAIT_DRIFT) && dwParam->measureType == WFD_WITHIN_AUTOFOC));
   if (mAcqCycleDefocus)
@@ -10227,7 +10231,7 @@ void CNavigatorDlg::AcquireAreas(int source, bool dlgClosing, bool useTempParams
   mHelper->CountAcquireItems(mAcquireIndex, mEndingAcquireIndex, loop, loopEnd);
   mInitialNumAcquire = mAcqParm->acquireType == ACQUIRE_DO_TS ? loopEnd : loop;
   if (mAcqParm->acquireType == ACQUIRE_MULTISHOT)
-    mHelper->CountHoleAcquires(mAcquireIndex, mEndingAcquireIndex, 0, loop, loopEnd, 
+    mHelper->CountHoleAcquires(mAcquireIndex, mEndingAcquireIndex, 0, loop, loopEnd,
       mInitialTotalShots);
   mElapsedAcqTime = 0.;
   mLastAcqDoneTime = GetTickCount();
@@ -10299,7 +10303,7 @@ void CNavigatorDlg::AcquireNextTask(int param)
   mStartedTS = false;
   int *actOrder = mHelper->GetAcqActCurrentOrder(mHelper->GetAcqParamIndexToUse());
   const char *stepNames[ACQ_MAX_STEPS] = {"", "", "", "", "", "", "", "", "", "", "", "",
-    "", "", "", "", "", "", "Setup next item", "Open file if needed", 
+    "", "", "", "", "", "", "Setup next item", "Open file if needed",
     "Acquire image/montage", "Do multishot", "Run script", "Tilt series", "Move to item",
     "Manage backlash", "Move to other item", "Relax stage"};
 
@@ -10337,9 +10341,9 @@ void CNavigatorDlg::AcquireNextTask(int param)
         if (mAcqParm->relaxStage && elsewhereInd == -1) {
           for (ind = mNumAcqSteps - 1; ind >= 0; ind--) {
             if (mAcqSteps[ind] == ACQ_MOVE_TO_AREA ||
-              mAcqSteps[ind] == NAACT_REALIGN_ITEM || 
-              ((mAcqSteps[ind] == NAACT_ALIGN_TEMPLATE || 
-                (mAcqSteps[ind] == NAACT_EX_ALIGN_TEMPLATE && 
+              mAcqSteps[ind] == NAACT_REALIGN_ITEM ||
+              ((mAcqSteps[ind] == NAACT_ALIGN_TEMPLATE ||
+                (mAcqSteps[ind] == NAACT_EX_ALIGN_TEMPLATE &&
                   mHelper->IsExtraTaskIncluded(NAACT_EX_ALIGN_TEMPLATE))) &&
                 aliParams->maxNumResetIS > 0)) {
               for (next = mNumAcqSteps - 1; next > ind; next--)
@@ -10352,11 +10356,11 @@ void CNavigatorDlg::AcquireNextTask(int param)
           }
         }
 
-        // Add another dewar/PVP check if it is being done, it was not just added, 
+        // Add another dewar/PVP check if it is being done, it was not just added,
         // flag is set to do checks before task and one of the checks is selected
         // Record the index where it should just check
         if (DOING_ACTION(NAACT_CHECK_DEWARS) && (!mNumAcqSteps ||
-          mAcqSteps[mNumAcqSteps - 1] != NAACT_CHECK_DEWARS) && 
+          mAcqSteps[mNumAcqSteps - 1] != NAACT_CHECK_DEWARS) &&
           dvParams->doChecksBeforeTask && (dvParams->checkDewars || dvParams->checkPVP)) {
           mStepIndForDewarCheck = mNumAcqSteps;
           mAcqSteps[mNumAcqSteps++] = NAACT_CHECK_DEWARS;
@@ -10364,7 +10368,7 @@ void CNavigatorDlg::AcquireNextTask(int param)
 
         // Move stage if it is elsewhere, unless skipping is selected and the primary task
         // is a script.  Not calling OKtoSkipStageMove with its current simple form
-        if (elsewhereInd != -1 && !(mAcqParm->skipInitialMove && 
+        if (elsewhereInd != -1 && !(mAcqParm->skipInitialMove &&
           mAcqParm->acquireType == ACQUIRE_RUN_MACRO)) {
           mAcqSteps[mNumAcqSteps++] = ACQ_MOVE_TO_AREA;
           elsewhereInd = -1;
@@ -10387,7 +10391,7 @@ void CNavigatorDlg::AcquireNextTask(int param)
 
       }
 
-      // Loop on the actions, selecting the ones to run before the first time, after the 
+      // Loop on the actions, selecting the ones to run before the first time, after the
       // second time
       for (ind = 0; ind < mHelper->GetNumAcqActions(); ind++) {
         act = actOrder[ind];
@@ -10428,8 +10432,8 @@ void CNavigatorDlg::AcquireNextTask(int param)
 
             // Refine ZLP has its own time stamp
           } else if (act == NAACT_REFINE_ZLP) {
-            if (mWinApp->GetEFTEMMode() && 
-              SEMTickInterval(1000. * filtParam->alignZLPTimeStamp) > 60000. * 
+            if (mWinApp->GetEFTEMMode() &&
+              SEMTickInterval(1000. * filtParam->alignZLPTimeStamp) > 60000. *
               mAcqActions[act].minutes)
             runIt = true;
 
@@ -10490,7 +10494,7 @@ void CNavigatorDlg::AcquireNextTask(int param)
             && mAcqParm->skipInitialMove) {
             elsewhereInd = -1;
 
-            // Otherwise move to area if necessary 
+            // Otherwise move to area if necessary
           } else if (elsewhereInd != -1 && act != NAACT_REALIGN_ITEM) {
             mAcqSteps[mNumAcqSteps++] = ACQ_MOVE_TO_AREA;
             elsewhereInd = -1;
@@ -10516,14 +10520,14 @@ void CNavigatorDlg::AcquireNextTask(int param)
 
     // Handle defocus target cycling
     if (mAcqCycleDefocus) {
-      target = (float)(mAcqParm->cycleDefFrom + (mAcqParm->cycleDefTo - 
+      target = (float)(mAcqParm->cycleDefFrom + (mAcqParm->cycleDefTo -
         mAcqParm->cycleDefFrom) * mFocusCycleCounter / mAcqParm->cycleSteps);
       oldTarget = mWinApp->mFocusManager->GetTargetDefocus();
       mWinApp->mFocusManager->SetTargetDefocus(target);
       report.Format("Target defocus set to %.2f um", target);
-      if (mNumDoneAcq || (!mWinApp->mFocusManager->GetLastFailed() && 
+      if (mNumDoneAcq || (!mWinApp->mFocusManager->GetLastFailed() &&
         !mWinApp->mFocusManager->GetLastAborted() &&
-        fabs(mWinApp->mFocusManager->GetLastTargetFocus() - oldTarget) < 0.01 && 
+        fabs(mWinApp->mFocusManager->GetLastTargetFocus() - oldTarget) < 0.01 &&
         fabs(mWinApp->mFocusManager->GetLastScopeFocus() - mScope->GetDefocus()) < 0.5)) {
         mScope->IncDefocus(target - oldTarget);
         str.Format(" and scope defocus changed by %.2f", target - oldTarget);
@@ -10534,7 +10538,7 @@ void CNavigatorDlg::AcquireNextTask(int param)
     }
 
     // Handle hole vectors for multishot
-    if ((mAcqParm->acquireType == ACQUIRE_MULTISHOT || 
+    if ((mAcqParm->acquireType == ACQUIRE_MULTISHOT ||
       mAcqParm->acquireType == ACQUIRE_RUN_MACRO) && !msParams->useCustomHoles &&
       mAcqParm->useMapHoleVectors) {
       ind = mAcquireIndex;
@@ -10564,7 +10568,7 @@ void CNavigatorDlg::AcquireNextTask(int param)
               " vectors", (LPCTSTR)mapItem->mLabel);
             err = 1;
           }
-         
+
         } else {
 
           // Assign the vectors and adjust them if possible
@@ -10593,7 +10597,7 @@ void CNavigatorDlg::AcquireNextTask(int param)
 
     // PROCESS THE PRECEDING ACTION
     switch (mAcqSteps[mAcqStepIndex]) {
-      
+
       // A note on errors.  Anything that calls ErrorOccurred(1) will stop the acquisition
       // Anything that does not call this must leave a failure flag set that can be tested
       // here, otherwise it will plow on to next step instead of skipping to next item
@@ -10699,7 +10703,7 @@ void CNavigatorDlg::AcquireNextTask(int param)
       if (mWinApp->mTSController->GetLastSucceeded()) {
         mNumAcquired++;
         report.Format("Tilt series acquired at item # %d with label %s (item at %.2f, "
-          "%.2f, TS at %.2f, %.2f)", mAcquireIndex + 1, (LPCTSTR)item->mLabel, 
+          "%.2f, TS at %.2f, %.2f)", mAcquireIndex + 1, (LPCTSTR)item->mLabel,
           item->mStageX, item->mStageY, mWinApp->mTSController->GetStopStageX(),
           mWinApp->mTSController->GetStopStageY());
         mWinApp->AppendToLog(report);
@@ -10858,12 +10862,12 @@ void CNavigatorDlg::AcquireNextTask(int param)
     SEMTrace('n', "Doing %s", (LPCTSTR)mAcqActions[mAcqSteps[mAcqStepIndex]].name);
     mRealignedInAcquire = true;
     err = mHelper->RealignToItem(item, !mWinApp->LowDoseMode(),
-      mWillDoTemplateAlign ? 0.f : aliParams->resetISthresh, 
-      mWillDoTemplateAlign ? 0 : aliParams->maxNumResetIS, 
-      mWillDoTemplateAlign ? false : aliParams->leaveISatZero, 
-      (mAcqParm->hybridRealign && mWillDoTemplateAlign && 
-      mAcqActions[NAACT_ALIGN_TEMPLATE].timingType == NAA_EVERY_N_ITEMS && 
-      mAcqActions[NAACT_ALIGN_TEMPLATE].everyNitems == 1) ? REALI2ITEM_JUST_MOVE : 0, 
+      mWillDoTemplateAlign ? 0.f : aliParams->resetISthresh,
+      mWillDoTemplateAlign ? 0 : aliParams->maxNumResetIS,
+      mWillDoTemplateAlign ? false : aliParams->leaveISatZero,
+      (mAcqParm->hybridRealign && mWillDoTemplateAlign &&
+      mAcqActions[NAACT_ALIGN_TEMPLATE].timingType == NAA_EVERY_N_ITEMS &&
+      mAcqActions[NAACT_ALIGN_TEMPLATE].everyNitems == 1) ? REALI2ITEM_JUST_MOVE : 0,
       mAcqParm->realignToScaledMap ? mAcqParm->conSetForScaledAli : -1);
     if (err && (err < 4 || err == 6)) {
       StopAcquiring();
@@ -10928,7 +10932,7 @@ void CNavigatorDlg::AcquireNextTask(int param)
   case NAACT_AUTOFOCUS:
     SEMTrace('n', "Doing %s", (LPCTSTR)mAcqActions[mAcqSteps[mAcqStepIndex]].name);
     if (mAcqParm->focusChangeLimit > 0.)
-      mWinApp->mFocusManager->NextFocusChangeLimits(-mAcqParm->focusChangeLimit, 
+      mWinApp->mFocusManager->NextFocusChangeLimits(-mAcqParm->focusChangeLimit,
         mAcqParm->focusChangeLimit);
     mWinApp->mFocusManager->AutoFocusStart(1);
     break;
@@ -11092,10 +11096,10 @@ void CNavigatorDlg::AcquireNextTask(int param)
     SEMTrace('n', "Doing %s", stepNames[mAcqSteps[mAcqStepIndex]]);
     if (mAcqParm->adjustBTforIS && comaVsIS->magInd > 0) {
       mScope->GetImageShift(ISX, ISY);
-      mWinApp->mMacroProcessor->AdjustBeamTiltAndAstig(ISX, ISY, mSavedBeamTiltX, 
+      mWinApp->mMacroProcessor->AdjustBeamTiltAndAstig(ISX, ISY, mSavedBeamTiltX,
         mSavedBeamTiltY, mSavedAstigX,  mSavedAstigY);
     }
-    if (mWinApp->Montaging() && 
+    if (mWinApp->Montaging() &&
       !(mSkippingSave && mAcqParm->acquireType == ACQUIRE_IMAGE_ONLY)) {
       stopErr = mWinApp->mMontageController->StartMontage(MONT_NOT_TRIAL, false);
       if (!stopErr && mAcquireOpenedFile.IsEmpty())
@@ -11109,7 +11113,7 @@ void CNavigatorDlg::AcquireNextTask(int param)
         return;
       }
       ind = RECORD_CONSET;
-      if (mWinApp->LowDoseMode() && (mAcqParm->acquireType == ACQUIRE_TAKE_MAP || 
+      if (mWinApp->LowDoseMode() && (mAcqParm->acquireType == ACQUIRE_TAKE_MAP ||
         mAcqParm->acquireType == ACQUIRE_IMAGE_ONLY) &&  mAcqParm->mapWithViewSearch)
         ind = mAcqParm->mapWithViewSearch > 1 ? SEARCH_CONSET : VIEW_CONSET;
       mCamera->InitiateCapture(ind);
@@ -11130,7 +11134,7 @@ void CNavigatorDlg::AcquireNextTask(int param)
     SEMTrace('n', "Doing %s", stepNames[mAcqSteps[mAcqStepIndex]]);
     mMacroProcessor->Run(mAcqParm->extraMacroInd - 1);
     break;
-      
+
     // Run a macro
   case ACQ_RUN_MACRO:
     SEMTrace('n', "Doing %s", stepNames[mAcqSteps[mAcqStepIndex]]);
@@ -11160,7 +11164,7 @@ void CNavigatorDlg::AcquireNextTask(int param)
     if (mNumExtraFilesToClose > 0) {
       len = -1;
       for (ind = 0; ind < MAX_EXTRA_SAVES; ind++) {
-        if (tsStoreExtra[ind] || (ind == RECORD_CONSET && 
+        if (tsStoreExtra[ind] || (ind == RECORD_CONSET &&
           tsp->extraRecordType != NO_TS_EXTRA_RECORD)) {
           if (len >= 0) {
             len = -1;
@@ -11267,7 +11271,7 @@ void CNavigatorDlg::AcquireNextTask(int param)
 
     // This adds an idle task....
     SEMTrace('n', "Doing %s", stepNames[mAcqSteps[mAcqStepIndex]]);
-    if (GotoCurrentAcquireArea((mAcqParm->acquireType == ACQUIRE_TAKE_MAP || 
+    if (GotoCurrentAcquireArea((mAcqParm->acquireType == ACQUIRE_TAKE_MAP ||
       mWillRelaxStage) && !mWinApp->Montaging())) {
       StopAcquiring();
     }
@@ -11297,7 +11301,7 @@ void CNavigatorDlg::AcquireNextTask(int param)
   mWinApp->AddIdleTask(TASK_NAVIGATOR_ACQUIRE, 0, 0);
 }
 
-// This is called when the dialog is closing, it will either reenter the AcquireAreas 
+// This is called when the dialog is closing, it will either reenter the AcquireAreas
 // routine or change the flags for resuming from pause
 void CNavigatorDlg::AcquireDlgClosing()
 {
@@ -11340,7 +11344,7 @@ int CNavigatorDlg::EndAcquireWithMessage(void)
   CString report, scrp;
   int ind;
   MontParam *montp;
-  bool runScript = (mAcquireEnded == 10 || mAcquireEnded == 3) && !mPausedAcquire && 
+  bool runScript = (mAcquireEnded == 10 || mAcquireEnded == 3) && !mPausedAcquire &&
     mScriptToRunAtEnd >= 0;
   if (mRetractAtAcqEnd) {
     mRetractAtAcqEnd = false;
@@ -11353,7 +11357,7 @@ int CNavigatorDlg::EndAcquireWithMessage(void)
   if (mNumAcquired) {
     report.Format("%s at %d areas (%.4g/hr)", mAcqParm->acquireType == ACQUIRE_DO_TS ?
       "Tilt series acquired" : (mAcqParm->acquireType == ACQUIRE_RUN_MACRO ?
-      "Script run to completion" : (mAcqParm->acquireType == ACQUIRE_MULTISHOT ? 
+      "Script run to completion" : (mAcqParm->acquireType == ACQUIRE_MULTISHOT ?
         "Multiple Records acquired" : "Images acquired")), mNumAcquired,
       mNumDoneAcq / (mElapsedAcqTime / 3600000.));
     if (mAcqParm->acquireType == ACQUIRE_MULTISHOT)
@@ -11411,13 +11415,13 @@ int CNavigatorDlg::TaskAcquireBusy()
     stage = mScope->StageBusy();
   if (stage < 0)
     return -1;
-  return (stage > 0 || mWinApp->mMontageController->DoingMontage() || 
+  return (stage > 0 || mWinApp->mMontageController->DoingMontage() ||
     mHelper->GetRealigning() || mWinApp->mFocusManager->DoingFocus() ||
     mCamera->CameraBusy() || mMacroProcessor->DoingMacro() ||
     mWinApp->mComplexTasks->DoingTasks() || mWinApp->DoingTiltSeries() ||
-    mWinApp->mAutoTuning->DoingAutoTune() || mScope->GetDoingLongOperation() || 
+    mWinApp->mAutoTuning->DoingAutoTune() || mScope->GetDoingLongOperation() ||
     mWinApp->mGainRefMaker->AcquiringGainRef() || mWinApp->mFilterTasks->RefiningZLP() ||
-    mWinApp->mParticleTasks->GetDVDoingDewarVac() ||  
+    mWinApp->mParticleTasks->GetDVDoingDewarVac() ||
     mHelper->mHoleFinderDlg->GetFindingHoles()) ? 1 : 0;
 }
 
@@ -11428,7 +11432,7 @@ void CNavigatorDlg::AcquireCleanup(int error)
   if (error == IDLE_TIMEOUT_ERROR) {
     if (JEOLscope && mParam->maxReconnectsInAcq > 0) {
       if (mNumReconnectsInAcq < mParam->maxReconnectsInAcq) {
-        mWinApp->AppendToLog(toText + 
+        mWinApp->AppendToLog(toText +
           ": TRYING TO RENEW CONNECTION TO SCOPE; THE USER INTERFACE WILL FREEZE");
         mWinApp->SetStatusText(SIMPLE_PANE, "RENEWING SCOPE");
         if (mScope->RenewJeolConnection()) {
@@ -11523,7 +11527,7 @@ void CNavigatorDlg::RestoreBeamTiltIfSaved()
   mSavedBeamTiltX = EXTRA_NO_VALUE;
   if (mSavedAstigX < EXTRA_VALUE_TEST)
     return;
-  mWinApp->mAutoTuning->BacklashedStigmator(mSavedAstigX, mSavedAstigY, 
+  mWinApp->mAutoTuning->BacklashedStigmator(mSavedAstigX, mSavedAstigY,
     mScope->GetAdjustForISSkipBacklash() <= 0);
   mSavedAstigX = EXTRA_NO_VALUE;
 }
@@ -11568,7 +11572,7 @@ void CNavigatorDlg::EvaluateAcquiresForDlg(CNavAcquireDlg *dlg, bool fromMultiGr
         dlg->mNumFilesToOpen++;
         if (groupInd >= 0)
           groupID = item->mGroupID;
-          
+
       } else if (!dlg->mNumFilesToOpen) {
         dlg->mNumAcqBeforeFile++;
       }
@@ -11594,7 +11598,7 @@ void CNavigatorDlg::SetAcquireEnded(int state)
 {
   mAcquireEnded = state;
   if (mAcqParm->acquireType != ACQUIRE_RUN_MACRO && mAcqParm->acquireType != ACQUIRE_DO_TS)
-    mWinApp->SetStatusText(COMPLEX_PANE, state > 0 ? "ENDING NAV ACQUIRE" : 
+    mWinApp->SetStatusText(COMPLEX_PANE, state > 0 ? "ENDING NAV ACQUIRE" :
     "PAUSING NAV ACQUIRE");
   else
     mWinApp->AppendToLog(CString(state > 0 ? "Ending" : "Pausing") + " Navigator "
@@ -11604,8 +11608,8 @@ void CNavigatorDlg::SetAcquireEnded(int state)
 // Test for whether we started a macro and it is either running or resumable
 BOOL CNavigatorDlg::StartedMacro(void)
 {
-  return (GetAcquiring() && (mAcqParm->acquireType == ACQUIRE_RUN_MACRO || 
-    mAcqParm->runPremacro || mAcqParm->runPostmacro) && 
+  return (GetAcquiring() && (mAcqParm->acquireType == ACQUIRE_RUN_MACRO ||
+    mAcqParm->runPremacro || mAcqParm->runPostmacro) &&
     (mMacroProcessor->DoingMacro() || mMacroProcessor->IsResumable()));
 }
 
@@ -11674,9 +11678,9 @@ int CNavigatorDlg::FindAndSetupNextAcquireArea()
       return err;
 
     // Update the log file for tilt series with autosave policy
-    if (mAcqParm->acquireType == ACQUIRE_DO_TS && 
+    if (mAcqParm->acquireType == ACQUIRE_DO_TS &&
       mWinApp->mTSController->GetAutoSavePolicy()) {
-        if (mWinApp->mLogWindow && 
+        if (mWinApp->mLogWindow &&
           mWinApp->mLogWindow->SaveFileNotOnStack(item->mFileToOpen)) {
             mWinApp->mLogWindow->DoSave();
             mWinApp->mLogWindow->CloseLog();
@@ -11769,7 +11773,7 @@ int CNavigatorDlg::OpenFileIfNeeded(CMapDrawItem * item, bool stateOnly)
   // is before File Open step
   if (item->mFocusAxisPos > EXTRA_VALUE_TEST && stateOnly) {
     mHelper->SetLDFocusPosition(mWinApp->GetCurrentCamera(), item->mFocusAxisPos,
-      item->mRotateFocusAxis, item->mFocusAxisAngle, item->mFocusXoffset, 
+      item->mRotateFocusAxis, item->mFocusAxisAngle, item->mFocusXoffset,
       item->mFocusYoffset, "position for item", false);
   }
   if (item->mTargetDefocus > EXTRA_VALUE_TEST && stateOnly)
@@ -11821,7 +11825,7 @@ int CNavigatorDlg::OpenFileIfNeeded(CMapDrawItem * item, bool stateOnly)
 
       // Check if file is still OK
     if (mDocWnd->StoreIndexFromName(*namep) >= 0) {
-      SEMMessageBox("The file set to be opened for this item,\n" + *namep 
+      SEMMessageBox("The file set to be opened for this item,\n" + *namep
         + "\n" + "is already open.");
       return 1;
     }
@@ -11829,7 +11833,7 @@ int CNavigatorDlg::OpenFileIfNeeded(CMapDrawItem * item, bool stateOnly)
     // Get suffixes from TS param if non defined by script
     if (!mNumExtraFileSuffixes && item->mTSparamIndex >= 0) {
       tsParam = mTSparamArray.GetAt(item->mTSparamIndex);
-      if ((tsParam->extraRecordType != NO_TS_EXTRA_RECORD || tsStoreExtra[0] || 
+      if ((tsParam->extraRecordType != NO_TS_EXTRA_RECORD || tsStoreExtra[0] ||
         tsStoreExtra[1] || tsStoreExtra[2] || tsStoreExtra[4]) &&
         !tsParam->extraFileSuffixes.IsEmpty()) {
         mWinApp->mParamIO->ParseString(tsParam->extraFileSuffixes, mExtraFileSuffix,
@@ -11847,7 +11851,7 @@ int CNavigatorDlg::OpenFileIfNeeded(CMapDrawItem * item, bool stateOnly)
       UtilSplitExtension(*namep, root, extension);
       extraName = root + mExtraFileSuffix[ind] + extension;
       if (mDocWnd->StoreIndexFromName(extraName) >= 0) {
-        SEMMessageBox("The extra file set to be opened for this item,\n" + extraName 
+        SEMMessageBox("The extra file set to be opened for this item,\n" + extraName
           + "\n" + "is already open.");
         return 1;
       }
@@ -11939,7 +11943,7 @@ int CNavigatorDlg::OpenFileIfNeeded(CMapDrawItem * item, bool stateOnly)
 void CNavigatorDlg::CloseFileOpenedByAcquire(void)
 {
   int nz;
-  if (!mAcquireOpenedFile.IsEmpty() && mDocWnd->GetNumStores() > 0 && 
+  if (!mAcquireOpenedFile.IsEmpty() && mDocWnd->GetNumStores() > 0 &&
     mAcquireOpenedFile == mWinApp->mStoreMRC->getFilePath())
     mDocWnd->DoCloseFile();
   for (int ind = mNumExtraFilesToClose - 1; ind >= 0; ind--) {
@@ -12014,11 +12018,11 @@ int CNavigatorDlg::SetCurrentRegistration(int newReg)
   UpdateData(false);
   if (mAcquireIndex >= 0) {
     mResetAcquireIndex = true;
-    mHelper->CountAcquireItems(mStartingAcquireIndex, mEndingAcquireIndex, numNonTS, 
+    mHelper->CountAcquireItems(mStartingAcquireIndex, mEndingAcquireIndex, numNonTS,
       numTS);
     item = mItemArray[mAcquireIndex];
     delta = item->mAcquire ? 1 : 0;
-    mInitialNumAcquire += (mAcqParm->acquireType == ACQUIRE_DO_TS ? 
+    mInitialNumAcquire += (mAcqParm->acquireType == ACQUIRE_DO_TS ?
       numTS + delta - oldNumTS: numNonTS + delta - oldNonTS);
   }
   return 0;
@@ -12286,13 +12290,13 @@ void CNavigatorDlg::GetAdjustedStagePos(float & stageX, float & stageY, float & 
   AdjustISandMagForStageConversion(magInd, ISX, ISY);
 
   // Convert the current image shift into additional stage shift
-  mHelper->ConvertIStoStageIncrement(magInd, mWinApp->GetCurrentCamera(), 
+  mHelper->ConvertIStoStageIncrement(magInd, mWinApp->GetCurrentCamera(),
     ISX, ISY, (float)mScope->FastTiltAngle(), stageX, stageY);
 }
 
 // As one step in getting to and from mag-independent stage positions, adjust image shifts
 // for balance shifts, and set mag index to record mag if appropriate
-void CNavigatorDlg::AdjustISandMagForStageConversion(int &magInd, double &ISX, 
+void CNavigatorDlg::AdjustISandMagForStageConversion(int &magInd, double &ISX,
   double &ISY)
 {
   double viewX, viewY, searchX, searchY;
@@ -12334,7 +12338,7 @@ void CNavigatorDlg::Redraw()
 BOOL CNavigatorDlg::SetCurrentItem(bool groupOK)
 {
   if (mCurrentItem < 0 || mCurrentItem >= mItemArray.GetSize() || mCurListSel < 0 ||
-    (!groupOK && m_bCollapseGroups && 
+    (!groupOK && m_bCollapseGroups &&
     (mCurListSel >= (int)mListToItem.size() || mListToItem[mCurListSel] < 0)))
     return false;
   IndexOfSingleOrFirstInGroup(mCurListSel, mCurrentItem);
@@ -12424,7 +12428,7 @@ int CNavigatorDlg::GetMatchingMapWithVectors(CMapDrawItem *map, CMapDrawItem *&v
 
 // Return the current item of start of current group
 int CNavigatorDlg::GetCurrentOrGroupItem(CMapDrawItem *& item)
-{ 
+{
   item = NULL;
   if (!SetCurrentItem(true))
     return -1;
@@ -12459,8 +12463,8 @@ CMapDrawItem *CNavigatorDlg::FindNextAcquireItem(int &index)
 bool CNavigatorDlg::IsItemToBeAcquired(CMapDrawItem *item, bool &skippingGroup)
 {
   skippingGroup = false;
-  if (item->mRegistration == mCurrentRegistration && 
-    ((item->mAcquire && mAcqParm->acquireType != ACQUIRE_DO_TS) || 
+  if (item->mRegistration == mCurrentRegistration &&
+    ((item->mAcquire && mAcqParm->acquireType != ACQUIRE_DO_TS) ||
     (item->mTSparamIndex >= 0 && mAcqParm->acquireType == ACQUIRE_DO_TS))) {
       if (item->mGroupID && item->mGroupID == mGroupIDtoSkip)
         skippingGroup = true;
@@ -12471,7 +12475,7 @@ bool CNavigatorDlg::IsItemToBeAcquired(CMapDrawItem *item, bool &skippingGroup)
 }
 
 // Return a map or other item with the given ID if it exists, otherwise return NULL
-CMapDrawItem * CNavigatorDlg::FindItemWithMapID(int mapID, bool requireMap, 
+CMapDrawItem * CNavigatorDlg::FindItemWithMapID(int mapID, bool requireMap,
   bool matchGroup)
 {
   CMapDrawItem *item;
@@ -12479,7 +12483,7 @@ CMapDrawItem * CNavigatorDlg::FindItemWithMapID(int mapID, bool requireMap,
     return NULL;
   for (mFoundItem = 0; mFoundItem < mItemArray.GetSize(); mFoundItem++) {
     item = mItemArray[mFoundItem];
-    if ((item && item->IsMap() || !requireMap) && 
+    if ((item && item->IsMap() || !requireMap) &&
       ((!matchGroup && item->mMapID == mapID) || (matchGroup && item->mGroupID == mapID)))
       return item;
   }
@@ -12488,7 +12492,7 @@ CMapDrawItem * CNavigatorDlg::FindItemWithMapID(int mapID, bool requireMap,
 }
 
 // Return item whose label or note matchs the given string, case insensitive
-CMapDrawItem * CNavigatorDlg::FindItemWithString(CString & string, BOOL ifNote, 
+CMapDrawItem * CNavigatorDlg::FindItemWithString(CString & string, BOOL ifNote,
   bool caseSensitive)
 {
   CMapDrawItem *item;
@@ -12558,7 +12562,7 @@ int CNavigatorDlg::CheckIfMapIsInMultigridNav(int mapID)
 // If the selection list has only a single item, return it and optionally return its index
 // if index not NULL (the default); otherwise return NULL
 CMapDrawItem *CNavigatorDlg::GetSingleSelectedItem(int *index)
-{ 
+{
   std::set<int>::iterator iter;
   if (mSelectedItems.size() != 1)
     return NULL;
@@ -12580,8 +12584,8 @@ bool CNavigatorDlg::BacklashForItem(CMapDrawItem *item, float &backX, float &bac
     if (!item)
       return false;
   }
-  if ((!item->mBacklashX && !item->mBacklashY) || 
-    (mHelper->GetRealignTestOptions() & 1) == 0 || 
+  if ((!item->mBacklashX && !item->mBacklashY) ||
+    (mHelper->GetRealignTestOptions() & 1) == 0 ||
     item->mRegistration != item->mOriginalReg)
       return false;
   backX = item->mBacklashX;
@@ -12602,12 +12606,12 @@ void CNavigatorDlg::MontErrForItem(CMapDrawItem *inItem, float &montErrX, float 
   float useWidth, useHeight, delX, delY;
   montErrX = montErrY = 0.;
   item = FindItemWithMapID(inItem->mDrawnOnMapID);
-  if (!item || !item->mMapMontage || !item->mMontUseStage || 
+  if (!item || !item->mMapMontage || !item->mMontUseStage ||
     item->mRegistration != item->mOriginalReg)
     return;
   if (AccessMapFile(item, imageStore, curStore, montP, useWidth, useHeight))
     return;
-  mWinApp->mMontageController->ListMontagePieces(imageStore, montP, 
+  mWinApp->mMontageController->ListMontagePieces(imageStore, montP,
       item->mMapSection, pieceSavedAt);
 
   aMat = mShiftManager->StageToCamera(item->mMapCamera, item->mMapMagInd);
@@ -12617,7 +12621,7 @@ void CNavigatorDlg::MontErrForItem(CMapDrawItem *inItem, float &montErrX, float 
   // Get stage then montage coordinate relative to center of the montage
   delX = inItem->mStageX - item->mStageX;
   delY = inItem->mStageY - item->mStageY;
-  mHelper->InterpMontStageOffset(imageStore, montP, aMat, pieceSavedAt, delX, delY, 
+  mHelper->InterpMontStageOffset(imageStore, montP, aMat, pieceSavedAt, delX, delY,
     montErrX, montErrY);
 
   // Finish up with the file if it was not open before
@@ -12631,9 +12635,9 @@ void CNavigatorDlg::MontErrForItem(CMapDrawItem *inItem, float &montErrX, float 
   }
 }
 
-// Compute an image rotation from a stage to camera matrix in curMat and the 
+// Compute an image rotation from a stage to camera matrix in curMat and the
 // stage to image matrix of a map
-float CNavigatorDlg::RotationFromStageMatrices(ScaleMat curMat, ScaleMat mapMat, 
+float CNavigatorDlg::RotationFromStageMatrices(ScaleMat curMat, ScaleMat mapMat,
                                                BOOL &inverted)
 {
   ScaleMat aProd;
@@ -12684,7 +12688,7 @@ BOOL CNavigatorDlg::ImBufIsImportedMap(EMimageBuffer * imBuf)
 
 // Count items with same group #, return first and last label encountered, optionally
 // return a list of indices in indexVec
-int CNavigatorDlg::CountItemsInGroup(int curID, CString & label, CString & lastlab, 
+int CNavigatorDlg::CountItemsInGroup(int curID, CString & label, CString & lastlab,
                                      int &numAcquire, IntVec *indexVec)
 {
   CMapDrawItem *item;
@@ -12830,7 +12834,7 @@ void CNavigatorDlg::ManageListHeader(CString str)
     if (part)
       part->ShowWindow(hideShow);
   }
-  ShowDlgItem(IDC_STAT_HEADER_INDEX, (str.IsEmpty() && m_bTableIndexes && 
+  ShowDlgItem(IDC_STAT_HEADER_INDEX, (str.IsEmpty() && m_bTableIndexes &&
     mNumDigitsForIndex));
 }
 
@@ -12862,10 +12866,10 @@ void CNavigatorDlg::CheckRawStageMatches(void)
       if (ind == mCurrentItem)
         continue;
       item = mItemArray[ind];
-      if ((item->mRawStageX > RAW_STAGE_TEST && 
+      if ((item->mRawStageX > RAW_STAGE_TEST &&
         fabs((double)(curItem->mRawStageX - item->mRawStageX)) < tol &&
         fabs((double)(curItem->mRawStageY - item->mRawStageY)) < tol) ||
-        (lastMoveID > 0 && item->mRawStageX < RAW_STAGE_TEST && 
+        (lastMoveID > 0 && item->mRawStageX < RAW_STAGE_TEST &&
         item->mMoveStageID == lastMoveID)) {
           if (!loop) {
 
@@ -12951,7 +12955,7 @@ bool CNavigatorDlg::OKtoAdjustBacklash(bool fastStage)
     mScope->FastStagePosition(mLastScopeStageX, mLastScopeStageY, stageZ);
   else
     mScope->GetStagePosition(mLastScopeStageX, mLastScopeStageY, stageZ);
-  return fabs(mLastScopeStageX - mItem->mRawStageX) < tol && 
+  return fabs(mLastScopeStageX - mItem->mRawStageX) < tol &&
     fabs(mLastScopeStageY - mItem->mRawStageY) < tol;
 }
 
@@ -12977,7 +12981,7 @@ int CNavigatorDlg::OKtoSkipStageMove(NavAcqParams *param)
 
 int CNavigatorDlg::OKtoSkipStageMove(NavAcqAction *actions, int acqType)
 {
-  if ((actions[NAACT_RUN_PREMACRO].flags & NAA_FLAG_RUN_IT) != 0 || 
+  if ((actions[NAACT_RUN_PREMACRO].flags & NAA_FLAG_RUN_IT) != 0 ||
     acqType == ACQUIRE_RUN_MACRO)
     return 1;
   return 0;
@@ -12986,7 +12990,7 @@ int CNavigatorDlg::OKtoSkipStageMove(NavAcqAction *actions, int acqType)
 // Returns the number of point items in the current group; if maxPoints is > 0, returns
 // with maxPoints + 1 if number of items exceeds maxPoints; if stageX and stageY are
 // non-NULL, returns the stage coordinates of the points
-int CNavigatorDlg::GetCurrentGroupSizeAndPoints(int maxPoints, float *stageX, 
+int CNavigatorDlg::GetCurrentGroupSizeAndPoints(int maxPoints, float *stageX,
   float *stageY, float *defocusOffset)
 {
   int ind, num = 0;
@@ -13015,7 +13019,7 @@ int CNavigatorDlg::GetCurrentGroupSizeAndPoints(int maxPoints, float *stageX,
 void CNavigatorDlg::IStoXYandAdvance(int &direction)
 {
   OnGotoXy();
-  if (direction && mCurrentItem + direction >= 0 && 
+  if (direction && mCurrentItem + direction >= 0 &&
     mCurrentItem + direction < mItemArray.GetSize()) {
     SetCurrentSelection(mCurListSel + direction);
   } else
@@ -13127,7 +13131,7 @@ void CNavigatorDlg::SetCurrentNavFile(CString & inFile)
 void CNavigatorDlg::UpdateHiding()
 {
   int IDsToHide[] = {IDC_NEW_MAP, IDC_BUT_DUAL_MAP, IDC_CHECKCORNER, IDC_CHECKROTATE,
-    IDC_CHECK_DUALMAP, IDC_DRAW_LABELS, IDC_DRAW_NONE, IDC_DRAW_ALL_REG, 
+    IDC_CHECK_DUALMAP, IDC_DRAW_LABELS, IDC_DRAW_NONE, IDC_DRAW_ALL_REG,
     IDC_STAT_NAV_DRAW, IDC_STAT_NAV_SET, IDC_BUT_NAV_FILEPROPS, IDC_BUT_NAV_STATE,
     IDC_BUT_NAV_TSPARAMS, IDC_BUT_NAV_FILENAME, IDC_BUT_NAV_FOCUS_POS, IDC_SPIN_REGPT_NUM,
     IDC_CHECK_REGPOINT};

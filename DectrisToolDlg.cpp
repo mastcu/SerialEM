@@ -9,6 +9,10 @@
 #include "DectrisSettingsDlg.h"
 #include "PluginManager.h"
 
+#if defined(_DEBUG) && defined(_CRTDBG_MAP_ALLOC)
+#define new DEBUG_NEW
+#endif
+
 // CDectrisToolDlg dialog
 static VOID CALLBACK StatusUpdateProc(HWND hwnd, UINT uMsg, UINT_PTR idEvent,
   DWORD dwTime);
@@ -59,7 +63,7 @@ BOOL CDectrisToolDlg::OnInitDialog()
   mStatusUpdateID = ::SetTimer(NULL, 1, mUpdateInterval, StatusUpdateProc);
   mDTD.dectrisPlugFuncs = mWinApp->mPluginManager->GetDectrisFuncs();
   UpdateEnables();
-  
+
   mInitialized = true;
 
   return TRUE;  // return TRUE unless you set the focus to a control
@@ -143,9 +147,9 @@ void CDectrisToolDlg::UpdateEnables()
   bool camOK, tasks = mWinApp->DoingTasks() || mWinApp->mCamera->CameraBusy();
   int index;
   CameraParameters *camP = GetDectrisCamParams(index);
- 
+
   camOK = camP != NULL && index >= 0 && !camP->failedToInitialize;
-  EnableDlgItem(IDC_BUT_ACQUIRE_FLATFIELD, !tasks && camOK && 
+  EnableDlgItem(IDC_BUT_ACQUIRE_FLATFIELD, !tasks && camOK &&
     (!mWinApp->mScope->StageBusy() || mWinApp->mScope->GetSimulationMode()) &&
     index == mWinApp->GetCurrentCamera());
   EnableDlgItem(IDC_BUT_ADVANCED_SET, !tasks && camOK);
@@ -153,7 +157,7 @@ void CDectrisToolDlg::UpdateEnables()
   EnableDlgItem(IDC_BUT_TOGGLE_HV, !tasks && camOK);
 }
 
-// Returns params for the active camera or first DECTRIS camera in active list, and 
+// Returns params for the active camera or first DECTRIS camera in active list, and
 // returns camera number (parameter index) in index
 CameraParameters *CDectrisToolDlg::GetDectrisCamParams(int &index)
 {
@@ -189,7 +193,7 @@ void CDectrisToolDlg::UpdateToolDlg()
   CameraParameters *camParams = GetDectrisCamParams(index);
   if (!mInitialized)
     return;
-  if (!camParams || index < 0 || camParams->failedToInitialize || 
+  if (!camParams || index < 0 || camParams->failedToInitialize ||
     !mWinApp->mCamera->GetInitialized() || !mDTD.dectrisPlugFuncs)
     return;
   mDTD.dectrisPlugFuncs->GetDetectorStatus(&status);
@@ -285,7 +289,7 @@ void CDectrisToolDlg::FlatfieldNextTask()
   message.Format("ACQUIRING FLATFIELD %d of %d", mFlatCount, mNumFlatAcquires);
   mWinApp->SetStatusText(MEDIUM_PANE, message);
   mWinApp->mCamera->InitiateCapture(TRACK_CONSET);
-  mWinApp->AddIdleTask(CCameraController::TaskCameraBusy, TASK_DECTRIS_FLATFIELD, 0, 
+  mWinApp->AddIdleTask(CCameraController::TaskCameraBusy, TASK_DECTRIS_FLATFIELD, 0,
     120 * 1000);
 }
 
@@ -297,7 +301,7 @@ void CDectrisToolDlg::CleanupFlatfield(int error)
   FlatfieldDone();
 }
 
-// Finish with faltfielding, including informing the plugin regardless of whether the 
+// Finish with faltfielding, including informing the plugin regardless of whether the
 // fullcount was reached
 void CDectrisToolDlg::FlatfieldDone()
 {

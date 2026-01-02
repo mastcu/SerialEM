@@ -6,6 +6,10 @@
 #include ".\NavImportDlg.h"
 #include "NavigatorDlg.h"
 
+#if defined(_DEBUG) && defined(_CRTDBG_MAP_ALLOC)
+#define new DEBUG_NEW
+#endif
+
 // CNavImportDlg dialog
 
 CNavImportDlg::CNavImportDlg(CWnd* pParent /*=NULL*/)
@@ -66,7 +70,7 @@ void CNavImportDlg::OnDeltaposSpinRegnum(NMHDR *pNMHDR, LRESULT *pResult)
     if (newpos < 1 || newpos > MAX_CURRENT_REG) {
      *pResult = 1;
       return;
-    } 
+    }
   } while (mWinApp->mNavigator->RegistrationUseType(newpos) == NAVREG_REGULAR ||
     newpos == mWinApp->mNavigator->GetCurrentRegistration());
   mRegNum = newpos;
@@ -111,7 +115,7 @@ BOOL CNavImportDlg::OnInitDialog()
   return TRUE;
 }
 
-void CNavImportDlg::OnOK() 
+void CNavImportDlg::OnOK()
 {
   bool channelsOK = true;
   char a, b, c;

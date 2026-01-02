@@ -1,6 +1,6 @@
 // PiezoAndPPControl.cpp:  Routines for controlling piezos in general and phase plates
 //
-// Copyright (C) 2014 by the Regents of the University of
+// Copyright (C) 2014-2026 by the Regents of the University of
 // Colorado.  See Copyright.txt for full notice of copyright and limitations.
 //
 // Author: David Mastronarde
@@ -10,6 +10,10 @@
 #include "stdafx.h"
 #include "SerialEM.h"
 #include "PiezoAndPPControl.h"
+
+#if defined(_DEBUG) && defined(_CRTDBG_MAP_ALLOC)
+#define new DEBUG_NEW
+#endif
 
 CPiezoAndPPControl::CPiezoAndPPControl(void)
 {
@@ -34,7 +38,7 @@ void CPiezoAndPPControl::Initialize(void)
   for (plug = 0; plug < mNumPlugins; plug++) {
     mNumPiezos[plug] = mPlugFuncs[plug]->GetNumberOfPiezos();
     if (mNumPiezos[plug] <= 0)
-      PrintfToLog("WARNING: The piezo plugin %s failed to initialize", 
+      PrintfToLog("WARNING: The piezo plugin %s failed to initialize",
         (LPCTSTR)(*mPlugNames[plug]));
   }
 
@@ -91,7 +95,7 @@ bool CPiezoAndPPControl::GetXYPosition(double &xpos, double &ypos)
   int err;
   if (CheckSelection("get X/Y"))
     return true;
-  if (!mPlugFuncs[mSelectedPlug]->GetXYPosition || 
+  if (!mPlugFuncs[mSelectedPlug]->GetXYPosition ||
     (err = mPlugFuncs[mSelectedPlug]->GetXYPosition(&xpos, &ypos)) < 0) {
       ReportNoAxis("get X/Y");
       return true;
@@ -110,7 +114,7 @@ bool CPiezoAndPPControl::GetZPosition(double &zpos)
   int err;
   if (CheckSelection("get Z or only"))
     return true;
-  if (!mPlugFuncs[mSelectedPlug]->GetZPosition || 
+  if (!mPlugFuncs[mSelectedPlug]->GetZPosition ||
     (err = mPlugFuncs[mSelectedPlug]->GetZPosition(&zpos)) < 0) {
       ReportNoAxis("get Z");
       return true;
@@ -143,7 +147,7 @@ bool CPiezoAndPPControl::SetXYPosition(double xpos, double ypos, bool incrementa
   return false;
 }
 
-// Set the Z or only axis position to absolute or incremental value 
+// Set the Z or only axis position to absolute or incremental value
 // (incremental defaults to false)
 bool CPiezoAndPPControl::SetZPosition(double zpos, bool incremental)
 {
@@ -169,7 +173,7 @@ bool CPiezoAndPPControl::CheckSelection(const char *action)
   if (!err && mSelectedPlug >= 0 && mSelectedPiezo >= 0)
     return false;
   if (err)
-    mess.Format("Timeout waiting for piezo %d%s to be ready before trying to %s position", 
+    mess.Format("Timeout waiting for piezo %d%s to be ready before trying to %s position",
     mSelectedPiezo, (LPCTSTR)DrivenByMess(mSelectedPlug), action);
   else
     mess.Format("A specific piezo must be selected before trying to %s position", action);
@@ -204,7 +208,7 @@ CString CPiezoAndPPControl::DrivenByMess(int plugNum)
   return mess;
 }
 
-void CPiezoAndPPControl::StartMovementThread(double pos1, double pos2, bool setZ) 
+void CPiezoAndPPControl::StartMovementThread(double pos1, double pos2, bool setZ)
 {
   mPTD.pos1 = pos1;
   mPTD.pos2 = pos2;
@@ -254,18 +258,18 @@ int CPiezoAndPPControl::PiezoBusy(void)
     } else if (mPTD.errCode == -1) {
       if (mPTD.setZ)
         mess.Format("Trying to go to a Z or only position (%6g) out of range\n"
-          "for piezo %d%s", mPTD.pos1, mSelectedPiezo, 
+          "for piezo %d%s", mPTD.pos1, mSelectedPiezo,
           (LPCTSTR)DrivenByMess(mSelectedPlug));
       else
         mess.Format("Trying to go to an X/Y position (%6g, %6g) out of range\n"
-          "for piezo %d%s", mPTD.pos1, mPTD.pos2, mSelectedPiezo, 
+          "for piezo %d%s", mPTD.pos1, mPTD.pos2, mSelectedPiezo,
           (LPCTSTR)DrivenByMess(mSelectedPlug));
       SEMMessageBox(mess);
     } else if (mPTD.errCode > 0) {
       ReportAxisError(mPTD.errCode, mPTD.setZ ? "set Z or only" : "set X/Y");
     } else {
       mess.Format("Thread returned non-zero without setting error code when trying to set"
-        "%s position for piezo %d%s", mPTD.setZ ? "Z or only" : "X/Y", mSelectedPiezo, 
+        "%s position for piezo %d%s", mPTD.setZ ? "Z or only" : "X/Y", mSelectedPiezo,
           (LPCTSTR)DrivenByMess(mSelectedPlug));
       SEMMessageBox(mess);
     }
@@ -295,7 +299,7 @@ int CPiezoAndPPControl::WaitForPiezoReady(int timeOut)
 
 // Look up a scaling for the current plugin/piezo and the given axis, apply scale factor
 // to go from microns to units, or inverse if unitsToUm is true
-void CPiezoAndPPControl::ScalePosition(bool zAxis, bool unitsToUm, double &xpos, 
+void CPiezoAndPPControl::ScalePosition(bool zAxis, bool unitsToUm, double &xpos,
                                        double &ypos)
 {
   PiezoScaling scaling;
@@ -312,7 +316,7 @@ void CPiezoAndPPControl::ScalePosition(bool zAxis, bool unitsToUm, double &xpos,
 
 // Looks up a scaling for the given piezo in the given plugin, for Z axis or not.
 // Returns true if a scaling is found
-bool CPiezoAndPPControl::LookupScaling(int plugNum, int piezoNum, bool zAxis, 
+bool CPiezoAndPPControl::LookupScaling(int plugNum, int piezoNum, bool zAxis,
                                        PiezoScaling &scaling)
 {
   for (int ind = 0; ind < mScalings.GetSize(); ind++) {
