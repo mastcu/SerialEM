@@ -28,10 +28,6 @@
 #define new DEBUG_NEW
 #endif
 
-#ifdef _DEBUG
-#define new DEBUG_NEW
-#endif
-
 #define LOG_BASE 0.001
 #define SHIFT_CAL_CONSET  2
 #define SPOT_CAL_CONSET  2

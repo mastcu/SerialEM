@@ -39,10 +39,6 @@
 #define new DEBUG_NEW
 #endif
 
-#ifdef _DEBUG
-#define new DEBUG_NEW
-#endif
-
 #define AUTOSAVE_INTERVAL_MIN 1
 #define MUTEX_TIMEOUT_MS 502
 #define DATA_MUTEX_WAIT  100

@@ -36,10 +36,6 @@
 #define new DEBUG_NEW
 #endif
 
-#ifdef _DEBUG
-#define new DEBUG_NEW
-#endif
-
 #pragma warning ( disable : 4244 )
 
 static char *montMessage[5] = {

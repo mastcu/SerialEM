@@ -32,10 +32,6 @@
 #define new DEBUG_NEW
 #endif
 
-#ifdef _DEBUG
-#define new DEBUG_NEW
-#endif
-
 enum {STEM_FOCUS_CAL, STEM_FOCUS_COARSE1, STEM_FOCUS_COARSE2, STEM_FOCUS_FINE1,
 STEM_FOCUS_FINE2};
 

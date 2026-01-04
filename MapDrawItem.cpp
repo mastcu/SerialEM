@@ -11,10 +11,6 @@
 #define new DEBUG_NEW
 #endif
 
-#ifdef _DEBUG
-#define new DEBUG_NEW
-#endif
-
 #define POINT_CHUNK  5
 
 static COLORREF colors[] = {RGB(255,0,0), RGB(0,255,0), RGB(0,150,255), RGB(255,255,0),

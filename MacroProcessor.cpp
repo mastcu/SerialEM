@@ -51,10 +51,6 @@
 #endif
 
 
-#ifdef _DEBUG
-#define new DEBUG_NEW
-#endif
-
 #define CMD_IS(a) (cmdIndex == CME_##a)
 
 #define ABORT_NORET_LINE(a) \

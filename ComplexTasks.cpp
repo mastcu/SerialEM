@@ -29,10 +29,6 @@
 #define new DEBUG_NEW
 #endif
 
-#ifdef _DEBUG
-#define new DEBUG_NEW
-#endif
-
 #define RSRA_FIRST_SHOT  1
 #define RSRA_RESETTING   2
 #define RSRA_SECOND_SHOT 3

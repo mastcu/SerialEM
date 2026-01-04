@@ -40,10 +40,6 @@
 #define new DEBUG_NEW
 #endif
 
-#ifdef _DEBUG
-#define new DEBUG_NEW
-#endif
-
 static void AlignRightDblClickImage();
 
 

@@ -68,10 +68,6 @@
 #define new DEBUG_NEW
 #endif
 
-#ifdef _DEBUG
-#define new DEBUG_NEW
-#endif
-
 #define CMD_IS(a) (mCmdIndex == CME_##a)
 
 #define ABORT_NOLINE(a) \
