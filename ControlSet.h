@@ -157,6 +157,7 @@ struct CameraParameters {
   CString falconRefDir;    // Reference directory for this camera
   CString falconFramePath; // Local Frame path for this camera
   CString remoteFalconFramePath;  // Actual frame path on server, needed with dumb UTAPI
+  CString UtapiFramePath;  // local frame path in Utapi
   int falconVariant;      // Separate flag for Falcon 4i variant (for now)
   float linear2CountingRatio;  // Ratio of raw counts in linear mode to counting mode
   float linearOffset;      // Amount to subtract before scaling (K3)
