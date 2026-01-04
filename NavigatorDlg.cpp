@@ -50,9 +50,6 @@
 #include "CameraMacroTools.h"
 #include "MontageSetupDlg.h"
 
-#if defined(_DEBUG) && defined(_CRTDBG_MAP_ALLOC)
-#define new DEBUG_NEW
-#endif
 //#include "TiltSeriesParam.h"
 #include "TSController.h"
 #include "DoseModulator.h"
@@ -65,7 +62,8 @@
 #include "Shared\iimage.h"
 #include "Shared\imodel.h"
 
-
+#if defined(_DEBUG) && defined(_CRTDBG_MAP_ALLOC)
+#define new DEBUG_NEW
 #endif
 
 static char *colorNames[] = {"Red", "Grn", "Blu", "Yel", "Mag", "NRI", "SKP", "Red",
