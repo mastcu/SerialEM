@@ -3125,8 +3125,10 @@ void CCameraSetupDlg::OnSetSaveFolder()
     mCamera->FixDirForFalconFrames(mParam);
     str = continSave ? mParam->dirForFrameSaving : mCamera->GetDirForFalconFrames();
     if (FCAM_ADVANCED(mParam)) {
-      if (KGetOneString("Frames can be saved in the" +
-        CString(continSave ? "Ceta" : "Falcon") + " storage location or a new"
+      if (KGetOneString("Frames can be saved in the " +
+        CString(continSave ? "Ceta" : "Falcon") + " storage location " + 
+        CString(mParam->falconFramePath.IsEmpty() ? "" : 
+          "(" + mParam->falconFramePath + ") ") + "or a new"
         " or existing subfolder " + CString(subdirsOK ? "tree" : "of it"),
         "Enter name of subfolder to save frames in, or leave blank for none", str)) {
         if (!UtilCheckIllegalChars(str, 1, "The subfolder name")) {
