@@ -3943,10 +3943,17 @@ int CParameterIO::ReadProperties(CString strFileName)
         SetNumFEIChannels(itemInt[1] ? 4 : 3);
       } else if (MatchNoCase("SkipUtapiServices")) {
         ShortVec *skips = mWinApp->mScope->GetSkipUtapiServices();
-        for (index = 1; index < MAX_TOKENS; index++) {
-          if (itemEmpty[index])
-            break;
-          skips->push_back(itemInt[index]);
+        StripItems(strLine, 1, message, false, 2);
+        ind = message.Find('#');
+        if (ind >= 0)
+          message = message.Left(ind);
+        int *toSkip = parselist((LPCTSTR)message, &ind);
+        if (!toSkip) {
+          AfxMessageBox("Bad characters for interpreting entry as a list in " + 
+            strFileName + " : " + strLine, MB_EXCLAME);
+        } else {
+          for (index = 0; index < ind; index++)
+            skips->push_back(toSkip[index]);
         }
       } else if (MatchNoCase("UseTEMScripting")) {
         scope->SetUseTEMScripting(itemInt[1]);
@@ -6530,7 +6537,7 @@ void CParameterIO::StripItems(CString strLine, int numItems, CString & strCopy,
   else if (strCopy.GetLength() > 0 && strCopy.GetAt(0) == ' ')
     strCopy = strCopy.Mid(1);
   strCopy.TrimRight(" \t\r\n");
-  if (mCheckForComments && strCopy.Find(" #") >= 0)
+  if (mCheckForComments && allowComment < 2 && strCopy.Find(" #") >= 0)
     mPropsWithComments += "\r\n" + strLine;
 }
 
