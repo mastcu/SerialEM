@@ -38,7 +38,7 @@
         keyword followed by one or more values. The keywords are
         case-insensitive, but they are most readable when shown in the MixedCase form 
         used here. Values can be separated by any number of spaces or
-        tabs.</P>
+        tabs but not by commas.</P>
     <P>The properties file can have comments starting with #.&nbsp; Any line starting
       with # will be ignored.&nbsp; A property containing numeric entries can have a
       comment after the numbers.&nbsp; <b>However, a property specifying a general
@@ -140,7 +140,9 @@
           <TD>Follow with a list of indexes to UTAPI services that should be marked as not 
             available.&nbsp; The indexes correspond to the values of the enum 
             'UtapiSupportTypes' in SerialEM.h.  With the latest UTAPI server (April 2025), only 20 needs
-            to be used for cameras if you have a Ceta 2.</TD>
+            to be used for cameras if you have a Ceta 2.&nbsp; Unlike other property entries, this list 
+            can have ranges.&nbsp; For example, to skip everything except apertures, beam stop, and camera,
+            enter '0 2 4-19 21-32'.</TD>
         </TR>
         <TR VALIGN="top">
           <TD>SimulationMode</TD>
