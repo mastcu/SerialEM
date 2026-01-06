@@ -783,21 +783,7 @@ void CStateDlg::StateToListString(StateParams *state, CString &string, const cha
   mag = MagForCamera(camp, magInd);
   active = winApp->LookupActiveCamera(state->camIndex) + 1;
   spot = state->lowDose ? state->ldParams.spotSize : state->spotSize;
-  if (mag >= 1000000) {
-    if (mag % 1000000)
-      magstr.Format("%.1fM", mag / 1000000.);
-    else
-      magstr.Format("%dM", mag / 1000000);
-
-  } else if (mag >= 1000) {
-    if (mag % 1000)
-      magstr.Format("%.1fK", mag / 1000.);
-    else
-      magstr.Format("%dK", mag / 1000);
-
-  } else {
-      magstr.Format("%d", mag);
-  }
+  magstr = UtilFormattedMag(mag, 0);
   if (!camp->STEMcamera) {
     intensity = state->lowDose ? state->ldParams.intensity : state->intensity;
     probe = state->lowDose ? state->ldParams.probeMode : state->probeMode;
