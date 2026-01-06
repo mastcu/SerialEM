@@ -1709,7 +1709,7 @@ void FrameAlign::findAllVsAllAlignment(bool justForLimits)
         dropSet.clear();
         for (ind = dropRun; ind < numData; ind += numSets)
           dropSet.insert(ind);
-        doRobust = numData - dropSet.size() >= 2 * numGroups && mKfactor > 0.;
+        doRobust = numData - (int)dropSet.size() >= 2 * numGroups && mKfactor > 0.;
         doRegression(doRobust, filt, MAX_FILTERS, dropSet);
 
         // Compute the leave-out error

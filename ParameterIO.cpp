@@ -846,6 +846,8 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
         cookParams->trackImage = itemInt[7] != 0;
         cookParams->cookAtTilt = itemInt[8] != 0;
         cookParams->tiltAngle = itemFlt[9];
+        if (!itemEmpty[10])
+          cookParams->probeOrAlpha = itemInt[10];
 
       } else if (NAME_IS("VppConditionParams")) {
         vppParams->magIndex = itemInt[1];
@@ -2097,11 +2099,11 @@ void CParameterIO::WriteSettings(CString strFileName)
       dewar->postFillWaitMin, dewar->doChecksBeforeTask ? 1 : 0);
     mFile->WriteString(oneState);
 
-    oneState.Format("CookerParams %d %d %f %d %d %f %d %d %f -999 -999\n",
+    oneState.Format("CookerParams %d %d %f %d %d %f %d %d %f %d -999 -999\n",
       cookParams->magIndex, cookParams->spotSize, cookParams->intensity, 
       cookParams->targetDose, cookParams->timeInstead ? 1 : 0, cookParams->minutes,
       cookParams->trackImage ? 1 : 0, 
-      cookParams->cookAtTilt ? 1 : 0, cookParams->tiltAngle);
+      cookParams->cookAtTilt ? 1 : 0, cookParams->tiltAngle, cookParams->probeOrAlpha);
     mFile->WriteString(oneState);
     oneState.Format("VppConditionParams %d %d %f %d %d %d %d %d %d %d %d %d -999 -999\n",
       vppParams->magIndex, vppParams->spotSize, vppParams->intensity, vppParams->alpha,
