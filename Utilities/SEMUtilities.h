@@ -79,6 +79,7 @@ int UtilFindValidFrameAliParams(CameraParameters *camParam, int readMode, bool t
   int whereAlign, int curIndex, int &newIndex, CString *message);
 int UtilWriteTextFile(CString fileName, CString text);
 CString FormattedNumber(double value, const char *suffix, int minDec, int maxDec, float switchVal, bool skipTrim = false);
+CString UtilFormattedMag(int mag, int addX);
 BOOL SleepMsg(DWORD dwTime_ms);
 SOCKET UtilConnectSocket(CString &ipAddress, int port, CString &errStr,
   const char *className, const char *description);

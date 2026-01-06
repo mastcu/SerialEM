@@ -1292,6 +1292,30 @@ CString FormattedNumber(double value, const char *suffix, int minDec, int maxDec
   return retStr + suffix;
 }
 
+// Returns a string with mag in a brief format, with x add for values with K or M if
+// addX is 1, or to all if addX is > 1
+CString UtilFormattedMag(int mag, int addX)
+{
+  CString magstr;
+  if (mag >= 1000000) {
+    if (mag % 1000000)
+      magstr.Format("%.1fM%s", mag / 1000000., addX > 1 ? "x" : "");
+    else
+      magstr.Format("%dM%s", mag / 1000000, addX > 1 ? "x" : "");
+
+  } else if (mag >= 1000) {
+    if (mag % 1000)
+      magstr.Format("%.1fK%s", mag / 1000., addX > 1 ? "x" : "");
+    else
+      magstr.Format("%dK%s", mag / 1000, addX > 1 ? "x" : "");
+
+  } else {
+    magstr.Format("%d%s", mag, addX > 0 ? "x" : "");
+  }
+
+  return magstr;
+}
+
 // Sleep for specified, processing messages
 BOOL SleepMsg(DWORD dwTime_ms)
 {
