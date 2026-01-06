@@ -1283,11 +1283,13 @@ void CTSSetupDialog::ManageAutocen(void)
   LowDoseParams *ldp = mWinApp->GetLowDoseParams();
   int probe = mLowDoseMode ? ldp[TRIAL_CONSET].probeMode :
     mWinApp->mScope->GetProbeMode();
+  int alpha = mLowDoseMode ? (int)ldp[TRIAL_CONSET].beamAlpha :
+    mWinApp->mScope->FastAlpha();
   int magInd = mWinApp->mMultiTSTasks->GetAutoCenUseMagInd();
   if (!magInd || mLowDoseMode)
     magInd = mMagIndex[mSTEMindex];
   bool enable = mWinApp->mMultiTSTasks->AutocenParamExists(mActiveCameraList[m_iCamera],
-    magInd, probe) && !mSTEMindex;
+    magInd, probe, alpha) && !mSTEMindex;
   bool doingDosym = m_bDoBidir && m_bUseDoseSym && mLowDoseMode;
   m_butAutocenInterval.EnableWindow(enable);
   m_butAutocenCrossing.EnableWindow(enable && !doingDosym);

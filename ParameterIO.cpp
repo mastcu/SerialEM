@@ -953,6 +953,8 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
         acParmP->beamShiftUm = itemInt[9] < 0 ? 1.f : itemFlt[10];
         acParmP->addedShiftX = itemInt[9] < 0 ? 0.f : itemFlt[11];
         acParmP->addedShiftY = itemInt[9] < 0 ? 0.f : itemFlt[12];
+        if (!itemEmpty[13])
+          acParmP->alpha = itemInt[13];
         mWinApp->mMultiTSTasks->AddAutocenParams(acParmP);
       } else if (NAME_IS("ZbyGParams")) {
         zbgParam.lowDoseArea = itemInt[1];
@@ -2165,13 +2167,14 @@ void CParameterIO::WriteSettings(CString strFileName)
       if (acParams->intensity >= 0. || acParams->camera == -1) {
         acParmP = mWinApp->mMultiTSTasks->LookupAutocenParams(acParams->camera, 
           acParams->magIndex, acParams->spotSize, acParams->probeMode, 
-          acParams->intensity, j);
+          acParams->intensity, j, acParams->alpha);
         if (j == i) {
-          oneState.Format("AutocenterParams %d %d %d %f %d %f %d %d %d %f %f %f -999\n", 
+          oneState.Format("AutocenterParams %d %d %d %f %d %f %d %d %d %f %f %f %d "
+            "-999\n", 
             acParams->camera, acParams->magIndex, acParams->spotSize, acParams->intensity,
             acParams->binning, acParams->exposure, acParams->useCentroid ? 1 : 0, 
             acParams->probeMode, acParams->shiftBeamForCen ? 1 : 0, acParams->beamShiftUm,
-            acParams->addedShiftX, acParams->addedShiftY);
+            acParams->addedShiftX, acParams->addedShiftY, acParams->alpha);
           mFile->WriteString(oneState);
         }
       }

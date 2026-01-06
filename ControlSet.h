@@ -609,6 +609,7 @@ struct AutocenParams {
   int magIndex;
   int spotSize;
   int probeMode;
+  int alpha;
   double intensity;
   int binning;
   float exposure;

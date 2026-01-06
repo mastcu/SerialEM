@@ -681,7 +681,7 @@ void CMultiTSTasks::TimeToSimplePane(double time)
 
 
 AutocenParams *CMultiTSTasks::GetAutocenSettings(int camera, int magInd, int spot,
-  int probe, double roughInt, bool & synthesized, int &bestMag,int &bestSpot)
+  int probe, double roughInt, bool & synthesized, int &bestMag,int &bestSpot, int alpha)
 {
   static AutocenParams acParams;
   AutocenParams *parmP;
@@ -706,7 +706,7 @@ AutocenParams *CMultiTSTasks::GetAutocenSettings(int camera, int magInd, int spo
   synthesized = false;
   bestMag = magInd;
   bestSpot = spot;
-  parmP = LookupAutocenParams(camera, magInd, spot, probe, roughInt, index);
+  parmP = LookupAutocenParams(camera, magInd, spot, probe, roughInt, index, alpha);
   if (parmP)
     return parmP;
   synthesized = true;
@@ -731,6 +731,7 @@ AutocenParams *CMultiTSTasks::GetAutocenSettings(int camera, int magInd, int spo
     acParams.exposure = (float)(B3DNINT(acParams.exposure * roundFac) / roundFac);
   acParams.useCentroid = false;
   acParams.probeMode = probe;
+  acParams.alpha = alpha;
   acParams.shiftBeamForCen = false;
   acParams.beamShiftUm = 0.;
   acParams.addedShiftX = 0.;
@@ -748,7 +749,8 @@ AutocenParams *CMultiTSTasks::GetAutocenSettings(int camera, int magInd, int spo
     // skip if no camera match, or no spot match and spot has matched, or other side of
     // crossover
     if (parmP->camera != camera || (parmP->spotSize != spot && minSpotChg == 1.) ||
-      parmP->intensity < 0. || parmP->probeMode != probe)
+      parmP->intensity < 0. || parmP->probeMode != probe ||
+      (parmP->alpha >= 0 && parmP->alpha != alpha))
       continue;
     aboveCross = mBeamAssessor->GetAboveCrossover(parmP->spotSize, parmP->intensity,
       parmP->probeMode);
@@ -868,10 +870,11 @@ void CMultiTSTasks::AddAutocenParams(AutocenParams *params)
 
 // Delete matching params from the array
 int CMultiTSTasks::DeleteAutocenParams(int camera, int magInd, int spot, int probe,
-  double roughInt)
+  double roughInt, int alpha)
 {
   int index;
-  AutocenParams *parmP = LookupAutocenParams(camera, magInd, spot, probe, roughInt,index);
+  AutocenParams *parmP = LookupAutocenParams(camera, magInd, spot, probe, roughInt,
+    index, alpha);
   if (index < 0)
     return 1;
   delete parmP;
@@ -881,7 +884,8 @@ int CMultiTSTasks::DeleteAutocenParams(int camera, int magInd, int spot, int pro
 
 // Find a matching param
 AutocenParams * CMultiTSTasks::LookupAutocenParams(int camera, int magInd, int spot,
-                                                   int probe, double roughInt, int &index)
+                                                   int probe, double roughInt, int &index,
+                                                   int alpha)
 {
   int aboveCross, aboveNeeded;
   AutocenParams *parmP;
@@ -892,7 +896,8 @@ AutocenParams * CMultiTSTasks::LookupAutocenParams(int camera, int magInd, int s
     aboveCross = parmP->spotSize > MAX_SPOT_SIZE || mBeamAssessor->GetAboveCrossover
     (parmP->spotSize, parmP->intensity, parmP->probeMode);
     if (parmP->camera == camera && (camera < 0 || (parmP->magIndex == magInd &&
-      parmP->spotSize == spot && aboveCross == aboveNeeded && parmP->probeMode == probe)))
+      parmP->spotSize == spot && aboveCross == aboveNeeded && parmP->probeMode == probe
+      && (parmP->alpha < 0 || parmP->alpha == alpha))))
       return parmP;
   }
   index = -1;
@@ -900,13 +905,14 @@ AutocenParams * CMultiTSTasks::LookupAutocenParams(int camera, int magInd, int s
 }
 
 // Determine if a param exists for this camera and mag index
-bool CMultiTSTasks::AutocenParamExists(int camera, int magInd, int probe)
+bool CMultiTSTasks::AutocenParamExists(int camera, int magInd, int probe, int alpha)
 {
   AutocenParams *parmP;
   for (int index = 0; index < mAcParamArray.GetSize(); index++) {
     parmP = mAcParamArray[index];
     if (parmP->camera == camera && (camera < 0 ||
-      (parmP->magIndex == magInd && parmP->probeMode == probe)))
+      (parmP->magIndex == magInd && parmP->probeMode == probe
+      && (parmP->alpha < 0 || parmP->alpha == alpha))))
       return true;
   }
   return false;
@@ -1001,7 +1007,8 @@ bool CMultiTSTasks::AutocenMatchingIntensity(int changing)
     (!mWinApp->mLowDoseDlg.m_bContinuousUpdate && (mCamera->DoingContinuousAcquire() ||
       changing == ACTRACK_START_CONTIN || mScope->FastScreenPos() == spDown) &&
       (changing || (ldParm->magIndex == mScope->FastMagIndex() && ldParm->spotSize ==
-        mScope->FastSpotSize() && ldParm->probeMode == mScope->GetProbeMode()))));
+        mScope->FastSpotSize() && ldParm->probeMode == mScope->GetProbeMode()
+        && (ldParm->beamAlpha < 0 || ldParm->beamAlpha == mScope->FastAlpha())))));
 }
 
 // Call from the dialog to do the test shot
@@ -1016,6 +1023,7 @@ void CMultiTSTasks::TestAutocenAcquire()
   mAcSavedMagInd = dlg->mSavedMagInd;
   mAcSavedSpot = dlg->mSavedSpot;
   mAcSavedProbe = dlg->mSavedProbe;
+  mAcSavedAlpha = dlg->mSavedAlpha;
   if (mWinApp->LowDoseMode())
     mAcSavedIntensity = ldParm->intensity;
   else if (AutocenTrackingState())
@@ -1025,7 +1033,7 @@ void CMultiTSTasks::TestAutocenAcquire()
   mAcSavedScreen = mScope->GetScreenPos();
   param = GetAutocenSettings((mWinApp->LowDoseMode() && mUseEasyAutocen) ?
     -1 : dlg->mCamera, dlg->mCurMagInd, dlg->mCurSpot,
-    dlg->mCurProbe, dlg->mParam->intensity, synth, bestMag, bestSpot);
+    dlg->mCurProbe, dlg->mParam->intensity, synth, bestMag, bestSpot, dlg->mCurAlpha);
   if (mWinApp->LowDoseMode()) {
     mWinApp->mLowDoseDlg.SetContinuousUpdate(false);
     mAcLDTrialIntensity = ldParm->intensity;
@@ -1181,7 +1189,7 @@ void CMultiTSTasks::ShiftBeamForCentering(AutocenParams *param, int fullInitial)
 // Autocenter beam: takes an optional maximum radius in microns
 int CMultiTSTasks::AutocenterBeam(float maxShift, int pctSmallerView)
 {
-  int magInd, spotSize, probe, err;
+  int magInd, spotSize, probe, alpha, err;
   int bestMag, bestSpot, camForParam = mWinApp->GetCurrentCamera();
   bool synth, raise, smallerTrial = false;
   double pctDone;
@@ -1208,6 +1216,7 @@ int CMultiTSTasks::AutocenterBeam(float maxShift, int pctSmallerView)
     spotSize = ldParm->spotSize;
     mAcSavedIntensity = ldParm->intensity;
     probe = ldParm->probeMode;
+    alpha = (int)ldParm->beamAlpha;
     if (!magInd || !spotSize || !mAcSavedIntensity) {
       SEMMessageBox("You need to set up the " + names[mAcLDarea] + " low dose area\n"
         "before trying to autocenter in low dose", MB_EXCLAME);
@@ -1228,15 +1237,17 @@ int CMultiTSTasks::AutocenterBeam(float maxShift, int pctSmallerView)
     spotSize = mScope->GetSpotSize();
     mAcSavedIntensity = mScope->GetIntensity();
     probe = mScope->ReadProbeMode();
+    alpha = mScope->FastAlpha();
   }
   SEMTrace('I', "AutocenBeam saving intensity %.5f  %.3f%%", mAcSavedIntensity,
     mScope->GetC2Percent(spotSize, mAcSavedIntensity, probe));
   mAcSavedProbe = probe;
   mAcSavedSpot = spotSize;
+  mAcSavedAlpha = alpha;
 
   // Get the param and make sure it works
   param = mWinApp->mMultiTSTasks->GetAutocenSettings(camForParam, magInd,
-    spotSize, probe, mAcSavedIntensity, synth, bestMag, bestSpot);
+    spotSize, probe, mAcSavedIntensity, synth, bestMag, bestSpot, alpha);
   if (!smallerTrial && param->intensity < 0) {
     SEMMessageBox("There are no usable settings for autocentering at this magnification"
       " and spot size", MB_EXCLAME);

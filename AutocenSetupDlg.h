@@ -41,6 +41,7 @@ private:
   bool mOpening;
   int mStartingMagInd;
   CFont mItalicFont;
+  bool mScopeHasAlpha;
 
 public:
 
@@ -48,10 +49,12 @@ public:
   double mSavedIntensity;
   int mSavedSpot;
   int mSavedProbe;
+  int mSavedAlpha;
   int mCamera;
   int mCurMagInd;
   int mCurSpot;
   int mCurProbe;
+  int mCurAlpha;
   AutocenParams *mParam;
   double mCurIntensity;
   CStatic m_statCamLabel2;
@@ -74,14 +77,14 @@ public:
   CString m_strMag;
   CSpinButtonCtrl m_sbcMag;
   afx_msg void OnDeltaposSpinmag(NMHDR *pNMHDR, LRESULT *pResult);
-  void LiveUpdate(int magInd, int spotSize, int probe, double intensity);
+  void LiveUpdate(int magInd, int spotSize, int probe, double intensity, int alpha);
   CButton m_butDelete;
   afx_msg void OnDeleteSettings();
   void ParamChanged(void);
   void UpdateParamSettings(void);
   void StartTrackingState(void);
   void UpdateMagSpot(void);
-  void MagOrSpotChanged(int magInd, int spot, int probe);
+  void MagOrSpotChanged(int magInd, int spot, int probe, int alpha);
   void FetchParams(void);
   void RestoreScopeState(void);
   BOOL UpdateIfExposureChanged(void);

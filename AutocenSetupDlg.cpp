@@ -135,6 +135,7 @@ BOOL CAutocenSetupDlg::OnInitDialog()
   mMagTab = mWinApp->GetMagTable();
   mCamParams = mWinApp->GetCamParams() + mCamera;
   mLowDoseMode = mWinApp->LowDoseMode();
+  mScopeHasAlpha = JEOLscope && !mScope->GetHasNoAlpha();
   if (mWinApp->GetNumActiveCameras() > 1) {
     m_strCamName = mCamParams->name;
   } else {
@@ -160,6 +161,7 @@ BOOL CAutocenSetupDlg::OnInitDialog()
     mCurSpot = ldp->spotSize;
     mCurProbe = ldp->probeMode;
     mCurIntensity = ldp->intensity;
+    mCurAlpha = (int)ldp->beamAlpha;
     m_butSetState.ShowWindow(SW_HIDE);
   } else {
 
@@ -167,6 +169,7 @@ BOOL CAutocenSetupDlg::OnInitDialog()
     mCurMagInd = mScope->GetMagIndex();
     mCurSpot = mScope->GetSpotSize();
     mCurProbe = mScope->ReadProbeMode();
+    mCurAlpha = mScope->GetAlpha();
     m_statLdTrackScope.ShowWindow(SW_HIDE);
 
     // But if the option to run with a mag is set, save starting mag and go to that mag
@@ -184,7 +187,7 @@ BOOL CAutocenSetupDlg::OnInitDialog()
 
   // Get smaller trial params just to set the value in case it is off
   mParam = mMultiTasks->GetAutocenSettings(-1, mCurMagInd, mCurSpot,
-    mCurProbe, mCurIntensity, mSynthesized, mBestMag, mBestSpot);
+    mCurProbe, mCurIntensity, mSynthesized, mBestMag, mBestSpot, mCurAlpha);
   m_strSmallerTrial.Format("%d%%", mParam->spotSize);
 
   FetchParams();
@@ -298,7 +301,7 @@ void CAutocenSetupDlg::OnDeltaposSpinspot(NMHDR *pNMHDR, LRESULT *pResult)
     return;
   if (mMultiTasks->AutocenTrackingState())
     mScope->SetSpotSize(mCurSpot);
-  MagOrSpotChanged(-1, mCurSpot, -1);
+  MagOrSpotChanged(-1, mCurSpot, -1, -1);
 }
 
 // Mag change
@@ -313,7 +316,7 @@ void CAutocenSetupDlg::OnDeltaposSpinmag(NMHDR *pNMHDR, LRESULT *pResult)
   }
   if (mMultiTasks->AutocenTrackingState())
     mScope->SetMagIndex(newmag);
-  MagOrSpotChanged(newmag, -1, -1);
+  MagOrSpotChanged(newmag, -1, -1, -1);
   *pResult = 0;
 }
 
@@ -449,7 +452,7 @@ void CAutocenSetupDlg::OnTestacquire()
 void CAutocenSetupDlg::OnDeleteSettings()
 {
   mMultiTasks->DeleteAutocenParams(mCamera, mCurMagInd, mCurSpot, mCurProbe,
-    mCurIntensity);
+    mCurIntensity, mCurAlpha);
   FetchParams();
   if (mMultiTasks->AutocenTrackingState()) {
     mParam->intensity = mScope->GetIntensity();
@@ -532,7 +535,8 @@ void CAutocenSetupDlg::OnKillfocusEditIterate()
 }
 
 // Called from scope update with current values when they have changed
-void CAutocenSetupDlg::LiveUpdate(int magInd, int spotSize, int probe, double intensity)
+void CAutocenSetupDlg::LiveUpdate(int magInd, int spotSize, int probe, double intensity,
+int alpha)
 {
   LowDoseParams *ldp = mWinApp->GetLowDoseParams() + TRIAL_CONSET;
   bool mismatch = false;
@@ -541,16 +545,18 @@ void CAutocenSetupDlg::LiveUpdate(int magInd, int spotSize, int probe, double in
     return;
   if (mLowDoseMode) {
     mismatch = magInd != ldp->magIndex || spotSize != ldp->spotSize ||
-      probe != ldp->probeMode;
+      probe != ldp->probeMode || (alpha >= 0 && alpha != ldp->beamAlpha);
     magInd = ldp->magIndex;
     spotSize = ldp->spotSize;
     probe = ldp->probeMode;
+    alpha = (int)ldp->beamAlpha;
     if (!BOOL_EQUIV(mismatch, mLastTrialMismatch))
       ManageLDtrackText(mMultiTasks->AutocenMatchingIntensity());
     mLastTrialMismatch = mismatch;
   }
-  if (magInd != mCurMagInd || spotSize != mCurSpot || probe != mCurProbe) {
-    MagOrSpotChanged(magInd, spotSize, probe);
+  if (magInd != mCurMagInd || spotSize != mCurSpot || probe != mCurProbe ||
+    (alpha >= 0 && alpha != mCurAlpha)) {
+    MagOrSpotChanged(magInd, spotSize, probe, alpha);
   } else if (intensity != mParam->intensity && mMultiTasks->AutocenMatchingIntensity() &&
     !mismatch) {
 
@@ -558,7 +564,8 @@ void CAutocenSetupDlg::LiveUpdate(int magInd, int spotSize, int probe, double in
     // on the new side of crossover first, so there is only one there
     if (mWinApp->mBeamAssessor->GetAboveCrossover(mCurSpot, mCurIntensity, probe) !=
       mWinApp->mBeamAssessor->GetAboveCrossover(mCurSpot, intensity, probe))
-      mMultiTasks->DeleteAutocenParams(mCamera, mCurMagInd, mCurSpot, probe, intensity);
+      mMultiTasks->DeleteAutocenParams(mCamera, mCurMagInd, mCurSpot, probe, intensity,
+        alpha);
     mParam->intensity = intensity;
     mCurIntensity = intensity;
     ParamChanged();
@@ -650,10 +657,12 @@ void CAutocenSetupDlg::StartTrackingState(void)
   mSavedSpot = mScope->GetSpotSize();
   mSavedProbe = mScope->ReadProbeMode();
   mSavedIntensity = mScope->GetIntensity();
+  mSavedAlpha = mScope->GetAlpha();
   mScope->SetMagIndex(mCurMagInd);
   postMag = GetTickCount();
   mScope->SetProbeMode(mCurProbe);
   mScope->SetSpotSize(mCurSpot);
+  mScope->SetAlpha(mCurAlpha);
   if (mParam->intensity >= 0) {
     mScope->DelayedSetIntensity(mParam->intensity, postMag, mCurSpot, mCurProbe);
     mCurIntensity = mParam->intensity;
@@ -672,14 +681,21 @@ void CAutocenSetupDlg::UpdateMagSpot(void)
   m_strSpot.Format("%d", easyTrial ? ldParam->spotSize : mCurSpot);
   m_strMag.Format("%d", MagOrEFTEMmag(mCamParams->GIF,
     easyTrial ? ldParam->magIndex : mCurMagInd));
-  m_statNanoprobe.SetWindowText(B3DCHOICE((easyTrial ? ldParam->probeMode : mCurProbe) >
-    0, "uPr", "nPr"));
-  m_statNanoprobe.ShowWindow(B3DCHOICE(FEIscope, SW_SHOW, SW_HIDE));
+  if (FEIscope) {
+    m_statNanoprobe.SetWindowText(B3DCHOICE((easyTrial ? ldParam->probeMode : mCurProbe) >
+      0, "uPr", "nPr"));
+  }
+  else if (mScopeHasAlpha) {
+    CString mess;
+    mess.Format("Al %d", easyTrial ? (int)ldParam->beamAlpha + 1 : mCurAlpha + 1);
+    m_statNanoprobe.SetWindowText(mess);
+  }
+  m_statNanoprobe.ShowWindow(B3DCHOICE(FEIscope || mScopeHasAlpha, SW_SHOW, SW_HIDE));
   UpdateData(false);
 }
 
 // Make the necessary changes when mag or spot changes
-void CAutocenSetupDlg::MagOrSpotChanged(int magInd, int spot, int probe)
+void CAutocenSetupDlg::MagOrSpotChanged(int magInd, int spot, int probe, int alpha)
 {
   UpdateIfExposureChanged();
   if (magInd > 0)
@@ -688,6 +704,8 @@ void CAutocenSetupDlg::MagOrSpotChanged(int magInd, int spot, int probe)
     mCurSpot = spot;
   if (probe >= 0)
     mCurProbe = probe;
+  if (alpha >= 0)
+    mCurAlpha = alpha;
   FetchParams();
   if (mMultiTasks->AutocenTrackingState()) {
     if (mMultiTasks->AutocenMatchingIntensity()) {
@@ -716,7 +734,7 @@ void CAutocenSetupDlg::FetchParams(void)
   bool easyTrial = mWinApp->LowDoseMode() && m_bUseTrialSmaller;
   int binning;
   mParam = mMultiTasks->GetAutocenSettings(easyTrial ? -1 : mCamera, mCurMagInd, mCurSpot,
-    mCurProbe, mCurIntensity, mSynthesized, mBestMag, mBestSpot);
+    mCurProbe, mCurIntensity, mSynthesized, mBestMag, mBestSpot, mCurAlpha);
   binning = mParam->binning;
   if (easyTrial)
     binning = mMultiTasks->NextLowerNonSuperResBinning(conSet->binning);
@@ -731,7 +749,7 @@ void CAutocenSetupDlg::FetchParams(void)
   if (easyTrial && mSynthesized) {
     mMultiTasks->AddAutocenParams(mParam);
     mParam = mMultiTasks->GetAutocenSettings(-1, mCurMagInd, mCurSpot,
-      mCurProbe, mCurIntensity, mSynthesized, mBestMag, mBestSpot);
+      mCurProbe, mCurIntensity, mSynthesized, mBestMag, mBestSpot, mCurAlpha);
   }
 }
 
@@ -739,6 +757,7 @@ void CAutocenSetupDlg::FetchParams(void)
 void CAutocenSetupDlg::RestoreScopeState(void)
 {
   mScope->SetProbeMode(mSavedProbe);
+  mScope->SetAlpha(mSavedAlpha);
   mScope->SetSpotSize(mSavedSpot);
   mScope->SetMagIndex(mSavedMagInd);
   mScope->DelayedSetIntensity(mSavedIntensity, GetTickCount(), mSavedSpot, mSavedProbe);

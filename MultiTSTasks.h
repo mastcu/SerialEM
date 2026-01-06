@@ -66,6 +66,7 @@ private:
   int mAcSavedMagInd;     // Saved state values when reopening autocen setup after test
   int mAcSavedSpot;
   int mAcSavedProbe;
+  int mAcSavedAlpha;
   double mAcSavedIntensity;
   int mAcSavedScreen;
   double mAcLDTrialIntensity;  // Saved low dose intensity
@@ -226,11 +227,12 @@ public:
   void RestoreScopeState(void);
   CArray<AutocenParams *, AutocenParams *> *GetAutocenParams() {return &mAcParamArray;};
   AutocenParams *GetAutocenSettings(int camera, int magInd, int spotSize, int probe,
-    double roughInt, bool & synthesized, int &bestMag, int &bestSpot);
+    double roughInt, bool & synthesized, int &bestMag, int &bestSpot, int alpha);
   void AddAutocenParams(AutocenParams *params);
-  int DeleteAutocenParams(int camera, int magInd, int spot, int probe, double roughInt);
+  int DeleteAutocenParams(int camera, int magInd, int spot, int probe, double roughInt, 
+    int alpha);
   AutocenParams *LookupAutocenParams(int camera, int magInd, int spot, int probe, double roughInt, 
-    int &index);
+    int &index, int alpha);
   void SetupAutocenter();
   void MakeAutocenConset(AutocenParams * param);
   int NextLowerNonSuperResBinning(int binning);
@@ -254,7 +256,7 @@ public:
   void RestoreFromZeroShot(void);
   void LogStopMessage(CString str);
   void StoreLimitAngle(bool userAuto, float angle);
-  bool AutocenParamExists(int camera, int magInd, int probe);
+  bool AutocenParamExists(int camera, int magInd, int probe, int alpha);
   int SetupBidirFileCopy(int zmax);
   int StartBidirFileCopy(bool synchronous);
   void StopBidirFileCopy(void);

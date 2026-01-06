@@ -478,9 +478,10 @@ void CScopeStatusDlg::Update(double inCurrent, int inMagInd, double inDefocus,
   mLastCooker = mWinApp->mCookerDlg != NULL;
 
   if (mWinApp->mAutocenDlg && (!mLastAutocen || magChanged ||
-    rawIntensity != mRawIntensity || inSpot != mSpot ||
+    rawIntensity != mRawIntensity || inSpot != mSpot || inAlpha != mBeamAlpha ||
     tNanoChanged))
-    mWinApp->mAutocenDlg->LiveUpdate(inMagInd, inSpot, inProbeMode, rawIntensity);
+    mWinApp->mAutocenDlg->LiveUpdate(inMagInd, inSpot, inProbeMode, rawIntensity, 
+      inAlpha);
 
   if (mWinApp->mVPPConditionSetup)
     mWinApp->mVPPConditionSetup->LiveUpdate(inMagInd, inSpot, inProbeMode, rawIntensity,

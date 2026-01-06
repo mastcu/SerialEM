@@ -2968,7 +2968,7 @@ void CMenuTargets::OnTasksAutocenterBeam()
 
 void CMenuTargets::OnUpdateTasksAutocenterbeam(CCmdUI *pCmdUI)
 {
-  int bestm, bests, spot, mag, probe;
+  int bestm, bests, spot, mag, probe, alpha;
   double roughInt;
   bool synth;
   AutocenParams *param;
@@ -2981,6 +2981,7 @@ void CMenuTargets::OnUpdateTasksAutocenterbeam(CCmdUI *pCmdUI)
     mag = ldParm->magIndex;
     spot = ldParm->spotSize;
     probe = ldParm->probeMode;
+    alpha = (int)ldParm->beamAlpha;
     roughInt = ldParm->intensity;
   } else {
     spot = mScope->FastSpotSize();
@@ -2989,9 +2990,10 @@ void CMenuTargets::OnUpdateTasksAutocenterbeam(CCmdUI *pCmdUI)
       mag = mScope->FastMagIndex();
     roughInt = mScope->FastIntensity();
     probe = mScope->GetProbeMode();
+    alpha = mScope->FastAlpha();
   }
   param = mWinApp->mMultiTSTasks->GetAutocenSettings(mWinApp->GetCurrentCamera(), mag,
-    spot, probe, roughInt, synth, bestm, bests);
+    spot, probe, roughInt, synth, bestm, bests, alpha);
   pCmdUI->Enable(!mWinApp->DoingTasks() && param->intensity >= 0. &&
     !mScope->GetMovingStage());
 }
