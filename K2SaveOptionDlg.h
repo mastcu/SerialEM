@@ -113,4 +113,7 @@ public:
   BOOL m_bDatePrefix;
   afx_msg void OnCheckDatePrefix();
   BOOL m_bMultiHolePos;
+  CButton m_butMagFolder;
+  BOOL m_bMagFile;
+  BOOL m_bMagFolder;
 };

@@ -297,6 +297,9 @@ typedef bool (*PlugDoingFunc)(void);
 #define FRAME_FILE_TILT_ANGLE    (1 << 10) // 0x400
 #define FRAME_FILE_DATE_PREFIX   (1 << 11) // 0x800
 #define FRAME_FILE_HOLE_AND_POS  (1 << 12) // 0x1000
+#define FRAME_FILE_MAG           (1 << 13) // 0x2000
+#define FRAME_FOLDER_MAG         (1 << 14) // 0x4000
+
 
 // Definitions for Tietz errors and flags.  Keep flags compatible with PLUGCAM flags
 // defined in SEMCCDDefines.h
