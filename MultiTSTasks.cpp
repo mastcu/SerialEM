@@ -1237,7 +1237,7 @@ int CMultiTSTasks::AutocenterBeam(float maxShift, int pctSmallerView)
     spotSize = mScope->GetSpotSize();
     mAcSavedIntensity = mScope->GetIntensity();
     probe = mScope->ReadProbeMode();
-    alpha = mScope->FastAlpha();
+    alpha = mScope->GetAlpha();
   }
   SEMTrace('I', "AutocenBeam saving intensity %.5f  %.3f%%", mAcSavedIntensity,
     mScope->GetC2Percent(spotSize, mAcSavedIntensity, probe));

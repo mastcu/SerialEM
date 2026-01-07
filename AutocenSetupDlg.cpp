@@ -662,7 +662,8 @@ void CAutocenSetupDlg::StartTrackingState(void)
   postMag = GetTickCount();
   mScope->SetProbeMode(mCurProbe);
   mScope->SetSpotSize(mCurSpot);
-  mScope->SetAlpha(mCurAlpha);
+  if (!mScope->GetHasNoAlpha())
+    mScope->SetAlpha(mCurAlpha);
   if (mParam->intensity >= 0) {
     mScope->DelayedSetIntensity(mParam->intensity, postMag, mCurSpot, mCurProbe);
     mCurIntensity = mParam->intensity;
@@ -757,7 +758,8 @@ void CAutocenSetupDlg::FetchParams(void)
 void CAutocenSetupDlg::RestoreScopeState(void)
 {
   mScope->SetProbeMode(mSavedProbe);
-  mScope->SetAlpha(mSavedAlpha);
+  if (!mScope->GetHasNoAlpha())
+    mScope->SetAlpha(mSavedAlpha);
   mScope->SetSpotSize(mSavedSpot);
   mScope->SetMagIndex(mSavedMagInd);
   mScope->DelayedSetIntensity(mSavedIntensity, GetTickCount(), mSavedSpot, mSavedProbe);
