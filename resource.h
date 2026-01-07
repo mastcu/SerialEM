@@ -2627,6 +2627,8 @@
 #define IDC_STATIC_CONTOURS_BY          3659
 #define IDC_STATIC_CONTOURS_UM          3660
 #define IDC_COOKPROBEORALPHA            3661
+#define IDC_CHECK_MAG_FOLDER            3662
+#define IDC_CHECK_MAG_FILE              3663
 #define ID_NEW_IMAGE                    32771
 #define IDM_FILE_SAVEOTHER              32772
 #define IDM_FILE_READ                   32773
@@ -3222,7 +3224,7 @@
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        301
 #define _APS_NEXT_COMMAND_VALUE         33560
-#define _APS_NEXT_CONTROL_VALUE         3662
+#define _APS_NEXT_CONTROL_VALUE         3664
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif
