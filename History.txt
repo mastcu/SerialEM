@@ -3,6 +3,8 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+1/7/25: Added alpha parameter to beam autocentering.
+
 1/4/25: The entry to SkipUtapiServices can now include ranges (In 4.2).
 
 1/3/26: Added camera property to specify the local frame path for
