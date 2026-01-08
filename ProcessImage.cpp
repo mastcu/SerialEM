@@ -1094,47 +1094,14 @@ void CProcessImage::OnUpdateProcessCropimage(CCmdUI *pCmdUI)
 int CProcessImage::CropImage(EMimageBuffer *imBuf, int top, int left, int bottom,
   int right, bool display)
 {
-  Islice slice;
   Islice *newsl;
-  int nx, ny, mode;
-  float cenCrit = 3.f;
   bool centered;
-  void *data;
   EMimageExtra *extra;
-  KImage *image = imBuf->mImage;
-  if (!image)
-    return 1;
-  image->getSize(nx, ny);
-  top = B3DMAX(0, top);
-  bottom = B3DMIN(bottom, ny - 1);
-  left = B3DMAX(0, left);
-  right = B3DMIN(right, nx - 1);
-
-  // Make it even in X
-  if ((right + 1 - left) % 2)
-    right--;
-  if (bottom <= top || right <= left)
-    return 2;
-  switch (image->getType()) {
-    case kUBYTE: mode = SLICE_MODE_BYTE; break;
-    case kSHORT: mode = SLICE_MODE_SHORT; break;
-    case kUSHORT: mode = SLICE_MODE_USHORT; break;
-    case kFLOAT: mode = SLICE_MODE_FLOAT; break;
-    case kRGB: mode = SLICE_MODE_RGB; break;
-    default:
-      return 3;
-  }
-  image->Lock();
-  data = image->getData();
-  sliceInit(&slice, nx, ny, mode, data);
-  newsl = sliceBox(&slice, left, top, right + 1, bottom + 1);
-  image->UnLock();
+  int mode, err;
+  newsl = CropBufferToSlice(imBuf, top, left, bottom, right, false, mode, centered, err);
   if (!newsl)
-    return 4;
-
-  centered = fabs((left + right) / 2. - nx / 2.) < cenCrit &&
-    fabs((top + bottom) / 2. - ny / 2.) < cenCrit;
-  NewProcessedImage(imBuf, newsl->data.s, image->getType(), right + 1 - left,
+    return err;
+  NewProcessedImage(imBuf, newsl->data.s, mode, right + 1 - left,
     bottom + 1 - top, 1, centered ? imBuf->mCaptured : BUFFER_PROCESSED, false, 0,
     display);
   free(newsl);
@@ -1148,6 +1115,61 @@ int CProcessImage::CropImage(EMimageBuffer *imBuf, int top, int left, int bottom
   if (mWinApp->mNavigator)
     mWinApp->mNavigator->UpdateAddMarker();
   return 0;
+}
+
+// Does actual cropping of image in an image buffer, returning an Islice, with
+// bytes converted to short if convertBytes is true.  Coordinates may be modified to stay
+// in range or to make size in X even
+Islice *CProcessImage::CropBufferToSlice(EMimageBuffer *imBuf, int &top, int &left, 
+  int &bottom, int &right, bool convertBytes, int &mode, bool &centered, int &err)
+{
+  Islice slice;
+  Islice *newsl;
+  int nx, ny;
+  float cenCrit = 3.f;
+  void *data;
+  KImage *image = imBuf->mImage;
+  if (!image) {
+    err = 1;
+    return NULL;
+  }
+  image->getSize(nx, ny);
+  top = B3DMAX(0, top);
+  bottom = B3DMIN(bottom, ny - 1);
+  left = B3DMAX(0, left);
+  right = B3DMIN(right, nx - 1);
+
+  // Make it even in X
+  if ((right + 1 - left) % 2)
+    right--;
+  if (bottom <= top || right <= left) {
+    err = 2;
+    return NULL;
+  }
+
+  // kTypes are the same as SLICE_MODE's
+  mode = image->getType();
+  image->Lock();
+  data = image->getData();
+  sliceInit(&slice, nx, ny, mode, data);
+  newsl = sliceBox(&slice, left, top, right + 1, bottom + 1);
+  image->UnLock();
+  if (!newsl) {
+    err = 4;
+    return NULL;
+  }
+  if (convertBytes && mode == SLICE_MODE_BYTE) {
+    if (sliceNewMode(newsl, SLICE_MODE_SHORT) < 0) {
+      err = 4;
+      return NULL;
+    }
+    mode = SLICE_MODE_SHORT;
+  }
+
+  centered = fabs((left + right) / 2. - nx / 2.) < cenCrit &&
+    fabs((top + bottom) / 2. - ny / 2.) < cenCrit;
+
+  return newsl;
 }
 
 // Menu entry to reduce an image

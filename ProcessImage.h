@@ -256,6 +256,8 @@ public:
   afx_msg void OnProcessMakecoloroverlay();
   afx_msg void OnUpdateProcessMakecoloroverlay(CCmdUI *pCmdUI);
   int CropImage(EMimageBuffer *imBuf, int top, int left, int bottom, int right, bool display = true);
+  Islice *CropBufferToSlice(EMimageBuffer *imBuf, int &top, int &left, int &bottom, int &right,
+    bool convertBytes, int &mode, bool &centered, int &err);
   int AlignBetweenMagnifications(int toBufNum, float xcen, float ycen, float maxShiftUm,
     float scaleRange, float angleRange, bool doImShift, float &scaleMax, float &rotation, 
     int corrFlags, CString &errStr);
