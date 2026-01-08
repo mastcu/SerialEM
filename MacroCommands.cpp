@@ -9131,11 +9131,23 @@ int CMacCmd::NoLineWrapInMessageBox(void)
 // SetStatusLine
 int CMacCmd::SetStatusLine(void)
 {
-  if (mItemInt[1] < 1 || mItemInt[1] > NUM_CM_MESSAGE_LINES)
+  int ind, index = mItemInt[1];
+  if (index < 0 || index > NUM_CM_MESSAGE_LINES)
     ABORT_LINE("Status line number out of range in line:\n\n");
-  SubstituteLineStripItems(mStrLine, 2, mStatusLines[mItemInt[1] - 1]);
-  if (mItemInt[1] > mNumStatusLines)
-    SetNumStatusLines(mItemInt[1]);
+  if (!index) {
+    for (ind = 0; ind < NUM_CM_MESSAGE_LINES; ind++) {
+      if (mStatusLines[ind].IsEmpty()) {
+        index = ind + 1;
+        break;
+      }
+    }
+    SetReportedValues(index, 0);
+    if (!index)
+      return 0;
+  }
+  SubstituteLineStripItems(mStrLine, 2, mStatusLines[index - 1]);
+  if (index > mNumStatusLines)
+    SetNumStatusLines(index);
   else
     mWinApp->mCameraMacroTools.Invalidate();
   return 0;

@@ -903,10 +903,17 @@
         </TR>
         <TR>
           <TD class="scriptcommand">SetStatusLine #L text</TD>
-          <TD>Places the given text in status line <b>#L</b> at the bottom of the Camera & Script control panel and makes 
-            sure that enough lines are displayed there to show this line (see <a href="menu_script.htm#hid_script_set_num_status">Set
-               # of Status Lines</a> in the Script menu).&nbsp; There are currently up to 6 lines allowed so <B>#L</B> can be between
-            1 and 6.&nbsp; </TD>
+          <TD>Places the given text in status line <b>#L</b> at the bottom of the Camera & Script control
+             panel and makes sure that enough lines are displayed there to show this line 
+            (see <a href="menu_script.htm#hid_script_set_num_status">Set
+               # of Status Lines</a> in the Script menu).&nbsp; There are currently up to 6 lines 
+            allowed so <B>#L</B> can be between
+            1 and 6 to specify a specific line, or 0 to use the first free line.&nbsp; The latter is 
+            useful in case another script or an internal operation has used some status lines.&nbsp; If 0
+            is entered, the <i>reportedValue1</i> and <i>2</i> are set with the line number and 0, or with 0 if no
+            line was available.&nbsp; Record this value in a persistent variable and use that variable 
+            instead of 0 if it is defined.&nbsp; Allowing an entry of 0 was added in 4.3, 8-Jan-26.
+          </TD>
         </TR>
         <TR>
           <TD class="scriptcommand">HighlightStatusLine #L #O</TD>
