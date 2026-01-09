@@ -13411,9 +13411,9 @@ int CCameraController::RotateAndReplaceArray(int chan, int operation, int invert
 // filename for saving the next set of frames
 void CCameraController::ComposeFramePathAndName(bool temporary)
 {
-  CString date, time, path, filename, savefile, label;
+  CString date, time, path, filename, savefile, label, mag;
   char numFormat[6];
-  int trimCount;
+  int trimCount, magVal;
   CMapDrawItem *item;
   bool prefixDate = (mFrameNameFormat & FRAME_FILE_DATE_PREFIX) != 0;
   bool flexibleFEI = mParam->FEItype == FALCON4_TYPE || FCAM_CONTIN_SAVE(mParam) ||
@@ -13436,6 +13436,11 @@ void CCameraController::ComposeFramePathAndName(bool temporary)
     mWinApp->mNavigator->GetAcquiring()) && 
     mWinApp->mNavigator->GetCurrentOrAcquireItem(item) >= 0)
     label = item->mLabel;
+  if ((mFrameNameFormat & (FRAME_FOLDER_MAG | FRAME_FILE_MAG))) {
+    magVal = MagOrEFTEMmag(mWinApp->GetEFTEMMode(), mScope->GetLastMagIndex(), 
+      mScope->GetSTEMmode());
+    mag = UtilFormattedMag(magVal, 2);
+  }
 
   // Set up folder
   if (!mParam->DE_camType || mTD.DE_Cam->CanIgnoreAutosaveFolder() || 
@@ -13444,6 +13449,8 @@ void CCameraController::ComposeFramePathAndName(bool temporary)
       path = mFrameBaseName;
     if ((mFrameNameFormat & FRAME_FOLDER_SAVEFILE) && !savefile.IsEmpty())
       UtilAppendWithSeparator(path, savefile, "_");
+    if ((mFrameNameFormat & FRAME_FOLDER_MAG) && !mag.IsEmpty())
+      UtilAppendWithSeparator(path, mag, "_");
     if ((mFrameNameFormat & FRAME_FOLDER_NAVLABEL) && !label.IsEmpty())
       UtilAppendWithSeparator(path, label, "_");
 
@@ -13471,6 +13478,8 @@ void CCameraController::ComposeFramePathAndName(bool temporary)
     filename = mFrameBaseName;
   if ((mFrameNameFormat & FRAME_FILE_SAVEFILE) && !savefile.IsEmpty())
     UtilAppendWithSeparator(filename, savefile, "_");
+  if ((mFrameNameFormat & FRAME_FILE_MAG) && !mag.IsEmpty())
+    UtilAppendWithSeparator(filename, mag, "_");
   if ((mFrameNameFormat & FRAME_FILE_NAVLABEL) && !label.IsEmpty()) 
     UtilAppendWithSeparator(filename, label, "_");
 

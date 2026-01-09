@@ -25,7 +25,8 @@ static int idTable[] = {IDC_STAT_FILETYPE, IDC_SAVE_MRC, IDC_COMPRESSED_TIFF,
   IDC_STAT_COMPTITLE, IDC_STAT_USE_COMP, IDC_STAT_FOLDER, IDC_STAT_FILE,
   IDC_CHECK_ROOT_FOLDER, IDC_EDIT_BASENAME, IDC_CHECK_ROOT_FILE,
   IDC_CHECK_SAVEFILE_FILE, IDC_CHECK_SAVEFILE_FOLDER, IDC_CHECK_NAVLABEL_FOLDER,
-  IDC_CHECK_NAVLABEL_FILE, IDC_CHECK_NUMBER, IDC_EDIT_START_NUMBER, IDC_STAT_DIGITS,
+  IDC_CHECK_NAVLABEL_FILE, IDC_CHECK_MAG_FOLDER, IDC_CHECK_MAG_FILE,
+  IDC_CHECK_NUMBER, IDC_EDIT_START_NUMBER, IDC_STAT_DIGITS,
   IDC_SPIN_DIGITS, IDC_CHECK_ONLY_ACQUIRE, IDC_CHECK_TILT_ANGLE, PANEL_END,
   IDC_CHECK_MONTHDAY, IDC_CHECK_HOUR_MIN_SEC, IDC_CHECK_DATE_PREFIX, PANEL_END,
   IDC_CHECK_HOLE_POS, IDC_STAT_EXAMPLE, IDC_STAT_MUST_EXIST, IDC_STAT_MUST_EXIST2,
@@ -63,6 +64,8 @@ CK2SaveOptionDlg::CK2SaveOptionDlg(CWnd* pParent /*=NULL*/)
   , m_bSaveFrameStackMdoc(FALSE)
   , m_bDatePrefix(FALSE)
   , m_bMultiHolePos(FALSE)
+  , m_bMagFile(FALSE)
+  , m_bMagFolder(FALSE)
 {
   m_bRootFile = false;
   m_bSavefileFile = false;
@@ -128,6 +131,9 @@ void CK2SaveOptionDlg::DoDataExchange(CDataExchange* pDX)
   DDX_Control(pDX, IDC_CHECK_DATE_PREFIX, m_butDatePrefix);
   DDX_Check(pDX, IDC_CHECK_DATE_PREFIX, m_bDatePrefix);
   DDX_Check(pDX, IDC_CHECK_HOLE_POS, m_bMultiHolePos);
+  DDX_Control(pDX, IDC_CHECK_MAG_FOLDER, m_butMagFolder);
+  DDX_Check(pDX, IDC_CHECK_MAG_FILE, m_bMagFile);
+  DDX_Check(pDX, IDC_CHECK_MAG_FOLDER, m_bMagFolder);
 }
 
 
@@ -152,6 +158,8 @@ BEGIN_MESSAGE_MAP(CK2SaveOptionDlg, CBaseDlg)
   ON_BN_CLICKED(IDC_CHECK_REDUCE_SUPERRES, OnReduceSuperres)
   ON_BN_CLICKED(IDC_CHECK_DATE_PREFIX, OnCheckDatePrefix)
   ON_BN_CLICKED(IDC_CHECK_HOLE_POS, OnCheckComponent)
+  ON_BN_CLICKED(IDC_CHECK_MAG_FILE, OnCheckComponent)
+  ON_BN_CLICKED(IDC_CHECK_MAG_FOLDER, OnCheckComponent)
 END_MESSAGE_MAP()
 
 
@@ -217,6 +225,8 @@ BOOL CK2SaveOptionDlg::OnInitDialog()
   m_bDatePrefix = (mNameFormat & FRAME_FILE_DATE_PREFIX) != 0;
   m_bOnlyWhenAcquire = (mNameFormat & FRAME_LABEL_IF_ACQUIRE) != 0;
   m_bMultiHolePos = (mNameFormat & FRAME_FILE_HOLE_AND_POS) != 0;
+  m_bMagFolder = (mNameFormat & FRAME_FOLDER_MAG) != 0;
+  m_bMagFile = (mNameFormat & FRAME_FILE_MAG) != 0;
   if (!mCanCreateDir && !mDEtype && !mCamParams->DectrisType)
     SetDlgItemText(IDC_STAT_MUST_EXIST, B3DCHOICE(mFalconType,
     "Subfolder set with \"Set Folder\" must be blank to create folders",
@@ -242,9 +252,11 @@ BOOL CK2SaveOptionDlg::OnInitDialog()
   m_butRootFolder.EnableWindow(mCanCreateDir);
   m_butSaveFileFolder.EnableWindow(mCanCreateDir);
   m_butNavlabelFolder.EnableWindow(mCanCreateDir);
+  m_butMagFolder.EnableWindow(mCanCreateDir);
   m_butRootFolder.ShowWindow(show);
   m_butSaveFileFolder.ShowWindow(show);
   m_butNavlabelFolder.ShowWindow(show);
+  m_butMagFolder.ShowWindow(show);
   m_statUseComp.ShowWindow(show);
   m_statFolder.ShowWindow(show);
   m_statFile.ShowWindow(show);
@@ -278,7 +290,9 @@ void CK2SaveOptionDlg::OnOK()
     (m_bHourMinSec ? FRAME_FILE_HOUR_MIN_SEC : 0) |
     (m_bDatePrefix ? FRAME_FILE_DATE_PREFIX : 0) |
     (m_bOnlyWhenAcquire ? FRAME_LABEL_IF_ACQUIRE : 0) |
-    (m_bMultiHolePos ? FRAME_FILE_HOLE_AND_POS : 0);
+    (m_bMultiHolePos ? FRAME_FILE_HOLE_AND_POS : 0) |
+    (m_bMagFolder ? FRAME_FOLDER_MAG : 0) | 
+    (m_bMagFile ? FRAME_FILE_MAG : 0);
   CBaseDlg::OnOK();
 }
 
@@ -325,6 +339,8 @@ void CK2SaveOptionDlg::UpdateFormat(void)
     m_strExample = "Subfolder";
   if (m_bSavefileFolder && mCanCreateDir)
     UtilAppendWithSeparator(m_strExample, "File", "_");
+  if (m_bMagFolder && mCanCreateDir)
+    UtilAppendWithSeparator(m_strExample, "Mag", "_");
   if (m_bNavLabelFolder && mCanCreateDir)
     UtilAppendWithSeparator(m_strExample, "Label", "_");
   if (!m_strExample.IsEmpty())
@@ -339,6 +355,8 @@ void CK2SaveOptionDlg::UpdateFormat(void)
     filename = "Base";
   if (m_bSavefileFile)
     UtilAppendWithSeparator(filename, "File", "_");
+  if (m_bMagFile)
+    UtilAppendWithSeparator(filename, "Mag", "_");
   if (m_bNavLabelFile)
     UtilAppendWithSeparator(filename, "Label", "_");
   if (m_bNumber)
