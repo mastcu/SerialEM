@@ -102,7 +102,7 @@ IDC_RNAVACQ_EVERY_N, IDC_RNAVACQ_GROUP_START,
 IDC_RNAVACQ_GROUP_END, IDC_RNAVACQ_AFTER_MINUTES, IDC_RNAVACQ_WHEN_MOVED,
 IDC_STAT_INTERVAL_GROUP, IDC_RGOTO_LABEL, IDC_RGOTO_NOTE, IDC_NA_RUN_AT_OTHER,
 IDC_EDIT_EVERY_N, IDC_EDIT_AFTER_MINUTES,
-IDC_EDIT_WHEN_MOVED, IDC_EDIT_GOTO_ITEM,
+IDC_EDIT_WHEN_MOVED, IDC_EDIT_GOTO_ITEM, IDC_BUT_CLOSE_CONTROLS,
 IDC_SPIN_EVERY_N, IDC_STAT_EVERY_N, IDC_STAT_AFTER_MINUTES, IDC_STAT_WHEN_MOVED,
 IDC_STAT_SELECTED_GROUP, IDC_STAT_ORDER_GROUP, IDC_BUT_MOVE_UP,
 IDC_BUT_MOVE_DOWN, IDC_NA_RUN_AFTER_TASK, IDC_TSS_LINE6, PANEL_END,
@@ -275,6 +275,7 @@ void CNavAcquireDlg::DoDataExchange(CDataExchange* pDX)
   DDX_Text(pDX, IDC_EDIT_SUBSET_NUM, m_iSubsetNum);
   DDV_MinMaxInt(pDX, m_iSubsetNum, 1, 1000000);
   DDX_Radio(pDX, IDC_RSUBSET_ITEMS, m_iItemsOrShots);
+  DDX_Control(pDX, IDC_BUT_CLOSE_CONTROLS, m_butCloseControls);
 }
 
 
@@ -345,6 +346,7 @@ BEGIN_MESSAGE_MAP(CNavAcquireDlg, CBaseDlg)
   ON_BN_CLICKED(IDC_RSUBSET_ITEMS, OnRsubsetItems)
   ON_BN_CLICKED(IDC_RSUBSET_SHOTS, OnRsubsetItems)
   ON_EN_KILLFOCUS(IDC_EDIT_SUBSET_NUM, OnKillfocusEditSubsetNum)
+  ON_BN_CLICKED(IDC_BUT_CLOSE_CONTROLS, &CNavAcquireDlg::OnButCloseControls)
 END_MESSAGE_MAP()
 
 // CNavAcquireDlg message handlers
@@ -401,6 +403,7 @@ BOOL CNavAcquireDlg::OnInitDialog()
   SetupUnitsToAdd(idTable, sLeftTable, sTopTable, mNumInPanel, mPanelStart,
     -3 * rect.Height() / 4);
   boldFont = mWinApp->GetBoldFont(wnd);
+  m_butCloseControls.SetFont(mWinApp->GetLittleFont(&m_butCloseControls));
 
     // Add IDs for first opening height glitches!
   // Not all these are currently needed
@@ -1247,9 +1250,9 @@ void CNavAcquireDlg::BuildActionSection(bool unhiding)
   CRect actRect;
   bool runIt, holeEnable;
   BOOL states[5] = {true, true, true, true, true};
+  CFont *regularFont = m_butAcquireTS.GetFont();
   int acquireType = OptionsToAcquireType();
   Invalidate();
-
   // Leave out the hidden ones and configure the rest; loop on before then after task
   mIDsToDrop = mAddItemIDs;
   mAddUnitAfterIDs.resize(0);
@@ -1269,6 +1272,7 @@ void CNavAcquireDlg::BuildActionSection(bool unhiding)
         // If any action is shown, load it into the next position
         button = (CButton *)GetDlgItem(IDC_RADIO_NAVACQ_SEL1 + pos);
         button->SetWindowText(mActions[actInd].name);
+        button->SetFont(runIt ? mWinApp->GetBoldFont(NULL) : regularFont);
         button = (CButton *)GetDlgItem(IDC_CHECK_NAVACQ_RUN1 + pos);
         button->SetWindowText("");
         button->SetCheck(runIt ? BST_CHECKED : BST_UNCHECKED);
@@ -1733,6 +1737,9 @@ void CNavAcquireDlg::OnCheckRunAction(UINT nID)
   EnableDlgItem(IDC_STAT_NAVACQ_WHEN1 + posInd, runIt);
   if (mActions[actInd].flags & NAA_FLAG_HAS_SETUP)
     EnableDlgItem(IDC_BUT_NAVACQ_SETUP1 + posInd, runIt);
+  button = (CButton *)GetDlgItem(IDC_RADIO_NAVACQ_SEL1 + posInd);
+  if (button)
+    button->SetFont(runIt ? mWinApp->GetBoldFont(NULL) : m_butAcquireTS.GetFont());
 
   /*if (!runIt && m_bHideUnusedActions) {
     BuildActionSection();
@@ -1958,4 +1965,19 @@ void CNavAcquireDlg::OnNaRealignScaledMap()
 {
   UpdateData(true);
   ManageEnables();
+}
+
+
+void CNavAcquireDlg::OnButCloseControls()
+{
+  BOOL states[5] = {true, true, false, true, true};
+  if (m_iSelectedPos < 0 || CheckNearestItemText())
+    return;
+  CButton *button = (CButton *)GetDlgItem(m_iSelectedPos + IDC_RADIO_NAVACQ_SEL1);
+  if (button) {
+    m_iSelectedPos = -1;
+    button->SetCheck(BST_UNCHECKED);
+    AdjustPanels(states, idTable, sLeftTable, sTopTable, mNumInPanel, mPanelStart, 0,
+      sHeightTable);
+  }
 }

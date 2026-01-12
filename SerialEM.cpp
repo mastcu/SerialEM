@@ -5883,6 +5883,9 @@ CFont * CSerialEMApp::GetLittleFont(CWnd *stat)
   return &mLittleFont;
 }
 
+// IF YOU CAME HERE TO SEE HOW TO MAKE A FONT WITH FW_LIGHT, FW_MEDIUM etc,
+// IT IS NO GOOD: THERE IS ONLY REGULAR AND BOLD
+// Note that 0.75 * rect.Height Bold gives a smaller font about the same width as regular
 // Similar routine to return a common bold font given the size of static text
 CFont * CSerialEMApp::GetBoldFont(CWnd *stat)
 {

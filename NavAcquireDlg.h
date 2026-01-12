@@ -229,4 +229,6 @@ public:
   afx_msg void OnRsubsetItems();
   int m_iSubsetNum;
   afx_msg void OnKillfocusEditSubsetNum();
+  CButton m_butCloseControls;
+  afx_msg void OnButCloseControls();
 };
