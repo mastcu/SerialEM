@@ -561,6 +561,7 @@ CEMscope::CEMscope()
   mMonitorC2ApertureSize = -1;
   mInScopeUpdate = false;
   mUseDetectorNameIfUtapi = false;
+  mWarnedNeutralISoff = false;
   mAdvancedScriptVersion = 0;
   mPluginVersion = 0;
   mPlugFuncs = NULL;
@@ -3016,7 +3017,7 @@ BOOL CEMscope::ChangeImageShift(double shiftX, double shiftY, BOOL bInc)
   const double Jeol_IS1X_to_um =  0.00508;
   const double Jeol_IS1Y_to_um =  0.00434;
   bool needBeamShift = false;
-  int magIndex, ind, neutXnew, neutYnew, neutXold, neutYold;
+  int magIndex, neutXnew, neutYnew, neutXold, neutYold, dir, mag, numChg = 0;
   short ID = mJeolSD.usePLforIS ? 11 : 8;
   mLastISdelX = shiftX;
   mLastISdelY = shiftY;
@@ -3053,26 +3054,49 @@ BOOL CEMscope::ChangeImageShift(double shiftX, double shiftY, BOOL bInc)
         magIndex = mPlugFuncs->GetMagnificationIndex();
         if (!mCheckedNeutralIS[magIndex]) {
           mPlugFuncs->SetToNeutral(ID);
-          //Sleep(500);  Should no longer be necessary 2/9/22
           mPlugFuncs->GetImageShift(&neutISX, &neutISY);
-          mCheckedNeutralIS[magIndex] = 1;
           neutXold = NINT8000(mMagTab[magIndex].neutralISX[mNeutralIndex] /
             Jeol_IS1X_to_um);
           neutYold = NINT8000(mMagTab[magIndex].neutralISY[mNeutralIndex] /
             Jeol_IS1Y_to_um);
           neutXnew = NINT8000(neutISX / Jeol_IS1X_to_um);
           neutYnew = NINT8000(neutISY / Jeol_IS1Y_to_um);
+
+          // Change all mags in a contiguous range that match the old value to the new
+          // one and set them as checked
           if (B3DABS(neutXnew - neutXold) > 1 || B3DABS(neutYnew - neutYold) > 1 ) {
+            for (dir = -1; dir <= 1; dir += 2) {
+              for (mag = magIndex; mag > 0 && mag < MAX_MAGS; mag += dir) {
+                if (NINT8000(mMagTab[mag].neutralISX[mNeutralIndex] / Jeol_IS1X_to_um) ==
+                  neutXold && NINT8000(mMagTab[mag].neutralISY[mNeutralIndex] /
+                    Jeol_IS1Y_to_um) == neutYold) {
+                  if (!mCheckedNeutralIS[mag]) {
+                    mMagTab[mag].neutralISX[mNeutralIndex] =
+                      (float)((neutXnew - 0x8000) * Jeol_IS1X_to_um);
+                    mMagTab[mag].neutralISY[mNeutralIndex] =
+                      (float)((neutYnew - 0x8000) * Jeol_IS1Y_to_um);
+                    mCheckedNeutralIS[mag] = 1;
+                    numChg++;
+                  }
+                } else if (!mCheckedNeutralIS[mag])
+                  break;
+              }
+            }
+
+            // Do message box once, otherwise WARNING in log
             CString mess;
-            mess.Format("The neutral image shift calibration appears to be off at "
+            mess.Format("%sThe neutral image shift calibration appears to be off at "
               "this magnification.\r\n(Stored value 0x%x  0x%x,  value now 0x%x, 0x%x)"
-              "\r\n\r\nYou should run \"Neutral IS Values\" in the "
-                "Calibration menu and save calibrations", neutXold, neutYold, neutXnew,
-                neutYnew);
+              "\r\n%sYou should run \"Neutral IS Values\" in the "
+                "Calibration menu and save calibrations\r\n%sFor now, %d mags with "
+              "this stored neutral value have been set to the value found", 
+              mWarnedNeutralISoff ? "WARNING: " : "", neutXold, neutYold, neutXnew, 
+              neutYnew, mWarnedNeutralISoff ? "" : "\r\n", 
+              mWarnedNeutralISoff ? "" : "\r\n", numChg);
             mWinApp->AppendToLog(mess);
-            SEMMessageBox(mess);
-            for (ind = 0; ind < (int)mCheckedNeutralIS.size(); ind++)
-              mCheckedNeutralIS[ind] = 1;
+            if (!mWarnedNeutralISoff)
+              SEMMessageBox(mess);
+            mWarnedNeutralISoff = true;
           }
         }
     }

@@ -966,6 +966,7 @@ private:
   float mAddToFalcon3Exposure; // Default to set addToExposure for Falcon 3
   int mSkipAdvancedScripting;  // To make cameras connect by old scripting
   std::vector<short int> mCheckedNeutralIS;  // To keep track if neutral IS tested
+  bool mWarnedNeutralISoff;    // Flag that message box has been popped up
   BOOL mSkipJeolNeutralCheck;  // Flag to skip the check of neutral values
   int mSavedApertureSize[MAX_APERTURE_NUM + 1];     // Size and position from "RemoveAperture"
   float mSavedAperturePosX[MAX_APERTURE_NUM + 1];   // Apertures are numbered from 1, 
