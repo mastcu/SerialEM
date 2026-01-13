@@ -739,6 +739,7 @@ int CCameraController::Initialize(int whichCameras)
     CMenu *menu = mWinApp->m_pMainWnd->GetMenu()->GetSubMenu(TASKS_MENU_INDEX);
     menu->DeleteMenu(ID_TASKS_SETDOSERATEWITHEDM, MF_BYCOMMAND);
     mWinApp->m_pMainWnd->DrawMenuBar();
+    mWinApp->mLowDoseDlg.DeferredIDDropping(IDC_STAT_LD_EDM_PCT);
   }
 
   if (mDynFocusInterval < 0)

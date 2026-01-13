@@ -41,6 +41,7 @@ public:
 	void ChangeAllShifts(double delAxis);
 	void UpdateSettings();
   void ManagePanels();
+  void DeferredIDDropping(UINT nID);
   void UpdateDefocusOffset();
 	void SetLowDoseMode(BOOL inVal, BOOL hideOffState = FALSE);
 	void AddDefineAreaPoint();
@@ -169,6 +170,7 @@ private:
 	int mLastMag;
 	int mLastSpot;
 	double mLastIntensity;
+  float mLastEDMpct;
   double mLastDose;
   float mLastAlpha;
   int mLastProbe;
@@ -277,6 +279,7 @@ public:
   CStatic m_statSearchOffsets;
   CButton m_butSetupAutoShift;
   afx_msg void OnSetupAutoShift();
+  CString m_strEDMpct;
 };
 
 //{{AFX_INSERT_LOCATION}}

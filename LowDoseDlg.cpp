@@ -45,12 +45,13 @@ IDC_RDEFINENONE, IDC_RDEFINEFOCUS, IDC_RDEFINETRIAL, IDC_STAT_DEFINE_GROUP,
 IDC_STAT_ADD_SHIFT_BOX, IDC_SET_BEAM_SHIFT, IDC_RESET_BEAM_SHIFT, IDC_STATBEAMSHIFT,
 IDC_STATPOSITION, IDC_STATMICRON, IDC_SET_SEARCH_SHIFT, IDC_ZERO_SEARCH_SHIFT,
 IDC_EDITPOSITION, IDC_AUTO_VIEW_SHIFT, IDC_STATSEARCHDEFOCUS, IDC_SPINSEARCHDEFOCUS,
-IDC_STATVIEWDEFLABEL, IDC_STATVIEWDEFOCUS, IDC_SPINVIEWDEFOCUS,
+IDC_STATVIEWDEFLABEL, IDC_STATVIEWDEFOCUS, IDC_SPINVIEWDEFOCUS, IDC_STATVS_SHIFT_BOX,
+IDC_STATVS_BOX,
 IDC_STAT_VS_SHIFT, IDC_SET_VIEW_SHIFT, IDC_ZERO_VIEW_SHIFT, IDC_LOWDOSEMODE,
 IDC_STATELECDOSE, IDC_STAT_LDAREA, IDC_STATMAGSPOTC2, IDC_CONTINUOUSUPDATE,
 IDC_STATOVERLAP, IDC_GOTO_VIEW, IDC_GOTO_FOCUS, IDC_GOTO_TRIAL, IDC_AUTO_SEARCH_SHIFT,
 IDC_GOTO_RECORD, IDC_GOTO_SEARCH, IDC_STAT_LDCP_GO, IDC_SETUP_AUTO_SHIFT,
-IDC_STATBLANKED,  IDC_STATMORE, IDC_BUTMORE, PANEL_END,
+IDC_STATBLANKED,  IDC_STATMORE, IDC_BUTMORE, IDC_STAT_LD_EDM_PCT, PANEL_END,
 IDC_BLANKBEAM, IDC_LDNORMALIZE_BEAM, IDC_TIEFOCUSTRIAL, IDC_COPYTOVIEW, IDC_COPYTOFOCUS,
 IDC_COPYTOTRIAL, IDC_COPYTORECORD, IDC_BALANCESHIFTS,
 IDC_STAT_COPY_LD_AREA, IDC_LD_ROTATE_AXIS, IDC_STAT_LD_DEG, IDC_COPYTOSEARCH,
@@ -91,6 +92,7 @@ CLowDoseDlg::CLowDoseDlg(CWnd* pParent /*=NULL*/)
   mLastMag = 0;
   mLastSpot = 0;
   mLastIntensity = 0.;
+  mLastEDMpct = -1.;
   mLastDose = 0.;
   mLastAlpha = -999.;
   mLastProbe = 0;
@@ -195,6 +197,7 @@ void CLowDoseDlg::DoDataExchange(CDataExchange* pDX)
   DDX_Control(pDX, IDC_AUTO_SEARCH_SHIFT, m_butAutoSearchShift);
   DDX_Control(pDX, IDC_STAT_VS_SHIFT, m_statSearchOffsets);
   DDX_Control(pDX, IDC_SETUP_AUTO_SHIFT, m_butSetupAutoShift);
+  DDX_Text(pDX, IDC_STAT_LD_EDM_PCT, m_strEDMpct);
 }
 
 
@@ -688,6 +691,7 @@ void CLowDoseDlg::OnContinuousupdate()
   UpdateData(true);
   mWinApp->RestoreViewFocus();
   m_statMagSpot.EnableWindow(m_bContinuousUpdate);
+  EnableDlgItem(IDC_STAT_LD_EDM_PCT, m_bContinuousUpdate);
   if (IS_AREA_VIEW_OR_SEARCH(area) && !mWinApp->GetSTEMMode()) {
     lowestM = mScope->GetLowestMModeMagInd();
     if (!BOOL_EQUIV(mLDParams[area].magIndex < lowestM, mScope->GetMagIndex() < lowestM)
@@ -1401,14 +1405,13 @@ BOOL CLowDoseDlg::OnInitDialog()
   if (mScope->GetUseNormForLDNormalize())
     SetDlgItemText(IDC_LDNORMALIZE_BEAM, "Normalize condenser lenses");
   m_statMagSpot.EnableWindow(m_bContinuousUpdate);
+  EnableDlgItem(IDC_STAT_LD_EDM_PCT, m_bContinuousUpdate);
   m_sbcViewDefocus.SetRange(0, 100);
   m_sbcViewDefocus.SetPos(50);
   m_sbcSearchDefocus.SetRange(0, 100);
   m_sbcSearchDefocus.SetPos(50);
   DeselectGoToButtons(-1);
   m_butBalanceShifts.mSpecialColor = RGB(96, 255, 96);
-  string.Format("Defocus offsets %c%c%c Shift offsets", 0x97, 0x97, 0x97);
-  SetDlgItemText(IDC_STATVS_BOX, string);
 
   // Assume all variables are set into this dialog
 
@@ -1458,6 +1461,13 @@ void CLowDoseDlg::ManagePanels()
 {
   CToolDlg::ManagePanels();
   m_statBlanked.ShowWindow(mLastBlanked ? SW_SHOW : SW_HIDE);
+}
+
+// Add one ID to drop and resize panels
+void CLowDoseDlg::DeferredIDDropping(UINT nID)
+{
+  mIDsToDrop.push_back(nID);
+  ManagePanels();
 }
 
 // Just update the defocus offset - for multishot step and adjust
@@ -1536,6 +1546,7 @@ void CLowDoseDlg::Update(BOOL stageReady)
   m_statLDArea.ShowWindow(mTrulyLowDose ? SW_SHOW : SW_HIDE);
   m_statElecDose.ShowWindow(mTrulyLowDose ? SW_SHOW : SW_HIDE);
   m_statBeamShift.ShowWindow(mTrulyLowDose ? SW_SHOW : SW_HIDE);
+  ShowDlgItem(IDC_STAT_LD_EDM_PCT, mTrulyLowDose && mWinApp->mCamera->HasDoseModulator());
 
   // Disable low dose, if tasks or TS; montaging compatibility no longer checked here
   // Disable continuous update, tying focus/trial and shifting center if tasks
@@ -1595,6 +1606,7 @@ void CLowDoseDlg::ManageMagSpot(int inSetArea, BOOL screenDown)
   if (inSetArea < 0) {
     if (inSetArea != mLastSetArea) {
       m_strMagSpot = "Undefined";
+      m_strEDMpct = "";
       m_strLDArea = "";
       m_strElecDose = "";
       m_strBeamShift = "";
@@ -1618,6 +1630,11 @@ void CLowDoseDlg::ManageMagSpot(int inSetArea, BOOL screenDown)
 
   spotSize = ldArea->spotSize;
   intensity = ldArea->intensity;
+  if (mWinApp->mCamera->HasDoseModulator() && (inSetArea != mLastSetArea || 
+    fabs(ldArea->EDMPercent - mLastEDMpct) > 0.001)) {
+    mLastEDMpct = ldArea->EDMPercent;
+    m_strEDMpct.Format("EDM %.1f%%", mLastEDMpct);
+  }
   dose = 0.;
   //if (inSetArea != SEARCH_AREA)
     dose = mWinApp->mBeamAssessor->GetElectronDose(spotSize, intensity,
