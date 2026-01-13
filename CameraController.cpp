@@ -731,9 +731,8 @@ int CCameraController::Initialize(int whichCameras)
       B3DDELETE(mDoseModulator);
     }
   }
-  firstTime = false;
 
-  if (!HasDoseModulator()) {
+  if (firstTime && !HasDoseModulator()) {
     
     //Delete the EDM menu item if there is no EDM
     CMenu *menu = mWinApp->m_pMainWnd->GetMenu()->GetSubMenu(TASKS_MENU_INDEX);
@@ -741,6 +740,7 @@ int CCameraController::Initialize(int whichCameras)
     mWinApp->m_pMainWnd->DrawMenuBar();
     mWinApp->mLowDoseDlg.DeferredIDDropping(IDC_STAT_LD_EDM_PCT);
   }
+  firstTime = false;
 
   if (mDynFocusInterval < 0)
     mDynFocusInterval = FEIscope ? 40 : 80;
