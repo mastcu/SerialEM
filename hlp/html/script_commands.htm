@@ -1021,9 +1021,10 @@
         <TR>
           <TD class="scriptcommand">GetVariable(var)</TD>
           <TD>Returns the value of a variable <b>var</b> as string or floating point value, depending
-             on whether the variable was designated as numeric when it was stored&nbsp; The Python wrapper
+             on whether the variable was designated as numeric when it was stored.&nbsp; The Python wrapper
              function 'SEMarrayToFloats' can be used to create a list of float values from the return value
-            if the variable contains either a single numeric value or an array of numeric values</TD>
+            if the variable contains either a single numeric value or an array of numeric values.&nbsp; The
+             function does not work and will generate an error for a 2-D array variable.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">ReturnAllValuesAsTuples [#]</TD>
@@ -5870,11 +5871,14 @@
           <TD colspan="2"><A name="hole_square_finding"></A><B>Hole and Grid Square Finding Commands</B></TD>
         </TR>
               <TR>
-          <TD class="scriptcommand">FindHoles [buf]</TD>
+          <TD class="scriptcommand">FindHoles [buf] [xvar] [yvar]</TD>
           <TD>Runs the Hole Finder routine on the image in the current buffer, or in the
             buffer optionally specified by <b>buf</b>, using all of the
                parameters set in the <A HREF="hidd_hole_finder.htm">Hole Finder dialog</A>.&nbsp; That dialog
-            need not be open, but the Navigator must be.
+            need not be open, but the Navigator must be.&nbsp; The optional array variables <b>xvec</b> and
+             <b>yvec</b> can be used to specify the X and Y image coordinates in the given buffer of a contour to
+            use as a boundary in place of a polygon item.&nbsp; If the image is a montage that needs to be
+            reloaded at a lower binning, the coordinates will be scaled by the change in binning.
             </TD>
         </TR>
        <TR>
@@ -5928,15 +5932,16 @@
             maximum error.</TD>
         </TR>
         <TR>
-          <TD class="scriptcommand">SetHoleFinderParams #D #S #H [#M] [fvar] [tvar]</TD>
+          <TD class="scriptcommand">SetHoleFinderParams #D #S #H [#M] [fvar] [tvar] [#P]</TD>
           <TD>Sets the parameters for hole finding to <b>#D</b> for the diameter and <b>#S</b> for the 
             center-to-center spacing in microns and sets it to analyze for a hexagonal array if <b>#H</b> is 
             non-zero, in which case the hex-specific size and spacing are set.&nbsp; The maximum error is set 
-            with the optional <b>#M</b> if it is positive.&nbsp; If <b>fvar</b> is included with the name of
+            with the optional <b>#M</b> if it is positive.&nbsp; The option to finds points inside a 
+            polygon is set if <b>#P</b> is nonzero.&nbsp; If <b>fvar</b> is included with the name of
             an array variable, it is used to set the filter sigma values and median iterations (positive values for sigma,
             or negative number of iterations). If <b>tvar</b> is included with the name of
-            an array variable, it is used to set the thresholds (use 'NONE' for <b>fvar</b> to set just the
-            thresholds).&nbsp; </TD>
+            an array variable, it is used to set the thresholds (use 'NONE' for <b>fvar</b> or <B>tvar</B>to not set
+            filters or thresholds).&nbsp; </TD>
         </TR>
         <TR>
           <TD class="scriptcommand">FindMultiMapHoles #S #E #C [#A] [#R] [#H] [#T] [#S] [#L] [#D]</TD>

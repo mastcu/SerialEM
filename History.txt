@@ -3,6 +3,10 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+1/13/26: Added argument to SetHoleFinderParams to specify using a boundary
+polygon and added array variable arguments to FindHoles to specify boundary
+coordinates directly.
+
 1/12/26: Changed warning about neutral values being off on JEOL so that it
 adjusts values in the same range and gives warnings in log in each new mag
 range.

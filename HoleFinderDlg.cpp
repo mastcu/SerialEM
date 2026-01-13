@@ -871,7 +871,8 @@ void CHoleFinderDlg::OnButFindHoles()
   mFindingFromDialog = false;
 }
 
-int CHoleFinderDlg::DoFindHoles(EMimageBuffer *imBuf, bool synchronous)
+int CHoleFinderDlg::DoFindHoles(EMimageBuffer *imBuf, bool synchronous, 
+  FloatVec *inXboundary, FloatVec *inYboundary)
 {
   float curDiam, diamReduced, spacingReduced, maxRadius, area, minArea = 1.e30f;
   FloatVec *widths, *increments;
@@ -882,7 +883,7 @@ int CHoleFinderDlg::DoFindHoles(EMimageBuffer *imBuf, bool synchronous)
   KImage *image;
   CMapDrawItem *item;
   int reloadBinning, overBinSave, readBuf, err, numScans, ind, nav, minDrawnID = 0, bufID;
-  int numMedians, numOnIm, sigStart, sigEnd, iterStart, iterEnd;
+  int numMedians, numOnIm, sigStart, sigEnd, iterStart, iterEnd, bufBinSave;
   float useWidth, useHeight, ptX, ptY, delX, delY, bufStageX, bufStageY, useDiameter;
   float autocorSpacing, testSpacing, vectors[6], autocorCrit = 0.14f;
   double tstageX, tstageY;
@@ -1043,6 +1044,7 @@ int CHoleFinderDlg::DoFindHoles(EMimageBuffer *imBuf, bool synchronous)
             break;
           reloadBinning--;
         }
+        bufBinSave = imBuf->mOverviewBin;
 
         // Save some params, get rid of store for now, and set params for reload
         overBinSave = masterMont->overviewBinning;
@@ -1096,6 +1098,14 @@ int CHoleFinderDlg::DoFindHoles(EMimageBuffer *imBuf, bool synchronous)
         mMiniOffsets = new MiniOffsets;
         *mMiniOffsets = *imBuf->mMiniOffsets;
       }
+
+      // If boundary supplied in call, scale it
+      if (inXboundary && inYboundary && bufBinSave != reloadBinning) {
+        for (ind = 0; ind < (int)inXboundary->size(); ind++) {
+          (*inXboundary)[ind] *= bufBinSave / (float)reloadBinning;
+          (*inYboundary)[ind] *= bufBinSave / (float)reloadBinning;
+        }
+      }
     }
 
     // But single frame byte images need to be reloaded too
@@ -1133,7 +1143,7 @@ int CHoleFinderDlg::DoFindHoles(EMimageBuffer *imBuf, bool synchronous)
     mRegistration = mNavItem->mRegistration;
 
   // Look for boundary contour if selected
-  if (!synchronous && mParams.useBoundary) {
+  if (!synchronous && mParams.useBoundary && !inXboundary) {
     itemArray = mNav->GetItemArray();
     mNav->BufferStageToImage(imBuf, aMat, delX, delY);
     bufID = imBuf->mMapID;
@@ -1178,6 +1188,10 @@ int CHoleFinderDlg::DoFindHoles(EMimageBuffer *imBuf, bool synchronous)
     if (!boundLabel.IsEmpty())
       PrintfToLog("Points will be retained inside the polygon with label %s",
       (LPCTSTR)boundLabel);
+  }
+  if (inXboundary) {
+    mXboundary = *inXboundary;
+    mYboundary = *inYboundary;
   }
 
   numScans = (int)widths->size();
@@ -1395,6 +1409,7 @@ void CHoleFinderDlg::ScanningNextTask(int param)
     pieceOutlieVec.resize(numPcInSec);
 
     // Process montage pieces: set up, then loop on pieces
+  
     mHelper->mFindHoles->setMontPieceVectors(&pieceXcenVec, &pieceYcenVec, &piecePeakVec,
       &pieceMeanVec, &pieceSDsVec, &pieceOutlieVec, &secIxAliPiece,
       &secIyAliPiece, &pieceIndex, &tileXnum, &tileYnum);

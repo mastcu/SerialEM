@@ -1223,11 +1223,11 @@ int CMacCmd::SetBkgdScriptVar()
 {
   int index;
   CArray < ArrayRow, ArrayRow > *rowsFor2d = NULL;
+  Variable *var;
   if (!mWinApp->RunningBkgdMacro())
     ABORT_LINE("There is no background script running for line:\n\n");
-  Variable *var = LookupVariable(mStrItems[1], index);
-  if (!var)
-    ABORT_LINE("The variable " + mStrItems[1] + " is not defined in line:\n\n");
+  if (LookupVarAbortIfFail(mStrItems[1], &var, index, true))
+    return 1;
   delete mBkgdVariable.rowsFor2d;
   mBkgdVariable.rowsFor2d = NULL;
   mBkgdVariable = *var;
@@ -1485,9 +1485,8 @@ int CMacCmd::GetVariable(void)
   int ix0;
   Variable *var;
 
-  var = LookupVariable(mStrItems[1], ix0);
-  if (!var)
-    ABORT_LINE("The variable " + mStrItems[1] + " is not defined in line:\n\n");
+  if (LookupVarAbortIfFail(mStrItems[1], &var, ix0))
+    return 1;
   report = var->value;
   ClearVariables(VARTYPE_REPORT);
   if (var->isNumeric) {
@@ -1644,9 +1643,8 @@ int CMacCmd::MakeVarPersistent(void)
   int index, ix0;
   Variable *var;
 
-  var = LookupVariable(mStrItems[1], ix0);
-  if (!var)
-    ABORT_LINE("The variable " + mStrItems[1] + " is not defined in line:\n\n");
+  if (LookupVarAbortIfFail(mStrItems[1], &var, ix0, true))
+    return 1;
   index = 1;
   if (!mItemEmpty[2] && !mItemInt[2])
     index = 0;
@@ -2322,9 +2320,8 @@ int CMacCmd::QueueFrameTiltSeries(void)
     // Or pull the values out of the big variable array: figure out how many per step
     delay = mItemEmpty[3] ? 0. : mItemDbl[3];
     postISdelay = mItemEmpty[4] ? 0.f : mItemFlt[4];
-    var = LookupVariable(mItem1upper, index2);
-    if (!var)
-      ABORT_LINE("The variable " + mStrItems[1] + " is not defined in line:\n\n");
+    if (LookupVarAbortIfFail(mStrItems[1], &var, index2, true))
+      return 1;
     sizeX = 0;
     if (mItemInt[2] > 63 || mItemInt[2] < 1)
       ABORT_LINE("The entry with flags must be between 1 and 63 in line:\n\n");
@@ -2551,12 +2548,8 @@ int CMacCmd::ReplaceFrameTSFocus(void)
   truth = CMD_IS(REPLACEFRAMETSSHIFTS);
   for (index = 1; index < (truth ? 3 : 2); index++) {
     mStrCopy = mStrItems[index];
-    var = LookupVariable(mStrCopy, index2);
-    if (!var)
-      ABORT_LINE("The variable " + mStrItems[index] + " is not defined in line:\n\n");
-    if (var->rowsFor2d)
-      ABORT_LINE("The variable " + mStrItems[index] + " should not be a 2D array for "
-        "line:\n\n");
+    if (LookupVarAbortIfFail(mStrCopy, &var, index2))
+      return 1;
     valPtr = &var->value;
     for (iy0 = 0; iy0 < var->numElements; iy0++) {
       FindValueAtIndex(*valPtr, iy0, ix1, iy1);
@@ -2609,9 +2602,8 @@ int CMacCmd::GetDoseSymmetricAngles()
     return 0;
   }
 
-  var = LookupVariable(mItem1upper, ind);
-  if (!var)
-    ABORT_LINE("The variable " + mStrItems[1] + "is not defined for line:\n\n");
+  if (LookupVarAbortIfFail(mItem1upper, &var, ind))
+    return 1;
   FillVectorFromArrayVariable(&angles, NULL, var);
   if (CTSDoseSymDlg::SetAnglesToUse(*tsParam, angles, mStrCopy))
     ABORT_NOLINE("Error trying to change dose-symmetric angles: " + mStrCopy);
@@ -2996,15 +2988,9 @@ int CMacCmd::SetCustomHoleShifts(void)
   bool custom = CMD_IS(SETCUSTOMHOLESHIFTS);
   bool hex = !mItemEmpty[8];
   if (custom) {
-    xvar = LookupVariable(mItem1upper, index);
-    if (!xvar)
-      ABORT_LINE("The variable " + mStrItems[1] + "is not defined for line:\n\n");
-    mItem1upper = mStrItems[2];
-    yvar = LookupVariable(mItem1upper, index);
-    if (!yvar)
-      ABORT_LINE("The variable " + mStrItems[2] + "is not defined for line:\n\n");
-    if (xvar->rowsFor2d || yvar->rowsFor2d)
-      ABORT_LINE("Neither variable should be a 2D array for line:\n\n");
+    if (LookupVarAbortIfFail(mStrItems[1], &xvar, index) ||
+      LookupVarAbortIfFail(mStrItems[2], &yvar, index))
+      return 1;
     if (xvar->numElements != yvar->numElements)
       ABORT_LINE("The two variables do not have the same number of values for line:\n\n");
     if (mItemEmpty[3] && !msParams->customMagIndex)
@@ -3060,14 +3046,11 @@ int CMacCmd::SetCustomHoleDefocus(void)
 {
   int index, ix0, ix1;
   MultiShotParams *msParams = mNavHelper->GetMultiShotParams();
-  Variable *var = LookupVariable(mItem1upper, index);
-  if (!var)
-    ABORT_LINE("The variable " + mStrItems[1] + "is not defined for line:\n\n");
+  Variable *var;
+  if (LookupVarAbortIfFail(mItem1upper, &var, index))
+    return 1;
   if (!msParams->customMagIndex)
     ABORT_LINE("There are no custom holes defined for line:\n\n");
-  if (var->rowsFor2d)
-    ABORT_LINE("The variable " + mStrItems[1] + " should not be a 2D array for line"
-      ":\n\n");
   msParams->customDefocus.clear();
   for (index = 0; index < var->numElements; index++) {
     FindValueAtIndex(var->value, index + 1, ix0, ix1);
@@ -8195,9 +8178,8 @@ int CMacCmd::GraphValuesInArrays(void)
     for (; index < MAX_MACRO_TOKENS; index++) {
       if (mItemEmpty[index])
         break;
-      var = LookupVariable(mStrItems[index], ind);
-      if (!var)
-        ABORT_LINE("Variable \"" + mStrItems[index] + "\" is not defined for line:\n\n");
+      if (LookupVarAbortIfFail(mStrItems[index], &var, ind))
+        return 1;
 
       if (ifTypes && index == 2) {
         FillVectorFromArrayVariable(NULL, &mStoredGraphTypes, var);
@@ -8995,13 +8977,8 @@ int CMacCmd::ThreeChoiceBox(void)
   if (mItemEmpty[4])
     numButtons = 1;
   for (i = 0; i < numButtons + 2; i++) {
-    report = mStrItems[i + 1];
-    vars[i] = LookupVariable(report, index2);
-    if (!vars[i])
-      ABORT_LINE("The variable " + mStrItems[i + 1] + " is not defined in line:\n\n");
-    if (vars[i]->rowsFor2d)
-      ABORT_LINE("The variable " + mStrItems[i + 1] + " is a 2D array which is not "
-        "allowed for line:\n\n");
+    if (LookupVarAbortIfFail(mStrItems[i + 1], &vars[i], index2))
+      return 1;
   }
   report = "";
   for (i = 0; i < numButtons + 1; i++) {
@@ -9047,18 +9024,12 @@ int CMacCmd::ManyChoiceBox(void)
 
   dlg.mIsRadio = mItemInt[1] != 0;
   mItem1upper = mStrItems[2];
-  headervar = LookupVariable(mItem1upper, index);
-  if (!headervar)
-    ABORT_LINE("The variable " + mStrItems[2] + "is not defined for line:\n\n");
+  if (LookupVarAbortIfFail(mStrItems[2], &headervar, index) ||
+    LookupVarAbortIfFail(mStrItems[3], &labelsvar, index))
+    return 1;
+
   dlg.mHeader = headervar->value;
 
-  mItem1upper = mStrItems[3];
-  labelsvar = LookupVariable(mItem1upper, index);
-  if (!labelsvar)
-    ABORT_LINE("The variable " + mStrItems[3] + " is not defined for line:\n\n");
-  if (labelsvar->rowsFor2d)
-    ABORT_LINE("The variable " + mStrItems[3] +
-     " should not be a 2D array for line:\n\n");
   if (labelsvar->numElements > MAX_CHOICES)
     ABORT_LINE("The number of choices exceeds the maximum for line:\n\n");
   dlg.mNumChoices = labelsvar->numElements;
@@ -9180,9 +9151,8 @@ int CMacCmd::CompareNoCase(void)
   int index, index2;
   Variable *var;
 
-  var = LookupVariable(mItem1upper, index2);
-  if (!var)
-    ABORT_LINE("The variable " + mStrItems[1] + " is not defined in line:\n\n");
+  if (LookupVarAbortIfFail(mStrItems[1], &var, index2))
+    return 1;
   SubstituteLineStripItems(mStrLine, 2, mStrCopy);
   if (CMD_IS(COMPARESTRINGS))
     index = var->value.Compare(mStrCopy);
@@ -9198,9 +9168,9 @@ int CMacCmd::FindSubstring(void)
 {
   int index, index2;
   CString val, substr;
-  Variable *var = LookupVariable(mItem1upper, index2);
-  if (!var)
-    ABORT_LINE("The variable " + mStrItems[1] + " is not defined in line:\n\n");
+  Variable *var;
+  if (LookupVarAbortIfFail(mStrItems[1], &var, index2))
+    return 1;
   SubstituteLineStripItems(mStrLine, 3, mStrCopy);
   val = var->value;
   substr = mStrCopy;
@@ -9234,9 +9204,8 @@ int CMacCmd::TrimString(void)
   Variable *var;
   bool front = mItemInt[2] > 0 || mItemInt[2] < -1;
 
-  var = LookupVariable(mItem1upper, index2);
-  if (!var)
-    ABORT_LINE("The variable " + mStrItems[1] + " is not defined in line:\n\n");
+  if (LookupVarAbortIfFail(mStrItems[1], &var, index2))
+    return 1;
 
   if (mItemInt[2] < 0) {
     index = mItemInt[3];
@@ -9275,9 +9244,8 @@ int CMacCmd::StripEndingDigits(void)
   int index, index2;
   Variable *var;
 
-  var = LookupVariable(mItem1upper, index2);
-  if (!var)
-    ABORT_LINE("The variable " + mStrItems[1] + " is not defined in line:\n\n");
+  if (LookupVarAbortIfFail(mStrItems[1], &var, index2))
+    return 1;
   report = var->value;
   for (index = report.GetLength() - 1; index > 0; index--)
     if ((int)report.GetAt(index) < '0' || (int)report.GetAt(index) > '9')
@@ -13116,6 +13084,8 @@ int CMacCmd::FindHoles(void)
 {
   CString report;
   EMimageBuffer *imBuf;
+  Variable *xvar = NULL, *yvar = NULL;
+  FloatVec xvec, yvec;
   int index;
   ABORT_NONAV;
   imBuf = mWinApp->mMainView->GetActiveImBuf();
@@ -13124,7 +13094,19 @@ int CMacCmd::FindHoles(void)
       ABORT_LINE(report);
     imBuf = &mImBufs[index];
   }
-  if (mNavHelper->mHoleFinderDlg->DoFindHoles(imBuf, false)) {
+  if (!mItemEmpty[2]) {
+    if (mItemEmpty[3])
+      ABORT_LINE("You must enter both X and Y coordinates for line:\n\n");
+    if (LookupVarAbortIfFail(mStrItems[2], &xvar, index) ||
+      LookupVarAbortIfFail(mStrItems[3], &yvar, index))
+      return 1;
+    FillVectorFromArrayVariable(&xvec, NULL, xvar);
+    FillVectorFromArrayVariable(&yvec, NULL, yvar);
+    if (xvec.size() != yvec.size())
+      ABORT_LINE("The two arrays do not have the same size for line:\n\n");
+  }
+
+  if (mNavHelper->mHoleFinderDlg->DoFindHoles(imBuf, false, &xvec, &yvec)) {
     AbortMacro();
     return 1;
   }
@@ -13251,10 +13233,9 @@ int CMacCmd::SetHoleFinderParams(void)
     ABORT_LINE("Size must be at least 0.1 and spacing must be at least 0.15 and 0.1 more"
       " than size for line:\n\n");
   for (ind = 0; ind < 2; ind++) {
-    if (!mItemEmpty[5 + ind] && (ind || mStrItems[5 + ind] != "NONE")) {
-      var[ind] = LookupVariable(mStrItems[ind + 5], index);
-      if (!var[ind])
-        ABORT_LINE("The variable " + mStrItems[5 + ind] + " is not defined in line:\n\n");
+    if (!mItemEmpty[5 + ind] && mStrItems[5 + ind].CompareNoCase("NONE")) {
+      if (LookupVarAbortIfFail(mStrItems[5 + ind], &var[ind], index))
+        return 1;
     }
   }
   mNavHelper->mHoleFinderDlg->SyncToMasterParams();
@@ -13273,6 +13254,8 @@ int CMacCmd::SetHoleFinderParams(void)
     FillVectorFromArrayVariable(&hfp->sigmas, NULL, var[0]);
   if (var[1])
     FillVectorFromArrayVariable(&hfp->thresholds, NULL, var[1]);
+  if (!mItemEmpty[7])
+    hfp->useBoundary = mItemInt[7] != 0;
   if (mNavHelper->mHoleFinderDlg->IsOpen())
     mNavHelper->mHoleFinderDlg->UpdateSettings();
   return 0;
@@ -13965,9 +13948,9 @@ int CMacCmd::UpdateHWDarkRef(void)
 int CMacCmd::RunGatanScript(void)
 {
   int index;
-  Variable *var = LookupVariable(mStrItems[1], index);
-  if (!var)
-    ABORT_LINE("The variable " + mStrItems[1] + " is not defined in line:\n\n");
+  Variable *var;
+  if (LookupVarAbortIfFail(mStrItems[1], &var, index))
+    return 1;
   if (mCamera->RunScriptOnThread(var->value, mItemEmpty[2] ? 0 : mItemInt[2]))
     ABORT_LINE("The current camera must be a Gatan camera for line:\n\n");
   mRanGatanScript = true;
@@ -14081,9 +14064,8 @@ int CMacCmd::NextProcessArgs(void)
 int CMacCmd::PipeToNextProcess(void)
 {
   int ind;
-  Variable *var = LookupVariable(mStrItems[1], ind);
-  if (!var)
-    ABORT_LINE("variable is not defined for line:\n\n");
+  Variable *var;
+  if (LookupVarAbortIfFail(mStrItems[1], &var, ind))
   mInputToNextProcess = var->value;
   mInputToNextProcess.Replace("\\n", "\\r\\n");
   mInputToNextProcess + "\\r\\n";
