@@ -4916,7 +4916,7 @@ void CEMscope::CalNeutralNextMag(int magInd)
 
   if (mCalNeutralStartMag < 0)
     return;
-  if (mMagTab[magInd].mag) {
+  if (mNeutralIndex ? mMagTab[magInd].EFTEMmag : mMagTab[magInd].mag) {
     if (SetMagIndex(magInd)) {
       ScopeMutexAcquire("CalibrateNeutralIS", true);
       try {
