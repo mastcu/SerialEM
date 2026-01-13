@@ -768,6 +768,7 @@ void CLowDoseDlg::DoCopyArea(int from, int area)
   ldArea->camLenIndex = ldFrom->camLenIndex;
   ldArea->spotSize = ldFrom->spotSize;
   ldArea->intensity = ldFrom->intensity;
+  ldArea->EDMPercent = ldFrom->EDMPercent;
   ldArea->probeMode = ldFrom->probeMode;
   ldArea->energyLoss = ldFrom->energyLoss;
   ldArea->zeroLoss = ldFrom->zeroLoss;
