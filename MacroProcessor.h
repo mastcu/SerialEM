@@ -548,6 +548,7 @@ public:
     CString *errStr = NULL, CArray<ArrayRow, ArrayRow> *rowsFor2d = NULL);
   int CopyVariable(Variable *var, CString name, bool persist);
   Variable *LookupVariable(CString name, int &ind);
+  int LookupVarAbortIfFail(CString name, Variable **var, int &ind, bool OK2D = false);
   void ListVariables(int type = -1);
   void ClearVariables(int type = -1, int level = -1, int index = -1);
   int SubstituteVariables(CString * strItems, int maxItems, CString line);

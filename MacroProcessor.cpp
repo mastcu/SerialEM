@@ -2725,6 +2725,24 @@ Variable *CMacroProcessor::LookupVariable(CString name, int &ind)
   return NULL;
 }
 
+// Looks up a variable and aborts with the standard string if not found; tests for it 
+// being a 2D array if OK2D (default false) is not true, and aborts with message if it is
+int CMacroProcessor::LookupVarAbortIfFail(CString name, Variable **var, int &ind,
+  bool OK2D)
+{
+  *var = LookupVariable(name, ind);
+  if (!(*var)) {
+    LineAbort("The variable " + name + "is not defined for line:\n\n");
+    return 1;
+  }
+  if (!OK2D && (*var)->rowsFor2d) {
+    LineAbort("The variable " + name + " is a 2D array which is not allowed for "
+      "line:\n\n");
+    return 1;
+  }
+  return 0;
+}
+
 // List all variables of the specified type in the log window, or all variables if no type
 // is specified
 void CMacroProcessor::ListVariables(int type)
