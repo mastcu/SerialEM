@@ -1395,7 +1395,7 @@ void CAutoTuning::CtfBasedNextTask(int tparm)
         ErrorInCtfBased(command, true);
         return;
       }
-      if (processImg->RunCtfplotterOnBuffer(filename, command, 5000)) {
+      if (processImg->RunCtfplotterOnBuffer(filename, command, 10000)) {
         ErrorInCtfBased(command, true);
         return;
       }

@@ -2808,7 +2808,7 @@ int CSerialEMView::FitCtfAtMarkedPoint(EMimageBuffer *imBuf, CString &lenstr,
       processImg->DeletePlotterShrMemFile();
       return -3;
     }
-    if (processImg->RunCtfplotterOnBuffer(filename, command, 5000)) {
+    if (processImg->RunCtfplotterOnBuffer(filename, command, 10000)) {
       mWinApp->AppendToLog(command);
       return -3;
     }
