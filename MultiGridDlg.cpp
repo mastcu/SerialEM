@@ -3157,7 +3157,7 @@ void CMultiGridDlg::DoStartRun(bool undoneOnly)
   int finalNeedsLowDose = mWinApp->LowDoseMode() ? 1 : -1;
   bool sizesMatch = true;
   MontParam *montP;
-  int numStates, stateCamera;
+  int numStates, stateCamera = -1;
   mWinApp->RestoreViewFocus();
   DialogToParams();
   *mMasterParams = mParams;
