@@ -3090,7 +3090,7 @@ void CMultiGridDlg::DoStartRun(bool undoneOnly)
   StateParams *stateArr[4];
   bool sizesMatch = true;
   MontParam *montP;
-  int stateLowDose[4], stateMagInds[4], numStates, stateCamera;
+  int stateLowDose[4], stateMagInds[4], numStates, stateCamera = -1;
   mWinApp->RestoreViewFocus();
   DialogToParams();
   *mMasterParams = mParams;
