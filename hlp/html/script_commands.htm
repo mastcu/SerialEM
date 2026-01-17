@@ -5622,17 +5622,19 @@
         <TR>
           <TD class="scriptcommand">RefineGridMapAlignment #I set [#M] [#X] [#Y] [#PX] [#PY]</TD>
           <TD>Runs a routine to refine the alignment to a grid map by aligning medium-magnification images 
-            with scaled-up portions of the grid map.&nbsp; See the section <I>Optional Controls for Refining 
+            with scaled-up portions of the grid map or another map.&nbsp; See the section <I>Optional Controls for Refining 
               Alignment</I> in the help for <a href="hidd_multi_grid.htm">Multiple Grid Operations</a>
              for a full description of this routine.<br />
-            <b>#I</b> specifies the maps and can be its
+            <b>#I</b> specifies a Navigator item and can be its
             index in the table, 0 for the current item, or the negative of the distance from the end of
-             the table. <br />
+             the table.&nbsp; The item can be the map to realign to, which must have one or more polygons drawn on
+            it, a specific polygon drawn on a map, or a point drawn on a map. <br />
             <b>set</b> specifies the camera parameter set to use, as for camera control commands<br />
             <b>#M</b> optionally sets a criterion for the maximum allowed difference among the 
             three measured shifts; enter 0 to use the default limit or -1 to not shift Navigator points
              regardless of the result.<br />
-            <b>#X</b> and <b>#Y</b> optionally set a preferred position around which to choose a polygon,
+            <b>#X</b> and <b>#Y</b> optionally set a preferred position around which to choose a polygon when
+            <b>#I</b> specifies a map item,
              in place of the centroid of all eligible polygons; enter X/Y values less than -1900 for the 
             default position.<br />
             <b>#PX</b> and <b>#PY</b> optionally set the number of pieces in X and Y if a montage is 

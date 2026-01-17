@@ -356,6 +356,7 @@ private:
   float mRefineYinImage[3];
   CMapDrawItem *mRefineItem;     // Map item for refine
   int mRefineStepIndex;          // Index of point being done
+  int mNumRefinePoints;          // 3 for corners, 1 for point
   float mMaxRefineDiff;          // Do not apply refine if minimum difference exceeds this
   BOOL mShowRefineAfterRealign;  // Flag to hide the options for this
   float mRefineMinField;         // Minimum field size in microns

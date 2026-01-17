@@ -586,6 +586,8 @@ struct MultiGridParams {
   int refineImageType;       // Type of image/state to use for refine
   int refineStateNum;        // Number of state for refine
   CString refineStateName;   // Name of state to set
+  BOOL refineWithNavItem;    // Flag  to align at single marked point or specific polygon
+  CString refineItemNote;    // String that note starts with for item to 
   int msVectorSource;        // 1 to take multishot vectors from settings, 0 from maps
 };
 

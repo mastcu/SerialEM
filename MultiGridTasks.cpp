@@ -95,6 +95,7 @@ CMultiGridTasks::CMultiGridTasks()
   mParams.runFinalAcq = false;
   mParams.runMacroAfterLMM = false;
   mParams.refineAfterRealign = false;
+  mParams.refineWithNavItem = false;
   mParams.refineImageType = 1;
   mParams.refineStateNum = 0;
   mParams.macroToRun = 0;
@@ -1712,7 +1713,7 @@ void CMultiGridTasks::UndoOrRedoMarkerShift(bool redo)
  * Main routine for aligning to grid map from higher mag: takes the control set to use,
   * but imaging conditions must already be set up.
  */
-int CMultiGridTasks::AlignGridMapAcrossMags(CMapDrawItem *mapItem, int setNum,
+int CMultiGridTasks::AlignGridMapAcrossMags(CMapDrawItem *inItem, int setNum, 
   int numXpiece, int numYpiece, float findNearX, float findNearY, float maxDiff,
   CString &errStr)
 {
@@ -1733,7 +1734,7 @@ int CMultiGridTasks::AlignGridMapAcrossMags(CMapDrawItem *mapItem, int setNum,
   float maxCenDist = -1.e30f, minCenDist = 1.e30f, bestTargDist, fitInterval, subDist;
   ScaleMat aMat;
   ControlSet *conSets = mWinApp->GetConSets();
-  CMapDrawItem *item;
+  CMapDrawItem *item, *mapItem = inItem;
   const char *badInfo = "Image buffer does not have enough information to convert "
     "stage coordinates";
   mNavigator = mWinApp->mNavigator;
@@ -1744,9 +1745,20 @@ int CMultiGridTasks::AlignGridMapAcrossMags(CMapDrawItem *mapItem, int setNum,
     errStr = "Navigator must be open to refine grid map alignment";
     return 1;
   }
-  if (!mapItem->mMapID || !mapItem->IsMap()) {
-    errStr = "The item passed to AlignGridMapAcrossMags must be a map";
-    return 1;
+
+  // Determine the map to align to
+  if (!mapItem->IsMap()) {
+    if (!mapItem->mDrawnOnMapID) {
+      errStr = "The item passed to AlignGridMapAcrossMags is not a map and has no ID "
+        "for a map it was drawn on";
+      return 1;
+    }
+    mapItem = mNavigator->FindItemWithMapID(mapItem->mDrawnOnMapID);
+    if (!mapItem) {
+      errStr = "Cannot find the map that the item passed to AlignGridMapAcrossMags was"
+        " drawn on";
+      return 1;
+    }
   }
 
   // Get mag, field size and pixel size, make sure FOV is big enough
@@ -1755,6 +1767,10 @@ int CMultiGridTasks::AlignGridMapAcrossMags(CMapDrawItem *mapItem, int setNum,
     magInd = ldp[ldArea].magIndex;
   } else {
     magInd = mScope->GetMagIndex();
+  }
+  if (mapItem->mMapMagInd > magInd) {
+    errStr = "The map to align to is at a higher magnification than the current mag";
+    return 1;
   }
   pixel = mShiftManager->GetPixelSize(mWinApp->GetCurrentCamera(), magInd);
   sizeX = conSets[setNum].right - conSets[setNum].left;
@@ -1786,328 +1802,349 @@ int CMultiGridTasks::AlignGridMapAcrossMags(CMapDrawItem *mapItem, int setNum,
     return 1;
   }
 
-  // Get candidates
-  itemArray = mNavigator->GetItemArray();
-  for (ind = 0; ind < (int)itemArray->GetSize(); ind++) {
-    item = itemArray->GetAt(ind);
-    if (item->IsPolygon() && item->mDrawnOnMapID == mapItem->mMapID) {
-      size = sqrtf(mNavigator->ContourArea(item->mPtX, item->mPtY, item->mNumPoints));
-      if (item->mGroupID > 0 || size < mMaxSizeForRefinePolys) {
-        polySizes.push_back(size);
-        candidates.push_back(ind);
-        xSum += item->mStageX;
-        ySum += item->mStageY;
-        mWinApp->mMainView->ExternalStageToImage(&mImBufs[mMapBuf], aMat, delX,
-          delY, item->mStageX, item->mStageY, xCorn, yCorn, &dist);
-        ACCUM_MAX(maxCenDist, dist);
-        if (dist < minCenDist) {
-          minCenDist = dist;
-          indMinCen = (int)pcCenDists.size();
-        }
-        pcCenDists.push_back(dist);
-      }
-    }
-  }
+  if (inItem->IsMap()) {
 
-  // Make sure there are some
-  numPoly = (int)polySizes.size();
-  if (!numPoly) {
-    errStr.Format("To refine grid map alignment, there must be polygons either from "
-      "autocontouring or smaller than %.0f microns in size", mMaxSizeForRefinePolys);
-    return 1;
-  }
-
-  // If center for selection not specified, use center of candidate polygons
-  if (findNearX < EXTRA_VALUE_TEST || findNearY < EXTRA_VALUE_TEST) {
-    findNearX = xSum / numPoly;
-    findNearY = ySum / numPoly;
-  }
-  item = itemArray->GetAt(candidates[indMinCen]);
-  bestTargDist = sqrtf(powf(item->mStageX - findNearX, 2.f) +
-    powf(item->mStageY - findNearY, 2.f));
-  bestInd = indMinCen;
-  SEMTrace('q', "Initial polygon %s at %.1f, %.1f  %.1f from piece cen  %.1f from target",
-    (LPCTSTR)item->mLabel, item->mStageX, item->mStageY, pcCenDists[bestInd],
-    bestTargDist);
-
-  // Look for nearly as good polygons closer to specified center
-  for (ind = 0; ind < numPoly; ind++) {
-    if (pcCenDists[ind] - minCenDist < 0.05 * maxCenDist ||
-      pcCenDists[ind] < 0.1 * maxCenDist) {
-      item = itemArray->GetAt(candidates[ind]);
-      dist = sqrtf(powf(item->mStageX - findNearX, 2.f) + powf(item->mStageY - findNearY,
-        2.f));
-      if (dist < bestTargDist && (bestTargDist - dist > 0.1 * maxCenDist ||
-        minCenDist > pcCenDists[ind] / 2.f)) {
-        bestTargDist = dist;
-        bestInd = ind;
-      }
-    }
-  }
-
-  // Get perimeter
-  item = itemArray->GetAt(candidates[bestInd]);
-  SEMTrace('q', "Chose polygon %s at %.1f, %.1f  %.1f from piece cen  %.1f from target",
-    (LPCTSTR)item->mLabel, item->mStageX, item->mStageY, pcCenDists[bestInd],
-    bestTargDist);
-  perim = 0.;
-  for (ind = 1; ind < item->mNumPoints; ind++)
-    perim += sqrtf(powf(item->mPtX[ind] - item->mPtX[ind - 1], 2.f) +
-      powf(item->mPtY[ind] - item->mPtY[ind - 1], 2.f));
-  minLength = perimFrac * perim;
-  maxLength = maxPerimFrac * perim;
-  fitInterval = fitIntervalFrac * perim;
-
-  // Walk around, fit lines in two directions from each point out to 1/10 of perimeter
-  candidates.clear();
-  for (cen = 0; cen < item->mNumPoints - 1; cen++) {
-    for (dir = -1; dir <= 1; dir += 2) {
-      dist = 0.;
-      isi = (dir + 1) / 2;
-      lastJnd = cen;
-      fitX.clear();
-      fitY.clear();
-      fitDist.clear();
-      fitX.push_back(item->mPtX[cen]);
-      fitY.push_back(item->mPtY[cen]);
-      fitDist.push_back(0.);
-      for (ind = (!cen && dir < 0) ? 2 : 1; ind < item->mNumPoints; ind++) {
-        jnd = (ind * dir + cen + item->mNumPoints) % item->mNumPoints;
-        segLen = sqrtf(powf(item->mPtX[jnd] - item->mPtX[lastJnd], 2.f) +
-          powf(item->mPtY[jnd] - item->mPtY[lastJnd], 2.f));
-
-        // If segment is longer than this interval, add points along it to give more
-        // equal weighting to long straight parts of the contour
-        if (segLen > 1.05 * fitInterval) {
-          numInterp = (int)(segLen / fitInterval);
-          subSeg = segLen / (numInterp + 1);
-          for (knd = 1; knd <= numInterp; knd++) {
-            subDist = (float)(knd * subSeg);
-            if (dist + subDist > maxLength)
-              break;
-            fitX.push_back(item->mPtX[lastJnd] + subDist *
-              (item->mPtX[jnd] - item->mPtX[lastJnd]) / segLen);
-            fitY.push_back(item->mPtY[lastJnd] + subDist *
-              (item->mPtY[jnd] - item->mPtY[lastJnd]) / segLen);
-            fitDist.push_back(dist + subDist);
+    // Get candidates
+    itemArray = mNavigator->GetItemArray();
+    for (ind = 0; ind < (int)itemArray->GetSize(); ind++) {
+      item = itemArray->GetAt(ind);
+      if (item->IsPolygon() && item->mDrawnOnMapID == mapItem->mMapID) {
+        size = sqrtf(mNavigator->ContourArea(item->mPtX, item->mPtY, item->mNumPoints));
+        if (item->mGroupID > 0 || size < mMaxSizeForRefinePolys) {
+          polySizes.push_back(size);
+          candidates.push_back(ind);
+          xSum += item->mStageX;
+          ySum += item->mStageY;
+          mWinApp->mMainView->ExternalStageToImage(&mImBufs[mMapBuf], aMat, delX,
+            delY, item->mStageX, item->mStageY, xCorn, yCorn, &dist);
+          ACCUM_MAX(maxCenDist, dist);
+          if (dist < minCenDist) {
+            minCenDist = dist;
+            indMinCen = (int)pcCenDists.size();
           }
+          pcCenDists.push_back(dist);
         }
-
-        // stop if length would exceed maximum before adding point
-        dist += segLen;
-        if (dist > maxLength)
-          break;
-        fitX.push_back(item->mPtX[jnd]);
-        fitY.push_back(item->mPtY[jnd]);
-        fitDist.push_back(dist);
-        lastJnd = jnd;
-
-        // Stop if enough length
-        if (dist > minLength)
-          break;
       }
-
-      // Get X and Y as function of distance, and vector
-      numFit = (int)fitX.size();
-      lsFit(&fitDist[0], &fitX[0], numFit, &slopex[isi], &intcpx[isi], &ro);
-      vecX[isi] = slopex[isi] * fitDist[numFit - 1];
-      lsFit(&fitDist[0], &fitY[0], numFit, &slopey[isi], &intcpy[isi], &ro2);
-      vecY[isi] = slopey[isi] * fitDist[numFit - 1];
-      //PrintfToLog("n %d X int %.3f slo %.3f ro %.3f Y int %.3f slo %.3f ro %.3f  vec %.1f %.1f",
-        //numFit, intcpx[isi], slopex[isi], ro, intcpy[isi], slopey[isi], ro2, vecX[isi], vecY[isi]);
-
     }
 
-    // Get angle
-    angles.push_back((float)(acos((vecX[0] * vecX[1] + vecY[0] * vecY[1]) /
-      sqrtf((vecX[0] * vecX[0] + vecY[0] * vecY[0]) *
-      (vecX[1] * vecX[1] + vecY[1] * vecY[1]))) / DTOR));
-    candidates.push_back(cen);
-    xCorn = item->mPtX[cen];
-    yCorn = item->mPtY[cen];
-
-    // Solve for intersection of the two lines if possible and substitute that point
-    denom = slopey[0] * slopex[1] - slopex[0] * slopey[1];
-    if (fabs(denom) > -1.e10) {
-      dist = ((slopey[0] * intcpx[0] - slopex[0] * intcpy[0]) +
-        (slopex[0] * intcpy[1] - slopey[0] * intcpx[1])) / denom;
-      xCorn = slopex[1] * dist + intcpx[1];
-      yCorn = slopey[1] * dist + intcpy[1];
+    // Make sure there are some
+    numPoly = (int)polySizes.size();
+    if (!numPoly) {
+      errStr.Format("To refine grid map alignment, there must be polygons either from "
+        "autocontouring or smaller than %.0f microns in size", mMaxSizeForRefinePolys);
+      return 1;
     }
-    candX.push_back(xCorn);
-    candY.push_back(yCorn);
-    SEMTrace('q', "pt %d  at %.2f %.2f  angle %.1f  line intcp %.2f %.2f", cen,
-      item->mPtX[cen], item->mPtY[cen], angles[cen], xCorn, yCorn);
+
+    // If center for selection not specified, use center of candidate polygons
+    if (findNearX < EXTRA_VALUE_TEST || findNearY < EXTRA_VALUE_TEST) {
+      findNearX = xSum / numPoly;
+      findNearY = ySum / numPoly;
+    }
+    item = itemArray->GetAt(candidates[indMinCen]);
+    bestTargDist = sqrtf(powf(item->mStageX - findNearX, 2.f) +
+      powf(item->mStageY - findNearY, 2.f));
+    bestInd = indMinCen;
+    SEMTrace('q', "Initial polygon %s at %.1f, %.1f  %.1f from piece cen  %.1f from"
+      " target", (LPCTSTR)item->mLabel, item->mStageX, item->mStageY, pcCenDists[bestInd],
+      bestTargDist);
+
+    // Look for nearly as good polygons closer to specified center
+    for (ind = 0; ind < numPoly; ind++) {
+      if (pcCenDists[ind] - minCenDist < 0.05 * maxCenDist ||
+        pcCenDists[ind] < 0.1 * maxCenDist) {
+        item = itemArray->GetAt(candidates[ind]);
+        dist = sqrtf(powf(item->mStageX - findNearX, 2.f) + 
+          powf(item->mStageY - findNearY, 2.f));
+        if (dist < bestTargDist && (bestTargDist - dist > 0.1 * maxCenDist ||
+          minCenDist > pcCenDists[ind] / 2.f)) {
+          bestTargDist = dist;
+          bestInd = ind;
+        }
+      }
+    }
+
+    item = itemArray->GetAt(candidates[bestInd]);
+    SEMTrace('q', "Chose polygon %s at %.1f, %.1f  %.1f from piece cen  %.1f from target",
+      (LPCTSTR)item->mLabel, item->mStageX, item->mStageY, pcCenDists[bestInd],
+      bestTargDist);
+  } else if (inItem->IsPolygon()) {
+    item = inItem;
   }
 
-  if (!mNavigator->BufferStageToImage(&mImBufs[mMapBuf], aMat, delX, delY)) {
-    errStr = badInfo;
-    return 1;
-  }
-  type = mImBufs[mMapBuf].mImage->getType();
-  mImBufs[mMapBuf].mImage->getSize(nxIm, nyIm);
+  // Work with passed or selected polygon to find corners to align at
+  if (!inItem->IsPoint()) {
 
-  // Get single adjustment for item if it has group ID
-  if (item->mGroupID) {
-    mWinApp->mMainView->ExternalStageToImage(&mImBufs[mMapBuf], aMat, delX,
-      delY, item->mStageX, item->mStageY, xCorn, yCorn, NULL, false);
-    mWinApp->mMainView->ExternalStageToImage(&mImBufs[mMapBuf], aMat, delX,
-      delY, item->mStageX, item->mStageY, singleXadj, singleYadj, NULL, true);
-    singleXadj -= xCorn;
-    singleYadj -= yCorn;
-  }
+    // Get perimeter
+    perim = 0.;
+    for (ind = 1; ind < item->mNumPoints; ind++)
+      perim += sqrtf(powf(item->mPtX[ind] - item->mPtX[ind - 1], 2.f) +
+        powf(item->mPtY[ind] - item->mPtY[ind - 1], 2.f));
+    minLength = perimFrac * perim;
+    maxLength = maxPerimFrac * perim;
+    fitInterval = fitIntervalFrac * perim;
 
-  // Sort them to find smallest angles and find points that are well-separated
-  rsSortIndexedFloats(&angles[0], &candidates[0], item->mNumPoints - 1);
-
-  jnd = 0;
-  while (jnd < 3 && minLength > 1.) {
+    // Walk around, fit lines in two directions from each point out to 1/10 of perimeter
+    candidates.clear();
     for (cen = 0; cen < item->mNumPoints - 1; cen++) {
-      if ((jnd && candidates[cen] == cornInd[0]) ||
-        (jnd > 1 && candidates[cen] == cornInd[1]))
-        continue;
-      dir = 0;
-      for (ind = 0; ind < jnd; ind++) {
-        if (sqrtf(powf(item->mPtX[candidates[cen]] - item->mPtX[cornInd[ind]], 2.f) +
-          powf(item->mPtY[candidates[cen]] - item->mPtY[cornInd[ind]], 2.f)) < minLength)
-        {
-          dir = 1;
-          break;
-        }
-      }
-      if (!dir) {
+      for (dir = -1; dir <= 1; dir += 2) {
+        dist = 0.;
+        isi = (dir + 1) / 2;
+        lastJnd = cen;
+        fitX.clear();
+        fitY.clear();
+        fitDist.clear();
+        fitX.push_back(item->mPtX[cen]);
+        fitY.push_back(item->mPtY[cen]);
+        fitDist.push_back(0.);
+        for (ind = (!cen && dir < 0) ? 2 : 1; ind < item->mNumPoints; ind++) {
+          jnd = (ind * dir + cen + item->mNumPoints) % item->mNumPoints;
+          segLen = sqrtf(powf(item->mPtX[jnd] - item->mPtX[lastJnd], 2.f) +
+            powf(item->mPtY[jnd] - item->mPtY[lastJnd], 2.f));
 
-        // The next candidate is far enough from the other accepted points.  Try to look
-        // in image for the actual edge/corner
-        ind = candidates[cen];
-
-        // Get stage positions closer and farther from center along the sample line
-        xCorn = candX[ind];
-        yCorn = candY[ind];
-        cenXdel = xCorn - item->mStageX;
-        cenYdel = yCorn - item->mStageY;
-        dist = sqrtf(powf(cenXdel, 2.f) + powf(cenYdel, 2.f));
-        nearXstage = xCorn - 0.5f * cenXdel * edgeTestLen / dist;
-        nearYstage = yCorn - 0.5f * cenYdel * edgeTestLen / dist;
-        farXstage = xCorn + 0.5f * cenXdel * edgeTestLen / dist;
-        farYstage = yCorn + 0.5f * cenYdel * edgeTestLen / dist;
-
-        // Convert to image coords
-        mWinApp->mMainView->ExternalStageToImage(&mImBufs[mMapBuf], aMat, delX,
-          delY, nearXstage, nearYstage, nearXim, nearYim, NULL, item->mGroupID == 0);
-        mWinApp->mMainView->ExternalStageToImage(&mImBufs[mMapBuf], aMat, delX,
-          delY, farXstage, farYstage, farXim, farYim, NULL, item->mGroupID == 0);
-        nearXim += singleXadj;
-        nearYim += singleYadj;
-        farXim += singleXadj;
-        farYim += singleYadj;
-
-        // Set up for maximum of 160 step sample
-        dist = sqrtf(powf(farXim - nearXim, 2.f) + powf(farYim - nearYim, 2.f));
-        numSteps = B3DMIN(160, B3DNINT(dist));
-        if (nearXim > 2 && nearXim < nxIm - 3 && nearYim > 2 && nearYim < nyIm - 3 &&
-          farXim > 2 && farXim < nxIm - 3 && farYim > 2 && farYim < nyIm - 3 &&
-          numSteps > 20) {
-
-          // If both ends are inside the image and there are at least 20 steps, set a box
-          // size of at least 25 pixels, use square since it is going into a corner
-          SEMTrace('q', "near st %.2f %.2f  im %.0f %.0f  far st %.2f %.2f  im %.0f %.0f",
-           nearXstage, nearYstage, nearXim, nearYim, farXstage, farYstage, farXim, farYim);
-          frac = dist / (float)numSteps;
-          boxLen = B3DNINT(5. * frac);
-          boxWidth = B3DNINT(5. * frac);
-          fitX.resize(numSteps + 1);
-          fitY.resize(numSteps + 1);
-          fitDist.resize(6);
-          for (knd = 0; knd < 5; knd++)
-            fitDist[knd] = (float)(3 - knd);
-
-          // Get means and near and get average garident by fits to 5 points
-          ProcBoxMeansAlongLine(mImBufs[mMapBuf].mImage->getData(), type, nxIm, nyIm, 2,
-            boxLen, boxWidth, B3DNINT(nearXim), B3DNINT(nearYim), B3DNINT(farXim),
-            B3DNINT(farYim), numSteps, &fitX[0]);
-
-          for (knd = 2; knd < numSteps - 2; knd++) {
-            lsFit(&fitDist[0], &fitX[knd - 2], 5, &fitY[knd], &intcpx[0], &ro);
-            if (GetDebugOutput('*'))
-              SEMTrace('q', "%d  %.1f  %.2f  %.3f", knd, fitX[knd], fitY[knd], ro);
+          // If segment is longer than this interval, add points along it to give more
+          // equal weighting to long straight parts of the contour
+          if (segLen > 1.05 * fitInterval) {
+            numInterp = (int)(segLen / fitInterval);
+            subSeg = segLen / (numInterp + 1);
+            for (knd = 1; knd <= numInterp; knd++) {
+              subDist = (float)(knd * subSeg);
+              if (dist + subDist > maxLength)
+                break;
+              fitX.push_back(item->mPtX[lastJnd] + subDist *
+                (item->mPtX[jnd] - item->mPtX[lastJnd]) / segLen);
+              fitY.push_back(item->mPtY[lastJnd] + subDist *
+                (item->mPtY[jnd] - item->mPtY[lastJnd]) / segLen);
+              fitDist.push_back(dist + subDist);
+            }
           }
 
-          float firstPeak = -1.e10, secondPeak = -1.e10;
-          int firstInd = 0, secondInd = 0;
+          // stop if length would exceed maximum before adding point
+          dist += segLen;
+          if (dist > maxLength)
+            break;
+          fitX.push_back(item->mPtX[jnd]);
+          fitY.push_back(item->mPtY[jnd]);
+          fitDist.push_back(dist);
+          lastJnd = jnd;
 
-          // Find two highest peaks with monotonic fall of two boxes each side
-          for (knd = 4; knd < numSteps - 4; knd++) {
-            if (fitY[knd] > fitY[knd - 1] && fitY[knd] > fitY[knd + 1] &&
-              fitY[knd - 1] > fitY[knd - 2] && fitY[knd + 1] > fitY[knd + 2]) {
-              if (fitY[knd] > firstPeak) {
-                secondPeak = firstPeak;
-                secondInd = firstInd;
-                firstPeak = fitY[knd];
-                firstInd = knd;
-              } else if (fitY[knd] > secondPeak) {
-                secondPeak = fitY[knd];
-                secondInd = knd;
+          // Stop if enough length
+          if (dist > minLength)
+            break;
+        }
+
+        // Get X and Y as function of distance, and vector
+        numFit = (int)fitX.size();
+        lsFit(&fitDist[0], &fitX[0], numFit, &slopex[isi], &intcpx[isi], &ro);
+        vecX[isi] = slopex[isi] * fitDist[numFit - 1];
+        lsFit(&fitDist[0], &fitY[0], numFit, &slopey[isi], &intcpy[isi], &ro2);
+        vecY[isi] = slopey[isi] * fitDist[numFit - 1];
+        //PrintfToLog("n %d X int %.3f slo %.3f ro %.3f Y int %.3f slo %.3f ro %.3f  vec %.1f %.1f",
+          //numFit, intcpx[isi], slopex[isi], ro, intcpy[isi], slopey[isi], ro2, vecX[isi], vecY[isi]);
+
+      }
+
+      // Get angle
+      angles.push_back((float)(acos((vecX[0] * vecX[1] + vecY[0] * vecY[1]) /
+        sqrtf((vecX[0] * vecX[0] + vecY[0] * vecY[0]) *
+        (vecX[1] * vecX[1] + vecY[1] * vecY[1]))) / DTOR));
+      candidates.push_back(cen);
+      xCorn = item->mPtX[cen];
+      yCorn = item->mPtY[cen];
+
+      // Solve for intersection of the two lines if possible and substitute that point
+      denom = slopey[0] * slopex[1] - slopex[0] * slopey[1];
+      if (fabs(denom) > -1.e10) {
+        dist = ((slopey[0] * intcpx[0] - slopex[0] * intcpy[0]) +
+          (slopex[0] * intcpy[1] - slopey[0] * intcpx[1])) / denom;
+        xCorn = slopex[1] * dist + intcpx[1];
+        yCorn = slopey[1] * dist + intcpy[1];
+      }
+      candX.push_back(xCorn);
+      candY.push_back(yCorn);
+      SEMTrace('q', "pt %d  at %.2f %.2f  angle %.1f  line intcp %.2f %.2f", cen,
+        item->mPtX[cen], item->mPtY[cen], angles[cen], xCorn, yCorn);
+    }
+
+    if (!mNavigator->BufferStageToImage(&mImBufs[mMapBuf], aMat, delX, delY)) {
+      errStr = badInfo;
+      return 1;
+    }
+    type = mImBufs[mMapBuf].mImage->getType();
+    mImBufs[mMapBuf].mImage->getSize(nxIm, nyIm);
+
+    // Get single adjustment for item if it has group ID
+    if (item->mGroupID) {
+      mWinApp->mMainView->ExternalStageToImage(&mImBufs[mMapBuf], aMat, delX,
+        delY, item->mStageX, item->mStageY, xCorn, yCorn, NULL, false);
+      mWinApp->mMainView->ExternalStageToImage(&mImBufs[mMapBuf], aMat, delX,
+        delY, item->mStageX, item->mStageY, singleXadj, singleYadj, NULL, true);
+      singleXadj -= xCorn;
+      singleYadj -= yCorn;
+    }
+
+    // Sort them to find smallest angles and find points that are well-separated
+    rsSortIndexedFloats(&angles[0], &candidates[0], item->mNumPoints - 1);
+
+    jnd = 0;
+    while (jnd < 3 && minLength > 1.) {
+      for (cen = 0; cen < item->mNumPoints - 1; cen++) {
+        if ((jnd && candidates[cen] == cornInd[0]) ||
+          (jnd > 1 && candidates[cen] == cornInd[1]))
+          continue;
+        dir = 0;
+        for (ind = 0; ind < jnd; ind++) {
+          if (sqrtf(powf(item->mPtX[candidates[cen]] - item->mPtX[cornInd[ind]], 2.f) +
+            powf(item->mPtY[candidates[cen]] - item->mPtY[cornInd[ind]], 2.f)) < minLength)
+          {
+            dir = 1;
+            break;
+          }
+        }
+        if (!dir) {
+
+          // The next candidate is far enough from the other accepted points.  Try to look
+          // in image for the actual edge/corner
+          ind = candidates[cen];
+
+          // Get stage positions closer and farther from center along the sample line
+          xCorn = candX[ind];
+          yCorn = candY[ind];
+          cenXdel = xCorn - item->mStageX;
+          cenYdel = yCorn - item->mStageY;
+          dist = sqrtf(powf(cenXdel, 2.f) + powf(cenYdel, 2.f));
+          nearXstage = xCorn - 0.5f * cenXdel * edgeTestLen / dist;
+          nearYstage = yCorn - 0.5f * cenYdel * edgeTestLen / dist;
+          farXstage = xCorn + 0.5f * cenXdel * edgeTestLen / dist;
+          farYstage = yCorn + 0.5f * cenYdel * edgeTestLen / dist;
+
+          // Convert to image coords
+          mWinApp->mMainView->ExternalStageToImage(&mImBufs[mMapBuf], aMat, delX,
+            delY, nearXstage, nearYstage, nearXim, nearYim, NULL, item->mGroupID == 0);
+          mWinApp->mMainView->ExternalStageToImage(&mImBufs[mMapBuf], aMat, delX,
+            delY, farXstage, farYstage, farXim, farYim, NULL, item->mGroupID == 0);
+          nearXim += singleXadj;
+          nearYim += singleYadj;
+          farXim += singleXadj;
+          farYim += singleYadj;
+
+          // Set up for maximum of 160 step sample
+          dist = sqrtf(powf(farXim - nearXim, 2.f) + powf(farYim - nearYim, 2.f));
+          numSteps = B3DMIN(160, B3DNINT(dist));
+          if (nearXim > 2 && nearXim < nxIm - 3 && nearYim > 2 && nearYim < nyIm - 3 &&
+            farXim > 2 && farXim < nxIm - 3 && farYim > 2 && farYim < nyIm - 3 &&
+            numSteps > 20) {
+
+            // If both ends are inside the image and there are at least 20 steps, set a
+            // box size of at least 25 pixels, use square since it is going into a corner
+            SEMTrace('q', "near st %.2f %.2f  im %.0f %.0f  far st %.2f %.2f  im %.0f "
+              "%.0f", nearXstage, nearYstage, nearXim, nearYim, farXstage, farYstage,
+              farXim, farYim);
+            frac = dist / (float)numSteps;
+            boxLen = B3DNINT(5. * frac);
+            boxWidth = B3DNINT(5. * frac);
+            fitX.resize(numSteps + 1);
+            fitY.resize(numSteps + 1);
+            fitDist.resize(6);
+            for (knd = 0; knd < 5; knd++)
+              fitDist[knd] = (float)(3 - knd);
+
+            // Get means and near and get average gradient by fits to 5 points
+            ProcBoxMeansAlongLine(mImBufs[mMapBuf].mImage->getData(), type, nxIm, nyIm, 2,
+              boxLen, boxWidth, B3DNINT(nearXim), B3DNINT(nearYim), B3DNINT(farXim),
+              B3DNINT(farYim), numSteps, &fitX[0]);
+
+            for (knd = 2; knd < numSteps - 2; knd++) {
+              lsFit(&fitDist[0], &fitX[knd - 2], 5, &fitY[knd], &intcpx[0], &ro);
+              if (GetDebugOutput('*'))
+                SEMTrace('q', "%d  %.1f  %.2f  %.3f", knd, fitX[knd], fitY[knd], ro);
+            }
+
+            float firstPeak = -1.e10, secondPeak = -1.e10;
+            int firstInd = 0, secondInd = 0;
+
+            // Find two highest peaks with monotonic fall of two boxes each side
+            for (knd = 4; knd < numSteps - 4; knd++) {
+              if (fitY[knd] > fitY[knd - 1] && fitY[knd] > fitY[knd + 1] &&
+                fitY[knd - 1] > fitY[knd - 2] && fitY[knd + 1] > fitY[knd + 2]) {
+                if (fitY[knd] > firstPeak) {
+                  secondPeak = firstPeak;
+                  secondInd = firstInd;
+                  firstPeak = fitY[knd];
+                  firstInd = knd;
+                } else if (fitY[knd] > secondPeak) {
+                  secondPeak = fitY[knd];
+                  secondInd = knd;
+                }
+              }
+            }
+            SEMTrace('q', "first peak %.3f  at %d  second %.3f at %d", firstPeak,
+              firstInd, secondPeak, secondInd);
+
+            knd = 0;
+            if (firstInd > 0) {
+              if (!secondInd) {
+                knd = firstInd;
+              } else if (firstInd > secondInd) {
+                knd = firstInd;
+              } else if (secondPeak > 0.5 * firstPeak ||
+                (secondPeak > numSteps / 4 - 2 && firstPeak < numSteps / 4)) {
+                knd = secondInd;
+              } else {
+                knd = firstInd;
+              }
+            }
+            if (knd) {
+              if (knd < numSteps / 8) {
+                SEMTrace('q', "Gradient peak at %d of %d: inside polygon", knd + 1,
+                  numSteps);
+              } else {
+
+                // If all is good, get fractional way out from polygon point and revise
+                frac = 2.f * (float)knd / (float)numSteps - 1.f;
+                SEMTrace('q', "Revising corner by %.2f from %.2f, %.2f to %.2f, %.2f",
+                  frac * edgeTestLen / 2.f, xCorn, yCorn, xCorn + frac *
+                  (farXstage - xCorn), yCorn + frac * (farYstage - yCorn));
+                xCorn += frac * (farXstage - xCorn);
+                yCorn += frac * (farYstage - yCorn);
               }
             }
           }
-          SEMTrace('q', "first peak %.3f  at %d  second %.3f at %d", firstPeak, firstInd,
-            secondPeak, secondInd);
 
-          knd = 0;
-          if (firstInd > 0) {
-            if (!secondInd) {
-              knd = firstInd;
-            } else if (firstInd > secondInd) {
-              knd = firstInd;
-            } else if (secondPeak > 0.5 * firstPeak ||
-              (secondPeak > numSteps / 4 - 2 && firstPeak < numSteps / 4)) {
-              knd = secondInd;
-            } else {
-              knd = firstInd;
-            }
-          }
-          if (knd) {
-            if (knd < numSteps / 8) {
-              SEMTrace('q', "Gradient peak at %d of %d: inside polygon", knd + 1,
-                numSteps);
-            } else {
-
-              // If all is good, get fractional way out from polygon point and revise
-              frac = 2.f * (float)knd / (float)numSteps - 1.f;
-              SEMTrace('q', "Revising corner by %.2f from %.2f, %.2f to %.2f, %.2f",
-                frac * edgeTestLen / 2.f, xCorn, yCorn, xCorn + frac *
-                (farXstage - xCorn), yCorn + frac * (farYstage - yCorn));
-              xCorn += frac * (farXstage - xCorn);
-              yCorn += frac * (farYstage - yCorn);
-            }
-          }
+          // Now compute position that offsets the corner from the center of field
+          // Use same adjustment method as above to get and save the image positions
+          frac = cenOffset * FOV / dist;
+          mRRGxStages[jnd] = frac * item->mStageX + (1.f - frac) * xCorn;
+          mRRGyStages[jnd] = frac * item->mStageY + (1.f - frac) * yCorn;
+          mWinApp->mMainView->ExternalStageToImage(&mImBufs[mMapBuf], aMat, delX,
+            delY, mRRGxStages[jnd], mRRGyStages[jnd], mRefineXinImage[jnd],
+            mRefineYinImage[jnd], NULL, item->mGroupID == 0);
+          mRefineXinImage[jnd] += singleXadj;
+          mRefineYinImage[jnd] += singleYadj;
+          SEMTrace('q', "Extraction center %.0f %.0f", mRefineXinImage[jnd],
+            mRefineYinImage[jnd]);
+          cornInd[jnd++] = ind;
+          if (jnd >= 3)
+            break;
         }
-
-        // Now compute position that offsets the corner from the center of field
-        // Use same adjustment method as above to get and save the image positions
-        frac = cenOffset * FOV / dist;
-        mRRGxStages[jnd] = frac * item->mStageX + (1.f - frac) * xCorn;
-        mRRGyStages[jnd] = frac * item->mStageY + (1.f - frac) * yCorn;
-        mWinApp->mMainView->ExternalStageToImage(&mImBufs[mMapBuf], aMat, delX,
-          delY, mRRGxStages[jnd], mRRGyStages[jnd], mRefineXinImage[jnd],
-          mRefineYinImage[jnd], NULL, item->mGroupID == 0);
-        mRefineXinImage[jnd] += singleXadj;
-        mRefineYinImage[jnd] += singleYadj;
-        SEMTrace('q', "Extraction center %.0f %.0f", mRefineXinImage[jnd],
-          mRefineYinImage[jnd]);
-        cornInd[jnd++] = ind;
-        if (jnd >= 3)
-          break;
       }
+      minLength /= 2.f;
     }
-    minLength /= 2.f;
+    if (jnd < 3) {
+      errStr = "Cannot find three well-separated corners of the chosen polygon";
+      return 1;
+    }
+    SEMTrace('q', "Corner points %d  %d  %d", cornInd[0], cornInd[1], cornInd[2]);
+    mNumRefinePoints = 3;
+  } else {
+
+    // Or set up for single point
+    mRRGxStages[0] = inItem->mStageX;
+    mRRGyStages[0] = inItem->mStageY;
+    mWinApp->mMainView->ExternalStageToImage(&mImBufs[mMapBuf], aMat, delX,
+      delY, mRRGxStages[0], mRRGyStages[0], mRefineXinImage[0],
+      mRefineYinImage[0]);
+    mNumRefinePoints = 1;
   }
-  if (jnd < 3) {
-    errStr = "Cannot find three well-separated corners of the chosen polygon";
-    return 1;
-  }
-  SEMTrace('q', "Corner points %d  %d  %d", cornInd[0], cornInd[1], cornInd[2]);
 
   if (mWinApp->LowDoseMode())
     mScope->GotoLowDoseArea(ldArea);
@@ -2177,7 +2214,7 @@ void CMultiGridTasks::RefineRealignNextTask(int param)
       SEMMessageBox("Error aligning to grid map: " + errStr);
       return;
     }
-    mWinApp->ToggleBuffers(1, 300, 6, 10);
+    mWinApp->ToggleBuffers(1, 300, 8, 10);
 
     // Get shift and equivalent stage position
     mImBufs->mImage->getShifts(xShift, yShift);
@@ -2199,77 +2236,92 @@ void CMultiGridTasks::RefineRealignNextTask(int param)
       xStage - mRRGxStages[mRefineStepIndex], yStage - mRRGyStages[mRefineStepIndex]);
 
     // Move to next
-    if (mRefineStepIndex < 2) {
-      mRefineStepIndex++;
+    mRefineStepIndex++;
+    if (mRefineStepIndex < mNumRefinePoints) {
       MoveStageForRefineMapAlign();
       return;
     }
 
     // Or finish up with result
     // Get the shift amounts
-    for (ind = 0; ind < 3; ind++) {
+    for (ind = 0; ind < mNumRefinePoints; ind++) {
       xDeltas[ind] = mRRGnewXstage[ind] - mRRGxStages[ind];
       yDeltas[ind] = mRRGnewYstage[ind] - mRRGyStages[ind];
     }
 
-    // Compute difference between each pair of shifts and keep track of pair with minimum
-    for (ind = 0; ind < 3; ind++) {
-      delDiffs[ind] = sqrtf(powf(xDeltas[(ind + 1) % 3] - xDeltas[ind], 2.f) +
-        powf(yDeltas[(ind + 1) % 3] - yDeltas[ind], 2.f));
-      if (!ind || delDiffs[ind] < minDiff) {
-        minDiff = delDiffs[ind];
-        twoInd = ind;
-      }
-      if (!ind || delDiffs[ind] > maxDiff) {
-        maxDiff = delDiffs[ind];
-        maxInd = ind;
-      }
-    }
-    for (ind = 0; ind < 3; ind++)
-      if (ind != maxInd && ind != twoInd)
-        midInd = ind;
-    SEMTrace('q', "Differences between shifts: %.3f  %.3f  %.3f", minDiff,
-      delDiffs[midInd], maxDiff);
-    StopMultiGrid();
+    if (mNumRefinePoints == 1) {
 
-    // If applying and it exceeds limit, report that as error
-    if (mMaxRefineDiff > 0)
-      badDiffCrit = mMaxRefineDiff;
-    if (mMaxRefineDiff >= 0. && minDiff > badDiffCrit) {
-      errStr.Format("Differences between all three shifts exceed %.1f microns, items "
-            "are not being shifted", minDiff);
-      SEMMessageBox(errStr);
+      // Shift or just report for single point
+      if (mMaxRefineDiff >= 0.) {
+        ind = mNavigator->ShiftItemsAtRegistration(xDeltas[0], yDeltas[0],
+          mNavigator->GetCurrentRegistration(), 0);
+        PrintfToLog("%d items shifted by %.2f  %.2f microns", ind, xDeltas[0], 
+          yDeltas[0]);
+      } else {
+        PrintfToLog("Shift was %.2f  %.2f microns", xDeltas[0], yDeltas[0]);
+      }
     } else {
 
-      // Otherwise average two or three positions
-      if (delDiffs[midInd] > useTwoCritFac * minDiff && maxDiff > useTwoAbsCrit)
-        drop = (twoInd + 2) % 3;
-      xShift = yShift = 0.;
+      // Compute difference between each pair of shifts and keep track of pair with minimum
       for (ind = 0; ind < 3; ind++) {
-        if (ind != drop) {
-          errStr.Format("  %.2f, %.2f", xDeltas[ind], yDeltas[ind]);
-          diffStr += errStr;
-          xShift += xDeltas[ind];
-          yShift += yDeltas[ind];
-        } else {
-          dropStr.Format("  (dropped %.2f, %.2f)", xDeltas[ind], yDeltas[ind]);
+        delDiffs[ind] = sqrtf(powf(xDeltas[(ind + 1) % 3] - xDeltas[ind], 2.f) +
+          powf(yDeltas[(ind + 1) % 3] - yDeltas[ind], 2.f));
+        if (!ind || delDiffs[ind] < minDiff) {
+          minDiff = delDiffs[ind];
+          twoInd = ind;
+        }
+        if (!ind || delDiffs[ind] > maxDiff) {
+          maxDiff = delDiffs[ind];
+          maxInd = ind;
         }
       }
-      xShift /= (drop < 0 ? 3.f : 2.f);
-      yShift /= (drop < 0 ? 3.f : 2.f);
-      diffStr += dropStr;
+      for (ind = 0; ind < 3; ind++)
+        if (ind != maxInd && ind != twoInd)
+          midInd = ind;
+      SEMTrace('q', "Differences between shifts: %.3f  %.3f  %.3f", minDiff,
+        delDiffs[midInd], maxDiff);
 
-      // Shift or just report
-      if (mMaxRefineDiff >= 0.) {
-        ind = mNavigator->ShiftItemsAtRegistration(xShift, yShift,
-          mNavigator->GetCurrentRegistration(), 0);
-        PrintfToLog("%d items shifted by %.2f  %.2f microns from average at %d positions:"
-          "%s", ind, xShift, yShift, drop < 0 ? 3 : 2, (LPCTSTR)diffStr);
+      // If applying and it exceeds limit, report that as error
+      if (mMaxRefineDiff > 0)
+        badDiffCrit = mMaxRefineDiff;
+      if (mMaxRefineDiff >= 0. && minDiff > badDiffCrit) {
+        errStr.Format("Differences between all three shifts exceed %.1f microns, items "
+          "are not being shifted", minDiff);
+        SEMMessageBox(errStr);
       } else {
-        PrintfToLog("Average shift was %.2f  %.2f microns at %d positions:%s",
-          xShift, yShift, drop < 0 ? 3 : 2, (LPCTSTR)diffStr);
+
+        // Otherwise average two or three positions
+        if (delDiffs[midInd] > useTwoCritFac * minDiff && maxDiff > useTwoAbsCrit)
+          drop = (twoInd + 2) % 3;
+        xShift = yShift = 0.;
+        for (ind = 0; ind < 3; ind++) {
+          if (ind != drop) {
+            errStr.Format("  %.2f, %.2f", xDeltas[ind], yDeltas[ind]);
+            diffStr += errStr;
+            xShift += xDeltas[ind];
+            yShift += yDeltas[ind];
+          } else {
+            dropStr.Format("  (dropped %.2f, %.2f)", xDeltas[ind], yDeltas[ind]);
+          }
+        }
+        xShift /= (drop < 0 ? 3.f : 2.f);
+        yShift /= (drop < 0 ? 3.f : 2.f);
+        diffStr += dropStr;
+
+        // Shift or just report
+        if (mMaxRefineDiff >= 0.) {
+          ind = mNavigator->ShiftItemsAtRegistration(xShift, yShift,
+            mNavigator->GetCurrentRegistration(), 0);
+          PrintfToLog("%d items shifted by %.2f  %.2f microns from average at %d positions:"
+            "%s", ind, xShift, yShift, drop < 0 ? 3 : 2, (LPCTSTR)diffStr);
+        } else {
+          PrintfToLog("Average shift was %.2f  %.2f microns at %d positions:%s",
+            xShift, yShift, drop < 0 ? 3 : 2, (LPCTSTR)diffStr);
+        }
       }
     }
+    mWinApp->FinishBufferToggles();
+    StopMultiGrid();
   }
 }
 
@@ -2497,7 +2549,7 @@ int CMultiGridTasks::StartGridRuns(int LMneedsLD, int MMMneedsLD, int finalNeeds
 
       // Make sure polygons exist for refine operation or for polygon montage
       doPolyMonts = mParams.acquireMMMs && mParams.MMMimageType == 1;
-      if (doRefine || doPolyMonts) {
+      if ((doRefine && !mParams.refineWithNavItem) || doPolyMonts) {
         numAcq = 0;
         numPoly = 0;
         itemArray = mNavigator->GetItemArray();
@@ -2519,7 +2571,7 @@ int CMultiGridTasks::StartGridRuns(int LMneedsLD, int MMMneedsLD, int finalNeeds
             }
           }
         }
-        if (doRefine && !numAcq) {
+        if (doRefine && !mParams.refineWithNavItem && !numAcq) {
           str.Format("There are no polygons suitable for refining grid alignment in the"
             " Navigator file for grid # %d", jcd.id);
           SEMMessageBox(str);
@@ -2530,6 +2582,27 @@ int CMultiGridTasks::StartGridRuns(int LMneedsLD, int MMMneedsLD, int finalNeeds
             "there are no polygons marked for acquisition in the"
             " Navigator file for grid # %d", jcd.id);
           SEMMessageBox(str);
+          return 1;
+        }
+      }
+
+      if (doRefine &&  mParams.refineWithNavItem) {
+        if (mParams.refineItemNote.IsEmpty()) {
+          SEMMessageBox("There is no note set to specify item to refine grid alignment"
+            " at");
+          return 1;
+        }
+        ind = mNavHelper->FindNearestItemMatchingText(0., 0., mParams.refineItemNote,
+          true);
+        if (ind < 0) {
+          SEMMessageBox("Cannot find Navigator item with note starting with " +
+            mParams.refineItemNote);
+          return 1;
+        }
+        item = itemArray->GetAt(ind);
+        if (item->IsMap()) {
+          SEMMessageBox("The Navigator item picked for refining grid alignment is a map"
+            " and must be a polygon or point");
           return 1;
         }
       }
@@ -4555,9 +4628,22 @@ int CMultiGridTasks::RefineGridMapAlignment(int jcdInd, int stateNum, bool askIf
   CMapDrawItem *item;
   StateParams *state;
   BOOL inLD = mWinApp->LowDoseMode();
-  int ldArea, consNum = RECORD_CONSET;
+  int otherInd, ldArea, consNum = RECORD_CONSET;
   if (PrepareAlignToGridMap(jcdInd, askIfSave, &item, errStr))
     return 1;
+  if (mParams.refineWithNavItem) {
+    otherInd = mNavHelper->FindNearestItemMatchingText(0., 0., mParams.refineItemNote,
+      true);
+    if (otherInd < 0) {
+      errStr = "Cannot find item with Note starting with " + mParams.refineItemNote;
+      return 1;
+    }
+    item = mNavigator->GetOtherNavItem(otherInd);
+    if (item->IsMap()) {
+      errStr = "The item found for refining grid alignment is a map";
+      return 1;
+    }
+  }
   if (mParams.refineImageType < 2) {
     consNum = mParams.refineImageType ? VIEW_CONSET : SEARCH_CONSET;
     if (!inLD) {

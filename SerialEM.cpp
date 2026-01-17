@@ -3283,7 +3283,6 @@ BOOL CSerialEMApp::CheckIdleTasks()
       break;
     }
   }
-
   ManageBlinkingPane(time);
 
   return bRtn;
@@ -3953,10 +3952,10 @@ void CSerialEMApp::FinishBufferToggles()
   int firstWait = mBufToggleInterval - (int)SEMTickInterval(mLastToggleTime);
   while (mBufToggleCount > mMaxTogglesLeft) {
     if (firstWait > 0)
-      Sleep(firstWait);
+      SleepMsg(firstWait);
     firstWait = 0;
     SetCurrentBuffer(mMainView->GetImBufIndex() > 0 ? 0 : mBufToToggle);
-    Sleep(mBufToggleInterval);
+    SleepMsg(mBufToggleInterval);
     mBufToggleCount--;
   }
   mBufToggleCount = 0;

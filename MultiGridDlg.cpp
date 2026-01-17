@@ -51,7 +51,7 @@ static int sIdTable[] = {IDC_STAT_RUN, IDC_STAT_NAME, IDC_BUT_CLOSE_ALL, PANEL_E
   IDC_BUT_SET_ORDER, IDC_BUT_RESET_ORDER, IDC_BUT_OPEN_LOGS, IDC_RREFINE_VIEW,
   IDC_RREFINE_SEARCH, IDC_RREFINE_STATE, IDC_CHECK_MG_REFINE, IDC_COMBO_REFINE_STATE,
   IDC_BUT_REALIGN_TO_GRID_MAP, IDC_BUT_OPEN_NAV, IDC_BUT_SET_GRID_TYPE,
-  IDC_STAT_REFINE_FOV, PANEL_END,
+  IDC_STAT_REFINE_FOV, IDC_EDIT_MG_REFINE_NOTE, IDC_CHECK_MG_REF_USE_PT, PANEL_END,
   IDC_BUT_MG_SETUP, IDC_STAT_MG_GRID_SETUP, IDC_TSS_LINE4, PANEL_END,
   IDC_BUT_MG_GET_NAMES, IDC_BUT_MG_INVENTORY, IDC_STAT_MG_PREFIX,
   IDC_EDIT_MG_PREFIX, IDC_CHECK_MG_APPEND_NAME, IDC_BUT_MG_CLEAR,
@@ -117,6 +117,8 @@ CMultiGridDlg::CMultiGridDlg(CWnd* pParent /*=NULL*/)
   , m_strRefineFOV(_T(""))
   , m_iC1orC2(0)
   , m_iVectorSource(0)
+  , m_bRefineUseItem(FALSE)
+  , m_strRefineNote(_T(""))
 {
   mNonModal = true;
   for (int ind = 0; ind < MAX_MULGRID_PANELS; ind++)
@@ -197,6 +199,8 @@ void CMultiGridDlg::DoDataExchange(CDataExchange* pDX)
   DDX_Text(pDX, IDC_STAT_REFINE_FOV, m_strRefineFOV);
   DDX_Radio(pDX, IDC_RSET_C1_APERTURE, m_iC1orC2);
   DDX_Radio(pDX, IDC_RVECTORS_FROM_MAPS, m_iVectorSource);
+  DDX_Check(pDX, IDC_CHECK_MG_REF_USE_PT, m_bRefineUseItem);
+  DDX_Text(pDX, IDC_EDIT_MG_REFINE_NOTE, m_strRefineNote);
 }
 
 
@@ -281,6 +285,7 @@ BEGIN_MESSAGE_MAP(CMultiGridDlg, CBaseDlg)
   ON_BN_CLICKED(IDC_RSET_C2_APERTURE, OnRsetC1Aperture)
   ON_BN_CLICKED(IDC_RVECTORS_FROM_MAPS, OnRvectorsFromMaps)
   ON_BN_CLICKED(IDC_RVECTORS_FROM_SETTINGS, OnRvectorsFromMaps)
+  ON_BN_CLICKED(IDC_CHECK_MG_REF_USE_PT, OnCheckMgRefUsePt)
 END_MESSAGE_MAP()
 
 
@@ -350,7 +355,7 @@ BOOL CMultiGridDlg::OnInitDialog()
     mParams.appendNames = false;
   }
 
-  // All hiding is in ManagePanelsq
+  // All hiding is in ManagePanels
   if (!mMGTasks->GetShowRefineAfterRealign() && !mMGTasks->GetSkipGridRealign())
     mParams.refineAfterRealign = false;
   ParamsToDialog();
@@ -392,6 +397,8 @@ void CMultiGridDlg::OnOK()
 {
   CString errStr;
   SyncToMasterParams();
+  if (CheckEmptyRefineNote())
+    return;
   if (!mMGTasks->GetNamesLocked())
     mMGTasks->SetPrefix(m_strPrefix);
   if (mNumUsedSlots)
@@ -739,6 +746,14 @@ void CMultiGridDlg::OnRRefineRealign()
   ManageRefineFOV();
 }
 
+// Toggle using other Nav item for the refine
+void CMultiGridDlg::OnCheckMgRefUsePt()
+{
+  UPDATE_DATA_TRUE;
+  UpdateEnables();
+  mWinApp->RestoreViewFocus();
+}
+
 // New prefix characters are entered: fix them up
 void CMultiGridDlg::OnEnChangeEditMgPrefix()
 {
@@ -1074,6 +1089,8 @@ void CMultiGridDlg::UpdateEnables()
   EnableDlgItem(IDC_RREFINE_STATE, m_bRefineRealign && !tasks);
   EnableDlgItem(IDC_COMBO_REFINE_STATE, m_bRefineRealign && m_iRefineRealign == 2 &&
     !tasks);
+  EnableDlgItem(IDC_CHECK_MG_REF_USE_PT, m_bRefineRealign && !tasks);
+  EnableDlgItem(IDC_EDIT_REFINE_NOTE, m_bRefineRealign && m_bRefineUseItem && !tasks);
   EnableDlgItem(IDC_COMBO_LMM_STATE, m_bSetLMMstate && !tasks);
   EnableDlgItem(IDC_EDIT_CONDENSER, m_bSetCondenser && !tasks);
   EnableDlgItem(IDC_RSET_C1_APERTURE, m_bSetCondenser && !tasks);
@@ -1201,7 +1218,8 @@ void CMultiGridDlg::ManagePanels()
     IDC_CHECK_TOGGLE_ALL, IDC_BUT_RESET_ORDER, IDC_BUT_SET_ORDER, IDC_STAT_NOTE,
   IDC_EDIT_GRID_NOTE};
   UINT refineIDs[] = {IDC_CHECK_MG_REFINE, IDC_RREFINE_SEARCH, IDC_RREFINE_VIEW,
-    IDC_RREFINE_STATE, IDC_COMBO_REFINE_STATE, IDC_STAT_REFINE_FOV};
+    IDC_RREFINE_STATE, IDC_COMBO_REFINE_STATE, IDC_STAT_REFINE_FOV, 
+    IDC_CHECK_MG_REF_USE_PT, IDC_EDIT_MG_REFINE_NOTE};
   UINT MMMcomboIDs[4] = {IDC_COMBO_MMM_STATE1, IDC_COMBO_MMM_STATE2, IDC_COMBO_MMM_STATE3,
     IDC_COMBO_MMM_STATE4};
   UINT finalComboIDs[4] = {IDC_COMBO_FINAL_STATE1, IDC_COMBO_FINAL_STATE2,
@@ -1251,6 +1269,8 @@ void CMultiGridDlg::ParamsToDialog()
   m_bUseSubdirs = locked ? mMGTasks->GetUseSubdirs() : mParams.useSubdirectory;
   m_bRefineRealign = mParams.refineAfterRealign;
   m_iRefineRealign = mParams.refineImageType;
+  m_bRefineUseItem = mParams.refineWithNavItem;
+  m_strRefineNote = mParams.refineItemNote;
   m_bSetLMMstate = mParams.setLMMstate;
   m_iLMMacquireType = mParams.LMMstateType;
   m_bRemoveObjective = mParams.removeObjectiveAp;
@@ -1313,6 +1333,8 @@ void CMultiGridDlg::DialogToParams()
   mParams.macroToRun = mMacNumAtEnd;
   mParams.refineAfterRealign = m_bRefineRealign;
   mParams.refineImageType = m_iRefineRealign;
+  mParams.refineWithNavItem = m_bRefineUseItem;
+  mParams.refineItemNote = m_strRefineNote;
   GetStateFromComboBox(m_comboRefineState, mParams.refineStateNum,
     mParams.refineStateName, 0);
   GetStateFromComboBox(m_comboMMMstate1, mParams.MMMstateNums[0],
@@ -3161,6 +3183,8 @@ void CMultiGridDlg::DoStartRun(bool undoneOnly)
   mWinApp->RestoreViewFocus();
   DialogToParams();
   *mMasterParams = mParams;
+  if ((m_bTakeMMMs || m_bRunFinalAcq) && CheckEmptyRefineNote())
+    return;
   if (m_bTakeLMMs) {
     montP = mMGTasks->GetGridMontParam();
     sizesMatch = MontSetupSizesMatch(montP, montP->setupInLowDose,
@@ -3194,4 +3218,15 @@ void CMultiGridDlg::DoStartRun(bool undoneOnly)
   }
   mMGTasks->StartGridRuns(mLMneedsLowDose, mMMMneedsLowDose, finalNeedsLowDose,
     stateCamera < 0 ? mWinApp->GetCurrentCamera() : stateCamera, undoneOnly);
+}
+
+// Make sure there is a note entry if one is needed
+int CMultiGridDlg::CheckEmptyRefineNote()
+{
+  if (m_bRefineRealign && m_bRefineUseItem && m_strRefineNote.IsEmpty()) {
+    AfxMessageBox("For refining grid alignment at a Navigator item, you must have"
+      " an entry in the text box for the start of the item\'s Note", MB_EXCLAME);
+    return 1;
+  }
+  return 0;
 }

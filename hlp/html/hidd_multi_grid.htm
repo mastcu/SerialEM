@@ -335,8 +335,9 @@
     <p>These options are shown if either the &#39;ShowMulGridRefine&#39; or the 
       &#39;MulGridSkipRealign&#39; property is set non-zero and allow the grid alignment to be 
       refined by correlating images at a medium magnification with scaled up portions 
-      of the grid map.&nbsp; The routine is designed to align to three corners of one 
-      mesh opening.&nbsp; It does not currently try to detect these openings but 
+      of the grid map.&nbsp; The routine was originally designed to align to three corners of one 
+      mesh opening, but has been modified to align to a single point at a well-defined 
+      feature.&nbsp; It does not currently try to detect these openings but 
       instead relies on polygons that have been drawn on the map, either ones produced 
       by autocontouring or manually drawn ones smaller than 250 microns in size.&nbsp; 
       The accuracy deteriorates for mesh openings farther away from the center of a 
@@ -344,8 +345,8 @@
       the particular location.&nbsp; The routine thus tries to use an opening near the 
       center of a montage piece if possible.&nbsp; It will favor using a montage piece 
       close to the centroid of all polygons, but may use a different piece if the best 
-      polygon is much closer to the center of its piece.&nbsp; If you have to add 
-      polygons manually to enable use of this routine, try to put them near the 
+      polygon is much closer to the center of its piece.&nbsp; If you have to add a polygon 
+      or a point manually to enable use of this routine, try to put them near the 
       centers of montage pieces.</p>
     <p>The routine requires images or montages with a field of view (FOV) bigger than 
       a value that can be set with the property &#39;MulGridRefineMinField&#39;, with a 
@@ -355,6 +356,18 @@
       of the 3 corners.&nbsp; On the right side of the line with this option, there is an indicator of the 
       FOV that will be acquired with the selected method, including &#39;in 2x3&#39; or other 
       numbers if a montage will be taken.</p>
+    <p>The refinement can be done using a <strong>Search</strong> or <strong>View</strong> 
+      image with current parameters or with a selected <strong>state</strong> for Low 
+      Dose View or Search.</p>
+    <p>If the option to <strong>Refine using Nav item, note starting with</strong> is 
+      checked, then a Navigator point or polygon whose Note starts with the given 
+      entry is used for alignment.&nbsp; If the item is a polygon, it should be drawn 
+      at the boundaries of a mesh opening, just like an autocontoured polygon, and the 
+      routine will try to align to three corners of the opening.&nbsp; If it is a 
+      point, it should be marked on a well-defined high-contrast feature, preferably 
+      not near a grid bar; in this case the routine will just align to that point.&nbsp; 
+      In either case, the alignment will be to a scaled up image from the map that the 
+      item is drawn on, which need not be the grid map.&nbsp; </p>
     <p>When this option is checked with the &#39;ShowMulGridRefine&#39; property set, the 
       program will run the refinement after the low mag realign to the grid map when 
       running multiple grids, and will also run it after acquiring a grid map when going 

@@ -913,6 +913,8 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
           mgParams->C1orC2condenserAp = itemInt[26];
         if (!itemEmpty[27])
           mgParams->msVectorSource = itemInt[27];
+        if (!itemEmpty[28])
+          mgParams->refineWithNavItem = itemInt[28] != 0;
 
       } else if (strItems[0].Find("MG") == 0 && (strItems[0].Find("MMMstate") == 2 ||
         strItems[0].Find("State") == 7)) {
@@ -934,7 +936,8 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
         mgParams->refineStateNum = itemInt[1];
         if (!itemEmpty[2])
           StripItems(strLine, 2, mgParams->refineStateName);
-
+      } else if (NAME_IS("MGRefItemNote")) {
+        StripItems(strLine, 1, mgParams->refineItemNote);
       } else if (NAME_IS("MGSessionFile")) {
         StripItems(strLine, 1, message);
         mWinApp->mMultiGridTasks->SetLastSessionFile(message);
@@ -2121,7 +2124,7 @@ void CParameterIO::WriteSettings(CString strFileName)
       snapParams->compression, snapParams->jpegQuality, snapParams->skipOverlays);
     mFile->WriteString(oneState);
     oneState.Format("MultiGridParams %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d"
-      " %d %d %d %d %d %d %d %d %d %d\n", mgParams->appendNames ? 1 : 0,
+      " %d %d %d %d %d %d %d %d %d %d %d\n", mgParams->appendNames ? 1 : 0,
       mgParams->useSubdirectory ? 1 : 0, mgParams->setLMMstate ? 1 : 0,
       mgParams->LMMstateType, mgParams->removeObjectiveAp ? 1 : 0,
       mgParams->setCondenserAp ? 1 : 0, mgParams->condenserApSize, mgParams->LMMmontType,
@@ -2132,7 +2135,8 @@ void CParameterIO::WriteSettings(CString strFileName)
       mgParams->runFinalAcq ? 1 : 0, mgParams->MMMnumXpieces, mgParams->MMMnumYpieces,
       mgParams->framesUnderSession ? 1 : 0, mgParams->runMacroAfterLMM ? 1 : 0,
       mgParams->macroToRun, mgParams->refineAfterRealign ? 1 : 0, 
-      mgParams->refineImageType, mgParams->C1orC2condenserAp, mgParams->msVectorSource);
+      mgParams->refineImageType, mgParams->C1orC2condenserAp, mgParams->msVectorSource,
+      mgParams->refineWithNavItem ? 1 : 0);
     mFile->WriteString(oneState);
     oneState.Format("MGLMMstate %d %s\n", mgParams->LMMstateNum,
       (LPCTSTR)mgParams->LMMstateName);
@@ -2140,6 +2144,8 @@ void CParameterIO::WriteSettings(CString strFileName)
     oneState.Format("MGREFstate %d %s\n", mgParams->refineStateNum,
       (LPCTSTR)mgParams->refineStateName);
     mFile->WriteString(oneState);
+    if (!mgParams->refineItemNote.IsEmpty())
+      mFile->WriteString("MGRefItemNote " + mgParams->refineItemNote + "\n");
     for (i = 0; i < 4; i++) {
       if (mgParams->MMMstateNums[i] >= 0) {
         oneState.Format("MGMMMstate%d %d %s\n", i + 1, mgParams->MMMstateNums[i],

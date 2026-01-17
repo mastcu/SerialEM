@@ -213,6 +213,7 @@ public:
   afx_msg void OnButSetupAutocont();
   afx_msg void OnButStartRun();
   void DoStartRun(bool undoneOnly);
+  int CheckEmptyRefineNote();
   CComboBox m_comboMMMstate4;
   CComboBox m_comboFinalState4;
   afx_msg void OnCheckMulgridRun(UINT nID);
@@ -254,4 +255,7 @@ public:
   afx_msg void OnRsetC1Aperture();
   afx_msg void OnRvectorsFromMaps();
   int m_iVectorSource;
+  BOOL m_bRefineUseItem;
+  afx_msg void OnCheckMgRefUsePt();
+  CString m_strRefineNote;
 };
