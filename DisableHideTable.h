@@ -90,21 +90,21 @@ static DisableHideItem sDisableHideList[] =
   {"LowDoseDlg - Continuous update", 2, 0, IDC_CONTINUOUSUPDATE},
   {"LowDoseDlg - Added beam Shift", 2, 1, IDC_SET_BEAM_SHIFT},  // Must include the group too
   {"LowDoseDlg - Added beam group", 2, 0, IDC_STAT_ADD_SHIFT_BOX},
-  // Offsets section: first three will hide it completely
-  {"LowDoseDlg - Offsets View", 2, 1, IDC_RVIEW_OFFSET},
+  // Offsets section: first four will hide it completely but will leave vertical line and some space
   {"LowDoseDlg - Offsets Def spin", 2, 1, IDC_SPINVIEWDEFOCUS},
-  {"LowDoseDlg - Offsets line 5", 2, 0, IDC_STAT_LDCP_LINE5},
-  {"LowDoseDlg - Offsets group", 2, 0, IDC_STAT_VS_OFFSETS}, // Otherwise use entries for single items
-  {"LowDoseDlg - Offsets line 1", 2, 0, IDC_STAT_LDCP_LINE1},
-  {"LowDoseDlg - Offsets line 2", 2, 0, IDC_STAT_LDCP_LINE2},
-  {"LowDoseDlg - Offsets line 3", 2, 0, IDC_STAT_LDCP_LINE3},
-  {"LowDoseDlg - Offsets line 4", 2, 0, IDC_STAT_LDCP_LINE4},
-  {"LowDoseDlg - Offsets Search", 2, 0, IDC_RSEARCH_OFFSET},
-  {"LowDoseDlg - Offsets Shift label", 2, 0, IDC_STAT_VS_SHIFT},
-  {"LowDoseDlg - Offsets Set", 2, 0, IDC_SET_VIEW_SHIFT},
+  {"LowDoseDlg - Offsets Search spin", 2, 1, IDC_SPINSEARCHDEFOCUS},
+  {"LowDoseDlg - Offsets group", 2, 0, IDC_STATVS_BOX}, 
+  {"LowDoseDlg - Offsets Setup Auto", 2, 0, IDC_SETUP_AUTO_SHIFT},
+  {"LowDoseDlg - Offsets Set", 2, 0, IDC_SET_VIEW_SHIFT}, // Otherwise use entries for single items
   {"LowDoseDlg - Offsets Zero", 2, 0, IDC_ZERO_VIEW_SHIFT},
+  {"LowDoseDlg - Offsets Auto View", 2, 0, IDC_AUTO_VIEW_SHIFT},
+  {"LowDoseDlg - Offsets Set Search", 2, 0, IDC_SET_SEARCH_SHIFT},
+  {"LowDoseDlg - Offsets Zero Search", 2, 0, IDC_ZERO_SEARCH_SHIFT},
+  {"LowDoseDlg - Offsets Auto Search", 2, 0, IDC_AUTO_SEARCH_SHIFT},
   {"LowDoseDlg - Offsets Def label", 2, 0, IDC_STATVIEWDEFLABEL},
   {"LowDoseDlg - Offsets Def value", 2, 0, IDC_STATVIEWDEFOCUS},
+  {"LowDoseDlg - Offsets Search label", 2, 0, IDC_STAT_VS_SHIFT},
+  {"LowDoseDlg - Offsets Search value", 2, 0, IDC_STATSEARCHDEFOCUS},
   // Camera & Script panel
   {"CameraScript - Focus", 2, 0, IDC_BUT_FOCUS},
   {"CameraScript - Trial", 2, 0, IDC_BUT_TRIAL},
