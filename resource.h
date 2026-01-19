@@ -2637,6 +2637,21 @@
 #define IDC_EDIT_MG_REFINE_NOTE         3668
 #define IDC_STAT_APERTURES              3669
 #define IDC_STAT_APER_LABEL             3670
+#define IDC_CENTER_ADDED_HOLES          3671
+#define IDC_RALIGNTOTEMPLATE            3672
+#define IDC_RFINDANDCENTERHOLE          3673
+#define IDC_RALIGN_FCH_MAP              3674
+#define IDC_RALIGN_FCH_SEARCH           3675
+#define IDC_RALIGN_FCH_VIEW             3676
+#define IDC_EDIT_ALIGN_FCH_SPACING      3677
+#define IDC_STATIC_ALIGN_ATNAVITEM      3678
+#define IDC_STATIC_FCH_ACQUIREWITH      3679
+#define IDC_STATIC_FCH_TITLE            3680
+#define IDC_STATIC_FCH_CROPIMAGETO      3681
+#define IDC_STATIC_FCH_HOLESPACINGS     3682
+#define IDC_STATIC_ALIGNORCENTERTITLE   3683
+#define IDC_STAT_LINE16                 3684
+#define IDC_STAT_LINE17                 3685
 #define ID_NEW_IMAGE                    32771
 #define IDM_FILE_SAVEOTHER              32772
 #define IDM_FILE_READ                   32773
@@ -3232,7 +3247,7 @@
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        301
 #define _APS_NEXT_COMMAND_VALUE         33560
-#define _APS_NEXT_CONTROL_VALUE         3671
+#define _APS_NEXT_CONTROL_VALUE         3686
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif
