@@ -90,19 +90,20 @@ static DisableHideItem sDisableHideList[] =
   {"LowDoseDlg - Continuous update", 2, 0, IDC_CONTINUOUSUPDATE},
   {"LowDoseDlg - Added beam Shift", 2, 1, IDC_SET_BEAM_SHIFT},  // Must include the group too
   {"LowDoseDlg - Added beam group", 2, 0, IDC_STAT_ADD_SHIFT_BOX},
-  // Offsets section: first four will hide it completely but will leave vertical line and some space
-  {"LowDoseDlg - Offsets Def spin", 2, 1, IDC_SPINVIEWDEFOCUS},
+  // Offsets section: first five will hide it completely
+  {"LowDoseDlg - Offsets Def spin", 2, 1, IDC_SPINVIEWDEFOCUS},  // Just View
   {"LowDoseDlg - Offsets Search spin", 2, 1, IDC_SPINSEARCHDEFOCUS},
-  {"LowDoseDlg - Offsets group", 2, 0, IDC_STATVS_BOX}, 
-  {"LowDoseDlg - Offsets Setup Auto", 2, 0, IDC_SETUP_AUTO_SHIFT},
-  {"LowDoseDlg - Offsets Set", 2, 0, IDC_SET_VIEW_SHIFT}, // Otherwise use entries for single items
-  {"LowDoseDlg - Offsets Zero", 2, 0, IDC_ZERO_VIEW_SHIFT},
-  {"LowDoseDlg - Offsets Auto View", 2, 0, IDC_AUTO_VIEW_SHIFT},
+  {"LowDoseDlg - Offsets group", 2, 0, IDC_STATVS_BOX},  // JUST Defocus
+  {"LowDoseDlg - Offsets Shift group", 2, 0, IDC_STATVS_SHIFT_BOX},
+  {"LowDoseDlg - Offsets Setup Auto", 2, 0, IDC_SETUP_AUTO_SHIFT}, // Otherwise use entries for single items
+  {"LowDoseDlg - Offsets Set", 2, 0, IDC_SET_VIEW_SHIFT},   // Just view
+  {"LowDoseDlg - Offsets Zero", 2, 0, IDC_ZERO_VIEW_SHIFT},   // Just View
+  {"LowDoseDlg - Offsets Auto View", 2, 0, IDC_AUTO_VIEW_SHIFT},   // Just View
   {"LowDoseDlg - Offsets Set Search", 2, 0, IDC_SET_SEARCH_SHIFT},
   {"LowDoseDlg - Offsets Zero Search", 2, 0, IDC_ZERO_SEARCH_SHIFT},
   {"LowDoseDlg - Offsets Auto Search", 2, 0, IDC_AUTO_SEARCH_SHIFT},
-  {"LowDoseDlg - Offsets Def label", 2, 0, IDC_STATVIEWDEFLABEL},
-  {"LowDoseDlg - Offsets Def value", 2, 0, IDC_STATVIEWDEFOCUS},
+  {"LowDoseDlg - Offsets Def label", 2, 0, IDC_STATVIEWDEFLABEL},   // Just View
+  {"LowDoseDlg - Offsets Def value", 2, 0, IDC_STATVIEWDEFOCUS},    // Just View
   {"LowDoseDlg - Offsets Search label", 2, 0, IDC_STAT_VS_SHIFT},
   {"LowDoseDlg - Offsets Search value", 2, 0, IDC_STATSEARCHDEFOCUS},
   // Camera & Script panel
