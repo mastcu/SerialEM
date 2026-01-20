@@ -144,6 +144,8 @@ private:
   int mEMmode;          // 0 for TEM, 1 for EFTEM, 2 for STEM, 3 for DIFF
   bool mShowVacInEMmode;  // Flag to show vacuum for JEOL in EM mode spot
   bool mEMmodeChanged;  // Flag that mode changed
+  int mLastCondenserAp; // Aperture values last put out
+  int mLastObjectiveAp;
 
 public:
   CScreenMeter *mScreenMeter;
@@ -170,6 +172,9 @@ public:
   GetMember(int, VacStatus);
   CString m_strProbeAlf;
   CStatic m_statProbeAlf;
+  CStatic m_statApertures;
+  CStatic m_statAperLabel;
+  CString m_strApertures;
 };
 
 //{{AFX_INSERT_LOCATION}}

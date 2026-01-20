@@ -3,6 +3,12 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+1/19/25: Added optional line to Scope Status panel to show the condenser and
+objective apertures, enabled by property ShowApertureStatus.
+
+1/19/25: Added script command to find the nearest navigator item with a
+given label or note.
+
 1/16/26: In the routine to refine grid map alignment, accessed from multigrid
 dialog and RefineGridMapAlignment, added the ability to specify a polygon or
 point to realign at, aligning to the map that item is drawn on.

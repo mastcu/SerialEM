@@ -592,6 +592,10 @@ public:
   GetSetMember(int, LDFreeLensDelay);
   GetSetMember(int, OpenValvesDelay);
   GetSetMember(int, MonitorC2ApertureSize);
+  GetSetMember(int, ShowApertureStatus);
+  GetSetMember(int, LastCondenserAp);
+  GetMember(int, LastObjectiveAp);
+
   GetSetMember(BOOL, UseDetectorNameIfUtapi);
   static int GetScopeCallFromPlugin() {return mScopeCallFromPlugin ; };
   static void SetScopeCallFromPlugin(int val) { mScopeCallFromPlugin = val; };
@@ -1015,6 +1019,9 @@ private:
   int mLDFreeLensDelay;        // Delay time after setting FLC for an area, msec
   int mOpenValvesDelay;        // Delay time after opening column valves
   int mMonitorC2ApertureSize;  // Flag to keep aperture size up to date
+  int mShowApertureStatus;     // Put aperture state in scope panel, 2 update, 1 SEM-only
+  int mLastCondenserAp;        // Last known condenser aperture
+  int mLastObjectiveAp;        // Last known objective aperture
   BOOL mUseDetectorNameIfUtapi; // Use regular name if not going through Utapi
   int mAdvancedScriptVersion;  // My internal version number for advanced scripting
   int mPluginVersion;          // Version of plugin or server
@@ -1150,7 +1157,7 @@ public:
   void ApertureCleanup(int error);
   int StartApertureThread(const char *descrip);
   bool MovePhasePlateToNextPos();
-  int FindApertureSizeFromIndex(int apInd, int sizeInd);
+  int FindApertureSizeFromIndex(int apInd, int sizeInd, bool returnIndex = false);
   int FindApertureIndexFromSize(int apInd, int size);
   int FindApertureIndexFromSize(int apInd, int size, CString &errStr);
   BOOL RunSynchronousThread(int action, int newIndex, int curIndex, const char *routine);

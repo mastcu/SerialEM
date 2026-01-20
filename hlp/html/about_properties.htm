@@ -3108,6 +3108,18 @@
              default is 1 on Titans without UTAPI.
           </TD>
         </TR>
+        <TR>
+          <TD>ShowApertureStatus</TD>
+          <TD>Set to 1 or 2 to add a line to the Microscope Status panel showing the state of the 
+            condenser and objective apertures.&nbsp; For microscopes where aperture state can be found
+            by querying the scope, i.e., or Thermo/FEI with UTAPI interface or JEOL, either value can be used
+            and the scope will be polled every 5 seconds.&nbsp; For Thermo/FEI without UTAPI, use 1 to have
+            the value in the panel be updated whenever SerialEM reports or sets an aperture, or 2 to have
+            the value updated every 5 seconds, which will require the aperture panel to be visible in the
+            microscope user interface.&nbsp; For a JEOL scope without ApertureSizes entries, the aperture
+            index will be shown.&nbsp; Does not work for Hitachi.
+          </TD>
+        </TR>
           <TD>ApertureSizes</TD>
           <TD>Enter the index by which an aperture is controlled (see script command ReportApertureSize)
               followed by the list of integer aperture sizes in microns.&nbsp; Thus far this is used

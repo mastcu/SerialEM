@@ -21,6 +21,22 @@
 #define new DEBUG_NEW
 #endif
 
+static int sIdTable[] = {IDC_BUTOPEN, IDC_BUTFLOAT, IDC_BUTHELP, IDC_BUTFLOATDOCK, 
+IDC_STATTOPLINE, IDC_BUTDOSE, PANEL_END,
+IDC_BUTRESETDEFOCUS,
+IDC_STAT_DEFLABEL, IDC_STATXLM, IDC_MAGNIFICATION, IDC_DEFOCUS, IDC_STAT_UMMM,
+IDC_STATSPOTLABEL, IDC_SPOTSIZE, IDC_IMAGE_SHIFT, IDC_STAT_IS_UM, IDC_STATISORPS,
+IDC_STATVACUUM, IDC_BUTMORE, IDC_STAT_INTENSITY, IDC_STAT_C23IA, IDC_STAT_EM_MODE,
+IDC_STAT_PROBEALF, IDC_STAT_PCTUM, PANEL_END,
+IDC_STAT_XLABEL, IDC_STAT_STAGEX, IDC_STAT_YLABEL, IDC_STAT_ZLABEL,
+IDC_STAT_STAGEY, IDC_STAT_STAGEZ, IDC_STAT_UBPIX, IDC_RSPEC_DOSE, IDC_RCAM_DOSE,
+IDC_STAT_OBJLABEL, IDC_OBJECTIVE, IDC_STAT_DOSERATE, IDC_STAT_APER_LABEL, 
+IDC_STAT_APERTURES, PANEL_END, TABLE_END};
+
+static int sTopTable[sizeof(sIdTable) / sizeof(int)];
+static int sLeftTable[sizeof(sIdTable) / sizeof(int)];
+static int sHeightTable[sizeof(sIdTable) / sizeof(int)];
+
 /////////////////////////////////////////////////////////////////////////////
 // CScopeStatusDlg dialog
 
@@ -31,6 +47,7 @@ CScopeStatusDlg::CScopeStatusDlg(CWnd* pParent /*=NULL*/)
   , m_strEMmode(_T("EFTEM"))
   , m_iSpecVsCamDose(FALSE)
   , m_strProbeAlf(_T(""))
+  , m_strApertures(_T(""))
 {
   SEMBuildTime(__DATE__, __TIME__);
   //{{AFX_DATA_INIT(CScopeStatusDlg)
@@ -79,6 +96,8 @@ CScopeStatusDlg::CScopeStatusDlg(CWnd* pParent /*=NULL*/)
   mEnabledSpecCam = true;
   mCamDoseRate = -1.;
   mLastSpecCamDose = -1;
+  mLastCondenserAp = -1;
+  mLastObjectiveAp = -1;
 }
 
 
@@ -125,6 +144,9 @@ void CScopeStatusDlg::DoDataExchange(CDataExchange* pDX)
   DDX_Radio(pDX, IDC_RSPEC_DOSE, m_iSpecVsCamDose);
   DDX_Text(pDX, IDC_STAT_PROBEALF, m_strProbeAlf);
   DDX_Control(pDX, IDC_STAT_PROBEALF, m_statProbeAlf);
+  DDX_Control(pDX, IDC_STAT_APERTURES, m_statApertures);
+  DDX_Control(pDX, IDC_STAT_APER_LABEL, m_statAperLabel);
+  DDX_Text(pDX, IDC_STAT_APERTURES, m_strApertures);
 }
 
 
@@ -149,7 +171,9 @@ BOOL CScopeStatusDlg::OnInitDialog()
   HitachiParams *hitachi = mWinApp->GetHitachiParams();
   int medFontIDs[] = {IDC_STAT_DEFLABEL, IDC_STATISORPS, IDC_STAT_IS_UM, IDC_STATXLM,
     IDC_STAT_XLABEL, IDC_STAT_YLABEL, IDC_STAT_ZLABEL, IDC_STAT_OBJLABEL, IDC_STAT_UMMM,
-    IDC_STAT_UBPIX, IDC_STAT_C23IA, 0};
+    IDC_STAT_UBPIX, IDC_STAT_C23IA, IDC_STAT_APERTURES, IDC_STAT_APER_LABEL, 
+    IDC_STAT_STAGEX, IDC_STAT_STAGEY, IDC_STAT_STAGEZ, IDC_OBJECTIVE, IDC_STAT_DOSERATE,
+    0};
   int ind = 0;
   CWnd *win;
 
@@ -177,14 +201,9 @@ BOOL CScopeStatusDlg::OnInitDialog()
   m_statProbeAlf.SetFont(&mBigFont);
   m_statDefocus.SetFont(&mBigFont);
   m_statImageShift.SetFont(&mBigFont);
-  m_statStageX.SetFont(&mMedFont);
-  m_statStageY.SetFont(&mMedFont);
-  m_statStageZ.SetFont(&mMedFont);
   m_statC23IA.SetWindowText((LPCTSTR)mWinApp->mScope->GetC2Name());
   m_statPctUm.SetWindowText((LPCTSTR)mWinApp->mScope->GetC2Units());
   m_statIntensity.SetFont(&mBigFont);
-  m_statDoseRate.SetFont(&mMedFont);
-  m_statObjective.SetFont(&mMedFont);
   m_statSpotSize.SetFont(&mBigFont);
   m_butFloat.SetFont(mLittleFont);
   m_butDose.SetFont(mLittleFont);
@@ -199,10 +218,12 @@ BOOL CScopeStatusDlg::OnInitDialog()
   win = GetDlgItem(IDC_RCAM_DOSE);
   if (win)
     win->SetFont(mLittleFont);
-  m_statDoseRate.ShowWindow(SW_HIDE);
-  m_statUbpix.ShowWindow(SW_HIDE);
-  ShowDlgItem(IDC_RSPEC_DOSE, mWinApp->GetAnyDirectDetectors());
-  ShowDlgItem(IDC_RCAM_DOSE, mWinApp->GetAnyDirectDetectors());
+  m_statDoseRate.SetWindowText("");
+  m_statUbpix.SetWindowText("");
+  if (!mWinApp->GetAnyDirectDetectors()) {
+    mIDsToDrop.push_back(IDC_RSPEC_DOSE);
+    mIDsToDrop.push_back(IDC_RCAM_DOSE);
+  }
 
   m_butResetDef.SetFont(mLittleFont);
   if (JEOLscope || HitachiScope) {
@@ -212,27 +233,33 @@ BOOL CScopeStatusDlg::OnInitDialog()
     }
   }
   if (mWinApp->mComplexTasks->GetHitachiWithoutZ()) {
-    m_statStageZ.ShowWindow(SW_HIDE);
-    m_statZlabel.ShowWindow(SW_HIDE);
+    mIDsToDrop.push_back(IDC_STAT_STAGEZ);
+    mIDsToDrop.push_back(IDC_STAT_ZLABEL);
   }
   if (HitachiScope && !hitachi->screenAreaSqCm) {
-    //m_statCurrent.ShowWindow(SW_HIDE);
-    m_butFloat.ShowWindow(SW_HIDE);
-    //m_statNano.ShowWindow(SW_HIDE);
+    mIDsToDrop.push_back(IDC_BUTFLOAT);
   }
+  ind = mWinApp->mScope->GetShowApertureStatus();
+  if (!ind) {
+    mIDsToDrop.push_back(IDC_STAT_APER_LABEL);
+    mIDsToDrop.push_back(IDC_STAT_APERTURES);
+  } else if (ind > 1)
+    m_statAperLabel.SetWindowText("Apertures:");
 
   mCurrentSmoother.Setup(5, mSmootherThreshold1, mSmootherThreshold2);
+  SetupPanels(sIdTable, sLeftTable, sTopTable, sHeightTable);
   mInitialized = true;
 
   // Intensity status will draw the Spot text itself so this needs to hide.
   // Start with status -2 so it doesn't try to evaluate intensities until the real update
   if (mShowIntensityCal)
-    m_statSpotLabel.ShowWindow(SW_HIDE);
-  m_statProbeAlf.ShowWindow(FEIscope || (JEOLscope && !mWinApp->mScope->GetHasNoAlpha()) ?
-    SW_SHOW : SW_HIDE);
+    mIDsToDrop.push_back(IDC_STATSPOTLABEL);
+  if (!(FEIscope || (JEOLscope && !mWinApp->mScope->GetHasNoAlpha())))
+    mIDsToDrop.push_back(IDC_STAT_PROBEALF);
   mShowVacInEMmode = false;
   if (mShowVacInEMmode)
-    m_statEMmode.ShowWindow(SW_HIDE);
+    mIDsToDrop.push_back(IDC_STAT_EM_MODE);
+  mIDsToDrop.push_back(IDC_STATVACUUM);
   Update(0., 1, 0., 0., 0., 0., 0., 0., true, false, false, false, 0, 1, 0., 0., 0., -1,
     0., 1, -1, -999);
   mIntCalStatus = -1;
@@ -266,9 +293,10 @@ void CScopeStatusDlg::Update(double inCurrent, int inMagInd, double inDefocus,
   double screenCurrent = inCurrent;
   int camera = mWinApp->GetCurrentCamera();
   int pendingSpot = -1, pendingMag = -1, pendingCamLen = -1, numRegCamLens, numLADCamLens;
-  int EMmode = 0;
+  int EMmode = 0, condAp, objAp;
   const char *modeNames[] = {"TEM", "EFTEM", "STEM", "DIFF"};
   bool needDraw = false, showPending = false, magChanged = false, haveCamDose;
+  bool objUnits, condUnits;
   CameraParameters *camParam = mWinApp->GetCamParams() + camera;
   int *camLenTab = mWinApp->GetCamLenTable();
   BOOL noScope = mWinApp->mScope->GetNoScope();
@@ -509,10 +537,11 @@ void CScopeStatusDlg::Update(double inCurrent, int inMagInd, double inDefocus,
   // Dose
   if (inMagInd > 0)
     dose = mWinApp->mBeamAssessor->GetElectronDose(inSpot, rawIntensity, 1.);
-  if (B3DCHOICE(dose > 0., 1, 0) != B3DCHOICE(mShowedDose, 1, 0)) {
-    mShowedDose = dose > 0.;
-    m_statUbpix.ShowWindow(dose > 0. ? SW_SHOW : SW_HIDE);
-    m_statDoseRate.ShowWindow(dose > 0. ? SW_SHOW : SW_HIDE);
+  if (!BOOL_EQUIV(dose > 0., mShowedDose)) {
+    if (dose <= 0.) {
+      m_strDoseRate = "";
+      m_statDoseRate.SetWindowText(m_strDoseRate);
+    }
   }
 
   haveCamDose = mWinApp->mCamera->IsDirectDetector(camParam) &&
@@ -523,9 +552,14 @@ void CScopeStatusDlg::Update(double inCurrent, int inMagInd, double inDefocus,
   }
   bool showCamDose = haveCamDose && m_iSpecVsCamDose > 0;
   bool switchCamDose = !BOOL_EQUIV(showCamDose, mEnabledSpecCam && mLastSpecCamDose);
-  if (switchCamDose)
-    m_statUbpix.SetWindowText(showCamDose ? "e/pix/s at camera" :
-      "e/A2/s at specimen");
+  if (switchCamDose || !BOOL_EQUIV(dose > 0., mShowedDose)) {
+    mShowedDose = dose > 0.;
+    if (dose > 0.)
+      m_statUbpix.SetWindowText(showCamDose ? "e/pix/s at camera" :
+        "e/A2/s at specimen");
+    else
+      m_statUbpix.SetWindowText("");
+  }
 
   if (mShowedDose) {
     if (showCamDose) {
@@ -628,10 +662,36 @@ void CScopeStatusDlg::Update(double inCurrent, int inMagInd, double inDefocus,
     mTEMnanoProbe = temNano != 0;
     changed = true;
   }
+
+  // Optional aperture status report
+  if (mWinApp->mScope->GetShowApertureStatus()) {
+    condAp = mWinApp->mScope->GetLastCondenserAp();
+    objAp = mWinApp->mScope->GetLastObjectiveAp();
+    if (condAp != mLastCondenserAp || objAp != mLastObjectiveAp) {
+
+      // Put units just at the end if both need them or Obj does
+      // Otherwise put units on condenser if it needs them
+      objUnits = objAp > 5;
+      condUnits = condAp > 5 && !objUnits;
+      format = "out";
+      if (condAp > 0)
+        format.Format("%d", condAp);
+      m_strApertures = "C " + format + (condUnits ? " um  O " : "  O ");
+      format = "out";
+      if (objAp > 0)
+        format.Format("%d", objAp);
+      m_strApertures += format + (objUnits ? " um  " : "  ");
+      m_statApertures.SetWindowText(m_strApertures);
+      mLastCondenserAp = condAp;
+      mLastObjectiveAp = objAp;
+    }
+  }
+
+
   if (needDraw)
     Invalidate();
 
-  // Accuemulate dose
+  // Accumulate dose
   if (!screenUp && !blanked && gunState != 0 && WatchingDose()) {
     int area;
     BOOL lowDose = mWinApp->LowDoseMode();
