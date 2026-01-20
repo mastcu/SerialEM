@@ -11586,6 +11586,25 @@ int CMacCmd::ReportNavItem(void)
   return 0;
 }
 
+// FindItemWithLabelOrNote
+int CMacCmd::FindItemWithLabelOrNote()
+{
+  double stageZ;
+  int index;
+  CMapDrawItem *navItem;
+  ABORT_NONAV;
+  if (mItemEmpty[4])
+    mScope->GetStagePosition(mItemDbl[3], mItemDbl[4], stageZ);
+  index = mNavHelper->FindNearestItemMatchingText((float)mItemDbl[3], (float)mItemDbl[4],
+    mStrItems[2], mItemInt[1] != 0);
+  if (index >= 0) {
+    navItem = mNavigator->GetOtherNavItem(index);
+    SetReportedValues(index + 1, navItem->mStageX, navItem->mStageY);
+  } else
+    SetReportedValues(0., 0., 0.);
+  return 0;
+}
+
 // LoadPieceAtNavPoint
 int CMacCmd::LoadPieceAtNavPoint()
 {

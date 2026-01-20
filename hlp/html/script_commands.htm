@@ -5221,6 +5221,16 @@
             display.&nbsp; Command added in 4.2, 15-Feb-24.</TD>
         </TR>
         <TR>
+          <TD class="scriptcommand">FindItemWithLabelOrNote #N text [#X] [#Y]</TD>
+          <TD>Finds the navigator item closest to the current stage position or to the 
+            optional <strong>#X, #Y</strong> whose label (if <strong>#N</strong> is 0) or 
+            note (if <strong>#N</strong> is nonzero) starts with the string in <strong>text.</strong>&nbsp; 
+            (Use &#39;ParseQuotedStrings&#39; and single quotes if <strong>text</strong> contains a 
+            space.)&nbsp; Sets <em>reportedValue1</em> with the index of the item, or 0 if 
+            none is found, and <em>reportedValue2</em> and <em>3</em> with the item&#39;s stage 
+            position.</TD>
+        </TR>
+        <TR>
           <TD class="scriptcommand">ReportItemImageCoords [#I] [buf]</TD>
           <TD>Reports the pixel coordinates of navigator item <b>#I</b> on the image in buffer buf. If no <b>#I</b>
             is specified, the current item is used, negative numbers are items counted from
