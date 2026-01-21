@@ -3,6 +3,10 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+1/20/26: SEM_4-2-15
+1/20/26: Fixed setting aperture size on JEOL when there are ApertureSizes
+properties, broken 12/2/25 (In 4.2).
+
 1/19/25: Added optional line to Scope Status panel to show the condenser and
 objective apertures, enabled by property ShowApertureStatus.
 
@@ -52,7 +56,7 @@ just as when running grids.
 message and allow a script to run, and also made value of 2 allow multigrid to
 proceed to next grid (In 4.2).
 
-12/28/25: Fixed multigrid makring grid as failed when running a script after
+12/28/25: Fixed multigrid marking grid as failed when running a script after
 the LMM is acquired (In 4.2).
 
 12/28/25: Added property SaveK3CountingGainAsTiff to make the binned counting
