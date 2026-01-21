@@ -2335,7 +2335,7 @@ void CMultiGridTasks::RefineRealignNextTask(int param)
 int CMultiGridTasks::StartGridRuns(int LMneedsLD, int MMMneedsLD, int finalNeedsLD,
   int finalCamera, bool undoneOnly)
 {
-  int err, grid, ind, apSize = 0, numAcq, numTS, acqType, numFail = 0, numDark = 0;
+  int err, grid, ind, numAcq, numTS, acqType, numFail = 0, numDark = 0;
   int magInd, camera, ldArea, numPoly, jnd, numMSparam = 0, maxStamp, minStamp;
   int numXformed = 0, paramXformable = 0, curSetXformable = 0, backXformable = 0;
   int backXfStamp, subXfStamp;
@@ -3286,7 +3286,7 @@ void CMultiGridTasks::AddToSeqForRestoreFromLM(bool &apForLMM, bool &stateForLMM
 // Get state of apertures if they are to be changed and return error if bad
 int CMultiGridTasks::GetInitialApertureStates(CString &errStr)
 {
-  int apSize, ind;
+  int apSize = 0, ind;
   CString str;
 
   if (mParams.removeObjectiveAp) {
