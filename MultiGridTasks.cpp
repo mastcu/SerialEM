@@ -866,7 +866,7 @@ int CMultiGridTasks::RealignReloadedGrid(CMapDrawItem *item, float expectedRot,
   }
   mBigRotation = fabs(expectedRot) > 1.;
 
-  if (handleApertures && GetInitialApertureStates(errStr))
+  if (handleApertures && GetInitialApertureStates(errStr, ind))
     return 1;
 
   // If not doing big rotation, see if map is already available
@@ -2424,9 +2424,25 @@ int CMultiGridTasks::StartGridRuns(int LMneedsLD, int MMMneedsLD, int finalNeeds
   mActiveCameraList = mWinApp->GetActiveCameraList();
 
   // Get state of apertures if they are to be changed and error out if bad
-  if (GetInitialApertureStates(str)) {
+  if (GetInitialApertureStates(str, ind)) {
     SEMMessageBox(str);
     return 1;
+  }
+
+  // Check if either one matches the grid map state
+  if ((mParams.acquireMMMs || mParams.runFinalAcq)) {
+    str = "";
+    if (mParams.removeObjectiveAp && !mInitialObjApSize)
+      str = "the objective aperture is currently out as it would be for grid maps";
+    if (mParams.setCondenserAp && mInitialCondApSize == ind) {
+      if (!str.IsEmpty())
+        str += " and ";
+      str += "the condenser aperture is the size to be used for grid maps";
+    }
+    if (!str.IsEmpty() && AfxMessageBox("Apertures may not be set right for the selected"
+      " acquisitions:\n" + str + ".\n\nAre you sure you want to proceed?", MB_QUESTION) ==
+      IDNO)
+      return 1;
   }
 
   if (mSingleGridMode && !mReferenceCounts && mParams.acquireLMMs) {
@@ -3284,9 +3300,9 @@ void CMultiGridTasks::AddToSeqForRestoreFromLM(bool &apForLMM, bool &stateForLMM
 }
 
 // Get state of apertures if they are to be changed and return error if bad
-int CMultiGridTasks::GetInitialApertureStates(CString &errStr)
+int CMultiGridTasks::GetInitialApertureStates(CString &errStr, int &setC2Index)
 {
-  int apSize = 0, ind;
+  int apSize = 0;
   CString str;
 
   if (mParams.removeObjectiveAp) {
@@ -3299,16 +3315,17 @@ int CMultiGridTasks::GetInitialApertureStates(CString &errStr)
     mInitialCondApSize = apSize;
     if (apSize && mUseTwoJeolCondAp)
       mInitialC1CondSize = mScope->GetApertureSize(JEOL_C1_APERTURE);
+    setC2Index = mParams.condenserApSize;
   }
   if (apSize < 0) {
     errStr = "Aperture control appears not to work on this scope";
     return 1;
   }
   if (mParams.setCondenserAp && JEOLscope) {
-    ind = mScope->FindApertureIndexFromSize(
+    setC2Index = mScope->FindApertureIndexFromSize(
       (mUseTwoJeolCondAp && !mParams.C1orC2condenserAp) ?
       JEOL_C1_APERTURE : mSingleCondenserAp, mParams.condenserApSize, str);
-    if ((mParams.condenserApSize && !ind) || ind < 0) {
+    if ((mParams.condenserApSize && !setC2Index) || setC2Index < 0) {
       errStr = "There is a problem with condenser aperture size: \r\n" + str;
       return 1;
     }

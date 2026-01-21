@@ -133,7 +133,7 @@ public:
   void AddToSeqForLMimaging(bool &apForLMM, bool &stateForLMM, int needsLD);
   void AddToSeqForReloadRealign(bool &apForLMM, bool &stateForLMM);
   void AddToSeqForRestoreFromLM(bool &apForLMM, bool &stateForLMM);
-  int GetInitialApertureStates(CString &errStr);
+  int GetInitialApertureStates(CString &errStr, int &setC2Index);
   int CheckStatesInRange(int *stateNums, CString *names, int numStates, CString mess);
   void DoNextSequenceAction(int resume);
   int SkipToAction(int mgAct);
