@@ -7930,17 +7930,17 @@ int CEMscope::FindApertureIndexFromSize(int apInd, int size, CString &errStr)
   int index = size;
   if (size > 0 && JEOLscope) {
     index = FindApertureIndexFromSize(apInd, size);
-    if (!index) {
+    if (index <= 0 && size <= 4)
+      index = size;
+    else if (!index) {
       errStr.Format("Size %d is not in the list from the AperturesSizes property for "
         "aperture %d in line:\n\n", size, apInd);
-      
-    } else if (index < 0 && size > 4) {
+
+    } else if (index < 0) {
       errStr.Format("There is no ApertureSizes property with a size list for"
         " aperture %d; \r\n %d is probably an incorrect entry for the position index",
         apInd, size);
       index = -size;
-    } else if (index < 0) {
-      index = size;
     }
   }
   return index;
