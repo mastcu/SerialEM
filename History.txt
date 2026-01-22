@@ -3,6 +3,10 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+1/21/26: In multigrid, fixed checking of marker shift when "current state" is
+used instead of a set state for grid map; fixed getting the C1 aperture to
+restore on JEOL when there are two settable apertures (In 4.2).
+
 1/20/26: Fixed starting multigrid when changing condenser but not objective
 aperture for LM map, broken 12/31/25.
 

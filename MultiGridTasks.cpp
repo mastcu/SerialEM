@@ -4765,7 +4765,7 @@ int CMultiGridTasks::CheckShiftsForLMmode(int magInd)
     mWinApp->mLowDoseDlg.GetFullViewShift(shiftX, shiftY, ldArea);
     if (shiftX || shiftY)
       retVal += 2;
-  } else {
+  } else if (mParams.setLMMstate) {
 
     // The dialog should be open when this check is called, but...
     if (mMGdlg) {
