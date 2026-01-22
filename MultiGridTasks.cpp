@@ -2434,7 +2434,8 @@ int CMultiGridTasks::StartGridRuns(int LMneedsLD, int MMMneedsLD, int finalNeeds
     str = "";
     if (mParams.removeObjectiveAp && !mInitialObjApSize)
       str = "the objective aperture is currently out as it would be for grid maps";
-    if (mParams.setCondenserAp && mInitialCondApSize == ind) {
+    if (mParams.setCondenserAp && ((mUseTwoJeolCondAp && !mParams.C1orC2condenserAp) ?
+      mInitialC1CondSize : mInitialCondApSize) == ind) {
       if (!str.IsEmpty())
         str += " and ";
       str += "the condenser aperture is the size to be used for grid maps";
@@ -3313,7 +3314,7 @@ int CMultiGridTasks::GetInitialApertureStates(CString &errStr, int &setC2Index)
   if (apSize >= 0 && mParams.setCondenserAp) {
     apSize = mScope->GetApertureSize(mSingleCondenserAp);
     mInitialCondApSize = apSize;
-    if (apSize && mUseTwoJeolCondAp)
+    if (apSize >= 0 && mUseTwoJeolCondAp)
       mInitialC1CondSize = mScope->GetApertureSize(JEOL_C1_APERTURE);
     setC2Index = mParams.condenserApSize;
   }
