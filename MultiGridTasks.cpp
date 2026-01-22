@@ -2139,7 +2139,7 @@ int CMultiGridTasks::StartGridRuns(int LMneedsLD, int MMMneedsLD, int finalNeeds
   if (apSize >= 0 && mParams.setCondenserAp) {
     apSize = mScope->GetApertureSize(mSingleCondenserAp);
     mInitialCondApSize = apSize;
-    if (apSize && mUseTwoJeolCondAp)
+    if (apSize >= 0 && mUseTwoJeolCondAp)
       mInitialC1CondSize = mScope->GetApertureSize(JEOL_C1_APERTURE);
   }
   if (apSize < 0) {
@@ -4387,7 +4387,7 @@ int CMultiGridTasks::CheckShiftsForLMmode(int magInd)
     mWinApp->mLowDoseDlg.GetFullViewShift(shiftX, shiftY, ldArea);
     if (shiftX || shiftY)
       retVal += 2;
-  } else {
+  } else if (mParams.setLMMstate) {
 
     // The dialog should be open when this check is called, but...
     if (mMGdlg) {
