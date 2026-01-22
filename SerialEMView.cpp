@@ -3238,8 +3238,8 @@ void CSerialEMView::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
     mWinApp->mNavigator->ProcessNKey();
   } else if (navCanProcess && cChar == 'V' && !mCtrlPressed && mShiftPressed) {
     mWinApp->mNavigator->ProcessVKey();
-  } else if (navCanProcess && cChar == 'H' && !mCtrlPressed && mShiftPressed) {
-    mWinApp->mNavigator->ProcessHKey();
+  } else if (navCanProcess && cChar == 'O' && !mCtrlPressed && mShiftPressed) {
+    mWinApp->mNavigator->ProcessOKey();
 
   } else if (cChar == 'X' && !mCtrlPressed && mShiftPressed) {
     mWinApp->mImageLevel.ToggleExtraInfo();
