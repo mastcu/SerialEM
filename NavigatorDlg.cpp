@@ -2005,10 +2005,10 @@ void CNavigatorDlg::ProcessVKey(void)
   Redraw();
 }
 
-void CNavigatorDlg::ProcessHKey(void)
+void CNavigatorDlg::ProcessOKey(void)
 {
   int start, end;
-  if (ProcessRangeKey("H again to find holes in maps", mShiftHIndex, start, end))
+  if (ProcessRangeKey("O again to find holes in maps", mShiftHIndex, start, end))
     return;
   if (!KGetOneInt("Enter 0 not to combine points for Multiple Records",
     "Otherwise enter minimum # of found holes required to do combining",
