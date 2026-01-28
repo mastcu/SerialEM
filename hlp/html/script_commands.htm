@@ -5352,7 +5352,7 @@
         <TR>
            <TD class="scriptcommand">ImagingStateProperties name</TD>
          <TD>Reports properties of an imaging state specified by <b>name</b>, which
-            can be either the full name of the state, a unique set of starting letter, or
+            can be either the full name of the sntate, a unique set of starting letter, or
              the number of the state in the table (numbered from 1).&nbsp; <i>reportedValue1</i> is set to 
            1 for no matching name, 2 for more than one matching name, 3 for a number out of range, or 0 
            otherwise.&nbsp; For a valid state, <i>reportedValues 2-6</i> are set with the state number, the type 
@@ -5360,6 +5360,23 @@
            the name.&nbsp; The type is 0-5 for Low Dose V, F, T, R, S, or R using Mont-Map parameters, or -1 or -2
             for a non-Low Dose Record or Mont-Map state.&nbsp; Command added in 4.2, 8-Feb-24.
           </TD>
+        </TR>
+        <TR>
+           <a name="ListImagingState"></a>
+          <TD class="scriptcommand"><a name="ListImagingState"></a>ListImagingState name</TD>
+         <TD>Outputs many properties of an imaging state to the log, where <b>name</b> can be the name
+            (potentially abbreviated) or the index of a specific state (numbered from 1), -1 for all states, or
+           0 for the state currently selected in the <A HREF="hidd_statedlg.htm">Imaging States dialog</A>.&nbsp; In
+           addition to the properties shown in the dialog, the listing may include: the slit insertion,
+            width, and energy loss if the camera is on an energy filter; the EDM percent if there is a
+            dose modulator; the objective and condenser apertures (OA and CA), possibly the C1 
+           aperture for a JEOL (C1A), if using apertures for states is supported and enabled; 
+           for a Low Dose state, the position and angle of the focus area and the offset of the focus subarea;
+           the operating mode ('op mode') for a direct detector camera; whether acquisition is continuous ('cont');
+           if saving or aligning frames, the frame time plus 'save' and/or 'align'; and if aligning with
+           framealign in SerialEM or IMOD, the parameter set ('w/ param') index; the defocus target
+            ('def targ') out of Low Dose or the defocus offset ('def off') for View or Search area..
+         </TD>
         </TR>
          <TR>
           <TD class="scriptcommand">OpenImagingStateDialog</TD>

@@ -12352,18 +12352,40 @@ int CMacCmd::GoToImagingState(void)
   return 0;
 }
 
-// ImagingStateProperties
+// ImagingStateProperties, ListImagingState
 int CMacCmd::ImagingStateProperties()
 {
-  int index = 0, err, area, setNum;
+  int index = 0, err = 0, area, setNum, indStart, indEnd;
+  bool doList = CMD_IS(LISTIMAGINGSTATE);
   StateParams *param;
   CArray<StateParams *, StateParams *> *stateArr = mNavHelper->GetStateArray();
   CString errStr;
-  SubstituteLineStripItems(mStrLine, 1, mStrCopy);
-  err = CStateDlg::LookupStateByNameOrNum(mStrCopy, index, errStr);
-  if (err) {
-    SetReportedValues(err);
-    mLogRpt = "Specified imaging state not available: " + errStr;
+  if (doList && mStrItems[1] == "-1") {
+    indStart = 0;
+    indEnd = (int)stateArr->GetSize() - 1;
+  } else if (doList && mStrItems[1] == "0") {
+    if (!mNavHelper->mStateDlg)
+      ABORT_LINE("The State dialog must be open for line:\n\n");
+    indStart = indEnd = mNavHelper->mStateDlg->GetCurrentItem();
+    if (indStart < 0)
+      ABORT_LINE("There is no current item in the State dialog for line:\n\n");
+  } else {
+    SubstituteLineStripItems(mStrLine, 1, mStrCopy);
+    err = CStateDlg::LookupStateByNameOrNum(mStrCopy, index, errStr);
+    if (err) {
+      SetReportedValues(err);
+      mLogRpt = "Specified imaging state not available: " + errStr;
+      return 0;
+    }
+    indStart = indEnd = index;
+  }
+  if (doList) {
+    for (index = indStart; index <= indEnd; index++) {
+      param = stateArr->GetAt(index);
+      mNavHelper->MakeStateOutputLine(param, errStr);
+      PrintfToLog("%d: %s  : %s", index + 1, (LPCTSTR)errStr, param->name.IsEmpty() ? "" :
+        (LPCTSTR)param->name);
+    }
   } else {
     param = stateArr->GetAt(index);
     area = mNavHelper->AreaFromStateLowDoseValue(param, &setNum);
