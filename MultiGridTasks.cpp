@@ -3968,6 +3968,7 @@ void CMultiGridTasks::DoNextSequenceAction(int resume)
     // Set state(s) for MM mapping
   case MGACT_LMM_STATE:
     RestoreState();
+    mNavHelper->SetSkipAperturesNextState(true);
     if (CStateDlg::DoSetImState(mParams.LMMstateNum, errStr)) {
       SEMMessageBox("Error trying to set LM state: " + errStr);
       StopMulGridSeq();
@@ -3987,6 +3988,7 @@ void CMultiGridTasks::DoNextSequenceAction(int resume)
     RestoreState();
     for (ind = 0; ind < 4; ind++) {
       if (stateNums[ind] >= 0) {
+        mNavHelper->SetSkipAperturesNextState(true);
         err = CStateDlg::DoSetImState(stateNums[ind], errStr);
         if (!err)
           mStateWasSet = true;

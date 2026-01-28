@@ -164,6 +164,11 @@ CNavHelper::CNavHelper(void)
   mDistWeightThresh = 5.f;
   mRIweightSigma = 3.f;
   mTypeOfSavedState = STATE_NONE;
+  mTypeOfForgottenState = STATE_NONE;
+  mCurStateSetApertures = false;
+  mSkipAperturesNextState = false;
+  mForgotApertureState = false;
+  mSavedStateSetApertures = false;
   mLastTypeWasMont = false;
   mLastMontFitToPoly = false;
   for (i = 0; i < 4; i++) {
@@ -522,7 +527,8 @@ int CNavHelper::FindMapForRealigning(CMapDrawItem * inItem, BOOL restoreState)
   float toEdge, netViewShiftX, netViewShiftY;
   float incLowX, incLowY, incHighX, incHighY, targetX, targetY, borderDist, borderMax;
   double firstISX, firstISY;
-  BOOL betterMap, differentMap, stayInLD, mapInLM, maxInLM;
+  BOOL betterMap, differentMap, stayInLD, mapInLM, maxInLM, betterThanLM;
+  bool mapByAperture, maxByAperture = false;
   ScaleMat aMat, bMat;
   LowDoseParams *ldp = mWinApp->GetLowDoseParams();
   float delX, delY, distMin, distMax, firstDelX, firstDelY;
@@ -546,10 +552,19 @@ int CNavHelper::FindMapForRealigning(CMapDrawItem * inItem, BOOL restoreState)
     // Allow low mag mode if the camera field of view is smaller than the limit, which is
     // determined by objective aperture size
     mapInLM = item->mMapMagInd < mScope->GetLowestNonLMmag(&mCamParams[item->mMapCamera]);
+    mapByAperture = false;
     if (mapInLM && mShiftManager->GetPixelSize(item->mMapCamera, item->mMapMagInd) *
       B3DMAX(mCamParams[item->mMapCamera].sizeX, mCamParams[item->mMapCamera].sizeY) >
-      mRImaxLMfield)
-      continue;
+      mRImaxLMfield) {
+
+      // But an LM can be used if there are aperture settings for it, and there is not
+      // already a nonLM map accepted.
+      if ((mScope->GetUseAperturesInStates() && item->mObjectiveAp >= 0 &&
+        item->mCondenserAp >= 0) && !(distMax > 0. && !maxInLM))
+        mapByAperture = true;
+      else
+        continue;
+    }
 
     // Get the target which we need to go to at this mag - this will be different from
     // absolute target if the user does not have apply offsets on and it is clear that
@@ -668,6 +683,7 @@ int CNavHelper::FindMapForRealigning(CMapDrawItem * inItem, BOOL restoreState)
       // effective distance
       betterMap = distMin > distMax || (distMin == distMax && magMax < item->mMapMagInd)
         || (distMin == distMax && borderDist > borderMax);
+      betterThanLM = maxInLM && !mapInLM;
 
       // Same pos map trumps all: so if this is a same pos map and previous wasn't, accept
       // it if it is better or at least good enough
@@ -683,14 +699,28 @@ int CNavHelper::FindMapForRealigning(CMapDrawItem * inItem, BOOL restoreState)
         " mdr %d dmax %f bdis %.2f bmax %.2f", mapInd, samePosMap, maxSamePos, betterMap,
         distMin, mMinMarginWanted, alignedMap, maxAligned, drawnMap, maxDrawn, distMax,
         borderDist, borderMax);
+
+      // Pick this map in the following conditions:
+      //   If same position map, previous is not, and either better by distance, 
+      //      sufficent (more than min wanted) by distance, or it is nonLM and prev was LM
       if ((samePosMap && !maxSamePos && (betterMap ||
-        distMin >= B3DMIN(mMinAnchorMargin, mMinMarginWanted) || (maxInLM && !mapInLM)))
-        || ((!maxSamePos || distMin < mMinMarginWanted) &&
+        distMin >= B3DMIN(mMinAnchorMargin, mMinMarginWanted) || betterThanLM)) ||
+        // If prev was accepted in LM only because of aperture and there is nonLM map
+        (betterThanLM && maxByAperture) ||
+        // If prev not at same position or dist less than wanted margin AND 
+        ((!maxSamePos || distMin < mMinMarginWanted) &&
+          //   both were aligned to map or both were drawn on map and better by distance
         (((alignedMap == maxAligned || drawnMap == maxDrawn) && betterMap) ||
+          //   or this is an aligned to or drawn on map and prev is not and either better
+          //      by distance or distance more than wanted margin or it is nonLM, prev LM
           (((alignedMap && !maxAligned) || (drawnMap && !maxDrawn)) &&
-          (betterMap || distMin >= mMinMarginWanted || (maxInLM && !mapInLM))) ||
+          (betterMap || distMin >= mMinMarginWanted || betterThanLM)) ||
+          //   or it is a better map and EITHER the following is not true: not aligned to
+          //      map and prev is aligned to, or not drawn on map and prev is drawn on,
+          //      and distance is already fine or map is in LM and prev is not
             (betterMap && (!(((!alignedMap && maxAligned) || (!drawnMap && maxDrawn)) &&
           (distMax >= mMinMarginWanted || (mapInLM && !maxInLM))) ||
+              //  OR margin distance is just as good and border distance is better
             (distMin == distMax && borderDist > borderMax)))))) {
         SEMTrace('h', "Accepted %d as better", mapInd);
           distMax = distMin;
@@ -698,6 +728,7 @@ int CNavHelper::FindMapForRealigning(CMapDrawItem * inItem, BOOL restoreState)
           maxAligned = alignedMap;
           maxDrawn = drawnMap;
           maxSamePos = samePosMap;
+          maxByAperture = mapByAperture;
           maxInLM = mapInLM;
           mRIitemInd = mapInd;
           magMax = item->mMapMagInd;
@@ -1062,6 +1093,8 @@ int CNavHelper::RealignToItem(CMapDrawItem *inItem, BOOL restoreState,
   mRIdidSaveState = false;
   if (restoreState || mRISetNumForScaledAlign >= 0) {
     mRIdidSaveState = true;
+    if (mTypeOfSavedState != STATE_NONE)
+      mForgotApertureState = mCurStateSetApertures;
     ForgetSavedState();
     SaveCurrentState(STATE_MAP_ACQUIRE, 0, item->mMapCamera, 0);
   }
@@ -1727,9 +1760,11 @@ void CNavHelper::RestoreForStopOrScaledAlign()
 {
   RestoreLowDoseConset();
   RestoreMapOffsets();
-  if (mRIdidSaveState)
+  if (mRIdidSaveState) {
     RestoreSavedState();
-  else if (!mRIstayingInLD && mWinApp->mLowDoseDlg.m_bLowDoseMode ? 1 : 0) {
+    if (mTypeOfForgottenState != STATE_NONE)
+      RestoreForgottenState();
+  } else if (!mRIstayingInLD && mWinApp->mLowDoseDlg.m_bLowDoseMode ? 1 : 0) {
     mSettingState = true;
     mWinApp->mLowDoseDlg.SetLowDoseMode(true);
     mSettingState = false;
@@ -1885,14 +1920,77 @@ void CNavHelper::PrepareToReimageMap(CMapDrawItem *item, MontParam *param,
   ControlSet *conSet, int baseNum, int hideLDoff, int noFrames)
 {
   ControlSet *conSets = mWinApp->GetConSets();
-  int  binning, xFrame, yFrame, area, top, left, bottom, right;
+  int  binning, xFrame, yFrame, area = -1, top, left, bottom, right, condAp, objAp, c1Ap;
+  int curMag, objSize, condSize, c1Size = -1, mapObj, mapCond, mapC1 = -1, err, lowestM;
   float defocus;
+  bool needAps;
+  CString errStr;
   StateParams stateParam;
   LowDoseParams *ldp;
   CString *names = mWinApp->GetModeNames();
   CameraParameters *camP = mWinApp->GetCamParams() + item->mMapCamera;
   bool filtered = (camP->GIF || mScope->GetHasOmegaFilter()) && item->mMapSlitWidth > 0.;
   StoreMapStateInParam(item, param, baseNum, &stateParam);
+
+  // If we are using apertures in states, evaluate if anything would need changing
+  if (mScope->GetUseAperturesInStates() > 0) {
+    err = AperturesForMapsAndStates(objAp, condAp, c1Ap, errStr);
+    objSize = mScope->FindApertureSizeFromIndex(OBJECTIVE_APERTURE, objAp, true);
+    condSize = mScope->FindApertureSizeFromIndex(mScope->GetSingleCondenserAp(), condAp,
+      true);
+    mapObj = mScope->FindApertureSizeFromIndex(OBJECTIVE_APERTURE, item->mObjectiveAp,
+      true);
+    mapCond = mScope->FindApertureSizeFromIndex(mScope->GetSingleCondenserAp(),
+      item->mCondenserAp, true);
+    if (mScope->GetUseTwoJeolCondAp()) {
+      c1Size = mScope->FindApertureSizeFromIndex(JEOL_C1_APERTURE, c1Ap, true);
+      mapC1 = mScope->FindApertureSizeFromIndex(JEOL_C1_APERTURE, item->mJeolC1Ap, true);
+    }
+    needAps = (err && (mapObj >= 0 || mapCond >= 0 || mapC1 >= 0)) ||
+      (!err && (mapObj != objSize || mapCond != condSize || mapC1 != c1Size));
+
+    // If so but it is not supposed to be universal, then determine if need anyway
+    if (needAps && mScope->GetUseAperturesInStates() == 1) {
+
+      // Evaluate if we really do need apertures
+      if (mWinApp->LowDoseMode()) {
+        area = mScope->GetLowDoseArea();
+        if (area >= 0)
+          ldp = mWinApp->GetLowDoseParams() + area;
+      }
+      curMag = area < 1 ? mScope->FastMagIndex() : ldp->magIndex;
+      lowestM = mScope->GetLowestMModeMagInd();
+
+      // If going into low mag; or if in low mag already but an aperture needs to be 
+      // removed that is in, or needs to be bigger than what is in
+      needAps = (item->mMapMagInd < lowestM && curMag >= lowestM) ||
+        (item->mMapMagInd < lowestM &&
+        ((objSize >= 0 && mapObj >= 0 && ((objSize > 0 && mapObj == 0) ||
+          (objSize > 5 && mapObj > 5 && mapObj > objSize))) ||
+          (condSize >= 0 && mapCond >= 0 && ((condSize > 0 && mapCond == 0) ||
+          (condSize > 5 && mapCond > 5 && mapCond > condSize))) ||
+            (c1Size >= 0 && mapC1 >= 0 && ((c1Size > 0 && mapC1 == 0) ||
+          (c1Size > 5 && mapC1 > 5 && mapC1 > c1Size)))));
+
+      // If were in a state that had set
+      // apertures but the previous state has been thrown away, set apertures if coming 
+      // out of LM or the set apertures are bigger than this item's apertures
+      // Restoring was tried originally, but setting them gets them restored after a
+      // realign to item
+      if (!needAps && mForgotApertureState && item->mMapMagInd >= lowestM &&
+        (curMag < lowestM ||
+        (objSize >= 0 && mapObj >= 0 && ((objSize == 0 && mapObj > 0) ||
+          (objSize > 5 && mapObj > 5 && mapObj < objSize))) ||
+          (condSize >= 0 && mapCond >= 0 && ((condSize == 0 && mapCond > 0) ||
+          (condSize > 5 && mapCond > 5 && mapCond < condSize))) ||
+            (c1Size >= 0 && mapC1 >= 0 && ((c1Size == 0 && mapC1 > 0) ||
+          (c1Size > 5 && mapC1 > 5 && mapC1 < c1Size))))) {
+        //SetAperturesIfNeeded(mObjApToRestore, mCondApToRestore, mC1ApToRestore, false);
+        needAps = true;
+      }
+    }
+  }
+  mForgotApertureState = false;
 
   // If coming from Realign to Item, see if we can STAY in low dose instead of hiding it
   mRIstayingInLD = false;
@@ -1968,6 +2066,12 @@ void CNavHelper::PrepareToReimageMap(CMapDrawItem *item, MontParam *param,
           mScope->IncDefocus(mRIareaDefocusChange);
         }
       }
+
+      mCurStateSetApertures = false;
+      if (needAps) {
+        SetAperturesIfNeeded(item->mObjectiveAp, item->mCondenserAp, item->mJeolC1Ap,
+          true);
+      }
       return;
     }
 
@@ -1980,7 +2084,7 @@ void CNavHelper::PrepareToReimageMap(CMapDrawItem *item, MontParam *param,
   SEMTrace('I', "PrepareToReimageMap set intensity to %.5f  %.3f%%", stateParam.intensity
     , mScope->GetC2Percent(stateParam.spotSize, stateParam.intensity,
       stateParam.probeMode));
-  SetStateFromParam(&stateParam, conSet, baseNum, hideLDoff);
+  SetStateFromParam(&stateParam, conSet, baseNum, hideLDoff, needAps);
 
   // Prevent frame saving, retain frame-aligning
   if (noFrames > 0) {
@@ -2206,14 +2310,16 @@ void CNavHelper::RestoreSavedState(bool skipScope)
         conSets = mWinApp->GetConSets();
       else
         conSets = mWinApp->GetCamConSets() + destCam * MAX_CONSETS;
-      SetStateFromParam(&mSavedStates[0], conSets + setNum, setNum, 0, skipScope);
+      SetStateFromParam(&mSavedStates[0], conSets + setNum, setNum, 0, skipScope,
+        mCurStateSetApertures);
+      mCurStateSetApertures = false;
       if (mSavedStates[0].lowDose && mSavedLowDoseArea >= 0)
         mScope->GotoLowDoseArea(mSavedLowDoseArea);
     }
   }
   SEMTrace('I', "RestoreSavedState restored intensity to %.5f", mSavedStates[0].lowDose ?
     mSavedStates[0].ldParams.intensity : mSavedStates[0].intensity);
-  ForgetSavedState();
+  ForgetSavedState(true);
 }
 
 // Set the scope and camera parameter state to that used to acquire a map item
@@ -2330,6 +2436,7 @@ void CNavHelper::StoreCurrentStateInParam(StateParams *param, int lowdose,
   LowDoseParams *ldp;
   FilterParams *filtParam = mWinApp->GetFilterParams();
   ControlSet *conSets;
+  CString mess;
   double shiftX, shiftY;
   int curCam = mWinApp->GetCurrentCamera();
   int consInd, ldInd = RECORD_CONSET;
@@ -2362,6 +2469,7 @@ void CNavHelper::StoreCurrentStateInParam(StateParams *param, int lowdose,
   else
     conSets = mWinApp->GetCamConSets() + camNum * MAX_CONSETS;
   param->camForParams = camNum;
+  param->flags = 0;
   param->lowDose = lowdose;
   if (lowdose) {
     param->ldParams = *ldp;
@@ -2388,6 +2496,13 @@ void CNavHelper::StoreCurrentStateInParam(StateParams *param, int lowdose,
     param->slitWidth = filtParam->slitWidth;
     param->energyLoss = filtParam->energyLoss;
     param->zeroLoss = filtParam->zeroLoss;
+  }
+
+  if (mScope->GetUseAperturesInStates() > 0) {
+    if (AperturesForMapsAndStates(param->objectiveAp, param->condenserAp,
+      param->JeolC1Ap, mess))
+      SEMAppendToLog("WARNING: Error getting aperture states for saving current state: "
+        + mess);
   }
 
   // Save either the defocus target or the LD defocus offset - the caller knows what kind
@@ -2532,18 +2647,22 @@ void CNavHelper::StoreMapStateInParam(CMapDrawItem *item, MontParam *montP, int 
   }
 
   param->EDMPercent = item->mEDMPercent;
+  param->objectiveAp = item->mObjectiveAp;
+  param->condenserAp = item->mCondenserAp;
+  param->JeolC1Ap = item->mJeolC1Ap;
 }
 
 // Set scope state and control set state from the given state param
 void CNavHelper::SetStateFromParam(StateParams *param, ControlSet *conSet, int baseNum,
-                                   int hideLDoff, bool skipScope)
+                                   int hideLDoff, bool skipScope, bool setAperture)
 {
-  int i, alpha, ldArea;
+  int i, alpha, ldArea, objAp = -1, condAp = -1, JeolC1Ap = -1;
   FilterParams *filtParam = mWinApp->GetFilterParams();
   CameraParameters *camP = &mCamParams[param->camIndex];
   int *activeList = mWinApp->GetActiveCameraList();
   LowDoseParams *ldp = mWinApp->GetLowDoseParams();
   LowDoseParams ldsaParams;
+  CString errStr;
   bool gotoArea = false;
   mSettingState = true;
 
@@ -2610,7 +2729,6 @@ void CNavHelper::SetStateFromParam(StateParams *param, ControlSet *conSet, int b
           param->probeMode);
 
       if (param->EDMPercent > 0 && mCamera->HasDoseModulator()) {
-        CString errStr;
         if (mCamera->mDoseModulator->SetDutyPercent(param->EDMPercent, errStr))
           mWinApp->AppendToLog("WARNING: Could not set EDM dose percentage: " + errStr);
       }
@@ -2632,6 +2750,13 @@ void CNavHelper::SetStateFromParam(StateParams *param, ControlSet *conSet, int b
       }
     }
   }
+
+  if (!mSavedStates.GetSize())
+    mCurStateSetApertures = false;
+  if (!mSkipAperturesNextState && setAperture)
+    SetAperturesIfNeeded(param->objectiveAp, param->condenserAp, param->JeolC1Ap, true);
+  mSkipAperturesNextState = false;
+
   if (param->targetDefocus > -9990.) {
     mScope->IncDefocus(param->targetDefocus -
       mWinApp->mFocusManager->GetTargetDefocus());
@@ -2840,10 +2965,43 @@ int CNavHelper::AreaFromStateLowDoseValue(StateParams *param, int *setNum)
 }
 
 // Set type of state saved to None and clear out the array of saved states
-void CNavHelper::ForgetSavedState(void)
+// If not restoring from a state, save the state(s) we are forgetting
+void CNavHelper::ForgetSavedState(bool restored)
 {
+  int *stateInd = CStateDlg::GetSetStateIndex();
+  if (!restored) {
+    mForgottenStates.RemoveAll();
+    mForgottenStates.Append(mSavedStates);
+    mSavedCamOfState = CStateDlg::GetCamOfSetState();
+    for (int ind = 0; ind <= MAX_SAVED_STATE_IND; ind++)
+      mPrevStateIndex[ind] = stateInd[ind];
+    mTypeOfForgottenState = mTypeOfSavedState;
+    mSavedPriorState = mPriorState;
+    mSavedStateSetApertures = mCurStateSetApertures;
+  }
   mTypeOfSavedState = STATE_NONE;
+  mCurStateSetApertures = false;
   mSavedStates.RemoveAll();
+}
+
+// Restore forgotten state after realign to item
+void CNavHelper::RestoreForgottenState()
+{
+  int *stateInd = CStateDlg::GetSetStateIndex();
+  CStateDlg::SetCamOfSetState(mSavedCamOfState);
+  mTypeOfSavedState = mTypeOfForgottenState;
+  mCurStateSetApertures = mSavedStateSetApertures;
+  mSavedStates.RemoveAll();
+  mSavedStates.Append(mForgottenStates);
+  for (int ind = 0; ind <= MAX_SAVED_STATE_IND; ind++) {
+    stateInd[ind] = mPrevStateIndex[ind];
+    if (mStateDlg && stateInd[ind] >= 0)
+      mStateDlg->UpdateListString(stateInd[ind]);
+  }
+  mForgottenStates.RemoveAll();
+  mTypeOfForgottenState = STATE_NONE;
+  mPriorState = mSavedPriorState;
+  UpdateStateDlg();
 }
 
 // Returns a copy of the first saved state if any and true, or returns false if none
@@ -3491,6 +3649,173 @@ void CNavHelper::StateCameraCoords(StateParams *param, int camIndex, int xFrame,
   right *= binning;
   top *= binning;
   bottom *= binning;
+}
+
+// Gets the current state of relevant apertures
+int CNavHelper::AperturesForMapsAndStates(int &objAp, int &condAp, int &jeolC1, 
+  CString &errStr)
+{
+  static double lastTime;
+  static int lastObj = -1, lastCond = -1, lastC1 = -1, lastErr = 0;
+  int err = 0;
+  if (!lastErr && SEMTickInterval(lastTime) < 1000.) {
+    objAp = lastObj;
+    condAp = lastCond;
+    jeolC1 = lastC1;
+    return 0;
+  }
+  lastObj = objAp = mScope->GetApertureSize(OBJECTIVE_APERTURE, &errStr);
+  if (objAp < 0)
+    err++;
+  lastCond = condAp = mScope->GetApertureSize(mScope->GetSingleCondenserAp(), &errStr);
+  if (condAp < 0)
+    err++;
+  if (mScope->GetUseTwoJeolCondAp()) {
+    lastC1 = jeolC1 = mScope->GetApertureSize(JEOL_C1_APERTURE, &errStr);
+    if (jeolC1 < 0)
+      err++;
+  }
+  lastErr = err;
+  return err;
+}
+
+// Sets apertures to given values if >= 0, only if they differ from current state
+void CNavHelper::SetAperturesIfNeeded(int objectiveAp, int condenserAp, int JeolC1Ap, 
+  bool setting)
+{
+  CString errStr;
+  int objAp, condAp, C1Ap;
+  int i = AperturesForMapsAndStates(objAp, condAp, C1Ap, errStr);
+  if (objectiveAp >= 0 && (i || objectiveAp != objAp)) {
+    mObjApToRestore = mCondApToRestore = mC1ApToRestore = -1;
+    mScope->SetApertureSize(OBJECTIVE_APERTURE, objectiveAp, true);
+    mCurStateSetApertures = setting;
+    if (setting)
+      mObjApToRestore = objAp;
+  }
+  if (condenserAp >= 0 && (i || condenserAp != condAp)) {
+    mScope->SetApertureSize(mScope->GetSingleCondenserAp(), condenserAp, true);
+    mCurStateSetApertures = setting;
+    if (setting)
+      mCondApToRestore = condAp;
+  }
+  if (JEOLscope && JeolC1Ap >= 0 && (i || JeolC1Ap != C1Ap)) {
+    mScope->SetApertureSize(JEOL_C1_APERTURE, JeolC1Ap, true);
+    mCurStateSetApertures = setting;
+    if (setting)
+      mC1ApToRestore = C1Ap;
+  }
+}
+
+// Make a text line for listing a state
+void CNavHelper::MakeStateOutputLine(StateParams *state, CString &mess)
+{
+  CString mess2, probeOrAlpha, slit, ldStr = "--";
+  int ldArea;
+  CString *names = mWinApp->GetModeNames();
+  ControlSet *focusSet = mWinApp->GetConSets() + FOCUS_CONSET;
+  int magInd = state->lowDose ? state->ldParams.magIndex : state->magIndex;
+  CameraParameters *camp = mWinApp->GetCamParams() + state->camIndex;
+  int mag = MagForCamera(camp, magInd);
+  int active = mWinApp->LookupActiveCamera(state->camIndex) + 1;
+  int spot = state->lowDose ? state->ldParams.spotSize : state->spotSize;
+  double intensity = state->lowDose ? state->ldParams.intensity : state->intensity;
+  int probe = state->lowDose ? state->ldParams.probeMode : state->probeMode;
+  float EDM = state->lowDose ? state->ldParams.EDMPercent : state->EDMPercent;
+  if (state->lowDose) {
+    ldArea = B3DCHOICE(state->lowDose > 0, RECORD_CONSET, -1 - state->lowDose);
+    ldStr = "LD " + names[ldArea == SEARCH_AREA ? SEARCH_CONSET : ldArea].Left(1);
+  }
+  if (FEIscope)
+    probeOrAlpha = state->probeMode ? "  uP" : "  nP";
+  else if (!mScope->GetHasNoAlpha() && state->beamAlpha >= 0)
+    probeOrAlpha.Format("  a%d", state->beamAlpha);
+  if (camp->GIF || mWinApp->ScopeHasFilter()) {
+    if (state->slitIn)
+      slit.Format("  slit %.0f @ %.0feV", state->slitWidth,
+        state->zeroLoss ? 0. : state->energyLoss);
+    else
+      slit = "  slit Out";
+  }
+  if (mCamera->HasDoseModulator() && EDM > 0)
+    mess2.Format("  EDM %.1f%%", EDM);
+
+  // Write basic line
+  mess.Format("%s  cam %d  %s  spot %d%s  %s %.2f%s%s", ldStr, 
+    active, UtilFormattedMag(mag, 2), spot, probeOrAlpha, mScope->GetC2Name(), 
+    mScope->GetC2Percent(spot, intensity, probe),
+    mScope->GetC2Units(), probeOrAlpha, (LPCTSTR)mess2, (LPCTSTR)slit);
+
+  // Add any apertures
+  FormatApertureString(state, mess2, false);
+  if (!mess2.IsEmpty())
+    mess += "  " + mess2;
+
+  // Add focus position
+  if (state->lowDose && state->focusAxisPos > EXTRA_VALUE_TEST) {
+    mess2.Format("  F pos %.2f angle %d off %d %d", state->focusAxisPos,
+      state->axisRotation, state->focusXoffset / focusSet->binning,
+      state->focusYoffset / focusSet->binning);
+    mess += mess2;
+  }
+  mess2.Format("\r\n    exp %.3f  bin %d  %dx%d", state->exposure,
+    state->binning / BinDivisorI(camp), state->xFrame, state->yFrame);
+  mess += mess2;
+  if (state->singleContMode)
+    mess += "  cont";
+  if (mCamera->IsDirectDetector(camp) || camp->canTakeFrames) {
+    mess2.Format("  op mode %d", state->K2ReadMode);
+    mess += mess2;
+  }
+  if ((state->saveFrames || state->alignFrames) && state->frameTime > 0) {
+    mess2.Format("  frame %.3f", state->frameTime);
+    mess += mess2;
+  }
+  if (state->saveFrames)
+    mess += " save";
+  if (state->alignFrames)
+    mess += " align";
+  if (state->alignFrames && state->useFrameAlign > 0) {
+    mess2.Format(" w/ param %d", state->faParamSetInd + 1);
+    mess += mess2;
+  }
+  if (state->lowDose && state->ldDefocusOffset > -9990.) {
+    mess2.Format("  def off %d", B3DNINT(state->ldDefocusOffset));
+    mess += mess2;
+  }
+  if (!state->lowDose && state->targetDefocus > -9990.) {
+    mess2.Format("  targ def %.1f", state->targetDefocus);
+    mess += mess2;
+  }
+}
+
+// Make standard aperture listing with or without A on each letter
+bool CNavHelper::FormatApertureString(StateParams *state, CString &mess, bool skipA)
+{
+  CString mess2;
+  int apsize, apAdded = 0;
+  mess = "";
+  if (state->condenserAp >= 0) {
+    apsize = mScope->FindApertureSizeFromIndex(mScope->GetSingleCondenserAp(),
+      state->condenserAp, true);
+    mess2.Format("C%s %d%s", skipA ? "" : "A", apsize, apsize > 5 ? "um" : "");
+    mess += mess2;
+    apAdded = 1;
+  }
+  if (state->JeolC1Ap >= 0) {
+    apsize = mScope->FindApertureSizeFromIndex(JEOL_C1_APERTURE, state->JeolC1Ap, true);
+    mess2.Format("C1%s %d%s", skipA ? "" : "A", apsize, apsize > 5 ? "um" : "");
+    mess += (apAdded ? " " : "  ") + mess2;
+    apAdded = 1;
+  }
+  if (state->objectiveAp >= 0) {
+    apsize = mScope->FindApertureSizeFromIndex(OBJECTIVE_APERTURE, state->objectiveAp,
+      true);
+    mess2.Format("O%s %d%s", skipA ? "" : "A", apsize, apsize > 5 ? "um" : "");
+    mess += (apAdded ? " " : "  ") + mess2;
+    apAdded = 1;
+  }
+  return apAdded > 0;
 }
 
 // Get number of holes defined in multi-shot params, or 0,0 for a custom pattern
@@ -4893,10 +5218,13 @@ int CNavHelper::MakeDualMap(CMapDrawItem *item)
   // If already in a map acquire state, save the ID of that and restore before new state
   // But if in any other set state, forget the prior state so we return to this state
   mSavedMapStateID = 0;
+  mForgotApertureState = false;
   if (mTypeOfSavedState == STATE_MAP_ACQUIRE) {
     mSavedMapStateID = mMapStateItemID;
     RestoreFromMapState();
   } else {
+    if (mTypeOfSavedState != STATE_NONE)
+      mForgotApertureState = mCurStateSetApertures;
     ForgetSavedState();
   }
 
@@ -5564,8 +5892,6 @@ void CNavHelper::ListFilesToOpen(void)
   TiltSeriesParam *tsp;
   CString mess, mess2, label, lastlab;
   CString *namep;
-  int mag, active, magInd, spot, probe;
-  double intensity;
   int *activeList = mWinApp->GetActiveCameraList();
   MagTable *magTab = mWinApp->GetMagTable();
   CameraParameters *camp;
@@ -5659,25 +5985,8 @@ void CNavHelper::ListFilesToOpen(void)
           mWinApp->AppendToLog(mess, LOG_OPEN_IF_CLOSED);
         if (stateInd >= 0) {
           state = mAcqStateArray->GetAt(stateInd);
-          magInd = state->lowDose ? state->ldParams.magIndex : state->magIndex;
-          camp = mWinApp->GetCamParams() + state->camIndex;
-          mag = MagForCamera(camp, magInd);
-          active = mWinApp->LookupActiveCamera(state->camIndex) + 1;
-          spot = state->lowDose ? state->ldParams.spotSize : state->spotSize;
-          intensity = state->lowDose ? state->ldParams.intensity : state->intensity;
-          probe = state->lowDose ? state->ldParams.probeMode : state->probeMode;
-
-          mess.Format("   New state:  %s   cam %d   mag %d   spot %d   %s %.2f%s   exp "
-            "%.3f   bin %d   %dx%d", state->lowDose ? "LD" : "", active, mag, spot,
-            mScope->GetC2Name(), mScope->GetC2Percent(spot, intensity, probe),
-            mScope->GetC2Units(), state->exposure,
-            state->binning / BinDivisorI(camp), state->xFrame, state->yFrame);
-          if (state->lowDose) {
-            mess2.Format("  F pos %.2f angle %d off %d %d", state->focusAxisPos,
-              state->axisRotation, state->focusXoffset / focusSet->binning,
-              state->focusYoffset / focusSet->binning);
-            mess += mess2;
-          }
+          MakeStateOutputLine(state, mess);
+          mess = "   New state:  " + mess;
           mWinApp->AppendToLog(mess, LOG_OPEN_IF_CLOSED);
         }
       }

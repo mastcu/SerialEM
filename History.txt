@@ -3,6 +3,14 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+1/27/26: Added aperture settings to states and navigator maps; the state
+dialog has an option to specify if apertures should be set when setting a
+state; and apertures will be set when going to a map acquire state (e.g., for
+Realign to Item) in restricted cases.
+
+1/27/26: Added script command to list detailed properties of an imaging state,
+and enhanced state listing for tilt series.
+
 1/22/26: Reassigned Shift H to Shift O for selecting range of Navigator maps
 in which to find holes, so Shift H works for toggling crosshairs (In 4.2).
 

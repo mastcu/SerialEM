@@ -19,7 +19,9 @@
       parameters are stored.&nbsp; A 
       state always includes the magnification, spot size, intensity, probe mode for a 
       Thermo/FEI scope or alpha for a JEOL, and energy filter settings if any (slit 
-      in/out, slit width, energy loss, whether to do zero loss). The stored state for 
+      in/out, slit width, energy loss, whether to do zero loss).&nbsp; If there is an 
+      electronic dose modulator, the EDM percentage is saved.&nbsp; If aperture 
+      movement is supported, objective and condenser aperture sizes are saved.&nbsp; The stored state for 
       a Low Dose area consists of all of the settings of the respective area; a Search 
       or View area state also includes the added beam shift and beam tilt values, and 
       the Search or View shift and 
@@ -39,7 +41,7 @@
       it might be necessary to switch to or from linear mode.</P>
     <P><B><I>Map Acquire states:</I> </B>A map acquire state consists of all the
       parameters needed to acquire more maps of the same kind as a given Navigator
-      map. This state includes both an imaging state and the file where maps are to
+      map, or to acquire matching images for realignment. This state includes both an imaging state and the file where maps are to
       be saved, which can be a montage.&nbsp; The state for a map taken in Low Dose 
       mode will be either Record, View, or Search.</P>
     <P><em><strong>Scheduled states:</strong></em> These states can be stored with the
@@ -92,7 +94,7 @@
       When a state with target defocus stored is entered or left, the microscope 
       defocus is changed by the change in target defocus, so the target can also be 
       used as a defocus offset.</P>
-    <P><B>Go to Selected State</B></P>
+    <P><B>Selected State: Go To</B></P>
     <P>This button will change the microscope and acquisition settings to the imaging state
       on the current line of the table. It is equivalent to double clicking on a line
       of the table. If the selected state is a Low-Dose state, then the parameters of
@@ -122,8 +124,8 @@
         center are saved for both Focus and Trial states.</li>
       <li>When Focus or Trial is set and the scope is currently in that area (or the 
         other area, if they are kept at the same position), the program will switch to 
-        Record area before changing the parameters of the state being set.</li>
-      <li>&nbsp;If one or more states are set in Low Dose and then the mode is turned off, 
+        the Record area before changing the parameters of the state being set.</li>
+      <li>If one or more states are set in Low Dose and then the mode is turned off, 
         the prior state of Low Dose parameters is restored to avoid inconsistent changes 
         and loss of some parameters.</li>
       <li>When Low Dose mode is toggled, what happens to the prior state is governed by 
@@ -140,12 +142,34 @@
       <li>Each currently set state is marked in the table with a &dagger; after the 
         frame size.</li>
     </ul>
-    <P><B>Update It</B></P>
+    <P><B>Selected State: Update</B></P>
     <P>If an imaging state has been set from the currently selected line of the table,
       this button is enabled and allows you to update that state with the current
       microscope and imaging parameters.</P>
-    <P><B>Delete It</B></P>
+    <P><B>Selected State: Delete</B></P>
     <P>This button deletes the current line of the table.</P>
+    <P><B>Selected State: List</B></P>
+    <P>This button prints an extensive listing of state parameters to the log window, 
+      described more fully for the <a href="script_commands.htm#ListImagingState">
+      ListImagingState</a> script command.</P>
+    <P><strong>Set apertures with state</strong></P>
+    <P>The checkbox controls whether aperture settings stored in the selected state 
+      are set when the state is gone to.&nbsp; The option appears when aperture 
+      movement is supported; it is disabled if there are no aperture values recorded 
+      for the state.&nbsp; If there are apertures stored, the line includes the size 
+      of each aperture being considered: C for condenser, C1 for the JEOL C1 aperture 
+      if both are supported, and O for objective.&nbsp; To get apertures saved in an 
+      existing state, go to that state and use the <strong>Update</strong> button.&nbsp; When the option is on, 
+      going to the state will set the apertures immediately, even in Low Dose mode 
+      where it defers setting the scope parameters for an area until that area is gone 
+      to.</P>
+    <P>If you set more than one Low Dose state and this option is set for more than 
+      one of them, the apertures will be set on each of them in turn.&nbsp; If that 
+      leaves the apertures in the wrong state, select and go to the state with the 
+      desired apertures again.&nbsp; If you do plan to set a suite of Low Dose states, 
+      it is best to select this option for only one of them, thus avoiding conflicts.&nbsp; 
+      When state is restored, the original apertures, before any Low Dose state was 
+      set, are restored.</P>
     <P><B>Go to Map Acquire State</B></P>
     <P>This button is enabled if the Navigator is open and the current item there is a
       map. It will change the microscope and imaging parameters to the state used to

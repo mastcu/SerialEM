@@ -7356,6 +7356,11 @@ int CNavigatorDlg::NewMap(bool unsuitableOK, int addOrReplaceNote, CString *newN
     !mCamera->mDoseModulator->GetDutyPercent(edmPct, report)) {
     item->mEDMPercent = edmPct;
   }
+  if (mScope->GetUseAperturesInStates() > 0) {
+    if (mHelper->AperturesForMapsAndStates(item->mObjectiveAp, item->mCondenserAp,
+      item->mJeolC1Ap, report))
+      SEMAppendToLog("WARNING: Error getting aperture states for map: " + report);
+  }
 
   // For a LD View image, store the defocus offset, and get the net view IS shift and
   // convert it to a stage position for use in realign to item
@@ -9014,6 +9019,13 @@ int CNavigatorDlg::LoadNavFile(bool checkAutosave, bool mergeFile, CString *inFi
           state->montMapConSet = B3DNINT(vals[36]) != 0;
           if (ind2 > 37)
             state->EDMPercent = (float)vals[37];
+          if (ind2 > 41) {
+            state->objectiveAp = B3DNINT(vals[38]);
+            state->condenserAp = B3DNINT(vals[39]);
+            state->JeolC1Ap = B3DNINT(vals[40]);
+            state->flags = B3DNINT(vals[41]);
+          }
+
           if (state->lowDose) {
             ind2 = 0;
             ADOC_REQUIRED(AdocGetDoubleArray("StateParam", ind1, "LowDose", vals, &ind2,
@@ -9289,6 +9301,12 @@ int CNavigatorDlg::LoadNavFile(bool checkAutosave, bool mergeFile, CString *inFi
             &item->mMapSpotSize));
 
           ADOC_OPTIONAL(AdocGetFloat("Item", sectInd, "EDMPercent", &item->mEDMPercent));
+          ADOC_OPTIONAL(AdocGetInteger("Item", sectInd, "ObjectiveAperture",
+            &item->mObjectiveAp));
+          ADOC_OPTIONAL(AdocGetInteger("Item", sectInd, "CondenserAperture",
+            &item->mCondenserAp));
+          ADOC_OPTIONAL(AdocGetInteger("Item", sectInd, "JeolC1Aperture",
+            &item->mJeolC1Ap));
 
           // Preserve double precision if it is there
           ADOC_OPTIONAL(AdocGetString("Item", sectInd, "MapIntensity", &adocStr));
@@ -11751,7 +11769,8 @@ int CNavigatorDlg::OpenFileIfNeeded(CMapDrawItem * item, bool stateOnly)
   if (*stateIndp >= 0) {
     state = mHelper->ExistingStateParam(*stateIndp, true);
     if (state) {
-      mHelper->SetStateFromParam(state, conSet, RECORD_CONSET);
+      mHelper->SetStateFromParam(state, conSet, RECORD_CONSET, 0, false, 
+        (state->flags & STATEFLAG_SET_APERTURES) != 0);
       // Uncomment to set state twice, once at start and once before acquires
       //if (!stateOnly)
       mHelper->RemoveFromArray(NAVARRAY_STATE, *stateIndp);

@@ -21,7 +21,8 @@ static int sIdTable[] = {IDC_BUT_ADDCURSTATE, IDC_BUT_ADD_MONT_MAP, IDC_BUT_ADDN
 IDC_BUT_DELSTATE, IDC_BUT_SETIMSTATE, IDC_BUT_SETMAPSTATE, IDC_BUT_FORGETSTATE,
 IDC_STAT_STATE_NAME, IDC_STAT_TITLELINE, IDC_BUTHELP, IDC_BUT_SETSCHEDSTATE,
 IDC_BUT_SAVE_DEFOCUS, IDC_STAT_PRIOR_SUMMARY, IDC_STAT_NAV_GROUP, IDC_BUT_RESTORESTATE,
-IDC_BUT_UPDATE_STATE, IDC_EDIT_STATENAME, PANEL_END,
+IDC_BUT_UPDATE_STATE, IDC_EDIT_STATENAME, IDC_BUT_LIST_STATE, IDC_STAT_SELECTED_LABEL,
+IDC_CHECK_SET_APERTURES, PANEL_END,
 IDC_LIST_STATES, PANEL_END, TABLE_END};
 
 static int sTopTable[sizeof(sIdTable) / sizeof(int)];
@@ -45,6 +46,7 @@ CStateDlg::CStateDlg(CWnd* pParent /*=NULL*/)
   , m_strName(_T(""))
   , m_strPriorSummary(_T(""))
   , m_bShowNumber(FALSE)
+  , m_bSetApertures(FALSE)
 {
   mCurrentItem = -1;
   mInitialized = false;
@@ -79,6 +81,9 @@ void CStateDlg::DoDataExchange(CDataExchange* pDX)
   DDX_Text(pDX, IDC_STAT_PRIOR_SUMMARY, m_strPriorSummary);
   DDX_Control(pDX, IDC_BUT_ADD_MONT_MAP, m_butAddMontMap);
   DDX_Check(pDX, IDC_CHECK_SHOW_NUMBER, m_bShowNumber);
+  DDX_Control(pDX, IDC_BUT_LIST_STATE, m_butListState);
+  DDX_Control(pDX, IDC_CHECK_SET_APERTURES, m_butSetApertures);
+  DDX_Check(pDX, IDC_CHECK_SET_APERTURES, m_bSetApertures);
 }
 
 
@@ -100,6 +105,8 @@ BEGIN_MESSAGE_MAP(CStateDlg, CBaseDlg)
   ON_BN_CLICKED(IDC_BUT_SAVE_DEFOCUS, OnButSaveDefocus)
   ON_BN_CLICKED(IDC_BUT_ADD_MONT_MAP, OnButAddMontMap)
   ON_BN_CLICKED(IDC_CHECK_SHOW_NUMBER, OnCheckNumber)
+  ON_BN_CLICKED(IDC_BUT_LIST_STATE, OnButListState)
+  ON_BN_CLICKED(IDC_CHECK_SET_APERTURES, OnCheckSetApertures)
 END_MESSAGE_MAP()
 
 // CStateDlg message handlers
@@ -132,6 +139,8 @@ BOOL CStateDlg::OnInitDialog()
   FillListBox();
   mIDsToAdjustHeight.push_back(IDC_STAT_NAV_GROUP);
   mIDsForNextTop.push_back(IDC_BUT_RESTORESTATE);
+  if (mWinApp->mScope->GetUseAperturesInStates() <= 0)
+    mIDsToDrop.push_back(IDC_CHECK_SET_APERTURES);
   SetupPanelTables(sIdTable, sLeftTable, sTopTable, mNumInPanel, mPanelStart,
     sHeightTable);
   CWnd *wnd = GetDlgItem(IDC_STAT_PRIOR_SUMMARY);
@@ -254,6 +263,7 @@ void CStateDlg::Update(void)
   m_butAddMontMap.EnableWindow(noTasks);
   m_butAddNavItemState.EnableWindow(noTasks && mapItem);
   m_butDelState.EnableWindow(noTasks && mCurrentItem >= 0 && mgOK);
+  m_butListState.EnableWindow(noTasks && mCurrentItem >= 0);
   m_editName.EnableWindow(noTasks && mCurrentItem >= 0 && mgOK);
   m_butSetImState.EnableWindow(noTasks && noComplex && imOK && type != STATE_MAP_ACQUIRE
     && (type == STATE_NONE || !mParam->lowDose || mCamOfSetState< 0 ||
@@ -424,6 +434,18 @@ void CStateDlg::OnButUpdateState()
   DoUpdateState(mCurrentItem, mParam, area);
 }
 
+// List a state to the log window
+void CStateDlg::OnButListState()
+{
+  CString str;
+  if (!SetCurrentParam())
+    return;
+  bool noName = mParam->name.IsEmpty();
+  mHelper->MakeStateOutputLine(mParam, str);
+  PrintfToLog("%d: %s%s%s", mCurrentItem + 1, noName ? "" : (LPCTSTR)mParam->name, 
+    noName ? "" : ": ", (LPCTSTR)str);
+}
+
 // Common function for updating state and dialog
 void CStateDlg::DoUpdateState(int selInd, StateParams *param, int area)
 {
@@ -438,7 +460,17 @@ void CStateDlg::DoUpdateState(int selInd, StateParams *param, int area)
   if (mHelper->mStateDlg) {
     mHelper->mStateDlg->UpdateListString(selInd);
     mHelper->mStateDlg->Update();
+    mHelper->mStateDlg->ManageName();
   }
+}
+
+// Option to set apertures toggled
+void CStateDlg::OnCheckSetApertures()
+{
+  UpdateData(true);
+  if (!SetCurrentParam())
+    return;
+  setOrClearFlags(&mParam->flags, STATEFLAG_SET_APERTURES, m_bSetApertures ? 1 : 0);
 }
 
 // External call to update a state
@@ -510,6 +542,7 @@ int CStateDlg::DoSetImState(int stateNum, CString &errStr)
   ControlSet *conSet = winApp->GetConSets();
   CString *names = winApp->GetModeNames();
   StateParams *param;
+  CString str, mess;
   int type = mHelper->GetTypeOfSavedState();
   int area, setNum, indSave, areaInd, saveTarg = 0;
   param = mStateArray->GetAt(stateNum);
@@ -525,7 +558,7 @@ int CStateDlg::DoSetImState(int stateNum, CString &errStr)
     return 6;
   }
   area = mHelper->AreaFromStateLowDoseValue(param, &setNum);
-  PrintfToLog("%s%s parameters set from state # %d  %s %s", area < 0 ? "" : "Low dose ",
+  mess.Format("%s%s parameters set from state # %d  %s %s", area < 0 ? "" : "Low dose ",
     names[setNum], stateNum + 1, (LPCTSTR)param->name,
     (area >= 0 && !mRemindedToGoTo && !winApp->DoingTasks()) ?
     " (Press the Go To button in Low Dose to set the scope state)" : "");
@@ -565,7 +598,16 @@ int CStateDlg::DoSetImState(int stateNum, CString &errStr)
     param->montMapConSet, param->lowDose ? 0 : 1);
   mHelper->SaveLowDoseAreaForState(area, param->camIndex, saveTarg > 0,
     param->montMapConSet);
-  mHelper->SetStateFromParam(param, conSet, setNum);
+  mHelper->SetStateFromParam(param, conSet, setNum, 0, false, 
+    (param->flags & STATEFLAG_SET_APERTURES) != 0);
+  if (mHelper->GetCurStateSetApertures() && (param->flags & STATEFLAG_SET_APERTURES)) {
+    if (mHelper->FormatApertureString(param, str, false)) {
+      if (mess.Find("Press"))
+        mess += "\r\n";
+      mess += "   apertures set to " + str;
+    }
+  }
+  SEMAppendToLog(mess);
   areaInd = param->montMapConSet ? MAX_SAVED_STATE_IND : (area + 1);
   indSave = mSetStateIndex[areaInd];
   mSetStateIndex[areaInd] = stateNum;
@@ -878,9 +920,21 @@ void CStateDlg::AddNewStateToList(void)
 // Take care of the name edit box
 void CStateDlg::ManageName(void)
 {
+  CString str;
   m_strName = "";
   if (SetCurrentParam())
     m_strName = mParam->name;
+  if (mWinApp->mScope->GetUseAperturesInStates() > 0) {
+    if (mParam->objectiveAp >= 0 || mParam->condenserAp >= 0 || mParam->JeolC1Ap >= 0) {
+      m_butSetApertures.EnableWindow(true);
+      if (mHelper->FormatApertureString(mParam, str, true))
+        str = " (" + str + ")";
+    } else {
+      m_butSetApertures.EnableWindow(false);
+    }
+    m_butSetApertures.SetWindowText("Set apertures with state" + str);
+    m_bSetApertures = (mParam->flags & STATEFLAG_SET_APERTURES) != 0;
+  }
   UpdateData(false);
 }
 
