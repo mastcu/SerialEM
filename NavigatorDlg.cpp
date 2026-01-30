@@ -519,22 +519,24 @@ void CNavigatorDlg::ManageCurrentControls()
   } else if (m_bCollapseGroups && mCurListSel >= 0) {
     group = true;
     GetCollapsedGroupLimits(mCurListSel, mCurrentItem, index);
-    mItem = mItemArray[mCurrentItem];
-    m_strItemNum.Format("# %d-%d", mCurrentItem + 1, index + 1);
-    item = GetSingleSelectedItem();
-    if (item)
-      m_strLabel = item->mLabel;
-    for (ind = mCurrentItem; ind <= index; ind++) {
-      item = mItemArray[ind];
-      if (doDraw < 0)
-        doDraw = item->mDraw ? 1 : 0;
-      if (doDraw != (item->mDraw ? 1 : 0)) {
-        enableDraw = false;
-        break;
+    if (mCurrentItem >= 0 && mCurrentItem < mItemArray.GetSize()) {
+      mItem = mItemArray[mCurrentItem];
+      m_strItemNum.Format("# %d-%d", mCurrentItem + 1, index + 1);
+      item = GetSingleSelectedItem();
+      if (item)
+        m_strLabel = item->mLabel;
+      for (ind = mCurrentItem; ind <= index; ind++) {
+        item = mItemArray[ind];
+        if (doDraw < 0)
+          doDraw = item->mDraw ? 1 : 0;
+        if (doDraw != (item->mDraw ? 1 : 0)) {
+          enableDraw = false;
+          break;
+        }
       }
+      if (enableDraw)
+        m_bDrawOne = doDraw > 0;
     }
-    if (enableDraw)
-      m_bDrawOne = doDraw > 0;
   }
 
   // Manage selection list if necessary
@@ -12798,10 +12800,13 @@ void CNavigatorDlg::MakeListMappings(void)
 }
 
 // Get the starting and ending item index for a collapsed group at listInd in list box
-// Returns true if it is collapsed group, false otherwise
+// Returns true if it is collapsed group, false otherwise but still set the indexes
 bool CNavigatorDlg::GetCollapsedGroupLimits(int listInd, int &start, int &end)
 {
-  if (listInd < 0 || !m_bCollapseGroups || mListToItem[listInd] >= 0)
+  if (listInd < 0 || !m_bCollapseGroups)
+    return false;
+  end = start = mListToItem[listInd];
+  if (start >= 0)
     return false;
   start = -1 - mListToItem[listInd];
   if (listInd >= (int)mListToItem.size() - 1)
