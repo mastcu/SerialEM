@@ -3711,7 +3711,7 @@ void CNavHelper::SetAperturesIfNeeded(int objectiveAp, int condenserAp, int Jeol
 void CNavHelper::MakeStateOutputLine(StateParams *state, CString &mess)
 {
   CString mess2, probeOrAlpha, slit, ldStr = "--";
-  int ldArea;
+  int ldArea = -1;
   CString *names = mWinApp->GetModeNames();
   ControlSet *focusSet = mWinApp->GetConSets() + FOCUS_CONSET;
   int magInd = state->lowDose ? state->ldParams.magIndex : state->magIndex;
@@ -3749,7 +3749,8 @@ void CNavHelper::MakeStateOutputLine(StateParams *state, CString &mess)
   // Add any apertures
   FormatApertureString(state, mess2, false);
   if (!mess2.IsEmpty())
-    mess += "  " + mess2;
+    mess += "  " + mess2 + ((state->flags & STATEFLAG_SET_APERTURES) ?
+      " set" : " not set");
 
   // Add focus position
   if (state->lowDose && state->focusAxisPos > EXTRA_VALUE_TEST) {
@@ -3785,6 +3786,10 @@ void CNavHelper::MakeStateOutputLine(StateParams *state, CString &mess)
   }
   if (!state->lowDose && state->targetDefocus > -9990.) {
     mess2.Format("  targ def %.1f", state->targetDefocus);
+    mess += mess2;
+  }
+  if (ldArea == VIEW_CONSET || ldArea == SEARCH_AREA) {
+    mess2.Format("  shift %.3f %.3f", state->ldShiftOffsetX, state->ldShiftOffsetY);
     mess += mess2;
   }
 }
