@@ -296,7 +296,7 @@ protected:
   int mItemInt[MAX_MACRO_TOKENS];
   double mItemDbl[MAX_MACRO_TOKENS];
   float mItemFlt[MAX_MACRO_TOKENS];
-  CString mStrLine;
+  CString mStrLine, mStrCopy;
 
   int mProcessorIndex;    // 1 for the background processor
   BOOL mDoingMacro;       // Flag for whether running
@@ -643,6 +643,7 @@ public:
   int ConvertArrayIndex(CString strItem, int leftInd, int rightInd, CString name, int numElements,
     CString * errMess);
   void FillVectorFromArrayVariable(FloatVec *fvec, IntVec *ivec, Variable *var);
+  bool SetArrayVariableFromArray(CString name, void *values, int numVals, const char *format);
   static UINT RunInShellProc(LPVOID pParam);
   static UINT RunScriptLangProc(LPVOID pParam);
   static int CreateOnePipe(HANDLE *childRd, HANDLE *childWr, SECURITY_ATTRIBUTES *saAttr, bool setForWrite,

@@ -3140,6 +3140,27 @@ void CMacroProcessor::FillVectorFromArrayVariable(FloatVec *fvec, IntVec *ivec,
   }
 }
 
+// Set 1 1D array variable from an array of integer or float values, where the type is
+// inferred by whether the format has "d".  Uses mStrCopy for error message
+bool CMacroProcessor::SetArrayVariableFromArray(CString name, void *values, int numVals, 
+  const char *format)
+{
+  CString valStr, one;
+  float *fvals = (float *)values;
+  int *ivals = (int *)values;
+  bool doInts = strstr(format, "d") != NULL;
+  for (int ind = 0; ind < numVals; ind++) {
+
+    // It didn't work in one line with ternary choice, made 0 for the ints
+    if (doInts)
+      one.Format(format, ivals[ind] );
+    else
+      one.Format(format, fvals[ind]);
+    valStr += (ind ? "\n" : "") + one;
+  }
+  return SetVariable(name, valStr, VARTYPE_REGULAR, -1, false, &mStrCopy);
+}
+
 // Fill an integer vector from all values on command
 void CMacroProcessor::SetGraphListVec(IntVec &graphList)
 {
