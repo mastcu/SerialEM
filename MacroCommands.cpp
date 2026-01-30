@@ -2591,13 +2591,7 @@ int CMacCmd::GetDoseSymmetricAngles()
     CTSDoseSymDlg::IgnoreAnglesToUseNextCall();
     CTSDoseSymDlg::FindDoseSymmetricAngles(*tsParam, angles, directions, ind, final,
       NULL);
-    for (ind = 0; ind < (int)angles.size(); ind++) {
-      one.Format("%.2f", angles[ind]);
-      if (ind)
-        value += "\n";
-      value += one;
-    }
-    if (SetVariable(mStrItems[1], value, VARTYPE_REGULAR, -1, false, &mStrCopy))
+    if (SetArrayVariableFromArray(mStrItems[1], &angles[0], (int)angles.size(), "%.2f"))
       ABORT_NOLINE("Error setting a variable with dose-symmetric angles:\n" + mStrCopy);
     return 0;
   }
@@ -9023,7 +9017,6 @@ int CMacCmd::ManyChoiceBox(void)
   CString* valPtr;
 
   dlg.mIsRadio = mItemInt[1] != 0;
-  mItem1upper = mStrItems[2];
   if (LookupVarAbortIfFail(mStrItems[2], &headervar, index) ||
     LookupVarAbortIfFail(mStrItems[3], &labelsvar, index))
     return 1;
@@ -9040,8 +9033,7 @@ int CMacCmd::ManyChoiceBox(void)
     dlg.mChoiceLabels[i] = valPtr->Mid(ix0, ix1 - ix0);
   }
 
-  mItem1upper = mStrItems[4];
-  valuesvar = LookupVariable(mItem1upper, index);
+  valuesvar = LookupVariable(mStrItems[4], index);
 
   if (valuesvar && dlg.mIsRadio) {
     if (valuesvar->numElements > 1)
@@ -9071,20 +9063,14 @@ int CMacCmd::ManyChoiceBox(void)
     repval1 = -1.;
   }
   else if (dlgstate == IDOK && dlg.mIsRadio) {
-    SetVariable(mItem1upper, dlg.mRadioVal, VARTYPE_REGULAR, -1,
+    SetVariable(mStrItems[4], dlg.mRadioVal, VARTYPE_REGULAR, -1,
       false);
     repval1 = (double)(dlg.mRadioVal);
 	}
   else if (dlgstate == IDOK && !dlg.mIsRadio){
-    CString vvar, one;
-    for (index = 0; index < dlg.mNumChoices; index++) {
-      if (index) {
-        vvar += "\n";
-      }
-      one.Format("%d", dlg.mCheckboxVals[index]);
-      vvar += one;
-    }
-    SetVariable(mItem1upper, vvar, VARTYPE_REGULAR, -1, false);
+    if (SetArrayVariableFromArray(mStrItems[4], &dlg.mCheckboxVals[0], dlg.mNumChoices,
+      "%d"))
+      ABORT_NOLINE("Error setting a variable with checkbox choice values:\n" + mStrCopy);
     repval1 = 0.;
   }
   SetReportedValues(repval1, 0.);
@@ -11650,18 +11636,9 @@ int CMacCmd::GetItemPointArray()
   CMapDrawItem *navItem = CurrentOrIndexedNavItem(index, mStrLine);
   if (!navItem)
     return 1;
-  for (index = 0; index < navItem->mNumPoints; index++) {
-    if (index) {
-      xval += "\n";
-      yval += "\n";
-    }
-    one.Format("%.3f", navItem->mPtX[index]);
-    xval += one;
-    one.Format("%.3f", navItem->mPtY[index]);
-    yval += one;
-  }
-  if (SetVariable(mStrItems[2], xval, VARTYPE_REGULAR, -1, false, &mStrCopy) ||
-    SetVariable(mStrItems[3], yval, VARTYPE_REGULAR, -1, false, &mStrCopy))
+  if (SetArrayVariableFromArray(mStrItems[2], &navItem->mPtX[0], navItem->mNumPoints,
+    "%.3f") || SetArrayVariableFromArray(mStrItems[3], &navItem->mPtY[0], 
+      navItem->mNumPoints, "%.3f"))
     ABORT_NOLINE("Error setting a variable with item point coordinates:\n" + mStrCopy);
   return 0;
 
@@ -13420,6 +13397,25 @@ int CMacCmd::MakeNavPointsAtHoles(void)
 int CMacCmd::ClearHoleFinder(void)
 {
   mNavHelper->mHoleFinderDlg->OnButClearData();
+  return 0;
+}
+
+// GetFoundHolePositions
+int CMacCmd::GetFoundHolePositions()
+{
+  FloatVec *xHoleCens, *yHoleCens;
+  IntVec *pieceOn;
+  ShortVec *holeExcludes;
+  BOOL drawIncluded, drawExcluded, bufIsFFT = false;
+  bool any = mNavHelper->mHoleFinderDlg->GetHolePositions(&xHoleCens,
+    &yHoleCens, &pieceOn, &holeExcludes, drawIncluded, drawExcluded);
+  if (any) {
+    if (SetArrayVariableFromArray(mStrItems[1], &(*xHoleCens)[0], (int)xHoleCens->size(), 
+      "%.4f") || SetArrayVariableFromArray(mStrItems[2], &(*yHoleCens)[0], 
+      (int)yHoleCens->size(), "%.4f"))
+        ABORT_NOLINE("Error setting a variable with found hole positions:\n" + mStrCopy);
+  }
+  SetRepValsAndVars(3, any ? (int)xHoleCens->size() : 0, 0.);
   return 0;
 }
 

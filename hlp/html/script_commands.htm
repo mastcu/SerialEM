@@ -5367,15 +5367,21 @@
          <TD>Outputs many properties of an imaging state to the log, where <b>name</b> can be the name
             (potentially abbreviated) or the index of a specific state (numbered from 1), -1 for all states, or
            0 for the state currently selected in the <A HREF="hidd_statedlg.htm">Imaging States dialog</A>.&nbsp; In
-           addition to the properties shown in the dialog, the listing may include: the slit insertion,
-            width, and energy loss if the camera is on an energy filter; the EDM percent if there is a
-            dose modulator; the objective and condenser apertures (OA and CA), possibly the C1 
-           aperture for a JEOL (C1A), if using apertures for states is supported and enabled; 
-           for a Low Dose state, the position and angle of the focus area and the offset of the focus subarea;
-           the operating mode ('op mode') for a direct detector camera; whether acquisition is continuous ('cont');
-           if saving or aligning frames, the frame time plus 'save' and/or 'align'; and if aligning with
-           framealign in SerialEM or IMOD, the parameter set ('w/ param') index; the defocus target
-            ('def targ') out of Low Dose or the defocus offset ('def off') for View or Search area..
+           addition to the properties shown in the dialog, the listing may include:<br />
+           &nbsp;&nbsp; the slit insertion, width, and energy loss if the camera is on an energy filter;<br /> 
+           &nbsp;&nbsp; the EDM percent if there is a dose modulator;<br /> 
+           &nbsp;&nbsp; the objective and condenser apertures (OA and CA), possibly the C1 
+           aperture for a JEOL (C1A), if using apertures for states is supported and enabled, plus whether
+            they will be applied when the state is set ('set' or 'not set'); <br /> 
+           &nbsp;&nbsp; for a Low Dose state, the position and angle of the focus area and the offset of
+            the focus subarea;<br /> 
+           &nbsp;&nbsp; the operating mode ('op mode') for a direct detector camera;<br /> 
+           &nbsp;&nbsp; whether acquisition is continuous ('cont');<br /> 
+           &nbsp;&nbsp; if saving or aligning frames, the frame time plus 'save' and/or 'align';<br /> 
+           &nbsp;&nbsp; if aligning with framealign in SerialEM or IMOD, the parameter set ('w/ param') index;<br /> 
+           &nbsp;&nbsp; the defocus target ('def targ') out of Low Dose or the defocus offset ('def off') 
+           for View or Search area;<br /> 
+           &nbsp;&nbsp; the shift offset ('shift') for View or Search area.
          </TD>
         </TR>
          <TR>
@@ -5909,6 +5915,13 @@
             use as a boundary in place of a polygon item.&nbsp; If the image is a montage that needs to be
             reloaded at a lower binning, the coordinates will be scaled by the change in binning.
             </TD>
+        </TR>
+              <TR>
+          <TD class="scriptcommand">GetFoundHolePositions xvar yvar</TD>
+          <TD>Returns X and Y stage positions of holes found by the Hole Finder, which are only available before
+             converting to Navigator points, into the array variables <b>xvar</b> and <b>yvar</b> and
+            sets <i>reportedValue1</i> and <i>2></i> to the number of values and 0.&nbsp; Return value can 
+            be assigned to variable at end of command; command added in 4.3, 29-Jan-26.</TD>
         </TR>
        <TR>
           <TD class="scriptcommand">MakeNavPointsAtHoles [#A] [#L] [#U] [#S] [#B] [#E] [#H]</TD>
