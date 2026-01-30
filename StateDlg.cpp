@@ -235,8 +235,7 @@ void CStateDlg::Update(void)
   BOOL mapItem = false;
   BOOL schedItem = false, doUpdate = false;
   BOOL imOK = SetCurrentParam() && mWinApp->LookupActiveCamera(mParam->camIndex) >= 0;
-  BOOL mgOK = !mHelper->mMultiGridDlg ||
-    mCurrentItem >= mHelper->mMultiGridDlg->m_comboLMMstate.GetCount();
+  BOOL mgOK = !mHelper->mMultiGridDlg;
   int type = mHelper->GetTypeOfSavedState();
   if (mWinApp->LowDoseMode())
     ldArea = mWinApp->mScope->GetLowDoseArea();
@@ -915,6 +914,10 @@ void CStateDlg::AddNewStateToList(void)
   UpdateListString(mCurrentItem);
   ManageName();
   Update();
+  if (mHelper->mMultiGridDlg) {
+    mHelper->mMultiGridDlg->LoadAllComboBoxes();
+    mHelper->mMultiGridDlg->SetAllComboBoxesFromNameOrNum();
+  }
 }
 
 // Take care of the name edit box
