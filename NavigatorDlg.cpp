@@ -12117,8 +12117,10 @@ void CNavigatorDlg::FinishSingleDeletion(CMapDrawItem *item, int delIndex, int l
     if (multipleInGroup)
       UpdateListString(groupStart);
   }
+  if (mCurrentItem >= (int)mItemArray.GetSize())
+    mCurrentItem = (int)mItemArray.GetSize() - 1;
   if (mCurListSel >= m_listViewer.GetCount())
-    mCurListSel--;
+    mCurListSel = m_listViewer.GetCount() - 1;
   m_listViewer.SetCurSel(mCurListSel);
 
   // Set current item to beginning of group
