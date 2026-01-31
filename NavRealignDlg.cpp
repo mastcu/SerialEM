@@ -23,15 +23,26 @@
 #endif
 
 
-static int sIdTable[] = {IDC_STAT_DISABLE_TRIM, IDC_CHECK_DISABLE_TRIM, IDC_STAT_LINE2,
+static int sIdTable[] = {IDC_STAT_DISABLE_TRIM, IDC_CHECK_DISABLE_TRIM, IDC_STAT_LINE4,
 PANEL_END,
-IDC_STAT_TEMPLATE_TITLE, IDC_STAT_TEMP_LABEL, IDC_EDIT_MAP_LABEL,
-IDC_STAT_NOT_EXIST, IDC_STAT_BUFFER_ROLLS, IDC_MAKE_TEMPLATE_MAP, IDC_STAT_LOAD_KEEP,
-IDC_STAT_SELECTED_BUF, IDC_SPIN_TEMPLATE_BUF, IDC_EDIT_MAX_SHIFT, IDC_STAT_ALIGN_LIMIT,
-IDC_STAT_MAXALI_UM, IDC_STAT_LINE, IDC_STAT_WHY_A_NO_GOOD, PANEL_END,
+IDC_STATIC_ALIGNORCENTERTITLE, IDC_STATIC_ALIGN_ATNAVITEM, IDC_RALIGNTOTEMPLATE,
+IDC_RFINDANDCENTERHOLE,
+PANEL_END,
+IDC_STAT_TEMP_LABEL, IDC_EDIT_MAP_LABEL,
+IDC_STAT_NOT_EXIST, IDC_STAT_BUFFER_ROLLS, IDC_MAKE_TEMPLATE_MAP, IDC_STAT_WHY_A_NO_GOOD, 
+IDC_STAT_LOAD_KEEP, IDC_STAT_SELECTED_BUF, IDC_SPIN_TEMPLATE_BUF, IDC_STAT_LINE,
+PANEL_END,
+IDC_STATIC_FCH_ACQUIREWITH, IDC_RALIGN_FCH_MAP, 
+IDC_RALIGN_FCH_SEARCH, IDC_RALIGN_FCH_VIEW, IDC_STATIC_FCH_CROPIMAGETO, 
+IDC_EDIT_ALIGN_FCH_SPACING, IDC_STATIC_FCH_HOLESPACINGS, IDC_STAT_LINE16,
+PANEL_END,
+IDC_STAT_ALIGN_LIMIT, IDC_EDIT_MAX_SHIFT, IDC_STAT_MAXALI_UM, 
+IDC_STAT_LINE17,
+PANEL_END,
 IDC_STAT_RESET_IS_TITLE, IDC_CHECK_RESET_IS, IDC_STAT_PARAMS_SHARED, IDC_STAT_ONLY_ONCE,
 IDC_EDIT_RESET_IS, IDC_STAT_RESET_UM, IDC_STAT_REPEAT_RESET, IDC_STAT_RESET_TIMES,
-IDC_SPIN_RESET_TIMES, IDC_CHECK_LEAVE_IS_ZERO, IDC_CHECK_APPLY_INTERACTIVE, PANEL_END,
+IDC_SPIN_RESET_TIMES, IDC_CHECK_LEAVE_IS_ZERO, IDC_CHECK_APPLY_INTERACTIVE, 
+PANEL_END,
 IDC_STAT_SCALED_TITLE, IDC_STAT_EXTRA_AREA,
 IDC_EDIT_EXTRA_FOVS, IDC_STAT_X_FOVS, IDC_STAT_SIZE_CHANGE, IDC_EDIT_MAX_PCT_CHANGE,
 IDC_STAT_PCT, IDC_STAT_ROTATION, IDC_EDIT_MAX_ROTATION, IDC_STAT_DEG, IDC_STAT_LINE3,
@@ -60,6 +71,9 @@ CNavRealignDlg::CNavRealignDlg(CWnd* pParent /*=NULL*/)
   , m_fMaxRotation(0)
   , m_bDisableTrim(FALSE)
   , m_bApplyInteractive(FALSE)
+  , m_iTemplateOrFindHole(0)
+  , m_iAcquireWith(0)
+  , m_fCropHoleSpacings(3.f)
 {
   mForRealignOnly = 0;
   mMaxRotChgd = mMaxPctChgd = false;
@@ -97,12 +111,18 @@ void CNavRealignDlg::DoDataExchange(CDataExchange* pDX)
   DDV_MinMaxFloat(pDX, m_fMaxPctChange, 0, 25.);
   DDX_Text(pDX, IDC_EDIT_MAX_ROTATION, m_fMaxRotation);
   DDV_MinMaxFloat(pDX, m_fMaxRotation, 0, 25.);
-  DDX_Control(pDX, IDC_STAT_TEMPLATE_TITLE, m_statTemplateTitle);
+  DDX_Control(pDX, IDC_STATIC_ALIGNORCENTERTITLE, m_statTemplateTitle);
   DDX_Control(pDX, IDC_STAT_RESET_IS_TITLE, m_statResetISTitle);
   DDX_Control(pDX, IDC_STAT_SCALED_TITLE, m_statScaledTitle);
   DDX_Check(pDX, IDC_CHECK_DISABLE_TRIM, m_bDisableTrim);
   DDX_Control(pDX, IDC_STAT_DISABLE_TRIM, m_statDisableTrim);
   DDX_Check(pDX, IDC_CHECK_APPLY_INTERACTIVE, m_bApplyInteractive);
+  DDX_Radio(pDX, IDC_RALIGNTOTEMPLATE, m_iTemplateOrFindHole);
+  DDX_Radio(pDX, IDC_RALIGN_FCH_MAP, m_iAcquireWith);
+  DDX_Text(pDX, IDC_EDIT_ALIGN_FCH_SPACING, m_fCropHoleSpacings);
+  DDV_MinMaxFloat(pDX, m_fCropHoleSpacings, 0.2f, 20.f);
+  DDX_Control(pDX, IDC_RALIGNTOTEMPLATE, m_butRAlignToTemplate);
+  DDX_Control(pDX, IDC_RFINDANDCENTERHOLE, m_butRFindAndCenterHole);
 }
 
 
@@ -119,6 +139,9 @@ BEGIN_MESSAGE_MAP(CNavRealignDlg, CBaseDlg)
   ON_EN_KILLFOCUS(IDC_EDIT_EXTRA_FOVS, OnKillfocusEditExtraFovs)
   ON_EN_KILLFOCUS(IDC_EDIT_MAX_PCT_CHANGE, OnKillfocusEditMaxPctChange)
   ON_EN_KILLFOCUS(IDC_EDIT_MAX_ROTATION, OnKillfocusEditMaxRotation)
+  ON_BN_CLICKED(IDC_RALIGNTOTEMPLATE, OnRTemplateOrFindHole)
+  ON_BN_CLICKED(IDC_RFINDANDCENTERHOLE, OnRTemplateOrFindHole)
+  ON_EN_KILLFOCUS(IDC_EDIT_ALIGN_FCH_SPACING, OnEnKillfocusEditAlignFchSpacing)
 END_MESSAGE_MAP()
 
 
@@ -126,7 +149,7 @@ END_MESSAGE_MAP()
 BOOL CNavRealignDlg::OnInitDialog()
 {
   CBaseDlg::OnInitDialog();
-  BOOL states[5] = {true, true, true, true, true};
+  BOOL states[8] = {true, true, true, true, true, true, true, true};
   CFont *boldFont = mWinApp->GetBoldFont(&m_statTemplateTitle);
   mHelper = mWinApp->mNavHelper;
   m_sbcResetTimes.SetRange(0, 10000);
@@ -139,8 +162,6 @@ BOOL CNavRealignDlg::OnInitDialog()
   mParams = *mMasterParams;
   SetupPanelTables(sIdTable, sLeftTable, sTopTable, mNumInPanel, mPanelStart,
     sHeightTable);
-  states[1] = mForRealignOnly <= 0;
-  states[3] = mForRealignOnly >= 0;
 
   m_strMapLabel = mParams.templateLabel;
   m_fAlignShift = mParams.maxAlignShift;
@@ -160,11 +181,23 @@ BOOL CNavRealignDlg::OnInitDialog()
   m_fMaxRotation = mHelper->GetScaledRealignMaxRot();
   letter = 'A' + mParams.scaledAliLoadBuf;
   m_strRefMapBuf = letter;
+  m_iTemplateOrFindHole = mParams.findAndCenterHole ? 1 : 0;
+  if (m_iTemplateOrFindHole != 0)
+    m_butRFindAndCenterHole.SetFont(boldFont);
+  else
+    m_butRAlignToTemplate.SetFont(boldFont);
+  m_iAcquireWith = mParams.holeCenteringAcquire;
+  m_fCropHoleSpacings = mParams.cropHoleSpacings;
   m_statTemplateTitle.SetFont(boldFont);
   m_statResetISTitle.SetFont(boldFont);
   m_statScaledTitle.SetFont(boldFont);
   m_statDisableTrim.SetFont(boldFont);
   UpdateData(false);
+  states[1] = mForRealignOnly <= 0;
+  states[2] = mForRealignOnly <= 0 && !m_iTemplateOrFindHole;
+  states[3] = mForRealignOnly <= 0 && m_iTemplateOrFindHole;
+  states[4] = mForRealignOnly <= 0;
+  states[6] = mForRealignOnly >= 0;
   AdjustPanels(states, sIdTable, sLeftTable, sTopTable, mNumInPanel, mPanelStart, 0,
     sHeightTable);
   ManageBufferUseStatus(IDC_STAT_BUFFER_ROLLS, mParams.loadAndKeepBuf);
@@ -200,6 +233,9 @@ void CNavRealignDlg::OnOK()
     mParams.scaledAliPctChg = m_fMaxPctChange;
   if (mMaxRotChgd)
     mParams.scaledAliMaxRot = m_fMaxRotation;
+  mParams.findAndCenterHole = m_iTemplateOrFindHole != 0;
+  mParams.holeCenteringAcquire = m_iAcquireWith;
+  mParams.cropHoleSpacings = m_fCropHoleSpacings;
 
   *mMasterParams = mParams;
   CBaseDlg::OnOK();
@@ -210,6 +246,8 @@ void CNavRealignDlg::OnEnKillfocusEditMapLabel()
 {
   UpdateData(true);
   ManageMap();
+  /*if (m_iTemplateOrFindHole == 0)
+    ManageMap();*/
 }
 
 // Making a template map from image in A, including saving if needed
@@ -316,6 +354,7 @@ void CNavRealignDlg::OnCheckResetIs()
 // New # of iterations
 void CNavRealignDlg::OnDeltaposSpinResetTimes(NMHDR *pNMHDR, LRESULT *pResult)
 {
+  UpdateData(true);
   FormattedSpinnerValue(pNMHDR, pResult, 1, 5, mMaxNumResets, m_strRepeatReset,
     "Reset IS up to %d");
 }
@@ -323,6 +362,7 @@ void CNavRealignDlg::OnDeltaposSpinResetTimes(NMHDR *pNMHDR, LRESULT *pResult)
 // New buffer
 void CNavRealignDlg::OnDeltaposSpinTemplateBuf(NMHDR *pNMHDR, LRESULT *pResult)
 {
+  UpdateData(true);
   if (NewSpinnerValue(pNMHDR, pResult, mParams.loadAndKeepBuf, 1, MAX_BUFFERS - 1,
     mParams.loadAndKeepBuf))
     return;
@@ -340,6 +380,7 @@ void CNavRealignDlg::OnCheckLeaveIsZero()
 
 void CNavRealignDlg::OnDeltaposSpinRefMapBuf(NMHDR *pNMHDR, LRESULT *pResult)
 {
+  UpdateData(true);
   if (NewSpinnerValue(pNMHDR, pResult, mParams.scaledAliLoadBuf, 1, MAX_BUFFERS - 1,
     mParams.scaledAliLoadBuf))
     return;
@@ -434,4 +475,40 @@ void CNavRealignDlg::ManageBufferUseStatus(int nID, int bufNum)
   else
     show = false;
   ShowDlgItem(nID, show);
+}
+
+void CNavRealignDlg::OnRTemplateOrFindHole()
+{
+  UPDATE_DATA_TRUE;
+  CFont *boldFont = mWinApp->GetBoldFont(&m_statTemplateTitle);
+  CFont *regFont = GetDlgItem(IDC_STAT_PARAMS_SHARED)->GetFont();
+  BOOL states[8] = {true, true, true, true, true, true, true, true};
+  states[2] = mForRealignOnly <= 0;
+  states[3] = mForRealignOnly <= 0;
+  states[4] = mForRealignOnly <= 0;
+  states[6] = mForRealignOnly >= 0;
+  if (m_iTemplateOrFindHole) {
+    states[2] = false;
+    states[3] = true;
+    m_butRAlignToTemplate.SetFont(regFont);
+    m_butRFindAndCenterHole.SetFont(boldFont);
+  }
+  else {
+    states[2] = true;
+    states[3] = false;
+    m_butRAlignToTemplate.SetFont(boldFont);
+    m_butRFindAndCenterHole.SetFont(regFont);
+  }
+  AdjustPanels(states, sIdTable, sLeftTable, sTopTable, mNumInPanel, mPanelStart, 0,
+    sHeightTable);
+  ManageBufferUseStatus(IDC_STAT_BUFFER_ROLLS, mParams.loadAndKeepBuf);
+  ManageBufferUseStatus(IDC_STAT_REF_BUF_ROLLS, mParams.scaledAliLoadBuf);
+  if (mForRealignOnly <= 0)
+    ManageMap();
+}
+
+
+void CNavRealignDlg::OnEnKillfocusEditAlignFchSpacing()
+{
+  UpdateData(true);
 }

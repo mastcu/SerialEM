@@ -13125,6 +13125,7 @@ int CMacCmd::FindAndCenterOneHole()
   CMapDrawItem* item;
   HoleFinderParams *holeParams = mNavHelper->GetHoleFinderParams();
   float xmin, xmax, ymin, ymax;
+  bool cropCenter = false;
 
   imBuf = mWinApp->mMainView->GetActiveImBuf();
   if (!imBuf->mImage)
@@ -13198,8 +13199,18 @@ int CMacCmd::FindAndCenterOneHole()
     holeSize *= scale;
   }
 
+  if (!mItemEmpty[5] && !mItemEmpty[6]) {
+    if (mItemFlt[5] > 0 && mItemFlt[6] > 0) {
+      xCen = mItemFlt[5];
+      yCen = mItemFlt[6];
+    } else if (mItemFlt[5] < 0 || mItemFlt[6] < 0) {
+      cropCenter = true;
+    }
+  }
+
   index = mNavHelper->mHoleFinderDlg->FindAndCenterOneHole(imBuf, holeSize,
-    mItemEmpty[3] ? 0 : mItemInt[3], mItemEmpty[4] ? 0.f : mItemFlt[4], xCen, yCen);
+    mItemEmpty[3] ? 0 : mItemInt[3], mItemEmpty[4] ? 0.f : mItemFlt[4], xCen, yCen, 
+    mItemEmpty[7] ? 0 : mItemFlt[7], cropCenter);
   if (index > 0) {
     AbortMacro();
     return 1;

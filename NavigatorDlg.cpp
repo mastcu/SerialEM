@@ -3236,7 +3236,7 @@ BOOL CNavigatorDlg::UserMousePoint(EMimageBuffer *imBuf, float inX, float inY,
 {
   ScaleMat aInv;
   float delX, delY, stageX, stageY,xInPiece, yInPiece;
-  int pieceIndex;
+  int pieceIndex, err;
   int groupID = 0;
   CMapDrawItem *item;
   BOOL acquire = false;
@@ -3250,6 +3250,7 @@ BOOL CNavigatorDlg::UserMousePoint(EMimageBuffer *imBuf, float inX, float inY,
     !mAddingPoints && !mAddingPoly;
   bool addingOne = m_bEditMode && button == VK_MBUTTON && !mAddingPoints && !mAddingPoly;
   bool movingOne = (m_bEditMode || mAddingPoints) && button == VK_RBUTTON && !mAddingPoly;
+  CString errStr;
 
   mLastSelectWasCurrent = false;
   if (!(mAddingPoints || mAddingPoly || mMovingItem || selecting || movingOne ||
@@ -3257,6 +3258,15 @@ BOOL CNavigatorDlg::UserMousePoint(EMimageBuffer *imBuf, float inX, float inY,
     return false;
   if (mMovingItem && button == VK_MBUTTON)
     return false;
+
+  // if center point in hole
+  //TODO  only allow if HoleFinder is open. IsWindowVisible() seemed to cause issue
+  if (mHelper->mHoleFinderDlg->m_bCenterAddedHoles) {
+    err = CenterAddedPointInHole(imBuf, inX, inY, errStr);
+    if (err)
+      PrintfToLog("WARNING: Failed to center added point in hole: %s", errStr);
+  }
+
   if (!ConvertMousePoint(imBuf, inX, inY, stageX, stageY, aInv, delX, delY, xInPiece,
     yInPiece, pieceIndex))
     return false;
@@ -3363,6 +3373,95 @@ BOOL CNavigatorDlg::UserMousePoint(EMimageBuffer *imBuf, float inX, float inY,
     return SelectNearestPoint(imBuf, stageX, stageY, aInv, delX, delY, ctrlKey, 1.e9);
   }
   return true;
+}
+
+// Get hole size, from a map containing the stage location of the buffer image if provided
+int CNavigatorDlg::GetHoleSize(float &holeSize, EMimageBuffer* imBuf)
+{
+  HoleFinderParams *holeParams = mHelper->GetHoleFinderParams();
+  MapItemArray* itemArr = GetItemArray();
+  float tilt, scale, rotation, stageX, stageY, imSizeX, imSizeY;
+  float xmin, xmax, ymin, ymax;
+  int sizeX, sizeY, index;
+  CMapDrawItem* item;
+  holeSize = 0.f;
+
+  mHelper->mHoleFinderDlg->SyncToMasterParams();
+
+  if (imBuf) {
+    //Get stage coordinates and tilt of current buffer image
+    if (!imBuf->GetStagePosition(stageX, stageY)) {
+      return 1;
+    }
+    if (!imBuf->GetAxisAngle(tilt))
+      tilt = 0.f;
+    if (!imBuf->mMagInd || imBuf->mCamera < 0) {
+      return 2;
+    }
+
+    mHelper->ConvertIStoStageIncrement(imBuf->mMagInd, imBuf->mCamera, imBuf->mISX,
+      imBuf->mISY, tilt, stageX, stageY);
+
+    //get size of buffer image in microns, compare to size of map in microns
+    imBuf->mImage->getSize(sizeX, sizeY);
+    imSizeX = (float)sizeX * mShiftManager->GetPixelSize(imBuf);
+    imSizeY = (float)sizeY * mShiftManager->GetPixelSize(imBuf);
+
+    for (index = 0; index < (int)itemArr->GetSize(); index++) {
+      item = itemArr->GetAt(index);
+
+      //If item is a map containing the buffer image position, use its stored hole size
+      if (item->IsMap() && item->mFoundHoleSize > 0. &&
+        InsideContour(item->mPtX, item->mPtY, item->mNumPoints, stageX, stageY)) {
+
+        //Ensure that the buffer image is smaller overall than the map
+        xmin = item->mPtX[0];
+        xmax = xmin;
+        ymin = item->mPtY[0];
+        ymax = ymin;
+        for (int j = 1; j < item->mNumPoints; j++) {
+          ACCUM_MIN(xmin, item->mPtX[j]);
+          ACCUM_MIN(ymin, item->mPtY[j]);
+          ACCUM_MAX(xmax, item->mPtX[j]);
+          ACCUM_MAX(ymax, item->mPtY[j]);
+        }
+        if (imSizeX <= xmax - xmin && imSizeY <= ymax - ymin) {
+          SEMTrace('1', "Using hole size from map with ID %d", index + 1);
+          holeSize = item->mFoundHoleSize;
+          break;
+        }
+      }
+    }
+    mShiftManager->GetScaleAndRotationForFocus(imBuf, scale, rotation);
+    holeSize *= scale;
+  }
+  if (holeSize == 0) {
+    // If no imBuf or map with stored hole size, use hole size from hole finder
+    holeSize = holeParams->hexagonalArray ? holeParams->hexDiameter : 
+      holeParams->diameter;
+    if (imBuf) {
+      SEMTrace('1', "No map was found with stored hole size for current stage position. "
+        "Size from hole finder parameters will be used.");
+    }
+  }
+  return 0;
+}
+
+int CNavigatorDlg::CenterAddedPointInHole(EMimageBuffer* imBuf, float &inX, float &inY,
+  CString &errStr)
+{
+  float holeSize;
+  if (GetHoleSize(holeSize, imBuf)) {
+    errStr.Format("Failed to obtain hole size for hole centering");
+    return 1;
+  }
+
+  if (mHelper->mHoleFinderDlg->FindAndCenterOneHole(imBuf, holeSize, 0, 0.f, inX, inY, 
+    -3.f, true)) {
+    errStr.Format("Failed to center point in a hole");
+    return 2;
+  }
+  return 0;
 }
 
 // Initial operations for adjusting a mouse point and converting it to stage coords

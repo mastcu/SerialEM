@@ -50,9 +50,9 @@ public:
   void StopMultiMap();
   void MultimapCleanup(int error);
   int FindAndCenterOneHole(EMimageBuffer *imBuf, float diameter, int numTry, float maxFracShift,
-    float &xCenter, float &yCenter);
+    float &xCenter, float &yCenter, float crop, bool cropCenter);
   int DoFindHoles(EMimageBuffer *imBuf, bool synchronous, FloatVec *inXboundary = NULL, 
-    FloatVec *inYboundary = NULL);
+    FloatVec *inYboundary = NULL, bool croppedBuf = false);
   int DoMakeNavPoints(int layoutType, float lowerMeanCutoff, float upperMeanCutoff,
     float sdCutoff, float blackCutoff, float edgeDistCutoff, int useHexDiagonals);
   bool DoingMultiMapHoles() {return mPMMmagIndex > 0 ; };
@@ -79,6 +79,7 @@ private:
   HoleFinderParams *mMasterParams;
   CNavHelper *mHelper;
   CNavigatorDlg *mNav;
+  EMimageBuffer *mHoleCenteringImBuf;
   bool mHaveHoles;
   bool mIsOpen;
   float mMeanMin, mMeanMax;
@@ -242,4 +243,6 @@ public:
   afx_msg void OnKillfocusEditHullDist();
   BOOL m_bUseBestSubset;
   afx_msg void OnUseBestSubset();
+  BOOL m_bCenterAddedHoles;
+  afx_msg void OnCenterAddedHoles();
 };

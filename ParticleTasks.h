@@ -8,6 +8,7 @@ class CZbyGSetupDlg;
 enum { WFD_USE_TRIAL, WFD_USE_FOCUS, WFD_WITHIN_AUTOFOC };
 enum { DW_FAILED_TOO_LONG = 1, DW_FAILED_AUTOALIGN, DW_FAILED_AUTOFOCUS,
   DW_FAILED_TOO_DIM, DW_FAILED_NO_INFO, DW_EXTERNAL_STOP };
+enum { FCH_ACQUIRE_MAP, FCH_ACQUIRE_LD_SEARCH, FCH_ACQUIRE_LD_VIEW};
 
 struct DriftWaitParams {
   int measureType;              // Type of image/operation to assess with
@@ -201,6 +202,19 @@ private:
   bool mATLastFailed;               // Failure flag
   BOOL mATDidSaveState;             // Flag that starting state was saved
   int mATsizeX, mATsizeY;           // Size of template, for cropping image
+  int mATConSetNum;                 // Control set number to capture images for aligning
+  int mATHoleCenteringMode;         // 0=none, 1=hole centering, 2=even multishot center 
+  
+  bool mFCHOneHoleForMulti;         // Flag if only using one hole for centering even multishot 
+  int mFCHrestoreISdir;             // Direction to IS for when centering in even multishot 
+  double mFCHstartingISX;           // Initial X image shift at hole or multishot center
+  double mFCHstartingISY;           // Initial Y image shift at hole or multishot center
+  float mFCHholeVecISX;             // X image shift from center to nearest hole
+  float mFCHholeVecISY;             // Y image shift from center to nearest hole
+  float mFCHdelISX;                 // X change in image shift from centering hole
+  float mFCHdelISY;                 // Y change in image shift from centering hole  
+  int mFCHmagInd;                   // Mag index used for finding and centering hole
+  bool mFCHresetIS;                 // Flag to reset IS for centering hole  
 
   DewarVacParams mDVParams;         // Params for operation
   bool mDVAlreadyFilling;           // Flag that it is now/already filling
@@ -274,9 +288,14 @@ public:
   int GetLDAreaForZbyG(BOOL lowDose, int useVinLD, BOOL &usingView);
   void DoZbyGCalibration(ZbyGParams &param, int calInd, int iterations);
   void PrepareAutofocusForZbyG(ZbyGParams &param, bool saveAndSetLD);
+  void StartTemplateOrHoleAlign(CMapDrawItem *map, int conSetNum);
+  int CenterNavItemOnHole(CMapDrawItem *item, NavAlignParams &aliParams, bool doingMulti);
   int AlignToTemplate(NavAlignParams &aliParams);
   int DoingTemplateAlign() { return mATIterationNum >= 0 ? mATIterationNum + 1 : 0; };
   void TemplateAlignNextTask(int param);
+  void AlignOrCenterHoleResetIS();
+  int DoCenteringAutoAlign(bool cropping);
+  int TestForTemplateTermination();
   void StopTemplateAlign();
   int TemplateAlignBusy();
   void TemplateAlignCleanup(int error);

@@ -25,6 +25,8 @@
 #include "CameraController.h"
 #include "EMmontageController.h"
 #include "ZbyGSetupDlg.h"
+#include "HoleFinderDlg.h"
+#include "MultiShotDlg.h"
 
 #if defined(_DEBUG) && defined(_CRTDBG_MAP_ALLOC)
 #define new DEBUG_NEW
@@ -77,6 +79,8 @@ CParticleTasks::CParticleTasks(void)
   mZBGCalUseBeamTilt = false;
   mZBGSavedTop = -1;
   mATIterationNum = -1;
+  mFCHholeVecISX = 0.f;
+  mFCHholeVecISY = 0.f;
   mDVDoingDewarVac = false;
   mDVSetAutoVibOff = false;
   mDoingPrevPrescan = false;
@@ -2017,6 +2021,89 @@ void CParticleTasks::PrepareAutofocusForZbyG(ZbyGParams &param, bool saveAndSetL
     mScope->IncDefocus(param.focusOffset);
 }
 
+int CParticleTasks::CenterNavItemOnHole(CMapDrawItem *item, NavAlignParams &aliParams, 
+  bool doingMulti)
+{
+  int conSetNum = 0;
+  CMapDrawItem *mapItem = NULL;
+  
+  mATParams = aliParams;
+  mATHoleCenteringMode = 1;
+  if (mATParams.holeCenteringAcquire == FCH_ACQUIRE_MAP) {
+    mapItem = mWinApp->mNavigator->FindItemWithMapID(item->mDrawnOnMapID, 
+      true);
+    if (!mapItem)
+      return item->mDrawnOnMapID ? 2 : 1;
+    mFCHmagInd = mapItem->mMapMagInd;
+  } else {
+    LowDoseParams* ldParams = mWinApp->GetLowDoseParams();
+    if (mATParams.holeCenteringAcquire == FCH_ACQUIRE_LD_SEARCH) {
+      conSetNum = SEARCH_CONSET;
+      mFCHmagInd = ldParams[SEARCH_AREA].magIndex;
+    }
+    else if (mATParams.holeCenteringAcquire == FCH_ACQUIRE_LD_VIEW) {
+      conSetNum = VIEW_CONSET;
+      mFCHmagInd = ldParams[VIEW_CONSET].magIndex;
+    }
+  }
+  
+  if (doingMulti) {
+    int numXholes = item->mNumXholes;
+    int numYholes = item->mNumYholes;
+    int numHoles, minHoleVecInd = 0;
+    float minHoleVecDist, dist, ind;
+    FloatVec delISX, delISY;
+    IntVec posIndex;
+    MultiShotParams *msParams = mWinApp->mNavHelper->GetMultiShotParams();
+    if (numXholes == 0) {
+      numXholes = msParams->numHoles[0];
+      numYholes = msParams->numHoles[1];
+    }
+    if (!(numXholes % 2) || !(numYholes % 2)) {
+      mATHoleCenteringMode = 2;
+      mScope->GetImageShift(mFCHstartingISX, mFCHstartingISY);
+      numHoles = GetHolePositions(delISX, delISY, posIndex, mFCHmagInd,
+        mWinApp->GetCurrentCamera(), numXholes, numYholes, mScope->GetTiltAngle(), false);
+    
+      // exclude skipped holes
+      if (item->mNumXholes > 0) {
+        SkipHolesInList(delISX, delISY, posIndex, item->mSkipHolePos, item->mNumSkipHoles, 
+          numHoles);
+      }
+      
+      minHoleVecDist = powf(delISX[0], 2.f) + powf(delISY[0], 2.f);
+      mFCHholeVecISX = delISX[0];
+      mFCHholeVecISY = delISY[0];
+      for (ind = 1; ind < (int)delISX.size(); ind++) {
+        dist = powf(delISX[ind], 2.f) + powf(delISY[ind], 2.f);
+        if (dist < minHoleVecDist) {
+          minHoleVecDist = dist;
+          minHoleVecInd = ind;
+          mFCHholeVecISX = delISX[ind];
+          mFCHholeVecISY = delISY[ind];
+        }
+      }
+
+      //Check if hole in opposite direction is in the hole list
+      mFCHOneHoleForMulti = true;
+      for (ind = 0; ind < (int)delISX.size(); ind++) {
+        dist = powf(delISX[ind] + mFCHholeVecISX, 2.f) + 
+               powf(delISY[ind] + mFCHholeVecISY, 2.f);
+        if (dist < 0.1f * minHoleVecDist) {
+          mFCHOneHoleForMulti = false;
+          break;
+        }
+      }
+
+      mScope->SetImageShift(mFCHstartingISX + mFCHholeVecISX, 
+        mFCHstartingISX + mFCHholeVecISX);
+      mFCHrestoreISdir = 1;
+    }
+  }
+  StartTemplateOrHoleAlign(mapItem, conSetNum);
+  return 0;
+}
+
 ///////////////////////////////////////////////////////////////////////
 // ALIGN TO TEMPLATE
 //
@@ -2025,9 +2112,8 @@ int CParticleTasks::AlignToTemplate(NavAlignParams & aliParams)
 {
   CMapDrawItem *map;
   EMimageBuffer *imBuf = &mImBufs[aliParams.loadAndKeepBuf];
-  MontParam montParm;
-  ControlSet *conSet = mWinApp->GetConSets() + TRACK_CONSET;
   mATParams = aliParams;
+  mATHoleCenteringMode = 0; //Don't do any hole centering
 
   // Find map and check it
   map = mWinApp->mNavigator->FindItemWithString(mATParams.templateLabel, false, true);
@@ -2053,15 +2139,33 @@ int CParticleTasks::AlignToTemplate(NavAlignParams & aliParams)
       return 1;
   }
 
-  mATDidSaveState = !mWinApp->LowDoseMode();
-  if (mATDidSaveState) {
-    mNavHelper->SetTypeOfSavedState(STATE_NONE);
-    mNavHelper->SaveCurrentState(STATE_MAP_ACQUIRE, 0, map->mMapCamera, 0);
+  StartTemplateOrHoleAlign(map, 0);
+  return 0;
+}
+
+// Start Template Align / Hole centering, taking an image using map state or conset
+void CParticleTasks::StartTemplateOrHoleAlign(CMapDrawItem *map, int conSetNum)
+{
+  if (map) {
+    mATDidSaveState = !mWinApp->LowDoseMode();
+    ControlSet *conSet = mWinApp->GetConSets() + TRACK_CONSET;
+    MontParam montParm;
+    if (mATDidSaveState) {
+      mNavHelper->SetTypeOfSavedState(STATE_NONE);
+      mNavHelper->SaveCurrentState(STATE_MAP_ACQUIRE, 0, map->mMapCamera, 0);
+    }
+    mNavHelper->PrepareToReimageMap(map, &montParm, conSet, TRIAL_CONSET, (mATDidSaveState
+      || !(mWinApp->LowDoseMode() && map->mMapLowDoseConSet < 0)) ? 1 : 0, 1);
+    if (!mNavHelper->GetRIstayingInLD())
+      mNavHelper->SetMapOffsetsIfAny(map);
+
+    mATConSetNum = mNavHelper->GetRIstayingInLD() ? mNavHelper->GetRIconSetNum() :
+      TRACK_CONSET;
   }
-  mNavHelper->PrepareToReimageMap(map, &montParm, conSet, TRIAL_CONSET, (mATDidSaveState
-    || !(mWinApp->LowDoseMode() && map->mMapLowDoseConSet < 0)) ? 1 : 0, 1);
-  if (!mNavHelper->GetRIstayingInLD())
-    mNavHelper->SetMapOffsetsIfAny(map);
+  else {
+    mATDidSaveState = false;
+    mATConSetNum = conSetNum;
+  }
 
   mATResettingShift = false;
   mATIterationNum = 0;
@@ -2071,23 +2175,23 @@ int CParticleTasks::AlignToTemplate(NavAlignParams & aliParams)
   mWinApp->mBufferManager->SetShiftsOnAcquire(B3DMAX(1, mATSavedShiftsOnAcq));
   mCamera->SetCancelNextContinuous(true);
   mCamera->SetRequiredRoll(1);
-  mWinApp->mCamera->InitiateCapture(
-    mNavHelper->GetRIstayingInLD() ? mNavHelper->GetRIconSetNum() : TRACK_CONSET);
+  mWinApp->mCamera->InitiateCapture(mATConSetNum);
 
   mWinApp->UpdateBufferWindows();
-  mWinApp->SetStatusText(MEDIUM_PANE, "ALIGNING TO TEMPLATE");
+  mWinApp->SetStatusText(MEDIUM_PANE, mATHoleCenteringMode > 0 ? "FINDING AND CENTERING HOLE" : 
+    "ALIGNING TO TEMPLATE");
   mWinApp->AddIdleTask(TASK_TEMPLATE_ALIGN, 0, 0);
-
-  return 0;
 }
 
 // Next operation in align to template
 void CParticleTasks::TemplateAlignNextTask(int param)
 {
-  int alignErr, ix0, ix1, iy0, iy1, nxIm, nyIm;
-  double ISX, ISY, radialUM, stz;
+  int ix0, ix1, iy0, iy1, nxIm, nyIm;
   float backlashX, backlashY, shiftX, shiftY;
   bool cropping;
+  float holeSize;
+  float xCen, yCen;
+  double ISX, ISY;
   CString mess;
   ScaleMat mat;
   if (mATIterationNum < 0)
@@ -2111,89 +2215,193 @@ void CParticleTasks::TemplateAlignNextTask(int param)
     }
 
     // Otherwise new image for align
-    mWinApp->mCamera->InitiateCapture(
-      mNavHelper->GetRIstayingInLD() ? mNavHelper->GetRIconSetNum() : TRACK_CONSET);
-
+    mWinApp->mCamera->InitiateCapture(mATConSetNum);
+  
+  } else if (mFCHresetIS) {
+      AlignOrCenterHoleResetIS();
 
   } else {
+    if (mATHoleCenteringMode == 0) {
+      // Got an image, align it
+      mImBufs->mImage->getSize(nxIm, nyIm);
+      if (!mATIterationNum)
+        mImBufs[mATParams.loadAndKeepBuf].mImage->getSize(mATsizeX, mATsizeY);
+      cropping = nxIm > mATsizeX && nyIm > mATsizeY;
+      if (DoCenteringAutoAlign(cropping))
+        return;
 
-    // Got an image, align it
-    mImBufs->mImage->getSize(nxIm, nyIm);
-    if (!mATIterationNum)
-      mImBufs[mATParams.loadAndKeepBuf].mImage->getSize(mATsizeX, mATsizeY);
-    cropping = nxIm > mATsizeX && nyIm > mATsizeY;
-    mWinApp->mShiftManager->SetNextAutoalignLimit(mATParams.maxAlignShift);
-    alignErr = mWinApp->mShiftManager->AutoAlign(B3DCHOICE(mATIterationNum,
-      cropping ? 2 : 1, mATParams.loadAndKeepBuf), 1, true, AUTOALIGN_KEEP_SPOTS, NULL,
-      0., 0., 0., 0., 0., NULL, NULL, GetDebugOutput('1'));
-    if (alignErr) {
-      SEMMessageBox(alignErr < 0 ? "Template autoalignment failed to find a peak within"
-        " the distance limit" : "Template autoalignment had a memory or other error");
-      mATLastFailed = true;
-      StopTemplateAlign();
-      return;
-    }
-
-    // Crop image and shift it
-    mImBufs->mImage->getShifts(shiftX, shiftY);
-    if (cropping) {
-      ix0 = (nxIm - mATsizeX) / 2;
-      ix1 = ix0 + mATsizeX - 1;
-      iy0 = (nyIm - mATsizeY) / 2;
-      iy1 = iy0 + mATsizeY - 1;
-      ix0 = mWinApp->mProcessImage->CropImage(mImBufs, iy0, ix0, iy1, ix1);
-      if (ix0) {
-        mess.Format("Error # %d attempting to crop new image to match template", ix0);
-        SEMMessageBox(mess);
+      // Crop image and shift it
+      mImBufs->mImage->getShifts(shiftX, shiftY);
+      if (cropping) {
+        ix0 = (nxIm - mATsizeX) / 2;
+        ix1 = ix0 + mATsizeX - 1;
+        iy0 = (nyIm - mATsizeY) / 2;
+        iy1 = iy0 + mATsizeY - 1;
+        ix0 = mWinApp->mProcessImage->CropImage(mImBufs, iy0, ix0, iy1, ix1);
+        if (ix0) {
+          mess.Format("Error # %d attempting to crop new image to match template", ix0);
+          SEMMessageBox(mess);
+        }
+        mImBufs->mImage->setShifts(shiftX, shiftY);
+        mImBufs->mCaptured = BUFFER_CROPPED;
+        mImBufs->SetImageChanged(1);
+        mWinApp->mMainView->DrawImage();
       }
-      mImBufs->mImage->setShifts(shiftX, shiftY);
-      mImBufs->mCaptured = BUFFER_CROPPED;
-      mImBufs->SetImageChanged(1);
-      mWinApp->mMainView->DrawImage();
-    }
+      
+      // Assess shift for iterating or final message
+      if (!mATIterationNum) {
+        mat = MatInv(mShiftManager->StageToCamera(mWinApp->GetCurrentCamera(), mMagIndex));
+        if (mat.xpx) {
+          shiftX *= mImBufs->mBinning;
+          shiftY *= -mImBufs->mBinning;
+          ApplyScaleMatrix(mat, shiftX, shiftY, backlashX, backlashY);
+          PrintfToLog("Shift in Align to Template is %.3f, %.3f microns",
+            backlashX, backlashY);
+        }
+      }
+      if (TestForTemplateTermination())
+        return;
 
-    // Assess shift for iterating or final message
-    mScope->GetLDCenteredShift(ISX, ISY);
-    if (!mATIterationNum) {
-      mat = MatInv(mShiftManager->StageToCamera(mWinApp->GetCurrentCamera(), mMagIndex));
-      if (mat.xpx) {
-        shiftX *= mImBufs->mBinning;
-        shiftY *= -mImBufs->mBinning;
-        ApplyScaleMatrix(mat, shiftX, shiftY, backlashX, backlashY);
-        PrintfToLog("Shift in Align to Template is %.3f, %.3f microns",
-          backlashX, backlashY);
+    } else {
+      
+      // Align using hole centering
+      if (mATIterationNum == 0) {
+        ix0 = mWinApp->mNavigator->GetHoleSize(holeSize, mImBufs);
+        if (ix0) {
+          mess.Format("Error # %d attempting to get hole size for hole centering", ix0);
+          SEMMessageBox(mess);
+          return;
+        }
+        ix0 = mNavHelper->mHoleFinderDlg->FindAndCenterOneHole(mImBufs, holeSize, 0,
+          mATParams.maxAlignShift, xCen, yCen, -mATParams.cropHoleSpacings, false);
+        if (ix0) {
+          mess.Format("Error # %d attempting to find and center a hole", ix0);
+          SEMMessageBox(mess);
+          return;
+        }
+
+        //Image shift that happened in FindAndCenterOneHole
+        mScope->GetImageShift(ISX, ISY);
+        shiftX = (float)(ISX - (mFCHstartingISX + mFCHrestoreISdir * mFCHholeVecISX));
+        shiftY = (float)(ISY - (mFCHstartingISY + mFCHrestoreISdir * mFCHholeVecISY));
+        
+        // For a multishot pattern where the center is between holes
+        if (mATHoleCenteringMode == 2) {
+          
+          // If only centering on one hole, return to center with correction
+          if (mFCHOneHoleForMulti) {
+            mScope->SetImageShift(mFCHstartingISX + shiftX, 
+              mFCHstartingISX + shiftX);
+            mFCHrestoreISdir = 0;
+          } 
+
+          // Centered at the first hole, image shift to second hole in opposite direction
+          else if (mFCHrestoreISdir == 1) {
+            mScope->SetImageShift(mFCHstartingISX - mFCHholeVecISX, 
+              mFCHstartingISX - mFCHholeVecISX);
+            mFCHdelISX = shiftX;
+            mFCHdelISY = shiftY;
+            mFCHrestoreISdir = -1;
+          } 
+
+          //Centered at the second hole, compute average IS at center
+          else if (mFCHrestoreISdir == -1) {
+            shiftX = (mFCHdelISX + shiftX) / 2.f;
+            shiftY = (mFCHdelISY + shiftY) / 2.f;
+            mScope->SetImageShift(mFCHstartingISX + shiftX, mFCHstartingISX + shiftY);
+            mFCHrestoreISdir = 0;
+          }
+          if (mFCHrestoreISdir == 0) {
+            mat = mShiftManager->IStoSpecimen(mFCHmagInd);
+            if (mat.xpx) {
+              ApplyScaleMatrix(mat, shiftX, shiftY, backlashX, backlashY);
+              PrintfToLog("Shift in Finding and Centering Hole is %.3f, %.3f microns",
+                backlashX, backlashY);
+            }  
+          }
+        }
+      } else if (mATIterationNum > 0) {
+        DoCenteringAutoAlign(false);
+      }
+
+      if (TestForTemplateTermination()) {
+        return;
+      }
+      if (mFCHrestoreISdir == 1 || (!mATIterationNum && !(mATParams.leaveISatZero &&
+        (mATFinishing || mATIterationNum + 1 >= mATParams.maxNumResetIS)))) {
+        mWinApp->mCamera->InitiateCapture(mATConSetNum);
+        mFCHresetIS = true;
       }
     }
-    radialUM = (float)mWinApp->mShiftManager->RadialShiftOnSpecimen(ISX, ISY, mMagIndex);
-
-    // Done if iteration limit reached
-    if (mATIterationNum >= mATParams.maxNumResetIS) {
-      if (mATParams.maxNumResetIS > 0)
-        PrintfToLog("Align to Template stopped at limit of %d iterations, with residual "
-          "IS of %.2f um", mATIterationNum, radialUM);
-      else
-        PrintfToLog("Align to Template finished with residual IS of %.2f um", radialUM);
-      StopTemplateAlign();
-      return;
-    }
-
-    // Otherwise assess shift, start a reset if above limit, or on final round if below
-    // and leaving IS at zero
-    mATFinishing = radialUM < mATParams.resetISthresh;
-    if (mATFinishing && !mATParams.leaveISatZero) {
-      PrintfToLog("Align to Template finished after %d IS resets with residual IS of "
-        "%.2f, below threshold", mATIterationNum, radialUM);
-      StopTemplateAlign();
-      return;
-    }
-    SEMTrace('1', "Resetting shift of  %.2f um, iteration %d", radialUM,
-      mATIterationNum);
-    mScope->GetStagePosition(ISX, ISY, stz);
-    mWinApp->mShiftManager->ResetImageShift(mScope->GetValidXYbacklash(ISX, ISY,
-      backlashX, backlashY), false);
-    mATResettingShift = true;
+    
+    AlignOrCenterHoleResetIS();
   }
   mWinApp->AddIdleTask(TASK_TEMPLATE_ALIGN, 0, 0);
+}
+
+void CParticleTasks::AlignOrCenterHoleResetIS()
+{
+  double ISX, ISY, stz;
+  float backlashX, backlashY;
+  mScope->GetStagePosition(ISX, ISY, stz);
+  mWinApp->mShiftManager->ResetImageShift(mScope->GetValidXYbacklash(ISX, ISY,
+    backlashX, backlashY), false);
+  mATResettingShift = true;
+}
+
+int CParticleTasks::DoCenteringAutoAlign(bool cropping)
+{
+  int alignErr;
+  mWinApp->mShiftManager->SetNextAutoalignLimit(mATParams.maxAlignShift);
+  alignErr = mWinApp->mShiftManager->AutoAlign(B3DCHOICE(mATIterationNum,
+    cropping ? 2 : 1, mATParams.loadAndKeepBuf), 1, true, AUTOALIGN_KEEP_SPOTS, NULL,
+    0., 0., 0., 0., 0., NULL, NULL, GetDebugOutput('1'));
+  if (alignErr) {
+    CString mess;
+    mess.Format(alignErr < 0 ? "%s autoalignment failed to find a peak within"
+      " the distance limit" : "%s autoalignment had a memory or other error", 
+      mATIterationNum > 0 ? "Reset IS" : "Template");
+    SEMMessageBox(mess);
+    mATLastFailed = true;
+    StopTemplateAlign();
+    return 1;
+  }
+  return 0;
+}
+
+int CParticleTasks::TestForTemplateTermination()
+{
+  double ISX, ISY;
+  float radialUM;
+  CString mode;
+  mode.Format(mATHoleCenteringMode == 0 ? "Align to Template" : "Find & Center Hole");
+  
+  mScope->GetLDCenteredShift(ISX, ISY);
+  radialUM = (float)mWinApp->mShiftManager->RadialShiftOnSpecimen(ISX, ISY, mMagIndex);
+
+  // Done if iteration limit reached
+  if (mATIterationNum >= mATParams.maxNumResetIS) {
+    if (mATParams.maxNumResetIS > 0)
+      PrintfToLog("%s stopped at limit of %d iterations, with residual "
+        "IS of %.2f um", mode, mATIterationNum, radialUM);
+    else
+      PrintfToLog("%s finished with residual IS of %.2f um", mode, radialUM);
+    StopTemplateAlign();
+    return -1;
+  }
+
+  // Otherwise assess shift, start a reset if above limit, or on final round if below
+  // and leaving IS at zero
+  mATFinishing = radialUM < mATParams.resetISthresh;
+  if (mATFinishing && !mATParams.leaveISatZero) {
+    PrintfToLog("%s finished after %d IS resets with residual IS of "
+      "%.2f, below threshold", mode, mATIterationNum, radialUM);
+    StopTemplateAlign();
+    return 1;
+  }
+  SEMTrace('1', "Resetting shift of  %.2f um, iteration %d", radialUM,
+    mATIterationNum);
+  return 0;
 }
 
 // Stop - restore state

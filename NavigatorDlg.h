@@ -152,6 +152,8 @@ public:
   bool ConvertMousePoint(EMimageBuffer *imBuf, float &inX, float &inY, float &stageX,
     float &stageY, ScaleMat &aInv, float &delX, float &delY, float &xInPiece, float &yInPiece,
     int &pieceIndex);
+  int GetHoleSize(float &holeSize, EMimageBuffer* imBuf = NULL);
+  int CenterAddedPointInHole(EMimageBuffer* imBuf, float &inX, float &inY, CString &errStr);
   bool SelectNearestPoint(EMimageBuffer *imBuf, float stageX, float stageY, ScaleMat aInv,
     float delX, float delY, bool ctrlKey, float distLim);
   void GetSelectionLimits(EMimageBuffer *imBuf, ScaleMat aInv, float delX, float delY, float selXlimit[4], float selYlimit[4],
@@ -315,7 +317,7 @@ private:
   CCameraController *mCamera;
   CLowDoseDlg *mLowDoseDlg;
   CMacCmd *mMacroProcessor;
-
+  
   int mListBorderX, mListBorderY;
   int mNoteBorderX;  int mNoteHeight;
   int mLineBorderX;

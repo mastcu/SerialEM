@@ -71,6 +71,7 @@ CHoleFinderDlg::CHoleFinderDlg(CWnd* pParent /*=NULL*/)
   , m_strHullDist(_T(""))
   , m_strMaxHullDist(_T(""))
   , m_bUseBestSubset(FALSE)
+  , m_bCenterAddedHoles(FALSE)
 {
   mNonModal = true;
   mHaveHoles = false;
@@ -91,6 +92,7 @@ CHoleFinderDlg::CHoleFinderDlg(CWnd* pParent /*=NULL*/)
     mGridStageYVecs[ind] = 0.;
   }
   mPMMminPtsForSkipIfIS = 1;
+  mHoleCenteringImBuf = NULL;
 }
 
 CHoleFinderDlg::~CHoleFinderDlg()
@@ -162,6 +164,7 @@ void CHoleFinderDlg::DoDataExchange(CDataExchange* pDX)
   DDX_Text(pDX, IDC_EDIT_HULL_DIST, m_strHullDist);
   DDX_Text(pDX, IDC_STAT_MAX_HULL_DIST, m_strMaxHullDist);
   DDX_Check(pDX, IDC_USE_BEST_SUBSET, m_bUseBestSubset);
+  DDX_Check(pDX, IDC_CENTER_ADDED_HOLES, m_bCenterAddedHoles);
 }
 
 
@@ -190,6 +193,7 @@ BEGIN_MESSAGE_MAP(CHoleFinderDlg, CBaseDlg)
   ON_BN_CLICKED(IDC_HEX_ARRAY, OnHexArray)
   ON_EN_KILLFOCUS(IDC_EDIT_HULL_DIST, OnKillfocusEditHullDist)
   ON_BN_CLICKED(IDC_USE_BEST_SUBSET, OnUseBestSubset)
+  ON_BN_CLICKED(IDC_CENTER_ADDED_HOLES, &CHoleFinderDlg::OnCenterAddedHoles)
 END_MESSAGE_MAP()
 
 
@@ -872,7 +876,7 @@ void CHoleFinderDlg::OnButFindHoles()
 }
 
 int CHoleFinderDlg::DoFindHoles(EMimageBuffer *imBuf, bool synchronous, 
-  FloatVec *inXboundary, FloatVec *inYboundary)
+  FloatVec *inXboundary, FloatVec *inYboundary, bool croppedBuf)
 {
   float curDiam, diamReduced, spacingReduced, maxRadius, area, minArea = 1.e30f;
   FloatVec *widths, *increments;
@@ -913,7 +917,7 @@ int CHoleFinderDlg::DoFindHoles(EMimageBuffer *imBuf, bool synchronous,
   mBoundPolyID = 0;
   mAddedGroupID = 0;
   mCurStore = -2;
-  mBufInd = (int)(imBuf - mWinApp->GetImBufs());
+  mBufInd = croppedBuf ? -1 : (int)(imBuf - mWinApp->GetImBufs());
   mHaveHoles = false;
   mLastHoleSize = 0.;
   mLastHoleSpacing = 0.;
@@ -934,7 +938,7 @@ int CHoleFinderDlg::DoFindHoles(EMimageBuffer *imBuf, bool synchronous,
     return 1;
   }
 
-  if (mBufInd < 0 || mBufInd >= MAX_BUFFERS || !(imBuf && imBuf->mImage)) {
+  if ((!croppedBuf && mBufInd < 0) || mBufInd >= MAX_BUFFERS || !(imBuf && imBuf->mImage)) {
     SEMMessageBox("The specified buffer is not in the active window or has no image for"
       " finding holes", MB_EXCLAME);
     return 1;
@@ -974,7 +978,7 @@ int CHoleFinderDlg::DoFindHoles(EMimageBuffer *imBuf, bool synchronous,
   autocorSpacing = testSpacing;
   if (mFindingFromDialog && !mSkipAutoCor &&
     image->getWidth() / testSpacing >= 4. &&
-    image->getHeight() / testSpacing >= 4.) {
+    image->getHeight() / testSpacing >= 4. && !croppedBuf) {
     if (!mWinApp->mProcessImage->FindPixelSize(0., 0., 0., 0., mBufInd,
       FIND_ACPK_NO_WAFFLE | FIND_PIX_NO_DISPLAY | FIND_PIX_NO_TARGET |
       (hexArray ? FIND_ACPK_HEX_GRID : 0), autocorSpacing, vectors)) {
@@ -1018,7 +1022,7 @@ int CHoleFinderDlg::DoFindHoles(EMimageBuffer *imBuf, bool synchronous,
   readBuf = mWinApp->mBufferManager->GetBufToReadInto();
 
   // Montaging: check preconditions first
-  if (!synchronous && imBuf->mCaptured == BUFFER_MONTAGE_OVERVIEW) {
+  if (!synchronous && imBuf->mCaptured == BUFFER_MONTAGE_OVERVIEW && !croppedBuf) {
     mMontage = -1;
     if (!imBuf->mMapID)
       noMontReason = "the buffer has no ID for finding its Navigator map";
@@ -1288,6 +1292,8 @@ int CHoleFinderDlg::DoFindHoles(EMimageBuffer *imBuf, bool synchronous,
     mWinApp->SetStatusText(SIMPLE_PANE, "FINDING HOLES");
     mWinApp->UpdateBufferWindows();
   }
+  if (croppedBuf)
+    mMontage = 0;
   ScanningNextTask(synchronous ? -999 : 0);
   return 0;
 }
@@ -1310,7 +1316,7 @@ void CHoleFinderDlg::ScanningNextTask(int param)
   FloatVecArray pieceOutlieVec;
   MontParam *montP = &mMontParam;
   EMimageBuffer *allBufs = mWinApp->GetImBufs();
-  EMimageBuffer *imBuf = &allBufs[mBufInd];
+  EMimageBuffer *imBuf = mBufInd == -1 ? mHoleCenteringImBuf : &allBufs[mBufInd];
   int numMissAdded, numPcInSec, ixpc, iypc, ipc, readBuf, numMiss, xGrid, yGrid, subset;
   int xcoord, ycoord, zcoord, numFromCorr, numPoints;
   ScaleMat aMat, aInv, adjInv;
@@ -1324,7 +1330,7 @@ void CHoleFinderDlg::ScanningNextTask(int param)
     StopScanning();
     return;
   }
-
+  
   for (;; ) {
     err = mHelper->mFindHoles->runSequence(mSigInd, sigUsed, mThreshInd,
       threshUsed, mXboundary, mYboundary, mBestSigInd, mBestThreshInd,
@@ -2184,16 +2190,21 @@ void CHoleFinderDlg::MultimapCleanup(int error)
  * hole finder synchronously
  */
 int CHoleFinderDlg::FindAndCenterOneHole(EMimageBuffer *imBuf, float diameter, int numTry,
-  float maxFracShift, float &xCenter, float &yCenter)
+  float maxFracShift, float &xCenter, float &yCenter, float crop, bool cropCenter)
 {
   FloatVec *widths, *increments;
   IntVec *numCircles;
   ScaleMat bInv;
-  int numSave, err, nx, ny, ind, bestInd;
+  int numSave, err, nx, ny, ind, bestInd, cropShiftX = 0, cropShiftY = 0;
   float diamSave, xcen, ycen, dist, minDist, pixel, fbin = (float)imBuf->mBinning;
-  float xShift, yShift, imXshift, imYshift;
+  float xShift, yShift, imXshift, imYshift, xcenCrop, ycenCrop;
   HoleFinderParams *hfParams = mHelper->GetHoleFinderParams();
   double ISX, ISY;
+  int top = 0, left = 0, bottom, right, mode;
+  float cropSize;
+  bool centered;
+  EMimageExtra *extra;
+  Islice *slice;
 
   // Get the parameters and save # of circles and diameter
   SyncToMasterParams();
@@ -2211,13 +2222,99 @@ int CHoleFinderDlg::FindAndCenterOneHole(EMimageBuffer *imBuf, float diameter, i
   if (mIsOpen)
     UpdateSettings();
 
+  // Crop the image
+  if (crop) {
+    imBuf->mImage->getSize(nx, ny);
+    pixel = mWinApp->mShiftManager->GetPixelSize(imBuf);
+    cropSize = (B3DABS(crop) * B3DCHOICE(crop > 0, diameter, hfParams->spacing))
+      / pixel;
+
+    // Check if crop size bigger than image in either dimension
+    if (cropSize > nx || cropSize > ny) {
+      cropSize = (float)B3DMIN(nx, ny);
+      PrintfToLog("Crop size of %.2f hole %s exceeds image size. Crop size will be "
+        "reduced", B3DABS(crop), crop > 0 ? "sizes" : "spacings");
+    }
+
+    if (cropCenter) {
+      if (xCenter == 0 && yCenter == 0) {
+        xcen = (float)(nx / 2.);
+        ycen = (float)(ny / 2.);
+      } else if (xCenter < 0 || yCenter < 0 || xCenter > nx || yCenter > ny) {
+        PrintfToLog("Provided center for cropping (%.2f, %.2f) is outside the image", 
+          xCenter, yCenter);
+        return 1;
+      } else {
+        xcen = xCenter;
+        ycen = yCenter;
+      }
+    } else {
+      imBuf->mImage->getShifts(imXshift, imYshift);
+      xcen = (float)(nx / 2.) - imXshift;
+      ycen = (float)(ny / 2.) - imYshift;
+    }
+
+    //Compute crop 
+    right = (int)(xcen + cropSize / 2.);
+    left = (int)(xcen - cropSize / 2.);
+    bottom = (int)(ycen + cropSize / 2.);
+    top = (int)(ycen - cropSize / 2.);
+
+    //Shift crop window and center coordinates if crop goes outside image
+    if (right > nx) {
+      left -= right - nx;
+      cropShiftX = (nx - right);
+      right = nx;
+    } else if (left < 0) {
+      right -= left;
+      cropShiftX = -left;
+      left = 0;
+    } if (bottom > ny) {
+      top -= bottom - ny;
+      cropShiftY = ny - bottom;
+      bottom = ny;
+    } else if (top < 0) {
+      bottom -= top;
+      cropShiftY = -top;
+      top = 0;
+    }
+
+    slice = mWinApp->mProcessImage->CropBufferToSlice(imBuf, top, left,
+      bottom, right, true, mode, centered, err);
+    if (!slice)
+      return err;
+
+    //Make a new buffer image for hole centering
+    mHoleCenteringImBuf = new EMimageBuffer;
+    *mHoleCenteringImBuf = *imBuf;
+    mode = imBuf->mImage->getType();
+
+    // CropBufferToSlice with convertBytes true will convert data type to short
+    mHoleCenteringImBuf->mImage = new KImageShort();
+
+    // Allocate a new space for extra data and copy it over
+    EMimageExtra *fromExtra = (EMimageExtra *)imBuf->mImage->GetUserData();
+    if (fromExtra) {
+      extra = new EMimageExtra;
+      *extra = *fromExtra;
+      mHoleCenteringImBuf->mImage->SetUserData(extra);
+    }
+    
+    mHoleCenteringImBuf->mImage->useData((char *)slice->data.s, slice->xsize, 
+      slice->ysize);
+  }
+  else {
+    mHoleCenteringImBuf = imBuf;
+  }
+
   // Find holes synchronously
-  err = DoFindHoles(imBuf, true);
+  err = DoFindHoles(mHoleCenteringImBuf, true, NULL, NULL, crop != 0);
 
   // restore parameters
   if (hfParams->hexagonalArray) {
     hfParams->hexDiameter = diamSave;
-  } else {
+  }
+  else {
     hfParams->diameter = diamSave;
   }
   *(numCircles->data()) = numSave;
@@ -2226,22 +2323,40 @@ int CHoleFinderDlg::FindAndCenterOneHole(EMimageBuffer *imBuf, float diameter, i
 
   // Error return
   if (err || !mXcenters.size())
-    return err;
+    return 5;
 
   // Find point closest to center
-  imBuf->mImage->getSize(nx, ny);
-  imBuf->mImage->getShifts(imXshift, imYshift);
-  xcen = (float)(nx / 2.) - imXshift;
-  ycen = (float)(ny / 2.) - imYshift;
+  mHoleCenteringImBuf->mImage->getSize(nx, ny);
+  mHoleCenteringImBuf->mImage->getShifts(imXshift, imYshift);
+  xcenCrop = (float)(nx / 2. - cropShiftX) - imXshift;
+  ycenCrop = (float)(ny / 2. - cropShiftY) - imYshift;
   for (ind = 0; ind < (int)mXcenters.size(); ind++) {
-    dist = powf(mXcenters[ind] - xcen, 2.f) + powf(mYcenters[ind] - ycen, 2.f);
+      
+    // Calculate hole's distance from center
+    dist = powf(mXcenters[ind] - xcenCrop, 2.f) + powf(mYcenters[ind] - ycenCrop, 2.f);
     if (!ind || dist < minDist) {
       bestInd = ind;
       minDist = dist;
     }
   }
-  xCenter = mXcenters[bestInd];
-  yCenter = mYcenters[bestInd];
+
+  // Convert cropped image coordinates back to original image coordinates
+  xCenter = mXcenters[bestInd] += (float)left;
+  yCenter = mYcenters[bestInd] += (float)top;
+
+  // Clear cropped image
+  if (crop) {
+    if (slice) {
+      if (slice->data.b)
+        free(slice->data.b);
+      free(slice);
+    }
+    mHoleCenteringImBuf->mImage->detachData();
+    delete mHoleCenteringImBuf->mImage;
+    mHoleCenteringImBuf->ClearForDeletion();
+    delete mHoleCenteringImBuf;
+    mHoleCenteringImBuf = NULL;
+  }
 
   // If shifting requested, make sure not already done, compute it, apply if above limit
   if (maxFracShift > 0) {
@@ -2268,4 +2383,10 @@ int CHoleFinderDlg::FindAndCenterOneHole(EMimageBuffer *imBuf, float diameter, i
       pixel * xShift, pixel * yShift);
   }
   return 0;
+}
+
+
+void CHoleFinderDlg::OnCenterAddedHoles()
+{
+  UPDATE_DATA_TRUE;
 }

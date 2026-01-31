@@ -186,6 +186,9 @@ struct NavAlignParams {
   float scaledAliExtraFOV;   // Extra A fields of View to add
   int scaledAliLoadBuf;      // Buffer to keep map in
   BOOL applyInteractive;     // Flag to apply when run R2I from menu or button
+  BOOL findAndCenterHole;    // Flag to use FindAndCenterOneHole instead of template
+  int holeCenteringAcquire;  // 0 for map, 1 for LD Search, 2 for LD View
+  float cropHoleSpacings;    // Number of hole spacings used to crop hole centering image
 };
 
 // BEWARE.  Nav Actions are the "other tasks" in user terminology

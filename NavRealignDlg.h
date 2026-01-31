@@ -27,8 +27,8 @@ protected:
 	DECLARE_MESSAGE_MAP()
 
 private:
-  int mPanelStart[5];
-  int mNumInPanel[5];
+  int mPanelStart[8];
+  int mNumInPanel[8];
   NavAlignParams *mMasterParams;
   NavAlignParams mParams;
   int mMaxNumResets;
@@ -77,4 +77,12 @@ public:
   BOOL m_bDisableTrim;
   CStatic m_statDisableTrim;
   BOOL m_bApplyInteractive;
+  int m_iTemplateOrFindHole;
+  afx_msg void OnRTemplateOrFindHole();
+  int m_iAcquireWith;
+  float m_fCropHoleSpacings;
+  afx_msg void OnEnKillfocusEditAlignFchSpacing();
+  CStatic m_statFCHtitle;
+  CButton m_butRAlignToTemplate;
+  CButton m_butRFindAndCenterHole;
 };

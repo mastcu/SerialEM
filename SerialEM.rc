@@ -3679,18 +3679,18 @@ BEGIN
     PUSHBUTTON      "Next && Go",IDC_PPCOND_NEXT_AND_GO,12,182,33,14
 END
 
-IDD_HOLE_FINDER DIALOGEX 0, 0, 154, 315
+IDD_HOLE_FINDER DIALOGEX 0, 0, 154, 328
 STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 EXSTYLE WS_EX_TOOLWINDOW
 CAPTION "Hole Finder"
 FONT 8, "Microsoft Sans Serif", 400, 0, 0x0
 BEGIN
-    CONTROL         "Zigzag",IDC_RZIGZAG,"Button",BS_AUTORADIOBUTTON | WS_GROUP,8,265,36,10
-    CONTROL         "Away from Focus",IDC_RFROM_FOCUS,"Button",BS_AUTORADIOBUTTON,43,265,66,10
-    CONTROL         "In groups",IDC_RIN_GROUPS,"Button",BS_AUTORADIOBUTTON,109,265,40,10
-    GROUPBOX        "Layout of points",IDC_STATIC,3,256,147,24,WS_GROUP
-    DEFPUSHBUTTON   "OK",IDOK,21,299,50,12
-    PUSHBUTTON      "Cancel",IDCANCEL,82,299,50,12
+    CONTROL         "Zigzag",IDC_RZIGZAG,"Button",BS_AUTORADIOBUTTON | WS_GROUP,8,274,36,10
+    CONTROL         "Away from Focus",IDC_RFROM_FOCUS,"Button",BS_AUTORADIOBUTTON,43,274,66,10
+    CONTROL         "In groups",IDC_RIN_GROUPS,"Button",BS_AUTORADIOBUTTON,109,274,40,10
+    GROUPBOX        "Layout of points",IDC_STATIC,3,265,147,24,WS_GROUP
+    DEFPUSHBUTTON   "OK",IDOK,21,312,50,12
+    PUSHBUTTON      "Cancel",IDCANCEL,82,312,50,12
     GROUPBOX        "Filters to try",IDC_STATIC,18,39,118,36
     LTEXT           "Gaussian sigmas",IDC_STATIC,23,48,53,8
     LTEXT           "Median filter iterations",IDC_STATIC,23,62,66,8
@@ -3705,49 +3705,51 @@ BEGIN
     RTEXT           "Periodicity",IDC_STATIC,58,5,33,8
     EDITTEXT        IDC_EDIT_SPACING,93,3,20,12,ES_AUTOHSCROLL
     LTEXT           "um",IDC_STAT_UM_SIZE_SEP,114,5,36,8
-    PUSHBUTTON      "Find Holes",IDC_BUT_FIND_HOLES,4,102,40,12
-    LTEXT           "",IDC_STAT_STATUS_OUTPUT,7,116,136,8
-    CONTROL         "",IDC_SLIDER_LOW_MEAN,"msctls_trackbar32",TBS_BOTH | TBS_NOTICKS | WS_TABSTOP,3,129,118,12
-    CTEXT           "Lower mean cutoff",IDC_STAT_LOW_MEAN_LABEL,30,140,62,8
-    EDITTEXT        IDC_EDIT_LOWER_MEAN,120,128,30,12,ES_AUTOHSCROLL
-    RTEXT           "3000",IDC_STAT_MAX_LOWER_MEAN,93,140,26,8
-    CONTROL         "",IDC_SLIDER_UPPER_MEAN,"msctls_trackbar32",TBS_BOTH | TBS_NOTICKS | WS_TABSTOP,3,150,118,12
-    CTEXT           "Upper mean cutoff",IDC_STAT_UP_MEAN_LABEL,30,161,62,8
-    EDITTEXT        IDC_EDIT_UPPER_MEAN,120,150,30,12,ES_AUTOHSCROLL
-    LTEXT           "0",IDC_STAT_MIN_UPPER_MEAN,7,161,23,8
-    RTEXT           "3000",IDC_STAT_MAX_UPPER_MEAN,93,161,26,8
-    CONTROL         "",IDC_SLIDER_STANDEV,"msctls_trackbar32",TBS_BOTH | TBS_NOTICKS | WS_TABSTOP,3,171,118,12
-    CTEXT           "SD cutoff",IDC_STAT_SD_LABEL,30,182,62,8
-    LTEXT           "0",IDC_STAT_MIN_STANDEV,7,182,23,8
-    RTEXT           "3000",IDC_STAT_MAX_STANDEV,93,182,26,8
-    LTEXT           "Static",IDC_STAT_SD_CUTOFF,121,172,28,8
-    CONTROL         "",IDC_SLIDER_BLACK_CUTOFF,"msctls_trackbar32",TBS_BOTH | TBS_NOTICKS | WS_TABSTOP,3,192,118,12
-    CTEXT           "Black pixel % cutoff",IDC_STAT_PCT_LABEL,27,203,71,8
-    LTEXT           "0",IDC_STAT_MIN_BLACKPCT,7,203,20,8
-    RTEXT           "3000",IDC_STAT_MAX_BLACKPCT,99,203,20,8
-    LTEXT           "Static",IDC_STAT_BLACK_CUTOFF,124,193,24,8
-    LTEXT           "Show:",IDC_STATIC,7,246,19,8
-    CONTROL         "Included",IDC_SHOW_INCLUDED,"Button",BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,27,245,38,10
-    CONTROL         "Excluded",IDC_SHOW_EXCLUDED,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,65,245,38,10
-    PUSHBUTTON      "?",IDC_BUTHELP,140,301,11,10
-    PUSHBUTTON      "Make Navigator Points",IDC_BUT_MAKE_NAV_PTS,37,283,80,12
+    PUSHBUTTON      "Find Holes",IDC_BUT_FIND_HOLES,4,116,40,12
+    LTEXT           "",IDC_STAT_STATUS_OUTPUT,7,130,136,8
+    CONTROL         "",IDC_SLIDER_LOW_MEAN,"msctls_trackbar32",TBS_BOTH | TBS_NOTICKS | WS_TABSTOP,3,138,118,12
+    CTEXT           "Lower mean cutoff",IDC_STAT_LOW_MEAN_LABEL,30,149,62,8
+    EDITTEXT        IDC_EDIT_LOWER_MEAN,120,137,30,12,ES_AUTOHSCROLL
+    RTEXT           "3000",IDC_STAT_MAX_LOWER_MEAN,93,149,26,8
+    CONTROL         "",IDC_SLIDER_UPPER_MEAN,"msctls_trackbar32",TBS_BOTH | TBS_NOTICKS | WS_TABSTOP,3,159,118,12
+    CTEXT           "Upper mean cutoff",IDC_STAT_UP_MEAN_LABEL,30,170,62,8
+    EDITTEXT        IDC_EDIT_UPPER_MEAN,120,159,30,12,ES_AUTOHSCROLL
+    LTEXT           "0",IDC_STAT_MIN_UPPER_MEAN,7,170,23,8
+    RTEXT           "3000",IDC_STAT_MAX_UPPER_MEAN,93,170,26,8
+    CONTROL         "",IDC_SLIDER_STANDEV,"msctls_trackbar32",TBS_BOTH | TBS_NOTICKS | WS_TABSTOP,3,180,118,12
+    CTEXT           "SD cutoff",IDC_STAT_SD_LABEL,30,191,62,8
+    LTEXT           "0",IDC_STAT_MIN_STANDEV,7,191,23,8
+    RTEXT           "3000",IDC_STAT_MAX_STANDEV,93,191,26,8
+    LTEXT           "Static",IDC_STAT_SD_CUTOFF,121,181,28,8
+    CONTROL         "",IDC_SLIDER_BLACK_CUTOFF,"msctls_trackbar32",TBS_BOTH | TBS_NOTICKS | WS_TABSTOP,3,201,118,12
+    CTEXT           "Black pixel % cutoff",IDC_STAT_PCT_LABEL,27,212,71,8
+    LTEXT           "0",IDC_STAT_MIN_BLACKPCT,7,212,20,8
+    RTEXT           "3000",IDC_STAT_MAX_BLACKPCT,99,212,20,8
+    LTEXT           "Static",IDC_STAT_BLACK_CUTOFF,124,202,24,8
+    LTEXT           "Show:",IDC_STATIC,7,255,19,8
+    CONTROL         "Included",IDC_SHOW_INCLUDED,"Button",BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,27,254,38,10
+    CONTROL         "Excluded",IDC_SHOW_EXCLUDED,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,65,254,38,10
+    PUSHBUTTON      "?",IDC_BUTHELP,140,314,11,10
+    PUSHBUTTON      "Make Navigator Points",IDC_BUT_MAKE_NAV_PTS,37,292,80,12
     LTEXT           "Maximum error",IDC_STATIC,10,19,45,8
     EDITTEXT        IDC_EDIT_MAX_ERROR,56,17,22,12,ES_AUTOHSCROLL
     LTEXT           "microns",IDC_STATIC,79,19,25,8
-    PUSHBUTTON      "Clear Data",IDC_BUT_CLEAR_DATA,110,102,40,12
+    PUSHBUTTON      "Clear Data",IDC_BUT_CLEAR_DATA,110,116,40,12
     CONTROL         "Bracket last filter/threshold values",IDC_BRACKET_LAST,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,90,116,10
-    PUSHBUTTON      "Set Size/Period",IDC_BUT_SET_SIZE_SPACE,49,102,56,12
-    PUSHBUTTON      "Toggle Points",IDC_BUT_TOGGLE_HOLES,106,244,44,12
-    LTEXT           "0",IDC_STAT_MIN_LOWER_MEAN,7,140,23,8
+    PUSHBUTTON      "Set Size/Period",IDC_BUT_SET_SIZE_SPACE,49,116,56,12
+    PUSHBUTTON      "Toggle Points",IDC_BUT_TOGGLE_HOLES,106,253,44,12
+    LTEXT           "0",IDC_STAT_MIN_LOWER_MEAN,7,149,23,8
     CONTROL         "Hex grid",IDC_HEX_ARRAY,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,112,19,35,10
-    CONTROL         "",IDC_SLIDER_HULL_DIST,"msctls_trackbar32",TBS_BOTH | TBS_NOTICKS | WS_TABSTOP,3,213,118,12
-    CTEXT           "Distance from Edge",IDC_STAT_HULL_DIST_LABEL,27,224,71,8
-    EDITTEXT        IDC_EDIT_HULL_DIST,123,212,27,12,ES_AUTOHSCROLL
-    LTEXT           "0",IDC_STAT_MIN_HULL_DIST,7,224,20,8
-    RTEXT           "3000",IDC_STAT_MAX_HULL_DIST,99,224,20,8
+    CONTROL         "",IDC_SLIDER_HULL_DIST,"msctls_trackbar32",TBS_BOTH | TBS_NOTICKS | WS_TABSTOP,3,222,118,12
+    CTEXT           "Distance from Edge",IDC_STAT_HULL_DIST_LABEL,27,233,71,8
+    EDITTEXT        IDC_EDIT_HULL_DIST,123,221,27,12,ES_AUTOHSCROLL
+    LTEXT           "0",IDC_STAT_MIN_HULL_DIST,7,233,20,8
+    RTEXT           "3000",IDC_STAT_MAX_HULL_DIST,99,233,20,8
     CONTROL         "Use best 1/3 subset of holes, 1.07 um apart",IDC_USE_BEST_SUBSET,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,8,234,146,10
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,8,243,146,10
+    CONTROL         "Center added Navigator points in holes",IDC_CENTER_ADDED_HOLES,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,102,132,10
 END
 
 IDD_MULTI_COMBINER DIALOGEX 0, 0, 125, 124
@@ -3896,62 +3898,75 @@ BEGIN
     CTEXT           "Static",IDC_STAT_INFO_LINE1,7,9,276,8
 END
 
-IDD_NAVREALIGN DIALOGEX 0, 0, 174, 347
+IDD_NAVREALIGN DIALOGEX 0, 0, 174, 440
 STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Navigator Align Setup"
 FONT 8, "Microsoft Sans Serif", 400, 0, 0x0
 BEGIN
-    LTEXT           "",IDC_STAT_SPACER,0,333,8,8
-    DEFPUSHBUTTON   "OK",IDOK,28,327,50,14
-    PUSHBUTTON      "Cancel",IDCANCEL,89,327,50,14
-    CTEXT           "Aligning to Template",IDC_STAT_TEMPLATE_TITLE,41,36,93,8
-    LTEXT           "Label of Navigator map with template",IDC_STAT_TEMP_LABEL,9,49,111,8
-    EDITTEXT        IDC_EDIT_MAP_LABEL,121,46,42,14,ES_AUTOHSCROLL
-    CTEXT           "Map does not exist yet",IDC_STAT_NOT_EXIST,7,60,130,8
-    PUSHBUTTON      "Make Map from Image in A",IDC_MAKE_TEMPLATE_MAP,35,71,102,14
-    LTEXT           "Buffer to load and keep template in:",IDC_STAT_LOAD_KEEP,9,102,106,8
-    CTEXT           "W",IDC_STAT_SELECTED_BUF,116,102,8,8
-    CONTROL         "",IDC_SPIN_TEMPLATE_BUF,"msctls_updown32",UDS_ARROWKEYS,125,99,10,14
-    LTEXT           "Maximum alignment shift",IDC_STAT_ALIGN_LIMIT,9,125,73,8
-    EDITTEXT        IDC_EDIT_MAX_SHIFT,85,122,23,14,ES_AUTOHSCROLL
-    LTEXT           "microns",IDC_STAT_MAXALI_UM,111,125,25,8
-    CONTROL         "",IDC_STAT_LINE,"Static",SS_BLACKFRAME | SS_SUNKEN,9,139,157,1
-    CTEXT           "Handling Image Shift after Alignment",IDC_STAT_RESET_IS_TITLE,24,144,126,8
-    CONTROL         "Reset image shift and realign if >",IDC_CHECK_RESET_IS,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,199,108,10
-    EDITTEXT        IDC_EDIT_RESET_IS,118,197,22,14,ES_AUTOHSCROLL
-    LTEXT           "microns",IDC_STAT_RESET_UM,142,200,25,8
-    LTEXT           "Reset IS up to 3",IDC_STAT_REPEAT_RESET,9,214,48,8
-    LTEXT           "times",IDC_STAT_RESET_TIMES,71,214,17,8
-    CONTROL         "",IDC_SPIN_RESET_TIMES,"msctls_updown32",UDS_ARROWKEYS,58,211,10,14
-    CONTROL         "Leave IS at 0 (skip last realign)",IDC_CHECK_LEAVE_IS_ZERO,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,226,107,10
-    PUSHBUTTON      "?",IDC_BUTHELP,157,329,10,10
-    CTEXT           "Buffer is currently rolling",IDC_STAT_BUFFER_ROLLS,17,111,106,8
-    CTEXT           "These settings apply to both Align to Template and Realign to Item when run from Acquire at Items",IDC_STAT_PARAMS_SHARED,6,155,164,16
-    CTEXT           "If both are run from there, image shift is reset only once",IDC_STAT_ONLY_ONCE,7,172,160,8
-    CTEXT           "The image in A is already a map",IDC_STAT_WHY_A_NO_GOOD,9,87,156,8
-    CONTROL         "",IDC_STAT_LINE3,"Static",SS_BLACKFRAME | SS_SUNKEN,9,239,157,1
-    CTEXT           "Realign to Item Aligning to Scaled Map",IDC_STAT_SCALED_TITLE,22,244,130,8
-    LTEXT           "Maximum added size change to test",IDC_STAT_SIZE_CHANGE,9,274,108,8
-    EDITTEXT        IDC_EDIT_MAX_PCT_CHANGE,118,271,23,14,ES_AUTOHSCROLL
-    LTEXT           "%",IDC_STAT_PCT,143,274,8,8
-    LTEXT           "Maximum added rotation to test",IDC_STAT_ROTATION,9,290,94,8
-    EDITTEXT        IDC_EDIT_MAX_ROTATION,104,287,23,14,ES_AUTOHSCROLL
-    LTEXT           "degrees",IDC_STAT_DEG,129,290,27,8
-    LTEXT           "Extra area for scaled reference",IDC_STAT_EXTRA_AREA,9,258,93,8
-    EDITTEXT        IDC_EDIT_EXTRA_FOVS,103,255,23,14,ES_AUTOHSCROLL
-    LTEXT           "x FOV of A",IDC_STAT_X_FOVS,128,258,32,8
-    LTEXT           "Buffer to load and keep whole map in:",IDC_STAT_REF_MAP_LABEL,9,305,112,8
-    CTEXT           "W",IDC_STAT_REF_MAP_BUF,122,305,8,8
-    CONTROL         "",IDC_SPIN_REF_MAP_BUF,"msctls_updown32",UDS_ARROWKEYS,131,302,10,14
-    CTEXT           "Buffer is currently rolling",IDC_STAT_REF_BUF_ROLLS,17,314,106,8
+    LTEXT           "",IDC_STAT_SPACER,0,425,8,8
+    DEFPUSHBUTTON   "OK",IDOK,28,419,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,89,419,50,14
+    PUSHBUTTON      "?",IDC_BUTHELP,157,423,10,10
     CTEXT           "Trimming Dark Borders in Rounds 1&&2 of Realign to Item and in Align to Template IS Resets",IDC_STAT_DISABLE_TRIM,7,3,160,16
     CONTROL         "Disable trimming in these alignments",IDC_CHECK_DISABLE_TRIM,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,21,131,10
-    CONTROL         "",IDC_STAT_LINE2,"Static",SS_BLACKFRAME | SS_SUNKEN,8,33,157,1
+    CONTROL         "",IDC_STAT_LINE4,"Static",SS_BLACKFRAME | SS_SUNKEN,9,35,157,1
+    CTEXT           "Align to Template/Center on Hole",IDC_STATIC_ALIGNORCENTERTITLE,25,38,123,8
+    LTEXT           "At Navigator Item:",IDC_STATIC_ALIGN_ATNAVITEM,10,48,54,8,NOT WS_GROUP
+    CONTROL         "Align to template",IDC_RALIGNTOTEMPLATE,"Button",BS_AUTORADIOBUTTON | WS_GROUP,14,57,66,10
+    CONTROL         "Find and center hole",IDC_RFINDANDCENTERHOLE,"Button",BS_AUTORADIOBUTTON,82,57,85,10
+    LTEXT           "Label of Navigator map with template",IDC_STAT_TEMP_LABEL,9,71,111,8
+    EDITTEXT        IDC_EDIT_MAP_LABEL,121,68,42,14,ES_AUTOHSCROLL
+    CTEXT           "Map does not exist yet",IDC_STAT_NOT_EXIST,7,82,130,8
+    PUSHBUTTON      "Make Map from Image in A",IDC_MAKE_TEMPLATE_MAP,35,93,102,14
+    LTEXT           "The image in A is already a map",IDC_STAT_WHY_A_NO_GOOD,36,111,98,8
+    LTEXT           "Buffer to load and keep template in:",IDC_STAT_LOAD_KEEP,9,124,106,8
+    CTEXT           "W",IDC_STAT_SELECTED_BUF,116,124,8,8
+    CONTROL         "",IDC_SPIN_TEMPLATE_BUF,"msctls_updown32",UDS_ARROWKEYS,125,121,10,14
+    CTEXT           "Buffer is currently rolling",IDC_STAT_BUFFER_ROLLS,17,133,106,8
+    CONTROL         "Parameters of map that item was drawn on",IDC_RALIGN_FCH_MAP,
+                    "Button",BS_AUTORADIOBUTTON | WS_GROUP,14,156,141,10
+    CONTROL         "Search in Low Dose",IDC_RALIGN_FCH_SEARCH,"Button",BS_AUTORADIOBUTTON,14,168,76,10
+    CONTROL         "View in Low Dose",IDC_RALIGN_FCH_VIEW,"Button",BS_AUTORADIOBUTTON,14,180,69,10
+    LTEXT           "Crop image to ",IDC_STATIC_FCH_CROPIMAGETO,14,195,45,8
+    EDITTEXT        IDC_EDIT_ALIGN_FCH_SPACING,60,193,26,14,ES_AUTOHSCROLL
+    LTEXT           "hole spacings",IDC_STATIC_FCH_HOLESPACINGS,90,195,53,8
+    CONTROL         "",IDC_STAT_LINE16,"Static",SS_BLACKFRAME | SS_SUNKEN,8,209,157,1
+    LTEXT           "Maximum alignment shift",IDC_STAT_ALIGN_LIMIT,9,215,73,8
+    EDITTEXT        IDC_EDIT_MAX_SHIFT,86,212,23,14,ES_AUTOHSCROLL
+    LTEXT           "microns",IDC_STAT_MAXALI_UM,112,215,32,8
+    CONTROL         "",IDC_STAT_LINE17,"Static",SS_BLACKFRAME | SS_SUNKEN,8,230,157,1
+    CTEXT           "Handling Image Shift after Alignment",IDC_STAT_RESET_IS_TITLE,24,234,126,8
+    CTEXT           "These settings apply to both Align to Template and Realign to Item when run from Acquire at Items",IDC_STAT_PARAMS_SHARED,6,245,164,16
+    CTEXT           "If both are run from there, image shift is reset only once",IDC_STAT_ONLY_ONCE,7,262,160,8
     CONTROL         "Apply to Realign to Item run from menu or button",IDC_CHECK_APPLY_INTERACTIVE,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,183,164,10
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,273,164,10
+    CONTROL         "Reset image shift and realign if >",IDC_CHECK_RESET_IS,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,289,108,10
+    EDITTEXT        IDC_EDIT_RESET_IS,118,287,22,14,ES_AUTOHSCROLL
+    LTEXT           "microns",IDC_STAT_RESET_UM,142,290,25,8
+    LTEXT           "Reset IS up to 3",IDC_STAT_REPEAT_RESET,9,304,48,8
+    CONTROL         "",IDC_SPIN_RESET_TIMES,"msctls_updown32",UDS_ARROWKEYS,58,301,10,14
+    LTEXT           "times",IDC_STAT_RESET_TIMES,71,304,17,8
+    CONTROL         "Leave IS at 0 (skip last realign)",IDC_CHECK_LEAVE_IS_ZERO,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,316,107,10
+    CONTROL         "",IDC_STAT_LINE3,"Static",SS_BLACKFRAME | SS_SUNKEN,9,329,157,1
+    CTEXT           "Realign to Item Aligning to Scaled Map",IDC_STAT_SCALED_TITLE,22,334,130,8
+    LTEXT           "Extra area for scaled reference",IDC_STAT_EXTRA_AREA,9,348,93,8
+    EDITTEXT        IDC_EDIT_EXTRA_FOVS,103,345,23,14,ES_AUTOHSCROLL
+    LTEXT           "x FOV of A",IDC_STAT_X_FOVS,128,348,32,8
+    LTEXT           "Maximum added size change to test",IDC_STAT_SIZE_CHANGE,9,364,108,8
+    EDITTEXT        IDC_EDIT_MAX_PCT_CHANGE,118,361,23,14,ES_AUTOHSCROLL
+    LTEXT           "%",IDC_STAT_PCT,143,364,8,8
+    LTEXT           "Maximum added rotation to test",IDC_STAT_ROTATION,9,380,94,8
+    EDITTEXT        IDC_EDIT_MAX_ROTATION,104,377,23,14,ES_AUTOHSCROLL
+    LTEXT           "degrees",IDC_STAT_DEG,129,380,27,8
+    LTEXT           "Buffer to load and keep whole map in:",IDC_STAT_REF_MAP_LABEL,9,395,112,8
+    CTEXT           "W",IDC_STAT_REF_MAP_BUF,122,395,8,8
+    CONTROL         "",IDC_SPIN_REF_MAP_BUF,"msctls_updown32",UDS_ARROWKEYS,131,392,10,14
+    CTEXT           "Buffer is currently rolling",IDC_STAT_REF_BUF_ROLLS,17,404,106,8
+    GROUPBOX        "Acquire with",IDC_STATIC_FCH_ACQUIREWITH,12,147,155,45
+    CONTROL         "",IDC_STAT_LINE,"Static",SS_BLACKFRAME | SS_SUNKEN,7,144,158,1
 END
 
 IDD_MANAGE_DEWARS DIALOGEX 0, 0, 204, 212
@@ -5031,7 +5046,7 @@ BEGIN
         LEFTMARGIN, 3
         RIGHTMARGIN, 150
         TOPMARGIN, 3
-        BOTTOMMARGIN, 311
+        BOTTOMMARGIN, 324
     END
 
     IDD_MULTI_COMBINER, DIALOG
@@ -5079,7 +5094,7 @@ BEGIN
         LEFTMARGIN, 7
         RIGHTMARGIN, 167
         TOPMARGIN, 7
-        BOTTOMMARGIN, 340
+        BOTTOMMARGIN, 433
     END
 
     IDD_MANAGE_DEWARS, DIALOG

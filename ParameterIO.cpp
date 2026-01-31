@@ -788,6 +788,11 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
         }
         if (!itemEmpty[10])
           navAliParm->applyInteractive = itemInt[10] != 0;
+        if (!itemEmpty[11]) {
+          navAliParm->findAndCenterHole = itemInt[11] !=0;
+          navAliParm->holeCenteringAcquire = itemInt[12];
+          navAliParm->cropHoleSpacings = itemFlt[13];
+        }
       }
       else if (NAME_IS("NavAliMapLabel")) {
         StripItems(strLine, 1, navAliParm->templateLabel);
@@ -2081,11 +2086,13 @@ void CParameterIO::WriteSettings(CString strFileName)
       WriteNavAcqParams(i, mWinApp->GetNavAcqParams(i),
       mWinApp->mNavHelper->GetAcqActions(i),
       mWinApp->mNavHelper->GetAcqActCurrentOrder(i), false);
-    oneState.Format("NavAlignParams %d %f %d %f %d %f %f %f %d %d\n", 
+    oneState.Format("NavAlignParams %d %f %d %f %d %f %f %f %d %d %d %d %f\n", 
       navAliParm->loadAndKeepBuf, navAliParm->maxAlignShift, navAliParm->maxNumResetIS,
       navAliParm->resetISthresh, navAliParm->leaveISatZero ? 1 : 0, 
       navAliParm->scaledAliMaxRot, navAliParm->scaledAliPctChg, navAliParm->scaledAliExtraFOV,
-      navAliParm->scaledAliLoadBuf, navAliParm->applyInteractive ? 1 : 0);
+      navAliParm->scaledAliLoadBuf, navAliParm->applyInteractive ? 1 : 0, 
+      navAliParm->findAndCenterHole ? 1 : 0, navAliParm->holeCenteringAcquire, 
+      navAliParm->cropHoleSpacings);
     mFile->WriteString(oneState);
     mFile->WriteString("NavAliMapLabel " + navAliParm->templateLabel + "\n");
 
