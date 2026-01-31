@@ -3,6 +3,37 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+1/29/26: Added script command to return coordinates of all positions found by
+Hole Finder into array variables.
+
+1/27/26: Added aperture settings to states and navigator maps; the state
+dialog has an option to specify if apertures should be set when setting a
+state; and apertures will be set when going to a map acquire state (e.g., for
+Realign to Item) in restricted cases.
+
+1/27/26: Added script command to list detailed properties of an imaging state,
+and enhanced state listing for tilt series.
+
+1/22/26: Reassigned Shift H to Shift O for selecting range of Navigator maps
+in which to find holes, so Shift H works for toggling crosshairs (In 4.2).
+
+1/21/26: In multigrid, fixed checking of marker shift when "current state" is
+used instead of a set state for grid map; fixed getting the C1 aperture to
+restore on JEOL when there are two settable apertures (In 4.2).
+
+1/20/26: Fixed starting multigrid when changing condenser but not objective
+aperture for LM map, broken 12/31/25.
+
+1/20/26: SEM_4-2-15
+1/20/26: Fixed setting aperture size on JEOL when there are ApertureSizes
+properties, broken 12/2/25 (In 4.2).
+
+1/19/25: Added optional line to Scope Status panel to show the condenser and
+objective apertures, enabled by property ShowApertureStatus.
+
+1/19/25: Added script command to find the nearest navigator item with a
+given label or note.
+
 1/16/26: In the routine to refine grid map alignment, accessed from multigrid
 dialog and RefineGridMapAlignment, added the ability to specify a polygon or
 point to realign at, aligning to the map that item is drawn on.
@@ -46,7 +77,7 @@ just as when running grids.
 message and allow a script to run, and also made value of 2 allow multigrid to
 proceed to next grid (In 4.2).
 
-12/28/25: Fixed multigrid makring grid as failed when running a script after
+12/28/25: Fixed multigrid marking grid as failed when running a script after
 the LMM is acquired (In 4.2).
 
 12/28/25: Added property SaveK3CountingGainAsTiff to make the binned counting

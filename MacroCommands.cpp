@@ -2591,13 +2591,7 @@ int CMacCmd::GetDoseSymmetricAngles()
     CTSDoseSymDlg::IgnoreAnglesToUseNextCall();
     CTSDoseSymDlg::FindDoseSymmetricAngles(*tsParam, angles, directions, ind, final,
       NULL);
-    for (ind = 0; ind < (int)angles.size(); ind++) {
-      one.Format("%.2f", angles[ind]);
-      if (ind)
-        value += "\n";
-      value += one;
-    }
-    if (SetVariable(mStrItems[1], value, VARTYPE_REGULAR, -1, false, &mStrCopy))
+    if (SetArrayVariableFromArray(mStrItems[1], &angles[0], (int)angles.size(), "%.2f"))
       ABORT_NOLINE("Error setting a variable with dose-symmetric angles:\n" + mStrCopy);
     return 0;
   }
@@ -9023,7 +9017,6 @@ int CMacCmd::ManyChoiceBox(void)
   CString* valPtr;
 
   dlg.mIsRadio = mItemInt[1] != 0;
-  mItem1upper = mStrItems[2];
   if (LookupVarAbortIfFail(mStrItems[2], &headervar, index) ||
     LookupVarAbortIfFail(mStrItems[3], &labelsvar, index))
     return 1;
@@ -9040,8 +9033,7 @@ int CMacCmd::ManyChoiceBox(void)
     dlg.mChoiceLabels[i] = valPtr->Mid(ix0, ix1 - ix0);
   }
 
-  mItem1upper = mStrItems[4];
-  valuesvar = LookupVariable(mItem1upper, index);
+  valuesvar = LookupVariable(mStrItems[4], index);
 
   if (valuesvar && dlg.mIsRadio) {
     if (valuesvar->numElements > 1)
@@ -9071,20 +9063,14 @@ int CMacCmd::ManyChoiceBox(void)
     repval1 = -1.;
   }
   else if (dlgstate == IDOK && dlg.mIsRadio) {
-    SetVariable(mItem1upper, dlg.mRadioVal, VARTYPE_REGULAR, -1,
+    SetVariable(mStrItems[4], dlg.mRadioVal, VARTYPE_REGULAR, -1,
       false);
     repval1 = (double)(dlg.mRadioVal);
 	}
   else if (dlgstate == IDOK && !dlg.mIsRadio){
-    CString vvar, one;
-    for (index = 0; index < dlg.mNumChoices; index++) {
-      if (index) {
-        vvar += "\n";
-      }
-      one.Format("%d", dlg.mCheckboxVals[index]);
-      vvar += one;
-    }
-    SetVariable(mItem1upper, vvar, VARTYPE_REGULAR, -1, false);
+    if (SetArrayVariableFromArray(mStrItems[4], &dlg.mCheckboxVals[0], dlg.mNumChoices,
+      "%d"))
+      ABORT_NOLINE("Error setting a variable with checkbox choice values:\n" + mStrCopy);
     repval1 = 0.;
   }
   SetReportedValues(repval1, 0.);
@@ -11586,6 +11572,25 @@ int CMacCmd::ReportNavItem(void)
   return 0;
 }
 
+// FindItemWithLabelOrNote
+int CMacCmd::FindItemWithLabelOrNote()
+{
+  double stageZ;
+  int index;
+  CMapDrawItem *navItem;
+  ABORT_NONAV;
+  if (mItemEmpty[4])
+    mScope->GetStagePosition(mItemDbl[3], mItemDbl[4], stageZ);
+  index = mNavHelper->FindNearestItemMatchingText((float)mItemDbl[3], (float)mItemDbl[4],
+    mStrItems[2], mItemInt[1] != 0);
+  if (index >= 0) {
+    navItem = mNavigator->GetOtherNavItem(index);
+    SetReportedValues(index + 1, navItem->mStageX, navItem->mStageY);
+  } else
+    SetReportedValues(0., 0., 0.);
+  return 0;
+}
+
 // LoadPieceAtNavPoint
 int CMacCmd::LoadPieceAtNavPoint()
 {
@@ -11631,18 +11636,9 @@ int CMacCmd::GetItemPointArray()
   CMapDrawItem *navItem = CurrentOrIndexedNavItem(index, mStrLine);
   if (!navItem)
     return 1;
-  for (index = 0; index < navItem->mNumPoints; index++) {
-    if (index) {
-      xval += "\n";
-      yval += "\n";
-    }
-    one.Format("%.3f", navItem->mPtX[index]);
-    xval += one;
-    one.Format("%.3f", navItem->mPtY[index]);
-    yval += one;
-  }
-  if (SetVariable(mStrItems[2], xval, VARTYPE_REGULAR, -1, false, &mStrCopy) ||
-    SetVariable(mStrItems[3], yval, VARTYPE_REGULAR, -1, false, &mStrCopy))
+  if (SetArrayVariableFromArray(mStrItems[2], &navItem->mPtX[0], navItem->mNumPoints,
+    "%.3f") || SetArrayVariableFromArray(mStrItems[3], &navItem->mPtY[0], 
+      navItem->mNumPoints, "%.3f"))
     ABORT_NOLINE("Error setting a variable with item point coordinates:\n" + mStrCopy);
   return 0;
 
@@ -12333,18 +12329,40 @@ int CMacCmd::GoToImagingState(void)
   return 0;
 }
 
-// ImagingStateProperties
+// ImagingStateProperties, ListImagingState
 int CMacCmd::ImagingStateProperties()
 {
-  int index = 0, err, area, setNum;
+  int index = 0, err = 0, area, setNum, indStart, indEnd;
+  bool doList = CMD_IS(LISTIMAGINGSTATE);
   StateParams *param;
   CArray<StateParams *, StateParams *> *stateArr = mNavHelper->GetStateArray();
   CString errStr;
-  SubstituteLineStripItems(mStrLine, 1, mStrCopy);
-  err = CStateDlg::LookupStateByNameOrNum(mStrCopy, index, errStr);
-  if (err) {
-    SetReportedValues(err);
-    mLogRpt = "Specified imaging state not available: " + errStr;
+  if (doList && mStrItems[1] == "-1") {
+    indStart = 0;
+    indEnd = (int)stateArr->GetSize() - 1;
+  } else if (doList && mStrItems[1] == "0") {
+    if (!mNavHelper->mStateDlg)
+      ABORT_LINE("The State dialog must be open for line:\n\n");
+    indStart = indEnd = mNavHelper->mStateDlg->GetCurrentItem();
+    if (indStart < 0)
+      ABORT_LINE("There is no current item in the State dialog for line:\n\n");
+  } else {
+    SubstituteLineStripItems(mStrLine, 1, mStrCopy);
+    err = CStateDlg::LookupStateByNameOrNum(mStrCopy, index, errStr);
+    if (err) {
+      SetReportedValues(err);
+      mLogRpt = "Specified imaging state not available: " + errStr;
+      return 0;
+    }
+    indStart = indEnd = index;
+  }
+  if (doList) {
+    for (index = indStart; index <= indEnd; index++) {
+      param = stateArr->GetAt(index);
+      mNavHelper->MakeStateOutputLine(param, errStr);
+      PrintfToLog("%d: %s  : %s", index + 1, (LPCTSTR)errStr, param->name.IsEmpty() ? "" :
+        (LPCTSTR)param->name);
+    }
   } else {
     param = stateArr->GetAt(index);
     area = mNavHelper->AreaFromStateLowDoseValue(param, &setNum);
@@ -13390,6 +13408,25 @@ int CMacCmd::MakeNavPointsAtHoles(void)
 int CMacCmd::ClearHoleFinder(void)
 {
   mNavHelper->mHoleFinderDlg->OnButClearData();
+  return 0;
+}
+
+// GetFoundHolePositions
+int CMacCmd::GetFoundHolePositions()
+{
+  FloatVec *xHoleCens, *yHoleCens;
+  IntVec *pieceOn;
+  ShortVec *holeExcludes;
+  BOOL drawIncluded, drawExcluded, bufIsFFT = false;
+  bool any = mNavHelper->mHoleFinderDlg->GetHolePositions(&xHoleCens,
+    &yHoleCens, &pieceOn, &holeExcludes, drawIncluded, drawExcluded);
+  if (any) {
+    if (SetArrayVariableFromArray(mStrItems[1], &(*xHoleCens)[0], (int)xHoleCens->size(), 
+      "%.4f") || SetArrayVariableFromArray(mStrItems[2], &(*yHoleCens)[0], 
+      (int)yHoleCens->size(), "%.4f"))
+        ABORT_NOLINE("Error setting a variable with found hole positions:\n" + mStrCopy);
+  }
+  SetRepValsAndVars(3, any ? (int)xHoleCens->size() : 0, 0.);
   return 0;
 }
 

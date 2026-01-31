@@ -743,7 +743,7 @@ public:
   void ProcessTKey(void);
   void ProcessNKey(void);
   void ProcessVKey(void);
-  void ProcessHKey(void);
+  void ProcessOKey(void);
   int ProcessRangeKey(const char *key, int &shiftIndex, int &start, int &end);
   void ClearRangeKeys();
   void ToggleNewFileOverRange(int start, int end, int forMultiGrid = 0);

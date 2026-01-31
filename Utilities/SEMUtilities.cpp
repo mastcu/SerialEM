@@ -1292,7 +1292,7 @@ CString FormattedNumber(double value, const char *suffix, int minDec, int maxDec
   return retStr + suffix;
 }
 
-// Returns a string with mag in a brief format, with x add for values with K or M if
+// Returns a string with mag in a brief format, with x add for values without K or M if
 // addX is 1, or to all if addX is > 1
 CString UtilFormattedMag(int mag, int addX)
 {

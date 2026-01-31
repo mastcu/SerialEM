@@ -93,6 +93,9 @@ CMapDrawItem::CMapDrawItem()
   mFilePropIndex =  mTSparamIndex = mMontParamIndex =  mStateIndex = -1;
   mFileToOpen = "";
   mEDMPercent = -1.f;
+  mObjectiveAp = -1;
+  mCondenserAp = -1;
+  mJeolC1Ap = -1;
  }
 
 CMapDrawItem::CMapDrawItem(CMapDrawItem *item)

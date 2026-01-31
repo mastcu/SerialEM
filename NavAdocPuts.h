@@ -186,4 +186,10 @@
 
   if (item->mEDMPercent >= 0)
     ADOC_PUT(Float(ADOC_ARG, "EDMPercent", item->mEDMPercent));
+  if (item->mObjectiveAp >= 0)
+    ADOC_PUT(Integer(ADOC_ARG, "ObjectiveAperture", item->mObjectiveAp));
+  if (item->mCondenserAp >= 0)
+    ADOC_PUT(Integer(ADOC_ARG, "CondenserAperture", item->mCondenserAp));
+  if (item->mJeolC1Ap >= 0)
+    ADOC_PUT(Integer(ADOC_ARG, "JeolC1Aperture", item->mJeolC1Ap));
 }

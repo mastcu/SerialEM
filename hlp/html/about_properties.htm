@@ -140,7 +140,9 @@
           <TD>Follow with a list of indexes to UTAPI services that should be marked as not 
             available.&nbsp; The indexes correspond to the values of the enum 
             'UtapiSupportTypes' in SerialEM.h.  With a UTAPI server from April 2025, only 20 needs
-            to be used for cameras if you have a Ceta 2; the vibration manager is supported for dewar 
+            to be used for cameras if you have a Ceta 2.&nbsp; With a 7.27 UTAPI server, the Ceta 2 should give the
+            proper number of frames and there should be no more need to skip any services.&nbsp; The 
+            vibration manager is supported for dewar 
             and vacuum management as of 28-Dec-25 but you can use 28 to skip this service and use 
             older scripting calls.&nbsp; Unlike other property entries, this list 
             can have ranges.&nbsp; For example, to skip everything except apertures, beam stop, and camera,
@@ -3106,6 +3108,34 @@
             program will try to open it in the lower right instead of changing workset tabs, to avoid 
             interfering with the use of workset tabs.&nbsp; Set to 0 to disable the automatic scaling.&nbsp; The
              default is 1 on Titans without UTAPI.
+          </TD>
+        </TR>
+        <TR>
+          <TD>ShowApertureStatus</TD>
+          <TD>Set to 1 or 2 to add a line to the Microscope Status panel showing the state of the 
+            condenser and objective apertures.&nbsp; For microscopes where aperture state can be found
+            by querying the scope, i.e., or Thermo/FEI with UTAPI interface or JEOL, either value can be used
+            and the scope will be polled every 5 seconds.&nbsp; For Thermo/FEI without UTAPI, use 1 to have
+            the value in the panel be updated whenever SerialEM reports or sets an aperture, or 2 to have
+            the value updated every 5 seconds, which will require the aperture panel to be visible in the
+            microscope user interface.&nbsp; For a JEOL scope without ApertureSizes entries, the aperture
+            index will be shown.&nbsp; Does not work for Hitachi.
+          </TD>
+        </TR>
+        <TR>
+          <TD>UseAperturesInStates</TD>
+          <TD>Set this property to control the use of apertures in imaging and map acquisition 
+            states.&nbsp; With the default value of 1, the program will test for aperture support on
+            startup, if necessary, and record the status of objective and
+            condenser apertures in Navigator items and imaging states.&nbsp;On a JEOL with extra 
+            apertures and without the 'JeolCondenserApertureID' property set, the C1 aperture 
+            will also be recorded.&nbsp; When setting an imaging state, apertures will be set if an option in
+            the Imaging States dialog is set for the state.&nbsp; 
+            When setting a map acquisition state, they will be set only when entering LM or if 
+            staying in LM and the apertures in the map are larger than the current ones, or when leaving LM if
+            the apertures in the map are smaller than currently.  With a value of 2, apertures will be set
+            unconditionally when going to map acquire states.  Set the property to 0 to suppress
+            the use of apertures, even if they are already recorded in states and maps.
           </TD>
         </TR>
           <TD>ApertureSizes</TD>

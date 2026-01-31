@@ -332,6 +332,8 @@ public:
   GetSetMember(float, MinAutoAdjSquareRatio);
   GetSetMember(float, MaxAutoAdjHoleRatio);
   GetSetMember(int, MinAutoAdjCropSize);
+  GetMember(bool, CurStateSetApertures);
+  SetMember(bool, SkipAperturesNextState);
   IntVec *GetExtraTaskList() { return &mExtraTaskList; };
   float *GetLastUsedHoleISvecs() {return &mLastUsedHoleISvecs[0] ; };
 
@@ -375,6 +377,7 @@ private:
   CArray<StateParams *, StateParams *> *mAcqStateArray;
   CArray<StateParams *, StateParams *> mStateArray;
   CArray<StateParams, StateParams> mSavedStates;
+  CArray<StateParams, StateParams> mForgottenStates;
   CCameraController *mCamera;
   WINDOWPLACEMENT mStatePlacement;
   CArray<CenterSkipData, CenterSkipData> mCenterSkipArray;
@@ -387,6 +390,10 @@ private:
   NavAcqAction *mAcqActions;
   NavAlignParams mNavAlignParams;
   StateParams mPriorState;
+  StateParams mSavedPriorState;    // Forgotten prior state
+  int mPrevStateIndex[MAX_LOWDOSE_SETS + 2];
+  int mSavedCamOfState;
+
 
   std::vector<int> mPieceSavedAt;  // Sections numbers for existing pieces in montage
   int mThirdRoundID;           // Map ID of map itself for 2nd round alignment
@@ -431,6 +438,14 @@ private:
   float mRIweightSigma;         // Sigma for weighting by probability in corr at target
   BOOL mRIuseCurrentLDparams;   // Flag to use current low dose parameters in realign
   int mTypeOfSavedState;        // Type of saved state: 1 imaging, 2 map acquire
+  int mTypeOfForgottenState;    // For saving forgotten state
+  bool mSavedStateSetApertures; // Whether apertures were set
+  bool mCurStateSetApertures;   // Flag that it set apertures
+  bool mSkipAperturesNextState; // Flag not to apply the aperture change in state
+  int mObjApToRestore;          // Apertures that need restoring when staed in low dose
+  int mCondApToRestore;
+  int mC1ApToRestore;
+  bool mForgotApertureState;    // Flag so prepare to reimage can restore aps if needed
   int mSavedLowDoseArea;        // Low dose area when saved state
   BOOL mShowStateNumbers;       // Flag to show state # before name
   float mMaxMarginNeeded;       // Maximum center to edge distance for preferring a map
@@ -649,13 +664,14 @@ public:
   void StoreMapStateInParam(CMapDrawItem * item, MontParam *montP, int baseNum,
     StateParams * param);
   void SetStateFromParam(StateParams *param, ControlSet *conSet, int baseNum,
-    int hideLDoff = 0, bool skipScope = false);
+    int hideLDoff = 0, bool skipScope = false, bool setAperture = false);
   void SetConsetsFromParam(StateParams *param, ControlSet *conSet, int baseNum);
   void SaveCurrentState(int type, int saveLDfocusPos, int camNum, int saveTargOffs, BOOL montMap = false,
     int saveReadModes = -1);
   void SaveLowDoseAreaForState(int area, int camNum, bool saveTargOffs, BOOL montMap);
   int AreaFromStateLowDoseValue(StateParams *param, int *setNum);
-  void ForgetSavedState(void);
+  void ForgetSavedState(bool restored = false);
+  void RestoreForgottenState();
   bool GetSavedPriorState(StateParams &state);
   StateParams* NewStateParam(bool navAcquire);
   StateParams * ExistingStateParam(int index, bool navAcquire);
@@ -712,6 +728,10 @@ public:
   void StartRealignCapture(bool useContinuous, int nextTask);
   void GetViewOffsets(CMapDrawItem * item, float & netShiftX, float & netShiftY, float & beamShiftX, float & beamShiftY, float & beamTiltX, float & beamTiltY, int area = VIEW_CONSET);
   void StateCameraCoords(StateParams *param, int camIndex, int xFrame, int yFrame, int binning, int &left, int &right, int &top, int &bottom);
+  int AperturesForMapsAndStates(int &objAp, int &condAp, int &jeolC1, CString &errStr);
+  void SetAperturesIfNeeded(int objectiveAp, int condenserAp, int JeolC1Ap, bool setting);
+  void MakeStateOutputLine(StateParams *state, CString &mess);
+  bool FormatApertureString(StateParams *state, CString &mess, bool skipA);
   bool CanStayInLowDose(CMapDrawItem * item, int xFrame, int yFrame, int binning, int & set, float & netShiftX, float & netShiftY, bool forReal);
   void SimpleIStoStage(CMapDrawItem * item, double ISX, double ISY, float &stageX, float &stageY);
   ScaleMat ItemStageToCamera(CMapDrawItem * item);

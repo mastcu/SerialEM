@@ -59,6 +59,8 @@ public:
   CButton m_butRestore;
   CButton m_butForget;
   CButton m_butSetSchedState;
+  GetMember(int, CurrentItem);
+  static int *GetSetStateIndex() {return &mSetStateIndex[0] ; };
 
   afx_msg void OnEnChangeStatename();
   afx_msg void OnSelchangeListStates();
@@ -98,8 +100,14 @@ public:
   CButton m_butAddMontMap;
   afx_msg void OnButAddMontMap();
   static SetMember(int, CamOfSetState);
+  static GetMember(int, CamOfSetState);
   static void SetStaticPointers();
 
   BOOL m_bShowNumber;
   afx_msg void OnCheckNumber();
+  CButton m_butListState;
+  afx_msg void OnButListState();
+  CButton m_butSetApertures;
+  BOOL m_bSetApertures;
+  afx_msg void OnCheckSetApertures();
 };

@@ -69,7 +69,7 @@
 #define new DEBUG_NEW
 #endif
 
-#define MAX_TOKENS 40
+#define MAX_TOKENS 60
 #define FILTER_LIFETIME_MINUTES  60
 #define IS_STAGE_LIFETIME_HOURS 22
 #define PIXEL_LIFETIME_HOURS 24
@@ -1263,6 +1263,12 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
           stateP->montMapConSet = itemInt[36] != 0;
         if (!itemEmpty[37])
           stateP->EDMPercent = itemFlt[37];
+        if (!itemEmpty[41]) {
+          stateP->objectiveAp = itemInt[38];
+          stateP->condenserAp = itemInt[39];
+          stateP->JeolC1Ap = itemInt[40];
+          stateP->flags = itemInt[41];
+        }
         // ADD NEW ITEMS TO NAV READING
  
       } else if (NAME_IS("StateName")) {
@@ -2659,7 +2665,7 @@ void CParameterIO::WriteLowDoseToString(LowDoseParams *ldp, int ldi, int ldj, CS
 void CParameterIO::WriteStateToString(StateParams *stateP, CString &str)
 {
   str.Format("%d %d %d %d %f %d %f %f %d %d %d %d %f %f "
-    "%d %d %d %f %d %d %d %d %d %d %d %d %d %d %d %d %d %f %f %f %f %d %f",
+    "%d %d %d %f %d %d %d %d %d %d %d %d %d %d %d %d %d %f %f %f %f %d %f %d %d %d %d",
     stateP->lowDose, stateP->camIndex, stateP->magIndex,
     stateP->spotSize, stateP->intensity, stateP->slitIn ? 1 : 0, stateP->energyLoss,
     stateP->slitWidth, stateP->zeroLoss ? 1 : 0, stateP->binning, stateP->xFrame,
@@ -2670,7 +2676,8 @@ void CParameterIO::WriteStateToString(StateParams *stateP, CString &str)
     stateP->readModeFocus, stateP->readModeTrial, stateP->readModePrev,
     stateP->readModeSrch, stateP->readModeMont, stateP->beamAlpha,
     stateP->targetDefocus, stateP->ldDefocusOffset, stateP->ldShiftOffsetX,
-    stateP->ldShiftOffsetY, stateP->montMapConSet ? 1 : 0, stateP->EDMPercent);
+    stateP->ldShiftOffsetY, stateP->montMapConSet ? 1 : 0, stateP->EDMPercent,
+    stateP->objectiveAp, stateP->condenserAp, stateP->JeolC1Ap, stateP->flags);
 }
 
 #define HARD_CODED_FLAGS (NAA_FLAG_HAS_SETUP | NAA_FLAG_ALWAYS_HIDE | \

@@ -866,7 +866,7 @@ int CMultiGridTasks::RealignReloadedGrid(CMapDrawItem *item, float expectedRot,
   }
   mBigRotation = fabs(expectedRot) > 1.;
 
-  if (handleApertures && GetInitialApertureStates(errStr))
+  if (handleApertures && GetInitialApertureStates(errStr, ind))
     return 1;
 
   // If not doing big rotation, see if map is already available
@@ -2335,7 +2335,7 @@ void CMultiGridTasks::RefineRealignNextTask(int param)
 int CMultiGridTasks::StartGridRuns(int LMneedsLD, int MMMneedsLD, int finalNeedsLD,
   int finalCamera, bool undoneOnly)
 {
-  int err, grid, ind, apSize = 0, numAcq, numTS, acqType, numFail = 0, numDark = 0;
+  int err, grid, ind, numAcq, numTS, acqType, numFail = 0, numDark = 0;
   int magInd, camera, ldArea, numPoly, jnd, numMSparam = 0, maxStamp, minStamp;
   int numXformed = 0, paramXformable = 0, curSetXformable = 0, backXformable = 0;
   int backXfStamp, subXfStamp;
@@ -2424,9 +2424,26 @@ int CMultiGridTasks::StartGridRuns(int LMneedsLD, int MMMneedsLD, int finalNeeds
   mActiveCameraList = mWinApp->GetActiveCameraList();
 
   // Get state of apertures if they are to be changed and error out if bad
-  if (GetInitialApertureStates(str)) {
+  if (GetInitialApertureStates(str, ind)) {
     SEMMessageBox(str);
     return 1;
+  }
+
+  // Check if either one matches the grid map state
+  if ((mParams.acquireMMMs || mParams.runFinalAcq)) {
+    str = "";
+    if (mParams.removeObjectiveAp && !mInitialObjApSize)
+      str = "the objective aperture is currently out as it would be for grid maps";
+    if (mParams.setCondenserAp && ((mUseTwoJeolCondAp && !mParams.C1orC2condenserAp) ?
+      mInitialC1CondSize : mInitialCondApSize) == ind) {
+      if (!str.IsEmpty())
+        str += " and ";
+      str += "the condenser aperture is the size to be used for grid maps";
+    }
+    if (!str.IsEmpty() && AfxMessageBox("Apertures may not be set right for the selected"
+      " acquisitions:\n" + str + ".\n\nAre you sure you want to proceed?", MB_QUESTION) ==
+      IDNO)
+      return 1;
   }
 
   if (mSingleGridMode && !mReferenceCounts && mParams.acquireLMMs) {
@@ -3284,9 +3301,9 @@ void CMultiGridTasks::AddToSeqForRestoreFromLM(bool &apForLMM, bool &stateForLMM
 }
 
 // Get state of apertures if they are to be changed and return error if bad
-int CMultiGridTasks::GetInitialApertureStates(CString &errStr)
+int CMultiGridTasks::GetInitialApertureStates(CString &errStr, int &setC2Index)
 {
-  int apSize, ind;
+  int apSize = 0;
   CString str;
 
   if (mParams.removeObjectiveAp) {
@@ -3297,18 +3314,19 @@ int CMultiGridTasks::GetInitialApertureStates(CString &errStr)
   if (apSize >= 0 && mParams.setCondenserAp) {
     apSize = mScope->GetApertureSize(mSingleCondenserAp);
     mInitialCondApSize = apSize;
-    if (apSize && mUseTwoJeolCondAp)
+    if (apSize >= 0 && mUseTwoJeolCondAp)
       mInitialC1CondSize = mScope->GetApertureSize(JEOL_C1_APERTURE);
+    setC2Index = mParams.condenserApSize;
   }
   if (apSize < 0) {
     errStr = "Aperture control appears not to work on this scope";
     return 1;
   }
   if (mParams.setCondenserAp && JEOLscope) {
-    ind = mScope->FindApertureIndexFromSize(
+    setC2Index = mScope->FindApertureIndexFromSize(
       (mUseTwoJeolCondAp && !mParams.C1orC2condenserAp) ?
       JEOL_C1_APERTURE : mSingleCondenserAp, mParams.condenserApSize, str);
-    if ((mParams.condenserApSize && !ind) || ind < 0) {
+    if ((mParams.condenserApSize && !setC2Index) || setC2Index < 0) {
       errStr = "There is a problem with condenser aperture size: \r\n" + str;
       return 1;
     }
@@ -3950,6 +3968,7 @@ void CMultiGridTasks::DoNextSequenceAction(int resume)
     // Set state(s) for MM mapping
   case MGACT_LMM_STATE:
     RestoreState();
+    mNavHelper->SetSkipAperturesNextState(true);
     if (CStateDlg::DoSetImState(mParams.LMMstateNum, errStr)) {
       SEMMessageBox("Error trying to set LM state: " + errStr);
       StopMulGridSeq();
@@ -3969,6 +3988,7 @@ void CMultiGridTasks::DoNextSequenceAction(int resume)
     RestoreState();
     for (ind = 0; ind < 4; ind++) {
       if (stateNums[ind] >= 0) {
+        mNavHelper->SetSkipAperturesNextState(true);
         err = CStateDlg::DoSetImState(stateNums[ind], errStr);
         if (!err)
           mStateWasSet = true;
@@ -4748,7 +4768,7 @@ int CMultiGridTasks::CheckShiftsForLMmode(int magInd)
     mWinApp->mLowDoseDlg.GetFullViewShift(shiftX, shiftY, ldArea);
     if (shiftX || shiftY)
       retVal += 2;
-  } else {
+  } else if (mParams.setLMMstate) {
 
     // The dialog should be open when this check is called, but...
     if (mMGdlg) {

@@ -18,7 +18,7 @@ class CMacCmd : public CMacroProcessor
   static int mLongHasTime[MAX_LONG_OPERATIONS];
 
 
-  CString mStrCopy, mItem1upper;
+  CString mItem1upper;
   CString *mMacro;
 
   // Use this only for output followed by break not return, output at end of switch

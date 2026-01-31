@@ -363,6 +363,8 @@ struct LowDoseParams {
   float EDMPercent;        // Dose modulator duty percent
 };
 
+#define STATEFLAG_SET_APERTURES 1
+
 // State parameters and an initializer
 struct StateParams {
   StateParams() {
@@ -385,6 +387,10 @@ struct StateParams {
     axisRotation = 0;
     navID = 0;
     EDMPercent = -1.f;
+    objectiveAp = -1;
+    condenserAp = -1;
+    JeolC1Ap = -1;
+    flags = 0;
   }
   LowDoseParams ldParams;  // Low dose Record parameters if this is a low dose state
   int lowDose;            // Flag that it is a low dose state
@@ -429,6 +435,10 @@ struct StateParams {
   int navID;               // For keeping track of duplicates in merging navs
   int camForParams;        // Runtime: Camera index to which parameters should be restored
   float EDMPercent;        // Dose modulator duty percent
+  int objectiveAp;         // Objective aperture
+  int condenserAp;         // Main or only condenser aperture
+  int JeolC1Ap;            // C1 aperture on JEOL when use both
+  unsigned int flags;      // STATEFLAG_ values
 };
 
 struct FilterParams {

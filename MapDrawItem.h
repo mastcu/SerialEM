@@ -162,6 +162,9 @@ public:
   int mStateIndex;
   CString mFileToOpen;    // Filename of file to open at this item
   float mEDMPercent;      // Electronic dose modulator dose percentage
+  int mObjectiveAp;       // State of objective aperture
+  int mCondenserAp;       // State of main condenser aperture
+  int mJeolC1Ap;          // State of C1 aperture on JEOL if using two
 };
 
 #endif // !defined(AFX_MAPDRAWITEM_H__66DFD065_E39E_4A47_9CD0_02E9013B2469__INCLUDED_)

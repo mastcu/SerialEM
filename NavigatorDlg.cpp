@@ -519,22 +519,24 @@ void CNavigatorDlg::ManageCurrentControls()
   } else if (m_bCollapseGroups && mCurListSel >= 0) {
     group = true;
     GetCollapsedGroupLimits(mCurListSel, mCurrentItem, index);
-    mItem = mItemArray[mCurrentItem];
-    m_strItemNum.Format("# %d-%d", mCurrentItem + 1, index + 1);
-    item = GetSingleSelectedItem();
-    if (item)
-      m_strLabel = item->mLabel;
-    for (ind = mCurrentItem; ind <= index; ind++) {
-      item = mItemArray[ind];
-      if (doDraw < 0)
-        doDraw = item->mDraw ? 1 : 0;
-      if (doDraw != (item->mDraw ? 1 : 0)) {
-        enableDraw = false;
-        break;
+    if (mCurrentItem >= 0 && mCurrentItem < mItemArray.GetSize()) {
+      mItem = mItemArray[mCurrentItem];
+      m_strItemNum.Format("# %d-%d", mCurrentItem + 1, index + 1);
+      item = GetSingleSelectedItem();
+      if (item)
+        m_strLabel = item->mLabel;
+      for (ind = mCurrentItem; ind <= index; ind++) {
+        item = mItemArray[ind];
+        if (doDraw < 0)
+          doDraw = item->mDraw ? 1 : 0;
+        if (doDraw != (item->mDraw ? 1 : 0)) {
+          enableDraw = false;
+          break;
+        }
       }
+      if (enableDraw)
+        m_bDrawOne = doDraw > 0;
     }
-    if (enableDraw)
-      m_bDrawOne = doDraw > 0;
   }
 
   // Manage selection list if necessary
@@ -2005,10 +2007,10 @@ void CNavigatorDlg::ProcessVKey(void)
   Redraw();
 }
 
-void CNavigatorDlg::ProcessHKey(void)
+void CNavigatorDlg::ProcessOKey(void)
 {
   int start, end;
-  if (ProcessRangeKey("H again to find holes in maps", mShiftHIndex, start, end))
+  if (ProcessRangeKey("O again to find holes in maps", mShiftHIndex, start, end))
     return;
   if (!KGetOneInt("Enter 0 not to combine points for Multiple Records",
     "Otherwise enter minimum # of found holes required to do combining",
@@ -7455,6 +7457,11 @@ int CNavigatorDlg::NewMap(bool unsuitableOK, int addOrReplaceNote, CString *newN
     !mCamera->mDoseModulator->GetDutyPercent(edmPct, report)) {
     item->mEDMPercent = edmPct;
   }
+  if (mScope->GetUseAperturesInStates() > 0) {
+    if (mHelper->AperturesForMapsAndStates(item->mObjectiveAp, item->mCondenserAp,
+      item->mJeolC1Ap, report))
+      SEMAppendToLog("WARNING: Error getting aperture states for map: " + report);
+  }
 
   // For a LD View image, store the defocus offset, and get the net view IS shift and
   // convert it to a stage position for use in realign to item
@@ -9113,6 +9120,13 @@ int CNavigatorDlg::LoadNavFile(bool checkAutosave, bool mergeFile, CString *inFi
           state->montMapConSet = B3DNINT(vals[36]) != 0;
           if (ind2 > 37)
             state->EDMPercent = (float)vals[37];
+          if (ind2 > 41) {
+            state->objectiveAp = B3DNINT(vals[38]);
+            state->condenserAp = B3DNINT(vals[39]);
+            state->JeolC1Ap = B3DNINT(vals[40]);
+            state->flags = B3DNINT(vals[41]);
+          }
+
           if (state->lowDose) {
             ind2 = 0;
             ADOC_REQUIRED(AdocGetDoubleArray("StateParam", ind1, "LowDose", vals, &ind2,
@@ -9388,6 +9402,12 @@ int CNavigatorDlg::LoadNavFile(bool checkAutosave, bool mergeFile, CString *inFi
             &item->mMapSpotSize));
 
           ADOC_OPTIONAL(AdocGetFloat("Item", sectInd, "EDMPercent", &item->mEDMPercent));
+          ADOC_OPTIONAL(AdocGetInteger("Item", sectInd, "ObjectiveAperture",
+            &item->mObjectiveAp));
+          ADOC_OPTIONAL(AdocGetInteger("Item", sectInd, "CondenserAperture",
+            &item->mCondenserAp));
+          ADOC_OPTIONAL(AdocGetInteger("Item", sectInd, "JeolC1Aperture",
+            &item->mJeolC1Ap));
 
           // Preserve double precision if it is there
           ADOC_OPTIONAL(AdocGetString("Item", sectInd, "MapIntensity", &adocStr));
@@ -11850,7 +11870,8 @@ int CNavigatorDlg::OpenFileIfNeeded(CMapDrawItem * item, bool stateOnly)
   if (*stateIndp >= 0) {
     state = mHelper->ExistingStateParam(*stateIndp, true);
     if (state) {
-      mHelper->SetStateFromParam(state, conSet, RECORD_CONSET);
+      mHelper->SetStateFromParam(state, conSet, RECORD_CONSET, 0, false, 
+        (state->flags & STATEFLAG_SET_APERTURES) != 0);
       // Uncomment to set state twice, once at start and once before acquires
       //if (!stateOnly)
       mHelper->RemoveFromArray(NAVARRAY_STATE, *stateIndp);
@@ -12261,8 +12282,10 @@ void CNavigatorDlg::FinishSingleDeletion(CMapDrawItem *item, int delIndex, int l
     if (multipleInGroup)
       UpdateListString(groupStart);
   }
+  if (mCurrentItem >= (int)mItemArray.GetSize())
+    mCurrentItem = (int)mItemArray.GetSize() - 1;
   if (mCurListSel >= m_listViewer.GetCount())
-    mCurListSel--;
+    mCurListSel = m_listViewer.GetCount() - 1;
   m_listViewer.SetCurSel(mCurListSel);
 
   // Set current item to beginning of group
@@ -12876,10 +12899,13 @@ void CNavigatorDlg::MakeListMappings(void)
 }
 
 // Get the starting and ending item index for a collapsed group at listInd in list box
-// Returns true if it is collapsed group, false otherwise
+// Returns true if it is collapsed group, false otherwise but still set the indexes
 bool CNavigatorDlg::GetCollapsedGroupLimits(int listInd, int &start, int &end)
 {
-  if (listInd < 0 || !m_bCollapseGroups || mListToItem[listInd] >= 0)
+  if (listInd < 0 || !m_bCollapseGroups)
+    return false;
+  end = start = mListToItem[listInd];
+  if (start >= 0)
     return false;
   start = -1 - mListToItem[listInd];
   if (listInd >= (int)mListToItem.size() - 1)
