@@ -2051,7 +2051,8 @@ int CParticleTasks::CenterNavItemOnHole(CMapDrawItem *item, NavAlignParams &aliP
     int numXholes = item->mNumXholes;
     int numYholes = item->mNumYholes;
     int numHoles, minHoleVecInd = 0;
-    float minHoleVecDist, dist, ind;
+    float minHoleVecDist, dist;
+    int ind;
     FloatVec delISX, delISY;
     IntVec posIndex;
     MultiShotParams *msParams = mWinApp->mNavHelper->GetMultiShotParams();
@@ -2063,7 +2064,7 @@ int CParticleTasks::CenterNavItemOnHole(CMapDrawItem *item, NavAlignParams &aliP
       mATHoleCenteringMode = 2;
       mScope->GetImageShift(mFCHstartingISX, mFCHstartingISY);
       numHoles = GetHolePositions(delISX, delISY, posIndex, mFCHmagInd,
-        mWinApp->GetCurrentCamera(), numXholes, numYholes, mScope->GetTiltAngle(), false);
+        mWinApp->GetCurrentCamera(), numXholes, numYholes, (float)mScope->GetTiltAngle(), false);
     
       // exclude skipped holes
       if (item->mNumXholes > 0) {
