@@ -294,6 +294,7 @@ void CMacroEditer::OnSize(UINT nType, int cx, int cy)
   m_butFixIndent.ShowWindow(showFlag);
   m_butAddIndent.ShowWindow(showFlag);
   m_butRemoveIndent.ShowWindow(showFlag);
+  Invalidate();
 }
 
 
