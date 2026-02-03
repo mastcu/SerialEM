@@ -3261,9 +3261,8 @@ BOOL CNavigatorDlg::UserMousePoint(EMimageBuffer *imBuf, float inX, float inY,
   if (mMovingItem && button == VK_MBUTTON)
     return false;
 
-  // if center point in hole
-  //TODO  only allow if HoleFinder is open. IsWindowVisible() seemed to cause issue
-  if (mHelper->mHoleFinderDlg->m_bCenterAddedHoles) {
+  // if set in hole finder parameters, center added point in hole
+  if (mHelper->mHoleFinderDlg->IsOpen() && mHelper->mHoleFinderDlg->m_bCenterAddedHoles) {
     err = CenterAddedPointInHole(imBuf, inX, inY, errStr);
     if (err)
       PrintfToLog("WARNING: Failed to center added point in hole: %s", errStr);

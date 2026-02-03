@@ -5622,6 +5622,17 @@
           </TD>
         </TR>
         <TR>
+          <TD class="scriptcommand">CenterHoleAtNavItem #I A #U [#S] [#R] [#M] [#L]</TD>
+          <TD>Runs the Center Nav Item on Hole routine on the navigator index <strong>#I</strong>.
+              <strong>A</strong> dictates the type of image acquired for finding and 
+              centering: V or S for View or Search in Low Dose, or M to use the parameters 
+              used in acquiring the map on which the navigator item is drawn. Set <strong>#U</strong> 
+              nonzero if doing multishot at the nav item. The optional arguments <strong>#S</strong>,<strong> 
+              #R</strong>, <strong>#M</strong>, and <strong>#L</strong> are identical to those in 
+              AlignToTemplate, and are taken from <a href="hidd_navrealign.htm">Navigator Align Setup</a> dialog if not provided 
+              here.</TD>
+        </TR>
+        <TR>
           <TD class="scriptcommand">RealignReloadedGrid #I #E [#Z] [#R] [#T]</TD>
           <TD>Runs a procedure to align a grid that has been reloaded or rotated to a montage map and transforms
              Navigator items to a new registration.&nbsp; The procedure picks a montage piece near the stage

@@ -854,6 +854,7 @@ MAC_SAME_NAME_ARG(SetMultiGridRefCounts, 1, 4, SETMULTIGRIDREFCOUNTS, D)
 MAC_SAME_NAME_ARG(FindItemWithLabelOrNote, 2, 4, FindItemWithLabelOrNote, ISdd)
 MAC_SAME_FUNC_ARG(ListImagingState, 1, 4, ImagingStateProperties, LISTIMAGINGSTATE, S)
 MAC_SAME_NAME_ARG(GetFoundHolePositions, 2, 4, GETFOUNDHOLEPOSITIONS, SS)
+MAC_SAME_NAME_ARG(CenterHoleAtNavItem, 3, 0, CENTERHOLEATNAVITEM, ISIddii)
 
 
 // new Python-only commands need to be added to pythonOnlyCmds in ::CMacroProcessor

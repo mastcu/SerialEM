@@ -2021,11 +2021,16 @@ void CParticleTasks::PrepareAutofocusForZbyG(ZbyGParams &param, bool saveAndSetL
     mScope->IncDefocus(param.focusOffset);
 }
 
+// Align navigator item at the center of a hole
 int CParticleTasks::CenterNavItemOnHole(CMapDrawItem *item, NavAlignParams &aliParams, 
   bool doingMulti)
 {
-  int conSetNum = 0;
+  int ind, numXholes, numYholes, numHoles, minHoleVecInd, conSetNum = 0;
+  float minHoleVecDist, distSqrd, tol = 1.e-5f;
   CMapDrawItem *mapItem = NULL;
+  FloatVec delISX, delISY;
+  IntVec posIndex;
+  MultiShotParams *msParams;
   
   mATParams = aliParams;
   mATHoleCenteringMode = 1;
@@ -2048,14 +2053,9 @@ int CParticleTasks::CenterNavItemOnHole(CMapDrawItem *item, NavAlignParams &aliP
   }
   
   if (doingMulti) {
-    int numXholes = item->mNumXholes;
-    int numYholes = item->mNumYholes;
-    int numHoles, minHoleVecInd = 0;
-    float minHoleVecDist, dist;
-    int ind;
-    FloatVec delISX, delISY;
-    IntVec posIndex;
-    MultiShotParams *msParams = mWinApp->mNavHelper->GetMultiShotParams();
+    numXholes = item->mNumXholes;
+    numYholes = item->mNumYholes;
+    msParams = mWinApp->mNavHelper->GetMultiShotParams();
     if (numXholes == 0) {
       numXholes = msParams->numHoles[0];
       numYholes = msParams->numHoles[1];
@@ -2064,7 +2064,8 @@ int CParticleTasks::CenterNavItemOnHole(CMapDrawItem *item, NavAlignParams &aliP
       mATHoleCenteringMode = 2;
       mScope->GetImageShift(mFCHstartingISX, mFCHstartingISY);
       numHoles = GetHolePositions(delISX, delISY, posIndex, mFCHmagInd,
-        mWinApp->GetCurrentCamera(), numXholes, numYholes, (float)mScope->GetTiltAngle(), false);
+        mWinApp->GetCurrentCamera(), numXholes, numYholes, (float)mScope->GetTiltAngle(), 
+        false);
     
       // exclude skipped holes
       if (item->mNumXholes > 0) {
@@ -2076,9 +2077,9 @@ int CParticleTasks::CenterNavItemOnHole(CMapDrawItem *item, NavAlignParams &aliP
       mFCHholeVecISX = delISX[0];
       mFCHholeVecISY = delISY[0];
       for (ind = 1; ind < (int)delISX.size(); ind++) {
-        dist = powf(delISX[ind], 2.f) + powf(delISY[ind], 2.f);
-        if (dist < minHoleVecDist) {
-          minHoleVecDist = dist;
+        distSqrd = powf(delISX[ind], 2.f) + powf(delISY[ind], 2.f);
+        if (distSqrd < minHoleVecDist) {
+          minHoleVecDist = distSqrd;
           minHoleVecInd = ind;
           mFCHholeVecISX = delISX[ind];
           mFCHholeVecISY = delISY[ind];
@@ -2088,9 +2089,10 @@ int CParticleTasks::CenterNavItemOnHole(CMapDrawItem *item, NavAlignParams &aliP
       //Check if hole in opposite direction is in the hole list
       mFCHOneHoleForMulti = true;
       for (ind = 0; ind < (int)delISX.size(); ind++) {
-        dist = powf(delISX[ind] + mFCHholeVecISX, 2.f) + 
-               powf(delISY[ind] + mFCHholeVecISY, 2.f);
-        if (dist < 0.1f * minHoleVecDist) {
+
+        // If current IS vector is opposite mFCHholeVecIS, their sum should be ~0
+        if (B3DABS((delISX[ind] + mFCHholeVecISX) / mFCHholeVecISX) < tol &&
+            B3DABS((delISY[ind] + mFCHholeVecISY) / mFCHholeVecISY) < tol) {
           mFCHOneHoleForMulti = false;
           break;
         }
@@ -2179,8 +2181,8 @@ void CParticleTasks::StartTemplateOrHoleAlign(CMapDrawItem *map, int conSetNum)
   mWinApp->mCamera->InitiateCapture(mATConSetNum);
 
   mWinApp->UpdateBufferWindows();
-  mWinApp->SetStatusText(MEDIUM_PANE, mATHoleCenteringMode > 0 ? "FINDING AND CENTERING HOLE" : 
-    "ALIGNING TO TEMPLATE");
+  mWinApp->SetStatusText(MEDIUM_PANE, mATHoleCenteringMode > 0 ? 
+    "FINDING AND CENTERING HOLE" : "ALIGNING TO TEMPLATE");
   mWinApp->AddIdleTask(TASK_TEMPLATE_ALIGN, 0, 0);
 }
 
@@ -2340,6 +2342,7 @@ void CParticleTasks::TemplateAlignNextTask(int param)
   mWinApp->AddIdleTask(TASK_TEMPLATE_ALIGN, 0, 0);
 }
 
+// Reset the image shift during align to template or hole centering
 void CParticleTasks::AlignOrCenterHoleResetIS()
 {
   double ISX, ISY, stz;
@@ -2350,6 +2353,7 @@ void CParticleTasks::AlignOrCenterHoleResetIS()
   mATResettingShift = true;
 }
 
+// Perform Auto Align during Align to Template or Find & Center Hole
 int CParticleTasks::DoCenteringAutoAlign(bool cropping)
 {
   int alignErr;
@@ -2370,6 +2374,7 @@ int CParticleTasks::DoCenteringAutoAlign(bool cropping)
   return 0;
 }
 
+// Test whether the routine can stop, for both Align to Template and Find & Center Hole
 int CParticleTasks::TestForTemplateTermination()
 {
   double ISX, ISY;

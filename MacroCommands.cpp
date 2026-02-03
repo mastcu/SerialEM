@@ -13237,6 +13237,41 @@ int CMacCmd::FindAndCenterOneHole()
   return 0;
 }
 
+// CenterHoleAtNavItem
+int CMacCmd::CenterHoleAtNavItem(void)
+{
+  NavAlignParams params = *(mNavHelper->GetNavAlignParams());
+  CMapDrawItem *item;
+  CString mess;
+  ABORT_NONAV
+  
+  item = CurrentOrIndexedNavItem(mItemInt[1], mess);
+  if (!item)
+    return 1;
+  
+  if (mStrItems[2].Find("S") == 0 || mStrItems[2].Find("v") == 0)
+    params.holeCenteringAcquire = FCH_ACQUIRE_LD_VIEW;
+  else if (mStrItems[2].Find("S") == 0 || mStrItems[2].Find("s") == 0)
+    params.holeCenteringAcquire = FCH_ACQUIRE_LD_SEARCH;
+  else if (mStrItems[2].Find("M") == 0 || mStrItems[2].Find("m") == 0)
+    params.holeCenteringAcquire = FCH_ACQUIRE_MAP;
+  else
+    ABORT_NOLINE("Invalid acquisition type: use V for View, S for search, or M for map")
+  
+  if (!mItemEmpty[4] && mItemFlt[4] >= 0.)
+    params.maxAlignShift = mItemFlt[4];
+  if (!mItemEmpty[5] && mItemFlt[5] >= 0.)
+    params.resetISthresh = mItemFlt[5];
+  if (!mItemEmpty[6] && mItemInt[6] >= 0)
+    params.maxNumResetIS = mItemInt[6];
+  if (!mItemEmpty[7] && mItemInt[7] >= 0)
+    params.leaveISatZero = mItemInt[7] != 0;
+  if (mWinApp->mParticleTasks->CenterNavItemOnHole(item, params, mItemInt[3] != 0))
+    ABORT_NOLINE("Script halted due to failure in Center Nav Item on Hole routine");
+  mStartedOtherTask = true;
+  return 0;
+}
+
 // ReportHoleFinderParams
 int CMacCmd::ReportHoleFinderParams(void)
 {
