@@ -3264,8 +3264,10 @@ BOOL CNavigatorDlg::UserMousePoint(EMimageBuffer *imBuf, float inX, float inY,
   // if set in hole finder parameters, center added point in hole
   if (mHelper->mHoleFinderDlg->IsOpen() && mHelper->mHoleFinderDlg->m_bCenterAddedHoles) {
     err = CenterAddedPointInHole(imBuf, inX, inY, errStr);
-    if (err)
-      PrintfToLog("WARNING: Failed to center added point in hole: %s", errStr);
+    if (err) {
+      SEMTrace('1', "WARNING: %s", errStr);
+      return false;
+    }
   }
 
   if (!ConvertMousePoint(imBuf, inX, inY, stageX, stageY, aInv, delX, delY, xInPiece,
@@ -3386,6 +3388,7 @@ int CNavigatorDlg::GetHoleSize(float &holeSize, EMimageBuffer* imBuf)
   int sizeX, sizeY, index;
   CMapDrawItem* item;
   holeSize = 0.f;
+  bool fromMap = true;
 
   mHelper->mHoleFinderDlg->SyncToMasterParams();
 
@@ -3437,6 +3440,7 @@ int CNavigatorDlg::GetHoleSize(float &holeSize, EMimageBuffer* imBuf)
     holeSize *= scale;
   }
   if (holeSize == 0) {
+    fromMap = false;
     // If no imBuf or map with stored hole size, use hole size from hole finder
     holeSize = holeParams->hexagonalArray ? holeParams->hexDiameter : 
       holeParams->diameter;
@@ -3445,6 +3449,7 @@ int CNavigatorDlg::GetHoleSize(float &holeSize, EMimageBuffer* imBuf)
         "Size from hole finder parameters will be used.");
     }
   }
+  SEMTrace('1', "Found hole size of %.4f from %s", holeSize, fromMap ? "map" : "HF params");
   return 0;
 }
 

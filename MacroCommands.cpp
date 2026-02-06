@@ -13217,11 +13217,11 @@ int CMacCmd::FindAndCenterOneHole()
     holeSize *= scale;
   }
 
+  xCen = yCen = 0.f;
   if (!mItemEmpty[5] && !mItemEmpty[6]) {
-    if (mItemFlt[5] > 0 && mItemFlt[6] > 0) {
+    if (mItemFlt[5] >= 0 && mItemFlt[6] >= 0) {
       xCen = mItemFlt[5];
       yCen = mItemFlt[6];
-    } else if (mItemFlt[5] < 0 || mItemFlt[6] < 0) {
       cropCenter = true;
     }
   }
@@ -13248,8 +13248,8 @@ int CMacCmd::CenterHoleAtNavItem(void)
   item = CurrentOrIndexedNavItem(mItemInt[1], mess);
   if (!item)
     return 1;
-  
-  if (mStrItems[2].Find("S") == 0 || mStrItems[2].Find("v") == 0)
+
+  if (mStrItems[2].Find("V") == 0 || mStrItems[2].Find("v") == 0)
     params.holeCenteringAcquire = FCH_ACQUIRE_LD_VIEW;
   else if (mStrItems[2].Find("S") == 0 || mStrItems[2].Find("s") == 0)
     params.holeCenteringAcquire = FCH_ACQUIRE_LD_SEARCH;

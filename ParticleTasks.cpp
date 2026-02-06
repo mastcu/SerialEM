@@ -2222,6 +2222,7 @@ void CParticleTasks::TemplateAlignNextTask(int param)
   
   } else if (mFCHresetIS) {
       AlignOrCenterHoleResetIS();
+      mFCHresetIS = false;
 
   } else {
     if (mATHoleCenteringMode == 0) {
@@ -2271,15 +2272,27 @@ void CParticleTasks::TemplateAlignNextTask(int param)
       if (mATIterationNum == 0) {
         ix0 = mWinApp->mNavigator->GetHoleSize(holeSize, mImBufs);
         if (ix0) {
-          mess.Format("Error # %d attempting to get hole size for hole centering", ix0);
+          mess.Format("Error getting hole size for hole centering");
           SEMMessageBox(mess);
+          StopTemplateAlign();
           return;
         }
         ix0 = mNavHelper->mHoleFinderDlg->FindAndCenterOneHole(mImBufs, holeSize, 0,
           mATParams.maxAlignShift, xCen, yCen, -mATParams.cropHoleSpacings, false);
+        
         if (ix0) {
-          mess.Format("Error # %d attempting to find and center a hole", ix0);
+          if (ix0 == FCH_ERR_CROP_RANGE)
+            mess.Format("Error: center for cropping is out of range");
+          else if (ix0 == FCH_ERR_CROP_SLICE)
+            mess.Format("Error: cropping buffer image failed");
+          else if (ix0 == FCH_ERR_HOLE_FIND)
+            mess.Format("Error: hole finding failed");
+          else if (ix0 == FCH_ERR_SHIFT_LIMIT)
+            mess.Format("Error: image shift to center hole is above the set limit");
+          else 
+            mess.Format("Error attempting to find and center a hole");
           SEMMessageBox(mess);
+          StopTemplateAlign();
           return;
         }
 
@@ -2334,10 +2347,10 @@ void CParticleTasks::TemplateAlignNextTask(int param)
         (mATFinishing || mATIterationNum + 1 >= mATParams.maxNumResetIS)))) {
         mWinApp->mCamera->InitiateCapture(mATConSetNum);
         mFCHresetIS = true;
+      } else {
+        AlignOrCenterHoleResetIS();
       }
     }
-    
-    AlignOrCenterHoleResetIS();
   }
   mWinApp->AddIdleTask(TASK_TEMPLATE_ALIGN, 0, 0);
 }

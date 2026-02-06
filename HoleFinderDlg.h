@@ -5,6 +5,8 @@
 #include "MyButton.h"
 #include "XSliderCtrl.h"
 
+enum { FCH_ERR_CROP_RANGE, FCH_ERR_CROP_SLICE, FCH_ERR_HOLE_FIND, FCH_ERR_SHIFT_LIMIT };
+
 #define MAX_HOLE_TRIALS 16
 class CNavHelper;
 class CNavigatorDlg;

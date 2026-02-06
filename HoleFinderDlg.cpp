@@ -2205,6 +2205,7 @@ int CHoleFinderDlg::FindAndCenterOneHole(EMimageBuffer *imBuf, float diameter, i
   bool centered;
   EMimageExtra *extra;
   Islice *slice;
+  bool displayCrop = false;
 
   // Get the parameters and save # of circles and diameter
   SyncToMasterParams();
@@ -2222,9 +2223,13 @@ int CHoleFinderDlg::FindAndCenterOneHole(EMimageBuffer *imBuf, float diameter, i
   if (mIsOpen)
     UpdateSettings();
 
+  imBuf->mImage->getShifts(imXshift, imYshift);
+  imBuf->mImage->getSize(nx, ny);
+  xcen = (float)(nx / 2.) - imXshift;
+  ycen = (float)(ny / 2.) - imYshift;
+
   // Crop the image
   if (crop) {
-    imBuf->mImage->getSize(nx, ny);
     pixel = mWinApp->mShiftManager->GetPixelSize(imBuf);
     cropSize = (B3DABS(crop) * B3DCHOICE(crop > 0, diameter, hfParams->spacing))
       / pixel;
@@ -2238,27 +2243,26 @@ int CHoleFinderDlg::FindAndCenterOneHole(EMimageBuffer *imBuf, float diameter, i
 
     if (cropCenter) {
       if (xCenter == 0 && yCenter == 0) {
-        xcen = (float)(nx / 2.);
-        ycen = (float)(ny / 2.);
+        xcenCrop = (float)(nx / 2.);
+        ycenCrop = (float)(ny / 2.);
       } else if (xCenter < 0 || yCenter < 0 || xCenter > nx || yCenter > ny) {
         PrintfToLog("Provided center for cropping (%.2f, %.2f) is outside the image", 
           xCenter, yCenter);
-        return 1;
+        return FCH_ERR_CROP_RANGE;
       } else {
-        xcen = xCenter;
-        ycen = yCenter;
+        xcenCrop = xCenter;
+        ycenCrop = yCenter;
       }
     } else {
-      imBuf->mImage->getShifts(imXshift, imYshift);
-      xcen = (float)(nx / 2.) - imXshift;
-      ycen = (float)(ny / 2.) - imYshift;
+      xcenCrop = xcen;
+      ycenCrop = ycen;
     }
 
     //Compute crop 
-    right = (int)(xcen + cropSize / 2.);
-    left = (int)(xcen - cropSize / 2.);
-    bottom = (int)(ycen + cropSize / 2.);
-    top = (int)(ycen - cropSize / 2.);
+    right = (int)(xcenCrop + cropSize / 2.);
+    left = (int)(xcenCrop - cropSize / 2.);
+    bottom = (int)(ycenCrop + cropSize / 2.);
+    top = (int)(ycenCrop - cropSize / 2.);
 
     //Shift crop window and center coordinates if crop goes outside image
     if (right > nx) {
@@ -2278,19 +2282,22 @@ int CHoleFinderDlg::FindAndCenterOneHole(EMimageBuffer *imBuf, float diameter, i
       cropShiftY = -top;
       top = 0;
     }
-
+    
     slice = mWinApp->mProcessImage->CropBufferToSlice(imBuf, top, left,
       bottom, right, true, mode, centered, err);
     if (!slice)
-      return err;
+      return FCH_ERR_CROP_SLICE;
 
     //Make a new buffer image for hole centering
     mHoleCenteringImBuf = new EMimageBuffer;
     *mHoleCenteringImBuf = *imBuf;
-    mode = imBuf->mImage->getType();
-
     // CropBufferToSlice with convertBytes true will convert data type to short
-    mHoleCenteringImBuf->mImage = new KImageShort();
+    if (mode == kFLOAT)
+      mHoleCenteringImBuf->mImage = new KImageFloat();
+    else {
+      mHoleCenteringImBuf->mImage = new KImageShort();
+      mHoleCenteringImBuf->mImage->setType(mode);
+    }
 
     // Allocate a new space for extra data and copy it over
     EMimageExtra *fromExtra = (EMimageExtra *)imBuf->mImage->GetUserData();
@@ -2307,9 +2314,15 @@ int CHoleFinderDlg::FindAndCenterOneHole(EMimageBuffer *imBuf, float diameter, i
     mHoleCenteringImBuf = imBuf;
   }
 
+  // Show cropped image for debug purposes
+  if (crop && displayCrop) {
+    mHoleCenteringImBuf->mImage->getSize(nx, ny);
+    mWinApp->mProcessImage->NewProcessedImage(imBuf, slice->data.s, mode, nx, ny, 1);
+  }
+
   // Find holes synchronously
   err = DoFindHoles(mHoleCenteringImBuf, true, NULL, NULL, crop != 0);
-
+  
   // restore parameters
   if (hfParams->hexagonalArray) {
     hfParams->hexDiameter = diamSave;
@@ -2322,14 +2335,18 @@ int CHoleFinderDlg::FindAndCenterOneHole(EMimageBuffer *imBuf, float diameter, i
     UpdateSettings();
 
   // Error return
-  if (err || !mXcenters.size())
-    return 5;
+  if (err || !mXcenters.size()) {
+    OnButClearData();
+    return FCH_ERR_HOLE_FIND;
+  }
 
-  // Find point closest to center
+  // Get targeted center on hole centering image, which may be cropped
   mHoleCenteringImBuf->mImage->getSize(nx, ny);
   mHoleCenteringImBuf->mImage->getShifts(imXshift, imYshift);
   xcenCrop = (float)(nx / 2. - cropShiftX) - imXshift;
   ycenCrop = (float)(ny / 2. - cropShiftY) - imYshift;
+
+  // Find point closest to center
   for (ind = 0; ind < (int)mXcenters.size(); ind++) {
       
     // Calculate hole's distance from center
@@ -2341,13 +2358,16 @@ int CHoleFinderDlg::FindAndCenterOneHole(EMimageBuffer *imBuf, float diameter, i
   }
 
   // Convert cropped image coordinates back to original image coordinates
-  xCenter = mXcenters[bestInd] += (float)left;
-  yCenter = mYcenters[bestInd] += (float)top;
+  xCenter = mXcenters[bestInd] + (float)left;
+  yCenter = mYcenters[bestInd] + (float)top;
+
+  // Clear Hole finder data
+  OnButClearData();
 
   // Clear cropped image
   if (crop) {
     if (slice) {
-      if (slice->data.b)
+      if (slice->data.b && !displayCrop)
         free(slice->data.b);
       free(slice);
     }
@@ -2357,18 +2377,19 @@ int CHoleFinderDlg::FindAndCenterOneHole(EMimageBuffer *imBuf, float diameter, i
     delete mHoleCenteringImBuf;
     mHoleCenteringImBuf = NULL;
   }
-
+  
   // If shifting requested, make sure not already done, compute it, apply if above limit
   if (maxFracShift > 0) {
 
     // Right-handed shift for coordinate conversion to IS
     xShift = xcen - xCenter;
     yShift = yCenter - ycen;
+    
     pixel = mWinApp->mShiftManager->GetPixelSize(imBuf);
     if (sqrtf(minDist) * pixel > maxFracShift * diameter) {
       PrintfToLog("Not applying image shift of %.2f, %.2f microns; it is above "
         "limit of %.2f", pixel * xShift, pixel * yShift, maxFracShift * diameter);
-      return -1;
+      return FCH_ERR_SHIFT_LIMIT;
     }
     bInv = mWinApp->mShiftManager->CameraToIS(imBuf->mMagInd);
     mWinApp->mShiftManager->ApplyScaleMatrix(bInv, -fbin * xShift, -fbin * yShift,

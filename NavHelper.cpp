@@ -286,6 +286,9 @@ CNavHelper::CNavHelper(void)
   mNavAlignParams.scaledAliExtraFOV = 0.5f;
   mNavAlignParams.scaledAliLoadBuf = MAX_BUFFERS - 1;
   mNavAlignParams.applyInteractive = false;
+  mNavAlignParams.findAndCenterHole = false;
+  mNavAlignParams.holeCenteringAcquire = 0;
+  mNavAlignParams.cropHoleSpacings = 3.f;
   float thresholds[] = {2.4f, 3.6f, 4.8f};
   mHoleFinderParams.thresholds.insert(mHoleFinderParams.thresholds.begin(),
     &thresholds[0], &thresholds[3]);

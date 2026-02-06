@@ -120,7 +120,7 @@ void CNavRealignDlg::DoDataExchange(CDataExchange* pDX)
   DDX_Radio(pDX, IDC_RALIGNTOTEMPLATE, m_iTemplateOrFindHole);
   DDX_Radio(pDX, IDC_RALIGN_FCH_MAP, m_iAcquireWith);
   DDX_Text(pDX, IDC_EDIT_ALIGN_FCH_SPACING, m_fCropHoleSpacings);
-  DDV_MinMaxFloat(pDX, m_fCropHoleSpacings, 0.2f, 20.f);
+  DDV_MinMaxFloat(pDX, m_fCropHoleSpacings, 0.5f, 20.f);
   DDX_Control(pDX, IDC_RALIGNTOTEMPLATE, m_butRAlignToTemplate);
   DDX_Control(pDX, IDC_RFINDANDCENTERHOLE, m_butRFindAndCenterHole);
 }
@@ -187,6 +187,7 @@ BOOL CNavRealignDlg::OnInitDialog()
   else
     m_butRAlignToTemplate.SetFont(boldFont);
   m_iAcquireWith = mParams.holeCenteringAcquire;
+  B3DCLAMP(mParams.cropHoleSpacings, 0.5f, 20.f);
   m_fCropHoleSpacings = mParams.cropHoleSpacings;
   m_statTemplateTitle.SetFont(boldFont);
   m_statResetISTitle.SetFont(boldFont);
@@ -246,8 +247,6 @@ void CNavRealignDlg::OnEnKillfocusEditMapLabel()
 {
   UpdateData(true);
   ManageMap();
-  /*if (m_iTemplateOrFindHole == 0)
-    ManageMap();*/
 }
 
 // Making a template map from image in A, including saving if needed
@@ -428,7 +427,7 @@ void CNavRealignDlg::ManageMap()
     notMap = map && !map->IsMap();
     isMont = map && map->mMapMontage;
   }
-  ShowDlgItem(IDC_STAT_NOT_EXIST, !exists);
+  ShowDlgItem(IDC_STAT_NOT_EXIST, !exists && m_iTemplateOrFindHole == 0);
   SetDlgItemText(IDC_STAT_NOT_EXIST, notMap ? "The item with that label is not a map" :
     (isMont ? "The item with that label is a montage map" :
       "No item exists with that label"));
