@@ -58,6 +58,7 @@ CParticleTasks::CParticleTasks(void)
   mMSRunMacro = false;
   mMSRunningMacro = false;
   mMSMacroToRun = 0;
+  mMSDropPlusFromName = false;
   mZBGIterationNum = -1;
   mZBGMaxIterations = 5;
   mZBGIterThreshold = 0.5f;
@@ -1126,6 +1127,8 @@ bool CParticleTasks::ItemIsEmptyMultishot(CMapDrawItem * item)
 bool CParticleTasks::CurrentHoleAndPosition(CString &strCurPos)
 {
   int curHole, curPos;
+  bool dropPlus = IS_FALCON3_OR_4(mWinApp->GetActiveCamParam()) && mMSDropPlusFromName &&
+    mScope->UtapiSupportsService(UTSUP_CAM_SINGLE);
   if (mMSCurIndex < -1)
     return false;
   curHole = mMSHoleIndex + 1;
@@ -1137,8 +1140,8 @@ bool CParticleTasks::CurrentHoleAndPosition(CString &strCurPos)
     strCurPos.Format("R%dH%d-%d", mMSPosIndex[2 * mMSHoleIndex],
       mMSPosIndex[2 * mMSHoleIndex + 1] + 1, curPos);
   } else if (mMSPosIndex.size() > 0) {
-    strCurPos.Format("X%+dY%+d-%d", mMSPosIndex[2 * mMSHoleIndex], 
-      mMSPosIndex[2 * mMSHoleIndex + 1], curPos);
+    strCurPos.Format(dropPlus ? "X%dY%d-%d" : "X%+dY%+d-%d", 
+      mMSPosIndex[2 * mMSHoleIndex], mMSPosIndex[2 * mMSHoleIndex + 1], curPos);
   } else {
     strCurPos.Format("%d-%d", curHole, curPos);
   }

@@ -3,6 +3,10 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+2/6/26: Added property DropPlusInHoleNameIfUtapi to omit '+' from the hole
+position component of frame filenames when doing Multiple Records with a
+Falcon camera through UTAPI (In 4.2).
+
 1/22/26: Reassigned Shift H to Shift O for selecting range of Navigator maps
 in which to find holes, so Shift H works for toggling crosshairs (In 4.2).
 

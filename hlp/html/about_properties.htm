@@ -144,6 +144,14 @@
             can have ranges.&nbsp; For example, to skip everything except apertures, beam stop, and camera,
             enter '0 2 4-19 21-32'.</TD>
         </TR>
+       <TR VALIGN="top">
+          <TD>DropPlusInHoleNameIfUtapi</TD>
+          <TD>Set to 1 to leave out the plus sign from the hole position component of frame 
+            filenames when doing Muliple Records and saving frames from a Falcon camera 
+            through UTAPI.&nbsp; The property is needed with UTAPI server versions at least 
+            through 7.27.&nbsp; It will be ignored if the FEIScopePlugin can detect that it 
+            is running with a server version where this bug is fixed.</TD>
+        </TR>
         <TR VALIGN="top">
           <TD>SimulationMode</TD>
           <TD>Set to 1 or to a desired high voltage value to indicate a microscope/camera simulator 
