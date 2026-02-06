@@ -3645,13 +3645,16 @@
         </TR>
         <TR>
           <TD class="scriptcommand">NormalizeLenses #</TD>
-          <TD>Normalizes selected lenses on a Thermo/FEI or Hitachi scope; <b>#</b> is the sum of 1 for projector, 2
+          <TD>Normalizes selected lenses on a Thermo/FEI or Hitachi scope, or a JEOL scope with
+            a 'JeolLensRelaxProgram' property entry for the requested lens type(s); <b>#</b> is the sum of 1 for projector, 2
             for objective, 4 for condenser lenses</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">NormalizeAllLenses [#]</TD>
-          <TD>Normalizes all lenses, or in a lens group, on a Thermo/FEI scope.&nbsp; With <b>#</b> 0 or
-            not present, it normalizes all lenses in one call.&nbsp; Otherwise, <b>#</b> can be the
+          <TD>Normalizes all lenses, or ones in a lens group, on a Thermo/FEI scope, or lenses
+             in a condenser or projector group on a JEOL if there is a 'JeolLensRelaxProgram' property
+            for 5 or 6, respectively.&nbsp; With <b>#</b> 0 or
+            not present, it normalizes all lenses in one call on a Thermo/FEI scope.&nbsp; Otherwise, <b>#</b> can be the
             sum of 1 to normalize the illumination group (which includes condenser,
             minicondenser, and objective lenses) and 2 to normalize the projection group (which includes objective and projector
             lenses) in a separate call.</TD>

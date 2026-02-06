@@ -3,6 +3,10 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+2/6/26: Added property DropPlusInHoleNameIfUtapi to omit '+' from the hole
+position component of frame filenames when doing Multiple Records with a
+Falcon camera through UTAPI (In 4.2).
+
 1/29/26: Added script command to return coordinates of all positions found by
 Hole Finder into array variables.
 

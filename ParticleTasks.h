@@ -64,6 +64,7 @@ public:
   GetMember(bool, MSLastFailed);
   GetSetMember(int, MSMacroToRun);
   GetSetMember(BOOL, MSRunMacro);
+  GetSetMember(BOOL, MSDropPlusFromName);
   GetMember(BOOL, MSRunningMacro);
   FloatVec *GetZBGFocusScalings() { return &mZBGFocusScalings; };
   SetMember(MultiShotParams *, NextMSParams);
@@ -117,6 +118,7 @@ private:
   MultiShotParams *mMSParams;      // Pointer to params from NavHelper
   MultiShotParams *mNextMSParams;  // Temporary pointer to params to use for next run
   bool mMSsaveToMontage;           // Flag to save through montage savePiece
+  BOOL mMSDropPlusFromName;        // Flag to drop + character from hole name if UTAPI
   int mMSTestRun;
   int mMagIndex;                   // Mag index for the run
   int mSavedAlignFlag;
