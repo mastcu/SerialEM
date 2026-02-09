@@ -3741,16 +3741,16 @@ void CNavHelper::MakeStateOutputLine(StateParams *state, CString &mess)
     mess2.Format("  EDM %.1f%%", EDM);
 
   // Write basic line
-  mess.Format("%s  cam %d  %s  spot %d%s  %s %.2f%s%s", ldStr, 
+  mess.Format("%s  cam %d  %s  spot %d%s  %s %.2f%s", ldStr, 
     active, UtilFormattedMag(mag, 2), spot, probeOrAlpha, mScope->GetC2Name(), 
     mScope->GetC2Percent(spot, intensity, probe),
-    mScope->GetC2Units(), probeOrAlpha, (LPCTSTR)mess2, (LPCTSTR)slit);
+    mScope->GetC2Units(), (LPCTSTR)mess2, (LPCTSTR)slit);
 
   // Add any apertures
   FormatApertureString(state, mess2, false);
   if (!mess2.IsEmpty())
     mess += "  " + mess2 + ((state->flags & STATEFLAG_SET_APERTURES) ?
-      " set" : " not set");
+      " (set)" : " (not set)");
 
   // Add focus position
   if (state->lowDose && state->focusAxisPos > EXTRA_VALUE_TEST) {

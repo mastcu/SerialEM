@@ -3107,26 +3107,33 @@
         <TR>
           <TD>MonitorC2ApertureSize</TD>
           <TD>This property controls whether intensities in calibrations will be scaled 
-            automatically when the C2 aperture changes on a Titan microscope.&nbsp; With a value
-            of 2, the aperture size will be monitored and intensities will be scaled whenever it
-            changes; this is the default value.&nbsp; With a value of 1, intensities
-             will be scaled when the aperture size is set from SerialEM, but aperture size will not be
-            monitored. When there is aperture control only through UI Automation and not UTAPI, the
-            aperture panel in the microscope user interface has to be visible all the time, and the 
+            automatically when the C2 aperture changes on a Titan microscope.&nbsp; With positive value,
+            the aperture size will be monitored and intensities will be scaled whenever it
+            changes.&nbsp; When there is aperture control only through UI Automation and not UTAPI, the
+            aperture panel in the microscope user interface has to be visible to access the apertures, and the 
             program will try to open it in the lower right instead of changing workset tabs, to avoid 
-            interfering with the use of workset tabs.&nbsp; Set to 0 to disable the automatic scaling.&nbsp; The
-             default is 1 on Titans without UTAPI.
+            interfering with the use of workset tabs.&nbsp; With a value of 2, the program will try to
+            get the aperture size every 5 seconds and consider it an error if it cannot access the
+            aperture panel.&nbsp; With a value of 1, it will still try to get the size every 5 seconds
+            but give up if the panel is not visible.&nbsp; This allows it to catch changes made through the
+            microscope interface, as long as the panel stays visible for up to 5 seconds after the change.&nbsp; In any case,
+              intensities will be scaled when the aperture size is set from SerialEM.&nbsp; Set
+             to 0 to disable the automatic scaling.&nbsp; The default is 1 on Titans without UTAPI and 2 with UTAPI.
           </TD>
         </TR>
         <TR>
           <TD>ShowApertureStatus</TD>
           <TD>Set to 1 or 2 to add a line to the Microscope Status panel showing the state of the 
             condenser and objective apertures.&nbsp; For microscopes where aperture state can be found
-            by querying the scope, i.e., or Thermo/FEI with UTAPI interface or JEOL, either value can be used
-            and the scope will be polled every 5 seconds.&nbsp; For Thermo/FEI without UTAPI, use 1 to have
-            the value in the panel be updated whenever SerialEM reports or sets an aperture, or 2 to have
-            the value updated every 5 seconds, which will require the aperture panel to be visible in the
-            microscope user interface.&nbsp; For a JEOL scope without ApertureSizes entries, the aperture
+            through the scope's scripting interface, i.e., Thermo/FEI with UTAPI interface or JEOL, either value can be used
+            and the scope will be polled every 5 seconds.&nbsp; For Thermo/FEI without UTAPI, the program will also
+            try to get the aperture status every 5 seconds, which requires the aperture panel to be visible in the
+            microscope user interface.&nbsp; In this case, with a value of 2, it will try to make the panel visible
+            every 5 seconds; whereas with a value of 1, it will quietly give up
+             if the panel is not visible. &nbsp;This allows it to catch changes made through the
+            microscope interface, as long as the panel stays visible for up to 5 seconds after the change.&nbsp; In any case,
+            getting or setting an aperture size through other SerialEM operations will update the displayed value.
+            &nbsp; For a JEOL scope without ApertureSizes entries, the aperture
             index will be shown.&nbsp; Does not work for Hitachi.
           </TD>
         </TR>

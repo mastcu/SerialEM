@@ -3,6 +3,18 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+2/9/26: Changed the monitoring of aperture status so that it occurs at
+5-second intervals with values of 1 for MonitorC2ApertureSize and
+ShowApertureStatus but quietly gives up when the aperture panel is not
+visible, so changes through TUI should be found in the update.
+
+2/9/26: Added argument to MakePolygonsAtSquares to set them as Acquire.
+
+2/9/26: Added calibration of beam size for non-Titan scopes and script
+commands to report size computed from calibration and to set beam size.
+
+2/9/26: Made Script-Edit menu show all scripts with names.
+
 2/6/26: Added property DropPlusInHoleNameIfUtapi to omit '+' from the hole
 position component of frame filenames when doing Multiple Records with a
 Falcon camera through UTAPI (In 4.2).
