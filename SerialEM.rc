@@ -7,7 +7,8 @@
 //
 // Generated from the TEXTINCLUDE 2 resource.
 //
-#include "afxres.h"
+#include "afxres.h"
+
 /////////////////////////////////////////////////////////////////////////////
 #undef APSTUDIO_READONLY_SYMBOLS
 
@@ -336,6 +337,7 @@ BEGIN
             MENUITEM "Set C&2 Factor",              ID_CALIBRATION_C2FACTOR
             MENUITEM SEPARATOR
             MENUITEM "Parallel Ill&umination",      ID_BEAMSPOT_PARALLELILLUMINATION
+            MENUITEM "Beam Si&ze",                  ID_BEAMSPOT_BEAMSIZE
             MENUITEM SEPARATOR
             MENUITEM "B&eam Shift",                 ID_CALIBRATION_BEAMSHIFT
             MENUITEM "&Refine Beam Shift",          ID_BEAMSPOT_REFINEBEAMSHIFT
@@ -424,15 +426,55 @@ BEGIN
             MENUITEM "Edit &8",                     ID_MACRO_EDIT8
             MENUITEM "Edit &9",                     ID_MACRO_EDIT9
             MENUITEM "Edit 1&0",                    ID_MACRO_EDIT10
+            MENUITEM "Edit 11",                     ID_MACRO_EDIT11
+            MENUITEM "Edit 12",                     ID_MACRO_EDIT12
+            MENUITEM "Edit 13",                     ID_MACRO_EDIT13
+            MENUITEM "Edit 14",                     ID_MACRO_EDIT14
             MENUITEM "Edit 15",                     ID_MACRO_EDIT15
+            MENUITEM "Edit 16",                     ID_MACRO_EDIT16
+            MENUITEM "Edit 17",                     ID_MACRO_EDIT17
+            MENUITEM "Edit 18",                     ID_MACRO_EDIT18
+            MENUITEM "Edit 19",                     ID_MACRO_EDIT19
             MENUITEM "Edit 20",                     ID_MACRO_EDIT20
+            MENUITEM "Edit 21",                     ID_MACRO_EDIT21
+            MENUITEM "Edit 22",                     ID_MACRO_EDIT22
+            MENUITEM "Edit 23",                     ID_MACRO_EDIT23
+            MENUITEM "Edit 24",                     ID_MACRO_EDIT24
             MENUITEM "Edit 25",                     ID_MACRO_EDIT25
+            MENUITEM "Edit 26",                     ID_MACRO_EDIT26
+            MENUITEM "Edit 27",                     ID_MACRO_EDIT27
+            MENUITEM "Edit 28",                     ID_MACRO_EDIT28
+            MENUITEM "Edit 29",                     ID_MACRO_EDIT29
             MENUITEM "Edit 30",                     ID_MACRO_EDIT30
+            MENUITEM "Edit 31",                     ID_MACRO_EDIT31
+            MENUITEM "Edit 32",                     ID_MACRO_EDIT32
+            MENUITEM "Edit 33",                     ID_MACRO_EDIT33
+            MENUITEM "Edit 34",                     ID_MACRO_EDIT34
             MENUITEM "Edit 35",                     ID_MACRO_EDIT35
+            MENUITEM "Edit 36",                     ID_MACRO_EDIT36
+            MENUITEM "Edit 37",                     ID_MACRO_EDIT37
+            MENUITEM "Edit 38",                     ID_MACRO_EDIT38
+            MENUITEM "Edit 39",                     ID_MACRO_EDIT39
             MENUITEM "Edit 40",                     ID_MACRO_EDIT40
+            MENUITEM "Edit 41",                     ID_MACRO_EDIT41
+            MENUITEM "Edit 42",                     ID_MACRO_EDIT42
+            MENUITEM "Edit 43",                     ID_MACRO_EDIT43
+            MENUITEM "Edit 44",                     ID_MACRO_EDIT44
             MENUITEM "Edit 45",                     ID_MACRO_EDIT45
+            MENUITEM "Edit 46",                     ID_MACRO_EDIT46
+            MENUITEM "Edit 47",                     ID_MACRO_EDIT47
+            MENUITEM "Edit 48",                     ID_MACRO_EDIT48
+            MENUITEM "Edit 49",                     ID_MACRO_EDIT49
             MENUITEM "Edit 50",                     ID_MACRO_EDIT50
+            MENUITEM "Edit 51",                     ID_MACRO_EDIT51
+            MENUITEM "Edit 52",                     ID_MACRO_EDIT52
+            MENUITEM "Edit 53",                     ID_MACRO_EDIT53
+            MENUITEM "Edit 54",                     ID_MACRO_EDIT54
             MENUITEM "Edit 55",                     ID_MACRO_EDIT55
+            MENUITEM "Edit 56",                     ID_MACRO_EDIT56
+            MENUITEM "Edit 57",                     ID_MACRO_EDIT57
+            MENUITEM "Edit 58",                     ID_MACRO_EDIT58
+            MENUITEM "Edit 59",                     ID_MACRO_EDIT59
             MENUITEM "Edit 60",                     ID_MACRO_EDIT60
         END
         POPUP "&Run"
@@ -1590,7 +1632,7 @@ BEGIN
     CTEXT           "",IDC_STAT_PROBEALF,14,36,16,9,SS_CENTERIMAGE
     PUSHBUTTON      "Reset",IDC_BUTRESETDEFOCUS,2,18,16,7
     LTEXT           "C 150  O 100 um",IDC_STAT_APERTURES,59,75,56,9
-    RTEXT           "Apertures were:",IDC_STAT_APER_LABEL,3,75,53,9
+    RTEXT           "Apertures:",IDC_STAT_APER_LABEL,3,75,53,9
 END
 
 IDD_TILTSERIES DIALOGEX 0, 0, 230, 799
@@ -7016,6 +7058,10 @@ BEGIN
     IDC_CHECK_AUTO_NEW_LOG  "Start new log based on stack name for each batch tilt series"
     IDC_BUT_CLOSE_KEEP      "Close this box but keep the image stack"
     IDC_BUT_SETSCHEDSTATE   "Set to state scheduled to be used when current Navigator item is acquired"
+END
+
+STRINGTABLE
+BEGIN
     IDC_CHECK_SET_APERTURES "Move apertures to listed sizes when setting this state"
 END
 
@@ -7221,7 +7267,7 @@ BEGIN
     ID_DE_retractCam        "Retract the camera"
     ID_DE_antosaveFinal     "Autosave the final summed image"
     ID_CALIBRATION_SET_APERTURE_SIZE 
-                            "Enter C2 aperture size so intensity cals are valid"
+                            "Enter C2 aperture size so intensity or beam size cals are valid"
     ID_CAMERA_SAVERAWPACKED "Save unnormalized K2/K3 frames in packed form"
     ID_FOCUS_SET_TILT_DIRECTION "Set which coils are used for beam tilt"
 END
@@ -8356,6 +8402,7 @@ BEGIN
                             "Set dose rate on camera in e/pixel/sec with an electronic dose modulator"
     ID_WINDOW_MULTICHANNELSTEMDISPLAY 
                             "Enable and select STEM channels for multi-window display"
+    ID_BEAMSPOT_BEAMSIZE    "Calibrate beam size by measuring it over a range of sizes"
 END
 
 STRINGTABLE
@@ -8398,7 +8445,8 @@ LANGUAGE 9, 1
 #include "res\SerialEM.rc2"  // non-Microsoft Visual C++ edited resources
 #include "afxres.rc"         // Standard components
 #include "XFolderDialog\XFolderDialog.rc"
-#endif
+#endif
+
 /////////////////////////////////////////////////////////////////////////////
 #endif    // not APSTUDIO_INVOKED
 
