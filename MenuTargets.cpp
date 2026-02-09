@@ -540,6 +540,8 @@ ON_COMMAND(ID_HELP_LISTDEBUGOUTPUTKEYLETTERS, OnHelpListDebugOutputKeyLetters)
 ON_UPDATE_COMMAND_UI(ID_HELP_LISTDEBUGOUTPUTKEYLETTERS, OnUpdateNoTasks)
 ON_COMMAND(ID_SPECIALIZEDMISC_SETTHRESHOLDFORRIGHT, OnSetThresholdForRightDblClick)
 ON_UPDATE_COMMAND_UI(ID_SPECIALIZEDMISC_SETTHRESHOLDFORRIGHT, OnUpdateNoTasks)
+ON_COMMAND(ID_BEAMSPOT_BEAMSIZE, OnBeamspotBeamsize)
+ON_UPDATE_COMMAND_UI(ID_BEAMSPOT_BEAMSIZE, OnUpdateBeamspotBeamSize)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -1481,8 +1483,9 @@ void CMenuTargets::OnCalibrationSetApertureSize()
 
 void CMenuTargets::OnUpdateCalibrationSetApertureSize(CCmdUI *pCmdUI)
 {
-  pCmdUI->Enable(!DoingTasks() && mScope->GetUseIllumAreaForC2() &&
-    mScope->GetMonitorC2ApertureSize() <= 1);
+  pCmdUI->Enable(!DoingTasks() && (mScope->GetUseIllumAreaForC2() ||
+    (mWinApp->mBeamAssessor->GetBeamSizeArray())->GetSize() > 0) &&
+    mScope->GetMonitorC2ApertureSize() <= 1 && mScope->GetShowApertureStatus() <= 1);
 }
 
 void CMenuTargets::OnCalibrationBeamshift()
@@ -2547,6 +2550,17 @@ void CMenuTargets::OnUpdateParallelillumination(CCmdUI *pCmdUI)
     !mScope->GetUseIllumAreaForC2());
 }
 
+void CMenuTargets::OnBeamspotBeamsize()
+{
+  mWinApp->mBeamAssessor->StartBeamSizeCalibration();
+}
+
+void CMenuTargets::OnUpdateBeamspotBeamSize(CCmdUI *pCmdUI)
+{
+  pCmdUI->Enable(!DoingTasks() && !mWinApp->GetSTEMMode() &&
+    !mScope->GetUseIllumAreaForC2());
+}
+
 void CMenuTargets::OnCalibrationHighDefocus()
 {
   mWinApp->mShiftCalibrator->CalibrateHighDefocus(0, NULL, NULL);
@@ -3505,6 +3519,7 @@ void CMenuTargets::OnBeamSpotListCalibrations()
   mWinApp->mBeamAssessor->ListIntensityCalibrations();
   mWinApp->mBeamAssessor->ListSpotCalibrations();
   mWinApp->mBeamAssessor->ListParallelIlluminations();
+  mWinApp->mBeamAssessor->ListBeamSizeCalibrations();
 }
 
 
