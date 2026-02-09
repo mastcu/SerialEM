@@ -2101,6 +2101,10 @@ int CParticleTasks::CenterNavItemOnHole(CMapDrawItem *item, NavAlignParams &aliP
       mScope->SetImageShift(mFCHstartingISX + mFCHholeVecISX, 
         mFCHstartingISX + mFCHholeVecISX);
       mFCHrestoreISdir = 1;
+
+      PrintfToLog("Applied IS (%.3f, %.3f) to first hole",
+        mFCHholeVecISX,
+        mFCHholeVecISY); //DEBUG
     }
   }
   StartTemplateOrHoleAlign(mapItem, conSetNum);
@@ -2195,6 +2199,7 @@ void CParticleTasks::TemplateAlignNextTask(int param)
   float holeSize;
   float xCen, yCen;
   double ISX, ISY;
+  double tempShiftX, tempShiftY;
   CString mess;
   ScaleMat mat;
   if (mATIterationNum < 0)
@@ -2221,9 +2226,15 @@ void CParticleTasks::TemplateAlignNextTask(int param)
     mWinApp->mCamera->InitiateCapture(mATConSetNum);
   
   } else if (mFCHresetIS) {
-      AlignOrCenterHoleResetIS();
-      mFCHresetIS = false;
+      double ISX, ISY, stz;
+      float backlashX, backlashY;
+      mScope->GetStagePosition(ISX, ISY, stz);
+      mWinApp->mShiftManager->ResetImageShift(mScope->GetValidXYbacklash(ISX, ISY,
+        backlashX, backlashY), false);
+      //mATResettingShift = true;
 
+      //AlignOrCenterHoleResetIS();
+      mFCHresetIS = false;
   } else {
     if (mATHoleCenteringMode == 0) {
       // Got an image, align it
@@ -2265,6 +2276,7 @@ void CParticleTasks::TemplateAlignNextTask(int param)
       }
       if (TestForTemplateTermination())
         return;
+      AlignOrCenterHoleResetIS();
 
     } else {
       
@@ -2307,14 +2319,21 @@ void CParticleTasks::TemplateAlignNextTask(int param)
           // If only centering on one hole, return to center with correction
           if (mFCHOneHoleForMulti) {
             mScope->SetImageShift(mFCHstartingISX + shiftX, 
-              mFCHstartingISX + shiftX);
+              mFCHstartingISY + shiftY);
             mFCHrestoreISdir = 0;
           } 
 
           // Centered at the first hole, image shift to second hole in opposite direction
           else if (mFCHrestoreISdir == 1) {
+            mScope->GetImageShift(tempShiftX, tempShiftY); //DEBUG
+            
             mScope->SetImageShift(mFCHstartingISX - mFCHholeVecISX, 
-              mFCHstartingISX - mFCHholeVecISX);
+              mFCHstartingISY - mFCHholeVecISY);
+
+            PrintfToLog("Applied IS (%.3f, %.3f) to second hole", 
+              mFCHstartingISX - mFCHholeVecISX - tempShiftX,
+              mFCHstartingISY - mFCHholeVecISY - tempShiftY); //DEBUG
+
             mFCHdelISX = shiftX;
             mFCHdelISY = shiftY;
             mFCHrestoreISdir = -1;
@@ -2322,10 +2341,16 @@ void CParticleTasks::TemplateAlignNextTask(int param)
 
           //Centered at the second hole, compute average IS at center
           else if (mFCHrestoreISdir == -1) {
+            mScope->GetImageShift(tempShiftX, tempShiftY); //DEBUG
+
             shiftX = (mFCHdelISX + shiftX) / 2.f;
             shiftY = (mFCHdelISY + shiftY) / 2.f;
-            mScope->SetImageShift(mFCHstartingISX + shiftX, mFCHstartingISX + shiftY);
+            mScope->SetImageShift(mFCHstartingISX + shiftX, mFCHstartingISY + shiftY);
             mFCHrestoreISdir = 0;
+
+            PrintfToLog("Applied IS (%.3f, %.3f) to multishot center",
+              mFCHstartingISX + shiftX - tempShiftX,
+              mFCHstartingISY + shiftY - tempShiftY); //DEBUG
           }
           if (mFCHrestoreISdir == 0) {
             mat = mShiftManager->IStoSpecimen(mFCHmagInd);
@@ -2339,12 +2364,13 @@ void CParticleTasks::TemplateAlignNextTask(int param)
       } else if (mATIterationNum > 0) {
         DoCenteringAutoAlign(false);
       }
-
       if (TestForTemplateTermination()) {
         return;
       }
-      if (mFCHrestoreISdir == 1 || (!mATIterationNum && !(mATParams.leaveISatZero &&
+      if (mFCHrestoreISdir == -1 || (!mATIterationNum && !(mATParams.leaveISatZero &&
         (mATFinishing || mATIterationNum + 1 >= mATParams.maxNumResetIS)))) {
+
+        //Capture a new image and reset image shift
         mWinApp->mCamera->InitiateCapture(mATConSetNum);
         mFCHresetIS = true;
       } else {
