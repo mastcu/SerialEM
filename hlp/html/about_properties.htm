@@ -3107,7 +3107,7 @@
         <TR>
           <TD>MonitorC2ApertureSize</TD>
           <TD>This property controls whether intensities in calibrations will be scaled 
-            automatically when the C2 aperture changes on a Titan microscope.&nbsp; With positive value,
+            automatically when the C2 aperture changes on a Titan microscope.&nbsp; With a positive value,
             the aperture size will be monitored and intensities will be scaled whenever it
             changes.&nbsp; When there is aperture control only through UI Automation and not UTAPI, the
             aperture panel in the microscope user interface has to be visible to access the apertures, and the 
@@ -3117,7 +3117,7 @@
             aperture panel.&nbsp; With a value of 1, it will still try to get the size every 5 seconds
             but give up if the panel is not visible.&nbsp; This allows it to catch changes made through the
             microscope interface, as long as the panel stays visible for up to 5 seconds after the change.&nbsp; In any case,
-              intensities will be scaled when the aperture size is set from SerialEM.&nbsp; Set
+              intensities will be scaled when the aperture size is set or reported by SerialEM.&nbsp; Set
              to 0 to disable the automatic scaling.&nbsp; The default is 1 on Titans without UTAPI and 2 with UTAPI.
           </TD>
         </TR>
@@ -3137,7 +3137,7 @@
             index will be shown.&nbsp; Does not work for Hitachi.
           </TD>
         </TR>
-        <TR>
+        <TR>a
           <TD>UseAperturesInStates</TD>
           <TD>Set this property to control the use of apertures in imaging and map acquisition 
             states.&nbsp; With the default value of 1, the program will test for aperture support on
