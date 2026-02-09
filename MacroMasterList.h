@@ -713,7 +713,7 @@ MAC_SAME_NAME_ARG(ParamSetToUseForMontage, 1, 4, PARAMSETTOUSEFORMONTAGE, Ii)
 MAC_SAME_NAME_ARG(SetStatusLine, 2, 4, SETSTATUSLINE, IS)
 MAC_SAME_NAME_ARG(ClearStatusLine, 1, 4, CLEARSTATUSLINE, I)
 MAC_SAME_FUNC_ARG(HighlightStatusLine, 2, 4, ClearStatusLine, HIGHLIGHTSTATUSLINE, II)
-MAC_SAME_NAME_ARG(MakePolygonsAtSquares, 0, 4, MAKEPOLYGONSATSQUARES, dddddd)
+MAC_SAME_NAME_ARG(MakePolygonsAtSquares, 0, 4, MAKEPOLYGONSATSQUARES, ddddddi)
 MAC_SAME_NAME_ARG(SetAutocontourGroups, 2, 4, SETAUTOCONTOURGROUPS, IIiiiiiiii)
 MAC_SAME_NAME_NOARG(ReportAutocontourStats, 0, 4, REPORTAUTOCONTOURSTATS)
 MAC_SAME_NAME_ARG(SetupPolygonMontage, 3, 0, SETUPPOLYGONMONTAGE, IDS)
@@ -854,6 +854,8 @@ MAC_SAME_NAME_ARG(SetMultiGridRefCounts, 1, 4, SETMULTIGRIDREFCOUNTS, D)
 MAC_SAME_NAME_ARG(FindItemWithLabelOrNote, 2, 4, FindItemWithLabelOrNote, ISdd)
 MAC_SAME_FUNC_ARG(ListImagingState, 1, 4, ImagingStateProperties, LISTIMAGINGSTATE, S)
 MAC_SAME_NAME_ARG(GetFoundHolePositions, 2, 4, GETFOUNDHOLEPOSITIONS, SS)
+MAC_SAME_NAME_NOARG(ReportBeamSizeFromCalib, 0, 4, REPORTBEAMSIZEFROMCALIB)
+MAC_SAME_NAME_ARG(SetBeamSize, 1, 4, SETBEAMSIZE, D)
 
 
 // new Python-only commands need to be added to pythonOnlyCmds in ::CMacroProcessor

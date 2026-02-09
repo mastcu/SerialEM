@@ -3360,17 +3360,31 @@
           <TD class="scriptcommand">ReportC2ApSizeForScaling</TD>
           <TD>Reports the stored value for the C2 aperture size in microns that is used to 
             scale intensity values in various calibrations when the aperture size changes on 
-            a Titan.&nbsp; Command added in 4.2, 5-Feb-25.</TD>
+            a Titan, or to adjust for a change in aperture size when using the beam size 
+            calibration..&nbsp; Command added in 4.2, 5-Feb-25.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">SetC2ApSizeForScaling #</TD>
           <TD>Sets the value for the C2 aperture size in microns that is used to scale 
-            intensity values on a Titan to <b>#</b>.&nbsp; This command has the same effect as <A href="menu_tasks.htm#hid_calibration_set_aperture_size">Set Aperture Size</A> in
+            intensity values on a Titan, or to scale sizes from a beam size calibration on 
+            other scopes, to <b>#</b>.&nbsp; This command has the same effect as <A href="menu_tasks.htm#hid_calibration_set_aperture_size">Set Aperture Size</A> in
              the Tasks menu.&nbsp If there is a change in aperture size,
-             intensity values in various calibrations will be scaled.&nbsp; Also, if run in the
+             intensity values in various calibrations will be scaled on a Titan.&nbsp; Also, if run in the
              same script, the 'CalibrateHighFocusMag' and 'CalibrateHighFocusIS' commands will run
              without requesting an aperture size.&nbsp; Command added in 4.2, 5-Feb-25.
           </TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">ReportBeamSizeFromCalib</TD>
+          <TD>Reports the beam size computed from the current intensity and a beam size 
+            calibration on a non-Titan scope.&nbsp; Command added in 4.3, 4-Feb-26.</TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">SetBeamSize #</TD>
+          <TD>On a scope with a beam size calibration, sets the beam size to <strong>#
+            </strong>in microns by computing the intensity corresponding to that size from 
+            the calibration.&nbsp; On a Titan, sets illuminated area to be <strong># </strong>in microns.&nbsp; 
+            Command added in 4.3, 4-Feb-26.</TD>
         </TR>
        <TR>
           <TD class="scriptcommand">ReportImageDistanceOffset</TD>
@@ -6115,7 +6129,7 @@
             squares found with 'AutoContourGridSquares'.&nbsp; </TD>
         </TR>
         <TR>
-          <TD class="scriptcommand">MakePolygonsAtSquares [#L] [#U] [#M] [#S] [#I] [#B]</TD>
+          <TD class="scriptcommand">MakePolygonsAtSquares [#L] [#U] [#M] [#S] [#I] [#B] [#A]</TD>
           <TD>Converts the current set of grid squares found with 'AutoContourGridSquares' to Navigator
             polygons, equivalent to pushing the <b>Make Polygons</b> button in the
             <a href="hidd_autocontour.htm">Autocontouring Grid Squares dialog</a>.&nbsp; The values from the
@@ -6130,6 +6144,7 @@
             <br />&nbsp;&nbsp;&nbsp; <b>#S</b> - Maximum SD cutoff.
             <br />&nbsp;&nbsp;&nbsp; <b>#I</b> - Maximum irregularity cutoff.
             <br />&nbsp;&nbsp;&nbsp; <b>#B</b> - Minimum border distance, in microns.
+            <br />&nbsp;&nbsp;&nbsp; <b>#A</b> - Set the Acquire flag for all polygons 
              &nbsp;</TD>
         </TR>
         </TABLE>

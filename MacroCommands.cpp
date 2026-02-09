@@ -8464,8 +8464,44 @@ int CMacCmd::MeasureBeamSize(void)
       ABORT_LINE("No pixel size is available for the image for line:\n\n");
     radius *= 2.f * binning * pixel;
     mLogRpt.Format("Beam diameter measured to be %.3f um from %d quadrants, fit error"
-      " %.3f", radius, numQuad, fitErr);
-    SetReportedValues(radius, numQuad, fitErr);
+      " %.3f um", radius, numQuad, fitErr * binning * pixel);
+    SetReportedValues(radius, numQuad, fitErr * binning * pixel);
+  }
+  return 0;
+}
+
+// ReportBeamSizeFromCalib
+int CMacCmd::ReportBeamSizeFromCalib()
+{
+  float size;
+  if (mWinApp->mBeamAssessor->BeamSizeFromCalibration(mScope->GetIntensity(), -1, -1,
+    size, mStrCopy))
+    ABORT_NOLINE("Error getting beam size from calibrations: " + mStrCopy);
+  mLogRpt.Format("Beam size at current conditions is %.2f um", size);
+  SetRepValsAndVars(1, size);
+  return 0;
+}
+
+// SetBeamSize
+int CMacCmd::SetBeamSize()
+{
+  double newIntensity;
+  int err;
+  if (mItemFlt[1] <= 0.01 || mItemFlt[1] > 3000.)
+    ABORT_LINE("Beam size must be between 0.01 and 3000 microns for line:\n\n");
+  if (mScope->GetUseIllumAreaForC2()) {
+    if (!mScope->SetIlluminatedArea(0.01 * mItemFlt[1])) {
+      AbortMacro();
+      return 1;
+    }
+  } else {
+    err = mWinApp->mBeamAssessor->FindIntensityForNewBeamSize(mScope->GetIntensity(),
+      -1, -1, mItemFlt[1], newIntensity, mStrCopy);
+    if (err == BEAM_ENDING_OUT_OF_RANGE)
+      ABORT_LINE("Beam size would require an intensity out of range for line:\n\n");
+    if (err)
+      ABORT_NOLINE("Error setting beam size: " + mStrCopy);
+    mScope->SetIntensity(newIntensity);
   }
   return 0;
 }
@@ -13543,7 +13579,7 @@ int CMacCmd::MakePolygonsAtSquares(void)
   if (mNavHelper->mAutoContouringDlg->ExternalCreatePolys(mItemEmpty[1] ? -1.f :
     mItemFlt[1], mItemEmpty[2] ? -1.f : mItemFlt[2], mItemEmpty[3] ? -1.f : mItemFlt[3],
     mItemEmpty[4] ? -1.f : mItemFlt[4], mItemEmpty[5] ? -1.f : mItemFlt[5],
-    mItemEmpty[6] ? -1.f : mItemFlt[6], mStrCopy))
+    mItemEmpty[6] ? -1.f : mItemFlt[6], !mItemEmpty[7] && mItemInt[7] != 0, mStrCopy))
     ABORT_NOLINE("Failed to convert grid square contours to polygons: " + mStrCopy);
   mLogRpt = "Converted grid square contours to Navigator polygons";
   return 0;
