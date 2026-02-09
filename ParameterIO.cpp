@@ -4767,6 +4767,9 @@ int CParameterIO::ReadCalibration(CString strFileName)
   CArray<ParallelIllum, ParallelIllum> *parIllums =
     mWinApp->mBeamAssessor->GetParIllumArray();
   ParallelIllum parallelIllum;
+  CArray<BeamSizeCal, BeamSizeCal> *beamSizes =
+    mWinApp->mBeamAssessor->GetBeamSizeArray();
+  BeamSizeCal sizeCal;
   HighFocusCalArray *focusMagCals;
   HighFocusMagCal focCal;
   HitachiParams *hParams = mWinApp->GetHitachiParams();
@@ -4900,7 +4903,21 @@ int CParameterIO::ReadCalibration(CString strFileName)
         crossCalAper[1] = itemInt[1];
         if (!itemEmpty[2])
           crossCalAper[0] = itemInt[2];
- 
+
+      } else if (NAME_IS("BeamSizeCal")) {
+        sizeCal.probeOrAlpha = itemInt[1];
+        sizeCal.spotSize = itemInt[2];
+        sizeCal.beamSize[0] = itemFlt[3];
+        sizeCal.intensity[0] = itemDbl[4];
+        sizeCal.beamSize[1] = itemFlt[5];
+        sizeCal.intensity[1] = itemDbl[6];
+        sizeCal.beamSize[2] = itemFlt[7];
+        sizeCal.intensity[2] = itemDbl[8];
+        sizeCal.crossover = itemFlt[9];
+        sizeCal.measuredAperture = itemInt[10];
+        sizeCal.JeolC1Aperture = itemEmpty[11] ? -1 : itemInt[11];
+        beamSizes->Add(sizeCal);
+
       } else if (NAME_IS("FocusCalibration")) {
         index = itemInt[1];
         camera = itemInt[2];
@@ -5472,6 +5489,9 @@ void CParameterIO::WriteCalibration(CString strFileName)
   CArray<ParallelIllum, ParallelIllum> *parIllums =
     mWinApp->mBeamAssessor->GetParIllumArray();
   ParallelIllum parallelIllum;
+  CArray<BeamSizeCal, BeamSizeCal> *beamSizes =
+    mWinApp->mBeamAssessor->GetBeamSizeArray();
+  BeamSizeCal sizeCal;
   HighFocusCalArray *focusMagCals;
   HighFocusMagCal focCal;
   HitachiParams *hParams = mWinApp->GetHitachiParams();
@@ -5539,6 +5559,16 @@ void CParameterIO::WriteCalibration(CString strFileName)
       parallelIllum = parIllums->GetAt(i);
       string.Format("ParallelIllum %f %d %d %f\n", parallelIllum.intensity,
         parallelIllum.spotSize, parallelIllum.probeOrAlpha, parallelIllum.crossover);
+      mFile->WriteString(string);
+    }
+
+    // Write beam size cals
+    for (i = 0; i < (int)beamSizes->GetSize(); i++) {
+      sizeCal = beamSizes->GetAt(i);
+      string.Format("BeamSizeCal %d %d %f %f %f %f %f %f %f %d %d\n", sizeCal.probeOrAlpha, 
+        sizeCal.spotSize, sizeCal.beamSize[0], sizeCal.intensity[0], sizeCal.beamSize[1], 
+        sizeCal.intensity[1], sizeCal.beamSize[2], sizeCal.intensity[2], 
+        sizeCal.crossover, sizeCal.measuredAperture, sizeCal.JeolC1Aperture);
       mFile->WriteString(string);
     }
 
