@@ -4559,13 +4559,15 @@
             left-handed camera coordinates).</TD>
         </TR>
         <TR>
-          <TD class="scriptcommand">SetAxisPosition area #D [#R]</TD>
+          <TD class="scriptcommand">SetAxisPosition area #D [#R] [#I]</TD>
           <TD>Modifies the axis position, and optionally the rotation of the inter-area
             axis, for the Focus and/or Trial area.&nbsp; Follow with 'F' or 'T' to specify the
             <b>area</b> (both will be changed if Focus and Trial settings are being kept
-            identical); with <b>#D</b>, the distance in microns; and optionally with <b>#R</b>, a rotation
-            angle.&nbsp; If an angle is set, the option to apply the angle will be turned on
-            in the Low Dose control panel.&nbsp; Low dose mode must be on to use this
+            identical).&nbsp; With the optional <b>#I</b> not set, <b>#D</b> specifies the distance in microns
+             and the optional <b>#R</b> sets a rotation angle.&nbsp; Set <b>#I</b> nonzero to enter raw image
+            shift X and Y values as the second and third values (<b>#D</b> and <b>#R</b>); this
+            will inevitably set a rotation angle too. &nbsp; If an angle is set, the option to apply the angle
+             will be turned on in the Low Dose control panel.&nbsp; Low dose mode must be on to use this
             command.</TD>
         </TR>
         <TR>

@@ -3,6 +3,9 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+2/9/26: Added option to SetAxisPosition command to enter image shift values
+instead of position and angle.
+
 2/9/26: Changed the monitoring of aperture status so that it occurs at
 5-second intervals with values of 1 for MonitorC2ApertureSize and
 ShowApertureStatus but quietly gives up when the aperture panel is not

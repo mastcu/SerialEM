@@ -13843,6 +13843,12 @@ int CMacCmd::SetAxisPosition(void)
 
   } else {
     index2 = 0;
+    if (!mItemEmpty[4] && mItemInt[4] != 0) {
+      delX = mWinApp->mLowDoseDlg.ConvertIStoAxisAndAngle(mLdParam[index].magIndex,
+        mItemDbl[2], mItemDbl[3], index2);
+      mItemDbl[2] = delX;
+      mItemDbl[3] = index2;
+    }
     if (fabs(mItemDbl[2]) > 19.)
       ABORT_LINE("The axis distance is too large in:\n\n");
     if (!mItemEmpty[3])
