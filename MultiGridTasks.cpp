@@ -3694,23 +3694,16 @@ void CMultiGridTasks::DoNextSequenceAction(int resume)
     case MGACT_AUTOCONTOUR:
       mAutoContouring = false;
 
-      // Create polygons
+      // Create polygons and set them all as acquire
       if (mNavHelper->mAutoContouringDlg->ExternalCreatePolys(-1., -1., -1., -1., -1.,
-        -1., errStr)) {
+        -1., true, errStr)) {
         errStr += "\r\nMarking grid as failed due to this failure in autocontouring";
         ChangeStatusFlag(mCurrentGrid, MGSTAT_FLAG_FAILED, 1);
         SaveSessionFileWarnIfError();
         if (SkipToNextGrid(errStr))
           return;
       }
-      itemArr = mNavigator->GetItemArray();
-      for (ind = 1; ind < (int)itemArr->GetSize(); ind++) {
-        item = itemArr->GetAt(ind);
-        if (item->IsPolygon())
-          item->mAcquire = true;
-      }
-
-      // Set them all to acquire
+ 
       mNavigator->FillListBox();
       mNavigator->SetChanged(true);
       mNavigator->ManageCurrentControls();
