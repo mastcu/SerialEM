@@ -165,8 +165,8 @@ public:
   afx_msg void OnButCreatePolys();
   int ExternalCreatePolys(float lowerMeanCutoff,
     float upperMeanCutoff, float minSizeCutoff, float SDcutoff, float irregularCutoff,
-    float borderDistCutoff, CString &mess);
-  int DoCreatePolys(CString &mess, bool doAll);
+    float borderDistCutoff, bool setAcquire, CString &mess);
+  int DoCreatePolys(CString &mess, bool doAll, bool setAcquire);
   afx_msg void OnButUndoPolys();
   int GetSquareStats(float &minMean, float &maxMean, float &medianMean);
   int *GetShowGroup() {return &mShowGroup[0] ; };

@@ -3791,8 +3791,8 @@ int CNavigatorDlg::ImodObjectToPolygons(EMimageBuffer *imBuf, Iobj *obj,
 
 // Add the non-excluded items in the selected groups to the Naviigator array
 void CNavigatorDlg::AddAutocontPolygons(MapItemArray &polyArray,
-  ShortVec &excluded, ShortVec &groupNums, int *groupShown, int numGroups, int &firstID,
-  int &lastID, IntVec &indsInPoly)
+  ShortVec &excluded, ShortVec &groupNums, int *groupShown, int numGroups,
+  bool setAcquire, int &firstID, int &lastID, IntVec &indsInPoly)
 {
   int ind, group, numOut = 0, numPolys = (int)polyArray.GetSize();
   int groupID;
@@ -3829,6 +3829,7 @@ void CNavigatorDlg::AddAutocontPolygons(MapItemArray &polyArray,
         firstID = item->mMapID;
         needFirst = false;
       }
+      item->mAcquire = setAcquire;
       item->mLabel.Format("%d", mNewItemNum++);
       item->mRegistration = mCurrentRegistration;
       item->mOriginalReg = mCurrentRegistration;
