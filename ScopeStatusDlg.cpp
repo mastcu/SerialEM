@@ -468,10 +468,12 @@ void CScopeStatusDlg::Update(double inCurrent, int inMagInd, double inDefocus,
   }
 
   // Intensity
-  if (inSpot != mSpot || rawIntensity != mRawIntensity) {
+  if (inSpot != mSpot || rawIntensity != mRawIntensity || 
+    inIntensity != mLastPctIntensity) {
     m_strIntensity.Format(B3DCHOICE(inIntensity > 999., "%.0f",
       inIntensity >= 100. ? "%.1f" : "%.2f"), inIntensity);
     m_statIntensity.SetWindowText(m_strIntensity);
+    mLastPctIntensity = inIntensity;
   }
 
   // Update others

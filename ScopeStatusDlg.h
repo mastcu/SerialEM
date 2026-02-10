@@ -132,6 +132,7 @@ private:
   BOOL mLastCooker;     // Flag that cooker was open last time
   BOOL mLastAutocen;    // Flag that beam autocenter was open last time
   double mRawIntensity; // Last raw intensity
+  double mLastPctIntensity;  // Last displayed value of intensity
   int mCameraIndex;     // Last current camera index
   WINDOWPLACEMENT mMeterPlace;
   WINDOWPLACEMENT mDosePlace;
