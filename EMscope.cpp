@@ -7445,7 +7445,7 @@ BOOL CEMscope::GetCartridgeInfo(int index, JeolCartridgeData &jcd)
     if (index)
       jcd.name = mPlugFuncs->GetCartridgeInfo(index, &jcd.id, &jcd.station, &jcd.slot,
         &jcd.rotation, &jcd.type);
-    if (!jcd.name.IsEmpty())
+    if (jcd.name)
       retval = true;
   }
   catch (_com_error E) {
@@ -10743,7 +10743,7 @@ UINT CEMscope::LongOperationProc(LPVOID pParam)
               try {
                 name = mPlugFuncs->GetCartridgeInfo(jnd, &jcData.id, &station, &slot,
                   &rotation, &cartType);
-                if (name && name[0] != 0x00 && jcData.id > 0) {
+                if (name && jcData.id > 0) {
                   jcData.station = station;
                   jcData.slot = slot;
                   jcData.rotation = rotation;

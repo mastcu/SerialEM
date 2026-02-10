@@ -229,6 +229,7 @@ public:
   GetMember(double, RunStartTime);
   GetSetMember(int, PostLoadDelay);
   GetSetMember(BOOL, RefineUseStageMont);
+  GetSetMember(BOOL, CheckLoadOnJeol);
   int *GetMontSetupConsetSizes() { return &mMontSetupConsetSizes[0]; };
   IntVec *GetCustomRunDlgInds() {return &mCustomRunDlgInds ; };
   bool WasStoppedInNavRun() { return mStoppedInNavRun && mSuspendedMulGrid; };
@@ -430,5 +431,6 @@ private:
   bool mNoMarkerShifts;          // Flag to skip in the run for whatever reason
   int mPostLoadDelay;            // Delay time in seconds after loading/unloading grid
   bool mInStopMultiGrid;         // Prevent reentrance
+  BOOL mCheckLoadOnJeol;         // Check that loaded grid is on the stage
 };
 

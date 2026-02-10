@@ -428,6 +428,7 @@ BOOL_PROP_TEST("MulGridRefineStageMont", mWinApp->mMultiGridTasks->, RefineUseSt
 FLOAT_PROP_TEST("MulGridRefineMinField", mWinApp->mMultiGridTasks->, RefineMinField)
 FLOAT_PROP_TEST("MulGridMaxRefineDiff", mWinApp->mMultiGridTasks->, MaxRefineShiftDiff)
 INT_PROP_TEST("MulGridPostLoadDelay", mWinApp->mMultiGridTasks->, PostLoadDelay)
+BOOL_PROP_TEST("MulGridCheckLoadOnJeol", mWinApp->mMultiGridTasks->, CheckLoadOnJeol)
 INT_PROP_TEST("MailConnectTimeout", mWinApp->mMailer->, ConnectTimeout)
 
 

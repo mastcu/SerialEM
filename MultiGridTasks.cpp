@@ -140,6 +140,7 @@ CMultiGridTasks::CMultiGridTasks()
   mLastRefCounts = 0.;
   mReferenceCounts = 0.;
   mInStopMultiGrid = false;
+  mCheckLoadOnJeol = false;
 }
 
 
@@ -3765,7 +3766,7 @@ void CMultiGridTasks::DoNextSequenceAction(int resume)
       }
 
       // The loader can be flaky so make sure the grid is on the stage
-      if (JEOLscope && action == MGACT_LOAD_GRID) {
+      if (JEOLscope && action == MGACT_LOAD_GRID && mCheckLoadOnJeol) {
         if (!mScope->GetCartridgeInfo(jcdIndex, jcdInfo)) {
           PrintfToLog("WARNING: There was error trying to confirm that"
             " grid %d is on the stage; going on anyway", jcd.id);
