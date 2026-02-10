@@ -3,6 +3,10 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+1/20/26: Allowed multigrid to do grid map and medium mag maps in same run if a
+script is set to run after the grid map is made, and final acquisition in the
+same run as mapping if a script is set to run after mapping.
+
 1/20/26: SEM_4-2-16
 2/10/26: Made autocontouring dialog remember group selections between openings
 with one SerialEM run.  Improved and clarified handling of group selections

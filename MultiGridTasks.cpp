@@ -2805,30 +2805,43 @@ int CMultiGridTasks::StartGridRuns(int LMneedsLD, int MMMneedsLD, int finalNeeds
   }
 
   if (mParams.acquireLMMs && mParams.acquireMMMs && !mParams.autocontour) {
-    SEMMessageBox("To do both grid maps and medium mag maps in the same run,"
-      " you need to select Autocontouring so that there are items to acquire");
-    return 1;
+    if (!mParams.runMacroAfterLMM) {
+      SEMMessageBox("To do both grid maps and medium mag maps in the same run,"
+        " you need to select Autocontouring so that there are items to acquire");
+      return 1;
+    }
+    if (AfxMessageBox("To do both grid maps and medium mag maps in the\n"
+      " same run, the script must make items at which to acquire the maps.\n\n"
+      "Will the script do this?", MB_QUESTION) == IDNO)
+      return 1;
   }
   mUsingHoleFinder = mParams.acquireMMMs &&
     (mapActions[NAACT_HOLE_FINDER].flags & NAA_FLAG_RUN_IT) != 0;
   if (mParams.acquireMMMs && mParams.runFinalAcq) {
-    if (!mUsingHoleFinder) {
-      SEMMessageBox("To do both medium mag maps and final acquisition in the same run,"
-        " you need to select hole finding as a mapping task");
-      return 1;
+    if ((mapActions[NAACT_RUN_POSTMACRO].flags & NAA_FLAG_RUN_IT) != 0) {
+      if (AfxMessageBox("To do both medium mag maps and final acquisition\n"
+        " in the same run, the script you run after mapping must add items to acquire."
+        "\n\nWill the script do this?", MB_QUESTION) == IDNO)
+        return 1;
+    } else {
+      if (!mUsingHoleFinder) {
+        SEMMessageBox("To do both medium mag maps and final acquisition in the same run,"
+          " you need to select hole finding as a mapping task");
+        return 1;
+      }
+      if (!mapParams->runHoleCombiner && finalParams->nonTSacquireType == ACQUIRE_MULTISHOT
+        && AfxMessageBox("You selected Multiple Records for final\nacquisition but did not"
+          " set the option to use the hole combiner.\n\nDo you really want to proceed?",
+          MB_QUESTION) == IDNO)
+        return 1;
+      /*if (!finalParams->useMapHoleVectors &&
+        finalParams->nonTSacquireType == ACQUIRE_MULTISHOT && mNumGridsToRun > 1) {
+        AfxMessageBox("You are trying to do Multiple Records on \n"
+          "more than one grid and did not select to use map hole vectors for shifts",
+          MB_EXCLAME);
+        return 1;
+      }*/
     }
-    if (!mapParams->runHoleCombiner && finalParams->nonTSacquireType == ACQUIRE_MULTISHOT
-      && AfxMessageBox("You selected Multiple Records for final\nacquisition but did not"
-        " set the option to use the hole combiner.\n\nDo you really want to proceed?",
-        MB_QUESTION) == IDNO)
-      return 1;
-    /*if (!finalParams->useMapHoleVectors &&
-      finalParams->nonTSacquireType == ACQUIRE_MULTISHOT && mNumGridsToRun > 1) {
-      AfxMessageBox("You are trying to do Multiple Records on \n"
-        "more than one grid and did not select to use map hole vectors for shifts",
-        MB_EXCLAME);
-      return 1;
-    }*/
   }
 
   // Set flags for parameter swaps needed
