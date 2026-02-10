@@ -204,7 +204,7 @@ BOOL CAutoContouringDlg::OnInitDialog()
 
   // Output parameters and manage enables
   ParamsToDialog();
-  ManageGroupSelectors(mWasEverOpen ? -1 : 1);
+  ManageGroupSelectors(-1);
   ManageACEnables();
   ManagePostEnables(false);
 
