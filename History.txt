@@ -3,6 +3,14 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+1/20/26: SEM_4-2-16
+2/10/26: Made autocontouring dialog remember group selections between openings
+with one SerialEM run.  Improved and clarified handling of group selections
+wen using autocontouring from multigrid (in 4.2).
+
+2/10/26: Fixed % C2 value displayed in Scope Status when spot size is changed
+through Scope Control and there is no underlying intensity change (In 4.2).
+
 2/6/26: Added property DropPlusInHoleNameIfUtapi to omit '+' from the hole
 position component of frame filenames when doing Multiple Records with a
 Falcon camera through UTAPI (In 4.2).
