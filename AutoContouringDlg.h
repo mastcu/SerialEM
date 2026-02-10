@@ -79,6 +79,7 @@ public:
   void MakeSinglePolygon(EMimageBuffer *imBuf, float xCenter, float yCenter);
   void ManageACEnables();
   GetSetMember(float, SingleSizeFac);
+  GetMember(bool, WasEverOpen);
 
 
 // Dialog Data
@@ -108,6 +109,7 @@ private:
   CNavigatorDlg *mNav;
   bool mHaveConts;
   bool mIsOpen;
+  bool mWasEverOpen;
   AutoContData mAutoContData;   // Structure for passing data to autocontouring
   CWinThread *mAutoContThread;
   bool mAutoContFailed;         // Flag cleared at successful completion
