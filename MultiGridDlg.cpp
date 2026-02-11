@@ -2495,6 +2495,7 @@ int CMultiGridDlg::DoSetupLMMmont(bool skipDlg)
   montP->skipOutsidePoly = false;
   montP->skipCorrelations = false;
   montP->warnedConSetBin = true;
+  montP->imShiftInBlocks = false;
   overlapFrac = m_bUseMontOverlap ? (float)(m_iMontOverlap / 100.) : 0.f;
 
   if (m_iLMMmontType == 0) {
