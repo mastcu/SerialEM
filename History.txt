@@ -3,6 +3,8 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+1/21/26: Prevented image shift in blocks for grid map in multigrid (In 4.2).
+
 1/21/26: Fixed crash turning on Edit Focus with no image in display (In 4.2).
 
 1/20/26: Made display of beam circles in multishot display work with beam size
