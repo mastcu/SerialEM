@@ -6540,7 +6540,9 @@ void CNavHelper::OpenMultishotDlg(void)
     return;
   }
   mMultiShotDlg = new CMultiShotDlg();
-  mMultiShotDlg->mHasIlluminatedArea = mScope->GetUseIllumAreaForC2();
+  mMultiShotDlg->mHasIlluminatedArea = mScope->GetUseIllumAreaForC2() ? 1 : 0;
+  if (mWinApp->mBeamAssessor->GetBeamSizeArray()->GetSize() > 0)
+    mMultiShotDlg->mHasIlluminatedArea = -1;
   mMultiShotDlg->mCanReturnEarly = false;
   for (int ind = 0; ind < mWinApp->GetActiveCamListSize(); ind++)
     if (mCamParams[activeList[ind]].K2Type)

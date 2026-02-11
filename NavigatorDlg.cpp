@@ -49,6 +49,7 @@
 #include "LogWindow.h"
 #include "CameraMacroTools.h"
 #include "MontageSetupDlg.h"
+#include "BeamAssessor.h"
 
 //#include "TiltSeriesParam.h"
 #include "TSController.h"
@@ -3929,6 +3930,7 @@ MapItemArray *CNavigatorDlg::GetMapDrawItems(
   float angle, tiltAngle;
   bool showMulti, asIfLowDose, showCurPtAcquire, curIsAcquire;
   int ring, magForHoles;
+
   if (!SetCurrentItem(true))
     mItem = NULL;
   if (m_bCollapseGroups)
@@ -4087,11 +4089,15 @@ MapItemArray *CNavigatorDlg::GetMapDrawItems(
 
             // Add one more point with beam radius as a position in X in camera coords
             beamRadius = 0.5f * msParams->beamDiam / pixel;
-            if (msParams->useIllumArea && mWinApp->mScope->GetUseIllumAreaForC2() &&
-              asIfLowDose)
-              beamRadius = (float)(50. *
-              mWinApp->mScope->IntensityToIllumArea(ldp[RECORD_CONSET].intensity,
-                ldp[RECORD_CONSET].spotSize, ldp[RECORD_CONSET].probeMode) / pixel);
+            if (msParams->useIllumArea && asIfLowDose) {
+              if (mWinApp->mScope->GetUseIllumAreaForC2()) {
+                beamRadius = (float)(50. *
+                  mWinApp->mScope->IntensityToIllumArea(ldp[RECORD_CONSET].intensity,
+                    ldp[RECORD_CONSET].spotSize, ldp[RECORD_CONSET].probeMode) / pixel);
+              } else if (!mWinApp->mBeamAssessor->LDRecordBeamSizeFromCal(&ptX)) {
+                beamRadius = 0.5f * ptX / pixel;
+              }
+            }
             ptX = box->mStageX + c2s.xpx * beamRadius;
             ptY = box->mStageY + c2s.ypx * beamRadius;
             box->AppendPoint(ptX, ptY);

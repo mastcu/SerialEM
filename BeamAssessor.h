@@ -321,6 +321,7 @@ public:
   void NormalizeForSizeCal(bool doBoth);
   void TakeSizeCalFirstShot(int step);
   int BeamSizeFromCalibration(double intensity, int spot, int probeOrAlpha, float &size, CString &errStr);
+  int LDRecordBeamSizeFromCal(float *size = NULL);
   int FindIntensityForNewBeamSize(double intensity, int spot, int probeOrAlpha, float newSize,
     double &newIntensity, CString &errStr);
   int GetSizeCalAndDeltaCross(double intensity, int spot, int probeOrAlpha, BeamSizeCal &sizeCal,

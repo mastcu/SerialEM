@@ -506,19 +506,26 @@
     <p><b>Diameter of circles to draw</b></p>
     <p>If the multi-shot circles are being displayed, the diameter of the circles is
       set to the entered value in microns, unless the option described next is
-      selected to use the illuminated area on a Thermo/FEI Titan.&nbsp; Press tab or Enter
+      selected to use the illuminated area on a Thermo/FEI Titan or a beam size 
+      computed from a beam size calibration on other scopes.&nbsp; Press tab or Enter
       to have the image redrawn after entering a new diameter.</p>
-    <p><b>Use Record illuminated area for circles in Low Dose</b></p>
-    <p>This option appears on a Thermo/FEI Titan and allows the multi-shot circle display to
-      take its diameter from the illuminated area setting of the Record area when Low
-      Dose mode is on instead of from the value entered in this dialog.&nbsp; The
-      display will be updated dynamically as this illuminated area setting is changed.&nbsp;
-      This update works even while this dialog is option, provided that the scope is
-      in the Record area and &#39;Continuous update&#39; is check in the Low Dose Control
-      panel before opening the dialog, and illuminated area is changed with microscope
-      controls.&nbsp; </p>
+    <p><b>Use Record illuminated area </b><em>or </em><b>beam size for circles in Low Dose</b></p>
+    <p>This option now appears on all scopes and allows the multi-shot circle display to
+      take its diameter from the intensity setting of the Record area when Low
+      Dose mode is on instead of from the value entered in this dialog.&nbsp; On a 
+      Thermo/FEI Titan, the illuminated area is used for the size and a size will 
+      always be available. On other scopes, a beam size calibration is used if one 
+      exists for the current conditions (namely, on the same side of crossover and for 
+      the same probe mode on Thermo/FEI or alpha on a JEOL).&nbsp; This option is 
+      permanently disabled if there are no beam size calibrations at all, or 
+      temporarily disabled when there is no calibration for the current Record 
+      settings. The display will be updated dynamically as the illuminated area or 
+      intensity setting of the Record area is changed.&nbsp;
+      This update works even while this dialog is open, provided that the scope is
+      in the Record area and &#39;Continuous update&#39; is checked in the Low Dose Control
+      panel.&nbsp; </p>
     <p>For this option to be valuable rather than misleading, the illuminated area
-      readout must be fairly accurate in the range of interest, which may not be the
+      readout or calculated beam size must be fairly accurate in the range of interest, which may not be the
       case.</p>
     <p><a NAME="testing"></a><i><b>Testing Image Location and Coma Adjustment</b></i></p>
     <p>Once positions are set up in this dialog, the script command 'TestNextMultiShot 

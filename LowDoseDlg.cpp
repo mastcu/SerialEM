@@ -1806,7 +1806,8 @@ void CLowDoseDlg::ScopeUpdate(int magIndex, int spotSize, double intensity,
       ((mWinApp->mNavigator->m_bShowAcquireArea &&
       (mWinApp->mNavHelper->GetEnableMultiShot() & 1)) ||
       mWinApp->mNavHelper->mMultiShotDlg) &&
-      fabs(ldArea->intensity - intensity) > 1.e-6 && mScope->GetUseIllumAreaForC2() &&
+      fabs(ldArea->intensity - intensity) > 1.e-6 && (mScope->GetUseIllumAreaForC2() ||
+        mWinApp->mBeamAssessor->GetBeamSizeArray()->GetSize() > 0) &&
       ((mWinApp->mMainView->GetActiveImBuf())->mHasUserPt ||
       (mWinApp->mMainView->GetActiveImBuf())->mHasUserLine)) {
         msParams = mWinApp->mNavHelper->GetMultiShotParams();

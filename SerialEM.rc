@@ -7665,7 +7665,7 @@ BEGIN
     IDC_CHECK_SAVE_RECORD   "Saved returned Record image to file"
     IDC_EDIT_BEAM_DIAM      "Diameter to draw circles representing the beam, in microns"
     IDC_CHECK_USE_ILLUM_AREA 
-                            "Instead of specified diameter, use Record illuminated area when in Low Dose"
+                            "Use Record illuminated area or size computed from a calibration in Low Dose"
     IDC_RNO_EARLY           "Return image after frame saving is complete, if any"
     IDC_RLAST_EARLY         "Return as soon as possible with specified sum for last shot only"
     IDC_RALL_EARLY          "Return as soon as possible with specified sum for all shots"

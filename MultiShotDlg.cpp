@@ -127,6 +127,8 @@ CMultiShotDlg::CMultiShotDlg(CWnd* pParent /*=NULL*/)
   mLastIntensity = 0.;
   mLastDrawTime = 0.;
   mSavedLDForCamera = -1;
+  mRecBeamSizeEnabled = true;
+  mLastInLowDose = mWinApp->LowDoseMode();
   for (int ind = 0; ind < 7; ind++)
     mLastPanelStates[ind] = true;
 }
@@ -272,8 +274,8 @@ END_MESSAGE_MAP()
 BOOL CMultiShotDlg::OnInitDialog()
 {
   CBaseDlg::OnInitDialog();
-  if (!mHasIlluminatedArea)
-    mIDsToDrop.push_back(IDC_CHECK_USE_ILLUM_AREA);
+  if (mHasIlluminatedArea <= 0)
+    ReplaceWindowText(&m_butUseIllumArea, "illuminated area", "beam size from cal");
   mIDsToIgnoreBot.insert(IDC_EDIT_EARLY_FRAMES);  // 2337
   mIDsToIgnoreBot.insert(IDC_STAT_NUM_Y_HOLES);   // 2411
   SetupPanelTables(idTable, sLeftTable, sTopTable, mNumInPanel, mPanelStart,
@@ -1606,7 +1608,7 @@ void CMultiShotDlg::ManageEnables(void)
   CMapDrawItem *item;
   int dir, gst, gnd, numDir = m_bHexGrid ? 3 : 2, pattern = m_bHexGrid ? 1 : 0;
   BOOL lowDose = mWinApp->LowDoseMode();
-  bool enable = !(mHasIlluminatedArea && m_bUseIllumArea && lowDose);
+  bool enable = !lowDose || !(mRecBeamSizeEnabled && m_bUseIllumArea);
   bool recording = mRecordingRegular || mRecordingCustom;
   bool notRecording = !recording && !mSteppingAdjusting;
   bool useCustom = m_bDoMultipleHoles && m_bUseCustom &&
@@ -1618,7 +1620,7 @@ void CMultiShotDlg::ManageEnables(void)
   m_editBeamDiam.EnableWindow(enable && !mDisabledDialog);
   m_editExtraDelay.EnableWindow(!mDisabledDialog);
   m_butCancel.EnableWindow(!mDisabledDialog);
-  m_butUseIllumArea.EnableWindow(!mDisabledDialog);
+  m_butUseIllumArea.EnableWindow(!mDisabledDialog && mRecBeamSizeEnabled);
   m_butAdjustBeamTilt.EnableWindow(comaVsIS->magInd > 0 && !mDisabledDialog);
   m_statNumEarly.EnableWindow(m_iEarlyReturn > 0);
   m_editEarlyFrames.EnableWindow(m_iEarlyReturn > 0);
@@ -1787,6 +1789,17 @@ void CMultiShotDlg::UpdateMultiDisplay(int magInd, double intensity)
 {
   MontParam *montp;
   LowDoseParams *ldp;
+  BOOL lowDose = mWinApp->LowDoseMode();
+  bool hasSize = mHasIlluminatedArea < 0 && 
+    mWinApp->mBeamAssessor->LDRecordBeamSizeFromCal() == 0;
+  bool enable = (mHasIlluminatedArea < 0 && (!lowDose || hasSize)) || 
+    mHasIlluminatedArea > 0;
+
+  if (!BOOL_EQUIV(lowDose, mLastInLowDose) || !BOOL_EQUIV(enable, mRecBeamSizeEnabled)) {
+    mRecBeamSizeEnabled = enable;
+    mLastInLowDose = lowDose;
+    ManageEnables();
+  }
 
   // This reproduces logic in NavigatorDlg::GetMapDrawItems for whether drawing and how to
   // get magInd
@@ -1797,7 +1810,7 @@ void CMultiShotDlg::UpdateMultiDisplay(int magInd, double intensity)
     return;
 
   // Get the intensity and mag that apply to current conditions
-  if (mWinApp->LowDoseMode()) {
+  if (lowDose) {
     ldp = mWinApp->GetLowDoseParams();
     magInd = ldp[RECORD_CONSET].magIndex;
     intensity = ldp[RECORD_CONSET].intensity;
@@ -1810,7 +1823,8 @@ void CMultiShotDlg::UpdateMultiDisplay(int magInd, double intensity)
 
   // redraw if mag changed, or if IA changed but not too often for that
   bool draw = magInd > 0 && magInd != mLastMagIndex;
-  if (mHasIlluminatedArea && m_bUseIllumArea && fabs(intensity - mLastIntensity) > 1.e-6){
+  if ((mHasIlluminatedArea > 0 || hasSize) && m_bUseIllumArea && 
+    fabs(intensity - mLastIntensity) > 1.e-6) {
     if (SEMTickInterval(mLastDrawTime) > 0.5)
       draw = true;
   }

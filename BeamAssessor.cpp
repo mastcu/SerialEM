@@ -3415,11 +3415,24 @@ int CBeamAssessor::BeamSizeFromCalibration(double intensity, int spot, int probe
 
   // Apply equation to get size from intensity
   size = (float)((intensity - intcp) / slope);
-  SEMTrace('1', "calInd %d slope %f intcp %f size %f", calInd, slope, intcp, size);
+  //SEMTrace('1', "calInd %d slope %f intcp %f size %f", calInd, slope, intcp, size);
 
   // Adjust for aperture
   size *= GetSizeScalingForAperture(sizeCal);
   return 0;
+}
+
+// Convenience function returns 0 if size exists and optionally returns size for Rec area
+int CBeamAssessor::LDRecordBeamSizeFromCal(float *size)
+{
+  LowDoseParams *ldp = mWinApp->GetLowDoseParams() + RECORD_CONSET;
+  CString str;
+  float bsize;
+  int ret = BeamSizeFromCalibration(ldp->intensity, ldp->spotSize, 
+    FEIscope ? ldp->probeMode : (int)ldp->beamAlpha, bsize, str);
+  if (size)
+    *size = ret ? 0.f : bsize;
+  return ret;
 }
 
 // Determine the intensity needed to get to a desired size at the given current intensity,
