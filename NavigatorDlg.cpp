@@ -1322,7 +1322,8 @@ void CNavigatorDlg::AddFocusAreaPoint(bool drawFirst)
     if (drawFirst)
       Redraw();
     imBuf->mHasUserPt = true;
-    mLowDoseDlg->FixUserPoint(imBuf, 0);
+    if (imBuf->mImage)
+      mLowDoseDlg->FixUserPoint(imBuf, 0);
   }
 }
 
