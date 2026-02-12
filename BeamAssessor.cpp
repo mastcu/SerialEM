@@ -3422,13 +3422,19 @@ int CBeamAssessor::BeamSizeFromCalibration(double intensity, int spot, int probe
   return 0;
 }
 
-// Convenience function returns 0 if size exists and optionally returns size for Rec area
+// Convenience function returns 0 if size exists and optionally returns size for Record
+// or for a general area
 int CBeamAssessor::LDRecordBeamSizeFromCal(float *size)
 {
-  LowDoseParams *ldp = mWinApp->GetLowDoseParams() + RECORD_CONSET;
+  return LDAreaBeamSizeFromCal(RECORD_CONSET, size);
+}
+
+int CBeamAssessor::LDAreaBeamSizeFromCal(int conSet, float *size)
+{
+  LowDoseParams *ldp = mWinApp->GetLowDoseParams() + conSet;
   CString str;
   float bsize;
-  int ret = BeamSizeFromCalibration(ldp->intensity, ldp->spotSize, 
+  int ret = BeamSizeFromCalibration(ldp->intensity, ldp->spotSize,
     FEIscope ? ldp->probeMode : (int)ldp->beamAlpha, bsize, str);
   if (size)
     *size = ret ? 0.f : bsize;
@@ -3481,7 +3487,7 @@ int CBeamAssessor::GetSizeCalAndDeltaCross(double intensity, int spot, int probe
     probeOrAlpha = -999;
     mWinApp->mMultiTSTasks->GetProbeOrAlpha(probeOrAlpha);
   }
-  curCross = mScope->GetCrossover(spot);
+  curCross = mScope->GetCrossover(spot, probeOrAlpha);
   if (!curCross) {
     errStr = "There is no crossover calibration for the current spot size";
     return 1;
