@@ -2484,7 +2484,7 @@ int CMultiGridTasks::StartGridRuns(int LMneedsLD, int MMMneedsLD, int finalNeeds
     if (jcd.status & MGSTAT_FLAG_TOO_DARK)
       numDark++;
   }
-  if (numDark) {
+  if (numDark && !mSkipGridRealign) {
     SEMMessageBox("Grids that were found to be too dark cannot be included because "
       "they can not be realigned");
     return 1;
