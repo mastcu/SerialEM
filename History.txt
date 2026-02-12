@@ -3,11 +3,14 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
-1/21/26: Prevented image shift in blocks for grid map in multigrid (In 4.2).
+2/12/26: Allowed multigrid to use a grid marked as too dark if the property
+to skip realignment is set (In 4.2).
 
-1/21/26: Fixed crash turning on Edit Focus with no image in display (In 4.2).
+2/11/26: Prevented image shift in blocks for grid map in multigrid (In 4.2).
 
-1/20/26: SEM_4-2-16
+2/11/26: Fixed crash turning on Edit Focus with no image in display (In 4.2).
+
+2/10/26: SEM_4-2-16
 2/10/26: Made autocontouring dialog remember group selections between openings
 with one SerialEM run.  Improved and clarified handling of group selections
 wen using autocontouring from multigrid (in 4.2).
