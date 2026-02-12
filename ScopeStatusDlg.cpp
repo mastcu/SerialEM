@@ -673,13 +673,13 @@ void CScopeStatusDlg::Update(double inCurrent, int inMagInd, double inDefocus,
 
       // Put units just at the end if both need them or Obj does
       // Otherwise put units on condenser if it needs them
-      objUnits = objAp > 5;
-      condUnits = condAp > 5 && !objUnits;
-      format = "out";
+      objUnits = objAp > (JEOLscope ? 8 : 5);
+      condUnits = condAp > (JEOLscope ? 8 : 5) && !objUnits;
+      format = (FEIscope && condAp == 1) ? "<->" : "out";
       if (condAp > 0)
         format.Format("%d", condAp);
       m_strApertures = "C " + format + (condUnits ? " um  O " : "  O ");
-      format = "out";
+      format = (FEIscope && objAp == 1) ? "<->" : "out";
       if (objAp > 0)
         format.Format("%d", objAp);
       m_strApertures += format + (objUnits ? " um  " : "  ");
