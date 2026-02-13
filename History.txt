@@ -3,8 +3,12 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+2/13/26: Added property 'SkipFocusRamper' to run dynamic focusing directly
+from SerialEM instead of through FocusRamper.
+
 2/12/26: Allowed multigrid to use a grid marked as too dark if the property
 to skip realignment is set (In 4.2).
+
 2/11/26: SEM_4-3-0beta5
 2/11/26: Prevented image shift in blocks for grid map in multigrid (In 4.2).
 
