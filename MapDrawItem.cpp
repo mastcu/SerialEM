@@ -96,6 +96,9 @@ CMapDrawItem::CMapDrawItem()
   mObjectiveAp = -1;
   mCondenserAp = -1;
   mJeolC1Ap = -1;
+  mMagOfIStargets = 0;
+  mNumIStargets = 0;
+  mIStargetsXY = NULL;
  }
 
 CMapDrawItem::CMapDrawItem(CMapDrawItem *item)
@@ -108,6 +111,8 @@ CMapDrawItem::CMapDrawItem(CMapDrawItem *item)
   mNumSkipHoles = mNumXholes = mNumYholes = 0;
   mSkipHolePos = NULL;
   mGridMapXform = NULL;
+  mIStargetsXY = NULL;
+  mNumIStargets = 0;
 }
 
 CMapDrawItem::~CMapDrawItem()
@@ -119,6 +124,8 @@ CMapDrawItem::~CMapDrawItem()
   if (mNumSkipHoles)
     delete[] mSkipHolePos;
   delete[] mGridMapXform;
+  if (mNumIStargets > 0)
+    delete [] mIStargetsXY;
 }
 
 // Creates a duplicate of the item with independent point array so they can both be safely
@@ -142,6 +149,11 @@ CMapDrawItem *CMapDrawItem::Duplicate()
   if (mNumSkipHoles) {
     newItem->mSkipHolePos = new unsigned char[2 * mNumSkipHoles];
     memcpy(newItem->mSkipHolePos, mSkipHolePos, 2 * mNumSkipHoles);
+  }
+  if (mNumIStargets) {
+    newItem->mIStargetsXY = new float[mNumIStargets * 2];
+    memcpy(newItem->mIStargetsXY, mIStargetsXY, mNumIStargets * sizeof(float));
+    newItem->mNumIStargets = mNumIStargets;
   }
   return newItem;
 }

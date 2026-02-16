@@ -183,6 +183,11 @@
 
   ADOC_PUT(FloatArray(ADOC_ARG, "PtsX", &item->mPtX[0], item->mNumPoints));
   ADOC_PUT(FloatArray(ADOC_ARG, "PtsY", &item->mPtY[0], item->mNumPoints));
+  if (item->mNumIStargets)
+    ADOC_PUT(FloatArray(ADOC_ARG, "IStargets", &item->mIStargetsXY[0], 
+      2 * item->mNumIStargets));
+  if (item->mMagOfIStargets > 0)
+    ADOC_PUT(Integer(ADOC_ARG, "TargetMag", item->mMagOfIStargets));
 
   if (item->mEDMPercent >= 0)
     ADOC_PUT(Float(ADOC_ARG, "EDMPercent", item->mEDMPercent));

@@ -232,7 +232,8 @@ public:
   void MultiShotCleanup(int error);
   bool GetNextShotAndHole(int &nextShot, int &nextHole);
   int GetHolePositions(FloatVec & delIsX, FloatVec & delISY, IntVec &posIndex, int magInd,
-    int camera, int numXholes, int numYholes, float tiltAngle, bool startingMulti = false);
+    int camera, int numXholes, int numYholes, float tiltAngle, CMapDrawItem *item = NULL,
+    bool startingMulti = false);
   void AddHolePosition(int ix, int iy, std::vector<double> &fromISX, std::vector<double> &fromISY,
     double xCenISX, double yCenISX, double xCenISY, double ycCenISY, IntVec &posIndex);
   void MakeSpiralPattern(int numX, int numY, IntVec &order);

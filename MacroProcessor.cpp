@@ -3042,6 +3042,23 @@ void CMacroProcessor::FillVectorFromArrayVariable(FloatVec *fvec, IntVec *ivec,
   }
 }
 
+// Looks up X and Y variables, makes sure they have the same number, and fills arrays
+int CMacroProcessor::LookupAndFillPairedVars(int itemInd, Variable **xvar, FloatVec &xvec,
+  Variable **yvar, FloatVec &yvec)
+{
+  int index;
+  if (LookupVarAbortIfFail(mStrItems[itemInd], xvar, index) ||
+      LookupVarAbortIfFail(mStrItems[itemInd + 1], yvar, index))
+      return 1;
+  FillVectorFromArrayVariable(&xvec, NULL, *xvar);
+  FillVectorFromArrayVariable(&yvec, NULL, *yvar);
+  if (xvec.size() != yvec.size()) {
+    LineAbort("The two arrays do not have the same size for line:\n\n");
+    return 1;
+  }
+  return 0;
+}
+
 // Set 1 1D array variable from an array of integer or float values, where the type is
 // inferred by whether the format has "d".  Uses mStrCopy for error message
 bool CMacroProcessor::SetArrayVariableFromArray(CString name, void *values, int numVals, 

@@ -203,6 +203,7 @@ CNavigatorDlg::CNavigatorDlg(CWnd* pParent /*=NULL*/)
   mGridIndexOfMap = -1;
   mCurrentItem = -1;
   mLastGridSetAcquire = false;
+  mNumIStargetItems = 0;
 }
 
 
@@ -3948,7 +3949,7 @@ MapItemArray *CNavigatorDlg::GetMapDrawItems(
   // Show multishot somehow if one or other type is on, and either the dialog is open
   // or acquire is on and "Show shots when show acquire" is checked
   showMulti = ((msParams->inHoleOrMultiHole & MULTI_IN_HOLE) ||
-    mHelper->MultipleHolesAreSelected()) &&
+    mHelper->MultipleHolesAreSelected() || mNumIStargetItems > 0) &&
     ((m_bShowAcquireArea && (mHelper->GetEnableMultiShot() & 1)) ||
     (mHelper->mMultiShotDlg && !mHelper->mMultiShotDlg->RecordingISValues()));
 
@@ -4063,7 +4064,7 @@ MapItemArray *CNavigatorDlg::GetMapDrawItems(
               if (!imBuf->GetTiltAngle(tiltAngle))
                 tiltAngle = -999.;
               int numHoles = mWinApp->mParticleTasks->GetHolePositions(delISX, delISY,
-                holeIndex, mMagIndForHoles, camera, 0, 0, tiltAngle, false);
+                holeIndex, mMagIndForHoles, camera, 0, 0, tiltAngle, NULL, false);
               AddHolePositionsToItemPts(delISX, delISY, holeIndex, custom, numHoles, box);
             }
 
@@ -4312,8 +4313,7 @@ void CNavigatorDlg::PolygonFromCorners(void)
       for (int i = (int)mItemArray.GetSize() - 1; i >= 0; i--) {
         item = mItemArray[i];
         if (item->mCorner && item->mRegistration == mCurrentRegistration) {
-          RemoveFromArray(i);
-          delete item;
+          DeleteAndRemoveFromArray(i);
         }
       }
   } else {
@@ -5323,8 +5323,7 @@ void CNavigatorDlg::DeleteGroup(bool collapsedGroup)
         item->mAcquire = false;
         mHelper->EndAcquireOrNewFile(item);
       }
-      RemoveFromArray(i);
-      delete item;
+      DeleteAndRemoveFromArray(i);
     }
   }
   FinishMultipleDeletion();
@@ -6289,7 +6288,7 @@ int CNavigatorDlg::MakeGridOrFoundPoints(int jstart, int jend, int jdir, int kst
       if (AfxMessageBox(label, MB_QUESTION) == IDNO) {
         for (k = mNumberBeforeAdd; k < mItemArray.GetSize(); k++) {
           item = mItemArray[k];
-          delete item;
+          DeleteItem(item);
         }
         RemoveFromArray(mNumberBeforeAdd, (int)mItemArray.GetSize() - mNumberBeforeAdd);
         mSelectedItems = selListBefore;
@@ -8691,6 +8690,7 @@ int CNavigatorDlg::LoadNavFile(bool checkAutosave, bool mergeFile, CString *inFi
   CFileStatus status;
   int retval, externalErr, returnVal = 0;
   bool hasStage;
+  const int maxFvals = 1000;
   BOOL found;
   int numSect, numAdocErr, numLackRequired, sectInd = 0, adocIndex = -1;
   int numToGet, numItemLack = 0, numItemErr = 0, numExtErr = 0;
@@ -8706,7 +8706,7 @@ int CNavigatorDlg::LoadNavFile(bool checkAutosave, bool mergeFile, CString *inFi
     "a montage map file having no mdoc file",
     "an error accessing the mdoc file by its autodoc index", "", "", "", ""};
   int index, i, numPoints, trimCount, ind1, ind2, numFuture = 0, addIndex, highestLabel;
-  float xx, yy, fvals[6], varyVals[NUM_VARY_ELEMENTS * MAX_TS_VARIES];
+  float xx, yy, fvals[maxFvals], varyVals[NUM_VARY_ELEMENTS * MAX_TS_VARIES];
   float curMapXform[6], dupMapXform[6] = {0., 0., 0., 0., 0., 0.}, oldInvXf[6];
   float incXform[6], incDxy[2];
   ScaleMat incMat;
@@ -9364,6 +9364,17 @@ int CNavigatorDlg::LoadNavFile(bool checkAutosave, bool mergeFile, CString *inFi
         } else {
           ADOC_OPTIONAL(AdocGetInteger("Item", sectInd, "MapID", &item->mMapID));
         }
+        numToGet = 0;
+        ADOC_OPTIONAL(AdocGetFloatArray("Item", sectInd, "IStargets", &fvals[0], 
+          &numToGet, maxFvals));
+        if (!retval && numToGet > 0) {
+          item->mNumIStargets = numToGet / 2;
+          item->mIStargetsXY = new float[numToGet];
+          memcpy(item->mIStargetsXY, &fvals[0], numToGet * sizeof(float));
+          mNumIStargetItems++;
+        }
+        ADOC_OPTIONAL(AdocGetInteger("Item", sectInd, "TargetMag", 
+          &item->mMagOfIStargets));
 
         // Get all the points: optional for external item
         if (numPoints > 0) {
@@ -9657,7 +9668,7 @@ int CNavigatorDlg::LoadNavFile(bool checkAutosave, bool mergeFile, CString *inFi
       } else {
 
         // Upon any error for an item, toss it out and increment error count
-        delete item;
+        DeleteItem(item);
         numItemErr += (numAdocErr ? 1 : 0);
         numItemLack += (numLackRequired ? 1 : 0);
         numExtErr += externalErr;
@@ -12179,9 +12190,8 @@ void CNavigatorDlg::FinishSingleDeletion(CMapDrawItem *item, int delIndex, int l
   } else if (!multipleInGroup) {
     m_listViewer.DeleteString(listInd);
   }
-  delete item;
 
-  RemoveFromArray(delIndex);
+  DeleteAndRemoveFromArray(delIndex);
   MakeListMappings();
   if (!isCurrentInList) {
     if (listInd < mCurListSel && !multipleInGroup) {
@@ -13180,4 +13190,20 @@ void CNavigatorDlg::RemoveFromArray(int index, int num)
     SEMAppendToLog(str);
   }
   mItemArray.RemoveAt(index, num);
+}
+
+// Convenience function for both removal and deletion of item
+void CNavigatorDlg::DeleteAndRemoveFromArray(int index)
+{
+  CMapDrawItem *item = mItemArray[index];
+  RemoveFromArray(index);
+  DeleteItem(item);
+}
+
+// Centralized deletion routine maintains number of items with IS targets
+void CNavigatorDlg::DeleteItem(CMapDrawItem *item)
+{
+  if (item->mNumIStargets)
+    mNumIStargetItems = B3DMAX(0, mNumIStargetItems - 1);
+  delete item;
 }

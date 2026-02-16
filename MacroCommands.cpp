@@ -12175,6 +12175,98 @@ int CMacCmd::AddStagePosAsNavPoint(void)
   return 0;
 }
 
+// SetItemImShiftTargets
+int CMacCmd::SetItemImShiftTargets()
+{
+  int ind, jnd, num, cenInd = 0;
+  float xmid, ymid, xtmp, ytmp, dist, minDist = 1.e30f;
+  Variable *xvar = NULL, *yvar = NULL;
+  FloatVec xvec, yvec;
+  ScaleMat st2is;
+  CMapDrawItem *navItem = CurrentOrIndexedNavItem(mItemInt[1], mStrLine);
+  CMapDrawItem *mapItem;
+  if (!navItem)
+    return 1;
+
+  // Get the mag index from current value or map
+  if (!mItemInt[2])
+    mItemInt[2] = mScope->FastMagIndex();
+  else if (mItemInt[2] < 0) {
+    mapItem = mNavigator->FindItemWithMapID(navItem->mDrawnOnMapID);
+    if (!mapItem)
+      ABORT_LINE("Cannot find map that item is drawn on for line:\n\n");
+    mItemInt[2] = mapItem->mMapMagInd;
+  }
+
+  // Get X/Y vectors
+  if (LookupAndFillPairedVars(4, &xvar, xvec, &yvar, yvec))
+    return 1;
+  num = (int)xvec.size();
+
+  // Get transform and find point closest to midpoint of ranges
+  if (mItemInt[3]) {
+    st2is = MatMul(mShiftManager->StageToCamera(mCurrentCam, mItemInt[2]),
+      mShiftManager->CameraToIS(mItemInt[2]));
+    if (!st2is.xpx)
+      ABORT_LINE("There is no calibration for getting from stage coordinates "
+        "to image shift values for line:\n\n");
+    if (mItemInt[3] > 1) {
+      xmid = (VECTOR_MIN(xvec) + VECTOR_MAX(xvec)) / 2.f;
+      ymid = (VECTOR_MIN(yvec) + VECTOR_MAX(yvec)) / 2.f;
+      for (ind = 0; ind < num; ind++) {
+        dist = powf(xvec[ind] - xmid, 2.f) + powf(yvec[ind] - ymid, 2.f);
+        if (dist < minDist) {
+          cenInd = ind;
+          minDist = dist;
+        }
+      }
+      navItem->mStageX = xvec[cenInd];
+      navItem->mStageY = yvec[cenInd];
+      if (navItem->mNumPoints) {
+        navItem->mPtX[0] = xvec[cenInd];
+        navItem->mPtX[0] = yvec[cenInd];
+      }
+    }
+
+    // Transform in place, shifting to center point
+    xmid = xvec[cenInd];
+    ymid = yvec[cenInd];
+    for (ind = 0; ind < num; ind++) {
+      ApplyScaleMatrix(st2is, xvec[ind] - xmid, yvec[ind] - ymid,
+        xtmp, ytmp);
+      xvec[ind] = xtmp;
+      yvec[ind] = ytmp;
+    }
+  }
+
+  if (navItem->mIStargetsXY)
+    delete[] navItem->mIStargetsXY;
+  else
+    mNavigator->SetNumIStargetItems(mNavigator->GetNumIStargetItems() + 1);
+  if (navItem->mNumSkipHoles > 0)
+    delete [] navItem->mSkipHolePos;
+  navItem->mNumSkipHoles = 0;
+  navItem->mNumXholes = 0;
+  navItem->mNumYholes = 0;
+
+  // Set up arrays in item, rearranging middle point as first
+  navItem->mIStargetsXY = new float[2 * num];
+  navItem->mNumIStargets = num;
+  navItem->mMagOfIStargets = mItemInt[2];
+  for (ind = 0; ind < navItem->mNumIStargets; ind++) {
+    jnd = ind;
+    if (cenInd > 0 && (!ind || cenInd == ind))
+      jnd = ind ? 0 : cenInd;
+    navItem->mIStargetsXY[2 * jnd] = xvec[ind];
+    navItem->mIStargetsXY[2 * jnd + 1] = yvec[ind];
+  }
+  if (navItem->mNote.IsEmpty())
+    navItem->mNote.Format("%d targets", num);
+  mNavigator->UpdateListString(mItemInt[1]);
+  mWinApp->mMainView->DrawImage();
+  return 0;
+}
+
 // AddCirclePolygon
 int CMacCmd::AddCirclePolygon(void)
 {
@@ -13151,13 +13243,8 @@ int CMacCmd::FindHoles(void)
   if (!mItemEmpty[2]) {
     if (mItemEmpty[3])
       ABORT_LINE("You must enter both X and Y coordinates for line:\n\n");
-    if (LookupVarAbortIfFail(mStrItems[2], &xvar, index) ||
-      LookupVarAbortIfFail(mStrItems[3], &yvar, index))
+    if (LookupAndFillPairedVars(2, &xvar, xvec, &yvar, yvec))
       return 1;
-    FillVectorFromArrayVariable(&xvec, NULL, xvar);
-    FillVectorFromArrayVariable(&yvec, NULL, yvar);
-    if (xvec.size() != yvec.size())
-      ABORT_LINE("The two arrays do not have the same size for line:\n\n");
   }
 
   if (mNavHelper->mHoleFinderDlg->DoFindHoles(imBuf, false, &xvec, &yvec)) {
@@ -13527,9 +13614,11 @@ int CMacCmd::GetItemHolesToAcquire()
   if (!navItem->mNumXholes && !nearestToCen)
     ABORT_LINE(mStrCopy);
   index = mWinApp->mParticleTasks->GetHolePositions(xVec, yVec, holePos,
-    mScope->FastMagIndex(), mCurrentCam, navItem->mNumXholes, navItem->mNumYholes, -999.);
-  mWinApp->mParticleTasks->SkipHolesInList(xVec, yVec, holePos, navItem->mSkipHolePos,
-    navItem->mNumSkipHoles, index);
+    mScope->FastMagIndex(), mCurrentCam, navItem->mNumXholes, navItem->mNumYholes, -999.,
+    navItem);
+  if (!navItem->mNumIStargets)
+    mWinApp->mParticleTasks->SkipHolesInList(xVec, yVec, holePos, navItem->mSkipHolePos,
+      navItem->mNumSkipHoles, index);
   if (nearestToCen) {
     if (!index)
       ABORT_LINE("There are no hole positions defined by the settings or Navigator item "

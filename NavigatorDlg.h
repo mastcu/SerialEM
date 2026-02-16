@@ -205,6 +205,8 @@ public:
   SetMember(int, GridIndexOfMap);
   GetMember(double, AcqAutoDefocus);
   GetSetMember(int, InitialTotalShots);
+  GetMember(bool, EditFocusEnabled);
+  GetSetMember(int, NumIStargetItems);
   void SetCurAcqParmActions(int which) { mAcqParm = mWinApp->GetNavAcqParams(which); mAcqActions = mHelper->GetAcqActions(which); };
   bool OKtoCloseNav();
 
@@ -543,6 +545,7 @@ private:
   bool mDoRefineZlpNextItem;   // Flag to do it unconditionally because it failed
   int mGridIndexOfMap;         // Index of grid that last map was loaded from
   double mAcqAutoDefocus;      // Keep track of valid focus from autofocus for tilt series
+  int mNumIStargetItems;       // To keep track of number of items that have IS targets
 
 public:
   afx_msg void OnGotoMarker();
@@ -770,6 +773,8 @@ void GetCurrentNavDir(CString &navPath);
 void SetCurrentNavFile(CString &inFile);
 void UpdateHiding();
 void RemoveFromArray(int index, int num = 1);
+void DeleteAndRemoveFromArray(int index);
+void DeleteItem(CMapDrawItem *item);
 void ManageListHeader(CString str = "");
 CButton m_butNavFocusPos;
 afx_msg void OnButNavFocusPos();

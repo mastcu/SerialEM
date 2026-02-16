@@ -118,7 +118,7 @@ int CParticleTasks::StartMultiShot(int numPeripheral, int doCenter, float spokeR
   int numXholes = 0, numYholes = 0;
   double delISX, delISY, transISX, transISY, delBTX, delBTY, angle;
   CString str, str2;
-  CMapDrawItem *item;
+  CMapDrawItem *item = NULL;
   CameraParameters *camParam = mWinApp->GetActiveCamParam();
   ComaVsISCalib *comaVsIS = mWinApp->mAutoTuning->GetComaVsIScal();
   MontParam *montP = mWinApp->GetMontParam();
@@ -127,6 +127,7 @@ int CParticleTasks::StartMultiShot(int numPeripheral, int doCenter, float spokeR
   int testImage = inHoleOrMulti & MULTI_TEST_IMAGE;
   bool testComa = (inHoleOrMulti & MULTI_TEST_COMA) != 0;
   bool openingFiles = mMSNumSepFiles == 0;
+  bool doIStargets = false;
   ScaleMat dMat;
   mMSNumPeripheral = multiInHole ? (numPeripheral + numSecondRing) : 0;
   mMSNumInRing[0] = mMSNumPeripheral - numSecondRing;
@@ -145,7 +146,36 @@ int CParticleTasks::StartMultiShot(int numPeripheral, int doCenter, float spokeR
     mMSParams = mNextMSParams;
     mNextMSParams = NULL;
   }
-  mMSUseCustomHoles = mMSParams->useCustomHoles;
+
+  if (!mMSsaveToMontage && mWinApp->mNavigator && (mNextMSUseNavItem >= 0 ||
+    mWinApp->mNavigator->GetAcquiring())) {
+    if (!mWinApp->mNavigator->GetAcquiring()) {
+      item = mWinApp->mNavigator->GetOtherNavItem(mNextMSUseNavItem);
+      if (!item) {
+        SEMMessageBox("Index of Navigator item specified for next multishot is out of "
+          "range");
+        RESTORE_MSP_RETURN(1);
+      }
+    } else if (mWinApp->mNavigator->GetCurrentOrAcquireItem(item) < 0) {
+      SEMMessageBox("Could not retrieve the Navigator item currently being acquired");
+      RESTORE_MSP_RETURN(1);
+    }
+    if (item->mNumIStargets > 0 && item->mMagOfIStargets > 0) {
+      doIStargets = true;
+      multiHoles = true;
+    } else {
+      numXholes = item->mNumXholes;
+      numYholes = item->mNumYholes;
+      if (ItemIsEmptyMultishot(item)) {
+        PrintfToLog("Item %s has all holes set to be skipped, so it is being skipped",
+          (LPCTSTR)item->mLabel);
+        RESTORE_MSP_RETURN(openingFiles ? -1 : 0);
+      }
+    }
+  }
+  mNextMSUseNavItem = -1;
+
+  mMSUseCustomHoles = mMSParams->useCustomHoles && !doIStargets;
   if (inHoleOrMulti & MULTI_FORCE_CUSTOM)
     mMSUseCustomHoles = true;
   else if (inHoleOrMulti & MULTI_FORCE_REGULAR)
@@ -217,6 +247,7 @@ int CParticleTasks::StartMultiShot(int numPeripheral, int doCenter, float spokeR
   mMSSaveRecord = (mMSsaveToMontage || !(multiHoles && mWinApp->Montaging())) && !testComa
     && (saveRec || mMSNumSepFiles >= 0) && !mMSDoStartMacro;
 
+
   // Then test other conditions
   if (mMSIfEarlyReturn && !camParam->K2Type && !mMSDoStartMacro) {
     SEMMessageBox("The current camera must be a K2/K3 to use early return for multiple "
@@ -232,7 +263,7 @@ int CParticleTasks::StartMultiShot(int numPeripheral, int doCenter, float spokeR
   }
   if (multiHoles && !((mMSUseCustomHoles && mMSParams->customHoleX.size() > 0) ||
     (!mMSUseCustomHoles && (mMSParams->holeMagIndex[0] > 0 ||
-      mMSParams->holeMagIndex[1] > 0)))) {
+      mMSParams->holeMagIndex[1] > 0)) || doIStargets)) {
       SEMMessageBox("Hole positions have not been defined for doing multiple Records");
       RESTORE_MSP_RETURN(1);
   }
@@ -251,29 +282,6 @@ int CParticleTasks::StartMultiShot(int numPeripheral, int doCenter, float spokeR
       " is a montage");
     RESTORE_MSP_RETURN(1);
   }
-
-  if (!mMSsaveToMontage && mWinApp->mNavigator && (mNextMSUseNavItem >= 0 ||
-    mWinApp->mNavigator->GetAcquiring())) {
-    if (!mWinApp->mNavigator->GetAcquiring()) {
-      item = mWinApp->mNavigator->GetOtherNavItem(mNextMSUseNavItem);
-      if (!item) {
-        SEMMessageBox("Index of Navigator item specified for next multishot is out of "
-          "range");
-        RESTORE_MSP_RETURN(1);
-      }
-    } else if (mWinApp->mNavigator->GetCurrentOrAcquireItem(item) < 0) {
-      SEMMessageBox("Could not retrieve the Navigator item currently being acquired");
-      RESTORE_MSP_RETURN(1);
-    }
-    numXholes = item->mNumXholes;
-    numYholes = item->mNumYholes;
-    if (ItemIsEmptyMultishot(item)) {
-      PrintfToLog("Item %s has all holes set to be skipped, so it is being skipped",
-        (LPCTSTR)item->mLabel);
-      RESTORE_MSP_RETURN(openingFiles ? -1 : 0);
-    }
-  }
-  mNextMSUseNavItem = -1;
 
   // Set this after all tests and parameter settings, it determines operation of
   // GetHolePositions which is called from SerialEMView
@@ -309,42 +317,44 @@ int CParticleTasks::StartMultiShot(int numPeripheral, int doCenter, float spokeR
   mMSHoleISY.clear();
   mMSDoingHexGrid = false;
   multiHoles = multiHoles || (numXholes && numYholes);
-  if (numXholes && numYholes)
+  if (numXholes && numYholes && !doIStargets)
     mMSDoingHexGrid = numYholes == -1;
   else if (multiHoles)
-    mMSDoingHexGrid = mMSParams->doHexArray && !mMSUseCustomHoles;
+    mMSDoingHexGrid = mMSParams->doHexArray && !mMSUseCustomHoles && !doIStargets;
   if (multiHoles && !mMSUseCustomHoles &&
-    !mMSParams->holeMagIndex[mMSDoingHexGrid ? 1 : 0]) {
+    !mMSParams->holeMagIndex[mMSDoingHexGrid ? 1 : 0] && !doIStargets) {
     SEMMessageBox("Hole positions have not been defined for doing this type of "
       "multiple Records");
     RESTORE_MSP_RETURN(1);
   }
 
   if (multiHoles) {
-     mMSNumHoles = GetHolePositions(mMSHoleISX, mMSHoleISY, mMSPosIndex, mMagIndex,
-       mWinApp->GetCurrentCamera(), numXholes, numYholes, (float)angle, true);
-     mMSUseHoleDelay = true;
-     useXholes = B3DABS(numXholes ? numXholes : mMSParams->numHoles[0]);
-     useYholes = B3DABS(numYholes ? numYholes : mMSParams->numHoles[1]);
+    mMSNumHoles = GetHolePositions(mMSHoleISX, mMSHoleISY, mMSPosIndex, mMagIndex,
+      mWinApp->GetCurrentCamera(), numXholes, numYholes, (float)angle, item, true);
+    mMSUseHoleDelay = true;
+    if (!doIStargets) {
+      useXholes = B3DABS(numXholes ? numXholes : mMSParams->numHoles[0]);
+      useYholes = B3DABS(numYholes ? numYholes : mMSParams->numHoles[1]);
 
-     if (numXholes && numYholes && item->mNumSkipHoles)
-       SkipHolesInList(mMSHoleISX, mMSHoleISY, mMSPosIndex, item->mSkipHolePos,
-         item->mNumSkipHoles, mMSNumHoles);
-     if ((!(mMSUseCustomHoles && mMSParams->customHoleX.size() > 0) ||
-       (numXholes && numYholes)) && !mMSDoingHexGrid) {
+      if (numXholes && numYholes && item->mNumSkipHoles)
+        SkipHolesInList(mMSHoleISX, mMSHoleISY, mMSPosIndex, item->mSkipHolePos,
+          item->mNumSkipHoles, mMSNumHoles);
+      if ((!(mMSUseCustomHoles && mMSParams->customHoleX.size() > 0) ||
+        (numXholes && numYholes)) && !mMSDoingHexGrid) {
 
-       // Adjust position indexes to be relative to middle, skip 0 for even # of holes
-       for (ind = 0; ind < mMSNumHoles; ind++) {
-         if (useXholes % 2 != 0 || mMSPosIndex[ind * 2] < useXholes / 2)
-           mMSPosIndex[ind * 2] -= useXholes / 2;
-         else
-           mMSPosIndex[ind * 2] -= useXholes / 2 - 1;
-         if (useYholes % 2 != 0 || mMSPosIndex[ind * 2 + 1] < useYholes / 2)
-           mMSPosIndex[ind * 2 + 1] -= useYholes / 2;
-         else
-           mMSPosIndex[ind * 2 + 1] -= useYholes / 2 - 1;
-       }
-     }
+        // Adjust position indexes to be relative to middle, skip 0 for even # of holes
+        for (ind = 0; ind < mMSNumHoles; ind++) {
+          if (useXholes % 2 != 0 || mMSPosIndex[ind * 2] < useXholes / 2)
+            mMSPosIndex[ind * 2] -= useXholes / 2;
+          else
+            mMSPosIndex[ind * 2] -= useXholes / 2 - 1;
+          if (useYholes % 2 != 0 || mMSPosIndex[ind * 2 + 1] < useYholes / 2)
+            mMSPosIndex[ind * 2 + 1] -= useYholes / 2;
+          else
+            mMSPosIndex[ind * 2 + 1] -= useYholes / 2 - 1;
+        }
+      }
+    }
   } else {
 
     // No holes = 1
@@ -782,7 +792,7 @@ int CParticleTasks::StartOneShotOfMulti(void)
  */
 int CParticleTasks::GetHolePositions(FloatVec &delISX, FloatVec &delISY, IntVec &posIndex,
   int magInd, int camera, int numXholes, int numYholes, float tiltAngle,
-  bool startingMulti)
+  CMapDrawItem *item, bool startingMulti)
 {
   int numHoles = 0, ind, ix, iy, direction[2], startInd[2], endInd[2], fromMag, jump[2];
   int ring, step, mainDir, sideDir, mainSign, sideSign, origMag, numRings;
@@ -790,14 +800,15 @@ int CParticleTasks::GetHolePositions(FloatVec &delISX, FloatVec &delISY, IntVec 
   BOOL crossPattern = startingMulti ? mMSNoCornersOf3x3 : mMSParams->skipCornersOf3x3;
   BOOL skipHexCenter = startingMulti ? mMSNoHexCenter : mMSParams->skipHexCenter;
   bool adjustForTilt = false;
+  bool isTargets = item && item->mNumIStargets > 0 && item->mMagOfIStargets > 0;
   float holeAngle, specX, specY, cosRatio;
   std::vector<double> fromISX, fromISY;
   IntVec holeOrder;
   ScaleMat IStoSpec, specToIS;
-  int hexInd = ((mMSParams->doHexArray && !mMSParams->useCustomHoles)  ||
+  int hexInd = ((mMSParams->doHexArray && !mMSParams->useCustomHoles && !isTargets)  ||
     (numXholes > 0 && numYholes == -1)) ? 1 : 0;
   if (startingMulti)
-    hexInd = (mMSDoingHexGrid && !mMSUseCustomHoles) ? 1 : 0;
+    hexInd = (mMSDoingHexGrid && !mMSUseCustomHoles && !isTargets) ? 1 : 0;
 
   delISX.clear();
   delISY.clear();
@@ -805,7 +816,17 @@ int CParticleTasks::GetHolePositions(FloatVec &delISX, FloatVec &delISY, IntVec 
   holeAngle = mMSParams->tiltOfHoleArray[hexInd];
   fromMag = mMSParams->holeMagIndex[hexInd];
   origMag = mMSParams->origMagOfArray[hexInd];
-  if (((!startingMulti && mMSParams->useCustomHoles) ||
+  if (item && item->mNumIStargets > 0) {
+    for (ind = 0; ind < item->mNumIStargets; ind++) {
+      fromISX.push_back(item->mIStargetsXY[2 * ind]);
+      fromISY.push_back(item->mIStargetsXY[2 * ind + 1]);
+    }
+    fromMag = item->mMagOfIStargets;
+    origMag = 0;
+    holeAngle = 0.;
+    numHoles = item->mNumIStargets;
+
+  } else if (((!startingMulti && mMSParams->useCustomHoles) ||
     (startingMulti && mMSUseCustomHoles)) && mMSParams->customHoleX.size() > 0 &&
     !(numXholes || numYholes)) {
 

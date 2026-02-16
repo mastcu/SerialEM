@@ -5465,6 +5465,26 @@
             indicate that they are being overridden.</TD>
         </TR>
         <TR>
+          <TD class="scriptcommand">SetItemImShiftTargets #I #M #S xvar yvar</TD>
+          <TD>Stores image shift targets for Multiple Record acquisition into the Navigator item specified by <b>#I</b>
+            (positive for table index, 0 for current or acquired item, or negative for index from
+            end), using X and Y values in variables <b>xvar</b> and <b>yvar</b>.&nbsp; The magnification
+             index at which image shift values apply is given by <b>#M</b>, which can be 0 to use the current 
+            magnification or negative to use the magnification of the map on which the item was drawn.&nbsp; 
+            The variables must contain raw image shift values if <b>#S</b> is 0, or stage coordinates if <b>#S</b>
+            is 1 or 2.&nbsp; With <b>#S</b> equal to 1, the difference between each coordinate and the first one
+            is converted to image shift and stored.&nbsp; With <b>#S</b> greater than 1, the same differences are stored, 
+            and the coordinate closest
+            to the middle of the range in X and Y is found and is moved to the start of the list, so that the IS values
+            are minimized and the 0, 0 value is at the start.&nbsp; Also, the stage coordinates of the item itself are
+            changed to be those of that middle point.&nbsp; The targets will all be acquired when running Multiple Records 
+            from Navigator Acquire at Items or the 'MultipleRecords' command, regardless of whether acquiring from multiple 
+            holes is specified in the Multiple Record Setup dialog or the 'MultipleRecords' command.&nbsp; Whether 
+            multiple shots are taken at each target (i.e., inside the hole, if there is a hole) is controlled by
+             the dialog settings and/or the MultipleRecords' command.&nbsp; Command added in 4.3, 16-Feb-26.
+          </TD>
+        </TR>
+        <TR>
           <TD class="scriptcommand">SetNavItemUserValue #I #V [text]</TD>
           <TD>Sets an arbitrary value for a Navigator item specified by <b>#I</b>
             (positive for table index, 0 for current or acquired item, or negative for index from

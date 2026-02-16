@@ -634,6 +634,7 @@ public:
   int ConvertArrayIndex(CString strItem, int leftInd, int rightInd, CString name, int numElements,
     CString * errMess);
   void FillVectorFromArrayVariable(FloatVec *fvec, IntVec *ivec, Variable *var);
+  int LookupAndFillPairedVars(int itemInd, Variable **xvar, FloatVec &xvec, Variable **yvar, FloatVec &yvec);
   bool SetArrayVariableFromArray(CString name, void *values, int numVals, const char *format);
   static UINT RunInShellProc(LPVOID pParam);
   static UINT RunScriptLangProc(LPVOID pParam);
