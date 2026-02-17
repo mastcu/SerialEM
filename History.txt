@@ -3,6 +3,7 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+2/17/26: SEM_4-3-0beta6
 2/17/26: Fixed writing states in lines too long to read in earlier versions.
 All versions between Jan. 27 and this should be replaced and this version
 should be run to rewrite the settings before trying to run a version before
