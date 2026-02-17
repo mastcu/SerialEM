@@ -619,6 +619,8 @@ int CStateDlg::DoSetImState(int stateNum, CString &errStr)
     mCamOfSetState = param->camIndex;
   if (mHelper->mStateDlg)
     mHelper->mStateDlg->Update();
+  if (area >= 0)
+    winApp->mLowDoseDlg.RedrawAndUpdateSepIfDefining(area);
   return 0;
 }
 
@@ -711,6 +713,7 @@ void CStateDlg::DoRestoreState(bool skipScope)
   }
   if (mHelper->mStateDlg)
     mHelper->mStateDlg->DisableUpdateButton();
+  ((CSerialEMApp *)AfxGetApp())->mLowDoseDlg.RedrawAndUpdateSepIfDefining(-1);
 }
 
 // Cancel restorability of state

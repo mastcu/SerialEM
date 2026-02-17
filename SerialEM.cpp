@@ -855,6 +855,7 @@ CSerialEMApp::CSerialEMApp()
   }
   mNeedMultiChan = 0;
   mMaxChannelBuffers = 3;
+  mCircleTypesInLDDefine = -2;
   traceMutexHandle = CreateMutex(0, 0, 0);
   sStartTime = GetTickCount();
   mLastIdleScriptTime = sStartTime;
@@ -4334,6 +4335,8 @@ void CSerialEMApp::OnCameraParameters()
     SetActiveCameraNumber(camDlg.mCurrentCamera);
   } else
     CopyConSets(mCurrentCamera);
+  if (LowDoseMode())
+    mLowDoseDlg.RedrawAndUpdateSepIfDefining(-1);
   mSelectedConSet = camDlg.mCurrentSet;   // Should this change if Cancel?
   mCamSetupPlacement = camDlg.mPlacement;
   RestoreViewFocus();

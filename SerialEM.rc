@@ -7,8 +7,7 @@
 //
 // Generated from the TEXTINCLUDE 2 resource.
 //
-#include "afxres.h"
-
+#include "afxres.h"
 /////////////////////////////////////////////////////////////////////////////
 #undef APSTUDIO_READONLY_SYMBOLS
 
@@ -193,6 +192,7 @@ BEGIN
             MENUITEM "&Reverse Wheel Zoom Direction", ID_MISCELLANEOUSOPTIONS_REVERSEWHEELZOOMDIRECTION
             MENUITEM "Turn &Off Beam after Long Inactivity...", ID_SPECIALIZEDOPTIONS_CLOSEVALVESAFTERLONGINACTIVITY
             MENUITEM "Set Threshold for Right-dbl-click &2nd shot", ID_SPECIALIZEDMISC_SETTHRESHOLDFORRIGHT
+            MENUITEM "Set Type of Bea&m Circles in LD Define", ID_MISC_NO_TRUE_SIZE
             MENUITEM SEPARATOR
             MENUITEM "&Disable Dark Trim in Align...", ID_SPECIAL_DISABLE_DARK_TRIM_IN_ALIGN
             MENUITEM "Adjust &Focus on Probe Mode Change", ID_SPECIALOPTIONS_ADJUSTFOCUSONPROBEMODECHANGE
@@ -3391,7 +3391,7 @@ BEGIN
     EDITTEXT        IDC_EDIT_BEAM_DIAM,89,396,26,12,ES_AUTOHSCROLL
     LTEXT           "um",IDC_STAT_BEAM_UM,119,398,11,8
     CONTROL         "Use Record illuminated area for circles in Low Dose",IDC_CHECK_USE_ILLUM_AREA,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,6,409,166,10
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,6,409,173,10
     PUSHBUTTON      "?",IDC_BUTHELP,165,426,11,10
     LTEXT           "Extra delay after image shift:",IDC_STAT_EXTRA_DELAY,5,338,89,8
     LTEXT           "sec",IDC_STAT_SEC,120,338,12,8
@@ -5790,6 +5790,23 @@ BEGIN
                             "Do focus detection and report shift and drift\nMeasure shift on beam tilt"
     ID_FOCUS_DRIFTPROTECTION 
                             "Toggle using three autofocus pictures to protect against drift\nToggle 3 picture method"
+END
+
+STRINGTABLE
+BEGIN
+    ID_HELP_LISTDEBUGOUTPUTKEYLETTERS 
+                            "List key letter for debug output in log"
+    ID_SCRIPT_RUNBACKGROUNDSCRIPT 
+                            "Select and start a script to run in the background"
+    ID_SCRIPT_STOPBACKGROUNDSCRIPT "Stop the script running in the background"
+    ID_IMAGESTAGESHIFT_REMOVEISOFFSETS 
+                            "Remove image shift offset calibrations for current mode"
+    ID_CALIBRATION_LISTMAGISOFFSETS "List mag image shift offset distances"
+    ID_TASKS_SETDOSERATEWITHEDM 
+                            "Set dose rate on camera in e/pixel/sec with an electronic dose modulator"
+    ID_WINDOW_MULTICHANNELSTEMDISPLAY 
+                            "Enable and select STEM channels for multi-window display"
+    ID_BEAMSPOT_BEAMSIZE    "Calibrate beam size by measuring it over a range of sizes"
     ID_MACRO_EDIT1          "Edit Script 1\nEdit Script 1"
     ID_MACRO_EDIT2          "Edit Script 2"
     ID_MACRO_EDIT3          "Edit Script 3"
@@ -5797,8 +5814,15 @@ BEGIN
     ID_MACRO_EDIT5          "Edit Script 5"
     ID_MACRO_EDIT6          "Edit Script 6"
     ID_MACRO_EDIT7          "Edit Script 7"
+END
+
+STRINGTABLE
+BEGIN
     ID_MACRO_EDIT8          "Edit Script 8"
     ID_MACRO_EDIT9          "Edit Script 9"
+    ID_MACRO_EDIT10         "Edit Script 10"
+    ID_MACRO_EDIT15         "Edit script 15"
+    ID_MACRO_EDIT20         "Edit script 20"
 END
 
 STRINGTABLE
@@ -6067,7 +6091,6 @@ END
 
 STRINGTABLE
 BEGIN
-    ID_MACRO_EDIT10         "Edit Script 10"
     ID_MACRO_STOP           "Stop script at next command"
     ID_MACRO_END            "Stop script at end of loop or repeat"
     ID_MACRO_RESUME         "Resume script at place where it stopped"
@@ -7183,8 +7206,6 @@ BEGIN
     ID_TRANSFORM_PTS        "Transform points and polygons to current registration"
     ID_TASKS_WALKUP         "Go to high tilt in steps, tracking current position"
     ID_RESET_REALIGN        "Reset Image Shift and realign image position"
-    ID_MACRO_EDIT15         "Edit script 15"
-    ID_MACRO_EDIT20         "Edit script 20"
     ID_CALIBRATION_SET_IS_DELAY_FACTOR 
                             "Set scaling factor for delays after image shift"
     ID_NAVIGATOR_POLYGON_FROM_CORNERS "Make a polygon from corner points"
@@ -8390,23 +8411,6 @@ END
 
 STRINGTABLE
 BEGIN
-    ID_HELP_LISTDEBUGOUTPUTKEYLETTERS 
-                            "List key letter for debug output in log"
-    ID_SCRIPT_RUNBACKGROUNDSCRIPT 
-                            "Select and start a script to run in the background"
-    ID_SCRIPT_STOPBACKGROUNDSCRIPT "Stop the script running in the background"
-    ID_IMAGESTAGESHIFT_REMOVEISOFFSETS 
-                            "Remove image shift offset calibrations for current mode"
-    ID_CALIBRATION_LISTMAGISOFFSETS "List mag image shift offset distances"
-    ID_TASKS_SETDOSERATEWITHEDM 
-                            "Set dose rate on camera in e/pixel/sec with an electronic dose modulator"
-    ID_WINDOW_MULTICHANNELSTEMDISPLAY 
-                            "Enable and select STEM channels for multi-window display"
-    ID_BEAMSPOT_BEAMSIZE    "Calibrate beam size by measuring it over a range of sizes"
-END
-
-STRINGTABLE
-BEGIN
     IDC_BUT_ACQUIRE_FLATFIELD 
                             "Start acquiring images for computing a new gain reference"
     IDC_BUT_INIT_DETECTOR   "Start initializing the detector to make it ready for use"
@@ -8420,6 +8424,11 @@ BEGIN
     IDC_CHECK_BAD_PIX_INTERP 
                             "Interpolate bad pixel values using neighboring pixels"
     IDC_CHECK_MODULE_INTERP "Interpolate gap between sensor modules"
+END
+
+STRINGTABLE
+BEGIN
+    ID_MISC_NO_TRUE_SIZE    "Select whether to show circles with actual beam size when defining Focus/Trial"
 END
 
 #endif    // English (United States) resources
@@ -8445,8 +8454,7 @@ LANGUAGE 9, 1
 #include "res\SerialEM.rc2"  // non-Microsoft Visual C++ edited resources
 #include "afxres.rc"         // Standard components
 #include "XFolderDialog\XFolderDialog.rc"
-#endif
-
+#endif
 /////////////////////////////////////////////////////////////////////////////
 #endif    // not APSTUDIO_INVOKED
 

@@ -542,6 +542,9 @@ ON_COMMAND(ID_SPECIALIZEDMISC_SETTHRESHOLDFORRIGHT, OnSetThresholdForRightDblCli
 ON_UPDATE_COMMAND_UI(ID_SPECIALIZEDMISC_SETTHRESHOLDFORRIGHT, OnUpdateNoTasks)
 ON_COMMAND(ID_BEAMSPOT_BEAMSIZE, OnBeamspotBeamsize)
 ON_UPDATE_COMMAND_UI(ID_BEAMSPOT_BEAMSIZE, OnUpdateBeamspotBeamSize)
+ON_COMMAND(ID_MISC_NO_TRUE_SIZE, OnMiscNoTrueSize)
+ON_UPDATE_COMMAND_UI(ID_MISC_NO_TRUE_SIZE, OnUpdateMiscNoTrueSize)
+ON_UPDATE_COMMAND_UI(ID_MISCELLANEOUSOPTIONS_REVERSEWHEELZOOMDIRECTION, OnUpdateReverseWheelZoomDirection)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -1028,7 +1031,7 @@ void CMenuTargets::OnReverseContourColors()
 {
   mNavHelper->SetReverseAutocontColors(!mNavHelper->GetReverseAutocontColors());
   if (mWinApp->mNavigator)
-    mWinApp->mMainView->RedrawWindow();
+    mWinApp->mMainView->DrawImage();
 }
 
 void CMenuTargets::OnUpdateReverseContourColors(CCmdUI *pCmdUI)
@@ -3545,6 +3548,11 @@ void CMenuTargets::OnReverseWheelZoomDirection()
   mWinApp->SetReverseWheelZoom(!mWinApp->GetReverseWheelZoom());
 }
 
+void CMenuTargets::OnUpdateReverseWheelZoomDirection(CCmdUI *pCmdUI)
+{
+  pCmdUI->SetCheck(mWinApp->GetReverseWheelZoom());
+}
+
 void CMenuTargets::OnSetThresholdForRightDblClick()
 {
   float thresh = mShiftManager->GetRDCthreshFor2ndShot();
@@ -3557,4 +3565,40 @@ void CMenuTargets::OnSetThresholdForRightDblClick()
 void CMenuTargets::OnHelpListDebugOutputKeyLetters()
 {
   CMacroEditer::ListDebugKeyLetters();
+}
+
+// It is type of beam circles, not "no true size"
+void CMenuTargets::OnMiscNoTrueSize()
+{
+  int ans, which;
+  CString report = "Choose the type of beam circles to draw when defining\n"
+    "the Focus or Trial area in Low Dose mode.\n\nPress:\n"
+    "\"FOV Only\" to show just a solid circle circumscribing the camera field of view\n\n"
+    "\"True Sizes\" to show dashed circles for sizes of Focus/Trial and Record beams";
+  if (mScope->GetUseIllumAreaForC2()) 
+    report += " based on illuminated areas\n\n";
+  else
+    report += " based on sizes estimated from a beam size calibration, when available\n\n";
+  report += "\"Both Sizes\" to show both the solid circle circumscribing the "
+    "Focus/Trial FOV and dashed circles for \"true\" beam sizes";
+  ans = SEMThreeChoiceBox(report, "FOV Only", "True Sizes", "Both Sizes",
+    MB_YESNOCANCEL | MB_ICONQUESTION, B3DABS(mWinApp->GetCircleTypesInLDDefine()));
+  if (ans == IDYES)
+    which = 0;
+  else if (ans == IDNO)
+    which = 1;
+  else
+    which = 2;
+
+  mWinApp->SetCircleTypesInLDDefine(which);
+  if (mWinApp->LowDoseMode() && mWinApp->mLowDoseDlg.m_iDefineArea) {
+    mWinApp->mLowDoseDlg.ManageAxisPosition();
+    mWinApp->mMainView->DrawImage();
+  }
+}
+
+void CMenuTargets::OnUpdateMiscNoTrueSize(CCmdUI *pCmdUI)
+{
+  pCmdUI->Enable(mWinApp->mScope->GetUseIllumAreaForC2() ||
+    mWinApp->mBeamAssessor->GetBeamSizeArray()->GetSize());
 }

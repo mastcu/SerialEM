@@ -52,6 +52,7 @@ public:
   ScaleMat MatrixAndStateForUserPoint(EMimageBuffer *imBuf, StateParams &state, float &xcen, float &ycen);
   bool CanActOnUserPointChange(EMimageBuffer *imBuf, float &xcen, float &ycen);
 	void ManageAxisPosition();
+  void RedrawAndUpdateSepIfDefining(int area);
 	void SnapCameraShiftToAxis(EMimageBuffer *imBuf, float &shiftX, float &shiftY, bool viewImage,
     int camIndex, BOOL &rotateAxis, int &axisAngle);
 	int UsefulImageInA();
@@ -199,11 +200,12 @@ private:
   float mFocusPiezoDelayFac;  // Amount to cut delay by for focus images
   float mTVPiezoDelayFac;     // Amount to cut it by for trial/focus
   BOOL  mTieFocusTrialPos;   // Flag to keep focus/trial positions together
+  bool mDidBeamCircleInfo;   // Flag that message about setting type of circles done
 
 public:
   GetMember(BOOL, TrulyLowDose);
   int DrawAreaOnView(int type, EMimageBuffer *imBuf, StateParams &state, float * cornerX,
-    float * cornerY, float & cenX, float & cenY, float &radius);
+    float * cornerY, float & cenX, float & cenY, float &radius, float &trueRad);
   void AreaAcqCoordToView(int inArea, int binning, int sizeX, int sizeY, ScaleMat aMat,
     ScaleMat vMat, int acqX, int acqY, StateParams &state, float & imX, float & imY);
   void ManageDefines(int area);

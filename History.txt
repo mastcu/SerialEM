@@ -3,6 +3,13 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+2/16/26: Started showing dashed circles with estimated beam size, if
+available, when defining Low Dose Focus/Trial position.
+
+2/16/26: Added script command for storing image shift vectors in an individual
+Navigator item and made Multiple Records able to acquire from item-specific
+locations.
+
 2/13/26: Added property 'SkipFocusRamper' to run dynamic focusing directly
 from SerialEM instead of through FocusRamper.
 

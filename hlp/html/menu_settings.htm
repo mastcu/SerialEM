@@ -42,7 +42,7 @@
         </TR>
         <TR VALIGN="top">
           <TD class="auto-style1"><a href="#hid_settings_discardonexit">Discard on Exit</a></TD>
-          <TD>Prevents autosaving, saving on exit, and offers to save when reading settings</TD>
+          <TD>Prevents autosaving, saving on exit, and offers to save when reading settings.</TD>
         </TR>
         <TR VALIGN="top">
           <TD class="auto-style1"><A HREF="#hid_settings_readdefaults">Read Defaults</A></TD>
@@ -63,59 +63,64 @@
         </TR>        
        <TR VALIGN="top">
           <TD class="auto-style1">&nbsp; <a href="#hid_specializedoptions_closevalvesafterlonginactivity">Turn Off Beam After Long Inactivity</a></TD>
-          <TD>Close valves or turn off filament after a specified period of inactivity</TD>
+          <TD>Close valves or turn off filament after a specified period of inactivity.</TD>
         </TR>
        <TR VALIGN="top">
           <TD class="auto-style1">&nbsp; 
             <a href="#hid_specializedmisc_setthresholdforright">Set Threshold for 
               Right-dbl-click 2nd shot</a></TD>
           <TD>Set threshold fraction of field loss for taking a second shot after a stage 
-            move from double-clickig right mouse button</TD>
+            move from double-clickig right mouse button.</TD>
+        </TR>
+       <TR VALIGN="top">
+          <TD class="auto-style1">&nbsp; <a href="#hid_misc_no_true_size">Set Type of Beam Circles 
+            in LD Define</a></TD></TD>
+          <TD>Choose whether to show estimated beam sizes when defining Focus or Trial Low Dose areas.</TD>
         </TR>
          <TR VALIGN="top">
           <TD class="auto-style1">&nbsp; <a href="#hid_special_disable_dark_trim_in_align">
             Disable Dark Trim in Align</a></TD>
-          <TD>Disable automatic trimming of dark borders in Autoalign in some cases</TD>
+          <TD>Disable automatic trimming of dark borders in Autoalign in some cases.</TD>
         </TR>
         <TR VALIGN="top">
           <TD class="auto-style1">&nbsp;
             <a href="#hid_specialoptions_adjustfocusonprobemodechange">Adjust Focus on Probe Mode Change</a>&nbsp;&nbsp;</TD>
           <TD>Maintain constant focus difference when switching between microprobe and
-            nanoprobe</TD>
+            nanoprobe.</TD>
         </TR>
         <TR VALIGN="top">
           <TD class="auto-style1">&nbsp; <a href="#hid_specialoptions_normalizealllens">Normalize
             All on Mag Change</a></TD>
           <TD>Specify whether to normalize all lenses when changing mag within LM, or on all
-            mag changes</TD>
+            mag changes.</TD>
         </TR>
         <TR VALIGN="top">
           <TD class="auto-style1">&nbsp; <a href="#hid_specialoptions_normalizeviaviewforau">Normalize
             Via View for Autofocus</a>&nbsp;</TD>
-          <TD>In Low Dose mode, go through View mode to normalize before autofocus</TD>
+          <TD>In Low Dose mode, go through View mode to normalize before autofocus.</TD>
         </TR>
        <TR VALIGN="top">
           <TD class="auto-style1">&nbsp; <a href="#hid_specializedoptions_skipblankinginldwithscreenup">Skip Blanking in LD when Screen Up</a></TD>
-          <TD>Do not keep beam blanked when screen is up in Low Dose mode</TD>
+          <TD>Do not keep beam blanked when screen is up in Low Dose mode.</TD>
         </TR>
        <TR VALIGN="top">
           <TD class="auto-style1">&nbsp; <a href="#hid_specializedoptions_keepfocustrialstsameposition">Keep Focus & Trial at Same Position</a></TD>
-          <TD>Make Focus and Trial in Low Dose mode be at same position</TD>
+          <TD>Make Focus and Trial in Low Dose mode be at same position.</TD>
         </TR>
        <TR VALIGN="top">
           <TD class="auto-style1">&nbsp; <a href="#hid_special_skip_beam_shift_in_ts">Skip Beam Shift
             in TS</a>&nbsp;</TD>
-          <TD>Skip beam shift when autoaligning with image shift in tilt series</TD>
+          <TD>Skip beam shift when autoaligning with image shift in tilt series.</TD>
         </TR>
         <TR VALIGN="top">
           <TD class="auto-style1">&nbsp; <a href="#hid_special_piezo_for_ld_axis_shift">Piezo for LD
             Axis Shift</a>&nbsp;</TD>
-          <TD>Use piezo-driven stage movement for on-axis shift between Low Dose areas</TD>
+          <TD>Use piezo-driven stage movement for on-axis shift between Low Dose areas.</TD>
         </TR>
          <TR VALIGN="top">
           <TD class="auto-style1">&nbsp; <a href="#hid_specialoptions_allowcontinuousintasks">Allow
             Continuous in TS</a>&nbsp;</TD>
-          <TD>Permit continuous mode acquisitions to be started during tilt series</TD>
+          <TD>Permit continuous mode acquisitions to be started during tilt series.</TD>
         </TR>
         <TR VALIGN="top">
           <TD class="auto-style1"><A HREF="#hid_tiltseries_setaddress">Set Email Address</A></TD>
@@ -256,6 +261,21 @@
         longer visiable after the shift exceeds the fraction set here, a second image is 
         taken so that you can see the full area.</p>
      <p>
+      <a name="hid_misc_no_true_size"><B>Set Type of Beam Circles 
+            in LD Define</a> (Settings - Specialized &amp; Misc. Options submenu)</B></p>
+      <p>When beam sizes are available either as illuminated areas on a Titan or from a 
+        beam size Use this option to select which kind of beam circles to show on a Low 
+        Dose View image when defining the positions of Focus or Trial areas.&nbsp; A box 
+        will pop up with three choices:</p>
+    <ol>
+      <li>The classic display with a solid circle circumscribing the camera field of 
+        view for the area being defined.</li>
+      <li>Dashed circles representing the estimated beam size for both the area being 
+        defined and the Record area, provided that a beam size is available in the 
+        current conditions.</li>
+      <li>Both the circumscribing circles and the dashed circles representing the &quot;true&quot; beam 
+        sizes.</li>
+    </ol>
       <A NAME="hid_special_disable_dark_trim_in_align"></A><B>Disable Dark Trim in
       Align command (Settings - Specialized &amp; Misc. Options submenu)</B></p>
     <p>

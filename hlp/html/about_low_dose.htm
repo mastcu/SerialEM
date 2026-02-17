@@ -131,7 +131,11 @@
       recorded with &#39;Continuous update&#39; on.&nbsp; (A relative beam position can be set
       for each area with a separate control.) If the option is
       off, you can change these features temporarily, but the stored properties of
-      the area will be reimposed next time a picture is taken of the area.</P>
+      the area will be reimposed next time a picture is taken of the area.&nbsp; An 
+      exception to this is that a change in intensity with the
+      <a href="menu_tasks.htm#hid_process_setintensity">Set Intensity</a> or
+      <a href="menu_tasks.htm#hid_tasks_set_dose_rate">Set Dose Rate</a> commands in 
+      the Tasks menu will change the stored properties of the area.</P>
     <P>If you want to make initial adjustments to the properties of an area with no
       exposure of the specimen at all, then select the area with a 'Go to' button and
       adjust its features.</P>
@@ -142,18 +146,31 @@
       box showing the distance along the tilt axis from the Record area to the area
       being defined, where negative and positive numbers reflect opposite directions
       along the axis. The other display shows essentially a safety factor for
-      spillover of the beam from the area being defined into the Record area; it is
-      the distance between a circle circumscribing the area being defined and the
-      edge of the Record area.</P>
+      spillover of the beam from the area being defined into the Record area.&nbsp; On 
+      a Titan microscope where illuminated area is available, or on other kinds of 
+      scopes where beam size has been calibrated, an estimated beam size is available 
+      for the current intensity setting of the area being defined,&nbsp; and the 
+      distance between a centered circle of the estimated size and the edge of the 
+      Record area can be computed and shown.&nbsp; This is referred to as a &quot;true&quot; 
+      area separation.&nbsp; Otherwise, the only value available is the distance 
+      between a circle circumscribing the area being defined and the edge of the 
+      Record area, referred to as a maximum area separation.</P>
     <P>There are several ways to adjust the position of the area being defined. In
       addition to simply typing in a distance in the text box, the most convenient is
       to take a picture of the View area. The position of the area being defined
       relative to the center of the View will be shown by a green cross, and you can
       click with the left mouse button to select a new position. On a View image, the
-      Record area and the area being defined will also be shown with a box, with a
-      circle circumscribing the area being defined.&nbsp; However, if Focus and Trial 
-      are being kept at the same position, the circle will circumscribe the larger of 
-      their two acquisition areas. They can be kept together either with the option
+      Record area and the area being defined will also be shown with a box.&nbsp; The 
+      beam is represented in this display with either a
+      solid circle circumscribing the area being defined, or dashed circles based on 
+      &quot;true&quot; beam sizes if available, or both kinds of circles. The kind of display 
+      can be selected with the <a href="menu_settings.htm#hid_misc_no_true_size">Set Type of Beam 
+      Circles in LD Define</a> command in the Settings - Specialized and Misc Options 
+      submenu. See the&nbsp; <A HREF="hidd_lowdose.htm">Low Dose control
+        panel</A> help for details on this feature and on how to adjust the intensity 
+      value and see the size change.&nbsp; If the solid circle is being displayed and 
+      Focus and Trial are being kept at the same position, it will circumscribe the 
+      larger of their two acquisition areas. They can be kept together either with the
       <strong>Keep Focus and Trial identical</strong> option in the <A HREF="hidd_lowdose.htm">Low Dose control
         panel</A> or with the specialized option in the Settings menu, <a href="menu_settings.htm#hid_specializedoptions_keepfocustrialstsameposition">Keep Focus & Trial at Same Position</a>.&nbsp; 
       In the latter case, the magnifications of the two areas are taken into account 

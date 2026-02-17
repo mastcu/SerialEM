@@ -450,6 +450,9 @@ public:
   afx_msg void OnSetThresholdForRightDblClick();
   afx_msg void OnBeamspotBeamsize();
   afx_msg void OnUpdateBeamspotBeamSize(CCmdUI *pCmdUI);
+  afx_msg void OnMiscNoTrueSize();
+  afx_msg void OnUpdateMiscNoTrueSize(CCmdUI *pCmdUI);
+  afx_msg void OnUpdateReverseWheelZoomDirection(CCmdUI *pCmdUI);
 };
 
 /////////////////////////////////////////////////////////////////////////////

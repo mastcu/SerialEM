@@ -753,6 +753,7 @@ public:
   GetSetMember(bool, AllowBkgdMacroTime);
   GetMember(BOOL, EnableMultiChanView);
   GetSetMember(int, MaxChannelBuffers);
+  GetSetMember(int, CircleTypesInLDDefine);
   void SetEnableMultiChanView(BOOL inVal);
   int *GetShowChanInMultiView() { return &mShowChanInMultiView[0]; };
   GetMember(bool, ClosingAllMultiChan);
@@ -1106,6 +1107,7 @@ private:
   int mMaxChannelBuffers;       // # of buffers in a channel window
   int mNumChanWindowRows;       // The number of rows and columns of multi-channel display
   int mNumChanWindowCols;
+  int mCircleTypesInLDDefine;   // Whether to draw true or circumscribing beam when defining areas
 
 public:
   void UpdateAllEditers(void);
