@@ -676,11 +676,11 @@ void CScopeStatusDlg::Update(double inCurrent, int inMagInd, double inDefocus,
       objUnits = objAp > (JEOLscope ? 8 : 5);
       condUnits = condAp > (JEOLscope ? 8 : 5) && !objUnits;
       format = (FEIscope && condAp == 1) ? "<->" : "out";
-      if (condAp > 0)
+      if (condAp > 1)
         format.Format("%d", condAp);
       m_strApertures = "C " + format + (condUnits ? " um  O " : "  O ");
       format = (FEIscope && objAp == 1) ? "<->" : "out";
-      if (objAp > 0)
+      if (objAp > 1)
         format.Format("%d", objAp);
       m_strApertures += format + (objUnits ? " um  " : "  ");
       m_statApertures.SetWindowText(m_strApertures);
