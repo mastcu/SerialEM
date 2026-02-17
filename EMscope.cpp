@@ -1834,7 +1834,9 @@ void CEMscope::ScopeUpdate(DWORD dwTime)
     CHECK_TIME(8);
     apertureUpdateCount++;
     if ((mMonitorC2ApertureSize > 0 || mShowApertureStatus > 0) && 
-      mUpdateInterval * apertureUpdateCount > 5000 && !mMovingAperture) {
+      mUpdateInterval * apertureUpdateCount > 5000 && !mMovingAperture &&
+      (!FEIscope || mShowApertureStatus > 1 || mMonitorC2ApertureSize > 1 ||
+        mPluginVersion >= FEI_PLUGIN_SKIP_AP_PANEL)) {
       apertureUpdateCount = 0;
       if (FEIscope && mPlugFuncs->DoingUpdate)
         mPlugFuncs->DoingUpdate(2);
