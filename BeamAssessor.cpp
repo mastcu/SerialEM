@@ -3125,6 +3125,12 @@ void CBeamAssessor::StartBeamSizeCalibration()
   if (AfxMessageBox(mess + "\r\nAre you ready to proceed?", MB_QUESTION) == IDNO)
     return;
 
+  if (mSizeCal.intensity[0] < mSizeCal.crossover &&
+    AfxMessageBox("The intensity is less than the calibrated crossover intensity.\n"
+      "Is this correct, i.e., is the beam really below crossover?\n"
+      "(If not, go redo the crossover calibration.)", MB_QUESTION) == IDNO)
+    return;
+
   // Get size range to do
   if (!KGetOneFloat("The magnification will be reduced to take an image with a larger beam"
     " size", "Enter the factor by which to increase the beam size for the second "
