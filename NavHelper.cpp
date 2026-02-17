@@ -5070,7 +5070,8 @@ void CNavHelper::DeleteArrays(void)
     delete item;
   }
   mItemArray->RemoveAll();
-  mNav->SetNumIStargetItems(0);
+  if (mNav)
+    mNav->SetNumIStargetItems(0);
   for (i = 0; i < mGroupFiles->GetSize(); i++) {
     sched = mGroupFiles->GetAt(i);
     delete sched;
