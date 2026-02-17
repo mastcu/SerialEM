@@ -8483,16 +8483,21 @@ void CNavigatorDlg::OpenAndWriteFile(bool autosave)
       if (sectInd < 0) {
         adocErr++;
       } else {
-        mWinApp->mParamIO->WriteStateToString(stateP, str);
+        mWinApp->mParamIO->WriteStateToString(0, stateP, str);
         sub.Format("%d ", stateP->navID);
         str = sub + str;
         if (AdocSetKeyValue("StateParam", sectInd, "State", (LPCTSTR)str)) {
           adocErr++;
-        } else if (stateP->lowDose) {
-          mWinApp->mParamIO->WriteLowDoseToString(&stateP->ldParams, 0, 0, str);
-          str = "0 " + str;
-          if (AdocSetKeyValue("StateParam", sectInd, "LowDose", (LPCTSTR)str))
+        } else {
+          mWinApp->mParamIO->WriteStateToString(1, stateP, str);
+          if (AdocSetKeyValue("StateParam", sectInd, "State3", (LPCTSTR)("0 " + str))) {
             adocErr++;
+          } else if (stateP->lowDose) {
+            mWinApp->mParamIO->WriteLowDoseToString(&stateP->ldParams, 0, 0, str);
+            str = "0 " + str;
+            if (AdocSetKeyValue("StateParam", sectInd, "LowDose", (LPCTSTR)str))
+              adocErr++;
+          }
         }
       }
     }
@@ -8591,16 +8596,22 @@ void CNavigatorDlg::OpenAndWriteFile(bool autosave)
       if (sectInd) {
         adocErr++;
       } else {
-        mWinApp->mParamIO->WriteStateToString(stateP, str);
+        mWinApp->mParamIO->WriteStateToString(0, stateP, str);
         sub.Format("%d ", stateP->navID);
         str = sub + str;
         if (AdocWriteKeyValue(fp, "State", (LPCTSTR)str)) {
           adocErr++;
-        } else if (stateP->lowDose) {
-          mWinApp->mParamIO->WriteLowDoseToString(&stateP->ldParams, 0, 0, str);
-          str = "0 " + str;
-          if (AdocWriteKeyValue(fp, "LowDose", (LPCTSTR)str))
+        } else {
+          mWinApp->mParamIO->WriteStateToString(1, stateP, str);
+          if (AdocWriteKeyValue(fp, "State3", (LPCTSTR)("0 " + str))) {
             adocErr++;
+
+          } else if (stateP->lowDose) {
+            mWinApp->mParamIO->WriteLowDoseToString(&stateP->ldParams, 0, 0, str);
+            str = "0 " + str;
+            if (AdocWriteKeyValue(fp, "LowDose", (LPCTSTR)str))
+              adocErr++;
+          }
         }
       }
     }
@@ -9073,6 +9084,19 @@ int CNavigatorDlg::LoadNavFile(bool checkAutosave, bool mergeFile, CString *inFi
               if (ind2 > 21)
                 ldp->EDMPercent = (float)vals[21];
             }
+          }
+          if (!retval) {
+            ind2 = 0;
+            ADOC_OPTIONAL(AdocGetDoubleArray("StateParam", ind1, "State3", vals, &ind2,
+              60));
+            if (!retval && ind2 > 4) {
+              state->objectiveAp = B3DNINT(vals[1]);
+              state->condenserAp = B3DNINT(vals[2]);
+              state->JeolC1Ap = B3DNINT(vals[3]);
+              state->flags = B3DNINT(vals[4]);
+            }
+            if (retval > 0)
+              retval = 0;
           }
           if (retval) {
             delete state;

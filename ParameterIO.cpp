@@ -69,7 +69,8 @@
 #define new DEBUG_NEW
 #endif
 
-#define MAX_TOKENS 60
+// Set to 45 2/17/26. DO NOT USE MORE THAN 40 UNTIL BACKWARDS COMPATIBILITY NOT AN ISSUE
+#define MAX_TOKENS 45
 #define FILTER_LIFETIME_MINUTES  60
 #define IS_STAGE_LIFETIME_HOURS 22
 #define PIXEL_LIFETIME_HOURS 24
@@ -1264,8 +1265,22 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
           stateP->JeolC1Ap = itemInt[40];
           stateP->flags = itemInt[41];
         }
-        // ADD NEW ITEMS TO NAV READING
- 
+        // DO NOT ADD ANY ITEMS
+
+      } else if (NAME_IS("StateParams3")) {
+        index = itemInt[1];
+        if (index < 0 || index >= stateArray->GetSize()) {
+          AfxMessageBox("Index out of range in StateParams3 line in settings file "
+            + strFileName + " :\n" + strLine, MB_EXCLAME);
+        } else {
+          stateP = stateArray->GetAt(index);
+          stateP->objectiveAp = itemInt[2];
+          stateP->condenserAp = itemInt[3];
+          stateP->JeolC1Ap = itemInt[4];
+          stateP->flags = itemInt[5];
+          // ADD NEW ITEMS TO NAV READING
+        }
+
       } else if (NAME_IS("StateName")) {
         index = itemInt[1];
         if (index < 0 || index >= stateArray->GetSize()) {
@@ -2343,8 +2358,12 @@ void CParameterIO::WriteSettings(CString strFileName)
     // Save stored states BEFORE low dose params
     for (i = 0; i < stateArray->GetSize(); i++) {
       stateP = stateArray->GetAt(i);
-      WriteStateToString(stateP, oneState);
+      WriteStateToString(0, stateP, oneState);
       oneState = "StateParameters " + oneState + "\n";
+      mFile->WriteString(oneState);
+      WriteStateToString(1, stateP, oneState);
+      macCopy.Format("%d ", i);
+      oneState = "StateParams3 " + macCopy + oneState + "\n";
       mFile->WriteString(oneState);
       if (!stateP->name.IsEmpty()) {
         oneState.Format("StateName %d %s\n", i, (LPCTSTR)stateP->name);
@@ -2655,22 +2674,26 @@ void CParameterIO::WriteLowDoseToString(LowDoseParams *ldp, int ldi, int ldj, CS
 }
 
 // Write state parameters to a string without \n for use here and in Navigator
-void CParameterIO::WriteStateToString(StateParams *stateP, CString &str)
+void CParameterIO::WriteStateToString(int which, StateParams *stateP, CString &str)
 {
-  str.Format("%d %d %d %d %f %d %f %f %d %d %d %d %f %f "
-    "%d %d %d %f %d %d %d %d %d %d %d %d %d %d %d %d %d %f %f %f %f %d %f %d %d %d %d",
-    stateP->lowDose, stateP->camIndex, stateP->magIndex,
-    stateP->spotSize, stateP->intensity, stateP->slitIn ? 1 : 0, stateP->energyLoss,
-    stateP->slitWidth, stateP->zeroLoss ? 1 : 0, stateP->binning, stateP->xFrame,
-    stateP->yFrame, stateP->exposure, stateP->drift, stateP->shuttering,
-    stateP->K2ReadMode, stateP->probeMode, stateP->frameTime, stateP->doseFrac,
-    stateP->saveFrames, stateP->processing, stateP->alignFrames,
-    stateP->useFrameAlign, stateP->faParamSetInd, stateP->readModeView,
-    stateP->readModeFocus, stateP->readModeTrial, stateP->readModePrev,
-    stateP->readModeSrch, stateP->readModeMont, stateP->beamAlpha,
-    stateP->targetDefocus, stateP->ldDefocusOffset, stateP->ldShiftOffsetX,
-    stateP->ldShiftOffsetY, stateP->montMapConSet ? 1 : 0, stateP->EDMPercent,
-    stateP->objectiveAp, stateP->condenserAp, stateP->JeolC1Ap, stateP->flags);
+  if (!which) {
+    str.Format("%d %d %d %d %f %d %f %f %d %d %d %d %f %f "
+      "%d %d %d %f %d %d %d %d %d %d %d %d %d %d %d %d %d %f %f %f %f %d %f",
+      stateP->lowDose, stateP->camIndex, stateP->magIndex,
+      stateP->spotSize, stateP->intensity, stateP->slitIn ? 1 : 0, stateP->energyLoss,
+      stateP->slitWidth, stateP->zeroLoss ? 1 : 0, stateP->binning, stateP->xFrame,
+      stateP->yFrame, stateP->exposure, stateP->drift, stateP->shuttering,
+      stateP->K2ReadMode, stateP->probeMode, stateP->frameTime, stateP->doseFrac,
+      stateP->saveFrames, stateP->processing, stateP->alignFrames,
+      stateP->useFrameAlign, stateP->faParamSetInd, stateP->readModeView,
+      stateP->readModeFocus, stateP->readModeTrial, stateP->readModePrev,
+      stateP->readModeSrch, stateP->readModeMont, stateP->beamAlpha,
+      stateP->targetDefocus, stateP->ldDefocusOffset, stateP->ldShiftOffsetX,
+      stateP->ldShiftOffsetY, stateP->montMapConSet ? 1 : 0, stateP->EDMPercent);
+  } else {
+    str.Format(" %d %d %d %d", stateP->objectiveAp, stateP->condenserAp, stateP->JeolC1Ap,
+      stateP->flags);
+  }
 }
 
 #define HARD_CODED_FLAGS (NAA_FLAG_HAS_SETUP | NAA_FLAG_ALWAYS_HIDE | \
