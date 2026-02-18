@@ -857,6 +857,7 @@ MAC_SAME_NAME_ARG(GetFoundHolePositions, 2, 4, GETFOUNDHOLEPOSITIONS, SS)
 MAC_SAME_NAME_NOARG(ReportBeamSizeFromCalib, 0, 4, REPORTBEAMSIZEFROMCALIB)
 MAC_SAME_NAME_ARG(SetBeamSize, 1, 4, SETBEAMSIZE, D)
 MAC_SAME_NAME_ARG(SetItemImShiftTargets, 5, 4, SETITEMIMSHIFTTARGETS, IIISS)
+MAC_SAME_NAME_ARG(AdjustImShiftTargets, 1, 4, ADJUSTIMSHIFTTARGETS, Ii)
 
 
 // new Python-only commands need to be added to pythonOnlyCmds in ::CMacroProcessor

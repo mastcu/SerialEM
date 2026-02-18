@@ -12224,7 +12224,7 @@ int CMacCmd::SetItemImShiftTargets()
       navItem->mStageY = yvec[cenInd];
       if (navItem->mNumPoints) {
         navItem->mPtX[0] = xvec[cenInd];
-        navItem->mPtX[0] = yvec[cenInd];
+        navItem->mPtY[0] = yvec[cenInd];
       }
     }
 
@@ -12264,6 +12264,20 @@ int CMacCmd::SetItemImShiftTargets()
     navItem->mNote.Format("%d targets", num);
   mNavigator->UpdateListString(mItemInt[1]);
   mWinApp->mMainView->DrawImage();
+  return 0;
+}
+
+// AdjustImShiftTargets
+int CMacCmd::AdjustImShiftTargets()
+{
+  MultiShotParams *params = mNavHelper->GetMultiShotParams();
+  CMapDrawItem *navItem = CurrentOrIndexedNavItem(mItemInt[1], mStrLine);
+  if (!navItem)
+    return 1;
+  if (mNavHelper->TransformImShiftTargets(params, navItem, mStrCopy))
+    ABORT_LINE(mStrCopy + " for line:\n\n");
+  if (!mItemInt[2])
+    mWinApp->mMainView->DrawImage();
   return 0;
 }
 

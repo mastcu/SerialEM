@@ -747,6 +747,7 @@ public:
   int RotateMultiShotVectors(MultiShotParams *params, float angle, int customOrHex);
   int AdjustMultiShotVectors(MultiShotParams *params, int customOrHex, bool statusOnly, CString &mess);
   void TransformMultiShotVectors(MultiShotParams *params, int customOrHex, ScaleMat &aProd);
+  int TransformImShiftTargets(MultiShotParams *params, CMapDrawItem *item, CString &mess);
   int XformISVecsWithSpecOrStage(float *xVecIn, float *yVecIn, int numVec, ScaleMat mat, 
     bool stage, int magInd, int camera, float *xVecOut, float *yVecOut);
   void AssignNavItemHoleVectors(CMapDrawItem * item, MultiShotParams *msParams = NULL);

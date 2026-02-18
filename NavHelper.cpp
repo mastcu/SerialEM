@@ -6694,6 +6694,32 @@ void CNavHelper::TransformMultiShotVectors(MultiShotParams *params, int customOr
   }
 }
 
+// Apply the adjusting transform in the given multishot params to IS targets in the item
+int CNavHelper::TransformImShiftTargets(MultiShotParams *params, CMapDrawItem *item, 
+  CString &mess)
+{
+  int ind, camera = mWinApp->GetCurrentCamera();
+  float xtmp, ytmp;
+  if (!item->mNumIStargets) {
+    mess = "There are no IS targets stored in the Navigator item";
+    return 1;
+  }
+  if (item->mMagOfIStargets != params->xformFromMag) {
+    mess.Format("The IS targets are currently defined at %dx and the adjustment at %dx",
+      MagForCamera(camera, item->mMagOfIStargets),
+      MagForCamera(camera, params->xformFromMag));
+      return 1;
+  }
+  for (ind = 0; ind < item->mNumIStargets; ind++) {
+    ApplyScaleMatrix(params->adjustingXform, item->mIStargetsXY[2 * ind], 
+      item->mIStargetsXY[2 * ind + 1], xtmp, ytmp);
+    item->mIStargetsXY[2 * ind] = xtmp;
+    item->mIStargetsXY[2 * ind + 1] = ytmp;
+  }
+  item->mMagOfIStargets = params->xformToMag;
+  return 0;
+}
+
 // Transforms image shift vectors given a transform defined in specimen or stage space
 // at the given mag, with optional camera specification too.  return 1 if no xform
 int CNavHelper::XformISVecsWithSpecOrStage(float *xVecIn, float *yVecIn, int numVec,

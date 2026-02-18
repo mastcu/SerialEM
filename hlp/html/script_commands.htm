@@ -5485,6 +5485,15 @@
           </TD>
         </TR>
         <TR>
+          <TD class="scriptcommand">AdjustImShiftTargets #I [#D]</TD>
+          <TD>Uses a pre-existing transformation for adjusting hole vectors to adjust the image shift targets
+            stored in the Navigator item specified by <b>#I</b>
+            (positive for table index, 0 for current or acquired item, or negative for index from
+            end).  Enter a non-zero value for the optional <b>#D</b> to suppress redisplaying the image, in case
+             you are doing this command many times in a loop.&nbsp; The magnification at which the IS targets
+             apply must match the starting magnification of the adjusting transformation.&nbsp; Command added in 4.3, 17-Feb-26</TD>
+        </TR>
+        <TR>
           <TD class="scriptcommand">SetNavItemUserValue #I #V [text]</TD>
           <TD>Sets an arbitrary value for a Navigator item specified by <b>#I</b>
             (positive for table index, 0 for current or acquired item, or negative for index from
