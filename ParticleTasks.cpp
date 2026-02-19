@@ -54,6 +54,7 @@ CParticleTasks::CParticleTasks(void)
   mMSLastHoleStageX = EXTRA_NO_VALUE;
   mMSLastHoleISX = mMSLastHoleISY = 0.;
   mMSinHoleStartAngle = -900.;
+  mMSinHoleOnAxisMinTilt = 20.f;
   mMSNumSepFiles = -1;
   mMSHolePatternType = 2;
   mNextMSUseNavItem = -1;
@@ -431,17 +432,10 @@ int CParticleTasks::StartMultiShot(int numPeripheral, int doCenter, float spokeR
     }
   }
 
-
   // Set up axis of peripheral shots along tilt axis if tilted enough, otherwise along
-  // short axis of camera
-  mPeripheralRotation = 0.;
-  if (fabs(mScope->GetTiltAngle()) > 20. || mMSinHoleStartAngle > 500.)
-    mPeripheralRotation = (float)mShiftManager->GetImageRotation(
-      mWinApp->GetCurrentCamera(), mMagIndex);
-  else if (fabs(mMSinHoleStartAngle) < 500.)
-    mPeripheralRotation = mMSinHoleStartAngle;
-  else if (camParam->sizeY < camParam->sizeX)
-    mPeripheralRotation = 90.f;
+  // short axis of camera unless specified
+  mPeripheralRotation = GetPeripheralRotation(mWinApp->GetCurrentCamera(), mMagIndex,
+    mScope->GetTiltAngle());
 
   mActPostExposure = mWinApp->ActPostExposure() && !mMSTestRun;
   mLastISX = mBaseISX;
@@ -1172,6 +1166,22 @@ bool CParticleTasks::CurrentHoleAndPosition(CString &strCurPos)
     strCurPos.Format("%d-%d", curHole, curPos);
   }
   return true;
+}
+
+// Return the rotation for the first peripheral shot of multiple shots in a hole
+// Set up axis of peripheral shots along tilt axis if tilted enough, otherwise along
+// short axis of camera unless specified
+float CParticleTasks::GetPeripheralRotation(int camera, int magInd, double tiltAngle)
+{
+  float rotation = 0.;
+  CameraParameters *camParam = mWinApp->GetCamParams() + camera;
+  if (fabs(tiltAngle) > mMSinHoleOnAxisMinTilt || mMSinHoleStartAngle > 500.)
+    rotation = (float)mShiftManager->GetImageRotation(camera, magInd);
+  else if (fabs(mMSinHoleStartAngle) < 500.)
+    rotation = mMSinHoleStartAngle;
+  else if (camParam->sizeY < camParam->sizeX)
+    rotation = 90.f;
+  return rotation;
 }
 
 // Open a file for each multishot position

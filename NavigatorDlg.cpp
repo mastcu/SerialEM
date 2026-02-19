@@ -4071,10 +4071,9 @@ MapItemArray *CNavigatorDlg::GetMapDrawItems(
             // Multishot positions in hole, with absolute positions
             if (msParams->inHoleOrMultiHole & MULTI_IN_HOLE) {
               rotation = 0.;
-              if (imBuf->GetTiltAngle(tiltAngle) && fabs((double)tiltAngle) > 20.)
-                rotation = (float)mShiftManager->GetImageRotation(camera, magInd);
-              else if (camParam->sizeY < camParam->sizeX)
-                rotation = 90.f;
+              if (imBuf->GetTiltAngle(tiltAngle))
+                rotation = mWinApp->mParticleTasks->GetPeripheralRotation(camera, magInd,
+                  tiltAngle);
               for (ring = 0; ring < (msParams->doSecondRing ? 2 : 1); ring++) {
                 inHoleRadius = msParams->spokeRad[ring] / pixel;
                 for (ind = 0; ind < msParams->numShots[ring]; ind++) {

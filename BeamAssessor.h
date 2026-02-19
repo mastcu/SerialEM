@@ -281,6 +281,8 @@ class CBeamAssessor
   int mLowerMagForSizeCal;   // Mag index of second step down
   float mSizeRangeForCal;    // User's desired range in size
   float mLastSizeTarget;     // Target size to be reached after mag/intensity change
+  double mStartingBeamShiftX;  // Beam shift at start of size calibration
+  double mStartingBeamShiftY;
 
 public:
   void CalibrateCrossover(void);

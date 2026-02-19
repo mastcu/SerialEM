@@ -4328,9 +4328,16 @@
           <TD>MultiInHoleStartAngle</TD>
           <TD>Angle at which to start the first peripheral image taken by the Multiple Records
             routine when doing points within a hole.&nbsp; The default is to set this angle to
-            the short axis of the camera unless tilted to 20 degrees or above, in which case it
+            the short axis of the camera unless tilted to 20 degrees or above (or the angle specified in
+            'MultiInHoleOnAxisMinTilt'), in which case it
             sets the angle along the tilt axis.&nbsp; Enter a value greater than 500 to have it along the tilt
             axis at any tilt angle, or the actual angle desired, or a value less than -500 to restore the default.
+          </TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>MultiInHoleOnAxisMinTilt</TD>
+          <TD>Set to minimum tilt angle above which it will always set the angle for the first
+             peripheral image within a hole along the tilt axis; the default is 20.
           </TD>
         </TR>
         <TR VALIGN="top">

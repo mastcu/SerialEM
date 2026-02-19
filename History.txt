@@ -5,6 +5,12 @@ significance, for the stable release version
 ============================================================================
 2/19/26: Fixed saving of JPEG quality from snapshot dialog (In 4.2).
 
+2/19/26: Fixed intensity value saved in the beam size calibration if it is
+stopped and resumed on the final mag step.
+
+2/19/26: Added property 'MultiInHoleOnAxisMinTilt' to specify angle above
+which multishot in a hole will put first peripheral shot along the tilt axis.
+
 2/17/26: Added script command for adjusting image shifts stored in a Navigator
 item with a hole vector adjusting transformation.
 
