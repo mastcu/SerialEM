@@ -3105,8 +3105,6 @@ void CBeamAssessor::StartBeamSizeCalibration()
   // Get settings and test conditions
   mSizeCal.spotSize = mScope->GetSpotSize();
   mSizeCal.intensity[0] = mScope->GetIntensity();
-  mSizeCal.intensity[1] = 0.;
-  mSizeCal.intensity[2] = 0.;
   mSizeCal.crossover = mScope->GetCrossover(mSizeCal.spotSize);
   mSizeCal.probeOrAlpha = -999;
   mWinApp->mMultiTSTasks->GetProbeOrAlpha(mSizeCal.probeOrAlpha);
@@ -3181,7 +3179,6 @@ void CBeamAssessor::BeamSizeCalNextTask()
   minSize = B3DMIN(nx, ny);
   diamPix = 2.f * (float)binning * radius;
   pixel = mShiftManager->GetPixelSize(imBuf);
-  SEMTrace('1', "top %d  %f %f %f", mBeamSizeCalStep, mSizeCal.intensity[0], mSizeCal.intensity[1], mSizeCal.intensity[2]);
   if (mBeamSizeCalStep % 2 == 0) {
 
     // After normalization and a shot, center the beam, then see if it is too small or
@@ -3206,7 +3203,6 @@ void CBeamAssessor::BeamSizeCalNextTask()
         target = B3DMIN(mLastSizeTarget, (float)(0.9 * minSize * pixel));
       mSizeCal.intensity[calInd] = slope * target + intcp;
       B3DCLAMP(mSizeCal.intensity[calInd], 0.02, 0.98);
-      SEMTrace('1', "clamp %d  %f %f %f", mBeamSizeCalStep, mSizeCal.intensity[0], mSizeCal.intensity[1], mSizeCal.intensity[2]);
 
       // Set intensity and normalize again
       mScope->SetIntensity(mSizeCal.intensity[calInd]);
@@ -3238,7 +3234,6 @@ void CBeamAssessor::BeamSizeCalNextTask()
     }
 
     if (mBeamSizeCalStep < 4) {
-      SEMTrace('1', "targ start %d  %f %f %f", mBeamSizeCalStep, mSizeCal.intensity[0], mSizeCal.intensity[1], mSizeCal.intensity[2]);
 
       // Compute target size for next step
       if (mBeamSizeCalStep < 2) {
@@ -3284,13 +3279,11 @@ void CBeamAssessor::BeamSizeCalNextTask()
       mScope->SetMagIndex(magInd);
       mLowerMagForSizeCal = magInd;
       mScope->SetIntensity(mSizeCal.intensity[calInd + 1]);
-      SEMTrace('1', "targ set %d  %f %f %f", mBeamSizeCalStep, mSizeCal.intensity[0], mSizeCal.intensity[1], mSizeCal.intensity[2]);
       NormalizeForSizeCal(1);
 
     } else {
 
       // Finish up: Get all-important aperture
-      SEMTrace('1', "finish A %d  %f %f %f", mBeamSizeCalStep, mSizeCal.intensity[0], mSizeCal.intensity[1], mSizeCal.intensity[2]);
       mSizeCal.measuredAperture = RequestApertureSize();
       if (mScope->GetUseTwoJeolCondAp()) {
         c1ap = mScope->GetApertureSize(JEOL_C1_APERTURE, &str);
@@ -3318,7 +3311,6 @@ void CBeamAssessor::BeamSizeCalNextTask()
       } else {
         mBeamSizeArray.Add(mSizeCal);
       }
-      SEMTrace('1', "stored %d  %f %f %f", mBeamSizeCalStep, mSizeCal.intensity[0], mSizeCal.intensity[1], mSizeCal.intensity[2]);
       mLowerMagForSizeCal = 0;
       StopBeamSizeCal();
       mWinApp->SetCalibrationsNotSaved(true);
