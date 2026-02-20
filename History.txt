@@ -3,6 +3,9 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+2/19/26: Stopped continuous view in DM if it is active before acquiring; this
+may work right away or require retrying the acquisition (In 4.2).
+
 2/19/26: Fixed saving of JPEG quality from snapshot dialog (In 4.2).
 
 2/19/26: Fixed intensity value saved in the beam size calibration if it is

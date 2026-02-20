@@ -89,7 +89,8 @@ static char *SEMCCDmessages[] =
  "DM returned a NULL pointer for an image or frame",
 "The call to SetupFileSaving specified making tilt sums or using dynamic threshold but"
 " included no tilt angles",
-"The continuous View is active in DM and must be stopped to take an image for SerialEM"
+"The continuous View still appears to be active in DM after calls to stop it; just try"
+" to acquire again - it will probably work."
 };
 
 static char *noDesc = "No error description available";
