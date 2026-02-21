@@ -142,8 +142,11 @@ public:
   int mSuperMontY;
   float *mGridMapXform;   // Full transform from reload, if used on items (new/delete)
   signed char mNumXholes, mNumYholes;  // Defined array size for multi-hole acquire
-  short mNumSkipHoles;            // Number of holes to skip
   unsigned char *mSkipHolePos;    // list of x,y indexes of holes to skip (new/delete)
+  short mNumSkipHoles;            // Number of holes to skip
+  short mNumIStargets;    // Number of image shift targets
+  float *mIStargetsXY;    // Array of X/Y values
+  int mMagOfIStargets;    // Magnification for IS values
   float mXHoleISSpacing[3]; // IS vectors from hole finding, valid at map's mag
   float mYHoleISSpacing[3];
   float mFoundHoleSize;    //Hole diameter obtained from hole finder

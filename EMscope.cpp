@@ -49,8 +49,8 @@
 
 // Scope plugin version that is good enough if there are no FEI cameras, and if there
 // are cameras.  This allows odd features to be added without harrassing other users
-#define FEISCOPE_NOCAM_VERSION 115
-#define FEISCOPE_CAM_VERSION   117
+#define FEISCOPE_NOCAM_VERSION 119
+#define FEISCOPE_CAM_VERSION   119
 
 // Global variables for scope identity
 bool JEOLscope = false;
@@ -564,6 +564,7 @@ CEMscope::CEMscope()
   mUseDetectorNameIfUtapi = false;
   mWarnedNeutralISoff = false;
   mUseAperturesInStates = -1;
+  mLastCondenserAp = mLastObjectiveAp = mLastJeolC1Ap = -1;
   mAdvancedScriptVersion = 0;
   mPluginVersion = 0;
   mPlugFuncs = NULL;
@@ -945,15 +946,21 @@ int CEMscope::Initialize()
     mMonitorC2ApertureSize = 0;
   else if (mMonitorC2ApertureSize < 0)
     mMonitorC2ApertureSize = 1;       // Default changed back to 1, 6/4/25
-  if (mMonitorC2ApertureSize > 1 || mShowApertureStatus > 0 ||mUseAperturesInStates > 0) {
+  if (mMonitorC2ApertureSize > 0 || mShowApertureStatus > 0 ||mUseAperturesInStates > 0) {
     try {
       if (mSimulationMode >= 0) {
         mLastCondenserAp = FindApertureSizeFromIndex(mSingleCondenserAp,
           mPlugFuncs->GetApertureSize(mSingleCondenserAp), true);
+        if (mUseTwoJeolCondAp)
+          mLastJeolC1Ap = FindApertureSizeFromIndex(JEOL_C1_APERTURE,
+            mPlugFuncs->GetApertureSize(JEOL_C1_APERTURE), true);
         if (mShowApertureStatus > 0) {
           mLastObjectiveAp = FindApertureSizeFromIndex(OBJECTIVE_APERTURE,
             mPlugFuncs->GetApertureSize(OBJECTIVE_APERTURE), true);
         }
+        if (mMonitorC2ApertureSize > 0)
+          mWinApp->mBeamAssessor->ScaleIntensitiesIfApChanged(mLastCondenserAp, true);
+
       }
       if (mUseAperturesInStates > 0)
         SEMAppendToLog("Aperture size will be used in imaging and mapping states");
@@ -1826,31 +1833,42 @@ void CEMscope::ScopeUpdate(DWORD dwTime)
     checkpoint = "vacuum";
     CHECK_TIME(8);
     apertureUpdateCount++;
-    if ((mMonitorC2ApertureSize > 1 || mShowApertureStatus > 1) && 
-      mUpdateInterval * apertureUpdateCount > 5000 && !mMovingAperture) {
+    if ((mMonitorC2ApertureSize > 0 || mShowApertureStatus > 0) && 
+      mUpdateInterval * apertureUpdateCount > 5000 && !mMovingAperture &&
+      (!FEIscope || mShowApertureStatus > 1 || mMonitorC2ApertureSize > 1 ||
+        mPluginVersion >= FEI_PLUGIN_SKIP_AP_PANEL)) {
       apertureUpdateCount = 0;
+      if (FEIscope && mPlugFuncs->DoingUpdate)
+        mPlugFuncs->DoingUpdate(2);
       ScopeMutexAcquire("ScopeUpdate", true);
       try {
         if (mSimulationMode < 0)
           apSize = sSimApertureSize[mSingleCondenserAp];
         else
           apSize = mPlugFuncs->GetApertureSize(mSingleCondenserAp);
-        if (mMonitorC2ApertureSize > 1)
-          mWinApp->mBeamAssessor->ScaleIntensitiesIfApChanged(apSize, true);
-        if (mShowApertureStatus > 1) {
-          mLastCondenserAp = FindApertureSizeFromIndex(mSingleCondenserAp, apSize, true);
+        apSize = FindApertureSizeFromIndex(mSingleCondenserAp, apSize, true);
+        if (apSize >= 0) {
+          if (mMonitorC2ApertureSize > 0)
+            mWinApp->mBeamAssessor->ScaleIntensitiesIfApChanged(apSize, true);
+          else
+            mWinApp->mBeamAssessor->SetCurrentAperture(apSize);
+        }
+        if (mShowApertureStatus > 0 && apSize >= 0) {
+          mLastCondenserAp = apSize;
           if (mSimulationMode < 0)
             apSize = sSimApertureSize[OBJECTIVE_APERTURE];
           else
             apSize = mPlugFuncs->GetApertureSize(OBJECTIVE_APERTURE);
-          mLastObjectiveAp = FindApertureSizeFromIndex(OBJECTIVE_APERTURE,
-            apSize, true);
+          if (apSize >= 0)
+            mLastObjectiveAp = FindApertureSizeFromIndex(OBJECTIVE_APERTURE,
+              apSize, true);
         }
         numApertureFailures = 0;
       }
       catch (_com_error E) {
         numApertureFailures++;
-        if (numApertureFailures > 4) {
+        if (numApertureFailures > 4 && 
+          (mMonitorC2ApertureSize > 1 || mShowApertureStatus > 1)) {
           mMonitorC2ApertureSize = 0;
           PrintfToLog("WARNING: Getting condenser%s aperture size has failed 5 times in a "
             "row;\r\n   it will no longer be monitored", mShowApertureStatus > 1 ?
@@ -7429,7 +7447,7 @@ BOOL CEMscope::GetCartridgeInfo(int index, JeolCartridgeData &jcd)
     if (index)
       jcd.name = mPlugFuncs->GetCartridgeInfo(index, &jcd.id, &jcd.station, &jcd.slot,
         &jcd.rotation, &jcd.type);
-    if (!jcd.name.IsEmpty())
+    if (jcd.name)
       retval = true;
   }
   catch (_com_error E) {
@@ -7963,11 +7981,9 @@ int CEMscope::GetApertureSize(int kind, CString *errStr)
         *errStr = mess;
       else
         SEMMessageBox(mess);
+    } else {
+      RecordApertureValue(kind, result);
     }
-    if (kind == OBJECTIVE_APERTURE)
-      mLastObjectiveAp = FindApertureSizeFromIndex(OBJECTIVE_APERTURE, result, true);
-    if (kind == mSingleCondenserAp)
-      mLastCondenserAp = FindApertureSizeFromIndex(mSingleCondenserAp, result, true);
   }
   catch (_com_error E) {
     if (FEIscope && mPlugFuncs->GetLastErrorString)
@@ -7993,6 +8009,9 @@ bool CEMscope::SetApertureSize(int kind, int size, bool synchronous)
       mLastObjectiveAp = FindApertureSizeFromIndex(OBJECTIVE_APERTURE, size, true);
     if (kind == mSingleCondenserAp)
       mLastCondenserAp = FindApertureSizeFromIndex(mSingleCondenserAp, size, true);
+    if (mUseTwoJeolCondAp)
+      mLastJeolC1Ap = FindApertureSizeFromIndex(JEOL_C1_APERTURE, size, true);
+
     return true;
   }
   mApertureTD.actionFlags = APERTURE_SET_SIZE;
@@ -8144,7 +8163,7 @@ int CEMscope::FindApertureIndexFromSize(int apInd, int size, CString &errStr)
   int index = size;
   if (size > 0 && JEOLscope) {
     index = FindApertureIndexFromSize(apInd, size);
-    if (index <= 0 && size <= 4)
+    if (index <= 0 && size <= 8)
       index = size;
     else if (!index) {
       errStr.Format("Size %d is not in the list from the AperturesSizes property for "
@@ -8233,14 +8252,7 @@ int CEMscope::ApertureBusy()
   if (retval <= 0)
     mCamera->SetSuspendFilterUpdates(false);
   if (!retval) {
-    if (mMonitorC2ApertureSize > 0 && mApertureTD.apIndex == 1)
-      mWinApp->mBeamAssessor->ScaleIntensitiesIfApChanged(mApertureTD.sizeOrIndex, true);
-    if (mApertureTD.apIndex == OBJECTIVE_APERTURE)
-      mLastObjectiveAp = FindApertureSizeFromIndex(OBJECTIVE_APERTURE,
-        mApertureTD.sizeOrIndex, true);
-    if (mApertureTD.apIndex == mSingleCondenserAp)
-      mLastCondenserAp = FindApertureSizeFromIndex(mSingleCondenserAp,
-        mApertureTD.sizeOrIndex, true);
+    RecordApertureValue(mApertureTD.apIndex, mApertureTD.sizeOrIndex);
   }
   return retval;
 }
@@ -8261,6 +8273,24 @@ void CEMscope::ApertureCleanup(int error)
   mWinApp->ErrorOccurred(error);
   mMovingAperture = false;
   mCamera->SetSuspendFilterUpdates(false);
+}
+
+// Set last value of condensor or objective aperture if its value is now known
+void CEMscope::RecordApertureValue(int apIndex, int sizeOrIndex)
+{
+  if (mMonitorC2ApertureSize > 0 && apIndex == 1)
+    mWinApp->mBeamAssessor->ScaleIntensitiesIfApChanged(sizeOrIndex, true);
+  if (apIndex == OBJECTIVE_APERTURE)
+    mLastObjectiveAp = FindApertureSizeFromIndex(OBJECTIVE_APERTURE,
+      sizeOrIndex, true);
+  if (apIndex == mSingleCondenserAp) {
+    mLastCondenserAp = FindApertureSizeFromIndex(mSingleCondenserAp,
+      sizeOrIndex, true);
+    mWinApp->mBeamAssessor->SetCurrentAperture(mLastCondenserAp);
+  }
+  if (mUseTwoJeolCondAp && apIndex == JEOL_C1_APERTURE)
+    mLastJeolC1Ap = FindApertureSizeFromIndex(JEOL_C1_APERTURE,
+      sizeOrIndex, true);
 }
 
 // The procedure for aperture or phase plate movement
@@ -10715,7 +10745,7 @@ UINT CEMscope::LongOperationProc(LPVOID pParam)
               try {
                 name = mPlugFuncs->GetCartridgeInfo(jnd, &jcData.id, &station, &slot,
                   &rotation, &cartType);
-                if (name && name[0] != 0x00 && jcData.id > 0) {
+                if (name && jcData.id > 0) {
                   jcData.station = station;
                   jcData.slot = slot;
                   jcData.rotation = rotation;
@@ -11079,6 +11109,8 @@ BOOL CEMscope::RunSynchronousThread(int action, int newIndex, int curIndex,
     mWinApp->UpdateBufferWindows();
     mWinApp->SetStatusText(SIMPLE_PANE, "");
   }
+  if (mSynchroTD.actionType == SYNCHRO_DO_APERTURE)
+    RecordApertureValue(mApertureTD.apIndex, mApertureTD.sizeOrIndex);
 
   // Get mutex back if needed.  Return TRUE on success like other routines
   if (routine)

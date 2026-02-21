@@ -3744,16 +3744,16 @@ void CNavHelper::MakeStateOutputLine(StateParams *state, CString &mess)
     mess2.Format("  EDM %.1f%%", EDM);
 
   // Write basic line
-  mess.Format("%s  cam %d  %s  spot %d%s  %s %.2f%s%s", ldStr, 
+  mess.Format("%s  cam %d  %s  spot %d%s  %s %.2f%s", ldStr, 
     active, UtilFormattedMag(mag, 2), spot, probeOrAlpha, mScope->GetC2Name(), 
     mScope->GetC2Percent(spot, intensity, probe),
-    mScope->GetC2Units(), probeOrAlpha, (LPCTSTR)mess2, (LPCTSTR)slit);
+    mScope->GetC2Units(), (LPCTSTR)mess2, (LPCTSTR)slit);
 
   // Add any apertures
   FormatApertureString(state, mess2, false);
   if (!mess2.IsEmpty())
     mess += "  " + mess2 + ((state->flags & STATEFLAG_SET_APERTURES) ?
-      " set" : " not set");
+      " (set)" : " (not set)");
 
   // Add focus position
   if (state->lowDose && state->focusAxisPos > EXTRA_VALUE_TEST) {
@@ -5073,6 +5073,8 @@ void CNavHelper::DeleteArrays(void)
     delete item;
   }
   mItemArray->RemoveAll();
+  if (mNav)
+    mNav->SetNumIStargetItems(0);
   for (i = 0; i < mGroupFiles->GetSize(); i++) {
     sched = mGroupFiles->GetAt(i);
     delete sched;
@@ -6543,7 +6545,9 @@ void CNavHelper::OpenMultishotDlg(void)
     return;
   }
   mMultiShotDlg = new CMultiShotDlg();
-  mMultiShotDlg->mHasIlluminatedArea = mScope->GetUseIllumAreaForC2();
+  mMultiShotDlg->mHasIlluminatedArea = mScope->GetUseIllumAreaForC2() ? 1 : 0;
+  if (mWinApp->mBeamAssessor->GetBeamSizeArray()->GetSize() > 0)
+    mMultiShotDlg->mHasIlluminatedArea = -1;
   mMultiShotDlg->mCanReturnEarly = false;
   for (int ind = 0; ind < mWinApp->GetActiveCamListSize(); ind++)
     if (mCamParams[activeList[ind]].K2Type)
@@ -6691,6 +6695,32 @@ void CNavHelper::TransformMultiShotVectors(MultiShotParams *params, int customOr
       ySpacing[ind] = transISY;
     }
   }
+}
+
+// Apply the adjusting transform in the given multishot params to IS targets in the item
+int CNavHelper::TransformImShiftTargets(MultiShotParams *params, CMapDrawItem *item, 
+  CString &mess)
+{
+  int ind, camera = mWinApp->GetCurrentCamera();
+  float xtmp, ytmp;
+  if (!item->mNumIStargets) {
+    mess = "There are no IS targets stored in the Navigator item";
+    return 1;
+  }
+  if (item->mMagOfIStargets != params->xformFromMag) {
+    mess.Format("The IS targets are currently defined at %dx and the adjustment at %dx",
+      MagForCamera(camera, item->mMagOfIStargets),
+      MagForCamera(camera, params->xformFromMag));
+      return 1;
+  }
+  for (ind = 0; ind < item->mNumIStargets; ind++) {
+    ApplyScaleMatrix(params->adjustingXform, item->mIStargetsXY[2 * ind], 
+      item->mIStargetsXY[2 * ind + 1], xtmp, ytmp);
+    item->mIStargetsXY[2 * ind] = xtmp;
+    item->mIStargetsXY[2 * ind + 1] = ytmp;
+  }
+  item->mMagOfIStargets = params->xformToMag;
+  return 0;
 }
 
 // Transforms image shift vectors given a transform defined in specimen or stage space

@@ -58,6 +58,7 @@ public:
   GetSetMember(BOOL, ZbyGUseViewInLD);
   GetSetMember(int, ZbyGViewSubarea);
   GetSetMember(float, MSinHoleStartAngle);
+  GetSetMember(float, MSinHoleOnAxisMinTilt);
   GetSetMember(int, MSHolePatternType);
   GetMember(int, ZBGMeasuringFocus);
   GetMember(bool, DVDoingDewarVac);
@@ -65,6 +66,7 @@ public:
   GetMember(bool, MSLastFailed);
   GetSetMember(int, MSMacroToRun);
   GetSetMember(BOOL, MSRunMacro);
+  GetSetMember(BOOL, MSDropPlusFromName);
   GetMember(BOOL, MSRunningMacro);
   FloatVec *GetZBGFocusScalings() { return &mZBGFocusScalings; };
   SetMember(MultiShotParams *, NextMSParams);
@@ -118,6 +120,7 @@ private:
   MultiShotParams *mMSParams;      // Pointer to params from NavHelper
   MultiShotParams *mNextMSParams;  // Temporary pointer to params to use for next run
   bool mMSsaveToMontage;           // Flag to save through montage savePiece
+  BOOL mMSDropPlusFromName;        // Flag to drop + character from hole name if UTAPI
   int mMSTestRun;
   int mMagIndex;                   // Mag index for the run
   int mSavedAlignFlag;
@@ -131,6 +134,7 @@ private:
   int mMSDefocusIndex;             // Index of focus to set
   bool mMSLastFailed;              // Flag if last one did not run to completion
   float mMSinHoleStartAngle;       // Value controlling peripheral rotation
+  float mMSinHoleOnAxisMinTilt;    // Minimum tilt for it to start rotation on tilt axis
   int mMSNumSepFiles;              // Number of separate files: -1 none, 0 define them
   int mMSFirstSepFile;             // Number of first separate file when created
   int mMSHolePatternType;          // 0 for zigzag, 1 for raster, 2 for spiral
@@ -243,7 +247,8 @@ public:
   void MultiShotCleanup(int error);
   bool GetNextShotAndHole(int &nextShot, int &nextHole);
   int GetHolePositions(FloatVec & delIsX, FloatVec & delISY, IntVec &posIndex, int magInd,
-    int camera, int numXholes, int numYholes, float tiltAngle, bool startingMulti = false);
+    int camera, int numXholes, int numYholes, float tiltAngle, CMapDrawItem *item = NULL,
+    bool startingMulti = false);
   void AddHolePosition(int ix, int iy, std::vector<double> &fromISX, std::vector<double> &fromISY,
     double xCenISX, double yCenISX, double xCenISY, double ycCenISY, IntVec &posIndex);
   void MakeSpiralPattern(int numX, int numY, IntVec &order);
@@ -253,6 +258,7 @@ public:
   bool ItemIsEmptyMultishot(CMapDrawItem *item);
   int MultiShotBusy(void);
   bool CurrentHoleAndPosition(CString &strCurPos);
+  float GetPeripheralRotation(int camera, int magInd, double tiltAngle);
   int OpenSeparateMultiFiles(CString &basename);
   void CloseSeparateMultiFiles();
   int WaitForDrift(DriftWaitParams &param, bool useImageInA,

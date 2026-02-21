@@ -287,6 +287,7 @@ protected:
   std::set<std::string> mReservedWords;
   std::map<std::string, int> mCustomTimeMap;
   int mReadOnlyStart[MAX_TOT_MACROS];
+  unsigned int mNameHash[MAX_MACROS];
 
   CString *mMacros;
   CmdItem *mCmdList;
@@ -591,16 +592,6 @@ public:
   afx_msg void OnMacroVerbose();
   afx_msg void OnUpdateMacroVerbose(CCmdUI *pCmdUI);
   CmdItem * GetCommandList(int & numCommands);
-  afx_msg void OnMacroEdit15();
-  afx_msg void OnMacroEdit20();
-  afx_msg void OnMacroEdit25();
-  afx_msg void OnMacroEdit30();
-  afx_msg void OnMacroEdit35();
-  afx_msg void OnMacroEdit40();
-  afx_msg void OnMacroEdit45();
-  afx_msg void OnMacroEdit50();
-  afx_msg void OnMacroEdit55();
-  afx_msg void OnMacroEdit60();
   void PrepareForMacroChecking(int which);
   bool IsMacroBeingUsed(int which);
   afx_msg void OnMacroReadMany();
@@ -643,6 +634,7 @@ public:
   int ConvertArrayIndex(CString strItem, int leftInd, int rightInd, CString name, int numElements,
     CString * errMess);
   void FillVectorFromArrayVariable(FloatVec *fvec, IntVec *ivec, Variable *var);
+  int LookupAndFillPairedVars(int itemInd, Variable **xvar, FloatVec &xvec, Variable **yvar, FloatVec &yvec);
   bool SetArrayVariableFromArray(CString name, void *values, int numVals, const char *format);
   static UINT RunInShellProc(LPVOID pParam);
   static UINT RunScriptLangProc(LPVOID pParam);

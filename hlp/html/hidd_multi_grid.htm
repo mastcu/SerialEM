@@ -479,18 +479,38 @@
     <p>Press this button to open the <A HREF="menu_navigator.htm#hid_montaginggrids_autocontourgridsquares">Autocontour Grid 
             Squares</A> dialog and set parameters.&nbsp; Opened this way, it will 
       allow the group selections to be adjusted even though no contours exist.&nbsp; 
-      You must select the set of groups to be converted to contours before starting 
-      the first run, unless you have used the autocontouring and selected groups 
-      previously in this run of the program and the Autocontouring dialog is still 
-      open.&nbsp; The group selection is stored in the session file, so groups will 
+      If you do not use <strong>Setup</strong> and have never opened the 
+      Autocontouring dialog in this run of the program, all groups will be selected 
+      and converted to contours, and you will be asked to confirm that you want to 
+      continue with these selections when you start the first run. &nbsp; The group selection is stored 
+      as part of the session data, so groups will 
       already be defined if you start another run to take maps on other grids in the 
-      set.</p>
+      set.&nbsp; The treatment of group selections made in the Autocontouring dialog 
+      depends on how it was opened:</p>
+    <ul>
+      <li>&nbsp;If the Autocontouring dialog is opened with this Setup button, then the 
+        selections will be set to the values in the session data if they are defined, 
+        otherwise to the last selections seen in the dialog.&nbsp; When the dialog is 
+        closed after being opened this way, the selections will be copied back to the 
+        session data, unless a run is underway.</li>
+      <li>If the dialog is opened from the menu, it will show the last selections made 
+        there, if any.&nbsp; When it is closed, the selections will be copied to the 
+        multigrid session data if selections have not been defined there yet, or if no 
+        runs have been done and selections have not been defined by opening the dialog 
+        from the <strong>Setup</strong> button.&nbsp; In other words, you can open the 
+        dialog several times from the menu and the latest selections will be copied to 
+        the session settings each time, until you open it from the <strong>Setup</strong> 
+        button instead or lock in the copied values by starting a run.</li>
+      <li>The Autocontouring dialog will put a message in the log about whether it 
+        copied selections to the multigrid settings when closed with the <strong>OK</strong> 
+        button.&nbsp; Nothing is ever copied when it is closed with <strong>Cancel</strong>.</li>
+    </ul>
     <p><strong>Run script at end</strong></p>
     <p>Select this option to run a script after each grid map is finished, after 
       autocontouring if any.&nbsp; Pick the desired script in the drop-down box.</p>
     <p>&nbsp;</p>
     <p><A NAME="mediumMag"></a><strong><em>Acquire Medium Mag Maps</em></strong></p>
-    <p>This section contains some controls governing the acThis section contains some controls governing the acquisition of 
+    <p>This section contains some controls governing the acquisition of 
       medium-magnification maps, although other aspects are controlled through the 
       <A HREF="hidd_navacquire.htm">Acquire at Items</A> dialog.&nbsp; Select the checkbox to include this phase of 
       operations in the run.</p>

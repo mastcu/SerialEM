@@ -299,6 +299,7 @@ void CScreenShotDialog::DialogToParams()
   mParams.imageScaleType = m_iImageScaleType;
   mParams.skipOverlays = m_bDrawOverlays ? 0 : 3;
   mParams.ifScaleSizes = m_bScaleSizes;
+  mParams.jpegQuality = m_iJpegQuality;
 }
 
 void CScreenShotDialog::ParamsToDialog()

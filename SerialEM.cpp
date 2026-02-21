@@ -80,7 +80,7 @@
 #endif
 
 #define VERSION_STRING  "SerialEM Version 4.3.0beta"
-#define TAG_STRING      "(Tagged SEM_4-2-15, 1/20/26)"
+#define TAG_STRING      "(Tagged SEM_4-2-16, 2/10/26)"
 #define DEPRECATED_PYTHON  "3.6-64"
 
 // Offsets for static window inside main frame
@@ -855,6 +855,7 @@ CSerialEMApp::CSerialEMApp()
   }
   mNeedMultiChan = 0;
   mMaxChannelBuffers = 3;
+  mCircleTypesInLDDefine = -2;
   traceMutexHandle = CreateMutex(0, 0, 0);
   sStartTime = GetTickCount();
   mLastIdleScriptTime = sStartTime;
@@ -3023,6 +3024,8 @@ BOOL CSerialEMApp::CheckIdleTasks()
           mBeamAssessor->SpotCalImage(idc->param);
         else if (idc->source == TASK_CAL_IA_LIMITS)
           mBeamAssessor->CalIllumAreaNextTask();
+        else if (idc->source == TASK_BEAM_SIZE_CAL)
+          mBeamAssessor->BeamSizeCalNextTask();
         else if (idc->source == TASK_RESET_REALIGN)
           mComplexTasks->RSRANextTask(idc->param);
         else if (idc->source == TASK_WALKUP)
@@ -3176,6 +3179,8 @@ BOOL CSerialEMApp::CheckIdleTasks()
           mBeamAssessor->CalIntensityCCDCleanup(busy);
         else if (idc->source == TASK_CAL_SPOT_INTENSITY)
           mBeamAssessor->SpotCalCleanup(busy);
+        else if (idc->source == TASK_BEAM_SIZE_CAL)
+          mBeamAssessor->CalBeamSizeCleanup(busy);
         else if (idc->source == TASK_RESET_REALIGN)
           mComplexTasks->RSRACleanup(busy);
         else if (idc->source == TASK_WALKUP)
@@ -3383,6 +3388,8 @@ void CSerialEMApp::ErrorOccurred(int error)
     mBeamAssessor->StopSpotCalibration();
   if (mBeamAssessor->CalibratingIAlimits())
     mBeamAssessor->StopCalIllumAreaLimits();
+  if (mBeamAssessor->DoingSizeCal())
+    mBeamAssessor->StopBeamSizeCal();
   if (mFilterTasks->CalibratingMagShift())
     mFilterTasks->StopCalMagShift();
   if (mFilterTasks->RefiningZLP())
@@ -4141,7 +4148,7 @@ BOOL CSerialEMApp::DoingImagingTasks()
     mComplexTasks->DoingTasks() ||   // Reports on MultiTSTasks too, and ParticleTasks
     mBeamAssessor->CalibratingIntensity() ||
     mBeamAssessor->CalibratingBeamShift() ||
-    mBeamAssessor->CalibratingSpotIntensity() ||
+    mBeamAssessor->CalibratingSpotIntensity() || mBeamAssessor->DoingSizeCal() ||
     mFilterTasks->CalibratingMagShift() ||
     mFilterTasks->RefiningZLP() ||
     mGainRefMaker->AcquiringGainRef() ||
@@ -4328,6 +4335,8 @@ void CSerialEMApp::OnCameraParameters()
     SetActiveCameraNumber(camDlg.mCurrentCamera);
   } else
     CopyConSets(mCurrentCamera);
+  if (LowDoseMode())
+    mLowDoseDlg.RedrawAndUpdateSepIfDefining(-1);
   mSelectedConSet = camDlg.mCurrentSet;   // Should this change if Cancel?
   mCamSetupPlacement = camDlg.mPlacement;
   RestoreViewFocus();

@@ -51,6 +51,8 @@ private:
   int mLastMagIndex;
   double mLastIntensity;
   double mLastDrawTime;
+  bool mRecBeamSizeEnabled;
+  BOOL mLastInLowDose;
   static int mSavedLDForCamera;
   static int mAreaSaved;
   static int mStepConsNum;
@@ -68,7 +70,7 @@ private:
 
 public:
   bool mCanReturnEarly;
-  BOOL mHasIlluminatedArea;
+  int mHasIlluminatedArea;
   CString m_strNumShots;
   CSpinButtonCtrl m_sbcNumShots;
   afx_msg void OnDeltaposSpinNumShots(NMHDR *pNMHDR, LRESULT *pResult);

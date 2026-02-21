@@ -192,6 +192,7 @@ BEGIN
             MENUITEM "&Reverse Wheel Zoom Direction", ID_MISCELLANEOUSOPTIONS_REVERSEWHEELZOOMDIRECTION
             MENUITEM "Turn &Off Beam after Long Inactivity...", ID_SPECIALIZEDOPTIONS_CLOSEVALVESAFTERLONGINACTIVITY
             MENUITEM "Set Threshold for Right-dbl-click &2nd shot", ID_SPECIALIZEDMISC_SETTHRESHOLDFORRIGHT
+            MENUITEM "Set Type of Bea&m Circles in LD Define", ID_MISC_NO_TRUE_SIZE
             MENUITEM SEPARATOR
             MENUITEM "&Disable Dark Trim in Align...", ID_SPECIAL_DISABLE_DARK_TRIM_IN_ALIGN
             MENUITEM "Adjust &Focus on Probe Mode Change", ID_SPECIALOPTIONS_ADJUSTFOCUSONPROBEMODECHANGE
@@ -336,6 +337,7 @@ BEGIN
             MENUITEM "Set C&2 Factor",              ID_CALIBRATION_C2FACTOR
             MENUITEM SEPARATOR
             MENUITEM "Parallel Ill&umination",      ID_BEAMSPOT_PARALLELILLUMINATION
+            MENUITEM "Beam Si&ze",                  ID_BEAMSPOT_BEAMSIZE
             MENUITEM SEPARATOR
             MENUITEM "B&eam Shift",                 ID_CALIBRATION_BEAMSHIFT
             MENUITEM "&Refine Beam Shift",          ID_BEAMSPOT_REFINEBEAMSHIFT
@@ -424,15 +426,55 @@ BEGIN
             MENUITEM "Edit &8",                     ID_MACRO_EDIT8
             MENUITEM "Edit &9",                     ID_MACRO_EDIT9
             MENUITEM "Edit 1&0",                    ID_MACRO_EDIT10
+            MENUITEM "Edit 11",                     ID_MACRO_EDIT11
+            MENUITEM "Edit 12",                     ID_MACRO_EDIT12
+            MENUITEM "Edit 13",                     ID_MACRO_EDIT13
+            MENUITEM "Edit 14",                     ID_MACRO_EDIT14
             MENUITEM "Edit 15",                     ID_MACRO_EDIT15
+            MENUITEM "Edit 16",                     ID_MACRO_EDIT16
+            MENUITEM "Edit 17",                     ID_MACRO_EDIT17
+            MENUITEM "Edit 18",                     ID_MACRO_EDIT18
+            MENUITEM "Edit 19",                     ID_MACRO_EDIT19
             MENUITEM "Edit 20",                     ID_MACRO_EDIT20
+            MENUITEM "Edit 21",                     ID_MACRO_EDIT21
+            MENUITEM "Edit 22",                     ID_MACRO_EDIT22
+            MENUITEM "Edit 23",                     ID_MACRO_EDIT23
+            MENUITEM "Edit 24",                     ID_MACRO_EDIT24
             MENUITEM "Edit 25",                     ID_MACRO_EDIT25
+            MENUITEM "Edit 26",                     ID_MACRO_EDIT26
+            MENUITEM "Edit 27",                     ID_MACRO_EDIT27
+            MENUITEM "Edit 28",                     ID_MACRO_EDIT28
+            MENUITEM "Edit 29",                     ID_MACRO_EDIT29
             MENUITEM "Edit 30",                     ID_MACRO_EDIT30
+            MENUITEM "Edit 31",                     ID_MACRO_EDIT31
+            MENUITEM "Edit 32",                     ID_MACRO_EDIT32
+            MENUITEM "Edit 33",                     ID_MACRO_EDIT33
+            MENUITEM "Edit 34",                     ID_MACRO_EDIT34
             MENUITEM "Edit 35",                     ID_MACRO_EDIT35
+            MENUITEM "Edit 36",                     ID_MACRO_EDIT36
+            MENUITEM "Edit 37",                     ID_MACRO_EDIT37
+            MENUITEM "Edit 38",                     ID_MACRO_EDIT38
+            MENUITEM "Edit 39",                     ID_MACRO_EDIT39
             MENUITEM "Edit 40",                     ID_MACRO_EDIT40
+            MENUITEM "Edit 41",                     ID_MACRO_EDIT41
+            MENUITEM "Edit 42",                     ID_MACRO_EDIT42
+            MENUITEM "Edit 43",                     ID_MACRO_EDIT43
+            MENUITEM "Edit 44",                     ID_MACRO_EDIT44
             MENUITEM "Edit 45",                     ID_MACRO_EDIT45
+            MENUITEM "Edit 46",                     ID_MACRO_EDIT46
+            MENUITEM "Edit 47",                     ID_MACRO_EDIT47
+            MENUITEM "Edit 48",                     ID_MACRO_EDIT48
+            MENUITEM "Edit 49",                     ID_MACRO_EDIT49
             MENUITEM "Edit 50",                     ID_MACRO_EDIT50
+            MENUITEM "Edit 51",                     ID_MACRO_EDIT51
+            MENUITEM "Edit 52",                     ID_MACRO_EDIT52
+            MENUITEM "Edit 53",                     ID_MACRO_EDIT53
+            MENUITEM "Edit 54",                     ID_MACRO_EDIT54
             MENUITEM "Edit 55",                     ID_MACRO_EDIT55
+            MENUITEM "Edit 56",                     ID_MACRO_EDIT56
+            MENUITEM "Edit 57",                     ID_MACRO_EDIT57
+            MENUITEM "Edit 58",                     ID_MACRO_EDIT58
+            MENUITEM "Edit 59",                     ID_MACRO_EDIT59
             MENUITEM "Edit 60",                     ID_MACRO_EDIT60
         END
         POPUP "&Run"
@@ -1590,7 +1632,7 @@ BEGIN
     CTEXT           "",IDC_STAT_PROBEALF,14,36,16,9,SS_CENTERIMAGE
     PUSHBUTTON      "Reset",IDC_BUTRESETDEFOCUS,2,18,16,7
     LTEXT           "C 150  O 100 um",IDC_STAT_APERTURES,59,75,56,9
-    RTEXT           "Apertures were:",IDC_STAT_APER_LABEL,3,75,53,9
+    RTEXT           "Apertures:",IDC_STAT_APER_LABEL,3,75,53,9
 END
 
 IDD_TILTSERIES DIALOGEX 0, 0, 230, 799
@@ -3349,7 +3391,7 @@ BEGIN
     EDITTEXT        IDC_EDIT_BEAM_DIAM,89,396,26,12,ES_AUTOHSCROLL
     LTEXT           "um",IDC_STAT_BEAM_UM,119,398,11,8
     CONTROL         "Use Record illuminated area for circles in Low Dose",IDC_CHECK_USE_ILLUM_AREA,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,6,409,166,10
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,6,409,173,10
     PUSHBUTTON      "?",IDC_BUTHELP,165,426,11,10
     LTEXT           "Extra delay after image shift:",IDC_STAT_EXTRA_DELAY,5,338,89,8
     LTEXT           "sec",IDC_STAT_SEC,120,338,12,8
@@ -5763,6 +5805,23 @@ BEGIN
                             "Do focus detection and report shift and drift\nMeasure shift on beam tilt"
     ID_FOCUS_DRIFTPROTECTION 
                             "Toggle using three autofocus pictures to protect against drift\nToggle 3 picture method"
+END
+
+STRINGTABLE
+BEGIN
+    ID_HELP_LISTDEBUGOUTPUTKEYLETTERS 
+                            "List key letter for debug output in log"
+    ID_SCRIPT_RUNBACKGROUNDSCRIPT 
+                            "Select and start a script to run in the background"
+    ID_SCRIPT_STOPBACKGROUNDSCRIPT "Stop the script running in the background"
+    ID_IMAGESTAGESHIFT_REMOVEISOFFSETS 
+                            "Remove image shift offset calibrations for current mode"
+    ID_CALIBRATION_LISTMAGISOFFSETS "List mag image shift offset distances"
+    ID_TASKS_SETDOSERATEWITHEDM 
+                            "Set dose rate on camera in e/pixel/sec with an electronic dose modulator"
+    ID_WINDOW_MULTICHANNELSTEMDISPLAY 
+                            "Enable and select STEM channels for multi-window display"
+    ID_BEAMSPOT_BEAMSIZE    "Calibrate beam size by measuring it over a range of sizes"
     ID_MACRO_EDIT1          "Edit Script 1\nEdit Script 1"
     ID_MACRO_EDIT2          "Edit Script 2"
     ID_MACRO_EDIT3          "Edit Script 3"
@@ -5770,8 +5829,15 @@ BEGIN
     ID_MACRO_EDIT5          "Edit Script 5"
     ID_MACRO_EDIT6          "Edit Script 6"
     ID_MACRO_EDIT7          "Edit Script 7"
+END
+
+STRINGTABLE
+BEGIN
     ID_MACRO_EDIT8          "Edit Script 8"
     ID_MACRO_EDIT9          "Edit Script 9"
+    ID_MACRO_EDIT10         "Edit Script 10"
+    ID_MACRO_EDIT15         "Edit script 15"
+    ID_MACRO_EDIT20         "Edit script 20"
 END
 
 STRINGTABLE
@@ -6040,7 +6106,6 @@ END
 
 STRINGTABLE
 BEGIN
-    ID_MACRO_EDIT10         "Edit Script 10"
     ID_MACRO_STOP           "Stop script at next command"
     ID_MACRO_END            "Stop script at end of loop or repeat"
     ID_MACRO_RESUME         "Resume script at place where it stopped"
@@ -7031,6 +7096,10 @@ BEGIN
     IDC_CHECK_AUTO_NEW_LOG  "Start new log based on stack name for each batch tilt series"
     IDC_BUT_CLOSE_KEEP      "Close this box but keep the image stack"
     IDC_BUT_SETSCHEDSTATE   "Set to state scheduled to be used when current Navigator item is acquired"
+END
+
+STRINGTABLE
+BEGIN
     IDC_CHECK_SET_APERTURES "Move apertures to listed sizes when setting this state"
 END
 
@@ -7152,8 +7221,6 @@ BEGIN
     ID_TRANSFORM_PTS        "Transform points and polygons to current registration"
     ID_TASKS_WALKUP         "Go to high tilt in steps, tracking current position"
     ID_RESET_REALIGN        "Reset Image Shift and realign image position"
-    ID_MACRO_EDIT15         "Edit script 15"
-    ID_MACRO_EDIT20         "Edit script 20"
     ID_CALIBRATION_SET_IS_DELAY_FACTOR 
                             "Set scaling factor for delays after image shift"
     ID_NAVIGATOR_POLYGON_FROM_CORNERS "Make a polygon from corner points"
@@ -7236,7 +7303,7 @@ BEGIN
     ID_DE_retractCam        "Retract the camera"
     ID_DE_antosaveFinal     "Autosave the final summed image"
     ID_CALIBRATION_SET_APERTURE_SIZE 
-                            "Enter C2 aperture size so intensity cals are valid"
+                            "Enter C2 aperture size so intensity or beam size cals are valid"
     ID_CAMERA_SAVERAWPACKED "Save unnormalized K2/K3 frames in packed form"
     ID_FOCUS_SET_TILT_DIRECTION "Set which coils are used for beam tilt"
 END
@@ -7634,7 +7701,7 @@ BEGIN
     IDC_CHECK_SAVE_RECORD   "Saved returned Record image to file"
     IDC_EDIT_BEAM_DIAM      "Diameter to draw circles representing the beam, in microns"
     IDC_CHECK_USE_ILLUM_AREA 
-                            "Instead of specified diameter, use Record illuminated area when in Low Dose"
+                            "Use Record illuminated area or size computed from a calibration in Low Dose"
     IDC_RNO_EARLY           "Return image after frame saving is complete, if any"
     IDC_RLAST_EARLY         "Return as soon as possible with specified sum for last shot only"
     IDC_RALL_EARLY          "Return as soon as possible with specified sum for all shots"
@@ -8359,22 +8426,6 @@ END
 
 STRINGTABLE
 BEGIN
-    ID_HELP_LISTDEBUGOUTPUTKEYLETTERS 
-                            "List key letter for debug output in log"
-    ID_SCRIPT_RUNBACKGROUNDSCRIPT 
-                            "Select and start a script to run in the background"
-    ID_SCRIPT_STOPBACKGROUNDSCRIPT "Stop the script running in the background"
-    ID_IMAGESTAGESHIFT_REMOVEISOFFSETS 
-                            "Remove image shift offset calibrations for current mode"
-    ID_CALIBRATION_LISTMAGISOFFSETS "List mag image shift offset distances"
-    ID_TASKS_SETDOSERATEWITHEDM 
-                            "Set dose rate on camera in e/pixel/sec with an electronic dose modulator"
-    ID_WINDOW_MULTICHANNELSTEMDISPLAY 
-                            "Enable and select STEM channels for multi-window display"
-END
-
-STRINGTABLE
-BEGIN
     IDC_BUT_ACQUIRE_FLATFIELD 
                             "Start acquiring images for computing a new gain reference"
     IDC_BUT_INIT_DETECTOR   "Start initializing the detector to make it ready for use"
@@ -8388,6 +8439,11 @@ BEGIN
     IDC_CHECK_BAD_PIX_INTERP 
                             "Interpolate bad pixel values using neighboring pixels"
     IDC_CHECK_MODULE_INTERP "Interpolate gap between sensor modules"
+END
+
+STRINGTABLE
+BEGIN
+    ID_MISC_NO_TRUE_SIZE    "Select whether to show circles with actual beam size when defining Focus/Trial"
 END
 
 #endif    // English (United States) resources

@@ -97,7 +97,8 @@ enum Tasks {TASK_NAVIGATOR_ACQUIRE, TASK_DISTORTION_STAGEPAIR, TASK_CAL_BEAMSHIF
   TASK_DEWARS_VACUUM, TASK_NAV_ACQ_RETRACT, TASK_MONT_MULTISHOT, TASK_AUTO_CONTOUR,
   TASK_SNAPSHOT_TO_BUF, TASK_NAV_FILE_RANGE, TASK_MONT_MACRO, TASK_LD_SHIFT_OFFSET,
   TASK_MULTI_GRID, TASK_MULGRID_SEQ, TASK_MULTI_MAP_HOLES, TASK_AUTO_STEP_ADJ_IS,
-  TASK_PREV_PRESCAN, TASK_DECTRIS_FLATFIELD, TASK_DECTRIS_INITIALIZE, TASK_BKGD_MACRO
+  TASK_PREV_PRESCAN, TASK_DECTRIS_FLATFIELD, TASK_DECTRIS_INITIALIZE, TASK_BKGD_MACRO,
+  TASK_BEAM_SIZE_CAL
 };
 
 enum CalTypes {CAL_DONE_IS = 0, CAL_DONE_STAGE, CAL_DONE_FOCUS, CAL_DONE_BEAM, 
@@ -752,6 +753,7 @@ public:
   GetSetMember(bool, AllowBkgdMacroTime);
   GetMember(BOOL, EnableMultiChanView);
   GetSetMember(int, MaxChannelBuffers);
+  GetSetMember(int, CircleTypesInLDDefine);
   void SetEnableMultiChanView(BOOL inVal);
   int *GetShowChanInMultiView() { return &mShowChanInMultiView[0]; };
   GetMember(bool, ClosingAllMultiChan);
@@ -1105,6 +1107,7 @@ private:
   int mMaxChannelBuffers;       // # of buffers in a channel window
   int mNumChanWindowRows;       // The number of rows and columns of multi-channel display
   int mNumChanWindowCols;
+  int mCircleTypesInLDDefine;   // Whether to draw true or circumscribing beam when defining areas
 
 public:
   void UpdateAllEditers(void);

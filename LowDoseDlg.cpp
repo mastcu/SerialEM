@@ -540,6 +540,16 @@ void CLowDoseDlg::OnRdefine()
   mWinApp->RestoreViewFocus();
   EMimageBuffer *imBuf = mWinApp->mMainView->GetActiveImBuf();
 
+  if (!mDidBeamCircleInfo && mWinApp->GetCircleTypesInLDDefine() < 0 &&
+    (mWinApp->mScope->GetUseIllumAreaForC2() ||
+      mWinApp->mBeamAssessor->GetBeamSizeArray()->GetSize())) {
+    mWinApp->SetNextLogColorStyle(3, 0);
+    SEMAppendToLog("Use \"Settings-Misc Options-Set Type of Beam Circles\" to choose"
+      " whether to show\r\n\"true\" beam sizes or a circle circumscribing the camera FOV"
+      " when defining Low Dose areas");
+  }
+  mDidBeamCircleInfo = true;
+
   // Get the base image shift and matching mag
   if (m_iDefineArea) {
 
@@ -1754,9 +1764,12 @@ void CLowDoseDlg::ScopeUpdate(int magIndex, int spotSize, double intensity,
   double specX, specY, tiltAxisX, newISX, newISY, baseTransX, baseTransY;
   float pct;
   int shiftedA;
-  bool needRedraw = false, needAutoCen = false, magChanged = false;
+  bool needRedraw = false, needAutoCen = false, magChanged = false, intChanged;
+  bool canDrawBeam = mScope->GetUseIllumAreaForC2() ||
+    !mWinApp->mBeamAssessor->LDAreaBeamSizeFromCal(inSetArea);
+  CMapDrawItem *item;
   MultiShotParams *msParams;
-  EMimageBuffer *imBuf;
+  EMimageBuffer *imBuf = mWinApp->mMainView->GetActiveImBuf();
   static double lastEDMupdate = 0.;
   bool focusOrTrial = inSetArea == FOCUS_CONSET || inSetArea == TRIAL_CONSET;
 
@@ -1764,15 +1777,19 @@ void CLowDoseDlg::ScopeUpdate(int magIndex, int spotSize, double intensity,
     return;
 
   // If the area has changed, update the enables
-  if (mLastSetArea != inSetArea)
+  if (mLastSetArea != inSetArea) {
     Update(stageReady ? 1 : 0);
+    if (m_iDefineArea && canDrawBeam)
+      needRedraw = true;
+  }
 
   // If continuous update and no tasks, update the text if anything has changed, and
   // modify the current set mode unconditionally
   // Disable changes in spectroscopy mode
   if (DoingContinuousUpdate(inSetArea)) {
     ldArea = &mLDParams[inSetArea];
-    needRedraw = ldArea->magIndex != magIndex && m_iDefineArea && focusOrTrial;
+    needRedraw = ldArea->magIndex != magIndex && m_iDefineArea && 
+      (focusOrTrial || inSetArea == RECORD_CONSET);
 
     // Change IS position only if mag changes, and treat it as on-axis only for T and F
     if (ldArea->magIndex != magIndex) {
@@ -1802,19 +1819,34 @@ void CLowDoseDlg::ScopeUpdate(int magIndex, int spotSize, double intensity,
       mWinApp->mNavHelper->mMultiGridDlg->m_bRefineRealign)
       mWinApp->mNavHelper->mMultiGridDlg->ManageRefineFOV();
 
+    // check for intensity change and need to redraw image with new beam size
+    intChanged = fabs(ldArea->intensity - intensity) > 1.e-6;
+    ldArea->intensity = intensity;
+
+    // Test for multishot being drawn
     if (inSetArea == RECORD_CONSET && mWinApp->mNavigator &&
       ((mWinApp->mNavigator->m_bShowAcquireArea &&
       (mWinApp->mNavHelper->GetEnableMultiShot() & 1)) ||
-      mWinApp->mNavHelper->mMultiShotDlg) &&
-      fabs(ldArea->intensity - intensity) > 1.e-6 && mScope->GetUseIllumAreaForC2() &&
-      ((mWinApp->mMainView->GetActiveImBuf())->mHasUserPt ||
-      (mWinApp->mMainView->GetActiveImBuf())->mHasUserLine)) {
-        msParams = mWinApp->mNavHelper->GetMultiShotParams();
-        ldArea->intensity = intensity;
-        if (msParams->useIllumArea)
-          mWinApp->mMainView->DrawImage();
-    } else
-      ldArea->intensity = intensity;
+        mWinApp->mNavHelper->mMultiShotDlg) && intChanged && canDrawBeam &&
+        (imBuf->mHasUserPt || imBuf->mHasUserLine)) {
+      msParams = mWinApp->mNavHelper->GetMultiShotParams();
+      if (msParams->useIllumArea)
+        mWinApp->mMainView->DrawImage();
+
+      // Test for edit focus
+    } else if (intChanged && inSetArea == FOCUS_CONSET && mWinApp->mNavigator &&
+      mWinApp->mNavigator->m_bEditFocus && mWinApp->mNavigator->GetEditFocusEnabled() &&
+      imBuf->mHasUserPt && canDrawBeam && imBuf->mLowDoseArea && 
+      imBuf->mConSetUsed == VIEW_CONSET) {
+      item = mWinApp->mNavigator->GetCurrentItem();
+      if (item && (item->mAcquire || item->mTSparamIndex >= 0))
+        mWinApp->mMainView->DrawImage();
+
+      // Test for defining low dose area
+    } else if (intChanged && (m_iDefineArea > 0 && (inSetArea == m_iDefineArea || 
+      inSetArea == RECORD_CONSET)) && canDrawBeam) {
+      needRedraw = true;
+    }
 
     if ((!lastEDMupdate || SEMTickInterval(lastEDMupdate) > 1000.) &&
       mWinApp->mCamera->GetEDMDutyPercent(pct) <= 0) {
@@ -1872,7 +1904,6 @@ void CLowDoseDlg::ScopeUpdate(int magIndex, int spotSize, double intensity,
         mScope->GetImageShift(ISX, ISY);
 
         // If A has an image from defining area, change the shift of the image
-        imBuf = mWinApp->mMainView->GetActiveImBuf();
         shiftedA = (UsefulImageInA() > 0 && imBuf == mImBufs) ? 1 : 0;
         if (shiftedA)
           ShiftImageInA(specX - ldArea->axisPosition);
@@ -1888,8 +1919,10 @@ void CLowDoseDlg::ScopeUpdate(int magIndex, int spotSize, double intensity,
     } else {
       CheckSeparationChange(magIndex);
     }
-    if (needRedraw)
+    if (needRedraw) {
       mWinApp->mMainView->DrawImage();
+      ManageAxisPosition();
+    }
   } else if (m_bTieFocusTrial)
     CheckSeparationChange(magIndex);
 
@@ -2298,8 +2331,8 @@ void CLowDoseDlg::SnapCameraShiftToAxis(EMimageBuffer *imBuf, float &shiftX,
 // Update the output to the position edit box and separation message
 void CLowDoseDlg::ManageAxisPosition()
 {
-  int recSize, defSize;
-  double angle, specX;
+  int recSize, defSize, whichSize = B3DABS(mWinApp->GetCircleTypesInLDDefine());
+  double angle, specX, maxSep, trueSep;
   float recUm, defUm, cenX, cenY, rh, sep1, sep2;
   int curCam = mWinApp->GetCurrentCamera();
   int area = m_iDefineArea ? m_iDefineArea : FOCUS_CONSET;
@@ -2331,11 +2364,28 @@ void CLowDoseDlg::ManageAxisPosition()
     cenX = cenY = rh;
   sep1 = mWinApp->mNavHelper->PointSegmentDistance(cenX, cenY, rh, -rh, rh, rh);
   sep2 = mWinApp->mNavHelper->PointSegmentDistance(cenX, cenY, -rh, rh, rh, rh);
-  double maxSep = B3DMIN(sep1, sep2) - sqrt(2.) * defUm / 2.;
+  maxSep = B3DMIN(sep1, sep2) - sqrt(2.) * defUm / 2.;
   m_strOverlap.Format("Maximum area separation:  %.2f um", maxSep);
+  if (whichSize &&
+    !mWinApp->mBeamAssessor->LDAreaBeamSizeFromCal(area, &defUm)) {
+    trueSep = B3DMIN(sep1, sep2) - 0.5 * defUm;
+    if (whichSize == 1)
+      m_strOverlap.Format("\"True\" area separation:  %.2f um", trueSep);
+    else
+      m_strOverlap.Format("Max/\"True\" area sep.:  %.2f/%.2f um", maxSep, trueSep);
+  }
   UpdateData(false);
   mLastRecordSize = recSize;
   mLastDefineSize = defSize;
+}
+
+void CLowDoseDlg::RedrawAndUpdateSepIfDefining(int area)
+{
+  if (m_iDefineArea && (area < 0 || area == FOCUS_CONSET || area == TRIAL_CONSET ||
+    area == RECORD_CONSET)) {
+    mWinApp->mMainView->DrawImage();
+    ManageAxisPosition();
+  }
 }
 
 // Compute the minimum separation between Record and area being defined
@@ -2458,8 +2508,8 @@ void CLowDoseDlg::SyncFilterSettings(int inArea, FilterParams *filtParam)
 // describe the View image.  Four corner points in image coordinates are returned
 // in corner[XY], and for the define area,
 int CLowDoseDlg::DrawAreaOnView(int type, EMimageBuffer *imBuf, StateParams &state,
-                                float * cornerX, float * cornerY,
-                                float & cenX, float & cenY, float &radius)
+                                float *cornerX, float *cornerY,
+                                float &cenX, float &cenY, float &radius, float &trueRad)
 {
   int binning = imBuf->mBinning;
   int magInd = imBuf->mMagInd > 0 ? imBuf->mMagInd : mLDParams[0].magIndex;
@@ -2505,6 +2555,16 @@ int CLowDoseDlg::DrawAreaOnView(int type, EMimageBuffer *imBuf, StateParams &sta
   AreaAcqCoordToView(boxArea, binning, sizeX, sizeY, aMat, vMat,
     left, bottom, state, cornerX[3], cornerY[3]);
 
+  pixel = mShiftManager->GetPixelSize(imBuf);
+  if (!pixel)
+    pixel = binning * mShiftManager->GetPixelSize(curCam, mLDParams[0].magIndex);
+  trueRad = 0.;
+  if (mScope->GetUseIllumAreaForC2()) {
+    trueRad = (float)(50. * mScope->IntensityToIllumArea(mLDParams[boxArea].intensity,
+      mLDParams[boxArea].spotSize, mLDParams[boxArea].probeMode)) / pixel;
+  } else if (!mWinApp->mBeamAssessor->LDAreaBeamSizeFromCal(boxArea, &scale)) {
+    trueRad = 0.5f * scale / pixel;
+  }
   if (type > 0 && type < 2)
     return boxArea;
 
@@ -2536,9 +2596,6 @@ int CLowDoseDlg::DrawAreaOnView(int type, EMimageBuffer *imBuf, StateParams &sta
   }
 
   // Get radius in image coordinates and convert center to view image coord
-  pixel = mShiftManager->GetPixelSize(imBuf);
-  if (!pixel)
-    pixel = binning * mShiftManager->GetPixelSize(curCam, mLDParams[0].magIndex);
   radius = (float)(sqrt(0.25 * diamSq) *
     mShiftManager->GetPixelSize(curCam, mLDParams[cenArea].magIndex) / pixel);
   AreaAcqCoordToView(boxArea, binning, sizeX, sizeY, aMat, vMat,

@@ -242,6 +242,9 @@
         <tr>
           <TD class="style1">&nbsp;&nbsp;&nbsp; <A href="#hid_beamspot_parallelillumination">Parallel Illumination</A></TD>
           <TD>Save intensity that gives parallel illumination at the current illumination conditions.</TD>
+        </tr> 
+          <TD class="style1">&nbsp;&nbsp;&nbsp; <A href="#hid_beamspot_beamsize">Beam Size</A></TD>
+          <TD>Calibrate dependence of beam size on intensity.</TD>
         </tr>
         <TR vAlign="top">
           <TD class="style1">&nbsp;&nbsp;&nbsp; <A href="#hid_calibration_beamshift">Beam Shift</A></TD>
@@ -1549,6 +1552,78 @@
         be replaced.&nbsp; The intensity can be returned to with the 
         'SetParallelIllumination' script command when at the same spot size and probe 
         mode or alpha.&nbsp; This command is not available for Titan microscopes.
+<P><A name="hid_beamspot_beamsize"></A><B>Beam Size command (Calibration -
+        Beam &amp; Spot sub-menu)</B></P> 
+        <P>Use this command to start a calibration of beam size as a function of intensity 
+          on a non-Titan microscope, operating on the assumption that beam size is 
+          proportional to the distance of the intensity value from crossover.&nbsp; The 
+          routine will measure the beam size at three magnifications after normalizing 
+          lenses, starting at a high magnification where you set up the beam, and going to 
+          intermediate and lower magnifications to cover a range of sizes that you 
+          specify.&nbsp; Calibrations are saved separately for each side of crossover, for 
+          nanoprobe and microprobe on Thermo/FEI scopes or for alpha on JEOL scopes, and 
+          for different spot sizes.&nbsp; Ideally, if the crossover calibrations are 
+          accurate, you may not need separate calibrations for different spot sizes.&nbsp; 
+          After you have one calibration, you can check how well it works for other spot 
+          sizes by comparing results from the 'MeasureBeamSize' and 
+          'ReportBeamSizeFromCalib' script commands.&nbsp; You can then do further 
+          calibrations at spot sizes where you want the value to be more accurate.&nbsp; A 
+          calibration is not needed on both sides of crossover if you care only about the 
+          size on one side of crossover.&nbsp; 
+          Extrapolation will be used when applying the calibration to estimate the beam 
+          size or to set an intensity that should give a desired beam size, so you do not 
+          need to start the calibration at the smallest beam size that you might 
+          encounter.</P>
+    <ul>
+      <li>The crossover calibration should be up to date, or at least not far off, 
+        before running this calibration.&nbsp; It plays two roles: 1) during the 
+        calibration, the value is used to determine how to make the first change in 
+        intensity, which could be off by quite a bit if&nbsp; the crossover is 
+        inaccurate; 2) if crossover is recalibrated, the relationship between intensity and 
+        size is assumed to change by the change in crossover since the size was 
+        calibrated.</li>
+      <li>Before starting the calibration, the stage should be brought to a eucentric 
+        height and the defocus set to near focus. </li>
+      <li>&nbsp;The calibration can be done on an empty area or on a sample area (e.g., 
+        the cross-line grating) as long as features would not obscure the edges of the 
+        beam.&nbsp;&nbsp; </li>
+      <li>Use a condenser aperture of 50 microns, or more if possible, to reduce edge effects relative 
+        to the full spot image. If you use a larger aperture than what will be used for 
+        typical acquisition, you can start with a proportionally larger beam size.</li>
+      <li>&nbsp;Select a spot size and set Trial parameters to acquire images with the 
+        whole condensed beam on the camera without saturating the camera.&nbsp; </li>
+      <li>Start at a high magnification, with a small beam (perhaps 0.3 to 0.5 micron, 
+        or larger with a large aperture) 
+        whose diameter is about 1/2 to 3/4 of the smaller axis of the camera field.</li>
+      <li>After confirming that you are ready to proceed, enter a size range.&nbsp; The 
+        default is 10 but larger ranges like 20 can be done if the magnification is high 
+        enough to start with, and if you know that the beam can be spread by the given 
+        amount without running into problems or going into LM.</li>
+      <li>After each measurement of beam size, the routine will ask you to confirm that 
+        it has measured a reasonable size.&nbsp; Pressing No will stop the routine.</li>
+      <li>If the routine stops at the second or third size step, either because you 
+        answered No or 
+        because of error, you will be able to adjust the beam, or even change the 
+        magnification by one step in either direction, then resume the calibration at 
+        this point simply by starting it again.</li>
+    </ul>
+    <p>
+      The routine will first normalize lenses, take an image, and recenter the beam.&nbsp; 
+      If the recentering fails because the beam moved too much, just try again; the 
+      next normalization will not affect it so much.&nbsp; It takes a new image, 
+      measures the size, and computes the magnification and intensity that should work 
+      to measure a size increased by the square of the range.&nbsp; It changes to 
+      those settings, normalizes again, and takes an image for centering. If the beam 
+      size is too large or small, it will change the intensity to try to reach its 
+      target size.&nbsp; It measures the size from the next image, and repeats this 
+      procedure for the largest beam size.</p>
+    <p>
+      The <A href="#hid_beamspot_listcalibrations"> List Calibrations</a> command summarizes
+      the calibrations that have been done; this can be helpful if you have to redo 
+      the calibration.</p>
+    <p>
+      In testing on a Thermo/FEI Talos, a range of 0.45 - 9 microns was calibrated in 
+      microprobe and a range of 0.4 - 4 microns was calibrated in nanoprobe.</p>
       <P><A name="hid_calibration_beamshift"></A><B>Beam Shift command (Calibration -
         Beam &amp; Spot sub-menu)</B></P>
       <P>This command will calibrate beam shift so that the beam can be moved by

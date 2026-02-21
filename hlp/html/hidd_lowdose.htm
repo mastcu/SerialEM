@@ -52,8 +52,8 @@
       matter which area is selected here.) With one of these options selected,
       SerialEM will try to display a marker point on the image in buffer A showing
       the center of the area being defined. On a View image, it will also draw boxes
-      representing the Record area and the area being defined, as well as a circle
-      circumscribing the area being defined. You can adjust the position of the area
+      representing the Record area and the area being defined, as well as one or more 
+      circles representing the beam. You can adjust the position of the area
       in 4 ways:
     </P>
     <OL>
@@ -88,6 +88,17 @@
           location on the axis.&nbsp; When you click in an image of the area being
           defined, the axis rotation is not changed, and the clicked point is projected
           onto the interarea axis.</P>
+    <P>&nbsp;On a Titan microscope where illuminated area is available, or on other 
+      kinds of scopes where beam size has been calibrated, the display can include dashed circles 
+      showing the estimated sizes of the beams for the Record area and the area being 
+      defined.&nbsp; (Which kind of circles are displayed can be selected with the
+      <a href="menu_settings.htm#hid_misc_no_true_size">Set Type of Beam Circles in LD Define</a> 
+      command in the Settings - Specialized and Misc Options submenu.) These sizes depend on the size of the condenser aperture being 
+      known.&nbsp; On non-Titan microscopes, a circle will not appear unless there is 
+      a calibration on the same side of crossover and at the same probe mode (for 
+      Thermo/FEI) or alpha (for JEOL) as the particular Low Dose area.&nbsp; If you 
+      use a &#39;Go to&#39; button to go to one of the areas and turn on &#39;Continuous update&#39;, 
+      you can change the intensity value and see the size change.</P>
       <P>You should select 'None' after adjusting the area to avoid inadvertent changes,
       and to restore the expected behavior when setting the marker or shifting an image with the right
       mouse button. Note that shifting the area being defined would change its offset

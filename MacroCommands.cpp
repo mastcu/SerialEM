@@ -8464,8 +8464,44 @@ int CMacCmd::MeasureBeamSize(void)
       ABORT_LINE("No pixel size is available for the image for line:\n\n");
     radius *= 2.f * binning * pixel;
     mLogRpt.Format("Beam diameter measured to be %.3f um from %d quadrants, fit error"
-      " %.3f", radius, numQuad, fitErr);
-    SetReportedValues(radius, numQuad, fitErr);
+      " %.3f um", radius, numQuad, fitErr * binning * pixel);
+    SetReportedValues(radius, numQuad, fitErr * binning * pixel);
+  }
+  return 0;
+}
+
+// ReportBeamSizeFromCalib
+int CMacCmd::ReportBeamSizeFromCalib()
+{
+  float size;
+  if (mWinApp->mBeamAssessor->BeamSizeFromCalibration(mScope->GetIntensity(), -1, -1,
+    size, mStrCopy))
+    ABORT_NOLINE("Error getting beam size from calibrations: " + mStrCopy);
+  mLogRpt.Format("Beam size at current conditions is %.2f um", size);
+  SetRepValsAndVars(1, size);
+  return 0;
+}
+
+// SetBeamSize
+int CMacCmd::SetBeamSize()
+{
+  double newIntensity;
+  int err;
+  if (mItemFlt[1] <= 0.01 || mItemFlt[1] > 3000.)
+    ABORT_LINE("Beam size must be between 0.01 and 3000 microns for line:\n\n");
+  if (mScope->GetUseIllumAreaForC2()) {
+    if (!mScope->SetIlluminatedArea(0.01 * mItemFlt[1])) {
+      AbortMacro();
+      return 1;
+    }
+  } else {
+    err = mWinApp->mBeamAssessor->FindIntensityForNewBeamSize(mScope->GetIntensity(),
+      -1, -1, mItemFlt[1], newIntensity, mStrCopy);
+    if (err == BEAM_ENDING_OUT_OF_RANGE)
+      ABORT_LINE("Beam size would require an intensity out of range for line:\n\n");
+    if (err)
+      ABORT_NOLINE("Error setting beam size: " + mStrCopy);
+    mScope->SetIntensity(newIntensity);
   }
   return 0;
 }
@@ -12139,6 +12175,112 @@ int CMacCmd::AddStagePosAsNavPoint(void)
   return 0;
 }
 
+// SetItemImShiftTargets
+int CMacCmd::SetItemImShiftTargets()
+{
+  int ind, jnd, num, cenInd = 0;
+  float xmid, ymid, xtmp, ytmp, dist, minDist = 1.e30f;
+  Variable *xvar = NULL, *yvar = NULL;
+  FloatVec xvec, yvec;
+  ScaleMat st2is;
+  CMapDrawItem *navItem = CurrentOrIndexedNavItem(mItemInt[1], mStrLine);
+  CMapDrawItem *mapItem;
+  if (!navItem)
+    return 1;
+
+  // Get the mag index from current value or map
+  if (!mItemInt[2])
+    mItemInt[2] = mScope->FastMagIndex();
+  else if (mItemInt[2] < 0) {
+    mapItem = mNavigator->FindItemWithMapID(navItem->mDrawnOnMapID);
+    if (!mapItem)
+      ABORT_LINE("Cannot find map that item is drawn on for line:\n\n");
+    mItemInt[2] = mapItem->mMapMagInd;
+  }
+
+  // Get X/Y vectors
+  if (LookupAndFillPairedVars(4, &xvar, xvec, &yvar, yvec))
+    return 1;
+  num = (int)xvec.size();
+
+  // Get transform and find point closest to midpoint of ranges
+  if (mItemInt[3]) {
+    st2is = MatMul(mShiftManager->StageToCamera(mCurrentCam, mItemInt[2]),
+      mShiftManager->CameraToIS(mItemInt[2]));
+    if (!st2is.xpx)
+      ABORT_LINE("There is no calibration for getting from stage coordinates "
+        "to image shift values for line:\n\n");
+    if (mItemInt[3] > 1) {
+      xmid = (VECTOR_MIN(xvec) + VECTOR_MAX(xvec)) / 2.f;
+      ymid = (VECTOR_MIN(yvec) + VECTOR_MAX(yvec)) / 2.f;
+      for (ind = 0; ind < num; ind++) {
+        dist = powf(xvec[ind] - xmid, 2.f) + powf(yvec[ind] - ymid, 2.f);
+        if (dist < minDist) {
+          cenInd = ind;
+          minDist = dist;
+        }
+      }
+      navItem->mStageX = xvec[cenInd];
+      navItem->mStageY = yvec[cenInd];
+      if (navItem->mNumPoints) {
+        navItem->mPtX[0] = xvec[cenInd];
+        navItem->mPtY[0] = yvec[cenInd];
+      }
+    }
+
+    // Transform in place, shifting to center point
+    xmid = xvec[cenInd];
+    ymid = yvec[cenInd];
+    for (ind = 0; ind < num; ind++) {
+      ApplyScaleMatrix(st2is, xvec[ind] - xmid, yvec[ind] - ymid,
+        xtmp, ytmp);
+      xvec[ind] = xtmp;
+      yvec[ind] = ytmp;
+    }
+  }
+
+  if (navItem->mIStargetsXY)
+    delete[] navItem->mIStargetsXY;
+  else
+    mNavigator->SetNumIStargetItems(mNavigator->GetNumIStargetItems() + 1);
+  if (navItem->mNumSkipHoles > 0)
+    delete [] navItem->mSkipHolePos;
+  navItem->mNumSkipHoles = 0;
+  navItem->mNumXholes = 0;
+  navItem->mNumYholes = 0;
+
+  // Set up arrays in item, rearranging middle point as first
+  navItem->mIStargetsXY = new float[2 * num];
+  navItem->mNumIStargets = num;
+  navItem->mMagOfIStargets = mItemInt[2];
+  for (ind = 0; ind < navItem->mNumIStargets; ind++) {
+    jnd = ind;
+    if (cenInd > 0 && (!ind || cenInd == ind))
+      jnd = ind ? 0 : cenInd;
+    navItem->mIStargetsXY[2 * jnd] = xvec[ind];
+    navItem->mIStargetsXY[2 * jnd + 1] = yvec[ind];
+  }
+  if (navItem->mNote.IsEmpty())
+    navItem->mNote.Format("%d targets", num);
+  mNavigator->UpdateListString(mItemInt[1]);
+  mWinApp->mMainView->DrawImage();
+  return 0;
+}
+
+// AdjustImShiftTargets
+int CMacCmd::AdjustImShiftTargets()
+{
+  MultiShotParams *params = mNavHelper->GetMultiShotParams();
+  CMapDrawItem *navItem = CurrentOrIndexedNavItem(mItemInt[1], mStrLine);
+  if (!navItem)
+    return 1;
+  if (mNavHelper->TransformImShiftTargets(params, navItem, mStrCopy))
+    ABORT_LINE(mStrCopy + " for line:\n\n");
+  if (!mItemInt[2])
+    mWinApp->mMainView->DrawImage();
+  return 0;
+}
+
 // AddCirclePolygon
 int CMacCmd::AddCirclePolygon(void)
 {
@@ -13115,13 +13257,8 @@ int CMacCmd::FindHoles(void)
   if (!mItemEmpty[2]) {
     if (mItemEmpty[3])
       ABORT_LINE("You must enter both X and Y coordinates for line:\n\n");
-    if (LookupVarAbortIfFail(mStrItems[2], &xvar, index) ||
-      LookupVarAbortIfFail(mStrItems[3], &yvar, index))
+    if (LookupAndFillPairedVars(2, &xvar, xvec, &yvar, yvec))
       return 1;
-    FillVectorFromArrayVariable(&xvec, NULL, xvar);
-    FillVectorFromArrayVariable(&yvec, NULL, yvar);
-    if (xvec.size() != yvec.size())
-      ABORT_LINE("The two arrays do not have the same size for line:\n\n");
   }
 
   if (mNavHelper->mHoleFinderDlg->DoFindHoles(imBuf, false, &xvec, &yvec)) {
@@ -13538,9 +13675,11 @@ int CMacCmd::GetItemHolesToAcquire()
   if (!navItem->mNumXholes && !nearestToCen)
     ABORT_LINE(mStrCopy);
   index = mWinApp->mParticleTasks->GetHolePositions(xVec, yVec, holePos,
-    mScope->FastMagIndex(), mCurrentCam, navItem->mNumXholes, navItem->mNumYholes, -999.);
-  mWinApp->mParticleTasks->SkipHolesInList(xVec, yVec, holePos, navItem->mSkipHolePos,
-    navItem->mNumSkipHoles, index);
+    mScope->FastMagIndex(), mCurrentCam, navItem->mNumXholes, navItem->mNumYholes, -999.,
+    navItem);
+  if (!navItem->mNumIStargets)
+    mWinApp->mParticleTasks->SkipHolesInList(xVec, yVec, holePos, navItem->mSkipHolePos,
+      navItem->mNumSkipHoles, index);
   if (nearestToCen) {
     if (!index)
       ABORT_LINE("There are no hole positions defined by the settings or Navigator item "
@@ -13590,7 +13729,7 @@ int CMacCmd::MakePolygonsAtSquares(void)
   if (mNavHelper->mAutoContouringDlg->ExternalCreatePolys(mItemEmpty[1] ? -1.f :
     mItemFlt[1], mItemEmpty[2] ? -1.f : mItemFlt[2], mItemEmpty[3] ? -1.f : mItemFlt[3],
     mItemEmpty[4] ? -1.f : mItemFlt[4], mItemEmpty[5] ? -1.f : mItemFlt[5],
-    mItemEmpty[6] ? -1.f : mItemFlt[6], mStrCopy))
+    mItemEmpty[6] ? -1.f : mItemFlt[6], !mItemEmpty[7] && mItemInt[7] != 0, mStrCopy))
     ABORT_NOLINE("Failed to convert grid square contours to polygons: " + mStrCopy);
   mLogRpt = "Converted grid square contours to Navigator polygons";
   return 0;
@@ -13854,6 +13993,12 @@ int CMacCmd::SetAxisPosition(void)
 
   } else {
     index2 = 0;
+    if (!mItemEmpty[4] && mItemInt[4] != 0) {
+      delX = mWinApp->mLowDoseDlg.ConvertIStoAxisAndAngle(mLdParam[index].magIndex,
+        mItemDbl[2], mItemDbl[3], index2);
+      mItemDbl[2] = delX;
+      mItemDbl[3] = index2;
+    }
     if (fabs(mItemDbl[2]) > 19.)
       ABORT_LINE("The axis distance is too large in:\n\n");
     if (!mItemEmpty[3])

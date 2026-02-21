@@ -84,7 +84,7 @@ public:
   int ReadMacrosFromFile(CString &filename, const CString &curSettings, int maxMacros, bool printMess = false);
   void WriteMacrosToFile(CString filename, int maxMacros);
   void WriteLowDoseToString(LowDoseParams *ldp, int ldi, int ldj, CString &str);
-  void WriteStateToString(StateParams *stateP, CString &str);
+  void WriteStateToString(int which, StateParams *stateP, CString &str);
   int ReadNavAcqParams(NavAcqParams *navParams, NavAcqAction *mAcqActions, int *actOrder, CString &unrecognized);
   void WriteNavAcqParams(int which, NavAcqParams *navParams, NavAcqAction *mAcqActions, int *actOrder, bool skipNum);
   int ReadAcqParamsFromFile(NavAcqParams *navParams, NavAcqAction *mAcqActions, int *actOrder, CString &filename, CString &errStr);

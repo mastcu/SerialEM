@@ -105,8 +105,8 @@ BEGIN_MESSAGE_MAP(CMacroProcessor, CCmdTarget)
   ON_COMMAND(ID_MACRO_CONTROLS, sMP->OnMacroControls)
   ON_UPDATE_COMMAND_UI(ID_MACRO_STOP, sMP->OnUpdateMacroStop)
   //}}AFX_MSG_MAP
-  ON_COMMAND_RANGE(ID_MACRO_EDIT1, ID_MACRO_EDIT10, sMP->OnMacroEdit)
-  ON_UPDATE_COMMAND_UI_RANGE(ID_MACRO_EDIT1, ID_MACRO_EDIT10, sMP->OnUpdateMacroEdit)
+  ON_COMMAND_RANGE(ID_MACRO_EDIT1, ID_MACRO_EDIT60, sMP->OnMacroEdit)
+  ON_UPDATE_COMMAND_UI_RANGE(ID_MACRO_EDIT1, ID_MACRO_EDIT60, sMP->OnUpdateMacroEdit)
   ON_COMMAND_RANGE(ID_MACRO_RUN1, ID_MACRO_RUN60, sMP->OnMacroRun)
   ON_COMMAND_RANGE(ID_MACRO_FKEYRUN1, ID_MACRO_FKEYRUN12, sMP->OnMacroFKeyRun)
   ON_UPDATE_COMMAND_UI_RANGE(ID_MACRO_RUN1, ID_MACRO_RUN60, sMP->OnUpdateMacroRun)
@@ -115,27 +115,6 @@ BEGIN_MESSAGE_MAP(CMacroProcessor, CCmdTarget)
   ON_COMMAND(ID_MACRO_SETLENGTH, sMP->OnMacroSetlength)
   ON_COMMAND(ID_MACRO_VERBOSE, sMP->OnMacroVerbose)
   ON_UPDATE_COMMAND_UI(ID_MACRO_VERBOSE, sMP->OnUpdateMacroVerbose)
-  ON_COMMAND(ID_MACRO_EDIT15, sMP->OnMacroEdit15)
-  ON_UPDATE_COMMAND_UI(ID_MACRO_EDIT15, sMP->OnUpdateMacroEdit)
-  ON_UPDATE_COMMAND_UI(ID_MACRO_EDIT20, sMP->OnUpdateMacroEdit)
-  ON_COMMAND(ID_MACRO_EDIT20, sMP->OnMacroEdit20)
-  ON_COMMAND(ID_MACRO_EDIT25, sMP->OnMacroEdit25)
-  ON_UPDATE_COMMAND_UI(ID_MACRO_EDIT25, sMP->OnUpdateMacroEdit)
-  ON_UPDATE_COMMAND_UI(ID_MACRO_EDIT30, sMP->OnUpdateMacroEdit)
-  ON_COMMAND(ID_MACRO_EDIT30, sMP->OnMacroEdit30)
-  ON_COMMAND(ID_MACRO_EDIT35, sMP->OnMacroEdit35)
-  ON_UPDATE_COMMAND_UI(ID_MACRO_EDIT35, sMP->OnUpdateMacroEdit)
-  ON_UPDATE_COMMAND_UI(ID_MACRO_EDIT40, sMP->OnUpdateMacroEdit)
-  ON_COMMAND(ID_MACRO_EDIT40, sMP->OnMacroEdit40)
-  ON_COMMAND(ID_MACRO_EDIT45, sMP->OnMacroEdit45)
-  ON_COMMAND(ID_MACRO_EDIT50, sMP->OnMacroEdit50)
-  ON_COMMAND(ID_MACRO_EDIT55, sMP->OnMacroEdit55)
-  ON_COMMAND(ID_MACRO_EDIT60, sMP->OnMacroEdit60)
-  ON_UPDATE_COMMAND_UI(ID_MACRO_EDIT45, sMP->OnUpdateMacroEdit)
-  ON_UPDATE_COMMAND_UI(ID_MACRO_EDIT50, sMP->OnUpdateMacroEdit)
-  ON_UPDATE_COMMAND_UI(ID_MACRO_EDIT55, sMP->OnUpdateMacroEdit)
-  ON_UPDATE_COMMAND_UI(ID_MACRO_EDIT60, sMP->OnUpdateMacroEdit)
-  ON_COMMAND(ID_MACRO_READMANY, sMP->OnMacroReadMany)
   ON_UPDATE_COMMAND_UI(ID_MACRO_READMANY, sMP->OnUpdateMacroReadMany)
   ON_COMMAND(ID_MACRO_LISTFUNCTIONS, sMP->OnMacroListFunctions)
   ON_UPDATE_COMMAND_UI(ID_MACRO_LISTFUNCTIONS, sMP->OnUpdateNoTasks)
@@ -281,7 +260,8 @@ CMacroProcessor::CMacroProcessor(int index)
   }
   for (i = 0; i < MAX_TOT_MACROS; i++)
     mReadOnlyStart[i] = -1;
-  srand(GetTickCount());
+  for (i = 0; i < MAX_MACROS; i++)
+    mNameHash[i] = 0;
   mProcessThread = NULL;
   for (i = 0; i < 2; i++) {
     CString mess;
@@ -338,26 +318,6 @@ void CMacroProcessor::Initialize()
 void CMacroProcessor::OnMacroEdit(UINT nID)
 {
   int index = nID - ID_MACRO_EDIT1;
-  if (nID == ID_MACRO_EDIT15)
-    index = 14;
-  if (nID == ID_MACRO_EDIT20)
-    index = 19;
-  if (nID == ID_MACRO_EDIT25)
-    index = 24;
-  if (nID == ID_MACRO_EDIT30)
-    index = 29;
-  if (nID == ID_MACRO_EDIT35)
-    index = 34;
-  if (nID == ID_MACRO_EDIT40)
-    index = 39;
-  if (nID == ID_MACRO_EDIT45)
-    index = 44;
-  if (nID == ID_MACRO_EDIT50)
-    index = 49;
-  if (nID == ID_MACRO_EDIT55)
-    index = 54;
-  if (nID == ID_MACRO_EDIT60)
-    index = 59;
   OpenMacroEditor(index);
 }
 
@@ -378,77 +338,7 @@ void CMacroProcessor::OpenMacroEditor(int index)
 void CMacroProcessor::OnUpdateMacroEdit(CCmdUI* pCmdUI)
 {
   int index = pCmdUI->m_nID - ID_MACRO_EDIT1;
-  if (pCmdUI->m_nID == ID_MACRO_EDIT15)
-    index = 14;
-  if (pCmdUI->m_nID == ID_MACRO_EDIT20)
-    index = 19;
-  if (pCmdUI->m_nID == ID_MACRO_EDIT25)
-    index = 24;
-  if (pCmdUI->m_nID == ID_MACRO_EDIT30)
-    index = 29;
-  if (pCmdUI->m_nID == ID_MACRO_EDIT35)
-    index = 34;
-  if (pCmdUI->m_nID == ID_MACRO_EDIT40)
-    index = 39;
-  if (pCmdUI->m_nID == ID_MACRO_EDIT45)
-    index = 44;
-  if (pCmdUI->m_nID == ID_MACRO_EDIT50)
-    index = 49;
-  if (pCmdUI->m_nID == ID_MACRO_EDIT55)
-    index = 54;
-  if (pCmdUI->m_nID == ID_MACRO_EDIT60)
-    index = 59;
   pCmdUI->Enable(!DoingMacro() && !mMacroEditer[index]);
-}
-
-void CMacroProcessor::OnMacroEdit15()
-{
-  OnMacroEdit(ID_MACRO_EDIT15);
-}
-
-void CMacroProcessor::OnMacroEdit20()
-{
-  OnMacroEdit(ID_MACRO_EDIT20);
-}
-
-void CMacroProcessor::OnMacroEdit25()
-{
-  OnMacroEdit(ID_MACRO_EDIT25);
-}
-
-void CMacroProcessor::OnMacroEdit30()
-{
-  OnMacroEdit(ID_MACRO_EDIT30);
-}
-
-void CMacroProcessor::OnMacroEdit35()
-{
-  OnMacroEdit(ID_MACRO_EDIT35);
-}
-
-void CMacroProcessor::OnMacroEdit40()
-{
-  OnMacroEdit(ID_MACRO_EDIT40);
-}
-
-void CMacroProcessor::OnMacroEdit45()
-{
-  OnMacroEdit(ID_MACRO_EDIT45);
-}
-
-void CMacroProcessor::OnMacroEdit50()
-{
-  OnMacroEdit(ID_MACRO_EDIT50);
-}
-
-void CMacroProcessor::OnMacroEdit55()
-{
-  OnMacroEdit(ID_MACRO_EDIT55);
-}
-
-void CMacroProcessor::OnMacroEdit60()
-{
-  OnMacroEdit(ID_MACRO_EDIT60);
 }
 
 void CMacroProcessor::OnMacroToolbar()
@@ -854,16 +744,28 @@ void CMacroProcessor::OnScriptRunOneCommand()
 
 void CMacroProcessor::OnUpdateScriptRunOneCommand(CCmdUI *pCmdUI)
 {
-  CString menuText;
+  CString menuText, editText;
   CString *longMacNames = mWinApp->GetLongMacroNames();
+  unsigned int hash;
   for (int ind = 0; ind < MAX_MACROS; ind++) {
-    if (!longMacNames[ind].IsEmpty())
+    if (!longMacNames[ind].IsEmpty()) {
       menuText.Format("%d: %s", ind + 1, (LPCTSTR)longMacNames[ind]);
-    else if (mMacNames[ind].IsEmpty())
+      editText = menuText;
+    } else if (mMacNames[ind].IsEmpty()) {
       menuText.Format("Run %d", ind + 1);
-    else
+      editText.Format("Edit %d", ind + 1);
+    } else {
       menuText.Format("%d: %s", ind + 1, (LPCTSTR)mMacNames[ind]);
-    UtilModifyMenuItem("Script", ID_MACRO_RUN1 + ind, (LPCTSTR)menuText);
+      editText = menuText;
+    }
+
+    // Get the hash value of the text to be displayed and update menu if it doesn't match
+    hash = StringHashValue((LPCTSTR)menuText);
+    if (hash != mNameHash[ind]) {
+      UtilModifyMenuItem("Script", ID_MACRO_RUN1 + ind, (LPCTSTR)menuText);
+      UtilModifyMenuItem("Script", ID_MACRO_EDIT1 + ind, (LPCTSTR)editText);
+      mNameHash[ind] = hash;
+    }
   }
   pCmdUI->Enable(!DoingMacro());
 }
@@ -3138,6 +3040,23 @@ void CMacroProcessor::FillVectorFromArrayVariable(FloatVec *fvec, IntVec *ivec,
     if (ivec)
       ivec->push_back(B3DNINT(fval));
   }
+}
+
+// Looks up X and Y variables, makes sure they have the same number, and fills arrays
+int CMacroProcessor::LookupAndFillPairedVars(int itemInd, Variable **xvar, FloatVec &xvec,
+  Variable **yvar, FloatVec &yvec)
+{
+  int index;
+  if (LookupVarAbortIfFail(mStrItems[itemInd], xvar, index) ||
+      LookupVarAbortIfFail(mStrItems[itemInd + 1], yvar, index))
+      return 1;
+  FillVectorFromArrayVariable(&xvec, NULL, *xvar);
+  FillVectorFromArrayVariable(&yvec, NULL, *yvar);
+  if (xvec.size() != yvec.size()) {
+    LineAbort("The two arrays do not have the same size for line:\n\n");
+    return 1;
+  }
+  return 0;
 }
 
 // Set 1 1D array variable from an array of integer or float values, where the type is

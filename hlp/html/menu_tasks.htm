@@ -79,7 +79,8 @@
         </TR>
         <TR vAlign="top">
           <TD class="style1"><A href="#hid_calibration_set_aperture_size">Set Aperture Size</A></TD>
-          <TD>Inform program about size of C2 aperture on Titan microscope.</TD>
+          <TD>Inform program about size of C2 aperture on Titan microscope or one with beam 
+            size calibrations.</TD>
         </TR>
         <TR VALIGN="top">
           <TD class="auto-style1"><A HREF="#hid_process_movebeam">Move Beam</A></TD>
@@ -348,6 +349,9 @@
       <P>Use this command to inform the program of the current size of the C2 aperture
       on a Titan microscope, where the illuminated area read from the microscope and
       used for intensity is scaled by this aperture size when the aperture is changed.&nbsp; 
+        It can also be used on other microscopes having a beam size calibration, where 
+        the size computed from the intensity needs to be scaled for a difference between 
+        the aperture when the size was calibrated and the current aperture.&nbsp; 
         The command is disabled if the program determines on startup that it can control 
         the apertures through UTAPI scripting, or if the property 
         &#39;MonitorC2ApertureSize&#39; is set to 2 and aperture control is available otherwise.&nbsp;

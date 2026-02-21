@@ -165,9 +165,9 @@ public:
   MontParam *GetMMMmontParam();
   void ChangeStatusFlag(int gridInd, b3dUInt32 flag, int state);
   void ChangeObjectiveAperture(bool restore, int param = -1);
+  void CopyAutoContGroups(int which);
   void ChangeCondenserAperture(int restore, int param = -1);
   bool CanFalconFramesMoveToSession(CameraParameters *camP, CString *frameDir);
-  void CopyAutoContGroups();
   void GridToMultiShotSettings(MGridMultiShotParams &mgParam);
   void GridToMultiShotSettings(MGridMultiShotParams &mgParam, MultiShotParams *msParams);
   void MultiShotToGridSettings(MGridMultiShotParams &mgParam);
@@ -228,7 +228,9 @@ public:
   GetMember(int, SingleCondenserAp);
   GetMember(double, RunStartTime);
   GetSetMember(int, PostLoadDelay);
+  GetMember(int, HaveAutoContGroups);
   GetSetMember(BOOL, RefineUseStageMont);
+  GetSetMember(BOOL, CheckLoadOnJeol);
   int *GetMontSetupConsetSizes() { return &mMontSetupConsetSizes[0]; };
   IntVec *GetCustomRunDlgInds() {return &mCustomRunDlgInds ; };
   bool WasStoppedInNavRun() { return mStoppedInNavRun && mSuspendedMulGrid; };
@@ -416,7 +418,7 @@ private:
   CString mLMMusedStateName;
   int mLMMneedsLowDose;          // Flag that LM map needs low dose turned on or off
   int mAutoContGroups[MAX_AUTOCONT_GROUPS];
-  bool mHaveAutoContGroups;      // Flag that groups were saved for autocontouring
+  int mHaveAutoContGroups;       // Flag that groups saved: -1 from dialog, 1 from mulgrid
   bool mOpeningForFinalFailed;   // Flag that a file was needed and opening it failed
   int mNumMMMstateCombos;        // Number of combo boxes to show for MMM
   int mNumFinalStateCombos;      // NUmber of combo boxes to show for final
@@ -430,5 +432,6 @@ private:
   bool mNoMarkerShifts;          // Flag to skip in the run for whatever reason
   int mPostLoadDelay;            // Delay time in seconds after loading/unloading grid
   bool mInStopMultiGrid;         // Prevent reentrance
+  BOOL mCheckLoadOnJeol;         // Check that loaded grid is on the stage
 };
 

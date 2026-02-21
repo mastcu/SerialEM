@@ -64,6 +64,16 @@ struct ParallelIllum {
   double crossover;
 };
 
+struct BeamSizeCal {
+  int probeOrAlpha;
+  int spotSize;
+  float beamSize[3];
+  double intensity[3];
+  double crossover;
+  int measuredAperture;
+  int JeolC1Aperture;
+};
+
 class CBeamAssessor
 {
  public:
@@ -132,13 +142,15 @@ class CBeamAssessor
   void StopCalibratingIntensity() {mStoppingCal = true;};
   BOOL CalibratingIntensity() {return mCalibratingIntensity;};
   BeamTable *GetBeamTables() {return mBeamTables;};
-  GetMember(int, CurrentAperture);
+  GetSetMember(int, CurrentAperture);
   GetSetMember(int, NumC2Apertures);
   GetSetMember(BOOL, UseTrialSettling);
+  bool DoingSizeCal() { return mBeamSizeCalStep >= 0; };
   int *GetCrossCalAperture(void) {return &mCrossCalAperture[0];};
   int *GetSpotCalAperture(void) {return &mSpotCalAperture[0];};
   int *GetC2Apertures(void) {return &mC2Apertures[0];};
   CArray<ParallelIllum, ParallelIllum> *GetParIllumArray() { return &mParIllumArray; };
+  CArray<BeamSizeCal, BeamSizeCal> *GetBeamSizeArray() { return &mBeamSizeArray; };
   GetSetMember(BOOL, FavorMagChanges);
   float *GetBSCalAlphaFactors() { return &mBSCalAlphaFactors[0];};
   bool CalibratingIAlimits() { return mCalIAlimitSpot > 0; };
@@ -261,6 +273,16 @@ class CBeamAssessor
   float mCalIAlowLimits[MAX_SPOT_SIZE + 1][2];    // Values accumulated diring routine
   float mCalIAhighLimits[MAX_SPOT_SIZE + 1][2];
   CArray<ParallelIllum, ParallelIllum> mParIllumArray;
+  CArray<BeamSizeCal, BeamSizeCal> mBeamSizeArray;
+  int mBeamSizeCalStep;      // Step counter in beam size cal, -1 if not doing it
+  int mStoppedBeamCalStep;   // Step at which it was stopped if incomplete
+  BeamSizeCal mSizeCal;      // New calibration being composed
+  int mUpperMagForSizeCal;   // Mag index of first mag step down
+  int mLowerMagForSizeCal;   // Mag index of second step down
+  float mSizeRangeForCal;    // User's desired range in size
+  float mLastSizeTarget;     // Target size to be reached after mag/intensity change
+  double mStartingBeamShiftX;  // Beam shift at start of size calibration
+  double mStartingBeamShiftY;
 
 public:
   void CalibrateCrossover(void);
@@ -293,6 +315,22 @@ public:
   int LookupParallelIllum(int spot, int probeOrAlpha);
   double GetParallelIllum(int spot = -1, int probeOrAlpha = -9999);
   void ListParallelIlluminations();
+  void StartBeamSizeCalibration();
+  void BeamSizeCalNextTask();
+  int LookupBeamSizeCalibration(double intensity, double curCross, int spot, int probeOrAlpha);
+  void StopBeamSizeCal();
+  void CalBeamSizeCleanup(int error);
+  void NormalizeForSizeCal(bool doBoth);
+  void TakeSizeCalFirstShot(int step);
+  int BeamSizeFromCalibration(double intensity, int spot, int probeOrAlpha, float &size, CString &errStr);
+  int LDRecordBeamSizeFromCal(float *size = NULL);
+  int LDAreaBeamSizeFromCal(int conSet, float *size = NULL);
+  int FindIntensityForNewBeamSize(double intensity, int spot, int probeOrAlpha, float newSize,
+    double &newIntensity, CString &errStr);
+  int GetSizeCalAndDeltaCross(double intensity, int spot, int probeOrAlpha, BeamSizeCal &sizeCal,
+    double &delCross, CString &errStr);
+  float GetSizeScalingForAperture(const BeamSizeCal &sizeCal);
+  void ListBeamSizeCalibrations();
 };
 
 #endif // !defined(AFX_BEAMASSESSOR_H__67812E27_EF7F_4AFB_A706_766E3FEA19AA__INCLUDED_)

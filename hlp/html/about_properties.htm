@@ -149,6 +149,14 @@
             enter '0 2 4-19 21-32'.</TD>
         </TR>
        <TR VALIGN="top">
+          <TD>DropPlusInHoleNameIfUtapi</TD>
+          <TD>Set to 1 to leave out the plus sign from the hole position component of frame 
+            filenames when doing Muliple Records and saving frames from a Falcon camera 
+            through UTAPI.&nbsp; The property is needed with UTAPI server versions at least 
+            through 7.27.&nbsp; It will be ignored if the FEIScopePlugin can detect that it 
+            is running with a server version where this bug is fixed.</TD>
+        </TR>
+        <TR VALIGN="top">
           <TD>UseDetectorNameIfUtapi</TD>
           <TD>Set to 1 if the DetectorName entry for a Thermo/FEI camera should be used only 
             if connecting to the camera with UTAPI.&nbsp; With this property, you can turn 
@@ -2670,6 +2678,11 @@
           <TD>InvertFocusRamp</TD>
           <TD>Set to 1 if dynamic focus changes in the wrong direction.</TD>
         </TR>
+         <TR VALIGN="top">
+          <TD>SkipFocusRamper</TD>
+          <TD>Set to 1 to run the ramp for dynamic focusing on a Thermo/FEI scope directly 
+            from SerialEM or FEI-SEMserver instead of through FocusRamper.</TD>
+        </TR>
        <TR VALIGN="top">
           <TD>MaximumScanRate</TD>
           <TD>Enter one or two numbers to indicate the highest scan rate that avoids
@@ -3099,30 +3112,37 @@
         <TR>
           <TD>MonitorC2ApertureSize</TD>
           <TD>This property controls whether intensities in calibrations will be scaled 
-            automatically when the C2 aperture changes on a Titan microscope.&nbsp; With a value
-            of 2, the aperture size will be monitored and intensities will be scaled whenever it
-            changes; this is the default value.&nbsp; With a value of 1, intensities
-             will be scaled when the aperture size is set from SerialEM, but aperture size will not be
-            monitored. When there is aperture control only through UI Automation and not UTAPI, the
-            aperture panel in the microscope user interface has to be visible all the time, and the 
+            automatically when the C2 aperture changes on a Titan microscope.&nbsp; With a positive value,
+            the aperture size will be monitored and intensities will be scaled whenever it
+            changes.&nbsp; When there is aperture control only through UI Automation and not UTAPI, the
+            aperture panel in the microscope user interface has to be visible to access the apertures, and the 
             program will try to open it in the lower right instead of changing workset tabs, to avoid 
-            interfering with the use of workset tabs.&nbsp; Set to 0 to disable the automatic scaling.&nbsp; The
-             default is 1 on Titans without UTAPI.
+            interfering with the use of workset tabs.&nbsp; With a value of 2, the program will try to
+            get the aperture size every 5 seconds and consider it an error if it cannot access the
+            aperture panel.&nbsp; With a value of 1, it will still try to get the size every 5 seconds
+            but give up if the panel is not visible.&nbsp; This allows it to catch changes made through the
+            microscope interface, as long as the panel stays visible for up to 5 seconds after the change.&nbsp; In any case,
+              intensities will be scaled when the aperture size is set or reported by SerialEM.&nbsp; Set
+             to 0 to disable the automatic scaling.&nbsp; The default is 1 on Titans without UTAPI and 2 with UTAPI.
           </TD>
         </TR>
         <TR>
           <TD>ShowApertureStatus</TD>
           <TD>Set to 1 or 2 to add a line to the Microscope Status panel showing the state of the 
             condenser and objective apertures.&nbsp; For microscopes where aperture state can be found
-            by querying the scope, i.e., or Thermo/FEI with UTAPI interface or JEOL, either value can be used
-            and the scope will be polled every 5 seconds.&nbsp; For Thermo/FEI without UTAPI, use 1 to have
-            the value in the panel be updated whenever SerialEM reports or sets an aperture, or 2 to have
-            the value updated every 5 seconds, which will require the aperture panel to be visible in the
-            microscope user interface.&nbsp; For a JEOL scope without ApertureSizes entries, the aperture
+            through the scope's scripting interface, i.e., Thermo/FEI with UTAPI interface or JEOL, either value can be used
+            and the scope will be polled every 5 seconds.&nbsp; For Thermo/FEI without UTAPI, the program will also
+            try to get the aperture status every 5 seconds, which requires the aperture panel to be visible in the
+            microscope user interface.&nbsp; In this case, with a value of 2, it will try to make the panel visible
+            every 5 seconds; whereas with a value of 1, it will quietly give up
+             if the panel is not visible. &nbsp;This allows it to catch changes made through the
+            microscope interface, as long as the panel stays visible for up to 5 seconds after the change.&nbsp; In any case,
+            getting or setting an aperture size through other SerialEM operations will update the displayed value.
+            &nbsp; For a JEOL scope without ApertureSizes entries, the aperture
             index will be shown.&nbsp; Does not work for Hitachi.
           </TD>
         </TR>
-        <TR>
+        <TR>a
           <TD>UseAperturesInStates</TD>
           <TD>Set this property to control the use of apertures in imaging and map acquisition 
             states.&nbsp; With the default value of 1, the program will test for aperture support on
@@ -4308,9 +4328,16 @@
           <TD>MultiInHoleStartAngle</TD>
           <TD>Angle at which to start the first peripheral image taken by the Multiple Records
             routine when doing points within a hole.&nbsp; The default is to set this angle to
-            the short axis of the camera unless tilted to 20 degrees or above, in which case it
+            the short axis of the camera unless tilted to 20 degrees or above (or the angle specified in
+            'MultiInHoleOnAxisMinTilt'), in which case it
             sets the angle along the tilt axis.&nbsp; Enter a value greater than 500 to have it along the tilt
             axis at any tilt angle, or the actual angle desired, or a value less than -500 to restore the default.
+          </TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>MultiInHoleOnAxisMinTilt</TD>
+          <TD>Set to minimum tilt angle above which it will always set the angle for the first
+             peripheral image within a hole along the tilt axis; the default is 20.
           </TD>
         </TR>
         <TR VALIGN="top">
@@ -4740,6 +4767,12 @@
           <TD height="20">Delay in seconds between loading or unloading a grid and reopening 
             the column or gun valves during multigrid operations.&nbsp; The default 
             is 0.</TD>
+        </TR>
+        <TR>
+          <TD height="20">MulGridCheckLoadOnJeol</TD>
+          <TD height="20">Set to 1 for a JEOL to check whether the intended grid is on the 
+              stage after multigrid tries to load it; if it appears not to be, it will be 
+              loaded again.</TD>
         </TR>
         <TR VALIGN="top">
           <TD>ImportStageToImage</TD>

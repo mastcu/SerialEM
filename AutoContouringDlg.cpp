@@ -29,7 +29,7 @@
 // CAutoContouringDlg dialog
 
 CAutoContouringDlg::CAutoContouringDlg(CWnd* pParent /*=NULL*/)
-	: CBaseDlg(IDD_AUTOCONTOUR, pParent)
+  : CBaseDlg(IDD_AUTOCONTOUR, pParent)
   , m_iReduceToWhich(0)
   , m_iThreshType(0)
   , m_iGroupType(0)
@@ -55,9 +55,16 @@ CAutoContouringDlg::CAutoContouringDlg(CWnd* pParent /*=NULL*/)
   , m_strShowGroups(_T(""))
   , m_bMakeOnePoly(FALSE)
   , m_bInsidePolygon(FALSE)
+  , m_intLowerMean(0)
+  , m_intUpperMean(255)
+  , m_intMinSize(0)
+  , m_intIrregular(255)
+  , m_intSquareSD(255)
+  , m_intBorderDist(0)
 {
   mNonModal = true;
   mIsOpen = false;
+  mWasEverOpen = false;
   mAutoContThread = NULL;
   mFindingFromDialog = false;
   mHaveConts = false;
@@ -178,6 +185,7 @@ BOOL CAutoContouringDlg::OnInitDialog()
   m_sbcNumGroups.SetRange(1, MAX_AUTOCONT_GROUPS);
   m_sbcNumGroups.SetPos(mParams.numGroups);
   mIsOpen = true;
+  mWasEverOpen = true;
   mBoldFont = mWinApp->GetBoldFont(&m_statShowGroups);
 
   // Set up sliders
@@ -196,10 +204,7 @@ BOOL CAutoContouringDlg::OnInitDialog()
 
   // Output parameters and manage enables
   ParamsToDialog();
-  if (!mOpenedFromMultiGrid)
-    for (int ind = 0; ind < MAX_AUTOCONT_GROUPS; ind++)
-      mShowGroup[ind] = 1;
-  ManageGroupSelectors(mOpenedFromMultiGrid ? -1 : 1);
+  ManageGroupSelectors(-1);
   ManageACEnables();
   ManagePostEnables(false);
 
@@ -213,8 +218,15 @@ void CAutoContouringDlg::OnOK()
   DialogToParams();
   *mMasterParams = mParams;
 
-  // Copy to here regardless of whether opened from multigrid
-  mWinApp->mMultiGridTasks->CopyAutoContGroups();
+  // Copy groups to multigrid if it was either opened from there or there are none defined
+  // yet - but not while running
+  if (!mWinApp->mMultiGridTasks->GetDoingMulGridSeq() && (mOpenedFromMultiGrid ||
+    mWinApp->mMultiGridTasks->GetHaveAutoContGroups() <= 0)) {
+    mWinApp->mMultiGridTasks->CopyAutoContGroups(mOpenedFromMultiGrid ? 1 : -1);
+    SEMAppendToLog("Copied contour group selections to multigrid settings");
+  } else {
+    SEMAppendToLog("Did not copy contour group selections to multigrid settings");
+  }
   OnCancel();
 }
 
@@ -566,14 +578,14 @@ void CAutoContouringDlg::OnButCreatePolys()
 {
   CString mess;
   mWinApp->RestoreViewFocus();
-  if (DoCreatePolys(mess, false))
+  if (DoCreatePolys(mess, false, false))
     SEMMessageBox(mess);
 }
 
 // External call to create the polygons with possible replcement cutoff values
 int CAutoContouringDlg::ExternalCreatePolys(float lowerMeanCutoff, float upperMeanCutoff,
   float minSizeCutoff, float SDcutoff, float irregularCutoff, float borderDistCutoff,
-  CString &mess)
+  bool setAcquire, CString &mess)
 {
   if (!mHaveConts) {
     mess = "There are no contours to convert";
@@ -597,11 +609,11 @@ int CAutoContouringDlg::ExternalCreatePolys(float lowerMeanCutoff, float upperMe
     borderDistCutoff = mParams.borderDistCutoff;
   SetExclusionsAndGroups(mParams.groupByMean, lowerMeanCutoff, upperMeanCutoff,
     minSizeCutoff, SDcutoff, irregularCutoff, borderDistCutoff);
-  return DoCreatePolys(mess, false);
+  return DoCreatePolys(mess, false, setAcquire);
 }
 
 // Common function to creat polygons
-int CAutoContouringDlg::DoCreatePolys(CString &mess, bool doAll)
+int CAutoContouringDlg::DoCreatePolys(CString &mess, bool doAll, bool setAcquire)
 {
   int firstID, lastID, num = 0, numAfter, ind;
   int numBefore = mWinApp->mNavigator->GetNumNavItems();
@@ -615,7 +627,7 @@ int CAutoContouringDlg::DoCreatePolys(CString &mess, bool doAll)
     return 1;
   }
   mWinApp->mNavigator->AddAutocontPolygons(mPolyArray, mExcluded, mGroupNums,
-    &mShowGroup[0], mNumGroups, firstID, lastID, indsInPoly);
+    &mShowGroup[0], mNumGroups, setAcquire, firstID, lastID, indsInPoly);
   numAfter = mWinApp->mNavigator->GetNumNavItems();
   if (numBefore < numAfter) {
     mFirstConvertedIndex.push_back(numBefore);

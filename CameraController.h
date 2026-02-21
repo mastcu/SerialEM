@@ -670,6 +670,7 @@ public:
   GetMember(bool, FalconSavingEER);
   GetMember(bool, FalconSavingLZW);
   GetSetMember(BOOL, SaveK3GainAsTIFF);
+  GetSetMember(BOOL, SkipFocusRamper);
 
   CameraThreadData *GetCamThreadData() { return &mTD; };
   bool DoingPartialScan() {return mTD.ReturnPartialScan > 0; };
@@ -1161,6 +1162,7 @@ public:
   bool mFalconSavingEER;          // Flags that it is saving EER or LZW: these are set
   bool mFalconSavingLZW;          // early in capture before conSet is changed
   BOOL mSaveK3GainAsTIFF;         // Flag to save K3 counting gain as TIFF not MRC
+  BOOL mSkipFocusRamper;          // Flag to do FEI ramping internally as in UTAPI
 
 public:
   void SetNonGatanPostActionTime(void);

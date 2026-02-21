@@ -82,6 +82,8 @@ public:
   void DrawCross(CDC *cdc, CPen *pNewPen, CPoint point, int crossLen);
   void DrawCircle(CDC *cdc, CPen *pNewPen, CRect *rect, KImage *image, float cenX,
     float cenY, float radius, bool skipShift = false);
+  void DrawDashedCircle(CDC *cdc, CPen *pNewPen, CRect *rect, KImage *image, float cenX,
+    float cenY, float radius, bool skipShift = false);
   void DrawEllipse(CDC *cdc, CPen *pNewPen, CRect *rect, KImage *image, float cenX,
     float cenY, float radius1, float radius2, float angle, bool drawHalf);
   float GetBufferBinning();

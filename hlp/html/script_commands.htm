@@ -3360,17 +3360,31 @@
           <TD class="scriptcommand">ReportC2ApSizeForScaling</TD>
           <TD>Reports the stored value for the C2 aperture size in microns that is used to 
             scale intensity values in various calibrations when the aperture size changes on 
-            a Titan.&nbsp; Command added in 4.2, 5-Feb-25.</TD>
+            a Titan, or to adjust for a change in aperture size when using the beam size 
+            calibration..&nbsp; Command added in 4.2, 5-Feb-25.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">SetC2ApSizeForScaling #</TD>
           <TD>Sets the value for the C2 aperture size in microns that is used to scale 
-            intensity values on a Titan to <b>#</b>.&nbsp; This command has the same effect as <A href="menu_tasks.htm#hid_calibration_set_aperture_size">Set Aperture Size</A> in
+            intensity values on a Titan, or to scale sizes from a beam size calibration on 
+            other scopes, to <b>#</b>.&nbsp; This command has the same effect as <A href="menu_tasks.htm#hid_calibration_set_aperture_size">Set Aperture Size</A> in
              the Tasks menu.&nbsp If there is a change in aperture size,
-             intensity values in various calibrations will be scaled.&nbsp; Also, if run in the
+             intensity values in various calibrations will be scaled on a Titan.&nbsp; Also, if run in the
              same script, the 'CalibrateHighFocusMag' and 'CalibrateHighFocusIS' commands will run
              without requesting an aperture size.&nbsp; Command added in 4.2, 5-Feb-25.
           </TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">ReportBeamSizeFromCalib</TD>
+          <TD>Reports the beam size computed from the current intensity and a beam size 
+            calibration on a non-Titan scope.&nbsp; Command added in 4.3, 4-Feb-26.</TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">SetBeamSize #</TD>
+          <TD>On a scope with a beam size calibration, sets the beam size to <strong>#
+            </strong>in microns by computing the intensity corresponding to that size from 
+            the calibration.&nbsp; On a Titan, sets illuminated area to be <strong># </strong>in microns.&nbsp; 
+            Command added in 4.3, 4-Feb-26.</TD>
         </TR>
        <TR>
           <TD class="scriptcommand">ReportImageDistanceOffset</TD>
@@ -3645,13 +3659,16 @@
         </TR>
         <TR>
           <TD class="scriptcommand">NormalizeLenses #</TD>
-          <TD>Normalizes selected lenses on a Thermo/FEI or Hitachi scope; <b>#</b> is the sum of 1 for projector, 2
+          <TD>Normalizes selected lenses on a Thermo/FEI or Hitachi scope, or a JEOL scope with
+            a 'JeolLensRelaxProgram' property entry for the requested lens type(s); <b>#</b> is the sum of 1 for projector, 2
             for objective, 4 for condenser lenses</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">NormalizeAllLenses [#]</TD>
-          <TD>Normalizes all lenses, or in a lens group, on a Thermo/FEI scope.&nbsp; With <b>#</b> 0 or
-            not present, it normalizes all lenses in one call.&nbsp; Otherwise, <b>#</b> can be the
+          <TD>Normalizes all lenses, or ones in a lens group, on a Thermo/FEI scope, or lenses
+             in a condenser or projector group on a JEOL if there is a 'JeolLensRelaxProgram' property
+            for 5 or 6, respectively.&nbsp; With <b>#</b> 0 or
+            not present, it normalizes all lenses in one call on a Thermo/FEI scope.&nbsp; Otherwise, <b>#</b> can be the
             sum of 1 to normalize the illumination group (which includes condenser,
             minicondenser, and objective lenses) and 2 to normalize the projection group (which includes objective and projector
             lenses) in a separate call.</TD>
@@ -4542,13 +4559,15 @@
             left-handed camera coordinates).</TD>
         </TR>
         <TR>
-          <TD class="scriptcommand">SetAxisPosition area #D [#R]</TD>
+          <TD class="scriptcommand">SetAxisPosition area #D [#R] [#I]</TD>
           <TD>Modifies the axis position, and optionally the rotation of the inter-area
             axis, for the Focus and/or Trial area.&nbsp; Follow with 'F' or 'T' to specify the
             <b>area</b> (both will be changed if Focus and Trial settings are being kept
-            identical); with <b>#D</b>, the distance in microns; and optionally with <b>#R</b>, a rotation
-            angle.&nbsp; If an angle is set, the option to apply the angle will be turned on
-            in the Low Dose control panel.&nbsp; Low dose mode must be on to use this
+            identical).&nbsp; With the optional <b>#I</b> not set, <b>#D</b> specifies the distance in microns
+             and the optional <b>#R</b> sets a rotation angle.&nbsp; Set <b>#I</b> nonzero to enter raw image
+            shift X and Y values as the second and third values (<b>#D</b> and <b>#R</b>); this
+            will inevitably set a rotation angle too. &nbsp; If an angle is set, the option to apply the angle
+             will be turned on in the Low Dose control panel.&nbsp; Low dose mode must be on to use this
             command.</TD>
         </TR>
         <TR>
@@ -5446,6 +5465,35 @@
             indicate that they are being overridden.</TD>
         </TR>
         <TR>
+          <TD class="scriptcommand">SetItemImShiftTargets #I #M #S xvar yvar</TD>
+          <TD>Stores image shift targets for Multiple Record acquisition into the Navigator item specified by <b>#I</b>
+            (positive for table index, 0 for current or acquired item, or negative for index from
+            end), using X and Y values in variables <b>xvar</b> and <b>yvar</b>.&nbsp; The magnification
+             index at which image shift values apply is given by <b>#M</b>, which can be 0 to use the current 
+            magnification or negative to use the magnification of the map on which the item was drawn.&nbsp; 
+            The variables must contain raw image shift values if <b>#S</b> is 0, or stage coordinates if <b>#S</b>
+            is 1 or 2.&nbsp; With <b>#S</b> equal to 1, the difference between each coordinate and the first one
+            is converted to image shift and stored.&nbsp; With <b>#S</b> greater than 1, the same differences are stored, 
+            and the coordinate closest
+            to the middle of the range in X and Y is found and is moved to the start of the list, so that the IS values
+            are minimized and the 0, 0 value is at the start.&nbsp; Also, the stage coordinates of the item itself are
+            changed to be those of that middle point.&nbsp; The targets will all be acquired when running Multiple Records 
+            from Navigator Acquire at Items or the 'MultipleRecords' command, regardless of whether acquiring from multiple 
+            holes is specified in the Multiple Record Setup dialog or the 'MultipleRecords' command.&nbsp; Whether 
+            multiple shots are taken at each target (i.e., inside the hole, if there is a hole) is controlled by
+             the dialog settings and/or the MultipleRecords' command.&nbsp; Command added in 4.3, 16-Feb-26.
+          </TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">AdjustImShiftTargets #I [#D]</TD>
+          <TD>Uses a pre-existing transformation for adjusting hole vectors to adjust the image shift targets
+            stored in the Navigator item specified by <b>#I</b>
+            (positive for table index, 0 for current or acquired item, or negative for index from
+            end).  Enter a non-zero value for the optional <b>#D</b> to suppress redisplaying the image, in case
+             you are doing this command many times in a loop.&nbsp; The magnification at which the IS targets
+             apply must match the starting magnification of the adjusting transformation.&nbsp; Command added in 4.3, 17-Feb-26</TD>
+        </TR>
+        <TR>
           <TD class="scriptcommand">SetNavItemUserValue #I #V [text]</TD>
           <TD>Sets an arbitrary value for a Navigator item specified by <b>#I</b>
             (positive for table index, 0 for current or acquired item, or negative for index from
@@ -6123,7 +6171,7 @@
             squares found with 'AutoContourGridSquares'.&nbsp; </TD>
         </TR>
         <TR>
-          <TD class="scriptcommand">MakePolygonsAtSquares [#L] [#U] [#M] [#S] [#I] [#B]</TD>
+          <TD class="scriptcommand">MakePolygonsAtSquares [#L] [#U] [#M] [#S] [#I] [#B] [#A]</TD>
           <TD>Converts the current set of grid squares found with 'AutoContourGridSquares' to Navigator
             polygons, equivalent to pushing the <b>Make Polygons</b> button in the
             <a href="hidd_autocontour.htm">Autocontouring Grid Squares dialog</a>.&nbsp; The values from the
@@ -6138,6 +6186,7 @@
             <br />&nbsp;&nbsp;&nbsp; <b>#S</b> - Maximum SD cutoff.
             <br />&nbsp;&nbsp;&nbsp; <b>#I</b> - Maximum irregularity cutoff.
             <br />&nbsp;&nbsp;&nbsp; <b>#B</b> - Minimum border distance, in microns.
+            <br />&nbsp;&nbsp;&nbsp; <b>#A</b> - Set the Acquire flag for all polygons 
              &nbsp;</TD>
         </TR>
         </TABLE>

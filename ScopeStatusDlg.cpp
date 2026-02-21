@@ -493,10 +493,12 @@ void CScopeStatusDlg::Update(double inCurrent, int inMagInd, double inDefocus,
   }
 
   // Intensity
-  if (inSpot != mSpot || rawIntensity != mRawIntensity) {
+  if (inSpot != mSpot || rawIntensity != mRawIntensity || 
+    inIntensity != mLastPctIntensity) {
     m_strIntensity.Format(B3DCHOICE(inIntensity > 999., "%.0f",
       inIntensity >= 100. ? "%.1f" : "%.2f"), inIntensity);
     m_statIntensity.SetWindowText(m_strIntensity);
+    mLastPctIntensity = inIntensity;
   }
 
   // Update others
@@ -671,14 +673,14 @@ void CScopeStatusDlg::Update(double inCurrent, int inMagInd, double inDefocus,
 
       // Put units just at the end if both need them or Obj does
       // Otherwise put units on condenser if it needs them
-      objUnits = objAp > 5;
-      condUnits = condAp > 5 && !objUnits;
-      format = "out";
-      if (condAp > 0)
+      objUnits = objAp > (JEOLscope ? 8 : 5);
+      condUnits = condAp > (JEOLscope ? 8 : 5) && !objUnits;
+      format = (FEIscope && condAp == 1) ? "<->" : "out";
+      if (condAp > 1)
         format.Format("%d", condAp);
       m_strApertures = "C " + format + (condUnits ? " um  O " : "  O ");
-      format = "out";
-      if (objAp > 0)
+      format = (FEIscope && objAp == 1) ? "<->" : "out";
+      if (objAp > 1)
         format.Format("%d", objAp);
       m_strApertures += format + (objUnits ? " um  " : "  ");
       m_statApertures.SetWindowText(m_strApertures);

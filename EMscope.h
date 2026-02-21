@@ -69,6 +69,7 @@ LONG_OP_PREPARE_NO_VIBRATE, LONG_OP_AVOID_VIBRATION};
 #define FEI_PLUGIN_DOES_FALCON3    106
 #define FEI_PLUGIN_SCALES_DUMB_F3  108
 #define FEI_PLUGIN_CAN_DO_EER      110
+#define FEI_PLUGIN_SKIP_AP_PANEL   119
 
 #define ASI_FILTER_FEG_LOAD_TEMP     4
 
@@ -596,10 +597,12 @@ public:
   GetSetMember(int, ShowApertureStatus);
   GetSetMember(int, LastCondenserAp);
   GetMember(int, LastObjectiveAp);
+  GetMember(int, LastJeolC1Ap);
   GetMember(int, SingleCondenserAp);
   GetMember(bool, UseTwoJeolCondAp);
   GetSetMember(int, UseAperturesInStates);
   GetSetMember(BOOL, UseDetectorNameIfUtapi);
+  GetMember(int, FEIhasApertureSupport);
   static int GetScopeCallFromPlugin() {return mScopeCallFromPlugin ; };
   static void SetScopeCallFromPlugin(int val) { mScopeCallFromPlugin = val; };
   GetMember(int, LastMagIndex);
@@ -1025,6 +1028,7 @@ private:
   int mShowApertureStatus;     // Put aperture state in scope panel, 2 update, 1 SEM-only
   int mLastCondenserAp;        // Last known condenser aperture
   int mLastObjectiveAp;        // Last known objective aperture
+  int mLastJeolC1Ap;           // Last C1 if both in use
   int mUseAperturesInStates;   // -1 not set yet, 0 no, 1 to save/restore in states & maps
   int mSingleCondenserAp;      // Aperture ID to use for condenser if only one
   bool mUseTwoJeolCondAp;      // Track both C1 and C2 in JEOL
@@ -1161,6 +1165,7 @@ public:
   static int TaskApertureBusy();
   int ApertureBusy();
   void ApertureCleanup(int error);
+  void RecordApertureValue(int apIndex, int sizeOrIndex);
   int StartApertureThread(const char *descrip);
   bool MovePhasePlateToNextPos();
   int FindApertureSizeFromIndex(int apInd, int sizeInd, bool returnIndex = false);

@@ -1409,12 +1409,13 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
   }
 
   // Now draw navigator items
-  float lastStageX, lastStageY, tiltAngle, acquireRadii[2], labelDistThresh = 40.;
+  float lastStageX, lastStageY, tiltAngle, acquireRadii[2] = {0., 0.};
+  float labelDistThresh = 40.;
   int lastGroupID = -1, lastGroupSize, size, numPoints, pieceDrawnOn;
   int regMatch = imBuf->mRegistration ?
     imBuf->mRegistration : navigator->GetCurrentRegistration();
   std::set<int> *selectedItems = navigator->GetSelectedItems();
-  bool highlight, draw, doInHole, drawSkips;
+  bool highlight, draw, doInHole, drawSkips, skipPattern = false, targetsOnly = false;
   CMapDrawItem holeItem;
   MultiShotParams *msParams;
   int msNumXholes = 0, msNumYholes = 0, useXholes, useYholes;
@@ -1422,8 +1423,10 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
   FloatVec specialFullISX, specialFullISY, delISX, delISY;
   IntVec fullHoleIndex, holeIndex;
   int currentIndex = navigator->GetCurrentOrAcquireItem(item);
-  if (!navigator->GetAcquiring())
+  if (!navigator->GetAcquiring()) {
     item = navigator->GetSingleSelectedItem(&currentIndex);
+    skipPattern = item && item->mNumIStargets > 0 && !imBuf->mHasUserPt;
+  }
   int currentGroup = (currentIndex >= 0 && item != NULL) ? item->mGroupID : -1;
   int groupThresh = mWinApp->mNavHelper->GetPointLabelDrawThresh();
   bool showCurPtAcquire = !imBuf->mHasUserPt && mAcquireBox;
@@ -1434,7 +1437,8 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
   if (useMultiShot) {
     msParams = mWinApp->mNavHelper->GetMultiShotParams();
     doInHole = (msParams->inHoleOrMultiHole & MULTI_IN_HOLE) > 0;
-    useMultiShot = doInHole || doMultiHole;
+    targetsOnly = navigator->GetNumIStargetItems() > 0 && !doInHole && !doMultiHole;
+    useMultiShot = doInHole || doMultiHole || targetsOnly;
     if (doMultiHole)
       mWinApp->mNavHelper->GetNumHolesFromParam(msNumXholes, msNumYholes, ix);
   }
@@ -1449,7 +1453,7 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
   FloatVec convXinHole, convYinHole, convXallHole, convYallHole;
   FloatVec skippedX, skippedY, acquireXhole, acquireYhole, convXacquire, convYacquire;
   ShortVec skippedDraw;
-  float area, side, skipPad;
+  float area, side, skipPad, targPad;
   CMapDrawItem skipItem, triangleItem;
   ScaleMat is2st;
   int holeMag = mWinApp->mNavigator->GetMagIndForHoles();
@@ -1538,6 +1542,7 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
         }
       }
 
+ 
       // DRAW MULTI-SHOT PATTERN
       if (iDraw < 0 && useMultiShot && !mWinApp->mNavHelper->mComaVsISCalDlg) {
         float holeXoffset = 0, holeYoffset = 0;
@@ -1545,6 +1550,8 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
         int inHoleStart = inHoleEnd - B3DCHOICE(doInHole, msParams->numShots[0] +
           (msParams->doSecondRing ? msParams->numShots[1] : 0) , 0);
         GetSingleAdjustmentForItem(imBuf, item, delPtX, delPtY);
+        if (skipPattern || targetsOnly)
+          item->mDraw = false;
 
         // If there is multishot in hole, draw them either centered or in the last hole
         if (doInHole) {
@@ -1724,49 +1731,70 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
         // params, need to get specific list of holes for it
         numSpecHoles = 0;
         drawSkips = false;
-        useXholes = (doMultiHole && item->mNumXholes) ? item->mNumXholes :
-          msNumXholes;
-        useYholes = (doMultiHole && item->mNumYholes) ? item->mNumYholes :
-          msNumYholes;
-        if (useXholes && useYholes && (useXholes != msNumXholes ||
-          useYholes != msNumYholes || item->mNumSkipHoles || highlight)) {
 
-          // Get full hole list if this doesn't match last one used
-          if (useXholes != lastSpecialXholes ||
-            useYholes != lastSpecialYholes) {
-            numFullSpecHoles = mWinApp->mParticleTasks->GetHolePositions(specialFullISX,
-              specialFullISY, fullHoleIndex, mWinApp->mNavigator->GetMagIndForHoles(),
-              mWinApp->mNavigator->GetCameraForHoles(), useXholes,
-              useYholes, tiltAngle, false);
-            lastSpecialXholes = useXholes;
-            lastSpecialYholes = useYholes;
-          }
-
-          // Reduce it by any skipped ones
-          numSpecHoles = numFullSpecHoles;
-          delISX = specialFullISX;
-          delISY = specialFullISY;
-          holeIndex = fullHoleIndex;
-
-          // Keep track of skipped holes
+        // For IS targets
+        if (item->mNumIStargets) {
+          lastSpecialXholes = lastSpecialYholes = 0;
+          numSpecHoles = mWinApp->mParticleTasks->GetHolePositions(delISX,
+            delISY, holeIndex, mWinApp->mNavigator->GetMagIndForHoles(),
+            mWinApp->mNavigator->GetCameraForHoles(), 0, 0, tiltAngle, item, false);
+          skipItem.mNumPoints = 0;
+          holeItem.mNumPoints = 0;
           acquireXhole.clear();
           acquireYhole.clear();
-          skippedX.clear();
-          skippedY.clear();
-          if (item->mNumSkipHoles) {
-            mWinApp->mParticleTasks->SkipHolesInList(delISX, delISY, holeIndex,
-              item->mSkipHolePos, item->mNumSkipHoles, numSpecHoles, &skippedX,
-              &skippedY);
-          }
-          holeItem.mNumPoints = 0;
-          mWinApp->mNavigator->AddHolePositionsToItemPts(delISX, delISY, holeIndex, false,
-            numSpecHoles, &holeItem);
+          mWinApp->mNavigator->AddHolePositionsToItemPts(delISX, delISY, holeIndex,
+            true, numSpecHoles, &holeItem);
+          targPad = skipPad;
+          if (mAcquireBox)
+            targPad = 0.5f * sqrtf(powf(mAcquireBox->mPtX[2] - mAcquireBox->mPtX[0], 2.f)
+              + powf(mAcquireBox->mPtY[2] - mAcquireBox->mPtY[0], 2.f));
+        } else {
 
-          // Put skipped holes into an item too
-          skipItem.mNumPoints = 0;
-          if (skippedX.size())
-            mWinApp->mNavigator->AddHolePositionsToItemPts(skippedX, skippedY,
-              holeIndex, false, -(int)skippedX.size(), &skipItem);
+          // For other patterns
+          useXholes = (doMultiHole && item->mNumXholes) ? item->mNumXholes :
+            msNumXholes;
+          useYholes = (doMultiHole && item->mNumYholes) ? item->mNumYholes :
+            msNumYholes;
+          if (useXholes && useYholes && (useXholes != msNumXholes ||
+            useYholes != msNumYholes || item->mNumSkipHoles || highlight)) {
+
+            // Get full hole list if this doesn't match last one used
+            if (useXholes != lastSpecialXholes ||
+              useYholes != lastSpecialYholes) {
+              numFullSpecHoles = mWinApp->mParticleTasks->GetHolePositions(specialFullISX,
+                specialFullISY, fullHoleIndex, mWinApp->mNavigator->GetMagIndForHoles(),
+                mWinApp->mNavigator->GetCameraForHoles(), useXholes,
+                useYholes, tiltAngle, false);
+              lastSpecialXholes = useXholes;
+              lastSpecialYholes = useYholes;
+            }
+
+            // Reduce it by any skipped ones
+            numSpecHoles = numFullSpecHoles;
+            delISX = specialFullISX;
+            delISY = specialFullISY;
+            holeIndex = fullHoleIndex;
+
+            // Keep track of skipped holes
+            acquireXhole.clear();
+            acquireYhole.clear();
+            skippedX.clear();
+            skippedY.clear();
+            if (item->mNumSkipHoles) {
+              mWinApp->mParticleTasks->SkipHolesInList(delISX, delISY, holeIndex,
+                item->mSkipHolePos, item->mNumSkipHoles, numSpecHoles, &skippedX,
+                &skippedY);
+            }
+            holeItem.mNumPoints = 0;
+            mWinApp->mNavigator->AddHolePositionsToItemPts(delISX, delISY, holeIndex,
+              false, numSpecHoles, &holeItem);
+
+            // Put skipped holes into an item too
+            skipItem.mNumPoints = 0;
+            if (skippedX.size())
+              mWinApp->mNavigator->AddHolePositionsToItemPts(skippedX, skippedY,
+                holeIndex, false, -(int)skippedX.size(), &skipItem);
+          }
         }
         if (numSpecHoles) {
 
@@ -1793,7 +1821,8 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
             // Get the convex boundary of the ones being acquired
             convXacquire.resize(numSpecHoles);
             convYacquire.resize(numSpecHoles);
-            convexBound(&acquireXhole[0], &acquireYhole[0], numSpecHoles, 0., skipPad,
+            convexBound(&acquireXhole[0], &acquireYhole[0], numSpecHoles, 0., 
+              item->mNumIStargets ? targPad : skipPad,
               &convXacquire[0], &convYacquire[0], &size, &ptX, &ptY, numSpecHoles);
             convXacquire.resize(size);
             convYacquire.resize(size);
@@ -1812,7 +1841,8 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
             drawSkips = ix < numSpecHoles / 2 && size > 2;
           }
 
-          if (!drawSkips) {
+          if (!drawSkips && (!item->mNumIStargets ||(item->mNumIStargets && highlight))) {
+            CPen circlePen(PS_SOLID, thick1, COLORREF(RGB(255, 255, 0)));
 
             // Subtract acquire box center so it works for drawing in-hole points and
             // item box using acquire box
@@ -1826,6 +1856,14 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
                 DrawMapItemBox(cdc, &rect, mAcquireBox, imBuf,
                   B3DMIN(5, mAcquireBox->mNumPoints), ptX, ptY, delPtX, delPtY, NULL,
                   NULL);
+
+                // Draw beam circles for IS targets
+                if (item->mNumIStargets && highlight) {
+                  StageToImage(imBuf, acquireXhole[hole], acquireYhole[hole], ptX, ptY);
+                  DrawCircle(&cdc, &circlePen, &rect, imBuf->mImage, ptX + delPtX,
+                    ptY + delPtY, acquireRadii[0]);
+
+                }
               }
             }
           }
@@ -2005,10 +2043,10 @@ void CSerialEMView::DrawLowDoseAreas(CDC &cdc, CRect &rect, EMimageBuffer *imBuf
 {
   COLORREF areaColors[6] = {RGB(255, 255, 0), RGB(255, 0, 0), RGB(0, 255, 0),
     RGB(255, 255, 0), RGB(255, 128, 0), RGB(255, 0, 0)};
-  float cornerX[4], cornerY[4], cenX, cenY, radius;
+  float cornerX[4], cornerY[4], cenX, cenY, radius, trueRad;
   CPoint point;
   StateParams state;
-  int newInd;
+  int newInd, whichSize = B3DABS(mWinApp->GetCircleTypesInLDDefine());
   bool useDash = mDrewLDAreasAtNavPt && recOnly < 0;
   state.camIndex = mWinApp->GetCurrentCamera();
   if (mWinApp->mNavigator && mWinApp->mNavigator->GetSingleSelectedItem(&newInd) &&
@@ -2021,7 +2059,7 @@ void CSerialEMView::DrawLowDoseAreas(CDC &cdc, CRect &rect, EMimageBuffer *imBuf
       imBuf->mRegistration, curInd);
   for (int type = (recOnly >= 0 ? 1 : 0); type < 2; type++) {
     int area = mWinApp->mLowDoseDlg.DrawAreaOnView(type + (recOnly >= 0 ? 1 : 0), imBuf,
-      state, cornerX, cornerY, cenX, cenY, radius);
+      state, cornerX, cornerY, cenX, cenY, radius, trueRad);
     if (area) {
       CPen pnSolidPen(useDash ? PS_DASHDOT : PS_SOLID, mDrewLDAreasAtNavPt ? 1 : thick,
         areaColors[(recOnly >= 0 ? recOnly : 0) + area - 1]);
@@ -2037,9 +2075,25 @@ void CSerialEMView::DrawLowDoseAreas(CDC &cdc, CRect &rect, EMimageBuffer *imBuf
       cdc.SelectObject(pOldPen);
 
       // Draw circle around center for area being defined
-      if ((!type || recOnly >= 0) && !mWinApp->GetSTEMMode())
+      if (((!type && (!trueRad || whichSize != 1)) || recOnly >= 0) && 
+        !mWinApp->GetSTEMMode())
         DrawCircle(&cdc, &pnSolidPen, &rect, imBuf->mImage, cenX + xOffset,
           cenY + yOffset, radius, true);
+
+      // Draw beam circle for either area when defining, or for focus when edit focus
+      if (recOnly < 0 && !mWinApp->GetSTEMMode() && trueRad > 0. && 
+        !mDrewLDAreasAtNavPt && whichSize > 0) {
+        cenX = (float)(type ? imBuf->mImage->getWidth() / 2. : cenX + xOffset);
+        cenY = (float)(type ? imBuf->mImage->getHeight() / 2. : cenY + yOffset);
+        if (area == mWinApp->mScope->GetLowDoseArea()) {
+          CPen pnThickPen(PS_SOLID, 2 * thick, areaColors[area - 1]);
+          DrawDashedCircle(&cdc, &pnThickPen, &rect, imBuf->mImage, cenX, cenY, trueRad,
+            true);
+        } else {
+          DrawDashedCircle(&cdc, &pnSolidPen, &rect, imBuf->mImage, cenX, cenY, trueRad,
+            true);
+        }
+      }
     }
   }
 }
@@ -2226,6 +2280,47 @@ void CSerialEMView::DrawCircle(CDC *cdc, CPen *pNewPen, CRect *rect, KImage *ima
       cdc->MoveTo(point);
   }
 
+  if (pNewPen)
+    cdc->SelectObject(pOldPen);
+}
+
+// Draw a dashed circle with controllable line thickness
+void CSerialEMView::DrawDashedCircle(CDC *cdc, CPen *pNewPen, CRect *rect, KImage *image,
+  float cenX, float cenY, float radius, bool skipShift)
+{
+  CPoint point;
+  float ptX, ptY;
+  CPen *pOldPen;
+  int pt, sub;
+
+  // Get the dash and gap lengths and the number of dashes to draw in circle
+  float dashLen = (float)mWinApp->ScaleValueForDPI(13.3 / mZoom);
+  float gapLen = (float)mWinApp->ScaleValueForDPI(10. / mZoom);
+  float circum = 2.f * 3.14119f * radius;
+  int numDash = B3DMAX(4, (int)(circum / (dashLen + gapLen)));
+  double angle, delAngle = DTOR * 360. / numDash;
+  double segAngle = delAngle * dashLen / (dashLen + gapLen);
+
+  // Subsegments are needed for small circles
+  int numSubSeg = B3DMAX(1, B3DNINT(36. / numDash));
+  double subSegAng = segAngle / numSubSeg;
+  if (pNewPen)
+    pOldPen = cdc->SelectObject(pNewPen);
+
+  // Loop on each segment and draw the subsegments in each
+  for (pt = 0; pt < numDash; pt++) {
+    angle = pt * delAngle;
+    ptX = (float)(cenX + radius * cos(angle));
+    ptY = (float)(cenY + radius * sin(angle));
+    MakeDrawPoint(rect, image, ptX, ptY, &point, skipShift);
+    cdc->MoveTo(point);
+    for (sub = 1; sub <= numSubSeg; sub++) {
+      ptX = (float)(cenX + radius * cos(angle + sub * subSegAng));
+      ptY = (float)(cenY + radius * sin(angle + sub * subSegAng));
+      MakeDrawPoint(rect, image, ptX, ptY, &point, skipShift);
+      cdc->LineTo(point);
+    }
+  }
   if (pNewPen)
     cdc->SelectObject(pOldPen);
 }

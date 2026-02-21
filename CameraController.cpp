@@ -497,6 +497,7 @@ CCameraController::CCameraController()
     mTD.PartialArrays[l] = NULL;
   mAskedDMtoInsert = false;
   mSaveK3GainAsTIFF = false;
+  mSkipFocusRamper = false;
 }
 
 // Clear anything that might be set externally, or was cleared in constructor and cleanup
@@ -3312,7 +3313,8 @@ void CCameraController::Capture(int inSet, bool retrying)
 
   // Need to set this before any ErrorCleanup calls
   mTD.UseUtapi = UsingUtapiForCamera(mParam);
-  mTD.UtapiForRamp = FEIscope && mScope->UtapiSupportsService(UTSUP_FOCUS);
+  mTD.UtapiForRamp = FEIscope && (mScope->UtapiSupportsService(UTSUP_FOCUS) || 
+    mSkipFocusRamper);
 
   // If we just raised the screen to switch into STEM, set a timeout
   if (mRaisingScreen > 0 && mParam->STEMcamera && mWinApp->DoSwitchSTEMwithScreen())

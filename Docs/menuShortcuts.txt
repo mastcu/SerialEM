@@ -58,6 +58,7 @@ U
   D
   F
   K
+  M
   N
   O
   P
@@ -139,6 +140,7 @@ Calibration:
   R
   S
   U
+  Z
   2
 A
 B

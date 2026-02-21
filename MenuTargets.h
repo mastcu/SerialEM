@@ -448,6 +448,11 @@ public:
   afx_msg void OnUpdateParallelillumination(CCmdUI *pCmdUI);
   afx_msg void OnHelpListDebugOutputKeyLetters();
   afx_msg void OnSetThresholdForRightDblClick();
+  afx_msg void OnBeamspotBeamsize();
+  afx_msg void OnUpdateBeamspotBeamSize(CCmdUI *pCmdUI);
+  afx_msg void OnMiscNoTrueSize();
+  afx_msg void OnUpdateMiscNoTrueSize(CCmdUI *pCmdUI);
+  afx_msg void OnUpdateReverseWheelZoomDirection(CCmdUI *pCmdUI);
 };
 
 /////////////////////////////////////////////////////////////////////////////

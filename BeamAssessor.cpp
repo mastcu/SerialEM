@@ -94,6 +94,10 @@ CBeamAssessor::CBeamAssessor()
   mNumC2Apertures = 0;
   mCalIAlimitSpot = -1;
   mCalIAtestValue = 10.f;
+  mSizeRangeForCal = 10.f;
+  mUpperMagForSizeCal = 0;
+  mLowerMagForSizeCal = 0;
+  mBeamSizeCalStep = -1;
   for (j = 0; j < 4; j++)
     mSpotCalAperture[j] = 0;
   mCrossCalAperture[0] = mCrossCalAperture[1] = 0;
@@ -2495,7 +2499,7 @@ void CBeamAssessor::ScaleTablesForAperture(int currentAp, bool fromMeasured)
 // short term cal not saved, and optionally giving a message
 void CBeamAssessor::ScaleIntensitiesIfApChanged(int newAp, bool doMess)
 {
-  if (newAp == mCurrentAperture || newAp < 5)
+  if (newAp == mCurrentAperture || newAp < 5 || JEOLscope)
     return;
   ScaleTablesForAperture(newAp, false);
   mWinApp->mDocWnd->SetShortTermNotSaved();
@@ -2511,9 +2515,14 @@ int CBeamAssessor::RequestApertureSize(void)
   int newAp;
   if (mScope->GetMonitorC2ApertureSize() > 1)
     return mCurrentAperture;
-  if (mScope->GetMonitorC2ApertureSize() > 0) {
-    newAp = mScope->GetApertureSize(CONDENSER_APERTURE);
-    if (newAp > 2) {
+  if (mScope->GetShowApertureStatus() > 1)
+    return mScope->GetLastCondenserAp();
+  if (mScope->GetMonitorC2ApertureSize() > 0 || mScope->GetShowApertureStatus() > 0 ||
+    mScope->GetUseAperturesInStates() > 0 || JEOLscope) {
+    newAp = mScope->GetApertureSize(mScope->GetSingleCondenserAp());
+    newAp = mScope->FindApertureSizeFromIndex(mScope->GetSingleCondenserAp(), newAp, 
+      true);
+    if (newAp > (JEOLscope ? 8 : 5)) {
       mCurrentAperture = newAp;
       return mCurrentAperture;
     }
@@ -2538,8 +2547,13 @@ int CBeamAssessor::RequestApertureSize(void)
 void CBeamAssessor::InitialSetupForAperture(void)
 {
   int i, numMeas = 0, numNotMeas = 0;
-  CString mess;
-  if (!mWinApp->mScope->GetUseIllumAreaForC2())
+  CString mess, str;
+  bool needForTitan = mScope->GetUseIllumAreaForC2() && 
+    (mScope->GetMonitorC2ApertureSize() <= 0 || !mScope->GetFEIhasApertureSupport());
+  bool needForSizes = mBeamSizeArray.GetSize() > 0 &&
+    ((mScope->GetMonitorC2ApertureSize() <= 0 && mScope->GetShowApertureStatus() <= 0) ||
+      (FEIscope && !mScope->GetFEIhasApertureSupport()));
+  if (!needForTitan && !needForSizes)
     return;
   for (i = 0; i < mNumTables; i++) {
     if (mBeamTables[i].measuredAperture)
@@ -2547,29 +2561,29 @@ void CBeamAssessor::InitialSetupForAperture(void)
     else
       numNotMeas++;
   }
-  if (numMeas) {
-    if (mCurrentAperture && mScope->GetMonitorC2ApertureSize() < 2)
-      mess.Format("Last known C2 aperture size was %d microns.\r\n   %d intensity "
-        "calibrations have been set to work with that size.\r\n   Use Tasks - Set"
-        " Aperture Size if the size is now different or you change the aperture.",
-        mCurrentAperture, numMeas);
-    else if (!mCurrentAperture) {
-      mess.Format("The C2 aperture size is not known from a previous session.\r\n"
-        "   For %d intensity calibrations, the aperture size was recorded at the time."
-        "\r\n   These will work correctly", numMeas);
-      mess += mScope->GetMonitorC2ApertureSize() < 2 ?
-        " if you run Tasks - Set Aperture Size" :
-        " once the program determines the current size";
+  if ((needForTitan && numMeas) || needForSizes) {
+    if (mCurrentAperture > 0) {
+      PrintfToLog("Last known C2 aperture size was %d microns.", mCurrentAperture);
+      if (needForTitan && numMeas)
+        PrintfToLog("%d intensity calibrations have been set to work with that size.",
+          numMeas);
+    } else {
+      SEMAppendToLog("The C2 aperture size is not known from a previous session.");
+      if (needForTitan && numMeas)
+        PrintfToLog("   For %d intensity calibrations, the aperture size was recorded "
+          " at the time.", numMeas);
     }
-    mWinApp->AppendToLog(mess);
+    if (needForSizes)
+      SEMAppendToLog("  There are beam size calibrations that will give the right\r\n"
+        "   beam size only if the aperture size is known.");
+    SEMAppendToLog("   Use Tasks - Set Aperture Size if the size is now different or"
+      " you change the aperture.");
   }
-  if (numNotMeas) {
-    mess.Format("The C2 aperture size was not recorded for %d beam intensity "
+  if (needForTitan && numNotMeas)
+    PrintfToLog("The C2 aperture size was not recorded for %d beam intensity "
       "calibrations.\r\n   These will work correctly only at the same aperture size as "
       "when they were obtained.\r\n   To fix the calibration file, see the Help for "
       "Calibration - Beam Intensity", numNotMeas);
-    mWinApp->AppendToLog(mess);
-  }
 }
 
 //////////////////////////////////////////////////////////////
@@ -3045,8 +3059,8 @@ void CBeamAssessor::ListParallelIlluminations()
   mWinApp->SetNextLogColorStyle(0, 1);
   SEMAppendToLog("\r\nParallel illuminations saved");
   mWinApp->SetNextLogColorStyle(0, 4);
-  PrintfToLog("Parallel illuminations saved\r\n"
-      "%s %s    Spot   %s", mScope->GetC2Units(), mScope->GetC2Name(), (LPCTSTR)probeText);
+  PrintfToLog("%s %s    Spot   %s", 
+    mScope->GetC2Units(), mScope->GetC2Name(), (LPCTSTR)probeText);
   probeText = "";
   for (int ind = 0; ind < mParIllumArray.GetSize(); ind++) {
     if (FEIscope)
@@ -3059,8 +3073,502 @@ void CBeamAssessor::ListParallelIlluminations()
   }
 }
 
+// BEAM SIZE ROUTINES
+
+// Start a calibration of beam size
+void CBeamAssessor::StartBeamSizeCalibration()
+{
+  EMimageBuffer *imBuf = mWinApp->GetImBufs();
+  int magInd;
+  float sizeRange = mSizeRangeForCal;
+  CameraParameters * camP = mWinApp->GetActiveCamParam();
+  CString mess;
+
+  if (mWinApp->LowDoseMode()) {
+    AfxMessageBox("The beam size calibration cannot be done in Low Dose mode");
+    return;
+  }
+  magInd = mScope->FastMagIndex();
+  if (mLowerMagForSizeCal > 0 && B3DABS(magInd - mLowerMagForSizeCal) < 2 && 
+    mSizeCal.spotSize == mScope->GetSpotSize()) {
+    if (AfxMessageBox("Do you want to finish the previously started beam size "
+      "calibration?", MB_QUESTION) == IDYES) {
+      mSizeCal.intensity[mStoppedBeamCalStep / 2] = mScope->GetIntensity();
+      NormalizeForSizeCal(true);
+      TakeSizeCalFirstShot(2 * (mStoppedBeamCalStep / 2));
+      return;
+    }
+  }
+  mLowerMagForSizeCal = 0;
+  mUpperMagForSizeCal = magInd;
+
+  // Get settings and test conditions
+  mSizeCal.spotSize = mScope->GetSpotSize();
+  mSizeCal.intensity[0] = mScope->GetIntensity();
+  mSizeCal.crossover = mScope->GetCrossover(mSizeCal.spotSize);
+  mSizeCal.probeOrAlpha = -999;
+  mWinApp->mMultiTSTasks->GetProbeOrAlpha(mSizeCal.probeOrAlpha);
+  if (!mSizeCal.crossover) {
+    AfxMessageBox("There is no crossover calibration" + 
+      CString(FEIscope ? " for this probe mode" : "") + 
+      "; this must exist to do this calibration");
+    return;
+  }
+
+  mess = "To do this calibration:\r\n"
+    "1. The crossover calibration should be up to date\r\n"
+    "2. The stage should be at the eucentric height and images near focus\r\n"
+    "3. You should start at the higher mag/smaller beam size\r\n"
+    "4. Trial parameters and beam conditions should be set to make\r\n"
+    "    the beam somewhat smaller than the field of view and not saturated";
+  SEMAppendToLog(mess);
+  if (AfxMessageBox(mess + "\r\nAre you ready to proceed?", MB_QUESTION) == IDNO)
+    return;
+
+  if (mSizeCal.intensity[0] < mSizeCal.crossover &&
+    AfxMessageBox("The intensity is less than the calibrated crossover intensity.\n"
+      "Is this correct, i.e., is the beam really below crossover?\n"
+      "(If not, go redo the crossover calibration.)", MB_QUESTION) == IDNO)
+    return;
+
+  // Get size range to do
+  if (!KGetOneFloat("The magnification will be reduced to take an image with a larger beam"
+    " size", "Enter the factor by which to increase the beam size for the second "
+    "measurement:", sizeRange, 1))
+    return;
+  if (sizeRange < 2.) {
+    AfxMessageBox("The size range must be at least 2", MB_EXCLAME);
+    return;
+  }
+  mSizeRangeForCal = sizeRange;
+  mScope->GetBeamShift(mStartingBeamShiftX, mStartingBeamShiftY);
+
+  NormalizeForSizeCal(true);
+  TakeSizeCalFirstShot(0);
+}
+
+// Next operation in beam size calibration: center and possibly resize after normalization
+// or measure size for real after second image
+void CBeamAssessor::BeamSizeCalNextTask()
+{
+  EMimageBuffer *imBuf = mWinApp->GetImBufs();
+  int magInd, ind, binning, numQuad, nx, ny, lowestMag, minSize, c1ap;
+  int calInd = mBeamSizeCalStep / 2;
+  float xcen, ycen, xcenUse, ycenUse, radUse, fracUse, radius, shiftX, shiftY, fitErr;
+  float pixel, target, diamPix;
+  double slope, intcp;
+  float sizeRange = mSizeRangeForCal;
+  CString mess, str;
+
+  if (mBeamSizeCalStep < 0)
+    return;
+  pixel = mShiftManager->GetPixelSize(imBuf);
+  lowestMag = mScope->GetLowestMModeMagInd();
+
+  // Analyze beam for size/center
+  ind = mWinApp->mProcessImage->FindBeamCenter(imBuf, xcen, ycen, radius, xcenUse,
+    ycenUse, radUse, fracUse, binning, numQuad, shiftX, shiftY, fitErr);
+  if (ind) {
+    AfxMessageBox(ind < 0 ? "No beam edges were detected in this image" :
+      "An error occurred analyzing the image for beam edges");
+    StopBeamSizeCal();
+    return;
+  }
+
+  imBuf->mImage->getSize(nx, ny);
+  minSize = B3DMIN(nx, ny);
+  diamPix = 2.f * (float)binning * radius;
+  pixel = mShiftManager->GetPixelSize(imBuf);
+  if (mBeamSizeCalStep % 2 == 0) {
+
+    // After normalization and a shot, center the beam, then see if it is too small or
+    // large
+    mWinApp->mProcessImage->MoveBeam(imBuf, shiftX, shiftY);
+    if (!mBeamSizeCalStep)
+      mScope->GetBeamShift(mStartingBeamShiftX, mStartingBeamShiftY);
+    if (mBeamSizeCalStep > 0 && (diamPix > 1.05 * minSize  ||
+      (diamPix < 0.75 * minSize && diamPix * pixel < mLastSizeTarget))) {
+
+      // Get equation from current measurements and get size that brings it to original
+      // target or keeps it within the field
+      slope = (mSizeCal.intensity[calInd] - mSizeCal.intensity[calInd - 1]) /
+        (pixel * diamPix - mSizeCal.beamSize[calInd - 1]);
+      intcp = mSizeCal.intensity[calInd - 1] - slope * mSizeCal.beamSize[calInd - 1];
+      SEMTrace('1', "int %f %f  size %f %f", mSizeCal.intensity[calInd], 
+        mSizeCal.intensity[calInd - 1], pixel * diamPix, mSizeCal.beamSize[calInd - 1]);
+      SEMTrace('1', "calInd %d , slope %f  intcp %f", calInd, slope, intcp);
+      if (diamPix > 1.05 * minSize)
+        target = (float)(0.9 * minSize * pixel);
+      else
+        target = B3DMIN(mLastSizeTarget, (float)(0.9 * minSize * pixel));
+      mSizeCal.intensity[calInd] = slope * target + intcp;
+      B3DCLAMP(mSizeCal.intensity[calInd], 0.02, 0.98);
+
+      // Set intensity and normalize again
+      mScope->SetIntensity(mSizeCal.intensity[calInd]);
+      SEMTrace('1', "Size %.2f  adjust intensity to %f to reach %.2f", diamPix * pixel,
+        mSizeCal.intensity[calInd], target);
+      if (!JEOLscope || SEMLookupJeolRelaxData(nmCondenser))
+        mScope->NormalizeCondenser();
+      mShiftManager->SetGeneralTimeOut(GetTickCount(), 3000);
+    }
+  } else {
+
+    // Require all 4 corners at least
+    if (numQuad < 4) {
+      mess.Format("The beam edge was detected in only %d quadrants\n"
+        "of the image in buffer A; it should be fully\ncontained in the image", numQuad);
+      AfxMessageBox(mess, MB_EXCLAME);
+      StopBeamSizeCal();
+      return;
+    }
+
+    // Confirm
+    mSizeCal.beamSize[calInd] = (float)(radius * 2.f * binning * pixel);
+    mess.Format("Beam diameter measured to be %.3f um, with a fit error %.3f um\n\n"
+      "Is this a valid value for the beam size in this image?",
+      mSizeCal.beamSize[calInd], fitErr * binning * pixel);
+    if (AfxMessageBox(mess, MB_QUESTION) == IDNO) {
+      StopBeamSizeCal();
+      return;
+    }
+
+    if (mBeamSizeCalStep < 4) {
+
+      // Compute target size for next step
+      if (mBeamSizeCalStep < 2) {
+        target = sqrtf(mSizeRangeForCal) * mSizeCal.beamSize[0];
+       } else {
+        target = mSizeRangeForCal * mSizeCal.beamSize[0];
+      }
+      slope = (float)(mSizeCal.intensity[calInd] - mSizeCal.crossover) /
+        mSizeCal.beamSize[calInd];
+      intcp = (float)mSizeCal.crossover;
+
+      // Find mag with FOV at least 25% bigger than expected size
+      for (magInd = mScope->FastMagIndex(); magInd >= lowestMag; 
+        magInd--) {
+        pixel = mShiftManager->GetPixelSize(mWinApp->GetCurrentCamera(), magInd) * 
+          imBuf->mBinning;
+        if (target < 0.8 * pixel * B3DMIN(nx, ny))
+          break;
+      }
+
+      // If mag couldn't go low enough, reduce target size
+      if (magInd < lowestMag) {
+        if (mBeamSizeCalStep < 2) {
+          AfxMessageBox("You must start with a smaller beam size or request\n"
+            "a smaller range to avoid reducing the range\n"
+            "to stay out of LM on the first step", MB_EXCLAME);
+          StopBeamSizeCal();
+          return;
+        }
+
+        magInd = lowestMag;
+        target = 0.8f * pixel * (float)B3DMIN(nx, ny);
+        PrintfToLog("Reduced size range to %.1f to stay out of LM", 
+          target / mSizeCal.beamSize[0]);
+      }
+      mLastSizeTarget = target;
+
+      // Assume crossover close enough that this will work for now
+      mSizeCal.intensity[calInd + 1] = slope * target + intcp;
+      SEMTrace('1', "size %.2f target %.2f mag %d  pixel %f  slope %f intcp %f intensity"
+        " %f", mSizeCal.beamSize[calInd], target, magInd, pixel,slope, intcp, 
+        mSizeCal.intensity[calInd + 1]);
+      mScope->SetMagIndex(magInd);
+      mLowerMagForSizeCal = magInd;
+      mScope->SetIntensity(mSizeCal.intensity[calInd + 1]);
+      NormalizeForSizeCal(1);
+
+    } else {
+
+      // Finish up: Get all-important aperture
+      mSizeCal.measuredAperture = RequestApertureSize();
+      if (mScope->GetUseTwoJeolCondAp()) {
+        c1ap = mScope->GetApertureSize(JEOL_C1_APERTURE, &str);
+        c1ap = mScope->FindApertureSizeFromIndex(JEOL_C1_APERTURE, c1ap, true);
+        mSizeCal.JeolC1Aperture = c1ap > 8 ? c1ap : 0;
+      }
+
+      // Look for calibration to replace or add new one
+      ind = LookupBeamSizeCalibration(mSizeCal.intensity[0], mSizeCal.crossover,
+        mSizeCal.spotSize, mSizeCal.probeOrAlpha);
+      if (ind >= 0 && mBeamSizeArray[ind].spotSize == mSizeCal.spotSize) {
+        mess.Format("This calibration replaces an existing one for spot %d", 
+          mSizeCal.spotSize);
+        if (!mScope->GetUseIllumAreaForC2() && mBeamSizeArray[ind].crossover > 0)
+          mess += mSizeCal.intensity[0] > mSizeCal.crossover ? " above crossover" :
+          " below crossover";
+        if (FEIscope) {
+          mess += mSizeCal.probeOrAlpha ? " for microprobe" : " for nanoprobe";
+        } else if (!mScope->GetHasNoAlpha()) {
+          str.Format(" for alpha %d", mSizeCal.probeOrAlpha + 1);
+          mess += str;
+        }
+        mBeamSizeArray.SetAt(ind, mSizeCal);
+        SEMAppendToLog(mess);
+      } else {
+        mBeamSizeArray.Add(mSizeCal);
+      }
+      mLowerMagForSizeCal = 0;
+      StopBeamSizeCal();
+      mWinApp->SetCalibrationsNotSaved(true);
+      return;
+    }
+  }
+
+  mBeamSizeCalStep++;
+  mWinApp->mCamera->InitiateCapture(TRIAL_CONSET);
+  mWinApp->AddIdleTask(CCameraController::TaskCameraBusy, TASK_BEAM_SIZE_CAL, 0, 0);
+}
+
+// Finds a matching beam size calibration
+int CBeamAssessor::LookupBeamSizeCalibration(double intensity, double curCross, int spot, 
+  int probeOrAlpha)
+{
+  BeamSizeCal sizeCal;
+  int bestSpot = -1, bestInd = -1;
+  for (int ind = 0; ind < mBeamSizeArray.GetSize(); ind++) {
+    sizeCal = mBeamSizeArray[ind];
+    if (sizeCal.probeOrAlpha == probeOrAlpha &&
+      BOOL_EQUIV(intensity > curCross, sizeCal.intensity[0] > sizeCal.crossover)) {
+      if (bestSpot < 0 || B3DABS(spot - sizeCal.spotSize) < B3DABS(spot - bestSpot)) {
+        bestSpot = sizeCal.spotSize;
+        bestInd = ind;
+      }
+    }
+  }
+  return bestInd;
+}
+
+// Stop the beam size calibration: if it is in second mag, allow it to be resumed,
+// otherwise restore initial conditions
+void CBeamAssessor::StopBeamSizeCal()
+{
+  if (mBeamSizeCalStep < 0)
+    return;
+
+  mStoppedBeamCalStep = mBeamSizeCalStep;
+  mBeamSizeCalStep = -1;
+  if (mLowerMagForSizeCal > 0) {
+    AfxMessageBox("You can complete this calibration if you adjust the\n"
+      " conditions and restart it within one mag step of the current mag");
+  } else {
+    mScope->SetMagIndex(mUpperMagForSizeCal);
+    mScope->SetIntensity(mSizeCal.intensity[0]);
+    mScope->SetBeamShift(mStartingBeamShiftX, mStartingBeamShiftY);
+  }
+  mWinApp->UpdateBufferWindows();
+  mWinApp->SetStatusText(MEDIUM_PANE, "");
+}
+
+void CBeamAssessor::CalBeamSizeCleanup(int error)
+{
+  if (error == IDLE_TIMEOUT_ERROR)
+    AfxMessageBox(_T("Time out trying to get image for beam size calibration"),
+      MB_EXCLAME);
+  StopBeamSizeCal();
+  mWinApp->ErrorOccurred(error);
+}
+
+// Do normalization of condenser and also of projector if doBoth is set
+void CBeamAssessor::NormalizeForSizeCal(bool doBoth)
+{
+  if (FEIscope) {
+    mScope->NormalizeAll(doBoth ? 0 : 1);
+  } else if (JEOLscope) {
+    if (SEMLookupJeolRelaxData(nmAll))
+      mScope->NormalizeAll(1);
+    else if (SEMLookupJeolRelaxData(nmCondenser))
+      mScope->NormalizeCondenser();
+    if (doBoth) {
+      if (SEMLookupJeolRelaxData(pnmAll))
+        mScope->NormalizeAll(2);
+      else if (SEMLookupJeolRelaxData(pnmProjector))
+        mScope->NormalizeProjector();
+    }
+  } else {
+    mScope->NormalizeCondenser();
+    if (doBoth)
+      mScope->NormalizeProjector();
+  }
+  mShiftManager->SetGeneralTimeOut(GetTickCount(), 5000);
+}
+
+// Start initial acquisition for size calibration, setting the step number and status
+void CBeamAssessor::TakeSizeCalFirstShot(int step)
+{
+  mBeamSizeCalStep = step;
+  mWinApp->UpdateBufferWindows();
+  mWinApp->SetStatusText(MEDIUM_PANE, "CALIBRATING BEAM SIZE");
+  mWinApp->mCamera->InitiateCapture(TRIAL_CONSET);
+  mWinApp->AddIdleTask(CCameraController::TaskCameraBusy, TASK_BEAM_SIZE_CAL, 0, 0);
+}
+
+// Determine the beam size from the calibration for the given intensity, spot, and 
+// probe/alpha or use the current spot or probe/alpha if either is -1
+int CBeamAssessor::BeamSizeFromCalibration(double intensity, int spot, int probeOrAlpha,
+  float &size, CString &errStr)
+{
+  double slope, intcp, delCross;
+  BeamSizeCal sizeCal;
+  int calInd = 0;
+  if (GetSizeCalAndDeltaCross(intensity, spot, probeOrAlpha, sizeCal, delCross, errStr))
+    return 1;
+  if (BOOL_EQUIV(sizeCal.intensity[2] > sizeCal.intensity[0],
+    intensity > sizeCal.intensity[1]))
+    calInd = 1;
+  slope = (sizeCal.intensity[calInd + 1] - sizeCal.intensity[calInd]) /
+    (sizeCal.beamSize[calInd + 1] - sizeCal.beamSize[calInd]);
+  intcp = sizeCal.intensity[1] - sizeCal.beamSize[1] * slope + delCross;
+
+  // Apply equation to get size from intensity
+  size = (float)((intensity - intcp) / slope);
+  //SEMTrace('1', "calInd %d slope %f intcp %f size %f", calInd, slope, intcp, size);
+
+  // Adjust for aperture
+  size *= GetSizeScalingForAperture(sizeCal);
+  return 0;
+}
+
+// Convenience function returns 0 if size exists and optionally returns size for Record
+// or for a general area
+int CBeamAssessor::LDRecordBeamSizeFromCal(float *size)
+{
+  return LDAreaBeamSizeFromCal(RECORD_CONSET, size);
+}
+
+int CBeamAssessor::LDAreaBeamSizeFromCal(int conSet, float *size)
+{
+  LowDoseParams *ldp = mWinApp->GetLowDoseParams() + conSet;
+  CString str;
+  float bsize;
+  int ret = BeamSizeFromCalibration(ldp->intensity, ldp->spotSize,
+    FEIscope ? ldp->probeMode : (int)ldp->beamAlpha, bsize, str);
+  if (size)
+    *size = ret ? 0.f : bsize;
+  return ret;
+}
+
+// Determine the intensity needed to get to a desired size at the given current intensity,
+// spot and probe/alpha
+int CBeamAssessor::FindIntensityForNewBeamSize(double intensity, int spot, 
+  int probeOrAlpha, float newSize, double &newIntensity, CString &errStr)
+{
+  double slope, intcp, delCross;
+  BeamSizeCal sizeCal;
+  int calInd = 0;
+  if (GetSizeCalAndDeltaCross(intensity, spot, probeOrAlpha, sizeCal, delCross, errStr))
+    return 1;
+
+  // Adjust for aperture
+  newSize /= GetSizeScalingForAperture(sizeCal);
+  if (BOOL_EQUIV(sizeCal.beamSize[2] > sizeCal.beamSize[0],
+    newSize > sizeCal.beamSize[1]))
+    calInd = 1;
+  slope = (sizeCal.intensity[calInd + 1] - sizeCal.intensity[calInd]) /
+    (sizeCal.beamSize[calInd + 1] - sizeCal.beamSize[calInd]);
+  intcp = sizeCal.intensity[1] - sizeCal.beamSize[1] * slope + delCross;
+
+  newIntensity = newSize * slope + intcp;
+  SEMTrace('1', "calInd %d  slope %f  intcp %f, newInt %f", calInd, slope, intcp, 
+    newIntensity);
+  if (newIntensity <= 0. || newIntensity >= 1.) {
+    B3DCLAMP(newIntensity, 0.001, 0.999);
+    return BEAM_ENDING_OUT_OF_RANGE;
+  }
+  return 0;
+}
+
+// Finds a calibration for intensity, spot and probe/alpha (or current if -1) and returns
+// adjustment needed for change in crossover
+int CBeamAssessor::GetSizeCalAndDeltaCross(double intensity, int spot, int probeOrAlpha,
+  BeamSizeCal &sizeCal, double &delCross, CString &errStr)
+{
+  int ind;
+  CString str;
+  double curCross;
+
+  // Get conditions if needed and crossover
+  if (spot < 0)
+    spot = mScope->FastSpotSize();
+  if (probeOrAlpha < 0) {
+    probeOrAlpha = -999;
+    mWinApp->mMultiTSTasks->GetProbeOrAlpha(probeOrAlpha);
+  }
+  curCross = mScope->GetCrossover(spot, probeOrAlpha);
+  if (!curCross) {
+    errStr = "There is no crossover calibration for the current spot size";
+    return 1;
+  }
+
+  // Look for calibration
+  ind = LookupBeamSizeCalibration(intensity, curCross, spot, probeOrAlpha);
+  if (ind >= 0) {
+    sizeCal = mBeamSizeArray[ind];
+  } else {
+    errStr = "There is no beam size calibration on this side of crossover";
+    if (FEIscope) {
+      errStr += probeOrAlpha ? " for microprobe" : " for nanoprobe";
+    } else if (!mScope->GetHasNoAlpha()) {
+      str.Format(" for alpha %d", probeOrAlpha);
+      errStr + str;
+    }
+    return 1;
+  }
+
+  delCross = curCross - sizeCal.crossover;
+  return 0;
+}
+
+// Returns scaling factor to apply to size for current condenser and possibly
+// JEOL C1 aperture relative to calibrated ones
+float CBeamAssessor::GetSizeScalingForAperture(const BeamSizeCal & sizeCal)
+{
+  float scale = 1.;
+  if (mCurrentAperture > 0 && sizeCal.measuredAperture > 0)
+    scale = (float)mCurrentAperture / (float)sizeCal.measuredAperture;
+  if (mScope->GetUseTwoJeolCondAp() && mScope->GetLastJeolC1Ap() > 0 &&
+    sizeCal.JeolC1Aperture > 0)
+    scale *= (float)mScope->GetLastJeolC1Ap() / (float)sizeCal.JeolC1Aperture;
+  return scale;
+}
+
+// List the beam size cals
+void CBeamAssessor::ListBeamSizeCalibrations()
+{
+  CString probeText = "Crossover";
+  if (!mBeamSizeArray.GetSize()) {
+    SEMAppendToLog("\r\nNo beam size calibrations saved\r\n");
+    return;
+  }
+  if (FEIscope)
+    probeText = "Probe  Crossover";
+  else if (JEOLscope && !mScope->GetHasNoAlpha())
+    probeText = "Alpha  Crossover";
+  mWinApp->SetNextLogColorStyle(0, 1);
+  SEMAppendToLog("\r\nBeam size calibrations saved");
+  mWinApp->SetNextLogColorStyle(0, 4);
+  PrintfToLog("%s  Spot  From size - %% %s To size - %% %s  aperture",
+    (LPCTSTR)probeText, mScope->GetC2Name(), mScope->GetC2Name());
+  probeText = "";
+  for (int ind = 0; ind < mBeamSizeArray.GetSize(); ind++) {
+    if (FEIscope)
+      probeText = mBeamSizeArray[ind].probeOrAlpha ? "uP" : "nP";
+    else if (JEOLscope && !mScope->GetHasNoAlpha())
+      probeText.Format("%d", mBeamSizeArray[ind].probeOrAlpha + 1);
+    PrintfToLog("%s      %s      %d     %.2f - %f   %.2f - %f   %d", (LPCTSTR)probeText,
+      mBeamSizeArray[ind].intensity[0] > mBeamSizeArray[ind].crossover ? "above" : "below"
+      , mBeamSizeArray[ind].spotSize, mBeamSizeArray[ind].beamSize[0], 
+      mBeamSizeArray[ind].intensity[0], mBeamSizeArray[ind].beamSize[2], 
+      mBeamSizeArray[ind].intensity[2], mBeamSizeArray[ind].measuredAperture);
+  }
+}
+
 // List the intensity calibrations
-void CBeamAssessor::ListIntensityCalibrations() {
+void CBeamAssessor::ListIntensityCalibrations() 
+{
   int i, j;
   CString report, s, t;
   mWinApp->SetNextLogColorStyle(0, 1);

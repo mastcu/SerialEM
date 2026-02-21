@@ -140,6 +140,7 @@ CMultiGridTasks::CMultiGridTasks()
   mLastRefCounts = 0.;
   mReferenceCounts = 0.;
   mInStopMultiGrid = false;
+  mCheckLoadOnJeol = false;
 }
 
 
@@ -177,7 +178,7 @@ void CMultiGridTasks::InitOrClearSessionValues()
   mReferenceCounts = 0.;
   mLMMneedsLowDose = 0;
   mLMMusedStateNum = -1;
-  mHaveAutoContGroups = false;
+  mHaveAutoContGroups = 0;
   mLMMmagIndex = 0;
   mSkipMarkerShifts = 0;
   mNamesLocked = 0;
@@ -2356,6 +2357,7 @@ int CMultiGridTasks::StartGridRuns(int LMneedsLD, int MMMneedsLD, int finalNeeds
   MultiShotParams *curMSparams;
   MGridMultiShotParams mgMSparam;
   ZbyGParams *zbygParam;
+  AutoContourParams *acParam;
   StateParams *state;
   int *stateNums;
   IntVec dlgIndToJcdInd, gridsDoingMulShot;
@@ -2482,7 +2484,7 @@ int CMultiGridTasks::StartGridRuns(int LMneedsLD, int MMMneedsLD, int finalNeeds
     if (jcd.status & MGSTAT_FLAG_TOO_DARK)
       numDark++;
   }
-  if (numDark) {
+  if (numDark && !mSkipGridRealign) {
     SEMMessageBox("Grids that were found to be too dark cannot be included because "
       "they can not be realigned");
     return 1;
@@ -2497,20 +2499,38 @@ int CMultiGridTasks::StartGridRuns(int LMneedsLD, int MMMneedsLD, int finalNeeds
   }
 
   // Make sure there are groups if autocontouring
-  if (mParams.acquireLMMs && mParams.autocontour && !mHaveAutoContGroups) {
+  if (mParams.acquireLMMs && mParams.autocontour) {
     mNavHelper->mAutoContouringDlg->SyncToMasterParams();
-    if (mNavHelper->mAutoContouringDlg->IsOpen())
-      CopyAutoContGroups();
+    acParam = mNavHelper->GetAutocontourParams();
+
+    if (!mHaveAutoContGroups && !mNavHelper->mAutoContouringDlg->GetWasEverOpen()) {
+      str.Format("All %d contour groups from autocontouring will be\nconverted to "
+        "polygons because the autocontouring dialog was never opened\n\n"
+        "Is this OK?", acParam->numGroups);
+      if (AfxMessageBox(str, MB_QUESTION) == IDNO)
+        return 0;
+    }
+    if (mNavHelper->mAutoContouringDlg->IsOpen() || !mHaveAutoContGroups)
+      CopyAutoContGroups(1);
     err = 0;
-    if (mHaveAutoContGroups)
-      for (ind = 0; ind < MAX_AUTOCONT_GROUPS; ind++)
+    fname = "";
+    if (mHaveAutoContGroups) {
+      for (ind = 0; ind < acParam->numGroups; ind++) {
         err += mAutoContGroups[ind];
+        if (mAutoContGroups[ind]) {
+          str.Format(" %d", ind + 1);
+          fname += str;
+        }
+      }
+    }
     if (!err) {
-      SEMMessageBox("You have selected to do autocontouring but have\nnot yet selected"
-        " any contour groups to be converted to polygons.\n\nUse the Setup button"
+      SEMMessageBox("You have selected to do autocontouring but there\nare no"
+        " contour groups selected to be converted to polygons.\n\nUse the Setup button"
         " to open the Autocontouring dialog for selecting groups");
       return 1;
     }
+    PrintfToLog("\r\nIn autocontouring, contours will be split into %d groups with these"
+      " selected:%s\r\n", acParam->numGroups, (LPCTSTR)fname);
   }
 
   // Make sure script is runnable
@@ -2785,30 +2805,43 @@ int CMultiGridTasks::StartGridRuns(int LMneedsLD, int MMMneedsLD, int finalNeeds
   }
 
   if (mParams.acquireLMMs && mParams.acquireMMMs && !mParams.autocontour) {
-    SEMMessageBox("To do both grid maps and medium mag maps in the same run,"
-      " you need to select Autocontouring so that there are items to acquire");
-    return 1;
+    if (!mParams.runMacroAfterLMM) {
+      SEMMessageBox("To do both grid maps and medium mag maps in the same run,"
+        " you need to select Autocontouring so that there are items to acquire");
+      return 1;
+    }
+    if (AfxMessageBox("To do both grid maps and medium mag maps in the\n"
+      " same run, the script must make items at which to acquire the maps.\n\n"
+      "Will the script do this?", MB_QUESTION) == IDNO)
+      return 1;
   }
   mUsingHoleFinder = mParams.acquireMMMs &&
     (mapActions[NAACT_HOLE_FINDER].flags & NAA_FLAG_RUN_IT) != 0;
   if (mParams.acquireMMMs && mParams.runFinalAcq) {
-    if (!mUsingHoleFinder) {
-      SEMMessageBox("To do both medium mag maps and final acquisition in the same run,"
-        " you need to select hole finding as a mapping task");
-      return 1;
+    if ((mapActions[NAACT_RUN_POSTMACRO].flags & NAA_FLAG_RUN_IT) != 0) {
+      if (AfxMessageBox("To do both medium mag maps and final acquisition\n"
+        " in the same run, the script you run after mapping must add items to acquire."
+        "\n\nWill the script do this?", MB_QUESTION) == IDNO)
+        return 1;
+    } else {
+      if (!mUsingHoleFinder) {
+        SEMMessageBox("To do both medium mag maps and final acquisition in the same run,"
+          " you need to select hole finding as a mapping task");
+        return 1;
+      }
+      if (!mapParams->runHoleCombiner && finalParams->nonTSacquireType == ACQUIRE_MULTISHOT
+        && AfxMessageBox("You selected Multiple Records for final\nacquisition but did not"
+          " set the option to use the hole combiner.\n\nDo you really want to proceed?",
+          MB_QUESTION) == IDNO)
+        return 1;
+      /*if (!finalParams->useMapHoleVectors &&
+        finalParams->nonTSacquireType == ACQUIRE_MULTISHOT && mNumGridsToRun > 1) {
+        AfxMessageBox("You are trying to do Multiple Records on \n"
+          "more than one grid and did not select to use map hole vectors for shifts",
+          MB_EXCLAME);
+        return 1;
+      }*/
     }
-    if (!mapParams->runHoleCombiner && finalParams->nonTSacquireType == ACQUIRE_MULTISHOT
-      && AfxMessageBox("You selected Multiple Records for final\nacquisition but did not"
-        " set the option to use the hole combiner.\n\nDo you really want to proceed?",
-        MB_QUESTION) == IDNO)
-      return 1;
-    /*if (!finalParams->useMapHoleVectors &&
-      finalParams->nonTSacquireType == ACQUIRE_MULTISHOT && mNumGridsToRun > 1) {
-      AfxMessageBox("You are trying to do Multiple Records on \n"
-        "more than one grid and did not select to use map hole vectors for shifts",
-        MB_EXCLAME);
-      return 1;
-    }*/
   }
 
   // Set flags for parameter swaps needed
@@ -3512,6 +3545,8 @@ void CMultiGridTasks::DoNextSequenceAction(int resume)
 
       // After reference image, record the image mean as the reference counts
     case MGACT_REF_IMAGE:
+      if (!mImBufs->mImage)
+        break;
       mReferenceCounts = (float)mWinApp->mProcessImage->WholeImageMean(mImBufs);
       mLastRefCounts = mReferenceCounts;
       SEMTrace('q', "Reference counts: %.2f", mReferenceCounts);
@@ -3520,6 +3555,8 @@ void CMultiGridTasks::DoNextSequenceAction(int resume)
       // After a survey image for eucentricity
     case MGACT_SURVEY_IMAGE:
       mDidEucentricity = false;
+      if (!mImBufs->mImage)
+        break;
       mImBufs->mImage->getSize(nx, ny);
       mPctPatchSize = B3DNINT(1.6 * pow((double)nx * ny, 0.25));
       B3DCLAMP(mPctPatchSize, 50, 100);
@@ -3694,23 +3731,16 @@ void CMultiGridTasks::DoNextSequenceAction(int resume)
     case MGACT_AUTOCONTOUR:
       mAutoContouring = false;
 
-      // Create polygons
+      // Create polygons and set them all as acquire
       if (mNavHelper->mAutoContouringDlg->ExternalCreatePolys(-1., -1., -1., -1., -1.,
-        -1., errStr)) {
+        -1., true, errStr)) {
         errStr += "\r\nMarking grid as failed due to this failure in autocontouring";
         ChangeStatusFlag(mCurrentGrid, MGSTAT_FLAG_FAILED, 1);
         SaveSessionFileWarnIfError();
         if (SkipToNextGrid(errStr))
           return;
       }
-      itemArr = mNavigator->GetItemArray();
-      for (ind = 1; ind < (int)itemArr->GetSize(); ind++) {
-        item = itemArr->GetAt(ind);
-        if (item->IsPolygon())
-          item->mAcquire = true;
-      }
-
-      // Set them all to acquire
+ 
       mNavigator->FillListBox();
       mNavigator->SetChanged(true);
       mNavigator->ManageCurrentControls();
@@ -3772,7 +3802,7 @@ void CMultiGridTasks::DoNextSequenceAction(int resume)
       }
 
       // The loader can be flaky so make sure the grid is on the stage
-      if (JEOLscope && action == MGACT_LOAD_GRID) {
+      if (JEOLscope && action == MGACT_LOAD_GRID && mCheckLoadOnJeol) {
         if (!mScope->GetCartridgeInfo(jcdIndex, jcdInfo)) {
           PrintfToLog("WARNING: There was error trying to confirm that"
             " grid %d is on the stage; going on anyway", jcd.id);
@@ -4096,14 +4126,9 @@ void CMultiGridTasks::DoNextSequenceAction(int resume)
 
     // Start autocontouring
   case MGACT_AUTOCONTOUR:
-    mNavHelper->mAutoContouringDlg->SyncToMasterParams();
     acParam = mNavHelper->GetAutocontourParams();
-    if (mNavHelper->mAutoContouringDlg->IsOpen())
-      CopyAutoContGroups();
-    if (mHaveAutoContGroups) {
-      mNavHelper->mAutoContouringDlg->ExternalSetGroups(acParam->numGroups,
-        acParam->groupByMean, mAutoContGroups, MAX_AUTOCONT_GROUPS);
-    }
+    mNavHelper->mAutoContouringDlg->ExternalSetGroups(acParam->numGroups,
+      acParam->groupByMean, mAutoContGroups, MAX_AUTOCONT_GROUPS);
     ind = mWinApp->mBufferManager->GetBufToReadInto();
     mNavHelper->mAutoContouringDlg->AutoContourImage(&mImBufs[ind],
       acParam->usePixSize ? acParam->targetPixSizeUm : acParam->targetSizePixels,
@@ -4916,12 +4941,21 @@ bool CMultiGridTasks::CanFalconFramesMoveToSession(CameraParameters *camP,
 /*
  * Get the autocontouring groups so they can be set properly
  */
-void CMultiGridTasks::CopyAutoContGroups()
+void CMultiGridTasks::CopyAutoContGroups(int which)
 {
+  AutoContourParams *acParam = mNavHelper->GetAutocontourParams();
+  CString mess, str;
   int *showGroup = mNavHelper->mAutoContouringDlg->GetShowGroup();
-  for (int ind = 0; ind < MAX_AUTOCONT_GROUPS; ind++)
+  for (int ind = 0; ind < MAX_AUTOCONT_GROUPS; ind++) {
     mAutoContGroups[ind] = showGroup[ind];
-  mHaveAutoContGroups = true;
+    if (ind < acParam->numGroups) {
+      str.Format(" %d", showGroup[ind]);
+      mess += str;
+    }
+  }
+  SEMTrace('q', "Copying to multigrid - %d groups: %s", acParam->numGroups,
+    (LPCTSTR)mess);
+  mHaveAutoContGroups = which;
 }
 
 /*
@@ -5875,7 +5909,7 @@ int CMultiGridTasks::LoadSessionFile(bool useLast, CString &errStr)
     MAX_AUTOCONT_GROUPS);
   if (val < 0)
     err++;
-  mHaveAutoContGroups = val == 0;
+  mHaveAutoContGroups = val == 0 ? 1 : 0;
 
   ind1 = 0;
   val = AdocGetIntegerArray(ADOC_GLOBAL_NAME, 0, MGDOC_ORDER, intVals, &ind1, 50);
