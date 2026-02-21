@@ -206,7 +206,7 @@ private:
   int mATHoleCenteringMode;         // 0=none, 1=hole centering, 2=even multishot center 
   
   bool mFCHOneHoleForMulti;         // Flag if only using one hole for centering even multishot 
-  int mFCHrestoreISdir;             // Direction to IS for when centering in even multishot 
+  int mFCHrestoreISdir;             // Direction to IS when centering in even multishot 
   double mFCHstartingISX;           // Initial X image shift at hole or multishot center
   double mFCHstartingISY;           // Initial Y image shift at hole or multishot center
   float mFCHholeVecISX;             // X image shift from center to nearest hole
@@ -214,7 +214,6 @@ private:
   float mFCHdelISX;                 // X change in image shift from centering hole
   float mFCHdelISY;                 // Y change in image shift from centering hole  
   int mFCHmagInd;                   // Mag index used for finding and centering hole
-  bool mFCHresetIS;                 // Flag to reset IS for centering hole  
 
   DewarVacParams mDVParams;         // Params for operation
   bool mDVAlreadyFilling;           // Flag that it is now/already filling

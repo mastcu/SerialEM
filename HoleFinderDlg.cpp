@@ -2400,7 +2400,7 @@ int CHoleFinderDlg::FindAndCenterOneHole(EMimageBuffer *imBuf, float diameter, i
     imBuf->mImage->setShifts(imXshift + xShift, imYshift - yShift);
     imBuf->SetImageChanged(1);
     mWinApp->mMainView->DrawImage();
-    PrintfToLog("Applied image shift of %.2f, %.2f microns to center hole",
+    SEMTrace('1', "Applied image shift of %.2f, %.2f microns to center on hole",
       pixel * xShift, pixel * yShift);
   }
   return 0;

@@ -2034,6 +2034,7 @@ int CParticleTasks::CenterNavItemOnHole(CMapDrawItem *item, NavAlignParams &aliP
   
   mATParams = aliParams;
   mATHoleCenteringMode = 1;
+  mFCHrestoreISdir = 0;
   if (mATParams.holeCenteringAcquire == FCH_ACQUIRE_MAP) {
     mapItem = mWinApp->mNavigator->FindItemWithMapID(item->mDrawnOnMapID, 
       true);
@@ -2099,7 +2100,7 @@ int CParticleTasks::CenterNavItemOnHole(CMapDrawItem *item, NavAlignParams &aliP
       }
 
       mScope->SetImageShift(mFCHstartingISX + mFCHholeVecISX, 
-        mFCHstartingISX + mFCHholeVecISX);
+        mFCHstartingISY + mFCHholeVecISY);
       mFCHrestoreISdir = 1;
     }
   }
@@ -2201,29 +2202,26 @@ void CParticleTasks::TemplateAlignNextTask(int param)
     return;
   if (mATResettingShift) {
 
-    // Image shift was reset: stop if leaving at zero and IS was below threshold or this
+    // Image shift was reset: stop if leaving at zero and IS was below threshold or this  
     // was the last iteration
     mATResettingShift = false;
     mATIterationNum++;
     if (mATParams.leaveISatZero &&
       (mATFinishing || mATIterationNum >= mATParams.maxNumResetIS)) {
       if (mATFinishing)
-        PrintfToLog("Align to Template finished after %d IS resets with IS left at zero",
+        PrintfToLog("%s finished after %d IS resets with IS left at zero", 
+          mATHoleCenteringMode == 0 ? "Align to Template" : "Center on Hole",
           mATIterationNum);
       else
-        PrintfToLog("Align to Template stopped at limit of %d iterations, with IS left"
-          " at 0", mATIterationNum);
+        PrintfToLog("%s stopped at limit of %d iterations, with IS left at 0",
+          mATHoleCenteringMode == 0 ? "Align to Template" : "Center on Hole", 
+          mATIterationNum);
       StopTemplateAlign();
       return;
     }
 
     // Otherwise new image for align
     mWinApp->mCamera->InitiateCapture(mATConSetNum);
-  
-  } else if (mFCHresetIS) {
-      AlignOrCenterHoleResetIS();
-      mFCHresetIS = false;
-
   } else {
     if (mATHoleCenteringMode == 0) {
       // Got an image, align it
@@ -2265,6 +2263,7 @@ void CParticleTasks::TemplateAlignNextTask(int param)
       }
       if (TestForTemplateTermination())
         return;
+      AlignOrCenterHoleResetIS();
 
     } else {
       
@@ -2279,7 +2278,7 @@ void CParticleTasks::TemplateAlignNextTask(int param)
         }
         ix0 = mNavHelper->mHoleFinderDlg->FindAndCenterOneHole(mImBufs, holeSize, 0,
           mATParams.maxAlignShift, xCen, yCen, -mATParams.cropHoleSpacings, false);
-        
+
         if (ix0) {
           if (ix0 == FCH_ERR_CROP_RANGE)
             mess.Format("Error: center for cropping is out of range");
@@ -2288,7 +2287,7 @@ void CParticleTasks::TemplateAlignNextTask(int param)
           else if (ix0 == FCH_ERR_HOLE_FIND)
             mess.Format("Error: hole finding failed");
           else if (ix0 == FCH_ERR_SHIFT_LIMIT)
-            mess.Format("Error: image shift to center hole is above the set limit");
+            mess.Format("Error: image shift to center on hole is above the set limit");
           else 
             mess.Format("Error attempting to find and center a hole");
           SEMMessageBox(mess);
@@ -2307,14 +2306,15 @@ void CParticleTasks::TemplateAlignNextTask(int param)
           // If only centering on one hole, return to center with correction
           if (mFCHOneHoleForMulti) {
             mScope->SetImageShift(mFCHstartingISX + shiftX, 
-              mFCHstartingISX + shiftX);
+              mFCHstartingISY + shiftY);
             mFCHrestoreISdir = 0;
           } 
 
           // Centered at the first hole, image shift to second hole in opposite direction
           else if (mFCHrestoreISdir == 1) {
             mScope->SetImageShift(mFCHstartingISX - mFCHholeVecISX, 
-              mFCHstartingISX - mFCHholeVecISX);
+              mFCHstartingISY - mFCHholeVecISY);
+
             mFCHdelISX = shiftX;
             mFCHdelISY = shiftY;
             mFCHrestoreISdir = -1;
@@ -2324,32 +2324,29 @@ void CParticleTasks::TemplateAlignNextTask(int param)
           else if (mFCHrestoreISdir == -1) {
             shiftX = (mFCHdelISX + shiftX) / 2.f;
             shiftY = (mFCHdelISY + shiftY) / 2.f;
-            mScope->SetImageShift(mFCHstartingISX + shiftX, mFCHstartingISX + shiftY);
+            mScope->SetImageShift(mFCHstartingISX + shiftX, mFCHstartingISY + shiftY);
             mFCHrestoreISdir = 0;
           }
-          if (mFCHrestoreISdir == 0) {
-            mat = mShiftManager->IStoSpecimen(mFCHmagInd);
-            if (mat.xpx) {
-              ApplyScaleMatrix(mat, shiftX, shiftY, backlashX, backlashY);
-              PrintfToLog("Shift in Finding and Centering Hole is %.3f, %.3f microns",
-                backlashX, backlashY);
-            }  
+          mWinApp->mCamera->InitiateCapture(mATConSetNum);
+        }
+        if (mFCHrestoreISdir == 0) {
+          mat = mShiftManager->IStoSpecimen(mFCHmagInd);
+          if (mat.xpx) {
+            ApplyScaleMatrix(mat, shiftX, shiftY, backlashX, backlashY);
+            PrintfToLog("Shift in Finding and Centering Hole is %.3f, %.3f microns",
+              backlashX, backlashY);
           }
         }
       } else if (mATIterationNum > 0) {
         DoCenteringAutoAlign(false);
       }
-
       if (TestForTemplateTermination()) {
         return;
       }
-      if (mFCHrestoreISdir == 1 || (!mATIterationNum && !(mATParams.leaveISatZero &&
-        (mATFinishing || mATIterationNum + 1 >= mATParams.maxNumResetIS)))) {
-        mWinApp->mCamera->InitiateCapture(mATConSetNum);
-        mFCHresetIS = true;
-      } else {
+
+      // Don't reset IS until center position is found via hole centering
+      if (!mFCHrestoreISdir)
         AlignOrCenterHoleResetIS();
-      }
     }
   }
   mWinApp->AddIdleTask(TASK_TEMPLATE_ALIGN, 0, 0);

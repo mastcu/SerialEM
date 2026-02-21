@@ -616,8 +616,8 @@ int CNavAcquireDlg::CheckActionOrder(int * order)
       if (act == NAACT_REALIGN_ITEM) {
         if (realigned >= 0) {
           if (AfxMessageBox("It is illogical to have Realign to Item after Align to\n"
-            "Template because the Realign to Item will undo the\n"
-            "alignment established by the Align to Template.\n\n"
+            "Template/Center on Hole because the Realign to Item will undo the\n"
+            "alignment established by the Align to Template/Center on Hole.\n\n"
             "Are you sure you want to proceed?", MB_QUESTION) == IDNO)
             return 1;
         }

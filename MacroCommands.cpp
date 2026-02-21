@@ -13227,8 +13227,9 @@ int CMacCmd::FindAndCenterOneHole()
   }
 
   index = mNavHelper->mHoleFinderDlg->FindAndCenterOneHole(imBuf, holeSize,
-    mItemEmpty[3] ? 0 : mItemInt[3], mItemEmpty[4] ? 0.f : mItemFlt[4], xCen, yCen, 
-    mItemEmpty[7] ? 0 : mItemFlt[7], cropCenter);
+    (mItemEmpty[3] || mItemInt[3] < 0) ? 0 : mItemInt[3], 
+    (mItemEmpty[4] || mItemInt[4] < 0) ? 0.f : mItemFlt[4],
+    xCen, yCen, mItemEmpty[7] ? 0 : mItemFlt[7], cropCenter);
   if (index > 0) {
     AbortMacro();
     return 1;

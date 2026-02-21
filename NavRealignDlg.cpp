@@ -214,7 +214,7 @@ void CNavRealignDlg::OnOK()
 {
   b3dUInt32 disable = mWinApp->mShiftManager->GetDisableAutoTrim();
   UpdateData(true);
-  if (m_strMapLabel.IsEmpty() && mForRealignOnly < 0) {
+  if (m_strMapLabel.IsEmpty() && mForRealignOnly < 0 && m_iTemplateOrFindHole == 0) {
     AfxMessageBox("You must enter a label for the Navigator map to align to", MB_EXCLAME);
     return;
   }
@@ -438,7 +438,7 @@ void CNavRealignDlg::ManageMap()
     noMeta = !imBuf->mImage->GetUserData();
     exists = !(isMap || noMeta || badBin);
   }
-  ShowDlgItem(IDC_STAT_WHY_A_NO_GOOD, !exists);
+  ShowDlgItem(IDC_STAT_WHY_A_NO_GOOD, !exists && m_iTemplateOrFindHole == 0);
   if (!exists) {
     if (isMap)
       str += "is already a map";

@@ -5407,7 +5407,7 @@ int CNavHelper::AssessAcquireForParams(NavAcqParams *navParam, NavAcqAction *acq
       }
     }
   }
-  if (WILL_DO_ACTION(NAACT_ALIGN_TEMPLATE)) {
+  if (WILL_DO_ACTION(NAACT_ALIGN_TEMPLATE) && !mNavAlignParams.findAndCenterHole) {
     item = mNav->FindItemWithString(mNavAlignParams.templateLabel, false, true);
     if (!item)
       mess = "Cannot find the template map in Navigator table for aligning to template";

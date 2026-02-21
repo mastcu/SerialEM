@@ -11014,7 +11014,12 @@ void CNavigatorDlg::AcquireNextTask(int param)
       break;
     SEMTrace('n', "Doing %s", (LPCTSTR)mAcqActions[mAcqSteps[mAcqStepIndex]].name);
     mRealignedInAcquire = true;
-    stopErr = mWinApp->mParticleTasks->AlignToTemplate(*aliParams);
+    if (aliParams->findAndCenterHole) {
+      stopErr = mWinApp->mParticleTasks->CenterNavItemOnHole(item, *aliParams, 
+        mAcqParm->acquireType == ACQUIRE_MULTISHOT);
+    } else {
+      stopErr = mWinApp->mParticleTasks->AlignToTemplate(*aliParams);
+    }
     break;
 
   // Cook specimen
