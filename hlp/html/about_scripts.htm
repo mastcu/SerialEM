@@ -608,21 +608,44 @@
       EndFunction</i> will not be run).&nbsp; The Function statement includes the name 
       of the function, which must be all one word without spaces, two optional entries 
       for the number of numeric arguments and whether there is a string argument, and 
-      optional variable names for arguments to be assigned to.<br />
+      optional variable names by which the arguments can be referenced within the 
+      function.<br />
 &nbsp;&nbsp;&nbsp;&nbsp; Function FunctionName #_of_numeric_args 1_if_string_arg 
       argName1 argName2 ...<br />
       Any integer other than a 0 in the last position indicates that there is a 
       string argument.&nbsp; If any variable names are entered, they must be preceded 
       by both of the numeric values.&nbsp; There need not be as many variable names as 
       arguments. </P>
+    <P>It is possible to pass all of the arguments as strings instead of numbers by 
+      giving the command &#39;FuncsTakeAllStringArgs&#39;.&nbsp; In this case, it does not 
+      matter whether the first value is the total number of arguments and the second 
+      value is 0, or the first value is the total minus 1, and the second is 1.&nbsp; 
+      With this command, there are two ways to pass multi-word strings to a function.&nbsp; 
+      Each string can be explicitly assigned to a string variable using &#39;@=&#39;, and then 
+      the string variables can be included in the function call with the leading &#39;$&#39; 
+      for each, but <em>without</em> any quotes around them.&nbsp; Alternatively, the 
+      command &#39;ParseQuotedStrings&#39; can be used, and then quoted strings can be used 
+      directly as the arguments in the function call, or they can be assigned to 
+      variables, or included in a array variable, without using &#39;@=&#39;.&nbsp; In the 
+      latter case, a variable such as &#39;var&#39; can be passed as an argument by referring 
+      to it as &#39;$var&#39; <em>including</em> the quotes around it.&nbsp; A variable 
+      reference surrounded by quotes is substituted by its value but kept as a single 
+      entity that can be assigned as an argument.</P>
+    <P>There are two implications of passing arguments as strings instead of numbers: 
+      1) if there are trailing zeros on the value being passed (e.g., &#39;2.7000&#39;), they 
+      are stripped when storing as a number (&#39;2.7&#39;) but not when passed as a string; 
+      2) if a Python script is run from the function and uses &#39;GetVariable&#39; to get one 
+      of the arguments, it will receive a string when they are passed as strings and a 
+      number otherwise.</P>
     <P>Like script names, function names are case sensitive.&nbsp; 
       There is no limit to the number of functions in a single script, although they 
       must all have distinct names. The same name can be used for functions in 
       different scripts; however, if this is the case, functions must be called with 
       the script name or number as shown next.</P>
     <P>A function is called with <i>CallFunction</i>, followed by the name of the 
-      function, the numeric arguments if any, then the string argument if any.&nbsp; 
-      The string argument can include spaces; all text after the numeric argument is 
+      function, the initial numeric arguments if any (or string arguments, if 
+      &#39;FuncsTakeAllStringArgs&#39; is used), then the string argument if any.&nbsp; 
+      The string argument can include spaces; all text after the last initial argument is 
       used for the string argument.&nbsp; For example, for a function defined as<br />
 &nbsp;&nbsp;&nbsp; Function AlignWithBuffer 1 1<br />
       the call could be<br />

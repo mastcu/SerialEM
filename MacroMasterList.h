@@ -858,6 +858,8 @@ MAC_SAME_NAME_NOARG(ReportBeamSizeFromCalib, 0, 4, REPORTBEAMSIZEFROMCALIB)
 MAC_SAME_NAME_ARG(SetBeamSize, 1, 4, SETBEAMSIZE, D)
 MAC_SAME_NAME_ARG(SetItemImShiftTargets, 5, 4, SETITEMIMSHIFTTARGETS, IIISS)
 MAC_SAME_NAME_ARG(AdjustImShiftTargets, 1, 4, ADJUSTIMSHIFTTARGETS, Ii)
+MAC_SAME_NAME_ARG(AlreadyInLowDoseArea, 1, 0, ALREADYINLOWDOSEAREA, S)
+MAC_SAME_NAME_ARG(FuncsTakeAllStringArgs, 0, 4, FUNCSTAKEALLSTRINGARGS, i)
 
 
 // new Python-only commands need to be added to pythonOnlyCmds in ::CMacroProcessor

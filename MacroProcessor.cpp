@@ -1385,6 +1385,7 @@ void CMacroProcessor::Run(int which)
   mRunToolArgPlacement = 0;
   mNumTempMacros = 0;
   mParseQuotes = false;
+  mAllStringArgsToFuncs = false;
   mNoLineWrapInMessageBox = false;
   mMonospacedMessageBox = false;
   mC2ApForScalingWasSet = false;
