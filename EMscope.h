@@ -337,6 +337,8 @@ public:
   void GotoLowDoseArea(int inArea);
   void DoISforLowDoseArea(int inArea, int curMag, double &delISX, double &delISY, bool registerMagIS,
     bool adjForFocus, double cenISX, double cenISY);
+  int SetupForStartedInLDArea(int area);
+  double ConvertJeolAbsFocusToMicrons(double absVal);
   void RestoreFromFreeLens(int oldArea, int newArea);
   void SetFreeLensForArea(int newArea);
   int GetLowDoseArea() { return mLowDoseSetArea; };
@@ -603,6 +605,7 @@ public:
   GetSetMember(int, UseAperturesInStates);
   GetSetMember(BOOL, UseDetectorNameIfUtapi);
   GetMember(int, FEIhasApertureSupport);
+  GetSetMember(float, LastRecordAbsFocus);
   static int GetScopeCallFromPlugin() {return mScopeCallFromPlugin ; };
   static void SetScopeCallFromPlugin(int val) { mScopeCallFromPlugin = val; };
   GetMember(int, LastMagIndex);
@@ -1033,6 +1036,8 @@ private:
   int mSingleCondenserAp;      // Aperture ID to use for condenser if only one
   bool mUseTwoJeolCondAp;      // Track both C1 and C2 in JEOL
   BOOL mUseDetectorNameIfUtapi; // Use regular name if not going through Utapi
+  bool mHaveSetLowDoseArea;    // Flag that an area was ever gone to
+  float mLastRecordAbsFocus;   // Save focus value last time Record was entered
   int mAdvancedScriptVersion;  // My internal version number for advanced scripting
   int mPluginVersion;          // Version of plugin or server
 

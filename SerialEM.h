@@ -40,6 +40,8 @@
 #define GetMember(a,b) a Get##b() {return m##b;};
 #define GetSetMember(a,b) GetMember(a,b)\
   SetMember(a,b)
+#define GetMemberPtr(a,b) a *Get##b() {return &m##b; };
+#define GetMemberArr(a,b) a *Get##b() {return &m##b[0]; };
 
 #include <math.h>
 #include <afxtempl.h>
@@ -557,7 +559,7 @@ public:
   SetMember(int, InitialCurrentCamera)
     void TransferConSet(int inSet, int fromCam, int toCam);
   void CopyConSets(int inCam);
-  void SetActiveCameraNumber(int inNum);
+  void SetActiveCameraNumber(int inNum, bool enteredLD = false);
   void SetNumberOfActiveCameras(int inNum, int readIn);
   GetSetMember(BOOL, RetractOnEFTEM)
     afx_msg LRESULT OnCommandHelp(WPARAM, LPARAM lParam);
@@ -1169,6 +1171,7 @@ void AdjustSizesForSuperResolution(int iCam);
 void MainViewResizing(CRect &winRect, bool FFTwin, int multiChanInd);
 void OpenOrCloseMacroEditors(void);
 void ClearAllMacros(void);
+bool EnterLowDoseAreaIfCrashed(BOOL inSTEM, BOOL inEFTEM);
 CFont * GetLittleFont(CWnd *stat);
 CFont * GetBoldFont(CWnd *stat);
 float GetScalingForDPI();
