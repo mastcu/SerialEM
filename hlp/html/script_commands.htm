@@ -258,6 +258,16 @@
           </TD>
         </TR>
         <TR>
+          <TD class="scriptcommand">FuncsTakeAllStringArgs [#]</TD>
+          <TD>Makes all arguments in a function call be passed as string rather than numeric 
+            variables.&nbsp; More than one multi-word string can thus be passed.&nbsp; See 
+            <A HREF="about_scripts#functions">Defining and Calling Functions</A> for details on the options
+            and implications of passing arguments as strings.&nbsp; Follow the command with 0 to return to
+            passing arguments as numeric.&nbsp; Command added in 4.3, 22-Feb-26.
+
+          </TD>
+        </TR>
+        <TR>
           <TD class="scriptcommand">PythonScript [arg1 arg2 ...]</TD>
           <TD>Allows a Python script to be embedded in a regular script and run at that point. &nbsp;
             Optional arguments can be added and will be placed into a list of strings named
@@ -4497,6 +4507,15 @@
           <TD>Turns low dose mode on for <b>#</b> nonzero or off for <b>#</b> 0; the previous state of low
             dose is saved in <I>reportedValue1</I> as a 0 or 1.&nbsp; This value can be assigned
             to a variable at the end of the command.</TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">AlreadyInLowDoseArea area</TD>
+          <TD>Sets variables so that the program is in the given Low Dose area without 
+            making any changes on the microscope.&nbsp; This command will also turn on the 
+            mode if it is off, but cannot be used after any area has been gone to.&nbsp; It 
+            can be used to recoevr from an abnormal termination if the program fails to 
+            detect what area it was in when it ended, or if you answer No when it asks 
+            whether to go to a particular area upon startup.&nbsp; Command added in 4.3, 23-Feb-26.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">ReportLowDose</TD>

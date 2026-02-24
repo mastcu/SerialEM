@@ -1144,11 +1144,19 @@ int CMacCmd::DoMacro(void)
       truth = false;
       for (index = 0; index < func->numNumericArgs; index++) {
         report = func->argNames[index];
-        if (SetVariable(func->argNames[index], mItemEmpty[index + ix0] ?
-          0. : mItemDbl[index + ix0], VARTYPE_LOCAL + VARTYPE_ADD_FOR_NUM, -1, false,
-          &report)) {
+        if (!mAllStringArgsToFuncs) {
+          if (SetVariable(func->argNames[index], mItemEmpty[index + ix0] ?
+            0. : mItemDbl[index + ix0], VARTYPE_LOCAL + VARTYPE_ADD_FOR_NUM, -1, false,
+            &report)) {
             truth = true;
             break;
+          }
+        } else {
+          if (SetVariable(func->argNames[index], mItemEmpty[index + ix0] ?
+            "NO_ARG" : mStrItems[index + ix0], VARTYPE_LOCAL, -1, false, &report)) {
+            truth = true;
+            break;
+          }
         }
       }
       if (!truth && func->ifStringArg) {
@@ -1341,6 +1349,13 @@ int CMacCmd::FindScriptByName(void)
 int CMacCmd::ParseQuotedStrings(void)
 {
   mParseQuotes = mItemEmpty[1] || mItemInt[1] != 0;
+  return 0;
+}
+
+// FuncsTakeAllStringArgs
+int CMacCmd::FuncsTakeAllStringArgs()
+{
+  mAllStringArgsToFuncs = mItemEmpty[1] || mItemInt[1] != 0;
   return 0;
 }
 
@@ -6961,6 +6976,11 @@ int CMacCmd::ReportFocus(void)
 
   delX = mScope->GetFocus();
   mLogRpt.Format("Absolute focus = %.5f", delX);
+  if (JEOLscope && !mWinApp->GetSTEMMode() &&
+    mScope->FastMagIndex() >= mScope->GetLowestMModeMagInd()) {
+    mStrCopy.Format("   %.3f microns", mScope->ConvertJeolAbsFocusToMicrons(delX));
+    mLogRpt += mStrCopy;
+  }
   SetRepValsAndVars(1, delX);
   return 0;
 }
@@ -13945,6 +13965,17 @@ int CMacCmd::GoToLowDoseArea(void)
   if (CheckAndConvertLDAreaLetter(mStrItems[1], 1, index, mStrLine))
     return 1;
   mScope->GotoLowDoseArea(index);
+  return 0;
+}
+
+// AlreadyInLowDoseArea
+int CMacCmd::AlreadyInLowDoseArea()
+{
+  int index;
+  if (CheckAndConvertLDAreaLetter(mStrItems[1], 0, index, mStrLine))
+    return 1;
+  if (mScope->SetupForStartedInLDArea(index))
+    ABORT_NOLINE("You cannot use AlreadyInLowDoseArea after having been to any area");
   return 0;
 }
 

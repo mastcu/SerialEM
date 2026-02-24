@@ -565,6 +565,8 @@ CEMscope::CEMscope()
   mWarnedNeutralISoff = false;
   mUseAperturesInStates = -1;
   mLastCondenserAp = mLastObjectiveAp = mLastJeolC1Ap = -1;
+  mHaveSetLowDoseArea = false;
+  mLastRecordAbsFocus = EXTRA_NO_VALUE;
   mAdvancedScriptVersion = 0;
   mPluginVersion = 0;
   mPlugFuncs = NULL;
@@ -5595,6 +5597,7 @@ void CEMscope::SetLowDoseMode(BOOL inVal, BOOL hidingOffState)
     if (!hidingOffState && !NeedBeamBlanking(GetScreenPos(), FastSTEMmode()))
       BlankBeam(false, "SetLowDoseMode");
     mLowDoseSetArea = -1;
+    mLastRecordAbsFocus = (float)GetFocus();
   }
   mLowDoseMode = inVal;
 }
@@ -5683,6 +5686,7 @@ void CEMscope::GotoLowDoseArea(int newArea)
   if (!sInitialized || mChangingLDArea || sClippingIS || mDisconnected)
     return;
 
+  mHaveSetLowDoseArea = true;
   mChangingLDArea = -1;
   mWinApp->UpdateBufferWindows();
   mWinApp->SetStatusText(SIMPLE_PANE, "CHANGING LD AREA");
@@ -6256,6 +6260,32 @@ void CEMscope::DoISforLowDoseArea(int inArea, int curMag, double &delISX, double
         mLDChangeCumulBeamY);
     }
   }
+}
+
+// Recover from crash by setting low dose and simply saying we are in the area
+int CEMscope::SetupForStartedInLDArea(int area)
+{
+  LowDoseParams *ldp = mWinApp->GetLowDoseParams() + area;
+  if (mHaveSetLowDoseArea)
+    return 1;
+  mWinApp->mLowDoseDlg.SetLowDoseMode(true);
+  mLowDoseSetArea = area;
+  //if (ldp->ISX || ldp->ISY)
+    //SetImageShift(ldp->ISX, ldp->ISY);
+  mWinApp->mLowDoseDlg.SelectGoToButton(area);
+  mHaveSetLowDoseArea = true;
+  return 0;
+}
+
+// Compute a value in microns from an absolute focus value, the same as in the JEOL plugin
+double CEMscope::ConvertJeolAbsFocusToMicrons(double absVal)
+{
+  long focus_coarse, focus_fine, focus;
+  double scaled = (absVal - 2.) * 32.;
+  focus_coarse = (int)scaled;
+  focus_fine = B3DNINT(65536. * (scaled - focus_coarse));
+  focus = (focus_fine - 32768) + ((focus_coarse - 32768) * 32);
+  return focus * mJeolParams.OLfine_to_um;
 }
 
 // Restore lenses set with FLC when leaving oldArea, except ones to be set in newArea,

@@ -80,7 +80,7 @@
 #endif
 
 #define VERSION_STRING  "SerialEM Version 4.3.0beta"
-#define TAG_STRING      "(Tagged SEM_4-2-16, 2/10/26)"
+#define TAG_STRING      "(Tagged SEM_4-2-17, 2/24/26)"
 #define DEPRECATED_PYTHON  "3.6-64"
 
 // Offsets for static window inside main frame
@@ -1542,7 +1542,10 @@ BOOL CSerialEMApp::InitInstance()
 
   // Make sure low dose parameters get copied in
   CopyCameraToCurrentLDP();
-  bool inSTEM = mScopeHasSTEM && mScope->GetInitialized() && mScope->GetSTEMmode();
+  BOOL inSTEM = mScopeHasSTEM && mScope->GetInitialized() && mScope->GetSTEMmode();
+  BOOL inEFTEM = mScopeHasFilter && mScope->GetInitialized() && 
+    mScope->GetCanControlEFTEM() && mScope->GetEFTEM();
+  bool enteredLD = mScope->GetInitialized() && EnterLowDoseAreaIfCrashed(inSTEM, inEFTEM);
 
   // set default startup camera as non GIF camera if possible
   iCam = mFilterParams.firstRegularCamera >= 0 ?
@@ -1552,7 +1555,8 @@ BOOL CSerialEMApp::InitInstance()
 
   // Then if an initial current camera is entered, try to find that in active list
   if (mInitialCurrentCamera >= 0 && LookupActiveCamera(mInitialCurrentCamera) >= 0 &&
-    !(mKeepSTEMstate && ((inSTEM && !mCamParams[mInitialCurrentCamera].STEMcamera) ||
+    !((mKeepSTEMstate || enteredLD) && 
+    ((inSTEM && !mCamParams[mInitialCurrentCamera].STEMcamera) ||
       (!inSTEM && mCamParams[mInitialCurrentCamera].STEMcamera) )))
     iCam = LookupActiveCamera(mInitialCurrentCamera);
 
@@ -1563,16 +1567,16 @@ BOOL CSerialEMApp::InitInstance()
   // Or pick the camera that keeps the EFTEM state if flag set
   else if (mScopeHasFilter && mScope->GetInitialized() && mScope->GetCanControlEFTEM()) {
     BOOL inState = mScope->GetEFTEM();
-    mScope->SetSelectedEFTEM(inState);
-    if (mKeepEFTEMstate && mFilterParams.firstRegularCamera >= 0) {
-      iCam = inState ? mFilterParams.firstGIFCamera : mFilterParams.firstRegularCamera;
+    mScope->SetSelectedEFTEM(inEFTEM);
+    if ((mKeepEFTEMstate || enteredLD) && mFilterParams.firstRegularCamera >= 0) {
+      iCam = inEFTEM ? mFilterParams.firstGIFCamera : mFilterParams.firstRegularCamera;
       mCurrentActiveCamera = iCam;
     }
   }
   if (iCam < 0)
     iCam = 0;
 
-  SetActiveCameraNumber(iCam);
+  SetActiveCameraNumber(iCam, enteredLD);
   mInitialCurrentCamera = mActiveCameraList[iCam];
 
   for (iAct = 0; iAct < mActiveCamListSize; iAct++) {
@@ -1664,6 +1668,7 @@ BOOL CSerialEMApp::InitInstance()
   // Initialize continuous aligning and assess GPU for it
   mFalconHelper->Initialize(-3);
 
+  // Give startup message of various kinds
   pMainFrame->SetWindowText("SerialEM");
   if (!mStartupMessage.IsEmpty()) {
     SetNextLogColorStyle(0, 1);
@@ -1692,6 +1697,8 @@ BOOL CSerialEMApp::InitInstance()
           "Post-exposure actions,\r\n"
           "  run Camera Timing in the Calibrate menu and update the StartupDelay.", iCam);
   }
+
+  // Inform on where files came from
   SetNextLogColorStyle(0, 1);
   AppendToLog("Read settings from: " + mDocWnd->GetOriginalSettingsPath(),
     mMinimizedStartup ? LOG_SWALLOW_IF_CLOSED : LOG_OPEN_IF_CLOSED);
@@ -1704,6 +1711,8 @@ BOOL CSerialEMApp::InitInstance()
       mMinimizedStartup ? LOG_SWALLOW_IF_CLOSED : LOG_OPEN_IF_CLOSED);
   }
   mDocWnd->ManageReadInCurrentDir();
+
+  // Check python versions/paths
   std::vector<std::string> *pyVersions = mMacroProcessor->GetVersionsOfPython();
   message = "";
   for (iCam = 0; iCam < (int)pyVersions->size(); iCam++) {
@@ -1716,6 +1725,7 @@ BOOL CSerialEMApp::InitInstance()
     AppendToLog("Paths are defined for Python version(s) " + message,
       mMinimizedStartup ? LOG_SWALLOW_IF_CLOSED : LOG_OPEN_IF_CLOSED);
 
+  // Some more checks on title line and JEOL delay
   message = mDocWnd->GetTitle();
   for (iAct = 0; iAct < message.GetLength(); iAct++) {
     if ((unsigned char)message.GetAt(iAct) > 127) {
@@ -1732,6 +1742,7 @@ BOOL CSerialEMApp::InitInstance()
 
   mDocWnd->ReportPeakEraseOptions();
 
+  // Now mark log as saved
   if (mLogWindow)
     mLogWindow->SetUnsaved(false);
   if (mDummyInstance)
@@ -1760,12 +1771,15 @@ BOOL CSerialEMApp::InitInstance()
   }
   if (mBufferManager->GetStackWinMaxXY() <= 0)
     mBufferManager->SetStackWinMaxXY(mMemoryLimit > 5.e9 ? 1024 : 512);
+
+  // Inform on bad comments
   message = mParamIO->GetPropsWithComments();
   if (!message.IsEmpty())
     AppendToLog("WARNING: The following lines in SerialEMproperties.txt appear to \r\n"
       "have comments after a string entry; if so, the comments MUST be removed:" +
       message);
 
+  // Inform on grid limits
   float *gridLimits = mNavHelper->GetGridLimits();
   if (gridLimits[0] || gridLimits[1] || gridLimits[2] || gridLimits[3]) {
     message = "There are Navigator settings for grid limits: ";
@@ -1779,11 +1793,14 @@ BOOL CSerialEMApp::InitInstance()
     AppendToLog(message);
   }
 
+  // Manage menu a bit
   mExternalTools->AddMenuItems();
   mMainFrame->RemoveHiddenItemsFromMenus();
   UtilModifyMenuItem("Navigator", ID_MONTAGINGGRIDS_MULTIPLEGRIDOPERATIONS,
     mScope->GetScopeHasAutoloader() ? "Mult&iple Grid Operations..." :
     "Mult&iple Operations on Grid...");
+
+
 
   mStartingProgram = false;
   DoResizeMain();
@@ -1792,7 +1809,7 @@ BOOL CSerialEMApp::InitInstance()
     SetEnableExternalPython(true);
   UpdateBufferWindows();
 
-  // The "Blanked" indicator is quire resistant to getting hidden on startup - this did it
+  // The "Blanked" indicator is quite resistant to getting hidden on startup - this did it
   mLowDoseDlg.BlankingUpdate(true);
   mLowDoseDlg.BlankingUpdate(false);
   iCam = mMacroProcessor->FindMacroByNameOrTextNum(mScriptToRunAtStart);
@@ -4998,7 +5015,7 @@ int CSerialEMApp::LookupActiveCamera(int camInd)
 }
 
 // Set the active & current camera number, copy control sets, and inform controller
-void CSerialEMApp::SetActiveCameraNumber(int inNum)
+void CSerialEMApp::SetActiveCameraNumber(int inNum, bool enteredLD)
 {
   int oldCam = mActiveCameraList[mCurrentActiveCamera];
   float toFactor;
@@ -5018,7 +5035,7 @@ void CSerialEMApp::SetActiveCameraNumber(int inNum)
     return;
   }
 
-  if (mNoCameras) {
+  if (mNoCameras || enteredLD) {
     mCurrentActiveCamera = inNum;
     mCurrentCamera = mActiveCameraList[mCurrentActiveCamera];
     return;
@@ -5858,6 +5875,94 @@ void CSerialEMApp::ClearAllMacros(void)
       mMacroProcessor->mOneLineScript->m_strOneLine[set - MAX_MACROS] = "";
   }
   mMacroProcessor->TransferOneLiners(false);
+}
+
+// Try to detect whether program terminated without leaving a low dose are and offer
+// start up in the area
+bool CSerialEMApp::EnterLowDoseAreaIfCrashed(BOOL inSTEM, BOOL inEFTEM)
+{
+  int src = inEFTEM ? 1 : 0;
+  int mag = -1, probeOrAlpha = -9999;
+  double intensity = -1.;
+  double focus = EXTRA_NO_VALUE;
+  LowDoseParams *recParam, *areaParam;
+  if (HitachiScope)
+    return false;
+  if (inSTEM)
+    src = 2;
+  recParam = &mCamLowDoseParams[src][RECORD_CONSET];
+
+  // Loop on the areas, continuing to next if any mismtach os found
+  for (int area = 0; area < 5; area++) {
+    areaParam = &mCamLowDoseParams[src][area];
+
+    // Skip Record, and F/T if they are indistinguishable from R
+    if (area == RECORD_CONSET || ((area == FOCUS_CONSET || area == TRIAL_CONSET) &&
+      areaParam->magIndex == recParam->magIndex &&
+      fabs(areaParam->intensity - recParam->intensity) < 2.e-4 &&
+      ((FEIscope && areaParam->probeMode == recParam->probeMode) || (JEOLscope &&
+      (mScope->GetHasNoAlpha() || areaParam->beamAlpha == recParam->beamAlpha)))))
+      continue;
+
+    // Mag: Get scope value only once when needed
+    if (mag < 0)
+      mag = mScope->GetMagIndex();
+    if (mag != areaParam->magIndex) {
+      SEMTrace('1', "area %d  mag %d %d", area, mag, areaParam->magIndex);
+      continue;
+    }
+
+    // Intensity
+    if (intensity < 0)
+      intensity = mScope->GetIntensity();
+    if (fabs(intensity - areaParam->intensity) > 1.e-4) {
+      SEMTrace('1', "area %d  int %f %f", area, intensity, areaParam->intensity);
+      continue;
+    }
+
+    // Probe mode or alpha
+    if (probeOrAlpha < -9990) {
+      probeOrAlpha = -1;
+      mMultiTSTasks->GetProbeOrAlpha(probeOrAlpha);
+    }
+    if (probeOrAlpha >= 0 && probeOrAlpha != (FEIscope ?
+      areaParam->probeMode : areaParam->beamAlpha)) {
+      SEMTrace('1', "area %d  probe %d %d", area, probeOrAlpha, (FEIscope ?
+        areaParam->probeMode : areaParam->beamAlpha));
+      continue;
+    }
+
+    // Defocus offset
+    if ((area == VIEW_CONSET || area == SEARCH_AREA) &&
+      areaParam->magIndex >= mScope->GetLowestMModeMagInd(inEFTEM)) {
+      if (focus < EXTRA_VALUE_TEST)
+        focus = FEIscope ? mScope->GetDefocus() : mScope->GetFocus();
+      if (FEIscope || mScope->GetLastRecordAbsFocus() > EXTRA_VALUE_TEST) {
+
+        // JEOL is done with absolute focus values
+        if (JEOLscope)
+          focus = mScope->ConvertJeolAbsFocusToMicrons(focus) -
+          mScope->ConvertJeolAbsFocusToMicrons(mScope->GetLastRecordAbsFocus());
+        if (fabs(focus - mScope->GetLDViewDefocus(area)) > 5.) {
+          SEMTrace('1', "area %d  foc %f %f", area, focus,
+            mScope->GetLDViewDefocus(area));
+          continue;
+        }
+      }
+    }
+
+    // If it made it to here it is a match
+    if (AfxMessageBox("It appears that SerialEM did not exit properly\n"
+      "and the scope is in the " + mModeName[area == SEARCH_AREA ? SEARCH_CONSET : area]
+      + " Low Dose area\n\nDo you want to start in that area to avoid problems with"
+      " various offsets?", MB_QUESTION) == IDNO)
+      return false;
+    mScope->SetupForStartedInLDArea(area);
+    mSTEMMode = inSTEM;
+    mEFTEMMode = inEFTEM;
+    return true;
+  }
+  return false;
 }
 
 // Returns the little font based on the size of a regaulr font static text box

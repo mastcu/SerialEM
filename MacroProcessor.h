@@ -454,6 +454,7 @@ protected:
   int mClearTempAtCallLevel; // Call level at which to clear temp macro
   bool mParseQuotes;         // Flag that strings are parsed with quoting
   bool mCheckingParseQuotes; // Flag it is happening during checking
+  bool mAllStringArgsToFuncs; // Flag that function calls pass all args as strings
   bool mSuspendNavRedraw;    // Flag to save redrawing of Nav table and display to end
   bool mDeferLogUpdates;     // Flag for log window to defer its updates and accumulate
   bool mNonMacroDeferring;   // Flag that some other module is deferring
