@@ -149,8 +149,8 @@ END_MESSAGE_MAP()
 BOOL CNavRealignDlg::OnInitDialog()
 {
   CBaseDlg::OnInitDialog();
-  BOOL states[8] = {true, true, true, true, true, true, true, true};
-  CFont *boldFont = mWinApp->GetBoldFont(&m_statTemplateTitle);
+  mBoldFont = mWinApp->GetBoldFont(&m_statTemplateTitle);
+  mRegFont = GetDlgItem(IDC_STAT_PARAMS_SHARED)->GetFont();
   mHelper = mWinApp->mNavHelper;
   m_sbcResetTimes.SetRange(0, 10000);
   m_sbcTemplateBuf.SetRange(0, 10000);
@@ -182,25 +182,15 @@ BOOL CNavRealignDlg::OnInitDialog()
   letter = 'A' + mParams.scaledAliLoadBuf;
   m_strRefMapBuf = letter;
   m_iTemplateOrFindHole = mParams.findAndCenterHole ? 1 : 0;
-  if (m_iTemplateOrFindHole != 0)
-    m_butRFindAndCenterHole.SetFont(boldFont);
-  else
-    m_butRAlignToTemplate.SetFont(boldFont);
   m_iAcquireWith = mParams.holeCenteringAcquire;
   B3DCLAMP(mParams.cropHoleSpacings, 0.5f, 20.f);
   m_fCropHoleSpacings = mParams.cropHoleSpacings;
-  m_statTemplateTitle.SetFont(boldFont);
-  m_statResetISTitle.SetFont(boldFont);
-  m_statScaledTitle.SetFont(boldFont);
-  m_statDisableTrim.SetFont(boldFont);
+  m_statTemplateTitle.SetFont(mBoldFont);
+  m_statResetISTitle.SetFont(mBoldFont);
+  m_statScaledTitle.SetFont(mBoldFont);
+  m_statDisableTrim.SetFont(mBoldFont);
   UpdateData(false);
-  states[1] = mForRealignOnly <= 0;
-  states[2] = mForRealignOnly <= 0 && !m_iTemplateOrFindHole;
-  states[3] = mForRealignOnly <= 0 && m_iTemplateOrFindHole;
-  states[4] = mForRealignOnly <= 0;
-  states[6] = mForRealignOnly >= 0;
-  AdjustPanels(states, sIdTable, sLeftTable, sTopTable, mNumInPanel, mPanelStart, 0,
-    sHeightTable);
+  ManageStates();
   ManageBufferUseStatus(IDC_STAT_BUFFER_ROLLS, mParams.loadAndKeepBuf);
   ManageBufferUseStatus(IDC_STAT_REF_BUF_ROLLS, mParams.scaledAliLoadBuf);
   if (mForRealignOnly <= 0)
@@ -353,7 +343,6 @@ void CNavRealignDlg::OnCheckResetIs()
 // New # of iterations
 void CNavRealignDlg::OnDeltaposSpinResetTimes(NMHDR *pNMHDR, LRESULT *pResult)
 {
-  UpdateData(true);
   FormattedSpinnerValue(pNMHDR, pResult, 1, 5, mMaxNumResets, m_strRepeatReset,
     "Reset IS up to %d");
 }
@@ -361,7 +350,6 @@ void CNavRealignDlg::OnDeltaposSpinResetTimes(NMHDR *pNMHDR, LRESULT *pResult)
 // New buffer
 void CNavRealignDlg::OnDeltaposSpinTemplateBuf(NMHDR *pNMHDR, LRESULT *pResult)
 {
-  UpdateData(true);
   if (NewSpinnerValue(pNMHDR, pResult, mParams.loadAndKeepBuf, 1, MAX_BUFFERS - 1,
     mParams.loadAndKeepBuf))
     return;
@@ -379,7 +367,6 @@ void CNavRealignDlg::OnCheckLeaveIsZero()
 
 void CNavRealignDlg::OnDeltaposSpinRefMapBuf(NMHDR *pNMHDR, LRESULT *pResult)
 {
-  UpdateData(true);
   if (NewSpinnerValue(pNMHDR, pResult, mParams.scaledAliLoadBuf, 1, MAX_BUFFERS - 1,
     mParams.scaledAliLoadBuf))
     return;
@@ -479,27 +466,7 @@ void CNavRealignDlg::ManageBufferUseStatus(int nID, int bufNum)
 void CNavRealignDlg::OnRTemplateOrFindHole()
 {
   UPDATE_DATA_TRUE;
-  CFont *boldFont = mWinApp->GetBoldFont(&m_statTemplateTitle);
-  CFont *regFont = GetDlgItem(IDC_STAT_PARAMS_SHARED)->GetFont();
-  BOOL states[8] = {true, true, true, true, true, true, true, true};
-  states[2] = mForRealignOnly <= 0;
-  states[3] = mForRealignOnly <= 0;
-  states[4] = mForRealignOnly <= 0;
-  states[6] = mForRealignOnly >= 0;
-  if (m_iTemplateOrFindHole) {
-    states[2] = false;
-    states[3] = true;
-    m_butRAlignToTemplate.SetFont(regFont);
-    m_butRFindAndCenterHole.SetFont(boldFont);
-  }
-  else {
-    states[2] = true;
-    states[3] = false;
-    m_butRAlignToTemplate.SetFont(boldFont);
-    m_butRFindAndCenterHole.SetFont(regFont);
-  }
-  AdjustPanels(states, sIdTable, sLeftTable, sTopTable, mNumInPanel, mPanelStart, 0,
-    sHeightTable);
+  ManageStates();
   ManageBufferUseStatus(IDC_STAT_BUFFER_ROLLS, mParams.loadAndKeepBuf);
   ManageBufferUseStatus(IDC_STAT_REF_BUF_ROLLS, mParams.scaledAliLoadBuf);
   if (mForRealignOnly <= 0)
@@ -510,4 +477,29 @@ void CNavRealignDlg::OnRTemplateOrFindHole()
 void CNavRealignDlg::OnEnKillfocusEditAlignFchSpacing()
 {
   UpdateData(true);
+}
+
+// templateOrFind: true for hole finding, false for template align
+void CNavRealignDlg::ManageStates()
+{
+  BOOL states[8] = { true, true, true, true, true, true, true, true };
+  states[1] = mForRealignOnly <= 0;
+  states[2] = mForRealignOnly <= 0;
+  states[3] = mForRealignOnly <= 0;
+  states[4] = mForRealignOnly <= 0;
+  states[6] = mForRealignOnly >= 0;
+  if (m_iTemplateOrFindHole) {
+    states[2] = false;
+    states[3] = true;
+    m_butRAlignToTemplate.SetFont(mRegFont);
+    m_butRFindAndCenterHole.SetFont(mBoldFont);
+  }
+  else {
+    states[2] = true;
+    states[3] = false;
+    m_butRAlignToTemplate.SetFont(mBoldFont);
+    m_butRFindAndCenterHole.SetFont(mRegFont);
+  }
+  AdjustPanels(states, sIdTable, sLeftTable, sTopTable, mNumInPanel, mPanelStart, 0,
+    sHeightTable);
 }

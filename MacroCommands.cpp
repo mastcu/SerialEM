@@ -13375,7 +13375,7 @@ int CMacCmd::FindAndCenterOneHole()
   }
 
   xCen = yCen = 0.f;
-  if (!mItemEmpty[5] && !mItemEmpty[6]) {
+  if (!mItemEmpty[6]) {
     if (mItemFlt[5] >= 0 && mItemFlt[6] >= 0) {
       xCen = mItemFlt[5];
       yCen = mItemFlt[6];
@@ -13414,7 +13414,8 @@ int CMacCmd::CenterHoleAtNavItem(void)
   else if (mStrItems[2].Find("M") == 0 || mStrItems[2].Find("m") == 0)
     params.holeCenteringAcquire = FCH_ACQUIRE_MAP;
   else
-    ABORT_NOLINE("Invalid acquisition type: use V for View, S for search, or M for map")
+    ABORT_LINE("Invalid acquisition type: use V for View, S for search, or M for map for "
+      "line\n\n")
   
   if (!mItemEmpty[4] && mItemFlt[4] >= 0.)
     params.maxAlignShift = mItemFlt[4];

@@ -59,6 +59,7 @@ public:
   void ManageMap();
   void ManageResetIS();
   void ManageBufferUseStatus(int nID, int bufNum);
+  void ManageStates();
   CSpinButtonCtrl m_sbcTemplateBuf;
   BOOL m_bResetIS;
   CSpinButtonCtrl n_sbcRefMapBuf;
@@ -85,4 +86,6 @@ public:
   CStatic m_statFCHtitle;
   CButton m_butRAlignToTemplate;
   CButton m_butRFindAndCenterHole;
+  CFont* mBoldFont;
+  CFont* mRegFont;
 };

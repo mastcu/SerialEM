@@ -5690,14 +5690,12 @@
         </TR>
         <TR>
           <TD class="scriptcommand">CenterHoleAtNavItem #I A #U [#S] [#R] [#M] [#L]</TD>
-          <TD>Runs the Center Nav Item on Hole routine on the navigator index <strong>#I</strong>.
+          <TD>Centers on the hole at the Navigator item with index <strong>#I</strong>.
               <strong>A</strong> dictates the type of image acquired for finding and 
               centering: V or S for View or Search in Low Dose, or M to use the parameters 
-              used in acquiring the map on which the navigator item is drawn. Set <strong>#U</strong> 
-              nonzero if doing multishot at the nav item. The optional arguments <strong>#S</strong>,<strong> 
-              #R</strong>, <strong>#M</strong>, and <strong>#L</strong> are identical to those in 
-              AlignToTemplate, and are taken from <a href="hidd_navrealign.htm">Navigator Align Setup</a> dialog if not provided 
-              here.</TD>
+              used in acquiring the map on which the item is drawn. Set <strong>#U</strong> 
+              nonzero if doing Multiple Records at the item. The optional arguments <strong>#S</strong>,<strong> 
+              #R</strong>, <strong>#M</strong>, and <strong>#L</strong> are treated the same as in AlignToTemplate.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">RealignReloadedGrid #I #E [#Z] [#R] [#T]</TD>
@@ -6087,7 +6085,7 @@
             image.&nbsp; Set <b>#D</b> to the diameter in microns, 0 to use the hole size 
               stored in the map if it exists, or -1 to take the size from the current Hole Finder parameters.
             &nbsp; Set optional <b>#C</b> to the number of 
-            circle sizes to try, or 0 for the default (generally 7); and optional<b>#S</b> to the maximum
+            circle sizes to try, or 0 for the default (generally 7); and optional<b> #S</b> to the maximum
              image shift allowed as a fraction of the hole diameter.  Other hole-finding parameters such as
             geometry and spacing are taken from existing settings.&nbsp; Command added in 4.2, 29-Oct-24.
           </TD>

@@ -15,7 +15,7 @@
     <basefont size="2">
     <p><a NAME="hidd_navrealign"></a><span class="style1">Navigator Align Setup
         Dialog</span></p>
-    <p> This dialog allows parameters to be set for the Align to Template task, which 
+    <p> This dialog allows parameters to be set for the Align to Template and Center on Hole tasks, both of which 
       can be run either from a script command or from the Navigator during the Acquire 
       at Items procedure.&nbsp; A subset of these parameters govern whether image 
       shift is reset after an alignment and are also used for the Realign to Item 
@@ -55,6 +55,8 @@
       uncropped image is still in buffer B.&nbsp; If image shift is reset and a new 
       image taken, that image will be aligned to the uncropped one, not to the cropped 
       one or the template, then cropped in turn. </p>
+      <p> As an alternative to Align to Template, the Center on Hole routine involves capturing a new cropped image, finding holes in the image, identifying the center of the hole closest to the target Navigator item, and applying an image shift to align to the center of the hole. Thus, the parameters for capturing this image and the desired crop size must be specified. After centering a hole, subsequent image shift resets and realignments are performed using the same specifications used in Align to Template.</p>
+      <p> &nbsp;A modified version of the hole centering routine is executed if multiple records will be done on an item in which the center of the multiple records pattern is positioned between holes (for example, in a 2x2 pattern). In such cases, two holes are centered: first, the nearest hole, then the hole in the opposite direction. The image shift from each centering operation is averaged and applied to align the center of the multishot pattern. If there is no hole in the opposite direction of the first one, then only the correction from centering the first hole is used to align to the center position of the multishot pattern.</p>
     <p> <em><strong>Disabling Trimming of Dark Borders in Alignments</strong></em></p>
     <p> The option in this section governs whether dark borders are automatically 
       trimmed in two situations: the initial rounds of Realign to Item, including 
@@ -92,6 +94,11 @@
       the template.&nbsp; This should be less than half the <em>center-to-center</em> distance between adjacent 
       features, to prevent the program from aligning on a feature farther from center 
       than the likely target.</p>
+    <p> <strong><em>Parameters for Finding And Centering Holes</em></strong></p>
+    <p> <strong>Acquire with</strong></p>
+      <p> An image of the specified type will be acquired, and then used to find and center a hole. This image will be cropped to a size determined by the cropping option that immediately follows.</p>
+    <p> <strong>Crop image to N hole spacings</strong></p>
+      <p> The image acquired for hole finding will be cropped so that its height and width equal the set number of hole spacings. The crop size must be at least 0.5 hole spacings.</p>
     <p> <strong><em>Parameters for Handling Image Shift after Alignment</em></strong></p>
     <p> Both Align to Template and Realign to Item have the ability to finish by 
       resetting image shift if it is above a threshold, moving the stage to 
