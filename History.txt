@@ -3,6 +3,12 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+2/24/26: SEM_4-2-17
+2/24/26: Made TIFF images be saved with pixel size readable by
+DigitalMicrograph (In 4.2).
+
+2/24/26: Fixed removal of stored shifts in Shift to Marker dialog (In 4.2).
+
 2/19/26: Stopped continuous view in DM if it is active before acquiring; this
 may work right away or require retrying the acquisition (In 4.2).
 
