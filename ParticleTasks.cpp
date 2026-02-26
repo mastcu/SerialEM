@@ -2226,8 +2226,8 @@ void CParticleTasks::TemplateAlignNextTask(int param)
 {
   int ix0, ix1, iy0, iy1, nxIm, nyIm;
   float backlashX, backlashY, shiftX, shiftY;
-  bool cropping;
-  float holeSize;
+  bool cropping, hex;
+  float holeSize, holeSpacing;
   float xCen, yCen;
   double ISX, ISY;
   CString mess;
@@ -2303,15 +2303,17 @@ void CParticleTasks::TemplateAlignNextTask(int param)
       
       // Align using hole centering
       if (mATIterationNum == 0) {
-        ix0 = mWinApp->mNavigator->GetHoleSize(holeSize, mImBufs);
+        ix0 = mWinApp->mNavigator->GetHoleGeometry(holeSize, holeSpacing, hex, 
+          mImBufs);
         if (ix0) {
           mess.Format("Error getting hole size for hole centering");
           SEMMessageBox(mess);
           StopTemplateAlign();
           return;
         }
-        ix0 = mNavHelper->mHoleFinderDlg->FindAndCenterOneHole(mImBufs, holeSize, 0,
-          mATParams.maxAlignShift, xCen, yCen, -mATParams.cropHoleSpacings, false);
+        ix0 = mNavHelper->mHoleFinderDlg->FindAndCenterOneHole(mImBufs, holeSize, 0, 
+          mATParams.maxAlignShift, xCen, yCen, -mATParams.cropHoleSpacings, false, 
+          holeSpacing, hex);
 
         if (ix0) {
           if (ix0 == FCH_ERR_CROP_RANGE)

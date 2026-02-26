@@ -51,8 +51,9 @@ public:
   int MultiMapBusy();
   void StopMultiMap();
   void MultimapCleanup(int error);
-  int FindAndCenterOneHole(EMimageBuffer *imBuf, float diameter, int numTry, float maxFracShift,
-    float &xCenter, float &yCenter, float crop, bool cropCenter);
+  int FindAndCenterOneHole(EMimageBuffer *imBuf, float diameter, int numTry, 
+    float maxFracShift, float &xCenter, float &yCenter, float crop, bool cropCenter, 
+    float spacing, bool hex);
   int DoFindHoles(EMimageBuffer *imBuf, bool synchronous, FloatVec *inXboundary = NULL, 
     FloatVec *inYboundary = NULL, bool croppedBuf = false);
   int DoMakeNavPoints(int layoutType, float lowerMeanCutoff, float upperMeanCutoff,

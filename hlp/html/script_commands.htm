@@ -6098,16 +6098,13 @@
           &nbsp; Command added in 4.2, 7-Aug-24; autocontouring added in 4.3, 6-Jun-25.</TD>
         </TR>
         <TR>
-          <TD class="scriptcommand">FindAndCenterOneHole buf #D [#C] [#S]</TD>
+          <TD class="scriptcommand">FindAndCenterOneHole buf #D [#C] [#S] [#X] [#Y] [#K] [#E] [#H]</TD>
           <TD>Runs the Hole Finder with parameters appropriate for finding the hole nearest to the center
              of an image with one or a few holes in it, and optionally centering on the hole with image 
             shift.&nbsp; <b>buf</b> specifies the buffer and can be 0 for the currently displayed 
-            image.&nbsp; Set <b>#D</b> to the diameter in microns, 0 to use the hole size 
-              stored in the map if it exists, or -1 to take the size from the current Hole Finder parameters.
-            &nbsp; Set optional <b>#C</b> to the number of 
+            image.&nbsp;Set <b>#D</b> to the diameter in microns, or 0 to use the hole diameter stored in the map if it exists, or -1 to take the diameter from the current Hole Finder parameters. Set optional <b>#C</b> to the number of 
             circle sizes to try, or 0 for the default (generally 7); and optional<b> #S</b> to the maximum
-             image shift allowed as a fraction of the hole diameter.  Other hole-finding parameters such as
-            geometry and spacing are taken from existing settings.&nbsp; Command added in 4.2, 29-Oct-24.
+             image shift allowed as a fraction of the hole diameter.  Optional arguments <strong>#X</strong> and <strong>#Y</strong> specify the image coordinates of the desired center; by default the center will be the center of the image. Optional argument <strong>#K</strong> sets the crop size of the cropped image on which holes are found. If <strong>#K</strong> is negative, it is the number of hole spacings, otherwise it is the number of hole sizes. Set optional <strong>#E</strong> to the center-to-center hole spacing in microns, or set it less than or equal to 0 for the default. Set optional <strong>#H</strong> to 0 or 1 to specify whether the hole geometry is rectangular or hexagonal, respectively, or negative to use a default.&nbsp;The default values for <strong>#E</strong> and <strong>#H</strong> will be obtaained from a corresponding map if it exists; otherwise they will be taken from the hole finder parameters. Command added in 4.2, 29-Oct-24.
           </TD>
         </TR>
         <TR>

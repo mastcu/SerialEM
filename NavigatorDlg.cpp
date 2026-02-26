@@ -3381,17 +3381,21 @@ BOOL CNavigatorDlg::UserMousePoint(EMimageBuffer *imBuf, float inX, float inY,
   return true;
 }
 
-// Get hole size, from a map containing the stage location of the buffer image if provided
-int CNavigatorDlg::GetHoleSize(float &holeSize, EMimageBuffer* imBuf)
+// Get hole size, spacing, and pattern type from a map containing the stage location of 
+// the buffer image. Otherwise get them from the hole finder parameters.
+int CNavigatorDlg::GetHoleGeometry(float &holeSize, float &holeSpacing, bool &hex,
+  EMimageBuffer *imBuf)
 {
-  HoleFinderParams *holeParams = mHelper->GetHoleFinderParams();
+  HoleFinderParams* holeParams = mHelper->GetHoleFinderParams();
   MapItemArray* itemArr = GetItemArray();
   float tilt, scale, rotation, stageX, stageY, imSizeX, imSizeY;
   float xmin, xmax, ymin, ymax;
   int sizeX, sizeY, index;
   CMapDrawItem* item;
-  holeSize = 0.f;
   bool fromMap = true;
+
+  holeSize = 0.f;
+  holeSpacing = 0.f;
 
   mHelper->mHoleFinderDlg->SyncToMasterParams();
 
@@ -3418,7 +3422,7 @@ int CNavigatorDlg::GetHoleSize(float &holeSize, EMimageBuffer* imBuf)
       item = itemArr->GetAt(index);
 
       //If item is a map containing the buffer image position, use its stored hole size
-      if (item->IsMap() && item->mFoundHoleSize > 0. &&
+      if (item->IsMap() && item->mFoundHoleSize > 0. && item->mFoundHoleSpacing > 0. &&
         InsideContour(item->mPtX, item->mPtY, item->mNumPoints, stageX, stageY)) {
 
         //Ensure that the buffer image is smaller overall than the map
@@ -3433,40 +3437,51 @@ int CNavigatorDlg::GetHoleSize(float &holeSize, EMimageBuffer* imBuf)
           ACCUM_MAX(ymax, item->mPtY[j]);
         }
         if (imSizeX <= xmax - xmin && imSizeY <= ymax - ymin) {
-          SEMTrace('1', "Using hole size from map with ID %d", index + 1);
+          SEMTrace('1', "Found hole parameters in map with navigator ID %d", index + 1);
           holeSize = item->mFoundHoleSize;
+          holeSpacing = item->mFoundHoleSpacing;
+          hex = (item->mFlags & NAV_FLAG_HOLES_IN_HEX) != 0;
           break;
         }
       }
     }
     mShiftManager->GetScaleAndRotationForFocus(imBuf, scale, rotation);
     holeSize *= scale;
+    holeSpacing *= scale;
   }
-  if (holeSize == 0) {
+  if (holeSize == 0 || holeSpacing == 0) {
+    
+    // If no imBuf or map with stored hole size/spacing, get them from hole finder
     fromMap = false;
-    // If no imBuf or map with stored hole size, use hole size from hole finder
-    holeSize = holeParams->hexagonalArray ? holeParams->hexDiameter : 
-      holeParams->diameter;
-    if (imBuf) {
-      SEMTrace('1', "No map was found with stored hole size for current stage position. "
-        "Size from hole finder parameters will be used.");
+    hex = holeParams->hexagonalArray != 0;
+    holeSize = hex ? holeParams->hexDiameter : holeParams->diameter;
+    holeSpacing = hex ? holeParams->hexSpacing : holeParams->spacing;
+    if (holeSize <= 0 || holeSpacing <= 0) {
+      return 3;
     }
+    if (imBuf) {
+      SEMTrace('1', "No map was found with stored hole size and spacing for current stage"
+        " position. Size and spacing from hole finder parameters will be used.");
+    } 
   }
-  SEMTrace('1', "Found hole size of %.4f from %s", holeSize, fromMap ? "map" : "HF params");
+  
+  SEMTrace('1', "Found hole size of %.4f and spacing of %.4f from %s", holeSize,
+    holeSpacing, fromMap ? "map" : "hole finder parameters");
   return 0;
 }
 
 int CNavigatorDlg::CenterAddedPointInHole(EMimageBuffer* imBuf, float &inX, float &inY,
   CString &errStr)
 {
-  float holeSize;
-  if (GetHoleSize(holeSize, imBuf)) {
+  float holeSize, holeSpacing;
+  bool hex;
+  if (GetHoleGeometry(holeSize, holeSpacing, hex, imBuf)) {
     errStr.Format("Failed to obtain hole size for hole centering");
     return 1;
   }
 
   if (mHelper->mHoleFinderDlg->FindAndCenterOneHole(imBuf, holeSize, 0, 0.f, inX, inY, 
-    -3.f, true)) {
+    -3.f, true, holeSpacing, hex)) {
     errStr.Format("Failed to center point in a hole");
     return 2;
   }

@@ -30,6 +30,7 @@
 #define CONT_COLOR_BASE_IND 7
 
 #define NAV_FLAG_DRAWN_ON_FFT 0x1
+#define NAV_FLAG_HOLES_IN_HEX 0x2
 
 class CMapDrawItem
 {

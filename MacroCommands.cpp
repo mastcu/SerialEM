@@ -13294,7 +13294,7 @@ int CMacCmd::FindHoles(void)
 // FindAndCenterOneHole
 int CMacCmd::FindAndCenterOneHole()
 {
-  float xCen, yCen, holeSize;
+  float xCen, yCen, holeSize, holeSpacing;
   EMimageBuffer *imBuf;
   int index, sizeX, sizeY;
   float stageX, stageY, tilt, scale, rotation, imSizeX, imSizeY;
@@ -13302,7 +13302,7 @@ int CMacCmd::FindAndCenterOneHole()
   CMapDrawItem* item;
   HoleFinderParams *holeParams = mNavHelper->GetHoleFinderParams();
   float xmin, xmax, ymin, ymax;
-  bool cropCenter = false;
+  bool cropCenter = false, hex;
 
   imBuf = mWinApp->mMainView->GetActiveImBuf();
   if (!imBuf->mImage)
@@ -13312,11 +13312,21 @@ int CMacCmd::FindAndCenterOneHole()
       ABORT_LINE(mStrCopy);
     imBuf = &mImBufs[index];
   }
+  
+  // Get pattern geometry parameters, ideally from map but from HF parameters as backup
+  if ((mItemEmpty[8] || mItemFlt[8] <= 0 || mItemEmpty[9] || mItemInt[9] < 0) &&
+    mNavigator->GetHoleGeometry(holeSize, holeSpacing, hex, imBuf))
+    ABORT_LINE("Could not obtain hole spacing or pattern geometry for line:\n\n");
+  if (!mItemEmpty[8] && mItemFlt[8] > 0) 
+    holeSpacing = mItemFlt[8];
+  if (!mItemEmpty[9] && mItemInt[9] >= 0)
+    hex = mItemInt[9] != 0;
+
+  // Hole size can be forced to come from HF parameters, so redo getting hole size.
   holeSize = mItemFlt[2];
   if (holeSize < 0) {
     mNavHelper->mHoleFinderDlg->SyncToMasterParams();
-    holeSize = holeParams->hexagonalArray ? holeParams->hexDiameter :
-      holeParams->diameter;
+    holeSize = hex ? holeParams->hexDiameter : holeParams->diameter;
     if (!holeSize)
       ABORT_LINE("There is no usable diameter in the current Hole Finder parameters for "
         "line:\n\n");
@@ -13347,7 +13357,8 @@ int CMacCmd::FindAndCenterOneHole()
       item = itemArr->GetAt(index);
 
       //If item is a map containing the buffer image position, use its stored hole size
-      if (item->IsMap() && item->mFoundHoleSize > 0. &&
+      if (item->IsMap() && ((item->mFlags & NAV_FLAG_HOLES_IN_HEX) != 0) == hex && 
+        item->mFoundHoleSize > 0 &&
         InsideContour(item->mPtX, item->mPtY, item->mNumPoints, stageX, stageY)) {
 
         //Ensure that the buffer image is smaller overall than the map
@@ -13362,8 +13373,6 @@ int CMacCmd::FindAndCenterOneHole()
           ACCUM_MAX(ymax, item->mPtY[j]);
         }
         if (imSizeX <= xmax - xmin && imSizeY <= ymax - ymin) {
-          SEMTrace('1', "Using hole size from map with ID %d for hole centering",
-            index + 1);
           holeSize = item->mFoundHoleSize;
           break;
         }
@@ -13388,7 +13397,7 @@ int CMacCmd::FindAndCenterOneHole()
   index = mNavHelper->mHoleFinderDlg->FindAndCenterOneHole(imBuf, holeSize,
     (mItemEmpty[3] || mItemInt[3] < 0) ? 0 : mItemInt[3], 
     (mItemEmpty[4] || mItemInt[4] < 0) ? 0.f : mItemFlt[4],
-    xCen, yCen, mItemEmpty[7] ? 0 : mItemFlt[7], cropCenter);
+    xCen, yCen, mItemEmpty[7] ? 0 : mItemFlt[7], cropCenter, holeSpacing, hex);
   if (index > 0) {
     AbortMacro();
     return 1;

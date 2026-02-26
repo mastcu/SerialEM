@@ -1816,6 +1816,8 @@ void CHoleFinderDlg::SetNavMapHoleVectors()
     }
     mNavItem->mFoundHoleSize = mLastHoleSize;
     mNavItem->mFoundHoleSpacing = mLastHoleSpacing;
+    if (mParams.hexagonalArray)
+      mNavItem->mFlags |= NAV_FLAG_HOLES_IN_HEX;
     mNav->SetChanged(true);
     mIDofNavItem = mNavItem->mMapID;
   }
@@ -2189,8 +2191,9 @@ void CHoleFinderDlg::MultimapCleanup(int error)
  * It can take a less accurate diameter if a lot of circles are tried, and runs the
  * hole finder synchronously
  */
-int CHoleFinderDlg::FindAndCenterOneHole(EMimageBuffer *imBuf, float diameter, int numTry,
-  float maxFracShift, float &xCenter, float &yCenter, float crop, bool cropCenter)
+int CHoleFinderDlg::FindAndCenterOneHole(EMimageBuffer *imBuf, float diameter, int numTry, 
+  float maxFracShift, float &xCenter, float &yCenter, float crop, bool cropCenter, 
+  float spacing, bool hex)
 {
   FloatVec *widths, *increments;
   IntVec *numCircles;
@@ -2201,7 +2204,7 @@ int CHoleFinderDlg::FindAndCenterOneHole(EMimageBuffer *imBuf, float diameter, i
   HoleFinderParams *hfParams = mHelper->GetHoleFinderParams();
   double ISX, ISY;
   int top = 0, left = 0, bottom, right, mode;
-  float cropSize;
+  float cropSize, spacingSave;
   bool centered;
   EMimageExtra *extra;
   Islice *slice;
@@ -2213,12 +2216,16 @@ int CHoleFinderDlg::FindAndCenterOneHole(EMimageBuffer *imBuf, float diameter, i
   numSave = numCircles->at(0);
   if (numTry)
     *(numCircles->data()) = numTry;
-  if (hfParams->hexagonalArray) {
+  if (hex) {
     diamSave = hfParams->hexDiameter;
     hfParams->hexDiameter = diameter;
+    spacingSave = hfParams->hexSpacing;
+    hfParams->hexSpacing = spacing;
   } else {
     diamSave = hfParams->diameter;
     hfParams->diameter = diameter;
+    spacingSave = hfParams->spacing;
+    hfParams->spacing = spacing;
   }
   if (mIsOpen)
     UpdateSettings();
@@ -2231,8 +2238,7 @@ int CHoleFinderDlg::FindAndCenterOneHole(EMimageBuffer *imBuf, float diameter, i
   // Crop the image
   if (crop) {
     pixel = mWinApp->mShiftManager->GetPixelSize(imBuf);
-    cropSize = (B3DABS(crop) * B3DCHOICE(crop > 0, diameter, hfParams->spacing))
-      / pixel;
+    cropSize = (B3DABS(crop) * B3DCHOICE(crop > 0, diameter, spacing)) / pixel;
 
     // Check if crop size bigger than image in either dimension
     if (cropSize > nx || cropSize > ny) {
@@ -2324,11 +2330,13 @@ int CHoleFinderDlg::FindAndCenterOneHole(EMimageBuffer *imBuf, float diameter, i
   err = DoFindHoles(mHoleCenteringImBuf, true, NULL, NULL, crop != 0);
   
   // restore parameters
-  if (hfParams->hexagonalArray) {
+  if (hex) {
     hfParams->hexDiameter = diamSave;
+    hfParams->hexSpacing = spacingSave;
   }
   else {
     hfParams->diameter = diamSave;
+    hfParams->spacing = spacingSave;
   }
   *(numCircles->data()) = numSave;
   if (mIsOpen)

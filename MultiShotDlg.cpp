@@ -1133,8 +1133,9 @@ void CMultiShotDlg::AutoStepAdjNextTask(int param)
   // Hole centering
   if (mActiveParams->autoAdjMethod) {
     if (mWinApp->mNavHelper->mHoleFinderDlg->FindAndCenterOneHole(
-      mWinApp->GetImBufs() + bufInd, mActiveParams->autoAdjHoleSize, 30,
-      mDeferredISX ? 0.9f : mActiveParams->autoAdjLimitFrac, xcen, ycen, 0, false)) {
+      mWinApp->GetImBufs() + bufInd, mActiveParams->autoAdjHoleSize,
+      30, mDeferredISX ? 0.9f : mActiveParams->autoAdjLimitFrac, xcen, ycen, 0, false,
+      0, mActiveParams->doHexArray != 0)) {
       StopRecording();
       return;
     }

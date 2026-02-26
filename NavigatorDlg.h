@@ -152,7 +152,8 @@ public:
   bool ConvertMousePoint(EMimageBuffer *imBuf, float &inX, float &inY, float &stageX,
     float &stageY, ScaleMat &aInv, float &delX, float &delY, float &xInPiece, float &yInPiece,
     int &pieceIndex);
-  int GetHoleSize(float &holeSize, EMimageBuffer* imBuf = NULL);
+  int GetHoleGeometry(float &holeSize, float &holeSpacing, bool &hex, 
+    EMimageBuffer *imBuf = NULL);
   int CenterAddedPointInHole(EMimageBuffer* imBuf, float &inX, float &inY, CString &errStr);
   bool SelectNearestPoint(EMimageBuffer *imBuf, float stageX, float stageY, ScaleMat aInv,
     float delX, float delY, bool ctrlKey, float distLim);
