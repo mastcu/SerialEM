@@ -5039,6 +5039,8 @@ void CSerialEMApp::SetActiveCameraNumber(int inNum, bool enteredLD)
   if (mNoCameras || enteredLD) {
     mCurrentActiveCamera = inNum;
     mCurrentCamera = mActiveCameraList[mCurrentActiveCamera];
+    if (enteredLD)
+      CopyCameraToCurrentLDP();
     return;
   }
   if (mCamera->CameraBusy())
