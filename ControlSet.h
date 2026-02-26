@@ -119,6 +119,7 @@ struct CameraParameters {
   float DE_CountingFPS;    // User's setting for FPS in counting mode
   float DE_MaxFrameRate;   // Maximum frame rate from server
   CString DE_AutosaveDir;  // Top folder for autosaves
+  float DEMaintenanceTime; // Duration of maintenance in seconds
   int DectrisType;         // Type of Dectris camera
   int alsoInsertCamera;    // Other camera to insert to make sure blanking is OK
   int samePhysicalCamera;  // Camera on same insertion state

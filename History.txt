@@ -3,6 +3,9 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+2/26/26: Added script commands for setting and getting a property in the DE
+server and a long operation for sensor maintenance.
+
 2/25/26: Added a script command to center on a hole at a navigator item.
 
 2/25/26: Added an option to center on holes instead of aligning to template in

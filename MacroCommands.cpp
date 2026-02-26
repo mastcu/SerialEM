@@ -54,6 +54,7 @@
 #include "Mailer.h"
 #include "PiezoAndPPControl.h"
 #include "DoseModulator.h"
+#include "DirectElectron\DirectElectronCamera.h"
 #include "Utilities\XCorr.h"
 #include "Utilities\KGetOne.h"
 #include "Shared\b3dutil.h"
@@ -119,9 +120,10 @@ static CmdItem cmdList[] = {
 
 // Be sure to add an entry for longHasTime when adding long operation
 const char *CMacCmd::mLongKeys[MAX_LONG_OPERATIONS] =
-  {"BU", "RE", "IN", "LO", "$=", "DA", "UN", "$=", "RS", "RT", "FF", "RB", "PA", "AV"};
+  {"BU", "RE", "IN", "LO", "$=", "DA", "UN", "$=", "RS", "RT", "FF", "RB", "PA", "AV",
+   "SM"};
 int CMacCmd::mLongHasTime[MAX_LONG_OPERATIONS] = {1, 1, 0, 1, 0, 1, 0, 0, 1, 1, 1, 1, 1,
-0};
+0, 1};
 
 CMacCmd::CMacCmd(int index) : CMacroProcessor(index)
 {
@@ -14227,7 +14229,7 @@ int CMacCmd::LongOperation(void)
 
   ix1 = 0;
   iy1 = 1;
-  int used[] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+  int used[] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
   int operations[MAX_LONG_OPERATIONS + 1];
   float intervals[MAX_LONG_OPERATIONS + 1];
   for (index = 1; index < MAX_MACRO_TOKENS && !mItemEmpty[index]; index++) {
@@ -14257,6 +14259,13 @@ int CMacCmd::LongOperation(void)
         if (index2 == LONG_OP_HW_DARK_REF &&
           !mCamera->CanDoK2HardwareDarkRef(mCamParams, report))
           ABORT_LINE(report + " in line:\n\n");
+        if (index2 == LONG_OP_DE_MAINTENANCE && !mCamParams->DE_camType)
+          ABORT_LINE("The current camera must be a DE camera to do sensor maintenance in "
+            "line:\n\n");
+        if (index2 == LONG_OP_DE_MAINTENANCE && 
+          !(mCamParams->CamFlags & DE_HAS_MAINTENANCE))
+          ABORT_LINE("The DE server cannot do sensor maintenance for the current camera "
+            "in line:\n\n");
         if (mLongHasTime[index2]) {
           if (index == MAX_MACRO_TOKENS - 1 || mItemEmpty[index + 1])
             ABORT_LINE("The last operation must be followed by an interval in hours "
@@ -14298,6 +14307,44 @@ int CMacCmd::NewDEserverDarkRef(void)
     report))
     ABORT_NOLINE(CString("Cannot make a new dark reference in DE server with "
     "NewDEserverDarkRef:\n") + report);
+  return 0;
+}
+
+// GetDEServerProperty
+int CMacCmd::GetDEServerProperty()
+{
+  int ind;
+  CString str;
+  SubstituteLineStripItems(mStrLine, 1, mStrCopy);
+  if (!mCamParams->DE_camType)
+    ABORT_LINE("The current camera must be a DE camera for line:\n\n");
+  ind = mCamera->mDE_Cam->justGetStringProperty(mStrCopy, mEnteredName) ? 0 : 1;
+  if (ind) {
+    mLogRpt = "Getting DE server property " + mStrCopy + " failed or returned no value";
+    SetReportedValues(1, 0);
+  } else {
+    mLogRpt = "DE server property " + mStrCopy + " has value " + mEnteredName;
+    SetOneReportedValue(0, 1);
+    SetOneReportedValue(mEnteredName, 2);
+  }
+  return 0;
+}
+
+// SetDEServerProperty
+int CMacCmd::SetDEServerProperty()
+{
+  int ind;
+  Variable *var;
+  if (LookupVarAbortIfFail(mStrItems[1], &var, ind))
+    return 1;
+  if (!mCamParams->DE_camType)
+    ABORT_LINE("The current camera must be a DE camera for line:\n\n");
+  SubstituteLineStripItems(mStrLine, 2, mStrCopy);
+  ind = mCamera->mDE_Cam->justSetStringProperty(var->value, mStrCopy) ? 0 : 1;
+  if (ind)
+    mLogRpt.Format("Failed to set property %s to %s in DE server", (LPCTSTR)var->value,
+      LPCTSTR(mStrCopy));
+  SetReportedValues(ind, 0);
   return 0;
 }
 

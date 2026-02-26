@@ -102,6 +102,7 @@ public:
 	float getColdFingerTemp();
 	HRESULT WarmUPCamera();
 	HRESULT CoolDownCamera();
+  int runSensorMaintenance();
 	int setCorrectionMode(int mode, int readMode);
 	CString getCameraInsertionState();
 	CString getCurrentCameraName(){return m_DE_CurrentCamera;};
@@ -109,8 +110,9 @@ public:
   BOOL CurrentIsSurvey();
 	bool getIntProperty(CString name, int &value);
 	bool getFloatProperty(CString name, float &value);
-	bool getStringProperty(CString name, CString &value);
-	void setIntProperty(CString name,int value);
+  bool getStringProperty(CString name, CString &value);
+  bool justGetStringProperty(CString name, CString &value);
+  void setIntProperty(CString name,int value);
 	void setStringProperty(CString name,CString value);
 	void setDoubleProperty(CString name,double value);
   bool setStringWithError(const char *name, const char *value);
@@ -147,6 +149,7 @@ public:
     mModeForServerRef = mode; mNumLeftServerRef = repeat;};
   bool justSetDoubleProperty(const char * propName, double value);
   bool justSetIntProperty(const char * propName, int value);
+  bool justSetStringProperty(CString name, CString value);
   CString ErrorTrace(char *fmt, ...);
   bool CanIgnoreAutosaveFolder();
   void SetSoftwareAndServerVersion(std::string & propValue);

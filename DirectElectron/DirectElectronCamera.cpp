@@ -72,6 +72,7 @@ static const char *psCountsPerElec = "Electron Counting - Counts Per Electron";
 static const char *psCountsPerEvent = "Event Counting - Value Per Event";
 static const char *psADUsPerElectron = "ADUs Per Electron";
 static const char *psFramesPerSec = "Frames Per Second";
+static const char *psMaintenance = "Sensor - Maintenance Cycle";
 
 // These are concatenated into multiple strings
 #define DE_PROP_COUNTING "Electron Counting"
@@ -333,14 +334,15 @@ int DirectElectronCamera::initializeDECamera(CString camName, int camIndex)
       psBinMode, psHardwareROI, psROIMode, psCountsPerElec,
       psCountsPerEvent, psADUsPerElectron, "ADUs Per Electron Bin1x",
       "Electron Counting - Super Resolution", "Event Counting - Super Resolution",
-      "Readout - Hardware HDR", "Readout - HDR"};
+      "Readout - Hardware HDR", "Readout - HDR", psMaintenance};
     unsigned int flagsToSet[] = {DE_CAM_CAN_COUNT, DE_CAM_CAN_ALIGN, DE_CAM_CAN_ALIGN,
       DE_HAS_TEMP_SET_PT, DE_HAS_TEMP_SET_PT, DE_HAS_READOUT_DELAY, DE_HAS_HARDWARE_BIN,
       DE_HAS_HARDWARE_BIN, DE_HAS_HARDWARE_ROI, DE_HAS_HARDWARE_ROI,
       DE_SCALES_ELEC_COUNTS, DE_SCALES_ELEC_COUNTS, DE_HARDWARE_SCALES,
       DE_HARDWARE_SCALES, DE_CAN_SAVE_SUPERRES, DE_CAN_SAVE_SUPERRES, DE_HAS_HARDWARE_HDR,
-      DE_HAS_HARDWARE_HDR};
+      DE_HAS_HARDWARE_HDR, DE_HAS_MAINTENANCE};
     int numFlags = sizeof(flagsToSet) / sizeof(unsigned int);
+    CameraParameters *params = &mCamParams[camIndex];
 
     result = mDeServer->setCameraName((LPCTSTR)camName);
     m_DE_CurrentCamera = camName;
@@ -370,11 +372,11 @@ int DirectElectronCamera::initializeDECamera(CString camName, int camIndex)
 
     // Clear out the flags in the structure, then set them if seen
     for (int j = 0; j < numFlags; j++)
-      mCamParams[camIndex].CamFlags &= ~flagsToSet[j];
+      params->CamFlags &= ~flagsToSet[j];
     for (int i = 0; i < (int)camProps.size(); i++) {
       for (int j = 0; j < numFlags; j++)
         if (!camProps[i].compare(propsToCheck[j]))
-          mCamParams[camIndex].CamFlags |= flagsToSet[j];
+          params->CamFlags |= flagsToSet[j];
       if (!camProps[i].compare("Hardware Binning X"))
         sawHWbinning = true;
       if (!camProps[i].compare("Hardware ROI Size X"))
@@ -435,14 +437,14 @@ int DirectElectronCamera::initializeDECamera(CString camName, int camIndex)
     // Clear super-res flag if server no longer supports it
     // Use licenses now as the ruling factor
     if (mServerVersion >= DE_NO_MORE_SUPER_RES)
-      mCamParams[camIndex].CamFlags &= ~DE_CAN_SAVE_SUPERRES;
+      params->CamFlags &= ~DE_CAN_SAVE_SUPERRES;
     if (mServerVersion >= DE_HAS_LICENSE_PROPS) {
       if (hasCountingLicense)
-        mCamParams[camIndex].CamFlags |= DE_CAM_CAN_COUNT;
+        params->CamFlags |= DE_CAM_CAN_COUNT;
       else
-        mCamParams[camIndex].CamFlags &= ~DE_CAM_CAN_COUNT;
+        params->CamFlags &= ~DE_CAM_CAN_COUNT;
       if (!hasHDRlicense)
-        mCamParams[camIndex].CamFlags &= ~DE_HAS_HARDWARE_HDR;
+        params->CamFlags &= ~DE_HAS_HARDWARE_HDR;
     }
 
     if (debug) {
@@ -463,38 +465,38 @@ int DirectElectronCamera::initializeDECamera(CString camName, int camIndex)
         if ((mDeServer->getProperty("Feature - HW ROI X", &propValue) &&
           propValue == "On") || (mDeServer->getProperty("Feature - HW ROI Y",
             &propValue) && propValue == "On"))
-          mCamParams[camIndex].CamFlags |= DE_HAS_HARDWARE_ROI;
+          params->CamFlags |= DE_HAS_HARDWARE_ROI;
       }
 
       // Check if there is a non-empty string for hardware bin
       // and supersede the counting detection with this feature value
       if (sawHWbinning && mDeServer->getProperty("Hardware Binning X", &propValue) &&
         propValue.length() > 0)
-        mCamParams[camIndex].CamFlags |= DE_HAS_HARDWARE_BIN;
+        params->CamFlags |= DE_HAS_HARDWARE_BIN;
       /* 8/9/25: Philip says there can be a feature listed but no license, so this is
       worthless
       if (mDeServer->getProperty("Feature - Counting", &propValue)) {
         if (propValue == "On")
-          mCamParams[camIndex].CamFlags |= DE_CAM_CAN_COUNT;
+          params->CamFlags |= DE_CAM_CAN_COUNT;
         else
-          mCamParams[camIndex].CamFlags &= ~DE_CAM_CAN_COUNT;
+          params->CamFlags &= ~DE_CAM_CAN_COUNT;
       }*/
     }
 
     // Set some properties that are not going to be managed
     mNormAllInServer = mServerVersion >= DE_ALL_NORM_IN_SERVER;
     if (mNormAllInServer) {
-      mCamParams[camIndex].CamFlags |= DE_NORM_IN_SERVER;
+      params->CamFlags |= DE_NORM_IN_SERVER;
       if (!IsApolloCamera())
         setIntProperty(mAPI2Server ?
           "Readout - Frames to Ignore" : DE_PROP_AUTOMOVIE"Ignored Frames", 0);
       //setStringProperty("Backward Compatibility", psDisable);
       // Leave this for engineers to be able to set depending on what is best
-      //if (mCamParams[camIndex].CamFlags & DE_CAM_CAN_COUNT)
+      //if (params->CamFlags & DE_CAM_CAN_COUNT)
         //setStringProperty(DE_PROP_COUNTING" - Apply Pre-Counting Gain", psEnable);
 
       // Hardware binning bins by averaging so set the software binning to match
-      if (mCamParams[camIndex].CamFlags & DE_HAS_HARDWARE_BIN)
+      if (params->CamFlags & DE_HAS_HARDWARE_BIN)
         setStringProperty(mAPI2Server ? "Binning Method" : "Binning Algorithm",
           "Average");
 
@@ -514,38 +516,42 @@ int DirectElectronCamera::initializeDECamera(CString camName, int camIndex)
 
     // TODO - what defines this?
     if (mServerVersion >= DE_FRAME_IS_IMAGE_SIZE)
-      mCamParams[camIndex].CamFlags |= DE_FRAMES_MATCH_IMAGE;
+      params->CamFlags |= DE_FRAMES_MATCH_IMAGE;
 
-    getFloatProperty("Frames Per Second (Max)", mCamParams[camIndex].DE_MaxFrameRate);
-    B3DCLAMP(mCamParams[camIndex].DE_MaxFrameRate, 1.f, 5000.f);
+    getFloatProperty("Frames Per Second (Max)", params->DE_MaxFrameRate);
+    B3DCLAMP(params->DE_MaxFrameRate, 1.f, 5000.f);
     if (mServerVersion >= DE_HAS_REPEAT_REF && mServerVersion < DE_AUTOSAVE_RENAMES2) {
       setStringProperty(psAutoRepeatRef, psDisable);
       mLastAutoRepeatRef = 0;
     }
 
+    if (params->CamFlags & DE_HAS_MAINTENANCE)
+      getFloatProperty("Sensor - Maintenance Cycle Duration (s)",
+        params->DEMaintenanceTime);
+
     if (IsApolloCamera()) {
-      if (mCamParams[camIndex].CamFlags & DE_HARDWARE_SCALES)
+      if (params->CamFlags & DE_HARDWARE_SCALES)
         getIntProperty(psADUsPerElectron, mElecCountsScaled);
       else
         mElecCountsScaled = 16;
-      getFloatProperty(psFramesPerSec, mCamParams[camIndex].DE_FramesPerSec);
-      mCamParams[camIndex].DE_CountingFPS = mCamParams[camIndex].DE_FramesPerSec;
-    } else if (mCamParams[camIndex].CamFlags & DE_SCALES_ELEC_COUNTS)
+      getFloatProperty(psFramesPerSec, params->DE_FramesPerSec);
+      params->DE_CountingFPS = params->DE_FramesPerSec;
+    } else if (params->CamFlags & DE_SCALES_ELEC_COUNTS)
       getIntProperty(mAPI2Server ? psCountsPerEvent : psCountsPerElec, mElecCountsScaled);
 
     // Make sure that if an autosave dir can be set and one is in properties, it is there
     // or can be created
     if (mServerVersion >= DE_CAN_SET_FOLDER) {
-      if (ServerIsLocal() && !mCamParams[camIndex].DE_AutosaveDir.IsEmpty() &&
-       CreateFrameDirIfNeeded(mCamParams[camIndex].DE_AutosaveDir, &str, 'D')) {
+      if (ServerIsLocal() && !params->DE_AutosaveDir.IsEmpty() &&
+       CreateFrameDirIfNeeded(params->DE_AutosaveDir, &str, 'D')) {
          PrintfToLog("WARNING: %s", (LPCTSTR)str);
-         mCamParams[camIndex].DE_AutosaveDir = "";
+         params->DE_AutosaveDir = "";
       }
 
       // If the autosave dir property is (now or originally) empty, strip the dir from the
       // server back to the
       // camera name and save that as the dir if possible; otherwise clear it out
-      if (mCamParams[camIndex].DE_AutosaveDir.IsEmpty()) {
+      if (params->DE_AutosaveDir.IsEmpty()) {
         if (getStringProperty(DE_PROP_AUTOSAVE_DIR, str)) {
           str.Replace('/', '\\');
           int len;
@@ -554,7 +560,7 @@ int DirectElectronCamera::initializeDECamera(CString camName, int camIndex)
               str = str.Left(len - 1);
             UtilSplitPath(str, tmp, tmp2);
             if (!tmp2.Compare(camName)) {
-              mCamParams[camIndex].DE_AutosaveDir = str;
+              params->DE_AutosaveDir = str;
               break;
             }
             str = tmp;
@@ -562,21 +568,21 @@ int DirectElectronCamera::initializeDECamera(CString camName, int camIndex)
         }
       }
     } else
-      mCamParams[camIndex].DE_AutosaveDir = "";
+      params->DE_AutosaveDir = "";
 
     //If frame folder doesn't have to be the autosave folder, but is not yet assigned,
     //initialize it to be the autosave folder with possible subfolder
-    if (CanIgnoreAutosaveFolder() && mCamParams[camIndex].dirForFrameSaving.IsEmpty()) {
-      mCamParams[camIndex].dirForFrameSaving = mCamParams[camIndex].DE_AutosaveDir;
+    if (CanIgnoreAutosaveFolder() && params->dirForFrameSaving.IsEmpty()) {
+      params->dirForFrameSaving = params->DE_AutosaveDir;
       str = mWinApp->mCamera->GetDirForDEFrames();
       if (!str.IsEmpty())
-        mCamParams[camIndex].dirForFrameSaving += "\\" + str;
+        params->dirForFrameSaving += "\\" + str;
     }
 
 
     // Set that we can align if server is local and frames are normalized
     if (ServerIsLocal() && mServerVersion >= DE_ALL_NORM_IN_SERVER)
-      mCamParams[camIndex].CamFlags |= DE_WE_CAN_ALIGN;
+      params->CamFlags |= DE_WE_CAN_ALIGN;
 
     FinishCameraSelection(true, &mCamParams[camIndex]);
   }
@@ -1904,6 +1910,34 @@ HRESULT DirectElectronCamera::CoolDownCamera()
   return hr;
 }
 
+// Run the sensor maintenance operation defined for this camera
+int DirectElectronCamera::runSensorMaintenance()
+{
+  std::string valStr;
+  int numErr = 0;
+  CSingleLock slock(&m_mutex);
+  if (slock.Lock(1000)) {
+    if (!mDeServer->setProperty(psMaintenance, "On"))
+      return 1;
+    Sleep(1000);
+    for (;;) {
+      if (mDeServer->getProperty(psMaintenance, &valStr) && valStr.length() > 0) {
+        numErr = 0;
+        if (valStr != "In Progress")
+          return 0;
+      } else {
+        numErr++;
+
+        // Give up if too many errors in a row reading the property
+        if (numErr > 10)
+          return 1;
+      }
+      Sleep(10000);
+    }
+  }
+  return 1;
+}
+
 // Set the correction mode with the given value, plus 4 to disable movie corrections
 int DirectElectronCamera::setCorrectionMode(int nIndex, int readMode)
 {
@@ -2059,9 +2093,23 @@ bool DirectElectronCamera::getStringProperty(CString name, CString &value)
   return false;
 }
 
+// Just try to get a property with no error trace
+bool DirectElectronCamera::justGetStringProperty(CString name, CString & value)
+{
+  std::string valStr;
+  CSingleLock slock(&m_mutex);
+  if (slock.Lock(1000)) {
+    if (mDeServer->getProperty(std::string((LPCTSTR)name), &valStr)) {
+      value = valStr.c_str();
+      return valStr.length() > 0;
+    }
+  }
+  return false;
+}
+
 /////////////////////////////////////////////////////////
 // Routines to set properties given string, int or float/double
-// The first two return true for success
+// The first three return true for success
 /////////////////////////////////////////////////////////
 
 // Just convert an integer property to string and set it, return result
@@ -2070,6 +2118,15 @@ bool DirectElectronCamera::justSetIntProperty(const char * propName, int value)
   char buffer[20];
   sprintf(buffer, "%d", value);
   return mDeServer->setProperty(propName, buffer);
+}
+
+bool DirectElectronCamera::justSetStringProperty(CString name, CString value)
+{
+  CSingleLock slock(&m_mutex);
+  if (slock.Lock(1000)) {
+    return mDeServer->setProperty((LPCTSTR)name, (LPCTSTR)value);
+  }
+  return false;
 }
 
 // Just convert a double property to string and set it, return result

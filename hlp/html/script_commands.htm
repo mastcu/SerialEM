@@ -1727,6 +1727,21 @@
             current time as the time of the last reference.</TD>
         </TR>
         <TR>
+          <TD class="scriptcommand">GetDEServerProperty text</TD>
+          <TD>Gets the value of the DE server property given by <b>text</b>, which is all of
+               the text on the line after the command.&nbsp; Sets <em>reportedValue1</em> to 0 
+              on success or 1 on failure or for no returned value, and <em>reportedValue2</em> 
+              to the property value.&nbsp; Command added in 4.3, 24-Feb-26.</TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">SetDEServerProperty var text</TD>
+          <TD>Sets the DE server property whose name is in the variable <strong>var</strong> 
+              to the value in <strong>text</strong>, which is all the text on the rest of the line after
+              <strong>var</strong>.&nbsp; Sets <em>reportedValue1</em> to 0 on success or 1 on 
+              failure, and <em>reportedValue2</em> to 0.&nbsp; Command added in 4.3, 
+              24-Feb-26.</TD>
+        </TR>
+        <TR>
           <TD class="scriptcommand">UpdateHWDarkRef #</TD>
           <TD>Updates the K2 hardware dark reference if the known interval since the last
             update is longer than <b>#</b> in hours.&nbsp; If <b>#</b> is 0, the update is done
@@ -4112,13 +4127,18 @@
         </TR>
         <TR>
           <TD class="scriptcommand">LongOperation op # [op #...]</TD>
-          <TD>Starts one or more time-consuming operations: <b>op</b> can be Buffer cycle ('Bu'), Refill
-            refrigerant on Thermo/FEI or SimpleOrigin ('Re'), Inventory cassettes ('In') on Thermo/FEI 
-            or JEOL, Loader buffer cycle ('Lo'), Unload cartridge ('Un') on Thermo/FEI only, Dark
-            reference update for K2 (or K3 with GMS 3.31+) ('Da'), Refill Stage tank ('RS'), Refill Transfer
-            tank ('RT'), or Refill Both tanks 'RB' on JEOL, Flash FEG ('FF') on JEOL or 
-            Thermo/FEI, and Prepare to Avoid vibrations ('PA') or Avoid Vibrations ('AV') on Thermo/FEI scopes with the 
-            UTAPI vibration manager supported.&nbsp; Operations are identified by the first two
+          <TD>Starts one or more time-consuming operations; <b>op</b> can be: <br />
+            &nbsp;&nbsp; Buffer cycle ('Bu') <br />
+            &nbsp;&nbsp; Refill refrigerant on Thermo/FEI or SimpleOrigin ('Re')<br />
+            &nbsp;&nbsp; Inventory cassettes ('In') on Thermo/FEI or JEOL<br />
+            &nbsp;&nbsp; Loader buffer cycle ('Lo'), Unload cartridge ('Un') on Thermo/FEI only<br />
+            &nbsp;&nbsp; Dark reference update for K2 (or K3 with GMS 3.31+) ('Da')<br />
+            &nbsp;&nbsp; Refill Stage tank ('RS'), Refill Transfer tank ('RT'), or Refill Both tanks 'RB' on JEOL<br />
+            &nbsp;&nbsp; Flash FEG ('FF') on JEOL or Thermo/FEI<br />
+            &nbsp;&nbsp; Prepare to Avoid vibrations ('PA') or Avoid Vibrations ('AV') on Thermo/FEI scopes with the 
+            UTAPI vibration manager supported<br />
+            &nbsp;&nbsp; Sensor Maintenance ('SM') on a DE camera that has a property for this <br />
+            Operations are identified by the first two
             letters of whatever full word you use (case insensitive); in cases where the required letters 
             come from two words, you can add other text to clarify, e.g., 'RS-RefillStage'.&nbsp; 
             <br />&nbsp;&nbsp;&nbsp;&nbsp; Operations other than Inventory, Unload cartridge, and 

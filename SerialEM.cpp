@@ -340,6 +340,7 @@ CSerialEMApp::CSerialEMApp()
     mCamParams[i].DE_FramesPerSec = -1.;
     mCamParams[i].DE_CountingFPS = -1.;
     mCamParams[i].DE_MaxFrameRate = -1.;
+    mCamParams[i].DEMaintenanceTime = 0.;
     mCamParams[i].alsoInsertCamera = -1;
     mCamParams[i].samePhysicalCamera = -1;
     mCamParams[i].K2Type = 0;

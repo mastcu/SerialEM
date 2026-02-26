@@ -13211,6 +13211,19 @@ UINT CCameraController::HWDarkRefProc(LPVOID pParam)
   return retval;
 }
 
+// Simple calls to start a thread and run the sensor maintenance
+CWinThread *CCameraController::StartDEMaintenceThread()
+{
+  return (AfxBeginThread(DEMaintenanceProc, &mITD, THREAD_PRIORITY_NORMAL, 0,
+    CREATE_SUSPENDED));
+}
+
+UINT CCameraController::DEMaintenanceProc(LPVOID pParam)
+{
+  InsertThreadData *itd = (InsertThreadData *)pParam;
+  return itd->td->DE_Cam->runSensorMaintenance();
+}
+
 // If K2 gain references have been loaded into DM, check if it is time to free them
 // or free them unconditionally on program exit
 void CCameraController::CheckAndFreeK2References(bool unconditionally)

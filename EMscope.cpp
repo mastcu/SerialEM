@@ -10562,7 +10562,7 @@ static char *longOpDescription[MAX_LONG_OPERATIONS] =
   "updating hardware dark reference", "unloading a cartridge", "loading a cartridge",
   "refilling stage", "refilling transfer tank", "flashing FEG",
   "refilling stage and transfer tank", "preparing to avoid vibration",
-  "avoiding vibration"};
+  "avoiding vibration", "doing DE sensor maintenance"};
 
 // Start a thread for a long-running operation: returns 1 if thread busy,
 // 2 if inappropriate in some other way, -1 if nothing was started
@@ -10570,11 +10570,14 @@ int CEMscope::StartLongOperation(int *operations, float *hoursSinceLast, int num
 {
   int ind, thread, longOp, scopeOps[MAX_LONG_OPERATIONS], numScopeOps = 0;
   float sinceLast;
-  bool needHWDR = false, startedThread = false, suspendFilter = false;
+  bool startedThread = false, suspendFilter = false;
+  int needHWDR = 0;
   int now = mWinApp->MinuteTimeStamp();
+  CameraParameters *camParam = mWinApp->GetActiveCamParam();
+
   // Change second one back to 0 to enable simpleorigin
-  short scopeType[MAX_LONG_OPERATIONS] = {1, 0, 1, 1, 1, 0, 1, 1, 2, 2, 0, 2, 1, 1};
-  short blocksFilter[MAX_LONG_OPERATIONS] = {0, 4, 4, 4, 0, 0, 4, 4, 0, 0, 4, 0, 0, 0};
+  short scopeType[MAX_LONG_OPERATIONS] = {1, 0, 1, 1, 1, 0, 1, 1, 2, 2, 0, 2, 1, 1, 0};
+  short blocksFilter[MAX_LONG_OPERATIONS] = {0, 4, 4, 4, 0, 0, 4, 4, 0, 0, 4, 0, 0, 0, 0};
   mDoingStoppableRefill = 0;
   mChangedLoaderInfo = false;
   mLongOpErrorToReport = 0;
@@ -10596,8 +10599,8 @@ int CEMscope::StartLongOperation(int *operations, float *hoursSinceLast, int num
       now - mLastLongOpTimes[longOp] < 60. * sinceLast)) {
         if (UtilThreadBusy(&mLongOpThreads[sLongThreadMap[longOp]]) > 0)
           return 1;
-        if (longOp == LONG_OP_HW_DARK_REF) {
-          needHWDR = true;
+        if (longOp == LONG_OP_HW_DARK_REF || longOp == LONG_OP_DE_MAINTENANCE) {
+          needHWDR = longOp;
         } else {
           scopeOps[numScopeOps++] = longOp;
           if ((scopeType[longOp] == 1 && !FEIscope) ||
@@ -10634,10 +10637,17 @@ int CEMscope::StartLongOperation(int *operations, float *hoursSinceLast, int num
   for (thread = 0; thread < MAX_LONG_THREADS; thread++) {
     if (thread == 1 && needHWDR) {
       mLongOpData[thread].numOperations = 1;
-      mLongOpData[thread].operations[0] = LONG_OP_HW_DARK_REF;
+      mLongOpData[thread].operations[0] = needHWDR;
       mLongOpData[thread].finished[0] = true;
-      mLongOpThreads[thread] = mCamera->StartHWDarkRefThread();
-      sLongOpDescriptions[thread] = longOpDescription[LONG_OP_HW_DARK_REF];
+      sLongOpDescriptions[thread] = longOpDescription[needHWDR];
+      if (needHWDR == LONG_OP_HW_DARK_REF) {
+        mLongOpThreads[thread] = mCamera->StartHWDarkRefThread();
+      } else {
+        mLongOpThreads[thread] = mCamera->StartDEMaintenceThread();
+        if (camParam->DEMaintenanceTime > 0)
+          sLongOpDescriptions[thread].Format("%s for up to %.1f minutes",
+            (LPCTSTR)longOpDescription[needHWDR], camParam->DEMaintenanceTime / 60.);
+      }
     } else if (thread == 0 && numScopeOps) {
       sLongOpDescriptions[thread] = "";
       mLongOpData[thread].flags = (mDoNextFEGFlashHigh ? LONGOP_FLASH_HIGH : 0) |

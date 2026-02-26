@@ -861,6 +861,9 @@ MAC_SAME_NAME_ARG(AdjustImShiftTargets, 1, 4, ADJUSTIMSHIFTTARGETS, Ii)
 MAC_SAME_NAME_ARG(AlreadyInLowDoseArea, 1, 0, ALREADYINLOWDOSEAREA, S)
 MAC_SAME_NAME_ARG(FuncsTakeAllStringArgs, 0, 4, FUNCSTAKEALLSTRINGARGS, i)
 MAC_SAME_NAME_ARG(CenterHoleAtNavItem, 3, 0, CENTERHOLEATNAVITEM, ISIddii)
+MAC_SAME_NAME_ARG(GetDEServerProperty, 1, 4, GETDESERVERPROPERTY, S)
+MAC_SAME_NAME_ARG(SetDEServerProperty, 2, 4, SETDESERVERPROPERTY, SS)
+
 
 // new Python-only commands need to be added to pythonOnlyCmds in ::CMacroProcessor
 // New Not from Python items omit _ARG or _NOARG
