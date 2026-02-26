@@ -6753,6 +6753,11 @@ void CCameraController::AdjustSizes(int &DMsizeX, int ccdSizeX, int moduloX, int
     camParam->coordsModulo = true;
     sRestrictedSizeIndex = -1;
   }
+
+  // Disable subareas only for binning 1 for 2100 STEM
+  if (camParam->STEMcamera && ((mBaseJeolSTEMflags & JEOLSTEM_BAD_2100) != 0) &&
+    binning == 1)
+    moduloX = -2;
   if (camParam->TietzType && camParam->TietzImageGeometry > 0)
     UserToTietzCCD(camParam->TietzImageGeometry, binning, ccdSizeX, ccdSizeY, DMsizeX, 
       DMsizeY, Top, Left, Bottom, Right);

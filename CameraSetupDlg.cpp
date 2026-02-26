@@ -717,7 +717,8 @@ void CCameraSetupDlg::OnBinning()
   ManageK2SaveSummary();
   ManageTimingAvailable();
   ManageAntialias();
-  if (mFlexibleSubareas)
+  if (mFlexibleSubareas || 
+    (mParam->STEMcamera && (mCamera->GetBaseJeolSTEMflags() & JEOLSTEM_BAD_2100) != 0))
     ManageSizeAndPositionButtons(false);
 }
 
@@ -1090,7 +1091,8 @@ void CCameraSetupDlg::LoadConsetToDialog()
 
   // Adjust the size in case of restricted sizes
   alwaysAdjust = (mSTEMcamera && mParam->FEItype) ||
-    (mParam->K2Type && m_bDoseFracMode);
+    (mParam->K2Type && m_bDoseFracMode) || (mSTEMcamera && 
+    (mCamera->GetBaseJeolSTEMflags() & JEOLSTEM_BAD_2100) != 0 && !m_iBinning);
   if (mParam->moduloX < 0 || mParam->centeredOnly || mParam->squareSubareas ||
     mTietzBlocks || alwaysAdjust)
     AdjustCoords(binning, alwaysAdjust ? 2 : 0);
@@ -2099,11 +2101,13 @@ void CCameraSetupDlg::ManageK2Processing(void)
 void CCameraSetupDlg::ManageSizeAndPositionButtons(BOOL disableAll)
 {
   static bool lastFlexEnabled = false;
-  bool enable = (mParam->moduloX >= 0 || mTietzSizes) && !disableAll;
+  bool badJeolSTEM = mParam->STEMcamera && 
+    ((mCamera->GetBaseJeolSTEMflags() & JEOLSTEM_BAD_2100) != 0) && !m_iBinning;
+  bool enable = (mParam->moduloX >= 0 || mTietzSizes) && !disableAll && !badJeolSTEM;
   if (!disableAll && mFlexibleSubareas)
     enable = mCamera->IsFEISubareaFlexible(mParam, m_bSaveFrames != 0,
       m_bAlignDoseFrac != 0, mCurSet->useFrameAlign, m_iK2Mode, mBinnings[m_iBinning]);
-  if (mFlexibleSubareas && lastFlexEnabled && !enable) {
+  if ((mFlexibleSubareas || badJeolSTEM) && lastFlexEnabled && !enable) {
     AdjustCoords(mBinnings[m_iBinning]);
     UpdateData(false);
   }
@@ -2124,7 +2128,7 @@ void CCameraSetupDlg::ManageSizeAndPositionButtons(BOOL disableAll)
   m_editBottom.EnableWindow(enable);
   m_editRight.EnableWindow(enable);
   enable = mParam->moduloX != -2 && (mParam->moduloX > -5 || mParam->moduloX < -8) &&
-    !disableAll;
+    !disableAll && !badJeolSTEM;
   m_butFull.EnableWindow(enable);
   m_butHalf.EnableWindow(enable);
   m_butQuarter.EnableWindow(enable);
