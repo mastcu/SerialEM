@@ -2710,12 +2710,17 @@
         </TR>
         <TR VALIGN="top">
           <TD>BaseJeolSTEMflags</TD>
-          <TD>Flags for testing.&nbsp; Set to the sum of: 4 to start live mode on a 
+          <TD>Flags for JEOL 2100 or for testing.&nbsp; Set to the sum of: 4 to start live mode on a 
             single-channel interface and wait for a frame before taking a single shot; 16 to 
             not rely on snapshot started or finished events with a multi-channel interface 
-            and just test for whether snapshot is till running.&nbsp; In the latter case, 
+            and just test for whether snapshot is till running; 32 for a 2100plus.&nbsp; For flag 16, 
             the environment variable SJC_FLAG16_DELAY can be used to set a delay in msec 
-            before starting to test; the default is 500 msec.</TD>
+            before starting to test; the default is 500 msec.&nbsp; For a 2100plus, the environment 
+            variable SJC_FLAG32_SCALING can be set with a value for scaling down the pixel time increment;
+            the default is 0.276 and larger values would give smaller exposure times.&nbsp; The actual exposure
+            time (plus flyback time) can be assessed best by setting Debug Output 'Z' and looking at the
+            interval in msec from 'EventSnapshotStarted' to 'EventSnapshotCompleted'.
+          </TD>
         </TR>
         <TR VALIGN="top">
           <TD><b>Plugin Camera Properties</b></TD>
