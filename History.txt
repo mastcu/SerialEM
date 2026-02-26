@@ -5,7 +5,8 @@ significance, for the stable release version
 ============================================================================
 2/25/26: Added a script command to center on a hole at a navigator item.
 
-2/25/26: Added the option to center on holes instead of align to template.
+2/25/26: Added an option to center on holes instead of aligning to template in
+the Navigator Realign dialog.
 
 2/24/26: SEM_4-2-17
 2/24/26: Made TIFF images be saved with pixel size readable by
