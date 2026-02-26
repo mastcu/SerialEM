@@ -2055,7 +2055,46 @@ void CParticleTasks::PrepareAutofocusForZbyG(ZbyGParams &param, bool saveAndSetL
     mScope->IncDefocus(param.focusOffset);
 }
 
-// Align navigator item at the center of a hole
+///////////////////////////////////////////////////////////////////////
+// ALIGN TO TEMPLATE OR CENTER ON HOLE
+//
+// Start aligning to template
+int CParticleTasks::AlignToTemplate(NavAlignParams & aliParams)
+{
+  CMapDrawItem *map;
+  EMimageBuffer *imBuf = &mImBufs[aliParams.loadAndKeepBuf];
+  mATParams = aliParams;
+  mATHoleCenteringMode = 0; //Don't do any hole centering
+
+  // Find map and check it
+  map = mWinApp->mNavigator->FindItemWithString(mATParams.templateLabel, false, true);
+  if (!map) {
+    SEMMessageBox("Cannot find the template map in Navigator table for aligning to "
+      "template");
+    return 1;
+  }
+  if (!map->IsMap()) {
+    SEMMessageBox("The Navigator item designated as the template to align, with label " +
+      mATParams.templateLabel + ", is not a map");
+    return 1;
+  }
+  if (map->mMapMontage) {
+    SEMMessageBox("The Navigator item designated as the template to align, with label " +
+      mATParams.templateLabel + ", ia a montage map");
+    return 1;
+  }
+
+  // See if it is in the buffer and load if not.  Load gives messages on error
+  if (!imBuf->mImage || imBuf->mMapID != map->mMapID) {
+    if (mWinApp->mNavigator->DoLoadMap(true, map, mATParams.loadAndKeepBuf, false))
+      return 1;
+  }
+
+  StartTemplateOrHoleAlign(map, 0);
+  return 0;
+}
+
+// Start aligning navigator item at the center of a hole
 int CParticleTasks::CenterNavItemOnHole(CMapDrawItem *item, NavAlignParams &aliParams, 
   bool doingMulti)
 {
@@ -2141,46 +2180,8 @@ int CParticleTasks::CenterNavItemOnHole(CMapDrawItem *item, NavAlignParams &aliP
   return 0;
 }
 
-///////////////////////////////////////////////////////////////////////
-// ALIGN TO TEMPLATE
-//
-// Start the task
-int CParticleTasks::AlignToTemplate(NavAlignParams & aliParams)
-{
-  CMapDrawItem *map;
-  EMimageBuffer *imBuf = &mImBufs[aliParams.loadAndKeepBuf];
-  mATParams = aliParams;
-  mATHoleCenteringMode = 0; //Don't do any hole centering
-
-  // Find map and check it
-  map = mWinApp->mNavigator->FindItemWithString(mATParams.templateLabel, false, true);
-  if (!map) {
-    SEMMessageBox("Cannot find the template map in Navigator table for aligning to "
-      "template");
-    return 1;
-  }
-  if (!map->IsMap()) {
-    SEMMessageBox("The Navigator item designated as the template to align, with label " +
-      mATParams.templateLabel + ", is not a map");
-    return 1;
-  }
-  if (map->mMapMontage) {
-    SEMMessageBox("The Navigator item designated as the template to align, with label " +
-      mATParams.templateLabel + ", ia a montage map");
-    return 1;
-  }
-
-  // See if it is in the buffer and load if not.  Load gives messages on error
-  if (!imBuf->mImage || imBuf->mMapID != map->mMapID) {
-    if (mWinApp->mNavigator->DoLoadMap(true, map, mATParams.loadAndKeepBuf, false))
-      return 1;
-  }
-
-  StartTemplateOrHoleAlign(map, 0);
-  return 0;
-}
-
-// Start Template Align / Hole centering, taking an image using map state or conset
+// Common initial steps in Template Align / Hole centering, taking an image using map
+// state or conset
 void CParticleTasks::StartTemplateOrHoleAlign(CMapDrawItem *map, int conSetNum)
 {
   if (map) {
