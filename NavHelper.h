@@ -441,6 +441,7 @@ private:
   int mTypeOfForgottenState;    // For saving forgotten state
   bool mSavedStateSetApertures; // Whether apertures were set
   bool mCurStateSetApertures;   // Flag that it set apertures
+  bool mRIsetApertures;         // Flag that it was specifically in map for realign item
   bool mSkipAperturesNextState; // Flag not to apply the aperture change in state
   int mObjApToRestore;          // Apertures that need restoring when staed in low dose
   int mCondApToRestore;
