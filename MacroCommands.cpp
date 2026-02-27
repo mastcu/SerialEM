@@ -12893,19 +12893,29 @@ int CMacCmd::StartNavAcquireAtEnd(void)
   return 0;
 }
 
-// NavAcqAtEndUseParams
+// NavAcqAtEndUseParams, ReadNavAcqParamSet
 int CMacCmd::NavAcqAtEndUseParams()
 {
-  NavAcqAction *actions = mNavHelper->GetAcqActions(2);
-  NavAcqParams *params = mWinApp->GetNavAcqParams(2);
-  int *order = mNavHelper->GetAcqActCurrentOrder(2);
-  int which = 0;
+  int which = 0, indParam = 2;
+  bool justRead = CMD_IS(READNAVACQPARAMSET);
   CString errStr;
   ABORT_NONAV;
   if (mNavigator->GetAcquiring())
-    ABORT_NOLINE("You cannot use NavAcqAtEndUseParams when Navigator is acquiring");
+    ABORT_NOLINE("You cannot use this command when Navigator is acquiring:\n\n");
 
-  if (!mStrItems[1].CompareNoCase("R")) {
+  if (justRead) {
+    if (!mStrItems[1].CompareNoCase("F"))
+      indParam = 1;
+    else if (!mStrItems[1].CompareNoCase("M"))
+      indParam = 0;
+    else
+      ABORT_LINE("Parameter set to use must be M or F in line:\n\n");
+  }
+  NavAcqAction *actions = mNavHelper->GetAcqActions(indParam);
+  NavAcqParams *params = mWinApp->GetNavAcqParams(indParam);
+  int *order = mNavHelper->GetAcqActCurrentOrder(indParam);
+  
+  if (justRead || !mStrItems[1].CompareNoCase("R")) {
     if (mItemEmpty[2])
       ABORT_LINE("You must include a filename with Navigator parameters in line:\n\n");
 
@@ -12923,7 +12933,7 @@ int CMacCmd::NavAcqAtEndUseParams()
       ABORT_LINE("Parameter set to use must be M, F, or R in line:\n\n");
     mNavHelper->CopyAcqParamsAndActionsToTemp(which);
   }
-  mUseTempNavParams = true;
+  mUseTempNavParams = !justRead;
   return 0;
 }
 

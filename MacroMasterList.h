@@ -863,6 +863,7 @@ MAC_SAME_NAME_ARG(FuncsTakeAllStringArgs, 0, 4, FUNCSTAKEALLSTRINGARGS, i)
 MAC_SAME_NAME_ARG(CenterHoleAtNavItem, 3, 0, CENTERHOLEATNAVITEM, ISIddii)
 MAC_SAME_NAME_ARG(GetDEServerProperty, 1, 4, GETDESERVERPROPERTY, S)
 MAC_SAME_NAME_ARG(SetDEServerProperty, 2, 4, SETDESERVERPROPERTY, SS)
+MAC_SAME_FUNC_ARG(ReadNavAcqParamSet, 2, 4, NavAcqAtEndUseParams, READNAVACQPARAMSET, SS)
 
 
 // new Python-only commands need to be added to pythonOnlyCmds in ::CMacroProcessor

@@ -941,6 +941,7 @@ int CNavHelper::RealignToItem(CMapDrawItem *inItem, BOOL restoreState,
   CenterSkipData cenSkip;
   LowDoseParams *ldParams = mWinApp->GetLowDoseParams();
   float finalX, finalY, stageX, stageY, firstDelX, firstDelY, mapAngle, angle;
+  bool saveSetAp;
   ControlSet *conSet = mWinApp->GetConSets() + TRACK_CONSET;
   ControlSet *consForScale;
 
@@ -1152,10 +1153,17 @@ int CNavHelper::RealignToItem(CMapDrawItem *inItem, BOOL restoreState,
   // This sets mRInetViewShiftX/Y, mRIconSetNum, and mRIstayingInLD, and mrIcalShiftX/Y
   // Here is where low dose gets turned off if so
   mRealigning = 1;
+  mRIsetApertures = false;
   if (!mRIJustMoving) {
+    saveSetAp = mCurStateSetApertures;
+    mCurStateSetApertures = false;
     PrepareToReimageMap(item, mMapMontP, conSet, TRIAL_CONSET,
       (restoreState || !(mWinApp->LowDoseMode() && item->mMapLowDoseConSet < 0)) ? 1 : 0,
       1);
+    if (mCurStateSetApertures)
+      mRIsetApertures = true;
+    else
+      mCurStateSetApertures = saveSetAp;
   } else {
     mRIstayingInLD = mWinApp->LowDoseMode() == TRUE;
     mRIconSetNum = TRIAL_CONSET;
@@ -1763,6 +1771,8 @@ void CNavHelper::RestoreForStopOrScaledAlign()
 {
   RestoreLowDoseConset();
   RestoreMapOffsets();
+  if (!mRIdidSaveState && mRIsetApertures)
+    SetAperturesIfNeeded(mObjApToRestore, mCondApToRestore, mC1ApToRestore, false);
   if (mRIdidSaveState) {
     RestoreSavedState();
     if (mTypeOfForgottenState != STATE_NONE)
@@ -3689,20 +3699,25 @@ void CNavHelper::SetAperturesIfNeeded(int objectiveAp, int condenserAp, int Jeol
   CString errStr;
   int objAp, condAp, C1Ap;
   int i = AperturesForMapsAndStates(objAp, condAp, C1Ap, errStr);
-  if (objectiveAp >= 0 && (i || objectiveAp != objAp)) {
+  bool needObj = objectiveAp >= 0 && (i || objectiveAp != objAp);
+  bool needCond = condenserAp >= 0 && (i || condenserAp != condAp);
+  bool needJC1 = JEOLscope && JeolC1Ap >= 0 && (i || JeolC1Ap != C1Ap);
+  if ((needObj || needCond || needJC1) && setting) {
     mObjApToRestore = mCondApToRestore = mC1ApToRestore = -1;
+  }
+  if (needObj) {
     mScope->SetApertureSize(OBJECTIVE_APERTURE, objectiveAp, true);
     mCurStateSetApertures = setting;
     if (setting)
       mObjApToRestore = objAp;
   }
-  if (condenserAp >= 0 && (i || condenserAp != condAp)) {
+  if (needCond) {
     mScope->SetApertureSize(mScope->GetSingleCondenserAp(), condenserAp, true);
     mCurStateSetApertures = setting;
     if (setting)
       mCondApToRestore = condAp;
   }
-  if (JEOLscope && JeolC1Ap >= 0 && (i || JeolC1Ap != C1Ap)) {
+  if (needJC1) {
     mScope->SetApertureSize(JEOL_C1_APERTURE, JeolC1Ap, true);
     mCurStateSetApertures = setting;
     if (setting)
