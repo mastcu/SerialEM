@@ -7642,3 +7642,113 @@ void CNavHelper::FindFocusPosForCurrentItem(StateParams &state, bool justLDstate
   }
 }
 
+// Get hole size, spacing, and pattern type from a map containing the stage location of 
+// the buffer image. Otherwise get them from the hole finder parameters.
+int CNavHelper::GetHoleGeometry(float &holeSize, float &holeSpacing, bool &hex,
+  EMimageBuffer *imBuf, bool *fromMapPtr)
+{
+  if (!mNav)
+    return 1;
+  HoleFinderParams* holeParams = GetHoleFinderParams();
+  MapItemArray* itemArr = mNav->GetItemArray();
+  float tilt, scale, rotation, stageX, stageY, imSizeX, imSizeY;
+  float xmin, xmax, ymin, ymax;
+  int sizeX, sizeY, index;
+  CMapDrawItem* item;
+  bool fromMap = true;
+
+  holeSize = 0.f;
+  holeSpacing = 0.f;
+
+  mHoleFinderDlg->SyncToMasterParams();
+
+  if (imBuf) {
+    //Get stage coordinates and tilt of current buffer image
+    if (!imBuf->GetStagePosition(stageX, stageY)) {
+      return 1;
+    }
+    if (!imBuf->GetAxisAngle(tilt))
+      tilt = 0.f;
+    if (!imBuf->mMagInd || imBuf->mCamera < 0) {
+      return 2;
+    }
+
+    ConvertIStoStageIncrement(imBuf->mMagInd, imBuf->mCamera, imBuf->mISX,
+      imBuf->mISY, tilt, stageX, stageY);
+
+    //get size of buffer image in microns, compare to size of map in microns
+    imBuf->mImage->getSize(sizeX, sizeY);
+    imSizeX = (float)sizeX * mShiftManager->GetPixelSize(imBuf);
+    imSizeY = (float)sizeY * mShiftManager->GetPixelSize(imBuf);
+
+    for (index = 0; index < (int)itemArr->GetSize(); index++) {
+      item = itemArr->GetAt(index);
+
+      //If item is a map containing the buffer image position, use its stored hole size
+      if (item->IsMap() && item->mFoundHoleSize > 0. && item->mFoundHoleSpacing > 0. &&
+        InsideContour(item->mPtX, item->mPtY, item->mNumPoints, stageX, stageY)) {
+
+        //Ensure that the buffer image is smaller overall than the map
+        xmin = item->mPtX[0];
+        xmax = xmin;
+        ymin = item->mPtY[0];
+        ymax = ymin;
+        for (int j = 1; j < item->mNumPoints; j++) {
+          ACCUM_MIN(xmin, item->mPtX[j]);
+          ACCUM_MIN(ymin, item->mPtY[j]);
+          ACCUM_MAX(xmax, item->mPtX[j]);
+          ACCUM_MAX(ymax, item->mPtY[j]);
+        }
+        if (imSizeX <= xmax - xmin && imSizeY <= ymax - ymin) {
+          SEMTrace('1', "Found hole parameters in map with navigator ID %d", index + 1);
+          holeSize = item->mFoundHoleSize;
+          holeSpacing = item->mFoundHoleSpacing;
+          hex = (item->mFlags & NAV_FLAG_HOLES_IN_HEX) != 0;
+          break;
+        }
+      }
+    }
+    mShiftManager->GetScaleAndRotationForFocus(imBuf, scale, rotation);
+    holeSize *= scale;
+    holeSpacing *= scale;
+  }
+  if (holeSize == 0 || holeSpacing == 0) {
+
+    // If no imBuf or map with stored hole size/spacing, get them from hole finder
+    fromMap = false;
+    hex = holeParams->hexagonalArray != 0;
+    holeSize = hex ? holeParams->hexDiameter : holeParams->diameter;
+    holeSpacing = hex ? holeParams->hexSpacing : holeParams->spacing;
+    if (holeSize <= 0 || holeSpacing <= 0) {
+      return 3;
+    }
+    if (imBuf) {
+      SEMTrace('1', "No map was found with stored hole size and spacing for current stage"
+        " position. Size and spacing from hole finder parameters will be used.");
+    }
+  }
+
+  SEMTrace('1', "Found hole size of %.4f and spacing of %.4f from %s", holeSize,
+    holeSpacing, fromMap ? "map" : "hole finder parameters");
+  if (fromMapPtr)
+    *fromMapPtr = fromMap;
+  return 0;
+}
+
+int CNavHelper::CenterAddedPointInHole(EMimageBuffer *imBuf, float &inX, float &inY,
+  CString &errStr)
+{
+  float holeSize, holeSpacing;
+  bool hex;
+  if (GetHoleGeometry(holeSize, holeSpacing, hex, imBuf)) {
+    errStr.Format("Failed to obtain hole size for hole centering");
+    return 1;
+  }
+
+  if (mHoleFinderDlg->FindAndCenterOneHole(imBuf, holeSize, 0, 0.f, inX, inY,
+    -3.f, true, holeSpacing, hex)) {
+    errStr.Format("Failed to center point in a hole");
+    return 2;
+  }
+  return 0;
+}

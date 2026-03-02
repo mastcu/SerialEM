@@ -152,9 +152,6 @@ public:
   bool ConvertMousePoint(EMimageBuffer *imBuf, float &inX, float &inY, float &stageX,
     float &stageY, ScaleMat &aInv, float &delX, float &delY, float &xInPiece, float &yInPiece,
     int &pieceIndex);
-  int GetHoleGeometry(float &holeSize, float &holeSpacing, bool &hex, 
-    EMimageBuffer *imBuf = NULL);
-  int CenterAddedPointInHole(EMimageBuffer* imBuf, float &inX, float &inY, CString &errStr);
   bool SelectNearestPoint(EMimageBuffer *imBuf, float stageX, float stageY, ScaleMat aInv,
     float delX, float delY, bool ctrlKey, float distLim);
   void GetSelectionLimits(EMimageBuffer *imBuf, ScaleMat aInv, float delX, float delY, float selXlimit[4], float selYlimit[4],
@@ -169,7 +166,7 @@ public:
   int GetCurrentRegistration() {return mCurrentRegistration;};
   MapItemArray *GetItemArray() {return &mItemArray;};
   CArray<ScheduledFile *, ScheduledFile *> *GetScheduledFiles() {return &mGroupFiles;};
-  CArray<FileOptions *, FileOptions *> *GetFileOptArray() {return &mFileOptArray;};
+  CArray<FileOptions *, FileOptions *> *GetFileOptArray() {return &mFileOptArray;}; 
   CArray<TiltSeriesParam *, TiltSeriesParam *> *GetTSparamArray() {return &mTSparamArray;};
   CArray<MontParam *, MontParam *> *GetMontParArray() {return &mMontParArray;};
   CArray<StateParams *, StateParams *> *GetAcqStateArray() {return &mAcqStateArray;};

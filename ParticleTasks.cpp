@@ -2303,7 +2303,7 @@ void CParticleTasks::TemplateAlignNextTask(int param)
       
       // Align using hole centering
       if (mATIterationNum == 0) {
-        ix0 = mWinApp->mNavigator->GetHoleGeometry(holeSize, holeSpacing, hex, 
+        ix0 = mNavHelper->GetHoleGeometry(holeSize, holeSpacing, hex, 
           mImBufs);
         if (ix0) {
           mess.Format("Error getting hole size for hole centering");

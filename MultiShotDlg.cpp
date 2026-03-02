@@ -1135,7 +1135,7 @@ void CMultiShotDlg::AutoStepAdjNextTask(int param)
     if (mWinApp->mNavHelper->mHoleFinderDlg->FindAndCenterOneHole(
       mWinApp->GetImBufs() + bufInd, mActiveParams->autoAdjHoleSize,
       30, mDeferredISX ? 0.9f : mActiveParams->autoAdjLimitFrac, xcen, ycen, 0, false,
-      0, mActiveParams->doHexArray != 0)) {
+      2.f * mActiveParams->autoAdjHoleSize, mActiveParams->doHexArray != 0)) {
       StopRecording();
       return;
     }

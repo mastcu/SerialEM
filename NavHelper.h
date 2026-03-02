@@ -809,6 +809,9 @@ public:
   bool OKtoShiftToMarker();
   void GetHFscanVectors(FloatVec **widths, FloatVec **increments, IntVec **numCircles) 
   {*widths = &mHFwidths; *increments = &mHFincrements; *numCircles = &mHFnumCircles;};
+  int GetHoleGeometry(float &holeSize, float &holeSpacing, bool &hex,
+    EMimageBuffer *imBuf, bool *fromMapPtr = NULL);
+  int CenterAddedPointInHole(EMimageBuffer* imBuf, float &inX, float &inY, CString &errStr);
 
 };
 

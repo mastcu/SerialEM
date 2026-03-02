@@ -13306,13 +13306,10 @@ int CMacCmd::FindAndCenterOneHole()
 {
   float xCen, yCen, holeSize, holeSpacing;
   EMimageBuffer *imBuf;
-  int index, sizeX, sizeY;
-  float stageX, stageY, tilt, scale, rotation, imSizeX, imSizeY;
+  int index;
   MapItemArray* itemArr = mNavigator->GetItemArray();
-  CMapDrawItem* item;
   HoleFinderParams *holeParams = mNavHelper->GetHoleFinderParams();
-  float xmin, xmax, ymin, ymax;
-  bool cropCenter = false, hex;
+  bool hex, cropCenter = false, fromMap = false;
 
   imBuf = mWinApp->mMainView->GetActiveImBuf();
   if (!imBuf->mImage)
@@ -13322,77 +13319,36 @@ int CMacCmd::FindAndCenterOneHole()
       ABORT_LINE(mStrCopy);
     imBuf = &mImBufs[index];
   }
+
+  // Get pattern geometry parameters, ideally from map but from HF parameters as backup
+  if (mItemFlt[2] == 0 || mItemEmpty[8] || mItemFlt[8] <= 0 || mItemEmpty[9] ||
+    mItemInt[9] < 0) {
+    index = mNavHelper->GetHoleGeometry(holeSize, holeSpacing, hex, imBuf, &fromMap);
+    if (index)
+      ABORT_LINE("Could not obtain hole pattern geometry for line:\n\n");
+    if (mItemFlt[2] == 0 && !fromMap)
+      ABORT_LINE("Could not find a map with stored hole size for line:\n\n");
+  }
   
   // Get pattern geometry parameters, ideally from map but from HF parameters as backup
   if ((mItemEmpty[8] || mItemFlt[8] <= 0 || mItemEmpty[9] || mItemInt[9] < 0) &&
-    mNavigator->GetHoleGeometry(holeSize, holeSpacing, hex, imBuf))
+    mNavHelper->GetHoleGeometry(holeSize, holeSpacing, hex, imBuf, &fromMap))
     ABORT_LINE("Could not obtain hole spacing or pattern geometry for line:\n\n");
+  
   if (!mItemEmpty[8] && mItemFlt[8] > 0) 
     holeSpacing = mItemFlt[8];
   if (!mItemEmpty[9] && mItemInt[9] >= 0)
     hex = mItemInt[9] != 0;
 
   // Hole size can be forced to come from HF parameters, so redo getting hole size.
-  holeSize = mItemFlt[2];
-  if (holeSize < 0) {
+  if (mItemFlt[2] < 0) {
     mNavHelper->mHoleFinderDlg->SyncToMasterParams();
     holeSize = hex ? holeParams->hexDiameter : holeParams->diameter;
     if (!holeSize)
       ABORT_LINE("There is no usable diameter in the current Hole Finder parameters for "
         "line:\n\n");
-  }
-
-  //If no hole size was specified, try to find parent map with stored hole size
-  if (!holeSize) {
-    ABORT_NONAV;
-
-    //Get stage coordinates and tilt of current buffer image
-    if (!imBuf->GetStagePosition(stageX, stageY))
-      ABORT_LINE("Could not obtain stage position of buffer image for line:\n\n");
-    if (!imBuf->GetAxisAngle(tilt))
-      tilt = 0.f;
-    if (!imBuf->mMagInd || imBuf->mCamera < 0)
-      ABORT_LINE("Image buffer does not have camera or "
-        "magnification information needed for line:\n\n");
-
-    mNavHelper->ConvertIStoStageIncrement(imBuf->mMagInd, imBuf->mCamera, imBuf->mISX,
-      imBuf->mISY, tilt, stageX, stageY);
-
-    //get size of buffer image in microns, compare to size of map in microns
-    imBuf->mImage->getSize(sizeX, sizeY);
-    imSizeX = (float) sizeX * mShiftManager->GetPixelSize(imBuf);
-    imSizeY = (float) sizeY * mShiftManager->GetPixelSize(imBuf);
-
-    for (index = 0; index < (int)itemArr->GetSize(); index++) {
-      item = itemArr->GetAt(index);
-
-      //If item is a map containing the buffer image position, use its stored hole size
-      if (item->IsMap() && ((item->mFlags & NAV_FLAG_HOLES_IN_HEX) != 0) == hex && 
-        item->mFoundHoleSize > 0 &&
-        InsideContour(item->mPtX, item->mPtY, item->mNumPoints, stageX, stageY)) {
-
-        //Ensure that the buffer image is smaller overall than the map
-        xmin = item->mPtX[0];
-        xmax = xmin;
-        ymin = item->mPtY[0];
-        ymax = ymin;
-        for (int j = 1; j < item->mNumPoints; j++) {
-          ACCUM_MIN(xmin, item->mPtX[j]);
-          ACCUM_MIN(ymin, item->mPtY[j]);
-          ACCUM_MAX(xmax, item->mPtX[j]);
-          ACCUM_MAX(ymax, item->mPtY[j]);
-        }
-        if (imSizeX <= xmax - xmin && imSizeY <= ymax - ymin) {
-          holeSize = item->mFoundHoleSize;
-          break;
-        }
-      }
-    }
-    if (!holeSize)
-      ABORT_LINE("No map with a stored hole size was found containing the buffer image"
-      " position for line:\n\n");
-    mShiftManager->GetScaleAndRotationForFocus(imBuf, scale, rotation);
-    holeSize *= scale;
+  } else if (mItemFlt[2] > 0) {
+    holeSize = mItemFlt[2];
   }
 
   xCen = yCen = 0.f;
