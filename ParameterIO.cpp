@@ -1322,8 +1322,10 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
             ldp->dfTiltX = itemDbl[19];
             ldp->dfTiltY = itemDbl[20];
           }
-          if (!itemEmpty[21])
+          if (!itemEmpty[21]) {
             ldp->EDMPercent = itemFlt[21];
+            B3DCLAMP(ldp->EDMPercent, 0.01f, 100.f);
+          }
           // ADD NEW ITEMS TO NAV STATE READING
         }
 
