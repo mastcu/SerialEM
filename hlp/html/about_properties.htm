@@ -726,6 +726,25 @@
             update (i.e, like &#39;J&#39; without all the output from &#39;1&#39;)</TD>
         </TR>
         <TR VALIGN="top">
+          <TD>SaveNewImageToShrMem</TD>
+          <TD>
+            Set to 1 to save each new image acquired by a camera into a shared memory file 
+            that can be read by nearly all IMOD programs.&nbsp; The program holds two such 
+            files and alternates between them, but the names change depending on the image 
+            size.&nbsp; A file &#39;bufferAimageList.txt&#39; will be written after each save with
+            the names of the previous and current filenames.&nbsp; Use these names verbatim as input
+             file names for IMOD programs like header, newstack and clip.&nbsp; The first file on
+            the list will be deleted as soon as a new image comes in.
+          </TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>NewImageListPath</TD>
+          <TD>
+            A directory in which to save the file with the list of new image shared memory files; the default is
+            the starting directory of the program from which settings were read.
+          </TD>
+        </TR>
+        <TR VALIGN="top">
           <TD>DiscardSettings</TD>
           <TD>Set to 1 to have &#39;Discard on Exit&#39; in the Settings menu initially turned on. </TD>
         </TR>

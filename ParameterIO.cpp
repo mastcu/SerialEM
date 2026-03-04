@@ -3915,6 +3915,10 @@ int CParameterIO::ReadProperties(CString strFileName)
         StripItems(strLine, 1, message);
         mWinApp->mMacroProcessor->SetMonoFontName(message);
 
+      } else if (MatchNoCase("NewImageListPath")) {
+        StripItems(strLine, 1, message);
+        mWinApp->mCamera->SetNewImageListPath(message);
+
       } else if (MatchNoCase("PythonModulePath")) {
         StripItems(strLine, 1, message);
         mWinApp->mMacroProcessor->SetPyModulePath(message);

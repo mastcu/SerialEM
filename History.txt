@@ -3,6 +3,9 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+3/4/26: Added property SaveNewImageToShrMem to have each new acquired image
+saved into a temporary file in shared memory readable by IMOD programs.
+
 2/27/26: Added script command to read Navigator acquire parameters from a
 file directly into the Mapping or Final data parameters.
 

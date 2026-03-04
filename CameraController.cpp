@@ -38,11 +38,13 @@
 #include "Image\KStoreADOC.h"
 #include "DirectElectron\DirectElectronCamera.h"
 #include "GatanSocket.h"
+#include "ExternalTools.h"
 #include <mmsystem.h>
 #include "Shared\b3dutil.h"
 #include "Shared\autodoc.h"
 #include "Shared\framealign.h"
 #include "Shared\SEMCCDDefines.h"
+#include "Shared\iimage.h"
 
 
 #if defined(_DEBUG) && defined(_CRTDBG_MAP_ALLOC)
@@ -498,6 +500,9 @@ CCameraController::CCameraController()
   mAskedDMtoInsert = false;
   mSaveK3GainAsTIFF = false;
   mSkipFocusRamper = false;
+  mSaveNewImageToShrMem = false;
+  mShrMemIIFile[0] = mShrMemIIFile[1] = NULL;
+  mCurShrMemInd = 0;
 }
 
 // Clear anything that might be set externally, or was cleared in constructor and cleanup
@@ -11236,6 +11241,27 @@ void CCameraController::DisplayNewImage(BOOL acquired)
     mWinApp->SetDeferBufWinUpdates(false);
     if (mWinApp->mNavigator)
       mWinApp->mNavigator->AddFocusAreaPoint(false);
+  }
+
+  // Save image to shared memory file, alternating between two root names
+  if (mSaveNewImageToShrMem) {
+    if (mShrMemIIFile[mCurShrMemInd])
+      iiDelete(mShrMemIIFile[mCurShrMemInd]);
+    mShrMemIIFile[mCurShrMemInd] = mWinApp->mExternalTools->SaveBufferToSharedMemory(0,
+      "bufferAimage" + CString(mCurShrMemInd ? "2" : "1") + ".mrc",
+      mShrMemFilename[mCurShrMemInd], 1.);
+    str = "";
+    if (mShrMemIIFile[1 - mCurShrMemInd])
+      str = mShrMemFilename[1 - mCurShrMemInd] + "\r\n";
+    if (mShrMemIIFile[mCurShrMemInd])
+      str += mShrMemFilename[mCurShrMemInd] + "\r\n";
+    if (!str.IsEmpty()) {
+      message = mNewImageListPath;
+      if (message.IsEmpty())
+        message = mWinApp->mDocWnd->GetOriginalCwd();
+      UtilWriteTextFile(message + "\\bufferAimageList.txt", str);
+    }
+    mCurShrMemInd = 1 - mCurShrMemInd;
   }
 
   if (errForCleanup && mRepFlag >= 0) {

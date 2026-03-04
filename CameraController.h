@@ -676,6 +676,8 @@ public:
   GetMember(bool, FalconSavingLZW);
   GetSetMember(BOOL, SaveK3GainAsTIFF);
   GetSetMember(BOOL, SkipFocusRamper);
+  GetSetMember(BOOL, SaveNewImageToShrMem);
+  GetSetMember(CString, NewImageListPath);
 
   CameraThreadData *GetCamThreadData() { return &mTD; };
   bool DoingPartialScan() {return mTD.ReturnPartialScan > 0; };
@@ -1168,6 +1170,11 @@ public:
   bool mFalconSavingLZW;          // early in capture before conSet is changed
   BOOL mSaveK3GainAsTIFF;         // Flag to save K3 counting gain as TIFF not MRC
   BOOL mSkipFocusRamper;          // Flag to do FEI ramping internally as in UTAPI
+  ImodImageFile *mShrMemIIFile[2]; // Files for double-buffered shared memory save of A
+  CString mShrMemFilename[2];     // Filenames
+  int mCurShrMemInd;              // Current index
+  BOOL mSaveNewImageToShrMem;     // Flag to save images
+  CString mNewImageListPath;      // Optional directory
 
 public:
   void SetNonGatanPostActionTime(void);
