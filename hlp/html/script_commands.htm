@@ -5710,7 +5710,10 @@
         </TR>
         <TR>
           <TD class="scriptcommand">CenterHoleAtNavItem #I A #U [#S] [#R] [#M] [#L]</TD>
-          <TD>Centers on the hole at the Navigator item with index <strong>#I</strong>.
+          <TD>Centers on the hole at the Navigator item with index <strong>#I</strong>, which 
+              can be 0 for the current item, greater than 0 for the item with that index in 
+              the table; or a value less than 0 to count back from the end of the table, where 
+              -1 is the last item.
               <strong>A</strong> dictates the type of image acquired for finding and 
               centering: V or S for View or Search in Low Dose, or M to use the parameters 
               used in acquiring the map on which the item is drawn. Set <strong>#U</strong> 
