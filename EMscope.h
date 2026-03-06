@@ -590,7 +590,8 @@ public:
   GetSetMember(BOOL, UseFilterInTEMMode);
   GetSetMember(int, FeiSTEMprobeModeInLM);
   GetSetMember(int, ScanningMags);
-  GetSetMember(BOOL, UseImageBeamTilt);
+  GetSetMember(int, UseImageBeamTilt);
+  GetSetMember(int, LastImageBeamTilt);
   GetSetMember(int, ScreenRaiseDelay);
   GetSetMember(int, ScopeHasAutoloader);
   GetSetMember(int, LDFreeLensDelay);
@@ -1022,7 +1023,8 @@ private:
   ShortVec mSkipUtapiServices;  // List of services to mark as unsupported
   BOOL mUseFilterInTEMMode;    // Flag that energy filter will be used without EFTEM mode
   int mScanningMags;           // 1 if scanning, set to 0 to stop or -1 to end
-  BOOL mUseImageBeamTilt;      // Flag to use image-beam tilt on FEI instead of regular
+  int mUseImageBeamTilt;       // Flag to use image-beam tilt on FEI instead of regular
+  int mLastImageBeamTilt;      // Whetherit was used last time
   std::vector<ShortVec> mApertureSizes;   // Each vector has aperture index then sizes
   int mScreenRaiseDelay;       // Delay time after raising the screen, msec
   int mLDFreeLensDelay;        // Delay time after setting FLC for an area, msec

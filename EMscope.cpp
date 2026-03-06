@@ -552,7 +552,8 @@ CEMscope::CEMscope()
   mUtapiConnected = 0;
   mUseFilterInTEMMode = false;
   mScanningMags = 0;
-  mUseImageBeamTilt = false;
+  mUseImageBeamTilt = -1;
+  mLastImageBeamTilt = -1;
   mScreenRaiseDelay = 0;
   mScopeHasAutoloader = 1;
   mLDFreeLensDelay = 0;
@@ -677,6 +678,7 @@ int CEMscope::Initialize()
       strcpy(mScopeMutexOwnerStr,"NOBODY");
       UsingScopeMutex = true;
       mMonitorC2ApertureSize = 0;
+      mUseImageBeamTilt = 0;
     }
 
     // Finish conditional initialization of variables
@@ -1191,6 +1193,21 @@ int CEMscope::Initialize()
             mCamera->SetTakeUnbinnedIfSavingEER(false);
           }
       }
+      if (mUseImageBeamTilt < 0)
+        mUseImageBeamTilt = UtapiSupportsService(UTSUP_DEFLECTORS1) ? 1 : 0;
+      if (mLastImageBeamTilt >= 0 && mUseImageBeamTilt != mLastImageBeamTilt) {
+        message.Format("WARNING: %s is being used for beam tilt but\r\n"
+          "%s was used in the last run of SerialEM.\r\nThese are separate functions that"
+          " add together to produce the actual beam tilt.\r\n"
+          "The range of absolute X and Y beam tilt values for coma-free\r\nalignment will"
+          " be different from previously.", mUseImageBeamTilt ? "Image-beam tilt" :
+          "Rotation center", mLastImageBeamTilt ? "image-beam tilt" : "rotation center");
+        if (!mUseImageBeamTilt)
+          message += "\r\nAdd property \"UseImageBeamTilt 1\" to avoid this change when\r\n"
+          "switching between UTAPI and standard scripting.";
+        SEMAppendToLog(message);
+      }
+      mLastImageBeamTilt = mUseImageBeamTilt;
       try {
         if (mPlugFuncs->GetXLensModeAvailable)
           mXLensModeAvailable = mPlugFuncs->GetXLensModeAvailable();
