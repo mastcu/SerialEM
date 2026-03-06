@@ -3708,8 +3708,14 @@
         <TR VALIGN="top">
           <TD class="style4">UseImageBeamTilt</TD>
           <TD>Set to 1 on a Thermo/FEI scope to use image-beam tilt instead of rotation 
-            center to set the beam tilt for autofocus and all other beam-tilting operations.&nbsp; 
-            For experimental use only.</TD>
+            center to set the beam tilt for autofocus and all other beam-tilting operations, or 0
+            to use rotation center instead when connecting with UTAPI.&nbsp; These two scope functions
+            set values that are added together to produce the actual beam tilt.&nbsp; 
+            The default is to use rotation center without UTAPI or image-beam tilt with UTAPI
+             because the rotation center value available in UTAPI is scaled about 5 times higher.&nbsp; Do
+             not use 0 with UTAPI unless you have to, because the program will still present numbers as 
+            milliradians even though they are not, and you will have to change the beam tilt values
+             for autofocusing and coma-free alignment to compensate.</TD>
         </TR>
       </TABLE>
       <BR>
