@@ -327,21 +327,29 @@ void CSerialEMDoc::OnUpdateFileOpennew(CCmdUI* pCmdUI)
 }
 
 // Open new file to replace the current one
-int CSerialEMDoc::OpenNewReplaceCurrent(CString filename, bool useMdoc, int fileType)
+int CSerialEMDoc::OpenNewReplaceCurrent(CString filename, bool useMdoc, int fileType, 
+  int storeInd)
 {
-  if (mCurrentStore < 0)
+  int saveCur = mCurrentStore;
+  if (storeInd < 0)
+    storeInd = mCurrentStore;
+  if (storeInd < 0)
     return 1;
-  CopyMasterFileOpts(&mStoreList[mCurrentStore].fileOpt, COPY_FROM_MASTER);
-  mStoreList[mCurrentStore].fileOpt.useMdoc = useMdoc;
-  if (mStoreList[mCurrentStore].fileOpt.isMontage())
-    mStoreList[mCurrentStore].fileOpt.montFileType = fileType;
+  CopyMasterFileOpts(&mStoreList[storeInd].fileOpt, COPY_FROM_MASTER);
+  mStoreList[storeInd].fileOpt.useMdoc = useMdoc;
+  if (mStoreList[storeInd].fileOpt.isMontage())
+    mStoreList[storeInd].fileOpt.montFileType = fileType;
   else
-    mStoreList[mCurrentStore].fileOpt.fileType = fileType;
-  mWinApp->mStoreMRC = OpenNewFileByName(filename, &mStoreList[mCurrentStore].fileOpt);
-  mStoreList[mCurrentStore].store = mWinApp->mStoreMRC;
-  if (mWinApp->mStoreMRC)
+    mStoreList[storeInd].fileOpt.fileType = fileType;
+  mStoreList[storeInd].store = OpenNewFileByName(filename, &mStoreList[storeInd].fileOpt);
+  if (storeInd == mCurrentStore)
+    mWinApp->mStoreMRC = mStoreList[storeInd].store;
+  if (mStoreList[storeInd].store)
     return 0;
+  mCurrentStore = storeInd;
   DoCloseFile();
+  if (storeInd != saveCur)
+    SetCurrentStore(storeInd < saveCur ? saveCur - 1 : saveCur);
   return 2;
 }
 
@@ -1724,10 +1732,12 @@ void CSerialEMDoc::RestoreCurrentFile()
 }
 
 // When MultiTSTasks has to reopen the file after a failure to rename, renew the pointer
-void CSerialEMDoc::NewPointerForCurrentStore(KImageStore * inStore)
+void CSerialEMDoc::NewPointerForCurrentStore(KImageStore *inStore, int storeInd)
 {
-  if (mCurrentStore >= 0)
-    mStoreList[mCurrentStore].store = inStore;
+  if (storeInd < 0)
+    storeInd = mCurrentStore;
+  if (storeInd >= 0 && storeInd < mNumStores)
+    mStoreList[storeInd].store = inStore;
 }
 
 // Protect this file from being closed and also create a ...openTS file
@@ -1785,7 +1795,7 @@ int CSerialEMDoc::StoreIndexFromName(CString name)
   for (int i = 0; i < mNumStores; i++) {
 
     // Special case, the current store is being replaced and it has been closed; skip it
-    if (i == mCurrentStore && !mWinApp->mStoreMRC)
+    if ((i == mCurrentStore && !mWinApp->mStoreMRC) || !mStoreList[i].store)
       continue;
     mStoreList[i].store->MakeNameBeFullPath();
     if (!name.CompareNoCase(mStoreList[i].store->getName()))

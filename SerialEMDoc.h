@@ -47,7 +47,7 @@ public:
 	int SaveBufferToFile(int bufNum, int fileNum, int inSect = -1);
 	int StoreIndexFromName(CString name);
 	void RestoreCurrentFile();
-  void NewPointerForCurrentStore(KImageStore *inStore);
+  void NewPointerForCurrentStore(KImageStore *inStore, int storeInd);
 	bool FileAlreadyOpen(CString filename, CString message);
 	void CloseAllStores();
   GetMember(int, NumStores)
@@ -305,7 +305,7 @@ public:
     int saveFrames, int alignFrames, int useFrameAli, int readMode);
   CString DateTimeForFrameSaving(void);
   void MakeSerialEMTitle(CString & titleStr, char * fullTitle);
-  int OpenNewReplaceCurrent(CString filename, bool useMdoc, int fileType);
+  int OpenNewReplaceCurrent(CString filename, bool useMdoc, int fileType, int storeInd);
   CString DateTimeForTitle(bool year4digits = false);
   const char **GetMonthStrings();
   afx_msg void OnFileOpenMdoc();
