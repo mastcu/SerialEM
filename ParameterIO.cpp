@@ -211,6 +211,7 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
   BaseMarkerShift markerShift;
   BOOL *chanInMultiView = mWinApp->GetShowChanInMultiView();
   MultiGridParams *mgParams = mWinApp->mMultiGridTasks->GetMultiGridParams();
+  ParallelTSOptions *parTSopts = mWinApp->mNavHelper->GetParTSOptions();
   CFileStatus status;
   BOOL startingProg = mWinApp->GetStartingProgram();
   int faLastFileIndex = -1, faLastArrayIndex = -1;
@@ -731,6 +732,22 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
           dwParams->usePriorAutofocus = itemInt[11] != 0;
           dwParams->priorAutofocusRate = itemFlt[12];
         }
+
+      } else if (NAME_IS("ParallelTSOptions")) {
+        parTSopts->adjustBeamTilt = itemInt[1] != 0;
+        parTSopts->extraDelayFactor = itemFlt[2];
+        parTSopts->beamDiam = itemFlt[3];
+        parTSopts->useIAorBeamSize = itemInt[4] != 0;
+        parTSopts->tiltForBeam = itemFlt[5];
+        parTSopts->CtfMeasureType = itemInt[6];
+        parTSopts->findAstig = itemInt[7] != 0;
+        parTSopts->extractVirtPrevs = itemInt[8];
+        parTSopts->alignLimitFrac = itemFlt[9];
+        parTSopts->mapMagIndNonLD = itemInt[10];
+        parTSopts->acqMagIndNonLD = itemInt[11];
+        parTSopts->refAliMaxPctChg = itemFlt[12];
+        parTSopts->refAliMaxRot = itemFlt[13];
+        parTSopts->flags = itemInt[14];
 
       } else if (NAME_IS("NavigatorAcquireParams")) {
 
@@ -1824,6 +1841,7 @@ void CParameterIO::WriteSettings(CString strFileName)
   CArray<BaseMarkerShift, BaseMarkerShift> *markerShiftArr =
     mWinApp->mNavHelper->GetMarkerShiftArray();
   MultiGridParams *mgParams = mWinApp->mMultiGridTasks->GetMultiGridParams();
+  ParallelTSOptions *parTSopts = mWinApp->mNavHelper->GetParTSOptions();
 
   // Transfer macros from any open editing windows
   for (i = 0; i < MAX_MACROS; i++)
@@ -2103,6 +2121,14 @@ void CParameterIO::WriteSettings(CString strFileName)
       dwParams->setTrialParams ? 1 : 0, dwParams->exposure, dwParams->binning, 
       dwParams->changeIS ? 1 : 0, dwParams->usePriorAutofocus ? 1 : 0, 
       dwParams->priorAutofocusRate);
+    mFile->WriteString(oneState);
+    oneState.Format("ParallelTSOptions %d %f %f %d %f %d %d %d %f %d %d %f %f %d\n",
+      parTSopts->adjustBeamTilt ? 1 : 0, parTSopts->extraDelayFactor, parTSopts->beamDiam,
+      parTSopts->useIAorBeamSize ? 1 : 0, parTSopts->tiltForBeam,
+      parTSopts->CtfMeasureType, parTSopts->findAstig ? 1 : 0,
+      parTSopts->extractVirtPrevs, parTSopts->alignLimitFrac, parTSopts->mapMagIndNonLD,
+      parTSopts->acqMagIndNonLD, parTSopts->refAliMaxPctChg, parTSopts->refAliMaxRot,
+      parTSopts->flags);
     mFile->WriteString(oneState);
 
     for (i = 0; i < 2; i++)

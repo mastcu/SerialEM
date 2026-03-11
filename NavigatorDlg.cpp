@@ -204,6 +204,7 @@ CNavigatorDlg::CNavigatorDlg(CWnd* pParent /*=NULL*/)
   mCurrentItem = -1;
   mLastGridSetAcquire = false;
   mNumIStargetItems = 0;
+  mOpenedSepMultiFiles = false;
 }
 
 
@@ -748,8 +749,9 @@ void CNavigatorDlg::Update()
   if (curExists || grpExists)
     index = GroupScheduledIndex(mItem->mGroupID);
   m_butAcquire.EnableWindow(!mNavAcquireDlg && ((fileOK && mItem->mTSparamIndex < 0) ||
-    (grpExists && noTasks && !numTS)));
-  m_butTiltSeries.EnableWindow(fileOK && !mItem->mAcquire);
+    (grpExists && noTasks && !numTS)) && mItem->mParallelTSIndex < 0);
+  m_butTiltSeries.EnableWindow(fileOK && !mItem->mAcquire && 
+    (!mItem->mNumIStargets || mItem->mParallelTSIndex >= 0));
   m_butFileAtItem.EnableWindow(((fileOK && mItem->mAcquire && mItem->mTSparamIndex < 0) ||
     (grpExists && noTasks && numAcqInGroup > 1)) && index < 0);
   m_butGroupFile.EnableWindow(groupOK && noTasks);
@@ -1812,7 +1814,7 @@ void CNavigatorDlg::ProcessAkey(BOOL ctrl, BOOL shift)
   }
   for (int index = start; index <= end; index++) {
     item = mItemArray[index];
-    if (item->mTSparamIndex >= 0)
+    if (item->mTSparamIndex >= 0 || item->mParallelTSIndex >= 0)
       continue;
     oldAcquire = item->mAcquire;
     if (toggle)
@@ -8431,6 +8433,22 @@ void CNavigatorDlg::OpenAndWriteFile(bool autosave)
       }
     }
 
+    // Save Parallel TS parameters
+#undef ADOC_ARG
+#define ADOC_ARG "ParallelTSParam",sectInd
+#define PARALLEL_TS_PARAMS
+    for (ind = 0; ind < mParallelTSArray.GetSize(); ind++) {
+      ParallelTSParam *parTS = mParallelTSArray[ind];
+      str.Format("%d", ind);
+      sectInd = AdocAddSection("ParallelTSParam", str);
+      if (sectInd < 0) {
+        adocErr++;
+      } else {
+#include "NavAdocPuts.h"
+      }
+    }
+#undef PARALLEL_TS_PARAMS
+
 #define BOOL_SETT_ASSIGN(a, b) ADOC_PUT(Integer(ADOC_ARG, a, b ? 1 : 0));
 #define INT_SETT_ASSIGN(a, b) ADOC_PUT(Integer(ADOC_ARG, a, b));
 #define FLOAT_SETT_ASSIGN(a, b) ADOC_PUT(Float(ADOC_ARG, a, b));
@@ -8550,6 +8568,21 @@ void CNavigatorDlg::OpenAndWriteFile(bool autosave)
 #include "NavAdocPuts.h"
       }
     }
+
+    // Save Parallel TS parameters
+#define PARALLEL_TS_PARAMS
+    for (ind = 0; ind < mParallelTSArray.GetSize(); ind++) {
+      ParallelTSParam *parTS = mParallelTSArray[ind];
+      str.Format("%d", ind);
+      fprintf(fp, "\n");
+      sectInd = AdocWriteSectionStart(fp, "ParallelTSParam", str);
+      if (sectInd < 0) {
+        adocErr++;
+      } else {
+#include "NavAdocPuts.h"
+      }
+    }
+#undef PARALLEL_TS_PARAMS
 
     // Tilt series params
 #define SET_TEST_SECT3
@@ -8740,7 +8773,7 @@ int CNavigatorDlg::LoadNavFile(bool checkAutosave, bool mergeFile, CString *inFi
   std::map<std::string, std::string> filesFoundMap;
   std::map<std::string, std::string>::iterator mapIter;
   std::string stdstr, stdstr2;
-  IntVec newTSparamInds, newMontParamInds, newFileOptInds, newStateInds;
+  IntVec newTSparamInds, newMontParamInds, newFileOptInds, newStateInds, newParTSInds;
   const char *externalKeys[4] = {"CoordsInMap", "CoordsInAliMont", "CoordsInAliMontVS",
     "CoordsInPiece"};
   char *adocStr;
@@ -8750,6 +8783,7 @@ int CNavigatorDlg::LoadNavFile(bool checkAutosave, bool mergeFile, CString *inFi
   MontParam *montParam, *montp2, *masterMont = mWinApp->GetMontParam();
   StateParams *state, *state2;
   LowDoseParams *ldp;
+  ParallelTSParam *parTSp, *partsp2;
   CMapDrawItem *item, *prev, *testItem;
   double vals[60];
   int originalSize = (int)mItemArray.GetSize();
@@ -9001,6 +9035,63 @@ int CNavigatorDlg::LoadNavFile(bool checkAutosave, bool mergeFile, CString *inFi
       }
 #undef NAV_FILE_OPTS
 #undef SECT_NAME
+
+      // ParallelTSparams
+      numParams = AdocGetNumberOfSections("ParallelTSParam");
+      for (ind1 = 0; ind1 < numParams; ind1++) {
+        parTSp = new ParallelTSParam;
+        if (!retval) {
+          ADOC_REQUIRED(AdocGetFloat("ParallelTSParam", ind1, "PreTilt",
+            &parTSp->preTilt));
+        }
+        if (!retval) {
+          ADOC_REQUIRED(AdocGetFloat("ParallelTSParam", ind1, "XAxisTilt",
+            &parTSp->xPitchAngle));
+        }
+        if (!retval) {
+          ADOC_REQUIRED(AdocGetFloat("ParallelTSParam", ind1, "MappingTilt",
+            &parTSp->mappingTilt));
+        }
+        if (!retval) {
+          ADOC_REQUIRED(AdocGetInteger("ParallelTSParam", ind1, "NavID",
+            &parTSp->navID));
+        }
+        if (!retval) {
+          ADOC_OPTIONAL(AdocGetInteger("ParallelTSParam", ind1, "FirstPrevMapID",
+            &parTSp->firstPrevMapID));
+          if (!retval) {
+            numToGet = 0;
+            ADOC_REQUIRED(AdocGetIntegerArray("ParallelTSParam", ind1, "PrevSectNums",
+              &holeSkips[0], &numToGet, 2000));
+            if (!retval) {
+              for (ind2 = 0; ind2 < numToGet; ind2++)
+                parTSp->prevSectNums.push_back(holeSkips[ind2]);
+            }
+          }
+          ACCUM_MIN(retval, 0);
+        }
+        if (retval >= 0) {
+          numToGet = 0;
+          ADOC_OPTIONAL(AdocGetFloatArray("ParallelTSParam", ind1, "XinAreaMap",
+            &fvals[0], &numToGet, maxFvals));
+          if (!retval) {
+            for (ind2 = 0; ind2 < numToGet; ind2++)
+              parTSp->xCoordInArea.push_back(fvals[ind2]);
+            numToGet = 0;
+            ADOC_REQUIRED(AdocGetFloatArray("ParallelTSParam", ind1, "YinAreaMap",
+              &fvals[0], &numToGet, maxFvals));
+            if (!retval) {
+              for (ind2 = 0; ind2 < numToGet; ind2++)
+                parTSp->yCoordInArea.push_back(fvals[ind2]);
+            }
+          }
+          ACCUM_MIN(retval, 0);
+        }
+        if (!retval) {
+          FIND_DUP_OR_ADD(mParallelTSArray, parTSp, partsp2, newParTSInds);
+        }
+      }
+
 
       // State params
       numParams = AdocGetNumberOfSections("StateParam");
@@ -9271,6 +9362,8 @@ int CNavigatorDlg::LoadNavFile(bool checkAutosave, bool mergeFile, CString *inFi
         // Read in parameter indexes and map them to new values
         ADOC_OPTIONAL(AdocGetInteger("Item", sectInd, "TSparamIndex",
           &item->mTSparamIndex));
+        ADOC_OPTIONAL(AdocGetInteger("Item", sectInd, "ParallelTSIndex",
+          &item->mParallelTSIndex));
         ADOC_OPTIONAL(AdocGetInteger("Item", sectInd, "MontParamIndex",
           &item->mMontParamIndex));
         ADOC_OPTIONAL(AdocGetInteger("Item", sectInd, "FilePropIndex",
@@ -9407,9 +9500,9 @@ int CNavigatorDlg::LoadNavFile(bool checkAutosave, bool mergeFile, CString *inFi
           item->mIStargetsXY = new float[numToGet];
           memcpy(item->mIStargetsXY, &fvals[0], numToGet * sizeof(float));
           mNumIStargetItems++;
+          ADOC_REQUIRED(AdocGetInteger("Item", sectInd, "TargetMag",
+            &item->mMagOfIStargets));
         }
-        ADOC_OPTIONAL(AdocGetInteger("Item", sectInd, "TargetMag", 
-          &item->mMagOfIStargets));
 
         // Get all the points: optional for external item
         if (numPoints > 0) {
@@ -10353,7 +10446,7 @@ void CNavigatorDlg::AcquireNextTask(int param)
   unsigned char lastChar;
   CString report, str;
   bool skippingGroup;
-  float hours, target, oldTarget;
+  float hours, target, oldTarget, useBidir;
   double ISX, ISY, ticks;
   BOOL runIt, vppNearestSave;
   CameraParameters *camParams = mWinApp->GetActiveCamParam();
@@ -10935,8 +11028,8 @@ void CNavigatorDlg::AcquireNextTask(int param)
       mWillDoTemplateAlign ? 0 : aliParams->maxNumResetIS,
       mWillDoTemplateAlign ? false : aliParams->leaveISatZero,
       (mAcqParm->hybridRealign && mWillDoTemplateAlign &&
-      mAcqActions[NAACT_ALIGN_TEMPLATE].timingType == NAA_EVERY_N_ITEMS &&
-      mAcqActions[NAACT_ALIGN_TEMPLATE].everyNitems == 1) ? REALI2ITEM_JUST_MOVE : 0,
+        mAcqActions[NAACT_ALIGN_TEMPLATE].timingType == NAA_EVERY_N_ITEMS &&
+        mAcqActions[NAACT_ALIGN_TEMPLATE].everyNitems == 1) ? REALI2ITEM_JUST_MOVE : 0,
       mAcqParm->realignToScaledMap ? mAcqParm->conSetForScaledAli : -1);
     if (err && (err < 4 || err == 6)) {
       StopAcquiring();
@@ -10966,14 +11059,14 @@ void CNavigatorDlg::AcquireNextTask(int param)
     SEMTrace('n', "Doing %s", (LPCTSTR)mAcqActions[mAcqSteps[mAcqStepIndex]].name);
     mRealignedInAcquire = true;
     if (aliParams->findAndCenterHole) {
-      stopErr = mWinApp->mParticleTasks->CenterNavItemOnHole(item, *aliParams, 
+      stopErr = mWinApp->mParticleTasks->CenterNavItemOnHole(item, *aliParams,
         mAcqParm->acquireType == ACQUIRE_MULTISHOT);
     } else {
       stopErr = mWinApp->mParticleTasks->AlignToTemplate(*aliParams);
     }
     break;
 
-  // Cook specimen
+    // Cook specimen
   case NAACT_COOK_SPEC:
     SEMTrace('n', "Doing %s", (LPCTSTR)mAcqActions[mAcqSteps[mAcqStepIndex]].name);
     stopErr = mWinApp->mMultiTSTasks->StartCooker();
@@ -11171,7 +11264,7 @@ void CNavigatorDlg::AcquireNextTask(int param)
     if (mAcqParm->adjustBTforIS && comaVsIS->magInd > 0) {
       mScope->GetImageShift(ISX, ISY);
       mWinApp->mMacroProcessor->AdjustBeamTiltAndAstig(ISX, ISY, mSavedBeamTiltX,
-        mSavedBeamTiltY, mSavedAstigX,  mSavedAstigY);
+        mSavedBeamTiltY, mSavedAstigX, mSavedAstigY);
     }
     if (mWinApp->Montaging() &&
       !(mSkippingSave && mAcqParm->acquireType == ACQUIRE_IMAGE_ONLY)) {
@@ -11188,7 +11281,7 @@ void CNavigatorDlg::AcquireNextTask(int param)
       }
       ind = RECORD_CONSET;
       if (mWinApp->LowDoseMode() && (mAcqParm->acquireType == ACQUIRE_TAKE_MAP ||
-        mAcqParm->acquireType == ACQUIRE_IMAGE_ONLY) &&  mAcqParm->mapWithViewSearch)
+        mAcqParm->acquireType == ACQUIRE_IMAGE_ONLY) && mAcqParm->mapWithViewSearch)
         ind = mAcqParm->mapWithViewSearch > 1 ? SEARCH_CONSET : VIEW_CONSET;
       mCamera->InitiateCapture(ind);
     }
@@ -11222,11 +11315,24 @@ void CNavigatorDlg::AcquireNextTask(int param)
     // This should leave things resumable if there is a problem
   case ACQ_START_TS:
     tsp = (TiltSeriesParam *)mTSparamArray.GetAt(item->mTSparamIndex);
+    useBidir = EXTRA_NO_VALUE;
+
+    // Use the items preTilt unconditionally if doing dose-symmetric, otherwise use it
+    // if the bidir angle didn't diverge from the pretilt in setup
+    if (item->mParallelTSIndex >= 0 && ((mWinApp->LowDoseMode() && tsp->doDoseSymmetric)
+      || !(tsp->tsFlags & TSFLAG_BIDIR_NOT_PRETILT))) {
+      useBidir = mParallelTSArray[item->mParallelTSIndex]->preTilt;
+
+      // Otherwise use value stored in item with angle range
+    } else if (item->mTSstartAngle > EXTRA_VALUE_TEST &&
+      item->mTSbidirAngle > EXTRA_VALUE_TEST && tsp->doBidirectional) {
+      useBidir = item->mTSbidirAngle;
+    }
 
     // Check item tilt angles before copying param
     if (item->mTSstartAngle > EXTRA_VALUE_TEST &&
       mHelper->CheckTiltSeriesAngles(item->mTSparamIndex, item->mTSstartAngle,
-        item->mTSendAngle, item->mTSbidirAngle, report)) {
+        item->mTSendAngle, useBidir, report)) {
       str.Format("For item %s, ", (LPCTSTR)item->mLabel);
       SEMMessageBox(str + report);
       StopAcquiring();
@@ -11255,17 +11361,19 @@ void CNavigatorDlg::AcquireNextTask(int param)
     mWinApp->mTSController->CopyParamToMaster(tsp, true);
 
     // If there are item changes, set them in master now, leave stored param alone
-    if (item->mTSstartAngle > EXTRA_VALUE_TEST ||
-      item->mTargetDefocus > EXTRA_VALUE_TEST) {
+    if (item->mTSstartAngle > EXTRA_VALUE_TEST || item->mTargetDefocus > EXTRA_VALUE_TEST
+      || useBidir > EXTRA_VALUE_TEST || item->mParallelTSIndex >= 0) {
       tsp = mWinApp->mTSController->GetTiltSeriesParam();
       if (item->mTargetDefocus > EXTRA_VALUE_TEST)
         tsp->targetDefocus = item->mTargetDefocus;
       if (item->mTSstartAngle > EXTRA_VALUE_TEST) {
         tsp->startingTilt = item->mTSstartAngle;
         tsp->endingTilt = item->mTSendAngle;
-        if (tsp->bidirAngle > EXTRA_VALUE_TEST && tsp->doBidirectional)
-          tsp->bidirAngle = item->mTSbidirAngle;
       }
+      if (useBidir > EXTRA_VALUE_TEST)
+        tsp->bidirAngle = useBidir;
+      if (item->mParallelTSIndex >= 0)
+        tsp->extraRecordType = NO_TS_EXTRA_RECORD;
       mWinApp->mTSController->SyncParamToOtherModules();
     }
     mHelper->ChangeRefCount(NAVARRAY_TSPARAM, item->mTSparamIndex, -1);
@@ -11281,7 +11389,7 @@ void CNavigatorDlg::AcquireNextTask(int param)
     // If tilt series fails to start, the email should already be sent, but
     // if it is not postponed we have to close the file.
     // Set flag regardless so tasks work normally
-    if (mWinApp->mTSController->StartTiltSeries(false, 1)) {
+    if (mWinApp->mTSController->StartTiltSeries(false, 1, item)) {
       if (!mWinApp->mTSController->GetPostponed())
         CloseFileOpenedByAcquire();
     }
@@ -11420,6 +11528,7 @@ int CNavigatorDlg::EndAcquireWithMessage(void)
   MontParam *montp;
   bool runScript = (mAcquireEnded == 10 || mAcquireEnded == 3) && !mPausedAcquire &&
     mScriptToRunAtEnd >= 0;
+
   if (mRetractAtAcqEnd) {
     mRetractAtAcqEnd = false;
     mCamera->RetractAllCameras();
@@ -11812,6 +11921,8 @@ int CNavigatorDlg::OpenFileIfNeeded(CMapDrawItem * item, bool stateOnly)
   TiltSeriesParam *tsParam;
   ControlSet *conSet = mWinApp->GetConSets() + RECORD_CONSET;
   BOOL *tsStoreExtra = mWinApp->mTSController->GetStoreExtra();
+  CameraParameters *camParam = mWinApp->GetActiveCamParam();
+  int numSkipExtraRec = 0, simultaneousChans[MAX_TS_SIMULTANEOUS_CHAN];
 
   mNextFileOptInd = item->mFilePropIndex;
   mNextMontParInd = item->mMontParamIndex;
@@ -11899,10 +12010,19 @@ int CNavigatorDlg::OpenFileIfNeeded(CMapDrawItem * item, bool stateOnly)
     }
 
       // Check if file is still OK
-    if (mDocWnd->StoreIndexFromName(*namep) >= 0) {
-      SEMMessageBox("The file set to be opened for this item,\n" + *namep
-        + "\n" + "is already open.");
-      return 1;
+    if (item->mParallelTSIndex < 0) {
+      if (mDocWnd->StoreIndexFromName(*namep) >= 0) {
+        SEMMessageBox("The file set to be opened for this item,\n" + *namep
+          + "\n" + "is already open.");
+        return 1;
+      }
+    } else {
+      mHelper->CheckParallelTSFiles(*namep, item, ind, NULL);
+      if (ind) {
+        SEMMessageBox("Some of the files set to be opened with root name\n" + *namep +
+          "\nare already open");
+        return 1;
+      }
     }
 
     // Get suffixes from TS param if non defined by script
@@ -11921,8 +12041,23 @@ int CNavigatorDlg::OpenFileIfNeeded(CMapDrawItem * item, bool stateOnly)
       }
     }
 
+    // Count up number of extra Records to skip if parallel TS
+    if (item->mParallelTSIndex >= 0 && tsParam->extraRecordType != NO_TS_EXTRA_RECORD) {
+      if (tsParam->extraRecordType == TS_FOCUS_SERIES)
+        numSkipExtraRec = tsParam->numExtraFocus;
+      else if (tsParam->extraRecordType == TS_FILTER_SERIES &&
+        (camParam->GIF || mScope->GetHasOmegaFilter()))
+        numSkipExtraRec = tsParam->numExtraFilter;
+      else if (tsParam->extraRecordType == TS_OPPOSITE_TRIAL)
+        numSkipExtraRec = mWinApp->LowDoseMode() ? 2 : 0;
+      else if (tsParam->extraRecordType == TS_OTHER_CHANNELS) {
+        numSkipExtraRec = mWinApp->mTSController->CountExtraRecChannels(tsParam,
+          MAX_TS_SIMULTANEOUS_CHAN, simultaneousChans, ind);
+      }
+    }
+
     // Check the extra file(s) before proceeding too
-    for (ind = 0; ind < mNumExtraFileSuffixes; ind++) {
+    for (ind = numSkipExtraRec; ind < mNumExtraFileSuffixes; ind++) {
       UtilSplitExtension(*namep, root, extension);
       extraName = root + mExtraFileSuffix[ind] + extension;
       if (mDocWnd->StoreIndexFromName(extraName) >= 0) {
@@ -11946,7 +12081,7 @@ int CNavigatorDlg::OpenFileIfNeeded(CMapDrawItem * item, bool stateOnly)
     }
 
     // Now open the extra file(s)
-    for (ind = 0; ind < mNumExtraFileSuffixes; ind++) {
+    for (ind = numSkipExtraRec; ind < mNumExtraFileSuffixes; ind++) {
       UtilSplitExtension(*namep, root, extension);
       extraName = root + mExtraFileSuffix[ind] + extension;
       mWinApp->mStoreMRC = mDocWnd->OpenNewFileByName(extraName, fileOptp);
@@ -11965,12 +12100,24 @@ int CNavigatorDlg::OpenFileIfNeeded(CMapDrawItem * item, bool stateOnly)
     mNumExtraFileSuffixes = 0;
 
     // And open the regular file
-    mWinApp->mStoreMRC = mDocWnd->OpenNewFileByName(*namep, fileOptp);
-    if (!mWinApp->mStoreMRC) {
-      mDocWnd->RestoreCurrentFile();
-      SEMMessageBox("An error occurred attempting to open a new file:"
-        "\n" + *namep);
-      return 1;
+    if (item->mParallelTSIndex < 0) {
+      mWinApp->mStoreMRC = mDocWnd->OpenNewFileByName(*namep, fileOptp);
+      if (!mWinApp->mStoreMRC) {
+        mDocWnd->RestoreCurrentFile();
+        SEMMessageBox("An error occurred attempting to open a new file:"
+          "\n" + *namep);
+        return 1;
+      }
+    } else {
+
+      // It is going to protect those stores, so we need to clean out here and not in TSC
+      mDocWnd->EndStoreProtection();
+      if (mWinApp->mParticleTasks->OpenSeparateMultiFiles(*namep, true)) {
+        mDocWnd->RestoreCurrentFile();
+        return 1;
+      }
+      mOpenedSepMultiFiles = true;
+      mDocWnd->SetCurrentStore(mDocWnd->GetNumStores() - item->mNumIStargets);
     }
     mHelper->ChangeRefCount(NAVARRAY_FILEOPT, mNextFileOptInd, -1);
     if (!leaveOpen) {
@@ -11998,8 +12145,10 @@ int CNavigatorDlg::OpenFileIfNeeded(CMapDrawItem * item, bool stateOnly)
       mWinApp->SetMontaging(true);
       mHelper->ChangeRefCount(NAVARRAY_MONTPARAM, mNextMontParInd, -1);
     }
-    mDocWnd->AddCurrentStore();
-    mWinApp->AppendToLog("Opened new file " + *namep, LOG_OPEN_IF_CLOSED);
+    if (item->mParallelTSIndex < 0) {
+      mDocWnd->AddCurrentStore();
+      mWinApp->AppendToLog("Opened new file " + *namep, LOG_OPEN_IF_CLOSED);
+    }
     *namep = "";
 
     if (j >= 0) {
@@ -12018,7 +12167,9 @@ int CNavigatorDlg::OpenFileIfNeeded(CMapDrawItem * item, bool stateOnly)
 void CNavigatorDlg::CloseFileOpenedByAcquire(void)
 {
   int nz;
-  if (!mAcquireOpenedFile.IsEmpty() && mDocWnd->GetNumStores() > 0 &&
+  if (mOpenedSepMultiFiles)
+    mWinApp->mParticleTasks->CloseSeparateMultiFiles();
+  else if (!mAcquireOpenedFile.IsEmpty() && mDocWnd->GetNumStores() > 0 &&
     mAcquireOpenedFile == mWinApp->mStoreMRC->getFilePath())
     mDocWnd->DoCloseFile();
   for (int ind = mNumExtraFilesToClose - 1; ind >= 0; ind--) {
@@ -12032,6 +12183,7 @@ void CNavigatorDlg::CloseFileOpenedByAcquire(void)
   }
   mNumExtraFilesToClose = 0;
   mAcquireOpenedFile = "";
+  mOpenedSepMultiFiles = false;
 }
 
 // Tell FindMapForRealigning what low dose area to realign for: current area (with Focus/

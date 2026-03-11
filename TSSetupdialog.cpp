@@ -581,7 +581,8 @@ BOOL CTSSetupDialog::OnInitDialog()
   m_statStarBidir.SetFont(mTitleFont);
   if (mNavOverrideFlags & NAV_OVERRIDE_TILT)
     m_statStarTilt.SetWindowText("*");
-  if (mNavOverrideFlags & NAV_OVERRIDE_BIDIR)
+  if ((mNavOverrideFlags & NAV_OVERRIDE_BIDIR) && 
+    !(mNavOverrideFlags & NAV_OVERRIDE_PARALLEL_TS))
     m_statStarBidir.SetWindowText("*");
   if (mNavOverrideFlags & NAV_OVERRIDE_DEF_TARG) {
     m_statTargMicrons.SetFont(mTitleFont);
@@ -1124,7 +1125,9 @@ void CTSSetupDialog::OnButSwapAngles()
   temp = m_fStartAngle;
   m_fStartAngle = m_fEndAngle;
   m_fEndAngle = temp;
-  m_fBidirAngle = -m_fBidirAngle;
+  if (!((mNavOverrideFlags & NAV_OVERRIDE_PARALLEL_TS) && ((mLowDoseMode && m_bUseDoseSym)
+    || fabs(m_fBidirAngle - mParTSPreTilt) < 0.01)))
+    m_fBidirAngle = -m_fBidirAngle;
   SetTotalTilts();
   ManageInitialActions();
 }
@@ -1576,7 +1579,7 @@ void CTSSetupDialog::ManageBidirectional(void)
   bool enable = !mDoingTS && m_bDoBidir;
   bool doingDosym = m_bDoBidir && m_bUseDoseSym && mLowDoseMode;
   m_butCosineInc.EnableWindow(!mDoingTS && !doingDosym);
-  m_butDoBidir.EnableWindow(!mDoingTS);
+  m_butDoBidir.EnableWindow(!mDoingTS && !(mNavOverrideFlags & NAV_OVERRIDE_PARALLEL_TS));
   m_editBidirAngle.EnableWindow(enable);
   m_butBidirWalkBack.EnableWindow((enable || mBidirStage == BIDIR_FIRST_PART) &&
     !doingDosym);
@@ -1600,6 +1603,8 @@ void CTSSetupDialog::ConstrainBidirAngle(bool warningIfShift, bool anglesChanged
   float maxAngle = B3DMAX(m_fStartAngle, m_fEndAngle);
   bool changed = false;
   bool limitEnd = true;
+  bool doSymParTS = m_bUseDoseSym && mLowDoseMode &&
+    (mNavOverrideFlags & NAV_OVERRIDE_PARALLEL_TS);
   int dir;
   float minSegment = 6.;
   if (!m_bDoBidir)
@@ -1632,15 +1637,15 @@ void CTSSetupDialog::ConstrainBidirAngle(bool warningIfShift, bool anglesChanged
     return;
 
   // Otherwise if the range is less than 20, set bidir to the midpoint
-  if (maxAngle - minAngle < 2. * minSegment) {
+  if (maxAngle - minAngle < 2. * minSegment && !doSymParTS) {
     changed = fabs(m_fBidirAngle - 0.5 * (maxAngle + minAngle)) >
       B3DMIN(0.5, maxAngle - minAngle);
     if (changed)
       m_fBidirAngle = 0.5f * (maxAngle + minAngle);
 
     // Otherwise move it in so it is 10 degrees from one end
-  } else if (m_fBidirAngle < minAngle + (minSegment - 0.01) ||
-    m_fBidirAngle > maxAngle - (minSegment - 0.01)) {
+  } else if (!doSymParTS & (m_fBidirAngle < minAngle + (minSegment - 0.01) ||
+    m_fBidirAngle > maxAngle - (minSegment - 0.01))) {
     changed = true;
     B3DCLAMP(m_fBidirAngle, minAngle + minSegment, maxAngle - minSegment);
     if (warningIfShift) {
@@ -1709,9 +1714,13 @@ void CTSSetupDialog::OnUseDoseSym()
   if (m_bUseDoseSym) {
     mTSParam.ISlimit = m_fLimitIS;
     m_fLimitIS = mTSParam.dosymStartingISLimit;
+    if (mNavOverrideFlags & NAV_OVERRIDE_PARALLEL_TS)
+      m_fBidirAngle = mParTSPreTilt;
   } else {
     mTSParam.dosymStartingISLimit = m_fLimitIS;
     m_fLimitIS = mTSParam.ISlimit;
+    if (mNavOverrideFlags & NAV_OVERRIDE_PARALLEL_TS)
+      mParTSPreTilt = m_fBidirAngle;
   }
   UpdateData(false);
   ManageBidirectional();

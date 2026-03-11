@@ -46,6 +46,7 @@ public:
   float mMinDosymStart;
   float mMinDosymEnd;
   int mNavOverrideFlags;
+  float mParTSPreTilt;
 
 // Dialog Data
   //{{AFX_DATA(CTSSetupDialog)

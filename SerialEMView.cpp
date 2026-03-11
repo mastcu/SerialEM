@@ -1410,12 +1410,13 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
 
   // Now draw navigator items
   float lastStageX, lastStageY, tiltAngle, acquireRadii[2] = {0., 0.};
-  float labelDistThresh = 40.;
+  float labelDistThresh = 40., axisAngle, beamElong;
   int lastGroupID = -1, lastGroupSize, size, numPoints, pieceDrawnOn;
   int regMatch = imBuf->mRegistration ?
     imBuf->mRegistration : navigator->GetCurrentRegistration();
   std::set<int> *selectedItems = navigator->GetSelectedItems();
   bool highlight, draw, doInHole, drawSkips, skipPattern = false, targetsOnly = false;
+  bool drawEllipse = false;
   CMapDrawItem holeItem;
   MultiShotParams *msParams;
   int msNumXholes = 0, msNumYholes = 0, useXholes, useYholes;
@@ -1683,8 +1684,8 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
 
     // Draw polygons for full acquire area on all acquire points if selected, or on
     // current/selected points
-    if (iDraw >= 0 && item->mAcquire && item->mNumPoints == 1 && mAcquireBox &&
-      (showMultiOnAll &&
+    if (iDraw >= 0 && (item->mAcquire || item->mParallelTSIndex >= 0) && 
+      item->mNumPoints == 1 && mAcquireBox && (showMultiOnAll &&
       (!showOnlyCombined || (item->mNumXholes != 0 && item->mNumYholes != 0) ||
         (checkUndos &&
           mWinApp->mNavHelper->mCombineHoles->IsItemInUndoList(item->mMapID))) ||
@@ -1745,6 +1746,14 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
           mWinApp->mNavigator->AddHolePositionsToItemPts(delISX, delISY, holeIndex,
             true, numSpecHoles, &holeItem);
           targPad = skipPad;
+          drawEllipse = item->mParallelTSIndex >= 0 && imBuf->mMagInd && 
+            imBuf->mCamera >= 0;
+          if (drawEllipse) {
+            axisAngle = (float)mShiftManager->GetImageRotation(imBuf->mCamera, 
+              imBuf->mMagInd);
+            beamElong = 1.f / cos((float)DTOR *
+              mWinApp->mNavHelper->GetParTSOptions()->tiltForBeam);
+          }
           if (mAcquireBox)
             targPad = 0.5f * sqrtf(powf(mAcquireBox->mPtX[2] - mAcquireBox->mPtX[0], 2.f)
               + powf(mAcquireBox->mPtY[2] - mAcquireBox->mPtY[0], 2.f));
@@ -1860,9 +1869,14 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
                 // Draw beam circles for IS targets
                 if (item->mNumIStargets && highlight) {
                   StageToImage(imBuf, acquireXhole[hole], acquireYhole[hole], ptX, ptY);
-                  DrawCircle(&cdc, &circlePen, &rect, imBuf->mImage, ptX + delPtX,
-                    ptY + delPtY, acquireRadii[0]);
-
+                  if (drawEllipse) {
+                    DrawEllipse(&cdc, &circlePen, &rect, imBuf->mImage, ptX + delPtX,
+                      ptY + delPtY, acquireRadii[0], acquireRadii[0] * beamElong,
+                      axisAngle, false);
+                  } else {
+                    DrawCircle(&cdc, &circlePen, &rect, imBuf->mImage, ptX + delPtX,
+                      ptY + delPtY, acquireRadii[0]);
+                   }
                 }
               }
             }

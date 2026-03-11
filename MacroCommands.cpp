@@ -2976,7 +2976,7 @@ int CMacCmd::StepAndAdjustISVectors()
 int CMacCmd::OpenMultiShotFiles(void)
 {
   SubstituteLineStripItems(mStrLine, 1, mStrCopy);
-  if (mWinApp->mParticleTasks->OpenSeparateMultiFiles(mStrCopy)) {
+  if (mWinApp->mParticleTasks->OpenSeparateMultiFiles(mStrCopy, false)) {
     AbortMacro();
     return 1;
   }

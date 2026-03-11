@@ -4359,7 +4359,7 @@ void CMultiGridTasks::DoNextSequenceAction(int resume)
       mLastSetFrameNum = mCamera->GetLastUsedFrameNumber();
       if (jcd.lastFrameNumber >= 0) {
         mLastSetFrameNum = jcd.lastFrameNumber;
-        mCamera->SetKeepLastUsedFrameNum(true);
+        mCamera->SetKeepLastUsedFrameNum(1);
         mCamera->SetLastUsedFrameNumber(jcd.lastFrameNumber);
       }
     }

@@ -34,7 +34,7 @@ enum NavAcquireTypes {ACQUIRE_TAKE_MAP = 0, ACQUIRE_IMAGE_ONLY, ACQUIRE_RUN_MACR
 enum NavRegTypes {NAVREG_UNUSED, NAVREG_REGULAR, NAVREG_IMPORT};
 enum NavNewFileTypes {NAVFILE_ITEM = 0, NAVFILE_GROUP, NAVFILE_TS};
 enum NavArrayTypes {NAVARRAY_FILEOPT, NAVARRAY_MONTPARAM, NAVARRAY_TSPARAM, 
-  NAVARRAY_STATE};
+  NAVARRAY_STATE, NAVARRAY_PARALLEL_TSP};
 enum NavSourceTypes {
   NAVACQ_SRC_MACRO = 0, NAVACQ_SRC_MENU, NAVACQ_SRC_MG_SET_MMM,
   NAVACQ_SRC_MG_SET_ACQ, NAVACQ_SRC_MG_RUN_MMM, NAVACQ_SRC_MG_RUN_ACQ
@@ -168,6 +168,7 @@ public:
   CArray<ScheduledFile *, ScheduledFile *> *GetScheduledFiles() {return &mGroupFiles;};
   CArray<FileOptions *, FileOptions *> *GetFileOptArray() {return &mFileOptArray;}; 
   CArray<TiltSeriesParam *, TiltSeriesParam *> *GetTSparamArray() {return &mTSparamArray;};
+  CArray<ParallelTSParam *, ParallelTSParam *> *GetParallelTSArray() { return &mParallelTSArray; };
   CArray<MontParam *, MontParam *> *GetMontParArray() {return &mMontParArray;};
   CArray<StateParams *, StateParams *> *GetAcqStateArray() {return &mAcqStateArray;};
 	void OnOK();
@@ -331,6 +332,7 @@ private:
   CArray<ScheduledFile *, ScheduledFile *> mGroupFiles;
   CArray<FileOptions *, FileOptions *> mFileOptArray;
   CArray<TiltSeriesParam *, TiltSeriesParam *> mTSparamArray;
+  CArray<ParallelTSParam *, ParallelTSParam *> mParallelTSArray;
   CArray<MontParam *, MontParam *> mMontParArray;
   CArray<StateParams *, StateParams *> mAcqStateArray;
   NavAcqAction *mAcqActions;
@@ -454,6 +456,7 @@ private:
   int mNextFileOptInd;      // File and mont param index for file to be opened on the
   int mNextMontParInd;      // item being acquired, set in GoToNextAcquirearea
   CString mAcquireOpenedFile;  // Name of file opened by Acquire
+  bool mOpenedSepMultiFiles;  // Flag that multiple files were opened in multishot
   bool mUsedPreExistingMont;  // Flag that an already open montage was acquired to
   CString mExtraFileToClose[MAX_STORES - 1];   // Name of extra files opened by Acquire
   int mNumExtraFilesToClose;   // Number of files to close
