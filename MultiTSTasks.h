@@ -131,16 +131,18 @@ private:
   BOOL mEndTiltRange;          // Flag that user wants to end the direction
 
   // Bidirectional File copy (mBfc) variables
-  CString mBfcNameFirstHalf;      // Filename for first half
-  KImageStore *mBfcStoreFirstHalf;  // Store that it is open on
-  CString mBfcAdocFirstHalf;      // Name of mdoc file if any
+  CString *mBfcNameFirstHalf;      // Filename for first half
+  KImageStore **mBfcStoreFirstHalf;  // Store that it is open on
+  CString *mBfcAdocFirstHalf;      // Name of mdoc file if any
+  KImageStore **mBfcSortedStore;   // Output file for sorted images
+  int mBfcNumFilesToDo;           // Number of files (parallel TS)
+  int mBfcFileIndex;              // Index of current file
   int mBfcNumToCopy;              // Number of sections to copy
   int mBfcCopyIndex;              // Index of next section to copy
   int mBfcDoingCopy;              // 1 if doing synchronous, -1 if doing asynchronous
   bool mBfcStopFlag;              // One-shot flag to stop either kind of copy
   bool mBfcIgnoreNextStop;        // Flag to ignore that if save error started dosym copy
   IntVec mBfcSectOrder;           // Section numbers to copy in order
-  KImageStore *mBfcSortedStore;   // Output file for sorted images
   bool mBfcReorderWholeFile;      // Flag to close dose-symmetric output file when done
   int mBfcSecZeroMapsTo;          // Last Z value section 0 mapped to
 
@@ -264,6 +266,7 @@ public:
   void ResetFromBidirFileCopy(void);
   int ReorderMontageByTilt(CString &errStr);
   void AsyncCopySucceeded(bool restart);
+  void IncCopyIndexAndManageFile();
   int BidirAnchorImage(int magInd, BOOL useView, bool alignNotSave, bool setImageShifts);
   void StopAnchorImage();
   void BidirAnchorCleanup(int error);

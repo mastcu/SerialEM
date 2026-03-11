@@ -21,6 +21,7 @@
 #include "AutocenSetupDlg.h"
 #include "VPPConditionSetup.h"
 #include "ProcessImage.h"
+#include "ParticleTasks.h"
 #include "TSRangeDlg.h"
 #include "TSViewRange.h"
 #include "FocusManager.h"
@@ -1941,6 +1942,10 @@ int CMultiTSTasks::InvertFileInZ(int zmax, float *tiltAngles, bool synchronous,
     if (mBfcCopyIndex < 0)
       err = SetupBidirFileCopy(zmax);
     if (err) {
+      if (err != 2 && err > 0 && err < 11) {
+        mWinApp->mParticleTasks->CloseSeparateMultiFiles();
+        ResetFromBidirFileCopy();
+      }
       mess.Format("An error (code %d) occurred trying to initialize the\ncopying of the"
         " file to a new one with reordered Z values.\n\n", err);
       if (err > 10)
@@ -1967,97 +1972,131 @@ int CMultiTSTasks::InvertFileInZ(int zmax, float *tiltAngles, bool synchronous,
 // Set up the copy operation
 int CMultiTSTasks::SetupBidirFileCopy(int zmax)
 {
-  int err, fileType, savedBufToSave = mBufferManager->GetBufToSave();
+  int err, ifil, fileType, storeInd, savedBufToSave = mBufferManager->GetBufToSave();
+  int firstStore = mWinApp->mDocWnd->GetCurrentStore();
   CString ext, root, adocName;
+  KImageStore *storeMRC;
   FileOptions *fileOptp;
   if (!mWinApp->mStoreMRC)
     return 1;
   if (mBfcCopyIndex >= 0)
     return 2;
-  CString filename = mWinApp->mStoreMRC->getFilePath();
-  if (filename.IsEmpty())
-    return 3;
-  if (mBfcReorderWholeFile)
-    fileOptp = mWinApp->mDocWnd->GetStoreFileOptions(mWinApp->mDocWnd->GetCurrentStore());
-
-
-  // Compose the filename for the first half
-  UtilSplitExtension(filename, root, ext);
-  mBfcNameFirstHalf = filename + (mBfcReorderWholeFile ? "-unsorted" : "-half1");
-  mBfcAdocFirstHalf = "";
-  fileType = mWinApp->mStoreMRC->getStoreType();
-
-  if (mWinApp->mStoreMRC->GetAdocIndex() >= 0 && fileType != STORE_TYPE_HDF) {
-    adocName = mWinApp->mStoreMRC->getAdocName();
-    UtilSplitExtension(adocName, root, ext);
-    mBfcAdocFirstHalf = mBfcNameFirstHalf + ext;
+  mBfcNumFilesToDo = 1;
+  if (mWinApp->mTSController->GetParTSNavItem() != NULL) {
+    firstStore = mWinApp->mParticleTasks->GetMSFirstSepFile();
+    mBfcNumFilesToDo = mWinApp->mParticleTasks->GetMSNumSepFiles();
+  }
+  mBfcNameFirstHalf = new CString[mBfcNumFilesToDo];
+  mBfcAdocFirstHalf = new CString[mBfcNumFilesToDo];
+  mBfcStoreFirstHalf = new KImageStore *[mBfcNumFilesToDo];
+  mBfcSortedStore = new KImageStore *[mBfcNumFilesToDo];
+  for (ifil = 0; ifil < mBfcNumFilesToDo; ifil++) {
+    mBfcStoreFirstHalf[ifil] = NULL;
+    mBfcSortedStore[ifil] = NULL;
   }
 
-  // Close the file, rename it, and reopen it by new name, then open new file in current
-  // store.  This leaves the store system in a bad state!  If the file rename fails, try
-  // to rename it back and restore mStoreMC
-  // If anything else goes wrong, we simply have to close the current file and bail, but
-  // it is going to crash unless there is another file open because a lot of things assume
-  // mStoreMRC is nonnull
-  if (!adocName.IsEmpty() && UtilRenameFile(adocName, mBfcAdocFirstHalf))
-    return 11;
-
-  delete mWinApp->mStoreMRC;
-  mWinApp->mStoreMRC = NULL;
-  mWinApp->mTSController->SetClosedDoseSymFile(true);
-  if (UtilRenameFile(filename, mBfcNameFirstHalf)) {
-    if (!adocName.IsEmpty())
-      UtilRenameFile(mBfcAdocFirstHalf, adocName);
-    mWinApp->mStoreMRC = mBfcStoreFirstHalf = UtilOpenOldMRCFile(filename);
-    if (!mWinApp->mStoreMRC) {
-      mWinApp->mDocWnd->DoCloseFile();
-      return 4;
-    } else {
-      mWinApp->mDocWnd->NewPointerForCurrentStore(mWinApp->mStoreMRC);
-    }
-    return 12;
-  }
-  mBfcStoreFirstHalf = UtilOpenOldMRCFile(mBfcNameFirstHalf);
-  if (!mBfcStoreFirstHalf) {
-    mWinApp->mDocWnd->DoCloseFile();
-    return 5;
-  }
-  mBfcStoreFirstHalf->MarkAsOpenWithFile(OPEN_TS_EXT);
-  if (mBfcReorderWholeFile) {
-    mBfcSortedStore = mWinApp->mDocWnd->OpenNewFileByName(filename, fileOptp);
-    if (!mBfcSortedStore) {
-      delete mBfcStoreFirstHalf;
-      return 6;
-    }
-
-  } else {
-    if (mWinApp->mDocWnd->OpenNewReplaceCurrent(filename, !adocName.IsEmpty(), fileType)){
-      delete mBfcStoreFirstHalf;
-      return 6;
-    }
-    mBfcSortedStore = mWinApp->mStoreMRC;
-  }
-  mBfcNumToCopy = zmax;
-  mBfcCopyIndex = 0;
-  mBfcSortedStore->MarkAsOpenWithFile(OPEN_TS_EXT);
-  mWinApp->mTSController->SetClosedDoseSymFile(false);
-
-  // Now we need to read first image into the read buffer and save it out
-  err = mBufferManager->ReadFromFile(mBfcStoreFirstHalf, mBfcSectOrder[0]);
-  if (!err) {
-    mBufferManager->SetBufToSave(mBufferManager->GetBufToReadInto());
-    err = mBufferManager->SaveImageBuffer(mBfcSortedStore, true);
-    mBufferManager->SetBufToSave(savedBufToSave);
-  }
-  if (err) {
-    mBfcCopyIndex = -1;
-    delete mBfcStoreFirstHalf;
+  for (ifil = 0; ifil < mBfcNumFilesToDo; ifil++) {
+    storeInd = ifil + firstStore;
+    storeMRC = mWinApp->mDocWnd->GetStoreMRC(storeInd);
+    CString filename = storeMRC->getFilePath();
+    if (filename.IsEmpty())
+      return 3;
     if (mBfcReorderWholeFile)
-      delete mBfcSortedStore;
-    return 7;
+      fileOptp = mWinApp->mDocWnd->GetStoreFileOptions(storeInd);
+
+
+    // Compose the filename for the first half
+    UtilSplitExtension(filename, root, ext);
+    mBfcNameFirstHalf[ifil] = filename + (mBfcReorderWholeFile ? "-unsorted" : "-half1");
+    mBfcAdocFirstHalf[ifil] = "";
+    fileType = storeMRC->getStoreType();
+
+    if (storeMRC->GetAdocIndex() >= 0 && fileType != STORE_TYPE_HDF) {
+      adocName = storeMRC->getAdocName();
+      UtilSplitExtension(adocName, root, ext);
+      mBfcAdocFirstHalf[ifil] = mBfcNameFirstHalf[ifil] + ext;
+    }
+
+    // Close the file, rename it, and reopen it by new name, then open new file in current
+    // store.  This leaves the store system in a bad state!  If the file rename fails, try
+    // to rename it back and restore mStoreMC
+    // If anything else goes wrong, we simply have to close the current file and bail, but
+    // it is going to crash unless there is another file open because a lot of things assume
+    // mStoreMRC is nonnull
+    if (!adocName.IsEmpty() && UtilRenameFile(adocName, mBfcAdocFirstHalf[ifil]))
+      return 11;
+
+    // NULL out pointers: DoClose is OK with this and handles everything else
+    delete storeMRC;
+    mWinApp->mDocWnd->NewPointerForCurrentStore(NULL, storeInd);
+    if (!ifil)
+      mWinApp->mStoreMRC = NULL;
+    mWinApp->mTSController->SetClosedDoseSymFile(true);
+    if (UtilRenameFile(filename, mBfcNameFirstHalf[ifil])) {
+      if (!adocName.IsEmpty())
+        UtilRenameFile(mBfcAdocFirstHalf[ifil], adocName);
+      storeMRC = mBfcStoreFirstHalf[ifil] = UtilOpenOldMRCFile(filename);
+      if (!ifil)
+        mWinApp->mStoreMRC = storeMRC;
+      if (!storeMRC) {
+        if (mBfcNumFilesToDo == 1)
+          mWinApp->mDocWnd->DoCloseFile();
+        return 4;
+      } else {
+        mWinApp->mDocWnd->NewPointerForCurrentStore(storeMRC, storeInd);
+      }
+      return 12;
+    }
+    mBfcStoreFirstHalf[ifil] = UtilOpenOldMRCFile(mBfcNameFirstHalf[ifil]);
+    if (!mBfcStoreFirstHalf[ifil]) {
+      if (mBfcNumFilesToDo == 1)
+        mWinApp->mDocWnd->DoCloseFile();
+      return 5;
+    }
+    mBfcStoreFirstHalf[ifil]->MarkAsOpenWithFile(OPEN_TS_EXT);
+    if (mBfcReorderWholeFile) {
+      mBfcSortedStore[ifil] = mWinApp->mDocWnd->OpenNewFileByName(filename, fileOptp);
+      if (!mBfcSortedStore[ifil]) {
+        B3DDELETE(mBfcStoreFirstHalf[ifil]);
+        return 6;
+      }
+
+    } else {
+      if (mWinApp->mDocWnd->OpenNewReplaceCurrent(filename, !adocName.IsEmpty(), fileType,
+        storeInd)) {
+        B3DDELETE(mBfcStoreFirstHalf[ifil]);
+        return 6;
+      }
+      mBfcSortedStore[ifil] = mWinApp->mDocWnd->GetStoreMRC(storeInd);
+    }
+    mBfcNumToCopy = zmax;
+    mBfcCopyIndex = 0;
+    mBfcSortedStore[ifil]->MarkAsOpenWithFile(OPEN_TS_EXT);
+
+    // This is signalling that DoClose hasn't been called, even though file IS closed
+    // Error returns from multi file operation WILL DoClose on all files
+    if (mBfcNumFilesToDo == 1)
+      mWinApp->mTSController->SetClosedDoseSymFile(false);
+
+    // Now we need to read first image into the read buffer and save it out
+    err = mBufferManager->ReadFromFile(mBfcStoreFirstHalf[ifil], mBfcSectOrder[0]);
+    if (!err) {
+      mBufferManager->SetBufToSave(mBufferManager->GetBufToReadInto());
+      err = mBufferManager->SaveImageBuffer(mBfcSortedStore[ifil], true);
+      mBufferManager->SetBufToSave(savedBufToSave);
+    }
+    if (err) {
+      mBfcCopyIndex = -1;
+      B3DDELETE(mBfcStoreFirstHalf[ifil]);
+      if (mBfcReorderWholeFile)
+        B3DDELETE(mBfcSortedStore[ifil]);
+      return 7;
+    }
+    mBufferManager->CheckAsyncSaving();
   }
-  mBufferManager->CheckAsyncSaving();
   mBfcCopyIndex++;
+  mBfcFileIndex = 0;
+
   return 0;
 }
 
@@ -2078,7 +2117,7 @@ int CMultiTSTasks::StartBidirFileCopy(bool synchronous)
   }
 
   // If there is more to copy
-  if (mBfcCopyIndex < mBfcNumToCopy) {
+  if (mBfcCopyIndex < mBfcNumToCopy && mBfcFileIndex < mBfcNumFilesToDo) {
 
     // First obey the stop flag
     if (mBfcStopFlag) {
@@ -2096,8 +2135,9 @@ int CMultiTSTasks::StartBidirFileCopy(bool synchronous)
     }
 
     // Launch or do the copy
-    err = mBufferManager->StartAsyncCopy(mBfcStoreFirstHalf, mBfcSortedStore,
-      mBfcSectOrder[mBfcCopyIndex], mBfcCopyIndex, doSynchro);
+    err = mBufferManager->StartAsyncCopy(mBfcStoreFirstHalf[mBfcFileIndex], 
+      mBfcSortedStore[mBfcFileIndex], mBfcSectOrder[mBfcCopyIndex], mBfcCopyIndex,
+      doSynchro);
     if (err) {
       BidirFileCopyClearFlags();
       return err > 0 ? err : -err;
@@ -2111,17 +2151,14 @@ int CMultiTSTasks::StartBidirFileCopy(bool synchronous)
     // If the operation is synchronous, it was successful, so inc the index, set an
     // idle task to give a chance to interrupt it, and return -1 so caller can set an
     // idle task for the whole transfer to be done
-    mBfcCopyIndex++;
+    IncCopyIndexAndManageFile();
     mWinApp->AddIdleTask(TASK_BIDIR_COPY, 0, 0);
     return -1;
   }
 
   // The copy is done, finish up
   ResetFromBidirFileCopy();
-  UtilRemoveFile(mBfcNameFirstHalf);
-  if (!mBfcAdocFirstHalf.IsEmpty())
-    UtilRemoveFile(mBfcAdocFirstHalf);
-  return 0;
+   return 0;
 }
 
 // Set a stop flag to stop after the current copy
@@ -2137,7 +2174,7 @@ void CMultiTSTasks::StopBidirFileCopy(void)
 // When an asynchronous copy succeeds, go ahead and restart if indicated, or clear flags
 void CMultiTSTasks::AsyncCopySucceeded(bool restart)
 {
-  mBfcCopyIndex++;
+  IncCopyIndexAndManageFile();
   if (restart) {
     StartBidirFileCopy(false);
     return;
@@ -2145,6 +2182,23 @@ void CMultiTSTasks::AsyncCopySucceeded(bool restart)
     SEMTrace('y', "Async save done, not restarting another (yet)");
   mBfcDoingCopy = 0;
   mBfcStopFlag = false;
+}
+
+// Increments the copy section index and, if at end of a file or the only file, it 
+// deletes the source stores and removed the files.  Then it increments the file index
+void CMultiTSTasks::IncCopyIndexAndManageFile()
+{
+  mBfcCopyIndex++;
+  if (mBfcCopyIndex == mBfcNumToCopy) {
+    B3DDELETE(mBfcStoreFirstHalf[mBfcFileIndex]);
+    if (mBfcReorderWholeFile)
+      B3DDELETE(mBfcSortedStore[mBfcFileIndex]);
+    UtilRemoveFile(mBfcNameFirstHalf[mBfcFileIndex]);
+    if (!mBfcAdocFirstHalf[mBfcFileIndex].IsEmpty())
+      UtilRemoveFile(mBfcAdocFirstHalf[mBfcFileIndex]);
+    mBfcFileIndex++;
+    mBfcCopyIndex = 1;
+  }
 }
 
 // External call to abandon any current copying attempt and cleanup the mess
@@ -2172,12 +2226,18 @@ void CMultiTSTasks::BidirFileCopyClearFlags(void)
 void CMultiTSTasks::ResetFromBidirFileCopy(void)
 {
   mBfcCopyIndex = -1;
-  delete mBfcStoreFirstHalf;
-  if (mBfcReorderWholeFile)
-    delete mBfcSortedStore;
+  for (int ind = 0; ind < mBfcNumFilesToDo; ind++) {
+    if (mBfcStoreFirstHalf)
+      B3DDELETE(mBfcStoreFirstHalf[ind]);
+    if (mBfcReorderWholeFile && mBfcSortedStore)
+      B3DDELETE(mBfcSortedStore[ind]);
+  }
+  DELETE_ARR(mBfcStoreFirstHalf);
+  DELETE_ARR(mBfcSortedStore);
+  DELETE_ARR(mBfcNameFirstHalf);
+  DELETE_ARR(mBfcAdocFirstHalf);
   BidirFileCopyClearFlags();
 }
-#include <algorithm>
 
 // Partially related routine: do a free-standing reordering of piece list in montage
 int CMultiTSTasks::ReorderMontageByTilt(CString &errStr)
