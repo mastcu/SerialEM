@@ -664,7 +664,7 @@ public:
   GetMember(double, CenterFocus);
   GetSetMember(bool, FilterObeyNormDelay);
   GetMember(bool, FilterWaiting);
-  SetMember(bool, KeepLastUsedFrameNum);
+  SetMember(int, KeepLastUsedFrameNum);
   GetSetMember(int, RamperBlankAtEnd);
   GetSetMember(int, MinShotInterval);
   GetSetMember(float, GIFslitWidthScaling);
@@ -678,6 +678,7 @@ public:
   GetSetMember(BOOL, SkipFocusRamper);
   GetSetMember(BOOL, SaveNewImageToShrMem);
   GetSetMember(CString, NewImageListPath);
+  SetMember(int, StoreNumForNextShot);
 
   CameraThreadData *GetCamThreadData() { return &mTD; };
   bool DoingPartialScan() {return mTD.ReturnPartialScan > 0; };
@@ -1075,7 +1076,7 @@ public:
   CString mNumberedFrameFolder; // Last folder used when numbering
   int mLastFrameNumberStart;    // The starting number last time frame was saved
   int mLastUsedFrameNumber;     // The number actually used last time
-  bool mKeepLastUsedFrameNum;   // Flag that it was externally set, don't reset it
+  int mKeepLastUsedFrameNum;    // 1 = Flag that it was externally set, don't reset it
   int mDigitsForNumberedFrame;  // Number of digits for sequential numbers
   CString mNewFunctionCalled;   // Description of new function being called in plugin
   int mK2GainRefTimeStamp[2][2]; // Time when a K2 gain reference last used; -1 not loaded
@@ -1175,6 +1176,7 @@ public:
   int mCurShrMemInd;              // Current index
   BOOL mSaveNewImageToShrMem;     // Flag to save images
   CString mNewImageListPath;      // Optional directory
+  int mStoreNumForNextShot;       // Number of image store for getting filename for frames
 
 public:
   void SetNonGatanPostActionTime(void);

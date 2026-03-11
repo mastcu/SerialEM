@@ -488,7 +488,7 @@ CCameraController::CCameraController()
   mDynFocusTiltOffset = 0.;
   mFilterObeyNormDelay = false;
   mFilterWaiting = false;
-  mKeepLastUsedFrameNum = false;
+  mKeepLastUsedFrameNum = 0;
   mRamperBlankAtEnd = 0;
   mGIFslitWidthScaling = 1.;
   mFalconWarningCount = 0;
@@ -544,6 +544,7 @@ void CCameraController::ClearOneShotFlags()
   mCancelNextContinuous = false;
   mDiscardImage = false;
   mNeedToRestoreISandBT = 0;
+  mStoreNumForNextShot = -1;
   mMaxChannelsToGet = MAX_STEM_CHANNELS;
 }
 
@@ -2487,7 +2488,7 @@ int CCameraController::GetDeferredSum(void)
 int CCameraController::MakeMdocFrameAlignCom(CString mdocPath)
 {
   CString mdocName, tempStr, comRoot, comDir, frameDir;
-  int nameLen, textLen, stringSize, summing = 0, frameX, frameY;
+  int nameLen, textLen, stringSize, summing = 0, frameX, frameY, macfFlags = 0;
   long retVal = 0;
   float pixelSize = 0.;
   UINT numRead;
@@ -2498,9 +2499,9 @@ int CCameraController::MakeMdocFrameAlignCom(CString mdocPath)
   bool remote = mParam->useSocket && CBaseSocket::ServerIsRemote(GATAN_SOCK_ID);
 
   // Check parameters
-  if (!mParam->K2Type && !IS_FALCON2_3_4(mParam)) {
+  if (!mParam->K2Type && !IS_FALCON2_3_4(mParam) && !mParam->canTakeFrames) {
     SEMMessageBox("Cannot make a com file for aligning tilt series frames\n"
-      "unless the K2/K3 or Falcon camera is still selected");
+      "unless the frame-saving camera is still selected");
     return 1;
   }
   if (mParam->K2Type && GetPluginVersion(mParam) < PLUGIN_CAN_ALIGN_FRAMES) {
@@ -2537,8 +2538,13 @@ int CCameraController::MakeMdocFrameAlignCom(CString mdocPath)
 
   // For Falcon, just call routine and leave
   if (!mParam->K2Type) {
-    WarnEmptyFalconFramePath(mLastLocalFramePath, "Cannot make com file for aligning");
-    UtilSplitPath(mLastLocalFramePath, frameDir, tempStr);
+    if (mParam->FEItype) {
+      WarnEmptyFalconFramePath(mLastLocalFramePath, "Cannot make com file for aligning");
+      UtilSplitPath(mLastLocalFramePath, frameDir, tempStr);
+    } else {
+      frameDir = mFrameFolder;
+    }
+    frameDir = mFalconHelper->AdjustedFramePathForPosTS(frameDir, comRoot);
     mFalconHelper->SetLastFrameDir(frameDir);
     comDir = mAlignFramesComPath;
     if (mComPathIsFramePath)
@@ -2551,7 +2557,7 @@ int CCameraController::MakeMdocFrameAlignCom(CString mdocPath)
         summing = B3DNINT(conSet->frameTime / GetFalconReadoutInterval(mParam));
       if (mWinApp->mStoreMRC)
         pixelSize = (float)(0.1 *mWinApp->mStoreMRC->GetPixelSpacing() / conSet->binning);
-    } else if (IS_FALCON2_3_4(mParam) && mWinApp->mStoreMRC) {
+    } else if (mWinApp->mStoreMRC) {
       pixelSize = 0.1f * mWinApp->mStoreMRC->GetPixelSpacing();
     }
     retVal = mFalconHelper->WriteAlignComFile(mdocPath, comDir + '\\' + comRoot + ".pcm",
@@ -2630,10 +2636,15 @@ int CCameraController::MakeMdocFrameAlignCom(CString mdocPath)
     true, &comRoot))
     retVal = 1;
 
+  macfFlags = remote ? K2FA_WRITE_MDOC_TEXT : 0;
+  if (mComPathIsFramePath && mWinApp->mTSController->GetParTSNavItem() &&
+    mWinApp->mTSController->GetNumMdocFiles() > 1)
+    macfFlags |= K2FA_MDOC_IN_SAME_DIR;
+
   // Get the plugin to make the file
   if (!retVal) {
     try {
-      MainCallGatanCamera(MakeAlignComFile(remote ? K2FA_WRITE_MDOC_TEXT : 0, 0, 0., 0.,
+      MainCallGatanCamera(MakeAlignComFile(macfFlags, 0, 0., 0.,
         stringSize, (long *)strings, &retVal));
       if (retVal) {
         tempStr.Format("Error %d trying to create com file for aligning tilt series "
@@ -5217,13 +5228,18 @@ int CCameraController::SetupK2SavingAligning(const ControlSet &conSet, int inSet
 
   // Set up for align com file if one is needed
   if (aligning && conSet.useFrameAlign > 1) {
-    if (aliComRoot)
-      aliComName = B3DCHOICE(mComPathIsFramePath, mFrameFolder, mAlignFramesComPath) + 
-      "\\" + *aliComRoot + ".pcm";
-    else
-      aliComName.Format("%s\\%s.pcm", B3DCHOICE(mComPathIsFramePath || 
-      mAlignFramesComPath.IsEmpty(), (LPCTSTR)mFrameFolder, (LPCTSTR)mAlignFramesComPath),
-      (LPCTSTR)mFrameFilename);
+    if (aliComRoot) {
+      CString framePath = mAlignFramesComPath;
+      if (mComPathIsFramePath) {
+        framePath = mWinApp->mFalconHelper->AdjustedFramePathForPosTS(mFrameFolder,
+          CString(*aliComRoot));
+      }
+      aliComName = framePath + "\\" + *aliComRoot + ".pcm";
+    } else {
+      aliComName.Format("%s\\%s.pcm", B3DCHOICE(mComPathIsFramePath ||
+        mAlignFramesComPath.IsEmpty(), (LPCTSTR)mFrameFolder, (LPCTSTR)mAlignFramesComPath),
+        (LPCTSTR)mFrameFilename);
+    }
     aliComLen = aliComName.GetLength() + 1;
     stringSize += aliComLen;
     alignFlags |= K2_MAKE_ALIGN_COM;
@@ -13386,7 +13402,7 @@ void CCameraController::RestoreGatanOrientations(void)
   }
 }
 
-// Test for falcon frame path entry hand complain if not there
+// Test for falcon frame path entry and complain if not there
 void CCameraController::WarnEmptyFalconFramePath(CString &localFramePath, 
   const char *prefix)
 {
@@ -13462,16 +13478,21 @@ void CCameraController::ComposeFramePathAndName(bool temporary)
   char numFormat[6];
   int trimCount, magVal;
   CMapDrawItem *item;
+  KImageStore *store = NULL;
   bool prefixDate = (mFrameNameFormat & FRAME_FILE_DATE_PREFIX) != 0;
   bool flexibleFEI = mParam->FEItype == FALCON4_TYPE || FCAM_CONTIN_SAVE(mParam) ||
     (mParam->FEItype == FALCON3_TYPE && mSubdirsOkInFalcon3Save);
   B3DCLAMP(mDigitsForNumberedFrame, 3, 5);
   sprintf(numFormat, "%%0%dd", mDigitsForNumberedFrame);
 
+  if (mStoreNumForNextShot >= 0)
+    store = mWinApp->mDocWnd->GetStoreMRC(mStoreNumForNextShot);
+  if (!store)
+    store = mWinApp->mStoreMRC;
+
   // Get common components
-  if ((mFrameNameFormat & (FRAME_FOLDER_SAVEFILE | FRAME_FILE_SAVEFILE)) && 
-    mWinApp->mStoreMRC) {
-    savefile = mWinApp->mStoreMRC->getName();
+  if ((mFrameNameFormat & (FRAME_FOLDER_SAVEFILE | FRAME_FILE_SAVEFILE)) && store) {
+    savefile = store->getName();
     if (!savefile.IsEmpty()) {
       trimCount = savefile.GetLength() - (savefile.ReverseFind('\\') + 1);
       time = savefile.Right(trimCount);
@@ -13538,10 +13559,15 @@ void CCameraController::ComposeFramePathAndName(bool temporary)
     if (!mKeepLastUsedFrameNum && (mLastUsedFrameNumber < mFrameNumberStart || 
       mNumberedFrameFolder != mFrameFolder || mNumberedFramePrefix != filename))
       mLastUsedFrameNumber = mFrameNumberStart - 1;
-    mNumberedFrameFolder = mFrameFolder;
-    mNumberedFramePrefix = filename;
-    mLastUsedFrameNumber++;
-    mKeepLastUsedFrameNum = false;
+
+    // reuse frame number for multishot if 2 is set and something else is different
+    if (!(mKeepLastUsedFrameNum == 2 &&
+      (mNumberedFrameFolder != mFrameFolder || mNumberedFramePrefix != filename))) {
+      mNumberedFrameFolder = mFrameFolder;
+      mNumberedFramePrefix = filename;
+      mLastUsedFrameNumber++;
+    }
+    mKeepLastUsedFrameNum = 0;
     date.Format(numFormat, mLastUsedFrameNumber);
     UtilAppendWithSeparator(filename, date, "_");
     mLastFrameNumberStart = mFrameNumberStart;
@@ -13690,7 +13716,8 @@ bool CCameraController::IsConSetSaving(const ControlSet *conSet, int setNum,
             (DEcanSave && (conSet->saveFrames & DE_SAVE_MASTER) && !noVirtual)) ||
            (conSet->useFrameAlign > 1 &&            // Or forced saving is called for
             ((K2Type && CAN_PLUGIN_DO(CAN_ALIGN_FRAMES, param)) || 
-             (!K2only && (weCanAlignFalcon || weCanAlignDE))) &&
+             (!K2only && (weCanAlignFalcon || weCanAlignDE || 
+              (param->canTakeFrames | FRAMES_CAN_BE_ALIGNED)))) &&
             (conSet->alignFrames || alignAnyway)))); // and align should be done
 }
 
