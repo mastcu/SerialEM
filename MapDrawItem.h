@@ -164,6 +164,7 @@ public:
   int mTSparamIndex;
   int mMontParamIndex;
   int mStateIndex;
+  int mParallelTSIndex;
   CString mFileToOpen;    // Filename of file to open at this item
   float mEDMPercent;      // Electronic dose modulator dose percentage
   int mObjectiveAp;       // State of objective aperture

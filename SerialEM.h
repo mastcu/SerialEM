@@ -217,6 +217,7 @@ struct JeolParams;
 #define BUFFER_PROC_OK_FOR_MAP   -17
 
 #define DTOR 0.01745329252
+#define DTORFL 0.01745329252f
 
 // Flags for plugins to pass back
 #define PLUGFLAG_CAMERA            1

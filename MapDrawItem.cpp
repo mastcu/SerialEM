@@ -91,6 +91,7 @@ CMapDrawItem::CMapDrawItem()
   mShiftCohortID = 0;
   mMarkerShiftX = mMarkerShiftY = EXTRA_NO_VALUE;
   mFilePropIndex =  mTSparamIndex = mMontParamIndex =  mStateIndex = -1;
+  mParallelTSIndex = -1;
   mFileToOpen = "";
   mEDMPercent = -1.f;
   mObjectiveAp = -1;
