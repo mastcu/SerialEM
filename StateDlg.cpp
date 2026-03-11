@@ -928,18 +928,19 @@ void CStateDlg::ManageName(void)
 {
   CString str;
   m_strName = "";
-  if (SetCurrentParam())
+  if (SetCurrentParam()) {
     m_strName = mParam->name;
-  if (mWinApp->mScope->GetUseAperturesInStates() > 0) {
-    if (mParam->objectiveAp >= 0 || mParam->condenserAp >= 0 || mParam->JeolC1Ap >= 0) {
-      m_butSetApertures.EnableWindow(true);
-      if (mHelper->FormatApertureString(mParam, str, true))
-        str = " (" + str + ")";
-    } else {
-      m_butSetApertures.EnableWindow(false);
+    if (mWinApp->mScope->GetUseAperturesInStates() > 0) {
+      if (mParam->objectiveAp >= 0 || mParam->condenserAp >= 0 || mParam->JeolC1Ap >= 0) {
+        m_butSetApertures.EnableWindow(true);
+        if (mHelper->FormatApertureString(mParam, str, true))
+          str = " (" + str + ")";
+      } else {
+        m_butSetApertures.EnableWindow(false);
+      }
+      m_butSetApertures.SetWindowText("Set apertures with state" + str);
+      m_bSetApertures = (mParam->flags & STATEFLAG_SET_APERTURES) != 0;
     }
-    m_butSetApertures.SetWindowText("Set apertures with state" + str);
-    m_bSetApertures = (mParam->flags & STATEFLAG_SET_APERTURES) != 0;
   }
   UpdateData(false);
 }
