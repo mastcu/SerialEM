@@ -23,6 +23,7 @@
 #include "NavFileTypeDlg.h"
 #include "NavRotAlignDlg.h"
 #include "MultiShotDlg.h"
+#include "ParticleTasks.h"
 #include "MontageSetupDlg.h"
 #include "BeamAssessor.h"
 #include "MacroProcessor.h"
@@ -330,6 +331,20 @@ CNavHelper::CNavHelper(void)
   mAutoContourParams.irregularCutoff = 1.;
   mAutoContourParams.borderDistCutoff = 0.;
   mAutoContourParams.useCurrentPolygon = false;
+  mParTSOptions.adjustBeamTilt = false;
+  mParTSOptions.beamDiam = 1.;
+  mParTSOptions.useIAorBeamSize = false;
+  mParTSOptions.extraDelayFactor = 0.;
+  mParTSOptions.CtfMeasureType = 1;
+  mParTSOptions.findAstig = true;
+  mParTSOptions.extractVirtPrevs = 0;
+  mParTSOptions.alignLimitFrac = 0.03f;
+  mParTSOptions.mapMagIndNonLD = 0;
+  mParTSOptions.acqMagIndNonLD = 0;
+  mParTSOptions.refAliMaxRot = -1.;
+  mParTSOptions.refAliMaxPctChg = -1.;
+  mParTSOptions.flags = 0;
+ 
   float widths[] = {4, 2, 1.5}, increments[] = {3., 1.5, 1.};
   int numCircles[] = {7, 3, 1};
   mHFwidths.insert(mHFwidths.begin(), &widths[0], &widths[3]);
@@ -421,6 +436,7 @@ void CNavHelper::NavOpeningOrClosing(bool open)
     mNav = mWinApp->mNavigator;
     mItemArray = mNav->GetItemArray();
     mTSparamArray = mNav->GetTSparamArray();
+    mParallelTSArray = mNav->GetParallelTSArray();
     mFileOptArray = mNav->GetFileOptArray();
     mMontParArray = mNav->GetMontParArray();
     mGroupFiles = mNav->GetScheduledFiles();
@@ -936,6 +952,7 @@ int CNavHelper::RealignToItem(CMapDrawItem *inItem, BOOL restoreState,
   KImageStore *imageStore;
   float useWidth, useHeight, montErrX, montErrY, itemBackX, itemBackY, field;
   MontParam *montP;
+  ParallelTSParam *parTSp;
   ScaleMat aMat;
   NavAcqParams *navParams = mWinApp->GetNavAcqParams(GetAcqParamIndexToUse());
   CenterSkipData cenSkip;
@@ -944,6 +961,16 @@ int CNavHelper::RealignToItem(CMapDrawItem *inItem, BOOL restoreState,
   bool saveSetAp;
   ControlSet *conSet = mWinApp->GetConSets() + TRACK_CONSET;
   ControlSet *consForScale;
+
+  // For the center point of a parallel tilt series, substitute the preview map
+  if (inItem->mParallelTSIndex >= 0) {
+    parTSp = mParallelTSArray->GetAt(inItem->mParallelTSIndex);
+    item = mNav->FindItemWithMapID(parTSp->firstPrevMapID);
+    if (item) {
+      inItem = item;
+      SEMTrace('h', "Realigning to Preview map for this parallel TS item");
+    }
+  }
 
   i = FindMapForRealigning(inItem, restoreState);
   mRIContinuousMode = mContinuousRealign;
@@ -4175,22 +4202,44 @@ void CNavHelper::CheckForSameRootAndNumber(CString &root, CString &ext,
 }
 
 // Check whether the name is already used in the lists of ones to open
-bool CNavHelper::NameToOpenUsed(CString name)
+bool CNavHelper::NameToOpenUsed(CString name, bool parTSOnly)
 {
   CMapDrawItem *item;
   ScheduledFile *sched;
   int i;
   for (i = 0; i < mItemArray->GetSize(); i++) {
     item = mItemArray->GetAt(i);
-    if (!item->mFileToOpen.IsEmpty() && item->mFileToOpen == name)
+    if (!item->mFileToOpen.IsEmpty() && item->mFileToOpen == name && 
+      BOOL_EQUIV(parTSOnly, item->mParallelTSIndex >= 0))
       return true;
   }
+  if (parTSOnly)
+    return false;
   for (i = 0; i < mGroupFiles->GetSize(); i++) {
     sched = mGroupFiles->GetAt(i);
     if (sched->filename == name)
       return true;
   }
   return false;
+}
+
+// Count how many files are already open or already exist for target positions
+void CNavHelper::CheckParallelTSFiles(CString filename, CMapDrawItem *item, 
+  int &numBadStores, int *numExists)
+{
+  CString root, ext, posSuff, posName;
+  UtilSplitExtension(filename, root, ext);
+  numBadStores = 0;
+  if (numExists)
+    *numExists = 0;
+  for (int i = 0; i < item->mNumIStargets; i++) {
+    mWinApp->mParticleTasks->FormatParallelTSSuffix(item->mNumIStargets, i, posSuff);
+    posName = root + "_" + posSuff + ext;
+    if (mDocWnd->StoreIndexFromName(posName) >= 0)
+      numBadStores++;
+    else if (numExists && UtilFileExists(posName))
+      (*numExists)++;
+  }
 }
 
 // Set up a new file to open for an item or group.  Returns -1 if user cancels, or >0
@@ -4203,12 +4252,13 @@ int CNavHelper::NewAcquireFile(int itemNum, int listType, ScheduledFile *sched)
   StateParams *state;
   MontParam *montp;
   int i, index;
-  bool breakForFit = false;
+  bool parUsed, breakForFit = false;
   int *propIndexp = &item->mFilePropIndex;
   int *montIndexp = &item->mMontParamIndex;
   int *stateIndexp = &item->mStateIndex;
   CString autoName = "";
   CString *namep = &item->mFileToOpen;
+  CString root, ext, posName, posExt;
   if (listType == NAVFILE_GROUP) {
     propIndexp = &sched->filePropIndex;
     montIndexp = &sched->montParamIndex;
@@ -4280,8 +4330,31 @@ int CNavHelper::NewAcquireFile(int itemNum, int listType, ScheduledFile *sched)
       // Check for uniqueness of filenames
       if (breakForFit)
         break;
-      while (NameToOpenUsed(autoName) || mDocWnd->StoreIndexFromName(autoName) >= 0)
-        autoName = NextAutoFilename(autoName);
+      if (item->mParallelTSIndex >= 0) {
+        parUsed = true;
+        while (parUsed) {
+          parUsed = NameToOpenUsed(autoName, true);
+          if (!parUsed) {
+            UtilSplitExtension(autoName, root, ext);
+            for (index = 0; index < item->mNumIStargets; index++) {
+              mWinApp->mParticleTasks->FormatParallelTSSuffix(item->mNumIStargets, index,
+                posExt);
+              posName = root + "_" + posExt + ext;
+              if (mDocWnd->StoreIndexFromName(posName) >= 0) {
+                parUsed = true;
+                break;
+              }
+            }
+          }
+          if (parUsed)
+            NextAutoFilename(autoName);
+        }
+      } else {
+
+        // regular filename
+        while (NameToOpenUsed(autoName) || mDocWnd->StoreIndexFromName(autoName) >= 0)
+          autoName = NextAutoFilename(autoName);
+      }
       *namep = autoName;
       return 0;
     }
@@ -4336,10 +4409,12 @@ int CNavHelper::SetTSParams(int itemNum)
 {
   TiltSeriesParam *tsp, *tspSrc;
   MontParam *montp;
+  ParallelTSParam *parTS = NULL;
   int err, i;
   CMapDrawItem *item = mItemArray->GetAt(itemNum);
   CMapDrawItem *item2;
   bool needNew = false;
+  float preTilt = 0.;
   int future = 1, futureLDstate = -1, ldMagInd = 0, overrideFlags = 0;
   int prevIndex = item->mTSparamIndex;
   CString inheritors;
@@ -4372,19 +4447,41 @@ int CNavHelper::SetTSParams(int itemNum)
     }
   }
 
+  // Fetch the pre-tilt for a parallel TS
+  if (item->mNumIStargets > 0 && item->mParallelTSIndex >= 0) {
+    overrideFlags |= NAV_OVERRIDE_PARALLEL_TS;
+    parTS = mParallelTSArray->GetAt(item->mParallelTSIndex);
+    preTilt = parTS->preTilt;
+    tsp->doBidirectional = true;
+    if (prevIndex < 0 || (tsp->doDoseSymmetric && futureLDstate != 0))
+      tsp->bidirAngle = preTilt;
+  }
+
   // Set flags for special parameters set in the Nav item
   if (item->mTSstartAngle > EXTRA_VALUE_TEST) {
     overrideFlags |= NAV_OVERRIDE_TILT;
-    if (item->mTSbidirAngle > EXTRA_VALUE_TEST)
+    if (item->mTSbidirAngle > EXTRA_VALUE_TEST && !parTS)
       overrideFlags |= NAV_OVERRIDE_BIDIR;
   }
   if (item->mTargetDefocus > EXTRA_VALUE_TEST)
     overrideFlags |= NAV_OVERRIDE_DEF_TARG;
 
   err = mWinApp->mTSController->SetupTiltSeries(future, futureLDstate, ldMagInd,
-    overrideFlags);
+    overrideFlags, preTilt);
   if (err)
     return err;
+
+  // See if the pre-tilt needs to change for parallel TS
+  if (parTS) {
+    i = 0;
+    if (fabs(tsp->bidirAngle - preTilt) > 0.01) {
+      if (tsp->doDoseSymmetric && futureLDstate != 0)
+        parTS->preTilt = tsp->bidirAngle;
+      if (!tsp->doDoseSymmetric || futureLDstate == 0)
+        i = 1;
+    }
+    setOrClearFlags((b3dUInt32 *)&tsp->tsFlags, TSFLAG_BIDIR_NOT_PRETILT, i);
+  }
 
   // Now that we have success, either copy it back to source or make a new one
   if (item->mTSparamIndex < 0)
@@ -4462,29 +4559,37 @@ int CNavHelper::SetFileProperties(int itemNum, int listType, ScheduledFile *sche
     montpSrc = mMontParArray->GetAt(prevIndex);
   if (*propIndexp >= 0)
     fileOptSrc = mFileOptArray->GetAt(*propIndexp);
-  typeDlg.m_iSingleMont = mLastTypeWasMont ? 1 : 0;
-  if (*propIndexp >= 0)
-    typeDlg.m_iSingleMont = prevIndex >= 0 ? 1 : 0;
-  typeDlg.mPolyFitOK = item->IsPolygon() && listType == NAVFILE_ITEM;
-  typeDlg.m_bFitPoly = mLastMontFitToPoly;
-  typeDlg.m_bSkipDlgs = mSkipMontFitDlgs;
-  typeDlg.m_iReusability = 0;
-  if (prevIndex >= 0 && montpSrc->reusability)
-    typeDlg.m_iReusability = 2;
-  if (mDoingMultipleFiles > 1) {
-    typeDlg.m_iReusability = 1;
-    typeDlg.m_bFitPoly = true;
-    typeDlg.m_iSingleMont = 1;
-    typeDlg.mOnlyLeaveOpenOK = true;
-  }
-  if (*montIndexp >= 0) {
-    newMontp = mMontParArray->GetAt(*montIndexp);
-    typeDlg.m_iReusability = newMontp->reusability;
-    typeDlg.mJustChangeOK = newMontp->wasFitToPolygon;
-  }
+  if (item->mNumIStargets && item->mParallelTSIndex >= 0) {
+    typeDlg.m_iSingleMont = 0;
+    typeDlg.m_bSkipDlgs = true;
+    typeDlg.m_iReusability = 0;
+    typeDlg.m_bFitPoly = false;
+    skipFitDlgs = true;
+  } else {
+    typeDlg.m_iSingleMont = mLastTypeWasMont ? 1 : 0;
+    if (*propIndexp >= 0)
+      typeDlg.m_iSingleMont = prevIndex >= 0 ? 1 : 0;
+    typeDlg.mPolyFitOK = item->IsPolygon() && listType == NAVFILE_ITEM;
+    typeDlg.m_bFitPoly = mLastMontFitToPoly;
+    typeDlg.m_bSkipDlgs = mSkipMontFitDlgs;
+    typeDlg.m_iReusability = 0;
+    if (prevIndex >= 0 && montpSrc->reusability)
+      typeDlg.m_iReusability = 2;
+    if (mDoingMultipleFiles > 1) {
+      typeDlg.m_iReusability = 1;
+      typeDlg.m_bFitPoly = true;
+      typeDlg.m_iSingleMont = 1;
+      typeDlg.mOnlyLeaveOpenOK = true;
+    }
+    if (*montIndexp >= 0) {
+      newMontp = mMontParArray->GetAt(*montIndexp);
+      typeDlg.m_iReusability = newMontp->reusability;
+      typeDlg.mJustChangeOK = newMontp->wasFitToPolygon;
+    }
 
-  if (prevIndex >= 0 && typeDlg.mPolyFitOK)
-    typeDlg.m_bFitPoly = montpSrc->wasFitToPolygon;
+    if (prevIndex >= 0 && typeDlg.mPolyFitOK)
+      typeDlg.m_bFitPoly = montpSrc->wasFitToPolygon;
+  }
   if (!skipFitDlgs && typeDlg.DoModal() != IDOK)
     return -1;
   mLastTypeWasMont = typeDlg.m_iSingleMont != 0;
@@ -4684,7 +4789,7 @@ int CNavHelper::SetFileProperties(int itemNum, int listType, ScheduledFile *sche
 // for a group, or 3 if it is scheduled for an item
 int CNavHelper::SetOrChangeFilename(int itemNum, int listType, ScheduledFile *sched)
 {
-  int i, numacq, fileType = STORE_TYPE_MRC;
+  int i, numacq, numBadStores = 0, numExists = 0, fileType = STORE_TYPE_MRC;
   CString filename, label, lastlab;
   ScheduledFile *sched2;
   CMapDrawItem *item2;
@@ -4715,26 +4820,49 @@ int CNavHelper::SetOrChangeFilename(int itemNum, int listType, ScheduledFile *sc
   if (mDocWnd->FilenameForSaveFile(fileType, lpszFileName, filename))
     return -1;
 
-    // Check for file already open
-  i = mDocWnd->StoreIndexFromName(filename);
-  if (i >= 0) {
-    label.Format("This file is already open (file #%d).\n\nPick another file name,"
-      " or close the file (in which case it will be overwritten)", i + 1);
-    AfxMessageBox(label, MB_EXCLAME);
-    return 1;
-  }
+  if (item->mTSparamIndex >= 0) {
 
-  // Check for duplication with group files
-  for (i = 0; i < mGroupFiles->GetSize(); i++) {
-    sched2 = mGroupFiles->GetAt(i);
-    if (listType == NAVFILE_GROUP && sched2->groupID == sched->groupID)
-      continue;
-    if (sched2->filename == filename) {
-      mNav->CountItemsInGroup(sched2->groupID, label, lastlab, numacq);
-      SEMMessageBox("This filename is already set up for the group\n"
-        "with labels from " + label + " to " + lastlab + "\n\nPick another name.",
-        MB_EXCLAME);
-      return 2;
+    // Checks for parallel TS files: count up ones that are open or already exist
+    CheckParallelTSFiles(filename, item, numBadStores, &numExists);
+
+    // Being open is fatal, already existing can be overwritten
+    if (numBadStores) {
+      label.Format("Files are already open for %d of the %d target positions\n\n"
+        "Pick a different file name or close those files to overwrite them",
+        numBadStores, item->mNumIStargets);
+      AfxMessageBox(label, MB_EXCLAME);
+      return 1;
+    }
+    if (numExists) {
+      label.Format("Files already exist for %d of the %d target positions\n\n"
+        "Do you want to overwrite them?", numExists, item->mNumIStargets);
+      if (AfxMessageBox(label, MB_QUESTION) == IDNO)
+        return 1;
+    }
+
+  } else {
+
+    // Check for file already open
+    i = mDocWnd->StoreIndexFromName(filename);
+    if (i >= 0) {
+      label.Format("This file is already open (file #%d).\n\nPick another file name,"
+        " or close the file (in which case it will be overwritten)", i + 1);
+      AfxMessageBox(label, MB_EXCLAME);
+      return 1;
+    }
+
+    // Check for duplication with group files
+    for (i = 0; i < mGroupFiles->GetSize(); i++) {
+      sched2 = mGroupFiles->GetAt(i);
+      if (listType == NAVFILE_GROUP && sched2->groupID == sched->groupID)
+        continue;
+      if (sched2->filename == filename) {
+        mNav->CountItemsInGroup(sched2->groupID, label, lastlab, numacq);
+        SEMMessageBox("This filename is already set up for the group\n"
+          "with labels from " + label + " to " + lastlab + "\n\nPick another name.",
+          MB_EXCLAME);
+        return 2;
+      }
     }
   }
 
@@ -4743,7 +4871,8 @@ int CNavHelper::SetOrChangeFilename(int itemNum, int listType, ScheduledFile *sc
     if (i == itemNum)
       continue;
     item2 = mItemArray->GetAt(i);
-    if (item2->mFilePropIndex >= 0 && item2->mFileToOpen == filename) {
+    if (item2->mFilePropIndex >= 0 && item2->mFileToOpen == filename &&
+      BOOL_EQUIV(item->mParallelTSIndex >= 0, item2->mParallelTSIndex >= 0)) {
       label.Format("This filename is already set up to be opened for item #%d with"
         " label %s\r\nPick another name.", i, (LPCTSTR)item2->mLabel);
       SEMMessageBox(label, MB_EXCLAME);
@@ -4814,6 +4943,8 @@ void CNavHelper::RemoveFromArray(int which, int index)
       item->mMontParamIndex--;
     if (which == NAVARRAY_TSPARAM && item->mTSparamIndex > index)
       item->mTSparamIndex--;
+    if (which == NAVARRAY_PARALLEL_TSP && item->mParallelTSIndex > index)
+      item->mParallelTSIndex--;
     if (which == NAVARRAY_STATE && item->mStateIndex > index)
       item->mStateIndex--;
   }
@@ -4838,6 +4969,10 @@ void CNavHelper::RemoveFromArray(int which, int index)
     TiltSeriesParam *tsp = mTSparamArray->GetAt(index);
     delete tsp;
     mTSparamArray->RemoveAt(index);
+  } else if (which == NAVARRAY_PARALLEL_TSP) {
+    ParallelTSParam *parTS = mParallelTSArray->GetAt(index);
+    delete parTS;
+    mParallelTSArray->RemoveAt(index);
   } else if (which == NAVARRAY_STATE) {
     StateParams *state = mAcqStateArray->GetAt(index);
     delete state;
@@ -4874,9 +5009,10 @@ void CNavHelper::RecomputeArrayRefs(void)
   FileOptions *opt;
   MontParam *montp;
   TiltSeriesParam *tsp;
-  ShortVec used;
-  int i, loop, limit, fileInd, montInd, tsInd, stateInd;
+  ShortVec used, parUsed;
+  int i, loop, limit, fileInd, montInd, tsInd, stateInd, parTSInd;
   int numStates = (int)mAcqStateArray->GetSize();
+  int numParTS = (int)mParallelTSArray->GetSize();
 
   // First zero all the references
   for (i = 0; i < mFileOptArray->GetSize(); i++) {
@@ -4894,6 +5030,7 @@ void CNavHelper::RecomputeArrayRefs(void)
 
   // NO references for state, just build list of ones used
   used.resize(numStates);
+  parUsed.resize(numParTS);
 
   // Add up the references again
   limit = (int)mItemArray->GetSize();
@@ -4905,12 +5042,14 @@ void CNavHelper::RecomputeArrayRefs(void)
         montInd = sched->montParamIndex;
         stateInd = sched->stateIndex;
         tsInd = -1;
+        parTSInd = -1;
       } else {
         item = mItemArray->GetAt(i);
         fileInd = item->mFilePropIndex;
         montInd = item->mMontParamIndex;
         tsInd = item->mTSparamIndex;
         stateInd = item->mStateIndex;
+        parTSInd = item->mParallelTSIndex;
       }
 
       if (fileInd >= 0) {
@@ -4927,6 +5066,8 @@ void CNavHelper::RecomputeArrayRefs(void)
       }
       if (stateInd >= 0 && stateInd < numStates)
         used[stateInd] = 1;
+      if (parTSInd >= 0 && parTSInd < numParTS)
+        parUsed[parTSInd] = 1;
     }
     limit = (int)mGroupFiles->GetSize();
   }
@@ -4950,6 +5091,9 @@ void CNavHelper::RecomputeArrayRefs(void)
   for (i = numStates - 1; i >= 0; i--)
     if (!used[i])
       RemoveFromArray(NAVARRAY_STATE, i);
+  for (i = numParTS - 1; i >= 0; i--)
+    if (!parUsed[i])
+      RemoveFromArray(NAVARRAY_PARALLEL_TSP, i);
 }
 
 // See if an earlier item shares a reference to the given type of index
@@ -5081,6 +5225,7 @@ void CNavHelper::DeleteArrays(void)
   FileOptions *opt;
   MontParam *montp;
   TiltSeriesParam *tsp;
+  ParallelTSParam *parTS;
   StateParams *state;
   int i;
   for (i = 0; i < mItemArray->GetSize(); i++) {
@@ -5110,6 +5255,11 @@ void CNavHelper::DeleteArrays(void)
     delete tsp;
   }
   mTSparamArray->RemoveAll();
+  for (i = 0; i < mParallelTSArray->GetSize(); i++) {
+    parTS = mParallelTSArray->GetAt(i);
+    delete parTS;
+  }
+  mParallelTSArray->RemoveAll();
   for (i = 0; i < mAcqStateArray->GetSize(); i++) {
     state = mAcqStateArray->GetAt(i);
     delete state;
@@ -5387,7 +5537,7 @@ int CNavHelper::AssessAcquireForParams(NavAcqParams *navParam, NavAcqAction *acq
   ControlSet *masterSets = mWinApp->GetCamConSets();
   int lastBin[MAX_CAMERAS];
   int cam, bin, i, j, k, ind, stateCam, numBroke, numGroups, curGroup, fileOptInd, setNum;
-  int lastMap = -1, curMap, numNoVec = 0, numNoXform = 0, numMaps = 0;
+  int lastMap = -1, curMap, numNoVec = 0, numNoXform = 0, numMaps = 0, numBadStores = 0;
   float delX, delY, critDist, critDistSq;
   double holeDist, dists[3], angle;
   bool seen;
@@ -5618,7 +5768,18 @@ int CNavHelper::AssessAcquireForParams(NavAcqParams *navParam, NavAcqAction *acq
       }
 
       // Check file already open
-      if (item->mFilePropIndex >= 0) {
+      if (item->mTSparamIndex >= 0 && item->mParallelTSIndex >= 0) {
+        CheckParallelTSFiles(item->mFileToOpen, item, numBadStores, NULL);
+        if (numBadStores) {
+          mess.Format("The %d of %d files set to open for item # %d, label %s\n"
+            "are already open\n\nYou should set a different name for the files to open,"
+            "\nor close the files, which will then be overwritten", numBadStores,
+            item->mNumIStargets, i + 1, (LPCTSTR)item->mLabel);
+          AfxMessageBox(prefix + mess, MB_EXCLAME);
+          delete[] seenGroups;
+          return 1;
+        }
+      } else if (item->mFilePropIndex >= 0) {
         k = mDocWnd->StoreIndexFromName(item->mFileToOpen);
         if (k >= 0) {
           mess.Format("The file set to be opened for item # %d, label %s is already open"
@@ -5760,13 +5921,14 @@ int CNavHelper::AssessAcquireForParams(NavAcqParams *navParam, NavAcqAction *acq
 // Make sure no indexes are out of range, which can crash when indexes are not checked
 int CNavHelper::CheckForBadParamIndexes(CString prefix)
 {
-  int ind, numBadTS = 0, numBadProp = 0, numBadMont = 0, numBadState = 0;
+  int ind, numBadTS = 0, numBadProp = 0, numBadMont = 0, numBadState = 0, numBadParTS = 0;
   int numTS = (int)mTSparamArray->GetSize();
   int numMont = (int)mMontParArray->GetSize();
   int numProp = (int)mFileOptArray->GetSize();
   int numStates = (int)mAcqStateArray->GetSize();
+  int numParTS = (int)mParallelTSArray->GetSize();
   CMapDrawItem *item;
-  CString str, badTSlist, badMontList, badPropList, badStateList, mess;
+  CString str, badTSlist, badMontList, badPropList, badStateList, badParList, mess;
   for (ind = 0; ind < (int)mItemArray->GetSize(); ind++) {
     item = mItemArray->GetAt(ind);
     if (item->mTSparamIndex >= numTS) {
@@ -5774,6 +5936,14 @@ int CNavHelper::CheckForBadParamIndexes(CString prefix)
       numBadTS++;
       badTSlist += str;
       item->mTSparamIndex = -1;
+    }
+    if (item->mParallelTSIndex >= numParTS) {
+      str.Format(" %d", ind + 1);
+      numBadParTS++;
+      badParList += str;
+      item->mParallelTSIndex = -1;
+      if (item->mNumIStargets && item->mTSparamIndex >= 0)
+        EndAcquireOrNewFile(item);
     }
     if (item->mMontParamIndex >= numMont) {
       str.Format(" %d", ind + 1);
@@ -5797,6 +5967,11 @@ int CNavHelper::CheckForBadParamIndexes(CString prefix)
   if (numBadTS) {
     mess.Format("%d items had tilt series parameter indexes out of range:\r\n", numBadTS);
     mess += badTSlist + "\r\n\r\n";
+  }
+  if (numBadParTS) {
+    mess.Format("%d items had parallel TS parameter indexes out of range:\r\n",
+      numBadParTS);
+    mess += badParList + "\r\n\r\n";
   }
   if (numBadMont) {
     str.Format("%d items had montage parameter indexes out of range:\r\n", numBadMont);

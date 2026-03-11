@@ -10,6 +10,8 @@
 #define MAX_TS_SIMULTANEOUS_CHAN  6
 #define NUM_VARY_ELEMENTS 5
 
+#define TSFLAG_BIDIR_NOT_PRETILT  0x1
+
 enum {NO_TS_EXTRA_RECORD, TS_FOCUS_SERIES, TS_FILTER_SERIES, TS_OPPOSITE_TRIAL, 
 TS_OTHER_CHANNELS};
 enum {TS_VARY_EXPOSURE = 0, TS_VARY_DRIFT, TS_VARY_FOCUS, TS_VARY_ENERGY, TS_VARY_SLIT,
@@ -153,6 +155,7 @@ struct TiltSeriesParam {
   BOOL waitDosymIgnoreAngles;  // Flag for angle restrictions to be ignore for dose-sym
   BOOL doEarlyReturn;          // Flag to do early return from K2
   int earlyReturnNumFrames;    // Number of frames to return with
+  int tsFlags;                 // General flags; started for parallel TS
   BOOL initialized;            // Setup has been run
   int refCount;                // Reference count for multiple use
   int navID;                   // ID for avoiding duplication when merging nav files

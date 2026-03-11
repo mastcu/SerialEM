@@ -663,6 +663,18 @@ struct VppConditionParams {
   int lowDoseArea;      // And run-time saved low dose area
 };
 
+// Data about targets for parallel tilt series
+struct ParTSTargetData {
+  float defocusByCTF;
+  float astig;
+  float score;
+  float fitRes;
+  float shiftX;
+  float shiftY;
+};
+
+typedef CArray<ParTSTargetData, ParTSTargetData> ParTargetDataArray;
+
 // A set of mutually exclusive channels, possibly switched into or mapped to one DS channel
 struct ChannelSet {
   int numChans;               // Number of channels

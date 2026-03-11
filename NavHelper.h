@@ -26,6 +26,7 @@ class CMGSettingsManagerDlg;
 #define MULTI_DO_CROSS_3X3  0x80
 #define MULTI_NO_HEX_CENTER 0x100
 #define MULTI_DO_HEX_CENTER 0x200
+#define MULTI_PAR_TS_NAME   0x400
 
 #define REALI2ITEM_JUST_MOVE   0x1
 
@@ -191,7 +192,37 @@ struct NavAlignParams {
   float cropHoleSpacings;    // Number of hole spacings used to crop hole centering image
 };
 
-// BEWARE.  Nav Actions are the "other tasks" in user terminology
+// Structure for Parallel TS data
+struct ParallelTSParam {
+  int firstPrevMapID;       // Map ID of the retained first previous map if any
+  IntVec prevSectNums;      // Section numbers preview map file if any
+  FloatVec xCoordInArea;    // X and Y coordinates in the area map, to use extracts
+  FloatVec yCoordInArea;
+  float preTilt;            // Pretilt angle to use as starting angle of series
+  float xPitchAngle;        // "X axis tilt" in IMOD for adjusting focus
+  float mappingTilt;        // Tilt angle at which previews were taken
+  int navID;                // ID needed when merging
+};
+
+// Structure for user options in parallel TS
+struct ParallelTSOptions {
+  BOOL adjustBeamTilt;     // Whether to adjust beam tilt if possible
+  float extraDelayFactor;  // Factor by which to increase regular IS delay between targets
+  float beamDiam;          // Beam diameter: display only
+  BOOL useIAorBeamSize;    // Whether to use illum area or beam size for drawing diameter
+  float tiltForBeam;       // Tilt angle for beam display
+  int  CtfMeasureType;     // 0 for none, 2 for Ctffind, 1 for  Ctfplotter
+  BOOL findAstig;          // Flag to find astigmatism
+  int extractVirtPrevs;    // Flag to use extracts from area map as virtual previews
+  float alignLimitFrac;    // Autoalign limit as fraction of FOV
+  int mapMagIndNonLD;      // Mag indexes outside low dose for mapping and acquisition
+  int acqMagIndNonLD;
+  float refAliMaxPctChg;   // Max percent size change when aligning to extracted reference
+  float refAliMaxRot;      // Max rotation when aligning to extracted reference
+  int flags;               // For future easy expansion
+};
+
+// BEWARE.  Nav Actions are the "other tasks" in user terminology, not the primary action
 
 // Add new default definition flags to "navActions[index].flags |=" in ParameterIO.cpp
 #define NAA_FLAG_HAS_SETUP    (1 << 0)
@@ -324,6 +355,8 @@ public:
   GetSetMember(float, ScaledAliDfltPctChg);
   float GetScaledRealignPctChg() { return mNavAlignParams.scaledAliPctChg < 0 ? mScaledAliDfltPctChg : mNavAlignParams.scaledAliPctChg; };
   float GetScaledRealignMaxRot() { return mNavAlignParams.scaledAliMaxRot < 0 ? mScaledAliDfltMaxRot : mNavAlignParams.scaledAliMaxRot; };
+  float GetParTSRefAliMaxPctChg() { return mParTSOptions.refAliMaxPctChg < 0 ? mScaledAliDfltPctChg : mParTSOptions.refAliMaxPctChg; };
+  float GetParTSRefAliMaxRot() { return mParTSOptions.refAliMaxRot < 0 ? mScaledAliDfltMaxRot : mParTSOptions.refAliMaxRot; };
   GetSetMember(float, RISkipItemPosMinField);
   GetSetMember(BOOL, ShowStateNumbers);
   SetMember(CString, FirstMontFilename);
@@ -336,8 +369,8 @@ public:
   SetMember(bool, SkipAperturesNextState);
   IntVec *GetExtraTaskList() { return &mExtraTaskList; };
   float *GetLastUsedHoleISvecs() {return &mLastUsedHoleISvecs[0] ; };
-
-
+  GetMemberPtr(ParallelTSOptions, ParTSOptions);
+  
   int *GetAcqActDefaultOrder() { return &mAcqActDefaultOrder[0]; };
   int *GetAcqActCurrentOrder(int which) { return &mAcqActCurrentOrder[which][0]; };
   NavAcqAction *GetAcqActions(int which) {return &mAllAcqActions[which][0] ; };
@@ -373,6 +406,7 @@ private:
   CArray<ScheduledFile *, ScheduledFile *> *mGroupFiles;
   CArray<FileOptions *, FileOptions *> *mFileOptArray;
   CArray<TiltSeriesParam *, TiltSeriesParam *> *mTSparamArray;
+  CArray<ParallelTSParam *, ParallelTSParam *> *mParallelTSArray;
   CArray<MontParam *, MontParam *> *mMontParArray;
   CArray<StateParams *, StateParams *> *mAcqStateArray;
   CArray<StateParams *, StateParams *> mStateArray;
@@ -386,6 +420,7 @@ private:
   int mEnableMultiShot;
   HoleFinderParams mHoleFinderParams;
   AutoContourParams mAutoContourParams;
+  ParallelTSOptions mParTSOptions;
   NavAcqAction mAllAcqActions[3][NAA_MAX_ACTIONS];
   NavAcqAction *mAcqActions;
   NavAlignParams mNavAlignParams;
@@ -697,7 +732,8 @@ public:
   BOOL GetNoMessageBoxOnError();
   void ListFilesToOpen(void);
   bool AreAnyFilesSetToOpen() {return mMontParArray->GetSize() > 0 || mTSparamArray->GetSize() > 0 || mFileOptArray->GetSize() > 0;};
-  bool NameToOpenUsed(CString name);
+  bool NameToOpenUsed(CString name, bool partTSOnly = false);
+  void CheckParallelTSFiles(CString filename, CMapDrawItem *item, int &numBadStores, int *numExists);
   int AlignWithRotation(int buffer, float centerAngle, float angleRange,
     float &rotBest, float &shiftXbest, float &shiftYbest, float scaling = 0., int doPart = 0,
     float *maxPtr = NULL, float shiftLimit = -1.f, int corrFlags = 0);

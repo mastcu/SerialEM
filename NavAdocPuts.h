@@ -1,5 +1,6 @@
 {
-  CString adocStr, valStr, keyStr;
+#ifndef PARALLEL_TS_PARAMS
+CString adocStr, valStr, keyStr;
   float fvals[4];
   int jnd;
   ADOC_PUT(Integer(ADOC_ARG, "Color", item->mColor));
@@ -172,6 +173,8 @@
   }
   if (item->mTSparamIndex >= 0)
     ADOC_PUT(Integer(ADOC_ARG, "TSparamIndex", item->mTSparamIndex));
+  if (item->mParallelTSIndex >= 0)
+    ADOC_PUT(Integer(ADOC_ARG, "ParallelTSIndex", item->mParallelTSIndex));
   if (item->mMontParamIndex >= 0)
     ADOC_PUT(Integer(ADOC_ARG, "MontParamIndex", item->mMontParamIndex));
   if (item->mFilePropIndex >= 0)
@@ -197,4 +200,21 @@
     ADOC_PUT(Integer(ADOC_ARG, "CondenserAperture", item->mCondenserAp));
   if (item->mJeolC1Ap >= 0)
     ADOC_PUT(Integer(ADOC_ARG, "JeolC1Aperture", item->mJeolC1Ap));
+#else
+  if (parTS->firstPrevMapID != 0)
+    ADOC_PUT(Integer(ADOC_ARG, "FirstPrevMapID", parTS->firstPrevMapID));
+  if (parTS->prevSectNums.size() > 0)
+    ADOC_PUT(IntegerArray(ADOC_ARG, "PrevSectNums", &parTS->prevSectNums[0],
+    (int)parTS->prevSectNums.size()));
+  if (parTS->xCoordInArea.size() > 0) {
+    ADOC_PUT(FloatArray(ADOC_ARG, "XinAreaMap", &parTS->xCoordInArea[0],
+      (int)parTS->xCoordInArea.size()));
+    ADOC_PUT(FloatArray(ADOC_ARG, "YinAreaMap", &parTS->yCoordInArea[0],
+      (int)parTS->yCoordInArea.size()));
+  }
+  ADOC_PUT(Float(ADOC_ARG, "PreTilt", parTS->preTilt));
+  ADOC_PUT(Float(ADOC_ARG, "XAxisTilt", parTS->xPitchAngle));
+  ADOC_PUT(Float(ADOC_ARG, "MappingTilt", parTS->mappingTilt));
+  ADOC_PUT(Integer(ADOC_ARG, "NavID", parTS->navID));
+#endif
 }
