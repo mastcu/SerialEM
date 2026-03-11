@@ -229,8 +229,8 @@ BOOL CK2SaveOptionDlg::OnInitDialog()
   m_bMagFile = (mNameFormat & FRAME_FILE_MAG) != 0;
   if (!mCanCreateDir && !mDEtype && !mCamParams->DectrisType)
     SetDlgItemText(IDC_STAT_MUST_EXIST, B3DCHOICE(mFalconType,
-    "Subfolder set with \"Set Folder\" must be blank to create folders",
-    "Plugin to DigitalMicrograph must be upgraded to create folders"));
+      "Subfolder set with \"Set Folder\" must be blank to create folders",
+      "Plugin to DigitalMicrograph must be upgraded to create folders"));
   else if (mFalconType && (mCamFlags & PLUGFEI_USES_ADVANCED)) {
     SetDlgItemText(IDC_STAT_MUST_EXIST, "Folder will be created if necessary inside "
       "Falcon storage location");
@@ -241,6 +241,8 @@ BOOL CK2SaveOptionDlg::OnInitDialog()
     str.Format("must be at least %d.%d.%d to create folders", DE_CAN_SET_FOLDER / 1000000,
       (DE_CAN_SET_FOLDER / 10000) % 100, DE_CAN_SET_FOLDER % 10000);
     SetDlgItemText(IDC_STAT_MUST_EXIST2, str);
+  } else if (!mCamParams->pluginName.IsEmpty() || mCamParams->TietzType) {
+    SetDlgItemText(IDC_STAT_MUST_EXIST2, "");
   }
   if (mDEtype)
     SetDlgItemText(IDC_STAT_COMPTITLE, mCanCreateDir ? "Components for Folder and "

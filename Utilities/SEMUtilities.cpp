@@ -606,7 +606,6 @@ int CreateFrameDirIfNeeded(CString &directory, CString *errStr, char debug)
 {
   CFileStatus status;
   CString parent, tmp;
-  int len;
   if (directory.IsEmpty()) {
     tmp = "Directory name is empty in CreateFrameDirIfNeeded";
     if (errStr)
@@ -617,17 +616,7 @@ int CreateFrameDirIfNeeded(CString &directory, CString *errStr, char debug)
   }
   if (!CFile::GetStatus((LPCTSTR)directory, status)) {
     SEMTrace(debug, "Directory %s does not exist, creating it", (LPCTSTR)directory);
-    if (_mkdir((LPCTSTR)directory)) {
-      directory.Replace('/', '\\');
-      len = directory.GetLength();
-      if (directory.GetAt(len - 1) == '\\')
-        directory = directory.Left(len - 1);
-      UtilSplitPath(directory, parent, tmp);
-      tmp.Format("An error occurred creating the directory:\r\n   %s\r\n"
-        "   for saving frame images %s", (LPCTSTR)directory,
-        CFile::GetStatus((LPCTSTR)parent, status) ?
-        "even though its parent directory exists" :
-        "because its parent directory does not exist");
+    if (UtilRecursiveMakeDir(directory, tmp)) {
       if (errStr)
         *errStr = tmp;
       else
