@@ -148,6 +148,8 @@ public:
     float conical = 0., float scaling = 0., float rotation = 0., float *CCC = NULL,
     float *fracPix = NULL, BOOL trimOutput = true, float *xShiftOut = NULL,
     float *yShiftOut = NULL, float probSigma = 0.);
+  int FindAutoAlignBinnings(int heightA, int widthA, int binA, int heightC, int widthC,
+    int binC, BOOL autoCorr, int &needBinA, int &needBinC, int &commonBin, int &size, CString &errStr);
   void AutoalignCleanup();
   BOOL MemoryError(BOOL inTest);
   BOOL ImageShiftIsOK(double newX, double newY, BOOL incremental);

@@ -591,6 +591,7 @@ int CShiftManager::AutoAlign(int bufIndex, int inSmallPad, BOOL doImShift, int c
   float oversizeFrac = 0.1f;
   float freqScale = 1., hiFreqScale = 1.;
   bool centered = true;
+  CString errStr;
   int numPeaks = mMaxNumPeaksToEval;
   int xInd, yInd;
   int iPeak, indMaxPeak, numRealPeaks;
@@ -626,7 +627,7 @@ int CShiftManager::AutoAlign(int bufIndex, int inSmallPad, BOOL doImShift, int c
   float tiltA = 0., tiltC = 0., tiltAngles[2] = {0., 0.}, axisAngle = 0.;
   float *fillArray = NULL, *fillBrray = NULL, *fillCrray = NULL;
   bool failed = true;
-  int commonBin, size, sizeC, maxBin, maxCommon;
+  int commonBin, size;
   float stretchAxis, alignLimit = -1.;
   ScaleMat str, strInv;
   float tempX, tempY;
@@ -724,40 +725,9 @@ int CShiftManager::AutoAlign(int bufIndex, int inSmallPad, BOOL doImShift, int c
   widthA = mImA->getWidth();
   heightC = mImC->getHeight();
   widthC = mImC->getWidth();
-  if (B3DMAX((size_t)widthA * heightA, (size_t)widthC * heightC) > 1.e8 && !autoCorr)
-    ACCUM_MAX(targetSize, 1024);
-
-  // Look for a common binning starting at the bigger binning
-  maxBin = binA > binC ? binA : binC;
-  maxCommon = B3DMAX(100, 50 * maxBin);
-  for (commonBin = maxBin; commonBin < maxCommon; commonBin++) {
-
-    // Evaluate only for common multiples of the two binnings
-    if (commonBin % binA || commonBin % binC)
-      continue;
-    needBinA = commonBin / binA;
-    needBinC = commonBin / binC;
-
-    // Find the biggest binned-down dimension of each image but use the smaller image
-    // as of 3/14/12
-    size = B3DMAX(heightA, widthA) / needBinA;
-    sizeC = B3DMAX(heightC, widthC) / needBinC;
-    size = B3DMIN(size, sizeC);
-
-    // If the images are less than half the target and this is not the
-    // first try, quit
-    if (size < targetSize / 2 && commonBin > maxBin) {
-      SEMMessageBox(_T("Image binnings cannot be matched up - cannot autoalign"));
-      return 1;
-    }
-
-  // Stop when size reaches the target
-    if (size <= targetSize)
-      break;
-  }
-
-  if (size > targetSize) {
-    SEMMessageBox(_T("Images are too large to bin for autoalign"));
+  if (FindAutoAlignBinnings(heightA, widthA, binA, heightC, widthC, binC, autoCorr,
+    needBinA, needBinC, commonBin, size, errStr)) {
+    SEMMessageBox(errStr);
     return 1;
   }
 
@@ -1500,6 +1470,54 @@ int CShiftManager::AutoAlign(int bufIndex, int inSmallPad, BOOL doImShift, int c
   AutoalignCleanup();
 
   return retval;
+}
+
+// Determine what binnings to use for images of the given size and binning to reach the
+// standard target size
+int CShiftManager::FindAutoAlignBinnings(int heightA, int widthA, int binA, int heightC, 
+  int widthC, int binC, BOOL autoCorr, int &needBinA, int &needBinC, int &commonBin, 
+  int &size, CString &errStr)
+{
+  int maxBin, maxCommon, sizeC;
+  int targetSize = 512;
+  if (B3DMAX((size_t)widthA * heightA, (size_t)widthC * heightC) > 1.e8 && !autoCorr)
+    ACCUM_MAX(targetSize, 1024);
+
+  // Look for a common binning starting at the bigger binning
+  maxBin = binA > binC ? binA : binC;
+  maxCommon = B3DMAX(100, 50 * maxBin);
+  for (commonBin = maxBin; commonBin < maxCommon; commonBin++) {
+
+    // Evaluate only for common multiples of the two binnings
+    if (commonBin % binA || commonBin % binC)
+      continue;
+    needBinA = commonBin / binA;
+    needBinC = commonBin / binC;
+
+    // Find the biggest binned-down dimension of each image but use the smaller image
+    // as of 3/14/12
+    size = B3DMAX(heightA, widthA) / needBinA;
+    sizeC = B3DMAX(heightC, widthC) / needBinC;
+    size = B3DMIN(size, sizeC);
+
+    // If the images are less than half the target and this is not the
+    // first try, quit
+    if (size < targetSize / 2 && commonBin > maxBin) {
+      errStr = _T("Image binnings cannot be matched up - cannot autoalign");
+      return 1;
+    }
+
+    // Stop when size reaches the target
+    if (size <= targetSize)
+      break;
+  }
+
+  if (size > targetSize) {
+    errStr = _T("Images are too large to bin for autoalign");
+    return 1;
+  }
+
+  return 0;
 }
 
 
