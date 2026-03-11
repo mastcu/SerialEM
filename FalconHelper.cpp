@@ -14,6 +14,7 @@
 #include "EMscope.h"
 #include "SerialEMDoc.h"
 #include "FalconHelper.h"
+#include "TSController.h"
 #include "CameraController.h"
 #include "ShiftManager.h"
 #include "PluginManager.h"
@@ -1821,7 +1822,8 @@ float CFalconHelper::AlignedSubsetExposure(ShortVec &summedFrameList, float fram
 int CFalconHelper::WriteAlignComFile(CString inputFile, CString comName, int faParamInd,
   int useGPU, bool ifMdoc, int frameX, int frameY, int EERsumming, float pixelSize)
 {
-  CString comStr, strTemp, aliHead, inputPath, relPath, outputRoot, outputExt, temp,temp2;
+  CString comStr, strTemp, aliHead, inputPath, relPath, outputRoot, outputExt, temp;
+  CString temp2, useFrameDir;
   CArray<FrameAliParams, FrameAliParams> *faParams =
     mCamera->GetFrameAliParams();
   FrameAliParams param;
@@ -1913,9 +1915,10 @@ int CFalconHelper::WriteAlignComFile(CString inputFile, CString comName, int faP
   }
 
   // If input is an mdoc file, copy it to frame location and strip path from name
+  useFrameDir = AdjustedFramePathForPosTS(mLastFrameDir, comName);
   if (ifMdoc) {
     UtilSplitPath(inputFile, temp, temp2);
-    temp = mLastFrameDir + '\\' + temp2;
+    temp = useFrameDir + '\\' + temp2;
     if (!CopyFile((LPCTSTR)inputFile, (LPCTSTR)temp, false))
       return -1;
     inputFile = temp2;
@@ -1923,9 +1926,9 @@ int CFalconHelper::WriteAlignComFile(CString inputFile, CString comName, int faP
 
   // get the relative path and make sure it is OK
   UtilSplitPath(comName, aliHead, temp);
-  SEMTrace('E', "com %s  alihead %s  lastframe %s", (LPCTSTR)comName, (LPCTSTR)aliHead,
-    (LPCTSTR)mLastFrameDir);
-  if (UtilRelativePath(aliHead, mLastFrameDir, relPath))
+  SEMTrace('E', "com %s  alihead %s  useframe %s", (LPCTSTR)comName, (LPCTSTR)aliHead,
+    (LPCTSTR)useFrameDir);
+  if (UtilRelativePath(aliHead, useFrameDir, relPath))
     return MAKECOM_NO_REL_PATH;
 
   // Set input file with the relative path and the right option
@@ -1955,6 +1958,42 @@ int CFalconHelper::WriteAlignComFile(CString inputFile, CString comName, int faP
     error = WRITE_COM_ERROR;
   return error;
 }
+
+// If the com file path specifies one position of a parallel TS, and frame path has a
+// position also, transfer the com path to the frame path, which is generally based on
+// the last position written to
+CString CFalconHelper::AdjustedFramePathForPosTS(CString framePath, CString comPath)
+{
+  int frameInd, frameEnd, comInd, comEnd;
+  if (mWinApp->mTSController->GetParTSNavItem() &&
+    mWinApp->mTSController->GetNumMdocFiles() > 1 && mCamera->GetComPathIsFramePath()) {
+    FindParTSPosInName(framePath, frameInd, frameEnd);
+    FindParTSPosInName(comPath, comInd, comEnd);
+    if (comInd > 0 && frameInd > 0) {
+      if (frameEnd < framePath.GetLength() - 1)
+        framePath = framePath.Left(frameInd) + comPath.Mid(comInd, comEnd + 1 - comInd) +
+        framePath.Mid(frameEnd + 1);
+      else
+        framePath = framePath.Left(frameInd) + comPath.Mid(comInd, comEnd + 1 - comInd);
+    }
+  }
+  return framePath;
+}
+
+// Find the start and end of _Pos## in the name
+void CFalconHelper::FindParTSPosInName(CString &name, int &start, int &end)
+{
+  int ind;
+  start = end = 0;
+  while ((ind = name.Find("_Pos", start)) >= 0)
+    start = ind + 1;
+  if (start < 1)
+    return;
+  end = start + 3;
+  while (end < name.GetLength() && name.GetAt(end) >= '0' && name.GetAt(end) <= '9')
+    end++;
+}
+
 
 // Return the size that frames will be saved for the given camera and parameters
 // For K2/K3, acquiredSize should be true to get the size in the plugin instead of the
