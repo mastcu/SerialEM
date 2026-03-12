@@ -74,6 +74,9 @@ public:
   SetMember(int, NextMSUseNavItem);
   GetSetMember(float, MSminTiltToCompensate);
   GetMember(bool, DoingPrevPrescan);
+  SetMember(int, ParTSOverwriteSec);
+  GetMember(int, MSNumSepFiles);
+  GetMember(int, MSFirstSepFile);
 
 private:
   CSerialEMApp * mWinApp;
@@ -84,6 +87,7 @@ private:
   CShiftManager *mShiftManager;
   CFocusManager *mFocusManager;
   CNavHelper *mNavHelper;
+  CTSController *mTSController;
   ControlSet *mRecConSet;
   int mMSNumPeripheral;           // Number of shots around the center, total
   int mMSNumInRing[2];            // Number in each ring
@@ -144,6 +148,12 @@ private:
   bool mMSDoStartMacro;            // Runtime flag to do it.
   bool mMSRunningMacro;            // Flag that it is started
   float mMSminTiltToCompensate;    // Minimum tilt above which it will compensate focus
+  EMimageBuffer *mParTSRefImBufs;  // Pointer to ref buffer array in TSController
+  ParTargetDataArray *mParTSTargetData;
+  bool mMSForParallelTS;           // Flag that shots are taken for parallel TS
+  bool mParTSTuningInCtfpDone;     // Flag that tuning can be skipped after it worked once
+  int mParTSFirstImageInBuf;       // Buffer that first image is in
+  int mParTSOverwriteSec;          // Section # to overwrite, -1 not to
 
   DriftWaitParams mWDDfltParams;   // Resident parameters
   DriftWaitParams mWDParm;         // Run-time parameters
@@ -241,7 +251,12 @@ public:
     BOOL saveRec, int ifEarlyReturn, int earlyRetFrames, BOOL adjustBT, int inHoleOrMulti);
   int StartMultiShot(MultiShotParams *msParams, CameraParameters *camParams, int testValue);
   void SetUpMultiShotShift(int shotIndex, int holeIndex, BOOL queueIt);
+  void GetBTandAstigAdjustment(double delISX, double delISY, double &delBTX, double &delBTY,
+    double &delAstigX, double &delAstigY, BOOL queueIt, BOOL debug);
   int StartOneShotOfMulti(void);
+  int StoreNumForCurrentShot();
+  int ProcessParallelTSImage(CString &errStr);
+  int GetCtfOfParallelTSImage(float defocus, float astig, float score, float fitRes, CString &errStr);
   void MultiShotNextTask(int param);
   void StopMultiShot(void);
   void MultiShotCleanup(int error);
@@ -258,8 +273,9 @@ public:
   bool ItemIsEmptyMultishot(CMapDrawItem *item);
   int MultiShotBusy(void);
   bool CurrentHoleAndPosition(CString &strCurPos);
+  void FormatParallelTSSuffix(int numHoles, int index, CString &strCurPos);
   float GetPeripheralRotation(int camera, int magInd, double tiltAngle);
-  int OpenSeparateMultiFiles(CString &basename);
+  int OpenSeparateMultiFiles(CString &basename, bool forParTS);
   void CloseSeparateMultiFiles();
   int WaitForDrift(DriftWaitParams &param, bool useImageInA,
     float requiredMean = 0., float changeLimit = 0.);

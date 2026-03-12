@@ -356,6 +356,7 @@ CTSController::CTSController()
   mTSParam.doEarlyReturn = false;
   mTSParam.earlyReturnNumFrames = 1;
   mTSParam.tiltDelay = -1.;
+  mTSParam.tsFlags = 0;
   mTSParam.initialized = false;
   mReorderDoseSymFile = true;
   mPostponed = false;
@@ -449,11 +450,16 @@ CTSController::CTSController()
   mTrackAfterScopeStopTime = 5;
   mFocusAfterScopeStopTime = 120;
   mWaitAfterScopeFilling = -1;
+  mParTSRefImBufs[0] = NULL;
+  mParTSRefImBufs[1] = NULL;
+  mParTSNavItem = NULL;
+  mEndCtlMdocPath = NULL;
   mTiltIndex = -1;
   mSetupOpenedStamp = GetTickCount();
   FillActOrder(actions, sizeof(actions) / sizeof(int));
   ClearActionFlags();
   mRunningMacro = false;
+  mNumMdocFiles = 0;
 }
 
 CTSController::~CTSController()
@@ -552,15 +558,19 @@ BOOL CTSController::CanBackUp()
 /////////////////////////////////////////////////////////////////////////////
 // THE MAIN SETUP AND STARTING DIALOG
 
-// Open the dialog, return 1 for error, -1 for cancel
+/*
+ * Open the dialog, return 1 for error, -1 for cancel
+ */
 int CTSController::SetupTiltSeries(int future, int futureLDstate, int ldMagIndex,
-  int navOverrideFlags)
+  int navOverrideFlags, float preTilt)
 {
   CTSSetupDialog tsDialog;
   float fangle, fangl2;
   double angle;
+  float startPreTiltMargin = 20.;
   int iDir, i, index, lowest, curDir;
   BOOL montaging, lowNewer, highNewer, reversal = false;
+  bool forParTS = (navOverrideFlags & NAV_OVERRIDE_PARALLEL_TS) != 0.;
   CString message;
   int *panelStates = mWinApp->GetTssPanelStates();
   mLowDoseMode = mWinApp->LowDoseMode();
@@ -589,6 +599,7 @@ int CTSController::SetupTiltSeries(int future, int futureLDstate, int ldMagIndex
   tsDialog.mPanelOpen[NUM_TSS_PANELS - 1] = 1;
   angle = future ? 0. : mScope->GetTiltAngle();
   tsDialog.mNavOverrideFlags = navOverrideFlags;
+  tsDialog.mParTSPreTilt = preTilt;
 
   // First time in (since last tilt series), set the camera and mags; try to set
   // the angles intelligently;
@@ -611,17 +622,27 @@ int CTSController::SetupTiltSeries(int future, int futureLDstate, int ldMagIndex
     mTSParam.limitToCurrent = false;
 
     // Try to use current angle or old starting angle
-    if (fabs(angle) > mStartAngleCrit1) {
+    if (fabs(angle) > mStartAngleCrit1 && !forParTS) {
       fangle = (float)(0.01 * floor(100. * angle + 0.5));
       mTSParam.startingTilt = fangle;
       mTSParam.endingTilt = -fangle;
     } else {
       iDir = 1;
-      if (angle < -mStartAngleCrit2 && mTSParam.lastStartingTilt > 0. ||
-        angle > mStartAngleCrit2 && mTSParam.lastStartingTilt < 0.)
+      if (!forParTS && (angle < -mStartAngleCrit2 && mTSParam.lastStartingTilt > 0. ||
+        angle > mStartAngleCrit2 && mTSParam.lastStartingTilt < 0.))
         iDir = -1;
       mTSParam.startingTilt = iDir * mTSParam.lastStartingTilt;
       mTSParam.endingTilt = -iDir * mTSParam.lastStartingTilt;
+      if (forParTS) {
+        if (mTSParam.startingTilt >= 0)
+          ACCUM_MAX(mTSParam.startingTilt, preTilt + startPreTiltMargin);
+        else
+          ACCUM_MIN(mTSParam.endingTilt, preTilt - startPreTiltMargin);
+        if (mTSParam.startingTilt > preTilt)
+          ACCUM_MIN(mTSParam.endingTilt, preTilt - startPreTiltMargin);
+        else
+          ACCUM_MAX(mTSParam.endingTilt, preTilt + startPreTiltMargin);
+      }
     }
   }
   mSTEMindex = camParam[mActiveCameraList[mTSParam.cameraIndex]].STEMcamera ?
@@ -796,15 +817,18 @@ int CTSController::SetupTiltSeries(int future, int futureLDstate, int ldMagIndex
     ResizeDosymVectors(mNumDoseSymTilts + 10);
   }
 
-  StartTiltSeries(tsDialog.mSingleStep, 0);
+  StartTiltSeries(tsDialog.mSingleStep, 0, NULL);
   return 0;
 }
 
-int CTSController::StartTiltSeries(BOOL singleStep, int external)
+/*
+ * Start the tilt series or restart it
+ */
+int CTSController::StartTiltSeries(BOOL singleStep, int external, CMapDrawItem *navItem)
 {
   float ratio, derate;
   double curAngle, curIntensity, sumAngle;
-  int error, spot, iDir, probe, numTilts, cenMag, imSize, newBaseZ, i, alpha;
+  int error, spot, iDir, probe, numTilts, cenMag, imSize, newBaseZ, i, alpha, consInd;
   int magToSet = 0;
   CString message, str, bidirStr;
   MontParam *montP = mWinApp->GetMontParam();
@@ -868,11 +892,11 @@ int CTSController::StartTiltSeries(BOOL singleStep, int external)
 
   // Check for binning change and issue warning and offer to abort
   // Need to operate on the camera-specific conset and copy to master consets
-  i = RECORD_CONSET + mWinApp->GetCurrentCamera() * MAX_CONSETS;
-  if (mCamConSets[i].binning != mTSParam.binning) {
-    ratio = (float)mCamConSets[i].binning / mTSParam.binning;
-    mCamConSets[i].exposure *= ratio * ratio;
-    mCamConSets[i].binning = mTSParam.binning;
+  consInd = RECORD_CONSET + mWinApp->GetCurrentCamera() * MAX_CONSETS;
+  if (mCamConSets[consInd].binning != mTSParam.binning) {
+    ratio = (float)mCamConSets[consInd].binning / mTSParam.binning;
+    mCamConSets[consInd].exposure *= ratio * ratio;
+    mCamConSets[consInd].binning = mTSParam.binning;
     mWinApp->CopyConSets(mWinApp->GetCurrentCamera());
     message = "You have changed the binning of the " + mModeNames[RECORD_CONSET] +
       " parameter set.\nThe exposure time has been changed to compensate,\n"
@@ -893,7 +917,7 @@ int CTSController::StartTiltSeries(BOOL singleStep, int external)
   }
 
   // Check for whether frame saving folder is defined: this is fatal even in batch
-  if (mCamera->IsConSetSaving(&mCamConSets[i], RECORD_CONSET, mCamParams, false)) {
+  if (mCamera->IsConSetSaving(&mCamConSets[consInd], RECORD_CONSET, mCamParams, false)) {
     str = mCamera->GetCameraFrameFolder(mCamParams, noSubDirs, movable);
     if (str.IsEmpty()) {
       AfxMessageBox("No folder is defined for saving frames from the selected camera",
@@ -1046,7 +1070,7 @@ int CTSController::StartTiltSeries(BOOL singleStep, int external)
     // Set the current output file, then test the output files and set the protections
     mNumRollingBuf = DFLT_ROLLING_BUFFERS;
     mCurrentStore = mDocWnd->GetCurrentStore();
-    EvaluateExtraRecord();
+    EvaluateExtraRecord(navItem && navItem->mParallelTSIndex >= 0);
     if (CheckExtraFiles()) {
       mPostponed = !mAlreadyTerminated;
       return 1;
@@ -1115,6 +1139,13 @@ int CTSController::StartTiltSeries(BOOL singleStep, int external)
     mTiltIndex = 0;
     SetFileZ();
 
+    if (navItem && navItem->mParallelTSIndex >= 0 && ParallelTSSetup(navItem, str)) {
+      SEMMessageBox(str);
+      CleanUpFromParallelTS();
+      mPostponed = !mAlreadyTerminated;
+      return 1;
+    }
+
     // Doing frame alignment in IMOD, turn off the frame alignment now and set flag
     if (mCamera->IsConSetSaving(&mConSets[RECORD_CONSET], RECORD_CONSET, mCamParams,
       false) && mConSets[RECORD_CONSET].alignFrames &&
@@ -1130,9 +1161,8 @@ int CTSController::StartTiltSeries(BOOL singleStep, int external)
        mSavedSaveFrames = mConSets[RECORD_CONSET].saveFrames;
        mConSets[RECORD_CONSET].alignFrames = 0;
        mConSets[RECORD_CONSET].saveFrames = 1;
-       i = RECORD_CONSET + mWinApp->GetCurrentCamera() * MAX_CONSETS;
-       mCamConSets[i].alignFrames = 0;
-       mCamConSets[i].saveFrames = 1;
+       mCamConSets[consInd].alignFrames = 0;
+       mCamConSets[consInd].saveFrames = 1;
     }
 
     // Put out starting message.  Navigator took care of the log file change
@@ -1434,7 +1464,7 @@ int CTSController::CommonResume(int inSingle, int external, bool stoppingPart)
   }
 
   // Check the extra files and reset the protections, and reset current output file
-  EvaluateExtraRecord();
+  EvaluateExtraRecord(mParTSNavItem != NULL);
   if (CheckExtraFiles()) {
     mPostponed = !mAlreadyTerminated;
     return 1;
@@ -1739,7 +1769,7 @@ void CTSController::NextAction(int param)
   }
 
   // Check errors if param >= 0
-  bwIndex = mLowDoseMode && mImBufs->mImage ?
+  bwIndex = (mLowDoseMode && mImBufs->mImage) ?
     mCamera->ConSetToLDArea(mImBufs->mConSetUsed) : 0;
 
   // If an error or stop came in during one of the initialization steps, just quit
@@ -2562,7 +2592,7 @@ void CTSController::NextAction(int param)
 
         // Set up for early return and set deferred sum if all conditions fit
         if (mTSParam.doEarlyReturn && mCamParams->K2Type && !mMontaging &&
-          !mNumExtraRecords) {
+          !mNumExtraRecords && !mParTSNavItem) {
             cset = &mConSets[RECORD_CONSET];
             if (cset->doseFrac && ((cset->alignFrames && cset->useFrameAlign == 1) ||
               cset->saveFrames) && B3DNINT(cset->exposure / cset->frameTime) >
@@ -2582,7 +2612,7 @@ void CTSController::NextAction(int param)
           !((mNeedLowMagTrack && !mUsableLowMagRef) || mRoughLowMagRef) &&
           !(mLowDoseMode && !mHaveTrackRef) && !mTSParam.manualTracking &&
           !mNeedTiltAfterMove && mTiltIndex - mLastStartedIndex > 2 &&
-          mTiltIndex - mLastRedoIndex > 1 && !mNumExtraRecords &&
+          mTiltIndex - mLastRedoIndex > 1 && !mNumExtraRecords && !mParTSNavItem &&
           !TimeToTakeDoseSymAnchor(mTiltIndex)) {
             TiltWithDoseSymBacklash(smi, mNextTilt, true);
             delay = mShiftManager->GetAdjustedTiltDelay(fabs(mNextTilt - mCurrentTilt));
@@ -2594,11 +2624,17 @@ void CTSController::NextAction(int param)
             if (mBidirSeriesPhase == DOSYM_ALTERNATING_PART)
               mDosymIndexTiltedTo = mTiltIndex + 1;
         }
-        mCamera->SetMaxChannelsToGet(mTSParam.extraRecordType == TS_OTHER_CHANNELS ?
-          mNumRollingBuf : 1);
-        if (mEarlyK2RecordReturn && !mTSParam.doEarlyReturn)
+        mCamera->SetMaxChannelsToGet((mTSParam.extraRecordType == TS_OTHER_CHANNELS && 
+          !mParTSNavItem) ? mNumRollingBuf : 1);
+        if (mEarlyK2RecordReturn && !mTSParam.doEarlyReturn && !mParTSNavItem)
           mCamera->SetFullSumAsyncIfOK(RECORD_CONSET);
-        mCamera->InitiateCapture(RECORD_CONSET);
+        if (mParTSNavItem) {
+          mWinApp->mParticleTasks->SetParTSOverwriteSec(mOverwriteSec);
+          mWinApp->mParticleTasks->StartMultiShot(0, 0, 0., 0, 0., 0., true, 0, 0,
+            mWinApp->mNavHelper->GetParTSOptions()->adjustBeamTilt, 0);
+        } else {
+          mCamera->InitiateCapture(RECORD_CONSET);
+        }
         mAcquiringImage = true;
       }
       mWinApp->AddIdleTask(TASK_TILT_SERIES, 0, 0);
@@ -2622,7 +2658,10 @@ void CTSController::NextAction(int param)
 
       // Update the BW mean value and copy to align buffer
       mProcessImage->UpdateBWCriterion(mImBufs, mBWMeanPerSec[bwIndex], derate);
-      if (!mMontaging) {
+      if (mParTSNavItem) {
+        ProcessParTSDataFromMultishot();
+
+      } else if (!mMontaging) {
         if (mOverwriteSec < 0)
           error = mBufferManager->SaveImageBuffer(mWinApp->mStoreMRC);
         else
@@ -3284,7 +3323,8 @@ void CTSController::NextAction(int param)
       // Adjust the mean counts per sec unless beam shutter has problem, it's
       // not a Record, and it's a global setting.  But still derate it a lot because
       // there could be a big change in intensity here
-      if (bwIndex || !mBeamShutterJitters || mImBufs->mConSetUsed == RECORD_CONSET)
+      if (mImBufs->mImage && (bwIndex || !mBeamShutterJitters || 
+        mImBufs->mConSetUsed == RECORD_CONSET))
         mProcessImage->UpdateBWCriterion(mImBufs, mBWMeanPerSec[bwIndex],
         0.3f * derate);
 
@@ -3963,7 +4003,7 @@ int CTSController::ImposeVariations(double angle)
   }
 
   // Change defocus target and defocus if change is big enough
-  if (mTypeVaries[TS_VARY_FOCUS]) {
+  if (mTypeVaries[TS_VARY_FOCUS] && !mParTSNavItem) {
     oldTarget = mFocusManager->GetTargetDefocus();
     if (fabs((double)oldTarget - setValues[TS_VARY_FOCUS]) > 5.e-4) {
       if (mTypeVaries[TS_VARY_FOCUS] > 0)
@@ -4217,32 +4257,24 @@ BOOL CTSController::UsableLowMagRef(double angle)
 BOOL CTSController::AutoAlignAndTest(int bufNum, int smallPad, char *shotName,
                                      bool scaling)
 {
-  int nx, ny;
-  float shiftX, shiftY;
   double pctShift;
+  int err;
+  float scaleMax;
   CString message;
 
   if (mSkipBeamShiftOnAlign)
     mScope->SetSkipNextBeamShift(true);
 
   if (scaling)
-    nx = mMultiTSTasks->AlignWithScaling(bufNum, true, shiftX);
+    err = mMultiTSTasks->AlignWithScaling(bufNum, true, scaleMax);
   else
-    nx = mShiftManager->AutoAlign(bufNum, smallPad);
+    err = mShiftManager->AutoAlign(bufNum, smallPad);
   mScope->SetSkipNextBeamShift(false);
-  if (nx) {
+  if (err) {
     ErrorStop();
     return true;
   }
-  if (!mTSParam.stopOnBigAlignShift)
-    return false;
-
-  mImBufs->mImage->getSize(nx, ny);
-  mImBufs->mImage->getShifts(shiftX, shiftY);
-  shiftX /= nx;
-  shiftY /= ny;
-  pctShift = 100. * sqrt((double)(shiftX * shiftX + shiftY * shiftY));
-  if (pctShift < mTSParam.maxAlignShift)
+  if (!AlignShiftAboveLimit(pctShift))
     return false;
 
   // Stop first to record stop time, in case it is a long time before user sees this
@@ -4256,6 +4288,22 @@ BOOL CTSController::AutoAlignAndTest(int bufNum, int smallPad, char *shotName,
     pctShift, mTSParam.maxAlignShift);
   TSMessageBox(message);
   return true;
+}
+
+// Test for whether the shift in the image is above the limit, return % of field shift
+bool CTSController::AlignShiftAboveLimit(double & pctShift)
+{
+  int nx, ny;
+  float shiftX, shiftY;
+  if (!mTSParam.stopOnBigAlignShift)
+    return false;
+
+  mImBufs->mImage->getSize(nx, ny);
+  mImBufs->mImage->getShifts(shiftX, shiftY);
+  shiftX /= nx;
+  shiftY /= ny;
+  pctShift = 100. * sqrt((double)(shiftX * shiftX + shiftY * shiftY));
+  return pctShift >= mTSParam.maxAlignShift;
 }
 
 // Center beam if flag set, require fitted radius to be 90% of half-diagonal
@@ -4426,7 +4474,8 @@ int CTSController::TiltSeriesBusy()
   if (mInvertingFile)
     return (mMultiTSTasks->DoingBidirCopy() ? 1 : 0);
   if (mAcquiringImage || mGettingDeferredSum)
-    return mCamera->TaskCameraBusy();
+    return (((mParTSNavItem && mWinApp->mParticleTasks->DoingMultiShot()) ||
+      mCamera->TaskCameraBusy()) ? 1 : 0);
   if (mWalkingUp || mReversingTilt || mFindingEucentricity || mResettingShift ||
     (mTilting && mDidTiltAfterMove))
     return (mComplexTasks->DoingTasks() ? 1 : 0);
@@ -4600,23 +4649,33 @@ int CTSController::EndControl(BOOL terminating, BOOL startReorder)
   int iCam = mActiveCameraList[mTSParam.cameraIndex];
   ControlSet *csets = mCamConSets + MAX_CONSETS * iCam;
   CString report, str, xyzName;
+  KImageStore *storeMRC;
   float pixelSize;
   int sizeX, sizeY, mbSaved, filmMag, i, error;
+  int firstFile = mWinApp->mDocWnd->GetCurrentStore();
   CTime ctdt = CTime::GetCurrentTime();
   bool saveFailed = mBufferManager->GetSaveAsynchronously() &&
     mBufferManager->GetBufferAsyncFailed();
   bool lastNavItem = mWinApp->mNavigator && mWinApp->mNavigator->GetAcquiring() &&
     !mWinApp->mNavigator->FindNextAcquireItem(i);
   if (!mTerminationStarted)
-    mEndCtlMdocPath = "";
+    DELETE_ARR(mEndCtlMdocPath);
   if (terminating)
     mTerminationStarted = true;
   if (!mClosedDoseSymFile && mWinApp->mStoreMRC) {
-    mEndCtlFilePath = mWinApp->mStoreMRC->getFilePath();
+    mNumMdocFiles = 1;
     mEndCtlWidth = mWinApp->mStoreMRC->getWidth();
     mEndCtlHeight = mWinApp->mStoreMRC->getHeight();
-    if (mWinApp->mStoreMRC->GetAdocIndex() >= 0)
-      mEndCtlMdocPath = mWinApp->mStoreMRC->getAdocName();
+    if (mParTSNavItem) {
+      mNumMdocFiles = mWinApp->mParticleTasks->GetMSNumSepFiles();
+      firstFile = mWinApp->mParticleTasks->GetMSFirstSepFile();
+    }
+    mEndCtlMdocPath = new CString[mNumMdocFiles];
+    for (i = 0; i < mNumMdocFiles; i++) {
+      storeMRC = mWinApp->mDocWnd->GetStoreMRC(i + firstFile);
+      if (storeMRC->GetAdocIndex() >= 0)
+        mEndCtlMdocPath[i] = storeMRC->getAdocName();
+    }
     mDocWnd->SetCurrentStore(mCurrentStore);
     mDocWnd->EndStoreProtection();
   }
@@ -4732,7 +4791,7 @@ int CTSController::EndControl(BOOL terminating, BOOL startReorder)
     for (int i = mTrackStackBuf; i < mNumTrackStack + mTrackStackBuf; i++)
       mWinApp->mBufferWindow.ProtectBuffer(i, false);
 
-  if (mTSParam.doVariations && mTypeVaries[TS_VARY_FOCUS]) {
+  if (mTSParam.doVariations && mTypeVaries[TS_VARY_FOCUS] && !mParTSNavItem) {
     //mWinApp->AppendToLog("Resetting target");
     mFocusManager->SetTargetDefocus(mSaveTargetDefocus);
   }
@@ -4800,10 +4859,17 @@ int CTSController::EndControl(BOOL terminating, BOOL startReorder)
 
   // And if any of those got restored, copy the consets
   if (mChangeRecExp || mChangeRecDrift || mChangeAllDrift || mVaryFrameTime ||
-    mAnyContinuous || mFrameAlignInIMOD)
+    mAnyContinuous || mFrameAlignInIMOD) {
     mWinApp->CopyConSets(iCam);
-  if (mFrameAlignInIMOD && mTiltIndex)
-    mCamera->MakeMdocFrameAlignCom(mEndCtlMdocPath);
+  }
+  if (mFrameAlignInIMOD && mTiltIndex) {
+    for (i = 0; i < mNumMdocFiles; i++)
+      if (!mEndCtlMdocPath[i].IsEmpty())
+        mCamera->MakeMdocFrameAlignCom(mEndCtlMdocPath[i]);
+  }
+  CleanUpFromParallelTS();
+  DELETE_ARR(mEndCtlMdocPath);
+  mNumMdocFiles = 0;
   mFrameAlignInIMOD = false;
   mWinApp->mCameraMacroTools.DoingTiltSeries(mExternalControl && mPostponed);
   mExternalControl = 0;
@@ -5887,7 +5953,7 @@ void CTSController::SetExtraOutput(TiltSeriesParam *tsParam)
 
   // Renew the protections with the potentially new file numbers
   if (mStartedTS) {
-    EvaluateExtraRecord();
+    EvaluateExtraRecord(mParTSNavItem != NULL);
     SetProtections();
   }
 }
@@ -5920,11 +5986,17 @@ int CTSController::LookupProtectedFiles()
 // Set the output file protections for main and extra outputs
 void CTSController::SetProtections()
 {
-  int numFiles, file;
-  mDocWnd->EndStoreProtection();
+  int numFiles, file, i;
+  int firstMS = mWinApp->mParticleTasks->GetMSFirstSepFile();
+  int numMS = mWinApp->mParticleTasks->GetMSNumSepFiles();
+
+  // Clear out existing protections except for multishot files
+  for (i = 0; i < mDocWnd->GetNumStores(); i++)
+    if (!numMS || i < firstMS || i >= firstMS + numMS)
+      mDocWnd->EndStoreProtection(i);
   mDocWnd->ProtectStore(mCurrentStore);
   mProtectedStore = mCurrentStore;
-  for (int i = 0; i < MAX_EXTRA_SAVES; i++) {
+  for (i = 0; i < MAX_EXTRA_SAVES; i++) {
     if (mStoreExtra[i]) {
       numFiles = 1;
       if (i == RECORD_CONSET && mSeparateExtraRecFiles)
@@ -6135,13 +6207,14 @@ void CTSController::ManageZafterNewExtraRec(void)
 }
 
 // Determine whether extra records will be taken and set number
-void CTSController::EvaluateExtraRecord()
+void CTSController::EvaluateExtraRecord(bool doingParTS)
 {
   CString str = "";
-  int ind, numex, numAvail, chan;
   int maxChan = mStartedTS ? mNumRollingBuf : MAX_TS_SIMULTANEOUS_CHAN;
 
   mNumExtraRecords = 0;
+  if (doingParTS)
+    return;
   mNumSimultaneousChans = 1;
   switch (mTSParam.extraRecordType) {
     case NO_TS_EXTRA_RECORD:
@@ -6181,28 +6254,15 @@ void CTSController::EvaluateExtraRecord()
         }
         break;
       }
-      if (mCamParams->FEItype)
-        mScope->GetFEIChannelList(mCamParams, true);
-      mCamera->CountSimultaneousChannels(mCamParams, mSimultaneousChans,
-        maxChan, mNumSimultaneousChans, numAvail);
+      mNumExtraRecords = CountExtraRecChannels(&mTSParam, maxChan, mSimultaneousChans,
+        mNumSimultaneousChans);
       if (!mNumSimultaneousChans) {
         str = "The tilt series will fail because the " + mModeNames[RECORD_CONSET] +
           " parameter set\r\ndoes not specify an available STEM detector";
         break;
       }
-      mNumExtraRecords = mNumSimultaneousChans - 1;
       mNumRollingBuf = B3DMAX(mNumRollingBuf, mNumSimultaneousChans);
 
-      // For each channel in the extra list not in the simultaneous channels and
-      // not duplicated later in the list, increment the record count
-      numex = mTSParam.numExtraChannels;
-      for (ind = 0; ind < numex; ind++) {
-        chan = mTSParam.extraChannels[ind];
-        if (!numberInList(chan, mSimultaneousChans, mNumSimultaneousChans, 0) &&
-          (ind == numex - 1 ||
-          !numberInList(chan, &mTSParam.extraChannels[ind+1], numex - ind - 1, 0)))
-            mNumExtraRecords++;
-      }
       if (!mNumExtraRecords && !mWarnedNoExtraChannels) {
         str = "No extra " + mModeNames[RECORD_CONSET] + "s will be saved "
           "because no other available detectors are specified";
@@ -6217,6 +6277,33 @@ void CTSController::EvaluateExtraRecord()
     else
       mWinApp->AppendToLog(str, LOG_OPEN_IF_CLOSED);
   }
+}
+
+// Get the count of extra Record STEM channels in given parameters
+int CTSController::CountExtraRecChannels(TiltSeriesParam *tsParam, int maxChan,
+  int *simultaneousChans, int &numSimultaneous)
+{
+  int numAvail, numex, chan, numExtraRecords, ind;
+  CameraParameters *camParams = mWinApp->GetActiveCamParam();
+  if (camParams->FEItype)
+    mScope->GetFEIChannelList(camParams, true);
+  mCamera->CountSimultaneousChannels(camParams, simultaneousChans,
+    maxChan, numSimultaneous, numAvail);
+  if (!numSimultaneous)
+    return 0;
+  numExtraRecords = numSimultaneous - 1;
+
+  // For each channel in the extra list not in the simultaneous channels and
+  // not duplicated later in the list, increment the record count
+  numex = tsParam->numExtraChannels;
+  for (ind = 0; ind < numex; ind++) {
+    chan = tsParam->extraChannels[ind];
+    if (!numberInList(chan, simultaneousChans, numSimultaneous, 0) &&
+      (ind == numex - 1 ||
+        !numberInList(chan, &(tsParam->extraChannels[ind + 1]), numex - ind - 1, 0)))
+      numExtraRecords++;
+  }
+  return numExtraRecords;
 }
 
 // Set up the state for the current extra record shot, saving existing state if needed
@@ -6991,6 +7078,8 @@ void CTSController::ComputePredictions(double angle)
     message += "  Need autofocus";
   if (!message.IsEmpty())
     mWinApp->VerboseAppendToLog(mVerbose, message);
+  if (mParTSNavItem && mTiltIndex > 0)
+    PredictParallelTSLocations(angle);
 }
 
 void CTSController::BestPredFit(float *x1fit, float *x2fit, float *yfit, int &nFit,
@@ -7269,6 +7358,766 @@ int CTSController::ManageDoseSymmetricOnTilt()
   }
   return 0;
 }
+
+
+/////////////////////////////////////////////////////////////////////////////
+// PARALLEL TILT SERIES ROUTINES
+
+/*
+ * Handle all of the initial setup for parallel tilt series
+ */
+int CTSController::ParallelTSSetup(CMapDrawItem *item, CString &errStr)
+{
+  int xsize, ysize, ind, comm, size, err, dir, curStore, readBuf, toBuf;
+  float useWidth, useHeight, reduction, specX, specY, zZero, sinMapAlf, sinBidAlf;
+  float delMapAng, delBidAng, yZero, pixel;
+  double ISX, ISY;
+  CString str;
+  BOOL loadSave;
+  KImageStore *store;
+  CMapDrawItem *mapItem;
+  ParTSTargetData targetData;
+  MontParam *montp;
+  MultiShotParams *msParams = mWinApp->mNavHelper->GetMultiShotParams();
+  int numTargets = item->mNumIStargets;
+  int acqMagInd = mTSParam.magIndex[mSTEMindex];
+  mParTSLoadedFocus.resize(numTargets);
+  mParTSLoadedSpecX.resize(numTargets);
+  mParTSLoadedSpecY.resize(numTargets);
+  memset(&targetData, 0, sizeof(ParTSTargetData));
+  targetData.score = -1.;
+
+  mParTSParams = mWinApp->mNavigator->GetParallelTSArray()->GetAt(
+    item->mParallelTSIndex);
+  if (numTargets < 2) {
+    errStr = "Navigator item for parallel tilt series must have more than one target";
+    return 1;
+  }
+  if (fabs(item->mIStargetsXY[0]) > 1.e-3 || fabs(item->mIStargetsXY[1]) > 1.e-3) {
+    errStr = "First target image shift for parallel tilt series is not 0,0";
+    return 1;
+  }
+
+  xsize = (mConSets[RECORD_CONSET].right - mConSets[RECORD_CONSET].left) /
+    mTSParam.binning;
+  ysize = (mConSets[RECORD_CONSET].bottom - mConSets[RECORD_CONSET].top) /
+    mTSParam.binning;
+  mShiftManager->FindAutoAlignBinnings(ysize, xsize, mTSParam.binning, ysize,
+    xsize, mTSParam.binning, false, mParTSRefBinning, ind, comm, size, errStr);
+
+  pixel = mShiftManager->GetPixelSize(mWinApp->GetCurrentCamera(),
+    acqMagInd) * (float)mTSParam.binning;
+  mFOVofRecord = pixel * (float)(xsize + ysize) / 2.f;
+
+  readBuf = mBufferManager->GetBufToReadInto();
+  toBuf = readBuf > 1 ? readBuf - 1 : readBuf + 1;
+
+  // Check validity of map sections and access the file
+  if (mParTSParams->prevSectNums.size()) {
+    if ((int)mParTSParams->prevSectNums.size() < numTargets) {
+      errStr.Format("Fewer preview section numbers (%d) than targets (%d) in Navigator"
+        " item", mParTSParams->prevSectNums.size(), numTargets);
+      return 1;
+    }
+    mapItem = mWinApp->mNavigator->FindItemWithMapID(mParTSParams->firstPrevMapID);
+    if (!mapItem) {
+      errStr.Format("Cannot find map with Navigator ID %d", mParTSParams->firstPrevMapID);
+      return 1;
+    }
+    err = mWinApp->mNavigator->AccessMapFile(mapItem, store, curStore, montp, useWidth,
+      useHeight);
+    if (err) {
+      errStr.Format("Error # %d trying to reopen target map file %s", err,
+        (LPCTSTR)mapItem->mMapFile);
+      return 1;
+    }
+  } else if (mParTSParams->xCoordInArea.size() >= 0) {
+
+    // Or check validity of area coordinates and load that
+    if ((int)mParTSParams->xCoordInArea.size() < numTargets ||
+      (int)mParTSParams->yCoordInArea.size() < numTargets) {
+      errStr.Format("Fewer image coordinates (%d, %d) than targets (%d) in Navigator"
+        " item", mParTSParams->xCoordInArea.size(), mParTSParams->yCoordInArea.size(),
+        numTargets);
+      return 1;
+    }
+
+    mapItem = mWinApp->mNavigator->FindItemWithMapID(item->mDrawnOnMapID);
+    if (!mapItem) {
+      errStr = "Cannot find map with Navigator item was drawn on";
+      return 1;
+    }
+    loadSave = mWinApp->mNavHelper->GetLoadMapsUnbinned();
+    mWinApp->mNavHelper->SetLoadMapsUnbinned(true);
+    err = mWinApp->mNavigator->DoLoadMap(true, mapItem, readBuf, false);
+    mWinApp->mNavHelper->SetLoadMapsUnbinned(loadSave);
+    if (err) {
+      errStr = "Error loading area map for extracting references";
+      return 1;
+    }
+  }
+
+  for (ind = 0; ind < 2; ind++) {
+    mParTSRefImBufs[ind] = new EMimageBuffer[numTargets - 1];
+    mParTSLastKnownX[ind].resize(numTargets);
+    mParTSLastKnownY[ind].resize(numTargets);
+    mParTSAngleOfKnown[ind].resize(numTargets);
+    mParTSDelZatZero[ind].resize(numTargets);
+    mParTSCurTiltOffset[ind] = mParTSParams->preTilt;
+  }
+  mParTSNavItem = item->Duplicate();
+  
+  err = 0;
+
+  if (mParTSParams->prevSectNums.size()) {
+    reduction = (float)(mTSParam.binning * mParTSRefBinning) / (float)mapItem->mMapBinning;
+    for (ind = numTargets - 1; ind >= 0; ind--) {
+      err = mBufferManager->ReadFromFile(store, mParTSParams->prevSectNums[ind], -1, false,
+        true, &str);
+      if (err) {
+        errStr.Format("Error reading section %d from target map file:\r\n%s",
+          mParTSParams->prevSectNums[ind], (LPCTSTR)str);
+        break;
+      }
+
+      // Leave first image in read buf
+      if (!ind)
+        break;
+      if (reduction > 1.) {
+
+        // Reduce into an adjacent buffer and copy into stack, or just copy there directly
+        err = mProcessImage->ReduceImage(&mImBufs[readBuf], reduction, &str, toBuf,
+          false);
+        if (err) {
+          errStr.Format("Error reducing section %d from target map file:\r\n%s",
+            mParTSParams->prevSectNums[ind], (LPCTSTR)str);
+          break;
+        }
+        mBufferManager->CopyImBuf(&mImBufs[toBuf], &mParTSRefImBufs[0][ind - 1], false);
+        mBufferManager->CopyImBuf(&mImBufs[toBuf], &mParTSRefImBufs[1][ind - 1], false);
+      } else {
+        mBufferManager->CopyImBuf(&mImBufs[readBuf], &mParTSRefImBufs[0][ind - 1], false);
+        mBufferManager->CopyImBuf(&mImBufs[readBuf], &mParTSRefImBufs[1][ind - 1], false);
+      }
+    }
+
+    if (curStore < 0)
+      delete store;
+  } else if (mParTSParams->xCoordInArea.size() >= 0) {
+
+    // Or transform to the needed mag and total binning and matching size
+    xsize /= mParTSRefBinning;
+    ysize /= mParTSRefBinning;
+    for (ind = numTargets - 1; ind >= 0; ind--) {
+      err = mWinApp->mProcessImage->TransformToOtherMag(&mImBufs[readBuf], toBuf,
+        acqMagInd, errStr, mWinApp->GetCurrentCamera(),
+        mTSParam.binning * mParTSRefBinning, mParTSParams->xCoordInArea[ind],
+        mParTSParams->yCoordInArea[ind], xsize, ysize);
+      if (err)
+        break;
+      mImBufs[toBuf].mCaptured = BUFFER_PROC_OK_FOR_MAP;
+      mBufferManager->CopyImBuf(&mImBufs[toBuf], &mParTSRefImBufs[0][ind - 1], false);
+      mBufferManager->CopyImBuf(&mImBufs[toBuf], &mParTSRefImBufs[1][ind - 1], false);
+    }
+  }
+  if (err)
+    return 1;
+
+  mParTSExpectedDefocus = mTSParam.targetDefocus;
+    
+  // Transform the image shift to specimen, change Y values to get it to the pretilt,
+  // and transform back;
+  mCmat = mShiftManager->IStoSpecimen(acqMagInd);
+  mCinv = mShiftManager->MatInv(mCmat);
+  delBidAng = DTORFL * (mTSParam.bidirAngle - mParTSCurTiltOffset[0]);
+  delMapAng = DTORFL * (mParTSParams->mappingTilt - mParTSCurTiltOffset[0]);
+  sinMapAlf = sinf(delMapAng);
+  sinBidAlf = sinf(delBidAng);
+  for (ind = 0; ind < numTargets; ind++) {
+
+    // But first get the IS values to the acquire mag
+    ISX = item->mIStargetsXY[ind * 2];
+    ISY = item->mIStargetsXY[ind * 2 + 1];
+    if (item->mMagOfIStargets != acqMagInd)
+      mShiftManager->TransferGeneralIS(item->mMagOfIStargets, item->mIStargetsXY[ind * 2],
+        item->mIStargetsXY[ind * 2 + 1], acqMagInd, ISX, ISY);
+
+    // Then get specimen coords for applying equations
+    ApplyScaleMatrix(mCmat, ISX, ISY, specX, specY);
+    zZero = specX * tanf(DTORFL * mParTSParams->xPitchAngle);
+    yZero = (specY + zZero * sinMapAlf) / cosf(delMapAng);
+    specY = yZero * cosf(delBidAng) - zZero * sinBidAlf;
+    ApplyScaleMatrix(mCmat, specX, specY, 
+      mParTSNavItem->mIStargetsXY[ind * 2], mParTSNavItem->mIStargetsXY[ind * 2 + 1]);
+
+    // Compute delta Z at starting angle, save X/Y values used to load IS values, 
+    // record X and Y as known at the starting angle and save starting zZero
+    mParTSLoadedFocus[ind] = yZero * sinBidAlf + zZero * cosf(delBidAng);
+    mParTSLoadedSpecX[ind] = specX;
+    mParTSLoadedSpecY[ind] = specY;
+    for (dir = 0; dir < 2; dir++) {
+      mParTSLastKnownX[dir][ind] = specX;
+      mParTSLastKnownY[dir][ind] = specY;
+      mParTSAngleOfKnown[dir][ind] = mTSParam.bidirAngle;
+      mParTSDelZatZero[dir][ind] = zZero;
+    }
+    mParTSTargetData.Add(targetData);
+  }
+  mParTSNavItem->mMagOfIStargets = acqMagInd;
+  msParams->customDefocus = mParTSLoadedFocus;
+  for (ind = 0; ind < (int) mParTargetDataArrays.GetSize(); ind++)
+    delete mParTargetDataArrays[ind];
+  mParTargetDataArrays.RemoveAll();
+
+  return 0;
+}
+
+/* 
+ * Determine best values for the parameters underlying shifts and focus values, if 
+ * possible, and computes IS and defocus values for the next tilt
+ */
+void CTSController::PredictParallelTSLocations(double angle)
+{
+  float brackets[14], initialStep, curOffset;
+  int err, numScanSteps, numCutsDone;
+  int ind, pos, numFound = 0, idir = mDirection > 0 ? 1 : 0;
+  float delNewAng, delLastAng, yZero, specY, zZero, meanErr;
+  int numTargets = mParTSNavItem->mNumIStargets;
+  MultiShotParams *msParams = mWinApp->mNavHelper->GetMultiShotParams();
+  std::vector<FloatVec> yOnly, yWithZ, zVec, angleYonly, angleWithZ;
+  FloatVec xFound, yFound, angRangeYonly;
+  IntVec dropping, posIndex;
+  double errSum, grandSum = 0.;
+  bool reversingDosym = mBidirSeriesPhase == DOSYM_ALTERNATING_PART;
+  ParTargetDataArray *targData;
+  ParTSTargetData data;
+  int minDataForOffset = 30;
+  float fitRange = 20.;
+  float absElimMin = 0.01f;
+  float fovFactor = 0.01f;
+  float elimMin = B3DMAX(mFOVofRecord * fovFactor, absElimMin);
+  int minForYonly = 4, minForYwithZ = 3;
+  float minAngRangeYonlyRefine = 14.9f;
+  float minAngRangeReviseZzero = 11.9f;
+  yOnly.resize(numTargets);
+  yWithZ.resize(numTargets);
+  zVec.resize(numTargets);
+  angleYonly.resize(numTargets);
+  angleWithZ.resize(numTargets);
+  angRangeYonly.resize(numTargets);
+
+  // Load data for prior tilts for each position
+  CLEAR_RESIZE(dropping, int, numTargets);
+  for (pos = 1; pos < numTargets; pos++) {
+    for (ind = mTiltIndex - 1; ind >= 0; ind--) {
+      if (reversingDosym && mDirection != mDosymDirections[ind]) {
+        if (mDosymFitPastReversals)
+          continue;
+        else
+          break;
+      }
+      if (fabs(angle - mTiltAngles[ind]) > fitRange)
+        break;
+      targData = mParTargetDataArrays[ind];
+      data = targData->GetAt(pos);
+      if (data.shiftX < EXTRA_VALUE_TEST)
+        continue;
+      yOnly[pos].push_back(data.shiftY);
+      angleYonly[pos].push_back(mTiltAngles[ind]);
+      if (data.score > 0.) {
+        zVec[pos].push_back(data.defocusByCTF);
+        yWithZ[pos].push_back(data.shiftY);
+        angleWithZ[pos].push_back(mTiltAngles[ind]);
+      }
+    }
+    if (yOnly[pos].size() > 0)
+      angRangeYonly[pos] = VECTOR_MAX(angleYonly[pos]) - VECTOR_MIN(angleYonly[pos]);
+
+    // Do initial fits to Y only data
+
+    if ((int)yOnly[pos].size() >= minForYonly) {
+      posIndex.push_back(pos);
+      FitParallelTSYonly(angleYonly[pos], yOnly[pos], mParTSCurTiltOffset[idir], yZero,
+        zZero, errSum, meanErr);
+      xFound.push_back(meanErr);
+    }
+  }
+
+  // Get outliers among Y-only data and mark any dropped ones
+  if (xFound.size() > 2) {
+    FindOutliersInResultList(xFound, elimMin, 1, yFound);
+    for (ind = 0; ind < (int)xFound.size(); ind++)
+      if (yFound[ind] > 0.)
+        dropping[posIndex[ind]] = 2;
+  }
+
+  // Now do fits with Y and Z
+  posIndex.clear();
+  xFound.clear();
+  for (pos = 1; pos < numTargets; pos++) {
+    if (!dropping[pos] && (int)zVec[pos].size() > minForYwithZ) {
+      posIndex.push_back(pos);
+      FitParallelTSYwithZ(angleWithZ[pos], yWithZ[pos], zVec[pos], 
+        mParTSCurTiltOffset[idir], yZero, zZero, errSum, meanErr);
+      xFound.push_back(meanErr);
+    }
+  }
+
+  // Get outliers among Y & Z data and mark any dropped ones with just a 1
+  if (xFound.size() > 2) {
+    FindOutliersInResultList(xFound, elimMin, 1, yFound);
+    for (ind = 0; ind < (int)xFound.size(); ind++)
+      if (yFound[ind] > 0.)
+        dropping[posIndex[ind]] = 1;
+  }
+
+  // Count how much data are available for refining tilt offset
+  numFound = 0;
+  for (pos = 1; pos < numTargets; pos++) {
+    if (!dropping[pos] && (int)zVec[pos].size() > minForYwithZ)
+      numFound += (int)zVec[pos].size() * 2;
+    else if (dropping[pos] <= 1 && angRangeYonly[pos] >= minAngRangeYonlyRefine)
+      numFound += (int)yOnly[pos].size();
+  }
+
+  if (numFound >= minDataForOffset) {
+    numScanSteps = 10;  // Want to make this 20 on first fit...
+    initialStep = 1.;
+    curOffset = mParTSCurTiltOffset[idir] - initialStep * (float)numScanSteps / 2.f;
+    numCutsDone = -1;
+    for (;;) {
+
+      // Add up all the errors from all the fits
+      grandSum = 0.;
+      for (pos = 1; pos < numTargets; pos++) {
+        if (dropping[pos] > 1)
+          continue;
+        if (!dropping[pos] && (int)zVec[pos].size() > minForYwithZ)
+          FitParallelTSYwithZ(angleWithZ[pos], yWithZ[pos], zVec[pos], curOffset, yZero,
+            zZero, errSum, meanErr);
+        else if (angRangeYonly[pos] >= minAngRangeYonlyRefine)
+          FitParallelTSYonly(angleYonly[pos], yOnly[pos], curOffset, yZero, zZero,
+            errSum, meanErr);
+        grandSum += errSum;
+      }
+      err = minimize1D(curOffset, (float)errSum, initialStep, numScanSteps, &numCutsDone,
+        brackets, &curOffset);
+      if (err)
+        break;
+      if (numCutsDone > 0 && initialStep / pow((double)numCutsDone, 2.) < 0.02)
+        break;
+    }
+
+    if (!err)
+      mParTSCurTiltOffset[idir] = curOffset;
+  }
+
+  // Revise the last known X/Y from good shifts that are not dropped from Y only fits
+  targData = mParTargetDataArrays[mTiltIndex - 1];
+  for (pos = 1; pos < numTargets; pos++) {
+    data = targData->GetAt(pos);
+    if (dropping[pos] < 2 && data.shiftX > EXTRA_VALUE_TEST) {
+      mParTSLastKnownX[idir][pos] = data.shiftX;
+      mParTSLastKnownY[idir][pos] = data.shiftY;
+      mParTSAngleOfKnown[idir][pos] = mTiltAngles[mTiltIndex - 1];
+    }
+  }
+
+  // Now revise zZero with possibly new offset
+  for (pos = 1; pos < numTargets; pos++) {
+    if (dropping[pos] > 1)
+      continue;
+    if (!dropping[pos] && (int)zVec[pos].size() > minForYwithZ) {
+      FitParallelTSYwithZ(angleWithZ[pos], yWithZ[pos], zVec[pos],
+        mParTSCurTiltOffset[idir], yZero, zZero, errSum, meanErr);
+      mParTSDelZatZero[idir][pos] = zZero;
+    } else if (angRangeYonly[pos] >= minAngRangeReviseZzero) {
+      FitParallelTSYonly(angleYonly[pos], yOnly[pos], mParTSCurTiltOffset[idir], yZero,
+        zZero, errSum, meanErr);
+      mParTSDelZatZero[idir][pos] = zZero;
+    }
+  }
+
+  // Set up image shift and focus from last known X/Y values for each point and the
+  // original or refined zZero
+  delNewAng = DTORFL * ((float)angle - mParTSCurTiltOffset[idir]);
+  for (ind = 0; ind < numTargets; ind++) {
+    delLastAng = DTORFL * (mParTSAngleOfKnown[idir][ind] - mParTSCurTiltOffset[idir]);
+    yZero = (mParTSLastKnownY[idir][ind] + mParTSDelZatZero[idir][ind]) * 
+      cosf(delLastAng);
+    specY = yZero * cosf(delNewAng) - mParTSDelZatZero[idir][ind] * sinf(delNewAng);
+    ApplyScaleMatrix(mCmat, mParTSLastKnownX[idir][ind], specY,
+      mParTSNavItem->mIStargetsXY[ind * 2], mParTSNavItem->mIStargetsXY[ind * 2 + 1]);
+    mParTSLoadedFocus[ind] = yZero * sinf(delNewAng) + mParTSDelZatZero[idir][ind] *
+      cosf(delNewAng);
+    mParTSLoadedSpecX[ind] = mParTSLastKnownX[idir][ind];
+    mParTSLoadedSpecY[ind] = specY;
+  }
+  msParams->customDefocus = mParTSLoadedFocus;
+
+}
+
+/*
+ * Examines the data from the last multishot alignments and CTF fits and finds outliers,
+ * eliminating them from fursther consideration, before adding the array of data for
+ * this tilt to the array for all tilts
+ */
+void CTSController::ProcessParTSDataFromMultishot()
+{
+  int ind, pos, numFound = 0, maxDrop;
+  int numTargets = mParTSNavItem->mNumIStargets;
+  float critProb = 0.01f;
+  float absProbCrit = 0.002f;
+  float absElimMin = 0.01f;
+  float fovFactor = 0.01f;
+  float elimMin = B3DMAX(mFOVofRecord * fovFactor, absElimMin);
+  FloatVec xFound, xLoaded, yFound, yLoaded, outDef, outScore, outResol, outAstig;
+  IntVec posIndex, dropping;
+  ParTargetDataArray *dataArray = new ParTargetDataArray();
+
+  // Compute the full specimen shift
+  for (ind = 0; ind < mParTSNavItem->mNumIStargets; ind++) {
+    mParTSTargetData[ind].shiftX += mParTSLoadedSpecX[ind];
+    mParTSTargetData[ind].shiftY += mParTSLoadedSpecY[ind];
+  }
+
+  // Load the data for points with alignment values into arrays for fitting 
+  // found versus predicted
+  for (pos = 1; pos < numTargets; pos++) {
+    if (mParTSTargetData[pos].shiftX > EXTRA_VALUE_TEST) {
+      posIndex.push_back(pos);
+      xFound.push_back(mParTSTargetData[pos].shiftX);
+      yFound.push_back(mParTSTargetData[pos].shiftY);
+      xLoaded.push_back(mParTSLoadedSpecX[pos]);
+      yLoaded.push_back(mParTSLoadedSpecY[pos]);
+      numFound++;
+    }
+  }
+  if (numFound > 2) {
+
+    // Do these fits to find outliers and drop them
+    dropping.resize(numFound);
+    maxDrop = B3DMAX(1, (numFound - 1) / 3);
+    IdentifyParTSOutliers(&xLoaded[0], &yLoaded[0], &xFound[0], &yFound[0], &dropping[0],
+      numFound, maxDrop, (numFound == 3 ? 2.f : 1.f) *elimMin, critProb, absProbCrit);
+
+    // Throw away the shifts for the outliers
+    for (ind = 0; ind < numFound; ind++)
+      if (dropping[ind])
+        mParTSTargetData[posIndex[ind]].shiftX = EXTRA_NO_VALUE;
+  }
+
+  // Now look at CTF fitting results and load them
+  numFound = 0;
+  if (mWinApp->mNavHelper->GetParTSOptions()->CtfMeasureType > 0) {
+    posIndex.clear();
+    xFound.clear();
+    yFound.clear();
+    xLoaded.clear();
+    yLoaded.clear();
+    for (pos = 1; pos < numTargets; pos++) {
+      if (mParTSTargetData[pos].score > 0.) {
+        posIndex.push_back(pos);
+        xFound.push_back(mParTSTargetData[pos].defocusByCTF);
+        yFound.push_back(mParTSTargetData[pos].astig);
+        xLoaded.push_back(mParTSTargetData[pos].score);
+        yLoaded.push_back(mParTSTargetData[pos].fitRes);
+        numFound++;
+      }
+    }
+  }
+  if (numFound > 2) {
+
+    // Get outliers for each CTF result value
+    outAstig.resize(numTargets);
+    outResol.resize(numTargets);
+    outScore.resize(numTargets);
+    outAstig.resize(numTargets);
+    FindOutliersInResultList(xFound, 0.f, 0, outDef);
+    FindOutliersInResultList(yFound, 0.2f, 1, outAstig);
+    FindOutliersInResultList(xLoaded, 0.f, -1, outScore);
+    FindOutliersInResultList(yLoaded, 5.f, 1, outResol);
+
+    // Eliminate if defocus is out or two of the other 3 measures are
+    for (ind = 0; ind < numFound; ind++)
+      if (outDef[ind] || outAstig[ind] + outResol[ind] - outScore[ind] > 1.5)
+        mParTSTargetData[posIndex[ind]].score = -1.;
+  }
+
+  // Add the data to the tilt series arrays
+  dataArray->Append(mParTSTargetData);
+  if (mParTargetDataArrays.GetSize() <= mTiltIndex)
+    mParTargetDataArrays.Add(dataArray);
+  else
+    mParTargetDataArrays.SetAt(mTiltIndex - 1, dataArray);
+}
+
+/*
+ * Attempts to find outliers among the shifts between expected and actual position for
+ * the various targets; derived from findXfWithoutOutliers from tiltxcorr.cpp in IMOD,
+ * it tries dropping successively more points to find a consistent point where dropped
+ * points are statistically out of range compared to the rest
+ */
+void CTSController::IdentifyParTSOutliers(float *xload, float *yload, float *xfound,
+  float *yfound, int *dropping, int numFit, int maxDrop, float elimMin, float critProb,
+  float absProbCrit)
+{
+  FloatVec devs, xftmp, yftmp, xltmp, yltmp;
+  IntVec devInds, topInds, tmpInds;
+  float slope, devAvg, devSd, maxErr;
+  float dev, probPerPoint, absPerPoint, z, prob, gprob;
+  float sigmaFromMean, sigmaFromSD, sigma;
+  int indMax, from;
+  int totalDrop = 0, numDrop = 0, ind, jdrop, numKeep;
+  int lastDrop = 0;
+
+  devs.resize(numFit);
+  FitYSlopeWithDropping(xload, yload, xfound, yfound, dropping, numFit, slope, &devs[0],
+    devAvg, devSd, maxErr, indMax);
+  if (maxErr < elimMin)
+    return;
+
+  // Sort the residuals from the full fit
+  for (ind = 0; ind < numFit; ind++)
+    devInds.push_back(ind);
+  rsSortIndexedFloats(&devs[0], &devInds[0], numFit);
+  probPerPoint = (float)pow(1. - critProb, 1. / numFit);
+  absPerPoint = (float)pow(1. - absProbCrit, 1. / numFit);
+
+  // Reload the data in that order
+  for (ind = 0; ind < numFit; ind++) {
+    from = devInds[ind];
+    xltmp.push_back(xload[from]);
+    yltmp.push_back(yload[from]);
+    xftmp.push_back(xfound[from]);
+    yftmp.push_back(yfound[from]);
+  }
+
+  for (jdrop = 1; jdrop <= maxDrop + 1; jdrop++) {
+    for (ind = 0; ind < numFit; ind++)
+      dropping[devInds[ind]] = (ind < numFit - jdrop) ? 0 : 1;
+    FitYSlopeWithDropping(&xltmp[0], &yltmp[0], &xftmp[0], &yftmp[0], dropping, numFit, 
+      slope, &devs[0], devAvg, devSd, maxErr, indMax);
+    sigmaFromMean = devAvg / sqrt(8.f / 3.14159f);
+    sigmaFromSD = devSd / sqrtf(3.f - 8.f / 3.14159f);
+    sigma = B3DMAX(sigmaFromMean, sigmaFromSD);
+    numKeep = 0;
+
+    // load the devs of the dropped ones and sort them
+    topInds.resize(jdrop);
+    for (ind = numFit - jdrop; ind < numFit; ind++) {
+      devs[ind - (numFit - jdrop)] = devs[ind];
+      topInds[ind - (numFit - jdrop)] = ind - (numFit - jdrop);
+    }
+    if (jdrop > 1)
+      rsSortIndexedFloats(&devs[0], &topInds[0], jdrop);
+
+    // Evaluate the deviation of each dropped one
+    for (ind = numFit - jdrop; ind < numFit; ind++) {
+      dev = devs[topInds[ind - (numFit - jdrop)] + (numFit - jdrop)];
+      if (sigma < 0.1 * dev || sigma < 1.e-5)
+        z = 10.;
+      else
+        z = dev / sigma;
+      gprob = (float)(1. - 0.5 * (1. - errFunc(z / 1.414214)));
+
+      prob = 2.f * (gprob - 0.5f) - sqrt(2.f / 3.14159f) * z * expf(-z * z / 2.f);
+      if (prob < probPerPoint) {
+        //PRINT4(dev, z, prob, "Inc nk");
+        numKeep = numKeep + 1;
+      }
+      if (prob >= absPerPoint) {
+        //PRINT4(dev, z, prob, "Set ND");
+        numDrop = B3DMIN(maxDrop, B3DMAX(numDrop, numFit - ind));
+      }
+    }
+
+    /*
+    * If all points are outliers, this is a candidate for a set to drop
+    * When only the first point is kept, and all the rest of the points
+    * were outliers on the previous round, then this is a safe place to
+    * draw the line between good data and outliers.  In this case, set
+    * numDrop; and at end take the biggest ndrop that fits these criteria
+    */
+    if (numKeep == 0)
+      lastDrop = jdrop;
+    if (numKeep == 1 && lastDrop == jdrop - 1 && lastDrop > 0)
+      numDrop = lastDrop;
+
+    // Maintain the indexes in the current order
+    tmpInds.resize(jdrop);
+    for (ind = 0; ind < jdrop; ind++) 
+      tmpInds[ind] = devInds[topInds[ind] + (numFit - jdrop)];
+    for (ind = numFit - jdrop; ind < numFit; ind++)
+      devInds[ind] = tmpInds[ind - (numFit - jdrop)];
+
+    // Reload the dropped ones in the right order
+    for (ind = numFit - jdrop; ind < numFit; ind++) {
+      from = devInds[ind];
+      xltmp[ind] = xload[from];
+      yltmp[ind] = yload[from];
+      xftmp[ind] = xfound[from];
+      yftmp[ind] = yfound[from];
+    }
+  }
+
+  // Mark the selected number as dropped
+  for (ind = 0; ind < numFit; ind++)
+    dropping[devInds[ind]] = (ind < numFit - numDrop) ? 0 : 1;
+}
+
+/*
+ * Finds the best least-squared fit for scaling between found and loaded Y values, 
+ * computes error between found X/Y and loaded positions with this scaling for all
+ * points, and returns the mean and sd error for non-dropped points
+ */
+void CTSController::FitYSlopeWithDropping(float *xload, float *yload, float *xfound, 
+  float *yfound, int *dropping, int numPos, float &slope, float *errors, float &mean, 
+  float &sd, float &maxErr, int &indMax)
+{
+  int ind, numFit = 0;
+  float xsqsum = 0., xysum = 0., delx, dely;
+  FloatVec errArr;
+  for (ind = 0; ind < numPos; ind++) {
+    if (!dropping[ind]) {
+      xsqsum += yload[ind] * yload[ind];
+      xysum += yfound[ind] * yload[ind];
+      numFit++;
+    }
+  }
+  slope = xysum / xsqsum;
+  maxErr = -1.;
+  for (ind = 0; ind < numPos; ind++) {
+    delx = xfound[ind] - xload[ind];
+    dely = yfound[ind] - slope * yload[ind];
+    errors[ind] = sqrtf(delx * delx + dely * dely);
+    if (!dropping[ind]) {
+      errArr.push_back(errors[ind]);
+      if (errors[ind] > maxErr) {
+        maxErr = errors[ind];
+        indMax = ind;
+      }
+    }
+  }
+  avgSD(&errArr[0], numFit, &mean, &sd, &delx);
+}
+
+/*
+ * Fit to data on Y positions only at one target point to derive yZero and zZero values
+ * and return summed and mean errors at teh specified pretilt
+ */
+void CTSController::FitParallelTSYonly(FloatVec &angles, FloatVec &yOnly, float preTilt,
+  float &yZero, float &zZero, double &errSum, float &meanErr)
+{
+  FloatVec x1, x2, yy;
+  int ind, numFit = (int)angles.size();
+  for (ind = 0; ind < numFit; ind++) {
+    x1.push_back(cosf(DTORFL * (angles[ind] - preTilt)));
+    x2.push_back(-sinf(DTORFL * (angles[ind] - preTilt)));
+    yy.push_back(yOnly[ind]);
+  }
+  lsFit2(&x1[0], &x2[0], &yy[0], numFit, &yZero, &zZero, NULL);
+  errSum = 0.;
+  for (ind = 0; ind < numFit; ind++)
+    errSum += powf(yZero * x1[ind] + zZero * x2[ind] - yy[ind], 2.f);
+  meanErr = (float)sqrt(errSum / numFit);
+}
+
+/*
+ * Fit to data on Y and Z at one target point to derive yZero and zZero values and
+ * return summed and mean errors at teh specified pretilt
+ */
+ void CTSController::FitParallelTSYwithZ(FloatVec &angles, FloatVec &yWithZ,
+  FloatVec &zVec, float preTilt, float &yZero, float &zZero, double &errSum, 
+  float &meanErr)
+{
+  FloatVec x1, x2, yy;
+  int ind, numFit = (int)angles.size();
+  float cosAng, sinAng;
+  for (ind = 0; ind < numFit; ind++) {
+    cosAng = cosf(DTORFL * (angles[ind] - preTilt));
+    sinAng = sinf(DTORFL * (angles[ind] - preTilt));
+    x1.push_back(cosAng);
+    x2.push_back(-sinAng);
+    yy.push_back(yWithZ[ind]);
+    x1.push_back(sinAng);
+    x2.push_back(cosAng);
+    yy.push_back(zVec[ind]);
+  }
+  lsFit2(&x1[0], &x2[0], &yy[0], numFit * 2, &yZero, &zZero, NULL);
+  errSum = 0.;
+  for (ind = 0; ind < numFit * 2; ind++)
+    errSum += powf(yZero * x1[ind] + zZero * x2[ind] - yy[ind], 2.f);
+  meanErr = (float)sqrt(errSum / (2 * numFit));
+}
+
+/*
+ * Identifies outliers in an arbitrary set of values either with a leave-one-out approach
+ * for < 5 items or using MAD median outlier routine
+ */
+void CTSController::FindOutliersInResultList(FloatVec &errors, float elimMin, 
+  int polarity, FloatVec &outliers)
+{
+  int minForRobust = 5;
+  float kcrit = 2.5f, semCrit = 2.f;
+  float avg, sd, sem, maxSem = -1., numSem;
+  int idrop, ind, itmp, maxDrop, numErr = (int)errors.size();
+  float temp[8];
+  
+  CLEAR_RESIZE(outliers, float, numErr);
+  if (elimMin != 0. && ((polarity > 0 && VECTOR_MAX(errors) < elimMin) || 
+    (polarity < 0 && VECTOR_MIN(errors) > elimMin)))
+    return;
+  if (numErr < minForRobust) {
+
+    // Try dropping each point, getting stats with the rest, and computing # of SEMs from
+    // the mean
+    for (idrop = 0; idrop < numErr; idrop++) {
+      itmp = 0;
+      for (ind = 0; ind < numErr; ind++)
+        if (ind != idrop)
+          temp[itmp++] = errors[ind];
+      avgSD(temp, numErr - 1, &avg, &sd, &sem);
+      numSem = (errors[idrop] - avg) / sem;
+      if ((polarity > 0 && numSem > maxSem) || (polarity < 0 && numSem < maxSem) ||
+      (!polarity && fabs(numSem) > fabs(maxSem))){
+        maxSem = numSem;
+        maxDrop = idrop;
+      }
+    }
+    
+    // If the worst one exceeds the crit, drop it
+    if (fabs(maxSem) > semCrit && (!polarity || 
+      BOOL_EQUIV(polarity > 0, maxSem > semCrit)))
+      outliers[maxDrop] = 1.;
+
+  } else {
+
+    // Robust is easy if it works
+    rsMadMedianOutliers(&errors[0], numErr, kcrit, &outliers[0]);
+    if (polarity) {
+      for (ind = 0;ind < numErr; ind++)
+        if (!BOOL_EQUIV(polarity > 0, outliers[ind] > 0))
+          outliers[ind] = 0.;
+    }
+  }
+}
+
+/*
+ * Remove allocated items and clean out arrays used for parallel TS
+ */
+void CTSController::CleanUpFromParallelTS()
+{
+  DELETE_ARR(mParTSRefImBufs[0]);
+  DELETE_ARR(mParTSRefImBufs[1]);
+  delete mParTSNavItem;
+  mParTSNavItem = NULL;
+  for (int ind = 0; ind < (int)mParTargetDataArrays.GetSize(); ind++)
+    delete mParTargetDataArrays[ind];
+  mParTargetDataArrays.RemoveAll();
+  mParTSTargetData.RemoveAll();
+}
+
 
 //////////////////////////////////////////////////////////////////////
 //  MORE VARIOUS HELPER FUNCTIONS

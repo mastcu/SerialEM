@@ -23,10 +23,13 @@
 #include "AutoTuning.h"
 #include "ShiftManager.h"
 #include "CameraController.h"
+#include "TSController.h"
 #include "EMmontageController.h"
 #include "ZbyGSetupDlg.h"
 #include "HoleFinderDlg.h"
 #include "MultiShotDlg.h"
+#include "Shared\ctffind.h"
+#include "ExternalTools.h"
 
 #if defined(_DEBUG) && defined(_CRTDBG_MAP_ALLOC)
 #define new DEBUG_NEW
@@ -86,6 +89,7 @@ CParticleTasks::CParticleTasks(void)
   mDVDoingDewarVac = false;
   mDVSetAutoVibOff = false;
   mDoingPrevPrescan = false;
+  mParTSOverwriteSec = -1;
 }
 
 
@@ -102,6 +106,7 @@ void CParticleTasks::Initialize(void)
   mShiftManager = mWinApp->mShiftManager;
   mFocusManager = mWinApp->mFocusManager;
   mNavHelper = mWinApp->mNavHelper;
+  mTSController = mWinApp->mTSController;
   mMSParams = mNavHelper->GetMultiShotParams();
   mZBGCalOffsetToUse = mFocusManager->GetDefocusOffset();
   mZBGCalBeamTiltToUse = mFocusManager->GetBeamTilt();
@@ -132,7 +137,7 @@ int CParticleTasks::StartMultiShot(int numPeripheral, int doCenter, float spokeR
   int testImage = inHoleOrMulti & MULTI_TEST_IMAGE;
   bool testComa = (inHoleOrMulti & MULTI_TEST_COMA) != 0;
   bool openingFiles = mMSNumSepFiles == 0;
-  bool doIStargets = false;
+  bool doIStargets = false, compensateTilt, customHoleFocus;
   ScaleMat dMat;
   mMSNumPeripheral = multiInHole ? (numPeripheral + numSecondRing) : 0;
   mMSNumInRing[0] = mMSNumPeripheral - numSecondRing;
@@ -146,15 +151,24 @@ int CParticleTasks::StartMultiShot(int numPeripheral, int doCenter, float spokeR
   mRecConSet = mWinApp->GetConSets() + RECORD_CONSET;
   mSavedAlignFlag = mRecConSet->alignFrames;
   mMSPosIndex.clear();
+  mParTSFirstImageInBuf = -1;
+
+  // Criteria for a valid parallel TS acquire
+  mParTSRefImBufs = mTSController->GetParTSRefImBufs(0);
+  mMSForParallelTS = (mParTSRefImBufs != NULL && mWinApp->DoingTiltSeries() && 
+    mTSController->GetParTSNavItem() != NULL) || (inHoleOrMulti & MULTI_PAR_TS_NAME);
 
   if (mNextMSParams) {
     mMSParams = mNextMSParams;
     mNextMSParams = NULL;
   }
 
+  // Get Navigator item from appropriate place
   if (!mMSsaveToMontage && mWinApp->mNavigator && (mNextMSUseNavItem >= 0 ||
-    mWinApp->mNavigator->GetAcquiring())) {
-    if (!mWinApp->mNavigator->GetAcquiring()) {
+    mWinApp->mNavigator->GetAcquiring() || mMSForParallelTS)) {
+    if (mMSForParallelTS && mParTSRefImBufs) {
+      item = mTSController->GetParTSNavItem();
+    } else if (!mWinApp->mNavigator->GetAcquiring()) {
       item = mWinApp->mNavigator->GetOtherNavItem(mNextMSUseNavItem);
       if (!item) {
         SEMMessageBox("Index of Navigator item specified for next multishot is out of "
@@ -180,6 +194,7 @@ int CParticleTasks::StartMultiShot(int numPeripheral, int doCenter, float spokeR
   }
   mNextMSUseNavItem = -1;
 
+  // Set some parameters based on flags in inHoleOrMulti
   mMSUseCustomHoles = mMSParams->useCustomHoles && !doIStargets;
   if (inHoleOrMulti & MULTI_FORCE_CUSTOM)
     mMSUseCustomHoles = true;
@@ -221,7 +236,7 @@ int CParticleTasks::StartMultiShot(int numPeripheral, int doCenter, float spokeR
     mMSSaveRecord = false;
     mMSDoCenter = -1;
   }
-  mMSSkipAstigBT = mWinApp->mNavHelper->GetSkipAstigAdjustment();
+  mMSSkipAstigBT = mNavHelper->GetSkipAstigAdjustment();
   mMSAdjustAstig = mMSAdjustBeamTilt && comaVsIS->astigMat.xpx != 0. &&
     mMSSkipAstigBT <= 0;
 
@@ -235,6 +250,20 @@ int CParticleTasks::StartMultiShot(int numPeripheral, int doCenter, float spokeR
         RESTORE_MSP_RETURN(1);
       }
       mMSDoStartMacro = true;
+    }
+  }
+
+  if (mMSForParallelTS && mParTSRefImBufs) {
+    mParTSTargetData = mTSController->GetParTSTargetData();
+    if (item->mNumIStargets > mParTSTargetData->GetSize()) {
+      SEMMessageBox("Program error: tilt series controller did not make data array for "
+        "parallel TS big enough");
+      RESTORE_MSP_RETURN(1);
+    }
+    if (mMSNumSepFiles <= 0) {
+      SEMMessageBox("Program error: No separate files opened for images for "
+        "parallel TS");
+      RESTORE_MSP_RETURN(1);
     }
   }
 
@@ -297,9 +326,31 @@ int CParticleTasks::StartMultiShot(int numPeripheral, int doCenter, float spokeR
     mScope->GotoLowDoseArea(RECORD_CONSET);
   mMagIndex = mScope->GetMagIndex();
 
-  // Set up to adjust for defocus if angle is high enough
+  // Set up to adjust for defocus if angle is high enough - parallel TS will handle it
   angle = mScope->GetTiltAngle();
-  if (fabs(angle) < mMSminTiltToCompensate && !mMSsaveToMontage) {
+  compensateTilt = (fabs(angle) >= mMSminTiltToCompensate || mMSsaveToMontage) && 
+    !mMSForParallelTS;
+  customHoleFocus = multiHoles && mMSUseCustomHoles && mMSParams->customHoleX.size() > 0
+    && mMSParams->customDefocus.size();
+
+  // Need image shift matrix for compensating or doing parallel TS
+  if (compensateTilt || mMSForParallelTS) {
+    mIStoSpec = mShiftManager->IStoSpecimen(mMagIndex);
+    if (!mIStoSpec.xpx) {
+      SEMMessageBox("No image shift to specimen matrix available at the\n"
+        "current magnification and one is needed " + 
+        CString(mMSForParallelTS ? "for parallel tilt series" : 
+          "to adjust defocus for tilt"));
+      RESTORE_MSP_RETURN(1);
+    }
+  }
+
+  // Need index starting at 0 if genuine custom defocus or for parallel TS
+  mMSDefocusIndex = -1;
+  if (customHoleFocus || (mMSForParallelTS && mMSParams->customDefocus.size()))
+    mMSDefocusIndex = 0;
+
+  if (!compensateTilt) {
     mMSDefocusTanFac = 0.;
   } else {
 
@@ -308,14 +359,12 @@ int CParticleTasks::StartMultiShot(int numPeripheral, int doCenter, float spokeR
     // here we need to impose that defocus for the given IS
     mMSDefocusTanFac = -(float)tan(DTOR * angle) * mShiftManager->GetDefocusZFactor() *
       (mShiftManager->GetStageInvertsZAxis() ? -1.f : 1.f);
-    mIStoSpec = mShiftManager->IStoSpecimen(mMagIndex);
-    if (!mIStoSpec.xpx) {
-      SEMMessageBox("No image shift to specimen matrix available at the\n"
-        "current magnification and one is needed to adjust defocus for tilt");
-      RESTORE_MSP_RETURN(1);
-    }
-    mMSBaseDefocus = mScope->GetDefocus();
   }
+
+  // Need a base focus in these cases: compensateTilt, mMSForParallelTS, customHoleFocus
+  // But here, reproduce the test applied when it is used or reset
+  if (mMSDefocusTanFac || mMSDefocusIndex >= 0)
+    mMSBaseDefocus = mScope->GetDefocus();
 
   mMSHoleIndex = 0;
   mMSHoleISX.clear();
@@ -456,21 +505,13 @@ int CParticleTasks::StartMultiShot(int numPeripheral, int doCenter, float spokeR
   mMSLastShotIndex = mMSNumPeripheral + (mMSDoCenter > 0 ? 0 : -1);
   mWinApp->UpdateBufferWindows();
 
-  mMSDefocusIndex = -1;
-  if (multiHoles && mMSUseCustomHoles && mMSParams->customHoleX.size() > 0 &&
-    mMSParams->customDefocus.size()) {
-    if (!mMSDefocusTanFac)
-      mMSBaseDefocus = mScope->GetDefocus();
-    mMSDefocusIndex = 0;
-  }
-
   // Need to shift to the first position if doing holes or if center is not being done
   // first
   if (mMSUseHoleDelay || mMSDoCenter >= 0)
     SetUpMultiShotShift(mMSCurIndex, mMSHoleIndex, false);
 
   // Queue the next position if post-actions and there IS a next position
-  if (mActPostExposure && GetNextShotAndHole(nextShot, nextHole))
+  if (mActPostExposure && GetNextShotAndHole(nextShot, nextHole) && !mMSForParallelTS)
     SetUpMultiShotShift(nextShot, nextHole, true);
 
   // Save stage position of the last hole
@@ -513,9 +554,9 @@ int CParticleTasks::StartMultiShot(MultiShotParams *msParams, CameraParameters *
  */
 void CParticleTasks::MultiShotNextTask(int param)
 {
-  int nextShot, nextHole, err, protectNum, storeNum;
-  int numInHole = mMSNumPeripheral + (mMSDoCenter ? 1 : 0);
+  int nextShot, nextHole, err, storeNum;
   KImageStore *storeMRC;
+  CString errStr;
   if (mMSCurIndex < -1)
     return;
 
@@ -526,20 +567,23 @@ void CParticleTasks::MultiShotNextTask(int param)
     if (mMSsaveToMontage) {
       err = mWinApp->mMontageController->SavePiece();
     } else if (mMSNumSepFiles > 0) {
-      protectNum = mMSFirstSepFile + mMSHoleIndex * numInHole +
-        mMSCurIndex + (mMSDoCenter < 0 ? 1 : 0);
-      storeNum = mWinApp->mDocWnd->LookupProtectedStore(protectNum);
+      storeNum = StoreNumForCurrentShot();
       storeMRC = mWinApp->mDocWnd->GetStoreMRC(storeNum);
       if (!storeMRC) {
         StopMultiShot();
         return;
       }
-      err = mWinApp->mBufferManager->SaveImageBuffer(storeMRC);
+      err = mWinApp->mBufferManager->SaveImageBuffer(storeMRC, false, mParTSOverwriteSec);
     } else {
       err = mWinApp->mBufferManager->SaveImageBuffer(mWinApp->mStoreMRC);
     }
     if (err) {
       StopMultiShot();
+      return;
+    }
+    if (ProcessParallelTSImage(errStr)) {
+      StopMultiShot();
+      SEMMessageBox("Error processing multishot image for parallel TS:\n" + errStr);
       return;
     }
   }
@@ -556,11 +600,11 @@ void CParticleTasks::MultiShotNextTask(int param)
 
   // Do or queue image shift as needed and take shot
   // For post-action queuing, get the hole and shot index of next position
+  if (!mActPostExposure || (mMSForParallelTS && mMSHoleIndex == 1))
+    SetUpMultiShotShift(mMSCurIndex, mMSHoleIndex, false);
   if (mActPostExposure) {
     if (GetNextShotAndHole(nextShot, nextHole))
       SetUpMultiShotShift(nextShot, nextHole, true);
-  } else {
-    SetUpMultiShotShift(mMSCurIndex, mMSHoleIndex, false);
   }
   StartOneShotOfMulti();
 }
@@ -604,17 +648,21 @@ void CParticleTasks::StopMultiShot(void)
     if (mMSDefocusTanFac || mMSDefocusIndex >= 0)
       mScope->SetDefocus(mMSBaseDefocus);
   }
+  if (mParTSFirstImageInBuf > 0)
+    mWinApp->mBufferManager->CopyImageBuffer(mParTSFirstImageInBuf, 0);
 
   // Montage does a second restore after it is no longer "Doing", so just set this
   mWinApp->mMontageController->SetBaseISXY(mBaseISX, mBaseISY);
   mRecConSet->alignFrames = mSavedAlignFlag;
   mMSCurIndex = -2;
   mMSTestRun = 0;
+  mMSParams->customDefocus.clear();
   mMSRunningMacro = false;
   mMSParams = mNavHelper->GetMultiShotParams();
   mWinApp->UpdateBufferWindows();
   mWinApp->SetStatusText(MEDIUM_PANE, "");
   mMSsaveToMontage = false;
+  mParTSOverwriteSec = -1;
 }
 
 /*
@@ -623,14 +671,13 @@ void CParticleTasks::StopMultiShot(void)
 void CParticleTasks::SetUpMultiShotShift(int shotIndex, int holeIndex, BOOL queueIt)
 {
   double ISX, ISY, delBTX, delBTY, delISX = 0, delISY = 0, angle;
-  double transISX, transISY, delAstigX = 0., delAstigY = 0.;
+  double delAstigX = 0., delAstigY = 0.;
   float delay, delFocus = 0.;
   int ring = 0, indBase = 0;
   CString str, str2;
   BOOL debug = GetDebugOutput('1');
   bool doBacklash = mScope->GetAdjustForISSkipBacklash() <= 0;
   int BTdelay;
-  ComaVsISCalib *comaVsIS = mWinApp->mAutoTuning->GetComaVsIScal();
 
   // Compute IS from center for a peripheral shot: rotate (rad,0) by the angle
   if (shotIndex < mMSNumPeripheral && shotIndex >= 0) {
@@ -670,34 +717,16 @@ void CParticleTasks::SetUpMultiShotShift(int shotIndex, int holeIndex, BOOL queu
 
   delay = mShiftManager->ComputeISDelay(ISX - mLastISX, ISY - mLastISY);
   if (mMSUseHoleDelay)
-    delay *= mMSParams->holeDelayFactor;
+    delay *= (mMSForParallelTS ? mNavHelper->GetParTSOptions()->extraDelayFactor :
+      mMSParams->holeDelayFactor);
   if (mMSExtraDelay > 0.)
     delay += mMSExtraDelay;
   mMSUseHoleDelay = false;
 
   if (mMSAdjustBeamTilt) {
     BTdelay = mWinApp->mAutoTuning->GetBacklashDelay();
-    mShiftManager->TransferGeneralIS(mMagIndex, delISX, delISY, comaVsIS->magInd,
-      transISX, transISY);
-    if (mMSSkipAstigBT >= 0) {
-      delBTX = comaVsIS->matrix.xpx * transISX + comaVsIS->matrix.xpy * transISY;
-      delBTY = comaVsIS->matrix.ypx * transISX + comaVsIS->matrix.ypy * transISY;
-    } else {
-      delBTX = delBTY = 0.;
-    }
-    if (debug)
-      str.Format("%s incremental IS  %.3f %.3f   BT  %.3f  %.3f",
-        queueIt ? "Queuing" : "Setting", delISX, delISY, delBTX, delBTY);
-    if (mMSAdjustAstig) {
-      delAstigX = comaVsIS->astigMat.xpx * transISX + comaVsIS->astigMat.xpy * transISY;
-      delAstigY = comaVsIS->astigMat.ypx * transISX + comaVsIS->astigMat.ypy * transISY;
-      if (debug) {
-        str2.Format("   Astig  %.3f  %.3f", delAstigX, delAstigY);
-        str += str2;
-      }
-    }
-    if (debug)
-      mWinApp->AppendToLog(str);
+    GetBTandAstigAdjustment(delISX, delISY, delBTX, delBTY, delAstigX, delAstigY,
+      queueIt, debug);
   }
 
   // Queue it or do it
@@ -726,6 +755,36 @@ void CParticleTasks::SetUpMultiShotShift(int shotIndex, int holeIndex, BOOL queu
 
   mLastISX = ISX;
   mLastISY = ISY;
+}
+
+// For the given image shift, compute beam tilt and astigmatism adjustments
+void CParticleTasks::GetBTandAstigAdjustment(double delISX, double delISY, double &delBTX, 
+  double &delBTY, double &delAstigX, double &delAstigY, BOOL queueIt, BOOL debug)
+{
+  ComaVsISCalib *comaVsIS = mWinApp->mAutoTuning->GetComaVsIScal();
+  double transISX, transISY;
+  CString str, str2;
+  mShiftManager->TransferGeneralIS(mMagIndex, delISX, delISY, comaVsIS->magInd,
+    transISX, transISY);
+  if (mMSSkipAstigBT >= 0) {
+    delBTX = comaVsIS->matrix.xpx * transISX + comaVsIS->matrix.xpy * transISY;
+    delBTY = comaVsIS->matrix.ypx * transISX + comaVsIS->matrix.ypy * transISY;
+  } else {
+    delBTX = delBTY = 0.;
+  }
+  if (debug)
+    str.Format("%s incremental IS  %.3f %.3f   BT  %.3f  %.3f",
+      queueIt ? "Queuing" : "Setting", delISX, delISY, delBTX, delBTY);
+  if (mMSAdjustAstig) {
+    delAstigX = comaVsIS->astigMat.xpx * transISX + comaVsIS->astigMat.xpy * transISY;
+    delAstigY = comaVsIS->astigMat.ypx * transISX + comaVsIS->astigMat.ypy * transISY;
+    if (debug) {
+      str2.Format("   Astig  %.3f  %.3f", delAstigX, delAstigY);
+      str += str2;
+    }
+  }
+  if (debug)
+    mWinApp->AppendToLog(str);
 }
 
 // Given current hole and shot index, this will give the next one
@@ -761,6 +820,12 @@ int CParticleTasks::StartOneShotOfMulti(void)
   if (earlyRet && mRecConSet->alignFrames && mRecConSet->useFrameAlign == 1)
     mRecConSet->alignFrames = 0;
   mMSImageReturned = false;
+  if (mMSNumSepFiles > 0) {
+    mCamera->SetStoreNumForNextShot(StoreNumForCurrentShot());
+    if (mMSHoleIndex > 0)
+      mCamera->SetKeepLastUsedFrameNum(2);
+  }
+
   if (mMSTestRun & MULTI_TEST_COMA) {
     mWinApp->mAutoTuning->CtfBasedAstigmatismComa(1, false, 1, 1, false);
   } else if (mMSTestRun && mWinApp->Montaging()) {
@@ -781,6 +846,211 @@ int CParticleTasks::StartOneShotOfMulti(void)
   str.Format("DOING MULTI-SHOT %d OF %d", mMSHoleIndex * numInHole +
     mMSCurIndex + (mMSDoCenter < 0 ? 2 : 1), numInHole * mMSNumHoles);
   mWinApp->SetStatusText(MEDIUM_PANE, str);
+  return 0;
+}
+
+/*
+ * Returns the number of the store for the current shot
+ */
+int CParticleTasks::StoreNumForCurrentShot()
+{
+  int protectNum;
+  int numInHole = mMSNumPeripheral + (mMSDoCenter ? 1 : 0);
+  protectNum = mMSFirstSepFile + mMSHoleIndex * numInHole +
+    mMSCurIndex + (mMSDoCenter < 0 ? 1 : 0);
+  return mWinApp->mDocWnd->LookupProtectedStore(protectNum);
+}
+
+/*
+ * Do alignment and compose new reference for one image for parallel TS
+ */
+int CParticleTasks::ProcessParallelTSImage(CString &errStr)
+{
+  double initISX, initISY, aliISX, aliISY, pctShift;
+  double delBTX, delBTY, delAstigX, delAstigY;
+  int err;
+  float shiftX = 0., shiftY = 0., shiftLimit = 0., scaleMax, rotation;
+  float reduction = (float)mTSController->GetParTSRefBinning();
+  int direction = mTSController->GetDirection();
+  bool hasRef, extractedRef, firstTilt = mTSController->GetTiltIndex() == 0;
+  EMimageBuffer *otherStack;
+  ScaleMat c2s;
+  ParTSTargetData &ptsd = mParTSTargetData->ElementAt(mMSHoleIndex);
+  ParallelTSOptions *parOpts = mNavHelper->GetParTSOptions();
+  if (mNavHelper->GetParTSOptions()->CtfMeasureType > 0 && GetCtfOfParallelTSImage(
+    ptsd.defocusByCTF, ptsd.astig, ptsd.score, ptsd.fitRes, errStr)) {
+    ptsd.score = -1.;
+    PrintfToLog("CTF fit failed at position %d: %s", mMSHoleIndex + 1, (LPCTSTR)errStr);
+  }
+
+  mParTSRefImBufs = mTSController->GetParTSRefImBufs(direction);
+  mScope->GetImageShift(initISX, initISY);
+  if (!mMSHoleIndex) {
+
+    // First position: align to the regular autoalign reference buffer
+    mParTSFirstImageInBuf = 0;
+    if (mTSController->GetHaveRecordRef()) {
+      if (mShiftManager->AutoAlign(mTSController->GetAlignBuf(), 1)) {
+        PrintfToLog("Autoalign failed at position 1; no shift applied to other positions");
+        mShiftManager->SetAlignShifts(0., 0., false, mImBufs);
+      } else if (mTSController->AlignShiftAboveLimit(pctShift)) {
+        PrintfToLog("Autoalign at position 1 exceeded limit; no shift applied to other"
+          " positions");
+        mShiftManager->SetAlignShifts(0., 0., false, mImBufs);
+      } else {
+        mScope->GetImageShift(aliISX, aliISY);
+
+        // Adjust base image shift
+        mBaseISX += aliISX - initISX;
+        mBaseISY += aliISY - initISY;
+
+        // Get beam tilt adjustment and change the center values
+        if (mMSAdjustBeamTilt) {
+          GetBTandAstigAdjustment(aliISX - initISX, aliISY - initISY, delBTX, delBTY,
+            delAstigX, delAstigY, false, false);
+          if (mMSAdjustBeamTilt && mMSSkipAstigBT >= 0) {
+            mCenterBeamTiltX += delBTX;
+            mCenterBeamTiltY += delBTY;
+          }
+          if (mMSAdjustAstig) {
+            mCenterAstigX += delAstigX;
+            mCenterAstigY += delAstigY;
+          }
+        }
+      }
+    }
+
+    // Copy A to B so it will be in C after next shot
+    mWinApp->mBufferManager->CopyImageBuffer(0, 1, false);
+    mParTSFirstImageInBuf = 1;
+  } else {
+
+    hasRef = mParTSRefImBufs[mMSHoleIndex - 1].mImage != NULL;
+    extractedRef = mParTSRefImBufs[mMSHoleIndex - 1].mCaptured == BUFFER_PROC_OK_FOR_MAP;
+    if (!firstTilt || hasRef) {
+
+      // Other positions - copy reference to B and align
+      mParTSFirstImageInBuf = 2;
+      mWinApp->mBufferManager->CopyImBuf(&mParTSRefImBufs[mMSHoleIndex - 1], &mImBufs[1],
+        false);
+
+      if (parOpts->alignLimitFrac > 0.)
+        shiftLimit = mTSController->GetFOVofRecord() * parOpts->alignLimitFrac;
+
+      if (extractedRef) {
+        err = mNavHelper->AlignWithScaleAndRotation(1, false, 
+          mNavHelper->GetParTSRefAliMaxPctChg() / 100.f, 
+          mNavHelper->GetParTSRefAliMaxRot() * 2.f, scaleMax, rotation,
+          shiftLimit, AUTOALIGN_SEARCH_KEEP);
+      } else {
+        if (shiftLimit)
+          mShiftManager->SetNextAutoalignLimit(shiftLimit);
+        err = mShiftManager->AutoAlign(1, 1, false);
+      }
+      if (err) {
+        PrintfToLog("Autoalign failed at position %d", mMSHoleIndex + 1);
+        ptsd.shiftX = EXTRA_NO_VALUE;
+      } else {
+
+        // Get shifts, convert to specimen coords
+        mImBufs->mImage->getShifts(shiftX, shiftY);
+        c2s = mShiftManager->CameraToSpecimen(mMagIndex);
+        ApplyScaleMatrix(c2s, shiftX * mImBufs->mBinning, shiftY * mImBufs->mBinning,
+          ptsd.shiftX, ptsd.shiftY);
+      }
+    } else {
+      ptsd.shiftX = EXTRA_NO_VALUE;
+    }
+
+    // reduce image, adjust the shift, and put new ref in stack if there was a good
+    // alignment or no alignment
+    if (ptsd.shiftX > EXTRA_VALUE_TEST || !hasRef) {
+      if (mWinApp->mProcessImage->ReduceImage(mImBufs, reduction, &errStr, 1, false))
+        return 1;
+      mImBufs[1].mImage->setShifts(shiftX / reduction, shiftY / reduction);
+      mWinApp->mBufferManager->CopyImBuf(&mImBufs[1], &mParTSRefImBufs[mMSHoleIndex - 1],
+        false);
+
+      // Place image in other stack too on first tilt if no image or if it was a virtual
+      // reference from area map
+      if (firstTilt && (!hasRef || extractedRef)) {
+        otherStack = mTSController->GetParTSRefImBufs(direction > 0 ? 0 : 1);
+        mWinApp->mBufferManager->CopyImBuf(&mImBufs[1], &otherStack[mMSHoleIndex - 1],
+          false);
+      }
+    }
+
+    // Copy C back to B, keep position 1 image 
+    mWinApp->mBufferManager->CopyImageBuffer(2, 1, false);
+    mParTSFirstImageInBuf = 1;
+
+  }
+
+  return 0;
+}
+
+/*
+ * Run Ctfplotter or ctffind routine on current shot to determine defocus and other 
+ * values from which quality can be determined
+ */
+int CParticleTasks::GetCtfOfParallelTSImage(float defocus, float astig, float score, 
+  float fitRes, CString &errStr)
+{
+  float expectDef = mTSController->GetParTSExpectedDefocus();
+  int direction = mTSController->GetDirection();
+  float tiltOffset = mTSController->GetParTSCurTiltOffset(direction);
+  float minDef, maxDef, reduction, phase, resultsArray[7];
+  CString filename, command, str;
+  int astigPhase;
+  int findAstig = mNavHelper->GetParTSOptions()->findAstig ? 1 : 0;
+  CtffindParams param;
+  CProcessImage *processImg = mWinApp->mProcessImage;
+  if (processImg->InitializeCtffindParams(mImBufs, param)) {
+    errStr = "An error occurred setting up Ctffind parameters";
+    return 1;
+  }
+  processImg->SetCtffindParamsForDefocus(param, -expectDef, false);
+  if (mNavHelper->GetParTSOptions()->CtfMeasureType > 1) {
+    if (!findAstig) {
+      param.astigmatism_is_known = true;
+      param.known_astigmatism = 0.;
+      param.known_astigmatism_angle = 0.;
+      astigPhase = 0;
+    }
+    param.compute_extra_stats = true;
+    if (processImg->RunCtffind(mImBufs, param, resultsArray)) {
+      errStr = "An error occurred running the Ctffind operation";
+      return 1;
+    }
+    defocus = -(resultsArray[0] + resultsArray[1]) / 20000.f;
+    astig = fabsf(resultsArray[0] - resultsArray[1]) / 10000.f;
+    fitRes = resultsArray[5];
+    score = resultsArray[4];
+
+  } else {
+    minDef = -param.minimum_defocus / 10000.f;
+    maxDef = -param.maximum_defocus / 10000.f;
+    if (processImg->MakeCtfplotterShrMemFile(0, filename, reduction)) {
+      errStr = filename;
+      return 1;
+    }
+    if (mWinApp->mExternalTools->MakeCtfplotterCommand(filename, reduction, 0, tiltOffset,
+      minDef, maxDef, expectDef, findAstig, 0.,
+      mParTSTuningInCtfpDone ? -1 : 1, 0., 0., 0., 0, str, command)) {
+      processImg->DeletePlotterShrMemFile();
+      errStr = command;
+      return 1;
+    }
+    if (processImg->RunCtfplotterOnBuffer(filename, command, 10000)) {
+      errStr = command;
+      return 1;
+    }
+    if (mWinApp->mExternalTools->ReadCtfplotterResults(defocus, astig,
+      resultsArray[2], phase, astigPhase, fitRes, score, str, errStr))
+      return 1;
+    if (!mParTSTuningInCtfpDone && mWinApp->mExternalTools->GetLastCropPixel())
+      mParTSTuningInCtfpDone = true;
+  }
   return 0;
 }
 
@@ -1160,7 +1430,10 @@ bool CParticleTasks::CurrentHoleAndPosition(CString &strCurPos)
     curPos = (mMSCurIndex + 1) % (mMSNumPeripheral + 1);
   else
     curPos = 0;
-  if (mMSDoingHexGrid) {
+  if (mMSForParallelTS) {
+    FormatParallelTSSuffix(mMSNumHoles, mMSHoleIndex, strCurPos);
+
+  } else if (mMSDoingHexGrid) {
     strCurPos.Format("R%dH%d-%d", mMSPosIndex[2 * mMSHoleIndex],
       mMSPosIndex[2 * mMSHoleIndex + 1] + 1, curPos);
   } else if (mMSPosIndex.size() > 0) {
@@ -1170,6 +1443,16 @@ bool CParticleTasks::CurrentHoleAndPosition(CString &strCurPos)
     strCurPos.Format("%d-%d", curHole, curPos);
   }
   return true;
+}
+
+void CParticleTasks::FormatParallelTSSuffix(int numHoles, int index, CString &strCurPos)
+{
+  if (numHoles > 99)
+    strCurPos.Format("Pos%03d", index);
+  else if (numHoles > 9)
+    strCurPos.Format("Pos%02d", index);
+  else
+    strCurPos.Format("Pos%d", index);
 }
 
 // Return the rotation for the first peripheral shot of multiple shots in a hole
@@ -1189,12 +1472,12 @@ float CParticleTasks::GetPeripheralRotation(int camera, int magInd, double tiltA
 }
 
 // Open a file for each multishot position
-int CParticleTasks::OpenSeparateMultiFiles(CString &basename)
+int CParticleTasks::OpenSeparateMultiFiles(CString &basename, bool forParTS)
 {
   int err = 0;
   int nextShot, nextHole;
   CString root, ext, holePos, fullName;
-  mWinApp->mNavHelper->UpdateMultishotIfOpen(false);
+  mNavHelper->UpdateMultishotIfOpen(false);
   if (mMSNumSepFiles > 0) {
     SEMMessageBox("Separate multishot files are already open");
     return 1;
@@ -1204,7 +1487,10 @@ int CParticleTasks::OpenSeparateMultiFiles(CString &basename)
   UtilSplitExtension(basename, root, ext);
 
   // Get startup routine to do checks and set up indexes
-  err = StartMultiShot(mMSParams, mWinApp->GetActiveCamParam(), 0);
+  if (forParTS)
+    err = StartMultiShot(0, 0, 0., 0, 0., 0., true, 0, 0, false, MULTI_PAR_TS_NAME);
+  else
+    err = StartMultiShot(mMSParams, mWinApp->GetActiveCamParam(), 0);
   if (err)
     return err;
   mWinApp->mBufferWindow.SetDeferComboReloads(true);
@@ -1237,7 +1523,7 @@ int CParticleTasks::OpenSeparateMultiFiles(CString &basename)
     }
   }
 
-  // Get evreything updated when done
+  // Get everything updated when done
   mWinApp->mBufferWindow.SetDeferComboReloads(false);
   mWinApp->SetDeferBufWinUpdates(false);
   mWinApp->UpdateBufferWindows();
@@ -2129,7 +2415,7 @@ int CParticleTasks::CenterNavItemOnHole(CMapDrawItem *item, NavAlignParams &aliP
   if (doingMulti) {
     numXholes = item->mNumXholes;
     numYholes = item->mNumYholes;
-    msParams = mWinApp->mNavHelper->GetMultiShotParams();
+    msParams = mNavHelper->GetMultiShotParams();
     if (numXholes == 0) {
       numXholes = msParams->numHoles[0];
       numYholes = msParams->numHoles[1];

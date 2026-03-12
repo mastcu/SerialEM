@@ -450,6 +450,8 @@ void CEMbufferWindow::ReloadFileComboBox()
   m_comboOutFile.ResetContent();
   for (ind = 0; ind < numFiles; ind++) {
     store = mWinApp->mDocWnd->GetStoreMRC(ind);
+    if (!store)
+      continue;
     UtilSplitPath(store->getName(), dir, file);
 
     // Truncate by adding 3 dots and eating away characters from front of name

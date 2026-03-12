@@ -19,9 +19,12 @@ enum {TSMACRO_PRE_TRACK1 = 1, TSMACRO_PRE_FOCUS, TSMACRO_PRE_TRACK2, TSMACRO_PRE
 enum {DEFSUM_LOOP, DEFSUM_NORMAL_STOP, DEFSUM_ERROR_STOP, DEFSUM_TERM_ERROR};
 #define TS_CHECK_DEWARS 1
 #define TS_CHECK_PVP     2
-#define NAV_OVERRIDE_TILT      1
-#define NAV_OVERRIDE_BIDIR     2
-#define NAV_OVERRIDE_DEF_TARG  4
+#define NAV_OVERRIDE_TILT        1
+#define NAV_OVERRIDE_BIDIR       2
+#define NAV_OVERRIDE_DEF_TARG    4
+#define NAV_OVERRIDE_PARALLEL_TS 8
+
+struct ParallelTSParam;
 
 /////////////////////////////////////////////////////////////////////////////
 // CTSController command target
@@ -44,8 +47,9 @@ public:
   int LookupProtectedFiles();
   void SetExtraOutput(TiltSeriesParam *tsParam = NULL);
   BOOL AutoAlignAndTest(int bufNum, int smallPad, char *shotName, bool scaling = false);
+  bool AlignShiftAboveLimit(double &pctShift);
   int SetupTiltSeries(int future = 0, int futureLDstate = -1, int ldMagIndex = 0,
-    int navOverrideFlags = 0);
+    int navOverrideFlags = 0, float preTilt = 0.);
   BOOL CanBackUp();
   GetSetMember(BOOL, Verbose)
   GetSetMember(BOOL, AutosaveLog)
@@ -143,7 +147,17 @@ public:
   GetSetMember(int, WaitAfterScopeFilling);
   GetMember(CString, LastNoBoxMessage);
   GetSetMember(int, PostBidirReturnDelay);
-  BOOL *GetStoreExtra() { return &mStoreExtra[0]; };
+  GetMember(int, Direction);
+  EMimageBuffer *GetParTSRefImBufs(int dir) { return mParTSRefImBufs[dir > 0 ? 1 : 0]; };
+  GetMember(CMapDrawItem *, ParTSNavItem);
+  ParTargetDataArray *GetParTSTargetData() { return &mParTSTargetData; };
+  GetMember(int, ParTSRefBinning);
+  GetMember(float, ParTSExpectedDefocus);
+  GetMember(float, FOVofRecord);
+  GetMember(BOOL, HaveRecordRef);
+  GetMember(int, NumMdocFiles);
+  float GetParTSCurTiltOffset(int dir) { return mParTSCurTiltOffset[dir > 0 ? 1 : 0]; };
+  GetMemberArr(BOOL, StoreExtra);
   BOOL *GetExtraFileStarts() { return &mExtraFiles[0]; };
 
   double GetCumulativeDose();
@@ -550,7 +564,8 @@ private:
   bool mTermOnErrorCalled;     // Flag to keep from calling back into TerminateOnError
   CString mEndCtlFilePath;     // Things that need to be known about the file in the
   int mEndCtlWidth, mEndCtlHeight;   // second trip through EndControl where file is gone
-  CString mEndCtlMdocPath;     // Name of mdoc file for making frame alignment com file
+  CString *mEndCtlMdocPath;     // Name of mdoc file for making frame alignment com file
+  int mNumMdocFiles;            // Number of mdoc files in array
 
   int mMaxDelayAfterTilt;      // Maximum delay for tilt during TS, in seconds
   BOOL mEarlyK2RecordReturn;   // Flag to return early if possible from Record Dose frac
@@ -589,9 +604,28 @@ private:
   int mPostBidirReturnDelay;   // Seconds of delay after biderectional return
   CString mLastNoBoxMessage;   // Last message logged with no message box on error
 
+  EMimageBuffer *mParTSRefImBufs[2];  // For array of reduced references in parallel TS
+  ParTargetDataArray mParTSTargetData;
+  CArray<ParTargetDataArray *, ParTargetDataArray *> mParTargetDataArrays;
+  int mParTSRefBinning;           // Binning applied to references in stack
+  float mParTSCurTiltOffset[2];   // Tilt offset for CTF, possibly modified from pretilt
+  float mParTSExpectedDefocus;    // Defocus for CTF: probably just the defocus target
+  CMapDrawItem *mParTSNavItem;    // A duplicate of the item with IS updated for current tilt
+  ParallelTSParam *mParTSParams;  // Pointer to parameters
+  FloatVec mParTSLoadedFocus;     // Change in focus from center to impose in shot
+  FloatVec mParTSLoadedSpecX;     // Specimen X & Y values that led to IS value used in shot
+  FloatVec mParTSLoadedSpecY;
+  FloatVec mParTSLastKnownX[2];   // Specimen coordinates originally or last found from align
+  FloatVec mParTSLastKnownY[2];
+  FloatVec mParTSAngleOfKnown[2]; // Angle at which it was known
+  FloatVec mParTSDelZatZero[2];   // Initially Z zero from X pitch, refined if focus found
+  float mFOVofRecord;             // Mean FOV of Record image
+
 public:
 	void CenterBeamWithTrial();
-  void EvaluateExtraRecord();
+  void EvaluateExtraRecord(bool doingParTS);
+  int CountExtraRecChannels(TiltSeriesParam *tsParam, int maxChan, int *simultaneousChan,
+    int &numSimultaneous);
   int SetExtraRecordState(void);
   void RestoreFromExtraRec(void);
   int CheckSaveLowTiltMap();
@@ -604,7 +638,7 @@ public:
   void TerminateOnError(void);
   int TSMessageBox(CString message, UINT type = MB_OK | MB_ICONEXCLAMATION,
     BOOL terminate = true, int retval = 0);
-  int StartTiltSeries(BOOL singleStep, int external);
+  int StartTiltSeries(BOOL singleStep, int external, CMapDrawItem *navItem);
   void SendEmailIfNeeded(BOOL terminating);
   void LeaveInitialChecks(void);
   void ChangeExposure(double &delFac, double angle, double limit = 1.e10);
@@ -631,6 +665,20 @@ public:
   int SwitchToSynchronousBidirCopy();
   void DoFinalTerminationTasks();
   int ManageDoseSymmetricOnTilt();
+  int ParallelTSSetup(CMapDrawItem *item, CString &errStr);
+  void PredictParallelTSLocations(double angle);
+  void ProcessParTSDataFromMultishot();
+  void IdentifyParTSOutliers(float *xload, float *yload, float *xfound,
+    float *yfound, int *dropping, int numPos, int maxDrop,
+    float elimMin, float critProb, float absProbCrit);
+  void FitYSlopeWithDropping(float *xload, float *yload, float *xfound, float *yfound,
+    int *dropping, int numPos, float &slope, float *errors, float &mean, float &sd, float &maxErr, int &maxInd);
+  void FitParallelTSYonly(FloatVec &angles, FloatVec &yOnly, float preTilt, float &yZero, 
+    float &zZero, double &errSum, float &meanErr);
+  void FitParallelTSYwithZ(FloatVec &angles, FloatVec &yWithZ, FloatVec &zVec, float preTilt, 
+    float &yZero, float &zZero, double &errSum, float &meanErr);
+  void FindOutliersInResultList(FloatVec &errors, float elimMin, int polarity, FloatVec &outliers);
+  void CleanUpFromParallelTS();
   int RestoreStageXYafterTilt();
   int FindClosestStackReference(double curAngle, int direction, float & bufAngle);
   bool DoWaitForDrift(double angle);
