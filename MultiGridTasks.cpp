@@ -659,18 +659,22 @@ void CMultiGridTasks::RestoreImposedParams()
  */
 void CMultiGridTasks::ReopenMainLog(int idVal)
 {
-  CString str = mWinApp->mLogWindow->GetSaveFile();
-  if (mMainLogName.IsEmpty() || !str.CompareNoCase(mMainLogName))
-    return;
-  mWinApp->mLogWindow->DoSave();
-  mWinApp->mLogWindow->CloseLog();
+  CString str;
+  if (mWinApp->mLogWindow) {
+    str = mWinApp->mLogWindow->GetSaveFile();
+    if (mMainLogName.IsEmpty() || !str.CompareNoCase(mMainLogName))
+      return;
+    mWinApp->mLogWindow->DoSave();
+    mWinApp->mLogWindow->CloseLog();
+  }
   mWinApp->AppendToLog(mWinApp->mDocWnd->DateTimeForTitle());
   if (idVal >= 0)
     PrintfToLog("Navigator Acquire %s for grid # %d", mNavigator->GetAcquireEnded() ?
       "finished" : "failed", idVal);
   else
     PrintfToLog("Multiple grid operations ended");
-  SEMAppendToLog("Log for Acquire is in " + str);
+  if (!str.IsEmpty())
+    SEMAppendToLog("Log for Acquire is in " + str);
   mWinApp->mLogWindow->ReadAndAppend(mMainLogName);
 
 }
