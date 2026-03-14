@@ -670,13 +670,13 @@ void CMultiGridTasks::UserResumeMulGridSeq()
   } else {
     mess.Format("The last multi-grid operation run was \"%s\"\n"
       "The next operation will be \"%s\".  Select:\n\n"
-      "\"Redo Last\" to resume by redoing the last operation (which may be inappropriate)"
-      "\n\n\"Do Next\" to start with the next operation",
+      "\"Redo Last Action\" to resume by redoing the last operation (which may be inappropriate)"
+      "\n\n\"Do Next Action\" to start with the next operation",
       sActionNames[mActSequence[B3DMAX(mSeqIndex - 1, 0)]],
       sActionNames[mActSequence[mSeqIndex]]);
     if (!mSingleGridMode)
       mess += "\n\n\"Skip to Next Grid\" to abandon this grid and go to the next one";
-    answer = SEMThreeChoiceBox(mess, "Redo Last", "Do Next", 
+    answer = SEMThreeChoiceBox(mess, "Redo Last Action", "Do Next Action", 
       mSingleGridMode ? "" : "Skip to Next Grid", mSingleGridMode ?
       MB_QUESTION : MB_YESNOCANCEL);
     if (answer == IDYES)
