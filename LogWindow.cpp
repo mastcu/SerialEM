@@ -472,7 +472,7 @@ int CLogWindow::UpdateSaveFile(BOOL createIfNone, CString stackName, BOOL replac
       dirInd = mSaveFile.GetLength() - (mSaveFile.ReverseFind('\\') + 1);
       name = mSaveFile.Right(dirInd);
       SetWindowText((mIsSecondary ? "SECONDARY Log: " : "Log: ") + name);
-      return (DoSave());
+      return (DoSave(mTempPruneName.IsEmpty() ? "" : mTempPruneName));
     }
     return 0;
   }
