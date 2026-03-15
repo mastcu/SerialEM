@@ -560,6 +560,38 @@
             but can be present as a comment.</TD>
         </TR>
         <TR>
+          <TD class="scriptcommand">ToolbarFillColor #R [#G] [#B]</TD>
+          <TD>Sets the background color of this script's button in the Script Toolbar to the color
+            specified either by three integers between 0 and 255 for red, green, and blue in <b>#R</b>,
+            <b>#G</b>, and <b>#B</b> or by a color name in <b>#R</b>.&nbsp; Color names (case-insensitive) 
+            are based on
+            some standard HTML names: aqua or cyan, darkorange,
+            darkviolet, fuchsia or magenta, green, lime,  maroon,
+            navy, olive, orange, purple, red, teal, yellow, gold, black, and white.&nbsp; Some of these
+             are too dark to be distinguishable or to be used as background colors.&nbsp; Not called 
+            as a function from Python, but can be present as a comment.&nbsp; Command added in 4.3, 
+            14-Mar-26.</TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">ToolbarOutlineColor #R [#G] [#B]</TD>
+          <TD>Sets the color drawn around this script's button in the Script Toolbar to the color
+            specified either by three integers between 0 and 255 for red, green, and blue in <b>#R</b>,
+            <b>#G</b>, and <b>#B</b> or by a color name in <b>#R</b>, as listed for 'ToolbarFillColor'.&nbsp;
+            Not called as a function from Python, but can be present as a comment.&nbsp; Command added in 4.3, 
+            14-Mar-26.</TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">ImposeToolbarColor #S #O #R [#G] [#B]</TD>
+          <TD>Sets a color for the button in the Script Toolbar for the script whose index is <b>#S</b>,
+            numbered from 1, overriding a color set within that script by 'ToolbarFillColor' or
+            'ToolbarOutlineColor'.&nbsp;  The background color is set if <b>#O</b> is 0 or the outline color
+              is set if it is non-zero. The color is specified by <b>#R</b> and optional <b>#G</b> and <b>#B</b>
+            as for 'ToolbarFillColor', but also the color can be 'none' or 'NONE' to clear the imposed color of
+            the particular type.&nbsp; If <b>#S</b> is 0, the color will be imposed on or removed 
+            from all buttons.&nbsp; Command added in 4.3, 14-Mar-26.
+          </TD>
+        </TR>
+        <TR>
           <TD class="scriptcommand">Delay # units</TD>
           <TD>Waits for given amount of time, where <B>units</B> can be 'msec', 'ms', 'sec', 's', or
             'min'. The units are actually optional but it is bad practice to leave them out and a 

@@ -883,6 +883,8 @@
         script to be included in another script.&nbsp; '#LongName' can also be included
          to specify a long name for the script.
       </li>
+      <li>Like script names, colors for the Script Toolbar buttons can be assigned with 
+        comments using &#39;#ToolbarFillColor&#39; and &#39;#ToolbarOutlineColor&#39;.</li>
       <li>Other Python scripts within SerialEM can be included at any point in the script, specified by their 
         names:<br /> #include name
         <br />The other scripts should all start with '#!Python' and a '#serialemPrefix' 
@@ -913,7 +915,7 @@
         in a 'try' block, and exception handlers at the end.&nbsp; The additional lines 
         are referred to as the &quot;script wrapper&quot; below.</li>
       <li>All of the significant comments mentioned, i.e, &#39;#ScriptName&#39;, &#39;#MacroName&#39;, 
-        &#39;#LongName&#39;, &#39;#include&#39;, &#39;#includeFile&#39;, and &#39;#serialemPrefix&#39;, are also 
+        &#39;#LongName&#39;, &#39;#ToolbarFillColor&#39;, &#39;#ToolbarOutlineColor&#39;, &#39;#include&#39;, &#39;#includeFile&#39;, and &#39;#serialemPrefix&#39;, are also 
         recognized with a single space after the &#39;#&#39; so that they are acceptable in 
         Python editors.</li>
     </ul>

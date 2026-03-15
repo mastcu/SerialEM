@@ -260,8 +260,11 @@ CMacroProcessor::CMacroProcessor(int index)
   }
   for (i = 0; i < MAX_TOT_MACROS; i++)
     mReadOnlyStart[i] = -1;
-  for (i = 0; i < MAX_MACROS; i++)
+  for (i = 0; i < MAX_MACROS; i++) {
     mNameHash[i] = 0;
+    mFillColors[i] = NO_TOOLBAR_COLOR;
+    mOutlineColors[i] = NO_TOOLBAR_COLOR;
+  }
   mProcessThread = NULL;
   for (i = 0; i < 2; i++) {
     CString mess;
@@ -2117,12 +2120,15 @@ int CMacroProcessor::ScanForName(int macroNumber, CString *macro)
   CString strLine, prefix, argName, strItem[MAX_MACRO_TOKENS];
   CString *longMacNames = mWinApp->GetLongMacroNames();
   MacroFunction *funcP;
+  COLORREF outlineColor = NO_TOOLBAR_COLOR;
+  COLORREF fillColor = NO_TOOLBAR_COLOR;
+
   mParamIO = mWinApp->mParamIO;
   int scriptLang = 0;
   int currentIndex = 0, lastIndex = 0;
   if ((macroNumber >= MAX_MACROS && macroNumber < MAX_MACROS + MAX_ONE_LINE_SCRIPTS) ||
     (mDoingMacro && mCallLevel > 0))
-      return 0;
+    return 0;
   if (!macro)
     macro = &mMacros[macroNumber];
   mReadOnlyStart[macroNumber] = -1;
@@ -2140,7 +2146,7 @@ int CMacroProcessor::ScanForName(int macroNumber, CString *macro)
         mParamIO->StripItems(strLine, 1, newName, false, scriptLang);
       } else if (strItem[0] == "#" && (strItem[1].CompareNoCase("MacroName") == 0 ||
         strItem[1].CompareNoCase("ScriptName") == 0) && !strItem[2].IsEmpty()) {
-          mParamIO->StripItems(strLine, 2, newName, false, scriptLang);
+        mParamIO->StripItems(strLine, 2, newName, false, scriptLang);
       } else if (strItem[0].CompareNoCase(prefix + "LongName") == 0 &&
         !strItem[1].IsEmpty()) {
         mParamIO->StripItems(strLine, 1, longName, false, scriptLang);
@@ -2148,8 +2154,15 @@ int CMacroProcessor::ScanForName(int macroNumber, CString *macro)
         !strItem[2].IsEmpty()) {
         mParamIO->StripItems(strLine, 2, longName, false, scriptLang);
 
-      // Put all the functions in there that won't be eliminated by minimum argument
-      // requirement and let pre-checking complain about details
+      } else if (strItem[0].CompareNoCase(prefix + "ToolbarFillColor") == 0 &&
+        !strItem[1].IsEmpty()) {
+        fillColor = TranslateColorEntry(&strItem[1]);
+      } else if (strItem[0].CompareNoCase(prefix + "ToolbarOutlineColor") == 0 &&
+        !strItem[1].IsEmpty()) {
+        outlineColor = TranslateColorEntry(&strItem[1]);
+
+        // Put all the functions in there that won't be eliminated by minimum argument
+        // requirement and let pre-checking complain about details
       } else if (strItem[0].CompareNoCase(prefix + "ReadOnlyUnlessAdmin") == 0 ||
         (strItem[0] == "#" && strItem[1].CompareNoCase("ReadOnlyUnlessAdmin")
           == 0)) {
@@ -2176,11 +2189,38 @@ int CMacroProcessor::ScanForName(int macroNumber, CString *macro)
     lastIndex = currentIndex;
   }
   longMacNames[macroNumber] = longName;
-  if (newName != mMacNames[macroNumber]) {
+  if (newName != mMacNames[macroNumber] || fillColor != mFillColors[macroNumber] ||
+    outlineColor != mOutlineColors[macroNumber]) {
     mMacNames[macroNumber] = newName;
+    mOutlineColors[macroNumber] = outlineColor;
+    mFillColors[macroNumber] = fillColor;
     return 1;
   }
   return 0;
+}
+
+// Convert one or three entries to a color
+COLORREF CMacroProcessor::TranslateColorEntry(CString *strItem)
+{
+  const char *stockNames[] = {
+    "aqua", "blue", "cyan", "darkorange", 
+    "darkviolet", "fuchsia", "green", "lime", "magenta", "maroon", "white", "navy", 
+    "olive", "orange", "purple", "red", "teal", "gold", "yellow", "black", "none"};
+  COLORREF stockColors[] = {
+    RGB(0, 255, 255), RGB(0, 0, 255), RGB(0, 255, 255), RGB(255, 140, 0), 
+    RGB(148, 0, 211), RGB(255, 0, 255), RGB(0, 128, 0), RGB(0, 255, 0), RGB(255, 0, 255),
+    RGB(128, 0, 0), RGB(255, 255, 255), RGB(0, 0, 128), RGB(128, 128, 0),
+    RGB(255, 165, 0), RGB(128, 0, 128), RGB(255, 0, 0), RGB(0, 128, 128),
+    RGB(255, 215, 0), RGB(255, 255, 0), RGB(0, 0, 0), NO_TOOLBAR_COLOR};
+  int ind;
+  if (!strItem[2].IsEmpty()) {
+    return RGB(atoi(strItem[0]), atoi(strItem[1]), atoi(strItem[2]));
+  } else {
+    for (ind = 0; ind < sizeof(stockColors) / sizeof(COLORREF); ind++)
+      if (strItem[0].CompareNoCase(stockNames[ind]) == 0)
+        return stockColors[ind];
+  }
+  return NO_TOOLBAR_COLOR;
 }
 
 // Clear out all the functions in a specific macro or all macros

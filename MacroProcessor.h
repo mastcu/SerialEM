@@ -29,6 +29,8 @@ struct MultiShotParams;
 #define MAX_MACRO_TOKENS 60
 #define MAX_SCRIPT_LANG_ARGS  20
 
+#define NO_TOOLBAR_COLOR 0x08000000
+
 #define LOOP_LIMIT_FOR_TRY -2146000000
 #define LOOP_LIMIT_FOR_IF  -2147000000
 
@@ -214,6 +216,12 @@ public:
   GetMember(CString, ScriptWindowTitle);
   GetMember(CString *, FKeyMapping);
   GetSetMember(int, SuppressJobObjWarning);
+  GetMemberArr(COLORREF, FillColors);
+  GetMemberArr(COLORREF, OutlineColors);
+  GetMemberPtr(std::vector<COLORREF>, ImposedFillColors);
+  GetMemberPtr(std::vector<COLORREF>, ImposedOutlineColors);
+  GetMemberPtr(ShortVec, ImposedSolidMacros);
+  GetMemberPtr(ShortVec, ImposedOutlineMacros);
   int GetNumVariables() { return (int)mVarArray.GetSize(); };
   int GetBaseMacroBeingRun() {return DoingMacro() ? mCallMacro[0] : -1; };
   bool *GetNoCatchOutput() { return &mNoCatchOutput[0]; };
@@ -278,6 +286,12 @@ protected:
   CString mModeCaps[5];
   CString *mMacNames;
   CString mStrNum[MAX_MACROS];
+  COLORREF mFillColors[MAX_TOT_MACROS];
+  COLORREF mOutlineColors[MAX_TOT_MACROS];
+  std::vector<COLORREF> mImposedFillColors;
+  std::vector<COLORREF> mImposedOutlineColors;
+  ShortVec mImposedSolidMacros;
+  ShortVec mImposedOutlineMacros;
   CArray <MacroFunction *, MacroFunction *> mFuncArray[MAX_TOT_MACROS];
   std::set<std::string> mArithAllowed;
   std::set<std::string> mArithDenied;
@@ -544,6 +558,7 @@ public:
   void SetNumStatusLines(int inVal);
   void GetNextLine(CString * macro, int & currentIndex, CString &strLine, bool commentOK = false);
   int ScanForName(int macroNumber, CString *macro = NULL);
+  COLORREF TranslateColorEntry(CString *strItems);
   bool SetVariable(CString name, CString value, int type, int index, bool mustBeNew,
     CString *errStr = NULL, CArray<ArrayRow, ArrayRow> *rowsFor2d = NULL);
   bool SetVariable(CString name, double value, int type, int index, bool mustBeNew,
