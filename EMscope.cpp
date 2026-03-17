@@ -49,8 +49,8 @@
 
 // Scope plugin version that is good enough if there are no FEI cameras, and if there
 // are cameras.  This allows odd features to be added without harrassing other users
-#define FEISCOPE_NOCAM_VERSION 119
-#define FEISCOPE_CAM_VERSION   119
+#define FEISCOPE_NOCAM_VERSION 120
+#define FEISCOPE_CAM_VERSION   120
 
 // Global variables for scope identity
 bool JEOLscope = false;

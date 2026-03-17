@@ -11245,11 +11245,12 @@ void CCameraController::DisplayNewImage(BOOL acquired)
 
   // Save image to shared memory file, alternating between two root names
   if (mSaveNewImageToShrMem) {
+    double wallStart = wallTime();
     if (mShrMemIIFile[mCurShrMemInd])
       iiDelete(mShrMemIIFile[mCurShrMemInd]);
     mShrMemIIFile[mCurShrMemInd] = mWinApp->mExternalTools->SaveBufferToSharedMemory(0,
       "bufferAimage" + CString(mCurShrMemInd ? "2" : "1") + ".mrc",
-      mShrMemFilename[mCurShrMemInd], 1.);
+      mShrMemFilename[mCurShrMemInd], 0.);
     str = "";
     if (mShrMemIIFile[1 - mCurShrMemInd])
       str = mShrMemFilename[1 - mCurShrMemInd] + "\r\n";
