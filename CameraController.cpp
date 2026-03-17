@@ -3762,7 +3762,7 @@ void CCameraController::Capture(int inSet, bool retrying)
   mTD.JeolMagChangeDelay = mScope->GetJeolPostMagDelay();
   mTD.RestoreBBmode = mParam->restoreBBmode != 0;
   mTD.scopeSimulation = mScope->GetSimulationMode();
-  mTD.useImageBeamTilt = FEIscope && mScope->GetUseImageBeamTilt();
+  mTD.useImageBeamTilt = FEIscope && mScope->GetUseImageBeamTilt() > 0;
 
   // Set up all the shuttering and timing parameters
   CapSetupShutteringTiming(conSet, inSet, bEnsureDark, anyVirtualChan);

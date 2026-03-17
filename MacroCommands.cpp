@@ -16,6 +16,7 @@
 #include "ChildFrm.h"
 #include ".\MacroProcessor.h"
 #include "MacroEditer.h"
+#include "MacroToolbar.h"
 #include "MenuTargets.h"
 #include "FocusManager.h"
 #include "AutoTuning.h"
@@ -8105,7 +8106,8 @@ int CMacCmd::Ctfplotter(void)
     mItemFlt[2], mItemFlt[3], 0., astigPhase, phase, resolOrTune, cropPixel, fitStart,
     fitEnd, mSaveCtfplotGraph, mCtfplotGraphName, mEnteredName))
     ABORT_LINE(report + " in line:\n\n");
-  if (mWinApp->mExternalTools->RunCreateProcess(mEnteredName, report, true, CString(""))) {
+  if (mWinApp->mExternalTools->RunCreateProcess(mEnteredName, report, true, CString("")))
+  {
     AbortMacro();
     return 1;
   }
@@ -9186,6 +9188,72 @@ int CMacCmd::ClearStatusLine(void)
       mHighlightStatus[ind - 1] = mItemInt[2] != 0;
   }
   mWinApp->mCameraMacroTools.Invalidate();
+  return 0;
+}
+
+// ImposeToolbarColor
+int CMacCmd::ImposeToolbarColor()
+{
+  int macNum = mItemInt[1] - 1;
+  if (macNum < -1 || macNum > MAX_MACROS)
+    ABORT_LINE("Script index out of range in line:\n\n");
+  std::vector<COLORREF> *imposedColors = mItemInt[2] != 0 ?
+    &mImposedOutlineColors : &mImposedFillColors;
+  ShortVec *macsImposed = mItemInt[2] != 0 ? 
+    &mImposedOutlineMacros : &mImposedSolidMacros;
+  COLORREF color = TranslateColorEntry(&mStrItems[3]);
+  int index = -1, ind;
+
+  // See if the macro is on the list already
+  if (macNum >= 0) {
+    for (ind = 0; ind < (int)macsImposed->size(); ind++) {
+      if (macsImposed->at(ind) == macNum) {
+        index = ind;
+        break;
+      }
+    }
+  }
+
+  // If it is NONE, either remove the specific item or clear all
+  if (color == NO_TOOLBAR_COLOR) {
+    if (macNum >= 0) {
+      if (index >= 0) {
+        VEC_REMOVE_AT((*imposedColors), index);
+        VEC_REMOVE_AT((*macsImposed), index);
+      }
+    } else {
+      imposedColors->clear();
+      macsImposed->clear();
+    }
+
+  } else {
+
+    // Otherwise add or replace for the specific item, or color all of them
+    if (macNum >= 0) {
+      if (index < 0) {
+        macsImposed->push_back(macNum);
+        imposedColors->push_back(color);
+      } else {
+        (*macsImposed)[ind] = macNum;
+        (*imposedColors)[ind] = color;
+      }
+    } else {
+      imposedColors->clear();
+      macsImposed->clear();
+      for (ind = 0; ind < MAX_MACROS; ind++) {
+        imposedColors->push_back(color);
+        macsImposed->push_back(ind);
+      }
+    }
+  }
+
+  // Update toolbar if it is open
+  if (mWinApp->mMacroToolbar) {
+    if (macNum >= 0)
+      mWinApp->mMacroToolbar->SetOneMacroLabel(macNum);
+    else
+      mWinApp->mMacroToolbar->UpdateSettings();
+  }
   return 0;
 }
 

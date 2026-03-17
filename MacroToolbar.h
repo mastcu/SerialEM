@@ -3,6 +3,7 @@
 #include "BaseDlg.h"
 #include "MyButton.h"
 
+class CMacroProcessor;
 // CMacroToolbar dialog
 
 class CMacroToolbar : public CBaseDlg
@@ -22,6 +23,7 @@ protected:
   afx_msg void OnRunButDraw(UINT nID, NMHDR *pNotifyStruct, LRESULT *result);
   virtual BOOL OnInitDialog();
   afx_msg void OnMacroRun(UINT nID);
+  afx_msg void OnPaint();
 
 	DECLARE_MESSAGE_MAP()
 
@@ -31,6 +33,7 @@ private:
   int mGutterHeight;
   int mLeftPos, mTopPos;
   int mBaseWinHeight;
+  CMacroProcessor *mMacroProcessor;
 
 public:
   void UpdateSettings(void);

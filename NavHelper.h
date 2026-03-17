@@ -557,6 +557,7 @@ private:
   bool mRIresetISAfter3rdRound; // Flag to do reset IS after scaled align
   int mRIResetISmagInd;         // Mag index it is to be done at
   LowDoseParams mRIsavedLDparam;
+  int mRILDareaSaved;           // Keep track of area saved separately from mRIconSetNum
   float mRIareaDefocusChange;   // Change in defocus offset when staying in low dose
   float mRIdefocusChangeLimit;  // Maximum defocus change for it to stay in LD
   BOOL mRIuseBeamOffsets;       // Flag for whether to use the offsets

@@ -173,6 +173,7 @@ CCameraSetupDlg::CCameraSetupDlg(CWnd* pParent /*=NULL*/)
   mWarnedOnCDS = false;
   mDeCombosLoaded = false;
   mVirtChanSelected = false;
+  mFPSfor4dSTEM = 0.;
   mPlacement.rcNormalPosition.right = NO_PLACEMENT;
 }
 

@@ -202,6 +202,7 @@ CNavHelper::CNavHelper(void)
   mRIuseBeamOffsets = false;
   mRITiltTolerance = 2.;
   mRIdefocusChangeLimit = 0.;
+  mRILDareaSaved = -1;
   mContinuousRealign = 0;
   mGridGroupSize = 5.;
   mDivideIntoGroups = false;
@@ -2088,6 +2089,7 @@ void CNavHelper::PrepareToReimageMap(CMapDrawItem *item, MontParam *param,
         area = mCamera->ConSetToLDArea(item->mMapLowDoseConSet);
         ldp = mWinApp->GetLowDoseParams() + area;
         mRIsavedLDparam = *ldp;
+        mRILDareaSaved = mRIconSetNum;
         ldp->intensity = item->mMapIntensity;
         ldp->spotSize = item->mMapSpotSize;
         if (filtered) {
@@ -3066,8 +3068,8 @@ void CNavHelper::RestoreLowDoseConset(void)
     return;
   workSets[mRIconSetNum] = mSavedConset;
   camSets[mWinApp->GetCurrentCamera() * MAX_CONSETS + mRIconSetNum] = mSavedConset;
-  if (!mRIuseCurrentLDparams) {
-    area = mCamera->ConSetToLDArea(mRIconSetNum);
+  if (!mRIuseCurrentLDparams && mRILDareaSaved >= 0) {
+    area = mRILDareaSaved;
     ldp = mWinApp->GetLowDoseParams() + area;
     *ldp = mRIsavedLDparam;
     if (mRIareaDefocusChange) {
@@ -3075,6 +3077,7 @@ void CNavHelper::RestoreLowDoseConset(void)
       mScope->SetLDViewDefocus(defocus - mRIareaDefocusChange, area);
       mScope->IncDefocus(-mRIareaDefocusChange);
     }
+    mRILDareaSaved = -1;
   }
 
   // And be sure to turn flag off in case this is called from other situations
