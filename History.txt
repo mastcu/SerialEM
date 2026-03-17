@@ -3,6 +3,12 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+3/16/26: Moved aperture status monitoring to a thread in attempt to solve menu
+hanging problem.
+
+3/15/26: Added script commands for setting color of a Script Toolbar button or
+of an outline around one.
+
 3/13/26: Fixed multigrid problems and potential crash reopening log (In 4.2).
 
 3/12/26: SEM_4-2-18

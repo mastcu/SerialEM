@@ -211,6 +211,16 @@ struct ApertureThreadData {
   CString description;
 };
 
+struct ApMonitorThreadData {
+  ScopePluginFuncs *plugFuncs;
+  int singleCondIndex;
+  bool getObjective;
+  int condenserSize;
+  int objectiveSize;
+  bool moving;
+  int exitOrFailed;
+};
+
 struct FreeLensSequence {
   short setIndex;
   short ldArea;
@@ -768,6 +778,7 @@ private:
     int axisBits, CString &str);
   static UINT ScreenMoveProc(LPVOID pParam);
   static UINT ApertureMoveProc(LPVOID pParam);
+  static UINT ApMonitorProc(LPVOID pParam);
   static UINT LongOperationProc(LPVOID pParam);
 
   CShiftManager *mShiftManager;
@@ -775,6 +786,7 @@ private:
   CWinThread * mScreenThread;
   CWinThread * mFilmThread;
   CWinThread * mApertureThread;
+  CWinThread *mApMonitorThread;
   CWinThread *mLongOpThreads[MAX_LONG_THREADS];
   LongThreadData mLongOpData[MAX_LONG_THREADS];
   CWinThread *mSynchronousThread;
@@ -786,6 +798,7 @@ private:
   BOOL mCosineTilt;         // Flag for cosine tilt
   StageMoveInfo mMoveInfo;
   ApertureThreadData mApertureTD;
+  ApMonitorThreadData mApMonitorTD;
   BOOL mBeamBlankSet;         // Keeps track of requested blank setting
   double mLastISdelX;         // Last change in image shift
   double mLastISdelY;
