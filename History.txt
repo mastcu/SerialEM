@@ -3,6 +3,10 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+3/20/26: SEM_4-3-0beta8
+3/20/26: Fixed problems from aperture thread in beta 7 and errors when
+changing between diffraction and imaging at the same time as an EFTEM change.
+
 3/16/26:  SEM_4-3-0beta7
 3/16/26: Moved aperture status monitoring to a thread in attempt to solve menu
 hanging problem.

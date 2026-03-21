@@ -655,6 +655,7 @@ public:
   ShortVec *GetSkipUtapiServices() {return &mSkipUtapiServices ; };
   bool UtapiSupportsService(int kind) { B3DCLAMP(kind, 0, UTAPI_SUPPORT_END - 1); return mUtapiConnected && mUtapiSupportsService[kind] ; };
   int Initialize();
+  void CreateScopeMutex();
   int RenewJeolConnection();
   CEMscope();
   virtual ~CEMscope();
