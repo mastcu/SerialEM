@@ -374,9 +374,6 @@ int DirectElectronCamera::initializeDECamera(CString camName, int camIndex)
     for (int j = 0; j < numFlags; j++)
       params->CamFlags &= ~flagsToSet[j];
     for (int i = 0; i < (int)camProps.size(); i++) {
-      SEMTrace('D', "%d  %s", i, camProps[i].c_str());
-      //if (camProps[i].find("Preset - Properties") != 0 && mDeServer->getProperty(camProps[i], &propValue))
-      //SEMTrace('D', "value  %s", i, propValue.c_str());
       for (int j = 0; j < numFlags; j++)
         if (!camProps[i].compare(propsToCheck[j]))
           params->CamFlags |= flagsToSet[j];
