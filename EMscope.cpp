@@ -49,8 +49,8 @@
 
 // Scope plugin version that is good enough if there are no FEI cameras, and if there
 // are cameras.  This allows odd features to be added without harrassing other users
-#define FEISCOPE_NOCAM_VERSION 119
-#define FEISCOPE_CAM_VERSION   119
+#define FEISCOPE_NOCAM_VERSION 121
+#define FEISCOPE_CAM_VERSION   121
 
 // Global variables for scope identity
 bool JEOLscope = false;
@@ -580,8 +580,7 @@ CEMscope::~CEMscope()
   if (mUpdateID)
     KillUpdateTimer();
   if (mApMonitorThread) {
-    mApMonitorTD.exitOrFailed = 1;
-    Sleep(50);
+    UtilThreadCleanup(&mApMonitorThread);
   }
   if (mScopeMutexHandle) {
     CloseHandle(mScopeMutexHandle);
@@ -672,15 +671,9 @@ int CEMscope::Initialize()
 
   if (firstTime) {
 
-    // Create the mutex here for JEOL, Hitachi, and FEI plugin without separate threads
+    // Create the mutex here for JEOL & Hitachi.  FEI will need it if aperture thread
     if (JEOLscope || HitachiScope) {
-      mScopeMutexHandle = CreateMutex(0,0,0);
-      mScopeMutexOwnerStr = (char *)calloc(128,1);
-      mScopeMutexLenderStr = (char *)calloc(128,1);
-      mScopeMutexOwnerCount = 0;
-      mScopeMutexOwnerId = 0;
-      strcpy(mScopeMutexOwnerStr,"NOBODY");
-      UsingScopeMutex = true;
+      CreateScopeMutex();
       mMonitorC2ApertureSize = 0;
       mUseImageBeamTilt = 0;
     }
@@ -974,7 +967,9 @@ int CEMscope::Initialize()
         SEMAppendToLog("Aperture size will be used in imaging and mapping states");
 
       // After all that success, now start the thread to do it
-      if (mSimulationMode >= 0) {
+      if (mSimulationMode >= 0 && (mMonitorC2ApertureSize > 0 || mShowApertureStatus > 0))
+      {
+        CreateScopeMutex();
         mApMonitorTD.plugFuncs = mPlugFuncs;
         mApMonitorTD.moving = false;
         mApMonitorTD.singleCondIndex = mSingleCondenserAp;
@@ -984,7 +979,7 @@ int CEMscope::Initialize()
         mApMonitorTD.exitOrFailed = 0;
         mApMonitorThread = AfxBeginThread(ApMonitorProc, &mApMonitorTD,
           THREAD_PRIORITY_NORMAL, 0, CREATE_SUSPENDED);
-        mApMonitorThread->m_bAutoDelete = true;
+        mApMonitorThread->m_bAutoDelete = false;
         mApMonitorThread->ResumeThread();
       }
     }
@@ -1275,6 +1270,17 @@ int CEMscope::Initialize()
   return startErr;
 }
 
+// For initial creation of scope mutex
+void CEMscope::CreateScopeMutex()
+{
+  mScopeMutexHandle = CreateMutex(0, 0, 0);
+  mScopeMutexOwnerStr = (char *)calloc(128, 1);
+  mScopeMutexLenderStr = (char *)calloc(128, 1);
+  mScopeMutexOwnerCount = 0;
+  mScopeMutexOwnerId = 0;
+  strcpy(mScopeMutexOwnerStr, "NOBODY");
+  UsingScopeMutex = true;
+}
 
 // Disconnect and reconnect to JEOL to try to cure errors
 int CEMscope::RenewJeolConnection()
@@ -4414,8 +4420,15 @@ BOOL CEMscope::SetMagKernel(SynchroThreadData *sytd)
 
       // Tecnai: if in diffraction mode, set back to imaging
       if (!currentIndex) {
-        if (mPlugFuncs->SetImagingMode)
+        if (mPlugFuncs->SetImagingMode) {
           mPlugFuncs->SetImagingMode(pmImaging);
+          startTime = GetTickCount();
+          while (mPlugFuncs->GetImagingMode && SEMTickInterval(startTime) < 10000) {
+            if (mPlugFuncs->GetImagingMode() == pmImaging)
+              break;
+            Sleep(200);
+          }
+        }
       }
 
       if (sytd->ifSTEM) {
@@ -4951,6 +4964,7 @@ BOOL CEMscope::SetCamLenIndex(int inIndex)
 {
   BOOL result = true;
   int indCalled = inIndex;
+  double startTime;
 
   if (!sInitialized)
     return false;
@@ -4986,8 +5000,15 @@ BOOL CEMscope::SetCamLenIndex(int inIndex)
         } else if (magInd >= lowestM && inIndex > LAD_INDEX_BASE) {
           PLUGSCOPE_SET(MagnificationIndex, lowestM - 1);
         }
-        if (mPlugFuncs->SetImagingMode)
+        if (mPlugFuncs->SetImagingMode) {
           mPlugFuncs->SetImagingMode(pmDiffraction);
+          startTime = GetTickCount();
+          while (mPlugFuncs->GetImagingMode && SEMTickInterval(startTime) < 10000) {
+            if (mPlugFuncs->GetImagingMode() == pmDiffraction)
+              break;
+            Sleep(200);
+          }
+        }
       }
 
       // Get right index for mode and set it
