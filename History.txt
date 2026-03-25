@@ -3,6 +3,9 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+3/24/26: Fixed BackgroundMoveStage when movement is allowed on only one axis
+(In 4.2).
+
 3/20/26: SEM_4-3-0beta8
 3/20/26: Fixed problems from aperture thread in beta 7 and errors when
 changing between diffraction and imaging at the same time as an EFTEM change.
