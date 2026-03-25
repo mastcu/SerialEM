@@ -4260,6 +4260,13 @@ void CMultiGridTasks::DoNextSequenceAction(int resume)
         lastInd = ind;
       }
     }
+    if (firstInd < 0) {
+      errStr.Format("Skipping grid %d because there are no items marked for Acquire",
+        jcd.id);
+      if (SkipToNextGrid(errStr))
+        return;
+      break;
+    }
 
     // For polygon montage, start process of setting up files
     fileOpt = *(mWinApp->mDocWnd->GetFileOpt());

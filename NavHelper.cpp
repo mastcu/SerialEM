@@ -564,7 +564,7 @@ int CNavHelper::FindMapForRealigning(CMapDrawItem * inItem, BOOL restoreState)
       // But an LM can be used if there are aperture settings for it, and there is not
       // already a nonLM map accepted.
       if ((mScope->GetUseAperturesInStates() && item->mObjectiveAp >= 0 &&
-        item->mCondenserAp >= 0) && !(distMax > 0. && !maxInLM))
+        item->mCondenserAp >= 0) && !(distMax >= mMinMarginNeeded && !maxInLM))
         mapByAperture = true;
       else
         continue;
