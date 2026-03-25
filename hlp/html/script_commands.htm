@@ -3021,8 +3021,10 @@
         </TR>
         <TR>
           <TD class="scriptcommand">BackgroundMoveStage #X #Y [#S]</TD>
-          <TD>Like 'BackgroundTilt', starts moving the stage in the background to <b>X</b>, <b>Y</b> with 
-            optional speed factor <b>S</b>&nbsp; The limitations described for 'MoveStageWithSpeed' apply.&nbsp; </TD>
+          <TD>Like 'BackgroundTilt', starts moving the stage in the background to <b>#X</b>, <b>#Y</b> with 
+            optional speed factor <b#>S</b#>&nbsp; The limitations described for 'MoveStageWithSpeed' apply; thus, when 
+            movement is supported only on one axis, it is important that either <b>#X</b> or <b>#Y</b> match the
+            current stage position on that axis.&nbsp; </TD>
         </TR>
         <TR>
           <TD class="scriptcommand">StopBackgroundStage [#X #Y]</TD>

@@ -6740,7 +6740,14 @@ int CMacCmd::BackgroundTilt(void)
       smi.x = mItemDbl[1];
       smi.y = mItemDbl[2];
       speedInd = 3;
-      smi.axisBits = axisXY;
+      if (!stopStage)
+        mScope->GetStagePosition(stageX, stageY, stageZ);
+      if (fabs(stageX - smi.x) < 0.01)
+        smi.axisBits = axisY;
+      else if (fabs(stageY - smi.y) < 0.01)
+        smi.axisBits = axisX;
+      else
+        smi.axisBits = axisXY;
     } else {
       smi.alpha = mItemDbl[1];
       smi.axisBits = axisA;

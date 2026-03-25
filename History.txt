@@ -3,6 +3,9 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+3/24/26: Fixed BackgroundMoveStage when movement is allowed on only one axis
+(In 4.2).
+
 3/13/26: Fixed multigrid problems and potential crash reopening log (In 4.2).
 
 3/12/26: SEM_4-2-18
