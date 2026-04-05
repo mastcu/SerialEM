@@ -3,6 +3,8 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+4/5/26: Fixed problem transitioning between LM and nonLM with UTAPI (In 4.2).
+
 3/24/26: Fixed BackgroundMoveStage when movement is allowed on only one axis
 (In 4.2).
 
