@@ -3671,9 +3671,15 @@ void CNavHelper::StateCameraCoords(StateParams *param, int camIndex, int xFrame,
 int CNavHelper::AperturesForMapsAndStates(int &objAp, int &condAp, int &jeolC1, 
   CString &errStr)
 {
-  static double lastTime;
-  static int lastObj = -1, lastCond = -1, lastC1 = -1, lastErr = 0;
+  static double lastTime = 0.;
+  static int lastObj = -1, lastCond = -1, lastC1 = -1, lastErr = 1;
   int err = 0;
+
+  // Initialize the time and make sure it reads apertures this time
+  if (!lastTime) {
+    lastTime = GetTickCount();
+    lastErr = 1;
+  }
   if (!lastErr && SEMTickInterval(lastTime) < 1000.) {
     objAp = lastObj;
     condAp = lastCond;
@@ -3692,6 +3698,8 @@ int CNavHelper::AperturesForMapsAndStates(int &objAp, int &condAp, int &jeolC1,
       err++;
   }
   lastErr = err;
+  if (!err)
+    lastTime = GetTickCount();
   return err;
 }
 
