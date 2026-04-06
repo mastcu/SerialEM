@@ -1950,7 +1950,9 @@ ScaleMat CShiftManager::IStoSpecimen(int inMagInd, int toCam)
   mCurrentCamera = mWinApp->GetCurrentCamera();
   if (toCam < 0)
     toCam = mCurrentCamera;
-  aInv = SpecimenToCamera(toCam, inMagInd);
+  aInv.xpx = 0.;
+  if (inMagInd >= 0)
+    aInv = SpecimenToCamera(toCam, inMagInd);
   if (!aInv.xpx)
     return aInv;
   aInv = MatInv(aInv);
