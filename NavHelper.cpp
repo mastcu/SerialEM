@@ -2494,7 +2494,6 @@ void CNavHelper::StoreCurrentStateInParam(StateParams *param, int lowdose,
       param->ldShiftOffsetX = (float)shiftX;
       param->ldShiftOffsetY = (float)shiftY;
     }
-    param->beamAlpha = B3DNINT(ldp->beamAlpha);
   } else {
     param->magIndex = mScope->GetMagIndex();
     param->intensity = mScope->GetIntensity();

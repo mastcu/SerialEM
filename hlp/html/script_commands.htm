@@ -5408,7 +5408,10 @@
             States dialog</A>, which need not be open.&nbsp; The text on the rest of the line, <b>name</b>, 
             can be either the full name of the state, a unique set of starting letters in the name of the state, or
              the number of the state in the table (numbered from 1).&nbsp; The comparison with state names is 
-            case-insensitive.&nbsp; If the command fails, a message is printed to the log 
+            case-insensitive.&nbsp; If the entry is numeric and matches one state name exactly, that state will be
+            chosen even if the entry is a valid index. &nbsp; If a numeric entry matches only the start of a state name,
+            that state is chosen if the number is not a valid index, but the state at that index is chosen 
+            otherwise.&nbsp; If the command fails, a message is printed to the log 
             and <i>reportedValue1</i> is set to 1 for no matching name,
             2 for more than one matching name, 3 for a number out of range, 4 if a map acquire state is already set,
             5 if the camera that the state is defined for is not available, or 6 if it is a Low Dose state and there
