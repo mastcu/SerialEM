@@ -560,7 +560,7 @@ void CCameraMacroTools::OnButresume()
     err = mNav->ResumeFromPause();
     mWinApp->SetStatusText(COMPLEX_PANE, "");
     if (!err && mWinApp->mMultiGridTasks->WasStoppedInNavRun())
-      mWinApp->mMultiGridTasks->ResumeMulGridSeq(0);
+      mWinApp->mMultiGridTasks->ResumeMulGridSeq(-1);
     Update();
   } else if (mWinApp->mMultiGridTasks->GetSuspendedMulGrid()) {
     mWinApp->mMultiGridTasks->UserResumeMulGridSeq();

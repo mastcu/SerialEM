@@ -3,6 +3,12 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+4/6/26: Fixed multigrid starting new Navigator Acquire run after finishing
+subset if the run was paused and resumed (In 4.2).
+
+4/6/26: Fixed test in Navigator Acquire for whether multi-hole combiner wasn't
+run to consider only multi-hole acquisition (In 4.2).
+
 4/6/26: SEM_4-2-19
 4/6/26: Fixed state dialog showing both states as selected when a Low Dose
 state is selected after a non Low Dose state (In 4.2).
