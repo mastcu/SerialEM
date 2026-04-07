@@ -5470,13 +5470,16 @@ int CNavHelper::AssessAcquireForParams(NavAcqParams *navParam, NavAcqAction *acq
       for (i = startInd; i <= endInd; i++) {
         item = mItemArray->GetAt(i);
         if (item->mRegistration == mNav->GetCurrentRegistration() && item->mAcquire &&
-          !item->mNumSkipHoles) {
+          !item->mNumSkipHoles && ((MSparams.inHoleOrMultiHole & MULTI_HOLES) || 
+          (item->mNumXholes && item->mNumYholes))) {
           for (j = startInd; j <= endInd; j++) {
             if (j == i)
               continue;
             item2 = mItemArray->GetAt(j);
             if (item2->mRegistration == mNav->GetCurrentRegistration() &&
-              item2->mAcquire && !item2->mNumSkipHoles) {
+              item2->mAcquire && !item2->mNumSkipHoles && 
+              ((MSparams.inHoleOrMultiHole & MULTI_HOLES) ||
+              (item2->mNumXholes && item2->mNumYholes))) {
               delX = item->mStageX - item2->mStageX;
               delY = item->mStageY - item2->mStageY;
 
