@@ -3,6 +3,11 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+4/9/26: Made it retry for up to 3 seconds on startup before complaining about
+a non-dummy instance of SerialEM running.
+
+4/9/26: Fixed saving of autocontour parameters in settings, broken 12/16/25.
+
 4/9/26: Fixed problem with repeated timeouts being set for non-existent probe
 mode changes on Hitachi scopes (In 4.2).
 
