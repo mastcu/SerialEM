@@ -1509,7 +1509,7 @@ void CEMscope::ScopeUpdate(DWORD dwTime)
         PLUGSCOPE_GET(ProbeMode, probe, 1);
         returnedProbe = probe = probe ? 1 : 0;
       } else {
-        probe = STEMmode ? 0 : 1;
+        returnedProbe = probe = STEMmode ? 0 : 1;
       }
       CHECK_TIME(3);
 
