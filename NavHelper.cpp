@@ -201,6 +201,7 @@ CNavHelper::CNavHelper(void)
   mRIuseBeamOffsets = false;
   mRITiltTolerance = 2.;
   mRIdefocusChangeLimit = 0.;
+  mRILDareaSaved = -1;
   mContinuousRealign = 0;
   mGridGroupSize = 5.;
   mDivideIntoGroups = false;
@@ -563,7 +564,7 @@ int CNavHelper::FindMapForRealigning(CMapDrawItem * inItem, BOOL restoreState)
       // But an LM can be used if there are aperture settings for it, and there is not
       // already a nonLM map accepted.
       if ((mScope->GetUseAperturesInStates() && item->mObjectiveAp >= 0 &&
-        item->mCondenserAp >= 0) && !(distMax > 0. && !maxInLM))
+        item->mCondenserAp >= 0) && !(distMax >= mMinMarginNeeded && !maxInLM))
         mapByAperture = true;
       else
         continue;
@@ -2061,6 +2062,7 @@ void CNavHelper::PrepareToReimageMap(CMapDrawItem *item, MontParam *param,
         area = mCamera->ConSetToLDArea(item->mMapLowDoseConSet);
         ldp = mWinApp->GetLowDoseParams() + area;
         mRIsavedLDparam = *ldp;
+        mRILDareaSaved = mRIconSetNum;
         ldp->intensity = item->mMapIntensity;
         ldp->spotSize = item->mMapSpotSize;
         if (filtered) {
@@ -3039,8 +3041,8 @@ void CNavHelper::RestoreLowDoseConset(void)
     return;
   workSets[mRIconSetNum] = mSavedConset;
   camSets[mWinApp->GetCurrentCamera() * MAX_CONSETS + mRIconSetNum] = mSavedConset;
-  if (!mRIuseCurrentLDparams) {
-    area = mCamera->ConSetToLDArea(mRIconSetNum);
+  if (!mRIuseCurrentLDparams && mRILDareaSaved >= 0) {
+    area = mRILDareaSaved;
     ldp = mWinApp->GetLowDoseParams() + area;
     *ldp = mRIsavedLDparam;
     if (mRIareaDefocusChange) {
@@ -3048,6 +3050,7 @@ void CNavHelper::RestoreLowDoseConset(void)
       mScope->SetLDViewDefocus(defocus - mRIareaDefocusChange, area);
       mScope->IncDefocus(-mRIareaDefocusChange);
     }
+    mRILDareaSaved = -1;
   }
 
   // And be sure to turn flag off in case this is called from other situations
@@ -3668,9 +3671,15 @@ void CNavHelper::StateCameraCoords(StateParams *param, int camIndex, int xFrame,
 int CNavHelper::AperturesForMapsAndStates(int &objAp, int &condAp, int &jeolC1, 
   CString &errStr)
 {
-  static double lastTime;
-  static int lastObj = -1, lastCond = -1, lastC1 = -1, lastErr = 0;
+  static double lastTime = 0.;
+  static int lastObj = -1, lastCond = -1, lastC1 = -1, lastErr = 1;
   int err = 0;
+
+  // Initialize the time and make sure it reads apertures this time
+  if (!lastTime) {
+    lastTime = GetTickCount();
+    lastErr = 1;
+  }
   if (!lastErr && SEMTickInterval(lastTime) < 1000.) {
     objAp = lastObj;
     condAp = lastCond;
@@ -3689,6 +3698,8 @@ int CNavHelper::AperturesForMapsAndStates(int &objAp, int &condAp, int &jeolC1,
       err++;
   }
   lastErr = err;
+  if (!err)
+    lastTime = GetTickCount();
   return err;
 }
 
@@ -5459,13 +5470,16 @@ int CNavHelper::AssessAcquireForParams(NavAcqParams *navParam, NavAcqAction *acq
       for (i = startInd; i <= endInd; i++) {
         item = mItemArray->GetAt(i);
         if (item->mRegistration == mNav->GetCurrentRegistration() && item->mAcquire &&
-          !item->mNumSkipHoles) {
+          !item->mNumSkipHoles && ((MSparams.inHoleOrMultiHole & MULTI_HOLES) || 
+          (item->mNumXholes && item->mNumYholes))) {
           for (j = startInd; j <= endInd; j++) {
             if (j == i)
               continue;
             item2 = mItemArray->GetAt(j);
             if (item2->mRegistration == mNav->GetCurrentRegistration() &&
-              item2->mAcquire && !item2->mNumSkipHoles) {
+              item2->mAcquire && !item2->mNumSkipHoles && 
+              ((MSparams.inHoleOrMultiHole & MULTI_HOLES) ||
+              (item2->mNumXholes && item2->mNumYholes))) {
               delX = item->mStageX - item2->mStageX;
               delY = item->mStageY - item2->mStageY;
 

@@ -16,7 +16,8 @@
 CMacroToolbar::CMacroToolbar(CWnd* pParent /*=NULL*/)
 	: CBaseDlg(CMacroToolbar::IDD, pParent)
 {
-  mNonModal = true;
+  mNonModal = true; 
+  mMacroProcessor = mWinApp->mMacroProcessor;
 }
 
 CMacroToolbar::~CMacroToolbar()
@@ -93,6 +94,7 @@ BEGIN_MESSAGE_MAP(CMacroToolbar, CBaseDlg)
   ON_CONTROL_RANGE(BN_CLICKED, ID_MACRO_RUN1, ID_MACRO_RUN60, OnMacroRun)
   ON_NOTIFY_EX_RANGE( TTN_NEEDTEXT, 0, 0xFFFF, OnToolTipNotify )
   ON_NOTIFY_RANGE(NM_LDOWN, ID_MACRO_RUN1, ID_MACRO_RUN60, OnRunButDraw)
+  ON_WM_PAINT()
 END_MESSAGE_MAP()
 
 
@@ -119,8 +121,8 @@ BOOL CMacroToolbar::OnInitDialog()
   button = (CButton *)GetDlgItem(ID_MACRO_RUN2);
   button->GetWindowRect(&butrect);
   mGutterHeight = butrect.top - top - mButHeightOrig;
-  SetLength(mWinApp->mMacroProcessor->GetNumToolButtons(),
-    mWinApp->mMacroProcessor->GetToolButHeight());
+  SetLength(mMacroProcessor->GetNumToolButtons(),
+    mMacroProcessor->GetToolButHeight());
   UpdateSettings();
 
   // Disable default button
@@ -133,9 +135,9 @@ void CMacroToolbar::OnMacroRun(UINT nID)
 {
   mWinApp->RestoreViewFocus();
   if (GetAsyncKeyState(VK_CONTROL) / 2 != 0)
-    mWinApp->mMacroProcessor->OpenMacroEditor(nID - ID_MACRO_RUN1);
+    mMacroProcessor->OpenMacroEditor(nID - ID_MACRO_RUN1);
   else
-    mWinApp->mMacroProcessor->ToolbarMacroRun(nID);
+    mMacroProcessor->ToolbarMacroRun(nID);
 }
 
 // Notification of a right-click event: open editor on right-click
@@ -144,18 +146,20 @@ void CMacroToolbar::OnRunButDraw(UINT nID, NMHDR *pNotifyStruct, LRESULT *result
   int index = nID - ID_MACRO_RUN1;
   if (mRunButtons[index].m_bRightWasClicked) {
     mRunButtons[index].m_bRightWasClicked = false;
-    mWinApp->mMacroProcessor->OpenMacroEditor(index);
+    mMacroProcessor->OpenMacroEditor(index);
     mWinApp->mScope->SetRestoreViewFocusCount(1);
   }
 }
 
 void CMacroToolbar::UpdateSettings(void)
 {
-  for (int i = 0; i < MAX_MACROS; i++)
+  for (int i = 0; i < MAX_MACROS; i++) {
     SetOneMacroLabel(i);
-  SetLength(mWinApp->mMacroProcessor->GetNumToolButtons(),
-    mWinApp->mMacroProcessor->GetToolButHeight());
+  }
+  SetLength(mMacroProcessor->GetNumToolButtons(),
+    mMacroProcessor->GetToolButHeight());
   Update();
+  Invalidate();
 }
 
 void CMacroToolbar::Update(void)
@@ -163,20 +167,38 @@ void CMacroToolbar::Update(void)
   CString *macros = mWinApp->GetMacros();
   for (int i = 0; i < MAX_MACROS; i++) {
     CButton *button = (CButton *)GetDlgItem(ID_MACRO_RUN1 + i);
-    button->EnableWindow(mWinApp->mMacroProcessor->MacroRunnable(i));
+    button->EnableWindow(mMacroProcessor->MacroRunnable(i));
   }
 }
 
 void CMacroToolbar::SetOneMacroLabel(int num)
 {
   UINT nID = ID_MACRO_RUN1 + num;
+  COLORREF color = NO_TOOLBAR_COLOR;
+  COLORREF *colors = mMacroProcessor->GetFillColors();
+  std::vector<COLORREF> *imposedColors = mMacroProcessor->GetImposedFillColors();
+  ShortVec *macsImposed = mMacroProcessor->GetImposedSolidMacros();
   CString label;
+  int ind;
   CString *names = mWinApp->GetMacroNames();
   if (names[num].IsEmpty())
     label.Format("Script %d", num + 1);
   else
     label = names[num];
   SetDlgItemText(nID, label);
+  for (ind = 0; ind < (int)macsImposed->size(); ind++) {
+    if (num == macsImposed->at(ind)) {
+      color = imposedColors->at(ind);
+      break;
+    }
+  }
+  if (color == NO_TOOLBAR_COLOR && colors[num] != NO_TOOLBAR_COLOR)
+    color = colors[num];
+  if (color != NO_TOOLBAR_COLOR)
+    mRunButtons[num].mSpecialColor = color;
+  mRunButtons[num].m_bShowSpecial = color != NO_TOOLBAR_COLOR;
+  mRunButtons[num].Invalidate();
+  Invalidate();
 }
 
 void CMacroToolbar::SetLength(int num, int butHeight)
@@ -188,7 +210,7 @@ void CMacroToolbar::SetLength(int num, int butHeight)
     butHeight = mButHeightOrig;
   if (butHeight < B3DNINT(0.8 * mButHeightOrig)) {
     butHeight = B3DNINT(0.8 * mButHeightOrig);
-    mWinApp->mMacroProcessor->SetToolButHeight(butHeight);
+    mMacroProcessor->SetToolButHeight(butHeight);
   }
   B3DCLAMP(num, 1, MAX_MACROS);
 
@@ -230,7 +252,7 @@ void CMacroToolbar::SetLength(int num, int butHeight)
 
 void CMacroToolbar::OnCancel()
 {
-  mWinApp->mMacroProcessor->ToolbarClosing();
+  mMacroProcessor->ToolbarClosing();
   DestroyWindow();
 }
 
@@ -256,4 +278,29 @@ BOOL CMacroToolbar::OnToolTipNotify( UINT id, NMHDR * pNMHDR, LRESULT * pResult 
     }
   }
   return(FALSE);
+}
+
+// Paint function in which to draw outlines for buttons
+void CMacroToolbar::OnPaint()
+{
+  COLORREF *colors = mMacroProcessor->GetOutlineColors();
+  COLORREF color;
+  std::vector<COLORREF> *imposedColors = mMacroProcessor->GetImposedOutlineColors();
+  ShortVec *macsImposed = mMacroProcessor->GetImposedOutlineMacros();
+  CPaintDC dc(this);
+  int ind;
+  for (int i = 0; i < MAX_MACROS; i++) {
+    color = NO_TOOLBAR_COLOR;
+    for (ind = 0; ind < (int)macsImposed->size(); ind++) {
+      if (i == macsImposed->at(ind)) {
+        color = imposedColors->at(ind);
+        break;
+      }
+    }
+    if (color == NO_TOOLBAR_COLOR && colors[i] != NO_TOOLBAR_COLOR)
+      color = colors[i];
+    if (color != NO_TOOLBAR_COLOR)
+      DrawButtonOutline(dc, &mRunButtons[i], 2, color, -2);
+  }
+  CBaseDlg::OnPaint();
 }

@@ -170,7 +170,7 @@ void CShiftManager::Initialize()
   // Identifiably modern scopes with old defaults: make them the new ones, adjust mag
   // dependence
   if (stillOldDflt && (mScope->GetUseIllumAreaForC2() ||
-    mScope->GetAdvancedScriptVersion() > 0)) {
+    mScope->GetAdvancedScriptVersion() > 0 || mScope->GetUtapiConnected())) {
     mNumISdelays = 4;
     for (ind = 0; ind < 4; ind++) {
       mISmoved[ind] = newDefaults[2 * ind];
@@ -1950,7 +1950,9 @@ ScaleMat CShiftManager::IStoSpecimen(int inMagInd, int toCam)
   mCurrentCamera = mWinApp->GetCurrentCamera();
   if (toCam < 0)
     toCam = mCurrentCamera;
-  aInv = SpecimenToCamera(toCam, inMagInd);
+  aInv.xpx = 0.;
+  if (inMagInd >= 0)
+    aInv = SpecimenToCamera(toCam, inMagInd);
   if (!aInv.xpx)
     return aInv;
   aInv = MatInv(aInv);

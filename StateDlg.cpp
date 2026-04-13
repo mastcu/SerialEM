@@ -585,6 +585,16 @@ int CStateDlg::DoSetImState(int stateNum, CString &errStr)
 
   conSet += setNum;
 
+  // But forget state when entering LD so nonLD state is not marked as set
+  if (param->lowDose && !winApp->LowDoseMode()) {
+    indSave = mSetStateIndex[0];
+    mSetStateIndex[0] = -1;
+    if (indSave >= 0) {
+      mHelper->ForgetSavedState();
+      mHelper->mStateDlg->UpdateListString(indSave);
+    }
+  }
+
   // Save the current defocus target or offset if one is set in this state
   if (param->targetDefocus > -9990. || param->ldDefocusOffset > -9990.) {
     if (IS_AREA_VIEW_OR_SEARCH(area))
@@ -791,10 +801,10 @@ int CStateDlg::LookupStateByNameOrNum(CString name, int &selInd, CString &errStr
     errStr = "There are two states whose names start with " + name;
     return 2;
   }
-  if (selInd < 0 && numOK) {
+  if ((selInd < 0 || !numExact) && numOK) {
     if (selNum >= 0 && selNum < (int)mStateArray->GetSize())
       selInd = selNum;
-    else {
+    else if (selInd < 0) {
       errStr = "There is no state numbered " + name;
       return 3;
     }
@@ -814,7 +824,7 @@ void CStateDlg::StateToListString(StateParams *state, CString &string, const cha
   int index, int *setStateIndex, int numSet, BOOL showNumber)
 {
   int magInd = state->lowDose ? state->ldParams.magIndex : state->magIndex;
-  int mag, active, spot, probe, ldArea;
+  int mag, active, spot, probe, ldArea, alpha;
   SetStaticPointers();
   int *activeList = winApp->GetActiveCameraList();
   double percentC2 = 0., intensity;
@@ -845,8 +855,11 @@ void CStateDlg::StateToListString(StateParams *state, CString &string, const cha
       lds = (char)0x97;
     if (FEIscope)
       prbal = probe ? "uP" : "nP";
-    else if (!winApp->mScope->GetHasNoAlpha() && state->beamAlpha >= 0)
-      prbal.Format("a%d", state->beamAlpha + 1);
+    else if (!winApp->mScope->GetHasNoAlpha()) {
+      alpha = state->lowDose ? B3DNINT(state->ldParams.beamAlpha) : state->beamAlpha;
+      if (alpha >= 0)
+        prbal.Format("a%d", alpha + 1);
+    }
     if (state->lowDose && state->ldDefocusOffset > -9990.)
       defstr.Format("%d", B3DNINT(state->ldDefocusOffset));
     if (!state->lowDose && state->targetDefocus > -9990.)
@@ -928,18 +941,19 @@ void CStateDlg::ManageName(void)
 {
   CString str;
   m_strName = "";
-  if (SetCurrentParam())
+  if (SetCurrentParam()) {
     m_strName = mParam->name;
-  if (mWinApp->mScope->GetUseAperturesInStates() > 0) {
-    if (mParam->objectiveAp >= 0 || mParam->condenserAp >= 0 || mParam->JeolC1Ap >= 0) {
-      m_butSetApertures.EnableWindow(true);
-      if (mHelper->FormatApertureString(mParam, str, true))
-        str = " (" + str + ")";
-    } else {
-      m_butSetApertures.EnableWindow(false);
+    if (mWinApp->mScope->GetUseAperturesInStates() > 0) {
+      if (mParam->objectiveAp >= 0 || mParam->condenserAp >= 0 || mParam->JeolC1Ap >= 0) {
+        m_butSetApertures.EnableWindow(true);
+        if (mHelper->FormatApertureString(mParam, str, true))
+          str = " (" + str + ")";
+      } else {
+        m_butSetApertures.EnableWindow(false);
+      }
+      m_butSetApertures.SetWindowText("Set apertures with state" + str);
+      m_bSetApertures = (mParam->flags & STATEFLAG_SET_APERTURES) != 0;
     }
-    m_butSetApertures.SetWindowText("Set apertures with state" + str);
-    m_bSetApertures = (mParam->flags & STATEFLAG_SET_APERTURES) != 0;
   }
   UpdateData(false);
 }

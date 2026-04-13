@@ -659,18 +659,22 @@ void CMultiGridTasks::RestoreImposedParams()
  */
 void CMultiGridTasks::ReopenMainLog(int idVal)
 {
-  CString str = mWinApp->mLogWindow->GetSaveFile();
-  if (mMainLogName.IsEmpty() || !str.CompareNoCase(mMainLogName))
-    return;
-  mWinApp->mLogWindow->DoSave();
-  mWinApp->mLogWindow->CloseLog();
+  CString str;
+  if (mWinApp->mLogWindow) {
+    str = mWinApp->mLogWindow->GetSaveFile();
+    if (mMainLogName.IsEmpty() || !str.CompareNoCase(mMainLogName))
+      return;
+    mWinApp->mLogWindow->DoSave();
+    mWinApp->mLogWindow->CloseLog();
+  }
   mWinApp->AppendToLog(mWinApp->mDocWnd->DateTimeForTitle());
   if (idVal >= 0)
     PrintfToLog("Navigator Acquire %s for grid # %d", mNavigator->GetAcquireEnded() ?
       "finished" : "failed", idVal);
   else
     PrintfToLog("Multiple grid operations ended");
-  SEMAppendToLog("Log for Acquire is in " + str);
+  if (!str.IsEmpty())
+    SEMAppendToLog("Log for Acquire is in " + str);
   mWinApp->mLogWindow->ReadAndAppend(mMainLogName);
 
 }
@@ -764,13 +768,13 @@ void CMultiGridTasks::UserResumeMulGridSeq()
   } else {
     mess.Format("The last multi-grid operation run was \"%s\"\n"
       "The next operation will be \"%s\".  Select:\n\n"
-      "\"Redo Last\" to resume by redoing the last operation (which may be inappropriate)"
-      "\n\n\"Do Next\" to start with the next operation",
+      "\"Redo Last Action\" to resume by redoing the last operation (which may be inappropriate)"
+      "\n\n\"Do Next Action\" to start with the next operation",
       sActionNames[mActSequence[B3DMAX(mSeqIndex - 1, 0)]],
       sActionNames[mActSequence[mSeqIndex]]);
     if (!mSingleGridMode)
       mess += "\n\n\"Skip to Next Grid\" to abandon this grid and go to the next one";
-    answer = SEMThreeChoiceBox(mess, "Redo Last", "Do Next",
+    answer = SEMThreeChoiceBox(mess, "Redo Last Action", "Do Next Action", 
       mSingleGridMode ? "" : "Skip to Next Grid", mSingleGridMode ?
       MB_QUESTION : MB_YESNOCANCEL);
     if (answer == IDYES)
@@ -4255,6 +4259,13 @@ void CMultiGridTasks::DoNextSequenceAction(int resume)
         }
         lastInd = ind;
       }
+    }
+    if (firstInd < 0) {
+      errStr.Format("Skipping grid %d because there are no items marked for Acquire",
+        jcd.id);
+      if (SkipToNextGrid(errStr))
+        return;
+      break;
     }
 
     // For polygon montage, start process of setting up files

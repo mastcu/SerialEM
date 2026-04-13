@@ -2086,8 +2086,8 @@ void CParameterIO::WriteSettings(CString strFileName)
       mWinApp->mNavHelper->GetMHCthreshNumHoles(),
       mWinApp->mNavHelper->GetMHCskipAveragingPos() ? 1 : 0);
     mFile->WriteString(oneState);
-    oneState.Format("AutoContParams %d %f %d %f %f %f %f %d %d %f %d %d %f %f %f %f %f %f"
-      " %d\n",
+    oneState.Format("AutoContParams %d %f %d %f %f %f %f %d %d %d %f %f %f %f %f %f"
+      " %d %d %f\n",
       contParams->targetSizePixels, contParams->targetPixSizeUm,
       contParams->usePixSize ? 1 : 0, contParams->minSize, contParams->maxSize,
       contParams->relThreshold, contParams->absThreshold, contParams->useAbsThresh ? 1 : 0,

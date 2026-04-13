@@ -211,6 +211,16 @@ struct ApertureThreadData {
   CString description;
 };
 
+struct ApMonitorThreadData {
+  ScopePluginFuncs *plugFuncs;
+  int singleCondIndex;
+  bool getObjective;
+  int condenserSize;
+  int objectiveSize;
+  bool moving;
+  int exitOrFailed;
+};
+
 struct FreeLensSequence {
   short setIndex;
   short ldArea;
@@ -590,7 +600,8 @@ public:
   GetSetMember(BOOL, UseFilterInTEMMode);
   GetSetMember(int, FeiSTEMprobeModeInLM);
   GetSetMember(int, ScanningMags);
-  GetSetMember(BOOL, UseImageBeamTilt);
+  GetSetMember(int, UseImageBeamTilt);
+  GetSetMember(int, LastImageBeamTilt);
   GetSetMember(int, ScreenRaiseDelay);
   GetSetMember(int, ScopeHasAutoloader);
   GetSetMember(int, LDFreeLensDelay);
@@ -644,6 +655,7 @@ public:
   ShortVec *GetSkipUtapiServices() {return &mSkipUtapiServices ; };
   bool UtapiSupportsService(int kind) { B3DCLAMP(kind, 0, UTAPI_SUPPORT_END - 1); return mUtapiConnected && mUtapiSupportsService[kind] ; };
   int Initialize();
+  void CreateScopeMutex();
   int RenewJeolConnection();
   CEMscope();
   virtual ~CEMscope();
@@ -767,6 +779,7 @@ private:
     int axisBits, CString &str);
   static UINT ScreenMoveProc(LPVOID pParam);
   static UINT ApertureMoveProc(LPVOID pParam);
+  static UINT ApMonitorProc(LPVOID pParam);
   static UINT LongOperationProc(LPVOID pParam);
 
   CShiftManager *mShiftManager;
@@ -774,6 +787,7 @@ private:
   CWinThread * mScreenThread;
   CWinThread * mFilmThread;
   CWinThread * mApertureThread;
+  CWinThread *mApMonitorThread;
   CWinThread *mLongOpThreads[MAX_LONG_THREADS];
   LongThreadData mLongOpData[MAX_LONG_THREADS];
   CWinThread *mSynchronousThread;
@@ -785,6 +799,7 @@ private:
   BOOL mCosineTilt;         // Flag for cosine tilt
   StageMoveInfo mMoveInfo;
   ApertureThreadData mApertureTD;
+  ApMonitorThreadData mApMonitorTD;
   BOOL mBeamBlankSet;         // Keeps track of requested blank setting
   double mLastISdelX;         // Last change in image shift
   double mLastISdelY;
@@ -1022,7 +1037,8 @@ private:
   ShortVec mSkipUtapiServices;  // List of services to mark as unsupported
   BOOL mUseFilterInTEMMode;    // Flag that energy filter will be used without EFTEM mode
   int mScanningMags;           // 1 if scanning, set to 0 to stop or -1 to end
-  BOOL mUseImageBeamTilt;      // Flag to use image-beam tilt on FEI instead of regular
+  int mUseImageBeamTilt;       // Flag to use image-beam tilt on FEI instead of regular
+  int mLastImageBeamTilt;      // Whetherit was used last time
   std::vector<ShortVec> mApertureSizes;   // Each vector has aperture index then sizes
   int mScreenRaiseDelay;       // Delay time after raising the screen, msec
   int mLDFreeLensDelay;        // Delay time after setting FLC for an area, msec

@@ -3,6 +3,70 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+4/9/26: Fixed combo boxes in multigrid to be non-editable (In 4.2).
+
+4/9/26: Made it retry for up to 3 seconds on startup before complaining about
+a non-dummy instance of SerialEM running.
+
+4/9/26: Fixed saving of autocontour parameters in settings, broken 12/16/25.
+
+4/9/26: Fixed problem with repeated timeouts being set for non-existent probe
+mode changes on Hitachi scopes (In 4.2).
+
+4/8/26: Fixed autocontouring when there is no image reduction and image is
+already bytes (In 4.2).
+
+4/6/26: Fixed multigrid starting new Navigator Acquire run after finishing
+subset if the run was paused and resumed (In 4.2).
+
+4/6/26: Fixed test in Navigator Acquire for whether multi-hole combiner wasn't
+run to consider only multi-hole acquisition (In 4.2).
+
+4/6/26: SEM_4-3-0beta9
+4/6/26: Fixed function that gets apertures for states and maps.
+
+4/6/26: SEM_4-2-19
+4/6/26: Fixed state dialog showing both states as selected when a Low Dose
+state is selected after a non Low Dose state (In 4.2).
+
+4/6/26: Improved choosing of state by index instead of start of name with
+GotoImagingState (In 4.2).
+
+4/5/26: Fixed display of alpha in Low Dose imaging state (In 4.2).
+
+4/5/26: Fixed problem transitioning between LM and nonLM with UTAPI (In 4.2).
+
+3/24/26: Fixed crash in multigrid when script run instead of autocontouring
+fails to set any items to Acquire and mapping immediately follows grid map.
+
+3/24/26: Fixed BackgroundMoveStage when movement is allowed on only one axis
+(In 4.2).
+
+3/20/26: SEM_4-3-0beta8
+3/20/26: Fixed problems from aperture thread in beta 7 and errors when
+changing between diffraction and imaging at the same time as an EFTEM change.
+
+3/16/26:  SEM_4-3-0beta7
+3/16/26: Moved aperture status monitoring to a thread in attempt to solve menu
+hanging problem.
+
+3/15/26: Added script commands for setting color of a Script Toolbar button or
+of an outline around one.
+
+3/13/26: Fixed multigrid problems and potential crash reopening log (In 4.2).
+
+3/12/26: SEM_4-2-18
+3/12/26: Fixed wrong low dose area settings being restored by hybrid Realign
+to Item (In 4.2).
+
+3/12/26: Had to disable the saving of pixel sizes readable by DM because after
+writing a file, the TIFF library crashes reading such a file (In 4.2).
+
+3/10/26: Fixed crash opening empty State dialog when tracking apertures.
+
+3/6/26: Made it use image-beam tilt instead of rotation center to access beam
+tilt when connecting with UTAPI, if UseImageBeamTilt is not set (In 4.2).
+
 3/4/26: Added property SaveNewImageToShrMem to have each new acquired image
 saved into a temporary file in shared memory readable by IMOD programs.
 
