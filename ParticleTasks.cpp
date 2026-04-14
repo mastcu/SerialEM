@@ -2311,9 +2311,9 @@ void CParticleTasks::TemplateAlignNextTask(int param)
           StopTemplateAlign();
           return;
         }
-        ix0 = mNavHelper->mHoleFinderDlg->FindAndCenterOneHole(mImBufs, holeSize, 0, 
-          mATParams.maxAlignShift, xCen, yCen, -mATParams.cropHoleSpacings, false, 
-          holeSpacing, hex);
+        ix0 = mNavHelper->mHoleFinderDlg->FindAndCenterOneHole(mImBufs, holeSize, 0,
+          mATParams.maxAlignShift / holeSize, xCen, yCen, -mATParams.cropHoleSpacings, 
+          false, holeSpacing, hex);
 
         if (ix0) {
           if (ix0 == FCH_ERR_CROP_RANGE)
@@ -2375,9 +2375,9 @@ void CParticleTasks::TemplateAlignNextTask(int param)
         }
       } else if (mATIterationNum > 0) {
         DoCenteringAutoAlign(false);
-      }
-      if (TestForTemplateTermination()) {
-        return;
+        if (TestForTemplateTermination()) {
+          return;
+        }
       }
 
       // Don't reset IS until center position is found via hole centering
