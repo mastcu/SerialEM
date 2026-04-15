@@ -2345,6 +2345,21 @@ int CHoleFinderDlg::FindAndCenterOneHole(EMimageBuffer *imBuf, float diameter, i
   // Error return
   if (err || !mXcenters.size()) {
     OnButClearData();
+
+    // Clear cropped image
+    if (crop) {
+      if (slice) {
+        if (slice->data.b && !displayCrop)
+          free(slice->data.b);
+        free(slice);
+      }
+      mHoleCenteringImBuf->mImage->detachData();
+      delete mHoleCenteringImBuf->mImage;
+      mHoleCenteringImBuf->ClearForDeletion();
+      delete mHoleCenteringImBuf;
+      mHoleCenteringImBuf = NULL;
+    }
+
     return FCH_ERR_HOLE_FIND;
   }
 
