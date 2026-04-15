@@ -984,7 +984,9 @@ int DirectElectronCamera::AcquireImageData(unsigned short *image4k, long &imageS
       DE::PixelFormat pixForm = DE::PixelFormat::UINT16;
       attributes.stretchType = DE::ContrastStretchType::NONE;
       imageOK = mDeServer->GetResult(useBuf, imageSizeX * imageSizeY * 2,
-        DE::FrameType::SUMTOTAL, &pixForm, &attributes);
+        mServerVersion >= DE_NEW_MOTIONCOR_FRAME ? 
+        DE::FrameType::SUMTOTAL_MOTIONCORRECTED : DE::FrameType::SUMTOTAL,
+        &pixForm, &attributes);
     }
   } else {
     imageOK = mDeServer->getImage(useBuf, imageSizeX * imageSizeY * 2);
