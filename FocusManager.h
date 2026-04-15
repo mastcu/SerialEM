@@ -177,6 +177,7 @@ private:
   int mFocusProbe;          // Probe mode for measuring defocus
   int mFocusAlpha;          // Alpha setting
   int mFocusSetNum;         // Control set #
+  int mFocusAreaNum;        // Low dose area
   bool mUsingExisting;      // Flag for any mode using existing images
   float *mFocusBuf[5];
   double mBufTimeStamp[3];  // For storing the time stamp when the image comes in
@@ -297,7 +298,8 @@ private:
   float mSFmaxFocusStep;
   float mBackupSlope;
   bool mModeWasContinuous;   // To keep track of whether it was in continuous mode
-  float mSFmaxTiltedSizeRange; // Maximum rangge of sizes in a tilted strip
+  int mSavedFrameSaving;     // To prevent frame-saving and restore it
+  float mSFmaxTiltedSizeRange; // Maximum range of sizes in a tilted strip
   float mSFminTiltedFraction;  // Minimum fraction of image to use when tilted
   EMimageBuffer *mSFbestImBuf;  // To keep a copy of best image for showing at end
   BOOL mSFshowBestAtEnd;        // Flag to show best focused image at end

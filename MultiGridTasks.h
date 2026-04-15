@@ -233,11 +233,11 @@ public:
   GetSetMember(BOOL, CheckLoadOnJeol);
   int *GetMontSetupConsetSizes() { return &mMontSetupConsetSizes[0]; };
   IntVec *GetCustomRunDlgInds() {return &mCustomRunDlgInds ; };
-  bool WasStoppedInNavRun() { return mStoppedInNavRun && mSuspendedMulGrid; };
-  bool WasStoppedInLMMont() { return mStoppedInLMMont && mSuspendedMulGrid; };
+  bool WasStoppedInNavRun() { return (mStoppedInNavRun && mSuspendedMulGrid); };
+  bool WasStoppedInLMMont() { return (mStoppedInLMMont && mSuspendedMulGrid); };
   void SetExtErrorOccurred(int inVal);
-  bool RunningExternalTask() { return mDoingMulGridSeq && !mInternalError; };
-  int *GetAutoContGroups() { return mHaveAutoContGroups ? &mAutoContGroups[0] : NULL; };
+  bool RunningExternalTask() { return (mDoingMulGridSeq && !mInternalError); };
+  int *GetAutoContGroups() { return (mHaveAutoContGroups ? &mAutoContGroups[0] : NULL); };
   CArray<MGridMultiShotParams, MGridMultiShotParams> *GetMGMShotParamArray() {return &mMGMShotParamArray ; };
   CArray<MGridHoleFinderParams, MGridHoleFinderParams> *GetMGHoleParamArray() { return &mMGHoleParamArray; };
   CArray<MGridAutoContParams, MGridAutoContParams> *GetMGAutoContParamArray() { return &mMGAutoContParamArray; };

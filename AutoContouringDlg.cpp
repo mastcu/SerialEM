@@ -1363,7 +1363,7 @@ UINT CAutoContouringDlg::AutoContProc(LPVOID pParam)
 
     // Or extract unreduced subarea for single point or polygon
     extractWithBinning(acd->slRefilled->data.b, mode, nxBuf, subXstart, subXend,
-      subYstart, subYend, 1, acd->slReduced->data.b, 0, &ix, &iy);
+      subYstart, subYend, 1, acd->slReduced->data.b, 1, &ix, &iy);
   }
 
   // Sampling and histogram for threshold
