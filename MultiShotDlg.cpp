@@ -1346,9 +1346,12 @@ bool CMultiShotDlg::CanDoAutoAdjust(int magType, int areaToUse, int otherMag, in
 }
 
 // Get a matrix for adjusting IS determined on a defocused image to unfocused IS,
-// given the image buffer (which can be NULL to use just area) or LD area
-ScaleMat CMultiShotDlg::ISfocusAdjustmentForBufOrArea(EMimageBuffer *imBufs, int area)
+// given the image buffer (which can be NULL to use just area), LD area, or map item
+ScaleMat CMultiShotDlg::ISfocusAdjustmentForBufOrArea(EMimageBuffer *imBufs, int area,
+  CMapDrawItem *mapItem)
 {
+  mWinApp = (CSerialEMApp *)AfxGetApp();
+  mShiftManager = mWinApp->mShiftManager;
   ScaleMat focMat, sclMat;
   float scale, rotation, defocus = 0.;
   int spot, probe, ind;
@@ -1367,6 +1370,12 @@ ScaleMat CMultiShotDlg::ISfocusAdjustmentForBufOrArea(EMimageBuffer *imBufs, int
     probe = imBufs->mProbeMode;
     ind = imBufs->mMagInd;
     imBufs->GetIntensity(intensity);
+  } else if (mapItem && mapItem->IsMap()) {
+    defocus = mapItem->mDefocusOffset;
+    probe = mapItem->mMapProbeMode;
+    spot = mapItem->mMapSpotSize;
+    ind = mapItem->mMapMagInd;
+    intensity = mapItem->mMapIntensity;
   } else if (mWinApp->LowDoseMode() && IS_AREA_VIEW_OR_SEARCH(area)) {
 
     // Or use specifed area

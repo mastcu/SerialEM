@@ -145,7 +145,8 @@ public:
   static int DoSaveIS(CString &str);
   static void AutoStepAdjNextTask(int param);
   static int AutoStepBusy();
-  static ScaleMat ISfocusAdjustmentForBufOrArea(EMimageBuffer *imBufs, int area);
+  static ScaleMat ISfocusAdjustmentForBufOrArea(EMimageBuffer *imBufs, int area, 
+    CMapDrawItem *mapItem = NULL);
   afx_msg void OnButEndPattern();
   afx_msg void OnButAbort();
   CStatic m_statSaveInstructions;

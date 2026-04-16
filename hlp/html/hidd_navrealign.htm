@@ -62,14 +62,12 @@
         crop size must be specified. After centering a hole, subsequent image shift resets 
         and realignments are performed using the same specifications used in Align to Template.
       </p>
-      <p> A modified version of the hole centering routine is executed if multiple 
-        Records will be done on an item in which the center of the multiple records pattern is
-         positioned between holes (for example, in a 2x2 pattern). In such cases, two holes are
-         centered: first, the nearest hole, then the hole in the opposite direction. The image
-         shift from each centering operation is averaged and applied to align the center of the
-         multishot pattern. If there is no hole in the opposite direction of the first one, 
-        then only the correction from centering the first hole is used to align to the center
-        position of the multishot pattern.</p>
+      <p> A modified version of the hole centering routine is executed if multiple Records 
+          will be done on an item in which the center of the multiple records pattern is 
+          positioned between holes (for example, in a 2x2 pattern). In such cases, two 
+          holes are centered: first, the nearest hole, then the hole in the opposite 
+          direction. The image shift from each centering operation is averaged and applied 
+          to align the center of the multishot pattern.</p>
     <p> <em><strong>Disabling Trimming of Dark Borders in Alignments</strong></em></p>
     <p> The option in this section governs whether dark borders are automatically 
       trimmed in two situations: the initial rounds of Realign to Item, including 

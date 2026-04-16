@@ -3122,8 +3122,8 @@ void HoleFinder::assignGridPositions
   }
 
   // Set up preliminary array and parameters
-  xdim = (int)(2. * (xmax - xmin) / avgLen + 2);
-  ydim = (int)(2. * (ymax - ymin) / avgLen + 2);
+  xdim = (int)(2. * (xmax - xmin) / avgLen + 6);
+  ydim = (int)(2. * (ymax - ymin) / avgLen + 6);
   indPrelim.resize(xdim * ydim, -1);
   xPrelim.resize(numPoints);
   yPrelim.resize(numPoints);

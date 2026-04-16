@@ -209,7 +209,6 @@ private:
   int mATConSetNum;                 // Control set number to capture images for aligning
   int mATHoleCenteringMode;         // 0=none, 1=hole centering, 2=even multishot center 
   
-  bool mFCHOneHoleForMulti;         // Flag if only using one hole for centering even multishot 
   int mFCHrestoreISdir;             // Direction to IS when centering in even multishot 
   double mFCHstartingISX;           // Initial X image shift at hole or multishot center
   double mFCHstartingISY;           // Initial Y image shift at hole or multishot center

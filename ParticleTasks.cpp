@@ -2098,12 +2098,16 @@ int CParticleTasks::AlignToTemplate(NavAlignParams & aliParams)
 int CParticleTasks::CenterNavItemOnHole(CMapDrawItem *item, NavAlignParams &aliParams, 
   bool doingMulti)
 {
-  int ind, numXholes, numYholes, numHoles, minHoleVecInd, conSetNum = 0;
-  float minHoleVecDist, distSqrd, tol = 1.e-5f;
+  int ind, jnd, minInd, numXholes, numYholes, numHoles, conSetNum = 0;
+  float minHoleVecDist, distSqrd, oppDistSqrd, tol = 1.e-5f;
+  CString mess;
   CMapDrawItem *mapItem = NULL;
   FloatVec delISX, delISY;
   IntVec posIndex;
   MultiShotParams *msParams;
+  ScaleMat is2ss, focMat;
+  float SSXi, SSYi, SSXj, SSYj;
+  int acqArea = -1;
   
   mATParams = aliParams;
   mATHoleCenteringMode = 1;
@@ -2111,20 +2115,26 @@ int CParticleTasks::CenterNavItemOnHole(CMapDrawItem *item, NavAlignParams &aliP
   if (mATParams.holeCenteringAcquire == FCH_ACQUIRE_MAP) {
     mapItem = mWinApp->mNavigator->FindItemWithMapID(item->mDrawnOnMapID, 
       true);
-    if (!mapItem)
+    if (!mapItem) {
+      SEMMessageBox("No map was found on which the given item is drawn");
       return item->mDrawnOnMapID ? 2 : 1;
+    }
     mFCHmagInd = mapItem->mMapMagInd;
   } else {
     LowDoseParams* ldParams = mWinApp->GetLowDoseParams();
     if (mATParams.holeCenteringAcquire == FCH_ACQUIRE_LD_SEARCH) {
       conSetNum = SEARCH_CONSET;
-      mFCHmagInd = ldParams[SEARCH_AREA].magIndex;
+      acqArea = SEARCH_AREA;
     }
     else if (mATParams.holeCenteringAcquire == FCH_ACQUIRE_LD_VIEW) {
       conSetNum = VIEW_CONSET;
-      mFCHmagInd = ldParams[VIEW_CONSET].magIndex;
+      acqArea = VIEW_CONSET;
     }
+    mFCHmagInd = ldParams[acqArea].magIndex;
   }
+
+  focMat = CMultiShotDlg::ISfocusAdjustmentForBufOrArea(NULL, acqArea, mapItem);
+  is2ss = mShiftManager->IStoSpecimen(mFCHmagInd);
   
   if (doingMulti) {
     numXholes = item->mNumXholes;
@@ -2139,36 +2149,54 @@ int CParticleTasks::CenterNavItemOnHole(CMapDrawItem *item, NavAlignParams &aliP
       mScope->GetImageShift(mFCHstartingISX, mFCHstartingISY);
       numHoles = GetHolePositions(delISX, delISY, posIndex, mFCHmagInd,
         mWinApp->GetCurrentCamera(), numXholes, numYholes, (float)mScope->GetTiltAngle());
-    
+
       // exclude skipped holes
       if (item->mNumXholes > 0) {
         SkipHolesInList(delISX, delISY, posIndex, item->mSkipHolePos, item->mNumSkipHoles, 
           numHoles);
       }
       
-      minHoleVecDist = powf(delISX[0], 2.f) + powf(delISY[0], 2.f);
-      mFCHholeVecISX = delISX[0];
-      mFCHholeVecISY = delISY[0];
-      for (ind = 1; ind < (int)delISX.size(); ind++) {
-        distSqrd = powf(delISX[ind], 2.f) + powf(delISY[ind], 2.f);
-        if (distSqrd < minHoleVecDist) {
-          minHoleVecDist = distSqrd;
-          minHoleVecInd = ind;
-          mFCHholeVecISX = delISX[ind];
-          mFCHholeVecISY = delISY[ind];
+      //Find pairs of opposite holes as possible candidates
+      minHoleVecDist = 1.e10;
+      minInd = -1;
+      for (ind = 0; ind < (int)delISX.size(); ind++) {
+        for (jnd = ind + 1; jnd < (int)delISX.size(); jnd++) {
+
+          mShiftManager->ApplyScaleMatrix(is2ss, delISX[ind], delISY[ind], SSXi, SSYi);
+          mShiftManager->ApplyScaleMatrix(is2ss, delISX[jnd], delISY[jnd], SSXj, SSYj);
+
+          // If current IS vector is opposite, their sum should be ~0
+          if (B3DABS((SSXi + SSXj) / SSXi) < tol && B3DABS((SSYi + SSYj) / SSYi) < tol) {
+
+            //Get shortest distance to one of the holes in the pair
+            distSqrd = powf(SSXi, 2.f) + powf(SSYi, 2.f);
+            oppDistSqrd = powf(SSXj, 2.f) + powf(SSYj, 2.f);
+
+            minInd = oppDistSqrd < distSqrd ? jnd : ind;
+            distSqrd = B3DMIN(oppDistSqrd, distSqrd);
+
+            if (distSqrd < minHoleVecDist) {
+              minHoleVecDist = distSqrd;
+              mFCHholeVecISX = delISX[minInd];
+              mFCHholeVecISY = delISY[minInd];
+            }
+          }
         }
       }
 
-      //Check if hole in opposite direction is in the hole list
-      mFCHOneHoleForMulti = true;
-      for (ind = 0; ind < (int)delISX.size(); ind++) {
+      //Check if no pairs found
+      if (minInd < 0) {
+        mess.Format("Centering a %d x %d multishot pattern requires two "
+          "opposite holes, but no such pair of holes exist in this item", 
+          numXholes, numYholes);
+        SEMMessageBox(mess);
+        return -1;
+      }
 
-        // If current IS vector is opposite mFCHholeVecIS, their sum should be ~0
-        if (B3DABS((delISX[ind] + mFCHholeVecISX) / mFCHholeVecISX) < tol &&
-            B3DABS((delISY[ind] + mFCHholeVecISY) / mFCHholeVecISY) < tol) {
-          mFCHOneHoleForMulti = false;
-          break;
-        }
+      // Get focus adjusted hole vectors
+      if (focMat.xpx) {
+        ApplyScaleMatrix(MatInv(focMat), mFCHholeVecISX, mFCHholeVecISY,
+          mFCHholeVecISX, mFCHholeVecISY);
       }
 
       mScope->SetImageShift(mFCHstartingISX + mFCHholeVecISX, 
@@ -2338,16 +2366,9 @@ void CParticleTasks::TemplateAlignNextTask(int param)
         
         // For a multishot pattern where the center is between holes
         if (mATHoleCenteringMode == 2) {
-          
-          // If only centering on one hole, return to center with correction
-          if (mFCHOneHoleForMulti) {
-            mScope->SetImageShift(mFCHstartingISX + shiftX, 
-              mFCHstartingISY + shiftY);
-            mFCHrestoreISdir = 0;
-          } 
 
           // Centered at the first hole, image shift to second hole in opposite direction
-          else if (mFCHrestoreISdir == 1) {
+          if (mFCHrestoreISdir == 1) {
             mScope->SetImageShift(mFCHstartingISX - mFCHholeVecISX, 
               mFCHstartingISY - mFCHholeVecISY);
 
@@ -2369,7 +2390,7 @@ void CParticleTasks::TemplateAlignNextTask(int param)
           mat = mShiftManager->IStoSpecimen(mFCHmagInd);
           if (mat.xpx) {
             ApplyScaleMatrix(mat, shiftX, shiftY, backlashX, backlashY);
-            PrintfToLog("Shift in Finding and Centering Hole is %.3f, %.3f microns",
+            PrintfToLog("Shift in centering hole(s) at navigator item is %.2f, %.2f microns",
               backlashX, backlashY);
           }
         }
