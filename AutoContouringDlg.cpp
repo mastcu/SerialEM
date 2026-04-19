@@ -1061,11 +1061,11 @@ void CAutoContouringDlg::MakeSinglePolygon(EMimageBuffer *imBuf, float xCenter,
   ScaleMat aInv;
   CMapDrawItem *item;
   MapItemArray *itemArray = mWinApp->mNavigator->GetItemArray();
-  float delX, delY, stageX, stageY, xInPiece, yInPiece;
+  float delX, delY, stageX, stageY, xInPiece, yInPiece, xAdj = xCenter, yAdj = yCenter;
   int pieceIndex, ind, registration = mWinApp->mNavigator->GetCurrentRegistration();
 
   // Test for whether the point is already inside a polygon
-  if (mWinApp->mNavigator->ConvertMousePoint(imBuf, xCenter, yCenter, stageX, stageY,
+  if (mWinApp->mNavigator->ConvertMousePoint(imBuf, xAdj, xAdj, stageX, stageY,
     aInv, delX, delY, xInPiece, yInPiece, pieceIndex)) {
     for (ind = 0; ind < (int)itemArray->GetSize(); ind++) {
       item = itemArray->GetAt(ind);
