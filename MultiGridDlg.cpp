@@ -2298,7 +2298,8 @@ void CMultiGridDlg::ProcessFinalStateCombo(CComboBox &combo, int index)
 void CMultiGridDlg::OnCheckSetFinalByGrid()
 {
   UPDATE_DATA_TRUE;
-  HandlePerGridStateChange();
+  if (m_bSetFinalByGrid)
+    HandlePerGridStateChange();
   mWinApp->RestoreViewFocus();
 }
 
