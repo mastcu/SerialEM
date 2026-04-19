@@ -267,7 +267,7 @@ struct JeolParams;
 #define PLUGFEI_CAN_LIVE_MODE     0x4000
 #define PLUGFEI_CAN_SAVE_TIFF     0x80
 #define PLUGFEI_NO_RECORD_LIMIT   1000000000
-#define PLUGFEI_INDEX_MASK        0x7F   // chop this down as flags are added below 0x100
+#define PLUGFEI_INDEX_MASK        0x3F   // chop this down as flags are added below 0x100
 #define PLUGFEI_MAX_FRAC_SHIFT    16
 #define PLUGFEI_WAIT_FOR_FRAMES   1
 #define PLUGFEI_APPLY_PIX2COUNT   2
