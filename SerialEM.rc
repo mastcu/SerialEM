@@ -7,8 +7,7 @@
 //
 // Generated from the TEXTINCLUDE 2 resource.
 //
-#include "afxres.h"
-
+#include "afxres.h"
 /////////////////////////////////////////////////////////////////////////////
 #undef APSTUDIO_READONLY_SYMBOLS
 
@@ -4297,8 +4296,8 @@ BEGIN
     PUSHBUTTON      "Clear",IDC_BUT_MG_CLEAR,139,251,26,12
     LTEXT           "Rootname: Pref_C###_name",IDC_STAT_MG_ROOTNAME,4,279,111,8
     LTEXT           "Current dir:",IDC_STAT_MG_CURRENT_DIR,4,288,159,8
-    PUSHBUTTON      "Set Current Dir",IDC_BUT_SET_CURRENT_DIR,79,296,50,12
-    CONTROL         "Use subdirectories",IDC_CHECK_MG_USE_SUBDIRS,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,5,297,73,10
+    PUSHBUTTON      "Set Current Dir",IDC_BUT_SET_CURRENT_DIR,6,296,50,12
+    CONTROL         "Use subdirectories",IDC_CHECK_MG_USE_SUBDIRS,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,90,297,73,10
     PUSHBUTTON      "+",IDC_BUT_MG_SETUP,2,241,10,9
     LTEXT           "Grid Setup",IDC_STAT_MG_GRID_SETUP,18,241,48,10
     PUSHBUTTON      "Load Grid",IDC_BUT_LOAD_GRID,37,191,33,12
@@ -8470,8 +8469,7 @@ LANGUAGE 9, 1
 #include "res\SerialEM.rc2"  // non-Microsoft Visual C++ edited resources
 #include "afxres.rc"         // Standard components
 #include "XFolderDialog\XFolderDialog.rc"
-#endif
-
+#endif
 /////////////////////////////////////////////////////////////////////////////
 #endif    // not APSTUDIO_INVOKED
 
