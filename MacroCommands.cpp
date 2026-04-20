@@ -2031,6 +2031,8 @@ int CMacCmd::AcquireToMatchBuffer(void)
   if (index2 == TRACK_CONSET)
     index2 = TRIAL_CONSET;
   mImBufs[index].mImage->getSize(mCropXafterShot, mCropYafterShot);
+  ACCUM_MIN(mCropXafterShot, mCamParams->sizeX / binning);
+  ACCUM_MIN(mCropYafterShot, mCamParams->sizeY / binning);
   sizeX = mCropXafterShot;
   sizeY = mCropYafterShot;
   v1 = 1.05;
