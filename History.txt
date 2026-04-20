@@ -3,6 +3,15 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+4/20/26: Fix enabling of subarea selection in Camera Setup when running FEI
+STEM through UTAPI.
+
+4/20/26: Fixed uninitialized variable probably giving inappropriate attempts
+to access aperture state.
+
+4/20/26: Prevented spurious objections to hole spacing when using the finad
+and center one hole procedure.
+
 4/20/26: SEM_4-2-21
 4/20/26: Fixed AcquireToMatchImage to work with montage overview (in 4.2).
 

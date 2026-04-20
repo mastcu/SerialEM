@@ -3578,7 +3578,7 @@ void CMultiGridTasks::DoNextSequenceAction(int resume)
         avgFrac = 0.5f * (mPctMidFracs[mSurveyIndex] + mPctRangeFracs[mSurveyIndex]);
         SEMTrace('q', "Pctl stats at %.2f,%.2f: low %.1f  high %.1f  midFrac %.3f "
           " rangeFrac %.3f  avg %.3f", mEucenXtrials[mSurveyIndex],
-          mEucenXtrials[mSurveyIndex], lowMean, highMean, mPctMidFracs[mSurveyIndex],
+          mEucenYtrials[mSurveyIndex], lowMean, highMean, mPctMidFracs[mSurveyIndex],
           mPctRangeFracs[mSurveyIndex], avgFrac);
         if (avgFrac >= mPctRightAwayFrac) {
 

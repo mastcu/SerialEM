@@ -1937,7 +1937,7 @@ void CNavHelper::PrepareToReimageMap(CMapDrawItem *item, MontParam *param,
   int  binning, xFrame, yFrame, area = -1, top, left, bottom, right, condAp, objAp, c1Ap;
   int curMag, objSize, condSize, c1Size = -1, mapObj, mapCond, mapC1 = -1, err, lowestM;
   float defocus;
-  bool needAps;
+  bool needAps = false;
   CString errStr;
   StateParams stateParam;
   LowDoseParams *ldp;
