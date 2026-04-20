@@ -13768,10 +13768,11 @@ bool CCameraController::IsFEISubareaFlexible(CameraParameters *param,
 bool CCameraController::IsFEISubareaFlexible(CameraParameters *param, BOOL saveFrames,
   BOOL alignFrames, int useFramealign, int readMode, int binning)
 {
-  return mScope->GetPluginVersion() >= PLUGFEI_FLEXIBLE_SUBAREAS && param->FEItype > 1 &&
+  return (mScope->GetPluginVersion() >= PLUGFEI_FLEXIBLE_SUBAREAS && param->FEItype > 1 &&
     binning <= 8 && !param->STEMcamera && (!alignFrames || useFramealign != 1 || 
       param->FEItype == FALCON4_TYPE) && (!saveFrames ||
-        IsSaveAsEERorLZW(param, saveFrames, alignFrames, useFramealign, readMode));
+        IsSaveAsEERorLZW(param, saveFrames, alignFrames, useFramealign, readMode))) ||
+    (param->STEMcamera && UsingUtapiForCamera(param));
 }
 
 // Returns true if camera is using Utapi interface, plus adjusts needed parameters
