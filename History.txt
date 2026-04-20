@@ -3,6 +3,12 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+4/20/26: SEM_4-2-21
+4/20/26: Added timeout in JeolScopePlugin so that stage move speed would not
+be canceled prematurely because of spurious stage ready signals (In 4.2).
+
+4/20/26: Made JeolScopePlugin recognize NBD as STEM mode (In 4.2).
+
 4/19/26: SEM_4-2-20
 4/18/26: Fixed erroneous offset of clicked point coordinates when adding a
 single autocontoured polygon with the mouse (In 4.2).
