@@ -2007,7 +2007,8 @@ void CCameraSetupDlg::ManageCamera()
   SetDlgItemText(IDC_DRIFTTEXT2, mSTEMcamera ? "usec" : "sec");
   if (mSTEMcamera)
     areaHeight = mParam->moduloX >= 0 ? mAreaTwoRowHeight : mAreaSTEMHeight;
-  else if (IS_FALCON2_3_4(mParam) || FCAM_CONTIN_SAVE(mParam) || mFEItype == 3)
+  else if ((IS_FALCON2_3_4(mParam) || FCAM_CONTIN_SAVE(mParam) || mFEItype == 3) &&
+    !mFlexibleSubareas)
     areaHeight = mAreaSTEMHeight;
   m_statArea.SetWindowPos(NULL, 0, 0, mAreaWidth, areaHeight, SWP_NOMOVE);
   m_statProcessing.SetWindowPos(NULL, 0, 0, mProcWidth,
