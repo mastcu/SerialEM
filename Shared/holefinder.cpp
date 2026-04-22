@@ -1358,7 +1358,7 @@ int HoleFinder::cannyEdge(float sigma, float f1, float f2)
     }
 
     // Expand the min/max to avoid clamping bin after histogram scaling
-    t1 = (sobelMax - mSobelMin) / SOBEL_HIST_DIM;
+    t1 = 2.f * (sobelMax - mSobelMin) / SOBEL_HIST_DIM + 0.1f;
     mSobelMin -= t1;
     sobelMax += t1;
     mHistScale = SOBEL_HIST_DIM / (sobelMax - mSobelMin);
@@ -1581,7 +1581,7 @@ void HoleFinder::sobelEdge(float *inputData, unsigned char *sobelDir, float &sob
   }
 
   sobelMin = 0.;
-  sobelMax = -1.e37f;
+  sobelMax = 0.;
   for (ind = 0; ind < numThreads; ind++) {
     ACCUM_MIN(sobelMin, threadMin[ind]);
     ACCUM_MAX(sobelMax, threadMax[ind]);
@@ -3122,8 +3122,8 @@ void HoleFinder::assignGridPositions
   }
 
   // Set up preliminary array and parameters
-  xdim = (int)(2. * (xmax - xmin) / avgLen + 2);
-  ydim = (int)(2. * (ymax - ymin) / avgLen + 2);
+  xdim = (int)(2. * (xmax - xmin) / avgLen + 6);
+  ydim = (int)(2. * (ymax - ymin) / avgLen + 6);
   indPrelim.resize(xdim * ydim, -1);
   xPrelim.resize(numPoints);
   yPrelim.resize(numPoints);

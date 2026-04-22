@@ -5875,6 +5875,7 @@ int CMultiGridTasks::LoadSessionFile(bool useLast, CString &errStr)
   // Clear out and process global entries
   ClearSession();
   mSessionFilename = mLastSessionFile;
+  mAdocChanged = false;
 
   // Look for nav acquire params
   UtilSplitExtension(mSessionFilename, acqParmName, ext);
@@ -6129,7 +6130,6 @@ int CMultiGridTasks::LoadSessionFile(bool useLast, CString &errStr)
   }
 
   AdocReleaseMutex();
-  mAdocChanged = false;
 
   return err;
 }
