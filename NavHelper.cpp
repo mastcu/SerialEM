@@ -462,7 +462,8 @@ void CNavHelper::InitAcqActionFlags(bool opening)
       // Manage Flash FEG
       setFlag = !((FEIscope && (mScope->GetAdvancedScriptVersion() >=
         ASI_FILTER_FEG_LOAD_TEMP || mScope->UtapiSupportsService(UTSUP_FLASHING))) ||
-        (JEOLscope && mScope->GetJeolHasNitrogenClass())) ||
+        (JEOLscope && mScope->GetJeolHasNitrogenClass()) ||
+        mScope->GetSimulationMode() < 0) ||
         mScope->GetScopeCanFlashFEG() <= 0;
       setOrClearFlags(&actions[NAACT_FLASH_FEG].flags, NAA_FLAG_ALWAYS_HIDE,
         setFlag ? 1 : 0);
