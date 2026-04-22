@@ -867,6 +867,7 @@ MAC_SAME_FUNC_ARG(ReadNavAcqParamSet, 2, 4, NavAcqAtEndUseParams, READNAVACQPARA
 MAC_SAME_FUNC(ToolbarFillColor, 1, 4, NoOperation, TOOLBARFILLCOLOR)
 MAC_SAME_FUNC(ToolbarOutlineColor, 1, 4, NoOperation, TOOLBAROUTLINECOLOR)
 MAC_SAME_NAME_ARG(ImposeToolbarColor, 3, 4, IMPOSETOOLBARCOLOR, IISss)
+MAC_SAME_NAME_ARG(ShowScopeControlPanel, 1, 0, ShowScopeControlPanel, I)
 
 
 // new Python-only commands need to be added to pythonOnlyCmds in ::CMacroProcessor

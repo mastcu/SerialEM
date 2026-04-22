@@ -12652,6 +12652,14 @@ int CMacCmd::OpenDialog()
   return 0;
 }
 
+// ShowScopeControlPanel
+int CMacCmd::ShowScopeControlPanel()
+{
+  if (!BOOL_EQUIV(mWinApp->GetShowRemoteControl(), mItemInt[1]))
+    mWinApp->OnShowScopeControlPanel();
+  return 0;
+}
+
 // ReportNumNavAcquire
 int CMacCmd::ReportNumNavAcquire(void)
 {
