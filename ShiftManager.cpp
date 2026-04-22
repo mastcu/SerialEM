@@ -169,7 +169,7 @@ void CShiftManager::Initialize()
   // Identifiably modern scopes with old defaults: make them the new ones, adjust mag
   // dependence
   if (stillOldDflt && (mScope->GetUseIllumAreaForC2() ||
-    mScope->GetAdvancedScriptVersion() > 0)) {
+    mScope->GetAdvancedScriptVersion() > 0 || mScope->GetUtapiConnected())) {
     mNumISdelays = 4;
     for (ind = 0; ind < 4; ind++) {
       mISmoved[ind] = newDefaults[2 * ind];
@@ -201,7 +201,7 @@ void CShiftManager::Initialize()
   if (mUseSquareShiftLimits < 0) {
     mUseSquareShiftLimits = 0;
     if (!FEIscope || mScope->GetUseIllumAreaForC2() ||
-      mScope->GetAdvancedScriptVersion() > 0)
+      mScope->GetAdvancedScriptVersion() > 0 || mScope->GetUtapiConnected())
       mUseSquareShiftLimits = 1;
   }
 }

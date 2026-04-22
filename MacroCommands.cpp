@@ -10977,7 +10977,8 @@ int CMacCmd::SetFEGEmissionState(void)
 int CMacCmd::IsFEGFlashingAdvised(void)
 {
   int answer;
-  if (mScope->GetAdvancedScriptVersion() < ASI_FILTER_FEG_LOAD_TEMP)
+  if (!mScope->UtapiSupportsService(UTSUP_FLASHING) && 
+    mScope->GetAdvancedScriptVersion() < ASI_FILTER_FEG_LOAD_TEMP)
     ABORT_NOLINE("The version of advanced scripting has not been identified as high "
       "enough to support FEG flashing");
   if (!mScope->GetIsFlashingAdvised(mItemInt[1], answer)) {
@@ -10993,7 +10994,8 @@ int CMacCmd::IsFEGFlashingAdvised(void)
 // NextFEGFlashHighTemp
 int CMacCmd::NextFEGFlashHighTemp(void)
 {
-  if (mScope->GetAdvancedScriptVersion() < ASI_FILTER_FEG_LOAD_TEMP)
+  if (!mScope->UtapiSupportsService(UTSUP_FLASHING) && 
+    mScope->GetAdvancedScriptVersion() < ASI_FILTER_FEG_LOAD_TEMP)
     ABORT_NOLINE("The version of advanced scripting has not been identified as high "
       "enough to support FEG flashing");
   mScope->SetDoNextFEGFlashHigh(mItemEmpty[1] || mItemInt[1]);
