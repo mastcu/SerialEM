@@ -25,6 +25,7 @@ static int sLeftTable[sizeof(sIdTable) / sizeof(int)];
 static int sHeightTable[sizeof(sIdTable) / sizeof(int)];
 
 int CStateDlg::mSetStateIndex[MAX_SAVED_STATE_IND + 1];
+bool  CStateDlg::mInitedSetStates = false;
 CArray<StateParams *, StateParams *> *CStateDlg::mStateArray;
 CNavHelper *CStateDlg::mHelper;
 StateParams *CStateDlg::mParam;
@@ -121,8 +122,6 @@ BOOL CStateDlg::OnInitDialog()
   tabs[0] = fields[0];
   for (i = 1; i < 12; i++)
     tabs[i] = tabs[i - 1] + fields[i]; 
-  for (i = 0; i <= MAX_SAVED_STATE_IND; i++)
-    mSetStateIndex[i] = -1;
   m_listViewer.SetTabStops(11, tabs);
   ReplaceDlgItemText(IDC_STAT_TITLELINE,"C2", mWinApp->mScope->GetC2Name());
   FillListBox();
@@ -147,6 +146,11 @@ void CStateDlg::SetStaticPointers()
   winApp = (CSerialEMApp *)AfxGetApp();
   mHelper = winApp->mNavHelper;
   mStateArray = mHelper->GetStateArray();
+  if (!mInitedSetStates) {
+    for (int i = 0; i <= MAX_SAVED_STATE_IND; i++)
+      mSetStateIndex[i] = -1;
+    mInitedSetStates = true;
+  }
 }
 
 void CStateDlg::PostNcDestroy() 
@@ -767,6 +771,7 @@ int CStateDlg::LookupStateByNameOrNum(CString name, int &selInd, CString &errStr
 // Format the string for the list box
 void CStateDlg::StateToListString(int index, CString &string)
 {
+  SetStaticPointers();
   StateParams *state = mStateArray->GetAt(index);
   StateToListString(state, string, "\t", index, mSetStateIndex, MAX_SAVED_STATE_IND + 1,
     m_bShowNumber);

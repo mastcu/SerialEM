@@ -3,6 +3,8 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+5/2/26: Fixed crash setting state if dialog never opened (In 4.2).
+
 4/22/26: Fixed some potential crashes in hole finder (In 4.2).
 
 4/22/26: Fixed multigrid losing track of whether grid on stage was aligned if

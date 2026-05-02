@@ -46,6 +46,7 @@ private:
   static bool mWarnedNoMontMap;
   static bool mRemindedToGoTo;
   static int mCamOfSetState;
+  static bool mInitedSetStates;
 
 public:
   CButton m_butAddCurState;
