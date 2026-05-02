@@ -1083,6 +1083,7 @@ void CCameraSetupDlg::LoadConsetToDialog()
     m_iSumCount = (*modeP > 0) ? mCurSet->sumK2OrDeCntFrames : mCurSet->DElinSumCount;
     m_fDEfps = (*modeP > 0 && mParam->DE_CountingFPS > 0.) ? mParam->DE_CountingFPS :
       mParam->DE_FramesPerSec;
+    m_fDEfps = (float)B3DNINT(100. * m_fDEfps) / 100.f;
     m_bDEalignFrames = m_bAlignDoseFrac;
     mSaveLinearFPS = mParam->DE_FramesPerSec;
     mSaveCountingFPS = mParam->DE_CountingFPS;

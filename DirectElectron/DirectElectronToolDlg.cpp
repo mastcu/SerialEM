@@ -35,6 +35,12 @@ DirectElectronToolDlg::DirectElectronToolDlg(CWnd *pParent /*=NULL*/)
   mChangingCooling = false;
   mStatusUpdateID = 0;
   mTemperSetpoint = -999;
+  mLastFPSset = 0.;
+  mLastTempSet = -999.;
+  mLastWaterLine = -999.;
+  mLastInserted = -1;
+  mLastCoolingSet = -1;
+  mLastMaxFPSset = 0.;
 }
 
 DirectElectronToolDlg::~DirectElectronToolDlg()
@@ -82,15 +88,22 @@ void DirectElectronToolDlg::updateDEToolDlgPanel(bool initialCall)
     BOOL isDE12 = mDECamera->CurrentIsDE12();
     BOOL isSurvey = mDECamera->CurrentIsSurvey();
     BOOL isEither = isDE12 || isSurvey;
-    SetDlgItemText(ID_DE_camName, value);
+    if (value != mLastNameSet) {
+      SetDlgItemText(ID_DE_camName, value);
+      mLastNameSet = value;
+    }
     EnableDlgItem(ID_DE_currfps, !isDE12);
     float temp_float = 0.0;
     int temp_int = 1;
 
     // Update Temperature
     if (!isSurvey) {
-      value.Format("%0.2f", mDECamera->getCameraTemp());
-      SetDlgItemText(IDC_DDD_Temp, value);
+      temp_float = mDECamera->getCameraTemp();
+      if (fabs(temp_float - mLastTempSet) > 0.01) {
+        value.Format("%0.2f", temp_float);
+        SetDlgItemText(IDC_DDD_Temp, value);
+        mLastTempSet = temp_float;
+      }
     }
 
     // update temperature setpoint if no property entered
@@ -98,27 +111,42 @@ void DirectElectronToolDlg::updateDEToolDlgPanel(bool initialCall)
       if (mTemperSetpoint <= -999 && curIsDE &&
         (camParam->CamFlags & DE_HAS_TEMP_SET_PT)) {
         if (mDECamera->getIntProperty(newNames ? sSetpointNew : sSetpointOld, temp_int)) {
-          value.Format("Setpoint(C): %d", temp_int);
-          SetDlgItemText(ID_DE_temperSet, value);
-          mTemperSetpoint = temp_int;
+          if (temp_int != mTemperSetpoint) {
+            value.Format("Setpoint(C): %d", temp_int);
+            SetDlgItemText(ID_DE_temperSet, value);
+            mTemperSetpoint = temp_int;
+          }
         }
       }
 
       // Read temperature control
       if (!mChangingCooling && mDECamera->getStringProperty(newNames ?
-        "Temperature - Control" : "Temperature Control", value))
-        ((CButton *) GetDlgItem(IDC_COOLCAM))->SetCheck(value == "Cool Down" ? 1 : 0);
+        "Temperature - Control" : "Temperature Control", value)) {
+        temp_int = (value == "Cool Down") ? 1 : 0;
+        if (temp_int != mLastCoolingSet) {
+          ((CButton *)GetDlgItem(IDC_COOLCAM))->SetCheck(temp_int);
+          mLastCoolingSet = temp_int;
+        }
+      }
     }
 
     if (isEither) {
       // update waterline temp
-      value.Format("Water line(C): %0.1f", mDECamera->getWaterLineTemp());
-      SetDlgItemText(ID_DE_waterlineTemp, value);
+      temp_float = mDECamera->getWaterLineTemp();
+      if (fabs(temp_float - mLastWaterLine) > 0.01) {
+        value.Format("Water line(C): %0.1f", temp_float);
+        SetDlgItemText(ID_DE_waterlineTemp, value);
+        mLastWaterLine = temp_float;
+      }
 
       // read "Camera Position Status"
-      if (mDECamera->getStringProperty("Camera Position Status", value))
-        ((CButton *) GetDlgItem(IDC_DE_insertCam))->SetCheck(value ==
-          DE_CAM_STATE_INSERTED ? 1 : 0);
+      if (mDECamera->getStringProperty("Camera Position Status", value)) {
+        temp_int = value == DE_CAM_STATE_INSERTED ? 1 : 0;
+        if (temp_int != mLastInserted) {
+          ((CButton *)GetDlgItem(IDC_DE_insertCam))->SetCheck(temp_int);
+          mLastInserted = temp_int;
+        }
+      }
 
       // Update Auto save address either from the camera properties or the server
       if (mDECamera->CanIgnoreAutosaveFolder()) {
@@ -130,7 +158,7 @@ void DirectElectronToolDlg::updateDEToolDlgPanel(bool initialCall)
         value = camParam->DE_AutosaveDir;
         if (value.IsEmpty() && !mDECamera->getStringProperty(DE_PROP_AUTOSAVE_DIR, value))
           value = "";
-        if (!value.IsEmpty()) {
+        if (!value.IsEmpty() && value != mAutosaveDir) {
           SetDlgItemText(ID_DE_saveDir, value);
           mAutosaveDir = value;
         }
@@ -147,9 +175,11 @@ void DirectElectronToolDlg::updateDEToolDlgPanel(bool initialCall)
       }
 
       // Update Max FPS
-      if (camParam->DE_MaxFrameRate > 0.) {
+      if (camParam->DE_MaxFrameRate > 0. && 
+        fabs(mLastFPSset - camParam->DE_MaxFrameRate) > 0.01) {
         value.Format("%0.2f", camParam->DE_MaxFrameRate);
         SetDlgItemText(ID_DE_maxfps, value);
+        mLastMaxFPSset = camParam->DE_MaxFrameRate;
       }
     }
 

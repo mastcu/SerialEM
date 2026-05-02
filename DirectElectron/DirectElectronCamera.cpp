@@ -925,6 +925,9 @@ int DirectElectronCamera::AcquireImageData(unsigned short *image4k, long &imageS
     float maxFPS = mLastFPS, maxExp = mLastExposureTime;
     if (getFloatProperty("Frames Per Second (Max)", maxFPS))
       mCamParams[mCurCamIndex].DE_MaxFrameRate = maxFPS;
+    if (mLastFPS > maxFPS && (!(mCamParams[mCurCamIndex].CamFlags & DE_CAM_CAN_COUNT) ||
+      !mLastElectronCounting))
+      mCamParams[mCurCamIndex].DE_FramesPerSec = maxFPS;
     getFloatProperty("Exposure Time Max (seconds)", maxExp);
     if (mLastExposureTime > maxExp) {
       mLastErrorString.Format("The exposure time of %.3f exceeds the maximum allowed "
