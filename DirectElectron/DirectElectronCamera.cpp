@@ -2262,7 +2262,7 @@ int DirectElectronCamera::SetFramesPerSecond(double value)
       ret1 = justSetDoubleProperty(psFramesPerSec, value);
       if (ret1) {
         mLastFPS = (float)value;
-        if (mCurCamIndex >= 0 && !(camP->CamFlags && DE_CAM_CAN_COUNT))
+        if (mCurCamIndex >= 0 && !(camP->CamFlags & DE_CAM_CAN_COUNT))
           camP->DE_FramesPerSec = (float)value;
       }
       if (CurrentIsDE12()) {
