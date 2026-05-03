@@ -198,6 +198,7 @@ CFocusManager::CFocusManager()
   mSFbestImBuf = NULL;
   mSFshowBestAtEnd = true;
   mModeWasContinuous = false;
+  mSavedFrameSaving = 0;
   mSFVZindex = -3;
   mSTEMdefocusToDelZ[0] = 1.;    // Placeholder
   mSTEMdefocusToDelZ[1] = 30.;    // Close to what microprobe had!
@@ -1063,21 +1064,22 @@ BOOL CFocusManager::FocusReady(int magInd, bool *calibrated)
     magInd > 0 && mScope->GetStandardLMFocus(magInd) > -900.;
 }
 
-// Call to start autofocus or measurement of defocus
+// Call to start autofocus or measurement of defocus: useViewInLD is 1 or 2 for View,
+// 3 or 4 for Preview, -1 for Record, -2 for Preview
 void CFocusManager::AutoFocusStart(int inChange, int useViewInLD, int iterNum)
 {
   float slope, shiftX, shiftY;
   FocusTable focTmp;
-  int hasCal, areaNum, probe, alpha;
+  int hasCal, probe, alpha;
   CString mess;
   LowDoseParams *ldParm = mWinApp->GetLowDoseParams();
-  mFocusSetNum = areaNum = FOCUS_CONSET;
+  mFocusSetNum = mFocusAreaNum = FOCUS_CONSET;
   mAutofocusIterNum = iterNum;
   if (useViewInLD && mWinApp->LowDoseMode() && !mWinApp->GetSTEMMode()) {
     mFocusSetNum = B3DCHOICE(useViewInLD > 0, useViewInLD < 3 ? VIEW_CONSET :
-      SEARCH_CONSET, RECORD_CONSET);
-    areaNum = mCamera->ConSetToLDArea(mFocusSetNum);
-    mScope->GotoLowDoseArea(areaNum);
+      SEARCH_CONSET, useViewInLD < -1 ? PREVIEW_CONSET : RECORD_CONSET);
+    mFocusAreaNum = mCamera->ConSetToLDArea(mFocusSetNum);
+    mScope->GotoLowDoseArea(mFocusAreaNum);
     if (mUseOppositeLDArea) {
       SEMMessageBox("You can not use opposite low dose areas with the View area",
         MB_EXCLAME);
@@ -1093,8 +1095,8 @@ void CFocusManager::AutoFocusStart(int inChange, int useViewInLD, int iterNum)
   if (mDoChangeFocus > 0)
     mLastTargetFocus = mTargetDefocus;
   SEMTrace('M', "Autofocus Start");
-  if (mWinApp->LowDoseMode() && ldParm[mFocusSetNum].magIndex)
-    mFocusMag = ldParm[areaNum].magIndex;
+  if (mWinApp->LowDoseMode() && ldParm[mFocusAreaNum].magIndex)
+    mFocusMag = ldParm[mFocusAreaNum].magIndex;
   else
     mFocusMag = mScope->GetMagIndex();
 
@@ -1124,9 +1126,9 @@ void CFocusManager::AutoFocusStart(int inChange, int useViewInLD, int iterNum)
   if (!mWinApp->GetSTEMMode()) {
 
     // Regular
-    if (mWinApp->LowDoseMode() && ldParm[mFocusSetNum].magIndex) {
-      alpha = (int)ldParm[mFocusSetNum].beamAlpha;
-      probe = ldParm[mFocusSetNum].probeMode;
+    if (mWinApp->LowDoseMode() && ldParm[mFocusAreaNum].magIndex) {
+      alpha = (int)ldParm[mFocusAreaNum].beamAlpha;
+      probe = ldParm[mFocusAreaNum].probeMode;
     } else {
       alpha = mScope->FastAlpha();
       probe = mScope->GetProbeMode();
@@ -1406,12 +1408,15 @@ void CFocusManager::DetectFocus(int inWhere, int useViewInLD)
   mFocusSetNum = FOCUS_CONSET;
   if (useViewInLD && mWinApp->LowDoseMode() && !mWinApp->GetSTEMMode())
     mFocusSetNum = B3DCHOICE(useViewInLD > 0, useViewInLD < 3 ? VIEW_CONSET :
-      SEARCH_CONSET, RECORD_CONSET);
+      SEARCH_CONSET, useViewInLD < -1 ? PREVIEW_CONSET : RECORD_CONSET);
+  mFocusAreaNum = mCamera->ConSetToLDArea(mFocusSetNum);
   ControlSet  *set = mConSets + mFocusSetNum;
   CameraParameters *camParam = mWinApp->GetCamParams() + mWinApp->GetCurrentCamera();
 
   mModeWasContinuous = set->mode == CONTINUOUS;
   set->mode = SINGLE_FRAME;
+  mSavedFrameSaving = set->saveFrames;
+  set->saveFrames = 0;
   mFocusWhere = inWhere;
   mUseViewInLD = useViewInLD;
   mUsingExisting = inWhere == FOCUS_EXISTING || inWhere == FOCUS_SHOW_CORR ||
@@ -1419,7 +1424,7 @@ void CFocusManager::DetectFocus(int inWhere, int useViewInLD)
   if (mUsingExisting && mImBufs->mMagInd > 0)
     mFocusMag = mImBufs->mMagInd;
   else if (mWinApp->LowDoseMode())
-    mFocusMag = ldParm[mFocusSetNum].magIndex;
+    mFocusMag = ldParm[mFocusAreaNum].magIndex;
   else
     mFocusMag = mScope->FastMagIndex();
 
@@ -1428,8 +1433,8 @@ void CFocusManager::DetectFocus(int inWhere, int useViewInLD)
     SetWorkingBeamTilt(mFocusMag);
 
   if (mWinApp->LowDoseMode()) {
-    mFocusProbe = ldParm[mFocusSetNum].probeMode;
-    mFocusAlpha = mScope->GetHasNoAlpha() ? -999 : (int)ldParm[mFocusSetNum].beamAlpha;
+    mFocusProbe = ldParm[mFocusAreaNum].probeMode;
+    mFocusAlpha = mScope->GetHasNoAlpha() ? -999 : (int)ldParm[mFocusAreaNum].beamAlpha;
   } else {
     mFocusProbe = mScope->ReadProbeMode();
     mFocusAlpha = mScope->GetAlpha();
@@ -1511,7 +1516,7 @@ void CFocusManager::DetectFocus(int inWhere, int useViewInLD)
     TaskFocusError, 0, 0);
   if (!mUsingExisting) {
     if (setLowDose)
-      mCamera->SetLDwasSetToArea(mFocusSetNum);
+      mCamera->SetLDwasSetToArea(mFocusAreaNum);
     mCamera->InitiateCapture(mFocusSetNum);
   }
 }
@@ -1743,7 +1748,7 @@ void CFocusManager::FocusDone()
       mCamera->OppositeLDAreaNextShot();
     if (!mUsingExisting) {
         if (!mUseOppositeLDArea)
-          mCamera->SetLDwasSetToArea(mFocusSetNum);
+          mCamera->SetLDwasSetToArea(mFocusAreaNum);
         mCamera->InitiateCapture(mFocusSetNum);
     }
     return;
@@ -1910,6 +1915,7 @@ void CFocusManager::FocusTasksFinished()
   mWinApp->SetStatusText(MEDIUM_PANE, "");
   if (mModeWasContinuous)
     mConSets[mFocusSetNum].mode = CONTINUOUS;
+  mConSets[mFocusSetNum].saveFrames = mSavedFrameSaving;
   mModeWasContinuous = false;
 }
 

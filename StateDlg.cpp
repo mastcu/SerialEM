@@ -30,6 +30,7 @@ static int sLeftTable[sizeof(sIdTable) / sizeof(int)];
 static int sHeightTable[sizeof(sIdTable) / sizeof(int)];
 
 int CStateDlg::mSetStateIndex[MAX_SAVED_STATE_IND + 1];
+bool  CStateDlg::mInitedSetStates = false;
 CArray<StateParams *, StateParams *> *CStateDlg::mStateArray;
 CNavHelper *CStateDlg::mHelper;
 StateParams *CStateDlg::mParam;
@@ -132,8 +133,6 @@ BOOL CStateDlg::OnInitDialog()
   tabs[0] = fields[0];
   for (i = 1; i < 12; i++)
     tabs[i] = tabs[i - 1] + fields[i];
-  for (i = 0; i <= MAX_SAVED_STATE_IND; i++)
-    mSetStateIndex[i] = -1;
   m_listViewer.SetTabStops(11, tabs);
   ReplaceDlgItemText(IDC_STAT_TITLELINE,"C2", mWinApp->mScope->GetC2Name());
   FillListBox();
@@ -160,6 +159,11 @@ void CStateDlg::SetStaticPointers()
   winApp = (CSerialEMApp *)AfxGetApp();
   mHelper = winApp->mNavHelper;
   mStateArray = mHelper->GetStateArray();
+  if (!mInitedSetStates) {
+    for (int i = 0; i <= MAX_SAVED_STATE_IND; i++)
+      mSetStateIndex[i] = -1;
+    mInitedSetStates = true;
+  }
 }
 
 void CStateDlg::PostNcDestroy()
@@ -585,6 +589,16 @@ int CStateDlg::DoSetImState(int stateNum, CString &errStr)
 
   conSet += setNum;
 
+  // But forget state when entering LD so nonLD state is not marked as set
+  if (param->lowDose && !winApp->LowDoseMode()) {
+    indSave = mSetStateIndex[0];
+    mSetStateIndex[0] = -1;
+    if (indSave >= 0) {
+      mHelper->ForgetSavedState();
+      mHelper->mStateDlg->UpdateListString(indSave);
+    }
+  }
+
   // Save the current defocus target or offset if one is set in this state
   if (param->targetDefocus > -9990. || param->ldDefocusOffset > -9990.) {
     if (IS_AREA_VIEW_OR_SEARCH(area))
@@ -791,10 +805,10 @@ int CStateDlg::LookupStateByNameOrNum(CString name, int &selInd, CString &errStr
     errStr = "There are two states whose names start with " + name;
     return 2;
   }
-  if (selInd < 0 && numOK) {
+  if ((selInd < 0 || !numExact) && numOK) {
     if (selNum >= 0 && selNum < (int)mStateArray->GetSize())
       selInd = selNum;
-    else {
+    else if (selInd < 0) {
       errStr = "There is no state numbered " + name;
       return 3;
     }
@@ -805,6 +819,7 @@ int CStateDlg::LookupStateByNameOrNum(CString name, int &selInd, CString &errStr
 // Format the string for the list box
 void CStateDlg::StateToListString(int index, CString &string)
 {
+  SetStaticPointers();
   StateParams *state = mStateArray->GetAt(index);
   StateToListString(state, string, "\t", index, mSetStateIndex, MAX_SAVED_STATE_IND + 1,
     m_bShowNumber);
@@ -814,7 +829,7 @@ void CStateDlg::StateToListString(StateParams *state, CString &string, const cha
   int index, int *setStateIndex, int numSet, BOOL showNumber)
 {
   int magInd = state->lowDose ? state->ldParams.magIndex : state->magIndex;
-  int mag, active, spot, probe, ldArea;
+  int mag, active, spot, probe, ldArea, alpha;
   SetStaticPointers();
   int *activeList = winApp->GetActiveCameraList();
   double percentC2 = 0., intensity;
@@ -845,8 +860,11 @@ void CStateDlg::StateToListString(StateParams *state, CString &string, const cha
       lds = (char)0x97;
     if (FEIscope)
       prbal = probe ? "uP" : "nP";
-    else if (!winApp->mScope->GetHasNoAlpha() && state->beamAlpha >= 0)
-      prbal.Format("a%d", state->beamAlpha + 1);
+    else if (!winApp->mScope->GetHasNoAlpha()) {
+      alpha = state->lowDose ? B3DNINT(state->ldParams.beamAlpha) : state->beamAlpha;
+      if (alpha >= 0)
+        prbal.Format("a%d", alpha + 1);
+    }
     if (state->lowDose && state->ldDefocusOffset > -9990.)
       defstr.Format("%d", B3DNINT(state->ldDefocusOffset));
     if (!state->lowDose && state->targetDefocus > -9990.)

@@ -925,6 +925,9 @@ int DirectElectronCamera::AcquireImageData(unsigned short *image4k, long &imageS
     float maxFPS = mLastFPS, maxExp = mLastExposureTime;
     if (getFloatProperty("Frames Per Second (Max)", maxFPS))
       mCamParams[mCurCamIndex].DE_MaxFrameRate = maxFPS;
+    if (mLastFPS > maxFPS && (!(mCamParams[mCurCamIndex].CamFlags & DE_CAM_CAN_COUNT) ||
+      !mLastElectronCounting))
+      mCamParams[mCurCamIndex].DE_FramesPerSec = maxFPS;
     getFloatProperty("Exposure Time Max (seconds)", maxExp);
     if (mLastExposureTime > maxExp) {
       mLastErrorString.Format("The exposure time of %.3f exceeds the maximum allowed "
@@ -984,7 +987,9 @@ int DirectElectronCamera::AcquireImageData(unsigned short *image4k, long &imageS
       DE::PixelFormat pixForm = DE::PixelFormat::UINT16;
       attributes.stretchType = DE::ContrastStretchType::NONE;
       imageOK = mDeServer->GetResult(useBuf, imageSizeX * imageSizeY * 2,
-        DE::FrameType::SUMTOTAL, &pixForm, &attributes);
+        mServerVersion >= DE_NEW_MOTIONCOR_FRAME ? 
+        DE::FrameType::SUMTOTAL_MOTIONCORRECTED : DE::FrameType::SUMTOTAL,
+        &pixForm, &attributes);
     }
   } else {
     imageOK = mDeServer->getImage(useBuf, imageSizeX * imageSizeY * 2);
@@ -2260,7 +2265,7 @@ int DirectElectronCamera::SetFramesPerSecond(double value)
       ret1 = justSetDoubleProperty(psFramesPerSec, value);
       if (ret1) {
         mLastFPS = (float)value;
-        if (mCurCamIndex >= 0 && !(camP->CamFlags && DE_CAM_CAN_COUNT))
+        if (mCurCamIndex >= 0 && !(camP->CamFlags & DE_CAM_CAN_COUNT))
           camP->DE_FramesPerSec = (float)value;
       }
       if (CurrentIsDE12()) {

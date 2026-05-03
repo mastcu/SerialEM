@@ -966,10 +966,12 @@ int CHoleFinderDlg::DoFindHoles(EMimageBuffer *imBuf, bool synchronous,
     return 1;
   }
 
-  if ((!hexArray && mParams.spacing < mParams.diameter + 0.5f) ||
-    (hexArray && mParams.hexSpacing < mParams.hexDiameter + 0.15f)) {
-    SEMMessageBox("The hole spacing is a center-to-center distance and must be at least "
-      + CString(hexArray ? "0.15" : "0.5") + " micron bigger than the hole size");
+  if ((!hexArray && mParams.spacing < mParams.diameter + MIN_RECT_SPACE_DIAM_DIFF) ||
+    (hexArray && mParams.hexSpacing < mParams.hexDiameter + MIN_HEX_SPACE_DIAM_DIFF)) {
+    mess.Format("The hole spacing is a center-to-center distance and must be at least "
+       " %.2f micron bigger than the hole size", 
+      hexArray ? MIN_HEX_SPACE_DIAM_DIFF : MIN_RECT_SPACE_DIAM_DIFF);
+    SEMMessageBox(mess);
     return 1;
   }
   mAdjustedStageToCam = mWinApp->mShiftManager->FocusAdjustedStageToCamera(imBuf);
@@ -2220,12 +2222,12 @@ int CHoleFinderDlg::FindAndCenterOneHole(EMimageBuffer *imBuf, float diameter, i
     diamSave = hfParams->hexDiameter;
     hfParams->hexDiameter = diameter;
     spacingSave = hfParams->hexSpacing;
-    hfParams->hexSpacing = spacing;
+    hfParams->hexSpacing = B3DMAX(spacing, diameter + 1.25f * MIN_HEX_SPACE_DIAM_DIFF);
   } else {
     diamSave = hfParams->diameter;
     hfParams->diameter = diameter;
     spacingSave = hfParams->spacing;
-    hfParams->spacing = spacing;
+    hfParams->spacing = B3DMAX(spacing, diameter + 1.25f * MIN_RECT_SPACE_DIAM_DIFF);
   }
   if (mIsOpen)
     UpdateSettings();
@@ -2345,6 +2347,21 @@ int CHoleFinderDlg::FindAndCenterOneHole(EMimageBuffer *imBuf, float diameter, i
   // Error return
   if (err || !mXcenters.size()) {
     OnButClearData();
+
+    // Clear cropped image
+    if (crop) {
+      if (slice) {
+        if (slice->data.b && !displayCrop)
+          free(slice->data.b);
+        free(slice);
+      }
+      mHoleCenteringImBuf->mImage->detachData();
+      delete mHoleCenteringImBuf->mImage;
+      mHoleCenteringImBuf->ClearForDeletion();
+      delete mHoleCenteringImBuf;
+      mHoleCenteringImBuf = NULL;
+    }
+
     return FCH_ERR_HOLE_FIND;
   }
 

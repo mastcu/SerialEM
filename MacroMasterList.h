@@ -851,7 +851,7 @@ MAC_SAME_NAME_ARG(GetMapIndexes, 1, 0, GETMAPINDEXES, S)
 MAC_SAME_NAME_ARG(GetApertureSizes, 2, 0, GETAPERTURESIZES, IS)
 MAC_SAME_NAME_ARG(GetLowDoseAreaParams, 2, 4, GETLOWDOSEAREAPARAMS, SS)
 MAC_SAME_NAME_ARG(SetMultiGridRefCounts, 1, 4, SETMULTIGRIDREFCOUNTS, D)
-MAC_SAME_NAME_ARG(FindItemWithLabelOrNote, 2, 4, FindItemWithLabelOrNote, ISdd)
+MAC_SAME_NAME_ARG(FindItemWithLabelOrNote, 2, 4, FINDITEMWITHLABELORNOTE, ISdd)
 MAC_SAME_FUNC_ARG(ListImagingState, 1, 4, ImagingStateProperties, LISTIMAGINGSTATE, S)
 MAC_SAME_NAME_ARG(GetFoundHolePositions, 2, 4, GETFOUNDHOLEPOSITIONS, SS)
 MAC_SAME_NAME_NOARG(ReportBeamSizeFromCalib, 0, 4, REPORTBEAMSIZEFROMCALIB)
@@ -867,6 +867,7 @@ MAC_SAME_FUNC_ARG(ReadNavAcqParamSet, 2, 4, NavAcqAtEndUseParams, READNAVACQPARA
 MAC_SAME_FUNC(ToolbarFillColor, 1, 4, NoOperation, TOOLBARFILLCOLOR)
 MAC_SAME_FUNC(ToolbarOutlineColor, 1, 4, NoOperation, TOOLBAROUTLINECOLOR)
 MAC_SAME_NAME_ARG(ImposeToolbarColor, 3, 4, IMPOSETOOLBARCOLOR, IISss)
+MAC_SAME_NAME_ARG(ShowScopeControlPanel, 1, 0, ShowScopeControlPanel, I)
 
 
 // new Python-only commands need to be added to pythonOnlyCmds in ::CMacroProcessor

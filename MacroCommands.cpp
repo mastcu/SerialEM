@@ -2148,6 +2148,8 @@ int CMacCmd::AcquireToMatchBuffer(void)
   if (index2 == TRACK_CONSET)
     index2 = TRIAL_CONSET;
   mImBufs[index].mImage->getSize(mCropXafterShot, mCropYafterShot);
+  ACCUM_MIN(mCropXafterShot, mCamParams->sizeX / binning);
+  ACCUM_MIN(mCropYafterShot, mCamParams->sizeY / binning);
   sizeX = mCropXafterShot;
   sizeY = mCropYafterShot;
   v1 = 1.05;
@@ -6848,7 +6850,14 @@ int CMacCmd::BackgroundTilt(void)
       smi.x = mItemDbl[1];
       smi.y = mItemDbl[2];
       speedInd = 3;
-      smi.axisBits = axisXY;
+      if (!stopStage)
+        mScope->GetStagePosition(stageX, stageY, stageZ);
+      if (fabs(stageX - smi.x) < 0.01)
+        smi.axisBits = axisY;
+      else if (fabs(stageY - smi.y) < 0.01)
+        smi.axisBits = axisX;
+      else
+        smi.axisBits = axisXY;
     } else {
       smi.alpha = mItemDbl[1];
       smi.axisBits = axisA;
@@ -11368,7 +11377,8 @@ int CMacCmd::SetFEGEmissionState(void)
 int CMacCmd::IsFEGFlashingAdvised(void)
 {
   int answer;
-  if (mScope->GetAdvancedScriptVersion() < ASI_FILTER_FEG_LOAD_TEMP)
+  if (!mScope->UtapiSupportsService(UTSUP_FLASHING) && 
+    mScope->GetAdvancedScriptVersion() < ASI_FILTER_FEG_LOAD_TEMP)
     ABORT_NOLINE("The version of advanced scripting has not been identified as high "
       "enough to support FEG flashing");
   if (!mScope->GetIsFlashingAdvised(mItemInt[1], answer)) {
@@ -11384,7 +11394,8 @@ int CMacCmd::IsFEGFlashingAdvised(void)
 // NextFEGFlashHighTemp
 int CMacCmd::NextFEGFlashHighTemp(void)
 {
-  if (mScope->GetAdvancedScriptVersion() < ASI_FILTER_FEG_LOAD_TEMP)
+  if (!mScope->UtapiSupportsService(UTSUP_FLASHING) && 
+    mScope->GetAdvancedScriptVersion() < ASI_FILTER_FEG_LOAD_TEMP)
     ABORT_NOLINE("The version of advanced scripting has not been identified as high "
       "enough to support FEG flashing");
   mScope->SetDoNextFEGFlashHigh(mItemEmpty[1] || mItemInt[1]);
@@ -12638,6 +12649,14 @@ int CMacCmd::OpenDialog()
   } else
     ABORT_LINE("\"" + mStrItems[1] + "\" does not match any of the names for dialogs that "
       "can be opened for line:\n\n");
+  return 0;
+}
+
+// ShowScopeControlPanel
+int CMacCmd::ShowScopeControlPanel()
+{
+  if (!BOOL_EQUIV(mWinApp->GetShowRemoteControl(), mItemInt[1]))
+    mWinApp->OnShowScopeControlPanel();
   return 0;
 }
 

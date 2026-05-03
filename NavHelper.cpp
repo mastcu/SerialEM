@@ -476,8 +476,10 @@ void CNavHelper::InitAcqActionFlags(bool opening)
         setOrClearFlags(&actions[NAACT_REFINE_ZLP].flags, NAA_FLAG_RUN_IT, 0);
 
       // Manage Flash FEG
-      setFlag = !((FEIscope && mScope->GetAdvancedScriptVersion() >=
-        ASI_FILTER_FEG_LOAD_TEMP) || (JEOLscope && mScope->GetJeolHasNitrogenClass())) ||
+      setFlag = !((FEIscope && (mScope->GetAdvancedScriptVersion() >=
+        ASI_FILTER_FEG_LOAD_TEMP || mScope->UtapiSupportsService(UTSUP_FLASHING))) ||
+        (JEOLscope && mScope->GetJeolHasNitrogenClass()) ||
+        mScope->GetSimulationMode() < 0) ||
         mScope->GetScopeCanFlashFEG() <= 0;
       setOrClearFlags(&actions[NAACT_FLASH_FEG].flags, NAA_FLAG_ALWAYS_HIDE,
         setFlag ? 1 : 0);
@@ -580,7 +582,7 @@ int CNavHelper::FindMapForRealigning(CMapDrawItem * inItem, BOOL restoreState)
       // But an LM can be used if there are aperture settings for it, and there is not
       // already a nonLM map accepted.
       if ((mScope->GetUseAperturesInStates() && item->mObjectiveAp >= 0 &&
-        item->mCondenserAp >= 0) && !(distMax > 0. && !maxInLM))
+        item->mCondenserAp >= 0) && !(distMax >= mMinMarginNeeded && !maxInLM))
         mapByAperture = true;
       else
         continue;
@@ -1964,7 +1966,7 @@ void CNavHelper::PrepareToReimageMap(CMapDrawItem *item, MontParam *param,
   int  binning, xFrame, yFrame, area = -1, top, left, bottom, right, condAp, objAp, c1Ap;
   int curMag, objSize, condSize, c1Size = -1, mapObj, mapCond, mapC1 = -1, err, lowestM;
   float defocus;
-  bool needAps;
+  bool needAps = false;
   CString errStr;
   StateParams stateParam;
   LowDoseParams *ldp;
@@ -3698,9 +3700,15 @@ void CNavHelper::StateCameraCoords(StateParams *param, int camIndex, int xFrame,
 int CNavHelper::AperturesForMapsAndStates(int &objAp, int &condAp, int &jeolC1, 
   CString &errStr)
 {
-  static double lastTime;
-  static int lastObj = -1, lastCond = -1, lastC1 = -1, lastErr = 0;
+  static double lastTime = 0.;
+  static int lastObj = -1, lastCond = -1, lastC1 = -1, lastErr = 1;
   int err = 0;
+
+  // Initialize the time and make sure it reads apertures this time
+  if (!lastTime) {
+    lastTime = GetTickCount();
+    lastErr = 1;
+  }
   if (!lastErr && SEMTickInterval(lastTime) < 1000.) {
     objAp = lastObj;
     condAp = lastCond;
@@ -3719,6 +3727,8 @@ int CNavHelper::AperturesForMapsAndStates(int &objAp, int &condAp, int &jeolC1,
       err++;
   }
   lastErr = err;
+  if (!err)
+    lastTime = GetTickCount();
   return err;
 }
 
@@ -5591,7 +5601,8 @@ int CNavHelper::AssessAcquireForParams(NavAcqParams *navParam, NavAcqAction *acq
     }
   }
   if (FEIscope && WILL_DO_ACTION(NAACT_FLASH_FEG) &&
-    mScope->GetAdvancedScriptVersion() < ASI_FILTER_FEG_LOAD_TEMP) {
+    mScope->GetAdvancedScriptVersion() < ASI_FILTER_FEG_LOAD_TEMP && 
+    !mScope->UtapiSupportsService(UTSUP_FLASHING)) {
     SEMMessageBox(prefix + "The version of advanced scripting has not been identified as"
       " high enough to support FEG flashing", MB_EXCLAME);
     return 1;
@@ -5612,13 +5623,16 @@ int CNavHelper::AssessAcquireForParams(NavAcqParams *navParam, NavAcqAction *acq
       for (i = startInd; i <= endInd; i++) {
         item = mItemArray->GetAt(i);
         if (item->mRegistration == mNav->GetCurrentRegistration() && item->mAcquire &&
-          !item->mNumSkipHoles) {
+          !item->mNumSkipHoles && ((MSparams.inHoleOrMultiHole & MULTI_HOLES) || 
+          (item->mNumXholes && item->mNumYholes))) {
           for (j = startInd; j <= endInd; j++) {
             if (j == i)
               continue;
             item2 = mItemArray->GetAt(j);
             if (item2->mRegistration == mNav->GetCurrentRegistration() &&
-              item2->mAcquire && !item2->mNumSkipHoles) {
+              item2->mAcquire && !item2->mNumSkipHoles && 
+              ((MSparams.inHoleOrMultiHole & MULTI_HOLES) ||
+              (item2->mNumXholes && item2->mNumYholes))) {
               delX = item->mStageX - item2->mStageX;
               delY = item->mStageY - item2->mStageY;
 

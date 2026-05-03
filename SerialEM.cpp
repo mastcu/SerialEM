@@ -80,7 +80,7 @@
 #endif
 
 #define VERSION_STRING  "SerialEM Version 4.3.0beta"
-#define TAG_STRING      "(Tagged SEM_4-2-18, 3/12/26)"
+#define TAG_STRING      "(Tagged SEM_4-2-21, 4/20/26)"
 #define DEPRECATED_PYTHON  "3.6-64"
 
 // Offsets for static window inside main frame
@@ -1168,15 +1168,24 @@ BOOL CSerialEMApp::InitInstance()
     mDummyInstance = true;
 
   if (!mDummyInstance) {
+    HANDLE hMutex = NULL;
+    double startTime = GetTickCount();
+    while (SEMTickInterval(startTime) < 3000) {
 
-    // If there is a previous instance, this will return a good handle with an error
-    HANDLE hMutex = CreateMutex(NULL, FALSE, "SerialEMSingleInstance");
-    if (hMutex) {
-      if (GetLastError() == ERROR_ALREADY_EXISTS) {
-        AfxMessageBox("There is a non-DUMMY instance of SerialEM still running.\n"
+      // If there is a previous instance, this will return a good handle with an error
+      hMutex = CreateMutex(NULL, FALSE, "SerialEMSingleInstance");
+      if (hMutex) {
+        if (GetLastError() == ERROR_ALREADY_EXISTS)
+          CloseHandle(hMutex);
+        else
+          break;
+      }
+      Sleep(50);
+    }
+    if (hMutex && GetLastError() == ERROR_ALREADY_EXISTS) {
+      AfxMessageBox("There is a non-DUMMY instance of SerialEM still running.\n"
           "It must be closed or killed before you can start another.");
         return FALSE;
-      }
     }
   }
 

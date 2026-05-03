@@ -202,7 +202,7 @@ void CShiftManager::Initialize()
   if (mUseSquareShiftLimits < 0) {
     mUseSquareShiftLimits = 0;
     if (!FEIscope || mScope->GetUseIllumAreaForC2() ||
-      mScope->GetAdvancedScriptVersion() > 0)
+      mScope->GetAdvancedScriptVersion() > 0 || mScope->GetUtapiConnected())
       mUseSquareShiftLimits = 1;
   }
 }
@@ -1968,7 +1968,9 @@ ScaleMat CShiftManager::IStoSpecimen(int inMagInd, int toCam)
   mCurrentCamera = mWinApp->GetCurrentCamera();
   if (toCam < 0)
     toCam = mCurrentCamera;
-  aInv = SpecimenToCamera(toCam, inMagInd);
+  aInv.xpx = 0.;
+  if (inMagInd >= 0)
+    aInv = SpecimenToCamera(toCam, inMagInd);
   if (!aInv.xpx)
     return aInv;
   aInv = MatInv(aInv);

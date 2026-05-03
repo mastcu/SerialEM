@@ -3578,7 +3578,7 @@ void CMultiGridTasks::DoNextSequenceAction(int resume)
         avgFrac = 0.5f * (mPctMidFracs[mSurveyIndex] + mPctRangeFracs[mSurveyIndex]);
         SEMTrace('q', "Pctl stats at %.2f,%.2f: low %.1f  high %.1f  midFrac %.3f "
           " rangeFrac %.3f  avg %.3f", mEucenXtrials[mSurveyIndex],
-          mEucenXtrials[mSurveyIndex], lowMean, highMean, mPctMidFracs[mSurveyIndex],
+          mEucenYtrials[mSurveyIndex], lowMean, highMean, mPctMidFracs[mSurveyIndex],
           mPctRangeFracs[mSurveyIndex], avgFrac);
         if (avgFrac >= mPctRightAwayFrac) {
 
@@ -4259,6 +4259,13 @@ void CMultiGridTasks::DoNextSequenceAction(int resume)
         }
         lastInd = ind;
       }
+    }
+    if (firstInd < 0) {
+      errStr.Format("Skipping grid %d because there are no items marked for Acquire",
+        jcd.id);
+      if (SkipToNextGrid(errStr))
+        return;
+      break;
     }
 
     // For polygon montage, start process of setting up files
@@ -5868,6 +5875,7 @@ int CMultiGridTasks::LoadSessionFile(bool useLast, CString &errStr)
   // Clear out and process global entries
   ClearSession();
   mSessionFilename = mLastSessionFile;
+  mAdocChanged = false;
 
   // Look for nav acquire params
   UtilSplitExtension(mSessionFilename, acqParmName, ext);
@@ -6122,7 +6130,6 @@ int CMultiGridTasks::LoadSessionFile(bool useLast, CString &errStr)
   }
 
   AdocReleaseMutex();
-  mAdocChanged = false;
 
   return err;
 }

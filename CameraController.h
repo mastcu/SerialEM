@@ -33,7 +33,7 @@ typedef void(*NewImCallback)(void);
 #define MAX_DARK_REFS   10
 #define MAX_CHANNELS     9
 #define MAX_RAMP_STEPS   32
-#define MAX_IGNORE_GATAN 10
+#define MAX_IGNORE_GATAN 12
 #define MAX_K2_FILTERS  8
 #define MAX_FILTER_NAME_LEN 64
 #define MAX_1VIEW_TYPES   6
