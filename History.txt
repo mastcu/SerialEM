@@ -3,6 +3,10 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+5/7/26 SEM_4-2-22
+5/7/26: Made it skip UTAPI insertion service if camera service is skipped to
+avoid errors because UTAPI has no camera names (In 4.2).
+
 5/7/26: Made ReportSlotStatus set repVal2 to the slot number instead of to hte
 error message if there is an error getting the name (In 4.2).
 
