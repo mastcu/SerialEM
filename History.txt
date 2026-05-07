@@ -3,6 +3,9 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+5/7/26: Made ReportSlotStatus set repVal2 to the slot number instead of to hte
+error message if there is an error getting the name (In 4.2).
+
 5/2/26: Fixed crash setting state if dialog never opened (In 4.2).
 
 4/22/26: Fixed some potential crashes in hole finder (In 4.2).
