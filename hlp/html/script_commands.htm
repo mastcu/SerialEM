@@ -3864,7 +3864,10 @@
              is included on some tab in the Workset area of the TEM user interface.&nbsp; The tab will be switched
             to if that panel is not currently visible.&nbsp; Names are obtained from
             the text boxes in the panel with Microsoft 'UI Automation', not with Thermo/FEI scripting 
-            commands.&nbsp; See 'ReportApertureSize' if the command hangs on a Windows 7 system.&nbsp; When
+            commands.&nbsp; See 'ReportApertureSize' if the command hangs on a Windows 7 system.&nbsp; If
+             there is an error getting the name, <i>reportedValue2</i> will be set to the slot 
+            number. &nbsp; Set the property 'FEIcanGetLoaderNames 0' to
+            prevent these errors if the names are in MiCo instead of in an Autoloader panel in TUI.&nbsp;  When
              these names are available, a value of 0 for <b>#</b> will retrieve the full list 
             of names from the panel and place them in the persistent 1-D array 'autoloaderInfo'.
             <br />With a JEOL autoloader, a cassette

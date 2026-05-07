@@ -139,7 +139,8 @@
           <TD>SkipUtapiServices</TD>
           <TD>Follow with a list of indexes to UTAPI services that should be marked as not 
             available.&nbsp; The indexes correspond to the values of the enum 
-            'UtapiSupportTypes' in SerialEM.h.  With the latest UTAPI server (April 2025), only 20 needs
+            'UtapiSupportTypes' in SerialEM.h and are printed to the log on the "Got service" line when
+            SerialEM is started with DebugOutput set to 'E*'.&nbsp;  With the latest UTAPI server (April 2025), only 20 needs
             to be used for cameras if you have a Ceta 2.&nbsp; Unlike other property entries, this list 
             can have ranges.&nbsp; For example, to skip everything except apertures, beam stop, and camera,
             enter '0 2 4-19 21-32'.</TD>
