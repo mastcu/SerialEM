@@ -942,6 +942,10 @@ int CEMscope::Initialize()
       mMonitorC2ApertureSize = 2;
     if (mShowApertureStatus > 0 && mUtapiSupportsService[UTSUP_APERTURES])
       mShowApertureStatus = 2;
+
+    // Need to skip insertion service if no camera service, because UTAPI has 0 cameras
+        if (!mUtapiSupportsService[UTSUP_CAM_SINGLE])
+      mUtapiSupportsService[UTSUP_CAM_INSERT] = false;
   }
   if (!(mUseIllumAreaForC2 && mFEIhasApertureSupport))
     mMonitorC2ApertureSize = 0;
@@ -7497,6 +7501,9 @@ BOOL CEMscope::CassetteSlotStatus(int slot, int &status, CString &names, int *nu
         if (names.Find("Could not find Workset tab") > 0)
           mFEIcanGetLoaderNames = 0;
         names += "\r\n";
+        if (names.Find("workset tab") >= 0)
+          names += "(If TUI has no Autoloader panel, set property"
+          " \"FEIcanGetLoaderNames 0\")\r\n";
       }
     }
   }
