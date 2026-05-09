@@ -10065,8 +10065,12 @@ int CMacCmd::ReportSlotStatus(void)
     }
   }
   SetRepValsAndVars(2, (double)index);
-  if (!name.IsEmpty())
-    SetOneReportedValue(&mStrItems[2], name, 2);
+  if (!name.IsEmpty()) {
+    if (name.Find("error occurred") < 0)
+      SetOneReportedValue(&mStrItems[2], name, 2);
+    else
+      SetOneReportedValue(&mStrItems[2], mItemInt[1], 2);
+  }
   return 0;
 }
 
