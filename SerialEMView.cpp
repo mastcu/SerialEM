@@ -1683,8 +1683,9 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
 
     // Draw polygons for full acquire area on all acquire points if selected, or on
     // current/selected points
-    if (iDraw >= 0 && item->mAcquire && item->mNumPoints == 1 && mAcquireBox &&
-      (showMultiOnAll &&
+    if (iDraw >= 0 && (item->mAcquire || 
+      (item->mTSparamIndex >= 0 && item->mNumIStargets)) && item->mNumPoints == 1 && 
+      mAcquireBox && (showMultiOnAll &&
       (!showOnlyCombined || (item->mNumXholes != 0 && item->mNumYholes != 0) ||
         (checkUndos &&
           mWinApp->mNavHelper->mCombineHoles->IsItemInUndoList(item->mMapID))) ||
