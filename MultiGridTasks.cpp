@@ -676,6 +676,7 @@ void CMultiGridTasks::ReopenMainLog(int idVal)
   if (!str.IsEmpty())
     SEMAppendToLog("Log for Acquire is in " + str);
   mWinApp->mLogWindow->ReadAndAppend(mMainLogName);
+  SEMTrace('q', "Back from ReadAndAppend main log");
 
 }
 
@@ -4557,6 +4558,8 @@ void CMultiGridTasks::NextAutoFilenameIfNeeded(CString &str)
 void CMultiGridTasks::CloseMainLogOpenForGrid(const char *suffix)
 {
   if (!mSingleGridMode) {
+    SEMTrace('q', "About to save log and open new for %s", 
+      (LPCTSTR)FullGridFilePath(mCurrentGrid, suffix));
     mWinApp->mLogWindow->DoSave();
     mWinApp->mLogWindow->CloseLog();
     mWinApp->AppendToLog(mWinApp->mDocWnd->DateTimeForTitle());
