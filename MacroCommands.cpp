@@ -4438,6 +4438,25 @@ int CMacCmd::ReportFrameSavingPath(void)
   return 0;
 }
 
+// ReadBasicModeFile
+int CMacCmd::ReadBasicModeFile()
+{
+  CString curFile = mDocWnd->GetBasicModeFile();
+  SubstituteLineStripItems(mStrLine, 2, mStrCopy);
+  if (curFile.CompareNoCase(mStrCopy)) {
+    if (mParamIO->ReadDisableOrHideFile(mStrCopy, mWinApp->GetBasicIDsToHide(),
+      mWinApp->GetBasicLineHideIDs(), mWinApp->GetBasicIDsToDisable(),
+      mWinApp->GetBasicHideStrings())) {
+      AbortMacro();
+      return 1;
+    }
+    mDocWnd->SetBasicModeFile(mStrCopy);
+  }
+  if (mItemInt[1] >= 0 && !BOOL_EQUIV(mWinApp->GetBasicMode(), mItemInt[1] > 0))
+    mWinApp->SetBasicMode(mItemInt[1] > 0);
+  return 0;
+}
+
 // ReportFreeDiskSpace
 int CMacCmd::ReportFreeDiskSpace()
 {
