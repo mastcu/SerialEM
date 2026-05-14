@@ -5697,7 +5697,10 @@ void CEMscope::GotoLowDoseArea(int newArea)
       if (oldArea > 0 && !sameIntensity && ldArea->spotSize && ldParams[0].spotSize &&
         ldArea->intensity && ldParams[0].intensity) {
 
+        // Need to set flag to +1 to accumulate beam shift if there is spot beam shift
+        mChangingLDArea = 1;
         SetSpotSize(ldParams[0].spotSize);
+        mChangingLDArea = -1;
         SetIntensity(ldParams[0].intensity, ldParams[0].spotSize, ldParams[0].probeMode);
         if (mLDBeamNormDelay)
           Sleep(mLDBeamNormDelay);
