@@ -3,6 +3,9 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+5/13/26: Added Locator window, opened from WIndow menu, for seeing and
+manipulating subarea displayed in an associated image window.
+
 5/7/26 SEM_4-2-22
 5/7/26: Made it skip UTAPI insertion service if camera service is skipped to
 avoid errors because UTAPI has no camera names (In 4.2).

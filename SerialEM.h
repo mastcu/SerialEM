@@ -757,6 +757,10 @@ public:
   GetSetMember(int, MaxChannelBuffers);
   GetSetMember(int, CircleTypesInLDDefine);
   void SetEnableMultiChanView(BOOL inVal);
+  afx_msg void OnWindowNewLocator();
+  afx_msg void OnUpdateWindowNewLocator(CCmdUI *pCmdUI);
+  int FindBufferForLocator(CSerialEMView *locator, int *numMatch = NULL);
+  CSerialEMView *FindLocatorForBuffer(int index);
   int *GetShowChanInMultiView() { return &mShowChanInMultiView[0]; };
   GetMember(bool, ClosingAllMultiChan);
   void RestoreFocusWhenIdle() { mRestoreFocusIdleCount = 4; };
@@ -892,9 +896,11 @@ public:
 private:
   BOOL mNeedStaticWindow;
   bool mNeedFFTWindow;
+  bool mNeedLocator;
   BOOL mViewClosing;
   BOOL mViewOpening;
   EMimageBuffer *mStackViewImBuf;     // Buffer to pass to it on creation
+  CArray<CSerialEMView *, CSerialEMView *> mLocatorViews;
   EMimageBuffer mImBufs[MAX_BUFFERS];
   EMimageBuffer mFFTBufs[MAX_FFT_BUFFERS];
   EMimageBuffer *mChannelImBufs[MAX_STEM_CHANNELS];

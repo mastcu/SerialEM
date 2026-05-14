@@ -1,4 +1,4 @@
-//race('1' SerialEMView.cpp:      Standard MFC MDI component, does the image display;
+// SerialEMView.cpp:      Standard MFC MDI component, does the image display;
 //                          one instance manages the main image window that
 //                          displays the stack of image buffers, and others
 //                          can be created for secondary image windows
@@ -127,6 +127,7 @@ CSerialEMView::CSerialEMView()
   mStackWindow = false;
   mFFTWindow = false;
   mMultiChanWindow = -1;
+  mLocatorViewNum = 0;
   mShiftPressed = false;
   mCtrlPressed = false;
   mPanning = false;
@@ -152,6 +153,8 @@ CSerialEMView::CSerialEMView()
   mInResize = false;
   mResizeMoveBoxLine = 0;
   mDoingResizeMove = false;
+  mDrawingLine = false;
+  mDidBoxShift = false;
 }
 
 CSerialEMView::~CSerialEMView()
@@ -234,7 +237,9 @@ BOOL CSerialEMView::PreCreateWindow(CREATESTRUCT& cs)
     }
 
     // Get window title
-    if (str.IsEmpty()) {
+    if (mLocatorViewNum > 0) {
+      str.Format("Locator %d", mLocatorViewNum % 100000);
+    } else if (str.IsEmpty()) {
       str.Format("Window %d", windowNum);
       windowNum++;
       KGetOneString("Title for new window:", str);
@@ -977,10 +982,31 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
     }
   }
 
+  // For locator window, find its buffer, get image limits and set up user box
+  if (mLocatorViewNum > 0 && !mDrawingLine && !mDoingResizeMove && !mDidBoxShift) {
+    ix = mWinApp->FindBufferForLocator(this, &iy);
+    imBuf->mHasUserPt = false;
+    if (ix < 0 || !imBuf->mImage || 
+      (iy > 1 &&ix != mWinApp->mMainView->GetImBufIndex())) {
+      imBuf->mHasUserLine = false;
+      imBuf->mDrawUserBox = false;
+    } else if (ix == mWinApp->mMainView->GetImBufIndex()) {
+      imBuf->mHasUserLine = true;
+      imBuf->mDrawUserBox = true;
+      float xCorner[4], yCorner[4];
+      EMimageBuffer * mainBuf = mWinApp->GetImBufs() + ix;
+      mWinApp->mMainView->WindowCornersInImageCoords(mainBuf, &xCorner[0], &yCorner[0]);
+      imBuf->mUserPtX = B3DMAX(0.f, xCorner[0]);
+      imBuf->mUserPtY = B3DMAX(0.f, yCorner[0]);
+      imBuf->mLineEndX = (float)B3DMIN(imBuf->mImage->getWidth(), xCorner[2]);
+      imBuf->mLineEndY = (float)B3DMIN(imBuf->mImage->getHeight(), yCorner[2]);
+    }
+  }
+
   // Draw user point if one is set, otherwise draw line if that flag is set
   drawUserPt = imBuf->mHasUserPt || imBuf->mIllegalUserPt;
   if ((drawUserPt || imBuf->mHasUserLine) && !(skipExtra & 1)) {
-    CPen pnSolidPen (PS_SOLID, thick2, RGB(0, 255, 0));
+    CPen pnSolidPen(PS_SOLID, thick2, RGB(0, 255, 0));
     CPoint point, point2;
     crossLen = DSB_DPI_SCALE(drawUserPt ? 7 : 1);
     MakeDrawPoint(&rect, imBuf->mImage, imBuf->mUserPtX, imBuf->mUserPtY, &point);
@@ -990,7 +1016,8 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
       MakeDrawPoint(&rect, imBuf->mImage, imBuf->mLineEndX, imBuf->mLineEndY, &point2);
       if (!imBuf->mDrawUserBox)
         DrawCross(&cdc, &pnSolidPen, point2, crossLen);
-      CPen pnSolid1(PS_SOLID, thick1, RGB(0, 255, 0));
+      CPen pnSolid1(PS_SOLID, mLocatorViewNum ? thick2 : thick1, 
+        mLocatorViewNum ? RGB(255, 0, 0) : RGB(0, 255, 0));
       CPen *pOldPen = cdc.SelectObject(&pnSolid1);
       cdc.MoveTo(point);
       if (imBuf->mDrawUserBox) {
@@ -2564,6 +2591,7 @@ void CSerialEMView::NewZoom()
 {
   double effZoom;
   float binning;
+  CSerialEMView *locator;
   if (mImBufs[mImBufIndex].mImage)
     DrawImage();
   if (mImBufs[mImBufIndex].mImageScale)
@@ -2586,6 +2614,11 @@ void CSerialEMView::NewZoom()
     }
   }
   mImBufs[mImBufIndex].mZoom = mZoom;
+  if (mMainWindow) {
+    locator = mWinApp->FindLocatorForBuffer(mImBufIndex);
+    if (locator && locator->m_hWnd)
+      locator->DrawImage();
+  }
 }
 
 // Left button down
@@ -2600,6 +2633,7 @@ void CSerialEMView::OnLButtonDown(UINT nFlags, CPoint point)
   mResizeMoveBoxLine = mLastCursorType;
   mRMBLCornerIndex = mNearCornerIndex;
   mRMBLEdgeIndex = mNearEdgeIndex;
+  mDidBoxShift = false;
   CView::OnLButtonDown(nFlags, point);
 }
 
@@ -2652,19 +2686,24 @@ void CSerialEMView::OnRButtonDblClk(UINT nFlags, CPoint point)
 void CSerialEMView::OnLButtonUp(UINT nFlags, CPoint point)
 {
   float shiftX, shiftY, angle, pixScale, crossLen;
-  int imX, imY;
+  int imX, imY, bufInd = -1;
   double defocus;
-  BOOL legal, used = false, showStage = false;
+  BOOL legal, used = false, showStage = false, needDraw = false;
   CString lenstr;
   bool shiftKey = GetAsyncKeyState(VK_SHIFT) / 2 != 0;
   bool ctrlKey = GetAsyncKeyState(VK_CONTROL) / 2 != 0;
-  EMimageBuffer *imBuf;
+  EMimageBuffer *imBuf, *mainBuf;
   CProcessImage *processImg = mWinApp->mProcessImage;
+  CSerialEMView *locator;
   CRect rect;
   FloatVec radii;
   mNavUsedLastLButtonUp = false;
   if (GetCapture() == this) {
     ReleaseCapture();
+    if (mLocatorViewNum > 0 && mImBufs->mImage)
+      bufInd = mWinApp->FindBufferForLocator(this);
+    if (bufInd >= 0)
+      mainBuf = mWinApp->GetImBufs() + bufInd;
     if (mImBufs && !mPanning && !mDrawingLine &&
       SEMTickInterval(mMouseDownTime) <= USER_PT_CLICK_TIME && !mDoingResizeMove) {
 
@@ -2674,8 +2713,17 @@ void CSerialEMView::OnLButtonUp(UINT nFlags, CPoint point)
       GetClientRect(&rect);
       legal = ConvertMousePoint(&rect, imBuf->mImage, &point, shiftX, shiftY);
 
+      if (legal && bufInd >= 0) {
+        if (bufInd != mWinApp->mMainView->GetImBufIndex())
+          mWinApp->SetCurrentBuffer(bufInd);
+        mainBuf = mWinApp->GetImBufs() + bufInd;
+        SetOffsetsFromCenterPoint(imBuf, mainBuf, shiftX, shiftY);
+        mWinApp->mMainView->DrawImage();
+        needDraw = true;
+      }
+
       if (mWinApp->mNavHelper->mHoleFinderDlg->HaveHolesToDrawOrMakePts() &&
-        !shiftKey && ctrlKey) {
+        !shiftKey && ctrlKey && !mLocatorViewNum) {
         crossLen = (float)(2 * mWinApp->ScaleValueForDPI(9) / (mZoom < 1 ? mZoom : 1.));
         mNavUsedLastLButtonUp = mWinApp->mNavHelper->mHoleFinderDlg->MouseSelectPoint(
           imBuf, shiftX, shiftY, crossLen, false);
@@ -2684,12 +2732,13 @@ void CSerialEMView::OnLButtonUp(UINT nFlags, CPoint point)
       // Navigator gets first crack if it is either a legal point or a valid hit for
       // selection
       if (!mNavUsedLastLButtonUp && ((!mDrewLDAreasAtNavPt || (!shiftKey && ctrlKey)) &&
-        mWinApp->mNavigator &&
+        mWinApp->mNavigator && !mLocatorViewNum &&
         (legal || (!shiftKey && (ctrlKey || mWinApp->mNavigator->InEditMode())) ||
         (shiftKey && mWinApp->mNavigator->InEditMode()))))
           mNavUsedLastLButtonUp = mWinApp->mNavigator->UserMousePoint(imBuf, shiftX,
             shiftY, mPointNearImageCenter, VK_LBUTTON);
-      if (legal && !mNavUsedLastLButtonUp) {
+
+      if (legal && !mNavUsedLastLButtonUp && !mLocatorViewNum) {
 
         // If the point is legal and was not used by navigator, commit it and output
         // stats.  But first see if low dose needs to snap it to axis and act on it
@@ -2724,7 +2773,7 @@ void CSerialEMView::OnLButtonUp(UINT nFlags, CPoint point)
         if (mWinApp->mNavigator)
           mWinApp->mNavigator->UpdateAddMarker();
       }
-      if (!legal && !mNavUsedLastLButtonUp) {
+      if (!legal && !mNavUsedLastLButtonUp && !mLocatorViewNum) {
         if (!(GetAsyncKeyState(VK_SHIFT) / 2)) {
           imBuf->mHasUserPt = false;
           imBuf->mHasUserLine = false;
@@ -2747,11 +2796,12 @@ void CSerialEMView::OnLButtonUp(UINT nFlags, CPoint point)
           mWinApp->SetStatusText(SIMPLE_PANE, lenstr, true);
         }
       }
-    } else if (mImBufs && mDrawingLine) {
+    } else if (mImBufs && (mDrawingLine || 
+      (bufInd >= 0 && (mDoingResizeMove ||  mDidBoxShift)))) {
 
       // If done drawing a line, output the length to log window
       imBuf = &mImBufs[mImBufIndex];
-      if (!imBuf->mDrawUserBox) {
+      if (!imBuf->mDrawUserBox && mDrawingLine) {
         if (mWinApp->mLowDoseDlg.CanActOnUserPointChange(imBuf, shiftX, shiftY)) {
           shiftX += imBuf->mLineEndX - imBuf->mUserPtX;
           shiftY += imBuf->mLineEndY - imBuf->mUserPtY;
@@ -2762,7 +2812,7 @@ void CSerialEMView::OnLButtonUp(UINT nFlags, CPoint point)
           imBuf->mUserPtX = shiftX;
           imBuf->mUserPtY = shiftY;
           mWinApp->mLowDoseDlg.Update();
-          DrawImage();
+          needDraw = true;
         } else {
           GetLineLength(imBuf, shiftX, shiftY, angle);
           if (shiftY) {
@@ -2774,20 +2824,62 @@ void CSerialEMView::OnLButtonUp(UINT nFlags, CPoint point)
           mWinApp->AppendToLog(lenstr, LOG_SWALLOW_IF_CLOSED);
         }
       }
-    } else if (mPanning && mZoom < 0.8 && mWinApp->mBufferManager->GetAntialias()) {
+      if (bufInd >= 0) {
+        if (bufInd != mWinApp->mMainView->GetImBufIndex())
+          mWinApp->SetCurrentBuffer(bufInd);
+        mainBuf->mZoom = B3DMIN(mWinApp->mMainView->mLastWinSizeX /
+          B3DMAX(10., B3DABS(imBuf->mUserPtX - imBuf->mLineEndX)),
+          mWinApp->mMainView->mLastWinSizeY /
+          B3DMAX(10., B3DABS(imBuf->mUserPtY - imBuf->mLineEndY)));
+        shiftX = (imBuf->mUserPtX + imBuf->mLineEndX) / 2.f;
+        shiftY = (imBuf->mUserPtY + imBuf->mLineEndY) / 2.f;
+        SetOffsetsFromCenterPoint(imBuf, mainBuf, shiftX, shiftY);
+        mWinApp->mMainView->mEffectiveZoom *= mainBuf->mZoom / mWinApp->mMainView->mZoom;
+        mWinApp->mMainView->mZoom = mainBuf->mZoom;
+        mWinApp->mMainView->NewZoom();
+        needDraw = true;
+      }
+    } else if (mPanning) {
+      if (mZoom < 0.8 && mWinApp->mBufferManager->GetAntialias()) {
 
-      // If we were panning and suspended antialias drawing, do antialias draw now
-      mPanning = false;
-      DrawImage();
+        // If we were panning and suspended antialias drawing, do antialias draw now
+        mPanning = false;
+        needDraw = true;
+      }
+      if (mMainWindow) {
+        locator = mWinApp->FindLocatorForBuffer(mImBufIndex);
+        if (locator && locator->m_hWnd)
+          locator->DrawImage();
+      }
     }
     mPanning = false;
   }
   CView::OnLButtonUp(nFlags, point);
   mResizeMoveBoxLine = 0;
   mDoingResizeMove = false;
+  mDrawingLine = false;
+  mDidBoxShift = false;
+  if (needDraw) {
+    DrawImage();
+    NewZoom();
+  }
 
-  //Update AlignFocusWindow to potentailly enable/disable To Marker button
+  //Update AlignFocusWindow to potentially enable/disable To Marker button
   mWinApp->mAlignFocusWindow.Update();
+}
+
+// Adjust clicked center point so that it is not too close to edge and get offsets from it
+void CSerialEMView::SetOffsetsFromCenterPoint(EMimageBuffer *imBuf, 
+  EMimageBuffer *mainBuf, float shiftX, float shiftY)
+{
+  int full = imBuf->mImage->getWidth();
+  int fits = (int)B3DMIN(mWinApp->mMainView->mLastWinSizeX / mainBuf->mZoom, full);
+  shiftX = (float)B3DMAX(fits / 2., B3DMIN(shiftX, full - fits / 2.));
+  mWinApp->mMainView->m_iOffsetX = B3DNINT(full / 2.f - shiftX);
+  full = imBuf->mImage->getHeight();
+  fits = (int)B3DMIN(mWinApp->mMainView->mLastWinSizeY / mainBuf->mZoom, full);
+  shiftY = (float)B3DMAX(fits / 2., B3DMIN(shiftY, full - fits / 2.));
+  mWinApp->mMainView->m_iOffsetY = B3DNINT(shiftY - full / 2.);
 }
 
 
@@ -3180,8 +3272,9 @@ void CSerialEMView::OnMouseMove(UINT nFlags, CPoint point)
               mWinApp->mNavigator->MouseDragSelectPoint(imBuf, shiftX, shiftY, crossLen);
 
             // Otherwise start or continue drawing a line if point is within image
-          } else if (!mDrawingLine && !(imBuf->mCaptured == BUFFER_FFT ||
-            imBuf->mCaptured == BUFFER_LIVE_FFT) && !changeBoxOrLine) {
+          } else if (!mDrawingLine && (ctrlKey || !mLocatorViewNum) &&  
+            !(imBuf->mCaptured == BUFFER_FFT || imBuf->mCaptured == BUFFER_LIVE_FFT) && 
+            (!changeBoxOrLine || (mLocatorViewNum && ctrlKey && shiftKey))) {
             CPoint prev(m_iPrevMX, m_iPrevMY);
             if (!ConvertMousePoint(&rect, imBuf->mImage, &prev, prevX, prevY)) {
               prevX = shiftX;
@@ -3217,10 +3310,12 @@ void CSerialEMView::OnMouseMove(UINT nFlags, CPoint point)
               if (mLastCursorType == 1 || (!imBuf->mDrawUserBox && !mRMBLCornerIndex)) {
                 imBuf->mUserPtX += shiftX;
                 imBuf->mUserPtY += shiftY;
+                mDidBoxShift = true;
               }
               if (mLastCursorType == 1 || (!imBuf->mDrawUserBox && mRMBLCornerIndex > 0)) {
                 imBuf->mLineEndX += shiftX;
                 imBuf->mLineEndY += shiftY;
+                mDidBoxShift = true;
               }
 
               // Adjusting a box
@@ -3500,9 +3595,9 @@ void CSerialEMView::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
     mShiftPressed);
 
   // Zoom up and down with these non standard keys
-  if (nChar == VK_MINUS) {
+  if (nChar == VK_MINUS && !mLocatorViewNum) {
     ZoomDown();
-  } else if (nChar == VK_EQUALS) {
+  } else if (nChar == VK_EQUALS && !mLocatorViewNum) {
     ZoomUp();
 
     // Invert contrast
@@ -3733,23 +3828,32 @@ void CSerialEMView::ResizeToFit(int iBordLeft, int iBordTop, int iBordRight,
 void CSerialEMView::OnSize(UINT nType, int cx, int cy)
 {
   CRect rect;
-  float xRatio, yRatio;
+  float xRatio, yRatio, newZoom;
   CView::OnSize(nType, cx, cy);
   if (mFFTWindow || mMultiChanWindow >= 0)
     mFFTresizeCount++;
 
   // Adjust zoom instead resizing to fit
-  if (mLastWinSizeX > 0 && cx > 0 && cy > 0 && mMainWindow) {
+  if (mLastWinSizeX > 0 && cx > 0 && cy > 0 && 
+    (mMainWindow || (mLocatorViewNum && mImBufs->mImage && mZoom > 0.))) {
     xRatio = (float)cx / mLastWinSizeX;
     yRatio = (float)cy / mLastWinSizeY;
-    if ((xRatio >= 1. ? xRatio : 1. / xRatio) < (yRatio >= 1. ? yRatio : 1. / yRatio))
-      xRatio = yRatio;
+    if (mMainWindow) {
+      if ((xRatio >= 1. ? xRatio : 1. / xRatio) < (yRatio >= 1. ? yRatio : 1. / yRatio))
+        xRatio = yRatio;
+    } else {
+      newZoom = (float)B3DMIN((float)cx / mImBufs->mImage->getWidth(), 
+        (float)cy / mImBufs->mImage->getHeight());
+      xRatio = newZoom / (float)mZoom;
+    }
     mZoom *= xRatio;
     mEffectiveZoom *= xRatio;
     mLastWinSizeX = cx;
     mLastWinSizeY = cy;
-    for (int ind = 0; ind < MAX_BUFFERS; ind++)
-      mImBufs[ind].mZoom *= xRatio;
+    if (mMainWindow)
+      for (int ind = 0; ind < MAX_BUFFERS; ind++)
+        mImBufs[ind].mZoom *= xRatio;
+    NewZoom();
   }
 
   // Report a resize event so borders and multi-window sizes can be adjusted, but not
@@ -3800,6 +3904,8 @@ void CSerialEMView::TryToChangeBuffer(int iTrial, int iDir)
 void CSerialEMView::SetCurrentBuffer(int inIndex)
 {
   float binning;
+  bool changed = !mFirstDraw && mMainWindow && inIndex != mImBufIndex;
+  CSerialEMView *oldLoc = changed ? mWinApp->FindLocatorForBuffer(mImBufIndex) : NULL;
   mImBufIndex = inIndex;
   if (mFirstDraw || mBasisSizeX < 0)
     FindEffectiveZoom();
@@ -3842,6 +3948,13 @@ void CSerialEMView::SetCurrentBuffer(int inIndex)
   NewImageScale();
   if (mMainWindow)
     mWinApp->UpdateBufferWindows();
+  if (changed) {
+    CSerialEMView *locator = mWinApp->FindLocatorForBuffer(inIndex);
+    if (locator)
+      locator->DrawImage();
+    if (oldLoc && oldLoc != locator)
+      oldLoc->DrawImage();
+  }
 }
 
 // The effective zoom is the zoom that would make a full-sized unbinned image from the

@@ -201,6 +201,8 @@ BEGIN_MESSAGE_MAP(CSerialEMApp, CWinApp)
   ON_UPDATE_COMMAND_UI(ID_LOGWINDOW_OPENSECONDARYLOG, OnUpdateOpenSecondaryLog)
   ON_COMMAND(ID_WINDOW_MULTICHANNELSTEMDISPLAY, OnMultiChannelStemDisplay)
   ON_UPDATE_COMMAND_UI(ID_WINDOW_MULTICHANNELSTEMDISPLAY, OnUpdateMultiChannelStemDisplay)
+  ON_COMMAND(ID_WINDOW_NEW_LOCATOR, OnWindowNewLocator)
+  ON_UPDATE_COMMAND_UI(ID_WINDOW_NEW_LOCATOR, OnUpdateWindowNewLocator)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -235,6 +237,7 @@ CSerialEMApp::CSerialEMApp()
   m_pMainWnd = NULL;
   mNeedStaticWindow = true;
   mNeedFFTWindow = false;
+  mNeedLocator = false;
   mMainView = NULL;
   mStackViewImBuf = NULL;
   mViewOpening = false;
@@ -2227,7 +2230,8 @@ int CSerialEMApp::GetNewViewProperties(CSerialEMView *inView, int &iBordLeft,
 {
   CRect rect;
   int userRight, userBot, fullWidth, needStatic = mNeedStaticWindow ? 1 : 0;
-  float dpiScale = GetScalingForDPI();
+  int num, ind, found;
+  float dpiScale = GetScalingForDPI(), locatorScale = 1.f;
   int nonStatAddBot = 25;
   iBordLeft = STATIC_BORDER_LEFT;
   iBordRight = STATIC_BORDER_RIGHT;
@@ -2312,6 +2316,29 @@ int CSerialEMApp::GetNewViewProperties(CSerialEMView *inView, int &iBordLeft,
     imBufs = new EMimageBuffer;
     EMimageBuffer *fromBuf = mActiveView->GetActiveImBuf();
     mBufferManager->CopyImBuf(fromBuf, imBufs);
+    if (mNeedLocator) {
+      needStatic = -1;
+
+      // Assign map ID or find first free number for locator number
+      if (fromBuf->mMapID > 0) {
+        inView->SetLocatorViewNum(fromBuf->mMapID);
+      } else {
+        for (num = 1; num < 1000; num++) {
+          found = 0;
+          for (ind = 0; ind < (int)mLocatorViews.GetSize(); ind++) {
+            if (mLocatorViews[ind]->GetLocatorViewNum() == num) {
+              found = 1;
+              break;
+            }
+          }
+          if (!found) {
+            inView->SetLocatorViewNum(num);
+            break;
+          }
+        }
+      }
+      mLocatorViews.Add(inView);
+    }
     if (fromBuf->mImage) {
       int width = B3DNINT(dpiScale * fromBuf->mImage->getWidth());
       int height = B3DNINT(dpiScale * fromBuf->mImage->getHeight() + nonStatAddBot);
@@ -2319,7 +2346,14 @@ int CSerialEMApp::GetNewViewProperties(CSerialEMView *inView, int &iBordLeft,
         iBordRight = width;
       if (height < iBordBottom)
         iBordBottom = height;
+
+      // This makes locator ~ half the size of image area
+      if (mNeedLocator) {
+        iBordBottom = B3DNINT(0.6 * iBordBottom);
+        iBordRight = B3DNINT(0.6 * iBordRight);
+      }
     }
+    mNeedLocator = false;
     iImBufNumber = 1;
     iImBufIndex = 0;
   }
@@ -2400,6 +2434,14 @@ void CSerialEMApp::ViewClosing(BOOL stackView, BOOL FFTview, int multiChan,
       mChannelImBufs[multiChan][nview].mPixMap = NULL;
     }
     mBufferWindow.UpdateSaveCopy();
+  }
+  if (view->GetLocatorViewNum() > 0) {
+    for (nview = 0; nview < (int)mLocatorViews.GetSize(); nview++) {
+      if (view == mLocatorViews[nview]) {
+        mLocatorViews.RemoveAt(nview);
+        break;
+      }
+    }
   }
   mViewClosing = true;
   nview = CountOpenViews();
@@ -2573,6 +2615,8 @@ EMimageBuffer *CSerialEMApp::GetActiveNonStackImBuf(void)
   return mActiveView->GetActiveImBuf();
 }
 
+///////////   MULTICHANNEL DISPLAY
+//
 // Open dialog for setting up multichannel display
 void CSerialEMApp::OnMultiChannelStemDisplay()
 {
@@ -2747,6 +2791,70 @@ void CSerialEMApp::SetEnableMultiChanView(BOOL inVal)
   mEnableMultiChanView = inVal;
   if (!mEnableMultiChanView)
     CloseAllMultiChanWindows(-1);
+}
+
+///////////// LOCATOR WINDOWS
+//
+// Open an new Locator window
+void CSerialEMApp::OnWindowNewLocator()
+{
+  int ind;
+
+  // Clean up any orphaned locators
+  for (ind = mLocatorViews.GetSize() - 1; ind >= 0; ind--) {
+    if (FindBufferForLocator(mLocatorViews[ind]) < -1) {
+      mLocatorViews[ind]->CloseFrame();
+    }
+  }
+  mNeedLocator = true;
+  ViewOpening();
+  mMainFrame->OnWindowNew();
+}
+
+// Enable Locator window if there is an image, no tasks, and no locator for active image
+void CSerialEMApp::OnUpdateWindowNewLocator(CCmdUI *pCmdUI)
+{
+  pCmdUI->Enable(mMainView->GetActiveImBuf()->mImage && !DoingTasks() &&
+    !FindLocatorForBuffer(mMainView->GetImBufIndex()));
+}
+
+// Look up buffer that locator should pay attention to and operate on
+// First the active buffer, then buffers in order, matching map ID or reference pointer
+int CSerialEMApp::FindBufferForLocator(CSerialEMView *locator, int *numMatch)
+{
+  EMimageBuffer *imBuf = locator->GetActiveImBuf();
+  int ind, index, retval = -2;
+  if (numMatch)
+    *numMatch = 0;
+  for (ind = MAX_BUFFERS; ind >= 0; ind--) {
+    index = ind == MAX_BUFFERS ? mMainView->GetImBufIndex() : ind;
+    if (!mImBufs[index].mImage || mImBufs[index].mCaptured == BUFFER_MONTAGE_CENTER)
+      continue;
+    if ((imBuf->mMapID > 0 && mImBufs[index].mMapID == imBuf->mMapID) ||
+      (mImBufs[index].mImage && mImBufs[index].mImage->getRefPtr() ==
+        imBuf->mImage->getRefPtr())) {
+      if (retval < 0)
+        retval = index;
+      if (numMatch)
+        (*numMatch)++;
+    }
+  }
+
+  // If not found, return -1 if in current Nav file, otherwise -2
+  if (retval < 0 && mNavigator && imBuf->mMapID && 
+    mNavigator->FindItemWithMapID(imBuf->mMapID))
+    return -1;
+  return retval;
+}
+
+// Look up locator for the given buffer by finding buffer for each locatoro
+CSerialEMView *CSerialEMApp::FindLocatorForBuffer(int index)
+{
+  int ind;
+  for (ind = 0; ind < (int)mLocatorViews.GetSize(); ind++)
+    if (FindBufferForLocator(mLocatorViews[ind]) == index)
+      return mLocatorViews[ind];
+  return NULL;
 }
 
 /////////////////////////////////////////////////////////////////////////////
