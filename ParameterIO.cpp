@@ -3047,7 +3047,7 @@ int CParameterIO::ReadDisableOrHideFile(CString & filename, std::set<int>  *IDsT
         lineHideIDs->clear();
         stringHides->clear();
       }
-      if (strLine.IsEmpty() || strLine.GetAt(0) == '#')
+      if (strLine.Trim().IsEmpty() || strLine.GetAt(0) == '#')
         continue;
 
       // Separate the type from the tag string and convert the type
