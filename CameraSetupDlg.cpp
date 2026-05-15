@@ -1941,7 +1941,9 @@ void CCameraSetupDlg::ManageCamera()
     (mDE_Type && (mParam->CamFlags & DE_HAS_HARDWARE_ROI))) ? SW_SHOW : SW_HIDE);
   m_butUseHwROI_OvDiff.SetWindowText(B3DCHOICE(hasDarkMode, "Dark Mode",
     mParam->OneViewType ? "Diffraction mode" : "Use Hardware ROI"));
-  m_butUseHwROI_OvDiff.EnableWindow(mCamera->CanK3DoDarkMode(mParam, m_bUseCorrDblSamp));
+  m_butUseHwROI_OvDiff.EnableWindow(ONEVIEW_NOT_CLEARVIEW(mParam) ||
+    (mDE_Type && (mParam->CamFlags & DE_HAS_HARDWARE_ROI)) ||
+    mCamera->CanK3DoDarkMode(mParam, m_bUseCorrDblSamp));
 
   // Decide whether to convert A bit Less to Square
   showbox = B3DMAX(mCameraSizeX, mCameraSizeY);

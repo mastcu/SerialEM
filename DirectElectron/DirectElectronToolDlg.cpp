@@ -256,7 +256,7 @@ BOOL DirectElectronToolDlg::OnInitDialog()
   mHdfMrcSaveOption = "HDF5";
 
   // Start a timer for periodic updates
-  mStatusUpdateID = ::SetTimer(NULL, 1, 10000, StatusUpdateProc);
+  mStatusUpdateID = ::SetTimer(NULL, 1, 5000, StatusUpdateProc);
 
   CString value;
   CComboBox   *correctComboBox = ((CComboBox *) GetDlgItem(ID_DE_protectMode));
