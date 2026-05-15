@@ -1083,6 +1083,7 @@ void CCameraSetupDlg::LoadConsetToDialog()
     m_iSumCount = (*modeP > 0) ? mCurSet->sumK2OrDeCntFrames : mCurSet->DElinSumCount;
     m_fDEfps = (*modeP > 0 && mParam->DE_CountingFPS > 0.) ? mParam->DE_CountingFPS :
       mParam->DE_FramesPerSec;
+    m_fDEfps = (float)B3DNINT(100. * m_fDEfps) / 100.f;
     m_bDEalignFrames = m_bAlignDoseFrac;
     mSaveLinearFPS = mParam->DE_FramesPerSec;
     mSaveCountingFPS = mParam->DE_CountingFPS;
@@ -2007,7 +2008,8 @@ void CCameraSetupDlg::ManageCamera()
   SetDlgItemText(IDC_DRIFTTEXT2, mSTEMcamera ? "usec" : "sec");
   if (mSTEMcamera)
     areaHeight = mParam->moduloX >= 0 ? mAreaTwoRowHeight : mAreaSTEMHeight;
-  else if (IS_FALCON2_3_4(mParam) || FCAM_CONTIN_SAVE(mParam) || mFEItype == 3)
+  else if ((IS_FALCON2_3_4(mParam) || FCAM_CONTIN_SAVE(mParam) || mFEItype == 3) &&
+    !mFlexibleSubareas)
     areaHeight = mAreaSTEMHeight;
   m_statArea.SetWindowPos(NULL, 0, 0, mAreaWidth, areaHeight, SWP_NOMOVE);
   m_statProcessing.SetWindowPos(NULL, 0, 0, mProcWidth,

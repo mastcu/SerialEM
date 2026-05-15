@@ -942,6 +942,10 @@ int CEMscope::Initialize()
       mMonitorC2ApertureSize = 2;
     if (mShowApertureStatus > 0 && mUtapiSupportsService[UTSUP_APERTURES])
       mShowApertureStatus = 2;
+
+    // Need to skip insertion service if no camera service, because UTAPI has 0 cameras
+        if (!mUtapiSupportsService[UTSUP_CAM_SINGLE])
+      mUtapiSupportsService[UTSUP_CAM_INSERT] = false;
   }
   if (!(mUseIllumAreaForC2 && mFEIhasApertureSupport))
     mMonitorC2ApertureSize = 0;
@@ -5828,7 +5832,10 @@ void CEMscope::GotoLowDoseArea(int newArea)
       if (oldArea > 0 && !sameIntensity && ldArea->spotSize && ldParams[0].spotSize &&
         ldArea->intensity && ldParams[0].intensity) {
 
+        // Need to set flag to +1 to accumulate beam shift if there is spot beam shift
+        mChangingLDArea = 1;
         SetSpotSize(ldParams[0].spotSize);
+        mChangingLDArea = -1;
         SetIntensity(ldParams[0].intensity, ldParams[0].spotSize, ldParams[0].probeMode);
         if (mLDBeamNormDelay)
           Sleep(mLDBeamNormDelay);
@@ -7497,6 +7504,9 @@ BOOL CEMscope::CassetteSlotStatus(int slot, int &status, CString &names, int *nu
         if (names.Find("Could not find Workset tab") > 0)
           mFEIcanGetLoaderNames = 0;
         names += "\r\n";
+        if (names.Find("workset tab") >= 0)
+          names += "(If TUI has no Autoloader panel, set property"
+          " \"FEIcanGetLoaderNames 0\")\r\n";
       }
     }
   }

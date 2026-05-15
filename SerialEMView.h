@@ -100,6 +100,7 @@ public:
   GetMember(bool, DrewLDAreasAtNavPt);
   GetMember(int, ImBufNumber);
   GetSetMember(bool, ChanBufIsNew);
+  GetSetMember(int, LocatorViewNum);
   static GetMember(bool, TakingSnapshot);
   void SetOffsets(int inX, int inY) { m_iOffsetX = inX, m_iOffsetY = inY; };
   void GetCenterForLDAreas(float &xcen, float &ycen) { xcen = mNavLDAreasXcenter; ycen = mNavLDAreasYcenter; };
@@ -152,6 +153,7 @@ private:
   BOOL mStackWindow;             // Flag that this is THE active stack view
   bool mFFTWindow;               // Flag that this is the FFT window
   int mMultiChanWindow;          // Index of multichannel window (-1 for not)
+  int mLocatorViewNum;           // Locator # or Map ID in window title
   bool mResizingToFit;           // Flag that a resize to fit is causing OnSize
   double mCreateTime;            // Timer for avoiding initial resizes of FFT
   int mFFTresizeCount;           // And counter
@@ -206,6 +208,7 @@ private:
   int mRMBLCornerIndex;          // Copies of corner and edge indexes then
   int mRMBLEdgeIndex;            
   bool mDoingResizeMove;         // Flag that any resize/move was done, inhibits mouse up
+  bool mDidBoxShift;
   int mDoingMontSnapshot;        // Flag that montage snapshot is being done, 2 for last
   static bool mTakingSnapshot;   // Flag set only when idle task occurs between calls
   bool mInResize;                // Flag that it is in the resize routine
@@ -230,6 +233,7 @@ protected:
   afx_msg void OnMButtonDown(UINT nFlags, CPoint point);
   afx_msg void OnRButtonDown(UINT nFlags, CPoint point);
   afx_msg void OnLButtonUp(UINT nFlags, CPoint point);
+  void SetOffsetsFromCenterPoint(EMimageBuffer *imBuf, EMimageBuffer *mainBuf, float shiftX, float shiftY);
   afx_msg void OnLButtonDblClk(UINT nFlags, CPoint point);
   afx_msg void OnMButtonDblClk(UINT nFlags, CPoint point);
   afx_msg void OnRButtonDblClk(UINT nFlags, CPoint point);

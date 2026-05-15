@@ -3,8 +3,61 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+5/14/26: Fixed using spot beam shifts on JEOL along with Normalize through
+View (In 4.2).
+
+5/13/26: Added Locator window, opened from WIndow menu, for seeing and
+manipulating subarea displayed in an associated image window.
+
+5/7/26 SEM_4-2-22
+5/7/26: Made it skip UTAPI insertion service if camera service is skipped to
+avoid errors because UTAPI has no camera names (In 4.2).
+
+5/7/26: Made ReportSlotStatus set repVal2 to the slot number instead of to hte
+error message if there is an error getting the name (In 4.2).
+
+5/2/26: Updated FPS for DE camera in DE panel and setup diaog when it is
+truncated to max FPS.
+
+5/2/26: Fixed crash setting state if dialog never opened (In 4.2).
+
+4/22/26: Fixed some potential crashes in hole finder (In 4.2).
+
+4/22/26: Added script command to show or hide the scope control panel.
+
+4/22/26: Fixed multigrid losing track of whether grid on stage was aligned if
+dialog is closed and reopened with reading of session file (In 4.2).
+
+4/22/26: Fixed to allow FEG flashing with UTAPI; also made it use square shift
+limits and assume that old image shift delays should be reduced if there is
+UTAPI (In 4.2).
+
+4/20/26: Fix enabling of subarea selection in Camera Setup when running FEI
+STEM through UTAPI.
+
+4/20/26: Fixed uninitialized variable probably giving inappropriate attempts
+to access aperture state.
+
+4/20/26: Prevented spurious objections to hole spacing when using the finad
+and center one hole procedure.
+
+4/20/26: SEM_4-2-21
+4/20/26: Fixed AcquireToMatchImage to work with montage overview (in 4.2).
+
+4/20/26: Added timeout in JeolScopePlugin so that stage move speed would not
+be canceled prematurely because of spurious stage ready signals (In 4.2).
+
+4/20/26: Made JeolScopePlugin recognize NBD as STEM mode (In 4.2).
+
+4/19/26: SEM_4-2-20
+4/18/26: Fixed erroneous offset of clicked point coordinates when adding a
+single autocontoured polygon with the mouse (In 4.2).
+
 4/15/26: Used new frame type in call to get motion-corrected image from DE
 camera for server 2.7.4+.
+
+4/17/29: Stopped setting state for grid after reverting to global when "Set &
+show states for each grid" is unchecked in multigrid (In 4.2).
 
 4/15/26: Added ability to autofocus with Preview and prevented frames from
 being saved for autofocus images.

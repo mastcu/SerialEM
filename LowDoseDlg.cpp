@@ -1477,7 +1477,8 @@ void CLowDoseDlg::ManagePanels()
 void CLowDoseDlg::DeferredIDDropping(UINT nID)
 {
   mIDsToDrop.push_back(nID);
-  ManagePanels();
+  if (mInitialized)
+    ManagePanels();
 }
 
 // Just update the defocus offset - for multishot step and adjust

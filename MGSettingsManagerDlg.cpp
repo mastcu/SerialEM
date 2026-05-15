@@ -575,8 +575,6 @@ void CMGSettingsManagerDlg::FormatMultiShotSettings(MGridMultiShotParams &param,
         dist, angle);
       one.Format(" @ %.2f um, %.0f deg", dist, angle);
       str += one;
-    } else {
-      str += " pattern";
     }
   } else
     str += ";  NO multiple holes";

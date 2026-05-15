@@ -3047,7 +3047,7 @@ int CParameterIO::WriteMulGridAcqParams(CString &filename, CString &errStr)
 
 // Reads a file to hide or disable items containing either defined strings in the
 // table in sDisableHideList or menu item IDs to be hidden
-void CParameterIO::ReadDisableOrHideFile(CString & filename, std::set<int>  *IDsToHide,
+int CParameterIO::ReadDisableOrHideFile(CString & filename, std::set<int>  *IDsToHide,
   std::set<int>  *lineHideIDs, std::set<int> *IDsToDisable, StringSet *stringHides)
 {
   CStdioFile *file = NULL;
@@ -3066,14 +3066,14 @@ void CParameterIO::ReadDisableOrHideFile(CString & filename, std::set<int>  *IDs
     while (file->ReadString(strLine)) {
       if (checkBOM) {
         if (CheckForByteOrderMark(strLine, "", filename, "items to hide or disable"))
-          return;
+          return 1;
         checkBOM = false;
         IDsToHide->clear();
         IDsToDisable->clear();
         lineHideIDs->clear();
         stringHides->clear();
       }
-      if (strLine.IsEmpty() || strLine.GetAt(0) == '#')
+      if (strLine.Trim().IsEmpty() || strLine.GetAt(0) == '#')
         continue;
 
       // Separate the type from the tag string and convert the type
@@ -3151,6 +3151,7 @@ void CParameterIO::ReadDisableOrHideFile(CString & filename, std::set<int>  *IDs
     AfxMessageBox(mess + " file of items to disable or hide:\n" + filename);
   if (!err && toggleMode)
     mWinApp->SetBasicMode(true);
+  return err;
 }
 
 // Properties are measured outside the program, entered by hand into the

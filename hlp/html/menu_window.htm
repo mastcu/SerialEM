@@ -13,6 +13,9 @@
       {
         width: 535px;
       }
+      .auto-style1 {
+        width: 571px;
+      }
   --></style>
   </HEAD>
   <BODY BGCOLOR="#ffffff" TEXT="#000000">
@@ -23,45 +26,88 @@
       <TABLE BORDER cols="2">
         <TR VALIGN="top">
           <TD class="style1"><A HREF="#hid_window_new">New Window</A></TD>
-          <TD class="style2">Copies active image to a new image window.</TD>
+          <TD class="auto-style1">Copies active image to a new image window.</TD>
+        </TR>
+        <TR VALIGN="top">
+           <TD class="style1"><A HREF="#hid_window_new_locator">New Locator Window</A></TD>
+          <TD class="auto-style1">Opens a window with an adjustable box showing displayed portion of 
+            active image.</TD>
         </TR>
         <TR VALIGN="top">
           <TD class="style1"><A HREF="#hid_window_cascade">Cascade</A></TD>
-          <TD class="style2">Arranges windows in an overlapped fashion.</TD>
+          <TD class="auto-style1">Arranges windows in an overlapped fashion.</TD>
         </TR>
         <TR VALIGN="top">
           <TD class="style1"><A HREF="#hid_window_tile">Tile</A></TD>
-          <TD class="style2">Arranges windows in non-overlapped tiles.</TD>
+          <TD class="auto-style1">Arranges windows in non-overlapped tiles.</TD>
         </TR>
         <TR VALIGN="top">
           <TD class="style1"><A HREF="#hid_resize_main">Resize Main</A></TD>
-          <TD class="style2">Resizes the main window to fill available space.</TD>
+          <TD class="auto-style1">Resizes the main window to fill available space.</TD>
         </TR>
         <TR VALIGN="top">
           <TD class="style1"><A HREF="#hid_window_stage_move_tool">Stage Move Tool...</A></TD>
-          <TD class="style2">Opens a panel for moving the stage.</TD>
+          <TD class="auto-style1">Opens a panel for moving the stage.</TD>
         </TR>
         <TR VALIGN="top">
           <TD class="style1"><a href="#hid_window_showscopecontrolpanel">Show Scope Control</a></TD>
-          <TD class="style2">Toggles whether the Microscope Control panel is included in 
+          <TD class="auto-style1">Toggles whether the Microscope Control panel is included in 
             stack of panels.</TD>
         </TR>
         <TR VALIGN="top">
           <TD class="style1"><a href="#hid_window_takescreenshot">Take Image Snapshot</a></TD>
-          <TD class="style2">Opens a dialog for taking snapshots of the image window.</TD>
+          <TD class="auto-style1">Opens a dialog for taking snapshots of the image window.</TD>
         </TR>
        <TR VALIGN="top">
           <TD class="style1"><a href="#hid_window_multichannelstemdisplay">Multichannel Display...</a></TD>
-          <TD class="style2">Opens a dialog to control displaying STEM images from selected detectors in separate windows.</TD>
+          <TD class="auto-style1">Opens a dialog to control displaying STEM images from selected detectors in separate windows.</TD>
         </TR>
          <TR VALIGN="top">
           <TD class="style1"><A HREF="#hid_window_all">Window 1, 2, ...</A></TD>
-          <TD class="style2">Goes to specified window.</TD>
+          <TD class="auto-style1">Goes to specified window.</TD>
         </TR>
       </TABLE>
       <BR>
       <P><A NAME="hid_window_new"></A><B>New Window command (Window menu)</B></P>
       <P>Use this command to copy the active image into a new window.</P>
+      <P><A NAME="hid_window_new_locator"></A><B>New Locator Window command (Window menu)</B></P>
+      <p>Use this command to open a Locator window tied to the image in the currently 
+        active buffer, which must be a buffer in the main image stack.&nbsp; This window 
+        will have a copy of the active image and a red box around the area being 
+        displayed for that image.&nbsp; When the original image is zoomed or panned, the 
+        box will be redrawn in the Locator. Clicking with the left mouse button in the 
+        Locator will center the original image at that point.&nbsp; The red box is the 
+        same as the one that can be drawn with Ctrl-Shift and the left mouse button, and 
+        it can be moved or resized with the left mouse button in the same way.&nbsp; The 
+        cursor will indicate whether the mouse will shift the whole box, an edge, or a 
+        corner.&nbsp; When such a change is finished, the original image will be made 
+        current and its zoom and position&nbsp; will be set based on the box size and 
+        position.&nbsp; The box will then be redrawn to reflect this new display.&nbsp; 
+        Here are some details about the behavior:</p>
+    <ul>
+      <li>Only one Locator can be opened for an image, but multiple Locators can be 
+        opened for different images.</li>
+      <li>The title of the Locator includes a small number for images that are not Navigator 
+        maps, or the last 5 didgits of the map ID for maps.</li>
+      <li>Zoom controls are disabled for the Locator window. If the window is resized, 
+        the zoom is adjusted so that the image still fills the window.</li>
+      <li>If the original image is copied to another buffer, the Locator operates only 
+        on one copy of the image: the one in the active buffer if it is shown there, 
+        otherwise on the one in the buffer with a higher letter.&nbsp; For example, if a 
+        montage map is read 
+        into buffer G and a Locator opened for it, it will show the display area in 
+        buffer G when that is the active buffer and operate on that buffer, but if you 
+        switch to the copy in buffer B, it will reflect and operate on the subarea shown 
+        there.&nbsp; In this case, the red box is not drawn when other buffers are 
+        displayed, but if you click in the Locator it will show the copy in the higher 
+        buffer.</li>
+      <li>The Locator becomes inactive when the original image is no longer present in 
+        the main buffer stack.&nbsp; If the Locator window has a map, it will become 
+        active again if the map is read back in.</li>
+      <li>When a new Locator window is opened, inactive windows (ones with no associated 
+        original image in a buffer) will be closed unless they correspond to a map in 
+        the current Navigator file.</li>
+    </ul>
       <P><A NAME="hid_window_cascade"></A><B>Cascade command (Window menu)</B></P>
       <P>Use this command to arrange multiple image windows in an overlapped fashion.
       </P>

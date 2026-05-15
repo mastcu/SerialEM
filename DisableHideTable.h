@@ -56,6 +56,12 @@ static DisableHideItem sDisableHideList[] =
   {"Calibration menu", 2, 0, -1},                                    // An entire menu
   {"Tilt Series menu", 2, 0, -1},
   {"Script menu", 2, 0, -1},
+  {"Camera menu", 2, 0, -1},
+  {"Process menu", 2, 0, -1},
+  {"Navigator menu", 2, 0, -1},
+  {"Tasks menu", 2, 0, -1},
+  {"Log menu", 2, 0, -1},
+  {"File menu", 2, 0, -1},
   // Whole submenus
   {"Beam & Spot submenu", 2, 0, -1},
   {"Pixel Size submenu", 2, 0, -1},
@@ -64,7 +70,7 @@ static DisableHideItem sDisableHideList[] =
   {"Special Settings submenu", 2, 0, -1},
   {"Old Coma-Free Alignment submenu", 2, 0, -1},    // In Calibration Focus & Tune submenu
   {"Old Coma-free Alignment submenu", 2, 0, -1},    // In Focus & Tune menu
-  {"Specialized Options submenu", 2, 0, -1},
+  {"Specialized & Misc. Options submenu", 2, 0, -1},
   {"Nav. Options submenu", 2, 0, -1},
 
   // Whole control panels

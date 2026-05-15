@@ -65,6 +65,12 @@ private:
   float mLastFPSset;
   CString mAutosaveDir;
   CString mHdfMrcSaveOption;
+  CString mLastNameSet;
+  float mLastTempSet;
+  int mLastCoolingSet;
+  float mLastWaterLine;
+  int mLastInserted;
+  float mLastMaxFPSset;
 
 protected:
 	virtual BOOL OnInitDialog();

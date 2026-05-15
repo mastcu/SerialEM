@@ -476,8 +476,10 @@ void CNavHelper::InitAcqActionFlags(bool opening)
         setOrClearFlags(&actions[NAACT_REFINE_ZLP].flags, NAA_FLAG_RUN_IT, 0);
 
       // Manage Flash FEG
-      setFlag = !((FEIscope && mScope->GetAdvancedScriptVersion() >=
-        ASI_FILTER_FEG_LOAD_TEMP) || (JEOLscope && mScope->GetJeolHasNitrogenClass())) ||
+      setFlag = !((FEIscope && (mScope->GetAdvancedScriptVersion() >=
+        ASI_FILTER_FEG_LOAD_TEMP || mScope->UtapiSupportsService(UTSUP_FLASHING))) ||
+        (JEOLscope && mScope->GetJeolHasNitrogenClass()) ||
+        mScope->GetSimulationMode() < 0) ||
         mScope->GetScopeCanFlashFEG() <= 0;
       setOrClearFlags(&actions[NAACT_FLASH_FEG].flags, NAA_FLAG_ALWAYS_HIDE,
         setFlag ? 1 : 0);
@@ -1964,7 +1966,7 @@ void CNavHelper::PrepareToReimageMap(CMapDrawItem *item, MontParam *param,
   int  binning, xFrame, yFrame, area = -1, top, left, bottom, right, condAp, objAp, c1Ap;
   int curMag, objSize, condSize, c1Size = -1, mapObj, mapCond, mapC1 = -1, err, lowestM;
   float defocus;
-  bool needAps;
+  bool needAps = false;
   CString errStr;
   StateParams stateParam;
   LowDoseParams *ldp;
@@ -5599,7 +5601,8 @@ int CNavHelper::AssessAcquireForParams(NavAcqParams *navParam, NavAcqAction *acq
     }
   }
   if (FEIscope && WILL_DO_ACTION(NAACT_FLASH_FEG) &&
-    mScope->GetAdvancedScriptVersion() < ASI_FILTER_FEG_LOAD_TEMP) {
+    mScope->GetAdvancedScriptVersion() < ASI_FILTER_FEG_LOAD_TEMP && 
+    !mScope->UtapiSupportsService(UTSUP_FLASHING)) {
     SEMMessageBox(prefix + "The version of advanced scripting has not been identified as"
       " high enough to support FEG flashing", MB_EXCLAME);
     return 1;

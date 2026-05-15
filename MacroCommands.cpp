@@ -2148,6 +2148,8 @@ int CMacCmd::AcquireToMatchBuffer(void)
   if (index2 == TRACK_CONSET)
     index2 = TRIAL_CONSET;
   mImBufs[index].mImage->getSize(mCropXafterShot, mCropYafterShot);
+  ACCUM_MIN(mCropXafterShot, mCamParams->sizeX / binning);
+  ACCUM_MIN(mCropYafterShot, mCamParams->sizeY / binning);
   sizeX = mCropXafterShot;
   sizeY = mCropYafterShot;
   v1 = 1.05;
@@ -4433,6 +4435,25 @@ int CMacCmd::ReportFrameSavingPath(void)
     mLogRpt = "The frame saving path for " + mCamParams->name + " is " + mStrCopy;
 
   SetOneReportedValue(&mStrItems[1], mStrCopy, 1);
+  return 0;
+}
+
+// ReadBasicModeFile
+int CMacCmd::ReadBasicModeFile()
+{
+  CString curFile = mDocWnd->GetBasicModeFile();
+  SubstituteLineStripItems(mStrLine, 2, mStrCopy);
+  if (curFile.CompareNoCase(mStrCopy)) {
+    if (mParamIO->ReadDisableOrHideFile(mStrCopy, mWinApp->GetBasicIDsToHide(),
+      mWinApp->GetBasicLineHideIDs(), mWinApp->GetBasicIDsToDisable(),
+      mWinApp->GetBasicHideStrings())) {
+      AbortMacro();
+      return 1;
+    }
+    mDocWnd->SetBasicModeFile(mStrCopy);
+  }
+  if (mItemInt[1] >= 0 && !BOOL_EQUIV(mWinApp->GetBasicMode(), mItemInt[1] > 0))
+    mWinApp->SetBasicMode(mItemInt[1] > 0);
   return 0;
 }
 
@@ -10063,8 +10084,12 @@ int CMacCmd::ReportSlotStatus(void)
     }
   }
   SetRepValsAndVars(2, (double)index);
-  if (!name.IsEmpty())
-    SetOneReportedValue(&mStrItems[2], name, 2);
+  if (!name.IsEmpty()) {
+    if (name.Find("error occurred") < 0)
+      SetOneReportedValue(&mStrItems[2], name, 2);
+    else
+      SetOneReportedValue(&mStrItems[2], mItemInt[1], 2);
+  }
   return 0;
 }
 
@@ -11375,7 +11400,8 @@ int CMacCmd::SetFEGEmissionState(void)
 int CMacCmd::IsFEGFlashingAdvised(void)
 {
   int answer;
-  if (mScope->GetAdvancedScriptVersion() < ASI_FILTER_FEG_LOAD_TEMP)
+  if (!mScope->UtapiSupportsService(UTSUP_FLASHING) && 
+    mScope->GetAdvancedScriptVersion() < ASI_FILTER_FEG_LOAD_TEMP)
     ABORT_NOLINE("The version of advanced scripting has not been identified as high "
       "enough to support FEG flashing");
   if (!mScope->GetIsFlashingAdvised(mItemInt[1], answer)) {
@@ -11391,7 +11417,8 @@ int CMacCmd::IsFEGFlashingAdvised(void)
 // NextFEGFlashHighTemp
 int CMacCmd::NextFEGFlashHighTemp(void)
 {
-  if (mScope->GetAdvancedScriptVersion() < ASI_FILTER_FEG_LOAD_TEMP)
+  if (!mScope->UtapiSupportsService(UTSUP_FLASHING) && 
+    mScope->GetAdvancedScriptVersion() < ASI_FILTER_FEG_LOAD_TEMP)
     ABORT_NOLINE("The version of advanced scripting has not been identified as high "
       "enough to support FEG flashing");
   mScope->SetDoNextFEGFlashHigh(mItemEmpty[1] || mItemInt[1]);
@@ -12645,6 +12672,14 @@ int CMacCmd::OpenDialog()
   } else
     ABORT_LINE("\"" + mStrItems[1] + "\" does not match any of the names for dialogs that "
       "can be opened for line:\n\n");
+  return 0;
+}
+
+// ShowScopeControlPanel
+int CMacCmd::ShowScopeControlPanel()
+{
+  if (!BOOL_EQUIV(mWinApp->GetShowRemoteControl(), mItemInt[1]))
+    mWinApp->OnShowScopeControlPanel();
   return 0;
 }
 

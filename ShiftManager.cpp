@@ -202,7 +202,7 @@ void CShiftManager::Initialize()
   if (mUseSquareShiftLimits < 0) {
     mUseSquareShiftLimits = 0;
     if (!FEIscope || mScope->GetUseIllumAreaForC2() ||
-      mScope->GetAdvancedScriptVersion() > 0)
+      mScope->GetAdvancedScriptVersion() > 0 || mScope->GetUtapiConnected())
       mUseSquareShiftLimits = 1;
   }
 }
