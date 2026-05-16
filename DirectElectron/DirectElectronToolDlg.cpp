@@ -108,8 +108,7 @@ void DirectElectronToolDlg::updateDEToolDlgPanel(bool initialCall)
 
     // update temperature setpoint if no property entered
     if (isDE12) {
-      if (mTemperSetpoint <= -999 && curIsDE &&
-        (camParam->CamFlags & DE_HAS_TEMP_SET_PT)) {
+      if (curIsDE && (camParam->CamFlags & DE_HAS_TEMP_SET_PT)) {
         if (mDECamera->getIntProperty(newNames ? sSetpointNew : sSetpointOld, temp_int)) {
           if (temp_int != mTemperSetpoint) {
             value.Format("Setpoint(C): %d", temp_int);

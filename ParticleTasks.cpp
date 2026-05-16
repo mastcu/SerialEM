@@ -2507,7 +2507,11 @@ int CParticleTasks::ManageDewarsVacuum(DewarVacParams & params, int skipOrDoChec
   bool doChecks = skipOrDoChecks >= 0;
   bool doNonChecks = skipOrDoChecks <= 0;
   bool callOK = mScope->AreDewarsFilling(busy);
+  bool checkDewars = mDVParams.checkVibFillOption > 0;
   mDVUseVibManager = mScope->UtapiSupportsService(UTSUP_VIBRATION);
+  mDVIgnoreVibrations = mDVUseVibManager && (mDVParams.checkVibFillOption == 3 || 
+    (mDVParams.checkVibFillOption == 2 && !(mWinApp->mNavigator && 
+      mWinApp->mNavigator->GetAcquiring() && mNavHelper->GetCurAcqParamIndex() > 0)));
   mDVAlreadyFilling = false;
   mDVWaitForFilling = 0;
   mDVWaitAfterFilled = 0.;
@@ -2515,7 +2519,7 @@ int CParticleTasks::ManageDewarsVacuum(DewarVacParams & params, int skipOrDoChec
   mDVStartedCycle = false;
   mDVParams = params;
   if ((capabilities & 2) == 0 && !mScope->GetHasSimpleOrigin()) {
-    mDVParams.checkDewars = false;
+    mDVParams.checkVibFillOption = false;
     mDVParams.refillAtInterval = false;
   }
   if (mDVUseVibManager) {
@@ -2529,22 +2533,24 @@ int CParticleTasks::ManageDewarsVacuum(DewarVacParams & params, int skipOrDoChec
   // Just handle nitrogen checking/filling here and leave other operations to next task
   // Check if dewars are already filling if it is either set to check or possibly
   // going to start it
-  if (((doNonChecks && mDVParams.refillAtInterval) || (doChecks && mDVParams.checkDewars))
-    && ((callOK && busy) || state == VIBMGR_STATE_VIBRATING))
-  {
+  mDVSawFilling = callOK && busy;
+  if (((doNonChecks && mDVParams.refillAtInterval) || (doChecks && checkDewars)
+    && (mDVSawFilling || 
+    (state == VIBMGR_STATE_VIBRATING && !mDVIgnoreVibrations)))) {
     mDVAlreadyFilling = true;
-    SEMAppendToLog(callOK && busy ? "Filling" : "Vibrating");
-    if (mDVUseVibManager)
+    SEMAppendToLog(mDVSawFilling ? "Filling" : "Vibrating");
+    if (mDVUseVibManager && !mDVIgnoreVibrations)
       SetupRefillLongOp(longOps, hours, numLongOps, 0.);
 
     // If not already filling and we can get time to next filling, do so
   } else if (((doNonChecks && mDVParams.refillAtInterval) || doChecks) &&
-    mDVParams.checkDewars && canGetTimeToFill) {
+    checkDewars && canGetTimeToFill) {
     if (mScope->GetDewarsRemainingTime(0, secToStart)) {
 
       // If it is within the pause interval, just set up to wait for it to start
       // No pause for vibration manager, starting is the only way to get to not vibrating
-      if (secToStart <= params.pauseBeforeMin * 60. && !mDVUseVibManager) {
+      if (secToStart <= params.pauseBeforeMin * 60. && 
+        (!mDVUseVibManager || mDVIgnoreVibrations)) {
         mDVWaitForFilling = secToStart;
         mDVStartTime = GetTickCount();
 
@@ -2557,7 +2563,7 @@ int CParticleTasks::ManageDewarsVacuum(DewarVacParams & params, int skipOrDoChec
 
     }
   }
-  mDVSawFilling = callOK && busy;
+  DumpDVFlags("Start-1");
 
   // Also trigger avoid vibrations if vibrating soon
   /*if (doNonChecks && state == VIBMGR_STATE_VIB_SOON && !mDVAlreadyFilling &&
@@ -2593,16 +2599,17 @@ int CParticleTasks::ManageDewarsVacuum(DewarVacParams & params, int skipOrDoChec
   }
   mWinApp->UpdateBufferWindows();
   mWinApp->SetStatusText(MEDIUM_PANE, "MANAGING SCOPE");
+  DumpDVFlags("Start-2");
 
   // Set up to go through busy if waiting or long op, or just go to next task now
   if (mDVAlreadyFilling || mDVWaitForFilling || mDVStartedRefill) {
     if (!mDVStartedRefill)
       mWinApp->SetStatusText(SIMPLE_PANE, B3DCHOICE(mDVAlreadyFilling, "WAIT UNTIL FILLED"
-        , mDVUseVibManager ? "WAIT FOR VIBRATIONS" : "WAIT for FILL START"));
-    if (mDVAlreadyFilling && !mDVUseVibManager) {
+        , mDVUseVibManager && !mDVIgnoreVibrations ? "WAIT FOR VIBRATIONS" : 
+        "WAIT for FILL START"));
+    if (mDVAlreadyFilling && (!mDVUseVibManager || mDVIgnoreVibrations)) {
 
-      // If it fills on its own, record the time that it was found to be filling, or
-      // make a call to prepare if vibration manager
+      // If it fills on its own, record the time that it was found to be filling, 
       numLongOps = 0;
       SetupRefillLongOp(longOps, hours, numLongOps, -1.f);
       mScope->StartLongOperation(longOps, hours, numLongOps);
@@ -2638,34 +2645,39 @@ void CParticleTasks::DewarsVacNextTask(int param)
   int longOps[5];
   float hours[5];
   int err, numLongOps = 0;
-  BOOL state;
+  BOOL state, waitDone = false;
   if (!mDVDoingDewarVac)
     return;
 
+  DumpDVFlags("NextTask-1");
   mDVWaitAfterFilled = 0.;
+
 
   // After waiting to start filling, set that it is filling
   if (mDVWaitForFilling) {
     mDVWaitForFilling = 0;
     mDVAlreadyFilling = true;
+    waitDone = true;
     SetupRefillLongOp(longOps, hours, numLongOps, -1.);
     mScope->StartLongOperation(longOps, hours, numLongOps);
-    mWinApp->SetStatusText(SIMPLE_PANE, mDVUseVibManager ? "WAIT UNTIL QUIET" :
-      "WAIT UNTIL FILLED");
-  } else if ((!mDVUseVibManager && (mDVAlreadyFilling ||  mDVStartedRefill)) ||
-    (mDVUseVibManager && mDVSawFilling)) {
+    mWinApp->SetStatusText(SIMPLE_PANE, (mDVUseVibManager && !mDVIgnoreVibrations) ? 
+      "WAIT UNTIL QUIET" : "WAIT UNTIL FILLED");
+  } else if (((!mDVUseVibManager || mDVIgnoreVibrations) && (mDVAlreadyFilling || mDVStartedRefill)) ||
+    (mDVUseVibManager && !mDVIgnoreVibrations && mDVSawFilling)) {
 
     // If filling was done by testing, or the long operation finished, set up for post-wait
     mDVAlreadyFilling = false;
     mDVStartedRefill = false;
-    mDVWaitAfterFilled = mDVParams.postFillWaitMin;
+    mDVWaitAfterFilled = (mDVSawFilling || mDVStartedRefill) ? mDVParams.postFillWaitMin :
+      0.f;
     mDVStartTime = GetTickCount();
     mDVSawFilling = false;
     mWinApp->SetStatusText(SIMPLE_PANE, "WAIT AFTER FILL");
   }
+  DumpDVFlags("NextTask-2");
 
   // Put this idle task on if there is a something to do (0 wait = nothing to do)
-  if (mDVAlreadyFilling || mDVWaitAfterFilled) {
+  if (waitDone || mDVWaitAfterFilled) {
     mWinApp->AddIdleTask(TASK_DEWARS_VACUUM, 0, 0);
     return;
   }
@@ -2706,6 +2718,7 @@ void CParticleTasks::DewarsVacNextTask(int param)
     mDVNeedPVPCheck = false;
     mWinApp->SetStatusText(SIMPLE_PANE, "WAITING FOR PVP");
   }
+  DumpDVFlags("NextTask-3");
 
   // Start task if anything to do, or stop
   if (mDVStartedCycle || mDVWaitForPVP)
@@ -2718,6 +2731,7 @@ void CParticleTasks::DewarsVacNextTask(int param)
 void CParticleTasks::StopDewarsVac()
 {
   mDVDoingDewarVac = false;
+  DumpDVFlags("StopDewarsVac");
   mWinApp->UpdateBufferWindows();
   mWinApp->SetStatusText(MEDIUM_PANE, "");
   mWinApp->SetStatusText(SIMPLE_PANE, "");
@@ -2729,13 +2743,20 @@ int CParticleTasks::DewarsVacBusy()
   int busy, callOK, longBusy, longOps[2];
   BOOL state;
   float hours[2];
+  static double lastDeb = 0.;
 
   callOK = mScope->AreDewarsFilling(busy);
   if (mDVUseVibManager && callOK && busy)
     mDVSawFilling = true;
 
+  if (GetDebugOutput('1') && SEMTickInterval(lastDeb) > 20000) {
+    DumpDVFlags("DewarsVacBusy");
+    lastDeb = GetTickCount();
+  }
+
   // Long operation for refill or buffer cycle
-  if (mDVStartedRefill || mDVStartedCycle) {
+  if (mDVStartedRefill || mDVStartedCycle || 
+    (mDVUseVibManager && !mDVIgnoreVibrations && mDVAlreadyFilling)) {
     longBusy = mScope->LongOperationBusy();
 
     // If it finished but we just saw filling, this is probably because of a collision
@@ -2771,6 +2792,15 @@ int CParticleTasks::DewarsVacBusy()
 
 void CParticleTasks::DewarsVacCleanup(int error)
 {
+}
+
+void CParticleTasks::DumpDVFlags(const char * desc)
+{
+  SEMTrace('v', "%s IgVi %d SaFi %d AlFi %d WaFFi %d NeVaRu %d NePVPCh %d StRe %d WaAFi"
+    " %.1f StCy %d WaPVP %d", desc, mDVIgnoreVibrations ? 1 : 0, mDVSawFilling ? 1 : 0, 
+    mDVAlreadyFilling ? 1 : 0, mDVWaitForFilling ? 1 : 0, mDVNeedVacRuns ? 1 : 0, 
+    mDVNeedPVPCheck ? 1 : 0, mDVStartedRefill ? 1 : 0, mDVWaitAfterFilled, 
+    mDVStartedCycle ? 1 : 0, mDVWaitForPVP ? 1 : 0);
 }
 
 //////////////////////////////////////////////////////////////////

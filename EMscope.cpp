@@ -539,7 +539,7 @@ CEMscope::CEMscope()
   mDewarVacParams.autoloaderTimeMin = 60;
   mDewarVacParams.refillAtInterval = false;
   mDewarVacParams.dewarTimeHours = 4.;
-  mDewarVacParams.checkDewars = false;
+  mDewarVacParams.checkVibFillOption = 0;
   mDewarVacParams.pauseBeforeMin = 1.;
   mDewarVacParams.startRefillEarly = false;
   mDewarVacParams.startIntervalMin = 15.;
