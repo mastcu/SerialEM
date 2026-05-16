@@ -455,6 +455,7 @@ protected:
   bool mSkipFrameAliCheck;   // Flag for camera controller to skip checking frame ali param
   bool mAlignWholeTSOnly;    // Flag for alignment to happen is if in TS with Whole TS
   bool mStartNavAcqAtEnd;    // Flag to start Nav acquire on successful completion 
+  bool mExitProgramAtEnd;    // Flag to start task that will just exit program
   bool mUseTempNavParams;    // Flag to do that with temp params at index 2;
   CString mPackToLoadAtEnd;  // Name of script package to load at end if successful
   bool mSaveCurrentPack;     // Flag to save current package first

@@ -1343,6 +1343,7 @@ void CMacroProcessor::Run(int which)
   mExitAtFuncEnd = false;
   mLoopIndsAreLocal = false;
   mStartNavAcqAtEnd = false;
+  mExitProgramAtEnd = false;
   mUseTempNavParams = false;
   mPackToLoadAtEnd = "";
   mConsetNums.clear();
