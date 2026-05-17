@@ -147,6 +147,7 @@ BOOL CManageDewarsDlg::OnInitDialog()
     mIDsToDrop.push_back(IDC_STAT_PAUSE_BEFORE);
     mIDsToDrop.push_back(IDC_EDIT_PAUSE_BEFORE);
     mIDsToDrop.push_back(IDC_STAT_BEFORE_MIN);
+    mIDsToDrop.push_back(IDC_CHECK_DEWARS);
   } else {
     mIDsToDrop.push_back(IDC_RIGNORE_VIB_AND_FILL);
     mIDsToDrop.push_back(IDC_RCHECK_VIB_AND_FILL);
