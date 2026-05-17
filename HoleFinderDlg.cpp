@@ -2127,8 +2127,9 @@ int CHoleFinderDlg::FindAndCenterOneHole(EMimageBuffer *imBuf, float diameter, i
   FloatVec *widths, *increments;
   IntVec *numCircles;
   ScaleMat bInv;
-  int numSave, err, nx, ny, ind, bestInd;
+  int numSave, err, nx, ny, ind, bestInd, magSave;
   float diamSave, xcen, ycen, dist, minDist, pixel, fbin = (float)imBuf->mBinning;
+  float xImSave[3], yImSave[3], xStageSave[3], yStageSave[3];
   float xShift, yShift, imXshift, imYshift;
   HoleFinderParams *hfParams = mHelper->GetHoleFinderParams();
   double ISX, ISY;
@@ -2149,8 +2150,26 @@ int CHoleFinderDlg::FindAndCenterOneHole(EMimageBuffer *imBuf, float diameter, i
   if (mIsOpen)
     UpdateSettings();
 
+  // Save vectors, the ones from this operation are useless
+  for (ind = 0; ind < 3; ind++) {
+    xImSave[ind] = mGridImXVecs[ind];
+    xStageSave[ind] = mGridStageXVecs[ind];
+    yImSave[ind] = mGridImYVecs[ind];
+    yStageSave[ind] = mGridStageYVecs[ind];
+  }
+  magSave = mLastMagIndex;
+
   // Find holes synchronously
   err = DoFindHoles(imBuf, true);
+
+  // Restore vectors
+  for (ind = 0; ind < 3; ind++) {
+    mGridImXVecs[ind] = xImSave[ind];
+    mGridStageXVecs[ind] = xStageSave[ind];
+    mGridImYVecs[ind] = yImSave[ind];
+    mGridStageYVecs[ind] = yStageSave[ind];
+  }
+  mLastMagIndex = magSave;
 
   // restore parameters
   if (hfParams->hexagonalArray) {
