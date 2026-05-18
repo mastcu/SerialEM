@@ -1413,9 +1413,13 @@ void CEMscope::ScopeUpdate(DWORD dwTime)
   double wallStart, wallTimes[12] = {0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.};
   bool reportTime = GetDebugOutput('u') && (mAutosaveCount % 10 == 0);
   static int firstTime = 1;
-
+  static double lastTime = 0.;
   //if (reportTime)
     wallStart = wallTime();
+
+  if (lastTime > 0 && wallStart - lastTime > B3DMAX(1.000, mUpdateInterval / 500.))
+    SEMTrace('1', "scope update interval %.3f", wallStart - lastTime);
+  lastTime = wallStart;
 
   // If a counter was set to restore focus, decrement and act on it when count expires
   if (mRestoreViewFocusCount > 0) {
@@ -2098,6 +2102,10 @@ void CEMscope::ScopeUpdate(DWORD dwTime)
       1000.*wallTimes[0],1000.*wallTimes[1], 1000.*wallTimes[2],1000.*wallTimes[3],
       1000.*wallTimes[4],1000.*wallTimes[5],1000.*wallTimes[6],
       1000.*wallTimes[7],1000.*wallTimes[8],1000.*wallTimes[9],1000.*wallTimes[10]);
+  } else if (GetDebugOutput('1')) {
+    cumWall = wallTime() - wallStart;
+    if (cumWall > 1.)
+      PrintfToLog("Update time %.3f", cumWall);
   }
   mInScopeUpdate = false;
 }
