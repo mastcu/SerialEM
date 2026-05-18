@@ -234,6 +234,7 @@ private:
   bool mDVSetAutoVibOff;            // Flag that auto vibration management turned off
   bool mDVSawFilling;               // Flag that filling occurred during prepare to avoid
   bool mDVIgnoreVibrations;         // Flag that it is not doing final acquire
+  int mDVDidPrepAvoidInBusy;        // 1 or 2: called prepare in busy when filling or not
   bool mDoingPrevPrescan;
 
 public:
@@ -310,6 +311,7 @@ public:
   void DewarsVacNextTask(int param);
   void StopDewarsVac();
   int DewarsVacBusy();
+  void StartPrepNoVibFromBusy(int busy);
   void DewarsVacCleanup(int error);
   void DumpDVFlags(const char *desc);
   int StartPreviewPrescan();

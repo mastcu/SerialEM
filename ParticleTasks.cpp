@@ -2496,7 +2496,7 @@ void CParticleTasks::TemplateAlignCleanup(int error)
 //
 // Start the process.. skipOrDoChecks specifies whether to skip (-1) or do (1) the checks
 // useful just before acquire
-int CParticleTasks::ManageDewarsVacuum(DewarVacParams & params, int skipOrDoChecks)
+int CParticleTasks::ManageDewarsVacuum(DewarVacParams &params, int skipOrDoChecks)
 {
   int state = VIBMGR_STATE_UNKNOWN, longOps[5];
   float hours[5];
@@ -2507,6 +2507,7 @@ int CParticleTasks::ManageDewarsVacuum(DewarVacParams & params, int skipOrDoChec
   bool doChecks = skipOrDoChecks >= 0;
   bool doNonChecks = skipOrDoChecks <= 0;
   bool callOK = mScope->AreDewarsFilling(busy);
+  mDVParams = params;
   bool checkDewars = mDVParams.checkVibFillOption > 0;
   mDVUseVibManager = mScope->UtapiSupportsService(UTSUP_VIBRATION);
   mDVIgnoreVibrations = mDVUseVibManager && (mDVParams.checkVibFillOption == 3 || 
@@ -2517,7 +2518,7 @@ int CParticleTasks::ManageDewarsVacuum(DewarVacParams & params, int skipOrDoChec
   mDVWaitAfterFilled = 0.;
   mDVStartedRefill = false;
   mDVStartedCycle = false;
-  mDVParams = params;
+  mDVDidPrepAvoidInBusy = 0;
   if ((capabilities & 2) == 0 && !mScope->GetHasSimpleOrigin()) {
     mDVParams.checkVibFillOption = false;
     mDVParams.refillAtInterval = false;
@@ -2662,10 +2663,12 @@ void CParticleTasks::DewarsVacNextTask(int param)
     mScope->StartLongOperation(longOps, hours, numLongOps);
     mWinApp->SetStatusText(SIMPLE_PANE, (mDVUseVibManager && !mDVIgnoreVibrations) ? 
       "WAIT UNTIL QUIET" : "WAIT UNTIL FILLED");
-  } else if (((!mDVUseVibManager || mDVIgnoreVibrations) && (mDVAlreadyFilling || mDVStartedRefill)) ||
+    numLongOps = 0;
+  } else if (((!mDVUseVibManager || mDVIgnoreVibrations) && 
+    (mDVAlreadyFilling || mDVStartedRefill)) ||
     (mDVUseVibManager && !mDVIgnoreVibrations && mDVSawFilling)) {
 
-    // If filling was done by testing, or the long operation finished, set up for post-wait
+    // If filling was done by testing, or long operation finished, set up for post-wait
     mDVAlreadyFilling = false;
     mDVStartedRefill = false;
     mDVWaitAfterFilled = (mDVSawFilling || mDVStartedRefill) ? mDVParams.postFillWaitMin :
@@ -2740,9 +2743,8 @@ void CParticleTasks::StopDewarsVac()
 // Testing for busy in the various cases
 int CParticleTasks::DewarsVacBusy()
 {
-  int busy, callOK, longBusy, longOps[2];
+  int busy, callOK, longBusy;
   BOOL state;
-  float hours[2];
   static double lastDeb = 0.;
 
   callOK = mScope->AreDewarsFilling(busy);
@@ -2758,18 +2760,31 @@ int CParticleTasks::DewarsVacBusy()
   if (mDVStartedRefill || mDVStartedCycle || 
     (mDVUseVibManager && !mDVIgnoreVibrations && mDVAlreadyFilling)) {
     longBusy = mScope->LongOperationBusy();
+    if (!longBusy) {
+      DumpDVFlags("long not busy:");
+      SEMTrace('v', "DVDidPrep %d  callok %d  busy %d", mDVDidPrepAvoidInBusy, callOK?1:0,
+        busy ?1:0);
+    }
 
     // If it finished but we just saw filling, this is probably because of a collision
     // and timeout starting the fill, so start new long op to catch the end of filling
-    if (!longBusy && mDVUseVibManager && callOK && busy) {
-      longOps[0] = LONG_OP_PREPARE_NO_VIBRATE;
-      hours[0] = 0;
-      mScope->StartLongOperation(longOps, hours, 1);
+    // Or maybe it just doesn't like this call when filling, so only do it once.
+    if (!longBusy && mDVUseVibManager && callOK && ((busy && !mDVDidPrepAvoidInBusy) ||
+      (!busy && (mDVStartedRefill || mDVAlreadyFilling) && mDVDidPrepAvoidInBusy < 2))) {
+      StartPrepNoVibFromBusy(busy);
       return 1;
     }
     return longBusy;
   }
 
+  // If filling was seen and it is no longer filling, do a call that will succeed
+  // This is probably never hit
+  if (mDVUseVibManager && !mDVIgnoreVibrations && mDVSawFilling && callOK && !busy &&
+    mDVDidPrepAvoidInBusy < 2) {
+    StartPrepNoVibFromBusy(busy);
+    return 1;
+  }
+  
   // Testing for filling to start or end
   if (mDVWaitForFilling || mDVAlreadyFilling) {
     if (callOK)
@@ -2788,6 +2803,17 @@ int CParticleTasks::DewarsVacBusy()
     return -1;
   }
   return 0;
+}
+
+// Start another prepare no vibrate from busy function; busy is filling busy
+void CParticleTasks::StartPrepNoVibFromBusy(int busy)
+{
+  int longOps[2];
+  float hours[2];
+  longOps[0] = LONG_OP_PREPARE_NO_VIBRATE;
+  hours[0] = 0;
+  mScope->StartLongOperation(longOps, hours, 1);
+  mDVDidPrepAvoidInBusy = busy ? 1 : 2;
 }
 
 void CParticleTasks::DewarsVacCleanup(int error)
