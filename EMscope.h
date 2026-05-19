@@ -662,6 +662,8 @@ public:
 
   static BOOL ScopeMutexAcquire(const char *name, BOOL retry);
   static BOOL ScopeMutexRelease(const char *name);
+  static int BeginFEIThreadAccess(ScopePluginFuncs *plugFuncs, int chan, int make);
+  static void EndFEIThreadAccess(ScopePluginFuncs *plugFuncs, int chan);
   static float ConvertJEOLStage(double inMove, float &outRem);
   static int LookupMagnification(int magValue, CString units, int mode, CString name,
     int &camLenInd);
@@ -748,6 +750,7 @@ private:
   static char * mScopeMutexLenderStr;
   static DWORD  mScopeMutexOwnerId;
   static int    mScopeMutexOwnerCount;
+  static HANDLE mFEIThreadMutexHandle;
   double mJeol_OLfine_to_um;  // Scale factor from OL fine value to microns
   double mJeol_CLA1_to_um;    // Scale factor from CLA1 units to microns, approximate
   double mJeol_LMCLA1_to_um;  // Scale factor for low mag, approximate
