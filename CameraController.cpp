@@ -10004,11 +10004,13 @@ UINT CCameraController::InsertProc(LPVOID pParam)
           retval = itd->plugFuncs->SetCameraInsertion(itd->camera, itd->insert ? 1 : 0);
       } else if (itd->DE_camType) {
         if (itd->insert)
-          hr = itd->td->DE_Cam->insertCamera();
+          retval = itd->td->DE_Cam->insertCamera();
         else
-          hr = itd->td->DE_Cam->retractCamera();
-        if (!SUCCEEDED(hr))
-          retval = 1;
+          retval = itd->td->DE_Cam->retractCamera();
+        if (retval) {
+          message = itd->td->DE_Cam->GetLastErrorString();
+          DeferMessage(itd->td, message);
+        }
       } else if (itd->FEItype) {
           retval = itd->td->scopePlugFuncs->ASIsetCameraInsertion(itd->camera, itd->insert ? 1 : 0);
           if (retval) {
