@@ -3,6 +3,9 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+5/19/26: Fixed timeout too short when running buffer cycle through UTAPI
+(In 4.2).
+
 5/19/26: Fixed scope updates and other actions being blocked during stage
 moves, long operations, etc when monitoring apertures.
 
