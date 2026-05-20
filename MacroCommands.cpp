@@ -12646,7 +12646,8 @@ int CMacCmd::ImagingStateProperties()
     if (setNum == MONT_USER_CONSET)
       area = area < 0 ? area - 1 : SEARCH_AREA + 1;
     SetReportedValues(err, index + 1, area,
-      mWinApp->LookupActiveCamera(param->camIndex) + 1, param->magIndex);
+      mWinApp->LookupActiveCamera(param->camIndex) + 1,
+      area < 0 ? param->magIndex : param->ldParams.magIndex);
     SetOneReportedValue(param->name, 6);
   }
   return 0;
