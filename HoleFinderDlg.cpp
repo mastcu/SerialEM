@@ -1753,7 +1753,8 @@ int CHoleFinderDlg::ConvertHoleToISVectors(int index, bool setVecs, double *xVec
 
     // Save that this was last vectors, set other parameters
     mHelper->SetLastUsedHoleISVecs(&xFloat[0], &yFloat[0], true);
-    msParams->holeMagIndex[hexInd] = index;
+    msParams->holeMagIndex[hexInd] = B3DABS(index);
+    msParams->origMagOfArray[hexInd] = -B3DABS(index);
     msParams->tiltOfHoleArray[hexInd] = mLastTiltAngle;
     msParams->doHexArray = mLastWasHexGrid;
     if (mWinApp->mNavHelper->mMultiShotDlg)
