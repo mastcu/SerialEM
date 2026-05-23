@@ -39,7 +39,7 @@ set GMS64PLUGS=SEMCCD-GMS2-64.dll SEMCCD-GMS2.2-64.dll SEMCCD-GMS2.30-64.dll SEM
  SEMCCD-GMS3.50-64.dll SEMCCD-GMS3.60-64.dll
 
 rem # Clean up all existing and older and near-future files
-for %%A in (SerialEM.exe SERIALEM.HLP SerialEM.cnt SerialEM.chm FTComm.dll jpeg62.dll zlib1.dll^
+for %%A in (SerialEM.exe SERIALEM.HLP SerialEM.cnt SerialEM.chm FTComm.dll^
  libtiff3.dll b3dregsvr.exe b3dregsvr32.exe b3dregsvr64.exe MFC71.dll msvcp71.dll msvcr71.dll^
  register.bat register-GMS1.bat register-GMS2-32.bat register-GMS2-64.bat SEMCCD-GMS2-32.dll^
  SEMCCDps-GMS2-32.dll SEMCCDps-GMS2-64.dll SerialEMCCD.dll SerialEMCCDps.dll %GMS64PLUGS% ^
