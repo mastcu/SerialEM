@@ -1799,6 +1799,15 @@ void CLowDoseDlg::ScopeUpdate(int magIndex, int spotSize, double intensity,
         ldArea->axisPosition = ConvertOneIStoAxis(ldArea->magIndex, ldArea->ISX,
           ldArea->ISY);
         ConvertOneAxisToIS(magIndex, ldArea->axisPosition, ldArea->ISX, ldArea->ISY);
+      } else if (IS_AREA_VIEW_OR_SEARCH(inSetArea)) {
+        double nvsx, nvsy, transx, transy;
+        GetEitherViewShift(nvsx, nvsy, inSetArea);
+        mShiftManager->TransferGeneralIS(ldArea->magIndex, nvsx, nvsy, magIndex,
+          transx, transy);
+        ldArea->ISX += transx - nvsx;
+        ldArea->ISY += transy - nvsy;
+        mViewShiftX[inSetArea ? 1 : 0] += transx - nvsx;
+        mViewShiftY[inSetArea ? 1 : 0] += transy - nvsy;
       } else {
         TransferISonAxis(ldArea->magIndex, ldArea->ISX, ldArea->ISY, magIndex,
           ldArea->ISX, ldArea->ISY);

@@ -3,9 +3,20 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+5/23/26: Made installer stop removing some DLL's needed by Dectris plugin
+(In 4.2).
+
+5/23/26: Stabilized image shift and changed V/S shift offset when V or S area
+mag is changed (In 4.2).
+
 5/20/26: Set vectors as not transformed after Use Last Hole Vectors (In 4.2).
 
 5/20/26: SEM_4-3-0beta10
+5/23/26: Stabilized image shift and changed V/S shift offset when V or S area
+mag is changed (In 4.2).
+
+5/20/26: Set vectors as not transformed after Use Last Hole Vectors (In 4.2).
+
 5/20/26: Fixed mag output from ImagingStateProperties command (In 4.2).
 
 5/19/26: Got DE temperature setpoint for control panel on startup if possible,
