@@ -400,6 +400,7 @@ CNavHelper::CNavHelper(void)
   mOpenedMultiGrid = false;
   mMaxISvecMatchRotDiff = 2.f;
   mMaxISvecMatchScaleDiff = 0.02f;
+  mParTSSetupGroupID = 804811256;   // Testing value
 }
 
 CNavHelper::~CNavHelper(void)
@@ -1932,6 +1933,8 @@ void CNavHelper::StartThirdRound(void)
       mMapStore, true);
   } else {
      mBufferManager->ReadFromFile(mMapStore, item->mMapSection, 0);
+     if (item->mShiftInImageX > EXTRA_VALUE_TEST)
+       mImBufs->mImage->setShifts(item->mShiftInImageX, item->mShiftInImageY);
   }
   mImBufs[0].mBinning = item->mMapMontage ? item->mMontBinning : item->mMapBinning;
   if (RotateForAligning(0)) {

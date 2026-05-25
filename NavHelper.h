@@ -196,6 +196,8 @@ struct NavAlignParams {
 struct ParallelTSParam {
   int firstPrevMapID;       // Map ID of the retained first previous map if any
   IntVec prevSectNums;      // Section numbers preview map file if any
+  FloatVec xShiftInImage;   // Shift in image when the preview was saved as a map
+  FloatVec yShiftInImage;
   FloatVec xCoordInArea;    // X and Y coordinates in the area map, to use extracts
   FloatVec yCoordInArea;
   float preTilt;            // Pretilt angle to use as starting angle of series
@@ -367,6 +369,7 @@ public:
   GetSetMember(int, MinAutoAdjCropSize);
   GetMember(bool, CurStateSetApertures);
   SetMember(bool, SkipAperturesNextState);
+  GetSetMember(int, ParTSSetupGroupID);
   IntVec *GetExtraTaskList() { return &mExtraTaskList; };
   float *GetLastUsedHoleISvecs() {return &mLastUsedHoleISvecs[0] ; };
   GetMemberPtr(ParallelTSOptions, ParTSOptions);
@@ -636,7 +639,8 @@ private:
   float mLastUsedHoleISvecs[6];  // Last set of hole IS vectors used to set multishot IS
   float mMaxISvecMatchScaleDiff; // Maximum difference in scale or rotations from last set
   float mMaxISvecMatchRotDiff;   // of hole IS vectors allowed for permuting vectors
-  IntVec mExtraTaskList;       // List of NAACT_EX... indexes to include, plus special
+  IntVec mExtraTaskList;         // List of NAACT_EX... indexes to include, plus special
+  int mParTSSetupGroupID;        // Group ID if parallel TS targets being defined
 
 public:
   void PrepareToReimageMap(CMapDrawItem * item, MontParam * param, ControlSet * conSet,
