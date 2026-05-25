@@ -1306,6 +1306,17 @@ CString UtilFormattedMag(int mag, int addX)
   return magstr;
 }
 
+// Return a string with float vector values
+CString UtilFormatFloatVec(FloatVec &vec)
+{
+  CString str, str2;
+  for (int ind = 0; ind < (int)vec.size(); ind++) {
+    str2.Format(" %.2f", vec[ind]);
+    str += str2;
+  }
+  return str;
+}
+
 // Sleep for specified, processing messages
 BOOL SleepMsg(DWORD dwTime_ms)
 {

@@ -80,6 +80,7 @@ int UtilFindValidFrameAliParams(CameraParameters *camParam, int readMode, bool t
 int UtilWriteTextFile(CString fileName, CString text);
 CString FormattedNumber(double value, const char *suffix, int minDec, int maxDec, float switchVal, bool skipTrim = false);
 CString UtilFormattedMag(int mag, int addX);
+CString UtilFormatFloatVec(std::vector<float> &vec);
 BOOL SleepMsg(DWORD dwTime_ms);
 SOCKET UtilConnectSocket(CString &ipAddress, int port, CString &errStr,
   const char *className, const char *description);
