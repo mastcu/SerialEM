@@ -843,7 +843,7 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
         dewar->autoloaderTimeMin = itemInt[5];
         dewar->refillAtInterval = itemInt[6] != 0;
         dewar->dewarTimeHours = itemFlt[7];
-        dewar->checkDewars = itemInt[8] != 0;
+        dewar->checkVibFillOption = itemInt[8];
         dewar->pauseBeforeMin = itemFlt[9];
         dewar->startRefillEarly = itemInt[10] != 0;
         dewar->startIntervalMin = itemFlt[11];
@@ -2155,7 +2155,7 @@ void CParameterIO::WriteSettings(CString strFileName)
     oneState.Format("DewarVacParams %d %d %d %d %d %d %f %d %f %d %f %f %d\n",
       dewar->checkPVP ? 1 : 0, dewar->runBufferCycle ? 1 : 0,
       dewar->bufferTimeMin, dewar->runAutoloaderCycle ? 1 : 0, dewar->autoloaderTimeMin,
-      dewar->refillAtInterval ? 1 : 0, dewar->dewarTimeHours, dewar->checkDewars ? 1 : 0,
+      dewar->refillAtInterval ? 1 : 0, dewar->dewarTimeHours, dewar->checkVibFillOption,
       dewar->pauseBeforeMin, dewar->startRefillEarly ? 1 : 0, dewar->startIntervalMin,
       dewar->postFillWaitMin, dewar->doChecksBeforeTask ? 1 : 0);
     mFile->WriteString(oneState);
@@ -3047,7 +3047,7 @@ int CParameterIO::WriteMulGridAcqParams(CString &filename, CString &errStr)
 
 // Reads a file to hide or disable items containing either defined strings in the
 // table in sDisableHideList or menu item IDs to be hidden
-void CParameterIO::ReadDisableOrHideFile(CString & filename, std::set<int>  *IDsToHide,
+int CParameterIO::ReadDisableOrHideFile(CString & filename, std::set<int>  *IDsToHide,
   std::set<int>  *lineHideIDs, std::set<int> *IDsToDisable, StringSet *stringHides)
 {
   CStdioFile *file = NULL;
@@ -3066,14 +3066,14 @@ void CParameterIO::ReadDisableOrHideFile(CString & filename, std::set<int>  *IDs
     while (file->ReadString(strLine)) {
       if (checkBOM) {
         if (CheckForByteOrderMark(strLine, "", filename, "items to hide or disable"))
-          return;
+          return 1;
         checkBOM = false;
         IDsToHide->clear();
         IDsToDisable->clear();
         lineHideIDs->clear();
         stringHides->clear();
       }
-      if (strLine.IsEmpty() || strLine.GetAt(0) == '#')
+      if (strLine.Trim().IsEmpty() || strLine.GetAt(0) == '#')
         continue;
 
       // Separate the type from the tag string and convert the type
@@ -3151,6 +3151,7 @@ void CParameterIO::ReadDisableOrHideFile(CString & filename, std::set<int>  *IDs
     AfxMessageBox(mess + " file of items to disable or hide:\n" + filename);
   if (!err && toggleMode)
     mWinApp->SetBasicMode(true);
+  return err;
 }
 
 // Properties are measured outside the program, entered by hand into the

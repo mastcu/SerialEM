@@ -181,7 +181,9 @@ void CMacCmd::TaskDone(int param)
         if (!mLastCompleted)
           PythonErrorMessageBox();
         AbortMacro();
-        if (mLastCompleted && mStartNavAcqAtEnd)
+        if (mExitProgramAtEnd)
+          mWinApp->AddIdleTask(TASK_EXIT_PROGRAM, 0, 0);
+        else if (mLastCompleted && mStartNavAcqAtEnd)
           mWinApp->AddIdleTask(TASK_START_NAV_ACQ, 0, 0);
 
       } else if (mScrpLangData[pnd].waitingForCommand) {
@@ -715,7 +717,9 @@ int CMacCmd::ScriptEnd(void)
       mScrpLangData[pnd].errorOccurred = SCRIPT_NORMAL_EXIT;
     AbortMacro(true);
     mLastCompleted = !mExitAtFuncEnd;
-    if (mLastCompleted && mStartNavAcqAtEnd)
+    if (mExitProgramAtEnd)
+      mWinApp->AddIdleTask(TASK_EXIT_PROGRAM, 0, 0);
+    else if (mLastCompleted && mStartNavAcqAtEnd)
       mWinApp->AddIdleTask(TASK_START_NAV_ACQ, 0, 0);
     return 1;
   }
@@ -1898,6 +1902,13 @@ int CMacCmd::FlashDisplay(void)
     if (index < index2 - 1)
       Sleep(B3DNINT(1000. *delX));
   }
+  return 0;
+}
+
+// ExitProgramAtEnd
+int CMacCmd::ExitProgramAtEnd()
+{
+  mExitProgramAtEnd = true;
   return 0;
 }
 
@@ -4435,6 +4446,25 @@ int CMacCmd::ReportFrameSavingPath(void)
     mLogRpt = "The frame saving path for " + mCamParams->name + " is " + mStrCopy;
 
   SetOneReportedValue(&mStrItems[1], mStrCopy, 1);
+  return 0;
+}
+
+// ReadBasicModeFile
+int CMacCmd::ReadBasicModeFile()
+{
+  CString curFile = mDocWnd->GetBasicModeFile();
+  SubstituteLineStripItems(mStrLine, 2, mStrCopy);
+  if (curFile.CompareNoCase(mStrCopy)) {
+    if (mParamIO->ReadDisableOrHideFile(mStrCopy, mWinApp->GetBasicIDsToHide(),
+      mWinApp->GetBasicLineHideIDs(), mWinApp->GetBasicIDsToDisable(),
+      mWinApp->GetBasicHideStrings())) {
+      AbortMacro();
+      return 1;
+    }
+    mDocWnd->SetBasicModeFile(mStrCopy);
+  }
+  if (mItemInt[1] >= 0 && !BOOL_EQUIV(mWinApp->GetBasicMode(), mItemInt[1] > 0))
+    mWinApp->SetBasicMode(mItemInt[1] > 0);
   return 0;
 }
 
@@ -12616,7 +12646,8 @@ int CMacCmd::ImagingStateProperties()
     if (setNum == MONT_USER_CONSET)
       area = area < 0 ? area - 1 : SEARCH_AREA + 1;
     SetReportedValues(err, index + 1, area,
-      mWinApp->LookupActiveCamera(param->camIndex) + 1, param->magIndex);
+      mWinApp->LookupActiveCamera(param->camIndex) + 1,
+      area < 0 ? param->magIndex : param->ldParams.magIndex);
     SetOneReportedValue(param->name, 6);
   }
   return 0;

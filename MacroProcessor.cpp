@@ -1343,6 +1343,7 @@ void CMacroProcessor::Run(int which)
   mExitAtFuncEnd = false;
   mLoopIndsAreLocal = false;
   mStartNavAcqAtEnd = false;
+  mExitProgramAtEnd = false;
   mUseTempNavParams = false;
   mPackToLoadAtEnd = "";
   mConsetNums.clear();
@@ -5434,11 +5435,16 @@ void CMacroProcessor::EnhancedExceptionToLog(CString &str)
         indLine = line.ReverseFind('\'');
         name = line.Mid(ind + 1, indLine - 1 - ind);
         name.MakeUpper();
-        if (LookupCommandIndex(name) == CME_NOTFOUND)
+        ind = LookupCommandIndex(name);
+        if (ind == CME_NOTFOUND) {
           attribErr = "That is not a recognized SerialEM script command";
-        else
+        } else if (ind >= 0 && name != mCmdList[ind].mixedCase) {
+          attribErr = "You need to use the standard mixed-case name of the script "
+            "command";
+        } else {
           attribErr = "You need to upgrade your SerialEM module with the latest"
-          " PythonModules package";
+            " PythonModules package";
+        }
       }
     }
     indLine = line.Find("line ");

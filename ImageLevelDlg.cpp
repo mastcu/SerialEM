@@ -418,6 +418,8 @@ void CImageLevelDlg::NewZoom(double inZoom)
   }
   sprintf(format, "%%.%df", ndec);
   m_editZoom.Format(format, inZoom);
+  m_eZoom.EnableWindow(mWinApp->mActiveView->GetLocatorViewNum() == 0);
+  m_sbcZoom.EnableWindow(mWinApp->mActiveView->GetLocatorViewNum() == 0);
   UpdateData(FALSE);
 }
 

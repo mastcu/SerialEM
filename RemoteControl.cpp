@@ -73,6 +73,7 @@ CRemoteControl::CRemoteControl(CWnd* pParent /*=NULL*/)
   mDidExtendedTimeout = false;
   mDoingTask = 0;
   mPanelResized = false;
+  mFirstTime = true;
 }
 
 CRemoteControl::~CRemoteControl()
@@ -167,8 +168,11 @@ BOOL CRemoteControl::OnInitDialog()
   mScope = mWinApp->mScope;
   mShiftManager = mWinApp->mShiftManager;
   CRect rect;
-  if (mWinApp->GetSystemDPI() >= 120 && !mWinApp->GetDisplayNotTruly120DPI()) {
+  if (mWinApp->GetSystemDPI() >= 120 && !mWinApp->GetDisplayNotTruly120DPI() &&
+    mFirstTime) {
     m_statBeamDelta.GetClientRect(rect);
+
+    // Creating a font more than once gives a debug assert error
     mDeltaFont.CreateFont(B3DNINT((mWinApp->GetSystemDPI() > 130 ? 0.87 : 0.82)
       * rect.Height()), 0, 0, 0, FW_MEDIUM,
       0, 0, 0, DEFAULT_CHARSET, OUT_CHARACTER_PRECIS,
@@ -246,6 +250,7 @@ BOOL CRemoteControl::OnInitDialog()
   ManagePanels();
   if (mScope->GetNoScope())
     DropIDsAndResize();
+  mFirstTime = false;
   return TRUE;
 }
 
@@ -413,6 +418,8 @@ void CRemoteControl::UpdateEnables(void)
   m_butScreenUpDown.EnableWindow(enable && !continuous && !stageBusy);
   m_sbcBeamShift.EnableWindow(enable && !stageBusy);
   m_sbcBeamLeftRight.EnableWindow(enable && !stageBusy);
+  m_sbcStageLeftRight.EnableWindow(enable && !stageBusy);
+  m_sbcStageUpDown.EnableWindow(enable && !stageBusy);
   m_butBlankUnblank.EnableWindow(enable);
 
   if (numTimes++ < 4) {
@@ -436,8 +443,6 @@ void CRemoteControl::UpdateEnables(void)
     mLastGunOn = -2;
   } else {
     m_butValves.EnableWindow(false);
-    m_sbcBeamShift.EnableWindow(false);
-    m_sbcBeamLeftRight.EnableWindow(false);
     m_butNanoMicro.EnableWindow(false);
     m_sbcAlpha.EnableWindow(false);
   }

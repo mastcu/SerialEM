@@ -2655,6 +2655,11 @@
 #define IDC_BUT_LIST_STATE              3686
 #define IDC_STAT_SELECTED_LABEL         3687
 #define IDC_CHECK_SET_APERTURES         3688
+#define IDC_RCHECK_VIB_AND_FILL         3690
+#define IDC_RCHECK_VIB_IN_FINAL         3691
+#define IDC_RCHECK_JUST_FILLING         3692
+#define IDC_RIGNORE_VIB_AND_FILL        3693
+#define IDC_STAT_VIB_CHECKS             3694
 #define ID_NEW_IMAGE                    32771
 #define IDM_FILE_SAVEOTHER              32772
 #define IDM_FILE_READ                   32773
@@ -3284,6 +3289,7 @@
 #define ID_MACRO_EDIT59                 33619
 #define ID_MACRO_EDIT60                 33620
 #define ID_MISC_NO_TRUE_SIZE            33621
+#define ID_WINDOW_NEW_LOCATOR           33622
 
 // Next default values for new objects
 // 
@@ -3291,8 +3297,8 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        301
-#define _APS_NEXT_COMMAND_VALUE         33622
-#define _APS_NEXT_CONTROL_VALUE         3689
+#define _APS_NEXT_COMMAND_VALUE         33623
+#define _APS_NEXT_CONTROL_VALUE         3695
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif

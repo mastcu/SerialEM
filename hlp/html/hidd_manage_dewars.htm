@@ -77,28 +77,45 @@
       is done. Even if filling is specified to be done at an interval, it would be
       advisable to check this option too if there is some chance that it might occur
       spontaneously.</p>
+    <p><strong>Checking for filling and vibrations&nbsp; (UTAPI)</strong></p>
+    <p>This set of radio buttons allows the program to detect whether filling has 
+      started and either detect other vibrations or ignore them.&nbsp; Specifically:</p>
+    <p>&nbsp;&nbsp; &nbsp;<em>Check for ongoing filling and vibrations and wait until done: </em>&nbsp;this 
+      option will check for both filling and other vibrations, and cause the program 
+      to prepare to avoid vibrations and wait until vibrations end.&nbsp; Thus, the 
+      autoloader turbo pump will be turned off.</p>
+    <p>&nbsp;&nbsp;&nbsp; <em>Check for filling; check for vibrations only in Final Data 
+      acquire: </em>this option is equivalent to the first one when running Navigator 
+      Acquire at Items with Final Data parameters, i.e., the program will wait until 
+      vibrations end.&nbsp; In other situations, it will not check for vibrations, 
+      prepare to avoid them, or wait until vibrations are done.&nbsp; Thus, the 
+      autoloader turbo pump can be left running for mapping operations.</p>
+    <p>&nbsp;&nbsp;&nbsp; <em>Just check for filling and ignore vibrations: </em>&nbsp;&nbsp;this 
+      option will not check for vibrations and wait for them to end even during Final 
+      Data acquisition.</p>
     <p><strong>Pause if time to next refill is below N minutes&nbsp;&nbsp; (non-UTAPI 
       only)</strong></p>
-    <p>This line and the next one appear if SerialEM can determine the time until the
-      system plans to start a filling - with Thermo/FEI and Simple Origin but not with JEOL.&nbsp;
-      When the program checks for ongoing filling, it also checks the time interval
-      until the next filling.&nbsp; If that interval is below the time entered on this
-      line (a floating point value), the program will pause and wait for it to start.&nbsp; 
-      With UTAPI, it is necessary to start the refill to end up in the desired state, 
-      so there is pausing.</p>
+    <p>This line and the next one appear if SerialEM can determine the time until the 
+      system plans to start a filling - with Thermo/FEI and Simple Origin but not with 
+      JEOL.&nbsp; When the program checks for ongoing filling, it also checks the time 
+      interval until the next filling.&nbsp; If that interval is below the time 
+      entered on this line (a floating point value), the program will pause and wait 
+      for it to start.&nbsp; With UTAPI, it is necessary to start the refill to end up 
+      in the desired state, so this line about pausing is not present.</p>
     <p><strong>Start the refill if time to next refill is below N minutes&nbsp; 
       (non-UTAPI)&nbsp;&nbsp;&nbsp; or&nbsp;&nbsp;&nbsp;&nbsp; Prepare to avoid if time to next refill is below N minutes&nbsp; 
       (UTAPI)</strong></p>
-    <p>If this option is selected, the program will start the filling immediately&nbsp;when
-      the
-      interval to the next filling is longer than the time on the previous line but below the time entered
-      here (also a floating point value).&nbsp; This option is provided particularly
+    <p>If this option is selected, the program will start the filling immediately&nbsp;when 
+      the interval to the next filling is below the time entered here (also a floating 
+      point value, unless pausing is selected (i.e., for non-UTAPI situations), in 
+      which ccase it will start the filling&nbsp; only if the time is longer than the time on the previous line 
+      about pausing.&nbsp; This option is provided particularly
       for tilt series, where it allows you to minimize wasted time while avoiding
       pauses or disturbances during the acquisition.&nbsp; When using it, a small
-      entry like 0.5 would be appropriate for the entry above, and the time here would
+      entry like 0.5 would be appropriate for the pausing entry above, and the time here would
       be set longer than the expected acquisition time.</p>
     <p><strong>Time to wait after filling is done</strong></p>
-    <p>Enter the interval in minutes to wait after the filling done (a floating point
+    <p>Enter the interval in minutes to wait after the filling is done (a floating point
       value).&nbsp; This wait will occur both when filling is discovered to be ongoing
       and when it is started by the program.</p>
     <p><strong>Repeat checks just before primary action in Acquire at Items</strong></p>

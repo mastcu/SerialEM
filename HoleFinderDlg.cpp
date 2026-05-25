@@ -1794,7 +1794,8 @@ int CHoleFinderDlg::ConvertHoleToISVectors(int index, bool setVecs, double *xVec
 
     // Save that this was last vectors, set other parameters
     mHelper->SetLastUsedHoleISVecs(&xFloat[0], &yFloat[0], true);
-    msParams->holeMagIndex[hexInd] = index;
+    msParams->holeMagIndex[hexInd] = B3DABS(index);
+    msParams->origMagOfArray[hexInd] = -B3DABS(index);
     msParams->tiltOfHoleArray[hexInd] = mLastTiltAngle;
     msParams->doHexArray = mLastWasHexGrid;
     if (mWinApp->mNavHelper->mMultiShotDlg)
@@ -2200,8 +2201,9 @@ int CHoleFinderDlg::FindAndCenterOneHole(EMimageBuffer *imBuf, float diameter, i
   FloatVec *widths, *increments;
   IntVec *numCircles;
   ScaleMat bInv;
-  int numSave, err, nx, ny, ind, bestInd, cropShiftX = 0, cropShiftY = 0;
+  int numSave, err, nx, ny, ind, bestInd, magSave, cropShiftX = 0, cropShiftY = 0;
   float diamSave, xcen, ycen, dist, minDist, pixel, fbin = (float)imBuf->mBinning;
+  float xImSave[3], yImSave[3], xStageSave[3], yStageSave[3];
   float xShift, yShift, imXshift, imYshift, xcenCrop, ycenCrop;
   HoleFinderParams *hfParams = mHelper->GetHoleFinderParams();
   double ISX, ISY;
@@ -2231,6 +2233,15 @@ int CHoleFinderDlg::FindAndCenterOneHole(EMimageBuffer *imBuf, float diameter, i
   }
   if (mIsOpen)
     UpdateSettings();
+
+  // Save vectors, the ones from this operation are useless
+  for (ind = 0; ind < 3; ind++) {
+    xImSave[ind] = mGridImXVecs[ind];
+    xStageSave[ind] = mGridStageXVecs[ind];
+    yImSave[ind] = mGridImYVecs[ind];
+    yStageSave[ind] = mGridStageYVecs[ind];
+  }
+  magSave = mLastMagIndex;
 
   imBuf->mImage->getShifts(imXshift, imYshift);
   imBuf->mImage->getSize(nx, ny);
@@ -2330,6 +2341,15 @@ int CHoleFinderDlg::FindAndCenterOneHole(EMimageBuffer *imBuf, float diameter, i
 
   // Find holes synchronously
   err = DoFindHoles(mHoleCenteringImBuf, true, NULL, NULL, crop != 0);
+
+  // Restore vectors
+  for (ind = 0; ind < 3; ind++) {
+    mGridImXVecs[ind] = xImSave[ind];
+    mGridStageXVecs[ind] = xStageSave[ind];
+    mGridImYVecs[ind] = yImSave[ind];
+    mGridStageYVecs[ind] = yStageSave[ind];
+  }
+  mLastMagIndex = magSave;
   
   // restore parameters
   if (hex) {

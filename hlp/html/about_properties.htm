@@ -139,7 +139,8 @@
           <TD>SkipUtapiServices</TD>
           <TD>Follow with a list of indexes to UTAPI services that should be marked as not 
             available.&nbsp; The indexes correspond to the values of the enum 
-            'UtapiSupportTypes' in SerialEM.h.  With a UTAPI server from April 2025, only 20 needs
+            'UtapiSupportTypes' in SerialEM.h and are printed to the log on the "Got service" line when
+            SerialEM is started with DebugOutput set to 'E*'.&nbsp; With a UTAPI server from April 2025, only 20 needs
             to be used for cameras if you have a Ceta 2.&nbsp; With a 7.27 UTAPI server, the Ceta 2 should give the
             proper number of frames and there should be no more need to skip any services.&nbsp; The 
             vibration manager is supported for dewar 
@@ -710,6 +711,7 @@
               s for STEM in general<br />
               t for exposure time changes in tasks and for continuous mode timing<BR>
               u for update items when polling JEOL, or time of scope update for all scopes<BR>
+              v for vacuum and dewar management <br />
               w for output on stage ready status<br />
               y for reports when background saving starts and ends, add * for adoc mutex output<br />
               [ for output about running a Python script, add * for script output<br />

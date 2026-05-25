@@ -100,7 +100,7 @@ enum Tasks {TASK_NAVIGATOR_ACQUIRE, TASK_DISTORTION_STAGEPAIR, TASK_CAL_BEAMSHIF
   TASK_SNAPSHOT_TO_BUF, TASK_NAV_FILE_RANGE, TASK_MONT_MACRO, TASK_LD_SHIFT_OFFSET,
   TASK_MULTI_GRID, TASK_MULGRID_SEQ, TASK_MULTI_MAP_HOLES, TASK_AUTO_STEP_ADJ_IS,
   TASK_PREV_PRESCAN, TASK_DECTRIS_FLATFIELD, TASK_DECTRIS_INITIALIZE, TASK_BKGD_MACRO,
-  TASK_BEAM_SIZE_CAL
+  TASK_BEAM_SIZE_CAL, TASK_EXIT_PROGRAM
 };
 
 enum CalTypes {CAL_DONE_IS = 0, CAL_DONE_STAGE, CAL_DONE_FOCUS, CAL_DONE_BEAM, 
@@ -758,6 +758,10 @@ public:
   GetSetMember(int, MaxChannelBuffers);
   GetSetMember(int, CircleTypesInLDDefine);
   void SetEnableMultiChanView(BOOL inVal);
+  afx_msg void OnWindowNewLocator();
+  afx_msg void OnUpdateWindowNewLocator(CCmdUI *pCmdUI);
+  int FindBufferForLocator(CSerialEMView *locator, int *numMatch = NULL);
+  CSerialEMView *FindLocatorForBuffer(int index);
   int *GetShowChanInMultiView() { return &mShowChanInMultiView[0]; };
   GetMember(bool, ClosingAllMultiChan);
   void RestoreFocusWhenIdle() { mRestoreFocusIdleCount = 4; };
@@ -893,9 +897,11 @@ public:
 private:
   BOOL mNeedStaticWindow;
   bool mNeedFFTWindow;
+  bool mNeedLocator;
   BOOL mViewClosing;
   BOOL mViewOpening;
   EMimageBuffer *mStackViewImBuf;     // Buffer to pass to it on creation
+  CArray<CSerialEMView *, CSerialEMView *> mLocatorViews;
   EMimageBuffer mImBufs[MAX_BUFFERS];
   EMimageBuffer mFFTBufs[MAX_FFT_BUFFERS];
   EMimageBuffer *mChannelImBufs[MAX_STEM_CHANNELS];

@@ -10523,7 +10523,8 @@ void CNavigatorDlg::AcquireNextTask(int param)
         // Record the index where it should just check
         if (DOING_ACTION(NAACT_CHECK_DEWARS) && (!mNumAcqSteps ||
           mAcqSteps[mNumAcqSteps - 1] != NAACT_CHECK_DEWARS) &&
-          dvParams->doChecksBeforeTask && (dvParams->checkDewars || dvParams->checkPVP)) {
+          dvParams->doChecksBeforeTask && (dvParams->checkVibFillOption || 
+            dvParams->checkPVP)) {
           mStepIndForDewarCheck = mNumAcqSteps;
           mAcqSteps[mNumAcqSteps++] = NAACT_CHECK_DEWARS;
         }

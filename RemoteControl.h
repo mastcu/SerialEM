@@ -111,6 +111,7 @@ private:
   int mDutyPercentIncrementIndex;
   float mLastDutyPercent;
   bool mPanelResized;
+  bool mFirstTime;
 
 public:
   CSpinButtonCtrl m_sbcBeamLeftRight;

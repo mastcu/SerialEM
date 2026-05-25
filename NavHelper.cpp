@@ -7129,6 +7129,8 @@ int CNavHelper::OKtoUseNavPtsForVectors(int pattern, int &groupStart, int &group
   if (ISmat)
     *ISmat = stage2IS;
   itemInd = nav->GetCurrentOrAcquireItem(item);
+  if (itemInd < 0 && nav->m_bCollapseGroups && nav->GetCurListSel() >= 0)
+    nav->GetCollapsedGroupLimits(nav->GetCurListSel(), itemInd, groupEnd);
   if (itemInd < 0) {
     if (reason)
       *reason = "There is no current Navigator item";
