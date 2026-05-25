@@ -3,6 +3,8 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+5/2/526: Added colored borders to multigrid dialog acquisition sections.
+
 5/23/26: Made installer stop removing some DLL's needed by Dectris plugin
 (In 4.2).
 
@@ -12,9 +14,6 @@ mag is changed (In 4.2).
 5/20/26: Set vectors as not transformed after Use Last Hole Vectors (In 4.2).
 
 5/20/26: SEM_4-3-0beta10
-5/23/26: Stabilized image shift and changed V/S shift offset when V or S area
-mag is changed (In 4.2).
-
 5/20/26: Set vectors as not transformed after Use Last Hole Vectors (In 4.2).
 
 5/20/26: Fixed mag output from ImagingStateProperties command (In 4.2).
@@ -50,6 +49,9 @@ View (In 4.2).
 
 5/13/26: Added Locator window, opened from WIndow menu, for seeing and
 manipulating subarea displayed in an associated image window.
+
+5/11/26: Added script command to read in a basic mode file and turn basic mode
+on or off.
 
 5/7/26 SEM_4-2-22
 5/7/26: Made it skip UTAPI insertion service if camera service is skipped to

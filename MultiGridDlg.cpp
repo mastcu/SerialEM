@@ -441,10 +441,53 @@ BOOL CMultiGridDlg::PreTranslateMessage(MSG* pMsg)
 
 void CMultiGridDlg::OnPaint()
 {
+  CWnd *wnd, *wndM, *wndF, *wndS;
+  CRect winRect, clientRect, butRect;
+  COLORREF colors[3] = {RGB(255,0,255), RGB(0,150, 60), RGB(0, 0, 255)};
+  CPaintDC dc(this);
+  int lrSize = (int)(4 * mWinApp->GetScalingForDPI());
+  int border, left, ind, delHeight, tops[4], brackLen = 3 * lrSize, barBot;
   if (mOnStageDlgIndex >= 0) {
-    CWnd *wnd = GetDlgItem(IDC_EDIT_MULGRID_NAME1 + mOnStageDlgIndex);
-    CPaintDC dc(this);
+    wnd = GetDlgItem(IDC_EDIT_MULGRID_NAME1 + mOnStageDlgIndex);
     DrawButtonOutline(dc, wnd, 2, RGB(0, 255, 0), -2);
+  }
+  if (mRightIsOpen <= 0)
+    return;
+  GetWindowRect(&winRect);
+  GetClientRect(&clientRect);
+  border = (winRect.Width() - clientRect.Width()) / 2;
+  delHeight = winRect.top + winRect.Height() - clientRect.Height() - border;
+  wnd = GetDlgItem(IDC_BUT_MG_LOW_MAG_MAPS);
+  wndM = GetDlgItem(IDC_BUT_MG_MEDIUM_MAG_MAPS);
+  wndS = GetDlgItem(IDC_BUT_SETUP_FINAL_ACQ);
+  wndF = GetDlgItem(IDC_BUT_MG_FINAL_ACQ);
+  if (wnd && wndM && wndS && wndF) {
+    wnd->GetWindowRect(&butRect);
+    tops[0] = butRect.top - delHeight - lrSize;
+    left = (butRect.left - winRect.left) - lrSize / 2;
+    wndM->GetWindowRect(&butRect);
+    tops[1] = butRect.top - delHeight - lrSize;
+    wndF->GetWindowRect(&butRect);
+    tops[2] = butRect.top - delHeight - lrSize;
+    if (mPanelStates[9])
+      wndS->GetWindowRect(&butRect);
+    tops[3] = butRect.bottom - delHeight + lrSize;
+    for (ind = 0; ind < 3; ind++) {
+      barBot = tops[ind + 1] - (ind < 2 ? lrSize / 2 : 0);
+      dc.FillSolidRect(left - 2 * lrSize, tops[ind], lrSize,
+        barBot - tops[ind], colors[ind]);
+      dc.FillSolidRect(clientRect.Width() - lrSize, tops[ind], lrSize,
+        barBot - tops[ind], colors[ind]);
+      dc.FillSolidRect(left - lrSize, tops[ind], brackLen, lrSize,
+        colors[ind]);
+      dc.FillSolidRect(clientRect.Width() - lrSize - brackLen, tops[ind], brackLen,
+        lrSize, colors[ind]);
+      dc.FillSolidRect(left - lrSize, barBot - lrSize, brackLen, lrSize,
+        colors[ind]);
+      dc.FillSolidRect(clientRect.Width() - lrSize - brackLen, barBot - lrSize, brackLen,
+        lrSize, colors[ind]);
+    }
+
   }
   CBaseDlg::OnPaint();
 }
@@ -670,6 +713,7 @@ void CMultiGridDlg::ReloadTable(int resetOrClear, int checkRuns)
   if (mRightIsOpen < 0 && mNumUsedSlots > 0)
     mRightIsOpen = 1;
   m_bToggleAll = true;
+  Invalidate();
   ManagePanels();
   DisplayRunOrder();
   mNamesChanged = false;
@@ -1708,6 +1752,7 @@ void CMultiGridDlg::OnButMgLowMagMaps()
 {
   mPanelStates[5] = !mPanelStates[5];
   SetDlgItemText(IDC_BUT_MG_LOW_MAG_MAPS, mPanelStates[5] ? "-" : "+");
+  Invalidate();
   ManagePanels();
   mWinApp->RestoreViewFocus();
 }
@@ -1717,6 +1762,7 @@ void CMultiGridDlg::OnButMgMediumMagMaps()
 {
   mPanelStates[7] = !mPanelStates[7];
   SetDlgItemText(IDC_BUT_MG_MEDIUM_MAG_MAPS, mPanelStates[7] ? "-" : "+");
+  Invalidate();
   ManagePanels();
   mWinApp->RestoreViewFocus();
 }
@@ -1726,6 +1772,7 @@ void CMultiGridDlg::OnButMgFinalAcq()
 {
   mPanelStates[9] = !mPanelStates[9];
   SetDlgItemText(IDC_BUT_MG_FINAL_ACQ, mPanelStates[9] ? "-" : "+");
+  Invalidate();
   ManagePanels();
   mWinApp->RestoreViewFocus();
 }
@@ -1734,6 +1781,7 @@ void CMultiGridDlg::OnButMgFinalAcq()
 void CMultiGridDlg::OnButCloseRight()
 {
   mRightIsOpen = mRightIsOpen > 0 ? 0 : 1;
+  Invalidate();
   ManagePanels();
   mWinApp->RestoreViewFocus();
 }
@@ -1752,6 +1800,7 @@ void CMultiGridDlg::OnButCloseAll()
     }
   }
   mClosedAll = !mClosedAll;
+  Invalidate();
   ManagePanels();
   mWinApp->RestoreViewFocus();
 }
@@ -1760,6 +1809,7 @@ void CMultiGridDlg::OnButCloseAll()
 void CMultiGridDlg::OnCheckRunLmms()
 {
   UPDATE_DATA_TRUE;
+  Invalidate();
   mPanelStates[5] = m_bTakeLMMs;
   SetDlgItemText(IDC_BUT_MG_LOW_MAG_MAPS, mPanelStates[5] ? "-" : "+");
   m_butTakeLMMs.SetFont(m_bTakeLMMs ? &mBigBoldFont : &mBiggerFont);
@@ -1773,6 +1823,7 @@ void CMultiGridDlg::OnCheckRunLmms()
 void CMultiGridDlg::OnCheckTakeMmms()
 {
   UPDATE_DATA_TRUE;
+  Invalidate();
   mPanelStates[7] = m_bTakeMMMs;
   SetDlgItemText(IDC_BUT_MG_MEDIUM_MAG_MAPS, mPanelStates[7] ? "-" : "+");
   m_butTakeMMMs.SetFont(m_bTakeMMMs ? &mBigBoldFont : &mBiggerFont);
@@ -1786,6 +1837,7 @@ void CMultiGridDlg::OnCheckTakeMmms()
 void CMultiGridDlg::OnCheckRunFinalAcq()
 {
   UPDATE_DATA_TRUE;
+  Invalidate();
   mPanelStates[9] = m_bRunFinalAcq;
   SetDlgItemText(IDC_BUT_MG_FINAL_ACQ, mPanelStates[9] ? "-" : "+");
   m_butRunFinalAcq.SetFont(m_bRunFinalAcq ? &mBigBoldFont : &mBiggerFont);
