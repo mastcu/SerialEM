@@ -59,4 +59,6 @@ public:
   void ManageEnables();
   BOOL m_bDoCheckJustBefore;
   bool mUsingVibrationManager;
+  int m_iVibrationFillOption;
+  afx_msg void OnRignoreVibAndFill();
 };

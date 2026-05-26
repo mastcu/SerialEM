@@ -108,15 +108,18 @@ void DirectElectronToolDlg::updateDEToolDlgPanel(bool initialCall)
 
     // update temperature setpoint if no property entered
     if (isDE12) {
-      if (mTemperSetpoint <= -999 && curIsDE &&
-        (camParam->CamFlags & DE_HAS_TEMP_SET_PT)) {
+      if (curIsDE && mTemperSetpoint < -900) {
         if (mDECamera->getIntProperty(newNames ? sSetpointNew : sSetpointOld, temp_int)) {
           if (temp_int != mTemperSetpoint) {
             value.Format("Setpoint(C): %d", temp_int);
             SetDlgItemText(ID_DE_temperSet, value);
             mTemperSetpoint = temp_int;
           }
-        }
+
+          // The property may be missing from the property list.  If so and it failed,
+          // set to intermediate value so it won't be tested again
+        } else if (!(camParam->CamFlags & DE_HAS_TEMP_SET_PT))
+          mTemperSetpoint = -500;
       }
 
       // Read temperature control
@@ -256,7 +259,7 @@ BOOL DirectElectronToolDlg::OnInitDialog()
   mHdfMrcSaveOption = "HDF5";
 
   // Start a timer for periodic updates
-  mStatusUpdateID = ::SetTimer(NULL, 1, 10000, StatusUpdateProc);
+  mStatusUpdateID = ::SetTimer(NULL, 1, 5000, StatusUpdateProc);
 
   CString value;
   CComboBox   *correctComboBox = ((CComboBox *) GetDlgItem(ID_DE_protectMode));

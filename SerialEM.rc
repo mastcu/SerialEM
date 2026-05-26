@@ -7,8 +7,7 @@
 //
 // Generated from the TEXTINCLUDE 2 resource.
 //
-#include "afxres.h"
-
+#include "afxres.h"
 /////////////////////////////////////////////////////////////////////////////
 #undef APSTUDIO_READONLY_SYMBOLS
 
@@ -4019,13 +4018,22 @@ BEGIN
     CONTROL         "",IDC_STAT_LINE,"Static",SS_BLACKFRAME | SS_SUNKEN,7,144,158,1
 END
 
-IDD_MANAGE_DEWARS DIALOGEX 0, 0, 204, 212
+IDD_MANAGE_DEWARS DIALOGEX 0, 0, 210, 264
 STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Dewar and Vacuum Management"
 FONT 8, "Microsoft Sans Serif", 400, 0, 0x0
 BEGIN
-    DEFPUSHBUTTON   "OK",IDOK,37,190,50,14
-    PUSHBUTTON      "Cancel",IDCANCEL,107,190,50,14
+    CONTROL         "Do not check for ongoing filling or vibrations",IDC_RIGNORE_VIB_AND_FILL,
+                    "Button",BS_AUTORADIOBUTTON | WS_GROUP,13,115,152,10
+    CONTROL         "Check for ongoing filling and vibrations and wait until done",IDC_RCHECK_VIB_AND_FILL,
+                    "Button",BS_AUTORADIOBUTTON,13,126,196,10
+    CONTROL         "Check for filling; check vibrations only in Final Data acquire",IDC_RCHECK_VIB_IN_FINAL,
+                    "Button",BS_AUTORADIOBUTTON,13,137,189,10
+    CONTROL         "Just check for filling and ignore vibrations",IDC_RCHECK_JUST_FILLING,
+                    "Button",BS_AUTORADIOBUTTON,13,148,144,10
+    GROUPBOX        "Checking for filling and vibrations",IDC_STAT_VIB_CHECKS,9,106,194,55,WS_GROUP
+    DEFPUSHBUTTON   "OK",IDOK,37,243,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,107,243,50,14
     CONTROL         "Check for PVP running and wait until done",IDC_CHECK_PVP_RUNNING,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,19,150,10
     CONTROL         "Run buffer cycle every ",IDC_RUN_BUFFER_CYCLE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,33,77,10
@@ -4036,28 +4044,28 @@ BEGIN
     EDITTEXT        IDC_EDIT_AUTOLOADER_TIME,123,45,24,14,ES_AUTOHSCROLL
     LTEXT           "minutes",IDC_STAT_AUTOLOADER_MIN,149,48,26,8
     CTEXT           "Vacuum Management",IDC_STAT_VACUUM_TITLE,54,9,90,8
-    CONTROL         "",IDC_STAT_LINE,"Static",SS_BLACKFRAME,9,64,183,1
+    CONTROL         "",IDC_STAT_LINE,"Static",SS_BLACKFRAME,9,64,193,1
     CTEXT           "Nitrogen Management",IDC_STAT_DEWAR_TITLE,21,69,161,8
     CONTROL         "Refill nitrogen every",IDC_REFILL_DEWARS,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,81,74,10
     EDITTEXT        IDC_EDIT_REFILL_TIME,86,79,24,14,ES_AUTOHSCROLL
     LTEXT           "hours",IDC_STAT_REFILL_HOURS,112,82,19,8
     CONTROL         "Check for ongoing filling and wait until done",IDC_CHECK_DEWARS,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,95,176,10
-    LTEXT           "Pause if time to next refill is below ",IDC_STAT_PAUSE_BEFORE,27,110,102,8
-    EDITTEXT        IDC_EDIT_PAUSE_BEFORE,130,107,24,14,ES_AUTOHSCROLL
-    LTEXT           "minutes",IDC_STAT_BEFORE_MIN,156,110,26,8
+    LTEXT           "Pause if time to next refill is below ",IDC_STAT_PAUSE_BEFORE,27,166,102,8
+    EDITTEXT        IDC_EDIT_PAUSE_BEFORE,130,163,24,14,ES_AUTOHSCROLL
+    LTEXT           "minutes",IDC_STAT_BEFORE_MIN,156,166,26,8
     CONTROL         "Start the refill if time to next refill is below",IDC_START_REFILL,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,126,133,10
-    EDITTEXT        IDC_EDIT_START_IF_BELOW,144,124,24,14,ES_AUTOHSCROLL
-    LTEXT           "minutes",IDC_STAT_START_BELOW_MIN,170,127,26,8
-    LTEXT           "Time to wait after refilling is done",IDC_STAT_WAIT_TIME,10,144,105,8
-    EDITTEXT        IDC_EDIT_WAIT_AFTER,112,141,24,14,ES_AUTOHSCROLL
-    LTEXT           "minutes",IDC_STAT_AFTER_MIN,138,144,26,8
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,182,133,10
+    EDITTEXT        IDC_EDIT_START_IF_BELOW,144,180,24,14,ES_AUTOHSCROLL
+    LTEXT           "minutes",IDC_STAT_START_BELOW_MIN,170,183,26,8
+    LTEXT           "Time to wait after refilling is done",IDC_STAT_WAIT_TIME,10,200,105,8
+    EDITTEXT        IDC_EDIT_WAIT_AFTER,112,197,24,14,ES_AUTOHSCROLL
+    LTEXT           "minutes",IDC_STAT_AFTER_MIN,138,200,26,8
     CONTROL         "Repeat checks just before primary action in Acquire at Items",IDC_DO_CHECKS_JUST_BEFORE,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,157,187,10
-    PUSHBUTTON      "?",IDC_BUTHELP,183,191,10,11
-    LTEXT           "",IDC_STAT_SPACER,10,198,8,8
-    CTEXT           "Operations occur only when management is run from script or by Acquire at Items",IDC_STAT_WHEN_OCCURS,23,170,153,16
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,16,213,187,10
+    PUSHBUTTON      "?",IDC_BUTHELP,183,245,10,11
+    LTEXT           "",IDC_STAT_SPACER,10,241,8,8
+    CTEXT           "Operations occur only when management is run from script or by Acquire at Items",IDC_STAT_WHEN_OCCURS,23,226,153,16
 END
 
 IDD_NAVACQ_HOLE_FINDER DIALOGEX 0, 0, 161, 75
@@ -5150,9 +5158,9 @@ BEGIN
     IDD_MANAGE_DEWARS, DIALOG
     BEGIN
         LEFTMARGIN, 9
-        RIGHTMARGIN, 197
+        RIGHTMARGIN, 203
         TOPMARGIN, 7
-        BOTTOMMARGIN, 205
+        BOTTOMMARGIN, 257
     END
 
     IDD_NAVACQ_HOLE_FINDER, DIALOG
@@ -8446,6 +8454,11 @@ END
 STRINGTABLE
 BEGIN
     ID_MISC_NO_TRUE_SIZE    "Select whether to show circles with actual beam size when defining Focus/Trial"
+    IDC_RCHECK_VIB_AND_FILL "Check for both dewar filling and other vibrations"
+    IDC_RCHECK_VIB_IN_FINAL "Check for vibrations only if acquiring Final Data in Acquire at Items"
+    IDC_RCHECK_JUST_FILLING "Do not check for vibrations, just for whether dewars are alreday filling"
+    IDC_RIGNORE_VIB_AND_FILL
+                            "Do not check for dewars filling or other vibrations occurring"
 END
 
 #endif    // English (United States) resources
@@ -8471,8 +8484,7 @@ LANGUAGE 9, 1
 #include "res\SerialEM.rc2"  // non-Microsoft Visual C++ edited resources
 #include "afxres.rc"         // Standard components
 #include "XFolderDialog\XFolderDialog.rc"
-#endif
-
+#endif
 /////////////////////////////////////////////////////////////////////////////
 #endif    // not APSTUDIO_INVOKED
 

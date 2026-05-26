@@ -47,6 +47,8 @@
 // getting mutex because update routine should finish quickly
 #define MAG_MUTEX_WAIT   500
 
+#define FEI_THREAD_MUTEX_WAIT 5000
+
 // Scope plugin version that is good enough if there are no FEI cameras, and if there
 // are cameras.  This allows odd features to be added without harrassing other users
 #define FEISCOPE_NOCAM_VERSION 121
@@ -137,6 +139,7 @@ char * CEMscope::mScopeMutexOwnerStr;
 char * CEMscope::mScopeMutexLenderStr;
 DWORD  CEMscope::mScopeMutexOwnerId;
 int    CEMscope::mScopeMutexOwnerCount;
+HANDLE CEMscope::mFEIThreadMutexHandle = NULL;
 int    CEMscope::mLastMagIndex;
 double CEMscope::mTiltAngle;
 int    CEMscope::mLastEFTEMmode;
@@ -539,7 +542,7 @@ CEMscope::CEMscope()
   mDewarVacParams.autoloaderTimeMin = 60;
   mDewarVacParams.refillAtInterval = false;
   mDewarVacParams.dewarTimeHours = 4.;
-  mDewarVacParams.checkDewars = false;
+  mDewarVacParams.checkVibFillOption = 0;
   mDewarVacParams.pauseBeforeMin = 1.;
   mDewarVacParams.startRefillEarly = false;
   mDewarVacParams.startIntervalMin = 15.;
@@ -671,7 +674,7 @@ int CEMscope::Initialize()
 
   if (firstTime) {
 
-    // Create the mutex here for JEOL & Hitachi.  FEI will need it if aperture thread
+    // Create the mutex here for JEOL & Hitachi
     if (JEOLscope || HitachiScope) {
       CreateScopeMutex();
       mMonitorC2ApertureSize = 0;
@@ -970,10 +973,11 @@ int CEMscope::Initialize()
       if (mUseAperturesInStates > 0)
         SEMAppendToLog("Aperture size will be used in imaging and mapping states");
 
-      // After all that success, now start the thread to do it
+      // After all that success, now start the thread to do it and create mutex for second
+      // channel/threads
       if (mSimulationMode >= 0 && (mMonitorC2ApertureSize > 0 || mShowApertureStatus > 0))
       {
-        CreateScopeMutex();
+        mFEIThreadMutexHandle = CreateMutex(0, 0, 0);
         mApMonitorTD.plugFuncs = mPlugFuncs;
         mApMonitorTD.moving = false;
         mApMonitorTD.singleCondIndex = mSingleCondenserAp;
@@ -1413,9 +1417,13 @@ void CEMscope::ScopeUpdate(DWORD dwTime)
   double wallStart, wallTimes[12] = {0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.};
   bool reportTime = GetDebugOutput('u') && (mAutosaveCount % 10 == 0);
   static int firstTime = 1;
-
+  static double lastTime = 0.;
   //if (reportTime)
     wallStart = wallTime();
+
+  if (lastTime > 0 && wallStart - lastTime > B3DMAX(2.000, mUpdateInterval / 500.))
+    SEMTrace('u', "scope update interval %.3f", wallStart - lastTime);
+  lastTime = wallStart;
 
   // If a counter was set to restore focus, decrement and act on it when count expires
   if (mRestoreViewFocusCount > 0) {
@@ -2098,6 +2106,10 @@ void CEMscope::ScopeUpdate(DWORD dwTime)
       1000.*wallTimes[0],1000.*wallTimes[1], 1000.*wallTimes[2],1000.*wallTimes[3],
       1000.*wallTimes[4],1000.*wallTimes[5],1000.*wallTimes[6],
       1000.*wallTimes[7],1000.*wallTimes[8],1000.*wallTimes[9],1000.*wallTimes[10]);
+  } else if (GetDebugOutput('u')) {
+    cumWall = wallTime() - wallStart;
+    if (cumWall > 1.)
+      PrintfToLog("Update time %.3f", cumWall);
   }
   mInScopeUpdate = false;
 }
@@ -2766,7 +2778,7 @@ UINT CEMscope::StageMoveProc(LPVOID pParam)
 
   ScopeMutexAcquire("StageMoveProc", true);
   if (FEIscope) {
-    if (info->plugFuncs->BeginThreadAccess(info->inBackground ? 3 : 1,
+    if (BeginFEIThreadAccess(info->plugFuncs, info->inBackground ? 3 : 1,
       PLUGFEI_MAKE_STAGE)) {
       sThreadErrString = "Error creating second instance of microscope object for"
         " moving stage";
@@ -2790,7 +2802,7 @@ UINT CEMscope::StageMoveProc(LPVOID pParam)
     }
   }
   if (FEIscope) {
-    info->plugFuncs->EndThreadAccess(info->inBackground ? 3 : 1);
+    EndFEIThreadAccess(info->plugFuncs, info->inBackground ? 3 : 1);
   }
   CoUninitialize();
   ScopeMutexRelease("StageMoveProc");
@@ -3992,7 +4004,7 @@ UINT CEMscope::ScreenMoveProc(LPVOID pParam)
   ScopeMutexAcquire("ScreenMoveProc", true);
   int retval = 0;
 
-  if (FEIscope && info->plugFuncs->BeginThreadAccess(1, PLUGFEI_MAKE_CAMERA)) {
+  if (FEIscope && BeginFEIThreadAccess(info->plugFuncs, 1, PLUGFEI_MAKE_CAMERA)) {
     SEMMessageBox("Error creating second instance of microscope object for"
       "moving screen");
     SEMErrorOccurred(1);
@@ -4036,7 +4048,7 @@ UINT CEMscope::ScreenMoveProc(LPVOID pParam)
     }
   }
   if (FEIscope) {
-    info->plugFuncs->EndThreadAccess(1);
+    EndFEIThreadAccess(info->plugFuncs, 1);
   }
   if (!retval && info->finishedTick > 0)
     Sleep(info->finishedTick);
@@ -8403,7 +8415,7 @@ UINT CEMscope::ApertureMoveProc(LPVOID pParam)
   ScopeMutexAcquire("ApertureMoveProc", true);
 
   if (FEIscope) {
-    if (td->plugFuncs->BeginThreadAccess(1, 0)) {
+    if (BeginFEIThreadAccess(td->plugFuncs, 1, 0)) {
       sThreadErrString.Format("Error creating second instance of microscope object for"
         " moving %s", (td->actionFlags & APERTURE_NEXT_PP_POS) ? "phase plate" :
         "aperture");
@@ -8439,7 +8451,7 @@ UINT CEMscope::ApertureMoveProc(LPVOID pParam)
   }
 
   if (FEIscope && !(td->actionFlags & APERTURE_BEAM_STOP)) {
-    td->plugFuncs->EndThreadAccess(1);
+    EndFEIThreadAccess(td->plugFuncs, 1);
   }
   CoUninitialize();
   ScopeMutexRelease("ApertureMoveProc");
@@ -8461,8 +8473,8 @@ UINT CEMscope::ApMonitorProc(LPVOID pParam)
       err = 0;
 
       // Get the access for FEI
-      if (FEIscope && td->plugFuncs->BeginThreadAccess(1, 0)) {
-        err = 1;
+      if (FEIscope && BeginFEIThreadAccess(td->plugFuncs, 1, 0)) {
+        err = 3;
       }
       if (!err) {
         try {
@@ -8483,17 +8495,17 @@ UINT CEMscope::ApMonitorProc(LPVOID pParam)
       }
 
       // Give up after 10 consecutive errors
-      if (err) {
+      if (err && err != 3) {
         errCount++;
         if (errCount > 10) {
           retval = 1;
           break;
         }
-      } else {
+      } else if (!err) {
         errCount = 0;
       }
-      if (FEIscope)
-        td->plugFuncs->EndThreadAccess(1);
+      if (FEIscope && err != 3)
+        EndFEIThreadAccess(td->plugFuncs, 1);
       ScopeMutexRelease("ApMonitorProc");
     }
 
@@ -9166,6 +9178,30 @@ BOOL CEMscope::ScopeMutexRelease(const char *name) {
   return true;
 }
 
+// Wrappers for begin and end thread access that acquire and release a mutex for thread
+// access to FEI scope on channel 1, used when aperture monitoring thread is running
+int CEMscope::BeginFEIThreadAccess(ScopePluginFuncs *plugFuncs, int chan, int make)
+{
+  if (chan == 1 && mFEIThreadMutexHandle) {
+    if (WaitForSingleObject(mFEIThreadMutexHandle, FEI_THREAD_MUTEX_WAIT) == WAIT_TIMEOUT)
+    {
+      SEMTrace('y', "FEI thread access FAILED for %d!", GetCurrentThreadId());
+      return 1;
+    }
+    SEMTrace('y', "FEI thread access acquired for %d", GetCurrentThreadId());
+  }
+  return plugFuncs->BeginThreadAccess(chan, make);
+}
+
+void CEMscope::EndFEIThreadAccess(ScopePluginFuncs *plugFuncs, int chan)
+{
+  if (chan == 1 && mFEIThreadMutexHandle) {
+    SEMTrace('y', "FEI thread access released for %d", GetCurrentThreadId());
+    ReleaseMutex(mFEIThreadMutexHandle);
+  }
+  plugFuncs->EndThreadAccess(chan);
+}
+
 // Returns FALSE when the mag mutex could not be acquired
 BOOL CEMscope::AcquireMagMutex()
 {
@@ -9827,7 +9863,8 @@ UINT CEMscope::FilmExposeProc(LPVOID pParam)
   int retval = 0;
   if (FEIscope) {
 
-    if (info->plugFuncs->BeginThreadAccess(1, PLUGFEI_MAKE_CAMERA | PLUGFEI_MAKE_ILLUM)) {
+    if (BeginFEIThreadAccess(info->plugFuncs, 1, 
+      PLUGFEI_MAKE_CAMERA | PLUGFEI_MAKE_ILLUM)) {
       SEMMessageBox("Error creating second instance of microscope object for"
         "film exposure");
       SEMErrorOccurred(1);
@@ -9971,7 +10008,7 @@ UINT CEMscope::FilmExposeProc(LPVOID pParam)
     }
   }
   if (FEIscope) {
-    info->plugFuncs->EndThreadAccess(1);
+    EndFEIThreadAccess(info->plugFuncs, 1);
   }
   CoUninitialize();
   ScopeMutexRelease("FilmExposeProc");
@@ -10851,7 +10888,7 @@ UINT CEMscope::LongOperationProc(LPVOID pParam)
   CoInitializeEx(NULL, COINIT_MULTITHREADED);
   CEMscope::ScopeMutexAcquire("LongOperationProc", true);
 
-  if (FEIscope && lod->plugFuncs->BeginThreadAccess(1, PLUGFEI_MAKE_VACUUM)) {
+  if (FEIscope && BeginFEIThreadAccess(lod->plugFuncs, 1, PLUGFEI_MAKE_VACUUM)) {
     SEMMessageBox("Error creating second instance of microscope object for" +
     sLongOpDescriptions[0]);
     SEMErrorOccurred(1);
@@ -11046,7 +11083,7 @@ UINT CEMscope::LongOperationProc(LPVOID pParam)
     }
   }
   if (FEIscope) {
-    lod->plugFuncs->EndThreadAccess(1);
+    EndFEIThreadAccess(lod->plugFuncs, 1);
   }
   CoUninitialize();
   CEMscope::ScopeMutexRelease("LongOperationProc");
@@ -11306,7 +11343,7 @@ UINT CEMscope::SynchronousProc(LPVOID pParam)
   CoInitializeEx(NULL, COINIT_MULTITHREADED);
   CEMscope::ScopeMutexAcquire("SynchronousProc", true);
 
-  if (FEIscope && mPlugFuncs->BeginThreadAccess(1,
+  if (FEIscope && BeginFEIThreadAccess(mPlugFuncs, 1,
     PLUGFEI_MAKE_ILLUM | PLUGFEI_MAKE_PROJECT)) {
     SEMMessageBox("Error creating second instance of microscope object for synchronous "
       "thread");
@@ -11342,7 +11379,7 @@ UINT CEMscope::SynchronousProc(LPVOID pParam)
   }
 
   if (FEIscope) {
-    mPlugFuncs->EndThreadAccess(1);
+    EndFEIThreadAccess(mPlugFuncs, 1);
   }
   CoUninitialize();
   CEMscope::ScopeMutexRelease("SynchronousProc");

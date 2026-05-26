@@ -1769,10 +1769,12 @@ void CLowDoseDlg::ScopeUpdate(int magIndex, int spotSize, double intensity,
   bool canDrawBeam = mScope->GetUseIllumAreaForC2() ||
     !mWinApp->mBeamAssessor->LDAreaBeamSizeFromCal(inSetArea);
   CMapDrawItem *item;
+  CNavigatorDlg *nav = mWinApp->mNavigator;
   MultiShotParams *msParams;
   EMimageBuffer *imBuf = mWinApp->mMainView->GetActiveImBuf();
   static double lastEDMupdate = 0.;
   bool focusOrTrial = inSetArea == FOCUS_CONSET || inSetArea == TRIAL_CONSET;
+  int parTSgroupID = mWinApp->mNavHelper->GetParTSSetupGroupID();
 
   if (!mInitialized || !mTrulyLowDose)
     return;
@@ -1799,6 +1801,15 @@ void CLowDoseDlg::ScopeUpdate(int magIndex, int spotSize, double intensity,
         ldArea->axisPosition = ConvertOneIStoAxis(ldArea->magIndex, ldArea->ISX,
           ldArea->ISY);
         ConvertOneAxisToIS(magIndex, ldArea->axisPosition, ldArea->ISX, ldArea->ISY);
+      } else if (IS_AREA_VIEW_OR_SEARCH(inSetArea)) {
+        double nvsx, nvsy, transx, transy;
+        GetEitherViewShift(nvsx, nvsy, inSetArea);
+        mShiftManager->TransferGeneralIS(ldArea->magIndex, nvsx, nvsy, magIndex,
+          transx, transy);
+        ldArea->ISX += transx - nvsx;
+        ldArea->ISY += transy - nvsy;
+        mViewShiftX[inSetArea ? 1 : 0] += transx - nvsx;
+        mViewShiftY[inSetArea ? 1 : 0] += transy - nvsy;
       } else {
         TransferISonAxis(ldArea->magIndex, ldArea->ISX, ldArea->ISY, magIndex,
           ldArea->ISX, ldArea->ISY);
@@ -1825,8 +1836,8 @@ void CLowDoseDlg::ScopeUpdate(int magIndex, int spotSize, double intensity,
     ldArea->intensity = intensity;
 
     // Test for multishot being drawn
-    if (inSetArea == RECORD_CONSET && mWinApp->mNavigator &&
-      ((mWinApp->mNavigator->m_bShowAcquireArea &&
+    if (inSetArea == RECORD_CONSET && nav &&
+      ((nav->m_bShowAcquireArea &&
       (mWinApp->mNavHelper->GetEnableMultiShot() & 1)) ||
         mWinApp->mNavHelper->mMultiShotDlg) && intChanged && canDrawBeam &&
         (imBuf->mHasUserPt || imBuf->mHasUserLine)) {
@@ -1834,12 +1845,28 @@ void CLowDoseDlg::ScopeUpdate(int magIndex, int spotSize, double intensity,
       if (msParams->useIllumArea)
         mWinApp->mMainView->DrawImage();
 
+      // Test for parallel TS group being defined
+    } else if (parTSgroupID > 0 && ((intChanged && canDrawBeam) || magChanged) && 
+      (inSetArea == RECORD_CONSET || inSetArea == FOCUS_CONSET || 
+        inSetArea == TRIAL_CONSET) &&
+      mWinApp->mNavHelper->GetParTSOptions()->useIAorBeamSize) {
+      mWinApp->mMainView->DrawImage();
+
+      // Test for current item having parallel Ts params
+    } else if (inSetArea == RECORD_CONSET && nav && 
+      ((intChanged && canDrawBeam) || magChanged) &&
+      nav->m_bShowAcquireArea && nav->GetNumIStargetItems()  &&
+      mWinApp->mNavHelper->GetParTSOptions()->useIAorBeamSize) {
+      item = nav->GetCurrentItem();
+      if (item && item->mParallelTSIndex  >= 0)
+        mWinApp->mMainView->DrawImage();
+
       // Test for edit focus
-    } else if (intChanged && inSetArea == FOCUS_CONSET && mWinApp->mNavigator &&
-      mWinApp->mNavigator->m_bEditFocus && mWinApp->mNavigator->GetEditFocusEnabled() &&
+    } else if (intChanged && inSetArea == FOCUS_CONSET && nav &&
+      nav->m_bEditFocus && nav->GetEditFocusEnabled() &&
       imBuf->mHasUserPt && canDrawBeam && imBuf->mLowDoseArea && 
       imBuf->mConSetUsed == VIEW_CONSET) {
-      item = mWinApp->mNavigator->GetCurrentItem();
+      item = nav->GetCurrentItem();
       if (item && (item->mAcquire || item->mTSparamIndex >= 0))
         mWinApp->mMainView->DrawImage();
 
@@ -2505,9 +2532,10 @@ void CLowDoseDlg::SyncFilterSettings(int inArea, FilterParams *filtParam)
 }
 
 // Compute corner points for drawing an area on a view image, if an area is
-// being defined.  type = 0 for the area, 1 for Record.  Binning and sizeX, sizeY
-// describe the View image.  Four corner points in image coordinates are returned
-// in corner[XY], and for the define area,
+// being defined.  type = 0 for the defined area with beam size from larger of T/F if 
+// tied, or for focus if drawing from Nav, 1 for Record, 2 for Record with radius
+// returned.  Four corner points in image coordinates are returned
+// in corner[XY] for the define area, Record, or Focus
 int CLowDoseDlg::DrawAreaOnView(int type, EMimageBuffer *imBuf, StateParams &state,
                                 float *cornerX, float *cornerY,
                                 float &cenX, float &cenY, float &radius, float &trueRad)

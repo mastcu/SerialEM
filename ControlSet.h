@@ -671,6 +671,8 @@ struct ParTSTargetData {
   float fitRes;
   float shiftX;
   float shiftY;
+  float loadedSpecY;
+  float loadedDelZFocus;
 };
 
 typedef CArray<ParTSTargetData, ParTSTargetData> ParTargetDataArray;
@@ -742,7 +744,7 @@ struct DewarVacParams
   int autoloaderTimeMin;     // Interval to run at
   BOOL refillAtInterval;     // Refill at interval
   float dewarTimeHours;      // Time between refills
-  BOOL checkDewars;          // Check status of dewar filling
+  int checkVibFillOption;    // 1 to check vib & fill, 2/3 ignore vib in Final Data/always
   float pauseBeforeMin;      // Pause time before filling
   BOOL startRefillEarly;     // Start a refill if remaining time is low enough
   float startIntervalMin;    // Start a refill if within this time

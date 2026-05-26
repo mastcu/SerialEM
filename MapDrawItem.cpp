@@ -88,6 +88,8 @@ CMapDrawItem::CMapDrawItem()
   mTSendAngle = EXTRA_NO_VALUE;
   mTSbidirAngle = EXTRA_NO_VALUE;
   mTargetDefocus = EXTRA_NO_VALUE;
+  mShiftInImageX = EXTRA_NO_VALUE;
+  mShiftInImageY = EXTRA_NO_VALUE;
   mShiftCohortID = 0;
   mMarkerShiftX = mMarkerShiftY = EXTRA_NO_VALUE;
   mFilePropIndex =  mTSparamIndex = mMontParamIndex =  mStateIndex = -1;

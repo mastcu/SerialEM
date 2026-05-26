@@ -869,6 +869,7 @@ MAC_SAME_FUNC(ToolbarOutlineColor, 1, 4, NoOperation, TOOLBAROUTLINECOLOR)
 MAC_SAME_NAME_ARG(ImposeToolbarColor, 3, 4, IMPOSETOOLBARCOLOR, IISss)
 MAC_SAME_NAME_ARG(ShowScopeControlPanel, 1, 0, SHOWSCOPECONTROLPANEL, I)
 MAC_SAME_NAME_ARG(ReadBasicModeFile, 2, 0, READBASICMODEFILE, S)
+MAC_SAME_NAME_NOARG(ExitProgramAtEnd, 0, 0, EXITPROGRAMATEND)
 
 
 // new Python-only commands need to be added to pythonOnlyCmds in ::CMacroProcessor

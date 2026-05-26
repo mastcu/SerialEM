@@ -2127,7 +2127,11 @@ int CMultiTSTasks::StartBidirFileCopy(bool synchronous)
 
     // Set up for synchronous copy BEFORE it starts
     if (doSynchro) {
-      mess.Format("COPYING SEC %d OF %d", mBfcCopyIndex + 1, mBfcNumToCopy);
+      if (mBfcNumFilesToDo > 1)
+        mess.Format("COPYING #%d SEC %d OF %d", mBfcFileIndex + 1, mBfcCopyIndex + 1,
+          mBfcNumToCopy);
+      else
+        mess.Format("COPYING SEC %d OF %d", mBfcCopyIndex + 1, mBfcNumToCopy);
       mWinApp->SetStatusText(MEDIUM_PANE, mess);
       mBfcDoingCopy = 1;
       if (!wasDoing)

@@ -9180,7 +9180,7 @@ UINT CCameraController::BlankerProc(LPVOID pParam)
 
   CEMscope::ScopeMutexAcquire("BlankerProc", true);
   td->GotScopeMutex = true;
-  if (FEIscope && td->scopePlugFuncs->BeginThreadAccess(1, 
+  if (FEIscope && CEMscope::BeginFEIThreadAccess(td->scopePlugFuncs, 1,
     PLUGFEI_MAKE_ILLUM | PLUGFEI_MAKE_PROJECT | PLUGFEI_MAKE_STAGE)) {
     DeferMessage(td, "Error creating second instance of microscope object\n"
       "for blanking beam or doing post-exposure actions");
@@ -9642,7 +9642,7 @@ UINT CCameraController::BlankerProc(LPVOID pParam)
     }
   }
   if (FEIscope) {
-    td->scopePlugFuncs->EndThreadAccess(1);
+    CEMscope::EndFEIThreadAccess(td->scopePlugFuncs, 1);
   }
   CoUninitialize();
   CEMscope::ScopeMutexRelease("BlankerProc");
@@ -9768,7 +9768,7 @@ int CCameraController::StartFocusRamp(CameraThreadData *td, bool &rampStarted)
       td->ScanDelay = 10;
     }
     if (FEIscope) {
-      if (td->scopePlugFuncs->BeginThreadAccess(1, 0)) {
+      if (CEMscope::BeginFEIThreadAccess(td->scopePlugFuncs, 1, 0)) {
         DeferMessage(td,"Error getting access to thread for starting focus ramper");
         SEMErrorOccurred(1);
         retval = 1;
@@ -9811,7 +9811,7 @@ void CCameraController::FinishFocusRamp(CameraThreadData *td, bool rampStarted)
       if (rampStarted && td->scopePlugFuncs->FinishFocusRamp(3000, &td->ScanIntMin, 
         &td->ScanIntMax, &td->ScanIntMean, &td->ScanIntSD))
         DeferMessage(td, CString(td->scopePlugFuncs->GetLastErrorString()));
-      td->scopePlugFuncs->EndThreadAccess(1);
+      CEMscope::EndFEIThreadAccess(td->scopePlugFuncs, 1);
       if (winApp->mCamera->GetRamperBlankAtEnd() > 1)
         Sleep(1000 * (winApp->mCamera->GetRamperBlankAtEnd() - 1));
     } else {
@@ -9993,7 +9993,7 @@ UINT CCameraController::InsertProc(LPVOID pParam)
   HRESULT hr = S_OK;
   CString message;
   if (itd->FEItype) {
-    if (itd->td->scopePlugFuncs->BeginThreadAccess(2, PLUGFEI_MAKE_NOBASIC)) {
+    if (CEMscope::BeginFEIThreadAccess(itd->td->scopePlugFuncs, 2, PLUGFEI_MAKE_NOBASIC)) {
       DeferMessage(itd->td, "Error setting up thread access for inserting/retracting");
       retval = 1;
     }
@@ -10020,11 +10020,13 @@ UINT CCameraController::InsertProc(LPVOID pParam)
           retval = itd->plugFuncs->SetCameraInsertion(itd->camera, itd->insert ? 1 : 0);
       } else if (itd->DE_camType) {
         if (itd->insert)
-          hr = itd->td->DE_Cam->insertCamera();
+          retval = itd->td->DE_Cam->insertCamera();
         else
-          hr = itd->td->DE_Cam->retractCamera();
-        if (!SUCCEEDED(hr))
-          retval = 1;
+          retval = itd->td->DE_Cam->retractCamera();
+        if (retval) {
+          message = itd->td->DE_Cam->GetLastErrorString();
+          DeferMessage(itd->td, message);
+        }
       } else if (itd->FEItype) {
           retval = itd->td->scopePlugFuncs->ASIsetCameraInsertion(itd->camera, itd->insert ? 1 : 0);
           if (retval) {
@@ -10048,7 +10050,7 @@ UINT CCameraController::InsertProc(LPVOID pParam)
       pGatan->Release();
   }
   if (itd->FEItype)
-    itd->td->scopePlugFuncs->EndThreadAccess(2);
+    CEMscope::EndFEIThreadAccess(itd->td->scopePlugFuncs, 2);
   CoUninitialize();
   SEMTrace('R', "InsertProc: exiting thread after sleep");
   return retval;
@@ -12571,7 +12573,8 @@ int CCameraController::AcquireFEIimage(CameraThreadData *td, void *array, int co
   if (td->SaveFrames && (td->CamFlags & PLUGFEI_CAM_CONTIN_SAVE))
     saveFrames = -1 - B3DNINT(td->Exposure / td->FrameTime);
 
-  if (td->scopePlugFuncs->BeginThreadAccess(2, advanced ? PLUGFEI_MAKE_NOBASIC : 0)) {
+  if (CEMscope::BeginFEIThreadAccess(td->scopePlugFuncs, 2, 
+    advanced ? PLUGFEI_MAKE_NOBASIC : 0)) {
     DeferMessage(td, "Error creating second instance of microscope object\n"
       " for acquiring image");
     SEMErrorOccurred(1);
@@ -12610,7 +12613,7 @@ int CCameraController::AcquireFEIimage(CameraThreadData *td, void *array, int co
     message = "Cannot set subarea, the plugin is out of date";
   else if (retval)
     message = td->scopePlugFuncs->GetLastErrorString();
-  td->scopePlugFuncs->EndThreadAccess(2);
+  CEMscope::EndFEIThreadAccess(td->scopePlugFuncs, 2);
 
   // Workaround for a problem on a simulator
   if (retval == 2 && td->scopeSimulation && message.Find("Cable::Exception") > 0)
@@ -12648,7 +12651,7 @@ int CCameraController::AcquireFEIchannels(CameraThreadData * td, int sizeX, int 
   const char *chanNames[MAX_STEM_CHANNELS];
   SEMTrace('E', "Entering AcquireFEIchannels");
 
-  if (!td->UseUtapi && td->scopePlugFuncs->BeginThreadAccess(2, 0)) {
+  if (!td->UseUtapi && CEMscope::BeginFEIThreadAccess(td->scopePlugFuncs, 2, 0)) {
     DeferMessage(td, "Error creating second instance of microscope object\n"
       " for acquiring image");
     SEMErrorOccurred(1);
@@ -12705,7 +12708,7 @@ int CCameraController::AcquireFEIchannels(CameraThreadData * td, int sizeX, int 
       DeferMessage(td, CString(td->scopePlugFuncs->GetLastErrorString()));
   }
   if (!td->UseUtapi)
-    td->scopePlugFuncs->EndThreadAccess(2);
+    CEMscope::EndFEIThreadAccess(td->scopePlugFuncs, 2);
 
   // Return value 2 means numCopied is correct
   if (retval && retval != 2)

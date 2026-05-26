@@ -21,7 +21,8 @@ static int sIdTable[] = {IDC_CHECK_PVP_RUNNING, IDC_RUN_BUFFER_CYCLE,
 IDC_EDIT_BUFFER_TIME, IDC_STAT_BUFFER_MIN, IDC_RUN_AUTOLOADER_CYCLE, IDC_STAT_LINE,
 IDC_EDIT_AUTOLOADER_TIME, IDC_STAT_AUTOLOADER_MIN, IDC_STAT_VACUUM_TITLE, PANEL_END,
 IDC_STAT_DEWAR_TITLE, IDC_REFILL_DEWARS, IDC_EDIT_REFILL_TIME, IDC_CHECK_DEWARS,
-IDC_STAT_REFILL_HOURS, PANEL_END,
+IDC_STAT_REFILL_HOURS, IDC_STAT_VIB_CHECKS, IDC_RIGNORE_VIB_AND_FILL, 
+IDC_RCHECK_VIB_AND_FILL, IDC_RCHECK_VIB_IN_FINAL, IDC_RCHECK_JUST_FILLING, PANEL_END,
 IDC_STAT_PAUSE_BEFORE, IDC_EDIT_PAUSE_BEFORE, IDC_STAT_BEFORE_MIN,
 IDC_START_REFILL, IDC_EDIT_START_IF_BELOW, IDC_STAT_START_BELOW_MIN, PANEL_END,
 IDC_STAT_WAIT_TIME, IDC_EDIT_WAIT_AFTER, IDC_STAT_AFTER_MIN, PANEL_END,
@@ -49,6 +50,7 @@ CManageDewarsDlg::CManageDewarsDlg(CWnd* pParent /*=NULL*/)
   , m_fStartIfBelow(0.)
   , m_fWaitAfter(1.)
   , m_bDoCheckJustBefore(FALSE)
+  , m_iVibrationFillOption(0)
 {
 
 }
@@ -87,6 +89,7 @@ void CManageDewarsDlg::DoDataExchange(CDataExchange* pDX)
   DDV_MinMaxFloat(pDX, m_fWaitAfter, 0.1f, 20.f);
   DDX_Control(pDX, IDC_DO_CHECKS_JUST_BEFORE, m_butDoCheckBeforeTask);
   DDX_Check(pDX, IDC_DO_CHECKS_JUST_BEFORE, m_bDoCheckJustBefore);
+  DDX_Radio(pDX, IDC_RIGNORE_VIB_AND_FILL, m_iVibrationFillOption);
 }
 
 
@@ -104,6 +107,10 @@ BEGIN_MESSAGE_MAP(CManageDewarsDlg, CBaseDlg)
   ON_BN_CLICKED(IDC_CHECK_DEWARS, OnCheckDewars)
   ON_BN_CLICKED(IDC_START_REFILL, OnStartRefill)
   ON_BN_CLICKED(IDC_DO_CHECKS_JUST_BEFORE, OnDoChecksJustBefore)
+  ON_BN_CLICKED(IDC_RIGNORE_VIB_AND_FILL, OnRignoreVibAndFill)
+  ON_BN_CLICKED(IDC_RCHECK_VIB_AND_FILL, OnRignoreVibAndFill)
+  ON_BN_CLICKED(IDC_RCHECK_VIB_IN_FINAL, OnRignoreVibAndFill)
+  ON_BN_CLICKED(IDC_RCHECK_JUST_FILLING, OnRignoreVibAndFill)
 END_MESSAGE_MAP()
 
 
@@ -136,12 +143,17 @@ BOOL CManageDewarsDlg::OnInitDialog()
   if (mUsingVibrationManager) {
     SetDlgItemText(IDC_STAT_DEWAR_TITLE, "Vibration Avoidance and Nitrogen Management");
     SetDlgItemText(IDC_REFILL_DEWARS, "Prepare to avoid every");
-    SetDlgItemText(IDC_CHECK_DEWARS, "Check for ongoing filling or vibrations and wait"
-      " until done");
     SetDlgItemText(IDC_START_REFILL, "Prepare to avoid if time to next refill is below");
     mIDsToDrop.push_back(IDC_STAT_PAUSE_BEFORE);
     mIDsToDrop.push_back(IDC_EDIT_PAUSE_BEFORE);
     mIDsToDrop.push_back(IDC_STAT_BEFORE_MIN);
+    mIDsToDrop.push_back(IDC_CHECK_DEWARS);
+  } else {
+    mIDsToDrop.push_back(IDC_RIGNORE_VIB_AND_FILL);
+    mIDsToDrop.push_back(IDC_RCHECK_VIB_AND_FILL);
+    mIDsToDrop.push_back(IDC_RCHECK_VIB_IN_FINAL);
+    mIDsToDrop.push_back(IDC_RCHECK_JUST_FILLING);
+    mIDsToDrop.push_back(IDC_STAT_VIB_CHECKS);
   }
 
   // Load data from master params
@@ -152,7 +164,8 @@ BOOL CManageDewarsDlg::OnInitDialog()
   m_iAutoloaderTime = param->autoloaderTimeMin;
   m_bRefillDewars = param->refillAtInterval;
   m_fRefillTime = param->dewarTimeHours;
-  m_bCheckDewars = param->checkDewars;
+  m_bCheckDewars = param->checkVibFillOption > 0;;
+  m_iVibrationFillOption = param->checkVibFillOption;
   m_fPauseBefore = param->pauseBeforeMin;
   m_bStartRefill = param->startRefillEarly;
   m_fStartIfBelow = param->startIntervalMin;
@@ -177,7 +190,10 @@ void CManageDewarsDlg::OnOK()
   param->autoloaderTimeMin = m_iAutoloaderTime;
   param->refillAtInterval = m_bRefillDewars;
   param->dewarTimeHours = m_fRefillTime;
-  param->checkDewars = m_bCheckDewars;
+  if (mUsingVibrationManager)
+    param->checkVibFillOption = m_iVibrationFillOption;
+  else
+    param->checkVibFillOption = m_bCheckDewars ? 1 : 0;
   param->pauseBeforeMin = m_fPauseBefore;
   param->startRefillEarly = m_bStartRefill;
   param->startIntervalMin = m_fStartIfBelow;
@@ -220,8 +236,14 @@ void CManageDewarsDlg::OnEnKillfocusEditBox()
   UpdateData(true);
 }
 
-// Check dewars
+// Check dewars and/or/vibrations
 void CManageDewarsDlg::OnCheckDewars()
+{
+  UpdateData(true);
+  ManageEnables();
+}
+
+void CManageDewarsDlg::OnRignoreVibAndFill()
 {
   UpdateData(true);
   ManageEnables();
@@ -243,17 +265,19 @@ void CManageDewarsDlg::OnDoChecksJustBefore()
 // Manage conditional enabling
 void CManageDewarsDlg::ManageEnables()
 {
+  bool checkDewars = (!mUsingVibrationManager && m_bCheckDewars) ||
+    (mUsingVibrationManager && m_iVibrationFillOption > 0);
   m_editBufferTime.EnableWindow(m_bRunBufferCycle);
   m_editAutoloaderTime.EnableWindow(m_bRunAutoloader);
   m_editRefillTime.EnableWindow(m_bRefillDewars);
-  m_editPauseBefore.EnableWindow(m_bCheckDewars);
-  EnableDlgItem(IDC_STAT_PAUSE_BEFORE, m_bCheckDewars);
-  EnableDlgItem(IDC_STAT_BEFORE_MIN, m_bCheckDewars);
-  m_editStartIfBelow.EnableWindow(m_bStartRefill && m_bCheckDewars);
-  m_butStartRefill.EnableWindow(m_bCheckDewars);
-  EnableDlgItem(IDC_STAT_START_BELOW_MIN, m_bCheckDewars);
-  m_editWaitAfter.EnableWindow(m_bRefillDewars || m_bCheckDewars);
-  EnableDlgItem(IDC_STAT_WAIT_TIME, m_bRefillDewars || m_bCheckDewars);
-  EnableDlgItem(IDC_STAT_AFTER_MIN, m_bRefillDewars || m_bCheckDewars);
-  m_butDoCheckBeforeTask.EnableWindow(m_bCheckPVPrunning || m_bCheckDewars);
+  m_editPauseBefore.EnableWindow(checkDewars);
+  EnableDlgItem(IDC_STAT_PAUSE_BEFORE, checkDewars);
+  EnableDlgItem(IDC_STAT_BEFORE_MIN, checkDewars);
+  m_editStartIfBelow.EnableWindow(m_bStartRefill && checkDewars);
+  m_butStartRefill.EnableWindow(checkDewars);
+  EnableDlgItem(IDC_STAT_START_BELOW_MIN, checkDewars);
+  m_editWaitAfter.EnableWindow(m_bRefillDewars || checkDewars);
+  EnableDlgItem(IDC_STAT_WAIT_TIME, m_bRefillDewars || checkDewars);
+  EnableDlgItem(IDC_STAT_AFTER_MIN, m_bRefillDewars || checkDewars);
+  m_butDoCheckBeforeTask.EnableWindow(m_bCheckPVPrunning || checkDewars);
 }

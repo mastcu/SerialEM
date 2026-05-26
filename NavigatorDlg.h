@@ -208,6 +208,8 @@ public:
   GetSetMember(int, InitialTotalShots);
   GetMember(bool, EditFocusEnabled);
   GetSetMember(int, NumIStargetItems);
+  GetMember(BOOL, AddingPoints);
+
   void SetCurAcqParmActions(int which) { mAcqParm = mWinApp->GetNavAcqParams(which); mAcqActions = mHelper->GetAcqActions(which); };
   bool OKtoCloseNav();
 

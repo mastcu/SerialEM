@@ -165,6 +165,9 @@ CString adocStr, valStr, keyStr;
       item->mMarkerShiftY));
     ADOC_PUT(Integer(ADOC_ARG, "ShiftCohortID", item->mShiftCohortID));
   }
+  if (item->mShiftInImageX > EXTRA_VALUE_TEST)
+    ADOC_PUT(TwoFloats(ADOC_ARG, "ShiftInImage", item->mShiftInImageX,
+      item->mShiftInImageY));
   for (jnd = 1; jnd <= MAX_NAV_USER_VALUES; jnd++) {
     if (!mHelper->GetUserValue(item, jnd, valStr)) {
       keyStr.Format("UserValue%d", jnd);
@@ -206,6 +209,12 @@ CString adocStr, valStr, keyStr;
   if (parTS->prevSectNums.size() > 0)
     ADOC_PUT(IntegerArray(ADOC_ARG, "PrevSectNums", &parTS->prevSectNums[0],
     (int)parTS->prevSectNums.size()));
+  if (parTS->xShiftInImage.size() > 0) {
+    ADOC_PUT(FloatArray(ADOC_ARG, "XShiftInImage", &parTS->xShiftInImage[0],
+      (int)parTS->xShiftInImage.size()));
+    ADOC_PUT(FloatArray(ADOC_ARG, "YShiftInImage", &parTS->yShiftInImage[0],
+      (int)parTS->yShiftInImage.size()));
+  }
   if (parTS->xCoordInArea.size() > 0) {
     ADOC_PUT(FloatArray(ADOC_ARG, "XinAreaMap", &parTS->xCoordInArea[0],
       (int)parTS->xCoordInArea.size()));

@@ -159,6 +159,7 @@ public:
   float GetParTSCurTiltOffset(int dir) { return mParTSCurTiltOffset[dir > 0 ? 1 : 0]; };
   GetMemberArr(BOOL, StoreExtra);
   BOOL *GetExtraFileStarts() { return &mExtraFiles[0]; };
+  GetSetMember(float, ParTSMinCtfpPixel);
 
   double GetCumulativeDose();
   int GetEDMPercent(float &EDMPct);
@@ -615,11 +616,24 @@ private:
   FloatVec mParTSLoadedFocus;     // Change in focus from center to impose in shot
   FloatVec mParTSLoadedSpecX;     // Specimen X & Y values that led to IS value used in shot
   FloatVec mParTSLoadedSpecY;
+  FloatVec mParTSLoadedDelZFocus[2]; // Component of total focus due to del Z at pos
   FloatVec mParTSLastKnownX[2];   // Specimen coordinates originally or last found from align
   FloatVec mParTSLastKnownY[2];
   FloatVec mParTSAngleOfKnown[2]; // Angle at which it was known
-  FloatVec mParTSDelZatZero[2];   // Initially Z zero from X pitch, refined if focus found
+  FloatVec mParTSDelZatZero;      // Z zero from X pitch
+  FloatVec mParTSPreTiltsUsed;    // Pretilts used for computations at each tilt index
+  FloatVec mParTSMeanDefocus;     // Intercept from Z vs Y at each tilt
+  FloatVec mParTSLastFoundDelZ0[2];
+  IntVec mParTSLastDelZ0TiltInd[2];
   float mFOVofRecord;             // Mean FOV of Record image
+  int mParTSFirstOffsetFit;       // Flag that it is doing first fit for tilt offset 
+  float mParTSMinCtfpPixel;       // Minimum pixel size for Ctfplotter reduction
+  float mParTSMinFindStartScore;
+  float mParTSMinPlotStartScore;
+  float mParTSMinFindScoreRatio;
+  float mParTSMinPlotScoreRatio;
+  float mParTSMeanStartScore;
+  bool mParTsReviseDZFocusFromZ0;
 
 public:
 	void CenterBeamWithTrial();
@@ -670,10 +684,12 @@ public:
   void ProcessParTSDataFromMultishot();
   void IdentifyParTSOutliers(float *xload, float *yload, float *xfound,
     float *yfound, int *dropping, int numPos, int maxDrop,
-    float elimMin, float critProb, float absProbCrit);
+    float elimMin, float critProb, float absProbCrit, float &slope, float *intcp);
   void FitYSlopeWithDropping(float *xload, float *yload, float *xfound, float *yfound,
     int *dropping, int numPos, float &slope, float *errors, float &mean, float &sd, float &maxErr, int &maxInd);
-  void FitParallelTSYonly(FloatVec &angles, FloatVec &yOnly, float preTilt, float &yZero, 
+  void FitZvsYWithDropping(float *yload, float *zvec,
+    int *dropping, int numPos, float &slope, float &intcp, float *errors, float &mean, float &sd, float &maxErr, int &maxInd);
+  void FitParallelTSYonly(FloatVec &angles, FloatVec &yOnly, float preTilt, float &yZero,
     float &zZero, double &errSum, float &meanErr);
   void FitParallelTSYwithZ(FloatVec &angles, FloatVec &yWithZ, FloatVec &zVec, float preTilt, 
     float &yZero, float &zZero, double &errSum, float &meanErr);

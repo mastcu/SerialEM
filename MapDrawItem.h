@@ -115,6 +115,8 @@ public:
   float mMapMaxScale;
   int mMapFramesX;        // Number of montage frames when montage acquired
   int mMapFramesY;
+  float mShiftInImageX;   // Shift stored in image (for single-frame maps)
+  float mShiftInImageY;
   int mMapSpotSize;       // Illumination state when map was taken
   double mMapIntensity;
   int mMapProbeMode;

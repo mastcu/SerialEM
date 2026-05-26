@@ -154,6 +154,7 @@ private:
   bool mParTSTuningInCtfpDone;     // Flag that tuning can be skipped after it worked once
   int mParTSFirstImageInBuf;       // Buffer that first image is in
   int mParTSOverwriteSec;          // Section # to overwrite, -1 not to
+  bool mMSStartedCtfplotter;       // Flag that it started it then took next shot
 
   DriftWaitParams mWDDfltParams;   // Resident parameters
   DriftWaitParams mWDParm;         // Run-time parameters
@@ -243,6 +244,8 @@ private:
   bool mDVUseVibManager;            // Flag to use vibration manager
   bool mDVSetAutoVibOff;            // Flag that auto vibration management turned off
   bool mDVSawFilling;               // Flag that filling occurred during prepare to avoid
+  bool mDVIgnoreVibrations;         // Flag that it is not doing final acquire
+  int mDVDidPrepAvoidInBusy;        // 1 or 2: called prepare in busy when filling or not
   bool mDoingPrevPrescan;
 
 public:
@@ -256,7 +259,8 @@ public:
   int StartOneShotOfMulti(void);
   int StoreNumForCurrentShot();
   int ProcessParallelTSImage(CString &errStr);
-  int GetCtfOfParallelTSImage(float defocus, float astig, float score, float fitRes, CString &errStr);
+  void OutputDebugPositionAndCTF(int holeIndex);
+  int GetCtfOfParallelTSImage(float &defocus, float &astig, float &score, float &fitRes, CString &errStr);
   void MultiShotNextTask(int param);
   void StopMultiShot(void);
   void MultiShotCleanup(int error);
@@ -325,7 +329,9 @@ public:
   void DewarsVacNextTask(int param);
   void StopDewarsVac();
   int DewarsVacBusy();
+  void StartPrepNoVibFromBusy(int busy);
   void DewarsVacCleanup(int error);
+  void DumpDVFlags(const char *desc);
   int StartPreviewPrescan();
   void StopPreviewPrescan();
 };

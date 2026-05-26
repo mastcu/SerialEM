@@ -3,11 +3,55 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+5/2/526: Added colored borders to multigrid dialog acquisition sections.
+
+5/23/26: Made installer stop removing some DLL's needed by Dectris plugin
+(In 4.2).
+
+5/23/26: Stabilized image shift and changed V/S shift offset when V or S area
+mag is changed (In 4.2).
+
+5/20/26: Set vectors as not transformed after Use Last Hole Vectors (In 4.2).
+
+5/20/26: SEM_4-3-0beta10
+5/20/26: Set vectors as not transformed after Use Last Hole Vectors (In 4.2).
+
+5/20/26: Fixed mag output from ImagingStateProperties command (In 4.2).
+
+5/19/26: Got DE temperature setpoint for control panel on startup if possible,
+even if not in the property list.
+
+5/19/26: SEM_4-2-23
+5/19/26: Fixed timeout too short when running buffer cycle through UTAPI
+(In 4.2).
+
+5/19/26: Fixed scope updates and other actions being blocked during stage
+moves, long operations, etc when monitoring apertures.
+
+5/19/26: Disabled stage spinners in Scope Control panel when busy (In 4.2).
+
+5/18/26: More changes to dewar/vacuum management to make sure it turns off
+autoloader turbo if appropriate when it triggers or sees filling.
+
+5/17/26: Saved previous hole vectors before finding and centering one hole and
+restored afterwards, so that Use Last Hole Vectors has correct data (In 4.2).
+
+5/16/26: Fixed a problem with using vibration manager for dewar and vacuum
+management and added options to check for vibrations separately from checking
+for filling.
+
+5/16/26: Added script command to exit program.
+
+5/14/26: Fixed enabling of Hardware ROI option for DE camera, broken 11/21/25.
+
 5/14/26: Fixed using spot beam shifts on JEOL along with Normalize through
 View (In 4.2).
 
 5/13/26: Added Locator window, opened from WIndow menu, for seeing and
 manipulating subarea displayed in an associated image window.
+
+5/11/26: Added script command to read in a basic mode file and turn basic mode
+on or off.
 
 5/7/26 SEM_4-2-22
 5/7/26: Made it skip UTAPI insertion service if camera service is skipped to

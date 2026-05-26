@@ -69,6 +69,7 @@ CParticleTasks::CParticleTasks(void)
   mMSRunningMacro = false;
   mMSMacroToRun = 0;
   mMSDropPlusFromName = false;
+  mMSStartedCtfplotter = false;
   mZBGIterationNum = -1;
   mZBGMaxIterations = 5;
   mZBGIterThreshold = 0.5f;
@@ -193,6 +194,7 @@ int CParticleTasks::StartMultiShot(int numPeripheral, int doCenter, float spokeR
     }
   }
   mNextMSUseNavItem = -1;
+  mParTSTuningInCtfpDone = false;
 
   // Set some parameters based on flags in inHoleOrMulti
   mMSUseCustomHoles = mMSParams->useCustomHoles && !doIStargets;
@@ -384,7 +386,8 @@ int CParticleTasks::StartMultiShot(int numPeripheral, int doCenter, float spokeR
 
   if (multiHoles) {
     mMSNumHoles = GetHolePositions(mMSHoleISX, mMSHoleISY, mMSPosIndex, mMagIndex,
-      mWinApp->GetCurrentCamera(), numXholes, numYholes, (float)angle, item, true);
+      mWinApp->GetCurrentCamera(), numXholes, numYholes, 
+      mMSForParallelTS ? 0.f : (float)angle, item, true);
     mMSUseHoleDelay = true;
     if (!doIStargets) {
       useXholes = B3DABS(numXholes ? numXholes : mMSParams->numHoles[0]);
@@ -480,7 +483,7 @@ int CParticleTasks::StartMultiShot(int numPeripheral, int doCenter, float spokeR
         str += str2;
       }
 
-      if (GetDebugOutput('1'))
+      if (GetDebugOutput('I'))
         mWinApp->AppendToLog(str);
     }
   }
@@ -557,8 +560,11 @@ void CParticleTasks::MultiShotNextTask(int param)
   int nextShot, nextHole, err, storeNum;
   KImageStore *storeMRC;
   CString errStr;
-  if (mMSCurIndex < -1)
+  if (mMSCurIndex < -1) {
+    if (mParTSFirstImageInBuf > 0)
+      mWinApp->mBufferManager->CopyImageBuffer(mParTSFirstImageInBuf, 0, false);
     return;
+  }
 
   // Save Record
   mMSRunningMacro = false;
@@ -581,9 +587,14 @@ void CParticleTasks::MultiShotNextTask(int param)
       StopMultiShot();
       return;
     }
-    if (ProcessParallelTSImage(errStr)) {
+    if (mMSForParallelTS && ProcessParallelTSImage(errStr)) {
       StopMultiShot();
       SEMMessageBox("Error processing multishot image for parallel TS:\n" + errStr);
+      return;
+    }
+    if (mMSCurIndex < -1) {
+      if (mParTSFirstImageInBuf > 0)
+        mWinApp->mBufferManager->CopyImageBuffer(mParTSFirstImageInBuf, 0, false);
       return;
     }
   }
@@ -631,6 +642,9 @@ void CParticleTasks::StopMultiShot(void)
 {
   if (mMSCurIndex < -1)
     return;
+  if (mMSForParallelTS)
+    mShiftManager->SetISTimeOut(
+      mShiftManager->ComputeISDelay(mBaseISX - mLastISX, mBaseISX - mLastISY));
   if (mCamera->Acquiring()) {
     mCamera->SetImageShiftToRestore(mBaseISX, mBaseISY);
     if (mMSAdjustBeamTilt && mMSSkipAstigBT >= 0)
@@ -663,6 +677,7 @@ void CParticleTasks::StopMultiShot(void)
   mWinApp->SetStatusText(MEDIUM_PANE, "");
   mMSsaveToMontage = false;
   mParTSOverwriteSec = -1;
+  mMSStartedCtfplotter = false;
 }
 
 /*
@@ -675,7 +690,7 @@ void CParticleTasks::SetUpMultiShotShift(int shotIndex, int holeIndex, BOOL queu
   float delay, delFocus = 0.;
   int ring = 0, indBase = 0;
   CString str, str2;
-  BOOL debug = GetDebugOutput('1');
+  BOOL debug = GetDebugOutput('I');
   bool doBacklash = mScope->GetAdjustForISSkipBacklash() <= 0;
   int BTdelay;
 
@@ -868,27 +883,50 @@ int CParticleTasks::ProcessParallelTSImage(CString &errStr)
 {
   double initISX, initISY, aliISX, aliISY, pctShift;
   double delBTX, delBTY, delAstigX, delAstigY;
-  int err;
+  int err, astigPhase;
   float shiftX = 0., shiftY = 0., shiftLimit = 0., scaleMax, rotation;
+  float dummy, phase;
   float reduction = (float)mTSController->GetParTSRefBinning();
   int direction = mTSController->GetDirection();
   bool hasRef, extractedRef, firstTilt = mTSController->GetTiltIndex() == 0;
   EMimageBuffer *otherStack;
   ScaleMat c2s;
+  CString str, str2;
   ParTSTargetData &ptsd = mParTSTargetData->ElementAt(mMSHoleIndex);
   ParallelTSOptions *parOpts = mNavHelper->GetParTSOptions();
-  if (mNavHelper->GetParTSOptions()->CtfMeasureType > 0 && GetCtfOfParallelTSImage(
+
+  if (parOpts->CtfMeasureType == 1 && mMSStartedCtfplotter && mMSHoleIndex > 0) {
+    ParTSTargetData &ptsdLast = mParTSTargetData->ElementAt(mMSHoleIndex);
+    err = mWinApp->mProcessImage->FinishCtfplotterRun(10000, errStr);
+    mMSStartedCtfplotter = false;
+    if (!err) {
+      astigPhase = parOpts->findAstig ? 1 : 0;
+      err = mWinApp->mExternalTools->ReadCtfplotterResults(ptsdLast.defocusByCTF,
+        ptsdLast.astig, dummy, phase, astigPhase, ptsdLast.fitRes, ptsdLast.score, str,
+        errStr);
+    }
+    if (err) {
+      ptsdLast.score = -1;
+      PrintfToLog("CTF fit failed at position %d: %s", mMSHoleIndex, (LPCTSTR)errStr);
+    }
+    OutputDebugPositionAndCTF(mMSHoleIndex - 1);
+  }
+
+  if (parOpts->CtfMeasureType > 0 && GetCtfOfParallelTSImage(
     ptsd.defocusByCTF, ptsd.astig, ptsd.score, ptsd.fitRes, errStr)) {
     ptsd.score = -1.;
     PrintfToLog("CTF fit failed at position %d: %s", mMSHoleIndex + 1, (LPCTSTR)errStr);
   }
+  if (mMSCurIndex < -1)
+    return 1;
 
   mParTSRefImBufs = mTSController->GetParTSRefImBufs(direction);
-  mScope->GetImageShift(initISX, initISY);
   if (!mMSHoleIndex) {
 
     // First position: align to the regular autoalign reference buffer
     mParTSFirstImageInBuf = 0;
+    ptsd.shiftX = ptsd.shiftY = 0;
+    mScope->GetImageShift(initISX, initISY);
     if (mTSController->GetHaveRecordRef()) {
       if (mShiftManager->AutoAlign(mTSController->GetAlignBuf(), 1)) {
         PrintfToLog("Autoalign failed at position 1; no shift applied to other positions");
@@ -918,6 +956,8 @@ int CParticleTasks::ProcessParallelTSImage(CString &errStr)
           }
         }
       }
+      mWinApp->ToggleBuffers(mTSController->GetAlignBuf(), 300, 4, 4);
+      mWinApp->FinishBufferToggles();
     }
 
     // Copy A to B so it will be in C after next shot
@@ -946,18 +986,31 @@ int CParticleTasks::ProcessParallelTSImage(CString &errStr)
         if (shiftLimit)
           mShiftManager->SetNextAutoalignLimit(shiftLimit);
         err = mShiftManager->AutoAlign(1, 1, false);
+        //mScope->GetImageShift(aliISX, aliISY);
+        //mScope->SetImageShift(initISX, initISY);
+        //SEMTrace('1', "pos %d delIS %.3f %.3f -> %.3f %.3f", mMSHoleIndex + 1, 
+        // initISX - mBaseISX, initISY- mBaseISY, aliISX - mBaseISX, aliISY - mBaseISY);
       }
       if (err) {
         PrintfToLog("Autoalign failed at position %d", mMSHoleIndex + 1);
         ptsd.shiftX = EXTRA_NO_VALUE;
+        /* Do not recall why this was there when shift limit disabled
+        if (mMSHoleIndex > 1) {
+          StopMultiShot();
+          return 1;
+        } */
       } else {
 
         // Get shifts, convert to specimen coords
         mImBufs->mImage->getShifts(shiftX, shiftY);
         c2s = mShiftManager->CameraToSpecimen(mMagIndex);
-        ApplyScaleMatrix(c2s, shiftX * mImBufs->mBinning, shiftY * mImBufs->mBinning,
+        ApplyScaleMatrix(c2s, -shiftX * mImBufs->mBinning, shiftY * mImBufs->mBinning,
           ptsd.shiftX, ptsd.shiftY);
       }
+
+      // For testing for now...
+      mWinApp->ToggleBuffers(1, 300, 4, 4);
+      mWinApp->FinishBufferToggles();
     } else {
       ptsd.shiftX = EXTRA_NO_VALUE;
     }
@@ -983,25 +1036,51 @@ int CParticleTasks::ProcessParallelTSImage(CString &errStr)
     // Copy C back to B, keep position 1 image 
     mWinApp->mBufferManager->CopyImageBuffer(2, 1, false);
     mParTSFirstImageInBuf = 1;
-
   }
-
+  if (!mMSStartedCtfplotter)
+    OutputDebugPositionAndCTF(mMSHoleIndex);
   return 0;
+}
+
+// Function to produce summary line about position and CTF result
+void CParticleTasks::OutputDebugPositionAndCTF(int holeIndex)
+{
+  CString str, str2;
+  if (!GetDebugOutput('1'))
+    return;
+  ParTSTargetData ptsd = mParTSTargetData->ElementAt(holeIndex);
+  ParallelTSOptions *parOpts = mNavHelper->GetParTSOptions();
+  str.Format("Position %d: ", holeIndex + 1);
+  if (ptsd.shiftX > EXTRA_VALUE_TEST)
+    str2.Format("shift %.3f %.3f", ptsd.shiftX, ptsd.shiftY);
+  else
+    str2 = "bad align";
+  str += str2;
+  if (parOpts->CtfMeasureType > 0) {
+    if (ptsd.score > 0)
+      str2.Format(" CTF %.3f  %.3f  %.3f  %.4g", ptsd.defocusByCTF, ptsd.astig,
+        ptsd.score, ptsd.fitRes);
+    else
+      str2 = " bad CTF";
+    str += str2;
+  }
+  SEMAppendToLog(str);
 }
 
 /*
  * Run Ctfplotter or ctffind routine on current shot to determine defocus and other 
  * values from which quality can be determined
  */
-int CParticleTasks::GetCtfOfParallelTSImage(float defocus, float astig, float score, 
-  float fitRes, CString &errStr)
+int CParticleTasks::GetCtfOfParallelTSImage(float &defocus, float &astig, float &score, 
+  float &fitRes, CString &errStr)
 {
   float expectDef = mTSController->GetParTSExpectedDefocus();
   int direction = mTSController->GetDirection();
   float tiltOffset = mTSController->GetParTSCurTiltOffset(direction);
-  float minDef, maxDef, reduction, phase, resultsArray[7];
+  float minDef, maxDef, reduction, phase, resultsArray[7], minPixSave;
+  float defocusRangeTrimFac = sqrtf(2.5f);
   CString filename, command, str;
-  int astigPhase;
+  int astigPhase, err;
   int findAstig = mNavHelper->GetParTSOptions()->findAstig ? 1 : 0;
   CtffindParams param;
   CProcessImage *processImg = mWinApp->mProcessImage;
@@ -1010,6 +1089,10 @@ int CParticleTasks::GetCtfOfParallelTSImage(float defocus, float astig, float sc
     return 1;
   }
   processImg->SetCtffindParamsForDefocus(param, -expectDef, false);
+
+  // Give focus less range to reduce bad fits
+  param.minimum_defocus *= defocusRangeTrimFac;
+  param.maximum_defocus /= defocusRangeTrimFac;
   if (mNavHelper->GetParTSOptions()->CtfMeasureType > 1) {
     if (!findAstig) {
       param.astigmatism_is_known = true;
@@ -1018,7 +1101,7 @@ int CParticleTasks::GetCtfOfParallelTSImage(float defocus, float astig, float sc
       astigPhase = 0;
     }
     param.compute_extra_stats = true;
-    if (processImg->RunCtffind(mImBufs, param, resultsArray)) {
+    if (processImg->RunCtffind(mImBufs, param, resultsArray, true)) {
       errStr = "An error occurred running the Ctffind operation";
       return 1;
     }
@@ -1028,28 +1111,42 @@ int CParticleTasks::GetCtfOfParallelTSImage(float defocus, float astig, float sc
     score = resultsArray[4];
 
   } else {
+
     minDef = -param.minimum_defocus / 10000.f;
     maxDef = -param.maximum_defocus / 10000.f;
     if (processImg->MakeCtfplotterShrMemFile(0, filename, reduction)) {
       errStr = filename;
       return 1;
     }
-    if (mWinApp->mExternalTools->MakeCtfplotterCommand(filename, reduction, 0, tiltOffset,
-      minDef, maxDef, expectDef, findAstig, 0.,
-      mParTSTuningInCtfpDone ? -1 : 1, 0., 0., 0., 0, str, command)) {
+
+    minPixSave = mWinApp->mProcessImage->GetMinCtfplotterPixel();
+    mWinApp->mProcessImage->SetMinCtfplotterPixel(
+      mWinApp->mTSController->GetParTSMinCtfpPixel());
+    err = mWinApp->mExternalTools->MakeCtfplotterCommand(filename, reduction, 0, 
+      tiltOffset, minDef, maxDef, expectDef, findAstig, 0.,
+      mParTSTuningInCtfpDone ? -1 : 1, 0., 0., 0., 0, str, command);
+    mWinApp->mProcessImage->SetMinCtfplotterPixel(minPixSave);
+    if (err) {
       processImg->DeletePlotterShrMemFile();
       errStr = command;
       return 1;
     }
-    if (processImg->RunCtfplotterOnBuffer(filename, command, 10000)) {
+    if (processImg->RunCtfplotterOnBuffer(filename, command, 
+      (mMSHoleIndex < mMSNumHoles - 1) ? - 1 : 10000)) {
       errStr = command;
       return 1;
     }
+    mMSStartedCtfplotter = mMSHoleIndex < mMSNumHoles - 1;
+    if (mMSStartedCtfplotter)
+      return 0;
     if (mWinApp->mExternalTools->ReadCtfplotterResults(defocus, astig,
-      resultsArray[2], phase, astigPhase, fitRes, score, str, errStr))
+      resultsArray[2], phase, astigPhase, fitRes, score, str, errStr)) {
       return 1;
-    if (!mParTSTuningInCtfpDone && mWinApp->mExternalTools->GetLastCropPixel())
-      mParTSTuningInCtfpDone = true;
+    }
+    //SEMTrace('1', "returning %.2f %.2f %.1f  %.1f %.4f", defocus, astig,
+      //resultsArray[2], fitRes, score);
+    //if (!mParTSTuningInCtfpDone && mWinApp->mExternalTools->GetLastCropPixel())
+      //mParTSTuningInCtfpDone = true;
   }
   return 0;
 }
@@ -1448,11 +1545,11 @@ bool CParticleTasks::CurrentHoleAndPosition(CString &strCurPos)
 void CParticleTasks::FormatParallelTSSuffix(int numHoles, int index, CString &strCurPos)
 {
   if (numHoles > 99)
-    strCurPos.Format("Pos%03d", index);
+    strCurPos.Format("Pos%03d", index + 1);
   else if (numHoles > 9)
-    strCurPos.Format("Pos%02d", index);
+    strCurPos.Format("Pos%02d", index + 1);
   else
-    strCurPos.Format("Pos%d", index);
+    strCurPos.Format("Pos%d", index + 1);
 }
 
 // Return the rotation for the first peripheral shot of multiple shots in a hole
@@ -2782,7 +2879,7 @@ void CParticleTasks::TemplateAlignCleanup(int error)
 //
 // Start the process.. skipOrDoChecks specifies whether to skip (-1) or do (1) the checks
 // useful just before acquire
-int CParticleTasks::ManageDewarsVacuum(DewarVacParams & params, int skipOrDoChecks)
+int CParticleTasks::ManageDewarsVacuum(DewarVacParams &params, int skipOrDoChecks)
 {
   int state = VIBMGR_STATE_UNKNOWN, longOps[5];
   float hours[5];
@@ -2793,15 +2890,20 @@ int CParticleTasks::ManageDewarsVacuum(DewarVacParams & params, int skipOrDoChec
   bool doChecks = skipOrDoChecks >= 0;
   bool doNonChecks = skipOrDoChecks <= 0;
   bool callOK = mScope->AreDewarsFilling(busy);
+  mDVParams = params;
+  bool checkDewars = mDVParams.checkVibFillOption > 0;
   mDVUseVibManager = mScope->UtapiSupportsService(UTSUP_VIBRATION);
+  mDVIgnoreVibrations = mDVUseVibManager && (mDVParams.checkVibFillOption == 3 || 
+    (mDVParams.checkVibFillOption == 2 && !(mWinApp->mNavigator && 
+      mWinApp->mNavigator->GetAcquiring() && mNavHelper->GetCurAcqParamIndex() > 0)));
   mDVAlreadyFilling = false;
   mDVWaitForFilling = 0;
   mDVWaitAfterFilled = 0.;
   mDVStartedRefill = false;
   mDVStartedCycle = false;
-  mDVParams = params;
+  mDVDidPrepAvoidInBusy = 0;
   if ((capabilities & 2) == 0 && !mScope->GetHasSimpleOrigin()) {
-    mDVParams.checkDewars = false;
+    mDVParams.checkVibFillOption = false;
     mDVParams.refillAtInterval = false;
   }
   if (mDVUseVibManager) {
@@ -2815,22 +2917,24 @@ int CParticleTasks::ManageDewarsVacuum(DewarVacParams & params, int skipOrDoChec
   // Just handle nitrogen checking/filling here and leave other operations to next task
   // Check if dewars are already filling if it is either set to check or possibly
   // going to start it
-  if (((doNonChecks && mDVParams.refillAtInterval) || (doChecks && mDVParams.checkDewars))
-    && ((callOK && busy) || state == VIBMGR_STATE_VIBRATING))
-  {
+  mDVSawFilling = callOK && busy;
+  if (((doNonChecks && mDVParams.refillAtInterval) || (doChecks && checkDewars)
+    && (mDVSawFilling || 
+    (state == VIBMGR_STATE_VIBRATING && !mDVIgnoreVibrations)))) {
     mDVAlreadyFilling = true;
-    SEMAppendToLog(callOK && busy ? "Filling" : "Vibrating");
-    if (mDVUseVibManager)
+    SEMAppendToLog(mDVSawFilling ? "Filling" : "Vibrating");
+    if (mDVUseVibManager && !mDVIgnoreVibrations)
       SetupRefillLongOp(longOps, hours, numLongOps, 0.);
 
     // If not already filling and we can get time to next filling, do so
   } else if (((doNonChecks && mDVParams.refillAtInterval) || doChecks) &&
-    mDVParams.checkDewars && canGetTimeToFill) {
+    checkDewars && canGetTimeToFill) {
     if (mScope->GetDewarsRemainingTime(0, secToStart)) {
 
       // If it is within the pause interval, just set up to wait for it to start
       // No pause for vibration manager, starting is the only way to get to not vibrating
-      if (secToStart <= params.pauseBeforeMin * 60. && !mDVUseVibManager) {
+      if (secToStart <= params.pauseBeforeMin * 60. && 
+        (!mDVUseVibManager || mDVIgnoreVibrations)) {
         mDVWaitForFilling = secToStart;
         mDVStartTime = GetTickCount();
 
@@ -2843,7 +2947,7 @@ int CParticleTasks::ManageDewarsVacuum(DewarVacParams & params, int skipOrDoChec
 
     }
   }
-  mDVSawFilling = callOK && busy;
+  DumpDVFlags("Start-1");
 
   // Also trigger avoid vibrations if vibrating soon
   /*if (doNonChecks && state == VIBMGR_STATE_VIB_SOON && !mDVAlreadyFilling &&
@@ -2879,16 +2983,17 @@ int CParticleTasks::ManageDewarsVacuum(DewarVacParams & params, int skipOrDoChec
   }
   mWinApp->UpdateBufferWindows();
   mWinApp->SetStatusText(MEDIUM_PANE, "MANAGING SCOPE");
+  DumpDVFlags("Start-2");
 
   // Set up to go through busy if waiting or long op, or just go to next task now
   if (mDVAlreadyFilling || mDVWaitForFilling || mDVStartedRefill) {
     if (!mDVStartedRefill)
       mWinApp->SetStatusText(SIMPLE_PANE, B3DCHOICE(mDVAlreadyFilling, "WAIT UNTIL FILLED"
-        , mDVUseVibManager ? "WAIT FOR VIBRATIONS" : "WAIT for FILL START"));
-    if (mDVAlreadyFilling && !mDVUseVibManager) {
+        , mDVUseVibManager && !mDVIgnoreVibrations ? "WAIT FOR VIBRATIONS" : 
+        "WAIT for FILL START"));
+    if (mDVAlreadyFilling && (!mDVUseVibManager || mDVIgnoreVibrations)) {
 
-      // If it fills on its own, record the time that it was found to be filling, or
-      // make a call to prepare if vibration manager
+      // If it fills on its own, record the time that it was found to be filling, 
       numLongOps = 0;
       SetupRefillLongOp(longOps, hours, numLongOps, -1.f);
       mScope->StartLongOperation(longOps, hours, numLongOps);
@@ -2924,34 +3029,41 @@ void CParticleTasks::DewarsVacNextTask(int param)
   int longOps[5];
   float hours[5];
   int err, numLongOps = 0;
-  BOOL state;
+  BOOL state, waitDone = false;
   if (!mDVDoingDewarVac)
     return;
 
+  DumpDVFlags("NextTask-1");
   mDVWaitAfterFilled = 0.;
+
 
   // After waiting to start filling, set that it is filling
   if (mDVWaitForFilling) {
     mDVWaitForFilling = 0;
     mDVAlreadyFilling = true;
+    waitDone = true;
     SetupRefillLongOp(longOps, hours, numLongOps, -1.);
     mScope->StartLongOperation(longOps, hours, numLongOps);
-    mWinApp->SetStatusText(SIMPLE_PANE, mDVUseVibManager ? "WAIT UNTIL QUIET" :
-      "WAIT UNTIL FILLED");
-  } else if ((!mDVUseVibManager && (mDVAlreadyFilling ||  mDVStartedRefill)) ||
-    (mDVUseVibManager && mDVSawFilling)) {
+    mWinApp->SetStatusText(SIMPLE_PANE, (mDVUseVibManager && !mDVIgnoreVibrations) ? 
+      "WAIT UNTIL QUIET" : "WAIT UNTIL FILLED");
+    numLongOps = 0;
+  } else if (((!mDVUseVibManager || mDVIgnoreVibrations) && 
+    (mDVAlreadyFilling || mDVStartedRefill)) ||
+    (mDVUseVibManager && !mDVIgnoreVibrations && mDVSawFilling)) {
 
-    // If filling was done by testing, or the long operation finished, set up for post-wait
+    // If filling was done by testing, or long operation finished, set up for post-wait
     mDVAlreadyFilling = false;
     mDVStartedRefill = false;
-    mDVWaitAfterFilled = mDVParams.postFillWaitMin;
+    mDVWaitAfterFilled = (mDVSawFilling || mDVStartedRefill) ? mDVParams.postFillWaitMin :
+      0.f;
     mDVStartTime = GetTickCount();
     mDVSawFilling = false;
     mWinApp->SetStatusText(SIMPLE_PANE, "WAIT AFTER FILL");
   }
+  DumpDVFlags("NextTask-2");
 
   // Put this idle task on if there is a something to do (0 wait = nothing to do)
-  if (mDVAlreadyFilling || mDVWaitAfterFilled) {
+  if (waitDone || mDVWaitAfterFilled) {
     mWinApp->AddIdleTask(TASK_DEWARS_VACUUM, 0, 0);
     return;
   }
@@ -2992,6 +3104,7 @@ void CParticleTasks::DewarsVacNextTask(int param)
     mDVNeedPVPCheck = false;
     mWinApp->SetStatusText(SIMPLE_PANE, "WAITING FOR PVP");
   }
+  DumpDVFlags("NextTask-3");
 
   // Start task if anything to do, or stop
   if (mDVStartedCycle || mDVWaitForPVP)
@@ -3004,6 +3117,7 @@ void CParticleTasks::DewarsVacNextTask(int param)
 void CParticleTasks::StopDewarsVac()
 {
   mDVDoingDewarVac = false;
+  DumpDVFlags("StopDewarsVac");
   mWinApp->UpdateBufferWindows();
   mWinApp->SetStatusText(MEDIUM_PANE, "");
   mWinApp->SetStatusText(SIMPLE_PANE, "");
@@ -3012,29 +3126,48 @@ void CParticleTasks::StopDewarsVac()
 // Testing for busy in the various cases
 int CParticleTasks::DewarsVacBusy()
 {
-  int busy, callOK, longBusy, longOps[2];
+  int busy, callOK, longBusy;
   BOOL state;
-  float hours[2];
+  static double lastDeb = 0.;
 
   callOK = mScope->AreDewarsFilling(busy);
   if (mDVUseVibManager && callOK && busy)
     mDVSawFilling = true;
 
+  if (GetDebugOutput('1') && SEMTickInterval(lastDeb) > 20000) {
+    DumpDVFlags("DewarsVacBusy");
+    lastDeb = GetTickCount();
+  }
+
   // Long operation for refill or buffer cycle
-  if (mDVStartedRefill || mDVStartedCycle) {
+  if (mDVStartedRefill || mDVStartedCycle || 
+    (mDVUseVibManager && !mDVIgnoreVibrations && mDVAlreadyFilling)) {
     longBusy = mScope->LongOperationBusy();
+    if (!longBusy) {
+      DumpDVFlags("long not busy:");
+      SEMTrace('v', "DVDidPrep %d  callok %d  busy %d", mDVDidPrepAvoidInBusy, callOK?1:0,
+        busy ?1:0);
+    }
 
     // If it finished but we just saw filling, this is probably because of a collision
     // and timeout starting the fill, so start new long op to catch the end of filling
-    if (!longBusy && mDVUseVibManager && callOK && busy) {
-      longOps[0] = LONG_OP_PREPARE_NO_VIBRATE;
-      hours[0] = 0;
-      mScope->StartLongOperation(longOps, hours, 1);
+    // Or maybe it just doesn't like this call when filling, so only do it once.
+    if (!longBusy && mDVUseVibManager && callOK && ((busy && !mDVDidPrepAvoidInBusy) ||
+      (!busy && (mDVStartedRefill || mDVAlreadyFilling) && mDVDidPrepAvoidInBusy < 2))) {
+      StartPrepNoVibFromBusy(busy);
       return 1;
     }
     return longBusy;
   }
 
+  // If filling was seen and it is no longer filling, do a call that will succeed
+  // This is probably never hit
+  if (mDVUseVibManager && !mDVIgnoreVibrations && mDVSawFilling && callOK && !busy &&
+    mDVDidPrepAvoidInBusy < 2) {
+    StartPrepNoVibFromBusy(busy);
+    return 1;
+  }
+  
   // Testing for filling to start or end
   if (mDVWaitForFilling || mDVAlreadyFilling) {
     if (callOK)
@@ -3055,8 +3188,28 @@ int CParticleTasks::DewarsVacBusy()
   return 0;
 }
 
+// Start another prepare no vibrate from busy function; busy is filling busy
+void CParticleTasks::StartPrepNoVibFromBusy(int busy)
+{
+  int longOps[2];
+  float hours[2];
+  longOps[0] = LONG_OP_PREPARE_NO_VIBRATE;
+  hours[0] = 0;
+  mScope->StartLongOperation(longOps, hours, 1);
+  mDVDidPrepAvoidInBusy = busy ? 1 : 2;
+}
+
 void CParticleTasks::DewarsVacCleanup(int error)
 {
+}
+
+void CParticleTasks::DumpDVFlags(const char * desc)
+{
+  SEMTrace('v', "%s IgVi %d SaFi %d AlFi %d WaFFi %d NeVaRu %d NePVPCh %d StRe %d WaAFi"
+    " %.1f StCy %d WaPVP %d", desc, mDVIgnoreVibrations ? 1 : 0, mDVSawFilling ? 1 : 0, 
+    mDVAlreadyFilling ? 1 : 0, mDVWaitForFilling ? 1 : 0, mDVNeedVacRuns ? 1 : 0, 
+    mDVNeedPVPCheck ? 1 : 0, mDVStartedRefill ? 1 : 0, mDVWaitAfterFilled, 
+    mDVStartedCycle ? 1 : 0, mDVWaitForPVP ? 1 : 0);
 }
 
 //////////////////////////////////////////////////////////////////

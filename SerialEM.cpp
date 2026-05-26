@@ -80,7 +80,7 @@
 #endif
 
 #define VERSION_STRING  "SerialEM Version 4.3.0beta"
-#define TAG_STRING      "(Tagged SEM_4-2-22, 5/7/26)"
+#define TAG_STRING      "(Tagged SEM_4-2-23, 5/19/26)"
 #define DEPRECATED_PYTHON  "3.6-64"
 
 // Offsets for static window inside main frame
@@ -2801,7 +2801,7 @@ void CSerialEMApp::OnWindowNewLocator()
   int ind;
 
   // Clean up any orphaned locators
-  for (ind = mLocatorViews.GetSize() - 1; ind >= 0; ind--) {
+  for (ind = (int)mLocatorViews.GetSize() - 1; ind >= 0; ind--) {
     if (FindBufferForLocator(mLocatorViews[ind]) < -1) {
       mLocatorViews[ind]->CloseFrame();
     }
@@ -3292,6 +3292,8 @@ BOOL CSerialEMApp::CheckIdleTasks()
           CSerialEMView::mSnapshotData->view->SnapshotNextTask(idc->param);
         else if (idc->source == TASK_NAV_FILE_RANGE && mNavigator)
           mNavigator->NewFileRangeNextTask(idc->param);
+        else if (idc->source == TASK_EXIT_PROGRAM)
+          mMainFrame->DoClose(false);
 
       } else {
         if (busy > 0 && idc->timeOut && (idc->timeOut <= time))
