@@ -194,7 +194,14 @@ struct NavAlignParams {
 
 // Structure for Parallel TS data
 struct ParallelTSParam {
-  int firstPrevMapID;       // Map ID of the retained first previous map if any
+  ParallelTSParam() {
+    firstPrevMapID = 0;
+    preTilt = 0.;
+    xPitchAngle = 0.;
+    mappingTilt = 0.;
+    navID = 0;
+  }
+  int firstPrevMapID;       // Map ID of the retained first preview map if any
   IntVec prevSectNums;      // Section numbers preview map file if any
   FloatVec xShiftInImage;   // Shift in image when the preview was saved as a map
   FloatVec yShiftInImage;

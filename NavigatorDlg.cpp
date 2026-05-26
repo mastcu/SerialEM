@@ -1736,6 +1736,8 @@ void CNavigatorDlg::OnListItemDrag(int oldIndex, int newIndex)
   mSelectedItems.insert(mCurrentItem);
   if (m_bTableIndexes)
     FillListBox(true, true);
+  if (mHelper->GetParTSSetupGroupID() > 0)
+    Redraw();
   UpdateData(false);
 }
 
@@ -3944,8 +3946,9 @@ MapItemArray *CNavigatorDlg::GetMapDrawItems(
   CMapDrawItem **acquireBox)
 {
   float angle, tiltAngle;
-  bool showMulti, asIfLowDose, showCurPtAcquire, curIsAcquire;
+  bool showMulti, asIfLowDose, showCurPtAcquire, curIsAcquire, drawParTSEllipses;
   int ring, magForHoles;
+  ParallelTSOptions *parTsOpt = mHelper->GetParTSOptions();
 
   if (!SetCurrentItem(true))
     mItem = NULL;
@@ -3957,6 +3960,7 @@ MapItemArray *CNavigatorDlg::GetMapDrawItems(
     return NULL;
   drawAllReg = m_bDrawAllReg;
   MultiShotParams *msParams = mHelper->GetMultiShotParams();
+  int parTSgroupID = mWinApp->mNavHelper->GetParTSSetupGroupID();
   mMagIndForHoles = mCameraForHoles = 0;
   mWinApp->mParticleTasks->SetLastHolesWereAdjusted(false);
 
@@ -3964,7 +3968,8 @@ MapItemArray *CNavigatorDlg::GetMapDrawItems(
   // or acquire is on and "Show shots when show acquire" is checked
   showMulti = ((msParams->inHoleOrMultiHole & MULTI_IN_HOLE) ||
     mHelper->MultipleHolesAreSelected() || mNumIStargetItems > 0) &&
-    ((m_bShowAcquireArea && (mHelper->GetEnableMultiShot() & 1)) ||
+    ((m_bShowAcquireArea && ((mHelper->GetEnableMultiShot() & 1) || 
+    (mItem && mItem->mTSparamIndex >= 0))) ||
     (mHelper->mMultiShotDlg && !mHelper->mMultiShotDlg->RecordingISValues()));
 
   // Show something on the current point if multi draw is on or show acquire is on and
@@ -3974,163 +3979,175 @@ MapItemArray *CNavigatorDlg::GetMapDrawItems(
   curIsAcquire = mItem && (mItem->mAcquire || mItem->mTSparamIndex >= 0);
   mShowingLDareas = (curIsAcquire || m_bShowAcquireArea) && m_bEditFocus &&
     mEditFocusEnabled && mLowDoseDlg->ViewImageOKForEditingFocus(imBuf);
+  drawParTSEllipses = (curIsAcquire && mItem->mParallelTSIndex >= 0) || parTSgroupID > 0;
 
   // Showing low dose area in edit mode: just provide a copy of current item
   if (mShowingLDareas && curIsAcquire) {
     *acquireBox = new CMapDrawItem(mItem);
     (*acquireBox)->AppendPoint(mItem->mStageX, mItem->mStageY);
 
-  } else if (!mShowingLDareas && (imBuf->mHasUserPt || showCurPtAcquire) &&
-    (m_bShowAcquireArea || showMulti) &&
+  } else if (!mShowingLDareas && ((imBuf->mHasUserPt || showCurPtAcquire) &&
+    (m_bShowAcquireArea || showMulti || drawParTSEllipses) || parTSgroupID > 0) &&
     RegistrationUseType(imBuf->mRegistration) != NAVREG_IMPORT) {
 
-      // If there is a user point and the box is on to draw acquire area, get needed
-      // parameters: camera and mag index from current state or low dose or montage params
-      ScaleMat s2c, c2s, st2is, is2cam;
-      ControlSet *conSet = mWinApp->GetConSets() + RECORD_CONSET;
-      int camera = mWinApp->GetCurrentCamera();
-      MontParam *montp;
-      BOOL montaging = mWinApp->Montaging();
-      int *activeList;
-      LowDoseParams *ldp;
-      int magInd, sizeX, sizeY, ind, useLineEnd;
-      float ptX, ptY, cornX, cornY, rotation;
-      asIfLowDose = mWinApp->LowDoseMode() || mWinApp->GetDummyInstance() || showMulti;
-      if (montaging)
-        montp = mWinApp->GetMontParam();
-      if (asIfLowDose) {
-        ldp = mWinApp->GetLowDoseParams();
-        magInd = ldp[RECORD_CONSET].magIndex;
-        if (montaging && !showMulti)
-          magInd = ldp[MontageLDAreaIndex(montp)].magIndex;
+    // If there is a user point and the box is on to draw acquire area, get needed
+    // parameters: camera and mag index from current state or low dose or montage params
+    ScaleMat s2c, c2s, st2is, is2cam;
+    ControlSet *conSet = mWinApp->GetConSets() + RECORD_CONSET;
+    int camera = mWinApp->GetCurrentCamera();
+    MontParam *montp;
+    BOOL montaging = mWinApp->Montaging();
+    int *activeList;
+    LowDoseParams *ldp;
+    int magInd, sizeX, sizeY, ind, useLineEnd;
+    float ptX, ptY, cornX, cornY, rotation;
+    asIfLowDose = mWinApp->LowDoseMode() || mWinApp->GetDummyInstance() || showMulti;
+    if (montaging)
+      montp = mWinApp->GetMontParam();
+    if (asIfLowDose) {
+      ldp = mWinApp->GetLowDoseParams();
+      magInd = ldp[RECORD_CONSET].magIndex;
+      if (montaging && !showMulti)
+        magInd = ldp[MontageLDAreaIndex(montp)].magIndex;
 
-      } else if (montaging) {
-        magInd = montp->magIndex;
-        activeList = mWinApp->GetActiveCameraList();
-        camera = activeList[montp->cameraIndex];
-      } else
-        magInd = mScope->FastMagIndex();
+    } else if (montaging) {
+      magInd = montp->magIndex;
+      activeList = mWinApp->GetActiveCameraList();
+      camera = activeList[montp->cameraIndex];
+    } else
+      magInd = mScope->FastMagIndex();
 
-      // Get the camera to stage matrix, determine the frame size, and make an item
-      // with stage coordinates in the corners of that frame
-      s2c = mShiftManager->StageToCamera(camera, magInd);
-      if (s2c.xpx) {
-        c2s = MatInv(s2c);
-        if (imBuf->GetTiltAngle(tiltAngle) && fabs((double)tiltAngle) > 1.)
-          mShiftManager->AdjustCameraToStageForTilt(c2s, tiltAngle);
-        CMapDrawItem *box = new CMapDrawItem;
-        *acquireBox = box;
-        useLineEnd = imBuf->mHasUserLine ? 1 : 0;
-        if (showMulti && mWinApp->LowDoseMode() && mLowDoseDlg->m_iDefineArea)
-          useLineEnd = -1;
-        if (showCurPtAcquire) {
-          box->mStageX = mItem->mStageX;
-          box->mStageY = mItem->mStageY;
-        } else {
-          MarkerStagePosition(imBuf, aMat, delX, delY, box->mStageX, box->mStageY,
-            useLineEnd);
-        }
-        sizeX = conSet->right - conSet->left;
-        sizeY = conSet->bottom - conSet->top;
-        if (montaging && !showMulti) {
-          sizeX = montp->binning * (montp->xFrame + (montp->xFrame - montp->xOverlap) *
-            (montp->xNframes - 1));
-          sizeY = montp->binning * (montp->yFrame + (montp->yFrame - montp->yOverlap) *
-            (montp->yNframes - 1));
-        }
-        for (ind = 0; ind < 5; ind++) {
-          cornX = (float)(0.5 * sizeX * (1 - 2 * ((ind / 2) % 2)));
-          cornY = (float)(0.5 * sizeY * (1 - 2 * (((ind + 1) / 2) % 2)));
-          ptX = box->mStageX + c2s.xpx * cornX + c2s.xpy * cornY;
-          ptY = box->mStageY + c2s.ypx * cornX + c2s.ypy * cornY;
-          box->AppendPoint(ptX, ptY);
-        }
+    // Get the camera to stage matrix, determine the frame size, and make an item
+    // with stage coordinates in the corners of that frame
+    s2c = mShiftManager->StageToCamera(camera, magInd);
+    if (s2c.xpx) {
+      c2s = MatInv(s2c);
+      if (imBuf->GetTiltAngle(tiltAngle) && fabs((double)tiltAngle) > 1.)
+        mShiftManager->AdjustCameraToStageForTilt(c2s, tiltAngle);
+      CMapDrawItem *box = new CMapDrawItem;
+      *acquireBox = box;
+      useLineEnd = imBuf->mHasUserLine ? 1 : 0;
+      if (showMulti && mWinApp->LowDoseMode() && mLowDoseDlg->m_iDefineArea)
+        useLineEnd = -1;
+      if (showCurPtAcquire) {
+        box->mStageX = mItem->mStageX;
+        box->mStageY = mItem->mStageY;
+      } else {
+        MarkerStagePosition(imBuf, aMat, delX, delY, box->mStageX, box->mStageY,
+          useLineEnd);
+      }
+      sizeX = conSet->right - conSet->left;
+      sizeY = conSet->bottom - conSet->top;
+      if (montaging && !showMulti) {
+        sizeX = montp->binning * (montp->xFrame + (montp->xFrame - montp->xOverlap) *
+          (montp->xNframes - 1));
+        sizeY = montp->binning * (montp->yFrame + (montp->yFrame - montp->yOverlap) *
+          (montp->yNframes - 1));
+      }
+      for (ind = 0; ind < 5; ind++) {
+        cornX = (float)(0.5 * sizeX * (1 - 2 * ((ind / 2) % 2)));
+        cornY = (float)(0.5 * sizeY * (1 - 2 * (((ind + 1) / 2) % 2)));
+        ptX = box->mStageX + c2s.xpx * cornX + c2s.xpy * cornY;
+        ptY = box->mStageY + c2s.ypx * cornX + c2s.ypy * cornY;
+        box->AppendPoint(ptX, ptY);
+      }
 
-        // If showing circles, then get the parameters and compute stage coordinates for
-        // each circle from camera coordinates; add more points to box
-        if (showMulti) {
-          float inHoleRadius = 0., beamRadius;
-          float pixel = mShiftManager->GetPixelSize(camera, magInd);
-          FloatVec delISX, delISY;
-          IntVec holeIndex;
-          CameraParameters *camParam = mWinApp->GetCamParams() + camera;
-          bool custom = msParams->useCustomHoles && msParams->customHoleX.size() > 0;
-          magForHoles = custom ? msParams->customMagIndex :
-            msParams->holeMagIndex[msParams->doHexArray ? 1 : 0];
+      // If showing circles, then get the parameters and compute stage coordinates for
+      // each circle from camera coordinates; add more points to box
+      float inHoleRadius = 0., beamRadius;
+      float pixel = mShiftManager->GetPixelSize(camera, magInd);
+      if (showMulti) {
+        FloatVec delISX, delISY;
+        IntVec holeIndex;
+        CameraParameters *camParam = mWinApp->GetCamParams() + camera;
+        bool custom = msParams->useCustomHoles && msParams->customHoleX.size() > 0;
+        magForHoles = custom ? msParams->customMagIndex :
+          msParams->holeMagIndex[msParams->doHexArray ? 1 : 0];
 
-          // This is the inverse of the conversion of hole vectors to image shifts
-          // it is done at the defined mag and hole IS positions are gotten at that
-          st2is = MatMul(mShiftManager->StageToCamera(camera, magForHoles),
-            mShiftManager->CameraToIS(magForHoles));
-          is2cam = mShiftManager->IStoGivenCamera(magInd, camera);
-          if (pixel && is2cam.xpx) {
-            if (st2is.xpx && mHelper->MultipleHolesAreSelected()) {
-              mMagIndForHoles = magForHoles;
-              mIStoStageForHoles = MatInv(st2is);
-            } else {
-              mIStoStageForHoles = MatMul(is2cam, c2s);
-              mMagIndForHoles = magInd;
-            }
-            mCameraForHoles = camera;
+        // This is the inverse of the conversion of hole vectors to image shifts
+        // it is done at the defined mag and hole IS positions are gotten at that
+        st2is = MatMul(mShiftManager->StageToCamera(camera, magForHoles),
+          mShiftManager->CameraToIS(magForHoles));
+        is2cam = mShiftManager->IStoGivenCamera(magInd, camera);
+        if (pixel && is2cam.xpx) {
+          if (st2is.xpx && mHelper->MultipleHolesAreSelected()) {
+            mMagIndForHoles = magForHoles;
+            mIStoStageForHoles = MatInv(st2is);
+          } else {
+            mIStoStageForHoles = MatMul(is2cam, c2s);
+            mMagIndForHoles = magInd;
+          }
+          mCameraForHoles = camera;
 
-            // Make multihole positions relative to center
-            if (mHelper->MultipleHolesAreSelected()) {
-              if (!imBuf->GetTiltAngle(tiltAngle))
-                tiltAngle = -999.;
-              int numHoles = mWinApp->mParticleTasks->GetHolePositions(delISX, delISY,
-                holeIndex, mMagIndForHoles, camera, 0, 0, tiltAngle, NULL, false);
-              AddHolePositionsToItemPts(delISX, delISY, holeIndex, custom, numHoles, box);
-            }
+          // Make multihole positions relative to center
+          if (mHelper->MultipleHolesAreSelected()) {
+            if (!imBuf->GetTiltAngle(tiltAngle))
+              tiltAngle = -999.;
+            int numHoles = mWinApp->mParticleTasks->GetHolePositions(delISX, delISY,
+              holeIndex, mMagIndForHoles, camera, 0, 0, tiltAngle, NULL, false);
+            AddHolePositionsToItemPts(delISX, delISY, holeIndex, custom, numHoles, box);
+          }
 
-            // Multishot positions in hole, with absolute positions
-            if (msParams->inHoleOrMultiHole & MULTI_IN_HOLE) {
-              rotation = 0.;
-              if (imBuf->GetTiltAngle(tiltAngle))
-                rotation = mWinApp->mParticleTasks->GetPeripheralRotation(camera, magInd,
-                  tiltAngle);
-              for (ring = 0; ring < (msParams->doSecondRing ? 2 : 1); ring++) {
-                inHoleRadius = msParams->spokeRad[ring] / pixel;
-                for (ind = 0; ind < msParams->numShots[ring]; ind++) {
-                  angle = (float)(DTOR * (ind * 360. / msParams->numShots[ring] +
-                    rotation));
-                  cornX = inHoleRadius * (float)cos(angle);
-                  cornY = inHoleRadius * (float)sin(angle);
-                  ptX = box->mStageX + c2s.xpx * cornX + c2s.xpy * cornY;
-                  ptY = box->mStageY + c2s.ypx * cornX + c2s.ypy * cornY;
-                  box->AppendPoint(ptX, ptY);
-                }
+          // Multishot positions in hole, with absolute positions
+          if (msParams->inHoleOrMultiHole & MULTI_IN_HOLE) {
+            rotation = 0.;
+            if (imBuf->GetTiltAngle(tiltAngle))
+              rotation = mWinApp->mParticleTasks->GetPeripheralRotation(camera, magInd,
+                tiltAngle);
+            for (ring = 0; ring < (msParams->doSecondRing ? 2 : 1); ring++) {
+              inHoleRadius = msParams->spokeRad[ring] / pixel;
+              for (ind = 0; ind < msParams->numShots[ring]; ind++) {
+                angle = (float)(DTOR * (ind * 360. / msParams->numShots[ring] +
+                  rotation));
+                cornX = inHoleRadius * (float)cos(angle);
+                cornY = inHoleRadius * (float)sin(angle);
+                ptX = box->mStageX + c2s.xpx * cornX + c2s.xpy * cornY;
+                ptY = box->mStageY + c2s.ypx * cornX + c2s.ypy * cornY;
+                box->AppendPoint(ptX, ptY);
               }
             }
-
-            // Add one more point with beam radius as a position in X in camera coords
-            beamRadius = 0.5f * msParams->beamDiam / pixel;
-            if (msParams->useIllumArea && asIfLowDose) {
-              if (mWinApp->mScope->GetUseIllumAreaForC2()) {
-                beamRadius = (float)(50. *
-                  mWinApp->mScope->IntensityToIllumArea(ldp[RECORD_CONSET].intensity,
-                    ldp[RECORD_CONSET].spotSize, ldp[RECORD_CONSET].probeMode) / pixel);
-              } else if (!mWinApp->mBeamAssessor->LDRecordBeamSizeFromCal(&ptX)) {
-                beamRadius = 0.5f * ptX / pixel;
-              }
-            }
-            ptX = box->mStageX + c2s.xpx * beamRadius;
-            ptY = box->mStageY + c2s.ypx * beamRadius;
-            box->AppendPoint(ptX, ptY);
-
-            // Add another point with outside radius for whole acquisition in hole
-            ptX = box->mStageX + c2s.xpx * (beamRadius + inHoleRadius);
-            ptY = box->mStageY + c2s.ypx * (beamRadius + inHoleRadius);
-            box->AppendPoint(ptX, ptY);
           }
         }
-        box->mRegistration = mCurrentRegistration;
-        box->mType = ITEM_TYPE_POLYGON;
-        box->mColor = POINT_ACQUIRE_COLOR;
-        box->mDraw = ((mItem && mItem->mDraw && !mItem->mNumSkipHoles) ||
-          imBuf->mHasUserPt);
-        if (mItem)
-          box->mPieceDrawnOn = mItem->mPieceDrawnOn;
       }
+
+      if (pixel && (showMulti || drawParTSEllipses)) {
+
+        // Add one more point with beam radius as a position in X in camera coords
+        if (drawParTSEllipses)
+          beamRadius = 0.5f * parTsOpt->beamDiam / pixel;
+        else 
+          beamRadius = 0.5f * msParams->beamDiam / pixel;
+        if (((drawParTSEllipses && parTsOpt->useIAorBeamSize) ||
+          (!drawParTSEllipses && msParams->useIllumArea)) && asIfLowDose) {
+          if (mWinApp->mScope->GetUseIllumAreaForC2()) {
+            beamRadius = (float)(50. *
+              mWinApp->mScope->IntensityToIllumArea(ldp[RECORD_CONSET].intensity,
+                ldp[RECORD_CONSET].spotSize, ldp[RECORD_CONSET].probeMode) / pixel);
+          } else if (!mWinApp->mBeamAssessor->LDRecordBeamSizeFromCal(&ptX)) {
+            beamRadius = 0.5f * ptX / pixel;
+          }
+        }
+        if (drawParTSEllipses)
+          inHoleRadius = beamRadius * (1.f / cosf(DTORFL * parTsOpt->tiltForBeam) - 1.f);
+        ptX = box->mStageX + c2s.xpx * beamRadius;
+        ptY = box->mStageY + c2s.ypx * beamRadius;
+        box->AppendPoint(ptX, ptY);
+
+        // Add another point with outside radius for whole acquisition in hole
+        ptX = box->mStageX + c2s.xpx * (beamRadius + inHoleRadius);
+        ptY = box->mStageY + c2s.ypx * (beamRadius + inHoleRadius);
+        box->AppendPoint(ptX, ptY);
+      }
+
+      box->mRegistration = mCurrentRegistration;
+      box->mType = ITEM_TYPE_POLYGON;
+      box->mColor = POINT_ACQUIRE_COLOR;
+      box->mDraw = ((mItem && mItem->mDraw && !mItem->mNumSkipHoles) ||
+        imBuf->mHasUserPt);
+      if (mItem)
+        box->mPieceDrawnOn = mItem->mPieceDrawnOn;
+    }
+
   }
   return &mItemArray;
 }
@@ -7945,6 +7962,11 @@ void CNavigatorDlg::FinishLoadMap(void)
     imBuf->mConSetUsed = mLoadItem->mMapLowDoseConSet;
   }
 
+  // For single-frame, impose shift in image if any
+  if (!mLoadItem->mMapMontage && mLoadItem->mShiftInImageX > EXTRA_VALUE_TEST)
+    imBuf->mImage->setShifts(mLoadItem->mShiftInImageX, mLoadItem->mShiftInImageY);
+
+
   // Copy defocus offset and set other items needed to evaluate defocus adjustment
   needDefocusData = mLoadItem->mMapLowDoseConSet == VIEW_CONSET ||
     mLoadItem->mMapLowDoseConSet == SEARCH_CONSET;
@@ -9038,6 +9060,7 @@ int CNavigatorDlg::LoadNavFile(bool checkAutosave, bool mergeFile, CString *inFi
 
       // ParallelTSparams
       numParams = AdocGetNumberOfSections("ParallelTSParam");
+      retval = 0;
       for (ind1 = 0; ind1 < numParams; ind1++) {
         parTSp = new ParallelTSParam;
         if (!retval) {
@@ -9045,7 +9068,7 @@ int CNavigatorDlg::LoadNavFile(bool checkAutosave, bool mergeFile, CString *inFi
             &parTSp->preTilt));
         }
         if (!retval) {
-          ADOC_REQUIRED(AdocGetFloat("ParallelTSParam", ind1, "XAxisTilt",
+          ADOC_REQUIRED(AdocGetFloat("ParallelTSParam", ind1, "XPitchAngle",
             &parTSp->xPitchAngle));
         }
         if (!retval) {
@@ -9083,6 +9106,23 @@ int CNavigatorDlg::LoadNavFile(bool checkAutosave, bool mergeFile, CString *inFi
             if (!retval) {
               for (ind2 = 0; ind2 < numToGet; ind2++)
                 parTSp->yCoordInArea.push_back(fvals[ind2]);
+            }
+          }
+          ACCUM_MIN(retval, 0);
+        }
+        if (retval >= 0) {
+          numToGet = 0;
+          ADOC_OPTIONAL(AdocGetFloatArray("ParallelTSParam", ind1, "XShiftInImage",
+            &fvals[0], &numToGet, maxFvals));
+          if (!retval) {
+            for (ind2 = 0; ind2 < numToGet; ind2++)
+              parTSp->xShiftInImage.push_back(fvals[ind2]);
+            numToGet = 0;
+            ADOC_REQUIRED(AdocGetFloatArray("ParallelTSParam", ind1, "YShiftInImage",
+              &fvals[0], &numToGet, maxFvals));
+            if (!retval) {
+              for (ind2 = 0; ind2 < numToGet; ind2++)
+                parTSp->yShiftInImage.push_back(fvals[ind2]);
             }
           }
           ACCUM_MIN(retval, 0);
@@ -9318,6 +9358,8 @@ int CNavigatorDlg::LoadNavFile(bool checkAutosave, bool mergeFile, CString *inFi
           &item->mMarkerShiftX, &item->mMarkerShiftY));
         ADOC_OPTIONAL(AdocGetInteger("Item", sectInd, "ShiftCohortID",
           &item->mShiftCohortID));
+        ADOC_OPTIONAL(AdocGetTwoFloats("Item", sectInd, "ShiftInImage",
+          &item->mShiftInImageX, &item->mShiftInImageY));
         for (ind1 = 1; ind1 <= MAX_NAV_USER_VALUES; ind1++) {
           str.Format("UserValue%d", ind1);
           retval = AdocGetString("Item", sectInd, (LPCTSTR)str, &adocStr);

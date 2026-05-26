@@ -686,6 +686,7 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
   CString letString, firstLabel, lastLabel, fontName;
   ScaleMat aInv, isToCamNoFoc, isToCam;
   double transX, transY;
+  int parTSgroupID = mWinApp->mNavHelper->GetParTSSetupGroupID();
   COLORREF bkgColor = RGB(48, 0, 48);
   COLORREF flashColor = RGB(192, 192, 0), lowExcludeColor = RGB(0, 255, 255);
   COLORREF includeColor = RGB(255, 0, 160), highExcludeColor = RGB(0, 100, 255);
@@ -1147,7 +1148,12 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
       }
     }
   }
-  mDrewLDAreasAtNavPt = itemArray && ((mAcquireBox && mAcquireBox->mNumPoints == 1) ||
+
+  mPreParTSDrewLDAreas = itemArray && ((mAcquireBox && mAcquireBox->mNumPoints == 1) ||
+    navigator->GetShowingLDareas()) && !bufIsFFT;
+
+  mDrewLDAreasAtNavPt = itemArray && ((mAcquireBox && 
+    (mAcquireBox->mNumPoints == 1 || parTSgroupID > 0)) ||
     navigator->GetShowingLDareas()) && !bufIsFFT;
 
   if (mMainWindow) {
@@ -1438,12 +1444,13 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
   // Now draw navigator items
   float lastStageX, lastStageY, tiltAngle, acquireRadii[2] = {0., 0.};
   float labelDistThresh = 40., axisAngle, beamElong;
-  int lastGroupID = -1, lastGroupSize, size, numPoints, pieceDrawnOn;
+  int lastGroupID = -1, lastGroupSize, size, numPoints, pieceDrawnOn, posInParTSgroup = 0;
   int regMatch = imBuf->mRegistration ?
     imBuf->mRegistration : navigator->GetCurrentRegistration();
+  COLORREF parTScolor = RGB(0, 180, 140);
   std::set<int> *selectedItems = navigator->GetSelectedItems();
-  bool highlight, draw, doInHole, drawSkips, skipPattern = false, targetsOnly = false;
-  bool drawEllipse = false;
+  bool highlight, draw, doInHole, drawSkips, skipPattern = false;
+  bool drawEllipse = false, itemInParTSgroup = false, sawFirstParTS = false;
   CMapDrawItem holeItem;
   MultiShotParams *msParams;
   int msNumXholes = 0, msNumYholes = 0, useXholes, useYholes;
@@ -1453,15 +1460,21 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
   int currentIndex = navigator->GetCurrentOrAcquireItem(item);
   if (!navigator->GetAcquiring()) {
     item = navigator->GetSingleSelectedItem(&currentIndex);
-    skipPattern = item && item->mNumIStargets > 0 && !imBuf->mHasUserPt;
+    skipPattern = item && item->mNumIStargets > 0 && 
+      (!imBuf->mHasUserPt || item->mParallelTSIndex >= 0);
   }
+  bool targetsOnly = navigator->GetNumIStargetItems() > 0;
   int currentGroup = (currentIndex >= 0 && item != NULL) ? item->mGroupID : -1;
   int groupThresh = mWinApp->mNavHelper->GetPointLabelDrawThresh();
-  bool showCurPtAcquire = !imBuf->mHasUserPt && mAcquireBox;
+  int offset10 = DSB_DPI_SCALE(10);
+  bool showCurPtAcquire = (!imBuf->mHasUserPt || skipPattern) && mAcquireBox;
   bool doMultiHole = mWinApp->mNavHelper->MultipleHolesAreSelected();
   bool checkUndos = mWinApp->mNavHelper->mCombineHoles->OKtoUndoCombine();
-  BOOL useMultiShot = ((mWinApp->mNavHelper->GetEnableMultiShot() & 1) &&
-    navigator->m_bShowAcquireArea) || mWinApp->mNavHelper->mMultiShotDlg;
+  item = navigator->GetCurrentItem();
+  bool curIsInGroup = parTSgroupID > 0 && item && item->mGroupID == parTSgroupID;
+  BOOL useMultiShot = (((mWinApp->mNavHelper->GetEnableMultiShot() & 1) || 
+    (item && item->mParallelTSIndex >= 0)) && navigator->m_bShowAcquireArea) || 
+    mWinApp->mNavHelper->mMultiShotDlg;
   if (useMultiShot) {
     msParams = mWinApp->mNavHelper->GetMultiShotParams();
     doInHole = (msParams->inHoleOrMultiHole & MULTI_IN_HOLE) > 0;
@@ -1471,7 +1484,7 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
       mWinApp->mNavHelper->GetNumHolesFromParam(msNumXholes, msNumYholes, ix);
   }
   bool showMultiOnAll = useMultiShot && (mWinApp->mNavHelper->GetEnableMultiShot() & 2) &&
-    !(mDrewLDAreasAtNavPt && navigator->m_bShowAcquireArea);
+    !(mPreParTSDrewLDAreas && navigator->m_bShowAcquireArea);
   bool showOnlyCombined = mWinApp->mNavHelper->mMultiCombinerDlg &&
     !mWinApp->mNavHelper->GetMHCenableMultiDisplay();
   if (useMultiShot && !imBuf->GetTiltAngle(tiltAngle))
@@ -1489,7 +1502,8 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
   for (int iDraw = -1; iDraw < itemArray->GetSize(); iDraw++) {
     adjSave = mAdjustPt;
     float delPtX = 0., delPtY = 0.;
-
+    drawEllipse = false;
+    itemInParTSgroup = false;
     if (iDraw < 0) {
       if (!mAcquireBox || bufIsFFT)
         continue;
@@ -1505,6 +1519,9 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
       highlight = selectedItems->count(iDraw) > 0;
       thick = highlight ? thick : 1;
       numPoints = item->mNumPoints;
+      itemInParTSgroup = parTSgroupID > 0 && parTSgroupID == item->mGroupID;
+      if (itemInParTSgroup)
+        posInParTSgroup++;
     }
     thick = DSB_DPI_SCALE(thick);
 
@@ -1529,19 +1546,26 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
       StageToImage(imBuf, item->mPtX[0], item->mPtY[0], ptX, ptY, pieceDrawnOn);
 
       // Draw low dose areas around current point
-      if (mDrewLDAreasAtNavPt && (iDraw < 0 ||
-        ((item->mAcquire || item->mTSparamIndex >= 0) && navigator->m_bShowAcquireArea))){
+      if (mDrewLDAreasAtNavPt && ((itemInParTSgroup && !sawFirstParTS) || (iDraw < 0 ||
+        (((item->mAcquire && navigator->GetShowingLDareas()) || 
+        (item->mTSparamIndex >= 0 && !parTSgroupID)) &&
+          navigator->m_bShowAcquireArea)))) {
         cenX = imBuf->mImage->getWidth() / 2.f;
         cenY = imBuf->mImage->getHeight() / 2.f;
-        DrawLowDoseAreas(cdc, rect, imBuf, ptX - cenX, ptY - cenY, thick1, iDraw);
+        DrawLowDoseAreas(cdc, rect, imBuf, ptX - cenX, ptY - cenY, thick1, iDraw,
+          (itemInParTSgroup && !sawFirstParTS) ? -2 : -1);
         if (iDraw < 0) {
           mNavLDAreasXcenter = ptX;
           mNavLDAreasYcenter = ptY;
         }
       }
-
+      if (itemInParTSgroup) {
+        sawFirstParTS = true;
+        drawEllipse = imBuf->mMagInd && imBuf->mCamera >= 0;
+      }
+ 
       // Otherwise draw a cross at a single point
-      if (!mDrewLDAreasAtNavPt || iDraw >= 0) {
+      if ((!mPreParTSDrewLDAreas || iDraw >= 0) && !itemInParTSgroup) {
         MakeDrawPoint(&rect, imBuf->mImage, ptX, ptY, &point);
         DrawCross(&cdc, &pnSolidPen, point, crossLen);
       }
@@ -1555,7 +1579,7 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
 
       // Draw lines if there is more than one point
       CPen *pOldPen = cdc.SelectObject(&pnSolidPen);
-      if (!(iDraw < 0 && useMultiShot))
+      if (!(iDraw < 0 && (useMultiShot || targetsOnly)))
         DrawMapItemBox(cdc, &rect, item, imBuf, numPoints, 0., 0., delPtX, delPtY, NULL,
         NULL);
       if (item->IsMap() && item->mFitToPolygonID && item->mMapSection > 0){
@@ -1570,9 +1594,21 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
         }
       }
 
- 
+      if (iDraw < 0 && ((useMultiShot && !mWinApp->mNavHelper->mComaVsISCalDlg) ||
+        parTSgroupID > 0)) {
+
+        // Get radii of Record and multishot in hole
+        StageToImage(imBuf, item->mStageX, item->mStageY, cenX, cenY);
+        for (int pt = item->mNumPoints - 2; pt < item->mNumPoints; pt++) {
+          StageToImage(imBuf, item->mPtX[pt], item->mPtY[pt], ptX, ptY);
+          acquireRadii[pt + 2 - item->mNumPoints] = sqrtf((ptX - cenX) * (ptX - cenX) +
+            (ptY - cenY) * (ptY - cenY));
+        }
+      }
+
       // DRAW MULTI-SHOT PATTERN
-      if (iDraw < 0 && useMultiShot && !mWinApp->mNavHelper->mComaVsISCalDlg) {
+      if (iDraw < 0 && useMultiShot && !mWinApp->mNavHelper->mComaVsISCalDlg && 
+        !curIsInGroup) {
         float holeXoffset = 0, holeYoffset = 0;
         int inHoleEnd = item->mNumPoints - 2;
         int inHoleStart = inHoleEnd - B3DCHOICE(doInHole, msParams->numShots[0] +
@@ -1649,13 +1685,6 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
         }
 
         // Setup to draw circles, switch color and draw them
-        // Get radii of Record and multishot in hole
-        StageToImage(imBuf, item->mStageX, item->mStageY, cenX, cenY);
-        for (int pt = item->mNumPoints - 2; pt < item->mNumPoints; pt++) {
-          StageToImage(imBuf, item->mPtX[pt], item->mPtY[pt], ptX, ptY);
-          acquireRadii[pt + 2 - item->mNumPoints] = sqrtf((ptX - cenX) * (ptX - cenX) +
-            (ptY - cenY) * (ptY - cenY));
-        }
         CPen circlePen(PS_SOLID, thick1, COLORREF(
           RGB(mWinApp->mParticleTasks->GetLastHolesWereAdjusted() ? 255 : 0, 255, 0)));
 
@@ -1711,18 +1740,18 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
 
     // Draw polygons for full acquire area on all acquire points if selected, or on
     // current/selected points
-    if (iDraw >= 0 && (item->mAcquire || 
-      (item->mTSparamIndex >= 0 && item->mNumIStargets)) && item->mNumPoints == 1 && 
-      mAcquireBox && (showMultiOnAll &&
+    if (iDraw >= 0 && (item->mAcquire || item->mParallelTSIndex >= 0 || itemInParTSgroup) 
+      && item->mNumPoints == 1 && mAcquireBox && (itemInParTSgroup || (showMultiOnAll &&
       (!showOnlyCombined || (item->mNumXholes != 0 && item->mNumYholes != 0) ||
         (checkUndos &&
           mWinApp->mNavHelper->mCombineHoles->IsItemInUndoList(item->mMapID))) ||
-        (showCurPtAcquire && highlight && doMultiHole))) {
+        (showCurPtAcquire && highlight && (doMultiHole || item->mNumIStargets)))) &&
+      !(targetsOnly && !itemInParTSgroup && !useMultiShot)) {
       GetSingleAdjustmentForItem(imBuf, item, delPtX, delPtY);
       CPen pnAcquire(PS_SOLID, thick1, item->GetColor(highlight));
       CPen *pOldPen = cdc.SelectObject(&pnAcquire);
       mAcquireBox->mDraw = true;
-      if (useMultiShot) {
+      if (useMultiShot && !itemInParTSgroup && !itemInParTSgroup) {
 
         // One-time computation of the triangle area for skipped points
         if (!triangleItem.mNumPoints) {
@@ -1765,24 +1794,31 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
         if (item->mNumIStargets) {
           lastSpecialXholes = lastSpecialYholes = 0;
           numSpecHoles = mWinApp->mParticleTasks->GetHolePositions(delISX,
-            delISY, holeIndex, mWinApp->mNavigator->GetMagIndForHoles(),
-            mWinApp->mNavigator->GetCameraForHoles(), 0, 0, tiltAngle, item, false);
+            delISY, holeIndex, item->mMagOfIStargets,
+            navigator->GetCameraForHoles(), 0, 0, tiltAngle, item, false);
           skipItem.mNumPoints = 0;
           holeItem.mNumPoints = 0;
           acquireXhole.clear();
           acquireYhole.clear();
-          mWinApp->mNavigator->AddHolePositionsToItemPts(delISX, delISY, holeIndex,
-            true, numSpecHoles, &holeItem);
+          if (imBuf->mMagInd && imBuf->mCamera >= 0) {
+            ScaleMat is2st = MatMul(mShiftManager->IStoGivenCamera(item->mMagOfIStargets,
+              imBuf->mCamera),
+              MatInv(mShiftManager->StageToCamera(imBuf->mCamera, imBuf->mMagInd)));
+            ScaleMat tmpMat = mShiftManager->IStoGivenCamera(item->mMagOfIStargets,
+              imBuf->mCamera);
+            tmpMat = mShiftManager->StageToCamera(imBuf->mCamera, imBuf->mMagInd);
+            tmpMat = is2st;
+            if (is2st.xpx) {
+              for (int hole = 0; hole < item->mNumIStargets; hole++) {
+                ApplyScaleMatrix(is2st, delISX[hole], delISY[hole], ptX, ptY);
+                holeItem.AppendPoint(ptX, ptY);
+              }
+            }
+          }
           targPad = skipPad;
           drawEllipse = item->mParallelTSIndex >= 0 && imBuf->mMagInd && 
             imBuf->mCamera >= 0;
-          if (drawEllipse) {
-            axisAngle = (float)mShiftManager->GetImageRotation(imBuf->mCamera, 
-              imBuf->mMagInd);
-            beamElong = 1.f / cos((float)DTOR *
-              mWinApp->mNavHelper->GetParTSOptions()->tiltForBeam);
-          }
-          if (mAcquireBox)
+           if (mAcquireBox)
             targPad = 0.5f * sqrtf(powf(mAcquireBox->mPtX[2] - mAcquireBox->mPtX[0], 2.f)
               + powf(mAcquireBox->mPtY[2] - mAcquireBox->mPtY[0], 2.f));
         } else {
@@ -1878,15 +1914,30 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
             drawSkips = ix < numSpecHoles / 2 && size > 2;
           }
 
-          if (!drawSkips && (!item->mNumIStargets ||(item->mNumIStargets && highlight))) {
+          if (!drawSkips && (!item->mNumIStargets || (item->mNumIStargets && highlight) ||
+            itemInParTSgroup)) {
             CPen circlePen(PS_SOLID, thick1, COLORREF(RGB(255, 255, 0)));
+            CFont *def_font = GetFont();
+            UINT textAlign = 0;
+            int defMode = 0;
+            COLORREF defColor = RGB(0, 0, 0);
+            if (drawEllipse) {
+              axisAngle = (float)mShiftManager->GetImageRotation(imBuf->mCamera,
+                imBuf->mMagInd);
+              beamElong = 1.f / cosf(DTORFL *
+                mWinApp->mNavHelper->GetParTSOptions()->tiltForBeam);
+              CFont *def_font = cdc.SelectObject(useLabelFont);
+              int defMode = cdc.SetBkMode(TRANSPARENT);
+              COLORREF defColor = cdc.SetTextColor(parTScolor);
+              textAlign = cdc.SetTextAlign(TA_CENTER | TA_BASELINE);
+            }
 
             // Subtract acquire box center so it works for drawing in-hole points and
             // item box using acquire box
             for (int hole = 0; hole < numSpecHoles; hole++) {
               ptX = acquireXhole[hole] - mAcquireBox->mStageX;
               ptY = acquireYhole[hole] - mAcquireBox->mStageY;
-              if (doInHole) {
+              if (doInHole && item->mParallelTSIndex < 0) {
                 DrawVectorPolygon(cdc, &rect, item, imBuf, convXinHole, convYinHole, ptX,
                   ptY, delPtX, delPtY, NULL, NULL);
               } else {
@@ -1901,12 +1952,25 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
                     DrawEllipse(&cdc, &circlePen, &rect, imBuf->mImage, ptX + delPtX,
                       ptY + delPtY, acquireRadii[0], acquireRadii[0] * beamElong,
                       axisAngle, false);
+                    if (hole) {
+                      MakeDrawPoint(&rect, imBuf->mImage, ptX + delPtX, ptY + delPtY,
+                        &point);
+                      point = point + CPoint(0, 7 * offset10 / 10);
+                      letString.Format("%d", hole + 1);
+                      cdc.TextOut(point.x, point.y, letString);
+                    }
                   } else {
                     DrawCircle(&cdc, &circlePen, &rect, imBuf->mImage, ptX + delPtX,
                       ptY + delPtY, acquireRadii[0]);
-                   }
+                  }
                 }
               }
+            }
+            if (drawEllipse) {
+              cdc.SetTextAlign(textAlign);
+              cdc.SelectObject(def_font);
+              cdc.SetTextColor(defColor);
+              cdc.SetBkMode(defMode);
             }
           }
         }
@@ -1942,6 +2006,17 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
         DrawMapItemBox(cdc, &rect, mAcquireBox, imBuf,
           B3DMIN(5, mAcquireBox->mNumPoints), item->mStageX - mAcquireBox->mStageX,
           item->mStageY - mAcquireBox->mStageY, delPtX, delPtY, NULL, NULL);
+        if (drawEllipse) {
+          CPen circlePen(PS_SOLID, thick1, COLORREF(RGB(255, 255, 0)));
+          axisAngle = (float)mShiftManager->GetImageRotation(imBuf->mCamera,
+            imBuf->mMagInd);
+          beamElong = 1.f / cosf(DTORFL *
+            mWinApp->mNavHelper->GetParTSOptions()->tiltForBeam);
+          StageToImage(imBuf, item->mStageX, item->mStageY, ptX, ptY);
+          DrawEllipse(&cdc, &circlePen, &rect, imBuf->mImage, ptX,
+            ptY, acquireRadii[0], acquireRadii[0] * beamElong,
+            axisAngle, false);
+        }
         cdc.SelectObject(pOldPen);
       }
       cdc.SelectObject(pOldPen);
@@ -1973,11 +2048,19 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
         StageToImage(imBuf, item->mStageX, item->mStageY, ptX, ptY, pieceDrawnOn);
         MakeDrawPoint(&rect, imBuf->mImage, ptX, ptY, &point);
         if (item->mNumPoints == 1)
-          point = point + CPoint(10, 0);
+          point = point + CPoint(offset10, 0);
         CFont *def_font = cdc.SelectObject(useLabelFont);
         int defMode = cdc.SetBkMode(TRANSPARENT);
         COLORREF defColor = cdc.SetTextColor(item->GetColor(highlight));
         cdc.TextOut(point.x, point.y, item->mLabel);
+        if (itemInParTSgroup && drawEllipse) {
+          cdc.SetTextColor(parTScolor);
+          UINT textAlign = cdc.SetTextAlign(TA_CENTER | TA_BASELINE);
+          point = point - CPoint(offset10, -7 * offset10 / 10);
+          letString.Format("%d", posInParTSgroup);
+          cdc.TextOut(point.x, point.y, letString);
+          cdc.SetTextAlign(textAlign);
+        }
         cdc.SelectObject(def_font);
         cdc.SetTextColor(defColor);
         cdc.SetBkMode(defMode);
@@ -2085,11 +2168,11 @@ void CSerialEMView::DrawLowDoseAreas(CDC &cdc, CRect &rect, EMimageBuffer *imBuf
 {
   COLORREF areaColors[6] = {RGB(255, 255, 0), RGB(255, 0, 0), RGB(0, 255, 0),
     RGB(255, 255, 0), RGB(255, 128, 0), RGB(255, 0, 0)};
-  float cornerX[4], cornerY[4], cenX, cenY, radius, trueRad;
+  float cornerX[4], cornerY[4], cenX, cenY, radius, trueRad, axisAngle, beamElong;
   CPoint point;
   StateParams state;
   int newInd, whichSize = B3DABS(mWinApp->GetCircleTypesInLDDefine());
-  bool useDash = mDrewLDAreasAtNavPt && recOnly < 0;
+  bool useDash = mDrewLDAreasAtNavPt && recOnly == -1;
   state.camIndex = mWinApp->GetCurrentCamera();
   if (mWinApp->mNavigator && mWinApp->mNavigator->GetSingleSelectedItem(&newInd) &&
     (curInd == -1 || curInd == newInd) && recOnly < 0) {
@@ -2122,12 +2205,23 @@ void CSerialEMView::DrawLowDoseAreas(CDC &cdc, CRect &rect, EMimageBuffer *imBuf
         DrawCircle(&cdc, &pnSolidPen, &rect, imBuf->mImage, cenX + xOffset,
           cenY + yOffset, radius, true);
 
-      // Draw beam circle for either area when defining, or for focus when edit focus
+      // Draw beam circle for either area when defining, or for focus when edit focus,
+      // of for focus when it is first point of parallel TS group
       if (recOnly < 0 && !mWinApp->GetSTEMMode() && trueRad > 0. && 
-        !mDrewLDAreasAtNavPt && whichSize > 0) {
+        (!mDrewLDAreasAtNavPt || (recOnly == -2 && area == FOCUS_CONSET)) && 
+        whichSize > 0) {
         cenX = (float)(type ? imBuf->mImage->getWidth() / 2. : cenX + xOffset);
         cenY = (float)(type ? imBuf->mImage->getHeight() / 2. : cenY + yOffset);
-        if (area == mWinApp->mScope->GetLowDoseArea()) {
+        if (recOnly == -2 && area == FOCUS_CONSET && imBuf->mCamera >= 0 &&
+          imBuf->mMagInd) {
+          axisAngle = (float)mShiftManager->GetImageRotation(imBuf->mCamera,
+            imBuf->mMagInd);
+          beamElong = 1.f / cosf(DTORFL *
+            mWinApp->mNavHelper->GetParTSOptions()->tiltForBeam);
+          CPen pnThickPen(PS_SOLID, thick, areaColors[area - 1]);
+          DrawEllipse(&cdc, &pnThickPen, &rect, imBuf->mImage, cenX, cenY, trueRad,
+            trueRad * beamElong, axisAngle, false);
+        } else if (area == mWinApp->mScope->GetLowDoseArea()) {
           CPen pnThickPen(PS_SOLID, 2 * thick, areaColors[area - 1]);
           DrawDashedCircle(&cdc, &pnThickPen, &rect, imBuf->mImage, cenX, cenY, trueRad,
             true);
@@ -2745,8 +2839,9 @@ void CSerialEMView::OnLButtonUp(UINT nFlags, CPoint point)
 
       // Navigator gets first crack if it is either a legal point or a valid hit for
       // selection
-      if (!mNavUsedLastLButtonUp && ((!mDrewLDAreasAtNavPt || (!shiftKey && ctrlKey)) &&
-        mWinApp->mNavigator && !mLocatorViewNum &&
+      if (!mNavUsedLastLButtonUp && mWinApp->mNavigator && ((!mDrewLDAreasAtNavPt || 
+        (!shiftKey && ctrlKey) || mWinApp->mNavigator->GetAddingPoints()) &&
+        !mLocatorViewNum &&
         (legal || (!shiftKey && (ctrlKey || mWinApp->mNavigator->InEditMode())) ||
         (shiftKey && mWinApp->mNavigator->InEditMode()))))
           mNavUsedLastLButtonUp = mWinApp->mNavigator->UserMousePoint(imBuf, shiftX,

@@ -400,7 +400,7 @@ CNavHelper::CNavHelper(void)
   mOpenedMultiGrid = false;
   mMaxISvecMatchRotDiff = 2.f;
   mMaxISvecMatchScaleDiff = 0.02f;
-  mParTSSetupGroupID = 804811256;   // Testing value
+  mParTSSetupGroupID = 0; //804811256;   // Testing value
 }
 
 CNavHelper::~CNavHelper(void)

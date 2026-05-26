@@ -671,6 +671,8 @@ struct ParTSTargetData {
   float fitRes;
   float shiftX;
   float shiftY;
+  float loadedSpecY;
+  float loadedDelZFocus;
 };
 
 typedef CArray<ParTSTargetData, ParTSTargetData> ParTargetDataArray;

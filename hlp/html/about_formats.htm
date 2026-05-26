@@ -847,6 +847,21 @@
       <TD class="style9">Hole diameter and spacing from hole finding, in microns.</TD>
     </TR>
     <TR VALIGN="top">
+      <TD>IStargets</TD>
+      <TD class="style10">Float array</TD>
+      <TD class="style7">none</TD>
+      <TD class="style8">mIStargetsXY, mNumIStargets</TD>
+      <TD class="style9">Successive X,Y pairs of raw image shift values for targets of 
+        multiple Records or parallel tilt series</TD>
+    </TR>
+    <TR VALIGN="top">
+      <TD>TargetMag</TD>
+      <TD class="style10">Integer</TD>
+      <TD class="style7">0</TD>
+      <TD class="style8">mMagOfIStargets</TD>
+      <TD class="style9">Magnification index at which the image shift targets apply</TD>
+    </TR>
+    <TR VALIGN="top">
       <TD>TSstartEndAngles</TD>
       <TD class="style10">Two Floats</TD>
       <TD class="style7">-1.e8,-1.e8</TD>
@@ -879,7 +894,15 @@
       <TD class="style10">Integer</TD>
       <TD class="style7">-1</TD>
       <TD class="style8">mTSParamIndex</TD>
-      <TD class="style9">Index of into parameter array for tilt series</TD>
+      <TD class="style9">Index into parameter array for tilt series</TD>
+    </TR>
+    <TR VALIGN="top">
+      <TD>ParallelTSIndex</TD>
+      <TD class="style10">Integer</TD>
+      <TD class="style7">-1</TD>
+      <TD class="style8">mParallelTSIndex</TD>
+      <TD class="style9">Index in array of ParallelTSParam structures for parallel tilt 
+        series</TD>
     </TR>
     <TR VALIGN="top">
       <TD>MontParamIndex</TD>
@@ -1186,6 +1209,90 @@
       <TD class="style7">-1.</TD>
       <TD class="style8">mEDMPercent</TD>
       <TD class="style9">Dose modulation duty cycle percentage.</TD>
+    </TR>
+       <TR VALIGN="top">
+      <TD colspan = "5"><strong>ParallelTSParam</strong> - a section containing 
+        parameters for parallel tilt series; 4th column is name in ParallelTSParam 
+        structure.
+        <br />
+&nbsp;&nbsp; Either FirstPrevMapID and PrevSectNums for saved previews, or XinAreaMap 
+        and YinAreaMap for aligning to map
+        <br />
+&nbsp;&nbsp; extracts, must be entered, but not both</TD>
+    </TR>
+    <TR VALIGN="top">
+     <TD>FirstPrevMapID</TD>
+      <TD class="style10">Integer</TD>
+      <TD class="style7">0</TD>
+      <TD class="style8">firstPrevMapID</TD>
+      <TD class="style9">Map ID of the first preview map if any; this is the only map 
+        needed in the Navigator file</TD>
+    </TR>
+    <TR VALIGN="top">
+     <TD>PrevSectNums</TD>
+      <TD class="style10">Integer array</TD>
+      <TD class="style7">none</TD>
+      <TD class="style8">prevSectNums</TD>
+      <TD class="style9">Section number in the file of previews for each of the image 
+        shift targets</TD>
+    </TR>
+    <TR VALIGN="top">
+     <TD>XShiftInImage</TD>
+      <TD class="style10">Float array</TD>
+      <TD class="style7">none</TD>
+      <TD class="style8">xShiftInImage</TD>
+      <TD class="style9">X shift in image when preview was saved</TD>
+    </TR>
+    <TR VALIGN="top">
+     <TD>YShiftInImage</TD>
+      <TD class="style10">Float array</TD>
+      <TD class="style7">none</TD>
+      <TD class="style8">yShiftInImage</TD>
+      <TD class="style9">Y shift in image when preview was saved</TD>
+    </TR>
+    <TR VALIGN="top">
+     <TD>XinAreaMap</TD>
+      <TD class="style10">Float array</TD>
+      <TD class="style7">none</TD>
+      <TD class="style8">xCoordInArea</TD>
+      <TD class="style9">X coordinate of each target in the area map, for aligning to 
+        extracts from map instead of previews</TD>
+    </TR>
+    <TR VALIGN="top">
+     <TD>YinAreaMap</TD>
+      <TD class="style10">Float array</TD>
+      <TD class="style7">none</TD>
+      <TD class="style8">yCoordInArea</TD>
+      <TD class="style9">Y coordinate of each target in the area map</TD>
+    </TR>
+    <TR VALIGN="top">
+     <TD>PreTilt</TD>
+      <TD class="style10">Float</TD>
+      <TD class="style7">0</TD>
+      <TD class="style8">preTilt</TD>
+      <TD class="style9">Angle to use as starting angle of tilt series, typically angle 
+        at which specimen is level</TD>
+    </TR>
+    <TR VALIGN="top">
+     <TD>XPitchAngle</TD>
+      <TD class="style10">Float</TD>
+      <TD class="style7">0</TD>
+      <TD class="style8">xPitchAngle</TD>
+      <TD class="style9">Tilt of specimen around the microscope Y axis</TD>
+    </TR>
+    <TR VALIGN="top">
+     <TD>MappingTilt</TD>
+      <TD class="style10">Float</TD>
+      <TD class="style7">0</TD>
+      <TD class="style8">mappingTilt</TD>
+      <TD class="style9">Tilt angle at which previews were taken</TD>
+    </TR>
+    <TR VALIGN="top">
+     <TD>NavID</TD>
+      <TD class="style10">Integer</TD>
+      <TD class="style7">0</TD>
+      <TD class="style8">navID</TD>
+      <TD class="style9">Unique ID of this section, needed for merging</TD>
     </TR>
        <TR VALIGN="top">
       <TD colspan = "5"><B>TSParam</B>   - a section containing tilt series parameters.&nbsp; See

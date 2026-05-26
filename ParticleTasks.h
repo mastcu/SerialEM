@@ -154,6 +154,7 @@ private:
   bool mParTSTuningInCtfpDone;     // Flag that tuning can be skipped after it worked once
   int mParTSFirstImageInBuf;       // Buffer that first image is in
   int mParTSOverwriteSec;          // Section # to overwrite, -1 not to
+  bool mMSStartedCtfplotter;       // Flag that it started it then took next shot
 
   DriftWaitParams mWDDfltParams;   // Resident parameters
   DriftWaitParams mWDParm;         // Run-time parameters
@@ -258,7 +259,8 @@ public:
   int StartOneShotOfMulti(void);
   int StoreNumForCurrentShot();
   int ProcessParallelTSImage(CString &errStr);
-  int GetCtfOfParallelTSImage(float defocus, float astig, float score, float fitRes, CString &errStr);
+  void OutputDebugPositionAndCTF(int holeIndex);
+  int GetCtfOfParallelTSImage(float &defocus, float &astig, float &score, float &fitRes, CString &errStr);
   void MultiShotNextTask(int param);
   void StopMultiShot(void);
   void MultiShotCleanup(int error);

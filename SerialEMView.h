@@ -98,6 +98,7 @@ public:
   SetMember(bool, FlashNextDisplay);
   SetMember(COLORREF, FlashColor)
   GetMember(bool, DrewLDAreasAtNavPt);
+  GetMember(bool, PreParTSDrewLDAreas);
   GetMember(int, ImBufNumber);
   GetSetMember(bool, ChanBufIsNew);
   GetSetMember(int, LocatorViewNum);
@@ -199,6 +200,7 @@ private:
   int mWheelDeltaPending;        // Delta sum below threshold
   BOOL mNavUsedLastLButtonUp;    // Flag that Navigator used last button up event
   bool mDrewLDAreasAtNavPt;      // Flag that low dose areas were drawn at a Navigator pt
+  bool mPreParTSDrewLDAreas;     // Old flag before parallel TS display was included
   float mNavLDAreasXcenter;      // Image position around which areas were drawn
   float mNavLDAreasYcenter;
   int mLastCursorType;           // 0 for arrow or 1 to move, 2+ to modify

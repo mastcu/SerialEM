@@ -453,6 +453,12 @@ CTSController::CTSController()
   mParTSRefImBufs[0] = NULL;
   mParTSRefImBufs[1] = NULL;
   mParTSNavItem = NULL;
+  mParTSMinCtfpPixel = 0.3f;
+  mParTSMinFindStartScore = 0.15f;
+  mParTSMinPlotStartScore = 0.7f;
+  mParTSMinFindScoreRatio = 0.33f;
+  mParTSMinPlotScoreRatio = 0.66f;
+  mParTsReviseDZFocusFromZ0 = true;
   mEndCtlMdocPath = NULL;
   mTiltIndex = -1;
   mSetupOpenedStamp = GetTickCount();
@@ -1138,6 +1144,7 @@ int CTSController::StartTiltSeries(BOOL singleStep, int external, CMapDrawItem *
     }
     mTiltIndex = 0;
     SetFileZ();
+    mHaveRecordRef = false;
 
     if (navItem && navItem->mParallelTSIndex >= 0 && ParallelTSSetup(navItem, str)) {
       SEMMessageBox(str);
@@ -1249,6 +1256,8 @@ int CTSController::StartTiltSeries(BOOL singleStep, int external, CMapDrawItem *
     }
     mBufferManager->SetBufToReadInto(mReadBuf);
     mAnchorBuf = MAX_BUFFERS - 1;
+    if (mParTSNavItem && mSaveBufToReadInto != mReadBuf)
+      mBufferManager->CopyImageBuffer(mSaveBufToReadInto, mReadBuf, false);
 
     // With new align to B, can just leave copy on save at 0
     mBufferManager->SetCopyOnSave(0);
@@ -1284,6 +1293,7 @@ int CTSController::StartTiltSeries(BOOL singleStep, int external, CMapDrawItem *
 
     mWarnedNoExtraFilter = false;
     mWarnedNoExtraChannels = false;
+    mParTSFirstOffsetFit = 1;
     mInExtraRecState = false;
     mFirstIntensity = 0.;
     mFirstExposure = 0.;
@@ -1302,7 +1312,6 @@ int CTSController::StartTiltSeries(BOOL singleStep, int external, CMapDrawItem *
     mCheckFocusPrediction = false;
     mUsableLowMagRef = false;
     mHaveLowMagRef = false;
-    mHaveRecordRef = false;
     mHaveTrackRef = false;
     mNeedFirstTrackRef = mTSParam.doBidirectional && mLowDoseMode;
     mDidRegularTrack = false;
@@ -1334,9 +1343,9 @@ int CTSController::StartTiltSeries(BOOL singleStep, int external, CMapDrawItem *
     mWinApp->UpdateWindowSettings();
     mActIndex = mNumActLoop;
     mActLoopEnd = mNumActTotal;
-    mHaveStartRef = false;
     mHaveZeroTiltTrack = false;
     mHaveZeroTiltPreview = false;
+    mHaveStartRef = false;
     mAccumDeltaForMean = 1.;
     mStoppedForAccumDelta = false;
     mMinAccumDeltaForMean = 1.;
@@ -1361,6 +1370,11 @@ int CTSController::StartTiltSeries(BOOL singleStep, int external, CMapDrawItem *
       mTSParam.cenBeamAngle = -mTSParam.cenBeamAngle;
     mNumSavedExtras.resize(0);
     mExtraStartingZ.resize(0);
+    if (mParTSNavItem && mHaveRecordRef) {
+      mBufferManager->CopyImageBuffer(1, mAlignBuf, false);
+      if (mDoingDoseSymmetric)
+        mBufferManager->CopyImageBuffer(1, mAlignBuf + 2, false);
+    }
 
     // If the user says there is an image to align to in buffer A, it is a starting
     // reference if we are within usable range of starting angle: save it in extraref
@@ -2629,6 +2643,8 @@ void CTSController::NextAction(int param)
         if (mEarlyK2RecordReturn && !mTSParam.doEarlyReturn && !mParTSNavItem)
           mCamera->SetFullSumAsyncIfOK(RECORD_CONSET);
         if (mParTSNavItem) {
+          if (!mTiltIndex)
+            mBufferManager->CopyImageBuffer(mReadBuf, mAlignBuf, false);
           mWinApp->mParticleTasks->SetParTSOverwriteSec(mOverwriteSec);
           mWinApp->mParticleTasks->StartMultiShot(0, 0, 0., 0, 0., 0., true, 0, 0,
             mWinApp->mNavHelper->GetParTSOptions()->adjustBeamTilt, 0);
@@ -7368,7 +7384,7 @@ int CTSController::ManageDoseSymmetricOnTilt()
  */
 int CTSController::ParallelTSSetup(CMapDrawItem *item, CString &errStr)
 {
-  int xsize, ysize, ind, comm, size, err, dir, curStore, readBuf, toBuf;
+  int xsize, ysize, ind, comm, jnd, size, err, dir, curStore, readBuf, toBuf;
   float useWidth, useHeight, reduction, specX, specY, zZero, sinMapAlf, sinBidAlf;
   float delMapAng, delBidAng, yZero, pixel;
   double ISX, ISY;
@@ -7384,11 +7400,15 @@ int CTSController::ParallelTSSetup(CMapDrawItem *item, CString &errStr)
   mParTSLoadedFocus.resize(numTargets);
   mParTSLoadedSpecX.resize(numTargets);
   mParTSLoadedSpecY.resize(numTargets);
+  mParTSLoadedDelZFocus[0].resize(numTargets);
+  mParTSLoadedDelZFocus[1].resize(numTargets);
   memset(&targetData, 0, sizeof(ParTSTargetData));
   targetData.score = -1.;
+  mParTSMeanStartScore = 0.;
 
   mParTSParams = mWinApp->mNavigator->GetParallelTSArray()->GetAt(
     item->mParallelTSIndex);
+
   if (numTargets < 2) {
     errStr = "Navigator item for parallel tilt series must have more than one target";
     return 1;
@@ -7462,27 +7482,35 @@ int CTSController::ParallelTSSetup(CMapDrawItem *item, CString &errStr)
     mParTSLastKnownX[ind].resize(numTargets);
     mParTSLastKnownY[ind].resize(numTargets);
     mParTSAngleOfKnown[ind].resize(numTargets);
-    mParTSDelZatZero[ind].resize(numTargets);
     mParTSCurTiltOffset[ind] = mParTSParams->preTilt;
+    mParTSLastFoundDelZ0[ind].resize(numTargets);
+    mParTSLastDelZ0TiltInd[ind].resize(numTargets);
   }
+  mParTSDelZatZero.resize(numTargets);
   mParTSNavItem = item->Duplicate();
   
   err = 0;
 
   if (mParTSParams->prevSectNums.size()) {
-    reduction = (float)(mTSParam.binning * mParTSRefBinning) / (float)mapItem->mMapBinning;
+    reduction = (float)(mTSParam.binning * mParTSRefBinning) / 
+      (float)mapItem->mMapBinning;
     for (ind = numTargets - 1; ind >= 0; ind--) {
-      err = mBufferManager->ReadFromFile(store, mParTSParams->prevSectNums[ind], -1, false,
-        true, &str);
+      err = mBufferManager->ReadFromFile(store, mParTSParams->prevSectNums[ind], -1, 
+        false, true, &str);
       if (err) {
         errStr.Format("Error reading section %d from target map file:\r\n%s",
           mParTSParams->prevSectNums[ind], (LPCTSTR)str);
         break;
       }
 
-      // Leave first image in read buf
-      if (!ind)
+      // Leave first image in A
+      if (!ind) {
+        if (mParTSParams->xShiftInImage.size())
+          mImBufs[readBuf].mImage->setShifts(mParTSParams->xShiftInImage[0],
+            mParTSParams->yShiftInImage[0]);
+        mBufferManager->CopyImageBuffer(readBuf, 1, false);
         break;
+      }
       if (reduction > 1.) {
 
         // Reduce into an adjacent buffer and copy into stack, or just copy there directly
@@ -7499,10 +7527,16 @@ int CTSController::ParallelTSSetup(CMapDrawItem *item, CString &errStr)
         mBufferManager->CopyImBuf(&mImBufs[readBuf], &mParTSRefImBufs[0][ind - 1], false);
         mBufferManager->CopyImBuf(&mImBufs[readBuf], &mParTSRefImBufs[1][ind - 1], false);
       }
+      if ((int)mParTSParams->xShiftInImage.size() > ind) {
+        for (jnd = 0; jnd < 2; jnd++)
+        mParTSRefImBufs[jnd][ind - 1].mImage->setShifts(mParTSParams->xShiftInImage[ind] /
+          reduction, mParTSParams->yShiftInImage[ind] / reduction);
+      }
     }
 
     if (curStore < 0)
       delete store;
+    mHaveRecordRef = err == 0;
   } else if (mParTSParams->xCoordInArea.size() >= 0) {
 
     // Or transform to the needed mag and total binning and matching size
@@ -7516,9 +7550,14 @@ int CTSController::ParallelTSSetup(CMapDrawItem *item, CString &errStr)
       if (err)
         break;
       mImBufs[toBuf].mCaptured = BUFFER_PROC_OK_FOR_MAP;
-      mBufferManager->CopyImBuf(&mImBufs[toBuf], &mParTSRefImBufs[0][ind - 1], false);
-      mBufferManager->CopyImBuf(&mImBufs[toBuf], &mParTSRefImBufs[1][ind - 1], false);
+      if (ind) {
+        mBufferManager->CopyImBuf(&mImBufs[toBuf], &mParTSRefImBufs[0][ind - 1], false);
+        mBufferManager->CopyImBuf(&mImBufs[toBuf], &mParTSRefImBufs[1][ind - 1], false);
+      } else {
+        mBufferManager->CopyImageBuffer(toBuf, 1, false);
+      }
     }
+    mHaveRecordRef = err == 0;
   }
   if (err)
     return 1;
@@ -7547,7 +7586,7 @@ int CTSController::ParallelTSSetup(CMapDrawItem *item, CString &errStr)
     zZero = specX * tanf(DTORFL * mParTSParams->xPitchAngle);
     yZero = (specY + zZero * sinMapAlf) / cosf(delMapAng);
     specY = yZero * cosf(delBidAng) - zZero * sinBidAlf;
-    ApplyScaleMatrix(mCmat, specX, specY, 
+    ApplyScaleMatrix(mCinv, specX, specY, 
       mParTSNavItem->mIStargetsXY[ind * 2], mParTSNavItem->mIStargetsXY[ind * 2 + 1]);
 
     // Compute delta Z at starting angle, save X/Y values used to load IS values, 
@@ -7556,11 +7595,12 @@ int CTSController::ParallelTSSetup(CMapDrawItem *item, CString &errStr)
     mParTSLoadedSpecX[ind] = specX;
     mParTSLoadedSpecY[ind] = specY;
     for (dir = 0; dir < 2; dir++) {
+      mParTSLoadedDelZFocus[dir][ind] = 0.;
       mParTSLastKnownX[dir][ind] = specX;
       mParTSLastKnownY[dir][ind] = specY;
       mParTSAngleOfKnown[dir][ind] = mTSParam.bidirAngle;
-      mParTSDelZatZero[dir][ind] = zZero;
     }
+    mParTSDelZatZero[ind] = zZero;
     mParTSTargetData.Add(targetData);
   }
   mParTSNavItem->mMagOfIStargets = acqMagInd;
@@ -7580,31 +7620,42 @@ void CTSController::PredictParallelTSLocations(double angle)
 {
   float brackets[14], initialStep, curOffset;
   int err, numScanSteps, numCutsDone;
-  int ind, pos, numFound = 0, idir = mDirection > 0 ? 1 : 0;
-  float delNewAng, delLastAng, yZero, specY, zZero, meanErr;
+  int ind, pos, numFound = 0, idir = mDirection > 0 ? 1 : 0, numZfound;
+  float delNewAng, delLastAng, yZero, specY, zZero, meanErr, yOnlyMaxAngle = 0.;
+  float yWithZMaxAngle = 0., coef, ctmp;
   int numTargets = mParTSNavItem->mNumIStargets;
   MultiShotParams *msParams = mWinApp->mNavHelper->GetMultiShotParams();
-  std::vector<FloatVec> yOnly, yWithZ, zVec, angleYonly, angleWithZ;
+  std::vector<FloatVec> yOnly, yWithZ, zVec, angleYonly, angleWithZ, preTiltsYwithZ;
+  std::vector<FloatVec> loadedY, loadedDelZFocus, loadedYwithZ, preTiltsYonly;
+  std::vector<FloatVec> meanDefAtZeroY;
   FloatVec xFound, yFound, angRangeYonly;
-  IntVec dropping, posIndex;
+  IntVec dropping, posIndex, lastFitTiltInd, outliers;
   double errSum, grandSum = 0.;
-  bool reversingDosym = mBidirSeriesPhase == DOSYM_ALTERNATING_PART;
+  bool fromYZ, revised, reversingDosym = mBidirSeriesPhase == DOSYM_ALTERNATING_PART;
   ParTargetDataArray *targData;
   ParTSTargetData data;
-  int minDataForOffset = 30;
+  CString str, str2;
+  int minDataForOffset = 20;
+  float minAngleForYonlyRefine = 30., maxAngleForZBasedRefine = 20.;
   float fitRange = 20.;
   float absElimMin = 0.01f;
   float fovFactor = 0.01f;
   float elimMin = B3DMAX(mFOVofRecord * fovFactor, absElimMin);
   int minForYonly = 4, minForYwithZ = 3;
-  float minAngRangeYonlyRefine = 14.9f;
-  float minAngRangeReviseZzero = 11.9f;
+  float maxDiffRevZFrom2 = 0.1f;
   yOnly.resize(numTargets);
   yWithZ.resize(numTargets);
   zVec.resize(numTargets);
   angleYonly.resize(numTargets);
   angleWithZ.resize(numTargets);
   angRangeYonly.resize(numTargets);
+  loadedY.resize(numTargets);
+  loadedYwithZ.resize(numTargets);
+  loadedDelZFocus.resize(numTargets);
+  lastFitTiltInd.resize(numTargets, -1);
+  preTiltsYonly.resize(numTargets);
+  preTiltsYwithZ.resize(numTargets);
+  meanDefAtZeroY.resize(numTargets);
 
   // Load data for prior tilts for each position
   CLEAR_RESIZE(dropping, int, numTargets);
@@ -7622,16 +7673,27 @@ void CTSController::PredictParallelTSLocations(double angle)
       data = targData->GetAt(pos);
       if (data.shiftX < EXTRA_VALUE_TEST)
         continue;
+      if (lastFitTiltInd[pos] < 0)
+        lastFitTiltInd[pos] = ind;
       yOnly[pos].push_back(data.shiftY);
       angleYonly[pos].push_back(mTiltAngles[ind]);
+      loadedY[pos].push_back(data.loadedSpecY);
+      preTiltsYonly[pos].push_back(mParTSPreTiltsUsed[ind]);
+      ACCUM_MAX(yOnlyMaxAngle, B3DABS(mTiltAngles[ind] - mParTSPreTiltsUsed[ind]));
       if (data.score > 0.) {
         zVec[pos].push_back(data.defocusByCTF);
         yWithZ[pos].push_back(data.shiftY);
+        loadedYwithZ[pos].push_back(data.loadedSpecY);
         angleWithZ[pos].push_back(mTiltAngles[ind]);
+        loadedDelZFocus[pos].push_back(data.loadedDelZFocus);
+        preTiltsYwithZ[pos].push_back(mParTSPreTiltsUsed[ind]);
+        ACCUM_MAX(yWithZMaxAngle, B3DABS(mTiltAngles[ind] - mParTSPreTiltsUsed[ind]));
+        meanDefAtZeroY[pos].push_back(mParTSMeanDefocus[ind]);
       }
     }
-    if (yOnly[pos].size() > 0)
+    if (yOnly[pos].size() > 0) {
       angRangeYonly[pos] = VECTOR_MAX(angleYonly[pos]) - VECTOR_MIN(angleYonly[pos]);
+    }
 
     // Do initial fits to Y only data
 
@@ -7640,118 +7702,212 @@ void CTSController::PredictParallelTSLocations(double angle)
       FitParallelTSYonly(angleYonly[pos], yOnly[pos], mParTSCurTiltOffset[idir], yZero,
         zZero, errSum, meanErr);
       xFound.push_back(meanErr);
+      SEMTrace('1', "Pos %d y only yZero %.3f zZero %.3f  err %.3f", pos + 1, yZero,
+        zZero, meanErr);
     }
   }
+  str = "";
 
   // Get outliers among Y-only data and mark any dropped ones
   if (xFound.size() > 2) {
     FindOutliersInResultList(xFound, elimMin, 1, yFound);
-    for (ind = 0; ind < (int)xFound.size(); ind++)
-      if (yFound[ind] > 0.)
-        dropping[posIndex[ind]] = 2;
-  }
-
-  // Now do fits with Y and Z
-  posIndex.clear();
-  xFound.clear();
-  for (pos = 1; pos < numTargets; pos++) {
-    if (!dropping[pos] && (int)zVec[pos].size() > minForYwithZ) {
-      posIndex.push_back(pos);
-      FitParallelTSYwithZ(angleWithZ[pos], yWithZ[pos], zVec[pos], 
-        mParTSCurTiltOffset[idir], yZero, zZero, errSum, meanErr);
-      xFound.push_back(meanErr);
+    for (ind = 0; ind < (int)xFound.size(); ind++) {
+      if (yFound[ind] > 0.) {
+        dropping[posIndex[ind]] = 1;
+        str2.Format(" %d", posIndex[ind] + 1);
+        str += str2;
+      }
     }
   }
-
-  // Get outliers among Y & Z data and mark any dropped ones with just a 1
-  if (xFound.size() > 2) {
-    FindOutliersInResultList(xFound, elimMin, 1, yFound);
-    for (ind = 0; ind < (int)xFound.size(); ind++)
-      if (yFound[ind] > 0.)
-        dropping[posIndex[ind]] = 1;
+  if (!str.IsEmpty() && GetDebugOutput('1')) {
+    SEMAppendToLog("Y only fit errors: " + UtilFormatFloatVec(xFound));
+    SEMAppendToLog("  dropping position(s) " + str);
   }
 
   // Count how much data are available for refining tilt offset
   numFound = 0;
+  numZfound = 0;
   for (pos = 1; pos < numTargets; pos++) {
-    if (!dropping[pos] && (int)zVec[pos].size() > minForYwithZ)
-      numFound += (int)zVec[pos].size() * 2;
-    else if (dropping[pos] <= 1 && angRangeYonly[pos] >= minAngRangeYonlyRefine)
+    if (!dropping[pos] && (int)zVec[pos].size() >= 2)
+      numZfound += (int)zVec[pos].size();
+    if (!dropping[pos] && (int)yOnly[pos].size() >= 2)
       numFound += (int)yOnly[pos].size();
   }
+  
+  // Proceed if enough data and max angle of one type of fit is suitable
+  if ((numZfound >= minDataForOffset && yWithZMaxAngle < maxAngleForZBasedRefine) ||
+    (numFound >= minDataForOffset && yOnlyMaxAngle > minAngleForYonlyRefine)) {
 
-  if (numFound >= minDataForOffset) {
-    numScanSteps = 10;  // Want to make this 20 on first fit...
+    numScanSteps = mParTSFirstOffsetFit ? 20 : 10;  
     initialStep = 1.;
     curOffset = mParTSCurTiltOffset[idir] - initialStep * (float)numScanSteps / 2.f;
     numCutsDone = -1;
     for (;;) {
 
-      // Add up all the errors from all the fits
+      // Add up the error with current test offset
       grandSum = 0.;
-      for (pos = 1; pos < numTargets; pos++) {
-        if (dropping[pos] > 1)
+      for (pos = 0; pos < numTargets; pos++) {
+        if (dropping[pos])
           continue;
-        if (!dropping[pos] && (int)zVec[pos].size() > minForYwithZ)
-          FitParallelTSYwithZ(angleWithZ[pos], yWithZ[pos], zVec[pos], curOffset, yZero,
-            zZero, errSum, meanErr);
-        else if (angRangeYonly[pos] >= minAngRangeYonlyRefine)
-          FitParallelTSYonly(angleYonly[pos], yOnly[pos], curOffset, yZero, zZero,
-            errSum, meanErr);
-        grandSum += errSum;
+        if (numZfound >= minDataForOffset && yWithZMaxAngle < maxAngleForZBasedRefine) {
+          fromYZ = true;
+          if ((int)zVec[pos].size() >= minForYwithZ) {
+            for (ind = 0; ind < (int)zVec[pos].size(); ind++) {
+              coef = tanf(DTORFL * (angleWithZ[pos][ind] - curOffset)) -
+                tanf(DTORFL * (angleWithZ[pos][ind] - preTiltsYwithZ[pos][ind]));
+              grandSum += powf(loadedYwithZ[pos][ind] * coef -
+                ((zVec[pos][ind] - meanDefAtZeroY[pos][ind]) - loadedDelZFocus[pos][ind]),
+                2.f);
+            }
+          }
+
+        } else {
+          fromYZ = false;
+          if ((int)yOnly[pos].size() >= minForYonly) {
+            for (ind = 0; ind < (int)yOnly[pos].size(); ind++) {
+              coef = cosf(DTORFL * (angleYonly[pos][ind] - curOffset)) /
+                cosf(DTORFL * (angleYonly[pos][ind] - preTiltsYonly[pos][ind]));
+              grandSum += powf(loadedY[pos][ind] * coef - yOnly[pos][ind], 2.f);
+            }
+          }
+        }
       }
-      err = minimize1D(curOffset, (float)errSum, initialStep, numScanSteps, &numCutsDone,
-        brackets, &curOffset);
+      //SEMTrace('1', "test PT %.3f  err sum %g", curOffset, grandSum);
+      err = minimize1D(curOffset, (float)grandSum, initialStep, numScanSteps, 
+        &numCutsDone, brackets, &curOffset);
       if (err)
         break;
       if (numCutsDone > 0 && initialStep / pow((double)numCutsDone, 2.) < 0.02)
         break;
     }
 
-    if (!err)
+    if (!err) {
+      SEMTrace('1', "Revising tilt offset using %s from %.2f to %.2f", 
+        fromYZ ? "Y/Z": "Y only", mParTSCurTiltOffset[idir], curOffset);
       mParTSCurTiltOffset[idir] = curOffset;
+
+      // On first fit for dose-symmetric, copy the tilt offset to the other direction
+      // and set up to copy the delta Z's after adjustment for this new offset
+      if (mParTSFirstOffsetFit && mDoingDoseSymmetric) {
+        mParTSCurTiltOffset[1 - idir] = curOffset;
+        mParTSFirstOffsetFit = -1;
+      } else
+        mParTSFirstOffsetFit = 0;
+    }
   }
 
   // Revise the last known X/Y from good shifts that are not dropped from Y only fits
-  targData = mParTargetDataArrays[mTiltIndex - 1];
   for (pos = 1; pos < numTargets; pos++) {
-    data = targData->GetAt(pos);
-    if (dropping[pos] < 2 && data.shiftX > EXTRA_VALUE_TEST) {
-      mParTSLastKnownX[idir][pos] = data.shiftX;
-      mParTSLastKnownY[idir][pos] = data.shiftY;
-      mParTSAngleOfKnown[idir][pos] = mTiltAngles[mTiltIndex - 1];
+    if (lastFitTiltInd[pos] >= 0) {
+      targData = mParTargetDataArrays[lastFitTiltInd[pos]];
+      data = targData->GetAt(pos);
+      if (dropping[pos] < 2 && data.shiftX > EXTRA_VALUE_TEST) {
+        mParTSLastKnownX[idir][pos] = data.shiftX;
+        mParTSLastKnownY[idir][pos] = data.shiftY;
+        mParTSAngleOfKnown[idir][pos] = mTiltAngles[lastFitTiltInd[pos]];
+      }
     }
   }
 
   // Now revise zZero with possibly new offset
   for (pos = 1; pos < numTargets; pos++) {
-    if (dropping[pos] > 1)
-      continue;
-    if (!dropping[pos] && (int)zVec[pos].size() > minForYwithZ) {
-      FitParallelTSYwithZ(angleWithZ[pos], yWithZ[pos], zVec[pos],
-        mParTSCurTiltOffset[idir], yZero, zZero, errSum, meanErr);
-      mParTSDelZatZero[idir][pos] = zZero;
-    } else if (angRangeYonly[pos] >= minAngRangeReviseZzero) {
-      FitParallelTSYonly(angleYonly[pos], yOnly[pos], mParTSCurTiltOffset[idir], yZero,
-        zZero, errSum, meanErr);
-      mParTSDelZatZero[idir][pos] = zZero;
+    revised = false;
+    if (!dropping[pos] && (int)zVec[pos].size() >= 2) {
+      xFound.clear();
+      str.Format("Pos %d dz & z0: ", pos + 1);
+
+      // Compute the Z offset at current tilt offset (Z zero)
+      // A delta focus at tilt times cos tilt gives Z zero
+      for (ind = 0; ind < (int)zVec[pos].size(); ind++) {
+
+        // This is the factor by which the Y-dependent component of Z changes due to 
+        // change in pretilt
+        ctmp = tanf(DTORFL * (angleWithZ[pos][ind] - mParTSCurTiltOffset[idir])) -
+          tanf(DTORFL * (angleWithZ[pos][ind] - preTiltsYwithZ[pos][ind]));
+        coef = -loadedYwithZ[pos][ind] * ctmp +
+          ((zVec[pos][ind] - meanDefAtZeroY[pos][ind]) - loadedDelZFocus[pos][ind]);
+        xFound.push_back(coef * cosf(DTORFL * (angleWithZ[pos][ind] -
+          mParTSCurTiltOffset[idir])));
+        str2.Format("  %.3f %.3f ", loadedYwithZ[pos][ind] * ctmp, xFound[xFound.size() - 1]);
+        str += str2;
+      }
+      SEMTrace('1', "%s", (LPCTSTR)str);
+      CLEAR_RESIZE(yFound, float, zVec[pos].size());
+      if (xFound.size() > 3)
+        FindOutliersInResultList(xFound, 0.25f, 0, yFound);
+      errSum = 0.;
+      err = 0;
+      str = "";
+
+      // Average the Z zero estimates, excluding outliers
+      if (xFound.size() > 2 || B3DABS(xFound[0] - xFound[1]) < maxDiffRevZFrom2) {
+        for (ind = 0; ind < (int)zVec[pos].size(); ind++) {
+          if (!yFound[ind]) {
+            err++;
+            errSum += xFound[ind];
+          } else {
+            str2.Format(" %.3f", xFound[ind]);
+            str += str2;
+          }
+        }
+        if (!str.IsEmpty())
+          SEMTrace('1', "Outliers %s", (LPCTSTR)str);
+
+        // Dividing average Z zero by cosine gives a focus offset
+        errSum /= err;
+        mParTSLastFoundDelZ0[idir][pos] = (float)errSum;
+        mParTSLastDelZ0TiltInd[idir][pos] = mTiltIndex;
+        errSum /= -cos(DTORFL * (angle - mParTSCurTiltOffset[idir]));
+        SEMTrace('1', "revising delta Z focus for pos %d: %.3f to %.3f", pos + 1,
+          mParTSLoadedDelZFocus[idir][pos], errSum);
+        mParTSLoadedDelZFocus[idir][pos] = (float)errSum;
+        revised = true;
+      }
     }
+
+    // If delta focus was not revised through that means, and flag is set, compute from
+    // last estimated Zzero
+    if (!revised && mParTsReviseDZFocusFromZ0 && 
+      mWinApp->mNavHelper->GetParTSOptions()->CtfMeasureType) {
+      ind = mParTSLastDelZ0TiltInd[idir][pos];
+      yZero = mParTSLastKnownY[idir][pos] /
+        cosf(DTORFL * (mParTSAngleOfKnown[idir][pos] - mParTSCurTiltOffset[idir]));
+      zZero = mParTSLastFoundDelZ0[idir][pos] - yZero * 
+        sinf(mParTSCurTiltOffset[idir] - mParTSPreTiltsUsed[ind]);
+      ctmp = -zZero / (float)cos(DTOR * (angle - mParTSCurTiltOffset[idir]));
+      SEMTrace('1', "Using delta Z focus from last Z0 for pos %d: %.3f to %.3f", pos + 1,
+        mParTSLoadedDelZFocus[idir][pos], ctmp);
+      mParTSLoadedDelZFocus[idir][pos] = ctmp;
+    }
+  }
+
+  // If the revised tilt offset was copied to other direction, copy the delta focus also
+  if (mParTSFirstOffsetFit < 0) {
+    mParTSFirstOffsetFit = 0;
+    for (pos = 1; pos < numTargets; pos++)
+      mParTSLoadedDelZFocus[1 - idir][pos] = mParTSLoadedDelZFocus[idir][pos];
   }
 
   // Set up image shift and focus from last known X/Y values for each point and the
   // original or refined zZero
   delNewAng = DTORFL * ((float)angle - mParTSCurTiltOffset[idir]);
-  for (ind = 0; ind < numTargets; ind++) {
-    delLastAng = DTORFL * (mParTSAngleOfKnown[idir][ind] - mParTSCurTiltOffset[idir]);
-    yZero = (mParTSLastKnownY[idir][ind] + mParTSDelZatZero[idir][ind]) * 
-      cosf(delLastAng);
-    specY = yZero * cosf(delNewAng) - mParTSDelZatZero[idir][ind] * sinf(delNewAng);
-    ApplyScaleMatrix(mCmat, mParTSLastKnownX[idir][ind], specY,
-      mParTSNavItem->mIStargetsXY[ind * 2], mParTSNavItem->mIStargetsXY[ind * 2 + 1]);
-    mParTSLoadedFocus[ind] = yZero * sinf(delNewAng) + mParTSDelZatZero[idir][ind] *
-      cosf(delNewAng);
-    mParTSLoadedSpecX[ind] = mParTSLastKnownX[idir][ind];
-    mParTSLoadedSpecY[ind] = specY;
+  for (pos = 0; pos < numTargets; pos++) {
+    delLastAng = DTORFL * (mParTSAngleOfKnown[idir][pos] - mParTSCurTiltOffset[idir]);
+    zZero = mParTSDelZatZero[pos] +
+      mParTSLoadedDelZFocus[idir][pos] * cosf(delNewAng);
+    yZero = (mParTSLastKnownY[idir][pos] + zZero *sinf(delLastAng))
+      / cosf(delLastAng);
+    specY = yZero * cosf(delNewAng) - zZero * sinf(delNewAng);
+    ApplyScaleMatrix(mCinv, mParTSLastKnownX[idir][pos], specY,
+      mParTSNavItem->mIStargetsXY[pos * 2], mParTSNavItem->mIStargetsXY[pos * 2 + 1]);
+    mParTSLoadedFocus[pos] = -(yZero * sinf(delNewAng) + mParTSDelZatZero[pos] *
+      cosf(delNewAng)) + mParTSLoadedDelZFocus[idir][pos];
+    SEMTrace('1', "pos %d yZero %.3f from lky %.3f  specY %.3f  IS %.3f %.3f  focus %.2f",
+      pos + 1, yZero, mParTSLastKnownY[idir][pos], specY, 
+      mParTSNavItem->mIStargetsXY[pos * 2], mParTSNavItem->mIStargetsXY[pos * 2 + 1],
+      mParTSLoadedFocus[pos]);
+    mParTSLoadedSpecX[pos] = mParTSLastKnownX[idir][pos];
+    mParTSLoadedSpecY[pos] = specY;
   }
   msParams->customDefocus = mParTSLoadedFocus;
 
@@ -7768,9 +7924,14 @@ void CTSController::ProcessParTSDataFromMultishot()
   int numTargets = mParTSNavItem->mNumIStargets;
   float critProb = 0.01f;
   float absProbCrit = 0.002f;
-  float absElimMin = 0.01f;
-  float fovFactor = 0.01f;
+  float absElimMin = 0.03f;
+  float fovFactor = 0.03f;
+  CString str, str2;
   float elimMin = B3DMAX(mFOVofRecord * fovFactor, absElimMin);
+  float defElimMin = 0.25f;
+  float slope, intcp, defSum = 0., scoreSum = 0.;
+  int idir = mDirection > 0 ? 1 : 0;
+  int measureType = mWinApp->mNavHelper->GetParTSOptions()->CtfMeasureType;
   FloatVec xFound, xLoaded, yFound, yLoaded, outDef, outScore, outResol, outAstig;
   IntVec posIndex, dropping;
   ParTargetDataArray *dataArray = new ParTargetDataArray();
@@ -7779,7 +7940,16 @@ void CTSController::ProcessParTSDataFromMultishot()
   for (ind = 0; ind < mParTSNavItem->mNumIStargets; ind++) {
     mParTSTargetData[ind].shiftX += mParTSLoadedSpecX[ind];
     mParTSTargetData[ind].shiftY += mParTSLoadedSpecY[ind];
+    float ISX, ISY;
+    ApplyScaleMatrix(mCinv, mParTSTargetData[ind].shiftX, mParTSTargetData[ind].shiftY,
+      ISX, ISY);
+    mParTSTargetData[ind].loadedSpecY = mParTSLoadedSpecY[ind];
+    mParTSTargetData[ind].loadedDelZFocus = mParTSLoadedDelZFocus[idir][ind];
   }
+
+  if (mTiltIndex >= (int)mParTSPreTiltsUsed.size())
+    mParTSPreTiltsUsed.resize(mTiltIndex + 10);
+  mParTSPreTiltsUsed[mTiltIndex] = mParTSCurTiltOffset[idir];
 
   // Load the data for points with alignment values into arrays for fitting 
   // found versus predicted
@@ -7799,57 +7969,130 @@ void CTSController::ProcessParTSDataFromMultishot()
     dropping.resize(numFound);
     maxDrop = B3DMAX(1, (numFound - 1) / 3);
     IdentifyParTSOutliers(&xLoaded[0], &yLoaded[0], &xFound[0], &yFound[0], &dropping[0],
-      numFound, maxDrop, (numFound == 3 ? 2.f : 1.f) *elimMin, critProb, absProbCrit);
+      numFound, maxDrop, (numFound == 3 ? 2.f : 1.f) * elimMin, critProb, absProbCrit,
+      slope, NULL);
 
     // Throw away the shifts for the outliers
-    for (ind = 0; ind < numFound; ind++)
-      if (dropping[ind])
+    for (ind = 0; ind < numFound; ind++) {
+      if (dropping[ind]) {
         mParTSTargetData[posIndex[ind]].shiftX = EXTRA_NO_VALUE;
-  }
-
-  // Now look at CTF fitting results and load them
-  numFound = 0;
-  if (mWinApp->mNavHelper->GetParTSOptions()->CtfMeasureType > 0) {
-    posIndex.clear();
-    xFound.clear();
-    yFound.clear();
-    xLoaded.clear();
-    yLoaded.clear();
-    for (pos = 1; pos < numTargets; pos++) {
-      if (mParTSTargetData[pos].score > 0.) {
-        posIndex.push_back(pos);
-        xFound.push_back(mParTSTargetData[pos].defocusByCTF);
-        yFound.push_back(mParTSTargetData[pos].astig);
-        xLoaded.push_back(mParTSTargetData[pos].score);
-        yLoaded.push_back(mParTSTargetData[pos].fitRes);
-        numFound++;
+        str2.Format(" %d", posIndex[ind] + 1);
+        str += str2;
       }
     }
   }
-  if (numFound > 2) {
+  if (!str.IsEmpty() && GetDebugOutput('1'))
+    SEMAppendToLog("Outlier positions in cur vs. prev fit:" + str);
 
-    // Get outliers for each CTF result value
-    outAstig.resize(numTargets);
-    outResol.resize(numTargets);
-    outScore.resize(numTargets);
-    outAstig.resize(numTargets);
-    FindOutliersInResultList(xFound, 0.f, 0, outDef);
-    FindOutliersInResultList(yFound, 0.2f, 1, outAstig);
-    FindOutliersInResultList(xLoaded, 0.f, -1, outScore);
-    FindOutliersInResultList(yLoaded, 5.f, 1, outResol);
+  // Now look at CTF fitting results
+  numFound = 0;
+  intcp = mParTSExpectedDefocus;
+  if (measureType > 0) {
 
-    // Eliminate if defocus is out or two of the other 3 measures are
-    for (ind = 0; ind < numFound; ind++)
-      if (outDef[ind] || outAstig[ind] + outResol[ind] - outScore[ind] > 1.5)
-        mParTSTargetData[posIndex[ind]].score = -1.;
+    // First look for outliers in ancillary results
+    posIndex.clear();
+    yFound.clear();
+    xLoaded.clear();
+    yLoaded.clear();
+    for (pos = 0; pos < numTargets; pos++) {
+      if (mParTSTargetData[pos].score > 0.) {
+        if (mParTSMeanStartScore > 0.) {
+          if (mParTSMeanStartScore <
+            (measureType == 1 ? mParTSMinPlotStartScore : mParTSMinFindStartScore))
+            mParTSTargetData[pos].score = -1.;
+          else
+            scoreSum += mParTSTargetData[pos].score;
+        } else if (mParTSTargetData[pos].score < mParTSMeanStartScore *
+          (measureType == 1 ? mParTSMinPlotScoreRatio : mParTSMinFindScoreRatio)) {
+          mParTSTargetData[pos].score = -1.;
+        }
+        if (mParTSMeanStartScore > 0.) {
+          posIndex.push_back(pos);
+          yFound.push_back(mParTSTargetData[pos].astig);
+          xLoaded.push_back(mParTSTargetData[pos].score);
+          yLoaded.push_back(mParTSTargetData[pos].fitRes);
+          numFound++;
+        }
+      }
+    }
+    if (numFound > 1 && !mParTSMeanStartScore)
+      mParTSMeanStartScore = scoreSum / numFound;
+
+    if (numFound > 2) {
+
+      // Get outliers for each CTF result value
+      outResol.resize(numTargets);
+      outScore.resize(numTargets);
+      outAstig.resize(numTargets);
+      FindOutliersInResultList(yFound, 0.2f, 1, outAstig);
+      //FindOutliersInResultList(xLoaded, 0.f, -1, outScore);
+      FindOutliersInResultList(yLoaded, 5.f, 1, outResol);
+
+      // Eliminate if either measure is out
+      for (ind = 0; ind < numFound; ind++) {
+        if (outAstig[ind] > 0 || outResol[ind] > 0) {
+          mParTSTargetData[posIndex[ind]].score = -1.;
+          SEMTrace('1', "From CTF metrics, dropping pos %d, outlier %.0f %.0f",
+            posIndex[ind] + 1, outAstig[ind], outResol[ind]);
+        }
+      }
+    }
+
+    // Now look at defocus in fits versus Y so we can get intercept = nominal mean at Y 0
+    posIndex.clear();
+    xLoaded.clear();
+    yLoaded.clear();
+    numFound = 0;
+    for (pos = 0; pos < numTargets; pos++) {
+      if (mParTSTargetData[pos].score > 0. &&
+        mParTSTargetData[pos].shiftX > EXTRA_VALUE_TEST) {
+        posIndex.push_back(pos);
+        xLoaded.push_back(mParTSTargetData[pos].shiftY);
+        yLoaded.push_back(mParTSTargetData[pos].defocusByCTF);
+        defSum += mParTSTargetData[pos].defocusByCTF;
+        numFound++;
+      }
+    }
+
+    if (numFound > 1) {
+      str = "";
+
+      // Do these fits to find outliers and drop them
+      CLEAR_RESIZE(dropping, int, numFound);
+      maxDrop = B3DMAX(1, (numFound - 1) / 3);
+      IdentifyParTSOutliers(&xLoaded[0], &yLoaded[0], &xFound[0], &yFound[0],
+        &dropping[0], numFound, maxDrop, (numFound == 3 ? 2.f : 1.f) * defElimMin,
+        critProb, absProbCrit, slope, &intcp);
+
+      // Throw away the CTF for the outliers
+      for (ind = 0; ind < numFound; ind++) {
+        if (dropping[ind]) {
+          mParTSTargetData[posIndex[ind]].score = -1;
+          str2.Format(" %d", posIndex[ind] + 1);
+          str += str2;
+        }
+      }
+      if (!str.IsEmpty() && GetDebugOutput('1'))
+        SEMAppendToLog("Outlier positions in Z vs Y fit:" + str);
+    } else if (numFound) {
+      intcp = defSum / (float)numFound;
+    } else if (mTiltIndex > 0) {
+      intcp = mParTSMeanDefocus[mTiltIndex - 1];
+    }
   }
 
-  // Add the data to the tilt series arrays
+  // Save putative mean defocus at Y zero
+
+  if (mTiltIndex >= (int)mParTSMeanDefocus.size())
+    mParTSMeanDefocus.resize(mTiltIndex + 10);
+  mParTSMeanDefocus[mTiltIndex] = intcp;
+    
+    // Add the data to the tilt series arrays
   dataArray->Append(mParTSTargetData);
   if (mParTargetDataArrays.GetSize() <= mTiltIndex)
     mParTargetDataArrays.Add(dataArray);
   else
-    mParTargetDataArrays.SetAt(mTiltIndex - 1, dataArray);
+    mParTargetDataArrays.SetAt(mTiltIndex, dataArray);
 }
 
 /*
@@ -7860,21 +8103,31 @@ void CTSController::ProcessParTSDataFromMultishot()
  */
 void CTSController::IdentifyParTSOutliers(float *xload, float *yload, float *xfound,
   float *yfound, int *dropping, int numFit, int maxDrop, float elimMin, float critProb,
-  float absProbCrit)
+  float absProbCrit, float &slope, float *intcp)
 {
   FloatVec devs, xftmp, yftmp, xltmp, yltmp;
   IntVec devInds, topInds, tmpInds;
-  float slope, devAvg, devSd, maxErr;
+  float devAvg, devSd, maxErr;
   float dev, probPerPoint, absPerPoint, z, prob, gprob;
   float sigmaFromMean, sigmaFromSD, sigma;
   int indMax, from;
   int totalDrop = 0, numDrop = 0, ind, jdrop, numKeep;
   int lastDrop = 0;
+  CString mess, str;
 
   devs.resize(numFit);
-  FitYSlopeWithDropping(xload, yload, xfound, yfound, dropping, numFit, slope, &devs[0],
-    devAvg, devSd, maxErr, indMax);
-  if (maxErr < elimMin)
+  if (intcp) {
+    FitZvsYWithDropping(xload, yload, dropping, numFit, slope, *intcp, &devs[0],
+      devAvg, devSd, maxErr, indMax);
+    SEMTrace('1', "Initial fit Y vs Z avg slope %f  intcp %.3f dev %.3f  max %.3f at %d", 
+      slope, *intcp, devAvg, maxErr, indMax);
+  } else {
+    FitYSlopeWithDropping(xload, yload, xfound, yfound, dropping, numFit, slope, &devs[0],
+      devAvg, devSd, maxErr, indMax);
+    SEMTrace('1', "Initial fit exp to actual avg dev %.3f  max %.3f at %d", devAvg, maxErr,
+      indMax);
+  }
+  if (maxErr < elimMin || numFit <= (intcp ? 3 : 2))
     return;
 
   // Sort the residuals from the full fit
@@ -7892,12 +8145,26 @@ void CTSController::IdentifyParTSOutliers(float *xload, float *yload, float *xfo
     xftmp.push_back(xfound[from]);
     yftmp.push_back(yfound[from]);
   }
+  /*
+  FitYSlopeWithDropping(&xltmp[0], &yltmp[0], &xftmp[0], &yftmp[0], dropping, numFit,
+    slope, &devs[0], devAvg, devSd, maxErr, indMax);
+  mess = "Refit with all ordered data";
+  for (ind = 0; ind < numFit; ind++) {
+    str.Format(" %.4f", devs[ind]);
+    mess += str;
+  }
+  SEMTrace('1', "%s", (LPCTSTR)mess);*/
 
   for (jdrop = 1; jdrop <= maxDrop + 1; jdrop++) {
     for (ind = 0; ind < numFit; ind++)
-      dropping[devInds[ind]] = (ind < numFit - jdrop) ? 0 : 1;
-    FitYSlopeWithDropping(&xltmp[0], &yltmp[0], &xftmp[0], &yftmp[0], dropping, numFit, 
-      slope, &devs[0], devAvg, devSd, maxErr, indMax);
+      dropping[ind] = (ind < numFit - jdrop) ? 0 : 1;
+    if (intcp)
+      FitZvsYWithDropping(&xltmp[0], &yltmp[0], dropping, numFit,
+        slope, *intcp, &devs[0], devAvg, devSd, maxErr, indMax);
+    else
+      FitYSlopeWithDropping(&xltmp[0], &yltmp[0], &xftmp[0], &yftmp[0], dropping, numFit,
+        slope, &devs[0], devAvg, devSd, maxErr, indMax);
+    //mess.Format("drop %d avg dev %.4f  LO devs: ", jdrop, devAvg);
     sigmaFromMean = devAvg / sqrt(8.f / 3.14159f);
     sigmaFromSD = devSd / sqrtf(3.f - 8.f / 3.14159f);
     sigma = B3DMAX(sigmaFromMean, sigmaFromSD);
@@ -7915,6 +8182,8 @@ void CTSController::IdentifyParTSOutliers(float *xload, float *yload, float *xfo
     // Evaluate the deviation of each dropped one
     for (ind = numFit - jdrop; ind < numFit; ind++) {
       dev = devs[topInds[ind - (numFit - jdrop)] + (numFit - jdrop)];
+      //str.Format("%.4f ", dev);
+      //mess += str;
       if (sigma < 0.1 * dev || sigma < 1.e-5)
         z = 10.;
       else
@@ -7931,6 +8200,7 @@ void CTSController::IdentifyParTSOutliers(float *xload, float *yload, float *xfo
         numDrop = B3DMIN(maxDrop, B3DMAX(numDrop, numFit - ind));
       }
     }
+    //SEMTrace('1', "%s", mess);
 
     /*
     * If all points are outliers, this is a candidate for a set to drop
@@ -7961,9 +8231,27 @@ void CTSController::IdentifyParTSOutliers(float *xload, float *yload, float *xfo
     }
   }
 
-  // Mark the selected number as dropped
+  // Redo fit with final numDrop
   for (ind = 0; ind < numFit; ind++)
+    dropping[ind] = (ind < numFit - numDrop) ? 0 : 1;
+  if (intcp)
+    FitZvsYWithDropping(&xltmp[0], &yltmp[0], dropping, numFit,
+      slope, *intcp, &devs[0], devAvg, devSd, maxErr, indMax);
+  else
+    FitYSlopeWithDropping(&xltmp[0], &yltmp[0], &xftmp[0], &yftmp[0], dropping, numFit,
+      slope, &devs[0], devAvg, devSd, maxErr, indMax);
+
+  // Mark the selected number as dropped
+  mess = "";
+  for (ind = 0; ind < numFit; ind++) {
     dropping[devInds[ind]] = (ind < numFit - numDrop) ? 0 : 1;
+    if (ind >= numFit - numDrop) {
+      str.Format(" %d", devInds[ind] + 1);
+      mess += str;
+    }
+  }
+  if (!mess.IsEmpty())
+    SEMTrace('1', "Final drop %d: pos %s", numDrop, (LPCTSTR)mess);
 }
 
 /*
@@ -8003,6 +8291,36 @@ void CTSController::FitYSlopeWithDropping(float *xload, float *yload, float *xfo
 }
 
 /*
+ * Does simple linear fit of Z versus Y, dropping points marged in the dropping array
+ */
+void CTSController::FitZvsYWithDropping(float *yload, float *zvec, int *dropping,
+  int numPos, float &slope, float &intcp, float *errors, float &mean, float &sd,
+  float &maxErr, int &indMax)
+{
+  FloatVec ytemp, ztemp, errArr;
+  int ind;
+  float ro;
+  for (ind = 0; ind < numPos; ind++) {
+    if (!dropping[ind]) {
+      ytemp.push_back(yload[ind]);
+      ztemp.push_back(zvec[ind]);
+    }
+  }
+  lsFit(&ytemp[0], &ztemp[0], (int)ytemp.size(), &slope, &intcp, &ro);
+  for (ind = 0; ind < numPos; ind++) {
+    errors[ind] = B3DABS(yload[ind] * slope + intcp - zvec[ind]);
+    if (!dropping[ind]) {
+      errArr.push_back(errors[ind]);
+      if (errors[ind] > maxErr) {
+        maxErr = errors[ind];
+        indMax = ind;
+      }
+    }
+  }
+  avgSD(&errArr[0], (int)ytemp.size(), &mean, &sd, &ro);
+}
+
+/*
  * Fit to data on Y positions only at one target point to derive yZero and zZero values
  * and return summed and mean errors at teh specified pretilt
  */
@@ -8025,7 +8343,7 @@ void CTSController::FitParallelTSYonly(FloatVec &angles, FloatVec &yOnly, float 
 
 /*
  * Fit to data on Y and Z at one target point to derive yZero and zZero values and
- * return summed and mean errors at teh specified pretilt
+ * return summed and mean errors at teh specified pretilt  (UNUSED)
  */
  void CTSController::FitParallelTSYwithZ(FloatVec &angles, FloatVec &yWithZ,
   FloatVec &zVec, float preTilt, float &yZero, float &zZero, double &errSum, 
@@ -8051,9 +8369,14 @@ void CTSController::FitParallelTSYonly(FloatVec &angles, FloatVec &yOnly, float 
   meanErr = (float)sqrt(errSum / (2 * numFit));
 }
 
+
 /*
  * Identifies outliers in an arbitrary set of values either with a leave-one-out approach
- * for < 5 items or using MAD median outlier routine
+ * for < 5 items or using MAD median outlier routine.  Polarity should be 1 or -1 for 
+ * just the outliers above or below the median, or 0 for outliers in either direction.
+ * If nonzero, elimMin is a threshold value for any elimination; it should be
+ * a lower limit if polarity is -1, an upper limit if polarity is 1, or values should
+ * be positive and negative (e.g., differences from a mean) to use elimMin with polarity 0
  */
 void CTSController::FindOutliersInResultList(FloatVec &errors, float elimMin, 
   int polarity, FloatVec &outliers)
@@ -8066,7 +8389,8 @@ void CTSController::FindOutliersInResultList(FloatVec &errors, float elimMin,
   
   CLEAR_RESIZE(outliers, float, numErr);
   if (elimMin != 0. && ((polarity > 0 && VECTOR_MAX(errors) < elimMin) || 
-    (polarity < 0 && VECTOR_MIN(errors) > elimMin)))
+    (polarity < 0 && VECTOR_MIN(errors) > elimMin) ||
+    (!polarity && VECTOR_MAX(errors) < elimMin) && VECTOR_MIN(errors) > -elimMin))
     return;
   if (numErr < minForRobust) {
 

@@ -4352,15 +4352,23 @@ void CProcessImage::DeletePlotterShrMemFile()
 // Error string is returned in command, following practice with related functions here
 int CProcessImage::RunCtfplotterOnBuffer(CString &filename, CString &command, int timeOut)
 {
-  int retVal = 0;
-  DWORD waitResult, exitStatus;
-  double startTime = GetTickCount();
+   mCtfpStartTime = GetTickCount();
   if (mWinApp->mExternalTools->RunCreateProcess(command, filename, true, CString(""))) {
     DeletePlotterShrMemFile();
     return 2;
   }
   mRunningCtfplotter = 1;
-  while (SEMTickInterval(startTime) < timeOut && mRunningCtfplotter > 0) {
+  if (timeOut < 0)
+    return 0;
+  return FinishCtfplotterRun(timeOut, command);
+}
+
+// Wait until run is done or timed out or killed
+int CProcessImage::FinishCtfplotterRun(int timeOut, CString &errStr)
+{
+  int retVal = 0;
+  DWORD waitResult, exitStatus;
+  while (SEMTickInterval(mCtfpStartTime) < timeOut && mRunningCtfplotter > 0) {
     waitResult = WaitForSingleObject(mWinApp->mExternalTools->mExtProcInfo.hProcess, 20);
     if (waitResult == WAIT_OBJECT_0) {
       mRunningCtfplotter = 0;
@@ -4373,14 +4381,14 @@ int CProcessImage::RunCtfplotterOnBuffer(CString &filename, CString &command, in
   if (!mRunningCtfplotter) {
     GetExitCodeProcess(mWinApp->mExternalTools->mExtProcInfo.hProcess, &exitStatus);
     if (exitStatus) {
-      command.Format("ctfplotter exited with status %d", exitStatus);
+      errStr.Format("ctfplotter exited with status %d", exitStatus);
       if (exitStatus == 1)
-        command += "\r\nSee " + CString(_getcwd(NULL, _MAX_PATH)) +
+        errStr += "\r\nSee " + CString(_getcwd(NULL, _MAX_PATH)) +
         "\\ctfplotter.log for error messages";
     }
   } else if (mWinApp->mExternalTools->mExtProcInfo.hProcess) {
     TerminateProcess(mWinApp->mExternalTools->mExtProcInfo.hProcess, 1);
-    command = mRunningCtfplotter > 0 ? "Ctfplotter timed out and was killed" :
+    errStr = mRunningCtfplotter > 0 ? "Ctfplotter timed out and was killed" :
       "Ctfplotter was terminated by user";
     retVal = 3;
   }

@@ -223,6 +223,7 @@ private:
   int mRunningCtfplotter;       // 1 if running, -1 is external signal to stop
   ImodImageFile *mShrMemIIFile; // File created with buffer in shared memory
   float mMinCtfplotterPixel;    // Minimum pixel size, reduce to this in shared mem file
+  double mCtfpStartTime;        // Time process was started
  
 public:
   afx_msg void OnProcessMinmaxmean();
@@ -315,6 +316,7 @@ int InitializeCtffindParams(EMimageBuffer * imBuf, CtffindParams & params);
 int MakeCtfplotterShrMemFile(int bufInd, CString &filename, float &reduction);
 void DeletePlotterShrMemFile();
 int RunCtfplotterOnBuffer(CString &filename, CString &command, int timeOut);
+int FinishCtfplotterRun(int timeOut, CString &errStr);
 afx_msg void OnProcessDoCtffindFitOnClick();
 afx_msg void OnUpdateProcessDoCtffindFitOnClick(CCmdUI *pCmdUI);
 afx_msg void OnProcessSetCtffindOptions();
