@@ -2113,11 +2113,11 @@
           </TD>
         </TR>
         <TR>
-          <TD class="scriptcommand">TransformToOtherMag buf #M [obuf] [#CX] {#CY] [#XS] [#YS] [#B] [#C]</TD>
+          <TD class="scriptcommand">TransformToOtherMag buf #M [obuf] [#CX] [#CY] [#XS] [#YS] [#B] [#C]</TD>
           <TD>Scales and rotates the image in buffer <b>buf</b> to match the pixel size at magnification index
             <b>#M</b>.&nbsp; This command is similar to 'TransformtoMatchBuffer' except that the binning and
-            camera to match are optionally specified with <b>#B</b> and <b>#C</b> (-1 for the same as the
-            image in <b>buf</b>.&nbsp; Command added in 4.2, 19-Jan-24.
+            active camera number (numbered from 1) to match are optionally specified with <b>#B</b> and <b>#C</b>
+             (-1 for the same as the image in <b>buf</b>).&nbsp; Command added in 4.2, 19-Jan-24.
           </TD>
         </TR>
         <TR>
