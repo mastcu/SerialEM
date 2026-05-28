@@ -7151,16 +7151,16 @@ void CNavHelper::OpenComaVsISCal(void)
   }
   mComaVsISCalDlg = new CComaVsISCalDlg();
   mComaVsISCalDlg->Create(IDD_COMA_VS_IS_CAL);
-  mWinApp->SetPlacementFixSize(mComaVsISCalDlg, &mMultiCombinerPlace);
+  mWinApp->SetPlacementFixSize(mComaVsISCalDlg, &mComaVsISDlgPlace);
   mWinApp->RestoreViewFocus();
 }
 
 WINDOWPLACEMENT * CNavHelper::GetComaVsISDlgPlacement()
 {
   if (mComaVsISCalDlg) {
-    mComaVsISCalDlg->GetWindowPlacement(&mMultiCombinerPlace);
+    mComaVsISCalDlg->GetWindowPlacement(&mComaVsISDlgPlace);
   }
-  return &mMultiCombinerPlace;
+  return &mComaVsISDlgPlace;
 }
 
 void CNavHelper::OpenAutoContouring(bool fromMulti)

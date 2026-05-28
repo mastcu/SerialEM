@@ -3,6 +3,10 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+5/27/26: Fixed crash using multi-hole combiner from multigrid (In 4.2).
+
+5/27/26: Fixed saving of coma vs. IS cal dialog position (In 4.2).
+
 5/27/26: Fixed and clarified camera number passed by TransformToOtherMag
 (In 4.2).
 
