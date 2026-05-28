@@ -7977,7 +7977,7 @@ int CMacCmd::TransformToOtherMag()
     ConvertBufferLetter(mStrItems[3], 0, false, outInd, report))
     ABORT_LINE(report);
   if (mProcessImage->TransformToOtherMag(&mImBufs[index], outInd, mItemInt[2], report,
-    mItemEmpty[9] ? -1 : mItemInt[9], mItemEmpty[8] ? -1 : mItemInt[8],
+    mItemEmpty[9] ? -1 : mItemInt[9] - 1, mItemEmpty[8] ? -1 : mItemInt[8],
     mItemEmpty[4] ? -1.f : mItemFlt[4], mItemEmpty[5] ? -1.f : mItemFlt[5],
     mItemEmpty[6] ? -1 : mItemInt[6], mItemEmpty[7] ? -1 : mItemInt[7]))
     ABORT_LINE(report + " for line\n\n");
