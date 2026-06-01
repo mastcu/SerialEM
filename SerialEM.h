@@ -509,6 +509,7 @@ bool DLL_IM_EX SEMSetVariableWithDbl(CString name, double value, bool persistent
 int DLL_IM_EX SEMQueueScriptNextIdle(CString name);
 void DLL_IM_EX AddBackTraceToMessage(CString &message);
 void DLL_IM_EX SEMAppendToLog(CString inString, int inAction = LOG_OPEN_IF_CLOSED, int lineFlags = 0);
+int DLL_IM_EX SEMUtapiDisconnectThres(); 
 
 // Functions that return true on success, false on error
 BOOL DLL_IM_EX SEMScanningMags();
