@@ -6839,6 +6839,14 @@
             queries upon exiting will be made.&nbsp; Command added in 4.3, 16-May-26.</TD>
         </TR>
         <TR>
+          <TD class="scriptcommand">SkipUtapiService #U #S</TD>
+          <TD>Clears the flag that the UTAPI service whose number is <b>#U</b> is supported if <b>#S</b> is 1, or
+            sets the flag if it is 0 (i.e., use 1 to skip the service and make calls go through standard or
+            Advanced scripting instead).&nbsp; Camera-related services (20-24) cannot be switched
+             after startup.&nbsp; Command added in 4.3, 1-Jun-26.</b>
+          </TD>
+        </TR>
+        <TR>
           <TD class="scriptcommand">ReportEnvironVar name</TD>
           <TD>Reports whether the environment variable given by <b>name</b> exists in <i>reportedValue1</i>
             and its value in <I>reportedValue2</I> if so or 'none' if not.&nbsp; The name must be a single word
