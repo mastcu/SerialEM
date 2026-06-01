@@ -1942,7 +1942,7 @@ void CNavHelper::PrepareToReimageMap(CMapDrawItem *item, MontParam *param,
         area = mCamera->ConSetToLDArea(item->mMapLowDoseConSet);
         ldp = mWinApp->GetLowDoseParams() + area;
         mRIsavedLDparam = *ldp;
-        mRILDareaSaved = mRIconSetNum;
+        mRILDareaSaved = mCamera->ConSetToLDArea(mRIconSetNum);
         ldp->intensity = item->mMapIntensity;
         ldp->spotSize = item->mMapSpotSize;
         if (filtered) {
