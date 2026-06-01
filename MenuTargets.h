@@ -65,6 +65,7 @@ protected:
 	afx_msg void OnUpdateDeleteitem(CCmdUI* pCmdUI);
 	afx_msg void OnCalibrationDistortion();
   afx_msg void OnUpdateNoTasks(CCmdUI* pCmdUI);
+  afx_msg void OnUpdateNoTasksButNavAcq(CCmdUI* pCmdUI);
   afx_msg void OnUpdateNoTasksNoTS(CCmdUI* pCmdUI);
   afx_msg void OnCalibrationMagenergyshifts();
   afx_msg void OnUpdateCalibrationMagenergyshifts(CCmdUI* pCmdUI);

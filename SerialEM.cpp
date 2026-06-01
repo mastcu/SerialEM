@@ -3805,6 +3805,10 @@ int SEMQueueScriptNextIdle(CString name)
   return i < 0 ? 1 : 0;
 }
 
+int SEMUtapiDisconnectThres() {
+  return ((CSerialEMApp *)AfxGetApp())->mScope->GetUtapiDisconnectThres();
+};
+
 // Global convenience function for accessing TSMessageBox
 int SEMMessageBox(CString message, UINT type, BOOL terminate, int retval)
 {

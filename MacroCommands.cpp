@@ -11474,6 +11474,18 @@ int CMacCmd::SetBeamBlank(void)
   return 0;
 }
 
+// SkipUtapiService
+int CMacCmd::SkipUtapiService()
+{
+  bool *supports = mScope->GetUtapiSupportsService();
+  if (mItemInt[1] < 0 || mItemInt[1] >= UTAPI_SUPPORT_END)
+    ABORT_LINE("Service number is out of range in line:\n\n");
+  if (mItemInt[1] >= UTSUP_CAM_SINGLE && mItemInt[1] <= UTSUP_CAM_CONTIN)
+    ABORT_LINE("You cannot change support for a camera-related service");
+  supports[mItemInt[1]] = mItemInt[2] == 0;
+  return 0;
+}
+
 // MoveToNavItem
 int CMacCmd::MoveToNavItem(void)
 {

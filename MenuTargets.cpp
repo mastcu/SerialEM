@@ -559,6 +559,10 @@ void CMenuTargets::OnUpdateNoTasks(CCmdUI* pCmdUI)
 {
   pCmdUI->Enable(!mWinApp->DoingTasks());
 }
+void CMenuTargets::OnUpdateNoTasksButNavAcq(CCmdUI * pCmdUI)
+{
+  pCmdUI->Enable(!mWinApp->DoingTasks() || mWinApp->GetJustNavAcquireOpen());
+}
 void CMenuTargets::OnUpdateNoTasksNoTS(CCmdUI* pCmdUI)
 {
   pCmdUI->Enable(!mWinApp->DoingTasks() && !mWinApp->StartedTiltSeries());

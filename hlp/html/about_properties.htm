@@ -144,10 +144,10 @@
             to be used for cameras if you have a Ceta 2.&nbsp; With a 7.27 UTAPI server, the Ceta 2 should give the
             proper number of frames and there should be no more need to skip any services.&nbsp; The 
             vibration manager is supported for dewar 
-            and vacuum management as of 28-Dec-25 but you can use 28 to skip this service and use 
+            and vacuum management as of 16-May-26 but you can use 28 to skip this service and use 
             older scripting calls.&nbsp; Unlike other property entries, this list 
             can have ranges.&nbsp; For example, to skip everything except apertures, beam stop, and camera,
-            enter '0 2 4-19 21-32'.</TD>
+            enter '0 2 4-19 25-32'.</TD>
         </TR>
        <TR VALIGN="top">
           <TD>DropPlusInHoleNameIfUtapi</TD>
@@ -165,6 +165,13 @@
             without having to change the DetectorName entry that is needed for UTAPI, 
             provided that the camera's Name entry is the full name for the camera in standard or 
             Advanced scripting.&nbsp; If that is not the case, use the camera property UtapiName instead.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>UtapiDisconnectThreshold</TD>
+          <TD>Sets the minimum number of consecutive UTAPI calls that must fail with a message
+             'failed to connect to all addresses' before the program will consider itself disconnected from the
+            server.&nbsp; The default is 3.
+          </TD>
         </TR>
         <TR VALIGN="top">
           <TD>SimulationMode</TD>
@@ -3138,31 +3145,19 @@
           <TD>MonitorC2ApertureSize</TD>
           <TD>This property controls whether intensities in calibrations will be scaled 
             automatically when the C2 aperture changes on a Titan microscope.&nbsp; With a positive value,
-            the aperture size will be monitored and intensities will be scaled whenever it
-            changes.&nbsp; When there is aperture control only through UI Automation and not UTAPI, the
-            aperture panel in the microscope user interface has to be visible to access the apertures, and the 
-            program will try to open it in the lower right instead of changing workset tabs, to avoid 
-            interfering with the use of workset tabs.&nbsp; With a value of 2, the program will try to
-            get the aperture size every 5 seconds and consider it an error if it cannot access the
-            aperture panel.&nbsp; With a value of 1, it will still try to get the size every 5 seconds
-            but give up if the panel is not visible.&nbsp; This allows it to catch changes made through the
-            microscope interface, as long as the panel stays visible for up to 5 seconds after the change.&nbsp; In any case,
-              intensities will be scaled when the aperture size is set or reported by SerialEM.&nbsp; Set
+             intensities will be scaled whenever the aperture size is set or reported by SerialEM.&nbsp; 
+            Changes through the microscope user interface will NOT be monitored.&nbsp; Set
              to 0 to disable the automatic scaling.&nbsp; The default is 1 on Titans without UTAPI and 2 with UTAPI.
+            changes. 
           </TD>
         </TR>
         <TR>
           <TD>ShowApertureStatus</TD>
           <TD>Set to 1 or 2 to add a line to the Microscope Status panel showing the state of the 
-            condenser and objective apertures.&nbsp; For microscopes where aperture state can be found
-            through the scope's scripting interface, i.e., Thermo/FEI with UTAPI interface or JEOL, either value can be used
-            and the scope will be polled every 5 seconds.&nbsp; For Thermo/FEI without UTAPI, the program will also
-            try to get the aperture status every 5 seconds, which requires the aperture panel to be visible in the
-            microscope user interface.&nbsp; In this case, with a value of 2, it will try to make the panel visible
-            every 5 seconds; whereas with a value of 1, it will quietly give up
-             if the panel is not visible. &nbsp;This allows it to catch changes made through the
-            microscope interface, as long as the panel stays visible for up to 5 seconds after the change.&nbsp; In any case,
-            getting or setting an aperture size through other SerialEM operations will update the displayed value.
+            condenser and objective apertures.&nbsp; The program will try to get the aperture sizes on
+            startup, and update them whenever the aperture size is set or reported by SerialEM.&nbsp; 
+            Changes through the microscope user interface will NOT be reflected unless ReportApertureSize or
+            other aperture operations are done in SerialEM.
             &nbsp; For a JEOL scope without ApertureSizes entries, the aperture
             index will be shown.&nbsp; Does not work for Hitachi.
           </TD>
@@ -3894,8 +3889,9 @@
             to use rotation center instead when connecting with UTAPI.&nbsp; These two scope functions
             set values that are added together to produce the actual beam tilt.&nbsp; 
             The default is to use rotation center without UTAPI or image-beam tilt with UTAPI
-             because the rotation center value available in UTAPI is scaled about 5 times higher.&nbsp; Do
-             not use 0 with UTAPI unless you have to, because the program will still present numbers as 
+             because the rotation center value available in UTAPI is scaled about 5 times higher
+             in UTAPI servers below version 7.26.&nbsp; Do not use 0 with UTAPI for older servers
+             unless you have to, because the program will still present numbers as 
             milliradians even though they are not, and you will have to change the beam tilt values
              for autofocusing and coma-free alignment to compensate.</TD>
         </TR>
