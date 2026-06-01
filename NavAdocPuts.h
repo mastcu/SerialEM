@@ -222,7 +222,7 @@ CString adocStr, valStr, keyStr;
       (int)parTS->yCoordInArea.size()));
   }
   ADOC_PUT(Float(ADOC_ARG, "PreTilt", parTS->preTilt));
-  ADOC_PUT(Float(ADOC_ARG, "XAxisTilt", parTS->xPitchAngle));
+  ADOC_PUT(Float(ADOC_ARG, "XPitchAngle", parTS->xPitchAngle));
   ADOC_PUT(Float(ADOC_ARG, "MappingTilt", parTS->mappingTilt));
   ADOC_PUT(Integer(ADOC_ARG, "NavID", parTS->navID));
 #endif

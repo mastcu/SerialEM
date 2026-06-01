@@ -2266,11 +2266,11 @@
           </TD>
         </TR>
         <TR>
-          <TD class="scriptcommand">TransformToOtherMag buf #M [obuf] [#CX] {#CY] [#XS] [#YS] [#B] [#C]</TD>
+          <TD class="scriptcommand">TransformToOtherMag buf #M [obuf] [#CX] [#CY] [#XS] [#YS] [#B] [#C]</TD>
           <TD>Scales and rotates the image in buffer <b>buf</b> to match the pixel size at magnification index
             <b>#M</b>.&nbsp; This command is similar to 'TransformtoMatchBuffer' except that the binning and
-            camera to match are optionally specified with <b>#B</b> and <b>#C</b> (-1 for the same as the
-            image in <b>buf</b>.&nbsp; Command added in 4.2, 19-Jan-24.
+            active camera number (numbered from 1) to match are optionally specified with <b>#B</b> and <b>#C</b>
+             (-1 for the same as the image in <b>buf</b>).&nbsp; Command added in 4.2, 19-Jan-24.
           </TD>
         </TR>
         <TR>
@@ -6837,6 +6837,14 @@
           <TD class="scriptcommand">ExitProgramAtEnd</TD>
           <TD>Initiates exiting of the program when the script ends.&nbsp; All normal 
             queries upon exiting will be made.&nbsp; Command added in 4.3, 16-May-26.</TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">SkipUtapiService #U #S</TD>
+          <TD>Clears the flag that the UTAPI service whose number is <b>#U</b> is supported if <b>#S</b> is 1, or
+            sets the flag if it is 0 (i.e., use 1 to skip the service and make calls go through standard or
+            Advanced scripting instead).&nbsp; Camera-related services (20-24) cannot be switched
+             after startup.&nbsp; Command added in 4.3, 1-Jun-26.</b>
+          </TD>
         </TR>
         <TR>
           <TD class="scriptcommand">ReportEnvironVar name</TD>

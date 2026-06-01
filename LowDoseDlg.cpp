@@ -2113,7 +2113,7 @@ ScaleMat CLowDoseDlg::MatrixAndStateForUserPoint(EMimageBuffer *imBuf, StatePara
 {
   ScaleMat aMat;
   int nx, ny;
-  bool navArea = mWinApp->mMainView->GetDrewLDAreasAtNavPt();
+  bool navArea = mWinApp->mMainView->GetPreParTSDrewLDAreas();
 
   aMat.xpx = 0.;
   if (!mTrulyLowDose || !(m_iDefineArea || navArea) || !UsableDefineImageInAOrView(imBuf))
@@ -2220,7 +2220,7 @@ void CLowDoseDlg::FixUserPoint(EMimageBuffer *imBuf, int needDraw)
   float xcen, ycen;
   bool drawZero = needDraw > 0;
   StateParams state;
-  bool navArea = mWinApp->mMainView->GetDrewLDAreasAtNavPt() && !m_iDefineArea;
+  bool navArea = mWinApp->mMainView->GetPreParTSDrewLDAreas() && !m_iDefineArea;
 
   if (imBuf->mHasUserPt && (UsableDefineImageInAOrView(imBuf) || navArea)) {
     imBuf->mImage->getShifts(shiftX, shiftY);

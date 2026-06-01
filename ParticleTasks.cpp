@@ -896,7 +896,7 @@ int CParticleTasks::ProcessParallelTSImage(CString &errStr)
   ParallelTSOptions *parOpts = mNavHelper->GetParTSOptions();
 
   if (parOpts->CtfMeasureType == 1 && mMSStartedCtfplotter && mMSHoleIndex > 0) {
-    ParTSTargetData &ptsdLast = mParTSTargetData->ElementAt(mMSHoleIndex);
+    ParTSTargetData &ptsdLast = mParTSTargetData->ElementAt(mMSHoleIndex - 1);
     err = mWinApp->mProcessImage->FinishCtfplotterRun(10000, errStr);
     mMSStartedCtfplotter = false;
     if (!err) {

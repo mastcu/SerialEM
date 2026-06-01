@@ -335,6 +335,7 @@ CNavHelper::CNavHelper(void)
   mParTSOptions.adjustBeamTilt = false;
   mParTSOptions.beamDiam = 1.;
   mParTSOptions.useIAorBeamSize = false;
+  mParTSOptions.tiltForBeam = 50.;
   mParTSOptions.extraDelayFactor = 0.;
   mParTSOptions.CtfMeasureType = 1;
   mParTSOptions.findAstig = true;
@@ -2094,7 +2095,7 @@ void CNavHelper::PrepareToReimageMap(CMapDrawItem *item, MontParam *param,
         area = mCamera->ConSetToLDArea(item->mMapLowDoseConSet);
         ldp = mWinApp->GetLowDoseParams() + area;
         mRIsavedLDparam = *ldp;
-        mRILDareaSaved = mRIconSetNum;
+        mRILDareaSaved = mCamera->ConSetToLDArea(mRIconSetNum);
         ldp->intensity = item->mMapIntensity;
         ldp->spotSize = item->mMapSpotSize;
         if (filtered) {
@@ -7329,16 +7330,16 @@ void CNavHelper::OpenComaVsISCal(void)
   }
   mComaVsISCalDlg = new CComaVsISCalDlg();
   mComaVsISCalDlg->Create(IDD_COMA_VS_IS_CAL);
-  mWinApp->SetPlacementFixSize(mComaVsISCalDlg, &mMultiCombinerPlace);
+  mWinApp->SetPlacementFixSize(mComaVsISCalDlg, &mComaVsISDlgPlace);
   mWinApp->RestoreViewFocus();
 }
 
 WINDOWPLACEMENT * CNavHelper::GetComaVsISDlgPlacement()
 {
   if (mComaVsISCalDlg) {
-    mComaVsISCalDlg->GetWindowPlacement(&mMultiCombinerPlace);
+    mComaVsISCalDlg->GetWindowPlacement(&mComaVsISDlgPlace);
   }
-  return &mMultiCombinerPlace;
+  return &mComaVsISDlgPlace;
 }
 
 void CNavHelper::OpenAutoContouring(bool fromMulti)

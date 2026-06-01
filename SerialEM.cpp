@@ -80,7 +80,7 @@
 #endif
 
 #define VERSION_STRING  "SerialEM Version 4.3.0beta"
-#define TAG_STRING      "(Tagged SEM_4-2-23, 5/19/26)"
+#define TAG_STRING      "(Tagged SEM_4-2-24, 5/28/26)"
 #define DEPRECATED_PYTHON  "3.6-64"
 
 // Offsets for static window inside main frame
@@ -3804,6 +3804,10 @@ int SEMQueueScriptNextIdle(CString name)
     winApp->mScheduledScripts.push(i);
   return i < 0 ? 1 : 0;
 }
+
+int SEMUtapiDisconnectThres() {
+  return ((CSerialEMApp *)AfxGetApp())->mScope->GetUtapiDisconnectThres();
+};
 
 // Global convenience function for accessing TSMessageBox
 int SEMMessageBox(CString message, UINT type, BOOL terminate, int retval)

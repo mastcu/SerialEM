@@ -7977,7 +7977,7 @@ int CMacCmd::TransformToOtherMag()
     ConvertBufferLetter(mStrItems[3], 0, false, outInd, report))
     ABORT_LINE(report);
   if (mProcessImage->TransformToOtherMag(&mImBufs[index], outInd, mItemInt[2], report,
-    mItemEmpty[9] ? -1 : mItemInt[9], mItemEmpty[8] ? -1 : mItemInt[8],
+    mItemEmpty[9] ? -1 : mItemInt[9] - 1, mItemEmpty[8] ? -1 : mItemInt[8],
     mItemEmpty[4] ? -1.f : mItemFlt[4], mItemEmpty[5] ? -1.f : mItemFlt[5],
     mItemEmpty[6] ? -1 : mItemInt[6], mItemEmpty[7] ? -1 : mItemInt[7]))
     ABORT_LINE(report + " for line\n\n");
@@ -11471,6 +11471,18 @@ int CMacCmd::SetBeamBlank(void)
     ABORT_LINE("Entry requires a number for setting blank on or off: \n\n");
   index = mItemInt[1];
   mScope->BlankBeam(index != 0);
+  return 0;
+}
+
+// SkipUtapiService
+int CMacCmd::SkipUtapiService()
+{
+  bool *supports = mScope->GetUtapiSupportsService();
+  if (mItemInt[1] < 0 || mItemInt[1] >= UTAPI_SUPPORT_END)
+    ABORT_LINE("Service number is out of range in line:\n\n");
+  if (mItemInt[1] >= UTSUP_CAM_SINGLE && mItemInt[1] <= UTSUP_CAM_CONTIN)
+    ABORT_LINE("You cannot change support for a camera-related service");
+  supports[mItemInt[1]] = mItemInt[2] == 0;
   return 0;
 }
 

@@ -1294,6 +1294,7 @@ int CTSController::StartTiltSeries(BOOL singleStep, int external, CMapDrawItem *
     mWarnedNoExtraFilter = false;
     mWarnedNoExtraChannels = false;
     mParTSFirstOffsetFit = 1;
+    mNumDidPretiltFromYOnly = 0;
     mInExtraRecState = false;
     mFirstIntensity = 0.;
     mFirstExposure = 0.;
@@ -7400,8 +7401,6 @@ int CTSController::ParallelTSSetup(CMapDrawItem *item, CString &errStr)
   mParTSLoadedFocus.resize(numTargets);
   mParTSLoadedSpecX.resize(numTargets);
   mParTSLoadedSpecY.resize(numTargets);
-  mParTSLoadedDelZFocus[0].resize(numTargets);
-  mParTSLoadedDelZFocus[1].resize(numTargets);
   memset(&targetData, 0, sizeof(ParTSTargetData));
   targetData.score = -1.;
   mParTSMeanStartScore = 0.;
@@ -7483,9 +7482,11 @@ int CTSController::ParallelTSSetup(CMapDrawItem *item, CString &errStr)
     mParTSLastKnownY[ind].resize(numTargets);
     mParTSAngleOfKnown[ind].resize(numTargets);
     mParTSCurTiltOffset[ind] = mParTSParams->preTilt;
-    mParTSLastFoundDelZ0[ind].resize(numTargets);
-    mParTSLastDelZ0TiltInd[ind].resize(numTargets);
+    CLEAR_RESIZE(mParTSLastFoundDelZ0[ind], float, numTargets);
+    CLEAR_RESIZE(mParTSLastDelZ0TiltInd[ind], int, numTargets);
+    CLEAR_RESIZE(mParTSLoadedDelZFocus[ind], float, numTargets);
   }
+  CLEAR_RESIZE(mParTSCopiedZ0OtherDir, short, numTargets);
   mParTSDelZatZero.resize(numTargets);
   mParTSNavItem = item->Duplicate();
   
@@ -7544,7 +7545,7 @@ int CTSController::ParallelTSSetup(CMapDrawItem *item, CString &errStr)
     ysize /= mParTSRefBinning;
     for (ind = numTargets - 1; ind >= 0; ind--) {
       err = mWinApp->mProcessImage->TransformToOtherMag(&mImBufs[readBuf], toBuf,
-        acqMagInd, errStr, mWinApp->GetCurrentCamera(),
+        acqMagInd, errStr, mWinApp->GetCurrentActiveCamera(),
         mTSParam.binning * mParTSRefBinning, mParTSParams->xCoordInArea[ind],
         mParTSParams->yCoordInArea[ind], xsize, ysize);
       if (err)
@@ -7565,7 +7566,11 @@ int CTSController::ParallelTSSetup(CMapDrawItem *item, CString &errStr)
   mParTSExpectedDefocus = mTSParam.targetDefocus;
     
   // Transform the image shift to specimen, change Y values to get it to the pretilt,
-  // and transform back;
+  // and transform back
+  // NOTE that equations involving Y and Z treat them as being in a right-handed
+  // system, but X and Z are computed looking up the Y axis with X to the right and
+  // Z up, so Z = X * tan(X pitch angle)
+  // Focus to be applied for a particular component is the negative of the computed Z 
   mCmat = mShiftManager->IStoSpecimen(acqMagInd);
   mCinv = mShiftManager->MatInv(mCmat);
   delBidAng = DTORFL * (mTSParam.bidirAngle - mParTSCurTiltOffset[0]);
@@ -7591,7 +7596,7 @@ int CTSController::ParallelTSSetup(CMapDrawItem *item, CString &errStr)
 
     // Compute delta Z at starting angle, save X/Y values used to load IS values, 
     // record X and Y as known at the starting angle and save starting zZero
-    mParTSLoadedFocus[ind] = yZero * sinBidAlf + zZero * cosf(delBidAng);
+    mParTSLoadedFocus[ind] = -(yZero * sinBidAlf + zZero * cosf(delBidAng));
     mParTSLoadedSpecX[ind] = specX;
     mParTSLoadedSpecY[ind] = specY;
     for (dir = 0; dir < 2; dir++) {
@@ -7628,7 +7633,7 @@ void CTSController::PredictParallelTSLocations(double angle)
   std::vector<FloatVec> yOnly, yWithZ, zVec, angleYonly, angleWithZ, preTiltsYwithZ;
   std::vector<FloatVec> loadedY, loadedDelZFocus, loadedYwithZ, preTiltsYonly;
   std::vector<FloatVec> meanDefAtZeroY;
-  FloatVec xFound, yFound, angRangeYonly;
+  FloatVec xFound, yFound, angRangeYonly, xfit, yfit;
   IntVec dropping, posIndex, lastFitTiltInd, outliers;
   double errSum, grandSum = 0.;
   bool fromYZ, revised, reversingDosym = mBidirSeriesPhase == DOSYM_ALTERNATING_PART;
@@ -7637,6 +7642,7 @@ void CTSController::PredictParallelTSLocations(double angle)
   CString str, str2;
   int minDataForOffset = 20;
   float minAngleForYonlyRefine = 30., maxAngleForZBasedRefine = 20.;
+  int maxNumRefineFromYOnly = 5;
   float fitRange = 20.;
   float absElimMin = 0.01f;
   float fovFactor = 0.01f;
@@ -7735,8 +7741,9 @@ void CTSController::PredictParallelTSLocations(double angle)
   }
   
   // Proceed if enough data and max angle of one type of fit is suitable
-  if ((numZfound >= minDataForOffset && yWithZMaxAngle < maxAngleForZBasedRefine) ||
-    (numFound >= minDataForOffset && yOnlyMaxAngle > minAngleForYonlyRefine)) {
+  if (((numZfound >= minDataForOffset && yWithZMaxAngle < maxAngleForZBasedRefine) ||
+    (numFound >= minDataForOffset && yOnlyMaxAngle > minAngleForYonlyRefine)) &&
+    mNumDidPretiltFromYOnly < maxNumRefineFromYOnly) {
 
     numScanSteps = mParTSFirstOffsetFit ? 20 : 10;  
     initialStep = 1.;
@@ -7785,10 +7792,12 @@ void CTSController::PredictParallelTSLocations(double angle)
       SEMTrace('1', "Revising tilt offset using %s from %.2f to %.2f", 
         fromYZ ? "Y/Z": "Y only", mParTSCurTiltOffset[idir], curOffset);
       mParTSCurTiltOffset[idir] = curOffset;
+      if (!fromYZ)
+        mNumDidPretiltFromYOnly++;
 
-      // On first fit for dose-symmetric, copy the tilt offset to the other direction
+      // On first fit, copy the tilt offset to the other direction
       // and set up to copy the delta Z's after adjustment for this new offset
-      if (mParTSFirstOffsetFit && mDoingDoseSymmetric) {
+      if (mParTSFirstOffsetFit) {
         mParTSCurTiltOffset[1 - idir] = curOffset;
         mParTSFirstOffsetFit = -1;
       } else
@@ -7818,7 +7827,7 @@ void CTSController::PredictParallelTSLocations(double angle)
 
       // Compute the Z offset at current tilt offset (Z zero)
       // A delta focus at tilt times cos tilt gives Z zero
-      for (ind = 0; ind < (int)zVec[pos].size(); ind++) {
+      for (ind = 0; ind < B3DMIN((int)zVec[pos].size(), 5); ind++) {
 
         // This is the factor by which the Y-dependent component of Z changes due to 
         // change in pretilt
@@ -7828,10 +7837,11 @@ void CTSController::PredictParallelTSLocations(double angle)
           ((zVec[pos][ind] - meanDefAtZeroY[pos][ind]) - loadedDelZFocus[pos][ind]);
         xFound.push_back(coef * cosf(DTORFL * (angleWithZ[pos][ind] -
           mParTSCurTiltOffset[idir])));
-        str2.Format("  %.3f %.3f ", loadedYwithZ[pos][ind] * ctmp, xFound[xFound.size() - 1]);
+        str2.Format("  %.3f %.3f %.3f ", zVec[pos][ind] - meanDefAtZeroY[pos][ind],
+          loadedDelZFocus[pos][ind], xFound[xFound.size() - 1]);
         str += str2;
       }
-      SEMTrace('1', "%s", (LPCTSTR)str);
+      //SEMTrace('1', "%s", (LPCTSTR)str);
       CLEAR_RESIZE(yFound, float, zVec[pos].size());
       if (xFound.size() > 3)
         FindOutliersInResultList(xFound, 0.25f, 0, yFound);
@@ -7839,12 +7849,17 @@ void CTSController::PredictParallelTSLocations(double angle)
       err = 0;
       str = "";
 
-      // Average the Z zero estimates, excluding outliers
-      if (xFound.size() > 2 || B3DABS(xFound[0] - xFound[1]) < maxDiffRevZFrom2) {
-        for (ind = 0; ind < (int)zVec[pos].size(); ind++) {
+      // Fit a line through the Z zero estimates, excluding outliers
+      if (xFound.size() > 2 || (xFound.size() > 1 && B3DABS(xFound[0] - xFound[1]) <
+        maxDiffRevZFrom2)) {
+        xfit.clear();
+        yfit.clear();
+        for (ind = 0; ind < (int)xFound.size(); ind++) {
           if (!yFound[ind]) {
             err++;
             errSum += xFound[ind];
+            xfit.push_back((float)ind);
+            yfit.push_back(xFound[ind]);
           } else {
             str2.Format(" %.3f", xFound[ind]);
             str += str2;
@@ -7853,8 +7868,11 @@ void CTSController::PredictParallelTSLocations(double angle)
         if (!str.IsEmpty())
           SEMTrace('1', "Outliers %s", (LPCTSTR)str);
 
-        // Dividing average Z zero by cosine gives a focus offset
-        errSum /= err;
+        lsFit(&xfit[0], &yfit[0], (int)xfit.size(), &coef, &zZero, &ctmp);
+
+        // Get a partial extrapolation to the tilt about to be done
+        // Dividing estimated Z zero by cosine gives a focus offset
+        errSum = zZero - 0.5f * coef;
         mParTSLastFoundDelZ0[idir][pos] = (float)errSum;
         mParTSLastDelZ0TiltInd[idir][pos] = mTiltIndex;
         errSum /= -cos(DTORFL * (angle - mParTSCurTiltOffset[idir]));
@@ -7862,6 +7880,14 @@ void CTSController::PredictParallelTSLocations(double angle)
           mParTSLoadedDelZFocus[idir][pos], errSum);
         mParTSLoadedDelZFocus[idir][pos] = (float)errSum;
         revised = true;
+
+        // First time for this target, copy Z0 to other direction
+        if (!mParTSCopiedZ0OtherDir[pos]) {
+          mParTSLastFoundDelZ0[1 - idir][pos] = mParTSLastFoundDelZ0[idir][pos];
+          mParTSLastDelZ0TiltInd[1 - idir][pos] = mTiltIndex;
+          SEMTrace('1', "Copied del Z0 %.3f to direction %d", errSum, 1 - idir);
+          mParTSCopiedZ0OtherDir[pos] = 1;
+        }
       }
     }
 
@@ -7893,7 +7919,7 @@ void CTSController::PredictParallelTSLocations(double angle)
   delNewAng = DTORFL * ((float)angle - mParTSCurTiltOffset[idir]);
   for (pos = 0; pos < numTargets; pos++) {
     delLastAng = DTORFL * (mParTSAngleOfKnown[idir][pos] - mParTSCurTiltOffset[idir]);
-    zZero = mParTSDelZatZero[pos] +
+    zZero = mParTSDelZatZero[pos] -
       mParTSLoadedDelZFocus[idir][pos] * cosf(delNewAng);
     yZero = (mParTSLastKnownY[idir][pos] + zZero *sinf(delLastAng))
       / cosf(delLastAng);
@@ -8060,7 +8086,7 @@ void CTSController::ProcessParTSDataFromMultishot()
       // Do these fits to find outliers and drop them
       CLEAR_RESIZE(dropping, int, numFound);
       maxDrop = B3DMAX(1, (numFound - 1) / 3);
-      IdentifyParTSOutliers(&xLoaded[0], &yLoaded[0], &xFound[0], &yFound[0],
+      IdentifyParTSOutliers(&xLoaded[0], &yLoaded[0], &xFound[0], NULL,
         &dropping[0], numFound, maxDrop, (numFound == 3 ? 2.f : 1.f) * defElimMin,
         critProb, absProbCrit, slope, &intcp);
 
@@ -8143,7 +8169,8 @@ void CTSController::IdentifyParTSOutliers(float *xload, float *yload, float *xfo
     xltmp.push_back(xload[from]);
     yltmp.push_back(yload[from]);
     xftmp.push_back(xfound[from]);
-    yftmp.push_back(yfound[from]);
+    if (!intcp)
+      yftmp.push_back(yfound[from]);
   }
   /*
   FitYSlopeWithDropping(&xltmp[0], &yltmp[0], &xftmp[0], &yftmp[0], dropping, numFit,
@@ -8227,7 +8254,8 @@ void CTSController::IdentifyParTSOutliers(float *xload, float *yload, float *xfo
       xltmp[ind] = xload[from];
       yltmp[ind] = yload[from];
       xftmp[ind] = xfound[from];
-      yftmp[ind] = yfound[from];
+      if (!intcp)
+        yftmp[ind] = yfound[from];
     }
   }
 
