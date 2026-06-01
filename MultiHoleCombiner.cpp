@@ -132,6 +132,8 @@ int CMultiHoleCombiner::CombineItems(int boundType, BOOL turnOffOutside, int inX
   int ori, crossDx[5] = {0, -1, 1, 0, 0}, crossDy[5] = {0, 0, 0, -1, 1};
   int numAdded = 0;
   msParams = &msParamsCopy;
+  mHelper = mWinApp->mNavHelper;
+  mFindHoles = mHelper->mFindHoles;
 
   // When runing multi-grid, the map is passed in for the vectors to be taken from
   if (vecItem)
@@ -168,8 +170,6 @@ int CMultiHoleCombiner::CombineItems(int boundType, BOOL turnOffOutside, int inX
   hexGrid = msParams->doHexArray ? 1 : 0;
 
   // Check for Nav
-  mHelper = mWinApp->mNavHelper;
-  mFindHoles = mHelper->mFindHoles;
   mNav = mWinApp->mNavigator;
   if (!mNav)
     return ERR_NO_NAV;
