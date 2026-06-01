@@ -473,6 +473,8 @@ public:
   SetMember(bool, DoNextFEGFlashHigh);
   GetMember(int, AdvancedScriptVersion);
   GetSetMember(float, CurDefocusOffset);
+  GetSetMember(int, UtapiDisconnectThres);
+  GetMember(bool *, UtapiSupportsService);
   void SetRetryStageMove(int inVal);
   int GetRetryStageMove();
   void SetAdvancedScriptVersion(int inVal) { mAdvancedScriptVersion = B3DMAX(mAdvancedScriptVersion, inVal); };
@@ -782,7 +784,6 @@ private:
     int axisBits, CString &str);
   static UINT ScreenMoveProc(LPVOID pParam);
   static UINT ApertureMoveProc(LPVOID pParam);
-  static UINT ApMonitorProc(LPVOID pParam);
   static UINT LongOperationProc(LPVOID pParam);
 
   CShiftManager *mShiftManager;
@@ -790,7 +791,6 @@ private:
   CWinThread * mScreenThread;
   CWinThread * mFilmThread;
   CWinThread * mApertureThread;
-  CWinThread *mApMonitorThread;
   CWinThread *mLongOpThreads[MAX_LONG_THREADS];
   LongThreadData mLongOpData[MAX_LONG_THREADS];
   CWinThread *mSynchronousThread;
@@ -802,7 +802,6 @@ private:
   BOOL mCosineTilt;         // Flag for cosine tilt
   StageMoveInfo mMoveInfo;
   ApertureThreadData mApertureTD;
-  ApMonitorThreadData mApMonitorTD;
   BOOL mBeamBlankSet;         // Keeps track of requested blank setting
   double mLastISdelX;         // Last change in image shift
   double mLastISdelY;
@@ -1057,6 +1056,7 @@ private:
   BOOL mUseDetectorNameIfUtapi; // Use regular name if not going through Utapi
   bool mHaveSetLowDoseArea;    // Flag that an area was ever gone to
   float mLastRecordAbsFocus;   // Save focus value last time Record was entered
+  int mUtapiDisconnectThres;   // Threshold # of successive "failed to connect" messages
   int mAdvancedScriptVersion;  // My internal version number for advanced scripting
   int mPluginVersion;          // Version of plugin or server
 

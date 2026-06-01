@@ -47,8 +47,6 @@
 // getting mutex because update routine should finish quickly
 #define MAG_MUTEX_WAIT   500
 
-#define FEI_THREAD_MUTEX_WAIT 5000
-
 // Scope plugin version that is good enough if there are no FEI cameras, and if there
 // are cameras.  This allows odd features to be added without harrassing other users
 #define FEISCOPE_NOCAM_VERSION 121
@@ -200,7 +198,6 @@ CEMscope::CEMscope()
   mScreenThread = NULL;
   mFilmThread = NULL;
   mApertureThread = NULL;
-  mApMonitorThread = NULL;
   mSynchronousThread = NULL;
   for (i = 0; i < MAX_LONG_THREADS; i++)
     mLongOpThreads[i] = NULL;
@@ -572,6 +569,7 @@ CEMscope::CEMscope()
   mLastCondenserAp = mLastObjectiveAp = mLastJeolC1Ap = -1;
   mHaveSetLowDoseArea = false;
   mLastRecordAbsFocus = EXTRA_NO_VALUE;
+  mUtapiDisconnectThres = 3;
   mAdvancedScriptVersion = 0;
   mPluginVersion = 0;
   mPlugFuncs = NULL;
@@ -582,9 +580,6 @@ CEMscope::~CEMscope()
 {
   if (mUpdateID)
     KillUpdateTimer();
-  if (mApMonitorThread) {
-    UtilThreadCleanup(&mApMonitorThread);
-  }
   if (mScopeMutexHandle) {
     CloseHandle(mScopeMutexHandle);
     free(mScopeMutexOwnerStr);
@@ -973,23 +968,6 @@ int CEMscope::Initialize()
       if (mUseAperturesInStates > 0)
         SEMAppendToLog("Aperture size will be used in imaging and mapping states");
 
-      // After all that success, now start the thread to do it and create mutex for second
-      // channel/threads
-      if (mSimulationMode >= 0 && (mMonitorC2ApertureSize > 0 || mShowApertureStatus > 0))
-      {
-        mFEIThreadMutexHandle = CreateMutex(0, 0, 0);
-        mApMonitorTD.plugFuncs = mPlugFuncs;
-        mApMonitorTD.moving = false;
-        mApMonitorTD.singleCondIndex = mSingleCondenserAp;
-        mApMonitorTD.getObjective = mShowApertureStatus > 0;
-        mApMonitorTD.condenserSize = -1;
-        mApMonitorTD.objectiveSize = -1;;
-        mApMonitorTD.exitOrFailed = 0;
-        mApMonitorThread = AfxBeginThread(ApMonitorProc, &mApMonitorTD,
-          THREAD_PRIORITY_NORMAL, 0, CREATE_SUSPENDED);
-        mApMonitorThread->m_bAutoDelete = false;
-        mApMonitorThread->ResumeThread();
-      }
     }
     catch (_com_error E) {
       mFEIhasApertureSupport = 0;
@@ -1400,7 +1378,7 @@ void CEMscope::ScopeUpdate(DWORD dwTime)
   int spotSize, probe, returnedProbe, tmpMag, toCam, oldNeutralInd, subMode;
   double intensity, objective, rawIntensity, ISX, ISY, current, defocus;
   BOOL EFTEM, bReady, smallScreen, manageISonMagChg, gotoArea, blanked, restoreIS = false;
-  int STEMmode, gunState = -1, apSize;
+  int STEMmode, gunState = -1;
   bool newISseen = false;
   bool handleMagChange, deferISchange, temProbeChanged = false;
   int vacStatus = -1;
@@ -1887,48 +1865,6 @@ void CEMscope::ScopeUpdate(DWORD dwTime)
     UpdateGauges(vacStatus);
     checkpoint = "vacuum";
     CHECK_TIME(8);
-
-    // Aperture update can happen every cycle since it is done by thread
-    if ((mMonitorC2ApertureSize > 0 || mShowApertureStatus > 0) && !mMovingAperture &&
-      (!FEIscope || mShowApertureStatus > 1 || mMonitorC2ApertureSize > 1 ||
-        mPluginVersion >= FEI_PLUGIN_SKIP_AP_PANEL)) {
-
-      // Report on failure
-      if (mSimulationMode >= 0 && mApMonitorTD.exitOrFailed < 0) {
-        if (mMonitorC2ApertureSize > 1 || mShowApertureStatus > 1) {
-          mMonitorC2ApertureSize = 0;
-          mShowApertureStatus = 0;
-          PrintfToLog("WARNING: Getting condenser%s aperture size has failed 10 times in "
-            "a row;\r\n   it will no longer be monitored", mShowApertureStatus > 1 ?
-            " or objective" : "");
-        }
-
-      } else {
-
-        // Get simulated or actual value for condenser, and objective if showing status
-        if (mSimulationMode < 0)
-          apSize = sSimApertureSize[mSingleCondenserAp];
-        else
-          apSize = mApMonitorTD.condenserSize;
-        apSize = FindApertureSizeFromIndex(mSingleCondenserAp, apSize, true);
-        if (apSize >= 0) {
-          if (mMonitorC2ApertureSize > 0)
-            mWinApp->mBeamAssessor->ScaleIntensitiesIfApChanged(apSize, true);
-          else
-            mWinApp->mBeamAssessor->SetCurrentAperture(apSize);
-        }
-        if (mShowApertureStatus > 0 && apSize >= 0) {
-          mLastCondenserAp = apSize;
-          if (mSimulationMode < 0)
-            apSize = sSimApertureSize[OBJECTIVE_APERTURE];
-          else
-            apSize = mApMonitorTD.objectiveSize;
-          if (apSize >= 0)
-            mLastObjectiveAp = FindApertureSizeFromIndex(OBJECTIVE_APERTURE,
-              apSize, true);
-        }
-      }
-    }
 
     // Take care of screen-dependent changes in low dose and update low dose panel
     needBlank = NeedBeamBlanking(screenPos, STEMmode != 0, gotoArea);
@@ -8346,8 +8282,6 @@ int CEMscope::StartApertureThread(const char *descrip)
   mApertureThread->ResumeThread();
   mWinApp->AddIdleTask(TASK_MOVE_APERTURE, 0, 30000); 
   mMovingAperture = true;
-  if (mApertureTD.actionFlags == APERTURE_SET_SIZE)
-    mApMonitorTD.moving = true;
   return 0;
 }
 
@@ -8358,7 +8292,6 @@ int CEMscope::ApertureBusy()
   mMovingAperture = retval > 0;
   if (retval <= 0) {
     mCamera->SetSuspendFilterUpdates(false);
-    mApMonitorTD.moving = false;
   }
   if (!retval) {
     RecordApertureValue(mApertureTD.apIndex, mApertureTD.sizeOrIndex);
@@ -8392,12 +8325,10 @@ void CEMscope::RecordApertureValue(int apIndex, int sizeOrIndex)
   if (apIndex == OBJECTIVE_APERTURE) {
     mLastObjectiveAp = FindApertureSizeFromIndex(OBJECTIVE_APERTURE,
       sizeOrIndex, true);
-    mApMonitorTD.objectiveSize = sizeOrIndex;
   }
   if (apIndex == mSingleCondenserAp) {
     mLastCondenserAp = FindApertureSizeFromIndex(mSingleCondenserAp,
       sizeOrIndex, true);
-    mApMonitorTD.condenserSize = sizeOrIndex;
     mWinApp->mBeamAssessor->SetCurrentAperture(mLastCondenserAp);
   }
   if (mUseTwoJeolCondAp && apIndex == JEOL_C1_APERTURE)
@@ -8455,73 +8386,6 @@ UINT CEMscope::ApertureMoveProc(LPVOID pParam)
   }
   CoUninitialize();
   ScopeMutexRelease("ApertureMoveProc");
-  return retval;
-}
-
-// A thread for monitoring aperture sizes because the menu hangs when monitoring in update
-UINT CEMscope::ApMonitorProc(LPVOID pParam)
-{
-  ApMonitorThreadData *td = (ApMonitorThreadData *)pParam;
-  int errCount = 0, retval = 0, err = 0;
-  double startTime;
-  CoInitializeEx(NULL, COINIT_MULTITHREADED);
-  
-  for (;;) {
-
-    // Proceed if update not suspended, aperture not moving, and mutex available
-    if (sSuspendCount <= 0 && !td->moving && ScopeMutexAcquire("ApMonitorProc", true)) {
-      err = 0;
-
-      // Get the access for FEI
-      if (FEIscope && BeginFEIThreadAccess(td->plugFuncs, 1, 0)) {
-        err = 3;
-      }
-      if (!err) {
-        try {
-          if (FEIscope && mPlugFuncs->DoingUpdate)
-            mPlugFuncs->DoingUpdate(2);
-
-          // Get the raw aperture sizes/indexes
-          td->condenserSize = td->plugFuncs->GetApertureSize(td->singleCondIndex);
-          if (td->getObjective)
-            td->objectiveSize = td->plugFuncs->GetApertureSize(OBJECTIVE_APERTURE);
-          if (FEIscope && mPlugFuncs->DoingUpdate)
-            mPlugFuncs->DoingUpdate(((CSerialEMApp *)AfxGetApp())->mScope->mInScopeUpdate
-              ? -1 : -2);
-        }
-        catch (_com_error E) {
-          err = 1;
-        }
-      }
-
-      // Give up after 10 consecutive errors
-      if (err && err != 3) {
-        errCount++;
-        if (errCount > 10) {
-          retval = 1;
-          break;
-        }
-      } else if (!err) {
-        errCount = 0;
-      }
-      if (FEIscope && err != 3)
-        EndFEIThreadAccess(td->plugFuncs, 1);
-      ScopeMutexRelease("ApMonitorProc");
-    }
-
-    // Wait for 5 seconds, checking for exit
-    startTime = GetTickCount();
-    while (SEMTickInterval(startTime) < 5000) {
-      SleepMsg(50);
-      if (td->exitOrFailed > 0)
-        break;
-    }
-    if (td->exitOrFailed > 0)
-      break;
-  }
-  CoUninitialize();
-  if (retval)
-    td->exitOrFailed = -1;
   return retval;
 }
 
@@ -9178,27 +9042,14 @@ BOOL CEMscope::ScopeMutexRelease(const char *name) {
   return true;
 }
 
-// Wrappers for begin and end thread access that acquire and release a mutex for thread
-// access to FEI scope on channel 1, used when aperture monitoring thread is running
+// Wrappers for begin and end thread access 
 int CEMscope::BeginFEIThreadAccess(ScopePluginFuncs *plugFuncs, int chan, int make)
 {
-  if (chan == 1 && mFEIThreadMutexHandle) {
-    if (WaitForSingleObject(mFEIThreadMutexHandle, FEI_THREAD_MUTEX_WAIT) == WAIT_TIMEOUT)
-    {
-      SEMTrace('y', "FEI thread access FAILED for %d!", GetCurrentThreadId());
-      return 1;
-    }
-    SEMTrace('y', "FEI thread access acquired for %d", GetCurrentThreadId());
-  }
   return plugFuncs->BeginThreadAccess(chan, make);
 }
 
 void CEMscope::EndFEIThreadAccess(ScopePluginFuncs *plugFuncs, int chan)
 {
-  if (chan == 1 && mFEIThreadMutexHandle) {
-    SEMTrace('y', "FEI thread access released for %d", GetCurrentThreadId());
-    ReleaseMutex(mFEIThreadMutexHandle);
-  }
   plugFuncs->EndThreadAccess(chan);
 }
 
@@ -11378,7 +11229,7 @@ UINT CEMscope::SynchronousProc(LPVOID pParam)
     }
   }
 
-  if (FEIscope) {
+  if (FEIscope && retval) {
     EndFEIThreadAccess(mPlugFuncs, 1);
   }
   CoUninitialize();
