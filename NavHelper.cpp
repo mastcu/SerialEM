@@ -335,6 +335,7 @@ CNavHelper::CNavHelper(void)
   mParTSOptions.adjustBeamTilt = false;
   mParTSOptions.beamDiam = 1.;
   mParTSOptions.useIAorBeamSize = false;
+  mParTSOptions.tiltForBeam = 50.;
   mParTSOptions.extraDelayFactor = 0.;
   mParTSOptions.CtfMeasureType = 1;
   mParTSOptions.findAstig = true;

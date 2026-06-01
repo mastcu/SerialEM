@@ -623,17 +623,19 @@ private:
   FloatVec mParTSDelZatZero;      // Z zero from X pitch
   FloatVec mParTSPreTiltsUsed;    // Pretilts used for computations at each tilt index
   FloatVec mParTSMeanDefocus;     // Intercept from Z vs Y at each tilt
-  FloatVec mParTSLastFoundDelZ0[2];
-  IntVec mParTSLastDelZ0TiltInd[2];
+  FloatVec mParTSLastFoundDelZ0[2];  // Variables for last time Z zero was found and
+  IntVec mParTSLastDelZ0TiltInd[2];  // what tilt index it was at
+  ShortVec mParTSCopiedZ0OtherDir;  // Flag that Z zero has been copied to other direction
   float mFOVofRecord;             // Mean FOV of Record image
   int mParTSFirstOffsetFit;       // Flag that it is doing first fit for tilt offset 
   float mParTSMinCtfpPixel;       // Minimum pixel size for Ctfplotter reduction
-  float mParTSMinFindStartScore;
-  float mParTSMinPlotStartScore;
-  float mParTSMinFindScoreRatio;
-  float mParTSMinPlotScoreRatio;
-  float mParTSMeanStartScore;
-  bool mParTsReviseDZFocusFromZ0;
+  float mParTSMinFindStartScore;  // Minimum score at starting tilt for Ctffind
+  float mParTSMinPlotStartScore;  // and Ctfplotter
+  float mParTSMinFindScoreRatio;  // Minimum reduction from mean score at higher tilt
+  float mParTSMinPlotScoreRatio;  // for Ctffind and Ctfplotter
+  float mParTSMeanStartScore;     // Mean score at starting tilt
+  bool mParTsReviseDZFocusFromZ0; // Flag to keep revising delta Z focus from older Z0
+  int mNumDidPretiltFromYOnly;    // # of times it has revised tilt offset from Y only
 
 public:
 	void CenterBeamWithTrial();

@@ -1447,7 +1447,7 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
   int lastGroupID = -1, lastGroupSize, size, numPoints, pieceDrawnOn, posInParTSgroup = 0;
   int regMatch = imBuf->mRegistration ?
     imBuf->mRegistration : navigator->GetCurrentRegistration();
-  COLORREF parTScolor = RGB(0, 180, 140);
+  COLORREF parTScolor = RGB(0, 200, 200);
   std::set<int> *selectedItems = navigator->GetSelectedItems();
   bool highlight, draw, doInHole, drawSkips, skipPattern = false;
   bool drawEllipse = false, itemInParTSgroup = false, sawFirstParTS = false;
@@ -1802,12 +1802,8 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
           acquireYhole.clear();
           if (imBuf->mMagInd && imBuf->mCamera >= 0) {
             ScaleMat is2st = MatMul(mShiftManager->IStoGivenCamera(item->mMagOfIStargets,
-              imBuf->mCamera),
-              MatInv(mShiftManager->StageToCamera(imBuf->mCamera, imBuf->mMagInd)));
-            ScaleMat tmpMat = mShiftManager->IStoGivenCamera(item->mMagOfIStargets,
-              imBuf->mCamera);
-            tmpMat = mShiftManager->StageToCamera(imBuf->mCamera, imBuf->mMagInd);
-            tmpMat = is2st;
+              imBuf->mCamera), MatInv(mShiftManager->StageToCamera(imBuf->mCamera, 
+                item->mMagOfIStargets)));
             if (is2st.xpx) {
               for (int hole = 0; hole < item->mNumIStargets; hole++) {
                 ApplyScaleMatrix(is2st, delISX[hole], delISY[hole], ptX, ptY);
