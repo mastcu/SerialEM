@@ -14407,6 +14407,20 @@ int CMacCmd::LongOperation(void)
   return 0;
 }
 
+// ReportLongOperations
+int CMacCmd::ReportLongOperations()
+{
+  CString str1, str2;
+  int first = -1, second = -1, num;
+  num = mScope->GetLongOperationsRunning(first, second, str1, str2);
+  SetRepValsAndVars(1, num, first, second);
+  if (num)
+    SetOneReportedValue(&mStrItems[1], str1, 4);
+  if (num > 1)
+    SetOneReportedValue(&mStrItems[1], str1, 5);
+  return 0;
+}
+
 // NewDEserverDarkRef
 int CMacCmd::NewDEserverDarkRef(void)
 {

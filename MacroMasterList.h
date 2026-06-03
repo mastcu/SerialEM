@@ -871,6 +871,7 @@ MAC_SAME_NAME_ARG(ShowScopeControlPanel, 1, 0, SHOWSCOPECONTROLPANEL, I)
 MAC_SAME_NAME_ARG(ReadBasicModeFile, 2, 0, READBASICMODEFILE, S)
 MAC_SAME_NAME_NOARG(ExitProgramAtEnd, 0, 0, EXITPROGRAMATEND)
 MAC_SAME_NAME_ARG(SkipUtapiService, 2, 4, SKIPUTAPISERVICE, II)
+MAC_SAME_NAME_NOARG(ReportLongOperations, 0, 4, REPORTLONGOPERATIONS)
 
 
 // new Python-only commands need to be added to pythonOnlyCmds in ::CMacroProcessor
