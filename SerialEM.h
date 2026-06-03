@@ -1084,6 +1084,7 @@ private:
   BOOL mEnableExternalPython;   // Flag to open socket for external python
   bool mHasK2OrK3Camera;        // Flag for whether there is K2 or K3
   int mDEcamCount;              // Number of DE cameras
+  bool mAnyDectris;             // Flag for any Dectris cameras
   int mNavOrLogHadFocus;        // 1 if nav last got focus, -1 if log did
   BOOL mMonospacedLog;          // Flag that log window should use monospaced font
   BOOL mSaveAutosaveLog;         // Flag to save on startup and autosave afterwards
