@@ -887,7 +887,7 @@ MAC_SAME_NAME_NOARG(ReportLongOperations, 0, 4, REPORTLONGOPERATIONS)
 //Undefine ALL the macros to ready it for the next use
 #undef MAC_DIFF_NAME
 #undef MAC_DIFF_NAME_ARG
-#undef MAC_DIFF_NAME_NOARGt
+#undef MAC_DIFF_NAME_NOARG
 #undef MAC_SAME_FUNC
 #undef MAC_SAME_FUNC_ARG
 #undef MAC_SAME_FUNC_NOARG
