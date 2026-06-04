@@ -54,6 +54,7 @@
 //#include "TiltSeriesParam.h"
 #include "TSController.h"
 #include "DoseModulator.h"
+#include "ParallelTSDlg.h"
 #include "Utilities\XCorr.h"
 #include "Utilities\KGetOne.h"
 #include "Shared\autodoc.h"
@@ -809,6 +810,8 @@ void CNavigatorDlg::UpdateAddMarker(void)
   m_butMoveItem.EnableWindow(curExists &&
     !(mAddingPoints || mAddingPoly || mLoadingMap) && noTasks);
   m_butDrawPts.EnableWindow(!(mAddingPoly || mMovingItem || mLoadingMap) && noTasks);
+  if (mHelper->mParallelTSDlg->IsOpen())
+    mHelper->mParallelTSDlg->ExternalUpdate();
   m_butDrawPoly.EnableWindow(!(mAddingPoints || mMovingItem || mLoadingMap) && noTasks);
   m_butAddMarker.EnableWindow(OKtoAddMarkerPoint(true));
   m_butGotoMarker.EnableWindow(OKtoAddMarkerPoint(false));
@@ -3021,7 +3024,8 @@ void CNavigatorDlg::MoveStageOrDoImageShift(int axisBits)
   double areaX = 0, areaY = 0;
   ScaleMat stage2IS;
   int magInd, area;
-  if (mHelper->mMultiShotDlg && mHelper->mMultiShotDlg->RecordingHoles()) {
+  if (mHelper->mMultiShotDlg && mHelper->mMultiShotDlg->RecordingHoles() ||
+    (mHelper->mParallelTSDlg->IsOpen() && mHelper->mParallelTSDlg->RefiningTargets())) {
     GetAdjustedStagePos(stageX, stageY, stageZ);
     if (mWinApp->LowDoseMode()) {
       area = mScope->GetLowDoseArea();
@@ -3096,6 +3100,9 @@ void CNavigatorDlg::OnDeleteitem()
   }
   if (m_bTableIndexes)
     FillListBox(true, true);
+
+  if (mHelper->mParallelTSDlg->IsOpen() && mHelper->mParallelTSDlg->HasAreaMap())
+    mHelper->mParallelTSDlg->Update();
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -3109,14 +3116,25 @@ void CNavigatorDlg::OnDrawPoints()
 
   // Remove group ID for single point and update the mappings and that item's string
   if (!mAddingPoints && (int)mItemArray.GetSize() - mNumberBeforeAdd == 1) {
-    mItemArray[mNumberBeforeAdd]->mGroupID = 0;
+    if (!mWinApp->mNavHelper->mParallelTSDlg->IsOpen() || 
+      !mWinApp->mNavHelper->mParallelTSDlg->GetDrawingISTargets())
+      mItemArray[mNumberBeforeAdd]->mGroupID = 0;
     if (m_bCollapseGroups) {
       MakeListMappings();
       UpdateListString(mNumberBeforeAdd);
     }
   }
   mNumberBeforeAdd = (int)mItemArray.GetSize();
-  mAddPointID = MakeUniqueID();
+
+  if (mWinApp->mNavHelper->mParallelTSDlg->IsOpen() &&
+    mWinApp->mNavHelper->mParallelTSDlg->GetDefiningPoints())
+    mAddPointID = mWinApp->mNavHelper->mParallelTSDlg->GetFitPlaneGroupID();
+  else if (mWinApp->mNavHelper->mParallelTSDlg->IsOpen() &&
+    mWinApp->mNavHelper->mParallelTSDlg->GetAddingTargets())
+    mAddPointID = mWinApp->mNavHelper->mParallelTSDlg->GetTargetGroupID();
+  else
+    mAddPointID = MakeUniqueID();
+
   if (mAddingPoints) {
     ManageListHeader("Use Backspace to remove added points one by one");
   } else {
@@ -3124,7 +3142,7 @@ void CNavigatorDlg::OnDrawPoints()
     Redraw();
     mReloadTableOnNextAdd = B3DMAX(0, mReloadTableOnNextAdd - 1);
   }
-
+  
   Update();
   mWinApp->RestoreViewFocus();
 }
@@ -3267,6 +3285,18 @@ BOOL CNavigatorDlg::UserMousePoint(EMimageBuffer *imBuf, float inX, float inY,
     return false;
   if (mMovingItem && button == VK_MBUTTON)
     return false;
+  
+  // If adding targets in ParallelTSDlg, require that the buffer is a map
+  if (mHelper->mParallelTSDlg->IsOpen() && mHelper->mParallelTSDlg->IsAddingToNav()
+    && !FindItemWithMapID(imBuf->mMapID)) {
+    AfxMessageBox("Targets must be added on a map", MB_EXCLAME);
+    return false;
+  }
+  if (mHelper->mParallelTSDlg->IsOpen() && mHelper->mParallelTSDlg->GetAddingTargets() 
+    && !mHelper->mParallelTSDlg->AreaMapInBuf(imBuf)){
+    AfxMessageBox("Targets must be added to the defined area map", MB_EXCLAME);
+    return false;
+  }
 
   // if set in hole finder parameters, center added point in hole
   if (mHelper->mHoleFinderDlg->IsOpen() && mHelper->mHoleFinderDlg->m_bCenterAddedHoles) {
@@ -5345,6 +5375,43 @@ void CNavigatorDlg::DeleteGroup(bool collapsedGroup)
   if ((!doSelection || num > 2) &&
     AfxMessageBox(message, MB_ICONQUESTION | MB_YESNO) != IDYES)
     return;
+  for (i = end; i >= start; i--) {
+    item = mItemArray[i];
+    if ((!doSelection && item->mGroupID == curID) ||
+      (doSelection && mSelectedItems.count(i))) {
+      if (item->mAcquire) {
+        item->mAcquire = false;
+        mHelper->EndAcquireOrNewFile(item);
+      }
+      DeleteAndRemoveFromArray(i);
+    }
+  }
+  FinishMultipleDeletion();
+}
+
+// Delete a whole group, or the part on one line of collapsed groups, or multiple
+// selected points.  "collapsedGroups" is true literally or for multiple selected points
+// in this case suppress any message boxes
+void CNavigatorDlg::ExternalDeleteGroup(bool collapsedGroup)
+{
+  CString message, label, lastlab;
+  CMapDrawItem *item;
+  bool doSelection = collapsedGroup && mSelectedItems.size() > 1;
+  int i, curID, num, start = 0, end = (int)mItemArray.GetSize() - 1;
+  if (!SetCurrentItem(true))
+    return;
+  curID = mItem->mGroupID;
+  if (!curID && !doSelection)
+    return;
+
+  if (doSelection) {
+    num = (int)mSelectedItems.size();
+  } else if (collapsedGroup) {
+    GetCollapsedGroupLimits(mCurListSel, start, end);
+    num = end + 1 - start;
+  } else {
+    num = CountItemsInGroup(curID, label, lastlab, i);
+  }
   for (i = end; i >= start; i--) {
     item = mItemArray[i];
     if ((!doSelection && item->mGroupID == curID) ||

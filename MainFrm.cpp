@@ -29,6 +29,7 @@
 #include "DoseModulator.h"
 #include "MultiGridDlg.h"
 #include "ProcessImage.h"
+#include "ParallelTSDlg.h"
 #include "XFolderDialog\XWinVer.h"
 
 #include ".\MainFrm.h"
@@ -454,6 +455,11 @@ void CMainFrame::DoClose(bool afterScript)
     if (mWinApp->mAutocenDlg && !wasLD && mWinApp->mAutocenDlg->m_bSetState &&
       !disconnected)
       mWinApp->mAutocenDlg->RestoreScopeState();
+
+    //Close Parallel TS Dialog because this may be preventing changes to low dose mode
+    if (mWinApp->mNavHelper->mParallelTSDlg) {
+      mWinApp->mNavHelper->mParallelTSDlg->CloseWindow();
+    }
 
     // Want to shut off low dose mode now so that parameters return
     // to their normal states before settings are saved

@@ -28,6 +28,7 @@
 #include "PiezoAndPPControl.h"
 #include "ParticleTasks.h"
 #include "ZbyGSetupDlg.h"
+#include "ParallelTSDlg.h"
 #include "Utilities\KGetOne.h"
 
 #if defined(_DEBUG) && defined(_CRTDBG_MAP_ALLOC)
@@ -271,6 +272,14 @@ void CLowDoseDlg::SetLowDoseMode(BOOL inVal, BOOL hideOffState)
     return;
   }
 
+  if (mWinApp->mNavHelper->mParallelTSDlg->IsOpen() && 
+    mWinApp->mNavHelper->mParallelTSDlg->IsDoingNewArea()) {
+    SEMMessageBox("You cannot turn Low Dose mode on or off while\n"
+      "defining a target area in the Parallel Tilt Series dialog");
+    mWinApp->ErrorOccurred(1);
+    return;
+  }
+
   // Set a one-shot flag for hiding the off state; only set the variable for
   // the checkbox if it is not being hidden
   mHideOffState = hideOffState;
@@ -491,6 +500,12 @@ void CLowDoseDlg::OnLowdosemode()
   if (!mTrulyLowDose && m_bContinuousUpdate) {
     m_bContinuousUpdate = false;
     mScope->SetLDContinuousUpdate(false);
+  }
+
+  // If ParallelTS dialog is open, update it
+  if (mWinApp->mNavHelper->mParallelTSDlg->IsOpen()) {
+    mWinApp->mNavHelper->mParallelTSDlg->Update();
+    return;
   }
 
   // Turn off define function in either direction to keep things simple
@@ -1565,7 +1580,9 @@ void CLowDoseDlg::Update(BOOL stageReady)
   enableIfNavAcq = (bEnable || justNavAcq);
   m_butLowDoseMode.EnableWindow(bEnable && !mWinApp->DoingComplexTasks() &&
     !mScope->GetJeol1230() && !mWinApp->mAutocenDlg && !stageBusy &&
-    (!mWinApp->GetSTEMMode() || !mWinApp->DoSwitchSTEMwithScreen()));
+    (!mWinApp->GetSTEMMode() || !mWinApp->DoSwitchSTEMwithScreen()) 
+    && !(mWinApp->mNavHelper->mParallelTSDlg->IsOpen() && 
+      mWinApp->mNavHelper->mParallelTSDlg->IsDoingNewArea()));
   m_butContinuousUpdate.EnableWindow(enableIfNavAcq);
   m_butNormalizeBeam.EnableWindow(!STEMmode && enableIfNavAcq);
   m_butBalanceShifts.EnableWindow(!STEMmode && bEnable && mTrulyLowDose && defined &&

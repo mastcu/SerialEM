@@ -60,6 +60,7 @@
 #include "ExternalTools.h"
 #include "TSVariationsDlg.h"
 #include "PiezoAndPPControl.h"
+#include "ParallelTSDlg.h"
 #include "Shared\b3dutil.h"
 #include "Utilities\KGetOne.h"
 #include <set>
@@ -1148,6 +1149,8 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
             place = mWinApp->mNavHelper->GetRotAlignPlacement();
           else if (NAME_IS("MultiShotPlacement"))
             place = mWinApp->mNavHelper->GetMultiShotPlacement(false);
+          else if (NAME_IS("ParallelTSPlacement"))
+            place = mWinApp->mNavHelper->GetParallelTSPlacement();
           else if (NAME_IS("HoleFinderPlacement"))
             place = mWinApp->mNavHelper->GetHoleFinderPlacement();
           else if (NAME_IS("MultiCombinerPlacement"))
@@ -1225,6 +1228,7 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
             SET_PLACEMENT("ReadDlgPlacement", mDocWnd->mReadFileDlg);
             SET_PLACEMENT("StageToolPlacement", mWinApp->mStageMoveTool);
             SET_PLACEMENT("OneLinePlacement", mWinApp->mMacroProcessor->mOneLineScript);
+            SET_PLACEMENT("ParallelTSPlacement", mWinApp->mNavHelper->mParallelTSDlg);
             SET_PLACEMENT("MacroToolPlacement", mWinApp->mMacroToolbar);
             if (NAME_IS("HoleFinderPlacement") &&
               mWinApp->mNavHelper->mHoleFinderDlg->IsOpen())
@@ -1805,6 +1809,7 @@ void CParameterIO::WriteSettings(CString strFileName)
   WINDOWPLACEMENT *zbgPlace = mWinApp->mParticleTasks->GetZbyGPlacement();
   WINDOWPLACEMENT *navAcqPlace = mWinApp->mNavHelper->GetAcquireDlgPlacement(true);
   WINDOWPLACEMENT *scndLogPlace = mWinApp->GetSecondaryLogPlacement();
+  WINDOWPLACEMENT *parallelTSPlace = mWinApp->mNavHelper->GetParallelTSPlacement();
   int *macroButtonNumbers = mWinApp->mCameraMacroTools.GetMacroNumbers();
   mWinApp->CopyCurrentToCameraLDP();
   DoseTable *doseTables = mWinApp->mBeamAssessor->GetDoseTables();
@@ -2368,6 +2373,7 @@ void CParameterIO::WriteSettings(CString strFileName)
     WritePlacement("VppCondPlacement", 0, vppPlace);
     WritePlacement("ZbyGSetupPlacement", 0, zbgPlace);
     WritePlacement("NavAcqPlacement", 0, navAcqPlace);
+    WritePlacement("ParallelTSPlacement", 0, parallelTSPlace);
     WritePlacement("SnapshotPlacement", 0, mWinApp->GetScreenShotPlacement());
     WritePlacement("HoleFinderPlacement", 0, 
       mWinApp->mNavHelper->GetHoleFinderPlacement());

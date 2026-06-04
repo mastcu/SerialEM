@@ -43,11 +43,13 @@
 #include "AutoContouringDlg.h"
 #include "MultiGridDlg.h"
 #include "DoseModulator.h"
+#include "ParallelTSDlg.h"
 #include "Utilities\XCorr.h"
 #include "Image\KStoreADOC.h"
 #include "Utilities\KGetOne.h"
 #include "Shared\autodoc.h"
 #include "Shared\b3dutil.h"
+#include "Shared\icont.h"
 
 #if defined(_DEBUG) && defined(_CRTDBG_MAP_ALLOC)
 #define new DEBUG_NEW
@@ -137,6 +139,7 @@ CNavHelper::CNavHelper(void)
   mCombineHoles = new CMultiHoleCombiner();
   mHoleFinderDlg = new CHoleFinderDlg();
   mAutoContouringDlg = new CAutoContouringDlg();
+  mParallelTSDlg = new CParallelTSDlg();
 
   // Copy the default acquire action structures
   for (mNumAcqActions = 0; mNumAcqActions < NAA_MAX_ACTIONS; mNumAcqActions++) {
@@ -195,6 +198,7 @@ CNavHelper::CNavHelper(void)
   mMGSettingsDlg = NULL;
   mMGSettingsPlace.rcNormalPosition.right = NO_PLACEMENT;
   mComaVsISCalDlg = NULL;
+  mParallelTSPlace.rcNormalPosition.right = NO_PLACEMENT;
   mRIdefocusOffsetSet = 0.;
   mRIbeamShiftSetX = mRIbeamShiftSetY = 0.;
   mRIbeamTiltSetX = mRIbeamTiltSetY = 0.;
@@ -411,6 +415,7 @@ CNavHelper::~CNavHelper(void)
   delete mCombineHoles;
   delete mHoleFinderDlg;
   delete mAutoContouringDlg;
+  delete mParallelTSDlg;
 }
 
 
@@ -7421,6 +7426,29 @@ WINDOWPLACEMENT *CNavHelper::GetAcquireDlgPlacement(bool fromDlg)
     mNav->mNavAcquireDlg->GetWindowPlacement(&mAcquireDlgPlace);
   }
   return &mAcquireDlgPlace;
+}
+
+void CNavHelper::OpenParallelTS(void)
+{
+  mWinApp->mMenuTargets.OpenNavigatorIfClosed();
+  if (mParallelTSDlg->IsOpen()) {
+    mParallelTSDlg->BringWindowToTop();
+    return;
+  }
+  mParallelTSDlg->mHasIlluminatedArea = mScope->GetUseIllumAreaForC2() ? 1 : 0;
+  if (mWinApp->mBeamAssessor->GetBeamSizeArray()->GetSize() > 0)
+    mParallelTSDlg->mHasIlluminatedArea = -1;
+  mParallelTSDlg->Create(IDD_PARALLELTS);
+  mWinApp->SetPlacementFixSize(mParallelTSDlg, &mParallelTSPlace);
+  mWinApp->RestoreViewFocus();
+}
+
+WINDOWPLACEMENT * CNavHelper::GetParallelTSPlacement(void)
+{
+  if (mParallelTSDlg->IsOpen()) {
+    mParallelTSDlg->GetWindowPlacement(&mParallelTSPlace);
+  }
+  return &mParallelTSPlace;
 }
 
 // This is called on file changes to update the acquire dialog

@@ -946,6 +946,8 @@
     <ClInclude Include="NavAdocPuts.h" />
     <ClInclude Include="NavRealignDlg.h" />
     <ClInclude Include="OneLineScript.h" />
+    <ClInclude Include="ParallelTSDlg.h" />
+    <ClInclude Include="ParallelTSHelper.h" />
     <ClInclude Include="ParticleTasks.h" />
     <ClInclude Include="PropertyTests.h" />
     <ClInclude Include="PythonServer.h" />
@@ -1821,6 +1823,8 @@ echo.
     <ClCompile Include="NavAcqHoleFinder.cpp" />
     <ClCompile Include="NavRealignDlg.cpp" />
     <ClCompile Include="OneLineScript.cpp" />
+    <ClCompile Include="ParallelTSDlg.cpp" />
+    <ClCompile Include="ParallelTSHelper.cpp" />
     <ClCompile Include="ParticleTasks.cpp" />
     <ClCompile Include="PythonServer.cpp" />
     <ClCompile Include="RadioChoiceDlg.cpp" />

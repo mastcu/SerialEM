@@ -278,7 +278,6 @@ protected:
 	afx_msg void OnCheckRegpoint();
 	afx_msg void OnCheckcorner();
 	afx_msg void OnDeleteitem();
-	afx_msg void OnDrawPoints();
 	afx_msg void OnDrawPolygon();
 	afx_msg void OnGotoPoint();
 	afx_msg void OnSelchangeListviewer();
@@ -554,6 +553,7 @@ private:
 
 public:
   afx_msg void OnGotoMarker();
+  afx_msg void OnDrawPoints();
   BOOL RegistrationChangeOK(void);
   int ChangeItemRegistration(void);
   int ChangeItemRegistration(int index, int newReg, CString &str);
@@ -599,6 +599,7 @@ public:
   BOOL SupermontLabel(CMapDrawItem * item, int & startNum, int & ix, int & iy);
   BOOL CurrentIsInGroup(void);
   void DeleteGroup(bool collapsedGroup);
+  void ExternalDeleteGroup(bool collapsedGroup);
   void PolygonSupermontage(void);
   void PolygonToCameraCoords(CMapDrawItem * item, int camera, int magIndex, 
     int adjustForFocusSet, float &xMin, float &xMax, float &yMin, float &yMax);

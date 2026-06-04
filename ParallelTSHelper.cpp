@@ -1,0 +1,1340 @@
+// ParallelTSHelper.cpp : Helper class for Parallel Tilt Series and task-oriented routines
+//
+//
+// Copyright (C) 2007-2026 by the Regents of the University of
+// Colorado.  See Copyright.txt for full notice of copyright and limitations.
+//
+// Author: Leo Crowder
+//
+#include "stdafx.h"
+#include "SerialEM.h"
+#include "ParallelTSDlg.h"
+#include "NavHelper.h"
+#include "EMscope.h"
+#include "NavigatorDlg.h"
+#include "ParticleTasks.h"
+#include "ComplexTasks.h"
+#include "CameraController.h"
+#include "EMmontageController.h"
+#include "SerialEMDoc.h"
+#include "MultiShotDlg.h"
+#include "ShiftManager.h"
+#include "ShiftCalibrator.h"
+#include "AutoTuning.h"
+#include "FocusManager.h"
+#include "TSController.h"
+#include "SerialEMView.h"
+#include "ParallelTSHelper.h"
+#include ".\Utilities\SEMUtilities.h"
+#include "Shared\b3dutil.h"
+#include "Shared\icont.h"
+
+#if defined(_DEBUG) && defined(_CRTDBG_MAP_ALLOC)
+#define new DEBUG_NEW
+#endif
+
+CParallelTSHelper::CParallelTSHelper()
+{
+  mWinApp = (CSerialEMApp *)AfxGetApp();
+  mShiftManager = mWinApp->mShiftManager;
+  mScope = NULL;
+  mCamera = NULL;
+  mNav = NULL;
+
+  mISTargetIter = -1;
+  mActionAtTarget = PARALLELTS_ACTION_AUTOFOCUS;
+  mDoingISToTargets = false;
+  mLastActionFailed = false;
+  mPretilt = 0.f;
+  mXpitch = 0.f;
+  mStartIndex = 0;
+  mAreaMapFileName = "";
+  mAreaMapID = 0;
+  mTargetMapFileName = "";
+  mParTSitem = NULL;
+  mSavedTSparamIndex = -1;
+  mInitialStateSaved = false;
+  mParTSParam.firstPrevMapID = -1;
+  mParTSParam.mappingTilt = 0.f;
+  mParTSParam.preTilt = 0.f;
+}
+
+CParallelTSHelper::~CParallelTSHelper()
+{
+
+}
+
+void CParallelTSHelper::Initialize(void)
+{
+  mScope = mWinApp->mScope;
+  mCamera = mWinApp->mCamera;
+
+  // TODO should probably load this from properties saved
+  if (mWinApp->mNavHelper->mParallelTSDlg->IsOpen()) {
+    mPretilt = mWinApp->mNavHelper->mParallelTSDlg->m_fPretilt;
+    mXpitch = mWinApp->mNavHelper->mParallelTSDlg->m_fXpitch;
+  }
+}
+
+// Busy function for task when doing IS
+int CParallelTSHelper::ISToTargetsBusy()
+{
+  return (mCamera->CameraBusy() || mWinApp->mScope->StageBusy() ||
+    mWinApp->mNavHelper->GetRealigning() || mWinApp->mFocusManager->DoingFocus()) ? 1 : 0;
+}
+
+void CParallelTSHelper::ClearTargets(bool autofocusOrPreview)
+{
+  mStartIndex = 0;
+  mAlignedToFirstISTarget = false;
+  mInitialStateSaved = false;
+  mISTargetPointIDs.clear();
+  mSavedTargetIDs.clear();
+  mISTargetFailedIDs.clear(); 
+  if (autofocusOrPreview) {
+    mISTargetSSX.clear();
+    mISTargetSSY.clear();
+    mISTargetDefocus.clear();
+  } else {
+    mISTargetISX.clear();
+    mISTargetISY.clear();
+    mPrevMapShiftX.clear();
+    mPrevMapShiftY.clear();
+    mPreviewMapIDs.clear();
+    mPrevMapSectNums.clear();
+  }
+}
+
+//Only clear saved data, but keep target map IDs so that refining can be retried
+void CParallelTSHelper::ClearSavedTargets()
+{
+  mStartIndex = 0;
+  mAlignedToFirstISTarget = false;
+  mInitialStateSaved = false;
+  mSavedTargetIDs.clear();
+  mISTargetFailedIDs.clear();
+  mPrevMapShiftX.clear();
+  mPrevMapShiftY.clear();
+  mPreviewMapIDs.clear();
+  mPrevMapSectNums.clear();
+}
+
+// Begin procedure of image shifting to targets with given map IDs, and either getting the 
+// autofocusing or taking Previews at each target
+int CParallelTSHelper::StartShiftToTargets(IntVec targetMapIDs, bool autofocusOrPreview)
+{
+  int err;
+  CString mess;
+  
+  err = AppendNewTargets(targetMapIDs, mess);
+  if (err) {
+    AfxMessageBox(mess, MB_EXCLAME);
+    return err;
+  }
+  mDoingISToTargets = true;
+  mISTargetIter = 0;
+  /*mDoNextShift = false;*/
+  mAtTarget = false;
+  mLastActionFailed = false;
+  mParTSopts = mWinApp->mNavHelper->GetParTSOptions();
+
+  if (mWinApp->LowDoseMode()) {
+    LowDoseParams *ldp = mWinApp->GetLowDoseParams() + RECORD_CONSET;
+    mMagIndex = ldp->magIndex;
+  } else {
+    mMagIndex = mParTSopts->acqMagIndNonLD;
+  }
+
+  if (autofocusOrPreview) {
+    mActionAtTarget = PARALLELTS_ACTION_AUTOFOCUS;
+    mess = "FITTING PLANE";
+  } else {
+    mActionAtTarget = PARALLELTS_ACTION_PREVIEW;
+    mSavedMouseStage = mWinApp->mShiftManager->GetMouseMoveStage();
+    mWinApp->mShiftManager->SetMouseMoveStage(false);
+    mess = "REFINING TARGETS";
+  }
+
+  mWinApp->UpdateBufferWindows();
+  mWinApp->SetStatusText(COMPLEX_PANE, mess);
+  mWinApp->AddIdleTask(TASK_IS_TO_PARALLELTS_TARGET, 0, 0);
+  return 0;
+}
+
+void CParallelTSHelper::UpdatePlaneParamsInDlg()
+{
+  if (mWinApp->mNavHelper->mParallelTSDlg->IsOpen()) {
+    mWinApp->mNavHelper->mParallelTSDlg->UpdatePlaneParams(mPretilt, mXpitch);
+  }
+}
+
+//Pauses the routine, does not restore original state so that more targets can be added.
+void CParallelTSHelper::PauseParallelTSShift()
+{
+  mISTargetIter = -1;
+  mDoingISToTargets = false;
+
+  if (mActionAtTarget == PARALLELTS_ACTION_PREVIEW) {
+    mWinApp->mNavHelper->mParallelTSDlg->FinishRefineTargets(false);
+  }
+  mWinApp->SetStatusText(COMPLEX_PANE, "");
+}
+
+//Stops the routine, and restores original state of the scope.
+void CParallelTSHelper::StopParallelTSShift(bool error)
+{
+  int numPoints;
+  CMapDrawItem *item, *mapItem;
+
+  mWinApp->mShiftManager->SetMouseMoveStage(mSavedMouseStage);
+  mISTargetIter = -1;
+
+  if (mCamera->Acquiring()) {
+    mCamera->SetImageShiftToRestore(mBaseISX, mBaseISY);
+    if (mParTSopts->adjustBeamTilt)
+      mCamera->SetBeamTiltToRestore(mBaseBeamTiltX, mBaseBeamTiltY);
+    if (mAdjustBeamTilt)
+      mCamera->SetAstigToRestore(mBaseAstigX, mBaseAstigY);
+  } else {
+    mScope->SetImageShift(mBaseISX, mBaseISY);
+    if (mParTSopts->adjustBeamTilt)
+      mScope->SetBeamTilt(mBaseBeamTiltX, mBaseBeamTiltY);
+    if (mAdjustBeamTilt)
+      mScope->SetObjectiveStigmator(mBaseAstigX, mBaseAstigY);
+  }
+
+  mDoingISToTargets = false;
+  mAlignedToFirstISTarget = false;
+  mDoNextShift = false;
+  mInitialStateSaved = false;
+
+  if (mActionAtTarget == PARALLELTS_ACTION_AUTOFOCUS) {
+    numPoints = (int)mISTargetPointIDs.size();
+    if (numPoints > 0) {
+      item = mWinApp->mNavigator->FindItemWithMapID(mISTargetPointIDs[0], false);
+      if (item && item->mDrawnOnMapID) {
+        mapItem = mWinApp->mNavigator->FindItemWithMapID(item->mDrawnOnMapID);
+        if (mapItem)
+          mWinApp->mNavigator->DoLoadMap(true, mapItem, -1);
+      }
+    }
+
+    if (!GetDebugOutput('N')) {
+      if (numPoints == 1)
+        mWinApp->mNavigator->DeleteItem();
+      else if (numPoints > 1) {
+        mWinApp->mNavigator->ExternalDeleteGroup(
+          mWinApp->mNavigator->m_bCollapseGroups != 0);
+      }
+    }
+    mWinApp->mNavHelper->mParallelTSDlg->FinishFitPlane();
+    ClearTargets(true);
+  } else if (mActionAtTarget == PARALLELTS_ACTION_PREVIEW) {
+    mWinApp->mNavHelper->mParallelTSDlg->FinishRefineTargets(error);
+    if (error)
+      ClearSavedTargets();
+  }
+  mWinApp->SetStatusText(COMPLEX_PANE, "");
+}
+
+//Stops routine due to error, clears targets
+void CParallelTSHelper::ErrorParallelTSShift()
+{
+  StopParallelTSShift();
+  if (mActionAtTarget == PARALLELTS_ACTION_AUTOFOCUS) {
+    ClearTargets(true);
+  } else if (mActionAtTarget == PARALLELTS_ACTION_PREVIEW) {
+    ClearSavedTargets();
+  }
+  
+}
+
+//Executes the next task in image shifting to targets
+int CParallelTSHelper::ISToNextTarget(int targetIndex)
+{
+  double ISX, ISY, delX, delY, delBTX = 0., delBTY = 0., delAstigX = 0., delAstigY = 0.;
+  float delay;
+  int BTdelay;
+  CMapDrawItem *item = mWinApp->mNavigator->FindItemWithMapID(targetIndex, false);
+  ScaleMat st2is;
+  bool doBacklash = mWinApp->mScope->GetAdjustForISSkipBacklash() <= 0;
+  ComaVsISCalib *comaVsIS = mWinApp->mAutoTuning->GetComaVsIScal();
+  ParallelTSOptions *parTSopt = mWinApp->mNavHelper->GetParTSOptions();
+
+  st2is = MatMul(mWinApp->mShiftManager->StageToCamera(mWinApp->GetCurrentCamera(),
+    mMagIndex), mWinApp->mShiftManager->CameraToIS(mMagIndex));
+  if (!st2is.xpx) {
+    /*mess.Format("There is no calibration to get from stage to IS coordinates at the "
+    "given mag");*/
+    return 1;
+  }
+
+  // Get IS from center point to the next target
+  mWinApp->mShiftManager->ApplyScaleMatrix(st2is, item->mStageX - mCenterStageX,
+    item->mStageY - mCenterStageY, delX, delY);
+  ISX = mCenterISX + delX;
+  ISY = mCenterISY + delY;
+
+  if (!mWinApp->mShiftManager->ImageShiftIsOK(ISX, ISY, FALSE)) {
+    PrintfToLog("Point at navigator index %d is beyond image shift limit and will "
+      "be skipped", targetIndex);
+    return 2;
+  }
+
+  mCurISTargetItem = item;
+
+  // Compute the delay for the amount that IS will change
+  delay = mWinApp->mShiftManager->ComputeISDelay(ISX - mLastISX, ISY - mLastISY);
+  if (parTSopt->extraDelayFactor > 0.)
+    delay *= parTSopt->extraDelayFactor;
+
+  if (mParTSopts->adjustBeamTilt) {
+    BTdelay = mWinApp->mAutoTuning->GetBacklashDelay();
+    mWinApp->mParticleTasks->GetBTandAstigAdjustment(delX, delY, delBTX, delBTY,
+      delAstigX, delAstigY, FALSE, GetDebugOutput('1'));
+  }
+
+  mWinApp->mScope->SetImageShift(ISX, ISY);
+  mWinApp->mShiftManager->SetISTimeOut(delay);
+
+  if (mParTSopts->adjustBeamTilt) {
+    mWinApp->mAutoTuning->BacklashedBeamTilt(mCenterBeamTiltX + delBTX,
+      mCenterBeamTiltY + delBTY, doBacklash);
+    if (mAdjustBeamTilt)
+      mWinApp->mAutoTuning->BacklashedStigmator(mCenterAstigX + delAstigX,
+        mCenterAstigY + delAstigY, doBacklash);
+  }
+
+  mLastISX = ISX;
+  mLastISY = ISY;
+
+  return 0;
+}
+
+void CParallelTSHelper::ISToTargetNextTask(int param)
+{
+  int index, mapID;
+  float residual;
+  float focusLim = -20.;
+  float shiftX, shiftY;
+  int sizeX, sizeY;
+  float FOVchange, FOVchangeThresh = 0.1f;
+  CString curPath = "";
+  bool openNewFile = false, openOldFile = false;
+  EMimageBuffer *imBufs = mWinApp->GetImBufs();
+  CString mess, str;
+  ScaleMat st2ss = MatInv(mWinApp->mShiftManager->SpecimenToStage(1., 1.));
+  NavAlignParams *alignParams = mWinApp->mNavHelper->GetNavAlignParams();
+  ComaVsISCalib *comaVsIS = mWinApp->mAutoTuning->GetComaVsIScal();
+  bool canAdjustIS = mWinApp->mShiftManager->GetFocusISCals()->GetSize() > 0 &&
+    mWinApp->mShiftManager->GetFocusMagCals()->GetSize() > 0;
+
+  if (!mDoingISToTargets || mISTargetIter < 0)
+    return;
+
+  mLastActionFailed = false;
+  mapID = mISTargetPointIDs[mStartIndex + mISTargetIter];
+  mCurISTargetItem = mWinApp->mNavigator->FindItemWithMapID(mapID, false);
+
+  if (mISTargetIter == 0) {
+    if (!mAlignedToFirstISTarget) {
+      if (!mCurISTargetItem) {
+        StopParallelTSShift();
+        return;
+      }
+
+      //Realign to first IS Target
+      if (mWinApp->mNavHelper->RealignToItem(mCurISTargetItem, 0, 
+        alignParams->resetISthresh, alignParams->maxNumResetIS, 0, 0,
+        mParTSopts->extractVirtPrevs == 1 ? PREVIEW_CONSET : -1)) {
+        AfxMessageBox("Realign to first IS target failed");
+        mLastActionFailed = true;
+        return;
+      }
+      mAlignedToFirstISTarget = true;
+      mDoNextShift = false;
+      mWinApp->AddIdleTask(TASK_IS_TO_PARALLELTS_TARGET, 0, 0);
+      return;
+    } else {
+
+      //Get Image shift in case we go straight into shift to next target
+      mWinApp->mScope->GetImageShift(mLastISX, mLastISY);
+    }
+  }
+
+  if (mAtTarget && mCurISTargetItem) {
+
+    if (mActionAtTarget == PARALLELTS_ACTION_PREVIEW) {
+      imBufs->mImage->getShifts(shiftX, shiftY);
+      imBufs->mImage->getSize(sizeX, sizeY);
+      FOVchange = (1 - (sizeX - fabs(shiftX)) * (sizeY - fabs(shiftY)) / 
+        (float)(sizeX * sizeY));
+
+      if (FOVchange > FOVchangeThresh) {
+        mWinApp->mCamera->InitiateCapture(PREVIEW_CONSET);
+        mWinApp->AddIdleTask(TASK_IS_TO_PARALLELTS_TARGET, 0, 0);
+        return;
+      }
+
+      if (mParTSopts->extractVirtPrevs != 1 && SaveTargetMap(mess)) {
+        mISTargetFailedIDs.push_back(mapID);
+        str.Format("Could not save Preview map due to error: %s", mess);
+        AfxMessageBox(str, MB_EXCLAME);
+        //PauseParallelTSShift();
+        return;
+      }
+    }
+
+    if (!mInitialStateSaved) {
+      SaveInitialState();
+    }
+
+    if (SaveTarget(mess)) {
+      mISTargetFailedIDs.push_back(mapID);
+      str.Format("Could not save target %d due to error: %s", mapID, mess);
+      AfxMessageBox(str, MB_EXCLAME);
+      //TODO give a choice box to skip or abort
+      mDoNextShift = true;
+    }
+
+  } else if (mAtTarget && !mCurISTargetItem) {
+    
+    if (!mInitialStateSaved) {
+      SaveInitialState();
+    }
+
+    //User deleted the target item
+    mDoNextShift = true;
+
+    //Get Image shift since we will go straight into shift to next target
+    mWinApp->mScope->GetImageShift(mLastISX, mLastISY);
+  }
+
+  if (mDoNextShift) {
+    mAtTarget = false;
+
+    if (mStartIndex + mISTargetIter >= (int)mISTargetPointIDs.size() - 1) {
+      if (mActionAtTarget == PARALLELTS_ACTION_AUTOFOCUS) {
+
+        // Run the least squares fit to get pretilt and X pitch angle
+        index = FitPlane(mPretilt, mXpitch, residual, mess);
+        if (index) {
+          str.Format("Plane fit on points failed: %s", mess);
+          AfxMessageBox(str, MB_EXCLAME);
+        } else {
+          UpdatePlaneParamsInDlg();
+        }
+
+        StopParallelTSShift();
+        ClearTargets(true);
+      } else if (mActionAtTarget == PARALLELTS_ACTION_PREVIEW) {
+         PauseParallelTSShift();
+      }
+      return;
+    }
+
+    // Increment the target iteration to get next target
+    //If some targets were done on a previous separate run, skip to the first new target
+    mISTargetIter++;
+    mapID = mISTargetPointIDs[mStartIndex + mISTargetIter];
+
+    // Do the image shift to next target
+    if (ISToNextTarget(mapID)) {
+      PrintfToLog("Could not image shift to point with ID %d", mapID);
+      mISTargetFailedIDs.push_back(mapID);
+      mLastActionFailed = true;
+    }
+
+    // If failed at this point, skip action and shift to next point if continuing on
+    mDoNextShift = mLastActionFailed;
+  }
+
+  if (!mDoNextShift) {
+
+    //Queue to save this target and shift to next target on next iteration
+    mAtTarget = true;
+    mDoNextShift = true;
+
+    if (mActionAtTarget == PARALLELTS_ACTION_AUTOFOCUS) {
+      mWinApp->mFocusManager->AutoFocusStart(1, -2);
+    } else if (mActionAtTarget == PARALLELTS_ACTION_PREVIEW) {
+
+      // Taking Previews: Stop iterations to allow user to refine IS
+      mCamera->InitiateCapture(PREVIEW_CONSET);
+      return;
+    }
+  }
+
+  mWinApp->AddIdleTask(TASK_IS_TO_PARALLELTS_TARGET, 0, 0);
+}
+
+int CParallelTSHelper::SaveAreaMap(CString &err)
+{
+  int index;
+  bool wrongFile, openNewFile = false, openOldFile = false;
+  CFile *cfile;
+  CMapDrawItem *item;
+  EMimageBuffer *imBuf = mWinApp->mActiveView->GetActiveImBuf();
+
+  // Current image buffer is a loaded map, so map already exists
+  item = mWinApp->mNavigator->FindItemWithMapID(imBuf->mMapID);
+  if (!item) {
+
+    //If no open file, or open file is unusable, do not use it
+    index = mWinApp->mDocWnd->StoreIndexFromName(mTargetMapFileName);
+    wrongFile = !mTargetMapFileName.IsEmpty() && (index >= 0 ||
+      index == mWinApp->mDocWnd->GetCurrentStore());
+    if (!mWinApp->mStoreMRC || wrongFile ||
+      !mWinApp->mBufferManager->IsBufferSavable(imBuf, mWinApp->mStoreMRC)) {
+
+      //If Area map is defined and exists, switch to or open it. If not, open new file
+      if (!mAreaMapFileName.IsEmpty() && UtilFileExists(mAreaMapFileName) != 0) {
+        index = mWinApp->mDocWnd->StoreIndexFromName(mAreaMapFileName);
+        if (index >= 0)
+          mWinApp->mDocWnd->SetCurrentStore(index);
+        else {
+          index = mWinApp->mDocWnd->OpenOldMrcCFile(&cfile, mAreaMapFileName, false);
+          if (index == MRC_OPEN_NOERR || index == MRC_OPEN_ADOC || index == MRC_OPEN_HDF)
+            index = mWinApp->mDocWnd->OpenOldFile(cfile, mAreaMapFileName, index, true);
+          if (index != MRC_OPEN_NOERR) {
+            err.Format("Error opening old area map file");
+            return 1;
+          }
+        }
+      } else {
+        if (mWinApp->mDocWnd->DoOpenNewFile()) {
+          err.Format("New file was not opened");
+          return 2;
+        }
+      }
+    }
+    mWinApp->mDocWnd->SaveRegularBuffer();
+
+    if (mWinApp->mNavigator->NewMap()) {
+      err.Format("Error making a new area map");
+      return 3;
+    }
+
+    index = mWinApp->mDocWnd->StoreIndexFromName(mAreaMapFileName);
+    if (index >= 0) {
+      mWinApp->mDocWnd->SetCurrentStore(index);
+      mWinApp->mDocWnd->DoCloseFile();
+    }
+
+    item = mWinApp->mNavigator->GetCurrentItem();
+  }
+  mAreaMapID = item->mMapID;
+  mAreaMapFileName = item->mMapFile;
+  mMappingTilt = item->mMapTiltAngle;
+  return 0;
+}
+
+int CParallelTSHelper::SaveTargetMap(CString &err)
+{
+  int areaStore, tgtStore, store, index, numMaps;
+  bool areaFileOpen, tgtFileOpen, fileExists;
+  CFile *cfile;
+  CMapDrawItem *item;
+  EMimageBuffer *imBuf = mWinApp->mActiveView->GetActiveImBuf();
+
+  // check that mag of current buffer image matches acquire mag
+  if (imBuf->mMagInd != mMagIndex) {
+    err.Format("Target Maps must match the magnification that will be used to "
+      "acquire images");
+    return 1;
+  }
+
+  fileExists = !mTargetMapFileName.IsEmpty() && UtilFileExists(mTargetMapFileName);
+  tgtStore = mWinApp->mDocWnd->StoreIndexFromName(mTargetMapFileName);
+  numMaps = (int)mPreviewMapIDs.size();
+
+  //If no open file, or open file is unusable, do not use it
+  areaStore = mWinApp->mDocWnd->StoreIndexFromName(mAreaMapFileName);
+  store = mWinApp->mDocWnd->GetCurrentStore();
+  areaFileOpen = (areaStore >= 0 && areaStore == store);
+  tgtFileOpen = (tgtStore >= 0 && tgtStore == store);
+
+  if (tgtStore >= 0 && tgtStore != store) {
+    mWinApp->mDocWnd->SetCurrentStore(tgtStore);
+  } else if (!tgtFileOpen && (!mWinApp->mStoreMRC || areaFileOpen || numMaps > 0 ||
+    !mWinApp->mBufferManager->IsBufferSavable(imBuf, mWinApp->mStoreMRC))) {
+    if (fileExists) {
+      index = mWinApp->mDocWnd->OpenOldMrcCFile(&cfile, mTargetMapFileName, false);
+      if (index == MRC_OPEN_NOERR || index == MRC_OPEN_ADOC || index == MRC_OPEN_HDF)
+        index = mWinApp->mDocWnd->OpenOldFile(cfile, mTargetMapFileName, index, true);
+      if (index != MRC_OPEN_NOERR) {
+        err.Format("Error opening map file");
+        return 2;
+      }
+    } else if (numMaps == 0) {
+      if (mWinApp->mDocWnd->DoOpenNewFile())
+        return 4;
+    } else if (numMaps > 0) {
+    //If some preview maps were saved but map file was deleted, throw error
+      err.Format("The Preview map file was deleted");
+      return 3;
+    }
+  }
+
+  mWinApp->mDocWnd->SaveRegularBuffer();
+
+  if (mWinApp->mNavigator->NewMap()) {
+    err.Format("Error making a new Preview map");
+    return 5;
+  }
+
+  item = mWinApp->mNavigator->GetCurrentItem();
+  if (numMaps == 0)
+    mTargetMapFileName = item->mMapFile;
+  mPreviewMapIDs.push_back(item->mMapID);
+  mPrevMapSectNums.push_back(item->mMapSection);
+
+  return 0;
+}
+
+int CParallelTSHelper::SaveInitialState()
+{
+  int index, index2, mapID;
+  int area;
+  float defocus, SSX, SSY;
+  float shiftX, shiftY;
+  CString err;
+  ScaleMat st2ss = MatInv(mWinApp->mShiftManager->SpecimenToStage(1., 1.));
+  CMapDrawItem *item;
+  NavAlignParams *alignParams = mWinApp->mNavHelper->GetNavAlignParams();
+  bool canAdjustIS = mWinApp->mShiftManager->GetFocusISCals()->GetSize() > 0 &&
+    mWinApp->mShiftManager->GetFocusMagCals()->GetSize() > 0;
+  double ISX, ISY, stageX, stageY, stageZ;
+  float ISlimit = 2.f * mWinApp->mShiftCalibrator->GetCalISOstageLimit();
+  float focusLim = -20.;
+  EMimageBuffer *imBufs = mWinApp->GetImBufs();
+  ScaleMat focMat;
+  ComaVsISCalib *comaVsIS = mWinApp->mAutoTuning->GetComaVsIScal();
+
+  area = mWinApp->mScope->GetLowDoseArea();
+
+  // First time, record stage position and check for defocus
+
+  // Go to the desired mag or low dose area before recording any values
+  if (mWinApp->LowDoseMode()) {
+    mWinApp->mScope->GotoLowDoseArea(RECORD_CONSET);
+  } else {
+    if (mWinApp->mScope->GetMagIndex() != mMagIndex &&
+      !mWinApp->mScope->SetMagIndex(mMagIndex)) {
+      //TODO error
+      return 1;
+    }
+  }
+
+  mWinApp->mScope->GetStagePosition(mBaseStageX, mBaseStageY, stageZ);
+  if (!canAdjustIS && ((imBufs->mLowDoseArea && (imBufs->mConSetUsed == VIEW_CONSET ||
+    imBufs->mConSetUsed == SEARCH_CONSET) && imBufs->mViewDefocus < focusLim) ||
+    (mWinApp->LowDoseMode() && IS_AREA_VIEW_OR_SEARCH(area) &&
+      mWinApp->mScope->GetLDViewDefocus(area) < focusLim))) {
+    err.Format("It appears that the scope is in the View Low Dose\n"
+      "area with a View defocus offset bigger than %.0f microns.\n\n"
+      "This procedure should be run closer to focus.\n"
+      "Press Abort to end it, or continue if you know what you are doing.", focusLim);
+    AfxMessageBox(err, MB_EXCLAME);
+  }
+
+  mWinApp->mScope->GetImageShift(mBaseISX, mBaseISY);
+  mLastISX = mBaseISX;
+  mLastISY = mBaseISY;
+
+  mAdjustBeamTilt = mParTSopts->adjustBeamTilt && comaVsIS->astigMat.xpx != 0. &&
+    mWinApp->mNavHelper->GetSkipAstigAdjustment() <= 0;
+
+  if (mParTSopts->adjustBeamTilt) {
+    mWinApp->mScope->GetBeamTilt(mBaseBeamTiltX, mBaseBeamTiltY);
+    mCenterBeamTiltX = mBaseBeamTiltX;
+    mCenterBeamTiltY = mBaseBeamTiltY;
+    if (mAdjustBeamTilt) {
+      mWinApp->mScope->GetObjectiveStigmator(mBaseAstigX, mBaseAstigY);
+      mCenterAstigX = mBaseAstigX;
+      mCenterAstigY = mBaseAstigY;
+    }
+  }
+  mInitialStateSaved = true;
+  return 0;
+}
+
+//Save info about current target. For plane fit, specimen coords and defocus. For target
+//refinement, image shifts and Preview map info.
+int CParallelTSHelper::SaveTarget(CString &err)
+{
+  int index, index2, mapID;
+  int area;
+  float defocus, SSX, SSY;
+  float shiftX, shiftY;
+  CString mess;
+  ScaleMat st2ss = MatInv(mWinApp->mShiftManager->SpecimenToStage(1., 1.));
+  CMapDrawItem *item;
+  NavAlignParams *alignParams = mWinApp->mNavHelper->GetNavAlignParams();
+  bool canAdjustIS = mWinApp->mShiftManager->GetFocusISCals()->GetSize() > 0 &&
+    mWinApp->mShiftManager->GetFocusMagCals()->GetSize() > 0;
+  double ISX, ISY, stageX, stageY, stageZ;
+  float ISlimit = 2.f * mWinApp->mShiftCalibrator->GetCalISOstageLimit();
+  float focusLim = -20.;
+  EMimageBuffer *imBufs = mWinApp->GetImBufs();
+  ScaleMat focMat;
+  ComaVsISCalib *comaVsIS = mWinApp->mAutoTuning->GetComaVsIScal();
+  int size = mActionAtTarget == PARALLELTS_ACTION_PREVIEW ? (int)mISTargetISX.size() : 
+    (int)mISTargetDefocus.size();
+
+  area = mWinApp->mScope->GetLowDoseArea();
+  mapID = mCurISTargetItem->mMapID;
+
+
+  if (size == 0) {
+
+    mCenterStageX = mCurISTargetItem->mStageX;
+    mCenterStageY = mCurISTargetItem->mStageY;
+
+    mWinApp->mScope->GetImageShift(mCenterISX, mCenterISY);
+    mLastISX = mCenterISX;
+    mLastISY = mCenterISY;
+  } 
+  
+  mWinApp->mScope->GetStagePosition(stageX, stageY, stageZ);
+  if (fabs(stageX - mBaseStageX) > ISlimit ||
+    fabs(stageY - mBaseStageY) > ISlimit) {
+    err.Format("The stage appears to have moved by %.3f in X and %.3f in Y\n"
+      "(more than ISoffsetCalStageLimit = %f).\n\n"
+      "There must be no stage movement during this procedure.",
+      stageX - mBaseStageX, stageY - mBaseStageY, ISlimit);
+    AfxMessageBox(err, MB_EXCLAME);
+    StopParallelTSShift(true);
+    return 1;
+  }
+  
+
+  // If taking Previews, save the image shift at the target
+  if (mActionAtTarget == PARALLELTS_ACTION_PREVIEW) {
+
+    // Get the IS and save it
+    mWinApp->mScope->GetImageShift(ISX, ISY);
+
+    // But adjust IS for defocus first if possible
+    if (canAdjustIS) {
+      focMat = CMultiShotDlg::ISfocusAdjustmentForBufOrArea(imBufs, area);
+      if (focMat.xpx)
+        ApplyScaleMatrix(focMat, ISX, ISY, ISX, ISY);
+    }
+    
+    imBufs->mImage->getShifts(shiftX, shiftY);
+    mPrevMapShiftX.push_back(shiftX);
+    mPrevMapShiftY.push_back(shiftY);
+    mISTargetISX.push_back(ISX);
+    mISTargetISY.push_back(ISY);
+    mSavedTargetIDs.push_back(mCurISTargetItem->mMapID);
+
+  } else if (mActionAtTarget == PARALLELTS_ACTION_AUTOFOCUS) {
+
+    // If doing autofocus at targets, get the defocus
+    index = mWinApp->mFocusManager->GetLastFailed() ? -1 : 0;
+    index2 = mWinApp->mFocusManager->GetLastAborted();
+    if (index2)
+      index = index2;
+    if (index) {
+      PrintfToLog("WARNING: Autofocus failed on point at index %d with error type %d",
+        mapID, index);
+      mISTargetFailedIDs.push_back(mapID);
+      mLastActionFailed = true;
+
+    } else {
+      defocus = (float)mWinApp->mScope->GetDefocus();
+      mISTargetDefocus.push_back(defocus);
+
+      if (mISTargetDefocus.size() == 1) {
+        mBaseDefocus = defocus;
+      } else {
+        mWinApp->mScope->SetDefocus(mBaseDefocus);
+      }
+
+      mWinApp->mShiftManager->ApplyScaleMatrix(st2ss, mCurISTargetItem->mStageX, 
+        mCurISTargetItem->mStageY,
+        SSX, SSY);
+      mISTargetSSX.push_back(SSX);
+      mISTargetSSY.push_back(SSY);
+      mSavedTargetIDs.push_back(mCurISTargetItem->mMapID);
+    }
+  }
+  //mWinApp->RestoreViewFocus();
+  return 0;
+}
+
+// Measure z-height at navigator items in the specified group, and perform a least 
+// squares fit to a plane to determine the pretilt and X pitch angle.
+int CParallelTSHelper::FitPlane(float &pretilt, float &xPitch, float &residual,
+  CString &mess)
+{
+  int numPoints, numToDrop;
+  FloatVec residuals;
+  MapItemArray *itemArr = mWinApp->mNavigator->GetItemArray();
+  float alpha;
+  IntVec indexVec, sortedIndexVec, mapIDs;
+  CString label, lastlabel;
+  float dev;
+  float xCoef, yCoef, zIntercept;
+  int i;
+
+  //numPoints = indexVec.size();
+
+  //// Asses the quality of the sample points, and get them sorted with center point first
+  //err = mWinApp->mNavHelper->AssessPtsToFitPlane(indexVec, sortedIndexVec, mess);
+  //if (err) {
+  //  return err;
+  //}
+  //for (int i = 0; i < (int)sortedIndexVec.size(); i++) {
+  //  item = itemArr->GetAt(sortedIndexVec[i]);
+  //  mapIDs.push_back(item->mMapID);
+  //}
+
+  if ((int)mISTargetDefocus.size() < MIN_NUM_POINTS_TO_FIT_PLANE) {
+    mess.Format("Defocus was measured at %d out of %d points, "
+      "but %d are required to fit to plane",
+      (int)mISTargetDefocus.size(), (int)mISTargetPointIDs.size(), MIN_NUM_POINTS_TO_FIT_PLANE);
+    return 3;
+  }
+
+  //Run least squares fit on vectors of x,y,z coords
+  numPoints = (int)mISTargetDefocus.size();
+  lsFit2(&mISTargetSSX[0], &mISTargetSSY[0], &mISTargetDefocus[0], numPoints, &xCoef,
+    &yCoef, &zIntercept);
+
+  for (i = 0; i < numPoints; i++) {
+    dev = mISTargetDefocus[i] -
+      (mISTargetSSX[i] * xCoef + mISTargetSSY[i] * yCoef + zIntercept);
+    residuals.push_back(B3DABS(dev));
+  }
+
+  if (numPoints > MIN_NUM_POINTS_TO_FIT_PLANE) {
+    FloatVec outliers, outlierResid;
+    float elimMin = 0.01f; //TODO what should this be?
+    mWinApp->mTSController->FindOutliersInResultList(residuals, elimMin, 1, outliers);
+    IntVec dropInd;
+    for (i = 0; i < numPoints; i++) {
+      if (outliers[i] > 0) {
+        outlierResid.push_back(residuals[i]);
+        dropInd.push_back(i);
+      }
+    }
+
+    //Remove outliers and redo the fit
+    numToDrop = B3DMIN((int)dropInd.size(), numPoints - MIN_NUM_POINTS_TO_FIT_PLANE);
+
+    if (numToDrop > 0) {
+
+      rsSortIndexedFloats(&outlierResid[0], &dropInd[0], numToDrop);
+
+      //TODO delete this, I think rsSortIndexedFloats does the same thing
+      ////Drop in the order of the highest error first
+      //for (i = 1; i < (int)dropInd.size(); i++) {
+      //  int key = dropInd[i];
+      //  int j = i - 1;
+      //  while (j >= 0 && residuals[dropInd[j]] < residuals[key]) {
+      //    dropInd[j + 1] = dropInd[j];
+      //    j--;
+      //  }
+      //  dropInd[j + 1] = key;
+      //}
+
+      dropInd.resize(numToDrop);
+
+      //Resort into increasing index order to easily drop elements starting from the end
+      std::sort(dropInd.begin(), dropInd.end());
+      for (i = numToDrop - 1; i >= 0; i--) {
+        //sortedIndexVec.erase(sortedIndexVec.begin() + dropInd[i]);
+        mISTargetSSX.erase(mISTargetSSX.begin() + dropInd[i]);
+        mISTargetSSY.erase(mISTargetSSY.begin() + dropInd[i]);
+        mISTargetDefocus.erase(mISTargetDefocus.begin() + dropInd[i]);
+      }
+
+      if (AssessPtsToFitPlane(mISTargetSSX, mISTargetSSY,
+        mISTargetDefocus, mess)) {
+        return 2;
+      }
+
+      lsFit2(&mISTargetSSX[0], &mISTargetSSY[0], &mISTargetDefocus[0],
+        (int)mISTargetDefocus.size(), &xCoef, &yCoef, &zIntercept);
+    }
+
+  }
+
+  alpha = atan(yCoef);
+  pretilt = -alpha / (float)RADIANS_PER_DEGREE;
+  xPitch = atan(xCoef / (cos(alpha) - yCoef * sin(alpha))) / (float)RADIANS_PER_DEGREE;
+
+  return 0;
+}
+
+// Find the long axis and aspect ratio of the convex hull of a set of points. 
+// This is used to determine if a set of points sufficiently span 2d space.
+void CParallelTSHelper::ConvexHullLongAxis(FloatVec ptsX, FloatVec ptsY, float *aspectRatio,
+  float *longAxis, float anglePrecision)
+{
+  int numPoints = B3DMIN((int)ptsX.size(), (int)ptsY.size());
+  FloatVec xHull, yHull;
+  int nHull;
+  float xcen, ycen;
+  Icont *cont;
+
+  xHull.resize(numPoints);
+  yHull.resize(numPoints);
+  convexBound(&ptsX[0], &ptsY[0], numPoints, 0., 0., &xHull[0], &yHull[0], &nHull, &xcen,
+    &ycen, numPoints);
+
+  cont = imodContourNew();
+  cont->pts = B3DMALLOC(Ipoint, nHull);
+  if (cont->pts) {
+    cont->psize = nHull;
+    for (int ind = 0; ind < nHull; ind++) {
+      cont->pts[ind].x = xHull[ind];
+      cont->pts[ind].y = yHull[ind];
+      cont->pts[ind].z = 0.;
+    }
+  }
+  imodContourLongAxis(cont, anglePrecision, aspectRatio, longAxis);
+  imodContourDelete(cont);
+}
+
+// Assess if the provided group of points are sufficient for a 2D least squares fit
+int CParallelTSHelper::AssessPtsToFitPlane(int groupID, IntVec &sortedIndexVec, CString &mess)
+{
+  CString label, lastlabel;
+  int numAcq, numPoints;
+  IntVec indexVec;
+
+  numPoints = mWinApp->mNavigator->CountItemsInGroup(groupID, label, lastlabel, numAcq, &indexVec);
+
+  return AssessPtsToFitPlane(indexVec, sortedIndexVec, mess);
+}
+
+// Assess if the provided group of points are sufficient for a 2D least squares fit
+int CParallelTSHelper::AssessPtsToFitPlane(FloatVec &ptsX, FloatVec &ptsY, FloatVec &ptsZ, CString &mess)
+{
+  int numPoints, centerPtInd;
+  FloatVec finalPtsX, finalPtsY, finalPtsZ;
+  IntVec indexVec, sortedIndexVec;
+  float dist, cenX = 0.f, cenY = 0.f;
+  float ratio, longAxis, distToCen;
+
+  float minSpanOfPlanePts = 1.f; //TODO get this from parameters or something
+  float ISlimit = mWinApp->mShiftManager->GetRegularShiftLimit();
+
+  numPoints = (int)ptsZ.size();
+  if (numPoints < MIN_NUM_POINTS_TO_FIT_PLANE) {
+    mess.Format("Only %d point(s) added but %d are required to fit to plane",
+      numPoints, MIN_NUM_POINTS_TO_FIT_PLANE);
+    return -1;
+  }
+
+  for (int i = 0; i < numPoints; i++) {
+    indexVec.push_back(i);
+    cenX += ptsX[i];
+    cenY += ptsY[i];
+  }
+
+  cenX /= (float)numPoints;
+  cenY /= (float)numPoints;
+
+  distToCen = 1.e10;
+  for (int i = 0; i < numPoints; i++) {
+    dist = (cenX - ptsX[i]) * (cenX - ptsX[i]) + (cenY - ptsY[i]) * (cenY - ptsY[i]);
+    if (i == 0 || dist < distToCen) {
+      centerPtInd = i;
+      distToCen = dist;
+    }
+  }
+
+  //Place center point first in final vectors
+  sortedIndexVec.resize(1, indexVec[centerPtInd]);
+  finalPtsX.resize(1, ptsX[centerPtInd]);
+  finalPtsY.resize(1, ptsY[centerPtInd]);
+
+  // Remove points beyond image shift limit
+  for (int i = 0; i < numPoints; i++) {
+    if (i != centerPtInd) {
+      if (fabs(ptsX[i] - ptsX[centerPtInd]) <= ISlimit &&
+        fabs(ptsY[i] - ptsY[centerPtInd]) <= ISlimit) {
+        sortedIndexVec.push_back(indexVec[i]);
+        finalPtsX.push_back(ptsX[i]);
+        finalPtsY.push_back(ptsY[i]);
+        finalPtsZ.push_back(ptsZ[i]);
+      }
+    }
+  }
+
+  //Check that there are still enough remaining points
+  numPoints = (int)sortedIndexVec.size();
+  if (numPoints < MIN_NUM_POINTS_TO_FIT_PLANE) {
+    mess.Format("Only %d point(s) within IS limits but %d are required to fit to plane",
+      numPoints, MIN_NUM_POINTS_TO_FIT_PLANE);
+    return -2;
+  }
+
+  //Check that points sufficiently span
+  ConvexHullLongAxis(finalPtsX, finalPtsY, &ratio, &longAxis);
+  if (longAxis / ratio < minSpanOfPlanePts) {
+    mess.Format("Given points are not suitable for a least squares fit. "
+      "Points should span at least %.1f microns in perpendicular directions",
+      minSpanOfPlanePts);
+    return 1;
+  }
+
+  ptsX = finalPtsX;
+  ptsY = finalPtsY;
+  ptsZ = finalPtsZ;
+
+  return 0;
+}
+
+// Given a set of points, determine if image shifts from the center point to the other 
+// points are within IS limits. By default the first item is the starting point, unless 
+// sortedIndexVec is given in which case the center-most point will be the starting point.
+int CParallelTSHelper::AssessISTargetShiftLimit(IntVec indexVec, CString &mess, 
+  IntVec *sortedIndexVec)
+{
+  int numPoints, centerPtInd;
+  FloatVec ptsX, ptsY;
+  CMapDrawItem *item;
+  MapItemArray *itemArr = mWinApp->mNavigator->GetItemArray();
+  float dist, cenX = 0.f, cenY = 0.f;
+  float distToCen;
+  //TODO prob don't need mess anymore
+  float ISlimit = mWinApp->mShiftManager->GetRegularShiftLimit();
+
+  numPoints = (int)indexVec.size();
+
+  for (int i = 0; i < numPoints; i++) {
+    item = itemArr->GetAt(indexVec[i]);
+    ptsX.push_back(item->mStageX);
+    ptsY.push_back(item->mStageY);
+  }
+
+  if (sortedIndexVec) {
+    for (int i = 0; i < numPoints; i++) {
+      cenX += ptsX[i];
+      cenY += ptsY[i];
+    }
+    cenX /= (float)numPoints;
+    cenY /= (float)numPoints;
+
+    distToCen = 1.e10;
+    for (int i = 0; i < numPoints; i++) {
+      dist = (cenX - ptsX[i]) * (cenX - ptsX[i]) + (cenY - ptsY[i]) * (cenY - ptsY[i]);
+      if (i == 0 || dist < distToCen) {
+        centerPtInd = i;
+        distToCen = dist;
+      }
+    }
+  } else {
+    centerPtInd = 0;
+  }
+
+  //Place center point first in final vectors
+  if (sortedIndexVec)
+    sortedIndexVec->resize(1, indexVec[centerPtInd]);
+
+  // Remove points beyond image shift limit
+  for (int i = 0; i < numPoints; i++) {
+    if (i != centerPtInd) {
+      if (fabs(ptsX[i] - ptsX[centerPtInd]) <= ISlimit &&
+        fabs(ptsY[i] - ptsY[centerPtInd]) <= ISlimit) {
+        if (sortedIndexVec)
+          sortedIndexVec->push_back(indexVec[i]);
+      } else {
+        PrintfToLog("WARNING: Point at navigator index %d is beyond image shift limit\n"
+          " and therefore unusable.", indexVec[i] + 1);
+      }
+    }
+  }
+  return 0;
+}
+
+// Assess if the provided points are sufficient for a 2D least squares fit
+int CParallelTSHelper::AssessPtsToFitPlane(IntVec indexVec, IntVec &sortedIndexVec, CString &mess)
+{
+  int numPoints, err;
+  FloatVec ptsX, ptsY;
+  CMapDrawItem *item;
+  MapItemArray *itemArr = mWinApp->mNavigator->GetItemArray();
+  float ratio, longAxis;
+
+  float minSpanOfPlanePts = 1.f; //TODO get this from parameters or something
+  float ISlimit = mWinApp->mShiftManager->GetRegularShiftLimit();
+
+  numPoints = (int)indexVec.size();
+  if (numPoints < MIN_NUM_POINTS_TO_FIT_PLANE) {
+    mess.Format("Only %d point(s) added but %d are required to fit to plane",
+      numPoints, MIN_NUM_POINTS_TO_FIT_PLANE);
+    return -1;
+  }
+
+  err = AssessISTargetShiftLimit(indexVec, mess, &sortedIndexVec);
+  if (err) {
+    return err;
+  }
+
+  //Check that there are still enough remaining points
+  numPoints = (int)sortedIndexVec.size();
+  if (numPoints < MIN_NUM_POINTS_TO_FIT_PLANE) {
+    mess.Format("Only %d point(s) within IS limits but %d are required to fit to plane",
+      numPoints, MIN_NUM_POINTS_TO_FIT_PLANE);
+    return -2;
+  }
+
+  for (int i = 0; i < (int)sortedIndexVec.size(); i++) {
+    item = itemArr->GetAt(indexVec[i]);
+    ptsX.push_back(item->mStageX);
+    ptsY.push_back(item->mStageY);
+  }
+
+  //Check that points sufficiently span
+  //These should be in specimen coords I think
+  ConvexHullLongAxis(ptsX, ptsY, &ratio, &longAxis);
+  if (longAxis / ratio < minSpanOfPlanePts) {
+    mess.Format("Given points are not suitable for a least squares fit. "
+      "Points should span at least %.1f microns in perpendicular directions",
+      minSpanOfPlanePts);
+    return 1;
+  }
+
+  return 0;
+}
+
+int CParallelTSHelper::AppendNewTargets(IntVec targetMapIDs, CString &mess)
+{
+  int ind, jnd, size;
+  bool append;
+
+  size = (int)mISTargetPointIDs.size();
+
+  if (size == 0) {
+    mStartIndex = 0;
+    mISTargetPointIDs = targetMapIDs;
+    mAlignedToFirstISTarget = false;
+    return 0;
+  } 
+  mStartIndex = size > 0 ? size - 1 : 0;
+
+  for (ind = 0; ind < (int)targetMapIDs.size(); ind++) {
+    append = true;
+    for (jnd = 0; jnd < size; jnd++) {
+      if (mISTargetPointIDs[jnd] == targetMapIDs[ind]) {
+        append = false;
+        break;
+      }
+    }
+    if (append) {
+      mISTargetPointIDs.push_back(targetMapIDs[ind]);
+    }
+  }
+
+  return 0;
+}
+
+// Converts saved IS targets or the given item to a parallel TS item. 
+int CParallelTSHelper::ConvertToParTSItem(CString &err, CMapDrawItem *item)
+{
+  int ind, jnd;
+  CMapDrawItem *mapItem;
+  MapItemArray *itemArr = mWinApp->mNavigator->GetItemArray();
+  IntVec navInd, indices;
+  FloatVec delISX, delISY;
+  int numPoints, numX, numY, numDef;
+  float ptX, ptY;
+  EMimageBuffer *imBuf;
+  double ISXcen, ISYcen;
+
+  mapItem = mWinApp->mNavigator->FindItemWithMapID(mAreaMapID);
+  if (!mapItem) {
+    err.Format("The Parallel Tilt Series area map was deleted");
+    return -1;
+  }
+
+  mParTSParam.prevSectNums.clear();
+  mParTSParam.xCoordInArea.clear();
+  mParTSParam.yCoordInArea.clear();
+  mParTSParam.xShiftInImage.clear();
+  mParTSParam.yShiftInImage.clear();
+
+  //Handle a regular pattern set up from multishot params
+  if (item) {
+    //parTSitemInd = mWinApp->mNavigator->GetCurrentIndex(); //TODO
+    if (item->IsPoint()) {
+      MultiShotParams *msPars = mWinApp->mNavHelper->GetMultiShotParams();
+      mWinApp->mNavHelper->GetNumHolesFromParam(numX, numY, numDef);
+      numPoints = mWinApp->mNavHelper->GetNumHolesForItem(item, numDef);
+      if (item->mNumXholes > 0)
+        numX = item->mNumXholes;
+      if (item->mNumYholes > 0)
+        numY = item->mNumYholes;
+      mWinApp->mParticleTasks->GetHolePositions(delISX, delISY, indices, mMagIndex,
+        mWinApp->GetCurrentCamera(), numX, numY, mMappingTilt, item);
+
+      //TODO maps or coord in area
+      mParTSitem = item;
+      mParTSitem->mNumIStargets = (short)numPoints;
+      mParTSitem->mIStargetsXY = new float[numPoints * 2];
+      mParTSitem->mMagOfIStargets = msPars->holeMagIndex[msPars->doHexArray ? 1 : 0];
+
+      for (ind = 0; ind < numPoints; ind++) {
+        mParTSitem->mIStargetsXY[2 * ind] = delISX[ind];
+        mParTSitem->mIStargetsXY[2 * ind + 1] = delISY[ind];
+      }
+    
+    //TODO when code it written to make regular pattern with polygon, add here
+    //} else if (item->IsPolygon()) {
+
+    } else {
+      err.Format("The item must be a point to finalize the area");
+      return 1;
+    }
+
+  } else {
+
+    //Handle custom targets places in arbitrary positions
+
+    numPoints = (int)mSavedTargetIDs.size();
+
+    for (ind = 0; ind < numPoints; ind++) {
+      mWinApp->mNavigator->FindItemWithMapID(mSavedTargetIDs[ind], false);
+      navInd.push_back(mWinApp->mNavigator->GetFoundItem());
+    }
+
+    //Sort saved targets by their order in the navigator
+    std::sort(navInd.begin(), navInd.end());
+    for (ind = 0; ind < numPoints; ind++) {
+      item = itemArr->GetAt(navInd[ind]);
+      for (jnd = 0; jnd < numPoints; jnd++) {
+        if (item->mMapID == mSavedTargetIDs[jnd]) {
+          indices.push_back(jnd);
+          break;
+        }
+      }
+    }
+
+    //Center point information
+    mParTSitem = itemArr->GetAt(navInd[0]);
+    mParTSitem->mNumIStargets = (short)numPoints;
+    mParTSitem->mIStargetsXY = new float[numPoints * 2];
+    mParTSitem->mMagOfIStargets = mMagIndex;
+
+    // Get IS and Preview map for first item
+    mParTSParam.firstPrevMapID = mPreviewMapIDs[indices[0]];
+    ISXcen = mISTargetISX[indices[0]];
+    ISYcen = mISTargetISY[indices[0]];
+
+    // If using extracts, load the area map
+    if (mParTSopts->extractVirtPrevs == 1) {
+      mWinApp->mNavigator->DoLoadMap(true, mapItem, -1);
+      imBuf = &mWinApp->GetImBufs()[mWinApp->mBufferManager->GetBufToReadInto()];
+    }
+
+    for (ind = 0; ind < numPoints; ind++) {
+      jnd = indices[ind];
+      mParTSitem->mIStargetsXY[2 * ind] = (float)(mISTargetISX[jnd] - ISXcen);
+      mParTSitem->mIStargetsXY[2 * ind + 1] = (float)(mISTargetISY[jnd] - ISYcen);
+      
+      if (mParTSopts->extractVirtPrevs == 1) {
+        item = itemArr->GetAt(navInd[ind]);
+        mWinApp->mMainView->GetItemImageCoords(imBuf, item, ptX, ptY);
+        mParTSParam.xCoordInArea.push_back(ptX);
+        mParTSParam.yCoordInArea.push_back(ptY);
+      } else {
+        mParTSParam.prevSectNums.push_back(mPrevMapSectNums[jnd]);
+        mParTSParam.xShiftInImage.push_back(mPrevMapShiftX[jnd]);
+        mParTSParam.yShiftInImage.push_back(mPrevMapShiftY[jnd]);
+      }
+    }
+
+    //Delete the extra nav items now that all parameters are stored in one item
+    mWinApp->mNavigator->m_bCollapseGroups = false;
+    for (ind = numPoints - 1; ind > 0; ind--) {
+      item = mWinApp->mNavigator->FindItemWithMapID(mPreviewMapIDs[indices[ind]]);
+      if (item) {
+        jnd = mWinApp->mNavigator->GetFoundItem();
+        mWinApp->mNavigator->ExternalDeleteItem(item, jnd);
+      }
+      item = mWinApp->mNavigator->FindItemWithMapID(mSavedTargetIDs[indices[ind]], false);
+      if (item) {
+        jnd = mWinApp->mNavigator->GetFoundItem();
+        mWinApp->mNavigator->ExternalDeleteItem(item, jnd);
+      }
+    }
+
+    ClearTargets(false);
+
+    //Close preview map file if open
+    ind = mWinApp->mDocWnd->StoreIndexFromName(mTargetMapFileName);
+    if (ind >= 0) {
+      mWinApp->mDocWnd->SetCurrentStore(ind);
+      mWinApp->mDocWnd->DoCloseFile();
+    }
+
+    item = mParTSitem;
+  }
+
+  mParTSParam.navID = mWinApp->mNavigator->MakeUniqueID();
+  mParTSParam.preTilt = mPretilt;
+  mParTSParam.xPitchAngle = mXpitch;
+  mParTSParam.mappingTilt = mMappingTilt;
+
+  ParallelTSParam *parTSParam = new ParallelTSParam;
+  *parTSParam = mParTSParam;
+  mParTSitem->mParallelTSIndex = (int)mWinApp->mNavigator->GetParallelTSArray()->Add(parTSParam);
+
+  mWinApp->mNavigator->FindItemWithMapID(mParTSitem->mMapID, false);
+  ind = mWinApp->mNavigator->GetFoundItem();
+  mParTSitem->mNote.Format("%d targets", mParTSitem->mNumIStargets);
+  mWinApp->mNavigator->UpdateListString(ind);
+  mWinApp->mMainView->DrawImage(); //TODO maybe don't need this because SetSelectedItem redraws
+  mWinApp->mNavigator->SetSelectedItem(ind);
+
+  //Check the TS box. If already checked for some reason, uncheck it first.
+  if (mWinApp->mNavigator->m_bTiltSeries) {
+    mWinApp->mNavigator->m_bTiltSeries = false;
+    mWinApp->mNavigator->UpdateData(false);
+    mWinApp->mNavigator->OnCheckTiltSeries();
+  }
+  mWinApp->mNavigator->m_bTiltSeries = true;
+  mWinApp->mNavigator->UpdateData(false);
+  mWinApp->mNavigator->OnCheckTiltSeries();
+
+  mSavedTSparamIndex = mParTSitem->mTSparamIndex;
+  return 0;
+}
+
+int CParallelTSHelper::GetTSparamItem(CMapDrawItem *&item)
+{
+  item = NULL;
+  MapItemArray *itemArr = mWinApp->mNavigator->GetItemArray();
+  int ind;
+
+  for (ind = 0; ind < itemArr->GetSize(); ind++) {
+    item = itemArr->GetAt(ind);
+    if (item->mTSparamIndex == mSavedTSparamIndex)
+      break;
+  }
+
+  if (ind == itemArr->GetSize() - 1)
+    ind = -1;
+
+  return ind;
+}
+
+void CParallelTSHelper::UpdateTSParams()
+{
+  CMapDrawItem *item;
+  int ind;
+  
+  ind = GetTSparamItem(item);
+  if (ind < 0) {
+    return;
+  }
+  mWinApp->mNavigator->SetSelectedItem(ind, false);
+  mWinApp->mNavigator->OnButTsparams();
+  mSavedTSparamIndex = item->mTSparamIndex;
+}

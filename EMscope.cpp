@@ -32,6 +32,7 @@
 #include "DoseModulator.h"
 #include "ZbyGSetupDlg.h"
 #include "BaseSocket.h"
+#include "ParallelTSDlg.h"
 #include <assert.h>
 #include "Shared\b3dutil.h"
 
@@ -2582,6 +2583,8 @@ void CEMscope::UpdateWindowsForStage()
   mWinApp->mLowDoseDlg.Update();
   if (mWinApp->GetShowRemoteControl())
     mWinApp->mRemoteControl.UpdateEnables();
+  if (mWinApp->mNavHelper->mParallelTSDlg->IsOpen())
+    mWinApp->mNavHelper->mParallelTSDlg->Update();
 }
 
 int CEMscope::TaskStageBusy()

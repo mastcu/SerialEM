@@ -575,6 +575,12 @@
     <ClInclude Include="XSliderCtrl.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="ParallelTSDlg.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ParallelTSHelper.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="res\bitmap1.bmp">
@@ -1396,6 +1402,12 @@
       <Filter>CSource Files</Filter>
     </ClCompile>
     <ClCompile Include="XSliderCtrl.cpp">
+      <Filter>CSource Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ParallelTSDlg.cpp">
+      <Filter>CSource Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ParallelTSHelper.cpp">
       <Filter>CSource Files</Filter>
     </ClCompile>
   </ItemGroup>

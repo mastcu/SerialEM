@@ -27,6 +27,7 @@
 #include "NavHelper.h"
 #include "HoleFinderDlg.h"
 #include "NavAcquireDlg.h"
+#include "ParallelTSDlg.h"
 
 #if defined(_DEBUG) && defined(_CRTDBG_MAP_ALLOC)
 #define new DEBUG_NEW
@@ -1349,6 +1350,8 @@ bool CMultiShotDlg::CanDoAutoAdjust(int magType, int areaToUse, int otherMag, in
 // given the image buffer (which can be NULL to use just area) or LD area
 ScaleMat CMultiShotDlg::ISfocusAdjustmentForBufOrArea(EMimageBuffer *imBufs, int area)
 {
+  mWinApp = (CSerialEMApp *)AfxGetApp();
+  mShiftManager = mWinApp->mShiftManager;
   ScaleMat focMat, sclMat;
   float scale, rotation, defocus = 0.;
   int spot, probe, ind;
@@ -1616,13 +1619,15 @@ void CMultiShotDlg::ManageEnables(void)
     mActiveParams->customHoleX.size() > 0;
   bool canAdjustIS = mShiftManager->GetFocusISCals()->GetSize() > 0 &&
     mShiftManager->GetFocusMagCals()->GetSize() > 0 && lowDose;
-  m_statBeamDiam.EnableWindow(enable);
-  m_statBeamMicrons.EnableWindow(enable);
-  m_editBeamDiam.EnableWindow(enable && !mDisabledDialog);
-  m_editExtraDelay.EnableWindow(!mDisabledDialog);
+  bool parallelTSopen = mWinApp->mNavHelper->mParallelTSDlg->IsOpen();
+
+  m_statBeamDiam.EnableWindow(enable && !parallelTSopen);
+  m_statBeamMicrons.EnableWindow(enable && !parallelTSopen);
+  m_editBeamDiam.EnableWindow(enable && !mDisabledDialog && !parallelTSopen);
+  m_editExtraDelay.EnableWindow(!mDisabledDialog && !parallelTSopen);
   m_butCancel.EnableWindow(!mDisabledDialog);
-  m_butUseIllumArea.EnableWindow(!mDisabledDialog && mRecBeamSizeEnabled);
-  m_butAdjustBeamTilt.EnableWindow(comaVsIS->magInd > 0 && !mDisabledDialog);
+  m_butUseIllumArea.EnableWindow(!mDisabledDialog && mRecBeamSizeEnabled && !parallelTSopen);
+  m_butAdjustBeamTilt.EnableWindow(comaVsIS->magInd > 0 && !mDisabledDialog && !parallelTSopen);
   m_statNumEarly.EnableWindow(m_iEarlyReturn > 0);
   m_editEarlyFrames.EnableWindow(m_iEarlyReturn > 0);
   m_butSaveRecord.EnableWindow(m_iEarlyReturn != 2 || m_iEarlyFrames != 0 ||

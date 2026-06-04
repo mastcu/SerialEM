@@ -71,6 +71,7 @@
 #include "RemoteControl.h"
 #include "./DirectElectron/DirectElectronToolDlg.h"
 #include "DectrisToolDlg.h"
+
 #include "Utilities\SEMUtilities.h"
 
 typedef std::set<std::string> StringSet;
@@ -100,7 +101,7 @@ enum Tasks {TASK_NAVIGATOR_ACQUIRE, TASK_DISTORTION_STAGEPAIR, TASK_CAL_BEAMSHIF
   TASK_SNAPSHOT_TO_BUF, TASK_NAV_FILE_RANGE, TASK_MONT_MACRO, TASK_LD_SHIFT_OFFSET,
   TASK_MULTI_GRID, TASK_MULGRID_SEQ, TASK_MULTI_MAP_HOLES, TASK_AUTO_STEP_ADJ_IS,
   TASK_PREV_PRESCAN, TASK_DECTRIS_FLATFIELD, TASK_DECTRIS_INITIALIZE, TASK_BKGD_MACRO,
-  TASK_BEAM_SIZE_CAL, TASK_EXIT_PROGRAM
+  TASK_BEAM_SIZE_CAL, TASK_EXIT_PROGRAM, TASK_IS_TO_PARALLELTS_TARGET
 };
 
 enum CalTypes {CAL_DONE_IS = 0, CAL_DONE_STAGE, CAL_DONE_FOCUS, CAL_DONE_BEAM, 
@@ -394,6 +395,7 @@ class CDistortionTasks;
 class CGainRefMaker;
 class CNavigatorDlg;
 class CNavHelper;
+class CParallelTSHelper;
 class CCalibCameraTiming;
 class CCookerSetupDlg;
 class CAutocenSetupDlg;
@@ -840,6 +842,7 @@ public:
   CGainRefMaker *mGainRefMaker;
   CNavigatorDlg *mNavigator;
   CNavHelper *mNavHelper;
+  CParallelTSHelper *mParallelTSHelper;
   CFalconHelper *mFalconHelper;
   CCalibCameraTiming *mCalibTiming;
   CCookerSetupDlg *mCookerDlg;

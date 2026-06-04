@@ -12693,6 +12693,8 @@ int CMacCmd::OpenDialog()
     mNavHelper->OpenMultiCombiner();
   } else if (mItem1upper.Find("AUTO") == 0) {
     mNavHelper->OpenAutoContouring(false);
+  } else if (mItem1upper.Find("PARA") == 0) {
+    mNavHelper->OpenParallelTS();
   } else
     ABORT_LINE("\"" + mStrItems[1] + "\" does not match any of the names for dialogs that "
       "can be opened for line:\n\n");
