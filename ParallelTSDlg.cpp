@@ -881,12 +881,14 @@ void CParallelTSDlg::OnDefinePtsFitPlane()
 void CParallelTSDlg::OnEnKillfocusEditPretilt()
 {
   UpdateData(true);
+  mWinApp->mParallelTSHelper->SetPretilt(m_fPretilt);
 }
 
 
 void CParallelTSDlg::OnEnKillfocusEditXpitch()
 {
   UpdateData(true);
+  mWinApp->mParallelTSHelper->SetXpitch(m_fXpitch);
 }
 
 
@@ -927,6 +929,7 @@ void CParallelTSDlg::OnStartNewTargetArea()
   mSettingUpTargetArea = true;
   mHasAreaMap = mWinApp->mNavigator->FindItemWithMapID(mWinApp->mParallelTSHelper->GetAreaMapID());
   mWinApp->mLowDoseDlg.Update();
+  mWinApp->mScope->TiltTo(m_fPretilt);
   Update();
   mWinApp->RestoreViewFocus();
 }
@@ -1006,7 +1009,7 @@ void CParallelTSDlg::OnSaveAreaMap()
   }
 
   Update();
-  //mWinApp->RestoreViewFocus();
+  mWinApp->RestoreViewFocus();
 }
 
 
@@ -1065,6 +1068,7 @@ void CParallelTSDlg::OnAddTargets()
 void CParallelTSDlg::OnSaveTargetMap()
 {
   mWinApp->AddIdleTask(TASK_IS_TO_PARALLELTS_TARGET, 0, 0);
+  mWinApp->RestoreViewFocus();
 }
 
 
@@ -1076,6 +1080,7 @@ void CParallelTSDlg::OnRemoveTarget()
     mWinApp->mNavigator->ExternalDeleteItem(item, mWinApp->mNavigator->GetFoundItem());
   }
   mWinApp->AddIdleTask(TASK_IS_TO_PARALLELTS_TARGET, 0, 0);
+  mWinApp->RestoreViewFocus();
 }
 
 
@@ -1187,6 +1192,7 @@ void CParallelTSDlg::OnSetupTiltSeries()
 {
   mWinApp->mParallelTSHelper->UpdateTSParams();
   Update();
+  mWinApp->RestoreViewFocus();
 }
 
 void CParallelTSDlg::OnOpenCloseOptions()
@@ -1249,6 +1255,7 @@ void CParallelTSDlg::OnBeamsizecircles()
 {
   UpdateData(true);
   DialogToOptions();
+  mWinApp->mNavigator->Redraw();
 }
 
 

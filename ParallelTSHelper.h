@@ -85,6 +85,8 @@ public:
   GetMember(int, AreaMapID);
   GetSetMember(int, SavedTSparamIndex);
   GetMember(ParallelTSParam, ParTSParam);
+  GetSetMember(float, Pretilt);
+  GetSetMember(float, Xpitch);
   bool DoingISToTargets() { return mDoingISToTargets; };
   int GetNumSavedTargets() { return (int)mSavedTargetIDs.size(); };
   int ISToTargetsBusy();

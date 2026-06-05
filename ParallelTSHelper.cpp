@@ -211,7 +211,8 @@ void CParallelTSHelper::StopParallelTSShift(bool error)
   if (mActionAtTarget == PARALLELTS_ACTION_AUTOFOCUS) {
     numPoints = (int)mISTargetPointIDs.size();
     if (numPoints > 0) {
-      item = mWinApp->mNavigator->FindItemWithMapID(mISTargetPointIDs[0], false);
+      item = mWinApp->mNavigator->FindItemWithMapID(
+        mISTargetPointIDs[numPoints - 1], false);
       if (item && item->mDrawnOnMapID) {
         mapItem = mWinApp->mNavigator->FindItemWithMapID(item->mDrawnOnMapID);
         if (mapItem)
@@ -388,8 +389,19 @@ void CParallelTSHelper::ISToTargetNextTask(int param)
     if (!mInitialStateSaved) {
       SaveInitialState();
     }
+ 
+    bool skipSave = mActionAtTarget == PARALLELTS_ACTION_AUTOFOCUS && mISTargetIter == 0;
 
-    if (SaveTarget(mess)) {
+    if ((mSavedTargetIDs.size() == 0 && mActionAtTarget == PARALLELTS_ACTION_PREVIEW) 
+      || skipSave) {
+      mCenterStageX = mCurISTargetItem->mStageX;
+      mCenterStageY = mCurISTargetItem->mStageY;
+      mWinApp->mScope->GetImageShift(mCenterISX, mCenterISY);
+      mLastISX = mCenterISX;
+      mLastISY = mCenterISY;
+    }
+    
+    if (!skipSave && SaveTarget(mess)) {
       mISTargetFailedIDs.push_back(mapID);
       str.Format("Could not save target %d due to error: %s", mapID, mess);
       AfxMessageBox(str, MB_EXCLAME);
@@ -456,7 +468,8 @@ void CParallelTSHelper::ISToTargetNextTask(int param)
     mDoNextShift = true;
 
     if (mActionAtTarget == PARALLELTS_ACTION_AUTOFOCUS) {
-      mWinApp->mFocusManager->AutoFocusStart(1, -2);
+      if (mISTargetIter)
+        mWinApp->mFocusManager->AutoFocusStart(1, -2);
     } else if (mActionAtTarget == PARALLELTS_ACTION_PREVIEW) {
 
       // Taking Previews: Stop iterations to allow user to refine IS
@@ -627,7 +640,8 @@ int CParallelTSHelper::SaveInitialState()
   }
 
   mWinApp->mScope->GetStagePosition(mBaseStageX, mBaseStageY, stageZ);
-  if (!canAdjustIS && ((imBufs->mLowDoseArea && (imBufs->mConSetUsed == VIEW_CONSET ||
+  if (mActionAtTarget == PARALLELTS_ACTION_PREVIEW &&
+    !canAdjustIS && ((imBufs->mLowDoseArea && (imBufs->mConSetUsed == VIEW_CONSET ||
     imBufs->mConSetUsed == SEARCH_CONSET) && imBufs->mViewDefocus < focusLim) ||
     (mWinApp->LowDoseMode() && IS_AREA_VIEW_OR_SEARCH(area) &&
       mWinApp->mScope->GetLDViewDefocus(area) < focusLim))) {
@@ -679,22 +693,9 @@ int CParallelTSHelper::SaveTarget(CString &err)
   EMimageBuffer *imBufs = mWinApp->GetImBufs();
   ScaleMat focMat;
   ComaVsISCalib *comaVsIS = mWinApp->mAutoTuning->GetComaVsIScal();
-  int size = mActionAtTarget == PARALLELTS_ACTION_PREVIEW ? (int)mISTargetISX.size() : 
-    (int)mISTargetDefocus.size();
 
   area = mWinApp->mScope->GetLowDoseArea();
   mapID = mCurISTargetItem->mMapID;
-
-
-  if (size == 0) {
-
-    mCenterStageX = mCurISTargetItem->mStageX;
-    mCenterStageY = mCurISTargetItem->mStageY;
-
-    mWinApp->mScope->GetImageShift(mCenterISX, mCenterISY);
-    mLastISX = mCenterISX;
-    mLastISY = mCenterISY;
-  } 
   
   mWinApp->mScope->GetStagePosition(stageX, stageY, stageZ);
   if (fabs(stageX - mBaseStageX) > ISlimit ||
@@ -996,13 +997,12 @@ int CParallelTSHelper::AssessPtsToFitPlane(FloatVec &ptsX, FloatVec &ptsY, Float
 int CParallelTSHelper::AssessISTargetShiftLimit(IntVec indexVec, CString &mess, 
   IntVec *sortedIndexVec)
 {
-  int numPoints, centerPtInd;
+  int numPoints, centerPtInd, newInd;
   FloatVec ptsX, ptsY;
   CMapDrawItem *item;
   MapItemArray *itemArr = mWinApp->mNavigator->GetItemArray();
-  float dist, cenX = 0.f, cenY = 0.f;
+  float dist, stageZ, cenX, cenY;
   float distToCen;
-  //TODO prob don't need mess anymore
   float ISlimit = mWinApp->mShiftManager->GetRegularShiftLimit();
 
   numPoints = (int)indexVec.size();
@@ -1011,9 +1011,13 @@ int CParallelTSHelper::AssessISTargetShiftLimit(IntVec indexVec, CString &mess,
     item = itemArr->GetAt(indexVec[i]);
     ptsX.push_back(item->mStageX);
     ptsY.push_back(item->mStageY);
+    if (i == 0)
+      stageZ = item->mStageZ;
   }
 
   if (sortedIndexVec) {
+    cenX = 0.f;
+    cenY = 0.f;
     for (int i = 0; i < numPoints; i++) {
       cenX += ptsX[i];
       cenY += ptsY[i];
@@ -1029,25 +1033,30 @@ int CParallelTSHelper::AssessISTargetShiftLimit(IntVec indexVec, CString &mess,
         distToCen = dist;
       }
     }
+
+    mWinApp->mNavigator->AddItemFromStagePositions(&cenX, &cenY, 1, stageZ,
+      mWinApp->mNavHelper->mParallelTSDlg->GetFitPlaneGroupID());
+    itemArr = mWinApp->mNavigator->GetItemArray();
+    newInd = (int)itemArr->GetSize() - 1;
+
+    //Place center point first in vectors
+    sortedIndexVec->resize(1, newInd);
+    indexVec.insert(indexVec.begin(), newInd);
+    ptsX.insert(ptsX.begin(), cenX);
+    ptsY.insert(ptsY.begin(), cenY);
   } else {
-    centerPtInd = 0;
+    cenX = ptsX[0];
+    cenY = ptsY[0];
   }
 
-  //Place center point first in final vectors
-  if (sortedIndexVec)
-    sortedIndexVec->resize(1, indexVec[centerPtInd]);
-
   // Remove points beyond image shift limit
-  for (int i = 0; i < numPoints; i++) {
-    if (i != centerPtInd) {
-      if (fabs(ptsX[i] - ptsX[centerPtInd]) <= ISlimit &&
-        fabs(ptsY[i] - ptsY[centerPtInd]) <= ISlimit) {
-        if (sortedIndexVec)
-          sortedIndexVec->push_back(indexVec[i]);
-      } else {
-        PrintfToLog("WARNING: Point at navigator index %d is beyond image shift limit\n"
-          " and therefore unusable.", indexVec[i] + 1);
-      }
+  for (int i = 1; i < (int)indexVec.size(); i++) {
+    if (fabs(ptsX[i] - cenX) <= ISlimit && fabs(ptsY[i] - cenY) <= ISlimit) {
+      if (sortedIndexVec)
+        sortedIndexVec->push_back(indexVec[i]);
+    } else {
+      PrintfToLog("WARNING: Point at navigator index %d is beyond image shift limit\n"
+        " and therefore unusable.", indexVec[i] + 1);
     }
   }
   return 0;
@@ -1086,7 +1095,7 @@ int CParallelTSHelper::AssessPtsToFitPlane(IntVec indexVec, IntVec &sortedIndexV
   }
 
   for (int i = 0; i < (int)sortedIndexVec.size(); i++) {
-    item = itemArr->GetAt(indexVec[i]);
+    item = itemArr->GetAt(sortedIndexVec[i]);
     ptsX.push_back(item->mStageX);
     ptsY.push_back(item->mStageY);
   }

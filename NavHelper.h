@@ -865,12 +865,5 @@ public:
   int GetHoleGeometry(float &holeSize, float &holeSpacing, bool &hex,
     EMimageBuffer *imBuf, bool *fromMapPtr = NULL);
   int CenterAddedPointInHole(EMimageBuffer* imBuf, float &inX, float &inY, CString &errStr);
-  void ConvexHullLongAxis(FloatVec ptsX, FloatVec ptsY, float *aspectRatio,
-    float *longAxis, float anglePrecision = 1.f);
-  int AssessISTargetShiftLimit(IntVec indexVec, IntVec &sortedIndexVec, 
-    CString &mess, bool findCenterPt = false);
-  int AssessPtsToFitPlane(int groupID, IntVec &sortedIndexVec, CString &mess);
-  int AssessPtsToFitPlane(FloatVec &ptsX, FloatVec &ptsY, FloatVec &ptsZ, CString &mess);
-  int AssessPtsToFitPlane(IntVec indexVec, IntVec &sortedIndexVec, CString &mess);
 };
 
