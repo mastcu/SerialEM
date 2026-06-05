@@ -531,6 +531,7 @@ void CParallelTSDlg::ExternalUpdate()
     else if (mAddingTargets)
       OnAddTargets();
   }
+  mWinApp->RestoreViewFocus();
 }
 
 // Save a copy of the original ParallelTSoptions and load them into the dialog
@@ -662,6 +663,7 @@ void CParallelTSDlg::DoPlaneFit()
   err = mWinApp->mParallelTSHelper->StartShiftToTargets(mapIDs, true);
 
   Update();
+  mWinApp->RestoreViewFocus();
 }
 
 void CParallelTSDlg::UpdatePlaneParams(float pretilt, float xPitchAngle) 
@@ -670,6 +672,7 @@ void CParallelTSDlg::UpdatePlaneParams(float pretilt, float xPitchAngle)
   m_fXpitch = roundf(xPitchAngle * 100) / 100.f;
   UpdateData(false);
   Update();
+  mWinApp->RestoreViewFocus();
 }
 
 void CParallelTSDlg::StartRefineTargets()
@@ -720,6 +723,7 @@ void CParallelTSDlg::StartRefineTargets()
 
   UpdateData(true);
   Update();
+  mWinApp->RestoreViewFocus();
 }
 
 void CParallelTSDlg::FinishFitPlane()
@@ -728,6 +732,7 @@ void CParallelTSDlg::FinishFitPlane()
   mWinApp->mNavigator->Redraw();
   UpdateData(true);
   Update();
+  mWinApp->RestoreViewFocus();
 }
 
 void CParallelTSDlg::FinishRefineTargets(bool error)
@@ -740,6 +745,7 @@ void CParallelTSDlg::FinishRefineTargets(bool error)
 
   UpdateData(true);
   Update();
+  mWinApp->RestoreViewFocus();
 }
 
 

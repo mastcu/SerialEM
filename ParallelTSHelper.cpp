@@ -57,6 +57,7 @@ CParallelTSHelper::CParallelTSHelper()
   mParTSParam.firstPrevMapID = -1;
   mParTSParam.mappingTilt = 0.f;
   mParTSParam.preTilt = 0.f;
+  mTiltDuringFit = 0.;
 }
 
 CParallelTSHelper::~CParallelTSHelper()
@@ -185,8 +186,7 @@ void CParallelTSHelper::StopParallelTSShift(bool error)
 {
   int numPoints;
   CMapDrawItem *item, *mapItem;
-
-  mWinApp->mShiftManager->SetMouseMoveStage(mSavedMouseStage);
+  
   mISTargetIter = -1;
 
   if (mCamera->Acquiring()) {
@@ -231,6 +231,7 @@ void CParallelTSHelper::StopParallelTSShift(bool error)
     mWinApp->mNavHelper->mParallelTSDlg->FinishFitPlane();
     ClearTargets(true);
   } else if (mActionAtTarget == PARALLELTS_ACTION_PREVIEW) {
+    mWinApp->mShiftManager->SetMouseMoveStage(mSavedMouseStage);
     mWinApp->mNavHelper->mParallelTSDlg->FinishRefineTargets(error);
     if (error)
       ClearSavedTargets();
@@ -399,6 +400,7 @@ void CParallelTSHelper::ISToTargetNextTask(int param)
       mWinApp->mScope->GetImageShift(mCenterISX, mCenterISY);
       mLastISX = mCenterISX;
       mLastISY = mCenterISY;
+      mTiltDuringFit = mWinApp->mScope->GetTiltAngle();
     }
     
     if (!skipSave && SaveTarget(mess)) {
@@ -745,7 +747,7 @@ int CParallelTSHelper::SaveTarget(CString &err)
 
     } else {
       defocus = (float)mWinApp->mScope->GetDefocus();
-      mISTargetDefocus.push_back(defocus);
+      mISTargetDefocus.push_back(-defocus);
 
       if (mISTargetDefocus.size() == 1) {
         mBaseDefocus = defocus;
@@ -808,6 +810,10 @@ int CParallelTSHelper::FitPlane(float &pretilt, float &xPitch, float &residual,
     dev = mISTargetDefocus[i] -
       (mISTargetSSX[i] * xCoef + mISTargetSSY[i] * yCoef + zIntercept);
     residuals.push_back(B3DABS(dev));
+    if (GetDebugOutput('N')) {
+      PrintfToLog("%d  %.4f  %.4f  %.4f  %.4f", i, mISTargetSSX[i], mISTargetSSY[i],
+        mISTargetDefocus[i], dev);
+    }
   }
 
   if (numPoints > MIN_NUM_POINTS_TO_FIT_PLANE) {
@@ -863,9 +869,17 @@ int CParallelTSHelper::FitPlane(float &pretilt, float &xPitch, float &residual,
 
   }
 
-  alpha = atan(yCoef);
-  pretilt = -alpha / (float)RADIANS_PER_DEGREE;
-  xPitch = atan(xCoef / (cos(alpha) - yCoef * sin(alpha))) / (float)RADIANS_PER_DEGREE;
+  //Measured angle from fit, which is current stage tilt plus specimen tilt
+  alpha = atan(yCoef); 
+
+  //Pretilt is the tilt angle that will make the specimen level
+  pretilt = (float)mTiltDuringFit - alpha / (float)RADIANS_PER_DEGREE; 
+  xPitch = -atan(xCoef / (cos(alpha) - yCoef * sin(alpha))) / (float)RADIANS_PER_DEGREE;
+
+  if (GetDebugOutput('N')) {
+    PrintfToLog("xcoef =  %.4f, ycoef =  %.4f, zintercept =  %.4f", xCoef, yCoef, zIntercept);
+    PrintfToLog("alpha =  %.4f, pretilt = %.4f, xPitch = %.4f", alpha, pretilt, xPitch);
+  }
 
   return 0;
 }

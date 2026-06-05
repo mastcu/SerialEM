@@ -33,6 +33,7 @@ private:
   double mBaseStageX, mBaseStageY;
   float mCenterStageX, mCenterStageY;
   double mCenterISX, mCenterISY;
+  double mTiltDuringFit;
   
   bool mAdjustBeamTilt;
   int mMagIndex;
