@@ -4837,7 +4837,7 @@ int CNavHelper::SetOrChangeFilename(int itemNum, int listType, ScheduledFile *sc
   if (mDocWnd->FilenameForSaveFile(fileType, lpszFileName, filename))
     return -1;
 
-  if (item->mTSparamIndex >= 0) {
+  if (item->mTSparamIndex >= 0 || listType == NAVFILE_TS) {
 
     // Checks for parallel TS files: count up ones that are open or already exist
     CheckParallelTSFiles(filename, item, numBadStores, &numExists);
