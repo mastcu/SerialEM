@@ -64,7 +64,7 @@ enum {
   BIDIR_CHECK_SHIFT, BIDIR_TRACK_SHOT, BIDIR_ALIGN_TRACK, BIDIR_RELOAD_REFS,
   BIDIR_LOWMAG_REF, BIDIR_COPY_LOWMAG_REF, BIDIR_AUTOFOCUS, BIDIR_REVERSE_TILT,
   BIDIR_FINISH_INVERT, GET_DEFERRED_SUM, DOSYM_SWITCH_TO_BIDIR, DOSYM_ANCHOR_SHOT,
-  DOSYM_REALIGN_SHOT, WAIT_FOR_DRIFT, RECHECK_SCOPE_EVENTS
+  DOSYM_REALIGN_SHOT, WAIT_FOR_DRIFT, RECHECK_SCOPE_EVENTS, PREWALK_REVERSE_TILT
 };
 
 // Every item in enum should have an entry, with text for the phrase in the resume dialog
@@ -117,6 +117,7 @@ static const char *actionText[][2] =
 {"DOSYM_REALIGN_SHOT", "realign to the anchor."},
 {"WAIT_FOR_DRIFT", "wait for drift to settle"},
 {"RECHECK_SCOPE_EVENTS", "check for disturbances by the scope"},
+{"PREWALK_REVERSE_TILT", "reverse tilt before walkup"},
 {"", ""}};   // End with empty strings
 
 #define NO_PREVIOUS_ACTION   -1
@@ -198,6 +199,7 @@ static int actions[] = {
   ZEROTILT_PREVIEW,
   ALIGN_ZEROTILT_PREVIEW,
   EUCENTRICITY,
+  PREWALK_REVERSE_TILT,
   WALK_UP,
   POST_WALKUP_SHOT,
   STARTUP_AUTOFOCUS,
@@ -3243,6 +3245,15 @@ void CTSController::NextAction(int param)
       mNeedGoodAngle = true;
       return;
 
+    // PRE-WALK REVERSE TILT if walking and using Low Dose Trial with small FOV
+    } else if (NextActionIs(mActIndex, PREWALK_REVERSE_TILT) &&
+      fabs(angle - mStartingTilt) > 0.1) {
+      if (mComplexTasks->ReverseTilt(mStartingTilt > angle ? 1 : -1)) {
+        mWinApp->AddIdleTask(TASK_TILT_SERIES, 0, 0);
+        mReversingTilt = true;
+        return;
+      }
+
     // WALK UP if not near enough to the starting tilt
     } else if (NextActionIs(mActIndex, WALK_UP) &&
       fabs(angle - mStartingTilt) > 0.1) {
@@ -3611,6 +3622,14 @@ BOOL CTSController::NextActionIsReally(int nextIndex, int action, int testStep)
   case EUCENTRICITY:
     return (mCanFindEucentricity && mTSParam.refineEucen &&
       !mComplexTasks->GetHitachiWithoutZ());
+
+  // PRE WALKUP REVERSE TILT if low dose and T not big enough
+  case PREWALK_REVERSE_TILT:
+    if (!mLowDoseMode || mComplexTasks->GetWalkUseViewInLD())
+      return false;
+    return (mShiftManager->GetPixelSize(mWinApp->GetCurrentCamera(),
+      mLDParam[TRIAL_CONSET].magIndex) * B3DMIN(mCamParams->sizeX, mCamParams->sizeY) <
+      0.67 * mComplexTasks->GetMinRTField());
 
   case WALK_UP:
   case STARTUP_AUTOFOCUS:
@@ -7588,7 +7607,7 @@ int CTSController::ParallelTSSetup(CMapDrawItem *item, CString &errStr)
 
     // Then get specimen coords for applying equations
     ApplyScaleMatrix(mCmat, ISX, ISY, specX, specY);
-    zZero = specX * tanf(DTORFL * mParTSParams->xPitchAngle);
+    zZero = -specX * tanf(DTORFL * mParTSParams->xPitchAngle);
     yZero = (specY + zZero * sinMapAlf) / cosf(delMapAng);
     specY = yZero * cosf(delBidAng) - zZero * sinBidAlf;
     ApplyScaleMatrix(mCinv, specX, specY, 

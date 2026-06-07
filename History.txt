@@ -3,6 +3,19 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+6/7/26: Parallel tilt series capability added to tilt series controller.
+
+6/7/26: Added a reverse tilt step to tilt series if walkup is being done with
+a Trial area that is not big enough to handle a tilt backlash.
+
+6/7/26: Accounted for shift in image being aligned to when applying align
+limits in autoalign.
+
+6/7/26: Stored the ID of item at which a high mag map is acquired so that
+Realign to Item can align to that map by first aligning to the item with that
+ID then rely on View/Search offset to get to the right position for the higher
+mag map.
+
 6/3/26: Allowed background script to run during long operations and added
 script command to find out what operations are running.
 
