@@ -104,6 +104,7 @@ public:
   int mDrawnOnMapID;      // ID of map point/polygon was drawn on
   int mAtSamePosID;       // Items with this matching were taken at same raw stage pos
   int mFitToPolygonID;    // ID of polygon that montage was fit to
+  int mAcquiredAtID;      // ID of item at which this map was acquired if realign used
   int mPieceDrawnOn;      // Index of piece in map that item was drawn on
   float mXinPiece;        // Coordinates in unbinned piece        
   float mYinPiece;

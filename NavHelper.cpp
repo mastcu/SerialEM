@@ -953,7 +953,7 @@ int CNavHelper::RealignToItem(CMapDrawItem *inItem, BOOL restoreState,
 {
   int i, ix, iy, ind, axes, action;
   BOOL justMoveIfSkipCen = (realiFlags & REALI2ITEM_JUST_MOVE) ? 1 : 0;
-  CMapDrawItem *item;
+  CMapDrawItem *item, *findForItem, *drawnItem;
   KImageStore *imageStore;
   float useWidth, useHeight, montErrX, montErrY, itemBackX, itemBackY, field;
   MontParam *montP;
@@ -977,7 +977,25 @@ int CNavHelper::RealignToItem(CMapDrawItem *inItem, BOOL restoreState,
     }
   }
 
-  i = FindMapForRealigning(inItem, restoreState);
+  // If it is an LD map acquired with realign to item from a point drawn on view or
+  // Search and there are shift offsets, and the drawn point and map still exist,
+  // set up to do realign to the drawn point and bypass whatever adjustments were going
+  // to be used to try to get to the final map position, which don't work
+  findForItem = inItem;
+  if (inItem->mAcquiredAtID && inItem->mMapLowDoseConSet >= 0 && mWinApp->LowDoseMode()) {
+    item = mNav->FindItemWithMapID(inItem->mAcquiredAtID, false);
+    if (item && item->mDrawnOnMapID) {
+      drawnItem = mNav->FindItemWithMapID(item->mDrawnOnMapID);
+      if (drawnItem && IS_SET_VIEW_OR_SEARCH(drawnItem->mMapLowDoseConSet) &&
+        (drawnItem->mNetViewShiftX || drawnItem->mNetViewShiftY)) {
+        findForItem = item;
+      }
+    }
+  }
+
+  i = FindMapForRealigning(findForItem, restoreState);
+  if (i && findForItem != inItem)
+    i = FindMapForRealigning(inItem, restoreState);
   mRIContinuousMode = mContinuousRealign;
   mContinuousRealign = 0;
   if (i)
