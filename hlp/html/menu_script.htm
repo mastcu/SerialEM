@@ -384,8 +384,8 @@
       <p>Use this command to start a script to run continuously in the background, the 
         same as with the script command 'RunBackgroundScript'.&nbsp; The script is 
         started once and then is able to execute commands whenever the program is idle, 
-        or when a regular script allows it to run. Currently the script is not allowed 
-        to execute during other program operations, but this capability can be added for 
+        or when a regular script allows it to run. Currently the script is allowed 
+        to execute during &#39;long operations&#39; but not other program operations; this capability can be added for 
         particular operations if the need becomes clear.&nbsp; The background script can 
         do synchronized communication with a regular script using a special shared 
         variable referred to as the 'background script variable'.&nbsp; This variable 

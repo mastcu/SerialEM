@@ -962,7 +962,7 @@ CSerialEMApp theApp;
 BOOL CSerialEMApp::InitInstance()
 {
   int iSet, iCam, iAct, mag, indSpace, indQuote1, indQuote2;
-  bool anyFrameSavers = false, anyDectris = false;
+  bool anyFrameSavers = false, mAnyDectris = false;
   char fullPath[MAX_PATH + 10];
   CameraParameters *camP;
   CString message, dropCameras, settingsFile, str;
@@ -1458,7 +1458,7 @@ BOOL CSerialEMApp::InitInstance()
       }
     }
     if (camP->DectrisType)
-      anyDectris = true;
+      mAnyDectris = true;
   }
 
   mScopeHasFilter = anyGIF || mScope->GetHasOmegaFilter();
@@ -1513,7 +1513,7 @@ BOOL CSerialEMApp::InitInstance()
   CREATE_IF_SHOWING(mScopeHasSTEM && !IsIDinHideSet(-20), 10);
   CREATE_IF_SHOWING(mScopeHasFilter && !IsIDinHideSet(-21), 11);
   CREATE_IF_SHOWING(mDEcamCount > 0 && !IsIDinHideSet(-22), 12);
-  CREATE_IF_SHOWING(anyDectris && !IsIDinHideSet(-23), 13);
+  CREATE_IF_SHOWING(mAnyDectris && !IsIDinHideSet(-23), 13);
 
   if (mDEcamCount > 0)
 	  mDEToolDlg.setUpDialogNames(DE_camNames,mDEcamCount);
@@ -5881,6 +5881,9 @@ void CSerialEMApp::SetBasicMode(BOOL inVal)
 
   for (ind = 0; ind < MAX_TOOL_DLGS; ind++) {
     if (mBasicIDsToHide.count(-10 - ind)) {
+      if ((ind == -20 && !mScopeHasSTEM) || (ind == -21 && !mScopeHasFilter) ||
+        (ind == -22 && !mDEcamCount) || (ind == -23 && !mAnyDectris))
+        continue;
       if (ind == REMOTE_PANEL_INDEX) {
         if (BOOL_EQUIV(mShowRemoteControl, inVal))
           OnShowScopeControlPanel();
