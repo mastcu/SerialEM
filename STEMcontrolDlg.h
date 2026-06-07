@@ -36,6 +36,7 @@ public:
 	virtual BOOL OnInitDialog();
   void UpdateEnables(void);
   void UpdateSettings(void);
+  void UpdateHiding(void);
   CButton m_butStemMode;
   BOOL m_bStemMode;
   CStatic m_statOnOff;

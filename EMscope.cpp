@@ -10702,6 +10702,8 @@ int CEMscope::StartLongOperation(int *operations, float *hoursSinceLast, int num
       mWinApp->AppendToLog("Started a long running operation: " +
         sLongOpDescriptions[thread]);
     startedThread = true;
+    mSavedAllowBkgdMacro = mWinApp->GetAllowBkgdMacroTime();
+    mWinApp->SetAllowBkgdMacroTime(true);
   }
   if (startedThread) {
     if (mWinApp->mParticleTasks->GetDVDoingDewarVac())
@@ -11070,10 +11072,43 @@ int CEMscope::LongOperationBusy(int index)
     }
 
     mDoingLongOperation = false;
+    mWinApp->SetAllowBkgdMacroTime(mSavedAllowBkgdMacro);
     mCamera->SetSuspendFilterUpdates(false);
     mWinApp->SetStatusText(mWinApp->mParticleTasks->GetDVDoingDewarVac() ?
       SIMPLE_PANE : MEDIUM_PANE, "");
     mWinApp->UpdateBufferWindows();
+  }
+  return retval;
+}
+
+// Returns details about what operation is running for a script call
+int CEMscope::GetLongOperationsRunning(int &first, int &second, CString &str1,
+  CString &str2)
+{
+  int thread, op, longOp, retval = 0;
+  if (!mDoingLongOperation)
+    return 0;
+  first = -1;
+  second = -1;
+  str1 = "";
+  str2 = "";
+  for (thread = 0; thread < 1; thread++) {
+    if (!mLongOpThreads[thread])
+      continue;
+    for (op = 0; op < mLongOpData[thread].numOperations; op++) {
+      if (!mLongOpData[thread].finished[op]) {
+        longOp = mLongOpData[thread].operations[op];
+        if (retval) {
+          second = longOp;
+          str2 = longOpDescription[longOp];
+        } else {
+          first = longOp;
+          str1 = longOpDescription[longOp];
+        }
+        retval++;
+        break;
+      }
+    }
   }
   return retval;
 }

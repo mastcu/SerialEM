@@ -4216,6 +4216,15 @@
           </TD>
         </TR>
         <TR>
+          <TD class="scriptcommand">ReportLongOperations</TD>
+          <TD>Returns information about what long operations are running: the number 
+            running, which can be 0, 1, or 2; the index of the first one running or -1 if 
+            none; the index of the second one or -1 if none; the description string for the 
+            first one if any; and the string for the second one, if any.&nbsp; If there are 
+            two operations, the first is a scope operation and the second is a camera one.&nbsp; 
+            Command added in 4.3, 3-Jun-26.</TD>
+        </TR>
+        <TR>
           <TD class="scriptcommand">ManageDewarsAndPumps [#]</TD>
           <TD>Runs the scope management routine configured in the
             <a href="hidd_manage_dewars.htm">Dewar and Vacuum Management</a> dialog. &nbsp;For
