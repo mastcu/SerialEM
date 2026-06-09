@@ -1016,8 +1016,8 @@ int CParticleTasks::ProcessParallelTSImage(CString &errStr)
     }
 
     // reduce image, adjust the shift, and put new ref in stack if there was a good
-    // alignment or no alignment
-    if (ptsd.shiftX > EXTRA_VALUE_TEST || !hasRef) {
+    // alignment or no alignment; or even bad alignment for extracted ref
+    if (ptsd.shiftX > EXTRA_VALUE_TEST || !hasRef || (firstTilt && extractedRef)) {
       if (mWinApp->mProcessImage->ReduceImage(mImBufs, reduction, &errStr, 1, false))
         return 1;
       mImBufs[1].mImage->setShifts(shiftX / reduction, shiftY / reduction);
