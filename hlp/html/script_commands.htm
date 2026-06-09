@@ -1384,6 +1384,14 @@
             its binning) under the current conditions, namely at the current magnification if outside 
             Low Dose mode, or at the magnification of the corresponding area in Low Dose mode.</TD>
         </TR>
+        <tr>
+          <TD class="scriptcommand">ReportDoseFracParams set</TD>
+          <TD>Reports values in the given parameter set for: dose fractionation, frames 
+            saving, frame alignment; use of Framealign (1 or 2 for aligning in SerialEM or 
+            IMOD), frame summing (for a K2 camera) or the frame sum count in counting mode 
+            (for a DE camera), and frame time.&nbsp; Some values will not be meaningful for 
+            some cameras.&nbsp; Command added in 4.3, 8-Jun-26.</TD>
+        </tr>
         <TR>
           <TD class="scriptcommand">SetDoseFracParams set #D [#S] [#A] [#M] [#C]&nbsp;</TD>
           <TD>Sets dose fractionation or frame saving/aligning parameters for <B>set</B>; follow with up to 5
@@ -1394,6 +1402,12 @@
             <b>#S</b> sets a variable that holds flags for 3 different settings.&nbsp; Set this to the sum of 
             16 to save summed frames, 4 to save final images, and 32 to save single (unsummed) frames.
             &nbsp; If an optional value is not included, the respective parameter is unchanged.</TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">ReportMiscCameraParams set</TD>
+          <TD>For <b>set</b>, reports the processing type (0 for unprocessed, 1 for dark-subtracted, 
+            2 for gain-normalized), and 0 for single frame or 1 for continuous mode.&nbsp; Command 
+            added in 4.3, 9-Jun-26.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">RestoreCameraSet [set]</TD>
