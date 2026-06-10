@@ -2003,6 +2003,8 @@ void CSerialEMApp::CleanupAndReportCrash(CString &message)
       !mScope->GetNoColumnValve()) {
       mScope->SetColumnValvesOpen(false, true);
       message += "\r\n\r\nValves have been closed";
+      if (JEOLscope)
+        mScope->RestoreStageSpeed();
     }
   }
   catch (...) {
