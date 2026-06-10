@@ -4068,6 +4068,23 @@ BOOL CEMscope::SetEmissionState(int state)
   return success;
 }
 
+// Restore stage speed on exiting or crashing
+BOOL CEMscope::RestoreStageSpeed()
+{
+  BOOL success = false;
+  if (!sInitialized || !mPlugFuncs->RestoreStageSpeed)
+    return false;
+  ScopeMutexAcquire("RestoreStageSpeed", true);
+  try {
+    mPlugFuncs->RestoreStageSpeed();
+    success = true;
+  }
+  catch (_com_error E) {
+  }
+  ScopeMutexRelease("RestoreStageSpeed");
+  return success;
+}
+
 // MAGNIFICATION AND PROJECTOR NORMALIZATION
 
 // Get the magnification value

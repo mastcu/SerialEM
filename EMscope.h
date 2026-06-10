@@ -578,6 +578,7 @@ public:
   BOOL SetFilamentCurrent(double current);
   BOOL GetEmissionState(int &state);
   BOOL SetEmissionState(int state);
+  BOOL RestoreStageSpeed();
   GetSetMember(float, FilamentCurrentScale);
   GetSetMember(float, DiffShiftScaling);
   GetSetMember(int, UseTEMScripting);

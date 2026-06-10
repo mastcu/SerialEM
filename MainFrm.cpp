@@ -505,6 +505,8 @@ void CMainFrame::DoClose(bool afterScript)
   }
 
   mWinApp->SetAppExiting(true);
+  if (JEOLscope)
+    mWinApp->mScope->RestoreStageSpeed();
   mWinApp->mCamera->CheckAndFreeK2References(true);
   if (mWinApp->mCamera->HasDoseModulator())
     mWinApp->mCamera->mDoseModulator->SetDutyPercent(100., str);
