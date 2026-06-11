@@ -1140,8 +1140,10 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
             AfxMessageBox("Error in window placement line in settings file "
               + strFileName + " :\n" + strLine, MB_EXCLAME);
         } else {
-          place = mWinApp->GetNavPlacement();
-          if (NAME_IS("MeterPlacement"))
+          place = &winPlace;
+          if (NAME_IS("NavigatorPlacement"))
+            place = mWinApp->GetNavPlacement();
+          else if (NAME_IS("MeterPlacement"))
             place = mWinApp->mScopeStatus.GetMeterPlacement();
           else if (NAME_IS("DosePlacement"))
             place = mWinApp->mScopeStatus.GetDosePlacement();

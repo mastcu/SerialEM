@@ -578,6 +578,7 @@ public:
   BOOL SetFilamentCurrent(double current);
   BOOL GetEmissionState(int &state);
   BOOL SetEmissionState(int state);
+  BOOL RestoreStageSpeed();
   GetSetMember(float, FilamentCurrentScale);
   GetSetMember(float, DiffShiftScaling);
   GetSetMember(int, UseTEMScripting);
@@ -939,6 +940,7 @@ private:
   BOOL mSkipNextBeamShift;    // Flag to skip shifting beam on next IS change
   bool mDoingLongOperation;   // Flag that any long operation is active
   int mLongOpErrorToReport;   // A value to set reported value in in script
+  bool mSavedAllowBkgdMacro;  // Saved value of allowing backgroup script before long op
   BOOL mUsePiezoForLDaxis;    // Flag to use a piezo for low dose axis shift
   bool mFocusCameFromView;    // Flag that focus was reached from View mode
   int mFalconPostMagDelay;    // Timeout interval after mag change for taking Falcon image
@@ -1207,6 +1209,7 @@ public:
   static BOOL NormalizeKernel(SynchroThreadData *sytd);
   int StartLongOperation(int *operations, float *hoursSinceLast, int numOps);
   int LongOperationBusy(int index = -1);
+  int GetLongOperationsRunning(int &first, int &second, CString &str1, CString &str2);
   int StopLongOperation(bool exiting, int index = -1);
   void ChangeAlphaAndBeam(int oldAlpha, int newAlpha, int oldMag = -1, int newMag = -1);
   int FastAlpha(void);

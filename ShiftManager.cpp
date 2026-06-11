@@ -616,6 +616,7 @@ int CShiftManager::AutoAlign(int bufIndex, int inSmallPad, BOOL doImShift, int c
   int typeA, typeC;
   int heightA, widthA, heightC, widthC, nxUseA, nxUseC, nyUseA, nyUseC;
   int extra, baseXshift, ix0A, ix1A, ix0C, ix1C, baseYshift, iy0A, iy1A, iy0C, iy1C;
+  int limitXshift, limitYshift;
   //int height, width;
   //int minWidth, minHeight;
   int binA, binC, peakXoffset, peakYoffset, retval = 0;
@@ -1178,8 +1179,19 @@ int CShiftManager::AutoAlign(int bufIndex, int inSmallPad, BOOL doImShift, int c
 
   if (alignLimit > 0) {
     iPeak = (int)(alignLimit / needBinA) + 2;
-    setPeakFindLimits(-iPeak - baseXshift, iPeak - baseXshift, -iPeak - baseYshift,
-      iPeak - baseYshift, 1);
+
+    // The base shift was there long before shifts were accounted for, so if they exist,
+    // better ignore the shifts; otherwise set limits with shift taken into account
+    if (baseXshift || baseYshift) {
+      limitXshift = baseXshift;
+      limitYshift = baseYshift;
+    } else {
+      mImC->getShifts(cshiftX, cshiftY);
+      limitXshift = B3DNINT(cshiftX / needBinC);
+      limitYshift = B3DNINT(cshiftY / needBinC);
+    }
+    setPeakFindLimits(-iPeak - limitXshift, iPeak - limitXshift, -iPeak - limitYshift,
+      iPeak - limitYshift, 1);
   }
 
   XCorrPeakFindWidth(mBrray, nxPad + 2, nyPad, &Xpeaks[0], &Ypeaks[0], &peak[0], NULL,
@@ -1241,8 +1253,8 @@ int CShiftManager::AutoAlign(int bufIndex, int inSmallPad, BOOL doImShift, int c
 
     for (int iy = 1; iy >= 0; iy--) {
       for (int ix = 1; ix >= 0 ; ix--) {
-        if (alignLimit > 0. && sqrt(pow(xPeak[ix] + baseXshift, 2) +
-          pow(yPeak[iy] + baseYshift, 2)) * needBinA > alignLimit)
+        if (alignLimit > 0. && sqrt(pow(xPeak[ix] + limitXshift, 2) +
+          pow(yPeak[iy] + limitYshift, 2)) * needBinA > alignLimit)
           continue;
         CCChere = CCCoefficientTwoPads(mCrray, mArray,nxPad + 2, nxPad, nyPad,
           xPeak[ix], yPeak[iy], (nxPad - nxUseC) / 2, (nyPad - nyUseC) / 2 + 2,

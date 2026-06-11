@@ -7607,8 +7607,7 @@ int CNavigatorDlg::NewMap(bool unsuitableOK, int addOrReplaceNote, CString *newN
     stageY = item->mStageY - stageErrY;
     if (item2 && InsideContour(&item2->mPtX[0], &item2->mPtY[0], item2->mNumPoints,
       stageX, stageY) && (!item2->mMapMontage ||
-      (fabs((double)(imX - stageX)) < 10. &&
-      fabs((double)(imY - stageY)) < 10.))) {
+      (fabs((double)(imX - stageX)) < 10. && fabs((double)(imY - stageY)) < 10.))) {
       item->mRealignedID = i;
       item->mRealignErrX = stageErrX;
       item->mRealignErrY = stageErrY;
@@ -9413,6 +9412,8 @@ int CNavigatorDlg::LoadNavFile(bool checkAutosave, bool mergeFile, CString *inFi
         ADOC_OPTIONAL(AdocGetInteger("Item", sectInd, "SamePosId", &item->mAtSamePosID));
         ADOC_OPTIONAL(AdocGetInteger("Item", sectInd, "FitToPolygonID",
           &item->mFitToPolygonID));
+        ADOC_OPTIONAL(AdocGetInteger("Item", sectInd, "AcquiredAtID",
+          &item->mAcquiredAtID));
         ADOC_OPTIONAL(AdocGetTwoFloats("Item", sectInd, "RawStageXY",
           &item->mRawStageX, &item->mRawStageY));
         ADOC_OPTIONAL(AdocGetInteger("Item", sectInd, "Acquire", &index));
@@ -10981,6 +10982,8 @@ void CNavigatorDlg::AcquireNextTask(int param)
       m_strLabel = mItem->mLabel;
       UpdateListString(mCurrentItem);
       mAcqMadeMapWithID = mItem->mMapID;
+      if (mRealignedInAcquire && !mWillDoTemplateAlign)
+        mItem->mAcquiredAtID = item->mMapID;
       break;
 
       // After a script
@@ -11464,7 +11467,8 @@ void CNavigatorDlg::AcquireNextTask(int param)
     // if the bidir angle didn't diverge from the pretilt in setup
     if (item->mParallelTSIndex >= 0 && ((mWinApp->LowDoseMode() && tsp->doDoseSymmetric)
       || !(tsp->tsFlags & TSFLAG_BIDIR_NOT_PRETILT))) {
-      useBidir = mParallelTSArray[item->mParallelTSIndex]->preTilt;
+      useBidir = (float)B3DNINT(100. * mParallelTSArray[item->mParallelTSIndex]->preTilt)
+        / 100.f;
 
       // Otherwise use value stored in item with angle range
     } else if (item->mTSstartAngle > EXTRA_VALUE_TEST &&

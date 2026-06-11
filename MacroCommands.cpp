@@ -10850,6 +10850,35 @@ int CMacCmd::SetDoseFracParams(void)
   return 0;
 }
 
+// ReportDoseFracParams
+int CMacCmd::ReportDoseFracParams()
+{
+  int index;
+  if (CheckAndConvertCameraSet(mStrItems[1], mItemInt[1], index, mStrCopy))
+    ABORT_LINE(mStrCopy);
+  ControlSet &set = mConSets[index];
+  SetRepValsAndVars(2, set.doseFrac, set.saveFrames, set.alignFrames, set.useFrameAlign,
+    set.sumK2OrDeCntFrames, set.frameTime);
+  mLogRpt.Format("%s: dose frac %d  save %d  align %d  framealign %d  %s %d  frame %.4f",
+    mModeNames[index], set.doseFrac, set.saveFrames, set.alignFrames, set.useFrameAlign,
+    !mCamParams->K2Type ? "DE counting sum %d" : "K2/K3 summing",
+    set.sumK2OrDeCntFrames, set.frameTime);
+  return 0;
+}
+
+// ReportMiscCameraParams
+int CMacCmd::ReportMiscCameraParams()
+{
+  int index;
+  if (CheckAndConvertCameraSet(mStrItems[1], mItemInt[1], index, mStrCopy))
+    ABORT_LINE(mStrCopy);
+  ControlSet &set = mConSets[index];
+  SetRepValsAndVars(2, set.processing, set.mode);
+  mLogRpt.Format("%s: processing %d continuous %d", mModeNames[index], set.processing,
+    set.mode);
+  return 0;
+}
+
 // SetDECamFrameRate
 int CMacCmd::SetDECamFrameRate(void)
 {
@@ -14406,6 +14435,20 @@ int CMacCmd::LongOperation(void)
     ABORT_LINE(index == 1 ? "The thread is already busy for a long operation in:\n\n" :
       "A long scope operation can be done only on an FEI scope for:\n\n");
   mStartedLongOp = !index;
+  return 0;
+}
+
+// ReportLongOperations
+int CMacCmd::ReportLongOperations()
+{
+  CString str1, str2;
+  int first = -1, second = -1, num;
+  num = mScope->GetLongOperationsRunning(first, second, str1, str2);
+  SetRepValsAndVars(1, num, first, second);
+  if (num)
+    SetOneReportedValue(&mStrItems[1], str1, 4);
+  if (num > 1)
+    SetOneReportedValue(&mStrItems[1], str1, 5);
   return 0;
 }
 

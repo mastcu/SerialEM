@@ -41,6 +41,8 @@ CString adocStr, valStr, keyStr;
                         item->mBacklashX, item->mBacklashY));
   if (item->mAtSamePosID)
     ADOC_PUT(Integer(ADOC_ARG, "SamePosId", item->mAtSamePosID));
+  if (item->mAcquiredAtID)
+    ADOC_PUT(Integer(ADOC_ARG, "AcquiredAtID", item->mAcquiredAtID));
   if (item->mRawStageX != NO_RAW_STAGE || item->mRawStageY != NO_RAW_STAGE)
     ADOC_PUT(TwoFloats(ADOC_ARG, "RawStageXY", item->mRawStageX,
                        item->mRawStageY));

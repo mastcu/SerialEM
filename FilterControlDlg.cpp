@@ -226,14 +226,17 @@ BOOL CFilterControlDlg::OnInitDialog()
 {
   CRect rect, wndRect, magRect, clientRect;
   int leftOfs, leftPos, topOfs, topPos;
+  static bool firstTime = true;
 
   CToolDlg::OnInitDialog();
 
   m_statOnOff.GetWindowRect(&rect);
-  mFont.CreateFont((rect.Height() - 4), 0, 0, 0, FW_HEAVY,
+  if (firstTime)
+    mFont.CreateFont((rect.Height() - 4), 0, 0, 0, FW_HEAVY,
       0, 0, 0, DEFAULT_CHARSET, OUT_CHARACTER_PRECIS,
       CLIP_CHARACTER_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH |
       FF_DONTCARE, mBigFontName);
+  firstTime = false;
   m_statOnOff.SetFont(&mFont);
   mParam = mWinApp->GetFilterParams();
 
@@ -292,6 +295,8 @@ void CFilterControlDlg::Update()
   BOOL bEnable = !mWinApp->DoingTasks() && !mWinApp->GetSTEMMode();
   BOOL bOmega = mWinApp->mScope->GetHasOmegaFilter();
   BOOL bUseTEM = mWinApp->mScope->GetUseFilterInTEMMode();
+  if (!mInitialized)
+    return;
   if (mWinApp->mCamera) {
     bEnable = bEnable && !mWinApp->mCamera->CameraBusy();
     noControl = mWinApp->mCamera->GetNoFilterControl();
@@ -334,6 +339,8 @@ void CFilterControlDlg::Update()
 
 void CFilterControlDlg::UpdateSettings()
 {
+  if (!mInitialized)
+    return;
   if (!mParam)
     return;
   m_bAutoCamera = mParam->autoCamera;

@@ -78,11 +78,14 @@ BOOL CSTEMcontrolDlg::OnInitDialog()
 {
   CRect rect, rect2, winRect;
   CToolDlg::OnInitDialog();
+  static bool firstTime = true;
   m_statOnOff.GetWindowRect(&rect);
-  mFont.CreateFont((rect.Height() - 4), 0, 0, 0, FW_HEAVY,
+  if (firstTime)
+    mFont.CreateFont((rect.Height() - 4), 0, 0, 0, FW_HEAVY,
       0, 0, 0, DEFAULT_CHARSET, OUT_CHARACTER_PRECIS,
       CLIP_CHARACTER_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH |
       FF_DONTCARE, mBigFontName);
+  firstTime = false;
   m_statOnOff.SetFont(&mFont);
   if (FEIscope) {
     m_butSetISneutral.ShowWindow(SW_HIDE);
@@ -97,6 +100,8 @@ BOOL CSTEMcontrolDlg::OnInitDialog()
     SetDlgItemText(IDC_CHECK_INVERT_CONTRAST, "Invert contrast unless Bright Field");
   m_butUnblank.SetWindowText(mLastBlanked ? "Unblank" : "Blank");
   mLastProbeMode = -1;
+  ManageHideableItems(NULL, 0);
+  mInitialized = true;
   UpdateSTEMstate(mWinApp->mScope->GetProbeMode());
   return TRUE;
 }
@@ -187,6 +192,8 @@ void CSTEMcontrolDlg::OnOK()
 void CSTEMcontrolDlg::UpdateEnables(void)
 {
   BOOL startedTS = mWinApp->StartedTiltSeries();
+  if (!mInitialized)
+    return;
   if (!mWinApp->mCamera)
     return;
   BOOL enable = !mWinApp->mCamera->CameraBusy() && !mWinApp->DoingTasks();
@@ -205,6 +212,8 @@ void CSTEMcontrolDlg::UpdateEnables(void)
 
 void CSTEMcontrolDlg::UpdateSettings(void)
 {
+  if (!mInitialized)
+    return;
   m_bScreenSwitches = mWinApp->GetScreenSwitchSTEM();
   m_bMatchPixel = mWinApp->GetSTEMmatchPixel();
   m_bInvertContrast = mWinApp->GetInvertSTEMimages();
@@ -217,6 +226,8 @@ void CSTEMcontrolDlg::UpdateSettings(void)
 
 void CSTEMcontrolDlg::UpdateSTEMstate(int probeMode, int magInd)
 {
+  if (!mInitialized)
+    return;
   BOOL mode = mWinApp->GetSTEMMode();
   if (mLastProbeMode < -1)
     return;
@@ -244,9 +255,17 @@ void CSTEMcontrolDlg::UpdateSTEMstate(int probeMode, int magInd)
 
 void CSTEMcontrolDlg::BlankingUpdate(BOOL blanked)
 {
+  if (!mInitialized)
+    return;
   if (BOOL_EQUIV(blanked, mLastBlanked))
     return;
   mLastBlanked = blanked;
   m_butUnblank.SetWindowText(blanked ? "Unblank" : "Blank");
   m_butUnblank.EnableWindow(!mWinApp->mCamera->CameraBusy() && !mWinApp->DoingTasks());
 }
+
+void CSTEMcontrolDlg::UpdateHiding(void)
+{
+  ManageHideableItems(NULL, 0);
+}
+

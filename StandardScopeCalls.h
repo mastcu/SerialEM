@@ -210,6 +210,7 @@ SCOPE_SAMENAME(ScopeGetDbl, GetFilamentCurrent);
 SCOPE_SAMENAME(ScopeSetDbl, SetFilamentCurrent);
 SCOPE_SAMENAME(ScopeGetInt, GetEmissionState);
 SCOPE_SAMENAME(CamOneInt, SetEmissionState);
+SCOPE_SAMENAME(ScopeNoArg, RestoreStageSpeed);
 SCOPE_SAMENAME(CamOneInt, FlashFEG);
 SCOPE_SAMENAME(ScopeGetSetInt, GetFlashingAdvised);
 SCOPE_SAMENAME(CamOneInt, GetNitrogenStatus);

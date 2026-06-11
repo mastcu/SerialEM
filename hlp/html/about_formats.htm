@@ -1092,6 +1092,16 @@
       <TD class="style9">Original registration of that realign</TD>
     </TR>
     <TR VALIGN="top">
+      <TD>AcquiredAtID</TD>
+      <TD class="style10">Integer</TD>
+      <TD class="style7">0</TD>
+      <TD class="style8">mAcquiredAtID</TD>
+      <TD class="style9">ID of item at which map was acquired after a Realign to Item.&nbsp; 
+        In Low Dose mode, Realign to Item will align to the position of that item and 
+        rely on the View or Search offset to get to an accurate position for aligning to the 
+        higher mag map.</TD>
+    </TR>
+    <TR VALIGN="top">
       <TD>ImageType</TD>
       <TD class="style10">Integer</TD>
       <TD class="style7">0</TD>
@@ -1278,8 +1288,8 @@
       <TD class="style10">Float</TD>
       <TD class="style7">0</TD>
       <TD class="style8">xPitchAngle</TD>
-      <TD class="style9">Tilt of specimen around the microscope Y axis, with clockwise 
-        positive looking down the Y axis, so that Z = X tan(XPitchAngle)</TD>
+      <TD class="style9">Tilt of specimen around the microscope Y axis, with counterclockwise 
+        positive looking down the Y axis, so that Z = -X tan(XPitchAngle)</TD>
     </TR>
     <TR VALIGN="top">
      <TD>MappingTilt</TD>

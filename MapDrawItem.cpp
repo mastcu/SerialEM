@@ -50,6 +50,7 @@ CMapDrawItem::CMapDrawItem()
   mFitToPolygonID = 0;
   mDrawnOnMapID = 0;
   mOldDrawnOnID = 0;
+  mAcquiredAtID = 0;
   mPieceDrawnOn = -1;
   mXinPiece = mYinPiece = -1.;
   mRealignedID = 0;
