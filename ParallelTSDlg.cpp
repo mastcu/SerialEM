@@ -603,8 +603,12 @@ void CParallelTSDlg::ExternalUpdate()
   if (mWinApp->mNavigator->NoDrawing()) {
     if (mDefiningPoints)
       OnDefinePtsFitPlane();
-    else if (mAddingTargets)
-      OnAddTargets();
+    else if (mAddingTargets) {
+      if (mFinishedRefiningTargets && mNumAddedTargets > 0)
+        OnRefineTargets();
+      else
+        OnAddTargets();
+    }
   }
   //mWinApp->RestoreViewFocus();
 }
@@ -898,9 +902,7 @@ void CParallelTSDlg::CancelAddingDefining()
     itemArray = mWinApp->mNavigator->GetItemArray();
     arrSize = (int)itemArray->GetSize();
     if (!mWinApp->mNavigator->NoDrawing()) {
-      mDrawingISTargets = true;
       mWinApp->mNavigator->OnDrawPoints();
-      mDrawingISTargets = false;
     }
 
     if (arrSize > mNumberBeforeAdd && 
@@ -914,6 +916,8 @@ void CParallelTSDlg::CancelAddingDefining()
           mWinApp->mNavigator->m_bCollapseGroups != 0);
     }
   }
+
+  mDrawingISTargets = false;
 }
 
 void CParallelTSDlg::OnDefinePtsFitPlane()
@@ -933,17 +937,17 @@ void CParallelTSDlg::OnDefinePtsFitPlane()
     if (!mFitPlaneGroupID) {
       mFitPlaneGroupID = mWinApp->mNavigator->MakeUniqueID();
     }
+    mDrawingISTargets = true;
   } 
   
   // Call on navigator to start adding points, or if stopping, tell it to 
   // stop adding points if not already stopped from the navigator  
   if (mDefiningPoints || !nav->NoDrawing()) {
-    mDrawingISTargets = true;
     mWinApp->mNavigator->OnDrawPoints();
-    mDrawingISTargets = false;
   }
   
   if (!mDefiningPoints) {
+    mDrawingISTargets = false;
     if (nav->m_bCollapseGroups) {
       nav->MakeListMappings();
       nav->FillListBox();
@@ -1118,17 +1122,17 @@ void CParallelTSDlg::OnAddTargets()
       mTargetGroupID = nav->MakeUniqueID();
       mNavHelper->SetParTSSetupGroupID(mTargetGroupID);
     }
+    mDrawingISTargets = true;
   } 
 
   // Do not call on navigator to start/stop adding points, if adding points was 
   // already succesfully stopped from the navigator button 
   if (mAddingTargets || !mWinApp->mNavigator->NoDrawing()) {
-    mDrawingISTargets = true;
     mWinApp->mNavigator->OnDrawPoints();
-    mDrawingISTargets = false;
   }
 
   if (!mAddingTargets) {
+    mDrawingISTargets = false;
     if (nav->m_bCollapseGroups) {
       nav->MakeListMappings();
       nav->FillListBox();

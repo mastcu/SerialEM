@@ -1691,6 +1691,29 @@ void CNavigatorDlg::OnListItemDrag(int oldIndex, int newIndex)
   CMapDrawItem *item = mItemArray.GetAt(oldIndex);
   mWinApp->RestoreViewFocus();
   if (!m_bCollapseGroups) {
+
+    //If doing parallel TS, enforce that first nav item remains first in the group
+    CParallelTSDlg *parTSDlg = mHelper->mParallelTSDlg;
+    int numPoints, numAcq;
+    IntVec navInd;
+    CString label, lastLab;
+    if (parTSDlg->IsOpen() && mWinApp->mParallelTSHelper->GetNumSavedTargets() &&
+      item->mGroupID > 0 && item->mGroupID == parTSDlg->GetTargetGroupID()) {
+      numPoints = CountItemsInGroup(item->mGroupID, label, lastLab, numAcq, &navInd);
+      if (numPoints > 1) {
+        if ((oldIndex == navInd[0] && newIndex >= navInd[1]) || 
+          (oldIndex != navInd[0] && newIndex <= navInd[0])) {
+          AfxMessageBox("The assigned center target must remain first in the group of "
+            "parallel tilt series targets.", MB_EXCLAME);
+          if (oldIndex == navInd[0] && newIndex >= navInd[1]) {
+            newIndex = navInd[1] - 1;
+          } else {
+            newIndex = navInd[0] + 1;
+          }
+        }
+      }
+    }
+
     RemoveFromArray(oldIndex);
     mItemArray.InsertAt(newIndex, item);
   } else {

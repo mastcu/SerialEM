@@ -55,7 +55,7 @@ private:
   int mTargetGroupID;
   bool mAddingTargets;                // Flag if targets are being added to area
   bool mRefiningTargets;              // Flag if targets are being refined
-  bool mFinishedRefiningTargets;      // Flag for when all targets have been refined
+  bool mFinishedRefiningTargets;      // Flag for when a round of targets have been refined
   bool mFinalizedTargetArea;          // Flag if area and targets are finalized
   int mSavedTSparamIndex;
   bool mDrawingISTargets;
