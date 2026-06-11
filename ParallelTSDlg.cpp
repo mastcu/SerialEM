@@ -534,9 +534,9 @@ void CParallelTSDlg::Update()
 
 void CParallelTSDlg::ManagePanels()
 {
-  CMapDrawItem *item;
+  CMapDrawItem *item, *parTSitem;
   int TSparInd = mParallelTSHelper->GetSavedTSparamIndex();
-  bool foundTSparInd = false;
+  bool foundInherit = false;
 
   // Toggle buttons for custom positions or multishot item
   mIDsToDrop.clear();
@@ -561,17 +561,19 @@ void CParallelTSDlg::ManagePanels()
     if (TSparInd >= mWinApp->mNavigator->GetTSparamArray()->GetSize()) {
       mParallelTSHelper->SetSavedTSparamIndex(-1);
     } else {
+      parTSitem = mParallelTSHelper->GetParTSitem();
       MapItemArray *itemArr = mWinApp->mNavigator->GetItemArray();
       for (int ind = 0; ind < (int)itemArr->GetSize(); ind++) {
         item = itemArr->GetAt(ind);
-        if (item->mTSparamIndex == TSparInd) {
-          foundTSparInd = true;
+        if (item->mTSparamIndex == TSparInd && parTSitem && 
+          item->mMapID != parTSitem->mMapID) {
+          foundInherit = true;
           break;
         }
       }
     }
   }
-  if (!foundTSparInd) {
+  if (!foundInherit) {
     mIDsToDrop.push_back(IDC_STATIC_PTS_INHERITTS);
     mIDsToDrop.push_back(IDC_STATIC_PTS_TSITEMINDEXLABEL);
   } 

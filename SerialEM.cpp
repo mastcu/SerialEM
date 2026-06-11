@@ -4389,9 +4389,9 @@ BOOL CSerialEMApp::UserAcquireOK(void)
 BOOL CSerialEMApp::DoingComplexTasks()
 {
   return mMacroProcessor->DoingMacro() || mNavHelper->GetAcquiringDual() ||
-    mComplexTasks->DoingComplexTasks() || StartedTiltSeries() ||
-    (mNavigator && mNavigator->GetAcquiring() && !mNavigator->StartedMacro() ||
-      mMultiGridTasks->GetDoingMulGridSeq());
+    mComplexTasks->DoingComplexTasks() || StartedTiltSeries() || 
+    (mNavigator && mNavigator->GetAcquiring() && !mNavigator->StartedMacro()) ||
+      mMultiGridTasks->GetDoingMulGridSeq() || mParallelTSHelper->ISToTargetsBusy();
 }
 
 int *CSerialEMApp::GetInitialDlgState()

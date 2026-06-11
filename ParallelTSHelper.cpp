@@ -353,6 +353,13 @@ void CParallelTSHelper::ISToTargetNextTask(int param)
   if (!mDoingISToTargets || mISTargetIter < 0)
     return;
 
+  if (mActionAtTarget == PARALLELTS_ACTION_AUTOFOCUS) {
+    mess = "FITTING PLANE";
+  } else if (mActionAtTarget == PARALLELTS_ACTION_PREVIEW) {
+    mess = "REFINING TARGETS";
+  }
+  mWinApp->SetStatusText(COMPLEX_PANE, mess);
+
   mLastActionFailed = false;
   mapID = mISTargetPointIDs[mStartIndex + mISTargetIter];
   mCurISTargetItem = mWinApp->mNavigator->FindItemWithMapID(mapID, false);
