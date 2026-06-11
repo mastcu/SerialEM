@@ -19,10 +19,11 @@ private:
   CEMscope *mScope;
   CCameraController *mCamera;
   CShiftManager *mShiftManager;
-  CNavigatorDlg *mNav;
-
+  CNavHelper *mNavHelper;
+  CParallelTSDlg *mParallelTSDlg;
   ParallelTSOptions *mParTSopts;
   ParallelTSOptions mSavedParTSopts;
+
   double mBaseISX, mBaseISY;      // Starting IS
   double mLastISX, mLastISY;      // Last IS position
   double mBaseBeamTiltX, mBaseBeamTiltY;  // Starting beam tilt
@@ -56,7 +57,6 @@ private:
   bool mDoNextShift;
   int mActionAtTarget;
   bool mAtTarget;
-  IntVec mISTargetFailedIDs;
   bool mLastActionFailed;
   BOOL mSavedMouseStage;
   float mBaseDefocus;
@@ -66,6 +66,7 @@ private:
   CMapDrawItem *mCurISTargetItem;
 
   int mAreaMapID;
+  int mAreaMapMagInd;
   CString mAreaMapFileName;
   CString mTargetMapFileName;
   float mMappingTilt;
@@ -88,6 +89,7 @@ public:
   GetMember(ParallelTSParam, ParTSParam);
   GetSetMember(float, Pretilt);
   GetSetMember(float, Xpitch);
+  GetMember(int, AreaMapMagInd)
   bool DoingISToTargets() { return mDoingISToTargets; };
   int GetNumSavedTargets() { return (int)mSavedTargetIDs.size(); };
   int ISToTargetsBusy();
@@ -102,7 +104,7 @@ public:
   void ErrorParallelTSShift();
   int SaveAreaMap(CString &err);
   int SaveInitialState();
-  int SaveTargetMap(CString &err);
+  int SaveTargetMap(CString &err, bool &saved);
   int SaveTarget(CString &err);
   int FitPlane(float &pretilt, float &xPitch, float &residual,
     CString &mess);
@@ -116,4 +118,6 @@ public:
   int ConvertToParTSItem(CString &err, CMapDrawItem *item = NULL);
   int GetTSparamItem(CMapDrawItem *&item);
   void UpdateTSParams();
+  bool CanAdjustISVectors(int fromMag, int toMag, bool multiShot, CString &mess);
+  int GetCenterPtID();
 };

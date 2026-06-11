@@ -545,6 +545,8 @@ ON_UPDATE_COMMAND_UI(ID_BEAMSPOT_BEAMSIZE, OnUpdateBeamspotBeamSize)
 ON_COMMAND(ID_MISC_NO_TRUE_SIZE, OnMiscNoTrueSize)
 ON_UPDATE_COMMAND_UI(ID_MISC_NO_TRUE_SIZE, OnUpdateMiscNoTrueSize)
 ON_UPDATE_COMMAND_UI(ID_MISCELLANEOUSOPTIONS_REVERSEWHEELZOOMDIRECTION, OnUpdateReverseWheelZoomDirection)
+ON_COMMAND(ID_TILTSERIES_SETUPPARALLELTILTSERIES, &CMenuTargets::OnSetupParallelTS)
+ON_UPDATE_COMMAND_UI(ID_TILTSERIES_SETUPPARALLELTILTSERIES, &CMenuTargets::OnUpdateSetupParallelTS)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -3605,4 +3607,16 @@ void CMenuTargets::OnUpdateMiscNoTrueSize(CCmdUI *pCmdUI)
 {
   pCmdUI->Enable(mWinApp->mScope->GetUseIllumAreaForC2() ||
     mWinApp->mBeamAssessor->GetBeamSizeArray()->GetSize());
+}
+
+
+void CMenuTargets::OnSetupParallelTS()
+{
+  mNavHelper->OpenParallelTS();
+}
+
+
+void CMenuTargets::OnUpdateSetupParallelTS(CCmdUI *pCmdUI)
+{
+  pCmdUI->Enable(!mWinApp->DoingTasks() && !(mNavigator && mNavigator->StartedMacro()));
 }

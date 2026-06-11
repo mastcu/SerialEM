@@ -55,6 +55,7 @@
 #include "TSController.h"
 #include "DoseModulator.h"
 #include "ParallelTSDlg.h"
+#include "ParallelTSHelper.h"
 #include "Utilities\XCorr.h"
 #include "Utilities\KGetOne.h"
 #include "Shared\autodoc.h"
@@ -720,6 +721,12 @@ void CNavigatorDlg::Update()
     groupOK = numAcq && !numTS && !numFile;
   }
 
+  CParallelTSDlg *parTSDlg = mHelper->mParallelTSDlg;
+  bool parTSRefining = parTSDlg->IsOpen() && parTSDlg->RefiningTargets();
+  bool parTSCenPt = curExists && 
+    mItem->mMapID == mWinApp->mParallelTSHelper->GetCenterPtID() &&
+    parTSDlg->IsOpen() && parTSDlg->GetSettingUpTargetArea();
+
   //m_butUpdatePos.EnableWindow(curExists && mItem->IsNotMap() && noDrawing &&
   //  mAcquireIndex < 0);
   m_butUpdateZ.EnableWindow((curExists || grpExists) && noTasks && noDrawing);
@@ -741,9 +748,9 @@ void CNavigatorDlg::Update()
   m_butDualMap.EnableWindow(noDrawing && noTasks && mDualMapID >= 0);
   m_butDeleteItem.EnableWindow((curExists || grpExists) && noDrawing &&
     mAcquireIndex < 0 && !mHelper->GetAcquiringDual() && !mWinApp->DoingComplexTasks() &&
-    !mNavAcquireDlg && mFRangeIndex < 0);
+    !mNavAcquireDlg && mFRangeIndex < 0 && !parTSRefining && !parTSCenPt);
   m_butRealign.EnableWindow(curExists && noDrawing && mAcquireIndex < 0 && noTasks &&
-    !mCamera->CameraBusy());
+    !mCamera->CameraBusy() && !parTSRefining);
   m_listViewer.EnableWindow(!mAddingPoints && !mLoadingMap && mAcquireIndex < 0);
   index = -1;
 
@@ -3084,7 +3091,7 @@ void CNavigatorDlg::OnDeleteitem()
     MB_YESNO | MB_ICONQUESTION) == IDNO)
     return;
 
-   FinishSingleDeletion(mItem, delIndex, mCurListSel, multipleInGroup, 0);
+  FinishSingleDeletion(mItem, delIndex, mCurListSel, multipleInGroup, 0);
 
   delIndex = B3DMAX(0, delIndex - 1);
   if (m_bCollapseGroups && m_bEditMode && mRemoveItemOnly && !mAddingPoints &&
@@ -3127,10 +3134,10 @@ void CNavigatorDlg::OnDrawPoints()
   mNumberBeforeAdd = (int)mItemArray.GetSize();
 
   if (mWinApp->mNavHelper->mParallelTSDlg->IsOpen() &&
-    mWinApp->mNavHelper->mParallelTSDlg->GetDefiningPoints())
+    mWinApp->mNavHelper->mParallelTSDlg->IsDefiningPoints())
     mAddPointID = mWinApp->mNavHelper->mParallelTSDlg->GetFitPlaneGroupID();
   else if (mWinApp->mNavHelper->mParallelTSDlg->IsOpen() &&
-    mWinApp->mNavHelper->mParallelTSDlg->GetAddingTargets())
+    mWinApp->mNavHelper->mParallelTSDlg->IsAddingTargets())
     mAddPointID = mWinApp->mNavHelper->mParallelTSDlg->GetTargetGroupID();
   else
     mAddPointID = MakeUniqueID();
@@ -3292,10 +3299,13 @@ BOOL CNavigatorDlg::UserMousePoint(EMimageBuffer *imBuf, float inX, float inY,
     AfxMessageBox("Targets must be added on a map", MB_EXCLAME);
     return false;
   }
-  if (mHelper->mParallelTSDlg->IsOpen() && mHelper->mParallelTSDlg->GetAddingTargets() 
-    && !mHelper->mParallelTSDlg->AreaMapInBuf(imBuf)){
-    AfxMessageBox("Targets must be added to the defined area map", MB_EXCLAME);
-    return false;
+  if (mHelper->mParallelTSDlg->IsOpen() && mHelper->mParallelTSDlg->IsAddingTargets()) {
+    mHelper->mParallelTSDlg->IncrementNumTargetsAdded();
+    mHelper->mParallelTSDlg->Update();
+    if (!mHelper->mParallelTSDlg->AreaMapInBuf(imBuf)) {
+      AfxMessageBox("Targets must be added to the defined area map", MB_EXCLAME);
+      return false;
+    }
   }
 
   // if set in hole finder parameters, center added point in hole
@@ -12475,6 +12485,17 @@ void CNavigatorDlg::FinishSingleDeletion(CMapDrawItem *item, int delIndex, int l
   bool multipleInGroup, int groupStart)
 {
   bool isCurrentInList = listInd == mCurListSel;
+
+  if (item->IsPoint() && item->mMapID == mWinApp->mParallelTSHelper->GetCenterPtID() &&
+    mHelper->mParallelTSDlg->IsOpen() &&
+    mHelper->mParallelTSDlg->GetSettingUpTargetArea()) {
+
+    AfxMessageBox("The center target for a parallel tilt series cannot be deleted or "
+      "reordered. Abort the parallel tilt series area if you wish to change the center "
+      "point", MB_EXCLAME);
+    return;
+  }
+
   if (item->mAcquire || item->mTSparamIndex >= 0) {
     item->mAcquire = false;
     mHelper->EndAcquireOrNewFile(item);

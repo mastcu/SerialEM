@@ -31,6 +31,13 @@ protected:
   DECLARE_MESSAGE_MAP()
 
 private:
+  CEMscope *mScope;
+  CShiftManager *mShiftManager;
+  CNavHelper *mNavHelper;
+  CParallelTSHelper *mParallelTSHelper;
+  ParallelTSOptions *mParTSopts;
+  ParallelTSOptions mSavedParTSopts;
+
   int mPanelStart[PARALLELTSDLG_NUM_PANELS];
   int mNumInPanel[PARALLELTSDLG_NUM_PANELS];
   bool mDisplayExtraOptions;
@@ -38,6 +45,7 @@ private:
   int mMapMagIndex;
   int mAcqMagIndex;
   int mSTEMindex;
+  int mHasIlluminatedArea;
   int mCurrentCamera;
   int mNumberBeforeAdd;
   int mFitPlaneGroupID;
@@ -49,31 +57,32 @@ private:
   bool mRefiningTargets;              // Flag if targets are being refined
   bool mFinishedRefiningTargets;      // Flag for when all targets have been refined
   bool mFinalizedTargetArea;          // Flag if area and targets are finalized
-  ParallelTSOptions *mParTSopts;
-  ParallelTSOptions mSavedParTSopts;
   int mSavedTSparamIndex;
   bool mDrawingISTargets;
+  int mNumAddedTargets;
   
   void ClearArea();
   void CancelAddingDefining();
+  bool KeepAddingChoiceBox(CString mess);
 
 public:
-  GetMember(bool, DefiningPoints);//TODO change to IsDefiningPoints, and likewise for other status functions
-  GetMember(bool, AddingTargets);
-  GetMember(bool, FinishedRefiningTargets);
   GetMember(int, FitPlaneGroupID);
   GetMember(int, TargetGroupID);
   GetMember(bool, DrawingISTargets);
-  //SetMember(bool, FinishedRefiningTargets);
+  GetMember(int, MapMagIndex);
+  GetMember(int, AcqMagIndex);
+  GetSetMember(int, HasIlluminatedArea);
+  GetMember(bool, SettingUpTargetArea);
+  void IncrementNumTargetsAdded() { mNumAddedTargets++; };
+  bool IsDefiningPoints() { return mDefiningPoints; };
+  bool IsAddingTargets() { return mAddingTargets; };
   void FinishFitPlane();
   void FinishRefineTargets(bool error);
   void UpdatePlaneParams(float pretilt, float xPitchAngle);
   bool HasAreaMap() { return mHasAreaMap; };
   bool RefiningTargets() { return mRefiningTargets; };
-  int mHasIlluminatedArea;
   bool IsAddingToNav() { return mDefiningPoints || mAddingTargets; };
   bool AreaMapInBuf(EMimageBuffer *imBuf);
-  bool KeepAddingChoiceBox(CString mess);
   void DoPlaneFit();
   void StartRefineTargets();
   void CloseWindow();
@@ -108,6 +117,7 @@ public:
   afx_msg void OnPreview();
   afx_msg void OnSaveAreaMap();
   CButton m_butAddTargets;
+  CButton m_butRefineTargets;
   afx_msg void OnAddTargets();
   afx_msg void OnSaveTargetMap();
   afx_msg void OnRemoveTarget();
@@ -135,6 +145,7 @@ public:
   CButton m_butApplyAdjusting;
   BOOL m_bApplyAdjusting;
   void Update();
+  void ManagePanels();
   afx_msg void OnCtf();
   CStatic m_statMapping;
   CStatic m_statAcquisition;
@@ -187,4 +198,5 @@ public:
   afx_msg void OnEnKillfocusEditMaxrotation();
   afx_msg void OnEnKillfocusEditMaxscaling();
   CStatic m_statAreaMapStatus;
+  afx_msg void OnRefineTargets();
 };

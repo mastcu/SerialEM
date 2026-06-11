@@ -505,6 +505,7 @@ void CLowDoseDlg::OnLowdosemode()
   // If ParallelTS dialog is open, update it
   if (mWinApp->mNavHelper->mParallelTSDlg->IsOpen()) {
     mWinApp->mNavHelper->mParallelTSDlg->Update();
+    mWinApp->mNavHelper->mParallelTSDlg->ManagePanels();
     return;
   }
 

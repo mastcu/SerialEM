@@ -7435,9 +7435,9 @@ void CNavHelper::OpenParallelTS(void)
     mParallelTSDlg->BringWindowToTop();
     return;
   }
-  mParallelTSDlg->mHasIlluminatedArea = mScope->GetUseIllumAreaForC2() ? 1 : 0;
+  mParallelTSDlg->SetHasIlluminatedArea(mScope->GetUseIllumAreaForC2() ? 1 : 0);
   if (mWinApp->mBeamAssessor->GetBeamSizeArray()->GetSize() > 0)
-    mParallelTSDlg->mHasIlluminatedArea = -1;
+    mParallelTSDlg->SetHasIlluminatedArea(-1);
   mParallelTSDlg->Create(IDD_PARALLELTS);
   mWinApp->SetPlacementFixSize(mParallelTSDlg, &mParallelTSPlace);
   mWinApp->RestoreViewFocus();
