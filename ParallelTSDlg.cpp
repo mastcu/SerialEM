@@ -339,21 +339,21 @@ void CParallelTSDlg::Update()
   int uncroppedX, uncroppedY;
   int numPoints;
   bool cropped, enable;
+  IntVec indexVec;
+  CString label, lastlabel;
+  int numAcq;
   CWnd *pwnd;
   BOOL lowDose = mWinApp->LowDoseMode();
   BOOL noTasks = !mWinApp->DoingTasks() && !mWinApp->StartedTiltSeries() &&
     !mWinApp->mCamera->CameraBusy() && !mScope->GetMovingStage();
 
   if (mTargetGroupID) {
-    IntVec indexVec;
-    CString label, lastlabel;
-    int numAcq;
     numPoints = mWinApp->mNavigator->CountItemsInGroup(mTargetGroupID, label, lastlabel,
       numAcq, &indexVec);
   } else {
     numPoints = 0;
   }
-  
+
   mWinApp->mLowDoseDlg.Update();
   m_butLDSearchElseView.SetWindowText(lowDose ? "Search" : "View");
   m_butLDViewElseTrial.SetWindowText(lowDose ? "View" : "Trial");
@@ -366,7 +366,7 @@ void CParallelTSDlg::Update()
   CString saveType = m_iAlignRef == 0 ? "Map" : "IS";
   if (mRefiningTargets) {
     mess.Format("Save Target %s %d/%d", saveType, 
-      mParallelTSHelper->GetNumSavedTargets() + 1, numPoints);
+      mParallelTSHelper->GetSavedTargetsInNav(&indexVec) + 1, numPoints);
   } else {
     mess.Format("Save Target %s", saveType);
   }
@@ -471,7 +471,8 @@ void CParallelTSDlg::Update()
   m_butRemoveTarget.EnableWindow(mSettingUpTargetArea && !mFinishedRefiningTargets && 
     mRefiningTargets && noTasks);
   m_butFinalizeTargetArea.EnableWindow(mSettingUpTargetArea && !mFinalizedTargetArea &&
-    noTasks && ((m_iCustomOrMultishotTargets == 0 && mFinishedRefiningTargets ) || 
+    noTasks && ((m_iCustomOrMultishotTargets == 0 && mFinishedRefiningTargets &&
+      mParallelTSHelper->GetSavedTargetsInNav(&indexVec) > 1) ||
       (m_iCustomOrMultishotTargets == 1)));
   m_butAbortArea.EnableWindow(noTasks && 
     ((mSettingUpTargetArea) || mAddingTargets) &&

@@ -115,6 +115,7 @@ public:
   int AssessPtsToFitPlane(FloatVec &ptsX, FloatVec &ptsY, FloatVec &ptsZ, CString &mess);
   int AssessPtsToFitPlane(IntVec indexVec, IntVec &sortedIndexVec, CString &mess);
   int AppendNewTargets(IntVec targetMapIDs, CString &mess);
+  int GetSavedTargetsInNav(IntVec *navInd, IntVec *indices = NULL);
   int ConvertToParTSItem(CString &err, CMapDrawItem *item = NULL);
   int GetTSparamItem(CMapDrawItem *&item);
   void UpdateTSParams();

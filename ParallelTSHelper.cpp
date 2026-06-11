@@ -1191,6 +1191,40 @@ int CParallelTSHelper::AppendNewTargets(IntVec targetMapIDs, CString &mess)
   return 0;
 }
 
+int CParallelTSHelper::GetSavedTargetsInNav(IntVec *navInd, IntVec *indices)
+{
+  int ind, jnd, numPoints, numSaved;
+  CMapDrawItem *item;
+  MapItemArray *itemArr = mWinApp->mNavigator->GetItemArray();
+  if (indices)
+    indices->clear();
+  navInd->clear();
+  numSaved = (int)mSavedTargetIDs.size();
+  for (ind = 0; ind < numSaved; ind++) {
+    if (mWinApp->mNavigator->FindItemWithMapID(mSavedTargetIDs[ind], false)) {
+      navInd->push_back(mWinApp->mNavigator->GetFoundItem());
+    }
+  }
+  numPoints = (int)navInd->size();
+  
+  //Sort saved targets by their order in the navigator
+  std::sort(navInd->begin(), navInd->end());
+
+  if (indices) {
+    for (ind = 0; ind < numPoints; ind++) {
+      item = itemArr->GetAt(navInd->at(ind));
+      for (jnd = 0; jnd < numSaved; jnd++) {
+        if (item->mMapID == mSavedTargetIDs[jnd]) {
+          indices->push_back(jnd);
+          break;
+        }
+      }
+    }
+  }
+
+  return numPoints;
+}
+
 // Converts saved IS targets or the given item to a parallel TS item. 
 int CParallelTSHelper::ConvertToParTSItem(CString &err, CMapDrawItem *item)
 {
@@ -1251,24 +1285,10 @@ int CParallelTSHelper::ConvertToParTSItem(CString &err, CMapDrawItem *item)
   } else {
 
     //Handle custom targets places in arbitrary positions
-
-    numPoints = (int)mSavedTargetIDs.size();
-
-    for (ind = 0; ind < numPoints; ind++) {
-      mWinApp->mNavigator->FindItemWithMapID(mSavedTargetIDs[ind], false);
-      navInd.push_back(mWinApp->mNavigator->GetFoundItem());
-    }
-
-    //Sort saved targets by their order in the navigator
-    std::sort(navInd.begin(), navInd.end());
-    for (ind = 0; ind < numPoints; ind++) {
-      item = itemArr->GetAt(navInd[ind]);
-      for (jnd = 0; jnd < numPoints; jnd++) {
-        if (item->mMapID == mSavedTargetIDs[jnd]) {
-          indices.push_back(jnd);
-          break;
-        }
-      }
+    numPoints = GetSavedTargetsInNav(&navInd, &indices);
+    if (numPoints < 2) {
+      err.Format("At least two targets are required to create a parallel tilt series item");
+      return 2;
     }
 
     //Center point information
