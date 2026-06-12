@@ -4,6 +4,7 @@
 #include "NavHelper.h"
 
 #define PARALLELTSDLG_NUM_PANELS 7
+#define FLAG_DISPLAY_EXTRA_OPTS   (1)
 
 // CParallelTSDlg dialog
 

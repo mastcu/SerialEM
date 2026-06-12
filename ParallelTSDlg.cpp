@@ -275,8 +275,9 @@ BOOL CParallelTSDlg::OnInitDialog()
   SetupPanelTables(idTable, sLeftTable, sTopTable, mNumInPanel, mPanelStart,
     sHeightTable);
   OptionsToDialog();
-  Update();
   UpdateData(false);
+  Update();
+  ManagePanels();
   SetDefID(45678);    // Disable OK from being default button
   return TRUE;
 }
@@ -505,6 +506,8 @@ void CParallelTSDlg::Update()
 
   m_statTSitemLabel.EnableWindow(!mDefiningPoints);
 
+  SetDlgItemText(IDC_BUT_PTS_OPENCLOSEOPTIONS, mDisplayExtraOptions ? "-" : "+");
+
   if (mHasIlluminatedArea <= 0)
     ReplaceWindowText(&m_butBeamSizeCircles, "illuminated area", "beam size from cal");
 
@@ -649,6 +652,7 @@ void CParallelTSDlg::OptionsToDialog()
   m_fRefMaxScaling = mNavHelper->GetParTSRefAliMaxPctChg();
   m_fRefMaxRotation = mNavHelper->GetParTSRefAliMaxRot();
   m_bApplyAdjusting = mParTSopts->applyAdjustingXform;
+  mDisplayExtraOptions = (mParTSopts->flags & FLAG_DISPLAY_EXTRA_OPTS) != 0;
 }
 
 // Update the options struct with values from the dialog
@@ -670,6 +674,9 @@ void CParallelTSDlg::DialogToOptions()
   mParTSopts->refAliMaxPctChg = m_fRefMaxScaling;
   mParTSopts->refAliMaxRot = m_fRefMaxRotation;
   mParTSopts->applyAdjustingXform = m_bApplyAdjusting != 0;
+  mParTSopts->flags = 0;
+  if (mDisplayExtraOptions)
+    mParTSopts->flags |= FLAG_DISPLAY_EXTRA_OPTS;
 }
 
 bool CParallelTSDlg::AreaMapInBuf(EMimageBuffer *imBuf)
@@ -1287,13 +1294,7 @@ void CParallelTSDlg::OnSetupTiltSeries()
 void CParallelTSDlg::OnOpenCloseOptions()
 {
   UpdateData(true);
-  if (mDisplayExtraOptions) {
-    SetDlgItemText(IDC_BUT_PTS_OPENCLOSEOPTIONS, "+");
-    mDisplayExtraOptions = false;
-  } else {
-    SetDlgItemText(IDC_BUT_PTS_OPENCLOSEOPTIONS, "-");
-    mDisplayExtraOptions = true;
-  }
+  mDisplayExtraOptions = !mDisplayExtraOptions;
   Update();
   ManagePanels();
   //mWinApp->RestoreViewFocus();
