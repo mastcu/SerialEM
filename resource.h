@@ -2660,6 +2660,7 @@
 #define IDC_RCHECK_JUST_FILLING         3692
 #define IDC_RIGNORE_VIB_AND_FILL        3693
 #define IDC_STAT_VIB_CHECKS             3694
+#define IDC_STAT_MAX_FPS                3695
 #define ID_NEW_IMAGE                    32771
 #define IDM_FILE_SAVEOTHER              32772
 #define IDM_FILE_READ                   32773
@@ -3298,7 +3299,7 @@
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        301
 #define _APS_NEXT_COMMAND_VALUE         33623
-#define _APS_NEXT_CONTROL_VALUE         3695
+#define _APS_NEXT_CONTROL_VALUE         3696
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif
