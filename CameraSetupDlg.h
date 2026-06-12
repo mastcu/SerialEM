@@ -174,6 +174,7 @@ protected:
 	afx_msg void OnBinning();
 	afx_msg void OnContSingle();
 	afx_msg void OnButrecenter();
+  void FinishShiftingArea(CButton *but);
 	afx_msg void OnDeltaposSpinupdown(NMHDR* pNMHDR, LRESULT* pResult);
 	afx_msg void OnDeltaposSpinleftright(NMHDR* pNMHDR, LRESULT* pResult);
 	afx_msg void OnButupdatedose();
@@ -228,6 +229,7 @@ private:
   bool mDeCombosLoaded;
   float mFPSfor4dSTEM;
   bool mVirtChanSelected;
+  bool mWarnedDENotSelected;
 
 public:
   afx_msg void OnAcquireReopen();
@@ -372,6 +374,7 @@ afx_msg void OnKillfocusDeFrameTime();
   CStatic m_statWhereAlign;
   CStatic m_statIntermediateOnOff;
 void ManageDEpanel(void);
+void ManageDEvariableMaxFPS();
 afx_msg void OnDeSaveMaster();
   void CheckFalconFrameSumList(void);
 float RoundedFrameTime(float frameTime, CameraParameters *param = NULL);

@@ -91,7 +91,7 @@ IDC_CHECK_USE_CORR_DBL_SAMP,
 IDC_STAT_WHERE_ALIGN, IDC_STAT_INTERMEDIATE_ONOFF, IDC_STAT_ALIGN_SUMMARY, PANEL_END,
 IDC_CHECK_TAKE_K3_BINNED, IDC_SETUP_K2_FRAME_SUMS, IDC_SAVE_FRAME_SUMS, PANEL_END,
 IDC_STAT_DEMODE, IDC_RDE_LINEAR, IDC_RDE_COUNTING, IDC_RDE_SUPERRES, IDC_EDIT_DE_FPS,
-IDC_DE_SAVE_FRAMES, IDC_EDIT_DE_SUM_COUNT, IDC_DE_SAVE_MASTER,
+IDC_DE_SAVE_FRAMES, IDC_EDIT_DE_SUM_COUNT, IDC_DE_SAVE_MASTER, IDC_STAT_MAX_FPS,
 IDC_DE_SAVE_FINAL, IDC_STAT_NUM_DE_RAW, IDC_BUT_NAME_SUFFIX, IDC_STAT_DE_FRAME_TIME,
 IDC_STAT_DE_FRAME_SEC, IDC_STAT_DEFPS, IDC_DE_ALIGN_FRAMES, IDC_BUT_DE_SETUP_ALIGN,
 IDC_EDIT_DE_FRAME_TIME, IDC_STAT_DE_SUM_NUM, IDC_SPIN_DE_SUM_NUM, IDC_STAT_DE_WHERE_ALIGN,
@@ -174,6 +174,7 @@ CCameraSetupDlg::CCameraSetupDlg(CWnd* pParent /*=NULL*/)
   mDeCombosLoaded = false;
   mVirtChanSelected = false;
   mFPSfor4dSTEM = 0.;
+  mWarnedDENotSelected = false;
   mPlacement.rcNormalPosition.right = NO_PLACEMENT;
 }
 
@@ -481,6 +482,7 @@ void CCameraSetupDlg::SetFractionalSize(int fracX, int fracY)
   UpdateData(FALSE);
   if (mSTEMcamera)
     ManageDrift();
+  ManageDEvariableMaxFPS();
   ManageTimingAvailable();
   DrawBox();
 }
@@ -586,6 +588,7 @@ void CCameraSetupDlg::SetAdjustedSize(int deltaX, int deltaY)
   }
   if (mSTEMcamera)
     ManageDrift();
+  ManageDEvariableMaxFPS();
 }
 
 // Decrease area by 10%
@@ -713,6 +716,7 @@ void CCameraSetupDlg::OnBinning()
   }
   if (mDE_Type && (mParam->CamFlags & DE_HAS_HARDWARE_BIN))
     m_butCorrDrift_DeHwBin.EnableWindow(m_iBinning > 0);
+  ManageDEvariableMaxFPS();
   ManageExposure();
   ManageBinnedSize();
   ManageK2SaveSummary();
@@ -754,6 +758,7 @@ void CCameraSetupDlg::OnUseHwROI_OvDiff()
     ManageExposure();
     ManageK2SaveSummary();
   }
+  ManageDEvariableMaxFPS();
 }
 
 void CCameraSetupDlg::OnCorrectDrift()
@@ -761,6 +766,7 @@ void CCameraSetupDlg::OnCorrectDrift()
   UpdateData(true);
   if (DECTRIS_WITH_SUPER_RES(mParam))
     ManageSuperResBinning();
+  ManageDEvariableMaxFPS();
 }
 
 void CCameraSetupDlg::OnProcessing()
@@ -797,11 +803,18 @@ void CCameraSetupDlg::OnButrecenter()
   m_eRight += deltaX;
   m_eTop += deltaY;
   m_eBottom += deltaY;
+  FinishShiftingArea(&m_butRecenter);
+}
+
+void CCameraSetupDlg::FinishShiftingArea(CButton *but)
+{
   if (mTietzBlocks || mTietzSizes)
     AdjustCoords(mBinnings[m_iBinning]);
   UpdateData(FALSE);
+  ManageDEvariableMaxFPS();
   DrawBox();
-  FixButtonFocus(m_butRecenter);
+  if (but)
+    FixButtonFocus(*but);
 }
 
 void CCameraSetupDlg::OnSwapXY()
@@ -812,11 +825,7 @@ void CCameraSetupDlg::OnSwapXY()
   temp = m_eRight;
   m_eRight = B3DMIN(m_eBottom, mCameraSizeX / mCoordScaling);
   m_eBottom = B3DMIN(temp, mCameraSizeY / mCoordScaling);
-  if (mTietzBlocks || mTietzSizes)
-    AdjustCoords(mBinnings[m_iBinning]);
-  UpdateData(FALSE);
-  DrawBox();
-  FixButtonFocus(m_butSwapXY);
+  FinishShiftingArea(&m_butSwapXY);
 }
 
 // Shift box up or down.  The signs of these delta make no sense
@@ -838,10 +847,7 @@ void CCameraSetupDlg::OnDeltaposSpinupdown(NMHDR* pNMHDR, LRESULT* pResult)
     return;
   m_eTop += delta;
   m_eBottom += delta;
-  if (mTietzBlocks || mTietzSizes)
-    AdjustCoords(mBinnings[m_iBinning]);
-  UpdateData(FALSE);
-  DrawBox();
+  FinishShiftingArea(NULL);
 }
 
 // Shift box left or right
@@ -863,10 +869,7 @@ void CCameraSetupDlg::OnDeltaposSpinleftright(NMHDR* pNMHDR, LRESULT* pResult)
     return;
   m_eLeft += delta;
   m_eRight += delta;
-  if (mTietzBlocks || mTietzSizes)
-    AdjustCoords(mBinnings[m_iBinning]);
-  UpdateData(FALSE);
-  DrawBox();
+  FinishShiftingArea(NULL);
 }
 
 // Update the dose
@@ -970,6 +973,7 @@ void CCameraSetupDlg::LoadConsetToDialog()
   int i, indMin, binning, showProc, lockSet, special, numSel;
   bool noDark, noGain, alwaysAdjust, noRaw, show, canCopyView, noRawButDark;
   int *modeP = mParam->DE_camType ? &m_iDEMode : &m_iK2Mode;
+  CString str;
   CButton *radio;
   MontParam *montp = mWinApp->GetMontParam();
   mCurSet = &mConSets[mCurrentSet + mActiveCameraList[mCurrentCamera] * MAX_CONSETS];
@@ -1083,6 +1087,8 @@ void CCameraSetupDlg::LoadConsetToDialog()
     m_iSumCount = (*modeP > 0) ? mCurSet->sumK2OrDeCntFrames : mCurSet->DElinSumCount;
     m_fDEfps = (*modeP > 0 && mParam->DE_CountingFPS > 0.) ? mParam->DE_CountingFPS :
       mParam->DE_FramesPerSec;
+    if (mCurSet->DeFPS > 0. && mParam->variableMaxFPSType == 1)
+      m_fDEfps = mCurSet->DeFPS;
     m_fDEfps = (float)B3DNINT(100. * m_fDEfps) / 100.f;
     m_bDEalignFrames = m_bAlignDoseFrac;
     mSaveLinearFPS = mParam->DE_FramesPerSec;
@@ -1262,6 +1268,11 @@ void CCameraSetupDlg::LoadConsetToDialog()
     m_bAlignDoseFrac, mCurSet->useFrameAlign));
 
   UpdateData(false);
+  ManageDEvariableMaxFPS();
+  if (mDE_Type && mParam->variableMaxFPSType == 1) {
+    str.Format("Max FPS: %.5g", mParam->DE_MaxFrameRate);
+    SetDlgItemText(IDC_STAT_MAX_FPS, str);
+  }
   ManageDrift();
   ManageTimingAvailable();
   ManageFalcon4FrameSpec();
@@ -1326,6 +1337,8 @@ void CCameraSetupDlg::UnloadDialogToConset()
       mCurSet->DElinSumCount = m_iSumCount;
     mSaveLinearFPS = mParam->DE_FramesPerSec;
     mSaveCountingFPS = mParam->DE_CountingFPS;
+    if (mCurSet->DeFPS > 0 || mParam->variableMaxFPSType == 1)
+      mCurSet->DeFPS = m_fDEfps;
     m_bAlignDoseFrac = m_bDEalignFrames;
   }
   if (mDE_Type && (mParam->CamFlags & DE_HAS_HARDWARE_BIN))
@@ -1919,6 +1932,7 @@ void CCameraSetupDlg::ManageCamera()
     ShowDlgItem(IDC_STAT_DE_WHERE_ALIGN, mDEweCanAlign);
     m_spinDEsumNum.SetRange(1, 10000);
     m_spinDEsumNum.SetPos(5000);
+    ShowDlgItem(IDC_STAT_MAX_FPS, mParam->variableMaxFPSType == 1);
   }
 
   // Dark ref management is now con-set dependent, moved it there
@@ -2770,6 +2784,7 @@ void CCameraSetupDlg::FinishEditingCoords(BOOL update)
   }
   if (mVirtChanSelected)
     ManageDrift();
+  ManageDEvariableMaxFPS();
 }
 
 /////////////////////////////////////////////
@@ -3035,6 +3050,7 @@ void CCameraSetupDlg::OnK2Mode()
       }
       m_iSumCount = B3DMAX(1, m_iSumCount);
     }
+    ManageDEvariableMaxFPS();
     ManageDEpanel();
     ManageK2Processing();
     ManageExposure();
@@ -3928,6 +3944,46 @@ void CCameraSetupDlg::ManageDEpanel(void)
   }
 }
 
+// Find out if the maximum FPS has changed for a DE camera and either make sure the 
+// current FPS is not more than that for variable max type 1, or set the FPS to that 
+// for variable max type 2
+void CCameraSetupDlg::ManageDEvariableMaxFPS()
+{
+  int changedOrErr;
+  CString str;
+  if (!mParam->DE_camType || !mParam->variableMaxFPSType || mSTEMcamera || 
+    (!(mParam->CamFlags & DE_HAS_HARDWARE_BIN) &&
+      !(mParam->CamFlags & DE_HAS_HARDWARE_ROI)))
+      return;
+  changedOrErr = mCamera->CheckIfDEMaxFPSChanges(mWinApp->GetCurrentCamera(),
+    mBinnings[m_iBinning], m_bOvDrift_DeHwBin_DctSep ? 1 : 0, m_eTop, m_eLeft, m_eBottom,
+    m_eRight, m_bUseHwROI_OvDiff, m_iDEMode);
+  if (changedOrErr == -6) {
+    if (!mWarnedDENotSelected)
+      AfxMessageBox("This DE camera is not the current camera and the\n"
+        "frames per second cannot be determined for these settings\n"
+        "unless it is set as the current camera", MB_EXCLAME);
+    mWarnedDENotSelected = true;
+    return;
+  }
+  if (changedOrErr < 0) {
+    PrintfToLog("WARNING: Error %d trying to determine max FPS for DE camera",
+      changedOrErr);
+    return;
+  }
+  if (!changedOrErr && mParam->DE_MaxFrameRate >= m_fDEfps)
+    return;
+  if (mParam->variableMaxFPSType == 1) {
+    str.Format("Max FPS: %.5g", mParam->DE_MaxFrameRate);
+    SetDlgItemText(IDC_STAT_MAX_FPS, str);
+  }  
+  if (mParam->variableMaxFPSType > 1 || mParam->DE_MaxFrameRate < m_fDEfps) {
+    m_fDEfps =(float)((int)(100. * mParam->DE_MaxFrameRate + 0.01)) / 100.f;
+    UpdateData(false);
+    OnKillfocusEditDeFPS();
+  }
+}
+
 // new frame time: adjust the sum count and then make sure it is legal
 void CCameraSetupDlg::OnKillfocusDeFrameTime()
 {
@@ -3945,6 +4001,10 @@ void CCameraSetupDlg::OnKillfocusDeFrameTime()
 void CCameraSetupDlg::OnKillfocusEditDeFPS()
 {
   UpdateData(true);
+  if (m_fDEfps > mParam->DE_MaxFrameRate && mParam->variableMaxFPSType == 1) {
+    m_fDEfps = (float)((int)(100. * mParam->DE_MaxFrameRate + 0.01)) / 100.f;
+    UpdateData(false);
+  }
   if (m_iDEMode > 0)
     mParam->DE_CountingFPS = m_fDEfps;
   else

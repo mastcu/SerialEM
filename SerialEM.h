@@ -48,6 +48,7 @@
 #include <set>
 #include <queue>
 #include <string>
+#include <map>
 #include "resource.h"       // main symbols
 #include "EMimageBuffer.h"  // Added by ClassView
 #include "ImageLevelDlg.h"  // Added by ClassView

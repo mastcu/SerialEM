@@ -80,6 +80,7 @@ struct ControlSet {
   int skipBeforeOrPrePix;  // # frames to skip or prepixel time in microseconds in Tietz STEM
   int skipAfterOrPtRpt;  // # frames to skip after or  point repeats option in DE STEM
   int DElinSumCount;     // DE sum count only for linear mode
+  float DeFPS;           // Frames per second when it is variable and controllable
   b3dUInt32 flags;       // Flags for new boolean items
 };
 
@@ -118,6 +119,7 @@ struct CameraParameters {
   float DE_FramesPerSec;   // USER's setting for the frames per second for this camera
   float DE_CountingFPS;    // User's setting for FPS in counting mode
   float DE_MaxFrameRate;   // Maximum frame rate from server
+  int variableMaxFPSType;  // 1 if max FPS depends on binning/ROI; 2 if FPS is set to max
   CString DE_AutosaveDir;  // Top folder for autosaves
   float DEMaintenanceTime; // Duration of maintenance in seconds
   int DectrisType;         // Type of Dectris camera

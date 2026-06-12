@@ -1290,6 +1290,7 @@ BEGIN
     LTEXT           "Point repeats",IDC_STAT_POINT_REPEATS,145,398,40,8
     EDITTEXT        IDC_EDIT_POINT_REPEATS,186,395,18,14,ES_AUTOHSCROLL
     CONTROL         "",IDC_SPIN_POINT_REPEATS,"msctls_updown32",UDS_ARROWKEYS,204,395,10,14
+    LTEXT           "Max FPS: 1200.23",IDC_STAT_MAX_FPS,5,543,60,8
 END
 
 IDD_ALIGNFOCUS DIALOGEX 0, 0, 119, 136
@@ -7111,6 +7112,11 @@ END
 STRINGTABLE
 BEGIN
     IDC_CHECK_SET_APERTURES "Move apertures to listed sizes when setting this state"
+    IDC_RCHECK_VIB_AND_FILL "Check for both dewar filling and other vibrations"
+    IDC_RCHECK_VIB_IN_FINAL "Check for vibrations only if acquiring Final Data in Acquire at Items"
+    IDC_RCHECK_JUST_FILLING "Do not check for vibrations, just for whether dewars are alreday filling"
+    IDC_RIGNORE_VIB_AND_FILL 
+                            "Do not check for dewars filling or other vibrations occurring"
 END
 
 STRINGTABLE
@@ -8454,11 +8460,6 @@ END
 STRINGTABLE
 BEGIN
     ID_MISC_NO_TRUE_SIZE    "Select whether to show circles with actual beam size when defining Focus/Trial"
-    IDC_RCHECK_VIB_AND_FILL "Check for both dewar filling and other vibrations"
-    IDC_RCHECK_VIB_IN_FINAL "Check for vibrations only if acquiring Final Data in Acquire at Items"
-    IDC_RCHECK_JUST_FILLING "Do not check for vibrations, just for whether dewars are alreday filling"
-    IDC_RIGNORE_VIB_AND_FILL
-                            "Do not check for dewars filling or other vibrations occurring"
 END
 
 #endif    // English (United States) resources

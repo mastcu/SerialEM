@@ -341,6 +341,8 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
             cs->sumK2OrDeCntFrames = itemInt[1];
           else if (NAME_IS("DEsumCount"))
             cs->DElinSumCount = itemInt[1];
+          else if (NAME_IS("DeFPS"))
+            cs->DeFPS = itemFlt[1];
           else if (NAME_IS("Flags"))
             cs->flags = (b3dUInt32)itemInt[1];
           else if (NAME_IS("SkipFramesBefore"))
@@ -1920,6 +1922,8 @@ void CParameterIO::WriteSettings(CString strFileName)
         WriteInt("FAParamSetInd", cs->faParamSetInd);
         if (cs->DElinSumCount)
           WriteInt("DEsumCount", cs->DElinSumCount);
+        if (cs->DeFPS)
+          WriteFloat("DeFPS", cs->DeFPS);
         WriteInt("FilterType", cs->filtTypeOrPreset);
         WriteIndexedInts("ChannelIndex", cs->channelIndex, MAX_STEM_CHANNELS);
         oneState.Format("BoostMag %d %d\n", cs->boostMagOrHwBin, cs->magAllShotsOrHwROI);
@@ -6492,6 +6496,7 @@ void CParameterIO::InitializeControlSet(ControlSet * cs, int sizeX, int sizeY)
   cs->skipBeforeOrPrePix = 0;
   cs->skipAfterOrPtRpt = 0;
   cs->DElinSumCount = 0;
+  cs->DeFPS = 0.;
   cs->flags = 0;
 }
 
