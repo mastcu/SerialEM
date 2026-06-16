@@ -5875,7 +5875,8 @@ BOOL CSerialEMApp::GetDummyInstance()
 // Toggle basic mode, managing tool dlgs and calling various things to manage menu/dialogs
 void CSerialEMApp::SetBasicMode(BOOL inVal)
 {
-  int ind, useInd;
+  int ind, useInd, state;
+  WINDOWPLACEMENT winPlace;
   if (mBasicMode == inVal)
     return;
   mBasicMode = inVal;
@@ -5883,10 +5884,11 @@ void CSerialEMApp::SetBasicMode(BOOL inVal)
     return;
 
   for (ind = 0; ind < MAX_TOOL_DLGS; ind++) {
+    if ((ind == 10 && !mScopeHasSTEM) || (ind == 11 && !mScopeHasFilter) ||
+      (ind == 12 && !mDEcamCount) || (ind == 13 && !mAnyDectris))
+      continue;
+
     if (mBasicIDsToHide.count(-10 - ind)) {
-      if ((ind == -20 && !mScopeHasSTEM) || (ind == -21 && !mScopeHasFilter) ||
-        (ind == -22 && !mDEcamCount) || (ind == -23 && !mAnyDectris))
-        continue;
       if (ind == REMOTE_PANEL_INDEX) {
         if (BOOL_EQUIV(mShowRemoteControl, inVal))
           OnShowScopeControlPanel();
@@ -5904,6 +5906,25 @@ void CSerialEMApp::SetBasicMode(BOOL inVal)
         if (useInd >= 0)
           mMainFrame->InitializeOnePosition(useInd, ind, initialDlgState[ind],
             &mDlgPlacements[ind]);
+      }
+    } else if (mPanelsToClose.count(ind) || mPanelsToClose.count(-ind - 1)) {
+      if (ind == REMOTE_PANEL_INDEX && !mShowRemoteControl)
+        continue;
+      if (inVal) {
+        mSavedToolDlgStates[ind] = mToolDlgs[ind]->GetState();
+        mToolDlgs[ind]->GetWindowPlacement(&winPlace);
+        mDlgPlacements[ind] = winPlace.rcNormalPosition;
+        state = 0;
+        if (mPanelsToClose.count(-ind - 1))
+          state = TOOL_OPENCLOSED + (mSavedToolDlgStates[ind] & TOOL_FLOATDOCK);
+        mToolDlgs[ind]->SetOpenClosed(state);
+      } else {
+        useInd = LookupToolDlgIndex(ind);
+        if ((mSavedToolDlgStates[ind] & TOOL_FLOATDOCK) && useInd >= 0) 
+          mMainFrame->InitializeOnePosition(useInd, ind, mSavedToolDlgStates[ind],
+            &mDlgPlacements[ind]);
+        else
+          mToolDlgs[ind]->SetOpenClosed(mSavedToolDlgStates[ind]);
       }
     }
   }

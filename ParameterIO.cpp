@@ -3054,7 +3054,8 @@ int CParameterIO::WriteMulGridAcqParams(CString &filename, CString &errStr)
 // Reads a file to hide or disable items containing either defined strings in the
 // table in sDisableHideList or menu item IDs to be hidden
 int CParameterIO::ReadDisableOrHideFile(CString & filename, std::set<int>  *IDsToHide,
-  std::set<int>  *lineHideIDs, std::set<int> *IDsToDisable, StringSet *stringHides)
+  std::set<int>  *lineHideIDs, std::set<int> *IDsToDisable, StringSet *stringHides, 
+  std::set<short> *panelsToClose)
 {
   CStdioFile *file = NULL;
   int err = 0, type, ind, space;
@@ -3110,18 +3111,23 @@ int CParameterIO::ReadDisableOrHideFile(CString & filename, std::set<int>  *IDsT
             for (ind = 0; ind < numInTable; ind++) {
               if (!tag.CompareNoCase(sDisableHideList[ind].descrip)) {
                 if (sDisableHideList[ind].disableOrHide & type) {
+                  if (type & 3) {
 
-                  // Store as string, disable, lin ehide, or simple hide
-                  if (sDisableHideList[ind].nID < 1 && sDisableHideList[ind].nID > -10) {
-                    space = tag.ReverseFind(' ');
-                    tag = tag.Left(space);
-                    stringHides->insert(std::string((LPCTSTR)tag));
-                  } else if (type == 1)
-                    IDsToDisable->insert(sDisableHideList[ind].nID);
-                  else if (sDisableHideList[ind].wholeLine)
-                    lineHideIDs->insert(sDisableHideList[ind].nID);
-                  else
-                    IDsToHide->insert(sDisableHideList[ind].nID);
+                    // Store as string, disable, line hide, or simple hide
+                    if (sDisableHideList[ind].nID < 1 && sDisableHideList[ind].nID > -10) {
+                      space = tag.ReverseFind(' ');
+                      tag = tag.Left(space);
+                      stringHides->insert(std::string((LPCTSTR)tag));
+                    } else if (type == 1)
+                      IDsToDisable->insert(sDisableHideList[ind].nID);
+                    else if (sDisableHideList[ind].wholeLine)
+                      lineHideIDs->insert(sDisableHideList[ind].nID);
+                    else
+                      IDsToHide->insert(sDisableHideList[ind].nID);
+                  } else if ((type & 4) || (type & 8)) {
+                    panelsToClose->insert(sDisableHideList[ind].nID);
+                  }
+
                 } else {
                   tag.Format("This menu item can only be %s not %s in line:\n",
                     type == 1 ? "hidden" : "disabled", type > 1 ? "hidden" : "disabled");
@@ -3934,7 +3940,8 @@ int CParameterIO::ReadProperties(CString strFileName)
         StripItems(strLine, 1, message);
         mCheckForComments = false;
         ReadDisableOrHideFile(message, mWinApp->GetIDsToHide(), mWinApp->GetLineHideIDs(),
-          mWinApp->GetIDsToDisable(), mWinApp->GetHideStrings());
+          mWinApp->GetIDsToDisable(), mWinApp->GetHideStrings(), 
+          mWinApp->GetPanelsToClose());
         mCheckForComments = true;
 
       } else if (MatchNoCase("BasicModeDisableHideFile")) {

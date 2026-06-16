@@ -3,6 +3,9 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+6/16/26: Added ability to close up control panels or their options sections
+in basic mode.
+
 6/12/26: Added new treatment of frames per second for DE cameras with variable
 maximum FPS values, with a property setting that enables the maximum FPS to be
 determined on the fly and properly taken into account, and different FPS
