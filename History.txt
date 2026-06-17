@@ -3,6 +3,20 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+6/17/26: Added ability to set a lens with free lens control in LM on a JEOL,
+and a set of 'FLCInLM' properties for specifying it.
+
+6/16/26: Added ability to close up control panels or their options sections
+in basic mode.
+
+6/12/26: Added new treatment of frames per second for DE cameras with variable
+maximum FPS values, with a property setting that enables the maximum FPS to be
+determined on the fly and properly taken into account, and different FPS
+values to be set for different camera parameter sets.
+
+6/12/26: For De cameras, it now checks the system status before inserting the
+camera or taking an image and disallows the action if inappropriate.
+
 6/10/26: Added call to restore JEOL stage speed on exit or crash (In 4.2).
 
 6/9/26: Added script commands for reporting frame-saving variables and
@@ -21,6 +35,7 @@ Realign to Item can align to that map by first aligning to the item with that
 ID then rely on View/Search offset to get to the right position for the higher
 mag map.
 
+6/3/26: SEM_4-3-0beta11
 6/3/26: Allowed background script to run during long operations and added
 script command to find out what operations are running.
 

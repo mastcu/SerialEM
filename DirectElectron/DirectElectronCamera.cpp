@@ -73,6 +73,7 @@ static const char *psCountsPerEvent = "Event Counting - Value Per Event";
 static const char *psADUsPerElectron = "ADUs Per Electron";
 static const char *psFramesPerSec = "Frames Per Second";
 static const char *psMaintenance = "Sensor - Maintenance Cycle";
+static const char *psSystemStatus = "System Status";
 
 // These are concatenated into multiple strings
 #define DE_PROP_COUNTING "Electron Counting"
@@ -379,8 +380,12 @@ int DirectElectronCamera::initializeDECamera(CString camName, int camIndex)
           params->CamFlags |= flagsToSet[j];
       if (!camProps[i].compare("Hardware Binning X"))
         sawHWbinning = true;
-      if (!camProps[i].compare("Hardware ROI Size X"))
+      if (!camProps[i].compare("Hardware ROI Size X") || 
+        !camProps[i].compare("Hardware ROI Size Y") || 
+        !camProps[i].compare("Feature - HW ROI X") || 
+        !camProps[i].compare("Feature - HW ROI Y"))
         sawHWROI = true;
+
       if (!camProps[i].compare("License - Event Counting")) {
         if (mDeServer->getProperty(camProps[i], &propValue) &&
           propValue.find("Valid") == 0)
@@ -885,7 +890,7 @@ int DirectElectronCamera::AcquireImageData(unsigned short *image4k, long &imageS
   long &imageSizeY, int divideBy2)
 {
   CString valStr;
-  int actualSizeX, actualSizeY;
+  int actualSizeX, actualSizeY, status;
   double startTime = GetTickCount();
   bool api2Reference = mAPI2Server && mRepeatForServerRef > 0;
   bool imageOK;
@@ -911,6 +916,13 @@ int DirectElectronCamera::AcquireImageData(unsigned short *image4k, long &imageS
   }
 
   // Resume code for NORMAL SINGLE IMAGE ACQUISITION
+  status = GetSystemStatus(valStr);
+  if (status > 0 && (status < 701 || status > 704) && status != 402 && status != 601) {
+    mLastErrorString.Format("Not acquiring because of system status: %s",
+      (LPCTSTR)valStr);
+    SEMTrace('D', "%s", (LPCTSTR)mLastErrorString);
+    return 1;
+  }
 
   // Get a checksum of current conditions and time stamp
   int checksum = B3DNINT(1000 * mLastExposureTime) + B3DNINT(1005 * mLastPreExposure) +
@@ -943,14 +955,14 @@ int DirectElectronCamera::AcquireImageData(unsigned short *image4k, long &imageS
   }
 
   // Check dark reference if any processing or counting mode and older server
-  if ((mLastProcessing != UNPROCESSED ||
+  if (mRepeatForServerRef <= 0 && (mLastProcessing != UNPROCESSED ||
     (mLastElectronCounting > 0 && mServerVersion < DE_NO_REF_IF_UNNORMED)) &&
     !IsReferenceValid(checksum, mDarkChecks, minuteNow, mAPI2Server ?
       "Reference - Dark" : "Correction Mode Dark Reference Status", "dark"))
     return 1;
 
   // Check gain reference if normalized or counting mode and older server
-  if ((mLastProcessing == GAIN_NORMALIZED ||
+  if (mRepeatForServerRef <= 0 && (mLastProcessing == GAIN_NORMALIZED ||
     (mLastElectronCounting > 0 && mServerVersion < DE_NO_REF_IF_UNNORMED)) &&
     !IsReferenceValid(checksum, mGainChecks, minuteNow, mAPI2Server ?
       "Reference - Gain" : "Correction Mode Gain Reference Status", "gain"))
@@ -1377,7 +1389,8 @@ int DirectElectronCamera::SetCountingParams(int readMode, double scaling, double
   CameraParameters *camP = mCamParams + mCurCamIndex;
   bool superRes = readMode == SUPERRES_MODE;
   bool hasHDR = (camP->CamFlags & DE_HAS_HARDWARE_HDR) != 0;
-  mCountScaling = (float)scaling;
+  if (scaling > 0)
+    mCountScaling = (float)scaling;
   if (slock.Lock(1000)) {
     if (!IsApolloCamera() && (camP->CamFlags & DE_CAM_CAN_COUNT)) {
       if (((readMode == LINEAR_MODE && mLastElectronCounting != 0) ||
@@ -1406,7 +1419,7 @@ int DirectElectronCamera::SetCountingParams(int readMode, double scaling, double
       }
     }
     if (!IsApolloCamera() && (fabs(FPS - mLastFPS) > 1.e-3 || !mTrustLastSettings) &&
-      !mLiveThread && SetFramesPerSecond(FPS))
+      FPS > 0. && !mLiveThread && SetFramesPerSecond(FPS))
       return 1;
   }
   return 0;
@@ -1771,17 +1784,24 @@ float DirectElectronCamera::getCameraTemp()
 // Inserts camera and waits until done
 int DirectElectronCamera::insertCamera()
 {
+  CString valStr;
   CSingleLock slock(&m_mutex);
+  int status;
   if (slock.Lock(1000)) {
+    status = GetSystemStatus(valStr);
+    if (!status || status >= 400 || status == 208) {
+      if (!mDeServer->setProperty(mAPI2Server ? psCamPositionCtrl : psCamPosition,
+        mAPI2Server ? "Extend" : DE_CAM_STATE_INSERTED)) {
+        CString str = ErrorTrace("ERROR: Could NOT insert the DE camera ");
+        //AfxMessageBox(str);
+      } else {
+        WaitForInsertionState(DE_CAM_STATE_INSERTED);
+        return 0;
 
-    if (!mDeServer->setProperty(mAPI2Server ? psCamPositionCtrl : psCamPosition,
-      mAPI2Server ? "Extend" : DE_CAM_STATE_INSERTED)) {
-      CString str = ErrorTrace("ERROR: Could NOT insert the DE camera ");
-      //AfxMessageBox(str);
+      }
     } else {
-      WaitForInsertionState(DE_CAM_STATE_INSERTED);
-      return 0;
-
+      ErrorTrace("ERROR: Will not insert camera due to system status: %s", 
+        (LPCTSTR)valStr);
     }
   }
   return 1;
@@ -2112,6 +2132,25 @@ bool DirectElectronCamera::justGetStringProperty(CString name, CString & value)
   return false;
 }
 
+// Returns the system status string and a value (0 or the error code)
+// Returns empty string if failure to get lock or status
+int DirectElectronCamera::GetSystemStatus(CString &valStr)
+{
+  std::string statStr;
+  valStr = "";
+  CSingleLock slock(&m_mutex);
+  if (slock.Lock(1000)) {
+    if (!mDeServer->getProperty(psSystemStatus, &statStr))
+      return 0;
+    valStr = statStr.c_str();
+    if (statStr == "OK")
+      return 0;
+    return atoi(statStr.c_str());
+  }
+  return 0;
+}
+
+
 /////////////////////////////////////////////////////////
 // Routines to set properties given string, int or float/double
 // The first three return true for success
@@ -2316,7 +2355,7 @@ bool DirectElectronCamera::IsReferenceValid(int checksum, std::map<int, int> &vm
         valStr.Format("There is no %s reference valid for the current conditions",
           refType);
         if (mServerVersion >= DE_NO_REF_IF_UNNORMED &&
-          getStringProperty("System Status", statStr)) {
+          getStringProperty(psSystemStatus, statStr)) {
           valStr += ".  Message from server:\r\n" + statStr;
         }
         SetAndTraceErrorString(valStr);

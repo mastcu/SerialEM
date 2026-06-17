@@ -703,7 +703,7 @@
               d for reason why no electron dose<br />
               e for JEOL event reports<br />
               f for STEM autofocus<BR>
-              g for GIF and STEM state setting/tracking<br />
+              g for GIF and STEM state setting/tracking and for setting a lens with FLC in LM<br />
               h for navHelper Realign to Item details including choice of map to use<br />
               i for image shift-related items<BR>
               j for JEOL camera<BR>
@@ -2801,8 +2801,8 @@
         </TR>
         <TR VALIGN="top">
           <TD>DECameraServerIP</TD>
-          <TD>Set to the IP address of the DE server computer, or 127.0.0.1 if the server is
-            running on the same computer as SerialEM.</TD>
+          <TD>Set to the IP address of the DE server computer, or 127.0.0.1 (for API 1) or 
+              localhost (for API 2) if the server is running on the same computer as SerialEM.</TD>
         </TR>
         <TR VALIGN="top">
           <TD>DECameraReadPort</TD>
@@ -2841,6 +2841,19 @@
             has an effect only if the server is local ('DECameraServerIP' set to 127.0.0.1) and with a server version of 1.0.943 or higher, where SerialEM
             will allow saving to subfolders of the autosave folder.&nbsp; The directory will
             be created if it does not exist but its parent must already exist.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>DEVariableMaxFPSType</TD>
+          <TD>With this property set to 1 or 2, the program will determine the maximum frames 
+              per second when some settings are changed in the camera setup dialog and just 
+              before acquiring an image.&nbsp; Set to 1 if the camera varies the maximum FPS&nbsp; 
+              for different subareas or when hardware ROI or hardware binning are used, and 
+              the FPS can be set.&nbsp; The program will truncate the current FPS to the 
+              maximum when necessary.&nbsp; It will also display the maximum in the setup 
+              dalog and store the FPS value for each individual parameter set, using it when 
+              an image is to be acquired.&nbsp; Set to 2 for a camera like Artemis where the 
+              maximum FPS varies and the DE server always sets FPS to the maximum value rather 
+              than allowing it to be changed by the user.</TD>
         </TR>
         </TABLE>
       <BR>
@@ -5121,9 +5134,9 @@
             used for NormalizeAll with flag 2.<br />
             Number of steps in the positive direction.<br />
             Delay after each step (can certainly be 0 if multiple changes are interleaved).<br />
-            Lens number #1: lens numbers for FLC calls are: 0: CL1,  2: CL3,  6: OL Coarse,
-              7: OL Fine,  8: OM,  I0: IL1,  11: IL2,  12: IL3, 13: IL4,  14: PL1,  15 or 16: PL2,
-              19: FL Coarse,  20: FL Fine,  21: FL Ratio.<br />
+            Lens number #1: lens numbers for FLC calls are: 0: CL1,  1: CL2  2: CL3,  3: CM, 6: OL Coarse,
+              7: OL Fine,  8: OM, 9: OM2,  I0: IL1,  11: IL2,  12: IL3, 13: IL4,  14: PL1,  15 or 16: PL2,
+              19: FL Coarse,  20: FL Fine,  21: FL Ratio, 22: FL1Comp, 23: FL2Comp.<br />
             Amplitude #1: size of change in positive direction.  Changes should generally be under 0.05.<br />
             Follow with up to 5 more lens number and amplitude pairs. <br />
             On a 3200, a good entry for a condenser normalization that includes IL1 is:<br />
@@ -5144,6 +5157,31 @@
             The values will be set after all other regular low dose area changes.&nbsp; When 
             leaving an area wih free lens changes set, the program will turn off FLC for any 
             lens not included in a series for the area being entered. </TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>JeolSetLenswithFLCinLM</TD>
+          <TD>Set to a lens number for free lens control calls (see the list in 'JeolLensRelaxProgram')&nbsp; 
+              to have the lens set to the value provided in 'JeolFLCInLMLensValue' when the 
+              scope is in LM mode, not in STEM, and a camera is not acquiring.&nbsp; The 
+              program will turn on FLC and set the lens to that value when LM is entered, turn 
+              it off before camera acquisition in LM and back on afterwards, and turn it off 
+              when LM is left.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>JeolFLCInLMLensValue</TD>
+          <TD>The value to set the lens specified in 'JeolSetLenswithFLCinLM' with in LM mode.&nbsp; 
+              For most lenses, this value can be between 0 and 1.&nbsp; There is no default; 
+              both properties must be set to enable this feature. </TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>FLCInLMGeneralDelay</TD>
+          <TD>The delay in msec after FLC is turned on, after the lens is set to the given 
+              value, and after turning off FLC when leaving LM.&nbsp; The default is 250.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>FLCInLMAcquireDelay</TD>
+          <TD>The delay in msec after FLC is turned off for a camera acquisition.&nbsp; The 
+              default is 500.</TD>
         </TR>
         <TR VALIGN="top">
           <TD>NumberOfAlphas</TD>

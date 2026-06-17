@@ -466,6 +466,9 @@ public:
   GetSetMember(float, Ceta2ReadoutInterval);
   GetSetMember(int, MaxFalconFrames);
   int GetMaxFalconFrames(CameraParameters *params);
+  int GetDERotFlipOperation(CameraParameters *params);
+  int CheckIfDEMaxFPSChanges(int camNum, int binning, int useHWbin, int ubTop, int ubLeft, int ubBot,
+    int ubRight, int useHWROI, int readMode);
   SetMember(BOOL, FrameSavingEnabled);
   BOOL GetFrameSavingEnabled() { return mFrameSavingEnabled || mCanUseFalconConfig > 0; };
   GetSetMember(CString, FalconFrameConfig);
@@ -751,6 +754,7 @@ public:
   ControlSet *mConSetsp;
   ControlSet *mCamConSets;
   CameraParameters *mParam;
+  int mCurrentCam;            // Current camera index number
   CameraParameters *mAllParams;
   int *mActiveList;
   IDMCamera *mGatanCamera;    // A member pointer, transient or not
@@ -1177,6 +1181,7 @@ public:
   BOOL mSaveNewImageToShrMem;     // Flag to save images
   CString mNewImageListPath;      // Optional directory
   int mStoreNumForNextShot;       // Number of image store for getting filename for frames
+  std::map<INT64, float> mDeFPSmap; // Map of FPS values for DE cameras
 
 public:
   void SetNonGatanPostActionTime(void);

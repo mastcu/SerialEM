@@ -571,6 +571,11 @@ CEMscope::CEMscope()
   mHaveSetLowDoseArea = false;
   mLastRecordAbsFocus = EXTRA_NO_VALUE;
   mUtapiDisconnectThres = 3;
+  mSetLenswithFLCinLM = -1;
+  mFLCInLMLensValue = -1.;
+  mFLCInLMGenDelay = 250;
+  mFLCInLMAcqDelay = 500;
+  mJeolLensSetForLM = -1;
   mAdvancedScriptVersion = 0;
   mPluginVersion = 0;
   mPlugFuncs = NULL;
@@ -1395,6 +1400,7 @@ void CEMscope::ScopeUpdate(DWORD dwTime)
   double diffFocus = -999., newWall, cumWall = 0.;
   double wallStart, wallTimes[12] = {0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.};
   bool reportTime = GetDebugOutput('u') && (mAutosaveCount % 10 == 0);
+  static int JeolFLCErrorCount = 0;
   static int firstTime = 1;
   static double lastTime = 0.;
   //if (reportTime)
@@ -1479,6 +1485,10 @@ void CEMscope::ScopeUpdate(DWORD dwTime)
         SEMTrace('i', "Update saw new mag index %d, last seen %d, last handled %d",
           magIndex, mLastSeenMagInd, mLastMagIndex);
       }
+      if (SetFLCofLensInLMIfNeeded(magIndex, JeolFLCErrorCount % 100 == 0 ? -1 : 0))
+        JeolFLCErrorCount = 0;
+      else
+        JeolFLCErrorCount++;
 
     } else { // FEI-like
 
@@ -4215,7 +4225,7 @@ BOOL CEMscope::SetMagIndex(int inIndex)
 {
   double tranISX, tranISY, curISX, curISY;
   double axisISX, axisISY;
-  BOOL result = true;
+  BOOL result = true, FLCresult = true;
   BOOL convertIS, restoreIS, ifSTEM;
   bool unblankAfter;
   int lowestM, ticks, newLowestM;
@@ -4331,6 +4341,7 @@ BOOL CEMscope::SetMagIndex(int inIndex)
     if (IS_FALCON2_3_4(camParam))
       mShiftManager->SetGeneralTimeOut(mLastNormalization, mFalconPostMagDelay);
     HandleNewMag(inIndex);
+    FLCresult = SetFLCofLensInLMIfNeeded(inIndex, 1);
   }
 
   // If there is change in base image shift or mag change resets it, then put out the
@@ -4358,8 +4369,9 @@ BOOL CEMscope::SetMagIndex(int inIndex)
       SetImageShift(tranISX - axisISX, tranISY - axisISY);
     }
   }
+
   ScopeMutexRelease(routine);
-  return result;
+  return result && FLCresult;
 }
 
 BOOL CEMscope::SetMagKernel(SynchroThreadData *sytd)
@@ -5585,7 +5597,7 @@ void CEMscope::SetBlankWhenDown(BOOL inVal)
 // Unblank or blank beam depending on camera acquire if in low dose mode and camera module
 // is not handling the shutter (shutterless not 2) or if there is no shutter but camera
 // module is just letting this function take care of shuttering (shutterless = 1)
-void CEMscope::SetCameraAcquiring(BOOL inVal, float waitTime)
+BOOL CEMscope::SetCameraAcquiring(BOOL inVal, float waitTime)
 {
   int screenPos = FastScreenPos();
   int blankBefore = NeedBeamBlanking(screenPos, mWinApp->GetSTEMMode()) ? 1 : 0;
@@ -5596,6 +5608,7 @@ void CEMscope::SetCameraAcquiring(BOOL inVal, float waitTime)
       if (waitTime >= 0.001)
         Sleep(B3DNINT(1000. * waitTime));
   }
+  return SetFLCofLensInLMIfNeeded(mLastMagIndex, 1);
 }
 
 // Set flag to maintain blanking for a shutterless camera
@@ -6357,7 +6370,7 @@ void CEMscope::RestoreFromFreeLens(int oldArea, int newArea)
 
         // If not, turn off FLC
         if (!retain)
-          SetFreeLensControl(seq.lens[lens], 0);
+          SetFreeLensControl(seq.lens[lens], 0, 1);
       }
     }
   }
@@ -6376,7 +6389,7 @@ void CEMscope::SetFreeLensForArea(int newArea)
     seq = mFLCSequences.GetAt(ind);
     if (seq.ldArea == newArea && seq.setIndex == setIndex) {
       for (lens = 0; lens < seq.numLens; lens++)
-        SetLensWithFLC(seq.lens[lens], seq.value[lens], false);
+        SetLensWithFLC(seq.lens[lens], seq.value[lens], false, 1);
       if (mLDFreeLensDelay > 0)
         Sleep(mLDFreeLensDelay);
       break;
@@ -7220,7 +7233,7 @@ BOOL CEMscope::SetDeflectorByName(CString & name, double valueX, double valueY, 
 }
 
 // Set free lens control on or off on JEOL for one or all lenses
-BOOL CEMscope::SetFreeLensControl(int lens, int arg)
+BOOL CEMscope::SetFreeLensControl(int lens, int arg, int reportErr)
 {
   BOOL result = true;
   if (!sInitialized || !mPlugFuncs->SetFreeLensControl)
@@ -7230,7 +7243,11 @@ BOOL CEMscope::SetFreeLensControl(int lens, int arg)
     mPlugFuncs->SetFreeLensControl(lens, arg);
   }
   catch (_com_error E) {
-    SEMReportCOMError(E, _T("setting state/value of free lens control "));
+    if (reportErr > 0)
+      SEMReportCOMError(E, _T("setting state/value of free lens control "));
+    else if (reportErr < 0)
+      PrintfToLog("WARNING: Failed to turn %s free lens control for lens %d", 
+        arg ? "on" : "off", lens);
     result = false;
   }
   ScopeMutexRelease("SetFreeLensControl");
@@ -7238,7 +7255,7 @@ BOOL CEMscope::SetFreeLensControl(int lens, int arg)
 }
 
 // Set one lens that has had free lens control turned on
-BOOL CEMscope::SetLensWithFLC(int lens, double inVal, bool relative)
+BOOL CEMscope::SetLensWithFLC(int lens, double inVal, bool relative, int reportErr)
 {
   BOOL result = true;
   if (!sInitialized || !mPlugFuncs->SetLensWithFLC)
@@ -7248,13 +7265,18 @@ BOOL CEMscope::SetLensWithFLC(int lens, double inVal, bool relative)
     mPlugFuncs->SetLensWithFLC(lens, relative ? 1 : 0, inVal);
   }
   catch (_com_error E) {
-    SEMReportCOMError(E, _T("setting a lens under free lens control "));
+    if (reportErr > 0)
+      SEMReportCOMError(E, _T("setting a lens under free lens control "));
+    else if (reportErr < 0)
+      PrintfToLog("WARNING: Failed to set lens %d with %.4f under free "
+        "lens control", lens, inVal);
     result = false;
   }
   ScopeMutexRelease("SetLensWithFLC");
   return result;
 }
 
+// Returns whether FLC is on for a lens and its value if so
 BOOL CEMscope::GetLensFLCStatus(int lens, int &state, double &lensVal)
 {
   BOOL result = true;
@@ -7272,6 +7294,42 @@ BOOL CEMscope::GetLensFLCStatus(int lens, int &state, double &lensVal)
   return result;
 }
 
+// Sets one lens (CM in practice) into FLC with specific value in LM when not acquiring
+// Pass reportErr of 1 for error calls, -1 for wqarning to log, 0 for nothing on error
+BOOL CEMscope::SetFLCofLensInLMIfNeeded(int magIndex, int reportErr)
+{
+  if (!(JEOLscope && mSetLenswithFLCinLM >= 0 && mFLCInLMLensValue >= 0 &&
+    mFLCInLMLensValue <= 1.))
+    return true;
+  bool inLM = magIndex >= 0 && magIndex < GetLowestNonLMmag();
+  int needState = (JEOLscope &&inLM && !mJeolSD.JeolSTEM && !mCameraAcquiring) ? 1 : 0;
+  int delay = mFLCInLMGenDelay;
+  if (needState == mJeolLensSetForLM || (needState && mWinApp->GetAppExiting()))
+    return true;
+  if (needState) {
+    if (!SetFreeLensControl(mSetLenswithFLCinLM, 1, reportErr))
+      return false;
+    if (delay > 0)
+      Sleep(delay);
+    if (!SetLensWithFLC(mSetLenswithFLCinLM, mFLCInLMLensValue, false, reportErr)) {
+      SetFreeLensControl(mSetLenswithFLCinLM, 0, false);
+      return false;
+    }
+    SEMTrace('g', "Set lens %d with value %.4f for LM mode", mSetLenswithFLCinLM,
+      mFLCInLMLensValue);
+  } else {
+    if (!SetFreeLensControl(mSetLenswithFLCinLM, 0, reportErr))
+      return false;
+    SEMTrace('g', "Turned off FLC for lens %d %s", mSetLenswithFLCinLM, 
+      (inLM && mCameraAcquiring) ? "for camera acquisition" :"");
+    if (inLM && mCameraAcquiring)
+      delay = mFLCInLMAcqDelay;
+  }
+  if (delay > 0)
+    Sleep(delay);
+  mJeolLensSetForLM = needState;
+  return true;
+}
 
 // Returns state of column valves or beam; 1 open/on, 0 closed, -1 for indeterminate
 // and -2 for error or not supported

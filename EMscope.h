@@ -524,7 +524,7 @@ public:
   void SetBlankWhenDown(BOOL inVal);
   void SetLowDoseMode(BOOL inVal, BOOL hidingOffState = FALSE);
   GetMember(BOOL, LowDoseMode);
-  void SetCameraAcquiring(BOOL inVal, float waitTime = 0.);
+  BOOL SetCameraAcquiring(BOOL inVal, float waitTime = 0.);
   GetMember(BOOL, CameraAcquiring);
   void SetShutterlessCamera(int inVal);
   BOOL GetBlankSet() { return mBeamBlankSet; };
@@ -620,6 +620,10 @@ public:
   GetSetMember(BOOL, UseDetectorNameIfUtapi);
   GetMember(int, FEIhasApertureSupport);
   GetSetMember(float, LastRecordAbsFocus);
+  GetSetMember(int, SetLenswithFLCinLM);
+  GetSetMember(float, FLCInLMLensValue);
+  GetSetMember(int, FLCInLMGenDelay);
+  GetSetMember(int, FLCInLMAcqDelay);
   static int GetScopeCallFromPlugin() {return mScopeCallFromPlugin ; };
   static void SetScopeCallFromPlugin(int val) { mScopeCallFromPlugin = val; };
   GetMember(int, LastMagIndex);
@@ -1059,6 +1063,11 @@ private:
   bool mHaveSetLowDoseArea;    // Flag that an area was ever gone to
   float mLastRecordAbsFocus;   // Save focus value last time Record was entered
   int mUtapiDisconnectThres;   // Threshold # of successive "failed to connect" messages
+  int mSetLenswithFLCinLM;     // Lens # to set in LM or -1 if none
+  float mFLCInLMLensValue;     // Value to set the lens to in LM
+  int mJeolLensSetForLM;       // -1 at start, 0 not set, 1 set
+  int mFLCInLMGenDelay;        // General sleep time (ms) after setting FLC state or value
+  int mFLCInLMAcqDelay;        // Sleep time (ms) after truning off FLC for acquisition
   int mAdvancedScriptVersion;  // My internal version number for advanced scripting
   int mPluginVersion;          // Version of plugin or server
 
@@ -1232,9 +1241,10 @@ public:
     mStartForMinMoveZ = startZ; mMinZMoveForBacklash = minMove;};
   bool BlankTransientIfNeeded(const char *routine);
   void UnblankAfterTransient(bool needUnblank, const char *routine);
-  BOOL SetFreeLensControl(int lens, int arg);
-  BOOL SetLensWithFLC(int lens, double inVal, bool relative);
+  BOOL SetFreeLensControl(int lens, int arg, int reportErr);
+  BOOL SetLensWithFLC(int lens, double inVal, bool relative, int reportErr);
   BOOL GetLensFLCStatus(int lens, int &state, double &lensVal);
+  BOOL SetFLCofLensInLMIfNeeded(int magIndex, int reportErr);
   double GetStageBAxis(void);
   BOOL SetStageBAxis(double inVal);
   int CheckApertureKind(int kind);

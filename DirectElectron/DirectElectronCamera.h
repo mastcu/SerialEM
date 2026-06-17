@@ -113,6 +113,7 @@ public:
 	bool getFloatProperty(CString name, float &value);
   bool getStringProperty(CString name, CString &value);
   bool justGetStringProperty(CString name, CString &value);
+  int GetSystemStatus(CString &valStr);
   void setIntProperty(CString name,int value);
 	void setStringProperty(CString name,CString value);
 	void setDoubleProperty(CString name,double value);

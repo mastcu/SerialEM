@@ -32,7 +32,8 @@
       since it will become impossible for users to fix a bad value.</P>
     <P>
       Each line in one of these files consists of two entries: an initial value of 1
-      or 2 to indicate whether the item should be disabled or hidden, and a unique
+      or 2 to indicate whether the item should be disabled or hidden (or 4 or 8 for
+      closing a control panel or its options section), and a unique
       identifier for the item.&nbsp; The first table below lists items for which the
       identifier is a string that is defined in the program; when using one of these,
       you need to copy the exact string shown.&nbsp; However, any item in the
@@ -81,6 +82,7 @@
       <li>&nbsp;Submenu items will have a string indicating the submenu name.</li>
       <li>&nbsp;An entire top-level menu or submenu can be hidden.</li>
       <li>Control panels can be hidden, or just the options sections of them.</li>
+      <li>Control panels can be closed, or just the options sections of them.</li>
     </ul>
       <pre>
 <I># Must include the group too</i>
@@ -139,6 +141,29 @@
 2 STEM Control options
 2 Filter Control options
 2 DE Camera options
+ 
+<B># Close up control panels</B>
+4 Buffer Status close
+4 Buffer Control close
+4 Image Display close
+4 Scope Control close
+4 Tilt panel close
+4 Low Dose close
+4 Montage panel close
+4 STEM Control close
+4 Filter Control close
+ 
+<B># Just close options sections in control panels</B>
+8 Buffer Control opt close
+8 Image Display opt close
+8 Scope Status opt close
+8 Tilt panel opt close
+8 Image Align opt close
+8 Low Dose opt close
+8 Montage Control opt close
+8 STEM Control opt close
+8 Filter Control opt close
+8 DE Camera opt close
  
 <B># Low dose panel</B>
 2 LowDoseDlg - Continuous update

@@ -391,8 +391,9 @@
       the camera frame time.</P>
     <P>Various options described below will not appear under some circumstances.&nbsp;
       If electron counting is not available, the selection of operating mode is
-      hidden, and the frames per second is set only in the Direct Electron control
-      panel instead of here.&nbsp; Aligning of frames within SerialEM is available if
+      hidden, and the frames per second (FPS) is set only in the Direct Electron control
+      panel instead of here. These controls will also not appear for Apollo-type cameras 
+        that are intrinsically counting and whose FPS values cannot be set.&nbsp; Aligning of frames within SerialEM is available if
       SerialEM is running on the DE server and if the server version is at least 1200
       or so.&nbsp; This is because with such a server version, frames will be saved
       with dark-subtraction and gain-normalization, making it straightforward for
@@ -413,7 +414,7 @@
         a subarea or region of interest (ROI).</li>
     </ol>
     <P><b>Operating mode - Linear, Counting, Super-Resolution</b></P>
-    <P>When electron counting is available, these radio button appear to allow the
+    <P>When electron counting is available, these radio buttons are present to allow the
       selection of linear (integrating) mode, electron counting mode, and a
       super-resolution mode where frames are saved with twice the native size in X and
       Y.&nbsp; Super-resolution mode is available only when saving or aligning frames.&nbsp;
@@ -421,11 +422,18 @@
       SerialEM, and if the saved frames are aligned in SerialEM, the aligned sum will
       be Fourier-cropped to the selected binning.</P>
     <P><b>Frames per sec</b></P>
-    <P>The frames per second can be seen and entered here.&nbsp;
-      When electron counting is available, the program maintains two separate settings, one for linear mode and one for
-      counting mode, and switches between them automatically when you change modes.&nbsp;
-      There is not a separate frames per second value for each camera parameter set;
-      they all share these two values.</P>
+    <P>The frames per second can be seen and entered here if this field is present.&nbsp;
+      When electron counting is available as an option, the program maintains two separate settings, one for linear mode and one for
+      counting mode, and switches between them automatically when you change modes.&nbsp;By 
+        default, there is not a separate frames per second value for each camera parameter set;
+      they all share these two values.&nbsp; However, if the SerialEM property 
+        DEVariableMaxFPSType is set to 1, the program will determine the maximum FPS 
+        whenever the subarea or binning change and make sure that the FPS being used 
+        does not exceed that maximum.&nbsp; It will also store the FPS for individual 
+        parameter sets and set the stored value when taking an image with that set, 
+        which allows you to set the FPS to whatever high value is allowed for a subarea 
+        in one parameter set but still take images that require a lower FPS with other 
+        parameter sets.</P>
     <P><b>Save frames</b></P>
     <P>Turn on this checkbox to save frames permanently.</P>
     <P><b>Summed Frame Time </b>and<b> Frames in Sum</b></P>

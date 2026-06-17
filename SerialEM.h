@@ -48,6 +48,7 @@
 #include <set>
 #include <queue>
 #include <string>
+#include <map>
 #include "resource.h"       // main symbols
 #include "EMimageBuffer.h"  // Added by ClassView
 #include "ImageLevelDlg.h"  // Added by ClassView
@@ -776,6 +777,7 @@ public:
   std::set<int>  *GetBasicIDsToHide() { return &mBasicIDsToHide; };
   std::set<int>  *GetBasicLineHideIDs() { return &mBasicLineHideIDs; };
   std::set<int>  *GetBasicIDsToDisable() { return &mBasicIDsToDisable; };
+  GetMemberPtr(std::set<short>, PanelsToClose);
   StringSet *GetHideStrings() { return &mHideStrings; };
   StringSet *GetBasicHideStrings() { return &mBasicHideStrings; };
   bool IsIDinHideSet(UINT nID) { return mIDsToHide.count(nID) > 0 ||
@@ -951,6 +953,7 @@ private:
   int mDlgColorIndex[MAX_TOOL_DLGS];
   bool mAbsoluteDlgIndex;
   CToolDlg *mToolDlgs[MAX_TOOL_DLGS];
+  short mSavedToolDlgStates[MAX_TOOL_DLGS];
   WINDOWPLACEMENT mLogPlacement;
   WINDOWPLACEMENT mNavPlacement;
   WINDOWPLACEMENT mCamSetupPlacement;
@@ -1069,6 +1072,7 @@ private:
   std::set<int>  mBasicIDsToHide;
   std::set<int>  mBasicLineHideIDs;
   std::set<int>  mBasicIDsToDisable;
+  std::set<short> mPanelsToClose;
   StringSet mHideStrings;
   StringSet mBasicHideStrings;
   BOOL mBasicMode;

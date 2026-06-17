@@ -168,6 +168,10 @@ INT_PROP_TEST("GoToRecMagEnteringLD", scope->, GoToRecMagEnteringLD)
 INT_PROP_TEST("LowDoseFreeLensDelay", scope->, LDFreeLensDelay)
 INT_PROP_TEST("RetryStageMove", scope->, RetryStageMove)
 BOOL_PROP_TEST("AllowStopEmissionIfIdle", scope->, AllowStopEmissionIfIdle)
+INT_PROP_TEST("JeolSetLenswithFLCinLM", scope->, SetLenswithFLCinLM)
+FLOAT_PROP_TEST("JeolFLCInLMLensValue", scope->, FLCInLMLensValue)
+INT_PROP_TEST("FLCInLMGeneralDelay", scope->, FLCInLMGenDelay)
+INT_PROP_TEST("FLCInLMAcquireDelay", scope->, FLCInLMAcqDelay)
 
 #endif
 #ifdef PROP_TEST_SECT2
@@ -529,6 +533,7 @@ INT_PROP_TEST("DEImageRotation", DE_ImageRot)
 INT_PROP_TEST("DEImageInvertXAxis", DE_ImageInvertX)
 INT_PROP_TEST("DECameraReadPort", DE_ServerReadPort)
 INT_PROP_TEST("DECameraWritePort", DE_ServerWritePort)
+INT_PROP_TEST("DEVariableMaxFPSType", variableMaxFPSType)
 INT_PROP_TEST("AlsoInsertCamera", alsoInsertCamera)
 INT_PROP_TEST("SamePhysicalCamera", samePhysicalCamera)
 BOOL_PROP_TEST("TietzCanPreExpose", TietzCanPreExpose)

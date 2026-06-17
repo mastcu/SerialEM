@@ -4457,7 +4457,7 @@ int CMacCmd::ReadBasicModeFile()
   if (curFile.CompareNoCase(mStrCopy)) {
     if (mParamIO->ReadDisableOrHideFile(mStrCopy, mWinApp->GetBasicIDsToHide(),
       mWinApp->GetBasicLineHideIDs(), mWinApp->GetBasicIDsToDisable(),
-      mWinApp->GetBasicHideStrings())) {
+      mWinApp->GetBasicHideStrings(), mWinApp->GetPanelsToClose())) {
       AbortMacro();
       return 1;
     }
@@ -7221,7 +7221,7 @@ int CMacCmd::SetCoilByName()
 // SetFreeLensControl
 int CMacCmd::SetFreeLensControl(void)
 {
-  if (!mScope->SetFreeLensControl(mItemInt[1], mItemInt[2]))
+  if (!mScope->SetFreeLensControl(mItemInt[1], mItemInt[2], 1))
     ABORT_LINE("Error trying to run:\n\n");
   return 0;
 }
@@ -7229,7 +7229,7 @@ int CMacCmd::SetFreeLensControl(void)
 // SetLensWithFLC
 int CMacCmd::SetLensWithFLC(void)
 {
-  if (!mScope->SetLensWithFLC(mItemInt[1], mItemDbl[2], mItemInt[3] != 0))
+  if (!mScope->SetLensWithFLC(mItemInt[1], mItemDbl[2], mItemInt[3] != 0, 1))
     ABORT_LINE("Error trying to run:\n\n");
   return 0;
 }

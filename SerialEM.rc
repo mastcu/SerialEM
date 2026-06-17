@@ -7,7 +7,8 @@
 //
 // Generated from the TEXTINCLUDE 2 resource.
 //
-#include "afxres.h"
+#include "afxres.h"
+
 /////////////////////////////////////////////////////////////////////////////
 #undef APSTUDIO_READONLY_SYMBOLS
 
@@ -1291,6 +1292,7 @@ BEGIN
     LTEXT           "Point repeats",IDC_STAT_POINT_REPEATS,145,398,40,8
     EDITTEXT        IDC_EDIT_POINT_REPEATS,186,395,18,14,ES_AUTOHSCROLL
     CONTROL         "",IDC_SPIN_POINT_REPEATS,"msctls_updown32",UDS_ARROWKEYS,204,395,10,14
+    LTEXT           "Max FPS: 1200.23",IDC_STAT_MAX_FPS,5,543,60,8
 END
 
 IDD_ALIGNFOCUS DIALOGEX 0, 0, 119, 136
@@ -8592,7 +8594,8 @@ LANGUAGE 9, 1
 #include "res\SerialEM.rc2"  // non-Microsoft Visual C++ edited resources
 #include "afxres.rc"         // Standard components
 #include "XFolderDialog\XFolderDialog.rc"
-#endif
+#endif
+
 /////////////////////////////////////////////////////////////////////////////
 #endif    // not APSTUDIO_INVOKED
 

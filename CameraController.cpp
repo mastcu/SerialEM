@@ -1644,9 +1644,13 @@ void CCameraController::InitializeDirectElectron(int *originalList, int numOrig)
       if (!mTD.DE_Cam)
         mTD.DE_Cam = new DirectElectronCamera(mAllParams[i].DE_camType, i);
       mDE_Cam = mTD.DE_Cam;
-
-      // DNM: need to test for + return value
-      if (mTD.DE_Cam->initialize(mAllParams[i].name, i) > 0) {
+      if (mAllParams[i].name.Find("Default Camera") == 0) {
+        AfxMessageBox("The Direct Electron camera must have a Name property entry",
+          MB_EXCLAME);
+        mAllParams[i].failedToInitialize = true;
+        
+        // DNM: need to test for + return value
+      } else if (mTD.DE_Cam->initialize(mAllParams[i].name, i) > 0) {
         SEMTrace('D', "successfully initialized the camera: %s", mAllParams[i].name);
         mNumDECameras = mNumDECameras + 1;
         mDEInitialized = true;
@@ -1991,6 +1995,7 @@ void CCameraController::SetCurrentCamera(int currentCam, int activeCam)
   BOOL wasSTEM = mParam->STEMcamera;
   CString name;
   mParam = &mAllParams[currentCam];
+  mCurrentCam = currentCam;
   mFilmShutter = 1 - mParam->beamShutter;
   mTD.Camera = activeCam;
   mTD.SelectCamera = mParam->cameraNumber;  // See how simple this is (if it works)?
@@ -2365,6 +2370,56 @@ int CCameraController::GetMaxFalconFrames(CameraParameters *params)
   if (FCAM_ADVANCED(params))
     return ((params->CamFlags >> PLUGFEI_MAX_FRAC_SHIFT) & 0xFFFF);
   return mMaxFalconFrames;
+}
+
+// Returns the operation needed for adjusting user coordinates
+int CCameraController::GetDERotFlipOperation(CameraParameters *params)
+{
+  if (mTD.DE_Cam->GetServerVersion() < DE_ROI_IS_ON_CHIP)
+    return mTD.DE_Cam->OperationForRotateFlip(mParam->DE_ImageRot,
+      mParam->DE_ImageInvertX);
+  else
+    return mParam->rotationFlip;
+}
+
+// Checks the max FPS of a DE camera camNum for the given binning and subarea params
+// Return -2 to -6 for errors, 0 if no change, 1 if changed and max FPS in param set
+int CCameraController::CheckIfDEMaxFPSChanges(int camNum, int binning, int useHWbin, 
+  int ubTop, int ubLeft, int ubBot, int ubRight, int useHWROI, int readMode)
+{
+  CameraParameters *param = mWinApp->GetCamParams() + camNum;
+  int operation = GetDERotFlipOperation(param);
+  int csizeX = param->sizeX, csizeY = param->sizeY;
+  int tsizeX = ubRight - ubLeft, tsizeY = ubBot - ubTop;
+  float maxFPS;
+  std::map<INT64, float> ::iterator iter;
+  INT64 index = (((((INT64)(((useHWbin * 2 + useHWROI) * 2 + readMode) * 4 + camNum) * 
+    MAX_CAMERAS + binning) * 64 + ubTop) * 8192 + ubLeft) * 8192 + ubBot) * 8192 +
+    ubRight;
+  iter = mDeFPSmap.find(index);
+  if (iter != mDeFPSmap.end()) {
+    maxFPS = iter->second;
+  } else {
+    if (camNum != mWinApp->GetCurrentCamera())
+      return -6;
+    if (operation)
+      CorDefUserToRotFlipCCD(operation, 1, csizeX, csizeY, tsizeX, tsizeY, ubTop,
+        ubLeft, ubBot, ubRight);
+    if (mTD.DE_Cam->setBinning(binning, binning, -1, -1,
+      (binning > 1 && (param->CamFlags & DE_HAS_HARDWARE_BIN)) ? useHWbin : -1))
+      return -2;
+    if (mTD.DE_Cam->setROI(ubLeft, ubTop, tsizeX, tsizeY, useHWROI))
+      return -3;
+    if (mTD.DE_Cam->SetCountingParams(readMode, -1., -1.))
+      return -4;
+    if (!mTD.DE_Cam->getFloatProperty("Frames Per Second (Max)", maxFPS))
+      return -5;
+    mDeFPSmap[index] = maxFPS;
+  }
+  if (fabs(param->DE_MaxFrameRate - maxFPS) < 0.02)
+    return 0;
+  param->DE_MaxFrameRate = (float)((int)(100. * maxFPS)) / 100.f;
+  return 1;
 }
 
 // Return number of intervals if dynamic focusing can be used
@@ -3291,7 +3346,7 @@ void CCameraController::Capture(int inSet, bool retrying)
   int numActive = mWinApp->GetNumActiveCameras();
   int gainXoffset, gainYoffset, offsetPerMs;
   double intensity, exposure, megaVoxel, megaVoxPerSec = 0.15;
-  float scaleFac;
+  float scaleFac, frameTime;
   DectrisPlugFuncs *dectrisFuncs;
   StringVec camPresets;
   std::string dirStr, nameStr;
@@ -3300,6 +3355,10 @@ void CCameraController::Capture(int inSet, bool retrying)
   BOOL retracting = inSet == RETRACT_BLOCKERS || inSet == RETRACT_ALL;
   mWinApp->CopyOptionalSetIfNeeded(inSet);
   ControlSet conSet = mConSetsp[retracting ? 0 : inSet]; // Copy the control set for ease
+  float *fpsP = conSet.K2ReadMode > 0 ? &mParam->DE_CountingFPS :
+    &mParam->DE_FramesPerSec;
+  int *sumCountP = conSet.K2ReadMode > 0 ? &conSet.sumK2OrDeCntFrames :
+    &conSet.DElinSumCount;
   mStartTime = GetTickCount();
   mShotIncomplete = true;     // Set flag for incomplete shot, cleared only on image
   mNeedShotToInsert = -1;
@@ -3408,6 +3467,23 @@ void CCameraController::Capture(int inSet, bool retrying)
     }
   }
 
+  // For a DE camera with changing max FPS, get the max for this control set
+  if (mParam->DE_camType && mParam->variableMaxFPSType) {
+    if (conSet.DeFPS > 0. && mParam->variableMaxFPSType == 1)
+      *fpsP = conSet.DeFPS;
+    ind = CheckIfDEMaxFPSChanges(mCurrentCam, conSet.binning, conSet.boostMagOrHwBin,
+      conSet.top, conSet.left, conSet.bottom, conSet.right, conSet.magAllShotsOrHwROI,
+      conSet.K2ReadMode);
+    if (*fpsP > mParam->DE_MaxFrameRate || (ind > 0 && mParam->variableMaxFPSType > 1)) {
+      if ((conSet.saveFrames & DE_SAVE_MASTER) ||
+        (conSet.alignFrames && conSet.useFrameAlign > 0)) {
+        frameTime = *fpsP * *sumCountP;
+        *sumCountP = B3DMAX(1, B3DNINT(frameTime / mParam->DE_MaxFrameRate));
+      }
+      *fpsP = mParam->DE_MaxFrameRate;
+    }
+  }
+
   // Enforce constraints on exposure time in the COPY of the control set, do not modify
   // the original.  This is so that tilt series can keep working on exposure time in
   // main control set, but it means exposure and dose have to be taken from this exposure
@@ -3421,6 +3497,7 @@ void CCameraController::Capture(int inSet, bool retrying)
       conSet.binning, mBinning);
     mWinApp->AppendToLog(logmess);
     conSet.binning = mBinning;
+    mConSetsp[inSet].binning = mBinning;
   }
   
   mFalconSavingEER = IsSaveInEERMode(mParam, &conSet);
@@ -4492,9 +4569,13 @@ void CCameraController::Capture(int inSet, bool retrying)
   // Inform scope so it can unblank beam if in low dose mode; when noshutter = 1 this also
   // unblanks the beam and reblanks it in the call at the end
   // Don't do this if about to blank for dark ref
-  if (!mScope->GetCameraAcquiring())
-    mScope->SetCameraAcquiring(true, 
-      B3DCHOICE(bEnsureDark && !mSimulationMode, 0.f, mParam->postBlankerDelay));
+  if (!mScope->GetCameraAcquiring()) {
+    if (!mScope->SetCameraAcquiring(true,
+      B3DCHOICE(bEnsureDark && !mSimulationMode, 0.f, mParam->postBlankerDelay))) {
+      ErrorCleanup(1);
+      return;
+    }
+  }
   
   if (bEnsureDark && !mSimulationMode) {
     SEMTrace('Z', "start getting dark, %u elapsed", GetTickCount() - mStartTime);
@@ -5705,11 +5786,7 @@ void CCameraController::CapManageCoordinates(ControlSet & conSet, int &gainXoffs
     swapXYinAcquire = TIETZ_ROTATING(mParam);
   }
   if (mParam->DE_camType >= 2) {
-    if (mTD.DE_Cam->GetServerVersion() < DE_ROI_IS_ON_CHIP)
-      operation = mTD.DE_Cam->OperationForRotateFlip(mParam->DE_ImageRot,
-        mParam->DE_ImageInvertX);
-    else
-      operation = mParam->rotationFlip;
+      operation = GetDERotFlipOperation(mParam);
   }
   if (mParam->STEMcamera && mTD.UseUtapi) {
     operation = mParam->rotationFlip;

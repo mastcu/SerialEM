@@ -94,6 +94,28 @@ static DisableHideItem sDisableHideList[] =
   {"STEM Control options", 2, 0, -40},
   {"Filter Control options", 2, 0, -41},
   {"DE Camera options", 2, 0, -42},
+  // Close up control panels
+  {"Buffer Status close", 4, 0, 0},
+  {"Buffer Control close", 4, 0, 1},
+  {"Image Display close", 4, 0, 2},
+  {"Scope Control close", 4, 0, 4},
+  {"Tilt panel close", 4, 0, 5},
+  {"Low Dose close", 4, 0, 8},
+  {"Montage panel close", 4, 0, 9},
+  {"STEM Control close", 4, 0, 10},
+  {"Filter Control close", 4, 0, 11},
+  // Just close options sections in control panels
+  {"Buffer Control opt close", 8, 0, -2},
+  {"Image Display opt close", 8, 0, -3},
+  {"Scope Status opt close", 8, 0, -4},
+  {"Tilt panel opt close", 8, 0, -6},
+  {"Image Align opt close", 8, 0, -8},
+  {"Low Dose opt close", 8, 0, -9},
+  {"Montage Control opt close", 8, 0, -10},
+  {"STEM Control opt close", 8, 0, -11},
+  {"Filter Control opt close", 8, 0, -12},
+  {"DE Camera opt close", 8, 0, -13},
+
   // Low dose panel
   {"LowDoseDlg - Continuous update", 2, 0, IDC_CONTINUOUSUPDATE},
   {"LowDoseDlg - Added beam Shift", 2, 1, IDC_SET_BEAM_SHIFT},  // Must include the group too
