@@ -1027,6 +1027,7 @@ void CCameraSetupDlg::LoadConsetToDialog()
         (mParam->OneViewType && mCurSet->K2ReadMode != 0)) ? 1 : special);
     }
     m_fFrameTime /= mFrameTimeMsScale;
+    B3DCLAMP(m_fFrameTime, 0.00001f, 9.99f);
     m_fDEframeTime = m_fFrameTime = RoundedFrameTime(m_fFrameTime);
   } else
     m_fFrameTime = 0.1f;
@@ -1457,6 +1458,12 @@ float CCameraSetupDlg::ManageExposure(bool updateIfChange)
   // Special for DE
   if (mWinApp->mDEToolDlg.CanSaveFrames(mParam) && !mParam->STEMcamera) {
     m_fDEframeTime = RoundedFrameTime(m_fFrameTime * (savingDE ? 1 : m_iSumCount));
+    if (m_fDEframeTime > 10.) {
+      m_fDEframeTime = 9.99f;
+      ACCUM_MIN(m_fFrameTime, 9.99f);
+      if (!savingDE)
+        m_iSumCount = (int)B3DMAX(1, realExp / 10.);
+    }
     int frames = (int)floor(realExp / m_fFrameTime) + 1;
     m_statNumDEraw.ShowWindow(savingDE ? SW_SHOW : SW_HIDE);
     changed = savingDE;
