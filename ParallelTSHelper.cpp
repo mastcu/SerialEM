@@ -241,18 +241,6 @@ void CParallelTSHelper::StopParallelTSShift(bool error)
   mWinApp->SetStatusText(COMPLEX_PANE, "");
 }
 
-//Stops routine due to error, clears targets
-void CParallelTSHelper::ErrorParallelTSShift()
-{
-  StopParallelTSShift();
-  if (mActionAtTarget == PARALLELTS_ACTION_AUTOFOCUS) {
-    ClearTargets(true);
-  } else if (mActionAtTarget == PARALLELTS_ACTION_PREVIEW) {
-    ClearSavedTargets();
-  }
-  
-}
-
 // Applies image shift to get to the next target. 
 // If returned error code is < 0, the whole procedure should be aborted. If > 0, then just
 // the given target should be skippped.
