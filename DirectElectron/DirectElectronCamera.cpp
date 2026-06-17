@@ -917,7 +917,7 @@ int DirectElectronCamera::AcquireImageData(unsigned short *image4k, long &imageS
 
   // Resume code for NORMAL SINGLE IMAGE ACQUISITION
   status = GetSystemStatus(valStr);
-  if (status > 0 && (status < 701 || status > 704) && status != 402) {
+  if (status > 0 && (status < 701 || status > 704) && status != 402 && status != 601) {
     mLastErrorString.Format("Not acquiring because of system status: %s",
       (LPCTSTR)valStr);
     SEMTrace('D', "%s", (LPCTSTR)mLastErrorString);
@@ -1789,7 +1789,7 @@ int DirectElectronCamera::insertCamera()
   int status;
   if (slock.Lock(1000)) {
     status = GetSystemStatus(valStr);
-    if (!status || status >= 400) {
+    if (!status || status >= 400 || status == 208) {
       if (!mDeServer->setProperty(mAPI2Server ? psCamPositionCtrl : psCamPosition,
         mAPI2Server ? "Extend" : DE_CAM_STATE_INSERTED)) {
         CString str = ErrorTrace("ERROR: Could NOT insert the DE camera ");
