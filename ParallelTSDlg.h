@@ -4,7 +4,8 @@
 #include "NavHelper.h"
 
 #define PARALLELTSDLG_NUM_PANELS 7
-#define FLAG_DISPLAY_EXTRA_OPTS   (1)
+#define PTSFLAG_SKIP_REFINE       (1)
+#define PTSFLAG_DISP_EXTRA_OPTS   (1 << 1)
 
 // CParallelTSDlg dialog
 
@@ -49,14 +50,14 @@ private:
   int mHasIlluminatedArea;
   int mCurrentCamera;
   int mNumberBeforeAdd;
-  int mFitPlaneGroupID;
+  int mFitPlaneGroupID;               // Nav group ID for points used to fit plane
   bool mDefiningPoints;               // Flag if defining points to find pretilt, X pitch
-  bool mSettingUpTargetArea;        // Flag if setting up a new target area
+  bool mSettingUpTargetArea;          // Flag if setting up a new target area
   bool mHasAreaMap;                   // Flag if the area has a map
-  int mTargetGroupID;
+  int mTargetGroupID;                 // Nav group ID for parallel tilt series targets
   bool mAddingTargets;                // Flag if targets are being added to area
   bool mRefiningTargets;              // Flag if targets are being refined
-  bool mFinishedRefiningTargets;      // Flag for when a round of targets have been refined
+  bool mSavedTargets;                 // Flag for when a round of targets have been saved
   bool mFinalizedTargetArea;          // Flag if area and targets are finalized
   int mSavedTSparamIndex;
   bool mDrawingISTargets;
@@ -74,6 +75,7 @@ public:
   GetMember(int, AcqMagIndex);
   GetSetMember(int, HasIlluminatedArea);
   GetMember(bool, SettingUpTargetArea);
+  bool SavedTargets() { return mSavedTargets; };
   void IncrementNumTargetsAdded() { mNumAddedTargets++; };
   bool IsDefiningPoints() { return mDefiningPoints; };
   bool IsAddingTargets() { return mAddingTargets; };
@@ -87,6 +89,8 @@ public:
   void DoPlaneFit();
   void StartRefineTargets();
   void CloseWindow();
+  bool CanSaveTarget();
+  void OnProcessSKey();
   CStatic m_statMappingMag;
   CSpinButtonCtrl m_sbcMappingMag;
   afx_msg void OnDeltaposSpinPtsMapmag(NMHDR *pNMHDR, LRESULT *pResult);
@@ -105,7 +109,7 @@ public:
   float m_fXpitch;
   afx_msg void OnEnKillfocusEditXpitch();
   CStatic m_statDefineAreaTargets;
-  int m_iCustomOrMultishotTargets;
+  int m_iTargetType;
   CButton m_butAddCustomTargets;
   CButton m_butAddMultishotItem;
   afx_msg void OnRadioCustomTargets();
@@ -200,4 +204,7 @@ public:
   afx_msg void OnEnKillfocusEditMaxscaling();
   CStatic m_statAreaMapStatus;
   afx_msg void OnRefineTargets();
+  CButton m_butSkipRefine;
+  BOOL m_bSkipRefine;
+  afx_msg void OnCheckSkipRefine();
 };

@@ -96,7 +96,7 @@ public:
   void ClearTargets(bool autofocusOrPreview);
   void ClearSavedTargets();
   void ISToTargetNextTask(int param);
-  int ISToNextTarget(int targetIndex);
+  int ISToNextTarget(int targetIndex, CString &err);
   int StartShiftToTargets(IntVec targetMapIDs, bool autofocusOrPreview);
   void UpdatePlaneParamsInDlg();
   void PauseParallelTSShift();
@@ -111,7 +111,6 @@ public:
   void ConvexHullLongAxis(FloatVec ptsX, FloatVec ptsY, float *aspectRatio,
     float *longAxis, float anglePrecision = 1.f);
   int AssessISTargetShiftLimit(IntVec indexVec, CString &mess, IntVec *sortedIndexVec = NULL);
-  int AssessPtsToFitPlane(int groupID, IntVec &sortedIndexVec, CString &mess);
   int AssessPtsToFitPlane(FloatVec &ptsX, FloatVec &ptsY, FloatVec &ptsZ, CString &mess);
   int AssessPtsToFitPlane(IntVec indexVec, IntVec &sortedIndexVec, CString &mess);
   int AppendNewTargets(IntVec targetMapIDs, CString &mess);
@@ -119,6 +118,7 @@ public:
   int ConvertToParTSItem(CString &err, CMapDrawItem *item = NULL);
   int GetTSparamItem(CMapDrawItem *&item);
   void UpdateTSParams();
-  bool CanAdjustISVectors(int fromMag, int toMag, bool multiShot, CString &mess);
+  bool CanAdjustISVectors(int fromMag, bool multiShot, CString &mess);
   int GetCenterPtID();
+  int GetISVectors(int groupID, CString &err);
 };

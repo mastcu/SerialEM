@@ -253,8 +253,10 @@ void CParallelTSHelper::ErrorParallelTSShift()
   
 }
 
-//Executes the next task in image shifting to targets
-int CParallelTSHelper::ISToNextTarget(int targetIndex)
+// Applies image shift to get to the next target. 
+// If returned error code is < 0, the whole procedure should be aborted. If > 0, then just
+// the given target should be skippped.
+int CParallelTSHelper::ISToNextTarget(int targetIndex, CString &err)
 {
   double ISX, ISY, delX, delY, delBTX = 0., delBTY = 0., delAstigX = 0., delAstigY = 0.;
   float delay, transISX, transISY;
@@ -269,9 +271,9 @@ int CParallelTSHelper::ISToNextTarget(int targetIndex)
   st2is = MatMul(mShiftManager->StageToCamera(mWinApp->GetCurrentCamera(),
     mMagIndex), mShiftManager->CameraToIS(mMagIndex));
   if (!st2is.xpx) {
-    /*mess.Format("There is no calibration to get from stage to IS coordinates at the "
-    "given mag");*/
-    return 1;
+    err.Format("There is no calibration to get from stage to IS coordinates at the "
+    "given mag");
+    return -1;
   }
 
   // Get IS from center point to the next target
@@ -281,7 +283,7 @@ int CParallelTSHelper::ISToNextTarget(int targetIndex)
   ISY = mCenterISY + delY;
   
   if (mActionAtTarget == PARALLELTS_ACTION_PREVIEW && mParTSopts->applyAdjustingXform) {
-    if (CanAdjustISVectors(mAreaMapMagInd, mMagIndex, false, mess)) {
+    if (CanAdjustISVectors(mAreaMapMagInd, false, mess)) {
       MultiShotParams *params = mNavHelper->GetMultiShotParams();
       SEMTrace('N', "adj xform xpx=%.4f, xpy=%.4f, ypx=%.4f, ypy=%.4f", 
         params->adjustingXform.xpx, params->adjustingXform.xpy, 
@@ -297,12 +299,15 @@ int CParallelTSHelper::ISToNextTarget(int targetIndex)
   }
 
   if (!mShiftManager->ImageShiftIsOK(ISX, ISY, FALSE)) {
-    PrintfToLog("Point at navigator index %d is beyond image shift limit and will "
+    err.Format("Point at navigator index %d is beyond image shift limit and will "
       "be skipped", targetIndex);
-    return 2;
+    PrintfToLog("%s", err);
+    return 1;
   }
 
   mCurISTargetItem = item;
+
+  mScope->GetImageShift(mLastISX, mLastISY);
 
   // Compute the delay for the amount that IS will change
   delay = mShiftManager->ComputeISDelay(ISX - mLastISX, ISY - mLastISY);
@@ -364,30 +369,24 @@ void CParallelTSHelper::ISToTargetNextTask(int param)
   mapID = mISTargetPointIDs[mStartIndex + mISTargetIter];
   mCurISTargetItem = mWinApp->mNavigator->FindItemWithMapID(mapID, false);
 
-  if (mISTargetIter == 0) {
-    if (!mAlignedToFirstISTarget) {
-      if (!mCurISTargetItem) {
-        StopParallelTSShift();
-        return;
-      }
-
-      //Realign to first IS Target
-      if (mNavHelper->RealignToItem(mCurISTargetItem, 0, 
-        alignParams->resetISthresh, alignParams->maxNumResetIS, 0, 0,
-        mParTSopts->extractVirtPrevs == 1 ? PREVIEW_CONSET : -1)) {
-        AfxMessageBox("Realign to first IS target failed");
-        mLastActionFailed = true;
-        return;
-      }
-      mAlignedToFirstISTarget = true;
-      mDoNextShift = false;
-      mWinApp->AddIdleTask(TASK_IS_TO_PARALLELTS_TARGET, 0, 0);
+  if (mISTargetIter == 0 && !mAlignedToFirstISTarget) { 
+    if (!mCurISTargetItem) {
+      StopParallelTSShift();
       return;
-    } else {
-
-      //Get Image shift in case we go straight into shift to next target
-      mScope->GetImageShift(mLastISX, mLastISY);
     }
+
+    //Realign to first IS Target
+    if (mNavHelper->RealignToItem(mCurISTargetItem, 0, 
+      alignParams->resetISthresh, alignParams->maxNumResetIS, 0, 0,
+      mParTSopts->extractVirtPrevs == 1 ? PREVIEW_CONSET : -1)) {
+      AfxMessageBox("Realign to first IS target failed");
+      mLastActionFailed = true;
+      return;
+    }
+    mAlignedToFirstISTarget = true;
+    mDoNextShift = false;
+    mWinApp->AddIdleTask(TASK_IS_TO_PARALLELTS_TARGET, 0, 0);
+    return;
   }
 
   if (mAtTarget && mCurISTargetItem) {
@@ -432,14 +431,13 @@ void CParallelTSHelper::ISToTargetNextTask(int param)
       mCenterStageX = mCurISTargetItem->mStageX;
       mCenterStageY = mCurISTargetItem->mStageY;
       mScope->GetImageShift(mCenterISX, mCenterISY);
-      mLastISX = mCenterISX;
-      mLastISY = mCenterISY;
       mTiltDuringFit = mScope->GetTiltAngle();
     }
     
     if (!skipSave && SaveTarget(mess)) {
       AfxMessageBox(mess, MB_EXCLAME);
       StopParallelTSShift(true);
+      ClearSavedTargets();
       return;
     }
 
@@ -447,23 +445,14 @@ void CParallelTSHelper::ISToTargetNextTask(int param)
 
     //Center item was deleted but none have been saved, cancel refining
     if (mSavedTargetIDs.size() == 0) {
-      /*mDoNextShift = false;
-      mAtTarget = false;
-      mAlignedToFirstISTarget = false;*/
       StopParallelTSShift(true);
       ClearTargets(true);
       return;
     }
-    
     if (!mInitialStateSaved) {
       SaveInitialState();
     }
-
-    //User deleted the target item
     mDoNextShift = true;
-
-    //Get Image shift since we will go straight into shift to next target
-    mScope->GetImageShift(mLastISX, mLastISY);
   }
 
   if (mDoNextShift) {
@@ -495,8 +484,16 @@ void CParallelTSHelper::ISToTargetNextTask(int param)
     mapID = mISTargetPointIDs[mStartIndex + mISTargetIter];
 
     // Do the image shift to next target
-    if (ISToNextTarget(mapID)) {
-      PrintfToLog("Could not image shift to point with ID %d", mapID);
+    index = ISToNextTarget(mapID, mess);
+
+    // If returned error code is < 0, the whole procedure should be aborted. 
+    // If > 0, then just the given target should be skippped.
+    if (index < 0) {
+      AfxMessageBox(mess, MB_EXCLAME);
+      StopParallelTSShift(true);
+      ClearSavedTargets();
+      return;
+    } else if (index > 0) {
       mLastActionFailed = true;
     }
 
@@ -510,14 +507,18 @@ void CParallelTSHelper::ISToTargetNextTask(int param)
     mAtTarget = true;
     mDoNextShift = true;
 
+    //Get Image shift before next iteration
+    mScope->GetImageShift(mLastISX, mLastISY);
+
     if (mActionAtTarget == PARALLELTS_ACTION_AUTOFOCUS) {
       if (mISTargetIter)
         mWinApp->mFocusManager->AutoFocusStart(1, -2);
     } else if (mActionAtTarget == PARALLELTS_ACTION_PREVIEW) {
-
-      // Taking Previews: Stop iterations to allow user to refine IS
       mCamera->InitiateCapture(PREVIEW_CONSET);
-      return;
+
+      // Stop iterations to allow user to refine IS, unless they want to skip that
+      if (!(mParTSopts->flags & PTSFLAG_SKIP_REFINE))
+        return;
     }
   }
 
@@ -691,8 +692,6 @@ int CParallelTSHelper::SaveInitialState()
   }
 
   mScope->GetImageShift(mBaseISX, mBaseISY);
-  mLastISX = mBaseISX;
-  mLastISY = mBaseISY;
 
   mAdjustBeamTilt = mParTSopts->adjustBeamTilt && comaVsIS->astigMat.xpx != 0. &&
     mNavHelper->GetSkipAstigAdjustment() <= 0;
@@ -717,14 +716,14 @@ int CParallelTSHelper::SaveTarget(CString &err)
 {
   int index, index2, mapID;
   int area;
-  float defocus, SSX, SSY;
+  float defocus, SX, SY;
   float shiftX, shiftY;
   CString mess;
-  ScaleMat st2ss = MatInv(mShiftManager->SpecimenToStage(1., 1.));
+  ScaleMat mat;
   NavAlignParams *alignParams = mNavHelper->GetNavAlignParams();
   bool canAdjustIS = mShiftManager->GetFocusISCals()->GetSize() > 0 &&
     mShiftManager->GetFocusMagCals()->GetSize() > 0;
-  double ISX, ISY, stageX, stageY, stageZ;
+  double ISX, ISY, stageX, stageY, stageZ, delX, delY;
   float ISlimit = 2.f * mWinApp->mShiftCalibrator->GetCalISOstageLimit();
   float focusLim = -20.;
   EMimageBuffer *imBufs = mWinApp->GetImBufs();
@@ -749,6 +748,10 @@ int CParallelTSHelper::SaveTarget(CString &err)
 
     // Get the IS and save it
     mScope->GetImageShift(ISX, ISY);
+    delX = ISX - mLastISX;
+    delY = ISY - mLastISY;
+    mLastISX = ISX;
+    mLastISY = ISY;
 
     // But adjust IS for defocus first if possible
     if (canAdjustIS) {
@@ -763,6 +766,25 @@ int CParallelTSHelper::SaveTarget(CString &err)
     mISTargetISX.push_back(ISX);
     mISTargetISY.push_back(ISY);
     mSavedTargetIDs.push_back(mCurISTargetItem->mMapID);
+
+    //If center point, update stage position
+    if (mSavedTargetIDs.size() == 1 && (delX != 0 || delY != 0)) {
+
+      //Convert IS change to stage shift
+      mat = MatMul(mShiftManager->IStoCamera(mMagIndex), 
+        MatInv(mShiftManager->StageToCamera(mWinApp->GetCurrentCamera(), mMagIndex)));
+      mShiftManager->ApplyScaleMatrix(mat, delX, delY, SX, SY);
+
+      SEMTrace('N', "Shifted center pt stage by %.3f, %.3f", SX, SY);
+
+      mCenterStageX += SX;
+      mCenterStageY += SY;
+      mCurISTargetItem->mStageX = mCenterStageX;
+      mCurISTargetItem->mStageY = mCenterStageY;
+      mWinApp->mNavigator->FindItemWithMapID(mapID, false);
+      mWinApp->mNavigator->UpdateListString(mWinApp->mNavigator->GetFoundItem());
+      mWinApp->mNavigator->Redraw();
+    }
 
   } else if (mActionAtTarget == PARALLELTS_ACTION_AUTOFOCUS) {
 
@@ -786,15 +808,17 @@ int CParallelTSHelper::SaveTarget(CString &err)
         mScope->SetDefocus(mBaseDefocus);
       }
 
-      mShiftManager->ApplyScaleMatrix(st2ss, mCurISTargetItem->mStageX, 
-        mCurISTargetItem->mStageY,
-        SSX, SSY);
-      mISTargetSSX.push_back(SSX);
-      mISTargetSSY.push_back(SSY);
+      mat = MatInv(mShiftManager->SpecimenToStage(1., 1.));
+      mShiftManager->ApplyScaleMatrix(mat, mCurISTargetItem->mStageX,
+        mCurISTargetItem->mStageY, SX, SY);
+      mISTargetSSX.push_back(SX);
+      mISTargetSSY.push_back(SY);
       mSavedTargetIDs.push_back(mCurISTargetItem->mMapID);
     }
+
+    //Get Image shift since we will go straight into shift to next target
+    mScope->GetImageShift(mLastISX, mLastISY);
   }
-  //mWinApp->RestoreViewFocus();
   return 0;
 }
 
@@ -805,25 +829,10 @@ int CParallelTSHelper::FitPlane(float &pretilt, float &xPitch, float &residual,
 {
   int numPoints, numToDrop;
   FloatVec residuals;
-  MapItemArray *itemArr = mWinApp->mNavigator->GetItemArray();
   float alpha;
-  IntVec indexVec, sortedIndexVec, mapIDs;
-  CString label, lastlabel;
   float dev;
   float xCoef, yCoef, zIntercept;
   int i;
-
-  //numPoints = indexVec.size();
-
-  //// Asses the quality of the sample points, and get them sorted with center point first
-  //err = mNavHelper->AssessPtsToFitPlane(indexVec, sortedIndexVec, mess);
-  //if (err) {
-  //  return err;
-  //}
-  //for (int i = 0; i < (int)sortedIndexVec.size(); i++) {
-  //  item = itemArr->GetAt(sortedIndexVec[i]);
-  //  mapIDs.push_back(item->mMapID);
-  //}
 
   if ((int)mISTargetDefocus.size() < MIN_NUM_POINTS_TO_FIT_PLANE) {
     mess.Format("Defocus was measured at %d out of %d points, "
@@ -864,27 +873,12 @@ int CParallelTSHelper::FitPlane(float &pretilt, float &xPitch, float &residual,
     numToDrop = B3DMIN((int)dropInd.size(), numPoints - MIN_NUM_POINTS_TO_FIT_PLANE);
 
     if (numToDrop > 0) {
-
       rsSortIndexedFloats(&outlierResid[0], &dropInd[0], numToDrop);
-
-      //TODO delete this, I think rsSortIndexedFloats does the same thing
-      ////Drop in the order of the highest error first
-      //for (i = 1; i < (int)dropInd.size(); i++) {
-      //  int key = dropInd[i];
-      //  int j = i - 1;
-      //  while (j >= 0 && residuals[dropInd[j]] < residuals[key]) {
-      //    dropInd[j + 1] = dropInd[j];
-      //    j--;
-      //  }
-      //  dropInd[j + 1] = key;
-      //}
-
       dropInd.resize(numToDrop);
 
       //Resort into increasing index order to easily drop elements starting from the end
       std::sort(dropInd.begin(), dropInd.end());
       for (i = numToDrop - 1; i >= 0; i--) {
-        //sortedIndexVec.erase(sortedIndexVec.begin() + dropInd[i]);
         mISTargetSSX.erase(mISTargetSSX.begin() + dropInd[i]);
         mISTargetSSY.erase(mISTargetSSY.begin() + dropInd[i]);
         mISTargetDefocus.erase(mISTargetDefocus.begin() + dropInd[i]);
@@ -945,19 +939,6 @@ void CParallelTSHelper::ConvexHullLongAxis(FloatVec ptsX, FloatVec ptsY,
   }
   imodContourLongAxis(cont, anglePrecision, aspectRatio, longAxis);
   imodContourDelete(cont);
-}
-
-// Assess if the provided group of points are sufficient for a 2D least squares fit
-int CParallelTSHelper::AssessPtsToFitPlane(int groupID, IntVec &sortedIndexVec, 
-  CString &mess)
-{
-  CString label, lastlabel;
-  int numAcq, numPoints;
-  IntVec indexVec;
-
-  numPoints = mWinApp->mNavigator->CountItemsInGroup(groupID, label, lastlabel, numAcq, &indexVec);
-
-  return AssessPtsToFitPlane(indexVec, sortedIndexVec, mess);
 }
 
 // Assess if the provided group of points are sufficient for a 2D least squares fit
@@ -1291,18 +1272,25 @@ int CParallelTSHelper::ConvertToParTSItem(CString &err, CMapDrawItem *item)
 
   } else {
 
+    if (mParTSopts->flags & PTSFLAG_SKIP_REFINE) {
+      if (GetISVectors(mParallelTSDlg->GetTargetGroupID(), err)) {
+        return 2;
+      }
+    } 
+
     //Handle custom targets places in arbitrary positions
     numPoints = GetSavedTargetsInNav(&navInd, &indices);
     if (numPoints < 2) {
       err.Format("At least two targets are required to create a parallel tilt series item");
-      return 2;
+      return 3;
     }
 
     //Center point information
     mParTSitem = itemArr->GetAt(navInd[0]);
     mParTSitem->mNumIStargets = (short)numPoints;
     mParTSitem->mIStargetsXY = new float[numPoints * 2];
-    mParTSitem->mMagOfIStargets = mMagIndex;
+    mParTSitem->mMagOfIStargets = (mParTSopts->flags & PTSFLAG_SKIP_REFINE) ? 
+      mAreaMapMagInd : mMagIndex;
 
     // Get IS and Preview map for first item
     if (mParTSopts->extractVirtPrevs == 0)
@@ -1427,8 +1415,7 @@ void CParallelTSHelper::UpdateTSParams()
 
 // Checks preconditions and applies the adjusting transform to a given set of multishot
 // vectors
-bool CParallelTSHelper::CanAdjustISVectors(int fromMag, int toMag, bool multiShot, 
-  CString &mess)
+bool CParallelTSHelper::CanAdjustISVectors(int fromMag, bool multiShot, CString &mess)
 {
   int camera = mWinApp->GetCurrentCamera();
   MultiShotParams *params = mNavHelper->GetMultiShotParams();
@@ -1454,4 +1441,82 @@ int CParallelTSHelper::GetCenterPtID()
     return mSavedTargetIDs[0];
   else
     return -1;
+}
+
+// Just compute the image shift vectors without any refinement
+int CParallelTSHelper::GetISVectors(int groupID, CString &err)
+{
+  int ind, numPoints, numAcq;
+  CMapDrawItem *item;
+  MapItemArray *itemArr = mWinApp->mNavigator->GetItemArray();
+  float cenStageX, cenStageY;
+  float delX, delY;
+  double ISX, ISY;
+  CString label, mess;
+  IntVec indexVec;
+  ScaleMat st2is;
+  bool canAdjustIS = mShiftManager->GetFocusISCals()->GetSize() > 0 &&
+    mShiftManager->GetFocusMagCals()->GetSize() > 0;
+
+  numPoints = mWinApp->mNavigator->CountItemsInGroup(groupID, label, mess, numAcq, 
+    &indexVec);
+  if (numPoints < 2) {
+    err.Format("At least two targets are required to create a parallel tilt series item");
+    return -1;
+  }
+
+  st2is = MatMul(mShiftManager->StageToCamera(mWinApp->GetCurrentCamera(), mAreaMapMagInd), 
+    mShiftManager->CameraToIS(mAreaMapMagInd));
+  if (!st2is.xpx) {
+    err.Format("There is no calibration to get from stage to IS coordinates at the "
+    "given mag");
+    return 1;
+  }
+
+  for (ind = 0; ind < numPoints; ind++) {
+    item = itemArr->GetAt(indexVec[ind]);
+    if (ind == 0) {
+      cenStageX = item->mStageX;
+      cenStageY = item->mStageY;
+      ISX = ISY = 0.f;
+    } else {
+
+      // Get IS from center point to the next target
+      mShiftManager->ApplyScaleMatrix(st2is, item->mStageX - cenStageX,
+        item->mStageY - cenStageY, ISX, ISY);
+
+      //TODO TransferGeneralIS??? I need this also in the regular routine I think???
+      /*mWinApp->mShiftManager->TransferGeneralIS(mAreaMapMagInd, delX, delY,
+        magInd, ISX, ISY, mWinApp->GetCurrentCamera());*/
+
+      if (mParTSopts->applyAdjustingXform) {
+        if (CanAdjustISVectors(mAreaMapMagInd, false, mess)) {
+          MultiShotParams *params = mNavHelper->GetMultiShotParams();
+          SEMTrace('N', "adj xform xpx=%.4f, xpy=%.4f, ypx=%.4f, ypy=%.4f",
+            params->adjustingXform.xpx, params->adjustingXform.xpy,
+            params->adjustingXform.ypx, params->adjustingXform.ypy);
+          ApplyScaleMatrix(params->adjustingXform, ISX, ISY, delX, delY);
+          SEMTrace('N', "IS transformed from (%.4f, %.4f) to (%.4f, %.4f)",
+            ISX, ISY, delX, delY);
+          ISX = delX;
+          ISY = delY;
+        }
+        else {
+          SEMTrace('N', "Adjusting transform not applied: %s", mess);
+        }
+      }
+
+      if (!mShiftManager->ImageShiftIsOK(ISX, ISY, FALSE)) {
+        PrintfToLog("Point at navigator index %d is beyond image shift limit and will "
+          "be skipped", indexVec[ind]);
+        continue;
+      }
+    }
+
+    mISTargetISX.push_back(ISX);
+    mISTargetISY.push_back(ISY);
+    mSavedTargetIDs.push_back(item->mMapID);
+  }
+
+  return 0;
 }

@@ -37,6 +37,7 @@
 #include "MultiGridTasks.h"
 #include "RemoteControl.h"
 #include "ExternalTools.h"
+#include "ParallelTSDlg.h"
 #include "Image\KStoreIMOD.h"
 #include "Shared\ctffind.h"
 #include "Utilities\KGetOne.h"
@@ -3683,6 +3684,8 @@ void CSerialEMView::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
   bool ctrl = GetAsyncKeyState(VK_CONTROL) / 2 != 0;
   bool shift = GetAsyncKeyState(VK_SHIFT) / 2 != 0;
   bool navCanProcess = mWinApp->mNavigator && !mWinApp->mNavigator->mNavAcquireDlg;
+  bool ptsDlgCanProcess = mWinApp->mNavHelper->mParallelTSDlg->IsOpen() &&
+    mWinApp->mNavHelper->mParallelTSDlg->CanSaveTarget();
   mWinApp->mMacroProcessor->SetKeyPressed((int)cChar);
 
   // Keep track of ctrl and shift (ONLY IF WE GET KEYUP TOO)
@@ -3825,6 +3828,11 @@ void CSerialEMView::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
     ChangeMovieInterval(1.414214f);
   }
 
+  // If saving refining image shifts in Parallel TS, S key saves the current target and 
+  // continues the refinement routine
+  else if (ptsDlgCanProcess && cChar == 'S' && !mCtrlPressed && !mShiftPressed) {
+    mWinApp->mNavHelper->mParallelTSDlg->OnProcessSKey();
+  }
 
   CView::OnKeyDown(nChar, nRepCnt, nFlags);
 }
