@@ -4569,9 +4569,13 @@ void CCameraController::Capture(int inSet, bool retrying)
   // Inform scope so it can unblank beam if in low dose mode; when noshutter = 1 this also
   // unblanks the beam and reblanks it in the call at the end
   // Don't do this if about to blank for dark ref
-  if (!mScope->GetCameraAcquiring())
-    mScope->SetCameraAcquiring(true, 
-      B3DCHOICE(bEnsureDark && !mSimulationMode, 0.f, mParam->postBlankerDelay));
+  if (!mScope->GetCameraAcquiring()) {
+    if (!mScope->SetCameraAcquiring(true,
+      B3DCHOICE(bEnsureDark && !mSimulationMode, 0.f, mParam->postBlankerDelay))) {
+      ErrorCleanup(1);
+      return;
+    }
+  }
   
   if (bEnsureDark && !mSimulationMode) {
     SEMTrace('Z', "start getting dark, %u elapsed", GetTickCount() - mStartTime);

@@ -168,6 +168,10 @@ INT_PROP_TEST("GoToRecMagEnteringLD", scope->, GoToRecMagEnteringLD)
 INT_PROP_TEST("LowDoseFreeLensDelay", scope->, LDFreeLensDelay)
 INT_PROP_TEST("RetryStageMove", scope->, RetryStageMove)
 BOOL_PROP_TEST("AllowStopEmissionIfIdle", scope->, AllowStopEmissionIfIdle)
+INT_PROP_TEST("JeolSetLenswithFLCinLM", scope->, SetLenswithFLCinLM)
+FLOAT_PROP_TEST("JeolFLCInLMLensValue", scope->, FLCInLMLensValue)
+INT_PROP_TEST("FLCInLMGeneralDelay", scope->, FLCInLMGenDelay)
+INT_PROP_TEST("FLCInLMAcquireDelay", scope->, FLCInLMAcqDelay)
 
 #endif
 #ifdef PROP_TEST_SECT2

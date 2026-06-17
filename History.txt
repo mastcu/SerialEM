@@ -3,6 +3,9 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+6/17/26: Added ability to set a lens with free lens control in LM on a JEOL,
+and a set of 'FLCInLM' properties for specifying it.
+
 6/16/26: Added ability to close up control panels or their options sections
 in basic mode.
 
