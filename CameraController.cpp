@@ -10097,7 +10097,7 @@ UINT CCameraController::InsertProc(LPVOID pParam)
           retval = itd->plugFuncs->SetCameraInsertion(itd->camera, itd->insert ? 1 : 0);
       } else if (itd->DE_camType) {
         if (itd->insert)
-          retval = itd->td->DE_Cam->insertCamera();
+          retval = itd->td->DE_Cam->insertCamera(false);
         else
           retval = itd->td->DE_Cam->retractCamera();
         if (retval) {

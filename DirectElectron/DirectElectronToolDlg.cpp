@@ -508,7 +508,7 @@ void DirectElectronToolDlg::OnBnClickedinsert()
   if (mDECamera) {
     mDECamera->getStringProperty("Camera Position Status", value);
     if (state && value.Compare("Extended") != 0) {
-      result = mDECamera->insertCamera();
+      result = mDECamera->insertCamera(true);
     } else if (!state && value.Compare("Retracted") != 0) {
       result = mDECamera->retractCamera();
     }
