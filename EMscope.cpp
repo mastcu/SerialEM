@@ -7299,7 +7299,8 @@ BOOL CEMscope::SetFLCofLensInLMIfNeeded(int magIndex, int reportErr)
     mFLCInLMLensValue <= 1.))
     return true;
   bool inLM = magIndex >= 0 && magIndex < GetLowestNonLMmag();
-  int needState = (JEOLscope &&inLM && !mJeolSD.JeolSTEM && !mCameraAcquiring) ? 1 : 0;
+  int needState = (JEOLscope &&inLM && !mJeolSD.JeolSTEM && !mCameraAcquiring && 
+    spJeolToFEI[mJeolSD.screenPos] == spUp) ? 1 : 0;
   int delay = mFLCInLMGenDelay;
   if (needState == mJeolLensSetForLM || (needState && mWinApp->GetAppExiting()))
     return true;
