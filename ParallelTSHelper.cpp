@@ -248,43 +248,61 @@ int CParallelTSHelper::ISToNextTarget(int targetIndex, CString &err)
 {
   double ISX, ISY, delX, delY, delBTX = 0., delBTY = 0., delAstigX = 0., delAstigY = 0.;
   float delay, transISX, transISY;
-  int BTdelay;
+  int BTdelay, fromMagInd, area, mapID;
   CMapDrawItem *item = mWinApp->mNavigator->FindItemWithMapID(targetIndex, false);
-  ScaleMat st2is;
+  ScaleMat st2is, focMat;
   bool doBacklash = mScope->GetAdjustForISSkipBacklash() <= 0;
   ComaVsISCalib *comaVsIS = mWinApp->mAutoTuning->GetComaVsIScal();
   ParallelTSOptions *parTSopt = mNavHelper->GetParTSOptions();
   CString mess;
+  
+  mapID = item->mDrawnOnMapID;
+  CMapDrawItem *mapItem = mWinApp->mNavigator->FindItemWithMapID(mapID);
+  if (!mapItem) {
+    err.Format("The map on which items were drawn no longer exists");
+    return -2;
+  }
+  area = mapItem->mMapLowDoseConSet;
 
-  st2is = MatMul(mShiftManager->StageToCamera(mWinApp->GetCurrentCamera(),
-    mMagIndex), mShiftManager->CameraToIS(mMagIndex));
-  if (!st2is.xpx) {
-    err.Format("There is no calibration to get from stage to IS coordinates at the "
-    "given mag");
-    return -1;
+  fromMagInd = mAreaMapMagInd;
+  if (fromMagInd < 0) {
+    fromMagInd = mapItem->mMapMagInd;
   }
 
-  // Get IS from center point to the next target
-  mShiftManager->ApplyScaleMatrix(st2is, item->mStageX - mCenterStageX,
-    item->mStageY - mCenterStageY, delX, delY);
-  ISX = mCenterISX + delX;
-  ISY = mCenterISY + delY;
-  
+  st2is = MatMul(mShiftManager->StageToCamera(mWinApp->GetCurrentCamera(),
+    fromMagInd), mShiftManager->CameraToIS(fromMagInd));
+  SEMTrace('N', "stage to IS: mag index %d xpx %.3f xpy %.3f ypx %.3f ypy %.3f",
+    fromMagInd, st2is.xpx, st2is.xpy, st2is.ypx, st2is.ypy);
+  if (!st2is.xpx) {
+    err.Format("There is no calibration to get from stage to IS coordinates at the "
+      "given mag");
+    return -1;
+  }
+  ApplyScaleMatrix(st2is, item->mStageX - mCenterStageX,
+    item->mStageY - mCenterStageY, ISX, ISY);
+  mShiftManager->TransferGeneralIS(fromMagInd, ISX, ISY, mMagIndex, delX, delY);
+  focMat = CMultiShotDlg::ISfocusAdjustmentForBufOrArea(NULL, area);
+  if (focMat.xpx)
+    ApplyScaleMatrix(MatInv(focMat), delX, delY, delX, delY);
+
   if (mActionAtTarget == PARALLELTS_ACTION_PREVIEW && mParTSopts->applyAdjustingXform) {
     if (CanAdjustISVectors(mAreaMapMagInd, false, mess)) {
       MultiShotParams *params = mNavHelper->GetMultiShotParams();
       SEMTrace('N', "adj xform xpx=%.4f, xpy=%.4f, ypx=%.4f, ypy=%.4f", 
         params->adjustingXform.xpx, params->adjustingXform.xpy, 
         params->adjustingXform.ypx, params->adjustingXform.ypy);
-      ApplyScaleMatrix(params->adjustingXform, ISX, ISY, transISX, transISY);
+      ApplyScaleMatrix(params->adjustingXform, delX, delY, transISX, transISY);
       SEMTrace('N', "IS transformed from (%.4f, %.4f) to (%.4f, %.4f)",
-        ISX, ISY, transISX, transISY);
-      ISX = transISX;
-      ISY = transISY;
+        delX, delY, transISX, transISY);
+      delX = transISX;
+      delY = transISY;
     } else {
       SEMTrace('N', "Adjusting transform not applied: %s", mess);
     }
   }
+
+  ISX = mCenterISX + delX;
+  ISY = mCenterISY + delY;
 
   if (!mShiftManager->ImageShiftIsOK(ISX, ISY, FALSE)) {
     err.Format("Point at navigator index %d is beyond image shift limit and will "
@@ -763,12 +781,14 @@ int CParallelTSHelper::SaveTarget(CString &err)
         MatInv(mShiftManager->StageToCamera(mWinApp->GetCurrentCamera(), mMagIndex)));
       mShiftManager->ApplyScaleMatrix(mat, delX, delY, SX, SY);
 
-      SEMTrace('N', "Shifted center pt stage by %.3f, %.3f", SX, SY);
+      SEMTrace('N', "Shifted stage coords of PTS center pt by %.3f, %.3f", SX, SY);
 
       mCenterStageX += SX;
       mCenterStageY += SY;
       mCurISTargetItem->mStageX = mCenterStageX;
       mCurISTargetItem->mStageY = mCenterStageY;
+      mCurISTargetItem->mPtX[0] = mCenterStageX;
+      mCurISTargetItem->mPtY[0] = mCenterStageY;
       mWinApp->mNavigator->FindItemWithMapID(mapID, false);
       mWinApp->mNavigator->UpdateListString(mWinApp->mNavigator->GetFoundItem());
       mWinApp->mNavigator->Redraw();
