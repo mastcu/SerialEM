@@ -93,7 +93,7 @@ public:
 	int setROI(int offset_x, int offset_y, int xsize, int ysize, int hardwareROI);
   int SetLiveMode(int mode, bool skipLock = false);
 	void setCameraName(CString name, int index, BOOL ifSTEM);
-	int insertCamera();
+	int insertCamera(bool allowError);
 	int retractCamera();
 	HRESULT setAutoSaveRaw(int state);
 	HRESULT setAutoSaveSummedImages(int state);

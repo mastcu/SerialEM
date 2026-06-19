@@ -917,7 +917,7 @@ int DirectElectronCamera::AcquireImageData(unsigned short *image4k, long &imageS
 
   // Resume code for NORMAL SINGLE IMAGE ACQUISITION
   status = GetSystemStatus(valStr);
-  if (status > 0 && (status < 701 || status > 704) && status != 402 && status != 601) {
+  if (status > 0 && (status < 701 || status > 704) && status != 402) {
     mLastErrorString.Format("Not acquiring because of system status: %s",
       (LPCTSTR)valStr);
     SEMTrace('D', "%s", (LPCTSTR)mLastErrorString);
@@ -1782,17 +1782,17 @@ float DirectElectronCamera::getCameraTemp()
 
 
 // Inserts camera and waits until done
-int DirectElectronCamera::insertCamera()
+int DirectElectronCamera::insertCamera(bool allowError)
 {
   CString valStr;
   CSingleLock slock(&m_mutex);
   int status;
   if (slock.Lock(1000)) {
     status = GetSystemStatus(valStr);
-    if (!status || status >= 400 || status == 208) {
+    if (!status || status >= 400 || (allowError && status == 208)) {
       if (!mDeServer->setProperty(mAPI2Server ? psCamPositionCtrl : psCamPosition,
         mAPI2Server ? "Extend" : DE_CAM_STATE_INSERTED)) {
-        CString str = ErrorTrace("ERROR: Could NOT insert the DE camera ");
+        mLastErrorString = ErrorTrace("ERROR: Could NOT insert the DE camera ");
         //AfxMessageBox(str);
       } else {
         WaitForInsertionState(DE_CAM_STATE_INSERTED);
@@ -1800,7 +1800,7 @@ int DirectElectronCamera::insertCamera()
 
       }
     } else {
-      ErrorTrace("ERROR: Will not insert camera due to system status: %s", 
+     mLastErrorString = ErrorTrace("ERROR: Will not insert camera due to system status: %s", 
         (LPCTSTR)valStr);
     }
   }
@@ -1815,7 +1815,7 @@ int DirectElectronCamera::retractCamera()
 
     if (!mDeServer->setProperty(mAPI2Server ? psCamPositionCtrl : psCamPosition,
       mAPI2Server ? "Retract" : DE_CAM_STATE_RETRACTED)) {
-      CString str = ErrorTrace("ERROR: Could NOT retract the DE camera ");
+      mLastErrorString = ErrorTrace("ERROR: Could NOT retract the DE camera ");
       //AfxMessageBox(str);
     } else {
       WaitForInsertionState(DE_CAM_STATE_RETRACTED);
