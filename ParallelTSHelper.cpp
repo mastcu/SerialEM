@@ -571,7 +571,9 @@ int CParallelTSHelper::SaveAreaMap(CString &err)
         }
       }
     }
-    mWinApp->mDocWnd->SaveRegularBuffer();
+
+    if (imBuf->GetSaveCopyFlag() >= 0) 
+      mWinApp->mDocWnd->SaveRegularBuffer();
 
     if (mWinApp->mNavigator->NewMap()) {
       err.Format("Error making a new area map");
