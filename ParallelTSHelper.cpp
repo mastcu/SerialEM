@@ -969,17 +969,12 @@ int CParallelTSHelper::AssessPtsToFitPlane(FloatVec &ptsX, FloatVec &ptsY, Float
     return -1;
   }
 
-  for (int i = 0; i < numPoints; i++) {
-    indexVec.push_back(i);
-    cenX += ptsX[i];
-    cenY += ptsY[i];
-  }
-
-  cenX /= (float)numPoints;
-  cenY /= (float)numPoints;
+  cenX = (VECTOR_MIN(ptsX) + VECTOR_MAX(ptsX)) / 2.f;
+  cenY = (VECTOR_MIN(ptsY) + VECTOR_MAX(ptsY)) / 2.f;
 
   distToCen = 1.e10;
   for (int i = 0; i < numPoints; i++) {
+    indexVec.push_back(i);
     dist = (cenX - ptsX[i]) * (cenX - ptsX[i]) + (cenY - ptsY[i]) * (cenY - ptsY[i]);
     if (i == 0 || dist < distToCen) {
       centerPtInd = i;
@@ -1035,12 +1030,11 @@ int CParallelTSHelper::AssessPtsToFitPlane(FloatVec &ptsX, FloatVec &ptsY, Float
 int CParallelTSHelper::AssessISTargetShiftLimit(IntVec indexVec, CString &mess, 
   IntVec *sortedIndexVec)
 {
-  int numPoints, centerPtInd, newInd;
+  int numPoints, newInd;
   FloatVec ptsX, ptsY;
   CMapDrawItem *item;
   MapItemArray *itemArr = mWinApp->mNavigator->GetItemArray();
-  float dist, stageZ, cenX, cenY;
-  float distToCen;
+  float stageZ, cenX, cenY;
   float ISlimit = mShiftManager->GetRegularShiftLimit();
 
   numPoints = (int)indexVec.size();
@@ -1054,23 +1048,9 @@ int CParallelTSHelper::AssessISTargetShiftLimit(IntVec indexVec, CString &mess,
   }
 
   if (sortedIndexVec) {
-    cenX = 0.f;
-    cenY = 0.f;
-    for (int i = 0; i < numPoints; i++) {
-      cenX += ptsX[i];
-      cenY += ptsY[i];
-    }
-    cenX /= (float)numPoints;
-    cenY /= (float)numPoints;
 
-    distToCen = 1.e10;
-    for (int i = 0; i < numPoints; i++) {
-      dist = (cenX - ptsX[i]) * (cenX - ptsX[i]) + (cenY - ptsY[i]) * (cenY - ptsY[i]);
-      if (i == 0 || dist < distToCen) {
-        centerPtInd = i;
-        distToCen = dist;
-      }
-    }
+    cenX = (VECTOR_MIN(ptsX) + VECTOR_MAX(ptsX)) / 2.f;
+    cenY = (VECTOR_MIN(ptsY) + VECTOR_MAX(ptsY)) / 2.f;
 
     mWinApp->mNavigator->AddItemFromStagePositions(&cenX, &cenY, 1, stageZ,
       mParallelTSDlg->GetFitPlaneGroupID());
