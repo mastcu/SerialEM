@@ -1934,6 +1934,10 @@ void CFocusManager::CheckAccuracy(int logging)
   mCalDefocus = 0.;
   mFCindex = 0;
   mAccuracyMeasured = false;
+  mScope->IncDefocus(-2. * mCalDelta);
+  Sleep(250);
+  mScope->IncDefocus(mCalDelta);
+  Sleep(250);
   report.Format("Checking accuracy of autofocus by measuring defocus at\r\n"
     "current value and at %.1f microns above and below current defocus", mCalDelta);
   mWinApp->AppendToLog(report,
@@ -1945,7 +1949,6 @@ void CFocusManager::CheckAccuracy(int logging)
 // Process result when a focus measurement is done
 void CFocusManager::CheckDone(int param)
 {
-  double delta = mCalDelta;
   CString report;
   if (mFCindex < 0)
     return;
@@ -1957,16 +1960,16 @@ void CFocusManager::CheckDone(int param)
     mCheckFirstMeasured = mCurrentDefocus;
     break;
 
-    // Second time, compute plus accuracy, change in minus, and start again
+    // Second time, compute minus accuracy, and start again
   case 1:
-    mPlusAccuracy = (float)((mCurrentDefocus - mCheckFirstMeasured) / mCalDelta);
-    delta = -2. * mCalDelta;
+    mMinusAccuracy = (float)((mCurrentDefocus - mCheckFirstMeasured) / mCalDelta);
+    mCheckFirstMeasured = mCurrentDefocus;
     break;
 
-    // Third time, compute minus accuracy, set flags, report result and return;
+    // Third time, compute plus accuracy, set flags, report result and return;
   case 2:
-    mMinusAccuracy = (float)((mCheckFirstMeasured - mCurrentDefocus) / mCalDelta);
-    mScope->IncDefocus(mCalDelta);
+    mPlusAccuracy = (float)((mCurrentDefocus - mCheckFirstMeasured) / mCalDelta);
+    mScope->IncDefocus(-mCalDelta);
     mFCindex = -1;
     mAccuracyMeasured = true;
     report.Format("Measured defocus change was:\r\n   %.2f times actual change"
@@ -1978,8 +1981,9 @@ void CFocusManager::CheckDone(int param)
   }
 
   // Change focus and start next measurement
-  mScope->IncDefocus(delta);
-  mCalDefocus += delta;
+  mScope->IncDefocus(mCalDelta);
+  Sleep(250);
+  mCalDefocus += mCalDelta;
   mFCindex++;
   AutoFocusStart(-1);
   mWinApp->AddIdleTask(TaskCheckBusy, TaskCheckDone, TaskFocusError, 0, 0);
