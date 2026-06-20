@@ -67,6 +67,7 @@ END_MESSAGE_MAP()
 void CToolDlg::SetOpenClosed(int inState)
 {
   CRect rcWin;
+  RECT *placeRect;
   CButton *openBut;
   int dockHeight, floatHeight;
   mState = inState;
@@ -91,12 +92,19 @@ void CToolDlg::SetOpenClosed(int inState)
     ModifyStyle(0, WS_CAPTION);
     ModifyStyleEx(0, WS_EX_TOOLWINDOW);
     SetDlgItemText(IDC_BUTFLOATDOCK, "D");
+    placeRect = mWinApp->GetToolDlgPlacementRect(this);
+    if (placeRect && placeRect->right != NO_PLACEMENT) {
+      SetWindowPos(NULL, placeRect->left, placeRect->top, 
+        placeRect->right - placeRect->left, placeRect->bottom - placeRect->top, 
+        SWP_FRAMECHANGED | SWP_NOSIZE | SWP_NOZORDER);
+    } else {
 
-    // This is needed to get a window redraw and avoid blue covering top controls
-    // with XP style
-    GetWindowRect( rcWin );
-    SetWindowPos(NULL, rcWin.left, rcWin.top, rcWin.right - rcWin.left,
-      rcWin.bottom - rcWin.top, SWP_FRAMECHANGED | SWP_NOMOVE | SWP_NOZORDER);
+      // This is needed to get a window redraw and avoid blue covering top controls
+      // with XP style
+      GetWindowRect(rcWin);
+      SetWindowPos(NULL, rcWin.left, rcWin.top, rcWin.right - rcWin.left,
+        rcWin.bottom - rcWin.top, SWP_FRAMECHANGED | SWP_NOMOVE | SWP_NOZORDER);
+    }
     if (sFirstFloatDlg) {
       floatHeight = CurrentButHeight(openBut);
       sFirstFloatDlg = false;
@@ -161,6 +169,14 @@ void CToolDlg::OnButmore()
 
 void CToolDlg::OnButfloat()
 {
+  RECT *placeRect;
+  WINDOWPLACEMENT winPlace;
+  if (mState & TOOL_FLOATDOCK) {
+    placeRect = mWinApp->GetToolDlgPlacementRect(this);
+    GetWindowPlacement(&winPlace);
+    if (placeRect)
+      *placeRect = winPlace.rcNormalPosition;
+  }
   ToggleState(TOOL_FLOATDOCK);
 }
 

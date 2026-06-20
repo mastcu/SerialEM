@@ -775,7 +775,7 @@ public:
   std::set<int>  *GetBasicIDsToHide() { return &mBasicIDsToHide; };
   std::set<int>  *GetBasicLineHideIDs() { return &mBasicLineHideIDs; };
   std::set<int>  *GetBasicIDsToDisable() { return &mBasicIDsToDisable; };
-  GetMemberPtr(std::set<short>, PanelsToClose);
+  unsigned char *GetBasicPanelStates() { return &mBasicPanelStates[0]; };
   StringSet *GetHideStrings() { return &mHideStrings; };
   StringSet *GetBasicHideStrings() { return &mBasicHideStrings; };
   bool IsIDinHideSet(UINT nID) { return mIDsToHide.count(nID) > 0 ||
@@ -1069,7 +1069,7 @@ private:
   std::set<int>  mBasicIDsToHide;
   std::set<int>  mBasicLineHideIDs;
   std::set<int>  mBasicIDsToDisable;
-  std::set<short> mPanelsToClose;
+  unsigned char mBasicPanelStates[MAX_TOOL_DLGS];
   StringSet mHideStrings;
   StringSet mBasicHideStrings;
   BOOL mBasicMode;
@@ -1173,6 +1173,7 @@ public:
   void SyncNonModalsToMasterParams();
   void ManageDialogOptionsHiding(void);
   int LookupToolDlgIndex(int colorInd);
+  RECT *GetToolDlgPlacementRect(CToolDlg *dlg);
  afx_msg void OnUpdateShowScopeControlPanel(CCmdUI *pCmdUI);
 afx_msg void OnShowScopeControlPanel();
 void SetMaxDialogWidth(void);

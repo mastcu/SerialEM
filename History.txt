@@ -3,6 +3,14 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+6/20/26: Provided complete control over control panel states in basic mode,
+but basic file entries added on 6/16 no longer work.  Also made panel
+positions when floated be stored so panels can return to the same position
+when floated again.
+
+6/20/26: Made Check Autofocus do a backlash on start and change focus in one
+direction, which improves the plus accuracy value if there is hysteresis.
+
 6/17/26: Added ability to set a lens with free lens control in LM on a JEOL,
 and a set of 'FLCInLM' properties for specifying it.
 

@@ -32,8 +32,8 @@
       since it will become impossible for users to fix a bad value.</P>
     <P>
       Each line in one of these files consists of two entries: an initial value of 1
-      or 2 to indicate whether the item should be disabled or hidden (or 4 or 8 for
-      closing a control panel or its options section), and a unique
+      or 2 to indicate whether the item should be disabled or hidden (or a negative
+      value for setting the open/closed state of a control panel), and a unique
       identifier for the item.&nbsp; The first table below lists items for which the
       identifier is a string that is defined in the program; when using one of these,
       you need to copy the exact string shown.&nbsp; However, any item in the
@@ -51,7 +51,27 @@
             100 times the release number, plus the update value; thus use 40100 to skip
             properties not defined in version 4.0.&nbsp; More than one entry is allowed;
            the one for the earlier version should come before the later version.
-        <p>Guenter Resch has constructed a web page at <a href="https://www.nexperion.net/basicmodefile">
+        <P>
+          For a basic mode file (but not a general hide/disable file entered wih
+          &#39;DisableOrHideFile&#39;), control panel states can be set with entries that start
+          with negative numbers.&nbsp; These numbers are the negative of:&nbsp;<br />
+           &nbsp;&nbsp;&nbsp;
+           1 + (1 for main panel open) + (2 for options open) + (4 to float if docked) + (8 to dock
+          if floated)<br />
+
+        <P>
+          The panel is left in its current floated or docked state unless the number
+          includes a specific bit to float or dock it.&nbsp; Thus, meaningful values are:<p>-1 to close<br />
+         -2 to have only main section open<br />
+         -4 to open fully<br />
+         -5 to close and float<br />
+         -6 to open main section and float<br />
+         -8 to open fully and float<br />
+         -9 to close and dock<br />
+         -10 to open main section and dock<br />
+         -12 to open fully and dock<br />
+      </p>
+    <p>Guenter Resch has constructed a web page at <a href="https://www.nexperion.net/basicmodefile">
           https://www.nexperion.net/basicmodefile</a>
           that will prepare a Basic mode file customized for a specific set of activities;
            this should be a good starting point for your own Basic mode file.
@@ -142,28 +162,20 @@
 2 Filter Control options
 2 DE Camera options
  
-<B># Close up control panels</B>
-4 Buffer Status close
-4 Buffer Control close
-4 Image Display close
-4 Scope Control close
-4 Tilt panel close
-4 Low Dose close
-4 Montage panel close
-4 STEM Control close
-4 Filter Control close
- 
-<B># Just close options sections in control panels</B>
-8 Buffer Control opt close
-8 Image Display opt close
-8 Scope Status opt close
-8 Tilt panel opt close
-8 Image Align opt close
-8 Low Dose opt close
-8 Montage Control opt close
-8 STEM Control opt close
-8 Filter Control opt close
-8 DE Camera opt close
+<B># Control panel states</B>
+-1 to -12 Buffer Status state
+-1 to -12 Buffer Control state
+-1 to -12 Image Display state
+-1 to -12 Scope Status state
+-1 to -12 Scope Control state
+-1 to -12 Tilt panel state
+-1 to -12 Camera&Script state
+-1 to -12 Image Align state
+-1 to -12 Low Dose state
+-1 to -12 Montage panel state
+-1 to -12 STEM Control state
+-1 to -12 Filter Control state
+-1 to -12 DE Camera state
  
 <B># Low dose panel</B>
 2 LowDoseDlg - Continuous update

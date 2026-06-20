@@ -223,7 +223,8 @@ int CMainFrame::RemoveOneDialog(int colorInd, RECT *dlgPlacement, bool deferSetA
     return 1;
   CToolDlg *dlg = mDialogTable[dlgInd].pDialog;
   dlg->GetWindowPlacement(&winPlace);
-  *dlgPlacement = winPlace.rcNormalPosition;
+  if (dlg->GetState() & TOOL_FLOATDOCK)
+    *dlgPlacement = winPlace.rcNormalPosition;
   for (ind = dlgInd; ind < mNumDialogs - 1; ind++) {
     mDialogTable[ind] = mDialogTable[ind + 1];
     dlgColorIndex[ind] = dlgColorIndex[ind + 1];

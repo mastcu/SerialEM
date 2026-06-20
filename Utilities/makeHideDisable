@@ -169,7 +169,7 @@ for line in menus:
 
 outTable = []
 inList = False
-typeText = ('1', '2', '1 OR 2', '4', '', '', '', '8')
+typeText = ('1', '2', '1 OR 2', '-1 to -12')
 for line in table:
    line = line.strip()
    if 'static' in line and '[] =' in line:
@@ -203,7 +203,7 @@ for line in table:
    ifWhole = int(lsplit[2])
    if ifWhole:
       outTable.append('<i># Removes whole line</i>')
-   if typ < 1 or (typ > 4 and typ != 8):
+   if typ < 1 or typ > 4:
       exitError('Second value is out of range in line: ' + line)
 
    outTable.append(typeText[typ - 1] + ' ' + name)

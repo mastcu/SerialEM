@@ -4457,7 +4457,7 @@ int CMacCmd::ReadBasicModeFile()
   if (curFile.CompareNoCase(mStrCopy)) {
     if (mParamIO->ReadDisableOrHideFile(mStrCopy, mWinApp->GetBasicIDsToHide(),
       mWinApp->GetBasicLineHideIDs(), mWinApp->GetBasicIDsToDisable(),
-      mWinApp->GetBasicHideStrings(), mWinApp->GetPanelsToClose())) {
+      mWinApp->GetBasicHideStrings(), mWinApp->GetBasicPanelStates())) {
       AbortMacro();
       return 1;
     }

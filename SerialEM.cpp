@@ -775,8 +775,10 @@ CSerialEMApp::CSerialEMApp()
     mTssPanelStates[i] = (!i || i == NUM_TSS_PANELS - 1) ? 1 : 0;
 
   // Initialize dialog panel placements and log window status
-  for (i = 0; i < MAX_TOOL_DLGS; i++)
+  for (i = 0; i < MAX_TOOL_DLGS; i++) {
     mDlgPlacements[i].right = NO_PLACEMENT;
+    mBasicPanelStates[i] = 0;
+  }
   mLogPlacement.rcNormalPosition.right = NO_PLACEMENT;
   mNavPlacement.rcNormalPosition.right = NO_PLACEMENT;
   mCamSetupPlacement.rcNormalPosition.right = NO_PLACEMENT;
@@ -5875,7 +5877,7 @@ BOOL CSerialEMApp::GetDummyInstance()
 // Toggle basic mode, managing tool dlgs and calling various things to manage menu/dialogs
 void CSerialEMApp::SetBasicMode(BOOL inVal)
 {
-  int ind, useInd, state;
+  int ind, useInd, state, entry;
   WINDOWPLACEMENT winPlace;
   if (mBasicMode == inVal)
     return;
@@ -5888,6 +5890,7 @@ void CSerialEMApp::SetBasicMode(BOOL inVal)
       (ind == 12 && !mDEcamCount) || (ind == 13 && !mAnyDectris))
       continue;
 
+    useInd = LookupToolDlgIndex(ind);
     if (mBasicIDsToHide.count(-10 - ind)) {
       if (ind == REMOTE_PANEL_INDEX) {
         if (BOOL_EQUIV(mShowRemoteControl, inVal))
@@ -5902,30 +5905,29 @@ void CSerialEMApp::SetBasicMode(BOOL inVal)
         mToolDlgs[ind]->Create(sToolDlgIDs[ind]);
         mMainFrame->InsertOneDialog(mToolDlgs[ind], ind, dlgBorderColors,
           &mDlgPlacements[ind]);
-        useInd = LookupToolDlgIndex(ind);
         if (useInd >= 0)
           mMainFrame->InitializeOnePosition(useInd, ind, initialDlgState[ind],
             &mDlgPlacements[ind]);
       }
-    } else if (mPanelsToClose.count(ind) || mPanelsToClose.count(-ind - 1)) {
+    } else if (mBasicPanelStates[ind]) { 
       if (ind == REMOTE_PANEL_INDEX && !mShowRemoteControl)
         continue;
       if (inVal) {
         mSavedToolDlgStates[ind] = mToolDlgs[ind]->GetState();
         mToolDlgs[ind]->GetWindowPlacement(&winPlace);
-        mDlgPlacements[ind] = winPlace.rcNormalPosition;
-        state = 0;
-        if (mPanelsToClose.count(-ind - 1))
-          state = TOOL_OPENCLOSED + (mSavedToolDlgStates[ind] & TOOL_FLOATDOCK);
-        mToolDlgs[ind]->SetOpenClosed(state);
+        if (mSavedToolDlgStates[ind] & TOOL_FLOATDOCK)
+          mDlgPlacements[ind] = winPlace.rcNormalPosition;
+        entry = mBasicPanelStates[ind] - 1;
+        state = entry & 3;
+        if ((entry & 4) || (!(entry & 8) && (mSavedToolDlgStates[ind] & TOOL_FLOATDOCK)))
+          state += TOOL_FLOATDOCK;
       } else {
-        useInd = LookupToolDlgIndex(ind);
-        if ((mSavedToolDlgStates[ind] & TOOL_FLOATDOCK) && useInd >= 0) 
-          mMainFrame->InitializeOnePosition(useInd, ind, mSavedToolDlgStates[ind],
-            &mDlgPlacements[ind]);
-        else
-          mToolDlgs[ind]->SetOpenClosed(mSavedToolDlgStates[ind]);
+        state = mSavedToolDlgStates[ind];
       }
+      if ((state & TOOL_FLOATDOCK) && useInd >= 0)
+        mMainFrame->InitializeOnePosition(useInd, ind, state, &mDlgPlacements[ind]);
+      else
+        mToolDlgs[ind]->SetOpenClosed(state);
     }
   }
   ManageDialogOptionsHiding();
@@ -5980,6 +5982,19 @@ int CSerialEMApp::LookupToolDlgIndex(int colorInd)
     if (mDlgColorIndex[ind] == colorInd)
       return ind;
   return -1;
+}
+
+// Return the placement for a dialog or NULL if it is not created (shouldn't happen)
+RECT *CSerialEMApp::GetToolDlgPlacementRect(CToolDlg *dlg)
+{
+  int ind;
+  for (ind = 0; ind < MAX_TOOL_DLGS; ind++) {
+    if (mToolDlgs[ind] == dlg) {
+      if (LookupToolDlgIndex(ind) >= 0)
+        return &mDlgPlacements[ind];
+    }
+  }
+  return NULL;
 }
 
 // Compute the maximum width of tool panels

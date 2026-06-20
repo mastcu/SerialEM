@@ -91,7 +91,7 @@ public:
   void WriteAcqParamsToFile(NavAcqParams *navParams, NavAcqAction *mAcqActions, int *actOrder, CString &filename);
   int WriteMulGridAcqParams(CString &filename, CString &errStr);
   int ReadDisableOrHideFile(CString &filename, std::set<int>  *IDsToHide,
-    std::set<int>  *lineHideIDs, std::set<int>  *IDsToDisable, StringSet *stringHides, std::set<short> *panelsToClose);
+    std::set<int>  *lineHideIDs, std::set<int>  *IDsToDisable, StringSet *stringHides, unsigned char *panelStates);
   void ReportSpecialOptions(void);
   void PrintAnOption(bool &anyDone, const char *mess);
   void OutputVector(const char * key, int size, ShortVec * shorts, FloatVec* floats);

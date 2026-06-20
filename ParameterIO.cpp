@@ -2300,17 +2300,17 @@ void CParameterIO::WriteSettings(CString strFileName)
     mFile->WriteString(states);
 
     for (i = 0; i < MAX_TOOL_DLGS; i++) {
+      RECT dlgRect;
       j = mWinApp->LookupToolDlgIndex(i);
       int state = j >= 0 ? dlgTable[j].state : initialDlgState[i];
-      if (state & TOOL_FLOATDOCK) {
-        RECT dlgRect;
-        if (j >= 0) {
-          dlgTable[j].pDialog->GetWindowPlacement(&winPlace);
-          dlgRect = winPlace.rcNormalPosition;
-        } else {
-          dlgRect = dlgPlacements[i];
-        }
-        oneState.Format("ToolDialogPlacement %d %d %d %d %d\n", i, 
+      if ((state & TOOL_FLOATDOCK) && j >= 0) {
+        dlgTable[j].pDialog->GetWindowPlacement(&winPlace);
+        dlgRect = winPlace.rcNormalPosition;
+      } else {
+        dlgRect = dlgPlacements[i];
+      }
+      if (dlgRect.right != NO_PLACEMENT) {
+        oneState.Format("ToolDialogPlacement %d %d %d %d %d\n", i,
           dlgRect.left, dlgRect.top, dlgRect.right, dlgRect.bottom);
         mFile->WriteString(oneState);
       }
@@ -3055,10 +3055,10 @@ int CParameterIO::WriteMulGridAcqParams(CString &filename, CString &errStr)
 // table in sDisableHideList or menu item IDs to be hidden
 int CParameterIO::ReadDisableOrHideFile(CString & filename, std::set<int>  *IDsToHide,
   std::set<int>  *lineHideIDs, std::set<int> *IDsToDisable, StringSet *stringHides, 
-  std::set<short> *panelsToClose)
+  unsigned char *panelStates)
 {
   CStdioFile *file = NULL;
-  int err = 0, type, ind, space;
+  int err = 0, type, ind, space, state, ID;
   int numInTable = sizeof(sDisableHideList) / sizeof(DisableHideItem);
   CString strLine, tag, mess = "Error opening", unknown;
   std::string sstr;
@@ -3087,6 +3087,10 @@ int CParameterIO::ReadDisableOrHideFile(CString & filename, std::set<int>  *IDsT
       if (ParseString(strLine, &tag, 1, false) == 2) {
         versionEnd = tag.CompareNoCase("EndIfVersionBelow") == 0;
         type = atoi((LPCTSTR)tag);
+        if (type < 0 && panelStates) {
+          state = -type;
+          type = 4;
+        }
         if (type < 1 && !versionEnd) {
           AfxMessageBox("Incorrect number for disabling or hiding in line:\n" +
             strLine + "\n\nin file:  " + filename, MB_EXCLAME);
@@ -3111,21 +3115,22 @@ int CParameterIO::ReadDisableOrHideFile(CString & filename, std::set<int>  *IDsT
             for (ind = 0; ind < numInTable; ind++) {
               if (!tag.CompareNoCase(sDisableHideList[ind].descrip)) {
                 if (sDisableHideList[ind].disableOrHide & type) {
+                  ID = sDisableHideList[ind].nID;
                   if (type & 3) {
 
                     // Store as string, disable, line hide, or simple hide
-                    if (sDisableHideList[ind].nID < 1 && sDisableHideList[ind].nID > -10) {
+                    if (sDisableHideList[ind].nID < 1 && ID > -10) {
                       space = tag.ReverseFind(' ');
                       tag = tag.Left(space);
                       stringHides->insert(std::string((LPCTSTR)tag));
                     } else if (type == 1)
-                      IDsToDisable->insert(sDisableHideList[ind].nID);
+                      IDsToDisable->insert(ID);
                     else if (sDisableHideList[ind].wholeLine)
-                      lineHideIDs->insert(sDisableHideList[ind].nID);
+                      lineHideIDs->insert(ID);
                     else
-                      IDsToHide->insert(sDisableHideList[ind].nID);
-                  } else if ((type & 4) || (type & 8)) {
-                    panelsToClose->insert(sDisableHideList[ind].nID);
+                      IDsToHide->insert(ID);
+                  } else if (type == 4 && ID >= 0 && ID < MAX_TOOL_DLGS) {
+                    panelStates[ID] = state;
                   }
 
                 } else {
@@ -3940,8 +3945,7 @@ int CParameterIO::ReadProperties(CString strFileName)
         StripItems(strLine, 1, message);
         mCheckForComments = false;
         ReadDisableOrHideFile(message, mWinApp->GetIDsToHide(), mWinApp->GetLineHideIDs(),
-          mWinApp->GetIDsToDisable(), mWinApp->GetHideStrings(), 
-          mWinApp->GetPanelsToClose());
+          mWinApp->GetIDsToDisable(), mWinApp->GetHideStrings(), NULL);
         mCheckForComments = true;
 
       } else if (MatchNoCase("BasicModeDisableHideFile")) {

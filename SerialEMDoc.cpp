@@ -2050,7 +2050,7 @@ void CSerialEMDoc::ReadSetPropCalFiles()
   if (!mBasicModeFile.IsEmpty())
     mParamIO->ReadDisableOrHideFile(mBasicModeFile, mWinApp->GetBasicIDsToHide(),
       mWinApp->GetBasicLineHideIDs(), mWinApp->GetBasicIDsToDisable(),
-      mWinApp->GetBasicHideStrings(), mWinApp->GetPanelsToClose());
+      mWinApp->GetBasicHideStrings(), mWinApp->GetBasicPanelStates());
 
   // Fix intensities in settings
   FixSettingsForIALimitCal();
@@ -2435,7 +2435,7 @@ void CSerialEMDoc::PostSettingsRead()
   if (mBasicModeFile.CompareNoCase(mPreReadBasicFile))
     mParamIO->ReadDisableOrHideFile(mBasicModeFile, mWinApp->GetBasicIDsToHide(),
       mWinApp->GetBasicLineHideIDs(), mWinApp->GetBasicIDsToDisable(),
-      mWinApp->GetBasicHideStrings(), mWinApp->GetPanelsToClose());
+      mWinApp->GetBasicHideStrings(), mWinApp->GetBasicPanelStates());
   ManageReadInCurrentDir();
   ReportPeakEraseOptions();
 }
@@ -2649,7 +2649,7 @@ void CSerialEMDoc::OnReadBasicModeFile()
   mBasicModeFile = newFile;
   mParamIO->ReadDisableOrHideFile(mBasicModeFile, mWinApp->GetBasicIDsToHide(),
     mWinApp->GetBasicLineHideIDs(), mWinApp->GetBasicIDsToDisable(),
-    mWinApp->GetBasicHideStrings(), mWinApp->GetPanelsToClose());
+    mWinApp->GetBasicHideStrings(), mWinApp->GetBasicPanelStates());
 }
 
 
