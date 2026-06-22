@@ -575,8 +575,7 @@ void CFocusManager::OnFocusMovecenter()
   int nx, ny;
   float shiftX, shiftY, specY, angle, focusFac;
   double newFocus;
-  focusFac = mShiftManager->GetDefocusZFactor() *
-    (mShiftManager->GetStageInvertsZAxis() ? -1 : 1);
+  focusFac = AdjustedDefocusZFactor(-1);
   EMimageBuffer *imBuf = mWinApp->mActiveView->GetActiveImBuf();
   ScaleMat aInv = mShiftManager->CameraToSpecimen(imBuf->mMagInd);
   if (!aInv.xpx)
@@ -594,8 +593,6 @@ void CFocusManager::OnFocusMovecenter()
   specY = imBuf->mBinning * (aInv.ypx * shiftX - aInv.ypy * shiftY);
   if (!imBuf->GetTiltAngle(angle))
     angle = (float)mScope->GetTiltAngle();
-  if (mWinApp->GetSTEMMode())
-     focusFac = -1.f / GetSTEMdefocusToDelZ(-1);;
   newFocus = imBuf->mDefocus + specY * tan(DTOR * angle) * focusFac;
   if (!mWinApp->GetSTEMMode() && mWinApp->LowDoseMode() && imBuf->mLowDoseArea &&
     IS_SET_VIEW_OR_SEARCH(imBuf->mConSetUsed))
@@ -1354,8 +1351,7 @@ int CFocusManager::CurrentDefocusFromShift(float inX, float inY, float &defocus,
 {
   int shiftX, shiftY;
   float angle, specY, minDist;
-  float focusFac = mShiftManager->GetDefocusZFactor() *
-    (mShiftManager->GetStageInvertsZAxis() ? -1 : 1);
+  float focusFac = AdjustedDefocusZFactor(0);
   LowDoseParams *ldParm = mWinApp->GetLowDoseParams();
   ScaleMat aInv;
   ControlSet *conSet = &mConSets[mFocusSetNum];
@@ -1934,6 +1930,10 @@ void CFocusManager::CheckAccuracy(int logging)
   mCalDefocus = 0.;
   mFCindex = 0;
   mAccuracyMeasured = false;
+  mScope->IncDefocus(-2. * mCalDelta);
+  Sleep(250);
+  mScope->IncDefocus(mCalDelta);
+  Sleep(250);
   report.Format("Checking accuracy of autofocus by measuring defocus at\r\n"
     "current value and at %.1f microns above and below current defocus", mCalDelta);
   mWinApp->AppendToLog(report,
@@ -1945,7 +1945,6 @@ void CFocusManager::CheckAccuracy(int logging)
 // Process result when a focus measurement is done
 void CFocusManager::CheckDone(int param)
 {
-  double delta = mCalDelta;
   CString report;
   if (mFCindex < 0)
     return;
@@ -1957,16 +1956,16 @@ void CFocusManager::CheckDone(int param)
     mCheckFirstMeasured = mCurrentDefocus;
     break;
 
-    // Second time, compute plus accuracy, change in minus, and start again
+    // Second time, compute minus accuracy, and start again
   case 1:
-    mPlusAccuracy = (float)((mCurrentDefocus - mCheckFirstMeasured) / mCalDelta);
-    delta = -2. * mCalDelta;
+    mMinusAccuracy = (float)((mCurrentDefocus - mCheckFirstMeasured) / mCalDelta);
+    mCheckFirstMeasured = mCurrentDefocus;
     break;
 
-    // Third time, compute minus accuracy, set flags, report result and return;
+    // Third time, compute plus accuracy, set flags, report result and return;
   case 2:
-    mMinusAccuracy = (float)((mCheckFirstMeasured - mCurrentDefocus) / mCalDelta);
-    mScope->IncDefocus(mCalDelta);
+    mPlusAccuracy = (float)((mCurrentDefocus - mCheckFirstMeasured) / mCalDelta);
+    mScope->IncDefocus(-mCalDelta);
     mFCindex = -1;
     mAccuracyMeasured = true;
     report.Format("Measured defocus change was:\r\n   %.2f times actual change"
@@ -1978,8 +1977,9 @@ void CFocusManager::CheckDone(int param)
   }
 
   // Change focus and start next measurement
-  mScope->IncDefocus(delta);
-  mCalDefocus += delta;
+  mScope->IncDefocus(mCalDelta);
+  Sleep(250);
+  mCalDefocus += mCalDelta;
   mFCindex++;
   AutoFocusStart(-1);
   mWinApp->AddIdleTask(TaskCheckBusy, TaskCheckDone, TaskFocusError, 0, 0);
@@ -2997,6 +2997,17 @@ float CFocusManager::GetSTEMdefocusToDelZ(int spotSize, int probeMode, double ab
   imin = B3DMAX(0, imin - 2);
   return (mSFfocusZtables[ind].stageZ[imax] - mSFfocusZtables[ind].stageZ[imin]) /
     (mSFfocusZtables[ind].defocus[imax] - mSFfocusZtables[ind].defocus[imin]);
+}
+
+// Convenience function to get the Z to defocus scaling factor adjusted for Z axis 
+// inversion or STEM mode; pass -1 for ifSTEM to use winApp STEM mode
+float CFocusManager::AdjustedDefocusZFactor(int ifSTEM)
+{
+  float defocusFac = mShiftManager->GetDefocusZFactor() *
+    (mShiftManager->GetStageInvertsZAxis() ? -1.f : 1.f);
+  if (ifSTEM > 0 || (ifSTEM < 0 && mWinApp->GetSTEMMode()))
+    defocusFac = -1.f / GetSTEMdefocusToDelZ(-1);
+  return defocusFac;
 }
 
 // A hack to enable autofocus in LM in JEOL.  If necessary, the array(s) could be extended

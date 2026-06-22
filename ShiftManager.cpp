@@ -1619,7 +1619,7 @@ int CShiftManager::ResetImageShift(BOOL bDoBacklash, BOOL bAdjustScale, int wait
   double adjustX, adjustY, roughScale;
   int magInd, area;
   LowDoseParams *ldp = mWinApp->GetLowDoseParams();
-  float defocusFac = mDefocusZFactor * (mStageInvertsZAxis ? -1 : 1);
+  float defocusFac = mWinApp->mFocusManager->AdjustedDefocusZFactor(-1);
   float xTiltFac, yTiltFac;
   bool setBacklash;
   StageMoveInfo smi;
@@ -1737,8 +1737,6 @@ int CShiftManager::ResetImageShift(BOOL bDoBacklash, BOOL bAdjustScale, int wait
 
   // Adjust focus, but only on first iteration
   // Do all scope actions before moving stage because of single Tecnai problem
-  if (mWinApp->GetSTEMMode())
-    defocusFac = -1. / mWinApp->mFocusManager->GetSTEMdefocusToDelZ(-1);
   if (!bAdjustScale  && magInd >= mScope->GetLowestNonLMmag())
     mScope->IncDefocus(specY * defocusFac * tan(angle));
   mScope->IncImageShift(-shiftX, -shiftY);

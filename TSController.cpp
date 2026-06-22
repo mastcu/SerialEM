@@ -2498,11 +2498,8 @@ void CTSController::NextAction(int param)
       // Adjust the focus if this was taken after an autofocus
       if (mActIndex == mActOrder[ALIGN_POST_FOCUS] && mNeedFocus && mDidFocus[mTiltIndex])
       {
-        float focusFac = mShiftManager->GetDefocusZFactor() *
-          (mShiftManager->GetStageInvertsZAxis() ? -1 : 1);
-        if (mSTEMindex)
-          focusFac = -1.f / mFocusManager->GetSTEMdefocusToDelZ(-1);
-        mScope->IncDefocus(specErrorY * tan(DTOR * angle) * focusFac);
+        mScope->IncDefocus(specErrorY * tan(DTOR * angle) * 
+          mFocusManager->AdjustedDefocusZFactor(mSTEMindex ? 1 : 0));
       }
 
       // If doing intensity for mean, do it now unless low dose or inaccurate
@@ -7587,8 +7584,8 @@ int CTSController::ParallelTSSetup(CMapDrawItem *item, CString &errStr)
   // Transform the image shift to specimen, change Y values to get it to the pretilt,
   // and transform back
   // NOTE that equations involving Y and Z treat them as being in a right-handed
-  // system, but X and Z are computed looking up the Y axis with X to the right and
-  // Z up, so Z = X * tan(X pitch angle)
+  // system, and ones with X and Z are the same, with angle CCW looking down the Y axis
+  // so Z = -X * tan(X pitch angle)
   // Focus to be applied for a particular component is the negative of the computed Z 
   mCmat = mShiftManager->IStoSpecimen(acqMagInd);
   mCinv = mShiftManager->MatInv(mCmat);
@@ -7615,7 +7612,8 @@ int CTSController::ParallelTSSetup(CMapDrawItem *item, CString &errStr)
 
     // Compute delta Z at starting angle, save X/Y values used to load IS values, 
     // record X and Y as known at the starting angle and save starting zZero
-    mParTSLoadedFocus[ind] = -(yZero * sinBidAlf + zZero * cosf(delBidAng));
+    mParTSLoadedFocus[ind] = -(yZero * sinBidAlf + zZero * cosf(delBidAng)) *
+      mFocusManager->AdjustedDefocusZFactor(mSTEMindex ? 1 : 0);
     mParTSLoadedSpecX[ind] = specX;
     mParTSLoadedSpecY[ind] = specY;
     for (dir = 0; dir < 2; dir++) {
@@ -7668,6 +7666,7 @@ void CTSController::PredictParallelTSLocations(double angle)
   float elimMin = B3DMAX(mFOVofRecord * fovFactor, absElimMin);
   int minForYonly = 4, minForYwithZ = 3;
   float maxDiffRevZFrom2 = 0.1f;
+  float defocusFac = mFocusManager->AdjustedDefocusZFactor(mSTEMindex ? 1 : 0);
   yOnly.resize(numTargets);
   yWithZ.resize(numTargets);
   zVec.resize(numTargets);
@@ -7710,7 +7709,9 @@ void CTSController::PredictParallelTSLocations(double angle)
         yWithZ[pos].push_back(data.shiftY);
         loadedYwithZ[pos].push_back(data.loadedSpecY);
         angleWithZ[pos].push_back(mTiltAngles[ind]);
-        loadedDelZFocus[pos].push_back(data.loadedDelZFocus);
+
+        // Convert this back to a putative Z value
+        loadedDelZFocus[pos].push_back(data.loadedDelZFocus / defocusFac);
         preTiltsYwithZ[pos].push_back(mParTSPreTiltsUsed[ind]);
         ACCUM_MAX(yWithZMaxAngle, B3DABS(mTiltAngles[ind] - mParTSPreTiltsUsed[ind]));
         meanDefAtZeroY[pos].push_back(mParTSMeanDefocus[ind]);
@@ -7895,6 +7896,9 @@ void CTSController::PredictParallelTSLocations(double angle)
         mParTSLastFoundDelZ0[idir][pos] = (float)errSum;
         mParTSLastDelZ0TiltInd[idir][pos] = mTiltIndex;
         errSum /= -cos(DTORFL * (angle - mParTSCurTiltOffset[idir]));
+
+        // Convert Z to defocus with factor before saving
+        errSum *= defocusFac;
         SEMTrace('1', "revising delta Z focus for pos %d: %.3f to %.3f", pos + 1,
           mParTSLoadedDelZFocus[idir][pos], errSum);
         mParTSLoadedDelZFocus[idir][pos] = (float)errSum;
@@ -7919,7 +7923,7 @@ void CTSController::PredictParallelTSLocations(double angle)
         cosf(DTORFL * (mParTSAngleOfKnown[idir][pos] - mParTSCurTiltOffset[idir]));
       zZero = mParTSLastFoundDelZ0[idir][pos] - yZero * 
         sinf(mParTSCurTiltOffset[idir] - mParTSPreTiltsUsed[ind]);
-      ctmp = -zZero / (float)cos(DTOR * (angle - mParTSCurTiltOffset[idir]));
+      ctmp = -defocusFac * zZero / (float)cos(DTOR * (angle - mParTSCurTiltOffset[idir]));
       SEMTrace('1', "Using delta Z focus from last Z0 for pos %d: %.3f to %.3f", pos + 1,
         mParTSLoadedDelZFocus[idir][pos], ctmp);
       mParTSLoadedDelZFocus[idir][pos] = ctmp;
@@ -7938,15 +7942,17 @@ void CTSController::PredictParallelTSLocations(double angle)
   delNewAng = DTORFL * ((float)angle - mParTSCurTiltOffset[idir]);
   for (pos = 0; pos < numTargets; pos++) {
     delLastAng = DTORFL * (mParTSAngleOfKnown[idir][pos] - mParTSCurTiltOffset[idir]);
+
+    // Divide focus by factor to get Z value; multiply Z-dependent component for defocus
     zZero = mParTSDelZatZero[pos] -
-      mParTSLoadedDelZFocus[idir][pos] * cosf(delNewAng);
+      (mParTSLoadedDelZFocus[idir][pos] / defocusFac) * cosf(delNewAng);
     yZero = (mParTSLastKnownY[idir][pos] + zZero *sinf(delLastAng))
       / cosf(delLastAng);
     specY = yZero * cosf(delNewAng) - zZero * sinf(delNewAng);
     ApplyScaleMatrix(mCinv, mParTSLastKnownX[idir][pos], specY,
       mParTSNavItem->mIStargetsXY[pos * 2], mParTSNavItem->mIStargetsXY[pos * 2 + 1]);
     mParTSLoadedFocus[pos] = -(yZero * sinf(delNewAng) + mParTSDelZatZero[pos] *
-      cosf(delNewAng)) + mParTSLoadedDelZFocus[idir][pos];
+      cosf(delNewAng)) * defocusFac + mParTSLoadedDelZFocus[idir][pos];
     SEMTrace('1', "pos %d yZero %.3f from lky %.3f  specY %.3f  IS %.3f %.3f  focus %.2f",
       pos + 1, yZero, mParTSLastKnownY[idir][pos], specY, 
       mParTSNavItem->mIStargetsXY[pos * 2], mParTSNavItem->mIStargetsXY[pos * 2 + 1],
