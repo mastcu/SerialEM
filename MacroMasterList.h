@@ -874,6 +874,8 @@ MAC_SAME_NAME_ARG(SkipUtapiService, 2, 4, SKIPUTAPISERVICE, II)
 MAC_SAME_NAME_NOARG(ReportLongOperations, 0, 4, REPORTLONGOPERATIONS)
 MAC_SAME_NAME_ARG(ReportDoseFracParams, 1, 4, REPORTDOSEFRACPARAMS, S)
 MAC_SAME_NAME_ARG(ReportMiscCameraParams, 1, 4, REPORTMISCCAMERAPARAMS, S)
+MAC_SAME_NAME_ARG(GetControlPanelState, 1, 4, GETCONTROLPANELSTATE, I)
+MAC_SAME_FUNC_ARG(SetControlPanelState, 2, 4, GetControlPanelState, SETCONTROLPANELSTATE, II)
 
 
 // new Python-only commands need to be added to pythonOnlyCmds in ::CMacroProcessor

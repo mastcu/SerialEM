@@ -4468,6 +4468,29 @@ int CMacCmd::ReadBasicModeFile()
   return 0;
 }
 
+// GetControlPanelState, SetControlPanelState
+int CMacCmd::GetControlPanelState()
+{
+  int state = -1, index = mItemInt[1], dlgInd;
+  CToolDlg **dlgs = mWinApp->GetToolDlgs();
+  mStrCopy.Format("Control panel number must be between 0 and %d for line:\n\n",
+    MAX_TOOL_DLGS);
+  if (index < 0 || index >= MAX_TOOL_DLGS)
+    ABORT_LINE(mStrCopy);
+  dlgInd = mWinApp->LookupToolDlgIndex(index);
+  if (CMD_IS(GETCONTROLPANELSTATE)) {
+    if (dlgInd >= 0)
+      state = dlgs[index]->GetState();
+    SetRepValsAndVars(2, state);
+  } else {
+    if (dlgInd < 0)
+      ABORT_LINE("The specified control panel is not present for line:\n\n");
+    dlgs[index]->SetOpenClosed(mItemInt[2]);
+    mWinApp->DialogChangedState(dlgs[index], mItemInt[2]);
+  }
+  return 0;
+}
+
 // ReportFreeDiskSpace
 int CMacCmd::ReportFreeDiskSpace()
 {

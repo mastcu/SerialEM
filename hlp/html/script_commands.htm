@@ -6684,6 +6684,35 @@
             respectively.&nbsp; Command added in 4.3, 22-Apr-26.</TD>
         </TR>
          <TR>
+          <TD class="scriptcommand">GetControlPanelState #</TD>
+          <TD>Set <i>reportedValue1</i> with the state for the control panel whose absolute index is
+            <b>#</b>, where the state is the sum of three flags: 1 for the panel to be open at all; 2 for
+            its options section (if any) to be open; and 4 for whether it is floated.&nbsp; Sets the
+            value to -1 if the panel is not being shown.&nbsp; The indexes
+            are fixed values:<br />
+            &nbsp;&nbsp;&nbsp; 0 for Buffer Status<br>
+&nbsp;&nbsp;&nbsp; 1 for Buffer Control<br>
+&nbsp;&nbsp;&nbsp; 2 for Image Display<br>
+&nbsp;&nbsp;&nbsp; 3 for Scope Status<br>
+&nbsp;&nbsp;&nbsp; 4 for Scope Control<br>
+&nbsp;&nbsp;&nbsp; 5 for Tilt panel<br>
+&nbsp;&nbsp;&nbsp; 6 for Camera&Script<br>
+&nbsp;&nbsp;&nbsp; 7 for Image Align<br>
+&nbsp;&nbsp;&nbsp; 8 for Low Dose<br>
+&nbsp;&nbsp;&nbsp; 9 for Montage panel<br>
+&nbsp;&nbsp;&nbsp; 10 for STEM Control<br>
+&nbsp;&nbsp;&nbsp; 11 for Filter Control<br>
+&nbsp;&nbsp;&nbsp; 12 for DE Camera<br>
+&nbsp;&nbsp;&nbsp; 13 for DECTRIS Camera<br>
+            Value can be assigned to variable at end of command.&nbsp; Command added in 4.3, 20-Jun-26.
+          </TD>
+        </TR>
+         <TR>
+          <TD class="scriptcommand">SetControlPanelState #P #S</TD>
+          <TD>Sets the state of the control panel with absolute index <b>#P</b> to <B>#S</B>, where indexes
+             and states are the same as for 'GetControlPanelState'.&nbsp; Command added in 4.3, 20-Jun-26.</TD>
+        </TR>
+         <TR>
           <TD class="scriptcommand">ReadBasicModeFile # file</TD>
           <TD>Reads in a basic mode file specified in <strong>file</strong> if it is 
             different from the current file, makes it the current basic mode file, and sets 

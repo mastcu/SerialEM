@@ -759,6 +759,7 @@ public:
   GetMember(BOOL, EnableMultiChanView);
   GetSetMember(int, MaxChannelBuffers);
   GetSetMember(int, CircleTypesInLDDefine);
+  CToolDlg **GetToolDlgs() { return &mToolDlgs[0]; };
   void SetEnableMultiChanView(BOOL inVal);
   afx_msg void OnWindowNewLocator();
   afx_msg void OnUpdateWindowNewLocator(CCmdUI *pCmdUI);
