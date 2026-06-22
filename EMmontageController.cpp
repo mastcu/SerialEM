@@ -1678,10 +1678,8 @@ int EMmontageController::StartMontage(int inTrial, BOOL inReadMont, float cookDw
   if (mParam->adjustFocus && !mReadingMontage && mUsingImageShift &&
     !mUsingMultishot) {
     double angle = DTOR * mScope->GetTiltAngle();
-    float defocusFac = mShiftManager->GetDefocusZFactor() *
-      (mShiftManager->GetStageInvertsZAxis() ? -1 : 1);
-    if (mWinApp->GetSTEMMode())
-      defocusFac = -1. / mWinApp->mFocusManager->GetSTEMdefocusToDelZ(-1);
+    float defocusFac = mWinApp->mFocusManager->AdjustedDefocusZFactor(
+      mWinApp->GetSTEMMode() ? 1 : 0);
     aInv = mShiftManager->CameraToSpecimen(mParam->magIndex);
 
     mFocusPitchX = -tan(angle) * aInv.ypx * defocusFac;

@@ -359,8 +359,8 @@ int CParticleTasks::StartMultiShot(int numPeripheral, int doCenter, float spokeR
     // This is the opposite sign from Reset Image Shift because that is taking away the
     // defocus at the given IS because the stage is sliding up to the 0 IS point,
     // here we need to impose that defocus for the given IS
-    mMSDefocusTanFac = -(float)tan(DTOR * angle) * mShiftManager->GetDefocusZFactor() *
-      (mShiftManager->GetStageInvertsZAxis() ? -1.f : 1.f);
+    mMSDefocusTanFac = -(float)tan(DTOR * angle) * 
+      mFocusManager->AdjustedDefocusZFactor(0);
   }
 
   // Need a base focus in these cases: compensateTilt, mMSForParallelTS, customHoleFocus
@@ -2101,7 +2101,7 @@ void CParticleTasks::ZbyGNextTask(int param)
           SEMTrace('1', "Change scale to %f for being past AF calibration", scaling);
         }
 
-        delZ *= scaling / mShiftManager->GetDefocusZFactor();
+        delZ *= scaling / mFocusManager->AdjustedDefocusZFactor(0);
 
         // compute an error factor
         if (mZBGIterationNum)
