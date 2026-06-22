@@ -725,7 +725,7 @@ int CParallelTSHelper::SaveTarget(CString &err)
   int index, index2, mapID;
   int area;
   float defocus, SX, SY;
-  float shiftX, shiftY;
+  float shiftX, shiftY, factor;
   CString mess;
   ScaleMat mat;
   NavAlignParams *alignParams = mNavHelper->GetNavAlignParams();
@@ -810,7 +810,8 @@ int CParallelTSHelper::SaveTarget(CString &err)
 
     } else {
       defocus = (float)mScope->GetDefocus();
-      mISTargetDefocus.push_back(-defocus);
+      factor = mWinApp->mFocusManager->AdjustedDefocusZFactor(-1);
+      mISTargetDefocus.push_back(-defocus / factor);
 
       if (mISTargetDefocus.size() == 1) {
         mBaseDefocus = defocus;
