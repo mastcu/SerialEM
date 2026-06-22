@@ -750,7 +750,8 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
         parTSopts->acqMagIndNonLD = itemInt[11];
         parTSopts->refAliMaxPctChg = itemFlt[12];
         parTSopts->refAliMaxRot = itemFlt[13];
-        parTSopts->flags = itemInt[14];
+        parTSopts->applyAdjustingXform = itemInt[14];
+        parTSopts->flags = itemInt[15];
 
       } else if (NAME_IS("NavigatorAcquireParams")) {
 
@@ -2133,13 +2134,13 @@ void CParameterIO::WriteSettings(CString strFileName)
       dwParams->changeIS ? 1 : 0, dwParams->usePriorAutofocus ? 1 : 0, 
       dwParams->priorAutofocusRate);
     mFile->WriteString(oneState);
-    oneState.Format("ParallelTSOptions %d %f %f %d %f %d %d %d %f %d %d %f %f %d\n",
+    oneState.Format("ParallelTSOptions %d %f %f %d %f %d %d %d %f %d %d %f %f %d %d\n",
       parTSopts->adjustBeamTilt ? 1 : 0, parTSopts->extraDelayFactor, parTSopts->beamDiam,
       parTSopts->useIAorBeamSize ? 1 : 0, parTSopts->tiltForBeam,
       parTSopts->CtfMeasureType, parTSopts->findAstig ? 1 : 0,
       parTSopts->extractVirtPrevs, parTSopts->alignLimitFrac, parTSopts->mapMagIndNonLD,
       parTSopts->acqMagIndNonLD, parTSopts->refAliMaxPctChg, parTSopts->refAliMaxRot,
-      parTSopts->flags);
+      parTSopts->applyAdjustingXform, parTSopts->flags);
     mFile->WriteString(oneState);
 
     for (i = 0; i < 2; i++)

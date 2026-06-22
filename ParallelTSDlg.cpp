@@ -461,10 +461,9 @@ void CParallelTSDlg::Update()
   mess.Format("");
   int mag;
   mag = mParallelTSHelper->GetAreaMapMagInd();
+  if (mag < 0 && !mWinApp->LowDoseMode())
+    mag = mMapMagIndex;
   enable = mParallelTSHelper->CanAdjustISVectors(mag, m_iTargetType != 0, mess);
-  if (!enable) {
-    mParTSopts->applyAdjustingXform = false;
-  }
   SetDlgItemText(IDC_STATIC_PTS_ADJUSTXFORMSTATUS, mess);
   m_statAdjustingXformStatus.EnableWindow(!mDefiningPoints);
   m_butApplyAdjusting.EnableWindow(enable && !(mDefiningPoints || mAddingTargets)
@@ -668,7 +667,7 @@ void CParallelTSDlg::OptionsToDialog()
   m_fRefMaxScaling = mNavHelper->GetParTSRefAliMaxPctChg();
   m_fRefMaxRotation = mNavHelper->GetParTSRefAliMaxRot();
   m_bApplyAdjusting = mParTSopts->applyAdjustingXform;
-  m_bSkipRefine = (mParTSopts->flags & PTSFLAG_SKIP_REFINE);
+  m_bSkipRefine = mParTSopts->flags & PTSFLAG_SKIP_REFINE;
   mDisplayExtraOptions = (mParTSopts->flags & PTSFLAG_DISP_EXTRA_OPTS) != 0;
 }
 
@@ -690,9 +689,9 @@ void CParallelTSDlg::DialogToOptions()
   mParTSopts->alignLimitFrac  = m_fMaxAlignShift / 100.f;
   mParTSopts->refAliMaxPctChg = m_fRefMaxScaling;
   mParTSopts->refAliMaxRot = m_fRefMaxRotation;
-  mParTSopts->applyAdjustingXform = m_bApplyAdjusting != 0;
+  mParTSopts->applyAdjustingXform = m_bApplyAdjusting;
   mParTSopts->flags = 0;
-  if (m_bSkipRefine != 0)
+  if (m_bSkipRefine)
     mParTSopts->flags |= PTSFLAG_SKIP_REFINE;
   if (mDisplayExtraOptions)
     mParTSopts->flags |= PTSFLAG_DISP_EXTRA_OPTS;

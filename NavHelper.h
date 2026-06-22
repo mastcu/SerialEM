@@ -229,7 +229,7 @@ struct ParallelTSOptions {
   int acqMagIndNonLD;
   float refAliMaxPctChg;   // Max percent size change when aligning to extracted reference
   float refAliMaxRot;      // Max rotation when aligning to extracted reference
-  bool applyAdjustingXform;// Whether to apply Adjusting transform
+  BOOL applyAdjustingXform;// Whether to apply Adjusting transform
   int flags;               // For future easy expansion
 };
 
