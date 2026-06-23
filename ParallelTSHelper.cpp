@@ -1231,9 +1231,8 @@ int CParallelTSHelper::ConvertToParTSItem(CString &err, CMapDrawItem *item)
 
   //Handle a regular pattern set up from multishot params
   if (item) {
-    //parTSitemInd = mWinApp->mNavigator->GetCurrentIndex(); //TODO
+    MultiShotParams *msPars = mNavHelper->GetMultiShotParams();
     if (item->IsPoint()) {
-      MultiShotParams *msPars = mNavHelper->GetMultiShotParams();
       mNavHelper->GetNumHolesFromParam(numX, numY, numDef);
       numPoints = mNavHelper->GetNumHolesForItem(item, numDef);
       if (item->mNumXholes > 0)
@@ -1242,25 +1241,28 @@ int CParallelTSHelper::ConvertToParTSItem(CString &err, CMapDrawItem *item)
         numY = item->mNumYholes;
       mWinApp->mParticleTasks->GetHolePositions(delISX, delISY, indices, mMagIndex,
         mWinApp->GetCurrentCamera(), numX, numY, mMappingTilt, item);
-
       mParTSitem = item;
-      mParTSitem->mNumIStargets = (short)numPoints;
-      mParTSitem->mIStargetsXY = new float[numPoints * 2];
-      mParTSitem->mMagOfIStargets = msPars->holeMagIndex[msPars->doHexArray ? 1 : 0];
-
-      for (ind = 0; ind < numPoints; ind++) {
-        mParTSitem->mIStargetsXY[2 * ind] = delISX[ind];
-        mParTSitem->mIStargetsXY[2 * ind + 1] = delISY[ind];
-      }
-    
-    //TODO when code it written to make regular pattern with polygon, add here
-    //} else if (item->IsPolygon()) {
-
+    } else if (item->IsPolygon()) {
+      mNavHelper->FillPolygonWithMultiShot(item, delISX, delISY, err);
+      numPoints = (int) delISX.size();
+      ptX = item->mStageX;
+      ptY = item->mStageY;
+      mWinApp->mNavigator->AddItemFromStagePositions(&ptX, &ptY, 1, item->mStageZ, 0);
+      mParTSitem = itemArr->GetAt(itemArr->GetSize() - 1);
     } else {
-      err.Format("The item must be a point to finalize the area");
+      err.Format("The item must be a point or polygon to finalize the area");
       return 1;
     }
+    
+    mParTSitem->mNumIStargets = (short)numPoints;
+    mParTSitem->mIStargetsXY = new float[numPoints * 2];
+    mParTSitem->mMagOfIStargets = msPars->holeMagIndex[msPars->doHexArray ? 1 : 0];
 
+    for (ind = 0; ind < numPoints; ind++) {
+      mParTSitem->mIStargetsXY[2 * ind] = delISX[ind];
+      mParTSitem->mIStargetsXY[2 * ind + 1] = delISY[ind];
+    }
+    
   } else {
 
     if (mParTSopts->flags & PTSFLAG_SKIP_REFINE) {

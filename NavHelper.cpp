@@ -7996,3 +7996,187 @@ int CNavHelper::CenterAddedPointInHole(EMimageBuffer *imBuf, float &inX, float &
   }
   return 0;
 }
+
+// Generates multishot positions inside a polygon item, centered on the given stage coords
+int CNavHelper::FillPolygonWithMultiShot(CMapDrawItem *polyItem, FloatVec &ISX, 
+  FloatVec &ISY, CString &errStr, float cenX, float cenY)
+{
+  int mapID, ix, iy;
+  CMapDrawItem *item;
+  EMimageBuffer *imBuf;
+  double dist, shiftX, shiftY;
+  float xmin, xmax, ymin, ymax, ptx, pty, delX, delY;
+  double cen2polyEdge;
+  double xCenISX, xCenISY, yCenISX, yCenISY;
+  int numRings, numXholes, numYholes;
+  int numHoles, step, ring, ind, jnd, mainDir, mainSign, sideDir, sideSign;
+  bool ringInPoly;
+  ScaleMat is2st;
+  IntVec order;
+
+  if (!polyItem || !polyItem->IsPolygon()) {
+    errStr.Format("Provided item must be a polygon");
+    return 1;
+  }
+
+  mapID = polyItem->mDrawnOnMapID;
+  item = mNav->FindItemWithMapID(mapID);
+  if (!item) {
+    errStr.Format("Map on which polygon was drawn no longer exists");
+    return 2;
+  }
+
+  imBuf = mWinApp->mActiveView->GetActiveImBuf();
+  if (!imBuf || imBuf->mMapID != mapID)
+    mNav->DoLoadMap(true, item, -1);
+
+  ind = mMultiShotParams.holeMagIndex[mMultiShotParams.doHexArray ? 1 : 0];
+  is2st = MatMul(mShiftManager->IStoCamera(ind),
+    MatInv(mShiftManager->StageToCamera(mWinApp->GetCurrentCamera(), ind)));
+  if (!is2st.xpx) {
+    errStr.Format("There is no calibration to get from IS to stage coordinates at the "
+      "given mag");
+    return 3;
+  }
+
+  if (cenX == 0 && cenY == 0) {
+    cenX = polyItem->mStageX;
+    cenY = polyItem->mStageY;
+  } else if (!InsideContour(polyItem->mPtX, polyItem->mPtY, polyItem->mNumPoints, 
+    cenX, cenY)) {
+    errStr.Format("Provided center point must be inside the polygon item");
+    return 2;
+  }
+
+  xmin = xmax = polyItem->mPtX[0];
+  ymin = ymax = polyItem->mPtY[0];
+  for (int i = 0; i < polyItem->mNumPoints; i++) {
+    ACCUM_MIN(xmin, polyItem->mPtX[i]);
+    ACCUM_MAX(xmax, polyItem->mPtX[i]);
+    ACCUM_MIN(ymin, polyItem->mPtY[i]);
+    ACCUM_MAX(ymax, polyItem->mPtY[i]);
+  }
+  shiftX = (double) B3DMAX(xmax - cenX, cenX - xmin);
+  shiftY = (double) B3DMAX(ymax - cenY, cenY - ymin);
+
+  //Safe distance from centerpoint to outside the polygon
+  cen2polyEdge = sqrt(pow(shiftX, 2.) + pow(shiftY, 2.));
+  if (mMultiShotParams.doHexArray) {
+    dist = sqrt(pow(mMultiShotParams.hexISXspacing[0], 2.) +
+      pow(mMultiShotParams.hexISYspacing[0], 2.));
+  } else {
+    dist = sqrt(pow(mMultiShotParams.holeISXspacing[0], 2.) +
+      pow(mMultiShotParams.holeISYspacing[0], 2.));
+  }
+  numRings = (int)round(cen2polyEdge / dist);
+
+  ISX.clear();
+  ISY.clear();
+
+  if (mMultiShotParams.doHexArray) {
+    numHoles = 3 * numRings * (numRings + 1) + 1;
+
+    // Loop on rings and steps in rings
+    for (ring = 1; ring <= numRings; ring++) {
+      ringInPoly = false;
+      for (step = 0; step < 6; step++) {
+
+        // For minimum shifts, step out from last point of previous ring, so this backs
+        // it up one position per ring
+        ind = (step + 607 - ring) % 6;
+
+        // Direction along side is 2 past main direction; set up indexes and signs of each
+        mWinApp->mParticleTasks->DirectionIndexesForHexSide(ind, mainDir, mainSign, 
+          sideDir, sideSign);
+
+        // Add each position along side
+        for (jnd = 0; jnd < ring; jnd++) {
+          shiftX = ring * mMultiShotParams.hexISXspacing[mainDir] * mainSign +
+            jnd * mMultiShotParams.hexISXspacing[sideDir] * sideSign;
+          shiftY = ring * mMultiShotParams.hexISYspacing[mainDir] * mainSign +
+            jnd * mMultiShotParams.hexISYspacing[sideDir] * sideSign;
+          ApplyScaleMatrix(is2st, shiftX, shiftY, delX, delY);
+          ptx = cenX + delX;
+          pty = cenY + delY;
+          if (InsideContour(polyItem->mPtX, polyItem->mPtY, polyItem->mNumPoints, ptx, 
+            pty) && mShiftManager->ImageShiftIsOK(shiftX, shiftY, FALSE)) {
+            ISX.push_back((float) shiftX);
+            ISY.push_back((float) shiftY);
+            ringInPoly = true;
+          }
+        }
+      }
+
+      //If no points in this ring were inside the polygon, then we are all done
+      if (!ringInPoly)
+        break;
+    }
+  } else {
+    int direction[2];
+    int startInd[2];
+    int endInd[2];
+
+    numXholes = numYholes = 2 * numRings + 1;
+    xCenISX = mMultiShotParams.holeISXspacing[0] * 0.5 * (numXholes - 1);
+    xCenISY = mMultiShotParams.holeISYspacing[0] * 0.5 * (numXholes - 1);
+    yCenISX = mMultiShotParams.holeISXspacing[1] * 0.5 * (numYholes - 1);
+    yCenISY = mMultiShotParams.holeISYspacing[1] * 0.5 * (numYholes - 1);
+
+    // Set up to do arbitrary directions in each axis
+    direction[0] = direction[1] = 1;
+    startInd[0] = startInd[1] = 0;
+    endInd[0] = numXholes - 1;
+    endInd[1] = numYholes - 1;
+    int patternType = mWinApp->mParticleTasks->GetMSHolePatternType();
+    if (patternType < 2) {
+      for (iy = startInd[1]; (endInd[1] - iy) * direction[1] >= 0;
+        iy += direction[1]) {
+        for (ix = startInd[0]; (endInd[0] - ix) * direction[0] >= 0;
+          ix += direction[0]) {
+          shiftX = (ix * mMultiShotParams.holeISXspacing[0] - xCenISX) +
+            (iy * mMultiShotParams.holeISXspacing[1] - yCenISX);
+          shiftY = (ix * mMultiShotParams.holeISYspacing[0] - xCenISY) +
+            (iy * mMultiShotParams.holeISYspacing[1] - yCenISY);
+          ApplyScaleMatrix(is2st, shiftX, shiftY, delX, delY);
+          ptx = cenX + delX;
+          pty = cenY + delY;
+          if (InsideContour(polyItem->mPtX, polyItem->mPtY, polyItem->mNumPoints, ptx,
+            pty) && mShiftManager->ImageShiftIsOK(shiftX, shiftY, FALSE)) {
+            ISX.push_back((float)shiftX);
+            ISY.push_back((float)shiftY);
+          }
+        }
+
+        // Zigzag pattern unless raster specified
+        if (patternType != 1) {
+          ix = startInd[0];
+          startInd[0] = endInd[0];
+          endInd[0] = ix;
+          direction[0] = -direction[0];
+        }
+      }
+    } else {
+
+      // Spiral with extra rows/columns if needed
+      mWinApp->mParticleTasks->MakeSpiralPattern(numXholes, numYholes, order);
+      for (ind = 0; ind < (int)order.size(); ind++) {
+        ix = order[ind] % numXholes;
+        iy = order[ind] / numXholes;
+        shiftX = (ix * mMultiShotParams.holeISXspacing[0] - xCenISX) +
+          (iy * mMultiShotParams.holeISXspacing[1] - yCenISX);
+        shiftY = (ix * mMultiShotParams.holeISYspacing[0] - xCenISY) +
+          (iy * mMultiShotParams.holeISYspacing[1] - yCenISY);
+        ApplyScaleMatrix(is2st, shiftX, shiftY, delX, delY);
+        ptx = cenX + delX;
+        pty = cenY + delY;
+        if (InsideContour(polyItem->mPtX, polyItem->mPtY, polyItem->mNumPoints, ptx,
+          pty) && mShiftManager->ImageShiftIsOK(shiftX, shiftY, FALSE)) {
+          ISX.push_back((float)shiftX);
+          ISY.push_back((float)shiftY);
+        }
+      }
+    }
+  }
+
+  return 0;
+}
