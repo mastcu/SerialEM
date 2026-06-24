@@ -4288,6 +4288,11 @@ BOOL CEMscope::SetMagIndex(int inIndex)
       }
       SetImageShift(tranISX - axisISX, tranISY - axisISY);
     }
+  } else if (GetDebugOutput('i')) {
+    GetTiltAxisIS(axisISX, axisISY);
+    GetImageShift(curISX, curISY);
+    PrintfToLog("SetMagIndex: IS after raw %.3f %.3f  net %.3f %.3f", curISX + axisISX,
+      curISY + axisISY, curISX, curISY);
   }
   ScopeMutexRelease(routine);
   return result;
