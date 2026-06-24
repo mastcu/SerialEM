@@ -68,7 +68,7 @@ CParticleTasks::CParticleTasks(void)
   mMSRunMacro = false;
   mMSRunningMacro = false;
   mMSMacroToRun = 0;
-  mMSDropPlusFromName = false;
+  mMSDropPlusFromName = true;
   mMSStartedCtfplotter = false;
   mZBGIterationNum = -1;
   mZBGMaxIterations = 5;
