@@ -4171,6 +4171,67 @@ bool CShiftManager::ShiftAdjustmentForSet(int conSet, int magInd, float &shiftX,
   return true;
 }
 
+ScaleMat CShiftManager::GetTransformFromISAdjustments(std::vector<double> fromISX,
+  std::vector<double> fromISY, std::vector<double> toISX, std::vector<double> toISY)
+{
+  /* Given IS adjustments 
+  fromISX = [a_x1, a_x2, ..., a_xn]
+  fromISY = [a_y1, a_y2, ..., a_yn]
+  toISX   = [b_x1, b_x2, ..., b_xn]
+  toISY   = [b_y1, b_y2, ..., b_yn]
+
+  Then the adjusting transform "F" should tranform each IS vector in fromISX/Y to the
+  corresponding adjusted vector in toISX/Y
+
+  Define A and B as the matrices:
+       _                       _
+  A = |  a_x1, a_x2, ..., a_xn  |
+      |_ a_y1, a_y2, ..., a_yn _|
+       _                       _
+  B = |  b_x1, b_x2, ..., b_xn  |
+      |_ b_y1, b_y2, ..., b_yn _|
+  
+   should obey XA = B.
+  Solving for the adjusting transform "X" via multivariate linear regression is then
+
+  X = BA^T (AA^T)^(-1)
+  */
+
+  double axax, axay, ayay, bxax, bxay, byax, byay;
+  int ind;
+  ScaleMat BAt, AAt, xform;
+  xform.xpx = 0.f;
+
+  if (fromISX.size() < 2) {
+    //TODO error mess
+  }
+
+  axax = axay = ayay = bxax = bxay = byax = byay = 0.;
+  for (ind = 0; ind < (int)fromISX.size(); ind++) {
+    axax += fromISX[ind] * fromISX[ind];
+    axay += fromISX[ind] * fromISY[ind];
+    ayay += fromISY[ind] * fromISY[ind];
+    bxax += toISX[ind] * fromISX[ind];
+    bxay += toISX[ind] * fromISY[ind];
+    byax += toISY[ind] * fromISX[ind];
+    byay += toISY[ind] * fromISY[ind];
+  }
+
+  BAt.xpx = (float)bxax;
+  BAt.xpy = (float)bxay;
+  BAt.ypx = (float)byax;
+  BAt.ypy = (float)byay;
+  AAt.xpx = (float)axax;
+  AAt.xpy = (float)axay;
+  AAt.ypx = (float)axay;
+  AAt.ypy = (float)ayay;
+
+  if (AAt.xpx != 0) {
+    xform = MatMul(BAt, MatInv(AAt));
+  }
+  return xform;
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 // HIGH-DEFOCUS MAGNIFICATION AND ROTATION CALIBRATIONS
 ///////////////////////////////////////////////////////////////////////////////

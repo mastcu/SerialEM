@@ -323,6 +323,8 @@ public:
   ScaleMat StretchCorrectedRotation(int camera, int magInd, float rotation);
   ScaleMat StretchCorrectedRotation(float rotation);
   ScaleMat UnderlyingStretch(ScaleMat raMat, float &smagMean, double & thetad, float & str, double & alpha);
+  ScaleMat GetTransformFromISAdjustments(std::vector<double> fromISX, 
+    std::vector<double> fromISY, std::vector<double> toISX, std::vector<double> toISY);
   int GetDefocusMagAndRot(int spot, int probeMode, double intensity, float defocus,
     float & scale, float & rotation, float &nearestFocus, double nearC2Dist[2], int nearC2ind[2],
     int &numNearC2, int magIndForIS = 0);

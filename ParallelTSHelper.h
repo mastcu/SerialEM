@@ -4,8 +4,9 @@
 class CParallelTSHelper;
 
 #define MIN_NUM_POINTS_TO_FIT_PLANE 4
+#define MIN_NUM_POINTS_FOR_PTSADJUST 5
 
-enum { PARALLELTS_ACTION_AUTOFOCUS, PARALLELTS_ACTION_PREVIEW };
+enum { PARALLELTS_ACTION_AUTOFOCUS, PARALLELTS_ACTION_PREVIEW, PARALLELTS_ACTION_ADJUST};
 
 class CParallelTSHelper
 {
@@ -54,6 +55,8 @@ private:
   IntVec mSavedTargetIDs;               //Map IDs of target points that were saved
   FloatVec mPrevMapShiftX;
   FloatVec mPrevMapShiftY;
+  std::vector<double> mPreRefineISX;
+  std::vector<double> mPreRefineISY;
   bool mDoNextShift;
   int mActionAtTarget;
   bool mAtTarget;
@@ -75,6 +78,10 @@ private:
   CMapDrawItem *mParTSitem;
   ParallelTSParam mParTSParam;
 
+  ScaleMat mAdjustingXform;
+  int mXformFromMag;
+  int mXformToMag;
+
 public:
   GetMember(CMapDrawItem*, CurISTargetItem);
   GetMember(CMapDrawItem*, ParTSitem);
@@ -93,10 +100,10 @@ public:
   bool DoingISToTargets() { return mDoingISToTargets; };
   int GetNumSavedTargets() { return (int)mSavedTargetIDs.size(); };
   int ISToTargetsBusy();
-  void ClearTargets(bool autofocusOrPreview);
+  void ClearTargets(bool autofocus);
   void ClearSavedTargets();
   void ISToTargetNextTask(int param);
-  int StartShiftToTargets(IntVec targetMapIDs, bool autofocusOrPreview);
+  int StartShiftToTargets(IntVec targetMapIDs, int actionType);
   void StopParallelTSShift(bool error = false);
   int SaveAreaMap(CString &err);
   int AssessISTargetShiftLimit(IntVec indexVec, CString &mess, IntVec *sortedIndexVec = NULL);
@@ -109,12 +116,14 @@ public:
   bool CanAdjustISVectors(int fromMag, bool multiShot, CString &mess);
   int GetCenterPtID();
   int GetISVectors(int groupID, CString &err);
+  int CreateAdjustingTransform(CString &err);
+  void DeleteTargetsFromNav();
 
 private:
   int ISToNextTarget(int targetIndex, CString &err);
   void UpdatePlaneParamsInDlg();
   void PauseParallelTSShift();
-  int SaveInitialState();
+  int SaveInitialState(CString &err);
   int SaveTargetMap(CString &err, bool &saved);
   int SaveTarget(CString &err);
   int FitPlane(float &pretilt, float &xPitch, float &residual,

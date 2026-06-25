@@ -2638,6 +2638,7 @@
 #define IDC_EDIT_MG_REFINE_NOTE         3668
 #define IDC_STAT_APERTURES              3669
 #define IDC_STAT_APER_LABEL             3670
+#define IDC_STAT_MAX_FPS                3670
 #define IDC_CENTER_ADDED_HOLES          3671
 #define IDC_RALIGNTOTEMPLATE            3672
 #define IDC_RFINDANDCENTERHOLE          3673
@@ -2736,7 +2737,7 @@
 #define IDC_STATIC_PTS_PERCENTOFFIELD   3767
 #define IDC_BUT_PTS_REFINE              3768
 #define IDC_CHECK_PTS_SKIPREFINE        3769
-#define IDC_STAT_MAX_FPS                3670
+#define IDC_BUT_PTS_NEWADJXFORM         3770
 #define ID_NEW_IMAGE                    32771
 #define IDM_FILE_SAVEOTHER              32772
 #define IDM_FILE_READ                   32773

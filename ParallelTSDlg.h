@@ -62,6 +62,7 @@ private:
   int mSavedTSparamIndex;
   bool mDrawingISTargets;
   int mNumAddedTargets;
+  bool mMakingNewXform;
   
   void ClearArea();
   void CancelAddingDefining();
@@ -207,4 +208,6 @@ public:
   CButton m_butSkipRefine;
   BOOL m_bSkipRefine;
   afx_msg void OnCheckSkipRefine();
+  CButton m_butNewAdjTransform;
+  afx_msg void OnNewAdjTransform();
 };

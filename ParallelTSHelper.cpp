@@ -58,6 +58,9 @@ CParallelTSHelper::CParallelTSHelper()
   mTiltDuringFit = 0.;
   mMagIndex = -1;
   mAreaMapMagInd = -1;
+  mAdjustingXform.xpx = 0;
+  mXformFromMag = -1;
+  mXformToMag = -1;
 }
 
 CParallelTSHelper::~CParallelTSHelper()
@@ -89,14 +92,14 @@ int CParallelTSHelper::ISToTargetsBusy()
     mNavHelper->GetRealigning() || mWinApp->mFocusManager->DoingFocus()) ? 1 : 0;
 }
 
-void CParallelTSHelper::ClearTargets(bool autofocusOrPreview)
+void CParallelTSHelper::ClearTargets(bool autofocus)
 {
   mStartIndex = 0;
   mAlignedToFirstISTarget = false;
   mInitialStateSaved = false;
   mISTargetPointIDs.clear();
   mSavedTargetIDs.clear();
-  if (autofocusOrPreview) {
+  if (autofocus) {
     mISTargetSSX.clear();
     mISTargetSSY.clear();
     mISTargetDefocus.clear();
@@ -107,10 +110,12 @@ void CParallelTSHelper::ClearTargets(bool autofocusOrPreview)
     mPrevMapShiftY.clear();
     mPreviewMapIDs.clear();
     mPrevMapSectNums.clear();
+    mPreRefineISX.clear();
+    mPreRefineISY.clear();
   }
 }
 
-//Only clear saved data, but keep target map IDs so that refining can be retried
+//Clear saved data, but keep target IDs and computed ISs so refining can be retried
 void CParallelTSHelper::ClearSavedTargets()
 {
   mStartIndex = 0;
@@ -121,15 +126,17 @@ void CParallelTSHelper::ClearSavedTargets()
   mPrevMapShiftY.clear();
   mPreviewMapIDs.clear();
   mPrevMapSectNums.clear();
+  mPreRefineISX.clear();
+  mPreRefineISY.clear();
 }
 
 // Begin procedure of image shifting to targets with given map IDs, and either getting the 
 // autofocusing or taking Previews at each target
-int CParallelTSHelper::StartShiftToTargets(IntVec targetMapIDs, bool autofocusOrPreview)
+int CParallelTSHelper::StartShiftToTargets(IntVec targetMapIDs, int actionType)
 {
   int err;
   CString mess;
-  
+
   err = AppendNewTargets(targetMapIDs, mess);
   if (err) {
     AfxMessageBox(mess, MB_EXCLAME);
@@ -139,6 +146,7 @@ int CParallelTSHelper::StartShiftToTargets(IntVec targetMapIDs, bool autofocusOr
   mISTargetIter = 0;
   mAtTarget = false;
   mLastActionFailed = false;
+  mActionAtTarget = actionType;
   mParTSopts = mNavHelper->GetParTSOptions();
 
   if (mWinApp->LowDoseMode()) {
@@ -148,14 +156,19 @@ int CParallelTSHelper::StartShiftToTargets(IntVec targetMapIDs, bool autofocusOr
     mMagIndex = mParTSopts->acqMagIndNonLD;
   }
 
-  if (autofocusOrPreview) {
-    mActionAtTarget = PARALLELTS_ACTION_AUTOFOCUS;
+  if (mActionAtTarget == PARALLELTS_ACTION_AUTOFOCUS) {
     mess = "FITTING PLANE";
-  } else {
-    mActionAtTarget = PARALLELTS_ACTION_PREVIEW;
+  } else if (mActionAtTarget == PARALLELTS_ACTION_PREVIEW) {
     mSavedMouseStage = mShiftManager->GetMouseMoveStage();
     mShiftManager->SetMouseMoveStage(false);
     mess = "REFINING TARGETS";
+  } else if (mActionAtTarget == PARALLELTS_ACTION_ADJUST) {
+    mSavedMouseStage = mShiftManager->GetMouseMoveStage();
+    mShiftManager->SetMouseMoveStage(false);
+    mess = "ADJUSTING IS";
+  } else {
+    AfxMessageBox("Invalid flag for Parallel Tilt Series action", MB_EXCLAME);
+    return -1;
   }
 
   mWinApp->UpdateBufferWindows();
@@ -177,7 +190,8 @@ void CParallelTSHelper::PauseParallelTSShift()
   mISTargetIter = -1;
   mDoingISToTargets = false;
 
-  if (mActionAtTarget == PARALLELTS_ACTION_PREVIEW) {
+  if (mActionAtTarget == PARALLELTS_ACTION_PREVIEW || 
+    mActionAtTarget == PARALLELTS_ACTION_ADJUST) {
     mParallelTSDlg->FinishRefineTargets(false);
   }
   mWinApp->SetStatusText(COMPLEX_PANE, "");
@@ -210,7 +224,8 @@ void CParallelTSHelper::StopParallelTSShift(bool error)
   mDoNextShift = false;
   mInitialStateSaved = false;
 
-  if (mActionAtTarget == PARALLELTS_ACTION_AUTOFOCUS) {
+  if (mActionAtTarget == PARALLELTS_ACTION_AUTOFOCUS || 
+    mActionAtTarget == PARALLELTS_ACTION_ADJUST) {
     numPoints = (int)mISTargetPointIDs.size();
     if (numPoints > 0) {
       item = mWinApp->mNavigator->FindItemWithMapID(
@@ -230,9 +245,12 @@ void CParallelTSHelper::StopParallelTSShift(bool error)
           mWinApp->mNavigator->m_bCollapseGroups != 0);
       }
     }
+  } 
+  if (mActionAtTarget == PARALLELTS_ACTION_AUTOFOCUS) {
     mParallelTSDlg->FinishFitPlane();
     ClearTargets(true);
-  } else if (mActionAtTarget == PARALLELTS_ACTION_PREVIEW) {
+  } else if (mActionAtTarget == PARALLELTS_ACTION_PREVIEW || 
+    mActionAtTarget == PARALLELTS_ACTION_ADJUST) {
     mShiftManager->SetMouseMoveStage(mSavedMouseStage);
     mParallelTSDlg->FinishRefineTargets(error);
     if (error)
@@ -368,6 +386,8 @@ void CParallelTSHelper::ISToTargetNextTask(int param)
     mess = "FITTING PLANE";
   } else if (mActionAtTarget == PARALLELTS_ACTION_PREVIEW) {
     mess = "REFINING TARGETS";
+  } else if (mActionAtTarget == PARALLELTS_ACTION_ADJUST) {
+    mess = "ADJUSTING IS";
   }
   mWinApp->SetStatusText(COMPLEX_PANE, mess);
 
@@ -398,18 +418,18 @@ void CParallelTSHelper::ISToTargetNextTask(int param)
   if (mAtTarget && mCurISTargetItem) {
 
     if (mActionAtTarget == PARALLELTS_ACTION_PREVIEW) {
-      imBufs->mImage->getShifts(shiftX, shiftY);
-      imBufs->mImage->getSize(sizeX, sizeY);
-      FOVchange = (1 - (sizeX - fabs(shiftX)) * (sizeY - fabs(shiftY)) / 
-        (float)(sizeX * sizeY));
 
-      if (FOVchange > FOVchangeThresh) {
-        mCamera->InitiateCapture(PREVIEW_CONSET);
-        mWinApp->AddIdleTask(TASK_IS_TO_PARALLELTS_TARGET, 0, 0);
-        return;
-      }
+      if (mParTSopts->extractVirtPrevs == 0) {
+        imBufs->mImage->getShifts(shiftX, shiftY);
+        imBufs->mImage->getSize(sizeX, sizeY);
+        FOVchange = (1 - (sizeX - fabs(shiftX)) * (sizeY - fabs(shiftY)) / 
+          (float)(sizeX * sizeY));
 
-      if (mParTSopts->extractVirtPrevs == 0){
+        if (FOVchange > FOVchangeThresh) {
+          mCamera->InitiateCapture(PREVIEW_CONSET);
+          mWinApp->AddIdleTask(TASK_IS_TO_PARALLELTS_TARGET, 0, 0);
+          return;
+        }
         if (SaveTargetMap(mess, mapSaved)) {
           AfxMessageBox(mess, MB_EXCLAME);
           StopParallelTSShift();
@@ -426,14 +446,14 @@ void CParallelTSHelper::ISToTargetNextTask(int param)
       }
     }
 
-    if (!mInitialStateSaved) {
-      SaveInitialState();
+    if (!mInitialStateSaved && SaveInitialState(mess)) {
+      AfxMessageBox(mess, MB_EXCLAME);
     }
  
     bool skipSave = mActionAtTarget == PARALLELTS_ACTION_AUTOFOCUS && mISTargetIter == 0;
 
-    if ((mSavedTargetIDs.size() == 0 && mActionAtTarget == PARALLELTS_ACTION_PREVIEW) 
-      || skipSave) {
+    if ((mSavedTargetIDs.size() == 0 && (mActionAtTarget == PARALLELTS_ACTION_PREVIEW
+      || mActionAtTarget == PARALLELTS_ACTION_ADJUST)) || skipSave) {
       mCenterStageX = mCurISTargetItem->mStageX;
       mCenterStageY = mCurISTargetItem->mStageY;
       mScope->GetImageShift(mCenterISX, mCenterISY);
@@ -455,8 +475,8 @@ void CParallelTSHelper::ISToTargetNextTask(int param)
       ClearTargets(true);
       return;
     }
-    if (!mInitialStateSaved) {
-      SaveInitialState();
+    if (!mInitialStateSaved && SaveInitialState(mess)) {
+      AfxMessageBox(mess, MB_EXCLAME);
     }
     mDoNextShift = true;
   }
@@ -478,7 +498,8 @@ void CParallelTSHelper::ISToTargetNextTask(int param)
 
         StopParallelTSShift();
         ClearTargets(true);
-      } else if (mActionAtTarget == PARALLELTS_ACTION_PREVIEW) {
+      } else if (mActionAtTarget == PARALLELTS_ACTION_PREVIEW || 
+        mActionAtTarget == PARALLELTS_ACTION_ADJUST) {
          PauseParallelTSShift();
       }
       return;
@@ -519,11 +540,14 @@ void CParallelTSHelper::ISToTargetNextTask(int param)
     if (mActionAtTarget == PARALLELTS_ACTION_AUTOFOCUS) {
       if (mISTargetIter)
         mWinApp->mFocusManager->AutoFocusStart(1, -2);
-    } else if (mActionAtTarget == PARALLELTS_ACTION_PREVIEW) {
+    } else if (mActionAtTarget == PARALLELTS_ACTION_PREVIEW ||
+      mActionAtTarget == PARALLELTS_ACTION_ADJUST) {
       mCamera->InitiateCapture(PREVIEW_CONSET);
 
       // Stop iterations to allow user to refine IS, unless they want to skip that
-      if (!(mParTSopts->flags & PTSFLAG_SKIP_REFINE))
+      if (!((mActionAtTarget == PARALLELTS_ACTION_PREVIEW ||
+        mActionAtTarget == PARALLELTS_ACTION_ADJUST) &&
+        mParTSopts->flags & PTSFLAG_SKIP_REFINE))
         return;
     }
   }
@@ -660,10 +684,9 @@ int CParallelTSHelper::SaveTargetMap(CString &err, bool &saved)
   return 0;
 }
 
-int CParallelTSHelper::SaveInitialState()
+int CParallelTSHelper::SaveInitialState(CString &err)
 {
   int area;
-  CString err;
   bool canAdjustIS = mShiftManager->GetFocusISCals()->GetSize() > 0 &&
     mShiftManager->GetFocusMagCals()->GetSize() > 0;
   double stageZ;
@@ -681,13 +704,14 @@ int CParallelTSHelper::SaveInitialState()
   } else {
     if (mScope->GetMagIndex() != mMagIndex &&
       !mScope->SetMagIndex(mMagIndex)) {
-      //TODO error
+      err.Format("Failed to switch to the desired magnification");
       return 1;
     }
   }
 
   mScope->GetStagePosition(mBaseStageX, mBaseStageY, stageZ);
-  if (mActionAtTarget == PARALLELTS_ACTION_PREVIEW &&
+  if ((mActionAtTarget == PARALLELTS_ACTION_PREVIEW
+    || mActionAtTarget == PARALLELTS_ACTION_ADJUST) &&
     !canAdjustIS && ((imBufs->mLowDoseArea && (imBufs->mConSetUsed == VIEW_CONSET ||
     imBufs->mConSetUsed == SEARCH_CONSET) && imBufs->mViewDefocus < focusLim) ||
     (mWinApp->LowDoseMode() && IS_AREA_VIEW_OR_SEARCH(area) &&
@@ -752,12 +776,16 @@ int CParallelTSHelper::SaveTarget(CString &err)
   }
   
   // If taking Previews, save the image shift at the target
-  if (mActionAtTarget == PARALLELTS_ACTION_PREVIEW) {
+  if (mActionAtTarget == PARALLELTS_ACTION_PREVIEW || 
+    mActionAtTarget == PARALLELTS_ACTION_ADJUST) {
 
     // Get the IS and save it
     mScope->GetImageShift(ISX, ISY);
     delX = ISX - mLastISX;
     delY = ISY - mLastISY;
+
+    mPreRefineISX.push_back(mLastISX);
+    mPreRefineISY.push_back(mLastISY);
     mLastISX = ISX;
     mLastISY = ISY;
 
@@ -774,9 +802,11 @@ int CParallelTSHelper::SaveTarget(CString &err)
     mISTargetISX.push_back(ISX);
     mISTargetISY.push_back(ISY);
     mSavedTargetIDs.push_back(mCurISTargetItem->mMapID);
+    
 
     //If center point, update stage position
-    if (mSavedTargetIDs.size() == 1 && (delX != 0 || delY != 0)) {
+    if (mSavedTargetIDs.size() == 1 && 
+      (B3DABS(delX) > ISlimit || B3DABS(delY) > ISlimit)) {
 
       //Convert IS change to stage shift
       mat = MatMul(mShiftManager->IStoCamera(mMagIndex), 
@@ -962,7 +992,7 @@ int CParallelTSHelper::AssessPtsToFitPlane(FloatVec &ptsX, FloatVec &ptsY, Float
   float dist, cenX = 0.f, cenY = 0.f;
   float ratio, longAxis, distToCen;
 
-  float minSpanOfPlanePts = 1.f; //TODO get this from parameters or something
+  float minSpanOfPlanePts = 1.f; //TODO get this from parameters or something?
   float ISlimit = mShiftManager->GetRegularShiftLimit();
 
   numPoints = (int)ptsZ.size();
@@ -1097,7 +1127,7 @@ int CParallelTSHelper::AssessPtsToFitPlane(IntVec indexVec, IntVec &sortedIndexV
   MapItemArray *itemArr = mWinApp->mNavigator->GetItemArray();
   float ratio, longAxis;
 
-  float minSpanOfPlanePts = 1.f; //TODO get this from parameters or something
+  float minSpanOfPlanePts = 1.f; //TODO get this from parameters or something?
   float ISlimit = mShiftManager->GetRegularShiftLimit();
 
   numPoints = (int)indexVec.size();
@@ -1411,20 +1441,26 @@ void CParallelTSHelper::UpdateTSParams()
 bool CParallelTSHelper::CanAdjustISVectors(int fromMag, bool multiShot, CString &mess)
 {
   int camera = mWinApp->GetCurrentCamera();
-  MultiShotParams *params = mNavHelper->GetMultiShotParams();
-
-  if (!params->xformFromMag || !params->adjustingXform.xpx) {
-    mess = "No adjustment transform available";
-    return false;
-  }
+  
 
   if (multiShot) {
+    MultiShotParams *params = mNavHelper->GetMultiShotParams();
+
+    if (!params->xformFromMag || !params->adjustingXform.xpx) {
+      mess = "No adjusting transform available";
+      return false;
+    }
+
     return mNavHelper->AdjustMultiShotVectors(params,
       B3DCHOICE(params->useCustomHoles, 1, params->doHexArray ? -1 : 0), true, mess) == 0;
   } else {
-    mess.Format("Adjustment transform available from %dx to %dx", MagForCamera(camera,
-      params->xformFromMag), MagForCamera(camera, params->xformToMag));
-    return params->xformFromMag == fromMag;
+    if (mXformFromMag < 0 || !mAdjustingXform.xpx) {
+      mess = "No adjusting transform available";
+      return false;
+    }
+    mess.Format("Adjusting transform available from %dx to %dx", MagForCamera(camera,
+      mXformFromMag), MagForCamera(camera, mXformToMag));
+    return mXformFromMag == fromMag;
   }
 }
 
@@ -1439,15 +1475,15 @@ int CParallelTSHelper::GetCenterPtID()
 // Just compute the image shift vectors without any refinement
 int CParallelTSHelper::GetISVectors(int groupID, CString &err)
 {
-  int ind, numPoints, numAcq;
+  int ind, numPoints, numAcq, area;
   CMapDrawItem *item;
   MapItemArray *itemArr = mWinApp->mNavigator->GetItemArray();
   float cenStageX, cenStageY;
-  float delX, delY;
+  double delX, delY;
   double ISX, ISY;
   CString label, mess;
   IntVec indexVec;
-  ScaleMat st2is;
+  ScaleMat st2is, focMat;
   bool canAdjustIS = mShiftManager->GetFocusISCals()->GetSize() > 0 &&
     mShiftManager->GetFocusMagCals()->GetSize() > 0;
 
@@ -1457,6 +1493,14 @@ int CParallelTSHelper::GetISVectors(int groupID, CString &err)
     err.Format("At least two targets are required to create a parallel tilt series item");
     return -1;
   }
+
+  CMapDrawItem *mapItem = mWinApp->mNavigator->FindItemWithMapID(mAreaMapID);
+  if (!mapItem) {
+    err.Format("The map on which items were drawn no longer exists");
+    return -2;
+  }
+  area = mapItem->mMapLowDoseConSet;
+
 
   st2is = MatMul(mShiftManager->StageToCamera(mWinApp->GetCurrentCamera(), mAreaMapMagInd), 
     mShiftManager->CameraToIS(mAreaMapMagInd));
@@ -1477,10 +1521,10 @@ int CParallelTSHelper::GetISVectors(int groupID, CString &err)
       // Get IS from center point to the next target
       mShiftManager->ApplyScaleMatrix(st2is, item->mStageX - cenStageX,
         item->mStageY - cenStageY, ISX, ISY);
-
-      //TODO TransferGeneralIS??? I need this also in the regular routine I think???
-      /*mWinApp->mShiftManager->TransferGeneralIS(mAreaMapMagInd, delX, delY,
-        magInd, ISX, ISY, mWinApp->GetCurrentCamera());*/
+      mShiftManager->TransferGeneralIS(mAreaMapMagInd, ISX, ISY, mMagIndex, delX, delY);
+      focMat = CMultiShotDlg::ISfocusAdjustmentForBufOrArea(NULL, area);
+      if (focMat.xpx)
+        ApplyScaleMatrix(MatInv(focMat), delX, delY, delX, delY);
 
       if (mParTSopts->applyAdjustingXform) {
         if (CanAdjustISVectors(mAreaMapMagInd, false, mess)) {
@@ -1488,11 +1532,9 @@ int CParallelTSHelper::GetISVectors(int groupID, CString &err)
           SEMTrace('N', "adj xform xpx=%.4f, xpy=%.4f, ypx=%.4f, ypy=%.4f",
             params->adjustingXform.xpx, params->adjustingXform.xpy,
             params->adjustingXform.ypx, params->adjustingXform.ypy);
-          ApplyScaleMatrix(params->adjustingXform, ISX, ISY, delX, delY);
+          ApplyScaleMatrix(params->adjustingXform, delX, delY, ISX, ISY);
           SEMTrace('N', "IS transformed from (%.4f, %.4f) to (%.4f, %.4f)",
-            ISX, ISY, delX, delY);
-          ISX = delX;
-          ISY = delY;
+            delX, delY, ISX, ISY);
         }
         else {
           SEMTrace('N', "Adjusting transform not applied: %s", mess);
@@ -1512,4 +1554,61 @@ int CParallelTSHelper::GetISVectors(int groupID, CString &err)
   }
 
   return 0;
+}
+
+int CParallelTSHelper::CreateAdjustingTransform(CString &err)
+{
+  int ind, jnd;
+  IntVec navInd, indices;
+  int numPoints;
+  double ISXcen, ISYcen;
+  std::vector<double> fromISX, fromISY, toISX, toISY;
+  ScaleMat adjustingXform;
+
+  //Handle custom targets places in arbitrary positions
+  numPoints = GetSavedTargetsInNav(&navInd, &indices);
+  if (numPoints < MIN_NUM_POINTS_FOR_PTSADJUST) {
+    err.Format("There must be at least %d points to create an adjusting transform.", 
+      MIN_NUM_POINTS_FOR_PTSADJUST);
+    return 1;
+  }
+
+  ISXcen = mISTargetISX[indices[0]];
+  ISYcen = mISTargetISY[indices[0]];
+
+  for (ind = 1; ind < numPoints; ind++) {
+    jnd = indices[ind];
+    fromISX.push_back(mPreRefineISX[jnd] - ISXcen);
+    fromISY.push_back(mPreRefineISY[jnd] - ISYcen);
+    toISX.push_back(mISTargetISX[jnd] - ISXcen);
+    toISY.push_back(mISTargetISY[jnd] - ISYcen);
+  }
+
+  adjustingXform = mShiftManager->GetTransformFromISAdjustments(fromISX, fromISY, toISX, 
+    toISY);
+
+  if (adjustingXform.xpx == 0) {
+    err.Format("A transform could not be determined from the given IS adjustments");
+    return 2;
+  }
+
+  mAdjustingXform = adjustingXform;
+  mXformFromMag = mAreaMapMagInd;
+  mXformToMag = mMagIndex;
+
+  return 0;
+}
+
+void CParallelTSHelper::DeleteTargetsFromNav()
+{
+  int numPoints, ind, jnd;
+  IntVec navInd, indices;
+  MapItemArray *itemArr = mWinApp->mNavigator->GetItemArray();
+
+  numPoints = GetSavedTargetsInNav(&navInd, &indices);
+  mWinApp->mNavigator->m_bCollapseGroups = false;
+  for (ind = numPoints - 1; ind >= 0; ind--) {
+    jnd = navInd[ind];
+    mWinApp->mNavigator->ExternalDeleteItem(itemArr->GetAt(jnd), jnd);
+  }
 }
