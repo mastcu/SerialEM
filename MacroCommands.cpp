@@ -8972,6 +8972,13 @@ int CMacCmd::ListAllCalibrations(void)
   return 0;
 }
 
+// ListAdjustingTransforms
+int CMacCmd::ListAdjustingTransforms()
+{
+  mNavHelper->ListAdjustingXforms();
+  return 0;
+}
+
 // ListISVectorsToGraph
 int CMacCmd::ListISVectorsToGraph(void)
 {
@@ -12469,11 +12476,10 @@ int CMacCmd::SetItemImShiftTargets()
 // AdjustImShiftTargets
 int CMacCmd::AdjustImShiftTargets()
 {
-  MultiShotParams *params = mNavHelper->GetMultiShotParams();
   CMapDrawItem *navItem = CurrentOrIndexedNavItem(mItemInt[1], mStrLine);
   if (!navItem)
     return 1;
-  if (mNavHelper->TransformImShiftTargets(params, navItem, mStrCopy))
+  if (mNavHelper->TransformImShiftTargets(navItem, mStrCopy))
     ABORT_LINE(mStrCopy + " for line:\n\n");
   if (!mItemInt[2])
     mWinApp->mMainView->DrawImage();

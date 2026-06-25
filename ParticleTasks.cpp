@@ -1169,6 +1169,7 @@ int CParticleTasks::GetHolePositions(FloatVec &delISX, FloatVec &delISY, IntVec 
   float holeAngle, specX, specY, cosRatio;
   std::vector<double> fromISX, fromISY;
   IntVec holeOrder;
+  AdjustXformData *xformData;
   ScaleMat IStoSpec, specToIS;
   int hexInd = ((mMSParams->doHexArray && !mMSParams->useCustomHoles && !isTargets)  ||
     (numXholes > 0 && numYholes == -1)) ? 1 : 0;
@@ -1327,10 +1328,10 @@ int CParticleTasks::GetHolePositions(FloatVec &delISX, FloatVec &delISY, IntVec 
       }
     }
   }
-
-  mLastHolesWereAdjusted = origMag > 0 && mMSParams->adjustingXform.xpx != 0. &&
-    magInd == fromMag && origMag == mMSParams->xformFromMag &&
-    fromMag == mMSParams->xformToMag;
+  xformData = mNavHelper->GetNearestAdjustingXform(B3DABS(origMag));
+  mLastHolesWereAdjusted = origMag > 0 && xformData &&
+    magInd == fromMag && origMag == xformData->xformFromMag &&
+    fromMag == xformData->xformToMag;
 
   // Transfer the image shifts and add to return vectors
   for (ind = 0; ind < numHoles; ind++) {

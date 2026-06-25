@@ -2993,9 +2993,58 @@
         <TR VALIGN="top">
           <TD>DeltaZtoDefocusFactor</TD>
           <TD>Factor needed to adjust for a discrepancy between the change in defocus
-            reported by the microscope and the actual defocus change. Determined by
-            calibrating autofocus, moving in Z and measuring defocus; the factor is (defocus
-            change)/(change in Z height)</TD>
+            reported by the microscope and the actual defocus change.  It is used in all situations
+            where a change in focus needs to be related to a change in Z height.  It is best determined by
+            measuring defocus from a CTF for several defocus values at a magnification where
+            Ctffind gives good results, such as by this script:
+            <pre>
+SetUserSetting TargetDefocus -2
+AutoFocus 
+ChangeFocus 5
+ChangeFocus -5
+R
+Ctffind A -1 -5
+lastVal = $repVal1
+facSum = 0.
+delta = -3
+Loop 3 ind
+   ChangeFocus $delta
+   low = $delta * $ind - 1
+   high = $delta  * $ind - 5
+   R
+   Ctffind A $low $high
+   newVal = $repVal1
+   fac = 3 / ($lastVal - $newVal)
+   facSum = $facSum + $fac
+   echo Factor from differences is $fac
+   lastVal = $newVal
+EndLoop 
+EchoEval Mean factor is round $facSum / 3 3
+</pre>
+            where the first value might be used instead of the mean if there is a clear trend.  If CTF-based
+            values are not available or do not seem reliable, another method would be to use Z stage
+            movement.  Make that stage eucentric and autofocus, then try this script:
+            <pre>
+delz = 10.
+MoveStage 0 0 5
+MoveStage 0 0 -5
+AutoFocus 
+ChangeFocus -1
+loop 3 
+Autofocus
+ endLoop
+ReportDefocus first
+MoveStage 0 0 -$delz
+ChangeFocus $delz - 3
+Loop 3 
+Autofocus
+ EndLoop
+ReportDefocus second
+ratio = ($second - $first ) / $delz
+echoEval Factor round $ratio 3
+MoveStage 0 0 $delz
+            </pre>
+          </TD>
         </TR>
         <TR VALIGN="top">
           <TD>StandardLowMagFocus</TD>

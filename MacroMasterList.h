@@ -876,7 +876,7 @@ MAC_SAME_NAME_ARG(ReportDoseFracParams, 1, 4, REPORTDOSEFRACPARAMS, S)
 MAC_SAME_NAME_ARG(ReportMiscCameraParams, 1, 4, REPORTMISCCAMERAPARAMS, S)
 MAC_SAME_NAME_ARG(GetControlPanelState, 1, 4, GETCONTROLPANELSTATE, I)
 MAC_SAME_FUNC_ARG(SetControlPanelState, 2, 4, GetControlPanelState, SETCONTROLPANELSTATE, II)
-
+MAC_SAME_NAME_NOARG(ListAdjustingTransforms, 0, 4, LISTADJUSTINGTRANSFORMS)
 
 // new Python-only commands need to be added to pythonOnlyCmds in ::CMacroProcessor
 // New Not from Python items omit _ARG or _NOARG

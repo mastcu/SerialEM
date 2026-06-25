@@ -359,6 +359,8 @@ BOOL CNavAcquireDlg::OnInitDialog()
   int skipAdjust = mWinApp->mNavHelper->GetSkipAstigAdjustment();
   ComaVsISCalib *comaVsIS = mWinApp->mAutoTuning->GetComaVsIScal();
   MultiShotParams *msParams = mWinApp->mNavHelper->GetMultiShotParams();
+  CArray<AdjustXformData *, AdjustXformData *> *adjustXforms = 
+    mWinApp->mNavHelper->GetAdjustXformArray();
   int navState = mWinApp->mCameraMacroTools.GetNavigatorState();
   int ind, groupIDsToBold[] = {IDC_STAT_PRIMARY_GROUP, IDC_STAT_GEN_OPTIONS,
     IDC_STAT_TASK_OPTIONS, IDC_STAT_ACTION_OPTIONS, IDC_STAT_ACTION_GROUP,
@@ -487,7 +489,7 @@ BOOL CNavAcquireDlg::OnInitDialog()
   EnableDlgItem(IDC_NA_RETRACT_CAMS, mWinApp->GetAnyRetractableCams());
   EnableDlgItem(IDC_NA_RUN_SCRIPT_AT_END, navState != NAV_PAUSED);
 
-  if (!msParams->xformFromMag || !msParams->adjustingXform.xpx)
+  if (!adjustXforms->GetSize())
     ReplaceWindowText(&m_butUseMapHoles, ", with adjustment", " (no adjustment)");
 
   // Get params in and set everything right

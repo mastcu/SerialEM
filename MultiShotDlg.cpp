@@ -583,13 +583,17 @@ void CMultiShotDlg::OnButStepAdjust()
 void CMultiShotDlg::OnButUndoAuto()
 {
   int hexInd = mActiveParams->canUndoRectOrHex - 1, dir;
+  AdjustXformData *xformData = mWinApp->mNavHelper->GetNearestAdjustingXform(
+    mActiveParams->prevXformFromMag);
   if (hexInd < 0)
     return;
   mActiveParams->holeMagIndex[hexInd] = mActiveParams->prevHoleMag;
   mActiveParams->origMagOfArray[hexInd] = mActiveParams->prevOrigMag;
-  mActiveParams->xformFromMag = mActiveParams->prevXformFromMag;
-  mActiveParams->xformToMag = mActiveParams->prevXformToMag;
-  mActiveParams->adjustingXform = mActiveParams->prevAdjXform;
+  if (xformData && xformData->xformFromMag == mActiveParams->prevXformFromMag) {
+    xformData->xformToMag = mActiveParams->prevXformToMag;
+    xformData->adjustingXform = mActiveParams->prevAdjXform;
+    xformData->xformMinuteTime = mActiveParams->prevMinuteTime;
+  }
   for (dir = 0; dir < (m_bHexGrid ? 3 : 2); dir++) {
     mActiveParams->holeISXspacing[dir] = mActiveParams->prevXspacing[dir];
     mActiveParams->holeISYspacing[dir] = mActiveParams->prevYspacing[dir];
@@ -882,6 +886,7 @@ int CMultiShotDlg::DoSaveIS(CString &str)
   LowDoseParams *ldp = mWinApp->GetLowDoseParams();
   mActiveParams = mWinApp->mNavHelper->GetMultiShotParams();
   MultiShotParams *params = mActiveParams;
+  AdjustXformData xformData, *oldXform;
   bool canAdjustIS = mShiftManager->GetFocusISCals()->GetSize() > 0 &&
     mShiftManager->GetFocusMagCals()->GetSize() > 0;
   int dir, area, ind, origMag, numSteps[2], size = (int)mSavedISX.size() + 1;
@@ -945,24 +950,26 @@ int CMultiShotDlg::DoSaveIS(CString &str)
 
     // Finishing up for regular or hex
     if (size == (m_bHexGrid ? 6 : 4)) {
+      oldXform = mWinApp->mNavHelper->GetNearestAdjustingXform(
+        B3DABS(params->origMagOfArray[hexInd]));
 
       // If this is an adjustment from a defined original mag, or the holes have already
       // been adjusted and mags match current transform, get the inverse of original
       // vector matrix for refining it
       if (mSteppingAdjusting && (params->origMagOfArray[hexInd] < 0 ||
-        (params->xformFromMag > 0 && ((magInd == params->xformToMag &&
-          params->origMagOfArray[hexInd] == params->xformFromMag)) ||
-          (params->xformToMag == params->holeMagIndex[hexInd])))) {
+        (oldXform && ((magInd == oldXform->xformToMag &&
+          params->origMagOfArray[hexInd] == oldXform->xformFromMag)) ||
+          (oldXform->xformToMag == params->holeMagIndex[hexInd])))) {
 
         // This is the point at which we can save the previous state for undoability
         if (params->doAutoAdjustment) {
           params->canUndoRectOrHex = m_bHexGrid ? 2 : 1;
           params->prevHoleMag = params->holeMagIndex[hexInd];
           params->prevOrigMag = params->origMagOfArray[hexInd];
-          params->prevXformFromMag = params->xformFromMag;
-          params->prevXformToMag = params->xformToMag;
-          params->prevAdjXform = params->adjustingXform;
-          params->prevMinuteTime = params->xformMinuteTime;
+          params->prevXformFromMag = oldXform->xformFromMag;
+          params->prevXformToMag = oldXform->xformToMag;
+          params->prevAdjXform = oldXform->adjustingXform;
+          params->prevMinuteTime = oldXform->xformMinuteTime;
           for (dir = 0; dir < (m_bHexGrid ? 3 : 2); dir++) {
             params->prevXspacing[dir] = params->holeISXspacing[dir];
             params->prevYspacing[dir] = params->holeISYspacing[dir];
@@ -976,7 +983,7 @@ int CMultiShotDlg::DoSaveIS(CString &str)
         oldVecInv.ypy = (float)ySpacing[1];
         oldVecInv = MatInv(oldVecInv);
         if (params->origMagOfArray[hexInd] > 0)
-          oldVecInv = MatMul(params->adjustingXform, oldVecInv);
+          oldVecInv = MatMul(oldXform->adjustingXform, oldVecInv);
       }
 
       // Compute new vectors
@@ -1005,10 +1012,11 @@ int CMultiShotDlg::DoSaveIS(CString &str)
         newVec.xpy = (float)xSpacing[1];
         newVec.ypx = (float)ySpacing[0];
         newVec.ypy = (float)ySpacing[1];
-        params->adjustingXform = MatMul(oldVecInv, newVec);
-        params->xformToMag = magInd;
-        params->xformFromMag = B3DABS(params->origMagOfArray[hexInd]);
-        params->xformMinuteTime = mWinApp->MinuteTimeStamp();
+        xformData.adjustingXform = MatMul(oldVecInv, newVec);
+        xformData.xformToMag = magInd;
+        xformData.xformFromMag = B3DABS(params->origMagOfArray[hexInd]);
+        xformData.xformMinuteTime = mWinApp->MinuteTimeStamp();
+        mWinApp->mNavHelper->AddAdjustingXform(xformData);
       }
       params->holeMagIndex[hexInd] = magInd;
       params->tiltOfHoleArray[hexInd] = (float)mWinApp->mScope->GetTiltAngle();

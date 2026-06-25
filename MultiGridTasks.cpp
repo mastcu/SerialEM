@@ -10,6 +10,7 @@
 #include "SerialEMDoc.h"
 #include "SerialEMView.h"
 #include "MultiGridTasks.h"
+#include "MGSettingsManagerDlg.h"
 #include "ComplexTasks.h"
 #include "EMscope.h"
 #include "StateDlg.h"
@@ -121,6 +122,7 @@ CMultiGridTasks::CMultiGridTasks()
   mSavedAutoCont = NULL;
   mSavedGeneralParams = NULL;
   mSavedFocusPos = NULL;
+  mSavedAdjustXforms = NULL;
   mCamNumForFrameDir = -1;
   mAdocChanged = false;
   mSkipGridRealign = false;
@@ -634,6 +636,8 @@ void CMultiGridTasks::RestoreImposedParams()
   RESTORE_PARAMS(AutoCont, AutoCont);
   RESTORE_PARAMS(General, GeneralParams);
   RESTORE_PARAMS(FocusPos, FocusPos);
+  RestoreSavedAdjustXforms();
+  ClearSavedAdjustXforms();
 
   // Restore camera settings if saved: this can happen multiple times
   if (mCamNumForFrameDir >= 0) {
@@ -2360,6 +2364,7 @@ int CMultiGridTasks::StartGridRuns(int LMneedsLD, int MMMneedsLD, int finalNeeds
   NavAcqAction *testActions;
   MultiShotParams testMSparams;
   MultiShotParams *curMSparams;
+  AdjustXformData testXform, *curXform;
   MGridMultiShotParams mgMSparam;
   ZbyGParams *zbygParam;
   AutoContourParams *acParam;
@@ -2408,6 +2413,8 @@ int CMultiGridTasks::StartGridRuns(int LMneedsLD, int MMMneedsLD, int finalNeeds
     mMGdlg->UpdateEnables();
     mMGdlg->UpdateCurrentDir();
   }
+  if (mNavHelper->mMGSettingsDlg)
+    mNavHelper->mMGSettingsDlg->CloseWindow();
 
   // Lock in names for new ones in refreshed list
   for (ind = 0; ind < mCartInfo->GetSize(); ind++) {
@@ -2679,7 +2686,7 @@ int CMultiGridTasks::StartGridRuns(int LMneedsLD, int MMMneedsLD, int finalNeeds
         testAcqParams->useMapHoleVectors = mParams.msVectorSource == 0;
       if (jcd.multiShotParamIndex >= 0) {
         MGridMultiShotParams mgParam = mMGMShotParamArray.GetAt(jcd.multiShotParamIndex);
-        GridToMultiShotSettings(mgParam, &testMSparams);
+        GridToMultiShotSettings(mgParam, &testMSparams, &testXform);
       }
       str.Format("FOR GRID # %d:\r\n", jcd.id);
       err = mNavHelper->AssessAcquireForParams(testAcqParams, testActions,
@@ -2898,7 +2905,7 @@ int CMultiGridTasks::StartGridRuns(int LMneedsLD, int MMMneedsLD, int finalNeeds
         grid = gridsDoingMulShot[ind];
         jcd = mCartInfo->GetAt(mJcdIndsToRun[grid]);
         mgMSparam = mMGMShotParamArray.GetAt(jcd.multiShotParamIndex);
-        GridToMultiShotSettings(mgMSparam, &testMSparams);
+        GridToMultiShotSettings(mgMSparam, &testMSparams, &testXform);
         mNavHelper->GetMultishotDistAndAngles(&testMSparams, testMSparams.doHexArray,
           dists, avgDist, angle);
         msDists.push_back((float)avgDist);
@@ -2908,19 +2915,20 @@ int CMultiGridTasks::StartGridRuns(int LMneedsLD, int MMMneedsLD, int finalNeeds
         magInd = (int)mgMSparam.values[MS_origMagOfArray];
         if (magInd > 0) {
           numXformed++;
-          if (testMSparams.xformFromMag == magInd)
+          if (testXform.xformFromMag == magInd)
             backXformable++;
         } else {
-          if (testMSparams.xformFromMag == -magInd)
+          if (testXform.xformFromMag == -magInd)
             paramXformable++;
         }
-        if (curMSparams->xformFromMag == B3DABS(magInd))
+        curXform = mNavHelper->GetNearestAdjustingXform(B3DABS(magInd));
+        if (curXform->xformFromMag == B3DABS(magInd))
           curSetXformable++;
         if (!ind) {
-          minStamp = maxStamp = testMSparams.xformMinuteTime;
+          minStamp = maxStamp = testXform.xformMinuteTime;
         } else {
-          ACCUM_MIN(minStamp, testMSparams.xformMinuteTime);
-          ACCUM_MAX(maxStamp, testMSparams.xformMinuteTime);
+          ACCUM_MIN(minStamp, testXform.xformMinuteTime);
+          ACCUM_MAX(maxStamp, testXform.xformMinuteTime);
         }
       }
 
@@ -2946,8 +2954,8 @@ int CMultiGridTasks::StartGridRuns(int LMneedsLD, int MMMneedsLD, int finalNeeds
       backXfStamp = -2;
       subXfStamp = -2;
       if (curSetXformable &&
-        ((minStamp == maxStamp && minStamp != curMSparams->xformMinuteTime) ||
-        (minStamp != maxStamp && maxStamp == curMSparams->xformMinuteTime))) {
+        ((minStamp == maxStamp && minStamp != curXform->xformMinuteTime) ||
+        (minStamp != maxStamp && maxStamp == curXform->xformMinuteTime))) {
 
         // All the same and a new one was done, or the current doesn't match the earliest
         str = "You have made a new refining transform for vectors since the";
@@ -2978,7 +2986,7 @@ int CMultiGridTasks::StartGridRuns(int LMneedsLD, int MMMneedsLD, int finalNeeds
           backXfStamp = minStamp;
         }
 
-      } else if (curSetXformable && minStamp != curMSparams->xformMinuteTime) {
+      } else if (curSetXformable && minStamp != curXform->xformMinuteTime) {
 
         // Otherwise, multiple stored one and a new current one!
         str = "You have made a new refining transform for vectors since some"
@@ -3006,31 +3014,31 @@ int CMultiGridTasks::StartGridRuns(int LMneedsLD, int MMMneedsLD, int finalNeeds
         grid = gridsDoingMulShot[ind];
         jcd = mCartInfo->GetAt(mJcdIndsToRun[grid]);
         mgMSparam = mMGMShotParamArray.GetAt(jcd.multiShotParamIndex);
-        GridToMultiShotSettings(mgMSparam, &testMSparams);
+        GridToMultiShotSettings(mgMSparam, &testMSparams, &testXform);
         magInd = (int)mgMSparam.values[MS_origMagOfArray];
 
         // Backtransform if appropriate
-        if ((backXfStamp == -1 || backXfStamp == testMSparams.xformMinuteTime) &&
-          magInd > 0 && magInd == testMSparams.xformFromMag) {
-          TransformStoredVectors(mgMSparam, MatInv(testMSparams.adjustingXform));
+        if ((backXfStamp == -1 || backXfStamp == testXform.xformMinuteTime) &&
+          magInd > 0 && magInd == testXform.xformFromMag) {
+          TransformStoredVectors(mgMSparam, MatInv(testXform.adjustingXform));
           magInd = -magInd;
           mgMSparam.values[MS_origMagOfArray] = (float)magInd;
         }
 
         // Substitute current transform if appropriate
-        if ((subXfStamp == -1 || subXfStamp == testMSparams.xformMinuteTime) && magInd < 0
-          && curMSparams->xformFromMag == -magInd) {
-          testMSparams.adjustingXform = curMSparams->adjustingXform;
-          mgMSparam.values[MS_xformXpx] = curMSparams->adjustingXform.xpx;
-          mgMSparam.values[MS_xformXpy] = curMSparams->adjustingXform.xpy;
-          mgMSparam.values[MS_xformYpx] = curMSparams->adjustingXform.ypx;
-          mgMSparam.values[MS_xformYpy] = curMSparams->adjustingXform.ypy;
-          mgMSparam.values[MS_xformMinuteTime] = (float)curMSparams->xformMinuteTime;
+        if ((subXfStamp == -1 || subXfStamp == testXform.xformMinuteTime) && magInd < 0
+          && curXform->xformFromMag == -magInd) {
+          testXform.adjustingXform = curXform->adjustingXform;
+          mgMSparam.values[MS_xformXpx] = curXform->adjustingXform.xpx;
+          mgMSparam.values[MS_xformXpy] = curXform->adjustingXform.xpy;
+          mgMSparam.values[MS_xformYpx] = curXform->adjustingXform.ypx;
+          mgMSparam.values[MS_xformYpy] = curXform->adjustingXform.ypy;
+          mgMSparam.values[MS_xformMinuteTime] = (float)curXform->xformMinuteTime;
         }
 
         // Transform unconditionally now
-        if (magInd < 0 && -magInd == testMSparams.xformFromMag) {
-          TransformStoredVectors(mgMSparam, testMSparams.adjustingXform);
+        if (magInd < 0 && -magInd == testXform.xformFromMag) {
+          TransformStoredVectors(mgMSparam, testXform.adjustingXform);
           mgMSparam.values[MS_origMagOfArray] = -(float)magInd;
           PrintfToLog("Applied adjusting transform to IS vectors in multiple record"
             " settings for grid %d", jcd.id);
@@ -4169,6 +4177,7 @@ void CMultiGridTasks::DoNextSequenceAction(int resume)
         mSavedMultiShot = new MGridMultiShotParams;
         MultiShotToGridSettings(*mSavedMultiShot);
       }
+      SaveAdjustXformsIfNeeded();
       msParam = mMGMShotParamArray.GetAt(jcd.multiShotParamIndex);
       GridToMultiShotSettings(msParam);
       if (mParams.msVectorSource)
@@ -4977,8 +4986,9 @@ void CMultiGridTasks::CopyAutoContGroups(int which)
  */
 #define COPY_MEMBER(mem) msParam->mem = B3DNINT(mgParam.values[MS_##mem]);
 void CMultiGridTasks::GridToMultiShotSettings(MGridMultiShotParams &mgParam,
-  MultiShotParams *msParam)
+  MultiShotParams *msParam, AdjustXformData *outXform)
 {
+  AdjustXformData xformData, *curXform;
   msParam->numShots[0] = B3DNINT(mgParam.values[MS_numShots0]);
   msParam->numShots[1] = B3DNINT(mgParam.values[MS_numShots1]);
   msParam->numHoles[0] = B3DNINT(mgParam.values[MS_numHoles0]);
@@ -5010,15 +5020,34 @@ void CMultiGridTasks::GridToMultiShotSettings(MGridMultiShotParams &mgParam,
     msParam->holeISXspacing[1] = mgParam.values[MS_ISXspacing1];
     msParam->holeISYspacing[1] = mgParam.values[MS_ISYspacing1];
   }
-  msParam->xformFromMag = B3DNINT(mgParam.values[MS_xformFromMag]);
-  msParam->xformToMag = B3DNINT(mgParam.values[MS_xformToMag]);
-  msParam->adjustingXform.xpx = mgParam.values[MS_xformXpx];
-  msParam->adjustingXform.xpy = mgParam.values[MS_xformXpy];
-  msParam->adjustingXform.ypx = mgParam.values[MS_xformYpx];
-  msParam->adjustingXform.ypy = mgParam.values[MS_xformYpy];
-  msParam->xformMinuteTime = B3DNINT(mgParam.values[MS_xformMinuteTime]);
+
+  // Copy these items to the xform structure
+  xformData.xformFromMag = B3DNINT(mgParam.values[MS_xformFromMag]);
+  xformData.xformToMag = B3DNINT(mgParam.values[MS_xformToMag]);
+  xformData.adjustingXform.xpx = mgParam.values[MS_xformXpx];
+  xformData.adjustingXform.xpy = mgParam.values[MS_xformXpy];
+  xformData.adjustingXform.ypx = mgParam.values[MS_xformYpx];
+  xformData.adjustingXform.ypy = mgParam.values[MS_xformYpy];
+  xformData.xformMinuteTime = B3DNINT(mgParam.values[MS_xformMinuteTime]);
+
+  // If it is a good transform, return it or add to array (most likely replacing one)
+  if (xformData.xformFromMag) {
+    if (outXform)
+      *outXform = xformData;
+    else
+      mNavHelper->AddAdjustingXform(xformData);
+  } else if (outXform) {
+
+    // Otherwise try to feed back a current transform, or the unset one with 0's
+    curXform = mNavHelper->GetNearestAdjustingXform(
+      B3DABS(msParam->origMagOfArray[msParam->doHexArray ? 1 : 0]));
+    *outXform = curXform ? *curXform : xformData;
+  }
   if (mNavHelper->mMultiShotDlg)
     mNavHelper->mMultiShotDlg->UpdateSettings();
+  MultiShotParams *msMas = mNavHelper->GetMultiShotParams();
+  AdjustXformData *xfd = mNavHelper->GetNearestAdjustingXform(
+    B3DABS(msMas->origMagOfArray[msMas->doHexArray ? 1 : 0]));
 }
 #undef COPY_MEMBER
 
@@ -5035,6 +5064,8 @@ void CMultiGridTasks::GridToMultiShotSettings(MGridMultiShotParams &mgParam)
 void CMultiGridTasks::MultiShotToGridSettings(MGridMultiShotParams &mgParam)
 {
   MultiShotParams *msParam = mNavHelper->GetMultiShotParams();
+  AdjustXformData *xformData = mNavHelper->GetNearestAdjustingXform(
+    B3DABS(msParam->origMagOfArray[msParam->doHexArray ? 1 : 0]));
   mNavHelper->UpdateMultishotIfOpen();
   mgParam.values[MS_spokeRad0] = msParam->spokeRad[0];
   mgParam.values[MS_spokeRad1] = msParam->spokeRad[1];
@@ -5064,15 +5095,62 @@ void CMultiGridTasks::MultiShotToGridSettings(MGridMultiShotParams &mgParam)
     msParam->hexISXspacing[2] : 0.);
   mgParam.values[MS_ISYspacing2] = (float)(msParam->doHexArray ?
     msParam->hexISYspacing[2] : 0.);
-  mgParam.values[MS_xformFromMag] = (float)msParam->xformFromMag;
-  mgParam.values[MS_xformToMag] = (float)msParam->xformToMag;
-  mgParam.values[MS_xformXpx] = msParam->adjustingXform.xpx;
-  mgParam.values[MS_xformXpy] = msParam->adjustingXform.xpy;
-  mgParam.values[MS_xformYpx] = msParam->adjustingXform.ypx;
-  mgParam.values[MS_xformYpy] = msParam->adjustingXform.ypy;
-  mgParam.values[MS_xformMinuteTime] = (float)msParam->xformMinuteTime;
+  if (xformData) {
+    mgParam.values[MS_xformFromMag] = (float)xformData->xformFromMag;
+    mgParam.values[MS_xformToMag] = (float)xformData->xformToMag;
+    mgParam.values[MS_xformXpx] = xformData->adjustingXform.xpx;
+    mgParam.values[MS_xformXpy] = xformData->adjustingXform.xpy;
+    mgParam.values[MS_xformYpx] = xformData->adjustingXform.ypx;
+    mgParam.values[MS_xformYpy] = xformData->adjustingXform.ypy;
+    mgParam.values[MS_xformMinuteTime] = (float)xformData->xformMinuteTime;
+  } else {
+    mgParam.values[MS_xformFromMag] = 0.;
+    mgParam.values[MS_xformToMag] = 0.;
+    mgParam.values[MS_xformXpx] = 0.;
+    mgParam.values[MS_xformXpy] = 0.;
+    mgParam.values[MS_xformYpx] = 0.;
+    mgParam.values[MS_xformYpy] = 0.;
+    mgParam.values[MS_xformMinuteTime] = 0.;
+  }
 }
 #undef COPY_MEMBER
+
+// Save a copy of the array of adjusting transforms if setting per-grid params or for
+// the settings dialog
+void CMultiGridTasks::SaveAdjustXformsIfNeeded()
+{
+  AdjustXformData *xformData, *savedData;
+  if (mSavedAdjustXforms)
+    return;
+  mMasterAdjustXforms = mNavHelper->GetAdjustXformArray();
+  mSavedAdjustXforms = new CArray<AdjustXformData *, AdjustXformData *>;
+  for (int ind = 0; ind < (int)mMasterAdjustXforms->GetSize(); ind++) {
+    xformData = mMasterAdjustXforms->GetAt(ind);
+    savedData = new AdjustXformData;
+    *savedData = *xformData;
+    mSavedAdjustXforms->Add(savedData);
+  }
+}
+
+// Remove the array of saved transforms
+void CMultiGridTasks::ClearSavedAdjustXforms()
+{
+  if (!mSavedAdjustXforms)
+    return;
+  for (int ind = 0; ind < (int)mSavedAdjustXforms->GetSize(); ind++)
+    delete mSavedAdjustXforms->GetAt(ind);
+  B3DDELETE(mSavedAdjustXforms);
+}
+
+// Restore the main array of transforms from the saved array
+void CMultiGridTasks::RestoreSavedAdjustXforms()
+{
+  if (!mSavedAdjustXforms)
+    return;
+  mNavHelper->ClearAdjustingXforms();
+  for (int ind = 0; ind < (int)mSavedAdjustXforms->GetSize(); ind++)
+    mNavHelper->AddAdjustingXform(*(mSavedAdjustXforms->GetAt(ind)));
+}
 
 /*
  * Macro and function for copying grid hole finder settings to main settings
@@ -5220,6 +5298,7 @@ void CMultiGridTasks::ApplyVectorsIfSavedAndOK(int jcdInd)
   JeolCartridgeData jcd = mCartInfo->ElementAt(jcdInd);
   MGridMultiShotParams mgParam;
   MultiShotParams tempParam;
+  AdjustXformData xformData;
   MultiShotParams *master = mNavHelper->GetMultiShotParams();
   int hexInd, dir;
   if (jcd.multiShotParamIndex < 0)
@@ -5228,7 +5307,7 @@ void CMultiGridTasks::ApplyVectorsIfSavedAndOK(int jcdInd)
   if (!mgParam.values[MS_holeMagIndex])
     return;
   mNavHelper->UpdateMultishotIfOpen();
-  GridToMultiShotSettings(mgParam, &tempParam);
+  GridToMultiShotSettings(mgParam, &tempParam, &xformData);
   hexInd = tempParam.doHexArray ? 1 : 0;
   if (mNavHelper->ConfirmReplacingShiftVectors(4, hexInd))
     return;
