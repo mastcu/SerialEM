@@ -3,6 +3,13 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+6/27/26: Added ability to save multiple transforms with different starting
+mags for adjusting IS vectors and positions from lower to higher mag.
+
+6/24/26: SEM_4-2-25
+6/24/26: Turned on property DropPlusInHoleNameIfUtapi by default; the entry is
+no longer needed.  The restriction on + in filenames is permanent (In 4.2).
+
 6/20/26: Added script commands to get and set a control panel state.
 
 6/20/26: Provided complete control over control panel states in basic mode,

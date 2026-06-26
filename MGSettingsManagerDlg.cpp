@@ -56,6 +56,7 @@ CMGSettingsManagerDlg::~CMGSettingsManagerDlg()
   delete mSavedGeneralParams;
   delete mSavedFocusPosParams;
   delete mSavedAcqItemsParam;
+  mMGTasks->RestoreSavedAdjustXforms();
 }
 
 void CMGSettingsManagerDlg::DoDataExchange(CDataExchange* pDX)
@@ -269,11 +270,8 @@ void CMGSettingsManagerDlg::OnButRevert##brev##()  \
   Update##typ##Current();  \
   ManageEnables();
 
-
-// Macro for function to restore current parameters to saved ones
-#define RESTORE_CURRENT(typ, brev) \
-void CMGSettingsManagerDlg::OnButRestoreCur##brev##()  \
-{  \
+// Macros for function to restore current parameters to saved ones
+#define RESTORE_CURRENT_BODY(typ, brev) \
   mWinApp->RestoreViewFocus();  \
   if (!mSaved##typ##Params)  \
     return;  \
@@ -282,7 +280,12 @@ void CMGSettingsManagerDlg::OnButRestoreCur##brev##()  \
   mSaved##typ##Params = NULL; \
   Update##typ##Current();  \
   UpdateData(false);  \
-  ManageEnables(); \
+  ManageEnables();
+
+#define RESTORE_CURRENT(typ, brev) \
+void CMGSettingsManagerDlg::OnButRestoreCur##brev##()  \
+{  \
+  RESTORE_CURRENT_BODY(typ, brev); \
 }
 
 // Convenience macro for all four actions and the actual macro entries
@@ -307,13 +310,23 @@ void CMGSettingsManagerDlg::OnButApplyHF()
 
 ON_THREE_BUTTONS(HoleFinder, holeFinderParamIndex, HF);
 
+// Multishot has special handling
 void CMGSettingsManagerDlg::OnButApplyMS()
 {
+  mMGTasks->SaveAdjustXformsIfNeeded();
   APPLY_GRID(MultiShot, multiShotParamIndex, MS);
   mNavHelper->OpenMultishotDlg();
 }
 
-ON_THREE_BUTTONS(MultiShot, multiShotParamIndex, MS);
+GRID_USE(MultiShot, multiShotParamIndex, MS);
+REMOVE_ADJUST(MultiShot, multiShotParamIndex, MS);
+
+void CMGSettingsManagerDlg::OnButRestoreCurMS()
+{
+  mMGTasks->RestoreSavedAdjustXforms();
+  RESTORE_CURRENT_BODY(MultiShot, MS);
+  mMGTasks->ClearSavedAdjustXforms();
+}
 
 void CMGSettingsManagerDlg::OnButApplyGEN()
 {
@@ -546,6 +559,7 @@ void CMGSettingsManagerDlg::FormatMultiShotSettings(MGridMultiShotParams &param,
   CString line, one;
   float *vals = param.values;
   MultiShotParams msParams;
+  AdjustXformData  xformDat;
   int nxHoles, nyHoles, doCen = B3DNINT(vals[MS_doCenter]);
   double dists[3], dist, angle;
   str = "Within hole: one";
@@ -570,7 +584,7 @@ void CMGSettingsManagerDlg::FormatMultiShotSettings(MGridMultiShotParams &param,
         "cross" : "rectangle");
     str += one;
     if (vals[MS_origMagOfArray]) {
-      mMGTasks->GridToMultiShotSettings(param, &msParams);
+      mMGTasks->GridToMultiShotSettings(param, &msParams, &xformDat);
       mWinApp->mNavHelper->GetMultishotDistAndAngles(&msParams, msParams.doHexArray, dists,
         dist, angle);
       one.Format(" @ %.2f um, %.0f deg", dist, angle);

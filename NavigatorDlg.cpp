@@ -10594,6 +10594,7 @@ void CNavigatorDlg::AcquireNextTask(int param)
   BOOL runIt, vppNearestSave;
   CameraParameters *camParams = mWinApp->GetActiveCamParam();
   CMapDrawItem *item, *nextItem, *mapItem, *vecMap, *drawnMap;
+  AdjustXformData *xformData;
   TiltSeriesParam *tsp;
   FilterParams *filtParam = mWinApp->GetFilterParams();
   MultiShotParams *msParams = mHelper->GetMultiShotParams();
@@ -10879,7 +10880,8 @@ void CNavigatorDlg::AcquireNextTask(int param)
 
           // Assign the vectors and adjust them if possible
           mHelper->AssignNavItemHoleVectors(mapItem);
-          if (msParams->adjustingXform.xpx && msParams->xformFromMag) {
+          xformData = mHelper->GetNearestAdjustingXform(mapItem->mMapMagInd);
+          if (xformData) {
             err = mHelper->AdjustMultiShotVectors(msParams, B3DCHOICE(
               msParams->useCustomHoles, 1, msParams->doHexArray ? -1 : 0), false, str);
             if (err)

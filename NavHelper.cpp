@@ -266,10 +266,6 @@ CNavHelper::CNavHelper(void)
   mMultiShotParams.origMagOfArray[0] = 0;
   mMultiShotParams.origMagOfArray[1] = 0;
   mMultiShotParams.origMagOfCustom = 0;
-  mMultiShotParams.xformFromMag = 0;
-  mMultiShotParams.xformToMag = 0;
-  mMultiShotParams.adjustingXform = {0., 0., 0., 0.};
-  mMultiShotParams.xformMinuteTime = 0;
   mMultiShotParams.doAutoAdjustment = false;
   mMultiShotParams.autoAdjHoleSize = 1.f;
   mMultiShotParams.autoAdjMethod = 0;
@@ -5572,6 +5568,7 @@ int CNavHelper::AssessAcquireForParams(NavAcqParams *navParam, NavAcqAction *acq
   StateParams *state;
   TiltSeriesParam *tsp;
   CString mess, mess2, label;
+  AdjustXformData *xformData;
   int montParInd, stateInd, camMismatch, binMismatch, numNoMap, numAtEdge, err, numClose;
   int *activeList = mWinApp->GetActiveCameraList();
   ControlSet *masterSets = mWinApp->GetCamConSets();
@@ -5706,13 +5703,13 @@ int CNavHelper::AssessAcquireForParams(NavAcqParams *navParam, NavAcqAction *acq
         } else if (curMap != lastMap) {
           numMaps++;
           lastMap = curMap;
+          xformData = mWinApp->mNavHelper->GetNearestAdjustingXform(item2->mMapMagInd);
 
           // For multigrid, it is allowed to have vector just onany similar item
           if (item2->mXHoleISSpacing[0] == 0. && item2->mYHoleISSpacing[0] == 0. &&
             (!checkingMulGrd || mNav->GetMatchingMapWithVectors(item2, item3) < 0))
             numNoVec++;
-          else if (MSparams.xformFromMag && MSparams.adjustingXform.xpx &&
-            item2->mMapMagInd != MSparams.xformFromMag)
+          else if (xformData && item2->mMapMagInd != xformData->xformFromMag)
             numNoXform++;
         }
       }
@@ -6846,10 +6843,11 @@ int CNavHelper::AdjustMultiShotVectors(MultiShotParams *params, int customOrHex,
   int magInd = customOrHex > 0 ? params->customMagIndex : params->holeMagIndex[hexInd];
   int origInd = customOrHex > 0 ? params->origMagOfCustom :
     params->origMagOfArray[hexInd];
+  AdjustXformData *xformData;
 
-  if (!params->xformFromMag || !params->adjustingXform.xpx) {
-    mess = statusOnly ? "No adjustment transform available" :
-      "No transform has been saved for adjusting hole positions";
+  if (!mAdjustXformArray.GetSize()) {
+    mess = statusOnly ? "No adjusting transforms available" :
+      "No transforms have been saved for adjusting hole positions";
     return 1;
   }
   if (customOrHex > 0 && (!params->customHoleX.size() || !magInd)) {
@@ -6863,38 +6861,39 @@ int CNavHelper::AdjustMultiShotVectors(MultiShotParams *params, int customOrHex,
     return 1;
   }
   if (!origInd) {
-    mess = statusOnly ? "Not enough information to use adjustment transform" :
-      "The requested hole vectors are not eligible for applying the adjustment transform";
+    mess = statusOnly ? "Not enough information to use adjusting transform" :
+      "The requested hole vectors are not eligible for applying the adjusting transform";
     return 1;
   }
   if (origInd > 0) {
-    mess = statusOnly ? "Adjustment transform already applied" :
-      "The requested hole vectors have already had the adjustment transform applied";
+    mess = statusOnly ? "Adjusting transform already applied" :
+      "The requested hole vectors have already had the adjusting transform applied";
     return 1;
   }
-  if (-origInd != params->xformFromMag) {
+  xformData = GetNearestAdjustingXform(-origInd);
+  if (xformData->xformFromMag != -origInd) {
     if (statusOnly)
-      mess.Format("Shifts defined at %dx, adjustment transform at %dx",
-        MagForCamera(camera, -origInd), MagForCamera(camera, params->xformFromMag));
+      mess.Format("Shifts defined at %dx, nearest adjustment at %dx",
+        MagForCamera(camera, -origInd), MagForCamera(camera, xformData->xformFromMag));
     else
       mess = "The requested hole vectors were not defined at the same magnification as "
-        "the adjustment transform";
+        "an adjusting transform";
     return 1;
   }
   if (statusOnly) {
-    mess.Format("Adjustment transform available from %dx to %dx", MagForCamera(camera,
-      params->xformFromMag), MagForCamera(camera, params->xformToMag));
+    mess.Format("Adjusting transform available from %dx to %dx", MagForCamera(camera,
+      xformData->xformFromMag), MagForCamera(camera, xformData->xformToMag));
     return 0;
   }
 
   // Finally apply transform and mark as transformed by changing sign of original mag,
   // set mag index to target mag of transform
-  TransformMultiShotVectors(params, customOrHex, params->adjustingXform);
+  TransformMultiShotVectors(params, customOrHex, xformData->adjustingXform);
   if (customOrHex > 0) {
-    params->customMagIndex = params->xformToMag;
+    params->customMagIndex = xformData->xformToMag;
     params->origMagOfCustom = -params->origMagOfCustom;
   } else {
-    params->holeMagIndex[hexInd] = params->xformToMag;
+    params->holeMagIndex[hexInd] = xformData->xformToMag;
     params->origMagOfArray[hexInd] = -params->origMagOfArray[hexInd];
   }
   if (mMultiShotDlg)
@@ -6932,28 +6931,34 @@ void CNavHelper::TransformMultiShotVectors(MultiShotParams *params, int customOr
 }
 
 // Apply the adjusting transform in the given multishot params to IS targets in the item
-int CNavHelper::TransformImShiftTargets(MultiShotParams *params, CMapDrawItem *item, 
-  CString &mess)
+int CNavHelper::TransformImShiftTargets(CMapDrawItem *item, CString &mess)
 {
   int ind, camera = mWinApp->GetCurrentCamera();
   float xtmp, ytmp;
+  AdjustXformData *xformData = GetNearestAdjustingXform(item->mMagOfIStargets);
   if (!item->mNumIStargets) {
     mess = "There are no IS targets stored in the Navigator item";
     return 1;
   }
-  if (item->mMagOfIStargets != params->xformFromMag) {
-    mess.Format("The IS targets are currently defined at %dx and the adjustment at %dx",
+  if (!xformData) {
+    mess = "There are no adjusting transforms available";
+    return 1;
+  }
+  
+  if (item->mMagOfIStargets != xformData->xformFromMag) {
+    mess.Format("The IS targets are currently defined at %dx and the nearest adjustment"
+      " is at %dx",
       MagForCamera(camera, item->mMagOfIStargets),
-      MagForCamera(camera, params->xformFromMag));
+      MagForCamera(camera, xformData->xformFromMag));
       return 1;
   }
   for (ind = 0; ind < item->mNumIStargets; ind++) {
-    ApplyScaleMatrix(params->adjustingXform, item->mIStargetsXY[2 * ind], 
+    ApplyScaleMatrix(xformData->adjustingXform, item->mIStargetsXY[2 * ind],
       item->mIStargetsXY[2 * ind + 1], xtmp, ytmp);
     item->mIStargetsXY[2 * ind] = xtmp;
     item->mIStargetsXY[2 * ind + 1] = ytmp;
   }
-  item->mMagOfIStargets = params->xformToMag;
+  item->mMagOfIStargets = xformData->xformToMag;
   return 0;
 }
 
@@ -7303,6 +7308,69 @@ int CNavHelper::UseNavPointsForVectors(int pattern, int numXholes, int numYholes
     mNav->Redraw();
   return 0;
 }
+
+// Returns pointer to adjusting transform at the nearest mag value to the one at magInd
+// or NULL if there are no adjusting transforms
+AdjustXformData *CNavHelper::GetNearestAdjustingXform(int magInd)
+{
+  int nearestInd = -1, minDiff = 100000000, diff;
+  int cam = mWinApp->GetCurrentCamera();
+  int magVal = MagForCamera(cam, magInd);
+  for (int ind = 0; ind < (int)mAdjustXformArray.GetSize(); ind++) {
+    diff = B3DABS(MagForCamera(cam, mAdjustXformArray[ind]->xformFromMag) - magVal);
+    if (diff < minDiff) {
+      nearestInd = ind;
+      minDiff = diff;
+    }
+  }
+  if (nearestInd < 0)
+    return NULL;
+  return mAdjustXformArray[nearestInd];
+}
+
+// Adds an adjusting transform to the array, replacing one at the same fromMag if any
+void CNavHelper::AddAdjustingXform(AdjustXformData &adjData)
+{
+  AdjustXformData *arrData = GetNearestAdjustingXform(adjData.xformFromMag);
+  if (!arrData || arrData->xformFromMag != adjData.xformFromMag) {
+    arrData = new AdjustXformData;
+    mAdjustXformArray.Add(arrData);
+  }
+  *arrData = adjData;
+}
+
+// Clears the array of adjusting transforms
+void CNavHelper::ClearAdjustingXforms()
+{
+  for (int ind = 0; ind < (int)mAdjustXformArray.GetSize(); ind++)
+    delete mAdjustXformArray[ind];
+  mAdjustXformArray.RemoveAll();
+}
+
+void CNavHelper::ListAdjustingXforms()
+{
+  AdjustXformData *data;
+  int camera = mWinApp->GetCurrentCamera();
+  if (!mAdjustXformArray.GetSize()) {
+    SEMAppendToLog("There are no adjusting transforms stored");
+    return;
+  }
+  mWinApp->SetNextLogColorStyle(0, 1);
+  SEMAppendToLog("\r\nAdjusting transforms:");
+  mWinApp->SetNextLogColorStyle(0, 4);
+  SEMAppendToLog("Mag From & Index   Mag To & Index       Matrix");
+  for (int ind = 0; ind < (int)mAdjustXformArray.GetSize(); ind++) {
+    data = mAdjustXformArray[ind];
+    PrintfToLog("%d      %d           %d      %d         %.4f %.4f %.4f %.4f",
+      MagForCamera(camera, data->xformFromMag), data->xformFromMag,
+      MagForCamera(camera, data->xformToMag), data->xformToMag,
+      data->adjustingXform.xpx, data->adjustingXform.xpy, data->adjustingXform.ypx,
+      data->adjustingXform.ypy);
+  }
+}
+
+///////////////////////////////////////////////////////
+// SUBSIDIARY DIALOGS
 
 void CNavHelper::OpenHoleFinder(void)
 {

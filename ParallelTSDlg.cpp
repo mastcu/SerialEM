@@ -1184,7 +1184,8 @@ void CParallelTSDlg::OnAddTargets()
     mNumAddedTargets = 0;
     if (!mTargetGroupID) {
       mTargetGroupID = nav->MakeUniqueID();
-      mNavHelper->SetParTSSetupGroupID(mTargetGroupID);
+      if (!mMakingNewXform)
+        mNavHelper->SetParTSSetupGroupID(mTargetGroupID);
     }
     mDrawingISTargets = true;
   } 

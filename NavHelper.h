@@ -43,6 +43,15 @@ struct CenterSkipData
   float baseDelY;
 };
 
+// Structure for transforms for adjusting image shift from one mag to another
+struct AdjustXformData
+{
+  int xformFromMag;      // Mag that adjusting transform is from and to
+  int xformToMag;
+  ScaleMat adjustingXform;  // Transform for adjustment
+  int xformMinuteTime;   // Minute time stamp when it was last done
+};
+
 // Structure for the multiple-record parameters
 struct MultiShotParams
 {
@@ -91,10 +100,6 @@ struct MultiShotParams
   float autoAdjLimitFrac;  // Limit to shift as fraction of hole diameter 
   int origMagOfArray[2]; // Negative of mag when defined, positive if adjusted
   int origMagOfCustom;
-  int xformFromMag;      // Mag that adjusting transform is from and to
-  int xformToMag;
-  ScaleMat adjustingXform;  // Transform for adjustment
-  int xformMinuteTime;   // Minute time stamp when it was last done
 
   // Runtime for undo capability: values to restore
   int canUndoRectOrHex;    // 0 if not, 1 for regular, 2 for hex
@@ -382,6 +387,8 @@ public:
   IntVec *GetExtraTaskList() { return &mExtraTaskList; };
   float *GetLastUsedHoleISvecs() {return &mLastUsedHoleISvecs[0] ; };
   GetMemberPtr(ParallelTSOptions, ParTSOptions);
+  CArray<AdjustXformData *, AdjustXformData *> *GetAdjustXformArray() {return &mAdjustXformArray; };
+
   
   int *GetAcqActDefaultOrder() { return &mAcqActDefaultOrder[0]; };
   int *GetAcqActCurrentOrder(int which) { return &mAcqActCurrentOrder[which][0]; };
@@ -425,6 +432,7 @@ private:
   CArray<StateParams *, StateParams *> mStateArray;
   CArray<StateParams, StateParams> mSavedStates;
   CArray<StateParams, StateParams> mForgottenStates;
+  CArray<AdjustXformData *, AdjustXformData *> mAdjustXformArray;
   CCameraController *mCamera;
   WINDOWPLACEMENT mStatePlacement;
   CArray<CenterSkipData, CenterSkipData> mCenterSkipArray;
@@ -803,7 +811,7 @@ public:
   int RotateMultiShotVectors(MultiShotParams *params, float angle, int customOrHex);
   int AdjustMultiShotVectors(MultiShotParams *params, int customOrHex, bool statusOnly, CString &mess);
   void TransformMultiShotVectors(MultiShotParams *params, int customOrHex, ScaleMat &aProd);
-  int TransformImShiftTargets(MultiShotParams *params, CMapDrawItem *item, CString &mess);
+  int TransformImShiftTargets(CMapDrawItem *item, CString &mess);
   int XformISVecsWithSpecOrStage(float *xVecIn, float *yVecIn, int numVec, ScaleMat mat, 
     bool stage, int magInd, int camera, float *xVecOut, float *yVecOut);
   void AssignNavItemHoleVectors(CMapDrawItem * item, MultiShotParams *msParams = NULL);
@@ -815,6 +823,10 @@ public:
     CString *reason = NULL);
   int ConfirmReplacingShiftVectors(int kind, int vecType);
   int UseNavPointsForVectors(int pattern, int numXholes, int numYholes);
+  AdjustXformData *GetNearestAdjustingXform(int magInd);
+  void AddAdjustingXform(AdjustXformData &adjData);
+  void ClearAdjustingXforms();
+  void ListAdjustingXforms();
   void OpenHoleFinder(void);
   WINDOWPLACEMENT *GetHoleFinderPlacement(void);
   void OpenMultiCombiner(void);

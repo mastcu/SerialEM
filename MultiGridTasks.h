@@ -169,8 +169,11 @@ public:
   void ChangeCondenserAperture(int restore, int param = -1);
   bool CanFalconFramesMoveToSession(CameraParameters *camP, CString *frameDir);
   void GridToMultiShotSettings(MGridMultiShotParams &mgParam);
-  void GridToMultiShotSettings(MGridMultiShotParams &mgParam, MultiShotParams *msParams);
+  void GridToMultiShotSettings(MGridMultiShotParams &mgParam, MultiShotParams *msParams, AdjustXformData *outXform = NULL);
   void MultiShotToGridSettings(MGridMultiShotParams &mgParam);
+  void SaveAdjustXformsIfNeeded();
+  void RestoreSavedAdjustXforms();
+  void ClearSavedAdjustXforms();
   void GridToHoleFinderSettings(MGridHoleFinderParams &mgParam);
   void HoleFinderToGridSettings(MGridHoleFinderParams &mgParam);
   void GridToAutoContSettings(MGridAutoContParams &mgParam);
@@ -284,6 +287,8 @@ private:
   int mMontSetupConsetSizes[4];   // Frame sizes in conset when LMM or MMM montage set up
   BOOL mSavedLowDose;         // Saved state of low dose at start
   MGridMultiShotParams *mSavedMultiShot;
+  CArray<AdjustXformData *, AdjustXformData *> *mMasterAdjustXforms;
+  CArray<AdjustXformData *, AdjustXformData *> *mSavedAdjustXforms;
   MGridHoleFinderParams *mSavedHoleFinder;
   MGridAutoContParams *mSavedAutoCont;
   MGridGeneralParams *mSavedGeneralParams;

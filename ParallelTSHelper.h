@@ -78,10 +78,6 @@ private:
   CMapDrawItem *mParTSitem;
   ParallelTSParam mParTSParam;
 
-  ScaleMat mAdjustingXform;
-  int mXformFromMag;
-  int mXformToMag;
-
 public:
   GetMember(CMapDrawItem*, CurISTargetItem);
   GetMember(CMapDrawItem*, ParTSitem);
