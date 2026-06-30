@@ -25,6 +25,7 @@
 #include "TSController.h"
 #include "SerialEMView.h"
 #include "ParallelTSHelper.h"
+#include "MacroProcessor.h"
 #include ".\Utilities\SEMUtilities.h"
 #include "Shared\b3dutil.h"
 #include "Shared\icont.h"
@@ -58,6 +59,7 @@ CParallelTSHelper::CParallelTSHelper()
   mTiltDuringFit = 0.;
   mMagIndex = -1;
   mAreaMapMagInd = -1;
+  mOldAdjustingXform.xpx = 0.f;
 }
 
 CParallelTSHelper::~CParallelTSHelper()
@@ -296,13 +298,18 @@ int CParallelTSHelper::ISToNextTarget(int targetIndex, CString &err)
     item->mStageY - mCenterStageY, ISX, ISY);
   mShiftManager->TransferGeneralIS(fromMagInd, ISX, ISY, mMagIndex, delX, delY);
 
-  if (mActionAtTarget == PARALLELTS_ACTION_PREVIEW && mParTSopts->applyAdjustingXform) {
+  mOldAdjustingXform.xpx = 0.f;
+  if ((mActionAtTarget == PARALLELTS_ACTION_PREVIEW || 
+    mActionAtTarget == PARALLELTS_ACTION_ADJUST) && mParTSopts->applyAdjustingXform) {
     if (CanAdjustISVectors(mAreaMapMagInd, false, mess)) {
       AdjustXformData *adjustData =
         mNavHelper->GetNearestAdjustingXform(mAreaMapMagInd);
       SEMTrace('N', "adj xform xpx=%.4f, xpy=%.4f, ypx=%.4f, ypy=%.4f",
         adjustData->adjustingXform.xpx, adjustData->adjustingXform.xpy,
         adjustData->adjustingXform.ypx, adjustData->adjustingXform.ypy);
+
+      //Save applied adjusting transform to factor into calculation of new one
+      mOldAdjustingXform = adjustData->adjustingXform;
 
       ApplyScaleMatrix(adjustData->adjustingXform, delX, delY, transISX, transISY);
       SEMTrace('N', "IS transformed from (%.4f, %.4f) to (%.4f, %.4f)",
@@ -385,6 +392,7 @@ void CParallelTSHelper::ISToTargetNextTask(int param)
     mess = "ADJUSTING IS";
   }
   mWinApp->SetStatusText(COMPLEX_PANE, mess);
+  mWinApp->mMacroProcessor->SetNumStatusLines(0);
 
   mLastActionFailed = false;
   mapID = mISTargetPointIDs[mStartIndex + mISTargetIter];
@@ -557,9 +565,12 @@ void CParallelTSHelper::ISToTargetNextTask(int param)
       mCamera->InitiateCapture(PREVIEW_CONSET);
 
       // Stop iterations to allow user to refine IS, unless they want to skip that
-      if (!(mActionAtTarget == PARALLELTS_ACTION_PREVIEW && 
-        mParTSopts->flags & PTSFLAG_SKIP_REFINE))
+      if (!(mActionAtTarget == PARALLELTS_ACTION_PREVIEW &&
+        mParTSopts->flags & PTSFLAG_SKIP_REFINE)) {
+        mWinApp->mMacroProcessor->SetNumStatusLines(1);
+        mWinApp->mMacroProcessor->SetStatus(1, "Adjust IS to align to target");
         return;
+      }
     }
   }
 
@@ -1584,6 +1595,9 @@ int CParallelTSHelper::CreateAdjustingTransform(CString &err)
     err.Format("A transform could not be determined from the given IS adjustments");
     return 2;
   }
+
+  if (mOldAdjustingXform.xpx)
+    adjustingXform = MatMul(adjustingXform, mOldAdjustingXform);
 
   xformData.adjustingXform = adjustingXform;
   xformData.xformFromMag = mAreaMapMagInd;

@@ -77,6 +77,7 @@ private:
 
   CMapDrawItem *mParTSitem;
   ParallelTSParam mParTSParam;
+  ScaleMat mOldAdjustingXform;
 
 public:
   GetMember(CMapDrawItem*, CurISTargetItem);

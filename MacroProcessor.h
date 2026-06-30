@@ -557,6 +557,7 @@ protected:
 public:
   void SetNumCamMacRows(int inVal);
   void SetNumStatusLines(int inVal);
+  int SetStatus(int lineNum, CString text);
   void GetNextLine(CString * macro, int & currentIndex, CString &strLine, bool commentOK = false);
   int ScanForName(int macroNumber, CString *macro = NULL);
   COLORREF TranslateColorEntry(CString *strItems);

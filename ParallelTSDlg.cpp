@@ -20,6 +20,7 @@
 #include "TSController.h"
 #include "SerialEMView.h"
 #include "ParallelTSHelper.h"
+#include "MacroProcessor.h"
 #include ".\Utilities\SEMUtilities.h"
 #include "Shared\b3dutil.h"
 
@@ -1008,6 +1009,10 @@ void CParallelTSDlg::OnDefinePtsFitPlane()
       mFitPlaneGroupID = mWinApp->mNavigator->MakeUniqueID();
     }
     mDrawingISTargets = true;
+    
+    label.Format("Mark locations to measure defocus", MIN_NUM_POINTS_TO_FIT_PLANE);
+    mWinApp->mMacroProcessor->SetNumStatusLines(1);
+    mWinApp->mMacroProcessor->SetStatus(1, label);
   } 
   
   // Call on navigator to start adding points, or if stopping, tell it to 
@@ -1017,6 +1022,7 @@ void CParallelTSDlg::OnDefinePtsFitPlane()
   }
   
   if (!mDefiningPoints) {
+    mWinApp->mMacroProcessor->SetNumStatusLines(0);
     mDrawingISTargets = false;
     if (nav->m_bCollapseGroups) {
       nav->MakeListMappings();
@@ -1188,7 +1194,11 @@ void CParallelTSDlg::OnAddTargets()
         mNavHelper->SetParTSSetupGroupID(mTargetGroupID);
     }
     mDrawingISTargets = true;
-  } 
+    
+    if (mMakingNewXform) {
+      mWinApp->mMacroProcessor->SetStatus(1, "Mark locations to align to at high mag");
+    }
+  }
 
   // Do not call on navigator to start/stop adding points, if adding points was 
   // already succesfully stopped from the navigator button 
@@ -1197,6 +1207,7 @@ void CParallelTSDlg::OnAddTargets()
   }
 
   if (!mAddingTargets) {
+    mWinApp->mMacroProcessor->SetNumStatusLines(0);
     mDrawingISTargets = false;
     if (nav->m_bCollapseGroups) {
       nav->MakeListMappings();

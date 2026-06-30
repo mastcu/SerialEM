@@ -407,6 +407,18 @@ void CMacroProcessor::SetNumStatusLines(int inVal)
   mWinApp->mCameraMacroTools.ManagePanels();
 }
 
+int CMacroProcessor::SetStatus(int index, CString text)
+{
+  if (index < 0 || index > NUM_CM_MESSAGE_LINES)
+    return 1;
+  mStatusLines[index - 1] = text;
+  if (index > mNumStatusLines)
+    SetNumStatusLines(index);
+  else
+    mWinApp->mCameraMacroTools.Invalidate();
+  return 0;
+}
+
 void CMacroProcessor::OnMonospaceStatusLines()
 {
   mMonospaceStatus = !mMonospaceStatus;
