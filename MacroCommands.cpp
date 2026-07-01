@@ -10161,6 +10161,35 @@ int CMacCmd::LoadCartridge(void)
   return 0;
 }
 
+// ReportLoadedSlot
+int CMacCmd::ReportLoadedSlot()
+{
+  int slot, id = -1;
+  if (FEIscope) {
+    if (!mScope->UtapiSupportsService(UTSUP_LOADER))
+      ABORT_LINE("UTAPI loader service must be connected to for line:\n\n");
+    slot = mScope->GetLoadedSlot();
+    if (slot < 0)
+      ABORT_LINE("Error getting slot number loaded on stage for line:\n\n");
+    if (slot)
+      mLogRpt = "No grid from autoloader is on the stage";
+    else
+      mLogRpt.Format("Grid from slot %d is on stage", slot);
+    SetRepValsAndVars(1, slot, 0);
+  } else {
+    CArray<JeolCartridgeData, JeolCartridgeData> *cartInfo = mScope->GetJeolLoaderInfo();
+    if (!cartInfo->GetSize())
+      ABORT_LINE("You must get a cartridge inventory before line:\n\n");
+    slot = mScope->FindCartridgeAtStage(id);
+    if (slot < 0)
+      mLogRpt = "No cartridge is listed as on the stage in current inventory";
+    else
+      mLogRpt.Format("Grid at index %d in inventory with ID %d is on stage", slot, id);
+    SetRepValsAndVars(1, slot, id);
+  }
+  return 0;
+}
+
 // RefrigerantLevel
 int CMacCmd::RefrigerantLevel(void)
 {
@@ -11536,12 +11565,89 @@ int CMacCmd::SetBeamBlank(void)
 // SkipUtapiService
 int CMacCmd::SkipUtapiService()
 {
+  int ind, found = 0;
   bool *supports = mScope->GetUtapiSupportsService();
+  ShortVec *skips = mScope->GetSkipUtapiServices();
   if (mItemInt[1] < 0 || mItemInt[1] >= UTAPI_SUPPORT_END)
     ABORT_LINE("Service number is out of range in line:\n\n");
   if (mItemInt[1] >= UTSUP_CAM_SINGLE && mItemInt[1] <= UTSUP_CAM_CONTIN)
     ABORT_LINE("You cannot change support for a camera-related service");
   supports[mItemInt[1]] = mItemInt[2] == 0;
+
+  // Maintain skip array
+  for (ind = 0; ind < (int)skips->size(); ind++) {
+    if (skips->at(ind) == mItemInt[1]) {
+      if (!mItemInt[2])
+        skips->erase(skips->begin() + ind);
+      else
+        found = 1;
+      break;
+    }
+  }
+  if (mItemInt[2] && !found)
+    skips->push_back(mItemInt[1]);
+  return 0;
+}
+
+// ReportUtapiServices
+int CMacCmd::ReportUtapiServices()
+{
+  const char **serviceNames = NULL;
+  int ind, start = 0, end = UTAPI_SUPPORT_END - 1, maxService = -1;
+  ShortVec *skips = mScope->GetSkipUtapiServices();
+  if (!FEIscope)
+    ABORT_LINE("UTAPI is used only with Thermo/FEI scopes for line:\n\n");
+  if (mScope->GetPlugFuncs()->UtapiServiceNames)
+    serviceNames = mScope->GetPlugFuncs()->UtapiServiceNames();
+  if (!mItemEmpty[1]) {
+    start = end = mItemInt[1];
+    if (start < -1 || start >= UTAPI_SUPPORT_END)
+      ABORT_LINE("Service number out of range in line:\n\n");
+  }
+
+  // Get maximum service in plugin
+  if (serviceNames)
+    maxService = mScope->GetMaxUtapiService();
+
+  // Print the skips
+  if (start == -1) {
+    if (!skips->size()) {
+      SEMAppendToLog("No UTAPI services are being skipped");
+    } else {
+      mWinApp->SetNextLogColorStyle(0, 1);
+      SEMAppendToLog("UTAPI services being skipped:");
+      for (ind = 0; ind < (int)skips->size(); ind++) {
+        end = skips->at(ind);
+        if (end >= 0 && end < UTAPI_SUPPORT_END) {
+          if (end <= maxService)
+            PrintfToLog("%d  %s service%s", end, serviceNames[end],
+              ind == UTSUP_FILTER ? "s" : "");
+          else
+            PrintfToLog("service %d", end);
+        }
+      }
+    }
+    return 0;
+  }
+
+  // Or print the services
+  if (mScope->GetUtapiConnected()) {
+    mWinApp->SetNextLogColorStyle(0, 1);
+    SEMAppendToLog("\r\nUTAPI services being used:");
+    for (ind = start; ind <= B3DMIN(end, maxService); ind++) {
+      if (mScope->UtapiSupportsService(ind) && ind != UTSUP_TEMP_CONTROL) {
+        if (ind <= maxService)
+          PrintfToLog("%d %s service%s", ind, serviceNames[ind],
+            ind == UTSUP_FILTER ? "s" : "");
+        else
+          PrintfToLog("service %d", ind);
+      }
+    }
+  } else {
+    SEMAppendToLog("There is no connection to UTAPI");
+  }
+  if (!mItemEmpty[1])
+    SetRepValsAndVars(2, mScope->UtapiSupportsService(end) ? 1 : 0, 0);
   return 0;
 }
 

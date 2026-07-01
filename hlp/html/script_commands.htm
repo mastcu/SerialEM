@@ -4099,6 +4099,15 @@
              is <b>#</b>&nbsp; Values are numbered from 1 and suitable for use in the 'LoadCartridge'.&nbsp; Value 
             may be assigned to a variable after the ID.&nbsp;</TD>
         <TR>
+          <TD class="scriptcommand">ReportLoadedSlot</TD>
+          <TD>For a Thermo/FEI scope with a UTAPI connection to the loader service, reports 
+            the slot number (numbered from 1) of the cartridge loaded on the stage, or 0 if 
+            no cartridge is loaded.&nbsp; For a JEOL autoloader, reports the index in the 
+            inventory array (numbered from 0) and the ID of the cartridge loaded on the 
+            stage, or -1 and -1 if no cartridge is loaded.&nbsp; A cassette inventory must 
+            be obtained first with 'LongOperation In'.&nbsp; Command added in 4.3, 
+            30-Jun-26.</TD>
+        <TR>
           <TD class="scriptcommand">AreDewarsFilling</TD>
           <TD>Reports whether any of the dewars in a temperature control system on a Thermo/FEI
             scope are busy
@@ -6895,6 +6904,17 @@
           <TD class="scriptcommand">ExitProgramAtEnd</TD>
           <TD>Initiates exiting of the program when the script ends.&nbsp; All normal 
             queries upon exiting will be made.&nbsp; Command added in 4.3, 16-May-26.</TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">ReportUtapiServices [#]</TD>
+          <TD>Reports the UTAPI services connected to and not being skipped, either all 
+            services if <B>#</B> is not entered or a specific service whose index is <B>#</B>
+             for <B>#</B> &ge; 0.&nbsp; In the 
+            latter case, <I>reportedValue1</I> is set to 1 if the service is being used, or 0 if 
+            not, and the value may be assigned to a variable after 
+            <b>#</b>.&nbsp; If <B>#</B> is -1, reports the list of services being skipped either
+            from the 'SkipUtapiServices' property of as a result of the 'SkipUtapiService' 
+            command.&nbsp; Command added in 4.3, 30-Jun-26.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">SkipUtapiService #U #S</TD>

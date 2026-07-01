@@ -88,6 +88,7 @@ UTSET_ONE_BOOL(SetIntensityZoom, UTSUP_COL_MODE) LINE_END
 UTGET_ONE_INT(GetEFTEMMode, UTSUP_COL_MODE) LINE_END
 UTSET_ONE_INT(SetEFTEMMode, UTSUP_COL_MODE) LINE_END
 UTSET_ONE_INT(SetImagingMode, UTSUP_COL_MODE) LINE_END
+UTGET_ONE_INT(GetImagingMode, UTSUP_COL_MODE) LINE_END
 UTGET_ONE_INT(GetSubMode, UTSUP_COL_MODE) LINE_END
 UTGET_ONE_INT(GetDarkFieldMode, UTSUP_COL_MODE) LINE_END
 UTSET_ONE_INT(SetDarkFieldMode, UTSUP_COL_MODE) LINE_END
@@ -186,7 +187,6 @@ SCOPE_SAMENAME(ScopeSetDbl, SetDiffractionFocus);
 SCOPE_SAMENAME(ScopeSetInt, SetFineFocus);
 SCOPE_SAMENAME(ScopeSetInt, SetCoarseFocus);
 SCOPE_SAMENAME(ScopeGetSetInt, CheckMagSelector);
-SCOPE_SAMENAME(ScopeGetInt, GetImagingMode);
 SCOPE_SAMENAME(ScopeGetInt, GetMDSMode);
 SCOPE_SAMENAME(ScopeSetInt, SetMDSMode);
 SCOPE_SAMENAME(ScopeGetInt, GetSpectroscopyMode);
@@ -258,6 +258,7 @@ SCOPE_SAMENAME(ShowMB, ShowMessageBox);
 SCOPE_SAMENAME(ScopeSetInt, SetBeamStopper);
 SCOPE_SAMENAME(ScopeSetDbl, SetHighVoltage);
 SCOPE_SAMENAME(UtapiSTEMimage, UtapiAcquireSTEMimage);
+SCOPE_SAMENAME(ServiceNames, UtapiServiceNames);
 SCOPE_SAMENAME(ScopeNoArg, UtapiStopContinuous);
 SCOPE_SAMENAME(ScopeGetSetInt, GetVibrationState);
 SCOPE_SAMENAME(ScopeSetInt, SetVibrationAvoidance);

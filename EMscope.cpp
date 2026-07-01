@@ -575,6 +575,7 @@ CEMscope::CEMscope()
   mFLCInLMGenDelay = 250;
   mFLCInLMAcqDelay = 500;
   mJeolLensSetForLM = -1;
+  mMaxUtapiService = UTAPI_SUPPORT_END - 1;
   mAdvancedScriptVersion = 0;
   mPluginVersion = 0;
   mPlugFuncs = NULL;
@@ -623,6 +624,7 @@ int CEMscope::Initialize()
   mShiftManager = mWinApp->mShiftManager;
   int *activeList = mWinApp->GetActiveCameraList();
   CameraParameters *camParam = mWinApp->GetCamParams();
+  const char **serviceNames;
   mCamera = mWinApp->mCamera;
   if (mNoScope) {
     mMaxTiltAngle = 70.;
@@ -938,6 +940,21 @@ int CEMscope::Initialize()
   if (FEIscope && mScopeHasPhasePlate < 0)
     mScopeHasPhasePlate = mAdvancedScriptVersion > 0 ? 1 : 0;
   if (mUtapiConnected) {
+
+    // Find maximum service in plugin
+    if (mPlugFuncs->UtapiServiceNames) {
+      serviceNames = mPlugFuncs->UtapiServiceNames();
+      if (serviceNames) {
+        for (ind = 0; ind <= UTAPI_SUPPORT_END; ind++) {
+          if (strlen(serviceNames[ind]))
+            mMaxUtapiService = ind;
+          else
+            break;
+        }
+      }
+    }
+
+    // Process the skip list
     for (ind = 0; ind < (int)mSkipUtapiServices.size(); ind++)
       if (mSkipUtapiServices[ind] >= 0 && mSkipUtapiServices[ind] < UTAPI_SUPPORT_END)
         mUtapiSupportsService[mSkipUtapiServices[ind]] = false;
