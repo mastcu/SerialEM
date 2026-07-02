@@ -407,6 +407,7 @@ CNavHelper::CNavHelper(void)
 CNavHelper::~CNavHelper(void)
 {
   ClearStateArray();
+  ClearAdjustingXforms();
   delete mFindHoles;
   delete mCombineHoles;
   delete mHoleFinderDlg;
