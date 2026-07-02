@@ -1407,13 +1407,14 @@ int CParallelTSHelper::ConvertToParTSItem(CString &err, CMapDrawItem *item)
   }
 
   mParTSParam.navID = mWinApp->mNavigator->MakeUniqueID();
-  mParTSParam.preTilt = mPretilt;
-  mParTSParam.xPitchAngle = mXpitch;
-  mParTSParam.mappingTilt = mMappingTilt;
+  mParTSParam.preTilt = roundf(mPretilt * 100) / 100.f;
+  mParTSParam.xPitchAngle = roundf(mXpitch * 100) / 100.f;
+  mParTSParam.mappingTilt = roundf(mMappingTilt * 100) / 100.f;
 
   ParallelTSParam *parTSParam = new ParallelTSParam;
   *parTSParam = mParTSParam;
-  mParTSitem->mParallelTSIndex = (int)mWinApp->mNavigator->GetParallelTSArray()->Add(parTSParam);
+  mParTSitem->mParallelTSIndex = 
+    (int)mWinApp->mNavigator->GetParallelTSArray()->Add(parTSParam);
 
   mWinApp->mNavigator->FindItemWithMapID(mParTSitem->mMapID, false);
   ind = mWinApp->mNavigator->GetFoundItem();

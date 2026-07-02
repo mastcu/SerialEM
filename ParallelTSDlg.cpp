@@ -433,8 +433,9 @@ void CParallelTSDlg::Update()
   m_butSaveAreaMap.EnableWindow(noTasks && mSettingUpTargetArea && enable
     && !(mDefiningPoints || mAddingTargets || mRefiningTargets) && 
     !mSavedTargets && !mMakingNewXform);
-  SetDlgItemText(IDC_BUT_PTS_SAVEAREAMAP,
-    mHasAreaMap ? "Save New Area Map" : "Save Area Map");
+  bool isMap = activeImBuf->mImage && activeImBuf->mMapID > 0;
+  SetDlgItemText(IDC_BUT_PTS_SAVEAREAMAP, isMap ? "Identify Area Map" :
+    (mHasAreaMap ? "Save New Area Map" : "Save Area Map"));
   m_statAreaMapStatus.EnableWindow(mSettingUpTargetArea);
   
   
