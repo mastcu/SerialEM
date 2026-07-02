@@ -4686,7 +4686,7 @@ BEGIN
     LTEXT           "um",IDC_STATIC_PTS_DIAMUM,118,364,11,8
     CONTROL         "Use Record illuminated area for circles in Low Dose",IDC_CHECK_PTS_BEAMSIZECIRCLES,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,376,173,10
-    LTEXT           "Multiplier of usual delay after shifting to target:",IDC_STATIC_PTS_EXTRADELAY,8,389,134,8
+    LTEXT           "Multiplier of usual delay after shifting to target:",IDC_STATIC_PTS_EXTRADELAY,8,389,136,8
     EDITTEXT        IDC_EDIT_PTS_DIAM,95,362,21,12,ES_AUTOHSCROLL
     CONTROL         "",IDC_TSS_LINE3,"Static",SS_BLACKFRAME | SS_SUNKEN,9,30,163,1
     CONTROL         "",IDC_TSS_LINE4,"Static",SS_BLACKFRAME | SS_SUNKEN,9,72,163,1
@@ -4715,7 +4715,7 @@ BEGIN
     LTEXT           "deg",IDC_STATIC_PTS_MAXROTDEG,70,457,13,8
     LTEXT           "Max scaling",IDC_STATIC_PTS_MAXSCALING,98,457,37,8
     LTEXT           "%",IDC_STATIC_PTS_MAXSCALINGPCT,159,457,8,8
-    LTEXT           "Maximum alignment shift at targets",IDC_STATIC_PTS_MAXALIGNSHIFT,8,435,102,8
+    LTEXT           "Maximum alignment shift at targets",IDC_STATIC_PTS_MAXALIGNSHIFT,8,435,103,8
     EDITTEXT        IDC_EDIT_PTS_MAXALIGNSHIFT,112,433,23,12,ES_AUTOHSCROLL
     LTEXT           "% of field",IDC_STATIC_PTS_PERCENTOFFIELD,138,435,28,8
     CTEXT           "Area map not defined",IDC_STATIC_PTS_MAPSTATUS,16,158,148,8
