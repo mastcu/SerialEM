@@ -66,7 +66,7 @@ private:
   
   void ClearArea();
   void CancelAddingDefining();
-  bool KeepAddingChoiceBox(CString mess);
+  bool KeepAddingChoiceBox(CString mess, int groupID = 0);
 
 public:
   GetMember(int, FitPlaneGroupID);

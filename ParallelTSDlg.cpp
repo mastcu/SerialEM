@@ -483,7 +483,7 @@ void CParallelTSDlg::Update()
     && !mSavedTargets && !mRefiningTargets && noTasks);
   m_butNewAdjTransform.EnableWindow(noTasks && !(mDefiningPoints || mAddingTargets)
     && !mSavedTargets && !mRefiningTargets && mSettingUpTargetArea && mHasAreaMap &&
-    !mMakingNewXform);
+    !mMakingNewXform && !numPoints);
   
   m_statAlignStartingTilt.EnableWindow(noTasks && !(mDefiningPoints || mAddingTargets)
     && !mSavedTargets && !mRefiningTargets && !mMakingNewXform);
@@ -733,7 +733,7 @@ bool CParallelTSDlg::AreaMapInBuf(EMimageBuffer *imBuf)
   return (mapID > 0 && imBuf->mMapID == mapID);
 }
 
-bool CParallelTSDlg::KeepAddingChoiceBox(CString mess)
+bool CParallelTSDlg::KeepAddingChoiceBox(CString mess, int groupID)
 {
   int numPoints, arrSize, choice;
   bool keepAdding;
@@ -747,10 +747,11 @@ bool CParallelTSDlg::KeepAddingChoiceBox(CString mess)
   int numAcq;
   CString label, lastlabel;
 
-  if (mWinApp->mNavigator->GetCurrentOrGroupItem(item) < 0)
-    return false;
-
-  int groupID = item->mGroupID;
+  if (!groupID) {
+    if (mWinApp->mNavigator->GetCurrentOrGroupItem(item) < 0)
+      return false;
+    groupID = item->mGroupID;
+  }
   numPoints = mWinApp->mNavigator->CountItemsInGroup(groupID, label, lastlabel,
     numAcq, &indexVec);
 
@@ -759,11 +760,12 @@ bool CParallelTSDlg::KeepAddingChoiceBox(CString mess)
   keepAdding = choice == IDYES || choice == IDNO;
 
   if (choice == IDYES || choice == IDCANCEL) {
-    if (numPoints == 1)
-      mWinApp->mNavigator->DeleteItem();
-    else
-      mWinApp->mNavigator->ExternalDeleteGroup(mWinApp->mNavigator->m_bCollapseGroups != 0);
-    mNumberBeforeAdd = (int)itemArray->GetSize();
+    for (int ind = numPoints - 1; ind >= 0; ind--) {
+      item = itemArray->GetAt(indexVec[ind]);
+      if (item) {
+        mWinApp->mNavigator->ExternalDeleteItem(item, indexVec[ind]);
+      }
+    }
   }
 
   if (choice == IDCANCEL) {
@@ -789,7 +791,7 @@ void CParallelTSDlg::DoPlaneFit()
   // Asses the quality of the sample points, and get them sorted with center point first
   err = mParallelTSHelper->AssessPtsToFitPlane(indexVec, sortedIndexVec, mess);
   if (err) {
-    keepAdding = KeepAddingChoiceBox(mess);
+    keepAdding = KeepAddingChoiceBox(mess, mFitPlaneGroupID);
     if (keepAdding)
       OnDefinePtsFitPlane();
 
@@ -821,10 +823,10 @@ void CParallelTSDlg::StartRefineTargets()
 {
   CMapDrawItem *item;
   MapItemArray *itemArr = mWinApp->mNavigator->GetItemArray();
-  int err, numPoints;
+  int ind, err, numPoints, numRemove;
   bool keepAdding = false;
   CString mess;
-  IntVec indexVec, mapIDs;
+  IntVec indexVec, mapIDs, farInds;
   CString label, lastlabel;
   int action;
 
@@ -832,19 +834,45 @@ void CParallelTSDlg::StartRefineTargets()
     action, &indexVec);
 
   if (numPoints == 0) {
-    err = -2;
-    mess = "There are no targets to refine";
-  } else {
-    // Remove points outside image shift limit
-    err = mParallelTSHelper->AssessISTargetShiftLimit(indexVec, mess);
-  }
-  if (err) {
-    keepAdding = KeepAddingChoiceBox(mess);
+    keepAdding = KeepAddingChoiceBox("There are no targets to refine", mTargetGroupID);
     if (keepAdding)
       OnAddTargets();
-
     return;
+  } else {
+
+    // Remove points outside image shift limit
+    numRemove = mParallelTSHelper->AssessISTargetShiftLimit(indexVec, farInds);
+
+    if (farInds.size()) {
+      mess.Format("%d targets are beyond the image shift limit from the center point."
+        " How would you like to proceed?", numRemove);
+      CString yes;
+      yes.Format("Skip %d Targets && Continue", numRemove);
+      action = SEMThreeChoiceBox(mess, yes, "Clear All Targets", "Cancel", 
+        MB_YESNOCANCEL | MB_ICONQUESTION);
+      if (action == IDYES) {
+        std::sort(farInds.begin(), farInds.end());
+        for (ind = numRemove - 1; ind >= 0; ind--) {
+          item = itemArr->GetAt(farInds[ind]);
+          mWinApp->mNavigator->ExternalDeleteItem(item, farInds[ind]);
+        }
+      } else if (action == IDNO) {
+        for (ind = numPoints - 1; ind >= 0; ind--) {
+          item = itemArr->GetAt(indexVec[ind]);
+          if (item) {
+            mWinApp->mNavigator->ExternalDeleteItem(item, indexVec[ind]);
+          }
+        }
+        return;
+      } else if (action == IDCANCEL) {
+        return;
+      }
+    }
   }
+
+  //Recount items in group since some may have been removed
+  numPoints = mWinApp->mNavigator->CountItemsInGroup(mTargetGroupID, label, lastlabel,
+    action, &indexVec);
 
   for (int i = 0; i < (int)indexVec.size(); i++) {
     item = itemArr->GetAt(indexVec[i]);
@@ -905,16 +933,18 @@ void CParallelTSDlg::OnProcessSKey()
 void CParallelTSDlg::CancelAddingDefining()
 {
   CString label, lastlabel;
-  int numAcq, numPoints, arrSize;
+  int numAcq, numPoints, arrSize, groupID;
   IntVec indexVec;
   CMapDrawItem *item;
   MapItemArray *itemArray;
 
-  if (mDefiningPoints)
+  if (mDefiningPoints) {
     mDefiningPoints = false;
-  else if (mAddingTargets)
+    groupID = mFitPlaneGroupID;
+  } else if (mAddingTargets) {
     mAddingTargets = false;
-  else
+    groupID = mTargetGroupID;
+  } else
     return;
 
   if (mWinApp->mNavigator) {
@@ -924,15 +954,15 @@ void CParallelTSDlg::CancelAddingDefining()
       mWinApp->mNavigator->OnDrawPoints();
     }
 
-    if (arrSize > mNumberBeforeAdd &&
-      mWinApp->mNavigator->GetCurrentOrGroupItem(item) >= 0) {
-      numPoints = mWinApp->mNavigator->CountItemsInGroup(item->mGroupID, label, lastlabel,
+    if (arrSize > mNumberBeforeAdd) {
+      numPoints = mWinApp->mNavigator->CountItemsInGroup(groupID, label, lastlabel,
         numAcq, &indexVec);
-      if (numPoints == 1)
-        mWinApp->mNavigator->DeleteItem();
-      else
-        mWinApp->mNavigator->ExternalDeleteGroup(
-          mWinApp->mNavigator->m_bCollapseGroups != 0);
+      for (int ind = numPoints - 1; ind >= 0; ind--) {
+        item = itemArray->GetAt(indexVec[ind]);
+        if (item) {
+          mWinApp->mNavigator->ExternalDeleteItem(item, indexVec[ind]);
+        }
+      }
     }
   }
 
@@ -1269,6 +1299,7 @@ void CParallelTSDlg::OnFinalizeArea()
     mSettingUpTargetArea = false;
 
     mWinApp->mParallelTSHelper->DeleteTargetsFromNav();
+    mSettingUpTargetArea = true;
 
   } else {
     if (m_iTargetType == 0) {

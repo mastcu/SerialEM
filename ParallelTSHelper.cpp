@@ -91,6 +91,7 @@ int CParallelTSHelper::ISToTargetsBusy()
     mNavHelper->GetRealigning() || mWinApp->mFocusManager->DoingFocus()) ? 1 : 0;
 }
 
+// Clears data from vectors and resets members for a new run
 void CParallelTSHelper::ClearTargets(bool autofocus)
 {
   mStartIndex = 0;
@@ -223,8 +224,9 @@ void CParallelTSHelper::StopParallelTSShift(bool error)
   mDoNextShift = false;
   mInitialStateSaved = false;
 
-  if (mActionAtTarget == PARALLELTS_ACTION_AUTOFOCUS || 
-    mActionAtTarget == PARALLELTS_ACTION_ADJUST) {
+  if (mActionAtTarget == PARALLELTS_ACTION_AUTOFOCUS || (!error && 
+    mActionAtTarget == PARALLELTS_ACTION_ADJUST)) {
+    ClearSavedTargets();
     numPoints = (int)mISTargetPointIDs.size();
     if (numPoints > 0) {
       item = mWinApp->mNavigator->FindItemWithMapID(
@@ -237,11 +239,11 @@ void CParallelTSHelper::StopParallelTSShift(bool error)
     }
 
     if (!GetDebugOutput('N')) {
-      if (numPoints == 1)
-        mWinApp->mNavigator->DeleteItem();
-      else if (numPoints > 1) {
-        mWinApp->mNavigator->ExternalDeleteGroup(
-          mWinApp->mNavigator->m_bCollapseGroups != 0);
+      for (int ind = 0; ind < numPoints; ind++) {
+        item = mWinApp->mNavigator->FindItemWithMapID(mISTargetPointIDs[ind], false);
+        if (item)
+          mWinApp->mNavigator->ExternalDeleteItem(item,
+            mWinApp->mNavigator->GetFoundItem());
       }
     }
   } 
@@ -261,18 +263,25 @@ void CParallelTSHelper::StopParallelTSShift(bool error)
 // Applies image shift to get to the next target. 
 // If returned error code is < 0, the whole procedure should be aborted. If > 0, then just
 // the given target should be skippped.
-int CParallelTSHelper::ISToNextTarget(int targetIndex, CString &err)
+int CParallelTSHelper::ISToNextTarget(int targetID, CString &err)
 {
   double ISX, ISY, delX, delY, delBTX = 0., delBTY = 0., delAstigX = 0., delAstigY = 0.;
   float delay, transISX, transISY;
   int BTdelay, fromMagInd, mapID;
-  CMapDrawItem *item = mWinApp->mNavigator->FindItemWithMapID(targetIndex, false);
+  CMapDrawItem *item = mWinApp->mNavigator->FindItemWithMapID(targetID, false);
+  int navInd;
   ScaleMat st2is;
   bool doBacklash = mScope->GetAdjustForISSkipBacklash() <= 0;
   ComaVsISCalib *comaVsIS = mWinApp->mAutoTuning->GetComaVsIScal();
   ParallelTSOptions *parTSopt = mNavHelper->GetParTSOptions();
   CString mess;
+
+  if (!item) {
+    err.Format("The given target item no longer exists");
+    return -3;
+  }
   
+  navInd = mWinApp->mNavigator->GetFoundItem();
   mapID = item->mDrawnOnMapID;
   CMapDrawItem *mapItem = mWinApp->mNavigator->FindItemWithMapID(mapID);
   if (!mapItem) {
@@ -326,8 +335,8 @@ int CParallelTSHelper::ISToNextTarget(int targetIndex, CString &err)
 
   if (!mShiftManager->ImageShiftIsOK(ISX, ISY, FALSE)) {
     err.Format("Point at navigator index %d is beyond image shift limit and will "
-      "be skipped", targetIndex);
-    PrintfToLog("%s", err);
+      "be skipped", navInd);
+    mWinApp->mNavigator->ExternalDeleteItem(item, navInd);
     return 1;
   }
 
@@ -363,6 +372,7 @@ int CParallelTSHelper::ISToNextTarget(int targetIndex, CString &err)
   return 0;
 }
 
+// Next task in the IS to target routine
 void CParallelTSHelper::ISToTargetNextTask(int param)
 {
   int index, mapID;
@@ -524,13 +534,15 @@ void CParallelTSHelper::ISToTargetNextTask(int param)
 
     // If returned error code is < 0, the whole procedure should be aborted. 
     // If > 0, then just the given target should be skippped.
-    if (index < 0) {
+    if (index) {
       AfxMessageBox(mess, MB_EXCLAME);
-      StopParallelTSShift(true);
-      ClearSavedTargets();
-      return;
-    } else if (index > 0) {
-      mLastActionFailed = true;
+      if (index < 0) {
+        StopParallelTSShift(true);
+        ClearSavedTargets();
+        return;
+      } else if (index > 0) {
+        mLastActionFailed = true;
+      }
     }
 
     // If failed at this point, skip action and shift to next point if continuing on
@@ -577,6 +589,7 @@ void CParallelTSHelper::ISToTargetNextTask(int param)
   mWinApp->AddIdleTask(TASK_IS_TO_PARALLELTS_TARGET, 0, 0);
 }
 
+// Save a map for the parallel tilt series area
 int CParallelTSHelper::SaveAreaMap(CString &err)
 {
   int index;
@@ -641,6 +654,7 @@ int CParallelTSHelper::SaveAreaMap(CString &err)
   return 0;
 }
 
+// Save a map centered on a target
 int CParallelTSHelper::SaveTargetMap(CString &err, bool &saved)
 {
   int areaStore, tgtStore, store, index, numMaps;
@@ -706,6 +720,7 @@ int CParallelTSHelper::SaveTargetMap(CString &err, bool &saved)
   return 0;
 }
 
+// Saves the state of the microscope before beginning the routine
 int CParallelTSHelper::SaveInitialState(CString &err)
 {
   int area;
@@ -893,7 +908,7 @@ int CParallelTSHelper::FitPlane(float &pretilt, float &xPitch, float &residual,
   if ((int)mISTargetDefocus.size() < MIN_NUM_POINTS_TO_FIT_PLANE) {
     mess.Format("Defocus was measured at %d out of %d points, "
       "but %d are required to fit to plane",
-      (int)mISTargetDefocus.size(), (int)mISTargetPointIDs.size(), 
+      (int)mISTargetDefocus.size(), (int)mISTargetPointIDs.size() - 1, 
       MIN_NUM_POINTS_TO_FIT_PLANE);
     return 3;
   }
@@ -1075,7 +1090,7 @@ int CParallelTSHelper::AssessPtsToFitPlane(FloatVec &ptsX, FloatVec &ptsY, Float
 // Given a set of points, determine if image shifts from the center point to the other 
 // points are within IS limits. By default the first item is the starting point, unless 
 // sortedIndexVec is given in which case the center-most point will be the starting point.
-int CParallelTSHelper::AssessISTargetShiftLimit(IntVec indexVec, CString &mess, 
+int CParallelTSHelper::AssessISTargetShiftLimit(IntVec indexVec, IntVec &farInd, 
   IntVec *sortedIndexVec)
 {
   int numPoints, newInd;
@@ -1084,6 +1099,7 @@ int CParallelTSHelper::AssessISTargetShiftLimit(IntVec indexVec, CString &mess,
   MapItemArray *itemArr = mWinApp->mNavigator->GetItemArray();
   float stageZ, cenX, cenY;
   float ISlimit = mShiftManager->GetRegularShiftLimit();
+  farInd.clear();
 
   numPoints = (int)indexVec.size();
 
@@ -1125,11 +1141,11 @@ int CParallelTSHelper::AssessISTargetShiftLimit(IntVec indexVec, CString &mess,
       if (sortedIndexVec)
         sortedIndexVec->push_back(indexVec[i]);
     } else {
-      PrintfToLog("WARNING: Point at navigator index %d is beyond image shift limit\n"
-        " and therefore unusable.", indexVec[i] + 1);
+      farInd.push_back(indexVec[i]);
     }
   }
-  return 0;
+
+  return (int)farInd.size();
 }
 
 // Assess if the provided points are sufficient for a 2D least squares fit
@@ -1138,6 +1154,7 @@ int CParallelTSHelper::AssessPtsToFitPlane(IntVec indexVec, IntVec &sortedIndexV
 {
   int numPoints, err;
   FloatVec ptsX, ptsY;
+  IntVec farInds;
   CMapDrawItem *item;
   MapItemArray *itemArr = mWinApp->mNavigator->GetItemArray();
   float ratio, longAxis;
@@ -1152,10 +1169,7 @@ int CParallelTSHelper::AssessPtsToFitPlane(IntVec indexVec, IntVec &sortedIndexV
     return -1;
   }
 
-  err = AssessISTargetShiftLimit(indexVec, mess, &sortedIndexVec);
-  if (err) {
-    return err;
-  }
+  err = AssessISTargetShiftLimit(indexVec, farInds, &sortedIndexVec);
 
   //Check that there are still enough remaining points
   numPoints = (int)sortedIndexVec.size();
@@ -1184,6 +1198,7 @@ int CParallelTSHelper::AssessPtsToFitPlane(IntVec indexVec, IntVec &sortedIndexV
   return 0;
 }
 
+// When a new round of targets are added, this appends new targets to existing targets
 int CParallelTSHelper::AppendNewTargets(IntVec targetMapIDs, CString &mess)
 {
   int ind, jnd, size;
@@ -1215,6 +1230,7 @@ int CParallelTSHelper::AppendNewTargets(IntVec targetMapIDs, CString &mess)
   return 0;
 }
 
+// Searches the navigator for items with IDs that have been saved during routine
 int CParallelTSHelper::GetSavedTargetsInNav(IntVec *navInd, IntVec *indices)
 {
   int ind, jnd, numPoints, numSaved;
@@ -1419,6 +1435,7 @@ int CParallelTSHelper::ConvertToParTSItem(CString &err, CMapDrawItem *item)
   return 0;
 }
 
+// Gets the item from which TS parameters are being inherited, and returnss the nav index 
 int CParallelTSHelper::GetTSparamItem(CMapDrawItem *&item)
 {
   item = NULL;
@@ -1437,12 +1454,16 @@ int CParallelTSHelper::GetTSparamItem(CMapDrawItem *&item)
   return navInd;
 }
 
+// Opens the tilt series parameters window for the current PTS item
 void CParallelTSHelper::UpdateTSParams()
 {
   CMapDrawItem *item;
   int ind;
   
-  ind = GetTSparamItem(item);
+  if (!mParTSitem)
+    return;
+  item = mWinApp->mNavigator->FindItemWithMapID(mParTSitem->mMapID, false);
+  ind = mWinApp->mNavigator->GetFoundItem();
   if (ind < 0) {
     return;
   }
@@ -1472,6 +1493,7 @@ bool CParallelTSHelper::CanAdjustISVectors(int fromMag, bool multiShot, CString 
   }
 }
 
+// Get the ID of the center point in the target group, which is always the first target
 int CParallelTSHelper::GetCenterPtID()
 {
   if (mSavedTargetIDs.size() > 0)
@@ -1545,7 +1567,7 @@ int CParallelTSHelper::GetISVectors(int groupID, CString &err)
       }
 
       if (!mShiftManager->ImageShiftIsOK(ISX, ISY, FALSE)) {
-        PrintfToLog("Point at navigator index %d is beyond image shift limit and will "
+        SEMTrace('N', "Target at navigator index %d is beyond image shift limit and will "
           "be skipped", indexVec[ind]);
         continue;
       }
@@ -1559,6 +1581,7 @@ int CParallelTSHelper::GetISVectors(int groupID, CString &err)
   return 0;
 }
 
+// Use the saved image shifts and adjustments to generate an adjusting transform
 int CParallelTSHelper::CreateAdjustingTransform(CString &err)
 {
   int ind, jnd;
@@ -1607,6 +1630,7 @@ int CParallelTSHelper::CreateAdjustingTransform(CString &err)
   return 0;
 }
 
+// Deletes all saved parallelTS targets from the navigator
 void CParallelTSHelper::DeleteTargetsFromNav()
 {
   int numPoints, ind, jnd;

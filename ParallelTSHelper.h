@@ -103,7 +103,8 @@ public:
   int StartShiftToTargets(IntVec targetMapIDs, int actionType);
   void StopParallelTSShift(bool error = false);
   int SaveAreaMap(CString &err);
-  int AssessISTargetShiftLimit(IntVec indexVec, CString &mess, IntVec *sortedIndexVec = NULL);
+  int AssessISTargetShiftLimit(IntVec indexVec, IntVec &farInd, 
+    IntVec *sortedIndexVec = NULL);
   int AssessPtsToFitPlane(FloatVec &ptsX, FloatVec &ptsY, FloatVec &ptsZ, CString &mess);
   int AssessPtsToFitPlane(IntVec indexVec, IntVec &sortedIndexVec, CString &mess);
   int GetSavedTargetsInNav(IntVec *navInd, IntVec *indices = NULL);
@@ -117,7 +118,7 @@ public:
   void DeleteTargetsFromNav();
 
 private:
-  int ISToNextTarget(int targetIndex, CString &err);
+  int ISToNextTarget(int targetID, CString &err);
   void UpdatePlaneParamsInDlg();
   void PauseParallelTSShift();
   int SaveInitialState(CString &err);
