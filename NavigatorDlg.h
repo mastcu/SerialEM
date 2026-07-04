@@ -76,7 +76,7 @@ class CNavigatorDlg : public CBaseDlg
 public:
   CNavAcquireDlg *mNavAcquireDlg;
   BOOL FittingMontage() {return mMontItem != NULL;};
-  int FitMontageToItem(MontParam * montParam, int binning, int magIndex, 
+  int FitMontageToItem(MontParam * montParam, int binning, int magIndex,
     BOOL forceStage, float overlapFac, int iCam, BOOL lowDose);
 	void SetupSuperMontage(BOOL skewed);
 	int FullMontage(bool skipDlg, float overlapFac, int source = 0);
@@ -290,19 +290,20 @@ protected:
 	afx_msg void OnChangeEditPtlabel();
 	afx_msg void OnChangeEditPtnote();
 	virtual BOOL OnInitDialog();
-	afx_msg void OnSize(UINT nType, int cx, int cy);
+  afx_msg void OnSize(UINT nType, int cx, int cy);
   afx_msg void OnCancel();
-	afx_msg void OnDrawOne();
+  afx_msg BOOL OnHelpInfo(HELPINFO* lpHelpInfo);
+  afx_msg void OnDrawOne();
 	afx_msg void OnGotoXy();
 	afx_msg void OnMove(int x, int y);
+  afx_msg void OnInitMenuPopup(CMenu*  pPopupMenu, UINT  nIndex, BOOL  bSysMenu);
   afx_msg void OnActivate(UINT nState, CWnd* pWndOther, BOOL bMinimized);
   afx_msg void OnSelendokCombocolor();
 	afx_msg void OnCheckAcquire();
   afx_msg void OnDblclkListviewer();
   afx_msg void OnSetFocusListviewer();
-	afx_msg void OnDrawNone();
   afx_msg void OnCheckrotate();
-	//}}AFX_MSG
+  //}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 
 private:
@@ -551,6 +552,7 @@ private:
   int mGridIndexOfMap;         // Index of grid that last map was loaded from
   double mAcqAutoDefocus;      // Keep track of valid focus from autofocus for tilt series
   int mNumIStargetItems;       // To keep track of number of items that have IS targets
+  int mExpandedHeight;         // Height before window was shrunk
 
 public:
   afx_msg void OnGotoMarker();
@@ -755,7 +757,6 @@ public:
   void ToggleNewFileOverRange(int start, int end, int forMultiGrid = 0);
   void NewFileRangeNextTask(int param);
   BOOL m_bDrawLabels;
-  afx_msg void OnDrawLabels();
   void ManageNumDoneAcquired(void);
   int SetCurrentRegistration(int newReg);
   int MakeUniqueID(void);
@@ -790,9 +791,16 @@ void SetChanged(BOOL inVal);
 void AddFocusAreaPoint(bool drawFirst);
 bool AtSamePosAsHigherMagMapInRange(int itemInd, int startInd, int endInd);
 bool GetHolePositionVectors(FloatVec **xypos, IntVec **index);
-CButton m_butTableIndexes;
 BOOL m_bTableIndexes;
-afx_msg void OnTableIndexes();
+afx_msg void OnViewIndexes();
+afx_msg void OnUpdateViewIndexes(CCmdUI *pCmdUI);
+afx_msg void OnViewLabels();
+afx_msg void OnUpdateViewLabels(CCmdUI *pCmdUI);
+afx_msg void OnViewAllRegistrations();
+afx_msg void OnUpdateViewAllRegistrations(CCmdUI *pCmdUI);
+afx_msg void OnViewDrawNothing();
+afx_msg void OnUpdateViewDrawNothing(CCmdUI *pCmdUI);
+afx_msg void OnNavShrink();
 };
 
 //{{AFX_INSERT_LOCATION}}

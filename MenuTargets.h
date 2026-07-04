@@ -47,7 +47,6 @@ protected:
   afx_msg void OnTasksNavigator();
 	afx_msg void OnUpdateTasksNavigator(CCmdUI* pCmdUI);
 	afx_msg void OnSaveNavFile();
-	afx_msg void OnUpdateSaveNavFile(CCmdUI* pCmdUI);
 	afx_msg void OnSaveasNavFile();
 	afx_msg void OnNavigatorClose();
 	afx_msg void OnUpdateNavigatorClose(CCmdUI* pCmdUI);
@@ -198,6 +197,7 @@ public:
   afx_msg void OnUpdateNoUserShots(CCmdUI* pCmdUI);
   afx_msg void OnCalibrationMagisoffsets();
   afx_msg void OnUpdateCalibrationEftemISoffset(CCmdUI *pCmdUI);
+  afx_msg void OnUpdateSaveNavFile(CCmdUI* pCmdUI);
   afx_msg void OnNavigatorRotatemap();
   afx_msg void OnUpdateNavigatorRotatemap(CCmdUI *pCmdUI);
   afx_msg void OnNavigatorAligntoitem();

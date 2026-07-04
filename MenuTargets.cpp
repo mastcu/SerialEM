@@ -613,8 +613,6 @@ void CMenuTargets::OnTasksNavigator()
     mNavigator->SetWindowPlacement(placement);
   }
   mNavigator->ShowWindow(SW_SHOW);
-  if (mWinApp->GetOpenStateWithNav())
-    mNavHelper->OpenStateDialog();
   if (!param->autosaveFile.IsEmpty())
     mNavigator->LoadNavFile(true, false);
   mWinApp->RestoreViewFocus();

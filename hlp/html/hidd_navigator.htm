@@ -22,7 +22,7 @@
         </TR>
         <TR VALIGN="top">
           <TD width="256"><A HREF="#nav_acquire_controls">Acquisition Controls</A></TD>
-          <TD>Between item properties and the horizontal line, controls to set the properties 
+          <TD>Between the two horizontal lines, controls to set the properties 
           when acquiring data at the current item.</TD>
         </TR>
         <TR VALIGN="top">
@@ -99,11 +99,9 @@
 
       <P>The Navigator window can be resized to show more or less of the list box.</P>
       <P><i><A NAME="nav_current_item"></A><B><FONT size="3">Properties of Current Item</FONT></B></i></P>
-      <P><B>Label</B></P>
-      <P>The label is a short identifier that will be drawn on the image. The Navigator 
-        will assign labels as sequential numbers but you are free to edit them to say 
-        something more meaningful.&nbsp; When groups are collapsed and a single item is 
-        selected in a group, the label of that item will be shown.</P>
+      <P><B>Index #</B></P>
+      <P>In the upper left appears the number of the current item in the table, numbered 
+        from 1. When the current table line is a summary of a group of points, the range of item numbers is shown.</P>
       <P><B>Registration Point</B></P>
       <P>Use this check box to mark a point as a registration point, which can be used to 
         transform locations when the grid is repositioned in the holder. The first time 
@@ -117,6 +115,14 @@
       <P>Use this check box to mark a point as a corner of an area for which you want to 
         construct a montage.&nbsp; The hot key C (without Shift or Ctrl) can be used to 
         toggle this check box.</P>
+      <P><B>Label</B></P>
+      <P>The label is a short identifier that will be drawn on the image. The Navigator 
+        will assign labels as sequential numbers but you are free to edit them to say 
+        something more meaningful.&nbsp; When groups are collapsed and a single item is 
+        selected in a group, the label of that item will be shown.</P>
+      <P><B>Note</B></P>
+      <P>This text box allows you enter an arbitrarily long note about the current item.&nbsp; 
+        Various operations will also add a note to generated items.</P>
       <P><B>Color</B></P>
       <P>You can change the color of an item with this selector. By default, single 
         points are red, drawn polygons are green, maps are blue, and supermontage 
@@ -146,12 +152,6 @@
         item can be marked as such a template, so if there is already a map marked for 
         this, it will be unselected when you check the box for a new item. See <B>Anchor Map</B>
         below for details.</P>
-      <P><B>Item #</B></P>
-      <P>To the left of the Note text box appears the number of the current item in the 
-        table, numbered from 1. When the current table line is a summary of a group of 
-        points, their range of item numbers is shown.</P>
-      <P><B>Note</B></P>
-      <P>This text box allows you enter an arbitrarily long note about the current item.</P>
       <P><b><i><A NAME="nav_acquire_controls"></A>Acquisition Controls<B><FONT size="3"></FONT></B></i></b></P>
       <P>The controls in this section allow items to be marked for particular kinds of 
         acquisition, including tilt series and montaging, both of which involve numerous 
@@ -374,26 +374,7 @@
       <P>Use this button to change the name of the file that is set to be opened for this 
         item or group. The existing filename is shown just to the right of this button.</P>
       <P><i><A NAME="nav_general_behavior"></A><B><FONT size="3">Controls of General Behavior</FONT></B></i></P>
-      <P><B><A NAME="navgb_registration"></A>Current Registration</B></P>
-      <P>The current registration starts at 1 and should be increased every time the grid 
-        is repositioned in the holder or the holder is replaced in the microscope. Use 
-        the spin button to change the current registration. An image is associated with 
-        the current registration when it is acquired. When items are created by marking 
-        on images, they are assigned the registration of the image, which is not 
-        necessarily the current registration.</P>
-      <P><B>(Draw:) All Reg.</B></P>
-      <P>Ordinarily the only items that will be drawn on an image are ones with the same 
-        registration as the image. Use this check box to turn on drawing of items from 
-        other registrations.</P>
-      <P><B>(Draw:) None</B></P>
-      <P>Use this check box to turn off drawing of all items.</P>
-    <P><b>(Draw:) Labels</b></P>
-    <P>Use this check box to turn on or off the drawing of labels.&nbsp; With it off, 
-      no labels will appear.&nbsp; With it on, labels will appear except for 
-      closely-spaced points in 
-      groups larger than a threshold size that can be set with the 
-      <A HREF="menu_navigator.htm#hid_options_setpointlabelthreshold">Set Point Label Threshold</A> command.</P>
-      <P><B><A NAME="navgb_collapse"></A>Collapse Groups</B></P>
+      <P><B><A NAME="navgb_registration"></A><A NAME="navgb_collapse"></A>Collapse Groups</B></P>
       <P>Items that are added together by various means are marked as belonging to a 
         group with a unique ID number. Use this check box to have each group summarized 
         by a single line in the table, showing the number of items in the group, the 
@@ -410,10 +391,7 @@
         checkbox or typing 'A' will toggle the 'Acquire' status of the first item and 
         set all the other items summarized on that line to the same status, except for 
         items marked for tilt series.</P>
-    <P><strong>Indexes</strong></P>
-    <P>Use this check box to add a column to the table with the index of each item, 
-      numbered from 1.</P>
-      <P><B><A NAME="navgb_showacquire"></A>Show Acquire Area</B></P>
+    <P><B><A NAME="navgb_showacquire"></A>Show Acq.</B></P>
       <P>Use this check box to turn on drawing of a yellow box representing the current 
         acquisition area, centered on the marker point in the current image, which is 
         placed by clicking with the left mouse button.&nbsp; The box will also be 
@@ -524,7 +502,14 @@
           If you set such items as Acquire instead, you must turn off the Acquire before saving 
           from the offline instance, because the focus positions will be lost if you turn 
           off Acquire in the real session in order to turn on Tilt Series</em>.</p>
-      <P><i><A NAME="nav_action_buttons"></A><B><FONT size="3">Action Buttons</FONT></B></i></P>
+      <P><i><A NAME="nav_action_buttons"></A></i><B>Current Registration</B></P>
+      <P>The current registration starts at 1 and should be increased every time the grid 
+        is repositioned in the holder or the holder is replaced in the microscope. Use 
+        the spin button to change the current registration. An image is associated with 
+        the current registration when it is acquired. When items are created by marking 
+        on images, they are assigned the registration of the image, which is not 
+        necessarily the current registration.</P>
+      <P><i><B><FONT size="3">Action Buttons</FONT></B></i></P>
       <P><B>Add Stage Pos</B></P>
       <P>Use this button to add the current stage position as a point item. Note that the 
         stage position will be adjusted by any image shift, so it may not match the 

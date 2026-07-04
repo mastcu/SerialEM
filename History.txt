@@ -3,6 +3,11 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+7/4/26: Added menus to Navigator window, moved many commands from main
+Navigator menu into them and moved all commands from Montaging & Grids into
+the main menu.  Moved "Open Imaging states" to Tasks menu.  For help to work,
+replace SerialEM.chm also.
+
 7/1/26: SEM_4-3-0beta12
 7/1/26: Added script command to report which grid/slot is loaded on stage.
 

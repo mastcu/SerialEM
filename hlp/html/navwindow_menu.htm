@@ -9,6 +9,9 @@
       {
         width: 238px;
       }
+      .auto-style1 {
+        width: 275px;
+      }
   --></style>
   </HEAD>
   <BODY BGCOLOR="#ffffff" TEXT="#000000">
@@ -20,175 +23,218 @@
       </P>
       <TABLE BORDER cols="2">
        <TR VALIGN="top">
-          <TD class="style1"><b>>File Menu</b></TD>
+          <TD class="auto-style1"><b>File Menu</b></TD>
           <TD>This menu has commands for opening and saving Navigator files
             of points.</TD>
         </TR>
         <TR VALIGN="top">
-          <TD class="style1"><A HREF="#hid_save_nav_file">Save</A></TD>
+          <TD class="auto-style1"><A HREF="#hid_save_nav_file">Save</A></TD>
           <TD>Save current Navigator items to a file.</TD>
         </TR>
         <TR VALIGN="top">
-          <TD class="style1"><A HREF="#hid_saveas_nav_file">Save As...</A></TD>
+          <TD class="auto-style1"><A HREF="#hid_saveas_nav_file">Save As...</A></TD>
           <TD>Save current Navigator items to a different file.</TD>
         </TR>
         <TR VALIGN="top">
-          <TD class="style1"><A HREF="#hid_load_nav_file">>Load...</A></TD>
+          <TD class="auto-style1"><A HREF="#hid_load_nav_file">Load...</A></TD>
           <TD>Read a Navigator file and open Navigator window if it is not open.</TD>
         </TR>
         <TR VALIGN="top">
-          <TD class="style1"><a href="#hid_navigator_mergefile">Merge File</a></TD>
+          <TD class="auto-style1"><a href="#hid_navigator_mergefile">Merge File</a></TD>
           <TD>Merge items from other Navigator file into current items, eliminating
             duplicates.</TD>
         </TR>
         <TR VALIGN="top">
-          <TD class="style1"><A HREF="#hid_navigator_close">Close</A></TD>
+          <TD class="auto-style1"><A HREF="#hid_navigator_close">Close</A></TD>
           <TD>Close the Navigator window.</TD>
         </TR>
-        <TR VALIGN="top">
-          <TD class="style1"><b>Options Menu</b></TD>
+         <TR VALIGN="top">
+          <TD class="auto-style1"> </TD>
+        </TR>
+      <TR VALIGN="top">
+          <TD class="auto-style1"><b>Options Menu</b></TD>
           <TD>This menu has various options to control autosaving, file type, map loading
             behavior, and drawing of point labels.</TD>
         </TR>
          <TR VALIGN="top">
-          <TD class="style1">&nbsp;&nbsp; <A HREF="#hid_options_setpointlabelthreshold">Set Point Label Threshold</A></TD>
+          <TD class="auto-style1"><A HREF="#hid_options_setpointlabelthreshold">Set Point Label Threshold</A></TD>
           <TD>Set maximum size of group for which point labels will be drawn.</TD>
         </TR>
          <TR VALIGN="top">
-           <TD class="style1">&nbsp;&nbsp; <A HREF="#hid_options_useitemlabelsinfilenames">Use
+           <TD class="auto-style1"><A HREF="#hid_options_useitemlabelsinfilenames">Use
                Item Labels in Filenames</A></TD>
           <TD>Use label in name of new file created for an item.</TD>
         </TR>
          <TR VALIGN="top">
-          <TD class="style1">&nbsp;&nbsp; <A HREF="#hid_navigator_autosave">Autosave Nav File</A></TD>
+          <TD class="auto-style1"><A HREF="#hid_navigator_autosave">Autosave Nav File</A></TD>
           <TD>Periodically save entries to file.</TD>
         </TR>
         <TR VALIGN="top">
-          <TD class="style1">&nbsp;&nbsp; <a href="#hid_navigator_writeasxml">Write as XML</a></TD>
+          <TD class="auto-style1"><a href="#hid_navigator_writeasxmlfile">Write as XML File</a></TD>
           <TD>Write Navigator file as an XML file instead of in autodoc format.</TD>
         </TR>
         <TR VALIGN="top">
-          <TD class="style1">&nbsp;&nbsp; <A HREF="#hid_navigator_convertmapstobytes">Convert Maps to Bytes</A></TD>
+          <TD class="auto-style1"><A HREF="#hid_navigator_convertmapstobytes">Convert Maps to Bytes</A></TD>
           <TD>Convert maps to bytes when creating or loading them to save memory.</TD>
         </TR>
         <TR VALIGN="top">
-          <TD class="style1">&nbsp;&nbsp; <A HREF="#hid_navigator_loadunbinned">Load Maps Unbinned</A></TD>
+          <TD class="auto-style1"><A HREF="#hid_navigator_loadunbinned">Load Maps Unbinned</A></TD>
           <TD>Always load montage maps with overview binning of 1.</TD>
         </TR>
+         <TR VALIGN="top">
+          <TD class="auto-style1"> </TD>
+        </TR>
         <TR VALIGN="top">
-          <TD class="style1"><b>Map/Polygon Menu</b></TD>
+          <TD class="auto-style1"><b>View Menu</b></TD>
+          <TD>This menu has commands for controlling what is drawn on the image.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="auto-style1"><A HREF="#hid_view_indexes">Indexes</A></TD>
+          <TD>Toggle showing index numbers of items in table.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="auto-style1"><A HREF="#hid_view_lables">Labels</A></TD>
+          <TD>Toggle showing labels on drawn items.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="auto-style1"><A HREF="#hid_view_allregistrations">All Registrations</A></TD>
+          <TD>Toggle drawing items from all registrations on image.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="auto-style1"><A HREF="#hid_view_drawnothing">Draw Nothing</A></TD>
+          <TD>Turn off all drawing of Navigator items.</TD>
+        </TR>
+          <TR VALIGN="top">
+          <TD class="auto-style1"> </TD>
+        </TR>
+       <TR VALIGN="top">
+          <TD class="auto-style1"><b>Map/Polygon Menu</b></TD>
           <TD>This menu has commands to operate on maps and to create polygons.
           </TD>
         </TR>
         <TR VALIGN="top">
-          <TD class="style1"><A HREF="#hid_navigator_importmap">Import Map</A></TD>
+          <TD class="auto-style1"><A HREF="#hid_navigator_importmap">Import Map</A></TD>
           <TD>Define an externally acquired image as a map.</TD>
         </TR>
         <TR VALIGN="top">
-          <TD class="style1"><A HREF="#hid_navigator_rotatemap">Rotate Map</A></TD>
+          <TD class="auto-style1"><A HREF="#hid_navigator_rotatemap">Rotate Map</A></TD>
           <TD>Rotate a map to correct orientation at current registration and magnification.</TD>
         </TR>
         <TR VALIGN="top">
-          <TD class="style1"><A HREF="#hid_navigator_adjust_backlash">Adjust for Backlash</A></TD>
+          <TD class="auto-style1"><A HREF="#hid_navigator_adjust_backlash">Adjust for Backlash</A></TD>
           <TD>Adjust stage position of map so that it can be returned to with backlash correction.</TD>
         </TR>
         <TR VALIGN="top">
-          <TD class="style1"><A HREF="#hid_navigator_backlashsettings">Backlash Settings</A></TD>
+          <TD class="auto-style1"><A HREF="#hid_navigator_backlashsettings">Backlash Settings</A></TD>
           <TD>Open dialog to control when program will adjust a new map for backlash.</TD>
         </TR>
         <TR VALIGN="top">
-          <TD class="style1"><A HREF="#hid_navigator_setacquirestate">Set Map Acquire State</A></TD>
+          <TD class="auto-style1"><A HREF="#hid_navigator_setacquirestate">Set Map Acquire State</A></TD>
           <TD>Set mag, beam, and Record parameters from current map</TD>
         </TR>
         <TR VALIGN="top">
-          <TD class="style1"><A HREF="#hid_navigator_restorestate">Restore State</A></TD>
+          <TD class="auto-style1"><A HREF="#hid_navigator_restorestate">Restore State</A></TD>
           <TD>Restore mag, beam, and Record parameters from setting to map state</TD>
         </TR>
         <TR VALIGN="top">
-          <TD class="style1">&nbsp;&nbsp; <A HREF="#hid_navigator_addcirclepolygon">Add Circle
+          <TD class="auto-style1">&nbsp;<A HREF="#hid_navigator_addcirclepolygon">Add Circle
               Polygon</A></TD>
           <TD>Add a polygon that is a circle of specified radius.</TD>
         </TR>
         <TR VALIGN="top">
-          <TD class="style1">&nbsp;&nbsp; <A HREF="#hid_navigator_polygon_from_corners">Polygon
+          <TD class="auto-style1">&nbsp;<A HREF="#hid_navigator_polygon_from_corners">Polygon
               from Corners</A></TD>
           <TD>Make a polygon from the current set of corner points.</TD>
         </TR>
-        <TR VALIGN="top">
-          <TD class="style1"><b>Transformations Menu</b></TD>
+          <TR VALIGN="top">
+          <TD class="auto-style1"> </TD>
+        </TR>
+       <TR VALIGN="top">
+          <TD class="auto-style1"><b>Transformations Menu</b></TD>
           <TD>This menu has commands for shifting or transforming Navigator items.
           </TD>
         </TR>
         <TR VALIGN="top">
-          <TD class="style1"><A HREF="#hid_navigator_shifttomarker">Shift to Marker</A></TD>
+          <TD class="auto-style1"><A HREF="#hid_navigator_shifttomarker">Shift to Marker</A></TD>
           <TD>Open dialog to shift items by distance from current item to marker point.</TD>
         </TR>
         <TR VALIGN="top">
-          <TD class="style1"><A HREF="#hid_navigator_applysavedshift">Apply Saved Shift</A></TD>
+          <TD class="auto-style1"><A HREF="#hid_navigator_applysavedshift">Apply Saved Shift</A></TD>
           <TD>Apply a saved shift to marker point to unshifted items.</TD>
         </TR>
         <TR VALIGN="top">
-          <TD class="style1"><A HREF="#hid_navigator_undolastshift">Undo Last Shift</A></TD>
+          <TD class="auto-style1"><A HREF="#hid_navigator_undolastshift">Undo Last Shift</A></TD>
           <TD>Undo the last shift to marker point or use of a saved shift.</TD>
         </TR>
         </TR>
         <TR VALIGN="top">
-          <TD class="style1"><A HREF="#hid_transform_pts">Transform Items</A></TD>
+          <TD class="auto-style1"><A HREF="#hid_transform_pts">Transform Items</A></TD>
           <TD>Transform items to the current registration.</TD>
         </TR>
         <TR VALIGN="top">
-          <TD class="style1"><A HREF="#hid_navigator_undotransformation">Undo Transformation</A></TD>
+          <TD class="auto-style1"><A HREF="#hid_navigator_undotransformation">Undo Transformation</A></TD>
           <TD>Undo the last transformation between registrations.</TD>
         </TR>
         <TR VALIGN="top">
-          <TD class="style1"><A HREF="#hid_navigator_changeregistration">Change Registration</A></TD>
+          <TD class="auto-style1"><A HREF="#hid_navigator_changeregistration">Change Registration</A></TD>
           <TD>Change registration of current item.</TD>
         </TR>
        <TR VALIGN="top">
-          <TD class="style1"><A HREF="#hid_navigator_align_to_map">Align with Rotation</A></TD>
+          <TD class="auto-style1"><A HREF="#hid_navigator_align_to_map">Align with Rotation</A></TD>
           <TD>Align image to map taken before rotating specimen.</TD>
         </TR>
-        <TR VALIGN="top">
-          <TD class="style1"><b>Realign Menu</b></TD>
+          <TR VALIGN="top">
+          <TD class="auto-style1"> </TD>
+        </TR>
+       <TR VALIGN="top">
+          <TD class="auto-style1"><b>Realign Menu</b></TD>
           <TD>This menu has commands for realigning to Navigator items and
           options related to that operation.
           </TD>
         </TR>
         <TR VALIGN="top">
-          <TD class="style1"><A HREF="#hid_navigator_aligntoitem">Realign to item</A></TD>
+          <TD class="auto-style1"><A HREF="#hid_navigator_aligntoitem">Realign to item</A></TD>
           <TD>Use correlation to map(s) to center on the current item.</TD>
         </TR>
         <TR VALIGN="top">
-          <TD class="style1"><a href="#hid_navigator_setupalign">Setup Align/Realign</a></TD>
+          <TD class="auto-style1"><a href="#hid_navigator_setupalign">Setup Align/Realign</a></TD>
           <TD>Open dialog to set parameters for Align to Template and Realign to Item routines</TD>
         </TR>
         <TR VALIGN="top">
-          <TD class="style1"><a href="#hid_navigator_force_center_align">Force Center Align</a></TD>
+          <TD class="auto-style1"><a href="#hid_navigator_force_center_align">Force Center Align</a></TD>
           <TD>Make Realign to Item align to center of map even if it has recently aligned to
             it.</TD>
         </TR>
        <TR VALIGN="top">
-          <TD class="style1"><a href="#hid_navigator_eraseperiodiccorr">Erase Periodic Peaks 
+          <TD class="auto-style1"><a href="#hid_navigator_eraseperiodiccorr">Erase Periodic Peaks 
             in LD</a></TD>
           <TD>Erase periodic peaks in FFTs in cross-correlations for Realign to Item in Low 
             Dose mode.</TD>
         </TR>
        <TR VALIGN="top">
-          <TD class="style1">&nbsp;&nbsp; <a href="#hid_navoptions_usecurrentldparamsinri">
+          <TD class="auto-style1"><a href="#hid_navoptions_usecurrentldparamsinri">
             Use Current LD Params in Realign</a></TD>
           <TD>When staying in Low Dose for Realign to Item, use current instead of map
             parameters.</TD>
         </TR>
         <TR VALIGN="top">
-          <TD class="style1">&nbsp;&nbsp; <A HREF="#hid_navigator_realign_scaling">Try Scaling in Realign</A></TD>
+          <TD class="auto-style1"><A HREF="#hid_navigator_realign_scaling">Try Scaling in Realign</A></TD>
           <TD>Find image scaling in first round of Realign to Item to adjust for shrinkage</TD>
         </TR>
         <TR VALIGN="top">
-          <TD class="style1">&nbsp;&nbsp; <A HREF="#hid_options_search">Search + and - Scaling in Realign</A></TD>
+          <TD class="auto-style1"><A HREF="#hid_options_search">Search + and - Scaling in Realign</A></TD>
           <TD>When finding scaling during  Realign to Item, try scalings above and below 0.</TD>
         </TR>
+        <TR VALIGN="top">
+          <TD class="auto-style1">&nbsp;</TD>
+          <TD>&nbsp;</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="auto-style1"><strong>Close Up/Expand</strong></TD>
+          <TD>Close up the window to show only the menu bar, or open it up again.</TD>
+        </TR>
       </TABLE>
-      <P><A NAME="hid_save_nav_file"></A><B>Save command (Navigator window
+      <P><A NAME="hid_save_nav_file"></A><B>Save command (Navigator window -
       File menu)</B></P>
       <P>Use this command to save Navigator items to a file. The file is a simple
         tab-delimited text file with the properties of each item. If there is no
@@ -196,18 +242,18 @@
           dialog box</A> to specify the file, which will have the default extension
         .nav. When you select this command again, the entries will be saved to this
         file.</P>
-      <P><A NAME="hid_saveas_nav_file"></A><B>Save As command (Navigator window
+      <P><A NAME="hid_saveas_nav_file"></A><B>Save As command (Navigator window -
       File menu)</B></P>
       <P>Use this command to save Navigator items to a file different from the current
         file. You will enter the <A HREF="afx_hidd_filesave.htm">Save As dialog box</A>
         to specify the file. The new file will become the current file for saving into.</P>
-      <P><A NAME="hid_load_nav_file"></A><B>Load command (Navigator window
+      <P><A NAME="hid_load_nav_file"></A><B>Load command (Navigator window -
       File menu)</B></P>
       <P>Use this command to read in a Navigator file.
         The file will become the current file for saving into.&nbsp; See
         the <A HREF="menu_navigator.htm#hid_load_nav_file">Read &amp; Open
           command</A> for details on the Navigator file reading.</P>
-      <P><A NAME="hid_navigator_mergefile"></A><B>Merge File command (Navigator window
+      <P><A NAME="hid_navigator_mergefile"></A><B>Merge File command (Navigator window -
       File menu)</B></P>
       <P>Use this command to read in the items from another Navigator file and merge
         them in with the items currently present in the table.&nbsp; Duplicate items
@@ -221,7 +267,7 @@
       sought at locations relative to the file being merged in, not the current
       Navigator file.</P>
       <P><A NAME="hid_navigator_close"></A><B>Close command (Navigator window
-      File menu)</B></P>
+        - File menu)</B></P>
       <P>Use this command to close the Navigator window. If the contents of the window
         have changed since it was last saved, you will be asked if you want to save
         them to a file.</P>
@@ -258,8 +304,9 @@
         label into the name (but again, after any other numbers in the name).</p>
     <p>This option should be particularly useful for generating names that correspond
       between the two axes of dual-axis tilt series.</p>
-      <P><A NAME="hid_navigator_autosave"></A><B>Autosave Nav File command (Navigator -
-        Options submenu)</B></P>
+      <P><A NAME="hid_navigator_autosave"></A><B>Autosave Nav File command (Navigator 
+        window -
+        Options menu)</B></P>
       <P>Toggle this menu item on to have the Navigator items saved to a file
         periodically if they have changed. If there is no currently open file, the
         program will save to a file named AUTOSAVEmmddhhmm.nav, where 'mmddhhmm' are
@@ -267,8 +314,9 @@
         when you save to a file or when the program exits (if you elect not to save at
         that time). However, if the program crashes, you should find the file in the
         directory in which your SerialEM shortcut starts the program.</P>
-      <P><A NAME="hid_navigator_writeasxml"></A><B>Write as XML command (Navigator -
-        Options submenu)</B></P>
+      <P><A NAME="hid_navigator_writeasxmlfile"></A><B>Write as XML File command (Navigator 
+        window -
+        Options menu)</B></P>
       <P>This command toggles an option to save the Navigator file as an XML file
         instead of in autodoc format.&nbsp; Either one can be read back in by SerialEM.&nbsp;
         The autodoc writing is significantly faster because it is optimized to write each
@@ -300,6 +348,25 @@
         can turn off the option and set a higher overview binning in the <A HREF="hidd_montagecontrol.htm">
           Montage Control panel</A> . However, if the map file is open, you must make
         it the current open file before setting the binning in the control panel.</P>
+         <P><b><A NAME="hid_view_indexes"></A>Indexes command (Navigator window
+         - View menu)</b></P>
+    <P>Use this command to add a column to the table with the index of each item, 
+      numbered from 1.</P>
+         <P><b><A NAME="hid_view_lables"></A>Labels command (Navigator window -
+         View menu)</b></P>
+    <P>Use this command to turn on or off the drawing of labels.&nbsp; With it off, 
+      no labels will appear.&nbsp; With it on, labels will appear except for 
+      closely-spaced points in 
+      groups larger than a threshold size that can be set with the 
+      <A HREF="#hid_options_setpointlabelthreshold">Set Point Label Threshold</A> command.</P>
+         <P><b><A NAME="hid_view_allregistrations"></A>All Registrations command
+         (Navigator window - View menu)</b></P>
+    <P>Ordinarily the only items that will be drawn on an image are ones with the same 
+        registration as the image. Use this command to turn on drawing of items from 
+        other registrations.</P>
+         <P><b><A NAME="hid_view_drawnothing"></A>Draw Nothing command (Navigator
+         window - View menu)</b></P>
+    <P>Use this command to turn off drawing of all items.</P>
       <P><A NAME="hid_navigator_importmap"></A><B>Import Map command (Navigator window - Map/Polygon menu)</B></P>
       <P>Use this command to define an image obtained elsewhere, such as on a light
         microscope, as a map. First, a dialog will open to allow you to select the
