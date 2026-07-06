@@ -678,6 +678,7 @@ void CMenuTargets::OnNavigatorImportmap()
   if (!mNavigator)
     OnTasksNavigator();
   mNavigator->ImportMap();
+  mWinApp->RestoreViewFocus();
 }
 
 void CMenuTargets::OnSaveNavFile()
@@ -740,6 +741,7 @@ void CMenuTargets::OnUpdateCornerMontage(CCmdUI* pCmdUI)
 void CMenuTargets::OnNavigatorPolygonFromCorners()
 {
   mNavigator->PolygonFromCorners();
+  mWinApp->RestoreViewFocus();
 }
 
 void CMenuTargets::OnPolygonMontage()
@@ -813,6 +815,7 @@ void CMenuTargets::OnUpdateNewMap(CCmdUI* pCmdUI)
 void CMenuTargets::OnNavigatorAdjustBacklash()
 {
   mNavigator->AdjustBacklash(-1, true);
+  mWinApp->RestoreViewFocus();
 }
 
 void CMenuTargets::OnUpdateNavigatorAdjustBacklash(CCmdUI *pCmdUI)
@@ -831,11 +834,13 @@ void CMenuTargets::OnNavigatorBacklashSettings()
     mNavHelper->SetAutoBacklashNewMap(dlg.m_iAskOrAuto);
     mNavHelper->SetAutoBacklashMinField(dlg.m_fMinField);
   }
+  mWinApp->RestoreViewFocus();
 }
 
 void CMenuTargets::OnTransformPts()
 {
   mNavigator->TransformPts();
+  mWinApp->RestoreViewFocus();
 }
 
 void CMenuTargets::OnUpdateTransformPts(CCmdUI* pCmdUI)
@@ -847,6 +852,7 @@ void CMenuTargets::OnUpdateTransformPts(CCmdUI* pCmdUI)
 void CMenuTargets::OnNavigatorUndotransformation()
 {
   mNavigator->UndoTransform();
+  mWinApp->RestoreViewFocus();
 }
 
 void CMenuTargets::OnUpdateNavigatorUndotransformation(CCmdUI *pCmdUI)
@@ -870,6 +876,7 @@ void CMenuTargets::OnUpdateDeleteitem(CCmdUI* pCmdUI)
 void CMenuTargets::OnNavigatorConvertmaps()
 {
   mNavHelper->SetConvertMaps(!mNavHelper->GetConvertMaps());
+  mWinApp->RestoreViewFocus();
 }
 
 void CMenuTargets::OnUpdateNavigatorConvertmaps(CCmdUI* pCmdUI)
@@ -881,6 +888,7 @@ void CMenuTargets::OnUpdateNavigatorConvertmaps(CCmdUI* pCmdUI)
 void CMenuTargets::OnNavigatorLoadunbinned()
 {
   mNavHelper->SetLoadMapsUnbinned(!mNavHelper->GetLoadMapsUnbinned());
+  mWinApp->RestoreViewFocus();
 }
 
 void CMenuTargets::OnUpdateNavigatorLoadunbinned(CCmdUI *pCmdUI)
@@ -897,11 +905,13 @@ void CMenuTargets::OnSetPointLabelThreshold()
     return;
   mNavHelper->SetPointLabelDrawThresh(thresh);
   mWinApp->mMainView->DrawImage();
+  mWinApp->RestoreViewFocus();
 }
 
 void CMenuTargets::OnUseItemLabelsInFilenames()
 {
   mNavHelper->SetUseLabelInFilenames(!mNavHelper->GetUseLabelInFilenames());
+  mWinApp->RestoreViewFocus();
 }
 
 void CMenuTargets::OnUpdateUseItemLabelsInFilenames(CCmdUI *pCmdUI)
@@ -1058,6 +1068,7 @@ void CMenuTargets::OnUpdateKeepColorsForPolygons(CCmdUI *pCmdUI)
 void CMenuTargets::OnNavigatorRealignScaling()
 {
   mNavHelper->SetTryRealignScaling(!mNavHelper->GetTryRealignScaling());
+  mWinApp->RestoreViewFocus();
   /*int options = mNavHelper->GetRealignTestOptions();
   if (KGetOneInt("Enter sum of 1 to use montage backlash and 2 to use montage stage "
     "errors", options))
@@ -1102,6 +1113,7 @@ void CMenuTargets::OnUpdatePolygonsupermontage(CCmdUI *pCmdUI)
 void CMenuTargets::OnNavigatorAddcirclepolygon()
 {
   static float radius = 0.;
+  mWinApp->RestoreViewFocus();
   if (!KGetOneFloat("Radius of circle polygon to add (microns):", radius, 2))
     return;
   if (radius <= 0)
@@ -1174,6 +1186,7 @@ void CMenuTargets::OnSetHoleOrderForRegularArray()
 void CMenuTargets::OnNavigatorChangeregistration()
 {
   mNavigator->ChangeItemRegistration();
+  mWinApp->RestoreViewFocus();
 }
 
 void CMenuTargets::OnUpdateNavigatorChangeregistration(CCmdUI *pCmdUI)
@@ -1185,6 +1198,7 @@ void CMenuTargets::OnUpdateNavigatorChangeregistration(CCmdUI *pCmdUI)
 void CMenuTargets::OnNavigatorRotatemap()
 {
   mNavigator->RotateMap(mWinApp->mActiveView->GetActiveImBuf(), true);
+  mWinApp->RestoreViewFocus();
 }
 
 void CMenuTargets::OnUpdateNavigatorRotatemap(CCmdUI *pCmdUI)
@@ -1199,6 +1213,7 @@ void CMenuTargets::OnNavigatorAligntoitem()
 {
   mWinApp->mNavigator->OnRealigntoitem();
 //  mWinApp->mNavigator->RealignToCurrentItem(true, 0., 0, 0, 0, -1);
+  mWinApp->RestoreViewFocus();
 }
 
 void CMenuTargets::OnUpdateNavigatorAligntoitem(CCmdUI *pCmdUI)
@@ -1210,11 +1225,13 @@ void CMenuTargets::OnUpdateNavigatorAligntoitem(CCmdUI *pCmdUI)
 void CMenuTargets::OnNavigatorForceCenterAlign()
 {
   mNavHelper->ForceCenterRealign();
+  mWinApp->RestoreViewFocus();
 }
 
 void CMenuTargets::OnNavigatorShifttomarker()
 {
   mNavigator->ShiftToMarker();
+  mWinApp->RestoreViewFocus();
 }
 
 void CMenuTargets::OnUpdateNavigatorShifttomarker(CCmdUI *pCmdUI)
@@ -1226,6 +1243,7 @@ void CMenuTargets::OnUpdateNavigatorShifttomarker(CCmdUI *pCmdUI)
 void CMenuTargets::OnNavigatorUndolastshift()
 {
   mNavigator->UndoShiftToMarker();
+  mWinApp->RestoreViewFocus();
 }
 
 void CMenuTargets::OnUpdateNavigatorUndolastshift(CCmdUI *pCmdUI)
@@ -1237,6 +1255,7 @@ void CMenuTargets::OnUpdateNavigatorUndolastshift(CCmdUI *pCmdUI)
 void CMenuTargets::OnNavigatorApplySavedShift()
 {
   mNavHelper->ApplyBaseMarkerShift();
+  mWinApp->RestoreViewFocus();
 }
 
 void CMenuTargets::OnUpdateNavigatorApplySavedShift(CCmdUI *pCmdUI)
@@ -1268,6 +1287,7 @@ void CMenuTargets::OnNavigatorSetacquirestate()
     return;
   mNavHelper->SetToMapImagingState(item, true,
     (mWinApp->LowDoseMode() && item->mMapLowDoseConSet >= 0) ? -1 : 0, 1);
+  mWinApp->RestoreViewFocus();
 }
 
 void CMenuTargets::OnUpdateNavigatorSetacquirestate(CCmdUI *pCmdUI)
@@ -1284,6 +1304,7 @@ void CMenuTargets::OnNavigatorRestorestate()
     mNavHelper->RestoreFromMapState();
   else
     mNavHelper->RestoreSavedState();
+  mWinApp->RestoreViewFocus();
 }
 
 void CMenuTargets::OnUpdateNavigatorRestorestate(CCmdUI *pCmdUI)
@@ -1330,6 +1351,7 @@ void CMenuTargets::OnUpdateNavigatorDeleteGroup(CCmdUI *pCmdUI)
 
 void CMenuTargets::OnNavigatorAlignToMap()
 {
+  mWinApp->RestoreViewFocus();
   if (!mNavHelper->OKtoAlignWithRotation()) {
     AfxMessageBox("To open this dialog, there must be a map in the Read buffer\n"
       "and an image in buffer A or a montage overview in B\n(and montage center in A) at"
@@ -1358,6 +1380,7 @@ void CMenuTargets::OnUseCurrentLDparamsInNavRealign()
 {
   mNavHelper->SetRIuseCurrentLDparams(
     !mNavHelper->GetRIuseCurrentLDparams());
+  mWinApp->RestoreViewFocus();
 }
 
 void CMenuTargets::OnUpdateUseCurrentLDparamsInNavRealign(CCmdUI *pCmdUI)
@@ -1369,6 +1392,7 @@ void CMenuTargets::OnUpdateUseCurrentLDparamsInNavRealign(CCmdUI *pCmdUI)
 void CMenuTargets::OnOptionsSearchPlusMinus()
 {
   mNavHelper->SetPlusMinusRIScaling(!mNavHelper->GetPlusMinusRIScaling());
+  mWinApp->RestoreViewFocus();
 }
 
 void CMenuTargets::OnUpdateOptionsSearchPlusMinus(CCmdUI *pCmdUI)
@@ -1383,6 +1407,7 @@ void CMenuTargets::OnNavigatorSetupAlign()
     OnTasksNavigator();
   CNavRealignDlg dlg;
   dlg.DoModal();
+  mWinApp->RestoreViewFocus();
 }
 
 void CMenuTargets::OnUpdateNavigatorSetupAlign(CCmdUI * pCmdUI)
@@ -1393,6 +1418,7 @@ void CMenuTargets::OnUpdateNavigatorSetupAlign(CCmdUI * pCmdUI)
 void CMenuTargets::OnNavigatorErasePeriodicPeaks()
 {
   mNavHelper->SetRIErasePeriodicPeaks(!mNavHelper->GetRIErasePeriodicPeaks());
+  mWinApp->RestoreViewFocus();
 }
 
 

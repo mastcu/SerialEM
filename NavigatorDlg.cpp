@@ -453,7 +453,8 @@ void CNavigatorDlg::OnNavShrink()
     mExpandedHeight = rcWin.Height();
   }
   GetMenu()->ModifyMenu(ID_NAV_SHRINK, MF_BYCOMMAND | MF_STRING, ID_NAV_SHRINK,
-    mExpandedHeight ? "Expand" : "Close Up" );
+    mExpandedHeight ? "        Expand" : "        Close Up" );
+  SetFocus();
 }
 
 // Clean up when window is being destroyed
@@ -1207,21 +1208,24 @@ void CNavigatorDlg::OnViewAllRegistrations()
 {
   m_bDrawAllReg = !m_bDrawAllReg;
   Redraw();
+  mWinApp->RestoreViewFocus();
 }
+
 void CNavigatorDlg::OnUpdateViewAllRegistrations(CCmdUI *pCmdUI)
 {
   pCmdUI->SetCheck(m_bDrawAllReg ? 1 : 0);
 }
-
 
 void CNavigatorDlg::OnViewDrawNothing()
 {
   m_bDrawNone = !m_bDrawNone;
   Redraw();
 }
+
 void CNavigatorDlg::OnUpdateViewDrawNothing(CCmdUI *pCmdUI)
 {
   pCmdUI->SetCheck(m_bDrawNone ? 1 : 0);
+  mWinApp->RestoreViewFocus();
 }
 
 void CNavigatorDlg::OnViewLabels()
@@ -1230,10 +1234,10 @@ void CNavigatorDlg::OnViewLabels()
   Redraw();
 }
 
-
 void CNavigatorDlg::OnUpdateViewLabels(CCmdUI *pCmdUI)
 {
   pCmdUI->SetCheck(m_bDrawLabels ? 1 : 0);
+  mWinApp->RestoreViewFocus();
 }
 
 // The corner checkbox
@@ -1784,6 +1788,7 @@ void CNavigatorDlg::OnViewIndexes()
   m_bTableIndexes = !m_bTableIndexes;
   mHelper->SetShowTableIndexes(m_bTableIndexes);
   FillListBox(true, true);
+  mWinApp->RestoreViewFocus();
 }
 
 
