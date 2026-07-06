@@ -40,6 +40,7 @@ enum {JEOL_MDS_OFF = 0, JEOL_MDS_SEARCH, JEOL_MDS_FOCUS, JEOL_MDS_PHOTOSET};
 #define JEOL_SEQUENTIAL_RELAX    (1 << 2)
 #define JEOL_CL3_FOCUS_LM_STEM   (1 << 3)
 #define JEOL_SET_CL3_LMSTEM_FOCUS (1 << 4)
+#define JEOL_SKIP_UPDATE_FOR_TASK (1 << 5)
 
 // Standard conversions from signed real to nearest integer for JEOL calls
 #define NINT8000(a) (long)floor((a) + 0x8000 + 0.5)
@@ -173,6 +174,7 @@ struct JeolParams {
   int beamRampupTimeout;
   int gaugeSwitchDelay;
   float StemLMCL3ToUm;
+  int updateTaskSkips;
   // Used to keep track if actual structure is smaller than what was built against
   int lastMember; 
 };

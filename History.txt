@@ -3,6 +3,9 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+7/5/26: Added properties to skip scope updates and reduce calls to scope for
+updates during tasks.
+
 7/4/26: Added menus to Navigator window, moved many commands from main
 Navigator menu into them and moved all commands from Montaging & Grids into
 the main menu.  Moved "Open Imaging states" to Tasks menu.  For help to work,

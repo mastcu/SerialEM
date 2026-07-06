@@ -501,9 +501,17 @@
             the microscope so this should be OK.</TD>
        </TR>
         <TR VALIGN="top">
+          <TD>ScopeUpdateTaskSkips</TD>
+          <TD>Set to the number of successive times to skip the scope update routine when a
+             task is running; e.g., with a value of 2, the routine would be skipped twice then 
+            allowed to run, effectively tripling the update interval. &nbsp;This would reduce 
+            the number of calls to the scope for a Thermo/FEI scope but not a JEOL scope; use
+             'JeolUpdateTaskSkips' to affect the latter.</TD>
+       </TR>
+        <TR VALIGN="top">
           <TD>UpdateDuringAreaChange</TD>
           <TD>Set to 1 to let the scope update routine run, update the display, and respond
-            to changes during a low dose area change.&nbsp; Ths may be fine on Thermo/FEI scopes,
+            to changes during a low dose area change.&nbsp; This may be fine on Thermo/FEI scopes,
             but is less likely to be so on JEOL scopes.</TD>
        </TR>
        <TR VALIGN="top">
@@ -5061,6 +5069,18 @@ MoveStage 0 0 $delz
             interval must be long enough to leave substantial time for user interface
             handling, etc. If events are not used for update, the stage position and status
             calls take up to 300 msec.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>JeolUpdateTaskSkips</TD>
+          <TD>Set to the number of successive times to skip the JEOL scope update routine just
+             described when a task is running; e.g., a value of 9 would make it
+            skip the routine 9 times then allow it to run, effectively multiplying the
+            'JeolUpdateSleep' by 10.&nbsp; When the program changes a scope value during a task,
+            the change is generally recorded in the scope state structure used to update the 
+            user interface; and events are still received with some scope changes.&nbsp; This 
+            value should thus have little effect on whether the scope status shown in the 
+            program is up to date.
+          </TD>
         </TR>
         <TR VALIGN="top">
           <TD>JEOLReportsSmallScreen</TD>
