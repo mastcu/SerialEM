@@ -16,6 +16,7 @@ public:
   CParallelTSDlg(CWnd* pParent = NULL);   // standard constructor
   virtual ~CParallelTSDlg();
   bool IsOpen() { return mIsOpen; };
+  afx_msg HBRUSH OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor);
 
   // Dialog Data
 #ifdef AFX_DESIGN_TIME
@@ -29,6 +30,9 @@ protected:
   virtual void OnCancel();
   virtual void PostNcDestroy();
   virtual BOOL PreTranslateMessage(MSG* pMsg);
+  /*afx_msg void OnPaint();*/
+  CBrush mBrushHighlight;   // brush for highlighted background
+  COLORREF mHighlightColor;
 
   DECLARE_MESSAGE_MAP()
 
@@ -63,6 +67,8 @@ private:
   bool mDrawingISTargets;
   int mNumAddedTargets;
   bool mMakingNewXform;
+  CString mInstruction;
+  CString mSaveBtnText;
   
   void ClearArea();
   void CancelAddingDefining();
@@ -76,6 +82,7 @@ public:
   GetMember(int, AcqMagIndex);
   GetSetMember(int, HasIlluminatedArea);
   GetMember(bool, SettingUpTargetArea);
+  GetMember(CString, SaveBtnText);
   bool SavedTargets() { return mSavedTargets; };
   void IncrementNumTargetsAdded() { mNumAddedTargets++; };
   bool IsDefiningPoints() { return mDefiningPoints; };
@@ -92,6 +99,7 @@ public:
   void CloseWindow();
   bool CanSaveTarget();
   void OnProcessSKey();
+  void SetInstructionLine(CString text = "");
   CStatic m_statMappingMag;
   CSpinButtonCtrl m_sbcMappingMag;
   afx_msg void OnDeltaposSpinPtsMapmag(NMHDR *pNMHDR, LRESULT *pResult);
@@ -210,4 +218,5 @@ public:
   afx_msg void OnCheckSkipRefine();
   CButton m_butNewAdjTransform;
   afx_msg void OnNewAdjTransform();
+  CString m_strInstruct;
 };

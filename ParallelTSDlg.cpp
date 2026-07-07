@@ -51,7 +51,7 @@ IDC_BUT_PTS_ADDTARGETS, IDC_BUT_PTS_REFINE, IDC_BUT_PTS_SAVETARGETMAP,
 IDC_BUT_PTS_REMOVETARGET,
 IDC_BUT_PTS_FINALIZEAREA, IDC_BUT_PTS_ABORTAREA, 
 IDC_STATIC_PTS_INHERITTS, IDC_STATIC_PTS_TSITEMINDEXLABEL,
-IDC_BUT_PTS_SETUPTILTSERIES,
+IDC_BUT_PTS_SETUPTILTSERIES, IDC_STATIC_PTS_INSTRUCT,
 PANEL_END,
 IDC_BUT_PTS_OPENCLOSEOPTIONS, IDC_STATIC_PTS_EXTRAOPTIONS, IDC_TSS_LINE5,
 PANEL_END,
@@ -95,6 +95,7 @@ CParallelTSDlg::CParallelTSDlg(CWnd* pParent /*=NULL*/)
   , m_iAlignRef(0)
   , m_fMaxAlignShift(0)
   , m_bSkipRefine(FALSE)
+  , m_strInstruct(_T(""))
 {
   mWinApp = (CSerialEMApp *)AfxGetApp();
   mShiftManager = mWinApp->mShiftManager;
@@ -116,6 +117,9 @@ CParallelTSDlg::CParallelTSDlg(CWnd* pParent /*=NULL*/)
   mDrawingISTargets = false;
   mNumAddedTargets = 0;
   mMakingNewXform = false;
+  mHighlightColor = RGB(255, 255, 210);
+  mBrushHighlight.CreateSolidBrush(mHighlightColor);
+  mSaveBtnText = "";
 }
 
 CParallelTSDlg::~CParallelTSDlg()
@@ -205,6 +209,7 @@ void CParallelTSDlg::DoDataExchange(CDataExchange* pDX)
   DDX_Control(pDX, IDC_CHECK_PTS_SKIPREFINE, m_butSkipRefine);
   DDX_Check(pDX, IDC_CHECK_PTS_SKIPREFINE, m_bSkipRefine);
   DDX_Control(pDX, IDC_BUT_PTS_NEWADJXFORM, m_butNewAdjTransform);
+  DDX_Text(pDX, IDC_STATIC_PTS_INSTRUCT, m_strInstruct);
 }
 
 BEGIN_MESSAGE_MAP(CParallelTSDlg, CBaseDlg)
@@ -248,6 +253,8 @@ BEGIN_MESSAGE_MAP(CParallelTSDlg, CBaseDlg)
   ON_EN_KILLFOCUS(IDC_EDIT_PTS_MAXSCALING, OnEnKillfocusEditMaxscaling)
   ON_BN_CLICKED(IDC_BUT_PTS_REFINE, OnRefineTargets)
   ON_BN_CLICKED(IDC_BUT_PTS_NEWADJXFORM, OnNewAdjTransform)
+  ON_BN_CLICKED(IDC_CHECK_PTS_SKIPREFINE, OnCheckSkipRefine)
+  ON_WM_CTLCOLOR()
 END_MESSAGE_MAP()
 
 BOOL CParallelTSDlg::OnInitDialog()
@@ -333,6 +340,16 @@ void CParallelTSDlg::CloseWindow()
   }
 }
 
+HBRUSH CParallelTSDlg::OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor) {
+  if (nCtlColor == CTLCOLOR_STATIC && pWnd->GetDlgCtrlID() == IDC_STATIC_PTS_INSTRUCT) {
+    pDC->SetBkMode(OPAQUE);
+    pDC->SetBkColor(mHighlightColor);
+    return (HBRUSH)(mBrushHighlight.GetSafeHandle());
+  } else {
+    return CDialog::OnCtlColor(pDC, pWnd, nCtlColor);
+  }
+}
+
 void CParallelTSDlg::Update()
 {
   EMimageBuffer *imBufs = mWinApp->GetImBufs();
@@ -371,12 +388,16 @@ void CParallelTSDlg::Update()
     m_butRefineTargets.SetWindowText(mAddingTargets ? "Stop Adding && Adjust" : "Adjust");
     if (mRefiningTargets) {
       numAcq = mParallelTSHelper->GetSavedTargetsInNav(&indexVec);
-      if (numAcq == 0)
-        mess.Format("Save Starting IS");
-      else
-        mess.Format("Save Adjustment %d/%d", numAcq, numPoints - 1);
+      if (numAcq == 0) {
+        mSaveBtnText = "Save Starting IS";
+        mess = mSaveBtnText;
+      } else {
+        mSaveBtnText = "Save Adjustment";
+        mess.Format("%s %d/%d", mSaveBtnText, numAcq, numPoints - 1);
+      }
     } else {
-      mess.Format("Save Adjustment");
+      mSaveBtnText = "Save Adjustment";
+      mess = mSaveBtnText;
     }
     m_butSaveTargetMap.SetWindowText(mess);
     m_butFinalizeTargetArea.SetWindowText("Save Transform");
@@ -387,12 +408,12 @@ void CParallelTSDlg::Update()
       "Add More Targets" : "Add Targets"));
     m_butRefineTargets.SetWindowText(mapsOnly ? "Save Target Maps" :
       (mAddingTargets ? "Stop Adding && Refine" : "Refine IS"));
-    CString saveType = m_iAlignRef == 0 ? "Map" : "IS";
+    mSaveBtnText.Format("Save Target %s", m_iAlignRef == 0 ? "Map" : "IS");
     if (mRefiningTargets) {
-      mess.Format("Save Target %s %d/%d", saveType,
+      mess.Format("%s %d/%d", mSaveBtnText,
         mParallelTSHelper->GetSavedTargetsInNav(&indexVec) + 1, numPoints);
     } else {
-      mess.Format("Save Target %s", saveType);
+      mess = mSaveBtnText;
     }
     m_butSaveTargetMap.SetWindowText(mess);
     m_butRemoveTarget.SetWindowText("Remove Target");
@@ -543,7 +564,7 @@ void CParallelTSDlg::Update()
   SetDlgItemText(IDC_STATIC_PTS_TSITEMINDEXLABEL, mess);
 
   m_statTSitemLabel.EnableWindow(!mDefiningPoints);
-
+  
   SetDlgItemText(IDC_BUT_PTS_OPENCLOSEOPTIONS, mDisplayExtraOptions ? "-" : "+");
 
   if (mHasIlluminatedArea <= 0)
@@ -627,6 +648,10 @@ void CParallelTSDlg::ManagePanels()
     mIDsToDrop.push_back(IDC_STATIC_PTS_INHERITTS);
     mIDsToDrop.push_back(IDC_STATIC_PTS_TSITEMINDEXLABEL);
   } 
+
+  if (m_strInstruct.IsEmpty()) {
+    mIDsToDrop.push_back(IDC_STATIC_PTS_INSTRUCT);
+  }
 
   BOOL states[PARALLELTSDLG_NUM_PANELS] = { !mWinApp->LowDoseMode(), true, true, true,
     mDisplayExtraOptions, mDisplayExtraOptions && m_iAlignRef == 1, true };
@@ -911,11 +936,42 @@ void CParallelTSDlg::FinishRefineTargets(bool error)
   if (mSavedTargets)
     mNumAddedTargets = 0;
 
-  CMapDrawItem *mapItem = mWinApp->mNavigator->FindItemWithMapID(mParallelTSHelper->GetAreaMapID());
+  CMapDrawItem *mapItem = mWinApp->mNavigator->FindItemWithMapID(
+    mParallelTSHelper->GetAreaMapID());
   mWinApp->mNavigator->DoLoadMap(true, mapItem, -1);
 
+  bool changeSize = m_strInstruct.IsEmpty();
+  if (error) {
+    if (mMakingNewXform) {
+      m_strInstruct.Format("An error occurred. Click \"Adjust\" to retry adjusting "
+        "image shifts.");
+    } else {
+      m_strInstruct.Format("An error occurred. Click \"Refine IS\" to retry refining "
+        "target image shifts.");
+    }
+  } else {
+    CString str = "ready";
+    int numSaved = mParallelTSHelper->GetNumSavedTargets();
+    if (mMakingNewXform) {
+      if (numSaved < MIN_NUM_POINTS_FOR_PTSADJUST) {
+        str.Format("at least %d image shifts have been adjusted", 
+          MIN_NUM_POINTS_FOR_PTSADJUST);
+      }
+      m_strInstruct.Format("%d image shift(s) adjusted. Click \"Save Transform\" when %s", 
+        numSaved, str);
+    } else {
+      if (numSaved < 2) {
+        str.Format("at least 2 targets have been refined");
+      }
+      m_strInstruct.Format("%d target(s) refined. Click \"Finalize Target Area\" when %s",
+        numSaved, str);
+    }
+  }
+  UpdateData(false);
   UpdateData(true);
   Update();
+  if (changeSize)
+    ManagePanels();
 }
 
 bool CParallelTSDlg::CanSaveTarget()
@@ -968,6 +1024,18 @@ void CParallelTSDlg::CancelAddingDefining()
   }
 
   mDrawingISTargets = false;
+}
+
+// Externally change the instruction line text, hiding it if empty
+void CParallelTSDlg::SetInstructionLine(CString text)
+{
+  bool changeSize = (m_strInstruct.IsEmpty() && !text.IsEmpty()) ||
+    (!m_strInstruct.IsEmpty() && text.IsEmpty());
+  m_strInstruct = text;
+  UpdateData(false);
+  Update();
+  if (changeSize)
+    ManagePanels();
 }
 
 ///////////////////////////////////////
@@ -1041,9 +1109,10 @@ void CParallelTSDlg::OnDefinePtsFitPlane()
     }
     mDrawingISTargets = true;
     
-    label.Format("Mark locations to measure defocus", MIN_NUM_POINTS_TO_FIT_PLANE);
-    mWinApp->mMacroProcessor->SetNumStatusLines(1);
-    mWinApp->mMacroProcessor->SetStatus(1, label);
+    label.Format("Mark at least %d locations to measure defocus. A center point"
+      " will be automatically generated for realigning.", 
+      MIN_NUM_POINTS_TO_FIT_PLANE);
+    m_strInstruct = label;
   } 
   
   // Call on navigator to start adding points, or if stopping, tell it to 
@@ -1053,7 +1122,7 @@ void CParallelTSDlg::OnDefinePtsFitPlane()
   }
   
   if (!mDefiningPoints) {
-    mWinApp->mMacroProcessor->SetNumStatusLines(0);
+    m_strInstruct = "";
     mDrawingISTargets = false;
     if (nav->m_bCollapseGroups) {
       nav->MakeListMappings();
@@ -1067,6 +1136,7 @@ void CParallelTSDlg::OnDefinePtsFitPlane()
     if (numPoints > 0)
       DoPlaneFit();
   }
+  UpdateData(false);
   Update();
   ManagePanels();
 }
@@ -1126,6 +1196,11 @@ void CParallelTSDlg::OnStartNewTargetArea()
   mSettingUpTargetArea = true;
   item = mWinApp->mNavigator->FindItemWithMapID(mParallelTSHelper->GetAreaMapID());
   mHasAreaMap = item != NULL;
+  if (!mHasAreaMap) {
+    m_strInstruct = "Save a new area map or identify an existing area map in the active "
+      "buffer to begin.";
+    UpdateData(false);
+  }
   mWinApp->mLowDoseDlg.Update();
   mScope->TiltTo(m_fPretilt);
   Update();
@@ -1201,7 +1276,10 @@ void CParallelTSDlg::OnSaveAreaMap()
   } else {
     mHasAreaMap = true;
   }
-
+  if (!m_strInstruct.IsEmpty()) {
+    m_strInstruct = "";
+    UpdateData(false);
+  }
   Update();
   ManagePanels();
 }
@@ -1212,6 +1290,7 @@ void CParallelTSDlg::OnAddTargets()
   MapItemArray *itemArray = mWinApp->mNavigator->GetItemArray();
   CNavigatorDlg *nav = mWinApp->mNavigator;
   int arrSize = (int)itemArray->GetSize();
+  CString str;
 
   mAddingTargets = !mAddingTargets;
 
@@ -1221,13 +1300,20 @@ void CParallelTSDlg::OnAddTargets()
     mNumAddedTargets = 0;
     if (!mTargetGroupID) {
       mTargetGroupID = nav->MakeUniqueID();
-      if (!mMakingNewXform)
-        mNavHelper->SetParTSSetupGroupID(mTargetGroupID);
     }
+    mNavHelper->SetParTSSetupGroupID(mMakingNewXform ? 0 : mTargetGroupID);
     mDrawingISTargets = true;
     
     if (mMakingNewXform) {
-      mWinApp->mMacroProcessor->SetStatus(1, "Mark locations to align to at high mag");
+      m_strInstruct.Format("Mark locations to be aligned at high mag. Click "
+        "\"Stop Adding && Adjust\" to begin adjusting image shifts.");
+    } else {
+      if (m_bSkipRefine) {
+        m_strInstruct.Format("Add targets to the area map.");
+      } else {
+        m_strInstruct.Format("Add targets to the area map. Click "
+          "\"Stop Adding && Refine\" to begin refining target image shifts.");
+      }
     }
   }
 
@@ -1238,7 +1324,21 @@ void CParallelTSDlg::OnAddTargets()
   }
 
   if (!mAddingTargets) {
-    mWinApp->mMacroProcessor->SetNumStatusLines(0);
+   if (mNumAddedTargets) {
+      if (mMakingNewXform) {
+        m_strInstruct.Format("Click \"Adjust\" to begin adjusting image shifts.");
+      } else if (!m_bSkipRefine) {
+        m_strInstruct.Format("Click \"Refine IS\" to begin refining target image shifts.");
+      } else if (m_bSkipRefine) {
+        CString str = "ready";
+        if (mNumAddedTargets < 2) {
+          str.Format("at least 2 targets have been added");
+        }
+        m_strInstruct.Format("Click \"Finalize Target Area\" when %s", str);
+      }
+   } else {
+     m_strInstruct = "";
+   }
     mDrawingISTargets = false;
     if (nav->m_bCollapseGroups) {
       nav->MakeListMappings();
@@ -1246,7 +1346,7 @@ void CParallelTSDlg::OnAddTargets()
     }
     nav->Redraw();
   }
-
+  UpdateData(false);
   UpdateData(true);
   Update();
   ManagePanels();
@@ -1320,7 +1420,7 @@ void CParallelTSDlg::OnFinalizeArea()
     } else if (m_iTargetType == 1) {
       item = mWinApp->mNavigator->GetCurrentItem();
     }
-
+    
     if (mParallelTSHelper->ConvertToParTSItem(err, item)) {
       AfxMessageBox(err, MB_EXCLAME);
       return;
@@ -1335,6 +1435,8 @@ void CParallelTSDlg::OnFinalizeArea()
   mNavHelper->SetParTSSetupGroupID(0);
   mWinApp->mNavigator->Redraw();
 
+  m_strInstruct = "";
+  UpdateData(false);
   Update();
   ManagePanels();
 }
@@ -1356,6 +1458,8 @@ void CParallelTSDlg::ClearArea()
   mSavedTargets = false;
   mFinalizedTargetArea = false;
   mNumAddedTargets = 0;
+  m_strInstruct = "";
+  UpdateData(false);
 }
 
 void CParallelTSDlg::OnAbortArea()

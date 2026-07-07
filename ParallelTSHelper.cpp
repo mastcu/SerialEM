@@ -381,7 +381,6 @@ void CParallelTSHelper::ISToTargetNextTask(int param)
   float shiftX, shiftY;
   int sizeX, sizeY;
   float FOVchange, FOVchangeThresh = 0.1f;
-  CString curPath = "";
   bool mapSaved, openNewFile = false, openOldFile = false;
   EMimageBuffer *imBufs = mWinApp->GetImBufs();
   CString mess, str;
@@ -402,7 +401,7 @@ void CParallelTSHelper::ISToTargetNextTask(int param)
     mess = "ADJUSTING IS";
   }
   mWinApp->SetStatusText(COMPLEX_PANE, mess);
-  mWinApp->mMacroProcessor->SetNumStatusLines(0);
+  mParallelTSDlg->SetInstructionLine();
 
   mLastActionFailed = false;
   mapID = mISTargetPointIDs[mStartIndex + mISTargetIter];
@@ -579,8 +578,9 @@ void CParallelTSHelper::ISToTargetNextTask(int param)
       // Stop iterations to allow user to refine IS, unless they want to skip that
       if (!(mActionAtTarget == PARALLELTS_ACTION_PREVIEW &&
         mParTSopts->flags & PTSFLAG_SKIP_REFINE)) {
-        mWinApp->mMacroProcessor->SetNumStatusLines(1);
-        mWinApp->mMacroProcessor->SetStatus(1, "Adjust IS to align to target");
+        mess.Format("Adjust image shift to align to the target. Click \"%s\" or press S "
+          "key to save and go on.", mParallelTSDlg->GetSaveBtnText());
+        mParallelTSDlg->SetInstructionLine(mess);
         return;
       }
     }
@@ -1421,6 +1421,8 @@ int CParallelTSHelper::ConvertToParTSItem(CString &err, CMapDrawItem *item)
   mParTSitem->mNote.Format("%d TS targets", mParTSitem->mNumIStargets);
   mWinApp->mNavigator->UpdateListString(ind);
   mWinApp->mNavigator->SetSelectedItem(ind);
+
+  mParallelTSDlg->SetInstructionLine("Select the desired tilt series file.");
 
   //Check the TS box. If already checked for some reason, uncheck it first.
   if (mWinApp->mNavigator->m_bTiltSeries) {
