@@ -95,7 +95,8 @@
 #define IDD_MANYCHOICEBOX               294
 #define IDD_DECTRIS_TOOLDLG             296
 #define IDD_DECTRIS_SETTINGS            298
-#define IDD_PARALLELTS                  301
+#define IDR_NAV_MENU                    301
+#define IDD_PARALLELTS                  302
 #define IDC_EDITXSIZE                   1000
 #define IDC_EDITYSIZE                   1002
 #define IDC_EDITYOVERLAP                1003
@@ -805,8 +806,7 @@
 #define IDC_BUT_TSS_PREV                1760
 #define IDC_BUT_TSS_NEXT                1761
 #define IDC_CHECK_NAV_FILEATITEM        1762
-#define IDC_STATOFFSETMICRONS2          1762
-#define IDC_STATTHRESHMICRONS           1762
+#define IDC_STATTHRESHMICRONS           3696
 #define IDC_CHECK_NAV_FILEATGROUP       1763
 #define IDC_BUT_TSS_FULL                1764
 #define IDC_BUT_NAV_STATE               1765
@@ -816,6 +816,7 @@
 #define IDC_STAT_NAV_HORIZLINE          1769
 #define IDC_BUT_UPDATEZ                 1770
 #define IDC_NA_RUN_TS                   1771
+#define IDC_STAT_NAV_HORIZLINE2         1771
 #define IDC_CHECK_MONTTOOPEN            1772
 #define IDC_NA_ACQUIRE_TS               1773
 #define IDC_NA_PREMACRO                 1774
@@ -2896,7 +2897,6 @@
 #define ID_TILTSERIES_EXTRAOUTPUT       32966
 #define ID_PROCESS_LIVEFFT              32967
 #define ID_NAVIGATOR_RUNMACROATAREAS    32968
-#define ID_Menu                         32969
 #define ID_FOCUS_SHOWEXISTINGCORR       32970
 #define ID_NAVIGATOR_CHANGEREGISTRATION 32979
 #define ID_CALIBRATION_MAGISOFFSETS     32980
@@ -2914,7 +2914,6 @@
 #define ID_CAMERA_GAINREFPOLICY         32998
 #define ID_TILTSERIES_RESETPOLEANGLE    32999
 #define ID_MACRO_TOOLBAR                33000
-#define ID_Menu33001                    33001
 #define ID_TILTSERIES_SETUPFUTURE       33002
 #define ID_TILTSERIES_FUTUREPOLICIES    33003
 #define ID_NAVIGATOR_ENDACQUIRE         33004
@@ -3101,7 +3100,6 @@
 #define ID_SCRIPT_CLEARPERSISTENTVARS   33284
 #define ID_OPTIONS_SHOWMULTI            33285
 #define ID_OPTIONS_SETMULTI             33286
-#define ID_Menu33287                    33287
 #define ID_SCRIPT_RUNONECOMMAND         33288
 #define ID_FILE_SKIPFILEPROPERTIESDIALOG 33289
 #define ID_PROCESS_REDUCEIMAGE          33290
@@ -3369,15 +3367,24 @@
 #define ID_MACRO_EDIT60                 33620
 #define ID_MISC_NO_TRUE_SIZE            33621
 #define ID_WINDOW_NEW_LOCATOR           33622
-#define ID_TILTSERIES_SETUPPARALLELTILTSERIES 33623
+#define ID_NAV_FILE                     33623
+#define ID_NAV_MAP                      33625
+#define ID_NAV_TRANSFORMATIONS          33626
+#define ID_NAV_ALIGN                    33627
+#define ID_NAV_SHRINK                   33628
+#define ID_VIEW_INDEXES                 33630
+#define ID_VIEW_LABLES                  33631
+#define ID_VIEW_ALLREGISTRATIONS        33632
+#define ID_VIEW_DRAWNOTHING             33633
+#define ID_TILTSERIES_SETUPPARALLELTILTSERIES 33634
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        303
-#define _APS_NEXT_COMMAND_VALUE         33624
+#define _APS_NEXT_RESOURCE_VALUE        305
+#define _APS_NEXT_COMMAND_VALUE         33640
 #define _APS_NEXT_CONTROL_VALUE         3773
 #define _APS_NEXT_SYMED_VALUE           104
 #endif

@@ -2062,6 +2062,7 @@ void CNavHelper::PrepareToReimageMap(CMapDrawItem *item, MontParam *param,
   // If coming from Realign to Item, see if we can STAY in low dose instead of hiding it
   mRIstayingInLD = false;
   mRIleaveISX = mRIleaveISY = 0.;
+  mRIconSetNum = -1;
   if (hideLDoff) {
     if (item->mMapMontage) {
       xFrame = param->xFrame;
@@ -2155,7 +2156,7 @@ void CNavHelper::PrepareToReimageMap(CMapDrawItem *item, MontParam *param,
   SetStateFromParam(&stateParam, conSet, baseNum, hideLDoff, needAps);
 
   // Prevent frame saving, retain frame-aligning
-  if (noFrames > 0) {
+  if (noFrames > 0 && mRIconSetNum >= 0) {
     conSets[mRIconSetNum].saveFrames = 0;
     if (conSets[mRIconSetNum].alignFrames &&
       (conSets[mRIconSetNum].useFrameAlign > 1 || noFrames > 1))

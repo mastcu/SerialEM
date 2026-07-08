@@ -576,6 +576,10 @@ CEMscope::CEMscope()
   mFLCInLMGenDelay = 250;
   mFLCInLMAcqDelay = 500;
   mJeolLensSetForLM = -1;
+  mScopeUpdateTaskSkips = 0;
+  mJeolUpdateTaskSkips = 0;
+  mSkipUpdatesForTasks = false;
+  mMaxUtapiService = UTAPI_SUPPORT_END - 1;
   mAdvancedScriptVersion = 0;
   mPluginVersion = 0;
   mPlugFuncs = NULL;
@@ -624,6 +628,7 @@ int CEMscope::Initialize()
   mShiftManager = mWinApp->mShiftManager;
   int *activeList = mWinApp->GetActiveCameraList();
   CameraParameters *camParam = mWinApp->GetCamParams();
+  const char **serviceNames;
   mCamera = mWinApp->mCamera;
   if (mNoScope) {
     mMaxTiltAngle = 70.;
@@ -787,6 +792,7 @@ int CEMscope::Initialize()
       mJeolSD.pairedDetectorID = mPairedDetectorID;
       if (mJeolParams.StemLMCL3ToUm > 0.)
         mJeolParams.flags |= JEOL_CL3_FOCUS_LM_STEM;
+      mJeolParams.updateTaskSkips = mJeolUpdateTaskSkips;
 
       // Event stuff is subject to revision if it fails, including spectrum by event
       mScreenByEvent = mUpdateByEvent;  // This hasn't needed to be separate
@@ -939,6 +945,21 @@ int CEMscope::Initialize()
   if (FEIscope && mScopeHasPhasePlate < 0)
     mScopeHasPhasePlate = mAdvancedScriptVersion > 0 ? 1 : 0;
   if (mUtapiConnected) {
+
+    // Find maximum service in plugin
+    if (mPlugFuncs->UtapiServiceNames) {
+      serviceNames = mPlugFuncs->UtapiServiceNames();
+      if (serviceNames) {
+        for (ind = 0; ind <= UTAPI_SUPPORT_END; ind++) {
+          if (strlen(serviceNames[ind]))
+            mMaxUtapiService = ind;
+          else
+            break;
+        }
+      }
+    }
+
+    // Process the skip list
     for (ind = 0; ind < (int)mSkipUtapiServices.size(); ind++)
       if (mSkipUtapiServices[ind] >= 0 && mSkipUtapiServices[ind] < UTAPI_SUPPORT_END)
         mUtapiSupportsService[mSkipUtapiServices[ind]] = false;
@@ -1324,6 +1345,23 @@ void CEMscope::StartUpdate()
   }
 }
 
+// Set up to skip updates during tasks if the update skip count is set for general scope
+// update or JEOL update thread.  TaskBusy informs us if the program is "truly busy"
+// and the flag to skip is set if that is the case or it is changing LD area.
+void CEMscope::SetUpdateSkippingForTasks(bool trulyBusy)
+{
+  bool busy = trulyBusy || mWinApp->GetJustChangingLDarea();
+  bool changing = !BOOL_EQUIV(busy, mSkipUpdatesForTasks);
+  mSkipUpdatesForTasks = busy;
+  if (changing && JEOLscope && mJeolUpdateTaskSkips > 0) {
+    SEMAcquireJeolDataMutex();
+    mJeolParams.updateTaskSkips = mJeolUpdateTaskSkips;
+    setOrClearFlags((b3dUInt32 *)&mJeolParams.flags, JEOL_SKIP_UPDATE_FOR_TASK,
+      busy ? 1 : 0);
+    SEMReleaseJeolDataMutex();
+  }
+}
+
 void CEMscope::SuspendUpdate(int duration)
 {
   sSuspendCount = (duration + mUpdateInterval - 1) / mUpdateInterval;
@@ -1401,6 +1439,7 @@ void CEMscope::ScopeUpdate(DWORD dwTime)
   double wallStart, wallTimes[12] = {0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.};
   bool reportTime = GetDebugOutput('u') && (mAutosaveCount % 10 == 0);
   static int JeolFLCErrorCount = 0;
+  static int taskSkippingCount = 0;
   static int firstTime = 1;
   static double lastTime = 0.;
   //if (reportTime)
@@ -1434,6 +1473,12 @@ void CEMscope::ScopeUpdate(DWORD dwTime)
   }
   if ((mChangingLDArea && !mUpdateDuringAreaChange) || mSynchronousThread)
     return;
+
+  if (mSkipUpdatesForTasks && mScopeUpdateTaskSkips > 0 &&
+    taskSkippingCount++ < mScopeUpdateTaskSkips)
+    return;
+  else
+    taskSkippingCount = 0;
 
   // Routine makes no direct calls to JEOL so doesn't need scope mutex, but does
   // need the data mutex to access thread data

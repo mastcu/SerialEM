@@ -172,6 +172,8 @@ INT_PROP_TEST("JeolSetLenswithFLCinLM", scope->, SetLenswithFLCinLM)
 FLOAT_PROP_TEST("JeolFLCInLMLensValue", scope->, FLCInLMLensValue)
 INT_PROP_TEST("FLCInLMGeneralDelay", scope->, FLCInLMGenDelay)
 INT_PROP_TEST("FLCInLMAcquireDelay", scope->, FLCInLMAcqDelay)
+INT_PROP_TEST("ScopeUpdateTaskSkips", scope->, ScopeUpdateTaskSkips)
+INT_PROP_TEST("JeolUpdateTaskSkips", scope->, JeolUpdateTaskSkips)
 
 #endif
 #ifdef PROP_TEST_SECT2

@@ -2,6 +2,12 @@ And by the way, when you add a menu item to the help, you need to add the
 entry to aliases.h by hand.
 AND IF YOU ADD A WHOLE MENU, INCREASE TOOL_MENU_INDEX
 
+Top-level Alt keys:
+F G E C O S T I P N L W H
+
+For Navigator menus
+V M A R
+
 File:
 A
 C
@@ -292,6 +298,7 @@ X
 Z
 
 Navigator:
+
 A
 B
 C
@@ -301,53 +308,61 @@ F
 G
 H
 I
-J
 K
 L
 M
 N
 O
 P
-Q
 R
 S
 T
 U
 V
 W
+Y
 
-  Montaging & Grids:
+  Options:
+R
+S
+
+NAVIGATOR MENUS
+  File
+A
+C
+L
+M
+S
+
+  Options
+A
+B
+L
+P
+U
+X
+
+  View
+I
+L
+N
+R
+
+  Map/Polygon
 A
 B
 C
-D
+E
+I
+P
+R
+S
+
+  Transformations
+C
 E
 F
-G
-H
-I
-K
-L
-M
-N
-O
-P
 R
 S
 T
 U
-V
-Y
-
-  Options:
-A
-C
-L
-M
-P
-R
-S
-U
-V
-X
-Y

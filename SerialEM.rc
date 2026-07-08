@@ -7,7 +7,8 @@
 //
 // Generated from the TEXTINCLUDE 2 resource.
 //
-#include "afxres.h"
+#include "afxres.h"
+
 /////////////////////////////////////////////////////////////////////////////
 #undef APSTUDIO_READONLY_SYMBOLS
 
@@ -598,6 +599,8 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "Set Low Dose Areas...",       ID_TASKS_SETAREASINLOWDOSE
         MENUITEM SEPARATOR
+        MENUITEM "Ope&n Imaging States ...",    ID_NAVIGATOR_OPENSTATEDLG
+        MENUITEM SEPARATOR
         MENUITEM "&Set intensity\tShift+I",     ID_PROCESS_SETINTENSITY
         MENUITEM "Set &Dose Rate",              ID_TASKS_SET_DOSE_RATE
         MENUITEM "Set Dose Rate wit&h EDM",     ID_TASKS_SETDOSERATEWITHEDM
@@ -698,93 +701,48 @@ BEGIN
     END
     POPUP "&Navigator"
     BEGIN
-        POPUP "&Montaging && Grids"
-        BEGIN
-            MENUITEM "Setup &Corner Montage",       ID_CORNER_MONTAGE
-            MENUITEM "Setup &Polygon Montage",      ID_POLYGON_MONTAGE
-            MENUITEM "Setup &Full Montage",         ID_NAVIGATOR_SETUPFULLMONTAGE
-            MENUITEM "Set &Grid Limits",            ID_NAVIGATOR_SETGRIDLIMITS
-            MENUITEM SEPARATOR
-            MENUITEM "Mult&iple Grid Operations...", ID_MONTAGINGGRIDS_MULTIPLEGRIDOPERATIONS
-            MENUITEM "Reopen Multi-grid &Session...", ID_MONTAGINGGRIDS_READSESSIONFILE
-            MENUITEM "Clear Multi-grid Session",    ID_MONTAGINGGRIDS_CLEARSESSION
-            MENUITEM "Identify Grid on Stage...",   ID_MONTAGINGGRIDS_IDENTIFYGRIDONSTAGE
-            MENUITEM "L&oad All Grid Maps",         ID_MONTAGINGGRIDS_LOADALLGRIDMAPS
-            MENUITEM SEPARATOR
-            MENUITEM "Fi&nd Holes in Regular Grid...", ID_MONTAGINGGRIDS_FINDREGULARARRAYOFHOLES
-            MENUITEM "&Add Grid of Points",         ID_NAVIGATOR_ADDGRIDOFPOINTS
-            MENUITEM "Add Grid &Like Last One",     ID_MONTAGINGGRIDS_ADDGRIDLIKELASTONE
-            MENUITEM "Di&vide Points into Groups",  ID_MONTAGINGGRIDS_GROUPPOINTSINGRID
-            MENUITEM "Set Group &Radius",           ID_MONTAGINGGRIDS_SETGROUPSIZE
-            MENUITEM SEPARATOR
-            MENUITEM "Set &Multi-shot Parameters...", ID_OPTIONS_SETMULTI
-            MENUITEM "S&et Hole Order for Regular Array", ID_MONTAGINGGRIDS_SETHOLEORDERFORREGULARARRAY
-            MENUITEM "Com&bine Points for Multi-shots...", ID_MONTAGINGGRIDS_COMBINEPOINTSINTOMULTI
-            MENUITEM "S&how Shots when Show Acquire", ID_OPTIONS_SHOWMULTI
-            MENUITEM "Show &Whole Area for All Points", ID_MONTAGINGGRIDS_SHOWWHOLEAREAFORALLPOINTS
-            MENUITEM SEPARATOR
-            MENUITEM "A&utocontour Grid Squares...", ID_MONTAGINGGRIDS_AUTOCONTOURGRIDSQUARES
-            MENUITEM "Reverse Con&tour Colors",     ID_MONTAGINGGRIDS_REVERSECONTOURCOLORS
-            MENUITEM "&Keep Colors for Polygons",   ID_MONTAGINGGRIDS_KEEPCOLORSFORPOLYGONS
-            MENUITEM SEPARATOR
-            MENUITEM "Setup Super Montage",         ID_NAVIGATOR_ALIGNEDSUPERMONTAGE
-            MENUITEM "Polygon Super Montage",       ID_SUPERMONTAGING_POLYGONSUPERMONTAGE
-            MENUITEM "A&dd Circle Polygon",         ID_NAVIGATOR_ADDCIRCLEPOLYGON
-            MENUITEM "Pol&ygon from Corners",       ID_NAVIGATOR_POLYGON_FROM_CORNERS
-        END
-        MENUITEM SEPARATOR
-        MENUITEM "Open Navi&gator",             ID_TASKS_NAVIGATOR
+        MENUITEM "Open Navigator",              ID_TASKS_NAVIGATOR
         MENUITEM "Read && &Open...",            ID_LOAD_NAV_FILE
-        MENUITEM "Merge File...",               ID_NAVIGATOR_MERGEFILE
-        MENUITEM "Sa&ve",                       ID_SAVE_NAV_FILE
-        MENUITEM "Save As...",                  ID_SAVEAS_NAV_FILE
-        MENUITEM "Close",                       ID_NAVIGATOR_CLOSE
-        MENUITEM SEPARATOR
-        MENUITEM "&Acquire at Items...",        ID_NAVIGATOR_ACQUIRE
-        MENUITEM "End Ac&quire",                ID_NAVIGATOR_ENDACQUIRE
-        MENUITEM "List &Files/Series/States",   ID_MONTAGE_LISTFILESTOOPEN
         MENUITEM SEPARATOR
         POPUP "Nav. Options"
         BEGIN
-            MENUITEM "Set &Point Label Threshold",  ID_OPTIONS_SETPOINTLABELTHRESHOLD
-            MENUITEM "Use Item &Labels in Filenames", ID_OPTIONS_USEITEMLABELSINFILENAMES
             MENUITEM SEPARATOR
-            MENUITEM "&Autosave Nav File",          ID_NAVIGATOR_AUTOSAVE
-            MENUITEM "Write as &XML File",          ID_NAVIGATOR_WRITEASXMLFILE
-            MENUITEM SEPARATOR
-            MENUITEM "Con&vert Maps to Bytes",      ID_NAVIGATOR_CONVERTMAPSTOBYTES
-            MENUITEM "Load Maps &Unbinned",         ID_NAVIGATOR_LOADUNBINNED
-            MENUITEM SEPARATOR
-            MENUITEM "Use &Current LD Params in Realign", ID_NAVOPTIONS_USECURRENTLDPARAMSINRI
-            MENUITEM "Tr&y Scaling in Realign",     ID_NAVIGATOR_REALIGN_SCALING
-            MENUITEM "&Search + and - Scaling in Realign", ID_OPTIONS_SEARCH
-            MENUITEM SEPARATOR
-            MENUITEM "Run Script in &Multi-shot",   ID_NAV_RUNSCRIPTINMULTISHOTACQUIRE
-            MENUITEM "Set Script to &Run",          ID_NAV_SETSCRIPTTORUN
+            MENUITEM "&Run Script in Multi-shot",   ID_NAV_RUNSCRIPTINMULTISHOTACQUIRE
+            MENUITEM "&Set Script to Run",          ID_NAV_SETSCRIPTTORUN
         END
         MENUITEM SEPARATOR
-        MENUITEM "&Transform Items",            ID_TRANSFORM_PTS
-        MENUITEM "&Undo Transformation",        ID_NAVIGATOR_UNDOTRANSFORMATION
-        MENUITEM "C&hange Registration",        ID_NAVIGATOR_CHANGEREGISTRATION
-        MENUITEM "Align &with Rotation...",     ID_NAVIGATOR_ALIGN_TO_MAP
+        MENUITEM "Setup &Full Montage",         ID_NAVIGATOR_SETUPFULLMONTAGE
+        MENUITEM "Set &Grid Limits",            ID_NAVIGATOR_SETGRIDLIMITS
+        MENUITEM "Setup &Polygon Montage",      ID_POLYGON_MONTAGE
+        MENUITEM "Setup &Corner Montage",       ID_CORNER_MONTAGE
         MENUITEM SEPARATOR
-        MENUITEM "&Shift to Marker...",         ID_NAVIGATOR_SHIFTTOMARKER
-        MENUITEM "Apply Save&d Shift",          ID_NAVIGATOR_APPLYSAVEDSHIFT
-        MENUITEM "Undo &Last Shift",            ID_NAVIGATOR_UNDOLASTSHIFT
+        MENUITEM "&Acquire at Items...",        ID_NAVIGATOR_ACQUIRE
+        MENUITEM "List Files/Series/States",    ID_MONTAGE_LISTFILESTOOPEN
         MENUITEM SEPARATOR
-        MENUITEM "Import Map...",               ID_NAVIGATOR_IMPORTMAP
-        MENUITEM "Rotat&e Map",                 ID_NAVIGATOR_ROTATEMAP
-        MENUITEM "Ad&just for Backlash",        ID_NAVIGATOR_ADJUST_BACKLASH
-        MENUITEM "&Backlash Settings...",       ID_NAVIGATOR_BACKLASHSETTINGS
+        MENUITEM "Mult&iple Grid Operations...", ID_MONTAGINGGRIDS_MULTIPLEGRIDOPERATIONS
+        MENUITEM "Reopen Multi-grid &Session...", ID_MONTAGINGGRIDS_READSESSIONFILE
+        MENUITEM "Clear Multi-grid Session",    ID_MONTAGINGGRIDS_CLEARSESSION
+        MENUITEM "Identif&y Grid on Stage...",  ID_MONTAGINGGRIDS_IDENTIFYGRIDONSTAGE
+        MENUITEM "L&oad All Grid Maps",         ID_MONTAGINGGRIDS_LOADALLGRIDMAPS
         MENUITEM SEPARATOR
-        MENUITEM "Ope&n Imaging States ...",    ID_NAVIGATOR_OPENSTATEDLG
-        MENUITEM "Set Ma&p Acquire State",      ID_NAVIGATOR_SETACQUIRESTATE
-        MENUITEM "&Restore State",              ID_NAVIGATOR_RESTORESTATE
+        MENUITEM "A&utocontour Grid Squares...", ID_MONTAGINGGRIDS_AUTOCONTOURGRIDSQUARES
+        MENUITEM "Reverse Con&tour Colors",     ID_MONTAGINGGRIDS_REVERSECONTOURCOLORS
+        MENUITEM "&Keep Colors for Polygons",   ID_MONTAGINGGRIDS_KEEPCOLORSFORPOLYGONS
         MENUITEM SEPARATOR
-        MENUITEM "Real&ign to Item",            ID_NAVIGATOR_ALIGNTOITEM
-        MENUITEM "Setup Align/Realign...",      ID_NAVIGATOR_SETUPALIGN
-        MENUITEM "For&ce Center Align",         ID_NAVIGATOR_FORCE_CENTER_ALIGN
-        MENUITEM "Erase Periodic Pea&ks in LD", ID_NAVIGATOR_ERASEPERIODICCORR
+        MENUITEM "Fi&nd Holes in Regular Grid...", ID_MONTAGINGGRIDS_FINDREGULARARRAYOFHOLES
+        MENUITEM "A&dd Grid of Points",         ID_NAVIGATOR_ADDGRIDOFPOINTS
+        MENUITEM "Add Grid &Like Last One",     ID_MONTAGINGGRIDS_ADDGRIDLIKELASTONE
+        MENUITEM "Di&vide Points into Groups",  ID_MONTAGINGGRIDS_GROUPPOINTSINGRID
+        MENUITEM "Set Group &Radius",           ID_MONTAGINGGRIDS_SETGROUPSIZE
+        MENUITEM SEPARATOR
+        MENUITEM "Set &Multi-shot Parameters...", ID_OPTIONS_SETMULTI
+        MENUITEM "S&et Hole Order for Regular Array", ID_MONTAGINGGRIDS_SETHOLEORDERFORREGULARARRAY
+        MENUITEM "Com&bine Points for Multi-shots...", ID_MONTAGINGGRIDS_COMBINEPOINTSINTOMULTI
+        MENUITEM "S&how Shots when Show Acquire", ID_OPTIONS_SHOWMULTI
+        MENUITEM "Show &Whole Area for All Points", ID_MONTAGINGGRIDS_SHOWWHOLEAREAFORALLPOINTS
+        MENUITEM SEPARATOR
+        MENUITEM "Setup Super Montage",         ID_NAVIGATOR_ALIGNEDSUPERMONTAGE
+        MENUITEM "Polygon Super Montage",       ID_SUPERMONTAGING_POLYGONSUPERMONTAGE
     END
     POPUP "Too&ls"
     BEGIN
@@ -836,6 +794,70 @@ BEGIN
         MENUITEM "&Run SerialEM Snapshot",      ID_HELP_RUNSERIALEMSNAPSHOT
         MENUITEM "&List Debug Output Key Letters", ID_HELP_LISTDEBUGOUTPUTKEYLETTERS
     END
+END
+
+IDR_NAV_MENU MENU
+BEGIN
+    POPUP "File"
+    BEGIN
+        MENUITEM "&Save",                       ID_SAVE_NAV_FILE
+        MENUITEM "Save &As...",                 ID_SAVEAS_NAV_FILE
+        MENUITEM "&Load...",                    ID_LOAD_NAV_FILE
+        MENUITEM "&Merge File...",              ID_NAVIGATOR_MERGEFILE
+        MENUITEM "&Close",                      ID_NAVIGATOR_CLOSE
+    END
+    POPUP "Options"
+    BEGIN
+        MENUITEM "Set &Point Label Threshold",  ID_OPTIONS_SETPOINTLABELTHRESHOLD
+        MENUITEM "Use Item &Labels in Filenames", ID_OPTIONS_USEITEMLABELSINFILENAMES
+        MENUITEM SEPARATOR
+        MENUITEM "&Autosave Nav File",          ID_NAVIGATOR_AUTOSAVE
+        MENUITEM "Write as &XML File",          ID_NAVIGATOR_WRITEASXMLFILE
+        MENUITEM SEPARATOR
+        MENUITEM "Convert Maps to &Bytes",      ID_NAVIGATOR_CONVERTMAPSTOBYTES
+        MENUITEM "Load Maps &Unbinned",         ID_NAVIGATOR_LOADUNBINNED
+    END
+    POPUP "&View"
+    BEGIN
+        MENUITEM "&Indexes",                    ID_VIEW_INDEXES
+        MENUITEM "&Labels",                     ID_VIEW_LABLES
+        MENUITEM "All &Registrations",          ID_VIEW_ALLREGISTRATIONS
+        MENUITEM "Draw &Nothing",               ID_VIEW_DRAWNOTHING
+    END
+    POPUP "&Map/Polygon"
+    BEGIN
+        MENUITEM "&Import Map...",              ID_NAVIGATOR_IMPORTMAP
+        MENUITEM "&Rotate Map",                 ID_NAVIGATOR_ROTATEMAP
+        MENUITEM "Adjust for &Backlash",        ID_NAVIGATOR_ADJUST_BACKLASH
+        MENUITEM "Backlash &Settings...",       ID_NAVIGATOR_BACKLASHSETTINGS
+        MENUITEM "Set Map &Acquire State",      ID_NAVIGATOR_SETACQUIRESTATE
+        MENUITEM "R&estore State",              ID_NAVIGATOR_RESTORESTATE
+        MENUITEM SEPARATOR
+        MENUITEM "Add &Circle Polygon",         ID_NAVIGATOR_ADDCIRCLEPOLYGON
+        MENUITEM "&Polygon from Corners",       ID_NAVIGATOR_POLYGON_FROM_CORNERS
+    END
+    POPUP "Tr&ansformations"
+    BEGIN
+        MENUITEM "&Shift to Marker...",         ID_NAVIGATOR_SHIFTTOMARKER
+        MENUITEM "Apply Save&d Shift",          ID_NAVIGATOR_APPLYSAVEDSHIFT
+        MENUITEM "Undo &Last Shift",            ID_NAVIGATOR_UNDOLASTSHIFT
+        MENUITEM "&Transform Items",            ID_TRANSFORM_PTS
+        MENUITEM "&Undo Transformation",        ID_NAVIGATOR_UNDOTRANSFORMATION
+        MENUITEM "C&hange Registration",        ID_NAVIGATOR_CHANGEREGISTRATION
+        MENUITEM "Align with Rotation...",      ID_NAVIGATOR_ALIGN_TO_MAP
+    END
+    POPUP "&Realign"
+    BEGIN
+        MENUITEM "&Realign to Item",            ID_NAVIGATOR_ALIGNTOITEM
+        MENUITEM "Set&up Align/Realign...",     ID_NAVIGATOR_SETUPALIGN
+        MENUITEM "&Force Center Align",         ID_NAVIGATOR_FORCE_CENTER_ALIGN
+        MENUITEM "&Erase Periodic Peaks in LD", ID_NAVIGATOR_ERASEPERIODICCORR
+        MENUITEM SEPARATOR
+        MENUITEM "Use &Current LD Params in Realign", ID_NAVOPTIONS_USECURRENTLDPARAMSINRI
+        MENUITEM "&Try Scaling in Realign",     ID_NAVIGATOR_REALIGN_SCALING
+        MENUITEM "&Search + and - Scaling in Realign", ID_OPTIONS_SEARCH
+    END
+    MENUITEM "        Close Up",            ID_NAV_SHRINK
 END
 
 
@@ -2050,23 +2072,24 @@ BEGIN
     CONTROL         "Autosave sum of raw frames",IDC_AUTOSAVE_RAW,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,213,100,10
 END
 
-IDD_NAVIGATOR DIALOGEX 0, 0, 284, 261
+IDD_NAVIGATOR DIALOGEX 0, 0, 285, 264
 STYLE DS_SETFONT | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME
 CAPTION "Navigator"
+MENU IDR_NAV_MENU
 FONT 8, "Microsoft Sans Serif", 0, 0, 0x1
 BEGIN
-    LTEXT           "Label:",IDC_STATIC,3,5,20,8
-    EDITTEXT        IDC_EDIT_PTLABEL,23,4,30,12,ES_AUTOHSCROLL | NOT WS_TABSTOP
-    CONTROL         "Registration point",IDC_CHECK_REGPOINT,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,61,5,66,10
-    RTEXT           "99",IDC_STAT_REGPT_NUM,126,6,8,8
-    CONTROL         "Spin2",IDC_SPIN_REGPT_NUM,"msctls_updown32",UDS_ARROWKEYS,137,3,10,14
-    CONTROL         "Corner point (C)",IDC_CHECKCORNER,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,154,5,62,10
-    LTEXT           "Note:",IDC_STATIC,55,36,17,8
-    EDITTEXT        IDC_EDIT_PTNOTE,73,34,209,12,ES_AUTOHSCROLL
-    LTEXT           "Registration",IDC_STATIC,59,79,37,8
-    RTEXT           "99",IDC_STAT_CURRENTREG,97,79,9,8
-    CONTROL         "Spin1",IDC_SPINCURRENT_REG,"msctls_updown32",UDS_ARROWKEYS,108,76,10,14
-    LISTBOX         IDC_LISTVIEWER,55,114,227,141,LBS_USETABSTOPS | LBS_NOINTEGRALHEIGHT | LBS_DISABLENOSCROLL | WS_VSCROLL | WS_HSCROLL | WS_TABSTOP
+    LTEXT           "Label:",IDC_STATIC,4,20,20,8
+    EDITTEXT        IDC_EDIT_PTLABEL,24,19,30,12,ES_AUTOHSCROLL | NOT WS_TABSTOP
+    CONTROL         "Registration point",IDC_CHECK_REGPOINT,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,76,5,66,10
+    RTEXT           "99",IDC_STAT_REGPT_NUM,141,6,8,8
+    CONTROL         "Spin2",IDC_SPIN_REGPT_NUM,"msctls_updown32",UDS_ARROWKEYS,152,4,10,14
+    CONTROL         "Corner point (C)",IDC_CHECKCORNER,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,177,5,62,10
+    LTEXT           "Note:",IDC_STATIC,64,21,16,8
+    EDITTEXT        IDC_EDIT_PTNOTE,80,19,200,12,ES_AUTOHSCROLL
+    LTEXT           "Registration",IDC_STATIC,229,79,36,8
+    CTEXT           "99",IDC_STAT_CURRENTREG,265,79,9,8
+    CONTROL         "Spin1",IDC_SPINCURRENT_REG,"msctls_updown32",UDS_ARROWKEYS,274,76,11,14
+    LISTBOX         IDC_LISTVIEWER,59,102,227,153,LBS_USETABSTOPS | LBS_NOINTEGRALHEIGHT | LBS_DISABLENOSCROLL | WS_VSCROLL | WS_HSCROLL | WS_TABSTOP
     PUSHBUTTON      "Add Polygon",IDC_DRAW_POLYGON,3,102,50,10
     PUSHBUTTON      "Add Points",IDC_DRAW_POINTS,3,89,50,10
     PUSHBUTTON      "Move Item",IDC_MOVE_ITEM,3,128,50,10
@@ -2076,53 +2099,49 @@ BEGIN
     PUSHBUTTON      "Go To XYZ",IDC_GOTO_POINT,3,167,50,10
     PUSHBUTTON      "New Map",IDC_NEW_MAP,3,206,50,10
     PUSHBUTTON      "Load Map",IDC_LOAD_MAP,3,193,50,10
-    COMBOBOX        IDC_COMBOCOLOR,23,19,48,63,CBS_DROPDOWNLIST | WS_TABSTOP
-    LTEXT           "Color",IDC_STATIC,3,21,17,8
-    CONTROL         "Acquire (A)",IDC_CHECK_ACQUIRE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,5,49,49,10
-    PUSHBUTTON      "?",IDC_BUTHELP,272,3,10,10
-    CONTROL         "All reg.",IDC_DRAW_ALL_REG,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,141,78,33,10
-    CONTROL         "Rotate when load",IDC_CHECKROTATE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,107,20,68,10
+    COMBOBOX        IDC_COMBOCOLOR,23,34,48,63,CBS_DROPDOWNLIST | WS_TABSTOP
+    LTEXT           "Color",IDC_STATIC,4,36,18,8
+    CONTROL         "Acquire (A)",IDC_CHECK_ACQUIRE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,49,49,10
+    PUSHBUTTON      "?",IDC_BUTHELP,273,4,10,10
+    CONTROL         "Rotate when load",IDC_CHECKROTATE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,108,35,68,10
     PUSHBUTTON      "Realign to Item",IDC_REALIGNTOITEM,3,245,50,10
-    CONTROL         "Tilt series",IDC_CHECK_NAV_TS,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,55,49,45,10
-    CONTROL         "New file at item",IDC_CHECK_NAV_FILEATITEM,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,102,49,61,10
-    CONTROL         "New file at group",IDC_CHECK_NAV_FILEATGROUP,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,171,49,66,10
-    LTEXT           "Set:",IDC_STAT_NAV_SET,5,61,13,9
-    PUSHBUTTON      "File Props",IDC_BUT_NAV_FILEPROPS,18,61,35,10
-    PUSHBUTTON      "Imaging State",IDC_BUT_NAV_STATE,57,61,45,10
-    PUSHBUTTON      "TS Params",IDC_BUT_NAV_TSPARAMS,106,61,38,10
-    PUSHBUTTON      "Filename",IDC_BUT_NAV_FILENAME,148,61,32,10
-    LTEXT           "(A name for you)",IDC_STAT_NAV_FILENAME,235,61,47,8
-    CONTROL         "",IDC_STAT_NAV_HORIZLINE,"Static",SS_BLACKFRAME | SS_SUNKEN,2,73,235,1
+    CONTROL         "Tilt series",IDC_CHECK_NAV_TS,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,61,49,45,10
+    CONTROL         "New file at item",IDC_CHECK_NAV_FILEATITEM,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,108,49,61,10
+    CONTROL         "New file at group",IDC_CHECK_NAV_FILEATGROUP,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,177,49,66,10
+    LTEXT           "Set:",IDC_STAT_NAV_SET,10,61,13,9
+    PUSHBUTTON      "File Props",IDC_BUT_NAV_FILEPROPS,23,61,35,10
+    PUSHBUTTON      "Imaging State",IDC_BUT_NAV_STATE,62,61,45,10
+    PUSHBUTTON      "TS Params",IDC_BUT_NAV_TSPARAMS,111,61,38,10
+    PUSHBUTTON      "Filename",IDC_BUT_NAV_FILENAME,153,61,32,10
+    LTEXT           "(A name for you)",IDC_STAT_NAV_FILENAME,228,61,58,8
+    CONTROL         "",IDC_STAT_NAV_HORIZLINE,"Static",SS_BLACKFRAME | SS_SUNKEN,3,73,282,1
     PUSHBUTTON      "Update Z",IDC_BUT_UPDATEZ,3,141,50,10
-    CONTROL         "For anchor state",IDC_CHECK_DUALMAP,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,176,20,61,10
+    CONTROL         "For anchor state",IDC_CHECK_DUALMAP,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,177,35,61,10
     PUSHBUTTON      "Anchor Map",IDC_BUT_DUAL_MAP,3,219,50,10
-    LTEXT           "# 99999-99999",IDC_STAT_NAVITEMNUM,5,36,48,8
-    CONTROL         "Collapse",IDC_COLLAPSE_GROUPS,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,59,91,40,10
-    CONTROL         "Show Acquire",IDC_SHOW_ACQUIRE_AREA,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,139,91,50,10
+    LTEXT           "Index: 99999-99999",IDC_STAT_NAVITEMNUM,4,6,63,8
+    CONTROL         "Collapse",IDC_COLLAPSE_GROUPS,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,57,78,36,10
+    CONTROL         "Show Acq.",IDC_SHOW_ACQUIRE_AREA,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,96,78,41,10
     PUSHBUTTON      "Add At Marker",IDC_ADD_MARKER,3,115,50,10
     CONTROL         "",IDC_STATIC,"Static",SS_BLACKFRAME,0,126,54,1
     CONTROL         "",IDC_STATIC,"Static",SS_BLACKFRAME,0,152,54,1
     CONTROL         "",IDC_STATIC,"Static",SS_BLACKFRAME,0,191,54,1
-    CONTROL         "Edit mode",IDC_EDIT_MODE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,195,91,42,10
+    CONTROL         "Edit mode",IDC_EDIT_MODE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,140,78,41,10
     PUSHBUTTON      "Go To XY",IDC_GOTO_XY,3,154,50,10
-    LTEXT           "",IDC_STATLISTHEADER,57,102,218,8
-    LTEXT           "#",IDC_STAT_HEADER_INDEX,57,102,8,8
-    LTEXT           "Label",IDC_STATLISTHEADER1,57,102,20,8
-    LTEXT           "Color",IDC_STATLISTHEADER2,91,102,20,8
-    LTEXT           "X",IDC_STATLISTHEADER3,120,102,10,8
-    LTEXT           "Y",IDC_STATLISTHEADER4,145,102,10,8
-    LTEXT           "Z",IDC_STATLISTHEADER5,166,102,10,8
-    LTEXT           "Type",IDC_STATLISTHEADER6,174,102,16,8
-    LTEXT           "Reg.",IDC_STATLISTHEADER7,193,102,14,8
-    LTEXT           "Acq.",IDC_STATLISTHEADER8,210,102,13,8
-    LTEXT           "Note",IDC_STATLISTHEADER9,226,102,15,8
-    CONTROL         "Draw",IDC_DRAW_ONE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,75,20,32,10
-    CONTROL         "None",IDC_DRAW_NONE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,176,78,29,10
-    LTEXT           "Draw:",IDC_STAT_NAV_DRAW,122,79,18,8
-    CONTROL         "Labels",IDC_DRAW_LABELS,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,208,78,34,10
-    PUSHBUTTON      "Focus Pos",IDC_BUT_NAV_FOCUS_POS,184,61,36,10
-    CONTROL         "Edit Focus",IDC_EDIT_FOCUS,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,241,91,43,10
-    CONTROL         "Indexes",IDC_TABLE_INDEXES,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,101,91,35,10
+    LTEXT           "",IDC_STATLISTHEADER,57,90,218,8
+    LTEXT           "#",IDC_STAT_HEADER_INDEX,57,90,8,8
+    LTEXT           "Label",IDC_STATLISTHEADER1,57,90,20,8
+    LTEXT           "Color",IDC_STATLISTHEADER2,91,90,20,8
+    LTEXT           "X",IDC_STATLISTHEADER3,120,90,10,8
+    LTEXT           "Y",IDC_STATLISTHEADER4,145,90,10,8
+    LTEXT           "Z",IDC_STATLISTHEADER5,166,90,10,8
+    LTEXT           "Type",IDC_STATLISTHEADER6,174,90,16,8
+    LTEXT           "Reg.",IDC_STATLISTHEADER7,193,90,14,8
+    LTEXT           "Acq.",IDC_STATLISTHEADER8,210,90,13,8
+    LTEXT           "Note",IDC_STATLISTHEADER9,226,90,15,8
+    CONTROL         "Draw",IDC_DRAW_ONE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,76,35,32,10
+    PUSHBUTTON      "Focus Pos",IDC_BUT_NAV_FOCUS_POS,189,61,36,10
+    CONTROL         "Edit Focus",IDC_EDIT_FOCUS,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,184,78,41,10
+    CONTROL         "",IDC_STAT_NAV_HORIZLINE2,"Static",SS_BLACKFRAME | SS_SUNKEN,3,47,282,1
 END
 
 IDD_DUMMYDLG DIALOG 0, 0, 44, 26
@@ -4918,9 +4937,9 @@ BEGIN
     IDD_NAVIGATOR, DIALOG
     BEGIN
         LEFTMARGIN, 2
-        RIGHTMARGIN, 282
-        TOPMARGIN, 3
-        BOTTOMMARGIN, 258
+        RIGHTMARGIN, 283
+        TOPMARGIN, 4
+        BOTTOMMARGIN, 261
         HORZGUIDE, 166
     END
 
@@ -6085,9 +6104,14 @@ BEGIN
     IDC_SPINCOSINEPOWER     "Set power for changing intensity by less than full cosine factor"
     IDC_SPINSCANBIN         "Set binning for prescan (unsaved) montage"
     IDC_SAVE_INTENSITY      "Save condenser lens setting for each image"
-    IDC_DRAW_ALL_REG        "Draw items at all registrations over images"
     IDC_DRAW_NONE           "Turn off drawing of all Navigator items"
     IDC_REFINE_ZLP          "Refine alignment of ZLP with a series of pictures"
+END
+
+STRINGTABLE
+BEGIN
+    ID_VIEW_ALLREGISTRATIONS "Draw items at all registrations over images"
+    ID_VIEW_DRAWNOTHING     "Toggle drawing of all items on and off"
 END
 
 STRINGTABLE
@@ -6479,8 +6503,14 @@ BEGIN
     IDC_DELSTAGE_MINUS      "Decrease step size for stage movement"
     IDC_AUTO_VIEW_SHIFT     "Take and align Preview & View images to measure View shift offset"
     IDC_ZERO_SEARCH_SHIFT   "Reset the shift offset for Search mode to zero or undo Auto shift"
-    IDC_TABLE_INDEXES       "Show item numbers, numbered from 1, as first column of table"
     IDC_AUTO_SEARCH_SHIFT   "Take and align View & Search images to measure Search shift offset"
+END
+
+STRINGTABLE
+BEGIN
+    ID_MISC_NO_TRUE_SIZE    "Select whether to show circles with actual beam size when defining Focus/Trial"
+    ID_VIEW_INDEXES         "Show item numbers, numbered from 1, as first column of table"
+    ID_VIEW_LABLES          "Draw labels except for points in groups above threshold size"
 END
 
 STRINGTABLE
@@ -6712,7 +6742,6 @@ BEGIN
     IDC_TRANSFORM_PTS       "Transform points and polygons to current registration"
     IDC_CORNER_MONTAGE      "Set up parameters for a montage area defined by corners"
     IDC_POLYGON_MONTAGE     "Set up parameters for a montage area enclosing the polygon"
-    IDC_DRAW_ALL            "Toggle drawing of all items on and off"
     IDC_DRAW_ONE            "Draw this item on any images that include it"
     IDC_GOTO_XY             "Go to the X/Y stage coordinates of item (leave Z unchanged)"
     IDC_SAVEAS_NAV_FILE     "Save entries into a different file"
@@ -7692,7 +7721,6 @@ BEGIN
     IDC_BUT_SETUP_ALIGN     "Select type of alignment and set parameters"
     IDC_CHECK_END_HIGH_EXP  "End series or first half normally if exposure or intensity increase too much"
     IDC_CHECK_MAGINTENSITY  "Change intensity with magnification to keep brightness constant "
-    IDC_DRAW_LABELS         "Draw labels except for points in groups above threshold size"
     IDC_COMBO_PREMACRO      "Select script to run before doing main action"
     IDC_COMBO_MACRO         "Select script to run for the main action"
     IDC_CHECK_LIMIT_ABS_FOCUS 
@@ -8567,7 +8595,6 @@ END
 
 STRINGTABLE
 BEGIN
-    ID_MISC_NO_TRUE_SIZE    "Select whether to show circles with actual beam size when defining Focus/Trial"
     ID_TILTSERIES_SETUPPARALLELTILTSERIES 
                             "Set up to acquire parallel tilt series"
 END
@@ -8595,7 +8622,8 @@ LANGUAGE 9, 1
 #include "res\SerialEM.rc2"  // non-Microsoft Visual C++ edited resources
 #include "afxres.rc"         // Standard components
 #include "XFolderDialog\XFolderDialog.rc"
-#endif
+#endif
+
 /////////////////////////////////////////////////////////////////////////////
 #endif    // not APSTUDIO_INVOKED
 

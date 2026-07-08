@@ -4349,6 +4349,7 @@ BOOL CSerialEMApp::DoingTasks()
     mBufferManager->DoingSychroThread());
   mJustNavAcquireOpen = !trulyBusy && mNavigator && mNavigator->mNavAcquireDlg;
   mJustMontRestoringStage = !trulyBusy && mMontageController->GetRestoringStage();
+  mScope->SetUpdateSkippingForTasks(trulyBusy);
   return trulyBusy || mJustChangingLDarea || mJustDoingSynchro || mJustNavAcquireOpen ||
     mJustMontRestoringStage;
 }

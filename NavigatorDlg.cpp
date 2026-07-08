@@ -207,6 +207,7 @@ CNavigatorDlg::CNavigatorDlg(CWnd* pParent /*=NULL*/)
   mLastGridSetAcquire = false;
   mNumIStargetItems = 0;
   mOpenedSepMultiFiles = false;
+  mExpandedHeight = 0;
 }
 
 
@@ -244,8 +245,6 @@ void CNavigatorDlg::DoDataExchange(CDataExchange* pDX)
   DDX_Check(pDX, IDC_DRAW_ONE, m_bDrawOne);
   DDX_CBIndex(pDX, IDC_COMBOCOLOR, m_iColor);
   DDX_Check(pDX, IDC_CHECK_ACQUIRE, m_bAcquire);
-  DDX_Check(pDX, IDC_DRAW_NONE, m_bDrawNone);
-  DDX_Check(pDX, IDC_DRAW_ALL_REG, m_bDrawAllReg);
   //}}AFX_DATA_MAP
   DDX_Control(pDX, IDC_REALIGNTOITEM, m_butRealign);
   DDX_Control(pDX, IDC_STATLISTHEADER, m_statListHeader);
@@ -275,12 +274,9 @@ void CNavigatorDlg::DoDataExchange(CDataExchange* pDX)
   DDX_Control(pDX, IDC_ADD_MARKER, m_butAddMarker);
   DDX_Control(pDX, IDC_EDIT_MODE, m_butEditMode);
   DDX_Check(pDX, IDC_EDIT_MODE, m_bEditMode);
-  DDX_Check(pDX, IDC_DRAW_LABELS, m_bDrawLabels);
   DDX_Control(pDX, IDC_BUT_NAV_FOCUS_POS, m_butNavFocusPos);
   DDX_Control(pDX, IDC_EDIT_FOCUS, m_butEditFocus);
   DDX_Check(pDX, IDC_EDIT_FOCUS, m_bEditFocus);
-  DDX_Control(pDX, IDC_TABLE_INDEXES, m_butTableIndexes);
-  DDX_Check(pDX, IDC_TABLE_INDEXES, m_bTableIndexes);
 }
 
 
@@ -305,14 +301,14 @@ BEGIN_MESSAGE_MAP(CNavigatorDlg, CBaseDlg)
   ON_BN_CLICKED(IDC_DRAW_ONE, OnDrawOne)
   ON_BN_CLICKED(IDC_GOTO_XY, OnGotoXy)
   ON_WM_MOVE()
+  ON_WM_INITMENUPOPUP()
   ON_WM_ACTIVATE()
+  ON_WM_HELPINFO()
 	ON_CBN_SELENDOK(IDC_COMBOCOLOR, OnSelendokCombocolor)
 	ON_BN_CLICKED(IDC_CHECK_ACQUIRE, OnCheckAcquire)
   ON_LBN_DBLCLK(IDC_LISTVIEWER, OnDblclkListviewer)
   ON_LBN_SETFOCUS(IDC_LISTVIEWER, OnSetFocusListviewer)
   ON_BN_CLICKED(IDC_GOTO_MARKER, OnGotoMarker)
-	ON_BN_CLICKED(IDC_DRAW_NONE, OnDrawNone)
-	ON_BN_CLICKED(IDC_DRAW_ALL_REG, OnDrawNone)
   ON_BN_CLICKED(IDC_CHECKROTATE, OnCheckrotate)
 	//}}AFX_MSG_MAP
   ON_BN_CLICKED(IDC_REALIGNTOITEM, OnRealigntoitem)
@@ -332,10 +328,17 @@ BEGIN_MESSAGE_MAP(CNavigatorDlg, CBaseDlg)
   ON_BN_CLICKED(IDC_ADD_MARKER, OnAddMarker)
   ON_BN_CLICKED(IDC_SHOW_ACQUIRE_AREA, OnShowAcquireArea)
   ON_BN_CLICKED(IDC_EDIT_MODE, OnEditMode)
-  ON_BN_CLICKED(IDC_DRAW_LABELS, OnDrawLabels)
   ON_BN_CLICKED(IDC_BUT_NAV_FOCUS_POS, OnButNavFocusPos)
   ON_BN_CLICKED(IDC_EDIT_FOCUS, OnEditFocus)
-  ON_BN_CLICKED(IDC_TABLE_INDEXES, OnTableIndexes)
+  ON_COMMAND(ID_VIEW_INDEXES, OnViewIndexes)
+  ON_UPDATE_COMMAND_UI(ID_VIEW_INDEXES, OnUpdateViewIndexes)
+  ON_COMMAND(ID_VIEW_LABLES, OnViewLabels)
+  ON_UPDATE_COMMAND_UI(ID_VIEW_LABLES, OnUpdateViewLabels)
+  ON_COMMAND(ID_VIEW_ALLREGISTRATIONS, OnViewAllRegistrations)
+  ON_UPDATE_COMMAND_UI(ID_VIEW_ALLREGISTRATIONS, OnUpdateViewAllRegistrations)
+  ON_COMMAND(ID_VIEW_DRAWNOTHING, OnViewDrawNothing)
+  ON_UPDATE_COMMAND_UI(ID_VIEW_DRAWNOTHING, OnUpdateViewDrawNothing)
+  ON_COMMAND(ID_NAV_SHRINK, OnNavShrink)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -434,6 +437,28 @@ void CNavigatorDlg::OnSize(UINT nType, int cx, int cy)
   mWinApp->RestoreViewFocus();
 }
 
+// Shrink or expand the window
+void CNavigatorDlg::OnNavShrink()
+{
+  CRect rcWin, rect;
+  GetWindowRect(&rcWin);
+  CWnd *wnd = GetDlgItem(IDC_STAT_NAVITEMNUM);
+  if (wnd)
+    wnd->GetWindowRect(&rect);
+  if (mExpandedHeight > 0) {
+    SetWindowPos(NULL, 0, 0, rcWin.Width(), mExpandedHeight,
+      SWP_NOZORDER | SWP_NOMOVE);
+    mExpandedHeight = 0;
+  } else {
+    SetWindowPos(NULL, 0, 0, rcWin.Width(), wnd ? rect.top - rcWin.top : 90, 
+      SWP_NOZORDER | SWP_NOMOVE);
+    mExpandedHeight = rcWin.Height();
+  }
+  GetMenu()->ModifyMenu(ID_NAV_SHRINK, MF_BYCOMMAND | MF_STRING, ID_NAV_SHRINK,
+    mExpandedHeight ? "        Expand" : "        Close Up" );
+  SetFocus();
+}
+
 // Clean up when window is being destroyed
 void CNavigatorDlg::PostNcDestroy()
 {
@@ -461,6 +486,12 @@ void CNavigatorDlg::OnCancel()
   DestroyWindow();
 }
 
+BOOL CNavigatorDlg::OnHelpInfo(HELPINFO * lpHelpInfo)
+{
+  mWinApp->WinHelpInternal(0x10000 + lpHelpInfo->iCtrlId);
+  return 0;
+}
+
 // Central place to test for whether it is OK to close the dialog
 bool CNavigatorDlg::OKtoCloseNav()
 {
@@ -482,6 +513,101 @@ void CNavigatorDlg::OnMove(int x, int y)
 	CBaseDlg::OnMove(x, y);
   if (mInitialized)
     mWinApp->RestoreViewFocus();
+}
+
+// Calls update functions for menu items in Navigator menus
+// Copied from winfrm.cpp with references to members of CWinFrame commented out
+void CNavigatorDlg::OnInitMenuPopup(CMenu* pMenu, UINT nIndex, BOOL bSysMenu)
+{
+  //AfxCancelModes(m_hWnd);
+
+  if (bSysMenu)
+    return;     // don't support system menu
+
+                // allow hook to consume message
+  /*if (m_pNotifyHook != NULL &&
+    m_pNotifyHook->OnInitMenuPopup(pMenu, nIndex, bSysMenu))
+  {
+    return;
+  }*/
+
+  ENSURE_VALID(pMenu);
+
+  // check the enabled state of various menu items
+
+  CCmdUI state;
+  state.m_pMenu = pMenu;
+  ASSERT(state.m_pOther == NULL);
+  ASSERT(state.m_pParentMenu == NULL);
+
+  // determine if menu is popup in top-level menu and set m_pOther to
+  //  it if so (m_pParentMenu == NULL indicates that it is secondary popup)
+  HMENU hParentMenu;
+  if (AfxGetThreadState()->m_hTrackingMenu == pMenu->m_hMenu)
+    state.m_pParentMenu = pMenu;    // parent == child for tracking popup
+  else if ((hParentMenu = /*(m_dwMenuBarState == AFX_MBS_VISIBLE) ?*/ ::GetMenu(m_hWnd) /*: m_hMenu*/) != NULL)
+  {
+    CWnd* pParent = GetTopLevelParent();
+    // child windows don't have menus -- need to go to the top!
+    if (pParent != NULL &&
+      (hParentMenu = pParent->GetMenu()->GetSafeHmenu()) != NULL)
+    {
+      int nIndexMax = ::GetMenuItemCount(hParentMenu);
+      for (int nItemIndex = 0; nItemIndex < nIndexMax; nItemIndex++)
+      {
+        if (::GetSubMenu(hParentMenu, nItemIndex) == pMenu->m_hMenu)
+        {
+          // when popup is found, m_pParentMenu is containing menu
+          state.m_pParentMenu = CMenu::FromHandle(hParentMenu);
+          break;
+        }
+      }
+    }
+  }
+
+  state.m_nIndexMax = pMenu->GetMenuItemCount();
+  for (state.m_nIndex = 0; state.m_nIndex < state.m_nIndexMax;
+    state.m_nIndex++)
+  {
+    state.m_nID = pMenu->GetMenuItemID(state.m_nIndex);
+    if (state.m_nID == 0)
+      continue; // menu separator or invalid cmd - ignore it
+
+    ASSERT(state.m_pOther == NULL);
+    ASSERT(state.m_pMenu != NULL);
+    if (state.m_nID == (UINT)-1)
+    {
+      // possibly a popup menu, route to first item of that popup
+      state.m_pSubMenu = pMenu->GetSubMenu(state.m_nIndex);
+      if (state.m_pSubMenu == NULL ||
+        (state.m_nID = state.m_pSubMenu->GetMenuItemID(0)) == 0 ||
+        state.m_nID == (UINT)-1)
+      {
+        continue;       // first item of popup can't be routed to
+      }
+      state.DoUpdate(this, FALSE);    // popups are never auto disabled
+    } else
+    {
+      // normal menu item
+      // Auto enable/disable if frame window has 'm_bAutoMenuEnable'
+      //    set and command is _not_ a system command.
+      state.m_pSubMenu = NULL;
+      state.DoUpdate(this, /*m_bAutoMenuEnable && */state.m_nID < 0xF000);
+    }
+
+    // adjust for menu deletions and additions
+    UINT nCount = pMenu->GetMenuItemCount();
+    if (nCount < state.m_nIndexMax)
+    {
+      state.m_nIndex -= (state.m_nIndexMax - nCount);
+      while (state.m_nIndex < nCount &&
+        pMenu->GetMenuItemID(state.m_nIndex) == state.m_nID)
+      {
+        state.m_nIndex++;
+      }
+    }
+    state.m_nIndexMax = nCount;
+  }
 }
 
 void CNavigatorDlg::OnActivate(UINT nState, CWnd * pWndOther, BOOL bMinimized)
@@ -509,7 +635,7 @@ void CNavigatorDlg::ManageCurrentControls()
   m_strItemNum = "";
   if (SetCurrentItem()) {
     exists = true;
-    m_strItemNum.Format("# %d", mCurrentItem + 1);
+    m_strItemNum.Format("Index: %d", mCurrentItem + 1);
     m_strPtNote = mItem->mNote;
     m_strLabel = mItem->mLabel;
     m_iColor = mItem->mColor;
@@ -526,7 +652,7 @@ void CNavigatorDlg::ManageCurrentControls()
     GetCollapsedGroupLimits(mCurListSel, mCurrentItem, index);
     if (mCurrentItem >= 0 && mCurrentItem < mItemArray.GetSize()) {
       mItem = mItemArray[mCurrentItem];
-      m_strItemNum.Format("# %d-%d", mCurrentItem + 1, index + 1);
+      m_strItemNum.Format("Index: %d-%d", mCurrentItem + 1, index + 1);
       item = GetSingleSelectedItem();
       if (item)
         m_strLabel = item->mLabel;
@@ -1088,18 +1214,40 @@ void CNavigatorDlg::OnRealigntoitem()
 
 /////////////////////////////////////////////////////////////////////
 // RESPONSES TO USER CHANGE OF ITEM STATE CONTROLS
-void CNavigatorDlg::OnDrawNone()
+void CNavigatorDlg::OnViewAllRegistrations()
 {
-  UpdateData(true);
+  m_bDrawAllReg = !m_bDrawAllReg;
+  Redraw();
   mWinApp->RestoreViewFocus();
+}
+
+void CNavigatorDlg::OnUpdateViewAllRegistrations(CCmdUI *pCmdUI)
+{
+  pCmdUI->SetCheck(m_bDrawAllReg ? 1 : 0);
+}
+
+void CNavigatorDlg::OnViewDrawNothing()
+{
+  m_bDrawNone = !m_bDrawNone;
   Redraw();
 }
 
-void CNavigatorDlg::OnDrawLabels()
+void CNavigatorDlg::OnUpdateViewDrawNothing(CCmdUI *pCmdUI)
 {
-  UpdateData(true);
+  pCmdUI->SetCheck(m_bDrawNone ? 1 : 0);
   mWinApp->RestoreViewFocus();
+}
+
+void CNavigatorDlg::OnViewLabels()
+{
+  m_bDrawLabels = !m_bDrawLabels;
   Redraw();
+}
+
+void CNavigatorDlg::OnUpdateViewLabels(CCmdUI *pCmdUI)
+{
+  pCmdUI->SetCheck(m_bDrawLabels ? 1 : 0);
+  mWinApp->RestoreViewFocus();
 }
 
 // The corner checkbox
@@ -1645,12 +1793,18 @@ void CNavigatorDlg::OnCollapseGroups()
   mWinApp->RestoreViewFocus();
 }
 
-void CNavigatorDlg::OnTableIndexes()
+void CNavigatorDlg::OnViewIndexes()
 {
-  UpdateData(true);
+  m_bTableIndexes = !m_bTableIndexes;
   mHelper->SetShowTableIndexes(m_bTableIndexes);
   FillListBox(true, true);
   mWinApp->RestoreViewFocus();
+}
+
+
+void CNavigatorDlg::OnUpdateViewIndexes(CCmdUI *pCmdUI)
+{
+  pCmdUI->SetCheck(m_bTableIndexes ? 1 : 0);
 }
 
 /////////////////////////////////////////////////////////////////////

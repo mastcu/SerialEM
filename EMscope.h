@@ -340,6 +340,7 @@ public:
   static void TaskStageDone(int param);
   void Release();
   void StartUpdate();
+  void SetUpdateSkippingForTasks(bool trulyBusy);
   BOOL GetInitialized();
   BOOL SetSpotSize(int inIndex, int normalize = 0);
   void SetLowDoseDownArea(int inArea);
@@ -624,6 +625,9 @@ public:
   GetSetMember(float, FLCInLMLensValue);
   GetSetMember(int, FLCInLMGenDelay);
   GetSetMember(int, FLCInLMAcqDelay);
+  GetMember(int, MaxUtapiService);
+  GetSetMember(int, ScopeUpdateTaskSkips);
+  GetSetMember(int, JeolUpdateTaskSkips);
   static int GetScopeCallFromPlugin() {return mScopeCallFromPlugin ; };
   static void SetScopeCallFromPlugin(int val) { mScopeCallFromPlugin = val; };
   GetMember(int, LastMagIndex);
@@ -660,7 +664,7 @@ public:
   float GetBaseIncrement() {return mIncrement;};
   GetSetMember(BOOL, CosineTilt);
   ShortVec *GetSkipUtapiServices() {return &mSkipUtapiServices ; };
-  bool UtapiSupportsService(int kind) { B3DCLAMP(kind, 0, UTAPI_SUPPORT_END - 1); return mUtapiConnected && mUtapiSupportsService[kind] ; };
+  bool UtapiSupportsService(int kind) { B3DCLAMP(kind, 0, mMaxUtapiService); return mUtapiConnected && mUtapiSupportsService[kind] ; };
   int Initialize();
   void CreateScopeMutex();
   int RenewJeolConnection();
@@ -1067,7 +1071,11 @@ private:
   float mFLCInLMLensValue;     // Value to set the lens to in LM
   int mJeolLensSetForLM;       // -1 at start, 0 not set, 1 set
   int mFLCInLMGenDelay;        // General sleep time (ms) after setting FLC state or value
-  int mFLCInLMAcqDelay;        // Sleep time (ms) after truning off FLC for acquisition
+  int mFLCInLMAcqDelay;        // Sleep time (ms) after turning off FLC for acquisition
+  int mScopeUpdateTaskSkips;   // # of times to skip scope update when task is running
+  int mJeolUpdateTaskSkips;    // # of times to skip an update from JEOL scope in thread
+  bool mSkipUpdatesForTasks;   // Flag to do the skipping
+  int mMaxUtapiService;        // Maximum UTAPI service # in plugin from array of names
   int mAdvancedScriptVersion;  // My internal version number for advanced scripting
   int mPluginVersion;          // Version of plugin or server
 
