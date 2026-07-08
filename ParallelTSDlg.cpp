@@ -274,6 +274,7 @@ BOOL CParallelTSDlg::OnInitDialog()
   mSTEMindex = mWinApp->GetSTEMMode();
   mCurrentCamera = mWinApp->GetCurrentActiveCamera();
   mParTSopts = mNavHelper->GetParTSOptions();
+  mHasIlluminatedArea = mScope->GetUseIllumAreaForC2() ? 1 : 0;
 
   m_sbcMappingMag.SetRange(1, MAX_MAGS);
   m_sbcAcquisitionMag.SetRange(1, MAX_MAGS);
@@ -567,7 +568,9 @@ void CParallelTSDlg::Update()
   
   SetDlgItemText(IDC_BUT_PTS_OPENCLOSEOPTIONS, mDisplayExtraOptions ? "-" : "+");
 
-  if (mHasIlluminatedArea <= 0)
+  if (mHasIlluminatedArea > 0)
+    ReplaceWindowText(&m_butBeamSizeCircles, "beam size from cal", "illuminated area");
+  else
     ReplaceWindowText(&m_butBeamSizeCircles, "illuminated area", "beam size from cal");
 
   // In case we want to enable or disable the extra buttons in the future
@@ -1400,6 +1403,7 @@ void CParallelTSDlg::OnFinalizeArea()
     mSettingUpTargetArea = false;
 
     mWinApp->mParallelTSHelper->DeleteTargetsFromNav();
+    mParallelTSHelper->ClearTargets(false);
     mSettingUpTargetArea = true;
 
   } else {

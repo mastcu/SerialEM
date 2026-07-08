@@ -7,8 +7,7 @@
 //
 // Generated from the TEXTINCLUDE 2 resource.
 //
-#include "afxres.h"
-
+#include "afxres.h"
 /////////////////////////////////////////////////////////////////////////////
 #undef APSTUDIO_READONLY_SYMBOLS
 
@@ -4709,10 +4708,10 @@ BEGIN
     EDITTEXT        IDC_EDIT_PTS_DIAM,88,377,21,12,ES_AUTOHSCROLL
     CONTROL         "",IDC_TSS_LINE3,"Static",SS_BLACKFRAME | SS_SUNKEN,4,28,169,1
     CONTROL         "",IDC_TSS_LINE4,"Static",SS_BLACKFRAME | SS_SUNKEN,4,70,169,1
-    CTEXT           "Defining Specimen Angles",IDC_STATIC_PTS_SPECPRETILTANGLE,35,30,108,8
+    CTEXT           "Defining Specimen Angles",IDC_STATIC_PTS_SPECPRETILTANGLE,29,30,119,8
     LTEXT           "deg",IDC_STATIC_PTS_PRETILTDEG,69,58,13,8
     LTEXT           "deg",IDC_STATIC_PTS_XPITCHDEG,157,58,13,8
-    CTEXT           "Defining Area && Targets",IDC_STATIC_PTS_DEFININGAREA,48,72,81,8
+    CTEXT           "Defining Area && Targets",IDC_STATIC_PTS_DEFININGAREA,37,72,103,8
     CONTROL         "",IDC_TSS_LINE5,"Static",SS_BLACKFRAME | SS_SUNKEN,11,359,162,1
     CTEXT           "Acquisition && Display Options",IDC_STATIC_PTS_EXTRAOPTIONS,39,355,98,8
     CONTROL         "Apply adjusting transform where appropriate",IDC_CHECK_PTS_APPLYADJUSTING,
@@ -6112,6 +6111,8 @@ STRINGTABLE
 BEGIN
     ID_VIEW_ALLREGISTRATIONS "Draw items at all registrations over images"
     ID_VIEW_DRAWNOTHING     "Toggle drawing of all items on and off"
+    ID_TILTSERIES_SETUPPARALLELTILTSERIES 
+                            "Set up to acquire parallel tilt series"
 END
 
 STRINGTABLE
@@ -8593,12 +8594,6 @@ BEGIN
     IDC_CHECK_MODULE_INTERP "Interpolate gap between sensor modules"
 END
 
-STRINGTABLE
-BEGIN
-    ID_TILTSERIES_SETUPPARALLELTILTSERIES 
-                            "Set up to acquire parallel tilt series"
-END
-
 #endif    // English (United States) resources
 /////////////////////////////////////////////////////////////////////////////
 
@@ -8622,8 +8617,7 @@ LANGUAGE 9, 1
 #include "res\SerialEM.rc2"  // non-Microsoft Visual C++ edited resources
 #include "afxres.rc"         // Standard components
 #include "XFolderDialog\XFolderDialog.rc"
-#endif
-
+#endif
 /////////////////////////////////////////////////////////////////////////////
 #endif    // not APSTUDIO_INVOKED
 
