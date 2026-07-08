@@ -1486,7 +1486,7 @@ bool CParallelTSHelper::CanAdjustISVectors(int fromMag, bool multiShot, CString 
       B3DCHOICE(params->useCustomHoles, 1, params->doHexArray ? -1 : 0), true, mess) == 0;
   } else {
     AdjustXformData *adjustData = mNavHelper->GetNearestAdjustingXform(fromMag);
-    if (!adjustData) {
+    if (!adjustData || MagForCamera(camera, adjustData->xformFromMag) == 0) {
       mess = "No adjusting transform available";
       return false;
     }
