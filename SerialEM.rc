@@ -7452,7 +7452,7 @@ BEGIN
     IDC_CHECK_REDUCE_SUPERRES 
                             "Save super-resolution frames with antialiased reduction by 2 (norm only)"
     IDC_CHECK_TAKE_K3_BINNED 
-                            "Use hardware binning to get frames the same size as chip (normalized only)"
+                            "Use hardware binning by 2 to get frames the same size as chip"
     IDC_CHECK_SKIP_DLGS     "Skip this dialog when opening a new file; select to see again in File menu"
     IDC_GOTO_VIEW           "Change to View area without taking an image"
     IDC_GOTO_FOCUS          "Change to Focus area without taking an image"
