@@ -7266,6 +7266,11 @@ int CNavHelper::UseNavPointsForVectors(int pattern, int numXholes, int numYholes
 
   // Convert all to image shift relative to first, arbitrary but minimizes error
   prevItem = nav->GetOtherNavItem(groupStart);
+  if (prevItem->mDrawnOnMapID) {
+    item = nav->FindItemWithMapID(prevItem->mDrawnOnMapID);
+    if (item)
+      magInd = item->mMapMagInd;
+  }
   ISXvec.resize(groupEnd + 1 - groupStart);
   ISYvec.resize(groupEnd + 1 - groupStart);
   for (ind = groupStart; ind <= groupEnd; ind++) {

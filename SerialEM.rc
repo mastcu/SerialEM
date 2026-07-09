@@ -7,7 +7,8 @@
 //
 // Generated from the TEXTINCLUDE 2 resource.
 //
-#include "afxres.h"
+#include "afxres.h"
+
 /////////////////////////////////////////////////////////////////////////////
 #undef APSTUDIO_READONLY_SYMBOLS
 
@@ -7773,7 +7774,7 @@ BEGIN
     IDC_CHECK_REDUCE_SUPERRES 
                             "Save super-resolution frames with antialiased reduction by 2 (norm only)"
     IDC_CHECK_TAKE_K3_BINNED 
-                            "Use hardware binning by 2 to get normalized frames the same size as chip"
+                            "Use hardware binning by 2 to get frames the same size as chip"
     IDC_CHECK_SKIP_DLGS     "Skip this dialog when opening a new file; select to see again in File menu"
     IDC_GOTO_VIEW           "Change to View area without taking an image"
     IDC_GOTO_FOCUS          "Change to Focus area without taking an image"
@@ -8507,7 +8508,8 @@ LANGUAGE 9, 1
 #include "res\SerialEM.rc2"  // non-Microsoft Visual C++ edited resources
 #include "afxres.rc"         // Standard components
 #include "XFolderDialog\XFolderDialog.rc"
-#endif
+#endif
+
 /////////////////////////////////////////////////////////////////////////////
 #endif    // not APSTUDIO_INVOKED
 
