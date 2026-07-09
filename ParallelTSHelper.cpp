@@ -207,18 +207,20 @@ void CParallelTSHelper::StopParallelTSShift(bool error)
   
   mISTargetIter = -1;
 
-  if (mCamera->Acquiring()) {
-    mCamera->SetImageShiftToRestore(mBaseISX, mBaseISY);
-    if (mParTSopts->adjustBeamTilt)
-      mCamera->SetBeamTiltToRestore(mBaseBeamTiltX, mBaseBeamTiltY);
-    if (mAdjustBeamTilt)
-      mCamera->SetAstigToRestore(mBaseAstigX, mBaseAstigY);
-  } else {
-    mScope->SetImageShift(mBaseISX, mBaseISY);
-    if (mParTSopts->adjustBeamTilt)
-      mScope->SetBeamTilt(mBaseBeamTiltX, mBaseBeamTiltY);
-    if (mAdjustBeamTilt)
-      mScope->SetObjectiveStigmator(mBaseAstigX, mBaseAstigY);
+  if (mInitialStateSaved) {
+    if (mCamera->Acquiring()) {
+      mCamera->SetImageShiftToRestore(mBaseISX, mBaseISY);
+      if (mParTSopts->adjustBeamTilt)
+        mCamera->SetBeamTiltToRestore(mBaseBeamTiltX, mBaseBeamTiltY);
+      if (mAdjustBeamTilt)
+        mCamera->SetAstigToRestore(mBaseAstigX, mBaseAstigY);
+    } else {
+      mScope->SetImageShift(mBaseISX, mBaseISY);
+      if (mParTSopts->adjustBeamTilt)
+        mScope->SetBeamTilt(mBaseBeamTiltX, mBaseBeamTiltY);
+      if (mAdjustBeamTilt)
+        mScope->SetObjectiveStigmator(mBaseAstigX, mBaseAstigY);
+    }
   }
 
   mDoingISToTargets = false;
@@ -254,9 +256,9 @@ void CParallelTSHelper::StopParallelTSShift(bool error)
     ClearTargets(true);
   } else if (mActionAtTarget == PARALLELTS_ACTION_PREVIEW || 
     mActionAtTarget == PARALLELTS_ACTION_ADJUST) {
+    mParallelTSDlg->FinishRefineTargets(error);
     mShiftManager->SetMouseMoveStage(mSavedMouseStage);
     mWinApp->UpdateWindowSettings();
-    mParallelTSDlg->FinishRefineTargets(error);
     if (error)
       ClearSavedTargets();
   }

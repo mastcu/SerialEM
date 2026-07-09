@@ -1,5 +1,6 @@
 #pragma once
 #include "afxwin.h"
+#include "NavHelper.h"
 
 class CParallelTSHelper;
 

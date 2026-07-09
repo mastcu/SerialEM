@@ -390,7 +390,7 @@ void CParallelTSDlg::Update()
     if (mRefiningTargets) {
       numAcq = mParallelTSHelper->GetSavedTargetsInNav(&indexVec);
       if (numAcq == 0) {
-        mSaveBtnText = "Save Starting IS";
+        mSaveBtnText = "Save IS";
         mess = mSaveBtnText;
       } else {
         mSaveBtnText = "Save Adjustment";
@@ -474,7 +474,7 @@ void CParallelTSDlg::Update()
   m_butDefinePtsFitPlane.EnableWindow(!mParallelTSHelper->ISToTargetsBusy() &&
     mWinApp->mNavigator->m_butDrawPts.IsWindowEnabled() &&
     (mWinApp->mNavigator->NoDrawing() || mDefiningPoints) &&
-    !(mAddingTargets || mRefiningTargets) && !numPoints);
+    !(mAddingTargets || mRefiningTargets) && !numPoints && !mMakingNewXform);
   m_statPretilt.EnableWindow(!(mAddingTargets));
   m_butPretilt.EnableWindow(noTasks && !(mDefiningPoints || mAddingTargets));
   m_statPretiltDeg.EnableWindow(!(mAddingTargets));
@@ -1308,14 +1308,13 @@ void CParallelTSDlg::OnAddTargets()
     mDrawingISTargets = true;
     
     if (mMakingNewXform) {
-      m_strInstruct.Format("Mark locations to be aligned at high mag. Click "
-        "\"Stop Adding && Adjust\" to begin adjusting image shifts.");
+      m_strInstruct.Format("Mark features to align at high mag, with the first point near the area center."
+        " Click \"Stop Adding && Adjust\" to adjust image shifts.");
     } else {
-      if (m_bSkipRefine) {
-        m_strInstruct.Format("Add targets to the area map.");
-      } else {
-        m_strInstruct.Format("Add targets to the area map. Click "
-          "\"Stop Adding && Refine\" to begin refining target image shifts.");
+      m_strInstruct.Format("Add targets, with the first point near the area center.");
+      if (!m_bSkipRefine) {
+        m_strInstruct +=
+          " Click \"Stop Adding && Refine\" to refine target image shifts.";
       }
     }
   }
@@ -1445,6 +1444,7 @@ void CParallelTSDlg::OnFinalizeArea()
   UpdateData(false);
   Update();
   ManagePanels();
+  mWinApp->UpdateWindowSettings();
 }
 
 //For internal calls to abort the area, without needing to update the dialog
@@ -1478,6 +1478,8 @@ void CParallelTSDlg::OnAbortArea()
   MapItemArray *itemArr = mWinApp->mNavigator->GetItemArray();
 
   UpdateData(true);
+
+  mParallelTSHelper->StopParallelTSShift();
 
   // If currently adding, stop navigator adding and delete points
   if (mAddingTargets || !mWinApp->mNavigator->NoDrawing()) {
@@ -1516,6 +1518,7 @@ void CParallelTSDlg::OnAbortArea()
   ClearArea();
   Update();
   ManagePanels();
+  mWinApp->UpdateWindowSettings();
 }
 
 void CParallelTSDlg::OnSetupTiltSeries()
