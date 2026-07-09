@@ -4821,8 +4821,8 @@ int CNavHelper::SetFileProperties(int itemNum, int listType, ScheduledFile *sche
 // for a group, or 3 if it is scheduled for an item
 int CNavHelper::SetOrChangeFilename(int itemNum, int listType, ScheduledFile *sched)
 {
-  int i, numacq, numBadStores = 0, numExists = 0, fileType = STORE_TYPE_MRC;
-  CString filename, label, lastlab;
+  int i, len, ind, numacq, numBadStores = 0, numExists = 0, fileType = STORE_TYPE_MRC;
+  CString filename, label, lastlab, root, ext;
   ScheduledFile *sched2;
   CMapDrawItem *item2;
   LPCTSTR lpszFileName = NULL;
@@ -4849,10 +4849,25 @@ int CNavHelper::SetOrChangeFilename(int itemNum, int listType, ScheduledFile *sc
       filename += ".tif";
     lpszFileName = (LPCTSTR)filename;
   }
-  if (mDocWnd->FilenameForSaveFile(fileType, lpszFileName, filename))
+  if (mDocWnd->FilenameForSaveFile(fileType, lpszFileName, filename, 
+    item->mParallelTSIndex >= 0 ?
+    "Save As: Enter filename for base name of parallel tilt series" : NULL))
     return -1;
 
   if (item->mTSparamIndex >= 0 || listType == NAVFILE_TS) {
+
+    // Accept an existing _Pos filename and strip off the _Pos##
+    if (item->mParallelTSIndex >= 0) {
+      UtilSplitExtension(filename, root, ext);
+      ind = root.Find("_Pos");
+      len = root.GetLength();
+      if (ind > 0) {
+        while (root.GetAt(len - 1) >= '0' && root.GetAt(len - 1) <= '9')
+          len--;
+        if (len == ind + 4)
+          filename = root.Left(ind) + ext;
+      }
+    }
 
     // Checks for parallel TS files: count up ones that are open or already exist
     CheckParallelTSFiles(filename, item, numBadStores, &numExists);

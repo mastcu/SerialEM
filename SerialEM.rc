@@ -721,7 +721,7 @@ BEGIN
         MENUITEM "Reopen Multi-grid &Session...", ID_MONTAGINGGRIDS_READSESSIONFILE
         MENUITEM "Clear Multi-grid Session",    ID_MONTAGINGGRIDS_CLEARSESSION
         MENUITEM "Identif&y Grid on Stage...",  ID_MONTAGINGGRIDS_IDENTIFYGRIDONSTAGE
-        MENUITEM "L&oad All Grid Maps",         ID_MONTAGINGGRIDS_LOADALLGRIDMAPS
+        MENUITEM "Load All Grid Maps",          ID_MONTAGINGGRIDS_LOADALLGRIDMAPS
         MENUITEM SEPARATOR
         MENUITEM "A&utocontour Grid Squares...", ID_MONTAGINGGRIDS_AUTOCONTOURGRIDSQUARES
         MENUITEM "Reverse Con&tour Colors",     ID_MONTAGINGGRIDS_REVERSECONTOURCOLORS
@@ -7773,7 +7773,7 @@ BEGIN
     IDC_CHECK_REDUCE_SUPERRES 
                             "Save super-resolution frames with antialiased reduction by 2 (norm only)"
     IDC_CHECK_TAKE_K3_BINNED 
-                            "Use hardware binning to get frames the same size as chip (normalized only)"
+                            "Use hardware binning by 2 to get normalized frames the same size as chip"
     IDC_CHECK_SKIP_DLGS     "Skip this dialog when opening a new file; select to see again in File menu"
     IDC_GOTO_VIEW           "Change to View area without taking an image"
     IDC_GOTO_FOCUS          "Change to Focus area without taking an image"

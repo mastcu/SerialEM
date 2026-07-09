@@ -295,7 +295,8 @@ public:
   int OpenOldFile(CFile *file, CString cFilename, int err, bool skipMontDlg);
   KImageStore * GetStoreForSaving(int type);
   int FilePropForSaveFile(FileOptions * fileOptp, int openAnyway);
-  int FilenameForSaveFile(int fileType, LPCTSTR lpszFileName, CString & cFilename);
+  int FilenameForSaveFile(int fileType, LPCTSTR lpszFileName, CString & cFilename,
+    LPCTSTR lpszTitle = NULL);
   void ManageSaveSingle(void);
   void SetFileOptsForSTEM(void);
   void RestoreFileOptsFromSTEM(void);
@@ -366,7 +367,8 @@ class MyFileDialog
 public:
   MyFileDialog(BOOL bOpenFileDialog, LPCTSTR lpszDefExt = NULL,
     LPCTSTR lpszFileName = NULL, DWORD dwFlags = OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT,
-    LPCTSTR lpszFilter = NULL, CWnd* pParentWnd = NULL, BOOL setCurrentDir = true);
+    LPCTSTR lpszFilter = NULL, CWnd* pParentWnd = NULL, BOOL setCurrentDir = true, 
+    LPCTSTR lpszTitle = NULL);
   ~MyFileDialog();
   int DoModal();
   CString GetFileName() {return mfdTD.fileName;};

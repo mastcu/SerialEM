@@ -1412,7 +1412,7 @@ void CSerialEMDoc::CopyMasterFileOpts(FileOptions *fileOptp, int fromTo)
 // Get a save file name with filters/extension set from the fileType member of file
 // fileOpts and with given starting filename (NULL for none), returns -1 if user cancels
 int CSerialEMDoc::FilenameForSaveFile(int fileType, LPCTSTR lpszFileName,
-                                      CString & cFilename)
+                                      CString & cFilename, LPCTSTR lpszTitle)
 {
   static char BASED_CODE szFilter[] =
     "MRC image stacks (*.mrc, *.st, *.map)|*.mrc; *.st; *.map|All files (*.*)|*.*||";
@@ -1448,7 +1448,7 @@ int CSerialEMDoc::FilenameForSaveFile(int fileType, LPCTSTR lpszFileName,
 
   // It will attach the default extension unless the user enteres a RECOGNIZED extension
   MyFileDialog fileDlg(FALSE, ext, lpszFileName, OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT,
-    filter);
+    filter, NULL, true, lpszTitle);
   if (fileDlg.DoModal() != IDOK)
     return -1;
 
@@ -3024,7 +3024,7 @@ static char emptyString[] = "";
 
 MyFileDialog::MyFileDialog(BOOL bOpenFileDialog, LPCTSTR lpszDefExt,
     LPCTSTR lpszFileName, DWORD dwFlags,
-    LPCTSTR lpszFilter, CWnd* pParentWnd, BOOL setCurrentDir)
+    LPCTSTR lpszFilter, CWnd* pParentWnd, BOOL setCurrentDir, LPCTSTR lpszTitle)
 {
 #ifdef USE_SDK_FILEDLG
 
@@ -3039,6 +3039,11 @@ MyFileDialog::MyFileDialog(BOOL bOpenFileDialog, LPCTSTR lpszDefExt,
   // Otherwise construct CFileDialog object
   mFileDlg = new CFileDialog(bOpenFileDialog, lpszDefExt, lpszFileName, dwFlags,
     lpszFilter, pParentWnd);
+
+  if (lpszTitle) {
+    OPENFILENAME &ofn = mFileDlg->GetOFN();
+    ofn.lpstrTitle = lpszTitle;
+  }
 
   // For windows XP, add a dumb notice to the Open dialog.  Not needed in Win 7.
   CSerialEMApp *winApp = (CSerialEMApp *)AfxGetApp();
