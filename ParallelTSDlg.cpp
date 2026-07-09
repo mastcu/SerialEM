@@ -474,7 +474,7 @@ void CParallelTSDlg::Update()
   m_butDefinePtsFitPlane.EnableWindow(!mParallelTSHelper->ISToTargetsBusy() &&
     mWinApp->mNavigator->m_butDrawPts.IsWindowEnabled() &&
     (mWinApp->mNavigator->NoDrawing() || mDefiningPoints) &&
-    !(mAddingTargets || mRefiningTargets));
+    !(mAddingTargets || mRefiningTargets) && !numPoints);
   m_statPretilt.EnableWindow(!(mAddingTargets));
   m_butPretilt.EnableWindow(noTasks && !(mDefiningPoints || mAddingTargets));
   m_statPretiltDeg.EnableWindow(!(mAddingTargets));
@@ -1381,6 +1381,8 @@ void CParallelTSDlg::OnFinalizeArea()
   CString err;
 
   UpdateData(true);
+
+  mParallelTSHelper->StopParallelTSShift();
   
   if (mMakingNewXform) {
     if (mParallelTSHelper->GetNumSavedTargets() < MIN_NUM_POINTS_FOR_PTSADJUST) {

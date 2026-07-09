@@ -161,10 +161,12 @@ int CParallelTSHelper::StartShiftToTargets(IntVec targetMapIDs, int actionType)
   } else if (mActionAtTarget == PARALLELTS_ACTION_PREVIEW) {
     mSavedMouseStage = mShiftManager->GetMouseMoveStage();
     mShiftManager->SetMouseMoveStage(false);
+    mWinApp->UpdateWindowSettings();
     mess = "REFINING TARGETS";
   } else if (mActionAtTarget == PARALLELTS_ACTION_ADJUST) {
     mSavedMouseStage = mShiftManager->GetMouseMoveStage();
     mShiftManager->SetMouseMoveStage(false);
+    mWinApp->UpdateWindowSettings();
     mess = "ADJUSTING IS";
   } else {
     AfxMessageBox("Invalid flag for Parallel Tilt Series action", MB_EXCLAME);
@@ -253,6 +255,7 @@ void CParallelTSHelper::StopParallelTSShift(bool error)
   } else if (mActionAtTarget == PARALLELTS_ACTION_PREVIEW || 
     mActionAtTarget == PARALLELTS_ACTION_ADJUST) {
     mShiftManager->SetMouseMoveStage(mSavedMouseStage);
+    mWinApp->UpdateWindowSettings();
     mParallelTSDlg->FinishRefineTargets(error);
     if (error)
       ClearSavedTargets();
@@ -442,14 +445,15 @@ void CParallelTSHelper::ISToTargetNextTask(int param)
           mWinApp->AddIdleTask(TASK_IS_TO_PARALLELTS_TARGET, 0, 0);
           return;
         }
-        if (SaveTargetMap(mess, mapSaved)) {
+        index = SaveTargetMap(mess, mapSaved);
+        if (index) {
           AfxMessageBox(mess, MB_EXCLAME);
           StopParallelTSShift();
           return;
         }
 
         if (!mapSaved) {
-          if (!mess.IsEmpty()) {
+          if (index && !mess.IsEmpty()) {
             str.Format("Map was not saved: %s", mess);
             AfxMessageBox(str, MB_EXCLAME);
           }
@@ -766,11 +770,18 @@ int CParallelTSHelper::SaveInitialState(CString &err)
     mNavHelper->GetSkipAstigAdjustment() <= 0;
 
   if (mParTSopts->adjustBeamTilt) {
-    mScope->GetBeamTilt(mBaseBeamTiltX, mBaseBeamTiltY);
+    if (!mScope->GetBeamTilt(mBaseBeamTiltX, mBaseBeamTiltY)) {
+      err.Format("Failed to get beam tilt.");
+      return 2;
+    }
     mCenterBeamTiltX = mBaseBeamTiltX;
     mCenterBeamTiltY = mBaseBeamTiltY;
+    
     if (mAdjustBeamTilt) {
-      mScope->GetObjectiveStigmator(mBaseAstigX, mBaseAstigY);
+      if (!mScope->GetObjectiveStigmator(mBaseAstigX, mBaseAstigY)) {
+        err.Format("Failed to get objective stigmator.");
+        return 3;
+      }
       mCenterAstigX = mBaseAstigX;
       mCenterAstigY = mBaseAstigY;
     }
@@ -1347,10 +1358,17 @@ int CParallelTSHelper::ConvertToParTSItem(CString &err, CMapDrawItem *item)
       mAreaMapMagInd : mMagIndex;
 
     // Get IS and Preview map for first item
-    if (mParTSopts->extractVirtPrevs == 0)
-      mParTSParam.firstPrevMapID = mPreviewMapIDs[indices[0]];
-    else
+    if (mParTSopts->extractVirtPrevs == 0) {
+      item = mWinApp->mNavigator->FindItemWithMapID(mPreviewMapIDs[indices[0]]);
+      if (item) {
+        mParTSParam.firstPrevMapID = mPreviewMapIDs[indices[0]];
+      } else {
+        err.Format("The first target map item no longer exists. ");
+        return 3;
+      }
+    } else {
       mParTSParam.firstPrevMapID = 0;
+    }
     ISXcen = mISTargetISX[indices[0]];
     ISYcen = mISTargetISY[indices[0]];
 
