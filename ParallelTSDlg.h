@@ -88,7 +88,7 @@ public:
   bool IsDefiningPoints() { return mDefiningPoints; };
   bool IsAddingTargets() { return mAddingTargets; };
   void FinishFitPlane();
-  void FinishRefineTargets(bool error);
+  void FinishRefineTargets(bool keepTargets);
   void UpdatePlaneParams(float pretilt, float xPitchAngle);
   bool HasAreaMap() { return mHasAreaMap; };
   bool RefiningTargets() { return mRefiningTargets; };

@@ -403,7 +403,10 @@ void CParallelTSDlg::Update()
     m_butSaveTargetMap.SetWindowText(mess);
     m_butFinalizeTargetArea.SetWindowText("Save Transform");
     m_butRemoveTarget.SetWindowText("Remove Point");
-    m_butAbortArea.SetWindowText("Abort");
+    if (mRefiningTargets || (mSavedTargets && !mFinalizedTargetArea))
+      m_butAbortArea.SetWindowText("Abort Adjusting");
+    else
+      m_butAbortArea.SetWindowText("Abort Area");
   } else {
     m_butAddTargets.SetWindowText(mAddingTargets ? "Stop Adding" : (numPoints ?
       "Add More Targets" : "Add Targets"));
@@ -419,7 +422,10 @@ void CParallelTSDlg::Update()
     m_butSaveTargetMap.SetWindowText(mess);
     m_butRemoveTarget.SetWindowText("Remove Target");
     m_butFinalizeTargetArea.SetWindowText("Finalize Target Area");
-    m_butAbortArea.SetWindowText("Abort Area");
+    if (mRefiningTargets || (mSavedTargets && !mFinalizedTargetArea))
+      m_butAbortArea.SetWindowText("Abort Refining");
+    else
+      m_butAbortArea.SetWindowText("Abort Area");
   }
 
   if (lowDose) {
@@ -932,11 +938,11 @@ void CParallelTSDlg::FinishFitPlane()
 
 // Public function that can be called externally to trigger stopping/pausing
 // refine or adjust
-void CParallelTSDlg::FinishRefineTargets(bool error)
+void CParallelTSDlg::FinishRefineTargets(bool keepTargets)
 {
   mRefiningTargets = false;
-  mSavedTargets = !error;
-  if (mSavedTargets)
+  mSavedTargets = !keepTargets;
+  if (!keepTargets)
     mNumAddedTargets = 0;
 
   CMapDrawItem *mapItem = mWinApp->mNavigator->FindItemWithMapID(
@@ -944,27 +950,25 @@ void CParallelTSDlg::FinishRefineTargets(bool error)
   mWinApp->mNavigator->DoLoadMap(true, mapItem, -1);
 
   bool changeSize = m_strInstruct.IsEmpty();
-  if (error) {
+  if (keepTargets) {
     if (mMakingNewXform) {
-      m_strInstruct.Format("An error occurred. Click \"Adjust\" to retry adjusting "
-        "image shifts.");
+      m_strInstruct.Format("Adjustments stopped. Click \"Adjust\" to start over.");
     } else {
-      m_strInstruct.Format("An error occurred. Click \"Refine IS\" to retry refining "
-        "target image shifts.");
+      m_strInstruct.Format("Refinement stopped. Click \"Refine IS\" to start over.");
     }
   } else {
     CString str = "ready";
     int numSaved = mParallelTSHelper->GetNumSavedTargets();
     if (mMakingNewXform) {
       if (numSaved < MIN_NUM_POINTS_FOR_PTSADJUST) {
-        str.Format("at least %d image shifts have been adjusted", 
+        str.Format("at least %d image shifts have been adjusted.", 
           MIN_NUM_POINTS_FOR_PTSADJUST);
       }
       m_strInstruct.Format("%d image shift(s) adjusted. Click \"Save Transform\" when %s", 
         numSaved, str);
     } else {
       if (numSaved < 2) {
-        str.Format("at least 2 targets have been refined");
+        str.Format("at least 2 targets have been refined.");
       }
       m_strInstruct.Format("%d target(s) refined. Click \"Finalize Target Area\" when %s",
         numSaved, str);
@@ -1309,8 +1313,8 @@ void CParallelTSDlg::OnAddTargets()
     mDrawingISTargets = true;
     
     if (mMakingNewXform) {
-      m_strInstruct.Format("Mark features to align at high mag, with the first point near the area center."
-        " Click \"Stop Adding && Adjust\" to adjust image shifts.");
+      m_strInstruct.Format("Mark features to align at high mag, with the first point "
+        "near the area center. Click \"Stop Adding && Adjust\" to adjust image shifts.");
     } else {
       m_strInstruct.Format("Add targets, with the first point near the area center.");
       if (!m_bSkipRefine) {
@@ -1472,7 +1476,6 @@ void CParallelTSDlg::ClearArea()
 void CParallelTSDlg::OnAbortArea()
 {
   int numPoints, ind, jnd;
-  bool del;
   IntVec indexVec, mapIDs;
   CString label, lastlabel;
   CMapDrawItem *item;
@@ -1480,43 +1483,57 @@ void CParallelTSDlg::OnAbortArea()
 
   UpdateData(true);
 
-  mParallelTSHelper->StopParallelTSShift();
-
   // If currently adding, stop navigator adding and delete points
   if (mAddingTargets || !mWinApp->mNavigator->NoDrawing()) {
     CancelAddingDefining();
   }
 
+  numPoints = mWinApp->mNavigator->CountItemsInGroup(mTargetGroupID, label, lastlabel,
+    jnd, &indexVec);
+
+  //If some image shifts have been saved, only clear saved image shifts, not whole area
+  if (mRefiningTargets || (mSavedTargets && !mFinalizedTargetArea)) {
+    label.Format("Are you sure you want to clear all saved image shift %s%s?",
+      mMakingNewXform ? "adjustments" : 
+      (mParTSopts->extractVirtPrevs == 0 ? "refinements and delete target maps" : 
+        "refinements"));
+    ind = AfxMessageBox(label, MB_QUESTION);
+    if (ind == IDNO)
+      return;
+    if (mParTSopts->extractVirtPrevs == 0)
+      mParallelTSHelper->DeleteTargetMapsFromNav();
+    mParallelTSHelper->StopParallelTSShift(true);
+    mParallelTSHelper->ClearTargets(false);
+    mNumAddedTargets = numPoints;
+  } else {
+    mParallelTSHelper->StopParallelTSShift();
+
+    mapIDs = mParallelTSHelper->GetPreviewMapIDs();
+    if (mapIDs.size() > 0) {
+      ind = AfxMessageBox("Are you sure you want to delete all of this area's targets and "
+        "target maps from the Navigator?", MB_QUESTION);
+      if (ind == IDNO)
+        return;
+    }
+
+    //Delete un-finalized targets, plus all others if user said so
+    if (mTargetGroupID && numPoints > 0) {
+      mWinApp->mNavigator->SetSelectedItem(indexVec[0], false);
+      mWinApp->mNavigator->ExternalDeleteGroup(mWinApp->mNavigator->m_bCollapseGroups != 0);
+
+      for (ind = 0; ind < (int)mapIDs.size(); ind++) {
+        item = mWinApp->mNavigator->FindItemWithMapID(mapIDs[ind]);
+        if (item) {
+          jnd = mWinApp->mNavigator->GetFoundItem();
+          mWinApp->mNavigator->ExternalDeleteItem(item, jnd);
+        }
+      }
+    }
+    ClearArea();
+  }
   if (mMakingNewXform) {
     mMakingNewXform = false;
   }
-
-  mapIDs = mParallelTSHelper->GetPreviewMapIDs();
-  del = true;
-  if (mapIDs.size() > 0) {
-    ind = AfxMessageBox("Are you sure you want to delete all of this area's targets and "
-      "target maps from the Navigator?", MB_QUESTION);
-    if (ind == IDNO)
-      return;
-  }
-  
-  //Delete un-finalized targets, plus all others if user said so
-  numPoints = mWinApp->mNavigator->CountItemsInGroup(mTargetGroupID, label, lastlabel,
-    jnd, &indexVec);
-  if (mTargetGroupID && numPoints > 0) {
-    mWinApp->mNavigator->SetSelectedItem(indexVec[0], false);
-    mWinApp->mNavigator->ExternalDeleteGroup(mWinApp->mNavigator->m_bCollapseGroups != 0);
-
-    for (ind = 0; ind < (int)mapIDs.size(); ind++) {
-      item = mWinApp->mNavigator->FindItemWithMapID(mapIDs[ind]);
-      if (item) {
-        jnd = mWinApp->mNavigator->GetFoundItem();
-        mWinApp->mNavigator->ExternalDeleteItem(item, jnd);
-      }
-    }
-  }
-
-  ClearArea();
   Update();
   ManagePanels();
   mWinApp->UpdateWindowSettings();

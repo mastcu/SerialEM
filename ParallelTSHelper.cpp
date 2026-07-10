@@ -1671,3 +1671,15 @@ void CParallelTSHelper::DeleteTargetsFromNav()
     mWinApp->mNavigator->ExternalDeleteItem(itemArr->GetAt(jnd), jnd);
   }
 }
+
+void CParallelTSHelper::DeleteTargetMapsFromNav() {
+  CMapDrawItem *item;
+  int ind, jnd;
+  for (ind = 0; ind < mPreviewMapIDs.size(); ind++) {
+    item = mWinApp->mNavigator->FindItemWithMapID(mPreviewMapIDs[ind]);
+    if (item) {
+      jnd = mWinApp->mNavigator->GetFoundItem();
+      mWinApp->mNavigator->ExternalDeleteItem(item, jnd);
+    }
+  }
+}

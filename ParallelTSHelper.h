@@ -117,6 +117,7 @@ public:
   int GetISVectors(int groupID, CString &err);
   int CreateAdjustingTransform(CString &err);
   void DeleteTargetsFromNav();
+  void DeleteTargetMapsFromNav();
 
 private:
   int ISToNextTarget(int targetID, CString &err);
