@@ -542,8 +542,7 @@ void CParallelTSDlg::Update()
     noTasks && !IsAddingToNav() && ((m_iTargetType == 0 && mSavedTargets && numAcq > 1) ||
       m_iTargetType == 1 || (noIS && numPoints > 1)));
   m_butAbortArea.EnableWindow(noTasks && 
-    ((mSettingUpTargetArea) || mAddingTargets) &&
-    !mDefiningPoints && !mFinalizedTargetArea);
+    (mSettingUpTargetArea || mAddingTargets || mDefiningPoints) && !mFinalizedTargetArea);
 
   m_butSetupTiltSeries.EnableWindow(mFinalizedTargetArea && !mDefiningPoints &&
     mParallelTSHelper->GetTSparamItem(item) >= 0 && !mMakingNewXform);
@@ -1484,7 +1483,7 @@ void CParallelTSDlg::OnAbortArea()
   UpdateData(true);
 
   // If currently adding, stop navigator adding and delete points
-  if (mAddingTargets || !mWinApp->mNavigator->NoDrawing()) {
+  if (IsAddingToNav() || !mWinApp->mNavigator->NoDrawing()) {
     CancelAddingDefining();
   }
 
