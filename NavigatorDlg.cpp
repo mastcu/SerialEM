@@ -1230,24 +1230,24 @@ void CNavigatorDlg::OnViewDrawNothing()
 {
   m_bDrawNone = !m_bDrawNone;
   Redraw();
+  mWinApp->RestoreViewFocus();
 }
 
 void CNavigatorDlg::OnUpdateViewDrawNothing(CCmdUI *pCmdUI)
 {
   pCmdUI->SetCheck(m_bDrawNone ? 1 : 0);
-  mWinApp->RestoreViewFocus();
 }
 
 void CNavigatorDlg::OnViewLabels()
 {
   m_bDrawLabels = !m_bDrawLabels;
   Redraw();
+  mWinApp->RestoreViewFocus();
 }
 
 void CNavigatorDlg::OnUpdateViewLabels(CCmdUI *pCmdUI)
 {
   pCmdUI->SetCheck(m_bDrawLabels ? 1 : 0);
-  mWinApp->RestoreViewFocus();
 }
 
 // The corner checkbox

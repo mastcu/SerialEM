@@ -664,7 +664,8 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
         xformData.adjustingXform.ypy = itemFlt[index++];
         if (!itemEmpty[index])
           xformData.xformMinuteTime = itemInt[index++];
-        navHelper->AddAdjustingXform(xformData);
+        if (xformData.xformFromMag && xformData.xformToMag)
+          navHelper->AddAdjustingXform(xformData);
       } else if (NAME_IS("CustomHoleX")) {
         for (index = 1; index < MAX_TOKENS && !itemEmpty[index]; index++)
           msParams->customHoleX.push_back(itemFlt[index]);
