@@ -172,6 +172,7 @@ BOOL CSerialEMView::PreCreateWindow(CREATESTRUCT& cs)
   int iBordTop, iBordLeft, iBordBottom, iBordRight, type, width, ind, num = 0;
   static int windowNum = 1;
   CString str;
+  CMapDrawItem *item;
   CameraParameters *camP;
   int *chanInMulti = mWinApp->GetShowChanInMultiView();
 
@@ -236,10 +237,27 @@ BOOL CSerialEMView::PreCreateWindow(CREATESTRUCT& cs)
       mStackWindow = true;
     }
 
-    // Get window title
+    // Get window title for locator
     if (mLocatorViewNum > 0) {
       str.Format("Locator %d", mLocatorViewNum % 100000);
+    } else if (type == -2) {
+
+      // For zoomed overview
+      if (mImBufs->mMapID && mWinApp->mNavigator) {
+        item = mWinApp->mNavigator->FindItemWithMapID(mImBufs->mMapID);
+        if (item)
+          str = "Zoomed Map " + item->mLabel;
+      }
+      if (str.IsEmpty()) {
+        ind = mImBufs->mConSetUsed;
+        if (ind >= 0 && ind < 8)
+          str = "Zoomed " + (mWinApp->GetModeNames())[ind];
+        else
+          str = "Zoomed overview";
+      }
     } else if (str.IsEmpty()) {
+
+      // Or for general window
       str.Format("Window %d", windowNum);
       windowNum++;
       KGetOneString("Title for new window:", str);
@@ -2987,6 +3005,24 @@ void CSerialEMView::SetOffsetsFromCenterPoint(EMimageBuffer *imBuf,
   mWinApp->mMainView->m_iOffsetY = B3DNINT(shiftY - full / 2.);
 }
 
+// Set the offsets in the given buffer of THIS view to center the given point coordinates
+void CSerialEMView::CenterBufferOnPoint(int bufInd, float xCen, float yCen)
+{
+  if (bufInd < 0 || bufInd >= mImBufNumber || !mImBufs[bufInd].mImage)
+    return;
+  EMimageBuffer *imBuf = &mImBufs[bufInd];
+  int full = imBuf->mImage->getWidth();
+  int fits = (int)B3DMIN(mLastWinSizeX / imBuf->mZoom, full);
+  xCen = (float)B3DMAX(fits / 2., B3DMIN(xCen, full - fits / 2.));
+  m_iOffsetX = B3DNINT(full / 2.f - xCen);
+  full = imBuf->mImage->getHeight();
+  fits = (int)B3DMIN(mLastWinSizeY / imBuf->mZoom, full);
+  yCen = (float)B3DMAX(fits / 2., B3DMIN(yCen, full - fits / 2.));
+  m_iOffsetY = B3DNINT(yCen - full / 2.);
+  mImBufIndex = bufInd;
+  DrawImage();
+}
+
 
 int CSerialEMView::FitCtfAtMarkedPoint(EMimageBuffer *imBuf, CString &lenstr,
   double &defocus, FloatVec &radii)
@@ -4122,8 +4158,13 @@ void CSerialEMView::FindEffectiveZoom()
   if (mEffectiveZoom == 0.)
     mEffectiveZoom = ratioX;
 
-  // Now set the actual zoom too
-  mZoom = mEffectiveZoom * binning;
+  if (this == mWinApp->mZoomedOverview && mZoom > 0.) {
+    mEffectiveZoom = mZoom / binning;
+  } else {
+
+    // Now set the actual zoom too
+    mZoom = mEffectiveZoom * binning;
+  }
   if (mImBufs[mImBufIndex].mImageScale)
     mWinApp->mImageLevel.NewZoom(mZoom);
   mImBufs[mImBufIndex].mZoom = mZoom;
