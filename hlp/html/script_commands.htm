@@ -2028,8 +2028,9 @@
           <TD class="scriptcommand">CopyToZoomedOverview buf #S</TD>
           <TD>Copies the image in buffer <b>buf</b> to a separate window referred to as the
              "zoomed overview", opening this window in the lower right of the program frame if it
-            is not already open, and sets the zoom so that the extent displayed in microns is
-            approximately <b>#S</b>.&nbsp; Enter 0 for <B>#S</B> to close the window.&nbsp; This
+            is not already open.  When opening the window, it sets the zoom so that the extent displayed
+             in microns is approximately <b>#S</b>, but this value has no effect if the window is 
+            already open.&nbsp; Enter 0 for <B>#S</B> to close the window.&nbsp; This
              window contains a single image, not a stack.&nbsp; Command added in 4.3, 10-Jul-26.
           </TD>
         </TR>

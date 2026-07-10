@@ -2881,6 +2881,7 @@ CSerialEMView *CSerialEMApp::FindLocatorForBuffer(int index)
 }
 
 // Copy buffer image into a zoomed overview, opening one if needed
+// The targetMicrons parameter has an effect only when opening the window
 int CSerialEMApp::CopyBufferToZoomedView(EMimageBuffer *imBuf, float targetMicrons)
 {
   if (mZoomedOverview) {
