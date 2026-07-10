@@ -138,9 +138,9 @@ void CParallelTSDlg::DoDataExchange(CDataExchange* pDX)
   DDX_Control(pDX, IDC_STATIC_PTS_SPECPRETILTANGLE, m_statSpecimenPretiltAngle);
   DDX_Control(pDX, IDC_BUT_PTS_DEFINEFITPLANE, m_butDefinePtsFitPlane);
   DDX_Text(pDX, IDC_EDIT_PTS_PRETILT, m_fPretilt);
-  DDV_MinMaxFloat(pDX, m_fPretilt, -90, 90);
+  DDV_MinMaxFloat(pDX, m_fPretilt, -89, 89);
   DDX_Text(pDX, IDC_EDIT_PTS_XPITCH, m_fXpitch);
-  DDV_MinMaxFloat(pDX, m_fXpitch, -90, 90);
+  DDV_MinMaxFloat(pDX, m_fXpitch, -89, 89);
   DDX_Control(pDX, IDC_STATIC_PTS_DEFININGAREA, m_statDefineAreaTargets);
   DDX_Radio(pDX, IDC_RADIO_PTS_CUSTOMTARGETS, m_iTargetType);
   DDX_Control(pDX, IDC_RADIO_PTS_CUSTOMTARGETS, m_butAddCustomTargets);
@@ -151,7 +151,7 @@ void CParallelTSDlg::DoDataExchange(CDataExchange* pDX)
   DDX_Control(pDX, IDC_BUT_PTS_OPENCLOSEOPTIONS, m_butOpenCloseOptions);
   DDX_Control(pDX, IDC_STATIC_PTS_EXTRAOPTIONS, m_statAcqDisplayOptions);
   DDX_Text(pDX, IDC_EDIT_PTS_MAXTILT, m_fMaxTilt);
-  DDV_MinMaxFloat(pDX, m_fMaxTilt, -90, 90);
+  DDV_MinMaxFloat(pDX, m_fMaxTilt, -89, 89);
   DDX_Text(pDX, IDC_EDIT_PTS_DIAM, m_fBeamDiameter);
   DDV_MinMaxFloat(pDX, m_fBeamDiameter, 0, 10);
   DDX_Control(pDX, IDC_CHECK_PTS_BEAMSIZECIRCLES, m_butBeamSizeCircles);
@@ -717,7 +717,7 @@ void CParallelTSDlg::OptionsToDialog()
   m_fExtraDelayFactor = mParTSopts->extraDelayFactor;
   m_fBeamDiameter = mParTSopts->beamDiam;
   m_bBeamSizeCircles = mParTSopts->useIAorBeamSize;
-  m_fMaxTilt = B3DABS(mParTSopts->tiltForBeam) > 90 ? 0 : mParTSopts->tiltForBeam;
+  m_fMaxTilt = B3DABS(mParTSopts->tiltForBeam) >= 90 ? 0 : mParTSopts->tiltForBeam;
   m_iCTFType = mParTSopts->CtfMeasureType;
   m_bFindAstig = mParTSopts->findAstig;
   if (m_iTargetType == 0)
@@ -1149,6 +1149,7 @@ void CParallelTSDlg::OnEnKillfocusEditPretilt()
 {
   UpdateData(true);
   mParallelTSHelper->SetPretilt(m_fPretilt);
+  mWinApp->mNavigator->Redraw();
 }
 
 

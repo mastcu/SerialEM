@@ -8270,3 +8270,18 @@ int CNavHelper::FillPolygonWithMultiShot(CMapDrawItem *polyItem, FloatVec &ISX,
 
   return 0;
 }
+
+float CNavHelper::GetParTSdisplayTilt()
+{
+  float tilt = mParTSOptions.tiltForBeam;
+  float levelTilt = mParallelTSDlg->m_fPretilt;
+  if (mParallelTSDlg->IsOpen()) {
+    if (B3DABS(levelTilt + tilt) >= B3DABS(levelTilt - tilt)) {
+      tilt += levelTilt;
+    } else {
+      tilt -= levelTilt;
+    }
+  }
+  B3DCLAMP(tilt, -89, 89);
+  return tilt;
+}

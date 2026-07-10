@@ -7,8 +7,7 @@
 //
 // Generated from the TEXTINCLUDE 2 resource.
 //
-#include "afxres.h"
-
+#include "afxres.h"
 /////////////////////////////////////////////////////////////////////////////
 #undef APSTUDIO_READONLY_SYMBOLS
 
@@ -4697,7 +4696,7 @@ BEGIN
     LTEXT           "##, (label)",IDC_STATIC_PTS_TSITEMINDEXLABEL,112,307,59,8
     PUSHBUTTON      "Setup Tilt Series",IDC_BUT_PTS_SETUPTILTSERIES,49,319,79,12
     PUSHBUTTON      "-",IDC_BUT_PTS_OPENCLOSEOPTIONS,2,362,9,8
-    LTEXT           "Assumed max tilt angle for beam display:",IDC_STATIC_PTS_MAXTILT,4,374,122,8
+    LTEXT           "Expected max tilt angle from leveling tilt:",IDC_STATIC_PTS_MAXTILT,4,374,122,8
     EDITTEXT        IDC_EDIT_PTS_MAXTILT,129,372,21,12,ES_AUTOHSCROLL
     LTEXT           "deg",IDC_STATIC_PTS_MAXTILTDEG,152,374,13,8
     LTEXT           "Diameter of circles to draw:",IDC_STATIC_PTS_DIAM,4,386,84,8
@@ -8618,8 +8617,7 @@ LANGUAGE 9, 1
 #include "res\SerialEM.rc2"  // non-Microsoft Visual C++ edited resources
 #include "afxres.rc"         // Standard components
 #include "XFolderDialog\XFolderDialog.rc"
-#endif
-
+#endif
 /////////////////////////////////////////////////////////////////////////////
 #endif    // not APSTUDIO_INVOKED
 

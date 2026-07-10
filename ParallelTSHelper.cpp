@@ -1499,7 +1499,7 @@ void CParallelTSHelper::UpdateTSParams()
 // vectors
 bool CParallelTSHelper::CanAdjustISVectors(int fromMag, bool multiShot, CString &mess)
 {
-  int fromMagCam, toMagCam;
+  int fromMagCam = 0, toMagCam = 0;
   int camera = mWinApp->GetCurrentCamera();
   if (multiShot) {
     MultiShotParams *params = mNavHelper->GetMultiShotParams();
@@ -1507,8 +1507,10 @@ bool CParallelTSHelper::CanAdjustISVectors(int fromMag, bool multiShot, CString 
       B3DCHOICE(params->useCustomHoles, 1, params->doHexArray ? -1 : 0), true, mess) == 0;
   } else {
     AdjustXformData *adjustData = mNavHelper->GetNearestAdjustingXform(fromMag);
-    fromMagCam = MagForCamera(camera, adjustData->xformFromMag);
-    toMagCam = MagForCamera(camera, adjustData->xformToMag);
+    if (adjustData) {
+      fromMagCam = MagForCamera(camera, adjustData->xformFromMag);
+      toMagCam = MagForCamera(camera, adjustData->xformToMag);
+    }
     if (!adjustData || fromMagCam == 0 || toMagCam == 0) {
       mess = "No adjusting transform available";
       return false;
