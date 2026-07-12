@@ -1583,7 +1583,7 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
       }
  
       // Otherwise draw a cross at a single point
-      if ((!mPreParTSDrewLDAreas || iDraw >= 0) && !itemInParTSgroup) {
+      if ((!mPreParTSDrewLDAreas || iDraw >= 0)) {
         MakeDrawPoint(&rect, imBuf->mImage, ptX, ptY, &point);
         DrawCross(&cdc, &pnSolidPen, point, crossLen);
       }
@@ -1597,7 +1597,7 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
 
       // Draw lines if there is more than one point
       CPen *pOldPen = cdc.SelectObject(&pnSolidPen);
-      if (!(iDraw < 0 && (useMultiShot || targetsOnly)))
+      if (!(iDraw < 0 && (useMultiShot || targetsOnly || parTSgroupID > 0)))
         DrawMapItemBox(cdc, &rect, item, imBuf, numPoints, 0., 0., delPtX, delPtY, NULL,
         NULL);
       if (item->IsMap() && item->mFitToPolygonID && item->mMapSection > 0){
@@ -1943,7 +1943,7 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
               CFont *def_font = cdc.SelectObject(useLabelFont);
               int defMode = cdc.SetBkMode(TRANSPARENT);
               COLORREF defColor = cdc.SetTextColor(parTScolor);
-              textAlign = cdc.SetTextAlign(TA_CENTER | TA_BASELINE);
+              textAlign = cdc.SetTextAlign(TA_RIGHT | TA_BOTTOM);
             }
 
             // Subtract acquire box center so it works for drawing in-hole points and
@@ -1959,20 +1959,21 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
                   B3DMIN(5, mAcquireBox->mNumPoints), ptX, ptY, delPtX, delPtY, NULL,
                   NULL);
 
-                // Draw beam circles for IS targets
+                // Draw beam circles & numbers for IS targets, first one offset from cross
                 if (item->mNumIStargets && highlight) {
                   StageToImage(imBuf, acquireXhole[hole], acquireYhole[hole], ptX, ptY);
                   if (drawEllipse) {
                     DrawEllipse(&cdc, &circlePen, &rect, imBuf->mImage, ptX + delPtX,
                       ptY + delPtY, acquireRadii[0], acquireRadii[0] * beamElong,
                       axisAngle, false);
-                    if (hole) {
-                      MakeDrawPoint(&rect, imBuf->mImage, ptX + delPtX, ptY + delPtY,
-                        &point);
-                      point = point + CPoint(0, 7 * offset10 / 10);
-                      letString.Format("%d", hole + 1);
-                      cdc.TextOut(point.x, point.y, letString);
-                    }
+                    MakeDrawPoint(&rect, imBuf->mImage, ptX + delPtX, ptY + delPtY,
+                      &point);
+                    point = point + CPoint(hole ? 0 : -offset10, (hole ? 7 : -2) *
+                      offset10 / 10);
+                    letString.Format("%d", hole + 1);
+                    cdc.TextOut(point.x, point.y, letString);
+                    if (!hole)
+                      cdc.SetTextAlign(TA_CENTER | TA_BASELINE);
                   } else {
                     DrawCircle(&cdc, &circlePen, &rect, imBuf->mImage, ptX + delPtX,
                       ptY + delPtY, acquireRadii[0]);
@@ -2014,7 +2015,8 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
             }
           }
         }
-      } else {
+      } else if (!(itemInParTSgroup && imBuf->mMagInd && 
+        imBuf->mMagInd == mWinApp->mNavHelper->GetParTSRefiningISMag())) {
 
         // if not multishot, draw acquire box
         DrawMapItemBox(cdc, &rect, mAcquireBox, imBuf,
@@ -2053,7 +2055,7 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
             firstLabel, lastLabel, ierr);
           lastGroupID = item->mGroupID;
         }
-        draw = size <= groupThresh || item->mLabel == firstLabel ||
+        draw = size <= groupThresh || itemInParTSgroup || item->mLabel == firstLabel ||
           item->mLabel == lastLabel || (iDraw > 0 && item->IsPoint() &&
             sqrt(pow((double)lastStageX - item->mStageX, 2.) +
           pow((double)lastStageY - item->mStageY, 2.)) > labelDistThresh);
@@ -2069,8 +2071,8 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
         cdc.TextOut(point.x, point.y, item->mLabel);
         if (itemInParTSgroup && drawEllipse) {
           cdc.SetTextColor(parTScolor);
-          UINT textAlign = cdc.SetTextAlign(TA_CENTER | TA_BASELINE);
-          point = point - CPoint(offset10, -7 * offset10 / 10);
+          UINT textAlign = cdc.SetTextAlign(TA_RIGHT | TA_BOTTOM);
+          point = point - CPoint(2 * offset10, 2 * offset10 / 10);
           letString.Format("%d", posInParTSgroup);
           cdc.TextOut(point.x, point.y, letString);
           cdc.SetTextAlign(textAlign);
