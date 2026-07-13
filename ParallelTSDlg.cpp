@@ -1152,6 +1152,12 @@ void CParallelTSDlg::OnEnKillfocusEditPretilt()
 {
   UpdateData(true);
   mParallelTSHelper->SetPretilt(m_fPretilt);
+  if (mFinalizedTargetArea && mParallelTSHelper->GetParTSitem) {
+    mParallelTSHelper->GetParTSitem()->mParallelTSIndex; 
+    //TODO use this index to find and update the correct matching ParTSparams. Same for xpitch
+    //Maybe, detect if angles changed, then print this in instruction line, and re-enable
+    //finalize target area
+  }
   mWinApp->mNavigator->Redraw();
 }
 

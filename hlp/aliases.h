@@ -411,6 +411,7 @@ hid_tiltseries_autosavex			  = SerialEM.chm::/html\menu_tilt_series.htm#hid_tilt
 hid_tiltseries_debugmode				= SerialEM.chm::/html\menu_tilt_series.htm#hid_tiltseries_debugmode
 hid_tiltseries_savex    				= SerialEM.chm::/html\menu_tilt_series.htm#hid_tiltseries_savex
 hid_tiltseries_setbidirreturndelay = SerialEM.chm::/html\menu_tilt_series.htm#hid_tiltseries_setbidirreturndelay
+hid_tiltseries_parallel         = SerialEM.chm:: / html\menu_tilt_series.htm#hid_tiltseries_parallel
 hid_process_minmaxmean					= SerialEM.chm::/html\menu_process.htm#hid_process_minmaxmean
 hid_process_zerotiltmean				= SerialEM.chm::/html\menu_process.htm#hid_process_zerotiltmean
 hid_process_setintensity				= SerialEM.chm::/html\menu_process.htm#hid_process_setintensity
