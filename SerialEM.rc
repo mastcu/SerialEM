@@ -639,10 +639,10 @@ BEGIN
     POPUP "T&ilt Series"
     BEGIN
         MENUITEM "&Setup/Start...",             ID_TASKS_TILTSERIES
-        MENUITEM "Setup Parallel TS",           ID_TILTSERIES_SETUPPARALLELTILTSERIES
+        MENUITEM "Setup &Parallel TS",          ID_TILTSERIES_SETUPPARALLELTILTSERIES
         MENUITEM "Ter&minate",                  ID_TILTSERIES_TERMINATE
         MENUITEM "E&xtra Output...",            ID_TILTSERIES_EXTRAOUTPUT
-        MENUITEM "Batch &Policies...",          ID_TILTSERIES_FUTUREPOLICIES
+        MENUITEM "&Batch Policies...",          ID_TILTSERIES_FUTUREPOLICIES
         MENUITEM "Reset Po&le Angle",           ID_TILTSERIES_RESETPOLEANGLE
         MENUITEM SEPARATOR
         MENUITEM "R&un Script in TS ",          ID_TILTSERIES_RUN_MACRO
@@ -656,7 +656,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "S&TOP",                       ID_TILTSERIES_STOP
         MENUITEM "&End Loop",                   ID_TILTSERIES_ENDLOOP
-        MENUITEM "&Back Up...",                 ID_TILTSERIES_BACKUP
+        MENUITEM "Bac&k Up...",                 ID_TILTSERIES_BACKUP
         MENUITEM "&Resume...",                  ID_TILTSERIES_RESUME
         MENUITEM "&One Loop",                   ID_TILTSERIES_ONELOOP
         MENUITEM "O&ne Step",                   ID_TILTSERIES_ONESTEP
