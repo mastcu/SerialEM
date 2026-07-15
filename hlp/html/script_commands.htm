@@ -2025,6 +2025,23 @@
           <TD>Closes the stack window if it is open.&nbsp; Command added in 4.2, 18-Sep-24.</TD>
         </TR>
         <TR>
+          <TD class="scriptcommand">CopyToZoomedOverview buf #S</TD>
+          <TD>Copies the image in buffer <b>buf</b> to a separate window referred to as the
+             "zoomed overview", opening this window in the lower right of the program frame if it
+            is not already open.  When opening the window, it sets the zoom so that the extent displayed
+             in microns is approximately <b>#S</b>, but this value has no effect if the window is 
+            already open.&nbsp; Enter 0 for <B>#S</B> to close the window.&nbsp; This
+             window contains a single image, not a stack.&nbsp; Command added in 4.3, 10-Jul-26.
+          </TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">SetZoomedOverviewCenter #X #Y</TD>
+          <TD>Centers the image in the zoomed overview on the point with image coordinates
+            <b>#X</b>, <b>#Y</b>, or as near that as possible for a point near the edge.&nbsp; 
+            Command added in 4.3, 10-Jul-26.
+          </TD>
+        </TR>
+        <TR>
           <TD class="scriptcommand">ImageProperties [buf]</TD>
           <TD>Reports size in X and Y, binning, exposure, pixel size, and parameter set
             used&nbsp;for the image in buffer A or in the buffer indicated by <b>buf</b>,
@@ -2144,12 +2161,13 @@
         </TR>
         <TR>
           <TD class="scriptcommand">StageToBufImageMatrix buf #I</TD>
-          <td>For the image in buffer <b>buf></b>, reports the transformation from stage to image
+          <td>For the image in buffer <b>buf</b>, which can be 'ZO' for the zoomed overview,
+             reports the transformation from stage to image
             coordinates: the 6 elements XperX, XperY. YperX, YperY delX, delY, where the transformation is <br />
             Ximage = Xstage * XperX + Ystage * XperY + delX<br />
             Yimage = Xstage * YperX + Ystage * YperY + delY <br />
             Set <b>#I</b> 0 for delX and delY values that work with Navigator stage coordinates, which are potentially adjusted to be 
-            magnification-independent, or non-zero for values that wrork with an actual stage coordinate that applies at the 
+            magnification-independent, or non-zero for values that work with an actual stage coordinate that applies at the 
             current magnification and image shift.&nbsp; Image Y is inverted: the origin for the image coordinates is at
              the top of the image.&nbsp; Values can be assigned to variables at end of command.&nbsp; This
             and the following 3 commands were fixed on 24-Oct-24 to work with Navigator coordinates when <b>#I</b> is 0 and 
@@ -2164,7 +2182,8 @@
         <TR>
           <TD class="scriptcommand">BufImagePosToStagePos buf #I #X #Y</TD>
           <td>Reports the stage position (X and Y) corresponding to the position <b>#X</b>, <b>#Y</b>
-            in the image in buffer <b>buf</b>.&nbsp; Image coordinates are inverted in Y.&nbsp; If the
+            in the image in buffer <b>buf</b>, which can be 'ZO' for the zoomed overview.&nbsp; Image
+             coordinates are inverted in Y.&nbsp; If the
             image is a montage, it also reports the piece the point is in and the coordinates within the piece, 
             defined the same as the PieceOn and XYinPc entries in a Navigator file; 
             otherwise -1 is reported for each.&nbsp; Set <b>#I</b>

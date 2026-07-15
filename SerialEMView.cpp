@@ -173,6 +173,7 @@ BOOL CSerialEMView::PreCreateWindow(CREATESTRUCT& cs)
   int iBordTop, iBordLeft, iBordBottom, iBordRight, type, width, ind, num = 0;
   static int windowNum = 1;
   CString str;
+  CMapDrawItem *item;
   CameraParameters *camP;
   int *chanInMulti = mWinApp->GetShowChanInMultiView();
 
@@ -237,10 +238,27 @@ BOOL CSerialEMView::PreCreateWindow(CREATESTRUCT& cs)
       mStackWindow = true;
     }
 
-    // Get window title
+    // Get window title for locator
     if (mLocatorViewNum > 0) {
       str.Format("Locator %d", mLocatorViewNum % 100000);
+    } else if (type == -2) {
+
+      // For zoomed overview
+      if (mImBufs->mMapID && mWinApp->mNavigator) {
+        item = mWinApp->mNavigator->FindItemWithMapID(mImBufs->mMapID);
+        if (item)
+          str = "Zoomed Map " + item->mLabel;
+      }
+      if (str.IsEmpty()) {
+        ind = mImBufs->mConSetUsed;
+        if (ind >= 0 && ind < 8)
+          str = "Zoomed " + (mWinApp->GetModeNames())[ind];
+        else
+          str = "Zoomed overview";
+      }
     } else if (str.IsEmpty()) {
+
+      // Or for general window
       str.Format("Window %d", windowNum);
       windowNum++;
       KGetOneString("Title for new window:", str);
@@ -1566,7 +1584,7 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
       }
  
       // Otherwise draw a cross at a single point
-      if ((!mPreParTSDrewLDAreas || iDraw >= 0) && !itemInParTSgroup) {
+      if ((!mPreParTSDrewLDAreas || iDraw >= 0)) {
         MakeDrawPoint(&rect, imBuf->mImage, ptX, ptY, &point);
         DrawCross(&cdc, &pnSolidPen, point, crossLen);
       }
@@ -1580,7 +1598,7 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
 
       // Draw lines if there is more than one point
       CPen *pOldPen = cdc.SelectObject(&pnSolidPen);
-      if (!(iDraw < 0 && (useMultiShot || targetsOnly)))
+      if (!(iDraw < 0 && (useMultiShot || targetsOnly || parTSgroupID > 0)))
         DrawMapItemBox(cdc, &rect, item, imBuf, numPoints, 0., 0., delPtX, delPtY, NULL,
         NULL);
       if (item->IsMap() && item->mFitToPolygonID && item->mMapSection > 0){
@@ -1926,7 +1944,7 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
               CFont *def_font = cdc.SelectObject(useLabelFont);
               int defMode = cdc.SetBkMode(TRANSPARENT);
               COLORREF defColor = cdc.SetTextColor(parTScolor);
-              textAlign = cdc.SetTextAlign(TA_CENTER | TA_BASELINE);
+              textAlign = cdc.SetTextAlign(TA_RIGHT | TA_BOTTOM);
             }
 
             // Subtract acquire box center so it works for drawing in-hole points and
@@ -1942,20 +1960,21 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
                   B3DMIN(5, mAcquireBox->mNumPoints), ptX, ptY, delPtX, delPtY, NULL,
                   NULL);
 
-                // Draw beam circles for IS targets
+                // Draw beam circles & numbers for IS targets, first one offset from cross
                 if (item->mNumIStargets && highlight) {
                   StageToImage(imBuf, acquireXhole[hole], acquireYhole[hole], ptX, ptY);
                   if (drawEllipse) {
                     DrawEllipse(&cdc, &circlePen, &rect, imBuf->mImage, ptX + delPtX,
                       ptY + delPtY, acquireRadii[0], acquireRadii[0] * beamElong,
                       axisAngle, false);
-                    if (hole) {
-                      MakeDrawPoint(&rect, imBuf->mImage, ptX + delPtX, ptY + delPtY,
-                        &point);
-                      point = point + CPoint(0, 7 * offset10 / 10);
-                      letString.Format("%d", hole + 1);
-                      cdc.TextOut(point.x, point.y, letString);
-                    }
+                    MakeDrawPoint(&rect, imBuf->mImage, ptX + delPtX, ptY + delPtY,
+                      &point);
+                    point = point + CPoint(hole ? 0 : -offset10, (hole ? 7 : -2) *
+                      offset10 / 10);
+                    letString.Format("%d", hole + 1);
+                    cdc.TextOut(point.x, point.y, letString);
+                    if (!hole)
+                      cdc.SetTextAlign(TA_CENTER | TA_BASELINE);
                   } else {
                     DrawCircle(&cdc, &circlePen, &rect, imBuf->mImage, ptX + delPtX,
                       ptY + delPtY, acquireRadii[0]);
@@ -1997,7 +2016,8 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
             }
           }
         }
-      } else {
+      } else if (!(itemInParTSgroup && imBuf->mMagInd && 
+        imBuf->mMagInd == mWinApp->mNavHelper->GetParTSRefiningISMag())) {
 
         // if not multishot, draw acquire box
         DrawMapItemBox(cdc, &rect, mAcquireBox, imBuf,
@@ -2036,7 +2056,7 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
             firstLabel, lastLabel, ierr);
           lastGroupID = item->mGroupID;
         }
-        draw = size <= groupThresh || item->mLabel == firstLabel ||
+        draw = size <= groupThresh || itemInParTSgroup || item->mLabel == firstLabel ||
           item->mLabel == lastLabel || (iDraw > 0 && item->IsPoint() &&
             sqrt(pow((double)lastStageX - item->mStageX, 2.) +
           pow((double)lastStageY - item->mStageY, 2.)) > labelDistThresh);
@@ -2052,8 +2072,8 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
         cdc.TextOut(point.x, point.y, item->mLabel);
         if (itemInParTSgroup && drawEllipse) {
           cdc.SetTextColor(parTScolor);
-          UINT textAlign = cdc.SetTextAlign(TA_CENTER | TA_BASELINE);
-          point = point - CPoint(offset10, -7 * offset10 / 10);
+          UINT textAlign = cdc.SetTextAlign(TA_RIGHT | TA_BOTTOM);
+          point = point - CPoint(2 * offset10, 2 * offset10 / 10);
           letString.Format("%d", posInParTSgroup);
           cdc.TextOut(point.x, point.y, letString);
           cdc.SetTextAlign(textAlign);
@@ -2986,6 +3006,24 @@ void CSerialEMView::SetOffsetsFromCenterPoint(EMimageBuffer *imBuf,
   fits = (int)B3DMIN(mWinApp->mMainView->mLastWinSizeY / mainBuf->mZoom, full);
   shiftY = (float)B3DMAX(fits / 2., B3DMIN(shiftY, full - fits / 2.));
   mWinApp->mMainView->m_iOffsetY = B3DNINT(shiftY - full / 2.);
+}
+
+// Set the offsets in the given buffer of THIS view to center the given point coordinates
+void CSerialEMView::CenterBufferOnPoint(int bufInd, float xCen, float yCen)
+{
+  if (bufInd < 0 || bufInd >= mImBufNumber || !mImBufs[bufInd].mImage)
+    return;
+  EMimageBuffer *imBuf = &mImBufs[bufInd];
+  int full = imBuf->mImage->getWidth();
+  int fits = (int)B3DMIN(mLastWinSizeX / imBuf->mZoom, full);
+  xCen = (float)B3DMAX(fits / 2., B3DMIN(xCen, full - fits / 2.));
+  m_iOffsetX = B3DNINT(full / 2.f - xCen);
+  full = imBuf->mImage->getHeight();
+  fits = (int)B3DMIN(mLastWinSizeY / imBuf->mZoom, full);
+  yCen = (float)B3DMAX(fits / 2., B3DMIN(yCen, full - fits / 2.));
+  m_iOffsetY = B3DNINT(yCen - full / 2.);
+  mImBufIndex = bufInd;
+  DrawImage();
 }
 
 
@@ -4130,8 +4168,13 @@ void CSerialEMView::FindEffectiveZoom()
   if (mEffectiveZoom == 0.)
     mEffectiveZoom = ratioX;
 
-  // Now set the actual zoom too
-  mZoom = mEffectiveZoom * binning;
+  if (this == mWinApp->mZoomedOverview && mZoom > 0.) {
+    mEffectiveZoom = mZoom / binning;
+  } else {
+
+    // Now set the actual zoom too
+    mZoom = mEffectiveZoom * binning;
+  }
   if (mImBufs[mImBufIndex].mImageScale)
     mWinApp->mImageLevel.NewZoom(mZoom);
   mImBufs[mImBufIndex].mZoom = mZoom;

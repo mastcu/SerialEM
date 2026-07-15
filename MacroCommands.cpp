@@ -5212,6 +5212,31 @@ int CMacCmd::CloseStackWindow()
   return 0;
 }
 
+// CopyToZoomedOverview
+int CMacCmd::CopyToZoomedOverview()
+{
+  int index;
+  if (mItemFlt[2] <= 0.) {
+    if (mWinApp->mZoomedOverview)
+      mWinApp->mZoomedOverview->CloseFrame();
+    return 0;
+  }
+  if (ConvertBufferLetter(mStrItems[1], 0, true, index, mStrCopy))
+    ABORT_LINE(mStrCopy);
+  if (mWinApp->CopyBufferToZoomedView(&mImBufs[index], mItemFlt[2]))
+    ABORT_LINE("Error copying image buffer for line:\n\n");
+  return 0;
+}
+
+// SetZoomedOverviewCenter
+int CMacCmd::SetZoomedOverviewCenter()
+{
+  if (!mWinApp->mZoomedOverview)
+    ABORT_LINE("The zoomed overview is not open for line:\n\n");
+  mWinApp->CenterZoomedViewAtPoint(mItemFlt[1], mItemFlt[2]);
+  return 0;
+}
+
 // ChangeFocus
 int CMacCmd::ChangeFocus(void)
 {
@@ -6584,9 +6609,13 @@ int CMacCmd::StageToBufImageMatrix(void)
   bool im2st = CMD_IS(BUFIMAGETOSTAGEMATRIX) || CMD_IS(BUFIMAGEPOSTOSTAGEPOS);
   EMimageBuffer *imBuf;
   ABORT_NONAV;
-  if (ConvertBufferLetter(mStrItems[1], 0, true, index, mStrCopy))
-    ABORT_LINE(mStrCopy);
-  imBuf = &mImBufs[index];
+  if (mStrItems[1] == "ZO" && mWinApp->mZoomedOverview) {
+    imBuf = mWinApp->mZoomedOverview->GetImBufs();
+  } else {
+    if (ConvertBufferLetter(mStrItems[1], 0, true, index, mStrCopy))
+      ABORT_LINE(mStrCopy);
+    imBuf = &mImBufs[index];
+  }
   if (!mNavigator->BufferStageToImage(imBuf, aMat, delX, delY))
     ABORT_LINE("Image buffer does not have enough coordinate information for line:\n\n");
   if (im2st) {
@@ -6614,7 +6643,7 @@ int CMacCmd::StageToBufImageMatrix(void)
   }
   if (CMD_IS(BUFIMAGEPOSTOSTAGEPOS) || CMD_IS(STAGEPOSTOBUFIMAGEPOS)) {
     if (im2st) {
-      mNavHelper->AdjustMontImagePos(&mImBufs[index], mItemFlt[3], mItemFlt[4], &pcInd,
+      mNavHelper->AdjustMontImagePos(imBuf, mItemFlt[3], mItemFlt[4], &pcInd,
         &xInPiece, &yInPiece);
       mShiftManager->ApplyScaleMatrix(aMat, mItemFlt[3], mItemFlt[4], outX, outY);
       outX += delX;
@@ -6622,7 +6651,7 @@ int CMacCmd::StageToBufImageMatrix(void)
       mLogRpt.Format("Stage position is %.3f %.3f", outX, outY);
       SetRepValsAndVars(5, outX, outY, pcInd, xInPiece, yInPiece);
     } else {
-      mWinApp->mMainView->ExternalStageToImage(&mImBufs[index], aMat, delX,
+      mWinApp->mMainView->ExternalStageToImage(imBuf, aMat, delX,
         delY, mItemFlt[3] + adjXstage, mItemFlt[4] + adjYstage, outX, outY);
       mLogRpt.Format("Image position is %.1f %.1f", outX, outY);
       SetRepValsAndVars(5, outX, outY);
@@ -11568,6 +11597,9 @@ int CMacCmd::SkipUtapiService()
   int ind, found = 0;
   bool *supports = mScope->GetUtapiSupportsService();
   ShortVec *skips = mScope->GetSkipUtapiServices();
+  if (mScope->GetUseUtapiScripting() > 1)
+    ABORT_NOLINE("You cannot skip UTAPI services, there is no connection to older"
+      " scripting");
   if (mItemInt[1] < 0 || mItemInt[1] >= UTAPI_SUPPORT_END)
     ABORT_LINE("Service number is out of range in line:\n\n");
   if (mItemInt[1] >= UTSUP_CAM_SINGLE && mItemInt[1] <= UTSUP_CAM_CONTIN)

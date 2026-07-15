@@ -102,11 +102,13 @@ public:
   GetMember(int, ImBufNumber);
   GetSetMember(bool, ChanBufIsNew);
   GetSetMember(int, LocatorViewNum);
+  GetMember(EMimageBuffer *, ImBufs);
   static GetMember(bool, TakingSnapshot);
   void SetOffsets(int inX, int inY) { m_iOffsetX = inX, m_iOffsetY = inY; };
   void GetCenterForLDAreas(float &xcen, float &ycen) { xcen = mNavLDAreasXcenter; ycen = mNavLDAreasYcenter; };
   virtual ~CSerialEMView();
   double GetZoom() {return mZoom; };
+  void PreSetZoom(double inVal) { mZoom = inVal; };
   int GetImBufIndex() {return mImBufIndex; };
   void SetImBufIndex(int inImBufIndex) {mImBufIndex = inImBufIndex; };
   void SetImBufs(EMimageBuffer *inImBufs, int inNumber) {mImBufs = inImBufs; mImBufNumber = inNumber;};
@@ -118,6 +120,7 @@ public:
   void SnapshotNextTask(int shotNum);
   bool DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect, float sizeScaling, int skipExtra, bool toBuffer);
   void DrawImage(void);
+  void CenterBufferOnPoint(int bufInd, float xCen, float yCen);
   double b3dStepPixelZoom(double czoom, int step);
   void b3dSetImageOffset(int winsize,     /* window size in wpixels.          */
                          int imsize,      /* image size in ipixels            */

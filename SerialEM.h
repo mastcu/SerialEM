@@ -767,6 +767,8 @@ public:
   afx_msg void OnUpdateWindowNewLocator(CCmdUI *pCmdUI);
   int FindBufferForLocator(CSerialEMView *locator, int *numMatch = NULL);
   CSerialEMView *FindLocatorForBuffer(int index);
+  int CopyBufferToZoomedView(EMimageBuffer *imBuf, float targetMicrons);
+  void CenterZoomedViewAtPoint(float xCen, float yCen);
   int *GetShowChanInMultiView() { return &mShowChanInMultiView[0]; };
   GetMember(bool, ClosingAllMultiChan);
   void RestoreFocusWhenIdle() { mRestoreFocusIdleCount = 4; };
@@ -804,6 +806,7 @@ public:
   CSerialEMView *mLastStackView;     // The previous (detached) stack view window
   CSerialEMView *mFFTView;           // View for side-by-side FFT
   CSerialEMView *mChannelViews[MAX_STEM_CHANNELS];   // Views for multichannel
+  CSerialEMView *mZoomedOverview;    // Separate window that can center on zoomed spot
   CMenuTargets mMenuTargets;
   CImageLevelDlg mImageLevel;
   CEMbufferWindow mBufferWindow;
@@ -905,9 +908,11 @@ private:
   BOOL mNeedStaticWindow;
   bool mNeedFFTWindow;
   bool mNeedLocator;
+  float mNeedZoomedView;              // Set to desired display extent in microns
   BOOL mViewClosing;
   BOOL mViewOpening;
   EMimageBuffer *mStackViewImBuf;     // Buffer to pass to it on creation
+  EMimageBuffer *mZoomViewImbuf;      // Same idea
   CArray<CSerialEMView *, CSerialEMView *> mLocatorViews;
   EMimageBuffer mImBufs[MAX_BUFFERS];
   EMimageBuffer mFFTBufs[MAX_FFT_BUFFERS];

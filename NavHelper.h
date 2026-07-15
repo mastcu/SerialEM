@@ -384,6 +384,7 @@ public:
   GetMember(bool, CurStateSetApertures);
   SetMember(bool, SkipAperturesNextState);
   GetSetMember(int, ParTSSetupGroupID);
+  GetSetMember(int, ParTSRefiningISMag);
   IntVec *GetExtraTaskList() { return &mExtraTaskList; };
   float *GetLastUsedHoleISvecs() {return &mLastUsedHoleISvecs[0] ; };
   GetMemberPtr(ParallelTSOptions, ParTSOptions);
@@ -660,6 +661,7 @@ private:
   float mMaxISvecMatchRotDiff;   // of hole IS vectors allowed for permuting vectors
   IntVec mExtraTaskList;         // List of NAACT_EX... indexes to include, plus special
   int mParTSSetupGroupID;        // Group ID if parallel TS targets being defined
+  int mParTSRefiningISMag;       // Index of higher mag (only) when refining IS targets
 
 public:
   void PrepareToReimageMap(CMapDrawItem * item, MontParam * param, ControlSet * conSet,

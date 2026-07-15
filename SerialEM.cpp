@@ -247,6 +247,8 @@ CSerialEMApp::CSerialEMApp()
   mLastStackView = NULL;
   mFFTView = NULL;
   mFFTbufIndex = 0;
+  mZoomedOverview = NULL;
+  mNeedZoomedView = 0.;
   mViewClosing = false;
   mMontaging = false;
   mStoreMRC = NULL;
@@ -2242,7 +2244,7 @@ int CSerialEMApp::GetNewViewProperties(CSerialEMView *inView, int &iBordLeft,
   CRect rect;
   int userRight, userBot, fullWidth, needStatic = mNeedStaticWindow ? 1 : 0;
   int num, ind, found;
-  float dpiScale = GetScalingForDPI(), locatorScale = 1.f;
+  float dpiScale = GetScalingForDPI(), locatorScale = 1.f, pixel, targetPix;
   int nonStatAddBot = 25;
   iBordLeft = STATIC_BORDER_LEFT;
   iBordRight = STATIC_BORDER_RIGHT;
@@ -2320,12 +2322,17 @@ int CSerialEMApp::GetNewViewProperties(CSerialEMView *inView, int &iBordLeft,
     mStackView = inView;
   } else {
 
-    // Otherwise copy active buffer and send a size
+    // Otherwise copy active buffer and send a size in Right and Bottom
     iBordLeft = mMaxDialogWidth;
     iBordRight = B3DNINT(512 * dpiScale);
     iBordBottom = B3DNINT(512 * dpiScale + nonStatAddBot);
     imBufs = new EMimageBuffer;
     EMimageBuffer *fromBuf = mActiveView->GetActiveImBuf();
+    if (mNeedZoomedView > 0. && mZoomViewImbuf) {
+      mZoomedOverview = inView;
+      fromBuf = mZoomViewImbuf;
+      needStatic = -2;
+    }
     mBufferManager->CopyImBuf(fromBuf, imBufs);
     if (mNeedLocator) {
       needStatic = -1;
@@ -2359,11 +2366,19 @@ int CSerialEMApp::GetNewViewProperties(CSerialEMView *inView, int &iBordLeft,
         iBordBottom = height;
 
       // This makes locator ~ half the size of image area
-      if (mNeedLocator) {
+      if (mNeedLocator || mNeedZoomedView > 0) {
         iBordBottom = B3DNINT(0.6 * iBordBottom);
         iBordRight = B3DNINT(0.6 * iBordRight);
       }
+      if (mNeedZoomedView > 0 && mZoomViewImbuf && mZoomViewImbuf->mImage) { 
+        pixel = mShiftManager->GetPixelSize(fromBuf);
+        if (pixel > 0.) {
+          targetPix = mNeedZoomedView / pixel;
+          inView->PreSetZoom(sqrt(iBordBottom * iBordRight) / targetPix);
+        }
+      }
     }
+    mNeedZoomedView = 0.;
     mNeedLocator = false;
     iImBufNumber = 1;
     iImBufIndex = 0;
@@ -2453,6 +2468,9 @@ void CSerialEMApp::ViewClosing(BOOL stackView, BOOL FFTview, int multiChan,
         break;
       }
     }
+  }
+  if (view == mZoomedOverview) {
+    mZoomedOverview = NULL;
   }
   mViewClosing = true;
   nview = CountOpenViews();
@@ -2804,7 +2822,7 @@ void CSerialEMApp::SetEnableMultiChanView(BOOL inVal)
     CloseAllMultiChanWindows(-1);
 }
 
-///////////// LOCATOR WINDOWS
+///////////// LOCATOR WINDOWS AND ZOOMED OVERVIEW
 //
 // Open an new Locator window
 void CSerialEMApp::OnWindowNewLocator()
@@ -2867,6 +2885,32 @@ CSerialEMView *CSerialEMApp::FindLocatorForBuffer(int index)
       return mLocatorViews[ind];
   return NULL;
 }
+
+// Copy buffer image into a zoomed overview, opening one if needed
+// The targetMicrons parameter has an effect only when opening the window
+int CSerialEMApp::CopyBufferToZoomedView(EMimageBuffer *imBuf, float targetMicrons)
+{
+  if (mZoomedOverview) {
+    if (mBufferManager->CopyImBuf(imBuf, mZoomedOverview->GetActiveImBuf()))
+      return 1;
+    mZoomedOverview->DrawImage();
+  } else {
+    mZoomViewImbuf = imBuf;
+    mNeedZoomedView = targetMicrons;
+    ViewOpening();
+    mMainFrame->OnWindowNew();
+  }
+  return 0;
+}
+
+// Set the display center for the zoomed overview
+void CSerialEMApp::CenterZoomedViewAtPoint(float xCen, float yCen)
+{
+  if (!mZoomedOverview || !mZoomedOverview->GetImBufs()->mImage)
+    return;
+  mZoomedOverview->CenterBufferOnPoint(0, xCen, yCen);
+}
+
 
 /////////////////////////////////////////////////////////////////////////////
 // IDLE TASK MANAGER
