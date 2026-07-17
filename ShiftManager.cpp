@@ -4172,7 +4172,8 @@ bool CShiftManager::ShiftAdjustmentForSet(int conSet, int magInd, float &shiftX,
 }
 
 ScaleMat CShiftManager::GetTransformFromISAdjustments(std::vector<double> fromISX,
-  std::vector<double> fromISY, std::vector<double> toISX, std::vector<double> toISY)
+  std::vector<double> fromISY, std::vector<double> toISX, std::vector<double> toISY,
+  std::vector<double> &predErr)
 {
   /* Given IS adjustments 
   fromISX = [a_x1, a_x2, ..., a_xn]
@@ -4197,7 +4198,7 @@ ScaleMat CShiftManager::GetTransformFromISAdjustments(std::vector<double> fromIS
   X = BA^T (AA^T)^(-1)
   */
 
-  double axax, axay, ayay, bxax, bxay, byax, byay;
+  double axax, axay, ayay, bxax, bxay, byax, byay, predToISX, predToISY;
   int ind;
   ScaleMat BAt, AAt, xform;
   xform.xpx = 0.f;
@@ -4228,6 +4229,13 @@ ScaleMat CShiftManager::GetTransformFromISAdjustments(std::vector<double> fromIS
 
   if (AAt.xpx != 0) {
     xform = MatMul(BAt, MatInv(AAt));
+
+    predErr.clear();
+    for (ind = 0; ind < (int)fromISX.size(); ind++) {
+      ApplyScaleMatrix(xform, fromISX[ind], fromISY[ind], predToISX, predToISY);
+      predErr.push_back(sqrt(
+        pow(predToISX - toISX[ind], 2.) + pow(predToISY - toISY[ind], 2.)));
+    }
   }
   return xform;
 }

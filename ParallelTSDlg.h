@@ -53,7 +53,7 @@ private:
   int mSTEMindex;
   int mHasIlluminatedArea;
   int mCurrentCamera;
-  int mNumberBeforeAdd;
+  int mArraySizeBeforeAdd;
   int mFitPlaneGroupID;               // Nav group ID for points used to fit plane
   bool mDefiningPoints;               // Flag if defining points to find pretilt, X pitch
   bool mSettingUpTargetArea;          // Flag if setting up a new target area
@@ -87,8 +87,9 @@ public:
   void IncrementNumTargetsAdded() { mNumAddedTargets++; };
   bool IsDefiningPoints() { return mDefiningPoints; };
   bool IsAddingTargets() { return mAddingTargets; };
+  bool IsMakingXform() { return mMakingNewXform; };
   void FinishFitPlane();
-  void FinishRefineTargets(bool keepTargets);
+  void FinishRefineTargets(bool savedTargets);
   void UpdatePlaneParams(float pretilt, float xPitchAngle);
   bool HasAreaMap() { return mHasAreaMap; };
   bool RefiningTargets() { return mRefiningTargets; };
@@ -100,6 +101,8 @@ public:
   bool CanSaveTarget();
   void OnProcessSKey();
   void SetInstructionLine(CString text = "");
+  int GetUpdatedAdjustingTransform(CString mess);
+  void UpdateRefinementOrAdjustingStatus();
   CStatic m_statMappingMag;
   CSpinButtonCtrl m_sbcMappingMag;
   afx_msg void OnDeltaposSpinPtsMapmag(NMHDR *pNMHDR, LRESULT *pResult);

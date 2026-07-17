@@ -60,6 +60,7 @@ CParallelTSHelper::CParallelTSHelper()
   mMagIndex = -1;
   mAreaMapMagInd = -1;
   mOldAdjustingXform.xpx = 0.f;
+  mAdjustingXform.xpx = 0.f;
 }
 
 CParallelTSHelper::~CParallelTSHelper()
@@ -155,6 +156,7 @@ int CParallelTSHelper::StartShiftToTargets(IntVec targetMapIDs, int actionType)
   } else {
     mMagIndex = mParTSopts->acqMagIndNonLD;
   }
+  mNavHelper->SetParTSRefiningISMag(mMagIndex);
 
   if (mActionAtTarget == PARALLELTS_ACTION_AUTOFOCUS) {
     mess = "FITTING PLANE";
@@ -194,7 +196,7 @@ void CParallelTSHelper::PauseParallelTSShift()
 
   if (mActionAtTarget == PARALLELTS_ACTION_PREVIEW || 
     mActionAtTarget == PARALLELTS_ACTION_ADJUST) {
-    mParallelTSDlg->FinishRefineTargets(false);
+    mParallelTSDlg->FinishRefineTargets(true);
   }
   mWinApp->SetStatusText(COMPLEX_PANE, "");
 }
@@ -223,14 +225,14 @@ void CParallelTSHelper::StopParallelTSShift(bool error)
     }
   }
 
+  mNavHelper->SetParTSRefiningISMag(0);
+
   mDoingISToTargets = false;
   mAlignedToFirstISTarget = false;
   mDoNextShift = false;
   mInitialStateSaved = false;
 
-  if (mActionAtTarget == PARALLELTS_ACTION_AUTOFOCUS || (!error && 
-    mActionAtTarget == PARALLELTS_ACTION_ADJUST)) {
-    ClearSavedTargets();
+  if (mActionAtTarget == PARALLELTS_ACTION_AUTOFOCUS) {
     numPoints = (int)mISTargetPointIDs.size();
     if (numPoints > 0) {
       item = mWinApp->mNavigator->FindItemWithMapID(
@@ -250,13 +252,11 @@ void CParallelTSHelper::StopParallelTSShift(bool error)
             mWinApp->mNavigator->GetFoundItem());
       }
     }
-  } 
-  if (mActionAtTarget == PARALLELTS_ACTION_AUTOFOCUS) {
     mParallelTSDlg->FinishFitPlane();
     ClearTargets(true);
   } else if (mActionAtTarget == PARALLELTS_ACTION_PREVIEW || 
     mActionAtTarget == PARALLELTS_ACTION_ADJUST) {
-    mParallelTSDlg->FinishRefineTargets(error);
+    mParallelTSDlg->FinishRefineTargets(!error);
     mShiftManager->SetMouseMoveStage(mSavedMouseStage);
     mWinApp->UpdateWindowSettings();
     if (error)
@@ -665,6 +665,7 @@ int CParallelTSHelper::SaveTargetMap(CString &err, bool &saved)
 {
   int areaStore, tgtStore, store, index, numMaps;
   bool areaFileOpen, tgtFileOpen, fileExists;
+  float shiftX, shiftY;
   CFile *cfile;
   CMapDrawItem *item;
   EMimageBuffer *imBuf = mWinApp->mActiveView->GetActiveImBuf();
@@ -721,6 +722,9 @@ int CParallelTSHelper::SaveTargetMap(CString &err, bool &saved)
     mTargetMapFileName = item->mMapFile;
   mPreviewMapIDs.push_back(item->mMapID);
   mPrevMapSectNums.push_back(item->mMapSection);
+  imBuf->mImage->getShifts(shiftX, shiftY);
+  mPrevMapShiftX.push_back(shiftX);
+  mPrevMapShiftY.push_back(shiftY);
 
   saved = true;
   return 0;
@@ -797,8 +801,7 @@ int CParallelTSHelper::SaveInitialState(CString &err)
 int CParallelTSHelper::SaveTarget(CString &err)
 {
   int index, index2, mapID;
-  float defocus, SX, SY;
-  float shiftX, shiftY, factor;
+  float defocus, SX, SY, factor;
   CString mess;
   ScaleMat mat;
   NavAlignParams *alignParams = mNavHelper->GetNavAlignParams();
@@ -840,9 +843,6 @@ int CParallelTSHelper::SaveTarget(CString &err)
     mLastISX = ISX;
     mLastISY = ISY;
     
-    imBufs->mImage->getShifts(shiftX, shiftY);
-    mPrevMapShiftX.push_back(shiftX);
-    mPrevMapShiftY.push_back(shiftY);
     mISTargetISX.push_back(ISX);
     mISTargetISY.push_back(ISY);
     mSavedTargetIDs.push_back(mCurISTargetItem->mMapID);
@@ -1609,15 +1609,14 @@ int CParallelTSHelper::GetISVectors(int groupID, CString &err)
 }
 
 // Use the saved image shifts and adjustments to generate an adjusting transform
-int CParallelTSHelper::CreateAdjustingTransform(CString &err)
+int CParallelTSHelper::ComputeAdjustingTransform(CString &err)
 {
   int ind, jnd;
   IntVec navInd, indices;
   int numPoints;
-  double ISXcen, ISYcen;
-  std::vector<double> fromISX, fromISY, toISX, toISY;
-  ScaleMat adjustingXform;
-  AdjustXformData xformData;
+  double ISXcen, ISYcen, delX, delY;
+  double maxErr = 0., meanErr = 0.;
+  std::vector<double> fromISX, fromISY, toISX, toISY, predErr;
 
   //Handle custom targets places in arbitrary positions
   numPoints = GetSavedTargetsInNav(&navInd, &indices);
@@ -1636,25 +1635,49 @@ int CParallelTSHelper::CreateAdjustingTransform(CString &err)
     fromISY.push_back(mPreRefineISY[jnd] - ISYcen);
     toISX.push_back(mISTargetISX[jnd] - ISXcen);
     toISY.push_back(mISTargetISY[jnd] - ISYcen);
+    delX = mISTargetISX[jnd] - mPreRefineISX[jnd];
+    delY = mISTargetISY[jnd] - mPreRefineISY[jnd];
   }
 
-  adjustingXform = mShiftManager->GetTransformFromISAdjustments(fromISX, fromISY, toISX, 
-    toISY);
+  mAdjustingXform = mShiftManager->GetTransformFromISAdjustments(fromISX, fromISY, toISX, 
+    toISY, predErr);
 
-  if (adjustingXform.xpx == 0) {
+  if (mAdjustingXform.xpx == 0) {
     err.Format("A transform could not be determined from the given IS adjustments");
     return 2;
   }
+  if (mOldAdjustingXform.xpx != 0) {
+    mAdjustingXform = MatMul(mAdjustingXform, mOldAdjustingXform);
+  }
+  
+  jnd = 0;
+  SEMTrace('N', "Adjusting transform fit errors:");
+  for (ind = 0; ind < (int)predErr.size(); ind++) {
+    meanErr += predErr[ind];
+    SEMTrace('N', "error = %.1f nm at navigator item #%d", predErr[ind] * 1.e3,
+      navInd[ind + 1] + 1);
+    if (predErr[ind] > maxErr) {
+      maxErr = predErr[ind];
 
-  if (mOldAdjustingXform.xpx)
-    adjustingXform = MatMul(adjustingXform, mOldAdjustingXform);
+      // Shift by one because first item is center point for which adjustment is not done
+      jnd = navInd[ind + 1] + 1;
+    }
+  }
+  meanErr /= numPoints;
+  PrintfToLog("Adjusting Transform Fit: mean error = %.1f nm, highest error = %.1f nm at "
+    "navigator item #%d", 
+    meanErr * 1.e3, maxErr * 1.e3, jnd);
+  return 0;
+}
 
-  xformData.adjustingXform = adjustingXform;
+void CParallelTSHelper::SaveAdjustingTransform()
+{
+  AdjustXformData xformData;
+  xformData.adjustingXform = mAdjustingXform;
   xformData.xformFromMag = mAreaMapMagInd;
   xformData.xformToMag = mMagIndex;
   xformData.xformMinuteTime = mWinApp->MinuteTimeStamp();
   mNavHelper->AddAdjustingXform(xformData);
-  return 0;
 }
 
 // Deletes all saved parallelTS targets from the navigator
@@ -1682,4 +1705,55 @@ void CParallelTSHelper::DeleteTargetMapsFromNav() {
       mWinApp->mNavigator->ExternalDeleteItem(item, jnd);
     }
   }
+}
+
+
+void CParallelTSHelper::UpdateSpecAngles(float pretilt, float xPitch)
+{
+  ParallelTSParam *pars;
+
+  mPretilt = pretilt;
+  mXpitch  = xPitch;
+
+  if (mParTSitem && mParTSitem->mParallelTSIndex >= 0) {
+    pars = mWinApp->mNavigator->GetParallelTSArray()->GetAt(mParTSitem->mParallelTSIndex);
+    pars->preTilt = roundf(mPretilt * 100) / 100.f;
+    pars->xPitchAngle = roundf(mXpitch * 100) / 100.f;
+  }
+}
+
+int CParallelTSHelper::PruneDeletedTargets()
+{
+  CMapDrawItem *item;
+  int numDeleted = 0;
+
+  for (int ind = 0; ind < (int)mSavedTargetIDs.size(); ind++) {
+    item = mWinApp->mNavigator->FindItemWithMapID(mSavedTargetIDs[ind], false);
+    if (!item) {
+      numDeleted++;
+      VEC_REMOVE_AT(mSavedTargetIDs, ind);
+      if (mActionAtTarget == PARALLELTS_ACTION_ADJUST) {
+        VEC_REMOVE_AT(mISTargetISX, ind);
+        VEC_REMOVE_AT(mISTargetISY, ind);
+        VEC_REMOVE_AT(mPreRefineISX, ind);
+        VEC_REMOVE_AT(mPreRefineISY, ind);
+      } else if (mActionAtTarget == PARALLELTS_ACTION_AUTOFOCUS) {
+        VEC_REMOVE_AT(mISTargetSSX, ind);
+        VEC_REMOVE_AT(mISTargetSSY, ind);
+        VEC_REMOVE_AT(mISTargetDefocus, ind);
+      } else if (mActionAtTarget == PARALLELTS_ACTION_PREVIEW) {
+        VEC_REMOVE_AT(mISTargetISX, ind);
+        VEC_REMOVE_AT(mISTargetISY, ind);
+        VEC_REMOVE_AT(mPreRefineISX, ind);
+        VEC_REMOVE_AT(mPreRefineISY, ind);
+        if (mParTSopts->extractVirtPrevs == 0) {
+          VEC_REMOVE_AT(mPreviewMapIDs, ind);
+          VEC_REMOVE_AT(mPrevMapSectNums, ind);
+          VEC_REMOVE_AT(mPrevMapShiftX, ind);
+          VEC_REMOVE_AT(mPrevMapShiftY, ind);
+        }
+      }
+    }
+  }
+  return numDeleted;
 }

@@ -79,10 +79,11 @@ private:
   CMapDrawItem *mParTSitem;
   ParallelTSParam mParTSParam;
   ScaleMat mOldAdjustingXform;
+  ScaleMat mAdjustingXform;
 
 public:
   GetMember(CMapDrawItem*, CurISTargetItem);
-  GetMember(CMapDrawItem*, ParTSitem);
+  GetSetMember(CMapDrawItem*, ParTSitem);
   GetMember(IntVec, ISTargetPointIDs);
   GetMember(IntVec, SavedTargetIDs);
   GetMember(IntVec, PreviewMapIDs);
@@ -94,7 +95,7 @@ public:
   GetMember(ParallelTSParam, ParTSParam);
   GetSetMember(float, Pretilt);
   GetSetMember(float, Xpitch);
-  GetMember(int, AreaMapMagInd)
+  GetMember(int, AreaMapMagInd);
   bool DoingISToTargets() { return mDoingISToTargets; };
   int GetNumSavedTargets() { return (int)mSavedTargetIDs.size(); };
   int ISToTargetsBusy();
@@ -115,9 +116,12 @@ public:
   bool CanAdjustISVectors(int fromMag, bool multiShot, CString &mess);
   int GetCenterPtID();
   int GetISVectors(int groupID, CString &err);
-  int CreateAdjustingTransform(CString &err);
+  int ComputeAdjustingTransform(CString &err);
+  void SaveAdjustingTransform();
   void DeleteTargetsFromNav();
   void DeleteTargetMapsFromNav();
+  void UpdateSpecAngles(float pretilt, float xPitch);
+  int PruneDeletedTargets();
 
 private:
   int ISToNextTarget(int targetID, CString &err);

@@ -3285,8 +3285,13 @@ void CNavigatorDlg::OnDeleteitem()
   if (m_bTableIndexes)
     FillListBox(true, true);
 
-  if (mHelper->mParallelTSDlg->IsOpen() && mHelper->mParallelTSDlg->HasAreaMap())
+  if (mHelper->mParallelTSDlg->IsOpen() && 
+    mHelper->mParallelTSDlg->GetSettingUpTargetArea()) {
+    if (mWinApp->mParallelTSHelper->PruneDeletedTargets()) {
+      mHelper->mParallelTSDlg->UpdateRefinementOrAdjustingStatus();
+    }
     mHelper->mParallelTSDlg->Update();
+  }
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -12669,14 +12674,17 @@ void CNavigatorDlg::FinishSingleDeletion(CMapDrawItem *item, int delIndex, int l
 {
   bool isCurrentInList = listInd == mCurListSel;
 
-  if (item->IsPoint() && item->mMapID == mWinApp->mParallelTSHelper->GetCenterPtID() &&
-    mHelper->mParallelTSDlg->IsOpen() &&
+  if (mHelper->mParallelTSDlg->IsOpen() &&
     mHelper->mParallelTSDlg->GetSettingUpTargetArea()) {
-
-    AfxMessageBox("The center target for a parallel tilt series cannot be deleted or "
-      "reordered. Abort the parallel tilt series area if you wish to change the center "
-      "point", MB_EXCLAME);
-    return;
+    if (item->IsPoint() && item->mMapID == mWinApp->mParallelTSHelper->GetCenterPtID()) {
+      AfxMessageBox("The center target for a parallel tilt series cannot be deleted or "
+        "reordered. Abort the parallel tilt series area if you wish to change the center "
+        "point", MB_EXCLAME);
+      return;
+    }
+    if (mWinApp->mParallelTSHelper->PruneDeletedTargets()) {
+      mHelper->mParallelTSDlg->UpdateRefinementOrAdjustingStatus();
+    }
   }
 
   if (item->mAcquire || item->mTSparamIndex >= 0) {
