@@ -120,6 +120,7 @@ CParallelTSDlg::CParallelTSDlg(CWnd* pParent /*=NULL*/)
   mHighlightColor = RGB(255, 255, 210);
   mBrushHighlight.CreateSolidBrush(mHighlightColor);
   mSaveBtnText = "";
+  mYesAlwaysFinalize = false;
 }
 
 CParallelTSDlg::~CParallelTSDlg()
@@ -875,10 +876,10 @@ void CParallelTSDlg::StartRefineTargets()
     numRemove = mParallelTSHelper->AssessISTargetShiftLimit(indexVec, farInds);
 
     if (farInds.size()) {
-      mess.Format("%d targets are beyond the image shift limit from the center point."
+      mess.Format("%d target(s) beyond the image shift limit from the center point."
         " How would you like to proceed?", numRemove);
       CString yes;
-      yes.Format("Skip %d Targets && Continue", numRemove);
+      yes.Format("Skip %d Target(s) && Continue", numRemove);
       action = SEMThreeChoiceBox(mess, yes, "Clear All Targets", "Cancel", 
         MB_YESNOCANCEL | MB_ICONQUESTION);
       if (action == IDYES) {
@@ -934,7 +935,7 @@ void CParallelTSDlg::FinishFitPlane()
 
 void CParallelTSDlg::UpdateRefinementOrAdjustingStatus()
 {
-  CString str = "ready";
+  CString str = "ready", str2;
   int numSaved = mParallelTSHelper->GetNumSavedTargets();
   if (mMakingNewXform) {
     if (numSaved < MIN_NUM_POINTS_FOR_PTSADJUST) {
@@ -948,11 +949,15 @@ void CParallelTSDlg::UpdateRefinementOrAdjustingStatus()
     m_strInstruct.Format("%d image shift(s) adjusted. Click \"Save Transform\" when %s",
       numSaved, str);
   } else {
+    str2 = m_bSkipRefine && m_iAlignRef == 0 ? "map(s) saved" : "target(s) refined";
     if (numSaved < 2) {
-      str.Format("at least 2 targets have been refined.");
+      if  (m_bSkipRefine && m_iAlignRef == 0)
+        str.Format("at least 2 maps have been saved.");
+      else
+        str.Format("at least 2 targets have been refined.");
     }
-    m_strInstruct.Format("%d target(s) refined. Click \"Finalize Target Area\" when %s",
-      numSaved, str);
+    m_strInstruct.Format("%d %s. Click \"Finalize Target Area\" when %s",
+      numSaved, str2, str);
   }
   UpdateData(false);
 }
@@ -1433,11 +1438,16 @@ void CParallelTSDlg::OnFinalizeArea()
 
   } else {
     if (m_iTargetType == 0) {
-      ans = AfxMessageBox("Are you done rearranging or removing points from the Navigator "
-        "table, and is the first target point in the table the desired central point?",
-        MB_YESNO);
-      if (ans != IDYES) {
-        return;
+      if (!mYesAlwaysFinalize) {
+        ans = SEMThreeChoiceBox("Are you done rearranging or removing points from the "
+          "Navigator table,"
+          " and is the first target point in the table the desired central point?",
+          "Yes", "Yes Always", "No", MB_YESNOCANCEL | MB_ICONQUESTION);
+        if (ans == IDCANCEL) {
+          return;
+        } else if (ans == IDNO) {
+          mYesAlwaysFinalize = true;
+        }
       }
       if (!(mParTSopts->flags & PTSFLAG_SKIP_REFINE) &&
         mParallelTSHelper->GetNumSavedTargets() < 2) {

@@ -196,6 +196,8 @@ void CParallelTSHelper::PauseParallelTSShift()
 
   if (mActionAtTarget == PARALLELTS_ACTION_PREVIEW || 
     mActionAtTarget == PARALLELTS_ACTION_ADJUST) {
+    if (mWinApp->mZoomedOverview)
+      mWinApp->mZoomedOverview->CloseFrame();
     mParallelTSDlg->FinishRefineTargets(true);
   }
   mWinApp->SetStatusText(COMPLEX_PANE, "");
@@ -256,6 +258,8 @@ void CParallelTSHelper::StopParallelTSShift(bool error)
     ClearTargets(true);
   } else if (mActionAtTarget == PARALLELTS_ACTION_PREVIEW || 
     mActionAtTarget == PARALLELTS_ACTION_ADJUST) {
+    if (mWinApp->mZoomedOverview)
+      mWinApp->mZoomedOverview->CloseFrame();
     mParallelTSDlg->FinishRefineTargets(!error);
     mShiftManager->SetMouseMoveStage(mSavedMouseStage);
     mWinApp->UpdateWindowSettings();
@@ -447,6 +451,7 @@ void CParallelTSHelper::ISToTargetNextTask(int param)
           mWinApp->AddIdleTask(TASK_IS_TO_PARALLELTS_TARGET, 0, 0);
           return;
         }
+        mess = "";
         index = SaveTargetMap(mess, mapSaved);
         if (index) {
           AfxMessageBox(mess, MB_EXCLAME);
@@ -455,7 +460,7 @@ void CParallelTSHelper::ISToTargetNextTask(int param)
         }
 
         if (!mapSaved) {
-          if (index && !mess.IsEmpty()) {
+          if (!mess.IsEmpty()) {
             str.Format("Map was not saved: %s", mess);
             AfxMessageBox(str, MB_EXCLAME);
           }
@@ -579,6 +584,26 @@ void CParallelTSHelper::ISToTargetNextTask(int param)
         mWinApp->mFocusManager->AutoFocusStart(1, -2);
     } else if (mActionAtTarget == PARALLELTS_ACTION_PREVIEW ||
       mActionAtTarget == PARALLELTS_ACTION_ADJUST) {
+      if (!(mParTSopts->flags & PTSFLAG_SKIP_REFINE)) {
+        float windowSize;
+        CameraParameters *camParam = mWinApp->GetActiveCamParam();
+        windowSize = camParam->sizeX *
+          mShiftManager->GetPixelSize(mWinApp->GetCurrentCamera(), mMagIndex);
+        CMapDrawItem *mapItem = mWinApp->mNavigator->FindItemWithMapID(mAreaMapID);
+        if (!mapItem) {
+          AfxMessageBox("The Parallel Tilt Series area map was deleted", MB_EXCLAME);
+          StopParallelTSShift(true);
+          ClearSavedTargets();
+          return;
+        }
+        mWinApp->mNavigator->DoLoadMap(true, mapItem, -1);
+        float ptX, ptY;
+        EMimageBuffer *mapBuf = imBufs + mWinApp->mBufferManager->GetBufToReadInto();
+        mWinApp->mMainView->GetItemImageCoords(mapBuf, mCurISTargetItem, ptX, ptY);
+        mWinApp->CopyBufferToZoomedView(mapBuf, windowSize);
+        mWinApp->CenterZoomedViewAtPoint(ptX, ptY);
+        mWinApp->RestoreViewFocus();
+      }
       mCamera->InitiateCapture(PREVIEW_CONSET);
 
       // Stop iterations to allow user to refine IS, unless they want to skip that
@@ -602,7 +627,7 @@ int CParallelTSHelper::SaveAreaMap(CString &err)
   bool wrongFile, openNewFile = false, openOldFile = false;
   CFile *cfile;
   CMapDrawItem *item;
-  EMimageBuffer *imBuf = mWinApp->mActiveView->GetActiveImBuf();
+  EMimageBuffer *imBuf = mWinApp->mMainView->GetActiveImBuf();
 
   // Current image buffer is a loaded map, so map already exists
   item = mWinApp->mNavigator->FindItemWithMapID(imBuf->mMapID);
@@ -660,7 +685,7 @@ int CParallelTSHelper::SaveAreaMap(CString &err)
   return 0;
 }
 
-// Save a map centered on a target
+// Save a map centered on a target.
 int CParallelTSHelper::SaveTargetMap(CString &err, bool &saved)
 {
   int areaStore, tgtStore, store, index, numMaps;
@@ -668,7 +693,7 @@ int CParallelTSHelper::SaveTargetMap(CString &err, bool &saved)
   float shiftX, shiftY;
   CFile *cfile;
   CMapDrawItem *item;
-  EMimageBuffer *imBuf = mWinApp->mActiveView->GetActiveImBuf();
+  EMimageBuffer *imBuf = mWinApp->GetImBufs();
   saved = false;
 
   // check that mag of current buffer image matches acquire mag
@@ -1339,7 +1364,8 @@ int CParallelTSHelper::ConvertToParTSItem(CString &err, CMapDrawItem *item)
     
   } else {
 
-    if (mParTSopts->flags & PTSFLAG_SKIP_REFINE) {
+    // If skipping refinements and no maps saved, need to find image shifts for nav points
+    if ((mParTSopts->flags & PTSFLAG_SKIP_REFINE) && mParTSopts->extractVirtPrevs != 0) {
       if (GetISVectors(mParallelTSDlg->GetTargetGroupID(), err)) {
         return 2;
       }
@@ -1726,6 +1752,8 @@ int CParallelTSHelper::PruneDeletedTargets()
 {
   CMapDrawItem *item;
   int numDeleted = 0;
+  if ((mParTSopts->flags & PTSFLAG_SKIP_REFINE) && mParTSopts->extractVirtPrevs != 0)
+    return 0;
 
   for (int ind = 0; ind < (int)mSavedTargetIDs.size(); ind++) {
     item = mWinApp->mNavigator->FindItemWithMapID(mSavedTargetIDs[ind], false);

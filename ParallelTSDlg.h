@@ -69,6 +69,7 @@ private:
   bool mMakingNewXform;
   CString mInstruction;
   CString mSaveBtnText;
+  bool mYesAlwaysFinalize;
   
   void ClearArea();
   void CancelAddingDefining();
