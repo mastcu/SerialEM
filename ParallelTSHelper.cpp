@@ -624,21 +624,30 @@ void CParallelTSHelper::ISToTargetNextTask(int param)
 int CParallelTSHelper::SaveAreaMap(CString &err)
 {
   int index;
-  bool wrongFile, openNewFile = false, openOldFile = false;
+  bool wrongFile, saveable, openNewFile = false, openOldFile = false;
   CFile *cfile;
   CMapDrawItem *item;
   EMimageBuffer *imBuf = mWinApp->mMainView->GetActiveImBuf();
+  EMimageBuffer *imBufs = mWinApp->GetImBufs();
 
-  // Current image buffer is a loaded map, so map already exists
+  // Current active image buffer is a loaded map, so map already exists
   item = mWinApp->mNavigator->FindItemWithMapID(imBuf->mMapID);
   if (!item) {
+    if (mWinApp->Montaging() && imBufs[1].mCaptured == BUFFER_MONTAGE_OVERVIEW) {
+      imBuf = &imBufs[1];
+      saveable = mWinApp->mStoreMRC;
+    } else {
+      imBuf = &imBufs[0];
+      saveable = mWinApp->mStoreMRC && 
+        mWinApp->mBufferManager->IsBufferSavable(imBuf, mWinApp->mStoreMRC);
+    }
 
     //If no open file, or open file is unusable, do not use it
     index = mWinApp->mDocWnd->StoreIndexFromName(mTargetMapFileName);
     wrongFile = !mTargetMapFileName.IsEmpty() && (index >= 0 ||
       index == mWinApp->mDocWnd->GetCurrentStore());
-    if (!mWinApp->mStoreMRC || wrongFile ||
-      !mWinApp->mBufferManager->IsBufferSavable(imBuf, mWinApp->mStoreMRC)) {
+
+    if (wrongFile || !saveable) {
 
       //If Area map is defined and exists, switch to or open it. If not, open new file
       if (!mAreaMapFileName.IsEmpty() && UtilFileExists(mAreaMapFileName) != 0) {
@@ -662,7 +671,7 @@ int CParallelTSHelper::SaveAreaMap(CString &err)
       }
     }
 
-    if (imBuf->GetSaveCopyFlag() >= 0) 
+    if (imBuf->GetSaveCopyFlag() >= 0 && !mWinApp->Montaging())
       mWinApp->mDocWnd->SaveRegularBuffer();
 
     if (mWinApp->mNavigator->NewMap()) {
