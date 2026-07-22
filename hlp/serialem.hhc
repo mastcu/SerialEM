@@ -393,6 +393,11 @@
 			</OBJECT>
 			<A HREF="html/hidd_tspolicies.htm">Tilt Series Batch Policies dialog</A><BR>
 		<LI><OBJECT type="text/sitemap">
+			<param name="Name" value="Parallel Tilt Series dialog">
+			<param name="Local" value="html/hidd_paralleltiltseries.htm">
+			</OBJECT>
+			<A HREF="html/hidd_paralleltiltseries.htm">Parallel Tilt Series dialog</A><BR>
+		<LI><OBJECT type="text/sitemap">
 			<param name="Name" value="Navigator Window">
 			<param name="Local" value="html/hidd_navigator.htm">
 			</OBJECT>

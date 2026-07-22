@@ -1,0 +1,274 @@
+﻿<html>
+<head>
+    <title>Parallel Tilt Series Dialog</title>
+    <meta HTTP-EQUIV="Content-Type" Content="text/html; charset=Windows-1252" />
+    <style type="text/css">
+        <!-- BODY {
+            font-family: "Arial";
+        }
+
+        TD {
+            font-size: 16;
+        }
+
+        .style1 {
+            font-size: larger;
+            font-weight: bold;
+        }
+        -->
+    </style>
+</head>
+<body BGCOLOR="#ffffff" TEXT="#000000">
+    <basefont size="2">
+    <p>
+        <a NAME="hidd_paralleltiltseries"></a><span class="style1">
+            Parallel Tilt Series
+            Setup Dialog
+        </span>
+    </p>
+    <p>
+        This dialog allows you to set parameters, measure specimen angles, and create 
+        target areas for a parallel tilt series. </p>
+    <p> <em><strong>Magnification for</strong></em></p>
+    <p>
+        If not in Low Dose mode, you can set the magnifications to be used for the area 
+        map and for acquisition. This section is hidden in Low Dose Mode, in which case 
+        Preview will be used for acquisition.</p>
+    <p> <strong><em>Defining Specimen Angles</em></strong></p>
+    <p>
+        The <strong>Define Points to Fit Plane</strong> routine will measure the defocus 
+        at points defined on an area, and then compute a least squares fit with those 
+        measurements to determine the geometry of the specimen plane. After points are 
+        defined as navigator items, the procedure runs automatically and will delete 
+        those items. In other words, all points used for this procedure are temporary 
+        and there is no option to continuously update the sample points used for the fit 
+        to plane.</p>
+    <ol>
+        <li>Click <strong>Define Points to Fit Plane</strong> and mark at least four points 
+            on an area map. These points should span perpendicular directions on the 
+            specimen plane.</li>
+        <li>Click <strong>Stop Adding and Fit</strong>. The program realigns to a point in 
+            the center of the marked points and switches to the acquisition magnification.</li>
+        <li>The program image shifts to each point and measures the defocus.</li>
+        <li>The program computes leveling tilt and X pitch angle, and the corresponding edit 
+            boxes in the dialog are updated with these new values.</li>
+    </ol>
+    <p> <strong>Define Points to Fit Plane</strong></p>
+    <p>
+        Click this button to add points spanning the specimen plane. Upon clicking &quot;Stop 
+        Adding and Fit&quot;, the program will realign to an automatically generated center 
+        point, image shift to each drawn point, and measure the defocus at each 
+        location. The defocus measurements will then be used to calculate the tilt and 
+        X-axis pitch angle of the specimen.</p>
+    <p>
+        <strong>Leveling tilt</strong></p>
+    <p>
+        The tilt angle at which the specimen will be flat. When starting a new target 
+        area, the tilt will be set to this angle. </p>
+    <p>
+        <strong>X pitch angle</strong></p>
+    <p>
+        The pitch angle of the specimen relative to the X-axis.</p>
+    <p>
+        <strong><em>Defining Area &amp; Targets</em></strong></p>
+    <p> <strong>Add Custom Targets / Add Regular Pattern</strong></p>
+    <p> With <strong>Add Custom Targets</strong> selected, targets are created by marking specific 
+        locations on the area map. </p>
+    <p> With <strong>Add Regular Pattern</strong> selected, targets are created according to the 
+        pattern set in the multishot parameters, by one of two ways: if the currently 
+        selected navigator item is a point, then the targets will follow the multishot 
+        pattern centered at the point. If the item is a polygon, the polygon interior 
+        will be populated with targets that follow the multishot pattern angle and 
+        spacing.</p>
+    <p> <strong>Rough Eucentricity</strong></p>
+    <p> Runs the <a href="menu_tasks.htm#hid_eucentricity_coarse">Rough Eucentricity</a> routine.</p>
+    <p> <strong>Eucentricity by Focus</strong></p>
+    <p> Runs the <a href="menu_tasks.htm#hid_eucentricity_eucentricitybyfocus">Eucentricity by Focus</a> routine.</p>
+    <p> <strong>Start New Target Area</strong></p>
+    <p> Click this button to go to the specified leveling tilt and start a new target area. 
+        Starting a target area and making an area map are required steps before you can 
+        add targets to refine/adjust.</p>
+    <p> <strong>Acquire</strong></p>
+    <p> In Low Dose mode, there are four acquire buttons: <strong>Search</strong>, 
+        <strong>View</strong>, <strong>Preview</strong>, and 
+        <strong>Montage</strong>, which capture images with parameters from the specified Low Dose area. 
+        Preview is always used to refine target image shifts and create new adjusting 
+        transforms. </p>
+    <p> If not in Low Dose mode, the four buttons are <strong>View</strong>, <strong>Trial</strong>, 
+        <strong>Preview</strong>, and <strong>Montage</strong>. 
+        Clicking <strong>View</strong>, <strong>Trial</strong>, or <strong>Montage</strong> will capture images with the mapping 
+        magnification set at the top of this dialog. Equivalently, <strong>Preview</strong> will use the 
+        specified acquisition magnification.</p>
+    <p> <strong>Save/Identify Area Map</strong></p>
+    <p> If there is a newly captured image or montage in the active buffer, a new map 
+        will be created from the active buffer. The image will be saved to the current 
+        open file, if possible, or else you will be prompted to open a new file to save 
+        the map. Alternatively, if an existing map is loaded into the active buffer, 
+        that will be assigned as the area map for the parallel tilt series area.</p>
+    <p> <strong><em>Adjusting Transform Controls</em></strong></p>
+    <p> The parallel tilt series setup dialog provides controls to create and apply 
+        adjusting transforms. The routine is as follows:</p>
+    <ol>
+        <li>Click <strong>Add Targets</strong> and mark points on an area map. These should 
+            be recognizable features that you can accurately align by adjusting the image 
+            shift at the specified acquisition magnification.</li>
+        <li>Click <strong>Stop Adding &amp; Adjust</strong> / <strong>Adjust IS</strong>. The program realigns to 
+            the first marked point and captures an image at the acquisition magnification.</li>
+        <li>Adjust the image shift to align the original intended target. Click <strong>Save 
+            Adjustment</strong> when done.</li>
+        <li>The program image shifts to the next point and captures an image at the 
+            acquisition magnification.</li>
+        <li>Repeat steps 3-4 until you have adjusted all image shifts. You can also add more 
+            points after saving a round of image shift adjustments, in which case you will 
+            be prompted to immediately adjust their corresponding image shifts.</li>
+        <li>Click <strong>Save Transform</strong> when you are finished.</li>
+    </ol>
+    <p>
+        The procedure to create a new adjusting transform closely resembles the generic 
+        routine to refine target image shifts, which is outlined further below.</p>
+    <p> <strong>Apply adjusting transform where appropriate</strong></p>
+    <p> If this box is checked, the adjusting transform described in the status line 
+        below will be applied while refining target image shifts and/or saving target 
+        maps. </p>
+    <p style="font-weight: 700"> Create New Adjusting Transform</p>
+    <p> Clicking this button to enter a special state of the dialog which will allow you 
+        to create a new adjusting transform. Buttons which are normally used to 
+        add, refine, and remove targets will have slightly different behavior; The
+        <strong>Stop Adding &amp; Refine</strong> / <strong>Refine IS</strong> button will 
+        instead be labeled <strong>Stop Adding &amp; Adjust</strong> / <strong>Adjust IS</strong>. 
+        When this button is clicked, </p>
+    <p> <strong><em>Adding Targets, Refining Image Shifts, and Saving Target Maps</em></strong></p>
+    <p>
+        The procedure to refine target image shifts can be modified with a variety of 
+        options in the dialog, but the generic routine is as follows:</p>
+    <ol>
+        <li>Click <strong>Add Targets</strong> and mark targets on an area map.</li>
+        <li>Click <strong>Stop Adding &amp; Refine</strong> / <strong>Refine IS</strong>.The 
+            program realigns to the target that comes first in the navigator, and captures 
+            an image at the acquisition magnification.</li>
+        <li>Adjust the image shift to align the desired target. Click <strong>Save IS</strong> 
+            / <strong>Save Target Maps</strong> when done.</li>
+        <li>The program image shifts to the next point and captures an image at the 
+            acquisition magnification.</li>
+        <li>Repeat steps 3-4 until you have refined all image shifts (and saved a map for 
+            each target, if you are using Preview maps for reference). You can also add more 
+            targets after refining a round of existing targets, in which case you will be 
+            prompted to immediately refine the image shifts of the new targets.</li>
+        <li>Click <strong>Finalize Target Area</strong> when you are finished.</li>
+    </ol>
+    <p> <strong>Alignment at starting tilt</strong></p>
+    <p> The option selected here determines which method will be ensure images are 
+        aligned to the targets at the starting tilt. Accordingly, the desired option 
+        should be selected before refining targets, because they introduce the following 
+        modifications to the image shift refinement routine:</p>
+    <ul>
+        <li><em>Take Preview for reference</em>: After image shift is refined, the program 
+            saves a map of the Preview image centered on the target. </li>
+        <li><em>Extract reference from area map</em>: Instead of a Preview map, a crop of 
+            the area map centered on the target will be used for alignment.</li>
+        <li><em>No alignment</em>: The refined image shifts will be applied without any 
+            additional alignment.</li>
+    </ul>
+    <p> Note that the latter two options rely on the assumption that the refined image 
+        shifts match with target locations marked on the area map. On the other hand, if 
+        you are taking Previews for reference, you can modify target locations during 
+        the refinement process, since the Preview maps are saved at the same time as the 
+        refined image shifts.</p>
+    <p> <strong>Skip image shift refinement</strong></p>
+    <p> If checked, image shifts will be obtained by converting stage coordinates of the 
+        targets drawn on the area map. This means that, if you are saving Preview maps 
+        for references, the refinement procedure will run and automatically save all the 
+        target maps without stopping and asking you to refine the image shifts. 
+        Alternatively, if you are extracting references from the area map or doing no 
+        alignment, you can finalize the target area as soon as targets are added, 
+        skipping the refinement procedure entirely.</p>
+    <p> <strong>Add Targets / Stop Adding</strong></p>
+    <p> Click this button to begin adding targets to the area map, or, if already 
+        adding, click to stop adding without initiating the refinement routine.</p>
+    <p> <strong>Refine IS / Stop Adding &amp; Refine</strong></p>
+    <p> Click this button to begin the refinement routine on added points.</p>
+    <p> <strong>Save Target Map/IS</strong></p>
+    <p> After the routine realigns or image shifts to a target and captures a Preview 
+        image, you will be able to freely change the image shift and take more images 
+        and this button will be enabled. When you are centered on your desired target, 
+        click this button to save the image shift (and possibly also a target map) and 
+        continue on to the next target.</p>
+    <p> <strong>Remove Target</strong></p>
+    <p> After the routine realigns or image shifts to a target and captures a Preview 
+        image, you will be able to freely change the image shift and take more images 
+        and this button will be enabled. Clicking this button will remove the current 
+        target. If it is the first target in the group, the routine will stop so you can 
+        rearrange or edit the rest of the added targets. Otherwise, it will continue on 
+        to the next one. </p>
+    <p> <strong>Finalize Target Area</strong></p>
+    <p> Clicking this button will consolidate all refined targets into one parallel tilt 
+        series item that contains all necessary information about the image shifts and 
+        relevant options from the dialog. The first time a parallel tilt series item is 
+        created in a given navigator, you will be prompted to select a tilt series file 
+        and the Tilt Series Parameters dialog will open with relevant parameters 
+        imported from this dialog.</p>
+    <p> <strong>Abort Area / Abort Refining</strong></p>
+    <p> Click this button to either clear the whole area and start over, or, if some 
+        targets have been refined, just clear the saved image shifts so that refinement 
+        can be redone.</p>
+    <p> <strong>Setup Tilt Series</strong></p>
+    <p> Opens the Tilt Series Parameters dialog for the finalized parallel tilt series 
+        item. This is equivalent to selecting the item in the navigator and clicking the
+        <strong>TS Params</strong> button in the navigator.</p>
+    <p> <em><strong>Acquisition &amp; Display Options</strong></em></p>
+    <p> This closable section of the dialog contains extra options that affect how beam 
+        circles are drawn during target area setup, and how which steps are taken during 
+        final acquisition.</p>
+    <p> <strong>Assumed max tilt angle for beam display</strong></p>
+    <p> Beam circles will be drawn as ellipses, stretched perpendicular to the tilt axis 
+        based on the tilt angle specified here. Beam circles/ellipses are drawn at all 
+        targets while setting up a target area.</p>
+    <p><b>Diameter of circles to draw</b></p>
+    <p>The diameter of the circles is
+      set to the entered value in microns, unless the option described next is
+      selected to use the illuminated area on a Thermo/FEI Titan or a beam size 
+      computed from a beam size calibration on other scopes.&nbsp;Press tab or Enter
+      to have the image redrawn after entering a new diameter.</p>
+    <p><b>Use Record illuminated area </b><em>or </em><b>beam size for circles in Low Dose</b></p>
+    <p>This option now appears on all scopes and allows the multi-shot circle display to
+      take its diameter from the intensity setting of the Record area when Low
+      Dose mode is on instead of from the value entered in this dialog. On a 
+      Thermo/FEI Titan, the illuminated area is used for the size and a size will 
+      always be available. On other scopes, a beam size calibration is used if one 
+      exists for the current conditions (namely, on the same side of crossover and for 
+      the same probe mode on Thermo/FEI or alpha on a JEOL).&nbsp;This option is 
+        permanently disabled if there are no beam size calibrations at all, or 
+        temporarily disabled when there is no calibration for the current Record 
+        settings.</p>
+    <p>For this option to be valuable rather than misleading, the illuminated area
+      readout or calculated beam size must be fairly accurate in the range of interest, which may not be the
+      case.</p>
+    <p> <strong>Multiplier of usual delay after shifting to target</strong></p>
+    <p> SerialEM has a built-in settling time after image shift that depends on the
+      size of the shift; it is probably inadequate at high magnification. The
+      factor entered here increases this settling time when shifting between targets.</p>
+    <p> <strong>Adjust beam tilt &amp; astig to compenate for image shift</strong></p>
+    <p> This option is enabled if you have calibrated the beam tilt needed for
+      coma-free alignment as a function of image shift with
+      <a href="menu_focus.htm#hid_focustuning_comavs">Coma vs. Image Shift</a>
+      in the Calibration - Focus &amp; Tuning submenu.&nbsp; If so, then beam tilt will be
+      adjusted appropriately for each Record position, and restored at the end.&nbsp;
+      As of SerialEM 3.8, the dependence of astigmatism on image shift is
+      also calibrated and will be compensated, unless the property
+      &#39;SkipAstigAdjustmentForIS&#39; is set.
+      In addition, the image shift present when starting the routine will also be
+      compensated for, unless the script command &#39;AdjustBeamTiltforIS&#39; was run or beam
+      tilt was adjusted by any of the image-shift setting commands that provide the
+      adjustment.&nbsp; The conditions under which the calibration was taken are shown on the following
+      line.&nbsp; For the adjustment to work accurately, the current beam intensity at
+      least should be close to what it was when the calibration was done.</p>
+    <p> <strong>CTF Type</strong></p>
+    <p> Indicate which CTF type to use, if any, and whether to find astigmatism during 
+        final acquisition.</p>
+    <p> <strong>Maximum alignment shift at targets</strong></p>
+    <p> <strong>Aligning to extracted references</strong></p>
+    <p> &nbsp;</p>
+    <p> &nbsp;</p>
+    <p> &nbsp;</p>
+</body>
+</html>
