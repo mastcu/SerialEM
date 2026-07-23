@@ -4362,7 +4362,7 @@ void CMultiGridTasks::DoNextSequenceAction(int resume)
         movable = true;
       else
         str2 = mWorkingDir;
-      if (!str2.IsEmpty() && str2.GetAt(str.GetLength() - 1) != '\\')
+      if (!str2.IsEmpty() && str2.GetAt(str2.GetLength() - 1) != '\\')
         str2 += '\\';
       if (!noFrameSubs) {
         if (!movable || !mParams.framesUnderSession)

@@ -138,16 +138,47 @@
        <TR VALIGN="top">
           <TD>SkipUtapiServices</TD>
           <TD>Follow with a list of indexes to UTAPI services that should be marked as not 
-            available.&nbsp; The indexes correspond to the values of the enum 
-            'UtapiSupportTypes' in SerialEM.h and are printed to the log on the "Got service" line when
-            SerialEM is started with DebugOutput set to 'E*'.&nbsp; With a UTAPI server from April 2025, only 20 needs
+            available.&nbsp; The indexes of services are as follows: <br />
+Acquisition - 21 <br>
+Aperture - 1 <br>
+Beam blanker - 4 <br>
+Beam stopper - 3 <br>
+Camera continuous - 24 <br>
+Camera insertion - 31 <br>
+Camera single - 20 <br>
+Column mode - 5 <br>
+Column temperature - 27 & 30 <br>
+Column valves - 15 <br>
+Deflectors - 0 <br>
+Deflectors alignments - 32 <br>
+FEG - 19 <br>
+Filter - 29 <br>
+Fluscreen - 6 <br>
+Focus - 7 <br>
+HT - 14 <br>
+Illumination - 8 <br>
+Loader - 25 <br>
+Magnification - 9 <br>
+Normalization - 2 <br>
+Phase plate - 10 <br>
+Sample temperature - 26 & 30 <br>
+Stage - 13 <br>
+STEM dynamic - 23 <br>
+STEM raster - 22 <br>
+Stigmator - 11 <br>
+Vacuum - 16 <br>
+Vacuum chambers - 17 <br>
+Vibration - 28 <br>
+X lens - 18 <br>
+With a UTAPI server from April 2025, only 20 needs
             to be used for cameras if you have a Ceta 2.&nbsp; With a 7.27 UTAPI server, the Ceta 2 should give the
             proper number of frames and there should be no more need to skip any services.&nbsp; The 
             vibration manager is supported for dewar 
             and vacuum management as of 16-May-26 but you can use 28 to skip this service and use 
             older scripting calls.&nbsp; Unlike other property entries, this list 
-            can have ranges.&nbsp; For example, to skip everything except apertures, beam stop, and camera,
-            enter '0 2 4-19 25-32'.</TD>
+            can have ranges.&nbsp; For example, to skip everything except the services that 
+            provide some actual benefit over older scripting, namely apertures, beam stop, and camera,
+            enter '0 2 4-19 25-30,32'.</TD>
         </TR>
        <TR VALIGN="top">
           <TD>DropPlusInHoleNameIfUtapi</TD>
