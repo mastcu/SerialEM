@@ -3,6 +3,8 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+7/23/26: Fixed scaling of FEG beam current through UTAPI (In 4.2).
+
 7/9/26: When using Nav Pts to make IS vectors with points drawn on a map, it
 considers the vectors to apply at the map mag instead of the current mag
 (In 4.2).
