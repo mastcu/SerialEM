@@ -10200,7 +10200,7 @@ int CMacCmd::ReportLoadedSlot()
     slot = mScope->GetLoadedSlot();
     if (slot < 0)
       ABORT_LINE("Error getting slot number loaded on stage for line:\n\n");
-    if (slot)
+    if (!slot)
       mLogRpt = "No grid from autoloader is on the stage";
     else
       mLogRpt.Format("Grid from slot %d is on stage", slot);
