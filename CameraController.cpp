@@ -4192,7 +4192,7 @@ void CCameraController::Capture(int inSet, bool retrying)
   // Adjust or set scaling for FEI cameras in advanced interface
   mDivBy2ForExtra = mDivBy2ForImBuf = mTD.DivideBy2;
   if (mParam->FEItype && FCAM_ADVANCED(mParam)) { 
-    if (mParam->autoGainAtBinning > 0) {
+    if (mParam->autoGainAtBinning > 0 && !mTD.UseUtapi) {
       mTD.DivideBy2 += B3DNINT(log((double)mParam->gainFactor[binIndex]) / log(0.5));
       SEMTrace('E', "Divide by 2 set to %d for binning %d (factor %f)", mTD.DivideBy2, 
         mBinning, mParam->gainFactor[binIndex]);

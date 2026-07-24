@@ -4452,7 +4452,8 @@ float CProcessImage::CountsPerElectronForImBuf(EMimageBuffer * imBuf)
     countsPerElectron /= powf(2.f, (float)extra->mDividedBy2);
   else if (imBuf->mDividedBy2)
     countsPerElectron /= 2.f;
-  if (extra->mDividedBy2 <= 1 && !camParam->autoGainAtBinning)
+  if (extra->mDividedBy2 <= 1 && (!camParam->autoGainAtBinning || 
+    mCamera->UsingUtapiForCamera(camParam)))
     gainFac = mWinApp->GetGainFactor(imBuf->mCamera, imBuf->mBinning);
   return gainFac * countsPerElectron;
 }

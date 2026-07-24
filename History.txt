@@ -3,6 +3,14 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+7/24/26: SEM_4-2-26
+7/24/26: Made AutoGainFactors work properly with UTAPI (In 4.2).
+
+7/24/26: Made the default ScopeUpdateInterval be 200 with UTAPI (In 4.2).
+
+7/24/26: Fixed crash when loading montage area around double-clicked Navigator
+point after changing the Treat as very Sloppy option (In 4.2).
+
 7/23/26: Fixed scaling of FEG beam current through UTAPI (In 4.2).
 
 7/23/26: Fixed ReportLoadedSlot.
