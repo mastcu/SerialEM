@@ -80,8 +80,8 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
-#define VERSION_STRING  "SerialEM Version 4.2.25"
-#define TAG_STRING      "(Tagged SEM_4-2-25, 6/24/26)"
+#define VERSION_STRING  "SerialEM Version 4.2.26"
+#define TAG_STRING      "(Tagged SEM_4-2-26, 7/24/26)"
 #define DEPRECATED_PYTHON  "3.6-64"
 
 // Offsets for static window inside main frame

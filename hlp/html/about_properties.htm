@@ -454,8 +454,9 @@
         <TR VALIGN="top">
           <TD>ScopeUpdateInterval</TD>
           <TD>The interval in milliseconds between calls to the function that reads scope
-            properties and updates the user interface. The default is 150, raised from
-            100 on April 10, 2018. For a JEOL, the update function does not normally access
+            properties and updates the user interface. The default is 150 unless connecting to a
+             Thermo/FEI scope through the UTAPI interface, where it is 200.
+            For a JEOL, the update function does not normally access
             the microscope so this should be OK.</TD>
        </TR>
         <TR VALIGN="top">
@@ -2001,17 +2002,26 @@
         <TR VALIGN="top">
           <TD>RelativeGainFactors</TD>
           <TD>A list of relative camera gain values, one per binning listed on the Binnings
-            line. This entry is needed for the Eagle and some other Thermo/FEI cameras, OneView camera, Tietz CMOS cameras, and for DE
+            line. This entry is needed for the Eagle and some other Thermo/FEI cameras, OneView 
+            cameras, Tietz CMOS cameras, and for DE
             cameras configured to bin by averaging instead of summation. The factor should be 1 for the
-            binning at which counts per electron is calibrated.</TD>
+            binning at which counts per electron is calibrated.&nbsp; These values are used when comparing counts
+            in images taken at different binnings and for computing the
+            electron dose rate per physical pixel correctly for each binning.
+          </TD>
         </TR>
         <TR VALIGN="top">
           <TD>AutoGainFactors</TD>
           <TD>The binning index at which to start applying an automatically set gain factor,
-            for a Thermo/FEI camera with the advanced scripting interface.&nbsp; With a value of
-            1, binning will essentially average instead of summing values, so counts are
-            scaled by 0.25 , 0.0625, and 0.0156 at binnings 2, 4, and 8.&nbsp; With a value
-            of 2, the scalings would be 1, 0.25, and 0.0625 at 2,&nbsp; 4, and 8.</TD>
+            for a Thermo/FEI camera with the Advanced scripting interface, or simply for setting relative
+            gain factors with the UTAPI interface.&nbsp; With a value of
+            1, counts are
+            scaled by 0.25 , 0.0625, and 0.0156 at binnings 2, 4, and 8. which makes binning give 
+            averaged instead of summed values.&nbsp; With a value
+            of 2, the scalings would be 1, 0.25, and 0.0625 at 2, 4, and 8.&nbsp; Relative gain factors
+            are set to match these gain factors, but they are applied to acquired images only with 
+            with Advanced scripting, since the UTAPI interface provides images that are already scaled.
+          </TD>
         </TR>
         <TR VALIGN="top">
           <TD>ExtraGainReferences</TD>
