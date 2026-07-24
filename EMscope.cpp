@@ -385,7 +385,7 @@ CEMscope::CEMscope()
 
   // General initializations (-1 for these 2 that are scope-dependent)
   mHasNoAlpha = -1;
-  mUpdateInterval = 150;
+  mUpdateInterval = -1;
   mMagFixISdelay = 450;    // Was 300: needed to be longer for diffraction
   mJeolForceMDSmode = 0;
   mCalNeutralStartMag = -1;
@@ -926,7 +926,11 @@ int CEMscope::Initialize()
     // Need to skip insertion service if no camera service, because UTAPI has 0 cameras
     if (!mUtapiSupportsService[UTSUP_CAM_SINGLE])
       mUtapiSupportsService[UTSUP_CAM_INSERT] = false;
+    if (mUpdateInterval <= 0)
+      mUpdateInterval = 200;
   }
+  if (mUpdateInterval <= 0)
+    mUpdateInterval = 150;
   if (!(mUseIllumAreaForC2 && mFEIhasApertureSupport))
     mMonitorC2ApertureSize = 0;
   else if (mMonitorC2ApertureSize < 0)
