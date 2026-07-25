@@ -798,6 +798,8 @@ CSerialEMApp::CSerialEMApp()
   mDummyInstance = false;
   mNoCameras = false;
   mComModuleInited = false;
+  mEnableExternalPython = false;
+  mNoLDAreaMoveWithLine = false;
   mPlugDoingFunc = NULL;
   mPlugStopFunc = NULL;
   mPlugImagingTask = false;

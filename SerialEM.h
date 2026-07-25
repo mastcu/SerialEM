@@ -694,6 +694,7 @@ public:
   GetMember(bool, JustMontRestoringStage);
   GetMember(bool, InUpdateWindows);
   GetMember(BOOL, EnableExternalPython);
+  GetSetMember(BOOL, NoLDAreaMoveWithLine);
   GetMember(bool, HasK2OrK3Camera);
   GetMember(int, DEcamCount);
   GetSetMember(int, NavOrLogHadFocus);
@@ -1018,6 +1019,7 @@ private:
   bool mJustMontRestoringStage; // Flagthat "DoingTasks" true because of stage restore
   bool mInUpdateWindows;        // Flag that update call is from UpdateBufferWindows
   BOOL mEnableExternalPython;   // Flag to open socket for external python
+  BOOL mNoLDAreaMoveWithLine;   // Flag not to move LD area when drawing a line
   bool mHasK2OrK3Camera;        // Flag for whether there is K2 or K3
   int mDEcamCount;              // Number of DE cameras
   int mNavOrLogHadFocus;        // 1 if nav last got focus, -1 if log did
