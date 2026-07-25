@@ -3,6 +3,12 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+7/25/26: Added property NoLDAreaMoveWithLine to prevent drawing a line for
+setting the position of Focus/Trial whening defining area (In 4.2).
+
+7/25/26: Fixed scaling of linear mode images from Falcon through UTAPI (new
+plugin needed) (In 4.2).
+
 7/24/26: SEM_4-2-26
 7/24/26: Made AutoGainFactors work properly with UTAPI (In 4.2).
 
