@@ -48,7 +48,7 @@ enum NavExtErrors {NEXERR_MULTIPLE_ENTRY = 0, NEXERR_NO_DRAWN_ON, NEXERR_NO_MAP_
   EXTERR_NO_PC_COORD, EXTERR_NO_MDOC, EXTERR_BAD_MDOC_IND};
 
 enum MontSetupSource { SETUPMONT_FROM_MACRO = 1, SETUPMONT_MG_FULL_GRID, 
-  SETUPMONT_MG_LM_NBYN, SETUPMONT_MG_POLYGON, SETUPMONT_MG_MMM_NBYN };
+  SETUPMONT_MG_LM_NBYN, SETUPMONT_MG_POLYGON, SETUPMONT_MG_MMM_NBYN, SETUPMONT_ASSESS_POLY};
 
 struct ScheduledFile {
   CString filename;
@@ -100,7 +100,7 @@ public:
   void DeleteItem() {OnDeleteitem();};
 	void CornerMontage();
 	int PolygonMontage(CMontageSetupDlg *montDlg, bool skipSetupDlg, int itemInd = -1, 
-    float overlapFac = 0., int source = 0);
+    float overlapFac = 0., int source = 0, MontParam *useMontP = NULL);
 	void TransformPts();
   void DoClose() {OnCancel();};
   BOOL GetAcquiring() {return mAcquireIndex >= 0;};
@@ -553,6 +553,7 @@ private:
   double mAcqAutoDefocus;      // Keep track of valid focus from autofocus for tilt series
   int mNumIStargetItems;       // To keep track of number of items that have IS targets
   int mExpandedHeight;         // Height before window was shrunk
+  MontParam *mPolyMontParam;   // For storing montage param when assessing polygon mont
 
 public:
   afx_msg void OnGotoMarker();

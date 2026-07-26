@@ -3,6 +3,12 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+7/26/26: Added property UtapiLinearToCounting to specify ratio of linear mode
+to counting mode counts for Falcon when connected with UTAPI.
+
+7/26/26: Added script command to report # of pieces that will be used if
+SetupPolygonMontage is run.
+
 7/25/26: Added property NoLDAreaMoveWithLine to prevent drawing a line for
 setting the position of Focus/Trial whening defining area (In 4.2).
 
