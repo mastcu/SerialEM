@@ -1603,6 +1603,9 @@ void CCameraController::InitializeFEIcameras(int &numFEIlisted, int *originalLis
       if (mAllParams[i].FEItype == FALCON4_TYPE && !mAllParams[i].falconVariant &&
         mFalconReadoutInterval < 0.0035)
         mAllParams[i].falconVariant = 1;
+
+      if (UsingUtapiForCamera(&mAllParams[i]) && mAllParams[i].UtapiLinear2Counting > 0)
+        mAllParams[i].linear2CountingRatio = mAllParams[i].UtapiLinear2Counting;
     }
   }
   if (anyGIF && !mCEOSFilter) {

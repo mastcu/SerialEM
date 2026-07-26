@@ -471,6 +471,7 @@ CSerialEMApp::CSerialEMApp()
     mCamParams[i].EERscaleForIMODalign = 0.;
     mCamParams[i].falconVariant = 0;
     mCamParams[i].linear2CountingRatio = 8.;
+    mCamParams[i].UtapiLinear2Counting = 0.;
     mCamParams[i].linearOffset = 0.;
     mCamParams[i].K3CDSLinearRatio = 1.5f;
     mCamParams[i].origDefects = NULL;

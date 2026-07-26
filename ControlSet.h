@@ -163,6 +163,7 @@ struct CameraParameters {
   CString UtapiFramePath;  // local frame path in Utapi
   int falconVariant;      // Separate flag for Falcon 4i variant (for now)
   float linear2CountingRatio;  // Ratio of raw counts in linear mode to counting mode
+  float UtapiLinear2Counting;  // Ratio in UTAPI
   float linearOffset;      // Amount to subtract before scaling (K3)
   float K3CDSLinearRatio;  // ratio of counts with CDS on to off
   int numExtraGainRefs;    // Number of extra gain refs

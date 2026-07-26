@@ -2599,7 +2599,7 @@ With a UTAPI server from April 2025, only 20 needs
         </TR>
         <TR VALIGN="top">
           <TD>LinearToCountingRatio</TD>
-          <TD><i>For Falcon 3:</i> Ratio of number of counts (in SerialEM) obtained from a Falcon 3 camera in
+          <TD><i>For Falcon 3 or 4:</i> Ratio of number of counts (in SerialEM) obtained from a Falcon camera in
             linear mode to # of counts for the same exposure in counting mode.&nbsp; The
             counts for linear mode must be measured in SerialEM because it returns
             integrated rather than averaged counts.&nbsp; The default is 8.<br />
@@ -2608,9 +2608,16 @@ With a UTAPI server from April 2025, only 20 needs
             exposure.&nbsp; The default is 350.</TD>
         </TR>
         <TR VALIGN="top">
+          <TD>UtapiLinearToCounting</TD>
+          <TD>Ratio of counts in linear mode to counts in counting mode for a Falcon 4 being 
+            run through the UTAPI interface.&nbsp; If this entry is defined in the 
+            properties file, it will replace the value for 'LinearToCountingRatio' on 
+            program startup when connecting with UTAPI.</TD>
+        </TR>
+        <TR VALIGN="top">
           <TD><a name="scalepower">Falcon3ScalingPower</a></TD>
-          <TD>This entry does three things.&nbsp; For Falcon 3 with the Advanced Scripting
-            interface, it enables the scaling of data from the Falcon 3
+          <TD>This entry does three things.&nbsp; For Falcon 3 or 4 with the Advanced Scripting
+            interface, it enables the scaling of data from the Falcon
             so that linear and counting modes give comparable counts for the same exposure;
             and it sets the number of divisions by 2 applied to the data.&nbsp; If the value
             is 0 or negative (but greater than -10), then counting mode data will be divided
@@ -2622,7 +2629,7 @@ With a UTAPI server from April 2025, only 20 needs
             disable the scaling of both kinds of data.&nbsp; The default is 4, which will
             divide linear mode counts by 16 and scale counting mode by ~0.4 to 0.5,
             depending on the entry for &#39;LinearToCountingRatio&#39;.&nbsp; For a &#39;dumb&#39;
-            Falcon 3 with the standard scripting interface, it activates a scaling so that
+            Falcon 3 or 4 with the standard scripting interface, it activates a scaling so that
             images with different exposures do not all have the same counts.&nbsp; Its value
             is the power of 2 that will be used to scale a 1 sec exposure; it can be between
             -9 and 18, and its default is again 4.</TD>
