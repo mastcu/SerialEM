@@ -3807,13 +3807,15 @@ int CMacCmd::SetupFullMontage(void)
   return 0;
 }
 
-// SetupPolygonMontage
+// SetupPolygonMontage, AssessPolygonMontage
 int CMacCmd::SetupPolygonMontage(void)
 {
   CFileStatus status;
   int index;
   CMapDrawItem *navItem;
   CMontageSetupDlg dlg;
+  bool assess = CMD_IS(ASSESSPOLYGONMONTAGE);
+  MontParam tmpParam = *(mWinApp->GetMontParam());
 
   index = mItemEmpty[1] ? 0 : mItemInt[1];
   navItem = CurrentOrIndexedNavItem(index, mStrLine);
@@ -3823,15 +3825,26 @@ int CMacCmd::SetupPolygonMontage(void)
     ABORT_LINE("Navigator item is not a polygon for line:\n\n");
   if (mItemFlt[2] < 0 || mItemFlt[2] >= 0.5)
     ABORT_LINE("Overlap factor must be between 0 (for unspecified) and 0.5 in line:\n\n");
-  if (CheckConvertFilename(mStrItems, mStrLine, 3, mEnteredName))
-    return 1;
+  if (!assess) {
+    if (CheckConvertFilename(mStrItems, mStrLine, 3, mEnteredName))
+      return 1;
 
-  if (!mOverwriteOK && CFile::GetStatus((LPCTSTR)mEnteredName, status))
-    SUSPEND_NOLINE("setting up a polygon  montage because " + mEnteredName +
-      " already exists");
-  if (mNavigator->PolygonMontage(NULL, true, index, mItemFlt[2], SETUPMONT_FROM_MACRO))
+    if (!mOverwriteOK && CFile::GetStatus((LPCTSTR)mEnteredName, status))
+      SUSPEND_NOLINE("setting up a polygon  montage because " + mEnteredName +
+        " already exists");
+  }
+  if (mNavigator->PolygonMontage(NULL, true, index, mItemFlt[2], 
+    assess ? SETUPMONT_ASSESS_POLY : SETUPMONT_FROM_MACRO, assess ? & tmpParam : NULL))
     ABORT_LINE("An error occurred setting up a polygon montage for line:\n\n");
-  mMovedStage = true;
+  if (assess) {
+    index = tmpParam.xNframes * tmpParam.yNframes -
+      (tmpParam.ignoreSkipList ? 0 : tmpParam.numToSkip);
+    mLogRpt.Format("Polygon montage would have %d total pieces in %d x %d array",
+      index, tmpParam.xNframes, tmpParam.yNframes);
+    SetRepValsAndVars(3, index, tmpParam.xNframes, tmpParam.yNframes);
+  } else {
+    mMovedStage = true;
+  }
   return 0;
 }
 

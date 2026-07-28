@@ -386,7 +386,7 @@ CEMscope::CEMscope()
 
   // General initializations (-1 for these 2 that are scope-dependent)
   mHasNoAlpha = -1;
-  mUpdateInterval = 150;
+  mUpdateInterval = -1;
   mMagFixISdelay = 450;    // Was 300: needed to be longer for diffraction
   mJeolForceMDSmode = 0;
   mCalNeutralStartMag = -1;
@@ -929,8 +929,8 @@ int CEMscope::Initialize()
     }
     if (mScopeCanFlashFEG < 0) {
       mScopeCanFlashFEG = 0;
-      if (mAdvancedScriptVersion >= ASI_FILTER_FEG_LOAD_TEMP &&
-        mPlugFuncs->GetFlashingAdvised) {
+      if ((mAdvancedScriptVersion >= ASI_FILTER_FEG_LOAD_TEMP || 
+        UtapiSupportsService(UTSUP_FLASHING)) && mPlugFuncs->GetFlashingAdvised) {
         try {
           mScopeCanFlashFEG = mPlugFuncs->GetFlashingAdvised(-1);
         }
@@ -971,7 +971,11 @@ int CEMscope::Initialize()
     // Need to skip insertion service if no camera service, because UTAPI has 0 cameras
         if (!mUtapiSupportsService[UTSUP_CAM_SINGLE])
       mUtapiSupportsService[UTSUP_CAM_INSERT] = false;
+    if (mUpdateInterval <= 0)
+      mUpdateInterval = 200;
   }
+  if (mUpdateInterval <= 0)
+    mUpdateInterval = 150;
   if (!(mUseIllumAreaForC2 && mFEIhasApertureSupport))
     mMonitorC2ApertureSize = 0;
   else if (mMonitorC2ApertureSize < 0)
@@ -11167,6 +11171,8 @@ int CEMscope::LongOperationBusy(int index)
           if (longOp == LONG_OP_FLASH_FEG)
             mFegFlashCounter++;
           mLastLongOpTimes[longOp] = now;
+          if (UtapiSupportsService(UTSUP_FLASHING))
+            mLastBeamCurrentTime = now;
           mWinApp->mDocWnd->SetShortTermNotSaved();
         } else if (busy < 0 && !errorOK[longOp] && !mLongOpErrorToReport)
           throwErr = true;

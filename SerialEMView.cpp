@@ -2928,7 +2928,8 @@ void CSerialEMView::OnLButtonUp(UINT nFlags, CPoint point)
       // If done drawing a line, output the length to log window
       imBuf = &mImBufs[mImBufIndex];
       if (!imBuf->mDrawUserBox && mDrawingLine) {
-        if (mWinApp->mLowDoseDlg.CanActOnUserPointChange(imBuf, shiftX, shiftY)) {
+        if (mWinApp->mLowDoseDlg.CanActOnUserPointChange(imBuf, shiftX, shiftY) &&
+          !mWinApp->GetNoLDAreaMoveWithLine()) {
           shiftX += imBuf->mLineEndX - imBuf->mUserPtX;
           shiftY += imBuf->mLineEndY - imBuf->mUserPtY;
           imBuf->mHasUserPt = true;

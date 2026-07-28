@@ -881,6 +881,7 @@ MAC_SAME_NAME_ARG(ReportUtapiServices, 0, 4, REPORTUTAPISERVICES, i)
 MAC_SAME_NAME_NOARG(ReportLoadedSlot, 0, 4, REPORTLOADEDSLOT)
 MAC_SAME_NAME_ARG(CopyToZoomedOverview, 2, 0, COPYTOZOOMEDOVERVIEW, SD)
 MAC_SAME_NAME_ARG(SetZoomedOverviewCenter, 2, 0, SETZOOMEDOVERVIEWCENTER, DD)
+MAC_SAME_FUNC_ARG(AssessPolygonMontage, 2, 4, SetupPolygonMontage, ASSESSPOLYGONMONTAGE, II)
 
 // new Python-only commands need to be added to pythonOnlyCmds in ::CMacroProcessor
 // New Not from Python items omit _ARG or _NOARG

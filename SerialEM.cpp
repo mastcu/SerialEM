@@ -82,7 +82,7 @@
 #endif
 
 #define VERSION_STRING  "SerialEM Version 4.3.0beta"
-#define TAG_STRING      "(Tagged SEM_4-2-25, 6/24/26)"
+#define TAG_STRING      "(Tagged SEM_4-2-26, 7/24/26)"
 #define DEPRECATED_PYTHON  "3.6-64"
 
 // Offsets for static window inside main frame
@@ -474,6 +474,7 @@ CSerialEMApp::CSerialEMApp()
     mCamParams[i].EERscaleForIMODalign = 0.;
     mCamParams[i].falconVariant = 0;
     mCamParams[i].linear2CountingRatio = 8.;
+    mCamParams[i].UtapiLinear2Counting = 0.;
     mCamParams[i].linearOffset = 0.;
     mCamParams[i].K3CDSLinearRatio = 1.5f;
     mCamParams[i].origDefects = NULL;
@@ -822,6 +823,8 @@ CSerialEMApp::CSerialEMApp()
   mDummyInstance = false;
   mNoCameras = false;
   mComModuleInited = false;
+  mEnableExternalPython = false;
+  mNoLDAreaMoveWithLine = false;
   mPlugDoingFunc = NULL;
   mPlugStopFunc = NULL;
   mPlugImagingTask = false;

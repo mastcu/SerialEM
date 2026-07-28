@@ -4583,13 +4583,14 @@ void CNavigatorDlg::PolygonFromCorners(void)
 
 // Setup a montage from a polygon
 int CNavigatorDlg::PolygonMontage(CMontageSetupDlg *montDlg, bool skipSetupDlg,
-  int itemInd, float overlapFac, int source)
+  int itemInd, float overlapFac, int source, MontParam *useMontP)
 {
 	CMapDrawItem *item, *itmp;
   CString str;
   MontParam *montp;
-  bool forMacro = source == SETUPMONT_FROM_MACRO;
+  bool forMacro = source == SETUPMONT_FROM_MACRO || source == SETUPMONT_ASSESS_POLY;
   int err;
+  mPolyMontParam = useMontP;
   if (!mHelper->GetDoingMultipleFiles())
     mWinApp->RestoreViewFocus();
   if (itemInd < 0) {
@@ -4608,8 +4609,8 @@ int CNavigatorDlg::PolygonMontage(CMontageSetupDlg *montDlg, bool skipSetupDlg,
   for (int i = 0; i < item->mNumPoints; i++)
     itmp->AppendPoint(item->mPtX[i],item->mPtY[i]);
   err = SetupMontage(itmp, montDlg, skipSetupDlg, overlapFac, source);
-  if (!err && (fabs(item->mStageX - itmp->mStageX) > 0.005 ||
-    fabs(item->mStageY - itmp->mStageY) > 0.005)) {
+  if (!err && source != SETUPMONT_ASSESS_POLY && (fabs(item->mStageX - itmp->mStageX) >
+    0.005 || fabs(item->mStageY - itmp->mStageY) > 0.005)) {
       if (!mHelper->GetDoingMultipleFiles()) {
         str.Format("Changing center of polygon from %.2f,%.2f to center for montage, "
           "%.2f,%.2f", item->mStageX, item->mStageY, itmp->mStageX, itmp->mStageY);
@@ -4764,7 +4765,8 @@ int CNavigatorDlg::SetupMontage(CMapDrawItem *item, CMontageSetupDlg *montDlg,
   BOOL lowDose = mWinApp->LowDoseMode();
   int trial, numTry = 1, initCons = RECORD_CONSET, useCons;
   LowDoseParams *ldp = mWinApp->GetLowDoseParams();
-  bool forMacro = source == SETUPMONT_FROM_MACRO;
+  bool assess = source == SETUPMONT_ASSESS_POLY;
+  bool forMacro = source == SETUPMONT_FROM_MACRO || assess;
   bool forMulti = source == SETUPMONT_MG_FULL_GRID || source == SETUPMONT_MG_POLYGON;
   MontParam *montParam = mMontParam;
   CString *modeNames = mWinApp->GetModeNames();
@@ -4773,6 +4775,8 @@ int CNavigatorDlg::SetupMontage(CMapDrawItem *item, CMontageSetupDlg *montDlg,
   BOOL forceStage = false;
   BOOL useViewSave, useSearchSave;
   int *activeList = mWinApp->GetActiveCameraList();
+  if (assess)
+    montParam = mPolyMontParam;
 
   if (montDlg) {
     magIndex = montDlg->mParam.magIndex;
@@ -4802,7 +4806,7 @@ int CNavigatorDlg::SetupMontage(CMapDrawItem *item, CMontageSetupDlg *montDlg,
   }
 
   // Leave the current file before touching the montage parameters
-  if (!montDlg)
+  if (!montDlg && !assess)
     mDocWnd->LeaveCurrentFile();
   if (mWinApp->mMacroProcessor->DoingMacro() &&
     mWinApp->mMacroProcessor->GetNextParamSetForMont()) {
@@ -4904,9 +4908,14 @@ int CNavigatorDlg::SetupMontage(CMapDrawItem *item, CMontageSetupDlg *montDlg,
       return 1;
     }
   }
-  if (numTry > 1 && initCons != useCons)
-    AfxMessageBox("Turning on \"Use " + modeNames[useCons] + " in Low Dose\" because "
-    "area could not be fit with " + modeNames[initCons] + " parameters", MB_EXCLAME);
+  if (numTry > 1 && initCons != useCons) {
+    str = "Turning on \"Use " + modeNames[useCons] + " in Low Dose\" because "
+      "area could not be fit with " + modeNames[initCons] + " parameters";
+    if (assess)
+      SEMAppendToLog(str);
+    else
+      AfxMessageBox(str, MB_EXCLAME);
+  }
 
   // Call with argument to indicate frame set up.  It takes care of restoring current
   // file if it is aborted
@@ -4914,7 +4923,7 @@ int CNavigatorDlg::SetupMontage(CMapDrawItem *item, CMontageSetupDlg *montDlg,
     err = B3DCHOICE(!skipSetupDlg && montDlg->DoModal() != IDOK, 1, 0);
   } else if (forMulti) {
     err = 0;
-  } else {
+  } else if (!assess) {
     if (forMacro && mWinApp->mMacroProcessor->DoingMacro())
       err = mDocWnd->GetMontageParamsAndFile(1, montParam->xFrame, montParam->yFrame,
         mWinApp->mMacroProcessor->GetEnteredName());
@@ -4929,11 +4938,15 @@ int CNavigatorDlg::SetupMontage(CMapDrawItem *item, CMontageSetupDlg *montDlg,
 
   // If no cancel, redo the skip list in case of changes then move to center
   // Also set overview binning to 1 since that is the point of the overview
-  montParam->overviewBinning = 1;
-  mWinApp->mMontageWindow.UpdateSettings();
+  if (!assess) {
+    montParam->overviewBinning = 1;
+    mWinApp->mMontageWindow.UpdateSettings();
+  }
   SetupSkipList(montParam);
   mMontItem = NULL;
   delete mMontItemCam;
+  if (assess)
+    return 0;
 
   // Store new center stage position in the temporary item for fixing polygon center
   // Go to center only if not defining for future

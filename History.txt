@@ -3,6 +3,37 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+7/28/26: Enabled CanFlashFEG by default if running through UTAPI and flashing
+is supported; prevented FEG beam current from being read for .mdoc entries
+within 5 minutes after a flash through UTAPI (In 4.2).
+
+7/28/26: Made LoadCartridge for UTAPI doan unload call unconditionally before
+trying to load because Autoloader X does not unload automatically (In 4.2).
+
+7/27/26: Increased timeout for FEG flashing in UTAPI to 20 minutes (In 4.2).
+
+7/26/26: Added property UtapiLinearToCounting to specify ratio of linear mode
+to counting mode counts for Falcon when connected with UTAPI.
+
+7/26/26: Added script command to report # of pieces that will be used if
+SetupPolygonMontage is run.
+
+7/25/26: Added property NoLDAreaMoveWithLine to prevent drawing a line for
+setting the position of Focus/Trial whening defining area (In 4.2).
+
+7/25/26: Fixed scaling of linear mode images from Falcon through UTAPI (new
+plugin needed) (In 4.2).
+
+7/24/26: SEM_4-2-26
+7/24/26: Made AutoGainFactors work properly with UTAPI (In 4.2).
+
+7/24/26: Made the default ScopeUpdateInterval be 200 with UTAPI (In 4.2).
+
+7/24/26: Fixed crash when loading montage area around double-clicked Navigator
+point after changing the Treat as very Sloppy option (In 4.2).
+
+7/23/26: Fixed scaling of FEG beam current through UTAPI (In 4.2).
+
 7/23/26: Fixed ReportLoadedSlot.
 
 7/23/26: Fixed crash in multigrid setting up name of frames directory.

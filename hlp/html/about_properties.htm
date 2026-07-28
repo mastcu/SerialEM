@@ -527,8 +527,9 @@ With a UTAPI server from April 2025, only 20 needs
         <TR VALIGN="top">
           <TD>ScopeUpdateInterval</TD>
           <TD>The interval in milliseconds between calls to the function that reads scope
-            properties and updates the user interface. The default is 150, raised from
-            100 on April 10, 2018. For a JEOL, the update function does not normally access
+            properties and updates the user interface. The default is 150 unless connecting to a
+             Thermo/FEI scope through the UTAPI interface, where it is 200.
+            For a JEOL, the update function does not normally access
             the microscope so this should be OK.</TD>
        </TR>
         <TR VALIGN="top">
@@ -2166,17 +2167,26 @@ With a UTAPI server from April 2025, only 20 needs
         <TR VALIGN="top">
           <TD>RelativeGainFactors</TD>
           <TD>A list of relative camera gain values, one per binning listed on the Binnings
-            line. This entry is needed for the Eagle and some other Thermo/FEI cameras, OneView camera, Tietz CMOS cameras, and for DE
+            line. This entry is needed for the Eagle and some other Thermo/FEI cameras, OneView 
+            cameras, Tietz CMOS cameras, and for DE
             cameras configured to bin by averaging instead of summation. The factor should be 1 for the
-            binning at which counts per electron is calibrated.</TD>
+            binning at which counts per electron is calibrated.&nbsp; These values are used when comparing counts
+            in images taken at different binnings and for computing the
+            electron dose rate per physical pixel correctly for each binning.
+          </TD>
         </TR>
         <TR VALIGN="top">
           <TD>AutoGainFactors</TD>
           <TD>The binning index at which to start applying an automatically set gain factor,
-            for a Thermo/FEI camera with the advanced scripting interface.&nbsp; With a value of
-            1, binning will essentially average instead of summing values, so counts are
-            scaled by 0.25 , 0.0625, and 0.0156 at binnings 2, 4, and 8.&nbsp; With a value
-            of 2, the scalings would be 1, 0.25, and 0.0625 at 2,&nbsp; 4, and 8.</TD>
+            for a Thermo/FEI camera with the Advanced scripting interface, or simply for setting relative
+            gain factors with the UTAPI interface.&nbsp; With a value of
+            1, counts are
+            scaled by 0.25 , 0.0625, and 0.0156 at binnings 2, 4, and 8. which makes binning give 
+            averaged instead of summed values.&nbsp; With a value
+            of 2, the scalings would be 1, 0.25, and 0.0625 at 2, 4, and 8.&nbsp; Relative gain factors
+            are set to match these gain factors, but they are applied to acquired images only with 
+            with Advanced scripting, since the UTAPI interface provides images that are already scaled.
+          </TD>
         </TR>
         <TR VALIGN="top">
           <TD>ExtraGainReferences</TD>
@@ -2589,7 +2599,7 @@ With a UTAPI server from April 2025, only 20 needs
         </TR>
         <TR VALIGN="top">
           <TD>LinearToCountingRatio</TD>
-          <TD><i>For Falcon 3:</i> Ratio of number of counts (in SerialEM) obtained from a Falcon 3 camera in
+          <TD><i>For Falcon 3 or 4:</i> Ratio of number of counts (in SerialEM) obtained from a Falcon camera in
             linear mode to # of counts for the same exposure in counting mode.&nbsp; The
             counts for linear mode must be measured in SerialEM because it returns
             integrated rather than averaged counts.&nbsp; The default is 8.<br />
@@ -2598,9 +2608,16 @@ With a UTAPI server from April 2025, only 20 needs
             exposure.&nbsp; The default is 350.</TD>
         </TR>
         <TR VALIGN="top">
+          <TD>UtapiLinearToCounting</TD>
+          <TD>Ratio of counts in linear mode to counts in counting mode for a Falcon 4 being 
+            run through the UTAPI interface.&nbsp; If this entry is defined in the 
+            properties file, it will replace the value for 'LinearToCountingRatio' on 
+            program startup when connecting with UTAPI.</TD>
+        </TR>
+        <TR VALIGN="top">
           <TD><a name="scalepower">Falcon3ScalingPower</a></TD>
-          <TD>This entry does three things.&nbsp; For Falcon 3 with the Advanced Scripting
-            interface, it enables the scaling of data from the Falcon 3
+          <TD>This entry does three things.&nbsp; For Falcon 3 or 4 with the Advanced Scripting
+            interface, it enables the scaling of data from the Falcon
             so that linear and counting modes give comparable counts for the same exposure;
             and it sets the number of divisions by 2 applied to the data.&nbsp; If the value
             is 0 or negative (but greater than -10), then counting mode data will be divided
@@ -2612,7 +2629,7 @@ With a UTAPI server from April 2025, only 20 needs
             disable the scaling of both kinds of data.&nbsp; The default is 4, which will
             divide linear mode counts by 16 and scale counting mode by ~0.4 to 0.5,
             depending on the entry for &#39;LinearToCountingRatio&#39;.&nbsp; For a &#39;dumb&#39;
-            Falcon 3 with the standard scripting interface, it activates a scaling so that
+            Falcon 3 or 4 with the standard scripting interface, it activates a scaling so that
             images with different exposures do not all have the same counts.&nbsp; Its value
             is the power of 2 that will be used to scale a 1 sec exposure; it can be between
             -9 and 18, and its default is again 4.</TD>
@@ -3708,6 +3725,11 @@ MoveStage 0 0 $delz
             otherwise.</TD>
         </TR>
         <TR>
+          <TD>NoLDAreaMoveWithLine</TD>
+          <TD>Set to 1 to not set the position of the Focus or Trial area when drawing a 
+            line while defining the area position.</TD>
+        </TR>
+        <TR>
           <TD>MagChangeIntensityDelay</TD>
           <TD>Delay time between changing magnification and changing intensity.&nbsp; The
             default is 200 msec on JEOL, 30 msec on Hitachi, and 0 on Thermo/FEI.</TD>
@@ -3768,9 +3790,11 @@ MoveStage 0 0 $delz
           <TD>This property determines whether the 'Flash FEG' task appears in the Navigator
             <A HREF="hidd_navacquire.htm">Acquire at Items
           dialog</A>. If necessary, set to 1 if the microscope has a cold FEG and a version of scripting that supports
-            flashing it.&nbsp; The default is 1 for a Thermo/FEI scope identified as having advanced
-             scripting version 4 if it supports flashing, and 1 for a JEOL scope that has the JeolHasNitrogenClass
-             property set.  Set to 0 in these cases to omit the task from the dialog.
+            flashing it.&nbsp; The default is 1 for a JEOL scope that has the JeolHasNitrogenClass
+             property set.  For a Thermo/FEI scope identified as having advanced
+             scripting version 4 or running through the UTAPI interface, the program will test if it supports
+             flashing on startup and set this property to 1 if so.   Set to 0 in these cases to
+             omit the task from the dialog.
           </TD>
         </TR>
        <TR>

@@ -1453,8 +1453,8 @@
         computer.</li>
     </ul>
     <p>
-      <i><a name="Falcon3Details"><b>For a Falcon 3 or 4 camera with the advanced scripting
-      interface:</b></a></i></p>
+      <i><a name="Falcon3Details"><b>For a Falcon 3 or 4 camera with the Advanced scripting&nbsp; 
+      or UTAPI interface:</b></a></i></p>
     <ul>
       <li>For a <em>Falcon 3</em>, if the frame rate is not 40 FPS,
         add the general property &#39;FalconReadoutInterval&#39; with the inverse of the
@@ -3105,9 +3105,13 @@ MoveStage 0 0 -$zRange / 2.
     <p>
         It is also important for some purposes to make linear mode and counting mode
         give the same number of counts; this is achieved with the camera property
-        'LinearToCountingRatio'.&nbsp; A procedure for estimating this for is:</p>
+        'LinearToCountingRatio'.&nbsp; If you are upgrading from Advanced scripting to 
+        UTAPI, you can keep an existing value of &#39;LinearToCountingRatio&#39; to use when 
+        connecting with Advanced scripting and add a separate property 
+        &#39;UtapiLinearToCounting&#39; to be used when connecting with UTAPI.&nbsp; A procedure for estimating this for is:</p>
     <ol>
-      <li>Add the property 'LinearToCountingRatio 8' if it is not already present.</li>
+      <li>Add the property 'LinearToCountingRatio 8' if it is not already present, or 
+        &#39;UtapiLinearToCounting 8&#39; if upgrading to UTAPI.</li>
       <li>For Falcon 3, turn on Divide By 2 in the Camera menu so that linear mode measurements will
         not be biased by truncation at 0.</li>
       <li>Set Record parameters for unbinned, 2 second exposure, no frame saving.</li>
@@ -3138,7 +3142,7 @@ MoveStage 0 0 -$zRange / 2.
       adjust = round ( $lmean / $cmean 3 )<br />
       echo linear mean $lmean&nbsp;&nbsp; counting mean&nbsp; $cmean<br />
       echo Adjust by $adjust</li>
-      <li>Multiply the value of LinearToCountingRatio by the adjustment factor.</li>
+      <li>Multiply the value of LinearToCountingRatio or UtapiLinearToCounting by the adjustment factor.</li>
     </ol>
       <p>
         &nbsp;</p>

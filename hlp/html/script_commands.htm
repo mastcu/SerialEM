@@ -2975,7 +2975,15 @@
             acquisition parameters of the camera parameter set indicated 
             in the Montage Setup dialog will be used.&nbsp; If <b>O</b> is nonzero, it sets the minimum 
             overlap factor for fitting the montage, overriding the corresponding entry in the setup 
-            dialog.&nbsp; If nonzero, this factor must be between 0 and 0.5&nbsp; </TD>
+            dialog.&nbsp; If nonzero, this factor must be between 0 and 0.5. </TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">AssessPolygonMontage #I #O</TD>
+          <TD>Reports the total number of pieces and number of pieces in X and Y for the polygon montage
+            that would be obtained by running 'SetupPolygonMontage' with the given values of <b>#I</b>
+            and <b>O</b>.&nbsp; Values can be assigned to variables at end of command.&nbsp; 
+            Command added in 4.3, 26-Aug-26.
+          </TD>
         </TR>
         <TR>
           <TD class="scriptcommand">ReportNumMontagePieces</TD>
@@ -4186,7 +4194,8 @@
         </TR>
         <TR>
           <TD class="scriptcommand">ReportVacuumStatus</TD>
-          <TD>For a Thermo/FEI scope, reports the index of the vacuum status in the Microscope panel as 0 for green, 1 for yellow, or 2 for red.&nbsp;</TD>
+          <TD>For a Thermo/FEI scope, reports the index of the vacuum status in the Microscope panel 
+            as 0 for green, 1 for yellow, or 2 for red.&nbsp;</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">IsPVPRunning</TD>
@@ -4196,8 +4205,10 @@
        <TR>
           <TD class="scriptcommand">IsFEGFlashingAdvised #</TD>
           <TD>Reports whether flashing of a cold FEG is advisable on a Thermo/FEI scope, where <b>#</b> should be 0 for
-            a low-temperature flash and non-zero for a high-temperature flash.  FEG flashing commands are available on Thermo/FEI scopes only if there is a Selectris filter or a property entry 'AdvancedScriptingVersion 4' or higher.&nbsp; Value can be assigned
-          to a variable at end of command.</TD>
+            a low-temperature flash and non-zero for a high-temperature flash.  FEG flashing commands 
+            are available on Thermo/FEI scopes only if running through the UTAPI interface or if 
+            there is a Selectris filter or a property entry 'AdvancedScriptingVersion 4' or higher.&nbsp; Value 
+            can be assigned to a variable at end of command.</TD>
         </TR>
        <TR>
           <TD class="scriptcommand">ReportFEGBeamCurrent</TD>
