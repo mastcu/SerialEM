@@ -881,7 +881,6 @@ public:
     EMimageBuffer *imBuf, bool *fromMapPtr = NULL);
   int CenterAddedPointInHole(EMimageBuffer* imBuf, float &inX, float &inY, CString &errStr);
   int FillPolygonWithMultiShot(CMapDrawItem *polyItem, FloatVec &ISX,
-    FloatVec &ISY, CString &errStr, float cenX = 0.f, float cenY = 0.f); 
-  float GetParTSdisplayTilt();
+    FloatVec &ISY, CString &errStr, float cenX = 0.f, float cenY = 0.f);
 };
 

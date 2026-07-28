@@ -371,6 +371,9 @@ void CParallelTSDlg::Update()
   bool noIS = m_iTargetType == 0 && m_iAlignRef != 0 && m_bSkipRefine;
   bool mapsOnly = m_iTargetType == 0 && m_iAlignRef == 0 && m_bSkipRefine;
 
+  if (!mWinApp->mNavigator)
+    return;
+
   if (mTargetGroupID) {
     numPoints = mWinApp->mNavigator->CountItemsInGroup(mTargetGroupID, label, lastlabel,
       numAcq, &indexVec);
@@ -542,8 +545,8 @@ void CParallelTSDlg::Update()
   m_butFinalizeTargetArea.EnableWindow(mSettingUpTargetArea && !mFinalizedTargetArea &&
     noTasks && !IsAddingToNav() && ((m_iTargetType == 0 && mSavedTargets && numAcq > 1) ||
       m_iTargetType == 1 || (noIS && numPoints > 1)));
-  m_butAbortArea.EnableWindow(noTasks && 
-    (mSettingUpTargetArea || mAddingTargets || mDefiningPoints) && !mFinalizedTargetArea);
+  m_butAbortArea.EnableWindow(noTasks && (mDefiningPoints ||
+    ((mSettingUpTargetArea || mAddingTargets) && !mFinalizedTargetArea)));
 
   m_butSetupTiltSeries.EnableWindow(mFinalizedTargetArea && !mDefiningPoints &&
     mParallelTSHelper->GetTSparamItem(item) >= 0 && !mMakingNewXform);
@@ -928,7 +931,8 @@ void CParallelTSDlg::StartRefineTargets()
 void CParallelTSDlg::FinishFitPlane()
 {
   mFitPlaneGroupID = 0;
-  mWinApp->mNavigator->Redraw();
+  if (mWinApp->mNavigator)
+    mWinApp->mNavigator->Redraw();
   UpdateData(true);
   Update();
 }
@@ -966,9 +970,11 @@ void CParallelTSDlg::UpdateRefinementOrAdjustingStatus()
 // refine or adjust
 void CParallelTSDlg::FinishRefineTargets(bool savedTargets)
 {
-  CMapDrawItem *mapItem = mWinApp->mNavigator->FindItemWithMapID(
-    mParallelTSHelper->GetAreaMapID());
-  mWinApp->mNavigator->DoLoadMap(true, mapItem, -1);
+  if (mWinApp->mNavigator) {
+    CMapDrawItem *mapItem = mWinApp->mNavigator->FindItemWithMapID(
+      mParallelTSHelper->GetAreaMapID());
+    mWinApp->mNavigator->DoLoadMap(true, mapItem, -1);
+  }
   bool changeSize = m_strInstruct.IsEmpty();
 
   if (savedTargets) {
@@ -1177,7 +1183,6 @@ void CParallelTSDlg::OnEnKillfocusEditPretilt()
 {
   UpdateData(true);
   mParallelTSHelper->UpdateSpecAngles(m_fPretilt, m_fXpitch);
-  mWinApp->mNavigator->Redraw();
 }
 
 
@@ -1329,7 +1334,7 @@ void CParallelTSDlg::OnAddTargets()
   if (mAddingTargets) {
     mFinalizedTargetArea = false;
     mArraySizeBeforeAdd = arrSize;
-    mNumAddedTargets = 0;
+    //mNumAddedTargets = 0; //TODO delete?
     if (!mTargetGroupID) {
       mTargetGroupID = nav->MakeUniqueID();
     }
@@ -1493,7 +1498,8 @@ void CParallelTSDlg::ClearArea()
   if (mTargetGroupID) {
     mTargetGroupID = 0;
     mNavHelper->SetParTSSetupGroupID(0);
-    mWinApp->mNavigator->Redraw();
+    if (mWinApp->mNavigator)
+      mWinApp->mNavigator->Redraw();
   }
   mParallelTSHelper->ClearTargets(false);
   mParallelTSHelper->SetParTSitem(NULL);
@@ -1601,7 +1607,8 @@ void CParallelTSDlg::OnEnKillfocusEditMaxtilt()
 {
   UpdateData(true);
   DialogToOptions();
-  mWinApp->mNavigator->Redraw();
+  if (mWinApp->mNavigator)
+    mWinApp->mNavigator->Redraw();
 }
 
 
@@ -1609,7 +1616,8 @@ void CParallelTSDlg::OnEnKillfocusEditDiam()
 {
   UpdateData(true);
   DialogToOptions();
-  mWinApp->mNavigator->Redraw();
+  if (mWinApp->mNavigator)
+    mWinApp->mNavigator->Redraw();
 }
 
 
@@ -1654,7 +1662,8 @@ void CParallelTSDlg::OnBeamsizecircles()
 {
   UpdateData(true);
   DialogToOptions();
-  mWinApp->mNavigator->Redraw();
+  if (mWinApp->mNavigator)
+    mWinApp->mNavigator->Redraw();
 }
 
 

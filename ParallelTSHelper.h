@@ -125,7 +125,6 @@ public:
 
 private:
   int ISToNextTarget(int targetID, CString &err);
-  void UpdatePlaneParamsInDlg();
   void PauseParallelTSShift();
   int SaveInitialState(CString &err);
   int SaveTargetMap(CString &err, bool &saved);

@@ -44,7 +44,7 @@ CParallelTSHelper::CParallelTSHelper()
   mParallelTSDlg = NULL;
 
   mISTargetIter = -1;
-  mActionAtTarget = PARALLELTS_ACTION_AUTOFOCUS;
+  mActionAtTarget = -1;
   mDoingISToTargets = false;
   mLastActionFailed = false;
   mPretilt = 0.f;
@@ -181,13 +181,6 @@ int CParallelTSHelper::StartShiftToTargets(IntVec targetMapIDs, int actionType)
   return 0;
 }
 
-void CParallelTSHelper::UpdatePlaneParamsInDlg()
-{
-  if (mParallelTSDlg->IsOpen()) {
-    mParallelTSDlg->UpdatePlaneParams(mPretilt, mXpitch);
-  }
-}
-
 //Pauses the routine, does not restore original state so that more targets can be added.
 void CParallelTSHelper::PauseParallelTSShift()
 {
@@ -253,6 +246,11 @@ void CParallelTSHelper::StopParallelTSShift(bool error)
           mWinApp->mNavigator->ExternalDeleteItem(item,
             mWinApp->mNavigator->GetFoundItem());
       }
+    }
+
+    // Remove the current parallel tilt series item if fit points ran on different map
+    if (mapItem && mapItem->mMapID != mAreaMapID) {
+      mParTSitem = NULL;
     }
     mParallelTSDlg->FinishFitPlane();
     ClearTargets(true);
@@ -361,7 +359,7 @@ int CParallelTSHelper::ISToNextTarget(int targetID, CString &err)
   if (mParTSopts->adjustBeamTilt) {
     BTdelay = mWinApp->mAutoTuning->GetBacklashDelay();
     mWinApp->mParticleTasks->GetBTandAstigAdjustment(delX, delY, delBTX, delBTY,
-      delAstigX, delAstigY, FALSE, GetDebugOutput('1'));
+      delAstigX, delAstigY, FALSE, GetDebugOutput('I'));
   }
 
   mScope->SetImageShift(ISX, ISY);
@@ -385,7 +383,7 @@ int CParallelTSHelper::ISToNextTarget(int targetID, CString &err)
 void CParallelTSHelper::ISToTargetNextTask(int param)
 {
   int index, mapID;
-  float residual;
+  float residual, windowSize;
   float focusLim = -20.;
   float shiftX, shiftY;
   int sizeX, sizeY;
@@ -521,12 +519,13 @@ void CParallelTSHelper::ISToTargetNextTask(int param)
         if (index) {
           str.Format("Plane fit on points failed: %s", mess);
           AfxMessageBox(str, MB_EXCLAME);
-        } else {
-          UpdatePlaneParamsInDlg();
         }
-
         StopParallelTSShift();
         ClearTargets(true);
+        if (!index && mParallelTSDlg->IsOpen()) {
+          mParallelTSDlg->UpdatePlaneParams(mPretilt, mXpitch);
+          UpdateSpecAngles(mPretilt, mXpitch);
+        }
       } else if (mActionAtTarget == PARALLELTS_ACTION_PREVIEW || 
         mActionAtTarget == PARALLELTS_ACTION_ADJUST) {
          PauseParallelTSShift();
@@ -585,9 +584,8 @@ void CParallelTSHelper::ISToTargetNextTask(int param)
     } else if (mActionAtTarget == PARALLELTS_ACTION_PREVIEW ||
       mActionAtTarget == PARALLELTS_ACTION_ADJUST) {
       if (!(mParTSopts->flags & PTSFLAG_SKIP_REFINE)) {
-        float windowSize;
         CameraParameters *camParam = mWinApp->GetActiveCamParam();
-        windowSize = camParam->sizeX *
+        windowSize = 1.5f * (float)camParam->sizeX *
           mShiftManager->GetPixelSize(mWinApp->GetCurrentCamera(), mMagIndex);
         CMapDrawItem *mapItem = mWinApp->mNavigator->FindItemWithMapID(mAreaMapID);
         if (!mapItem) {
@@ -597,11 +595,10 @@ void CParallelTSHelper::ISToTargetNextTask(int param)
           return;
         }
         mWinApp->mNavigator->DoLoadMap(true, mapItem, -1);
-        float ptX, ptY;
         EMimageBuffer *mapBuf = imBufs + mWinApp->mBufferManager->GetBufToReadInto();
-        mWinApp->mMainView->GetItemImageCoords(mapBuf, mCurISTargetItem, ptX, ptY);
+        mWinApp->mMainView->GetItemImageCoords(mapBuf, mCurISTargetItem, shiftX, shiftY);
         mWinApp->CopyBufferToZoomedView(mapBuf, windowSize);
-        mWinApp->CenterZoomedViewAtPoint(ptX, ptY);
+        mWinApp->CenterZoomedViewAtPoint(shiftX, shiftY);
         mWinApp->RestoreViewFocus();
       }
       mCamera->InitiateCapture(PREVIEW_CONSET);
@@ -635,7 +632,7 @@ int CParallelTSHelper::SaveAreaMap(CString &err)
   if (!item) {
     if (mWinApp->Montaging() && imBufs[1].mCaptured == BUFFER_MONTAGE_OVERVIEW) {
       imBuf = &imBufs[1];
-      saveable = mWinApp->mStoreMRC;
+      saveable = mWinApp->mStoreMRC != NULL;
     } else {
       imBuf = &imBufs[0];
       saveable = mWinApp->mStoreMRC && 
@@ -1651,6 +1648,7 @@ int CParallelTSHelper::ComputeAdjustingTransform(CString &err)
   int numPoints;
   double ISXcen, ISYcen, delX, delY;
   double maxErr = 0., meanErr = 0.;
+  CString label;
   std::vector<double> fromISX, fromISY, toISX, toISY, predErr;
 
   //Handle custom targets places in arbitrary positions
@@ -1686,22 +1684,27 @@ int CParallelTSHelper::ComputeAdjustingTransform(CString &err)
   }
   
   jnd = 0;
-  SEMTrace('N', "Adjusting transform fit errors:");
   for (ind = 0; ind < (int)predErr.size(); ind++) {
     meanErr += predErr[ind];
-    SEMTrace('N', "error = %.1f nm at navigator item #%d", predErr[ind] * 1.e3,
-      navInd[ind + 1] + 1);
+    SEMTrace('N', "Adj transform fit error = %.1f nm at navigator item #%d (%s)", 
+      predErr[ind] * 1.e3, navInd[ind + 1] + 1,
+      mWinApp->mNavigator->GetItemArray()->GetAt(navInd[ind + 1])->mLabel);
     if (predErr[ind] > maxErr) {
       maxErr = predErr[ind];
 
       // Shift by one because first item is center point for which adjustment is not done
       jnd = navInd[ind + 1] + 1;
+      label = mWinApp->mNavigator->GetItemArray()->GetAt(navInd[ind + 1])->mLabel;
     }
   }
   meanErr /= numPoints;
-  PrintfToLog("Adjusting Transform Fit: mean error = %.1f nm, highest error = %.1f nm at "
-    "navigator item #%d", 
-    meanErr * 1.e3, maxErr * 1.e3, jnd);
+  PrintfToLog("Adjusting Transform:");
+  PrintfToLog("  Mean fit error = %.1f nm", meanErr * 1.e3);
+  PrintfToLog("  Max fit error = %.1f nm at navigator item #%d (%s)", 
+     maxErr * 1.e3, jnd, label);
+  PrintfToLog("  xpx=%.4f, xpy=%.4f, ypx=%.4f, ypy=%.4f",
+    mAdjustingXform.xpx, mAdjustingXform.xpy,
+    mAdjustingXform.ypx, mAdjustingXform.ypy);
   return 0;
 }
 
@@ -1745,13 +1748,16 @@ void CParallelTSHelper::DeleteTargetMapsFromNav() {
 
 void CParallelTSHelper::UpdateSpecAngles(float pretilt, float xPitch)
 {
+  CArray<ParallelTSParam*, ParallelTSParam*> *parsArr = 
+    mWinApp->mNavigator->GetParallelTSArray();
   ParallelTSParam *pars;
 
   mPretilt = pretilt;
   mXpitch  = xPitch;
-
-  if (mParTSitem && mParTSitem->mParallelTSIndex >= 0) {
-    pars = mWinApp->mNavigator->GetParallelTSArray()->GetAt(mParTSitem->mParallelTSIndex);
+  
+  if (mParTSitem && mParTSitem->mParallelTSIndex >= 0 && 
+    mParTSitem->mParallelTSIndex < parsArr->GetSize()) {
+    pars = parsArr->GetAt(mParTSitem->mParallelTSIndex);
     pars->preTilt = roundf(mPretilt * 100) / 100.f;
     pars->xPitchAngle = roundf(mXpitch * 100) / 100.f;
   }

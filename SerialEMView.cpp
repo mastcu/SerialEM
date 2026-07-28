@@ -1940,7 +1940,7 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
               axisAngle = (float)mShiftManager->GetImageRotation(imBuf->mCamera,
                 imBuf->mMagInd);
               beamElong = 1.f / cosf(DTORFL *
-                mWinApp->mNavHelper->GetParTSdisplayTilt());
+                mWinApp->mNavHelper->GetParTSOptions()->tiltForBeam);
               CFont *def_font = cdc.SelectObject(useLabelFont);
               int defMode = cdc.SetBkMode(TRANSPARENT);
               COLORREF defColor = cdc.SetTextColor(parTScolor);
@@ -2028,7 +2028,7 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
           axisAngle = (float)mShiftManager->GetImageRotation(imBuf->mCamera,
             imBuf->mMagInd);
           beamElong = 1.f / cosf(DTORFL *
-            mWinApp->mNavHelper->GetParTSdisplayTilt());
+            mWinApp->mNavHelper->GetParTSOptions()->tiltForBeam);
           StageToImage(imBuf, item->mStageX, item->mStageY, ptX, ptY);
           DrawEllipse(&cdc, &circlePen, &rect, imBuf->mImage, ptX,
             ptY, acquireRadii[0], acquireRadii[0] * beamElong,
@@ -2234,7 +2234,7 @@ void CSerialEMView::DrawLowDoseAreas(CDC &cdc, CRect &rect, EMimageBuffer *imBuf
           axisAngle = (float)mShiftManager->GetImageRotation(imBuf->mCamera,
             imBuf->mMagInd);
           beamElong = 1.f / cosf(DTORFL *
-            mWinApp->mNavHelper->GetParTSdisplayTilt());
+            mWinApp->mNavHelper->GetParTSOptions()->tiltForBeam);
           CPen pnThickPen(PS_SOLID, thick, areaColors[area - 1]);
           DrawEllipse(&cdc, &pnThickPen, &rect, imBuf->mImage, cenX, cenY, trueRad,
             trueRad * beamElong, axisAngle, false);
