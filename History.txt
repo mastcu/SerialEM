@@ -3,6 +3,8 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+7/27/26: Increased timeout for FEG flashing in UTAPI to 20 minutes (In 4.2).
+
 7/25/26: Added property NoLDAreaMoveWithLine to prevent drawing a line for
 setting the position of Focus/Trial whening defining area (In 4.2).
 
