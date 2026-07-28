@@ -10708,7 +10708,8 @@ int CEMscope::LongOperationBusy(int index)
           if (longOp == LONG_OP_FLASH_FEG)
             mFegFlashCounter++;
           mLastLongOpTimes[longOp] = now;
-          mLastBeamCurrentTime = now;
+          if (UtapiSupportsService(UTSUP_FLASHING))
+            mLastBeamCurrentTime = now;
           mWinApp->mDocWnd->SetShortTermNotSaved();
         } else if (busy < 0 && !errorOK[longOp] && !mLongOpErrorToReport)
           throwErr = true;
