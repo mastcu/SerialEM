@@ -928,8 +928,8 @@ int CEMscope::Initialize()
     }
     if (mScopeCanFlashFEG < 0) {
       mScopeCanFlashFEG = 0;
-      if (mAdvancedScriptVersion >= ASI_FILTER_FEG_LOAD_TEMP &&
-        mPlugFuncs->GetFlashingAdvised) {
+      if ((mAdvancedScriptVersion >= ASI_FILTER_FEG_LOAD_TEMP || 
+        UtapiSupportsService(UTSUP_FLASHING)) && mPlugFuncs->GetFlashingAdvised) {
         try {
           mScopeCanFlashFEG = mPlugFuncs->GetFlashingAdvised(-1);
         }
@@ -11168,6 +11168,7 @@ int CEMscope::LongOperationBusy(int index)
           if (longOp == LONG_OP_FLASH_FEG)
             mFegFlashCounter++;
           mLastLongOpTimes[longOp] = now;
+          mLastBeamCurrentTime = now;
           mWinApp->mDocWnd->SetShortTermNotSaved();
         } else if (busy < 0 && !errorOK[longOp] && !mLongOpErrorToReport)
           throwErr = true;
