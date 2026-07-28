@@ -125,6 +125,8 @@ static HANDLE sDataMutexHandle;
 static int sSimLoadedCartridge = -1;
 static int sSimApertureSize[MAX_APERTURE_NUM + 1] = {0,0,0,0,0,0,0,0,0,0,0, 0};
 
+static float sFakeTiltOffset = 0.;
+
 // Jeol calls for screen pos will all work in terms of spUpJeol, etc
 // The rest of the program will use the standard FEI definitions and JEOL positions are
 // converted with spJeolToFEI[JoelPosition]
@@ -2127,7 +2129,7 @@ void CEMscope::UpdateStage(double &stageX, double &stageY, double &stageZ, BOOL 
     stageX *= 1.e6;
     stageY *= 1.e6;
     stageZ *= 1.e6;
-    mTiltAngle = mPlugFuncs->GetTiltAngle() / DTOR;
+    mTiltAngle = (mPlugFuncs->GetTiltAngle() / DTOR + sFakeTiltOffset);
     bReady = mPlugFuncs->GetStageStatus() == 0;
   }
 
@@ -2413,6 +2415,9 @@ void CEMscope::ManageTiltReversalVars()
   }
 }
 
+void CEMscope::SetFakeTiltOffset(float offset) { sFakeTiltOffset = offset; };
+float CEMscope::GetFakeTiltOffset() { return sFakeTiltOffset; };
+
 // Return tilt angle
 double CEMscope::GetTiltAngle(BOOL forceGet)
 {
@@ -2445,7 +2450,7 @@ double CEMscope::GetTiltAngle(BOOL forceGet)
   }
   if (!getFast)
     ScopeMutexRelease("GetTiltAngle");
-  return mTiltAngle;
+  return mTiltAngle + sFakeTiltOffset;
 }
 
 // Used to get tilt angle fast for JEOL by using update value, but setting fast won't be
@@ -2856,6 +2861,7 @@ void CEMscope::StageMoveKernel(StageThreadData *std, BOOL fromBlanker, BOOL asyn
 
   // Make sure this is initialized so timeouts are sensible
   info->finishedTick = GetTickCount();
+  info->alpha -= sFakeTiltOffset;
 
   // If doing backlash, set up a first move with backlash added
   // Only change axes that are specified in axisBits
