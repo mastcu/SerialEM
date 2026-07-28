@@ -5,7 +5,7 @@ significance, for the stable release version
 ============================================================================
 7/28/26: Enabled CanFlashFEG by default if running through UTAPI and flashing
 is supported; prevented FEG beam current from being read for .mdoc entries
-within 5 minutes after a flash (In 4.2).
+within 5 minutes after a flash through UTAPI (In 4.2).
 
 7/28/26: Made LoadCartridge for UTAPI doan unload call unconditionally before
 trying to load because Autoloader X does not unload automatically (In 4.2).
