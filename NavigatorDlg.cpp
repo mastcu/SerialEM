@@ -3482,11 +3482,13 @@ BOOL CNavigatorDlg::UserMousePoint(EMimageBuffer *imBuf, float inX, float inY,
     return false;
   }
   if (mHelper->mParallelTSDlg->IsOpen() && mHelper->mParallelTSDlg->IsAddingTargets()) {
-    mHelper->mParallelTSDlg->IncrementNumTargetsAdded();
-    mHelper->mParallelTSDlg->Update();
     if (!mHelper->mParallelTSDlg->AreaMapInBuf(imBuf)) {
+      mHelper->mParallelTSDlg->Update();
       AfxMessageBox("Targets must be added to the defined area map", MB_EXCLAME);
       return false;
+    } else {
+      mHelper->mParallelTSDlg->IncrementNumTargetsAdded();
+      mHelper->mParallelTSDlg->Update();
     }
   }
 

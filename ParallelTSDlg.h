@@ -61,7 +61,7 @@ private:
   int mTargetGroupID;                 // Nav group ID for parallel tilt series targets
   bool mAddingTargets;                // Flag if targets are being added to area
   bool mRefiningTargets;              // Flag if targets are being refined
-  bool mSavedTargets;                 // Flag for when a round of targets have been saved
+  bool mJustSavedTargets;                 // Flag for when a round of targets have been saved
   bool mFinalizedTargetArea;          // Flag if area and targets are finalized
   int mSavedTSparamIndex;
   bool mDrawingISTargets;
@@ -84,7 +84,6 @@ public:
   GetSetMember(int, HasIlluminatedArea);
   GetMember(bool, SettingUpTargetArea);
   GetMember(CString, SaveBtnText);
-  bool SavedTargets() { return mSavedTargets; };
   void IncrementNumTargetsAdded() { mNumAddedTargets++; };
   bool IsDefiningPoints() { return mDefiningPoints; };
   bool IsAddingTargets() { return mAddingTargets; };

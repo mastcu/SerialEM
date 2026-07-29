@@ -426,6 +426,8 @@ void CParallelTSHelper::ISToTargetNextTask(int param)
       mParTSopts->extractVirtPrevs == 1 ? PREVIEW_CONSET : -1)) {
       AfxMessageBox("Realign to first IS target failed");
       mLastActionFailed = true;
+      StopParallelTSShift(true);
+      ClearTargets(true);
       return;
     }
     mAlignedToFirstISTarget = true;
@@ -532,6 +534,9 @@ void CParallelTSHelper::ISToTargetNextTask(int param)
       }
       return;
     }
+
+    if (mWinApp->mZoomedOverview)
+      mWinApp->mZoomedOverview->CloseFrame();
 
     // Increment the target iteration to get next target
     //If some targets were done on a previous separate run, skip to the first new target

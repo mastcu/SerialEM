@@ -113,7 +113,7 @@ CParallelTSDlg::CParallelTSDlg(CWnd* pParent /*=NULL*/)
   mAddingTargets = false;
   mRefiningTargets = false;
   mFinalizedTargetArea = false;
-  mSavedTargets = false;
+  mJustSavedTargets = false;
   mDrawingISTargets = false;
   mNumAddedTargets = 0;
   mMakingNewXform = false;
@@ -359,11 +359,10 @@ void CParallelTSDlg::Update()
   EMimageBuffer *imBuf, *activeImBuf;
   CMapDrawItem *item;
   int uncroppedX, uncroppedY;
-  int numPoints;
+  int numPoints, numSaved;
   bool cropped, enable;
   IntVec indexVec;
   CString label, lastlabel;
-  int numAcq;
   CWnd *pwnd;
   BOOL lowDose = mWinApp->LowDoseMode();
   BOOL noTasks = !mWinApp->DoingTasks() && !mWinApp->StartedTiltSeries() &&
@@ -376,7 +375,7 @@ void CParallelTSDlg::Update()
 
   if (mTargetGroupID) {
     numPoints = mWinApp->mNavigator->CountItemsInGroup(mTargetGroupID, label, lastlabel,
-      numAcq, &indexVec);
+      numSaved, &indexVec);
   } else {
     numPoints = 0;
   }
@@ -387,18 +386,18 @@ void CParallelTSDlg::Update()
   m_butDefinePtsFitPlane.SetWindowText(mDefiningPoints ? "Stop Adding and Fit" :
     "Define Points to Fit Plane");
 
+  numSaved = mParallelTSHelper->GetSavedTargetsInNav(&indexVec);
   if (mMakingNewXform) {
     m_butAddTargets.SetWindowText(mAddingTargets ? "Stop Adding" : (numPoints ?
       "Add More Points" : "Add Points"));
     m_butRefineTargets.SetWindowText(mAddingTargets ? "Stop Adding && Adjust" : "Adjust");
-    if (mRefiningTargets) {
-      numAcq = mParallelTSHelper->GetSavedTargetsInNav(&indexVec);
-      if (numAcq == 0) {
+    if (mRefiningTargets && numSaved < numPoints) {
+      if (numSaved == 0) {
         mSaveBtnText = "Save IS";
         mess = mSaveBtnText;
       } else {
         mSaveBtnText = "Save Adjustment";
-        mess.Format("%s %d/%d", mSaveBtnText, numAcq, numPoints - 1);
+        mess.Format("%s %d/%d", mSaveBtnText, numSaved, numPoints - 1);
       }
     } else {
       mSaveBtnText = "Save Adjustment";
@@ -407,7 +406,7 @@ void CParallelTSDlg::Update()
     m_butSaveTargetMap.SetWindowText(mess);
     m_butFinalizeTargetArea.SetWindowText("Save Transform");
     m_butRemoveTarget.SetWindowText("Remove Point");
-    if (mRefiningTargets || (mSavedTargets && !mFinalizedTargetArea))
+    if (mRefiningTargets || (mJustSavedTargets && !mFinalizedTargetArea))
       m_butAbortArea.SetWindowText("Abort Adjusting");
     else
       m_butAbortArea.SetWindowText("Abort Area");
@@ -417,16 +416,15 @@ void CParallelTSDlg::Update()
     m_butRefineTargets.SetWindowText(mapsOnly ? "Save Target Maps" :
       (mAddingTargets ? "Stop Adding && Refine" : "Refine IS"));
     mSaveBtnText.Format("Save Target %s", m_iAlignRef == 0 ? "Map" : "IS");
-    if (mRefiningTargets) {
-      mess.Format("%s %d/%d", mSaveBtnText,
-        mParallelTSHelper->GetSavedTargetsInNav(&indexVec) + 1, numPoints);
+    if (mRefiningTargets && numSaved < numPoints) {
+      mess.Format("%s %d/%d", mSaveBtnText, numSaved + 1, numPoints);
     } else {
       mess = mSaveBtnText;
     }
     m_butSaveTargetMap.SetWindowText(mess);
     m_butRemoveTarget.SetWindowText("Remove Target");
     m_butFinalizeTargetArea.SetWindowText("Finalize Target Area");
-    if (mRefiningTargets || (mSavedTargets && !mFinalizedTargetArea))
+    if (mRefiningTargets || (mJustSavedTargets && !mFinalizedTargetArea))
       m_butAbortArea.SetWindowText("Abort Refining");
     else
       m_butAbortArea.SetWindowText("Abort Area");
@@ -464,7 +462,7 @@ void CParallelTSDlg::Update()
         imBuf->mCaptured != BUFFER_PROC_OK_FOR_MAP)));
   m_butSaveAreaMap.EnableWindow(noTasks && mSettingUpTargetArea && enable
     && !(mDefiningPoints || mAddingTargets || mRefiningTargets) && 
-    !mSavedTargets && !mMakingNewXform);
+    !mJustSavedTargets && !mMakingNewXform);
   bool isMap = activeImBuf->mImage && activeImBuf->mMapID > 0;
   SetDlgItemText(IDC_BUT_PTS_SAVEAREAMAP, isMap ? "Identify Area Map" :
     (mHasAreaMap ? "Save New Area Map" : "Save Area Map"));
@@ -513,37 +511,36 @@ void CParallelTSDlg::Update()
   SetDlgItemText(IDC_STATIC_PTS_ADJUSTXFORMSTATUS, mess);
   m_statAdjustingXformStatus.EnableWindow(!mDefiningPoints);
   m_butApplyAdjusting.EnableWindow(enable && !(mDefiningPoints || mAddingTargets)
-    && !mSavedTargets && !mRefiningTargets && noTasks);
+    && !mJustSavedTargets && !mRefiningTargets && noTasks);
   m_butNewAdjTransform.EnableWindow(noTasks && !(mDefiningPoints || mAddingTargets)
-    && !mSavedTargets && !mRefiningTargets && mSettingUpTargetArea && mHasAreaMap &&
+    && !mJustSavedTargets && !mRefiningTargets && mSettingUpTargetArea && mHasAreaMap &&
     !mMakingNewXform && !numPoints);
   
   m_statAlignStartingTilt.EnableWindow(noTasks && !(mDefiningPoints || mAddingTargets)
-    && !mSavedTargets && !mRefiningTargets && !mMakingNewXform);
+    && !mJustSavedTargets && !mRefiningTargets && !mMakingNewXform);
   m_butAlignPreview.EnableWindow(noTasks && !(mDefiningPoints || mAddingTargets)
-    && !mSavedTargets && !mRefiningTargets && !mMakingNewXform);
+    && !mJustSavedTargets && !mRefiningTargets && !mMakingNewXform);
   pwnd = GetDlgItem(IDC_RADIO_PTS_EXTRACTREF);
   if (pwnd)
     pwnd->EnableWindow(noTasks && !(mDefiningPoints || mAddingTargets)
-      && !mSavedTargets && !mRefiningTargets && !mMakingNewXform);
+      && !mJustSavedTargets && !mRefiningTargets && !mMakingNewXform);
   pwnd = GetDlgItem(IDC_RADIO_PTS_NOALIGN);
   if (pwnd)
     pwnd->EnableWindow(noTasks && !(mDefiningPoints || mAddingTargets)
-      && !mSavedTargets && !mRefiningTargets && !mMakingNewXform);
+      && !mJustSavedTargets && !mRefiningTargets && !mMakingNewXform);
   m_butSkipRefine.EnableWindow(!(mDefiningPoints || mAddingTargets)
-    && !mSavedTargets && !mRefiningTargets && noTasks && !mMakingNewXform);
+    && !mJustSavedTargets && !mRefiningTargets && noTasks && !mMakingNewXform);
 
   m_butAddTargets.EnableWindow(mSettingUpTargetArea && mHasAreaMap && noTasks &&
     !(mDefiningPoints || mRefiningTargets) &&
-    (!mAddingTargets || !mSavedTargets || mNumAddedTargets == 0));
+    (!mAddingTargets || !mJustSavedTargets || mNumAddedTargets == 0));
   m_butRefineTargets.EnableWindow(mTargetGroupID && mSettingUpTargetArea && mHasAreaMap &&
     !(mDefiningPoints || mRefiningTargets) && mNumAddedTargets && !noIS && noTasks);
   m_butSaveTargetMap.EnableWindow(CanSaveTarget() && noTasks);
-  m_butRemoveTarget.EnableWindow(mSettingUpTargetArea && !mSavedTargets && 
+  m_butRemoveTarget.EnableWindow(mSettingUpTargetArea && !mJustSavedTargets && 
     mRefiningTargets && noTasks);
-  numAcq = mParallelTSHelper->GetSavedTargetsInNav(&indexVec);
   m_butFinalizeTargetArea.EnableWindow(mSettingUpTargetArea && !mFinalizedTargetArea &&
-    noTasks && !IsAddingToNav() && ((m_iTargetType == 0 && mSavedTargets && numAcq > 1) ||
+    noTasks && !IsAddingToNav() && ((m_iTargetType == 0 && mJustSavedTargets && numSaved > 1) ||
       m_iTargetType == 1 || (noIS && numPoints > 1)));
   m_butAbortArea.EnableWindow(noTasks && (mDefiningPoints ||
     ((mSettingUpTargetArea || mAddingTargets) && !mFinalizedTargetArea)));
@@ -693,7 +690,7 @@ void CParallelTSDlg::ExternalUpdate()
     if (mDefiningPoints)
       OnDefinePtsFitPlane();
     else if (mAddingTargets) {
-      if (mSavedTargets && mNumAddedTargets > 0)
+      if (mJustSavedTargets && mNumAddedTargets > 0)
         OnRefineTargets();
       else
         OnAddTargets();
@@ -920,7 +917,7 @@ void CParallelTSDlg::StartRefineTargets()
   if (!err) {
 
     //New targets were added that need to be refined
-    mSavedTargets = false;
+    mJustSavedTargets = false;
     mRefiningTargets = true;
   }
 
@@ -989,7 +986,7 @@ void CParallelTSDlg::FinishRefineTargets(bool savedTargets)
     }
   } 
   mRefiningTargets = false;
-  mSavedTargets = savedTargets;
+  mJustSavedTargets = savedTargets;
   UpdateData(false);
   UpdateData(true);
   Update();
@@ -999,7 +996,7 @@ void CParallelTSDlg::FinishRefineTargets(bool savedTargets)
 
 bool CParallelTSDlg::CanSaveTarget()
 {
-  return (mIsOpen && mSettingUpTargetArea && !mSavedTargets &&
+  return (mIsOpen && mSettingUpTargetArea && !mJustSavedTargets &&
     mRefiningTargets && !mParallelTSHelper->ISToTargetsBusy());
 }
 
@@ -1431,7 +1428,7 @@ void CParallelTSDlg::OnFinalizeArea()
     mParallelTSHelper->SaveAdjustingTransform();
 
     mMakingNewXform = false;
-    mSavedTargets = false;
+    mJustSavedTargets = false;
     
     // IMPORTANT to set this flag to false before deleting from navigator. Otherwise nav
     // will forbid deletion of center target
@@ -1473,7 +1470,7 @@ void CParallelTSDlg::OnFinalizeArea()
     mParallelTSHelper->StopParallelTSShift();
 
     mFinalizedTargetArea = true;
-    mSavedTargets = false;
+    mJustSavedTargets = false;
     mSettingUpTargetArea = false;
   }
   
@@ -1504,7 +1501,7 @@ void CParallelTSDlg::ClearArea()
   mParallelTSHelper->ClearTargets(false);
   mParallelTSHelper->SetParTSitem(NULL);
   mRefiningTargets = false;
-  mSavedTargets = false;
+  mJustSavedTargets = false;
   mFinalizedTargetArea = false;
   mNumAddedTargets = 0;
   m_strInstruct = "";
@@ -1530,7 +1527,7 @@ void CParallelTSDlg::OnAbortArea()
     jnd, &indexVec);
 
   //If some image shifts have been saved, only clear saved image shifts, not whole area
-  if (mRefiningTargets || (mSavedTargets && !mFinalizedTargetArea)) {
+  if (mRefiningTargets || (mJustSavedTargets && !mFinalizedTargetArea)) {
     label.Format("Are you sure you want to clear all saved image shift %s?",
       mMakingNewXform ? "adjustments" : 
       (mParTSopts->extractVirtPrevs == 0 ? "refinements and delete target maps" : 
@@ -1547,7 +1544,7 @@ void CParallelTSDlg::OnAbortArea()
     mParallelTSHelper->StopParallelTSShift(true);
     mParallelTSHelper->ClearTargets(false);
     mNumAddedTargets = numPoints;
-    mSavedTargets = false;
+    mJustSavedTargets = false;
   } else {
     mParallelTSHelper->StopParallelTSShift();
 

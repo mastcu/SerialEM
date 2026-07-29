@@ -29,6 +29,7 @@
 #include "ParticleTasks.h"
 #include "ZbyGSetupDlg.h"
 #include "ParallelTSDlg.h"
+#include "ParallelTSHelper.h"
 #include "Utilities\KGetOne.h"
 
 #if defined(_DEBUG) && defined(_CRTDBG_MAP_ALLOC)
@@ -273,7 +274,8 @@ void CLowDoseDlg::SetLowDoseMode(BOOL inVal, BOOL hideOffState)
   }
 
   if (mWinApp->mNavHelper->mParallelTSDlg->IsOpen() && 
-    mWinApp->mNavHelper->mParallelTSDlg->IsDoingNewArea()) {
+    mWinApp->mNavHelper->mParallelTSDlg->IsDoingNewArea() && 
+    mWinApp->mParallelTSHelper->GetNumSavedTargets()) {
     SEMMessageBox("You cannot turn Low Dose mode on or off while\n"
       "defining a target area in the Parallel Tilt Series dialog");
     mWinApp->ErrorOccurred(1);
