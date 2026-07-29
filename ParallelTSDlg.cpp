@@ -1732,6 +1732,7 @@ void CParallelTSDlg::OnCheckSkipRefine()
 void CParallelTSDlg::OnNewAdjTransform()
 {
   mMakingNewXform = true;
+  OnAddTargets();
   UpdateData(true);
   Update();
   DialogToOptions();
