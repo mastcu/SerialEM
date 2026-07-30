@@ -359,16 +359,18 @@ void CParallelTSDlg::Update()
   EMimageBuffer *imBuf, *activeImBuf;
   CMapDrawItem *item;
   int uncroppedX, uncroppedY;
-  int numPoints, numSaved;
-  bool cropped, enable;
+  int numPoints, numSaved, mag;
+  bool cropped, enable, isMap;
   IntVec indexVec;
   CString label, lastlabel;
   CWnd *pwnd;
   BOOL lowDose = mWinApp->LowDoseMode();
   BOOL noTasks = !mWinApp->DoingTasks() && !mWinApp->StartedTiltSeries() &&
     !mWinApp->mCamera->CameraBusy() && !mScope->GetMovingStage();
-  bool noIS = m_iTargetType == 0 && m_iAlignRef != 0 && m_bSkipRefine;
-  bool mapsOnly = m_iTargetType == 0 && m_iAlignRef == 0 && m_bSkipRefine;
+  bool noIS = m_iTargetType == 0 && m_iAlignRef != 0 && 
+    (!mMakingNewXform && m_bSkipRefine);
+  bool mapsOnly = m_iTargetType == 0 && m_iAlignRef == 0 && 
+    (!mMakingNewXform && m_bSkipRefine);
 
   if (!mWinApp->mNavigator)
     return;
@@ -440,6 +442,7 @@ void CParallelTSDlg::Update()
     item = mWinApp->mNavigator->FindItemWithMapID(mParallelTSHelper->GetAreaMapID());
     if (!item) {
       SetDlgItemText(IDC_STATIC_PTS_MAPSTATUS, "Area map not defined");
+      mHasAreaMap = false;
       ClearArea();
     } else {
       mess.Format("Map note: %s", item->mNote);
@@ -455,15 +458,15 @@ void CParallelTSDlg::Update()
     imBufs[1].mCaptured == BUFFER_MONTAGE_OVERVIEW) ? 1 : 0];
   cropped = imBuf->GetUncroppedSize(uncroppedX, uncroppedY) && uncroppedX > 0 &&
     uncroppedY > 0;
-  enable = (activeImBuf->mImage && activeImBuf->mMapID > 0) || (imBuf->mImage &&
-    !((mWinApp->Montaging() &&
+  isMap = activeImBuf->mImage && activeImBuf->mMapID > 0 &&
+    mWinApp->mNavigator->FindItemWithMapID(activeImBuf->mMapID);
+  enable = isMap || (imBuf->mImage && !((mWinApp->Montaging() &&
     (imBuf->mCaptured != BUFFER_MONTAGE_OVERVIEW || imBuf->mSecNumber < 0))
       || (!mWinApp->Montaging() && imBuf->mCaptured < 0 && !cropped &&
         imBuf->mCaptured != BUFFER_PROC_OK_FOR_MAP)));
   m_butSaveAreaMap.EnableWindow(noTasks && mSettingUpTargetArea && enable
     && !(mDefiningPoints || mAddingTargets || mRefiningTargets) && 
     !mJustSavedTargets && !mMakingNewXform);
-  bool isMap = activeImBuf->mImage && activeImBuf->mMapID > 0;
   SetDlgItemText(IDC_BUT_PTS_SAVEAREAMAP, isMap ? "Identify Area Map" :
     (mHasAreaMap ? "Save New Area Map" : "Save Area Map"));
   m_statAreaMapStatus.EnableWindow(mSettingUpTargetArea);
@@ -503,11 +506,10 @@ void CParallelTSDlg::Update()
   m_butMontage.EnableWindow(noTasks && (!mDefiningPoints));
   
   mess.Format("");
-  int mag;
+  enable = false;
   mag = mParallelTSHelper->GetAreaMapMagInd();
-  if (mag < 0 && !mWinApp->LowDoseMode())
-    mag = mMapMagIndex;
-  enable = mParallelTSHelper->CanAdjustISVectors(mag, m_iTargetType != 0, mess);
+  if (mHasAreaMap)
+    enable = mParallelTSHelper->CanAdjustISVectors(mag, m_iTargetType != 0, mess);
   SetDlgItemText(IDC_STATIC_PTS_ADJUSTXFORMSTATUS, mess);
   m_statAdjustingXformStatus.EnableWindow(!mDefiningPoints);
   m_butApplyAdjusting.EnableWindow(enable && !(mDefiningPoints || mAddingTargets)
@@ -612,7 +614,7 @@ void CParallelTSDlg::ManagePanels()
     wnd = GetDlgItem(IDC_RADIO_PTS_CUSTOMTARGETS);
     wnd->SetFont(mBoldFont);
 
-    if (m_bSkipRefine) {
+    if (m_bSkipRefine && !mMakingNewXform) {
       mIDsToDrop.push_back(IDC_BUT_PTS_SAVETARGETMAP);
       mIDsToDrop.push_back(IDC_BUT_PTS_REMOVETARGET);
       if (m_iAlignRef != 0)
@@ -660,6 +662,10 @@ void CParallelTSDlg::ManagePanels()
 
   if (m_strInstruct.IsEmpty()) {
     mIDsToDrop.push_back(IDC_STATIC_PTS_INSTRUCT);
+  }
+
+  if (!mHasAreaMap) {
+    mIDsToDrop.push_back(IDC_STATIC_PTS_ADJUSTXFORMSTATUS);
   }
 
   BOOL states[PARALLELTSDLG_NUM_PANELS] = { !mWinApp->LowDoseMode(), true, true, true,
@@ -1180,6 +1186,7 @@ void CParallelTSDlg::OnEnKillfocusEditPretilt()
 {
   UpdateData(true);
   mParallelTSHelper->UpdateSpecAngles(m_fPretilt, m_fXpitch);
+  mWinApp->RestoreViewFocus();
 }
 
 
@@ -1187,6 +1194,7 @@ void CParallelTSDlg::OnEnKillfocusEditXpitch()
 {
   UpdateData(true);
   mParallelTSHelper->UpdateSpecAngles(m_fPretilt, m_fXpitch);
+  mWinApp->RestoreViewFocus();
 }
 
 
@@ -1606,6 +1614,7 @@ void CParallelTSDlg::OnEnKillfocusEditMaxtilt()
   DialogToOptions();
   if (mWinApp->mNavigator)
     mWinApp->mNavigator->Redraw();
+  mWinApp->RestoreViewFocus();
 }
 
 
@@ -1615,6 +1624,7 @@ void CParallelTSDlg::OnEnKillfocusEditDiam()
   DialogToOptions();
   if (mWinApp->mNavigator)
     mWinApp->mNavigator->Redraw();
+  mWinApp->RestoreViewFocus();
 }
 
 
@@ -1668,6 +1678,7 @@ void CParallelTSDlg::OnEnKillfocusEditExtradelay()
 {
   UpdateData(true);
   DialogToOptions();
+  mWinApp->RestoreViewFocus();
 }
 
 
@@ -1689,6 +1700,7 @@ void CParallelTSDlg::OnEnKillfocusEditMaxalignshift()
 {
   UpdateData(true);
   DialogToOptions();
+  mWinApp->RestoreViewFocus();
 }
 
 
@@ -1696,6 +1708,7 @@ void CParallelTSDlg::OnEnKillfocusEditMaxrotation()
 {
   UpdateData(true);
   DialogToOptions();
+  mWinApp->RestoreViewFocus();
 }
 
 
@@ -1703,6 +1716,7 @@ void CParallelTSDlg::OnEnKillfocusEditMaxscaling()
 {
   UpdateData(true);
   DialogToOptions();
+  mWinApp->RestoreViewFocus();
 }
 
 

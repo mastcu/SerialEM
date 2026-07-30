@@ -3237,6 +3237,8 @@ void CNavigatorDlg::OnDeleteitem()
 {
   int start, end, delIndex = mCurrentItem;
   bool multipleInGroup = false;
+  bool deletingPTSmap = mHelper->mParallelTSDlg->IsOpen() && mItem->IsMap() &&
+    mItem->mMapID == mWinApp->mParallelTSHelper->GetAreaMapID();
   mWinApp->RestoreViewFocus();
 
   // This sets current item to actual item or beginning of group
@@ -3284,13 +3286,17 @@ void CNavigatorDlg::OnDeleteitem()
   }
   if (m_bTableIndexes)
     FillListBox(true, true);
-
-  if (mHelper->mParallelTSDlg->IsOpen() && 
-    mHelper->mParallelTSDlg->GetSettingUpTargetArea()) {
-    if (mWinApp->mParallelTSHelper->PruneDeletedTargets()) {
-      mHelper->mParallelTSDlg->UpdateRefinementOrAdjustingStatus();
+  
+  if (mHelper->mParallelTSDlg->IsOpen()) {
+    if (mHelper->mParallelTSDlg->GetSettingUpTargetArea()) {
+      if (mWinApp->mParallelTSHelper->PruneDeletedTargets()) {
+        mHelper->mParallelTSDlg->UpdateRefinementOrAdjustingStatus();
+      }
     }
     mHelper->mParallelTSDlg->Update();
+    if (deletingPTSmap) {
+      mHelper->mParallelTSDlg->ManagePanels();
+    }
   }
 }
 
@@ -12689,7 +12695,7 @@ void CNavigatorDlg::FinishSingleDeletion(CMapDrawItem *item, int delIndex, int l
 {
   bool isCurrentInList = listInd == mCurListSel;
 
-  if (mHelper->mParallelTSDlg->IsOpen() &&
+  if (mHelper->mParallelTSDlg->IsOpen() && 
     mHelper->mParallelTSDlg->GetSettingUpTargetArea()) {
     if (item->IsPoint() && item->mMapID == mWinApp->mParallelTSHelper->GetCenterPtID()) {
       AfxMessageBox("The center target for a parallel tilt series cannot be deleted or "

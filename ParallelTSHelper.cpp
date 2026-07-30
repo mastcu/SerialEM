@@ -261,8 +261,10 @@ void CParallelTSHelper::StopParallelTSShift(bool error)
     mParallelTSDlg->FinishRefineTargets(!error);
     mShiftManager->SetMouseMoveStage(mSavedMouseStage);
     mWinApp->UpdateWindowSettings();
-    if (error)
+    if (error) {
+      DeleteTargetMapsFromNav();
       ClearSavedTargets();
+    }
   }
   mWinApp->SetStatusText(COMPLEX_PANE, "");
 }
@@ -585,7 +587,8 @@ void CParallelTSHelper::ISToTargetNextTask(int param)
         mWinApp->mFocusManager->AutoFocusStart(1, -2);
     } else if (mActionAtTarget == PARALLELTS_ACTION_PREVIEW ||
       mActionAtTarget == PARALLELTS_ACTION_ADJUST) {
-      if (!(mParTSopts->flags & PTSFLAG_SKIP_REFINE)) {
+      if (mActionAtTarget == PARALLELTS_ACTION_ADJUST || 
+        !(mParTSopts->flags & PTSFLAG_SKIP_REFINE)) {
         CameraParameters *camParam = mWinApp->GetActiveCamParam();
         windowSize = 1.5f * (float)camParam->sizeX *
           mShiftManager->GetPixelSize(mWinApp->GetCurrentCamera(), mMagIndex);
@@ -1769,7 +1772,8 @@ int CParallelTSHelper::PruneDeletedTargets()
 {
   CMapDrawItem *item;
   int numDeleted = 0;
-  if ((mParTSopts->flags & PTSFLAG_SKIP_REFINE) && mParTSopts->extractVirtPrevs != 0)
+  if (mActionAtTarget == PARALLELTS_ACTION_PREVIEW && 
+    (mParTSopts->flags & PTSFLAG_SKIP_REFINE) && mParTSopts->extractVirtPrevs != 0)
     return 0;
 
   for (int ind = 0; ind < (int)mSavedTargetIDs.size(); ind++) {
