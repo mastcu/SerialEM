@@ -535,9 +535,6 @@ void CParallelTSHelper::ISToTargetNextTask(int param)
       return;
     }
 
-    if (mWinApp->mZoomedOverview)
-      mWinApp->mZoomedOverview->CloseFrame();
-
     // Increment the target iteration to get next target
     //If some targets were done on a previous separate run, skip to the first new target
     mISTargetIter++;

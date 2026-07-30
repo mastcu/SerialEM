@@ -3016,11 +3016,11 @@ void CSerialEMView::CenterBufferOnPoint(int bufInd, float xCen, float yCen)
     return;
   EMimageBuffer *imBuf = &mImBufs[bufInd];
   int full = imBuf->mImage->getWidth();
-  int fits = (int)B3DMIN(mLastWinSizeX / imBuf->mZoom, full);
+  int fits = (int)B3DMIN(mLastWinSizeX / mZoom, full);
   xCen = (float)B3DMAX(fits / 2., B3DMIN(xCen, full - fits / 2.));
   m_iOffsetX = B3DNINT(full / 2.f - xCen);
   full = imBuf->mImage->getHeight();
-  fits = (int)B3DMIN(mLastWinSizeY / imBuf->mZoom, full);
+  fits = (int)B3DMIN(mLastWinSizeY / mZoom, full);
   yCen = (float)B3DMAX(fits / 2., B3DMIN(yCen, full - fits / 2.));
   m_iOffsetY = B3DNINT(yCen - full / 2.);
   mImBufIndex = bufInd;
