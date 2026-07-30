@@ -628,6 +628,8 @@ public:
   GetMember(int, MaxUtapiService);
   GetSetMember(int, ScopeUpdateTaskSkips);
   GetSetMember(int, JeolUpdateTaskSkips);
+  void SetFakeTiltOffset(float offset);
+  float GetFakeTiltOffset();
   static int GetScopeCallFromPlugin() {return mScopeCallFromPlugin ; };
   static void SetScopeCallFromPlugin(int val) { mScopeCallFromPlugin = val; };
   GetMember(int, LastMagIndex);

@@ -2368,10 +2368,10 @@ int CSerialEMApp::GetNewViewProperties(CSerialEMView *inView, int &iBordLeft,
       if (height < iBordBottom)
         iBordBottom = height;
 
-      // This makes locator ~ half the size of image area
+      // This makes locator ~ 0.4 the size of image area
       if (mNeedLocator || mNeedZoomedView > 0) {
-        iBordBottom = B3DNINT(0.6 * iBordBottom);
-        iBordRight = B3DNINT(0.6 * iBordRight);
+        iBordBottom = B3DNINT(0.75 * iBordBottom);
+        iBordRight = B3DNINT(0.75 * iBordRight);
       }
       if (mNeedZoomedView > 0 && mZoomViewImbuf && mZoomViewImbuf->mImage) { 
         pixel = mShiftManager->GetPixelSize(fromBuf);
