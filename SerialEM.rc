@@ -8594,6 +8594,79 @@ BEGIN
     IDC_CHECK_MODULE_INTERP "Interpolate gap between sensor modules"
 END
 
+STRINGTABLE
+BEGIN
+    IDC_SPIN_PTS_MAPMAG     "Adjust the magnification to use for mapping"
+    IDC_SPIN_PTS_ACQMAG     "Adjust the magnification to use for acquisition"
+    IDC_BUT_PTS_DEFINEFITPLANE 
+                            "Define points to measure defocus and fit a plane to defocus values"
+    IDC_EDIT_PTS_PRETILT    "Tilt angle at which the specimen will be flat"
+    IDC_EDIT_PTS_XPITCH     "Pitch angle relative to the X-axis (tilt axis)"
+    IDC_BUT_PTS_ROUGHEUCEN  "Run rough eucentricity"
+    IDC_BUT_PTS_EUCENBYFOCUS "Run eucentricity by focus"
+    IDC_BUT_PTS_STARTNEWTARGETAREA 
+                            "Start defining a new group of parallel tilt series targets on an area"
+    IDC_BUT_PTS_LDVIEWELSETRIAL 
+                            "Capture an image with the specified parameters"
+    IDC_BUT_PTS_LDSEARCHELSEVIEW 
+                            "Capture an image with the specified parameters"
+    IDC_BUT_PTS_PREVIEW     "Capture a Preview image"
+    IDC_BUT_PTS_SAVEAREAMAP "Define the area map by making a new one, or identifying the loaded map"
+    IDC_BUT_PTS_ADDTARGETS  "Start or stop adding targets to the area map"
+    IDC_BUT_PTS_SAVETARGETMAP 
+                            "Save the image shift and map for the current target"
+    IDC_BUT_PTS_REMOVETARGET 
+                            "Remove the current target and move on to the next"
+    IDC_BUT_PTS_FINALIZEAREA 
+                            "Create a single parallel tilt series item with corresponding tilt series file"
+END
+
+STRINGTABLE
+BEGIN
+    IDC_EDIT_PTS_MAXALIGNSHIFT 
+                            "Set the highest allowed shift when aligning to targets"
+    IDC_BUT_PTS_REFINE      "Begin refining or adjusting image shifts and save maps at each target"
+    IDC_CHECK_PTS_SKIPREFINE 
+                            "Skip refininement, just converting stage positions to image shifts"
+    IDC_BUT_PTS_NEWADJXFORM "Create or update adjusting transform by marking points to adjust image shifts "
+END
+
+STRINGTABLE
+BEGIN
+    IDC_BUT_PTS_ABORTAREA   "Clear the saved image shifts, if any, or abort the whole area "
+    IDC_BUT_PTS_SETUPTILTSERIES 
+                            "Set tilt series parameters for the finalized target area"
+    IDC_EDIT_PTS_MAXTILT    "Enter expected highest angle from leveling tilt to show beam ellipses"
+    IDC_EDIT_PTS_EXTRADELAY "Multiplies the delay time after image shift by this value"
+    IDC_CHECK_PTS_BEAMSIZECIRCLES 
+                            "Draw beam circles with calibrated Record beam size or illuminated area"
+    IDC_EDIT_PTS_DIAM       "Specify the diameter of drawn beam circles"
+    IDC_BUT_PTS_MONTAGE     "Collect a montage"
+    IDC_RADIO_PTS_CTFNONE   "Do not get CTFs during acquisition"
+    IDC_RADIO_PTS_CTFPLOTTER "Use Ctfplotter to get CTFs during acquisition"
+    IDC_RADIO_PTS_CTFFIND   "Use Ctffind to get CTFs during acquisition"
+    IDC_CHECK_PTS_FINDASTIG "Find the astigmatism in CTFs"
+    IDC_RADIO_PTS_CUSTOMTARGETS 
+                            "Create target area by individually adding custom targets"
+    IDC_RADIO_PTS_MULTISHOTTARGETS 
+                            "Generate targets in the area using multishot parameters"
+END
+
+STRINGTABLE
+BEGIN
+    IDC_CHECK_PTS_ADJUSTBEAMTILT 
+                            "Check to adjust beam tilt and astigmatism to compensate for image shift"
+    IDC_CHECK_PTS_APPLYADJUSTING 
+                            "Apply the appropriate adjusting transform when image shifting to targets"
+    IDC_RADIO_PTS_TAKEPREV  "Save a Preview map at each target to use for alignment"
+    IDC_RADIO_PTS_EXTRACTREF 
+                            "Use cropped extracts from the area map for alignment to targets"
+    IDC_RADIO_PTS_NOALIGN   "Do not do any alignment at targets"
+    IDC_EDIT_PTS_MAXROTATION 
+                            "Maximum rotation for aligning acquired images to extracts from area map"
+    IDC_EDIT_PTS_MAXSCALING "Maximum scaling for aligning acquired images to extracts from area map"
+END
+
 #endif    // English (United States) resources
 /////////////////////////////////////////////////////////////////////////////
 
