@@ -408,10 +408,6 @@ void CParallelTSDlg::Update()
     m_butSaveTargetMap.SetWindowText(mess);
     m_butFinalizeTargetArea.SetWindowText("Save Transform");
     m_butRemoveTarget.SetWindowText("Remove Point");
-    if (mRefiningTargets || (mJustSavedTargets && !mFinalizedTargetArea))
-      m_butAbortArea.SetWindowText("Abort Adjusting");
-    else
-      m_butAbortArea.SetWindowText("Abort Area");
   } else {
     m_butAddTargets.SetWindowText(mAddingTargets ? "Stop Adding" : (numPoints ?
       "Add More Targets" : "Add Targets"));
@@ -426,11 +422,15 @@ void CParallelTSDlg::Update()
     m_butSaveTargetMap.SetWindowText(mess);
     m_butRemoveTarget.SetWindowText("Remove Target");
     m_butFinalizeTargetArea.SetWindowText("Finalize Target Area");
-    if (mRefiningTargets || (mJustSavedTargets && !mFinalizedTargetArea))
-      m_butAbortArea.SetWindowText("Abort Refining");
-    else
-      m_butAbortArea.SetWindowText("Abort Area");
   }
+
+  mess = mMakingNewXform ? "Adjusting" : "Refining";
+  if (mRefiningTargets)
+    m_butAbortArea.SetWindowText("Abort " + mess);
+  else if (mJustSavedTargets && !mFinalizedTargetArea)
+    m_butAbortArea.SetWindowText("Clear Saved Shifts");
+  else
+    m_butAbortArea.SetWindowText("Abort Area");
 
   if (lowDose) {
     LowDoseParams *ldp = mWinApp->GetLowDoseParams() + RECORD_CONSET;
