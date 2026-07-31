@@ -226,6 +226,7 @@ CString adocStr, valStr, keyStr;
   ADOC_PUT(Float(ADOC_ARG, "PreTilt", parTS->preTilt));
   ADOC_PUT(Float(ADOC_ARG, "XPitchAngle", parTS->xPitchAngle));
   ADOC_PUT(Float(ADOC_ARG, "MappingTilt", parTS->mappingTilt));
+  ADOC_PUT(Float(ADOC_ARG, "MaxTilt", parTS->maxTiltFromStart));
   ADOC_PUT(Integer(ADOC_ARG, "NavID", parTS->navID));
 #endif
 }
