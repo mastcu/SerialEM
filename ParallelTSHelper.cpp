@@ -1467,6 +1467,7 @@ int CParallelTSHelper::ConvertToParTSItem(CString &err, CMapDrawItem *item)
   mParTSParam.preTilt = roundf(mPretilt * 100) / 100.f;
   mParTSParam.xPitchAngle = roundf(mXpitch * 100) / 100.f;
   mParTSParam.mappingTilt = roundf(mMappingTilt * 100) / 100.f;
+  mParTSParam.maxTiltFromStart = mNavHelper->mParallelTSDlg->m_fMaxTilt;
 
   ParallelTSParam *parTSParam = new ParallelTSParam;
   *parTSParam = mParTSParam;
@@ -1765,6 +1766,19 @@ void CParallelTSHelper::UpdateSpecAngles(float pretilt, float xPitch)
     pars = parsArr->GetAt(mParTSitem->mParallelTSIndex);
     pars->preTilt = roundf(mPretilt * 100) / 100.f;
     pars->xPitchAngle = roundf(mXpitch * 100) / 100.f;
+  }
+}
+
+void CParallelTSHelper::UpdateMaxTilt(float angle)
+{
+  CArray<ParallelTSParam*, ParallelTSParam*> *parsArr =
+    mWinApp->mNavigator->GetParallelTSArray();
+  ParallelTSParam *pars;
+
+  if (mParTSitem && mParTSitem->mParallelTSIndex >= 0 &&
+    mParTSitem->mParallelTSIndex < parsArr->GetSize()) {
+    pars = parsArr->GetAt(mParTSitem->mParallelTSIndex);
+    pars->maxTiltFromStart = angle;
   }
 }
 

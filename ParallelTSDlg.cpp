@@ -152,7 +152,7 @@ void CParallelTSDlg::DoDataExchange(CDataExchange* pDX)
   DDX_Control(pDX, IDC_BUT_PTS_OPENCLOSEOPTIONS, m_butOpenCloseOptions);
   DDX_Control(pDX, IDC_STATIC_PTS_EXTRAOPTIONS, m_statAcqDisplayOptions);
   DDX_Text(pDX, IDC_EDIT_PTS_MAXTILT, m_fMaxTilt);
-  DDV_MinMaxFloat(pDX, m_fMaxTilt, -89, 89);
+  DDV_MinMaxFloat(pDX, m_fMaxTilt, 0, 89);
   DDX_Text(pDX, IDC_EDIT_PTS_DIAM, m_fBeamDiameter);
   DDV_MinMaxFloat(pDX, m_fBeamDiameter, 0, 10);
   DDX_Control(pDX, IDC_CHECK_PTS_BEAMSIZECIRCLES, m_butBeamSizeCircles);
@@ -1612,6 +1612,7 @@ void CParallelTSDlg::OnEnKillfocusEditMaxtilt()
 {
   UpdateData(true);
   DialogToOptions();
+  mParallelTSHelper->UpdateMaxTilt(m_fMaxTilt);
   if (mWinApp->mNavigator)
     mWinApp->mNavigator->Redraw();
   mWinApp->RestoreViewFocus();

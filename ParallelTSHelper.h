@@ -121,6 +121,7 @@ public:
   void DeleteTargetsFromNav();
   void DeleteTargetMapsFromNav();
   void UpdateSpecAngles(float pretilt, float xPitch);
+  void UpdateMaxTilt(float angle);
   int PruneDeletedTargets();
 
 private:
