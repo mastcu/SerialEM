@@ -9242,6 +9242,10 @@ int CNavigatorDlg::LoadNavFile(bool checkAutosave, bool mergeFile, CString *inFi
             &parTSp->mappingTilt));
         }
         if (!retval) {
+          ADOC_OPTIONAL(AdocGetFloat("ParallelTSParam", ind1, "MaxTilt",
+            &parTSp->maxTiltFromStart));
+        }
+        if (!retval) {
           ADOC_REQUIRED(AdocGetInteger("ParallelTSParam", ind1, "NavID",
             &parTSp->navID));
         }

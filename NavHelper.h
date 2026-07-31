@@ -204,6 +204,7 @@ struct ParallelTSParam {
     preTilt = 0.;
     xPitchAngle = 0.;
     mappingTilt = 0.;
+    maxTiltFromStart = 0.;
     navID = 0;
   }
   int firstPrevMapID;       // Map ID of the retained first preview map if any
@@ -215,6 +216,7 @@ struct ParallelTSParam {
   float preTilt;            // Pretilt angle to use as starting angle of series
   float xPitchAngle;        // "X axis tilt" in IMOD for adjusting focus
   float mappingTilt;        // Tilt angle at which previews were taken
+  float maxTiltFromStart;   // Maximum tilt angle to run symmetrically from starting angle
   int navID;                // ID needed when merging
 };
 
