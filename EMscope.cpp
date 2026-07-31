@@ -2946,7 +2946,7 @@ void CEMscope::StageMoveKernel(StageThreadData *std, BOOL fromBlanker, BOOL asyn
       return;
     if (HitachiScope || JEOLscope)
       WaitForStageDone(info, fromBlanker ? "BlankerProc" : "StageMoveProc");
-    mTiltAngle = info->plugFuncs->GetTiltAngle() / DTOR;
+    mTiltAngle = info->plugFuncs->GetTiltAngle() / DTOR + sFakeTiltOffset;
     ManageTiltReversalVars();
     if ((step == 2 && !info->doRestoreXY) || (restore && step == 3)) {
       info->plugFuncs->GetStagePosition(&xpos, &ypos, &zpos);
