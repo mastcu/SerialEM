@@ -4772,8 +4772,11 @@ int CMacCmd::AddToAutodoc(void)
         ABORT_LINE("Error adding string to autodoc file for: \n\n");
     }
   } else if (AdocWrite((char * )(LPCTSTR)mWinApp->mStoreMRC->getAdocName()) < 0) {
-    AdocReleaseMutex();
-    ABORT_NOLINE("Error writing to autodoc file");
+    Sleep(1000);
+    if (AdocWrite((char *)(LPCTSTR)mWinApp->mStoreMRC->getAdocName()) < 0) {
+      AdocReleaseMutex();
+      ABORT_NOLINE("Error writing to autodoc file");
+    }
   }
   AdocReleaseMutex();
   return 0;
