@@ -805,7 +805,6 @@
 #define IDC_BUT_TSS_PREV                1760
 #define IDC_BUT_TSS_NEXT                1761
 #define IDC_CHECK_NAV_FILEATITEM        1762
-#define IDC_STATTHRESHMICRONS           3696
 #define IDC_CHECK_NAV_FILEATGROUP       1763
 #define IDC_BUT_TSS_FULL                1764
 #define IDC_BUT_NAV_STATE               1765
@@ -2662,6 +2661,8 @@
 #define IDC_RIGNORE_VIB_AND_FILL        3693
 #define IDC_STAT_VIB_CHECKS             3694
 #define IDC_STAT_MAX_FPS                3695
+#define IDC_STATTHRESHMICRONS           3696
+#define IDC_USE_ITEM_MAX_TILT           3697
 #define ID_NEW_IMAGE                    32771
 #define IDM_FILE_SAVEOTHER              32772
 #define IDM_FILE_READ                   32773
@@ -3306,7 +3307,7 @@
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        304
 #define _APS_NEXT_COMMAND_VALUE         33639
-#define _APS_NEXT_CONTROL_VALUE         3697
+#define _APS_NEXT_CONTROL_VALUE         3698
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif

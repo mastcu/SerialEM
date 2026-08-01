@@ -47,6 +47,7 @@ public:
   float mMinDosymEnd;
   int mNavOverrideFlags;
   float mParTSPreTilt;
+  float mParTSMaxTilt;
 
 // Dialog Data
   //{{AFX_DATA(CTSSetupDialog)
@@ -362,6 +363,9 @@ CStatic m_statStarTilt;
 CStatic m_statStarBidir;
 CStatic m_statTargMicrons;
 afx_msg void OnButChangeEDM();
+BOOL m_bUseItemMaxTilt;
+afx_msg void OnUseItemMaxTilt();
+void ManageUseItemMaxTilt(bool updateIfChg);
 };
 
 //{{AFX_INSERT_LOCATION}}

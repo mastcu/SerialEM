@@ -106,6 +106,18 @@
         have increments proportional to the cosine of the angle, this value will be the
         increment at zero tilt, and the increment will be progressively smaller at
         higher angles.</P>
+    <P><strong>Make range symmetric using &quot;Expected max tilt&quot; stored in Nav item</strong>&nbsp;&nbsp; 
+      (parallel tilt series only)</P>
+    <P>This option appears when parameters are being set for parallel tilt series.&nbsp; 
+      The value of the &#39;Expected max tilt angle from leveling tilt&#39; in the Parallel 
+      Tilt Series dialog is stored in the Navigator item when the targets are 
+      finalized and the item is set for a tilt series.&nbsp; Select this option have 
+      the &#39;Tilt to&#39; and &#39;End at&#39; angles set from this maximum tilt and the 
+      bidirectional starting angle.&nbsp; With the option set, the maximum tilt will 
+      be used to set the range around the leveling tilt angle or starting angle for 
+      each individual parallel tilt series.&nbsp; With it not set, the angles set in 
+      the text boxes will be used for all tilt series inheriting this set of 
+      parameters. </P>
       <P><B>Increment proportional to cosine of angle</B></P>
       <P>Select this option to have tilt increments proportional to the cosine of the
         tilt angle. The increment would have its basic value at zero tilt, half of that
@@ -137,6 +149,17 @@
       Params</B> button in the Navigator window, it means that the angle you are
       seeing, which may apply to multiple tilt series, has been overridden by the
       &#39;SetItemSeriesAngles&#39; script command for this Navigator item.</P>
+    <P>This option is disabled when setting parameters for a parallel tilt series 
+      because such series must be run bidirectionally from an angle near the one at 
+      which image shift targets were defined.&nbsp; The angle will initially be set 
+      from the leveling tilt measured in the Parallel Tilt Series dialog.&nbsp; If you 
+      do not change it, then for later parallel tilt series inheriting these 
+      parameters, the starting angle will be set to the leveling tilt angles of the 
+      individual Navigator items.&nbsp; If you do change it, later dose-symmetric 
+      series will still start at their respective leveling tilt angles, but regular 
+      bidirectional series will inherit the changed value.&nbsp; The logic here is 
+      that there are valid reasons for starting a bidirectional series to one side of 
+      the leveling tilt, but no reason to do so for a dose-symmetric series.</P>
     <P><b>Return with Walk Up</b></P>
     <P>By default, the program will return to the starting angle of a bidirectional
       series by tilting back in steps and restoring the stage position and image shift
