@@ -358,7 +358,7 @@ CTSController::CTSController()
   mTSParam.doEarlyReturn = false;
   mTSParam.earlyReturnNumFrames = 1;
   mTSParam.tiltDelay = -1.;
-  mTSParam.tsFlags = 0;
+  mTSParam.tsFlags = TSFLAG_PAR_USE_MAXTILT;
   mTSParam.initialized = false;
   mReorderDoseSymFile = true;
   mPostponed = false;
@@ -570,7 +570,7 @@ BOOL CTSController::CanBackUp()
  * Open the dialog, return 1 for error, -1 for cancel
  */
 int CTSController::SetupTiltSeries(int future, int futureLDstate, int ldMagIndex,
-  int navOverrideFlags, float preTilt)
+  int navOverrideFlags, float preTilt, float maxTilt)
 {
   CTSSetupDialog tsDialog;
   float fangle, fangl2;
@@ -653,6 +653,9 @@ int CTSController::SetupTiltSeries(int future, int futureLDstate, int ldMagIndex
       }
     }
   }
+  if (forParTS && maxTilt >= 10.)
+    tsDialog.mParTSMaxTilt = maxTilt;
+
   mSTEMindex = camParam[mActiveCameraList[mTSParam.cameraIndex]].STEMcamera ?
     1 + mTSParam.probeMode : 0;
   if (future && futureLDstate > 0 && ldMagIndex > 0)
@@ -1296,7 +1299,7 @@ int CTSController::StartTiltSeries(BOOL singleStep, int external, CMapDrawItem *
     mWarnedNoExtraFilter = false;
     mWarnedNoExtraChannels = false;
     mParTSFirstOffsetFit = 1;
-    mNumDidPretiltFromYOnly = 0;
+    mNumDidPretiltFromYOnly[0] = mNumDidPretiltFromYOnly[1] = 0;
     mInExtraRecState = false;
     mFirstIntensity = 0.;
     mFirstExposure = 0.;
@@ -1373,6 +1376,8 @@ int CTSController::StartTiltSeries(BOOL singleStep, int external, CMapDrawItem *
       mTSParam.cenBeamAngle = -mTSParam.cenBeamAngle;
     mNumSavedExtras.resize(0);
     mExtraStartingZ.resize(0);
+
+    // Get the reference into align buffer(s) for parallel TS
     if (mParTSNavItem && mHaveRecordRef) {
       mBufferManager->CopyImageBuffer(1, mAlignBuf, false);
       if (mDoingDoseSymmetric)
@@ -2643,8 +2648,6 @@ void CTSController::NextAction(int param)
         if (mEarlyK2RecordReturn && !mTSParam.doEarlyReturn && !mParTSNavItem)
           mCamera->SetFullSumAsyncIfOK(RECORD_CONSET);
         if (mParTSNavItem) {
-          if (!mTiltIndex)
-            mBufferManager->CopyImageBuffer(mReadBuf, mAlignBuf, false);
           mWinApp->mParticleTasks->SetParTSOverwriteSec(mOverwriteSec);
           mWinApp->mParticleTasks->StartMultiShot(0, 0, 0., 0, 0., 0., true, 0, 0,
             mWinApp->mNavHelper->GetParTSOptions()->adjustBeamTilt, 0);
@@ -3280,7 +3283,7 @@ void CTSController::NextAction(int param)
     // it is low dose tracking shot
     } else if (NextActionIs(mActIndex, STARTUP_AUTOFOCUS)) {
       if (mHaveStartRef) {
-        if (!mLowDoseMode ||
+        if (!mLowDoseMode || 
           mCamera->ConSetToLDArea(refImBuf->mConSetUsed) == 3) {
           mBufferManager->CopyImageBuffer(mExtraRefBuf, mAlignBuf);
           mHaveRecordRef = true;
@@ -4713,7 +4716,7 @@ int CTSController::EndControl(BOOL terminating, BOOL startReorder)
     mDocWnd->EndStoreProtection();
   }
 
-  if (startReorder && mDoingDoseSymmetric && mStartedTS && mTiltIndex > 0) {
+  if (startReorder && mDoingDoseSymmetric && mStartedTS && mTiltIndex > 1) {
 
     // If there was a previous asynchronous copy, switch it to synchronous and return 1;
     if (SwitchToSynchronousBidirCopy() > 0) {
@@ -7466,7 +7469,8 @@ int CTSController::ParallelTSSetup(CMapDrawItem *item, CString &errStr)
         (LPCTSTR)mapItem->mMapFile);
       return 1;
     }
-  } else if (mParTSParams->xCoordInArea.size() >= 0) {
+  } else if (mParTSParams->xCoordInArea.size() > 0 || 
+    mParTSParams->yCoordInArea.size() > 0) {
 
     // Or check validity of area coordinates and load that
     if ((int)mParTSParams->xCoordInArea.size() < numTargets ||
@@ -7479,7 +7483,7 @@ int CTSController::ParallelTSSetup(CMapDrawItem *item, CString &errStr)
 
     mapItem = mWinApp->mNavigator->FindItemWithMapID(item->mDrawnOnMapID);
     if (!mapItem) {
-      errStr = "Cannot find map with Navigator item was drawn on";
+      errStr = "Cannot find map that Navigator item was drawn on";
       return 1;
     }
     loadSave = mWinApp->mNavHelper->GetLoadMapsUnbinned();
@@ -7520,7 +7524,7 @@ int CTSController::ParallelTSSetup(CMapDrawItem *item, CString &errStr)
         break;
       }
 
-      // Leave first image in A
+      // Leave first image in B, from where it will be copied to align buffer(s)
       if (!ind) {
         if (mParTSParams->xShiftInImage.size())
           mImBufs[readBuf].mImage->setShifts(mParTSParams->xShiftInImage[0],
@@ -7554,7 +7558,7 @@ int CTSController::ParallelTSSetup(CMapDrawItem *item, CString &errStr)
     if (curStore < 0)
       delete store;
     mHaveRecordRef = err == 0;
-  } else if (mParTSParams->xCoordInArea.size() >= 0) {
+  } else if (mParTSParams->xCoordInArea.size() > 0) {
 
     // Or transform to the needed mag and total binning and matching size
     xsize /= mParTSRefBinning;
@@ -7578,7 +7582,6 @@ int CTSController::ParallelTSSetup(CMapDrawItem *item, CString &errStr)
   }
   if (err)
     return 1;
-
   mParTSExpectedDefocus = mTSParam.targetDefocus;
     
   // Transform the image shift to specimen, change Y values to get it to the pretilt,
@@ -7624,6 +7627,8 @@ int CTSController::ParallelTSSetup(CMapDrawItem *item, CString &errStr)
     }
     mParTSDelZatZero[ind] = zZero;
     mParTSTargetData.Add(targetData);
+    SEMTrace('1', "Pos %d  specX %.3f yZero %.3f zZero %.3f  focus %.3f", ind, specX, 
+      yZero, zZero, mParTSLoadedFocus[ind]);
   }
   mParTSNavItem->mMagOfIStargets = acqMagInd;
   msParams->customDefocus = mParTSLoadedFocus;
@@ -7641,22 +7646,22 @@ int CTSController::ParallelTSSetup(CMapDrawItem *item, CString &errStr)
 void CTSController::PredictParallelTSLocations(double angle)
 {
   float brackets[14], initialStep, curOffset;
-  int err, numScanSteps, numCutsDone;
+  int err, numScanSteps, numCutsDone, size;
   int ind, pos, numFound = 0, idir = mDirection > 0 ? 1 : 0, numZfound;
   float delNewAng, delLastAng, yZero, specY, zZero, meanErr, yOnlyMaxAngle = 0.;
-  float yWithZMaxAngle = 0., coef, ctmp;
+  float yWithZMaxAngle = 0., coef, ctmp, prevOffset, prevZzero, delZzeroSum, delZzero;
   int numTargets = mParTSNavItem->mNumIStargets;
   MultiShotParams *msParams = mWinApp->mNavHelper->GetMultiShotParams();
   std::vector<FloatVec> yOnly, yWithZ, zVec, angleYonly, angleWithZ, preTiltsYwithZ;
   std::vector<FloatVec> loadedY, loadedDelZFocus, loadedYwithZ, preTiltsYonly;
-  std::vector<FloatVec> meanDefAtZeroY;
+  std::vector<FloatVec> meanDefAtZeroY, loadedFocus, lastKnownY, angleOfKnown;
   FloatVec xFound, yFound, angRangeYonly, xfit, yfit;
-  IntVec dropping, posIndex, lastFitTiltInd, outliers;
+  IntVec dropping, posIndex, lastFitTiltInd, outliers, indYonlyToWithZ;
   double errSum, grandSum = 0.;
   bool fromYZ, revised, reversingDosym = mBidirSeriesPhase == DOSYM_ALTERNATING_PART;
   ParTargetDataArray *targData;
   ParTSTargetData data;
-  CString str, str2;
+  CString str, str2, str3;
   int minDataForOffset = 20;
   float minAngleForYonlyRefine = 30., maxAngleForZBasedRefine = 20.;
   int maxNumRefineFromYOnly = 5;
@@ -7669,6 +7674,7 @@ void CTSController::PredictParallelTSLocations(double angle)
   float defocusFac = mFocusManager->AdjustedDefocusZFactor(mSTEMindex ? 1 : 0);
   yOnly.resize(numTargets);
   yWithZ.resize(numTargets);
+  indYonlyToWithZ.resize(numTargets, -1);
   zVec.resize(numTargets);
   angleYonly.resize(numTargets);
   angleWithZ.resize(numTargets);
@@ -7676,6 +7682,9 @@ void CTSController::PredictParallelTSLocations(double angle)
   loadedY.resize(numTargets);
   loadedYwithZ.resize(numTargets);
   loadedDelZFocus.resize(numTargets);
+  loadedFocus.resize(numTargets);
+  lastKnownY.resize(numTargets);
+  angleOfKnown.resize(numTargets);
   lastFitTiltInd.resize(numTargets, -1);
   preTiltsYonly.resize(numTargets);
   preTiltsYwithZ.resize(numTargets);
@@ -7690,6 +7699,9 @@ void CTSController::PredictParallelTSLocations(double angle)
           continue;
         else
           break;
+      } else if (!mDoingDoseSymmetric && mDirection * 
+        (mTSParam.bidirAngle - mTiltAngles[ind]) > 0.1) {
+        break;
       }
       if (fabs(angle - mTiltAngles[ind]) > fitRange)
         break;
@@ -7703,15 +7715,19 @@ void CTSController::PredictParallelTSLocations(double angle)
       angleYonly[pos].push_back(mTiltAngles[ind]);
       loadedY[pos].push_back(data.loadedSpecY);
       preTiltsYonly[pos].push_back(mParTSPreTiltsUsed[ind]);
+      lastKnownY[pos].push_back(data.lastKnownY);
+      angleOfKnown[pos].push_back(data.angleOfKnownY);
       ACCUM_MAX(yOnlyMaxAngle, B3DABS(mTiltAngles[ind] - mParTSPreTiltsUsed[ind]));
       if (data.score > 0.) {
+        indYonlyToWithZ[pos] = (int)yOnly[pos].size() - 1;
         zVec[pos].push_back(data.defocusByCTF);
         yWithZ[pos].push_back(data.shiftY);
         loadedYwithZ[pos].push_back(data.loadedSpecY);
         angleWithZ[pos].push_back(mTiltAngles[ind]);
 
-        // Convert this back to a putative Z value
+        // Convert these back to a putative Z value
         loadedDelZFocus[pos].push_back(data.loadedDelZFocus / defocusFac);
+        loadedFocus[pos].push_back(data.loadedFocus / defocusFac);
         preTiltsYwithZ[pos].push_back(mParTSPreTiltsUsed[ind]);
         ACCUM_MAX(yWithZMaxAngle, B3DABS(mTiltAngles[ind] - mParTSPreTiltsUsed[ind]));
         meanDefAtZeroY[pos].push_back(mParTSMeanDefocus[ind]);
@@ -7761,10 +7777,10 @@ void CTSController::PredictParallelTSLocations(double angle)
   }
   
   // Proceed if enough data and max angle of one type of fit is suitable
-  if (((numZfound >= minDataForOffset && yWithZMaxAngle < maxAngleForZBasedRefine) ||
-    (numFound >= minDataForOffset && yOnlyMaxAngle > minAngleForYonlyRefine)) &&
-    mNumDidPretiltFromYOnly < maxNumRefineFromYOnly) {
-
+  prevOffset = mParTSCurTiltOffset[idir];
+  if ((numZfound >= minDataForOffset && yWithZMaxAngle < maxAngleForZBasedRefine) ||
+    (numFound >= minDataForOffset && yOnlyMaxAngle > minAngleForYonlyRefine &&
+    mNumDidPretiltFromYOnly[idir] < maxNumRefineFromYOnly)) {
     numScanSteps = mParTSFirstOffsetFit ? 20 : 10;  
     initialStep = 1.;
     curOffset = mParTSCurTiltOffset[idir] - initialStep * (float)numScanSteps / 2.f;
@@ -7778,29 +7794,45 @@ void CTSController::PredictParallelTSLocations(double angle)
           continue;
         if (numZfound >= minDataForOffset && yWithZMaxAngle < maxAngleForZBasedRefine) {
           fromYZ = true;
+
+          // For Y/Z data, compute the implied zZero for the test offset and sum squares
           if ((int)zVec[pos].size() >= minForYwithZ) {
             for (ind = 0; ind < (int)zVec[pos].size(); ind++) {
-              coef = tanf(DTORFL * (angleWithZ[pos][ind] - curOffset)) -
-                tanf(DTORFL * (angleWithZ[pos][ind] - preTiltsYwithZ[pos][ind]));
-              grandSum += powf(loadedYwithZ[pos][ind] * coef -
-                ((zVec[pos][ind] - meanDefAtZeroY[pos][ind]) - loadedDelZFocus[pos][ind]),
-                2.f);
+              ctmp = DTORFL * (angleWithZ[pos][ind] - curOffset);
+              zZero = -loadedYwithZ[pos][ind] * sinf(ctmp) +
+                ((zVec[pos][ind] - meanDefAtZeroY[pos][ind]) + 
+                (-loadedFocus[pos][ind] - mParTSDelZatZero[pos] * cosf(ctmp))) * 
+                cosf(ctmp);
+              grandSum += zZero * zZero;
             }
           }
 
         } else {
+
+          // For y-only data, recompute specY for given offset and get error from position
           fromYZ = false;
-          if ((int)yOnly[pos].size() >= minForYonly) {
-            for (ind = 0; ind < (int)yOnly[pos].size(); ind++) {
-              coef = cosf(DTORFL * (angleYonly[pos][ind] - curOffset)) /
-                cosf(DTORFL * (angleYonly[pos][ind] - preTiltsYonly[pos][ind]));
-              grandSum += powf(loadedY[pos][ind] * coef - yOnly[pos][ind], 2.f);
+          size = (int)yOnly[pos].size();
+          if (size >= minForYonly) {
+            for (ind = 0; ind < size; ind++) {
+              delNewAng = DTORFL * (angleYonly[pos][ind] - curOffset);
+              delLastAng = DTORFL * (angleOfKnown[pos][ind] - curOffset);
+              if (indYonlyToWithZ[pos] >= 0)
+                zZero = mParTSDelZatZero[pos] - loadedDelZFocus[pos][indYonlyToWithZ[pos]]
+                * cosf(delNewAng);
+              else
+                zZero = mParTSDelZatZero[pos] - (mParTSLoadedDelZFocus[idir][pos] /
+                  defocusFac) * cosf(delNewAng);
+              yZero = (lastKnownY[pos][ind] + zZero *sinf(delLastAng))
+                / cosf(delLastAng);
+              specY = yZero * cosf(delNewAng) - zZero * sinf(delNewAng);
+              grandSum += powf(specY - yOnly[pos][ind], 2.f);
             }
           }
         }
       }
-      //SEMTrace('1', "test PT %.3f  err sum %g", curOffset, grandSum);
-      err = minimize1D(curOffset, (float)grandSum, initialStep, numScanSteps, 
+      //if (!fromYZ)
+        //SEMTrace('1', "test PT %.3f  err sum %g", curOffset, grandSum);
+      err = minimize1D(curOffset, (float)grandSum, initialStep, numScanSteps,
         &numCutsDone, brackets, &curOffset);
       if (err)
         break;
@@ -7813,7 +7845,7 @@ void CTSController::PredictParallelTSLocations(double angle)
         fromYZ ? "Y/Z": "Y only", mParTSCurTiltOffset[idir], curOffset);
       mParTSCurTiltOffset[idir] = curOffset;
       if (!fromYZ)
-        mNumDidPretiltFromYOnly++;
+        mNumDidPretiltFromYOnly[idir]++;
 
       // On first fit, copy the tilt offset to the other direction
       // and set up to copy the delta Z's after adjustment for this new offset
@@ -7823,6 +7855,11 @@ void CTSController::PredictParallelTSLocations(double angle)
       } else
         mParTSFirstOffsetFit = 0;
     }
+  } else {
+    SEMTrace('1', "No new offset: Y/Z: %d %d %.1f %.1f  Yonly: %d %d %.1f %.1f %d %d",
+      numZfound, minDataForOffset, yWithZMaxAngle, maxAngleForZBasedRefine,
+      numFound, minDataForOffset, yOnlyMaxAngle, minAngleForYonlyRefine,
+      mNumDidPretiltFromYOnly[idir], maxNumRefineFromYOnly);
   }
 
   // Revise the last known X/Y from good shifts that are not dropped from Y only fits
@@ -7847,18 +7884,30 @@ void CTSController::PredictParallelTSLocations(double angle)
 
       // Compute the Z offset at current tilt offset (Z zero)
       // A delta focus at tilt times cos tilt gives Z zero
-      for (ind = 0; ind < B3DMIN((int)zVec[pos].size(), 5); ind++) {
+      delZzeroSum = 0.;
+      delZzero = 0.;
+      for (ind = 0; ind < B3DMIN((int)zVec[pos].size(), 3); ind++) {
 
-        // This is the factor by which the Y-dependent component of Z changes due to 
-        // change in pretilt
-        ctmp = tanf(DTORFL * (angleWithZ[pos][ind] - mParTSCurTiltOffset[idir])) -
-          tanf(DTORFL * (angleWithZ[pos][ind] - preTiltsYwithZ[pos][ind]));
-        coef = -loadedYwithZ[pos][ind] * ctmp +
-          ((zVec[pos][ind] - meanDefAtZeroY[pos][ind]) - loadedDelZFocus[pos][ind]);
-        xFound.push_back(coef * cosf(DTORFL * (angleWithZ[pos][ind] -
-          mParTSCurTiltOffset[idir])));
-        str2.Format("  %.3f %.3f %.3f ", zVec[pos][ind] - meanDefAtZeroY[pos][ind],
-          loadedDelZFocus[pos][ind], xFound[xFound.size() - 1]);
+        // If the offset has changed, compute a separate adjustment based on this
+        if (fabs(prevOffset - mParTSCurTiltOffset[idir]) > 0.01) {
+          ctmp = DTORFL * (angleWithZ[pos][ind] - prevOffset);
+          prevZzero = -loadedYwithZ[pos][ind] * sinf(ctmp) +
+            ((zVec[pos][ind] - meanDefAtZeroY[pos][ind]) +
+            (-loadedFocus[pos][ind] - mParTSDelZatZero[pos] * cosf(ctmp))) * cosf(ctmp);
+
+          ctmp = DTORFL * (angleWithZ[pos][ind] - mParTSCurTiltOffset[idir]);
+          zZero = -loadedYwithZ[pos][ind] * sinf(ctmp) +
+            ((zVec[pos][ind] - meanDefAtZeroY[pos][ind]) +
+            (-loadedFocus[pos][ind] - mParTSDelZatZero[pos] * cosf(ctmp))) * cosf(ctmp);
+          delZzeroSum += zZero - prevZzero;
+        }
+
+        // Just accumulate the errors in Z
+        ctmp = DTORFL * (angleWithZ[pos][ind] - mParTSCurTiltOffset[idir]);
+        zZero = (zVec[pos][ind] - meanDefAtZeroY[pos][ind]) * cosf(ctmp);
+        xFound.push_back(zZero);
+        str2.Format("  %.3f %.3f ", 
+          (zVec[pos][ind] - meanDefAtZeroY[pos][ind]), zZero);
         str += str2;
       }
       //SEMTrace('1', "%s", (LPCTSTR)str);
@@ -7868,6 +7917,14 @@ void CTSController::PredictParallelTSLocations(double angle)
       errSum = 0.;
       err = 0;
       str = "";
+      str3 = "";
+      if (delZzeroSum) {
+        delZzero = delZzeroSum / xFound.size();
+        str3.Format("adjust delZ0 for pretilt %.2f to %.2f  ",
+          mParTSLastFoundDelZ0[idir][pos], mParTSLastFoundDelZ0[idir][pos] +
+          delZzero);
+        mParTSLastFoundDelZ0[idir][pos] += delZzero;
+      }
 
       // Fit a line through the Z zero estimates, excluding outliers
       if (xFound.size() > 2 || (xFound.size() > 1 && B3DABS(xFound[0] - xFound[1]) <
@@ -7892,23 +7949,28 @@ void CTSController::PredictParallelTSLocations(double angle)
 
         // Get a partial extrapolation to the tilt about to be done
         // Dividing estimated Z zero by cosine gives a focus offset
-        errSum = zZero - 0.5f * coef;
-        mParTSLastFoundDelZ0[idir][pos] = (float)errSum;
+        errSum = zZero;
+        mParTSLastFoundDelZ0[idir][pos] += zZero;
         mParTSLastDelZ0TiltInd[idir][pos] = mTiltIndex;
-        errSum /= -cos(DTORFL * (angle - mParTSCurTiltOffset[idir]));
+        zZero /= -cosf(DTORFL * ((float)angle - mParTSCurTiltOffset[idir]));
 
         // Convert Z to defocus with factor before saving
-        errSum *= defocusFac;
-        SEMTrace('1', "revising delta Z focus for pos %d: %.3f to %.3f", pos + 1,
-          mParTSLoadedDelZFocus[idir][pos], errSum);
-        mParTSLoadedDelZFocus[idir][pos] = (float)errSum;
+        zZero *= defocusFac;
+        delZzero *= -defocusFac / 
+          cosf(DTORFL * ((float)angle - mParTSCurTiltOffset[idir]));
+        str2.Format("revising delta Z focus for pos %d: %.3f to %.3f", pos + 1,
+          mParTSLoadedDelZFocus[idir][pos], mParTSLoadedDelZFocus[idir][pos] + zZero + 
+          delZzero);
+        SEMTrace('1', "%s", (LPCTSTR)(str3 + str2));
+        mParTSLoadedDelZFocus[idir][pos] += zZero + delZzero;
         revised = true;
 
         // First time for this target, copy Z0 to other direction
         if (!mParTSCopiedZ0OtherDir[pos]) {
           mParTSLastFoundDelZ0[1 - idir][pos] = mParTSLastFoundDelZ0[idir][pos];
           mParTSLastDelZ0TiltInd[1 - idir][pos] = mTiltIndex;
-          SEMTrace('1', "Copied del Z0 %.3f to direction %d", errSum, 1 - idir);
+          SEMTrace('1', "Copied del Z0 %.3f to direction %d", 
+            mParTSLastFoundDelZ0[idir][pos], 1 - idir);
           mParTSCopiedZ0OtherDir[pos] = 1;
         }
       }
@@ -7922,10 +7984,13 @@ void CTSController::PredictParallelTSLocations(double angle)
       yZero = mParTSLastKnownY[idir][pos] /
         cosf(DTORFL * (mParTSAngleOfKnown[idir][pos] - mParTSCurTiltOffset[idir]));
       zZero = mParTSLastFoundDelZ0[idir][pos] - yZero * 
-        sinf(mParTSCurTiltOffset[idir] - mParTSPreTiltsUsed[ind]);
+        sinf(DTORFL* (mParTSCurTiltOffset[idir] - mParTSPreTiltsUsed[ind]));
       ctmp = -defocusFac * zZero / (float)cos(DTOR * (angle - mParTSCurTiltOffset[idir]));
-      SEMTrace('1', "Using delta Z focus from last Z0 for pos %d: %.3f to %.3f", pos + 1,
-        mParTSLoadedDelZFocus[idir][pos], ctmp);
+      SEMTrace('1', "Using delta Z focus from last Z0 for pos %d: %.3f to %.3f",
+        //(%.3f %.1f %.1f %.2f %.3f %.1f %.3f)", 
+        pos + 1, mParTSLoadedDelZFocus[idir][pos], ctmp);
+      //, mParTSLastKnownY[idir][pos], mParTSAngleOfKnown[idir][pos], mParTSCurTiltOffset[idir],
+        //yZero, mParTSLastFoundDelZ0[idir][pos], mParTSPreTiltsUsed[ind], zZero);
       mParTSLoadedDelZFocus[idir][pos] = ctmp;
     }
   }
@@ -7933,8 +7998,11 @@ void CTSController::PredictParallelTSLocations(double angle)
   // If the revised tilt offset was copied to other direction, copy the delta focus also
   if (mParTSFirstOffsetFit < 0) {
     mParTSFirstOffsetFit = 0;
-    for (pos = 1; pos < numTargets; pos++)
+    for (pos = 1; pos < numTargets; pos++) {
       mParTSLoadedDelZFocus[1 - idir][pos] = mParTSLoadedDelZFocus[idir][pos];
+      mParTSLastFoundDelZ0[1 - idir][pos] = mParTSLastFoundDelZ0[idir][pos];
+      mParTSLastDelZ0TiltInd[1 - idir][pos] = mParTSLastDelZ0TiltInd[idir][pos];
+    }
   }
 
   // Set up image shift and focus from last known X/Y values for each point and the
@@ -7966,7 +8034,7 @@ void CTSController::PredictParallelTSLocations(double angle)
 
 /*
  * Examines the data from the last multishot alignments and CTF fits and finds outliers,
- * eliminating them from fursther consideration, before adding the array of data for
+ * eliminating them from further consideration, before adding the array of data for
  * this tilt to the array for all tilts
  */
 void CTSController::ProcessParTSDataFromMultishot()
@@ -7979,11 +8047,11 @@ void CTSController::ProcessParTSDataFromMultishot()
   float fovFactor = 0.03f;
   CString str, str2;
   float elimMin = B3DMAX(mFOVofRecord * fovFactor, absElimMin);
-  float defElimMin = 0.25f;
+  float defElimMin = 0.5f;
   float slope, intcp, defSum = 0., scoreSum = 0.;
   int idir = mDirection > 0 ? 1 : 0;
   int measureType = mWinApp->mNavHelper->GetParTSOptions()->CtfMeasureType;
-  FloatVec xFound, xLoaded, yFound, yLoaded, outDef, outScore, outResol, outAstig;
+  FloatVec xFound, xLoaded, yFound, yLoaded, outDef, outResol, outAstig;
   IntVec posIndex, dropping;
   ParTargetDataArray *dataArray = new ParTargetDataArray();
 
@@ -7996,6 +8064,9 @@ void CTSController::ProcessParTSDataFromMultishot()
       ISX, ISY);
     mParTSTargetData[ind].loadedSpecY = mParTSLoadedSpecY[ind];
     mParTSTargetData[ind].loadedDelZFocus = mParTSLoadedDelZFocus[idir][ind];
+    mParTSTargetData[ind].loadedFocus = mParTSLoadedFocus[ind];
+    mParTSTargetData[ind].lastKnownY = mParTSLastKnownY[idir][ind];
+    mParTSTargetData[ind].angleOfKnownY = mParTSAngleOfKnown[idir][ind];
   }
 
   if (mTiltIndex >= (int)mParTSPreTiltsUsed.size())
@@ -8043,7 +8114,6 @@ void CTSController::ProcessParTSDataFromMultishot()
     // First look for outliers in ancillary results
     posIndex.clear();
     yFound.clear();
-    xLoaded.clear();
     yLoaded.clear();
     for (pos = 0; pos < numTargets; pos++) {
       if (mParTSTargetData[pos].score > 0.) {
@@ -8057,13 +8127,12 @@ void CTSController::ProcessParTSDataFromMultishot()
           (measureType == 1 ? mParTSMinPlotScoreRatio : mParTSMinFindScoreRatio)) {
           mParTSTargetData[pos].score = -1.;
         }
-        if (mParTSMeanStartScore > 0.) {
-          posIndex.push_back(pos);
-          yFound.push_back(mParTSTargetData[pos].astig);
-          xLoaded.push_back(mParTSTargetData[pos].score);
-          yLoaded.push_back(mParTSTargetData[pos].fitRes);
-          numFound++;
-        }
+      }
+      if (mParTSMeanStartScore > 0. && mParTSTargetData[pos].score >= 0.) {
+        posIndex.push_back(pos);
+        yFound.push_back(mParTSTargetData[pos].astig);
+        yLoaded.push_back(mParTSTargetData[pos].fitRes);
+        numFound++;
       }
     }
     if (numFound > 1 && !mParTSMeanStartScore)
@@ -8073,10 +8142,8 @@ void CTSController::ProcessParTSDataFromMultishot()
 
       // Get outliers for each CTF result value
       outResol.resize(numTargets);
-      outScore.resize(numTargets);
       outAstig.resize(numTargets);
       FindOutliersInResultList(yFound, 0.2f, 1, outAstig);
-      //FindOutliersInResultList(xLoaded, 0.f, -1, outScore);
       FindOutliersInResultList(yLoaded, 5.f, 1, outResol);
 
       // Eliminate if either measure is out
@@ -8729,6 +8796,37 @@ int CTSController::StoreXYZForGraphing()
     vecs->at(3).push_back(mSpecimenZ[ind]);
   }
   return 0;
+}
+
+// Limit starting and ending angles in a bidirectional series, accounting for backlash 
+// in dose-symmetric one
+bool CTSController::LimitBidirAngles(bool dosym, float &startAngle, float &endAngle)
+{
+  bool changed = false, limitEnd;
+  int dir = mFixedDosymBacklashDir;
+  float maxAngle, maxTilt = mScope->GetMaxTiltAngle();
+  if (fabs(startAngle) > maxTilt) {
+    B3DCLAMP(startAngle, -maxTilt, maxTilt);
+    changed = true;
+  }
+  if (fabs(endAngle) > maxTilt) {
+    B3DCLAMP(endAngle, -maxTilt, maxTilt);
+    changed = true;
+  }
+  if (dosym) {
+    maxAngle = maxTilt - (float)fabs(mWinApp->mComplexTasks->GetTiltBacklash());
+    limitEnd = !((dir > 0 && startAngle < endAngle) ||
+      (dir < 0 && startAngle > endAngle));
+    if (limitEnd && fabs(endAngle) > maxAngle) {
+      B3DCLAMP(endAngle, -maxAngle, maxAngle);
+      changed = true;
+    }
+    if (!limitEnd && fabs(startAngle) > maxAngle) {
+      B3DCLAMP(startAngle, -maxAngle, maxAngle);
+      changed = true;
+    }
+  }
+  return changed;
 }
 
 // Compute factor for changing exposure/intensity by cosine-power, taking the base angle
