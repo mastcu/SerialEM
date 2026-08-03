@@ -4,11 +4,24 @@
     <TITLE>Acquiring Tilt Series</TITLE>
     <META HTTP-EQUIV="Content-Type" Content="text/html; charset=Windows-1252">
     <style type="text/css"> <!-- BODY { font-family:"Arial" } TD { font-size:16 } 
+      .auto-style1 {
+        text-align: center;
+      }
   --></style>
   </HEAD>
   <BODY BGCOLOR="#ffffff" TEXT="#000000">
     <basefont size="2">
-    <P><A NAME="about_tilt_series"></A><B><FONT size="3">Acquiring Tilt Series</FONT></B></P>
+    <P class="auto-style1"><A NAME="about_tilt_series"></A><B><FONT size="3">Acquiring Tilt Series</FONT></B></P>
+<p>   <a HREF="#basics">Basic Tilt Series Operations</a><br>
+    <A HREF="#minimize_errors">Minimizing Tracking Errors</a><br>
+    <A HREF="#bidir_series">Bidirectional Tilt Series</a><br>
+    <A HREF="#doseSymmetric">Dose-symmetric Tilt Series</a><br>
+    <A HREF="#parallel">Parallel Tilt Series</a><br>
+    <A HREF="#exposure">Control of Specimen Exposure</a><br>
+    <A HREF="#starting">Starting a Tilt Series</a><br>
+    <A HREF="#predictions">How Predictions Work</a><br>
+</p>
+    <P><A NAME="basics"></A><B>Basic Tilt Series Operations</FONT></B></P>
     <P>The basic steps involved in acquiring a tilt series are quite simple: tilt by an 
       increment, adjust image position to keep features of interest centered, adjust 
       focus to maintain a desired level of defocus, and acquire and save an image. 
@@ -38,7 +51,7 @@
       more details on what options are available when you do this. You can also back 
       up to previous tilt angles; see the help for the <A HREF="hidd_tsbackup.htm">Tilt 
         Series Back Up dialog box</A> for more details on this process.</P>
-    <P><B>Minimizing tracking errors</B></P>
+    <P><A NAME="minimize_errors"></A><B>Minimizing Tracking Errors</B></P>
     <P>Running a tilt series continuously from one extreme tilt to the other can result 
       in the area of interest not being well centered at zero tilt. This can happen 
       either because of inaccurate tracking from high to low tilt, or because it was 
@@ -70,7 +83,7 @@
       button. Then select the 'Resume' option, check the box 'Use image in buffer A 
       as reference for alignments' in the <A HREF="hidd_tsresume.htm">Tilt Series Resume 
         dialog box</A>, and push the 'GO' button.</P>
-    <P><b>Bidirectional tilt series</b></P>
+    <P><A NAME="bidir_series"><b>Bidirectional Tilt Series</b></P>
     <P>A different strategy, running the tilt series in both directions from zero tilt, 
         can be used to avoid problems in reaching an initial high tilt angle 
       and in tracking accurately when coming down from a high angle.&nbsp; This 
@@ -101,7 +114,8 @@
       an image with a larger field of view than in other operations.&nbsp; For 
       example, in Low Dose mode, you may find that View images with a relatively small 
       field of view work in all other aspects of the series but are inadequate for the 
-      anchor image.&nbsp; Because of this vulnerability, the <A HREF="hidd_tiltseries.htm">Tilt Series Setup dialog</A> 
+      anchor image.&nbsp; Because of this vulnerability, the 
+      <A HREF="hidd_tiltseries.htm">Tilt Series Setup dialog</A>
       shows the anchor&#39;s field of view in microns and highlights the value when a 
       magnification is chosen that makes the value too small. </P>
     <P>In order to produce output files in the proper order, SerialEM restacks the 
@@ -112,7 +126,7 @@
       before tilting to the first angle of the second half.&nbsp; If a metadata 
       autodoc (.mdoc) file is being written, a new file will also be produced in the 
       proper order. </P>
-      <P><A NAME="doseSymmetric"></A><strong>Dose-symmetric tilt series</strong></P>
+      <P><A NAME="doseSymmetric"></A><strong>Dose-symmetric Tilt Series</strong></P>
       <P>Dose-symmetric tilting is designed to maximize the acquisition of useful 
           high-resolution information, with the least beam damage, from the lowest tilt 
           views where the images have the highest quality.&nbsp; This is often referred to 
@@ -210,7 +224,142 @@
               The default can be overridden by setting the property 'TSRestoreStageXYonTilt' 
               to 0 to prevent the restoration, or 2 to have it occur for all tilt series.</li>
       </ul>
-    <P><b>Control of specimen exposure</b></P>
+    <P><A NAME="parallel"><b>Parallel Tilt Series</b></P>
+    <p>
+        Parallel tilt series involve acquiring from multiple areas at each tilt angle by 
+        image shifting from a central area.&nbsp; The procedure is an implementation 
+        within SerialEM of PACEtomo by Eisenstein at al.&nbsp; The areas are referred to 
+        as targets.&nbsp; All normal tilt series operations, including preliminary 
+        actions like eucentricity, focusing, tracking, and waiting for drift, are done 
+        at the first target.&nbsp; This target should be near the center of the 
+        collection of areas to minimize the image shifts required to reach the other 
+        targets, but it is also important that it be likely to track reliably.&nbsp; The 
+        other targets will be referred to as peripheral targets.</p>
+    <p>
+        <em>Use of Multiple Records and target references.</em>&nbsp;
+        Acquisition at the targets is done with the Multiple Record routine.&nbsp; In 
+        addition to its normal operations of image shifting, compensating for Z height 
+        changes, and optionally adjusting beam tilt and astigmatism, the routine aligns 
+        each image to a reference and optionally measures its defocus with Ctffind or 
+        Ctfplotter.&nbsp; The first target is aligned to the regular Record reference of 
+        the tilt series, and a separate stack of references is maintained for the 
+        peripheral targets.&nbsp; Initial references for the targets can be provided in 
+        two ways: by acquiring an image at the Record magnification, or by extracting a 
+        zoomed-up reference from the map on which the targets were originally marked.&nbsp; 
+        It is also possible to rely on the defined image shift values instead of 
+        providing an initial reference.&nbsp; In any case, the acquired image at each 
+        tilt becomes the reference for the next acquisition, unless the shift is above a 
+        limit set in <A HREF="hidd_paralleltiltseries.htm">Parallel Tilt Series Setup dialog</A>.
+       This tracking should keep the targets centered through 
+        the series.</p>
+    <p>
+        <em>Position tracking</em>.
+        The program analyzes the shifts after each tilt in order to improve the image 
+        shift set for each target at the next tilt.&nbsp; Shifts that appear to be 
+        outliers are ignored when predicting new image shifts.&nbsp; If defocus was 
+        measured from the acquired images, these values will also be analyzed to adjust 
+        the defocus set for each target, also with an attempt to ignore outlying values.&nbsp; 
+        If the defocus measurements are sufficently similar for the first two tilts, the 
+        defocus will be adjusted after the second tilt; otherwise it may require three 
+        or more tilts to adjust the defocus for an area.&nbsp; </p>
+    <p>
+        <em>Initial and revised 'leveling tilt'. </em>&nbsp;Predictions about target positions 
+      in 3-D rely on an estimate of the tilt angle 
+        at which the specimen is horizontal in the microscope (at least along the 
+        microscope Y axis).&nbsp; This estimate is provided by the &#39;leveling tilt&#39; that 
+        can be measured in the the <A HREF="hidd_paralleltiltseries.htm">Parallel Tilt Series Setup 
+        dialog</A>.&nbsp; (We use this term rather than &#39;pretilt&#39; 
+        because the latter is sometimes defined as the amount the specimen is tilted at 
+        microscope zero tilt, and we wanted the sign of this value to match that of the 
+        starting tilt angle for dose-symmetric series.)&nbsp; When sufficient defocus 
+        data have accumulated, the program will adjust the&nbsp; leveling tilt used for 
+        calculations so as to minimize the defocus adjustments.&nbsp; At higher tilt, it 
+        will switch to using the behavior of positions in Y to adjust the leveling tilt, 
+        which it can also do when defocus is not being measured.&nbsp; The goal of these 
+        adjustments is to provide the best model for predicting Z heights (and thus 
+        focus adjustments) at higher tilt where CTF measurement may become unreliable, 
+        or when there is no CTF measurement.</p>
+    <p>
+        <em>Correspondence between Z height and focus changes.</em>&nbsp;
+        Z height and focus changes may not be equivalent if the scaling between 
+        objective lens setting and defocus is not accurate.&nbsp; If the difference is 
+        significant, it is important to have a setting for the property 
+        &#39;DeltaZtoDefocusFactor&#39; so that the focus value set based on the Z-height of a 
+        target will achieve the desired defocus.&nbsp; See the help for &#39;<a 
+          href="about_properties.htm#deltaZ2defocus">DeltaZtoDefocusFactor</a>&#39; for two 
+        procedures that can estimate this factor. </p>
+    <p>
+        <em>Measuring defocus with CTF.</em>&nbsp;
+        In the the <A HREF="hidd_paralleltiltseries.htm">Parallel Tilt Series Setup 
+        dialog</A>, you can choose whether to measure defocus with Ctfplotter, 
+        Ctffind, or not at all.&nbsp; Ctfplotter is designed to work with tilted images 
+        and should thus be more reliable at higher tilt.&nbsp; It tends to be slower, 
+        but in the Multiple Record routine it is run in the background as the next image 
+        is acquired, while Ctffind is run before the next acquisition is started, so 
+        this speed difference should not matter.&nbsp; Excessive drift will impair the 
+        measurement with either method, so if CTF failures become frequent, consider 
+        adding a Wait for Drift operation in the Tilt Series Setup dialog or increasing 
+        the delay time after image shifts in the the 
+      <A HREF="hidd_paralleltiltseries.htm">Parallel Tilt Series Setup dialog</A> .&nbsp; 
+      Unless astigmatism is expected to 
+        become substantial, it is probably better not to find astigmatism, because it is 
+        relatively inaccurate for single tilt series images and could throw off the 
+        defocus measurement that is the main goal of fitting.&nbsp; (Note that when 
+        Ctfplotter is run on tilt series, it typically finds astigmatism accurately by 
+        summing power spectra from 5 sequential tilt angles, which is not possible 
+        here.)</p>
+    <p>
+        <em>Tilt series and frame file naming.</em>&nbsp;
+        The tilt series files will be named with a base name that you specify and with 
+        &#39;_Pos#&#39; inserted before the extension.&nbsp; For example, if you specify 
+        series3.mrc, files will be named series3_Pos1.mrc, series3_Pos2.mrc, etc., or 
+        series3_Pos01.mrc, series3_Pos02.mrc, etc. if there are more than 9 targets.&nbsp; 
+        If frames are being saved, you should set an option in the 
+      <A HREF="hidd_k2_save_options.htm">Frame File Options dialog</A> so that the frames from the different positions are easily distinguished.&nbsp; 
+        You can select either &#39;File name of current open file&#39; in the file name or 
+        &#39;Multiple Record hole number...&#39; to have the &#39;_Pos#&#39; included in the frame file 
+        name, or you can choose &#39;File name of current open file&#39; in the folder name to 
+        have them in separate folders.&nbsp; The program will check for whether one of 
+        these options is set before starting acquisition.</p>
+    <p>
+        <em>Running from Navigator. </em>&nbsp;Parallel tilt series must be run from the Navigator Acquire at Items procedure 
+        because information about the targets and other parameters are stored in a 
+        Navigator item.&nbsp; Items with such parameters stored should have a note &quot;# TS 
+        targets&quot;, and only the 'Tilt series' checkbox, not the 'Acquire' checkbox, is 
+        enabled when the current item has the parameters.&nbsp; </p>
+    <p>
+        <em>Starting at low tilt required.</em>&nbsp; Parallel tilt series are also required to be run as dose-symmetric or 
+        bidirectional series.&nbsp; The starting angle for a dose-symmetric series 
+        should generally be the leveling tilt, so this will be the value that appears in 
+        the Tilt Series Setup dialog.&nbsp; The Navigator will supply the leveling tilt 
+        for each series as its starting tilt angle.&nbsp; Also, it will set the tilt 
+        range for each series symmetrically around the leveling tilt if you select the 
+        option to do so in the <A HREF="hidd_tiltseries.htm">Tilt Series Setup dialog</A>.&nbsp; If you are doing a 
+        bidirectional series on a dose-sensitive specimen because your microscope does 
+        not allow dose-symmetric ones, you may want to offset the starting angle from 
+        the leveling tilt. However, too big a difference may run into trouble aligning 
+        to the initial references if they were taken near the leveling tilt.&nbsp; This 
+        problem could be avoided by doing the mapping at a tilt near the intended 
+        starting tilt angle.</p>
+    <p>
+        <em>File reordering. </em>&nbsp;Just as for single tilt series, bidirectional series will be reordered in the 
+        background when the second half is started, with the series being done 
+        sequentially.&nbsp; Dose-symmetric series will be reordered at the end if the 
+        option to do so is selected in the <A HREF="hidd_tsdosesym.htm">Dose Symmetric Tilt
+           Series Parameters dialog</A>. 
+        The help there explains whether that will occur synchronously (blocking other 
+        operations) or in the background.</p>
+    <p>
+        <em>Use outside Low Dose mode.</em>&nbsp;
+        Parallel tilt series can be run outside of Low Dose mode.&nbsp; However, defocus 
+        measurement by CTF will generally be unavailable (e.g., for stained plastic 
+        sections), so focus adjustments for Z-height rely solely on the modeling of 
+        positions in Y and Z.&nbsp; The effect of errors at high tilt depends on 
+        distance from the tilt axis, so one strategy for avoiding focus problems would 
+        be to include only targets near the tilt axis. Perhaps using a more negative 
+        autofocus target than usual will give acceptable results for targets farther 
+        from the axis.</p>
+    <P><A NAME="exposure"><b>Control of Specimen Exposure</b></P>
     <P>Because a sample becomes thicker in the direction of the beam when tilted, a 
       smaller fraction of incident electrons reaches the camera at higher tilts.&nbsp; 
       It is usually desirable to keep the signal-to-noise ratio in the acquired images 
@@ -235,7 +384,7 @@
       <P>There may be a third option available to change the dose percentage instead of 
           beam intensity or exposure time. You will only have this option if there is an 
           electronic dose modulator.</P>
-    <P><B>Starting a tilt series</B></P>
+    <P><A NAME="starting"><B>Starting a Tilt Series</B></P>
     <P>When taking a tilt series in one direction, from one extreme angle to the 
       other, the TSC can be started either at a low tilt angle or at the starting tilt angle. 
       You can safely start at low tilt if you are fairly confident that:</P>
@@ -369,7 +518,7 @@
       touch' in this process, the program will try to compensate for this by taking 
       lower magnification tracking images during the first few tilts, until the 
       backlash is worked out.</P>
-    <P><B>How predictions work</B></P>
+    <P><A NAME="predictions"><B>How Predictions Work</B></P>
     <P>The TSC minimizes the number of tracking and focusing positions by predicting 
       where the specimen will be after each tilt. It predicts position separately in 
       the X and Y directions (along and across the tilt axis) and uses image shift to 
