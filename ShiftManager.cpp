@@ -3843,6 +3843,9 @@ float CShiftManager::ComputeISDelay(double delX, double delY)
   // IS on a Tecnai
   if (mWinApp->GetSTEMMode())
     delay /= 5.;
+  if (delay * mISdelayScaleFactor > 0.005)
+    SEMTrace('t', "ComputeISDelay returning delay of %.3f for IS of %.2f, %.2f",
+      mISdelayScaleFactor * delay, delX, delY);
   return mISdelayScaleFactor * delay;
 
 }
