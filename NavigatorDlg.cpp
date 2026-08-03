@@ -12699,20 +12699,16 @@ void CNavigatorDlg::FinishSingleDeletion(CMapDrawItem *item, int delIndex, int l
   bool multipleInGroup, int groupStart)
 {
   bool isCurrentInList = listInd == mCurListSel;
+  bool isPTSTarget = mHelper->mParallelTSDlg->IsOpen() && 
+    mHelper->mParallelTSDlg->GetSettingUpTargetArea() &&
+    item->mGroupID == mHelper->mParallelTSDlg->GetTargetGroupID()
+    && item->IsPoint() && item->mGroupID > 0;
 
-  if (mHelper->mParallelTSDlg->IsOpen() && 
-    mHelper->mParallelTSDlg->GetSettingUpTargetArea()) {
-    if (item->IsPoint() && item->mMapID == mWinApp->mParallelTSHelper->GetCenterPtID()
-      && item->mGroupID == mHelper->mParallelTSDlg->GetTargetGroupID() 
-      && item->mGroupID > 0) {
-      AfxMessageBox("The center target for a parallel tilt series cannot be deleted or "
-        "reordered. Abort the parallel tilt series area if you wish to change the center "
-        "point", MB_EXCLAME);
-      return;
-    }
-    if (mWinApp->mParallelTSHelper->PruneDeletedTargets()) {
-      mHelper->mParallelTSDlg->UpdateRefinementOrAdjustingStatus();
-    }
+  if (isPTSTarget && item->mMapID == mWinApp->mParallelTSHelper->GetCenterPtID()) {
+    AfxMessageBox("The center target for a parallel tilt series cannot be deleted or "
+      "reordered. Abort the parallel tilt series area if you wish to change the center "
+      "point", MB_EXCLAME);
+    return;
   }
 
   if (item->mAcquire || item->mTSparamIndex >= 0) {
@@ -12755,6 +12751,13 @@ void CNavigatorDlg::FinishSingleDeletion(CMapDrawItem *item, int delIndex, int l
     if (multipleInGroup)
       UpdateListString(mCurrentItem);
   }
+
+  if (isPTSTarget) {
+    if (mWinApp->mParallelTSHelper->PruneDeletedTargets()) {
+      mHelper->mParallelTSDlg->UpdateRefinementOrAdjustingStatus();
+    }
+  }
+
   SetChanged(true);
   mSelectedItems.clear();
 }

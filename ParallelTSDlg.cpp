@@ -946,24 +946,27 @@ void CParallelTSDlg::UpdateRefinementOrAdjustingStatus()
   int numSaved = mParallelTSHelper->GetNumSavedTargets();
   if (mMakingNewXform) {
     if (numSaved < MIN_NUM_POINTS_FOR_PTSADJUST) {
-      str.Format("at least %d image shifts have been adjusted.",
+      str.Format("at least %d image shifts have been adjusted",
         MIN_NUM_POINTS_FOR_PTSADJUST);
     } else {
+      str.Format("ready, or add or delete points");
       CString mess;
       if (GetUpdatedAdjustingTransform(mess))
         SEMAppendToLog("WARNING: " + mess);
     }
-    m_strInstruct.Format("%d image shift(s) adjusted. Click \"Save Transform\" when %s",
+    m_strInstruct.Format("%d image shift(s) adjusted. Click \"Save Transform\" when %s.",
       numSaved, str);
   } else {
     str2 = m_bSkipRefine && m_iAlignRef == 0 ? "map(s) saved" : "target(s) refined";
     if (numSaved < 2) {
       if  (m_bSkipRefine && m_iAlignRef == 0)
-        str.Format("at least 2 maps have been saved.");
+        str.Format("at least 2 maps have been saved");
       else
-        str.Format("at least 2 targets have been refined.");
+        str.Format("at least 2 targets have been refined");
+    } else {
+      str.Format("ready, or add, delete, or rearrange points");
     }
-    m_strInstruct.Format("%d %s. Click \"Finalize Target Area\" when %s",
+    m_strInstruct.Format("%d %s. Click \"Finalize Target Area\" when %s.",
       numSaved, str2, str);
   }
   UpdateData(false);
@@ -1367,15 +1370,17 @@ void CParallelTSDlg::OnAddTargets()
   if (!mAddingTargets) {
     if (mNumAddedTargets) {
       if (mMakingNewXform) {
-        m_strInstruct.Format("Click \"Adjust\" to begin adjusting image shifts.");
+        m_strInstruct.Format("Click \"Adjust\" to begin adjusting image shifts,"
+          " or add, delete, or rearrange points");
       } else if (!m_bSkipRefine) {
-        m_strInstruct.Format("Click \"Refine IS\" to begin refining target image shifts.");
+        m_strInstruct.Format("Click \"Refine IS\" to begin refining target image shifts,"
+          " or add, delete, or rearrange points");
       } else if (m_bSkipRefine) {
-        CString str = "ready";
+        CString str = "ready, or add/delete/rearrange points";
         if (mNumAddedTargets < 2) {
           str.Format("at least 2 targets have been added");
         }
-        m_strInstruct.Format("Click \"Finalize Target Area\" when %s", str);
+        m_strInstruct.Format("Click \"Finalize Target Area\" when %s.", str);
       }
    } else {
      m_strInstruct = "";

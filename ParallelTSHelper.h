@@ -118,7 +118,7 @@ public:
   int GetISVectors(int groupID, CString &err);
   int ComputeAdjustingTransform(CString &err);
   void SaveAdjustingTransform();
-  void DeleteTargetsFromNav();
+  void DeleteTargetsFromNav(bool keepFirst = false);
   void DeleteTargetMapsFromNav();
   void UpdateSpecAngles(float pretilt, float xPitch);
   void UpdateMaxTilt(float angle);

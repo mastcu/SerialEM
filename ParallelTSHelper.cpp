@@ -1385,7 +1385,8 @@ int CParallelTSHelper::ConvertToParTSItem(CString &err, CMapDrawItem *item)
     //Handle custom targets places in arbitrary positions
     numPoints = GetSavedTargetsInNav(&navInd, &indices);
     if (numPoints < 2) {
-      err.Format("At least two targets are required to create a parallel tilt series item");
+      err.Format("At least two targets are required to create a parallel tilt series "
+        "item");
       return 3;
     }
 
@@ -1435,22 +1436,7 @@ int CParallelTSHelper::ConvertToParTSItem(CString &err, CMapDrawItem *item)
     }
 
     //Delete the extra nav items now that all parameters are stored in one item
-    mWinApp->mNavigator->m_bCollapseGroups = false;
-    for (ind = numPoints - 1; ind > 0; ind--) {
-      if (mParTSopts->extractVirtPrevs == 0) {
-        item = mWinApp->mNavigator->FindItemWithMapID(mPreviewMapIDs[indices[ind]]);
-        if (item) {
-          jnd = mWinApp->mNavigator->GetFoundItem();
-          mWinApp->mNavigator->ExternalDeleteItem(item, jnd);
-        }
-      }
-      item = mWinApp->mNavigator->FindItemWithMapID(mSavedTargetIDs[indices[ind]], false);
-      if (item) {
-        jnd = mWinApp->mNavigator->GetFoundItem();
-        mWinApp->mNavigator->ExternalDeleteItem(item, jnd);
-      }
-    }
-
+    DeleteTargetsFromNav(true);
     ClearTargets(false);
 
     //Close preview map file if open
@@ -1725,17 +1711,23 @@ void CParallelTSHelper::SaveAdjustingTransform()
 }
 
 // Deletes all saved parallelTS targets from the navigator
-void CParallelTSHelper::DeleteTargetsFromNav()
+void CParallelTSHelper::DeleteTargetsFromNav(bool keepFirst)
 {
   int numPoints, ind, jnd;
   IntVec navInd, indices;
+  CMapDrawItem *item;
   MapItemArray *itemArr = mWinApp->mNavigator->GetItemArray();
 
   numPoints = GetSavedTargetsInNav(&navInd, &indices);
   mWinApp->mNavigator->m_bCollapseGroups = false;
   for (ind = numPoints - 1; ind >= 0; ind--) {
-    jnd = navInd[ind];
-    mWinApp->mNavigator->ExternalDeleteItem(itemArr->GetAt(jnd), jnd);
+    if (keepFirst && ind == 0)
+      break;
+    item = mWinApp->mNavigator->FindItemWithMapID(mSavedTargetIDs[ind], false);
+    jnd = mWinApp->mNavigator->GetFoundItem();
+    if (item) {
+      mWinApp->mNavigator->ExternalDeleteItem(item, jnd);
+    }
   }
 }
 
@@ -1809,7 +1801,12 @@ int CParallelTSHelper::PruneDeletedTargets()
         VEC_REMOVE_AT(mISTargetISY, ind);
         VEC_REMOVE_AT(mPreRefineISX, ind);
         VEC_REMOVE_AT(mPreRefineISY, ind);
-        if (mParTSopts->extractVirtPrevs == 0) {
+        if (mParTSopts->extractVirtPrevs == 0 && ind < mPreviewMapIDs.size() ) {
+          item = mWinApp->mNavigator->FindItemWithMapID(mPreviewMapIDs[ind], false);
+          if (item) {
+            mWinApp->mNavigator->ExternalDeleteItem(item,
+              mWinApp->mNavigator->GetFoundItem());
+          }
           VEC_REMOVE_AT(mPreviewMapIDs, ind);
           VEC_REMOVE_AT(mPrevMapSectNums, ind);
           VEC_REMOVE_AT(mPrevMapShiftX, ind);
