@@ -851,7 +851,8 @@ void CNavigatorDlg::Update()
   bool parTSRefining = parTSDlg->IsOpen() && parTSDlg->RefiningTargets();
   bool parTSCenPt = curExists && 
     mItem->mMapID == mWinApp->mParallelTSHelper->GetCenterPtID() &&
-    parTSDlg->IsOpen() && parTSDlg->GetSettingUpTargetArea();
+    mItem->mGroupID == mHelper->mParallelTSDlg->GetTargetGroupID() && mItem->mGroupID > 0
+    && parTSDlg->IsOpen() && parTSDlg->GetSettingUpTargetArea();
 
   //m_butUpdatePos.EnableWindow(curExists && mItem->IsNotMap() && noDrawing &&
   //  mAcquireIndex < 0);
@@ -12701,7 +12702,9 @@ void CNavigatorDlg::FinishSingleDeletion(CMapDrawItem *item, int delIndex, int l
 
   if (mHelper->mParallelTSDlg->IsOpen() && 
     mHelper->mParallelTSDlg->GetSettingUpTargetArea()) {
-    if (item->IsPoint() && item->mMapID == mWinApp->mParallelTSHelper->GetCenterPtID()) {
+    if (item->IsPoint() && item->mMapID == mWinApp->mParallelTSHelper->GetCenterPtID()
+      && item->mGroupID == mHelper->mParallelTSDlg->GetTargetGroupID() 
+      && item->mGroupID > 0) {
       AfxMessageBox("The center target for a parallel tilt series cannot be deleted or "
         "reordered. Abort the parallel tilt series area if you wish to change the center "
         "point", MB_EXCLAME);
