@@ -3851,11 +3851,13 @@ static void CheckTimeout(UINT value, const char * descrip)
 {
   float crit = 300000.;
 
-  // This gives interval from current time to value
+  // This gives interval from value to current time
   double interval = SEMTickInterval(value);
   if (interval < -crit)
     PrintfToLog("WARNING (please report): Timeout for %s is too long (%.2f sec, timeout"
       " %u, ticks %u)", descrip, -0.001 * interval, value, GetTickCount());
+  if (interval < 0)
+    SEMTrace('t', "Timeout for %s set to %.2f sec", descrip, -interval * 0.001);
 }
 
 // Set the time out time to be present time plus the delay, but do not make
