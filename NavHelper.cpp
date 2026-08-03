@@ -4453,7 +4453,7 @@ int CNavHelper::SetTSParams(int itemNum)
   CMapDrawItem *item = mItemArray->GetAt(itemNum);
   CMapDrawItem *item2;
   bool needNew = false;
-  float preTilt = 0.;
+  float preTilt = 0., maxTilt = 0.;
   int future = 1, futureLDstate = -1, ldMagInd = 0, overrideFlags = 0;
   int prevIndex = item->mTSparamIndex;
   CString inheritors;
@@ -4491,6 +4491,8 @@ int CNavHelper::SetTSParams(int itemNum)
     overrideFlags |= NAV_OVERRIDE_PARALLEL_TS;
     parTS = mParallelTSArray->GetAt(item->mParallelTSIndex);
     preTilt = parTS->preTilt;
+    if (item->mTSstartAngle < EXTRA_VALUE_TEST)
+      maxTilt = parTS->maxTiltFromStart;
     tsp->doBidirectional = true;
     if (prevIndex < 0 || (tsp->doDoseSymmetric && futureLDstate != 0))
       tsp->bidirAngle = preTilt;
@@ -4506,7 +4508,7 @@ int CNavHelper::SetTSParams(int itemNum)
     overrideFlags |= NAV_OVERRIDE_DEF_TARG;
 
   err = mWinApp->mTSController->SetupTiltSeries(future, futureLDstate, ldMagInd,
-    overrideFlags, preTilt);
+    overrideFlags, preTilt, maxTilt);
   if (err)
     return err;
 
@@ -5595,7 +5597,7 @@ int CNavHelper::AssessAcquireForParams(NavAcqParams *navParam, NavAcqAction *acq
   int lastMap = -1, curMap, numNoVec = 0, numNoXform = 0, numMaps = 0, numBadStores = 0;
   float delX, delY, critDist, critDistSq;
   double holeDist, dists[3], angle;
-  bool seen;
+  bool seen, anyParTSsaving = false;
   bool checkingMulGrd = !prefix.IsEmpty();
   BOOL savingMulti = navParam->acquireType == ACQUIRE_MULTISHOT &&
     IsMultishotSaving(NULL, &MSparams);
@@ -5828,6 +5830,11 @@ int CNavHelper::AssessAcquireForParams(NavAcqParams *navParam, NavAcqAction *acq
 
       // Check file already open
       if (item->mTSparamIndex >= 0 && item->mParallelTSIndex >= 0) {
+        tsp = mTSparamArray->GetAt(item->mTSparamIndex);
+        cam = activeList[tsp->cameraIndex];
+        if (mCamera->IsConSetSaving(&masterSets[cam * MAX_CONSETS + RECORD_CONSET],
+          RECORD_CONSET, mCamParams + cam, false))
+          anyParTSsaving = true;
         CheckParallelTSFiles(item->mFileToOpen, item, numBadStores, NULL);
         if (numBadStores) {
           mess.Format("The %d of %d files set to open for item # %d, label %s\n"
@@ -5968,6 +5975,17 @@ int CNavHelper::AssessAcquireForParams(NavAcqParams *navParam, NavAcqAction *acq
     mess += "Press:\n\"Stop && Fix\" to stop and fix these problems by resetting state"
       " parameters,\n\n"
       "\"Go On\" to go on regardless of these problems.";
+    if (SEMThreeChoiceBox(mess, "Stop && Fix", "Go On", "", MB_YESNO | MB_ICONQUESTION) ==
+      IDYES)
+      return 1;
+  }
+  if (anyParTSsaving && !(mCamera->GetFrameNameFormat() & 
+    (FRAME_FOLDER_SAVEFILE | FRAME_FILE_SAVEFILE | FRAME_FILE_HOLE_AND_POS))) {
+    mess = "With the current frame file naming choices, frame files will not be "
+      "easily distinguishable by target position.\n\nTo avoid this, you can select to"
+      " include the Multiple Record position in the name or include the current open file"
+      " in the folder or file name.\n\nPress:\n\"Stop && Fix\" to stop and change the "
+      "selections in the Frame File Options dialog\n\n\"Go On\" to just go on";
     if (SEMThreeChoiceBox(mess, "Stop && Fix", "Go On", "", MB_YESNO | MB_ICONQUESTION) ==
       IDYES)
       return 1;

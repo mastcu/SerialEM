@@ -170,7 +170,9 @@ Vacuum - 16 <br>
 Vacuum chambers - 17 <br>
 Vibration - 28 <br>
 X lens - 18 <br>
-With a UTAPI server from April 2025, only 20 needs
+<B>The normalization service, 2, should be skipped because some normalizations are much slower
+              than in standard scripting.</B>
+            With a UTAPI server from April 2025, only 20 needs
             to be used for cameras if you have a Ceta 2.&nbsp; With a 7.27 UTAPI server, the Ceta 2 should give the
             proper number of frames and there should be no more need to skip any services.&nbsp; The 
             vibration manager is supported for dewar 
@@ -756,7 +758,8 @@ With a UTAPI server from April 2025, only 20 needs
               q for multiple grid operations<br />
               r for gain and dark references<BR>
               s for STEM in general<br />
-              t for exposure time changes in tasks and for continuous mode timing<BR>
+              t for exposure time changes in task, continuous mode timing, and setting of timeouts 
+              for IS and other items<BR>
               u for update items when polling JEOL, or time of scope update for all scopes<BR>
               v for vacuum and dewar management <br />
               w for output on stage ready status<br />

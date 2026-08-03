@@ -49,7 +49,7 @@ public:
   BOOL AutoAlignAndTest(int bufNum, int smallPad, char *shotName, bool scaling = false);
   bool AlignShiftAboveLimit(double &pctShift);
   int SetupTiltSeries(int future = 0, int futureLDstate = -1, int ldMagIndex = 0,
-    int navOverrideFlags = 0, float preTilt = 0.);
+    int navOverrideFlags = 0, float preTilt = 0., float maxTilt = 0.);
   BOOL CanBackUp();
   GetSetMember(BOOL, Verbose)
   GetSetMember(BOOL, AutosaveLog)
@@ -635,7 +635,7 @@ private:
   float mParTSMinPlotScoreRatio;  // for Ctffind and Ctfplotter
   float mParTSMeanStartScore;     // Mean score at starting tilt
   bool mParTsReviseDZFocusFromZ0; // Flag to keep revising delta Z focus from older Z0
-  int mNumDidPretiltFromYOnly;    // # of times it has revised tilt offset from Y only
+  int mNumDidPretiltFromYOnly[2]; // # of times it has revised tilt offset from Y only
 
 public:
 	void CenterBeamWithTrial();
@@ -668,6 +668,7 @@ public:
   int LookupActionFromText(const char * actionName);
   void WriteTiltXYZFile(CString *inFile);
   int StoreXYZForGraphing();
+  bool LimitBidirAngles(bool dosym, float &startAngle, float &endAngle);
   void SetupExtraOverwriteSec(void);
   int CheckAndLimitAbsFocus(void);
   int StartGettingDeferredSum(int fromWhere);

@@ -929,10 +929,11 @@ int CParticleTasks::ProcessParallelTSImage(CString &errStr)
     mScope->GetImageShift(initISX, initISY);
     if (mTSController->GetHaveRecordRef()) {
       if (mShiftManager->AutoAlign(mTSController->GetAlignBuf(), 1)) {
-        PrintfToLog("Autoalign failed at position 1; no shift applied to other positions");
+        SEMAppendToLog("Autoalign failed at position 1; no shift applied to other "
+          "positions");
         mShiftManager->SetAlignShifts(0., 0., false, mImBufs);
       } else if (mTSController->AlignShiftAboveLimit(pctShift)) {
-        PrintfToLog("Autoalign at position 1 exceeded limit; no shift applied to other"
+        SEMAppendToLog("Autoalign at position 1 exceeded limit; no shift applied to other"
           " positions");
         mShiftManager->SetAlignShifts(0., 0., false, mImBufs);
       } else {
@@ -956,7 +957,8 @@ int CParticleTasks::ProcessParallelTSImage(CString &errStr)
           }
         }
       }
-      mWinApp->ToggleBuffers(mTSController->GetAlignBuf(), 300, 4, 4);
+      if (GetDebugOutput('1'))
+        mWinApp->ToggleBuffers(mTSController->GetAlignBuf(), 300, 4, 4);
       mWinApp->FinishBufferToggles();
     }
 
@@ -1057,11 +1059,15 @@ void CParticleTasks::OutputDebugPositionAndCTF(int holeIndex)
     str2 = "bad align";
   str += str2;
   if (parOpts->CtfMeasureType > 0) {
-    if (ptsd.score > 0)
+    if (ptsd.score > 0 || (ptsd.score == 0 && ptsd.fitRes > 0)) {
       str2.Format(" CTF %.3f  %.3f  %.3f  %.4g", ptsd.defocusByCTF, ptsd.astig,
         ptsd.score, ptsd.fitRes);
-    else
+    } else {
       str2 = " bad CTF";
+      if (ptsd.score == 0)
+        str2.Format(" bad CTF (%.3f, no score or fit res)", ptsd.defocusByCTF);
+      ptsd.score = -1.;
+    }
     str += str2;
   }
   SEMAppendToLog(str);

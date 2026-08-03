@@ -2688,7 +2688,7 @@ int CMacroProcessor::LookupVarAbortIfFail(CString name, Variable **var, int &ind
 {
   *var = LookupVariable(name, ind);
   if (!(*var)) {
-    LineAbort("The variable " + name + "is not defined for line:\n\n");
+    LineAbort("The variable " + name + " is not defined for line:\n\n");
     return 1;
   }
   if (!OK2D && (*var)->rowsFor2d) {
@@ -5697,8 +5697,15 @@ UINT CMacroProcessor::RunScriptLangProc(LPVOID pParam)
       }
     }
 
+    // Write to the pipe, allowing for multiple writes needed (above 100K?)
     dwWrite = (DWORD)strlen(script);
-    bSuccess = WriteFile(hChildStd_IN_Wr, script, dwWrite, &dwWritten, NULL);
+    for (;;) {
+      bSuccess = WriteFile(hChildStd_IN_Wr, script, dwWrite, &dwWritten, NULL);
+      if (!bSuccess || dwWritten >= dwWrite)
+        break;
+      dwWrite -= dwWritten;
+      script += dwWritten;
+    }
 
     // Close the pipe handle so the child process stops reading.
     CloseHandle(hChildStd_IN_Wr);
@@ -5706,8 +5713,8 @@ UINT CMacroProcessor::RunScriptLangProc(LPVOID pParam)
     // Give up if there was an error writing to pipe
     if (!bSuccess) {
       TerminateScrpLangProcess(pnd);
-      mScrpLangData[pnd].strItems[0] = "An error occurred writing the script to the pipe into"
-        " Python";
+      mScrpLangData[pnd].strItems[0] = "An error occurred writing the script to the pipe"
+        " into Python";
       mScrpLangData[pnd].exitStatus = -1;
       return 1;
     }

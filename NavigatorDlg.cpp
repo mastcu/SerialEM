@@ -10774,7 +10774,7 @@ void CNavigatorDlg::AcquireNextTask(int param)
   unsigned char lastChar;
   CString report, str;
   bool skippingGroup;
-  float hours, target, oldTarget, useBidir;
+  float hours, target, oldTarget, useBidir, sign;
   double ISX, ISY, ticks;
   BOOL runIt, vppNearestSave;
   CameraParameters *camParams = mWinApp->GetActiveCamParam();
@@ -11700,12 +11700,22 @@ void CNavigatorDlg::AcquireNextTask(int param)
       tsp = mWinApp->mTSController->GetTiltSeriesParam();
       if (item->mTargetDefocus > EXTRA_VALUE_TEST)
         tsp->targetDefocus = item->mTargetDefocus;
+      if (useBidir > EXTRA_VALUE_TEST)
+        tsp->bidirAngle = useBidir;
       if (item->mTSstartAngle > EXTRA_VALUE_TEST) {
         tsp->startingTilt = item->mTSstartAngle;
         tsp->endingTilt = item->mTSendAngle;
+      } else if (item->mParallelTSIndex >= 0 && (tsp->tsFlags & TSFLAG_PAR_USE_MAXTILT)) {
+        sign = tsp->startingTilt < tsp->bidirAngle ? 1.f : -1.f;
+        tsp->startingTilt = tsp->bidirAngle - sign *
+          mParallelTSArray[item->mParallelTSIndex]->maxTiltFromStart;
+        tsp->endingTilt = tsp->bidirAngle + sign *
+          mParallelTSArray[item->mParallelTSIndex]->maxTiltFromStart;
+        mWinApp->mTSController->LimitBidirAngles(tsp->doDoseSymmetric && 
+          mWinApp->LowDoseMode(), tsp->startingTilt, tsp->endingTilt);
+        SEMTrace('1', "Setting symmetric range %.1f to %.1f", tsp->startingTilt,
+          tsp->endingTilt);
       }
-      if (useBidir > EXTRA_VALUE_TEST)
-        tsp->bidirAngle = useBidir;
       if (item->mParallelTSIndex >= 0)
         tsp->extraRecordType = NO_TS_EXTRA_RECORD;
       mWinApp->mTSController->SyncParamToOtherModules();

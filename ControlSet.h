@@ -676,6 +676,9 @@ struct ParTSTargetData {
   float shiftY;
   float loadedSpecY;
   float loadedDelZFocus;
+  float loadedFocus;
+  float lastKnownY;
+  float angleOfKnownY;
 };
 
 typedef CArray<ParTSTargetData, ParTSTargetData> ParTargetDataArray;

@@ -4368,16 +4368,17 @@ int CProcessImage::FinishCtfplotterRun(int timeOut, CString &errStr)
 {
   int retVal = 0;
   DWORD waitResult, exitStatus;
-  while (SEMTickInterval(mCtfpStartTime) < timeOut && mRunningCtfplotter > 0) {
+  do {
     waitResult = WaitForSingleObject(mWinApp->mExternalTools->mExtProcInfo.hProcess, 20);
     if (waitResult == WAIT_OBJECT_0) {
       mRunningCtfplotter = 0;
       break;
     }
+  } while (SEMTickInterval(mCtfpStartTime) < timeOut && mRunningCtfplotter > 0);
 
     // Maybe implement user stop and updating windows later if needed...
     //SleepMsg(2);
-  }
+
   if (!mRunningCtfplotter) {
     GetExitCodeProcess(mWinApp->mExternalTools->mExtProcInfo.hProcess, &exitStatus);
     if (exitStatus) {

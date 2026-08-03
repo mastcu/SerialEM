@@ -19,6 +19,7 @@
 #include "TSVariationsDlg.h"
 #include "TSDoseSymDlg.h"
 #include "DriftWaitSetupDlg.h"
+#include "Shared\b3dutil.h"
 
 #if defined(_DEBUG) && defined(_CRTDBG_MAP_ALLOC)
 #define new DEBUG_NEW
@@ -48,7 +49,7 @@ static int idTable[] = {
   IDC_DO_BIDIR, IDC_BIDIR_ANGLE, IDC_BIDIR_WALK_BACK, IDC_STAT_BDMAG_LABEL,
   IDC_STAT_BIDIR_MAG, IDC_SPIN_BIDIR_MAG, IDC_BIDIR_USE_VIEW, IDC_STAT_BIDIR_FIELD_SIZE,
   IDC_USE_DOSE_SYM, IDC_BUT_SETUP_DOSE_SYM, IDC_STAT_STAR_TILT, IDC_STAT_STAR_BIDIR,
-  PANEL_END,
+  IDC_USE_ITEM_MAX_TILT, PANEL_END,
   IDC_TSS_PLUS2, 0, 0, IDC_TSS_TITLE2, IDC_TSS_LINE2,
   IDC_STATMAGLABEL, IDC_STATRECORDMAG,IDC_SPINRECORDMAG,  IDC_STATBINLABEL,
   IDC_STATBINNING, IDC_SPINBIN, IDC_STATPIXEL, IDC_LOWMAGTRACK, IDC_STATLOWMAG,
@@ -112,6 +113,7 @@ CTSSetupDialog::CTSSetupDialog(CWnd* pParent /*=NULL*/)
   , m_bUseDoseSym(FALSE)
   , m_bWaitForDrift(FALSE)
   , m_fIterThresh(1.)
+  , m_bUseItemMaxTilt(FALSE)
 {
   //{{AFX_DATA_INIT(CTSSetupDialog)
   m_bCosineInc = FALSE;
@@ -184,6 +186,7 @@ CTSSetupDialog::CTSSetupDialog(CWnd* pParent /*=NULL*/)
     mMaxTiltAngle = 90.f;
   mMaxDelayAfterTilt = 15.f;
   m_bChangeEDMPct = FALSE;
+  mParTSMaxTilt = 0.;
 	//}}AFX_DATA_INIT
 }
 
@@ -277,7 +280,7 @@ void CTSSetupDialog::DoDataExchange(CDataExchange* pDX)
   DDX_MM_FLOAT(pDX, IDC_EDITREPEATFOCUS, m_fRepeatFocus, 0.f, 20.f,
     "Difference from prediction for repeating autofocus");
   DDX_MM_FLOAT(pDX, IDC_EDITSTARTANGLE, m_fStartAngle, -mMaxTiltAngle, mMaxTiltAngle,
-    "Starting or Tilt to tilt angle");
+    "Starting or \"Tilt to\" tilt angle");
   DDX_MM_FLOAT(pDX, IDC_EDITTILTDELAY, m_fTiltDelay, 0.f, mMaxDelayAfterTilt,
     "Delay time after tilting");
   DDX_Check(pDX, IDC_LEAVEANCHOR, m_bLeaveAnchor);
@@ -408,6 +411,7 @@ void CTSSetupDialog::DoDataExchange(CDataExchange* pDX)
   DDX_Control(pDX, IDC_STAT_STAR_TILT, m_statStarTilt);
   DDX_Control(pDX, IDC_STAT_STAR_BIDIR, m_statStarBidir);
   DDX_Control(pDX, IDC_STATTARGMICRONS, m_statTargMicrons);
+  DDX_Check(pDX, IDC_USE_ITEM_MAX_TILT, m_bUseItemMaxTilt);
 }
 
 
@@ -497,6 +501,7 @@ BEGIN_MESSAGE_MAP(CTSSetupDialog, CBaseDlg)
   ON_BN_CLICKED(IDC_TSWAITFORDRIFT, OnWaitForDrift)
   ON_BN_CLICKED(IDC_BUT_SETUP_DRIFT_WAIT, OnButSetupDriftWait)
   ON_BN_CLICKED(IDC_CHANGE_EDMPCT, OnButChangeEDM)
+  ON_BN_CLICKED(IDC_USE_ITEM_MAX_TILT, OnUseItemMaxTilt)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -575,6 +580,11 @@ BOOL CTSSetupDialog::OnInitDialog()
   } else
     m_bChangeEDMPct = mTSParam.changeEDMPct;
 
+  if (mParTSMaxTilt >= 10. && !mDoingTS)
+    m_bUseItemMaxTilt = (mTSParam.tsFlags & TSFLAG_PAR_USE_MAXTILT) != 0;
+  else
+    mIDsToDrop.push_back(IDC_USE_ITEM_MAX_TILT);
+
   ManagePanels();
 
   m_statStarTilt.SetFont(mTitleFont);
@@ -617,6 +627,7 @@ BOOL CTSSetupDialog::OnInitDialog()
   m_bBidirUseView = mTSParam.anchorBidirWithView;
   m_bBidirWalkBack = mTSParam.walkBackForBidir;
   m_bUseDoseSym = mTSParam.doDoseSymmetric;
+
   ConstrainBidirAngle(false, false);
 
   m_iCamera = mTSParam.cameraIndex;
@@ -1116,6 +1127,33 @@ void CTSSetupDialog::OnAngleChanges()
   ManageInitialActions();
 }
 
+// Use max tilt angle for symmetric series around start for parallel TS
+void CTSSetupDialog::OnUseItemMaxTilt()
+{
+  UPDATE_DATA_TRUE;
+  ManageUseItemMaxTilt(false);
+  if (m_bUseItemMaxTilt)
+    ConstrainBidirAngle(false, true);
+}
+
+// Handle the things that depend on using the max tilt
+void CTSSetupDialog::ManageUseItemMaxTilt(bool updateIfChg)
+{
+  float sign = m_fStartAngle < m_fBidirAngle ? 1.f : -1.f;
+  m_editStartAngle.EnableWindow(!m_bUseItemMaxTilt && 
+    (!mDoingTS || mDisableStartOrEnd >= 0));
+  m_editEndAngle.EnableWindow(!m_bUseItemMaxTilt && 
+    (!mDoingTS || mDisableStartOrEnd <= 0));
+  if (!m_bUseItemMaxTilt)
+    return;
+  m_fStartAngle = m_fBidirAngle - sign * mParTSMaxTilt;
+  m_fEndAngle = m_fBidirAngle + sign * mParTSMaxTilt;
+  mWinApp->mTSController->LimitBidirAngles(m_bUseDoseSym && mLowDoseMode, m_fStartAngle,
+    m_fEndAngle);
+  if (updateIfChg)
+    UpdateData(false);
+}
+
 // Button to swap the starting and ending angles
 void CTSSetupDialog::OnButSwapAngles()
 {
@@ -1128,6 +1166,8 @@ void CTSSetupDialog::OnButSwapAngles()
   if (!((mNavOverrideFlags & NAV_OVERRIDE_PARALLEL_TS) && ((mLowDoseMode && m_bUseDoseSym)
     || fabs(m_fBidirAngle - mParTSPreTilt) < 0.01)))
     m_fBidirAngle = -m_fBidirAngle;
+  if (m_bUseItemMaxTilt)
+    ManageUseItemMaxTilt(true);
   SetTotalTilts();
   ManageInitialActions();
 }
@@ -1631,6 +1671,11 @@ void CTSSetupDialog::ConstrainBidirAngle(bool warningIfShift, bool anglesChanged
     return;
   }
 
+  if (m_bUseItemMaxTilt) {
+    ManageUseItemMaxTilt(true);
+    return;
+  }
+
   // Angles are actively being edited and one is still zero, let it go
   if (anglesChanged && fabs((double)m_fBidirAngle) < 0.1 &&
     (fabs((double)m_fStartAngle) < 0.1 || fabs((double)m_fEndAngle) < 0.1))
@@ -1659,19 +1704,7 @@ void CTSSetupDialog::ConstrainBidirAngle(bool warningIfShift, bool anglesChanged
 
   // Limit backlashed side if dose-symmetric
   if (mLowDoseMode && m_bUseDoseSym) {
-    maxAngle = mWinApp->mScope->GetMaxTiltAngle() -
-      (float)fabs(mWinApp->mComplexTasks->GetTiltBacklash());
-    dir = mWinApp->mTSController->GetFixedDosymBacklashDir();
-    limitEnd = !((dir > 0 && m_fStartAngle < m_fEndAngle) ||
-      (dir < 0 && m_fStartAngle > m_fEndAngle));
-    if (limitEnd && fabs(m_fEndAngle) > maxAngle) {
-      B3DCLAMP(m_fEndAngle, -maxAngle, maxAngle);
-      changed = true;
-    }
-    if (!limitEnd && fabs(m_fStartAngle) > maxAngle) {
-      B3DCLAMP(m_fStartAngle, -maxAngle, maxAngle);
-      changed = true;
-    }
+    changed = mWinApp->mTSController->LimitBidirAngles(true, m_fStartAngle, m_fEndAngle);
   }
   if (changed)
     UpdateData(false);
@@ -1864,6 +1897,9 @@ void CTSSetupDialog::DoOK()
   mTSParam.anchorBidirWithView = m_bBidirUseView;
   mTSParam.walkBackForBidir = m_bBidirWalkBack;
   mTSParam.doDoseSymmetric = m_bUseDoseSym;
+  if (mParTSMaxTilt >= 10. && !mDoingTS)
+    setOrClearFlags((b3dUInt32 *)&mTSParam.tsFlags, TSFLAG_PAR_USE_MAXTILT,
+      m_bUseItemMaxTilt ? 1 : 0);
   mTSParam.cameraIndex = m_iCamera;
   mTSParam.probeMode = mProbeMode;
   for (int j = 0; j < 3; j++) {
@@ -2186,4 +2222,3 @@ void CTSSetupDialog::InitializePanels(int type)
       mPanelOpen[i] = 0;
   }
 }
-

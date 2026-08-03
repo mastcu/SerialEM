@@ -552,6 +552,8 @@ int EMbufferManager::OverwriteImage(KImageStore *inStoreMRC, int inSect)
   toBuf->mSecNumber = number;
   if (mCopyOnSave > 0  && !mWinApp->Montaging())
     CopyImageBuffer((int)(toBuf - mImBufsp), mCopyOnSave);
+  if (inStoreMRC == mWinApp->mStoreMRC)
+    toBuf->mCurStoreChecksum = mWinApp->mStoreMRC->getChecksum();
   mWinApp->UpdateBufferWindows();
   return 0;
 }
