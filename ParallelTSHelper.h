@@ -81,6 +81,8 @@ private:
   ScaleMat mOldAdjustingXform;
   ScaleMat mAdjustingXform;
 
+  float mSavedRefocusThreshold;
+
 public:
   GetMember(CMapDrawItem*, CurISTargetItem);
   GetSetMember(CMapDrawItem*, ParTSitem);

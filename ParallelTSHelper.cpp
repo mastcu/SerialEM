@@ -61,6 +61,7 @@ CParallelTSHelper::CParallelTSHelper()
   mAreaMapMagInd = -1;
   mOldAdjustingXform.xpx = 0.f;
   mAdjustingXform.xpx = 0.f;
+  mSavedRefocusThreshold = 0.f;
 }
 
 CParallelTSHelper::~CParallelTSHelper()
@@ -218,6 +219,8 @@ void CParallelTSHelper::StopParallelTSShift(bool error)
       if (mAdjustBeamTilt)
         mScope->SetObjectiveStigmator(mBaseAstigX, mBaseAstigY);
     }
+    if (mActionAtTarget == PARALLELTS_ACTION_AUTOFOCUS)
+      mWinApp->mFocusManager->SetRefocusThreshold(mSavedRefocusThreshold);
   }
 
   mNavHelper->SetParTSRefiningISMag(0);
@@ -583,7 +586,7 @@ void CParallelTSHelper::ISToTargetNextTask(int param)
     mScope->GetImageShift(mLastISX, mLastISY);
 
     if (mActionAtTarget == PARALLELTS_ACTION_AUTOFOCUS) {
-      if (mISTargetIter)
+      if (mISTargetIter)  
         mWinApp->mFocusManager->AutoFocusStart(1, -2);
     } else if (mActionAtTarget == PARALLELTS_ACTION_PREVIEW ||
       mActionAtTarget == PARALLELTS_ACTION_ADJUST) {
@@ -828,6 +831,12 @@ int CParallelTSHelper::SaveInitialState(CString &err)
       mCenterAstigY = mBaseAstigY;
     }
   }
+
+  if (mActionAtTarget == PARALLELTS_ACTION_AUTOFOCUS) {
+    mSavedRefocusThreshold = mWinApp->mFocusManager->GetRefocusThreshold();
+    mWinApp->mFocusManager->SetRefocusThreshold(1.);
+  }
+  
   mInitialStateSaved = true;
   return 0;
 }
