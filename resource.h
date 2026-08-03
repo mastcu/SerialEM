@@ -2662,7 +2662,6 @@
 #define IDC_RIGNORE_VIB_AND_FILL        3693
 #define IDC_STAT_VIB_CHECKS             3694
 #define IDC_STAT_MAX_FPS                3695
-#define IDC_STATTHRESHMICRONS           3696
 #define IDC_SPIN_PTS_MAPMAG             3696
 #define IDC_SPIN_PTS_ACQMAG             3697
 #define IDC_BUT_PTS_DEFINEFITPLANE      3698
