@@ -276,6 +276,8 @@ BOOL CParallelTSDlg::OnInitDialog()
   mCurrentCamera = mWinApp->GetCurrentActiveCamera();
   mParTSopts = mNavHelper->GetParTSOptions();
   mHasIlluminatedArea = mScope->GetUseIllumAreaForC2() ? 1 : 0;
+  mMapMagIndex = mScope->GetLowestMModeMagInd();
+  mAcqMagIndex = mMapMagIndex + 6;
 
   m_sbcMappingMag.SetRange(1, MAX_MAGS);
   m_sbcAcquisitionMag.SetRange(1, MAX_MAGS);
@@ -710,8 +712,12 @@ void CParallelTSDlg::OptionsToDialog()
   mSavedParTSopts = *mParTSopts;
 
   if (!mWinApp->LowDoseMode()) {
-    mAcqMagIndex = mParTSopts->acqMagIndNonLD;
-    mMapMagIndex = mParTSopts->mapMagIndNonLD;
+
+    // Check valid mag to avoid accidentally getting stuck at 0
+    if (MagForCamera(mCurrentCamera, mParTSopts->acqMagIndNonLD))
+      mAcqMagIndex = mParTSopts->acqMagIndNonLD;
+    if (MagForCamera(mCurrentCamera, mParTSopts->mapMagIndNonLD))
+      mMapMagIndex = mParTSopts->mapMagIndNonLD;
 
     m_sbcMappingMag.SetPos(mMapMagIndex);
     m_strMappingMag.Format("%d", MagForCamera(mCurrentCamera, mMapMagIndex));
