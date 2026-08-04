@@ -3134,6 +3134,51 @@ bool CMacroProcessor::SetArrayVariableFromArray(CString name, void *values, int 
   return SetVariable(name, valStr, VARTYPE_REGULAR, -1, false, &mStrCopy);
 }
 
+// Fills a float vector with sequential values from a structure whose types are desrcibed
+// in types: f = float, i = int, b = BOOL, d = double, p = pointer to skip
+void CMacroProcessor::FillVectorFromStructure(void *struc, const char *types, 
+  FloatVec &vals)
+{
+  char *cptr = (char *)struc;
+  float *fptr;
+  int *iptr;
+  double *dptr;
+  BOOL *bptr;
+  for (int ind = 0; ind < (int)strlen(types); ind++) {
+    switch (types[ind]) {
+    case 'f':
+      fptr = (float *)cptr;
+      vals.push_back(*fptr);
+      cptr += sizeof(float);
+      break;
+    case 'i':
+      iptr = (int *)cptr;
+      vals.push_back((float)(*iptr));
+      cptr += sizeof(int);
+      break;
+    case 'd':
+      if ((cptr - (char *)struc) % sizeof(double) != 0)
+        cptr += sizeof(float);
+      dptr = (double *)cptr;
+      vals.push_back((float)(*dptr));
+      cptr += sizeof(double);
+      break;
+    case 'b':
+      bptr = (BOOL *)cptr;
+      vals.push_back((*bptr) ? 1.f : 0.f);
+      cptr += sizeof(BOOL);
+      break;
+    case 'p':
+      cptr += sizeof(float *);
+      break;
+    default:
+      PrintfToLog("WARNING: Program error call FillVectorFromStructure, types array has"
+        " unknown character %c", types[ind]);
+      break;
+    }
+  }
+}
+
 // Fill an integer vector from all values on command
 void CMacroProcessor::SetGraphListVec(IntVec &graphList)
 {

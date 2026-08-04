@@ -1410,6 +1410,53 @@
             added in 4.3, 9-Jun-26.</TD>
         </TR>
         <TR>
+          <TD class="scriptcommand">GetAllCameraSetValues #C set arr [var] ...</TD>
+          <TD>Returns all parameters for <b>set</b> for the active camera <b>#C</b> (numbered from 1) into 
+            an array variable <b>arr</b>.&nbsp; If there are further variable names after <b>arr</b>, sequential
+            values will be placed into those variables also.&nbsp; Only up to 16 such variables can be 
+            set from Python.&nbsp; Values are:
+            <pre>
+   mode:            Single or continuous
+  processing:      Also for Gain correction in DE STEM
+  forceDark:       Force new dark reference each time
+  onceDark:        Take new dark ref next time
+  shuttering:      Shutter selection
+  binning:         Binning (relative to super-res for K2/K3)
+  exposure:        Exposure in sec
+  drift:           Drift settling in sec
+  left:            Subarea range in unbinned coordinates (super-res for K2/K3)
+  top:
+  right:           Last pixel on right and bottom plus 1
+  bottom:
+  numAverage:      # darks to average
+  averageDark:     Flag to average dark refs
+  averageOnce:     Flag to average one time
+  removeXrays:     Flag to apply X-ray removal
+  K2ReadMode:      Linear/counting/super-res for K2, DE, and Falcon; diff for 1View
+  doseFrac:        Dose-fractionation mode
+  frameTime:       Frame time in sec
+  alignFrames:     Flag to align frames
+  useFrameAlign:   1 to align in SerialEM[CCD], 2 to write alignframes pcm file
+  faParamSetInd:   Index of frame align parameter set
+  saveFrames:      Flag to save frames
+  filtTypeOrPreset:   K2 align filter type or DE STEM preset index
+  DElinSumCount:      DE sum count only for linear mode
+  sumK2OrDeCntFrames: Flag that K2 summing is active; AND DE counting mode dose frac #
+  lineSyncOrPattern:  For line sync in DigiScan or for pattern index in DE STEM
+  dynamicFocus:       Flag for dynamic focusing
+  boostMagOrHwBin:    For boosting mag in STEM focus AND for DE hardware binning
+  magAllShotsOrHwROI: For choice to boost mag on all shots AND for DE hardware ROI
+  integration:        STEM integration
+  correctDrift:       Flag to use internal drift correction of camera
+  skipBeforeOrPrePix: # frames to skip or prepixel time in microseconds in Tietz STEM
+  skipAfterOrPtRpt:   # frames to skip after or  point repeats option in DE STEM
+  DeFPS:              Frames per second when it is variable and controllable
+  flags:              Flags for new boolean items
+            </pre>
+            Command added in 4.3, 4-Aug-26.
+          </TD>
+        </TR>
+        <TR>
           <TD class="scriptcommand">RestoreCameraSet [set]</TD>
           <TD>Restores one or all camera parameter set(s) modified with the &#39;Set&#39; commands
             above.&nbsp; If <B>set</B> is omitted, all modified sets will be restored.</TD>
@@ -4694,6 +4741,39 @@
              in <a href = "about_formats.htm#LDparams"><i>Low Dose Parameters</i></a>&nbsp; 
             Command added in 4.3, 26-Nov-25.
           </TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">GetAllLowDoseValues #C area arr [var] ...</TD>
+          <TD>Returns all parameters for the low dose area specified by <b>area</b> and for the active
+             camera <b>#C</b> (numbered from 1) into 
+            an array variable <b>arr</b>.&nbsp; If there are further variable names after <b>arr</b>, sequential
+            values will be placed into those variables also.&nbsp; Only up to 16 such variables can be 
+            set from Python.&nbsp; The camera number determines whether TEM, EFTEM, or STEM 
+            parameters are accessed.&nbsp; Access to these varaiables relies on an assumption about 
+            variable alignment in the structure, so check values carefully before relying on this
+             command.&nbsp; Values are:
+            <pre>
+   magIndex:            Magnification index
+  camLenIndex:         Camera length index if in diffraction
+  spotSize:            Spot size
+  intensity:           Beam intensity value
+  ISX, ISY:            Incremental image shifts: may not be valid
+  beamDelX, beamDelY:  Incremental beam shifts for mode
+  axisPosition:        Distance along axis: should be valid
+  delayFactor:         Multiplier for image shift delay
+  slitIn:              Flag that slit is supposed to be in
+  energyLoss:          Energy loss value, sent to spectrum offset
+  slitWidth:           Slit width
+  zeroLoss:            Do zero loss, not the energy loss value
+  beamAlpha:           Alpha value for JEOL
+  probeMode:           Probe mode for FEI
+  diffFocus:           Diffraction focus
+  beamTiltDX, beamTiltDY: Incremental beam tilts for mode
+  darkFieldMode:       Dark field mode for FEI
+  dfTiltX, dfTiltY:    Absolute dark field tilt for F/T
+  EDMPercent:          Dose modulator duty percent
+</pre>
+            Command added in 4.3, 4-Aug-26.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">ReportAxisPosition area</TD>

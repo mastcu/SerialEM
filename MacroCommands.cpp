@@ -10983,6 +10983,40 @@ int CMacCmd::ReportMiscCameraParams()
   return 0;
 }
 
+// GetAllLowDoseValues, GetAllCameraSetValues
+int CMacCmd::GetAllLowDoseValues()
+{
+  FloatVec vals;
+  int index;
+  int camera = mItemInt[1] > 0 ? mItemInt[1] - 1 : mWinApp->GetCurrentActiveCamera();
+  ControlSet *conSets = mWinApp->GetCamConSets();
+  LowDoseParams *ldp;
+  if (camera >= mWinApp->GetActiveCamListSize())
+    ABORT_LINE("Camera number is out of range in line:\n\n");
+  if (CMD_IS(GETALLCAMERASETVALUES)) {
+    if (CheckAndConvertCameraSet(mStrItems[2], mItemInt[2], index, mStrCopy))
+      ABORT_LINE(mStrCopy);
+    FillVectorFromStructure(&conSets[mActiveList[camera] * MAX_CONSETS + index],
+      "iiiiiiffiiiiiiiiiifiiiiiiiiiiiiiiifi", vals);
+  } else {
+    if (CheckAndConvertLDAreaLetter(mStrItems[2], -1, index, mStrLine))
+      return 1;
+    ldp = mWinApp->GetLDParamsForCamera(mActiveList[camera]);
+    FillVectorFromStructure(&ldp[index], "iiiddddddfbffbfidddiddf", vals);
+  }
+  if (SetArrayVariableFromArray(mStrItems[3], &vals[0], (int)vals.size(), "%f"))
+    ABORT_LINE("Error creating array variable (" + mStrCopy + ") for line:\n\n");
+  for (index = 0; index < (int)vals.size(); index++) {
+    if (mItemEmpty[4 + index])
+        break;
+    if (SetVariable(mStrItems[4 + index], (double)vals[index], VARTYPE_REGULAR, -1,
+      false, &mStrCopy))
+      ABORT_LINE("Error setting variable " + mStrItems[3 + index] + " (" + mStrCopy +
+        ") for line:\n\n");
+  }
+  return 0;
+}
+
 // SetDECamFrameRate
 int CMacCmd::SetDECamFrameRate(void)
 {

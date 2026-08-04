@@ -42,46 +42,48 @@ typedef std::vector <float> FloatVec;
 #define CONS_FLAG_DARK_MODE 0x1
 
 struct ControlSet {
-  int mode;
+  int mode;            // Single or continuous
   int processing;      // Also for Gain correction in DE STEM
-  int forceDark;
-  int onceDark;
-  int shuttering;
-  int binning;
-  float exposure;
-  float drift;
-  int left;
+  int forceDark;       // Force new dark reference each time
+  int onceDark;        // Take new dark ref next time
+  int shuttering;      // Shutter selection
+  int binning;         // Binning (relative to super-res for K2/K3)
+  float exposure;      // Exposure in sec
+  float drift;         // Drift settling in sec
+  int left;            // Subarea range in unbinned coordinates (super-res for K2/K3)
   int top;
-  int right;
+  int right;           // Last pixel on right and bottom plus 1
   int bottom;
-  int numAverage;      // # darks to average or
-  int averageDark;
-  int averageOnce;
-  int removeXrays;
-  int channelIndex[MAX_STEM_CHANNELS];
-  int lineSyncOrPattern; // For line sync in DigiScan or for pattern index in DE STEM
-  int dynamicFocus;
-  int boostMagOrHwBin;       // For boostin mag in STEM focus AND for DE hardware binning
-  int magAllShotsOrHwROI;  // For choice to boost mag on all shots AND for DE hardware ROI
-  int integration;    
-  int correctDrift;   // Flag to use internal drift correction of camera
-  int K2ReadMode;     // Linear/counting/super-res for K2, DE, and Falcon; diff for 1View
-  int doseFrac;
-  float frameTime;
-  int alignFrames;
-  int useFrameAlign;  // 1 to align in SerialEM[CCD], 2 to write alignframes pcm file
-  int faParamSetInd;
-  int saveFrames;
-  int filtTypeOrPreset; // K2 align filter type or DE STEM preset index
+  int numAverage;      // # darks to average
+  int averageDark;     // Flag to average dark refs
+  int averageOnce;     // Flag to average one time
+  int removeXrays;     // Flag to apply X-ray removal
+  int K2ReadMode;      // Linear/counting/super-res for K2, DE, and Falcon; diff for 1View
+  int doseFrac;        // Dose-fractionation mode
+  float frameTime;     // Frame time in sec
+  int alignFrames;     // Flag to align frames
+  int useFrameAlign;   // 1 to align in SerialEM[CCD], 2 to write alignframes pcm file
+  int faParamSetInd;   // Index of frame align parameter set
+  int saveFrames;      // Flag to save frames
+  int filtTypeOrPreset;   // K2 align filter type or DE STEM preset index
+  int DElinSumCount;      // DE sum count only for linear mode
   int sumK2OrDeCntFrames; // Flag that K2 summing is active; AND DE counting mode dose frac #
+  int lineSyncOrPattern;  // For line sync in DigiScan or for pattern index in DE STEM
+  int dynamicFocus;       // Flag for dynamic focusing
+  int boostMagOrHwBin;    // For boosting mag in STEM focus AND for DE hardware binning
+  int magAllShotsOrHwROI; // For choice to boost mag on all shots AND for DE hardware ROI
+  int integration;        // STEM integration
+  int correctDrift;       // Flag to use internal drift correction of camera
+  int skipBeforeOrPrePix; // # frames to skip or prepixel time in microseconds in Tietz STEM
+  int skipAfterOrPtRpt;   // # frames to skip after or  point repeats option in DE STEM
+  float DeFPS;            // Frames per second when it is variable and controllable
+  b3dUInt32 flags;        // Flags for new boolean items
+
+  // Keep these at end; update GetAllCameraSetValues for added values
+  int channelIndex[MAX_STEM_CHANNELS];
   ShortVec summedFrameList;
   FloatVec userFrameFractions;
   FloatVec userSubframeFractions;
-  int skipBeforeOrPrePix;  // # frames to skip or prepixel time in microseconds in Tietz STEM
-  int skipAfterOrPtRpt;  // # frames to skip after or  point repeats option in DE STEM
-  int DElinSumCount;     // DE sum count only for linear mode
-  float DeFPS;           // Frames per second when it is variable and controllable
-  b3dUInt32 flags;       // Flags for new boolean items
 };
 
 struct CameraParameters {
@@ -344,7 +346,7 @@ struct ScaleMat {
   float ypy;
 };
 
-// Check OnCopyArea when add new members
+// Check OnCopyArea when add new members, update GetAllLowDoseValues
 struct LowDoseParams {
   int magIndex;            // Magnification index
   int camLenIndex;         // Camera length index if in diffraction
