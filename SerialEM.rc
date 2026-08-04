@@ -4677,7 +4677,7 @@ BEGIN
     CONTROL         "",IDC_SPIN_PTS_ACQMAG,"msctls_updown32",UDS_ARROWKEYS,156,12,10,14
     LTEXT           "123456",IDC_STATIC_PTS_MAPMAGVAL,44,15,22,8
     LTEXT           "123456",IDC_STATIC_PTS_ACQMAGVAL,132,15,22,8
-    PUSHBUTTON      "Define Points to Fit Plane",IDC_BUT_PTS_DEFINEFITPLANE,44,41,90,12
+    PUSHBUTTON      "Define Points to Fit Plane",IDC_BUT_PTS_DEFINEFITPLANE,74,41,90,12
     LTEXT           "Leveling tilt:",IDC_STATIC_PTS_PRETILT,6,58,36,8
     LTEXT           "X pitch angle:",IDC_STATIC_PTS_XPITCH,91,58,40,8
     EDITTEXT        IDC_EDIT_PTS_PRETILT,46,56,22,12,ES_AUTOHSCROLL
@@ -4744,6 +4744,7 @@ BEGIN
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,3,250,124,10
     PUSHBUTTON      "Create New Adjusting Transform",IDC_BUT_PTS_NEWADJXFORM,33,189,111,12
     LTEXT           "line 1\nline 2\nline3",IDC_STATIC_PTS_INSTRUCT,5,334,168,25
+    PUSHBUTTON      "Save Map",IDC_BUT_PTS_SAVEMAP,13,41,55,12
 END
 
 
@@ -8577,6 +8578,16 @@ BEGIN
     ID_SCRIPT_LISTFKEYMAPPINGS "Print list of function key mappings to log"
     ID_BEAMSPOT_PARALLELILLUMINATION 
                             "Save intensity, spot size, and probe/alpha as parallel illumination conditions"
+END
+
+STRINGTABLE
+BEGIN
+    IDC_EDIT_PTS_MAXALIGNSHIFT 
+                            "Set the highest allowed shift when aligning to targets"
+    IDC_BUT_PTS_REFINE      "Begin refining or adjusting image shifts and save maps at each target"
+    IDC_CHECK_PTS_SKIPREFINE 
+                            "Skip refininement, just converting stage positions to image shifts"
+    IDC_BUT_PTS_NEWADJXFORM "Create or update adjusting transform by marking points to adjust image shifts "
     IDC_USE_ITEM_MAX_TILT   "Set Tilt to and End at from bidirectional start angle and stored maximum tilt"
 END
 
@@ -8622,16 +8633,6 @@ BEGIN
                             "Remove the current target and move on to the next"
     IDC_BUT_PTS_FINALIZEAREA 
                             "Create a single parallel tilt series item with corresponding tilt series file"
-END
-
-STRINGTABLE
-BEGIN
-    IDC_EDIT_PTS_MAXALIGNSHIFT 
-                            "Set the highest allowed shift when aligning to targets"
-    IDC_BUT_PTS_REFINE      "Begin refining or adjusting image shifts and save maps at each target"
-    IDC_CHECK_PTS_SKIPREFINE 
-                            "Skip refininement, just converting stage positions to image shifts"
-    IDC_BUT_PTS_NEWADJXFORM "Create or update adjusting transform by marking points to adjust image shifts "
 END
 
 STRINGTABLE

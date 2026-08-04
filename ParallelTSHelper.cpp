@@ -769,6 +769,53 @@ int CParallelTSHelper::SaveTargetMap(CString &err, bool &saved)
   return 0;
 }
 
+int CParallelTSHelper::SaveMap(CString &err)
+{
+  int index;
+  bool wrongFile, saveable, openNewFile = false, openOldFile = false;
+  CMapDrawItem *item;
+  EMimageBuffer *imBuf = mWinApp->mMainView->GetActiveImBuf();
+  EMimageBuffer *imBufs = mWinApp->GetImBufs();
+
+  // Current active image buffer is a loaded map, so map already exists
+  item = mWinApp->mNavigator->FindItemWithMapID(imBuf->mMapID);
+  if (!item) {
+    if (mWinApp->Montaging() && imBufs[1].mCaptured == BUFFER_MONTAGE_OVERVIEW) {
+      imBuf = &imBufs[1];
+      saveable = mWinApp->mStoreMRC != NULL;
+    }
+    else {
+      imBuf = &imBufs[0];
+      saveable = mWinApp->mStoreMRC &&
+        mWinApp->mBufferManager->IsBufferSavable(imBuf, mWinApp->mStoreMRC);
+    }
+
+    //If no open file, or open file is unusable, do not use it
+    index = mWinApp->mDocWnd->StoreIndexFromName(mTargetMapFileName);
+    wrongFile = !mTargetMapFileName.IsEmpty() && (index >= 0 ||
+      index == mWinApp->mDocWnd->GetCurrentStore());
+
+    if (wrongFile || !saveable) {
+      if (mWinApp->mDocWnd->DoOpenNewFile()) {
+        err.Format("New file was not opened");
+        return 2;
+      }
+    }
+
+    if (imBuf->GetSaveCopyFlag() >= 0 && !mWinApp->Montaging())
+      mWinApp->mDocWnd->SaveRegularBuffer();
+
+    if (mWinApp->mNavigator->NewMap()) {
+      err.Format("Error making a new map");
+      return 3;
+    }
+  } else {
+    err.Format("The active buffer image is already a map");
+    return 4;
+  }
+  return 0;
+}
+
 // Saves the state of the microscope before beginning the routine
 int CParallelTSHelper::SaveInitialState(CString &err)
 {

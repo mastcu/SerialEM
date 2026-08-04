@@ -125,6 +125,7 @@ public:
   void UpdateSpecAngles(float pretilt, float xPitch);
   void UpdateMaxTilt(float angle);
   int PruneDeletedTargets();
+  int SaveMap(CString &err);
 
 private:
   int ISToNextTarget(int targetID, CString &err);

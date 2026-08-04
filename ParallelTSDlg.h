@@ -222,4 +222,6 @@ public:
   CButton m_butNewAdjTransform;
   afx_msg void OnNewAdjTransform();
   CString m_strInstruct;
+  CButton m_butSaveMap;
+  afx_msg void OnSavemap();
 };

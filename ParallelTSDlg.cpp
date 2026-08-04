@@ -34,7 +34,7 @@ IDC_STATIC_PTS_MAPMAGVAL, IDC_STATIC_PTS_ACQUISITION,
 IDC_STATIC_PTS_ACQMAGVAL, IDC_SPIN_PTS_MAPMAG, 
 IDC_SPIN_PTS_ACQMAG, IDC_TSS_LINE3,
 PANEL_END,
-IDC_STATIC_PTS_SPECPRETILTANGLE, IDC_BUT_PTS_DEFINEFITPLANE,
+IDC_STATIC_PTS_SPECPRETILTANGLE, IDC_BUT_PTS_SAVEMAP, IDC_BUT_PTS_DEFINEFITPLANE,
 IDC_STATIC_PTS_PRETILT, IDC_EDIT_PTS_PRETILT,  IDC_STATIC_PTS_PRETILTDEG,
 IDC_STATIC_PTS_XPITCH, IDC_EDIT_PTS_XPITCH, IDC_STATIC_PTS_XPITCHDEG, 
 IDC_TSS_LINE4,
@@ -211,6 +211,7 @@ void CParallelTSDlg::DoDataExchange(CDataExchange* pDX)
   DDX_Check(pDX, IDC_CHECK_PTS_SKIPREFINE, m_bSkipRefine);
   DDX_Control(pDX, IDC_BUT_PTS_NEWADJXFORM, m_butNewAdjTransform);
   DDX_Text(pDX, IDC_STATIC_PTS_INSTRUCT, m_strInstruct);
+  DDX_Control(pDX, IDC_BUT_PTS_SAVEMAP, m_butSaveMap);
 }
 
 BEGIN_MESSAGE_MAP(CParallelTSDlg, CBaseDlg)
@@ -255,6 +256,7 @@ BEGIN_MESSAGE_MAP(CParallelTSDlg, CBaseDlg)
   ON_BN_CLICKED(IDC_BUT_PTS_REFINE, OnRefineTargets)
   ON_BN_CLICKED(IDC_BUT_PTS_NEWADJXFORM, OnNewAdjTransform)
   ON_BN_CLICKED(IDC_CHECK_PTS_SKIPREFINE, OnCheckSkipRefine)
+  ON_BN_CLICKED(IDC_BUT_PTS_SAVEMAP, OnSavemap)
   ON_WM_CTLCOLOR()
 END_MESSAGE_MAP()
 
@@ -473,7 +475,6 @@ void CParallelTSDlg::Update()
     (mHasAreaMap ? "Save New Area Map" : "Save Area Map"));
   m_statAreaMapStatus.EnableWindow(mSettingUpTargetArea);
   
-  
   //Manage other enable windows
   m_statMagFor.EnableWindow(!(mDefiningPoints || mSettingUpTargetArea));
   m_statMapping.EnableWindow(!(mDefiningPoints || mSettingUpTargetArea));
@@ -487,6 +488,9 @@ void CParallelTSDlg::Update()
   m_butDefinePtsFitPlane.EnableWindow(!mParallelTSHelper->ISToTargetsBusy() &&
     mWinApp->mNavigator->m_butDrawPts.IsWindowEnabled() &&
     (mWinApp->mNavigator->NoDrawing() || mDefiningPoints) &&
+    !(mAddingTargets || mRefiningTargets) && !numPoints && !mMakingNewXform);
+  m_butSaveMap.EnableWindow(enable && !isMap &&
+    !mParallelTSHelper->ISToTargetsBusy() &&
     !(mAddingTargets || mRefiningTargets) && !numPoints && !mMakingNewXform);
   m_statPretilt.EnableWindow(!(mAddingTargets));
   m_butPretilt.EnableWindow(noTasks && !(mDefiningPoints || mAddingTargets));
@@ -1759,4 +1763,14 @@ void CParallelTSDlg::OnNewAdjTransform()
   UpdateData(true);
   Update();
   DialogToOptions();
+}
+
+
+void CParallelTSDlg::OnSavemap()
+{
+  CString mess;
+  if (mParallelTSHelper->SaveMap(mess)) {
+    AfxMessageBox(mess, MB_EXCLAME);
+  }
+  Update();
 }
