@@ -653,6 +653,7 @@ public:
   void FillVectorFromArrayVariable(FloatVec *fvec, IntVec *ivec, Variable *var);
   int LookupAndFillPairedVars(int itemInd, Variable **xvar, FloatVec &xvec, Variable **yvar, FloatVec &yvec);
   bool SetArrayVariableFromArray(CString name, void *values, int numVals, const char *format);
+  void FillVectorFromStructure(void *struc, const char *types, FloatVec &vals);
   static UINT RunInShellProc(LPVOID pParam);
   static UINT RunScriptLangProc(LPVOID pParam);
   static int CreateOnePipe(HANDLE *childRd, HANDLE *childWr, SECURITY_ATTRIBUTES *saAttr, bool setForWrite,
