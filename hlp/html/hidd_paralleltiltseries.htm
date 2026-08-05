@@ -30,7 +30,7 @@
         This dialog allows you to set parameters, measure specimen angles, and create 
         target areas for a parallel tilt series. Important information on running parallel tilt 
         series can be found in the <a href="about_tilt_series.htm#parallel">Parallel Tilt Series</a> 
-        section in the Tilt Series help page.&nbsp; Here are some general points about 
+        section in the Tilt Series help page.&nbsp;Here are some general points about 
         operations with the dialog:</p>
     <p>
         <em>Adding points:</em>
@@ -55,26 +55,24 @@
     <p>
         <em>Adjusting transforms: </em>Image shifts derived from positions marked on a 
         medium-magnification often do not apply well at the higher acquisition 
-        magnification.&nbsp; This dialog uses the same adjusting transforms that are 
+        magnification. This dialog uses the same adjusting transforms that are 
         used when correcting image shift vectors for Multiple Records and that can be 
         defined with the <strong>Step To &amp; Adjust IS</strong> routine in the
-        <a href="hidd_multi_shot_setup.htm">Multiple Record Setup</a> dialog.&nbsp; 
-        There can be several such transforms, defined from different starting 
-        magnifications.&nbsp; The dialog will indicate whether one is available at the 
-        mapping magnification.&nbsp; Although it is probably better to define an 
+        <a href="hidd_multi_shot_setup.htm">Multiple Record Setup</a> dialog.&nbsp;There can be several such transforms, defined from different starting 
+        magnifications.&nbsp;The dialog will indicate whether one is available at the 
+        mapping magnification.&nbsp;Although it is probably better to define an 
         adjusting transform in
         <a href="hidd_multi_shot_setup.htm">Multiple Record Setup</a> on a regular holey 
         specimen, where automatic hole centering can be used, this dialog also provides 
         the ability to create an adjusting transform in case the other procedure is not 
-        conveniently available.&nbsp; The transform is defined here by marking points in 
+        conveniently available. The transform is defined here by marking points in 
         a map that can be accurately located in a Preview, then adjusting image shift to 
         center each feature in a Preview.</p>
     <p>
-        <em>Image types and cleanup:</em>&nbsp; Preview camera parameters will be used for all images 
+        <em>Image types and cleanup:</em> Preview camera parameters will be used for all images 
         at the acquisition mag, namely, images for refining target positions, for 
         tracking references, and even autofocus images in Low Dose mode. Area maps can be taken with 
-        whatever parameters you choose.&nbsp;
-        To avoid clutter, almost all additions to the Navigator will be removed when a 
+        whatever parameters you choose.&nbsp;To avoid clutter, almost all additions to the Navigator will be removed when a 
         target area is finalized (completed). After finalizing, there will only be the 
         area map, the parallel tilt series item, and the target map at the center 
         position (if you chose to save references).</p>
@@ -259,13 +257,13 @@
         <li>Repeat steps 3-4 until you have adjusted all image shifts. You can also add more 
             points after saving a round of image shift adjustments, in which case you will 
             be prompted to immediately adjust their corresponding image shifts.</li>
-        <li>Click <strong>Save Transform< when you are finished.</li>
+        <li>Click <strong>Save Transform</strong> when you are finished.</li>
     </ol>
     <p>
         Whenever you finish adjusting added points, an adjusting transform is computed and 
-        information about the fit is displayed in the log.&nbsp; If 
+        information about the fit is displayed in the log. If 
         you delete a point, the transform is recomputed and the updated results will be 
-        shown in the log.&nbsp; The log will display the following:</p>
+        shown in the log.&nbsp;The log will display the following:</p>
     <ul>
         <li>The average error from fitting the saved adjustments to a transformation matrixn matrix</li>
         <li>The highest fit error, and the Navigator index and label of the corresponding 
@@ -274,13 +272,17 @@
         <li>If debug output 'N' is set, the fit error for every point used to compute the 
             adjusting transform.</li>
     </ul>
+    <strong> <strong>
     <p> &nbsp;</p>
     <p> <strong><em>Adding Targets, Refining Image Shifts, and Saving Target Maps</em></strong></p>
+    </strong></strong>
     <p>
         The 
         general procedure to refine target image shifts is outlined earlier in the 
         overview section, but it can be modified with a variety of options.</p>
+    <strong>
     <p> <strong>Alignment at starting tilt</strong></p>
+    </strong>
     <p> The option selected here determines which method will be 
         used to obtain reference images for 
         aligning to targets at the starting tilt. Accordingly, the desired option 
@@ -298,10 +300,12 @@
         shifts match with target locations marked on the area map. In other words, if 
         you are taking Previews for reference, you can modify target locations during 
         the refinement process, since the Preview maps are saved at the same time as the 
-        refined image shifts.&nbsp; If you are using extracts, it is meaningful only 
+        refined image shifts.&nbsp;If you are using extracts, it is meaningful only 
       to adjust image shifts to center the points marked on the map, and attempting to 
       shift the target location will have no effect.</p>
+    <strong>
     <p> <strong>Skip image shift refinement</strong></p>
+    </strong>
     <p> If checked, image shifts will be obtained by converting stage coordinates of the 
         targets drawn on the area map. This means that, if you are saving Preview maps 
         for references, the refinement procedure will run and automatically save all the 
@@ -309,25 +313,35 @@
         Alternatively, if you are extracting references from the area map or doing no 
         alignment, you can finalize the target area as soon as targets are added, 
         skipping the refinement procedure entirely.</p>
+    <strong>
     <p> <strong>Add Targets / Stop Adding</strong></p>
+    </strong>
     <p> Click this button to begin adding targets to the area map, or, if already 
         adding, click to stop adding without initiating the refinement routine.</p>
+    <strong>
     <p> <strong>Refine IS / Stop Adding &amp; Refine</strong></p>
+    </strong>
     <p> Click this button to begin the refinement routine on added points.</p>
+    <strong>
     <p> <strong>Save Target Map/IS</strong></p>
+    </strong>
     <p> After the routine realigns or image shifts to a target and captures a Preview 
         image, you will be able to freely change the image shift and take more images 
         and this button will be enabled. When you are centered on your desired target, 
         click this button to save the image shift (and possibly also a target map) and 
         continue on to the next target. For convenience, you can press the S key instead 
         of clicking this button.</p>
+    <strong>
     <p> <strong>Remove Target</strong></p>
+    </strong>
     <p> This button will be enabled after the routine realigns or image shifts to a target and captures a Preview 
         image. Clicking this button will remove the current 
         target. If it is the first target in the group, the routine will stop so you can 
         rearrange or edit the rest of the added targets. Otherwise, it will continue on 
         to the next one. </p>
+    <strong>
     <p> <strong>Finalize Target Area</strong></p>
+    </strong>
     <p> Clicking this button will consolidate all refined targets into one parallel tilt 
         series item that contains all necessary information about the image shifts and 
         relevant options from the dialog. The first time a parallel tilt series item is 
@@ -335,22 +349,29 @@
       output file 
         and the Tilt Series Parameters dialog will open with relevant parameters 
         imported from this dialog.</p>
+    <strong>
     <p> <strong>Abort Area / Abort Refining</strong></p>
+    </strong>
     <p> Click this button to either clear the whole area and start over, or, if some 
         targets have been refined, just clear the saved image shifts so that refinement 
         can be redone.</p>
+    <strong>
     <p> <strong>Setup Tilt Series</strong></p>
+    </strong>
     <p> Opens the <a href="hidd_tiltseries.htm">Tilt Series Setup</a> dialog for the finalized parallel tilt series 
         item. This is equivalent to selecting the item in the Navigator and clicking the
-        <strong>TS Params</strong> button in the Navigator.</p>
+        <strong>TS Params </strong>button in the Navigator<strong>.</p>
     <p> &nbsp;</p>
     <p> <em><strong>Acquisition &amp; Display Options</strong></em></p>
+    </strong>
     <p> This closable section of the dialog contains extra options that affect how beam 
         circles are drawn during target area setup, and how which steps are taken during 
         final acquisition.</p>
+    <strong>
     <p> <strong>Expected max tilt angle from leveling tilt</strong></p>
+    </strong>
     <p> Enter the maximum amount that you anticipate tilting from the starting tilt of 
-      the tilt series.&nbsp; This entry has two effects.&nbsp; Most visibly, beam 
+      the tilt series. This entry has two effects.&nbsp;Most visibly, beam 
       circles will be drawn as ellipses, stretched perpendicular to the tilt axis 
       based on the tilt angle specified here. Beam circles/ellipses are drawn at all 
       targets while setting up a target area, and are also drawn when the current 
@@ -359,13 +380,17 @@
       series will be set to the leveling tilt plus or minus this angle, if you have 
       the option to do so checked in the <a href="hidd_tiltseries.htm">Tilt Series Setup</a> 
       dialog.</p>
+    <strong>
     <p><b>Diameter of circles to draw</b></p>
+    </strong>
     <p>The diameter of the circles is
       set to the entered value in microns, unless the option described next is
       selected to use the illuminated area on a Thermo/FEI Titan or a beam size 
       computed from a beam size calibration on other scopes.&nbsp;Press tab or Enter
       to have the image redrawn after entering a new diameter.</p>
+    <strong>
     <p><b>Use Record illuminated area </b><em>or </em><b>beam size for circles in Low Dose</b></p>
+    </strong>
     <p>This option now appears on all scopes and allows the multi-shot circle display to
       take its diameter from the intensity setting of the Record area when Low
       Dose mode is on instead of from the value entered in this dialog. On a 
@@ -379,42 +404,51 @@
     <p>For this option to be valuable rather than misleading, the illuminated area
       readout or calculated beam size must be fairly accurate in the range of interest, which may not be the
       case.</p>
+    <strong>
     <p> <strong>Multiplier of usual delay after shifting to target</strong></p>
+    </strong>
     <p> SerialEM has a built-in settling time after image shift that depends on the
       size of the shift; it is probably inadequate at high magnification. The
       factor entered here increases this settling time when shifting between targets.</p>
+    <strong>
     <p> <strong>Adjust beam tilt &amp; astig to compenate for image shift</strong></p>
+    </strong>
     <p> This option is enabled if you have calibrated the beam tilt and 
       astigmatism needed for
       coma-free alignment as a function of image shift with
-      <a href="menu_focus.htm#hid_focustuning_comavs">Coma vs. Image S
-      in the Calibration - Focus &amp; Tuning submenu.&nbsp; If so, then beam tilt will be
-      adjusted appropriately for each Record position, and restored at the end.&nbsp; 
-      Astigmatism will also be compensated, unless the property 
+      <a href="menu_focus.htm#hid_focustuning_comavs">Coma vs. Image Shift</a>
+      in the Calibration - Focus &amp; Tuning submenu.&nbsp;If so, then beam tilt will be
+      adjusted appropriately for each Record position, and restored at the end.&nbsp;Astigmatism will also be compensated, unless the property 
       &#39;SkipAstigAdjustmentForIS&#39; is set. In addition, the image shift present when 
       starting the Multiple Record routine will also be compensated for. The conditions under which the calibration was taken are shown on the following
       line.&nbsp; For the adjustment to work accurately, the current beam intensity at
       least should be close to what it was when the calibration was done.</p>
+    <strong>
     <p> <strong>CTF Type </strong><em>and</em><strong> Find astigmatism</strong></p>
+    </strong>
     <p> Indicate which CTF type to use, if any, and whether to find astigmatism during 
-        final acquisition.&nbsp; See <a href="about_tilt_series.htm#parallel">Parallel Tilt Series</a> 
+        final acquisition.&nbsp;See
+        <a href="about_tilt_series.htm#parallel">Parallel Tilt Series</a> 
       for more details about this choice.</p>
+    <strong>
     <p> <strong>Maximum alignment shift at targets</strong></p>
+    </strong>
     <p> Enter the maximum shift, as a 
         percentage of the field of view, that will be allowed in alignment to 
       targets.&nbsp; When alignment finds a shift greater than this maximum, no shift 
       will be applied.</p>
+    <strong>
     <p> <strong>Aligning to extracted references</strong></p>
-    <p> If  <p> If <strong>Extract reference from area map< is selected for 
+    </strong>  <p> If Extract reference from area map is selected for 
         the alignment at starting tilt, then the following additional options will 
         appear:</p>
     <ul>
         <li><em>Max rotation</em>: the maximum angle in degrees by which high magnification 
             images at targets will be rotated in order to align to the reference extracted 
             from the area map.</li>
-        <li><em>Max scaling</em>: the maximum scaling, as a percentage, to be applied to 
-            high magnification images at targets in order to align to the reference 
-            extracted from the area map.</li>
+        <li><em>Max scaling</em><strong>: </strong>the maximum scaling, as a percentage, to 
+            be applied to high magnification images at targets in order to align to the 
+            reference extracted from the area map.</li>
     </ul>
     <p>
       The degree of rotation and scaling that need to be allowed for depends on the 
