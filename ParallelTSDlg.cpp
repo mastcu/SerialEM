@@ -464,11 +464,11 @@ void CParallelTSDlg::Update()
     uncroppedY > 0;
   isMap = activeImBuf->mImage && activeImBuf->mMapID > 0 &&
     mWinApp->mNavigator->FindItemWithMapID(activeImBuf->mMapID);
-  enable = isMap || (imBuf->mImage && !((mWinApp->Montaging() &&
-    (imBuf->mCaptured != BUFFER_MONTAGE_OVERVIEW || imBuf->mSecNumber < 0))
+  enable = imBuf->mImage && !((mWinApp->Montaging() &&
+    (imBuf->mCaptured != BUFFER_MONTAGE_OVERVIEW || imBuf->mSecNumber < 0)
       || (!mWinApp->Montaging() && imBuf->mCaptured < 0 && !cropped &&
         imBuf->mCaptured != BUFFER_PROC_OK_FOR_MAP)));
-  m_butSaveAreaMap.EnableWindow(noTasks && mSettingUpTargetArea && enable
+  m_butSaveAreaMap.EnableWindow(noTasks && mSettingUpTargetArea && (isMap || enable)
     && !(mDefiningPoints || mAddingTargets || mRefiningTargets) && 
     !mJustSavedTargets && !mMakingNewXform);
   SetDlgItemText(IDC_BUT_PTS_SAVEAREAMAP, isMap ? "Identify Area Map" :
@@ -489,7 +489,7 @@ void CParallelTSDlg::Update()
     mWinApp->mNavigator->m_butDrawPts.IsWindowEnabled() &&
     (mWinApp->mNavigator->NoDrawing() || mDefiningPoints) &&
     !(mAddingTargets || mRefiningTargets) && !numPoints && !mMakingNewXform);
-  m_butSaveMap.EnableWindow(enable && !isMap &&
+  m_butSaveMap.EnableWindow(enable &&
     !mParallelTSHelper->ISToTargetsBusy() &&
     !(mAddingTargets || mRefiningTargets) && !numPoints && !mMakingNewXform);
   m_statPretilt.EnableWindow(!(mAddingTargets));
