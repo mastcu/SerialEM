@@ -40,7 +40,7 @@ static int sIdTable[] = {IDC_STATCAMERA, IDC_RCAMERA1, IDC_RCAMERA2, IDC_RCAMERA
   IDC_STAT_LD_PARAM_SET, IDC_RLD_USE_SEARCH, IDC_RLD_USE_VIEW, IDC_RLD_USE_RECORD,
   IDC_RLD_USE_PREVIEW, IDC_RLD_USE_MONTMAP, IDC_CHECK_USE_MULTISHOT,
   IDC_CHECK_CLOSE_WHEN_DONE, IDC_CHECK_IMSHIFT_IN_BLOCKS, IDC_EDIT_MAX_BLOCK_IS,
-  IDC_STAT_IS_BLOCKPIECES, IDC_STAT_IS_BLOCK_STARS, IDC_STAT_LINE3,
+  IDC_STAT_IS_BLOCKPIECES, IDC_STAT_IS_BLOCK_STARS, IDC_STAT_LINE3, IDC_STAT_TOTAL_PIECES,
   PANEL_END,
   IDC_STAT_HQSTAGEBOX, IDC_CHECK_FOCUS_EACH,IDC_CHECK_FOCUS_BLOCKS,
   IDC_CHECK_SKIPCORR, IDC_CHECK_SKIP_REBLANK, IDC_STAT_BLOCKSIZE, IDC_STATBLOCKPIECES,
@@ -84,6 +84,7 @@ CMontageSetupDlg::CMontageSetupDlg(CWnd* pParent /*=NULL*/)
   , m_bImShiftInBlocks(FALSE)
   , m_fMaxBlockIS(1.f)
   , m_iLDParameterSet(0)
+  , m_strTotalPieces(_T(""))
 {
   //{{AFX_DATA_INIT(CMontageSetupDlg)
   m_iXnFrames = 1;
@@ -232,6 +233,7 @@ void CMontageSetupDlg::DoDataExchange(CDataExchange* pDX)
   DDX_MM_FLOAT(pDX, IDC_EDIT_MAX_BLOCK_IS, m_fMaxBlockIS, 1.0f, 1000.0f,
     "Maximum image shift within blocks");
   DDX_Radio(pDX, IDC_RLD_USE_SEARCH, m_iLDParameterSet);
+  DDX_Text(pDX, IDC_STAT_TOTAL_PIECES, m_strTotalPieces);
 }
 
 
@@ -281,6 +283,7 @@ BEGIN_MESSAGE_MAP(CMontageSetupDlg, CBaseDlg)
   ON_BN_CLICKED(IDC_RLD_USE_VIEW, OnRLDUseSearch)
   ON_BN_CLICKED(IDC_RLD_USE_RECORD, OnRLDUseSearch)
   ON_BN_CLICKED(IDC_RLD_USE_MONTMAP, OnRLDUseSearch)
+  ON_BN_CLICKED(IDC_IGNORESKIPS, OnIgnoreSkips)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -614,6 +617,7 @@ void CMontageSetupDlg::LoadParamData(BOOL setPos)
   }
   LoadOverlapBoxes();
   UpdateFocusBlockSizes();
+  ManageTotalPieces(false);
   UpdateData(false);
   ValidateEdits();
   UpdateSizes();
@@ -1110,7 +1114,7 @@ void CMontageSetupDlg::UpdateSizes()
   m_strTotalArea = FormatMicronSize(iTotalX, iTotalY, pixel) + " microns";
 
   UpdateFocusBlockSizes();
-
+  ManageTotalPieces(false);
   UpdateData(false);
 }
 
@@ -1160,6 +1164,21 @@ void CMontageSetupDlg::FindMaxExtents(bool ISinBlocks, int &xExtent, int &yExten
   }
   maxIS = magIndex >= lowestM ? navp->maxMontageIS : navp->maxLMMontageIS;
   montIS = sqrt((double)xExtent * xExtent + yExtent * yExtent) * pixelSize / 2.;
+}
+
+// Update the status line for total # of pieces or blank it out
+void CMontageSetupDlg::ManageTotalPieces(bool update)
+{
+  int total = m_iXnFrames * m_iYnFrames;
+  if (m_bSkipOutside && !(mLowDoseMode && mParam.useMultiShot)) {
+    m_strTotalPieces = "";
+  } else {
+    if (!m_bIgnoreSkips || mForMultiGridMap)
+      total -= mParam.numToSkip;
+    m_strTotalPieces.Format("Total pieces: %d", total);
+  }
+  if (update)
+    UpdateData(false);
 }
 
 // Get magindex given conditions
@@ -1360,6 +1379,13 @@ void CMontageSetupDlg::OnCheckSkipOutside()
 {
   UPDATE_DATA_TRUE;
   m_editSkipOutside.EnableWindow(m_bSkipOutside);
+  ManageTotalPieces(true);
+}
+
+void CMontageSetupDlg::OnIgnoreSkips()
+{
+  UPDATE_DATA_TRUE;
+  ManageTotalPieces(true);
 }
 
 void CMontageSetupDlg::OnCheckContinuousMode()

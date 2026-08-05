@@ -25,6 +25,7 @@ public:
 	void UpdateSizes();
   void UpdateFocusBlockSizes();
   void FindMaxExtents(bool ISinBlocks, int &xExtent, int &yExtent, int &maxPcX, int &maxPcY, double &maxIS, double &montIS);
+  void ManageTotalPieces(bool update);
   int GetMagIndexAndLowestNonLMInd(int &lowestM);
   CString FormatMicronSize(int xxSize, int ySize, float Pixel);
 	BOOL mSizeLocked;
@@ -229,6 +230,8 @@ public:
   afx_msg void OnRLDUseSearch();
   BOOL m_bUsePrevInLowDose;
   BOOL m_bUseMontMapInLD;
+  CString m_strTotalPieces;
+  afx_msg void OnIgnoreSkips();
 };
 
 //{{AFX_INSERT_LOCATION}}

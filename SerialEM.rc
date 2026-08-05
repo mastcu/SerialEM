@@ -1460,6 +1460,7 @@ BEGIN
     CONTROL         "Mont-map",IDC_RLD_USE_MONTMAP,"Button",BS_AUTORADIOBUTTON,126,276,35,10
     CONTROL         "Acquire with Multiple Record routine",IDC_CHECK_USE_MULTISHOT,
                     "Button",BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,10,289,128,10
+    LTEXT           "Total pieces: 99990",IDC_STAT_TOTAL_PIECES,3,109,62,8
 END
 
 IDD_MONTAGECONTROL DIALOGEX 0, 0, 119, 108
@@ -8467,6 +8468,10 @@ BEGIN
     ID_SCRIPT_LISTFKEYMAPPINGS "Print list of function key mappings to log"
     ID_BEAMSPOT_PARALLELILLUMINATION 
                             "Save intensity, spot size, and probe/alpha as parallel illumination conditions"
+END
+
+STRINGTABLE
+BEGIN
     IDC_USE_ITEM_MAX_TILT   "Set Tilt to and End at from bidirectional start angle and stored maximum tilt"
 END
 

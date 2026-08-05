@@ -2742,6 +2742,7 @@
 #define IDC_STATTHRESHMICRONS           3773
 #define IDC_USE_ITEM_MAX_TILT           3774
 #define IDC_BUT_PTS_SAVEMAP             3775
+#define IDC_STAT_TOTAL_PIECES           3776
 #define ID_NEW_IMAGE                    32771
 #define IDM_FILE_SAVEOTHER              32772
 #define IDM_FILE_READ                   32773
@@ -3387,7 +3388,7 @@
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        305
 #define _APS_NEXT_COMMAND_VALUE         33640
-#define _APS_NEXT_CONTROL_VALUE         3776
+#define _APS_NEXT_CONTROL_VALUE         3777
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif
