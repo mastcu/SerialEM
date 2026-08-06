@@ -454,6 +454,8 @@ public:
   afx_msg void OnMiscNoTrueSize();
   afx_msg void OnUpdateMiscNoTrueSize(CCmdUI *pCmdUI);
   afx_msg void OnUpdateReverseWheelZoomDirection(CCmdUI *pCmdUI);
+  afx_msg void OnSetupParallelTS();
+  afx_msg void OnUpdateSetupParallelTS(CCmdUI *pCmdUI);
 };
 
 /////////////////////////////////////////////////////////////////////////////

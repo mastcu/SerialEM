@@ -575,6 +575,12 @@
     <ClInclude Include="XSliderCtrl.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="ParallelTSDlg.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ParallelTSHelper.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="res\bitmap1.bmp">
@@ -947,6 +953,9 @@
       <Filter>HTML Help Topics</Filter>
     </None>
     <None Include="hlp\html\navwindow_menu.htm">
+      <Filter>HTML Help Topics</Filter>
+    </None>
+    <None Include="hlp\html\hidd_paralleltiltseries.htm">
       <Filter>HTML Help Topics</Filter>
     </None>
   </ItemGroup>
@@ -1399,6 +1408,12 @@
       <Filter>CSource Files</Filter>
     </ClCompile>
     <ClCompile Include="XSliderCtrl.cpp">
+      <Filter>CSource Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ParallelTSDlg.cpp">
+      <Filter>CSource Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ParallelTSHelper.cpp">
       <Filter>CSource Files</Filter>
     </ClCompile>
   </ItemGroup>

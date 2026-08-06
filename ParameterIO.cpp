@@ -60,6 +60,7 @@
 #include "ExternalTools.h"
 #include "TSVariationsDlg.h"
 #include "PiezoAndPPControl.h"
+#include "ParallelTSDlg.h"
 #include "Shared\b3dutil.h"
 #include "Utilities\KGetOne.h"
 #include <set>
@@ -764,7 +765,8 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
         parTSopts->acqMagIndNonLD = itemInt[11];
         parTSopts->refAliMaxPctChg = itemFlt[12];
         parTSopts->refAliMaxRot = itemFlt[13];
-        parTSopts->flags = itemInt[14];
+        parTSopts->applyAdjustingXform = itemInt[14];
+        parTSopts->flags = itemInt[15];
 
       } else if (NAME_IS("NavigatorAcquireParams")) {
 
@@ -1167,6 +1169,8 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
             place = navHelper->GetRotAlignPlacement();
           else if (NAME_IS("MultiShotPlacement"))
             place = navHelper->GetMultiShotPlacement(false);
+          else if (NAME_IS("ParallelTSPlacement"))
+            place = navHelper->GetParallelTSPlacement();
           else if (NAME_IS("HoleFinderPlacement"))
             place = navHelper->GetHoleFinderPlacement();
           else if (NAME_IS("MultiCombinerPlacement"))
@@ -1244,6 +1248,7 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
             SET_PLACEMENT("ReadDlgPlacement", mDocWnd->mReadFileDlg);
             SET_PLACEMENT("StageToolPlacement", mWinApp->mStageMoveTool);
             SET_PLACEMENT("OneLinePlacement", mWinApp->mMacroProcessor->mOneLineScript);
+            SET_PLACEMENT("ParallelTSPlacement", mWinApp->mNavHelper->mParallelTSDlg);
             SET_PLACEMENT("MacroToolPlacement", mWinApp->mMacroToolbar);
             if (NAME_IS("HoleFinderPlacement") &&
               navHelper->mHoleFinderDlg->IsOpen())
@@ -1825,6 +1830,7 @@ void CParameterIO::WriteSettings(CString strFileName)
   WINDOWPLACEMENT *zbgPlace = mWinApp->mParticleTasks->GetZbyGPlacement();
   WINDOWPLACEMENT *navAcqPlace = navHelper->GetAcquireDlgPlacement(true);
   WINDOWPLACEMENT *scndLogPlace = mWinApp->GetSecondaryLogPlacement();
+  WINDOWPLACEMENT *parallelTSPlace = mWinApp->mNavHelper->GetParallelTSPlacement();
   int *macroButtonNumbers = mWinApp->mCameraMacroTools.GetMacroNumbers();
   mWinApp->CopyCurrentToCameraLDP();
   DoseTable *doseTables = mWinApp->mBeamAssessor->GetDoseTables();
@@ -2152,13 +2158,13 @@ void CParameterIO::WriteSettings(CString strFileName)
       dwParams->changeIS ? 1 : 0, dwParams->usePriorAutofocus ? 1 : 0, 
       dwParams->priorAutofocusRate);
     mFile->WriteString(oneState);
-    oneState.Format("ParallelTSOptions %d %f %f %d %f %d %d %d %f %d %d %f %f %d\n",
+    oneState.Format("ParallelTSOptions %d %f %f %d %f %d %d %d %f %d %d %f %f %d %d\n",
       parTSopts->adjustBeamTilt ? 1 : 0, parTSopts->extraDelayFactor, parTSopts->beamDiam,
       parTSopts->useIAorBeamSize ? 1 : 0, parTSopts->tiltForBeam,
       parTSopts->CtfMeasureType, parTSopts->findAstig ? 1 : 0,
       parTSopts->extractVirtPrevs, parTSopts->alignLimitFrac, parTSopts->mapMagIndNonLD,
       parTSopts->acqMagIndNonLD, parTSopts->refAliMaxPctChg, parTSopts->refAliMaxRot,
-      parTSopts->flags);
+      parTSopts->applyAdjustingXform, parTSopts->flags);
     mFile->WriteString(oneState);
 
     for (i = 0; i < 2; i++)
@@ -2398,6 +2404,7 @@ void CParameterIO::WriteSettings(CString strFileName)
     WritePlacement("VppCondPlacement", 0, vppPlace);
     WritePlacement("ZbyGSetupPlacement", 0, zbgPlace);
     WritePlacement("NavAcqPlacement", 0, navAcqPlace);
+    WritePlacement("ParallelTSPlacement", 0, parallelTSPlace);
     WritePlacement("SnapshotPlacement", 0, mWinApp->GetScreenShotPlacement());
     WritePlacement("HoleFinderPlacement", 0, 
       navHelper->GetHoleFinderPlacement());

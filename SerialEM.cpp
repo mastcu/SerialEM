@@ -72,6 +72,8 @@
 #include "ExternalTools.h"
 #include "PythonServer.h"
 #include "ManyChoiceDlg.h"
+#include "ParallelTSDlg.h"
+#include "ParallelTSHelper.h"
 #include "Shared\b3dutil.h"
 #include "XFolderDialog/XWinVer.h"
 
@@ -259,6 +261,7 @@ CSerialEMApp::CSerialEMApp()
   mSaveLogAsRTF = false;
   mNavigator = NULL;
   mNavHelper = NULL;
+  mParallelTSHelper = NULL;
   mStageMoveTool = NULL;
   mScreenShotDialog = NULL;
   mAdministrator = false;
@@ -946,6 +949,7 @@ CSerialEMApp::~CSerialEMApp()
   delete mGainRefMaker;
   delete mCalibTiming;
   delete mNavHelper;
+  delete mParallelTSHelper;
   delete mMailer;
   delete mGatanSocket;
   delete mFalconHelper;
@@ -1142,6 +1146,7 @@ BOOL CSerialEMApp::InitInstance()
   mGainRefMaker = new CGainRefMaker();
   mCalibTiming = new CCalibCameraTiming();
   mNavHelper = new CNavHelper();
+  mParallelTSHelper = new CParallelTSHelper();
   mFalconHelper = new CFalconHelper();
   mPiezoControl = new CPiezoAndPPControl();
   mAutoTuning = new CAutoTuning();
@@ -1489,6 +1494,7 @@ BOOL CSerialEMApp::InitInstance()
   mFilterTasks->Initialize();
   mDistortionTasks->Initialize();
   mNavHelper->Initialize();
+  mParallelTSHelper->Initialize();
   mAutoTuning->Initialize();
   mProcessImage->Initialize();
   mFalconHelper->InitializePointers();
@@ -3170,6 +3176,8 @@ BOOL CSerialEMApp::CheckIdleTasks()
       busy = mDectrisToolDlg.InitializeBusy();
     else if (idc->source == TASK_AUTO_STEP_ADJ_IS)
       busy = CMultiShotDlg::AutoStepBusy();
+    else if (idc->source == TASK_IS_TO_PARALLELTS_TARGET)
+      busy = mParallelTSHelper->ISToTargetsBusy();
     else if (idc->source == TASK_SNAPSHOT_TO_BUF)
       busy = 0;
 
@@ -3330,6 +3338,8 @@ BOOL CSerialEMApp::CheckIdleTasks()
           mNavHelper->mHoleFinderDlg->MultiMapNextTask(idc->param);
         else if (idc->source == TASK_AUTO_STEP_ADJ_IS)
           CMultiShotDlg::AutoStepAdjNextTask(idc->param);
+        else if (idc->source == TASK_IS_TO_PARALLELTS_TARGET)
+          mParallelTSHelper->ISToTargetNextTask(idc->param);
         else if (idc->source == TASK_MACRO_AT_EXIT)
           mMainFrame->DoClose(true);
         else if (idc->source == TASK_AUTO_CONTOUR)
@@ -3457,6 +3467,8 @@ BOOL CSerialEMApp::CheckIdleTasks()
           mNavHelper->mHoleFinderDlg->StopMultiMap();
         else if (idc->source == TASK_AUTO_STEP_ADJ_IS)
           CMultiShotDlg::StopRecording();
+        else if (idc->source == TASK_IS_TO_PARALLELTS_TARGET)
+          mParallelTSHelper->StopParallelTSShift();
         else if (idc->source == TASK_AUTO_CONTOUR)
           mNavHelper->mAutoContouringDlg->CleanupAutoCont(busy);
         else if (idc->source == TASK_DECTRIS_INITIALIZE)
@@ -3651,6 +3663,8 @@ void CSerialEMApp::ErrorOccurred(int error)
     mMultiGridTasks->SetExtErrorOccurred(error);
   if (mPlugStopFunc && mPlugDoingFunc && mPlugDoingFunc())
     mPlugStopFunc(error);
+  if (mParallelTSHelper->DoingISToTargets())
+    mParallelTSHelper->StopParallelTSShift(true);
   mCamera->SetPreventUserToggle(0);
 }
 
@@ -3976,6 +3990,7 @@ bool DLL_IM_EX SEMIsIgnoringFunctionCalled()
 //   K for socket interface
 //   L for verbose low dose
 //   M for Moran/montage time reports
+//   N for multi-grid routines
 //   P Reserved for other plugins
 //   R for retraction
 //   S for stage and montage info
@@ -4268,6 +4283,8 @@ void CSerialEMApp::UpdateBufferWindows()
     mNavHelper->mMultiGridDlg->UpdateEnables();
   if (mNavHelper->mMGSettingsDlg)
     mNavHelper->mMGSettingsDlg->ManageEnables();
+  if (mNavHelper->mParallelTSDlg->IsOpen())
+    mNavHelper->mParallelTSDlg->Update();
   UpdateAllEditers();
   UpdateMacroButtons();
   mInUpdateWindows = false;
@@ -4425,9 +4442,9 @@ BOOL CSerialEMApp::UserAcquireOK(void)
 BOOL CSerialEMApp::DoingComplexTasks()
 {
   return mMacroProcessor->DoingMacro() || mNavHelper->GetAcquiringDual() ||
-    mComplexTasks->DoingComplexTasks() || StartedTiltSeries() ||
-    (mNavigator && mNavigator->GetAcquiring() && !mNavigator->StartedMacro() ||
-      mMultiGridTasks->GetDoingMulGridSeq());
+    mComplexTasks->DoingComplexTasks() || StartedTiltSeries() || 
+    (mNavigator && mNavigator->GetAcquiring() && !mNavigator->StartedMacro()) ||
+      mMultiGridTasks->GetDoingMulGridSeq() || mParallelTSHelper->ISToTargetsBusy();
 }
 
 int *CSerialEMApp::GetInitialDlgState()
@@ -5112,6 +5129,8 @@ void CSerialEMApp::NavigatorClosing()
     mNavHelper->mMultiGridDlg->CloseWindow();
   if (mNavHelper->mMGSettingsDlg)
     mNavHelper->mMGSettingsDlg->CloseWindow();
+  if (mNavHelper->mParallelTSDlg->IsOpen())
+    mNavHelper->mParallelTSDlg->CloseWindow();
 }
 
 // Stage move tool

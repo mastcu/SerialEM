@@ -15,6 +15,7 @@ class CComaVsISCalDlg;
 class CAutoContouringDlg;
 class CMultiGridDlg;
 class CMGSettingsManagerDlg;
+class CParallelTSDlg;
 
 #define MULTI_IN_HOLE       0x1
 #define MULTI_HOLES         0x2
@@ -235,6 +236,7 @@ struct ParallelTSOptions {
   int acqMagIndNonLD;
   float refAliMaxPctChg;   // Max percent size change when aligning to extracted reference
   float refAliMaxRot;      // Max rotation when aligning to extracted reference
+  BOOL applyAdjustingXform;// Whether to apply Adjusting transform
   int flags;               // For future easy expansion
 };
 
@@ -410,6 +412,7 @@ public:
   CAutoContouringDlg *mAutoContouringDlg;
   CMultiGridDlg *mMultiGridDlg;
   CMGSettingsManagerDlg *mMGSettingsDlg;
+  CParallelTSDlg *mParallelTSDlg;
 
 private:
   CSerialEMApp *mWinApp;
@@ -552,6 +555,7 @@ private:
   WINDOWPLACEMENT mAutoContDlgPlace;
   WINDOWPLACEMENT mMultiGridPlace;
   WINDOWPLACEMENT mMGSettingsPlace;
+  WINDOWPLACEMENT mParallelTSPlace;
   bool mOpenedMultiGrid;              // Flag that it was ever open
   double mRIdefocusOffsetSet;   // Defocus offset set in realign to item
   int mRIalphaSet;              // Alpha value set in realign to item
@@ -840,6 +844,8 @@ public:
   void OpenMGSettingsDlg(int jcdInd);
   WINDOWPLACEMENT *GetMGSettingsPlacement(void);
   WINDOWPLACEMENT *GetAcquireDlgPlacement(bool fromDlg);
+  void OpenParallelTS(void);
+  WINDOWPLACEMENT * GetParallelTSPlacement(void);
   void UpdateAcquireDlgForFileChanges();
   void CopyAcqParamsAndActionsToTemp(int which);
   void CopyAcqParamsAndActionsToTemp(NavAcqAction *useAct, NavAcqParams *useParams, int *useOrder);
@@ -876,6 +882,7 @@ public:
   int GetHoleGeometry(float &holeSize, float &holeSpacing, bool &hex,
     EMimageBuffer *imBuf, bool *fromMapPtr = NULL);
   int CenterAddedPointInHole(EMimageBuffer* imBuf, float &inX, float &inY, CString &errStr);
-
+  int FillPolygonWithMultiShot(CMapDrawItem *polyItem, FloatVec &ISX,
+    FloatVec &ISY, CString &errStr, float cenX = 0.f, float cenY = 0.f);
 };
 

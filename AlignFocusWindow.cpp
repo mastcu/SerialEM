@@ -19,6 +19,7 @@
 #include "CameraController.h"
 #include "ComplexTasks.h"
 #include "TSController.h"
+#include "ParallelTSHelper.h"
 #include "Utilities\KGetOne.h"
 
 #if defined(_DEBUG) && defined(_CRTDBG_MAP_ALLOC)
@@ -334,8 +335,11 @@ void CAlignFocusWindow::Update()
   }
   m_butApplyISoffset.EnableWindow(bEnable);
 
-  // Mouse moving of stage disabled in calibrating IS offset
-  m_butMouseStage.EnableWindow(!mWinApp->mShiftCalibrator->CalibratingOffset());
+  // Mouse moving of stage disabled in calibrating IS offset or refining/adjusting 
+  // image shifts in parallel tilt series
+  m_butMouseStage.EnableWindow(!mWinApp->mShiftCalibrator->CalibratingOffset() && 
+    !(mWinApp->mParallelTSHelper->DoingISToTargets() || 
+      mWinApp->mParallelTSHelper->GetNumSavedTargets()));
 }
 
 // Update the autofocus button: it is the only thing here that depends on scope state

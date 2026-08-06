@@ -54,6 +54,8 @@
 //#include "TiltSeriesParam.h"
 #include "TSController.h"
 #include "DoseModulator.h"
+#include "ParallelTSDlg.h"
+#include "ParallelTSHelper.h"
 #include "Utilities\XCorr.h"
 #include "Utilities\KGetOne.h"
 #include "Shared\autodoc.h"
@@ -845,6 +847,13 @@ void CNavigatorDlg::Update()
     groupOK = numAcq && !numTS && !numFile;
   }
 
+  CParallelTSDlg *parTSDlg = mHelper->mParallelTSDlg;
+  bool parTSRefining = parTSDlg->IsOpen() && parTSDlg->RefiningTargets();
+  bool parTSCenPt = curExists && 
+    mItem->mMapID == mWinApp->mParallelTSHelper->GetCenterPtID() &&
+    mItem->mGroupID == mHelper->mParallelTSDlg->GetTargetGroupID() && mItem->mGroupID > 0
+    && parTSDlg->IsOpen() && parTSDlg->GetSettingUpTargetArea();
+
   //m_butUpdatePos.EnableWindow(curExists && mItem->IsNotMap() && noDrawing &&
   //  mAcquireIndex < 0);
   m_butUpdateZ.EnableWindow((curExists || grpExists) && noTasks && noDrawing);
@@ -866,9 +875,9 @@ void CNavigatorDlg::Update()
   m_butDualMap.EnableWindow(noDrawing && noTasks && mDualMapID >= 0);
   m_butDeleteItem.EnableWindow((curExists || grpExists) && noDrawing &&
     mAcquireIndex < 0 && !mHelper->GetAcquiringDual() && !mWinApp->DoingComplexTasks() &&
-    !mNavAcquireDlg && mFRangeIndex < 0);
+    !mNavAcquireDlg && mFRangeIndex < 0 && !parTSRefining && !parTSCenPt);
   m_butRealign.EnableWindow(curExists && noDrawing && mAcquireIndex < 0 && noTasks &&
-    !mCamera->CameraBusy());
+    !mCamera->CameraBusy() && !parTSRefining);
   m_listViewer.EnableWindow(!mAddingPoints && !mLoadingMap && mAcquireIndex < 0);
   index = -1;
 
@@ -935,6 +944,8 @@ void CNavigatorDlg::UpdateAddMarker(void)
   m_butMoveItem.EnableWindow(curExists &&
     !(mAddingPoints || mAddingPoly || mLoadingMap) && noTasks);
   m_butDrawPts.EnableWindow(!(mAddingPoly || mMovingItem || mLoadingMap) && noTasks);
+  if (mHelper->mParallelTSDlg->IsOpen())
+    mHelper->mParallelTSDlg->ExternalUpdate();
   m_butDrawPoly.EnableWindow(!(mAddingPoints || mMovingItem || mLoadingMap) && noTasks);
   m_butAddMarker.EnableWindow(OKtoAddMarkerPoint(true));
   m_butGotoMarker.EnableWindow(OKtoAddMarkerPoint(false));
@@ -1835,6 +1846,29 @@ void CNavigatorDlg::OnListItemDrag(int oldIndex, int newIndex)
   CMapDrawItem *item = mItemArray.GetAt(oldIndex);
   mWinApp->RestoreViewFocus();
   if (!m_bCollapseGroups) {
+
+    //If doing parallel TS, enforce that first nav item remains first in the group
+    CParallelTSDlg *parTSDlg = mHelper->mParallelTSDlg;
+    int numPoints, numAcq;
+    IntVec navInd;
+    CString label, lastLab;
+    if (parTSDlg->IsOpen() && mWinApp->mParallelTSHelper->GetNumSavedTargets() &&
+      item->mGroupID > 0 && item->mGroupID == parTSDlg->GetTargetGroupID()) {
+      numPoints = CountItemsInGroup(item->mGroupID, label, lastLab, numAcq, &navInd);
+      if (numPoints > 1) {
+        if ((oldIndex == navInd[0] && newIndex >= navInd[1]) || 
+          (oldIndex != navInd[0] && newIndex <= navInd[0])) {
+          AfxMessageBox("The assigned center target must remain first in the group of "
+            "parallel tilt series targets.", MB_EXCLAME);
+          if (oldIndex == navInd[0] && newIndex >= navInd[1]) {
+            newIndex = navInd[1] - 1;
+          } else {
+            newIndex = navInd[0] + 1;
+          }
+        }
+      }
+    }
+
     RemoveFromArray(oldIndex);
     mItemArray.InsertAt(newIndex, item);
   } else {
@@ -3175,7 +3209,8 @@ void CNavigatorDlg::MoveStageOrDoImageShift(int axisBits)
   double areaX = 0, areaY = 0;
   ScaleMat stage2IS;
   int magInd, area;
-  if (mHelper->mMultiShotDlg && mHelper->mMultiShotDlg->RecordingHoles()) {
+  if (mHelper->mMultiShotDlg && mHelper->mMultiShotDlg->RecordingHoles() ||
+    (mHelper->mParallelTSDlg->IsOpen() && mHelper->mParallelTSDlg->RefiningTargets())) {
     GetAdjustedStagePos(stageX, stageY, stageZ);
     if (mWinApp->LowDoseMode()) {
       area = mScope->GetLowDoseArea();
@@ -3203,6 +3238,8 @@ void CNavigatorDlg::OnDeleteitem()
 {
   int start, end, delIndex = mCurrentItem;
   bool multipleInGroup = false;
+  bool deletingPTSmap = mHelper->mParallelTSDlg->IsOpen() && mItem->IsMap() &&
+    mItem->mMapID == mWinApp->mParallelTSHelper->GetAreaMapID();
   mWinApp->RestoreViewFocus();
 
   // This sets current item to actual item or beginning of group
@@ -3234,7 +3271,7 @@ void CNavigatorDlg::OnDeleteitem()
     MB_YESNO | MB_ICONQUESTION) == IDNO)
     return;
 
-   FinishSingleDeletion(mItem, delIndex, mCurListSel, multipleInGroup, 0);
+  FinishSingleDeletion(mItem, delIndex, mCurListSel, multipleInGroup, 0);
 
   delIndex = B3DMAX(0, delIndex - 1);
   if (m_bCollapseGroups && m_bEditMode && mRemoveItemOnly && !mAddingPoints &&
@@ -3250,6 +3287,18 @@ void CNavigatorDlg::OnDeleteitem()
   }
   if (m_bTableIndexes)
     FillListBox(true, true);
+  
+  if (mHelper->mParallelTSDlg->IsOpen()) {
+    if (mHelper->mParallelTSDlg->GetSettingUpTargetArea()) {
+      if (mWinApp->mParallelTSHelper->PruneDeletedTargets()) {
+        mHelper->mParallelTSDlg->UpdateRefinementOrAdjustingStatus();
+      }
+    }
+    mHelper->mParallelTSDlg->Update();
+    if (deletingPTSmap) {
+      mHelper->mParallelTSDlg->ManagePanels();
+    }
+  }
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -3263,14 +3312,25 @@ void CNavigatorDlg::OnDrawPoints()
 
   // Remove group ID for single point and update the mappings and that item's string
   if (!mAddingPoints && (int)mItemArray.GetSize() - mNumberBeforeAdd == 1) {
-    mItemArray[mNumberBeforeAdd]->mGroupID = 0;
+    if (!mWinApp->mNavHelper->mParallelTSDlg->IsOpen() || 
+      !mWinApp->mNavHelper->mParallelTSDlg->GetDrawingISTargets())
+      mItemArray[mNumberBeforeAdd]->mGroupID = 0;
     if (m_bCollapseGroups) {
       MakeListMappings();
       UpdateListString(mNumberBeforeAdd);
     }
   }
   mNumberBeforeAdd = (int)mItemArray.GetSize();
-  mAddPointID = MakeUniqueID();
+
+  if (mWinApp->mNavHelper->mParallelTSDlg->IsOpen() &&
+    mWinApp->mNavHelper->mParallelTSDlg->IsDefiningPoints())
+    mAddPointID = mWinApp->mNavHelper->mParallelTSDlg->GetFitPlaneGroupID();
+  else if (mWinApp->mNavHelper->mParallelTSDlg->IsOpen() &&
+    mWinApp->mNavHelper->mParallelTSDlg->IsAddingTargets())
+    mAddPointID = mWinApp->mNavHelper->mParallelTSDlg->GetTargetGroupID();
+  else
+    mAddPointID = MakeUniqueID();
+
   if (mAddingPoints) {
     ManageListHeader("Use Backspace to remove added points one by one");
   } else {
@@ -3278,7 +3338,7 @@ void CNavigatorDlg::OnDrawPoints()
     Redraw();
     mReloadTableOnNextAdd = B3DMAX(0, mReloadTableOnNextAdd - 1);
   }
-
+  
   Update();
   mWinApp->RestoreViewFocus();
 }
@@ -3421,6 +3481,23 @@ BOOL CNavigatorDlg::UserMousePoint(EMimageBuffer *imBuf, float inX, float inY,
     return false;
   if (mMovingItem && button == VK_MBUTTON)
     return false;
+  
+  // If adding targets in ParallelTSDlg, require that the buffer is a map
+  if (mHelper->mParallelTSDlg->IsOpen() && mHelper->mParallelTSDlg->IsAddingToNav()
+    && !FindItemWithMapID(imBuf->mMapID)) {
+    AfxMessageBox("Targets must be added on a map", MB_EXCLAME);
+    return false;
+  }
+  if (mHelper->mParallelTSDlg->IsOpen() && mHelper->mParallelTSDlg->IsAddingTargets()) {
+    if (!mHelper->mParallelTSDlg->AreaMapInBuf(imBuf)) {
+      mHelper->mParallelTSDlg->Update();
+      AfxMessageBox("Targets must be added to the defined area map", MB_EXCLAME);
+      return false;
+    } else {
+      mHelper->mParallelTSDlg->IncrementNumTargetsAdded();
+      mHelper->mParallelTSDlg->Update();
+    }
+  }
 
   // if set in hole finder parameters, center added point in hole
   if (mHelper->mHoleFinderDlg->IsOpen() && mHelper->mHoleFinderDlg->m_bCenterAddedHoles) {
@@ -5512,6 +5589,43 @@ void CNavigatorDlg::DeleteGroup(bool collapsedGroup)
   if ((!doSelection || num > 2) &&
     AfxMessageBox(message, MB_ICONQUESTION | MB_YESNO) != IDYES)
     return;
+  for (i = end; i >= start; i--) {
+    item = mItemArray[i];
+    if ((!doSelection && item->mGroupID == curID) ||
+      (doSelection && mSelectedItems.count(i))) {
+      if (item->mAcquire) {
+        item->mAcquire = false;
+        mHelper->EndAcquireOrNewFile(item);
+      }
+      DeleteAndRemoveFromArray(i);
+    }
+  }
+  FinishMultipleDeletion();
+}
+
+// Delete a whole group, or the part on one line of collapsed groups, or multiple
+// selected points.  "collapsedGroups" is true literally or for multiple selected points
+// in this case suppress any message boxes
+void CNavigatorDlg::ExternalDeleteGroup(bool collapsedGroup)
+{
+  CString message, label, lastlab;
+  CMapDrawItem *item;
+  bool doSelection = collapsedGroup && mSelectedItems.size() > 1;
+  int i, curID, num, start = 0, end = (int)mItemArray.GetSize() - 1;
+  if (!SetCurrentItem(true))
+    return;
+  curID = mItem->mGroupID;
+  if (!curID && !doSelection)
+    return;
+
+  if (doSelection) {
+    num = (int)mSelectedItems.size();
+  } else if (collapsedGroup) {
+    GetCollapsedGroupLimits(mCurListSel, start, end);
+    num = end + 1 - start;
+  } else {
+    num = CountItemsInGroup(curID, label, lastlab, i);
+  }
   for (i = end; i >= start; i--) {
     item = mItemArray[i];
     if ((!doSelection && item->mGroupID == curID) ||
@@ -12595,6 +12709,18 @@ void CNavigatorDlg::FinishSingleDeletion(CMapDrawItem *item, int delIndex, int l
   bool multipleInGroup, int groupStart)
 {
   bool isCurrentInList = listInd == mCurListSel;
+  bool isPTSTarget = mHelper->mParallelTSDlg->IsOpen() && 
+    mHelper->mParallelTSDlg->GetSettingUpTargetArea() &&
+    item->mGroupID == mHelper->mParallelTSDlg->GetTargetGroupID()
+    && item->IsPoint() && item->mGroupID > 0;
+
+  if (isPTSTarget && item->mMapID == mWinApp->mParallelTSHelper->GetCenterPtID()) {
+    AfxMessageBox("The center target for a parallel tilt series cannot be deleted or "
+      "reordered. Abort the parallel tilt series area if you wish to change the center "
+      "point", MB_EXCLAME);
+    return;
+  }
+
   if (item->mAcquire || item->mTSparamIndex >= 0) {
     item->mAcquire = false;
     mHelper->EndAcquireOrNewFile(item);
@@ -12635,6 +12761,13 @@ void CNavigatorDlg::FinishSingleDeletion(CMapDrawItem *item, int delIndex, int l
     if (multipleInGroup)
       UpdateListString(mCurrentItem);
   }
+
+  if (isPTSTarget) {
+    if (mWinApp->mParallelTSHelper->PruneDeletedTargets()) {
+      mHelper->mParallelTSDlg->UpdateRefinementOrAdjustingStatus();
+    }
+  }
+
   SetChanged(true);
   mSelectedItems.clear();
 }
