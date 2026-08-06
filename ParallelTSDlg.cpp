@@ -364,7 +364,7 @@ void CParallelTSDlg::Update()
   CMapDrawItem *item;
   int uncroppedX, uncroppedY;
   int numPoints, numSaved, mag;
-  bool cropped, enable, isMap;
+  bool cropped, enable, isMap, ABisMap;
   IntVec indexVec;
   CString label, lastlabel;
   CWnd *pwnd;
@@ -456,22 +456,28 @@ void CParallelTSDlg::Update()
     SetDlgItemText(IDC_STATIC_PTS_MAPSTATUS, "Area map not defined");
   }
 
-  //Check if current buffer is ok for map
-  activeImBuf = mWinApp->mActiveView->GetActiveImBuf();
-  imBuf = &imBufs[(mWinApp->Montaging() &&
-    imBufs[1].mCaptured == BUFFER_MONTAGE_OVERVIEW) ? 1 : 0];
+  //Check if buffer A/B is ok for map
+  imBuf = &imBufs[(mWinApp->Montaging() && 
+    imBufs[1].mCaptured == BUFFER_MONTAGE_OVERVIEW) ?  1 : 0];
   cropped = imBuf->GetUncroppedSize(uncroppedX, uncroppedY) && uncroppedX > 0 &&
     uncroppedY > 0;
-  isMap = activeImBuf->mImage && activeImBuf->mMapID > 0 &&
-    mWinApp->mNavigator->FindItemWithMapID(activeImBuf->mMapID);
   enable = imBuf->mImage && !((mWinApp->Montaging() &&
     (imBuf->mCaptured != BUFFER_MONTAGE_OVERVIEW || imBuf->mSecNumber < 0)
       || (!mWinApp->Montaging() && imBuf->mCaptured < 0 && !cropped &&
         imBuf->mCaptured != BUFFER_PROC_OK_FOR_MAP)));
-  m_butSaveAreaMap.EnableWindow(noTasks && mSettingUpTargetArea && (isMap || enable)
+  ABisMap = imBuf->mMapID > 0 && mWinApp->mNavigator->FindItemWithMapID(imBuf->mMapID);
+  activeImBuf = mWinApp->mActiveView->GetActiveImBuf();
+  isMap = activeImBuf->mImage && activeImBuf->mMapID > 0 &&
+    mWinApp->mNavigator->FindItemWithMapID(activeImBuf->mMapID);
+  
+  m_butSaveAreaMap.EnableWindow(noTasks && mSettingUpTargetArea && 
+    (isMap || (!isMap && !ABisMap && enable))
     && !(mDefiningPoints || mAddingTargets || mRefiningTargets) && 
     !mJustSavedTargets && !mMakingNewXform);
-  SetDlgItemText(IDC_BUT_PTS_SAVEAREAMAP, isMap ? "Identify Area Map" :
+
+  char letter = 'A' + mWinApp->mActiveView->GetImBufIndex();
+  SetDlgItemText(IDC_BUT_PTS_SAVEAREAMAP,
+    isMap ? "Use Map in Buf " + (CString)letter + " as Area Map":
     (mHasAreaMap ? "Save New Area Map" : "Save Area Map"));
   m_statAreaMapStatus.EnableWindow(mSettingUpTargetArea);
   
@@ -489,7 +495,7 @@ void CParallelTSDlg::Update()
     mWinApp->mNavigator->m_butDrawPts.IsWindowEnabled() &&
     (mWinApp->mNavigator->NoDrawing() || mDefiningPoints) &&
     !(mAddingTargets || mRefiningTargets) && !numPoints && !mMakingNewXform);
-  m_butSaveMap.EnableWindow(enable &&
+  m_butSaveMap.EnableWindow(enable && !ABisMap &&
     !mParallelTSHelper->ISToTargetsBusy() &&
     !(mAddingTargets || mRefiningTargets) && !numPoints && !mMakingNewXform);
   m_statPretilt.EnableWindow(!(mAddingTargets));
@@ -739,7 +745,7 @@ void CParallelTSDlg::OptionsToDialog()
   m_fExtraDelayFactor = mParTSopts->extraDelayFactor;
   m_fBeamDiameter = mParTSopts->beamDiam;
   m_bBeamSizeCircles = mParTSopts->useIAorBeamSize;
-  m_fMaxTilt = B3DABS(mParTSopts->tiltForBeam) >= 90 ? 0 : mParTSopts->tiltForBeam;
+  m_fMaxTilt = B3DABS(mParTSopts->tiltForBeam) >= 90 ? 0 : B3DABS(mParTSopts->tiltForBeam);
   m_iCTFType = mParTSopts->CtfMeasureType;
   m_bFindAstig = mParTSopts->findAstig;
   if (m_iTargetType == 0)

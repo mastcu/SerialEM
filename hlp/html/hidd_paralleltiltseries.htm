@@ -41,7 +41,8 @@
         have same effect as the <strong>Stop Adding</strong> button here.&nbsp;A map is 
         needed in all three cases; any map is allowed for fitting to a plane, but for 
         image shift refinement and defining adjusting transforms, the map must be the current 
-        area map.</p>
+        area map. You may find it helpful to open a locator window in order to have a 
+        full view of the map alongside a zoomed in view on which to add targets.</p>
     <p>
         <em>References and IS refinement: </em>The dialog provides some flexibility in how or whether the references for 
         tracking at the targets are made, depending on what works best for your 
@@ -51,7 +52,10 @@
         process. Additionally, you have the option to skip collecting references and 
         tracking altogether. You also have the option to skip refinement, if you 
         believe that the conversion of stage positions to image shifts will be 
-        sufficiently reliable.</p>
+        sufficiently reliable. During refinement, a separate window will open displaying 
+        a view of the area map zoomed in at the current target, to aid in centering the 
+        originally marked target. Changes to the zoom or size of this window will 
+        persist until you finish refining a round of targets.</p>
     <p>
         <em>Adjusting transforms: </em>Image shifts derived from positions marked on a 
         medium-magnification often do not apply well at the higher acquisition 
@@ -67,7 +71,8 @@
         the ability to create an adjusting transform in case the other procedure is not 
         conveniently available. The transform is defined here by marking points in 
         a map that can be accurately located in a Preview, then adjusting image shift to 
-        center each feature in a Preview.</p>
+        center each feature in a Preview. A zoomed map overview window will be displayed 
+        while adjusting, as is done in image shift refinement.</p>
     <p>
         <em>Image types and cleanup:</em> Preview camera parameters will be used for all images 
         at the acquisition mag, namely, images for refining target positions, for 
@@ -94,7 +99,7 @@
             compute specimen angles (&quot;Leveling tilt&quot; and &quot;X pitch angle&quot;).</li>
         <li><strong>Start New Target Area:</strong> The program will tilt to the leveling tilt so that the 
             specimen is flat.</li>
-        <li>&nbsp;<strong>Acquire</strong> a new image or montage at this tilt and <strong>Save/Identify Area Map </strong>of 
+        <li><strong>Acquire</strong> a new image or montage at this tilt and <strong>Save Area Map</strong> of 
             the desired area where targets will be added.</li>
         <li>In the <em>Alignment at starting tilt</em> section of the dialog, select a 
             method of obtaining references for tracking at targets.</li>
@@ -219,10 +224,9 @@
         Clicking <strong>View</strong>, <strong>Trial</strong>, or <strong>Montage</strong> will capture images with the mapping 
         magnification set at the top of this dialog. Equivalently, <strong>Preview</strong> will use the 
         specified acquisition magnification.</p>
-    <p> <strong>Save/Identify Area Map</strong></p>
+    <p> <strong>Save Area Map / Use Map in Buf for Area Map</strong></p>
     <p> If an existing map is loaded into the active (currently displayed) buffer, 
-        the button is labeled <strong>Identify Area Map</strong> and that map will be assigned as the area map for the parallel tilt series area.&nbsp; 
-      Otherwise, the button is labeled <strong>Save Area Map</strong> and it will be 
+        the button is labeled <strong>Use Map in Buf # for Area Map</strong> and that map will be assigned as the area map for the parallel tilt series area.&nbsp;Otherwise, the button is labeled <strong>Save Area Map</strong> and it will be 
       enabled if there is a newly captured single image in buffer A or a montage 
       overview in buffer B.&nbsp; Pressing will create a new map from the A or B 
       buffer. A single image will be saved to the current 

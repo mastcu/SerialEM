@@ -634,6 +634,7 @@ int CParallelTSHelper::SaveAreaMap(CString &err)
   CMapDrawItem *item;
   EMimageBuffer *imBuf = mWinApp->mMainView->GetActiveImBuf();
   EMimageBuffer *imBufs = mWinApp->GetImBufs();
+  CString bufLetter;
 
   // Current active image buffer is a loaded map, so map already exists
   item = mWinApp->mNavigator->FindItemWithMapID(imBuf->mMapID);
@@ -641,10 +642,17 @@ int CParallelTSHelper::SaveAreaMap(CString &err)
     if (mWinApp->Montaging() && imBufs[1].mCaptured == BUFFER_MONTAGE_OVERVIEW) {
       imBuf = &imBufs[1];
       saveable = mWinApp->mStoreMRC != NULL;
+      bufLetter = "B";
     } else {
       imBuf = &imBufs[0];
       saveable = mWinApp->mStoreMRC && 
         mWinApp->mBufferManager->IsBufferSavable(imBuf, mWinApp->mStoreMRC);
+      bufLetter = "A";
+    }
+    
+    if (imBuf->mMapID > 0 && mWinApp->mNavigator->FindItemWithMapID(imBuf->mMapID)) {
+      err.Format("The image in buffer %s has already been saved to a map", bufLetter);
+      return -1;
     }
 
     //If no open file, or open file is unusable, do not use it
@@ -775,15 +783,23 @@ int CParallelTSHelper::SaveMap(CString &err)
   bool wrongFile, saveable, openNewFile = false, openOldFile = false;
   EMimageBuffer *imBuf;
   EMimageBuffer *imBufs = mWinApp->GetImBufs();
+  CString bufLetter;
 
   if (mWinApp->Montaging() && imBufs[1].mCaptured == BUFFER_MONTAGE_OVERVIEW) {
     imBuf = &imBufs[1];
     saveable = mWinApp->mStoreMRC != NULL;
+    bufLetter = "B";
   }
   else {
     imBuf = &imBufs[0];
     saveable = mWinApp->mStoreMRC &&
       mWinApp->mBufferManager->IsBufferSavable(imBuf, mWinApp->mStoreMRC);
+    bufLetter = "A";
+  }
+
+  if (imBuf->mMapID > 0 && mWinApp->mNavigator->FindItemWithMapID(imBuf->mMapID)) {
+    err.Format("The image in buffer %s has already been saved to a map", bufLetter);
+    return -1;
   }
 
   //If no open file, or open file is unusable, do not use it
