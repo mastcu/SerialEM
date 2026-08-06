@@ -3,6 +3,8 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+8/6/26: Increased timeout for load or unload in multigrid to 15 min (In 4.2).
+
 8/4/26: Added script commands to put all camera parameter set values or low
 dose area values into an array and optionally named variables.
 
