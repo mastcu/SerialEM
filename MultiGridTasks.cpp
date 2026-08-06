@@ -305,7 +305,7 @@ int CMultiGridTasks::LoadOrUnloadGrid(int slot, int taskParam)
     mDoingMultiGrid = taskParam;
     mWinApp->UpdateBufferWindows();
   }
-  mWinApp->AddIdleTask(TASK_MULTI_GRID, taskParam, 300000);
+  mWinApp->AddIdleTask(TASK_MULTI_GRID, taskParam, 15 * 60000);
   return 0;
 }
 
