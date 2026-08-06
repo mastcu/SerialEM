@@ -1,5 +1,5 @@
 SerialEM and associated documentation and plugins are
-copyright (C) 2003-2025 by the Regents of the University of Colorado.
+copyright (C) 2003-2026 by the Regents of the University of Colorado.
 
 The following license applies to the SerialEM executable and it source code:
 
@@ -52,11 +52,13 @@ Because SerialEM uses the libjpeg library, this software is based in part on
 the work of the Independent JPEG Group.  SerialEM also uses the zlib library,
 which is Copyright (c) 1995-2010 by Jean-loup Gailly and Mark Adler.
 
-SerialEM uses the libcfshr, libiimod, libimod, and libifft libraries from
+SerialEM uses the libcfshr, libiimod, libimod, libifft, and libwarp libraries from
 IMOD, which are covered by the GNU Lesser General Public License (LGPL), a
-copy of which is in LGPL.txt.  SerialEM also includes the Mini-XML library
-from IMOD, which is Copyright 2003-2016 by Michael R. Sweet and is covered by
-the modified Library GPL in Mini-XML.txt.  SerialEM also includes the ctffind
+copy of which is in LGPL.txt.  Routines called from libwarp use code from Ken
+Clarkson's 'hull' program, which is copyrighted by AT&T and covered by the
+license in hull.txt. SerialEM also includes the Mini-XML library from IMOD,
+which is Copyright 2003-2016 by Michael R. Sweet and is covered by the
+modified Library GPL in Mini-XML.txt.  SerialEM also includes the ctffind
 library from IMOD, adapted from the ctffind program of Alexis Rohou and
 Nikolaus Grigorieff, which is Copyright (c) 2018, Howard Hughes Medical
 Institute, and is covered by the Janelia Research Campus Software License 1.2.

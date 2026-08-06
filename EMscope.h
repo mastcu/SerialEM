@@ -628,6 +628,7 @@ public:
   GetMember(int, MaxUtapiService);
   GetSetMember(int, ScopeUpdateTaskSkips);
   GetSetMember(int, JeolUpdateTaskSkips);
+  GetSetMember(int, PostProbeBeamDelay);
   void SetFakeTiltOffset(float offset);
   float GetFakeTiltOffset();
   static int GetScopeCallFromPlugin() {return mScopeCallFromPlugin ; };
@@ -964,7 +965,8 @@ private:
   double mLastFocusInUpdate;  // Last focus value seen in the update routine
   double mFirstBeamXforProbe; // First beam shift value seen in a probe mode
   double mFirstBeamYforProbe;
-  int mPostProbeDelay;        // Msec delay after changing probe mode
+  int mPostProbeDelay;        // Msec delay after changing probe mode for image acquire
+  int mPostProbeBeamDelay;    // Msec delay after changing probe mode before fixing beam
   int mHitachiMagFocusDelay;  // Maximum time to wait for focus change after mag change
   int mHitachiMagISDelay;     // Maximum time to wait for IS change after mag change
   int mMagChgIntensityDelay;  // Delay from changing mag to changing intensity

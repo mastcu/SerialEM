@@ -495,6 +495,7 @@ CEMscope::CEMscope()
   mGoToRecMagEnteringLD = -1;
   mFirstFocusForProbe = EXTRA_NO_VALUE;
   mPostProbeDelay = 3000;
+  mPostProbeBeamDelay = 0;
   mFirstBeamXforProbe = EXTRA_NO_VALUE;
   mHitachiModeChgDelay = 400;
   mDisconnected= false;
@@ -8584,6 +8585,8 @@ BOOL CEMscope::SetProbeMode(int micro, BOOL fromLowDose)
         IncDefocus(delFocus);
       }
       if (success && adjustShift) {
+        if (mPostProbeBeamDelay > 0)
+          Sleep(mPostProbeBeamDelay);
         if (GetBeamShift(beamX, beamY)) {
           SEMTrace('b', "After, beam %.3f %.3f  change to %.3f %.3f", beamX, beamY,
             beamX + toBeamX, beamY + toBeamY);

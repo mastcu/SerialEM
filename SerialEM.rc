@@ -928,9 +928,9 @@ FONT 8, "Microsoft Sans Serif", 0, 0, 0x1
 BEGIN
     ICON            IDR_MAINFRAME,IDC_STATIC,11,17,20,20
     LTEXT           "SerialEM Version 2.7.6",IDC_STATVERSION,35,10,156,8,SS_NOPREFIX
-    LTEXT           "Copyright (C) 2003-2018 by the Regents of the University of Colorado",IDC_STATIC,35,61,153,17
+    LTEXT           "Copyright (C) 2003-2026 by the Regents of the University of Colorado",IDC_STATIC,34,61,153,17
     DEFPUSHBUTTON   "OK",IDOK,87,84,37,14,WS_GROUP
-    LTEXT           "Written by David Mastronarde",IDC_STATIC,35,32,119,8,SS_NOPREFIX
+    LTEXT           "Written by David Mastronarde and Leo Crowder",IDC_STATIC,35,32,156,8,SS_NOPREFIX
     LTEXT           "Tagged SEM_2-7-6, 10/26/07",IDC_STATTAG,35,20,105,8
     LTEXT           "JEOL port by Tobin Fricke (Lawrence Berkeley Laboratory)",IDC_STATIC,35,42,148,18,SS_NOPREFIX
 END
@@ -5619,6 +5619,11 @@ BEGIN
 END
 
 IDD_COOKSETUP AFX_DIALOG_LAYOUT
+BEGIN
+    0
+END
+
+IDD_ABOUTBOX AFX_DIALOG_LAYOUT
 BEGIN
     0
 END
