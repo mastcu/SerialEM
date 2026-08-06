@@ -25,6 +25,7 @@ enum {DEFSUM_LOOP, DEFSUM_NORMAL_STOP, DEFSUM_ERROR_STOP, DEFSUM_TERM_ERROR};
 #define NAV_OVERRIDE_PARALLEL_TS 8
 
 struct ParallelTSParam;
+class CParallelTSHelper;
 
 /////////////////////////////////////////////////////////////////////////////
 // CTSController command target
@@ -241,6 +242,7 @@ private:
   CMultiTSTasks *mMultiTSTasks;
   CBeamAssessor *mBeamAssessor;
   CProcessImage *mProcessImage;
+  CParallelTSHelper *mParTSHelper;
 
   TiltSeriesParam mTSParam;   // The master parameter set
   BOOL mDoingTS;              // Flag that series is active
@@ -685,18 +687,6 @@ public:
   int ParallelTSSetup(CMapDrawItem *item, CString &errStr);
   void PredictParallelTSLocations(double angle);
   void ProcessParTSDataFromMultishot();
-  void IdentifyParTSOutliers(float *xload, float *yload, float *xfound,
-    float *yfound, int *dropping, int numPos, int maxDrop,
-    float elimMin, float critProb, float absProbCrit, float &slope, float *intcp);
-  void FitYSlopeWithDropping(float *xload, float *yload, float *xfound, float *yfound,
-    int *dropping, int numPos, float &slope, float *errors, float &mean, float &sd, float &maxErr, int &maxInd);
-  void FitZvsYWithDropping(float *yload, float *zvec,
-    int *dropping, int numPos, float &slope, float &intcp, float *errors, float &mean, float &sd, float &maxErr, int &maxInd);
-  void FitParallelTSYonly(FloatVec &angles, FloatVec &yOnly, float preTilt, float &yZero,
-    float &zZero, double &errSum, float &meanErr);
-  void FitParallelTSYwithZ(FloatVec &angles, FloatVec &yWithZ, FloatVec &zVec, float preTilt, 
-    float &yZero, float &zZero, double &errSum, float &meanErr);
-  void FindOutliersInResultList(FloatVec &errors, float elimMin, int polarity, FloatVec &outliers);
   void CleanUpFromParallelTS();
   int RestoreStageXYafterTilt();
   int FindClosestStackReference(double curAngle, int direction, float & bufAngle);

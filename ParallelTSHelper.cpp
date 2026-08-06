@@ -1044,7 +1044,7 @@ int CParallelTSHelper::FitPlane(float &pretilt, float &xPitch, float &residual,
   if (numPoints > MIN_NUM_POINTS_TO_FIT_PLANE) {
     FloatVec outliers, outlierResid;
     float elimMin = 0.01f; //TODO what should this be?
-    mWinApp->mTSController->FindOutliersInResultList(residuals, elimMin, 1, outliers);
+    FindOutliersInResultList(residuals, elimMin, 1, outliers);
     IntVec dropInd;
     for (i = 0; i < numPoints; i++) {
       if (outliers[i] > 0) {
@@ -1798,7 +1798,7 @@ void CParallelTSHelper::DeleteTargetsFromNav(bool keepFirst)
 void CParallelTSHelper::DeleteTargetMapsFromNav() {
   CMapDrawItem *item;
   int ind, jnd;
-  for (ind = 0; ind < mPreviewMapIDs.size(); ind++) {
+  for (ind = 0; ind < (int)mPreviewMapIDs.size(); ind++) {
     item = mWinApp->mNavigator->FindItemWithMapID(mPreviewMapIDs[ind]);
     if (item) {
       jnd = mWinApp->mNavigator->GetFoundItem();
@@ -1865,7 +1865,7 @@ int CParallelTSHelper::PruneDeletedTargets()
         VEC_REMOVE_AT(mISTargetISY, ind);
         VEC_REMOVE_AT(mPreRefineISX, ind);
         VEC_REMOVE_AT(mPreRefineISY, ind);
-        if (mParTSopts->extractVirtPrevs == 0 && ind < mPreviewMapIDs.size() ) {
+        if (mParTSopts->extractVirtPrevs == 0 && ind < (int)mPreviewMapIDs.size() ) {
           item = mWinApp->mNavigator->FindItemWithMapID(mPreviewMapIDs[ind], false);
           if (item) {
             mWinApp->mNavigator->ExternalDeleteItem(item,
@@ -1880,4 +1880,337 @@ int CParallelTSHelper::PruneDeletedTargets()
     }
   }
   return numDeleted;
+}
+
+/*
+* Attempts to find outliers among the shifts between expected and actual position for
+* the various targets; derived from findXfWithoutOutliers from tiltxcorr.cpp in IMOD,
+* it tries dropping successively more points to find a consistent point where dropped
+* points are statistically out of range compared to the rest
+*/
+void CParallelTSHelper::IdentifyParTSOutliers(float *xload, float *yload, float *xfound,
+  float *yfound, int *dropping, int numFit, int maxDrop, float elimMin, float critProb,
+  float absProbCrit, float &slope, float *intcp)
+{
+  FloatVec devs, xftmp, yftmp, xltmp, yltmp;
+  IntVec devInds, topInds, tmpInds;
+  float devAvg, devSd, maxErr;
+  float dev, probPerPoint, absPerPoint, z, prob, gprob;
+  float sigmaFromMean, sigmaFromSD, sigma;
+  int indMax, from;
+  int totalDrop = 0, numDrop = 0, ind, jdrop, numKeep;
+  int lastDrop = 0;
+  CString mess, str;
+
+  devs.resize(numFit);
+  if (intcp) {
+    FitZvsYWithDropping(xload, yload, dropping, numFit, slope, *intcp, &devs[0],
+      devAvg, devSd, maxErr, indMax);
+    SEMTrace('1', "Initial fit Y vs Z avg slope %f  intcp %.3f dev %.3f  max %.3f at %d",
+      slope, *intcp, devAvg, maxErr, indMax);
+  } else {
+    FitYSlopeWithDropping(xload, yload, xfound, yfound, dropping, numFit, slope, &devs[0],
+      devAvg, devSd, maxErr, indMax);
+    SEMTrace('1', "Initial fit exp to actual avg dev %.3f  max %.3f at %d", devAvg, maxErr,
+      indMax);
+  }
+  if (maxErr < elimMin || numFit <= (intcp ? 3 : 2))
+    return;
+
+  // Sort the residuals from the full fit
+  for (ind = 0; ind < numFit; ind++)
+    devInds.push_back(ind);
+  rsSortIndexedFloats(&devs[0], &devInds[0], numFit);
+  probPerPoint = (float)pow(1. - critProb, 1. / numFit);
+  absPerPoint = (float)pow(1. - absProbCrit, 1. / numFit);
+
+  // Reload the data in that order
+  for (ind = 0; ind < numFit; ind++) {
+    from = devInds[ind];
+    xltmp.push_back(xload[from]);
+    yltmp.push_back(yload[from]);
+    xftmp.push_back(xfound[from]);
+    if (!intcp)
+      yftmp.push_back(yfound[from]);
+  }
+  /*
+  FitYSlopeWithDropping(&xltmp[0], &yltmp[0], &xftmp[0], &yftmp[0], dropping, numFit,
+  slope, &devs[0], devAvg, devSd, maxErr, indMax);
+  mess = "Refit with all ordered data";
+  for (ind = 0; ind < numFit; ind++) {
+  str.Format(" %.4f", devs[ind]);
+  mess += str;
+  }
+  SEMTrace('1', "%s", (LPCTSTR)mess);*/
+
+  for (jdrop = 1; jdrop <= maxDrop + 1; jdrop++) {
+    for (ind = 0; ind < numFit; ind++)
+      dropping[ind] = (ind < numFit - jdrop) ? 0 : 1;
+    if (intcp)
+      FitZvsYWithDropping(&xltmp[0], &yltmp[0], dropping, numFit,
+        slope, *intcp, &devs[0], devAvg, devSd, maxErr, indMax);
+    else
+      FitYSlopeWithDropping(&xltmp[0], &yltmp[0], &xftmp[0], &yftmp[0], dropping, numFit,
+        slope, &devs[0], devAvg, devSd, maxErr, indMax);
+    //mess.Format("drop %d avg dev %.4f  LO devs: ", jdrop, devAvg);
+    sigmaFromMean = devAvg / sqrt(8.f / 3.14159f);
+    sigmaFromSD = devSd / sqrtf(3.f - 8.f / 3.14159f);
+    sigma = B3DMAX(sigmaFromMean, sigmaFromSD);
+    numKeep = 0;
+
+    // load the devs of the dropped ones and sort them
+    topInds.resize(jdrop);
+    for (ind = numFit - jdrop; ind < numFit; ind++) {
+      devs[ind - (numFit - jdrop)] = devs[ind];
+      topInds[ind - (numFit - jdrop)] = ind - (numFit - jdrop);
+    }
+    if (jdrop > 1)
+      rsSortIndexedFloats(&devs[0], &topInds[0], jdrop);
+
+    // Evaluate the deviation of each dropped one
+    for (ind = numFit - jdrop; ind < numFit; ind++) {
+      dev = devs[topInds[ind - (numFit - jdrop)] + (numFit - jdrop)];
+      //str.Format("%.4f ", dev);
+      //mess += str;
+      if (sigma < 0.1 * dev || sigma < 1.e-5)
+        z = 10.;
+      else
+        z = dev / sigma;
+      gprob = (float)(1. - 0.5 * (1. - errFunc(z / 1.414214)));
+
+      prob = 2.f * (gprob - 0.5f) - sqrt(2.f / 3.14159f) * z * expf(-z * z / 2.f);
+      if (prob < probPerPoint) {
+        //PRINT4(dev, z, prob, "Inc nk");
+        numKeep = numKeep + 1;
+      }
+      if (prob >= absPerPoint) {
+        //PRINT4(dev, z, prob, "Set ND");
+        numDrop = B3DMIN(maxDrop, B3DMAX(numDrop, numFit - ind));
+      }
+    }
+    //SEMTrace('1', "%s", mess);
+
+    /*
+    * If all points are outliers, this is a candidate for a set to drop
+    * When only the first point is kept, and all the rest of the points
+    * were outliers on the previous round, then this is a safe place to
+    * draw the line between good data and outliers.  In this case, set
+    * numDrop; and at end take the biggest ndrop that fits these criteria
+    */
+    if (numKeep == 0)
+      lastDrop = jdrop;
+    if (numKeep == 1 && lastDrop == jdrop - 1 && lastDrop > 0)
+      numDrop = lastDrop;
+
+    // Maintain the indexes in the current order
+    tmpInds.resize(jdrop);
+    for (ind = 0; ind < jdrop; ind++)
+      tmpInds[ind] = devInds[topInds[ind] + (numFit - jdrop)];
+    for (ind = numFit - jdrop; ind < numFit; ind++)
+      devInds[ind] = tmpInds[ind - (numFit - jdrop)];
+
+    // Reload the dropped ones in the right order
+    for (ind = numFit - jdrop; ind < numFit; ind++) {
+      from = devInds[ind];
+      xltmp[ind] = xload[from];
+      yltmp[ind] = yload[from];
+      xftmp[ind] = xfound[from];
+      if (!intcp)
+        yftmp[ind] = yfound[from];
+    }
+  }
+
+  // Redo fit with final numDrop
+  for (ind = 0; ind < numFit; ind++)
+    dropping[ind] = (ind < numFit - numDrop) ? 0 : 1;
+  if (intcp)
+    FitZvsYWithDropping(&xltmp[0], &yltmp[0], dropping, numFit,
+      slope, *intcp, &devs[0], devAvg, devSd, maxErr, indMax);
+  else
+    FitYSlopeWithDropping(&xltmp[0], &yltmp[0], &xftmp[0], &yftmp[0], dropping, numFit,
+      slope, &devs[0], devAvg, devSd, maxErr, indMax);
+
+  // Mark the selected number as dropped
+  mess = "";
+  for (ind = 0; ind < numFit; ind++) {
+    dropping[devInds[ind]] = (ind < numFit - numDrop) ? 0 : 1;
+    if (ind >= numFit - numDrop) {
+      str.Format(" %d", devInds[ind] + 1);
+      mess += str;
+    }
+  }
+  if (!mess.IsEmpty())
+    SEMTrace('1', "Final drop %d: pos %s", numDrop, (LPCTSTR)mess);
+}
+
+/*
+* Finds the best least-squared fit for scaling between found and loaded Y values,
+* computes error between found X/Y and loaded positions with this scaling for all
+* points, and returns the mean and sd error for non-dropped points
+*/
+void CParallelTSHelper::FitYSlopeWithDropping(float *xload, float *yload, float *xfound,
+  float *yfound, int *dropping, int numPos, float &slope, float *errors, float &mean,
+  float &sd, float &maxErr, int &indMax)
+{
+  int ind, numFit = 0;
+  float xsqsum = 0., xysum = 0., delx, dely;
+  FloatVec errArr;
+  for (ind = 0; ind < numPos; ind++) {
+    if (!dropping[ind]) {
+      xsqsum += yload[ind] * yload[ind];
+      xysum += yfound[ind] * yload[ind];
+      numFit++;
+    }
+  }
+  slope = xysum / xsqsum;
+  maxErr = -1.;
+  for (ind = 0; ind < numPos; ind++) {
+    delx = xfound[ind] - xload[ind];
+    dely = yfound[ind] - slope * yload[ind];
+    errors[ind] = sqrtf(delx * delx + dely * dely);
+    if (!dropping[ind]) {
+      errArr.push_back(errors[ind]);
+      if (errors[ind] > maxErr) {
+        maxErr = errors[ind];
+        indMax = ind;
+      }
+    }
+  }
+  avgSD(&errArr[0], numFit, &mean, &sd, &delx);
+}
+
+/*
+* Does simple linear fit of Z versus Y, dropping points marged in the dropping array
+*/
+void CParallelTSHelper::FitZvsYWithDropping(float *yload, float *zvec, int *dropping,
+  int numPos, float &slope, float &intcp, float *errors, float &mean, float &sd,
+  float &maxErr, int &indMax)
+{
+  FloatVec ytemp, ztemp, errArr;
+  int ind;
+  float ro;
+  for (ind = 0; ind < numPos; ind++) {
+    if (!dropping[ind]) {
+      ytemp.push_back(yload[ind]);
+      ztemp.push_back(zvec[ind]);
+    }
+  }
+  lsFit(&ytemp[0], &ztemp[0], (int)ytemp.size(), &slope, &intcp, &ro);
+  for (ind = 0; ind < numPos; ind++) {
+    errors[ind] = B3DABS(yload[ind] * slope + intcp - zvec[ind]);
+    if (!dropping[ind]) {
+      errArr.push_back(errors[ind]);
+      if (errors[ind] > maxErr) {
+        maxErr = errors[ind];
+        indMax = ind;
+      }
+    }
+  }
+  avgSD(&errArr[0], (int)ytemp.size(), &mean, &sd, &ro);
+}
+
+/*
+* Fit to data on Y positions only at one target point to derive yZero and zZero values
+* and return summed and mean errors at teh specified pretilt
+*/
+void CParallelTSHelper::FitParallelTSYonly(FloatVec &angles, FloatVec &yOnly, float preTilt,
+  float &yZero, float &zZero, double &errSum, float &meanErr)
+{
+  FloatVec x1, x2, yy;
+  int ind, numFit = (int)angles.size();
+  for (ind = 0; ind < numFit; ind++) {
+    x1.push_back(cosf(DTORFL * (angles[ind] - preTilt)));
+    x2.push_back(-sinf(DTORFL * (angles[ind] - preTilt)));
+    yy.push_back(yOnly[ind]);
+  }
+  lsFit2(&x1[0], &x2[0], &yy[0], numFit, &yZero, &zZero, NULL);
+  errSum = 0.;
+  for (ind = 0; ind < numFit; ind++)
+    errSum += powf(yZero * x1[ind] + zZero * x2[ind] - yy[ind], 2.f);
+  meanErr = (float)sqrt(errSum / numFit);
+}
+
+/*
+* Fit to data on Y and Z at one target point to derive yZero and zZero values and
+* return summed and mean errors at teh specified pretilt  (UNUSED)
+*/
+void CParallelTSHelper::FitParallelTSYwithZ(FloatVec &angles, FloatVec &yWithZ,
+  FloatVec &zVec, float preTilt, float &yZero, float &zZero, double &errSum,
+  float &meanErr)
+{
+  FloatVec x1, x2, yy;
+  int ind, numFit = (int)angles.size();
+  float cosAng, sinAng;
+  for (ind = 0; ind < numFit; ind++) {
+    cosAng = cosf(DTORFL * (angles[ind] - preTilt));
+    sinAng = sinf(DTORFL * (angles[ind] - preTilt));
+    x1.push_back(cosAng);
+    x2.push_back(-sinAng);
+    yy.push_back(yWithZ[ind]);
+    x1.push_back(sinAng);
+    x2.push_back(cosAng);
+    yy.push_back(zVec[ind]);
+  }
+  lsFit2(&x1[0], &x2[0], &yy[0], numFit * 2, &yZero, &zZero, NULL);
+  errSum = 0.;
+  for (ind = 0; ind < numFit * 2; ind++)
+    errSum += powf(yZero * x1[ind] + zZero * x2[ind] - yy[ind], 2.f);
+  meanErr = (float)sqrt(errSum / (2 * numFit));
+}
+
+/*
+* Identifies outliers in an arbitrary set of values either with a leave-one-out approach
+* for < 5 items or using MAD median outlier routine.  Polarity should be 1 or -1 for
+* just the outliers above or below the median, or 0 for outliers in either direction.
+* If nonzero, elimMin is a threshold value for any elimination; it should be
+* a lower limit if polarity is -1, an upper limit if polarity is 1, or values should
+* be positive and negative (e.g., differences from a mean) to use elimMin with polarity 0
+*/
+void CParallelTSHelper::FindOutliersInResultList(FloatVec &errors, float elimMin,
+  int polarity, FloatVec &outliers)
+{
+  int minForRobust = 5;
+  float kcrit = 2.5f, semCrit = 2.f;
+  float avg, sd, sem, maxSem = -1., numSem;
+  int idrop, ind, itmp, maxDrop, numErr = (int)errors.size();
+  float temp[8];
+
+  CLEAR_RESIZE(outliers, float, numErr);
+  if (elimMin != 0. && ((polarity > 0 && VECTOR_MAX(errors) < elimMin) ||
+    (polarity < 0 && VECTOR_MIN(errors) > elimMin) ||
+    (!polarity && VECTOR_MAX(errors) < elimMin) && VECTOR_MIN(errors) > -elimMin))
+    return;
+  if (numErr < minForRobust) {
+
+    // Try dropping each point, getting stats with the rest, and computing # of SEMs from
+    // the mean
+    for (idrop = 0; idrop < numErr; idrop++) {
+      itmp = 0;
+      for (ind = 0; ind < numErr; ind++)
+        if (ind != idrop)
+          temp[itmp++] = errors[ind];
+      avgSD(temp, numErr - 1, &avg, &sd, &sem);
+      numSem = (errors[idrop] - avg) / sem;
+      if ((polarity > 0 && numSem > maxSem) || (polarity < 0 && numSem < maxSem) ||
+        (!polarity && fabs(numSem) > fabs(maxSem))) {
+        maxSem = numSem;
+        maxDrop = idrop;
+      }
+    }
+
+    // If the worst one exceeds the crit, drop it
+    if (fabs(maxSem) > semCrit && (!polarity ||
+      BOOL_EQUIV(polarity > 0, maxSem > semCrit)))
+      outliers[maxDrop] = 1.;
+
+  } else {
+
+    // Robust is easy if it works
+    rsMadMedianOutliers(&errors[0], numErr, kcrit, &outliers[0]);
+    if (polarity) {
+      for (ind = 0;ind < numErr; ind++)
+        if (!BOOL_EQUIV(polarity > 0, outliers[ind] > 0))
+          outliers[ind] = 0.;
+    }
+  }
 }

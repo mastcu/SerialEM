@@ -126,6 +126,18 @@ public:
   void UpdateMaxTilt(float angle);
   int PruneDeletedTargets();
   int SaveMap(CString &err);
+  void IdentifyParTSOutliers(float *xload, float *yload, float *xfound,
+    float *yfound, int *dropping, int numPos, int maxDrop,
+    float elimMin, float critProb, float absProbCrit, float &slope, float *intcp);
+  void FitYSlopeWithDropping(float *xload, float *yload, float *xfound, float *yfound,
+    int *dropping, int numPos, float &slope, float *errors, float &mean, float &sd, float &maxErr, int &maxInd);
+  void FitZvsYWithDropping(float *yload, float *zvec,
+    int *dropping, int numPos, float &slope, float &intcp, float *errors, float &mean, float &sd, float &maxErr, int &maxInd);
+  void FitParallelTSYonly(FloatVec &angles, FloatVec &yOnly, float preTilt, float &yZero,
+    float &zZero, double &errSum, float &meanErr);
+  void FitParallelTSYwithZ(FloatVec &angles, FloatVec &yWithZ, FloatVec &zVec, float preTilt,
+    float &yZero, float &zZero, double &errSum, float &meanErr);
+  void FindOutliersInResultList(FloatVec &errors, float elimMin, int polarity, FloatVec &outliers);
 
 private:
   int ISToNextTarget(int targetID, CString &err);
