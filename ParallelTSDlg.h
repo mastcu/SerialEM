@@ -20,7 +20,7 @@ public:
 
   // Dialog Data
 #ifdef AFX_DESIGN_TIME
-  enum { IDD = IDD_PARALLELTS };
+  enum { IDD = IDD_PARALLELTILTSERIES };
 #endif
 
 protected:

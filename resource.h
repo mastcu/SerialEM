@@ -96,7 +96,7 @@
 #define IDD_DECTRIS_TOOLDLG             296
 #define IDD_DECTRIS_SETTINGS            298
 #define IDR_NAV_MENU                    301
-#define IDD_PARALLELTS                  302
+#define IDD_PARALLELTILTSERIES                  302
 #define IDC_EDITXSIZE                   1000
 #define IDC_EDITYSIZE                   1002
 #define IDC_EDITYOVERLAP                1003

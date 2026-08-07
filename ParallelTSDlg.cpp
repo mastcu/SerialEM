@@ -75,7 +75,7 @@ static int sHeightTable[sizeof(idTable) / sizeof(int)];
 // CParallelTSDlg dialog
 
 CParallelTSDlg::CParallelTSDlg(CWnd* pParent /*=NULL*/)
-  : CBaseDlg(IDD_PARALLELTS, pParent)
+  : CBaseDlg(IDD_PARALLELTILTSERIES, pParent)
   , m_strMappingMag(_T(""))
   , m_strAcquisitionMag(_T(""))
   , m_fPretilt(0)
