@@ -1906,12 +1906,12 @@ void CParallelTSHelper::IdentifyParTSOutliers(float *xload, float *yload, float 
   if (intcp) {
     FitZvsYWithDropping(xload, yload, dropping, numFit, slope, *intcp, &devs[0],
       devAvg, devSd, maxErr, indMax);
-    SEMTrace('1', "Initial fit Y vs Z avg slope %f  intcp %.3f dev %.3f  max %.3f at %d",
+    SEMTrace('N', "Initial fit Y vs Z avg slope %f  intcp %.3f dev %.3f  max %.3f at %d",
       slope, *intcp, devAvg, maxErr, indMax);
   } else {
     FitYSlopeWithDropping(xload, yload, xfound, yfound, dropping, numFit, slope, &devs[0],
       devAvg, devSd, maxErr, indMax);
-    SEMTrace('1', "Initial fit exp to actual avg dev %.3f  max %.3f at %d", devAvg, maxErr,
+    SEMTrace('N', "Initial fit exp to actual avg dev %.3f  max %.3f at %d", devAvg, maxErr,
       indMax);
   }
   if (maxErr < elimMin || numFit <= (intcp ? 3 : 2))
@@ -2040,7 +2040,7 @@ void CParallelTSHelper::IdentifyParTSOutliers(float *xload, float *yload, float 
     }
   }
   if (!mess.IsEmpty())
-    SEMTrace('1', "Final drop %d: pos %s", numDrop, (LPCTSTR)mess);
+    SEMTrace('N', "Final drop %d: pos %s", numDrop, (LPCTSTR)mess);
 }
 
 /*

@@ -7629,7 +7629,7 @@ int CTSController::ParallelTSSetup(CMapDrawItem *item, CString &errStr)
     }
     mParTSDelZatZero[ind] = zZero;
     mParTSTargetData.Add(targetData);
-    SEMTrace('1', "Pos %d  specX %.3f yZero %.3f zZero %.3f  focus %.3f", ind, specX, 
+    SEMTrace('N', "Pos %d  specX %.3f yZero %.3f zZero %.3f  focus %.3f", ind, specX, 
       yZero, zZero, mParTSLoadedFocus[ind]);
   }
   mParTSNavItem->mMagOfIStargets = acqMagInd;
@@ -7746,7 +7746,7 @@ void CTSController::PredictParallelTSLocations(double angle)
       mParTSHelper->FitParallelTSYonly(angleYonly[pos], yOnly[pos],
         mParTSCurTiltOffset[idir], yZero, zZero, errSum, meanErr);
       xFound.push_back(meanErr);
-      SEMTrace('1', "Pos %d y only yZero %.3f zZero %.3f  err %.3f", pos + 1, yZero,
+      SEMTrace('N', "Pos %d y only yZero %.3f zZero %.3f  err %.3f", pos + 1, yZero,
         zZero, meanErr);
     }
   }
@@ -7833,7 +7833,7 @@ void CTSController::PredictParallelTSLocations(double angle)
         }
       }
       //if (!fromYZ)
-        //SEMTrace('1', "test PT %.3f  err sum %g", curOffset, grandSum);
+        //SEMTrace('N', "test PT %.3f  err sum %g", curOffset, grandSum);
       err = minimize1D(curOffset, (float)grandSum, initialStep, numScanSteps,
         &numCutsDone, brackets, &curOffset);
       if (err)
@@ -7858,7 +7858,7 @@ void CTSController::PredictParallelTSLocations(double angle)
         mParTSFirstOffsetFit = 0;
     }
   } else {
-    SEMTrace('1', "No new offset: Y/Z: %d %d %.1f %.1f  Yonly: %d %d %.1f %.1f %d %d",
+    SEMTrace('N', "No new offset: Y/Z: %d %d %.1f %.1f  Yonly: %d %d %.1f %.1f %d %d",
       numZfound, minDataForOffset, yWithZMaxAngle, maxAngleForZBasedRefine,
       numFound, minDataForOffset, yOnlyMaxAngle, minAngleForYonlyRefine,
       mNumDidPretiltFromYOnly[idir], maxNumRefineFromYOnly);
@@ -7912,7 +7912,7 @@ void CTSController::PredictParallelTSLocations(double angle)
           (zVec[pos][ind] - meanDefAtZeroY[pos][ind]), zZero);
         str += str2;
       }
-      //SEMTrace('1', "%s", (LPCTSTR)str);
+      //SEMTrace('N', "%s", (LPCTSTR)str);
       CLEAR_RESIZE(yFound, float, zVec[pos].size());
       if (xFound.size() > 3)
         mParTSHelper->FindOutliersInResultList(xFound, 0.25f, 0, yFound);
@@ -7945,7 +7945,7 @@ void CTSController::PredictParallelTSLocations(double angle)
           }
         }
         if (!str.IsEmpty())
-          SEMTrace('1', "Outliers %s", (LPCTSTR)str);
+          SEMTrace('N', "Outliers %s", (LPCTSTR)str);
 
         lsFit(&xfit[0], &yfit[0], (int)xfit.size(), &coef, &zZero, &ctmp);
 
@@ -7963,7 +7963,7 @@ void CTSController::PredictParallelTSLocations(double angle)
         str2.Format("revising delta Z focus for pos %d: %.3f to %.3f", pos + 1,
           mParTSLoadedDelZFocus[idir][pos], mParTSLoadedDelZFocus[idir][pos] + zZero + 
           delZzero);
-        SEMTrace('1', "%s", (LPCTSTR)(str3 + str2));
+        SEMTrace('N', "%s", (LPCTSTR)(str3 + str2));
         mParTSLoadedDelZFocus[idir][pos] += zZero + delZzero;
         revised = true;
 
@@ -7971,7 +7971,7 @@ void CTSController::PredictParallelTSLocations(double angle)
         if (!mParTSCopiedZ0OtherDir[pos]) {
           mParTSLastFoundDelZ0[1 - idir][pos] = mParTSLastFoundDelZ0[idir][pos];
           mParTSLastDelZ0TiltInd[1 - idir][pos] = mTiltIndex;
-          SEMTrace('1', "Copied del Z0 %.3f to direction %d", 
+          SEMTrace('N', "Copied del Z0 %.3f to direction %d", 
             mParTSLastFoundDelZ0[idir][pos], 1 - idir);
           mParTSCopiedZ0OtherDir[pos] = 1;
         }
@@ -7988,7 +7988,7 @@ void CTSController::PredictParallelTSLocations(double angle)
       zZero = mParTSLastFoundDelZ0[idir][pos] - yZero * 
         sinf(DTORFL* (mParTSCurTiltOffset[idir] - mParTSPreTiltsUsed[ind]));
       ctmp = -defocusFac * zZero / (float)cos(DTOR * (angle - mParTSCurTiltOffset[idir]));
-      SEMTrace('1', "Using delta Z focus from last Z0 for pos %d: %.3f to %.3f",
+      SEMTrace('N', "Using delta Z focus from last Z0 for pos %d: %.3f to %.3f",
         //(%.3f %.1f %.1f %.2f %.3f %.1f %.3f)", 
         pos + 1, mParTSLoadedDelZFocus[idir][pos], ctmp);
       //, mParTSLastKnownY[idir][pos], mParTSAngleOfKnown[idir][pos], mParTSCurTiltOffset[idir],
@@ -8023,7 +8023,7 @@ void CTSController::PredictParallelTSLocations(double angle)
       mParTSNavItem->mIStargetsXY[pos * 2], mParTSNavItem->mIStargetsXY[pos * 2 + 1]);
     mParTSLoadedFocus[pos] = -(yZero * sinf(delNewAng) + mParTSDelZatZero[pos] *
       cosf(delNewAng)) * defocusFac + mParTSLoadedDelZFocus[idir][pos];
-    SEMTrace('1', "pos %d yZero %.3f from lky %.3f  specY %.3f  IS %.3f %.3f  focus %.2f",
+    SEMTrace('N', "pos %d yZero %.3f from lky %.3f  specY %.3f  IS %.3f %.3f  focus %.2f",
       pos + 1, yZero, mParTSLastKnownY[idir][pos], specY, 
       mParTSNavItem->mIStargetsXY[pos * 2], mParTSNavItem->mIStargetsXY[pos * 2 + 1],
       mParTSLoadedFocus[pos]);
@@ -8152,7 +8152,7 @@ void CTSController::ProcessParTSDataFromMultishot()
       for (ind = 0; ind < numFound; ind++) {
         if (outAstig[ind] > 0 || outResol[ind] > 0) {
           mParTSTargetData[posIndex[ind]].score = -1.;
-          SEMTrace('1', "From CTF metrics, dropping pos %d, outlier %.0f %.0f",
+          SEMTrace('N', "From CTF metrics, dropping pos %d, outlier %.0f %.0f",
             posIndex[ind] + 1, outAstig[ind], outResol[ind]);
         }
       }
