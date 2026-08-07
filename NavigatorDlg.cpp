@@ -11425,7 +11425,8 @@ void CNavigatorDlg::AcquireNextTask(int param)
       !mHelper->IsExtraTaskIncluded(NAACT_EX_CEN_BEAM))
       break;
     SEMTrace('n', "Doing %s", (LPCTSTR)mAcqActions[mAcqSteps[mAcqStepIndex]].name);
-    stopErr = mWinApp->mMultiTSTasks->AutocenterBeam();
+    stopErr = mWinApp->mMultiTSTasks->AutocenterBeam(
+      -mWinApp->mMultiTSTasks->GetAutoCenFOVLimit());
     break;
 
     // Autofocus
