@@ -1966,15 +1966,17 @@
 
         <TR>
           <TD class="scriptcommand">SetupDynamicFocus #E #X #Y #B</TD>
-          <TD>Sets up dynamic focus to be run through FocusRamper on a Thermo/FEI scope 
+          <TD>Sets up dynamic focus to be run  
             during an externally run STEM acquisition, with exposure time <b>#E</b>, size of resulting 
               image <b>#X</b> by <b>#Y</b> pixels, and binning <b>#B</b>.  Sets <i>reportedValue1-4</i>
             with the parameters to be sent to FocusRamper: initial delay, total time of ramp in msec, 
             interval between focus steps in msec (based on property 'DynamicFocusInterval'), and 
             index in the focus ramp table per msec.&nbsp; The last value will be negative if the 
-            property 'RamperBlankAtEnd' is nonzero.&nbsp; If no ramp can be set up, sets only <i>reportedValue1</i> to -1.&nbsp; Values can be assigned to variables at end of 
-            command.&nbsp; This command and StartFocusRamper do not work when running through 
-            UTAPI.&nbsp; Command added in 4.2, 24-May-24.
+            property 'RamperBlankAtEnd' is nonzero.&nbsp; If no ramp can be set up, sets only
+             <i>reportedValue1</i> to -1.&nbsp; The command and the next two will work on a Thermo/FEI scope
+            when running through Focus Ramper or when running directly from SerialEM with UTAPI
+            or with the SkipFocusRamper property set, and may work on a JEOL.&nbsp; Values can
+             be assigned to variables at end of command.&nbsp; Command added in 4.2, 24-May-24.
           </TD>
         </TR>
         <TR>
