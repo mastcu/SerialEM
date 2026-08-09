@@ -8813,7 +8813,7 @@ UINT CCameraController::BlankerProc(LPVOID pParam)
             if (elapsed > td->PostActionTime)
               break;
             if (FEIscope) {
-              rindex = elapsed * td->IndexPerMs;
+              rindex = elapsed * B3DABS(td->IndexPerMs);
               index = (int)rindex;
               if (index > MAX_RAMP_STEPS - 2)
                 index = MAX_RAMP_STEPS - 2;
@@ -9008,7 +9008,7 @@ UINT CCameraController::BlankerProc(LPVOID pParam)
       }
 
       // Now wait ReblankTime, and reblank the beam
-      if (td->ReblankTime) {
+      if (td->ReblankTime || (td->DynFocusInterval && td->IndexPerMs < 0.)) {
         if (!(td->DriftISinterval || td->DynFocusInterval || doFrameTS))
           ::Sleep(td->ReblankTime);
         td->scopePlugFuncs->SetBeamBlank(*vTrue);
