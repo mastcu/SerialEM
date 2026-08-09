@@ -3,6 +3,9 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+8/826: Possibly fixed using RamperBlankAtEnd when running ramp through UTAPI
+rather than Focus Ramper (In 4.2).
+
 8/6/26: Parallel tilt series, an implementation of PACEtomo, added to
 SerialEM.
 
