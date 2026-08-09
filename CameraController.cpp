@@ -9247,7 +9247,7 @@ UINT CCameraController::BlankerProc(LPVOID pParam)
   bool doFocusInTS = td->FrameTSfocusChange.size() > 0;
   bool doISinTS = td->FrameTSdeltaISX.size() > 0;
   bool doBSinTS = td->FrameTSdeltaBeamX.size() > 0;
-  int  numScan, step, numSteps, index;
+  int  numScan, step, numSteps, index, useUnblank, useScanDelay;
   float minDelayOneRefine = 0.5f, minDelayPostTiltRefine = 0.2f;
   double focus, rindex, focusBase = 0.;
   float focusChange, newChange, delISX, delISY, newDelISX, newDelISY;
@@ -9277,20 +9277,28 @@ UINT CCameraController::BlankerProc(LPVOID pParam)
     }
     try {
 
-      // UnblankTime indicates an optional initial blanking
-      if (td->UnblankTime) {
-        if (td->UnblankTime > td->MinBlankTime) {
+      // UnblankTime indicates an optional initial blanking; with negative indexPerMs for 
+      // dynamic focus, set to blank for most of scan delay
+      useUnblank = td->UnblankTime;
+      useScanDelay = td->ScanDelay;
+      if (td->DynFocusInterval && td->IndexPerMs < 0 && useScanDelay > 13 &&
+        !useUnblank) {
+        useUnblank = useScanDelay - 10;
+        useScanDelay = 10;
+      }
+      if (useUnblank) {
+        if (useUnblank > td->MinBlankTime) {
           CEMscope::SetBlankingFlag(true);
           td->scopePlugFuncs->SetBeamBlank(*vTrue);
           SEMTrace('B', "BlankerProc set beam blank ON");
-          ::Sleep(td->UnblankTime - td->MinBlankTime);
+          ::Sleep(useUnblank - td->MinBlankTime);
           td->scopePlugFuncs->SetBeamBlank(*vFalse);
           CEMscope::SetBlankingFlag(false);
           SEMTrace('B', "BlankerProc set beam blank OFF");
         } else
 
           // If it is too short, skip blanking and just sleep
-          ::Sleep(td->UnblankTime);
+          ::Sleep(useUnblank);
       }
 
       // TiltDuringDelay indicates to start a stage tilt
@@ -9383,7 +9391,7 @@ UINT CCameraController::BlankerProc(LPVOID pParam)
           last_coarse = coarseBase;
         }
 
-        ::Sleep(td->ScanDelay);
+        ::Sleep(useScanDelay);
         if (td->DynFocusInterval) {
 
           startTime = lastTime = timeGetTime();
