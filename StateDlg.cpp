@@ -595,7 +595,8 @@ int CStateDlg::DoSetImState(int stateNum, CString &errStr)
     mSetStateIndex[0] = -1;
     if (indSave >= 0) {
       mHelper->ForgetSavedState();
-      mHelper->mStateDlg->UpdateListString(indSave);
+      if (mHelper->mStateDlg)
+        mHelper->mStateDlg->UpdateListString(indSave);
     }
   }
 
