@@ -201,7 +201,7 @@ void CParallelTSHelper::PauseParallelTSShift()
 void CParallelTSHelper::StopParallelTSShift(bool error)
 {
   int numPoints;
-  CMapDrawItem *item, *mapItem;
+  CMapDrawItem *item, *mapItem = NULL;
   
   mISTargetIter = -1;
 
@@ -269,6 +269,7 @@ void CParallelTSHelper::StopParallelTSShift(bool error)
       ClearSavedTargets();
     }
   }
+  mActionAtTarget = -1;
   mWinApp->SetStatusText(COMPLEX_PANE, "");
 }
 
@@ -900,7 +901,7 @@ int CParallelTSHelper::SaveInitialState(CString &err)
 //refinement, image shifts and Preview map info.
 int CParallelTSHelper::SaveTarget(CString &err)
 {
-  int index, index2, mapID;
+  int index, index2, mapID, navInd;
   float defocus, SX, SY, factor;
   CString mess;
   ScaleMat mat;
@@ -914,6 +915,8 @@ int CParallelTSHelper::SaveTarget(CString &err)
   ComaVsISCalib *comaVsIS = mWinApp->mAutoTuning->GetComaVsIScal();
 
   mapID = mCurISTargetItem->mMapID;
+  mWinApp->mNavigator->FindItemWithMapID(mapID, false);
+  navInd = mWinApp->mNavigator->GetFoundItem();
   
   mScope->GetStagePosition(stageX, stageY, stageZ);
   if (fabs(stageX - mBaseStageX) > ISlimit ||
@@ -964,8 +967,8 @@ int CParallelTSHelper::SaveTarget(CString &err)
       mCurISTargetItem->mStageY = mCenterStageY;
       mCurISTargetItem->mPtX[0] = mCenterStageX;
       mCurISTargetItem->mPtY[0] = mCenterStageY;
-      mWinApp->mNavigator->FindItemWithMapID(mapID, false);
-      mWinApp->mNavigator->UpdateListString(mWinApp->mNavigator->GetFoundItem());
+      
+      mWinApp->mNavigator->UpdateListString(navInd);
       mWinApp->mNavigator->Redraw();
     }
 
@@ -978,7 +981,7 @@ int CParallelTSHelper::SaveTarget(CString &err)
       index = index2;
     if (index) {
       PrintfToLog("WARNING: Autofocus failed on point at index %d with error type %d",
-        mapID, index);
+        navInd, index);
       mLastActionFailed = true;
 
     } else {
