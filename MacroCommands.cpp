@@ -11491,6 +11491,9 @@ int CMacCmd::StartFocusRamper()
     td->DynFocusInterval = mItemInt[3];
   if (!mItemEmpty[4])
     td->IndexPerMs = mItemFlt[4];
+  td->UtapiForRamp = FEIscope && (mScope->UtapiSupportsService(UTSUP_FOCUS) ||
+    mCamera->GetSkipFocusRamper());
+  td->MinBlankTime = (int)(1000. * mCamera->GetMinBlankingTime());
   double extra = td->FocusBase > mCamera->GetCenterFocus() ? 1. : -1.;
   mScope->SetDefocus(td->FocusBase + extra);
   mScope->SetDefocus(td->FocusBase);
@@ -11511,6 +11514,7 @@ int CMacCmd::FinishFocusRamp()
       td->ScanIntMin, td->ScanIntMax, td->ScanIntMean, td->ScanIntSD);
     mScope->SetDefocus(mCamera->GetCenterFocus());
   }
+  mRamperStarted = false;
   return 0;
 }
 

@@ -9247,7 +9247,7 @@ UINT CCameraController::BlankerProc(LPVOID pParam)
   bool doFocusInTS = td->FrameTSfocusChange.size() > 0;
   bool doISinTS = td->FrameTSdeltaISX.size() > 0;
   bool doBSinTS = td->FrameTSdeltaBeamX.size() > 0;
-  int  numScan, step, numSteps, index;
+  int  numScan, step, numSteps, index, useUnblank, useScanDelay;
   float minDelayOneRefine = 0.5f, minDelayPostTiltRefine = 0.2f;
   double focus, rindex, focusBase = 0.;
   float focusChange, newChange, delISX, delISY, newDelISX, newDelISY;
@@ -9277,20 +9277,29 @@ UINT CCameraController::BlankerProc(LPVOID pParam)
     }
     try {
 
-      // UnblankTime indicates an optional initial blanking
-      if (td->UnblankTime) {
-        if (td->UnblankTime > td->MinBlankTime) {
+      // UnblankTime indicates an optional initial blanking; with negative indexPerMs for 
+      // dynamic focus, set to blank for most of scan delay
+      useUnblank = td->UnblankTime;
+      useScanDelay = td->ScanDelay;
+      if (td->DynFocusInterval && td->IndexPerMs < 0 && useScanDelay > 13 &&
+        !useUnblank) {
+        useUnblank = useScanDelay - 10;
+        useScanDelay = 10;
+      }
+      if (useUnblank) {
+        if (useUnblank > td->MinBlankTime) {
           CEMscope::SetBlankingFlag(true);
           td->scopePlugFuncs->SetBeamBlank(*vTrue);
-          SEMTrace('B', "BlankerProc set beam blank ON");
-          ::Sleep(td->UnblankTime - td->MinBlankTime);
+          SEMTrace('B', "BlankerProc set beam blank ON for %d", 
+            useUnblank - td->MinBlankTime);
+          ::Sleep(useUnblank - td->MinBlankTime);
           td->scopePlugFuncs->SetBeamBlank(*vFalse);
           CEMscope::SetBlankingFlag(false);
           SEMTrace('B', "BlankerProc set beam blank OFF");
         } else
 
           // If it is too short, skip blanking and just sleep
-          ::Sleep(td->UnblankTime);
+          ::Sleep(useUnblank);
       }
 
       // TiltDuringDelay indicates to start a stage tilt
@@ -9374,7 +9383,7 @@ UINT CCameraController::BlankerProc(LPVOID pParam)
         SEMTrace('1', "Starting %s", td->DynFocusInterval ? "Dynamic focus" :
           "focus steps");
 
-        // Get starting value in defocus units not microns
+        // Get starting value in defocus units not microns, scale to microns for FEI
         if (!JEOLscope || (td->LineSyncAndFlags & LSFLAG_JEOL_IN_LM)) {
           focusBase = 1.e6 * td->scopePlugFuncs->GetDefocus();
         } else {
@@ -9383,7 +9392,7 @@ UINT CCameraController::BlankerProc(LPVOID pParam)
           last_coarse = coarseBase;
         }
 
-        ::Sleep(td->ScanDelay);
+        ::Sleep(useScanDelay);
         if (td->DynFocusInterval) {
 
           startTime = lastTime = timeGetTime();
@@ -9394,10 +9403,10 @@ UINT CCameraController::BlankerProc(LPVOID pParam)
             // Get the elapsed time and set focus from base
             curTime = timeGetTime();
             elapsed = SEMTickInterval((double)curTime, (double)startTime);
-            if (elapsed > td->PostActionTime)
+            if (elapsed > td->PostActionTime || td->imageReturned)
               break;
             if (FEIscope) {
-              rindex = elapsed * td->IndexPerMs;
+              rindex = elapsed * B3DABS(td->IndexPerMs);
               index = (int)rindex;
               if (index > MAX_RAMP_STEPS - 2)
                 index = MAX_RAMP_STEPS - 2;
@@ -9409,7 +9418,9 @@ UINT CCameraController::BlankerProc(LPVOID pParam)
             ChangeDynFocus(td, focusBase, focus, fineBase, coarseBase, 
               last_coarse);
             
-            //if (numScan % 10 == 0) SEMTrace('1', "Elapsed %.0f  at focus %.2f  %.2f  %.2f  %f", elapsed, focus + focusBase, focusBase, elapsed * td->FocusPerMs, td->FocusPerMs);
+            /*if (numScan % 10 == 0) SEMTrace('1', "Elapsed %.0f  at focus %.2f  %.2f"
+            "  %.2f  %f", elapsed, focus + focusBase, focusBase, elapsed * td->FocusPerMs,
+            td->FocusPerMs); */
             AddStatsAndSleep(td, curTime, lastTime, numScan, intervalSum, intervalSumSq, 
               td->DynFocusInterval);
           }
@@ -9592,7 +9603,7 @@ UINT CCameraController::BlankerProc(LPVOID pParam)
       }
 
       // Now wait ReblankTime, and reblank the beam
-      if (td->ReblankTime) {
+      if (td->ReblankTime || (td->DynFocusInterval && td->IndexPerMs < 0.)) {
         if (!(td->DriftISinterval || td->DynFocusInterval || doFrameTS))
           ::Sleep(td->ReblankTime);
         td->scopePlugFuncs->SetBeamBlank(*vTrue);
@@ -9833,49 +9844,63 @@ bool CCameraController::ProcessFrameTSRefinements(CameraThreadData *td, int step
 int CCameraController::StartFocusRamp(CameraThreadData *td, bool &rampStarted)
 {
   int chan, retval = 0, useInterval = td->DynFocusInterval;
-  try {
-    if (!td->DynFocusInterval) {
-      td->ScanDelay = td->UnblankTime;
-      if (td->RamperWaitForBlank)
-        useInterval = -1;
-    }
 
-    // If startup delay is negative, it means start the ramper and then wait to 
-    // start the shot
-    chan = 0;
-    if (td->ScanDelay < 0) {
-      chan = 10 - td->ScanDelay;
-      td->ScanDelay = 10;
-    }
-    if (FEIscope) {
+  // If startup delay is negative, it means start the ramper and then wait to 
+  // start the shot
+  chan = 0;
+  if (td->ScanDelay < 0) {
+    chan = 10 - td->ScanDelay;
+    td->ScanDelay = 10;
+  }
+  if (!FEIscope || td->UtapiForRamp) {
+    td->PostChangeMag = td->PostImageShift = td->PostMoveStage = false;
+    td->PostBeamTilt = false;
+    td->PostStigmator = false;
+    td->PostSetDefocus = false;
+    td->UnblankTime = 0;
+    td->TiltDuringDelay = 0;
+    td->ScanTime = 0.;
+    td->imageReturned = false;
+    td->DriftISinterval = 0;
+    StartBlankerThread(td);
+    td->blankerTimeout = 5000;
+    rampStarted = true;
+
+  } else if (!FEIscope) {
+    return 1;
+  } else {
+    try {
+      if (!td->DynFocusInterval) {
+        td->ScanDelay = td->UnblankTime;
+        if (td->RamperWaitForBlank)
+          useInterval = -1;
+      }
+
       if (CEMscope::BeginFEIThreadAccess(td->scopePlugFuncs, 1, 0)) {
-        DeferMessage(td,"Error getting access to thread for starting focus ramper");
+        DeferMessage(td, "Error getting access to thread for starting focus ramper");
         SEMErrorOccurred(1);
         retval = 1;
       } else {
         if (td->scopePlugFuncs->DoFocusRamp(td->ScanDelay, td->PostActionTime,
           useInterval, td->rampTable, MAX_RAMP_STEPS, td->IndexPerMs)) {
-            DeferMessage(td, CString(td->scopePlugFuncs->GetLastErrorString()));
-            SEMErrorOccurred(1);
-            retval = 1;
+          DeferMessage(td, CString(td->scopePlugFuncs->GetLastErrorString()));
+          SEMErrorOccurred(1);
+          retval = 1;
         } else
           rampStarted = true;
       }
-    } else {
-      td->FocusRamper->DoRamp(td->ScanDelay, td->PostActionTime, 
-        td->DynFocusInterval, td->rampTable, td->IndexPerMs);
-    }
-    if (!retval)
-      SEMTrace('s', "Called DoFocusRamp with %d %d %d %f", td->ScanDelay,
-        td->PostActionTime, useInterval, td->IndexPerMs);
+      if (!retval)
+        SEMTrace('s', "Called DoFocusRamp with %d %d %d %f", td->ScanDelay,
+          td->PostActionTime, useInterval, td->IndexPerMs);
 
-    if (chan && !retval)
-      Sleep(chan);
+    }
+    catch (_com_error E) {
+      retval = 1;
+      CCReportCOMError(td, E, _T("Calling FocusRamper->DoRamp() "));
+    }
   }
-  catch (_com_error E) {
-    retval = 1;
-    CCReportCOMError(td, E, _T("Calling FocusRamper->DoRamp() "));
-  }
+  if (chan && !retval)
+    Sleep(chan);
   return retval;
 }
 
@@ -9885,33 +9910,38 @@ void CCameraController::FinishFocusRamp(CameraThreadData *td, bool rampStarted)
   CString report;
   int chan;
   CSerialEMApp *winApp = (CSerialEMApp *)AfxGetApp();
-  try {
-    td->ScanIntMin = 0;
-    if (FEIscope) {
-      if (rampStarted && td->scopePlugFuncs->FinishFocusRamp(3000, &td->ScanIntMin, 
-        &td->ScanIntMax, &td->ScanIntMean, &td->ScanIntSD))
-        DeferMessage(td, CString(td->scopePlugFuncs->GetLastErrorString()));
-      CEMscope::EndFEIThreadAccess(td->scopePlugFuncs, 1);
-      if (winApp->mCamera->GetRamperBlankAtEnd() > 1)
-        Sleep(1000 * (winApp->mCamera->GetRamperBlankAtEnd() - 1));
-    } else {
-      td->FocusRamper->FinishRamp(3000, &td->ScanIntMin, &td->ScanIntMax, 
-        &td->ScanIntMean, &td->ScanIntSD);
-    }
-  }
-  catch (_com_error E) {
-    chan = -B3DNINT(td->ScanIntMin);
-    report.Format("Calling FocusRamper->FinishRamp(), error code %d ", chan);
-    if (chan == 2) {
-      _bstr_t message = "";
-      try {
-        message = td->FocusRamper->GetLastComErrorString();
-        report += CString((char *)message) + " ";
-      }
-      catch (_com_error E2) {
+  if (!FEIscope || td->UtapiForRamp) {
+    if (!rampStarted)
+      return;
+    td->imageReturned = true;
+    winApp->mCamera->WaitForBlankerThread(td, td->blankerTimeout,
+      _T("Thread for focus ramping did not end soon enough when told to"));
+  } else {
+    try {
+      td->ScanIntMin = 0;
+      if (FEIscope) {
+        if (rampStarted && td->scopePlugFuncs->FinishFocusRamp(3000, &td->ScanIntMin,
+          &td->ScanIntMax, &td->ScanIntMean, &td->ScanIntSD))
+          DeferMessage(td, CString(td->scopePlugFuncs->GetLastErrorString()));
+        CEMscope::EndFEIThreadAccess(td->scopePlugFuncs, 1);
+        if (winApp->mCamera->GetRamperBlankAtEnd() > 1)
+          Sleep(1000 * (winApp->mCamera->GetRamperBlankAtEnd() - 1));
       }
     }
-    CCReportCOMError(td, E, report);
+    catch (_com_error E) {
+      chan = -B3DNINT(td->ScanIntMin);
+      report.Format("Calling FocusRamper->FinishRamp(), error code %d ", chan);
+      if (chan == 2) {
+        _bstr_t message = "";
+        try {
+          message = td->FocusRamper->GetLastComErrorString();
+          report += CString((char *)message) + " ";
+        }
+        catch (_com_error E2) {
+        }
+      }
+      CCReportCOMError(td, E, report);
+    }
   }
 }
 

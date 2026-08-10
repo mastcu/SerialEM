@@ -2767,7 +2767,8 @@ X lens - 18 <br>
          <TR VALIGN="top">
           <TD>SkipFocusRamper</TD>
           <TD>Set to 1 to run the ramp for dynamic focusing on a Thermo/FEI scope directly 
-            from SerialEM or FEI-SEMserver instead of through FocusRamper.</TD>
+            from SerialEM or FEI-SEMserver instead of through FocusRamper.&nbsp; When running
+             through UTAPI, the ramp is always run directly and this entry is not needed.</TD>
         </TR>
        <TR VALIGN="top">
           <TD>MaximumScanRate</TD>
@@ -5748,16 +5749,18 @@ MoveStage 0 0 $delz
           <TD>With a Thermo/FEI scope, set to 1 if the blanking starts after the beginning 
             of the scan (below the top of the image) when doing the 
             camera timing calibration to measure flyback times. With this set, the program will
-            wait for the Focus Ramper to finish blanking the beam before starting the
-            acquisition.</TD>
+            wait for the FocusRamper to finish blanking the beam before starting the
+            acquisition.&nbsp; Works only when running through FocusRamper.</TD>
         </TR>
         <TR VALIGN="top">
           <TD>RamperBlankAtEnd</TD>
-          <TD>Set to 1 to have the Focus Ramper blank the beam when it finishes the focus 
-            ramp or is stopped by the image being done, as well during the delay before starting
+          <TD>Set to 1 to have the beam blanked the beam when the focus ramp finishes
+            is stopped by the image being done, as well as during the delay before starting
              the ramp if it exceeds 50 msec.&nbsp; Set to 2, 3 etc. to do this and also have the 
             program wait for 1, 2, etc sec between telling the ramper to finish and 
-            returning from the acquisition routine.</TD>
+            returning from the acquisition routine.&nbsp; This should work both when running
+            through FocusRamper and when running the ramp directly from SerialEM (e.g., through UTAPI).
+          </TD>
         </TR>
         <TR VALIGN="top">
           <TD>ImageDetectorIDs</TD>
@@ -5901,8 +5904,8 @@ MoveStage 0 0 $delz
         <TR VALIGN="top">
           <TD>PartialScanThreshold</TD>
           <TD>Minimum exposure time for displaying partial scans as a STEM image is acquired, for
-            situations that support this (currently the Tietz scan generator and Thermo/FEI STEM accessed through
-            UTAPI).&nbsp; The default is 0.5 sec.
+            situations that support this (currently the Tietz scan generator, Thermo/FEI STEM accessed through
+            UTAPI, and DE and DECTRIS STEM imaging).&nbsp; The default is 0.5 sec.
           </TD>
         </TR>
         <TR VALIGN="top">

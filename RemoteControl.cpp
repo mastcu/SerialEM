@@ -313,12 +313,7 @@ void CRemoteControl::Update(int inMagInd, int inCamLen, int inSpot, double inInt
   }
 
   if ((beamBlanked ? 1 : 0) != mLastBlanked) {
-    if (baseEnable) {
-      m_butBlankUnblank.m_bShowSpecial = true;
-      m_butBlankUnblank.mSpecialColor = beamBlanked ? RGB(255, 255, 0) : RGB(0, 255, 0);
-    } else {
-      m_butBlankUnblank.m_bShowSpecial = false;
-    }
+    m_butBlankUnblank.mSpecialColor = beamBlanked ? RGB(255, 255, 0) : RGB(0, 255, 0);
     m_butBlankUnblank.SetWindowText(beamBlanked ? "Unblank" : "Blank");
     mLastBlanked = beamBlanked ? 1 : 0;
   }

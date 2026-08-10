@@ -1994,6 +1994,8 @@ void CMacroProcessor::SuspendMacro(int abort)
     SetFocus(mFocusedWndWhenSavedStatus);
     mFocusedWndWhenSavedStatus = NULL;
   }
+  if (mRamperStarted)
+    mCamera->FinishFocusRamp(mCamera->GetCamThreadData(), true);
 }
 
 // Centralized SEMmessagebox function to set the caller index and clear it
