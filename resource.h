@@ -96,7 +96,7 @@
 #define IDD_DECTRIS_TOOLDLG             296
 #define IDD_DECTRIS_SETTINGS            298
 #define IDR_NAV_MENU                    301
-#define IDD_PARALLELTILTSERIES                  302
+#define IDD_PARALLELTILTSERIES          302
 #define IDC_EDITXSIZE                   1000
 #define IDC_EDITYSIZE                   1002
 #define IDC_EDITYOVERLAP                1003
@@ -3380,6 +3380,7 @@
 #define ID_VIEW_ALLREGISTRATIONS        33632
 #define ID_VIEW_DRAWNOTHING             33633
 #define ID_TILTSERIES_SETUPPARALLELTILTSERIES 33634
+#define ID_OPTIONS_SKIPLDBLANKINGDURINGACQUIRE 33640
 
 // Next default values for new objects
 // 
@@ -3387,7 +3388,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        305
-#define _APS_NEXT_COMMAND_VALUE         33640
+#define _APS_NEXT_COMMAND_VALUE         33641
 #define _APS_NEXT_CONTROL_VALUE         3777
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
