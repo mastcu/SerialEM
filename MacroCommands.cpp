@@ -9906,8 +9906,12 @@ int CMacCmd::CenterBeamFromImage(void)
 // AutoCenterBeam
 int CMacCmd::AutoCenterBeam(void)
 {
-  float maxShift = mItemEmpty[1] ? 0.f : mItemFlt[1];
+  float maxShift = mItemEmpty[1] ? -9.f : mItemFlt[1];
   int pctSmaller = mItemEmpty[2] ? -1 : mItemInt[2];
+  
+  if (maxShift <= -9) {
+    maxShift = -mWinApp->mMultiTSTasks->GetAutoCenFOVLimit();
+  }
   if (mWinApp->mAutocenDlg)
     ABORT_NOLINE("You cannot run beam autocentering with the setup dialog open");
   if (pctSmaller >= 0 && !mWinApp->LowDoseMode())

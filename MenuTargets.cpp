@@ -3033,7 +3033,7 @@ void CMenuTargets::OnUpdateTasksSetupAutocenter(CCmdUI *pCmdUI)
 
 void CMenuTargets::OnTasksAutocenterBeam()
 {
-  mWinApp->mMultiTSTasks->AutocenterBeam();
+  mWinApp->mMultiTSTasks->AutocenterBeam(-mWinApp->mMultiTSTasks->GetAutoCenFOVLimit());
 }
 
 void CMenuTargets::OnUpdateTasksAutocenterbeam(CCmdUI *pCmdUI)

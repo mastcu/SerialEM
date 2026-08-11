@@ -5104,12 +5104,14 @@
         </TR>
         <TR>
           <TD class="scriptcommand">AutoCenterBeam [#M] [#P]</TD>
-          <TD>Starts the Beam Autocenter routine.&nbsp; The optional <b>#M</b> sets a maximum
-            beam shift in microns; the beam will not be moved if the shift determined
-            from the circle fit to the beam edges exceeds this value.&nbsp; If the optional [#P] is
+          <TD>Starts the Beam Autocenter routine.&nbsp;The optional <b>#M</b> sets a maximum
+            beam shift. If <strong>#M</strong> is positive, it represents the maximum shift in microns; the beam will not be moved if the shift determined
+            from the circle fit to the beam edges exceeds this value.&nbsp;If <strong>#M</strong> 
+              is negative, its absolute value represents the maximum beam shift as a multiple 
+              of the camera field of view. If the optional <strong>#P</strong> is
             set to 0 or a positive number, autocentering will be done using View with the specified
              percentage reduction in beam size; this may be useful for finding a badly mis-centered
-             beam.&nbsp; The program must already be in Low Dose mode to use this option.
+             beam.&nbsp;The program must already be in Low Dose mode to use this option.
           </TD>
         </TR>
         <TR>

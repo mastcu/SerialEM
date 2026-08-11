@@ -36,6 +36,7 @@ CAutocenSetupDlg::CAutocenSetupDlg(CWnd* pParent /*=NULL*/)
   , m_bIterate(FALSE)
   , m_fIterThresh(0.1f)
   , m_bSwitchMagToRun(FALSE)
+  , m_fAutoCenFOVLimit(1.f)
 {
   mEnableAll = true;
   mLastTrialMismatch = false;
@@ -96,6 +97,9 @@ void CAutocenSetupDlg::DoDataExchange(CDataExchange* pDX)
   DDX_MM_FLOAT(pDX, IDC_EDIT_ACS_ITERATE, m_fIterThresh, 0.01f, 10.f,
     "Threshold for running twice");
   DDX_Check(pDX, IDC_SWITCH_MAG_TO_RUN, m_bSwitchMagToRun);
+  DDX_Text(pDX, IDC_EDIT_AUTOCENLIMIT, m_fAutoCenFOVLimit);
+  DDX_MM_FLOAT(pDX, IDC_EDIT_AUTOCENLIMIT, m_fAutoCenFOVLimit, 0.01f, 9.f,
+    "Multiple of FOVs to limit beam movement");
 }
 
 
@@ -120,6 +124,7 @@ BEGIN_MESSAGE_MAP(CAutocenSetupDlg, CBaseDlg)
   ON_BN_CLICKED(IDC_ACS_ITERATE, OnIterate)
   ON_EN_KILLFOCUS(IDC_EDIT_ACS_ITERATE, OnKillfocusEditIterate)
   ON_BN_CLICKED(IDC_SWITCH_MAG_TO_RUN, OnSwitchMagToRun)
+  ON_EN_KILLFOCUS(IDC_EDIT_AUTOCENLIMIT, OnEnKillfocusEditAutocenlimit)
 END_MESSAGE_MAP()
 
 
@@ -194,6 +199,7 @@ BOOL CAutocenSetupDlg::OnInitDialog()
   m_butAcquire.EnableWindow(mLowDoseMode);
   m_bIterate = mMultiTasks->GetAutoCenIterate();
   m_fIterThresh = mMultiTasks->GetAutoCenIterThresh();
+  m_fAutoCenFOVLimit = mMultiTasks->GetAutoCenFOVLimit();
   EnableDlgItem(IDC_SWITCH_MAG_TO_RUN, !mLowDoseMode);
 
   m_sbcSpot.SetRange(0,30000);
@@ -218,6 +224,7 @@ void CAutocenSetupDlg::OnOK()
   UpdateIfExposureChanged();
   mMultiTasks->SetAutoCenIterate(m_bIterate);
   mMultiTasks->SetAutoCenIterThresh(m_fIterThresh);
+  mMultiTasks->SetAutoCenFOVLimit(m_fAutoCenFOVLimit);
   if (!mLowDoseMode)
     mMultiTasks->SetAutoCenUseMagInd(m_bSwitchMagToRun ? mCurMagInd : 0);
   if (mStartingMagInd)
@@ -532,6 +539,12 @@ void CAutocenSetupDlg::OnIterate()
 void CAutocenSetupDlg::OnKillfocusEditIterate()
 {
   UpdateData(true);
+}
+
+void CAutocenSetupDlg::OnEnKillfocusEditAutocenlimit()
+{
+  UpdateData(true);
+  mWinApp->RestoreViewFocus();
 }
 
 // Called from scope update with current values when they have changed

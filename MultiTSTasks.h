@@ -89,6 +89,7 @@ private:
   BOOL mAutoCenIterate;    // Flag to iterate
   float mAutoCenIterThresh;   // Threshold in microns for iterating
   int mAutoCenUseMagInd;   // Mag index to switch to outside low dose
+  float mAutoCenFOVLimit;  // Limit to beam movement as multiple of FOVs   
   WINDOWPLACEMENT mAutocenDlgPlace;
   WINDOWPLACEMENT mVPPConditionPlace;
   int mRangeConsets[6];   // Consets for range finding, regular and low dose
@@ -210,6 +211,7 @@ public:
   SetMember(bool, BfcIgnoreNextStop);
   GetSetMember(int, AutoCenUseMagInd);
   GetMember(int, BfcSecZeroMapsTo);
+  GetSetMember(float, AutoCenFOVLimit);
 
   void SetProbeOrAlpha(int probe, int alpha);
   void GetProbeOrAlpha(int &probe, int &alpha);

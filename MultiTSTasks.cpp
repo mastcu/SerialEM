@@ -107,6 +107,7 @@ CMultiTSTasks::CMultiTSTasks(void)
   mVppParams.postMoveDelay = 15;
   mMinNavVisitField = 8.;
   mConditioningVPP = false;
+  mAutoCenFOVLimit = 1.f;
 }
 
 CMultiTSTasks::~CMultiTSTasks(void)
@@ -1326,6 +1327,7 @@ void CMultiTSTasks::AutocenNextTask(int param)
 {
   LowDoseParams *ldp = mWinApp->GetLowDoseParams() + TRIAL_CONSET;
   float postShiftX = 0, postShiftY = 0;
+  float maxShift;
   bool iterate;
   int err;
   if (!mAutoCentering)
@@ -1335,9 +1337,17 @@ void CMultiTSTasks::AutocenNextTask(int param)
   if (!param) {
     mImBufs->mCaptured = BUFFER_TRACKING;
 
+    // use FOV if max shift argument was negative
+    if (mAcMaxShift < 0) {
+      maxShift = (mImBufs->mImage->getHeight() + mImBufs->mImage->getWidth()) / 2.f *
+        mImBufs->mPixelSize * -mAcMaxShift;
+    } else {
+      maxShift = mAcMaxShift;
+    }
+
     // Center the beam: if it fails, restore original shift
     err = mWinApp->mProcessImage->CenterBeamFromActiveImage(0., 0., mAcUseCentroid > 0,
-      mAcMaxShift);
+      maxShift);
 
     iterate = mAcUseCentroid == 1 || (!err && mAcDoIteration == 1 &&
       mWinApp->mProcessImage->GetBeamShiftFromImage() > mAutoCenIterThresh);
@@ -1402,6 +1412,7 @@ void CMultiTSTasks::StopAutocen(void)
     return;
   SEMTrace('I', "StopAutocen restoring intensity %.5f", mAcSavedIntensity);
   mScope->SetIntensity(mAcSavedIntensity, mAcSavedSpot, mAcSavedProbe);
+
   if (mWinApp->LowDoseMode()) {
 
     // Restore both trial and focus if tied, in case the trial value leaked into focus

@@ -135,4 +135,6 @@ public:
   afx_msg void OnKillfocusEditIterate();
   BOOL m_bSwitchMagToRun;
   afx_msg void OnSwitchMagToRun();
+  float m_fAutoCenFOVLimit;
+  afx_msg void OnEnKillfocusEditAutocenlimit();
 };
