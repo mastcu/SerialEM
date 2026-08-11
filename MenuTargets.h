@@ -456,6 +456,8 @@ public:
   afx_msg void OnUpdateReverseWheelZoomDirection(CCmdUI *pCmdUI);
   afx_msg void OnSetupParallelTS();
   afx_msg void OnUpdateSetupParallelTS(CCmdUI *pCmdUI);
+  afx_msg void OnSkipLDBlankingDuringAcquire();
+  afx_msg void OnUpdateSkipLDBlankingDuringAcquire(CCmdUI *pCmdUI);
 };
 
 /////////////////////////////////////////////////////////////////////////////

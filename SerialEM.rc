@@ -7,8 +7,7 @@
 //
 // Generated from the TEXTINCLUDE 2 resource.
 //
-#include "afxres.h"
-
+#include "afxres.h"
 /////////////////////////////////////////////////////////////////////////////
 #undef APSTUDIO_READONLY_SYMBOLS
 
@@ -816,6 +815,8 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "Convert Maps to &Bytes",      ID_NAVIGATOR_CONVERTMAPSTOBYTES
         MENUITEM "Load Maps &Unbinned",         ID_NAVIGATOR_LOADUNBINNED
+        MENUITEM SEPARATOR
+        MENUITEM "Skip LD Blanking during Acquire", ID_OPTIONS_SKIPLDBLANKINGDURINGACQUIRE
     END
     POPUP "&View"
     BEGIN
@@ -6123,6 +6124,8 @@ BEGIN
     ID_VIEW_DRAWNOTHING     "Toggle drawing of all items on and off"
     ID_TILTSERIES_SETUPPARALLELTILTSERIES 
                             "Set up to acquire parallel tilt series"
+    ID_OPTIONS_SKIPLDBLANKINGDURINGACQUIRE 
+                            "Do not blank between acquisitions during Acquire At Items"
 END
 
 STRINGTABLE
@@ -8702,8 +8705,7 @@ LANGUAGE 9, 1
 #include "res\SerialEM.rc2"  // non-Microsoft Visual C++ edited resources
 #include "afxres.rc"         // Standard components
 #include "XFolderDialog\XFolderDialog.rc"
-#endif
-
+#endif
 /////////////////////////////////////////////////////////////////////////////
 #endif    // not APSTUDIO_INVOKED
 

@@ -1147,6 +1147,7 @@ public:
   bool SetSTEMBrightnessContrast(const char *name, double bright, double contrast);
   BOOL NeedBeamBlanking(int screenPos, BOOL STEMmode, BOOL &goToLDarea);
   BOOL NeedBeamBlanking(int screenPos, BOOL STEMmode);
+  bool DoSkipBlankingInLowDose();
   void ScopeUpdate(DWORD dwTime);
   void UpdateStage(double &stageX, double &stageY, double &stageZ, BOOL &bReady);
   void UpdateLastMagEftemStem(int magIndex, double defocus, int screenPos, BOOL EFTEM,

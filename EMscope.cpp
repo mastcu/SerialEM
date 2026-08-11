@@ -25,6 +25,7 @@
 #include "StageMoveTool.h"
 #include "RemoteControl.h"
 #include "NavHelper.h"
+#include "NavigatorDlg.h"
 #include "MultiShotDlg.h"
 #include "MultiGridDlg.h"
 #include "MultiGridTasks.h"
@@ -1941,12 +1942,13 @@ void CEMscope::ScopeUpdate(DWORD dwTime)
     // If screen changed or STEM changed, manage blanking for shutterless camera when not
     // in low dose and STEM-dependent blanking
     if (mLastScreen != screenPos || changedSTEM ||
-      mLastSkipLDBlank != mSkipBlankingInLowDose) {
+      !BOOL_EQUIV(mLastSkipLDBlank, DoSkipBlankingInLowDose())) {
       if (mLastScreen != screenPos)
         mCamera->SetAMTblanking(screenPos == spUp);
-      if (!mLowDoseMode || changedSTEM || mLastSkipLDBlank != mSkipBlankingInLowDose)
+      if (!mLowDoseMode || changedSTEM || 
+        !BOOL_EQUIV(mLastSkipLDBlank, DoSkipBlankingInLowDose()))
         BlankBeam(needBlank, "ScopeUpdate");
-      mLastSkipLDBlank = mSkipBlankingInLowDose;
+      mLastSkipLDBlank = DoSkipBlankingInLowDose();
     }
 
     intensity = GetC2Percent(spotSize, rawIntensity);
@@ -10275,6 +10277,9 @@ int CEMscope::LookupScriptingCamera(CameraParameters *params, bool refresh,
       if (params->FEItype == FALCON4_TYPE && mPluginVersion >= PLUGFEI_PLUG_CAN_SAVE_LZW
         && (params->CamFlags & PLUGFEI_CAN_SAVE_TIFF))
         mCamera->SetFalconCanDoTiffLZW(true);
+      if (params->FEItype == FALCON4_TYPE && mPluginVersion >= PLUGFEI_CAN_RETURN_EARLY &&
+        UtapiSupportsService(UTSUP_CAM_SINGLE))
+        mCamera->SetFalconCanReturnEarly(true);
     } else {
       params->minimumDrift = (float)B3DMAX(params->minimumDrift, minDrift);
     }
@@ -10529,7 +10534,7 @@ BOOL CEMscope::NeedBeamBlanking(int screenPos, BOOL STEMmode, BOOL &goToLDarea)
   if (mCameraAcquiring && B3DABS(mShutterlessCamera) < 2)
     return false;
   if (screenPos == spUp)
-    return mShutterlessCamera || (!mSkipBlankingInLowDose &&
+    return mShutterlessCamera || (!DoSkipBlankingInLowDose() &&
     (mLowDoseMode || mWinApp->mLowDoseDlg.m_bLowDoseMode));
 
   // In Stem mode, when the screen is down, low dose rules the blanking and whether to
@@ -10561,6 +10566,14 @@ BOOL CEMscope::NeedBeamBlanking(int screenPos, BOOL STEMmode)
 {
   BOOL gotoArea;
   return NeedBeamBlanking(screenPos, STEMmode, gotoArea);
+}
+
+// Evaluate whether to skip blanking Low Dose because of either global setting or
+// setting for Nav acquire.
+bool CEMscope::DoSkipBlankingInLowDose()
+{
+  return mSkipBlankingInLowDose || (mWinApp->mNavHelper->GetSkipLDBlankInAcquire() &&
+    mWinApp->mNavigator && mWinApp->mNavigator->GetAcquiring());
 }
 
 // Way to call plugin to get values fast and keep track of whether doing so

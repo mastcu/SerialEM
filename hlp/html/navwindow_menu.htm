@@ -81,6 +81,11 @@
           <TD class="auto-style1"><A HREF="#hid_navigator_loadunbinned">Load Maps Unbinned</A></TD>
           <TD>Always load montage maps with overview binning of 1.</TD>
         </TR>
+        <TR VALIGN="top">
+          <TD class="auto-style1"><A HREF="#hid_options_skipldblankingduringacquire">Skip 
+            LD Blanking during Acquire</A></TD>
+          <TD>Do not blank beam between acquisitions in Low Dose mode during Acquire at Items.</TD>
+        </TR>
          <TR VALIGN="top">
           <TD class="auto-style1"> </TD>
         </TR>
@@ -348,6 +353,17 @@
         can turn off the option and set a higher overview binning in the <A HREF="hidd_montagecontrol.htm">
           Montage Control panel</A> . However, if the map file is open, you must make
         it the current open file before setting the binning in the control panel.</P>
+       <P><A NAME="hid_options_skipldblankingduringacquire"></A><B>Skip 
+            LD Blanking during Acquire command (Navigator window - Options menu)</B></P>
+     <p>In Low Dose mode, the beam is kept blanked between acquisitions when the screen 
+       is up, unless the <a href="menu_settings.htm#hid_specializedoptions_skipblankinginldwithscreenup">Skip Blanking in LD when Screen Up</a> 
+       option is set. This blanking protects the specimen from being exposed when there 
+       is no camera inserted that would cause shuttering to keep the beam blanked. When 
+       there is a camera inserted, it also protects the specimen when the screen is 
+       lowered during the interval between the camera opening its shutter and SerialEM 
+       discovering that the screen is down.&nbsp; Select this option to skip the 
+       blanking during Navigator Acquire at Items, when both of these factors should be 
+       irrelevant.</p>
          <P><b><A NAME="hid_view_indexes"></A>Indexes command (Navigator window
          - View menu)</b></P>
     <P>Use this command to add a column to the table with the index of each item, 

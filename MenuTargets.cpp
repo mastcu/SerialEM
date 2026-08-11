@@ -547,6 +547,8 @@ ON_UPDATE_COMMAND_UI(ID_MISC_NO_TRUE_SIZE, OnUpdateMiscNoTrueSize)
 ON_UPDATE_COMMAND_UI(ID_MISCELLANEOUSOPTIONS_REVERSEWHEELZOOMDIRECTION, OnUpdateReverseWheelZoomDirection)
 ON_COMMAND(ID_TILTSERIES_SETUPPARALLELTILTSERIES, OnSetupParallelTS)
 ON_UPDATE_COMMAND_UI(ID_TILTSERIES_SETUPPARALLELTILTSERIES, OnUpdateSetupParallelTS)
+ON_COMMAND(ID_OPTIONS_SKIPLDBLANKINGDURINGACQUIRE, OnSkipLDBlankingDuringAcquire)
+ON_UPDATE_COMMAND_UI(ID_OPTIONS_SKIPLDBLANKINGDURINGACQUIRE, OnUpdateSkipLDBlankingDuringAcquire)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -920,6 +922,17 @@ void CMenuTargets::OnUpdateUseItemLabelsInFilenames(CCmdUI *pCmdUI)
 {
   pCmdUI->Enable(true);
   pCmdUI->SetCheck(mNavHelper->GetUseLabelInFilenames() ? 1 : 0);
+}
+
+void CMenuTargets::OnSkipLDBlankingDuringAcquire()
+{
+  mNavHelper->SetSkipLDBlankInAcquire(!mNavHelper->GetSkipLDBlankInAcquire());
+}
+
+void CMenuTargets::OnUpdateSkipLDBlankingDuringAcquire(CCmdUI *pCmdUI)
+{
+  pCmdUI->Enable(!mWinApp->DoingTasks());
+  pCmdUI->SetCheck(mNavHelper->GetSkipLDBlankInAcquire());
 }
 
 void CMenuTargets::OnNavigatorShowMultiShot()
