@@ -541,6 +541,12 @@ void CAutocenSetupDlg::OnKillfocusEditIterate()
   UpdateData(true);
 }
 
+void CAutocenSetupDlg::OnEnKillfocusEditAutocenlimit()
+{
+  UpdateData(true);
+  mWinApp->RestoreViewFocus();
+}
+
 // Called from scope update with current values when they have changed
 void CAutocenSetupDlg::LiveUpdate(int magInd, int spotSize, int probe, double intensity,
 int alpha)
@@ -866,10 +872,4 @@ void CAutocenSetupDlg::UpdateSettings()
   FetchParams();
   UpdateParamSettings();
   UpdateEnables();
-}
-
-void CAutocenSetupDlg::OnEnKillfocusEditAutocenlimit()
-{
-  UpdateData(true);
-  mWinApp->RestoreViewFocus();
 }

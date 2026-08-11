@@ -1201,10 +1201,6 @@ int CMultiTSTasks::AutocenterBeam(float maxShift, int pctSmallerView)
   LowDoseParams *ldParm;
   FilterParams *filtParm = mWinApp->GetFilterParams();
   mAcMaxShift = maxShift;
-  if (maxShift < 0) {
-    mSavedAcFOVLimit = mAutoCenFOVLimit;
-    mAutoCenFOVLimit = -maxShift;
-  }
   mAcLDarea = TRIAL_CONSET;
   mAcConset = TRACK_CONSET;
 
@@ -1344,7 +1340,7 @@ void CMultiTSTasks::AutocenNextTask(int param)
     // use FOV if max shift argument was negative
     if (mAcMaxShift < 0) {
       maxShift = (mImBufs->mImage->getHeight() + mImBufs->mImage->getWidth()) / 2.f *
-        mImBufs->mPixelSize * mAutoCenFOVLimit;
+        mImBufs->mPixelSize * -mAcMaxShift;
     } else {
       maxShift = mAcMaxShift;
     }
@@ -1416,9 +1412,6 @@ void CMultiTSTasks::StopAutocen(void)
     return;
   SEMTrace('I', "StopAutocen restoring intensity %.5f", mAcSavedIntensity);
   mScope->SetIntensity(mAcSavedIntensity, mAcSavedSpot, mAcSavedProbe);
-
-  // Restore FOV limit for dialog
-  mAutoCenFOVLimit = mSavedAcFOVLimit;
 
   if (mWinApp->LowDoseMode()) {
 

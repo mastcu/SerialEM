@@ -2401,7 +2401,7 @@ void CTSController::NextAction(int param)
 
     // CHECK FOR BEAM AUTOCENTERING
     } else if (NextActionIs(mActIndex, CHECK_AUTOCENTER, 1)) {
-      if (mMultiTSTasks->AutocenterBeam(-mMultiTSTasks->GetAutoCenFOVLimit())) {
+      if (mMultiTSTasks->AutocenterBeam(-mWinApp->mMultiTSTasks->GetAutoCenFOVLimit())) {
         ErrorStop();
         return;
       }
