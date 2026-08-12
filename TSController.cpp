@@ -6439,6 +6439,7 @@ int CTSController::CheckSaveLowTiltMap()
   // Get current nav state then make the map and set the table back
   prevInd = mWinApp->mNavigator->GetCurListSel();
   item = mWinApp->mNavigator->GetCurrentItem();
+  mWinApp->mNavigator->SetSkipBacklashType(2);
   if (mWinApp->mNavigator->NewMap(true, 1, &newNote))
     return 1;
   mWinApp->mNavigator->SetCurListSel(prevInd);
