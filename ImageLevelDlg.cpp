@@ -181,7 +181,7 @@ void CImageLevelDlg::OnTruncation()
   KGetOneFloat("Percent of pixels to truncate as white:", mPctHi, 2);
   KGetOneFloat("Diameter of central area of FFT to truncate as fraction of image size:",
     oldFFTtrunc, 3);
-  KGetOneInt("Mean gray level (0-255) for low frequencies in FFT, or to disable special"
+  KGetOneInt("Mean gray level (1-255) for low frequencies in FFT, or 0 to disable special"
     " FFT scaling:", oldFFTgray);
   if (mPctLo != oldPctLo || mPctHi != oldPctHi ||
     oldFFTgray != mWinApp->GetBkgdGrayOfFFT() ||

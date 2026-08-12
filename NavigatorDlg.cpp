@@ -10540,20 +10540,25 @@ void CNavigatorDlg::AcquireAreas(int source, bool dlgClosing, bool useTempParams
   takingMap = mAcqParm->acquireType == ACQUIRE_TAKE_MAP;
   takingImage = mAcqParm->acquireType == ACQUIRE_IMAGE_ONLY;
   doingMultishot = mAcqParm->acquireType == ACQUIRE_MULTISHOT;
-  mDoingEarlyReturn = (takingMap || takingImage) && camParams->K2Type &&
+  mDoingEarlyReturn = (takingMap || takingImage) && (camParams->K2Type || 
+    (camParams->FEItype == FALCON4_TYPE && mCamera->GetFalconCanReturnEarly()) ||
+    mCamera->ThisDEcanReturnEarly(camParams)) &&
     !mWinApp->Montaging() && mAcqParm->earlyReturn;
-  if (takingMap && mDoingEarlyReturn && !mAcqParm->numEarlyFrames) {
-      AfxMessageBox("You must have a non-zero value for the number\n"
-        "of early return frames when acquiring maps", MB_EXCLAME);
-      ManageAcquireDlgCleanup(fromMenu, dlgClosing);
-      return;
+  if (takingMap && mDoingEarlyReturn && (!mAcqParm->numEarlyFrames || camParams->FEItype
+    || camParams->DE_camType)) {
+    SEMMessageBox(camParams->K2Type ? "You must have a non-zero value for the number\n"
+      "of early return frames when acquiring maps" : "You cannot do early returns when"
+      " acquiring maps from this camera", MB_EXCLAME);
+    ManageAcquireDlgCleanup(fromMenu, dlgClosing);
+    return;
   }
   mHelper->UpdateMultishotIfOpen(false);
 
   // If there is no file open for regular acquire, make sure one will be opened on
   // first item
-  mSkippingSave = (mDoingEarlyReturn && !mAcqParm->numEarlyFrames) ||
-    (mAcqParm->skipSaving && mAcqParm->acquireType == ACQUIRE_IMAGE_ONLY);
+  mSkippingSave = (mDoingEarlyReturn && (!mAcqParm->numEarlyFrames || camParams->FEItype
+    || camParams->DE_camType))
+    || (mAcqParm->skipSaving && mAcqParm->acquireType == ACQUIRE_IMAGE_ONLY);
   if (dlg->mNumAcqBeforeFile && ((!mWinApp->mStoreMRC && !mSkippingSave &&
     (takingMap || takingImage)) || ((!mWinApp->mStoreMRC || mWinApp->Montaging()) &&
         doingMultishot && mHelper->IsMultishotSaving()))) {
@@ -11609,7 +11614,9 @@ void CNavigatorDlg::AcquireNextTask(int param)
       timeOut = 300000;
       mCamera->SetCancelNextContinuous(true);
       if (mDoingEarlyReturn && mCamera->SetNextAsyncSumFrames(
-        mAcqParm->numEarlyFrames < 0 ? 65535 : mAcqParm->numEarlyFrames, false, false)) {
+        B3DCHOICE(mCamParams[mWinApp->GetCurrentCamera()].K2Type,
+          mAcqParm->numEarlyFrames < 0 ? 65535 : mAcqParm->numEarlyFrames, 0), 
+        false, false)) {
         StopAcquiring();
         return;
       }

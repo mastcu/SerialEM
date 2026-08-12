@@ -1582,11 +1582,14 @@
         </TR>
                 <TR>
           <TD class="scriptcommand">EarlyReturnNextShot #N [#D] [#S]</TD>
-          <TD>Returns as early as possible from the next acquisition, which must involve
-            either aligning or saving dose-fractionation frames from a K2/K3 camera.&nbsp; Follow with the number
+          <TD>Returns as early as possible from the next acquisition.&nbsp; For a K2/K3 camera, acquisition must involve
+            either aligning or saving dose-fractionation frames.&nbsp; Early return can also be used with a Falcon 4 camera
+            running through UTAPI, or for a DE camera connected to the server with API 2.
+            &nbsp; No image is returned from these cameras,&nbsp; Follow with the number
             of frames <b>#N</b> to be summed in the returned image, 0 to return without any summed
-            image, -1 to return with the full sum, or -9 to return immediately after starting the 
-            acquisition, without waiting for the exposure to end.&nbsp; The optional <b>#D</b> should be 1 to make a deferred
+            image (the required entry for DE or Falcon cameras), -1 to return with the full sum, or -9 to return immediately after starting the 
+            acquisition, without waiting for the exposure to end.&nbsp; The remaining entries pertain to K2/K3 cameras and
+            should be omitted for other cameras.&nbsp; The optional <b>#D</b> should be 1 to make a deferred
             full sum when not aligning in the plugin; this sum is always made when aligning in the plugin
             for an ordinary acquisition.&nbsp; If the optional <b>#S</b> is non-zero, the plugin will <i>not</i> 
             stack frames, which is done by default in order to allow another single-shot image to be taken as 
@@ -4868,9 +4871,13 @@
             3) <b>#O</b> for the distance from center of the off-center shots, in microns<br />
             4) <b>#D</b> for the extra delay after the image shift, in seconds<br />
             5) <b>#S</b> 1 to save a Record image at each position or 0 not to<br />
-            6) <b>#E</b> 1 or 2 to use early return for a K2/K3 camera after the last shot or after all 
-            shots, or 3 for early return on all shots with a full sum returned on the first one<br />
-            7) <b>#F</b> for the number of frames in the early returned image (or -1 for all, 0 for none)<br />
+            6) <b>#E</b> 1 or 2 to use early return after the last shot or after all 
+            shots, or 3 for early return on all shots except the first one.  Early 
+            return can be used with K2/K3 cameras, which can return a partial sum of frames, with Falcon 4 
+            cameras running through UTAPI, or with DE cameras using API 2.&nbsp; The latter
+            two cameras cannot return an image and frame alignment cannot be used.<br />
+            7) <b>#F</b> for the number of frames in the early returned image (or -1 for all, 0 for none; 
+            ignored for Falcon and DE)<br />
             8) <b>#B</b> 1 to adjust beam tilt to compensate for image shift or 0 not to<br />
             9) <b>#H</b> the sum of 1 to do shots around a center (within a hole) and 2 to do shots in multiple holes or
             specified positions.&nbsp; (In addition, the sum in <b>#H</b> can include 4 for testing

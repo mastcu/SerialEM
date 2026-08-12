@@ -484,10 +484,13 @@ BOOL CNavAcquireDlg::OnInitDialog()
   m_butSendEmail.EnableWindow(mWinApp->mMailer->GetInitialized() &&
     !(mWinApp->mMailer->GetSendTo()).IsEmpty());
   m_butOKGO.SetWindowText(navState == NAV_PAUSED ? "Resume" : "GO");
+  if (!mWinApp->GetHasK2OrK3Camera())
+    m_butEarlyReturn.SetWindowTextA("Do early return with no image");
   EnableDlgItem(IDC_RMAPPING, navState != NAV_PAUSED);
   EnableDlgItem(IDC_RACQUISITION, navState != NAV_PAUSED);
   EnableDlgItem(IDC_NA_RETRACT_CAMS, mWinApp->GetAnyRetractableCams());
   EnableDlgItem(IDC_NA_RUN_SCRIPT_AT_END, navState != NAV_PAUSED);
+
 
   if (!adjustXforms->GetSize())
     ReplaceWindowText(&m_butUseMapHoles, ", with adjustment", " (no adjustment)");
@@ -538,12 +541,19 @@ void CNavAcquireDlg::OnOK()
     mPostponed = 0;
     return;
   }
-  if (OptionsToAcquireType() == ACQUIRE_TAKE_MAP && m_bEarlyReturn && !m_iEarlyFrames &&
-    mWinApp->GetHasK2OrK3Camera()) {
-    AfxMessageBox("You must have a non-zero value for the number\n"
-      "of early return frames when acquiring maps", MB_EXCLAME);
-    mPostponed = 0;
-    return;
+  if (OptionsToAcquireType() == ACQUIRE_TAKE_MAP && m_bEarlyReturn) {
+    if (!m_iEarlyFrames && mWinApp->GetHasK2OrK3Camera()) {
+      AfxMessageBox("You must have a non-zero value for the number\n"
+        "of early return frames when acquiring maps", MB_EXCLAME);
+      mPostponed = 0;
+      return;
+    }
+    if (!mWinApp->GetHasK2OrK3Camera()) {
+      AfxMessageBox("You cannot do early returns when acquiring maps from Falcon or DE"
+        " cameras", MB_EXCLAME);
+      mPostponed = 0;
+      return;
+    }
   }
   if (CheckActionOrder(mCurrentOrder))
     return;
@@ -803,6 +813,8 @@ void CNavAcquireDlg::LoadParamsToDialog()
   m_bNoMBoxOnError = mParam->noMBoxOnError;
   m_bEarlyReturn = mParam->earlyReturn;
   m_iEarlyFrames = mParam->numEarlyFrames;
+  if (!mWinApp->GetHasK2OrK3Camera())
+    m_iEarlyFrames = 0;
   m_bUseMapHoles = mParam->useMapHoleVectors;
   m_bSkipSaving = mParam->skipSaving;
   m_bAdjustBTforIS = mParam->adjustBTforIS;
@@ -1035,8 +1047,9 @@ void CNavAcquireDlg::ManageOutputFile(void)
     else if (!multiSaving)
       m_strSavingFate = "NO SAVING: \"Save Record\" not on in multishot";
   }
-  if (mWinApp->GetHasK2OrK3Camera() && m_bEarlyReturn && !m_iEarlyFrames &&
-    acquireType == ACQUIRE_IMAGE_ONLY) {
+  if ((mWinApp->GetHasK2OrK3Camera() || mWinApp->mCamera->GetFalconCanReturnEarly() ||
+    mWinApp->mCamera->GetSomeDEcanReturnEarly())
+    && m_bEarlyReturn && !m_iEarlyFrames && acquireType == ACQUIRE_IMAGE_ONLY) {
     m_strSavingFate = "NO SAVING: \"Early return\" with 0 frames selected";
   } else if (m_bSkipSaving && acquireType == ACQUIRE_IMAGE_ONLY) {
     m_strSavingFate = "NO SAVING: \"Skip saving\" option selected";
@@ -1250,7 +1263,7 @@ void CNavAcquireDlg::BuildActionSection(bool unhiding)
   int ind, actInd, pos = 0, loop;
   CButton *button;
   CRect actRect;
-  bool runIt, holeEnable;
+  bool runIt, holeEnable, hideEarlyRet;
   BOOL states[5] = {true, true, true, true, true};
   CFont *regularFont = m_butAcquireTS.GetFont();
   int acquireType = OptionsToAcquireType();
@@ -1330,9 +1343,12 @@ void CNavAcquireDlg::BuildActionSection(bool unhiding)
   NewActionSelected(m_iSelectedPos);
 
   // Add any permanently dropped items now
-  if (!mWinApp->GetHasK2OrK3Camera() || (m_bHideUnselectedOpts &&
-    (!m_bEarlyReturn || !mEarlyRetEnabled))) {
+  hideEarlyRet = m_bHideUnselectedOpts && (!m_bEarlyReturn || !mEarlyRetEnabled);
+  if (!(mWinApp->GetHasK2OrK3Camera() || mWinApp->mCamera->GetFalconCanReturnEarly() ||
+    mWinApp->mCamera->GetSomeDEcanReturnEarly())
+     || hideEarlyRet)
     mIDsToDrop.push_back(IDC_NA_EARLY_RETURN);
+  if (!mWinApp->GetHasK2OrK3Camera() || hideEarlyRet) {
     mIDsToDrop.push_back(IDC_STAT_FRAMES);
     mIDsToDrop.push_back(IDC_EDIT_EARLY_FRAMES);
   }

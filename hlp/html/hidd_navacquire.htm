@@ -166,12 +166,15 @@
       <a href="hidd_multi_shot_setup.htm">Multiple Record Setup dialog</a> applies
       instead, and that routine adjusts for the starting image shift.</P>
     <P><strong>Do early return with sum of N frames</strong></P>
-    <P>This option appears if there is a K2 or K3 camera and allows the program to
+    <P>This option appears if there is a K2 or K3 camera, Falcon 4 running through 
+      UTAPI, or a DE camera connected to the server with API 2. It allows the program to
       resume some operations as soon as possible after starting a frame-saving
-      acquisition.&nbsp; The SerialEMCCD plugin will return control to SerialEM before
+      acquisition.&nbsp; With a K2/K3, the SerialEMCCD plugin will return control to SerialEM before
       the saving is finished, and return either an image with the given number of
       frames if a positive number is entered in the text box, no image if 0 is
-      entered, or a sum of all the frames if -1 is entered. </P>
+      entered, or a sum of all the frames if -1 is entered.&nbsp; With a DE or Falcon, 
+      no partial summed image can be returned, and the entry here is ignored or 
+      does not appear if there is no K2/K3.</P>
     <P><strong>Use map hole vectors for shifts, with adjustment</strong></P>
     <P>This option is enabled when the main action is acquiring multiple Records or 
       running a script with a regular array of holes selected in the multiple Record 

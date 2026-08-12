@@ -3,6 +3,12 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+8/12/26: Added ability to do early returns from Facon 4 running through UTAPI
+and from DE cameras connected with API 2.
+
+8/11/26: Added option to Navigator Window Options menu to skip blanking
+between shots in Low Dose mode when doing Navigator Acquire.
+
 8/10/26: Fixed crash going from nonLD to LD state with dialog closed (In 4.2).
 
 8/9/26: Fixed focus ramp script commands to work when running ramp directly

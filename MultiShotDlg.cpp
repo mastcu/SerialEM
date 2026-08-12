@@ -274,6 +274,10 @@ END_MESSAGE_MAP()
 // Initialize dialog
 BOOL CMultiShotDlg::OnInitDialog()
 {
+  bool hasK2 = mWinApp->GetHasK2OrK3Camera();
+  bool hasDE = mWinApp->mCamera->GetSomeDEcanReturnEarly();
+  CString cams;
+  bool hasFEI = mWinApp->mCamera->GetFalconCanReturnEarly();
   CBaseDlg::OnInitDialog();
   if (mHasIlluminatedArea <= 0)
     ReplaceWindowText(&m_butUseIllumArea, "illuminated area", "beam size from cal");
@@ -281,6 +285,26 @@ BOOL CMultiShotDlg::OnInitDialog()
   mIDsToIgnoreBot.insert(IDC_STAT_NUM_Y_HOLES);   // 2411
   SetupPanelTables(idTable, sLeftTable, sTopTable, mNumInPanel, mPanelStart,
     sHeightTable);
+  if (mCanReturnEarly && !hasK2) {
+    SetDlgItemText(IDC_STAT_NUM_EARLY, "Early return gives no image");
+    mIDsToDrop.push_back(IDC_EDIT_EARLY_FRAMES);
+  }
+  mCanReturnEarly = hasK2 || hasDE || hasFEI;
+  if (mCanReturnEarly && (!hasK2 || hasDE || hasFEI)) {
+    if (hasK2)
+      cams = "K2/K3";
+    if (hasFEI) {
+      if (!cams.IsEmpty())
+        cams += " or ";
+      cams += "Falcon";
+    }
+    if (hasDE) {
+      if (!cams.IsEmpty())
+        cams += " or ";
+      cams += "DE";
+    }
+    SetDlgItemText(IDC_STAT_EARLY_GROUP, "Early Returns for" + cams);
+  }
   mLastPanelStates[6] = false;
   UpdateSettings();
   SetDefID(45678);    // Disable OK from being default button
@@ -307,6 +331,7 @@ void CMultiShotDlg::UpdateSettings(void)
   mSavedParams = *mActiveParams;
   m_iEarlyReturn = mActiveParams->doEarlyReturn;
   m_iEarlyFrames = mActiveParams->numEarlyFrames;
+  B3DCLAMP(m_iEarlyFrames, -1, 999);
   m_iCenterShot = mActiveParams->doCenter < 0 ? 1 : (2 * mActiveParams->doCenter);
   m_fBeamDiam = mActiveParams->beamDiam;
   m_fSpokeDist = mActiveParams->spokeRad[0];
@@ -1628,6 +1653,9 @@ void CMultiShotDlg::ManageEnables(void)
   bool canAdjustIS = mShiftManager->GetFocusISCals()->GetSize() > 0 &&
     mShiftManager->GetFocusMagCals()->GetSize() > 0 && lowDose;
   bool parallelTSopen = mWinApp->mNavHelper->mParallelTSDlg->IsOpen();
+  bool canEarly = camParams->K2Type || (camParams->FEItype == FALCON4_TYPE &&
+    mWinApp->mCamera->GetFalconCanReturnEarly()) || 
+    mWinApp->mCamera->ThisDEcanReturnEarly(camParams);
 
   m_statBeamDiam.EnableWindow(enable && !parallelTSopen);
   m_statBeamMicrons.EnableWindow(enable && !parallelTSopen);
@@ -1636,17 +1664,15 @@ void CMultiShotDlg::ManageEnables(void)
   m_butCancel.EnableWindow(!mDisabledDialog);
   m_butUseIllumArea.EnableWindow(!mDisabledDialog && mRecBeamSizeEnabled && !parallelTSopen);
   m_butAdjustBeamTilt.EnableWindow(comaVsIS->magInd > 0 && !mDisabledDialog && !parallelTSopen);
-  m_statNumEarly.EnableWindow(m_iEarlyReturn > 0);
-  m_editEarlyFrames.EnableWindow(m_iEarlyReturn > 0);
-  m_butSaveRecord.EnableWindow(m_iEarlyReturn != 2 || m_iEarlyFrames != 0 ||
-    !camParams->K2Type);
-  EnableDlgItem(IDC_RNO_EARLY, camParams->K2Type);
-  EnableDlgItem(IDC_RLAST_EARLY, camParams->K2Type);
-  EnableDlgItem(IDC_RALL_EARLY, camParams->K2Type);
-  EnableDlgItem(IDC_RFIRST_FULL, camParams->K2Type);
-  EnableDlgItem(IDC_STAT_NUM_EARLY, camParams->K2Type);
-  EnableDlgItem(IDC_STAT_EARLY_GROUP, camParams->K2Type);
-  EnableDlgItem(IDC_EDIT_EARLY_FRAMES, camParams->K2Type);
+  m_statNumEarly.EnableWindow(m_iEarlyReturn > 0 && camParams->K2Type);
+  m_editEarlyFrames.EnableWindow(m_iEarlyReturn > 0 && camParams->K2Type);
+  m_butSaveRecord.EnableWindow(m_iEarlyReturn != 2 || 
+    (m_iEarlyFrames != 0 && camParams->K2Type) || !canEarly);
+  EnableDlgItem(IDC_RNO_EARLY, canEarly);
+  EnableDlgItem(IDC_RLAST_EARLY, canEarly);
+  EnableDlgItem(IDC_RALL_EARLY, canEarly);
+  EnableDlgItem(IDC_RFIRST_FULL, canEarly);
+  EnableDlgItem(IDC_STAT_EARLY_GROUP, canEarly);
   m_statCenterUm.EnableWindow(m_bDoShotsInHoles);
   m_statCenterDist.EnableWindow(m_bDoShotsInHoles);
   m_statCenterGroup.EnableWindow(m_bDoShotsInHoles);

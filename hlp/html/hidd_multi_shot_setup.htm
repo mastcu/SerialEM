@@ -460,9 +460,12 @@
       The option is disabled and its setting is irrelevant if an early return is
       selected for all Records with no returned image.&nbsp; However, if any images
       are returned, they will all be saved as of SerialEM 4.0.</p>
-    <p><b>Early returns for K2/K3</b></p>
-    <p>This group of controls appears when there is a K2 or K3 camera available and
-        allows for SerialEM to resume operations as soon as possible after acquiring an
+    <p><b>Early returns for K2/K3 or Falcon or DE</b></p>
+    <p>This group of controls appears when there is a K2 or K3 camera, a DE camera 
+      connected to the server with API 2, or a 
+      Falcon 4 camera running through UTAPI.&nbsp; The K2/K3 can return a partial sum 
+      of frames, whereas the DE and Falcon cannot return an image, and frame alignment 
+      is not allowed.&nbsp; Early return allows SerialEM to resume operations as soon as possible after acquiring an
         image with saved frames, the same as is accomplished with the script command
         &#39;EarlyReturnNextShot&#39;.&nbsp; The radio buttons allow you to select to have an
         early return only on the last shot, on all shots, or on all shots except the
@@ -477,7 +480,9 @@
       post-actions are not enabled, the early return will allow the program to do the
       image shift sooner.</p>
     <p>In the text box in this group, enter the number of frames in the returned
-      image: 0 for none, a specific number of frames, or -1 for all the frames.</p>
+      image: 0 for none, a specific number of frames, or -1 for all the frames.&nbsp; 
+      This entry is ignored for Falcon or DE, and does not appear if there is not a K2 
+      or K3.</p>
       <p>If frame alignment in the SerialEMCCD plugin is selected in the Record
           parameters, this alignment will be done only for shots without an early return;
           i.e., the deferred aligned sum computed when using alignment in the plugin with

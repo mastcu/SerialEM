@@ -390,6 +390,7 @@ CCameraController::CCameraController()
   mSaveInEERorLZW = 0;
   mCanSaveEERformat = -1;
   mFalconCanDoTiffLZW = false;
+  mFalconCanReturnEarly = true;
   mFrameSavingEnabled = false;
   mCanUseFalconConfig = -1;
   mRestoreFalconConfig = false;
@@ -503,6 +504,7 @@ CCameraController::CCameraController()
   mSaveNewImageToShrMem = false;
   mShrMemIIFile[0] = mShrMemIIFile[1] = NULL;
   mCurShrMemInd = 0;
+  mSomeDEcanReturnEarly = false;
 }
 
 // Clear anything that might be set externally, or was cleared in constructor and cleanup
@@ -1676,6 +1678,8 @@ void CCameraController::InitializeDirectElectron(int *originalList, int numOrig)
         if ((mAllParams[i].CamFlags & DE_APOLLO_CAMERA) &&
           !mAllParams[i].countsPerElectron)
           mAllParams[i].countsPerElectron = 16.;
+        if (mAllParams[i].CamFlags & DE_CAN_RETURN_EARLY && mUseAPI2ForDE)
+          mSomeDEcanReturnEarly = true;
 
       } else if (mWinApp->mPluginManager->GetDEplugIndex() >= 0) {
         AfxMessageBox("FAILURE in Initializing Direct Electron camera", MB_EXCLAME);
@@ -2452,8 +2456,20 @@ bool CCameraController::OppositeLDAreaNextShot(void)
 // Sets up for early return on next K2 shot, return true for error
 bool CCameraController::SetNextAsyncSumFrames(int inVal, bool deferSum, bool noStack)
 {
+  if ((mParam->FEItype == FALCON4_TYPE && mFalconCanReturnEarly) || 
+    ThisDEcanReturnEarly(mParam)) {
+    if (inVal > 0 || deferSum) {
+      SEMMessageBox("No deferred sum or partial sum is available with early return from"
+        " a " + CString(mParam->FEItype ? "Falcon" : "DE camera"));
+      return true;
+    }
+    mNextAsyncSumFrames = 0;
+    return false;
+  }
+
   if (!mParam->K2Type && !mParam->OneViewType) {
-    SEMMessageBox("Early return works only with K2/K3 or OneView/Rio type cameras");
+    SEMMessageBox("Early return works only with K2/K3, OneView/Rio type cameras,"
+      " Falcons running through UTAPI, or DE cameras with API 2");
     return true;
   }
   if (inVal == 65535 && mDMversion[CAMP_DM_INDEX(mParam)] < DM_K2_API_CHANGED_LOTS) {
@@ -3602,8 +3618,7 @@ void CCameraController::Capture(int inSet, bool retrying)
     mRestoreFalconConfig = setState >= 0;
   }
 
-  // Finally the one-shot flag can be cleared since we are done leaving and coming back
-  mNextAsyncSumFrames = -1;
+  // Finally the one-shot flags can be cleared since we are done leaving and coming back
   mImmediateReturn = false;
   mNoStackNextAsync = false;
   mDeferSumOnNextAsync = false;
@@ -3642,6 +3657,19 @@ void CCameraController::Capture(int inSet, bool retrying)
   if (mSavingFalconFrames && mParam->FEItype == FALCON4_TYPE &&
     mParam->falconVariant == FALCON4I_VARIANT)
     mTD.FEIacquireFlags |= PLUGFEI_SKIP_FRAME_WAIT;
+
+  // Falcon Early return
+  if (mParam->FEItype == FALCON4_TYPE && mNextAsyncSumFrames >= 0) {
+    if (mNextAsyncSumFrames > 0 || !mTD.UseUtapi || !mSavingFalconFrames ||
+      (conSet.alignFrames && conSet.useFrameAlign < 2)) {
+      SEMMessageBox("Early return from Falcon can only be done with saving, no immediate "
+        "aligning, no partial sum, and through UTAPI");
+      ErrorCleanup(1);
+      return;
+    }
+    mTD.FEIacquireFlags |= PLUGFEI_EARLY_RETURN;
+    mTD.NumAsyncSumFrames = 0;
+  }
 
   // Check for inability to write a com file for Falcon 2
   if (FCAM_ADVANCED(mParam) && mParam->FEItype == FALCON2_TYPE && conSet.alignFrames &&
@@ -3764,6 +3792,21 @@ void CCameraController::Capture(int inSet, bool retrying)
     sumCount = conSet.K2ReadMode > 0 ? conSet.sumK2OrDeCntFrames : conSet.DElinSumCount;
     sumCount = B3DMAX(1, sumCount);
 
+    // DE early return
+    if (mNextAsyncSumFrames >= 0) {
+      if (mNextAsyncSumFrames > 0 || !mUseAPI2ForDE || 
+        !(conSet.saveFrames & DE_SAVE_MASTER) || 
+        (conSet.alignFrames && conSet.useFrameAlign < 2)) {
+        SEMMessageBox("Early return from DE camera can only be done with saving, no "
+          "immediate aligning, no partial sum, and with API2");
+        ErrorCleanup(1);
+        return;
+      }
+      setState |= DE_SAVE_EARLY_RETURN;
+      mTD.NumAsyncSumFrames = 0;
+    }
+
+
     // Turn on only the save master flag if aligning only and set flag to remove frames
     if (!mParam->STEMcamera && conSet.alignFrames && 
       !(conSet.saveFrames & DE_SAVE_MASTER)) {
@@ -3813,6 +3856,9 @@ void CCameraController::Capture(int inSet, bool retrying)
       return;
     }
   }
+
+  // Finally clear the flag, all kinds of cameras have processed it
+  mNextAsyncSumFrames = -1;
 
   if (!mWinApp->mBufferManager->OKtoDestroy(0, "Capturing an image")) {
     ErrorCleanup(1);

@@ -74,6 +74,8 @@ static const char *psADUsPerElectron = "ADUs Per Electron";
 static const char *psFramesPerSec = "Frames Per Second";
 static const char *psMaintenance = "Sensor - Maintenance Cycle";
 static const char *psSystemStatus = "System Status";
+static const char *psFramesGrabbed = "Number of Frames Grabbed";
+static const char *psFramesToGrab = "Number of Frames To Grab";
 
 // These are concatenated into multiple strings
 #define DE_PROP_COUNTING "Electron Counting"
@@ -327,6 +329,7 @@ int DirectElectronCamera::initializeDECamera(CString camName, int camIndex)
     CString tmp, tmp2;
     std::string propValue;
     bool result, sawHWROI = false, sawHWbinning = false, hasHDRlicense = false;
+    bool sawToGrab = false, sawGrabbed = false;
     bool hasCountingLicense = false, noPreset = true;
     BOOL debug = GetDebugOutput('D'), scanDebug = GetDebugOutput('!');
     const char *propsToCheck[] = {DE_PROP_COUNTING, psMotionCor, psMotionCorNew,
@@ -416,6 +419,10 @@ int DirectElectronCamera::initializeDECamera(CString camName, int camIndex)
         mDeServer->getProperty(camProps[i], &propValue)) {
         noPreset = propValue == "Custom";
       }
+      if (!camProps[i].compare(psFramesGrabbed))
+        sawGrabbed = true;
+      if (!camProps[i].compare(psFramesToGrab))
+        sawToGrab = true;
 
       if (debug && (camProps[i].find("Scan") != 0 || scanDebug)) {
         listProps += camProps[i].c_str();
@@ -451,6 +458,8 @@ int DirectElectronCamera::initializeDECamera(CString camName, int camIndex)
       if (!hasHDRlicense)
         params->CamFlags &= ~DE_HAS_HARDWARE_HDR;
     }
+    if (sawGrabbed && sawToGrab && sUsingAPI2)
+      params->CamFlags |= DE_CAN_RETURN_EARLY;
 
     if (debug) {
       if (!GetDebugOutput('*')) {
@@ -890,10 +899,10 @@ int DirectElectronCamera::AcquireImageData(unsigned short *image4k, long &imageS
   long &imageSizeY, int divideBy2)
 {
   CString valStr;
-  int actualSizeX, actualSizeY, status;
+  int actualSizeX, actualSizeY, status, grabbed, toGrab = 0;
   double startTime = GetTickCount();
   bool api2Reference = mAPI2Server && mRepeatForServerRef > 0;
-  bool imageOK;
+  bool imageOK, toGrabOK = false;
   if (!m_DE_CLIENT_SERVER && m_STOPPING_ACQUISITION == true) {
     memset(image4k, 0, imageSizeX * imageSizeY * 2);
     m_STOPPING_ACQUISITION = false;
@@ -995,6 +1004,17 @@ int DirectElectronCamera::AcquireImageData(unsigned short *image4k, long &imageS
       return 1;
     }
     if (!api2Reference) {
+      if (mLastSaveFlags & DE_SAVE_EARLY_RETURN) {
+        startTime = GetTickCount();
+        while (SEMTickInterval(startTime) < (mLastExposureTime + 2.) * 1000.) {
+          if (!toGrabOK)
+            toGrabOK = getIntProperty(psFramesToGrab, toGrab);
+          if (toGrabOK && getIntProperty(psFramesGrabbed, grabbed) && grabbed >= toGrab)
+            break;
+          Sleep(50);
+        }
+        return 0;
+      }
       DE::ImageAttributes attributes;
       DE::PixelFormat pixForm = DE::PixelFormat::UINT16;
       attributes.stretchType = DE::ContrastStretchType::NONE;

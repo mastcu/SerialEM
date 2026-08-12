@@ -500,6 +500,7 @@ hid_options_setpointlabelthreshold = SerialEM.chm::/html\navwindow_menu.htm#hid_
 hid_options_useitemlabelsinfilenames = SerialEM.chm::/html\navwindow_menu.htm#hid_options_useitemlabelsinfilenames
 hid_navigator_convertmapstobytes = SerialEM.chm::/html\navwindow_menu.htm#hid_navigator_convertmapstobytes
 hid_navigator_loadunbinned			= SerialEM.chm::/html\navwindow_menu.htm#hid_navigator_loadunbinned
+hid_options_skipldblankingduringacquire  = SerialEM.chm::/html\navwindow_menu.htm#hid_options_skipldblankingduringacquire
 hid_navoptions_usecurrentldparamsinri = SerialEM.chm::/html\navwindow_menu.htm#hid_navoptions_usecurrentldparamsinri
 hid_options_search              = SerialEM.chm::/html\navwindow_menu.htm#hid_options_search
 hid_navigator_writeasxmlfile    = SerialEM.chm::/html\navwindow_menu.htm#hid_navigator_writeasxmlfile

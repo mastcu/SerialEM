@@ -97,6 +97,7 @@ typedef void(*NewImCallback)(void);
 #define DE_HAS_HARDWARE_HDR       0x1000 // (1 << 12)
 #define DE_FRAMES_MATCH_IMAGE     0x2000
 #define DE_HAS_MAINTENANCE        0x4000
+#define DE_CAN_RETURN_EARLY       0x8000
 
 // Camera flags for Gatan cameras
 #define K3_CAM_ROTFLIP_BUG        0x2
@@ -157,6 +158,7 @@ enum {K2_SUMMIT = 1, K2_BASE, K3_TYPE};
 #define PLUGFEI_CAN_BIN_IMAGE     114
 #define PLUGFEI_FLEXIBLE_SUBAREAS 117
 #define PLUGFEI_PLUG_CAN_SAVE_LZW 118
+#define PLUGFEI_CAN_RETURN_EARLY  122
 #define DECTRIS_WITH_SUPER_RES(a) ((a)->DectrisType && !(a)->STEMcamera && ((a)->CamFlags & DECTRIS_HAS_SUPER_RES))
 #define DECTRIS_WITH_COUNTING(a) ((a)->DectrisType && !(a)->STEMcamera && ((a)->CamFlags & DECTRIS_HAS_SINGLE_EVENT))
 #define DETECTOR_IS_VIRTUAL(p, n) (((p)->virtualChanFlags & (1 << n)) != 0)
@@ -653,6 +655,7 @@ public:
   GetSetMember(BOOL, ConsetsShareChannelList);
   SetMember(int, SaveInEERorLZW);
   GetSetMember(bool, FalconCanDoTiffLZW);
+  GetSetMember(bool, FalconCanReturnEarly);
   GetSetMember(int, RotFlipInFalcon3ComFile);
   GetSetMember(BOOL, SubdirsOkInFalcon3Save);
   GetSetMember(BOOL, RamperWaitForBlank);
@@ -682,6 +685,9 @@ public:
   GetSetMember(BOOL, SaveNewImageToShrMem);
   GetSetMember(CString, NewImageListPath);
   SetMember(int, StoreNumForNextShot);
+  GetMember(bool, SomeDEcanReturnEarly);
+  bool ThisDEcanReturnEarly(CameraParameters *param) { return mWinApp->mDEToolDlg.CanSaveFrames(param) &&
+      mUseAPI2ForDE && (param->CamFlags & DE_CAN_RETURN_EARLY); };
 
   CameraThreadData *GetCamThreadData() { return &mTD; };
   bool DoingPartialScan() {return mTD.ReturnPartialScan > 0; };
@@ -995,6 +1001,7 @@ public:
   int mSaveInEERorLZW;          // Flag + to save Falcon 4 frames as EER, - save TIFF LZW
   int mCanSaveEERformat;        // Flag that it is possible
   bool mFalconCanDoTiffLZW;     // Flag that it can save TIFF LZW
+  bool mFalconCanReturnEarly;   // Flag that it can do early return after exposure
   int mFalcon4RawSumSize;       // Size of initial sums that can go into fractions
   int mFalcon4iRawSumSize;      // Size of initial sums for Falcon 4i
   CString mFalconReferenceDir;  // Gain reference directory for counting gain
@@ -1182,6 +1189,7 @@ public:
   CString mNewImageListPath;      // Optional directory
   int mStoreNumForNextShot;       // Number of image store for getting filename for frames
   std::map<INT64, float> mDeFPSmap; // Map of FPS values for DE cameras
+  bool mSomeDEcanReturnEarly;     // Flag that at least one DE camera can do earky return
 
 public:
   void SetNonGatanPostActionTime(void);

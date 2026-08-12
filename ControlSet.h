@@ -35,6 +35,7 @@ typedef std::vector <float> FloatVec;
 #define DE_SAVE_COUNTING 0x8
 #define DE_SAVE_MASTER   0x10
 #define DE_SAVE_SINGLE   0x20
+#define DE_SAVE_EARLY_RETURN   0x40
 #define MAX_SPOT_SIZE  13
 #define MAX_CAMLENS 60
 

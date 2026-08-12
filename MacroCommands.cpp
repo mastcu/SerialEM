@@ -2777,7 +2777,10 @@ int CMacCmd::MultipleRecords(void)
   MultiShotParams *msParams = mNavHelper->GetMultiShotParams();
   doEarly = (mItemEmpty[6] || mItemInt[6] < -8) ? msParams->doEarlyReturn : mItemInt[6];
   numEarly = (mItemEmpty[7] || mItemInt[7] < -8) ? msParams->numEarlyFrames : mItemInt[7];
-  if (!mCamParams->K2Type)
+  if ((mCamParams->FEItype == FALCON2_TYPE && mCamera->GetFalconCanReturnEarly()) ||
+    mCamera->ThisDEcanReturnEarly(mCamParams))
+    numEarly = 0;
+  else if (!mCamParams->K2Type)
     doEarly = 0;
   index2 = msParams->inHoleOrMultiHole | (mTestNextMultiShot << 2);
   if (!mItemEmpty[9] && mItemInt[9] > -9) {

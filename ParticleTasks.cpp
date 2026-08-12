@@ -285,9 +285,21 @@ int CParticleTasks::StartMultiShot(int numPeripheral, int doCenter, float spokeR
 
 
   // Then test other conditions
-  if (mMSIfEarlyReturn && !camParam->K2Type && !mMSDoStartMacro) {
-    SEMMessageBox("The current camera must be a K2/K3 to use early return for multiple "
-       "shots");
+  if (mMSIfEarlyReturn && !camParam->K2Type && 
+    !(camParam->FEItype == FALCON4_TYPE && mCamera->GetFalconCanReturnEarly()) && 
+    !mCamera->ThisDEcanReturnEarly(camParam) && !mMSDoStartMacro) {
+    SEMMessageBox("The current camera is not capable of doing use early return for "
+      "multiple shots");
+    RESTORE_MSP_RETURN(1);
+  }
+  if (mMSIfEarlyReturn && !camParam->K2Type && earlyRetFrames) {
+    SEMMessageBox("Early return with a frame sum can only be done with a K2/K3 camera");
+    RESTORE_MSP_RETURN(1);
+  }
+  if (mMSIfEarlyReturn && !camParam->K2Type && mRecConSet->alignFrames &&
+    mRecConSet->useFrameAlign < 2) {
+    SEMMessageBox("Early return with immediate frame aligning can only be done with a"
+      " K2/K3 camera");
     RESTORE_MSP_RETURN(1);
   }
   if (multiInHole  && (numPeripheral < 2 || numPeripheral > MAX_PERIPHERAL_SHOTS ||
@@ -542,13 +554,16 @@ int CParticleTasks::StartMultiShot(int numPeripheral, int doCenter, float spokeR
 int CParticleTasks::StartMultiShot(MultiShotParams *msParams, CameraParameters *camParams,
   int testValue)
 {
+  bool otherEarly = mCamera->ThisDEcanReturnEarly(camParams) ||
+    (camParams->FEItype == FALCON4_TYPE && mCamera->GetFalconCanReturnEarly());
   return StartMultiShot(msParams->numShots[0],
     msParams->doCenter, msParams->spokeRad[0],
     msParams->doSecondRing ? msParams->numShots[1] : 0, msParams->spokeRad[1],
     msParams->extraDelay,
-    (msParams->doEarlyReturn != 2 || msParams->numEarlyFrames != 0 ||
-      !camParams->K2Type) ? msParams->saveRecord : false,
-    camParams->K2Type ? msParams->doEarlyReturn : 0, msParams->numEarlyFrames,
+    (msParams->doEarlyReturn != 2 || (msParams->numEarlyFrames != 0 && camParams->K2Type)
+      || !otherEarly) ? msParams->saveRecord : false,
+    (camParams->K2Type || otherEarly) ? msParams->doEarlyReturn : 0, 
+    camParams->K2Type ? msParams->numEarlyFrames : 0,
     msParams->adjustBeamTilt, msParams->inHoleOrMultiHole | (testValue << 2));
 }
 

@@ -401,8 +401,9 @@ CNavHelper::CNavHelper(void)
   mOpenedMultiGrid = false;
   mMaxISvecMatchRotDiff = 2.f;
   mMaxISvecMatchScaleDiff = 0.02f;
-  mParTSSetupGroupID = 0; // 804811256;   // Testing values
-  mParTSRefiningISMag = 0; //29;
+  mParTSSetupGroupID = 0;
+  mParTSRefiningISMag = 0;
+  mSkipLDBlankInAcquire = false;
 }
 
 CNavHelper::~CNavHelper(void)
@@ -5709,6 +5710,7 @@ int CNavHelper::AssessAcquireForParams(NavAcqParams *navParam, NavAcqAction *acq
 
   // Check for problems if map holes are to be used
   if (navParam->acquireType == ACQUIRE_MULTISHOT && !MSparams.useCustomHoles &&
+    (MSparams.inHoleOrMultiHole & MULTI_HOLES) &&
     navParam->useMapHoleVectors && !mWinApp->mMultiGridTasks->GetDoingMulGridSeq()) {
     numNoMap = 0;
     for (i = startInd; i <= endInd; i++) {
@@ -6815,10 +6817,6 @@ void CNavHelper::OpenMultishotDlg(void)
   mMultiShotDlg->mHasIlluminatedArea = mScope->GetUseIllumAreaForC2() ? 1 : 0;
   if (mWinApp->mBeamAssessor->GetBeamSizeArray()->GetSize() > 0)
     mMultiShotDlg->mHasIlluminatedArea = -1;
-  mMultiShotDlg->mCanReturnEarly = false;
-  for (int ind = 0; ind < mWinApp->GetActiveCamListSize(); ind++)
-    if (mCamParams[activeList[ind]].K2Type)
-      mMultiShotDlg->mCanReturnEarly = true;
   mMultiShotDlg->Create(IDD_MULTI_SHOT_SETUP);
   mWinApp->SetPlacementFixSize(mMultiShotDlg, &mMultiShotPlace);
   mWinApp->RestoreViewFocus();

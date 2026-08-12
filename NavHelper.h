@@ -387,6 +387,7 @@ public:
   SetMember(bool, SkipAperturesNextState);
   GetSetMember(int, ParTSSetupGroupID);
   GetSetMember(int, ParTSRefiningISMag);
+  GetSetMember(BOOL, SkipLDBlankInAcquire);
   IntVec *GetExtraTaskList() { return &mExtraTaskList; };
   float *GetLastUsedHoleISvecs() {return &mLastUsedHoleISvecs[0] ; };
   GetMemberPtr(ParallelTSOptions, ParTSOptions);
@@ -664,6 +665,7 @@ private:
   IntVec mExtraTaskList;         // List of NAACT_EX... indexes to include, plus special
   int mParTSSetupGroupID;        // Group ID if parallel TS targets being defined
   int mParTSRefiningISMag;       // Index of higher mag (only) when refining IS targets
+  BOOL mSkipLDBlankInAcquire;    // Flag to skip the blanking between shots during Acquire
 
 public:
   void PrepareToReimageMap(CMapDrawItem * item, MontParam * param, ControlSet * conSet,
