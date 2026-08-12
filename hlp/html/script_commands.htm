@@ -5115,7 +5115,9 @@
             beam shift. If <strong>#M</strong> is positive, it represents the maximum shift in microns; the beam will not be moved if the shift determined
             from the circle fit to the beam edges exceeds this value.&nbsp;If <strong>#M</strong> 
               is negative, its absolute value represents the maximum beam shift as a multiple 
-              of the camera field of view. If the optional <strong>#P</strong> is
+              of the camera field of view. Enter a value less than or equal to -9 to use the 
+              field of view limit in the <a href="hidd_autocensetup.htm">Beam Autocenter Setup</a> 
+              dialog. If the optional <strong>#P</strong> is
             set to 0 or a positive number, autocentering will be done using View with the specified
              percentage reduction in beam size; this may be useful for finding a badly mis-centered
              beam.&nbsp;The program must already be in Low Dose mode to use this option.
