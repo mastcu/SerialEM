@@ -840,8 +840,9 @@ int CParticleTasks::StartOneShotOfMulti(void)
   CameraParameters *camParams = mWinApp->GetActiveCamParam();
   bool earlyRet = ((mMSIfEarlyReturn == 1 && !GetNextShotAndHole(nextShot, nextHole)) ||
     mMSIfEarlyReturn == 2 || (mMSIfEarlyReturn > 2 && (mMSHoleIndex > 0 ||
-      mMSCurIndex > (mMSDoCenter < 0 ? -1 : 0)))) && camParams->K2Type &&
-    !mMSDoStartMacro;
+      mMSCurIndex > (mMSDoCenter < 0 ? -1 : 0)))) && (camParams->K2Type ||
+      (camParams->FEItype == FALCON4_TYPE && mCamera->GetFalconCanReturnEarly()) ||
+        mCamera->ThisDEcanReturnEarly(camParams)) && !mMSDoStartMacro;
   if (earlyRet && mCamera->SetNextAsyncSumFrames(mMSEarlyRetFrames < 0 ? 65535 :
     mMSEarlyRetFrames, false, GetNextShotAndHole(nextShot, nextHole))) {
     StopMultiShot();

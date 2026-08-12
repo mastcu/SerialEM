@@ -329,8 +329,9 @@ int DirectElectronCamera::initializeDECamera(CString camName, int camIndex)
     CString tmp, tmp2;
     std::string propValue;
     bool result, sawHWROI = false, sawHWbinning = false, hasHDRlicense = false;
-    bool sawToGrab = false, sawGrabbed = false;
+    bool sawGrabbed = false;
     bool hasCountingLicense = false, noPreset = true;
+    int toGrab;
     BOOL debug = GetDebugOutput('D'), scanDebug = GetDebugOutput('!');
     const char *propsToCheck[] = {DE_PROP_COUNTING, psMotionCor, psMotionCorNew,
       "Temperature Control - Setpoint (Celsius)",
@@ -421,8 +422,6 @@ int DirectElectronCamera::initializeDECamera(CString camName, int camIndex)
       }
       if (!camProps[i].compare(psFramesGrabbed))
         sawGrabbed = true;
-      if (!camProps[i].compare(psFramesToGrab))
-        sawToGrab = true;
 
       if (debug && (camProps[i].find("Scan") != 0 || scanDebug)) {
         listProps += camProps[i].c_str();
@@ -458,7 +457,7 @@ int DirectElectronCamera::initializeDECamera(CString camName, int camIndex)
       if (!hasHDRlicense)
         params->CamFlags &= ~DE_HAS_HARDWARE_HDR;
     }
-    if (sawGrabbed && sawToGrab && sUsingAPI2)
+    if (sawGrabbed && sUsingAPI2 && mDeServer->getIntProperty(psFramesToGrab, &toGrab))
       params->CamFlags |= DE_CAN_RETURN_EARLY;
 
     if (debug) {
@@ -1008,9 +1007,13 @@ int DirectElectronCamera::AcquireImageData(unsigned short *image4k, long &imageS
         startTime = GetTickCount();
         while (SEMTickInterval(startTime) < (mLastExposureTime + 2.) * 1000.) {
           if (!toGrabOK)
-            toGrabOK = getIntProperty(psFramesToGrab, toGrab);
-          if (toGrabOK && getIntProperty(psFramesGrabbed, grabbed) && grabbed >= toGrab)
+            toGrabOK = mDeServer->getIntProperty(psFramesToGrab, &toGrab);
+          if (toGrabOK && mDeServer->getIntProperty(psFramesGrabbed, &grabbed) &&
+            grabbed >= toGrab) {
+            SEMTrace('D', "%d frames grabbed after %.3f", grabbed, 
+              SEMTickInterval(startTime) / 1000.);
             break;
+          }
           Sleep(50);
         }
         return 0;
