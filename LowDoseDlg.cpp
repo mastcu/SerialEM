@@ -257,7 +257,7 @@ void CLowDoseDlg::ToggleBlankWhenDown(void)
 }
 
 // External entry for changing the mode
-void CLowDoseDlg::SetLowDoseMode(BOOL inVal, BOOL hideOffState)
+void CLowDoseDlg::SetLowDoseMode(BOOL inVal, BOOL hideOffState, bool crashing)
 {
   if (!mInitialized || mScope->GetDisconnected())
     return;
@@ -266,14 +266,15 @@ void CLowDoseDlg::SetLowDoseMode(BOOL inVal, BOOL hideOffState)
   if (inVal && mWinApp->GetSTEMMode() && mWinApp->DoSwitchSTEMwithScreen())
     return;
 
-  if (mWinApp->mAutocenDlg && !((CMainFrame *)mWinApp->m_pMainWnd)->GetClosingProgram()) {
+  if (mWinApp->mAutocenDlg && !((CMainFrame *)mWinApp->m_pMainWnd)->GetClosingProgram() &&
+    !crashing) {
     SEMMessageBox("You cannot turn Low Dose mode on or off with\n"
       "the Beam Autocenter Setup dialog open");
     mWinApp->ErrorOccurred(1);
     return;
   }
 
-  if (mWinApp->mNavHelper->mParallelTSDlg->IsOpen() && 
+  if (mWinApp->mNavHelper->mParallelTSDlg->IsOpen() && !crashing &&
     mWinApp->mNavHelper->mParallelTSDlg->IsDoingNewArea() && 
     mWinApp->mParallelTSHelper->GetNumSavedTargets()) {
     SEMMessageBox("You cannot turn Low Dose mode on or off while\n"

@@ -43,7 +43,7 @@ public:
   void ManagePanels();
   void DeferredIDDropping(UINT nID);
   void UpdateDefocusOffset();
-	void SetLowDoseMode(BOOL inVal, BOOL hideOffState = FALSE);
+	void SetLowDoseMode(BOOL inVal, BOOL hideOffState = FALSE, bool crashing = false);
 	void AddDefineAreaPoint();
 	void OnOK();
   bool SameAsFocusArea(int inArea);

@@ -2119,7 +2119,7 @@ void CSerialEMApp::CleanupAndReportCrash(CString &message)
     message += "\r\n\r\nWill try to leave low dose mode before closing...";
   AfxMessageBox(message);
   if (LowDoseMode())
-    mLowDoseDlg.SetLowDoseMode(false);
+    mLowDoseDlg.SetLowDoseMode(false, false, true);
   CBaseSocket::UninitializeWSA();
 }
 
