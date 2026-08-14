@@ -3,6 +3,7 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+8/14/26: SEM_4-3-0beta13
 8/13/26: Added menu option to display beam ellipses on all items in the
 current Navigator group based on parallel tilt series parameters.  Fixed some
 problems with Acquire area displays.
