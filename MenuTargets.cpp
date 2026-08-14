@@ -549,6 +549,8 @@ ON_COMMAND(ID_TILTSERIES_SETUPPARALLELTILTSERIES, OnSetupParallelTS)
 ON_UPDATE_COMMAND_UI(ID_TILTSERIES_SETUPPARALLELTILTSERIES, OnUpdateSetupParallelTS)
 ON_COMMAND(ID_OPTIONS_SKIPLDBLANKINGDURINGACQUIRE, OnSkipLDBlankingDuringAcquire)
 ON_UPDATE_COMMAND_UI(ID_OPTIONS_SKIPLDBLANKINGDURINGACQUIRE, OnUpdateSkipLDBlankingDuringAcquire)
+ON_COMMAND(ID_NAVIGATOR_TSELLIPSESWHENSHOWACQUIRE, OnTSellipsesWhenShowAcquire)
+ON_UPDATE_COMMAND_UI(ID_NAVIGATOR_TSELLIPSESWHENSHOWACQUIRE, OnUpdateTSellipsesWhenShowAcquire)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -938,21 +940,22 @@ void CMenuTargets::OnUpdateSkipLDBlankingDuringAcquire(CCmdUI *pCmdUI)
 void CMenuTargets::OnNavigatorShowMultiShot()
 {
   b3dUInt32 multi = mNavHelper->GetEnableMultiShot();
-  setOrClearFlags(&multi, 1, (multi & 1) ? 0  : 1);
+  setOrClearFlags(&multi, EMS_SHOW_MULTI_SHOT, (multi & EMS_SHOW_MULTI_SHOT) ? 0  : 1);
   mNavHelper->SetEnableMultiShot(multi);
   mWinApp->mMainView->DrawImage();
 }
 
 void CMenuTargets::OnUpdateNavigatorShowMultiShot(CCmdUI *pCmdUI)
 {
-  pCmdUI->Enable(!mWinApp->DoingTasks());
-  pCmdUI->SetCheck((mNavHelper->GetEnableMultiShot() & 1) != 0 ? 1 : 0);
+  pCmdUI->Enable(!mWinApp->DoingTasks() && 
+    !(mNavHelper->GetEnableMultiShot() & EMS_SHOW_TS_ELLIPSE));
+  pCmdUI->SetCheck((mNavHelper->GetEnableMultiShot() & EMS_SHOW_MULTI_SHOT) != 0 ? 1 : 0);
 }
 
 void CMenuTargets::OnShowWholeAreaForAllPoints()
 {
   b3dUInt32 multi = mNavHelper->GetEnableMultiShot();
-  setOrClearFlags(&multi, 2, (multi & 2) ? 0 : 1);
+  setOrClearFlags(&multi, EMS_SHOW_WHOLE_AREA, (multi & EMS_SHOW_WHOLE_AREA) ? 0 : 1);
   mNavHelper->SetEnableMultiShot(multi);
   mWinApp->mMainView->DrawImage();
 }
@@ -960,7 +963,21 @@ void CMenuTargets::OnShowWholeAreaForAllPoints()
 void CMenuTargets::OnUpdateShowWholeAreaForAllPoints(CCmdUI *pCmdUI)
 {
   pCmdUI->Enable(!mWinApp->DoingTasks());
-  pCmdUI->SetCheck((mNavHelper->GetEnableMultiShot() & 2) != 0 ? 1 : 0);
+  pCmdUI->SetCheck((mNavHelper->GetEnableMultiShot() & EMS_SHOW_WHOLE_AREA) != 0 ? 1 : 0);
+}
+
+void CMenuTargets::OnTSellipsesWhenShowAcquire()
+{
+  b3dUInt32 multi = mNavHelper->GetEnableMultiShot();
+  setOrClearFlags(&multi, EMS_SHOW_TS_ELLIPSE, (multi & EMS_SHOW_TS_ELLIPSE) ? 0 : 1);
+  mNavHelper->SetEnableMultiShot(multi);
+  mWinApp->mMainView->DrawImage();
+}
+
+void CMenuTargets::OnUpdateTSellipsesWhenShowAcquire(CCmdUI *pCmdUI)
+{
+  pCmdUI->Enable(!mWinApp->DoingTasks());
+  pCmdUI->SetCheck((mNavHelper->GetEnableMultiShot() & EMS_SHOW_TS_ELLIPSE) != 0 ? 1 : 0);
 }
 
 void CMenuTargets::OnNavigatorSetMultiShotParams()

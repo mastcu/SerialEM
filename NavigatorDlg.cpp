@@ -4178,7 +4178,8 @@ MapItemArray *CNavigatorDlg::GetMapDrawItems(
 {
   float angle, tiltAngle;
   bool showMulti, asIfLowDose, showCurPtAcquire, curIsAcquire, drawParTSEllipses;
-  int ring, magForHoles;
+  bool groupEllipse = false;;
+  int ring, magForHoles, emsMulti = mHelper->GetEnableMultiShot();
   ParallelTSOptions *parTsOpt = mHelper->GetParTSOptions();
 
   if (!SetCurrentItem(true))
@@ -4194,20 +4195,28 @@ MapItemArray *CNavigatorDlg::GetMapDrawItems(
   int parTSgroupID = mWinApp->mNavHelper->GetParTSSetupGroupID();
   mMagIndForHoles = mCameraForHoles = 0;
   mWinApp->mParticleTasks->SetLastHolesWereAdjusted(false);
+  if ((emsMulti & EMS_SHOW_TS_ELLIPSE) && mItem && mItem->mGroupID && m_bShowAcquireArea 
+    && !mItem->mNumIStargets)
+  {
+    parTSgroupID = mItem->mGroupID;
+    groupEllipse = true;
+  }
 
   // Show multishot somehow if one or other type is on, and either the dialog is open
   // or acquire is on and "Show shots when show acquire" is checked
   showMulti = ((msParams->inHoleOrMultiHole & MULTI_IN_HOLE) ||
     mHelper->MultipleHolesAreSelected() || mNumIStargetItems > 0) &&
-    ((m_bShowAcquireArea && ((mHelper->GetEnableMultiShot() & 1) || 
+    ((m_bShowAcquireArea && ((emsMulti & EMS_SHOW_MULTI_SHOT) || groupEllipse ||
     (mItem && mItem->mTSparamIndex >= 0))) ||
     (mHelper->mMultiShotDlg && !mHelper->mMultiShotDlg->RecordingISValues()));
 
   // Show something on the current point if multi draw is on or show acquire is on and
   // there is no user point (turns off draw on the acquire box)
-  showCurPtAcquire = !imBuf->mHasUserPt && mItem && (showMulti || (m_bShowAcquireArea &&
-    mItem->mAcquire && mItem->mNumPoints == 1 && mItem->mDraw));
-  curIsAcquire = mItem && (mItem->mAcquire || mItem->mTSparamIndex >= 0);
+  showCurPtAcquire = !imBuf->mHasUserPt && mItem && ((showMulti && 
+    (mItem->mAcquire || (emsMulti & EMS_SHOW_WHOLE_AREA))) || (m_bShowAcquireArea &&
+    (mItem->mAcquire || groupEllipse || mItem->mParallelTSIndex >= 0) && 
+      mItem->mNumPoints == 1 && mItem->mDraw));
+  curIsAcquire = mItem && (mItem->mAcquire || mItem->mTSparamIndex >= 0 || groupEllipse);
   mShowingLDareas = (curIsAcquire || m_bShowAcquireArea) && m_bEditFocus &&
     mEditFocusEnabled && mLowDoseDlg->ViewImageOKForEditingFocus(imBuf);
   drawParTSEllipses = (curIsAcquire && mItem->mParallelTSIndex >= 0) || parTSgroupID > 0;
@@ -12783,7 +12792,7 @@ void CNavigatorDlg::FinishSingleDeletion(CMapDrawItem *item, int delIndex, int l
 // External call to delete an item
 void CNavigatorDlg::ExternalDeleteItem(CMapDrawItem *item, int delIndex)
 {
-  int groupStart, groupEnd, listInd = delIndex;
+  int groupStart = 0, groupEnd, listInd = delIndex;
   bool multipleInGroup = false;
   if (delIndex < 0 || delIndex >= mItemArray.GetSize())
     return;

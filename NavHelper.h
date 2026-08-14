@@ -29,6 +29,10 @@ class CParallelTSDlg;
 #define MULTI_DO_HEX_CENTER 0x200
 #define MULTI_PAR_TS_NAME   0x400
 
+#define EMS_SHOW_MULTI_SHOT     0x1
+#define EMS_SHOW_WHOLE_AREA     0x2
+#define EMS_SHOW_TS_ELLIPSE     0x4
+
 #define REALI2ITEM_JUST_MOVE   0x1
 
 // Structure for keeping track of parameters that enable skipping center align in round 1

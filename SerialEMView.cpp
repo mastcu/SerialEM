@@ -685,6 +685,7 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
   int numZoomFilt = sizeof(zoomFilters) / sizeof(int);
   int zoomWidthCrit = 20;
   bool bufferOK, drawUserPt, filtering = false, saveCurHolePos = false;
+  bool groupEllipse = false;
   BOOL drawIncluded, drawExcluded, bufIsFFT = false;
   CNavigatorDlg *navigator = mWinApp->mNavigator;
   CProcessImage *processImg = mWinApp->mProcessImage;
@@ -706,6 +707,8 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
   ScaleMat aInv, isToCamNoFoc, isToCam;
   double transX, transY;
   int parTSgroupID = mWinApp->mNavHelper->GetParTSSetupGroupID();
+  int emsMulti = mWinApp->mNavHelper->GetEnableMultiShot();
+  bool showTSellipse = (emsMulti & EMS_SHOW_TS_ELLIPSE) != 0;
   COLORREF bkgColor = RGB(48, 0, 48);
   COLORREF flashColor = RGB(192, 192, 0), lowExcludeColor = RGB(0, 255, 255);
   COLORREF includeColor = RGB(255, 0, 160), highExcludeColor = RGB(0, 100, 255);
@@ -1168,11 +1171,22 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
     }
   }
 
+  // Set the flags about drawing low dose area, determine if drawing ellipses no current
+  //group, exclude focus area for that
   mPreParTSDrewLDAreas = itemArray && ((mAcquireBox && mAcquireBox->mNumPoints == 1) ||
     navigator->GetShowingLDareas()) && !bufIsFFT;
 
+  if (itemArray && !parTSgroupID && showTSellipse && 
+    navigator->m_bShowAcquireArea) {
+    CMapDrawItem *item = navigator->GetCurrentItem();
+    if (item && item->mGroupID && item->IsPoint() && !item->mNumIStargets) {
+      parTSgroupID = item->mGroupID;
+      groupEllipse = true;
+    }
+  }
+
   mDrewLDAreasAtNavPt = itemArray && ((mAcquireBox && 
-    (mAcquireBox->mNumPoints == 1 || parTSgroupID > 0)) ||
+    (mAcquireBox->mNumPoints == 1 || (parTSgroupID > 0 && !groupEllipse))) ||
     navigator->GetShowingLDareas()) && !bufIsFFT;
 
   if (mMainWindow) {
@@ -1479,8 +1493,9 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
   int currentIndex = navigator->GetCurrentOrAcquireItem(item);
   if (!navigator->GetAcquiring()) {
     item = navigator->GetSingleSelectedItem(&currentIndex);
-    skipPattern = item && item->mNumIStargets > 0 && 
-      (!imBuf->mHasUserPt || item->mParallelTSIndex >= 0);
+    skipPattern = item && (item->mNumIStargets > 0 || !item->mAcquire) && 
+      (!imBuf->mHasUserPt || item->mParallelTSIndex >= 0 || 
+      (item->mNumIStargets && showTSellipse));
   }
   bool targetsOnly = navigator->GetNumIStargetItems() > 0;
   int currentGroup = (currentIndex >= 0 && item != NULL) ? item->mGroupID : -1;
@@ -1491,18 +1506,21 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
   bool checkUndos = mWinApp->mNavHelper->mCombineHoles->OKtoUndoCombine();
   item = navigator->GetCurrentItem();
   bool curIsInGroup = parTSgroupID > 0 && item && item->mGroupID == parTSgroupID;
-  BOOL useMultiShot = (((mWinApp->mNavHelper->GetEnableMultiShot() & 1) || 
-    (item && item->mParallelTSIndex >= 0)) && navigator->m_bShowAcquireArea) || 
-    mWinApp->mNavHelper->mMultiShotDlg;
+  BOOL useMultiShot = ((((emsMulti & EMS_SHOW_MULTI_SHOT) && 
+    !showTSellipse) || curIsInGroup
+    || (item && (item->mParallelTSIndex >= 0 || (item->mNumIStargets && showTSellipse))))
+    && navigator->m_bShowAcquireArea) || 
+    (mWinApp->mNavHelper->mMultiShotDlg && !groupEllipse);
   if (useMultiShot) {
     msParams = mWinApp->mNavHelper->GetMultiShotParams();
     doInHole = (msParams->inHoleOrMultiHole & MULTI_IN_HOLE) > 0;
-    targetsOnly = navigator->GetNumIStargetItems() > 0 && !doInHole && !doMultiHole;
+    targetsOnly = (navigator->GetNumIStargetItems() > 0 || groupEllipse) && !doInHole &&
+      !doMultiHole;
     useMultiShot = doInHole || doMultiHole || targetsOnly;
     if (doMultiHole)
       mWinApp->mNavHelper->GetNumHolesFromParam(msNumXholes, msNumYholes, ix);
   }
-  bool showMultiOnAll = useMultiShot && (mWinApp->mNavHelper->GetEnableMultiShot() & 2) &&
+  bool showMultiOnAll = useMultiShot && (emsMulti & EMS_SHOW_WHOLE_AREA) &&
     !(mPreParTSDrewLDAreas && navigator->m_bShowAcquireArea);
   bool showOnlyCombined = mWinApp->mNavHelper->mMultiCombinerDlg &&
     !mWinApp->mNavHelper->GetMHCenableMultiDisplay();
@@ -1627,7 +1645,7 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
 
       // DRAW MULTI-SHOT PATTERN
       if (iDraw < 0 && useMultiShot && !mWinApp->mNavHelper->mComaVsISCalDlg && 
-        !curIsInGroup) {
+        !curIsInGroup && !showTSellipse) {
         float holeXoffset = 0, holeYoffset = 0;
         int inHoleEnd = item->mNumPoints - 2;
         int inHoleStart = inHoleEnd - B3DCHOICE(doInHole, msParams->numShots[0] +
@@ -1763,17 +1781,18 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
       && item->mNumPoints == 1 && mAcquireBox && (itemInParTSgroup || (showMultiOnAll &&
       (!showOnlyCombined || (item->mNumXholes != 0 && item->mNumYholes != 0) ||
         (checkUndos &&
-          mWinApp->mNavHelper->mCombineHoles->IsItemInUndoList(item->mMapID))) ||
-        (showCurPtAcquire && highlight && (doMultiHole || item->mNumIStargets)))) &&
-      !(targetsOnly && !itemInParTSgroup && !useMultiShot)) {
+          mWinApp->mNavHelper->mCombineHoles->IsItemInUndoList(item->mMapID)))) ||
+        (showCurPtAcquire && highlight && (doMultiHole || item->mNumIStargets))) &&
+      !(targetsOnly && !itemInParTSgroup && !useMultiShot && !showTSellipse)) {
       GetSingleAdjustmentForItem(imBuf, item, delPtX, delPtY);
       CPen pnAcquire(PS_SOLID, thick1, item->GetColor(highlight));
       CPen *pOldPen = cdc.SelectObject(&pnAcquire);
       mAcquireBox->mDraw = true;
-      if (useMultiShot && !itemInParTSgroup && !itemInParTSgroup) {
+      if ((useMultiShot || (showTSellipse && item->mNumIStargets)) &&
+        !itemInParTSgroup && !itemInParTSgroup) {
 
         // One-time computation of the triangle area for skipped points
-        if (!triangleItem.mNumPoints) {
+        if (!triangleItem.mNumPoints && !item->mNumIStargets) {
           area = 0.2f;
           if (doInHole && (int)convXinHole.size() > 2)
             area = 0.67f * navigator->ContourArea(&convXinHole[0], &convYinHole[0],
@@ -1952,7 +1971,7 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
             for (int hole = 0; hole < numSpecHoles; hole++) {
               ptX = acquireXhole[hole] - mAcquireBox->mStageX;
               ptY = acquireYhole[hole] - mAcquireBox->mStageY;
-              if (doInHole && item->mParallelTSIndex < 0) {
+              if (doInHole && item->mParallelTSIndex < 0 && !showTSellipse) {
                 DrawVectorPolygon(cdc, &rect, item, imBuf, convXinHole, convYinHole, ptX,
                   ptY, delPtX, delPtY, NULL, NULL);
               } else {
@@ -2010,7 +2029,8 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
             for (int hole = 0; hole < skipItem.mNumPoints; hole++) {
               ptX = item->mStageX + skipItem.mPtX[hole];
               ptY = item->mStageY + skipItem.mPtY[hole];
-              if (!size || InsideContour(&convXacquire[0], &convYacquire[0], size, ptX, ptY))
+              if (!size || InsideContour(&convXacquire[0], &convYacquire[0], size, ptX,
+                ptY))
                 DrawMapItemBox(cdc, &rect, &triangleItem, imBuf, 4, ptX, ptY, delPtX,
                   delPtY, NULL, NULL);
             }
@@ -2070,7 +2090,7 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
         int defMode = cdc.SetBkMode(TRANSPARENT);
         COLORREF defColor = cdc.SetTextColor(item->GetColor(highlight));
         cdc.TextOut(point.x, point.y, item->mLabel);
-        if (itemInParTSgroup && drawEllipse) {
+        if (itemInParTSgroup && drawEllipse && !groupEllipse) {
           cdc.SetTextColor(parTScolor);
           UINT textAlign = cdc.SetTextAlign(TA_RIGHT | TA_BOTTOM);
           point = point - CPoint(2 * offset10, 2 * offset10 / 10);

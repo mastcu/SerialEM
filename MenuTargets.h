@@ -458,6 +458,8 @@ public:
   afx_msg void OnUpdateSetupParallelTS(CCmdUI *pCmdUI);
   afx_msg void OnSkipLDBlankingDuringAcquire();
   afx_msg void OnUpdateSkipLDBlankingDuringAcquire(CCmdUI *pCmdUI);
+  afx_msg void OnTSellipsesWhenShowAcquire();
+  afx_msg void OnUpdateTSellipsesWhenShowAcquire(CCmdUI *pCmdUI);
 };
 
 /////////////////////////////////////////////////////////////////////////////

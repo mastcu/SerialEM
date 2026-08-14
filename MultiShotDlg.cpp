@@ -1845,7 +1845,8 @@ void CMultiShotDlg::UpdateMultiDisplay(int magInd, double intensity)
   // get magInd
   bool showMulti = mWinApp->mNavigator && mActiveParams->inHoleOrMultiHole &&
     ((mWinApp->mNavigator->m_bShowAcquireArea &&
-    (mWinApp->mNavHelper->GetEnableMultiShot() & 1)) || !RecordingISValues());
+    (mWinApp->mNavHelper->GetEnableMultiShot() & EMS_SHOW_MULTI_SHOT)) || 
+      !RecordingISValues());
   if (!showMulti)
     return;
 

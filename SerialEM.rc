@@ -739,6 +739,7 @@ BEGIN
         MENUITEM "Com&bine Points for Multi-shots...", ID_MONTAGINGGRIDS_COMBINEPOINTSINTOMULTI
         MENUITEM "S&how Shots when Show Acquire", ID_OPTIONS_SHOWMULTI
         MENUITEM "Show &Whole Area for All Points", ID_MONTAGINGGRIDS_SHOWWHOLEAREAFORALLPOINTS
+        MENUITEM "TS Ellipses when Show Ac&quire", ID_NAVIGATOR_TSELLIPSESWHENSHOWACQUIRE
         MENUITEM SEPARATOR
         MENUITEM "Setup Super Montage",         ID_NAVIGATOR_ALIGNEDSUPERMONTAGE
         MENUITEM "Polygon Super Montage",       ID_SUPERMONTAGING_POLYGONSUPERMONTAGE
@@ -6129,6 +6130,8 @@ BEGIN
                             "Set up to acquire parallel tilt series"
     ID_OPTIONS_SKIPLDBLANKINGDURINGACQUIRE 
                             "Do not blank between acquisitions during Acquire At Items"
+    ID_NAVIGATOR_TSELLIPSESWHENSHOWACQUIRE 
+                            "Show beam ellipses for current group based on Parallel TS max tilt"
 END
 
 STRINGTABLE
