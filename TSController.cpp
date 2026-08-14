@@ -576,7 +576,8 @@ int CTSController::SetupTiltSeries(int future, int futureLDstate, int ldMagIndex
 {
   CTSSetupDialog tsDialog;
   float fangle, fangl2;
-  double angle;
+  double angle, stageX, stageY;
+  CMapDrawItem *item;
   float startPreTiltMargin = 20.;
   int iDir, i, index, lowest, curDir;
   BOOL montaging, lowNewer, highNewer, reversal = false;
@@ -601,6 +602,24 @@ int CTSController::SetupTiltSeries(int future, int futureLDstate, int ldMagIndex
           mWinApp->mNavHelper->mStateDlg->Update();
       } else
         mWinApp->mNavHelper->RestoreFromMapState();
+    }
+  }
+
+  // Question starting at a parallel tilt series item if it is current item
+  if (!future && !forParTS && mWinApp->mNavigator) {
+    item = mWinApp->mNavigator->GetCurrentItem();
+    if (item && item->mParallelTSIndex >= 0) {
+      mScope->GetStagePosition(stageX, stageY, angle);
+      if (sqrt(pow(stageX - item->mStageX, 2.) + pow(stageY - item->mStageY, 2.)) < 2.) {
+        if (AfxMessageBox("The current Navigator item is set up for a parallel"
+          " tilt series.\nParallel tilt series can be run only"
+          " from Navigator Acquire\nat Items.  If you start a series"
+          " from this dialog, it will be a\nsingle series"
+          " at the current location.  If you just want to\nadjust parameters, use"
+          " the TS Params button.\n\n"
+          "Do you want to proceed?", MB_QUESTION) == IDNO)
+          return -1;
+      }
     }
   }
 
