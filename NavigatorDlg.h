@@ -209,6 +209,8 @@ public:
   GetMember(bool, EditFocusEnabled);
   GetSetMember(int, NumIStargetItems);
   GetMember(BOOL, AddingPoints);
+  GetMember(int, AddPointID);
+  GetMember(int, LastAddPtMagInd);
 
   void SetCurAcqParmActions(int which) { mAcqParm = mWinApp->GetNavAcqParams(which); mAcqActions = mHelper->GetAcqActions(which); };
   bool OKtoCloseNav();
@@ -354,6 +356,7 @@ private:
   int mAddingPoly;
   int mNumberBeforeAdd;
   int mAddPointID;          // Group ID for points being added
+  int mLastAddPtMagInd;     // Mag index of image last point was added on
   BOOL mMovingItem;
   CString mNavFilename;
   CString mMergeName;

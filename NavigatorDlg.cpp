@@ -3322,14 +3322,17 @@ void CNavigatorDlg::OnDrawPoints()
   }
   mNumberBeforeAdd = (int)mItemArray.GetSize();
 
-  if (mWinApp->mNavHelper->mParallelTSDlg->IsOpen() &&
-    mWinApp->mNavHelper->mParallelTSDlg->IsDefiningPoints())
-    mAddPointID = mWinApp->mNavHelper->mParallelTSDlg->GetFitPlaneGroupID();
-  else if (mWinApp->mNavHelper->mParallelTSDlg->IsOpen() &&
-    mWinApp->mNavHelper->mParallelTSDlg->IsAddingTargets())
-    mAddPointID = mWinApp->mNavHelper->mParallelTSDlg->GetTargetGroupID();
-  else
-    mAddPointID = MakeUniqueID();
+  if (mAddingPoints) {
+    if (mWinApp->mNavHelper->mParallelTSDlg->IsOpen() &&
+      mWinApp->mNavHelper->mParallelTSDlg->IsDefiningPoints())
+      mAddPointID = mWinApp->mNavHelper->mParallelTSDlg->GetFitPlaneGroupID();
+    else if (mWinApp->mNavHelper->mParallelTSDlg->IsOpen() &&
+      mWinApp->mNavHelper->mParallelTSDlg->IsAddingTargets())
+      mAddPointID = mWinApp->mNavHelper->mParallelTSDlg->GetTargetGroupID();
+    else
+      mAddPointID = MakeUniqueID();
+    mLastAddPtMagInd = 0;
+  }
 
   if (mAddingPoints) {
     ManageListHeader("Use Backspace to remove added points one by one");
@@ -3588,6 +3591,8 @@ BOOL CNavigatorDlg::UserMousePoint(EMimageBuffer *imBuf, float inX, float inY,
       item->mPieceDrawnOn = pieceIndex;
       item->mXinPiece = xInPiece;
       item->mYinPiece = yInPiece;
+      if (imBuf->mMagInd)
+        mLastAddPtMagInd = imBuf->mMagInd;
     }
     if (imBuf->mCaptured == BUFFER_FFT ||
       imBuf->mCaptured == BUFFER_LIVE_FFT || imBuf->mCaptured == BUFFER_AUTOCOR_OVERVIEW)

@@ -7268,7 +7268,7 @@ int CNavHelper::ConfirmReplacingShiftVectors(int kind, int vecType)
 // UpdateAndUseMSParams should be called before this
 int CNavHelper::UseNavPointsForVectors(int pattern, int numXholes, int numYholes)
 {
-  int magInd, type, dir, ind, groupStart, groupEnd, hexInd = (pattern == 1 ? 1 : 0);
+  int magInd = 0, type, dir, ind, groupStart, groupEnd, hexInd = (pattern == 1 ? 1 : 0);
   int numHoles[2];
   CNavigatorDlg *nav = mWinApp->mNavigator;
   ScaleMat stage2IS;
@@ -7279,7 +7279,6 @@ int CNavHelper::UseNavPointsForVectors(int pattern, int numXholes, int numYholes
   type = OKtoUseNavPtsForVectors(pattern, groupStart, groupEnd, &stage2IS);
   if (!type)
     return 1;
-  magInd = mWinApp->mScope->GetMagIndex();
   if (numXholes <= 0)
     numXholes = hexInd ? mMultiShotParams.numHexRings : mMultiShotParams.numHoles[0];
   if (numYholes <= 0)
@@ -7287,13 +7286,20 @@ int CNavHelper::UseNavPointsForVectors(int pattern, int numXholes, int numYholes
   numHoles[0] = numXholes;
   numHoles[1] = numYholes;
 
-  // Convert all to image shift relative to first, arbitrary but minimizes error
+  // Get the mag index from map drawn on, or from mag of image last points added on if
+  // group ID matched, or fall back to scope mag, which can be bad
   prevItem = nav->GetOtherNavItem(groupStart);
   if (prevItem->mDrawnOnMapID) {
     item = nav->FindItemWithMapID(prevItem->mDrawnOnMapID);
     if (item)
       magInd = item->mMapMagInd;
   }
+  if (!magInd && prevItem->mGroupID == mNav->GetAddPointID())
+    magInd = mNav->GetLastAddPtMagInd();
+  if (!magInd)
+    magInd = mWinApp->mScope->GetMagIndex();
+
+  // Convert all to image shift relative to first, arbitrary but minimizes error
   ISXvec.resize(groupEnd + 1 - groupStart);
   ISYvec.resize(groupEnd + 1 - groupStart);
   for (ind = groupStart; ind <= groupEnd; ind++) {
