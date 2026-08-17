@@ -51,14 +51,6 @@ html\afx_hidd_filesave.htm
 html\afx_hidw_status_bar.htm
 html\hid_ht_caption.htm
 html\scrollbars.htm
-html\hid_sc_size.htm
-html\hid_sc_move.htm
-html\hid_sc_minimize.htm
-html\hid_sc_maximize.htm
-html\hid_sc_nextwindow.htm
-html\hid_sc_prevwindow.htm
-html\hid_sc_close.htm
-html\hid_sc_restore.htm
 html\about_panels.htm
 html\hidd_bufferstatus.htm
 html\hidd_buffercontrol.htm
@@ -130,10 +122,8 @@ html\hidd_detoolpanel.htm
 
 [ALIAS]
 HIDR_MAINFRAME = html\main_index.htm
-HID_HT_SIZE = html\hid_sc_size.htm
 HID_HT_HSCROLL = html\scrollbars.htm
 HID_HT_VSCROLL = html\scrollbars.htm
-HID_HT_MAXBUTTON = html\hid_sc_maximize.htm
 #include aliases.h
 
 [MAP]

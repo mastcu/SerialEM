@@ -667,30 +667,6 @@
     <None Include="hlp\html\hid_ht_nowhere.htm">
       <Filter>HTML Help Topics</Filter>
     </None>
-    <None Include="hlp\html\hid_sc_close.htm">
-      <Filter>HTML Help Topics</Filter>
-    </None>
-    <None Include="hlp\html\hid_sc_maximize.htm">
-      <Filter>HTML Help Topics</Filter>
-    </None>
-    <None Include="hlp\html\hid_sc_minimize.htm">
-      <Filter>HTML Help Topics</Filter>
-    </None>
-    <None Include="hlp\html\hid_sc_move.htm">
-      <Filter>HTML Help Topics</Filter>
-    </None>
-    <None Include="hlp\html\hid_sc_nextwindow.htm">
-      <Filter>HTML Help Topics</Filter>
-    </None>
-    <None Include="hlp\html\hid_sc_prevwindow.htm">
-      <Filter>HTML Help Topics</Filter>
-    </None>
-    <None Include="hlp\html\hid_sc_restore.htm">
-      <Filter>HTML Help Topics</Filter>
-    </None>
-    <None Include="hlp\html\hid_sc_size.htm">
-      <Filter>HTML Help Topics</Filter>
-    </None>
     <None Include="hlp\html\hidd_alignfocus.htm">
       <Filter>HTML Help Topics</Filter>
     </None>
