@@ -28,6 +28,7 @@ struct MultiShotParams;
 #define MAX_CUSTOM_INTERVAL 20000 
 #define MAX_MACRO_TOKENS 60
 #define MAX_SCRIPT_LANG_ARGS  20
+#define SCRIPT_HISTORY_SEP  "$%EndLine%$"
 
 #define NO_TOOLBAR_COLOR 0x08000000
 
@@ -222,6 +223,10 @@ public:
   GetMemberPtr(std::vector<COLORREF>, ImposedOutlineColors);
   GetMemberPtr(ShortVec, ImposedSolidMacros);
   GetMemberPtr(ShortVec, ImposedOutlineMacros);
+  int TraverseHistory(int lineNum, int dir);
+  CString GetLineInHistory(int lineNum);
+  std::vector<std::string> GetHistoryArray(int lineNum) { return mHistoryArrays[lineNum]; };
+  GetSetMember(int, MaxHistoryLength);
   int GetNumVariables() { return (int)mVarArray.GetSize(); };
   int GetBaseMacroBeingRun() {return DoingMacro() ? mCallMacro[0] : -1; };
   bool *GetNoCatchOutput() { return &mNoCatchOutput[0]; };
@@ -312,6 +317,9 @@ protected:
   double mItemDbl[MAX_MACRO_TOKENS];
   float mItemFlt[MAX_MACRO_TOKENS];
   CString mStrLine, mStrCopy;
+  std::vector<std::string> mHistoryArrays[MAX_ONE_LINE_SCRIPTS];
+  int mHistoryIndex[MAX_ONE_LINE_SCRIPTS];
+  int mMaxHistoryLength;
 
   int mProcessorIndex;    // 1 for the background processor
   BOOL mDoingMacro;       // Flag for whether running
@@ -744,6 +752,16 @@ public:
   void DoStopBackgroundScript();
   afx_msg void OnUpdateRunbackgroundScript(CCmdUI *pCmdUI);
   afx_msg void OnUpdateStopBackgroundScript(CCmdUI *pCmdUI);
+  void AddLineToHistory(CString lineStr, int lineNum);
+  void UpdateHistoryOnChange(CString lineStr, int lineNum);
+  void PrintHistoryToLog();
+  void ClearOneLineHistory();
+  afx_msg void OnShowOneLineHistory();
+  afx_msg void OnUpdateShowOneLineHistory(CCmdUI *pCmdUI);
+  afx_msg void OnClearOneLineHistory();
+  afx_msg void OnSetHistoryLength();
+  afx_msg void OnUpdateSetHistoryLength(CCmdUI *pCmdUI);
+  afx_msg void OnUpdateClearOneLineHistory(CCmdUI *pCmdUI);
 };
 
 #include "MacroCommands.h"

@@ -161,6 +161,12 @@ BEGIN_MESSAGE_MAP(CMacroProcessor, CCmdTarget)
   ON_COMMAND(ID_SCRIPT_STOPBACKGROUNDSCRIPT, sMP->OnStopBackgroundScript)
   ON_UPDATE_COMMAND_UI(ID_SCRIPT_RUNBACKGROUNDSCRIPT, sMP->OnUpdateRunbackgroundScript)
   ON_UPDATE_COMMAND_UI(ID_SCRIPT_STOPBACKGROUNDSCRIPT, sMP->OnUpdateStopBackgroundScript)
+  ON_COMMAND(ID_SCRIPT_SHOWONELINEHISTORY, sMP->OnShowOneLineHistory)
+  ON_UPDATE_COMMAND_UI(ID_SCRIPT_SHOWONELINEHISTORY, sMP->OnUpdateShowOneLineHistory)
+  ON_COMMAND(ID_SCRIPT_CLEARONELINEHISTORY, OnClearOneLineHistory)
+  ON_COMMAND(ID_SCRIPT_SETHISTORYLENGTH, OnSetHistoryLength)
+  ON_UPDATE_COMMAND_UI(ID_SCRIPT_SETHISTORYLENGTH, OnUpdateSetHistoryLength)
+  ON_UPDATE_COMMAND_UI(ID_SCRIPT_CLEARONELINEHISTORY, OnUpdateClearOneLineHistory)
 END_MESSAGE_MAP()
 
 //////////////////////////////////////////////////////////////////////
@@ -243,6 +249,7 @@ CMacroProcessor::CMacroProcessor(int index)
     mHighlightStatus[i] = false;
   mMonospaceStatus = false;
   mKeepOneLineFocus = false;
+  mMaxHistoryLength = 20;
   mAutoIndentSize = 3;
   mShowIndentButtons = true;
   mUseMonoFont = false;
@@ -265,6 +272,8 @@ CMacroProcessor::CMacroProcessor(int index)
     mFillColors[i] = NO_TOOLBAR_COLOR;
     mOutlineColors[i] = NO_TOOLBAR_COLOR;
   }
+  for (i = 0; i < MAX_ONE_LINE_SCRIPTS; i++)
+    mHistoryIndex[i] = 0;
   mProcessThread = NULL;
   for (i = 0; i < 2; i++) {
     CString mess;
@@ -444,6 +453,38 @@ void CMacroProcessor::OnUpdateKeepFocusOnOneLine(CCmdUI *pCmdUI)
 {
   pCmdUI->Enable(!mWinApp->DoingTasks());
   pCmdUI->SetCheck(mKeepOneLineFocus ? 1 : 0);
+}
+
+void CMacroProcessor::OnSetHistoryLength()
+{
+  int val = mMaxHistoryLength;
+  if (KGetOneInt("Maximum history length for One-Line Scripts", val))
+    SetMaxHistoryLength(val);
+}
+
+void CMacroProcessor::OnUpdateSetHistoryLength(CCmdUI *pCmdUI)
+{
+  pCmdUI->Enable(!DoingMacro() && !mWinApp->DoingTasks());
+}
+
+void CMacroProcessor::OnShowOneLineHistory()
+{
+  PrintHistoryToLog();
+}
+
+void CMacroProcessor::OnUpdateShowOneLineHistory(CCmdUI *pCmdUI)
+{
+  pCmdUI->Enable(!DoingMacro() && !mWinApp->DoingTasks());
+}
+
+void CMacroProcessor::OnClearOneLineHistory()
+{
+  ClearOneLineHistory();
+}
+
+void CMacroProcessor::OnUpdateClearOneLineHistory(CCmdUI *pCmdUI)
+{
+  pCmdUI->Enable(!DoingMacro() && !mWinApp->DoingTasks());
 }
 
 void CMacroProcessor::OnScriptListPersistentVars()
@@ -799,24 +840,163 @@ void CMacroProcessor::OneLineClosing(void)
   mOneLineScript = NULL;
 }
 
+// When a one-line script runs, add the line to the history
+void CMacroProcessor::AddLineToHistory(CString lineStr, int lineNum)
+{
+  std::vector<std::string> *history = &mHistoryArrays[lineNum];
+  int jmax;
+  CString cmd1, cmd2;
+
+  // Place a copy at the front of the array
+  history->emplace(mHistoryArrays[lineNum].begin(), (std::string)lineStr);
+  
+  //Remove duplicates older in history and delete empty strings
+  for (int i = 1; i < (int)history->size(); i++) {
+    jmax = (int)history->size();
+    if (i >= jmax)
+      break;
+    cmd1 = history->at(i).data();
+    cmd1.TrimLeft().TrimRight();
+    if (cmd1.IsEmpty()) {
+      history->erase(history->begin() + i);
+      i--;
+      continue;
+    }
+    for (int j = jmax - 1; j > i; j--) {
+      cmd2 = history->at(j).data();
+      cmd2.TrimLeft().TrimRight();
+      if (strcmp(cmd1, cmd2) == 0) {
+        history->erase(history->begin() + j);
+      }
+    }
+  }
+
+  // If array is too big, resize
+  if ((int)history->size() > mMaxHistoryLength + 1) {
+    history->resize(mMaxHistoryLength + 1);
+  }
+
+  mHistoryIndex[lineNum] = 0;
+}
+
+// When a one-line script runs, add the line to the history
+void CMacroProcessor::UpdateHistoryOnChange(CString lineStr, int lineNum)
+{
+  // Update first element of the array and jump back to bottom
+  mHistoryArrays[lineNum][0] = (std::string)lineStr;
+  mHistoryIndex[lineNum] = 0;
+}
+
+int CMacroProcessor::TraverseHistory(int lineNum, int dir)
+{
+  std::vector<std::string> *history = &mHistoryArrays[lineNum];
+  int nextPos = mHistoryIndex[lineNum] + dir;
+
+  if (nextPos < 0 || nextPos >= (int)history->size()) {
+    return -1;
+  }
+
+  // going to first in run history (index = 1), skip if it matches with active line
+  if (nextPos == 1 && (int)history->size() > 1 &&
+    strcmp(history->at(0).data(), history->at(1).data()) == 0) {
+    nextPos += dir;
+    if (nextPos >= (int)history->size())
+      return -1;
+  }
+
+  mHistoryIndex[lineNum] = nextPos; 
+  return nextPos;
+}
+
+CString CMacroProcessor::GetLineInHistory(int lineNum)
+{
+  return mHistoryArrays[lineNum][mHistoryIndex[lineNum]].data();
+}
+
+void CMacroProcessor::PrintHistoryToLog()
+{
+  bool noHistory = true;
+  for (int i = 0; i < MAX_ONE_LINE_SCRIPTS; i++) {
+    if (mHistoryArrays[i].size() > 1) {
+      noHistory = false;
+      PrintfToLog("Line %d:", i + 1);
+      for (int j = (int)mHistoryArrays[i].size() - 1; j > 0; j--) {
+        if (!mHistoryArrays[i][j].empty())
+          PrintfToLog("  %s", mHistoryArrays[i][j].data());
+      }
+    }
+  }
+
+  if (noHistory) {
+    PrintfToLog("No one-line history to print");
+  }
+}
+
+void CMacroProcessor::ClearOneLineHistory()
+{
+  for (int i = 0; i < MAX_ONE_LINE_SCRIPTS; i++) {
+    mHistoryIndex[i] = 0;
+    mHistoryArrays[i].resize(1);
+    if (mOneLineScript) {
+      mHistoryArrays[i][0] = mOneLineScript->m_strOneLine[i];
+    }
+  }
+}
+
 // Transfer all one-line scripts to or from the dialog if it is open
 void CMacroProcessor::TransferOneLiners(bool fromDialog)
 {
-  if (!mOneLineScript)
-    return;
-  if (fromDialog)
+  if (mOneLineScript && fromDialog)
     mOneLineScript->UpdateData(true);
   for (int ind = 0; ind < MAX_ONE_LINE_SCRIPTS; ind++) {
+    int endInd;
+    CString cmd, macros = mMacros[MAX_MACROS + ind];
+
     if (fromDialog) {
-      mMacros[MAX_MACROS + ind] = mOneLineScript->m_strOneLine[ind];
-      mMacros[MAX_MACROS + ind].Replace(";", "\r\n");
+      if (mOneLineScript) {
+        mWinApp->mMacroProcessor->UpdateHistoryOnChange(mOneLineScript->m_strOneLine[ind], 
+          ind);
+      }
+      
+      mMacros[MAX_MACROS + ind] = "";
+      for (int jnd = 0; jnd < (int)mHistoryArrays[ind].size(); jnd++) {
+        cmd = (CString)mHistoryArrays[ind][jnd].data();
+        cmd.Replace(";", "\r\n");
+        if (jnd)
+          mMacros[MAX_MACROS + ind] += SCRIPT_HISTORY_SEP;
+        mMacros[MAX_MACROS + ind] += cmd;
+      }
     } else {
-      mOneLineScript->m_strOneLine[ind] = mMacros[MAX_MACROS + ind];
-      mOneLineScript->m_strOneLine[ind].TrimRight("\r\n");
-      mOneLineScript->m_strOneLine[ind].Replace("\r\n", ";");
+      mHistoryArrays[ind].clear();
+      macros.TrimRight("\r\n");
+      for (int jnd = 0; jnd < mMaxHistoryLength + 1; jnd++) {
+        
+        // Search for next separator key
+        cmd = macros;
+        endInd = macros.Find(SCRIPT_HISTORY_SEP);
+        if (endInd >= 0) {
+          cmd = macros.Left(endInd);
+          macros = macros.Right(macros.GetLength() - (int)strlen(SCRIPT_HISTORY_SEP)
+            - endInd);
+        }
+        cmd.Replace("\r\n", ";");
+
+        // Set current line to first command
+        if (jnd == 0)
+          mMacros[MAX_MACROS + ind] = cmd;
+        mHistoryArrays[ind].push_back((std::string)cmd);
+
+        // If separator key was not found or no string left, all done
+        if (endInd < 0 || (jnd > 0 && cmd.IsEmpty()))
+          break;
+      }
+
+      if (mOneLineScript) {
+        mOneLineScript->m_strOneLine[ind] = mMacros[MAX_MACROS + ind];
+      }
     }
   }
-  if (!fromDialog)
+  if (!fromDialog && mOneLineScript)
     mOneLineScript->UpdateData(false);
 }
 

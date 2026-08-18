@@ -541,7 +541,13 @@ BEGIN
             MENUITEM "Run 60",                      ID_MACRO_RUN60
         END
         MENUITEM "Edit/Run &One Line...",       ID_SCRIPT_RUNONECOMMAND
-        MENUITEM "Keep Focus on One Line",      ID_SCRIPT_KEEPFOCUSONONELINE
+        POPUP "One-Line Script Options"
+        BEGIN
+            MENUITEM "Keep Focus on One Line",      ID_SCRIPT_KEEPFOCUSONONELINE
+            MENUITEM "Set Max History Length",      ID_SCRIPT_SETHISTORYLENGTH
+            MENUITEM "Show One-Line History",       ID_SCRIPT_SHOWONELINEHISTORY
+            MENUITEM "Clear One-Line History",      ID_SCRIPT_CLEARONELINEHISTORY
+        END
         MENUITEM SEPARATOR
         MENUITEM "Map Function Key",            ID_SCRIPT_MAPFUNCTIONKEY
         MENUITEM "List F Key Mappings",         ID_SCRIPT_LISTFKEYMAPPINGS
@@ -6132,6 +6138,9 @@ BEGIN
                             "Do not blank between acquisitions during Acquire At Items"
     ID_NAVIGATOR_TSELLIPSESWHENSHOWACQUIRE 
                             "Show beam ellipses for current group based on Parallel TS max tilt"
+    ID_SCRIPT_SHOWONELINEHISTORY 
+                            "Print history for each one line script to the log"
+    ID_SCRIPT_CLEARONELINEHISTORY "Clear history of one line scripts"
 END
 
 STRINGTABLE
@@ -6528,7 +6537,6 @@ END
 
 STRINGTABLE
 BEGIN
-    ID_MISC_NO_TRUE_SIZE    "Select whether to show circles with actual beam size when defining Focus/Trial"
     ID_VIEW_INDEXES         "Show item numbers, numbered from 1, as first column of table"
     ID_VIEW_LABLES          "Draw labels except for points in groups above threshold size"
 END

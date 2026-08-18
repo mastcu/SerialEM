@@ -137,6 +137,7 @@ BOOL_SETT_GETSET("ShowIndentButtons", mWinApp->mMacroProcessor->, ShowIndentButt
 BOOL_SETT_GETSET("RestoreMacroEditors", mWinApp->mMacroProcessor->, RestoreMacroEditors)
 BOOL_SETT_GETSET("MonospaceStatusLines", mWinApp->mMacroProcessor->, MonospaceStatus)
 BOOL_SETT_GETSET("KeepOneLineFocus", mWinApp->mMacroProcessor->, KeepOneLineFocus)
+INT_SETT_GETSET("MaxHistoryLength", mWinApp->mMacroProcessor->, MaxHistoryLength)
 INT_SETT_GETSET("ZbyGMaxTotalChange", mWinApp->mParticleTasks->, ZBGMaxTotalChange)
 FLOAT_SETT_GETSET("ZbyGIterThreshold", mWinApp->mParticleTasks->, ZBGIterThreshold)
 BOOL_SETT_GETSET("ZbyGUseViewInLD", mWinApp->mParticleTasks->, ZbyGUseViewInLD)

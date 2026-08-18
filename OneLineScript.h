@@ -1,6 +1,6 @@
 #pragma once
 
-
+#define NUM_ONE_LINE_SCRIPT_MESSAGES 4
 // COneLineScript dialog
 
 #pragma once
@@ -36,6 +36,8 @@ public:
   afx_msg void OnEnChangeEditOneLine(UINT nID);
   CString *mMacros;
   void Update();
+  void HandleHistoryCompletion(CString &strMacro, CString &strCompletion,
+    int &sel2, bool &setCompletion, int curLineNum);
 private:
   int m_iRunLeftOrig;
   int m_iRunTop[MAX_ONE_LINE_SCRIPTS];
@@ -47,8 +49,13 @@ private:
   int m_iCompOffset;
   int m_iCompWidthOrig;
   int mLineForSignature;
+  int mCurMessageInd;
+  double mLastTime;
+  CString mMessages[NUM_ONE_LINE_SCRIPT_MESSAGES];
+  bool mShowMessages;
 public:
   CButton m_butRun[MAX_ONE_LINE_SCRIPTS];
   afx_msg void OnEnKillfocusEditOneLine(UINT nID);
   afx_msg void OnEnSetfocusEditOneLine(UINT nID);
+  afx_msg void OnTimer(UINT_PTR nIDEvent);
 };
