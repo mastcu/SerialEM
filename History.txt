@@ -3,6 +3,9 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+8/23/26: Fixed initialization of some variables involved in setting states
+with dialog not open (In 4.2).
+
 8/12/26: Made it skip backlash adjustment for low-tilt map taken at start of
 tilt series (In 4.2).
 
