@@ -3,6 +3,11 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+8/24/26: Fixed some functions being disabled when stage is not ready.
+
+8/23/26: When using Nav Pts to make IS vectors with points drawn on a non-map,
+it uses the mag of that image if it is defined.
+
 8/23/26: Fixed initialization of some variables involved in setting states
 with dialog not open (In 4.2).
 
