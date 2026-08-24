@@ -89,8 +89,8 @@ void CParallelTSHelper::Initialize(void)
 // Busy function for task when doing IS
 int CParallelTSHelper::ISToTargetsBusy()
 {
-  return (mCamera->CameraBusy() || mScope->StageBusy() ||
-    mNavHelper->GetRealigning() || mWinApp->mFocusManager->DoingFocus()) ? 1 : 0;
+  return (mDoingISToTargets && (mCamera->CameraBusy() || mScope->StageBusy() ||
+    mNavHelper->GetRealigning() || mWinApp->mFocusManager->DoingFocus())) ? 1 : 0;
 }
 
 // Clears data from vectors and resets members for a new run

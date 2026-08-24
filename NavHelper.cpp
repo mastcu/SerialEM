@@ -7286,7 +7286,8 @@ int CNavHelper::UseNavPointsForVectors(int pattern, int numXholes, int numYholes
   numHoles[0] = numXholes;
   numHoles[1] = numYholes;
 
-  // Get the mag index from map drawn on, or from mag of image last points added on if
+  // Get the mag index from map drawn on, from mag of item if not drawn on a map, 
+  // or from mag of image last points added on if
   // group ID matched, or fall back to scope mag, which can be bad
   prevItem = nav->GetOtherNavItem(groupStart);
   if (prevItem->mDrawnOnMapID) {
@@ -7294,6 +7295,8 @@ int CNavHelper::UseNavPointsForVectors(int pattern, int numXholes, int numYholes
     if (item)
       magInd = item->mMapMagInd;
   }
+  if (!magInd && prevItem->mMapMagInd)
+    magInd = prevItem->mMapMagInd;
   if (!magInd && prevItem->mGroupID == mNav->GetAddPointID())
     magInd = mNav->GetLastAddPtMagInd();
   if (!magInd)

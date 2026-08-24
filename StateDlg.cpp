@@ -34,10 +34,10 @@ bool  CStateDlg::mInitedSetStates = false;
 CArray<StateParams *, StateParams *> *CStateDlg::mStateArray;
 CNavHelper *CStateDlg::mHelper;
 StateParams *CStateDlg::mParam;
-bool CStateDlg::mWarnedSharedParams;
-bool CStateDlg::mWarnedNoMontMap;
-bool CStateDlg::mRemindedToGoTo;
-int CStateDlg::mCamOfSetState;
+bool CStateDlg::mWarnedSharedParams = false;
+bool CStateDlg::mWarnedNoMontMap = false;
+bool CStateDlg::mRemindedToGoTo = false;
+int CStateDlg::mCamOfSetState = -1;
 CSerialEMApp *CStateDlg::winApp;
 
 // CStateDlg dialog
@@ -51,10 +51,6 @@ CStateDlg::CStateDlg(CWnd* pParent /*=NULL*/)
 {
   mCurrentItem = -1;
   mInitialized = false;
-  mWarnedSharedParams = false;
-  mWarnedNoMontMap = false;
-  mRemindedToGoTo = false;
-  mCamOfSetState = -1;
   mNonModal = true;
 }
 
@@ -551,13 +547,14 @@ int CStateDlg::DoSetImState(int stateNum, CString &errStr)
   param = mStateArray->GetAt(stateNum);
 
   if (winApp->LookupActiveCamera(param->camIndex) < 0) {
-    errStr = "The camera number defined for this state is not an active camera";
+    errStr.Format("The camera number (%d) defined for this state is not an active camera",
+      param->camIndex + 1);
     return 5;
   }
   if (type != STATE_NONE && param->lowDose && mCamOfSetState >= 0 &&
     param->camIndex != mCamOfSetState) {
-    errStr = "Cannot set a low dose state with a camera different from that"
-      " of the first state set";
+    errStr.Format("Cannot set a low dose state with a camera (%d) different from that"
+      " of the first state set (camera %d)", param->camIndex + 1, mCamOfSetState + 1);
     return 6;
   }
   area = mHelper->AreaFromStateLowDoseValue(param, &setNum);

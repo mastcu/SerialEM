@@ -54,6 +54,8 @@ CString adocStr, valStr, keyStr;
     ADOC_PUT(Integer(ADOC_ARG, "PieceOn", item->mPieceDrawnOn));
   if (item->mXinPiece >= 0. && item->mYinPiece >= 0.)
     ADOC_PUT(TwoFloats(ADOC_ARG, "XYinPc", item->mXinPiece, item->mYinPiece));
+  if (item->mMapMagInd > 0)
+    ADOC_PUT(Integer(ADOC_ARG, "MapMagInd", item->mMapMagInd));
   if (item->IsMap()) {
     ADOC_PUT(KeyValue(ADOC_ARG, "MapFile",  (LPCTSTR)item->mMapFile));
     ADOC_PUT(Integer(ADOC_ARG, "MapID", item->mMapID));
@@ -61,7 +63,6 @@ CString adocStr, valStr, keyStr;
     ADOC_PUT(Integer(ADOC_ARG, "MapMontage", item->mMapMontage));
     ADOC_PUT(Integer(ADOC_ARG, "MapSection",item->mMapSection));
     ADOC_PUT(Integer(ADOC_ARG, "MapBinning",item->mMapBinning));
-    ADOC_PUT(Integer(ADOC_ARG, "MapMagInd", item->mMapMagInd));
     ADOC_PUT(Integer(ADOC_ARG, "MapCamera", item->mMapCamera));
     fvals[0] = item->mMapScaleMat.xpx;
     fvals[1] = item->mMapScaleMat.xpy;
