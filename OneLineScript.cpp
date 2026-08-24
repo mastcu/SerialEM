@@ -290,23 +290,27 @@ void COneLineScript::HandleHistoryCompletion(CString &strMacro, CString &strComp
   int &sel2, bool &setCompletion, int curLineNum)
 {
   int i;
-  CString historyCmd, curCmd;
+  CString historyCmd, curCmd, lineCopy;
   std::vector<std::string> cmds = mWinApp->mMacroProcessor->GetHistoryArray(curLineNum);
   setCompletion = false;
   bool completing = false;
-
-  if (sel2 <= 0 || !(strMacro.GetAt(0) == '!' || strMacro.GetAt(0) == '|'))
+  
+  if (sel2 <= 0)
     return;
-
+  
   if (strMacro.GetAt(sel2 - 1) == '`') {
     strMacro.Delete(sel2 - 1, 1);
     completing = true;
   }
+  lineCopy = strMacro;
+  lineCopy.TrimLeft();
 
-  curCmd = strMacro.Right(strMacro.GetLength() - 1);
+  if (!(lineCopy.GetAt(0) == '!' || lineCopy.GetAt(0) == '|'))
+    return;
+
+  curCmd = lineCopy.Right(lineCopy.GetLength() - 1);
   curCmd.TrimRight();
   if (curCmd.IsEmpty()) {
-    //strCompletion = "! for exact search, | for general search";
     return;
   }
   curCmd.MakeUpper();
@@ -315,8 +319,8 @@ void COneLineScript::HandleHistoryCompletion(CString &strMacro, CString &strComp
   // | means find line in history that contains substring
   for (i = 1; i < (int)cmds.size(); i++) {
     historyCmd = cmds[i].data();
-    if ((strMacro.GetAt(0) == '!' && historyCmd.MakeUpper().Find(curCmd) == 0)
-      || (strMacro.GetAt(0) == '|' && historyCmd.MakeUpper().Find(curCmd) >= 0)) {
+    if ((lineCopy.GetAt(0) == '!' && historyCmd.MakeUpper().Find(curCmd) == 0)
+      || (lineCopy.GetAt(0) == '|' && historyCmd.MakeUpper().Find(curCmd) >= 0)) {
       strCompletion = cmds[i].data();
       setCompletion = true;
       if (completing) {
@@ -341,8 +345,9 @@ void COneLineScript::OnEnChangeEditOneLine(UINT nID)
   m_editOneLine[ind].GetSel(sel1, sel2);
 
   mShowMessages = m_strOneLine[ind].IsEmpty();
-
-  if (m_strOneLine[ind].Find("!") == 0 || m_strOneLine[ind].Find("|") == 0) {
+  CString lineCopy = m_strOneLine[ind];
+  lineCopy.TrimLeft();
+  if (lineCopy.Find("!") == 0 || lineCopy.Find("|") == 0) {
     HandleHistoryCompletion(m_strOneLine[ind], m_strCompletions, sel2, setCompletions, ind);
     completing = true;
   } else {
