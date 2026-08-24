@@ -3,6 +3,12 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+8/24/26: Added "Auto" button and "Autocontrast" and "Log Scale" checkboxes to 
+image display control panel.
+
+8/24/26: Replaced "Skip Antialias" in the image display control panel with 
+"Antialias during Acquire" in the Navigator Options submenu.
+
 8/24/26: Fixed some functions being disabled when stage is not ready.
 
 8/23/26: When using Nav Pts to make IS vectors with points drawn on a non-map,

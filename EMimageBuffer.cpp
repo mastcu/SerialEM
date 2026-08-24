@@ -409,7 +409,8 @@ void EMimageBuffer::UpdatePixMap(void)
   // Check the image scaling and if it has changed or if image has
   // changed, refill the pixmap, invalidate filtered pixmap
   if (GetImageChanged() != 0 || mImageScale->GetMinScale() != mLastScale.GetMinScale() ||
-    mImageScale->GetMaxScale() != mLastScale.GetMaxScale() || !mPixMap->getImRectPtr()) {
+    mImageScale->GetMaxScale() != mLastScale.GetMaxScale() || !mPixMap->getImRectPtr() ||
+    mImageScale->GetLogScale() != mLastScale.GetLogScale()) {
     mPixMap->useRect(mImage);
     mFiltZoom = -1;
   }

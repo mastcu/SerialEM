@@ -19,6 +19,7 @@ protected:
   short mFalseColor;
   float mBoostContrast;
   float mMeanForBoost;
+  short mLogScale;
 	
 	// mMinScale ands mMaxScale are the min and max values for converting
 	// the raw image into the byte bitmap
@@ -43,6 +44,7 @@ public:
   virtual int GetInverted() { return mInverted; };
   virtual short GetFalseColor() { return mFalseColor; };
   void SetFalseColor(short inVal) { mFalseColor = inVal; };
+  virtual int GetLogScale() { return mLogScale; };
 
 	unsigned char DoScale(int inValue);
   void SetMinMax(float inMin, float inMax) {mMinScale = inMin; mMaxScale = inMax;};

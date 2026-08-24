@@ -513,6 +513,7 @@ hid_navigator_realign_scaling		= SerialEM.chm::/html\navwindow_menu.htm#hid_navi
 hid_navigator_eraseperiodiccorr = SerialEM.chm::/html\navwindow_menu.htm#hid_navigator_eraseperiodiccorr
 hid_nav_runscriptinmultishotacquire = SerialEM.chm::/html\menu_navigator.htm#hid_nav_runscriptinmultishotacquire
 hid_nav_setscripttorun          = SerialEM.chm::/html\menu_navigator.htm#hid_nav_setscripttorun
+hid_nav_antialias               = SerialEM.chm::/html\menu_navigator.htm#hid_nav_antialias
 hid_navigator_force_center_align	= SerialEM.chm::/html\navwindow_menu.htm#hid_navigator_force_center_align
 hid_window_new									= SerialEM.chm::/html\menu_window.htm#hid_window_new
 hid_window_cascade							= SerialEM.chm::/html\menu_window.htm#hid_window_cascade

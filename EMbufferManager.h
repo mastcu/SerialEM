@@ -38,6 +38,7 @@ public :
   GetSetMember(int, DrawScaleBar);
   GetSetMember(BOOL, DrawCrosshairs);
   GetSetMember(BOOL, DrawTiltAxis);
+  GetSetMember(BOOL, Autocontrast);
   GetSetMember(float, UnsignedTruncLimit);
   GetSetMember(BOOL, SaveAsynchronously);
   GetSetMember(float, HdfUpdateTimePerSect);
@@ -88,6 +89,7 @@ public :
   int mDrawScaleBar;
   BOOL mDrawCrosshairs;
   BOOL mDrawTiltAxis;
+  BOOL mAutocontrast;
   CString *mModeNames;
   EMimageBuffer *mImBufsp;
   CSerialEMApp *mWinApp;

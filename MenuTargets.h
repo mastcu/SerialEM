@@ -460,6 +460,8 @@ public:
   afx_msg void OnUpdateSkipLDBlankingDuringAcquire(CCmdUI *pCmdUI);
   afx_msg void OnTSellipsesWhenShowAcquire();
   afx_msg void OnUpdateTSellipsesWhenShowAcquire(CCmdUI *pCmdUI);
+  afx_msg void OnAntialiasDuringAcquire();
+  afx_msg void OnUpdateAntialiasDuringAcquire(CCmdUI *pCmdUI);
 };
 
 /////////////////////////////////////////////////////////////////////////////

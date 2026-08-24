@@ -57,8 +57,14 @@
       <P><B>Cross&nbsp;&nbsp; (Hot key Shift+H)</B></P>
       <P>When this option is selected, the program will always draw a large red cross in 
         the center of the display, not just when shifting with the mouse.</P>
-      <P><b>Invert</b></P>
-    <P>Use this button to invert the image contrast; the hot key F11 can also be used.</P>
+    <P><strong>Tilt axis</strong></P>
+    <P>Use this button to turn a display of the tilt axis on all images on or off.&nbsp; 
+      With the option off, the tilt axis will be displayed only on Low Dose View or 
+      Search images when defining the Trial or Focus area.</P>
+      <P><strong>Auto</strong></P>
+      <P>Click this button to automatically set the black and white levels using the 
+          procedure that is done when an image is acquired or read from a file, as 
+          described in the above introduction.</P>
       <P><B>Set Truncation</B></P>
       <P>Use this button to enter new values for the percent of pixels that will have 
         their intensities truncated at the low and the high end of the intensity range, 
@@ -83,27 +89,24 @@
         of the image. For example, if you enter 0.5, then only pixels from 256 to 768 
         in X and Y in a 1024 x 1024 pixel image will be analyzed, which is actually only 
         one-quarter of the image area.</P>
-      <P><B>Extra info&nbsp; (Hot key Shift+X)</B></P>
-      <P>Use this button to turn the display of scale bars, min/max/mean, camera name, 
-        and dose rate on or off.</P>
-    <P><strong>Tilt axis</strong></P>
-    <P>Use this button to turn a display of the tilt axis on all images on or off.&nbsp; 
-      With the option off, the tilt axis will be displayed only on Low Dose View or 
-      Search images when defining the Trial or Focus area.</P>
-      <P><STRONG>Antialiasing</STRONG></P>
-      <P>This button controls whether images zoomed down below 0.8 are scaled with a 
-        filter that eliminates noise and artifacts from aliased information.&nbsp; 
-        Aliasing occurs when an image&nbsp;is zoomed down by simply sub-sampling the 
-        pixels; namely, information at frequencies higher than what can appear in the 
-        scaled-down image appears as noise at other frequencies in the sub-sampled 
-        image.&nbsp; The antialias filter removes frequencies above the new frequency 
-        limit in the process of making the scaled down image.&nbsp; This process can 
-        take several seconds for very large images; thus this option can be used to 
-        turn off the filter.&nbsp; The filter is temporarily turned off when panning an 
-        image with the left mouse button.</P>
+      <P><strong>Autocontrast</strong></P>
+      <P>Keep this box checked to automatically set the black and white levels whenever a 
+          new image is acquired or read from a file, as described in the above 
+          introduction. If unchecked, that procedure will be skipped and the black and 
+          white levels will remain fixed even as new images are loaded.</P>
+      <P><strong>Log Scale</strong></P>
+      <P>Check this box to apply a logarithmic scaling to the pixels in the displayed 
+          image. When using the log scale, you may get more desirable results by setting a 
+          smaller percentage of pixels to truncate at high intensity.</P>
       <P><B>False color</B></P>
       <P>Use this button to display the current image in false color; the hot key F12 
         can also be used.&nbsp; Contrast inversion can be used to invert the color ramp.</P>
+      <P><b>Invert</b></P>
+    <P>Use this button to invert the image contrast; the hot key F11 can also be used.</P>
+      <P><B>Extra info&nbsp; (Hot key Shift+X)</B></P>
+      <P>Use this button to turn the display of scale bars, min/max/mean, camera name, and 
+          dose rate on or off.</P>
+      <P>&nbsp;</P>
     </basefont>
   </BODY>
 </HTML>

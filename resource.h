@@ -2745,6 +2745,9 @@
 #define IDC_STAT_TOTAL_PIECES           3776
 #define IDC_STATIC_LIMITBEAMMOVEMENT    3777
 #define IDC_STATIC_AUTOCENLIMITFOVS     3778
+#define IDC_AUTOCONTRAST                3779
+#define IDC_BUT_AUTO                    3780
+#define IDC_CHECK_LOGSCALE              3781
 #define ID_NEW_IMAGE                    32771
 #define IDM_FILE_SAVEOTHER              32772
 #define IDM_FILE_READ                   32773
@@ -3384,6 +3387,7 @@
 #define ID_TILTSERIES_SETUPPARALLELTILTSERIES 33634
 #define ID_OPTIONS_SKIPLDBLANKINGDURINGACQUIRE 33640
 #define ID_NAVIGATOR_TSELLIPSESWHENSHOWACQUIRE 33641
+#define ID_OPTIONS_ANTIALIASDURINGACQUIRE 33642
 
 // Next default values for new objects
 // 
@@ -3391,8 +3395,8 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        305
-#define _APS_NEXT_COMMAND_VALUE         33642
-#define _APS_NEXT_CONTROL_VALUE         3779
+#define _APS_NEXT_COMMAND_VALUE         33643
+#define _APS_NEXT_CONTROL_VALUE         3782
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif

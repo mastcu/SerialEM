@@ -818,6 +818,7 @@ BEGIN
         MENUITEM "Load Maps &Unbinned",         ID_NAVIGATOR_LOADUNBINNED
         MENUITEM SEPARATOR
         MENUITEM "Skip LD Blanking during Acquire", ID_OPTIONS_SKIPLDBLANKINGDURINGACQUIRE
+        MENUITEM "Antialias during Acquire",    ID_OPTIONS_ANTIALIASDURINGACQUIRE
     END
     POPUP "&View"
     BEGIN
@@ -952,23 +953,22 @@ BEGIN
     PUSHBUTTON      "Browse",IDC_BROWSE,209,33,43,14,NOT WS_VISIBLE
 END
 
-IDD_IMAGELEVEL DIALOGEX 0, 0, 119, 100
+IDD_IMAGELEVEL DIALOGEX 0, 0, 119, 99
 STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP
 EXSTYLE WS_EX_TOOLWINDOW | WS_EX_LEFTSCROLLBAR
 FONT 8, "Microsoft Sans Serif", 400, 0, 0x0
 BEGIN
     CONTROL         "Cross",IDC_CROSSHAIRS,"Button",BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,82,33,35,10
     EDITTEXT        IDC_EDITZOOM,82,54,24,12,ES_RIGHT | ES_AUTOHSCROLL
-    CONTROL         "Extra info",IDC_SCALEBAR,"Button",BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,4,80,38,10
+    CONTROL         "Extra info",IDC_SCALEBAR,"Button",BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,75,89,40,10
     EDITTEXT        IDC_BLACK,82,8,34,12,ES_RIGHT | ES_AUTOHSCROLL
-    CONTROL         "False color",IDC_AUTOZOOM,"Button",BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,63,90,52,10
+    CONTROL         "False color",IDC_AUTOZOOM,"Button",BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,75,79,43,10
     EDITTEXT        IDC_WHITE,82,21,34,12,ES_RIGHT | ES_AUTOHSCROLL
-    CONTROL         "Antialiasing",IDC_ANTIALIAS,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,4,90,57,10
     PUSHBUTTON      "?",IDC_BUTHELP,107,0,9,7
     PUSHBUTTON      "-",IDC_BUTOPEN,4,0,9,7
     PUSHBUTTON      "F",IDC_BUTFLOATDOCK,17,0,9,7
     CTEXT           "Image Display Controls",IDC_STATTOPLINE,30,0,73,8
-    RTEXT           "Zoom",IDC_STATZOOM,55,56,25,8
+    RTEXT           "Zoom",IDC_STATZOOM,60,56,20,8
     CONTROL         "Spin1",IDC_SPINZOOM,"msctls_updown32",UDS_ARROWKEYS,106,53,10,14
     LTEXT           "Blk",IDC_STATBLACK,3,11,12,11
     LTEXT           "Wht",IDC_STATWHITE,3,22,21,11
@@ -980,10 +980,13 @@ BEGIN
     LTEXT           "Options",IDC_STATMORE,17,60,27,8
     PUSHBUTTON      "Set Truncation",IDC_TRUNCATION,4,69,50,10
     PUSHBUTTON      "Set Area Fraction",IDC_AREAFRACTION,58,69,58,10
-    CONTROL         "Invert",IDC_INVERT_CON,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,82,43,31,10
+    CONTROL         "Invert",IDC_INVERT_CON,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,46,89,28,10
     CONTROL         "",IDC_SLIDER_BLACK,"msctls_trackbar32",TBS_AUTOTICKS | WS_TABSTOP,15,11,67,10
     CONTROL         "",IDC_SLIDER_WHITE,"msctls_trackbar32",TBS_AUTOTICKS | WS_TABSTOP,15,22,67,10
-    CONTROL         "Tilt axis",IDC_TILTAXIS,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,63,80,45,10
+    CONTROL         "Tilt axis",IDC_TILTAXIS,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,82,43,34,10
+    CONTROL         "Autocontrast",IDC_AUTOCONTRAST,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,4,79,50,10
+    PUSHBUTTON      "Auto",IDC_BUT_AUTO,40,56,19,10
+    CONTROL         "Log scale",IDC_CHECK_LOGSCALE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,4,89,41,10
 END
 
 IDD_BUFFERCONTROL DIALOGEX 0, 0, 119, 117
@@ -4824,7 +4827,7 @@ BEGIN
     IDD_IMAGELEVEL, DIALOG
     BEGIN
         LEFTMARGIN, 3
-        BOTTOMMARGIN, 97
+        BOTTOMMARGIN, 96
     END
 
     IDD_BUFFERCONTROL, DIALOG
@@ -6132,6 +6135,8 @@ BEGIN
                             "Do not blank between acquisitions during Acquire At Items"
     ID_NAVIGATOR_TSELLIPSESWHENSHOWACQUIRE 
                             "Show beam ellipses for current group based on Parallel TS max tilt"
+    ID_OPTIONS_ANTIALIASDURINGACQUIRE 
+                            "Filter to remove aliasing artifacts and noise when zoomed below 1 while acquiring"
 END
 
 STRINGTABLE
@@ -7421,7 +7426,6 @@ BEGIN
     IDC_INVERT_CON          "Invert the contrast of the active image (hot key F11)"
     ID_DE_autosaveSummedImages 
                             "Autosave the grouped sum images based on the sum count"
-    IDC_ANTIALIAS           "Filter to remove aliasing artifacts and noise when zoomed below 1"
     IDC_CHECK_LINESYNC      "Synchronize scan lines with line frequency (DigiScan only)"
     IDC_SCREEN_SWITCH_STEM  "Go to TEM mode when the screen is down, until a STEM image is taken"
 END

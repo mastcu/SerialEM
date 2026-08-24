@@ -95,9 +95,6 @@ public:
   CButton m_butCrosshairs;
   afx_msg void OnCrosshairs();
   void ToggleCrosshairs();
-  BOOL m_bAntialias;
-  afx_msg void OnAntialias();
-  CButton m_butAntialias;
   BOOL m_bInvertCon;
   afx_msg void OnInvertContrast();
   CButton m_butInvertCon;
@@ -110,6 +107,13 @@ public:
   void ProcessNewBlackWhite(void);
   BOOL m_bTiltAxis;
   afx_msg void OnTiltaxis();
+  BOOL m_bAutocontrast;
+  CButton m_butAuto;
+  afx_msg void OnAuto();
+  afx_msg void OnAutocontrast();
+  BOOL m_bLogScale;
+  CButton m_butLogScale;
+  afx_msg void OnLogScale();
 };
 
 //{{AFX_INSERT_LOCATION}}
