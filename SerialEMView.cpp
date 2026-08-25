@@ -845,8 +845,8 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
   iDestHeight = (int)floor(mZoom * iSrcHeight + 0.5);
   xSrc = mXSrc;
   ySrc = mYSrc;
-  if (mZoom < 0.8 && mWinApp->mBufferManager->GetAntialias() &&
-    mWinApp->mNavigator && mWinApp->mNavigator->GetAcquiring() && bitImage &&
+  if (mZoom < 0.8 && (mWinApp->mBufferManager->GetAntialias() ||
+    !(mWinApp->mNavigator && mWinApp->mNavigator->GetAcquiring())) && bitImage &&
     bitImage->getRowData(0) && !mPanning) {
 
     // Get truncated width to avoid error from filter routine
@@ -2989,8 +2989,8 @@ void CSerialEMView::OnLButtonUp(UINT nFlags, CPoint point)
         needDraw = true;
       }
     } else if (mPanning) {
-      if (mZoom < 0.8 && mWinApp->mBufferManager->GetAntialias() &&
-        mWinApp->mNavigator && mWinApp->mNavigator->GetAcquiring()) {
+      if (mZoom < 0.8 && (mWinApp->mBufferManager->GetAntialias() ||
+        !(mWinApp->mNavigator && mWinApp->mNavigator->GetAcquiring()))) {
 
         // If we were panning and suspended antialias drawing, do antialias draw now
         mPanning = false;
