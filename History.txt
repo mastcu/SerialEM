@@ -9,6 +9,9 @@ image display control panel.
 8/24/26: Replaced "Skip Antialias" in the image display control panel with 
 "Antialias during Acquire" in the Navigator Options submenu.
 
+8/24/26: Fixed centering of beam ellipses when drawing them for the current
+group on a montage.
+
 8/24/26: Fixed some functions being disabled when stage is not ready.
 
 8/23/26: When using Nav Pts to make IS vectors with points drawn on a non-map,

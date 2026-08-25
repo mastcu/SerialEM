@@ -1173,8 +1173,8 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
     }
   }
 
-  // Set the flags about drawing low dose area, determine if drawing ellipses no current
-  //group, exclude focus area for that
+  // Set the flags about drawing low dose area, determine if drawing ellipses on current
+  //group, include focus area for that
   mPreParTSDrewLDAreas = itemArray && ((mAcquireBox && mAcquireBox->mNumPoints == 1) ||
     navigator->GetShowingLDareas()) && !bufIsFFT;
 
@@ -1188,7 +1188,7 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
   }
 
   mDrewLDAreasAtNavPt = itemArray && ((mAcquireBox && 
-    (mAcquireBox->mNumPoints == 1 || (parTSgroupID > 0 && !groupEllipse))) ||
+    (mAcquireBox->mNumPoints == 1 || parTSgroupID > 0)) ||
     navigator->GetShowingLDareas()) && !bufIsFFT;
 
   if (mMainWindow) {
@@ -2052,8 +2052,8 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
           beamElong = 1.f / cosf(DTORFL *
             mWinApp->mNavHelper->GetParTSOptions()->tiltForBeam);
           StageToImage(imBuf, item->mStageX, item->mStageY, ptX, ptY);
-          DrawEllipse(&cdc, &circlePen, &rect, imBuf->mImage, ptX,
-            ptY, acquireRadii[0], acquireRadii[0] * beamElong,
+          DrawEllipse(&cdc, &circlePen, &rect, imBuf->mImage, ptX + delPtX,
+            ptY + delPtY, acquireRadii[0], acquireRadii[0] * beamElong,
             axisAngle, false);
         }
         cdc.SelectObject(pOldPen);
@@ -2092,7 +2092,7 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
         int defMode = cdc.SetBkMode(TRANSPARENT);
         COLORREF defColor = cdc.SetTextColor(item->GetColor(highlight));
         cdc.TextOut(point.x, point.y, item->mLabel);
-        if (itemInParTSgroup && drawEllipse && !groupEllipse) {
+        if (itemInParTSgroup && drawEllipse) {
           cdc.SetTextColor(parTScolor);
           UINT textAlign = cdc.SetTextAlign(TA_RIGHT | TA_BOTTOM);
           point = point - CPoint(2 * offset10, 2 * offset10 / 10);

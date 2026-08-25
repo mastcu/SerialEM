@@ -1826,9 +1826,10 @@ BOOL CSerialEMApp::InitInstance()
   UtilModifyMenuItem("Navigator", ID_MONTAGINGGRIDS_MULTIPLEGRIDOPERATIONS,
     mScope->GetScopeHasAutoloader() ? "Mult&iple Grid Operations..." :
     "Mult&iple Operations on Grid...");
-
-
-
+  if (!mScope->GetNoColumnValve())
+    UtilModifyMenuItem("Settings", ID_SPECIALIZEDOPTIONS_CLOSEVALVESAFTERLONGINACTIVITY,
+      "Close Valves after Long Inactivity...");
+    
   mStartingProgram = false;
   DoResizeMain();
   SetTitleFile("");

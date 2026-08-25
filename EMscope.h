@@ -176,6 +176,7 @@ struct SynchroThreadData {
   int newIndex;                // Value to set to or use in scope call
   int curIndex;                // current value
   int normalize;               // Whether to normalize (spot, for now)
+  bool consolidatingNorms;     // Flag not to touch auto normalization or do norm
   BOOL ifSTEM;                 // STEM stuff when doing mag
   double STEMmag;
   int initialSleep;
@@ -1079,6 +1080,7 @@ private:
   int mScopeUpdateTaskSkips;   // # of times to skip scope update when task is running
   int mJeolUpdateTaskSkips;    // # of times to skip an update from JEOL scope in thread
   bool mSkipUpdatesForTasks;   // Flag to do the skipping
+  bool mConsolidateLDNorms;    // Skip normalizing and do all lens norm at end of LD
   int mMaxUtapiService;        // Maximum UTAPI service # in plugin from array of names
   int mAdvancedScriptVersion;  // My internal version number for advanced scripting
   int mPluginVersion;          // Version of plugin or server
