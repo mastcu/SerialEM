@@ -3835,13 +3835,15 @@
         </TR>
         <TR>
           <TD class="scriptcommand">ReportColumnOrGunValve</TD>
-          <TD>Reports 0 or 1 if column/gun valve is closed or open on FEG scopes, or if
-            filament on JEOL is clearly off or on.&nbsp; Reports -1 if the filament current
+          <TD>Reports 0 or 1 if column/gun valve is closed or open on a Thermo/FEI scope or a JEOL
+            scope with FEG, or if the
+            filament on a non-FEG JEOL is clearly off or on.&nbsp; Reports -1 if the filament current
             is inconsistent with the beam switch state.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">SetColumnOrGunValve #</TD>
-          <TD>Closes column/gun valve on FEG scope or turn off filament on JEOL if <b>#</b> is 0; open valve or turn on filament if <b>#</b> is 1.
+          <TD>Closes column/gun valve on a Thermo/FEI scope or a JEOL scope with FEG, or turns 
+            off filament on a non-FEG JEOL if <b>#</b> is 0; opens valve or turns on filament if <b>#</b> is 1.
           </TD>
         </TR>
         <TR>
