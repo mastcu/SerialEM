@@ -27,11 +27,12 @@
 CImageLevelDlg::CImageLevelDlg(CWnd* pParent /*=NULL*/)
   : CToolDlg(CImageLevelDlg::IDD, pParent)
   , m_bScaleBars(FALSE)
-  , m_bAntialias(FALSE)
   , m_bInvertCon(FALSE)
   , mBlackSlider(0)
   , mWhiteSlider(255)
   , m_bTiltAxis(FALSE)
+  , m_bAutocontrast(FALSE)
+  , m_bLogScale(FALSE)
 {
   SEMBuildTime(__DATE__, __TIME__);
   //{{AFX_DATA_INIT(CImageLevelDlg)
@@ -70,7 +71,6 @@ void CImageLevelDlg::DoDataExchange(CDataExchange* pDX)
   DDX_Text(pDX, IDC_EDITZOOM, m_editZoom);
   DDV_MaxChars(pDX, m_editZoom, 7);
   DDX_Check(pDX, IDC_AUTOZOOM, m_bFalseColor);
-  DDX_Check(pDX, IDC_ANTIALIAS, m_bAntialias);
   DDX_Check(pDX, IDC_SCALEBAR, m_bScaleBars);
   DDX_Check(pDX, IDC_CROSSHAIRS, m_bCrosshairs);
   DDX_Text(pDX, IDC_WHITE, m_strWhite);
@@ -78,7 +78,6 @@ void CImageLevelDlg::DoDataExchange(CDataExchange* pDX)
   //}}AFX_DATA_MAP
   DDX_Control(pDX, IDC_SCALEBAR, m_butScaleBars);
   DDX_Control(pDX, IDC_CROSSHAIRS, m_butCrosshairs);
-  DDX_Control(pDX, IDC_ANTIALIAS, m_butAntialias);
   DDX_Control(pDX, IDC_INVERT_CON, m_butInvertCon);
   DDX_Check(pDX, IDC_INVERT_CON, m_bInvertCon);
   DDX_Control(pDX, IDC_SLIDER_BLACK, m_scBlack);
@@ -86,6 +85,10 @@ void CImageLevelDlg::DoDataExchange(CDataExchange* pDX)
   DDX_Control(pDX, IDC_SLIDER_WHITE, m_scWhite);
   DDX_Slider(pDX, IDC_SLIDER_WHITE, mWhiteSlider);
   DDX_Check(pDX, IDC_TILTAXIS, m_bTiltAxis);
+  DDX_Check(pDX, IDC_AUTOCONTRAST, m_bAutocontrast);
+  DDX_Control(pDX, IDC_BUT_AUTO, m_butAuto);
+  DDX_Check(pDX, IDC_CHECK_LOGSCALE, m_bLogScale);
+  DDX_Control(pDX, IDC_CHECK_LOGSCALE, m_butLogScale);
 }
 
 
@@ -103,9 +106,11 @@ BEGIN_MESSAGE_MAP(CImageLevelDlg, CToolDlg)
   //}}AFX_MSG_MAP
   ON_BN_CLICKED(IDC_SCALEBAR, OnScalebar)
   ON_BN_CLICKED(IDC_CROSSHAIRS, OnCrosshairs)
-  ON_BN_CLICKED(IDC_ANTIALIAS, OnAntialias)
   ON_BN_CLICKED(IDC_INVERT_CON, OnInvertContrast)
   ON_BN_CLICKED(IDC_TILTAXIS, OnTiltaxis)
+  ON_BN_CLICKED(IDC_BUT_AUTO, OnAuto)
+  ON_BN_CLICKED(IDC_AUTOCONTRAST, OnAutocontrast)
+  ON_BN_CLICKED(IDC_CHECK_LOGSCALE, OnLogScale)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -163,10 +168,10 @@ BOOL CImageLevelDlg::OnInitDialog()
 // Set items that can be affected by external settings
 void CImageLevelDlg::UpdateSettings()
 {
-  m_bAntialias = (mWinApp->mBufferManager->GetAntialias() != 0);
   m_bScaleBars = (mWinApp->mBufferManager->GetDrawScaleBar() != 0);
   m_bCrosshairs = mWinApp->mBufferManager->GetDrawCrosshairs();
   m_bTiltAxis = mWinApp->mBufferManager->GetDrawTiltAxis();
+  m_bAutocontrast = mWinApp->mBufferManager->GetAutocontrast();
   if (mInitialized)
     UpdateData(false);
 }
@@ -211,8 +216,8 @@ void CImageLevelDlg::AnalyzeImage()
   if (!imBuf->mImage || !imBuf->mImageScale)
     return;
   imBuf->mImageScale->FindPctStretch(imBuf->mImage, mPctLo, mPctHi, mAreaFrac,
-    B3DCHOICE(imBuf->mCaptured == BUFFER_FFT || imBuf->mCaptured == BUFFER_LIVE_FFT,
-    mWinApp->GetBkgdGrayOfFFT(), 0), mWinApp->GetTruncDiamOfFFT());
+    B3DCHOICE(imBuf->mCaptured == BUFFER_FFT || imBuf->mCaptured == BUFFER_LIVE_FFT, 
+      mWinApp->GetBkgdGrayOfFFT(), 0), mWinApp->GetTruncDiamOfFFT());
   mWinApp->mActiveView->DrawImage();
 
   // Also, set the new limits into the text box
@@ -239,7 +244,7 @@ void CImageLevelDlg::OnClose()
 // the tab order
 void CImageLevelDlg::OnOK()
 {
-  m_butAntialias.SetFocus();
+  m_butAuto.SetFocus();
   ProcessEditBoxes();
 }
 
@@ -360,6 +365,7 @@ void CImageLevelDlg::NewImageScale(KImageScale *inImageScale)
   mSampleMax = inImageScale->GetSampleMax();
   m_bInvertCon = inImageScale->GetInverted() != 0;
   m_bFalseColor = inImageScale->GetFalseColor() != 0;
+  m_bLogScale = inImageScale->GetLogScale() != 0;
   if (mInitialized)
     SetEditBoxes();
 }
@@ -473,21 +479,45 @@ void CImageLevelDlg::ToggleCrosshairs()
     mWinApp->mActiveView->DrawImage();
 }
 
-void CImageLevelDlg::OnAntialias()
-{
-  UpdateData(true);
-  mWinApp->mBufferManager->SetAntialias(m_bAntialias ? 1 : 0);
-  if (mWinApp->mActiveView)
-    mWinApp->mActiveView->DrawImage();
-  mWinApp->RestoreViewFocus();
-}
-
-
 void CImageLevelDlg::OnTiltaxis()
 {
   UpdateData(true);
   mWinApp->mBufferManager->SetDrawTiltAxis(m_bTiltAxis);
   if (mWinApp->mActiveView)
     mWinApp->mActiveView->DrawImage();
+  mWinApp->RestoreViewFocus();
+}
+
+
+void CImageLevelDlg::OnAuto()
+{
+  AnalyzeImage();
+  if (mWinApp->mActiveView)
+    mWinApp->mActiveView->DrawImage();
+  mWinApp->RestoreViewFocus();
+}
+
+
+void CImageLevelDlg::OnAutocontrast()
+{
+  UpdateData(true);
+  mWinApp->mBufferManager->SetAutocontrast(m_bAutocontrast);
+  if (mWinApp->mActiveView)
+    mWinApp->mActiveView->DrawImage();
+  mWinApp->RestoreViewFocus();
+}
+
+
+void CImageLevelDlg::OnLogScale()
+{
+  if (mInitialized)
+    UpdateData(true);
+  if (mWinApp->mActiveView) {
+    EMimageBuffer *imBuf = mWinApp->mActiveView->GetActiveImBuf();
+    if (imBuf->mImageScale) {
+      imBuf->mImageScale->mLogScale = m_bLogScale ? 1 : 0;
+      mWinApp->mActiveView->DrawImage();
+    }
+  }
   mWinApp->RestoreViewFocus();
 }

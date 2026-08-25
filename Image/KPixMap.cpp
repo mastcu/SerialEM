@@ -132,8 +132,14 @@ int KPixMap::useRect(KImage *inRect, bool keepBGRorder)
       return 1;
     }
 
+    
     if (theType != kFLOAT && theType != kRGB)
-      SetLut(theType, theMin, B3DMAX(1, theRange));
+      SetLut(theType, theMin, B3DMAX(1, theRange), mScale.GetLogScale());
+    else if (theType == kFLOAT && mScale.GetLogScale()) {
+
+      // set up table from unsigned shorts to bytes, with log scale
+      SetLut(kUSHORT, 0, 65536, mScale.GetLogScale());
+    }
 
     // Copy data row by row with look-up
     for (j = 0; j < startFillY; j++) {
@@ -169,11 +175,20 @@ int KPixMap::useRect(KImage *inRect, bool keepBGRorder)
       case kFLOAT:
         fdata = (float *)inRect->getRowData(j - theShiftY) + theOffset;
         for(i = 0; i < nCopyX; i++) {
-          fval = fScale * (*fdata++ - fMin);
+
+          if (mScale.GetLogScale()) {
+
+            // If applying log scale, convert to short to match with LUT entries
+            int ind = (int)(65535.f / fRange * (*fdata++ - fMin));
+            B3DCLAMP(ind, 0, 65535);
+            fval = mLut[ind];
+          } else {
+            fval = fScale * (*fdata++ - fMin);
+          }
           if (fval < 0.)
             fval = 0.f;
           if (fval > 255.)
-            fval = 255.f;
+            fval = 255.f;          
           *bdata++ = (unsigned char)fval;
         }
         break;
@@ -225,22 +240,23 @@ KPixMap::~KPixMap()
 }
 
 // Set up the LUT for getting from image to bitmap values
-void KPixMap::SetLut(int inType, int inMin, int inRange)
+void KPixMap::SetLut(int inType, int inMin, int inRange, int logScale)
 {
   int theVal, i;
   int loVal = 0;
   int hiVal = 256;
+  float logmin = 0.01f * (float)inRange;
   if (inType == kSHORT) {
     loVal = -32768;
     hiVal = 32768;
   } else if (inType == kUSHORT) {
     loVal = 0;
     hiVal = 65536;
-  }
+  } 
 
   // Make a look-up table unless old one matches
-  if (mLut == NULL || mLutType != inType || mLutMin != inMin ||
-    mLutRange != inRange) {
+  if (mLut == NULL || mLutType != inType || mLutMin != inMin || mLutRange != inRange ||
+    mLutLogScale != logScale) {
 
     // Allocate space if needed or if type has changed
     if (mLut == NULL || mLutType != inType) {
@@ -252,13 +268,20 @@ void KPixMap::SetLut(int inType, int inMin, int inRange)
 
     // Fill the table
     for (i = loVal; i< hiVal; i++) {
-      theVal =  ( (i - inMin) * 256) / inRange;
+      if (logScale) {
+        theVal = (int) (256.f * (logf(i - inMin + logmin) - logf(logmin)) 
+          / (logf(inRange + logmin) - logf(logmin)));
+
+      } else {
+        theVal = ((i - inMin) * 256) / inRange;
+      }
       if (theVal < 0) theVal =0;
       if (theVal > 255) theVal = 255;
       mLut[i - loVal] = (unsigned char)theVal;
     }
     mLutMin = inMin;
     mLutRange = inRange;
+    mLutLogScale = logScale;
   }
 
 }
@@ -266,7 +289,7 @@ void KPixMap::SetLut(int inType, int inMin, int inRange)
 // takes the incoming brightness and contrast, transfers them to the brightness and
 // contrast of THIS pixmap, and computes a ramp and sets the color table from it.
 void KPixMap::setLevels(int inBrightness, int inContrast, int inInverted,
-  int inFalseColor, float boostContrast, float mean)
+  int inFalseColor, float boostContrast, float mean, int logScale)
 {
   if (mHasScaled && (inBrightness == mScale.mBrightness) &&
     (inContrast == mScale.mContrast) && inInverted == mScale.mInverted &&
@@ -280,6 +303,7 @@ void KPixMap::setLevels(int inBrightness, int inContrast, int inInverted,
   mScale.mFalseColor = inFalseColor;
   mScale.mBoostContrast = boostContrast;
   mScale.mMeanForBoost = mean;
+  mScale.mLogScale = logScale;
 
   setLevels();
 }

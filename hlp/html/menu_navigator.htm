@@ -39,6 +39,10 @@
           <TD>Select the script to run in the Multiple Records routine.</TD>
         </TR>
         <TR VALIGN="top">
+          <TD class="style1">&nbsp; &nbsp;<a href="#hid_nav_antialias">Antialias during Acquire</a></TD>
+          <TD>Set whether to antialias zoomed images while during acquisition.</TD>
+        </TR>
+        <TR VALIGN="top">
           <TD class="style1"><A HREF="#hid_navigator_setupfullmontage">Setup Full
               Montage</A></TD>
           <TD>Define a montage to capture the full grid area.</TD>
@@ -203,6 +207,17 @@
         It is best to have a (short) name assigned to the script so that if scripts are 
         rearranged, or a different set is loaded, the program will not run the wrong 
         script.</p>
+      <p><strong><A NAME = "hid_nav_antialias"></A> Antialias during Acquire 
+          (Navigator - Options submenu)</strong></p>
+      <p>This button controls whether images zoomed down below 0.8 are scaled with a 
+        filter that eliminates noise and artifacts from aliased information. Aliasing occurs when an image&nbsp;is zoomed down by simply sub-sampling the 
+        pixels; namely, information at frequencies higher than what can appear in the 
+        scaled-down image appears as noise at other frequencies in the sub-sampled 
+        image. The antialias filter removes frequencies above the new frequency 
+        limit in the process of making the scaled down image.&nbsp;This process can 
+        take several seconds for very large images; thus this option can be used to 
+        turn off the filter during acquisition.&nbsp;The filter is temporarily turned off when panning an 
+        image with the left mouse button.</p>
       <P><A NAME="hid_navigator_setupfullmontage"></A><B>Setup Full Montage command
           (Navigator menu)</B></P>
       <P>Use this command to set up a montage to capture the whole grid area. A set of

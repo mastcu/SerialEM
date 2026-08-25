@@ -64,6 +64,7 @@ EMbufferManager::EMbufferManager(CString *inModeNamep, EMimageBuffer *inImBufs)
   mRotateAxisAngle = -1;
   mDrawCrosshairs = false;
   mDrawTiltAxis = false;
+  mAutocontrast = true;
   mUnsignedTruncLimit = 0.01f;
   mSaveAsynchronously = true;
   mSavingThread = NULL;
@@ -1203,13 +1204,13 @@ void EMbufferManager::FindScaling(EMimageBuffer * imBuf, int partialScan)
   float pctLo, pctHi;
   if (imBuf->mImageScale == NULL)
     imBuf->mImageScale = new KImageScale;
-  if (imBuf->mImage->getMode() == kRGBmode)
+  if (imBuf->mImage->getMode() == kRGBmode || !mAutocontrast)
     return;
   mWinApp->GetDisplayTruncation(pctLo, pctHi);
   imBuf->mImageScale->FindPctStretch(imBuf->mImage, pctLo, pctHi,
     mWinApp->GetPctAreaFraction(),
-    B3DCHOICE(imBuf->mCaptured == BUFFER_FFT || imBuf->mCaptured == BUFFER_LIVE_FFT,
-    mWinApp->GetBkgdGrayOfFFT(), 0), mWinApp->GetTruncDiamOfFFT(), partialScan);
+    B3DCHOICE(imBuf->mCaptured == BUFFER_FFT || imBuf->mCaptured == BUFFER_LIVE_FFT, 
+      mWinApp->GetBkgdGrayOfFFT(), 0), mWinApp->GetTruncDiamOfFFT(), partialScan);
 }
 
 // Initiate saving to file on a separate thread

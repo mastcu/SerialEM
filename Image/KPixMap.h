@@ -19,6 +19,7 @@ protected:
 	int           mLutMin;
 	int           mLutRange;
 	int           mLutType;
+  int           mLutLogScale;
 
 public:
 		     KPixMap();
@@ -26,9 +27,9 @@ public:
 	virtual  KImage*    getImRectPtr() { return mRect; }
 	virtual  int  useRect(KImage *inImage, bool keepBGRorder = false);
 	virtual  void doneWithRect();	
-	virtual  void KPixMap::SetLut(int inType, int inMin, int inRange);
+	virtual  void KPixMap::SetLut(int inType, int inMin, int inRange, int logScale = 0);
 	virtual  void setLevels(int inBrightness, int inContrast, int inInverted, 
-    int inFalseColor, float boostContrast, float mean);
+    int inFalseColor, float boostContrast, float mean, int logScale);
 	virtual  void setLevels(KImageScale &inScale);
 	virtual  void setLevels();
 	virtual  BITMAPINFO *getBMInfo() { return mBMInfo; };	

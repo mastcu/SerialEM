@@ -551,6 +551,8 @@ ON_COMMAND(ID_OPTIONS_SKIPLDBLANKINGDURINGACQUIRE, OnSkipLDBlankingDuringAcquire
 ON_UPDATE_COMMAND_UI(ID_OPTIONS_SKIPLDBLANKINGDURINGACQUIRE, OnUpdateSkipLDBlankingDuringAcquire)
 ON_COMMAND(ID_NAVIGATOR_TSELLIPSESWHENSHOWACQUIRE, OnTSellipsesWhenShowAcquire)
 ON_UPDATE_COMMAND_UI(ID_NAVIGATOR_TSELLIPSESWHENSHOWACQUIRE, OnUpdateTSellipsesWhenShowAcquire)
+ON_COMMAND(ID_OPTIONS_ANTIALIASDURINGACQUIRE, OnAntialiasDuringAcquire)
+ON_UPDATE_COMMAND_UI(ID_OPTIONS_ANTIALIASDURINGACQUIRE, OnUpdateAntialiasDuringAcquire)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -935,6 +937,19 @@ void CMenuTargets::OnUpdateSkipLDBlankingDuringAcquire(CCmdUI *pCmdUI)
 {
   pCmdUI->Enable(!mWinApp->DoingTasks());
   pCmdUI->SetCheck(mNavHelper->GetSkipLDBlankInAcquire());
+}
+
+void CMenuTargets::OnAntialiasDuringAcquire()
+{
+  mWinApp->mBufferManager->SetAntialias(mWinApp->mBufferManager->GetAntialias() == 0 ? 1 
+    : 0);
+}
+
+
+void CMenuTargets::OnUpdateAntialiasDuringAcquire(CCmdUI *pCmdUI)
+{
+  pCmdUI->Enable(!mWinApp->DoingTasks());
+  pCmdUI->SetCheck(mWinApp->mBufferManager->GetAntialias() != 0);
 }
 
 void CMenuTargets::OnNavigatorShowMultiShot()
