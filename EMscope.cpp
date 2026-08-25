@@ -162,6 +162,7 @@ int CEMscope::mScopeCallFromPlugin = 0;
 #define AUTONORMALIZE_SET(v) { \
   if (mPlugFuncs->SetAutoNormEnabled) \
     mPlugFuncs->SetAutoNormEnabled(v); \
+  SEMTrace('L', "autonorm %sabled", v ? "en" : "dis"); \
 }
 
 #define USE_DATA_MUTEX(a) { \
@@ -583,6 +584,7 @@ CEMscope::CEMscope()
   mScopeUpdateTaskSkips = 0;
   mJeolUpdateTaskSkips = 0;
   mSkipUpdatesForTasks = false;
+  mConsolidateLDNorms = false;
   mMaxUtapiService = UTAPI_SUPPORT_END - 1;
   mAdvancedScriptVersion = 0;
   mPluginVersion = 0;
@@ -4362,6 +4364,7 @@ BOOL CEMscope::SetMagIndex(int inIndex)
   mSynchroTD.ifSTEM = ifSTEM;
   mSynchroTD.lowestM = lowestM;
   mSynchroTD.normalize = (mSkipNormalizations & 1) ? 0 : 1;
+  mSynchroTD.consolidatingNorms = mConsolidateLDNorms;
   mSynchroTD.newProbeMode = mProbeMode;
 
   // JEOL STEM dies if mag is changed too soon after last image;
@@ -4493,7 +4496,8 @@ BOOL CEMscope::SetMagKernel(SynchroThreadData *sytd)
       } else {
 
         // Disable autonormalization, change mag, normalize and reenable
-        AUTONORMALIZE_SET(*vFalse);
+        if (!sytd->consolidatingNorms)
+          AUTONORMALIZE_SET(*vFalse);
         PLUGSCOPE_SET(MagnificationIndex, inIndex);
 
         // Hitachi needs to poll and make sure associated changes are done
@@ -4528,7 +4532,8 @@ BOOL CEMscope::SetMagKernel(SynchroThreadData *sytd)
     }
 
     // Normalization: has to be outside of the non-JEOL section now
-    if (!sytd->ifSTEM && mPlugFuncs->NormalizeLens && sytd->normalize > 0) {
+    if (!sytd->ifSTEM && mPlugFuncs->NormalizeLens && sytd->normalize > 0 && 
+      !sytd->consolidatingNorms) {
 
       // Normalize all lenses if going in or out of LM, or if in LM and option is 1,
       // or always if option is 2.  This used to do condenser in addition, but now
@@ -4537,6 +4542,7 @@ BOOL CEMscope::SetMagKernel(SynchroThreadData *sytd)
         sytd->newIndex < sytd->lowestM) ||
         (inIndex < sytd->lowestM && sytd->normAllOnMagChange > 0) ||
         sytd->normAllOnMagChange > 1);
+      SEMTrace('L', "normalizing after mag  normAll %d", normAll ? 1 : 0);
       if (normAll && FEIscope) {
         mPlugFuncs->NormalizeLens(ALL_INSTRUMENT_LENSES);
       } else {
@@ -4552,7 +4558,7 @@ BOOL CEMscope::SetMagKernel(SynchroThreadData *sytd)
     }
     sytd->lastNormalizationTime = GetTickCount();
 
-    if (!JEOLscope)
+    if (!JEOLscope && !sytd->consolidatingNorms)
       AUTONORMALIZE_SET(*vTrue);
 
   }
@@ -5859,17 +5865,18 @@ void CEMscope::GotoLowDoseArea(int newArea)
 
   // If normalizing beam, do it unless going to View or Search.
   // Do it differently depending on the property
-  if (!STEMmode && mLDNormalizeBeam && !toView && !toSearch) {
+  if (!STEMmode && mLDNormalizeBeam) {
     sameIntensity = oldArea >= 0 && ldArea->spotSize == mLdsaParams->spotSize &&
       ldArea->intensity == mLdsaParams->intensity &&
       ldArea->probeMode == mLdsaParams->probeMode &&
       ldArea->beamAlpha == mLdsaParams->beamAlpha;
     if (mUseNormForLDNormalize) {
 
-      // If using condenser normalization, do it if not going to view or search and not
-      // going between tied focus/trial
-      needCondenserNorm = !toView && !toSearch && !sameIntensity;
-    } else {
+      // If using condenser normalization, do it if not going to view or search or if it
+      // is set for consolidated normalization, and not going between tied focus/trial
+      needCondenserNorm = !sameIntensity && ((!toView && !toSearch) ||
+        (FEIscope && mUseNormForLDNormalize > 2));
+    } else if (!toView && !toSearch) {
 
       // Classic: set beam for view area if not going to View or Search, not coming from
       // view anyway, and intensity changes
@@ -5885,6 +5892,18 @@ void CEMscope::GotoLowDoseArea(int newArea)
           Sleep(mLDBeamNormDelay);
       }
     }
+  }
+
+  // For value of 4 for the normalizing variable, if it is changing mag
+  // and probe, set flag for the norm and then, if that flag is set either way
+  // for value 3 or 4, set flag to consolidate and cancel autonormalizations
+  if (!STEMmode && mUseNormForLDNormalize > 3 && FEIscope && oldArea >= 0 &&
+    ldArea->magIndex != mLdsaParams->magIndex &&
+    ldArea->probeMode != mLdsaParams->probeMode)
+    needCondenserNorm = true;
+  if (needCondenserNorm && FEIscope && mUseNormForLDNormalize > 2) {
+    mConsolidateLDNorms = true;
+    AUTONORMALIZE_SET(*vFalse);
   }
 
   // If we are not at the mag of the current area, just go back so the image shift gets
@@ -6095,10 +6114,20 @@ void CEMscope::GotoLowDoseArea(int newArea)
     if (intensity)
       DelayedSetIntensity(intensity, magTime, ldArea->spotSize, ldArea->probeMode);
     if (needCondenserNorm) {
-      if (mUseNormForLDNormalize == 1)
+
+      // Normalize all lenses for value > 2 and reenable autonormalization
+      if (mUseNormForLDNormalize > 2 && mConsolidateLDNorms) {
+        SEMTrace('L', "norm all 0");
+        NormalizeAll(0);
+        AUTONORMALIZE_SET(*vTrue);
+        mLastNormalization = GetTickCount();
+      } else if (mUseNormForLDNormalize == 1) {
+        SEMTrace('L', "norm condenser");
         NormalizeCondenser();
-      else
+      } else {
+        SEMTrace('L', "norm all 1");
         NormalizeAll(1);
+      }
       if (mLDBeamNormDelay)
         Sleep(mLDBeamNormDelay);
     }
@@ -6108,6 +6137,7 @@ void CEMscope::GotoLowDoseArea(int newArea)
   } else if (!STEMmode)
     ldArea->intensity = GetIntensity();
   SleepMsg(2);
+  mConsolidateLDNorms = false;
 
   // Shift image now after potential mag change
   if (!ISdone)
@@ -7004,6 +7034,7 @@ BOOL CEMscope::SetSpotSize(int inIndex, int normalize)
   if (mSkipNormalizations & 2)
     normalize = 0;
   mSynchroTD.normalize = normalize;
+  mSynchroTD.consolidatingNorms = mConsolidateLDNorms;
   result = RunSynchronousThread(SYNCHRO_DO_SPOT, inIndex, curSpot, NULL);
 
   UnblankAfterTransient(unblankAfter, routine);
@@ -7038,7 +7069,7 @@ BOOL CEMscope::SetSpotKernel(SynchroThreadData *sytd)
 
     // If normalization requested(or forbidden), disable autonorm,
     // then later normalize, and set normalization time to give some delay
-    if (sytd->normalize)
+    if (sytd->normalize && !sytd->consolidatingNorms)
       AUTONORMALIZE_SET(*vFalse);
 
     // Hitachi hysteresis is ferocious.  Things are somewhat stable by always going up
@@ -7079,14 +7110,15 @@ BOOL CEMscope::SetSpotKernel(SynchroThreadData *sytd)
     }
 
     // Then normalize if selected
-    if (sytd->normalize > 0) {
+    if (sytd->normalize > 0 && !sytd->consolidatingNorms) {
+      SEMTrace('L', "normalizing after spot");
       if (mPlugFuncs->NormalizeLens && (!JEOLscope || SEMLookupJeolRelaxData(nmSpotsize)))
         mPlugFuncs->NormalizeLens(nmSpotsize);
       sytd->lastNormalizationTime = GetTickCount();
     }
 
     // Re-enable autonormalization
-    if (sytd->normalize)
+    if (sytd->normalize && !sytd->consolidatingNorms)
       AUTONORMALIZE_SET(*vTrue);
   }
   catch (_com_error E) {

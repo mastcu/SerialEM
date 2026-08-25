@@ -4730,6 +4730,8 @@ int CTSController::EndControl(BOOL terminating, BOOL startReorder)
     mEndCtlMdocPath = new CString[mNumMdocFiles];
     for (i = 0; i < mNumMdocFiles; i++) {
       storeMRC = mWinApp->mDocWnd->GetStoreMRC(i + firstFile);
+      if (!i)
+        mEndCtlFilePath = storeMRC->getFilePath();
       if (storeMRC->GetAdocIndex() >= 0)
         mEndCtlMdocPath[i] = storeMRC->getAdocName();
     }

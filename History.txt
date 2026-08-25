@@ -3,11 +3,18 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+8/25/26: SEM_4-2-28
+8/25/26: Made it skip the UTAPI normalization service if the version is too
+low, one that normalizes all lenses sequentially (In 4.2).
+
 8/24/26: Added "Auto" button and "Autocontrast" and "Log Scale" checkboxes to 
 image display control panel.
 
 8/24/26: Replaced "Skip Antialias" in the image display control panel with 
 "Antialias during Acquire" in the Navigator Options submenu.
+
+8/24/26: Fixed centering of beam ellipses when drawing them for the current
+group on a montage.
 
 8/24/26: Fixed some functions being disabled when stage is not ready.
 

@@ -82,7 +82,7 @@
 #endif
 
 #define VERSION_STRING  "SerialEM Version 4.3.0beta"
-#define TAG_STRING      "(Tagged SEM_4-2-27, 8/1/26)"
+#define TAG_STRING      "(Tagged SEM_4-2-28, 8/25/26)"
 #define DEPRECATED_PYTHON  "3.6-64"
 
 // Offsets for static window inside main frame
@@ -1826,9 +1826,10 @@ BOOL CSerialEMApp::InitInstance()
   UtilModifyMenuItem("Navigator", ID_MONTAGINGGRIDS_MULTIPLEGRIDOPERATIONS,
     mScope->GetScopeHasAutoloader() ? "Mult&iple Grid Operations..." :
     "Mult&iple Operations on Grid...");
-
-
-
+  if (!mScope->GetNoColumnValve())
+    UtilModifyMenuItem("Settings", ID_SPECIALIZEDOPTIONS_CLOSEVALVESAFTERLONGINACTIVITY,
+      "Close Valves after Long Inactivity...");
+    
   mStartingProgram = false;
   DoResizeMain();
   SetTitleFile("");
