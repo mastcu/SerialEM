@@ -86,6 +86,10 @@
             LD Blanking during Acquire</A></TD>
           <TD>Do not blank beam between acquisitions in Low Dose mode during Acquire at Items.</TD>
         </TR>
+        <TR VALIGN="top">
+          <TD class="auto-style1"><a href="#hid_options_antialiasduringacquire">Antialias during Acquire</a></TD>
+          <TD>Set whether to antialias zoomed images while during Acquire at Items.</TD>
+        </TR>
          <TR VALIGN="top">
           <TD class="auto-style1"> </TD>
         </TR>
@@ -364,6 +368,17 @@
        discovering that the screen is down.&nbsp; Select this option to skip the 
        blanking during Navigator Acquire at Items, when both of these factors should be 
        irrelevant.</p>
+      <p><strong><A NAME = "hid_options_antialiasduringacquire"></A> Antialias during Acquire 
+          (Navigator window - Options menu)</strong></p>
+      <p>This button controls whether images zoomed down below 0.8 are scaled with a 
+        filter that eliminates noise and artifacts from aliased information. Aliasing occurs when an image&nbsp;is zoomed down by simply sub-sampling the 
+        pixels; namely, information at frequencies higher than what can appear in the 
+        scaled-down image appears as noise at other frequencies in the sub-sampled 
+        image. The antialias filter removes frequencies above the new frequency 
+        limit in the process of making the scaled down image.&nbsp;This process may 
+        take roughly 15 milliseconds for 4k images or 20 milliseconds for 8k images; thus this option can be used to 
+        turn off the filter during Acquire at Items.&nbsp;The filter is temporarily turned off when panning an 
+        image with the left mouse button.</p>
          <P><b><A NAME="hid_view_indexes"></A>Indexes command (Navigator window
          - View menu)</b></P>
     <P>Use this command to add a column to the table with the index of each item, 
