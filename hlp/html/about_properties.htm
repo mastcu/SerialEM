@@ -3714,11 +3714,31 @@ MoveStage 0 0 $delz
         </TR>
         <TR VALIGN="top">
           <TD>NormCondenserInLowDose</TD>
-          <TD>Set to 1 or 2 to change the option in the Low Dose control panel for &#39;normalize
+          <TD>Set to 1 or 4 to change the option in the Low Dose control panel for &#39;Normalize
             beam through View&#39; to use the microscope call for normalizing lenses
-            instead.&nbsp; With 1, it will normalize condenser lens (C1, C2, C3 if present);
-            with 2, it will normalize the minicondenser and objective lenses as well, in a single
-            call.&nbsp; Such normalization is not available on JEOL.</TD>
+            instead.<br />
+            &nbsp; With 1, it will normalize condenser lenses (C1, C2, C3 if present) on a Thermo/FEI scope,
+            or do a condenser lens normalization on a JEOL if one is defined.&nbsp; This is the only
+             value that is useful for JEOL scopes.&nbsp; If doing normalization through UTAPI, this 
+            involves two sequential normalizations.<br />
+            &nbsp; With 2, it will normalize the minicondenser and objective lenses as well as 
+            condenser lenses, which involves a single call for simultaneous normalizations through 
+            standard scripting but three sequential normalizations through UTAPI.&nbsp; With 1 or 2, 
+            the normalization does not occur when going to the View or Search area.<br />
+            &nbsp; With 3, it will avoid all normalizations until the end and normalize all lenses in one call that
+            should produce simultaneous normalizations&nbsp; It will suppress the normalization
+            for a magnification change done by SerialEM, and the automatic ones for spot size and probe 
+            mode changes if relevant.&nbsp; This will occur even when going to View or Serach, but only with
+            the option checked in the Low Dose panel.<br />
+            &nbsp; With 4, it will behave as just described for 3 if the option is checked; if the option is
+            not checked, it will suppress intermediate normalizations and normalize all lenses at the end if
+            the low dose area change involves both a magnification and a probe mode change.<br />
+            &nbsp; Do not use a value of 1 or 2 if normalization has to be done with UTAPI.&nbsp; Note that
+             the UTAPI normalization service is automatically skipped if its version is 1.2 or below,
+            because normalizing all lenses is done very slowly with sequential calls.&nbsp; Thus, values of 3 and 4 
+            should be effective even if using UTAPI generally, as the program will access a fast normalization
+            of all lenses either through standard scripting or through a higher UTAPI version.
+          </TD>
         </TR>
         <TR>
           <TD>LowDoseBeamTiltShifts</TD>

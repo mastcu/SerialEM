@@ -3,6 +3,10 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+8/25/26: Added new values for NormCondenserInLowDose that can be used to
+consolidate all normalizations during Low Dose area switching into a single
+normalize of all lenses at the end on Thermo/FEI scopes.
+
 8/25/26: SEM_4-2-28
 8/25/26: Made it skip the UTAPI normalization service if the version is too
 low, one that normalizes all lenses sequentially (In 4.2).
