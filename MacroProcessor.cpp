@@ -915,10 +915,17 @@ CString CMacroProcessor::GetLineInHistory(int lineNum)
 
 void CMacroProcessor::PrintHistoryToLog()
 {
-  bool noHistory = true;
+  bool hasHistory = false;
   for (int i = 0; i < MAX_ONE_LINE_SCRIPTS; i++) {
     if (mHistoryArrays[i].size() > 1) {
-      noHistory = false;
+
+      //Just once, print a title
+      if (!hasHistory) {
+        mWinApp->mLogWindow->SetNextLineColorStyle(0, 5);
+        PrintfToLog("One-Line Script History");
+      }
+      hasHistory = true;
+      mWinApp->mLogWindow->SetNextLineColorStyle(0, 4);
       PrintfToLog("Line %d:", i + 1);
       for (int j = (int)mHistoryArrays[i].size() - 1; j > 0; j--) {
         if (!mHistoryArrays[i][j].empty())
@@ -927,7 +934,7 @@ void CMacroProcessor::PrintHistoryToLog()
     }
   }
 
-  if (noHistory) {
+  if (!hasHistory) {
     PrintfToLog("No one-line history to print");
   }
 }
