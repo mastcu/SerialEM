@@ -28,11 +28,11 @@ COneLineScript::COneLineScript(CWnd* pParent /*=NULL*/)
   mLineWithFocus = -1;
   mLineForSignature = -1;
   mCurMessageInd = 0;
-  mShowMessages = true;
+  mCycleMessages = true;
   m_strCompletions = mMessages[0] = "Tab or  `  to complete command";
   mMessages[1] = "Up and Down keys to view run history";
-  mMessages[2] = "Start with ! to search exact match in history";
-  mMessages[3] = "Start with | for general history search";
+  mMessages[2] = "! to find line in history starting with search key";
+  mMessages[3] = "| to find line in history containing search key";
 }
 
 COneLineScript::~COneLineScript()
@@ -125,6 +125,7 @@ BOOL COneLineScript::OnInitDialog()
   }
   SetTimer(1, 200, 0);
   mLastTime = wallTime();
+  mNumMsgCycles = 0;
   UpdateData(false);
   mInitialized = true;
   SetDefID(45678);
@@ -141,7 +142,27 @@ void COneLineScript::OnOK()
 void COneLineScript::OnRunClicked(UINT nID)
 {
   int ind = nID - IDC_RUN_ONE_LINE1;
+  int sel1, sel2;
+  CString strCompletion, lineCopy;
+  bool setCompletions;
+  mCycleMessages = false;
+  
   UpdateData(true);
+  
+  lineCopy = m_strOneLine[ind];
+  lineCopy.TrimLeft();
+  if (lineCopy.GetAt(0) == '!' || lineCopy.GetAt(0) == '|') {
+    m_editOneLine[ind].GetSel(sel1, sel2);
+    m_strOneLine[ind].Insert(sel2, '`');
+    sel2++;
+    HandleHistoryCompletion(m_strOneLine[ind], m_strCompletions, sel2, setCompletions, 
+      ind);
+    UpdateData(FALSE);
+    m_editOneLine[ind].SetSel(sel2, sel2);
+    mWinApp->mMacroProcessor->UpdateHistoryOnChange(m_strOneLine[ind], ind);
+    return;
+  }
+
   mMacros[MAX_MACROS + ind] = m_strOneLine[ind];
   if (mMacros[MAX_MACROS + ind].Find("#!Python") == 0) {
     if (mMacros[MAX_MACROS + ind].Find("import serialem") < 0 &&
@@ -281,8 +302,6 @@ void COneLineScript::Update()
     m_butRun[ind].EnableWindow(runnable);
     m_editOneLine[ind].EnableWindow(!busy);
   }
-  SEMWallTime();
-  
 }
 
 // Process a change in an edit control and do 'backtick' completion or list completions
@@ -310,13 +329,18 @@ void COneLineScript::HandleHistoryCompletion(CString &strMacro, CString &strComp
 
   curCmd = lineCopy.Right(lineCopy.GetLength() - 1);
   curCmd.TrimRight();
+
+  // If no search key, just show help message for !, |, whichever is being used
   if (curCmd.IsEmpty()) {
+    i = lineCopy.Find("!") == 0 ? 2 : 3;
+    strCompletion = mMessages[i];
+    setCompletion = true;
     return;
   }
-  curCmd.MakeUpper();
 
   // ! means find line in history that matches exactly from the start
   // | means find line in history that contains substring
+  curCmd.MakeUpper();
   for (i = 1; i < (int)cmds.size(); i++) {
     historyCmd = cmds[i].data();
     if ((lineCopy.GetAt(0) == '!' && historyCmd.MakeUpper().Find(curCmd) == 0)
@@ -330,7 +354,7 @@ void COneLineScript::HandleHistoryCompletion(CString &strMacro, CString &strComp
       break;
     }
   }
-
+  
   if (!setCompletion) {
     strCompletion = "";
   }
@@ -344,11 +368,12 @@ void COneLineScript::OnEnChangeEditOneLine(UINT nID)
   UpdateData(true);
   m_editOneLine[ind].GetSel(sel1, sel2);
 
-  mShowMessages = m_strOneLine[ind].IsEmpty();
+  mCycleMessages = false;
   CString lineCopy = m_strOneLine[ind];
   lineCopy.TrimLeft();
   if (lineCopy.Find("!") == 0 || lineCopy.Find("|") == 0) {
-    HandleHistoryCompletion(m_strOneLine[ind], m_strCompletions, sel2, setCompletions, ind);
+    HandleHistoryCompletion(m_strOneLine[ind], m_strCompletions, sel2, setCompletions, 
+      ind);
     completing = true;
   } else {
     CMacroEditer::HandleCompletionsAndIndent(m_strOneLine[ind], m_strCompletions, sel2,
@@ -377,7 +402,6 @@ void COneLineScript::OnEnSetfocusEditOneLine(UINT nID)
   but->SetFont(mWinApp->GetBoldFont(GetDlgItem(IDC_STAT_COMPLETIONS)));
   but->SetButtonStyle(BS_DEFPUSHBUTTON);
   mLineForSignature = -1;
-  mShowMessages = m_strOneLine[mLineWithFocus].IsEmpty();
 }
 
 // When focus lost, set line to -1
@@ -391,18 +415,24 @@ void COneLineScript::OnEnKillfocusEditOneLine(UINT nID)
     but->SetFont((GetDlgItem(IDC_STAT_COMPLETIONS))->GetFont());
   }
   mLineWithFocus = -1;
-  mShowMessages = false;
   SetDefID(45678);
 }
+
+
 
 void COneLineScript::OnTimer(UINT_PTR nIDEvent)
 {
   double time = wallTime();
-  if (mShowMessages && time - mLastTime > 5.) {
+  if (mCycleMessages && mNumMsgCycles <= MAX_MSG_CYCLES && 
+    time - mLastTime > MSG_CYCLE_TIME) {
     mLastTime = time;
-    mCurMessageInd = (mCurMessageInd + 1) % NUM_ONE_LINE_SCRIPT_MESSAGES;
+    if (mNumMsgCycles == MAX_MSG_CYCLES)
+      mCurMessageInd = 0;
+    else
+      mCurMessageInd = (mCurMessageInd + 1) % NUM_ONE_LINE_SCRIPT_MSG;
+    mNumMsgCycles++;
     m_strCompletions = mMessages[mCurMessageInd];
+    UpdateData(FALSE);
   }
-  UpdateData(FALSE);
   CBaseDlg::OnTimer(nIDEvent);
 }

@@ -1,6 +1,8 @@
 #pragma once
 
-#define NUM_ONE_LINE_SCRIPT_MESSAGES 4
+#define NUM_ONE_LINE_SCRIPT_MSG 4
+#define MAX_MSG_CYCLES 50
+#define MSG_CYCLE_TIME 5.
 // COneLineScript dialog
 
 #pragma once
@@ -51,8 +53,9 @@ private:
   int mLineForSignature;
   int mCurMessageInd;
   double mLastTime;
-  CString mMessages[NUM_ONE_LINE_SCRIPT_MESSAGES];
-  bool mShowMessages;
+  CString mMessages[NUM_ONE_LINE_SCRIPT_MSG];
+  bool mCycleMessages;
+  int mNumMsgCycles;
 public:
   CButton m_butRun[MAX_ONE_LINE_SCRIPTS];
   afx_msg void OnEnKillfocusEditOneLine(UINT nID);
