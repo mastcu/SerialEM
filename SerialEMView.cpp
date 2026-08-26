@@ -1133,8 +1133,24 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
             if (mWinApp->mCamera->IsDirectDetector(camP) && imBuf->mK2ReadMode >= 0)
               letString += imBuf->mK2ReadMode > 0 ? "  counted" : "  linear";
             cdc.TextOut(mWinApp->ScaleValueForDPI(25),
-              rect.Height() - mWinApp->ScaleValueForDPI(40), letString);
+              rect.Height() - mWinApp->ScaleValueForDPI(60), letString);
           }
+      }
+
+      //Add image FOV in microns
+      float pixel = mShiftManager->GetPixelSize(imBuf);
+      if (pixel > 0) {
+        cdc.SetTextColor(RGB(0, 255, 40));
+        cdc.SelectObject(useLabelFont);
+        imBuf->mImage->getSize(ix, iy);
+        int ndec = 2 - (int)floor(log10(B3DMIN(ix * pixel, iy * pixel)));
+        B3DCLAMP(ndec, 0, 3);
+        CString dgts;
+        dgts.Format("%d", ndec);
+        letString.Format("FOV: %." + dgts + "f x %." + dgts + "f um", 
+          ix * pixel, iy * pixel);
+        cdc.TextOut(mWinApp->ScaleValueForDPI(25),
+          rect.Height() - mWinApp->ScaleValueForDPI(40), letString);
       }
     } else {
       cdc.SelectObject(useLabelFont);
