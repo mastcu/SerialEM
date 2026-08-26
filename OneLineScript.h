@@ -56,6 +56,7 @@ private:
   CString mMessages[NUM_ONE_LINE_SCRIPT_MSG];
   bool mCycleMessages;
   int mNumMsgCycles;
+  void StopCyclingMessages();
 public:
   CButton m_butRun[MAX_ONE_LINE_SCRIPTS];
   afx_msg void OnEnKillfocusEditOneLine(UINT nID);

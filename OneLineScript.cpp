@@ -145,10 +145,9 @@ void COneLineScript::OnRunClicked(UINT nID)
   int sel1, sel2;
   CString strCompletion, lineCopy;
   bool setCompletions;
-  mCycleMessages = false;
   
   UpdateData(true);
-  
+  StopCyclingMessages();
   lineCopy = m_strOneLine[ind];
   lineCopy.TrimLeft();
   if (lineCopy.GetAt(0) == '!' || lineCopy.GetAt(0) == '|') {
@@ -367,8 +366,7 @@ void COneLineScript::OnEnChangeEditOneLine(UINT nID)
   bool setCompletions, completing;
   UpdateData(true);
   m_editOneLine[ind].GetSel(sel1, sel2);
-
-  mCycleMessages = false;
+  StopCyclingMessages();
   CString lineCopy = m_strOneLine[ind];
   lineCopy.TrimLeft();
   if (lineCopy.Find("!") == 0 || lineCopy.Find("|") == 0) {
@@ -418,7 +416,14 @@ void COneLineScript::OnEnKillfocusEditOneLine(UINT nID)
   SetDefID(45678);
 }
 
-
+void COneLineScript::StopCyclingMessages()
+{
+  if (mCycleMessages) {
+    mCycleMessages = false;
+    m_strCompletions = "";
+    UpdateData(FALSE);
+  }
+}
 
 void COneLineScript::OnTimer(UINT_PTR nIDEvent)
 {
