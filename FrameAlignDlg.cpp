@@ -893,6 +893,7 @@ void CFrameAlignDlg::LoadParamToDialog(void)
   mPairwiseNum = param->numAllVsAll;
   m_strPairwiseNum.Format("%d", mPairwiseNum);
   m_fCutoff = param->rad2Filt1;
+  B3DCLAMP(m_fCutoff, 0.005f, 0.5f);
   mCutoff2 = param->rad2Filt2;
   mCutoff3 = param->rad2Filt3;
   SetBlankIsZeroEditBox(m_strCutoff2, mCutoff2);
@@ -901,6 +902,7 @@ void CFrameAlignDlg::LoadParamToDialog(void)
   SetBlankIsZeroEditBox(m_strRefineCutoff, mRefineCutoff);
   m_bHybridShifts = param->hybridShifts;
   m_fSigmaRatio = 0.0001f * (float)B3DNINT(10000. * param->sigmaRatio);
+  B3DCLAMP(m_fSigmaRatio, 0.01f, 20.f);
   m_bRefineAlignment = param->doRefine;
   mRefineIter = param->refineIter;
   m_strRefineIter.Format("%d", mRefineIter);
@@ -913,9 +915,12 @@ void CFrameAlignDlg::LoadParamToDialog(void)
   m_strSmoothCrit.Format("%d", mSmoothCrit);
   m_bTruncateAbove = param->truncate;
   m_fTruncation = param->truncLimit;
+  B3DCLAMP(m_fTruncation, 0, 1000.f);
   m_bRefineGroups = param->groupRefine;
   m_fStopIter = param->stopIterBelow;
+  B3DCLAMP(m_fStopIter, .01f, 5.f);
   m_iMaxShift = param->shiftLimit;
+  B3DCLAMP(m_iMaxShift, 2, 100);
   m_bKeepPrecision = param->keepPrecision;
   m_bSaveFloatSums = param->outputFloatSums;
   m_bAlignSubset = param->alignSubset;
