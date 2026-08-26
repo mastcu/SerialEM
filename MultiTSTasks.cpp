@@ -1340,7 +1340,7 @@ void CMultiTSTasks::AutocenNextTask(int param)
     // use FOV if max shift argument was negative
     if (mAcMaxShift < 0) {
       maxShift = (mImBufs->mImage->getHeight() + mImBufs->mImage->getWidth()) / 2.f *
-        mImBufs->mPixelSize * -mAcMaxShift;
+        mShiftManager->GetPixelSize(mImBufs) * -mAcMaxShift;
     } else {
       maxShift = mAcMaxShift;
     }
