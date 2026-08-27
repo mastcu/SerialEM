@@ -17,8 +17,8 @@
         width: 557px;
       }
       .auto-style2 {
-        width: 180px;
-      }
+            width: 205px;
+        }
   --></style>
   </HEAD>
   <BODY BGCOLOR="#ffffff" TEXT="#000000">
@@ -46,10 +46,32 @@
           <TD class="auto-style2"><a href="#hid_script_runonecommand">Edit/Run One Line</a>...</TD>
           <TD class="auto-style1">Opens window to allow up to 5 one-line scripts.</TD>
         </TR>
+        <TR VALIGN="top">
+          <TD class="auto-style2">One-Line Script Options</TD>
+          <TD class="auto-style1">&nbsp;</TD>
+        </TR>
          <TR VALIGN="top">
-          <TD class="auto-style2"><a href="#hid_script_keepfocusononeline">Keep Focus on One Line</a></TD>
+          <TD class="auto-style2">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+              <a href="#hid_script_keepfocusononeline">Keep Focus on One&nbsp; Line</a></TD>
           <TD class="auto-style1">Toggles whether keyboard focus returns to One-Line Script window after script runs.</TD>
         </TR>
+         <TR VALIGN="top">
+          <TD class="auto-style2">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+              <a href="#hid_script_setmaxhistorylength">Set Max History Length</a>&nbsp;</TD>
+          <TD class="auto-style1">Opens a dialog box to set the maximum history length for the 
+              One-Line Script window</TD>
+        </TR>
+          <tr>
+          <TD class="auto-style2">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+              <a href="#hid_script_showonelinehistory">Show One-Line History</a></TD>
+          <TD class="auto-style1">Lists the history for each line in the One-Line Script 
+              window.</TD>
+          </tr>
+          <tr>
+          <TD class="auto-style2">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+              <a href="#hid_script_clearonelinehistory">Clear One-Line History</a></TD>
+          <TD class="auto-style1">Clears the One-Line Script history.</TD>
+          </tr>
          <TR VALIGN="top">
           <TD class="auto-style2"><a href="#hid_script_mapfunctionkey">Map Function Key</a></TD>
           <TD class="auto-style1">Assign a script to a function key.</TD>
@@ -215,16 +237,48 @@
       select the whole line, after which it can be deleted with the Delete key, or the 
       whole line can be deleted with Ctrl-U.&nbsp; 
       Ctrl-Z can be used to undo the last operation.&nbsp; Ctrl-X, Ctrl-C, and Ctrl-V also work 
-      for cut, copy, and paste.&nbsp; Up and down arrows can be used to jump to the line 
+      for cut, copy, and paste.&nbsp; Page Up and Page down arrows can be used to jump to the line 
       above or below.&nbsp; The Escape key will return 
       focus to the main program, without closing the window, so that other keyboard 
       commands can be used.&nbsp; If you turn on the next option focus will return to 
       the text box of the script that was run when it is done, so you can easily 
-      change it and run again, or move to another script with an arrow key and run 
+      change it and run again, or move to another script with a Page Up/Down key and run 
       that.</P>
-       <P><A NAME="hid_script_keepfocusononeline"></A><B>Keep Focus on One Line command (Script menu)</B></P>
+      <P>History of executed one-line scripts will be saved, up to the set maximum history 
+          length. Use the Up and Down keys to navigate through the history in each line. 
+          Furthermore, you can perform a case-insensitive search of a line's history by 
+          starting the line with either '!' or vertical bar '|' followed by a specific 
+          keyword. A search starting with '!' will find the most recent line in the 
+          history that begins with the keyword, whereas a search starting with '|' will 
+          find the most recent line in the history that contains the keyword in any part 
+          of the line. For example, if the previously-run script in a line was 
+          'RealignToNavItem 0 1', this could be found by typing '!realign', 
+          '|align', or &#39;|1&#39;, but '!align' would not find it. If a match is found in the history, 
+          the result will be displayed at the top of the One-Line Script window, and 
+          pressing tab, Enter, or ` will fill the line with the search result. It is 
+          highly recommended to avoid putting &#39;!&#39; or &#39;|&#39; in a defined variable name, as it 
+          may cause confusion with the search functionality, even though this is 
+          technically possible by placing a semicolon beforehand. <!--EndFragment-->It is 
+          highly recommended to avoid putting &#39;!&#39; or &#39;|&#39; in a defined variable name, as it 
+          may cause confusion with the search functionality, even though this is 
+          technically possible by placing a semicolon beforehand. <!--EndFragment--></P>
+       <P><A NAME="hid_script_keepfocusononeline"></A><B>Keep Focus on One Line command (Script menu 
+           - One-Line Script Options submenu)</B></P>
     <p>Use this command to toggle whether keyboard focus returns to the line of the 
       one-line script that is run.</p>
+      <p><A NAME="hid_script_setmaxhistorylength"></A><strong>Set Max History Length (Script menu<B> - One-Line Script Options 
+          submenu</B>)</strong></p>
+      <p>Use this command to enter the maximum number of lines to save in the One-Line 
+          Script history.</p>
+      <P><A NAME="hid_script_showonelinehistory"></A><strong>Show One-Line History command (Script menu<B> - One-Line Script Options 
+          submenu</B>)</strong></P>
+      <P>Use this command to get a list in the log window of all the scripts that have 
+          been run in each line in the One-Line Script window, up to the maximum history 
+          length.</P>
+      <P><A NAME="hid_script_clearonelinehistory"></A><strong>Clear One-Line History command (Script menu<B> - One-Line Script Options 
+          submenu</B>)</strong></P>
+      <P>Use this command to clear out the One-Line Script window history. The current 
+          text in the One-Line Script window will be unchanged.</P>
       <P><A NAME="hid_script_mapfunctionkey"></A><B>Map Function Key command (Script menu)</B></P>
     <p>Use this command to assign a script to a function key, so that it can be run 
       with the keyboard shortcut Ctrl - Fn.&nbsp; By default Ctrl F1 to Ctrl F12 run 

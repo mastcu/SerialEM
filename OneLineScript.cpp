@@ -11,6 +11,7 @@
 #include "OneLineScript.h"
 #include "MacroEditer.h"
 #include "MacroProcessor.h"
+#include "b3dutil.h"
 
 #if defined(_DEBUG) && defined(_CRTDBG_MAP_ALLOC)
 #define new DEBUG_NEW
@@ -20,12 +21,18 @@
 
 COneLineScript::COneLineScript(CWnd* pParent /*=NULL*/)
 	: CBaseDlg(COneLineScript::IDD, pParent)
-  , m_strCompletions(_T("Tab or  `  to complete command"))
+  , m_strCompletions(_T(""))
 {
   mNonModal = true;
   mInitialized = false;
   mLineWithFocus = -1;
   mLineForSignature = -1;
+  mCurMessageInd = 0;
+  mCycleMessages = true;
+  m_strCompletions = mMessages[0] = "Tab or  `  to complete command";
+  mMessages[1] = "Up and Down keys to view run history";
+  mMessages[2] = "! to find line in history starting with search key";
+  mMessages[3] = "| to find line in history containing search key";
 }
 
 COneLineScript::~COneLineScript()
@@ -77,6 +84,7 @@ BEGIN_MESSAGE_MAP(COneLineScript, CDialog)
   ON_CONTROL_RANGE(EN_SETFOCUS,IDC_EDIT_ONE_LINE, IDC_EDIT_ONE_LINE10, OnEnSetfocusEditOneLine)
   ON_WM_SIZE()
   ON_WM_PAINT()
+  ON_WM_TIMER()
 END_MESSAGE_MAP()
 
 BOOL COneLineScript::OnInitDialog()
@@ -115,6 +123,9 @@ BOOL COneLineScript::OnInitDialog()
       mWinApp->ScaleValueForDPI(5);
     SetWindowPos(NULL, 0, 0, wndRect.Width(), ind, SWP_NOMOVE);
   }
+  SetTimer(1, 200, 0);
+  mLastTime = wallTime();
+  mNumMsgCycles = 0;
   UpdateData(false);
   mInitialized = true;
   SetDefID(45678);
@@ -131,7 +142,26 @@ void COneLineScript::OnOK()
 void COneLineScript::OnRunClicked(UINT nID)
 {
   int ind = nID - IDC_RUN_ONE_LINE1;
+  int sel1, sel2;
+  CString strCompletion, lineCopy;
+  bool setCompletions;
+  
   UpdateData(true);
+  StopCyclingMessages();
+  lineCopy = m_strOneLine[ind];
+  lineCopy.TrimLeft();
+  if (lineCopy.GetAt(0) == '!' || lineCopy.GetAt(0) == '|') {
+    m_editOneLine[ind].GetSel(sel1, sel2);
+    m_strOneLine[ind].Insert(sel2, '`');
+    sel2++;
+    HandleHistoryCompletion(m_strOneLine[ind], m_strCompletions, sel2, setCompletions, 
+      ind);
+    UpdateData(FALSE);
+    m_editOneLine[ind].SetSel(sel2, sel2);
+    mWinApp->mMacroProcessor->UpdateHistoryOnChange(m_strOneLine[ind], ind);
+    return;
+  }
+
   mMacros[MAX_MACROS + ind] = m_strOneLine[ind];
   if (mMacros[MAX_MACROS + ind].Find("#!Python") == 0) {
     if (mMacros[MAX_MACROS + ind].Find("import serialem") < 0 &&
@@ -142,6 +172,8 @@ void COneLineScript::OnRunClicked(UINT nID)
   }
   mMacros[MAX_MACROS + ind].Replace(";", "\r\n");
   if (!m_strOneLine[ind].IsEmpty()) {
+
+    mWinApp->mMacroProcessor->AddLineToHistory(m_strOneLine[ind], ind);
     mWinApp->mMacroProcessor->Run(MAX_MACROS + ind);
     if (mWinApp->mMacroProcessor->GetKeepOneLineFocus())
       mWinApp->mMacroProcessor->SetFocusedWndWhenSavedStatus(m_editOneLine[ind].m_hWnd);
@@ -213,17 +245,29 @@ BOOL COneLineScript::PreTranslateMessage(MSG* pMsg)
     ctrlPressed = false;
   if (pMsg->message == VK_PRIOR || pMsg->message == VK_NEXT)
     return FALSE;
-  if (pMsg->message == WM_KEYDOWN && (pMsg->wParam == VK_DOWN ||pMsg->wParam == VK_UP)) {
-    if ((pMsg->wParam == VK_DOWN && mLineWithFocus < MAX_ONE_LINE_SCRIPTS - 1) ||
-      (pMsg->wParam == VK_UP && mLineWithFocus > 0)) {
+  if (pMsg->message == WM_KEYDOWN && (pMsg->wParam == VK_NEXT ||pMsg->wParam == VK_PRIOR)) {
+    if ((pMsg->wParam == VK_NEXT && mLineWithFocus < MAX_ONE_LINE_SCRIPTS - 1) ||
+      (pMsg->wParam == VK_PRIOR && mLineWithFocus > 0)) {
       edit = (CEdit *)GetDlgItem(mLineWithFocus + IDC_EDIT_ONE_LINE +
-        (pMsg->wParam == VK_UP ? -1 : 1));
+        (pMsg->wParam == VK_PRIOR ? -1 : 1));
       edit->SetFocus();
       edit->GetWindowText(text);
       length = text.GetLength();
       edit->SetSel(length, length);
     }
     pMsg->wParam = 0x00;
+  }
+  if (pMsg->message == WM_KEYDOWN && (pMsg->wParam == VK_UP || pMsg->wParam == VK_DOWN)) {
+    if (mWinApp->mMacroProcessor->TraverseHistory(mLineWithFocus,
+      pMsg->wParam == VK_UP ? 1 : -1) >= 0) {
+      m_strOneLine[mLineWithFocus] = 
+        mWinApp->mMacroProcessor->GetLineInHistory(mLineWithFocus);
+      UpdateData(false);
+      edit = (CEdit *)GetDlgItem(mLineWithFocus + IDC_EDIT_ONE_LINE);
+      length = m_strOneLine[mLineWithFocus].GetLength();
+      edit->SetSel(length, length);
+    }
+    return TRUE;
   }
   if (ctrlPressed && pMsg->message == WM_KEYDOWN && mLineWithFocus >= 0 &&
     mLineWithFocus < 10) {
@@ -259,6 +303,62 @@ void COneLineScript::Update()
   }
 }
 
+// Find a match by searching history, and replace the line with match if ` is in it
+void COneLineScript::HandleHistoryCompletion(CString &strMacro, CString &strCompletion, 
+  int &sel2, bool &setCompletion, int curLineNum)
+{
+  int i;
+  CString historyCmd, curCmd, lineCopy;
+  std::vector<std::string> cmds = mWinApp->mMacroProcessor->GetHistoryArray(curLineNum);
+  setCompletion = false;
+  bool completing = false;
+  
+  if (sel2 <= 0)
+    return;
+  
+  if (strMacro.GetAt(sel2 - 1) == '`') {
+    strMacro.Delete(sel2 - 1, 1);
+    completing = true;
+  }
+  lineCopy = strMacro;
+  lineCopy.TrimLeft();
+
+  if (!(lineCopy.GetAt(0) == '!' || lineCopy.GetAt(0) == '|'))
+    return;
+
+  curCmd = lineCopy.Right(lineCopy.GetLength() - 1);
+  curCmd.TrimRight();
+
+  // If no search key, just show help message for !, |, whichever is being used
+  if (curCmd.IsEmpty()) {
+    i = lineCopy.Find("!") == 0 ? 2 : 3;
+    strCompletion = mMessages[i];
+    setCompletion = true;
+    return;
+  }
+
+  // ! means find line in history that matches exactly from the start
+  // | means find line in history that contains substring
+  curCmd.MakeUpper();
+  for (i = 1; i < (int)cmds.size(); i++) {
+    historyCmd = cmds[i].data();
+    if ((lineCopy.GetAt(0) == '!' && historyCmd.MakeUpper().Find(curCmd) == 0)
+      || (lineCopy.GetAt(0) == '|' && historyCmd.MakeUpper().Find(curCmd) >= 0)) {
+      strCompletion = cmds[i].data();
+      setCompletion = true;
+      if (completing) {
+        strMacro = cmds[i].data();
+        sel2 = strMacro.GetLength();
+      }
+      break;
+    }
+  }
+  
+  if (!setCompletion) {
+    strCompletion = "";
+  }
+}
+
 // Process a character in a line
 void COneLineScript::OnEnChangeEditOneLine(UINT nID)
 {
@@ -266,14 +366,25 @@ void COneLineScript::OnEnChangeEditOneLine(UINT nID)
   bool setCompletions, completing;
   UpdateData(true);
   m_editOneLine[ind].GetSel(sel1, sel2);
-  CMacroEditer::HandleCompletionsAndIndent(m_strOneLine[ind], m_strCompletions, sel2,
-    setCompletions, completing, true, mLineForSignature, 0);
+  StopCyclingMessages();
+  CString lineCopy = m_strOneLine[ind];
+  lineCopy.TrimLeft();
+  if (lineCopy.Find("!") == 0 || lineCopy.Find("|") == 0) {
+    HandleHistoryCompletion(m_strOneLine[ind], m_strCompletions, sel2, setCompletions, 
+      ind);
+    completing = true;
+  } else {
+    CMacroEditer::HandleCompletionsAndIndent(m_strOneLine[ind], m_strCompletions, sel2,
+      setCompletions, completing, true, mLineForSignature, 0);
+  }
   if (setCompletions)
     SetDlgItemText(IDC_STAT_COMPLETIONS, m_strCompletions);
   if (completing) {
     UpdateData(false);
     m_editOneLine[ind].SetSel(sel2, sel2);
   }
+
+  mWinApp->mMacroProcessor->UpdateHistoryOnChange(m_strOneLine[ind], ind);
 }
 
 // Set Run to default when a line gets focus
@@ -305,4 +416,28 @@ void COneLineScript::OnEnKillfocusEditOneLine(UINT nID)
   SetDefID(45678);
 }
 
+void COneLineScript::StopCyclingMessages()
+{
+  if (mCycleMessages) {
+    mCycleMessages = false;
+    m_strCompletions = "";
+    UpdateData(FALSE);
+  }
+}
 
+void COneLineScript::OnTimer(UINT_PTR nIDEvent)
+{
+  double time = wallTime();
+  if (mCycleMessages && mNumMsgCycles <= MAX_MSG_CYCLES && 
+    time - mLastTime > MSG_CYCLE_TIME) {
+    mLastTime = time;
+    if (mNumMsgCycles == MAX_MSG_CYCLES)
+      mCurMessageInd = 0;
+    else
+      mCurMessageInd = (mCurMessageInd + 1) % NUM_ONE_LINE_SCRIPT_MSG;
+    mNumMsgCycles++;
+    m_strCompletions = mMessages[mCurMessageInd];
+    UpdateData(FALSE);
+  }
+  CBaseDlg::OnTimer(nIDEvent);
+}
