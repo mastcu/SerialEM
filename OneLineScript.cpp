@@ -303,7 +303,7 @@ void COneLineScript::Update()
   }
 }
 
-// Process a change in an edit control and do 'backtick' completion or list completions
+// Find a match by searching history, and replace the line with match if ` is in it
 void COneLineScript::HandleHistoryCompletion(CString &strMacro, CString &strCompletion, 
   int &sel2, bool &setCompletion, int curLineNum)
 {
