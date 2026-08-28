@@ -462,6 +462,8 @@ public:
   afx_msg void OnUpdateTSellipsesWhenShowAcquire(CCmdUI *pCmdUI);
   afx_msg void OnAntialiasDuringAcquire();
   afx_msg void OnUpdateAntialiasDuringAcquire(CCmdUI *pCmdUI);
+  afx_msg void OnSettingsReopenDlgs();
+  afx_msg void OnUpdateSettingsReopenDlgs(CCmdUI *pCmdUI);
 };
 
 /////////////////////////////////////////////////////////////////////////////

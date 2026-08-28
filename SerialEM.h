@@ -763,6 +763,21 @@ public:
   GetMember(BOOL, EnableMultiChanView);
   GetSetMember(int, MaxChannelBuffers);
   GetSetMember(int, CircleTypesInLDDefine);
+  GetSetMember(bool, ReopenDlgsFromExit);
+  GetSetMember(bool, ReopenNavigator);
+  GetSetMember(bool, ReopenScreenMeter);
+  GetSetMember(bool, ReopenDoseMeter);
+  GetSetMember(bool, ReopenMultiShotDlg);
+  GetSetMember(bool, ReopenStageMoveTool);
+  GetSetMember(bool, ReopenCtffindParamDlg);
+  GetSetMember(bool, ReopenVPPConditionSetup);
+  GetSetMember(bool, ReopenZbyGsetupDlg);
+  GetSetMember(bool, ReopenParallelTSDlg);
+  GetSetMember(bool, ReopenScreenShotDialog);
+  GetSetMember(bool, ReopenHoleFinderDlg);
+  GetSetMember(bool, ReopenAutoContouringDlg);
+  GetSetMember(bool, ReopenMultiGridDlg);
+  GetSetMember(bool, ReopenMultiCombinerDlg);
   CToolDlg **GetToolDlgs() { return &mToolDlgs[0]; };
   void SetEnableMultiChanView(BOOL inVal);
   afx_msg void OnWindowNewLocator();
@@ -1135,6 +1150,23 @@ private:
   int mNumChanWindowRows;       // The number of rows and columns of multi-channel display
   int mNumChanWindowCols;
   int mCircleTypesInLDDefine;   // Whether to draw true or circumscribing beam when defining areas
+
+  // flags for dialogs open when program exited, and can be reopened during startup
+  bool mReopenDlgsFromExit;
+  bool mReopenNavigator;
+  bool mReopenScreenMeter;
+  bool mReopenDoseMeter;
+  bool mReopenMultiShotDlg;
+  bool mReopenStageMoveTool;
+  bool mReopenCtffindParamDlg;
+  bool mReopenVPPConditionSetup;
+  bool mReopenZbyGsetupDlg;
+  bool mReopenParallelTSDlg;
+  bool mReopenScreenShotDialog;
+  bool mReopenHoleFinderDlg;
+  bool mReopenAutoContouringDlg;
+  bool mReopenMultiGridDlg;
+  bool mReopenMultiCombinerDlg;
 
 public:
   void UpdateAllEditers(void);

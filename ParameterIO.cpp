@@ -262,8 +262,8 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
     mWinApp->InitializeLDParams();
 
     while (retval == 0 && (err = ReadSuperParse(strLine, strItems, itemEmpty, itemInt,
-                                                itemDbl, itemFlt,MAX_TOKENS))
-           == 0) {
+      itemDbl, itemFlt, MAX_TOKENS))
+      == 0) {
       recognized = true;
       recognized15 = true;
       recognized2 = true;
@@ -290,7 +290,7 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
         cs->userFrameFractions.clear();
         cs->userSubframeFractions.clear();
         while ((err = ReadSuperParse(strLine, strItems, itemEmpty, itemInt, itemDbl,
-                                     itemFlt, MAX_TOKENS)) == 0) {
+          itemFlt, MAX_TOKENS)) == 0) {
           if (NAME_IS("EndControlSet"))
             break;
           if (NAME_IS("ControlSetName"))
@@ -401,8 +401,8 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
             cs->filtTypeOrPreset = itemInt[1];
           else if (NAME_IS("ChannelIndex")) {
             for (index = 0; index < MAX_STEM_CHANNELS; index++)
-              if (!strItems[index+1].IsEmpty())
-                cs->channelIndex[index] = itemInt[index+1];
+              if (!strItems[index + 1].IsEmpty())
+                cs->channelIndex[index] = itemInt[index + 1];
           } else if (NAME_IS("BoostMag")) {
             cs->boostMagOrHwBin = itemInt[1];
             cs->magAllShotsOrHwROI = itemInt[2];
@@ -537,19 +537,19 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
           AfxMessageBox(strCopy, MB_OK | MB_ICONINFORMATION);
         }
       } else if (NAME_IS("AutofocusEucenAbsParams")) {
-        mWinApp->mFocusManager->SetEucenAbsFocusParams(itemDbl[1], itemDbl[2], 
-        itemFlt[3], itemFlt[4], itemInt[5] != 0, itemInt[6] != 0);
+        mWinApp->mFocusManager->SetEucenAbsFocusParams(itemDbl[1], itemDbl[2],
+          itemFlt[3], itemFlt[4], itemInt[5] != 0, itemInt[6] != 0);
       } else if (NAME_IS("AssessMultiplePeaksInAlign") || NAME_IS("AutoZoom")) {
-      } 
+      }
 #define SET_TEST_SECT1
 #include "SettingsTests.h"
 #undef SET_TEST_SECT1
       else
         recognized = false;
-    
+
       if (recognized) {
-      
-      } 
+
+      }
 #define SET_TEST_SECT15
 #include "SettingsTests.h"
 #undef SET_TEST_SECT15
@@ -562,13 +562,13 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
 #define SET_TEST_SECT2
 #include "SettingsTests.h"
 #undef SET_TEST_SECT2
-        
+
       else if (NAME_IS("AutosaveNavigator")) {
         if (!itemInt[1])
           AfxMessageBox("It is now the default to autosave a Navigator file\n"
-          "periodically.  If you do not want Navigator files to be\n"
-          "saved automatically, turn this option off with the\n"
-          "Navigator - Autosave Nav File menu item.", MB_OK | MB_ICONINFORMATION);
+            "periodically.  If you do not want Navigator files to be\n"
+            "saved automatically, turn this option off with the\n"
+            "Navigator - Autosave Nav File menu item.", MB_OK | MB_ICONINFORMATION);
       } else if (NAME_IS("AutoBacklashNewMap")) {
         navHelper->SetAutoBacklashNewMap(itemInt[1]);
         navHelper->SetAutoBacklashMinField(itemFlt[2]);
@@ -576,11 +576,11 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
         navHelper->SetCollapseGroups(itemInt[1] != 0);
       } else if (NAME_IS("MultiShotParams")) {
         msParams->beamDiam = itemFlt[1];
-        msParams->spokeRad[0] = itemFlt[2]; 
-        msParams->numShots[0] =  itemInt[3];
-        msParams->doCenter =  itemInt[4];
-        msParams->doEarlyReturn =  itemInt[5];
-        msParams->numEarlyFrames =  itemInt[6];
+        msParams->spokeRad[0] = itemFlt[2];
+        msParams->numShots[0] = itemInt[3];
+        msParams->doCenter = itemInt[4];
+        msParams->doEarlyReturn = itemInt[5];
+        msParams->numEarlyFrames = itemInt[6];
         msParams->saveRecord = itemInt[7] != 0;
         msParams->extraDelay = itemFlt[8];
         msParams->useIllumArea = itemInt[9] != 0;
@@ -614,7 +614,7 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
           msParams->origMagOfArray[1] = itemInt[30];
           msParams->origMagOfCustom = itemInt[31];
         }
- 
+
       } else if (NAME_IS("MultiHexParams")) {
         msParams->doHexArray = itemInt[1] != 0;
         msParams->numHexRings = itemInt[2];
@@ -807,8 +807,8 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
       } else if (NAME_IS("NavAcquireParams")) {
         index = itemInt[1];
         B3DCLAMP(index, 0, 1);
-        ReadNavAcqParams(mWinApp->GetNavAcqParams(index), 
-          navHelper->GetAcqActions(index), 
+        ReadNavAcqParams(mWinApp->GetNavAcqParams(index),
+          navHelper->GetAcqActions(index),
           navHelper->GetAcqActCurrentOrder(index), unrecognized);
 
       } else if (NAME_IS("NavAlignParams")) {
@@ -826,12 +826,11 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
         if (!itemEmpty[10])
           navAliParm->applyInteractive = itemInt[10] != 0;
         if (!itemEmpty[11]) {
-          navAliParm->findAndCenterHole = itemInt[11] !=0;
+          navAliParm->findAndCenterHole = itemInt[11] != 0;
           navAliParm->holeCenteringAcquire = itemInt[12];
           navAliParm->cropHoleSpacings = itemFlt[13];
         }
-      }
-      else if (NAME_IS("NavAliMapLabel")) {
+      } else if (NAME_IS("NavAliMapLabel")) {
         StripItems(strLine, 1, navAliParm->templateLabel);
 
       } else if (NAME_IS("MarkerShift")) {
@@ -1054,7 +1053,7 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
         mWinApp->mProcessImage->SetCtffindOnClick(itemInt[1] != 0);
         mWinApp->mProcessImage->SetSlowerCtfFit(itemInt[2]);
         mWinApp->mProcessImage->SetExtraCtfStats(itemInt[3]);
-        mWinApp->mProcessImage->SetDrawExtraCtfRings(itemInt[4]); 
+        mWinApp->mProcessImage->SetDrawExtraCtfRings(itemInt[4]);
         mWinApp->mProcessImage->SetCtfFitFocusRangeFac(itemFlt[5]);
         if (!itemEmpty[6]) {
           mWinApp->mProcessImage->SetCtfFindPhaseOnClick(itemInt[6] != 0);
@@ -1078,7 +1077,7 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
         if (!itemEmpty[8])
           mWinApp->mRemoteControl.SetDutyPercentIncrementIndex(itemInt[8]);
 
-      // Tool dialog placements and states now work when reading settings
+        // Tool dialog placements and states now work when reading settings
       } else if (NAME_IS("ToolDialogStates") || NAME_IS("ToolDialogStates2")) {
         index = 0;
         mWinApp->SetAbsoluteDlgIndex(NAME_IS("ToolDialogStates2"));
@@ -1089,10 +1088,10 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
       } else if (NAME_IS("ToolDialogPlacement")) {
         index = itemInt[1];
         if (index < 0 || index >= MAX_TOOL_DLGS || strItems[5].IsEmpty()) {
-            AfxMessageBox("Error in panel placement line in settings file "
-              + strFileName + " :\n" + strLine, MB_EXCLAME);
+          AfxMessageBox("Error in panel placement line in settings file "
+            + strFileName + " :\n" + strLine, MB_EXCLAME);
         } else {
-          ConstrainWindowPlacement(&itemInt[2], &itemInt[3], &itemInt[4], &itemInt[5], 
+          ConstrainWindowPlacement(&itemInt[2], &itemInt[3], &itemInt[4], &itemInt[5],
             !startingProg);
           dlgPlacements[index].left = itemInt[2];
           dlgPlacements[index].top = itemInt[3];
@@ -1120,8 +1119,7 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
         for (index = 0; index < MAX_STEM_CHANNELS; index++)
           if (!itemEmpty[index])
             chanInMultiView[index] = itemInt[index + 1];
-      }
-      else
+      } else
         recognized2 = false;
 
       if (recognized || recognized2) {
@@ -1135,7 +1133,7 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
         mWinApp->GetWindowPlacement(&winPlace);
         winPlace.showCmd = itemInt[1];
         if (err = ReadSuperParse(strLine, strItems, itemEmpty, itemInt, itemDbl, itemFlt,
-                                 MAX_TOKENS)) 
+          MAX_TOKENS))
           break;
         winPlace.ptMaxPosition.x = itemInt[0];
         winPlace.ptMaxPosition.y = itemInt[1];
@@ -1152,57 +1150,71 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
 
       } else if (strItems[0].Find("Placement") == strItems[0].GetLength() - 9) {
         index = NAME_IS("OneEditerPlacement") ? 1 : 0;
-        if (strItems[index + 10].IsEmpty() || 
+        if (strItems[index + 10].IsEmpty() ||
           (index && (itemInt[1] < 0 || itemInt[1] >= MAX_MACROS))) {
           if (index && itemInt[1] < 0)
             AfxMessageBox("Error in window placement line in settings file "
               + strFileName + " :\n" + strLine, MB_EXCLAME);
         } else {
           place = &winPlace;
-          if (NAME_IS("NavigatorPlacement"))
+          if (NAME_IS("NavigatorPlacement")) {
             place = mWinApp->GetNavPlacement();
-          else if (NAME_IS("MeterPlacement"))
+            mWinApp->SetReopenNavigator(itemInt[1] != 0);
+          } else if (NAME_IS("MeterPlacement")) {
             place = mWinApp->mScopeStatus.GetMeterPlacement();
-          else if (NAME_IS("DosePlacement"))
+            mWinApp->SetReopenScreenMeter(itemInt[1] != 0);
+          } else if (NAME_IS("DosePlacement")) {
             place = mWinApp->mScopeStatus.GetDosePlacement();
-          else if (NAME_IS("RotAlignPlacement"))
+            mWinApp->SetReopenDoseMeter(itemInt[1] != 0);
+          } else if (NAME_IS("RotAlignPlacement")) {
             place = navHelper->GetRotAlignPlacement();
-          else if (NAME_IS("MultiShotPlacement"))
+          } else if (NAME_IS("MultiShotPlacement")) {
             place = navHelper->GetMultiShotPlacement(false);
-          else if (NAME_IS("ParallelTSPlacement"))
+            mWinApp->SetReopenMultiShotDlg(itemInt[1] != 0);
+          } else if (NAME_IS("ParallelTSPlacement")) {
             place = navHelper->GetParallelTSPlacement();
-          else if (NAME_IS("HoleFinderPlacement"))
+            mWinApp->SetReopenParallelTSDlg(itemInt[1] != 0);
+          } else if (NAME_IS("HoleFinderPlacement")) {
             place = navHelper->GetHoleFinderPlacement();
-          else if (NAME_IS("MultiCombinerPlacement"))
+            mWinApp->SetReopenHoleFinderDlg(itemInt[1] != 0);
+          } else if (NAME_IS("MultiCombinerPlacement")) {
             place = navHelper->GetMultiCombinerPlacement();
-          else if (NAME_IS("AutoContPlacement"))
+            mWinApp->SetReopenMultiCombinerDlg(itemInt[1] != 0);
+          } else if (NAME_IS("AutoContPlacement")) {
             place = navHelper->GetAutoContDlgPlacement();
-          else if (NAME_IS("MultiGridPlacement"))
+            mWinApp->SetReopenAutoContouringDlg(itemInt[1] != 0);
+          } else if (NAME_IS("MultiGridPlacement")) {
             place = navHelper->GetMultiGridPlacement();
-          else if (NAME_IS("NavAcqPlacement"))
+            mWinApp->SetReopenMultiGridDlg(itemInt[1] != 0);
+          } else if (NAME_IS("NavAcqPlacement")) {
             place = navHelper->GetAcquireDlgPlacement(false);
-          else if (NAME_IS("CtffindPlacement"))
+          } else if (NAME_IS("CtffindPlacement")) {
             place = mWinApp->mProcessImage->GetCtffindPlacement();
-          else if (NAME_IS("AutocenPlacement"))
+            mWinApp->SetReopenCtffindParamDlg(itemInt[1] != 0);
+          } else if (NAME_IS("AutocenPlacement")) {
             place = mWinApp->mMultiTSTasks->GetAutocenPlacement();
-          else if (NAME_IS("VppCondPlacement"))
+          } else if (NAME_IS("VppCondPlacement")) {
             place = mWinApp->mMultiTSTasks->GetConditionPlacement();
-          else if (NAME_IS("ZbyGSetupPlacement"))
+            mWinApp->SetReopenVPPConditionSetup(itemInt[1] != 0);
+          } else if (NAME_IS("ZbyGSetupPlacement")) {
             place = mWinApp->mParticleTasks->GetZbyGPlacement();
-          else if (NAME_IS("SnapshotPlacement"))
+            mWinApp->SetReopenZbyGsetupDlg(itemInt[1] != 0);
+          } else if (NAME_IS("SnapshotPlacement")) {
             place = mWinApp->GetScreenShotPlacement();
-          else if (NAME_IS("SecondaryLogPlacement"))
+            mWinApp->SetReopenScreenShotDialog(itemInt[1] != 0);
+          } else if (NAME_IS("SecondaryLogPlacement")) {
             place = mWinApp->GetSecondaryLogPlacement();
-          else if (NAME_IS("StatePlacement")) {
+          } else if (NAME_IS("StatePlacement")) {
             mWinApp->SetOpenStateWithNav(itemInt[1] != 0);
             place = navHelper->GetStatePlacement();
-          } else if (NAME_IS("ReadDlgPlacement"))
+          } else if (NAME_IS("ReadDlgPlacement")) {
             place = mDocWnd->GetReadDlgPlacement();
-          else if (NAME_IS("StageToolPlacement"))
+          } else if (NAME_IS("StageToolPlacement")) {
             place = mWinApp->GetStageToolPlacement();
-          else if (NAME_IS("MacroEditerPlacement"))
+            mWinApp->SetReopenStageMoveTool(itemInt[1] != 0);
+          } else if (NAME_IS("MacroEditerPlacement")) {
             place = mWinApp->mMacroProcessor->GetEditerPlacement();
-          else if (NAME_IS("OneEditerPlacement")) {
+          } else if (NAME_IS("OneEditerPlacement")) {
             place = mWinApp->mMacroProcessor->GetEditerPlacement() + itemInt[1];
             mWinApp->SetReopenMacroEditor(itemInt[1], itemInt[2] != 0);
           } else if (NAME_IS("OneLinePlacement")) {
@@ -1236,8 +1248,7 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
             SET_PLACEMENT("RotAlignPlacement", navHelper->mRotAlignDlg);
             SET_PLACEMENT("LogPlacement", mWinApp->mLogWindow);
             SET_PLACEMENT("MultiShotPlacement", navHelper->mMultiShotDlg);
-            SET_PLACEMENT("MultiCombinerPlacement",
-              navHelper->mMultiCombinerDlg);
+            SET_PLACEMENT("MultiCombinerPlacement", navHelper->mMultiCombinerDlg);
             SET_PLACEMENT("MultiGridPlacement", navHelper->mMultiGridDlg);
             SET_PLACEMENT("CtffindPlacement", mWinApp->mProcessImage->mCtffindParamDlg);
             SET_PLACEMENT("AutocenPlacement", mWinApp->mAutocenDlg);
@@ -2391,30 +2402,40 @@ void CParameterIO::WriteSettings(CString strFileName)
     WritePlacement("NavigatorPlacement", mWinApp->mNavigator ? 1 : 0, navPlace);
 
     // Write screen meter placement
-    WritePlacement("MeterPlacement", 0, meterPlace);
-    WritePlacement("DosePlacement", 0, dosePlace);
+    WritePlacement("MeterPlacement", mWinApp->mScopeStatus.mScreenMeter ? 1 : 0, 
+      meterPlace);
+    WritePlacement("DosePlacement", mWinApp->mScopeStatus.mDoseMeter ? 1 : 0, dosePlace);
     WritePlacement("StatePlacement", (mWinApp->GetOpenStateWithNav() || 
       (mWinApp->mNavigator && navHelper->mStateDlg)) ? 1 : 0, statePlace);
     WritePlacement("RotAlignPlacement", 0, rotAlignPlace);
-    WritePlacement("MultiShotPlacement", 0, multiShotPlace);
+    WritePlacement("MultiShotPlacement", navHelper->mMultiShotDlg ? 1 : 0, multiShotPlace);
     WritePlacement("ReadDlgPlacement", 0, readPlace);
-    WritePlacement("StageToolPlacement", 0, stageToolPlace);
-    WritePlacement("CtffindPlacement", 0, ctffindPlace);
+    WritePlacement("StageToolPlacement", mWinApp->mStageMoveTool ? 1 : 0, stageToolPlace);
+    WritePlacement("CtffindPlacement", mWinApp->mProcessImage->mCtffindParamDlg ? 1 : 0,
+      ctffindPlace);
     WritePlacement("AutocenPlacement", 0, autocenPlace);
-    WritePlacement("VppCondPlacement", 0, vppPlace);
-    WritePlacement("ZbyGSetupPlacement", 0, zbgPlace);
+    WritePlacement("VppCondPlacement", mWinApp->mVPPConditionSetup ? 1 : 0, vppPlace);
+    WritePlacement("ZbyGSetupPlacement", mWinApp->mParticleTasks->mZbyGsetupDlg ? 1 : 0, 
+      zbgPlace);
     WritePlacement("NavAcqPlacement", 0, navAcqPlace);
-    WritePlacement("ParallelTSPlacement", 0, parallelTSPlace);
-    WritePlacement("SnapshotPlacement", 0, mWinApp->GetScreenShotPlacement());
-    WritePlacement("HoleFinderPlacement", 0, 
+    
+    // Parallel TS Dlg is closed before, and reopen flag is already set if it was open
+    WritePlacement("ParallelTSPlacement", mWinApp->GetReopenParallelTSDlg() ? 1 : 0, 
+      parallelTSPlace);
+    WritePlacement("SnapshotPlacement", mWinApp->mScreenShotDialog ? 1 : 0,
+      mWinApp->GetScreenShotPlacement());
+    WritePlacement("HoleFinderPlacement", navHelper->mHoleFinderDlg->IsOpen() ? 1 : 0,
       navHelper->GetHoleFinderPlacement());
-    WritePlacement("MultiCombinerPlacement", 0, 
+    WritePlacement("MultiCombinerPlacement", navHelper->mMultiCombinerDlg ? 1 : 0,
       navHelper->GetMultiCombinerPlacement());
-    WritePlacement("AutoContPlacement", 0, 
+    WritePlacement("AutoContPlacement", navHelper->mAutoContouringDlg->IsOpen() ? 1 : 0,
       navHelper->GetAutoContDlgPlacement());
-    WritePlacement("MultiGridPlacement", 0, navHelper->GetMultiGridPlacement());
+
+    // Multi grid Dlg is closed before, and reopen flag is already set if it was open
+    WritePlacement("MultiGridPlacement", mWinApp->GetReopenMultiGridDlg() ? 1 : 0,
+      navHelper->GetMultiGridPlacement());
     WritePlacement("MacroToolPlacement", mWinApp->mMacroToolbar ? 1 : 0, toolPlace);
-    WritePlacement("OneLinePlacement", mWinApp->mMacroProcessor->mOneLineScript ? 1 : 0, 
+    WritePlacement("OneLinePlacement", mWinApp->mMacroProcessor->mOneLineScript ? 1 : 0,
       oneLinePlace);
     for (i = 0; i < MAX_MACROS; i++) {
       oneState.Format("OneEditerPlacement %d", i);

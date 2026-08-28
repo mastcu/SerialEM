@@ -3392,6 +3392,7 @@
 #define ID_SCRIPT_CLEARONELINEHISTORY   33644
 #define ID_ONELINESCRIPTOPTIONS_SETHISTORYLENGTH 33645
 #define ID_SCRIPT_SETHISTORYLENGTH      33646
+#define ID_SETTINGS_REOPEN              33647
 
 // Next default values for new objects
 // 
@@ -3399,7 +3400,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        305
-#define _APS_NEXT_COMMAND_VALUE         33647
+#define _APS_NEXT_COMMAND_VALUE         33648
 #define _APS_NEXT_CONTROL_VALUE         3782
 #define _APS_NEXT_SYMED_VALUE           104
 #endif

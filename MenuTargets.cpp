@@ -553,6 +553,8 @@ ON_COMMAND(ID_NAVIGATOR_TSELLIPSESWHENSHOWACQUIRE, OnTSellipsesWhenShowAcquire)
 ON_UPDATE_COMMAND_UI(ID_NAVIGATOR_TSELLIPSESWHENSHOWACQUIRE, OnUpdateTSellipsesWhenShowAcquire)
 ON_COMMAND(ID_OPTIONS_ANTIALIASDURINGACQUIRE, OnAntialiasDuringAcquire)
 ON_UPDATE_COMMAND_UI(ID_OPTIONS_ANTIALIASDURINGACQUIRE, OnUpdateAntialiasDuringAcquire)
+ON_COMMAND(ID_SETTINGS_REOPEN, OnSettingsReopenDlgs)
+ON_UPDATE_COMMAND_UI(ID_SETTINGS_REOPEN, OnUpdateSettingsReopenDlgs)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -625,6 +627,9 @@ void CMenuTargets::OnTasksNavigator()
     mNavigator->LoadNavFile(true, false);
   mWinApp->RestoreViewFocus();
   mWinApp->SetNavOrLogHadFocus(1);
+  if (mWinApp->GetOpenStateWithNav()) {
+    mNavHelper->OpenStateDialog();
+  }
 }
 
 // External call to get the Navigator open
@@ -944,7 +949,6 @@ void CMenuTargets::OnAntialiasDuringAcquire()
   mWinApp->mBufferManager->SetAntialias(mWinApp->mBufferManager->GetAntialias() == 0 ? 1 
     : 0);
 }
-
 
 void CMenuTargets::OnUpdateAntialiasDuringAcquire(CCmdUI *pCmdUI)
 {
@@ -3594,6 +3598,17 @@ void CMenuTargets::OnCalibrateComaVsIS()
 void CMenuTargets::OnSettingsSetProperty()
 {
   mWinApp->mParamIO->UserSetProperty();
+}
+
+void CMenuTargets::OnSettingsReopenDlgs()
+{
+  mWinApp->SetReopenDlgsFromExit(!mWinApp->GetReopenDlgsFromExit());
+}
+
+void CMenuTargets::OnUpdateSettingsReopenDlgs(CCmdUI *pCmdUI)
+{
+  pCmdUI->SetCheck(mWinApp->GetReopenDlgsFromExit() ? 1 : 0);
+  pCmdUI->Enable(!mWinApp->DoingTasks());
 }
 
 void CMenuTargets::OnExternalTool(UINT nID)

@@ -7,8 +7,7 @@
 //
 // Generated from the TEXTINCLUDE 2 resource.
 //
-#include "afxres.h"
-
+#include "afxres.h"
 /////////////////////////////////////////////////////////////////////////////
 #undef APSTUDIO_READONLY_SYMBOLS
 
@@ -207,6 +206,7 @@ BEGIN
             MENUITEM "&Skip Beam Shift in TS",      ID_SPECIAL_SKIP_BEAM_SHIFT_IN_TS
             MENUITEM "&Piezo for LD Axis Shift",    ID_SPECIAL_PIEZO_FOR_LD_AXIS_SHIFT
         END
+        MENUITEM "Reope&n Dialogs On Startup",  ID_SETTINGS_REOPEN
         MENUITEM "Set E&mail Address",          ID_TILTSERIES_SETADDRESS
         MENUITEM "Set a &Property",             ID_SETTINGS_SETAPROPERTY
         MENUITEM "&Basic Mode",                 ID_SETTINGS_BASICMODE
@@ -6147,6 +6147,7 @@ BEGIN
     ID_SCRIPT_SHOWONELINEHISTORY 
                             "Print history for each one line script to the log"
     ID_SCRIPT_CLEARONELINEHISTORY "Clear history of one line scripts"
+    ID_SETTINGS_REOPEN      "When the program starts, reopens most non-modal dialogs that were open when the program was last exited"
 END
 
 STRINGTABLE
@@ -8725,8 +8726,7 @@ LANGUAGE 9, 1
 #include "res\SerialEM.rc2"  // non-Microsoft Visual C++ edited resources
 #include "afxres.rc"         // Standard components
 #include "XFolderDialog\XFolderDialog.rc"
-#endif
-
+#endif
 /////////////////////////////////////////////////////////////////////////////
 #endif    // not APSTUDIO_INVOKED
 

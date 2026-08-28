@@ -803,7 +803,22 @@ CSerialEMApp::CSerialEMApp()
   mReopenMacroToolbar = false;
   for (i = 0; i <= MAX_MACROS; i++)
     mReopenMacroEditor[i] = false;
-  mOpenStateWithNav = true;
+  mOpenStateWithNav = false;
+  mReopenDlgsFromExit = false;
+  mReopenNavigator = false;
+  mReopenScreenMeter = false;
+  mReopenDoseMeter = false;
+  mReopenMultiShotDlg = false;
+  mReopenStageMoveTool = false;
+  mReopenCtffindParamDlg = false;
+  mReopenVPPConditionSetup = false;
+  mReopenZbyGsetupDlg = false;
+  mReopenParallelTSDlg = false;
+  mReopenScreenShotDialog = false;
+  mReopenHoleFinderDlg = false;
+  mReopenAutoContouringDlg = false;
+  mReopenMultiGridDlg = false;
+  mReopenMultiCombinerDlg = false;
   mSkipGainRefWarning = false;
   mTestGainFactors = false;
   mDeferBufWinUpdates = false;
@@ -1818,6 +1833,37 @@ BOOL CSerialEMApp::InitInstance()
       }
     }
     AppendToLog(message);
+  }
+  
+  if (mReopenDlgsFromExit) {
+    if (GetReopenNavigator()) 
+      mMenuTargets.OpenNavigatorIfClosed();
+    if (GetReopenScreenMeter())
+      mScopeStatus.OnButfloat();
+    if (GetReopenDoseMeter()) 
+      mScopeStatus.OnButdose();
+    if (GetReopenMultiShotDlg()) 
+      mNavHelper->OpenMultishotDlg();
+    if (GetReopenStageMoveTool()) 
+      OpenStageMoveTool();
+    if (GetReopenCtffindParamDlg())
+      mProcessImage->OnProcessSetCtffindOptions();
+    if (GetReopenVPPConditionSetup())
+      mMultiTSTasks->SetupVPPConditioning();
+    if (GetReopenZbyGsetupDlg())
+      mParticleTasks->OpenZbyGDialog();
+    if (GetReopenParallelTSDlg())
+      mNavHelper->OpenParallelTS();
+    if (GetReopenScreenShotDialog())
+      OpenScreenShotDlg();
+    if (GetReopenHoleFinderDlg())
+      mNavHelper->OpenHoleFinder();
+    if (GetReopenAutoContouringDlg())
+      mNavHelper->OpenAutoContouring(false);
+    if (GetReopenMultiGridDlg())
+      mNavHelper->OpenMultiGrid();
+    if (GetReopenMultiCombinerDlg())
+      mNavHelper->OpenMultiCombiner();
   }
 
   // Manage menu a bit

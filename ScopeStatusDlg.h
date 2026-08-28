@@ -89,9 +89,7 @@ protected:
 	// Generated message map functions
 	//{{AFX_MSG(CScopeStatusDlg)
 	virtual BOOL OnInitDialog();
-	afx_msg void OnButfloat();
   afx_msg void OnPaint();
-	afx_msg void OnButdose();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 
@@ -176,6 +174,8 @@ public:
   CStatic m_statApertures;
   CStatic m_statAperLabel;
   CString m_strApertures;
+  afx_msg void OnButfloat();
+  afx_msg void OnButdose();
 };
 
 //{{AFX_INSERT_LOCATION}}

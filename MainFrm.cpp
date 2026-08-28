@@ -458,7 +458,8 @@ void CMainFrame::DoClose(bool afterScript)
       mWinApp->mAutocenDlg->RestoreScopeState();
 
     //Close Parallel TS Dialog because this may be preventing changes to low dose mode
-    if (mWinApp->mNavHelper->mParallelTSDlg) {
+    mWinApp->SetReopenParallelTSDlg(mWinApp->mNavHelper->mParallelTSDlg->IsOpen());
+    if (mWinApp->mNavHelper->mParallelTSDlg->IsOpen()) {
       mWinApp->mNavHelper->mParallelTSDlg->CloseWindow();
     }
 
@@ -480,6 +481,7 @@ void CMainFrame::DoClose(bool afterScript)
         mWinApp->mExternalTools->CloseAllGraphs();
     }
 
+    mWinApp->SetReopenMultiGridDlg(mWinApp->mNavHelper->mMultiGridDlg != NULL);
     if (mWinApp->mNavHelper->mMultiGridDlg)
       mWinApp->mNavHelper->mMultiGridDlg->CloseWindow();
     if (mWinApp->mDocWnd->SaveSettingsOnExit() ||
