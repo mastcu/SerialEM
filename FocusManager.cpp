@@ -289,9 +289,10 @@ void CFocusManager::OnUpdateFocusDriftprotection(CCmdUI* pCmdUI)
 
 void CFocusManager::OnFocusSetDddMinBinning()
 {
-  if (!KGetOneInt("Images from direct detectors will be binned and/or filter parameters"
-    " scaled", "to achieve the same effect as having images with this total amount of "
-    "binning:",mDDDminBinning))
+  if (!KGetOneInt("Images from direct detectors and other cameras with the "
+    "UseMinDDDFocusBinning property set will be binned",
+    "and/or filter parameters scaled to achieve the same effect as having images with "
+    "this total amount of binning:", mDDDminBinning))
     return;
   B3DCLAMP(mDDDminBinning, 1, 4);
 }
