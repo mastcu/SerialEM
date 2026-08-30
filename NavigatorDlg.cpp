@@ -2138,6 +2138,10 @@ void CNavigatorDlg::NewFileRangeNextTask(int synchronous)
           mFRangeMontInds.push_back(item->mMontParamIndex);
         }
       }
+    } else if (mFileRangeForMultiGrid && !item->IsPolygon()) {
+      PrintfToLog("WARNING: Item # %d (%s) is marked for Acquire but is not a polygon;"
+        " turning off acquire for it", ind + 1, (LPCTSTR)item->mLabel);
+      item->mAcquire = false;
     }
   } else if (mFRangeAllOn && item->mAcquire) {
     mHelper->EndAcquireOrNewFile(item);
