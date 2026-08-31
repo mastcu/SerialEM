@@ -670,6 +670,7 @@ private:
   int mParTSSetupGroupID;        // Group ID if parallel TS targets being defined
   int mParTSRefiningISMag;       // Index of higher mag (only) when refining IS targets
   BOOL mSkipLDBlankInAcquire;    // Flag to skip the blanking between shots during Acquire
+  float mIllumAreaScaleValues[2]; // Values to multiply then add to displayed IA beam size
 
 public:
   void PrepareToReimageMap(CMapDrawItem * item, MontParam * param, ControlSet * conSet,
@@ -890,5 +891,7 @@ public:
   int CenterAddedPointInHole(EMimageBuffer* imBuf, float &inX, float &inY, CString &errStr);
   int FillPolygonWithMultiShot(CMapDrawItem *polyItem, FloatVec &ISX,
     FloatVec &ISY, CString &errStr, float cenX = 0.f, float cenY = 0.f);
+  void SetIllumAreaScaleForDisplay(float scale, float constant);
+  void GetIllumAreaScaleForDisplay(float &scale, float &constant);
 };
 

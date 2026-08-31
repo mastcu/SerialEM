@@ -4365,9 +4365,15 @@ MapItemArray *CNavigatorDlg::GetMapDrawItems(
         if (((drawParTSEllipses && parTsOpt->useIAorBeamSize) ||
           (!drawParTSEllipses && msParams->useIllumArea)) && asIfLowDose) {
           if (mWinApp->mScope->GetUseIllumAreaForC2()) {
-            beamRadius = (float)(50. *
+            float scaleIA, constantIA;
+            mWinApp->mNavHelper->GetIllumAreaScaleForDisplay(scaleIA, constantIA);
+            beamRadius = (float)((50. * scaleIA *
               mWinApp->mScope->IntensityToIllumArea(ldp[RECORD_CONSET].intensity,
-                ldp[RECORD_CONSET].spotSize, ldp[RECORD_CONSET].probeMode) / pixel);
+                ldp[RECORD_CONSET].spotSize, ldp[RECORD_CONSET].probeMode) + constantIA) 
+              / pixel);
+
+            // Account for outrageously large negative constantIA, clamp to 0
+            beamRadius = B3DMAX(0, beamRadius); 
           } else if (!mWinApp->mBeamAssessor->LDRecordBeamSizeFromCal(&ptX)) {
             beamRadius = 0.5f * ptX / pixel;
           }
