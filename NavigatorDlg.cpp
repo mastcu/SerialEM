@@ -12478,6 +12478,12 @@ int CNavigatorDlg::OpenFileIfNeeded(CMapDrawItem * item, bool stateOnly)
 
       // It is going to protect those stores, so we need to clean out here and not in TSC
       mDocWnd->EndStoreProtection();
+      if (mDocWnd->GetNumStores() + item->mNumIStargets > MAX_STORES) {
+        SEMMessageBox("There are two many parallel TS targets to open a file for each"
+          " one");
+        return 1;
+      }
+
       if (mWinApp->mParticleTasks->OpenSeparateMultiFiles(*namep, true)) {
         mDocWnd->RestoreCurrentFile();
         return 1;
