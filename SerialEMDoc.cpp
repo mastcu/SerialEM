@@ -1821,6 +1821,8 @@ void CSerialEMDoc::ComposeTitlebarLine(void)
     indStart = B3DMAX(0, mCurrentStore + 1 - limit);
     title = "";
     for (int ind = indStart; ind < B3DMIN(mNumStores, indStart + limit); ind++) {
+      if (!mStoreList[ind].store)
+        continue;
       UtilSplitPath(mStoreList[ind].store->getName(), dir, filename);
       dir.Format("%s%s%d: ", ind > 0 ? "   " : "", ind == mCurrentStore ? "[" : "",
         ind + 1);
