@@ -4,7 +4,7 @@
   <HEAD>
     <TITLE>Hiding and Disabling Menu and Dialog Items</TITLE>
     <META HTTP-EQUIV="Content-Type" Content="text/html; charset=Windows-1252">
-    <style type="text/css"> <!-- BODY { font-family:"Arial" } TD { font-size:16 }
+    <style type="text/css"> <!-- BODY { font-family:"Arial" } TD { font-size:16 } 
   --></style>
   </HEAD>
   <BODY BGCOLOR="#ffffff" TEXT="#000000">
@@ -12,55 +12,55 @@
     <P><A NAME="about_hide_disable"></A><B><FONT size="3">Hiding and Disabling
     Menu and Dialog Items</FONT></B></P>
     <P>
-      This page describes the mechanism for hiding or disabling menu items and dialog
-      elements in SerialEM.&nbsp; This can be done either to prevent users from doing
-      some operations, or to simplify the interface for some users.&nbsp; There can be
-      two different files, corresponding to these two main purposes, listing items to
-      be hidden or disabled.&nbsp; One kind of file modifies the interface
-      unconditionally during the run of the program; it is specified with the property
-      entry &#39;DisableOrHideFile&#39; followed by the full path of the file, which can be
-      anywhere.&nbsp; The other kind of file defines a basic mode for the interface
+      This page describes the mechanism for hiding or disabling menu items and dialog 
+      elements in SerialEM.&nbsp; This can be done either to prevent users from doing 
+      some operations, or to simplify the interface for some users.&nbsp; There can be 
+      two different files, corresponding to these two main purposes, listing items to 
+      be hidden or disabled.&nbsp; One kind of file modifies the interface 
+      unconditionally during the run of the program; it is specified with the property 
+      entry &#39;DisableOrHideFile&#39; followed by the full path of the file, which can be 
+      anywhere.&nbsp; The other kind of file defines a basic mode for the interface 
       that can be toggled with the <a href="menu_settings.htm#hid_settings_basicmode">
-      Basic Mode</a> command in the Settings menu.&nbsp; By default, the program will
-      look for such a file, named &#39;SEMbasicModeItems.txt&#39; in the system directory
-      where the properties and calibration files reside.&nbsp; The property
-      &#39;BasicModeDisableHideFile&#39; can be entered with the full path to an alternative
+      Basic Mode</a> command in the Settings menu.&nbsp; By default, the program will 
+      look for such a file, named &#39;SEMbasicModeItems.txt&#39; in the system directory 
+      where the properties and calibration files reside.&nbsp; The property 
+      &#39;BasicModeDisableHideFile&#39; can be entered with the full path to an alternative 
       file, which can be anywhere and named anything.</P>
     <P>
-      Before you add a &#39;DisableOrHideFile&#39; entry that makes settings unavailable, be
-      sure that the settings files being used have good values for those settings,
+      Before you add a &#39;DisableOrHideFile&#39; entry that makes settings unavailable, be 
+      sure that the settings files being used have good values for those settings, 
       since it will become impossible for users to fix a bad value.</P>
     <P>
-      Each line in one of these files consists of two entries: an initial value of 1
-      or 2 to indicate whether the item should be disabled or hidden (or a negative
-      value for setting the open/closed state of a control panel), and a unique
-      identifier for the item.&nbsp; The first table below lists items for which the
-      identifier is a string that is defined in the program; when using one of these,
-      you need to copy the exact string shown.&nbsp; However, any item in the
-      program&#39;s menus can be hidden simply by entering its numeric ID as the
-      identifier for that item, so the second table below lists these IDs for all menu
-      items.&nbsp; That table also shows the menu strings; these are not required in
-      the file, but you should copy enough of the string so that you know what the
+      Each line in one of these files consists of two entries: an initial value of 1 
+      or 2 to indicate whether the item should be disabled or hidden (or a negative 
+      value for setting the open/closed state of a control panel), and a unique 
+      identifier for the item.&nbsp; The first table below lists items for which the 
+      identifier is a string that is defined in the program; when using one of these, 
+      you need to copy the exact string shown.&nbsp; However, any item in the 
+      program&#39;s menus can be hidden simply by entering its numeric ID as the 
+      identifier for that item, so the second table below lists these IDs for all menu 
+      items.&nbsp; That table also shows the menu strings; these are not required in 
+      the file, but you should copy enough of the string so that you know what the 
       item is afterwards.<P>
-      These files can also have blank lines and comment lines with a # as the first
-      character.&nbsp; A special line can be included to make the program skip the rest of
+      These files can also have blank lines and comment lines with a # as the first 
+      character.&nbsp; A special line can be included to make the program skip the rest of 
         the file if its version is too low:<br />
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
         EndIfVersionBelow ######<br />
         The integer version '#####' is 10000 times the first digit, plus
             100 times the release number, plus the update value; thus use 40100 to skip
-            properties not defined in version 4.0.&nbsp; More than one entry is allowed;
+            properties not defined in version 4.0.&nbsp; More than one entry is allowed; 
            the one for the earlier version should come before the later version.
         <P>
-          For a basic mode file (but not a general hide/disable file entered wih
-          &#39;DisableOrHideFile&#39;), control panel states can be set with entries that start
+          For a basic mode file (but not a general hide/disable file entered wih 
+          &#39;DisableOrHideFile&#39;), control panel states can be set with entries that start 
           with negative numbers.&nbsp; These numbers are the negative of:&nbsp;<br />
            &nbsp;&nbsp;&nbsp;
-           1 + (1 for main panel open) + (2 for options open) + (4 to float if docked) + (8 to dock
+           1 + (1 for main panel open) + (2 for options open) + (4 to float if docked) + (8 to dock 
           if floated)<br />
 
         <P>
-          The panel is left in its current floated or docked state unless the number
+          The panel is left in its current floated or docked state unless the number 
           includes a specific bit to float or dock it.&nbsp; Thus, meaningful values are:<p>-1 to close<br />
          -2 to have only main section open<br />
          -4 to open fully<br />
@@ -72,32 +72,32 @@
          -12 to open fully and dock<br />
       </p>
     <p>Guenter Resch has constructed a web page at <a href="https://www.nexperion.net/basicmodefile">
-          https://www.nexperion.net/basicmodefile</a>
+          https://www.nexperion.net/basicmodefile</a> 
           that will prepare a Basic mode file customized for a specific set of activities;
            this should be a good starting point for your own Basic mode file.
         </p>
-    <p>An example file for a Basic mode constructed by Tillman Schaefer is available at
+    <p>An example file for a Basic mode constructed by Tillman Schaefer is available at 
       <a href="https://bio3d.colorado.edu/ftp/SerialEM/Tools/SEMbasicModeItems.txt">
             https://bio3d.colorado.edu/ftp/SerialEM/Tools/SEMbasicModeItems.txt</a>.
         </p>
       <strong>Table of Items Defined by Strings</strong><P>
-      These are items currently eligible to be hidden.&nbsp;
-      (No disabling has been requested, and it would be more difficult to implement
-      generically than hiding).&nbsp; If you want
-      to have an item added to this table, contact the SerialEM developers.&nbsp; To
-      hide or disable an item, you must copy the whole identifier string shown here
-      into your file to use it.&nbsp; The entries in this table start with &#39;1&#39; if the
-      item can disabled but not hidden, &#39;2&#39; if the item can be hidden but not
-      disabled, or &#39;1 OR 2&#39; if it can both hidden and disabled.&nbsp; In the latter
-      case, after copying the line, remove the &#39;OR 2&#39; to disable the item or &#39;1 OR&#39; to
+      These are items currently eligible to be hidden.&nbsp; 
+      (No disabling has been requested, and it would be more difficult to implement 
+      generically than hiding).&nbsp; If you want 
+      to have an item added to this table, contact the SerialEM developers.&nbsp; To 
+      hide or disable an item, you must copy the whole identifier string shown here 
+      into your file to use it.&nbsp; The entries in this table start with &#39;1&#39; if the 
+      item can disabled but not hidden, &#39;2&#39; if the item can be hidden but not 
+      disabled, or &#39;1 OR 2&#39; if it can both hidden and disabled.&nbsp; In the latter 
+      case, after copying the line, remove the &#39;OR 2&#39; to disable the item or &#39;1 OR&#39; to 
       hide the item.<P>
       The first few lines of this table illustrate some features:<ul>
       <li>Some entries will hide all the elements on a dialog line.</li>
-      <li>To hide the contents of a group box, you must also include the string for the
-        group box as well as the one(s) for the items in the box.&nbsp; If all the items
-        are in one line, it will take only one entry to hide them; if they are
+      <li>To hide the contents of a group box, you must also include the string for the 
+        group box as well as the one(s) for the items in the box.&nbsp; If all the items 
+        are in one line, it will take only one entry to hide them; if they are 
         vertically arranged, a separate entry will be needed for each.</li>
-      <li>&nbsp;Menu items will be identified with part or all of the menu name, items
+      <li>&nbsp;Menu items will be identified with part or all of the menu name, items 
         in dialogs will have a string based on the dialog.</li>
       <li>&nbsp;Submenu items will have a string indicating the submenu name.</li>
       <li>&nbsp;An entire top-level menu or submenu can be hidden.</li>
@@ -325,8 +325,8 @@
     <P>
       <strong>Table of All Menu Items and Their IDs</strong></P>
     <P>
-      To hide a menu item not listed above, you can copy the line for that item from
-      this table into your file.&nbsp; The text after the ID number is optional but
+      To hide a menu item not listed above, you can copy the line for that item from 
+      this table into your file.&nbsp; The text after the ID number is optional but 
       will help you identify the entry.<pre>
   
 FILE MENU
@@ -733,6 +733,62 @@ WINDOW MENU
 2 33559 Multichannel Display
 2 33502 Run SerialEM Snapshot
 2 33552 List Debug Output Key Letters
+  
+
+===================
+
+NAVIGATOR WINDOW MENUS
+
+FILE MENU
+2 33088 Save
+2 33089 Save As
+2 32920 Load
+2 33194 Merge File
+2 32921 Close
+  
+OPTIONS MENU
+2 33267 Set Point Label Threshold
+2 33418 Use Item Labels in Filenames
+2 32929 Autosave Nav File
+2 33264 Write as XML File
+2 32941 Convert Maps to Bytes
+2 32994 Load Maps Unbinned
+2 33640 Skip LD Blanking during Acquire
+2 33642 Antialias during Acquire
+  
+VIEW MENU
+2 33630 Indexes
+2 33631 Labels
+2 33632 All Registrations
+2 33633 Draw Nothing
+  
+MAP/POLYGON MENU
+2 33039 Import Map
+2 32987 Rotate Map
+2 33117 Adjust for Backlash
+2 33118 Backlash Settings
+2 33009 Set Map Acquire State
+2 33008 Restore State
+2 33013 Add Circle Polygon
+2 33101 Polygon from Corners
+  
+TRANSFORMATIONS MENU
+2 32991 Shift to Marker
+2 33423 Apply Saved Shift
+2 32992 Undo Last Shift
+2 33092 Transform Items
+2 33040 Undo Transformation
+2 32979 Change Registration
+2 33071 Align with Rotation
+  
+REALIGN MENU
+2 32988 Realign to Item
+2 33427 Setup Align/Realign
+2 33203 Force Center Align
+2 33518 Erase Periodic Peaks in LD
+2 33279 Use Current LD Params in Realign
+2 33112 Try Scaling in Realign
+2 33413 Search + and - Scaling in Realign
   
   
       </pre>

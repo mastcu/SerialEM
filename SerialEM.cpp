@@ -6009,6 +6009,8 @@ void CSerialEMApp::SetBasicMode(BOOL inVal)
   if (mNavHelper->mMultiGridDlg)
     mNavHelper->mMultiGridDlg->ManagePanels();
   mMainFrame->RemoveHiddenItemsFromMenus();
+  if (mNavigator)
+    mNavigator->RemoveHiddenItemsFromMenus(false);
   UpdateBufferWindows();
   UpdateWindowSettings();
   BOOL blanked = mScope->GetBeamBlanked();

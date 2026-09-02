@@ -404,6 +404,7 @@ BOOL CNavigatorDlg::OnInitDialog()
   UtilModifyMenuItem("Navigator", ID_MONTAGINGGRIDS_MULTIPLEGRIDOPERATIONS,
     mScope->GetScopeHasAutoloader() ? "Mult&iple Grid Operations..." :
     "Mult&iple Operations on Grid...");
+  RemoveHiddenItemsFromMenus(true);
 
 	return TRUE;  // return TRUE unless you set the focus to a control
 	              // EXCEPTION: OCX Property Pages should return FALSE
@@ -608,6 +609,25 @@ void CNavigatorDlg::OnInitMenuPopup(CMenu* pMenu, UINT nIndex, BOOL bSysMenu)
     }
     state.m_nIndexMax = nCount;
   }
+}
+
+// Implement hiding of items in this window's menu
+void CNavigatorDlg::RemoveHiddenItemsFromMenus(bool opening)
+{
+  CMenu *mainMenu = GetMenu();
+
+  // As for main menu, if not just opening and not in basic mode, rebuild the menu
+  if (!opening && !mWinApp->GetBasicMode()) {
+    SetMenu(NULL);
+    ::DestroyMenu(mainMenu->m_hMenu);
+    mainMenu = new CMenu();
+    mainMenu->LoadMenu(IDR_NAV_MENU);
+    SetMenu(mainMenu);
+  }
+
+  // Then remove items if in basic mode
+  mainMenu = GetMenu();
+  mWinApp->mMainFrame->RemoveItemsFromOneMenu(mainMenu, 0);
 }
 
 void CNavigatorDlg::OnActivate(UINT nState, CWnd * pWndOther, BOOL bMinimized)

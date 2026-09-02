@@ -806,6 +806,7 @@ afx_msg void OnUpdateViewAllRegistrations(CCmdUI *pCmdUI);
 afx_msg void OnViewDrawNothing();
 afx_msg void OnUpdateViewDrawNothing(CCmdUI *pCmdUI);
 afx_msg void OnNavShrink();
+void RemoveHiddenItemsFromMenus(bool opening);
 };
 
 //{{AFX_INSERT_LOCATION}}
