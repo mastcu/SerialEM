@@ -225,6 +225,8 @@ public:
   GetMemberPtr(ShortVec, ImposedOutlineMacros);
   int TraverseHistory(int lineNum, int dir);
   CString GetLineInHistory(int lineNum);
+  void SetStrHistory(int ind, CString str) { mStrHistory[ind] = str; };
+  CString GetStrHistory(int ind) { return mStrHistory[ind]; };
   std::vector<std::string> GetHistoryArray(int lineNum) { return mHistoryArrays[lineNum]; };
   GetSetMember(int, MaxHistoryLength);
   int GetNumVariables() { return (int)mVarArray.GetSize(); };
@@ -317,6 +319,7 @@ protected:
   double mItemDbl[MAX_MACRO_TOKENS];
   float mItemFlt[MAX_MACRO_TOKENS];
   CString mStrLine, mStrCopy;
+  CString mStrHistory[MAX_ONE_LINE_SCRIPTS];
   std::vector<std::string> mHistoryArrays[MAX_ONE_LINE_SCRIPTS];
   int mHistoryIndex[MAX_ONE_LINE_SCRIPTS];
   int mMaxHistoryLength;

@@ -272,8 +272,10 @@ CMacroProcessor::CMacroProcessor(int index)
     mFillColors[i] = NO_TOOLBAR_COLOR;
     mOutlineColors[i] = NO_TOOLBAR_COLOR;
   }
-  for (i = 0; i < MAX_ONE_LINE_SCRIPTS; i++)
+  for (i = 0; i < MAX_ONE_LINE_SCRIPTS; i++) {
     mHistoryIndex[i] = 0;
+    mStrHistory[i] = "";
+  }
   mProcessThread = NULL;
   for (i = 0; i < 2; i++) {
     CString mess;
@@ -958,6 +960,7 @@ void CMacroProcessor::TransferOneLiners(bool fromDialog)
   for (int ind = 0; ind < MAX_ONE_LINE_SCRIPTS; ind++) {
     int endInd;
     CString cmd, macros = mMacros[MAX_MACROS + ind];
+    CString history = GetStrHistory(ind);
 
     if (fromDialog) {
       if (mOneLineScript) {
@@ -965,36 +968,45 @@ void CMacroProcessor::TransferOneLiners(bool fromDialog)
           ind);
       }
       
-      mMacros[MAX_MACROS + ind] = "";
-      for (int jnd = 0; jnd < (int)mHistoryArrays[ind].size(); jnd++) {
+      mMacros[MAX_MACROS + ind] = (CString)mHistoryArrays[ind][0].data();
+
+      mStrHistory[ind] = "";
+      for (int jnd = 1; jnd < (int)mHistoryArrays[ind].size(); jnd++) {
         cmd = (CString)mHistoryArrays[ind][jnd].data();
         cmd.Replace(";", "\r\n");
-        if (jnd)
-          mMacros[MAX_MACROS + ind] += SCRIPT_HISTORY_SEP;
-        mMacros[MAX_MACROS + ind] += cmd;
+        if (jnd > 1)
+          mStrHistory[ind] += SCRIPT_HISTORY_SEP;
+        mStrHistory[ind] += cmd;
       }
     } else {
-      mHistoryArrays[ind].clear();
+      mHistoryArrays[ind].resize(1);
+
+      // Set current line to first command
       macros.TrimRight("\r\n");
-      for (int jnd = 0; jnd < mMaxHistoryLength + 1; jnd++) {
+      macros.Replace("\r\n", ";");
+      mHistoryArrays[ind][0] = (std::string)macros;
+
+      history.TrimRight("\r\n");
+      for (int jnd = 1; jnd < mMaxHistoryLength + 1; jnd++) {
         
         // Search for next separator key
-        cmd = macros;
-        endInd = macros.Find(SCRIPT_HISTORY_SEP);
+        cmd = history;
+        endInd = history.Find(SCRIPT_HISTORY_SEP);
         if (endInd >= 0) {
-          cmd = macros.Left(endInd);
-          macros = macros.Right(macros.GetLength() - (int)strlen(SCRIPT_HISTORY_SEP)
+          cmd = history.Left(endInd);
+          history = history.Right(history.GetLength() - (int)strlen(SCRIPT_HISTORY_SEP)
             - endInd);
+          if (endInd == 0) {
+            jnd--;
+            continue;
+          }
         }
-        cmd.Replace("\r\n", ";");
-
-        // Set current line to first command
-        if (jnd == 0)
-          mMacros[MAX_MACROS + ind] = cmd;
-        mHistoryArrays[ind].push_back((std::string)cmd);
-
+        if (!cmd.IsEmpty()) {
+          cmd.Replace("\r\n", ";");
+          mHistoryArrays[ind].push_back((std::string)cmd);
+        }
         // If separator key was not found or no string left, all done
-        if (endInd < 0 || (jnd > 0 && cmd.IsEmpty()))
+        if (endInd < 0 || (jnd > 1 && cmd.IsEmpty()))
           break;
       }
 
