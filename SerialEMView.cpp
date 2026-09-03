@@ -1143,12 +1143,9 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
         cdc.SetTextColor(RGB(0, 255, 40));
         cdc.SelectObject(useLabelFont);
         imBuf->mImage->getSize(ix, iy);
-        int ndec = 2 - (int)floor(log10(B3DMIN(ix * pixel, iy * pixel)));
-        B3DCLAMP(ndec, 0, 3);
-        CString dgts;
-        dgts.Format("%d", ndec);
-        letString.Format("FOV: %." + dgts + "f x %." + dgts + "f um", 
-          ix * pixel, iy * pixel);
+        letString.Format("FOV: %s x %s um", 
+          FormattedNumber((double)(ix * pixel), "", 0, 3, 1.f, true),
+          FormattedNumber((double)(iy * pixel), "", 0, 3, 1.f, true));
         cdc.TextOut(mWinApp->ScaleValueForDPI(25),
           rect.Height() - mWinApp->ScaleValueForDPI(40), letString);
       }
