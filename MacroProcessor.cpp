@@ -984,6 +984,20 @@ void CMacroProcessor::TransferOneLiners(bool fromDialog)
       // Set current line to first command
       macros.TrimRight("\r\n");
       macros.Replace("\r\n", ";");
+
+      // Handle the case where we have a scripts file with history stored in the macro.
+      // This could happen if they used a testing version in late Aug / early Sept 2026
+      // Do this by removing all SCRIPT_HISTORY_SEP keys before the first macro and 
+      // cut off everything after that macro
+      endInd = macros.Find(SCRIPT_HISTORY_SEP);
+      while (endInd == 0) {
+        macros = macros.Right(macros.GetLength() - (int)strlen(SCRIPT_HISTORY_SEP));
+        endInd = macros.Find(SCRIPT_HISTORY_SEP);
+      }
+      if (endInd > 0) {
+        macros = macros.Left(endInd);
+        mMacros[MAX_MACROS + ind] = macros;
+      }
       mHistoryArrays[ind][0] = (std::string)macros;
 
       history.TrimRight("\r\n");
