@@ -6800,6 +6800,7 @@ int CParameterIO::ReadOneMacro(int iset, CString &strLine, CString *strItems,
   return err;
 }
 
+// Reads the OneLineHistory section for a given index, and transfers to the history string
 int CParameterIO::ReadOneLineHistory(int iset, CString & strLine, CString * strItems)
 {
   CString line;
@@ -6843,6 +6844,7 @@ void CParameterIO::WriteAllMacros(int numWrite)
   }
 }
 
+//Gets the history string for each line in the one-line window and output to a file
 void CParameterIO::WriteOneLineHistory()
 {
   CString macCopy, cmd;
