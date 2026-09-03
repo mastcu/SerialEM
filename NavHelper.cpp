@@ -5832,9 +5832,27 @@ int CNavHelper::AssessAcquireForParams(NavAcqParams *navParam, NavAcqAction *acq
         }
       }
 
-      // Check file already open
+      // Check too many files for parallel tilt series
       if (item->mTSparamIndex >= 0 && item->mParallelTSIndex >= 0) {
         tsp = mTSparamArray->GetAt(item->mTSparamIndex);
+        if (item->mNumIStargets + mDocWnd->GetNumStores() > MAX_STORES) {
+          if (item->mNumIStargets > MAX_STORES)
+            mess.Format("Parallel TS item %d, label %s has %d targets but only %d open "
+              "files are allowed", i + 1, (LPCTSTR)item->mLabel, item->mNumIStargets,
+              MAX_STORES);
+          else
+            mess.Format("Parallel TS item %d, label %s requires %d files, there are "
+              "currently %d files open, and only %d files are allowed, so you need to "
+              "close%s %d files to proceed", i + 1, (LPCTSTR)item->mLabel, 
+              item->mNumIStargets, mDocWnd->GetNumStores(), MAX_STORES,
+              item->mNumIStargets < MAX_STORES ? " at least" : "",
+              mDocWnd->GetNumStores() + item->mNumIStargets - MAX_STORES);
+          AfxMessageBox(prefix + mess, MB_EXCLAME);
+          delete[] seenGroups;
+          return 1;
+        }
+
+        // Check files already open for parallel TS
         cam = activeList[tsp->cameraIndex];
         if (mCamera->IsConSetSaving(&masterSets[cam * MAX_CONSETS + RECORD_CONSET],
           RECORD_CONSET, mCamParams + cam, false))
@@ -5850,6 +5868,8 @@ int CNavHelper::AssessAcquireForParams(NavAcqParams *navParam, NavAcqAction *acq
           return 1;
         }
       } else if (item->mFilePropIndex >= 0) {
+
+        // Check file already open for regular item
         k = mDocWnd->StoreIndexFromName(item->mFileToOpen);
         if (k >= 0) {
           mess.Format("The file set to be opened for item # %d, label %s is already open"

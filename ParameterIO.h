@@ -80,7 +80,9 @@ public:
     UShortVec &partialBadStartY, UShortVec &partialBadEndY, const char *colText, 
     CString &strLine);
   int ReadOneMacro(int iset, CString & strLine, CString * strItems, int maxMacros);
+  int ReadOneLineHistory(int iset, CString & strLine, CString * strItems);
   void WriteAllMacros(int numWrite);
+  void WriteOneLineHistory();
   int ReadMacrosFromFile(CString &filename, const CString &curSettings, int maxMacros, bool printMess = false);
   void WriteMacrosToFile(CString filename, int maxMacros);
   void WriteLowDoseToString(LowDoseParams *ldp, int ldi, int ldj, CString &str);

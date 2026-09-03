@@ -2701,6 +2701,9 @@ int CParameterIO::ReadMacrosFromFile(CString &filename, const CString &curSettin
           numLoaded++;
         } else if (NAME_IS("MaxMacros"))
           mMaxReadInMacros = itemInt[1];
+        else if (NAME_IS("OneLineHistory")) {
+          ReadOneLineHistory(itemInt[1], strLine, strItems);
+        }
     }
     if (err > 0)
       retval = err;
@@ -2738,6 +2741,7 @@ void CParameterIO::WriteMacrosToFile(CString filename, int maxMacros)
     mFile = new CStdioFile(filename, CFile::modeCreate | CFile::modeWrite | 
       CFile::shareDenyWrite);
     WriteAllMacros(maxMacros);
+    WriteOneLineHistory();
   }
   catch(CFileException *perr) {
     perr->Delete();
@@ -6821,6 +6825,30 @@ int CParameterIO::ReadOneMacro(int iset, CString &strLine, CString *strItems,
   return err;
 }
 
+// Reads the OneLineHistory section for a given index, and transfers to the history string
+int CParameterIO::ReadOneLineHistory(int iset, CString & strLine, CString * strItems)
+{
+  CString line;
+  int err;
+  if (iset < 0)
+    return 1;
+
+  while ((err = ReadAndParse(strLine, strItems, 4)) == 0 || err == 2) {
+
+    // Error 2 is too many items, which is fine, but reset it to 0
+    err = 0;
+    if (NAME_IS("EndHistory"))
+      break;
+    strLine.TrimRight("\r\n");
+    if (iset < MAX_ONE_LINE_SCRIPTS)
+      line += strLine + "\r\n";
+  }
+
+  mWinApp->mMacroProcessor->SetStrHistory(iset, line);
+
+  return 0;
+}
+
 // Write all macros to the current file
 void CParameterIO::WriteAllMacros(int numWrite)
 {
@@ -6837,6 +6865,24 @@ void CParameterIO::WriteAllMacros(int numWrite)
       macCopy.TrimRight("\r\n");
       mFile->WriteString(macCopy);
       mFile->WriteString("\nEndMacro\n");
+    }
+  }
+}
+
+//Gets the history string for each line in the one-line window and output to a file
+void CParameterIO::WriteOneLineHistory()
+{
+  CString macCopy, cmd;
+  for (int i = 0; i < MAX_ONE_LINE_SCRIPTS; i++) {
+    macCopy = mWinApp->mMacroProcessor->GetStrHistory(i);
+    if (!macCopy.IsEmpty()) {
+      WriteInt("OneLineHistory", i);
+
+      // For writing with WriteString, need to remove \r
+      macCopy.Replace("\r\n", "\n");
+      macCopy.TrimRight("\r\n");
+      mFile->WriteString(macCopy);
+      mFile->WriteString("\nEndHistory\n");
     }
   }
 }

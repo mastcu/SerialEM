@@ -404,6 +404,7 @@ BOOL CNavigatorDlg::OnInitDialog()
   UtilModifyMenuItem("Navigator", ID_MONTAGINGGRIDS_MULTIPLEGRIDOPERATIONS,
     mScope->GetScopeHasAutoloader() ? "Mult&iple Grid Operations..." :
     "Mult&iple Operations on Grid...");
+  RemoveHiddenItemsFromMenus(true);
 
 	return TRUE;  // return TRUE unless you set the focus to a control
 	              // EXCEPTION: OCX Property Pages should return FALSE
@@ -608,6 +609,25 @@ void CNavigatorDlg::OnInitMenuPopup(CMenu* pMenu, UINT nIndex, BOOL bSysMenu)
     }
     state.m_nIndexMax = nCount;
   }
+}
+
+// Implement hiding of items in this window's menu
+void CNavigatorDlg::RemoveHiddenItemsFromMenus(bool opening)
+{
+  CMenu *mainMenu = GetMenu();
+
+  // As for main menu, if not just opening and not in basic mode, rebuild the menu
+  if (!opening && !mWinApp->GetBasicMode()) {
+    SetMenu(NULL);
+    ::DestroyMenu(mainMenu->m_hMenu);
+    mainMenu = new CMenu();
+    mainMenu->LoadMenu(IDR_NAV_MENU);
+    SetMenu(mainMenu);
+  }
+
+  // Then remove items if in basic mode
+  mainMenu = GetMenu();
+  mWinApp->mMainFrame->RemoveItemsFromOneMenu(mainMenu, 0);
 }
 
 void CNavigatorDlg::OnActivate(UINT nState, CWnd * pWndOther, BOOL bMinimized)
@@ -12488,6 +12508,12 @@ int CNavigatorDlg::OpenFileIfNeeded(CMapDrawItem * item, bool stateOnly)
 
       // It is going to protect those stores, so we need to clean out here and not in TSC
       mDocWnd->EndStoreProtection();
+      if (mDocWnd->GetNumStores() + item->mNumIStargets > MAX_STORES) {
+        SEMMessageBox("There are two many parallel TS targets to open a file for each"
+          " one");
+        return 1;
+      }
+
       if (mWinApp->mParticleTasks->OpenSeparateMultiFiles(*namep, true)) {
         mDocWnd->RestoreCurrentFile();
         return 1;

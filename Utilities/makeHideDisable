@@ -6,8 +6,8 @@ progname = 'makeHideDisable'
 prefix = 'ERROR: ' + progname + ' - '
 
 def exitError(mess):
- sys.stdout.write(mess + '\n')
- sys.exit(1)
+   sys.stdout.write(mess + '\n')
+   sys.exit(1)
 
 def readTextFile(filename):
    try:
@@ -22,7 +22,7 @@ def readTextFile(filename):
 
    textfile.close()
    for i in range(len(lines)):
-      lines[i] = lines[i].rstrip(' \t\r\n')
+      lines[i] = lines[i].rstrip('\t\r\n')
    return lines
 
 def writeTextFile(filename, strings):
@@ -62,12 +62,14 @@ stubFile = 'hlp/html/hide_disable_stub.htm'
 helpFile = 'hlp/html/about_hide_disable.htm'
 tableTag = 'INSERT TABLE LIST HERE'
 menuTag = 'INSERT MENU ID LIST HERE'
+promptSpaces = -1
 
 # load System Libraries
-import os, sys
+import os, sys, re
 
 indent = ('', '   ', '      ')
 descrip = (' menu', ' submenu', ' sub-submenu')
+nonSpace = re.compile('[^ ]')
 
 if os.path.exists(helpFile):
    rcTime = os.path.getmtime(rcFile)
@@ -102,10 +104,19 @@ outMenu = []
 level = -2
 needFlush = False
 didBlank = False
+menuIDlist = []
 for line in menus:
    line = line.strip()
    if line.startswith('IDR_SERIALTYPE'):
       level += 1
+
+   if line.startswith('IDR_NAV_MENU'):
+      level += 1
+      outMenu += ['',
+                  '===================',
+                  '',
+                  'NAVIGATOR WINDOW MENUS',
+                  '']
 
    if level < -1:
       continue
@@ -148,6 +159,10 @@ for line in menus:
       continue
 
    if needFlush:
+      if line.startswith('MENUITEM') and 'SEPARATOR' not in line:
+         lsplit = line.split()
+         if lsplit[-1] in idDict:
+            menuIDlist.append(lsplit[-1])
       continue
    
    if line.startswith('MENUITEM') and 'SEPARATOR' not in line:
@@ -163,9 +178,11 @@ for line in menus:
          if inWindow:
             continue
          exitError('ID is not listed in resources in line: ' + line)
-
-      outMenu.append(indent[level] + '2 ' + idDict[lsplit[-1]] + ' ' + name)
-      didBlank = False
+         
+      if lsplit[-1] != 'ID_NAV_SHRINK':
+         outMenu.append(indent[level] + '2 ' + idDict[lsplit[-1]] + ' ' + name)
+         didBlank = False
+         menuIDlist.append(lsplit[-1])
 
 outTable = []
 inList = False
@@ -220,5 +237,51 @@ for line in stubLines:
 writeTextFile(helpFile, helpLines)
 sys.stdout.write('New hide/disable help file written\n')
 
-sys.exit(0)
+if promptSpaces < 0:
+   sys.exit(0)
 
+inTable = False
+changed = False
+pad = ' ' * promptSpaces
+for ind in range(len(menus)):
+   line = menus[ind].strip()
+   
+   if  line.startswith('STRINGTABLE'):
+      inTable = True
+      
+   if line.startswith('BEGIN'):
+      continue
+
+   if line.startswith('END'):
+      inTable = False
+      
+   if not inTable:
+      continue
+   
+   # find space and quote in stripped line
+   spaceInd = line.find(' ')
+   quoteInd = line.find('"')
+   
+   # if neither there, join lines and find again
+   if spaceInd < 0 and quoteInd < 0 and ind < len(menus) - 1:
+      line = line + ' ' + menus[ind + 1].strip()
+      ind += 1
+      spaceInd = line.find(' ')
+      quoteInd = line.find('"')
+      
+   if spaceInd > 0 and quoteInd > spaceInd and line[0:spaceInd] in menuIDlist:
+
+      # If space and quote exist and it is a menu ID, find number of spaces and replace
+      # actual line in resource lines if it doesn't match
+      numSpace = re.search(nonSpace, line[quoteInd + 1:]).start()
+      if numSpace != promptSpaces:
+         quoteInd =  menus[ind].find('"')
+         menus[ind] = menus[ind][:quoteInd + 1] + pad + \
+            menus[ind][quoteInd + 1 + numSpace:]
+         changed = True
+         
+if changed:
+   writeTextFile(rcFile + '.new', menus)
+   sys.stdout.write('New SerialEM.rc written with adjusted prompt padding\n')
+   
+sys.exit(0)
