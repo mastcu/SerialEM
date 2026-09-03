@@ -1412,6 +1412,11 @@ int CParallelTSHelper::ConvertToParTSItem(CString &err, CMapDrawItem *item)
     if (item->IsPoint()) {
       mNavHelper->GetNumHolesFromParam(numX, numY, numDef);
       numPoints = mNavHelper->GetNumHolesForItem(item, numDef);
+      if (numPoints > MAX_STORES) {
+        err.Format("The current multishot pattern would generate %d targets, which"
+          " exceeds the limit of %d", numPoints, MAX_STORES);
+        return -2;
+      }
       if (item->mNumXholes > 0)
         numX = item->mNumXholes;
       if (item->mNumYholes > 0)
@@ -1422,6 +1427,11 @@ int CParallelTSHelper::ConvertToParTSItem(CString &err, CMapDrawItem *item)
     } else if (item->IsPolygon()) {
       mNavHelper->FillPolygonWithMultiShot(item, delISX, delISY, err);
       numPoints = (int) delISX.size();
+      if (numPoints > MAX_STORES) {
+        err.Format("The current polygon would contain %d targets, which"
+          " exceeds the limit of %d", numPoints, MAX_STORES);
+        return -2;
+      }
       ptX = item->mStageX;
       ptY = item->mStageY;
       mWinApp->mNavigator->AddItemFromStagePositions(&ptX, &ptY, 1, item->mStageZ, 0);
@@ -1430,7 +1440,7 @@ int CParallelTSHelper::ConvertToParTSItem(CString &err, CMapDrawItem *item)
       err.Format("The item must be a point or polygon to finalize the area");
       return 1;
     }
-    
+
     mParTSitem->mNumIStargets = (short)numPoints;
     mParTSitem->mIStargetsXY = new float[numPoints * 2];
     mParTSitem->mMagOfIStargets = msPars->holeMagIndex[msPars->doHexArray ? 1 : 0];
@@ -1455,6 +1465,10 @@ int CParallelTSHelper::ConvertToParTSItem(CString &err, CMapDrawItem *item)
       err.Format("At least two targets are required to create a parallel tilt series "
         "item");
       return 3;
+    } else if (numPoints > MAX_STORES) {
+      err.Format("There are currently %d targets, which"
+        " exceeds the limit of %d", numPoints, MAX_STORES);
+      return -2;
     }
 
     //Center point information
@@ -1656,6 +1670,7 @@ int CParallelTSHelper::GetISVectors(int groupID, CString &err)
     return 1;
   }
 
+  mSavedTargetIDs.clear();
   for (ind = 0; ind < numPoints; ind++) {
     item = itemArr->GetAt(indexVec[ind]);
     if (ind == 0) {
