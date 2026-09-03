@@ -442,8 +442,6 @@ void CMainFrame::DoClose(bool afterScript)
     if (mWinApp->RunningBkgdMacro())
       mWinApp->mBkgdProcessor->Stop(true);
 
-    if (mWinApp->mNavigator)
-      mWinApp->SetOpenStateWithNav(mWinApp->mNavHelper->mStateDlg != NULL);
     if (mWinApp->mMultiGridTasks->GetDoingMulGridSeq() ||
       mWinApp->mMultiGridTasks->GetSuspendedMulGrid()) {
       mWinApp->mMultiGridTasks->RestoreImposedParams();

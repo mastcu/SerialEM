@@ -803,9 +803,9 @@ CSerialEMApp::CSerialEMApp()
   mReopenMacroToolbar = false;
   for (i = 0; i <= MAX_MACROS; i++)
     mReopenMacroEditor[i] = false;
-  mOpenStateWithNav = false;
   mReopenDlgsFromExit = false;
   mReopenNavigator = false;
+  mReopenStateDlg = false;
   mReopenScreenMeter = false;
   mReopenDoseMeter = false;
   mReopenMultiShotDlg = false;
@@ -1838,6 +1838,8 @@ BOOL CSerialEMApp::InitInstance()
   if (mReopenDlgsFromExit) {
     if (GetReopenNavigator()) 
       mMenuTargets.OpenNavigatorIfClosed();
+    if (GetReopenStateDlg())
+      mNavHelper->OpenStateDialog();
     if (GetReopenScreenMeter())
       mScopeStatus.OnButfloat();
     if (GetReopenDoseMeter()) 
@@ -5165,7 +5167,6 @@ void CSerialEMApp::NavigatorClosing()
   mNavigator = NULL;
   mMenuTargets.mNavigator = NULL;
   mNavHelper->NavOpeningOrClosing(false);
-  mOpenStateWithNav = mNavHelper->mStateDlg != NULL;
   if (mNavHelper->mHoleFinderDlg->IsOpen())
     mNavHelper->mHoleFinderDlg->CloseWindow();
   if (mNavHelper->mAutoContouringDlg->IsOpen())

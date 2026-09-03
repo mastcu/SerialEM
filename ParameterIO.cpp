@@ -1205,7 +1205,7 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
           } else if (NAME_IS("SecondaryLogPlacement")) {
             place = mWinApp->GetSecondaryLogPlacement();
           } else if (NAME_IS("StatePlacement")) {
-            mWinApp->SetOpenStateWithNav(itemInt[1] != 0);
+            mWinApp->SetReopenStateDlg(itemInt[1] != 0);
             place = navHelper->GetStatePlacement();
           } else if (NAME_IS("ReadDlgPlacement")) {
             place = mDocWnd->GetReadDlgPlacement();
@@ -2405,8 +2405,7 @@ void CParameterIO::WriteSettings(CString strFileName)
     WritePlacement("MeterPlacement", mWinApp->mScopeStatus.mScreenMeter ? 1 : 0, 
       meterPlace);
     WritePlacement("DosePlacement", mWinApp->mScopeStatus.mDoseMeter ? 1 : 0, dosePlace);
-    WritePlacement("StatePlacement", (mWinApp->GetOpenStateWithNav() || 
-      (mWinApp->mNavigator && navHelper->mStateDlg)) ? 1 : 0, statePlace);
+    WritePlacement("StatePlacement", navHelper->mStateDlg ? 1 : 0, statePlace);
     WritePlacement("RotAlignPlacement", 0, rotAlignPlace);
     WritePlacement("MultiShotPlacement", navHelper->mMultiShotDlg ? 1 : 0, multiShotPlace);
     WritePlacement("ReadDlgPlacement", 0, readPlace);

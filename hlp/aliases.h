@@ -122,6 +122,7 @@ hid_settings_setaproperty				= SerialEM.chm::/html\menu_settings.htm#hid_setting
 hid_settings_basicmode          = SerialEM.chm::/html\menu_settings.htm#hid_settings_basicmode
 hid_settings_readbasicmodefile  = SerialEM.chm::/html\menu_settings.htm#hid_settings_readbasicmodefile
 hid_miscellaneousoptions_reversewheelzoomdirection = SerialEM.chm::/html\menu_settings.htm#hid_miscellaneousoptions_reversewheelzoomdirection
+hid_settings_reopendialogs      = SerialEM.chm::/html\menu_settings.htm#hid_settings_reopendialogs
 hid_misc_no_true_size           = SerialEM.chm::/html\menu_settings.htm#hid_misc_no_true_size
 hid_camera_parameters						= SerialEM.chm::/html\menu_camera.htm#hid_camera_parameters
 hid_camera_acquiregainref				= SerialEM.chm::/html\menu_camera.htm#hid_camera_acquiregainref

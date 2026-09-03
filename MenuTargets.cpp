@@ -627,9 +627,6 @@ void CMenuTargets::OnTasksNavigator()
     mNavigator->LoadNavFile(true, false);
   mWinApp->RestoreViewFocus();
   mWinApp->SetNavOrLogHadFocus(1);
-  if (mWinApp->GetOpenStateWithNav()) {
-    mNavHelper->OpenStateDialog();
-  }
 }
 
 // External call to get the Navigator open

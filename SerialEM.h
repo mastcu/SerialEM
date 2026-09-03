@@ -677,7 +677,6 @@ public:
   CookParams *GetCookParams() { return &mCookParams; };
   SetMember(BOOL, DeferBufWinUpdates)
     GetSetMember(BOOL, ContinuousSaveLog)
-    GetSetMember(BOOL, OpenStateWithNav)
     GetSetMember(BOOL, NonGIFMatchIntensity)
     GetSetMember(BOOL, NonGIFMatchPixel)
     GetSetMember(int, FirstSTEMcamera)
@@ -765,6 +764,7 @@ public:
   GetSetMember(int, CircleTypesInLDDefine);
   GetSetMember(bool, ReopenDlgsFromExit);
   GetSetMember(bool, ReopenNavigator);
+  GetSetMember(bool, ReopenStateDlg);
   GetSetMember(bool, ReopenScreenMeter);
   GetSetMember(bool, ReopenDoseMeter);
   GetSetMember(bool, ReopenMultiShotDlg);
@@ -961,7 +961,6 @@ private:
   BOOL mScopeHasFilter;
   BOOL mScopeHasSTEM;
   int mFirstSTEMcamera;                // Index of first STEM camera or -1 if none
-  BOOL mOpenStateWithNav;              // Flag to open state dialog with the Navigator
 
   int mImBufIndex;
   int mFFTbufIndex;
@@ -1154,6 +1153,7 @@ private:
   // flags for dialogs open when program exited, and can be reopened during startup
   bool mReopenDlgsFromExit;
   bool mReopenNavigator;
+  bool mReopenStateDlg;
   bool mReopenScreenMeter;
   bool mReopenDoseMeter;
   bool mReopenMultiShotDlg;
