@@ -4397,7 +4397,7 @@ MapItemArray *CNavigatorDlg::GetMapDrawItems(
               / pixel);
 
             // Account for outrageously large negative constantIA, clamp to 0
-            beamRadius = B3DMAX(0, beamRadius); 
+            beamRadius = B3DMAX(0.01, beamRadius); 
           } else if (!mWinApp->mBeamAssessor->LDRecordBeamSizeFromCal(&ptX)) {
             beamRadius = 0.5f * ptX / pixel;
           }
