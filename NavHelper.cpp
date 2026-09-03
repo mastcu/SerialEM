@@ -8318,15 +8318,3 @@ int CNavHelper::FillPolygonWithMultiShot(CMapDrawItem *polyItem, FloatVec &ISX,
 
   return 0;
 }
-
-void CNavHelper::SetIllumAreaScaleForDisplay(float scale, float constant)
-{
-  mIllumAreaScaleValues[0] = scale;
-  mIllumAreaScaleValues[1] = constant;
-}
-
-void CNavHelper::GetIllumAreaScaleForDisplay(float &scale, float &constant)
-{
-  scale = mIllumAreaScaleValues[0];
-  constant = mIllumAreaScaleValues[1];
-}

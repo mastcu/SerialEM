@@ -4123,9 +4123,9 @@ int CParameterIO::ReadProperties(CString strFileName)
 #undef PROP_TEST_SECT2
       else if (MatchNoCase("IlluminatedAreaLimits"))
         scope->SetIllumAreaLimits(itemFlt[1], itemFlt[2]);
-      else if (MatchNoCase("IlluminatedAreaScaleDisplay")) {
+      else if (MatchNoCase("IllumAreaDisplayScaling")) {
         scale = itemFlt[1] > 0 ? itemFlt[1] : 1.f;
-        navHelper->SetIllumAreaScaleForDisplay(scale, itemFlt[2]);
+        navHelper->SetIllumAreaDisplayScaling(scale, itemFlt[2]);
       }
       else if (MatchNoCase("C2ApertureSizes")) {
         ind = mWinApp->mBeamAssessor->GetNumC2Apertures();

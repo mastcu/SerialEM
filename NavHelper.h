@@ -819,6 +819,12 @@ public:
   void OpenMultishotDlg(void);
   WINDOWPLACEMENT *GetMultiShotPlacement(bool update);
   void UpdateMultishotIfOpen(bool draw = true);
+  void SetIllumAreaDisplayScaling(float scale, float constant) {
+    mIllumAreaScaleValues[0] = scale; mIllumAreaScaleValues[1] = constant;
+  };
+  void GetIllumAreaDisplayScaling(float &scale, float &constant) {
+    scale = mIllumAreaScaleValues[0]; constant = mIllumAreaScaleValues[1];
+  };
   int RotateMultiShotVectors(MultiShotParams *params, float angle, int customOrHex);
   int AdjustMultiShotVectors(MultiShotParams *params, int customOrHex, bool statusOnly, CString &mess);
   void TransformMultiShotVectors(MultiShotParams *params, int customOrHex, ScaleMat &aProd);
@@ -891,7 +897,5 @@ public:
   int CenterAddedPointInHole(EMimageBuffer* imBuf, float &inX, float &inY, CString &errStr);
   int FillPolygonWithMultiShot(CMapDrawItem *polyItem, FloatVec &ISX,
     FloatVec &ISY, CString &errStr, float cenX = 0.f, float cenY = 0.f);
-  void SetIllumAreaScaleForDisplay(float scale, float constant);
-  void GetIllumAreaScaleForDisplay(float &scale, float &constant);
 };
 

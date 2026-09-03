@@ -4390,7 +4390,7 @@ MapItemArray *CNavigatorDlg::GetMapDrawItems(
           (!drawParTSEllipses && msParams->useIllumArea)) && asIfLowDose) {
           if (mWinApp->mScope->GetUseIllumAreaForC2()) {
             float scaleIA, constantIA;
-            mWinApp->mNavHelper->GetIllumAreaScaleForDisplay(scaleIA, constantIA);
+            mWinApp->mNavHelper->GetIllumAreaDisplayScaling(scaleIA, constantIA);
             beamRadius = (float)((50. * scaleIA *
               mWinApp->mScope->IntensityToIllumArea(ldp[RECORD_CONSET].intensity,
                 ldp[RECORD_CONSET].spotSize, ldp[RECORD_CONSET].probeMode) + constantIA) 
