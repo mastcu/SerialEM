@@ -961,6 +961,7 @@ void CMacroProcessor::TransferOneLiners(bool fromDialog)
     int endInd;
     CString cmd, macros = mMacros[MAX_MACROS + ind];
     CString history = GetStrHistory(ind);
+    CString histLineBrk = "\r\n";
 
     if (fromDialog) {
       if (mOneLineScript) {
@@ -974,8 +975,8 @@ void CMacroProcessor::TransferOneLiners(bool fromDialog)
       for (int jnd = 1; jnd < (int)mHistoryArrays[ind].size(); jnd++) {
         cmd = (CString)mHistoryArrays[ind][jnd].data();
         cmd.Replace(";", "\r\n");
-        if (jnd > 1)
-          mStrHistory[ind] += SCRIPT_HISTORY_SEP;
+        if (jnd > 1) 
+          mStrHistory[ind] += histLineBrk + SCRIPT_HISTORY_SEP + histLineBrk;
         mStrHistory[ind] += cmd;
       }
     } else {
@@ -1007,9 +1008,20 @@ void CMacroProcessor::TransferOneLiners(bool fromDialog)
         cmd = history;
         endInd = history.Find(SCRIPT_HISTORY_SEP);
         if (endInd >= 0) {
+
+          // Split off the one-line script line from the history
           cmd = history.Left(endInd);
           history = history.Right(history.GetLength() - (int)strlen(SCRIPT_HISTORY_SEP)
             - endInd);
+
+          //trim \r\n from right of cmd, only once because it was from SCRIPT_HISTORY_SEP
+          if (strcmp(cmd.Right(histLineBrk.GetLength()), histLineBrk) == 0)
+            cmd = cmd.Left(cmd.GetLength() - histLineBrk.GetLength());
+
+          //trim \r\n from left of history once because it was from SCRIPT_HISTORY_SEP
+          if (strcmp(history.Left(histLineBrk.GetLength()), histLineBrk) == 0)
+            history = history.Right(history.GetLength() - histLineBrk.GetLength());
+          
           if (endInd == 0) {
             jnd--;
             continue;
