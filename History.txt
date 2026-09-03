@@ -3,6 +3,9 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+9/3/26: Enabled the use of Advanced Scripting to get and set piezo X/Y positions
+in FEIScopePlugin.
+
 9/3/26: Added a property to scale the illuminated area when displayed.
 
 9/3/26: Added option to reopen dialogs on startup.
