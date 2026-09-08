@@ -1025,6 +1025,11 @@ int DirectElectronCamera::AcquireImageData(unsigned short *image4k, long &imageS
         mServerVersion >= DE_NEW_MOTIONCOR_FRAME ? 
         DE::FrameType::SUMTOTAL_MOTIONCORRECTED : DE::FrameType::SUMTOTAL,
         &pixForm, &attributes);
+      if (!attributes.acqFinished) {
+        startTime = GetTickCount();
+        while (IsAcquiring() && SEMTickInterval(startTime) < 10000.)
+          Sleep(25);
+      }
     }
   } else {
     imageOK = mDeServer->getImage(useBuf, imageSizeX * imageSizeY * 2);
