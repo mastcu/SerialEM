@@ -250,4 +250,5 @@ public:
   afx_msg void OnUseBestSubset();
   BOOL m_bCenterAddedHoles;
   afx_msg void OnCenterAddedHoles();
+  CButton m_butCenterAddedHoles;
 };
