@@ -165,6 +165,7 @@ void CHoleFinderDlg::DoDataExchange(CDataExchange* pDX)
   DDX_Text(pDX, IDC_STAT_MAX_HULL_DIST, m_strMaxHullDist);
   DDX_Check(pDX, IDC_USE_BEST_SUBSET, m_bUseBestSubset);
   DDX_Check(pDX, IDC_CENTER_ADDED_HOLES, m_bCenterAddedHoles);
+  DDX_Control(pDX, IDC_CENTER_ADDED_HOLES, m_butCenterAddedHoles);
 }
 
 
@@ -372,6 +373,7 @@ void CHoleFinderDlg::OnButClearData()
   CLEAR_RESIZE(mPieceOn, int, 0);
   mWinApp->mNavHelper->mFindHoles->clearAll();
   mWinApp->mMainView->DrawImage();
+  ManageEnables();
   mWinApp->RestoreViewFocus();
 }
 
@@ -533,6 +535,7 @@ void CHoleFinderDlg::OnButMakeNavPts()
   DoMakeNavPoints(mParams.layoutType, mParams.lowerMeanCutoff, mParams.upperMeanCutoff,
     mParams.SDcutoff, mParams.blackFracCutoff, mParams.edgeDistCutoff,
     mParams.useHexDiagonals ? 1 : 0);
+  ManageEnables();
 }
 
 //Externally called routine.  Pass -1 to use the layout in params and EXTRA_NO_VALUE to
@@ -760,6 +763,7 @@ void CHoleFinderDlg::ManageEnables()
   m_sliderBlackPct.EnableWindow(mHaveHoles);
   m_editLowerMean.EnableWindow(mHaveHoles);
   m_editUpperMean.EnableWindow(mHaveHoles);
+  m_butCenterAddedHoles.EnableWindow(!HaveHolesToDrawOrMakePts());
   m_butSetSizeSpace.EnableWindow(mLastHoleSize > 0.);
   if (mHaveHoles) {
     m_strMinLowerMean.FORMAT4OR5G(mMeanMin);
@@ -770,8 +774,7 @@ void CHoleFinderDlg::ManageEnables()
     m_strMaxSDcutoff.FORMAT4OR5G(mSDmax);
     m_strMinBlackPct.Format("%.1f", 100. * mBlackFracMin);
     m_strMaxBlackPct.Format("%.1f", 100. * mBlackFracMax);
-    m_strMaxHullDist.Format("%.1f", mEdgeDistMax);
-  } else {
+    m_strMaxHullDist.Format("%.1f", mEdgeDistMax);  } else {
     m_strMinLowerMean = "";
     m_strMaxLowerMean = "";
     m_strMinUpperMean = "";

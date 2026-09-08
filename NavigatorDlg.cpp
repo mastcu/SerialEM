@@ -3527,7 +3527,8 @@ BOOL CNavigatorDlg::UserMousePoint(EMimageBuffer *imBuf, float inX, float inY,
   }
 
   // if set in hole finder parameters, center added point in hole
-  if (mHelper->mHoleFinderDlg->IsOpen() && mHelper->mHoleFinderDlg->m_bCenterAddedHoles) {
+  if (mHelper->mHoleFinderDlg->IsOpen() && mHelper->mHoleFinderDlg->m_bCenterAddedHoles
+    && !selecting && !mHelper->mHoleFinderDlg->HaveHolesToDrawOrMakePts()) {
     err = mHelper->CenterAddedPointInHole(imBuf, inX, inY, errStr);
     if (err) {
       SEMTrace('1', "WARNING: %s", errStr);
