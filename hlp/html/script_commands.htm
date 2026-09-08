@@ -3188,21 +3188,29 @@
             the file rather than rewriting the whole file.</TD>
         </TR>
         <TR>
-          <TD class="scriptcommand">StartNextFrameStackMdoc key value</TD>
+          <TD class="scriptcommand">StartFrameStackMdoc key value</TD>
           <TD>Adds a key-value pair to the global section of the .mdoc file written with
             each frame stack when the option for such a file is selected in the
             <a href="hidd_k2_save_options.htm">Frame File Options</a> dialog, after
             clearing out any previous entries in the global section.&nbsp; This command and
-            the next must be given before acquiring.&nbsp; The 'Next' in these two command names 
-            is misleading; these global entries will be in all future .mdoc files until this command
-            is used again.
+            the 'AddToFrameStackMdoc' must be given before acquiring.&nbsp; These global entries
+             will be in all future .mdoc files until this command is used again.&nbsp; The values
+            can be cleared without setting new ones by entering 'clear' for both <b>key</b> and
+             <b>value</b> (case insensitive).&nbsp; Command name and ability to clear added in 4.3, 8-Sep-26.
              </TD>
         </TR>
         <TR>
-          <TD class="scriptcommand">AddToNextFrameStackMdoc key value</TD>
-          <TD>Adds a key-value pair to the global section of the frame stack .mdoc file
-            while retaining previous entries there./TD>
+          <TD class="scriptcommand">StartNextFrameStackMdoc key value</TD>
+          <TD>Misleading original name of the previous command.</TD>
         </TR>
+        <TR>
+          <TD class="scriptcommand">AddToFrameStackMdoc key value</TD>
+          <TD>Adds a key-value pair to the global section of the frame stack .mdoc file
+            while retaining previous entries there.&nbsp; Command name added in 4.3, 8-Sep-26</TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">AddToNextFrameStackMdoc key value</TD>
+          <TD>Misleading original name of the previous command.</TR>
       </TABLE>
       <BR>
       <P><A name="scope_filter_commands"></A><B>Microscope and Filter Control Commands</B></P>
@@ -4363,9 +4371,9 @@
         <TR>
           <TD class="scriptcommand">ReportPiezoXY</TD>
           <TD>Reports the X and Y position of the currently selected piezo, if there is
-              a piezo plugin loaded, or of the piezos on a JEOL stage if not.
-              The abilitiy to use Advanced Scripting to report the piezo X and Y positions was 
-              added in SerialEM 4.3, 3-Sep-26.</TD>
+              a piezo plugin loaded, or of the piezos on a JEOL or Thermo/FEI stage if not.
+              Works for Thermo/FEI as of SerialEM 4.3, 3-Sep-26, but only through Advanced Scripting and
+              with a license.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">ReportPiezoZ</TD>
@@ -4375,10 +4383,10 @@
         <TR>
           <TD class="scriptcommand">MovePiezoXY #X #Y [#R]</TD>
           <TD>Sets the X and Y position to <b>#X</b>, <b>#Y</b> for the currently selected piezo, if a
-              piezo plugin is loaded, or for the piezos on a JEOL stage if not. If
-            <b>#R</b> is non-zero, moves the piezo by <b>#X</b>, <b>#Y</b>. The abilitiy to 
-              use Advanced Scripting to move the piezo X and Y positions was added in SerialEM 
-              4.3, 3-Sep-26.</TD>
+              piezo plugin is loaded, or for the piezos on a JEOL or Thermo/FEI stage if not. If
+            <b>#R</b> is non-zero, moves the piezo by <b>#X</b>, <b>#Y</b>. Works for Thermo/FEI 
+            as of SerialEM 4.3, 3-Sep-26, but only through Advanced Scripting and
+            with a license.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">MovePiezoZ #Z [#R]</TD>

@@ -4850,13 +4850,14 @@ int CMacCmd::CloseFrameMdoc(void)
   return 0;
 }
 
-// AddToNextFrameStackMdoc, StartNextFrameStackMdoc
+// AddToNextFrameStackMdoc, StartNextFrameStackMdoc, AddToFrameStackMdoc
+// AddToFrameStackMdoc
 int CMacCmd::AddToNextFrameStackMdoc(void)
 {
   CString report;
   bool doBack;
 
-  doBack = CMD_IS(STARTNEXTFRAMESTACKMDOC);
+  doBack = CMD_IS(STARTNEXTFRAMESTACKMDOC) || CMD_IS(STARTFRAMESTACKMDOC);
   SubstituteLineStripItems(mStrLine, 2, mStrCopy);
   if (!mRunningScrpLang)
     mParamIO->ParseString(mStrLine, mStrItems, MAX_MACRO_TOKENS, mParseQuotes);

@@ -2943,7 +2943,9 @@ int CCameraController::AddToNextFrameStackMdoc(CString key, CString value, bool 
     if (addTitle && message.IsEmpty()) {
       mWinApp->mDocWnd->AddTitlesToFrameMdoc(message);
     }
-    if (message.IsEmpty() && AdocSetKeyValue(ADOC_GLOBAL, 0, (LPCTSTR)key, (LPCTSTR)value))
+    if (message.IsEmpty() && 
+      !(startIt && !key.CompareNoCase("CLEAR") && !value.CompareNoCase("CLEAR")) &&
+      AdocSetKeyValue(ADOC_GLOBAL, 0, (LPCTSTR)key, (LPCTSTR)value))
       message = "adding value to autodoc";
     AdocReleaseMutex();
   } else
