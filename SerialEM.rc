@@ -646,7 +646,7 @@ BEGIN
     POPUP "T&ilt Series"
     BEGIN
         MENUITEM "&Setup/Start...",             ID_TASKS_TILTSERIES
-        MENUITEM "Setup &Parallel TS",          ID_TILTSERIES_SETUPPARALLELTILTSERIES
+        MENUITEM "Setup &Parallel TS...",       ID_TILTSERIES_SETUPPARALLELTILTSERIES
         MENUITEM "Ter&minate",                  ID_TILTSERIES_TERMINATE
         MENUITEM "E&xtra Output...",            ID_TILTSERIES_EXTRAOUTPUT
         MENUITEM "&Batch Policies...",          ID_TILTSERIES_FUTUREPOLICIES
