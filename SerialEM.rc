@@ -3836,8 +3836,8 @@ BEGIN
     RTEXT           "3000",IDC_STAT_MAX_HULL_DIST,99,233,20,8
     CONTROL         "Use best 1/3 subset of holes, 1.07 um apart",IDC_USE_BEST_SUBSET,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,8,243,146,10
-    CONTROL         "Center added Navigator points in holes",IDC_CENTER_ADDED_HOLES,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,102,132,10
+    CONTROL         "Center manually added Nav. points in holes",IDC_CENTER_ADDED_HOLES,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,102,140,10
 END
 
 IDD_MULTI_COMBINER DIALOGEX 0, 0, 125, 124
@@ -7111,6 +7111,7 @@ BEGIN
     IDC_BUT_CLOSE_CONTROLS  "Close general controls section, just as by pressing task button again"
     IDC_CHECK_MG_REF_USE_PT "Align at a single point, or specify a polygon to align to corners of"
     IDC_EDIT_MG_REFINE_NOTE "Enter starting letters of the Note for item to align at"
+    IDC_CENTER_ADDED_HOLES  "Center each point added via the Navigator ""Add Points"" button in the hole"
 END
 
 STRINGTABLE
