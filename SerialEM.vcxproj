@@ -949,6 +949,8 @@
     <ClInclude Include="ParallelTSDlg.h" />
     <ClInclude Include="ParallelTSHelper.h" />
     <ClInclude Include="ParticleTasks.h" />
+    <ClInclude Include="PixieLib\PixieLib.h" />
+    <ClInclude Include="PixieLib\PLCoolUI.h" />
     <ClInclude Include="PropertyTests.h" />
     <ClInclude Include="PythonServer.h" />
     <ClInclude Include="RadioChoiceDlg.h" />
@@ -1808,6 +1810,9 @@ echo.
     <ClCompile Include="ParallelTSDlg.cpp" />
     <ClCompile Include="ParallelTSHelper.cpp" />
     <ClCompile Include="ParticleTasks.cpp" />
+    <ClCompile Include="PixieLib\MenuTipper.cpp" />
+    <ClCompile Include="PixieLib\PupText.cpp" />
+    <ClCompile Include="PixieLib\Subclass.cpp" />
     <ClCompile Include="PythonServer.cpp" />
     <ClCompile Include="RadioChoiceDlg.cpp" />
     <ClCompile Include="RemoteControl.cpp" />

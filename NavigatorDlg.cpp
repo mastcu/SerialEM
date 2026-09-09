@@ -64,6 +64,7 @@
 #include "Shared\b3dutil.h"
 #include "Shared\iimage.h"
 #include "Shared\imodel.h"
+#include "PixieLib\PixieLib.h"
 
 #if defined(_DEBUG) && defined(_CRTDBG_MAP_ALLOC)
 #define new DEBUG_NEW
@@ -405,6 +406,8 @@ BOOL CNavigatorDlg::OnInitDialog()
     mScope->GetScopeHasAutoloader() ? "Mult&iple Grid Operations..." :
     "Mult&iple Operations on Grid...");
   RemoveHiddenItemsFromMenus(true);
+
+  m_menuTipManager.Install(this);
 
 	return TRUE;  // return TRUE unless you set the focus to a control
 	              // EXCEPTION: OCX Property Pages should return FALSE

@@ -31,6 +31,7 @@
 #include "ProcessImage.h"
 #include "ParallelTSDlg.h"
 #include "XFolderDialog\XWinVer.h"
+#include "PixieLib\PixieLib.h"
 
 #include ".\MainFrm.h"
 
@@ -121,6 +122,7 @@ int CMainFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
   EnableDocking(CBRS_ALIGN_ANY);
   DockControlBar(&m_wndToolBar);
   m_wndToolBar.ShowWindow(SW_HIDE);
+  m_menuTipManager.Install(this);
 
   return 0;
 }

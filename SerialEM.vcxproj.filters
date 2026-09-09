@@ -581,6 +581,12 @@
     <ClInclude Include="ParallelTSHelper.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="PixieLib\PixieLib.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="PixieLib\PLCoolUI.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="res\bitmap1.bmp">
@@ -1390,6 +1396,15 @@
       <Filter>CSource Files</Filter>
     </ClCompile>
     <ClCompile Include="ParallelTSHelper.cpp">
+      <Filter>CSource Files</Filter>
+    </ClCompile>
+    <ClCompile Include="PixieLib\MenuTipper.cpp">
+      <Filter>CSource Files</Filter>
+    </ClCompile>
+    <ClCompile Include="PixieLib\Subclass.cpp">
+      <Filter>CSource Files</Filter>
+    </ClCompile>
+    <ClCompile Include="PixieLib\PupText.cpp">
       <Filter>CSource Files</Filter>
     </ClCompile>
   </ItemGroup>

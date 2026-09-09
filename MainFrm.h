@@ -1,6 +1,7 @@
 // MainFrm.h : interface of the CMainFrame class
 //
 /////////////////////////////////////////////////////////////////////////////
+#include "PixieLib\PixieLib.h"
 
 #if !defined(AFX_MAINFRM_H__742C775D_CDED_4003_AF84_5D0113017F26__INCLUDED_)
 #define AFX_MAINFRM_H__742C775D_CDED_4003_AF84_5D0113017F26__INCLUDED_
@@ -50,6 +51,7 @@ public:
   bool GetClosingProgram() {return mClosingProgram;};
   void DoClose(bool afterScript);
   GetMember(HMENU, RebuiltMenu);
+  
 #ifdef _DEBUG
 	virtual void AssertValid() const;
 	virtual void Dump(CDumpContext& dc) const;
@@ -61,6 +63,7 @@ public:
 protected:  // control bar embedded members
 	CStatusBar  m_wndStatusBar;
 	CToolBar    m_wndToolBar;
+  CMenuTipManager m_menuTipManager;
 
 // Generated message map functions
 protected:

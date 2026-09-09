@@ -306,6 +306,7 @@ protected:
   afx_msg void OnCheckrotate();
   //}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
+  CMenuTipManager m_menuTipManager;
 
 private:
   CSerialEMDoc *mDocWnd;
