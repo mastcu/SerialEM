@@ -64,7 +64,6 @@
 #include "Shared\b3dutil.h"
 #include "Shared\iimage.h"
 #include "Shared\imodel.h"
-#include "PixieLib\PixieLib.h"
 
 #if defined(_DEBUG) && defined(_CRTDBG_MAP_ALLOC)
 #define new DEBUG_NEW

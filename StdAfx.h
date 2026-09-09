@@ -26,7 +26,6 @@
 #ifndef _AFX_NO_AFXCMN_SUPPORT
 #include <afxcmn.h>			// MFC support for Windows Common Controls
 #endif // _AFX_NO_AFXCMN_SUPPORT
-#include "PixieLib\PixieLib.h"   //PixieLib for menu tool tips
 
 #define DLL_IM_EX _declspec(dllexport)
 

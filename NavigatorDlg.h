@@ -14,6 +14,7 @@
 #include <vector>
 #include <set>
 #include "NavHelper.h"
+#include "PixieLib\PixieLib.h"
 
 class CMontageSetupDlg;
 struct TiltSeriesParam;

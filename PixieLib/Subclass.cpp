@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////
-// Extracted from PixieLib and adapted for SerialEM.  Original copyright notice:
+// Extracted from PixieLib and adapted for SerialEM. Original copyright notice:
 //
 // PixieLib(TM) Copyright 1997-2005 Paul DiLascia
 // If this code works, it was written by Paul DiLascia.
@@ -11,6 +11,7 @@
 //
 // CSubclassWnd is a generic class for hooking another window's messages.
 #include "stdafx.h"
+#include "PixieLib.h"
 
 #if defined(_DEBUG) && defined(_CRTDBG_MAP_ALLOC)
 #define new DEBUG_NEW

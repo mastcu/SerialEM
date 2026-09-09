@@ -31,7 +31,6 @@
 #include "ProcessImage.h"
 #include "ParallelTSDlg.h"
 #include "XFolderDialog\XWinVer.h"
-#include "PixieLib\PixieLib.h"
 
 #include ".\MainFrm.h"
 
