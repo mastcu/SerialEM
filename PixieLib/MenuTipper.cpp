@@ -1,4 +1,6 @@
 ////////////////////////////////////////////////////////////////
+// Extracted from PixieLib and adapted for SerialEM.  Original copyright notice:
+//
 // PixieLib(TM) Copyright 1997-2005 Paul DiLascia
 // If this code works, it was written by Paul DiLascia.
 // If not, I don't know who wrote it.
@@ -90,6 +92,30 @@ void CMenuTipManager::OnMenuSelect(UINT nItemID, UINT nFlags, HMENU hMenu)
 				rc.Width(), rc.Height(), SWP_NOACTIVATE);
 			tip.SetWindowText(prompt);
 			tip.ShowDelayed(m_bSticky ? 0 : m_iDelay);
+
+      //added for SerialEM 9/9/26: move tip to the left side if it would go off the screen
+      //---------------------------------------------------------------------------
+      CRect rcMenu;
+      CWnd* pWndMenu = GetRunningMenuWnd();
+      pWndMenu->GetWindowRect(rcMenu); // whole menu rect
+
+      // Get the monitor where the menu is located (or use primary monitor)
+      HMONITOR hMonitor = MonitorFromRect(&rcMenu, MONITOR_DEFAULTTONEAREST);
+      MONITORINFO mi = { sizeof(MONITORINFO) };
+      GetMonitorInfo(hMonitor, &mi);
+      CRect rcWorkArea = mi.rcWork; // working area of the monitor
+      
+      // Check if tip would go off the right edge of the screen
+      tip.GetWindowRect(&rc);
+      if (rcMenu.right + rc.Width() > rcWorkArea.right) {
+        // Place tip to the left of the menu instead
+        rc.left = rcMenu.left - rc.Width();
+        rc.right = rcMenu.left;
+      }
+      tip.SetWindowPos(&CWnd::wndTopMost, rc.left, rc.top,
+        rc.Width(), rc.Height(), SWP_NOACTIVATE);
+      //---------------------------------------------------------------------------
+
 		}
 	}
 }

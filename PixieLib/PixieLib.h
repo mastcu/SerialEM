@@ -1,4 +1,6 @@
 ////////////////////////////////////////////////////////////////
+// Extracted from PixieLib and adapted for SerialEM.  Original copyright notice:
+//
 // PixieLib(TM) Copyright 1997-2005 Paul DiLascia
 // If this code works, it was written by Paul DiLascia.
 // If not, I don't know who wrote it.
