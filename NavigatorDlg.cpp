@@ -8336,7 +8336,7 @@ void CNavigatorDlg::FinishLoadMap(void)
     mLoadItem->mMapMinScale != mLoadItem->mMapMaxScale) {
     mImBufs[mBufToLoadInto].UpdatePixMap();
     mImBufs[mBufToLoadInto].ConvertToByte(mLoadItem->mMapMinScale,
-      mLoadItem->mMapMaxScale);
+      mLoadItem->mMapMaxScale, !mBufferManager->GetAutocontrast());
   }
 
   // Copy montage to read buffer, get loaded size, rotate if requested, and display

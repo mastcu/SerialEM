@@ -28,7 +28,7 @@ public:
   float GetUnbinnedBWMeanPerSec();
   BOOL IsMontageOverview();
   BOOL IsMontageCenter();
-  BOOL ConvertToByte(float minScale, float maxScale);
+  BOOL ConvertToByte(float minScale, float maxScale, bool keepBW = false);
 
   KImage          *mImage;
   KImageScale *mImageScale;

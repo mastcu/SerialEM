@@ -3728,6 +3728,25 @@ MoveStage 0 0 -$zRange / 2.
       Thermo/FEI STEM, you need to run this procedure at every spot size where dynamic focus
       might be used.
     <p>
+      <i><b>Running the Focus Ramp for Dynamic Focusing on Thermo/FEI.</b></i>&nbsp; 
+      When support for STEM was first added, it was not possible for SerialEM to modify focus 
+      during a STEM acquisition on Thermo/FEI scopes.&nbsp; The solution was to change focus for dynamic 
+      focusing with a separate executable, FocusRamper.&nbsp; The installation of this
+      component was described above in <a href="#runningInstaller">Running the 
+      Installer</a> and <a href="#pluginServer">Setting Up the
+          Plugin and Server</a>.&nbsp; If you are using the UTAPI interface for STEM 
+      and focusing, there is no need to install FocusRamper because SerialEM will run 
+      the focus ramp directly.&nbsp; In a bizarre twist, on some recent microscopes (as of 
+      ~2025), FocusRamper does not work, but it is possible for SerialEM or 
+      FEI-SEMserver to run the focus ramp while acquiring a STEM image through the old 
+      standard scripting interface.&nbsp; The signs of FocusRamper not working are 
+      that dynamic focusing fails to change focus, and that the flyback time 
+      calibration fails because the beam is never blanked during the acquisition.&nbsp; 
+      If this happens, try setting the property SkipFocusRamper to 1, which will make 
+      SerialEM or the server try to run the focus ramp directly.&nbsp; Alternatively, 
+      consider upgrading to UTAPI, which provides a much better interface for STEM 
+      acquisition.</p>
+      <p>
       <i><b>Flyback Times for Thermo/FEI STEM.</b></i>&nbsp; To use dynamic focusing with Thermo/FEI
       STEM, you will need to calibrate the flyback time a number of times, because it
       depends on exposure time, binning, subarea size, and magnification.&nbsp; The
@@ -3739,7 +3758,7 @@ MoveStage 0 0 -$zRange / 2.
       Quick Flyback Time</A> for more information, advice, and instructions on running
       this command with a script for a series of exposure times.</p>
     <p>
-      <b><i>Microprobe mode on Thermo/FEI.</i></b>&nbsp; The magnifications, pixel sizes,
+      <b><i>Microprobe Mode on Thermo/FEI.</i></b>&nbsp; The magnifications, pixel sizes,
       image shift, and focus-related calibrations are all stored separately for
       microprobe mode and nanoprobe mode.&nbsp; If you are going to use microprobe
       mode, you need to repeat steps above starting with <i>Rotating to the tilt axis</i>
@@ -3752,7 +3771,7 @@ MoveStage 0 0 -$zRange / 2.
       calibration, be sure to add the refinement to an absolute calibrated angle on a
       RotationAndPixel line instead of modifying the ExtraRotation entry.</p>
     <p>
-      <i><b>MaximumScanRate entries</b></i>.&nbsp; If you add a property defining a
+      <i><b>MaximumScanRate Entries</b></i>.&nbsp; If you add a property defining a
       maximum scan rate (see
       <A HREF="about_properties.htm#per_camera_properties">STEM Camera Properties</A>
       for details), there are two effects. 1) A button becomes available in the Camera
