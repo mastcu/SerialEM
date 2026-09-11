@@ -903,16 +903,9 @@ int CParallelTSHelper::SaveTarget(CString &err)
 {
   int index, index2, mapID, navInd;
   float defocus, SX, SY, factor;
-  CString mess;
   ScaleMat mat;
-  NavAlignParams *alignParams = mNavHelper->GetNavAlignParams();
-  bool canAdjustIS = mShiftManager->GetFocusISCals()->GetSize() > 0 &&
-    mShiftManager->GetFocusMagCals()->GetSize() > 0;
   double ISX, ISY, stageX, stageY, stageZ, delX, delY;
   float ISlimit = 2.f * mWinApp->mShiftCalibrator->GetCalISOstageLimit();
-  float focusLim = -20.;
-  EMimageBuffer *imBufs = mWinApp->GetImBufs();
-  ComaVsISCalib *comaVsIS = mWinApp->mAutoTuning->GetComaVsIScal();
 
   mapID = mCurISTargetItem->mMapID;
   mWinApp->mNavigator->FindItemWithMapID(mapID, false);
@@ -1411,18 +1404,18 @@ int CParallelTSHelper::ConvertToParTSItem(CString &err, CMapDrawItem *item)
     MultiShotParams *msPars = mNavHelper->GetMultiShotParams();
     if (item->IsPoint()) {
       mNavHelper->GetNumHolesFromParam(numX, numY, numDef);
-      numPoints = mNavHelper->GetNumHolesForItem(item, numDef);
-      if (numPoints > MAX_STORES) {
-        err.Format("The current multishot pattern would generate %d targets, which"
-          " exceeds the limit of %d", numPoints, MAX_STORES);
-        return -2;
-      }
       if (item->mNumXholes > 0)
         numX = item->mNumXholes;
       if (item->mNumYholes > 0)
         numY = item->mNumYholes;
       mWinApp->mParticleTasks->GetHolePositions(delISX, delISY, indices, mMagIndex,
         mWinApp->GetCurrentCamera(), numX, numY, mMappingTilt, item);
+      numPoints = (int)delISX.size();
+      if (numPoints > MAX_STORES) {
+        err.Format("The current multishot pattern would generate %d targets, which"
+          " exceeds the limit of %d", numPoints, MAX_STORES);
+        return -2;
+      }
       mParTSitem = item;
     } else if (item->IsPolygon()) {
       mNavHelper->FillPolygonWithMultiShot(item, delISX, delISY, err);

@@ -554,7 +554,8 @@ void CParallelTSDlg::Update()
   m_butRemoveTarget.EnableWindow(mSettingUpTargetArea && !mJustSavedTargets && 
     mRefiningTargets && noTasks);
   m_butFinalizeTargetArea.EnableWindow(mSettingUpTargetArea && !mFinalizedTargetArea &&
-    noTasks && !IsAddingToNav() && ((m_iTargetType == 0 && mJustSavedTargets && numSaved > 1) ||
+    mHasAreaMap && noTasks && !IsAddingToNav() && 
+    ((m_iTargetType == 0 && mJustSavedTargets && numSaved > 1) ||
       m_iTargetType == 1 || (noIS && numPoints > 1)));
   m_butAbortArea.EnableWindow(noTasks && (mDefiningPoints ||
     ((mSettingUpTargetArea || mAddingTargets) && !mFinalizedTargetArea)));

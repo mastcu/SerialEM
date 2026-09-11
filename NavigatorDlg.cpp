@@ -3805,42 +3805,126 @@ void CNavigatorDlg::MouseDoubleClick(int button)
   if (mLastSelectWasCurrent && button == VK_LBUTTON && m_bEditMode) {
     if (!shiftKey) {
       BackspacePressed();
-    } else if (mCurItemHoleXYpos.size() && (mItem = GetSingleSelectedItem()) != NULL &&
-      mHelper->GetNumHolesFromParam(msNumXholes, msNumYholes, ind)) {
+    } else if (mCurItemHoleXYpos.size() && (mItem = GetSingleSelectedItem()) != NULL) {
 
+      // Delete hole from a multishot pattern
+      if (mHelper->GetNumHolesFromParam(msNumXholes, msNumYholes, ind) && 
+        !mItem->mNumIStargets) {
 
-      // Get interhole distance and distance to nearest
-      for (ind = 0; ind < numHoles; ind++) {
-        dist = sqrt(pow(mMultiDelStageX - mCurItemHoleXYpos[2 * ind], 2.f) +
-          pow(mMultiDelStageY - mCurItemHoleXYpos[2 * ind + 1], 2.f));
-        if (dist < minDist) {
-          minDist = dist;
-          minInd = ind;
+        // Get interhole distance and distance to nearest
+        for (ind = 0; ind < numHoles; ind++) {
+          dist = sqrt(pow(mMultiDelStageX - mCurItemHoleXYpos[2 * ind], 2.f) +
+            pow(mMultiDelStageY - mCurItemHoleXYpos[2 * ind + 1], 2.f));
+          if (dist < minDist) {
+            minDist = dist;
+            minInd = ind;
+          }
+          for (jnd = ind + 1; jnd < numHoles; jnd++) {
+            dist = sqrt(pow(mCurItemHoleXYpos[2 * jnd] - mCurItemHoleXYpos[2 * ind], 2.f) +
+              pow(mCurItemHoleXYpos[2 * jnd + 1] - mCurItemHoleXYpos[2 * ind + 1], 2.f));
+            ACCUM_MIN(minInterHole, dist);
+          }
         }
-        for (jnd = ind + 1; jnd < numHoles; jnd++) {
-          dist = sqrt(pow(mCurItemHoleXYpos[2 * jnd] - mCurItemHoleXYpos[2 * ind], 2.f) +
-            pow(mCurItemHoleXYpos[2 * jnd + 1] - mCurItemHoleXYpos[2 * ind + 1], 2.f));
-          ACCUM_MIN(minInterHole, dist);
-        }
-      }
 
-      // It must be close enough to one hole
-      if (minDist < 0.33 * minInterHole) {
-        if (!mItem->mNumXholes && !mItem->mNumYholes) {
-          mItem->mNumXholes = msNumXholes;
-          mItem->mNumYholes = msNumYholes;
+        // It must be close enough to one hole
+        if (minDist < 0.33 * minInterHole) {
+          if (!mItem->mNumXholes && !mItem->mNumYholes) {
+            mItem->mNumXholes = msNumXholes;
+            mItem->mNumYholes = msNumYholes;
+          }
+          newSkipPos = new unsigned char[2 * mItem->mNumSkipHoles + 2];
+          for (jnd = 0; jnd < 2 * mItem->mNumSkipHoles; jnd++)
+            newSkipPos[jnd] = mItem->mSkipHolePos[jnd];
+          newSkipPos[jnd] = mCurItemHoleIndex[minInd * 2];
+          newSkipPos[jnd + 1] = mCurItemHoleIndex[minInd * 2 + 1];
+          delete[] mItem->mSkipHolePos;
+          mItem->mSkipHolePos = newSkipPos;
+          mItem->mNumSkipHoles += 1;
+          if (mWinApp->mParticleTasks->ItemIsEmptyMultishot(mItem)) {
+            BackspacePressed();
+          } else {
+            SetChanged(true);
+            Redraw();
+          }
         }
-        newSkipPos = new unsigned char[2 * mItem->mNumSkipHoles + 2];
-        for (jnd = 0; jnd < 2 * mItem->mNumSkipHoles; jnd++)
-          newSkipPos[jnd] = mItem->mSkipHolePos[jnd];
-        newSkipPos[jnd] = mCurItemHoleIndex[minInd * 2];
-        newSkipPos[jnd + 1] = mCurItemHoleIndex[minInd * 2 + 1];
-        delete[] mItem->mSkipHolePos;
-        mItem->mSkipHolePos = newSkipPos;
-        mItem->mNumSkipHoles += 1;
-        if (mWinApp->mParticleTasks->ItemIsEmptyMultishot(mItem)) {
-          BackspacePressed();
-        } else {
+
+      // Or, delete image shift target from parallel tilt series item
+      } else if (mItem->mNumIStargets) {
+
+        // Get distance to nearest target, excluding the center
+        for (ind = 0; ind < (int)mItem->mNumIStargets; ind++) {
+          dist = sqrt(pow(mMultiDelStageX - mCurItemHoleXYpos[2 * ind], 2.f) +
+            pow(mMultiDelStageY - mCurItemHoleXYpos[2 * ind + 1], 2.f));
+          if (dist < minDist && ind > 0) {
+            minDist = dist;
+            minInd = ind;
+          }
+        }
+        
+        // Check if the clicked point is within the acquire box of closest target.
+        // If it is, jnd will be nonzero
+        TiltSeriesParam *tsPar = GetTSparamArray()->GetAt(mItem->mTSparamIndex);
+        int magInd = tsPar->magIndex[mWinApp->GetSTEMMode() ? 1 + tsPar->probeMode : 0];
+        ScaleMat mat = mShiftManager->StageToCamera(mWinApp->GetCurrentCamera(), magInd);
+        jnd = 0;
+        if (mat.xpx) {
+          mat = MatInv(mat);
+          ControlSet *conSet = mWinApp->GetConSets() + RECORD_CONSET;
+          int sizeX = conSet->right - conSet->left;
+          int sizeY = conSet->bottom - conSet->top;
+          float cornX, cornY;
+          float *ptX = new float[5];
+          float *ptY = new float[5];
+          for (ind = 0; ind < 5; ind++) {
+            cornX = (float)(0.5 * sizeX * (1 - 2 * ((ind / 2) % 2)));
+            cornY = (float)(0.5 * sizeY * (1 - 2 * (((ind + 1) / 2) % 2)));
+            ptX[ind] = mCurItemHoleXYpos[2 * minInd] + mat.xpx * cornX + mat.xpy * cornY;
+            ptY[ind] = mCurItemHoleXYpos[2 * minInd + 1] + mat.ypx * cornX + mat.ypy * cornY;
+          }
+          jnd = InsideContour(ptX, ptY, 5, mMultiDelStageX, mMultiDelStageY);
+          delete[] ptX;
+          delete[] ptY;
+        }
+        
+        if (jnd) {
+          if (mItem->mNumIStargets <= 2) {
+            SEMMessageBox("No more targets can be deleted: a parallel tilt series item "
+              "requires at least two targets");
+            return;
+          }
+
+          // Decrement number of IS targets and remove IS x and y values from array
+          mItem->mNumIStargets--;
+          float *IStargetsXYcopy = new float[2 * (int)mItem->mNumIStargets];
+          for (ind = 0; ind < 2 * ((int)mItem->mNumIStargets + 1); ind++) {
+            if (ind < 2 * minInd) {
+              IStargetsXYcopy[ind] = mItem->mIStargetsXY[ind];
+            } else if (ind > 2 * minInd + 1)
+              IStargetsXYcopy[ind - 2] = mItem->mIStargetsXY[ind];
+          }
+          delete[] mItem->mIStargetsXY;
+          mItem->mIStargetsXY = IStargetsXYcopy;
+
+          // Remove additional PTS parameters, if applicable: 
+          // preview section number, coordinates in area map, shifts in saved preview
+          if (mItem->mParallelTSIndex >= 0 && 
+            mItem->mParallelTSIndex < mParallelTSArray.GetSize()) {
+            ParallelTSParam *ptsPar = mParallelTSArray[mItem->mParallelTSIndex];
+            if ((int)ptsPar->prevSectNums.size() == (int)mItem->mNumIStargets + 1)
+              VEC_REMOVE_AT(ptsPar->prevSectNums, minInd);
+            if ((int)ptsPar->xCoordInArea.size() == (int)mItem->mNumIStargets + 1)
+              VEC_REMOVE_AT(ptsPar->xCoordInArea, minInd);
+            if ((int)ptsPar->yCoordInArea.size() == (int)mItem->mNumIStargets + 1)
+              VEC_REMOVE_AT(ptsPar->yCoordInArea, minInd);
+            if ((int)ptsPar->xShiftInImage.size() == (int)mItem->mNumIStargets + 1)
+              VEC_REMOVE_AT(ptsPar->xShiftInImage, minInd);
+            if ((int)ptsPar->yShiftInImage.size() == (int)mItem->mNumIStargets + 1)
+              VEC_REMOVE_AT(ptsPar->yShiftInImage, minInd);
+          }
+
+          //Update item note in the navigator and redraw
+          mItem->mNote.Format("%d targets", mItem->mNumIStargets);
+          UpdateListString(mCurrentItem);
           SetChanged(true);
           Redraw();
         }
@@ -3891,6 +3975,7 @@ void CNavigatorDlg::MouseDoubleClick(int button)
     }
   }
 }
+
 
 // Return the vectors used to save positions for the holes drawn around current point
 // if appropriate for editing

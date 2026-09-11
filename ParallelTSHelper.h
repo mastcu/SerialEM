@@ -39,7 +39,7 @@ private:
   double mTiltDuringFit;
   
   bool mAdjustBeamTilt;
-  int mMagIndex;
+  int mMagIndex;  // The mag at which final images will be acquired
   float mPretilt;
   float mXpitch;
 
@@ -98,6 +98,7 @@ public:
   GetSetMember(float, Pretilt);
   GetSetMember(float, Xpitch);
   GetMember(int, AreaMapMagInd);
+  GetMember(int, MagIndex);
   bool DoingISToTargets() { return mDoingISToTargets; };
   int GetNumSavedTargets() { return (int)mSavedTargetIDs.size(); };
   int ISToTargetsBusy();
