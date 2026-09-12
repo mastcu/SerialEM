@@ -1490,7 +1490,8 @@ void CNavigatorDlg::OnEditMode()
       "    Ctrl-Left-Click to add or remove from selected points or polygons\r\n"
       "    Ctrl-Left Button down to add points or polygons to selection while moving mouse\r\n"
       "    Left-double-click to delete point if already selected\r\n"
-      "    Shift-Left-double-click to remove one position from multiple Record array\r\n"
+      "    Shift-Left-double-click to remove one position from multiple Record array"
+      " or Parallel Tilt Series item\r\n"
       "    Middle-click to add a point\r\n    Right-click to move current point\r\n"
       "    Backspace to delete current point or polygon\r\n");
     mHelper->SetEditReminderPrinted(true);
