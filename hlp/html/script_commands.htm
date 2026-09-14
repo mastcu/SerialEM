@@ -5751,16 +5751,6 @@
              apply must match the starting magnification of the adjusting transformation.&nbsp; Command added in 4.3, 17-Feb-26</TD>
         </TR>
         <TR>
-          <TD class="scriptcommand">DeleteItemImShiftTarget #I #T [#D]</TD>
-          <TD>If the Navigator item specified by <strong>#I</strong> (positive for table 
-              index, 0 for current or acquired item, or negative for index from end) has a 
-              stored array of image shift targets, the target at index <strong>#T</strong> 
-              will be deleted. Because the target at index 1 is always the center point and it 
-              is forbidden to delete its image shift value, the specified target index must be 
-              2 or higher. Enter a non-zero value for the optional <b>#D</b> to suppress redisplaying the image, in case you are 
-              doing this command many times in a loop. Command added in 4.3, 14-Sep-26</TD>
-        </TR>
-        <TR>
           <TD class="scriptcommand">SetNavItemUserValue #I #V [text]</TD>
           <TD>Sets an arbitrary value for a Navigator item specified by <b>#I</b>
             (positive for table index, 0 for current or acquired item, or negative for index from

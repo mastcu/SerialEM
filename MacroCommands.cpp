@@ -12687,24 +12687,6 @@ int CMacCmd::AdjustImShiftTargets()
   return 0;
 }
 
-int CMacCmd::DeleteItemImShiftTarget()
-{
-  CMapDrawItem *navItem = CurrentOrIndexedNavItem(mItemInt[1], mStrLine);
-  if (!navItem)
-    return 1;
-  if (mItemInt[2] < 2) {
-    ABORT_LINE("Only image shift targets with index 2 or higher can be deleted "
-      "for line:\n\n");
-  }
-  if (mWinApp->mParallelTSHelper->DeleteISTargetFromItem(navItem, mItemInt[2] - 1, 
-    mStrCopy)) {
-    ABORT_LINE(mStrCopy + " for line:\n\n");
-  }
-  if (!mItemInt[3])
-    mWinApp->mMainView->DrawImage();
-  return 0;
-}
-
 // AddCirclePolygon
 int CMacCmd::AddCirclePolygon(void)
 {
