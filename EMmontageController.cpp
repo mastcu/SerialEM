@@ -3107,12 +3107,24 @@ int EMmontageController::SavePiece()
       }
     }
 
+    float saveMinScl = 0., saveMaxScl = 0., saveMinSam, saveMaxSam;
+    if (!mBufferManager->GetAutocontrast() && mReadingMontage && 
+      mImBufs[mBufToCopyTo].mImageScale && mImBufs[1].mImageScale) {
+      saveMinScl = mImBufs[mBufToCopyTo].mImageScale->GetMinScale();
+      saveMaxScl = mImBufs[mBufToCopyTo].mImageScale->GetMaxScale();
+      saveMinSam = mImBufs[mBufToCopyTo].mImageScale->GetSampleMin();
+      saveMaxSam = mImBufs[mBufToCopyTo].mImageScale->GetSampleMax();
+    }
     if (mBufferManager->ReplaceImage((char *)mMiniData, miniType, mMiniSizeX, mMiniSizeY,
       1, mTrialMontage ? BUFFER_PRESCAN_OVERVIEW : BUFFER_MONTAGE_OVERVIEW,
       MONTAGE_CONSET, B3DCHOICE(mReadingMontage && mImBufs->mBinning > 0,
         mImBufs->mBinning, mParam->binning) * mMiniZoom, false, !mNoDrawOnRead)) {
       delete [] mMiniData;
     } else {
+      if (saveMaxScl || saveMinScl) {
+        mImBufs[1].mImageScale->SetMinMax(saveMinScl, saveMaxScl);
+        mImBufs[1].mImageScale->SetSampleMinMax(saveMinSam, saveMaxSam);
+      }
 
       // At this point buffer A still has the last read-in image, so get these parameters
       // from it if possible

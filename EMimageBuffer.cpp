@@ -344,10 +344,10 @@ BOOL EMimageBuffer::IsProcessed(void)
 }
 
 // Convert the image to a byte image with given scaling
-BOOL EMimageBuffer::ConvertToByte(float minScale, float maxScale)
+BOOL EMimageBuffer::ConvertToByte(float minScale, float maxScale, bool keepBW)
 {
   int type, saveFlag;
-  float shiftX, shiftY;
+  float shiftX, shiftY, saveMinScl, saveMaxScl, saveMinSam, saveMaxSam;
   KImage *byteImage;
 
   // Require an image, image scale, pixmap, and short image
@@ -362,6 +362,14 @@ BOOL EMimageBuffer::ConvertToByte(float minScale, float maxScale)
   if (minScale == 0. && maxScale == 0.) {
     minScale = mLastScale.GetMinScale();
     maxScale = mLastScale.GetMaxScale();
+  }
+
+  // Save scaling if keeping it
+  if (keepBW) {
+    saveMinScl = mImageScale->GetMinScale();
+    saveMaxScl = mImageScale->GetMaxScale();
+    saveMinSam = mImageScale->GetSampleMin();
+    saveMaxSam = mImageScale->GetSampleMax();
   }
 
   // If shifts are non-zero or scale does not match or no pixmap image, get a new pixmap
@@ -387,8 +395,13 @@ BOOL EMimageBuffer::ConvertToByte(float minScale, float maxScale)
   // Replace the existing image, free the pixmap, set the scale and restore the shifts
   mPixMap->doneWithRect();
   mImage = byteImage;
-  mImageScale->SetMinMax(0., 255.);
-  mImageScale->SetSampleMinMax(0., 255.);
+  if (keepBW && saveMinScl < saveMaxScl && saveMinScl >= 0. && saveMaxScl <= 255.) {
+    mImageScale->SetMinMax(saveMinScl, saveMaxScl);
+    mImageScale->SetSampleMinMax(saveMinSam, saveMaxSam);
+  } else {
+    mImageScale->SetMinMax(0., 255.);
+    mImageScale->SetSampleMinMax(0., 255.);
+  }
   mImage->setShifts(shiftX, shiftY);
   mSampleMean = EXTRA_NO_VALUE;
   SetImageChanged(1);

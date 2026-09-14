@@ -3,8 +3,11 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+9/11/26: Made it keep existing Black/White values when reading maps with
+Autocontrast turned off.
+
 9/10/26: Tips now pop up next to menu items in both the main program menu and
-the navigator window menu.
+the Navigator window menu.
 
 9/8/26: Renamed the option in Hole Finder Dialog that centers manually added
 navigator points in holes, and fixed a bug where using this option in certain
