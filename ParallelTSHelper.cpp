@@ -1583,6 +1583,7 @@ int CParallelTSHelper::DeleteISTargetFromItem(CMapDrawItem *item, int delInd, CS
   if (item->mNumIStargets == 0) {
     err = "The specified navigator item is not a parallel tilt series item";
     return 1;
+  }
   if (item->mNumIStargets <= 2) {
     err = "No more targets can be deleted: a parallel tilt series item "
       "requires at least two targets";
