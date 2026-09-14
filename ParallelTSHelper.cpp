@@ -1575,6 +1575,57 @@ int CParallelTSHelper::GetTSparamItem(CMapDrawItem *&item)
   return navInd;
 }
 
+// Deletes image shift target from a finalized parallel tilt series item, at index delInd
+int CParallelTSHelper::DeleteISTargetFromItem(CMapDrawItem *item, int delInd, CString &err)
+{
+  int ind;
+
+  if (item->mNumIStargets == 0) {
+    err = "The specified navigator item is not a parallel tilt series item";
+    return 1;
+  if (item->mNumIStargets <= 2) {
+    err = "No more targets can be deleted: a parallel tilt series item "
+      "requires at least two targets";
+    return 2;
+  }
+  if (delInd >= item->mNumIStargets) {
+    err.Format("Cannot delete target #%d from a parallel tilt series item with %d targets",
+      delInd + 1, item->mNumIStargets);
+    return 3;
+  }
+
+  // Decrement number of IS targets and remove IS x and y values from array
+  item->mNumIStargets--;
+  for (ind = 2 * delInd; ind < 2 * ((int)item->mNumIStargets - 1); ind++) {
+    item->mIStargetsXY[ind] = item->mIStargetsXY[ind + 2];
+  }
+
+  // Remove additional PTS parameters, if applicable: 
+  // preview section number, coordinates in area map, shifts in saved preview
+  if (item->mParallelTSIndex >= 0 && mWinApp->mNavigator &&
+    item->mParallelTSIndex < mWinApp->mNavigator->GetParallelTSArray()->GetSize()) {
+    ParallelTSParam *ptsPar = mWinApp->mNavigator->GetParallelTSArray()->GetAt(
+      item->mParallelTSIndex);
+    if ((int)ptsPar->prevSectNums.size() == (int)item->mNumIStargets + 1)
+      VEC_REMOVE_AT(ptsPar->prevSectNums, delInd);
+    if ((int)ptsPar->xCoordInArea.size() == (int)item->mNumIStargets + 1)
+      VEC_REMOVE_AT(ptsPar->xCoordInArea, delInd);
+    if ((int)ptsPar->yCoordInArea.size() == (int)item->mNumIStargets + 1)
+      VEC_REMOVE_AT(ptsPar->yCoordInArea, delInd);
+    if ((int)ptsPar->xShiftInImage.size() == (int)item->mNumIStargets + 1)
+      VEC_REMOVE_AT(ptsPar->xShiftInImage, delInd);
+    if ((int)ptsPar->yShiftInImage.size() == (int)item->mNumIStargets + 1)
+      VEC_REMOVE_AT(ptsPar->yShiftInImage, delInd);
+  }
+
+  //Update item note in the navigator and redraw
+  item->mNote.Format("%d targets", item->mNumIStargets);
+  mWinApp->mNavigator->FindItemWithMapID(item->mMapID, false);
+  mWinApp->mNavigator->UpdateListString(mWinApp->mNavigator->GetFoundItem());
+
+  return 0;
+}
+
 // Opens the tilt series parameters window for the current PTS item
 void CParallelTSHelper::UpdateTSParams()
 {

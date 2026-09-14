@@ -886,6 +886,7 @@ MAC_SAME_NAME_ARG(GetAllLowDoseValues, 3, 4, GETALLLOWDOSEVALUES, ISSsssssssssss
 MAC_SAME_FUNC_ARG(GetAllCameraSetValues, 3, 4, GetAllLowDoseValues, GETALLCAMERASETVALUES, ISSssssssssssssssss)
 MAC_SAME_FUNC_ARG(AddToFrameStackMdoc, 2, 4, AddToNextFrameStackMdoc, ADDTOFRAMESTACKMDOC, SS)
 MAC_SAME_FUNC_ARG(StartFrameStackMdoc, 2, 4, AddToNextFrameStackMdoc, STARTFRAMESTACKMDOC, SS)
+MAC_SAME_NAME_ARG(DeleteItemImShiftTarget, 2, 4, DELETEITEMIMSHIFTTARGET, IIi)
 
 // new Python-only commands need to be added to pythonOnlyCmds in ::CMacroProcessor
 // New Not from Python items omit _ARG or _NOARG

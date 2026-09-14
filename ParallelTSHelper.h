@@ -115,6 +115,7 @@ public:
   int GetSavedTargetsInNav(IntVec *navInd, IntVec *indices = NULL);
   int ConvertToParTSItem(CString &err, CMapDrawItem *item = NULL);
   int GetTSparamItem(CMapDrawItem *&item);
+  int DeleteISTargetFromItem(CMapDrawItem *item, int ind, CString &err);
   void UpdateTSParams();
   bool CanAdjustISVectors(int fromMag, bool multiShot, CString &mess);
   int GetCenterPtID();

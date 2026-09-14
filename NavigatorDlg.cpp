@@ -3803,6 +3803,7 @@ void CNavigatorDlg::MouseDoubleClick(int button)
   unsigned char *newSkipPos;
   Ipoint pt1, pt2, ptm;
   CMapDrawItem *item;
+  CString err;
   if (mLastSelectWasCurrent && button == VK_LBUTTON && m_bEditMode) {
     if (!shiftKey) {
       BackspacePressed();
@@ -3851,6 +3852,11 @@ void CNavigatorDlg::MouseDoubleClick(int button)
 
       // Or, delete image shift target from parallel tilt series item
       } else if (mItem->mNumIStargets) {
+        if (mItem->mTSparamIndex < 0 || 
+          mItem->mTSparamIndex >= GetTSparamArray()->GetSize()) {
+          SEMMessageBox("The parallel tilt series item is missing tilt series parameters");
+          return;
+        }
 
         // Get distance to nearest target, excluding the center
         for (ind = 0; ind < (int)mItem->mNumIStargets; ind++) {
@@ -3863,7 +3869,6 @@ void CNavigatorDlg::MouseDoubleClick(int button)
         }
         
         // Check if the clicked point is within the acquire box of closest target.
-        // If it is, jnd will be nonzero
         TiltSeriesParam *tsPar = GetTSparamArray()->GetAt(mItem->mTSparamIndex);
         int magInd = tsPar->magIndex[mWinApp->GetSTEMMode() ? 1 + tsPar->probeMode : 0];
         ScaleMat mat = mShiftManager->StageToCamera(mWinApp->GetCurrentCamera(), magInd);
@@ -3874,8 +3879,8 @@ void CNavigatorDlg::MouseDoubleClick(int button)
           int sizeX = conSet->right - conSet->left;
           int sizeY = conSet->bottom - conSet->top;
           float cornX, cornY;
-          float *ptX = new float[5];
-          float *ptY = new float[5];
+          float ptX[5];
+          float ptY[5];
           for (ind = 0; ind < 5; ind++) {
             cornX = (float)(0.5 * sizeX * (1 - 2 * ((ind / 2) % 2)));
             cornY = (float)(0.5 * sizeY * (1 - 2 * (((ind + 1) / 2) % 2)));
@@ -3883,50 +3888,14 @@ void CNavigatorDlg::MouseDoubleClick(int button)
             ptY[ind] = mCurItemHoleXYpos[2 * minInd + 1] + mat.ypx * cornX + mat.ypy * cornY;
           }
           jnd = InsideContour(ptX, ptY, 5, mMultiDelStageX, mMultiDelStageY);
-          delete[] ptX;
-          delete[] ptY;
         }
         
+        // If clicked pt was inside a target's acquire box, jnd will be nonzero
         if (jnd) {
-          if (mItem->mNumIStargets <= 2) {
-            SEMMessageBox("No more targets can be deleted: a parallel tilt series item "
-              "requires at least two targets");
+          if (mWinApp->mParallelTSHelper->DeleteISTargetFromItem(mItem, minInd, err)) {
+            SEMMessageBox(err);
             return;
           }
-
-          // Decrement number of IS targets and remove IS x and y values from array
-          mItem->mNumIStargets--;
-          float *IStargetsXYcopy = new float[2 * (int)mItem->mNumIStargets];
-          for (ind = 0; ind < 2 * ((int)mItem->mNumIStargets + 1); ind++) {
-            if (ind < 2 * minInd) {
-              IStargetsXYcopy[ind] = mItem->mIStargetsXY[ind];
-            } else if (ind > 2 * minInd + 1)
-              IStargetsXYcopy[ind - 2] = mItem->mIStargetsXY[ind];
-          }
-          delete[] mItem->mIStargetsXY;
-          mItem->mIStargetsXY = IStargetsXYcopy;
-
-          // Remove additional PTS parameters, if applicable: 
-          // preview section number, coordinates in area map, shifts in saved preview
-          if (mItem->mParallelTSIndex >= 0 && 
-            mItem->mParallelTSIndex < mParallelTSArray.GetSize()) {
-            ParallelTSParam *ptsPar = mParallelTSArray[mItem->mParallelTSIndex];
-            if ((int)ptsPar->prevSectNums.size() == (int)mItem->mNumIStargets + 1)
-              VEC_REMOVE_AT(ptsPar->prevSectNums, minInd);
-            if ((int)ptsPar->xCoordInArea.size() == (int)mItem->mNumIStargets + 1)
-              VEC_REMOVE_AT(ptsPar->xCoordInArea, minInd);
-            if ((int)ptsPar->yCoordInArea.size() == (int)mItem->mNumIStargets + 1)
-              VEC_REMOVE_AT(ptsPar->yCoordInArea, minInd);
-            if ((int)ptsPar->xShiftInImage.size() == (int)mItem->mNumIStargets + 1)
-              VEC_REMOVE_AT(ptsPar->xShiftInImage, minInd);
-            if ((int)ptsPar->yShiftInImage.size() == (int)mItem->mNumIStargets + 1)
-              VEC_REMOVE_AT(ptsPar->yShiftInImage, minInd);
-          }
-
-          //Update item note in the navigator and redraw
-          mItem->mNote.Format("%d targets", mItem->mNumIStargets);
-          UpdateListString(mCurrentItem);
-          SetChanged(true);
           Redraw();
         }
       }
