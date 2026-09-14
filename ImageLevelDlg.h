@@ -25,8 +25,7 @@ public:
 	void NewImageScale(KImageScale *inImageScale);
 	void ProcessEditBoxes();
 	void OnOK();
-	void AnalyzeImage();
-  void ResetLevels();
+	void AnalyzeImage(bool resetBriCon = false);
 	CImageLevelDlg(CWnd* pParent = NULL);   // standard constructor
 
 // Dialog Data
