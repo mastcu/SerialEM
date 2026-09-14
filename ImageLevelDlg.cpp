@@ -228,6 +228,29 @@ void CImageLevelDlg::AnalyzeImage()
   SetEditBoxes();
 }
 
+void CImageLevelDlg::ResetLevels()
+{
+  EMimageBuffer *imBuf = mWinApp->mActiveView->GetActiveImBuf();
+  if (!imBuf->mImage || !imBuf->mImageScale)
+    return;
+  imBuf->mImageScale->FindPctStretch(imBuf->mImage, mPctLo, mPctHi, mAreaFrac,
+    B3DCHOICE(imBuf->mCaptured == BUFFER_FFT || imBuf->mCaptured == BUFFER_LIVE_FFT,
+      mWinApp->GetBkgdGrayOfFFT(), 0), mWinApp->GetTruncDiamOfFFT());
+  mWinApp->mActiveView->DrawImage();
+
+  // Also, set the new limits into the text box
+  mBlackLevel = imBuf->mImageScale->GetMinScale();
+  mWhiteLevel = imBuf->mImageScale->GetMaxScale();
+  mSampleMin = imBuf->mImageScale->GetSampleMin();
+  mSampleMax = imBuf->mImageScale->GetSampleMax();
+  mBrightSlider = 0;
+  mContrastSlider = 0;
+  imBuf->mImageScale->mBrightness = mBrightSlider;
+  imBuf->mImageScale->mContrast = mContrastSlider;
+  SetEditBoxes();
+  
+}
+
 
 
 void CImageLevelDlg::OnClose()
@@ -491,7 +514,7 @@ void CImageLevelDlg::OnTiltaxis()
 
 void CImageLevelDlg::OnAuto()
 {
-  AnalyzeImage();
+  ResetLevels();
   if (mWinApp->mActiveView)
     mWinApp->mActiveView->DrawImage();
   mWinApp->RestoreViewFocus();

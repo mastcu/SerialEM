@@ -26,6 +26,7 @@ public:
 	void ProcessEditBoxes();
 	void OnOK();
 	void AnalyzeImage();
+  void ResetLevels();
 	CImageLevelDlg(CWnd* pParent = NULL);   // standard constructor
 
 // Dialog Data
