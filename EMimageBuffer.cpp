@@ -385,6 +385,8 @@ BOOL EMimageBuffer::ConvertToByte(float minScale, float maxScale, bool keepBW)
   // Make a copy of the pixmap image structure and transfer extra data
   // Find out if image saved; delete existing image, restore save flag
   byteImage = new KImage(mPixMap->getImRectPtr());
+  if (byteImage->GetUserData())
+    delete byteImage->GetUserData();
   byteImage->SetUserData(mImage->GetUserData());
   mImage->SetUserData(NULL);
   saveFlag = GetSaveCopyFlag();

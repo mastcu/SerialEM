@@ -1139,7 +1139,7 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
 
       //Add image FOV in microns
       float pixel = mShiftManager->GetPixelSize(imBuf);
-      if (pixel > 0) {
+      if (pixel > 0 && scaleCrit > 0) {
         cdc.SetTextColor(RGB(0, 255, 40));
         cdc.SelectObject(useLabelFont);
         imBuf->mImage->getSize(ix, iy);

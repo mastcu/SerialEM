@@ -3,6 +3,8 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+9/15/26: Autocontrast button also resets brightness and contrast.
+
 9/11/26: Made it keep existing Black/White values when reading maps with
 Autocontrast turned off.
 

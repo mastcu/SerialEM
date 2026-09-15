@@ -210,14 +210,20 @@ void CImageLevelDlg::OnAreafraction()
 }
 
 // If percent truncation or fraction area has changed, find new stretch and redraw image
-void CImageLevelDlg::AnalyzeImage()
+void CImageLevelDlg::AnalyzeImage(bool resetBriCon)
 {
   EMimageBuffer *imBuf = mWinApp->mActiveView->GetActiveImBuf();
   if (!imBuf->mImage || !imBuf->mImageScale)
     return;
   imBuf->mImageScale->FindPctStretch(imBuf->mImage, mPctLo, mPctHi, mAreaFrac,
     B3DCHOICE(imBuf->mCaptured == BUFFER_FFT || imBuf->mCaptured == BUFFER_LIVE_FFT, 
-      mWinApp->GetBkgdGrayOfFFT(), 0), mWinApp->GetTruncDiamOfFFT());
+      mWinApp->GetBkgdGrayOfFFT(), 0), mWinApp->GetTruncDiamOfFFT());  
+  if (resetBriCon) {
+    mBrightSlider = 0;
+    mContrastSlider = 0;
+    imBuf->mImageScale->mBrightness = mBrightSlider;
+    imBuf->mImageScale->mContrast = mContrastSlider;
+  }
   mWinApp->mActiveView->DrawImage();
 
   // Also, set the new limits into the text box
@@ -227,8 +233,6 @@ void CImageLevelDlg::AnalyzeImage()
   mSampleMax = imBuf->mImageScale->GetSampleMax();
   SetEditBoxes();
 }
-
-
 
 void CImageLevelDlg::OnClose()
 {
@@ -491,9 +495,7 @@ void CImageLevelDlg::OnTiltaxis()
 
 void CImageLevelDlg::OnAuto()
 {
-  AnalyzeImage();
-  if (mWinApp->mActiveView)
-    mWinApp->mActiveView->DrawImage();
+  AnalyzeImage(true);
   mWinApp->RestoreViewFocus();
 }
 
