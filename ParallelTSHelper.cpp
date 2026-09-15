@@ -285,7 +285,6 @@ int CParallelTSHelper::ISToNextTarget(int targetID, CString &err)
   int navInd;
   ScaleMat st2is;
   bool doBacklash = mScope->GetAdjustForISSkipBacklash() <= 0;
-  ComaVsISCalib *comaVsIS = mWinApp->mAutoTuning->GetComaVsIScal();
   ParallelTSOptions *parTSopt = mNavHelper->GetParTSOptions();
   CString mess;
 
@@ -394,14 +393,10 @@ void CParallelTSHelper::ISToTargetNextTask(int param)
   float shiftX, shiftY;
   int sizeX, sizeY;
   float FOVchange, FOVchangeThresh = 0.1f;
-  bool mapSaved, openNewFile = false, openOldFile = false;
+  bool mapSaved;
   EMimageBuffer *imBufs = mWinApp->GetImBufs();
   CString mess, str;
-  ScaleMat st2ss = MatInv(mShiftManager->SpecimenToStage(1., 1.));
   NavAlignParams *alignParams = mNavHelper->GetNavAlignParams();
-  ComaVsISCalib *comaVsIS = mWinApp->mAutoTuning->GetComaVsIScal();
-  bool canAdjustIS = mShiftManager->GetFocusISCals()->GetSize() > 0 &&
-    mShiftManager->GetFocusMagCals()->GetSize() > 0;
 
   if (!mDoingISToTargets || mISTargetIter < 0)
     return;
