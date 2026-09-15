@@ -3851,12 +3851,8 @@ void CNavigatorDlg::MouseDoubleClick(int button)
         }
 
       // Or, delete image shift target from parallel tilt series item
-      } else if (mItem->mNumIStargets) {
-        if (mItem->mTSparamIndex < 0 || 
-          mItem->mTSparamIndex >= GetTSparamArray()->GetSize()) {
-          SEMMessageBox("The parallel tilt series item is missing tilt series parameters");
-          return;
-        }
+      } else if (mItem->mNumIStargets && mItem->mTSparamIndex >= 0 &&
+        mItem->mTSparamIndex < GetTSparamArray()->GetSize()) {
 
         // Get distance to nearest target, excluding the center
         for (ind = 0; ind < (int)mItem->mNumIStargets; ind++) {
