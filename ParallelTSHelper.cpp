@@ -1597,7 +1597,7 @@ int CParallelTSHelper::DeleteISTargetFromItem(CMapDrawItem *item, int delInd, CS
 
   // Decrement number of IS targets and remove IS x and y values from array
   item->mNumIStargets--;
-  for (ind = 2 * delInd; ind < 2 * ((int)item->mNumIStargets - 1); ind++) {
+  for (ind = 2 * delInd; ind < 2 * (int)item->mNumIStargets; ind++) {
     item->mIStargetsXY[ind] = item->mIStargetsXY[ind + 2];
   }
 
