@@ -3738,14 +3738,23 @@ int CMacCmd::OpenNewFile(void)
 int CMacCmd::SetupWaffleMontage(void)
 {
   CString report;
-  int index2, ix0, iy0, sizeX, sizeY;
+  int index2, ix0, iy0, sizeX, sizeY, left, right, top, bot, bin;
   float backlashX;
 
   if (mItemInt[1] < 2)
     ABORT_LINE("Minimum number of blocks in waffle grating must be at least 2 in:\n\n");
   backlashX = (float)(0.462 * mItemInt[1]);
-  sizeX = mConSets[RECORD_CONSET].right - mConSets[RECORD_CONSET].left;
-  sizeY = mConSets[RECORD_CONSET].bottom - mConSets[RECORD_CONSET].top;
+  bin = mConSets[RECORD_CONSET].binning;
+  left = mConSets[RECORD_CONSET].left / bin;
+  right = mConSets[RECORD_CONSET].right / bin;
+  top = mConSets[RECORD_CONSET].top / bin;
+  bot = mConSets[RECORD_CONSET].bottom / bin;
+  sizeX = right - left;
+  sizeY = bot - top;
+  mCamera->AdjustSizes(sizeX, mCamParams->sizeX, mCamParams->moduloX, left, right, sizeY,
+    mCamParams->sizeY, mCamParams->moduloX, top, bot, bin);
+  sizeX *= bin;
+  sizeY *= bin;
   ix0 = PiecesForMinimumSize(backlashX, sizeX, 0.1f);
   iy0 = PiecesForMinimumSize(backlashX, sizeY, 0.1f);
   if (ix0 < 2 && iy0 < 2) {

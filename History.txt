@@ -5,6 +5,9 @@ significance, for the stable release version
 ============================================================================
 9/24/26: Added support for multiple DE cameras on different servers.
 
+9/24/26: Made SetupWaffleMontage adjust camera coordinates so that montage is
+not defined with a larger size than the images will be (In 4.2).
+
 9/17/26: Added the capability to delete individual image shift targets in a 
 parallel tilt series item when in Navigator edit mode.
 
