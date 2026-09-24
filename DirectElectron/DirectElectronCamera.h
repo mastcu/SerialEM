@@ -75,6 +75,7 @@ public:
 	DirectElectronCamera(int camType,int index);
 	~DirectElectronCamera(void);
 	int initialize(CString camName, int camIndex);
+  void copyCameraServerProps(CameraParameters *camP);
 	int setBinning(int x, int y, int sizex, int sizey, int hardwareBin);
 	int SetImageExposureAndMode(float seconds);
 	int SetDarkExposureAndMode(float seconds);
@@ -87,7 +88,8 @@ public:
   int SetupLiveAndGetImage(unsigned short *image4k, int inSizeX, int inSizeY, int divideBy2, int operation);
 	float getCameraTemp();
 
-	int initDEServer();
+	int initDEServer(bool reconnect);
+  int checkAndConnectToOtherServer(int camIndex, bool reconnect);
 	int initializeDECamera(CString camName, int camIndex);
   void FinishCameraSelection(bool initialCall, CameraParameters *camP);
 	int setROI(int offset_x, int offset_y, int xsize, int ysize, int hardwareROI);

@@ -56,6 +56,12 @@ Temperature - Water Line (Celsius)
 Temperature Control                 2.5 -> Temperature - Control  DONE
 Temperature Control - Setpoint (Celsius)  2.5 -> Temperature - Cool Down Setpoint (Celsius)  DONE
 
+Number of Frames Grabbed
+System Status
+Number of Frames To Grab
+Acquisition Status
+STEM additions!
+
 
 These are only referred to by these globals in the header file
 g_Property_DE_BinningX
@@ -82,5 +88,4 @@ Autosave Summed Image
 These are in currently unused functions
 Temperature - Cold Finger (Celsius)
 Temperature - TEC current (Ampere)
-
 

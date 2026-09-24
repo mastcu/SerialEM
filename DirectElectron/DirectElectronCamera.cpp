@@ -3,19 +3,9 @@
 // file:  DirectElectronCamera.cpp
 // Main file for controlling Direct Electron cameras.
 //
-// Comments about originally supported cameras:
-// This is the main file that wraps the functionality of the LC 1100.
-// The camera control is based on two COM modules:
-// FSM_MemoryLib.dll and SoliosFor4000.dll.  The FSM_MemoryLib.dll
-// deals with the MIL libs for reading the image from the Solios
-// capture card and the SoliosFor4000.dll COM lib deals with
-// writing and receiving the commands of the camera.
-//
-//
 // author of SerialEM: David Mastronarde
 //
-// LC1100 camera integration by Direct Electron
-// 2009
+//Original LC1100 camera integration by Direct Electron 2009 by Tomas Molina
 //
 ///////////////////////////////////////////////////////////////////
 
@@ -147,11 +137,7 @@ DirectElectronCamera::DirectElectronCamera(int camType, int index)
 
       // Set the server and rotation properties from the camParam
       CameraParameters *camP = &mCamParams[index];
-      mDE_SERVER_IP = camP->DEServerIP;
-      mDE_READPORT = camP->DE_ServerReadPort;
-      mDE_WRITEPORT = camP->DE_ServerWritePort;
-      m_DE_ImageRot = camP->DE_ImageRot;
-      m_DE_ImageInvertX = camP->DE_ImageInvertX;
+      copyCameraServerProps(camP);
 
       InitializeLastSettings();
       SEMTrace('D', "DEServer is %s ReadPort:%d WritePort:%d ImageRotation:%d "
@@ -219,7 +205,8 @@ int DirectElectronCamera::unInitialize()
       mDeServer->close();
     }
   }
-  mDeServer = NULL;
+  m_DE_CONNECTED = false;
+  //mDeServer = NULL;
   return 1;
 }
 
@@ -240,11 +227,13 @@ int DirectElectronCamera::initialize(CString camName, int camIndex)
   //pull the reference to the ToolDialog box for DE.
   //We need to give our dialogs the camera reference.
   mWinApp->mDEToolDlg.setCameraReference(this);
+  if (checkAndConnectToOtherServer(camIndex, false))
+    return -1;
 
   //initialize the DE server.
   int check = -1;
   if (!m_DE_CONNECTED) {
-    check = initDEServer();
+    check = initDEServer(false);
     if (check == -1)
       return check;
   }
@@ -260,11 +249,21 @@ int DirectElectronCamera::initialize(CString camName, int camIndex)
   return 1;
 }
 
+// Copies IP address, ports, and old geometry settings from camera properties to members
+void DirectElectronCamera::copyCameraServerProps(CameraParameters * camP)
+{
+  mDE_SERVER_IP = camP->DEServerIP;
+  mDE_READPORT = camP->DE_ServerReadPort;
+  mDE_WRITEPORT = camP->DE_ServerWritePort;
+  m_DE_ImageRot = camP->DE_ImageRot;
+  m_DE_ImageInvertX = camP->DE_ImageInvertX;
+}
+
 ///////////////////////////////////////////////////////////////////
 // Ensures that there is a proper connection between the client
 // and the server.
 ///////////////////////////////////////////////////////////////////
-int DirectElectronCamera::initDEServer()
+int DirectElectronCamera::initDEServer(bool reconnect)
 {
   if (!mDeServer) {
     SEMTrace('D', "No DE plugin was loaded");
@@ -296,6 +295,9 @@ int DirectElectronCamera::initDEServer()
     return -1;
   }
 
+  if (reconnect)
+    return 1;
+
   //Read out the possible list of cameras that have been setup:
   StringVec cameras;
   if (!mDeServer->getCameraNames(&cameras)) {
@@ -317,6 +319,25 @@ int DirectElectronCamera::initDEServer()
 
   // 5/5/25: Removed restriction on 32 bit version with API2
   return 1;
+}
+
+// See if the indicated camera is on a different server from the current one and if so,
+// disconnect from current server and connect to the one needed for this camera
+int DirectElectronCamera::checkAndConnectToOtherServer(int camIndex, bool reconnect)
+{
+  CameraParameters *camP = mCamParams + camIndex;
+  CString ipAddr = camP->DEServerIP;
+  if (sUsingAPI2 && ipAddr == "127.0.0.1")
+    ipAddr = "localhost";
+  if (ipAddr == mDE_SERVER_IP)
+    return 0;
+  copyCameraServerProps(camP);
+  if (!m_DE_CONNECTED)
+    return 0;
+  unInitialize();
+  if (initDEServer(reconnect) < 0)
+    return 1;
+  return 0;
 }
 
 // Initialize a particular DE camera, getting its properties and setting flags
@@ -717,13 +738,11 @@ void DirectElectronCamera::setCameraName(CString camName, int index, BOOL ifSTEM
 
   CameraParameters *camP = &mCamParams[index];
 
-  //set to the current Values from the camera.
-  //Just in case in the future we need to
-  mDE_SERVER_IP = camP->DEServerIP;
-  mDE_READPORT = camP->DE_ServerReadPort;
-  mDE_WRITEPORT = camP->DE_ServerWritePort;
-  m_DE_ImageRot = camP->DE_ImageRot;
-  m_DE_ImageInvertX = camP->DE_ImageInvertX;
+  // This will copy camera properties to member variables if it is a different server
+  checkAndConnectToOtherServer(index, true);
+
+  // But this might still be needed for a different camera on same server
+  copyCameraServerProps(camP);
 
   if (!BOOL_EQUIV(ifSTEM, mEnabledSTEM)) {
     if (setStringWithError("Scan - Enable", ifSTEM ? "On" : "Off"))
@@ -1027,7 +1046,7 @@ int DirectElectronCamera::AcquireImageData(unsigned short *image4k, long &imageS
         &pixForm, &attributes);
       if (!attributes.acqFinished) {
         startTime = GetTickCount();
-        while (IsAcquiring() && SEMTickInterval(startTime) < 10000.)
+        while (IsAcquiring(true) && SEMTickInterval(startTime) < 10000.)
           Sleep(25);
       }
     }
