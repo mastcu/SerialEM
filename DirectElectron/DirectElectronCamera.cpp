@@ -295,6 +295,10 @@ int DirectElectronCamera::initDEServer(bool reconnect)
     return -1;
   }
 
+  std::string propValue;
+  if (mDeServer->getProperty(std::string(psServerVersion), &propValue))
+    SetSoftwareAndServerVersion(propValue);
+
   if (reconnect)
     return 1;
 
@@ -312,10 +316,6 @@ int DirectElectronCamera::initDEServer(bool reconnect)
     listCameras += CString(cameras[i].c_str()) + "\r\n";
 
   SEMTrace('D', "%s", (LPCTSTR)listCameras);
-
-  std::string propValue;
-  if (mDeServer->getProperty(std::string(psServerVersion), &propValue))
-    SetSoftwareAndServerVersion(propValue);
 
   // 5/5/25: Removed restriction on 32 bit version with API2
   return 1;

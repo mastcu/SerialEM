@@ -125,6 +125,7 @@ class EMmontageController
   GetMember(int, PieceIndex);
   GetSetMember(BOOL, NoDrawOnRead);
   GetMember(int, RestoringStage);
+  GetMember(BOOL, ReadingMontage);
   void SetPercentileStatParams(int patchSize, float lowPct, float highPct, float midCrit, float rangeCrit) {
     mNextPctlPatchSize = patchSize, mLowPercentile = lowPct, mHighPercentile = highPct, 
       mPctlMidCrit = midCrit, mPctlRangeCrit = rangeCrit;

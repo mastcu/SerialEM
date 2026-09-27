@@ -3,7 +3,7 @@
  *
  *   Copyright (C) 1995-2020 by the Regents of the University of Colorado.
  *
- *   $Id$
+ *   $Id: cfsemshare.h,v 2b8bf5efdeae 2026/09/14 02:37:09 mast $
  */                                                                           
 
 #ifndef CFSEMSHARE_H
@@ -68,6 +68,10 @@ extern "C" {
                        int ixStart, int iyStart, int nxUse, int nyUse,
                        float filltoExclude, float *samples, int maxSamples, 
                        int *numSamples);
+  int getSampleOfLinePtrs(unsigned char **image, int mode, int nx, int ny,
+                          float sampleFrac, int ixStart, int iyStart, int nxUse,
+                          int nyUse, float fillToExclude, float *samples, int maxSamples,
+                          int *numSamples);
 
   /* pctstretch.c - for computing percentile limits quickly by sampling */
   int percentileStretch(unsigned char **image, int mode, int nx, int ny, float sample,
@@ -121,6 +125,13 @@ extern "C" {
                           float *peak, float *width, float *widthSD, int maxpeaks, 
                           float minStrength);
   void setPeakFindLimits(int limXlo, int limXhi, int limYlo, int limYhi, int useEllipse);
+  void setPeakFindAngle(float angle);
+  int getPeakFindError();
+  void storePeakFindError(int val);
+  void getPeakFindTestLimits(int nx, int ny, int *limXlo, int *limXhi, int *limYlo,
+                             int *limYhi);
+  void getPeakFindTimes(double *part1, double *part2, double *sort);
+
   int findManyXCorrPeaks(float *array, int nxdim, int ny, int ixOffset, 
                          int iyOffset, float *xpeak, float *ypeak, float *peak,
                          int maxPeaks, int maxGrow, int *numFound);
@@ -157,6 +168,14 @@ extern "C" {
                           int nyrOut, float dxIn,float dyIn, float *temp);
   void fourierExpandImage(float *fftIn, int nxrIn, int nyrIn, float *fftOut, int nxrOut,
                           int nyrOut, float dxIn,float dyIn, float *temp);
+  void fourierShiftVolume(float *fft, int nxPad, int nyPad, int nzPad, float dx, float dy,
+                          float dz, float *temp);
+  void fourierReduceVolume(float *fftIn, int nxrIn, int nyrIn, int nzrIn, float *fftOut,
+                           int nxrOut, int nyrOut, int nzrOut, float dxIn, float dyIn,
+                           float dzIn, float *temp);
+  void fourierExpandVolume(float *fftIn, int nxrIn, int nyrIn, int nzrIn, float *fftOut,
+                           int nxrOut, int nyrOut, int nzrOut, float dxIn, float dyIn,
+                           float dzIn, float *temp);
   void fourierRingCorr(float *ffta, float *fftb, int nxReal, int ny, float *ringCorrs,
                        int maxRings, float deltaR, float *temp);
   int fourierCropSizes(int size, float factor, float padFrac, int minPad, int niceLimit,
@@ -201,6 +220,8 @@ extern "C" {
   int fitSphereWgt(float *xpt, float *ypt, float *zpt, float *weights,
                    int numPts, float *rad, float *xcen, float *ycen,
                    float *zcen, float *rmsErr);
+  int fitCenteredEllipse(float *xpt, float *ypt, int numPts, float *xrad,
+                         float *yrad, float *theta, float *rmsErr, float *work);
 
   /* insidecontour.c */
   int InsideContour(float *ptX, float *ptY, int np, float x, float y);
@@ -294,6 +315,10 @@ extern "C" {
                       float *cenmean, float *annmean, float *temp, 
                       float annPct, float *median);
 
+  /* solvecubiceqn.c */
+  void solveCubicEqn(double aa, double bb, double cc, double dd, double roots[3][2],
+                     double *magnRatio);
+  
   /* statfuncs.f */
   double tValue(double signif, int ndf);
   double fValue(double signif, int ndf1, int ndf2);
@@ -370,6 +395,7 @@ extern "C" {
   int readOneXform(FILE *fp, float *xf);
   int readAllXforms(FILE *fp, float *xforms, int maxRead, int *numRead);
   void exitFromXFReadError(int ierr, const char *descrip);
+  int writeXform(FILE *fp, float *xf);
 
   /* piecefuncs.c */
   int checkPieceList(int *pclist, int stride, int npclist, int redfac, int nframe,
@@ -406,7 +432,8 @@ extern "C" {
   int findTransform(float *xMat, int mSize, int icolX, int numPoints, float xcen,
                     float yCen, int ifTrans, int ifRotrans, int ifDev, float *xf,
                     float *devAvg, float *devSd, float *devMax, int *ipntMax);
-
+  void findXfRobustParams(float kfactor, int maxIter, int maxZeroWgt, float maxChange,
+                          float maxOscill);
 
   /* minimize1D.c */
   int minimize1D(float curPosition, float curValue, float initialStep, int numScanSteps,
@@ -505,6 +532,7 @@ extern "C" {
                          int *izPiece, int maxPiece, int *numFound);
   int getMetadataWeightingDoses(int indAdoc, int iTypeAdoc, int nz, int *izPiece, 
                                 int bidirNumInvert, float *priorDose, float *secDose);
+  void setZeroDoseThreshAndAccum(float thresh, float accum);
   void priorDosesFromImageDoses(float *secDose, int nz, int bidirNumInvert,
                                 float *priorDose);
   double SEMshortsToFloat(short low, short ihigh);
