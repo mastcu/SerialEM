@@ -5064,9 +5064,11 @@ int EMmontageController::FindBestShifts(int nvar, float *upperShiftX, float *upp
         if (outlier[i] < 0. && mTrimmedMaxSDs[i] <= sdMedianRatio * median) {
           ixy = mMaxSDToIxyOfEdge[i];
           inde = edgeUpper[2 * mMaxSDToPieceNum[i] + ixy];
-          ifSkipEdge[2 * inde + ixy] = 1;
-          SEMTrace('a', "Skipping edge with SD %f: %d pc %d ixy %d", mTrimmedMaxSDs[i], 
-            inde, mMaxSDToPieceNum[i], ixy);
+          if (inde >= 0) {
+            ifSkipEdge[2 * inde + ixy] = 1;
+            SEMTrace('a', "Skipping edge with SD %f: %d pc %d ixy %d", mTrimmedMaxSDs[i],
+              inde, mMaxSDToPieceNum[i], ixy);
+          }
         }
       }
     }
