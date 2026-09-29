@@ -3,6 +3,12 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+9/29/26: Fixed ReadNavFile so that maps are found without a full path or with
+forward slashes in path (In 4.2).
+
+9/29/26: Fixed crash in loading a synthesized montage piece when double
+clicking Navigator point or using LoadPieceAtNavPoint (In 4.2).
+
 9/24/26: Added support for multiple DE cameras on different servers.
 
 9/24/26: Made SetupWaffleMontage adjust camera coordinates so that montage is
