@@ -8721,6 +8721,8 @@ int CNavigatorDlg::LoadNavFile(bool checkAutosave, bool mergeFile, CString *inFi
   }
   mHelper->mCombineHoles->ClearSavedItemArray(true, true);
   UtilSplitPath(name, navRoot, str);
+  if (navRoot.IsEmpty())
+    navRoot = _getcwd(NULL, _MAX_PATH);
   if (!mergeFile)
     mHelper->SetLastUsedHoleISVecs(NULL, NULL, false);
 

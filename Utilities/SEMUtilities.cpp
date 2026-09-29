@@ -365,6 +365,9 @@ void UtilSplitExtension(CString filename, CString &root, CString &ext)
 void UtilSplitPath(CString fullPath, CString &directory, CString &filename)
 {
   int index = fullPath.ReverseFind('\\');
+  int index2 = fullPath.ReverseFind('/');
+  if (index2 > index)
+    index = index2;
   filename = fullPath;
   directory = "";
   if (index >= 0 && index == fullPath.GetLength() - 1) {
