@@ -78,6 +78,13 @@
             in LD Define</a></TD></TD>
           <TD>Choose whether to show estimated beam sizes when defining Focus or Trial Low Dose areas.</TD>
         </TR>
+       <TR VALIGN="top">
+          <TD class="auto-style1">&nbsp;&nbsp;
+              <a href="#hid_special_comavsiscal_from_settings">Use Coma vs IS Calibrations 
+              from Settings</a></TD>
+          <TD>Set whether to use Coma vs Image Shift calibrations from Settings instead of 
+              Calibrations</TD>
+        </TR>
          <TR VALIGN="top">
           <TD class="auto-style1">&nbsp; <a href="#hid_special_disable_dark_trim_in_align">
             Disable Dark Trim in Align</a></TD>
@@ -283,9 +290,17 @@
       <li>Both the circumscribing circles and the dashed circles representing the &quot;true&quot; beam 
         sizes.</li>
     </ol>
-      <A NAME="hid_special_disable_dark_trim_in_align"></A><B>Disable Dark Trim in
-      Align command (Settings - Specialized &amp; Misc. Options submenu)</B></p>
-    <p>
+      <b>
+      <A NAME="hid_special_comavsiscal_from_settings"></A>Use Coma vs IS Calibrations 
+      from Settings (Settings - Specialized &amp; Misc. Options submenu)</b><br />
+      <br />
+      As of SerialEM 4.3, multiple Coma vs Image Shift calibrations can be stored in 
+      Calibrations as well as SerialEM Settings. If this option is checked, whenever 
+      the program computes a Coma vs IS calibration, it will use the calibrations 
+      stored in the the current Settings rather than Calibrations.<br />
+      <br />
+      <B>Disable Dark Trim in
+      Align command (Settings - Specialized &amp; Misc. Options submenu)</B><p>
       Even when 'Trim dark borders in Autoalign' is not selected in the
       <a href="hidd_alignfocus.htm">Image
       Alignment &amp; Focus</a> control panel, this trimming happens automatically in 

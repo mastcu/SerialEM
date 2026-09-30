@@ -10888,7 +10888,8 @@ void CNavigatorDlg::AcquireNextTask(int param)
   MultiShotParams *msParams = mHelper->GetMultiShotParams();
   DriftWaitParams *dwParam = mWinApp->mParticleTasks->GetDriftWaitParams();
   VppConditionParams *vppParams = mWinApp->mMultiTSTasks->GetVppConditionParams();
-  ComaVsISCalib *comaVsIS = mWinApp->mAutoTuning->GetComaVsIScal();
+  ComaVsISCalib *comaVsIS = mWinApp->mAutoTuning->GetBestComaVsISCal(mScope->GetSpotSize(),
+    mScope->GetIntensity(), mScope->GetProbeMode(), mScope->GetAlpha());
   NavAlignParams *aliParams = mHelper->GetNavAlignParams();
   DewarVacParams *dvParams = mScope->GetDewarVacParams();
   BOOL *tsStoreExtra = mWinApp->mTSController->GetStoreExtra();

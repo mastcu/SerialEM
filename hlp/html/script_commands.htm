@@ -4664,8 +4664,13 @@
         <TR>
           <TD class="scriptcommand">ReportComaVsISmatrix</TD>
           <TD>Reports the matrix computed from the
-            <a href="menu_focus.htm#hid_focustuning_comavs">Coma vs. Image Shift</a>
-            calibration.&nbsp; The 4 values are xpx, xpy, ypx, and ypy, where the change in
+            <a href="menu_focus.htm#hid_focustuning_comavs">Coma vs. Image Shift</a> 
+              calibrations at the current illumination conditions (spot size, C2/C3 lens setting or 
+              illuminated area, probe mode or alpha setting, and aperture for a Talos).&nbsp;Whether the 
+              calibrations are used from the calibrations or settings file is determined by 
+              the <a href="menu_settings.htm#hid_special_comavsiscal_from_settings">Use Coma 
+              vs IS Calibrations from Settings</a> option in the Specialized &amp; Misc. Options 
+              submenu. The 4 values are xpx, xpy, ypx, and ypy, where the change in
             beam tilt for a given image shift (in IS units) is given by<br />
 &nbsp; BTx = ISx * xpx + ISy * xpy<br />
 &nbsp; BTy = ISx * ypx + ISy * ypy</TD>

@@ -217,7 +217,11 @@
         <TR vAlign="top">
           <TD class="style1">&nbsp;&nbsp;&nbsp; <a href="#hid_autofocusfocus_listcalibrations">
             List Calibrations</a></TD>
-          <TD>List the magnifications at which focus calibrations exist for each camera</TD>
+          <TD>Lists all focus, astigmatism, and coma calibrations.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style1">&nbsp;&nbsp;&nbsp; Delete a Coma vs IS Cal&nbsp;</TD>
+          <TD>Delete one coma vs image shift calibration at specified illumination conditions.</TD>
         </TR>
         <TR vAlign="top">
           <TD class="style2">Beam &amp; Spot</TD>
@@ -1351,7 +1355,19 @@
         (Calibration - Focus &amp; Tuning sub-menu)</B></p>
     <p>
       Use this command to list all focus calibrations by magnification and camera,
-      plus astigmatism and coma-free calibrations with their conditions.</p>
+        plus astigmatism, coma-free, and coma vs image shift calibrations with their conditions.</p>
+      <p>
+          <strong>Delete a Coma vs IS Cal command<B> (Calibration - Focus &amp; Tuning 
+          sub-menu)</B></strong></p>
+      <p>
+          Use this command to delete one coma vs image shift calibration. A series of 
+          popup boxes will prompt you to enter the illumination conditions of the calibration 
+          you wish to delete (the spot size, C2/C3 lens setting or illuminated area, the 
+          probe mode or alpha setting, and the aperture size for a Talos). The default values in these popups will come from 
+          the current scope settings. The program will only consider calibrations either 
+          in the settings file or in the calibrations file, based on whether the
+          <a href="menu_settings.htm#hid_special_comavsiscal_from_settings">Use Coma vs IS 
+          Calibrations from Settings</a> option is checked.</p>
       <P><A name="hid_beamspot_illuminatedarealimits"></A><B>Illuminated Area Limits command (Calibration - 
         Beam &amp; Spot sub-menu)</B></P>
       <P>Use this command to calibrate the limits of the illuminated area readout from 

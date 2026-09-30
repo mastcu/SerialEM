@@ -40,4 +40,6 @@ public:
   CButton m_butCalibrate;
   BOOL m_iNumImages;
   afx_msg void OnSetNumImages();
+  int m_iStoreCal;
+  afx_msg void OnStoreCalibration();
 };

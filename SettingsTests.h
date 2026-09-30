@@ -252,6 +252,8 @@ INT_SETT_GETSET("ComaVsISrotation", mWinApp->mAutoTuning->, ComaVsISrotation)
 INT_SETT_GETSET("ComaVsISuseFullArray", mWinApp->mAutoTuning->, ComaVsISuseFullArray)
 FLOAT_SETT_GETSET("MinCtfBasedDefocus", mWinApp->mAutoTuning->, MinCtfBasedDefocus)
 FLOAT_SETT_GETSET("AddToMinForAstigCTF", mWinApp->mAutoTuning->, AddToMinForAstigCTF)
+BOOL_SETT_GETSET("ComaVsISFromSettings", mWinApp->mAutoTuning->, ComaVsIScalFromSettings)
+BOOL_SETT_GETSET("ComaVsISToSettings", mWinApp->mAutoTuning->, ComaVsIScalToSettings)
 #endif
 #ifdef SET_TEST_SECT3
 #include "NavAdocParams.h"

@@ -20,6 +20,7 @@
 #include "CtfAcquireParamDlg.h"
 #include "CameraController.h"
 #include "ExternalTools.h"
+#include "ComaVsISCalDlg.h"
 #include "Shared\b3dutil.h"
 #include "Shared\ctffind.h"
 #include "Utilities\XCorr.h"
@@ -93,6 +94,8 @@ CAutoTuning::CAutoTuning(void)
   mComaVsISextent = 3.f;
   mComaVsISrotation = 0;
   mComaVsISuseFullArray = 0;
+  mComaVsIScalFromSettings = true;
+  mComaVsIScalToSettings = true;
 }
 
 
@@ -2116,6 +2119,10 @@ void CAutoTuning::ComaVsISNextTask(int param)
   mComaVsIScal.aperture = 0;
   if (mScope->GetUseIllumAreaForC2())
     mComaVsIScal.aperture = mWinApp->mBeamAssessor->RequestApertureSize();
+  mComaVsIScal.userSetting = GetComaVsIScalToSettings();
+
+  AppendToComaVsISCals(&mComaVsIScal);
+
   if (mWinApp->mNavHelper->mMultiShotDlg)
     mWinApp->mNavHelper->mMultiShotDlg->ManageEnables();
   StopComaVsISCal();
@@ -2153,4 +2160,337 @@ void CAutoTuning::GetComaVsISVector(int magInd, float extent, int rotation, int 
   B3DCLAMP(posIndex, 0, 3);
   delISX = (float)(cosRot  * delx[posIndex] * ISX - sinRot * dely[posIndex] * ISY);
   delISY = (float)(sinRot *  delx[posIndex] * ISX + cosRot * dely[posIndex] * ISY);
+}
+
+// Look up a stored coma vs IS calibration with the given conditions, and find calibrations
+// at indexes i0, i1 closest to the conditions provided 
+int CAutoTuning::LookupComaVsISCal(int spotSize, float intensity, int probeMode, int alpha, 
+  int aperture, bool userSetting, int &i0, int &i1, float &interpPar)
+{
+  float distC2tol = mShiftManager->GetC2SpacingForHighFocus();
+  float crossover, calIntensity, calIntCmp, intCmp, int1, int0, dist, tooClose;
+  int ii0, ii1, match = -1;
+  std::vector<float> intensities;
+  std::vector<int> indices;
+  
+  //Initialize variables for finding and returning closest calibrations
+  // int0 and int1 have a double meaning. If crossover = 0, it's just the intensities.
+  // If crossover > 0, it's 1 / abs(intensity - crossover). Either way, these are used as 
+  // the endpoints for the interpolation in GetBestComaVsISCal
+  i0 = i1 = -1;
+  ii0 = ii1 = -1;
+  interpPar = -1.f;
+  int0 = 0.f; int1 = 1.e10f;
+
+  // Get tolerance and transform intensity for comparison to determine a match
+  crossover = (float)mScope->GetCrossover(spotSize, probeMode);
+  intCmp = intensity;
+  if (crossover <= 0.)
+    distC2tol /= 4.f;
+  else 
+    intCmp = 1.f / fabs(intensity - crossover);
+
+  // Search all calibrations with matching beam conditions, find cals with closest higher
+  // and lower intensities
+  for (int i = 0; i < (int)mComaVsISCals.size(); i++) {
+    if (mComaVsISCals[i].spotSize == spotSize && mComaVsISCals[i].probeMode == probeMode 
+      && mComaVsISCals[i].alpha == alpha && userSetting == mComaVsISCals[i].userSetting) {
+
+      // Scale intensity if the apertures are different for illuminated area
+      calIntensity = mComaVsISCals[i].intensity;
+      if (aperture != mComaVsISCals[i].aperture && mScope->GetUseIllumAreaForC2()) {
+        calIntensity = (float)mScope->IntensityAfterApertureChange(
+          (double)mComaVsISCals[i].intensity, mComaVsISCals[i].aperture, aperture, 
+          spotSize, probeMode);
+      }
+
+      calIntCmp = calIntensity;
+      if (crossover > 0.) {
+        calIntCmp = 1.f / fabs(calIntCmp - crossover);
+      }
+
+      intensities.push_back(calIntCmp);
+      indices.push_back(i);
+
+      // compare intensities to see if it's a match. Set the tolerance to this distance
+      // so that, if another cal is within the tolerance, it's only a match if closer.
+      dist = fabs(calIntCmp - intCmp);
+      if (((mComaVsISCals[i].aperture == aperture && !mScope->GetUseIllumAreaForC2()) ||
+        mScope->GetUseIllumAreaForC2()) && dist < distC2tol) {
+        distC2tol = dist;
+        match = i;
+      }
+
+      //Find closest intensities above and below with all other conditions matching
+      if (intCmp < calIntCmp && calIntCmp < int1) {
+        int1 = calIntCmp;
+        i1 = i;
+      } else if (intCmp >= calIntCmp && calIntCmp >= int0) {
+        int0 = calIntCmp;
+        i0 = i;
+      }
+      if (intCmp == calIntCmp && calIntCmp == int0) {
+        int0 = calIntCmp;
+        i0 = i;
+      }
+    }
+  }
+
+  // if intCmp is lower than the low endpoint or higher than the high endpoint, 
+  // find the next closest calibration to extrapolate outside the range.
+  if (((i0 < 0 && i1 >= 0) || (i1 < 0 && i0 >= 0)) && intensities.size() >= 2) {
+
+    // If int1 is the low endpoint, flip so that i0 to i1 will still go from low to high
+    if (i0 < 0) {
+      i0 = i1;
+      int0 = int1;
+    }
+
+    // Find the closest point to the existing interpolation point, without being so close 
+    // that the interpolation would break
+    i1 = -1;
+    int1 = 1.e10f;
+    dist = 1.e10f;
+    tooClose = 1.e-6f;
+    for (int i = 0; i < (int)intensities.size(); i++) {
+      if (indices[i] != i0 && fabs(int0 - intensities[i]) > tooClose &&
+        fabs(int0 - intensities[i]) < dist) {
+        i1 = indices[i];
+        int1 = intensities[i];
+        dist = fabs(int0 - int1);
+      }
+    }
+  }
+
+  // Interpolation parameter: tpar = 0 at int0 and 1 at int1
+  if (i0 >= 0 && i1 >= 0)
+    interpPar = (intCmp - int0) / (int1 - int0);
+
+  return match;
+}
+
+// Find a coma vs IS calibration matching the provided conditions, or generate a new 
+// calibration by interpolating existing calibrations with closest intensities.
+ComaVsISCalib *CAutoTuning::GetBestComaVsISCal(int spotSize, float intensity, int probeMode, 
+  int alpha, int aperture, int fromSettings)
+{
+  ScaleMat mat0, mat1, astigMat0, astigMat1;
+  int iCam = mWinApp->GetCurrentCamera();
+  CameraParameters *cam = mWinApp->GetCamParams();
+  ScaleMat cMat, cTo, cProd;
+  int i0, i1, toMag = -1, fromMag = -1;
+  bool userSetting;
+  float tpar, extrapLim = 0.5;
+
+  mComaVsIScal.matrix.xpx = 0;
+  mComaVsIScal.astigMat.xpx = 0;
+  mComaVsIScal.magInd = -1;
+
+  if (aperture < 0)
+    aperture = mWinApp->mBeamAssessor->GetCurrentAperture();
+  if (fromSettings < 0)
+    userSetting = GetComaVsIScalFromSettings();
+  else
+    userSetting = fromSettings > 0;
+
+  LookupComaVsISCal(spotSize, intensity, probeMode, alpha, aperture, userSetting,
+    i0, i1, tpar);
+
+  if (i0 < 0 || i1 < 0 || tpar < -extrapLim || tpar > 1 + extrapLim) {
+    return &mComaVsIScal;
+  }
+
+  mat1 = mComaVsISCals[i1].matrix;
+  astigMat1 = mComaVsISCals[i1].astigMat;
+  toMag = mComaVsISCals[i1].magInd;
+  mat0 = mComaVsISCals[i0].matrix;
+  astigMat0 = mComaVsISCals[i0].astigMat;
+  fromMag = mComaVsISCals[i0].magInd;
+
+  // If calibrations at different mags, transform the matrices for one calibration so that 
+  // all matrices used in the interpolation are defined for image shift vectors at the 
+  // same mag
+  if (toMag != fromMag && !mShiftManager->CanTransferIS(fromMag, toMag,
+    cam[iCam].STEMcamera, cam[iCam].GIF ? 1 : 0)) {
+
+    //Get matrix used in TransferGeneralIS
+    cMat = mShiftManager->IStoSpecimen(fromMag);
+    cTo = mShiftManager->IStoSpecimen(toMag);
+    if (!cTo.xpx || !cMat.xpx)
+      return &mComaVsIScal;
+    cProd = MatMul(cMat, MatInv(cTo));
+    mat1 = MatMul(cProd, mat1);
+    astigMat1 = MatMul(cProd, astigMat1);
+  }
+
+  mComaVsIScal.matrix = mShiftManager->InterpMatsByScaleRotStr(mat0, mat1, tpar);
+  if (!mComaVsIScal.matrix.xpx)
+    mComaVsIScal.matrix = mShiftManager->InterpMatsByElement(mat0, mat1, tpar);
+
+  //Do it again for astig
+  mComaVsIScal.astigMat = mShiftManager->InterpMatsByScaleRotStr(astigMat0, astigMat1,
+    tpar);
+  if (!mComaVsIScal.astigMat.xpx)
+    mComaVsIScal.astigMat = mShiftManager->InterpMatsByElement(astigMat0, astigMat1, 
+      tpar);
+
+  mComaVsIScal.spotSize = spotSize;
+  mComaVsIScal.intensity = intensity;
+  mComaVsIScal.probeMode = probeMode;
+  mComaVsIScal.alpha = alpha;
+  mComaVsIScal.aperture = aperture;
+  mComaVsIScal.magInd = fromMag;
+  mComaVsIScal.userSetting = userSetting;
+
+  return &mComaVsIScal;
+}
+
+// Wrapper for passing intensity as a double
+ComaVsISCalib *CAutoTuning::GetBestComaVsISCal(int spotSize, double intensity, int probeMode,
+  int alpha, int aperture, int fromSettings)
+{
+  return GetBestComaVsISCal(spotSize, (float)intensity, probeMode, alpha, aperture,
+    fromSettings);
+}
+
+// When a new coma vs IS calibration is done, add it to the vector, possibly replacing one
+void CAutoTuning::AppendToComaVsISCals(ComaVsISCalib *inCal)
+{
+  int replaceInd;
+  int i0, i1;
+  float tpar;
+  float ISX, ISY, outX, outY, outXnew, outYnew;
+  float extent = mWinApp->mNavHelper->mComaVsISCalDlg ? 
+    mWinApp->mNavHelper->mComaVsISCalDlg->m_fDistance : 0.5f;
+  float rotation = mWinApp->mNavHelper->mComaVsISCalDlg ? 
+    mWinApp->mNavHelper->mComaVsISCalDlg->m_fDistance : 0.f;
+  float maxBT = 0.f, maxBTnew = 0.f;
+  float dif;
+  bool exactMatch, closeMatch;
+  
+  replaceInd = LookupComaVsISCal(inCal->spotSize, inCal->intensity, inCal->probeMode, 
+    inCal->alpha, inCal->aperture, inCal->userSetting,
+    i0, i1, tpar);
+
+  exactMatch = fabs(tpar) < 1.e-6 || fabs(tpar - 1) < 1.e-6;
+  closeMatch = fabs(tpar) < 0.1 || fabs(tpar - 1) < 0.1;
+
+  if (closeMatch) {
+    for (int i = 0; i < 4; i++) {
+      GetComaVsISVector(inCal->magInd, extent, (int)rotation, i,
+        ISX, ISY);
+      ApplyScaleMatrix(inCal->matrix, ISX, ISY, outX, outY);
+      dif = fabs(powf(powf(outX, 2) + powf(outY, 2), 0.5));
+      maxBT = B3DMAX(dif, maxBT);
+
+      GetComaVsISVector(mComaVsISCals[replaceInd].magInd, extent, (int)rotation, i, ISX, ISY);
+      ApplyScaleMatrix(mComaVsISCals[replaceInd].matrix, ISX, ISY, outXnew, outYnew);
+      dif = fabs(powf(powf(outXnew, 2) + powf(outYnew, 2), 0.5));
+      maxBTnew = B3DMAX(dif, maxBTnew);
+    }
+
+    CString str, str2 = ", ";
+    if (!exactMatch) {
+      str2.Format(" and similar intensity (%.4g%s %s),\n",
+        mScope->GetC2Percent(mComaVsISCals[replaceInd].spotSize,
+          mComaVsISCals[replaceInd].intensity, mComaVsISCals[replaceInd].probeMode),
+        mScope->GetC2Units(), mScope->GetC2Name());
+    }
+    str.Format("A Coma vs IS calibration exists at the current illumination\n"
+      "conditions%s"
+      "with a max beam tilt of %.3f at the extent calibrated.\n\n"
+      "The new calibration has a max beam tilt of %.3f.\n\n"
+      "Do you want to replace the existing calibration?", str2, maxBT, maxBTnew);
+    if (exactMatch)
+      str += "\nThe new calibration will not be saved otherwise.";
+
+    if (AfxMessageBox(str, MB_QUESTION) == IDYES) {
+      mComaVsISCals[replaceInd] = *inCal;
+      return;
+    }
+  }
+
+  // To avoid having exact duplicate conditions, don't append exact matches
+  if (!exactMatch) {
+    mComaVsISCals.push_back(*inCal);
+    SortComaVsISCals();
+  }
+}
+
+// If a calibration is found closely matching the given specifications, delete it 
+int CAutoTuning::DeleteOneComaVsISCal(int spotSize, float intensity, int probeMode, 
+  int alpha, int aperture, int fromSettings)
+{
+  int delInd;
+  int i0, i1;
+  float tpar;
+  CString str, str2;
+
+  bool userSetting = mComaVsIScalFromSettings;
+  if (fromSettings >= 0)
+    userSetting = fromSettings > 0;
+
+  delInd = LookupComaVsISCal(spotSize, intensity, probeMode,
+    alpha, aperture, userSetting, i0, i1, tpar);
+
+  if (delInd >= 0) {
+    str.Format("A Coma vs IS calibration was found in %s with the following matrices:\n\n"
+      "IS to Beam Tilt: %.3f   %.3f;  %.3f   %.3f\n",
+      userSetting ? "Settings" : "Calibrations", mComaVsISCals[delInd].matrix.xpx,
+      mComaVsISCals[delInd].matrix.xpy, mComaVsISCals[delInd].matrix.ypx, 
+      mComaVsISCals[delInd].matrix.ypy);
+    if (mComaVsISCals[delInd].astigMat.xpx) {
+      str2.Format(
+        "IS to Astigmatism: %.3f   %.3f;  %.3f   %.3f\n", 
+        mComaVsISCals[delInd].astigMat.xpx,
+        mComaVsISCals[delInd].astigMat.xpy, mComaVsISCals[delInd].astigMat.ypx,
+        mComaVsISCals[delInd].astigMat.ypy);
+      str += str2;
+    }
+    str += "\nAre you sure you want to proceed with deleting?";
+    if (AfxMessageBox(str, MB_YESNO) == IDYES)
+      VEC_REMOVE_AT(mComaVsISCals, delInd);
+  } else {
+    str.Format("No Coma vs IS calibration was found in %s at the given\n"
+      "illumination conditions.", userSetting ? "Settings" : "Calibrations");
+    AfxMessageBox(str);
+  }
+  return 0;
+}
+
+// Clears only the coma vs IS cals stored in settings. Done before reading settings file.
+void CAutoTuning::ClearComaVsISCalsInSettings()
+{
+  for (int i = (int)mComaVsISCals.size() - 1; i >= 0; i--) {
+    if (mComaVsISCals[i].userSetting)
+      VEC_REMOVE_AT(mComaVsISCals, i);
+  }
+}
+
+// Sort the coma vs IS cals before listing
+void CAutoTuning::SortComaVsISCals()
+{
+  bool swap;
+  for (int i = 1; i < (int)mComaVsISCals.size(); i++) {
+    for (int j = i; j > 0; j--) {
+      if (mComaVsISCals[j - 1].userSetting != mComaVsISCals[j].userSetting)
+        swap = mComaVsISCals[j - 1].userSetting;
+      else if (mComaVsISCals[j - 1].alpha >= 0 && mComaVsISCals[j].alpha >= 0 && 
+        mComaVsISCals[j - 1].alpha != mComaVsISCals[j].alpha)
+        swap = mComaVsISCals[j - 1].alpha > mComaVsISCals[j].alpha;
+      else if (mComaVsISCals[j - 1].probeMode != mComaVsISCals[j].probeMode)
+        swap = mComaVsISCals[j - 1].probeMode > mComaVsISCals[j].probeMode;
+      else if (mComaVsISCals[j - 1].spotSize != mComaVsISCals[j].spotSize)
+        swap = mComaVsISCals[j - 1].spotSize > mComaVsISCals[j].spotSize;
+      else if (mComaVsISCals[j - 1].aperture > 0 && mComaVsISCals[j].aperture > 0 && 
+        mComaVsISCals[j - 1].aperture != mComaVsISCals[j].aperture)
+        swap = mComaVsISCals[j - 1].aperture > mComaVsISCals[j].aperture;
+      else if (mComaVsISCals[j - 1].magInd != mComaVsISCals[j].magInd)
+        swap = mComaVsISCals[j - 1].magInd > mComaVsISCals[j].magInd;
+      else 
+        swap = mComaVsISCals[j - 1].intensity > mComaVsISCals[j].intensity;
+      if (swap)
+        std::swap(mComaVsISCals[j - 1], mComaVsISCals[j]);
+    }
+  }
 }

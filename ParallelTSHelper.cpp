@@ -829,7 +829,8 @@ int CParallelTSHelper::SaveInitialState(CString &err)
   double stageZ;
   float focusLim = -20.;
   EMimageBuffer *imBufs = mWinApp->GetImBufs();
-  ComaVsISCalib *comaVsIS = mWinApp->mAutoTuning->GetComaVsIScal();
+  ComaVsISCalib *comaVsIS = mWinApp->mAutoTuning->GetBestComaVsISCal(mScope->GetSpotSize(),
+    mScope->GetIntensity(), mScope->GetProbeMode(), mScope->GetAlpha());
 
   area = mScope->GetLowDoseArea();
 
@@ -1794,7 +1795,7 @@ int CParallelTSHelper::ComputeAdjustingTransform(CString &err)
     return 2;
   }
   if (mOldAdjustingXform.xpx != 0) {
-    mAdjustingXform = MatMul(mAdjustingXform, mOldAdjustingXform);
+    mAdjustingXform = MatMul(mOldAdjustingXform, mAdjustingXform); //TODO double check correct order
   }
   
   jnd = 0;

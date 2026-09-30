@@ -555,6 +555,9 @@ ON_COMMAND(ID_OPTIONS_ANTIALIASDURINGACQUIRE, OnAntialiasDuringAcquire)
 ON_UPDATE_COMMAND_UI(ID_OPTIONS_ANTIALIASDURINGACQUIRE, OnUpdateAntialiasDuringAcquire)
 ON_COMMAND(ID_SETTINGS_REOPEN, OnSettingsReopenDlgs)
 ON_UPDATE_COMMAND_UI(ID_SETTINGS_REOPEN, OnUpdateSettingsReopenDlgs)
+ON_COMMAND(ID_COMAVSISCALFROMSETTINGS, OnComaVsIScalFromSettings)
+ON_UPDATE_COMMAND_UI(ID_COMAVSISCALFROMSETTINGS, OnUpdateComaVsIScalFromSettings)
+ON_COMMAND(ID_AUTOFOCUSFOCUS_DELETECOMAVSISCAL, OnDeleteComaVsISCal)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -3592,6 +3595,48 @@ void CMenuTargets::OnCalibrateComaVsIS()
   mNavHelper->OpenComaVsISCal();
 }
 
+void CMenuTargets::OnDeleteComaVsISCal()
+{
+  int spot = mScope->GetSpotSize();
+  int probe = mScope->GetProbeMode();
+  int alpha = mScope->GetAlpha() + 1;
+  int aperture = mWinApp->mBeamAssessor->GetCurrentAperture();
+  float intensity = (float)mScope->GetIntensity();
+  float userIntensity = (float)mScope->GetC2Percent(spot, intensity, probe);
+  CString str;
+
+  if (!KGetOneInt("Enter the spot size of the calibration to delete:", spot))
+    return;
+  if (JEOLscope && !mScope->GetHasNoAlpha()) {
+    if (!KGetOneInt("Enter alpha:", alpha))
+      return;
+    alpha -= 1;
+    probe = 0;
+  } else if (FEIscope) {
+    KGetOneChoice("", "Select the probe mode of the calibration to delete:", probe, 
+      "nanoprobe", "microprobe");
+    if (probe < 0 || probe > 1)
+      probe = 1;
+    alpha = -999;
+  }
+  str.Format("Enter the %s (%s %s) of the calibration to delete:", 
+    mScope->GetUseIllumAreaForC2() ? "illuminated area" : "intensity",
+    mScope->GetC2Name(), mScope->GetC2Units());
+  if (!KGetOneFloat(str, userIntensity, 3))
+    return;
+
+  if (mScope->GetUseIllumAreaForC2()) {
+    intensity = (float)mScope->IllumAreaToIntensity((double)userIntensity / 100.f, spot, 
+      probe);
+    if (!KGetOneInt("Enter the aperture size of the calibration to delete:", aperture))
+      return;
+  } else {
+    intensity = (userIntensity / 100.f - mScope->GetC2SpotOffset(spot, probe)) / 
+      mScope->GetC2IntensityFactor(probe);
+  }
+  mWinApp->mAutoTuning->DeleteOneComaVsISCal(spot, intensity, probe, alpha, aperture);
+}
+
 void CMenuTargets::OnSettingsSetProperty()
 {
   mWinApp->mParamIO->UserSetProperty();
@@ -3699,3 +3744,21 @@ void CMenuTargets::OnUpdateMiscNoTrueSize(CCmdUI *pCmdUI)
   pCmdUI->Enable(mWinApp->mScope->GetUseIllumAreaForC2() ||
     mWinApp->mBeamAssessor->GetBeamSizeArray()->GetSize());
 }
+
+
+void CMenuTargets::OnComaVsIScalFromSettings()
+{
+  mWinApp->mAutoTuning->SetComaVsIScalFromSettings(
+    !mWinApp->mAutoTuning->GetComaVsIScalFromSettings());
+  if (mWinApp->mNavHelper->mMultiShotDlg)
+    mWinApp->mNavHelper->mMultiShotDlg->UpdateSettings();
+}
+
+
+void CMenuTargets::OnUpdateComaVsIScalFromSettings(CCmdUI *pCmdUI)
+{
+  pCmdUI->SetCheck(mWinApp->mAutoTuning->GetComaVsIScalFromSettings());
+}
+
+
+

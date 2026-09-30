@@ -1359,7 +1359,6 @@ void CParallelTSDlg::OnAddTargets()
   if (mAddingTargets) {
     mFinalizedTargetArea = false;
     mArraySizeBeforeAdd = arrSize;
-    //mNumAddedTargets = 0; //TODO delete?
     if (!mTargetGroupID) {
       mTargetGroupID = nav->MakeUniqueID();
     }

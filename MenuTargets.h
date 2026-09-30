@@ -374,6 +374,7 @@ public:
   afx_msg void OnFocusSetCtfComaBt();
   afx_msg void OnUpdateFocusCorrectAstigmatismWithFfts(CCmdUI *pCmdUI);
   afx_msg void OnCalibrateComaVsIS();
+  afx_msg void OnDeleteComaVsISCal();
   afx_msg void OnShowWholeAreaForAllPoints();
   afx_msg void OnUpdateShowWholeAreaForAllPoints(CCmdUI *pCmdUI);
   afx_msg void OnMontagingGridsAddGridLikeLastOne();
@@ -464,6 +465,8 @@ public:
   afx_msg void OnUpdateAntialiasDuringAcquire(CCmdUI *pCmdUI);
   afx_msg void OnSettingsReopenDlgs();
   afx_msg void OnUpdateSettingsReopenDlgs(CCmdUI *pCmdUI);
+  afx_msg void OnComaVsIScalFromSettings();
+  afx_msg void OnUpdateComaVsIScalFromSettings(CCmdUI *pCmdUI);
 };
 
 /////////////////////////////////////////////////////////////////////////////

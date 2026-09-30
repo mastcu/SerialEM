@@ -3379,13 +3379,17 @@ int CMacCmd::ReportComaTiltNeeded(void)
 // ReportComaVsISmatrix
 int CMacCmd::ReportComaVsISmatrix(void)
 {
-  ComaVsISCalib *cvsis = mWinApp->mAutoTuning->GetComaVsIScal();
+  ComaVsISCalib *cvsis = mWinApp->mAutoTuning->GetBestComaVsISCal(
+    mWinApp->mScope->GetSpotSize(), mWinApp->mScope->GetIntensity(),
+    mWinApp->mScope->GetProbeMode(), mWinApp->mScope->GetAlpha());
   if (cvsis->magInd <= 0)
-    ABORT_LINE("There is no calibration of beam tilt versus image shift for line:\n\n");
+    ABORT_LINE("Cannot get a calibration of beam tilt versus image shift for the current"
+      " illumination conditions for line:\n\n");
   mLogRpt.Format("Coma versus IS calibration is %f  %f  %f  %f", cvsis->matrix.xpx,
     cvsis->matrix.xpy, cvsis->matrix.ypx, cvsis->matrix.ypy);
   SetRepValsAndVars(1, cvsis->matrix.xpx, cvsis->matrix.xpy,
     cvsis->matrix.ypx, cvsis->matrix.ypy);
+
   return 0;
 }
 

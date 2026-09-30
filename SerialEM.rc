@@ -193,6 +193,7 @@ BEGIN
             MENUITEM "Turn &Off Beam after Long Inactivity...", ID_SPECIALIZEDOPTIONS_CLOSEVALVESAFTERLONGINACTIVITY
             MENUITEM "Set Threshold for Right-dbl-click &2nd shot", ID_SPECIALIZEDMISC_SETTHRESHOLDFORRIGHT
             MENUITEM "Set Type of Bea&m Circles in LD Define", ID_MISC_NO_TRUE_SIZE
+            MENUITEM "&Use Coma vs IS Calibrations from Settings", ID_COMAVSISCALFROMSETTINGS
             MENUITEM SEPARATOR
             MENUITEM "&Disable Dark Trim in Align...", ID_SPECIAL_DISABLE_DARK_TRIM_IN_ALIGN
             MENUITEM "Adjust &Focus on Probe Mode Change", ID_SPECIALOPTIONS_ADJUSTFOCUSONPROBEMODECHANGE
@@ -328,6 +329,7 @@ BEGIN
             END
             MENUITEM SEPARATOR
             MENUITEM "&List Calibrations",          ID_AUTOFOCUSFOCUS_LISTCALIBRATIONS
+            MENUITEM "&Delete a Coma vs IS Cal",    ID_AUTOFOCUSFOCUS_DELETECOMAVSISCAL
         END
         POPUP "&Beam && Spot"
         BEGIN
@@ -4121,7 +4123,7 @@ BEGIN
     PUSHBUTTON      "?",IDC_BUTHELP,143,56,11,11
 END
 
-IDD_COMA_VS_IS_CAL DIALOGEX 0, 0, 182, 97
+IDD_COMA_VS_IS_CAL DIALOGEX 0, 0, 182, 134
 STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 EXSTYLE WS_EX_TOOLWINDOW
 CAPTION "Coma vs. Image Shift Calibration"
@@ -4131,8 +4133,8 @@ BEGIN
     CONTROL         "Full array of 9 images",IDC_RUSE_FULL_ARRAY,"Button",BS_AUTORADIOBUTTON,35,54,83,10
     CONTROL         "Setting for fixing coma",IDC_RUSE_SETTING,"Button",BS_AUTORADIOBUTTON,35,64,75,10
     GROUPBOX        "Measure coma with",IDC_STATIC,29,35,122,41,WS_GROUP
-    DEFPUSHBUTTON   "Run Calibration",IDOK,17,80,57,14
-    PUSHBUTTON      "Cancel",IDCANCEL,95,80,57,14
+    DEFPUSHBUTTON   "Run Calibration",IDOK,17,117,57,14
+    PUSHBUTTON      "Cancel",IDCANCEL,95,117,57,14
     LTEXT           "Distance to measure in each direction",IDC_STATIC,5,6,113,8
     EDITTEXT        IDC_EDIT_CVIC_DISTANCE,119,3,22,14,ES_AUTOHSCROLL
     LTEXT           "microns",IDC_STATIC,153,6,25,8
@@ -4141,8 +4143,13 @@ BEGIN
     EDITTEXT        IDC_EDIT_CVIC_ROTATION,119,20,22,14,ES_AUTOHSCROLL
     LTEXT           "deg",IDC_STATIC,153,23,13,8
     CONTROL         "",IDC_SPIN_CVIC_ROTATION,"msctls_updown32",UDS_ARROWKEYS,141,20,10,14
-    PUSHBUTTON      "?",IDC_BUTHELP,167,84,11,10
+    PUSHBUTTON      "?",IDC_BUTHELP,167,121,11,10
     LTEXT           "(currently 9)",IDC_STAT_CUR_SETTING,112,65,38,8
+    CONTROL         "Calibrations (must save to make permanent)",IDC_RSTORECALIBRATION,
+                    "Button",BS_AUTORADIOBUTTON | WS_GROUP,21,90,143,10
+    CONTROL         "Settings (automatically saved)",IDC_RSTORESETTING,
+                    "Button",BS_AUTORADIOBUTTON,21,101,122,10
+    GROUPBOX        "Store calibration in",IDC_STATIC,16,81,151,32
 END
 
 IDD_AUTOCONTOUR DIALOGEX 0, 0, 158, 294
@@ -5310,7 +5317,7 @@ BEGIN
         LEFTMARGIN, 4
         RIGHTMARGIN, 178
         TOPMARGIN, 3
-        BOTTOMMARGIN, 93
+        BOTTOMMARGIN, 130
     END
 
     IDD_AUTOCONTOUR, DIALOG
@@ -7637,7 +7644,8 @@ BEGIN
                             "Stop Realign to Item from skipping align to center"
     ID_SPECIAL_DISABLE_DARK_TRIM_IN_ALIGN 
                             "Disable automatic trim of dark borders in autoaligns"
-    ID_AUTOFOCUSFOCUS_LISTCALIBRATIONS "List mags with focus calibrations"
+    ID_AUTOFOCUSFOCUS_LISTCALIBRATIONS 
+                            "Lists all focus, astigmatism, and coma calibrations"
     ID_FOCUS_SET_DDD_MIN_BINNING 
                             "Set min total binning for direct detector autofocus correlations"
     ID_FOCUS_SET_FILTER_CUTOFFS 
@@ -8702,6 +8710,14 @@ BEGIN
     IDC_EDIT_PTS_MAXROTATION 
                             "Maximum rotation for aligning acquired images to extracts from area map"
     IDC_EDIT_PTS_MAXSCALING "Maximum scaling for aligning acquired images to extracts from area map"
+END
+
+STRINGTABLE
+BEGIN
+    ID_COMAVSISCALFROMSETTINGS 
+                            "Get coma vs IS calibrations from Settings instead of Calibrations"
+    ID_AUTOFOCUSFOCUS_DELETECOMAVSISCAL 
+                            "Delete one coma vs image shift calibration"
 END
 
 #endif    // English (United States) resources

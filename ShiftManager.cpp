@@ -3687,7 +3687,48 @@ ScaleMat CShiftManager::MatScaleRotate(ScaleMat aMat, float scale, float rotatio
   return MatMul(aMat, rotMat);
 }
 
-// Sets up an IMOD-style transform qith scale, rotation, and shift
+// Interpolate between two matrices by linearly interpolating the elements
+ScaleMat CShiftManager::InterpMatsByElement(ScaleMat startMat, ScaleMat endMat, 
+  float tpar)
+{
+  ScaleMat mat;
+
+  // mat = startMat at tpar = 0, and mat = endMat at tpar = 1
+  mat.xpx = (1 - tpar) * startMat.xpx + tpar * endMat.xpx;
+  mat.xpy = (1 - tpar) * startMat.xpy + tpar * endMat.xpy;
+  mat.ypx = (1 - tpar) * startMat.ypx + tpar * endMat.ypx;
+  mat.ypy = (1 - tpar) * startMat.ypy + tpar * endMat.ypy;
+  return mat;
+}
+
+// Interpolate between two matrices by linearly interpolating the rotation angle, scale,
+// stretch, and reflection angle of the transformation matrix between matrices
+ScaleMat CShiftManager::InterpMatsByScaleRotStr(ScaleMat startMat, ScaleMat endMat,
+  float tpar)
+{
+  ScaleMat dMat, mat;
+  float theta, smag, str, phi;
+
+  //Get matrices, compute transform from start to end matrix
+  dMat = MatMul(MatInv(startMat), endMat);
+     mat.xpx = 0.f;
+  
+  //cannot decompose, singular matrix!
+  if (!dMat.xpx || fabs(dMat.xpx * dMat.ypy - dMat.xpy * dMat.ypx) < 1.e-8) {
+    return mat;
+  }
+
+  //Do linear interpolation on geometric parameters theta, smag, str, and phi.
+  // This is set up so that mat = startMat at tpar = 0, and mat = endMat at tpar = 1
+  amatToRotmagstr(dMat.xpx, dMat.xpy, dMat.ypx, dMat.ypy, &theta, &smag, &str, &phi);
+  theta *= tpar;
+  smag = 1 + tpar * (smag - 1);
+  str = 1 + tpar * (str - 1);
+  rotmagstrToAmat(theta, smag, str, phi, &mat.xpx, &mat.xpy, &mat.ypx, &mat.ypy);
+  return MatMul(startMat, mat);
+}
+
+// Sets up an IMOD-style transform with scale, rotation, and shift
 void CShiftManager::MakeScaleRotTransXform(float xf[6], float scale, float rot,
   float dx, float dy)
 {
@@ -4209,7 +4250,7 @@ ScaleMat CShiftManager::GetTransformFromISAdjustments(std::vector<double> fromIS
   xform.xpx = 0.f;
 
   if (fromISX.size() < 2) {
-    //TODO error mess
+    return xform;
   }
 
   axax = axay = ayay = bxax = bxay = byax = byay = 0.;
@@ -4233,7 +4274,9 @@ ScaleMat CShiftManager::GetTransformFromISAdjustments(std::vector<double> fromIS
   AAt.ypy = (float)ayay;
 
   if (AAt.xpx != 0) {
-    xform = MatMul(BAt, MatInv(AAt));
+
+    // MatMul is flipped from matrix multiplication order
+    xform = MatMul(MatInv(AAt), BAt);
 
     predErr.clear();
     for (ind = 0; ind < (int)fromISX.size(); ind++) {

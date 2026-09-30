@@ -47,8 +47,14 @@ This dialog box allows you to calibrate how beam tilt must be changed to achieve
         the illumination to be used for acquisition.</li>
       <li>The calibration should be done in Low Dose mode if acquisition is to be done
         in Low Dose mode</li>
-      <li>Because it depends on your settings for illumination, the calibration will be
-        saved in your settings file, not shared with others using other settings files.</li>
+      <li>Because it depends on your settings for illumination, the calibration can
+        saved in your settings file, so that it will not be shared with others using other settings files.
+      
+          As of SerialEM 4.3, multiple calibrations may be saved, and the choice selected 
+          for <strong>Store calibration in</strong> determines whether the new calibration will 
+          be saved to the calibrations file or the settings file. If the new 
+          calibration closely matches the illumination conditions of an existing 
+          calibration, you will prompted for confirmation to replace it.</li>
       <li>The calibration can be checked with the the <strong>Test Multishot Positions</strong> 
         button in the <a href="menu_navigator.htm#hid_options_setmulti">Multiple Record 
         Setup</a> 
@@ -67,5 +73,7 @@ This dialog box allows you to calibrate how beam tilt must be changed to achieve
         the beam intensity is changed.</li>
     </ul>
     </basefont>
+      <p>
+&nbsp;</p>
   </BODY>
 </HTML>

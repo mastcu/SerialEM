@@ -314,7 +314,9 @@ BOOL CMultiShotDlg::OnInitDialog()
 // The dialog is being opened or the settings have been read: load dialog from parameters
 void CMultiShotDlg::UpdateSettings(void)
 {
-  ComaVsISCalib *comaVsIS = mWinApp->mAutoTuning->GetComaVsIScal();
+  ComaVsISCalib *comaVsIS = mWinApp->mAutoTuning->GetBestComaVsISCal(
+    mWinApp->mScope->GetSpotSize(), mWinApp->mScope->GetIntensity(),
+    mWinApp->mScope->GetProbeMode(), mWinApp->mScope->GetAlpha());
   CString str, str2;
   int skipAdjust = mWinApp->mNavHelper->GetSkipAstigAdjustment();
   int minNum0 = 1;
@@ -1637,7 +1639,9 @@ void CMultiShotDlg::UpdateAndUseMSparams(bool draw)
 // Some of this is superceded by panel closing
 void CMultiShotDlg::ManageEnables(void)
 {
-  ComaVsISCalib *comaVsIS = mWinApp->mAutoTuning->GetComaVsIScal();
+  ComaVsISCalib *comaVsIS = mWinApp->mAutoTuning->GetBestComaVsISCal(
+    mWinApp->mScope->GetSpotSize(), mWinApp->mScope->GetIntensity(), 
+    mWinApp->mScope->GetProbeMode(), mWinApp->mScope->GetAlpha());
   CString str2, str = "Use custom pattern (NONE DEFINED)";
   double holeXvec[3], holeYvec[3];
   LowDoseParams *ldp = mWinApp->GetLowDoseParams() + RECORD_CONSET;
@@ -1775,7 +1779,8 @@ void CMultiShotDlg::ManageEnables(void)
       mWinApp->mNavHelper->GetSkipAstigAdjustment() >= 0 ?
       "Coma versus image shift is not calibrated" :
       "Astigmatism versus image shift is not calibrated");
-    SetDlgItemText(IDC_STAT_COMA_CONDITIONS, "");
+    SetDlgItemText(IDC_STAT_COMA_CONDITIONS, 
+      " sufficiently close to current illumination conditions");
   } else {
     SetDlgItemText(IDC_STAT_COMA_IS_CAL,
       mWinApp->mNavHelper->GetSkipAstigAdjustment() >= 0 ?
