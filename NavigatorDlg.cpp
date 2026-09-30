@@ -2122,15 +2122,18 @@ void CNavigatorDlg::ProcessDKey(void)
   mInRangeDelete = true;
   saveCollapsed = m_bCollapseGroups;
   SetCollapsing(false);
+  mDeferAddingToViewer = true;
   for (ind = end; ind >= start; ind--) {
     item = mItemArray[ind];
     if (item->IsPoint() || allItems || (!numPt && item->IsPolygon())) {
       mCurrentItem = ind;
       mCurListSel = ind;
-      m_listViewer.SetCurSel(mCurListSel);
       OnDeleteitem();
     }
   }
+  mDeferAddingToViewer = false;
+  m_listViewer.SetCurSel(mCurListSel);
+  FillListBox(true, true);
   SetCollapsing(saveCollapsed);
   mInRangeDelete = false;
   ManageCurrentControls();
@@ -3312,7 +3315,7 @@ void CNavigatorDlg::OnDeleteitem()
     ManageCurrentControls();
     Redraw();
   }
-  if (m_bTableIndexes)
+  if (m_bTableIndexes && !mDeferAddingToViewer)
     FillListBox(true, true);
   
   if (mHelper->mParallelTSDlg->IsOpen()) {
@@ -12849,7 +12852,7 @@ void CNavigatorDlg::FinishSingleDeletion(CMapDrawItem *item, int delIndex, int l
     mNumberBeforeAdd + 1) {
     delIndex = (int)mItemArray.GetSize() - 1;
     item = mItemArray[delIndex];
-  } else if (!multipleInGroup) {
+  } else if (!multipleInGroup && !mDeferAddingToViewer) {
     m_listViewer.DeleteString(listInd);
   }
 
@@ -12860,19 +12863,20 @@ void CNavigatorDlg::FinishSingleDeletion(CMapDrawItem *item, int delIndex, int l
       mCurListSel--;
       mCurrentItem--;
     }
-    if (multipleInGroup)
+    if (multipleInGroup && !mDeferAddingToViewer)
       UpdateListString(groupStart);
   }
   if (mCurrentItem >= (int)mItemArray.GetSize())
     mCurrentItem = (int)mItemArray.GetSize() - 1;
   if (mCurListSel >= m_listViewer.GetCount())
     mCurListSel = m_listViewer.GetCount() - 1;
-  m_listViewer.SetCurSel(mCurListSel);
+  if (!mDeferAddingToViewer)
+    m_listViewer.SetCurSel(mCurListSel);
 
   // Set current item to beginning of group
   if (isCurrentInList) {
     IndexOfSingleOrFirstInGroup(mCurListSel, mCurrentItem);
-    if (multipleInGroup)
+    if (multipleInGroup && !mDeferAddingToViewer)
       UpdateListString(mCurrentItem);
   }
 
