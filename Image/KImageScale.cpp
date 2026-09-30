@@ -109,9 +109,13 @@ void KImageScale::FindPctStretch(KImage *inImage, float pctLo, float pctHi, floa
 {
   float nSample = 10000.;
   float matt = 0.5f * (1.f - fracUse);
-  int ix, iy, nx, ny, type, ixStart, iyStart, nxUse, nyUse, loop, dsize = 1;
+  int ix, iy, nx, ny, type, ixStart, iyStart, nxUse, nyUse, loop, dsize = 1, numSamples;
   int maxRing, minRing, nsum, numSame = 0, nyUsable, ixSame = 0, iySame = 0, nxUsable;
   float sample, scaleLo, scaleHi, val, sum, valMax, valSecond, bkgd;
+  float histDip, peakBelow, peakAbove;
+  float *sampArr, *bins;
+  const int histSize = 1000;
+  float fracBelowDip = 0.1f;
   double ringRad, rad;
   char *theImage;
   unsigned char **linePtrs;
@@ -194,7 +198,7 @@ void KImageScale::FindPctStretch(KImage *inImage, float pctLo, float pctHi, floa
 
   // Loop twice, first finding the normal sample, then getting a much denser sample to set
   // the limits for the black/white sliders
-  for (loop = 0; loop < 2; loop ++) {
+  for (loop = 0; loop < 2; loop++) {
     ixStart = (int)(nxUsable * matt);
     nxUse = nxUsable - 2 * ixStart;
     ixStart += ixSame;
@@ -207,41 +211,41 @@ void KImageScale::FindPctStretch(KImage *inImage, float pctLo, float pctHi, floa
     if (percentileStretch(linePtrs, type, nx, ny, sample, ixStart, iyStart, nxUse, nyUse,
       pctLo, pctHi, &scaleLo, &scaleHi) == 0) {
 
-        // Spread the values out a bit for integer images if they are close together
-        if (type != SLICE_MODE_FLOAT || scaleLo == scaleHi) {
-          val = scaleLo;
-          scaleLo = B3DMIN(scaleLo, scaleHi - 2);
-          scaleHi = B3DMAX(scaleHi, val + 2);
-        }
+      // Spread the values out a bit for integer images if they are close together
+      if (type != SLICE_MODE_FLOAT || scaleLo == scaleHi) {
+        val = scaleLo;
+        scaleLo = B3DMIN(scaleLo, scaleHi - 2);
+        scaleHi = B3DMAX(scaleHi, val + 2);
+      }
 
-        // Autocorrelations have a single pixel sharp peak, so just get center point and
-        // include it in the max range,
-        // Or, get 8 points around the center and include second-highest in scale
-        valMax = -1.e37f;
-        valSecond = -1.e37f;
-        if (nx > 3 && ny > 3) {
-          for (iy = -1; iy <= 1; iy++) {
-            for (ix = -1; ix <= 1; ix++) {
-              if ((loop && (ix || iy)) || (!loop && !ix && !iy))
-                continue;
-              val = GetImageValue(linePtrs, type, nx, ny, nx / 2 + ix, ny / 2 + iy);
-              if (val > valMax) {
-                valSecond = valMax;
-                valMax = val;
-              } else if (val > valSecond) {
-                valSecond = val;
-              }
+      // Autocorrelations have a single pixel sharp peak, so just get center point and
+      // include it in the max range,
+      // Or, get 8 points around the center and include second-highest in scale
+      valMax = -1.e37f;
+      valSecond = -1.e37f;
+      if (nx > 3 && ny > 3) {
+        for (iy = -1; iy <= 1; iy++) {
+          for (ix = -1; ix <= 1; ix++) {
+            if ((loop && (ix || iy)) || (!loop && !ix && !iy))
+              continue;
+            val = GetImageValue(linePtrs, type, nx, ny, nx / 2 + ix, ny / 2 + iy);
+            if (val > valMax) {
+              valSecond = valMax;
+              valMax = val;
+            } else if (val > valSecond) {
+              valSecond = val;
             }
           }
         }
+      }
 
-        if (loop) {
-          mSampleMin = scaleLo;
-          mSampleMax = B3DMAX(valMax, scaleHi);
-        } else {
-          mMinScale = scaleLo;
-          mMaxScale = B3DMAX(valSecond, scaleHi);
-        }
+      if (loop) {
+        mSampleMin = scaleLo;
+        mSampleMax = B3DMAX(valMax, scaleHi);
+      } else {
+        mMinScale = scaleLo;
+        mMaxScale = B3DMAX(valSecond, scaleHi);
+      }
     }
     nSample = 100000.;
     matt = 0.;
@@ -270,7 +274,7 @@ void KImageScale::FindPctStretch(KImage *inImage, float pctLo, float pctHi, floa
         if (iy < -minRing || iy > minRing || ix < -minRing || ix > minRing) {
           rad = sqrt((double)ix * ix + iy * iy);
           if (fabs(rad - ringRad) < 0.71) {
-            sum +=  GetImageValue(linePtrs, type, nx, ny, nx / 2 + ix, ny / 2 + iy);
+            sum += GetImageValue(linePtrs, type, nx, ny, nx / 2 + ix, ny / 2 + iy);
             nsum++;
           }
         }
@@ -286,13 +290,46 @@ void KImageScale::FindPctStretch(KImage *inImage, float pctLo, float pctHi, floa
     }
   }
 
-  // Finish up
-  free(linePtrs);
-  inImage->UnLock();
   if (mSampleMax < mMaxScale)
     mSampleMax = mMaxScale;
   if (mSampleMin > mMinScale)
     mSampleMin = mMinScale;
+
+  if (partialScan < -1 && nx > 100 && ny > 100) {
+    NewArray(sampArr, float, 10000);
+    NewArray(bins, float, histSize);
+    if (sampArr && bins) {
+      nSample = 10000.;
+      sample = nSample / (fracUse * nxUsable * fracUse * nyUsable);
+      if (sample > 1.0)
+        sample = 1.0;
+      if (!getSampleOfLinePtrs(linePtrs, type, nx, ny, sample, ixStart, iyStart, nxUse,
+        nyUse, 2147100000.f, sampArr, 10000, &numSamples)) {
+        if (!findHistogramDip(sampArr, numSamples, 0, bins, histSize, mSampleMin,
+          mSampleMax, &histDip, &peakBelow, &peakAbove, 0)) {
+          sample = 0.;
+          sum = 0.;
+          iy = (int)((histDip - mSampleMin) / (mSampleMax - mSampleMin) * histSize);
+          for (ix = 0; ix < histSize; ix++) {
+            sample += bins[ix];
+            if (ix < iy)
+              sum += bins[ix];
+          }
+          sum /= sample;
+          SEMTrace('1', "Dip %.1f  peak below %.1f  above %.1f  frac below dip %.3f", 
+            histDip, peakBelow, peakAbove, sum);
+          if (sum < 0.99 && sum > 0.01)
+            mMinScale = histDip - fracBelowDip * (histDip - peakBelow);
+        }
+      }
+        delete[] sampArr;
+      delete[] bins;
+    }
+  }
+
+  // Finish up
+  free(linePtrs);
+  inImage->UnLock();
   mBoostContrast = 1.;
 }
 

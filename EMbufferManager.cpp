@@ -1210,7 +1210,9 @@ void EMbufferManager::FindScaling(EMimageBuffer * imBuf, int partialScan)
   imBuf->mImageScale->FindPctStretch(imBuf->mImage, pctLo, pctHi,
     mWinApp->GetPctAreaFraction(),
     B3DCHOICE(imBuf->mCaptured == BUFFER_FFT || imBuf->mCaptured == BUFFER_LIVE_FFT, 
-      mWinApp->GetBkgdGrayOfFFT(), 0), mWinApp->GetTruncDiamOfFFT(), partialScan);
+      mWinApp->GetBkgdGrayOfFFT(), 0), mWinApp->GetTruncDiamOfFFT(), 
+    B3DCHOICE(partialScan > 0 || mWinApp->mMontageController->GetReadingMontage(),
+      partialScan, mDrawScaleBar ? 0 : -2));
 }
 
 // Initiate saving to file on a separate thread

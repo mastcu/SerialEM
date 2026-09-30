@@ -217,7 +217,8 @@ void CImageLevelDlg::AnalyzeImage(bool resetBriCon)
     return;
   imBuf->mImageScale->FindPctStretch(imBuf->mImage, mPctLo, mPctHi, mAreaFrac,
     B3DCHOICE(imBuf->mCaptured == BUFFER_FFT || imBuf->mCaptured == BUFFER_LIVE_FFT, 
-      mWinApp->GetBkgdGrayOfFFT(), 0), mWinApp->GetTruncDiamOfFFT());  
+    mWinApp->GetBkgdGrayOfFFT(), 0), mWinApp->GetTruncDiamOfFFT(),  
+    mWinApp->mBufferManager->GetDrawScaleBar() ? 0 : -2);
   if (resetBriCon) {
     mBrightSlider = 0;
     mContrastSlider = 0;
@@ -451,6 +452,7 @@ void CImageLevelDlg::OnScalebar()
 {
   UpdateData(true);
   mWinApp->mBufferManager->SetDrawScaleBar(m_bScaleBars ? 192 : 0);
+  AnalyzeImage();
   if (mWinApp->mActiveView)
     mWinApp->mActiveView->DrawImage();
   mWinApp->RestoreViewFocus();
