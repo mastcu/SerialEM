@@ -33,6 +33,8 @@ CImageLevelDlg::CImageLevelDlg(CWnd* pParent /*=NULL*/)
   , m_bTiltAxis(FALSE)
   , m_bAutocontrast(FALSE)
   , m_bLogScale(FALSE)
+  , m_bIgnoreDark(FALSE)
+  , m_bIgnoreLight(FALSE)
 {
   SEMBuildTime(__DATE__, __TIME__);
   //{{AFX_DATA_INIT(CImageLevelDlg)
@@ -89,6 +91,8 @@ void CImageLevelDlg::DoDataExchange(CDataExchange* pDX)
   DDX_Control(pDX, IDC_BUT_AUTO, m_butAuto);
   DDX_Check(pDX, IDC_CHECK_LOGSCALE, m_bLogScale);
   DDX_Control(pDX, IDC_CHECK_LOGSCALE, m_butLogScale);
+  DDX_Check(pDX, IDC_CHECK_IGNORE_DARK, m_bIgnoreDark);
+  DDX_Check(pDX, IDC_CHECK_IGNORE_LIGHT, m_bIgnoreLight);
 }
 
 
@@ -111,6 +115,8 @@ BEGIN_MESSAGE_MAP(CImageLevelDlg, CToolDlg)
   ON_BN_CLICKED(IDC_BUT_AUTO, OnAuto)
   ON_BN_CLICKED(IDC_AUTOCONTRAST, OnAutocontrast)
   ON_BN_CLICKED(IDC_CHECK_LOGSCALE, OnLogScale)
+  ON_BN_CLICKED(IDC_CHECK_IGNORE_DARK, OnCheckIgnoreDarkOrLight)
+  ON_BN_CLICKED(IDC_CHECK_IGNORE_LIGHT, OnCheckIgnoreDarkOrLight)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -168,6 +174,9 @@ BOOL CImageLevelDlg::OnInitDialog()
 // Set items that can be affected by external settings
 void CImageLevelDlg::UpdateSettings()
 {
+  int darkLight = mWinApp->mBufferManager->GetIgnoreDarkLight();
+  m_bIgnoreDark = darkLight & 1;
+  m_bIgnoreLight = darkLight & 2;
   m_bScaleBars = (mWinApp->mBufferManager->GetDrawScaleBar() != 0);
   m_bCrosshairs = mWinApp->mBufferManager->GetDrawCrosshairs();
   m_bTiltAxis = mWinApp->mBufferManager->GetDrawTiltAxis();
@@ -182,18 +191,30 @@ void CImageLevelDlg::OnTruncation()
   float oldPctHi = mPctHi;
   int oldFFTgray = mWinApp->GetBkgdGrayOfFFT();
   float oldFFTtrunc = mWinApp->GetTruncDiamOfFFT();
+  float oldMaxIgnore = mWinApp->GetHistoMaxIgnoreFrac();
+  float oldFracBeyond = mWinApp->GetHistoFracBeyondDip();
   KGetOneFloat("Percent of pixels to truncate as black:", mPctLo, 2);
   KGetOneFloat("Percent of pixels to truncate as white:", mPctHi, 2);
+  if (m_bIgnoreDark || m_bIgnoreLight) {
+    KGetOneFloat("Maximum fraction of pixels in light or dark portion of "
+      "histogram to be ignored:", oldMaxIgnore, 3);
+    KGetOneFloat("Fraction of way past dip toward peak to set black or white level:",
+      oldFracBeyond, 2);
+  }
   KGetOneFloat("Diameter of central area of FFT to truncate as fraction of image size:",
     oldFFTtrunc, 3);
   KGetOneInt("Mean gray level (1-255) for low frequencies in FFT, or 0 to disable special"
     " FFT scaling:", oldFFTgray);
   if (mPctLo != oldPctLo || mPctHi != oldPctHi ||
     oldFFTgray != mWinApp->GetBkgdGrayOfFFT() ||
-    oldFFTtrunc != mWinApp->GetTruncDiamOfFFT()) {
+    oldFFTtrunc != mWinApp->GetTruncDiamOfFFT() || 
+    oldFracBeyond != mWinApp->GetHistoFracBeyondDip() ||
+    oldMaxIgnore != mWinApp->GetHistoMaxIgnoreFrac()) {
       mWinApp->SetDisplayTruncation(mPctLo, mPctHi);
       mWinApp->SetBkgdGrayOfFFT(oldFFTgray);
       mWinApp->SetTruncDiamOfFFT(oldFFTtrunc);
+      mWinApp->SetHistoFracBeyondDip (oldFracBeyond);
+      mWinApp->SetHistoMaxIgnoreFrac(oldMaxIgnore);
       AnalyzeImage();
   }
   mWinApp->RestoreViewFocus();
@@ -218,7 +239,7 @@ void CImageLevelDlg::AnalyzeImage(bool resetBriCon)
   imBuf->mImageScale->FindPctStretch(imBuf->mImage, mPctLo, mPctHi, mAreaFrac,
     B3DCHOICE(imBuf->mCaptured == BUFFER_FFT || imBuf->mCaptured == BUFFER_LIVE_FFT, 
     mWinApp->GetBkgdGrayOfFFT(), 0), mWinApp->GetTruncDiamOfFFT(),  
-    mWinApp->mBufferManager->GetDrawScaleBar() ? 0 : -2);
+    -(mWinApp->mBufferManager->GetIgnoreDarkLight() + 1));
   if (resetBriCon) {
     mBrightSlider = 0;
     mContrastSlider = 0;
@@ -494,13 +515,11 @@ void CImageLevelDlg::OnTiltaxis()
   mWinApp->RestoreViewFocus();
 }
 
-
 void CImageLevelDlg::OnAuto()
 {
   AnalyzeImage(true);
   mWinApp->RestoreViewFocus();
 }
-
 
 void CImageLevelDlg::OnAutocontrast()
 {
@@ -510,7 +529,6 @@ void CImageLevelDlg::OnAutocontrast()
     mWinApp->mActiveView->DrawImage();
   mWinApp->RestoreViewFocus();
 }
-
 
 void CImageLevelDlg::OnLogScale()
 {
@@ -523,5 +541,14 @@ void CImageLevelDlg::OnLogScale()
       mWinApp->mActiveView->DrawImage();
     }
   }
+  mWinApp->RestoreViewFocus();
+}
+
+void CImageLevelDlg::OnCheckIgnoreDarkOrLight()
+{
+  UpdateData(true);
+  mWinApp->mBufferManager->SetIgnoreDarkLight((m_bIgnoreDark ? 1 : 0) +
+    (m_bIgnoreLight ? 2 : 0));
+  AnalyzeImage();
   mWinApp->RestoreViewFocus();
 }

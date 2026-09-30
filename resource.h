@@ -2748,6 +2748,8 @@
 #define IDC_AUTOCONTRAST                3779
 #define IDC_BUT_AUTO                    3780
 #define IDC_CHECK_LOGSCALE              3781
+#define IDC_CHECK_IGNORE_DARK           3782
+#define IDC_CHECK_IGNORE_LIGHT          3783
 #define ID_NEW_IMAGE                    32771
 #define IDM_FILE_SAVEOTHER              32772
 #define IDM_FILE_READ                   32773
@@ -3401,7 +3403,7 @@
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        305
 #define _APS_NEXT_COMMAND_VALUE         33648
-#define _APS_NEXT_CONTROL_VALUE         3782
+#define _APS_NEXT_CONTROL_VALUE         3784
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif

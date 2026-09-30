@@ -309,6 +309,8 @@ CSerialEMApp::CSerialEMApp()
   mPctAreaFraction = 0.8f;
   mTruncDiamOfFFT = 0.004f;
   mBkgdGrayOfFFT = 32;
+  mHistoMaxIgnoreFrac = 0.98f;
+  mHistoFracBeyondDip = 0.1f;
   mCurrentCamera = 0;
   mCurrentActiveCamera = 0;
   mActiveCameraList[0] = 0;

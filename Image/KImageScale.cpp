@@ -111,11 +111,16 @@ void KImageScale::FindPctStretch(KImage *inImage, float pctLo, float pctHi, floa
   float matt = 0.5f * (1.f - fracUse);
   int ix, iy, nx, ny, type, ixStart, iyStart, nxUse, nyUse, loop, dsize = 1, numSamples;
   int maxRing, minRing, nsum, numSame = 0, nyUsable, ixSame = 0, iySame = 0, nxUsable;
-  float sample, scaleLo, scaleHi, val, sum, valMax, valSecond, bkgd;
-  float histDip, peakBelow, peakAbove;
+  int ignoreLightDark = (partialScan < -1) ? -partialScan - 1 : 0;
+  int lowerInd, upperInd;
+  float sample, scaleLo, scaleHi, val, sum, sum2, valMax, valSecond, bkgd;
+  float histDip, peakBelow, peakAbove, midPeak, lowerDip;
   float *sampArr, *bins;
   const int histSize = 1000;
-  float fracBelowDip = 0.1f;
+  CSerialEMApp *winApp = (CSerialEMApp *)AfxGetApp();
+  float fracBelowDip = winApp->GetHistoFracBeyondDip();
+  float maxFracIgnored = winApp->GetHistoMaxIgnoreFrac();;
+  double wallStart = wallTime();
   double ringRad, rad;
   char *theImage;
   unsigned char **linePtrs;
@@ -295,7 +300,8 @@ void KImageScale::FindPctStretch(KImage *inImage, float pctLo, float pctHi, floa
   if (mSampleMin > mMinScale)
     mSampleMin = mMinScale;
 
-  if (partialScan < -1 && nx > 100 && ny > 100) {
+  // Histogram analysis for ignoring light and/or dark areas
+  if (ignoreLightDark && nx > 100 && ny > 100) {
     NewArray(sampArr, float, 10000);
     NewArray(bins, float, histSize);
     if (sampArr && bins) {
@@ -303,26 +309,76 @@ void KImageScale::FindPctStretch(KImage *inImage, float pctLo, float pctHi, floa
       sample = nSample / (fracUse * nxUsable * fracUse * nyUsable);
       if (sample > 1.0)
         sample = 1.0;
+
+      // Get sample
       if (!getSampleOfLinePtrs(linePtrs, type, nx, ny, sample, ixStart, iyStart, nxUse,
         nyUse, 2147100000.f, sampArr, 10000, &numSamples)) {
-        if (!findHistogramDip(sampArr, numSamples, 0, bins, histSize, mSampleMin,
-          mSampleMax, &histDip, &peakBelow, &peakAbove, 0)) {
-          sample = 0.;
-          sum = 0.;
-          iy = (int)((histDip - mSampleMin) / (mSampleMax - mSampleMin) * histSize);
-          for (ix = 0; ix < histSize; ix++) {
-            sample += bins[ix];
-            if (ix < iy)
-              sum += bins[ix];
+        if (ignoreLightDark == 3) {
+ 
+          // If ignoring both, find two dips
+          if (!findTwoHistogramDips(sampArr, numSamples, bins, histSize, mSampleMin,
+            mSampleMax, &histDip, &lowerDip, &peakBelow, &peakAbove, &midPeak, 0)) {
+            upperInd = (int)((histDip - mSampleMin) / (mSampleMax - mSampleMin) *
+              histSize);
+            lowerInd = (int)((lowerDip - mSampleMin) / (mSampleMax - mSampleMin) *
+              histSize);
+
+            // Compute the counts in the two tails and overall for testing fractions
+            sample = 0.;
+            sum = 0.;
+            sum2 = 0.;
+            for (ix = 0; ix < histSize; ix++) {
+              sample += bins[ix];
+              if (ix < lowerInd)
+                sum += bins[ix];
+              if (ix >= upperInd)
+                sum2 += bins[ix];
+            }
+            SEMTrace('1', "Dips %.1f  %.1f  peak below %.1f mid %.1f above %.1f  fracs "
+              "beyond dips %.3f, %.3f (%.0f msec)", lowerDip, histDip, peakBelow, midPeak,
+              peakAbove, sum / sample, sum2 / sample, 1000. * (wallTime() - wallStart));
+            if ((sum + sum2) / sample < maxFracIgnored) {
+              ACCUM_MIN(mMaxScale, histDip + fracBelowDip * (peakAbove - histDip));
+              ACCUM_MAX(mMinScale, lowerDip - fracBelowDip * (lowerDip - peakBelow));
+
+            }
+          } else {
+            SEMTrace('1', "Failed to find two histogram dips");
           }
-          sum /= sample;
-          SEMTrace('1', "Dip %.1f  peak below %.1f  above %.1f  frac below dip %.3f", 
-            histDip, peakBelow, peakAbove, sum);
-          if (sum < 0.99 && sum > 0.01)
-            mMinScale = histDip - fracBelowDip * (histDip - peakBelow);
+        } else {
+
+          // One or the other, just find one dip
+          if (!findHistogramDip(sampArr, numSamples, 0, bins, histSize, mSampleMin,
+            mSampleMax, &histDip, &peakBelow, &peakAbove, 0)) {
+            sample = 0.;
+            sum = 0.;
+            iy = (int)((histDip - mSampleMin) / (mSampleMax - mSampleMin) * histSize);
+
+            // Get sum below dip and take complement if ignoring above
+            for (ix = 0; ix < histSize; ix++) {
+              sample += bins[ix];
+              if (ix < iy)
+                sum += bins[ix];
+            }
+            if (ignoreLightDark & 2)
+              sum = sample - sum;
+            sum /= sample;
+            SEMTrace('1', "Dip %.1f  peak below %.1f  above %.1f  frac %s dip %.3f"
+              " (%.0f msec)", histDip, peakBelow, peakAbove, (ignoreLightDark & 2) ?
+              "above" : "below", sum, 1000. * (wallTime() - wallStart));
+            if (sum < maxFracIgnored) {
+              if (ignoreLightDark & 2)
+                ACCUM_MIN(mMaxScale, histDip + fracBelowDip * (peakAbove - histDip));
+              else
+                ACCUM_MAX(mMinScale, histDip - fracBelowDip * (histDip - peakBelow));
+            }
+          } else {
+            SEMTrace('1', "Failed to find histogram dip");
+          }
         }
       }
-        delete[] sampArr;
+
+      delete[] sampArr;
       delete[] bins;
     }
   }

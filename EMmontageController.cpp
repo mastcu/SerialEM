@@ -69,6 +69,7 @@ EMmontageController::EMmontageController()
   SEMBuildTime(__DATE__, __TIME__);
   mMontaging = false;
   mReadingMontage = false;
+  mReadingMontPiece = false;
   mPieceIndex = -1;
   mRestoringStage = 0;
   mFocusing = false;
@@ -1694,6 +1695,7 @@ int EMmontageController::StartMontage(int inTrial, BOOL inReadMont, float cookDw
     mNumDoing = 0;
   mStartTime = GetTickCount();
   mLastNumDoing = -1;
+  mReadingMontPiece = mReadingMontage;
   mInitialNumDoing = mNumDoing;
   SetNextPieceIndexXY();
   mNeedBacklash = true;   // Would it ever not need this?  Needs to be set firstUndone>0
@@ -2946,7 +2948,7 @@ int EMmontageController::SavePiece()
         mScope->SetDefocus(mBaseFocus);
     }
   }
-
+  mReadingMontPiece = false;
 
   nVar = mNumPieces - mNumToSkip;
   if (nVar > 1 && (mDoCorrelations || mUsingMultishot)) {
@@ -3664,6 +3666,7 @@ void EMmontageController::PieceCleanup(int error)
 // For stopping a montage - not called on normal finish
 void EMmontageController::StopMontage(int error)
 {
+  mReadingMontPiece = false;
   if (mPieceIndex < 0)
     return;
 

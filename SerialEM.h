@@ -705,6 +705,8 @@ public:
   GetMember(bool, AnyRetractableCams);
   GetSetMember(BOOL, FrameAlignMoreOpen);
   GetSetMember(int, BkgdGrayOfFFT);
+  GetSetMember(float, HistoMaxIgnoreFrac);
+  GetSetMember(float, HistoFracBeyondDip);
   GetSetMember(float, TruncDiamOfFFT);
   GetSetMember(int, SystemDPI);
   GetSetMember(int, LastSystemDPI);
@@ -966,8 +968,10 @@ private:
   int mFFTbufIndex;
   float mPctLo, mPctHi;
   float mPctAreaFraction;
-  int mBkgdGrayOfFFT;                  // Mean gray level for background of FFT
-  float mTruncDiamOfFFT;                 // Diameter of FFT area to truncate as frac of size
+  int mBkgdGrayOfFFT;                 // Mean gray level for background of FFT
+  float mTruncDiamOfFFT;              // Diameter of FFT area to truncate as frac of size
+  float mHistoMaxIgnoreFrac;          // Maximum fraction to ignore in histogram analysis
+  float mHistoFracBeyondDip;          // Fraction of way toward peak beyond dip to include
   DialogTable mDialogTable[MAX_TOOL_DLGS];
   int mMaxDialogWidth;
   int mNumToolDlg;
