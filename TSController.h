@@ -132,6 +132,7 @@ public:
   GetSetMember(BOOL, SeparateExtraRecFiles);
   GetSetMember(float, StepForBidirReturn);
   GetSetMember(float, SpeedForOneStepReturn);
+  GetSetMember(float, DefocusForLDTrial);
   GetSetMember(int, RestoreStageXYonTilt);
   GetMember(bool, DoingDoseSymmetric);
   GetSetMember(BOOL, ReorderDoseSymFile);
@@ -533,6 +534,7 @@ private:
   BOOL mWalkBackForBidir;      // Flag for whether to return with walk up
   float mStepForBidirReturn;   // Step size when returning in tilt steps
   float mSpeedForOneStepReturn; // Speed factor to use when returning in one step
+  float mDefocusForLDTrial;    // Experimental defocus for every low dose trial
   int mDosymBacklashDir;       // Backlash direction for current dose symmetric series
   int mFixedDosymBacklashDir;  // Specified backlash direction for dose symmetric series
   FloatVec mDosymCurrentTilts; // mCurrentTilt values when the states were saved

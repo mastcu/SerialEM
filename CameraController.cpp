@@ -505,6 +505,8 @@ CCameraController::CCameraController()
   mShrMemIIFile[0] = mShrMemIIFile[1] = NULL;
   mCurShrMemInd = 0;
   mSomeDEcanReturnEarly = false;
+  mNextLDTrialDefocus = 0.;
+  mTrialDefocusToRestore = EXTRA_NO_VALUE;
 }
 
 // Clear anything that might be set externally, or was cleared in constructor and cleanup
@@ -5675,6 +5677,18 @@ int CCameraController::CapSetLDAreaFilterSettling(int inSet)
     // Only go to low dose area on first shot of continuous mode
     if (ldArea != mLDwasSetToArea && !(mRepFlag == inSet && mContinuousCount > 0))
         mScope->GotoLowDoseArea(ldArea);
+
+    // Possibly experimental setting of defocus for Trial
+    if (inSet == TRIAL_CONSET && (mNextLDTrialDefocus != 0. || 
+      (mWinApp->mTSController->StartedTiltSeries() &&
+        mWinApp->mTSController->GetDefocusForLDTrial() != 0.))) {
+      mTrialDefocusToRestore = (float)mScope->GetDefocus();
+      if (mNextLDTrialDefocus)
+        mScope->IncDefocus(mNextLDTrialDefocus);
+      else
+        mScope->IncDefocus(mWinApp->mTSController->GetDefocusForLDTrial());
+      mNextLDTrialDefocus = 0.;
+    }
     mOppositeAreaNextShot = false;
     mLDwasSetToArea = -1;
   }
@@ -11603,6 +11617,11 @@ void CCameraController::ErrorCleanup(int error)
 
   if ((mShiftedISforSTEM || mMagToRestore) && (mRetainMagAndShift < 0 || error))
     RestoreMagAndShift();
+
+  if (mTrialDefocusToRestore > EXTRA_VALUE_TEST) {
+    mScope->SetDefocus(mTrialDefocusToRestore);
+    mTrialDefocusToRestore = EXTRA_NO_VALUE;
+  }
 
   if (mBlankNextShot)
     mScope->BlankBeam(false, "ErrorCleanup for BlankNextShot");

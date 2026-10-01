@@ -3,6 +3,13 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+9/20/26: Added a script command SetNextLDTrialDefocus and a temporary
+property TSDefocusForLDTrial for experimenting with a Trial defocus during
+tilt series.
+
+9/30/26: Fixed crash taking image from plugin camera after re-entering
+low dose area on startup.
+
 9/30/26: Added options to Image Level panel for ignoring dark or light areas
 (e.g., grid bars or empty areas) when setting black/white levels.
 

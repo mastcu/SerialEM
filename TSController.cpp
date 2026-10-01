@@ -426,6 +426,7 @@ CTSController::CTSController()
   mAlarmBidirFieldSize = 6.;
   mStepForBidirReturn = 0.;
   mSpeedForOneStepReturn = 0.;
+  mDefocusForLDTrial = 0.;
   mSkipBeamShiftOnAlign = false;
   mSavedBufForExtra = NULL;
   mEarlyK2RecordReturn = false;
