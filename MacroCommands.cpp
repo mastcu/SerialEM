@@ -3379,9 +3379,11 @@ int CMacCmd::ReportComaTiltNeeded(void)
 // ReportComaVsISmatrix
 int CMacCmd::ReportComaVsISmatrix(void)
 {
+  int close;
+  float interp, matchLim = 0.1f;
   ComaVsISCalib *cvsis = mWinApp->mAutoTuning->GetBestComaVsISCal(
     mWinApp->mScope->GetSpotSize(), mWinApp->mScope->GetIntensity(),
-    mWinApp->mScope->GetProbeMode(), mWinApp->mScope->GetAlpha());
+    mWinApp->mScope->GetProbeMode(), mWinApp->mScope->GetAlpha(), -1, -1, &close, &interp);
   if (cvsis->magInd <= 0)
     ABORT_LINE("Cannot get a calibration of beam tilt versus image shift for the current"
       " illumination conditions for line:\n\n");
@@ -3389,6 +3391,16 @@ int CMacCmd::ReportComaVsISmatrix(void)
     cvsis->matrix.xpy, cvsis->matrix.ypx, cvsis->matrix.ypy);
   SetRepValsAndVars(1, cvsis->matrix.xpx, cvsis->matrix.xpy,
     cvsis->matrix.ypx, cvsis->matrix.ypy);
+
+  if (close >= 0 && fabs(interp) > matchLim && fabs(1 - interp) > matchLim) {
+    cvsis = &mWinApp->mAutoTuning->GetComaVsISCals()->at(close);
+    CString str;
+    str.Format("\n  computed from calibration at %.4g%s %s, spot %d\n", 
+      mWinApp->mScope->GetC2Percent(cvsis->spotSize,
+      cvsis->intensity, cvsis->probeMode), mWinApp->mScope->GetC2Units(),
+      mWinApp->mScope->GetC2Name(), cvsis->spotSize);
+    mLogRpt += str;
+  }
 
   return 0;
 }
