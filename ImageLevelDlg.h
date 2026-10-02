@@ -114,6 +114,9 @@ public:
   BOOL m_bLogScale;
   CButton m_butLogScale;
   afx_msg void OnLogScale();
+  BOOL m_bIgnoreDark;
+  BOOL m_bIgnoreLight;
+  afx_msg void OnCheckIgnoreDarkOrLight();
 };
 
 //{{AFX_INSERT_LOCATION}}

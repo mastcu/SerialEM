@@ -241,6 +241,15 @@ extern "C" {
                        int numBins, float firstVal, float lastVal, 
                        float *histDip, float *peakBelow, float *peakAbove,
                        int verbose);
+  int scanHistogramFor2Dips(float *bins, int numBins, float firstVal, float lastVal,
+                            float scanBot, float scanTop, int findPeaks,
+                            float *dip, float *dip2, float *peakBelow,
+                            float *peakAbove, float *midPeak);
+  int findTwoHistogramDips(float *values, int numVals, float *bins, int numBins, 
+                           float firstVal, float lastVal, float *histDip,
+                           float *lowerDip, float *peakBelow, float *peakAbove,
+                           float *midPeak, int verbose);
+    
   /* simplestat.c */
   void avgSD(float *x, int n, float *avg, float *sd, float *sem);
   void sumsToAvgSD(float sx, float sxsq, int n, float *avg, float *sd);

@@ -2138,6 +2138,17 @@ int CMacCmd::OppositeTrial(void)
   return 0;
 }
 
+// SetNextLDTrialDefocus
+int CMacCmd::SetNextLDTrialDefocus()
+{
+  mCamera->SetNextLDTrialDefocus(mItemFlt[1]);
+  if (!mItemEmpty[2] && mItemInt[2]) {
+    mCamera->InitiateCapture(TRIAL_CONSET);
+    mTestScale = true;
+  }
+  return 0;
+}
+
 // AcquireToMatchBuffer
 int CMacCmd::AcquireToMatchBuffer(void)
 {

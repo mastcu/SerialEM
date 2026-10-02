@@ -1861,6 +1861,15 @@
             from the&nbsp;defined&nbsp;Trial area.</TD>
         </TR>
         <TR>
+          <TD class="scriptcommand">SetNextLDTrialDefocus #D [#A]</TD>
+          <TD>Sets the next Trial in Low Dose mode to be taken with an incremental defocus 
+            of <strong>#D</strong>.&nbsp; Set the optional <strong>#A</strong> non-zero to 
+            acquire a Trial image also.&nbsp; A defocus can be set for all Trials during a 
+            Low Dose tilt series (including while one is stopped) by setting the temporary 
+            property TSDefocusForLDTrial with a focus change to apply.&nbsp; Command added 
+            in 4.3, 30-Sep-26.</TD>
+        </TR>
+        <TR>
           <TD class="scriptcommand">AcquireToMatchBuffer buf</TD>
           <TD>Acquires an image whose size matches that of the image in the given buffer, with
              camera parameters matching those used to acquire that image.&nbsp; The image will

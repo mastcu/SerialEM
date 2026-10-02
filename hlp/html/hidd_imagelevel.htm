@@ -68,10 +68,19 @@
       <P><B>Set Truncation</B></P>
       <P>Use this button to enter new values for the percent of pixels that will have 
         their intensities truncated at the low and the high end of the intensity range, 
-        and new values controlling how FFTs are scaled. 
-        You will enter four dialog boxes for entering new values. The first two are for 
+        parameters controlling the histogram analysis for ignoring light or dark areas, and new values controlling how FFTs are scaled. 
+        You will enter four to six dialog boxes for entering new values. The first two are for 
         entering the percent of pixels truncated at the low and high end of the range.&nbsp; 
-        The next one is the mean gray level that FFTs should have at their edges when 
+        </P>
+    <P>If ignoring either dark or light areas is selected, two boxes will open next.&nbsp; 
+      The first is for the maximum fraction of pixels that should be considered a 
+      light or dark area; if this fraction is too high, the levels could get set so 
+      that only black blobs or hot pixels are displayed.&nbsp; The default is 0.98.&nbsp; 
+      The second is for the fraction of the distance from the dip to the peak being 
+      excluded at which the white or black level should be set.&nbsp; The default is 
+      0.1.&nbsp; A negative value can be used and will make it truncate values around 
+      the dip itself. </P>
+    <P>The next box is for the mean gray level that FFTs should have at their edges when 
         first displayed.&nbsp; Values in the range of 16 to 64 may be useful, although 
         the actual perceived gray level will depend on how noisy the FFTs are.&nbsp; An 
         entry of 0 here will disable the special scaling of FFTs. The final text box 
@@ -104,8 +113,23 @@
       <P><b>Invert</b></P>
     <P>Use this button to invert the image contrast; the hot key F11 can also be used.</P>
       <P><B>Extra info&nbsp; (Hot key Shift+X)</B></P>
-      <P>Use this button to turn the display of scale bars, min/max/mean, camera name, and 
+      <P>Use this button to turn the display of scale bars, min/max/mean, FOV, camera name, and 
           dose rate on or off.</P>
+    <P><strong>Ignore&nbsp; dark and/or light areas</strong></P>
+    <P>These two checkboxes cause the program to analyze for a multimodal distribution 
+      with a &#39;kernel&#39; histogram, which is a smoothed histogram involving computation 
+      of a kernel function for each sample point.&nbsp; With one of the boxes checked, 
+      it will look for the two highest peaks in the histogram and find the lowest 
+      point in the dip between them.&nbsp; With just <strong>dark</strong> checked, 
+      the black level will be set a bit below the dip (0.1 of the way from the dip to 
+      the peak, by default).&nbsp; With just <strong>light</strong> checked, the white 
+      level will be set a bit above the dip.&nbsp; With both options checked, the 
+      program will try to find three peaks in the histogram, and set the black level a 
+      bit below the dip between the lower and middle peak, and the white level to a 
+      bit above the dip between middle and upper peaks.</P>
+    <P>Up to 4 kernel histograms may need to be computed to find the peak, so the time 
+      for this operation may be significant during prolonged acquisition.&nbsp; Set 
+      Debug Output to 1 to see the time required.</P>
       <P>&nbsp;</P>
     </basefont>
   </BODY>

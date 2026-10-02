@@ -39,6 +39,7 @@ public :
   GetSetMember(BOOL, DrawCrosshairs);
   GetSetMember(BOOL, DrawTiltAxis);
   GetSetMember(BOOL, Autocontrast);
+  GetSetMember(int, IgnoreDarkLight);
   GetSetMember(float, UnsignedTruncLimit);
   GetSetMember(BOOL, SaveAsynchronously);
   GetSetMember(float, HdfUpdateTimePerSect);
@@ -90,6 +91,7 @@ public :
   BOOL mDrawCrosshairs;
   BOOL mDrawTiltAxis;
   BOOL mAutocontrast;
+  int mIgnoreDarkLight;       // 1 for dark, 2 for light, 3 for both
   CString *mModeNames;
   EMimageBuffer *mImBufsp;
   CSerialEMApp *mWinApp;

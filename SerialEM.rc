@@ -962,7 +962,7 @@ BEGIN
     PUSHBUTTON      "Browse",IDC_BROWSE,209,33,43,14,NOT WS_VISIBLE
 END
 
-IDD_IMAGELEVEL DIALOGEX 0, 0, 119, 99
+IDD_IMAGELEVEL DIALOGEX 0, 0, 119, 109
 STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP
 EXSTYLE WS_EX_TOOLWINDOW | WS_EX_LEFTSCROLLBAR
 FONT 8, "Microsoft Sans Serif", 400, 0, 0x0
@@ -996,6 +996,9 @@ BEGIN
     CONTROL         "Autocontrast",IDC_AUTOCONTRAST,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,4,79,50,10
     PUSHBUTTON      "Auto",IDC_BUT_AUTO,40,56,19,10
     CONTROL         "Log scale",IDC_CHECK_LOGSCALE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,4,89,41,10
+    LTEXT           "Ignore:",IDC_STATIC,5,99,23,8
+    CONTROL         "dark  and/or",IDC_CHECK_IGNORE_DARK,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,28,99,46,10
+    CONTROL         "light areas",IDC_CHECK_IGNORE_LIGHT,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,75,99,40,10
 END
 
 IDD_BUFFERCONTROL DIALOGEX 0, 0, 119, 117
@@ -4841,7 +4844,8 @@ BEGIN
     IDD_IMAGELEVEL, DIALOG
     BEGIN
         LEFTMARGIN, 3
-        BOTTOMMARGIN, 96
+        RIGHTMARGIN, 117
+        BOTTOMMARGIN, 107
     END
 
     IDD_BUFFERCONTROL, DIALOG
@@ -6261,6 +6265,15 @@ BEGIN
     IDC_BUT_SET_SIZE_SPACE  "Set size and periodicity text boxes above with values from last hole-finding"
     IDC_RHDFFILE            "Save to HDF file that can hold multiple images and metadata"
     IDC_TILTAXIS            "Draw the tilt axis on the image"
+END
+
+STRINGTABLE
+BEGIN
+    IDC_AUTOCONTRAST        "Analyze each new image to set Black/White levels; keep levels the same if off"
+    IDC_BUT_AUTO            "Set Black/White levels with the autocontrast analysis and reset Bri/Con"
+    IDC_CHECK_LOGSCALE      "Apply a log scaling to the image between the Balck and White levels"
+    IDC_CHECK_IGNORE_DARK   "Analyze histogram and set Black level a bit below the lower or only dip"
+    IDC_CHECK_IGNORE_LIGHT  "Analyze histogram and set White level a bit above the upper or only dip"
 END
 
 STRINGTABLE

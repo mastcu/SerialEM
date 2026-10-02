@@ -126,6 +126,7 @@ class EMmontageController
   GetSetMember(BOOL, NoDrawOnRead);
   GetMember(int, RestoringStage);
   GetMember(BOOL, ReadingMontage);
+  GetMember(BOOL, ReadingMontPiece);
   void SetPercentileStatParams(int patchSize, float lowPct, float highPct, float midCrit, float rangeCrit) {
     mNextPctlPatchSize = patchSize, mLowPercentile = lowPct, mHighPercentile = highPct, 
       mPctlMidCrit = midCrit, mPctlRangeCrit = rangeCrit;
@@ -170,6 +171,7 @@ class EMmontageController
   int mNumActions;
 
   BOOL mReadingMontage;
+  BOOL mReadingMontPiece;         // Flag so histogram analysis available for overview
   int mTrialMontage;
   BOOL mCenterOnly;               // Flag to do montage center only when reading in
   BOOL mSynchronous;              // Flag to read in sysnchronously

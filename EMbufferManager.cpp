@@ -65,6 +65,7 @@ EMbufferManager::EMbufferManager(CString *inModeNamep, EMimageBuffer *inImBufs)
   mDrawCrosshairs = false;
   mDrawTiltAxis = false;
   mAutocontrast = true;
+  mIgnoreDarkLight = 0;
   mUnsignedTruncLimit = 0.01f;
   mSaveAsynchronously = true;
   mSavingThread = NULL;
@@ -1211,8 +1212,8 @@ void EMbufferManager::FindScaling(EMimageBuffer * imBuf, int partialScan)
     mWinApp->GetPctAreaFraction(),
     B3DCHOICE(imBuf->mCaptured == BUFFER_FFT || imBuf->mCaptured == BUFFER_LIVE_FFT, 
       mWinApp->GetBkgdGrayOfFFT(), 0), mWinApp->GetTruncDiamOfFFT(), 
-    B3DCHOICE(partialScan > 0 || mWinApp->mMontageController->GetReadingMontage(),
-      partialScan, mDrawScaleBar ? 0 : -2));
+    B3DCHOICE(partialScan >= 0 || mWinApp->mMontageController->GetReadingMontPiece(),
+      partialScan, -(mIgnoreDarkLight + 1)));
 }
 
 // Initiate saving to file on a separate thread

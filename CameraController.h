@@ -686,6 +686,7 @@ public:
   GetSetMember(CString, NewImageListPath);
   SetMember(int, StoreNumForNextShot);
   GetMember(bool, SomeDEcanReturnEarly);
+  SetMember(float, NextLDTrialDefocus);
   bool ThisDEcanReturnEarly(CameraParameters *param) { return mWinApp->mDEToolDlg.CanSaveFrames(param) &&
       mUseAPI2ForDE && (param->CamFlags & DE_CAN_RETURN_EARLY); };
 
@@ -915,6 +916,8 @@ public:
   double mCenterBeamX, mCenterBeamY;  // Beam X and Y values at center
   int mBlockOffsetSign;         // Sign for Tietz block gain offset
   BOOL mOppositeAreaNextShot;   // Flag to go to opposite LD area on next shot
+  float mNextLDTrialDefocus;    // Defocus increment to set on next trial
+  float mTrialDefocusToRestore; // Starting defocus to restore, otherwise EXTRA_NO_VALUE
   BOOL mLDwasSetToArea;         // External flag that LD area already set
   int mNumIgnoreDM[3];          // Number of cameras to ignore on each interface
   int mIgnoreDMList[3][MAX_IGNORE_GATAN];
