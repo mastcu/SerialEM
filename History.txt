@@ -3,7 +3,10 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
-9/20/26: Added a script command SetNextLDTrialDefocus and a temporary
+10/2/26: Added script commands for saving and restoring the sequential number
+used in frame file names.
+
+9/30/26: Added a script command SetNextLDTrialDefocus and a temporary
 property TSDefocusForLDTrial for experimenting with a Trial defocus during
 tilt series.
 

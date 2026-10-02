@@ -887,6 +887,8 @@ MAC_SAME_FUNC_ARG(GetAllCameraSetValues, 3, 4, GetAllLowDoseValues, GETALLCAMERA
 MAC_SAME_FUNC_ARG(AddToFrameStackMdoc, 2, 4, AddToNextFrameStackMdoc, ADDTOFRAMESTACKMDOC, SS)
 MAC_SAME_FUNC_ARG(StartFrameStackMdoc, 2, 4, AddToNextFrameStackMdoc, STARTFRAMESTACKMDOC, SS)
 MAC_SAME_NAME_ARG(SetNextLDTrialDefocus, 1, 0, SETNEXTLDTRIALDEFOCUS, Di)
+MAC_SAME_NAME_NOARG(ReportSequentialFrameNum, 0, 4, REPORTSEQUENTIALFRAMENUM)
+MAC_SAME_NAME_ARG(SetSequentialFrameNum, 1, 4, SETSEQUENTIALFRAMENUM, I)
 
 // new Python-only commands need to be added to pythonOnlyCmds in ::CMacroProcessor
 // New Not from Python items omit _ARG or _NOARG

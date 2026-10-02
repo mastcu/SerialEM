@@ -4486,6 +4486,24 @@ int CMacCmd::ReportFrameSavingPath(void)
   return 0;
 }
 
+//ReportSequentialFrameNum
+int CMacCmd::ReportSequentialFrameNum()
+{
+  int num = mCamera->GetLastUsedFrameNumber();
+  mLogRpt.Format("Last used sequential frame file number is %d", num);
+  SetRepValsAndVars(1, num);
+  return 0;
+}
+
+//SetSequentialFrameNum
+int CMacCmd::SetSequentialFrameNum()
+{
+  if (mItemInt[1] < 0)
+    ABORT_LINE("Frame file number is negative in line:\n\n");
+  mCamera->SetLastUsedFrameNumber(mItemInt[1]);
+  return 0;
+}
+
 // ReadBasicModeFile
 int CMacCmd::ReadBasicModeFile()
 {
