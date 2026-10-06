@@ -2941,6 +2941,18 @@
               the DE camera server running locally and version 1.0.943 or newer.&nbsp; Sets <i>reportedValue1</i> to the path, or
             to NONE if it is not defined.&nbsp; </TD>
         </TR>
+       <TR>
+          <TD class="scriptcommand">ReportSequentialFrameNum</TD>
+          <TD>Reports the last used number for adding a sequential number frame file names.&nbsp; 
+            Command added in 4.3, 2-Oct-26.</TD>
+        </TR>
+       <TR>
+          <TD class="scriptcommand">SetSequentialFrameNum #</TD>
+          <TD>Sets the last used number for sequential frame file names with <strong>#</strong>; 
+            thus, the next frame file saved will have this value plus one.&nbsp; Use this 
+            command with the previous one to save and restore the number when switching to a 
+            temporary&nbsp; base name and back.&nbsp; Command added in 4.3, 2-Oct-26.</TD>
+        </TR>
         <TR>
           <TD colspan="2"><A name="montage"></A><B>Montage File Commands</B></TD>
         </TR>

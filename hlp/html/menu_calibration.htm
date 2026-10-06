@@ -1785,14 +1785,16 @@
         the image rotation as reported by a Thermo/FEI scope (or a 0 for a JEOL). These numbers
         are listed in the form required for the magnification table in the
         SerialEMProperties.txt file. Different numbers will be output in EFTEM mode than
-        in normal lens mode. <i>On a Thermo/FEI scope</i> or a <em>JEOL scope with GIF</em> in EFTEM mode, the normal mode
+        in normal lens mode. <i>On a Thermo/FEI scope</i> or a <em>JEOL scope with GIF</em> in EFTEM mode, 
+        you should run the command first in TEM mode, then copy and paste the table into 
+        the properties file.&nbsp; On a Thermo/FEI scope where the microscope UI shows a 
+        different magnification with the screen down, add the screen-down magnifications 
+        manually.&nbsp; On a JEOL with GIF, make sure that LowestMModeMagIndex is 
+        correct in the properties file.&nbsp; Save the file, exit, and restart SerialEM.&nbsp; 
+        Then when you list the magnifications in EFTEM mode, the normal mode
         magnification and rotation will be printed on each line before the EFTEM values,
-        so that the full table can be pasted directly into the properties file.&nbsp;&nbsp; However, make sure that the table entries for normal mode are correct before
-        adding the EFTEM values, and that LowestMModeMagIndex is correct in the 
-        properties file before running this on a JEOL with GIF.&nbsp; If necessary, correct the table for normal mode
-        and add the screen down magnifications (if they differ), then restart SerialEM
-        with the corrected properties file.&nbsp; Then run this command in EFTEM mode to
-        get the EFTEM table combined with the correct one for normal mode.</P>
+        so that the full table can be pasted directly into the properties file, 
+        replacing the TEM-only one.</P>
     <P><i>On a JEOL</i>, the magnification table is followed by a table
         of camera lengths, which is needed for the program to interpret diffraction mode
         correctly. This table should be cut and pasted into the properties file, with
