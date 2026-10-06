@@ -2169,7 +2169,7 @@ int CAutoTuning::LookupComaVsISCal(int spotSize, float intensity, int probeMode,
 {
   float distC2tol = mShiftManager->GetC2SpacingForHighFocus();
   float crossover, calIntensity, calIntCmp, intCmp, int1, int0, dist, minDist;
-  int spotDist, best;
+  int spotDist, best, ind, indCmp;
 
   FloatVec intensities; //scaled intensities of cals with same spot & alpha/probe
                         // (can be used for interpolation)
@@ -2237,8 +2237,7 @@ int CAutoTuning::LookupComaVsISCal(int spotSize, float intensity, int probeMode,
 
           // compare intensities to see if it's a better match, and update the best if so.
           dist = fabs(calIntCmp - intCmp);
-          if (((mComaVsISCals[i].aperture == aperture && !mScope->GetUseIllumAreaForC2()) ||
-            mScope->GetUseIllumAreaForC2()) && dist < minDist) {
+          if (dist < minDist) {
             minDist = dist;
             best = i;
           }
@@ -2260,24 +2259,37 @@ int CAutoTuning::LookupComaVsISCal(int spotSize, float intensity, int probeMode,
   // find the next closest calibration to extrapolate outside the range.
   if (((i0 < 0 && i1 >= 0) || (i1 < 0 && i0 >= 0)) && intensities.size() >= 2) {
 
-    // If int1 is the low endpoint, flip so that i0 to i1 will still go from low to high
+    // If int1 is the low endpoint or int0 is the high endpoint, try extrapolating
     if (i0 < 0) {
-      i0 = i1;
-      int0 = int1;
+      indCmp = i1;
+      calIntCmp = int1;
+    } else if (i1 < 0) {
+      indCmp = i0;
+      calIntCmp = int0;
     }
 
     // Find the closest point to the existing interpolation point, without being so close 
     // that the interpolation would break
-    i1 = -1;
-    int1 = 1.e10f;
+    ind = -1;
+    calIntensity = 1.e10f;
     dist = 1.e10f;
     minDist = 1.e-6f;
     for (int i = 0; i < (int)intensities.size(); i++) {
-      if (indices[i] != i0 && fabs(int0 - intensities[i]) > minDist &&
-        fabs(int0 - intensities[i]) < dist) {
-        i1 = indices[i];
-        int1 = intensities[i];
-        dist = fabs(int0 - int1);
+      if (indices[i] != indCmp && fabs(calIntCmp - intensities[i]) > minDist &&
+        fabs(calIntCmp - intensities[i]) < dist) {
+        ind = indices[i];
+        calIntensity = intensities[i];
+        dist = fabs(calIntensity - calIntCmp);
+      }
+    }
+
+    if (ind >= 0) {
+      if (i0 < 0) {
+        i0 = ind;
+        int0 = calIntensity;
+      } else if (i1 < 0) {
+        i1 = ind;
+        int1 = calIntensity;
       }
     }
   }
@@ -2340,8 +2352,11 @@ ComaVsISCalib *CAutoTuning::GetBestComaVsISCal(int spotSize, float intensity,
   if (interp != NULL)
     *interp = tpar;
 
+  PrintfToLog("interpolation %d %d %.4f", i0, i1, tpar);
+
   // If no interpolation or extrapolation can be made, return the best match found
-  if (i0 < 0 || i1 < 0 || tpar < -extrapLim || tpar > 1 + extrapLim) {
+  //if (i0 < 0 || i1 < 0 || tpar < -extrapLim || tpar > 1 + extrapLim) {
+  if (i0 < 0 || i1 < 0) {
     if (best >= 0)
       mComaVsIScal = mComaVsISCals[best];
     return &mComaVsIScal;
@@ -2416,6 +2431,11 @@ void CAutoTuning::AppendToComaVsISCals(ComaVsISCalib *inCal)
   
   best = LookupComaVsISCal(inCal->spotSize, inCal->intensity, inCal->probeMode, 
     inCal->alpha, inCal->aperture, inCal->userSetting, i0, i1, tpar, replaceInd);
+
+  SEMTrace('1', "ComaVsIS interpolation %d %d %.4f", i0, i1, tpar);
+  SEMTrace('1', "New ComaVsIS cal at intensity = %.4f, parallel illum = %.4f", 
+    inCal->intensity, 
+    mWinApp->mBeamAssessor->GetParallelIllum(inCal->spotSize, inCal->probeMode));
 
   exactMatch = fabs(tpar) < 1.e-6 || fabs(tpar - 1) < 1.e-6;
   closeMatch = fabs(tpar) < 0.1 || fabs(tpar - 1) < 0.1;

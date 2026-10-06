@@ -1895,13 +1895,13 @@ void CMultiShotDlg::UpdateMultiDisplay(int magInd, double intensity)
     if (SEMTickInterval(mLastManageEnablesTime) > 0.5) {
       mLastManageEnablesTime = GetTickCount();
       ManageEnables();
-      mLastProbeMode = mWinApp->mScope->GetProbeMode();
-      mLastSpotSize = mWinApp->mScope->GetSpotSize();
+      mLastProbeMode = probe;
+      mLastSpotSize = spot;
       mLastIntensity = intensity;
       if (mHasIlluminatedArea > 0)
         mLastAperture = mWinApp->mBeamAssessor->GetCurrentAperture();
       if (alpha >= 0)
-        alpha = mLastAlpha;
+        mLastAlpha = alpha;
     }
   }
 
