@@ -13726,7 +13726,8 @@ int CMacCmd::FindHoles(void)
       return 1;
   }
 
-  if (mNavHelper->mHoleFinderDlg->DoFindHoles(imBuf, false, &xvec, &yvec)) {
+  if (mNavHelper->mHoleFinderDlg->DoFindHoles(imBuf, false, 
+    mItemEmpty[2] ? NULL : &xvec, mItemEmpty[2] ? NULL : &yvec)) {
     AbortMacro();
     return 1;
   }

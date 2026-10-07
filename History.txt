@@ -3,6 +3,9 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+10/7/26: Fixed FindHoles command when dialog specifies to exclude outside a
+polygon.
+
 10/2/26: Added script commands for saving and restoring the sequential number
 used in frame file names.
 
