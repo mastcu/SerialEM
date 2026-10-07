@@ -42,4 +42,5 @@ public:
   afx_msg void OnSetNumImages();
   int m_iStoreCal;
   afx_msg void OnStoreCalibration();
+  void SetDistRotFromIS(int magInd, float shiftX, float shiftY);
 };

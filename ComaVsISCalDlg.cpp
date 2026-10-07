@@ -9,6 +9,7 @@
 #include "ComaVsISCalDlg.h"
 #include "NavHelper.h"
 #include "AutoTuning.h"
+#include "ShiftManager.h"
 
 #if defined(_DEBUG) && defined(_CRTDBG_MAP_ALLOC)
 #define new DEBUG_NEW
@@ -193,4 +194,21 @@ void CComaVsISCalDlg::OnStoreCalibration()
 {
   UpdateData(true);
   mWinApp->RestoreViewFocus();
+}
+
+void CComaVsISCalDlg::SetDistRotFromIS(int magInd, float delISX, float delISY)
+{
+  float ISX, ISY, rot, nRot;
+  ScaleMat aMat = mWinApp->mShiftManager->IStoSpecimen(magInd);
+  ISX = delISX * sqrtf(aMat.xpx * aMat.xpx + aMat.ypx * aMat.ypx);
+  ISY = delISY * sqrtf(aMat.xpy * aMat.xpy + aMat.ypy * aMat.ypy);
+  m_fDistance = sqrtf(ISX * ISX + ISY * ISY);
+  rot = atan2(ISY, ISX) / DTORFL;
+
+  //Rotation by 90 deg makes equivalent positions, so get the angle between -45 and 45
+  nRot = floorf((rot + 45.f) / 90.f);
+  m_iRotation = (int)(rot - nRot * 90.f);
+
+  UpdateData(false);
+  mWinApp->mMainView->DrawImage();
 }
