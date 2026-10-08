@@ -2175,6 +2175,7 @@ int CAutoTuning::LookupComaVsISCal(int spotSize, float intensity, int probeMode,
   float distC2tol = mShiftManager->GetC2SpacingForHighFocus();
   float crossover, calIntensity, calIntCmp, intCmp, int1, int0, dist, minDist;
   int spotDist, best, ind, indCmp;
+  bool aboveCrossover = true;
 
   FloatVec intensities; //scaled intensities of cals with same spot & alpha/probe
                         // (can be used for interpolation)
@@ -2200,9 +2201,10 @@ int CAutoTuning::LookupComaVsISCal(int spotSize, float intensity, int probeMode,
   intCmp = intensity;
   if (crossover <= 0.)
     distC2tol /= 4.f;
-  else 
+  else {
     intCmp = 1.f / fabs(intensity - crossover);
-
+    aboveCrossover = intensity > crossover;
+  }
   // Search all calibrations to find closest intensities and spot sizes
   minDist = 1.e10f;
   spotDist = 100;
@@ -2228,9 +2230,11 @@ int CAutoTuning::LookupComaVsISCal(int spotSize, float intensity, int probeMode,
       allIntens.push_back(calIntCmp);
       allInds.push_back(i);
 
-      // Check if probe/alpha match
+      // Check if probe/alpha match, and that both calibrations are on the same side of
+      // beam crossover
       if (mComaVsISCals[i].probeMode == probeMode && (alpha < 0 ||
-        (alpha >= 0 && mComaVsISCals[i].alpha == alpha))) {
+        (alpha >= 0 && mComaVsISCals[i].alpha == alpha)) && (crossover <= 0 || 
+        (crossover > 0 && calIntensity > crossover == aboveCrossover))) {
 
         //If all other conditions match, update the closest spot size
         spotDist = B3DMIN((int)fabs(mComaVsISCals[i].spotSize - spotSize), spotDist);
