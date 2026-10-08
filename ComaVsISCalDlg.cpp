@@ -20,6 +20,7 @@
 #define EXTENT_INCREMENT 0.2f
 #define ROTATION_INCREMENT 5
 #define MAX_ROTATION 50
+#define MAX_COMAVSISNUMSHOTS 5
 
 // CComaVsISCalDlg dialog
 
@@ -29,6 +30,7 @@ CComaVsISCalDlg::CComaVsISCalDlg(CWnd* pParent /*=NULL*/)
   , m_iRotation(0)
   , m_iNumImages(FALSE)
   , m_iStoreCal(0)
+  , m_iNumShots(0)
 {
   mNonModal = true;
 }
@@ -53,6 +55,10 @@ void CComaVsISCalDlg::DoDataExchange(CDataExchange* pDX)
   DDX_Control(pDX, IDOK, m_butCalibrate);
   DDX_Radio(pDX, IDC_RUSE_5IMAGES, m_iNumImages);
   DDX_Radio(pDX, IDC_RSTORECALIBRATION, m_iStoreCal);
+  DDX_Control(pDX, IDC_SPIN_COMAVSISNUMSHOTS, m_sbcNumShots);
+  DDX_Text(pDX, IDC_EDIT_COMAVSISNUMSHOTS, m_iNumShots);
+	MinMaxInt(IDC_EDIT_COMAVSISNUMSHOTS, m_iNumShots, 0, MAX_COMAVSISNUMSHOTS,
+    "number of extra shots before coma measurement\n");
 }
 
 
@@ -62,7 +68,12 @@ BEGIN_MESSAGE_MAP(CComaVsISCalDlg, CBaseDlg)
   ON_EN_KILLFOCUS(IDC_EDIT_CVIC_ROTATION, OnKillfocusEditRotation)
   ON_NOTIFY(UDN_DELTAPOS, IDC_SPIN_CVIC_ROTATION, OnDeltaposSpinRotation)
   ON_BN_CLICKED(IDC_RUSE_5IMAGES, OnSetNumImages)
+  ON_BN_CLICKED(IDC_RUSE_FULL_ARRAY, OnSetNumImages)
+  ON_BN_CLICKED(IDC_RUSE_SETTING, OnSetNumImages)
+  ON_EN_KILLFOCUS(IDC_EDIT_COMAVSISNUMSHOTS, OnEnKillfocusNumShots)
+  ON_NOTIFY(UDN_DELTAPOS, IDC_SPIN_COMAVSISNUMSHOTS, OnDeltaposNumShots)
   ON_BN_CLICKED(IDC_RSTORECALIBRATION, OnStoreCalibration)
+  ON_BN_CLICKED(IDC_RSTORESETTING, OnStoreCalibration)
 END_MESSAGE_MAP()
 
 
@@ -110,6 +121,7 @@ void CComaVsISCalDlg::OnOK()
   mWinApp->mAutoTuning->SetComaVsISrotation(m_iRotation);
   mWinApp->mAutoTuning->SetComaVsISuseFullArray(useFull);
   mWinApp->mAutoTuning->SetComaVsIScalToSettings(m_iStoreCal == 1);
+  mWinApp->mAutoTuning->SetNumShotsBeforeCal(m_iNumShots);
   EnableDlgItem(IDOK, false);
   EnableDlgItem(IDCANCEL, false);
   mWinApp->mAutoTuning->CalibrateComaVsImageShift(m_fDistance, m_iRotation, useFull);
@@ -211,4 +223,28 @@ void CComaVsISCalDlg::SetDistRotFromIS(int magInd, float delISX, float delISY)
 
   UpdateData(false);
   mWinApp->mMainView->DrawImage();
+}
+
+
+void CComaVsISCalDlg::OnDeltaposNumShots(NMHDR *pNMHDR, LRESULT *pResult)
+{
+  LPNMUPDOWN pNMUpDown = reinterpret_cast<LPNMUPDOWN>(pNMHDR);
+  mWinApp->RestoreViewFocus();
+  if ((pNMUpDown->iDelta > 0 && m_iNumShots <= 0) ||
+    (pNMUpDown->iDelta < 0 && m_iNumShots >= MAX_COMAVSISNUMSHOTS)) {
+    *pResult = 1;
+    return;
+  }
+  m_iNumShots -= pNMUpDown->iDelta;
+  B3DCLAMP(m_iNumShots, 0, MAX_COMAVSISNUMSHOTS);
+
+  UpdateData(false);
+  *pResult = 0;
+}
+
+
+void CComaVsISCalDlg::OnEnKillfocusNumShots()
+{
+  UpdateData(true);
+  mWinApp->RestoreViewFocus();
 }

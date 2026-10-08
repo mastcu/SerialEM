@@ -2752,6 +2752,9 @@
 #define IDC_CHECK_IGNORE_LIGHT          3783
 #define IDC_RSTORECALIBRATION           3784
 #define IDC_RSTORESETTING               3785
+#define IDC_EDIT_COMAVSISNUMSHOTS       3786
+#define IDC_SPIN1                       3787
+#define IDC_SPIN_COMAVSISNUMSHOTS       3787
 #define ID_NEW_IMAGE                    32771
 #define IDM_FILE_SAVEOTHER              32772
 #define IDM_FILE_READ                   32773
@@ -3411,7 +3414,7 @@
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        305
 #define _APS_NEXT_COMMAND_VALUE         33654
-#define _APS_NEXT_CONTROL_VALUE         3786
+#define _APS_NEXT_CONTROL_VALUE         3788
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif

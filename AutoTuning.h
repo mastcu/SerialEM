@@ -103,6 +103,7 @@ public:
   GetSetMember(BOOL, CtfUseFocusInLD);
   GetSetMember(bool, ComaVsIScalFromSettings);
   GetSetMember(bool, ComaVsIScalToSettings);
+  GetSetMember(int, NumShotsBeforeCal);
   float GetBeamTiltBacklash();
   std::vector<ComaVsISCalib> *GetComaVsISCals() { return &mComaVsISCals; };
   void SetBaseBeamTilt(double inX, double inY) {mBaseBeamTiltX = inX; mBaseBeamTiltY = inY;};
@@ -246,6 +247,7 @@ private:
   float mComaVsISYAstigNeeded[4];
   bool mComaVsIScalFromSettings;
   bool mComaVsIScalToSettings;
+  int mNumShotsBeforeCal;
 
 public:
   void CalibrateAstigmatism(void);

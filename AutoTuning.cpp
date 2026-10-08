@@ -96,6 +96,7 @@ CAutoTuning::CAutoTuning(void)
   mComaVsISuseFullArray = 0;
   mComaVsIScalFromSettings = true;
   mComaVsIScalToSettings = true;
+  mNumShotsBeforeCal = 0;
 }
 
 
@@ -2072,6 +2073,9 @@ void CAutoTuning::ComaVsISNextTask(int param)
     mComaVsISindex++;
     if (index % 2 || !skipBT) {
       mWinApp->AddIdleTask(TASK_CAL_COMA_VS_IS, 0, 0);
+      for (int i = 0; i < mNumShotsBeforeCal; i++) {
+        mWinApp->mCamera->InitiateCapture(RECORD_CONSET);
+      }
       CtfBasedAstigmatismComa(useFullFac * ((index + 1) % 2), false,
         1, (index % 2 && !skipBT) ? 2 : 1, false);
     } else {
@@ -2352,7 +2356,7 @@ ComaVsISCalib *CAutoTuning::GetBestComaVsISCal(int spotSize, float intensity,
   if (interp != NULL)
     *interp = tpar;
 
-  PrintfToLog("interpolation %d %d %.4f", i0, i1, tpar);
+  SEMTrace('1', "Coma vs IS interpolation %d %d %.4f", i0, i1, tpar);
 
   // If no interpolation or extrapolation can be made, return the best match found
   //if (i0 < 0 || i1 < 0 || tpar < -extrapLim || tpar > 1 + extrapLim) {
