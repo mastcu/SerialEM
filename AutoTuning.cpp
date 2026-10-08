@@ -1763,8 +1763,12 @@ void CAutoTuning::CtfBasedNextTask(int tparm)
     }
   }
 
-  if (mCtfActionType / 2 == 0)
+  if (mCtfActionType / 2 == 0) {
     mWinApp->mCamera->InitiateCapture(RECORD_CONSET);
+    for (int i = 0; i < mNumShotsBeforeCal; i++) {
+      mWinApp->mCamera->InitiateCapture(RECORD_CONSET);
+    }
+  }
   mWinApp->AddIdleTask(CCameraController::TaskCameraBusy, TASK_CTF_BASED, 0, 0);
 }
 
@@ -2073,9 +2077,6 @@ void CAutoTuning::ComaVsISNextTask(int param)
     mComaVsISindex++;
     if (index % 2 || !skipBT) {
       mWinApp->AddIdleTask(TASK_CAL_COMA_VS_IS, 0, 0);
-      for (int i = 0; i < mNumShotsBeforeCal; i++) {
-        mWinApp->mCamera->InitiateCapture(RECORD_CONSET);
-      }
       CtfBasedAstigmatismComa(useFullFac * ((index + 1) % 2), false,
         1, (index % 2 && !skipBT) ? 2 : 1, false);
     } else {
