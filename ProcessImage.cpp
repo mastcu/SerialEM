@@ -1976,6 +1976,7 @@ int CProcessImage::CenterBeamFromActiveImage(double maxRadius, double maxError,
   EMimageBuffer *imBuf = mWinApp->GetActiveNonStackImBuf();
   float xcen, ycen, radius, xcenUse, ycenUse, radUse, fracUse;
   int binning, err, numQuadrant;
+  CString errStr;
   double d1, d2, d3;
 
   if (useCentroid) {
@@ -1990,9 +1991,10 @@ int CProcessImage::CenterBeamFromActiveImage(double maxRadius, double maxError,
   if (err < 0)
     mWinApp->AppendToLog("No beam edges detectable in this image",
       LOG_MESSAGE_IF_CLOSED);
-  else if (err > 0)
-    mWinApp->AppendToLog("Error analyzing image for beam edges", LOG_MESSAGE_IF_CLOSED);
-  else if (maxRadius > 0. && radius * binning > maxRadius) {
+  else if (err > 0) {
+    errStr.Format("Error %d analyzing image for beam edges", err);
+    mWinApp->AppendToLog(errStr, LOG_MESSAGE_IF_CLOSED);
+  } else if (maxRadius > 0. && radius * binning > maxRadius) {
     mWinApp->AppendToLog("Beam radius from fit is greater than allowed radius; beam "
       "was not moved", LOG_OPEN_IF_CLOSED);
     err = 6;
