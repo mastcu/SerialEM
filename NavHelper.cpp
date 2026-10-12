@@ -4389,7 +4389,7 @@ int CNavHelper::NewAcquireFile(int itemNum, int listType, ScheduledFile *sched)
             }
           }
           if (parUsed)
-            NextAutoFilename(autoName);
+            autoName = NextAutoFilename(autoName);
         }
       } else {
 

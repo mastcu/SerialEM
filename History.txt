@@ -3,6 +3,8 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+10/13/26: Fixed some minor bugs in the parallel tilt series setup dialog.
+
 10/7/26: Fixed FindHoles command when dialog specifies to exclude outside a
 polygon.
 
