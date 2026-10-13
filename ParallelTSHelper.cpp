@@ -1415,34 +1415,20 @@ int CParallelTSHelper::ConvertToParTSItem(CString &err, CMapDrawItem *item)
         mWinApp->mParticleTasks->SkipHolesInList(delISX, delISY, indices, 
           item->mSkipHolePos, item->mNumSkipHoles, numPoints);
       }
-
       delX = delISX[0];
       delY = delISY[0];
-      ptX = ptY = 0;
       if (delX || delY) {
-        ScaleMat st2is = MatMul(mShiftManager->StageToCamera(mWinApp->GetCurrentCamera(),
-          mAreaMapMagInd), mShiftManager->CameraToIS(mAreaMapMagInd));
-        if (!st2is.xpx) {
-          err.Format("There is no calibration to get from stage to IS coordinates at the "
-            "given mag");
-          return 5;
-        }
-        ApplyScaleMatrix(MatInv(st2is), delX, delY, ptX, ptY);
         for (int i = 0; i < (int)delISX.size(); i++) {
           delISX[i] -= delX;
           delISY[i] -= delY;
         }
       }
-
       if (numPoints > MAX_STORES) {
         err.Format("The current multishot pattern would generate %d targets, which"
           " exceeds the limit of %d", numPoints, MAX_STORES);
         return -2;
       }
       mParTSitem = item;
-      /*mParTSitem->mStageX -= ptX;
-      mParTSitem->mStageY -= ptY;
-      mWinApp->mNavigator->ShiftItemPoints(mParTSitem, -ptX, -ptY);*/
     } else if (item->IsPolygon()) {
       mNavHelper->FillPolygonWithMultiShot(item, delISX, delISY, err);
       numPoints = (int) delISX.size();
