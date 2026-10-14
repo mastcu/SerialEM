@@ -82,7 +82,7 @@
 #endif
 
 #define VERSION_STRING  "SerialEM Version 4.3.0beta"
-#define TAG_STRING      "(Tagged SEM_4-2-28, 8/25/26)"
+#define TAG_STRING      "(Tagged SEM_4-2-29, 10/14/26)"
 #define DEPRECATED_PYTHON  "3.6-64"
 
 // Offsets for static window inside main frame
