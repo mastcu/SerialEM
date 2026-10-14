@@ -3,6 +3,11 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+10/14/26: SEM_4-2-29
+10/14/26: In Beam Autocenter setup dialog, fixed enabling of Smaller/Bigger
+buttons in Low Dose and tracking of scope state outside of Low Dose if option
+to use a smaller Trial is checked/disabled (In 4.2).
+
 9/29/26: Fixed crash in loading a synthesized montage piece when double
 clicking Navigator point or using LoadPieceAtNavPoint (In 4.2).
 
@@ -45,7 +50,7 @@ trying to load because Autoloader X does not unload automatically (In 4.2).
 7/27/26: Increased timeout for FEG flashing in UTAPI to 20 minutes (In 4.2).
 
 7/25/26: Added property NoLDAreaMoveWithLine to prevent drawing a line for
-setting the position of Focus/Trial whening defining area (In 4.2).
+setting the position of Focus/Trial when defining area (In 4.2).
 
 7/25/26: Fixed scaling of linear mode images from Falcon through UTAPI (new
 plugin needed) (In 4.2).

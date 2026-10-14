@@ -533,7 +533,7 @@ void CAutocenSetupDlg::LiveUpdate(int magInd, int spotSize, int probe, double in
   LowDoseParams *ldp = mWinApp->GetLowDoseParams() + TRIAL_CONSET;
   bool mismatch = false;
   if (mOpening || !mMultiTasks->AutocenTrackingState() || mScope->GetChangingLDArea() ||
-    m_bUseTrialSmaller)
+    (mLowDoseMode && m_bUseTrialSmaller))
     return;
   if (mLowDoseMode) {
     mismatch = magInd != ldp->magIndex || spotSize != ldp->spotSize || 
@@ -774,8 +774,6 @@ void CAutocenSetupDlg::UpdateEnables()
   m_editExposure.EnableWindow(mEnableAll && !smallTrial);
   m_butUseEdge.EnableWindow(mEnableAll);
   m_butUseCentroid.EnableWindow(mEnableAll);
-  m_butMore.EnableWindow(canAcquire && !smallTrial);
-  m_butLess.EnableWindow(canAcquire && !smallTrial);
   m_butDelete.EnableWindow(mEnableAll && !smallTrial);
   m_sbcMag.EnableWindow(mEnableAll && !mLowDoseMode);
   EnableDlgItem(IDC_STATACBMAG, mEnableAll && !mLowDoseMode);
@@ -808,14 +806,14 @@ void CAutocenSetupDlg::ManageMoreLessEnables()
   LowDoseParams *ldParam = mWinApp->GetLowDoseParams() + TRIAL_CONSET;
   int err;
   double newIntensity;
-  if (m_bSetState) {
+  if (m_bSetState || (mLowDoseMode && !m_bUseTrialSmaller)) {
     err = AssessMoreLessChange(1.25, newIntensity);
-    m_butMore.EnableWindow(!err);
+    m_butMore.EnableWindow(!err && mEnableAll);
     err = AssessMoreLessChange(0.8, newIntensity);
-    m_butLess.EnableWindow(!err);
+    m_butLess.EnableWindow(!err && mEnableAll);
   } else {
-    m_butMore.EnableWindow(m_bSetState);
-    m_butLess.EnableWindow(m_bSetState);
+    m_butMore.EnableWindow(false);
+    m_butLess.EnableWindow(false);
   }
 }
 
