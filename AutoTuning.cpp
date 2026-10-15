@@ -2190,7 +2190,7 @@ int CAutoTuning::LookupComaVsISCal(int spotSize, float intensity, int probeMode,
   // If crossover > 0, it's 1 / abs(intensity - crossover). Either way, these are used as 
   // the endpoints for the interpolation in GetBestComaVsISCal
   i0 = i1 = -1;
-  interpPar = -1.f;
+  interpPar = -1.e10f;
   match = -1;
   best = -1;
   int0 = 0.f; 
@@ -2264,6 +2264,11 @@ int CAutoTuning::LookupComaVsISCal(int spotSize, float intensity, int probeMode,
     }
   }
 
+  // If closest calibration matches illumination conditions and intensity is within 
+  // tolerance, then it is a match
+  if (minDist <= distC2tol)
+    match = best;
+
   // if intCmp is lower than the low endpoint or higher than the high endpoint, 
   // find the next closest calibration to extrapolate outside the range.
   if (((i0 < 0 && i1 >= 0) || (i1 < 0 && i0 >= 0)) && intensities.size() >= 2) {
@@ -2303,14 +2308,14 @@ int CAutoTuning::LookupComaVsISCal(int spotSize, float intensity, int probeMode,
     }
   }
 
-  // Interpolation parameter: tpar = 0 at int0 and 1 at int1
+  // Interpolation parameter: tpar = 0 at int0 and 1 at int1. Or intensity difference if
+  // one is missing
   if (i0 >= 0 && i1 >= 0)
     interpPar = (intCmp - int0) / (int1 - int0);
-
-  // If closest calibration matches illumination conditions and intensity is within 
-  // tolerance, then it is a match
-  if (minDist <= distC2tol)
-    match = best;
+  else if (i0 >= 0 && i1 < 0)
+    interpPar = intCmp - int0;
+  else if (i1 >= 0 && i0 < 0)
+    interpPar = int1 - intCmp;
 
   // If there were no calibrations at the given spot size, restrict the search to cals
   // with closest spot and matching probe/alpha, and find closest intensity within that
@@ -2446,8 +2451,13 @@ void CAutoTuning::AppendToComaVsISCals(ComaVsISCalib *inCal)
     inCal->intensity, 
     mWinApp->mBeamAssessor->GetParallelIllum(inCal->spotSize, inCal->probeMode));
 
-  exactMatch = fabs(tpar) < 1.e-6 || fabs(tpar - 1) < 1.e-6;
-  closeMatch = fabs(tpar) < 0.1 || fabs(tpar - 1) < 0.1;
+  if (i0 < 0 || i1 < 0) {
+    exactMatch = fabs(tpar) < 1.e-6;
+    closeMatch = fabs(tpar) < 0.1;
+  } else {
+    exactMatch = fabs(tpar) < 1.e-6 || fabs(tpar - 1) < 1.e-6;
+    closeMatch = fabs(tpar) < 0.1 || fabs(tpar - 1) < 0.1;
+  }
 
   if (closeMatch) {
     for (int i = 0; i < 4; i++) {

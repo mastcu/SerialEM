@@ -6277,6 +6277,10 @@ BEGIN
     IDC_CHECK_LOGSCALE      "Apply a log scaling to the image between the Balck and White levels"
     IDC_CHECK_IGNORE_DARK   "Analyze histogram and set Black level a bit below the lower or only dip"
     IDC_CHECK_IGNORE_LIGHT  "Analyze histogram and set White level a bit above the upper or only dip"
+    IDC_EDIT_COMAVSISNUMSHOTS 
+                            "Take additional conditioning shots at each position where coma is measured"
+    IDC_SPIN_COMAVSISNUMSHOTS 
+                            "Take additional conditioning shots at each position where coma is measured"
 END
 
 STRINGTABLE

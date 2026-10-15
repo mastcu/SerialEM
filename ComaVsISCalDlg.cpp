@@ -20,7 +20,7 @@
 #define EXTENT_INCREMENT 0.2f
 #define ROTATION_INCREMENT 5
 #define MAX_ROTATION 50
-#define MAX_COMAVSISNUMSHOTS 5
+#define MAX_COMAVSISNUMSHOTS 3
 
 // CComaVsISCalDlg dialog
 
@@ -90,10 +90,13 @@ BOOL CComaVsISCalDlg::OnInitDialog()
   SetDlgItemText(IDC_STAT_CUR_SETTING, mWinApp->mAutoTuning->GetCtfDoFullArray() ?
     "(currently 9)" : "(currently 5)");
   m_iStoreCal = mWinApp->mAutoTuning->GetComaVsIScalToSettings() ? 1 : 0;
+  m_iNumShots = mWinApp->mAutoTuning->GetNumShotsBeforeCal();
   m_sbcDistance.SetRange(0, 10000);
   m_sbcDistance.SetPos(5000);
   m_sbcRotation.SetRange(0, 10000);
   m_sbcRotation.SetPos(5000);
+  m_sbcNumShots.SetRange(0, 10000);
+  m_sbcNumShots.SetPos(5000);
   if (mWinApp->mNavHelper->GetSkipAstigAdjustment() < 0) {
     EnableDlgItem(IDC_RUSE_5IMAGES, false);
     EnableDlgItem(IDC_RUSE_FULL_ARRAY, false);
@@ -230,12 +233,12 @@ void CComaVsISCalDlg::OnDeltaposNumShots(NMHDR *pNMHDR, LRESULT *pResult)
 {
   LPNMUPDOWN pNMUpDown = reinterpret_cast<LPNMUPDOWN>(pNMHDR);
   mWinApp->RestoreViewFocus();
-  if ((pNMUpDown->iDelta > 0 && m_iNumShots <= 0) ||
-    (pNMUpDown->iDelta < 0 && m_iNumShots >= MAX_COMAVSISNUMSHOTS)) {
+  if ((pNMUpDown->iDelta < 0 && m_iNumShots <= 0) ||
+    (pNMUpDown->iDelta > 0 && m_iNumShots >= MAX_COMAVSISNUMSHOTS)) {
     *pResult = 1;
     return;
   }
-  m_iNumShots -= pNMUpDown->iDelta;
+  m_iNumShots += pNMUpDown->iDelta;
   B3DCLAMP(m_iNumShots, 0, MAX_COMAVSISNUMSHOTS);
 
   UpdateData(false);
