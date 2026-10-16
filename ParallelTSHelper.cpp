@@ -1378,7 +1378,7 @@ int CParallelTSHelper::ConvertToParTSItem(CString &err, CMapDrawItem *item)
   IntVec navInd, indices;
   FloatVec delISX, delISY;
   int numPoints, numX, numY, numDef;
-  float ptX, ptY, delX, delY;
+  float ptX, ptY;
   EMimageBuffer *imBuf;
   double ISXcen, ISYcen;
 
@@ -1396,9 +1396,13 @@ int CParallelTSHelper::ConvertToParTSItem(CString &err, CMapDrawItem *item)
 
   //Handle a regular pattern set up from multishot params
   if (item) {
-    if (item->mParallelTSIndex >= 0 || item->mTSparamIndex >= 0) {
+    if (item->mParallelTSIndex >= 0 || item->mTSparamIndex >= 0 || item->mNumIStargets) {
       err.Format("The selected item must not be an existing tilt series item");
       return 4;
+    }
+    if (item->mNumXholes > 0) {
+      err.Format("The selected item must not be an existing multishot item");
+      return 5;
     }
     MultiShotParams *msPars = mNavHelper->GetMultiShotParams();
     if (item->IsPoint()) {
@@ -1407,21 +1411,23 @@ int CParallelTSHelper::ConvertToParTSItem(CString &err, CMapDrawItem *item)
         numX = item->mNumXholes;
         numY = item->mNumYholes;
       }
+      if (!(numX % 2 && numY % 2)) {
+        err.Format("The current multishot pattern (%dx%d) does not have a center point", 
+          numX, numY);
+        return 5;
+      }
+
       numPoints = mWinApp->mParticleTasks->GetHolePositions(delISX, delISY, indices, 
         mMagIndex, mWinApp->GetCurrentCamera(), numX, numY, mMappingTilt, item);
       
       // exclude skipped holes
-      if (item->mNumXholes > 0) {
+      if (item->mNumXholes > 0 && item->mNumSkipHoles > 0) {
         mWinApp->mParticleTasks->SkipHolesInList(delISX, delISY, indices, 
           item->mSkipHolePos, item->mNumSkipHoles, numPoints);
       }
-      delX = delISX[0];
-      delY = delISY[0];
-      if (delX || delY) {
-        for (int i = 0; i < (int)delISX.size(); i++) {
-          delISX[i] -= delX;
-          delISY[i] -= delY;
-        }
+      if (delISX[0] || delISY[0]) {
+        err.Format("The current multishot pattern does not have a center point");
+        return 6;
       }
       if (numPoints > MAX_STORES) {
         err.Format("The current multishot pattern would generate %d targets, which"
