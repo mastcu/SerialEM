@@ -1382,12 +1382,6 @@ int CParallelTSHelper::ConvertToParTSItem(CString &err, CMapDrawItem *item)
   EMimageBuffer *imBuf;
   double ISXcen, ISYcen;
 
-  mapItem = mWinApp->mNavigator->FindItemWithMapID(mAreaMapID);
-  if (!mapItem) {
-    err.Format("The Parallel Tilt Series area map was deleted");
-    return -1;
-  }
-
   mParTSParam.prevSectNums.clear();
   mParTSParam.xCoordInArea.clear();
   mParTSParam.yCoordInArea.clear();
@@ -1400,10 +1394,15 @@ int CParallelTSHelper::ConvertToParTSItem(CString &err, CMapDrawItem *item)
       err.Format("The selected item must not be an existing tilt series item");
       return 4;
     }
-    if (item->mNumXholes > 0) {
-      err.Format("The selected item must not be an existing multishot item");
+    
+    // Get map on which selected item is drawn
+    mapItem = mWinApp->mNavigator->FindItemWithMapID(item->mDrawnOnMapID);
+    if (!mapItem) {
+      err.Format("The selected item is not drawn on a map");
       return 5;
     }
+    mMappingTilt = mapItem->mMapTiltAngle;
+    
     MultiShotParams *msPars = mNavHelper->GetMultiShotParams();
     if (item->IsPoint()) {
       mNavHelper->GetNumHolesFromParam(numX, numY, numDef);
@@ -1411,22 +1410,23 @@ int CParallelTSHelper::ConvertToParTSItem(CString &err, CMapDrawItem *item)
         numX = item->mNumXholes;
         numY = item->mNumYholes;
       }
+      
+      //TODO handle even multishot when it is supported
+      /*
       if (!(numX % 2 && numY % 2)) {
-        err.Format("The current multishot pattern (%dx%d) does not have a center point", 
-          numX, numY);
-        return 5;
-      }
-
+      }*/
+      
       numPoints = mWinApp->mParticleTasks->GetHolePositions(delISX, delISY, indices, 
         mMagIndex, mWinApp->GetCurrentCamera(), numX, numY, mMappingTilt, item);
       
-      // exclude skipped holes
+      // exclude skipped holes stored in item
       if (item->mNumXholes > 0 && item->mNumSkipHoles > 0) {
         mWinApp->mParticleTasks->SkipHolesInList(delISX, delISY, indices, 
           item->mSkipHolePos, item->mNumSkipHoles, numPoints);
       }
-      if (delISX[0] || delISY[0]) {
-        err.Format("The current multishot pattern does not have a center point");
+      if (fabs(delISX[0]) > 1.e-3 || fabs(delISY[0]) > 1.e-3) {
+        err.Format("The first image shift in the multishot pattern must be (0, 0) in \n"
+          "order to create a parallel tilt series item");
         return 6;
       }
       if (numPoints > MAX_STORES) {
@@ -1462,6 +1462,12 @@ int CParallelTSHelper::ConvertToParTSItem(CString &err, CMapDrawItem *item)
     }
     
   } else {
+
+    mapItem = mWinApp->mNavigator->FindItemWithMapID(mAreaMapID);
+    if (!mapItem) {
+      err.Format("The Parallel Tilt Series area map was deleted");
+      return -1;
+    }
 
     // If skipping refinements and no maps saved, need to find image shifts for nav points
     if ((mParTSopts->flags & PTSFLAG_SKIP_REFINE) && mParTSopts->extractVirtPrevs != 0) {
@@ -1555,6 +1561,8 @@ int CParallelTSHelper::ConvertToParTSItem(CString &err, CMapDrawItem *item)
   mWinApp->mNavigator->FindItemWithMapID(mParTSitem->mMapID, false);
   ind = mWinApp->mNavigator->GetFoundItem();
   mParTSitem->mNote.Format("%d TS targets", mParTSitem->mNumIStargets);
+  if (mParTSitem->mAcquire)
+    mParTSitem->mAcquire = false;
   mWinApp->mNavigator->UpdateListString(ind);
   mWinApp->mNavigator->SetSelectedItem(ind);
 

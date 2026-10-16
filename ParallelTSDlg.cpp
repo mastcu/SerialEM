@@ -520,12 +520,13 @@ void CParallelTSDlg::Update()
   mess.Format("");
   enable = false;
   mag = mParallelTSHelper->GetAreaMapMagInd();
-  if (mHasAreaMap)
+  if ((mHasAreaMap && m_iTargetType == 0) || m_iTargetType == 1)
     enable = mParallelTSHelper->CanAdjustISVectors(mag, m_iTargetType != 0, mess);
   SetDlgItemText(IDC_STATIC_PTS_ADJUSTXFORMSTATUS, mess);
   m_statAdjustingXformStatus.EnableWindow(!mDefiningPoints);
-  m_butApplyAdjusting.EnableWindow(enable && !(mDefiningPoints || mAddingTargets)
-    && !mJustSavedTargets && !mRefiningTargets && noTasks);
+  m_butApplyAdjusting.EnableWindow(enable && noTasks && (m_iTargetType == 1 || 
+    (m_iTargetType == 0 && !(mDefiningPoints || mAddingTargets) && !mJustSavedTargets && 
+      !mRefiningTargets)));
   m_butNewAdjTransform.EnableWindow(noTasks && !(mDefiningPoints || mAddingTargets)
     && !mJustSavedTargets && !mRefiningTargets && mSettingUpTargetArea && mHasAreaMap &&
     !mMakingNewXform && !numPoints);
@@ -553,10 +554,15 @@ void CParallelTSDlg::Update()
   m_butSaveTargetMap.EnableWindow(CanSaveTarget() && noTasks);
   m_butRemoveTarget.EnableWindow(mSettingUpTargetArea && !mJustSavedTargets && 
     mRefiningTargets && noTasks);
-  m_butFinalizeTargetArea.EnableWindow(mSettingUpTargetArea && !mFinalizedTargetArea &&
-    mHasAreaMap && noTasks && !IsAddingToNav() && 
-    ((m_iTargetType == 0 && mJustSavedTargets && numSaved > 1) ||
-      m_iTargetType == 1 || (noIS && numPoints > 1)));
+  
+  item = mWinApp->mNavigator ? mWinApp->mNavigator->GetCurrentItem() : NULL;
+  enable = (m_iTargetType == 0 && mSettingUpTargetArea
+    && !mFinalizedTargetArea && mHasAreaMap &&
+    ((mJustSavedTargets && numSaved > 1) || (noIS && numPoints > 1))) ||
+    (m_iTargetType == 1 && item && item->mParallelTSIndex < 0 && item->mTSparamIndex < 0
+      && item->mNumIStargets < 1 && item->mDrawnOnMapID && !item->IsMap());
+
+  m_butFinalizeTargetArea.EnableWindow(enable && noTasks && !IsAddingToNav());
   m_butAbortArea.EnableWindow(noTasks && (mDefiningPoints ||
     ((mSettingUpTargetArea || mAddingTargets) && !mFinalizedTargetArea)));
 
@@ -638,7 +644,10 @@ void CParallelTSDlg::ManagePanels()
     wnd->SetFont(m_statPretilt.GetFont());
     wnd = GetDlgItem(IDC_RADIO_PTS_MULTISHOTTARGETS);
     wnd->SetFont(mBoldFont);
-
+    
+    mIDsToDrop.push_back(IDC_BUT_PTS_STARTNEWTARGETAREA);
+    mIDsToDrop.push_back(IDC_BUT_PTS_SAVEAREAMAP);
+    mIDsToDrop.push_back(IDC_STATIC_PTS_MAPSTATUS);
     mIDsToDrop.push_back(IDC_BUT_PTS_NEWADJXFORM);
     mIDsToDrop.push_back(IDC_CHECK_PTS_SKIPREFINE);
     mIDsToDrop.push_back(IDC_BUT_PTS_ADDTARGETS);
@@ -649,6 +658,7 @@ void CParallelTSDlg::ManagePanels()
     mIDsToDrop.push_back(IDC_RADIO_PTS_TAKEPREV);
     mIDsToDrop.push_back(IDC_RADIO_PTS_EXTRACTREF);
     mIDsToDrop.push_back(IDC_RADIO_PTS_NOALIGN);
+    mIDsToDrop.push_back(IDC_BUT_PTS_ABORTAREA);
   }
 
   
@@ -677,9 +687,8 @@ void CParallelTSDlg::ManagePanels()
     mIDsToDrop.push_back(IDC_STATIC_PTS_INSTRUCT);
   }
 
-  if (!mHasAreaMap) {
-    mIDsToDrop.push_back(IDC_STATIC_PTS_ADJUSTXFORMSTATUS);
-  }
+  if (m_iTargetType == 0 && !mHasAreaMap)
+      mIDsToDrop.push_back(IDC_STATIC_PTS_ADJUSTXFORMSTATUS);
 
   BOOL states[PARALLELTSDLG_NUM_PANELS] = { !mWinApp->LowDoseMode(), true, true, true,
     mDisplayExtraOptions, mDisplayExtraOptions && m_iAlignRef == 1, true };

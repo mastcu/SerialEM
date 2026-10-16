@@ -928,6 +928,8 @@ void CNavigatorDlg::Update()
   mHelper->UpdateStateDlg();
   if (mNavAcquireDlg)
     mNavAcquireDlg->ExternalUpdate();
+  if (parTSDlg->IsOpen())
+    parTSDlg->Update();
   UpdateAddMarker();
 }
 
