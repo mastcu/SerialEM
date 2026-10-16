@@ -4126,36 +4126,37 @@ BEGIN
     PUSHBUTTON      "?",IDC_BUTHELP,143,56,11,11
 END
 
-IDD_COMA_VS_IS_CAL DIALOGEX 0, 0, 182, 146
+IDD_COMA_VS_IS_CAL DIALOGEX 0, 0, 182, 158
 STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 EXSTYLE WS_EX_TOOLWINDOW
 CAPTION "Coma vs. Image Shift Calibration"
 FONT 8, "Microsoft Sans Serif", 400, 0, 0x0
 BEGIN
-    CONTROL         "5 images",IDC_RUSE_5IMAGES,"Button",BS_AUTORADIOBUTTON | WS_GROUP,35,44,44,10
-    CONTROL         "Full array of 9 images",IDC_RUSE_FULL_ARRAY,"Button",BS_AUTORADIOBUTTON,35,54,83,10
-    CONTROL         "Setting for fixing coma",IDC_RUSE_SETTING,"Button",BS_AUTORADIOBUTTON,35,64,74,10
-    GROUPBOX        "Measure coma with",IDC_STATIC,29,35,122,41,WS_GROUP
-    LTEXT           "Distance to measure in each direction",IDC_STATIC,5,6,113,8
-    EDITTEXT        IDC_EDIT_CVIC_DISTANCE,119,3,22,14,ES_AUTOHSCROLL
-    CONTROL         "",IDC_SPIN_CVIC_DISTANCE,"msctls_updown32",UDS_ARROWKEYS,141,3,10,14
-    LTEXT           "microns",IDC_STATIC,153,6,25,8
-    LTEXT           "Rotation of measurement vectors",IDC_STATIC,19,23,99,8
-    EDITTEXT        IDC_EDIT_CVIC_ROTATION,119,20,22,14,ES_AUTOHSCROLL
-    CONTROL         "",IDC_SPIN_CVIC_ROTATION,"msctls_updown32",UDS_ARROWKEYS,141,20,10,14
-    LTEXT           "deg",IDC_STATIC,153,23,13,8
-    LTEXT           "(currently 9)",IDC_STAT_CUR_SETTING,112,65,37,8
-    LTEXT           "Number of extra shots before measuring coma:",IDC_STATIC,6,81,144,8
-    EDITTEXT        IDC_EDIT_COMAVSISNUMSHOTS,146,79,20,12,ES_AUTOHSCROLL
-    CONTROL         "",IDC_SPIN_COMAVSISNUMSHOTS,"msctls_updown32",UDS_ARROWKEYS,167,78,10,14
+    CONTROL         "5 images",IDC_RUSE_5IMAGES,"Button",BS_AUTORADIOBUTTON | WS_GROUP,33,57,44,10
+    CONTROL         "Full array of 9 images",IDC_RUSE_FULL_ARRAY,"Button",BS_AUTORADIOBUTTON,33,67,83,10
+    CONTROL         "Setting for fixing coma",IDC_RUSE_SETTING,"Button",BS_AUTORADIOBUTTON,33,77,76,10
+    GROUPBOX        "Measure coma with",IDC_STATIC,27,48,126,41,WS_GROUP
+    LTEXT           "Distance to measure in each direction",IDC_STATIC,5,7,113,8
+    EDITTEXT        IDC_EDIT_CVIC_DISTANCE,119,4,22,14,ES_AUTOHSCROLL
+    CONTROL         "",IDC_SPIN_CVIC_DISTANCE,"msctls_updown32",UDS_ARROWKEYS,141,4,10,14
+    LTEXT           "microns",IDC_STATIC,153,7,25,8
+    LTEXT           "Rotation of measurement vectors",IDC_STATIC,19,24,99,8
+    EDITTEXT        IDC_EDIT_CVIC_ROTATION,119,21,22,14,ES_AUTOHSCROLL
+    CONTROL         "",IDC_SPIN_CVIC_ROTATION,"msctls_updown32",UDS_ARROWKEYS,141,21,10,14
+    LTEXT           "deg",IDC_STATIC,153,24,13,8
+    LTEXT           "(currently 9)",IDC_STAT_CUR_SETTING,114,78,36,8
+    LTEXT           "Number of extra shots before measuring coma:",IDC_STATIC,6,94,144,8
+    EDITTEXT        IDC_EDIT_COMAVSISNUMSHOTS,146,92,20,12,ES_AUTOHSCROLL
+    CONTROL         "",IDC_SPIN_COMAVSISNUMSHOTS,"msctls_updown32",UDS_ARROWKEYS,167,91,10,14
     CONTROL         "Calibrations (must save to make permanent)",IDC_RSTORECALIBRATION,
-                    "Button",BS_AUTORADIOBUTTON | WS_GROUP,21,102,143,10
+                    "Button",BS_AUTORADIOBUTTON | WS_GROUP,21,115,143,10
     CONTROL         "Settings (automatically saved)",IDC_RSTORESETTING,
-                    "Button",BS_AUTORADIOBUTTON,21,113,122,10
-    GROUPBOX        "Store calibration in",IDC_STATIC,16,93,151,32,WS_GROUP
-    DEFPUSHBUTTON   "Run Calibration",IDOK,17,129,57,14
-    PUSHBUTTON      "Cancel",IDCANCEL,95,129,57,14
-    PUSHBUTTON      "?",IDC_BUTHELP,167,133,11,10
+                    "Button",BS_AUTORADIOBUTTON,21,126,122,10
+    GROUPBOX        "Store calibration in",IDC_STATIC,16,106,151,32,WS_GROUP
+    DEFPUSHBUTTON   "Run Calibration",IDOK,17,141,57,14
+    PUSHBUTTON      "Cancel",IDCANCEL,95,141,57,14
+    PUSHBUTTON      "?",IDC_BUTHELP,167,145,11,10
+    CTEXT           "Or Shift+Middle Click to set measurement vector endpoints",IDC_STATIC,4,37,174,8
 END
 
 IDD_AUTOCONTOUR DIALOGEX 0, 0, 158, 294
@@ -5324,7 +5325,7 @@ BEGIN
         LEFTMARGIN, 4
         RIGHTMARGIN, 178
         TOPMARGIN, 3
-        BOTTOMMARGIN, 142
+        BOTTOMMARGIN, 154
     END
 
     IDD_AUTOCONTOUR, DIALOG
