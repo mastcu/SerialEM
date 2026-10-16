@@ -3999,9 +3999,11 @@ MoveStage 0 0 $delz
             the point of minimum contrast; the value to set would be the negative of the 
             measured defocus in that condition.&nbsp; To use a comparison between measured 
             defocus reported by autofocus and a CTF-based defocus, first check for or measure the 
-            property <A HREF="#delz_defocus>'DeltaZtoDefocusFactor'</A> as described there.&nbsp; Autofocus
-             two or three times to reach a target, take an image suitable for CTF analysis and measure
+            property <A HREF="#delz_defocus>'DeltaZtoDefocusFactor'</A> as described there.&nbsp; 
+            Outside of Low Dose mode or with a Focus axis offset of zero, autofocus
+             two or three times to reach a target, then take an image suitable for CTF analysis and measure
             its defocus by clicking in the FFT or using the Ctffind or Ctfplotter script command.
+            (I.e., make sure that the autofocus and the analyzed image are taken at the same location.)
             &nbsp; The discrepancy to set is the CTF-based defocus divided by the 'DeltaZtoDefocusFactor',
              minus the defocus target.
           </TD>
@@ -4011,7 +4013,7 @@ MoveStage 0 0 $delz
           <TD>Amount to add to the measured defocus when the CTF-based coma and astigmatism correction
             routines assess whether the defocus needs to be changed to get enough CTF rings.&nbsp; This
             property is most useful if the autofocus-measured defocus is chonically more negative than
-             the CTF-based defocus, because then there is a risk that a coma-free correctoin will
+             the CTF-based defocus, because then there is a risk that a coma-free correction will
              be attempted too close to focus.&nbsp; To measure it, run the command to correct astigmatism,
             changing defocus first if necessary to cause it to measure defocus with autofocus.&nbsp; If the
             routine does not change focus to get the CTF, then the value is the defocus from CTF minus the defocus
