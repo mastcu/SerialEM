@@ -146,6 +146,7 @@ CFocusManager::CFocusManager()
   mCheckDelta = 5.f;
   mTripleMode = true;
   mDefocusOffset = 0.;
+  mAutofocusDiscrepancy = 0.;
   mMaxPeakDistanceRatio = 3.;
   mPadFrac = 0.1f;       // Fraction of largest dimension: pad equally in X and Y
   mTaperFrac = 0.1f;     // Fraction to taper, applied separately to X and Y
@@ -1368,10 +1369,12 @@ int CFocusManager::CurrentDefocusFromShift(float inX, float inY, float &defocus,
     minDist);
   rawDefocus = defocus;
 
-  // Subtract the defocus offset unless calibrating; also subtract the view offset
-  // unless measuring with script argument 1 instead of 2
-  if (mFCindex < 0)
+  // Subtract the defocus offset and adjust by the discrepancy unless calibrating;
+  // also subtract the view offset unless measuring with script argument 1 instead of 2
+  if (mFCindex < 0) {
     defocus -= (float)mDefocusOffset;
+    defocus += mAutofocusDiscrepancy;
+  }
   if ((mFocusSetNum == VIEW_CONSET || mFocusSetNum == SEARCH_CONSET) &&
     !(mDoChangeFocus == -1 && mUseViewInLD > 0 && (mUseViewInLD % 2) == 1))
     defocus -= mScope->GetLDViewDefocus(mUseViewInLD < 3 ? VIEW_CONSET : SEARCH_CONSET);

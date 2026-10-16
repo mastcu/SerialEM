@@ -735,6 +735,7 @@ X lens - 18 <br>
               R for camera retraction and JEOL STEM detector management<BR>
               S for stage and montaging information<BR>
               T for Tietz setup/reset time, camera coords, autoalign time<BR>
+              U for histogram analysis information when scaling display<br />
               V for vacuum gauge status output<br />
               W for LD axis position bug/autoloader/preventing DE retraction on exit/more output from TestNextMultiShot<br />
               X for EMSIS and DECTRIS cameras<BR>
@@ -3052,10 +3053,12 @@ X lens - 18 <br>
       <P><A NAME="microscope_properties"></A><B>Microscope properties</B></P>
       <TABLE BORDER cols="2">
         <TR VALIGN="top">
-          <TD>DeltaZtoDefocusFactor</TD>
+          <TD><A NAME="delz_defocus"></A>DeltaZtoDefocusFactor</TD>
           <TD>Factor needed to adjust for a discrepancy between the change in defocus
             reported by the microscope and the actual defocus change.  It is used in all situations
-            where a change in focus needs to be related to a change in Z height.  It is best determined by
+            where a change in focus needs to be related to a change in Z height, and in the CTF-based 
+            astigmatism and coma routines when assessing if a defocus change is needed to achieve
+            a desired number of CTF rings.  It is best determined by
             measuring defocus from a CTF for several defocus values at a magnification where
             Ctffind gives good results, such as by this script:
             <pre>
@@ -3987,6 +3990,38 @@ MoveStage 0 0 $delz
           <TD>Delay time in msec between changing to View area in Low Dose and starting
             autofocus when the option to normalize through View is selected.&nbsp; The
             default is 500.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style4">AutofocusDiscrepancy</TD>
+          <TD>Amount to add to the defocus determined from the beam-tilt-induced shifts and 
+            an autofocus calibration curve to make the measured defocus match the actual 
+            defocus.&nbsp; Ideally this should be measured at zero actual defocus, i.e. at 
+            the point of minimum contrast; the value to set would be the negative of the 
+            measured defocus in that condition.&nbsp; To use a comparison between measured 
+            defocus reported by autofocus and a CTF-based defocus, first check for or measure the 
+            property <A HREF="#delz_defocus>'DeltaZtoDefocusFactor'</A> as described there.&nbsp; Autofocus
+             two or three times to reach a target, take an image suitable for CTF analysis and measure
+            its defocus by clicking in the FFT or using the Ctffind or Ctfplotter script command.
+            &nbsp; The discrepancy to set is the CTF-based defocus divided by the 'DeltaZtoDefocusFactor',
+             minus the defocus target.
+          </TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style4">AstigComaFocusOffset</TD>
+          <TD>Amount to add to the measured defocus when the CTF-based coma and astigmatism correction
+            routines assess whether the defocus needs to be changed to get enough CTF rings.&nbsp; This
+            property is most useful if the autofocus-measured defocus is chonically more negative than
+             the CTF-based defocus, because then there is a risk that a coma-free correctoin will
+             be attempted too close to focus.&nbsp; To measure it, run the command to correct astigmatism,
+            changing defocus first if necessary to cause it to measure defocus with autofocus.&nbsp; If the
+            routine does not change focus to get the CTF, then the value is the defocus from CTF minus the defocus
+            from autofocusing (divided by the <A HREF="#delz_defocus>'DeltaZtoDefocusFactor'</A>, if any,
+             before subtracting).&nbsp;  
+            If it does change focus, then the value is the CTF defocus minus the focus it said it was 
+            setting.&nbsp; This property may be unnecessary if 'AutofocusDiscrepancy' and 
+            'DeltaZtoDefocusFactor' are both set, but using just this property would be a more direct way
+            to achieve the desired result in these routines.
+          </TD>
         </TR>
         <TR VALIGN="top">
           <TD class="style4"><A name="AstigmatismParams"></A>AstigmatismParams B [A] [T] [F] [R]</TD>

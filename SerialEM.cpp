@@ -1823,6 +1823,23 @@ BOOL CSerialEMApp::InitInstance()
       "have comments after a string entry; if so, the comments MUST be removed:" +
       message);
 
+  // Inform of autofocus discrepancy
+  if (mFocusManager->GetAutofocusDiscrepancy() != 0. ||
+    mShiftManager->GetDefocusZFactor() != 1. ||
+    mAutoTuning->GetAstigComaFocusOffset() != 0.) {
+    AppendToLog("NOTE: Properties set to adjust for focus discrepancies:");
+    if (mShiftManager->GetDefocusZFactor() != 1.)
+      PrintfToLog("    DeltaZtoDefocusFactor is %.3f (scales Z or CTF-based defocus to "
+        "defocus readout)", mShiftManager->GetDefocusZFactor());
+    if (mFocusManager->GetAutofocusDiscrepancy() != 0.)
+      PrintfToLog("    AutofocusDiscrepancy is %.2f (is added to autofocus measurements)",
+        mFocusManager->GetAutofocusDiscrepancy());
+    if (mAutoTuning->GetAstigComaFocusOffset() != 0.)
+      PrintfToLog("    AstigComaFocusOffset is %.2f (is added to measured value when "
+        "assessing defocus needed)",
+      mAutoTuning->GetAstigComaFocusOffset());
+  }
+
   // Inform on grid limits
   float *gridLimits = mNavHelper->GetGridLimits();
   if (gridLimits[0] || gridLimits[1] || gridLimits[2] || gridLimits[3]) {

@@ -100,6 +100,7 @@ public:
   GetSetMember(int, NumCtfFrames);
   GetSetMember(int, AlignParamSetNum);
   GetSetMember(BOOL, CtfUseFocusInLD);
+  GetSetMember(float, AstigComaFocusOffset);
   float GetBeamTiltBacklash();
   ComaVsISCalib *GetComaVsIScal() {return &mComaVsIScal;};
   void SetBaseBeamTilt(double inX, double inY) {mBaseBeamTiltX = inX; mBaseBeamTiltY = inY;};
@@ -200,6 +201,7 @@ private:
   int mMinRingsForCtf;            // Minimum and maximum number of rings allowed in a CTF
   int mMaxRingsForCtf;            // based on thepixel size at current mag
   float mAddToMinForAstigCTF;     // Amount of extra defocus to require for astig cal/coma
+  float mAstigComaFocusOffset;    // Add to measured defocus for evaluating need to change
   float mCenteredScore;           // Score of first "centered" shot
   float mMinCenteredScore;        // Minimum score required for first "centered" shot
   float mMinPlotterCenScore;      // Minimum score required for first ctfplotter
