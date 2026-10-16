@@ -615,7 +615,6 @@ void CFocusManager::OnUpdateFocusMovecenter(CCmdUI* pCmdUI)
 void CFocusManager::OnAutofocusListCalibrations()
 {
   CameraParameters *camP = mWinApp->GetCamParams();
-  MagTable *magTab = mWinApp->GetMagTable();
   int numCam = mWinApp->GetNumActiveCameras();
   int *active = mWinApp->GetActiveCameraList();
   int ind, iCam, iMag;
@@ -683,6 +682,8 @@ void CFocusManager::OnAutofocusListCalibrations()
     }
   }
 
+  iCam = mWinApp->GetCurrentActiveCamera();
+
   if (ctfAstigCals->GetSize()) {
     mWinApp->SetNextLogColorStyle(0, 1);
     mWinApp->AppendToLog("\r\nCTF-fitting based astigmatism calibrations:");
@@ -690,7 +691,7 @@ void CFocusManager::OnAutofocusListCalibrations()
     mWinApp->AppendToLog("Mag  Index  Stigmator delta");
     for (ind = 0; ind < ctfAstigCals->GetSize(); ind++) {
       ctfCal = ctfAstigCals->GetAt(ind);
-       PrintfToLog("%d   %d   %.3f", magTab[ctfCal.magInd].mag, ctfCal.magInd,
+       PrintfToLog("%d   %d   %.3f", MagForCamera(iCam, ctfCal.magInd), ctfCal.magInd,
         ctfCal.amplitude);
     }
   }
@@ -703,7 +704,7 @@ void CFocusManager::OnAutofocusListCalibrations()
       B3DCHOICE(JEOLscope && !mScope->GetHasNoAlpha(), "Alpha", ""));
     for (ind = 0; ind < astigCal->GetSize(); ind++) {
       astig = astigCal->GetAt(ind);
-      str.Format("%d   %d   %.2f    %.1f", magTab[astig.magInd].mag, astig.magInd,
+      str.Format("%d   %d   %.2f    %.1f", MagForCamera(iCam, astig.magInd), astig.magInd,
         astig.beamTilt, astig.defocus);
       if (JEOLscope  && !mScope->GetHasNoAlpha()) {
         str2.Format("    %d", astig.alpha + 1);
@@ -723,7 +724,7 @@ void CFocusManager::OnAutofocusListCalibrations()
       B3DCHOICE(JEOLscope && !mScope->GetHasNoAlpha(), "Alpha", ""));
     for (ind = 0; ind < comaCal->GetSize(); ind++) {
       coma = comaCal->GetAt(ind);
-      str.Format("%6d   %d   %.2f    %.1f", magTab[coma.magInd].mag, coma.magInd,
+      str.Format("%6d   %d   %.2f    %.1f", MagForCamera(iCam, coma.magInd), coma.magInd,
         coma.beamTilt, coma.defocus);
       if (JEOLscope  && !mScope->GetHasNoAlpha()) {
         str2.Format("    %d", coma.alpha + 1);
@@ -760,7 +761,7 @@ void CFocusManager::OnAutofocusListCalibrations()
         cvsis = comaVsIScals->at(ind);
         if (cvsis.userSetting == (set > 0)) {
           str.Format("%6d   %d     %.2f%s %s   %d",
-            magTab[cvsis.magInd].mag, cvsis.magInd,
+            MagForCamera(iCam, cvsis.magInd), cvsis.magInd,
             mScope->GetC2Percent(cvsis.spotSize, cvsis.intensity, cvsis.probeMode),
             mScope->GetC2Units(), mScope->GetC2Name(), cvsis.spotSize);
           if (JEOLscope && !mScope->GetHasNoAlpha()) {
