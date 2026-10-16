@@ -3721,11 +3721,11 @@ ScaleMat CShiftManager::InterpMatsByScaleRotStr(ScaleMat startMat, ScaleMat endM
   //Do linear interpolation on geometric parameters theta, smag, str, and phi.
   // This is set up so that mat = startMat at tpar = 0, and mat = endMat at tpar = 1
   amatToRotmagstr(dMat.xpx, dMat.xpy, dMat.ypx, dMat.ypy, &theta, &smag, &str, &phi);
-  SEMTrace('c', "initial: theta = %.4f, scale = %.4f, stretch = %.4f", theta, smag, str);
+  SEMTrace('C', "initial: theta = %.4f, scale = %.4f, stretch = %.4f", theta, smag, str);
   theta *= tpar;
   smag = 1 + tpar * (smag - 1);
   str = 1 + tpar * (str - 1);
-  SEMTrace('c', "final: theta = %.4f, scale = %.4f, stretch = %.4f", theta, smag, str);
+  SEMTrace('C', "final: theta = %.4f, scale = %.4f, stretch = %.4f", theta, smag, str);
   rotmagstrToAmat(theta, smag, str, phi, &mat.xpx, &mat.xpy, &mat.ypx, &mat.ypy);
   return MatMul(startMat, mat);
 }

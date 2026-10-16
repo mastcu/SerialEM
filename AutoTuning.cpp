@@ -2366,7 +2366,7 @@ ComaVsISCalib *CAutoTuning::GetBestComaVsISCal(int spotSize, float intensity,
   if (interp != NULL)
     *interp = tpar;
 
-  SEMTrace('c', "Coma vs IS interpolation %d %d %.4f", i0, i1, tpar);
+  SEMTrace('C', "Coma vs IS interpolation %d %d %.4f", i0, i1, tpar);
 
   // If no interpolation or extrapolation can be made, return the best match found
   //if (i0 < 0 || i1 < 0 || tpar < -extrapLim || tpar > 1 + extrapLim) {
@@ -2446,7 +2446,7 @@ void CAutoTuning::AppendToComaVsISCals(ComaVsISCalib *inCal)
   best = LookupComaVsISCal(inCal->spotSize, inCal->intensity, inCal->probeMode, 
     inCal->alpha, inCal->aperture, inCal->userSetting, i0, i1, tpar, replaceInd);
 
-  SEMTrace('c', "New ComaVsIS cal at intensity = %.4f, parallel illum = %.4f", 
+  SEMTrace('C', "New ComaVsIS cal at intensity = %.4f, parallel illum = %.4f", 
     inCal->intensity, 
     mWinApp->mBeamAssessor->GetParallelIllum(inCal->spotSize, inCal->probeMode));
 
