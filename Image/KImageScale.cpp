@@ -334,7 +334,7 @@ void KImageScale::FindPctStretch(KImage *inImage, float pctLo, float pctHi, floa
               if (ix >= upperInd)
                 sum2 += bins[ix];
             }
-            SEMTrace('1', "Dips %.1f  %.1f  peak below %.1f mid %.1f above %.1f  fracs "
+            SEMTrace('U', "Dips %.1f  %.1f  peak below %.1f mid %.1f above %.1f  fracs "
               "beyond dips %.3f, %.3f (%.0f msec)", lowerDip, histDip, peakBelow, midPeak,
               peakAbove, sum / sample, sum2 / sample, 1000. * (wallTime() - wallStart));
             if ((sum + sum2) / sample < maxFracIgnored) {
@@ -343,7 +343,7 @@ void KImageScale::FindPctStretch(KImage *inImage, float pctLo, float pctHi, floa
 
             }
           } else {
-            SEMTrace('1', "Failed to find two histogram dips");
+            SEMTrace('U', "Failed to find two histogram dips");
           }
         } else {
 
@@ -373,7 +373,7 @@ void KImageScale::FindPctStretch(KImage *inImage, float pctLo, float pctHi, floa
                 ACCUM_MAX(mMinScale, histDip - fracBelowDip * (histDip - peakBelow));
             }
           } else {
-            SEMTrace('1', "Failed to find histogram dip");
+            SEMTrace('U', "Failed to find histogram dip");
           }
         }
       }

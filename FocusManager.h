@@ -116,6 +116,7 @@ public:
   GetMember(BOOL, TestOffsetEucenAbs);
   GetMember(float, LastTargetFocus);
   GetMember(float, LastScopeFocus);
+  GetSetMember(float, AutofocusDiscrepancy);
 
   void SetBaseBeamTilt(double inX, double inY) {mBaseTiltX = inX; mBaseTiltY = inY;};
 
@@ -201,6 +202,7 @@ private:
   float mTargetDefocus;     // Value to set defocus at after autofocus
   float mDefocusOffset;     // Offset to apply when measuring defocus
   double mAppliedOffset;    // Offset that has been applied
+  float mAutofocusDiscrepancy;  // Actual defocus readout minus value from calibration
   float mCurrentDefocus;    // Measured defocus value
   double mOriginalDefocus;  // Original defocus value, in case it needs to bail out
   int mAutofocusIterNum;    // Iteration number of autofocus
