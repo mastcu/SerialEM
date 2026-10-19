@@ -65,6 +65,7 @@ CAutoTuning::CAutoTuning(void)
   mMaxCtfBasedDefocus = -10.;
   mMinRingsForCtf = 3;
   mMaxRingsForCtf = 20;
+  mAstigComaFocusOffset = 0.;
   mMinCenteredScore = 0.1f;
   mMinPlotterCenScore = 0.5f;
   mMinScoreRatio = 0.33f;
@@ -1285,6 +1286,7 @@ void CAutoTuning::CtfBasedNextTask(int tparm)
   float newFocus = 0, negMicrons, xCoeff, yCoeff, angle, diffPlus, diffMinus, minFocus;
   float intercept, diff1, diff9, rotateImage, astig, minAstig, maxAstig, minTiltedAstig;
   float plotterDef, phase;
+  float defocusFac = mShiftManager->GetDefocusZFactor();
   const int maxInLineFit = 50;
   float pFailMaxCen = 0.1f, pFailMaxAstig = 0.75f, pFailMaxMinTilted = 0.2f;
   float xfit[maxInLineFit], yfit[maxInLineFit], zfit[maxInLineFit];
@@ -1312,7 +1314,8 @@ void CAutoTuning::CtfBasedNextTask(int tparm)
 
   if (mCtfActionType / 2)
     imBufs += B3DCHOICE(mCtfCalibrating || mCtfComaFree, numOperations- mOperationInd, 0);
-  if (!imBufs->mImage || imBufs->mCaptured == BUFFER_FFT) {
+  if ((!imBufs->mImage || imBufs->mCaptured == BUFFER_FFT) && 
+    !(mOperationInd < 0 && mSkipMeasuringFocus)) {
     ErrorInCtfBased("The buffers do not have the right images to do this operation",
       false);
     return;
@@ -1337,7 +1340,7 @@ void CAutoTuning::CtfBasedNextTask(int tparm)
     }
 
     // In any case use that measurement to set and constrain initial defocus
-    mInitialDefocus = mLastMeasuredFocus;
+    mInitialDefocus = mLastMeasuredFocus / defocusFac + mAstigComaFocusOffset;
     minFocus = mMinDefocusForMag + B3DCHOICE(mCtfCalibrating || mCtfComaFree,
       mAddToMinForAstigCTF, 0.f);
     if (mInitialDefocus > minFocus)
@@ -1345,7 +1348,7 @@ void CAutoTuning::CtfBasedNextTask(int tparm)
     else if (mInitialDefocus < mMaxDefocusForMag)
       newFocus = mMaxDefocusForMag;
     if (newFocus) {
-      mScope->IncDefocus(newFocus - mInitialDefocus);
+      mScope->IncDefocus((newFocus - mInitialDefocus) * defocusFac);
       mInitialDefocus = newFocus;
       PrintfToLog("Changing defocus to %.2f to get an acceptable number of CTF rings",
         newFocus);

@@ -1379,7 +1379,7 @@ int CParallelTSHelper::ConvertToParTSItem(CString &err, CMapDrawItem *item)
   IntVec navInd, indices;
   FloatVec delISX, delISY;
   int numPoints, numX, numY, numDef;
-  float ptX, ptY;
+  float ptX, ptY, delX, delY;
   EMimageBuffer *imBuf;
   double ISXcen, ISYcen;
 
@@ -1397,16 +1397,33 @@ int CParallelTSHelper::ConvertToParTSItem(CString &err, CMapDrawItem *item)
 
   //Handle a regular pattern set up from multishot params
   if (item) {
+    if (item->mParallelTSIndex >= 0 || item->mTSparamIndex >= 0) {
+      err.Format("The selected item must not be an existing tilt series item");
+      return 4;
+    }
     MultiShotParams *msPars = mNavHelper->GetMultiShotParams();
     if (item->IsPoint()) {
       mNavHelper->GetNumHolesFromParam(numX, numY, numDef);
-      if (item->mNumXholes > 0)
+      if (item->mNumXholes > 0 && item->mNumYholes != 0) {
         numX = item->mNumXholes;
-      if (item->mNumYholes > 0)
         numY = item->mNumYholes;
-      mWinApp->mParticleTasks->GetHolePositions(delISX, delISY, indices, mMagIndex,
-        mWinApp->GetCurrentCamera(), numX, numY, mMappingTilt, item);
-      numPoints = (int)delISX.size();
+      }
+      numPoints = mWinApp->mParticleTasks->GetHolePositions(delISX, delISY, indices, 
+        mMagIndex, mWinApp->GetCurrentCamera(), numX, numY, mMappingTilt, item);
+      
+      // exclude skipped holes
+      if (item->mNumXholes > 0) {
+        mWinApp->mParticleTasks->SkipHolesInList(delISX, delISY, indices, 
+          item->mSkipHolePos, item->mNumSkipHoles, numPoints);
+      }
+      delX = delISX[0];
+      delY = delISY[0];
+      if (delX || delY) {
+        for (int i = 0; i < (int)delISX.size(); i++) {
+          delISX[i] -= delX;
+          delISY[i] -= delY;
+        }
+      }
       if (numPoints > MAX_STORES) {
         err.Format("The current multishot pattern would generate %d targets, which"
           " exceeds the limit of %d", numPoints, MAX_STORES);

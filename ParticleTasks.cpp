@@ -910,6 +910,10 @@ int CParticleTasks::ProcessParallelTSImage(CString &errStr)
   EMimageBuffer *otherStack;
   ScaleMat c2s;
   CString str, str2;
+  if (!mTSController->GetParTSTargetData()) {
+    errStr = "Tilt series controller has already terminated";
+    return 1;
+  }
   ParTSTargetData &ptsd = mParTSTargetData->ElementAt(mMSHoleIndex);
   ParallelTSOptions *parOpts = mNavHelper->GetParTSOptions();
 
@@ -1066,7 +1070,8 @@ int CParticleTasks::ProcessParallelTSImage(CString &errStr)
 void CParticleTasks::OutputDebugPositionAndCTF(int holeIndex)
 {
   CString str, str2;
-  if (!GetDebugOutput('1'))
+  if (!GetDebugOutput('1') || !mTSController->GetParTSTargetData() || !mParTSTargetData ||
+    holeIndex >= mParTSTargetData->GetSize())
     return;
   ParTSTargetData ptsd = mParTSTargetData->ElementAt(holeIndex);
   ParallelTSOptions *parOpts = mNavHelper->GetParTSOptions();

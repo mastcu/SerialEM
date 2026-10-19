@@ -607,7 +607,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "Set Low Dose Areas...",       ID_TASKS_SETAREASINLOWDOSE
         MENUITEM SEPARATOR
-        MENUITEM "Ope&n Imaging States ...",    ID_NAVIGATOR_OPENSTATEDLG
+        MENUITEM "Imagi&ng States ...",         ID_NAVIGATOR_OPENSTATEDLG
         MENUITEM SEPARATOR
         MENUITEM "&Set intensity\tShift+I",     ID_PROCESS_SETINTENSITY
         MENUITEM "Set &Dose Rate",              ID_TASKS_SET_DOSE_RATE

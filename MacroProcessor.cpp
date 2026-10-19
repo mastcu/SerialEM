@@ -275,6 +275,7 @@ CMacroProcessor::CMacroProcessor(int index)
   for (i = 0; i < MAX_ONE_LINE_SCRIPTS; i++) {
     mHistoryIndex[i] = 0;
     mStrHistory[i] = "";
+    mHistoryArrays[i].resize(1);
   }
   mProcessThread = NULL;
   for (i = 0; i < 2; i++) {

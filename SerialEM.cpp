@@ -82,7 +82,7 @@
 #endif
 
 #define VERSION_STRING  "SerialEM Version 4.3.0beta"
-#define TAG_STRING      "(Tagged SEM_4-2-28, 8/25/26)"
+#define TAG_STRING      "(Tagged SEM_4-2-29, 10/14/26)"
 #define DEPRECATED_PYTHON  "3.6-64"
 
 // Offsets for static window inside main frame
@@ -1822,6 +1822,23 @@ BOOL CSerialEMApp::InitInstance()
     AppendToLog("WARNING: The following lines in SerialEMproperties.txt appear to \r\n"
       "have comments after a string entry; if so, the comments MUST be removed:" +
       message);
+
+  // Inform of autofocus discrepancy
+  if (mFocusManager->GetAutofocusDiscrepancy() != 0. ||
+    mShiftManager->GetDefocusZFactor() != 1. ||
+    mAutoTuning->GetAstigComaFocusOffset() != 0.) {
+    AppendToLog("NOTE: Properties set to adjust for focus discrepancies:");
+    if (mShiftManager->GetDefocusZFactor() != 1.)
+      PrintfToLog("    DeltaZtoDefocusFactor is %.3f (scales Z or CTF-based defocus to "
+        "defocus readout)", mShiftManager->GetDefocusZFactor());
+    if (mFocusManager->GetAutofocusDiscrepancy() != 0.)
+      PrintfToLog("    AutofocusDiscrepancy is %.2f (is added to autofocus measurements)",
+        mFocusManager->GetAutofocusDiscrepancy());
+    if (mAutoTuning->GetAstigComaFocusOffset() != 0.)
+      PrintfToLog("    AstigComaFocusOffset is %.2f (is added to measured value when "
+        "assessing defocus needed)",
+      mAutoTuning->GetAstigComaFocusOffset());
+  }
 
   // Inform on grid limits
   float *gridLimits = mNavHelper->GetGridLimits();

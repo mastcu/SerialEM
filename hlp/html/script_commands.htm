@@ -5014,6 +5014,20 @@
             of the adjusting transformation. &nbsp;</TD>
         </TR>
         <TR>
+          <TD class="scriptcommand">ConvertDefocusedIStoMag #T #BA #A #M #X #Y</TD>
+          <TD>Adjusts an image shift <b>#X</b>, <b>#Y</b> determined while in a defocused
+             View or Search area or image for defocus (provided that high-focus magnification and 
+            image shift calibrations exist), applies an adjusting transform if <b>#A</b> is non-zero and 
+            one exists with a starting magnification matching that of the area or image, and converts
+             the shift to apply at the final magnification given by <b>#M</b> if it it non-zero, or by
+            the Record magnification if <b>#M</b> is 0.&nbsp; Set <b>#T</b> to 0 and <b>#BA</b> to the letter of a 
+            buffer with a Low Dose View or Search image, or set <b>#T</b> to 1 and <b>#BA</b> to specify
+            the Low Dose area.&nbsp; Sets <i>reportedValue1-3</i> with the new image shift X and Y and 1 if
+            and adjusting transform was applied, or -1 if one was available but at the wrong magnification.&nbsp;
+            Command added in 4.3, 16-Oct-26.
+          </TD>
+        </TR>
+        <TR>
           <TD class="scriptcommand">StepAndAdjustISVectors #M #D [#S]</TD>
           <TD>Runs the 'Step and Adjust IS' procedure with <b>#M</b> set to 0 to use cross-correlation or 1 to
             use hole finding and centering, <b>#D</b> set to the hole diameter in microns, and 
@@ -6854,7 +6868,7 @@
          <TR>
           <TD class="scriptcommand">OpenDialog name [#]</TD>
           <TD>Opens the dialog indicated by the given <b>name</b>, which is case-insensitive and can be abbreviated
-            to 4 letters.&nbsp; Currently the <b>name</b> can by &#39;Multishot&#39; to open the 
+            to 4 letters.&nbsp; Currently the <b>name</b> can be &#39;Multishot&#39; to open the 
               Multiple Records dialog, &#39;Multigrid&#39; to open the Multiple Grid Operations 
               dialog, &#39;HoleFinder&#39; to open the Hole Finder dialog, &#39;ComaVsIScal&#39; to open the Coma 
               VS Image Shift Calibration dialog, or &#39;Parallel&#39; to open the Parallel Tilt 

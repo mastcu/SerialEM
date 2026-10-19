@@ -14002,6 +14002,66 @@ int CMacCmd::UseMapItemHoleVectors()
   return 0;
 }
 
+// ConvertDefocusedIStoMag
+int CMacCmd::ConvertDefocusedIStoMag()
+{
+  int areaOrBuf, toMag = mItemInt[4], fromMag, adjusted = 0;
+  bool useArea = mItemInt[1] != 0;
+  double transISX, transISY, ISX = mItemDbl[5], ISY = mItemDbl[6];
+  ScaleMat mat;
+  AdjustXformData *adj;
+
+  // Get the area or the buffer and its mag
+  if (useArea) {
+    if (CheckAndConvertLDAreaLetter(mStrItems[2], 0, areaOrBuf, mStrLine))
+      return 1;
+    if (!IS_AREA_VIEW_OR_SEARCH(areaOrBuf))
+      ABORT_LINE("The Low Dose area must be View or Search for line:\n\n");
+      fromMag = mLdParam[areaOrBuf].magIndex;
+  } else {
+    if (ConvertBufferLetter(mStrItems[2], 0, true, areaOrBuf, mStrCopy))
+      ABORT_LINE(mStrCopy);
+    if (!(mImBufs[areaOrBuf].mLowDoseArea && (mImBufs[areaOrBuf].mConSetUsed ==
+      VIEW_CONSET || mImBufs[areaOrBuf].mConSetUsed == SEARCH_CONSET)))
+      ABORT_LINE("The image must be take in Low Dose View or Search for line:\n\n");
+
+    fromMag = mImBufs[areaOrBuf].mMagInd;
+    if (!fromMag)
+      ABORT_LINE("The image buffer has no magnification index stored for line:\n\n");
+  }
+
+  // Get final mag to use if 0
+  if (!toMag)
+    toMag = mLdParam[RECORD_CONSET].magIndex;
+  if (toMag < 0)
+    ABORT_LINE("Magnification index must be positive for line:\n\n");
+
+  // Get the focus adjustment if any and apply it
+  mat = CMultiShotDlg::ISfocusAdjustmentForBufOrArea(useArea ? NULL : mImBufs + areaOrBuf,
+    areaOrBuf);
+  if (mat.xpx)
+    ApplyScaleMatrix(mat, ISX, ISY, ISX, ISY);
+
+  // Apply adjusting xform if requested and available, change the fromMag
+  if (mItemInt[3]) {
+    adj = mNavHelper->GetNearestAdjustingXform(fromMag);
+    if (adj) {
+      if (adj->xformFromMag != fromMag) {
+        adjusted = -1;
+      } else {
+        adjusted = 1;
+        ApplyScaleMatrix(adj->adjustingXform, ISX, ISY, ISX, ISY);
+        fromMag = adj->xformToMag;
+      }
+    }
+  }
+
+  // Get to the final mag
+  mShiftManager->TransferGeneralIS(fromMag, ISX, ISY, toMag, transISX, transISY);
+  SetRepValsAndVars(6, transISX, transISY, adjusted);
+  return 0;
+}
+
 // MakeNavPointsAtHoles
 int CMacCmd::MakeNavPointsAtHoles(void)
 {

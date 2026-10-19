@@ -1489,6 +1489,11 @@ void CParallelTSDlg::OnFinalizeArea()
       item = NULL;
     } else if (m_iTargetType == 1) {
       item = mWinApp->mNavigator->GetCurrentItem();
+      if (item == NULL) {
+        AfxMessageBox("A single point or polygon item must be selected in the navigator.", 
+          MB_EXCLAME);
+        return;
+      }
     }
     
     if (mParallelTSHelper->ConvertToParTSItem(err, item)) {
