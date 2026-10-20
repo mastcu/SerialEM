@@ -12239,6 +12239,7 @@ int CMacCmd::SetItemAcquire(void)
   mNavigator->UpdateListString(index);
   mNavigator->Redraw();
   mNavigator->SetChanged(true);
+  mNavigator->ManageCurrentControls();
   mLoopInOnIdle = !mNavigator->GetAcquiring();
   return 0;
 }

@@ -906,7 +906,7 @@ void CNavigatorDlg::Update()
   if (curExists || grpExists)
     index = GroupScheduledIndex(mItem->mGroupID);
   m_butAcquire.EnableWindow(!mNavAcquireDlg && ((fileOK && mItem->mTSparamIndex < 0) ||
-    (grpExists && noTasks && !numTS)) && mItem->mParallelTSIndex < 0);
+    (grpExists && noTasks && !numTS)) && (mItem->mParallelTSIndex <0 || mItem->mAcquire));
   m_butTiltSeries.EnableWindow(fileOK && !mItem->mAcquire && 
     (!mItem->mNumIStargets || mItem->mParallelTSIndex >= 0));
   m_butFileAtItem.EnableWindow(((fileOK && mItem->mAcquire && mItem->mTSparamIndex < 0) ||
