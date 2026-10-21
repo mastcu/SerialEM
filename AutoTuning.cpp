@@ -2340,8 +2340,7 @@ int CAutoTuning::LookupComaVsISCal(int spotSize, float intensity, int probeMode,
 
 // Find a coma vs IS calibration matching the provided conditions, or generate a new 
 // calibration by interpolating existing calibrations with closest intensities.
-ComaVsISCalib *CAutoTuning::GetBestComaVsISCal(int spotSize, float intensity, 
-  int probeMode, int alpha, int aperture, int fromSettings, int *close, float *interp)
+ComaVsISCalib *CAutoTuning::GetBestComaVsISCal(int *close, float *interp)
 {
   ScaleMat mat0, mat1, astigMat0, astigMat1;
   int iCam = mWinApp->GetCurrentCamera();
@@ -2349,21 +2348,32 @@ ComaVsISCalib *CAutoTuning::GetBestComaVsISCal(int spotSize, float intensity,
   ScaleMat cMat, cTo, cProd;
   int i0, i1, best, match, toMag = -1, fromMag = -1;
   bool userSetting;
-  float tpar, extrapLim = 0.1f;
+  float tpar;
+  int spotSize, probeMode, alpha, aperture = 0;
+  double intensity;
 
   mComaVsIScal.matrix.xpx = 0;
   mComaVsIScal.astigMat.xpx = 0;
   mComaVsIScal.magInd = -1;
 
-  if (aperture < 0)
+  if (mWinApp->LowDoseMode()) {
+    LowDoseParams *ldp = mWinApp->GetLowDoseParams() + RECORD_CONSET;
+    spotSize = ldp->spotSize;
+    intensity = ldp->intensity;
+    probeMode = ldp->probeMode;
+    alpha = (int)ldp->beamAlpha;
+  } else {
+    spotSize = mScope->FastSpotSize();
+    intensity = mScope->FastIntensity();
+    probeMode = mScope->GetProbeMode();
+    alpha = mScope->FastAlpha();
+  }
+  if (mScope->GetUseIllumAreaForC2())
     aperture = mWinApp->mBeamAssessor->GetCurrentAperture();
-  if (fromSettings < 0)
-    userSetting = GetComaVsIScalFromSettings();
-  else
-    userSetting = fromSettings > 0;
+  userSetting = GetComaVsIScalFromSettings();
 
-  best = LookupComaVsISCal(spotSize, intensity, probeMode, alpha, aperture, userSetting,
-    i0, i1, tpar, match);
+  best = LookupComaVsISCal(spotSize, (float)intensity, probeMode, alpha, aperture, 
+    userSetting, i0, i1, tpar, match);
   if (close != NULL)
     *close = best;
   if (interp != NULL)
@@ -2372,7 +2382,6 @@ ComaVsISCalib *CAutoTuning::GetBestComaVsISCal(int spotSize, float intensity,
   SEMTrace('C', "Coma vs IS interpolation %d %d %.4f", i0, i1, tpar);
 
   // If no interpolation or extrapolation can be made, return the best match found
-  //if (i0 < 0 || i1 < 0 || tpar < -extrapLim || tpar > 1 + extrapLim) {
   if (i0 < 0 || i1 < 0) {
     if (best >= 0)
       mComaVsIScal = mComaVsISCals[best];
@@ -2414,7 +2423,7 @@ ComaVsISCalib *CAutoTuning::GetBestComaVsISCal(int spotSize, float intensity,
       tpar);
 
   mComaVsIScal.spotSize = spotSize;
-  mComaVsIScal.intensity = intensity;
+  mComaVsIScal.intensity = (float)intensity;
   mComaVsIScal.probeMode = probeMode;
   mComaVsIScal.alpha = alpha;
   mComaVsIScal.aperture = aperture;
@@ -2422,14 +2431,6 @@ ComaVsISCalib *CAutoTuning::GetBestComaVsISCal(int spotSize, float intensity,
   mComaVsIScal.userSetting = userSetting;
 
   return &mComaVsIScal;
-}
-
-// Wrapper for passing intensity as a double
-ComaVsISCalib *CAutoTuning::GetBestComaVsISCal(int spotSize, double intensity, 
-  int probeMode, int alpha, int aperture, int fromSettings, int *close, float *interp)
-{
-  return GetBestComaVsISCal(spotSize, (float)intensity, probeMode, alpha, aperture,
-    fromSettings, close, interp);
 }
 
 // When a new coma vs IS calibration is done, add it to the vector, possibly replacing one

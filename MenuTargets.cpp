@@ -49,6 +49,7 @@
 #include "ExternalTools.h"
 #include "Mailer.h"
 #include "PluginManager.h"
+#include "ParallelTSDlg.h"
 #include "Utilities\KGetOne.h"
 #include "Shared\b3dutil.h"
 #include "ScreenShotDialog.h"
@@ -3752,6 +3753,8 @@ void CMenuTargets::OnComaVsIScalFromSettings()
     !mWinApp->mAutoTuning->GetComaVsIScalFromSettings());
   if (mWinApp->mNavHelper->mMultiShotDlg)
     mWinApp->mNavHelper->mMultiShotDlg->UpdateSettings();
+  if (mWinApp->mNavHelper->mParallelTSDlg->IsOpen())
+    mWinApp->mNavHelper->mParallelTSDlg->Update();
 }
 
 

@@ -5088,8 +5088,7 @@ int CMacroProcessor::AdjustBeamTiltIfSelected(double delISX, double delISY, BOOL
 {
   double astigX, astigY, BTX, BTY;
   int probe = mScope->GetProbeMode();
-  ComaVsISCalib *comaVsIS = mWinApp->mAutoTuning->GetBestComaVsISCal(mScope->GetSpotSize(),
-    mScope->GetIntensity(), mScope->GetProbeMode(), mScope->GetAlpha());
+  ComaVsISCalib *comaVsIS = mWinApp->mAutoTuning->GetBestComaVsISCal();
   if (!doAdjust)
     return 0;
   if (comaVsIS->magInd <= 0) {
@@ -5117,8 +5116,7 @@ int CMacroProcessor::AdjustBeamTiltIfSelected(double delISX, double delISY, BOOL
 bool CMacroProcessor::AdjustBeamTiltAndAstig(double delISX, double delISY, double &BTX,
   double &BTY, double &astigX, double &astigY)
 {
-  ComaVsISCalib *comaVsIS = mWinApp->mAutoTuning->GetBestComaVsISCal(mScope->GetSpotSize(),
-    mScope->GetIntensity(), mScope->GetProbeMode(), mScope->GetAlpha());
+  ComaVsISCalib *comaVsIS = mWinApp->mAutoTuning->GetBestComaVsISCal();
   double delBTX, delBTY, transISX, transISY;
   mScope->GetBeamTilt(BTX, BTY);
   mShiftManager->TransferGeneralIS(mScope->FastMagIndex(), delISX, delISY,

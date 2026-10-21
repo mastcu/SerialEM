@@ -502,8 +502,8 @@
       adjustment.&nbsp; The conditions under which the calibration was taken are shown on the following
       line.&nbsp; For the adjustment to work accurately, the current beam intensity at
       least should be close to what it was when the calibration was done. </p>
-      <p>As of SerialEM 4.3, there can be multiple coma vs. image shift calibrations. If 
-          possible, a calibration will be computed for the current intensity by 
+      <p>As of SerialEM 4.3 Oct. 2026, there can be multiple coma vs. image shift calibrations. If 
+          possible, a calibration will be derived for the current intensity by 
           interpolating or extrapolating intensities of existing calibrations which 
           otherwise have matching illumination conditions. The status line will be 
           followed by an asterisk (*) if the current intensity is more than 10% of the 
@@ -511,7 +511,7 @@
           line will be followed by two asterisks (**) if the calibration will be 
           extrapolated by more than 10% of the extrapolation interval, or if the best 
           possible existing calibration still does not match the current conditions (for 
-          example, a different spot size). In this scenario the calibration may not be 
+          example, a different spot size). The two asterisks indicate that the calibration may not be 
           reliable, and it is recommended to generate a new coma vs. image shift 
           calibration at the current conditions.</p>
     <p><strong>Calibrate Coma vs. IS</strong></p>

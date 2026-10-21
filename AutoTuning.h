@@ -303,12 +303,7 @@ public:
     float &delISY);
   int LookupComaVsISCal(int spotSize, float intensity, int probeMode, int alpha,
     int aperture, bool userSetting, int &i0, int &i1, float &interpPar, int &close);
-  ComaVsISCalib *GetBestComaVsISCal(int spotSize, float intensity, int probeMode, 
-    int alpha, int aperture = -1, int fromSettings = -1, int *close = NULL, 
-    float *interp = NULL);
-  ComaVsISCalib *GetBestComaVsISCal(int spotSize, double intensity, int probeMode,
-    int alpha, int aperture = -1, int fromSettings = -1, int *close = NULL,
-    float *interp = NULL);
+  ComaVsISCalib *GetBestComaVsISCal(int *close = NULL, float *interp = NULL);
   void AppendToComaVsISCals(ComaVsISCalib *inCal);
   int DeleteOneComaVsISCal(int spotSize, float intensity, int probeMode,
     int alpha, int aperture = -1, int fromSettings = -1);

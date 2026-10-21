@@ -319,9 +319,7 @@ BOOL CMultiShotDlg::OnInitDialog()
 // The dialog is being opened or the settings have been read: load dialog from parameters
 void CMultiShotDlg::UpdateSettings(void)
 {
-  ComaVsISCalib *comaVsIS = mWinApp->mAutoTuning->GetBestComaVsISCal(
-    mWinApp->mScope->GetSpotSize(), mWinApp->mScope->GetIntensity(),
-    mWinApp->mScope->GetProbeMode(), mWinApp->mScope->GetAlpha());
+  ComaVsISCalib *comaVsIS = mWinApp->mAutoTuning->GetBestComaVsISCal();
   CString str, str2;
   int skipAdjust = mWinApp->mNavHelper->GetSkipAstigAdjustment();
   int minNum0 = 1;
@@ -1646,9 +1644,7 @@ void CMultiShotDlg::ManageEnables(void)
 {
   int close;
   float interp, extrapLim = 0.1f, matchLim = 0.1f;
-  ComaVsISCalib *comaVsIS = mWinApp->mAutoTuning->GetBestComaVsISCal(
-    mWinApp->mScope->GetSpotSize(), mWinApp->mScope->GetIntensity(), 
-    mWinApp->mScope->GetProbeMode(), mWinApp->mScope->GetAlpha(), -1, -1, &close, &interp);
+  ComaVsISCalib *comaVsIS = mWinApp->mAutoTuning->GetBestComaVsISCal(&close, &interp);
   CString str2, str = "Use custom pattern (NONE DEFINED)";
   double holeXvec[3], holeYvec[3];
   LowDoseParams *ldp = mWinApp->GetLowDoseParams() + RECORD_CONSET;

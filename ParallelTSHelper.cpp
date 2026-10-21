@@ -829,8 +829,7 @@ int CParallelTSHelper::SaveInitialState(CString &err)
   double stageZ;
   float focusLim = -20.;
   EMimageBuffer *imBufs = mWinApp->GetImBufs();
-  ComaVsISCalib *comaVsIS = mWinApp->mAutoTuning->GetBestComaVsISCal(mScope->GetSpotSize(),
-    mScope->GetIntensity(), mScope->GetProbeMode(), mScope->GetAlpha());
+  ComaVsISCalib *comaVsIS = mWinApp->mAutoTuning->GetBestComaVsISCal();
 
   area = mScope->GetLowDoseArea();
 

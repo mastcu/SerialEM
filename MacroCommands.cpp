@@ -3392,9 +3392,7 @@ int CMacCmd::ReportComaVsISmatrix(void)
 {
   int close;
   float interp, matchLim = 0.1f;
-  ComaVsISCalib *cvsis = mWinApp->mAutoTuning->GetBestComaVsISCal(
-    mWinApp->mScope->GetSpotSize(), mWinApp->mScope->GetIntensity(),
-    mWinApp->mScope->GetProbeMode(), mWinApp->mScope->GetAlpha(), -1, -1, &close, &interp);
+  ComaVsISCalib *cvsis = mWinApp->mAutoTuning->GetBestComaVsISCal(&close, &interp);
   if (cvsis->magInd <= 0)
     ABORT_LINE("Cannot get a calibration of beam tilt versus image shift for the current"
       " illumination conditions for line:\n\n");
