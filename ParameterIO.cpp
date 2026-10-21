@@ -1026,24 +1026,7 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
         tsrParams[index].direction = itemInt[9];
 
       } else if (NAME_IS("ComaVsISCal")) {
-        comaVsIS.magInd = itemInt[1];
-        comaVsIS.spotSize = itemInt[2];
-        comaVsIS.probeMode = itemInt[3];
-        comaVsIS.alpha = itemInt[4];
-        comaVsIS.aperture = itemInt[5];
-        comaVsIS.intensity = itemFlt[6];
-        comaVsIS.matrix.xpx = itemFlt[7];
-        comaVsIS.matrix.xpy = itemFlt[8];
-        comaVsIS.matrix.ypx = itemFlt[9];
-        comaVsIS.matrix.ypy = itemFlt[10];
-        comaVsIS.astigMat.xpx = comaVsIS.astigMat.xpy = comaVsIS.astigMat.ypx =
-          comaVsIS.astigMat.ypy = 0.;
-        if (!itemEmpty[14]) {
-          comaVsIS.astigMat.xpx = itemFlt[11];
-          comaVsIS.astigMat.xpy = itemFlt[12];
-          comaVsIS.astigMat.ypx = itemFlt[13];
-          comaVsIS.astigMat.ypy = itemFlt[14];
-        }
+        ReadComaVsISCalFromLineItems(comaVsIS, itemEmpty, itemInt, itemFlt);
         comaVsIS.userSetting = true;
         comaVsIScals->push_back(comaVsIS); 
 
@@ -2306,12 +2289,7 @@ void CParameterIO::WriteSettings(CString strFileName)
     for (i = 0; i < comaVsIScals->size(); i++){
       comaVsIS = comaVsIScals->at(i);
       if (comaVsIS.userSetting) {
-        oneState.Format("ComaVsISCal %d %d %d %d %d %f %f %f %f %f %f %f %f %f\n",
-          comaVsIS.magInd, comaVsIS.spotSize, comaVsIS.probeMode, comaVsIS.alpha,
-          comaVsIS.aperture, comaVsIS.intensity, comaVsIS.matrix.xpx,
-          comaVsIS.matrix.xpy, comaVsIS.matrix.ypx, comaVsIS.matrix.ypy,
-          comaVsIS.astigMat.xpx, comaVsIS.astigMat.xpy, comaVsIS.astigMat.ypx,
-          comaVsIS.astigMat.ypy);
+        WriteComaVsISCalToString(comaVsIS, oneState);
         mFile->WriteString(oneState);
       }
     }
@@ -3114,6 +3092,41 @@ int CParameterIO::WriteMulGridAcqParams(CString &filename, CString &errStr)
     mFile = NULL;
   }
   return retval;
+}
+
+// Format a string with the members of the ComaVsISCalib struct, to write to settings/cals
+void CParameterIO::WriteComaVsISCalToString(ComaVsISCalib &comaVsIS, CString &str)
+{
+  str.Format("ComaVsISCal %d %d %d %d %d %f %f %f %f %f %f %f %f %f\n",
+    comaVsIS.magInd, comaVsIS.spotSize, comaVsIS.probeMode, comaVsIS.alpha,
+    comaVsIS.aperture, comaVsIS.intensity, comaVsIS.matrix.xpx,
+    comaVsIS.matrix.xpy, comaVsIS.matrix.ypx, comaVsIS.matrix.ypy,
+    comaVsIS.astigMat.xpx, comaVsIS.astigMat.xpy, comaVsIS.astigMat.ypx,
+    comaVsIS.astigMat.ypy);
+}
+
+// Get ComaVsISCalib from the parsed line items
+void CParameterIO::ReadComaVsISCalFromLineItems(ComaVsISCalib &comaVsIS, BOOL *itemEmpty,
+  int *itemInt, float *itemFlt)
+{
+  comaVsIS.magInd = itemInt[1];
+  comaVsIS.spotSize = itemInt[2];
+  comaVsIS.probeMode = itemInt[3];
+  comaVsIS.alpha = itemInt[4];
+  comaVsIS.aperture = itemInt[5];
+  comaVsIS.intensity = itemFlt[6];
+  comaVsIS.matrix.xpx = itemFlt[7];
+  comaVsIS.matrix.xpy = itemFlt[8];
+  comaVsIS.matrix.ypx = itemFlt[9];
+  comaVsIS.matrix.ypy = itemFlt[10];
+  comaVsIS.astigMat.xpx = comaVsIS.astigMat.xpy = comaVsIS.astigMat.ypx =
+    comaVsIS.astigMat.ypy = 0.;
+  if (!itemEmpty[14]) {
+    comaVsIS.astigMat.xpx = itemFlt[11];
+    comaVsIS.astigMat.xpy = itemFlt[12];
+    comaVsIS.astigMat.ypx = itemFlt[13];
+    comaVsIS.astigMat.ypy = itemFlt[14];
+  }
 }
 
 // Reads a file to hide or disable items containing either defined strings in the
@@ -5208,24 +5221,7 @@ int CParameterIO::ReadCalibration(CString strFileName)
         ctfAstigCals->Add(ctfCal);
 
       } else if (NAME_IS("ComaVsISCal")) {
-        comaVsIS.magInd = itemInt[1];
-        comaVsIS.spotSize = itemInt[2];
-        comaVsIS.probeMode = itemInt[3];
-        comaVsIS.alpha = itemInt[4];
-        comaVsIS.aperture = itemInt[5];
-        comaVsIS.intensity = itemFlt[6];
-        comaVsIS.matrix.xpx = itemFlt[7];
-        comaVsIS.matrix.xpy = itemFlt[8];
-        comaVsIS.matrix.ypx = itemFlt[9];
-        comaVsIS.matrix.ypy = itemFlt[10];
-        comaVsIS.astigMat.xpx = comaVsIS.astigMat.xpy = comaVsIS.astigMat.ypx =
-          comaVsIS.astigMat.ypy = 0.;
-        if (!itemEmpty[14]) {
-          comaVsIS.astigMat.xpx = itemFlt[11];
-          comaVsIS.astigMat.xpy = itemFlt[12];
-          comaVsIS.astigMat.ypx = itemFlt[13];
-          comaVsIS.astigMat.ypy = itemFlt[14];
-        }
+        ReadComaVsISCalFromLineItems(comaVsIS, itemEmpty, itemInt, itemFlt);
         comaVsIS.userSetting = false;
         comaVsIScals->push_back(comaVsIS);
 
@@ -5851,12 +5847,7 @@ void CParameterIO::WriteCalibration(CString strFileName)
     for (i = 0; i < comaVsIScals->size(); i++) {
       comaVsIS = comaVsIScals->at(i);
       if (!comaVsIS.userSetting) {
-        string.Format("ComaVsISCal %d %d %d %d %d %f %f %f %f %f %f %f %f %f\n",
-          comaVsIS.magInd, comaVsIS.spotSize, comaVsIS.probeMode, comaVsIS.alpha,
-          comaVsIS.aperture, comaVsIS.intensity, comaVsIS.matrix.xpx,
-          comaVsIS.matrix.xpy, comaVsIS.matrix.ypx, comaVsIS.matrix.ypy,
-          comaVsIS.astigMat.xpx, comaVsIS.astigMat.xpy, comaVsIS.astigMat.ypx,
-          comaVsIS.astigMat.ypy);
+        WriteComaVsISCalToString(comaVsIS, string);
         mFile->WriteString(string);
       }
     }
@@ -7135,6 +7126,9 @@ void CParameterIO::ReportSpecialOptions(void)
   if (mWinApp->mLowDoseDlg.GetTieFocusTrialPos())
     PrintAnOption(any, "Special option is set to keep Low Dose Trial and Focus at same"
       " position");
+  if (mWinApp->mAutoTuning->GetComaVsIScalFromSettings())
+    PrintAnOption(any, "Special option is set to use coma vs. image shift calibrations"
+      " from Settings");
   if (mWinApp->GetStartingProgram() && any && !mWinApp->GetMinimizedStartup())
     mWinApp->AppendToLog(" ");
 }

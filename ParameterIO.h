@@ -10,6 +10,7 @@
 #endif // _MSC_VER > 1000
 
 #include "TiltSeriesParam.h"
+#include "AutoTuning.h"
 
 struct NavAcqAction;
 
@@ -92,6 +93,9 @@ public:
   int ReadAcqParamsFromFile(NavAcqParams *navParams, NavAcqAction *mAcqActions, int *actOrder, CString &filename, CString &errStr);
   void WriteAcqParamsToFile(NavAcqParams *navParams, NavAcqAction *mAcqActions, int *actOrder, CString &filename);
   int WriteMulGridAcqParams(CString &filename, CString &errStr);
+  void WriteComaVsISCalToString(ComaVsISCalib &comaVsIS, CString &str);
+  void ReadComaVsISCalFromLineItems(ComaVsISCalib &comaVsIS, BOOL *itemEmpty, int *itemInt,
+    float *itemFlt);
   int ReadDisableOrHideFile(CString &filename, std::set<int>  *IDsToHide,
     std::set<int>  *lineHideIDs, std::set<int>  *IDsToDisable, StringSet *stringHides, unsigned char *panelStates);
   void ReportSpecialOptions(void);
