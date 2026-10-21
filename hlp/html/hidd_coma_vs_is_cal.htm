@@ -30,7 +30,7 @@ This dialog box allows you to calibrate how beam tilt must be changed to achieve
     non-zero value is set in the <strong>Rotation of measurement vectors </strong>
     text box, these basic vectors are rotated by that amount.&nbsp; With these 
     features, you can avoid running the coma-free alignment over a hole. Alternatively, as 
-          of SerialEM 4.3, you can use Shift + Middle click to set one of the image shift 
+          of SerialEM 4.3 Oct. 2026, you can use Shift + Middle click to set one of the image shift 
           positions, and the corresponding distance and rotation will be derived from that 
           set position.</p>
     <p>
@@ -39,7 +39,9 @@ This dialog box allows you to calibrate how beam tilt must be changed to achieve
       as was the case prior to SerialEM 4.1; 2) use a full array of 9 positions, which 
       will take longer but may be more accurate; or 3) use whatever has been chosen 
       for running the routine to fix coma. Additionally, you can set the <strong>Number 
-        of extra shots before measuring coma</strong>.</p>
+        of extra shots before measuring coma <!--StartFragment--></strong>
+        <span data-olk-copy-source="MessageBody">which may stabilize the specimen and 
+        give more reliable coma measurements.</span><!--EndFragment--></p>
     <p>
       It is important to realize that this calibration strictly applies only under the
       current illumination conditions (specifically, the C2/C3 lens setting or
@@ -54,7 +56,7 @@ This dialog box allows you to calibrate how beam tilt must be changed to achieve
       <li>Because it depends on your settings for illumination, the calibration can
         saved in your settings file, so that it will not be shared with others using other settings files.
       
-          As of SerialEM 4.3, multiple calibrations may be saved, and the choice selected 
+          As of SerialEM 4.3 Oct. 2026, multiple calibrations may be saved, and the choice selected 
           for <strong>Store calibration in</strong> determines whether the new calibration will 
           be saved to the calibrations file or the settings file. If the new 
           calibration closely matches the illumination conditions of an existing 

@@ -2752,9 +2752,8 @@
 #define IDC_CHECK_IGNORE_LIGHT          3783
 #define IDC_RSTORECALIBRATION           3784
 #define IDC_RSTORESETTING               3785
-#define IDC_EDIT_COMAVSISNUMSHOTS       3786
-#define IDC_SPIN1                       3787
-#define IDC_SPIN_COMAVSISNUMSHOTS       3787
+#define IDC_SPIN_COMAVSISNUMSHOTS       3786
+#define IDC_STAT_CVSIS_NUM_SHOTS        3787
 #define ID_NEW_IMAGE                    32771
 #define IDM_FILE_SAVEOTHER              32772
 #define IDM_FILE_READ                   32773

@@ -1681,7 +1681,7 @@ END
 IDD_TILTSERIES DIALOGEX 0, 0, 230, 811
 STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 EXSTYLE WS_EX_LEFTSCROLLBAR
-CAPTION "D"
+CAPTION "Tilt Series Setup"
 FONT 8, "Microsoft Sans Serif", 0, 0, 0x1
 BEGIN
     CONTROL         "Keep beam intensity constant",IDC_RCONSTANTBEAM,"Button",BS_AUTORADIOBUTTON | WS_GROUP,10,255,103,10
@@ -4145,9 +4145,8 @@ BEGIN
     CONTROL         "",IDC_SPIN_CVIC_ROTATION,"msctls_updown32",UDS_ARROWKEYS,141,21,10,14
     LTEXT           "deg",IDC_STATIC,153,24,13,8
     LTEXT           "(currently 9)",IDC_STAT_CUR_SETTING,114,78,36,8
-    LTEXT           "Number of extra shots before measuring coma:",IDC_STATIC,6,94,144,8
-    EDITTEXT        IDC_EDIT_COMAVSISNUMSHOTS,146,92,20,12,ES_AUTOHSCROLL
-    CONTROL         "",IDC_SPIN_COMAVSISNUMSHOTS,"msctls_updown32",UDS_ARROWKEYS,167,91,10,14
+    LTEXT           "Number of extra shots before measuring coma:",IDC_STATIC,8,94,141,8
+    CONTROL         "",IDC_SPIN_COMAVSISNUMSHOTS,"msctls_updown32",UDS_ARROWKEYS,162,91,10,14
     CONTROL         "Calibrations (must save to make permanent)",IDC_RSTORECALIBRATION,
                     "Button",BS_AUTORADIOBUTTON | WS_GROUP,21,115,143,10
     CONTROL         "Settings (automatically saved)",IDC_RSTORESETTING,
@@ -4157,6 +4156,7 @@ BEGIN
     PUSHBUTTON      "Cancel",IDCANCEL,95,141,57,14
     PUSHBUTTON      "?",IDC_BUTHELP,167,145,11,10
     CTEXT           "Or Shift+Middle Click to set measurement vector endpoints",IDC_STATIC,4,37,174,8
+    LTEXT           "0",IDC_STAT_CVSIS_NUM_SHOTS,152,94,8,8
 END
 
 IDD_AUTOCONTOUR DIALOGEX 0, 0, 158, 294
@@ -6278,8 +6278,6 @@ BEGIN
     IDC_CHECK_LOGSCALE      "Apply a log scaling to the image between the Balck and White levels"
     IDC_CHECK_IGNORE_DARK   "Analyze histogram and set Black level a bit below the lower or only dip"
     IDC_CHECK_IGNORE_LIGHT  "Analyze histogram and set White level a bit above the upper or only dip"
-    IDC_EDIT_COMAVSISNUMSHOTS 
-                            "Take additional conditioning shots at each position where coma is measured"
     IDC_SPIN_COMAVSISNUMSHOTS 
                             "Take additional conditioning shots at each position where coma is measured"
 END

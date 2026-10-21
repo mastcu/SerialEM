@@ -30,9 +30,9 @@ CComaVsISCalDlg::CComaVsISCalDlg(CWnd* pParent /*=NULL*/)
   , m_iRotation(0)
   , m_iNumImages(FALSE)
   , m_iStoreCal(0)
-  , m_iNumShots(0)
 {
   mNonModal = true;
+  mNumExtraShots = 0;
 }
 
 CComaVsISCalDlg::~CComaVsISCalDlg()
@@ -56,9 +56,6 @@ void CComaVsISCalDlg::DoDataExchange(CDataExchange* pDX)
   DDX_Radio(pDX, IDC_RUSE_5IMAGES, m_iNumImages);
   DDX_Radio(pDX, IDC_RSTORECALIBRATION, m_iStoreCal);
   DDX_Control(pDX, IDC_SPIN_COMAVSISNUMSHOTS, m_sbcNumShots);
-  DDX_Text(pDX, IDC_EDIT_COMAVSISNUMSHOTS, m_iNumShots);
-	MinMaxInt(IDC_EDIT_COMAVSISNUMSHOTS, m_iNumShots, 0, MAX_COMAVSISNUMSHOTS,
-    "number of extra shots before coma measurement\n");
 }
 
 
@@ -70,7 +67,6 @@ BEGIN_MESSAGE_MAP(CComaVsISCalDlg, CBaseDlg)
   ON_BN_CLICKED(IDC_RUSE_5IMAGES, OnSetNumImages)
   ON_BN_CLICKED(IDC_RUSE_FULL_ARRAY, OnSetNumImages)
   ON_BN_CLICKED(IDC_RUSE_SETTING, OnSetNumImages)
-  ON_EN_KILLFOCUS(IDC_EDIT_COMAVSISNUMSHOTS, OnEnKillfocusNumShots)
   ON_NOTIFY(UDN_DELTAPOS, IDC_SPIN_COMAVSISNUMSHOTS, OnDeltaposNumShots)
   ON_BN_CLICKED(IDC_RSTORECALIBRATION, OnStoreCalibration)
   ON_BN_CLICKED(IDC_RSTORESETTING, OnStoreCalibration)
@@ -90,7 +86,10 @@ BOOL CComaVsISCalDlg::OnInitDialog()
   SetDlgItemText(IDC_STAT_CUR_SETTING, mWinApp->mAutoTuning->GetCtfDoFullArray() ?
     "(currently 9)" : "(currently 5)");
   m_iStoreCal = mWinApp->mAutoTuning->GetComaVsIScalToSettings() ? 1 : 0;
-  m_iNumShots = mWinApp->mAutoTuning->GetNumShotsBeforeCal();
+  mNumExtraShots = mWinApp->mAutoTuning->GetNumShotsBeforeCal();
+  CString str;
+  str.Format("%d", mNumExtraShots);
+  SetDlgItemText(IDC_STAT_CVSIS_NUM_SHOTS, str);
   m_sbcDistance.SetRange(0, 10000);
   m_sbcDistance.SetPos(5000);
   m_sbcRotation.SetRange(0, 10000);
@@ -124,7 +123,7 @@ void CComaVsISCalDlg::OnOK()
   mWinApp->mAutoTuning->SetComaVsISrotation(m_iRotation);
   mWinApp->mAutoTuning->SetComaVsISuseFullArray(useFull);
   mWinApp->mAutoTuning->SetComaVsIScalToSettings(m_iStoreCal == 1);
-  mWinApp->mAutoTuning->SetNumShotsBeforeCal(m_iNumShots);
+  mWinApp->mAutoTuning->SetNumShotsBeforeCal(mNumExtraShots);
   EnableDlgItem(IDOK, false);
   EnableDlgItem(IDCANCEL, false);
   mWinApp->mAutoTuning->CalibrateComaVsImageShift(m_fDistance, m_iRotation, useFull);
@@ -233,21 +232,11 @@ void CComaVsISCalDlg::OnDeltaposNumShots(NMHDR *pNMHDR, LRESULT *pResult)
 {
   LPNMUPDOWN pNMUpDown = reinterpret_cast<LPNMUPDOWN>(pNMHDR);
   mWinApp->RestoreViewFocus();
-  if ((pNMUpDown->iDelta < 0 && m_iNumShots <= 0) ||
-    (pNMUpDown->iDelta > 0 && m_iNumShots >= MAX_COMAVSISNUMSHOTS)) {
-    *pResult = 1;
+  if (NewSpinnerValue(pNMHDR, pResult, mNumExtraShots, 0, MAX_COMAVSISNUMSHOTS, 
+    mNumExtraShots))
     return;
-  }
-  m_iNumShots += pNMUpDown->iDelta;
-  B3DCLAMP(m_iNumShots, 0, MAX_COMAVSISNUMSHOTS);
-
+  CString str;
+  str.Format("%d", mNumExtraShots);
+  SetDlgItemText(IDC_STAT_CVSIS_NUM_SHOTS, str);
   UpdateData(false);
-  *pResult = 0;
-}
-
-
-void CComaVsISCalDlg::OnEnKillfocusNumShots()
-{
-  UpdateData(true);
-  mWinApp->RestoreViewFocus();
 }

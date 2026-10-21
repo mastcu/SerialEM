@@ -12,6 +12,9 @@ public:
 	CComaVsISCalDlg(CWnd* pParent = NULL);   // standard constructor
 	virtual ~CComaVsISCalDlg();
 
+private:
+  int mNumExtraShots;
+
 // Dialog Data
 #ifdef AFX_DESIGN_TIME
 	enum { IDD = IDD_COMA_VS_IS_CAL };
@@ -44,7 +47,5 @@ public:
   afx_msg void OnStoreCalibration();
   void SetDistRotFromIS(int magInd, float shiftX, float shiftY);
   CSpinButtonCtrl m_sbcNumShots;
-  int m_iNumShots;
   afx_msg void OnDeltaposNumShots(NMHDR *pNMHDR, LRESULT *pResult);
-  afx_msg void OnEnKillfocusNumShots();
 };
