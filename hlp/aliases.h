@@ -228,6 +228,7 @@ hid_calibration_administrator		= SerialEM.chm::/html\menu_calibration.htm#hid_ca
 hid_settings_savecalibrations		= SerialEM.chm::/html\menu_calibration.htm#hid_settings_savecalibrations
 hid_calibration_setdebugoutput	= SerialEM.chm::/html\menu_calibration.htm#hid_calibration_setdebugoutput
 hid_calibration_set_is_delay_factor	= SerialEM.chm::/html\menu_calibration.htm#hid_calibration_set_is_delay_factor
+hid_calibration_delete_comavsis_cal = SerialEM.chm:: / html\menu_calibration.htm#hid_calibration_delete_comavsis_cal
 hid_focus_measuredefocus				= SerialEM.chm::/html\menu_focus.htm#hid_focus_measuredefocus
 hid_focus_autofocus							= SerialEM.chm::/html\menu_focus.htm#hid_focus_autofocus
 hid_focus_movecenter						= SerialEM.chm::/html\menu_focus.htm#hid_focus_movecenter
