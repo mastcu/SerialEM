@@ -1405,6 +1405,8 @@ int CParallelTSHelper::ConvertToParTSItem(CString &err, CMapDrawItem *item)
     mMagIndex = mWinApp->mNavigator->GetMagIndForHoles();
     
     MultiShotParams *msPars = mNavHelper->GetMultiShotParams();
+    if (mMagIndex <= 0)
+      mMagIndex = msPars->holeMagIndex[msPars->doHexArray ? 1 : 0];
     if (item->IsPoint()) {
       mNavHelper->GetNumHolesFromParam(numX, numY, numDef);
       if (item->mNumXholes > 0 && item->mNumYholes != 0) {
