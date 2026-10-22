@@ -3,6 +3,9 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+10/22/26: Simplified the parallel tilt series setup dialog process for creating
+parallel tilt series items with regular patterns.
+
 10/16/26: Added script command for converting an image shift value obtained
 in a defocused View or Search area to apply at a higher mag close to focus.
 
