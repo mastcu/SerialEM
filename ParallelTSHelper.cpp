@@ -1402,6 +1402,12 @@ int CParallelTSHelper::ConvertToParTSItem(CString &err, CMapDrawItem *item)
       return 5;
     }
     mMappingTilt = mapItem->mMapTiltAngle;
+    if (mWinApp->LowDoseMode()) {
+      LowDoseParams *ldp = mWinApp->GetLowDoseParams() + RECORD_CONSET;
+      mMagIndex = ldp->magIndex;
+    } else {
+      mMagIndex = mParTSopts->acqMagIndNonLD;
+    }
     
     MultiShotParams *msPars = mNavHelper->GetMultiShotParams();
     if (item->IsPoint()) {
@@ -1410,11 +1416,6 @@ int CParallelTSHelper::ConvertToParTSItem(CString &err, CMapDrawItem *item)
         numX = item->mNumXholes;
         numY = item->mNumYholes;
       }
-      
-      //TODO handle even multishot when it is supported
-      /*
-      if (!(numX % 2 && numY % 2)) {
-      }*/
       
       numPoints = mWinApp->mParticleTasks->GetHolePositions(delISX, delISY, indices, 
         mMagIndex, mWinApp->GetCurrentCamera(), numX, numY, mMappingTilt, item);
