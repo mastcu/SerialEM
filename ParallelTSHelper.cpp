@@ -1402,12 +1402,7 @@ int CParallelTSHelper::ConvertToParTSItem(CString &err, CMapDrawItem *item)
       return 5;
     }
     mMappingTilt = mapItem->mMapTiltAngle;
-    if (mWinApp->LowDoseMode()) {
-      LowDoseParams *ldp = mWinApp->GetLowDoseParams() + RECORD_CONSET;
-      mMagIndex = ldp->magIndex;
-    } else {
-      mMagIndex = mParTSopts->acqMagIndNonLD;
-    }
+    mMagIndex = mWinApp->mNavigator->GetMagIndForHoles();
     
     MultiShotParams *msPars = mNavHelper->GetMultiShotParams();
     if (item->IsPoint()) {
@@ -1455,7 +1450,7 @@ int CParallelTSHelper::ConvertToParTSItem(CString &err, CMapDrawItem *item)
 
     mParTSitem->mNumIStargets = (short)numPoints;
     mParTSitem->mIStargetsXY = new float[numPoints * 2];
-    mParTSitem->mMagOfIStargets = msPars->holeMagIndex[msPars->doHexArray ? 1 : 0];
+    mParTSitem->mMagOfIStargets = mMagIndex;
 
     for (ind = 0; ind < numPoints; ind++) {
       mParTSitem->mIStargetsXY[2 * ind] = delISX[ind];
