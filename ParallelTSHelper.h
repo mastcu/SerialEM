@@ -127,6 +127,7 @@ public:
   void UpdateSpecAngles(float pretilt, float xPitch);
   void UpdateMaxTilt(float angle);
   int PruneDeletedTargets();
+  bool ItemOkForRegularPattern(CMapDrawItem *item = NULL);
   int SaveMap(CString &err);
   void IdentifyParTSOutliers(float *xload, float *yload, float *xfound,
     float *yfound, int *dropping, int numPos, int maxDrop,

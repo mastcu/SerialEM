@@ -1390,8 +1390,8 @@ int CParallelTSHelper::ConvertToParTSItem(CString &err, CMapDrawItem *item)
 
   //Handle a regular pattern set up from multishot params
   if (item) {
-    if (item->mParallelTSIndex >= 0 || item->mTSparamIndex >= 0 || item->mNumIStargets) {
-      err.Format("The selected item must not be an existing tilt series item");
+    if (!ItemOkForRegularPattern()) {
+      err.Format("The selected item cannot be converted into a parallel tilt series item");
       return 4;
     }
     
@@ -1967,6 +1967,33 @@ int CParallelTSHelper::PruneDeletedTargets()
     }
   }
   return numDeleted;
+}
+
+// Check if the given item (or current one if not given) can be converted to a parallel
+// tilt series item with a regular pattern
+bool CParallelTSHelper::ItemOkForRegularPattern(CMapDrawItem * item)
+{
+  int numX, numY, numDef;
+  bool ok = false;
+
+  if (!mWinApp->mNavigator)
+    return false;
+  if (!item)
+    item = mWinApp->mNavigator->GetCurrentItem();
+
+  if (item && item->mParallelTSIndex < 0 && item->mTSparamIndex < 0
+    && item->mNumIStargets < 1 && item->mDrawnOnMapID && !item->IsMap()) {
+    mNavHelper->GetNumHolesFromParam(numX, numY, numDef);
+    if (item->IsPoint() && item->mNumXholes > 0 && item->mNumYholes != 0) {
+      numX = item->mNumXholes;
+      numY = item->mNumYholes;
+    } 
+    if (numX > 0 && numY > 0)
+      return (numX % 2 && numY % 2);
+    else if (numY == -1)
+      return !mNavHelper->GetMultiShotParams()->skipHexCenter;
+  }
+  return false;
 }
 
 /*

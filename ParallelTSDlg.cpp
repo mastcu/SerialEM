@@ -555,12 +555,10 @@ void CParallelTSDlg::Update()
   m_butRemoveTarget.EnableWindow(mSettingUpTargetArea && !mJustSavedTargets && 
     mRefiningTargets && noTasks);
   
-  item = mWinApp->mNavigator ? mWinApp->mNavigator->GetCurrentItem() : NULL;
   enable = (m_iTargetType == 0 && mSettingUpTargetArea
     && !mFinalizedTargetArea && mHasAreaMap &&
     ((mJustSavedTargets && numSaved > 1) || (noIS && numPoints > 1))) ||
-    (m_iTargetType == 1 && item && item->mParallelTSIndex < 0 && item->mTSparamIndex < 0
-      && item->mNumIStargets < 1 && item->mDrawnOnMapID && !item->IsMap());
+    (m_iTargetType == 1 && mParallelTSHelper->ItemOkForRegularPattern());
 
   m_butFinalizeTargetArea.EnableWindow(enable && noTasks && !IsAddingToNav());
   m_butAbortArea.EnableWindow(noTasks && (mDefiningPoints ||
