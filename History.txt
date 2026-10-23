@@ -3,6 +3,9 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+10/23/26: Enable the checkbox for rotating Low Dose inter-area axis when Edit
+focus mode is turned on (In 4.2).
+
 10/23/26: Added the capability to set the measurement vector endpoints in the 
 coma vs. IS calibration setup dialog with Shift + Middle click.
 
