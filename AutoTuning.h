@@ -51,6 +51,7 @@ struct ComaVsISCalib {
   float intensity;
   int probeMode;
   int aperture;
+  bool userSetting;
 };
 
 class CAutoTuning
@@ -101,8 +102,11 @@ public:
   GetSetMember(int, AlignParamSetNum);
   GetSetMember(BOOL, CtfUseFocusInLD);
   GetSetMember(float, AstigComaFocusOffset);
+  GetSetMember(bool, ComaVsIScalFromSettings);
+  GetSetMember(bool, ComaVsIScalToSettings);
+  GetSetMember(int, NumShotsBeforeCal);
   float GetBeamTiltBacklash();
-  ComaVsISCalib *GetComaVsIScal() {return &mComaVsIScal;};
+  std::vector<ComaVsISCalib> *GetComaVsISCals() { return &mComaVsISCals; };
   void SetBaseBeamTilt(double inX, double inY) {mBaseBeamTiltX = inX; mBaseBeamTiltY = inY;};
 
   CArray <AstigCalib, AstigCalib> *GetAstigCals() {return &mAstigCals;};
@@ -126,6 +130,7 @@ private:
   int mMagIndex;          // Mag of the operation
   ScaleMat mCamToSpec;    // Matrix for converting pixels to nm
   ComaVsISCalib mComaVsIScal;
+  std::vector<ComaVsISCalib> mComaVsISCals;
   float mSavedBeamTilt;  // Starting values of beam til, defocus, astigmatism
   double mSavedDefocus;
   double mSavedAstigX;
@@ -242,6 +247,9 @@ private:
   float mComaVsISYTiltNeeded[4];
   float mComaVsISXAstigNeeded[4];
   float mComaVsISYAstigNeeded[4];
+  bool mComaVsIScalFromSettings;
+  bool mComaVsIScalToSettings;
+  int mNumShotsBeforeCal;
 
 public:
   void CalibrateAstigmatism(void);
@@ -293,5 +301,13 @@ public:
   void StopComaVsISCal(void);
   void GetComaVsISVector(int magInd, float extent, int rotation, int posIndex, float &delISX,
     float &delISY);
+  int LookupComaVsISCal(int spotSize, float intensity, int probeMode, int alpha,
+    int aperture, bool userSetting, int &i0, int &i1, float &interpPar, int &close);
+  ComaVsISCalib *GetBestComaVsISCal(int *close = NULL, float *interp = NULL);
+  void AppendToComaVsISCals(ComaVsISCalib *inCal);
+  int DeleteOneComaVsISCal(int spotSize, float intensity, int probeMode,
+    int alpha, int aperture = -1, int fromSettings = -1);
+  void ClearComaVsISCalsInSettings();
+  void SortComaVsISCals();
 };
 

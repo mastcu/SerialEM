@@ -70,6 +70,7 @@ private:
   CString mInstruction;
   CString mSaveBtnText;
   bool mYesAlwaysFinalize;
+  bool mHasComaVsISCal;
   
   void ClearArea();
   void CancelAddingDefining();

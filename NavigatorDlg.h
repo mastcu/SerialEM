@@ -192,6 +192,7 @@ public:
   SetMember(BOOL, SkipStageMoveInAcquire);
   GetSetMember(bool, PausedAcquire);
   GetMember(int, AcquireIndex);
+  GetMember(bool, EditFocusEnabled);
   GetMember(int, MagIndForHoles);
   GetMember(int, CameraForHoles);
   GetMember(int, EndingAcquireIndex);
@@ -207,7 +208,6 @@ public:
   SetMember(int, GridIndexOfMap);
   GetMember(double, AcqAutoDefocus);
   GetSetMember(int, InitialTotalShots);
-  GetMember(bool, EditFocusEnabled);
   GetSetMember(int, NumIStargetItems);
   GetMember(BOOL, AddingPoints);
   GetMember(int, AddPointID);

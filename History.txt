@@ -3,6 +3,25 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+10/23/26: Enable the checkbox for rotating Low Dose inter-area axis when Edit
+focus mode is turned on (In 4.2).
+
+10/23/26: Added the capability to set the measurement vector endpoints in the 
+coma vs. IS calibration setup dialog with Shift + Middle click.
+
+10/23/26: Added an option to the coma vs. IS calibration dialog to take extra
+conditioning shots at each position before coma measurement.
+
+10/23/16: Added a menu item to delete one coma vs. IS calibration.
+
+10/23/26: Added the capability to read and write coma vs. IS calibrations to 
+either the settings file or the calibrations file, and a menu option to specify 
+which file coma vs. IS calibrations are read from.
+
+10/23/26: Added the capability to store multiple coma vs. IS calibrations 
+for different illumination conditions, and interpolate/extrapolate calibration
+matrices across intensity values. 
+
 10/22/26: Simplified the parallel tilt series setup dialog process for creating
 parallel tilt series items with regular patterns.
 

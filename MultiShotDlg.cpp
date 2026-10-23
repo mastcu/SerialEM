@@ -127,6 +127,11 @@ CMultiShotDlg::CMultiShotDlg(CWnd* pParent /*=NULL*/)
   mLastMagIndex = 0;
   mLastIntensity = 0.;
   mLastDrawTime = 0.;
+  mLastManageEnablesTime = 0.;
+  mLastProbeMode = 0;
+  mLastAlpha = 0;
+  mLastSpotSize = 0;
+  mLastAperture = 0;
   mSavedLDForCamera = -1;
   mRecBeamSizeEnabled = true;
   mLastInLowDose = mWinApp->LowDoseMode();
@@ -314,7 +319,7 @@ BOOL CMultiShotDlg::OnInitDialog()
 // The dialog is being opened or the settings have been read: load dialog from parameters
 void CMultiShotDlg::UpdateSettings(void)
 {
-  ComaVsISCalib *comaVsIS = mWinApp->mAutoTuning->GetComaVsIScal();
+  ComaVsISCalib *comaVsIS = mWinApp->mAutoTuning->GetBestComaVsISCal();
   CString str, str2;
   int skipAdjust = mWinApp->mNavHelper->GetSkipAstigAdjustment();
   int minNum0 = 1;
@@ -1637,7 +1642,9 @@ void CMultiShotDlg::UpdateAndUseMSparams(bool draw)
 // Some of this is superceded by panel closing
 void CMultiShotDlg::ManageEnables(void)
 {
-  ComaVsISCalib *comaVsIS = mWinApp->mAutoTuning->GetComaVsIScal();
+  int close;
+  float interp, extrapLim = 0.1f, matchLim = 0.1f;
+  ComaVsISCalib *comaVsIS = mWinApp->mAutoTuning->GetBestComaVsISCal(&close, &interp);
   CString str2, str = "Use custom pattern (NONE DEFINED)";
   double holeXvec[3], holeYvec[3];
   LowDoseParams *ldp = mWinApp->GetLowDoseParams() + RECORD_CONSET;
@@ -1777,10 +1784,14 @@ void CMultiShotDlg::ManageEnables(void)
       "Astigmatism versus image shift is not calibrated");
     SetDlgItemText(IDC_STAT_COMA_CONDITIONS, "");
   } else {
-    SetDlgItemText(IDC_STAT_COMA_IS_CAL,
-      mWinApp->mNavHelper->GetSkipAstigAdjustment() >= 0 ?
-      "Coma versus image shift was calibrated at:" :
-      "Astigmatism versus image shift was calibrated at:");
+    comaVsIS = &mWinApp->mAutoTuning->GetComaVsISCals()->at(close);
+    str.Format("%s versus image shift was calibrated at:",
+      mWinApp->mNavHelper->GetSkipAstigAdjustment() >= 0 ? "Coma" : "Astigmatism");      
+    if (fabs(interp) > matchLim && fabs(1 - interp) > matchLim)
+      str += "*";
+    if (interp < -extrapLim || interp > 1 + extrapLim)
+      str += "*";
+    SetDlgItemText(IDC_STAT_COMA_IS_CAL, str);
     str.Format("%.4g%s %s, spot %d", mWinApp->mScope->GetC2Percent(comaVsIS->spotSize,
       comaVsIS->intensity, comaVsIS->probeMode), mWinApp->mScope->GetC2Units(),
       mWinApp->mScope->GetC2Name(),
@@ -1827,6 +1838,7 @@ void CMultiShotDlg::ManageHexGrid()
 // Check for whether condistions have changed and display should be updated
 void CMultiShotDlg::UpdateMultiDisplay(int magInd, double intensity)
 {
+  int probe, alpha, spot;
   MontParam *montp;
   LowDoseParams *ldp;
   BOOL lowDose = mWinApp->LowDoseMode();
@@ -1834,11 +1846,13 @@ void CMultiShotDlg::UpdateMultiDisplay(int magInd, double intensity)
     mWinApp->mBeamAssessor->LDRecordBeamSizeFromCal() == 0;
   bool enable = (mHasIlluminatedArea < 0 && (!lowDose || hasSize)) || 
     mHasIlluminatedArea > 0;
+  bool changedIntens;
 
   if (!BOOL_EQUIV(lowDose, mLastInLowDose) || !BOOL_EQUIV(enable, mRecBeamSizeEnabled)) {
     mRecBeamSizeEnabled = enable;
     mLastInLowDose = lowDose;
     ManageEnables();
+    mLastManageEnablesTime = GetTickCount();
   }
 
   // This reproduces logic in NavigatorDlg::GetMapDrawItems for whether drawing and how to
@@ -1855,17 +1869,41 @@ void CMultiShotDlg::UpdateMultiDisplay(int magInd, double intensity)
     ldp = mWinApp->GetLowDoseParams();
     magInd = ldp[RECORD_CONSET].magIndex;
     intensity = ldp[RECORD_CONSET].intensity;
-  } else if (mWinApp->Montaging()) {
-    montp = mWinApp->GetMontParam();
-    magInd = montp->magIndex;
+    probe = ldp[RECORD_CONSET].probeMode;
+    spot = ldp[RECORD_CONSET].spotSize;
+    alpha = (int)ldp[RECORD_CONSET].beamAlpha;
+  } else {
+    if (mWinApp->Montaging()) {
+      montp = mWinApp->GetMontParam();
+      magInd = montp->magIndex;
+    }
+    probe = mWinApp->mScope->GetProbeMode();
+    spot = mWinApp->mScope->GetSpotSize();
+    alpha = mWinApp->mScope->GetAlpha();
   }
   if (!magInd)
     mLastDrawTime = GetTickCount();
 
+  changedIntens = fabs(intensity - mLastIntensity) > 1.e-6;
+  if (changedIntens || probe != mLastProbeMode || spot != mLastSpotSize || 
+    (alpha >= 0 && alpha != mLastAlpha) || (mHasIlluminatedArea > 0 && 
+      mWinApp->mBeamAssessor->GetCurrentAperture() != mLastAperture)) {
+    if (SEMTickInterval(mLastManageEnablesTime) > 0.5) {
+      mLastManageEnablesTime = GetTickCount();
+      ManageEnables();
+      mLastProbeMode = probe;
+      mLastSpotSize = spot;
+      mLastIntensity = intensity;
+      if (mHasIlluminatedArea > 0)
+        mLastAperture = mWinApp->mBeamAssessor->GetCurrentAperture();
+      if (alpha >= 0)
+        mLastAlpha = alpha;
+    }
+  }
+
   // redraw if mag changed, or if IA changed but not too often for that
   bool draw = magInd > 0 && magInd != mLastMagIndex;
-  if ((mHasIlluminatedArea > 0 || hasSize) && m_bUseIllumArea && 
-    fabs(intensity - mLastIntensity) > 1.e-6) {
+  if ((mHasIlluminatedArea > 0 || hasSize) && m_bUseIllumArea && changedIntens) {
     if (SEMTickInterval(mLastDrawTime) > 0.5)
       draw = true;
   }

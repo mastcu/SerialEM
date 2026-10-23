@@ -29,13 +29,19 @@ This dialog box allows you to calibrate how beam tilt must be changed to achieve
     <strong>Distance to measure in each direction</strong> text box.&nbsp; When a 
     non-zero value is set in the <strong>Rotation of measurement vectors </strong>
     text box, these basic vectors are rotated by that amount.&nbsp; With these 
-    features, you can avoid running the coma-free alignment over a hole.</p>
+    features, you can avoid running the coma-free alignment over a hole. Alternatively, as 
+          of SerialEM 4.3 Oct. 2026, you can use Shift + Middle click to set one of the image shift 
+          positions, and the corresponding distance and rotation will be derived from that 
+          set position.</p>
     <p>
       
       The choices for <strong>Measure coma with</strong> are 1) use just 5 positions, 
       as was the case prior to SerialEM 4.1; 2) use a full array of 9 positions, which 
       will take longer but may be more accurate; or 3) use whatever has been chosen 
-      for running the routine to fix coma.</p>
+      for running the routine to fix coma. Additionally, you can set the <strong>Number 
+        of extra shots before measuring coma <!--StartFragment--></strong>
+        <span data-olk-copy-source="MessageBody">which may stabilize the specimen and 
+        give more reliable coma measurements.</span><!--EndFragment--></p>
     <p>
       It is important to realize that this calibration strictly applies only under the
       current illumination conditions (specifically, the C2/C3 lens setting or
@@ -47,8 +53,18 @@ This dialog box allows you to calibrate how beam tilt must be changed to achieve
         the illumination to be used for acquisition.</li>
       <li>The calibration should be done in Low Dose mode if acquisition is to be done
         in Low Dose mode</li>
-      <li>Because it depends on your settings for illumination, the calibration will be
-        saved in your settings file, not shared with others using other settings files.</li>
+      <li>Because it depends on your settings for illumination, the calibration can be
+        saved in your settings file, so that it will not be shared with others using other settings files.
+      
+          As of SerialEM 4.3 Oct. 2026, multiple calibrations may be saved, and the choice selected 
+          for <strong>Store calibration in</strong> determines whether the new calibration will 
+          be saved to the calibrations file or the settings file. Whether calibrations are 
+          used from the calibrations file or settings file is determined by the
+          <a href="menu_settings.htm#hid_special_comavsiscal_from_settings">Use Coma vs IS 
+          Calibrations from Settings</a> option in the Specialized &amp; Misc. Options 
+          submenu. If the new 
+          calibration closely matches the illumination conditions of an existing 
+          calibration, you will prompted for confirmation to replace it.</li>
       <li>The calibration can be checked with the the <strong>Test Multishot Positions</strong> 
         button in the <a href="menu_navigator.htm#hid_options_setmulti">Multiple Record 
         Setup</a> 
@@ -67,5 +83,7 @@ This dialog box allows you to calibrate how beam tilt must be changed to achieve
         the beam intensity is changed.</li>
     </ul>
     </basefont>
+      <p>
+&nbsp;</p>
   </BODY>
 </HTML>
