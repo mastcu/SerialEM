@@ -1312,6 +1312,8 @@ void CNavigatorDlg::OnEditFocus()
     UpdateData(false);
   }
   AddFocusAreaPoint(true);
+  if (!m_bEditFocus)
+    Redraw();
 }
 
 // If edit focus is on and active, set that there is a user point and get it positioned
