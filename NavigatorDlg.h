@@ -190,6 +190,7 @@ public:
   SetMember(BOOL, SkipStageMoveInAcquire);
   GetSetMember(bool, PausedAcquire);
   GetMember(int, AcquireIndex);
+  GetMember(bool, EditFocusEnabled);
   GetMember(int, MagIndForHoles);
   GetMember(int, CameraForHoles);
   GetMember(int, EndingAcquireIndex);

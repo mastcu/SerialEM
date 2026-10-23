@@ -1482,7 +1482,7 @@ void CLowDoseDlg::UpdateDefocusOffset()
 }
 
 // Update enables based on state of system
-void CLowDoseDlg::Update(BOOL stageReady)
+void CLowDoseDlg::Update(int stageReady)
 {
   if (!mInitialized)
     return;
@@ -1562,7 +1562,9 @@ void CLowDoseDlg::Update(BOOL stageReady)
   m_editPosition.EnableWindow(m_iDefineArea > 0);
   m_statMicron.EnableWindow(m_iDefineArea > 0);
   m_statOverlap.EnableWindow(m_iDefineArea > 0);
-  m_butRotateAxis.EnableWindow(m_iDefineArea > 0 && !usePiezo);
+  m_butRotateAxis.EnableWindow((m_iDefineArea > 0 || (mWinApp->mNavigator && 
+    mWinApp->mNavigator->m_bEditFocus && mWinApp->mNavigator->GetEditFocusEnabled())) && 
+    !usePiezo);
   m_editAxisAngle.EnableWindow(m_iDefineArea > 0 && m_bRotateAxis);
   m_statDegrees.EnableWindow(m_iDefineArea > 0 && m_bRotateAxis);
 

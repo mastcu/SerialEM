@@ -1314,6 +1314,7 @@ void CNavigatorDlg::OnEditFocus()
   AddFocusAreaPoint(true);
   if (!m_bEditFocus)
     Redraw();
+  mWinApp->mLowDoseDlg.Update();
 }
 
 // If edit focus is on and active, set that there is a user point and get it positioned
