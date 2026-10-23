@@ -208,7 +208,6 @@ public:
   SetMember(int, GridIndexOfMap);
   GetMember(double, AcqAutoDefocus);
   GetSetMember(int, InitialTotalShots);
-  GetMember(bool, EditFocusEnabled);
   GetSetMember(int, NumIStargetItems);
   GetMember(BOOL, AddingPoints);
   GetMember(int, AddPointID);
