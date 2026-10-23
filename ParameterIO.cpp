@@ -199,7 +199,8 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
   HoleFinderParams *hfParams = navHelper->GetHoleFinderParams();
   AutoContourParams *contParams = navHelper->GetAutocontourParams();
   DriftWaitParams *dwParams = mWinApp->mParticleTasks->GetDriftWaitParams();
-  ComaVsISCalib *comaVsIS = mWinApp->mAutoTuning->GetComaVsIScal();
+  std::vector<ComaVsISCalib> *comaVsIScals = mWinApp->mAutoTuning->GetComaVsISCals();
+  ComaVsISCalib comaVsIS;
   VppConditionParams *vppParams = mWinApp->mMultiTSTasks->GetVppConditionParams();
   ScreenShotParams *snapParams = mWinApp->GetScreenShotParams();
   CArray<ZbyGParams> *zbgArray = mWinApp->mParticleTasks->GetZbyGcalArray();
@@ -227,6 +228,7 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
   zbgArray->RemoveAll();
   markerShiftArr->RemoveAll();
   navHelper->ClearAdjustingXforms();
+  mWinApp->mAutoTuning->ClearComaVsISCalsInSettings();
 
   mWinApp->mCamera->SetFrameAliDefaults(faParam, "4K default set", 4, 0.06f, 1);
   mWinApp->SetAbsoluteDlgIndex(false);
@@ -1024,24 +1026,9 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
         tsrParams[index].direction = itemInt[9];
 
       } else if (NAME_IS("ComaVsISCal")) {
-        comaVsIS->magInd = itemInt[1];
-        comaVsIS->spotSize = itemInt[2];
-        comaVsIS->probeMode = itemInt[3];
-        comaVsIS->alpha = itemInt[4];
-        comaVsIS->aperture = itemInt[5];
-        comaVsIS->intensity = itemFlt[6];
-        comaVsIS->matrix.xpx = itemFlt[7];
-        comaVsIS->matrix.xpy = itemFlt[8];
-        comaVsIS->matrix.ypx = itemFlt[9];
-        comaVsIS->matrix.ypy = itemFlt[10];
-        comaVsIS->astigMat.xpx = comaVsIS->astigMat.xpy = comaVsIS->astigMat.ypx =
-          comaVsIS->astigMat.ypy = 0.;
-        if (!itemEmpty[14]) {
-          comaVsIS->astigMat.xpx = itemFlt[11];
-          comaVsIS->astigMat.xpy = itemFlt[12];
-          comaVsIS->astigMat.ypx = itemFlt[13];
-          comaVsIS->astigMat.ypy = itemFlt[14];
-        }
+        ReadComaVsISCalFromLineItems(comaVsIS, itemEmpty, itemInt, itemFlt);
+        comaVsIS.userSetting = true;
+        comaVsIScals->push_back(comaVsIS); 
 
       } else if (NAME_IS("NavigatorStockFile"))
         StripItems(strLine, 1, navParams->stockFile);
@@ -1259,7 +1246,6 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
             SET_PLACEMENT("ReadDlgPlacement", mDocWnd->mReadFileDlg);
             SET_PLACEMENT("StageToolPlacement", mWinApp->mStageMoveTool);
             SET_PLACEMENT("OneLinePlacement", mWinApp->mMacroProcessor->mOneLineScript);
-            SET_PLACEMENT("ParallelTSPlacement", mWinApp->mNavHelper->mParallelTSDlg);
             SET_PLACEMENT("MacroToolPlacement", mWinApp->mMacroToolbar);
             if (NAME_IS("HoleFinderPlacement") &&
               navHelper->mHoleFinderDlg->IsOpen())
@@ -1267,6 +1253,9 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
             if (NAME_IS("AutoContPlacement") &&
               navHelper->mAutoContouringDlg->IsOpen())
               navHelper->mAutoContouringDlg->SetWindowPlacement(place);
+            if (NAME_IS("ParallelTSPlacement" && 
+              mWinApp->mNavHelper->mParallelTSDlg->IsOpen()))
+              navHelper->mParallelTSDlg->SetWindowPlacement(place);
           }
         }
 
@@ -1870,7 +1859,8 @@ void CParameterIO::WriteSettings(CString strFileName)
   HoleFinderParams *hfParams = navHelper->GetHoleFinderParams();
   AutoContourParams *contParams = navHelper->GetAutocontourParams();
   DriftWaitParams *dwParams = mWinApp->mParticleTasks->GetDriftWaitParams();
-  ComaVsISCalib *comaVsIS = mWinApp->mAutoTuning->GetComaVsIScal();
+  std::vector<ComaVsISCalib> *comaVsIScals = mWinApp->mAutoTuning->GetComaVsISCals();
+  ComaVsISCalib comaVsIS;
   VppConditionParams *vppParams = mWinApp->mMultiTSTasks->GetVppConditionParams();
   ScreenShotParams *snapParams = mWinApp->GetScreenShotParams();
   NavAlignParams *navAliParm = navHelper->GetNavAlignParams();
@@ -2296,14 +2286,12 @@ void CParameterIO::WriteSettings(CString strFileName)
         zbgParam.targetDefocus, zbgParam.standardFocus);
       mFile->WriteString(oneState);
     }
-    if (comaVsIS->magInd >= 0) {
-      oneState.Format("ComaVsISCal %d %d %d %d %d %f %f %f %f %f %f %f %f %f\n",
-        comaVsIS->magInd, comaVsIS->spotSize, comaVsIS->probeMode, comaVsIS->alpha, 
-        comaVsIS->aperture, comaVsIS->intensity, comaVsIS->matrix.xpx, 
-        comaVsIS->matrix.xpy, comaVsIS->matrix.ypx, comaVsIS->matrix.ypy, 
-        comaVsIS->astigMat.xpx, comaVsIS->astigMat.xpy, comaVsIS->astigMat.ypx, 
-        comaVsIS->astigMat.ypy);
-      mFile->WriteString(oneState);
+    for (i = 0; i < comaVsIScals->size(); i++){
+      comaVsIS = comaVsIScals->at(i);
+      if (comaVsIS.userSetting) {
+        WriteComaVsISCalToString(comaVsIS, oneState);
+        mFile->WriteString(oneState);
+      }
     }
     for (i = 0; i < 2; i++) {
       oneState.Format("RangeFinderParams %d %d %d %d %d %f %f %f %d -999 -999\n", i,
@@ -3104,6 +3092,41 @@ int CParameterIO::WriteMulGridAcqParams(CString &filename, CString &errStr)
     mFile = NULL;
   }
   return retval;
+}
+
+// Format a string with the members of the ComaVsISCalib struct, to write to settings/cals
+void CParameterIO::WriteComaVsISCalToString(ComaVsISCalib &comaVsIS, CString &str)
+{
+  str.Format("ComaVsISCal %d %d %d %d %d %f %f %f %f %f %f %f %f %f\n",
+    comaVsIS.magInd, comaVsIS.spotSize, comaVsIS.probeMode, comaVsIS.alpha,
+    comaVsIS.aperture, comaVsIS.intensity, comaVsIS.matrix.xpx,
+    comaVsIS.matrix.xpy, comaVsIS.matrix.ypx, comaVsIS.matrix.ypy,
+    comaVsIS.astigMat.xpx, comaVsIS.astigMat.xpy, comaVsIS.astigMat.ypx,
+    comaVsIS.astigMat.ypy);
+}
+
+// Get ComaVsISCalib from the parsed line items
+void CParameterIO::ReadComaVsISCalFromLineItems(ComaVsISCalib &comaVsIS, BOOL *itemEmpty,
+  int *itemInt, float *itemFlt)
+{
+  comaVsIS.magInd = itemInt[1];
+  comaVsIS.spotSize = itemInt[2];
+  comaVsIS.probeMode = itemInt[3];
+  comaVsIS.alpha = itemInt[4];
+  comaVsIS.aperture = itemInt[5];
+  comaVsIS.intensity = itemFlt[6];
+  comaVsIS.matrix.xpx = itemFlt[7];
+  comaVsIS.matrix.xpy = itemFlt[8];
+  comaVsIS.matrix.ypx = itemFlt[9];
+  comaVsIS.matrix.ypy = itemFlt[10];
+  comaVsIS.astigMat.xpx = comaVsIS.astigMat.xpy = comaVsIS.astigMat.ypx =
+    comaVsIS.astigMat.ypy = 0.;
+  if (!itemEmpty[14]) {
+    comaVsIS.astigMat.xpx = itemFlt[11];
+    comaVsIS.astigMat.xpy = itemFlt[12];
+    comaVsIS.astigMat.ypx = itemFlt[13];
+    comaVsIS.astigMat.ypy = itemFlt[14];
+  }
 }
 
 // Reads a file to hide or disable items containing either defined strings in the
@@ -4903,6 +4926,8 @@ int CParameterIO::ReadCalibration(CString strFileName)
   CArray <CtfBasedCalib, CtfBasedCalib> *ctfAstigCals =
     mWinApp->mAutoTuning->GetCtfBasedCals();
   CtfBasedCalib ctfCal;
+  std::vector<ComaVsISCalib> *comaVsIScals = mWinApp->mAutoTuning->GetComaVsISCals();
+  ComaVsISCalib comaVsIS;
   CArray<ParallelIllum, ParallelIllum> *parIllums =
     mWinApp->mBeamAssessor->GetParIllumArray();
   ParallelIllum parallelIllum;
@@ -5194,6 +5219,11 @@ int CParameterIO::ReadCalibration(CString strFileName)
         ctfCal.fitValues[10] = itemFlt[13];
         ctfCal.fitValues[11] = itemFlt[14];
         ctfAstigCals->Add(ctfCal);
+
+      } else if (NAME_IS("ComaVsISCal")) {
+        ReadComaVsISCalFromLineItems(comaVsIS, itemEmpty, itemInt, itemFlt);
+        comaVsIS.userSetting = false;
+        comaVsIScals->push_back(comaVsIS);
 
       } else if (NAME_IS("BeamIntensityTable")) {
         nCal = itemInt[1];
@@ -5625,6 +5655,8 @@ void CParameterIO::WriteCalibration(CString strFileName)
   CArray <CtfBasedCalib, CtfBasedCalib> *ctfAstigCals =
     mWinApp->mAutoTuning->GetCtfBasedCals();
   CtfBasedCalib ctfCal;
+  std::vector<ComaVsISCalib> *comaVsIScals = mWinApp->mAutoTuning->GetComaVsISCals();
+  ComaVsISCalib comaVsIS;
   CArray<ParallelIllum, ParallelIllum> *parIllums =
     mWinApp->mBeamAssessor->GetParIllumArray();
   ParallelIllum parallelIllum;
@@ -5809,6 +5841,15 @@ void CParameterIO::WriteCalibration(CString strFileName)
         ctfCal.fitValues[6], ctfCal.fitValues[7], ctfCal.fitValues[8],ctfCal.fitValues[9], 
         ctfCal.fitValues[10], ctfCal.fitValues[11], mMagTab[ctfCal.magInd].mag);
       mFile->WriteString(string);
+    }
+
+    //Write coma vs image shift calibrations
+    for (i = 0; i < comaVsIScals->size(); i++) {
+      comaVsIS = comaVsIScals->at(i);
+      if (!comaVsIS.userSetting) {
+        WriteComaVsISCalToString(comaVsIS, string);
+        mFile->WriteString(string);
+      }
     }
 
     // Write beam calibrations
@@ -7085,6 +7126,9 @@ void CParameterIO::ReportSpecialOptions(void)
   if (mWinApp->mLowDoseDlg.GetTieFocusTrialPos())
     PrintAnOption(any, "Special option is set to keep Low Dose Trial and Focus at same"
       " position");
+  if (mWinApp->mAutoTuning->GetComaVsIScalFromSettings())
+    PrintAnOption(any, "Special option is set to use coma vs. image shift calibrations"
+      " from Settings");
   if (mWinApp->GetStartingProgram() && any && !mWinApp->GetMinimizedStartup())
     mWinApp->AppendToLog(" ");
 }

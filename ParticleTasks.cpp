@@ -131,7 +131,7 @@ int CParticleTasks::StartMultiShot(int numPeripheral, int doCenter, float spokeR
   CString str, str2;
   CMapDrawItem *item = NULL;
   CameraParameters *camParam = mWinApp->GetActiveCamParam();
-  ComaVsISCalib *comaVsIS = mWinApp->mAutoTuning->GetComaVsIScal();
+  ComaVsISCalib *comaVsIS = mWinApp->mAutoTuning->GetBestComaVsISCal();
   MontParam *montP = mWinApp->GetMontParam();
   bool multiInHole = (inHoleOrMulti & MULTI_IN_HOLE) != 0;
   bool multiHoles = (inHoleOrMulti & MULTI_HOLES) != 0;
@@ -791,7 +791,7 @@ void CParticleTasks::SetUpMultiShotShift(int shotIndex, int holeIndex, BOOL queu
 void CParticleTasks::GetBTandAstigAdjustment(double delISX, double delISY, double &delBTX, 
   double &delBTY, double &delAstigX, double &delAstigY, BOOL queueIt, BOOL debug)
 {
-  ComaVsISCalib *comaVsIS = mWinApp->mAutoTuning->GetComaVsIScal();
+  ComaVsISCalib *comaVsIS = mWinApp->mAutoTuning->GetBestComaVsISCal();
   double transISX, transISY;
   CString str, str2;
   mShiftManager->TransferGeneralIS(mMagIndex, delISX, delISY, comaVsIS->magInd,

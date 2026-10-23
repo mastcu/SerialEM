@@ -354,6 +354,8 @@ public:
     double intensity, float defocus);
   ScaleMat FocusAdjustedISToCamera(EMimageBuffer *imBuf);
   ScaleMat MatScaleRotate(ScaleMat aMat, float scale, float rotation);
+  ScaleMat InterpMatsByElement(ScaleMat startMat, ScaleMat endMat, float tpar);
+  ScaleMat InterpMatsByScaleRotStr(ScaleMat startMat, ScaleMat endMat, float tpar);
   void MakeScaleRotTransXform(float xf[6], float scale, float rot, float dx, float dy);
   void ScaleMatToIMODxform(ScaleMat mat, float delx, float dely, float xf[6]);
   ScaleMat IMODxformToScaleMat(float xf[6], float &delx, float &dely);

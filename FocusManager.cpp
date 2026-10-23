@@ -616,7 +616,6 @@ void CFocusManager::OnUpdateFocusMovecenter(CCmdUI* pCmdUI)
 void CFocusManager::OnAutofocusListCalibrations()
 {
   CameraParameters *camP = mWinApp->GetCamParams();
-  MagTable *magTab = mWinApp->GetMagTable();
   int numCam = mWinApp->GetNumActiveCameras();
   int *active = mWinApp->GetActiveCameraList();
   int ind, iCam, iMag;
@@ -626,10 +625,12 @@ void CFocusManager::OnAutofocusListCalibrations()
     mWinApp->mAutoTuning->GetCtfBasedCals();
   CArray<STEMFocusZTable, STEMFocusZTable> *focusZtables =
     mWinApp->mFocusManager->GetSFfocusZtables();
+  std::vector<ComaVsISCalib> *comaVsIScals = mWinApp->mAutoTuning->GetComaVsISCals();
   STEMFocusZTable sfzTable;
   CtfBasedCalib ctfCal;
   AstigCalib astig;
   ComaCalib coma;
+  ComaVsISCalib cvsis;
   CString str, str2;
   mWinApp->SetNextLogColorStyle(0, 1);
   mWinApp->AppendToLog("\r\nFocus calibrations:");
@@ -682,6 +683,8 @@ void CFocusManager::OnAutofocusListCalibrations()
     }
   }
 
+  iCam = mWinApp->GetCurrentActiveCamera();
+
   if (ctfAstigCals->GetSize()) {
     mWinApp->SetNextLogColorStyle(0, 1);
     mWinApp->AppendToLog("\r\nCTF-fitting based astigmatism calibrations:");
@@ -689,7 +692,7 @@ void CFocusManager::OnAutofocusListCalibrations()
     mWinApp->AppendToLog("Mag  Index  Stigmator delta");
     for (ind = 0; ind < ctfAstigCals->GetSize(); ind++) {
       ctfCal = ctfAstigCals->GetAt(ind);
-       PrintfToLog("%d   %d   %.3f", magTab[ctfCal.magInd].mag, ctfCal.magInd,
+       PrintfToLog("%d   %d   %.3f", MagForCamera(iCam, ctfCal.magInd), ctfCal.magInd,
         ctfCal.amplitude);
     }
   }
@@ -702,7 +705,7 @@ void CFocusManager::OnAutofocusListCalibrations()
       B3DCHOICE(JEOLscope && !mScope->GetHasNoAlpha(), "Alpha", ""));
     for (ind = 0; ind < astigCal->GetSize(); ind++) {
       astig = astigCal->GetAt(ind);
-      str.Format("%d   %d   %.2f    %.1f", magTab[astig.magInd].mag, astig.magInd,
+      str.Format("%d   %d   %.2f    %.1f", MagForCamera(iCam, astig.magInd), astig.magInd,
         astig.beamTilt, astig.defocus);
       if (JEOLscope  && !mScope->GetHasNoAlpha()) {
         str2.Format("    %d", astig.alpha + 1);
@@ -722,7 +725,7 @@ void CFocusManager::OnAutofocusListCalibrations()
       B3DCHOICE(JEOLscope && !mScope->GetHasNoAlpha(), "Alpha", ""));
     for (ind = 0; ind < comaCal->GetSize(); ind++) {
       coma = comaCal->GetAt(ind);
-      str.Format("%6d   %d   %.2f    %.1f", magTab[coma.magInd].mag, coma.magInd,
+      str.Format("%6d   %d   %.2f    %.1f", MagForCamera(iCam, coma.magInd), coma.magInd,
         coma.beamTilt, coma.defocus);
       if (JEOLscope  && !mScope->GetHasNoAlpha()) {
         str2.Format("    %d", coma.alpha + 1);
@@ -731,6 +734,56 @@ void CFocusManager::OnAutofocusListCalibrations()
       if (!coma.probeMode)
         str += "   nanoprobe";
       mWinApp->AppendToLog(str);
+    }
+  }
+
+  if (!comaVsIScals->empty()) {
+    mWinApp->mAutoTuning->SortComaVsISCals();
+    for (int set = 0; set < 2; set++) {
+      str.Format("\r\nComa vs Image Shift calibrations%s:", 
+        set > 0 ? " (in Settings)" : "");
+      mWinApp->SetNextLogColorStyle(0, 1);
+      mWinApp->AppendToLog(str);
+      mWinApp->SetNextLogColorStyle(0, 4);
+      CString extraSpace = "";
+      str = str2 = "";
+      if (JEOLscope && !mScope->GetHasNoAlpha())
+        str = "Alpha";
+      else if (FEIscope)
+        str = "Probe";
+      if (mScope->GetUseIllumAreaForC2()) {
+        str2 = "  Aperture";
+        extraSpace = "   ";
+      }
+      PrintfToLog("Mag  Index   %sIntensity   Spot  %s%s%s           IS to Beam Tilt     "
+        "         IS to Astigmatism",
+        extraSpace, str, str2, extraSpace);
+      for (ind = 0; ind < (int)comaVsIScals->size(); ind++) {
+        cvsis = comaVsIScals->at(ind);
+        if (cvsis.userSetting == (set > 0)) {
+          str.Format("%6d   %d     %.2f%s %s   %d",
+            MagForCamera(iCam, cvsis.magInd), cvsis.magInd,
+            mScope->GetC2Percent(cvsis.spotSize, cvsis.intensity, cvsis.probeMode),
+            mScope->GetC2Units(), mScope->GetC2Name(), cvsis.spotSize);
+          if (JEOLscope && !mScope->GetHasNoAlpha()) {
+            str2.Format("      %d", cvsis.alpha + 1);
+            str += str2;
+          } else if (FEIscope)
+            str += cvsis.probeMode == 0 ? "     nP" : "     uP";
+          if (mScope->GetUseIllumAreaForC2()) {
+            str2.Format("       %d um", cvsis.aperture);
+            str += str2;
+          }
+
+          str2.Format("     %.3f  %.3f  %.3f  %.3f     %.3f  %.3f  %.3f  %.3f",
+            cvsis.matrix.xpx, cvsis.matrix.xpy, cvsis.matrix.ypx, cvsis.matrix.ypy,
+            cvsis.astigMat.xpx, cvsis.astigMat.xpy, cvsis.astigMat.ypx, 
+            cvsis.astigMat.ypy);
+          str += str2;
+
+          mWinApp->AppendToLog(str);
+        }
+      }
     }
   }
 }

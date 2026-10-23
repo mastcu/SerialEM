@@ -357,7 +357,7 @@ BOOL CNavAcquireDlg::OnInitDialog()
   CFont *boldFont;
   CBaseDlg::OnInitDialog();
   int skipAdjust = mWinApp->mNavHelper->GetSkipAstigAdjustment();
-  ComaVsISCalib *comaVsIS = mWinApp->mAutoTuning->GetComaVsIScal();
+  ComaVsISCalib *comaVsIS = mWinApp->mAutoTuning->GetBestComaVsISCal();
   MultiShotParams *msParams = mWinApp->mNavHelper->GetMultiShotParams();
   CArray<AdjustXformData *, AdjustXformData *> *adjustXforms = 
     mWinApp->mNavHelper->GetAdjustXformArray();

@@ -9,6 +9,7 @@
 #include "ComaVsISCalDlg.h"
 #include "NavHelper.h"
 #include "AutoTuning.h"
+#include "ShiftManager.h"
 
 #if defined(_DEBUG) && defined(_CRTDBG_MAP_ALLOC)
 #define new DEBUG_NEW
@@ -19,6 +20,7 @@
 #define EXTENT_INCREMENT 0.2f
 #define ROTATION_INCREMENT 5
 #define MAX_ROTATION 50
+#define MAX_COMAVSISNUMSHOTS 3
 
 // CComaVsISCalDlg dialog
 
@@ -27,8 +29,10 @@ CComaVsISCalDlg::CComaVsISCalDlg(CWnd* pParent /*=NULL*/)
   , m_fDistance(0.5f)
   , m_iRotation(0)
   , m_iNumImages(FALSE)
+  , m_iStoreCal(0)
 {
   mNonModal = true;
+  mNumExtraShots = 0;
 }
 
 CComaVsISCalDlg::~CComaVsISCalDlg()
@@ -50,6 +54,8 @@ void CComaVsISCalDlg::DoDataExchange(CDataExchange* pDX)
   DDX_Control(pDX, IDC_SPIN_CVIC_ROTATION, m_sbcRotation);
   DDX_Control(pDX, IDOK, m_butCalibrate);
   DDX_Radio(pDX, IDC_RUSE_5IMAGES, m_iNumImages);
+  DDX_Radio(pDX, IDC_RSTORECALIBRATION, m_iStoreCal);
+  DDX_Control(pDX, IDC_SPIN_COMAVSISNUMSHOTS, m_sbcNumShots);
 }
 
 
@@ -59,6 +65,11 @@ BEGIN_MESSAGE_MAP(CComaVsISCalDlg, CBaseDlg)
   ON_EN_KILLFOCUS(IDC_EDIT_CVIC_ROTATION, OnKillfocusEditRotation)
   ON_NOTIFY(UDN_DELTAPOS, IDC_SPIN_CVIC_ROTATION, OnDeltaposSpinRotation)
   ON_BN_CLICKED(IDC_RUSE_5IMAGES, OnSetNumImages)
+  ON_BN_CLICKED(IDC_RUSE_FULL_ARRAY, OnSetNumImages)
+  ON_BN_CLICKED(IDC_RUSE_SETTING, OnSetNumImages)
+  ON_NOTIFY(UDN_DELTAPOS, IDC_SPIN_COMAVSISNUMSHOTS, OnDeltaposNumShots)
+  ON_BN_CLICKED(IDC_RSTORECALIBRATION, OnStoreCalibration)
+  ON_BN_CLICKED(IDC_RSTORESETTING, OnStoreCalibration)
 END_MESSAGE_MAP()
 
 
@@ -74,10 +85,17 @@ BOOL CComaVsISCalDlg::OnInitDialog()
     m_iNumImages = 2;
   SetDlgItemText(IDC_STAT_CUR_SETTING, mWinApp->mAutoTuning->GetCtfDoFullArray() ?
     "(currently 9)" : "(currently 5)");
+  m_iStoreCal = mWinApp->mAutoTuning->GetComaVsIScalToSettings() ? 1 : 0;
+  mNumExtraShots = mWinApp->mAutoTuning->GetNumShotsBeforeCal();
+  CString str;
+  str.Format("%d", mNumExtraShots);
+  SetDlgItemText(IDC_STAT_CVSIS_NUM_SHOTS, str);
   m_sbcDistance.SetRange(0, 10000);
   m_sbcDistance.SetPos(5000);
   m_sbcRotation.SetRange(0, 10000);
   m_sbcRotation.SetPos(5000);
+  m_sbcNumShots.SetRange(0, 10000);
+  m_sbcNumShots.SetPos(5000);
   if (mWinApp->mNavHelper->GetSkipAstigAdjustment() < 0) {
     EnableDlgItem(IDC_RUSE_5IMAGES, false);
     EnableDlgItem(IDC_RUSE_FULL_ARRAY, false);
@@ -104,6 +122,8 @@ void CComaVsISCalDlg::OnOK()
   mWinApp->mAutoTuning->SetComaVsISextent(m_fDistance);
   mWinApp->mAutoTuning->SetComaVsISrotation(m_iRotation);
   mWinApp->mAutoTuning->SetComaVsISuseFullArray(useFull);
+  mWinApp->mAutoTuning->SetComaVsIScalToSettings(m_iStoreCal == 1);
+  mWinApp->mAutoTuning->SetNumShotsBeforeCal(mNumExtraShots);
   EnableDlgItem(IDOK, false);
   EnableDlgItem(IDCANCEL, false);
   mWinApp->mAutoTuning->CalibrateComaVsImageShift(m_fDistance, m_iRotation, useFull);
@@ -181,4 +201,42 @@ void CComaVsISCalDlg::OnSetNumImages()
 {
   UpdateData(true);
   mWinApp->RestoreViewFocus();
+}
+
+// Choice for where to save the calibration: the calibrations file or settings file
+void CComaVsISCalDlg::OnStoreCalibration()
+{
+  UpdateData(true);
+  mWinApp->RestoreViewFocus();
+}
+
+void CComaVsISCalDlg::SetDistRotFromIS(int magInd, float delISX, float delISY)
+{
+  float ISX, ISY, rot, nRot;
+  ScaleMat aMat = mWinApp->mShiftManager->IStoSpecimen(magInd);
+  ISX = delISX * sqrtf(aMat.xpx * aMat.xpx + aMat.ypx * aMat.ypx);
+  ISY = delISY * sqrtf(aMat.xpy * aMat.xpy + aMat.ypy * aMat.ypy);
+  m_fDistance = sqrtf(ISX * ISX + ISY * ISY);
+  rot = atan2(ISY, ISX) / DTORFL;
+
+  //Rotation by 90 deg makes equivalent positions, so get the angle between -45 and 45
+  nRot = floorf((rot + 45.f) / 90.f);
+  m_iRotation = (int)(rot - nRot * 90.f);
+
+  UpdateData(false);
+  mWinApp->mMainView->DrawImage();
+}
+
+
+void CComaVsISCalDlg::OnDeltaposNumShots(NMHDR *pNMHDR, LRESULT *pResult)
+{
+  LPNMUPDOWN pNMUpDown = reinterpret_cast<LPNMUPDOWN>(pNMHDR);
+  mWinApp->RestoreViewFocus();
+  if (NewSpinnerValue(pNMHDR, pResult, mNumExtraShots, 0, MAX_COMAVSISNUMSHOTS, 
+    mNumExtraShots))
+    return;
+  CString str;
+  str.Format("%d", mNumExtraShots);
+  SetDlgItemText(IDC_STAT_CVSIS_NUM_SHOTS, str);
+  UpdateData(false);
 }

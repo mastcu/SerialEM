@@ -3292,6 +3292,36 @@ void CSerialEMView::OnMButtonDown(UINT nFlags, CPoint point)
       mWinApp->mNavHelper->mAutoContouringDlg->SinglePolygonMode() &&
       !mWinApp->DoingTasks()) {
       mWinApp->mNavHelper->mAutoContouringDlg->MakeSinglePolygon(imBuf, shiftX, shiftY);
+    } else if (!ctrl && shifted && mMainWindow && !mWinApp->DoingTasks() &&
+      mWinApp->mNavHelper->mComaVsISCalDlg && imBuf->mCaptured != BUFFER_FFT && 
+      imBuf->mCaptured != BUFFER_LIVE_FFT && imBuf->mLowDoseArea && mWinApp->LowDoseMode() 
+      && imBuf->mBinning > 0 && imBuf->mCamera >= 0 && 
+      IS_SET_VIEW_OR_SEARCH(imBuf->mConSetUsed)) {
+      float comaXcen, comaYcen, scale, rotation;
+      double transX, transY;
+      ScaleMat isToCamNoFoc, isToCam;
+      LowDoseParams *ldp = mWinApp->GetLowDoseParams() + RECORD_CONSET;
+
+      comaXcen = imBuf->mImage->getWidth() / 2.f;
+      comaYcen = imBuf->mImage->getHeight() / 2.f;
+      if (imBuf->mHasUserPt) {
+        comaXcen = imBuf->mUserPtX;
+        comaYcen = imBuf->mUserPtY;
+      }
+
+      // convert shift in pixels to camera coordinates; flip y axis
+      shiftX = (shiftX - comaXcen) * (float)imBuf->mBinning;
+      shiftY = -(shiftY - comaYcen) * (float)imBuf->mBinning;
+
+      mShiftManager->GetScaleAndRotationForFocus(imBuf, scale, rotation);
+      isToCamNoFoc = mShiftManager->IStoGivenCamera(imBuf->mMagInd, imBuf->mCamera);
+      isToCam = mShiftManager->MatScaleRotate(isToCamNoFoc, scale, rotation);
+      ApplyScaleMatrix(MatInv(isToCam), shiftX, shiftY, shiftX, shiftY);
+      mShiftManager->TransferGeneralIS(imBuf->mMagInd, shiftX, shiftY, ldp->magIndex,
+        transX, transY);
+      mWinApp->mNavHelper->mComaVsISCalDlg->SetDistRotFromIS(ldp->magIndex, 
+        (float)transX, (float)transY);
+
     } else if (legal && (isFFT || (mWinApp->mNavigator &&
       ((mWinApp->mNavigator->TakingMousePoints() && !shifted) || (shifted && !ctrl))))) {
       if (isFFT) {

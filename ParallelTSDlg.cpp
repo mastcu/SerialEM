@@ -121,6 +121,7 @@ CParallelTSDlg::CParallelTSDlg(CWnd* pParent /*=NULL*/)
   mBrushHighlight.CreateSolidBrush(mHighlightColor);
   mSaveBtnText = "";
   mYesAlwaysFinalize = false;
+  mHasComaVsISCal = false;
 }
 
 CParallelTSDlg::~CParallelTSDlg()
@@ -280,6 +281,9 @@ BOOL CParallelTSDlg::OnInitDialog()
   mHasIlluminatedArea = mScope->GetUseIllumAreaForC2() ? 1 : 0;
   mMapMagIndex = mScope->GetLowestMModeMagInd();
   mAcqMagIndex = mMapMagIndex + 6;
+
+  ComaVsISCalib *comaVsIS = mWinApp->mAutoTuning->GetBestComaVsISCal();
+  mHasComaVsISCal = comaVsIS->magInd > 0;
 
   m_sbcMappingMag.SetRange(1, MAX_MAGS);
   m_sbcAcquisitionMag.SetRange(1, MAX_MAGS);
@@ -600,12 +604,15 @@ void CParallelTSDlg::Update()
   else
     ReplaceWindowText(&m_butBeamSizeCircles, "illuminated area", "beam size from cal");
 
+  ComaVsISCalib *comaVsIS = mWinApp->mAutoTuning->GetBestComaVsISCal();
+  mHasComaVsISCal = comaVsIS->magInd > 0;
+  m_butBeamTiltAstig.EnableWindow(mHasComaVsISCal);
+
   // In case we want to enable or disable the extra buttons in the future
   /*m_butMaxTilt.EnableWindow();
   m_butDiameter.EnableWindow();
   m_butBeamSizeCircles.EnableWindow();
   m_butExtraISDelay.EnableWindow();
-  m_butBeamTiltAstig.EnableWindow();
   m_butCTFnone.EnableWindow();
   pwnd = GetDlgItem(IDC_RADIO_PTS_CTFPLOTTER);
   if (pwnd)
@@ -775,7 +782,7 @@ void CParallelTSDlg::DialogToOptions()
     mParTSopts->acqMagIndNonLD = mAcqMagIndex;
     mParTSopts->mapMagIndNonLD = mMapMagIndex;
   }
-  mParTSopts->adjustBeamTilt = m_bAdjustBeamTiltAstig;
+  mParTSopts->adjustBeamTilt = mHasComaVsISCal ? m_bAdjustBeamTiltAstig : 0;
   mParTSopts->extraDelayFactor = m_fExtraDelayFactor;
   mParTSopts->beamDiam = m_fBeamDiameter;
   mParTSopts->useIAorBeamSize = m_bBeamSizeCircles;
@@ -1368,7 +1375,6 @@ void CParallelTSDlg::OnAddTargets()
   if (mAddingTargets) {
     mFinalizedTargetArea = false;
     mArraySizeBeforeAdd = arrSize;
-    //mNumAddedTargets = 0; //TODO delete?
     if (!mTargetGroupID) {
       mTargetGroupID = nav->MakeUniqueID();
     }

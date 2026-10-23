@@ -53,6 +53,11 @@ private:
   double mLastDrawTime;
   bool mRecBeamSizeEnabled;
   BOOL mLastInLowDose;
+  double mLastManageEnablesTime;
+  int mLastProbeMode;
+  int mLastAlpha;
+  int mLastSpotSize;
+  int mLastAperture;
   static int mSavedLDForCamera;
   static int mAreaSaved;
   static int mStepConsNum;
