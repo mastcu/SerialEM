@@ -1398,7 +1398,7 @@ int CParallelTSHelper::ConvertToParTSItem(CString &err, CMapDrawItem *item)
     // Get map on which selected item is drawn
     mapItem = mWinApp->mNavigator->FindItemWithMapID(item->mDrawnOnMapID);
     if (!mapItem) {
-      err.Format("The selected item is not drawn on a map");
+      err.Format("Cannot find the map that the selected item was drawn on");
       return 5;
     }
     mMappingTilt = mapItem->mMapTiltAngle;
@@ -1976,13 +1976,14 @@ bool CParallelTSHelper::ItemOkForRegularPattern(CMapDrawItem * item)
   int numX, numY, numDef;
   bool ok = false;
 
-  if (!mWinApp->mNavigator)
+  if (!mWinApp->mNavigator || !mParallelTSDlg->IsOpen())
     return false;
   if (!item)
     item = mWinApp->mNavigator->GetCurrentItem();
 
   if (item && item->mParallelTSIndex < 0 && item->mTSparamIndex < 0
-    && item->mNumIStargets < 1 && item->mDrawnOnMapID && !item->IsMap()) {
+    && item->mNumIStargets < 1 && item->mDrawnOnMapID && !item->IsMap() &&
+    mWinApp->mNavigator->FindItemWithMapID(item->mDrawnOnMapID)) {
     mNavHelper->GetNumHolesFromParam(numX, numY, numDef);
     if (item->IsPoint() && item->mNumXholes > 0 && item->mNumYholes != 0) {
       numX = item->mNumXholes;

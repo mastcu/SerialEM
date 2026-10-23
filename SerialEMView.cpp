@@ -38,6 +38,7 @@
 #include "RemoteControl.h"
 #include "ExternalTools.h"
 #include "ParallelTSDlg.h"
+#include "ParallelTSHelper.h"
 #include "Image\KStoreIMOD.h"
 #include "Shared\ctffind.h"
 #include "Utilities\KGetOne.h"
@@ -1194,7 +1195,9 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
   if (itemArray && !parTSgroupID && showTSellipse && 
     navigator->m_bShowAcquireArea) {
     CMapDrawItem *item = navigator->GetCurrentItem();
-    if (item && item->mGroupID && item->IsPoint() && !item->mNumIStargets) {
+    if (item && mWinApp->mParallelTSHelper->ItemOkForRegularPattern(item))
+      showTSellipse = false;
+    else if (item && item->mGroupID && item->IsPoint() && !item->mNumIStargets) {
       parTSgroupID = item->mGroupID;
       groupEllipse = true;
     }
@@ -1520,18 +1523,20 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
   bool doMultiHole = mWinApp->mNavHelper->MultipleHolesAreSelected();
   bool checkUndos = mWinApp->mNavHelper->mCombineHoles->OKtoUndoCombine();
   item = navigator->GetCurrentItem();
+  bool multiOnRegParTS = item && doMultiHole && 
+    mWinApp->mParallelTSHelper->ItemOkForRegularPattern(item);
   bool curIsInGroup = parTSgroupID > 0 && item && item->mGroupID == parTSgroupID;
   BOOL useMultiShot = ((((emsMulti & EMS_SHOW_MULTI_SHOT) && 
     !showTSellipse) || curIsInGroup
     || (item && (item->mParallelTSIndex >= 0 || (item->mNumIStargets && showTSellipse))))
-    && navigator->m_bShowAcquireArea) || 
+    && navigator->m_bShowAcquireArea) || multiOnRegParTS ||
     (mWinApp->mNavHelper->mMultiShotDlg && !groupEllipse);
   if (useMultiShot) {
     msParams = mWinApp->mNavHelper->GetMultiShotParams();
     doInHole = (msParams->inHoleOrMultiHole & MULTI_IN_HOLE) > 0;
     targetsOnly = (navigator->GetNumIStargetItems() > 0 || groupEllipse) && !doInHole &&
       !doMultiHole;
-    useMultiShot = doInHole || doMultiHole || targetsOnly;
+    useMultiShot = doInHole || doMultiHole || targetsOnly || multiOnRegParTS;
     if (doMultiHole)
       mWinApp->mNavHelper->GetNumHolesFromParam(msNumXholes, msNumYholes, ix);
   }
@@ -1615,6 +1620,8 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
         sawFirstParTS = true;
         drawEllipse = imBuf->mMagInd && imBuf->mCamera >= 0;
       }
+      if (multiOnRegParTS)
+        drawEllipse = imBuf->mMagInd && imBuf->mCamera >= 0;
  
       // Otherwise draw a cross at a single point
       if ((!mPreParTSDrewLDAreas || iDraw >= 0)) {
@@ -1773,7 +1780,7 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
         }
 
         // Inside a hole, circle around each area
-        if (doInHole && item->mDraw) {
+        if (doInHole && item->mDraw && !multiOnRegParTS) {
           for (int pt = inHoleStart; pt < inHoleEnd; pt++) {
             StageToImage(imBuf, item->mPtX[pt] + holeXoffset,
               item->mPtY[pt] + holeYoffset, ptX, ptY);
@@ -1792,12 +1799,14 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
 
     // Draw polygons for full acquire area on all acquire points if selected, or on
     // current/selected points
-    if (iDraw >= 0 && (item->mAcquire || item->mParallelTSIndex >= 0 || itemInParTSgroup) 
+    if (iDraw >= 0 && (item->mAcquire || item->mParallelTSIndex >= 0 || itemInParTSgroup 
+      || multiOnRegParTS) 
       && item->mNumPoints == 1 && mAcquireBox && (itemInParTSgroup || (showMultiOnAll &&
       (!showOnlyCombined || (item->mNumXholes != 0 && item->mNumYholes != 0) ||
         (checkUndos &&
           mWinApp->mNavHelper->mCombineHoles->IsItemInUndoList(item->mMapID)))) ||
-        (showCurPtAcquire && highlight && (doMultiHole || item->mNumIStargets))) &&
+        ((showCurPtAcquire || multiOnRegParTS) && highlight && 
+        (doMultiHole || item->mNumIStargets))) &&
       !(targetsOnly && !itemInParTSgroup && !useMultiShot && !showTSellipse)) {
       GetSingleAdjustmentForItem(imBuf, item, delPtX, delPtY);
       CPen pnAcquire(PS_SOLID, thick1, item->GetColor(highlight));
@@ -1963,7 +1972,8 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
             drawSkips = ix < numSpecHoles / 2 && size > 2;
           }
 
-          if (!drawSkips && (!item->mNumIStargets || (item->mNumIStargets && highlight) ||
+          if (!drawSkips && (!item->mNumIStargets || (item->mNumIStargets && highlight &&
+            navigator->m_bShowAcquireArea && !navigator->GetShowingLDareas()) || 
             itemInParTSgroup)) {
             CPen circlePen(PS_SOLID, thick1, COLORREF(RGB(255, 255, 0)));
             CFont *def_font = GetFont();
@@ -1995,7 +2005,7 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
                   NULL);
 
                 // Draw beam circles & numbers for IS targets, first one offset from cross
-                if (item->mNumIStargets && highlight) {
+                if ((item->mNumIStargets || multiOnRegParTS) && highlight) {
                   StageToImage(imBuf, acquireXhole[hole], acquireYhole[hole], ptX, ptY);
                   if (drawEllipse) {
                     DrawEllipse(&cdc, &circlePen, &rect, imBuf->mImage, ptX + delPtX,
@@ -2105,7 +2115,7 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
         int defMode = cdc.SetBkMode(TRANSPARENT);
         COLORREF defColor = cdc.SetTextColor(item->GetColor(highlight));
         cdc.TextOut(point.x, point.y, item->mLabel);
-        if (itemInParTSgroup && drawEllipse) {
+        if (itemInParTSgroup && drawEllipse && !navigator->GetShowingLDareas()) {
           cdc.SetTextColor(parTScolor);
           UINT textAlign = cdc.SetTextAlign(TA_RIGHT | TA_BOTTOM);
           point = point - CPoint(2 * offset10, 2 * offset10 / 10);

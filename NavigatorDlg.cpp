@@ -4281,10 +4281,12 @@ MapItemArray *CNavigatorDlg::GetMapDrawItems(
   drawAllReg = m_bDrawAllReg;
   MultiShotParams *msParams = mHelper->GetMultiShotParams();
   int parTSgroupID = mWinApp->mNavHelper->GetParTSSetupGroupID();
+  bool multiOnRegParTS = mItem && 
+    mWinApp->mParallelTSHelper->ItemOkForRegularPattern(mItem);
   mMagIndForHoles = mCameraForHoles = 0;
   mWinApp->mParticleTasks->SetLastHolesWereAdjusted(false);
   if ((emsMulti & EMS_SHOW_TS_ELLIPSE) && mItem && mItem->mGroupID && m_bShowAcquireArea 
-    && !mItem->mNumIStargets)
+    && !mItem->mNumIStargets && !multiOnRegParTS)
   {
     parTSgroupID = mItem->mGroupID;
     groupEllipse = true;
@@ -4295,13 +4297,14 @@ MapItemArray *CNavigatorDlg::GetMapDrawItems(
   showMulti = ((msParams->inHoleOrMultiHole & MULTI_IN_HOLE) ||
     mHelper->MultipleHolesAreSelected() || mNumIStargetItems > 0) &&
     ((m_bShowAcquireArea && ((emsMulti & EMS_SHOW_MULTI_SHOT) || groupEllipse ||
-    (mItem && mItem->mTSparamIndex >= 0))) ||
+    (mItem && mItem->mTSparamIndex >= 0))) || multiOnRegParTS ||
     (mHelper->mMultiShotDlg && !mHelper->mMultiShotDlg->RecordingISValues()));
 
   // Show something on the current point if multi draw is on or show acquire is on and
   // there is no user point (turns off draw on the acquire box)
-  showCurPtAcquire = !imBuf->mHasUserPt && mItem && ((showMulti && 
-    (mItem->mAcquire || (emsMulti & EMS_SHOW_WHOLE_AREA))) || (m_bShowAcquireArea &&
+  showCurPtAcquire = (!imBuf->mHasUserPt || multiOnRegParTS) && mItem && ((showMulti && 
+    (mItem->mAcquire || (emsMulti & EMS_SHOW_WHOLE_AREA) || multiOnRegParTS)) || 
+    (m_bShowAcquireArea &&
     (mItem->mAcquire || groupEllipse || mItem->mParallelTSIndex >= 0) && 
       mItem->mNumPoints == 1 && mItem->mDraw));
   curIsAcquire = mItem && (mItem->mAcquire || mItem->mTSparamIndex >= 0 || groupEllipse);
@@ -4314,8 +4317,9 @@ MapItemArray *CNavigatorDlg::GetMapDrawItems(
     *acquireBox = new CMapDrawItem(mItem);
     (*acquireBox)->AppendPoint(mItem->mStageX, mItem->mStageY);
 
-  } else if (!mShowingLDareas && ((imBuf->mHasUserPt || showCurPtAcquire) &&
-    (m_bShowAcquireArea || showMulti || drawParTSEllipses) || parTSgroupID > 0) &&
+  } else if (!mShowingLDareas && ((((imBuf->mHasUserPt && 
+    (m_bShowAcquireArea || showMulti)) || showCurPtAcquire) &&
+    (m_bShowAcquireArea || showMulti || drawParTSEllipses)) || parTSgroupID > 0) &&
     RegistrationUseType(imBuf->mRegistration) != NAVREG_IMPORT) {
 
     // If there is a user point and the box is on to draw acquire area, get needed
