@@ -91,6 +91,7 @@ CParticleTasks::CParticleTasks(void)
   mDVSetAutoVibOff = false;
   mDoingPrevPrescan = false;
   mParTSOverwriteSec = -1;
+  mParTSSaveFrames = -1;
 }
 
 
@@ -283,6 +284,10 @@ int CParticleTasks::StartMultiShot(int numPeripheral, int doCenter, float spokeR
   mMSSaveRecord = (mMSsaveToMontage || !(multiHoles && mWinApp->Montaging())) && !testComa
     && (saveRec || mMSNumSepFiles >= 0) && !mMSDoStartMacro;
 
+  // store original frame saving/aligning options if it will be skipped for Parallel TS
+  if (mMSForParallelTS && mTSController->GetParTSNoCenter()) {
+    mParTSSaveFrames = mRecConSet->saveFrames;
+  }
 
   // Then test other conditions
   if (mMSIfEarlyReturn && !camParam->K2Type && 
@@ -657,9 +662,12 @@ void CParticleTasks::StopMultiShot(void)
 {
   if (mMSCurIndex < -1)
     return;
-  if (mMSForParallelTS)
+  if (mMSForParallelTS) {
     mShiftManager->SetISTimeOut(
       mShiftManager->ComputeISDelay(mBaseISX - mLastISX, mBaseISX - mLastISY));
+    if (mTSController->GetParTSNoCenter() && mParTSSaveFrames >= 0) 
+      mRecConSet->saveFrames = mParTSSaveFrames;
+  }
   if (mCamera->Acquiring()) {
     mCamera->SetImageShiftToRestore(mBaseISX, mBaseISY);
     if (mMSAdjustBeamTilt && mMSSkipAstigBT >= 0)
@@ -855,6 +863,14 @@ int CParticleTasks::StartOneShotOfMulti(void)
     mCamera->SetStoreNumForNextShot(StoreNumForCurrentShot());
     if (mMSHoleIndex > 0)
       mCamera->SetKeepLastUsedFrameNum(2);
+  }
+
+  if (mMSForParallelTS && mTSController->GetParTSNoCenter() && mParTSSaveFrames >= 0) {
+    if (mMSHoleIndex == 0) {
+      mRecConSet->saveFrames = 0;
+    } else if (mMSHoleIndex > 0) {
+      mRecConSet->saveFrames = mParTSSaveFrames;
+    }
   }
 
   if (mMSTestRun & MULTI_TEST_COMA) {

@@ -162,6 +162,7 @@ public:
   GetMemberArr(BOOL, StoreExtra);
   BOOL *GetExtraFileStarts() { return &mExtraFiles[0]; };
   GetSetMember(float, ParTSMinCtfpPixel);
+  GetMember(bool, ParTSNoCenter);
 
   double GetCumulativeDose();
   int GetEDMPercent(float &EDMPct);
@@ -640,6 +641,7 @@ private:
   float mParTSMeanStartScore;     // Mean score at starting tilt
   bool mParTsReviseDZFocusFromZ0; // Flag to keep revising delta Z focus from older Z0
   int mNumDidPretiltFromYOnly[2]; // # of times it has revised tilt offset from Y only
+  bool mParTSNoCenter;            // Flag to skip saving and aligning frames at PTS center
 
 public:
 	void CenterBeamWithTrial();

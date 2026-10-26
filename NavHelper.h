@@ -211,6 +211,7 @@ struct ParallelTSParam {
     mappingTilt = 0.;
     maxTiltFromStart = 0.;
     navID = 0;
+    skipCenter = 0;
   }
   int firstPrevMapID;       // Map ID of the retained first preview map if any
   IntVec prevSectNums;      // Section numbers preview map file if any
@@ -223,6 +224,7 @@ struct ParallelTSParam {
   float mappingTilt;        // Tilt angle at which previews were taken
   float maxTiltFromStart;   // Maximum tilt angle to run symmetrically from starting angle
   int navID;                // ID needed when merging
+  int skipCenter;          // Skip saving frames at center point. Non-odd regular pattern
 };
 
 // Structure for user options in parallel TS

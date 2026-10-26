@@ -1918,13 +1918,13 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
             }
             holeItem.mNumPoints = 0;
             mWinApp->mNavigator->AddHolePositionsToItemPts(delISX, delISY, holeIndex,
-              false, numSpecHoles, &holeItem);
+              false, numSpecHoles, &holeItem, false);
 
             // Put skipped holes into an item too
             skipItem.mNumPoints = 0;
             if (skippedX.size())
               mWinApp->mNavigator->AddHolePositionsToItemPts(skippedX, skippedY,
-                holeIndex, false, -(int)skippedX.size(), &skipItem);
+                holeIndex, false, -(int)skippedX.size(), &skipItem, false);
           }
         }
         if (numSpecHoles) {

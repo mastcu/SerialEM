@@ -221,8 +221,8 @@ BEGIN_MESSAGE_MAP(CParallelTSDlg, CBaseDlg)
   ON_BN_CLICKED(IDC_BUT_PTS_DEFINEFITPLANE, OnDefinePtsFitPlane)
   ON_EN_KILLFOCUS(IDC_EDIT_PTS_PRETILT, OnEnKillfocusEditPretilt)
   ON_EN_KILLFOCUS(IDC_EDIT_PTS_XPITCH, OnEnKillfocusEditXpitch)
-  ON_BN_CLICKED(IDC_RADIO_PTS_CUSTOMTARGETS, OnRadioCustomTargets)
-  ON_BN_CLICKED(IDC_RADIO_PTS_MULTISHOTTARGETS, OnRadioMultishotTargets)
+  ON_BN_CLICKED(IDC_RADIO_PTS_CUSTOMTARGETS, OnRadioTargetType)
+  ON_BN_CLICKED(IDC_RADIO_PTS_MULTISHOTTARGETS, OnRadioTargetType)
   ON_BN_CLICKED(IDC_BUT_PTS_ROUGHEUCEN, OnRoughEucen)
   ON_BN_CLICKED(IDC_BUT_PTS_EUCENBYFOCUS, OnEucenByFocus)
   ON_BN_CLICKED(IDC_BUT_PTS_STARTNEWTARGETAREA, OnStartNewTargetArea)
@@ -1232,20 +1232,13 @@ void CParallelTSDlg::OnEnKillfocusEditXpitch()
 }
 
 
-void CParallelTSDlg::OnRadioCustomTargets()
+void CParallelTSDlg::OnRadioTargetType()
 {
   UpdateData(true);
   Update();
   ManagePanels();
-  DialogToOptions();
-}
-
-
-void CParallelTSDlg::OnRadioMultishotTargets()
-{
-  UpdateData(true);
-  Update();
-  ManagePanels();
+  if (mWinApp->mNavigator)
+    mWinApp->mNavigator->Redraw();
   DialogToOptions();
 }
 

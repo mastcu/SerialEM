@@ -463,6 +463,7 @@ CTSController::CTSController()
   mParTSMinFindScoreRatio = 0.33f;
   mParTSMinPlotScoreRatio = 0.66f;
   mParTsReviseDZFocusFromZ0 = true;
+  mParTSNoCenter = false;
   mEndCtlMdocPath = NULL;
   mTiltIndex = -1;
   mSetupOpenedStamp = GetTickCount();
@@ -7451,6 +7452,7 @@ int CTSController::ParallelTSSetup(CMapDrawItem *item, CString &errStr)
 
   mParTSParams = mWinApp->mNavigator->GetParallelTSArray()->GetAt(
     item->mParallelTSIndex);
+  mParTSNoCenter = mParTSParams->skipCenter != 0;
 
   if (numTargets < 2) {
     errStr = "Navigator item for parallel tilt series must have more than one target";

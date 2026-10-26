@@ -154,6 +154,7 @@ private:
   bool mParTSTuningInCtfpDone;     // Flag that tuning can be skipped after it worked once
   int mParTSFirstImageInBuf;       // Buffer that first image is in
   int mParTSOverwriteSec;          // Section # to overwrite, -1 not to
+  int mParTSSaveFrames;            // saveFrames flag to restore after skipping PTS center
   bool mMSStartedCtfplotter;       // Flag that it started it then took next shot
 
   DriftWaitParams mWDDfltParams;   // Resident parameters

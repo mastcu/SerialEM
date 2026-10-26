@@ -162,7 +162,7 @@ public:
 	MapItemArray *GetMapDrawItems(EMimageBuffer *imBuf, 
     ScaleMat &aMat, float &delX, float &delY, BOOL &drawAllReg, CMapDrawItem **acquireBox);
   void AddHolePositionsToItemPts(FloatVec &delISX, FloatVec &delISY, IntVec &holeIndex, 
-    bool custom, int numHoles, CMapDrawItem *item);
+    bool custom, int numHoles, CMapDrawItem *item, bool swapClosest = true);
 	CNavigatorDlg(CWnd* pParent = NULL);   // standard constructor
   int GetCurrentRegistration() {return mCurrentRegistration;};
   MapItemArray *GetItemArray() {return &mItemArray;};

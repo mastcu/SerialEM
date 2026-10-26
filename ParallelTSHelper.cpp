@@ -1387,6 +1387,7 @@ int CParallelTSHelper::ConvertToParTSItem(CString &err, CMapDrawItem *item)
   mParTSParam.yCoordInArea.clear();
   mParTSParam.xShiftInImage.clear();
   mParTSParam.yShiftInImage.clear();
+  mParTSParam.skipCenter = 0;
 
   //Handle a regular pattern set up from multishot params
   if (item) {
@@ -1397,10 +1398,6 @@ int CParallelTSHelper::ConvertToParTSItem(CString &err, CMapDrawItem *item)
     
     // Get map on which selected item is drawn
     mapItem = mWinApp->mNavigator->FindItemWithMapID(item->mDrawnOnMapID);
-    if (!mapItem) {
-      err.Format("Cannot find the map that the selected item was drawn on");
-      return 5;
-    }
     mMappingTilt = mapItem->mMapTiltAngle;
     mMagIndex = mWinApp->mNavigator->GetMagIndForHoles();
     
@@ -1413,19 +1410,20 @@ int CParallelTSHelper::ConvertToParTSItem(CString &err, CMapDrawItem *item)
         numX = item->mNumXholes;
         numY = item->mNumYholes;
       }
-      
+
       numPoints = mWinApp->mParticleTasks->GetHolePositions(delISX, delISY, indices, 
         mMagIndex, mWinApp->GetCurrentCamera(), numX, numY, mMappingTilt, item);
-      
+
       // exclude skipped holes stored in item
       if (item->mNumXholes > 0 && item->mNumSkipHoles > 0) {
         mWinApp->mParticleTasks->SkipHolesInList(delISX, delISY, indices, 
           item->mSkipHolePos, item->mNumSkipHoles, numPoints);
       }
       if (fabs(delISX[0]) > 1.e-3 || fabs(delISY[0]) > 1.e-3) {
-        err.Format("The first image shift in the multishot pattern must be (0, 0) in \n"
-          "order to create a parallel tilt series item");
-        return 6;
+        delISX.insert(delISX.begin(), 0.f);
+        delISY.insert(delISY.begin(), 0.f);
+        mParTSParam.skipCenter = 1;
+        numPoints += 1;
       }
       if (numPoints > MAX_STORES) {
         err.Format("The current multishot pattern would generate %d targets, which"
@@ -1435,6 +1433,11 @@ int CParallelTSHelper::ConvertToParTSItem(CString &err, CMapDrawItem *item)
       mParTSitem = item;
     } else if (item->IsPolygon()) {
       mNavHelper->FillPolygonWithMultiShot(item, delISX, delISY, err);
+      if (fabs(delISX[0]) > 1.e-3 || fabs(delISY[0]) > 1.e-3) {
+        delISX.insert(delISX.begin(), 0.f);
+        delISY.insert(delISY.begin(), 0.f);
+        mParTSParam.skipCenter = 1;
+      }
       numPoints = (int) delISX.size();
       if (numPoints > MAX_STORES) {
         err.Format("The current polygon would contain %d targets, which"
@@ -1973,28 +1976,15 @@ int CParallelTSHelper::PruneDeletedTargets()
 // tilt series item with a regular pattern
 bool CParallelTSHelper::ItemOkForRegularPattern(CMapDrawItem * item)
 {
-  int numX, numY, numDef;
-  bool ok = false;
-
-  if (!mWinApp->mNavigator || !mParallelTSDlg->IsOpen())
+  if (!mWinApp->mNavigator || !mParallelTSDlg->IsOpen() || 
+    mParallelTSDlg->m_iTargetType != 1)
     return false;
   if (!item)
     item = mWinApp->mNavigator->GetCurrentItem();
 
-  if (item && item->mParallelTSIndex < 0 && item->mTSparamIndex < 0
+  return item && item->mParallelTSIndex < 0 && item->mTSparamIndex < 0
     && item->mNumIStargets < 1 && item->mDrawnOnMapID && !item->IsMap() &&
-    mWinApp->mNavigator->FindItemWithMapID(item->mDrawnOnMapID)) {
-    mNavHelper->GetNumHolesFromParam(numX, numY, numDef);
-    if (item->IsPoint() && item->mNumXholes > 0 && item->mNumYholes != 0) {
-      numX = item->mNumXholes;
-      numY = item->mNumYholes;
-    } 
-    if (numX > 0 && numY > 0)
-      return (numX % 2 && numY % 2);
-    else if (numY == -1)
-      return !mNavHelper->GetMultiShotParams()->skipHexCenter;
-  }
-  return false;
+    mWinApp->mNavigator->FindItemWithMapID(item->mDrawnOnMapID);
 }
 
 /*

@@ -125,8 +125,7 @@ public:
   int m_iTargetType;
   CButton m_butAddCustomTargets;
   CButton m_butAddMultishotItem;
-  afx_msg void OnRadioCustomTargets();
-  afx_msg void OnRadioMultishotTargets();
+  afx_msg void OnRadioTargetType();
   afx_msg void OnRoughEucen();
   afx_msg void OnEucenByFocus();
   afx_msg void OnStartNewTargetArea();

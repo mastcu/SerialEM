@@ -229,5 +229,6 @@ CString adocStr, valStr, keyStr;
   ADOC_PUT(Float(ADOC_ARG, "MappingTilt", parTS->mappingTilt));
   ADOC_PUT(Float(ADOC_ARG, "MaxTilt", parTS->maxTiltFromStart));
   ADOC_PUT(Integer(ADOC_ARG, "NavID", parTS->navID));
+  ADOC_PUT(Integer(ADOC_ARG, "SkipCenter", parTS->skipCenter))
 #endif
 }

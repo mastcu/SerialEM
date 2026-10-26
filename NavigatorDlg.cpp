@@ -4495,7 +4495,7 @@ MapItemArray *CNavigatorDlg::GetMapDrawItems(
 
 // Make multihole positions relative to center and add them to given item
 void CNavigatorDlg::AddHolePositionsToItemPts(FloatVec &delISX, FloatVec &delISY,
-  IntVec &holeIndex, bool custom, int numHoles, CMapDrawItem *item)
+  IntVec &holeIndex, bool custom, int numHoles, CMapDrawItem *item, bool swapClosest)
 {
   int ind, minInd = -1, indexInd;
   float dist, ptX, ptY, minDist = 1.e20f;
@@ -4523,7 +4523,7 @@ void CNavigatorDlg::AddHolePositionsToItemPts(FloatVec &delISX, FloatVec &delISY
   }
 
   // Swap last point for closest point;
-  if (!custom && numHoles > 0) {
+  if (!custom && numHoles > 0 && swapClosest) {
     B3DSWAP(item->mPtX[minInd], item->mPtX[item->mNumPoints - 1], ptX);
     B3DSWAP(item->mPtY[minInd], item->mPtY[item->mNumPoints - 1], ptY);
     B3DSWAP(holeIndex[2 * indexInd], holeIndex[2 * numHoles - 2], ind);
@@ -9474,6 +9474,10 @@ int CNavigatorDlg::LoadNavFile(bool checkAutosave, bool mergeFile, CString *inFi
         if (!retval) {
           ADOC_REQUIRED(AdocGetInteger("ParallelTSParam", ind1, "NavID",
             &parTSp->navID));
+        }
+        if (!retval) {
+          ADOC_OPTIONAL(AdocGetInteger("ParallelTSParam", ind1, "SkipCenter",
+            &parTSp->skipCenter));
         }
         if (!retval) {
           ADOC_OPTIONAL(AdocGetInteger("ParallelTSParam", ind1, "FirstPrevMapID",

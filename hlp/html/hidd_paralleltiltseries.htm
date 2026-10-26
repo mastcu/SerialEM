@@ -196,9 +196,10 @@
         &nbsp;</p>
     <p>
         <strong><em>Defining Area &amp; Targets</em></strong></p>
-    <p> <strong>Add Custom Targets / Add Regular Pattern</strong></p>
+    <p> <strong>Add Custom Targets</strong></p>
     <p> With <strong>Add Custom Targets</strong> selected, targets are created by marking specific 
         locations on the area map. </p>
+    <p> <strong>Add Regular Pattern</strong></p>
     <p> With <strong>Add Regular Pattern</strong> selected, targets are created according to the 
         pattern set in the Multiple Record parameters, by one of two ways.&nbsp; If the currently 
         selected Navigator item is a point, then the targets will follow the multishot 
@@ -208,6 +209,21 @@
         targets are generated automatically when finalizing the target area. Thus, with 
         this option selected, many of the dialog controls used to set up the target area 
         are hidden.</p>
+    <p> It is necessary to have a defined center point (at zero image shift) for tilt 
+        series acquisition. Thus, if the multishot pattern does not include a position 
+        at zero image shift, then a synthetic center point will be added upon 
+        finalizing. There are three distinct ways this could occur:</p>
+    <ul>
+        <li>The rectangular pattern being applied has an even number of holes in the X or Y 
+            direction.</li>
+        <li>The hex pattern from the multishot parameters is being applied, and the option 
+            to omit the hex center is turned on.</li>
+        <li>The pattern stored in the item would have had a center position, but it was 
+            deleted from the item.</li>
+    </ul>
+    <p> Images captured at the synthetic center point will still be saved to a tilt 
+        series file. If frame saving is turned on, the program will skip saving frames 
+        only at the synthetic center point in order to reduce unneeded output.</p>
     <p> <strong>Rough Eucentricity</strong></p>
     <p> Runs the <a href="menu_tasks.htm#hid_eucentricity_coarse">Rough Eucentricity</a> routine.</p>
     <p> <strong>Eucentricity by Focus</strong></p>
