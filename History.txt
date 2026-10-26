@@ -3,6 +3,10 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+10/26/26: Added the ability to create parallel tilt series items from regular 
+multishot patterns with no a center point by adding a synthetic target at zero
+image shift and skipping frame saving at that target. 
+
 10/26/26: Added ways to make SetItemImShiftTargets store IS targets for all
 but the first point and to delete the Navigator points for the IS targets
 after the central one.
