@@ -12638,11 +12638,12 @@ int CMacCmd::AddStagePosAsNavPoint(void)
 // SetItemImShiftTargets
 int CMacCmd::SetItemImShiftTargets()
 {
-  int ind, jnd, num, cenInd = 0;
+  int ind, jnd, num, cenInd = 0, indStart = 0;
   float xmid, ymid, xtmp, ytmp, dist, minDist = 1.e30f;
   Variable *xvar = NULL, *yvar = NULL;
   FloatVec xvec, yvec;
   ScaleMat st2is;
+  MapItemArray *itemArray = mNavigator->GetItemArray();
   CMapDrawItem *navItem = CurrentOrIndexedNavItem(mItemInt[1], mStrLine);
   CMapDrawItem *mapItem;
   if (!navItem)
@@ -12670,7 +12671,7 @@ int CMacCmd::SetItemImShiftTargets()
     if (!st2is.xpx)
       ABORT_LINE("There is no calibration for getting from stage coordinates "
         "to image shift values for line:\n\n");
-    if (mItemInt[3] > 1) {
+    if (mItemInt[3] == 2) {
       xmid = (VECTOR_MIN(xvec) + VECTOR_MAX(xvec)) / 2.f;
       ymid = (VECTOR_MIN(yvec) + VECTOR_MAX(yvec)) / 2.f;
       for (ind = 0; ind < num; ind++) {
@@ -12699,6 +12700,11 @@ int CMacCmd::SetItemImShiftTargets()
     }
   }
 
+  if (mItemInt[3] > 2) {
+    num--;
+    indStart = 1;
+  }
+
   if (navItem->mIStargetsXY)
     delete[] navItem->mIStargetsXY;
   else
@@ -12713,8 +12719,8 @@ int CMacCmd::SetItemImShiftTargets()
   navItem->mIStargetsXY = new float[2 * num];
   navItem->mNumIStargets = num;
   navItem->mMagOfIStargets = mItemInt[2];
-  for (ind = 0; ind < navItem->mNumIStargets; ind++) {
-    jnd = ind;
+  for (ind = indStart; ind < (int)xvec.size(); ind++) {
+    jnd = ind - indStart;
     if (cenInd > 0 && (!ind || cenInd == ind))
       jnd = ind ? 0 : cenInd;
     navItem->mIStargetsXY[2 * jnd] = xvec[ind];
@@ -12722,7 +12728,11 @@ int CMacCmd::SetItemImShiftTargets()
   }
   if (navItem->mNote.IsEmpty())
     navItem->mNote.Format("%d targets", num);
+  if (!mItemEmpty[6] && (mItemInt[6] & 2))
+    navItem->mAcquire = true;
   mNavigator->UpdateListString(mItemInt[1]);
+  if (!mItemEmpty[6] && (mItemInt[6] & 1) && navItem->mGroupID > 0 && navItem->mMapID > 0)
+    mNavigator->ExternalDeleteGroup(false, navItem->mGroupID, navItem->mMapID);
   mWinApp->mMainView->DrawImage();
   return 0;
 }
