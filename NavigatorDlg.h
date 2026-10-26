@@ -607,7 +607,7 @@ public:
   BOOL SupermontLabel(CMapDrawItem * item, int & startNum, int & ix, int & iy);
   BOOL CurrentIsInGroup(void);
   void DeleteGroup(bool collapsedGroup);
-  void ExternalDeleteGroup(bool collapsedGroup);
+  void ExternalDeleteGroup(bool collapsedGroup, int curID = -1, int excludeID = 0);
   void PolygonSupermontage(void);
   void PolygonToCameraCoords(CMapDrawItem * item, int camera, int magIndex, 
     int adjustForFocusSet, float &xMin, float &xMax, float &yMin, float &yMax);
