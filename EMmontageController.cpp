@@ -645,7 +645,8 @@ int EMmontageController::StartMontage(int inTrial, BOOL inReadMont, float cookDw
     // montage) - but not too long since UI is dead.
     if (mDoStageMoves && mScope->WaitForStageReady(5000)) {
       SEMMessageBox("The stage is busy or not ready; montage aborted");
-      return 1;
+      mLastFailed = true;
+      return 4;
     }
 
     // Now adjust the mag if it is not at the specified setting
@@ -885,7 +886,8 @@ int EMmontageController::StartMontage(int inTrial, BOOL inReadMont, float cookDw
           "The image shift needed is too close to the end of its range.\n\n"
           "Reset the image shift and reposition specimen stage.\n"
           "If that does not work, then the image shift range is just too big");
-        return 1;
+        mLastFailed = true;
+        return 4;
       }
 
       // If skipping outside a Nav item, compute adjusted stage position of center
@@ -1411,7 +1413,8 @@ int EMmontageController::StartMontage(int inTrial, BOOL inReadMont, float cookDw
 
   // Build the control set
   if (!mReadingMontage && !preCooking  && !mUsingMultishot) {
-    if (cam->K2Type && mConSets[setNum].doseFrac && mCamera->GetPluginVersion(cam) < PLUGIN_CAN_SAVE_SUBAREAS) {
+    if (cam->K2Type && mConSets[setNum].doseFrac && 
+      mCamera->GetPluginVersion(cam) < PLUGIN_CAN_SAVE_SUBAREAS) {
       ix = cam->sizeX / mParam->binning;
       iy = cam->sizeY / mParam->binning;
       mCamera->CenteredSizes(ix, cam->sizeX, cam->moduloX, left, right,

@@ -362,6 +362,7 @@ CTSController::CTSController()
   mTSParam.tsFlags = TSFLAG_PAR_USE_MAXTILT;
   mTSParam.initialized = false;
   mReorderDoseSymFile = true;
+  mSynchroDoseSymReorder = 0;
   mPostponed = false;
   mDoingTS = false;
   mStartedTS = false;
@@ -4757,7 +4758,8 @@ int CTSController::EndControl(BOOL terminating, BOOL startReorder)
     if (saveFailed)
       mMultiTSTasks->SetBfcIgnoreNextStop(true);
     error = mMultiTSTasks->InvertFileInZ(mTiltIndex - (saveFailed ? 1 : 0), mTiltAngles,
-      mFrameAlignInIMOD || saveFailed || lastNavItem);
+      mFrameAlignInIMOD || saveFailed || lastNavItem || mSynchroDoseSymReorder > 1 ||
+      (mParTSNavItem && mSynchroDoseSymReorder > 0));
     if (error > 3 && error != 11)
       mClosedDoseSymFile = true;
     if (error <= 0)
@@ -4767,7 +4769,8 @@ int CTSController::EndControl(BOOL terminating, BOOL startReorder)
     if (error < 0) {
       mInvertingFile = true;
       mWinApp->AddIdleTask(TASK_TILT_SERIES, 0, (mBaseZ + mTiltIndex) * (20000 +
-        4 * mEndCtlWidth *  mEndCtlHeight / 1000));
+        4 * mEndCtlWidth *  mEndCtlHeight / 1000) * 
+        B3DMAX(1, mMultiTSTasks->GetBfcNumFilesToDo()));
       mDoingDosymFileReorder = -1;
       return 1;
     }
@@ -7359,7 +7362,8 @@ int CTSController::SwitchToSynchronousBidirCopy()
     mMultiTSTasks->StartBidirFileCopy(true);
     mInvertingFile = true;
     mWinApp->AddIdleTask(TASK_TILT_SERIES, 0, (mBaseZ + mTiltIndex) * (20000 +
-      4 * mWinApp->mStoreMRC->getWidth() *  mWinApp->mStoreMRC->getHeight() / 1000));
+      4 * mWinApp->mStoreMRC->getWidth() *  mWinApp->mStoreMRC->getHeight() / 1000) *
+    B3DMAX(1, mMultiTSTasks->GetBfcNumFilesToDo()));
     return 1;
   }
   return 0;

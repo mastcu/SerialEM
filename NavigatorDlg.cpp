@@ -5716,17 +5716,19 @@ void CNavigatorDlg::DeleteGroup(bool collapsedGroup)
 // Delete a whole group, or the part on one line of collapsed groups, or multiple
 // selected points.  "collapsedGroups" is true literally or for multiple selected points
 // in this case suppress any message boxes
-void CNavigatorDlg::ExternalDeleteGroup(bool collapsedGroup)
+void CNavigatorDlg::ExternalDeleteGroup(bool collapsedGroup, int curID, int excludeID)
 {
   CString message, label, lastlab;
   CMapDrawItem *item;
   bool doSelection = collapsedGroup && mSelectedItems.size() > 1;
-  int i, curID, num, start = 0, end = (int)mItemArray.GetSize() - 1;
-  if (!SetCurrentItem(true))
-    return;
-  curID = mItem->mGroupID;
-  if (!curID && !doSelection)
-    return;
+  int i, num, start = 0, end = (int)mItemArray.GetSize() - 1;
+  if (curID <= 0) {
+    if (!SetCurrentItem(true))
+      return;
+    curID = mItem->mGroupID;
+    if (!curID && !doSelection)
+      return;
+  }
 
   if (doSelection) {
     num = (int)mSelectedItems.size();
@@ -5738,8 +5740,9 @@ void CNavigatorDlg::ExternalDeleteGroup(bool collapsedGroup)
   }
   for (i = end; i >= start; i--) {
     item = mItemArray[i];
-    if ((!doSelection && item->mGroupID == curID) ||
-      (doSelection && mSelectedItems.count(i))) {
+    if (((!doSelection && item->mGroupID == curID) ||
+      (doSelection && mSelectedItems.count(i))) && 
+      (excludeID < 0 || item->mMapID != excludeID)) {
       if (item->mAcquire) {
         item->mAcquire = false;
         mHelper->EndAcquireOrNewFile(item);
@@ -11224,8 +11227,15 @@ void CNavigatorDlg::AcquireNextTask(int param)
 
       // After acquisition
     case ACQ_ACQUIRE:
-      ManageNumDoneAcquired();
       RestoreBeamTiltIfSaved();
+      if (mWinApp->Montaging() && mWinApp->mMontageController->GetLastFailed()) {
+        item->mAcquire = false;
+        UpdateListString(mAcquireIndex);
+        SkipToNextItemInAcquire(item, "starting or running the montage");
+        break;
+      }
+      ManageNumDoneAcquired();
+
       if (!mSkippingSave || mAcqParm->acquireType == ACQUIRE_TAKE_MAP) {
         if (mWinApp->Montaging()) {
           zval = mWinApp->mMontageWindow.m_iCurrentZ - 1;
@@ -11724,6 +11734,8 @@ void CNavigatorDlg::AcquireNextTask(int param)
     if (mWinApp->Montaging() &&
       !(mSkippingSave && mAcqParm->acquireType == ACQUIRE_IMAGE_ONLY)) {
       stopErr = mWinApp->mMontageController->StartMontage(MONT_NOT_TRIAL, false);
+      if (stopErr == 4)
+        stopErr = 0;
       if (!stopErr && mAcquireOpenedFile.IsEmpty())
         mUsedPreExistingMont = true;
     } else {
@@ -12144,7 +12156,7 @@ void CNavigatorDlg::StopAcquiring(BOOL testMacro)
   mWinApp->SetStatusText(COMPLEX_PANE, "");
 }
 
-// Do common actions whenthe acquire step is done
+// Do common actions when the acquire step is done
 void CNavigatorDlg::SetItemSuccessfullyAcquired(CMapDrawItem * item)
 {
   item->mAcquire = false;

@@ -162,6 +162,7 @@ public:
   GetMemberArr(BOOL, StoreExtra);
   BOOL *GetExtraFileStarts() { return &mExtraFiles[0]; };
   GetSetMember(float, ParTSMinCtfpPixel);
+  GetSetMember(int, SynchroDoseSymReorder);
   GetMember(bool, ParTSNoCenter);
 
   double GetCumulativeDose();
@@ -565,6 +566,7 @@ private:
   int mDoingDosymFileReorder;  // Flag that reorder is under way
   bool mClosedDoseSymFile;     // Flag that the file was closed by reordering
   bool mFinishingLastReorder;  // Flag that last reorder was switched to synchronous
+  int mSynchroDoseSymReorder;  // 1 to do parallel TS, >1 to do all dose-sym synchronously
   bool mNeedFinalTermTasks;    // Flag to do final termination tasks when reorder is done
   bool mTerminationStarted;    // Flag that a termination call to EndControl occurred
   bool mTermOnErrorCalled;     // Flag to keep from calling back into TerminateOnError

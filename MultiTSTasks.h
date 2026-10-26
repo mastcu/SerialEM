@@ -212,6 +212,7 @@ public:
   GetSetMember(int, AutoCenUseMagInd);
   GetMember(int, BfcSecZeroMapsTo);
   GetSetMember(float, AutoCenFOVLimit);
+  GetMember(int, BfcNumFilesToDo);
 
   void SetProbeOrAlpha(int probe, int alpha);
   void GetProbeOrAlpha(int &probe, int &alpha);

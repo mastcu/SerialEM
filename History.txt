@@ -3,7 +3,18 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
-10/23/26: Enable the checkbox for rotating Low Dose inter-area axis when Edit
+10/26/26: Added ways to make SetItemImShiftTargets store IS targets for all
+but the first point and to delete the Navigator points for the IS targets
+after the central one.
+
+10/26/26: Added property TSSynchroDoseSymReorder to make dose-symmetric series
+be stacked immediately instead of in the background during next series.
+
+10/26/26: Made it go on to next item instead of stopping the Navigator
+acquisition if a montage fails because image shift would go out of range;
+Acquire is turned off if this is being run from multigrid.
+
+10/23/26: Enabled the checkbox for rotating Low Dose inter-area axis when Edit
 focus mode is turned on (In 4.2).
 
 10/23/26: Added the capability to set the measurement vector endpoints in the 
@@ -15,8 +26,8 @@ conditioning shots at each position before coma measurement.
 10/23/16: Added a menu item to delete one coma vs. IS calibration.
 
 10/23/26: Added the capability to read and write coma vs. IS calibrations to 
-either the settings file or the calibrations file, and a menu option to specify 
-which file coma vs. IS calibrations are read from.
+either the settings file or the calibrations file, and a menu option to
+specify which file coma vs. IS calibrations are read from.
 
 10/23/26: Added the capability to store multiple coma vs. IS calibrations 
 for different illumination conditions, and interpolate/extrapolate calibration

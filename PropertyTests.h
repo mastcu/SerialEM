@@ -478,6 +478,7 @@ INT_PROP_TEST("TSCheckScopeDisturbances", tsController->, CheckScopeDisturbances
 INT_PROP_TEST("TSTrackAfterScopeStopTime", tsController->, TrackAfterScopeStopTime)
 INT_PROP_TEST("TSFocusAfterScopeStopTime", tsController->, FocusAfterScopeStopTime)
 INT_PROP_TEST("TSWaitAfterScopeFilling", tsController->, WaitAfterScopeFilling)
+INT_PROP_TEST("TSSynchroDoseSymReorder", tsController->, SynchroDoseSymReorder)
 FLOAT_PROP_TEST("TSDefocusForLDTrial", tsController->, DefocusForLDTrial)
 FLOAT_PROP_TEST("BeamCalMinField", beamAssessor->, CalMinField)
 FLOAT_PROP_TEST("BeamCalExtraRangeNeeded", beamAssessor->, ExtraRangeAtMinMag)
