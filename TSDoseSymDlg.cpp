@@ -105,7 +105,7 @@ END_MESSAGE_MAP()
 BOOL CTSDoseSymDlg::OnInitDialog()
 {
   ControlSet *cset = mWinApp->GetConSets() + RECORD_CONSET;
-  BOOL async = mWinApp->mBufferManager->GetSaveAsynchronously();
+  BOOL async = mWinApp->mBufferManager->GetSaveAsynchronously() && !mSynchronousReorder;
   CBaseDlg::OnInitDialog();
   CLEAR_RESIZE(mIdealAnglesToUse, float, 0);
   m_bIncGroup = mTSparam.dosymIncreaseGroups;

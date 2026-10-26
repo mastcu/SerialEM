@@ -73,4 +73,5 @@ public:
   int m_iBigTiltToTrack;
   afx_msg void OnEnKillfocusEditBigTilt();
   afx_msg void OnCheckTrackBigTilt();
+  bool mSynchronousReorder;
 };

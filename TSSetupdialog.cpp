@@ -1764,12 +1764,15 @@ void CTSSetupDialog::OnUseDoseSym()
 void CTSSetupDialog::OnButSetupDoseSym()
 {
   CTSDoseSymDlg dlg;
+  int synchro = mWinApp->mTSController->GetSynchroDoseSymReorder();
   FixButtonStyle(IDC_BUT_SETUP_DOSE_SYM);
   dlg.mTSparam = mTSParam;
   dlg.mTSparam.startingTilt = m_fStartAngle;
   dlg.mTSparam.endingTilt = m_fEndAngle;
   dlg.mTSparam.tiltIncrement = m_fIncrement;
   dlg.mTSparam.bidirAngle = m_fBidirAngle;
+  dlg.mSynchronousReorder = m_bUseDoseSym && (synchro > 1 || 
+    (synchro > 0 && (mNavOverrideFlags & NAV_OVERRIDE_PARALLEL_TS)));
   if (dlg.DoModal() == IDOK) {
     dlg.mTSparam.startingTilt = mTSParam.startingTilt;
     dlg.mTSparam.endingTilt = mTSParam.endingTilt;

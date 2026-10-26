@@ -1370,7 +1370,8 @@ void EMbufferManager::AsyncSaveDone(void)
   } else if (mWinApp->mMultiTSTasks->BidirCopyPending()) {
     SEMTrace('y', "Async save done, starting next async copy");
     mWinApp->mMultiTSTasks->StartBidirFileCopy(false);
-  }
+  } else
+    SEMTrace('y', "Async save done");
 }
 
 // Clean up from an ansynchronous save
@@ -1449,6 +1450,8 @@ int EMbufferManager::CheckAsyncSaving(void)
     if (busy <= 0) {
       AsyncSaveCleanup(busy);
       mWinApp->RemoveIdleTask(TASK_ASYNC_SAVE);
+      SEMTrace('y', "Async %s finished after wait%s", mSaveTD.fromStore ? "copy" : "save",
+        mWinApp->mMultiTSTasks->BidirCopyPending() ? "; not restarting copy" : "");
 
       // Inform that copy is done successfully, the false means without a restart
       if (!busy && mSaveTD.fromStore)
