@@ -1235,6 +1235,12 @@ void CParallelTSDlg::OnEnKillfocusEditXpitch()
 void CParallelTSDlg::OnRadioTargetType()
 {
   UpdateData(true);
+  if (m_iTargetType == 0)
+    m_strInstruct = "";
+  else
+    m_strInstruct = "Click \"Finalize Target Area\" to convert the selected navigator"
+      " item.";
+  UpdateData(false);
   Update();
   ManagePanels();
   if (mWinApp->mNavigator)
