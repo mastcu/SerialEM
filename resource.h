@@ -2713,6 +2713,7 @@
 #define IDC_STATIC_PTS_DIAMUM           3744
 #define IDC_STATIC_PTS_EXTRADELAY       3745
 #define IDC_STATIC_PTS_EXTRADELAYSEC    3746
+#define IDC_STATIC_PTS_MAXISDISTUM      3746
 #define IDC_CHECK_PTS_ADJUSTBEAMTILT    3747
 #define IDC_STATIC_PTS_CTFTYPE          3748
 #define IDC_CHECK_PTS_APPLYADJUSTING    3749
@@ -2754,6 +2755,9 @@
 #define IDC_RSTORESETTING               3785
 #define IDC_SPIN_COMAVSISNUMSHOTS       3786
 #define IDC_STAT_CVSIS_NUM_SHOTS        3787
+#define IDC_STATIC_PTS_MAXISDIST        3788
+#define IDC_EDIT1                       3789
+#define IDC_EDIT_PTS_MAXISDIST          3789
 #define ID_NEW_IMAGE                    32771
 #define IDM_FILE_SAVEOTHER              32772
 #define IDM_FILE_READ                   32773
@@ -3413,7 +3417,7 @@
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        305
 #define _APS_NEXT_COMMAND_VALUE         33654
-#define _APS_NEXT_CONTROL_VALUE         3788
+#define _APS_NEXT_CONTROL_VALUE         3790
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif

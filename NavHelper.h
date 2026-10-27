@@ -244,6 +244,7 @@ struct ParallelTSOptions {
   float refAliMaxRot;      // Max rotation when aligning to extracted reference
   BOOL applyAdjustingXform;// Whether to apply Adjusting transform
   int flags;               // For future easy expansion
+  float maxISDist;         // Maximum image shift distance to draw
 };
 
 // BEWARE.  Nav Actions are the "other tasks" in user terminology, not the primary action
