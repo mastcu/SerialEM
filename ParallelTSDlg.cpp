@@ -739,6 +739,9 @@ void CParallelTSDlg::ExternalUpdate()
 // Save a copy of the original ParallelTSoptions and load them into the dialog
 void CParallelTSDlg::OptionsToDialog()
 {
+  float limit = mAcqMagIndex >= mScope->GetLowestNonLMmag()
+    ? mShiftManager->GetRegularShiftLimit() : mShiftManager->GetLowMagShiftLimit();
+
   mSavedParTSopts = *mParTSopts;
 
   if (!mWinApp->LowDoseMode()) {
@@ -774,7 +777,10 @@ void CParallelTSDlg::OptionsToDialog()
   m_fRefMaxScaling = mNavHelper->GetParTSRefAliMaxPctChg();
   m_fRefMaxRotation = mNavHelper->GetParTSRefAliMaxRot();
   m_bApplyAdjusting = mParTSopts->applyAdjustingXform;
-  m_fMaxISDist = B3DMAX(mParTSopts->maxISDist, 0);
+  if (mParTSopts->maxISDist <= 0)
+    m_fMaxISDist = limit - 3.f;
+  else
+    m_fMaxISDist = B3DMIN(mParTSopts->maxISDist, limit);
   m_bSkipRefine = mParTSopts->flags & PTSFLAG_SKIP_REFINE;
   mDisplayExtraOptions = (mParTSopts->flags & PTSFLAG_DISP_EXTRA_OPTS) != 0;
 }

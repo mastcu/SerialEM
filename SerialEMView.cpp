@@ -1628,32 +1628,28 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
             LowDoseParams *ldp = mWinApp->GetLowDoseParams() + RECORD_CONSET;
             int magInd = mWinApp->LowDoseMode() ? ldp->magIndex :
               mWinApp->mNavHelper->GetParTSOptions()->acqMagIndNonLD;
-            ScaleMat is2s = mShiftManager->IStoSpecimen(magInd);
-            ScaleMat s2st = mShiftManager->SpecimenToStage(1., 1.);
-            float specX1, specY1, specX2, specY2, x1, y1, x2, y2, scale1, scale2;
+            ScaleMat is2st = MatMul(mShiftManager->IStoGivenCamera(magInd, imBuf->mCamera), 
+              MatInv(mShiftManager->StageToCamera(imBuf->mCamera, magInd)));
+            float x1, y1, x2, y2, scale1, scale2;
 
-            // Get directions along specimen coords for pure x and y IS
-            ApplyScaleMatrix(is2s, 1., 0., specX1, specY1);
-            ApplyScaleMatrix(is2s, 0., 1., specX2, specY2);
+            ApplyScaleMatrix(is2st, 1., 0., x1, y1);
+            ApplyScaleMatrix(is2st, 0., 1., x2, y2);
 
-            //Scale vectors to max IS dist and then convert to stage coordinates
-            scale1 = limit / sqrtf(specX1 * specX1 + specY1 * specY1);
-            scale2 = limit / sqrtf(specX2 * specX2 + specY2 * specY2);
-            specX1 *= scale1;
-            specY1 *= scale1;
-            specX2 *= scale2;
-            specY2 *= scale2;
-            ApplyScaleMatrix(s2st, specX1, specY1, x1, y1);
-            ApplyScaleMatrix(s2st, specX2, specY2, x2, y2);
+            scale1 = limit / sqrtf(x1 * x1 + y1 * y1);
+            scale2 = limit / sqrtf(x2 * x2 + y2 * y2);
+            x1 *= scale1;
+            y1 *= scale1;
+            x2 *= scale2;
+            y2 *= scale2;
 
-            limCornX.push_back(x1);
-            limCornY.push_back(y1);
-            limCornX.push_back(x2);
-            limCornY.push_back(y2);
-            limCornX.push_back(-x1);
-            limCornY.push_back(-y1);
-            limCornX.push_back(-x2);
-            limCornY.push_back(-y2);
+            limCornX.push_back(x1 + x2);
+            limCornY.push_back(y1 + y2);
+            limCornX.push_back(x1 - x2);
+            limCornY.push_back(y1 - y2);
+            limCornX.push_back(-x1 - x2);
+            limCornY.push_back(-y1 - y2);
+            limCornX.push_back(-x1 + x2);
+            limCornY.push_back(-y1 + y2);
 
             CPen *pOldPen = cdc.SelectObject(&pnDashPen);
             DrawVectorPolygon(cdc, &rect, NULL, imBuf, limCornX, limCornY, 
