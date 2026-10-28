@@ -778,7 +778,7 @@ void CParallelTSDlg::OptionsToDialog()
   m_fRefMaxRotation = mNavHelper->GetParTSRefAliMaxRot();
   m_bApplyAdjusting = mParTSopts->applyAdjustingXform;
   if (mParTSopts->maxISDist <= 0)
-    m_fMaxISDist = limit - 3.f;
+    m_fMaxISDist = limit - 2.f;
   else
     m_fMaxISDist = B3DMIN(mParTSopts->maxISDist, limit);
   m_bSkipRefine = mParTSopts->flags & PTSFLAG_SKIP_REFINE;
