@@ -3,8 +3,15 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+10/30/26: Changes to use new UTAPI function for getting rotation center in
+radians for beam tilt; defaulted UseImageBeamTilt to 0 if available.
+
+10/30/26: Fixed continuous mode for binned images with UTAPI server >= 7.27 to
+set the "added binning" for live mode; added property FEINoLiveAddedBinning to
+keep it from setting this if necessary.
+
 10/26/26: Added the ability to create parallel tilt series items from regular 
-multishot patterns with no a center point by adding a synthetic target at zero
+multishot patterns with no center point by adding a synthetic target at zero
 image shift and skipping frame saving at that target. 
 
 10/26/26: Added ways to make SetItemImShiftTargets store IS targets for all
