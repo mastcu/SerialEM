@@ -507,6 +507,7 @@ CCameraController::CCameraController()
   mSomeDEcanReturnEarly = false;
   mNextLDTrialDefocus = 0.;
   mTrialDefocusToRestore = EXTRA_NO_VALUE;
+  mFEINoLiveAddedBinning = false;
 }
 
 // Clear anything that might be set externally, or was cleared in constructor and cleanup
@@ -4533,8 +4534,11 @@ void CCameraController::Capture(int inSet, bool retrying)
             mTD.GatanReadMode = 1;
           }
 
-          if (mParam->FEItype)
+          if (mParam->FEItype) {
             mTD.FEIacquireFlags |= PLUGFEI_USE_LIVE_MODE;
+            if (mFEINoLiveAddedBinning)
+              mTD.FEIacquireFlags |= PLUGFEI_NO_LIVE_ADD_BIN;
+          }
 
           // Make sure the camera timeout is appropriately longer than the return time
           // Plus, if continuous has already started, the return time governs completely

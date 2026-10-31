@@ -687,6 +687,7 @@ public:
   SetMember(int, StoreNumForNextShot);
   GetMember(bool, SomeDEcanReturnEarly);
   SetMember(float, NextLDTrialDefocus);
+  GetSetMember(BOOL, FEINoLiveAddedBinning);
   bool ThisDEcanReturnEarly(CameraParameters *param) { return mWinApp->mDEToolDlg.CanSaveFrames(param) &&
       mUseAPI2ForDE && (param->CamFlags & DE_CAN_RETURN_EARLY); };
 
@@ -1193,6 +1194,7 @@ public:
   int mStoreNumForNextShot;       // Number of image store for getting filename for frames
   std::map<INT64, float> mDeFPSmap; // Map of FPS values for DE cameras
   bool mSomeDEcanReturnEarly;     // Flag that at least one DE camera can do earky return
+  BOOL mFEINoLiveAddedBinning;    // To skip the added binning in live mode
 
 public:
   void SetNonGatanPostActionTime(void);
