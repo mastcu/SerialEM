@@ -608,6 +608,9 @@ BEGIN
         MENUITEM "Set Low Dose Areas...",       ID_TASKS_SETAREASINLOWDOSE
         MENUITEM SEPARATOR
         MENUITEM "Imagi&ng States ...",         ID_NAVIGATOR_OPENSTATEDLG
+        MENUITEM "Load Imaging States File",    ID_TASKS_LOADIMAGINGSTATES
+        MENUITEM "Save Imaging States To File", ID_TASKS_SAVEIMAGINGSTATES
+        MENUITEM "Save Imaging States As...",   ID_TASKS_SAVEIMAGINGSTATESAS
         MENUITEM SEPARATOR
         MENUITEM "&Set intensity\tShift+I",     ID_PROCESS_SETINTENSITY
         MENUITEM "Set &Dose Rate",              ID_TASKS_SET_DOSE_RATE

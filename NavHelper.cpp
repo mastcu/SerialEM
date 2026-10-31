@@ -44,6 +44,7 @@
 #include "MultiGridDlg.h"
 #include "DoseModulator.h"
 #include "ParallelTSDlg.h"
+#include "ParameterIO.h"
 #include "Utilities\XCorr.h"
 #include "Image\KStoreADOC.h"
 #include "Utilities\KGetOne.h"
@@ -3759,6 +3760,41 @@ int CNavHelper::AperturesForMapsAndStates(int &objAp, int &condAp, int &jeolC1,
   if (!err)
     lastTime = GetTickCount();
   return err;
+}
+
+int CNavHelper::LoadStatesFile(CString &filename, bool saveCurrent)
+{
+  CString filen, oldFile;
+  int retval = 0;
+  oldFile = mDocWnd->GetCurScriptPackPath();
+  if (saveCurrent) {
+    mDocWnd->ManageScriptPackBackup();
+    mWinApp->mParamIO->WriteStates(oldFile);
+  }
+  ClearStateArray();
+
+  // Try to read, try to revert if fails, and if THAT fails, assign the default name
+  if (mWinApp->mParamIO->ReadStates(filename)) {
+    ClearStateArray();
+    filename = oldFile;
+    retval = 1;
+    if (mWinApp->mParamIO->ReadStates(filename)) {
+      oldFile = mDocWnd->GetCurrentSettingsPath();
+      UtilSplitExtension(oldFile, filename, filen);
+      filename += "-states.txt";
+      mWinApp->AppendToLog("Unable to reload last imaging states file; states will be "
+        "saved to\n" + filename + " unless you do \"Save Imaging States As\" to a "
+        "different name");
+      retval = 2;
+    }
+  }
+  mDocWnd->SetCurStatesPath(filename);
+  mDocWnd->SetStatesBackedUp(false);
+  if (mStateDlg) {
+    mStateDlg->UpdateSettings();
+  }
+  mWinApp->AppendToLog("Current imaging states file is now " + filename);
+  return retval;
 }
 
 // Sets apertures to given values if >= 0, only if they differ from current state

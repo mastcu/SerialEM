@@ -559,6 +559,12 @@ ON_UPDATE_COMMAND_UI(ID_SETTINGS_REOPEN, OnUpdateSettingsReopenDlgs)
 ON_COMMAND(ID_COMAVSISCALFROMSETTINGS, OnComaVsIScalFromSettings)
 ON_UPDATE_COMMAND_UI(ID_COMAVSISCALFROMSETTINGS, OnUpdateComaVsIScalFromSettings)
 ON_COMMAND(ID_AUTOFOCUSFOCUS_DELETECOMAVSISCAL, OnDeleteComaVsISCal)
+ON_COMMAND(ID_TASKS_SAVEIMAGINGSTATES, OnSaveImagingStates)
+ON_COMMAND(ID_TASKS_LOADIMAGINGSTATES, OnLoadImagingStates)
+ON_UPDATE_COMMAND_UI(ID_TASKS_SAVEIMAGINGSTATES, &CMenuTargets::OnUpdateSaveImagingStates)
+ON_UPDATE_COMMAND_UI(ID_TASKS_LOADIMAGINGSTATES, &CMenuTargets::OnUpdateLoadImagingStates)
+ON_COMMAND(ID_TASKS_SAVEIMAGINGSTATESAS, &CMenuTargets::OnSaveImagingStatesAs)
+ON_UPDATE_COMMAND_UI(ID_TASKS_SAVEIMAGINGSTATESAS, &CMenuTargets::OnUpdateSaveImagingStatesAs)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -686,6 +692,62 @@ void CMenuTargets::OnUpdateNavigatorOpenStateDlg(CCmdUI *pCmdUI)
 {
   pCmdUI->Enable(!mNavHelper->mStateDlg && !DoingTasks());
 }
+
+void CMenuTargets::OnSaveImagingStatesAs()
+{
+  CString filename, path;
+  mWinApp->mDocWnd->DirFromCurrentOrSettingsFile(mWinApp->mDocWnd->GetCurStatesPath(),
+    path);
+  if (mWinApp->mDocWnd->GetTextFileName(false, true, filename, NULL, &path, NULL, true))
+    return;
+  mWinApp->mParamIO->WriteStates(filename);
+  mWinApp->mDocWnd->SetCurStatesPath(filename);
+  mWinApp->mDocWnd->SetStatesBackedUp(false);
+  mWinApp->AppendToLog("Current imaging states file is now " + filename);
+}
+
+void CMenuTargets::OnUpdateSaveImagingStatesAs(CCmdUI *pCmdUI)
+{
+  pCmdUI->Enable(!DoingTasks());
+}
+
+void CMenuTargets::OnSaveImagingStates()
+{
+  CString filename = mWinApp->mDocWnd->GetCurStatesPath();
+  if (filename.IsEmpty())
+    OnSaveImagingStatesAs();
+  else
+    mWinApp->mParamIO->WriteStates(filename);
+}
+
+void CMenuTargets::OnUpdateSaveImagingStates(CCmdUI *pCmdUI)
+{
+  pCmdUI->Enable(!DoingTasks());
+}
+
+
+void CMenuTargets::OnLoadImagingStates()
+{
+  CString filename, path, filen, oldFile;
+  bool saveCurrent = false;
+  oldFile = mWinApp->mDocWnd->GetCurStatesPath();
+  mWinApp->mDocWnd->DirFromCurrentOrSettingsFile(oldFile, path);
+
+  // Find out if want to save
+  if (!oldFile.IsEmpty())
+    saveCurrent = AfxMessageBox("Save current imaging states to current file before "
+      "loading a new imaging states file?", MB_QUESTION) == IDYES;
+  if (mWinApp->mDocWnd->GetTextFileName(true, true, filename, NULL, &path))
+    return;
+  mNavHelper->LoadStatesFile(filename, saveCurrent);
+}
+
+
+void CMenuTargets::OnUpdateLoadImagingStates(CCmdUI *pCmdUI)
+{
+  pCmdUI->Enable(!DoingTasks());
+}
+
 
 void CMenuTargets::OnNavigatorImportmap()
 {
@@ -3762,6 +3824,3 @@ void CMenuTargets::OnUpdateComaVsIScalFromSettings(CCmdUI *pCmdUI)
 {
   pCmdUI->SetCheck(mWinApp->mAutoTuning->GetComaVsIScalFromSettings());
 }
-
-
-

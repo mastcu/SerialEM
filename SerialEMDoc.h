@@ -92,6 +92,7 @@ public:
   GetSetMember(BOOL, SkipFileDlg);
   SetMember(bool, DeferWritingFrameMdoc);
   GetSetMember(bool, ReadScriptPack);
+  GetSetMember(bool, ReadStatesFile);
 
 	void AutoSaveFiles();
 	int AppendToLogBook(CString inString, CString title);
@@ -128,7 +129,9 @@ public:
   GetMember(int, FrameAdocIndex);
   GetMember(bool, HDFsupported);
   GetSetMember(CString, CurScriptPackPath);
+  GetSetMember(CString, CurStatesPath);
   GetSetMember(BOOL, ScriptPackBackedUp);
+  GetSetMember(BOOL, StatesBackedUp)
   SetMember(CString, SettingsName);
   GetSetMember(CString, BasicModeFile);
   GetSetMember(BOOL, AbandonSettings);
@@ -244,6 +247,7 @@ private:
   CString mPluginPath2;          // Second path name for plugins; additional location
   CString mFlybackName;          // Name of flyback time file
   CString mCurScriptPackPath;    // Full name of current script package file
+  CString mCurStatesPath;        // Full name of current states file
   BOOL mSettingsOpen;            // flag that settings file open
   BOOL mSettingsReadable;        // flag that settings file is readable
   BOOL mSysSettingsReadable;     // Flag that system file is rereadable
@@ -251,6 +255,7 @@ private:
   BOOL mCalibBackedUp;           // Calibration file was backup in this session
   BOOL mSettingsBackedUp;        // Current settings file was backed up this session
   BOOL mScriptPackBackedUp;      // Current script package is backed up
+  BOOL mStatesBackedUp;      // Current imaging states file is backed up
   BOOL mAutoSaveSettings;        // Flag to autosave settings
   BOOL mAutoSaveNav;             // Flag to do autosave of navigator
   BOOL mShortTermBackedUp;       // Flag that short-term cal file is backed up
@@ -284,6 +289,7 @@ private:
   bool mShowFileDlgOnce;         // Flag to be able to show it once
   BOOL mAbandonSettings;         // Flag not to save settings on exit or autosave
   bool mReadScriptPack;          // Flag that a settings file had a script package path
+  bool mReadStatesFile;           // Flag that a settings file had a states file path
   CString mBasicModeFile;        // File with disables/hides for basic mode
   CString mPreReadBasicFile;     // Filename before reading settings
   bool mHDFsupported;            // Flag that HDF files are supported

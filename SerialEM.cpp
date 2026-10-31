@@ -1754,6 +1754,11 @@ BOOL CSerialEMApp::InitInstance()
     AppendToLog("Read scripts from " + mDocWnd->GetCurScriptPackPath(),
       mMinimizedStartup ? LOG_SWALLOW_IF_CLOSED : LOG_OPEN_IF_CLOSED);
   }
+  if (mDocWnd->GetReadStatesFile()) {
+    SetNextLogColorStyle(0, 1);
+    AppendToLog("Read imaging states from " + mDocWnd->GetCurStatesPath(),
+      mMinimizedStartup ? LOG_SWALLOW_IF_CLOSED : LOG_OPEN_IF_CLOSED);
+  }
   mDocWnd->ManageReadInCurrentDir();
 
   // Check python versions/paths

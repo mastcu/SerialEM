@@ -467,6 +467,12 @@ public:
   afx_msg void OnUpdateSettingsReopenDlgs(CCmdUI *pCmdUI);
   afx_msg void OnComaVsIScalFromSettings();
   afx_msg void OnUpdateComaVsIScalFromSettings(CCmdUI *pCmdUI);
+  afx_msg void OnSaveImagingStates();
+  afx_msg void OnLoadImagingStates();
+  afx_msg void OnUpdateSaveImagingStates(CCmdUI *pCmdUI);
+  afx_msg void OnUpdateLoadImagingStates(CCmdUI *pCmdUI);
+  afx_msg void OnSaveImagingStatesAs();
+  afx_msg void OnUpdateSaveImagingStatesAs(CCmdUI *pCmdUI);
 };
 
 /////////////////////////////////////////////////////////////////////////////

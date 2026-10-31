@@ -147,7 +147,7 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
 {
   int retval = 0;
   int err;
-  int index, mag, spot, GIF;
+  int index, mag, spot;
 #define SETTINGS_MODULES
 #include "SettingsTests.h"
 #undef SETTINGS_MODULES
@@ -186,7 +186,6 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
   // When you split a section, you need to add "recognized" code here and in the two macro
   // get/set functions, and add another include in WriteSettings
   BOOL recognized, recognized15, recognized2, recognized25, recognized3, frameListOK;
-  LowDoseParams *ldp;
   StateParams *stateP;
   CArray<StateParams *, StateParams *> *stateArray = navHelper->GetStateArray();
   int *deNumRepeats = mWinApp->mGainRefMaker->GetDEnumRepeats();
@@ -433,6 +432,12 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
         if (fullp)
           strCopy = fullp;
         mDocWnd->SetCurScriptPackPath(strCopy);
+      } else if (NAME_IS("StatesFilePath")) {
+        StripItems(strLine, 1, strCopy);
+        fullp = _fullpath(absPath, (LPCTSTR)strCopy, _MAX_PATH);
+        if (fullp)
+          strCopy = fullp;
+        mDocWnd->SetCurStatesPath(strCopy);
       } else if (NAME_IS("CurrentDirectory")) {
         StripItems(strLine, 1, strCopy);
         mDocWnd->SetCurrentDirReadIn(strCopy);
@@ -1261,71 +1266,13 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
 
       } else if (NAME_IS("StateParameters")) {
         stateP = navHelper->NewStateParam(false);
-        stateP->lowDose = itemInt[1];;
-        if (stateP->lowDose)    // Add 100 until low dose params found
-          stateP->lowDose += 100;    
-        stateP->camIndex = itemInt[2];
-        stateP->magIndex = itemInt[3];
-        stateP->spotSize = itemInt[4];
-        stateP->intensity = itemDbl[5];
-        stateP->slitIn = itemInt[6] != 0;
-        stateP->energyLoss = itemFlt[7];
-        stateP->slitWidth = itemFlt[8];
-        stateP->zeroLoss = itemInt[9] != 0;
-        stateP->binning = itemInt[10];
-        stateP->xFrame = itemInt[11];
-        stateP->yFrame = itemInt[12];
-        stateP->exposure = itemFlt[13];
-        stateP->drift = itemFlt[14];
-        stateP->shuttering = itemInt[15];
-        stateP->K2ReadMode = itemEmpty[16] ? 0 : itemInt[16];
-        stateP->probeMode = itemEmpty[17] ? -1 : itemInt[17];
-        stateP->frameTime = (float)(itemEmpty[18] ? 0. : itemDbl[18]);
-        stateP->doseFrac = itemEmpty[19] ? 0 : itemInt[19];
-        stateP->saveFrames = itemEmpty[20] ? 0 : itemInt[20];
-        stateP->processing = itemEmpty[21] ? -1 : itemInt[21];
-        stateP->alignFrames = itemEmpty[22] ? -1 : itemInt[22];
-        stateP->useFrameAlign = itemEmpty[23] ? -1 : itemInt[23];
-        stateP->faParamSetInd = itemEmpty[24] ? -1 : itemInt[24];
-        stateP->readModeView = itemEmpty[25] ? -1 : itemInt[25];
-        stateP->readModeFocus = itemEmpty[26] ? -1 : itemInt[26];
-        stateP->readModeTrial = itemEmpty[27] ? -1 : itemInt[27];
-        stateP->readModePrev = itemEmpty[28] ? -1 : itemInt[28];
-        stateP->readModeSrch = itemEmpty[29] ? -1 : itemInt[29];
-        stateP->readModeMont = itemEmpty[30] ? -1 : itemInt[30];
-        stateP->focusAxisPos = EXTRA_NO_VALUE;
-        stateP->beamAlpha = itemEmpty[31] ? -999 : itemInt[31];
-        stateP->targetDefocus = itemEmpty[32] ? -9999.f : itemFlt[32];
-        stateP->ldDefocusOffset = itemEmpty[33] ? -9999.f : itemFlt[33];
-        if (!itemEmpty[35]) {
-          stateP->ldShiftOffsetX = itemFlt[34];
-          stateP->ldShiftOffsetY = itemFlt[35];
-        }
-        if (!itemEmpty[36])
-          stateP->montMapConSet = itemInt[36] != 0;
-        if (!itemEmpty[37])
-          stateP->EDMPercent = itemFlt[37];
-        if (!itemEmpty[41]) {
-          stateP->objectiveAp = itemInt[38];
-          stateP->condenserAp = itemInt[39];
-          stateP->JeolC1Ap = itemInt[40];
-          stateP->flags = itemInt[41];
-        }
-        // DO NOT ADD ANY ITEMS
+        ReadStateParameters(stateP, itemEmpty, itemInt, itemDbl, itemFlt);
 
       } else if (NAME_IS("StateParams3")) {
-        index = itemInt[1];
-        if (index < 0 || index >= stateArray->GetSize()) {
+        if (!ReadStateParams3(stateArray, itemInt)) {
           AfxMessageBox("Index out of range in StateParams3 line in settings file "
             + strFileName + " :\n" + strLine, MB_EXCLAME);
-        } else {
-          stateP = stateArray->GetAt(index);
-          stateP->objectiveAp = itemInt[2];
-          stateP->condenserAp = itemInt[3];
-          stateP->JeolC1Ap = itemInt[4];
-          stateP->flags = itemInt[5];
-          // ADD NEW ITEMS TO NAV READING
-        }
+        } 
 
       } else if (NAME_IS("StateName")) {
         index = itemInt[1];
@@ -1338,85 +1285,17 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
         }
 
       } else if (NAME_IS("StateParams2")) {
-        index = itemInt[1];
-        if (index < 0 || index >= stateArray->GetSize()) {
+        if (!ReadStateParams2(stateArray, itemInt, itemDbl, itemFlt)) {
           AfxMessageBox("Index out of range in StateParams2 line in settings file "
             + strFileName + " :\n" + strLine, MB_EXCLAME);
-        } else {
-          stateP = stateArray->GetAt(index);
-          if (itemFlt[2] > -999)
-            stateP->focusAxisPos = itemFlt[2];
-          stateP->rotateAxis = itemInt[3] != 0;
-          stateP->axisRotation = itemInt[4];
-          stateP->focusXoffset = itemInt[5];
-          stateP->focusYoffset = itemInt[6];
         }
 
       } else if (NAME_IS("LowDoseParameters")) {
-        index = itemInt[1];
-        mag = itemInt[2];
-        spot = itemInt[3];
-        GIF = strItems[6].IsEmpty() ? 0 : itemInt[6];
-        if (index < 0 && index >= -stateArray->GetSize())
-          stateP = stateArray->GetAt(-index - 1);
-        if (index < -stateArray->GetSize() || index >= MAX_LOWDOSE_SETS || GIF < 0 ||
-          GIF > 2 || strItems[5].IsEmpty() || (index < 0 && !stateP->lowDose) ||
-          (!strItems[6].IsEmpty() && strItems[9].IsEmpty()) ||
-          (!strItems[11].IsEmpty() && strItems[12].IsEmpty()) ) {
+        if (!ReadLowDoseParameters(stateArray, strItems, itemEmpty, itemInt, itemDbl, 
+          itemFlt)) {
           AfxMessageBox("Error in low dose parameter line in settings file "
             + strFileName + " :\n" + strLine, MB_EXCLAME);
-        } else {
-          if (index >= 0) {
-            ldp = &mLowDoseParams[GIF * MAX_LOWDOSE_SETS + index];
-          } else {
-            ldp = &stateP->ldParams;
-            stateP->lowDose -= 100;    // Restore to proper value
-          }
-          if (mag < 0) {
-            ldp->magIndex = 0;
-            ldp->camLenIndex = -mag;
-          } else {
-            ldp->magIndex = mag;
-            ldp->camLenIndex = 0;
-          }
-          ldp->spotSize = spot;
-          ldp->intensity = itemDbl[4];
-          ldp->axisPosition = itemDbl[5];
-          if (fabs(ldp->axisPosition) > 100.)
-            ldp->axisPosition = 0.;
-          ldp->probeMode = 1;
-          if (!itemEmpty[6]) {
-            ldp->slitIn = itemInt[7] != 0;
-            ldp->slitWidth = itemFlt[8];
-            ldp->energyLoss = itemFlt[9];
-          }
-          if (!itemEmpty[10]) 
-            ldp->zeroLoss = itemInt[10] != 0;
-          if (!itemEmpty[11]) {
-            ldp->beamDelX = itemDbl[11];
-            ldp->beamDelY = itemDbl[12];
-          }
-          if (!itemEmpty[15]) {
-            ldp->beamAlpha = itemFlt[13];
-            ldp->diffFocus = itemDbl[14];
-          }
-          if (!itemEmpty[15]) {
-            ldp->beamTiltDX = itemDbl[15];
-            ldp->beamTiltDY = itemDbl[16];
-          }
-          if (!itemEmpty[17])
-            ldp->probeMode = itemInt[17];
-          if (!itemEmpty[18]) {
-            ldp->darkFieldMode = itemInt[18];
-            ldp->dfTiltX = itemDbl[19];
-            ldp->dfTiltY = itemDbl[20];
-          }
-          if (!itemEmpty[21]) {
-            ldp->EDMPercent = itemFlt[21];
-            B3DCLAMP(ldp->EDMPercent, 0.01f, 100.f);
-          }
-          // ADD NEW ITEMS TO NAV STATE READING
-        }
+        } 
 
       } else if (NAME_IS("ImageXrayCriteria")) {
         index = itemInt[1];
@@ -1759,6 +1638,40 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
 
   mWinApp->mMacroProcessor->TransferOneLiners(false);
 
+  // Keep track if reading the imaging states file fails
+  strLine = mDocWnd->GetCurStatesPath();
+  recognized = true;
+  if (!strLine.IsEmpty()) {
+    if (ReadStates(strLine)) {
+      recognized = false;
+      strLine = "";
+    } else
+      mDocWnd->SetCurStatesPath(strLine);
+  }
+  mDocWnd->SetReadStatesFile(!strLine.IsEmpty());
+
+  // If no states file read, set the name of the output file, switching to current name
+  // of system settings being read.  Then try to read THAT file so we don't just blow
+  // it away
+  if (strLine.IsEmpty()) {
+    message = readingSys ? mDocWnd->GetCurStatesPath() : strFileName;
+    UtilSplitExtension(message, strLine, strCopy);
+    strLine += "-states.txt";
+    mDocWnd->SetCurStatesPath(strLine);
+    if (!recognized && !ReadStates(message))
+      mDocWnd->SetReadStatesFile(true);
+
+    // But if there was no script pack defined in settings, we need to stick with macros
+    // in there if any but save an existing file
+    if (recognized && CFile::GetStatus((LPCTSTR)strLine, status)) {
+      message = strLine;
+      message.Replace("-states.txt", "-states-saved.txt");
+      if (CopyFile((LPCTSTR)strLine, (LPCTSTR)message, true))
+        AfxMessageBox("Existing copy of " + strLine + "\r\nwas saved as " + message +
+          "\r\nto keep it from being overwritten by imaging states from the settings file");
+    }
+  }
+
   // Return -1 if only one line was read (system path)
   if (!retval && nLines == 1) retval = -1;
   if (retval >= 0 && !mWinApp->GetStartingProgram())
@@ -1810,7 +1723,7 @@ void CParameterIO::WriteSettings(CString strFileName)
   CString states = "ToolDialogStates2";
   CString oneState;
   CString macCopy;
-  int i, j, ldi, ldj;
+  int i, j;
   float *gridLim = navHelper->GetGridLimits();
   WINDOWPLACEMENT winPlace;
   WINDOWPLACEMENT *logPlace = mWinApp->GetLogPlacement();
@@ -1843,8 +1756,6 @@ void CParameterIO::WriteSettings(CString strFileName)
   RangeFinderParams *tsrParams = mWinApp->GetTSRangeParams();
   int *tssPanelStates = mWinApp->GetTssPanelStates();
   AutocenParams *acParams, *acParmP;
-  LowDoseParams *ldp;
-  StateParams *stateP;
   BaseMarkerShift markShft;
   CArray<StateParams *, StateParams *> *stateArray = navHelper->GetStateArray();
   int *deNumRepeats = mWinApp->mGainRefMaker->GetDEnumRepeats();
@@ -1889,6 +1800,7 @@ void CParameterIO::WriteSettings(CString strFileName)
     mFile->WriteString("SerialEMSettings\n");
     WriteString("SystemPath", mDocWnd->GetSysPathForSettings());
     WriteString("ScriptPackagePath", mDocWnd->GetCurScriptPackPath());
+    WriteString("StatesFilePath", mDocWnd->GetCurStatesPath());
     WriteString("CurrentDirectory", mDocWnd->GetInitialDir());
     oneState = mWinApp->GetScriptToRunAtStart();
     if (!oneState.IsEmpty())
@@ -2436,48 +2348,11 @@ void CParameterIO::WriteSettings(CString strFileName)
     WriteIndexedInts("ShowChanInMultiView", chanInMultiView, MAX_STEM_CHANNELS);
 
     // Save stored states BEFORE low dose params
-    for (i = 0; i < stateArray->GetSize(); i++) {
-      stateP = stateArray->GetAt(i);
-      WriteStateToString(0, stateP, oneState);
-      oneState = "StateParameters " + oneState + "\n";
-      mFile->WriteString(oneState);
-      WriteStateToString(1, stateP, oneState);
-      macCopy.Format("%d ", i);
-      oneState = "StateParams3 " + macCopy + oneState + "\n";
-      mFile->WriteString(oneState);
-      if (!stateP->name.IsEmpty()) {
-        oneState.Format("StateName %d %s\n", i, (LPCTSTR)stateP->name);
-        mFile->WriteString(oneState);
-      }
-      if (stateP->focusAxisPos > EXTRA_VALUE_TEST) {
-        oneState.Format("StateParams2 %d %f %d %d %d %d\n", i, stateP->focusAxisPos,
-          stateP->rotateAxis ? 1 : 0, stateP->axisRotation, stateP->focusXoffset,
-          stateP->focusYoffset);
-        mFile->WriteString(oneState);
-      }
-    }
+    WriteAllStateParamsToFile(stateArray);
 
     // Save low dose params, including those in states
-    for (j = 0; j < 4; j++) {
-      for (i = 0; i < (j < 3 ? mNumLDSets : stateArray->GetSize()); i++) {
-        if (j < 3) {
-          ldp = &mLowDoseParams[j * MAX_LOWDOSE_SETS + i];
-          ldi = i;
-          ldj = j;
-        } else {
-          stateP = stateArray->GetAt(i);
-          if (!stateP->lowDose)
-            continue;
-          ldp = &stateP->ldParams;
-          ldi = -1 - i;
-          ldj = 0;
-        }
+    WriteLowDoseParametersToFile(stateArray);
 
-        WriteLowDoseToString(ldp, ldi, ldj, oneState);
-        oneState = "LowDoseParameters " + oneState + "\n";
-        mFile->WriteString(oneState);
-      }
-    }
     oneState.Format("LowDoseViewShift %f %f\n", mWinApp->mLowDoseDlg.mViewShiftX[0], 
       mWinApp->mLowDoseDlg.mViewShiftY[0]); 
     mFile->WriteString(oneState);
@@ -2634,6 +2509,14 @@ void CParameterIO::WriteSettings(CString strFileName)
   }
   WriteMacrosToFile(oneState, MAX_MACROS + MAX_ONE_LINE_SCRIPTS);
 
+  oneState = mDocWnd->GetCurStatesPath();
+  if (oneState.IsEmpty()) {
+    UtilSplitExtension(strFileName, oneState, macCopy);
+    oneState += "-states.txt";
+    mDocWnd->SetCurStatesPath(oneState);
+  }
+  WriteStates(oneState);
+
 }
 #undef INT_SETT_GETSET
 #undef BOOL_SETT_GETSET
@@ -2642,6 +2525,135 @@ void CParameterIO::WriteSettings(CString strFileName)
 #undef INT_SETT_ASSIGN
 #undef BOOL_SETT_ASSIGN
 #undef FLOAT_SETT_ASSIGN
+
+void CParameterIO::WriteStates(CString strFileName)
+{
+  CNavHelper *navHelper = mWinApp->mNavHelper;
+  CArray<StateParams *, StateParams *> *stateArray = navHelper->GetStateArray();
+  CString oneState, macCopy;
+
+  try {
+    // Open the file for writing, 
+    mFile = new CStdioFile(strFileName, CFile::modeCreate |
+      CFile::modeWrite | CFile::shareDenyWrite);
+
+    // Save stored states BEFORE low dose params
+    WriteAllStateParamsToFile(stateArray);
+
+    // Save low dose states
+    WriteLowDoseParametersToFile(stateArray, true);
+  }
+  catch (CFileException *perr) {
+    perr->Delete();
+    CString message = "Error writing states to file " + strFileName;
+    AfxMessageBox(message, MB_EXCLAME);
+  }
+  if (mFile) {
+    delete mFile;
+    mFile = NULL;
+  }
+
+  oneState = mDocWnd->GetCurStatesPath();
+  if (oneState.IsEmpty()) {
+    UtilSplitExtension(strFileName, oneState, macCopy);
+    oneState += "-states.txt";
+    mDocWnd->SetCurStatesPath(oneState);
+  }
+}
+
+int CParameterIO::ReadStates(CString strFileName)
+{
+  CNavHelper *navHelper = mWinApp->mNavHelper;
+  StateParams *stateP;
+  CArray<StateParams *, StateParams *> *stateArray = navHelper->GetStateArray();
+  CString strLine, strCopy, unrecognized = "";
+  CString strItems[MAX_TOKENS];
+  CString message;
+  BOOL itemEmpty[MAX_TOKENS];
+  int itemInt[MAX_TOKENS];
+  double itemDbl[MAX_TOKENS];
+  float itemFlt[MAX_TOKENS];
+  int nLines = 0;
+  int retval = 0;
+  int err, index;
+
+  navHelper->ClearStateArray();
+
+  try {
+    // Open the file for reading, verify that it is a settings file
+    mFile = new CStdioFile(strFileName,
+      CFile::modeRead | CFile::shareDenyWrite);
+
+    // Clear out low dose params now in case there are none in the file
+    mWinApp->InitializeLDParams();
+
+    while (retval == 0 && (err = ReadSuperParse(strLine, strItems, itemEmpty, itemInt,
+      itemDbl, itemFlt, MAX_TOKENS)) == 0) {
+      if (NAME_IS("StateParameters")) {
+        stateP = navHelper->NewStateParam(false);
+        ReadStateParameters(stateP, itemEmpty, itemInt, itemDbl, itemFlt);
+
+      } else if (NAME_IS("StateParams3")) {
+        if (!ReadStateParams3(stateArray, itemInt)) {
+          AfxMessageBox("Index out of range in StateParams3 line in imaging states file "
+            + strFileName + " :\n" + strLine, MB_EXCLAME);
+        }
+
+      } else if (NAME_IS("StateName")) {
+        index = itemInt[1];
+        if (index < 0 || index >= stateArray->GetSize()) {
+          AfxMessageBox("Index out of range in state name line in imaging states file "
+            + strFileName + " :\n" + strLine, MB_EXCLAME);
+        } else {
+          stateP = stateArray->GetAt(index);
+          StripItems(strLine, 2, stateP->name);
+        }
+
+      } else if (NAME_IS("StateParams2")) {
+        if (!ReadStateParams2(stateArray, itemInt, itemDbl, itemFlt)) {
+          AfxMessageBox("Index out of range in StateParams2 line in imaging states file "
+            + strFileName + " :\n" + strLine, MB_EXCLAME);
+        }
+
+      } else if (NAME_IS("LowDoseParameters")) {
+        if (!ReadLowDoseParameters(stateArray, strItems, itemEmpty, itemInt, itemDbl,
+          itemFlt)) {
+          AfxMessageBox("Error in low dose parameter line in imaging states file "
+            + strFileName + " :\n" + strLine, MB_EXCLAME);
+        }
+      }
+    }
+  }
+  catch (CFileException *perr) {
+    perr->Delete();
+    retval = 1;
+  }
+  if (mFile) {
+    delete mFile;
+    mFile = NULL;
+  }
+  if (!unrecognized.IsEmpty())
+    AfxMessageBox("Unrecognized entries in imaging states file " + strFileName
+      + " :\n" + unrecognized, MB_EXCLAME);
+
+  // Remove state params that are supposed to be low dose but don't have LD param
+  err = 0;
+  for (index = (int)stateArray->GetSize() - 1; index >= 0; index--) {
+    stateP = stateArray->GetAt(index);
+    if (stateP->lowDose > 90) {
+      stateArray->RemoveAt(index);
+      err++;
+      delete stateP;
+    }
+  }
+  if (err) {
+    strLine.Format("Removed %d low dose states from list because no matching \n"
+      "low dose parameters were found in the imaging states file", err);
+    AfxMessageBox(strLine, MB_EXCLAME);
+  }
+
+  return retval;
+}
 
 // Read macros from a file with the given name
 int CParameterIO::ReadMacrosFromFile(CString &filename, const CString &curSettings,
@@ -6509,6 +6521,124 @@ void CParameterIO::WriteFlybackTimes(CString & fileName)
   mFile = NULL;
 }
 
+void CParameterIO::ReadStateParameters(StateParams *stateP,
+  BOOL * itemEmpty, int * itemInt, double * itemDbl, float * itemFlt)
+{
+  stateP->lowDose = itemInt[1];;
+  if (stateP->lowDose)    // Add 100 until low dose params found
+    stateP->lowDose += 100;
+  stateP->camIndex = itemInt[2];
+  stateP->magIndex = itemInt[3];
+  stateP->spotSize = itemInt[4];
+  stateP->intensity = itemDbl[5];
+  stateP->slitIn = itemInt[6] != 0;
+  stateP->energyLoss = itemFlt[7];
+  stateP->slitWidth = itemFlt[8];
+  stateP->zeroLoss = itemInt[9] != 0;
+  stateP->binning = itemInt[10];
+  stateP->xFrame = itemInt[11];
+  stateP->yFrame = itemInt[12];
+  stateP->exposure = itemFlt[13];
+  stateP->drift = itemFlt[14];
+  stateP->shuttering = itemInt[15];
+  stateP->K2ReadMode = itemEmpty[16] ? 0 : itemInt[16];
+  stateP->probeMode = itemEmpty[17] ? -1 : itemInt[17];
+  stateP->frameTime = (float)(itemEmpty[18] ? 0. : itemDbl[18]);
+  stateP->doseFrac = itemEmpty[19] ? 0 : itemInt[19];
+  stateP->saveFrames = itemEmpty[20] ? 0 : itemInt[20];
+  stateP->processing = itemEmpty[21] ? -1 : itemInt[21];
+  stateP->alignFrames = itemEmpty[22] ? -1 : itemInt[22];
+  stateP->useFrameAlign = itemEmpty[23] ? -1 : itemInt[23];
+  stateP->faParamSetInd = itemEmpty[24] ? -1 : itemInt[24];
+  stateP->readModeView = itemEmpty[25] ? -1 : itemInt[25];
+  stateP->readModeFocus = itemEmpty[26] ? -1 : itemInt[26];
+  stateP->readModeTrial = itemEmpty[27] ? -1 : itemInt[27];
+  stateP->readModePrev = itemEmpty[28] ? -1 : itemInt[28];
+  stateP->readModeSrch = itemEmpty[29] ? -1 : itemInt[29];
+  stateP->readModeMont = itemEmpty[30] ? -1 : itemInt[30];
+  stateP->focusAxisPos = EXTRA_NO_VALUE;
+  stateP->beamAlpha = itemEmpty[31] ? -999 : itemInt[31];
+  stateP->targetDefocus = itemEmpty[32] ? -9999.f : itemFlt[32];
+  stateP->ldDefocusOffset = itemEmpty[33] ? -9999.f : itemFlt[33];
+  if (!itemEmpty[35]) {
+    stateP->ldShiftOffsetX = itemFlt[34];
+    stateP->ldShiftOffsetY = itemFlt[35];
+  }
+  if (!itemEmpty[36])
+    stateP->montMapConSet = itemInt[36] != 0;
+  if (!itemEmpty[37])
+    stateP->EDMPercent = itemFlt[37];
+  if (!itemEmpty[41]) {
+    stateP->objectiveAp = itemInt[38];
+    stateP->condenserAp = itemInt[39];
+    stateP->JeolC1Ap = itemInt[40];
+    stateP->flags = itemInt[41];
+  }
+  // DO NOT ADD ANY ITEMS
+}
+
+bool CParameterIO::ReadStateParams3(CArray<StateParams*, StateParams*>* stateArray, 
+  int * itemInt)
+{
+  StateParams *stateP;
+  if (itemInt[1] < 0 || itemInt[1] >= stateArray->GetSize()) {
+    return false;
+  } else {
+    stateP = stateArray->GetAt(itemInt[1]);
+    stateP->objectiveAp = itemInt[2];
+    stateP->condenserAp = itemInt[3];
+    stateP->JeolC1Ap = itemInt[4];
+    stateP->flags = itemInt[5];
+    // ADD NEW ITEMS TO NAV READING
+  }
+
+  return true;
+}
+
+bool CParameterIO::ReadStateParams2(CArray<StateParams*, StateParams*>* stateArray, 
+  int * itemInt, double *itemDbl, float *itemFlt)
+{
+  StateParams *stateP;
+  if (itemInt[1] < 0 || itemInt[1] >= stateArray->GetSize()) {
+    return false;
+  } else {
+    stateP = stateArray->GetAt(itemInt[1]);
+    if (itemFlt[2] > -999)
+      stateP->focusAxisPos = itemFlt[2];
+    stateP->rotateAxis = itemInt[3] != 0;
+    stateP->axisRotation = itemInt[4];
+    stateP->focusXoffset = itemInt[5];
+    stateP->focusYoffset = itemInt[6];
+  }
+  return true;
+}
+
+void CParameterIO::WriteAllStateParamsToFile(CArray<StateParams*, StateParams*>* stateArray)
+{
+  StateParams *stateP;
+  CString oneState, macCopy;
+  for (int i = 0; i < stateArray->GetSize(); i++) {
+    stateP = stateArray->GetAt(i);
+    WriteStateToString(0, stateP, oneState);
+    oneState = "StateParameters " + oneState + "\n";
+    mFile->WriteString(oneState);
+    WriteStateToString(1, stateP, oneState);
+    macCopy.Format("%d ", i);
+    oneState = "StateParams3 " + macCopy + oneState + "\n";
+    mFile->WriteString(oneState);
+    if (!stateP->name.IsEmpty()) {
+      oneState.Format("StateName %d %s\n", i, (LPCTSTR)stateP->name);
+      mFile->WriteString(oneState);
+    }
+    if (stateP->focusAxisPos > EXTRA_VALUE_TEST) {
+      oneState.Format("StateParams2 %d %f %d %d %d %d\n", i, stateP->focusAxisPos,
+        stateP->rotateAxis ? 1 : 0, stateP->axisRotation, stateP->focusXoffset,
+        stateP->focusYoffset);
+      mFile->WriteString(oneState);
+    }
+  }
+}
+
 
 void CParameterIO::SetDefaultCameraControls(int which, ControlSet *cs,
   CameraParameters *camParams)
@@ -6579,6 +6709,109 @@ void CParameterIO::SetDefaultCameraControls(int which, ControlSet *cs,
   mWinApp->mCamera->FindNearestBinning(cs->binning, camParams->binnings, 
     camParams->numBinnings, binInd, realBin);
   cs->binning = realBin;
+}
+
+bool CParameterIO::ReadLowDoseParameters(CArray<StateParams*, StateParams*>* stateArray, 
+  CString * strItems, BOOL * itemEmpty, int *itemInt, double *itemDbl, float *itemFlt)
+{
+  StateParams *stateP;
+  LowDoseParams *ldp;
+  int index = itemInt[1];
+  int mag = itemInt[2];
+  int spot = itemInt[3];
+  int GIF = strItems[6].IsEmpty() ? 0 : itemInt[6];
+
+  if (index < 0 && index >= -stateArray->GetSize())
+    stateP = stateArray->GetAt(-index - 1);
+  if (index < -stateArray->GetSize() || index >= MAX_LOWDOSE_SETS || GIF < 0 ||
+    GIF > 2 || strItems[5].IsEmpty() || (index < 0 && !stateP->lowDose) ||
+    (!strItems[6].IsEmpty() && strItems[9].IsEmpty()) ||
+    (!strItems[11].IsEmpty() && strItems[12].IsEmpty())) {
+    return false;
+  } else {
+    if (index >= 0) {
+      ldp = &mLowDoseParams[GIF * MAX_LOWDOSE_SETS + index];
+    } else {
+      ldp = &stateP->ldParams;
+      stateP->lowDose -= 100;    // Restore to proper value
+    }
+    if (mag < 0) {
+      ldp->magIndex = 0;
+      ldp->camLenIndex = -mag;
+    } else {
+      ldp->magIndex = mag;
+      ldp->camLenIndex = 0;
+    }
+    ldp->spotSize = spot;
+    ldp->intensity = itemDbl[4];
+    ldp->axisPosition = itemDbl[5];
+    if (fabs(ldp->axisPosition) > 100.)
+      ldp->axisPosition = 0.;
+    ldp->probeMode = 1;
+    if (!itemEmpty[6]) {
+      ldp->slitIn = itemInt[7] != 0;
+      ldp->slitWidth = itemFlt[8];
+      ldp->energyLoss = itemFlt[9];
+    }
+    if (!itemEmpty[10])
+      ldp->zeroLoss = itemInt[10] != 0;
+    if (!itemEmpty[11]) {
+      ldp->beamDelX = itemDbl[11];
+      ldp->beamDelY = itemDbl[12];
+    }
+    if (!itemEmpty[15]) {
+      ldp->beamAlpha = itemFlt[13];
+      ldp->diffFocus = itemDbl[14];
+    }
+    if (!itemEmpty[15]) {
+      ldp->beamTiltDX = itemDbl[15];
+      ldp->beamTiltDY = itemDbl[16];
+    }
+    if (!itemEmpty[17])
+      ldp->probeMode = itemInt[17];
+    if (!itemEmpty[18]) {
+      ldp->darkFieldMode = itemInt[18];
+      ldp->dfTiltX = itemDbl[19];
+      ldp->dfTiltY = itemDbl[20];
+    }
+    if (!itemEmpty[21]) {
+      ldp->EDMPercent = itemFlt[21];
+      B3DCLAMP(ldp->EDMPercent, 0.01f, 100.f);
+    }
+    // ADD NEW ITEMS TO NAV STATE READING
+  }
+  return true;
+}
+
+void CParameterIO::WriteLowDoseParametersToFile(CArray<StateParams*, StateParams*>* stateArray,
+  bool statesOnly)
+{
+  int i, j, ldi, ldj, j0 = 0;
+  StateParams *stateP;
+  LowDoseParams *ldp;
+  CString oneState;
+  if (statesOnly)
+    j0 = 3;
+  for (j = j0; j < 4; j++) {
+    for (i = 0; i < (j < 3 ? mNumLDSets : stateArray->GetSize()); i++) {
+      if (j < 3) {
+        ldp = &mLowDoseParams[j * MAX_LOWDOSE_SETS + i];
+        ldi = i;
+        ldj = j;
+      } else {
+        stateP = stateArray->GetAt(i);
+        if (!stateP->lowDose)
+          continue;
+        ldp = &stateP->ldParams;
+        ldi = -1 - i;
+        ldj = 0;
+      }
+
+      WriteLowDoseToString(ldp, ldi, ldj, oneState);
+      oneState = "LowDoseParameters " + oneState + "\n";
+      mFile->WriteString(oneState);
+    }
+  }
 }
 
 // Overall defaults that apply to all or almost all consets

@@ -36,6 +36,8 @@ public:
   void WriteInt(CString format, int iVal);
   void WriteString(CString format, CString strValue);
   void WriteSettings(CString strFileName);
+  void WriteStates(CString strFileName);
+  int ReadStates(CString strFileName);
   void FindToken(CString &strCopy, CString &strItem, bool useQuotes = false, bool allowComment = false);
   int ReadAndParse(CStdioFile *file, CString &strLine, CString *strItems, int maxItems, 
     bool useQuotes = false);
@@ -75,6 +77,16 @@ public:
     double *itemDbl, int maxItems);
   int ReadFlybackTimes(CString & filename);
   void WriteFlybackTimes(CString & filename);
+  void ReadStateParameters(StateParams *stateP,
+    BOOL *itemEmpty, int *itemInt, double *itemDbl, float *itemFlt);
+  bool ReadStateParams3(CArray<StateParams*, StateParams*> *stateArray, int *itemInt);
+  bool ReadStateParams2(CArray<StateParams*, StateParams*> *stateArray, int *itemInt, 
+    double *itemDbl, float *itemFlt);
+  void WriteAllStateParamsToFile(CArray<StateParams*, StateParams*> *stateArray);
+  bool ReadLowDoseParameters(CArray<StateParams*, StateParams*> *stateArray,
+    CString *strItems, BOOL *itemEmpty, int *itemInt, double *itemDbl, float *itemFlt);
+  void WriteLowDoseParametersToFile(CArray<StateParams*, StateParams*> *stateArray, 
+    bool statesOnly = false);
   void InitializeControlSet(ControlSet * cs, int sizeX, int sizeY);
   void ReadBadColumns(CString *strItems, UShortVec &badColumnStart, ShortVec &badColumnWidth);
   void ReadPartialBad(CString *strItems, int *itemInt, UShortVec &partialBadCol, ShortVec &partialBadWidth, 

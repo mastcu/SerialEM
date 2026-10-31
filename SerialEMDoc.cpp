@@ -193,6 +193,7 @@ CSerialEMDoc::CSerialEMDoc()
   mShortTermBackedUp = false;
   mSettingsBackedUp = false;
   mScriptPackBackedUp = false;
+  mStatesBackedUp = false;
   mCalibBackedUp = false;
   mFlybackBackedUp = false;
   mIgnoreShortTerm = false;
@@ -2222,11 +2223,12 @@ void CSerialEMDoc::OnUpdateSettingsReadagain(CCmdUI* pCmdUI)
 void CSerialEMDoc::OnSettingsSave()
 {
   if (!mSettingsOpen) {
-      OnSettingsSaveas();
-      return;
+    OnSettingsSaveas();
+    return;
   }
   ManageBackupFile(mCurrentSettingsPath, mSettingsBackedUp);
   ManageBackupFile(mCurScriptPackPath, mScriptPackBackedUp);
+  ManageBackupFile(mCurStatesPath, mStatesBackedUp);
   mParamIO->WriteSettings(mCurrentSettingsPath);
   SaveShortTermCal();
   mAbandonSettings = false;
@@ -2248,6 +2250,7 @@ int CSerialEMDoc::SettingsSaveAs()
   mSettingsBackedUp = false;
   ManageBackupFile(newFile, mSettingsBackedUp);
   ManageBackupFile(mCurScriptPackPath, mScriptPackBackedUp);
+  ManageBackupFile(mCurStatesPath, mStatesBackedUp);
   mAbandonSettings = false;
 
   mParamIO->WriteSettings(newFile);
@@ -2434,6 +2437,14 @@ void CSerialEMDoc::PostSettingsRead()
   } else if (!mCurScriptPackPath.IsEmpty())
     mWinApp->AppendToLog("Scripts will be saved to " + mCurScriptPackPath +
       "\r\n   unless you do \"Scripts - Save Package As\" to a different name");
+  if (mReadStatesFile) {
+    mWinApp->SetNextLogColorStyle(0, 1);
+    mWinApp->AppendToLog("Read imaging states from " + mCurStatesPath,
+      LOG_SWALLOW_IF_CLOSED);
+  } else if (!mCurStatesPath.IsEmpty()) {
+    mWinApp->AppendToLog("Imaging states will be saved to " + mCurStatesPath +
+      "\r\n   unless you do \"Scripts - Save Package As\" to a different name");
+  }
   if (mBasicModeFile.CompareNoCase(mPreReadBasicFile))
     mParamIO->ReadDisableOrHideFile(mBasicModeFile, mWinApp->GetBasicIDsToHide(),
       mWinApp->GetBasicLineHideIDs(), mWinApp->GetBasicIDsToDisable(),

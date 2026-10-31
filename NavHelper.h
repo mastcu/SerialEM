@@ -803,6 +803,7 @@ public:
   void GetViewOffsets(CMapDrawItem * item, float & netShiftX, float & netShiftY, float & beamShiftX, float & beamShiftY, float & beamTiltX, float & beamTiltY, int area = VIEW_CONSET);
   void StateCameraCoords(StateParams *param, int camIndex, int xFrame, int yFrame, int binning, int &left, int &right, int &top, int &bottom);
   int AperturesForMapsAndStates(int &objAp, int &condAp, int &jeolC1, CString &errStr);
+  int LoadStatesFile(CString &filename, bool saveCurrent);
   void SetAperturesIfNeeded(int objectiveAp, int condenserAp, int JeolC1Ap, bool setting);
   void MakeStateOutputLine(StateParams *state, CString &mess);
   bool FormatApertureString(StateParams *state, CString &mess, bool skipA);
