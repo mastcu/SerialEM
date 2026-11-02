@@ -1619,7 +1619,7 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
       if (itemInParTSgroup) {
 
         //Draw IS limit centered on first ParTS target
-        if (!sawFirstParTS) {
+        if (posInParTSgroup == 1) {
           float limit = mWinApp->mNavHelper->GetParTSOptions()->maxISDist;
           CPen pnDashPen(PS_DASH, 1, RGB(255, 0, 0));
 

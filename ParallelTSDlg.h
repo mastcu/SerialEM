@@ -71,6 +71,7 @@ private:
   CString mSaveBtnText;
   bool mYesAlwaysFinalize;
   bool mHasComaVsISCal;
+  float mISlimit;
   
   void ClearArea();
   void CancelAddingDefining();

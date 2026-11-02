@@ -286,6 +286,7 @@ BOOL CParallelTSDlg::OnInitDialog()
   mHasIlluminatedArea = mScope->GetUseIllumAreaForC2() ? 1 : 0;
   mMapMagIndex = mScope->GetLowestMModeMagInd();
   mAcqMagIndex = mMapMagIndex + 6;
+  mISlimit = mShiftManager->GetRegularShiftLimit() - 0.5f;
 
   ComaVsISCalib *comaVsIS = mWinApp->mAutoTuning->GetBestComaVsISCal();
   mHasComaVsISCal = comaVsIS->magInd > 0;
@@ -739,9 +740,6 @@ void CParallelTSDlg::ExternalUpdate()
 // Save a copy of the original ParallelTSoptions and load them into the dialog
 void CParallelTSDlg::OptionsToDialog()
 {
-  float limit = mAcqMagIndex >= mScope->GetLowestNonLMmag()
-    ? mShiftManager->GetRegularShiftLimit() : mShiftManager->GetLowMagShiftLimit();
-
   mSavedParTSopts = *mParTSopts;
 
   if (!mWinApp->LowDoseMode()) {
@@ -778,9 +776,9 @@ void CParallelTSDlg::OptionsToDialog()
   m_fRefMaxRotation = mNavHelper->GetParTSRefAliMaxRot();
   m_bApplyAdjusting = mParTSopts->applyAdjustingXform;
   if (mParTSopts->maxISDist <= 0)
-    m_fMaxISDist = limit - 2.f;
+    m_fMaxISDist = mISlimit - 1.5f;
   else
-    m_fMaxISDist = B3DMIN(mParTSopts->maxISDist, limit);
+    m_fMaxISDist = B3DMIN(mParTSopts->maxISDist, mISlimit);
   m_bSkipRefine = mParTSopts->flags & PTSFLAG_SKIP_REFINE;
   mDisplayExtraOptions = (mParTSopts->flags & PTSFLAG_DISP_EXTRA_OPTS) != 0;
 }
@@ -1816,17 +1814,15 @@ void CParallelTSDlg::OnSavemap()
 void CParallelTSDlg::OnEnKillfocusMaxISDist()
 {
   CString str;
-  float limit = mAcqMagIndex >= mScope->GetLowestNonLMmag()
-    ? mShiftManager->GetRegularShiftLimit() : mShiftManager->GetLowMagShiftLimit();
   UpdateData(true);
-  if (m_fMaxISDist < 0 || m_fMaxISDist > limit) {
-    if (m_fMaxISDist > limit)
+  if (m_fMaxISDist < 0 || m_fMaxISDist > mISlimit) {
+    if (m_fMaxISDist > mISlimit)
       str.Format("The maximum image shift distance drawn cannot be greater\n than the image"
-        " shift limit of %.1f um", limit);
+        " shift limit of %.1f um", mISlimit);
     else
       str = "The maximum image shift distance drawn must be positive";
     SEMMessageBox(str, MB_EXCLAME);
-    B3DCLAMP(m_fMaxISDist, 0, limit);
+    B3DCLAMP(m_fMaxISDist, 0, mISlimit);
     UpdateData(false);
   }
   DialogToOptions();
