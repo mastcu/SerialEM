@@ -979,6 +979,10 @@ int CEMscope::Initialize()
       mUtapiSupportsService[UTSUP_CAM_INSERT] = false;
     if (mUpdateInterval <= 0)
       mUpdateInterval = 200;
+
+    // If Deflector alignments V2 is supported, then set it to skip V1
+    if (mUtapiSupportsService[UTSUP_DEFL_ALIGN2])
+      mUtapiSupportsService[UTSUP_DEFL_ALIGN] = false;
   }
   if (mUpdateInterval <= 0)
     mUpdateInterval = 150;
@@ -1231,7 +1235,8 @@ int CEMscope::Initialize()
           }
       }
       if (mUseImageBeamTilt < 0)
-        mUseImageBeamTilt = UtapiSupportsService(UTSUP_DEFLECTORS1) ? 1 : 0;
+        mUseImageBeamTilt = (UtapiSupportsService(UTSUP_DEFLECTORS1) && 
+          !UtapiSupportsService(UTSUP_DEFL_ALIGN2)) ? 1 : 0;
       if (mLastImageBeamTilt >= 0 && mUseImageBeamTilt != mLastImageBeamTilt) {
         message.Format("WARNING: %s is being used for beam tilt but\r\n"
           "%s was used in the last run of SerialEM.\r\nThese are separate functions that"

@@ -436,7 +436,15 @@
       readout or calculated beam size must be fairly accurate in the range of interest, which may not be the
       case.</p>
     <strong>
-    <p> <strong>Multiplier of usual delay after shifting to target</strong></p>
+    <p> Max image shift distance to draw</p>
+    </strong>
+    <p> This option determines the size of the image shift limit, drawn as a dashed red 
+        line around the center target when setting up a target area. If the property 
+        UseSquareShiftLimits is set to 1, a square is drawn around the center target 
+        whose width is twice the provided distance value. Otherwise, a circle is drawn 
+        around the center target with a radius equal to the provided distance value.</p>
+    <strong>
+    <p> Multiplier of usual delay after shifting to target</p>
     </strong>
     <p> SerialEM has a built-in settling time after image shift that depends on the
       size of the shift; it is probably inadequate at high magnification. The

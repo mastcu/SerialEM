@@ -11229,7 +11229,8 @@ void CNavigatorDlg::AcquireNextTask(int param)
     case ACQ_ACQUIRE:
       RestoreBeamTiltIfSaved();
       if (mWinApp->Montaging() && mWinApp->mMontageController->GetLastFailed()) {
-        item->mAcquire = false;
+        if (mWinApp->mMultiGridTasks->GetDoingMulGridSeq())
+          item->mAcquire = false;
         UpdateListString(mAcquireIndex);
         SkipToNextItemInAcquire(item, "starting or running the montage");
         break;

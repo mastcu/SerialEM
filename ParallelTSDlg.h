@@ -71,6 +71,7 @@ private:
   CString mSaveBtnText;
   bool mYesAlwaysFinalize;
   bool mHasComaVsISCal;
+  float mISlimit;
   
   void ClearArea();
   void CancelAddingDefining();
@@ -224,4 +225,6 @@ public:
   CString m_strInstruct;
   CButton m_butSaveMap;
   afx_msg void OnSavemap();
+  afx_msg void OnEnKillfocusMaxISDist();
+  float m_fMaxISDist;
 };

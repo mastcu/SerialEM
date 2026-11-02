@@ -1617,6 +1617,50 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
         }
       }
       if (itemInParTSgroup) {
+
+        //Draw IS limit centered on first ParTS target
+        if (posInParTSgroup == 1) {
+          float limit = mWinApp->mNavHelper->GetParTSOptions()->maxISDist;
+          CPen pnDashPen(PS_DASH, 1, RGB(255, 0, 0));
+
+          if (mShiftManager->GetUseSquareShiftLimits()) {
+            FloatVec limCornX, limCornY;
+            LowDoseParams *ldp = mWinApp->GetLowDoseParams() + RECORD_CONSET;
+            int magInd = mWinApp->LowDoseMode() ? ldp->magIndex :
+              mWinApp->mNavHelper->GetParTSOptions()->acqMagIndNonLD;
+            ScaleMat is2st = MatMul(mShiftManager->IStoGivenCamera(magInd, imBuf->mCamera), 
+              MatInv(mShiftManager->StageToCamera(imBuf->mCamera, magInd)));
+            float x1, y1, x2, y2, scale1, scale2;
+
+            ApplyScaleMatrix(is2st, 1., 0., x1, y1);
+            ApplyScaleMatrix(is2st, 0., 1., x2, y2);
+
+            scale1 = limit / sqrtf(x1 * x1 + y1 * y1);
+            scale2 = limit / sqrtf(x2 * x2 + y2 * y2);
+            x1 *= scale1;
+            y1 *= scale1;
+            x2 *= scale2;
+            y2 *= scale2;
+
+            limCornX.push_back(x1 + x2);
+            limCornY.push_back(y1 + y2);
+            limCornX.push_back(x1 - x2);
+            limCornY.push_back(y1 - y2);
+            limCornX.push_back(-x1 - x2);
+            limCornY.push_back(-y1 - y2);
+            limCornX.push_back(-x1 + x2);
+            limCornY.push_back(-y1 + y2);
+
+            CPen *pOldPen = cdc.SelectObject(&pnDashPen);
+            DrawVectorPolygon(cdc, &rect, NULL, imBuf, limCornX, limCornY, 
+              item->mPtX[0], item->mPtY[0], 0., 0., NULL, NULL);
+            cdc.SelectObject(pOldPen);
+          } else {
+            DrawDashedCircle(&cdc, &pnDashPen, &rect, imBuf->mImage, ptX, ptY, 
+              limit / mShiftManager->GetPixelSize(imBuf));
+          }
+        }
+
         sawFirstParTS = true;
         drawEllipse = imBuf->mMagInd && imBuf->mCamera >= 0;
       }

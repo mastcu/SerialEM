@@ -2754,6 +2754,9 @@
 #define IDC_RSTORESETTING               3785
 #define IDC_SPIN_COMAVSISNUMSHOTS       3786
 #define IDC_STAT_CVSIS_NUM_SHOTS        3787
+#define IDC_STATIC_PTS_MAXISDIST        3788
+#define IDC_STATIC_PTS_MAXISDISTUM      3789
+#define IDC_EDIT_PTS_MAXISDIST          3790
 #define ID_NEW_IMAGE                    32771
 #define IDM_FILE_SAVEOTHER              32772
 #define IDM_FILE_READ                   32773
@@ -3418,7 +3421,7 @@
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        305
 #define _APS_NEXT_COMMAND_VALUE         33659
-#define _APS_NEXT_CONTROL_VALUE         3788
+#define _APS_NEXT_CONTROL_VALUE         3791
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif

@@ -56,7 +56,9 @@ PANEL_END,
 IDC_BUT_PTS_OPENCLOSEOPTIONS, IDC_STATIC_PTS_EXTRAOPTIONS, IDC_TSS_LINE5,
 PANEL_END,
 IDC_EDIT_PTS_MAXTILT, IDC_EDIT_PTS_EXTRADELAY, IDC_CHECK_PTS_BEAMSIZECIRCLES,
-IDC_EDIT_PTS_DIAM, IDC_RADIO_PTS_CTFNONE, IDC_RADIO_PTS_CTFPLOTTER, IDC_RADIO_PTS_CTFFIND,
+IDC_EDIT_PTS_DIAM, IDC_STATIC_PTS_MAXISDIST, IDC_EDIT_PTS_MAXISDIST, 
+IDC_STATIC_PTS_MAXISDISTUM, 
+IDC_RADIO_PTS_CTFNONE, IDC_RADIO_PTS_CTFPLOTTER, IDC_RADIO_PTS_CTFFIND,
 IDC_CHECK_PTS_FINDASTIG, IDC_STATIC_PTS_MAXTILT, IDC_STATIC_PTS_MAXTILTDEG,
 IDC_STATIC_PTS_DIAM, IDC_STATIC_PTS_DIAMUM, IDC_STATIC_PTS_EXTRADELAY,
 IDC_CHECK_PTS_ADJUSTBEAMTILT, IDC_STATIC_PTS_CTFTYPE, 
@@ -96,6 +98,7 @@ CParallelTSDlg::CParallelTSDlg(CWnd* pParent /*=NULL*/)
   , m_fMaxAlignShift(0)
   , m_bSkipRefine(FALSE)
   , m_strInstruct(_T(""))
+  , m_fMaxISDist(0)
 {
   mWinApp = (CSerialEMApp *)AfxGetApp();
   mShiftManager = mWinApp->mShiftManager;
@@ -213,6 +216,7 @@ void CParallelTSDlg::DoDataExchange(CDataExchange* pDX)
   DDX_Control(pDX, IDC_BUT_PTS_NEWADJXFORM, m_butNewAdjTransform);
   DDX_Text(pDX, IDC_STATIC_PTS_INSTRUCT, m_strInstruct);
   DDX_Control(pDX, IDC_BUT_PTS_SAVEMAP, m_butSaveMap);
+  DDX_Text(pDX, IDC_EDIT_PTS_MAXISDIST, m_fMaxISDist);
 }
 
 BEGIN_MESSAGE_MAP(CParallelTSDlg, CBaseDlg)
@@ -259,6 +263,7 @@ BEGIN_MESSAGE_MAP(CParallelTSDlg, CBaseDlg)
   ON_BN_CLICKED(IDC_CHECK_PTS_SKIPREFINE, OnCheckSkipRefine)
   ON_BN_CLICKED(IDC_BUT_PTS_SAVEMAP, OnSavemap)
   ON_WM_CTLCOLOR()
+  ON_EN_KILLFOCUS(IDC_EDIT_PTS_MAXISDIST, OnEnKillfocusMaxISDist)
 END_MESSAGE_MAP()
 
 BOOL CParallelTSDlg::OnInitDialog()
@@ -281,6 +286,7 @@ BOOL CParallelTSDlg::OnInitDialog()
   mHasIlluminatedArea = mScope->GetUseIllumAreaForC2() ? 1 : 0;
   mMapMagIndex = mScope->GetLowestMModeMagInd();
   mAcqMagIndex = mMapMagIndex + 6;
+  mISlimit = mShiftManager->GetRegularShiftLimit() - 0.5f;
 
   ComaVsISCalib *comaVsIS = mWinApp->mAutoTuning->GetBestComaVsISCal();
   mHasComaVsISCal = comaVsIS->magInd > 0;
@@ -769,6 +775,10 @@ void CParallelTSDlg::OptionsToDialog()
   m_fRefMaxScaling = mNavHelper->GetParTSRefAliMaxPctChg();
   m_fRefMaxRotation = mNavHelper->GetParTSRefAliMaxRot();
   m_bApplyAdjusting = mParTSopts->applyAdjustingXform;
+  if (mParTSopts->maxISDist <= 0)
+    m_fMaxISDist = mISlimit - 1.5f;
+  else
+    m_fMaxISDist = B3DMIN(mParTSopts->maxISDist, mISlimit);
   m_bSkipRefine = mParTSopts->flags & PTSFLAG_SKIP_REFINE;
   mDisplayExtraOptions = (mParTSopts->flags & PTSFLAG_DISP_EXTRA_OPTS) != 0;
 }
@@ -792,6 +802,7 @@ void CParallelTSDlg::DialogToOptions()
   mParTSopts->refAliMaxPctChg = m_fRefMaxScaling;
   mParTSopts->refAliMaxRot = m_fRefMaxRotation;
   mParTSopts->applyAdjustingXform = m_bApplyAdjusting;
+  mParTSopts->maxISDist = m_fMaxISDist;
   mParTSopts->flags = 0;
   if (m_bSkipRefine)
     mParTSopts->flags |= PTSFLAG_SKIP_REFINE;
@@ -1797,4 +1808,25 @@ void CParallelTSDlg::OnSavemap()
     AfxMessageBox(mess, MB_EXCLAME);
   }
   Update();
+}
+
+
+void CParallelTSDlg::OnEnKillfocusMaxISDist()
+{
+  CString str;
+  UpdateData(true);
+  if (m_fMaxISDist < 0 || m_fMaxISDist > mISlimit) {
+    if (m_fMaxISDist > mISlimit)
+      str.Format("The maximum image shift distance drawn cannot be greater\n than the image"
+        " shift limit of %.1f um", mISlimit);
+    else
+      str = "The maximum image shift distance drawn must be positive";
+    SEMMessageBox(str, MB_EXCLAME);
+    B3DCLAMP(m_fMaxISDist, 0, mISlimit);
+    UpdateData(false);
+  }
+  DialogToOptions();
+  if (mWinApp->mNavigator)
+    mWinApp->mNavigator->Redraw();
+  mWinApp->RestoreViewFocus();
 }
