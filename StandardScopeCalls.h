@@ -28,6 +28,8 @@ SET_ONE_BOOL(SetScreenDim) LINE_END
 GET_ONE_INT(GetFilmStock) LINE_END
 SET_ONE_INT(SkipAdvancedScripting) LINE_END
 GET_ONE_INT(ASIstopContinuousRecord) LINE_END
+GET_TWO_DBL(GetPiezoXYPosition) LINE_END
+SET_TWO_DBL(SetPiezoXYPosition) LINE_END
 #endif
 #ifndef NON_UTAPI_ONLY
 #ifndef UTGET_ONE_INT
@@ -46,8 +48,6 @@ UTGET_TWO_DBL(GetBeamShift, UTSUP_DEFLECTORS1) LINE_END
 UTSET_TWO_DBL(SetBeamShift, UTSUP_DEFLECTORS1) LINE_END
 UTGET_TWO_DBL(GetImageShift, UTSUP_DEFLECTORS1) LINE_END
 UTSET_TWO_DBL(SetImageShift, UTSUP_DEFLECTORS1) LINE_END
-UTGET_TWO_DBL(GetBeamTilt, UTSUP_DEFL_ALIGN) LINE_END
-UTSET_TWO_DBL(SetBeamTilt, UTSUP_DEFL_ALIGN) LINE_END
 UTGET_TWO_DBL(GetImageBeamTilt, UTSUP_DEFLECTORS1) LINE_END
 UTSET_TWO_DBL(SetImageBeamTilt, UTSUP_DEFLECTORS1) LINE_END
 UTGET_TWO_DBL(GetDarkFieldTilt, UTSUP_DEFLECTORS1) LINE_END
@@ -166,8 +166,10 @@ UTGET_ONE_BOOL(GetSmallScreenOut, UTSUP_FLUSCREEN) LINE_END
 SCOPE_SAMENAME(ScopeGetThreeDbl, GetStagePosition);
 SCOPE_SAMENAME(ScopeSetStage, SetStagePosition);
 SCOPE_SAMENAME(ScopeSetStageExtra, SetStagePositionExtra);
-SCOPE_SAMENAME(ScopeGetTwoDbl, GetPiezoXYPosition);
-SCOPE_SAMENAME(ScopeSetTwoDbl, SetPiezoXYPosition);
+SCOPE_SAMENAME(ScopeGetTwoDbl, GetBeamTilt);
+SCOPE_SAMENAME(ScopeSetTwoDbl, SetBeamTilt);
+//SCOPE_SAMENAME(ScopeGetTwoDbl, GetPiezoXYPosition);
+//SCOPE_SAMENAME(ScopeSetTwoDbl, SetPiezoXYPosition);
 SCOPE_SAMENAME(ScopeGetGauge, GetGaugePressure);
 SCOPE_SAMENAME(ScopeGetDblSetInt, GetRefrigerantLevel);
 SCOPE_SAMENAME(ScopeGetSetInt, LoaderSlotStatus);
