@@ -1899,30 +1899,33 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
         // For IS targets
         if (item->mNumIStargets) {
           lastSpecialXholes = lastSpecialYholes = 0;
-          numSpecHoles = mWinApp->mParticleTasks->GetHolePositions(delISX,
-            delISY, holeIndex, item->mMagOfIStargets,
-            navigator->GetCameraForHoles(), 0, 0, tiltAngle, item, false);
           skipItem.mNumPoints = 0;
           holeItem.mNumPoints = 0;
           acquireXhole.clear();
           acquireYhole.clear();
-          if (imBuf->mMagInd && imBuf->mCamera >= 0) {
-            ScaleMat is2st = MatMul(mShiftManager->IStoGivenCamera(item->mMagOfIStargets,
-              imBuf->mCamera), MatInv(mShiftManager->StageToCamera(imBuf->mCamera, 
-                item->mMagOfIStargets)));
-            if (is2st.xpx) {
+
+          //IS to stage calibration is needed to draw IS targets. If calibration does not
+          //exist, then numSpecHoles will remain 0 and drawing will not occur
+          ScaleMat is2st = MatMul(mShiftManager->IStoGivenCamera(item->mMagOfIStargets,
+            imBuf->mCamera), MatInv(mShiftManager->StageToCamera(imBuf->mCamera,
+              item->mMagOfIStargets)));
+          if (is2st.xpx) {
+            numSpecHoles = mWinApp->mParticleTasks->GetHolePositions(delISX,
+              delISY, holeIndex, item->mMagOfIStargets,
+              navigator->GetCameraForHoles(), 0, 0, tiltAngle, item, false);
+            if (imBuf->mMagInd && imBuf->mCamera >= 0) {
               for (int hole = 0; hole < item->mNumIStargets; hole++) {
                 ApplyScaleMatrix(is2st, delISX[hole], delISY[hole], ptX, ptY);
                 holeItem.AppendPoint(ptX, ptY);
               }
             }
+            targPad = skipPad;
+            drawEllipse = item->mParallelTSIndex >= 0 && imBuf->mMagInd &&
+              imBuf->mCamera >= 0;
+            if (mAcquireBox)
+              targPad = 0.5f * sqrtf(powf(mAcquireBox->mPtX[2] - mAcquireBox->mPtX[0], 2.f)
+                + powf(mAcquireBox->mPtY[2] - mAcquireBox->mPtY[0], 2.f));
           }
-          targPad = skipPad;
-          drawEllipse = item->mParallelTSIndex >= 0 && imBuf->mMagInd && 
-            imBuf->mCamera >= 0;
-           if (mAcquireBox)
-            targPad = 0.5f * sqrtf(powf(mAcquireBox->mPtX[2] - mAcquireBox->mPtX[0], 2.f)
-              + powf(mAcquireBox->mPtY[2] - mAcquireBox->mPtY[0], 2.f));
         } else {
 
           // For other patterns
@@ -1977,7 +1980,7 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
           mAcquireBox->mDraw = true;
           if (highlight && saveCurHolePos)
             *curHoleIndex = holeIndex;
-          for (int hole = 0; hole < numSpecHoles; hole++) {
+          for (int hole = 0; hole < holeItem.mNumPoints; hole++) {
 
             // First get their actual coordinates for saving current pos and pos of ones
             // not being drawn because of boundary display
