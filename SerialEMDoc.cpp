@@ -1984,6 +1984,11 @@ void CSerialEMDoc::ReadSetPropCalFiles()
   else if (!settingsReadable)
     AfxMessageBox("Neither system default nor local settings file found", MB_EXCLAME);
 
+  if (mParamIO->GetStatesReadFromSettings()) {
+    AfxMessageBox("Imaging states were read from the settings file,\nand will be saved"
+      " to a separate file from now on.");
+  }
+
   // Read properties; but first set gain reference path to system path
   // Try the current path which may have come from settings file, then try the
   // default path in case it has changed
@@ -2185,6 +2190,11 @@ void CSerialEMDoc::ReadNewSettingsFile(CString newSettings)
     mSettingsOpen = err <= 0;
     mCurrentSettingsPath = newSettings;
     mSettingsBackedUp = false;
+
+    if (mParamIO->GetStatesReadFromSettings()) {
+      AfxMessageBox("Imaging states were read from the settings file,\nand will be saved"
+        " to a separate file from now on.");
+    }
   }
 
   PostSettingsRead();
@@ -2206,6 +2216,10 @@ void CSerialEMDoc::OnSettingsReadagain()
   if (mParamIO->ReadSettings(mCurrentSettingsPath)) {
     AfxMessageBox("Error rereading settings file", MB_EXCLAME);
     mSettingsReadable = false;
+  }
+  if (mParamIO->GetStatesReadFromSettings()) {
+    AfxMessageBox("Imaging states were read from the settings file,\nand will be saved"
+      " to a separate file from now on.");
   }
 
   PostSettingsRead();
@@ -2300,6 +2314,10 @@ void CSerialEMDoc::OnSettingsReaddefaults()
   CString strSys = mSystemPath + "\\" + mSystemSettingsName;
   if (mParamIO->ReadSettings(strSys))
     AfxMessageBox("Error reading system settings file", MB_EXCLAME);
+  if (mParamIO->GetStatesReadFromSettings()) {
+    AfxMessageBox("Imaging states were read from the settings file,\nand will be saved"
+      " to a separate file from now on.");
+  }
   PostSettingsRead();
 }
 

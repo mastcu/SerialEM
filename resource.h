@@ -97,6 +97,7 @@
 #define IDD_DECTRIS_SETTINGS            298
 #define IDR_NAV_MENU                    301
 #define IDD_PARALLELTILTSERIES          302
+#define IDR_STATES_MENU                 303
 #define IDC_EDITXSIZE                   1000
 #define IDC_EDITYSIZE                   1002
 #define IDC_EDITYOVERLAP                1003
@@ -2251,7 +2252,6 @@
 #define IDC_RREALI_PREV                 3271
 #define IDC_RREALI_VIEW                 3272
 #define IDC_RREALI_SEARCH               3273
-#define IDC_CHECK_SHOW_NUMBER           3275
 #define IDC_EDIT_DUMMY                  3277
 #define IDC_BLANK_UNBLANK               3278
 #define IDC_STAT_DELSTAGE               3279
@@ -3408,19 +3408,18 @@
 #define ID_IMAGESTAGESHIFT_LISTCOMAVSISCALS 33651
 #define ID_DELETECOMAVSISCAL            33652
 #define ID_AUTOFOCUSFOCUS_DELETECOMAVSISCAL 33653
-#define ID_TASKS_LOADIMAGINGSTATESFILE  33654
-#define ID_TASKS_SAVEIMAGINGSTATESTOFILE 33655
-#define ID_TASKS_SAVEIMAGINGSTATES      33656
-#define ID_TASKS_LOADIMAGINGSTATES      33657
-#define ID_TASKS_SAVEIMAGINGSTATESAS    33658
+#define ID_STATEMENU_SAVE               33654
+#define ID_STATEMENU_SAVEAS                  33655
+#define ID_STATEMENU_LOAD                    33656
+#define ID_STATEMENU_SHOWINDEXES             33657
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        305
-#define _APS_NEXT_COMMAND_VALUE         33659
+#define _APS_NEXT_RESOURCE_VALUE        304
+#define _APS_NEXT_COMMAND_VALUE         33658
 #define _APS_NEXT_CONTROL_VALUE         3791
 #define _APS_NEXT_SYMED_VALUE           104
 #endif

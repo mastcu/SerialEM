@@ -608,9 +608,6 @@ BEGIN
         MENUITEM "Set Low Dose Areas...",       ID_TASKS_SETAREASINLOWDOSE
         MENUITEM SEPARATOR
         MENUITEM "Imagi&ng States ...",         ID_NAVIGATOR_OPENSTATEDLG
-        MENUITEM "Load Imaging States File",    ID_TASKS_LOADIMAGINGSTATES
-        MENUITEM "Save Imaging States To File", ID_TASKS_SAVEIMAGINGSTATES
-        MENUITEM "Save Imaging States As...",   ID_TASKS_SAVEIMAGINGSTATESAS
         MENUITEM SEPARATOR
         MENUITEM "&Set intensity\tShift+I",     ID_PROCESS_SETINTENSITY
         MENUITEM "Set &Dose Rate",              ID_TASKS_SET_DOSE_RATE
@@ -873,6 +870,20 @@ BEGIN
         MENUITEM "&Search + and - Scaling in Realign", ID_OPTIONS_SEARCH
     END
     MENUITEM "        Close Up",            ID_NAV_SHRINK
+END
+
+IDR_STATES_MENU MENU
+BEGIN
+    POPUP "File"
+    BEGIN
+        MENUITEM "&Save",                       ID_STATEMENU_SAVE
+        MENUITEM "S&ave As...",                 ID_STATEMENU_SAVEAS
+        MENUITEM "&Load...",                    ID_STATEMENU_LOAD
+    END
+    POPUP "View"
+    BEGIN
+        MENUITEM "&Show Indexes",               ID_STATEMENU_SHOWINDEXES
+    END
 END
 
 
@@ -2863,7 +2874,6 @@ BEGIN
     PUSHBUTTON      "Save Target Defocus",IDC_BUT_SAVE_DEFOCUS,85,18,76,10
     LTEXT           "Prior: Rec.  1  39000  5nP   50.23     1.5   1     4kx4k",IDC_STAT_PRIOR_SUMMARY,4,100,142,8
     PUSHBUTTON      "Add Mont-Map State",IDC_BUT_ADD_MONT_MAP,3,18,72,10
-    CONTROL         "#",IDC_CHECK_SHOW_NUMBER,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,64,5,14,10
     LTEXT           "Selected state:",IDC_STAT_SELECTED_LABEL,4,31,46,8
     PUSHBUTTON      "List",IDC_BUT_LIST_STATE,142,30,19,10
     CONTROL         "Set apertures with state (C 150 C1 60 O out)",IDC_CHECK_SET_APERTURES,
@@ -8457,7 +8467,6 @@ BEGIN
     IDC_RREALI_PREV         "Use Preview parameters for third round of alignment"
     IDC_RREALI_VIEW         "Use View parameters for third round of alignment"
     IDC_RREALI_SEARCH       "Use Search parameters for third round of alignment"
-    IDC_CHECK_SHOW_NUMBER   "Show state index number before name in table"
 END
 
 STRINGTABLE
@@ -8743,6 +8752,11 @@ BEGIN
                             "Get coma vs IS calibrations from Settings instead of Calibrations"
     ID_AUTOFOCUSFOCUS_DELETECOMAVSISCAL 
                             "Delete one coma vs image shift calibration"
+    ID_STATEMENU_SAVE       "Save imaging states to the current states file"
+    ID_STATEMENU_SAVEAS     "Select a file and save the current imaging states to it"
+    ID_STATEMENU_LOAD       "Load an imaging states file"
+    ID_STATEMENU_SHOWINDEXES 
+                            "Set whether a numbered index is displayed next to each imaging state"
 END
 
 #endif    // English (United States) resources

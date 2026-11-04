@@ -45,6 +45,7 @@ public:
   void CheckForSpecialChars(CString &strLine);
   CString *GetDupMessage(void) {return &mDupMessage;};
   GetMember(CString, PropsWithComments);
+  GetMember(bool, StatesReadFromSettings)
   CParameterIO();
   virtual ~CParameterIO();
 
@@ -67,6 +68,7 @@ private:
   int mMaxReadInMacros;
   CString mPropsWithComments;
   bool mCheckForComments;
+  bool mStatesReadFromSettings;
 
 public:
   void StripItems(CString strLine, int numItems, CString & strCopy, bool keepIndent = false, 
@@ -85,8 +87,7 @@ public:
   void WriteAllStateParamsToFile(CArray<StateParams*, StateParams*> *stateArray);
   bool ReadLowDoseParameters(CArray<StateParams*, StateParams*> *stateArray,
     CString *strItems, BOOL *itemEmpty, int *itemInt, double *itemDbl, float *itemFlt);
-  void WriteLowDoseParametersToFile(CArray<StateParams*, StateParams*> *stateArray, 
-    bool statesOnly = false);
+  void WriteLowDoseParametersToFile();
   void InitializeControlSet(ControlSet * cs, int sizeX, int sizeY);
   void ReadBadColumns(CString *strItems, UShortVec &badColumnStart, ShortVec &badColumnWidth);
   void ReadPartialBad(CString *strItems, int *itemInt, UShortVec &partialBadCol, ShortVec &partialBadWidth, 

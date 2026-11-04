@@ -106,6 +106,7 @@ CParameterIO::CParameterIO()
   mNumLDSets = 5;
   mMaxReadInMacros = 20;
   mCheckForComments = false;
+  mStatesReadFromSettings = false;
 }
 
 CParameterIO::~CParameterIO()
@@ -220,6 +221,8 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
   AdjustXformData xformData;
   BOOL startingProg = mWinApp->GetStartingProgram();
   int faLastFileIndex = -1, faLastArrayIndex = -1;
+
+  mStatesReadFromSettings = false;
 
   // Clear all arrays being added to
   mWinApp->mMultiTSTasks->ClearAutocenParams();
@@ -1270,6 +1273,7 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
       } else if (NAME_IS("StateParameters")) {
         stateP = navHelper->NewStateParam(false);
         ReadStateParameters(stateP, itemEmpty, itemInt, itemDbl, itemFlt);
+        mStatesReadFromSettings = true;
 
       } else if (NAME_IS("StateParams3")) {
         if (!ReadStateParams3(stateArray, itemInt)) {
@@ -1664,7 +1668,7 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
     if (!recognized && !ReadStates(message))
       mDocWnd->SetReadStatesFile(true);
 
-    // But if there was no script pack defined in settings, we need to stick with macros
+    // But if there was no states file defined in settings, we need to stick with states
     // in there if any but save an existing file
     if (recognized && CFile::GetStatus((LPCTSTR)strLine, status)) {
       message = strLine;
@@ -2350,11 +2354,8 @@ void CParameterIO::WriteSettings(CString strFileName)
     mFile->WriteString(oneState);
     WriteIndexedInts("ShowChanInMultiView", chanInMultiView, MAX_STEM_CHANNELS);
 
-    // Save stored states BEFORE low dose params
-    WriteAllStateParamsToFile(stateArray);
-
-    // Save low dose params, including those in states
-    WriteLowDoseParametersToFile(stateArray);
+    // Save low dose params, not including those in states
+    WriteLowDoseParametersToFile();
 
     oneState.Format("LowDoseViewShift %f %f\n", mWinApp->mLowDoseDlg.mViewShiftX[0], 
       mWinApp->mLowDoseDlg.mViewShiftY[0]); 
@@ -2539,12 +2540,7 @@ void CParameterIO::WriteStates(CString strFileName)
     // Open the file for writing, 
     mFile = new CStdioFile(strFileName, CFile::modeCreate |
       CFile::modeWrite | CFile::shareDenyWrite);
-
-    // Save stored states BEFORE low dose params
     WriteAllStateParamsToFile(stateArray);
-
-    // Save low dose states
-    WriteLowDoseParametersToFile(stateArray, true);
   }
   catch (CFileException *perr) {
     perr->Delete();
@@ -2554,13 +2550,6 @@ void CParameterIO::WriteStates(CString strFileName)
   if (mFile) {
     delete mFile;
     mFile = NULL;
-  }
-
-  oneState = mDocWnd->GetCurStatesPath();
-  if (oneState.IsEmpty()) {
-    UtilSplitExtension(strFileName, oneState, macCopy);
-    oneState += "-states.txt";
-    mDocWnd->SetCurStatesPath(oneState);
   }
 }
 
@@ -6620,7 +6609,11 @@ void CParameterIO::WriteAllStateParamsToFile(CArray<StateParams*, StateParams*>*
 {
   StateParams *stateP;
   CString oneState, macCopy;
-  for (int i = 0; i < stateArray->GetSize(); i++) {
+  int i, ldi, ldj;
+  LowDoseParams *ldp;
+
+  // Save stored states BEFORE low dose params
+  for (i = 0; i < stateArray->GetSize(); i++) {
     stateP = stateArray->GetAt(i);
     WriteStateToString(0, stateP, oneState);
     oneState = "StateParameters " + oneState + "\n";
@@ -6639,6 +6632,19 @@ void CParameterIO::WriteAllStateParamsToFile(CArray<StateParams*, StateParams*>*
         stateP->focusYoffset);
       mFile->WriteString(oneState);
     }
+  }
+
+  for (i = 0; i < stateArray->GetSize(); i++) {
+    stateP = stateArray->GetAt(i);
+    if (!stateP->lowDose)
+      continue;
+    ldp = &stateP->ldParams;
+    ldi = -1 - i;
+    ldj = 0;
+
+    WriteLowDoseToString(ldp, ldi, ldj, oneState);
+    oneState = "LowDoseParameters " + oneState + "\n";
+    mFile->WriteString(oneState);
   }
 }
 
@@ -6786,31 +6792,16 @@ bool CParameterIO::ReadLowDoseParameters(CArray<StateParams*, StateParams*>* sta
   return true;
 }
 
-void CParameterIO::WriteLowDoseParametersToFile(CArray<StateParams*, StateParams*>* stateArray,
-  bool statesOnly)
+void CParameterIO::WriteLowDoseParametersToFile()
 {
-  int i, j, ldi, ldj, j0 = 0;
-  StateParams *stateP;
+  int i, j;
   LowDoseParams *ldp;
   CString oneState;
-  if (statesOnly)
-    j0 = 3;
-  for (j = j0; j < 4; j++) {
-    for (i = 0; i < (j < 3 ? mNumLDSets : stateArray->GetSize()); i++) {
-      if (j < 3) {
-        ldp = &mLowDoseParams[j * MAX_LOWDOSE_SETS + i];
-        ldi = i;
-        ldj = j;
-      } else {
-        stateP = stateArray->GetAt(i);
-        if (!stateP->lowDose)
-          continue;
-        ldp = &stateP->ldParams;
-        ldi = -1 - i;
-        ldj = 0;
-      }
+  for (j = 0; j < 3; j++) {
+    for (i = 0; i < mNumLDSets; i++) {
+      ldp = &mLowDoseParams[j * MAX_LOWDOSE_SETS + i];
 
-      WriteLowDoseToString(ldp, ldi, ldj, oneState);
+      WriteLowDoseToString(ldp, i, j, oneState);
       oneState = "LowDoseParameters " + oneState + "\n";
       mFile->WriteString(oneState);
     }

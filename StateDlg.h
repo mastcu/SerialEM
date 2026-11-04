@@ -25,6 +25,15 @@ protected:
   afx_msg void OnCancel();
 	afx_msg void OnOK();
 	afx_msg void OnMove(int x, int y);
+  afx_msg void OnInitMenuPopup(CMenu*  pPopupMenu, UINT  nIndex, BOOL  bSysMenu);
+  afx_msg void OnSaveImagingStates();
+  afx_msg void OnLoadImagingStates();
+  afx_msg void OnUpdateSaveImagingStates(CCmdUI *pCmdUI);
+  afx_msg void OnUpdateLoadImagingStates(CCmdUI *pCmdUI);
+  afx_msg void OnSaveImagingStatesAs();
+  afx_msg void OnUpdateSaveImagingStatesAs(CCmdUI *pCmdUI);
+  afx_msg void OnShowIndexes();
+  afx_msg void OnUpdateShowIndexes(CCmdUI *pCmdUI);
 
 	DECLARE_MESSAGE_MAP()
 
@@ -104,8 +113,6 @@ public:
   static GetMember(int, CamOfSetState);
   static void SetStaticPointers();
 
-  BOOL m_bShowNumber;
-  afx_msg void OnCheckNumber();
   CButton m_butListState;
   afx_msg void OnButListState();
   CButton m_butSetApertures;

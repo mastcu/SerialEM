@@ -12,6 +12,8 @@
 #include "NavigatorDlg.h"
 #include "CameraController.h"
 #include "ShiftManager.h"
+#include "SerialEMDoc.h"
+#include "ParameterIO.h"
 
 #if defined(_DEBUG) && defined(_CRTDBG_MAP_ALLOC)
 #define new DEBUG_NEW
@@ -46,7 +48,6 @@ CStateDlg::CStateDlg(CWnd* pParent /*=NULL*/)
 	: CBaseDlg(CStateDlg::IDD, pParent)
   , m_strName(_T(""))
   , m_strPriorSummary(_T(""))
-  , m_bShowNumber(FALSE)
   , m_bSetApertures(FALSE)
 {
   mCurrentItem = -1;
@@ -77,7 +78,6 @@ void CStateDlg::DoDataExchange(CDataExchange* pDX)
   DDX_Control(pDX, IDC_BUT_SAVE_DEFOCUS, m_butSaveDefocus);
   DDX_Text(pDX, IDC_STAT_PRIOR_SUMMARY, m_strPriorSummary);
   DDX_Control(pDX, IDC_BUT_ADD_MONT_MAP, m_butAddMontMap);
-  DDX_Check(pDX, IDC_CHECK_SHOW_NUMBER, m_bShowNumber);
   DDX_Control(pDX, IDC_BUT_LIST_STATE, m_butListState);
   DDX_Control(pDX, IDC_CHECK_SET_APERTURES, m_butSetApertures);
   DDX_Check(pDX, IDC_CHECK_SET_APERTURES, m_bSetApertures);
@@ -101,9 +101,17 @@ BEGIN_MESSAGE_MAP(CStateDlg, CBaseDlg)
   ON_BN_CLICKED(IDC_BUT_UPDATE_STATE, OnButUpdateState)
   ON_BN_CLICKED(IDC_BUT_SAVE_DEFOCUS, OnButSaveDefocus)
   ON_BN_CLICKED(IDC_BUT_ADD_MONT_MAP, OnButAddMontMap)
-  ON_BN_CLICKED(IDC_CHECK_SHOW_NUMBER, OnCheckNumber)
   ON_BN_CLICKED(IDC_BUT_LIST_STATE, OnButListState)
   ON_BN_CLICKED(IDC_CHECK_SET_APERTURES, OnCheckSetApertures)
+  ON_COMMAND(ID_STATEMENU_SAVE, OnSaveImagingStates)
+  ON_COMMAND(ID_STATEMENU_LOAD, OnLoadImagingStates)
+  ON_UPDATE_COMMAND_UI(ID_STATEMENU_SAVE, OnUpdateSaveImagingStates)
+  ON_UPDATE_COMMAND_UI(ID_STATEMENU_LOAD, OnUpdateLoadImagingStates)
+  ON_COMMAND(ID_STATEMENU_SAVEAS, OnSaveImagingStatesAs)
+  ON_UPDATE_COMMAND_UI(ID_STATEMENU_SAVEAS, OnUpdateSaveImagingStatesAs)
+  ON_COMMAND(ID_STATEMENU_SHOWINDEXES, OnShowIndexes)
+  ON_UPDATE_COMMAND_UI(ID_STATEMENU_SHOWINDEXES, OnUpdateShowIndexes)
+  ON_WM_INITMENUPOPUP()
 END_MESSAGE_MAP()
 
 // CStateDlg message handlers
@@ -116,7 +124,11 @@ BOOL CStateDlg::OnInitDialog()
   CRect clientRect, editRect;
   CBaseDlg::OnInitDialog();
   SetStaticPointers();
-  m_bShowNumber = mHelper->GetShowStateNumbers();
+
+  CMenu *mainMenu = new CMenu();
+  mainMenu->LoadMenu(IDR_STATES_MENU);
+  SetMenu(mainMenu);
+  delete mainMenu;
 
   GetClientRect(clientRect);
   m_editName.GetWindowRect(editRect);
@@ -219,6 +231,157 @@ void CStateDlg::OnMove(int x, int y)
     mWinApp->RestoreViewFocus();
 }
 
+void CStateDlg::OnInitMenuPopup(CMenu * pMenu, UINT nIndex, BOOL bSysMenu)
+{
+  //AfxCancelModes(m_hWnd);
+
+  if (bSysMenu)
+    return;     // don't support system menu
+
+                // allow hook to consume message
+                /*if (m_pNotifyHook != NULL &&
+                m_pNotifyHook->OnInitMenuPopup(pMenu, nIndex, bSysMenu))
+                {
+                return;
+                }*/
+
+  ENSURE_VALID(pMenu);
+
+  // check the enabled state of various menu items
+
+  CCmdUI state;
+  state.m_pMenu = pMenu;
+  ASSERT(state.m_pOther == NULL);
+  ASSERT(state.m_pParentMenu == NULL);
+
+  // determine if menu is popup in top-level menu and set m_pOther to
+  //  it if so (m_pParentMenu == NULL indicates that it is secondary popup)
+  HMENU hParentMenu;
+  if (AfxGetThreadState()->m_hTrackingMenu == pMenu->m_hMenu)
+    state.m_pParentMenu = pMenu;    // parent == child for tracking popup
+  else if ((hParentMenu = /*(m_dwMenuBarState == AFX_MBS_VISIBLE) ?*/ ::GetMenu(m_hWnd) /*: m_hMenu*/) != NULL)
+  {
+    CWnd* pParent = GetTopLevelParent();
+    // child windows don't have menus -- need to go to the top!
+    if (pParent != NULL &&
+      (hParentMenu = pParent->GetMenu()->GetSafeHmenu()) != NULL)
+    {
+      int nIndexMax = ::GetMenuItemCount(hParentMenu);
+      for (int nItemIndex = 0; nItemIndex < nIndexMax; nItemIndex++)
+      {
+        if (::GetSubMenu(hParentMenu, nItemIndex) == pMenu->m_hMenu)
+        {
+          // when popup is found, m_pParentMenu is containing menu
+          state.m_pParentMenu = CMenu::FromHandle(hParentMenu);
+          break;
+        }
+      }
+    }
+  }
+
+  state.m_nIndexMax = pMenu->GetMenuItemCount();
+  for (state.m_nIndex = 0; state.m_nIndex < state.m_nIndexMax;
+    state.m_nIndex++)
+  {
+    state.m_nID = pMenu->GetMenuItemID(state.m_nIndex);
+    if (state.m_nID == 0)
+      continue; // menu separator or invalid cmd - ignore it
+
+    ASSERT(state.m_pOther == NULL);
+    ASSERT(state.m_pMenu != NULL);
+    if (state.m_nID == (UINT)-1)
+    {
+      // possibly a popup menu, route to first item of that popup
+      state.m_pSubMenu = pMenu->GetSubMenu(state.m_nIndex);
+      if (state.m_pSubMenu == NULL ||
+        (state.m_nID = state.m_pSubMenu->GetMenuItemID(0)) == 0 ||
+        state.m_nID == (UINT)-1)
+      {
+        continue;       // first item of popup can't be routed to
+      }
+      state.DoUpdate(this, FALSE);    // popups are never auto disabled
+    } else
+    {
+      // normal menu item
+      // Auto enable/disable if frame window has 'm_bAutoMenuEnable'
+      //    set and command is _not_ a system command.
+      state.m_pSubMenu = NULL;
+      state.DoUpdate(this, /*m_bAutoMenuEnable && */state.m_nID < 0xF000);
+    }
+
+    // adjust for menu deletions and additions
+    UINT nCount = pMenu->GetMenuItemCount();
+    if (nCount < state.m_nIndexMax)
+    {
+      state.m_nIndex -= (state.m_nIndexMax - nCount);
+      while (state.m_nIndex < nCount &&
+        pMenu->GetMenuItemID(state.m_nIndex) == state.m_nID)
+      {
+        state.m_nIndex++;
+      }
+    }
+    state.m_nIndexMax = nCount;
+  }
+}
+
+void CStateDlg::OnSaveImagingStatesAs()
+{
+  CString filename, path;
+  mWinApp->mDocWnd->DirFromCurrentOrSettingsFile(mWinApp->mDocWnd->GetCurStatesPath(),
+    path);
+  if (mWinApp->mDocWnd->GetTextFileName(false, true, filename, NULL, &path, NULL, true))
+    return;
+  mWinApp->mParamIO->WriteStates(filename);
+  mWinApp->mDocWnd->SetCurStatesPath(filename);
+  mWinApp->mDocWnd->SetStatesBackedUp(false);
+  mWinApp->AppendToLog("Current imaging states file is now " + filename);
+}
+
+void CStateDlg::OnUpdateSaveImagingStatesAs(CCmdUI *pCmdUI)
+{
+  pCmdUI->Enable(!mWinApp->DoingTasks());
+}
+
+void CStateDlg::OnSaveImagingStates()
+{
+  CString filename = mWinApp->mDocWnd->GetCurStatesPath();
+  if (filename.IsEmpty())
+    OnSaveImagingStatesAs();
+  else
+    mWinApp->mParamIO->WriteStates(filename);
+}
+
+void CStateDlg::OnUpdateSaveImagingStates(CCmdUI *pCmdUI)
+{
+  pCmdUI->Enable(!mWinApp->DoingTasks());
+}
+
+
+void CStateDlg::OnLoadImagingStates()
+{
+  CString filename, path, filen, oldFile;
+  bool saveCurrent = false;
+  oldFile = mWinApp->mDocWnd->GetCurStatesPath();
+  mWinApp->mDocWnd->DirFromCurrentOrSettingsFile(oldFile, path);
+
+  //LEOTODO this pops up a lot, investigate
+
+  // Find out if want to save
+  if (!oldFile.IsEmpty())
+    saveCurrent = AfxMessageBox("Save current imaging states to current file before "
+      "loading a new imaging states file?", MB_QUESTION) == IDYES;
+  if (mWinApp->mDocWnd->GetTextFileName(true, true, filename, NULL, &path))
+    return;
+  mHelper->LoadStatesFile(filename, saveCurrent);
+}
+
+
+void CStateDlg::OnUpdateLoadImagingStates(CCmdUI *pCmdUI)
+{
+  pCmdUI->Enable(!mWinApp->DoingTasks());
+}
+
+
 // Enable all items depending on conditions
 void CStateDlg::Update(void)
 {
@@ -282,7 +445,7 @@ void CStateDlg::Update(void)
   if (mHelper->GetSavedPriorState(state)) {
     state.name = "";
     StateToListString(&state, summary, "  ", -1, mSetStateIndex, MAX_SAVED_STATE_IND + 1,
-      m_bShowNumber);
+      mHelper->GetShowStateNumbers());
   } else {
     summary = "None";
   }
@@ -322,14 +485,6 @@ void CStateDlg::OnEnChangeStatename()
   UpdateData(true);
   mParam->name = m_strName;
   UpdateListString(mCurrentItem);
-}
-
-// Toggle whether to show numbers in front of names
-void CStateDlg::OnCheckNumber()
-{
-  UPDATE_DATA_TRUE;
-  mHelper->SetShowStateNumbers(m_bShowNumber);
-  FillListBox();
 }
 
 // Selection changes
@@ -820,7 +975,7 @@ void CStateDlg::StateToListString(int index, CString &string)
   SetStaticPointers();
   StateParams *state = mStateArray->GetAt(index);
   StateToListString(state, string, "\t", index, mSetStateIndex, MAX_SAVED_STATE_IND + 1,
-    m_bShowNumber);
+    mHelper->GetShowStateNumbers());
 }
 
 void CStateDlg::StateToListString(StateParams *state, CString &string, const char *sep,
@@ -986,4 +1141,18 @@ void CStateDlg::UpdateHiding(void)
   GetClientRect(clientRect);
   mListBorderY = clientRect.Height() - rect.Height();
   mWinApp->RestoreViewFocus();
+}
+
+
+void CStateDlg::OnShowIndexes()
+{
+  mHelper->SetShowStateNumbers(!mHelper->GetShowStateNumbers());
+  FillListBox();
+  mWinApp->RestoreViewFocus();
+}
+
+
+void CStateDlg::OnUpdateShowIndexes(CCmdUI *pCmdUI)
+{
+  pCmdUI->SetCheck(mHelper->GetShowStateNumbers());
 }
