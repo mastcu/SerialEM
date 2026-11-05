@@ -364,8 +364,6 @@ void CStateDlg::OnLoadImagingStates()
   oldFile = mWinApp->mDocWnd->GetCurStatesPath();
   mWinApp->mDocWnd->DirFromCurrentOrSettingsFile(oldFile, path);
 
-  //LEOTODO this pops up a lot, investigate
-
   // Find out if want to save
   if (!oldFile.IsEmpty())
     saveCurrent = AfxMessageBox("Save current imaging states to current file before "
