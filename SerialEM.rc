@@ -6473,6 +6473,7 @@ END
 STRINGTABLE
 BEGIN
     ID_MACRO_SET            "Set number of buttons in script toolbar"
+    ID_MACRO_SETLENGTH      "Set the height and number of buttons shown in the script toolbar"
     ID_NAVIGATOR_IMPORTMAP  "Define an image in a file as a map"
 END
 
