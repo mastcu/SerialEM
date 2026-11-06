@@ -367,3 +367,12 @@ R
 S
 T
 U
+
+IMAGING STATE MENUS
+  File
+A
+L
+S
+
+  View
+S
