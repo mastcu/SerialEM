@@ -59,6 +59,7 @@ private:
   float mMinBlankSave;
   float mBuiltInSave;
   int mNoShutterSave;
+  float mPartialThreshSave;   // And partial scan threshold
   float mExtraBeamTime;       // Parameters to use during tests
   float mStartupDelay;
   float mMinimumDrift;
