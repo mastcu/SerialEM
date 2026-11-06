@@ -11718,7 +11718,7 @@ int CMacCmd::SkipUtapiService()
   if (mItemInt[1] < 0 || mItemInt[1] >= UTAPI_SUPPORT_END)
     ABORT_LINE("Service number is out of range in line:\n\n");
   if (mItemInt[1] >= UTSUP_CAM_SINGLE && mItemInt[1] <= UTSUP_CAM_CONTIN)
-    ABORT_LINE("You cannot change support for a camera-related service");
+    ABORT_LINE("You cannot change support for a camera-related service in line:\n\n");
   supports[mItemInt[1]] = mItemInt[2] == 0;
 
   // Maintain skip array

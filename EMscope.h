@@ -630,6 +630,7 @@ public:
   GetSetMember(int, ScopeUpdateTaskSkips);
   GetSetMember(int, JeolUpdateTaskSkips);
   GetSetMember(int, PostProbeBeamDelay);
+  GetSetMember(float, ScanFOVscaling);
   void SetFakeTiltOffset(float offset);
   float GetFakeTiltOffset();
   static int GetScopeCallFromPlugin() {return mScopeCallFromPlugin ; };
@@ -1082,6 +1083,8 @@ private:
   bool mSkipUpdatesForTasks;   // Flag to do the skipping
   bool mConsolidateLDNorms;    // Skip normalizing and do all lens norm at end of LD
   int mMaxUtapiService;        // Maximum UTAPI service # in plugin from array of names
+  float mScanFOVscaling;       // Scaling for mag computation from scan FOV in UTAPI
+  FEIPluginParams mFEIPluginParams;  // Params to pass to plugin to avoid callbacks
   int mAdvancedScriptVersion;  // My internal version number for advanced scripting
   int mPluginVersion;          // Version of plugin or server
 

@@ -211,6 +211,17 @@ X lens - 18 <br>
           </TD>
         </TR>
         <TR VALIGN="top">
+          <TD>UtapiSTEMMagScaling</TD>
+          <TD>Set to a scaling factor if the STEM magnifications received from UTAPI and 
+            shown in SerialEM are consistently different from the actual magnifications 
+            shown in TUI.&nbsp; Because there is rounding involved, it is necessary to 
+            derive this from a median ratio of actual to displayed values, determined for a large
+             number of magnifications, and then check that the rounded result comes out right for 
+            all the magnifications.&nbsp; A value of 1.32 was needed on one Glacios under UTAPI 7.27.&nbsp; This
+            property can be set with the script command 'SetProperty'.
+          </TD>
+        </TR>
+        <TR VALIGN="top">
           <TD>SimulationMode</TD>
           <TD>Set to 1 or to a desired high voltage value to indicate a microscope/camera simulator 
             is being used (enables some actions on JEOL and is needed to use an Eagle camera in simulation mode).&nbsp; Set to -1 or the negative of a desired high voltage value to enable simulation

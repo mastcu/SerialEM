@@ -586,6 +586,9 @@ CEMscope::CEMscope()
   mSkipUpdatesForTasks = false;
   mConsolidateLDNorms = false;
   mMaxUtapiService = UTAPI_SUPPORT_END - 1;
+  mScanFOVscaling = 1.;
+  mFEIPluginParams.disconnectThreshPtr = &mUtapiDisconnectThres;
+  mFEIPluginParams.scanFOVscalingPtr = &mScanFOVscaling;
   mAdvancedScriptVersion = 0;
   mPluginVersion = 0;
   mPlugFuncs = NULL;
@@ -732,7 +735,7 @@ int CEMscope::Initialize()
         mDewarVacCapabilities = mUseIllumAreaForC2 ? 3 : 0;
       if (!mPlugFuncs->GetCartridgeInfo)
         mFEIcanGetLoaderNames = 0;
-
+ 
     } else if (JEOLscope) {
 
       // JEOL: Also transfer values to structures before initialization
@@ -984,6 +987,8 @@ int CEMscope::Initialize()
     if (mUtapiSupportsService[UTSUP_DEFL_ALIGN2])
       mUtapiSupportsService[UTSUP_DEFL_ALIGN] = false;
   }
+  if (FEIscope && mPlugFuncs->SetParamStructure)
+    mPlugFuncs->SetParamStructure(&mFEIPluginParams, &mFEIPluginParams.lastMember);
   if (mUpdateInterval <= 0)
     mUpdateInterval = 150;
   if (!(mUseIllumAreaForC2 && mFEIhasApertureSupport))

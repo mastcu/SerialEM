@@ -450,6 +450,13 @@ struct LensRelaxData {
   float amplitudes[MAX_LENS_TO_RELAX]; // Change in the full direction
 };
 
+// Expandable structure for parameters to be passed to FEIScopePlugin
+struct FEIPluginParams {
+  int *disconnectThreshPtr;    // Pointers allow these properties to be scriptable
+  float *scanFOVscalingPtr;
+  int lastMember;     // Address of last member prevents newer plugin from overrunning
+};
+
 // GLOBAL error reporting and other functions; some for plugin access defined in EMscope
 void DLL_IM_EX SEMReportCOMError(_com_error E, CString inString, CString *outStr = NULL,
   bool skipErr = false);

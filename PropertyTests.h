@@ -177,6 +177,7 @@ INT_PROP_TEST("ScopeUpdateTaskSkips", scope->, ScopeUpdateTaskSkips)
 INT_PROP_TEST("JeolUpdateTaskSkips", scope->, JeolUpdateTaskSkips)
 FLOAT_PROP_TEST("FakeTiltOffset", scope->, FakeTiltOffset)
 INT_PROP_TEST("FEINoLiveAddedBinning", camera->, FEINoLiveAddedBinning)
+FLOAT_PROP_TEST("UtapiSTEMMagScaling", scope->, ScanFOVscaling)
 
 #endif
 #ifdef PROP_TEST_SECT2

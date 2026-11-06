@@ -261,6 +261,7 @@ SCOPE_SAMENAME(ScopeSetInt, SetBeamStopper);
 SCOPE_SAMENAME(ScopeSetDbl, SetHighVoltage);
 SCOPE_SAMENAME(UtapiSTEMimage, UtapiAcquireSTEMimage);
 SCOPE_SAMENAME(ServiceNames, UtapiServiceNames);
+SCOPE_SAMENAME(SetParamStruct, SetParamStructure);
 SCOPE_SAMENAME(ScopeNoArg, UtapiStopContinuous);
 SCOPE_SAMENAME(ScopeGetSetInt, GetVibrationState);
 SCOPE_SAMENAME(ScopeSetInt, SetVibrationAvoidance);
