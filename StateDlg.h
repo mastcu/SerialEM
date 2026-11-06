@@ -2,6 +2,7 @@
 #include "afxwin.h"
 #include "BaseDlg.h"
 #include "afxtempl.h"
+#include "PixieLib\PixieLib.h"
 
 class CNavHelper;
 struct StateParams;
@@ -36,6 +37,8 @@ protected:
   afx_msg void OnUpdateShowIndexes(CCmdUI *pCmdUI);
 
 	DECLARE_MESSAGE_MAP()
+
+  CMenuTipManager m_menuTipManager;
 
 private:
   int mCurrentItem;

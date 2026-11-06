@@ -3762,13 +3762,15 @@ int CNavHelper::AperturesForMapsAndStates(int &objAp, int &condAp, int &jeolC1,
   return err;
 }
 
+// Load an imaging states file with the given filename and make it the current file,
+// after saving the current states to the current file if saveCurrent flag is true 
 int CNavHelper::LoadStatesFile(CString &filename, bool saveCurrent)
 {
   CString filen, oldFile;
   int retval = 0;
   oldFile = mDocWnd->GetCurScriptPackPath();
   if (saveCurrent) {
-    mDocWnd->ManageScriptPackBackup();
+    mDocWnd->ManageStatesFileBackup();
     mWinApp->mParamIO->WriteStates(oldFile);
   }
   ClearStateArray();

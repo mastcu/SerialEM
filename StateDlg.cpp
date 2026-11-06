@@ -159,6 +159,7 @@ BOOL CStateDlg::OnInitDialog()
   mInitialized = true;
   //UpdateData(false);
 
+  m_menuTipManager.Install(this);
   return TRUE;
 }
 
@@ -231,6 +232,8 @@ void CStateDlg::OnMove(int x, int y)
     mWinApp->RestoreViewFocus();
 }
 
+// Calls update functions for menu items in State Dialog menu. 
+// Copied from NavigatorDlg.cpp
 void CStateDlg::OnInitMenuPopup(CMenu * pMenu, UINT nIndex, BOOL bSysMenu)
 {
   //AfxCancelModes(m_hWnd);
@@ -379,6 +382,19 @@ void CStateDlg::OnUpdateLoadImagingStates(CCmdUI *pCmdUI)
   pCmdUI->Enable(!mWinApp->DoingTasks());
 }
 
+
+void CStateDlg::OnShowIndexes()
+{
+  mHelper->SetShowStateNumbers(!mHelper->GetShowStateNumbers());
+  FillListBox();
+  mWinApp->RestoreViewFocus();
+}
+
+
+void CStateDlg::OnUpdateShowIndexes(CCmdUI *pCmdUI)
+{
+  pCmdUI->SetCheck(mHelper->GetShowStateNumbers());
+}
 
 // Enable all items depending on conditions
 void CStateDlg::Update(void)
@@ -1139,18 +1155,4 @@ void CStateDlg::UpdateHiding(void)
   GetClientRect(clientRect);
   mListBorderY = clientRect.Height() - rect.Height();
   mWinApp->RestoreViewFocus();
-}
-
-
-void CStateDlg::OnShowIndexes()
-{
-  mHelper->SetShowStateNumbers(!mHelper->GetShowStateNumbers());
-  FillListBox();
-  mWinApp->RestoreViewFocus();
-}
-
-
-void CStateDlg::OnUpdateShowIndexes(CCmdUI *pCmdUI)
-{
-  pCmdUI->SetCheck(mHelper->GetShowStateNumbers());
 }

@@ -3762,3 +3762,6 @@ void CMenuTargets::OnUpdateComaVsIScalFromSettings(CCmdUI *pCmdUI)
 {
   pCmdUI->SetCheck(mWinApp->mAutoTuning->GetComaVsIScalFromSettings());
 }
+
+
+

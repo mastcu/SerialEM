@@ -112,7 +112,9 @@ public:
   int SaveSettingsOnExit();
   void ManageBackupFile(CString strFile, BOOL &bBackedUp);
   void ManageScriptPackBackup();
+  void ManageStatesFileBackup();
   int OfferToSaveSettings(CString strWhy);
+  void StatesFromSettingsMsg();
   SetMember(CString, LogBook);
   GetMember(CString, SystemPath);
   GetMember(CString, FullSystemDir);
