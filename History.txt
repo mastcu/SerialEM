@@ -6,6 +6,8 @@ significance, for the stable release version
 11/5/26: Added property UtapiSTEMMagScaling to fix mag values returned by
 UTAPI (needs new plugin).
 
+11/5/26: Fixed STEM scan rotation set through UTAPI.
+
 11/5/26: Fixed camera timing calibration with UTAPI STEM to not do partial
 scans.
 
