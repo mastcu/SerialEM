@@ -3768,7 +3768,7 @@ int CNavHelper::LoadStatesFile(CString &filename, bool saveCurrent)
 {
   CString filen, oldFile;
   int retval = 0;
-  oldFile = mDocWnd->GetCurScriptPackPath();
+  oldFile = mDocWnd->GetCurStatesPath();
   if (saveCurrent) {
     mDocWnd->ManageStatesFileBackup();
     mWinApp->mParamIO->WriteStates(oldFile);
@@ -3785,8 +3785,8 @@ int CNavHelper::LoadStatesFile(CString &filename, bool saveCurrent)
       UtilSplitExtension(oldFile, filename, filen);
       filename += "-states.txt";
       mWinApp->AppendToLog("Unable to reload last imaging states file; states will be "
-        "saved to\n" + filename + " unless you do \"Save Imaging States As\" to a "
-        "different name");
+        "saved to\n" + filename + "\nunless you do \"File - Save As\" in the imaging "
+        "state dialog and save to a different name");
       retval = 2;
     }
   }

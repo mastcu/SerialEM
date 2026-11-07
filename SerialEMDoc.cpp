@@ -2464,7 +2464,7 @@ void CSerialEMDoc::PostSettingsRead()
       LOG_SWALLOW_IF_CLOSED);
   } else if (!mCurStatesPath.IsEmpty()) {
     mWinApp->AppendToLog("Imaging states will be saved to " + mCurStatesPath +
-      "\r\n   unless you do \"File - Save As\" in the imaging states dialog and save"
+      "\r\n   unless you do \"File - Save As\" in the imaging state dialog and save"
       " to a different name");
   }
   if (mBasicModeFile.CompareNoCase(mPreReadBasicFile))

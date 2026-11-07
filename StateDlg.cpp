@@ -232,8 +232,8 @@ void CStateDlg::OnMove(int x, int y)
     mWinApp->RestoreViewFocus();
 }
 
-// Calls update functions for menu items in State Dialog menu. 
-// Copied from NavigatorDlg.cpp
+// Calls update functions for menu items in State Dialog menu. Copied from OnInitMenuPopup
+// in NavigatorDlg.cpp, which was copied from winfrm.cpp and modified
 void CStateDlg::OnInitMenuPopup(CMenu * pMenu, UINT nIndex, BOOL bSysMenu)
 {
   //AfxCancelModes(m_hWnd);
