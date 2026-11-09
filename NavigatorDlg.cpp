@@ -1491,11 +1491,11 @@ void CNavigatorDlg::OnEditMode()
       "    Left-click to select a point or a polygon\r\n"
       "    Ctrl-Left-Click to add or remove from selected points or polygons\r\n"
       "    Ctrl-Left Button down to add points or polygons to selection while moving mouse\r\n"
-      "    Left-double-click to delete point if already selected\r\n"
+      "    Left-double-click to delete a single selected point\r\n"
       "    Shift-Left-double-click to remove one position from multiple Record array"
       " or Parallel Tilt Series item\r\n"
       "    Middle-click to add a point\r\n    Right-click to move current point\r\n"
-      "    Backspace to delete current point or polygon\r\n");
+      "    Backspace to delete currently selected points and autocontour polygons\r\n");
     mHelper->SetEditReminderPrinted(true);
   }
   if (m_bEditFocus) {
@@ -4140,48 +4140,48 @@ void CNavigatorDlg::AddAutocontPolygons(MapItemArray &polyArray,
   bool needFirst = true;
   CMapDrawItem *item = NULL;
   int color = DEFAULT_POLY_COLOR;
-  CString str, conv = "Converted group";
-  indsInPoly.clear();
+CString str, conv = "Converted group";
+indsInPoly.clear();
 
-  for (group = 0; group < numGroups; group++) {
-    if (!groupShown[group])
-      continue;
+for (group = 0; group < numGroups; group++) {
+  if (!groupShown[group])
+    continue;
 
-    // New ID for each  group: loop on points and add non-excluded ones in group
-    groupID = MakeUniqueID();
-    str.Format("  %d", group + 1);
-    conv += str;
-    if (mHelper->GetKeepColorsForPolygons()) {
-      color = group % MAX_AUTOCONT_GROUPS;
-      if (mHelper->GetReverseAutocontColors())
-        color = (MAX_AUTOCONT_GROUPS - 1) - color;
-      color += CONT_COLOR_BASE_IND;
-    }
-    for (ind = 0; ind < numPolys; ind++) {
-      if (excluded[ind] || groupNums[ind] != group)
-        continue;
-      item = polyArray.GetAt(ind);
-      if (!item)
-        continue;
-      item->mGroupID = groupID;
-      item->mColor = color;
-      item->mMapID = MakeUniqueID();
-      if (needFirst) {
-        firstID = item->mMapID;
-        needFirst = false;
-      }
-      item->mAcquire = setAcquire;
-      item->mLabel.Format("%d", mNewItemNum++);
-      item->mRegistration = mCurrentRegistration;
-      item->mOriginalReg = mCurrentRegistration;
-      mItemArray.Add(item);
-      polyArray.SetAt(ind, NULL);
-      indsInPoly.push_back(ind);
-      lastID = item->mMapID;
-    }
+  // New ID for each  group: loop on points and add non-excluded ones in group
+  groupID = MakeUniqueID();
+  str.Format("  %d", group + 1);
+  conv += str;
+  if (mHelper->GetKeepColorsForPolygons()) {
+    color = group % MAX_AUTOCONT_GROUPS;
+    if (mHelper->GetReverseAutocontColors())
+      color = (MAX_AUTOCONT_GROUPS - 1) - color;
+    color += CONT_COLOR_BASE_IND;
   }
-  mWinApp->AppendToLog(conv);
-  RefillAfterAutocontPolys();
+  for (ind = 0; ind < numPolys; ind++) {
+    if (excluded[ind] || groupNums[ind] != group)
+      continue;
+    item = polyArray.GetAt(ind);
+    if (!item)
+      continue;
+    item->mGroupID = groupID;
+    item->mColor = color;
+    item->mMapID = MakeUniqueID();
+    if (needFirst) {
+      firstID = item->mMapID;
+      needFirst = false;
+    }
+    item->mAcquire = setAcquire;
+    item->mLabel.Format("%d", mNewItemNum++);
+    item->mRegistration = mCurrentRegistration;
+    item->mOriginalReg = mCurrentRegistration;
+    mItemArray.Add(item);
+    polyArray.SetAt(ind, NULL);
+    indsInPoly.push_back(ind);
+    lastID = item->mMapID;
+  }
+}
+mWinApp->AppendToLog(conv);
+RefillAfterAutocontPolys();
 }
 
 // Just add a single autocont polygon made by clicking
@@ -4240,9 +4240,14 @@ BOOL CNavigatorDlg::BackspacePressed()
     if (mAddingPoints && mItemArray.GetSize() <= mNumberBeforeAdd)
       return false;
     if (m_bEditMode && !mAddingPoints) {
-      item = GetSingleSelectedItem();
-      if (!item || item->IsMap() || (item->IsPolygon() && !item->mGroupID))
-        return false;
+      if (mSelectedItems.size() > 1) {
+        DeleteGroup(true, true);
+        return true;
+      } else {
+        item = GetSingleSelectedItem();
+        if (!item || item->IsMap() || (item->IsPolygon() && !item->mGroupID))
+          return false;
+      }
     }
     mRemoveItemOnly = true;
     DeleteItem();
@@ -5669,11 +5674,14 @@ void CNavigatorDlg::PolygonSupermontage(void)
 }
 
 // Delete a whole group, or the part on one line of collapsed groups, or multiple
-// selected points.  "collapsedGroups" is true literally or for multiple selected points
-void CNavigatorDlg::DeleteGroup(bool collapsedGroup)
+// selected points.  "collapsedGroups" is true literally or for multiple selected points.
+// skipPoly flag will not delete polygons with group ID 0. polygons with a group ID 
+// (autocontour polygons) will be deleted.
+void CNavigatorDlg::DeleteGroup(bool collapsedGroup, bool skipPoly)
 {
   CString message, label, lastlab;
   CMapDrawItem *item;
+  std::set<int> skips;
   bool doSelection = collapsedGroup && mSelectedItems.size() > 1;
   int i, curID, num, start = 0, end = (int)mItemArray.GetSize() - 1;
   if (!SetCurrentItem(true))
@@ -5684,7 +5692,16 @@ void CNavigatorDlg::DeleteGroup(bool collapsedGroup)
 
   if (doSelection) {
     num = (int)mSelectedItems.size();
-    message.Format("Are you sure you want to delete the %d selected items?", num);
+    if (skipPoly) {
+      for (std::set<int>::iterator it = mSelectedItems.begin(); it != mSelectedItems.end(); 
+        ++it) {
+        item = mItemArray[*it];
+        if ((item->IsMap() || (item->IsPolygon() && !item->mGroupID))) 
+          skips.insert(*it);
+      }
+    }
+    message.Format("Are you sure you want to delete the %d selected items?", 
+      num - skips.size());
   } else if (collapsedGroup) {
     GetCollapsedGroupLimits(mCurListSel, start, end);
     num = end + 1 - start;
@@ -5702,7 +5719,7 @@ void CNavigatorDlg::DeleteGroup(bool collapsedGroup)
   for (i = end; i >= start; i--) {
     item = mItemArray[i];
     if ((!doSelection && item->mGroupID == curID) ||
-      (doSelection && mSelectedItems.count(i))) {
+      (doSelection && mSelectedItems.count(i) && !skips.count(i))) {
       if (item->mAcquire) {
         item->mAcquire = false;
         mHelper->EndAcquireOrNewFile(item);

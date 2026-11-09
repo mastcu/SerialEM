@@ -606,7 +606,7 @@ public:
   int DoAddCirclePolygon(float radius, float stageX, float stageY, BOOL useMarker, CString &mess);
   BOOL SupermontLabel(CMapDrawItem * item, int & startNum, int & ix, int & iy);
   BOOL CurrentIsInGroup(void);
-  void DeleteGroup(bool collapsedGroup);
+  void DeleteGroup(bool collapsedGroup, bool skipPoly = false);
   void ExternalDeleteGroup(bool collapsedGroup, int curID = -1, int excludeID = 0);
   void PolygonSupermontage(void);
   void PolygonToCameraCoords(CMapDrawItem * item, int camera, int magIndex, 
