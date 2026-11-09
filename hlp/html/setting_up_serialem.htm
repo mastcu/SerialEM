@@ -133,6 +133,8 @@
         <br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#upgradingK2toK3">Upgrading from a K2 to a K3 camera</a>
         <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<A href="#using_utapi">Upgrading To or Setting Up with UTAPI</A>
+        <br />
         <A href="#setup_camera">Initial Camera Setup</A>
         <BR>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#cameraOrientation">Camera
@@ -931,8 +933,66 @@
         and this may be&nbsp; adequate.</li>
       <li>Stage shift calibrations.</li>
     </ul>
-    <p>
-      &nbsp;</p>
+       <P><A name="using_utapi"><B>Upgrading To or Setting Up with UTAPI</B></A></P>
+      <p>The UTAPI interface for Thermo/FEI microscopes was designed to replace standard 
+        and Advanced scripting.&nbsp; It uses a protocol called gRPC that handles the 
+        communication between computers when SerialEM is not running on the microscope 
+        computer.&nbsp; The interface is organized as numerous independent services, 
+        only a subset of which need to be used if there is still older scripting 
+        available. The older scripting is eliminated in microscopes with TEMserver 
+        version 8.0 or higher.&nbsp; The recommended property settings are a bit 
+        different depending on the TEMserver version, mostly to facilitate switching 
+        back and forth between UTAPI and older scripting if necessary.&nbsp; Such 
+        switching has been required because of problems with UTAPI on various sites, and 
+        alternative properties for UTAPI were added to make this possible without having 
+        to change more than one entry.</p>
+      <ul>
+        <li>The property 'UseUtapiScripting' is currently required even when there is no 
+        other scripting. If the older scripting is still available, it should be set to 
+        1, and FEI-SEMserver.exe should still be used when SerialEM is on a separate 
+        computer.&nbsp; It should be set to 2 otherwise, since the setting of 3 has 
+        little or no value with newer microscopes and there is no benefit from running 
+        FEI-SEMserver.</li>
+        <li>If SerialEM is on a separate computer, the property 'FEISEMserverIP' or 
+        'SocketServerIP 1' is needed to specify the IP address of the microscope 
+        computer, just as with older scripting.</li>
+        <li>The property '<A href="about_properties.htm#skip_utapi">SkipUtapiServices</A>' 
+        can be used to avoid using UTAPI for specific 
+        services, as longer as there is standard scripting available to use instead.&nbsp; 
+        The service numbers are listed and some recommendations are given in the help there.&nbsp; 
+        The property should be included with an entry of 2, at least, because standard 
+        scripting does faster normalizations.&nbsp; If you do not have the property 
+        setting 'UseImageBeamTilt 1', you should also include 32 to avoid using 
+        improperly scaled rotation center values.</li>
+        <li>If the property DebugOutput includes 'E*', the plugin will print a complete 
+        list of services available (before skipping, if any).</li>
+        <li>Script commands 'ReportUtapiServices' and 'SkipUtapiService' can be used to 
+          find out if a service is being used and to switch a specific service back and 
+          forth between UTAPI and older scripting (except for the camera and STEM 
+          services).</li>
+        <li>The official names of available cameras and STEM detectors are printed in the 
+        log on program startup if the property DebugOutput is set to 1 or any other 
+        letters. The recommended camera property settings for cameras are:<br />&nbsp;&nbsp;&nbsp;&nbsp;
+        'Name' with the short name to appear in the user interface.<br />&nbsp;&nbsp;&nbsp;&nbsp;
+        'UtapiName' with the official name in UTAPI, which is too long for the user interface.<br />&nbsp;&nbsp;&nbsp;&nbsp;
+        'DetectorName' with the official name in Advanced scripting, if that is available.
+        </li>
+        <li>If there is a frame-saving camera (Falcon 4 or Ceta 2), the camera property 
+      'UtapiRemoteFramePath' is needed with the top directory on the storage server 
+      where frames are saved, as seen from the SerialEM computer.</li>
+        <li>The camera property 'LinearToCountingRatio' needs to be set differently under 
+        UTAPI than under Advanced scripting, so <A HREF="#linear2counting">the procedure</A> for measuring this needs 
+        to be redone when upgrading.&nbsp; If Advanced scripting is still available, it 
+        is recommended that you leave the value needed with Advanced scripting in 
+        'LinearToCountingRatio' and put the value for UTAPI in a separate camera 
+        property, 'UtapiLinearToCounting'.</li>
+        <li>The path for frames on the storage server typically starts with
+        'C:\OffloadData' with UTAPI, instead of 'C:\OffloadData\TemScripting\cameraName'.&nbsp; 
+        This path can be put in the camera property 'FalconLocalFramePath', but again, 
+        if Advanced scripting is still available, it is recommended that you leave 
+        'FalconLocalFramePath' with the path for Advanced scripting and put the path for 
+        UTAPI in 'UtapiLocalFramePath'.</li>
+      </ul>
       <P><A name="setup_camera"></A><B>Initial Camera Setup (Priority 1 and 2))</B></P>
       <P>You should set the basic properties of your camera(s) in the properties file
         before starting SerialEM. If you received a file configured for your scope, most
@@ -3103,7 +3163,7 @@ MoveStage 0 0 -$zRange / 2.
           each.&nbsp; Set the property FalconEventScaling to CountsPerElectron * (mean 
           without aligning) / (mean with aligning).</p>
     <p>
-        It is also important for some purposes to make linear mode and counting mode
+        <A Name="linear2counting"></A>It is also important for some purposes to make linear mode and counting mode
         give the same number of counts; this is achieved with the camera property
         'LinearToCountingRatio'.&nbsp; If you are upgrading from Advanced scripting to 
         UTAPI, you can keep an existing value of &#39;LinearToCountingRatio&#39; to use when 

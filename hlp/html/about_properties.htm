@@ -131,12 +131,13 @@
             standard plugin/server interface to perform some tasks using UI Automation, specifically getting 
             grid names from an autoloader and inserting the beam stop halfway.&nbsp; In the latter case, if running
             through FEI-SEMserver.exe, set the environment variable FEISEM_UI_ACCESS_ONLY to any value
-             to prevent FEI-SEMserver.exe from trying to connect to the scope.&nbsp; Full support for a microscope
-             with no scripting except UTAPI will be provided in SerialEM 4.3, not 4.2.
+             to prevent FEI-SEMserver.exe from trying to connect to the scope.&nbsp; If the microscope
+             has no scripting except UTAPI (i.e., TEMserver version 8.0 or higher), the value should be 2 
+            or 3, although 3 will be of little value because it is no longer possible to get grid names.
           </TD>
         </TR>
        <TR VALIGN="top">
-          <TD>SkipUtapiServices</TD>
+          <TD><A NAME="skip_utapi">SkipUtapiServices</A></TD>
           <TD>Follow with a list of indexes to UTAPI services that should be marked as not 
             available.&nbsp; The indexes of services are as follows: <br />
 Acquisition - 21 <br>
