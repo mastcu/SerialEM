@@ -320,12 +320,27 @@ void CToolDlg::OnPaint()
 // So individual panels can do things too
 void CToolDlg::DrawSideBorders(CPaintDC &dc)
 {
-  CRect clientRect;
+  CRect clientRect, butRect;
+  CButton *helpBut = (CButton *)GetDlgItem(IDC_BUTHELP);
   int lrSize = (int)(4 * mWinApp->GetScalingForDPI());
   GetClientRect(&clientRect);
   dc.FillSolidRect(0, 0, lrSize, clientRect.Height(), mBorderColor);
   dc.FillSolidRect(clientRect.Width() - lrSize, 0, clientRect.Width(),
     clientRect.Height(), mBorderColor);
+
+  // Fat brackets at the top
+  if (helpBut) {
+    helpBut->GetClientRect(&butRect);
+    dc.FillSolidRect(0, 0, butRect.Width(), butRect.Height(), mBorderColor);
+    dc.FillSolidRect(clientRect.Width() - butRect.Width(), 0, butRect.Width(),
+      butRect.Height(), mBorderColor);
+    /* Thin brackets at the bottom, less favored
+      int bbSize = (int)(9 * mWinApp->GetScalingForDPI());
+      dc.FillSolidRect(0, clientRect.Height() - lrSize, bbSize, lrSize, mBorderColor);
+      dc.FillSolidRect(clientRect.Width() - bbSize, clientRect.Height() - lrSize, bbSize,
+      lrSize, mBorderColor);
+      */
+  }
 }
 
 // Draw box with small offset
