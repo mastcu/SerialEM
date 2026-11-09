@@ -5974,15 +5974,21 @@
         </TR>
         <TR>
           <TD class="scriptcommand">CenterHoleAtNavItem #I A #U [#S] [#R] [#M] [#L]</TD>
-          <TD>Centers on the hole at the Navigator item with index <strong>#I</strong>, which 
+          <TD>Centers on the hole or on the center of a multishot pattern at the Navigator item with 
+            index <strong>#I</strong>, which 
               can be 0 for the current item, greater than 0 for the item with that index in 
               the table; or a value less than 0 to count back from the end of the table, where 
-              -1 is the last item.
+              -1 is the last item.&nbsp; 
               <strong>A</strong> dictates the type of image acquired for finding and 
               centering: V or S for View or Search in Low Dose, or M to use the parameters 
-              used in acquiring the map on which the item is drawn. Set <strong>#U</strong> 
-              nonzero if doing Multiple Records at the item. The optional arguments <strong>#S</strong>,<strong> 
-              #R</strong>, <strong>#M</strong>, and <strong>#L</strong> are treated the same as in AlignToTemplate. Like the Align to Template routine, the hole should already be roughly centered in the current field of view before running this command.</TD>
+              used in acquiring the map on which the item is drawn.&nbsp;  Set <strong>#U</strong> 
+              nonzero if doing Multiple Records at the item, in which case either the multishot geometry
+             stored in the item (if any) or
+            the current multishot parameters will be used to determine the pattern to align to.&nbsp;If there is not a 
+            hole at the center of the pattern, the procedure will find two holes near the center and 
+            center between them, as described in the <a href="hidd_navrealign.htm">Navigator Align Setup</a>
+        help.&nbsp; . The optional arguments <strong>#S</strong>,<strong> 
+              #R</strong>, <strong>#M</strong>, and <strong>#L</strong> are treated the same as in AlignToTemplate&nbsp;  Like the Align to Template routine, the hole or multishot pattern center should already be roughly centered in the current field of view before running this command.&nbsp; Command added in 4.3, 3-Feb-26.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">RealignReloadedGrid #I #E [#Z] [#R] [#T]</TD>
@@ -6390,7 +6396,7 @@
             of hole sizes. Set optional <strong>#E</strong> to the center-to-center hole spacing in microns, 
             or set it less than or equal to 0 for the default. Set optional <strong>#H</strong> to 0 or 1 to 
             specify whether the hole geometry is rectangular or hexagonal, respectively, or negative to use a 
-            default.&nbsp;The default values for <strong>#E</strong> and <strong>#H</strong> will be obtaained 
+            default.&nbsp;The default values for <strong>#E</strong> and <strong>#H</strong> will be obtained 
             from a corresponding map if it exists; otherwise they will be taken from the hole finder parameters. 
             Command added in 4.2, 29-Oct-24.
           </TD>

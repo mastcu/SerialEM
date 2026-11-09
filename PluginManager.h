@@ -113,6 +113,7 @@ typedef const char *(*CartridgeInfo)(int, int *, int *, int *, int *, int *);
 typedef int(*UtapiSTEMimage)(short **, const char **,
   int, long *, int, int, int, int, int, int, double, double, long, long, int, double);
 typedef const char **(*ServiceNames)();
+typedef void(*SetParamStruct)(void *, int*);
 
 #define GET_ONE_INT(a) ScopeGetInt a
 #define GET_ONE_BOOL(a) ScopeGetBool a

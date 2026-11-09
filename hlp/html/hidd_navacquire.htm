@@ -203,8 +203,9 @@
       to a file, which might be desired when saving frames.</P>
     <P><A NAME="taskOptions"></A>&nbsp;</P>
     <P><b><em>Options for Other Tasks</em></b></P>
-    <P><b>Do hybrid Realign to Item/Align to Template</b></P>
-    <P>This option is enabled when you have set the Align to Template task to run on
+    <P><b>Do hybrid Realign to Item/Template or Hole align</b></P>
+    <P>This option is enabled when you have set the task to align to a template or 
+      center on a hole to run on
       every item and also set Realign to Item to run on at least some of the items.&nbsp;
       When the Realign to Item routine is run, it will test whether it can skip the
       first round of alignment to the center of the map or of a map frame and rely on
@@ -213,7 +214,7 @@
       the item based on the stored results of the first round, move to that location,
       and end without taking or aligning any images.&nbsp; This should largely
       compensate for accumulated errors in positioning and make the position be close
-      enough so that alignment to the template can work reliably.&nbsp; This approach
+      enough so that alignment to the template or centering on a hole can work reliably.&nbsp; This approach
       <em>will not work</em> if the spacing between target features is too small and
       the stage movement is sloppy even with backlash or has periodic variability in
       its positioning (i.e., older Tecnai compustages).&nbsp; However, for typical
@@ -455,16 +456,22 @@
       Template' has also been run for this items,
       the task is run in a way that maintains alignment to the specimen position (the <A HREF="menu_tasks.htm#hid_tasks_finerealign">
         Refine &amp; Realign command</A>).</P>
-    <P><strong>Align to Template -</strong> This task will align to a map containing a
-      template image, such as a cropped image of one hole in the carbon film.&nbsp;
+    <P><strong>Template Ali/Center Hole-</strong> This task will align to a map containing a
+      template image, such as a cropped image of one hole in the carbon film, or find hole(s) 
+      in an image and center the Multiple Record pattern that applies to the current Navigator item.&nbsp; 
+      If the multishot pattern is odd in both dimensions, the latter procedure will 
+      center on a hole; otherwise it will find the locations of two holes and center 
+      between them.&nbsp;
       The <strong>Setup</strong> button opens the top and middle parts of the
        <a href="hidd_navrealign.htm">Navigator Align Setup</a>
-        dialog, where the label of the template map and the maximum shift for the
+        dialog.&nbsp; When aligning to a template, the label of the template map can 
+      be set; when finding and centering a hole, the acquisition parameters and 
+      cropping can be set.&nbsp; In either case, the maximum shift for the
       alignment can be set.&nbsp; Image shift can also be reset after this alignment.&nbsp;
       If both Realign to Item and this task are being run and image shift is being
-      reset, it will be reset only after the Align to Template.&nbsp; If you are
-      primarily relying on Align to Template for positioning, consider selecting the
-      option for the hybrid Realign to Item/Align to Template approach explained
+      reset, it will be reset only after this task is done.&nbsp; If you are
+      primarily relying on this task for positioning, consider selecting the
+      option for the hybrid Realign to Item/Template or Hole align approach explained
       above.&nbsp; If the routine does not find a shift within the limit and the
       <strong>No message box on error</strong> option is selected, the Navigator will
       skip this item and go on to the next.</P>

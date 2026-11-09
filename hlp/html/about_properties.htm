@@ -131,12 +131,13 @@
             standard plugin/server interface to perform some tasks using UI Automation, specifically getting 
             grid names from an autoloader and inserting the beam stop halfway.&nbsp; In the latter case, if running
             through FEI-SEMserver.exe, set the environment variable FEISEM_UI_ACCESS_ONLY to any value
-             to prevent FEI-SEMserver.exe from trying to connect to the scope.&nbsp; Full support for a microscope
-             with no scripting except UTAPI will be provided in SerialEM 4.3, not 4.2.
+             to prevent FEI-SEMserver.exe from trying to connect to the scope.&nbsp; If the microscope
+             has no scripting except UTAPI (i.e., TEMserver version 8.0 or higher), the value should be 2 
+            or 3, although 3 will be of little value because it is no longer possible to get grid names.
           </TD>
         </TR>
        <TR VALIGN="top">
-          <TD>SkipUtapiServices</TD>
+          <TD><A NAME="skip_utapi">SkipUtapiServices</A></TD>
           <TD>Follow with a list of indexes to UTAPI services that should be marked as not 
             available.&nbsp; The indexes of services are as follows: <br />
 Acquisition - 21 <br>
@@ -208,6 +209,17 @@ X lens - 18 <br>
           <TD>Sets the minimum number of consecutive UTAPI calls that must fail with a message
              'failed to connect to all addresses' before the program will consider itself disconnected from the
             server.&nbsp; The default is 3.
+          </TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>UtapiSTEMMagScaling</TD>
+          <TD>Set to a scaling factor if the STEM magnifications received from UTAPI and 
+            shown in SerialEM are consistently different from the actual magnifications 
+            shown in TUI.&nbsp; Because there is rounding involved, it is necessary to 
+            derive this from a median ratio of actual to displayed values, determined for a large
+             number of magnifications, and then check that the rounded result comes out right for 
+            all the magnifications.&nbsp; A value of 1.32 was needed on one Glacios under UTAPI 7.27.&nbsp; This
+            property can be set with the script command 'SetProperty'.
           </TD>
         </TR>
         <TR VALIGN="top">

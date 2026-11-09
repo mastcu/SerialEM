@@ -132,6 +132,8 @@ void CCalibCameraTiming::CalibrateTiming(int setNum, float exposure, bool confir
     }
     for (i = 1; i < MAX_STEM_CHANNELS; i++)
       mConSet->channelIndex[i] = -1;
+    mPartialThreshSave = mCamera->GetPartialScanThreshExp();
+    mCamera->SetPartialScanThreshExp(100.);
   }
 
   // Set up number of shots to take in initial reference and in finding startup range
@@ -656,6 +658,8 @@ void CCalibCameraTiming::StopCalTiming()
   mCamParam->extraBeamTime = mExtraTimeSave;
   mCamParam->builtInSettling = mBuiltInSave;
   mCamParam->noShutter = mNoShutterSave;
+  if (mSTEMcamera)
+    mCamera->SetPartialScanThreshExp(mPartialThreshSave);
   mConSet->doseFrac = 0;
   mConSet->alignFrames = 0;
   //mConSet->K2ReadMode = ??; Should this be reset? Do most track conset users copy trial?
