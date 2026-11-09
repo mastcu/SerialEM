@@ -2233,7 +2233,7 @@ void CSerialEMDoc::OnSettingsSave()
   }
   ManageBackupFile(mCurrentSettingsPath, mSettingsBackedUp);
   ManageBackupFile(mCurScriptPackPath, mScriptPackBackedUp);
-  ManageBackupFile(mCurStatesPath, mStatesBackedUp);
+  ManageStatesFileBackup();
   mParamIO->WriteSettings(mCurrentSettingsPath);
   SaveShortTermCal();
   mAbandonSettings = false;
@@ -2255,7 +2255,7 @@ int CSerialEMDoc::SettingsSaveAs()
   mSettingsBackedUp = false;
   ManageBackupFile(newFile, mSettingsBackedUp);
   ManageBackupFile(mCurScriptPackPath, mScriptPackBackedUp);
-  ManageBackupFile(mCurStatesPath, mStatesBackedUp);
+  ManageStatesFileBackup();
   mAbandonSettings = false;
 
   mParamIO->WriteSettings(newFile);
