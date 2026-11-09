@@ -114,7 +114,7 @@ public:
   void ManageScriptPackBackup();
   void ManageStatesFileBackup();
   int OfferToSaveSettings(CString strWhy);
-  void StatesFromSettingsMsg();
+  void MessageIfStatesFromSettings();
   SetMember(CString, LogBook);
   GetMember(CString, SystemPath);
   GetMember(CString, FullSystemDir);

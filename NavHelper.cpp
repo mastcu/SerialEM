@@ -3762,6 +3762,39 @@ int CNavHelper::AperturesForMapsAndStates(int &objAp, int &condAp, int &jeolC1,
   return err;
 }
 
+// Sets apertures to given values if >= 0, only if they differ from current state
+void CNavHelper::SetAperturesIfNeeded(int objectiveAp, int condenserAp, int JeolC1Ap, 
+  bool setting)
+{
+  CString errStr;
+  int objAp, condAp, C1Ap;
+  int i = AperturesForMapsAndStates(objAp, condAp, C1Ap, errStr);
+  bool needObj = objectiveAp >= 0 && (i || objectiveAp != objAp);
+  bool needCond = condenserAp >= 0 && (i || condenserAp != condAp);
+  bool needJC1 = JEOLscope && JeolC1Ap >= 0 && (i || JeolC1Ap != C1Ap);
+  if ((needObj || needCond || needJC1) && setting) {
+    mObjApToRestore = mCondApToRestore = mC1ApToRestore = -1;
+  }
+  if (needObj) {
+    mScope->SetApertureSize(OBJECTIVE_APERTURE, objectiveAp, true);
+    mCurStateSetApertures = setting;
+    if (setting)
+      mObjApToRestore = objAp;
+  }
+  if (needCond) {
+    mScope->SetApertureSize(mScope->GetSingleCondenserAp(), condenserAp, true);
+    mCurStateSetApertures = setting;
+    if (setting)
+      mCondApToRestore = condAp;
+  }
+  if (needJC1) {
+    mScope->SetApertureSize(JEOL_C1_APERTURE, JeolC1Ap, true);
+    mCurStateSetApertures = setting;
+    if (setting)
+      mC1ApToRestore = C1Ap;
+  }
+}
+
 // Load an imaging states file with the given filename and make it the current file,
 // after saving the current states to the current file if saveCurrent flag is true 
 int CNavHelper::LoadStatesFile(CString &filename, bool saveCurrent)
@@ -3797,39 +3830,6 @@ int CNavHelper::LoadStatesFile(CString &filename, bool saveCurrent)
   }
   mWinApp->AppendToLog("Current imaging states file is now " + filename);
   return retval;
-}
-
-// Sets apertures to given values if >= 0, only if they differ from current state
-void CNavHelper::SetAperturesIfNeeded(int objectiveAp, int condenserAp, int JeolC1Ap, 
-  bool setting)
-{
-  CString errStr;
-  int objAp, condAp, C1Ap;
-  int i = AperturesForMapsAndStates(objAp, condAp, C1Ap, errStr);
-  bool needObj = objectiveAp >= 0 && (i || objectiveAp != objAp);
-  bool needCond = condenserAp >= 0 && (i || condenserAp != condAp);
-  bool needJC1 = JEOLscope && JeolC1Ap >= 0 && (i || JeolC1Ap != C1Ap);
-  if ((needObj || needCond || needJC1) && setting) {
-    mObjApToRestore = mCondApToRestore = mC1ApToRestore = -1;
-  }
-  if (needObj) {
-    mScope->SetApertureSize(OBJECTIVE_APERTURE, objectiveAp, true);
-    mCurStateSetApertures = setting;
-    if (setting)
-      mObjApToRestore = objAp;
-  }
-  if (needCond) {
-    mScope->SetApertureSize(mScope->GetSingleCondenserAp(), condenserAp, true);
-    mCurStateSetApertures = setting;
-    if (setting)
-      mCondApToRestore = condAp;
-  }
-  if (needJC1) {
-    mScope->SetApertureSize(JEOL_C1_APERTURE, JeolC1Ap, true);
-    mCurStateSetApertures = setting;
-    if (setting)
-      mC1ApToRestore = C1Ap;
-  }
 }
 
 // Make a text line for listing a state

@@ -1983,10 +1983,8 @@ void CSerialEMDoc::ReadSetPropCalFiles()
     AfxMessageBox("Settings read from system default file, not local file", MB_EXCLAME);
   else if (!settingsReadable)
     AfxMessageBox("Neither system default nor local settings file found", MB_EXCLAME);
-
-  if (mParamIO->GetStatesReadFromSettings()) {
-    StatesFromSettingsMsg();
-  }
+  
+  MessageIfStatesFromSettings();
 
   // Read properties; but first set gain reference path to system path
   // Try the current path which may have come from settings file, then try the
@@ -2190,9 +2188,7 @@ void CSerialEMDoc::ReadNewSettingsFile(CString newSettings)
     mCurrentSettingsPath = newSettings;
     mSettingsBackedUp = false;
 
-    if (mParamIO->GetStatesReadFromSettings()) {
-      StatesFromSettingsMsg();
-    }
+    MessageIfStatesFromSettings();
   }
 
   PostSettingsRead();
@@ -2215,10 +2211,8 @@ void CSerialEMDoc::OnSettingsReadagain()
     AfxMessageBox("Error rereading settings file", MB_EXCLAME);
     mSettingsReadable = false;
   }
-  if (mParamIO->GetStatesReadFromSettings()) {
-    StatesFromSettingsMsg();
-  }
-
+  
+  MessageIfStatesFromSettings();
   PostSettingsRead();
 }
 
@@ -2311,9 +2305,7 @@ void CSerialEMDoc::OnSettingsReaddefaults()
   CString strSys = mSystemPath + "\\" + mSystemSettingsName;
   if (mParamIO->ReadSettings(strSys))
     AfxMessageBox("Error reading system settings file", MB_EXCLAME);
-  if (mParamIO->GetStatesReadFromSettings()) {
-    StatesFromSettingsMsg();
-  }
+  MessageIfStatesFromSettings();
   PostSettingsRead();
 }
 
@@ -2387,10 +2379,12 @@ int CSerialEMDoc::OfferToSaveSettings(CString strWhy)
 }
 
 // The message box to pop up whenever a settings file is read containing imaging states
-void CSerialEMDoc::StatesFromSettingsMsg()
+void CSerialEMDoc::MessageIfStatesFromSettings()
 {
-  AfxMessageBox("Imaging states were read from the settings file,\nand will be saved"
-    " to a separate file from now on.", MB_EXCLAME);
+  if (mParamIO->GetStatesReadFromSettings()) {
+    AfxMessageBox("Imaging states were read from the settings file,\nand will be saved"
+      " to a separate file from now on.", MB_EXCLAME);
+  }
 }
 
 
