@@ -5675,8 +5675,6 @@ void CNavigatorDlg::PolygonSupermontage(void)
 
 // Delete a whole group, or the part on one line of collapsed groups, or multiple
 // selected points.  "collapsedGroups" is true literally or for multiple selected points.
-// skipPoly flag will not delete polygons with group ID 0. polygons with a group ID 
-// (autocontour polygons) will be deleted.
 void CNavigatorDlg::DeleteGroup(bool collapsedGroup, bool skipPoly)
 {
   CString message, label, lastlab;
@@ -5692,6 +5690,9 @@ void CNavigatorDlg::DeleteGroup(bool collapsedGroup, bool skipPoly)
 
   if (doSelection) {
     num = (int)mSelectedItems.size();
+
+    // skipPoly flag will not delete polygons with group ID 0. polygons with a group ID 
+    // (autocontour polygons) will be deleted regardless of skipPoly.
     if (skipPoly) {
       for (std::set<int>::iterator it = mSelectedItems.begin(); it != mSelectedItems.end(); 
         ++it) {
