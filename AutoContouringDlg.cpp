@@ -1490,6 +1490,7 @@ UINT CAutoContouringDlg::AutoContProc(LPVOID pParam)
         }
       }
       if (ind) {
+        imodContourClear(&acd->obj->cont[coNum]);
 
         // Yes, this is how a contour is deleted.  Have to adjust statistics too
         acd->obj->contsize--;
