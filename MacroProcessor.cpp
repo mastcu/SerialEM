@@ -2337,7 +2337,8 @@ void CMacroProcessor::GetNextLine(CString * macro, int & currentIndex, CString &
           testInd--;
         trimmed = macro->Mid(currentIndex, testInd + 1 - currentIndex);
         trimmed.TrimRight();
-        if (testInd > 0 && trimmed.GetAt(trimmed.GetLength() - 1) == '\\' &&
+        if (testInd > 0 && trimmed.GetLength() >= 2 && 
+          trimmed.GetAt(trimmed.GetLength() - 1) == '\\' &&
           trimmed.GetAt(trimmed.GetLength() - 2) == ' ') {
 
           // To continue, add the line through the space then set the index to next line
