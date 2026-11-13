@@ -2335,11 +2335,13 @@ void CMacroProcessor::GetNextLine(CString * macro, int & currentIndex, CString &
         testInd = index - 2;
         if (testInd >= 0 && macro->GetAt(testInd) == '\r')
           testInd--;
-        if (testInd > 0 && macro->GetAt(testInd) == '\\' &&
-          macro->GetAt(testInd - 1) == ' ') {
+        trimmed = macro->Mid(currentIndex, testInd + 1 - currentIndex);
+        trimmed.TrimRight();
+        if (testInd > 0 && trimmed.GetAt(trimmed.GetLength() - 1) == '\\' &&
+          trimmed.GetAt(trimmed.GetLength() - 2) == ' ') {
 
           // To continue, add the line through the space then set the index to next line
-          strLine += macro->Mid(currentIndex, testInd - currentIndex);
+          strLine += trimmed.Left(trimmed.GetLength() - 1);
           currentIndex = index;
         } else {
 
