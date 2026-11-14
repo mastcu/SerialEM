@@ -2205,7 +2205,7 @@ void CParameterIO::WriteSettings(CString strFileName)
         zbgParam.targetDefocus, zbgParam.standardFocus);
       mFile->WriteString(oneState);
     }
-    for (i = 0; i < comaVsIScals->size(); i++){
+    for (i = 0; i < (int)comaVsIScals->size(); i++){
       comaVsIS = comaVsIScals->at(i);
       if (comaVsIS.userSetting) {
         WriteComaVsISCalToString(comaVsIS, oneState);
@@ -5848,7 +5848,7 @@ void CParameterIO::WriteCalibration(CString strFileName)
     }
 
     //Write coma vs image shift calibrations
-    for (i = 0; i < comaVsIScals->size(); i++) {
+    for (i = 0; i < (int)comaVsIScals->size(); i++) {
       comaVsIS = comaVsIScals->at(i);
       if (!comaVsIS.userSetting) {
         WriteComaVsISCalToString(comaVsIS, string);
