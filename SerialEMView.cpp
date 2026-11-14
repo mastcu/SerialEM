@@ -336,7 +336,7 @@ void CSerialEMView::CloseFrame()
 
 // Takes an image snapshot and saves it, managing all the changes needed before and
 // after calling the general draw routine
-// NOTE: Hans Windohoff worked out how to draw to a bitmap and changed the draw routines
+// NOTE: Hans Windhoff worked out how to draw to a bitmap and changed the draw routines
 // to work with CDC instead of CClientDC
 int CSerialEMView::TakeSnapshot(float zoomBy, float sizeScaling, int skipExtra,
   int fileType, int compression, int quality, CString &filename)
@@ -1136,20 +1136,21 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
             cdc.TextOut(mWinApp->ScaleValueForDPI(25),
               rect.Height() - mWinApp->ScaleValueForDPI(60), letString);
           }
+
+          //Add image FOV in microns
+          float pixel = mShiftManager->GetPixelSize(imBuf);
+          if (pixel > 0) {
+            cdc.SetTextColor(RGB(0, 255, 40));
+            cdc.SelectObject(useLabelFont);
+            imBuf->mImage->getSize(ix, iy);
+            letString.Format("FOV: %s x %s um",
+              FormattedNumber((double)(ix * pixel), "", 0, 3, 1.f, true),
+              FormattedNumber((double)(iy * pixel), "", 0, 3, 1.f, true));
+            cdc.TextOut(mWinApp->ScaleValueForDPI(25),
+              rect.Height() - mWinApp->ScaleValueForDPI(36), letString);
+          }
       }
 
-      //Add image FOV in microns
-      float pixel = mShiftManager->GetPixelSize(imBuf);
-      if (pixel > 0 && scaleCrit > 0) {
-        cdc.SetTextColor(RGB(0, 255, 40));
-        cdc.SelectObject(useLabelFont);
-        imBuf->mImage->getSize(ix, iy);
-        letString.Format("FOV: %s x %s um", 
-          FormattedNumber((double)(ix * pixel), "", 0, 3, 1.f, true),
-          FormattedNumber((double)(iy * pixel), "", 0, 3, 1.f, true));
-        cdc.TextOut(mWinApp->ScaleValueForDPI(25),
-          rect.Height() - mWinApp->ScaleValueForDPI(40), letString);
-      }
     } else {
       cdc.SelectObject(useLabelFont);
       if (mImBufs[mImBufIndex].mSecNumber < 0)
