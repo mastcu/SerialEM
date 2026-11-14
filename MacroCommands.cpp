@@ -11712,7 +11712,8 @@ int CMacCmd::SkipUtapiService()
   int ind, found = 0;
   bool *supports = mScope->GetUtapiSupportsService();
   ShortVec *skips = mScope->GetSkipUtapiServices();
-  if (mScope->GetUseUtapiScripting() > 1)
+  if (mScope->GetUseUtapiScripting() == 1 || (mScope->GetUseUtapiScripting() == 3 && 
+    mItemInt[1] != UTSUP_APERTURES))
     ABORT_NOLINE("You cannot skip UTAPI services, there is no connection to older"
       " scripting");
   if (mItemInt[1] < 0 || mItemInt[1] >= UTAPI_SUPPORT_END)
@@ -13078,9 +13079,13 @@ int CMacCmd::ReportNumTableItems(void)
 int CMacCmd::SetNavRegistration(void)
 {
   ABORT_NONAV;
-  if (mNavigator->SetCurrentRegistration(mItemInt[1]))
+  int err = mNavigator->SetCurrentRegistration(mItemInt[1]);
+  if (err == 2) {
+    ABORT_LINE("You cannot change registration when sampling items in maps in line:\n\n");
+  } else if (err) {
     ABORT_LINE("New registration number is out of range or used for imported items "
-    "in:\n\n");
+      "in:\n\n");
+  }
   mNavigator->SetChanged(true);
   return 0;
 }
