@@ -702,6 +702,8 @@ CSerialEMApp::CSerialEMApp()
     mNavAcqParams[i].mulGridSubsetFrom = 1;
     mNavAcqParams[i].mulGridItemsOrShots = 0;
     mNavAcqParams[i].refineZlpOptions = 0;
+    mNavAcqParams[i].sampleItemsPerMap = -10;
+    mNavAcqParams[i].numMapsToSample = 10;
   }
 
   mNavParams.warnedOnSkipMove = false;

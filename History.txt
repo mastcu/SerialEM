@@ -3,6 +3,9 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+11/12/26: Added option to Navigator Acquire to sample a subset of the items
+marked for acquisition from a subset of maps.
+
 11/9/26: Made imaging states save to a separate file, similar to scripts.
 
 11/5/26: Added property UtapiSTEMMagScaling to fix mag values returned by

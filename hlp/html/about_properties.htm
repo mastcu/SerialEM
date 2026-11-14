@@ -2192,7 +2192,7 @@ X lens - 18 <br>
         <TR VALIGN="top">
           <TD>RelativeGainFactors</TD>
           <TD>A list of relative camera gain values, one per binning listed on the Binnings
-            line. This entry is needed for the Eagle and some other Thermo/FEI cameras, OneView 
+            line. This entry is needed for some Thermo/FEI cameras, OneView 
             cameras, Tietz CMOS cameras, and for DE
             cameras configured to bin by averaging instead of summation. The factor should be 1 for the
             binning at which counts per electron is calibrated.&nbsp; These values are used when comparing counts
@@ -2206,10 +2206,10 @@ X lens - 18 <br>
             for a Thermo/FEI camera with the Advanced scripting interface, or simply for setting relative
             gain factors with the UTAPI interface.&nbsp; With a value of
             1, counts are
-            scaled by 0.25 , 0.0625, and 0.0156 at binnings 2, 4, and 8. which makes binning give 
+            scaled by 0.25 , 0.0625, and 0.0156 at binnings 2, 4, and 8, which makes binning give 
             averaged instead of summed values.&nbsp; With a value
             of 2, the scalings would be 1, 0.25, and 0.0625 at 2, 4, and 8.&nbsp; Relative gain factors
-            are set to match these gain factors, but they are applied to acquired images only with 
+            are set to match these gain factors, but they are applied to acquired images only 
             with Advanced scripting, since the UTAPI interface provides images that are already scaled.
           </TD>
         </TR>

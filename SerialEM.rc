@@ -2527,8 +2527,8 @@ BEGIN
     DEFPUSHBUTTON   "GO",IDOK,205,496,36,14
     PUSHBUTTON      "Cancel",IDCANCEL,317,496,36,14
     PUSHBUTTON      "?",IDC_BUTHELP,369,498,10,10
-    CONTROL         "Close column valves at end",IDC_NA_CLOSE_VALVES,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,342,94,10
-    CONTROL         "Send email at end",IDC_NA_SENDEMAIL,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,366,68,10
+    CONTROL         "Close column valves at end",IDC_NA_CLOSE_VALVES,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,356,94,10
+    CONTROL         "Send email at end",IDC_NA_SENDEMAIL,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,380,68,10
     LTEXT           "Images will be saved to:",IDC_STAT_SAVING_FATE,5,210,149,8
     LTEXT           "This open file",IDC_STAT_FILE_SAVING_INTO,5,220,149,8
     CONTROL         "Do subset",IDC_NA_DO_SUBSET,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,317,41,10
@@ -2560,9 +2560,9 @@ BEGIN
     CONTROL         "Do early return with sum of",IDC_NA_EARLY_RETURN,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,160,90,10
     EDITTEXT        IDC_EDIT_EARLY_FRAMES,99,159,24,12,ES_AUTOHSCROLL
     LTEXT           "frames",IDC_STAT_FRAMES,124,161,22,8
-    CONTROL         "Hide unselected options",IDC_NA_HIDE_OPTIONS,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,404,89,10
+    CONTROL         "Hide unselected options",IDC_NA_HIDE_OPTIONS,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,418,89,10
     CONTROL         "No message box when errors occur",IDC_NA_NO_MBOX_ON_ERROR,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,330,122,10
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,344,122,10
     PUSHBUTTON      "Restore Default Order",IDC_BUT_DEFAULT_ORDER,291,480,83,12
     CONTROL         "Run after Primary Action",IDC_NA_RUN_AFTER_TASK,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,297,448,89,10
     LTEXT           "um",IDC_STAT_WHEN_MOVED,274,447,10,8,NOT WS_GROUP
@@ -2608,15 +2608,15 @@ BEGIN
     CONTROL         "",IDC_TSS_LINE4,"Static",SS_BLACKFRAME | SS_SUNKEN,3,305,158,1
     CONTROL         "",IDC_TSS_LINE5,"Static",SS_BLACKFRAME | SS_SUNKEN,170,374,209,1
     CONTROL         "",IDC_TSS_LINE6,"Static",SS_BLACKFRAME | SS_SUNKEN,170,477,209,1
-    CONTROL         "Retract cameras at end",IDC_NA_RETRACT_CAMS,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,354,90,10
+    CONTROL         "Retract cameras at end",IDC_NA_RETRACT_CAMS,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,368,90,10
     LTEXT           "(Push button for controls)",IDC_STAT_PUSH_BUT,297,5,80,8
     CONTROL         "Hardware dark reference",IDC_RADIO_NAVACQ_SEL19,"Button",BS_AUTORADIOBUTTON | BS_PUSHLIKE,187,290,89,10
     CONTROL         "",IDC_CHECK_NAVACQ_RUN19,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,176,290,10,10
     PUSHBUTTON      "Setup",IDC_BUT_NAVACQ_SETUP19,350,290,24,10
     CONTROL         "Use map hole vectors for shifts, with adjustment",IDC_NA_USE_MAP_HOLES,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,172,151,10
-    CONTROL         "Run script at end",IDC_NA_RUN_SCRIPT_AT_END,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,392,60,10
-    COMBOBOX        IDC_COMBO_MACRO_AT_END,72,391,90,30,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    CONTROL         "Run script at end",IDC_NA_RUN_SCRIPT_AT_END,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,406,60,10
+    COMBOBOX        IDC_COMBO_MACRO_AT_END,72,405,90,30,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     CONTROL         "P",IDC_RREALI_PREV,"Button",BS_AUTORADIOBUTTON | WS_GROUP,100,255,15,10
     CONTROL         "R",IDC_RREALI_REC,"Button",BS_AUTORADIOBUTTON,116,255,15,10
     CONTROL         "V",IDC_RREALI_VIEW,"Button",BS_AUTORADIOBUTTON,132,255,15,10
@@ -2633,9 +2633,14 @@ BEGIN
     LTEXT           "from index",IDC_STAT_SUB_FROM_INDEX,50,318,31,8
     COMBOBOX        IDC_COMBO_EXTRAMACRO,234,108,90,30,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     LTEXT           "Script to run:",IDC_STAT_EXTRAMACRO,192,109,41,8
-    CONTROL         "Run script at start",IDC_NA_RUN_SCRIPT_AT_START,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,379,62,10
-    COMBOBOX        IDC_COMBO_MACRO_AT_START,72,378,90,30,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    CONTROL         "Run script at start",IDC_NA_RUN_SCRIPT_AT_START,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,393,62,10
+    COMBOBOX        IDC_COMBO_MACRO_AT_START,72,392,90,30,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     PUSHBUTTON      "Close",IDC_BUT_CLOSE_CONTROLS,350,376,24,9
+    CONTROL         "Sample",IDC_NA_DO_SAMPLE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,332,35,10
+    EDITTEXT        IDC_EDIT_SAMPLE_ITEMS,46,331,24,12,ES_AUTOHSCROLL
+    LTEXT           "items each from",IDC_STAT_FROM_MAPS,72,333,47,8
+    EDITTEXT        IDC_EDIT_SAMPLE_MAPS,120,331,24,12,ES_AUTOHSCROLL
+    LTEXT           "maps",IDC_STAT_NA_MAPS,145,333,18,8
 END
 
 IDD_NAVIMPORT DIALOGEX 0, 0, 162, 134
@@ -8759,6 +8764,9 @@ BEGIN
     ID_STATEMENU_LOAD       "Load an imaging states file"
     ID_STATEMENU_SHOWINDEXES 
                             "Set whether a numbered index is displayed next to each imaging state"
+    IDC_NA_DO_SAMPLE        "Just acquire a subset of non-contiguous items from a subset of maps"
+    IDC_EDIT_SAMPLE_ITEMS   "Maximum number of items to acquire from each map"
+    IDC_EDIT_SAMPLE_MAPS    "Maximum number of maps to sample from"
 END
 
 #endif    // English (United States) resources

@@ -59,7 +59,9 @@ IDC_NA_HIDE_OPTIONS, IDC_STAT_CYCLE_FROM, IDC_NA_USE_MAP_HOLES, IDC_NA_RUN_SCRIP
 IDC_STAT_SPACER3, IDC_COMBO_MACRO_AT_END, IDC_TSS_LINE4, IDC_STAT_SKIP_Z_IN,
 IDC_NA_RUN_SCRIPT_AT_START, IDC_COMBO_MACRO_AT_START,
 IDC_NA_RUN_AT_ITEM_Z, IDC_EDIT_SUBSET_NUM, IDC_EDIT_SUBSET_FROM, IDC_RSUBSET_ITEMS,
-IDC_STAT_SUBSET_FROM_ITEM, IDC_RSUBSET_SHOTS, IDC_STAT_SUB_FROM_INDEX, PANEL_END,
+IDC_STAT_SUBSET_FROM_ITEM, IDC_RSUBSET_SHOTS, IDC_STAT_SUB_FROM_INDEX, IDC_NA_DO_SAMPLE,
+IDC_EDIT_SAMPLE_ITEMS, IDC_EDIT_SAMPLE_MAPS, IDC_STAT_FROM_MAPS, IDC_STAT_NA_MAPS,
+PANEL_END,
 IDC_STAT_ACTION_GROUP, IDC_NA_TASK_LINE1, IDC_NA_TASK_LINE2, IDC_STAT_PRIMARY_LINE,
 IDC_COMBO_PREMACRO, IDC_STAT_PREMACRO,  IDC_COMBO_POSTMACRO, IDC_STAT_POSTMACRO,
 IDC_COMBO_EXTRAMACRO, IDC_STAT_EXTRAMACRO,
@@ -164,6 +166,9 @@ CNavAcquireDlg::CNavAcquireDlg(CWnd* pParent /*=NULL*/)
   , m_iSubsetFrom(1)
   , m_iItemsOrShots(0)
   , m_iSubsetNum(1)
+  , m_bDoSample(FALSE)
+  , m_iNumSampleItems(0)
+  , m_iNumSampleMaps(0)
 {
   mCurActSelected = -1;
   mNonModal = true;
@@ -276,6 +281,13 @@ void CNavAcquireDlg::DoDataExchange(CDataExchange* pDX)
   DDV_MinMaxInt(pDX, m_iSubsetNum, 1, 1000000);
   DDX_Radio(pDX, IDC_RSUBSET_ITEMS, m_iItemsOrShots);
   DDX_Control(pDX, IDC_BUT_CLOSE_CONTROLS, m_butCloseControls);
+  DDX_Check(pDX, IDC_NA_DO_SAMPLE, m_bDoSample);
+  DDX_Text(pDX, IDC_EDIT_SAMPLE_ITEMS, m_iNumSampleItems);
+  DDX_INT(pDX, IDC_EDIT_SAMPLE_ITEMS, m_iNumSampleItems, "\"Do sample\" # of items");
+  DDX_Text(pDX, IDC_EDIT_SAMPLE_MAPS, m_iNumSampleMaps);
+  DDX_INT(pDX, IDC_EDIT_SAMPLE_MAPS, m_iNumSampleMaps, "\"Do sample\" # of maps");
+  DDX_Control(pDX, IDC_EDIT_SAMPLE_ITEMS, m_editSampleItems);
+  DDX_Control(pDX, IDC_EDIT_SAMPLE_MAPS, m_editSampleMaps);
 }
 
 
@@ -346,7 +358,8 @@ BEGIN_MESSAGE_MAP(CNavAcquireDlg, CBaseDlg)
   ON_BN_CLICKED(IDC_RSUBSET_ITEMS, OnRsubsetItems)
   ON_BN_CLICKED(IDC_RSUBSET_SHOTS, OnRsubsetItems)
   ON_EN_KILLFOCUS(IDC_EDIT_SUBSET_NUM, OnKillfocusEditSubsetNum)
-  ON_BN_CLICKED(IDC_BUT_CLOSE_CONTROLS, &CNavAcquireDlg::OnButCloseControls)
+  ON_BN_CLICKED(IDC_BUT_CLOSE_CONTROLS, OnButCloseControls)
+  ON_BN_CLICKED(IDC_NA_DO_SAMPLE, OnNaDoSample)
 END_MESSAGE_MAP()
 
 // CNavAcquireDlg message handlers
@@ -981,8 +994,11 @@ void CNavAcquireDlg::OnDoSubset()
   UPDATE_DATA_TRUE;
   if (!mOpenedFromMultiGrid)
     ManageForSubset();
-  else
+  else {
+    if (m_bDoSubset)
+      m_bDoSample = false;
     ManageEnables();
+  }
 }
 
 void CNavAcquireDlg::OnKillfocusSubsetStart()
@@ -996,6 +1012,14 @@ void CNavAcquireDlg::OnKillfocusSubsetStart()
     return;
   }
   B3DCLAMP(m_iSubsetStart, 1, mNumArrayItems);
+  ManageForSubset();
+}
+
+void CNavAcquireDlg::OnNaDoSample()
+{
+  UPDATE_DATA_TRUE;
+  if (mOpenedFromMultiGrid && m_bDoSample && m_bDoSubset)
+    m_bDoSubset = false;
   ManageForSubset();
 }
 
@@ -1112,6 +1136,10 @@ void CNavAcquireDlg::ManageEnables(bool rebuilding)
   EnableDlgItem(IDC_RSUBSET_ITEMS, m_bDoSubset);
   EnableDlgItem(IDC_RSUBSET_SHOTS, m_bDoSubset && acquireType == ACQUIRE_MULTISHOT);
   EnableDlgItem(IDC_STAT_SUBSET_FROM_ITEM, m_bDoSubset);
+  EnableDlgItem(IDC_EDIT_SAMPLE_ITEMS, m_bDoSample);
+  EnableDlgItem(IDC_EDIT_SAMPLE_MAPS, m_bDoSample);
+  EnableDlgItem(IDC_STAT_FROM_MAPS, m_bDoSample);
+  EnableDlgItem(IDC_STAT_NA_MAPS, m_bDoSample);
   m_butAcquireTS.EnableWindow(mAnyTSpoints && !mulGridForMapping);
   m_butAcquireMap.EnableWindow(mAnyAcquirePoints && !mulGridForMapping);
   m_butSaveAsMap.EnableWindow(mAnyAcquirePoints && !m_iAcquireChoice &&

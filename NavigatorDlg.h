@@ -212,6 +212,7 @@ public:
   GetMember(BOOL, AddingPoints);
   GetMember(int, AddPointID);
   GetMember(int, LastAddPtMagInd);
+  GetMember(bool, DoingSample);
 
   void SetCurAcqParmActions(int which) { mAcqParm = mWinApp->GetNavAcqParams(which); mAcqActions = mHelper->GetAcqActions(which); };
   bool OKtoCloseNav();
@@ -503,6 +504,7 @@ private:
   int mPostponedSubsetStart; // Subset values when postponed
   int mPostponedSubsetEnd;
   BOOL mPostposedDoSubset;
+  bool mDoingSample;         // Flag for whether sample is being done
   bool mAcqCycleDefocus;     // Flag that acquire is actually cycling focus given settings
   int mLastMapForVectors;    // For keeping track of using map hole vectors
   bool mSettingUpFullMont;   // Flag so that fitting can not add extra area if skewed
