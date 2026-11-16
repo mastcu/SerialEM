@@ -304,9 +304,13 @@ void CToolDlg::OnCancel()
 void CToolDlg::OnMove(int x, int y)
 {
   CBaseDlg::OnMove(x, y);
-
-  if (mState & TOOL_FLOATDOCK)
+  WINDOWPLACEMENT place;
+  RECT *dlgPlacements = mWinApp->GetDlgPlacements();
+  if (mState & TOOL_FLOATDOCK) {
+    GetWindowPlacement(&place);
+    dlgPlacements[mColorIndex] = place.rcNormalPosition;
     mWinApp->RestoreViewFocus();
+  }
 }
 
 void CToolDlg::OnPaint()

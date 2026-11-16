@@ -74,6 +74,7 @@ protected:
 private:
 	int mMidHeight;	  // The height when midway open
 	int mState;			// The state flags
+  int mColorIndex;  // Absolute index of this dialog
 public:
   bool mInitialized;
   void DrawSideBorders(CPaintDC & dc);
@@ -85,6 +86,7 @@ public:
   GetMember(CString, BigFontName);
   void SetupPanels(int * idTable, int * leftTable, int * topTable,
     int *heightTable = NULL, int sortStart = 0);
+  SetMember(int, ColorIndex);
 };
 
 //{{AFX_INSERT_LOCATION}}
