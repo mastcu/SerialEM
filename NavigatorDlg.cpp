@@ -4140,48 +4140,48 @@ void CNavigatorDlg::AddAutocontPolygons(MapItemArray &polyArray,
   bool needFirst = true;
   CMapDrawItem *item = NULL;
   int color = DEFAULT_POLY_COLOR;
-CString str, conv = "Converted group";
-indsInPoly.clear();
+  CString str, conv = "Converted group";
+  indsInPoly.clear();
 
-for (group = 0; group < numGroups; group++) {
-  if (!groupShown[group])
-    continue;
+  for (group = 0; group < numGroups; group++) {
+    if (!groupShown[group])
+      continue;
 
-  // New ID for each  group: loop on points and add non-excluded ones in group
-  groupID = MakeUniqueID();
-  str.Format("  %d", group + 1);
-  conv += str;
-  if (mHelper->GetKeepColorsForPolygons()) {
-    color = group % MAX_AUTOCONT_GROUPS;
-    if (mHelper->GetReverseAutocontColors())
-      color = (MAX_AUTOCONT_GROUPS - 1) - color;
-    color += CONT_COLOR_BASE_IND;
-  }
-  for (ind = 0; ind < numPolys; ind++) {
-    if (excluded[ind] || groupNums[ind] != group)
-      continue;
-    item = polyArray.GetAt(ind);
-    if (!item)
-      continue;
-    item->mGroupID = groupID;
-    item->mColor = color;
-    item->mMapID = MakeUniqueID();
-    if (needFirst) {
-      firstID = item->mMapID;
-      needFirst = false;
+    // New ID for each  group: loop on points and add non-excluded ones in group
+    groupID = MakeUniqueID();
+    str.Format("  %d", group + 1);
+    conv += str;
+    if (mHelper->GetKeepColorsForPolygons()) {
+      color = group % MAX_AUTOCONT_GROUPS;
+      if (mHelper->GetReverseAutocontColors())
+        color = (MAX_AUTOCONT_GROUPS - 1) - color;
+      color += CONT_COLOR_BASE_IND;
     }
-    item->mAcquire = setAcquire;
-    item->mLabel.Format("%d", mNewItemNum++);
-    item->mRegistration = mCurrentRegistration;
-    item->mOriginalReg = mCurrentRegistration;
-    mItemArray.Add(item);
-    polyArray.SetAt(ind, NULL);
-    indsInPoly.push_back(ind);
-    lastID = item->mMapID;
+    for (ind = 0; ind < numPolys; ind++) {
+      if (excluded[ind] || groupNums[ind] != group)
+        continue;
+      item = polyArray.GetAt(ind);
+      if (!item)
+        continue;
+      item->mGroupID = groupID;
+      item->mColor = color;
+      item->mMapID = MakeUniqueID();
+      if (needFirst) {
+        firstID = item->mMapID;
+        needFirst = false;
+      }
+      item->mAcquire = setAcquire;
+      item->mLabel.Format("%d", mNewItemNum++);
+      item->mRegistration = mCurrentRegistration;
+      item->mOriginalReg = mCurrentRegistration;
+      mItemArray.Add(item);
+      polyArray.SetAt(ind, NULL);
+      indsInPoly.push_back(ind);
+      lastID = item->mMapID;
+    }
   }
-}
-mWinApp->AppendToLog(conv);
-RefillAfterAutocontPolys();
+  mWinApp->AppendToLog(conv);
+  RefillAfterAutocontPolys();
 }
 
 // Just add a single autocont polygon made by clicking
