@@ -441,12 +441,11 @@ void CEMbufferWindow::ReloadFileComboBox()
   int ind, maxWidth, numFiles = mWinApp->mDocWnd->GetNumStores();
   KImageStore *store;
   CString dir, file;
-  CRect rect;
+  float scaling;
   if (mDeferComboReloads || !mInitialized)
     return;
   CDC *pDC = m_comboOutFile.GetDC();
-  m_comboOutFile.GetClientRect(rect);
-  maxWidth = 17 * rect.Width() / 20;
+  maxWidth = mWinApp->MaxSizeAndTextExtentScaling(&m_comboOutFile, 0.9f, scaling);
   m_comboOutFile.ResetContent();
   for (ind = 0; ind < numFiles; ind++) {
     store = mWinApp->mDocWnd->GetStoreMRC(ind);
@@ -456,7 +455,7 @@ void CEMbufferWindow::ReloadFileComboBox()
 
     // Truncate by adding 3 dots and eating away characters from front of name
     dir.Format("%d: %s", ind + 1, (LPCTSTR)file);
-    while ((pDC->GetTextExtent(dir)).cx > maxWidth && file.GetLength() > 5) {
+    while (scaling * (pDC->GetTextExtent(dir)).cx > maxWidth && file.GetLength() > 5) {
       file = file.Mid(1);
       dir.Format("%d: ...%s", ind + 1, (LPCTSTR)file);
     }

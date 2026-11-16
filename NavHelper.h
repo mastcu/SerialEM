@@ -761,6 +761,7 @@ public:
   int AssessAcquireProblems(int startInd, int endInd);
   int AssessAcquireForParams(NavAcqParams *navParams, NavAcqAction *acqActions,
     MultiShotParams &multiShotParams, int startInd, int endInd, CString prefix);
+  void SelectSampleItems(NavAcqParams *acqParm, int startInd, int endInd);
   int CheckForBadParamIndexes(CString prefix);
   int GetAcqParamIndexToUse(bool starting = false);
   BOOL IsMultishotSaving(bool *allZeroER = NULL, MultiShotParams *params = NULL);

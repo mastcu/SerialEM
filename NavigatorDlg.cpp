@@ -2517,7 +2517,7 @@ void CNavigatorDlg::ItemToListString(int index, CString &string)
       string += "P";
     string += CString(item->mCorner ? "C\t" : "\t") + item->mNote;
   }
-  item->mTextExtent = (pDC->GetTextExtent(string)).cx;
+  item->mTextExtent = mWinApp->TextExtentScalingForDPI() * pDC->GetTextExtent(string).cx;
   m_listViewer.ReleaseDC(pDC);
 }
 
@@ -10507,6 +10507,11 @@ void CNavigatorDlg::AcquireAreas(int source, bool dlgClosing, bool useTempParams
     dlg->mNumArrayItems = (int)mItemArray.GetSize();
     if (fromMultigrid && (source < NAVACQ_SRC_MG_RUN_MMM ||
       !(mAcqDlgPostponed && !useTempParams))) {
+      if (mAcqParm->sampleItemsPerMap > 0 && mAcqParm->multiGridSubset > 0)
+        mAcqParm->multiGridSubset = -mAcqParm->multiGridSubset;
+      dlg->m_bDoSample = mAcqParm->sampleItemsPerMap > 0;
+      dlg->m_iNumSampleItems = B3DABS(mAcqParm->sampleItemsPerMap);
+      dlg->m_iNumSampleMaps = mAcqParm->numMapsToSample;
       dlg->m_bDoSubset = mAcqParm->multiGridSubset > 0;
       dlg->m_iSubsetNum = B3DABS(mAcqParm->multiGridSubset);
       dlg->m_iSubsetFrom = mAcqParm->mulGridSubsetFrom;
@@ -10529,6 +10534,9 @@ void CNavigatorDlg::AcquireAreas(int source, bool dlgClosing, bool useTempParams
         dlg->m_iSubsetEnd = dlg->mNumArrayItems;
         dlg->m_bDoSubset = false;
       }
+      dlg->m_bDoSample = mAcqParm->sampleItemsPerMap > 0;
+      dlg->m_iNumSampleItems = B3DABS(mAcqParm->sampleItemsPerMap);
+      dlg->m_iNumSampleMaps = mAcqParm->numMapsToSample;
       dlg->mLastNonTStype = mAcqParm->nonTSacquireType;
       EvaluateAcquiresForDlg(dlg, fromMultigrid);
     }
@@ -10578,6 +10586,8 @@ void CNavigatorDlg::AcquireAreas(int source, bool dlgClosing, bool useTempParams
     if (dlg->OptionsToAcquireType() != ACQUIRE_DO_TS)
       mAcqParm->nonTSacquireType = dlg->OptionsToAcquireType();
     mAcqParm->acquireType = dlg->OptionsToAcquireType();
+    mAcqParm->sampleItemsPerMap = (dlg->m_bDoSample ? 1 : -1) * dlg->m_iNumSampleItems;
+    mAcqParm->numMapsToSample = dlg->m_iNumSampleMaps;
 
     // Postponing: save subset parameters
     mAcqDlgPostponed = dlg->mPostponed > 0;
@@ -10807,6 +10817,15 @@ void CNavigatorDlg::AcquireAreas(int source, bool dlgClosing, bool useTempParams
       mEndingAcquireIndex = B3DMIN(mEndingAcquireIndex, dlg->m_iSubsetEnd - 1);
     }
   }
+
+  // Clear flags for sample points and set up for sample
+  for (ind = 0; ind < (int)mItemArray.GetSize(); ind++)
+    mItemArray[ind]->mFlags &= ~NAV_FLAG_IN_SAMPLE;
+  mDoingSample = dlg->m_bDoSample && (!dlg->m_bDoSubset || !fromMultigrid);
+  if (mDoingSample) {
+    mHelper->SelectSampleItems(mAcqParm, acqIndex, mEndingAcquireIndex);
+  }
+
   if (mHelper->AssessAcquireProblems(acqIndex, mEndingAcquireIndex)) {
     ManageAcquireDlgCleanup(fromMenu, dlgClosing);
     return;
@@ -12742,6 +12761,8 @@ int CNavigatorDlg::SetCurrentRegistration(int newReg)
   if (newReg < 0 || newReg > MAX_CURRENT_REG ||
     RegistrationUseType(newReg) == NAVREG_IMPORT)
     return 1;
+  if (mAcquireIndex >= 0 && mDoingSample)
+    return 2;
   if (mAcquireIndex >= 0)
     mHelper->CountAcquireItems(mAcquireIndex, mEndingAcquireIndex, oldNonTS, oldNumTS);
   mCurrentRegistration = newReg;
@@ -13219,10 +13240,12 @@ bool CNavigatorDlg::IsItemToBeAcquired(CMapDrawItem *item, bool &skippingGroup)
   if (item->mRegistration == mCurrentRegistration &&
     ((item->mAcquire && mAcqParm->acquireType != ACQUIRE_DO_TS) ||
     (item->mTSparamIndex >= 0 && mAcqParm->acquireType == ACQUIRE_DO_TS))) {
-      if (item->mGroupID && item->mGroupID == mGroupIDtoSkip)
-        skippingGroup = true;
-      else
-        return true;
+    if (item->mGroupID && item->mGroupID == mGroupIDtoSkip)
+      skippingGroup = true;
+    else if (mDoingSample)
+      return (item->mFlags & NAV_FLAG_IN_SAMPLE) != 0;
+    else
+      return true;
   }
   return false;
 }

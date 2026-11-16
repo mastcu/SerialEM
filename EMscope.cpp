@@ -631,6 +631,7 @@ int CEMscope::Initialize()
   static bool firstTime = true;
   double htval;
   int ind, ind2;
+  bool noSkip = false;
   HitachiParams *hitachi = mWinApp->GetHitachiParams();
   int *camLen = mWinApp->GetCamLenTable();
   CString message, str;
@@ -969,16 +970,25 @@ int CEMscope::Initialize()
     }
 
     // Process the skip list
-    for (ind = 0; ind < (int)mSkipUtapiServices.size(); ind++)
-      if (mSkipUtapiServices[ind] >= 0 && mSkipUtapiServices[ind] < UTAPI_SUPPORT_END)
-        mUtapiSupportsService[mSkipUtapiServices[ind]] = false;
+    for (ind = 0; ind < (int)mSkipUtapiServices.size(); ind++) {
+      if (mSkipUtapiServices[ind] >= 0 && mSkipUtapiServices[ind] < UTAPI_SUPPORT_END) {
+        if (mUseUtapiScripting == 1 || (mUseUtapiScripting == 3 &&
+          ind == UTSUP_APERTURES))
+          mUtapiSupportsService[mSkipUtapiServices[ind]] = false;
+        else
+          noSkip = true;
+      }
+    }
+    if (noSkip)
+      PrintfToLog("You cannot skip UTAPI services %sif there is no connection to old "
+        "scripting", mUseUtapiScripting == 3 ? "(except apertures)" : "");
     if (mMonitorC2ApertureSize < 0 && mUtapiSupportsService[UTSUP_APERTURES])
       mMonitorC2ApertureSize = 2;
     if (mShowApertureStatus > 0 && mUtapiSupportsService[UTSUP_APERTURES])
       mShowApertureStatus = 2;
 
     // Need to skip insertion service if no camera service, because UTAPI has 0 cameras
-        if (!mUtapiSupportsService[UTSUP_CAM_SINGLE])
+    if (!mUtapiSupportsService[UTSUP_CAM_SINGLE])
       mUtapiSupportsService[UTSUP_CAM_INSERT] = false;
     if (mUpdateInterval <= 0)
       mUpdateInterval = 200;

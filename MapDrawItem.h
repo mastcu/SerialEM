@@ -31,6 +31,7 @@
 
 #define NAV_FLAG_DRAWN_ON_FFT 0x1
 #define NAV_FLAG_HOLES_IN_HEX 0x2
+#define NAV_FLAG_IN_SAMPLE    0x4
 
 class CMapDrawItem
 {

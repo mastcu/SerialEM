@@ -231,4 +231,10 @@ public:
   afx_msg void OnKillfocusEditSubsetNum();
   CButton m_butCloseControls;
   afx_msg void OnButCloseControls();
+  afx_msg void OnNaDoSample();
+  BOOL m_bDoSample;
+  int m_iNumSampleItems;
+  int m_iNumSampleMaps;
+  CEdit m_editSampleItems;
+  CEdit m_editSampleMaps;
 };

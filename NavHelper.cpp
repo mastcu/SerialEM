@@ -6057,6 +6057,84 @@ int CNavHelper::AssessAcquireForParams(NavAcqParams *navParam, NavAcqAction *acq
   return 0;
 }
 
+// Set flag for sampling between the given item limits
+void CNavHelper::SelectSampleItems(NavAcqParams *acqParm, int startInd, int endInd)
+{
+  IntVec numInMap, nextInMap, numSoFar, numSelected;
+  std::map<int, int> IDtoIndex;
+  std::map<int, int>::iterator iter;
+  int itemsPerMap = acqParm->sampleItemsPerMap;
+  int numSampleMaps = acqParm->numMapsToSample;
+  int ind, vecInd, drawnID, numMaps, numUse, sampNum = 0, numEnough = 0, useCount = 0;
+  int groupStart, groupEnd;
+  bool doingTS = acqParm->acquireType == ACQUIRE_DO_TS;
+  CMapDrawItem *item;
+
+  // Find acquire items and count ones in each map
+  for (ind = startInd; ind <= endInd; ind++) {
+    item = mItemArray->GetAt(ind);
+    drawnID = item->mDrawnOnMapID;
+    if (((item->mAcquire && !doingTS) || (item->mTSparamIndex >= 0 && doingTS)) && 
+      item->mRegistration == mNav->GetCurrentRegistration() && drawnID > 0) {
+      if (IDtoIndex.count(drawnID)) {
+        iter = IDtoIndex.find(drawnID);
+        vecInd = iter->second;
+        numInMap[vecInd]++;
+        if (numInMap[vecInd] == itemsPerMap)
+          numEnough++;
+      } else {
+        IDtoIndex.insert(std::pair<int, int>(drawnID, (int)numInMap.size()));
+        numInMap.push_back(1);
+        if (itemsPerMap == 1)
+          numEnough++;
+      }
+    }
+  }
+
+  // Set up maps to sample, using all maps if necessary, or ones with enough points if
+  // there are enough of them
+  numMaps = numUse = (int)numInMap.size();
+  nextInMap.resize(numMaps, -1);
+  numSoFar.resize(numMaps);
+  numSelected.resize(numMaps);
+  if (numEnough >= numSampleMaps)
+    numUse = numEnough;
+  groupStart = 0;
+  for (ind = 0; ind < numMaps; ind++) {
+    if (numInMap[ind] >= itemsPerMap || numEnough < numSampleMaps) {
+      if (useCount == groupStart) {
+        nextInMap[ind] = 0;
+        sampNum++;
+        UtilBalancedGroupLimits(numUse, B3DMIN(numUse, numSampleMaps), sampNum,
+          groupStart, groupEnd);
+      }
+      useCount++;
+    }
+  }
+
+  // Go through items again and set flag for ones to sample
+  int total = 0;
+  for (ind = startInd; ind <= endInd; ind++) {
+    item = mItemArray->GetAt(ind);
+    drawnID = item->mDrawnOnMapID;
+    if ((item->mAcquire && !doingTS) || (item->mTSparamIndex >= 0 && doingTS) &&
+      drawnID > 0) {
+      iter = IDtoIndex.find(drawnID);
+      vecInd = iter->second;
+
+      // If index in map matches the next one to take, set flag and advance the next index
+      if (nextInMap[vecInd] == numSoFar[vecInd] && numSelected[vecInd] < itemsPerMap) {
+        item->mFlags |= NAV_FLAG_IN_SAMPLE;
+        nextInMap[vecInd] += B3DMAX(1, numInMap[vecInd] / itemsPerMap);
+        numSelected[vecInd]++;
+      }
+
+      // Keep track of ones seen so far in map
+      numSoFar[vecInd]++;
+    }
+  }
+}
+
 // Make sure no indexes are out of range, which can crash when indexes are not checked
 int CNavHelper::CheckForBadParamIndexes(CString prefix)
 {
@@ -6356,6 +6434,7 @@ void CNavHelper::ListFilesToOpen(void)
 void CNavHelper::CountAcquireItems(int startInd, int endInd, int &numAcquire, int &numTS)
 {
   CMapDrawItem *item;
+  bool sampling;
   if (!mNav) {
     numAcquire = -1;
     numTS = -1;
@@ -6365,9 +6444,11 @@ void CNavHelper::CountAcquireItems(int startInd, int endInd, int &numAcquire, in
     endInd = (int)mItemArray->GetSize() - 1;
   numAcquire = 0;
   numTS = 0;
+  sampling = mNav->GetAcquireIndex() >= 0 && mNav->GetDoingSample();
   for (int i = startInd; i <= endInd; i++) {
     item = mItemArray->GetAt(i);
-    if (item->mRegistration == mNav->GetCurrentRegistration()) {
+    if (item->mRegistration == mNav->GetCurrentRegistration() && 
+      (!sampling || (item->mFlags & NAV_FLAG_IN_SAMPLE))) {
       if (item->mAcquire)
         numAcquire++;
       if (item->mTSparamIndex >= 0)
@@ -6383,6 +6464,7 @@ void CNavHelper::CountHoleAcquires(int startInd, int endInd, int minHoles,
 {
   CMapDrawItem *item;
   int numDefault, numForItem, xt, yt;
+  bool sampling;
   if (!mNav) {
     numCenters = -1;
     numHoles = -1;
@@ -6393,6 +6475,7 @@ void CNavHelper::CountHoleAcquires(int startInd, int endInd, int minHoles,
   startInd = B3DMAX(0, startInd);
   numCenters = 0;
   numHoles = 0;
+  sampling = mNav->GetAcquireIndex() >= 0 && mNav->GetDoingSample();
 
   // Get the default from parameters
   if (mMultiShotDlg && endInd > startInd)
@@ -6402,7 +6485,8 @@ void CNavHelper::CountHoleAcquires(int startInd, int endInd, int minHoles,
   // Get value for each item to be acquired in range
   for (int i = startInd; i <= endInd; i++) {
     item = mItemArray->GetAt(i);
-    if (item->mRegistration == mNav->GetCurrentRegistration() && item->mAcquire) {
+    if (item->mRegistration == mNav->GetCurrentRegistration() && item->mAcquire &&
+      (!sampling || (item->mFlags & NAV_FLAG_IN_SAMPLE))) {
       numForItem = GetNumHolesForItem(item, numDefault);
       if (numForItem >= minHoles) {
         numCenters++;

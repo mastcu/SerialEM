@@ -978,8 +978,8 @@
         'DetectorName' with the official name in Advanced scripting, if that is available.
         </li>
         <li>If there is a frame-saving camera (Falcon 4 or Ceta 2), the camera property 
-      'UtapiRemoteFramePath' is needed with the top directory on the storage server 
-      where frames are saved, as seen from the SerialEM computer.</li>
+      'FalconRemoteFramePath' is needed with the top directory on the storage server 
+      where frames are saved, as seen on the storage computer.</li>
         <li>The camera property 'LinearToCountingRatio' needs to be set differently under 
         UTAPI than under Advanced scripting, so <A HREF="#linear2counting">the procedure</A> for measuring this needs 
         to be redone when upgrading.&nbsp; If Advanced scripting is still available, it 
@@ -992,6 +992,8 @@
         if Advanced scripting is still available, it is recommended that you leave 
         'FalconLocalFramePath' with the path for Advanced scripting and put the path for 
         UTAPI in 'UtapiLocalFramePath'.</li>
+        <li>The camera timing measurement should be rerun and the need for relative gain factors or the
+           AutoGainFactors property should be checked after upgrading to UTAPI.</li>
       </ul>
       <P><A name="setup_camera"></A><B>Initial Camera Setup (Priority 1 and 2))</B></P>
       <P>You should set the basic properties of your camera(s) in the properties file
