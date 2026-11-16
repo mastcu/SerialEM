@@ -2720,12 +2720,6 @@ bool CMacroProcessor::SetVariable(CString name, CString value, int type,
     return false;
   }
 
-  // Clear out any existing 2D array if not assigning to an array element
-  if (leftInd < 0) {
-    delete var->rowsFor2d;
-    var->rowsFor2d = rowsFor2d;
-  }
-
   // There is a set error if it must be new or if a user variable is using the name
   // of an existing variable of another type
   if (mustBeNew) {
@@ -2746,6 +2740,12 @@ bool CMacroProcessor::SetVariable(CString name, CString value, int type,
           " be reassigned as %spersistent", (LPCTSTR)name,
           (type != VARTYPE_PERSIST) ? "" : "non-", type == VARTYPE_PERSIST ? "" : "non-");
     return true;
+  }
+
+  // Clear out any existing 2D array if not assigning to an array element
+  if (leftInd < 0) {
+    delete var->rowsFor2d;
+    var->rowsFor2d = rowsFor2d;
   }
 
   var->isNumeric = false;

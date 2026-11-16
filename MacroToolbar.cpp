@@ -206,6 +206,7 @@ void CMacroToolbar::SetLength(int num, int butHeight)
   int ind, gutter, width, height, maxExtent = 0, deltaForBut = 6, deltaForWin = 6;
   CButton *button;
   CString *names = mWinApp->GetMacroNames();
+  float scaling = mWinApp->TextExtentScalingForDPI();
   if (!butHeight)
     butHeight = mButHeightOrig;
   if (butHeight < B3DNINT(0.8 * mButHeightOrig)) {
@@ -231,7 +232,7 @@ void CMacroToolbar::SetLength(int num, int butHeight)
   for (ind = 0; ind < num; ind++) {
     if (!names[ind].IsEmpty()) {
       CSize size = dc.GetTextExtent(names[ind]);
-      maxExtent = B3DMAX(maxExtent, size.cx);
+      maxExtent = B3DMAX(maxExtent, (int)ceil(scaling * size.cx));
     }
   }
 

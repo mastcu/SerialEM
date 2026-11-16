@@ -2205,7 +2205,7 @@ void CParameterIO::WriteSettings(CString strFileName)
         zbgParam.targetDefocus, zbgParam.standardFocus);
       mFile->WriteString(oneState);
     }
-    for (i = 0; i < comaVsIScals->size(); i++){
+    for (i = 0; i < (int)comaVsIScals->size(); i++){
       comaVsIS = comaVsIScals->at(i);
       if (comaVsIS.userSetting) {
         WriteComaVsISCalToString(comaVsIS, oneState);
@@ -2885,6 +2885,10 @@ int CParameterIO::ReadNavAcqParams(NavAcqParams *navParams, NavAcqAction *navAct
         navParams->mulGridSubsetFrom = itemInt[28];
         navParams->mulGridItemsOrShots = itemInt[29];
       }
+      if (!itemEmpty[31]) {
+        navParams->sampleItemsPerMap = itemInt[30];
+        navParams->numMapsToSample = itemInt[31];
+      }
 
     } else if (strItems[0].Find("NavAcqAction") == 0) {
       index = atoi((LPCTSTR)strItems[0].Mid(12));
@@ -2953,7 +2957,7 @@ void CParameterIO::WriteNavAcqParams(int which, NavAcqParams *navParams,
     navParams->runStartMacro ? 1 : 0, navParams->startMacroInd);
   mFile->WriteString(oneState);
   oneState.Format("AcquireParams2 %d %f %f %d %d %d %d %d %d %d %f %d %d %d %d %d %d %d "
-    "%d %d %d %d %d %d %d %d %d %d %d\n", navParams->cycleDefocus ? 1 : 0,
+    "%d %d %d %d %d %d %d %d %d %d %d %d %d\n", navParams->cycleDefocus ? 1 : 0,
     navParams->cycleDefFrom,
     navParams->cycleDefTo, navParams->cycleSteps,
     navParams->earlyReturn ? 1 : 0, navParams->numEarlyFrames,
@@ -2968,7 +2972,8 @@ void CParameterIO::WriteNavAcqParams(int which, NavAcqParams *navParams,
     navParams->endMacroInd, navParams->runEndMacro ? 1 : 0, 
     navParams->realignToScaledMap ? 1 : 0, navParams->conSetForScaledAli,
     navParams->multiGridSubset, navParams->mulGridSubsetFrom,
-    navParams->mulGridItemsOrShots);
+    navParams->mulGridItemsOrShots, navParams->sampleItemsPerMap, 
+    navParams->numMapsToSample);
   mFile->WriteString(oneState);
 
   orderLine = "ActionOrder";
@@ -5848,7 +5853,7 @@ void CParameterIO::WriteCalibration(CString strFileName)
     }
 
     //Write coma vs image shift calibrations
-    for (i = 0; i < comaVsIScals->size(); i++) {
+    for (i = 0; i < (int)comaVsIScals->size(); i++) {
       comaVsIS = comaVsIScals->at(i);
       if (!comaVsIS.userSetting) {
         WriteComaVsISCalToString(comaVsIS, string);

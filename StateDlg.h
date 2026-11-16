@@ -26,6 +26,7 @@ protected:
   afx_msg void OnCancel();
 	afx_msg void OnOK();
 	afx_msg void OnMove(int x, int y);
+  afx_msg void OnActivate(UINT nState, CWnd* pWndOther, BOOL bMinimized);
   afx_msg void OnInitMenuPopup(CMenu*  pPopupMenu, UINT  nIndex, BOOL  bSysMenu);
   afx_msg void OnSaveImagingStates();
   afx_msg void OnLoadImagingStates();
@@ -59,6 +60,7 @@ private:
   static bool mRemindedToGoTo;
   static int mCamOfSetState;
   static bool mInitedSetStates;
+  double mActivatedTime;
 
 public:
   CButton m_butAddCurState;

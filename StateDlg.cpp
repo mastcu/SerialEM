@@ -53,6 +53,7 @@ CStateDlg::CStateDlg(CWnd* pParent /*=NULL*/)
   mCurrentItem = -1;
   mInitialized = false;
   mNonModal = true;
+  mActivatedTime = 0;
 }
 
 CStateDlg::~CStateDlg()
@@ -112,6 +113,7 @@ BEGIN_MESSAGE_MAP(CStateDlg, CBaseDlg)
   ON_COMMAND(ID_STATEMENU_SHOWINDEXES, OnShowIndexes)
   ON_UPDATE_COMMAND_UI(ID_STATEMENU_SHOWINDEXES, OnUpdateShowIndexes)
   ON_WM_INITMENUPOPUP()
+  ON_WM_ACTIVATE()
 END_MESSAGE_MAP()
 
 // CStateDlg message handlers
@@ -230,6 +232,13 @@ void CStateDlg::OnMove(int x, int y)
 	CDialog::OnMove(x, y);
   if (mInitialized)
     mWinApp->RestoreViewFocus();
+}
+
+// Keep track of time when window activated with mouse
+void CStateDlg::OnActivate(UINT nState, CWnd * pWndOther, BOOL bMinimized)
+{
+  if (nState == WA_CLICKACTIVE)
+    mActivatedTime = GetTickCount();
 }
 
 // Calls update functions for menu items in State Dialog menu. Copied from OnInitMenuPopup
@@ -504,7 +513,11 @@ void CStateDlg::OnEnChangeStatename()
 // Selection changes
 void CStateDlg::OnSelchangeListStates()
 {
-  mWinApp->RestoreViewFocus();
+
+  // If window was activated by this click in the table just now, restore focus,
+  // but otherwise assume the window was given focus by clicking menu bar
+  if (SEMTickInterval(mActivatedTime) < 200)
+    mWinApp->RestoreViewFocus();
   mCurrentItem = m_listViewer.GetCurSel();
   if (mCurrentItem == LB_ERR)
     mCurrentItem = -1;

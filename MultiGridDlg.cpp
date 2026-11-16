@@ -1227,16 +1227,16 @@ void CMultiGridDlg::UpdateSettings()
  */
 void CMultiGridDlg::UpdateCurrentDir()
 {
-  CRect rect;
+  float scaling;
   CDC *pDC = m_statCurrentDir.GetDC();
   CString file = mMGTasks->GetNamesLocked() ?
     mMGTasks->GetWorkingDir() : mWinApp->mDocWnd->GetInitialDir();
   int maxWidth;
   CString current = mMGTasks->GetNamesLocked() ? "Session" : "Current";
-  m_statCurrentDir.GetClientRect(rect);
-  maxWidth = 18 * rect.Width() / 20;
+  maxWidth = mWinApp->MaxSizeAndTextExtentScaling(&m_statCurrentDir, 0.9f, scaling);;
   m_strCurrentDir = current + " dir: " + file;
-  while ((pDC->GetTextExtent(m_strCurrentDir)).cx > maxWidth && file.GetLength() > 5) {
+  while (scaling * (pDC->GetTextExtent(m_strCurrentDir)).cx > maxWidth && 
+    file.GetLength() > 5) {
     file = file.Mid(1);
     m_strCurrentDir = current + " dir: ..." + file;
   }
@@ -1594,8 +1594,8 @@ void CMultiGridDlg::LoadStatesInComboBox(CComboBox &combo, bool addNone)
 {
   CString str, fullStr, loadStr;
   StateParams *state;
-  CRect rect;
   CDC *pDC = combo.GetDC();
+  float scaling;
   int ind, jnd, token, minusOne = -1, maxWidth, numStates = (int)mStateArray->GetSize();
   if (!numStates) {
     combo.EnableWindow(false);
@@ -1621,10 +1621,9 @@ void CMultiGridDlg::LoadStatesInComboBox(CComboBox &combo, bool addNone)
     }
     if (!state->name.IsEmpty())
       loadStr += ": " + state->name;
-    combo.GetClientRect(rect);
-    maxWidth = 17 * rect.Width() / 20;
-    if (pDC->GetTextExtent(loadStr).cx > maxWidth) {
-      while ((pDC->GetTextExtent(loadStr + "...")).cx > maxWidth &&
+    maxWidth = mWinApp->MaxSizeAndTextExtentScaling(&combo, 0.85f, scaling);
+    if (scaling * pDC->GetTextExtent(loadStr).cx > maxWidth) {
+      while (scaling * (pDC->GetTextExtent(loadStr + "...")).cx > maxWidth &&
         loadStr.GetLength() > 5)
         loadStr = loadStr.Left(loadStr.GetLength() - 1);
       loadStr += "...";

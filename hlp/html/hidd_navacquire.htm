@@ -260,7 +260,7 @@
     <P><A NAME="generalOptions"></A>&nbsp;</P>
     <P><em><strong>General Options</strong></em></P>
     <P><b>Do subset from index</b></P>
-    <P>Select this option to acquire from a subset of items.&nbsp; Enter the item
+    <P>Select this option to acquire from a contiguous subset of items.&nbsp; Enter the item
       index at which to start and end in the two text boxes.&nbsp; If there are no
       items within the subset marked for acquisition and compatible with the selected
       primary task, it will switch the primary task between tilt series and a non-tilt
@@ -283,6 +283,21 @@
       of items or Records to acquire.&nbsp; In the text box after <strong>from item</strong>, 
       enter the number of the first acquisition item to start with; e.g., an entry of 
       11 will make it skip the first 10 items marked for acquisition.</P>
+    <P><strong>Do sample</strong></P>
+    <P>Select this option to sample a subset of items that have been drawn on maps and 
+      marked for acquiring from a subset of such maps.&nbsp; Enter the number of items 
+      to acquire from each map in the first text box, and the number of maps to 
+      acquire from in the second box.&nbsp; These numbers are maximum values; fewer 
+      items may be acquired from a map if less than the indicated number are marked 
+      there.&nbsp; However, if there are enough maps with at least that many items in 
+      them, only those maps will be considered for sampling.&nbsp; The indexes of the selected maps 
+      will be spaced apart if possible, and the indexes of items from each map will be spaced apart 
+      also.</P>
+    <P>If <strong>Do subset</strong> is also specified, the sample will be taken from 
+      within the subset limits.&nbsp; However, when this dialog is opened from the <a href="hidd_multi_grid.htm">Multiple Grid Operations</a> 
+      dialog, the modified subset entries cannot be specified together with sampling; 
+      only one of the two methods of taking a subset can be selected.&nbsp; The two 
+      checkboxes will toggle each other.</P>
     <P><b>No message box when errors occur</b></P>
     <P>Selecting this option has two effects: message boxes that would block
       unattended operation are converted to messages in the log, and the underlying

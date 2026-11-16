@@ -1246,6 +1246,8 @@ CFont * GetLittleFont(CWnd *stat);
 CFont * GetBoldFont(CWnd *stat);
 float GetScalingForDPI();
 int ScaleValueForDPI(double value);
+int MaxSizeAndTextExtentScaling(CWnd *wnd, float fracUse, float &scaling);
+float TextExtentScalingForDPI();
 afx_msg void OnWindowRescuelogwindow();
 afx_msg void OnUpdateWindowRescuelogwindow(CCmdUI *pCmdUI);
 afx_msg void OnFileUseMonospacedFont();

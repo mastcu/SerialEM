@@ -2757,6 +2757,11 @@
 #define IDC_STATIC_PTS_MAXISDIST        3788
 #define IDC_STATIC_PTS_MAXISDISTUM      3789
 #define IDC_EDIT_PTS_MAXISDIST          3790
+#define IDC_NA_DO_SAMPLE                3791
+#define IDC_EDIT_SAMPLE_ITEMS           3792
+#define IDC_STAT_FROM_MAPS              3793
+#define IDC_EDIT_SAMPLE_MAPS            3794
+#define IDC_STAT_NA_MAPS                3795
 #define ID_NEW_IMAGE                    32771
 #define IDM_FILE_SAVEOTHER              32772
 #define IDM_FILE_READ                   32773
@@ -3417,10 +3422,10 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_3D_CONTROLS                     1
+#define _APS_3D_CONTROLS                1
 #define _APS_NEXT_RESOURCE_VALUE        304
 #define _APS_NEXT_COMMAND_VALUE         33658
-#define _APS_NEXT_CONTROL_VALUE         3791
+#define _APS_NEXT_CONTROL_VALUE         3796
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif
