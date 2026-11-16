@@ -3,6 +3,12 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+11/15/26: Fixed file name/path truncations and some other places where text
+extent was used to account for DPI.
+
+11/15/26: Fixed tool dialogs so that opening/closing a floated dialog after
+moving it does not set it to previous position.
+
 11/15/26: Allowed arrow keys to scroll State dialog table if it is given focus
 by clicking in the title bar.
 

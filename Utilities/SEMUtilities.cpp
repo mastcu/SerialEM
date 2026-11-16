@@ -1141,12 +1141,13 @@ bool UtilCamRadiosNeedSmallFont(CButton *radio)
   CameraParameters *camParam = sWinApp->GetCamParams();
   int *activeList = sWinApp->GetActiveCameraList();
   CRect butrect;
+  float scaling = sWinApp->TextExtentScalingForDPI();
   radio->GetWindowRect(&butrect);
   CClientDC dc(radio);
   dc.SelectObject(radio->GetFont());
   for (int ind = 0; ind < sWinApp->GetNumActiveCameras(); ind++) {
     CSize size = dc.GetTextExtent(camParam[activeList[ind]].name);
-    if (size.cx >= butrect.Width() - (20 * sWinApp->GetSystemDPI()) / 120)
+    if (scaling * size.cx >= butrect.Width() - (20 * sWinApp->GetSystemDPI()) / 120)
       return true;
   }
   return false;

@@ -1529,6 +1529,7 @@ BOOL CSerialEMApp::InitInstance()
     mToolDlgs[color]->Create(sToolDlgIDs[color]);  \
     mDlgColorIndex[mNumToolDlg] = color;  \
     mDialogTable[mNumToolDlg++].pDialog = mToolDlgs[color];  \
+    mToolDlgs[color]->SetColorIndex(color);  \
   }
 
   CREATE_IF_SHOWING(!IsIDinHideSet(-10), 0);
@@ -6337,4 +6338,20 @@ float CSerialEMApp::GetScalingForDPI()
 int CSerialEMApp::ScaleValueForDPI(double value)
 {
   return B3DNINT(value * GetScalingForDPI());
+}
+
+// Return the maximum size to fit text within for the given window and fraction to use,
+// and a scaling to apply to the text extent.
+int CSerialEMApp::MaxSizeAndTextExtentScaling(CWnd *wnd, float fracUse, float &scaling)
+{
+  CRect rect;
+  scaling = TextExtentScalingForDPI();
+  wnd->GetClientRect(&rect);
+  return (int)(rect.Width() * fracUse);
+}
+
+// Text extents are logical units, invariant with DPI, so need to be scaled
+float CSerialEMApp::TextExtentScalingForDPI()
+{
+  return (float)mSystemDPI / 130.f;   // Determined with current dir in multigrid;
 }

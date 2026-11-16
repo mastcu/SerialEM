@@ -554,7 +554,7 @@ void CMacroEditer::EnsureLineVisible(int sel2)
   size = pDC->GetTextExtent("serialem");
   m_editMacro.ReleaseDC(pDC);
   m_editMacro.GetRect(&editRect);
-  numLines = editRect.Height() / size.cy;
+  numLines = editRect.Height() / (int)ceil(mWinApp->TextExtentScalingForDPI() * size.cy);
   if (sel2 < sel1 + 1 || sel2 > sel1 + numLines - 2)
     m_editMacro.LineScroll(sel2 - (sel1 + 1));
   m_editMacro.SetFocus();
