@@ -592,7 +592,7 @@ void CLowDoseDlg::OnRdefine()
 
   // (No longer go through a show cycle) and set up user point
   if (m_iDefineArea) {
-    if (UsableDefineImageInAOrView(imBuf)) {
+    if (UsableDefineImageInAOrViewOrSearch(imBuf)) {
       mImBufs->mHasUserPt = true;
       FixUserPoint(imBuf, 0);
     }
@@ -1888,7 +1888,7 @@ void CLowDoseDlg::ScopeUpdate(int magIndex, int spotSize, double intensity,
     } else if (intChanged && inSetArea == FOCUS_CONSET && nav &&
       nav->m_bEditFocus && nav->GetEditFocusEnabled() &&
       imBuf->mHasUserPt && canDrawBeam && imBuf->mLowDoseArea && 
-      imBuf->mConSetUsed == VIEW_CONSET) {
+      IS_SET_VIEW_OR_SEARCH(imBuf->mConSetUsed)) {
       item = nav->GetCurrentItem();
       if (item && (item->mAcquire || item->mTSparamIndex >= 0))
         mWinApp->mMainView->DrawImage();
@@ -2139,7 +2139,8 @@ ScaleMat CLowDoseDlg::MatrixAndStateForUserPoint(EMimageBuffer *imBuf, StatePara
   bool navArea = mWinApp->mMainView->GetPreParTSDrewLDAreas();
 
   aMat.xpx = 0.;
-  if (!mTrulyLowDose || !(m_iDefineArea || navArea) || !UsableDefineImageInAOrView(imBuf))
+  if (!mTrulyLowDose || !(m_iDefineArea || navArea) || 
+    !UsableDefineImageInAOrViewOrSearch(imBuf))
     return aMat;
 
   // Get the focus position that applies here, and a modified camera to specimen matrix
@@ -2245,7 +2246,7 @@ void CLowDoseDlg::FixUserPoint(EMimageBuffer *imBuf, int needDraw)
   StateParams state;
   bool navArea = mWinApp->mMainView->GetPreParTSDrewLDAreas() && !m_iDefineArea;
 
-  if (imBuf->mHasUserPt && (UsableDefineImageInAOrView(imBuf) || navArea)) {
+  if (imBuf->mHasUserPt && (UsableDefineImageInAOrViewOrSearch(imBuf) || navArea)) {
     imBuf->mImage->getShifts(shiftX, shiftY);
     imBuf->mImage->getSize(nx, ny);
     xcen = (float)nx / 2.f;
@@ -2312,19 +2313,21 @@ int CLowDoseDlg::UsefulImageInA()
 
 // Return true if there is "useful" image in A and A is the given buffer, or if
 // this is a View that would be suitable for editing focus position
-bool CLowDoseDlg::UsableDefineImageInAOrView(EMimageBuffer *imBuf)
+bool CLowDoseDlg::UsableDefineImageInAOrViewOrSearch(EMimageBuffer *imBuf)
 {
-  return (UsefulImageInA() && imBuf == mImBufs) || ViewImageOKForEditingFocus(imBuf);
+  return (UsefulImageInA() && imBuf == mImBufs) || 
+    SearchOrViewImageOKForEditingFocus(imBuf);
 }
 
-// Return true if buffer has a low dose view image with the right mag, and could thus
-// be used for adjusting focus position
-bool CLowDoseDlg::ViewImageOKForEditingFocus(EMimageBuffer * imBuf)
+// Return true if buffer has a low dose view or search image with the right mag, and could
+// thus be used for adjusting focus position
+bool CLowDoseDlg::SearchOrViewImageOKForEditingFocus(EMimageBuffer * imBuf)
 {
+  int area = imBuf->mConSetUsed == SEARCH_CONSET ? SEARCH_AREA : VIEW_CONSET;
   return ((imBuf->mCaptured > 0 || imBuf->mCaptured == BUFFER_MONTAGE_OVERVIEW ||
     imBuf->mCaptured == BUFFER_MONTAGE_PIECE || imBuf->ImageWasReadIn()) &&
-    imBuf->mConSetUsed == 0 && imBuf->mLowDoseArea &&
-    (imBuf->mMagInd == mLDParams[0].magIndex || mWinApp->GetDummyInstance()));
+    IS_SET_VIEW_OR_SEARCH(imBuf->mConSetUsed) && imBuf->mLowDoseArea &&
+    (imBuf->mMagInd == mLDParams[area].magIndex || mWinApp->GetDummyInstance()));
 }
 
 // Given a shift on camera, get the X coordinate on specimen and convert that
