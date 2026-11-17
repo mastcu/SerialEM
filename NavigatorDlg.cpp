@@ -2517,7 +2517,8 @@ void CNavigatorDlg::ItemToListString(int index, CString &string)
       string += "P";
     string += CString(item->mCorner ? "C\t" : "\t") + item->mNote;
   }
-  item->mTextExtent = mWinApp->TextExtentScalingForDPI() * pDC->GetTextExtent(string).cx;
+  item->mTextExtent = (int)ceil(mWinApp->TextExtentScalingForDPI() * 
+    pDC->GetTextExtent(string).cx);
   m_listViewer.ReleaseDC(pDC);
 }
 
