@@ -417,7 +417,10 @@ X lens - 18 <br>
           <TD>AssumeDPI</TD>
           <TD>Follow with a DPI value to use in font and dialog scaling instead of the
               detected one.&nbsp; This enables the program to be scaled independently of the
-              Windows scaling or DPI setting.&nbsp; If you want to scale for 120 DPI, you will also need
+              Windows scaling or DPI setting, to a limited extent.&nbsp; You may find that a particular
+            value gives bad results (i.e., text strings not fitting in the allowed space) while a 
+            nearby value works well, so try varying the value in relatively small steps if there are
+             problems with a particular value.&nbsp; If you want to scale for 120 DPI, you will also need
               to set &#39;DisplayIsNot120DPI 0&#39;</TD>
         </TR>
         <TR VALIGN="top">
@@ -3834,6 +3837,14 @@ MoveStage 0 0 $delz
              Thermo/FEI scope plus two if there nitrogen filling systems accessible by scripting commands.
             For a Thermo/FEI scope, the default is 3 for a Krios, 0 otherwise; for a JEOL scope the default
             is 2 if the JeolHasNitrogenClass property is set.
+          </TD>
+        </TR>
+       <TR>
+          <TD>VibrationManagerErrorsOK</TD>
+          <TD>Set to 1 to issue a message instead of stopping on an error from preparing to
+            avoid vibrations in the vibration 
+            manager if the error is 'Preparing temperature failed'.&nbsp; As of 17-Nov-26, it is not
+            yet known if such a failure indicates a problem or if the error return is misleading.
           </TD>
         </TR>
        <TR>

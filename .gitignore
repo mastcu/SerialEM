@@ -34,6 +34,7 @@ SerialEMcrash*.log
 hlp\HTMLDefines.h
 macroTestSettings.txt
 SEMbasicModeItems.txt
+*asicMode*.txt
 .vs
 *.orig
 Kriossettings*.*
