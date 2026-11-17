@@ -2765,6 +2765,11 @@ int CNavigatorDlg::ShiftCohortOfItems(float shiftX, float shiftY, int reg,
         mHelper->SaveMapMarkerShiftToLists(item, cohortID, shiftX, shiftY);
       else if (saveOrRestore < 0)
         mHelper->RestoreMapMarkerShift(item);
+      else {
+        item->mMarkerShiftX = shiftX;
+        item->mMarkerShiftY = shiftY;
+        item->mShiftCohortID = cohortID;
+      }
       shiftedMapIDs.insert(item->mMapID);
       ShiftItemAndPoints(shiftX, shiftY, item, i, numShift);
     }
