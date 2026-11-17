@@ -1665,7 +1665,7 @@ int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
     UtilSplitExtension(message, strLine, strCopy);
     strLine += "-states.txt";
     mDocWnd->SetCurStatesPath(strLine);
-    if (!recognized && !ReadStates(message))
+    if (!recognized && !ReadStates(strLine))
       mDocWnd->SetReadStatesFile(true);
 
     // But if there was no states file defined in settings, we need to stick with states
@@ -2575,9 +2575,6 @@ int CParameterIO::ReadStates(CString strFileName)
     // Open the file for reading, verify that it is a settings file
     mFile = new CStdioFile(strFileName,
       CFile::modeRead | CFile::shareDenyWrite);
-
-    // Clear out low dose params now in case there are none in the file
-    mWinApp->InitializeLDParams();
 
     while (retval == 0 && (err = ReadSuperParse(strLine, strItems, itemEmpty, itemInt,
       itemDbl, itemFlt, MAX_TOKENS)) == 0) {
