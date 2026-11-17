@@ -435,6 +435,8 @@ private:
   double mRemainingTime;         // Estimate of remaining time after current grid is done
   int mSkipMarkerShifts;         // User response to query: 1 to skip or -1 to use markers
   bool mNoMarkerShifts;          // Flag to skip in the run for whatever reason
+  bool mApplyFinalMarkerShifts;  // Flag to apply second-round shift in final acquisition
+  ShortVec mMagsForFinalShifts;  // Mag index for a grid that has any
   int mPostLoadDelay;            // Delay time in seconds after loading/unloading grid
   bool mInStopMultiGrid;         // Prevent reentrance
   BOOL mCheckLoadOnJeol;         // Check that loaded grid is on the stage
