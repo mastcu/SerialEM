@@ -2557,17 +2557,18 @@ void CLowDoseDlg::SyncFilterSettings(int inArea, FilterParams *filtParam)
   ldArea->zeroLoss = filtParam->zeroLoss;
 }
 
-// Compute corner points for drawing an area on a view image, if an area is
+// Compute corner points for drawing an area on a view or search image, if an area is
 // being defined.  type = 0 for the defined area with beam size from larger of T/F if 
 // tied, or for focus if drawing from Nav, 1 for Record, 2 for Record with radius
 // returned.  Four corner points in image coordinates are returned
 // in corner[XY] for the define area, Record, or Focus
-int CLowDoseDlg::DrawAreaOnView(int type, EMimageBuffer *imBuf, StateParams &state,
+int CLowDoseDlg::DrawAreaOnViewOrSearch(int type, EMimageBuffer *imBuf, StateParams &state,
                                 float *cornerX, float *cornerY,
                                 float &cenX, float &cenY, float &radius, float &trueRad)
 {
   int binning = imBuf->mBinning;
-  int magInd = imBuf->mMagInd > 0 ? imBuf->mMagInd : mLDParams[0].magIndex;
+  int drawnOnArea = imBuf->mConSetUsed == SEARCH_CONSET ? SEARCH_AREA : VIEW_CONSET;
+  int magInd = imBuf->mMagInd > 0 ? imBuf->mMagInd : mLDParams[drawnOnArea].magIndex;
   int sizeX = imBuf->mImage->getWidth();
   int sizeY = imBuf->mImage->getHeight();
   int curCam = state.camIndex;
@@ -2601,18 +2602,18 @@ int CLowDoseDlg::DrawAreaOnView(int type, EMimageBuffer *imBuf, StateParams &sta
     mWinApp->mNavHelper->ModifySubareaForOffset(curCam, state.focusXoffset,
       state.focusYoffset, left, top, right, bottom);
 
-  AreaAcqCoordToView(boxArea, binning, sizeX, sizeY, aMat, vMat,
-    left, top, state, cornerX[0], cornerY[0]);
-  AreaAcqCoordToView(boxArea, binning, sizeX, sizeY, aMat, vMat,
-    right, top, state, cornerX[1], cornerY[1]);
-  AreaAcqCoordToView(boxArea, binning, sizeX, sizeY, aMat, vMat,
-    right, bottom, state, cornerX[2], cornerY[2]);
-  AreaAcqCoordToView(boxArea, binning, sizeX, sizeY, aMat, vMat,
-    left, bottom, state, cornerX[3], cornerY[3]);
+  AreaAcqCoordToViewOrSearch(boxArea, binning, sizeX, sizeY, aMat, vMat,
+    left, top, state, cornerX[0], cornerY[0], drawnOnArea);
+  AreaAcqCoordToViewOrSearch(boxArea, binning, sizeX, sizeY, aMat, vMat,
+    right, top, state, cornerX[1], cornerY[1], drawnOnArea);
+  AreaAcqCoordToViewOrSearch(boxArea, binning, sizeX, sizeY, aMat, vMat,
+    right, bottom, state, cornerX[2], cornerY[2], drawnOnArea);
+  AreaAcqCoordToViewOrSearch(boxArea, binning, sizeX, sizeY, aMat, vMat,
+    left, bottom, state, cornerX[3], cornerY[3], drawnOnArea);
 
   pixel = mShiftManager->GetPixelSize(imBuf);
   if (!pixel)
-    pixel = binning * mShiftManager->GetPixelSize(curCam, mLDParams[0].magIndex);
+    pixel = binning * mShiftManager->GetPixelSize(curCam, mLDParams[drawnOnArea].magIndex);
   trueRad = 0.;
   if (mScope->GetUseIllumAreaForC2()) {
     trueRad = (float)(50. * mScope->IntensityToIllumArea(mLDParams[boxArea].intensity,
@@ -2653,17 +2654,17 @@ int CLowDoseDlg::DrawAreaOnView(int type, EMimageBuffer *imBuf, StateParams &sta
   // Get radius in image coordinates and convert center to view image coord
   radius = (float)(sqrt(0.25 * diamSq) *
     mShiftManager->GetPixelSize(curCam, mLDParams[cenArea].magIndex) / pixel);
-  AreaAcqCoordToView(boxArea, binning, sizeX, sizeY, aMat, vMat,
-    camXcen, camYcen, state, cenX, cenY);
+  AreaAcqCoordToViewOrSearch(boxArea, binning, sizeX, sizeY, aMat, vMat,
+    camXcen, camYcen, state, cenX, cenY, drawnOnArea);
 
   return boxArea;
 }
 
 // Convert from camera acquisition coordinates (inverted Y) in the given inArea to
 // image coordinates in the View image with given sizeX, sizeY and binning
-void CLowDoseDlg::AreaAcqCoordToView(int inArea, int binning, int sizeX, int sizeY,
+void CLowDoseDlg::AreaAcqCoordToViewOrSearch(int inArea, int binning, int sizeX, int sizeY,
   ScaleMat aMat, ScaleMat vMat, int acqX, int acqY, StateParams &state, float &imX,
-  float &imY)
+  float &imY, int drawnOnArea)
 {
   CameraParameters *camP = mWinApp->GetCamParams() + state.camIndex;
   double camX, camY, specX, specY, delX, delY;
@@ -2676,7 +2677,7 @@ void CLowDoseDlg::AreaAcqCoordToView(int inArea, int binning, int sizeX, int siz
   if (inArea == FOCUS_CONSET)
     delX = state.focusAxisPos;
   else
-    delX = mLDParams[inArea].axisPosition - mLDParams[0].axisPosition;
+    delX = mLDParams[inArea].axisPosition - mLDParams[drawnOnArea].axisPosition;
   delY = 0.;
   if (state.rotateAxis && state.axisRotation) {
     delY = delX * sin(DTOR * state.axisRotation);

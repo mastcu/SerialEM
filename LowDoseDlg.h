@@ -204,10 +204,12 @@ private:
 
 public:
   GetMember(BOOL, TrulyLowDose);
-  int DrawAreaOnView(int type, EMimageBuffer *imBuf, StateParams &state, float * cornerX,
-    float * cornerY, float & cenX, float & cenY, float &radius, float &trueRad);
-  void AreaAcqCoordToView(int inArea, int binning, int sizeX, int sizeY, ScaleMat aMat,
-    ScaleMat vMat, int acqX, int acqY, StateParams &state, float & imX, float & imY);
+  int DrawAreaOnViewOrSearch(int type, EMimageBuffer *imBuf, StateParams &state, 
+    float * cornerX, float * cornerY, float & cenX, float & cenY, float &radius, 
+    float &trueRad);
+  void AreaAcqCoordToViewOrSearch(int inArea, int binning, int sizeX, int sizeY, ScaleMat aMat,
+    ScaleMat vMat, int acqX, int acqY, StateParams &state, float & imX, float & imY,
+    int drawnOnArea = VIEW_CONSET);
   void ManageDefines(int area);
   CButton m_butBlankBeam;
   void ToggleBlankWhenDown(void);
