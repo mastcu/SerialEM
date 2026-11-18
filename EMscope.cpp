@@ -589,7 +589,6 @@ CEMscope::CEMscope()
   mScanFOVscaling = 1.;
   mFEIPluginParams.disconnectThreshPtr = &mUtapiDisconnectThres;
   mFEIPluginParams.scanFOVscalingPtr = &mScanFOVscaling;
-  mVibrationManagerErrorsOK = 0;
   mAdvancedScriptVersion = 0;
   mPluginVersion = 0;
   mPlugFuncs = NULL;
@@ -11157,14 +11156,12 @@ int CEMscope::LongOperationBusy(int index)
 {
   int thread, op, longOp, busy, indStart, indEnd, retval = 0;
   int now = mWinApp->MinuteTimeStamp();
-  int errorOK[MAX_LONG_OPERATIONS] = {0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1};
+  int errorOK[MAX_LONG_OPERATIONS] = {0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0};
   const char *errStringsOK[MAX_LONG_OPERATIONS] = {"", "Cannot force refill", "", "", "",
-    "", "", "", "", "", "Preparing temperature failed", "", "Start timed out"};
+    "", "", "", "", "", "", "", "Start timed out", "", ""};
   JeolCartridgeData jcData;
-  bool throwErr = false, didError;
+  bool throwErr = false, didError, prepNoVib;
   CString excuse;
-  errorOK[LONG_OP_PREPARE_NO_VIBRATE] = mVibrationManagerErrorsOK & 1;
-  errorOK[LONG_OP_AVOID_VIBRATION] = mVibrationManagerErrorsOK & 2;
   indStart = B3DCHOICE(index < 0, 0, sLongThreadMap[index]);
   indEnd = B3DCHOICE(index < 0, MAX_LONG_THREADS - 1, sLongThreadMap[index]);
   if (!mDoingLongOperation)
@@ -11176,15 +11173,17 @@ int CEMscope::LongOperationBusy(int index)
     if (busy <= 0) {
       for (op = 0; op < mLongOpData[thread].numOperations; op++) {
         longOp = mLongOpData[thread].operations[op];
+        prepNoVib = longOp == LONG_OP_PREPARE_NO_VIBRATE;
 
         // First convert an error to success if the error is allowed and the error string
         // matches the allowed one; issue completion messages in either case
         if (busy < 0 && errorOK[longOp] && errStringsOK[longOp][0] != 0x00 &&
-          mLongOpData[thread].errString.Find(errStringsOK[longOp]) >= 0) {
+          (mLongOpData[thread].errString.Find(errStringsOK[longOp]) >= 0 || (prepNoVib &&
+            mLongOpData[thread].errString.Find("Preparing temperature failed") >= 0))) {
             mWinApp->AppendToLog("Call for " + CString(longOpDescription[longOp]) +
-              CString(longOp == LONG_OP_PREPARE_NO_VIBRATE ? "may or may not have" :
-                "probably") + " finished successfully with misleading error message:\r\n"
-              "     " + mLongOpData[thread].errString);
+              CString(prepNoVib ? "may have" : "probably") + 
+              " finished successfully with misleading error message:\r\n     " +
+              mLongOpData[thread].errString);
             mLongOpData[thread].finished[op] = true;
             busy = 0;
         } else {

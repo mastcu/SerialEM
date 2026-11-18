@@ -631,7 +631,6 @@ public:
   GetSetMember(int, JeolUpdateTaskSkips);
   GetSetMember(int, PostProbeBeamDelay);
   GetSetMember(float, ScanFOVscaling);
-  GetSetMember(int, VibrationManagerErrorsOK);
   void SetFakeTiltOffset(float offset);
   float GetFakeTiltOffset();
   static int GetScopeCallFromPlugin() {return mScopeCallFromPlugin ; };
@@ -1038,7 +1037,6 @@ private:
   bool mDoNextFEGFlashHigh;    // Flag to do a high flash on next call
   BOOL mHasSimpleOrigin;       // Flag to use calls to Simple Origin for refilling
   int mDewarVacCapabilities;   // Flags: 1 for autoloader, 2 for temperature control
-  int mVibrationManagerErrorsOK;  // 1 to ignore error in preparing + 2 error in avoiding
   int mScopeCanFlashFEG;       // 1 if it can flash cold FEG, 0 not
   int mScopeHasPhasePlate;     // 1 if there is a phase plate, 0 not
   int mScopeHasAutoloader;     // 1 if it does, set to 0 if it does not
