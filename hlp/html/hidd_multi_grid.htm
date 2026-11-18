@@ -94,9 +94,11 @@
       works only at a medium magnification, as described below in <em>
         <a href="#refineRealign">Optional Controls for Refining Alignment</a></em>.</p>
     <p><em>Aligning to higher magnification:</em>&nbsp; To give a 
-      better registration with stage positions at higher magnifications, a one-time 
+      better registration with stage positions at higher magnifications, either the 
+      grid map has to be taken with View or Search images and a shift offset must be 
+      defined for the image type used, or a one-time 
       Shift to Marker has to be applied to the grid map and any items already marked 
-      on it.&nbsp; Thus, in general, such a shift needs to be stored before running 
+      on it.&nbsp; In general, such a shift needs to be stored before running 
       the later phases.&nbsp; If the <A href="hidd_shift_to_marker.htm">Shift to Marker</A> 
       dialog is opened while this dialog is open, its radio buttons will be set 
       appropriately for storing a shift.&nbsp;&nbsp; The &#39;ShiftItemsByMicrons&#39; script 
@@ -133,6 +135,17 @@
       vectors were already set by the first mechanism.&nbsp; The 
       program will ask you to confirm that you want to set the vectors, and you can 
       answer 'Yes Always' to stop being asked during this run of the program.</p>
+    <p><em>Aligning with Shift to Marker before Final Acquisition: </em>Some users 
+      have a workflow that benefits from being able to apply a Shift to Marker to 
+      medium mag maps and points drawn on them before final acquisition.&nbsp; The 
+      requirements are: 1) There must points that have not been shifted and that were 
+      drawn on maps that have never been shifted.&nbsp; 2) The shift will be offered 
+      only in a run where just final acquisition is done.&nbsp; 3) The step for 
+      realigning after reloading the grid must be skipped.&nbsp; 4) The acquisition 
+      parameters must not include Realign to Item, because the program is not set up 
+      to align to a map after it has been shifted away from its actual position at the 
+      mag where it was acquired.&nbsp; If these conditions are met, the program will 
+      ask whether you want to apply the available marker shift.</p>
     <p><em>Managing operations on a single grid with no autoloader:</em> This dialog may also be useful for managing the workflow when 
       there is just one manually loaded grid.&nbsp; When the property 
       'ScopeHasAutoloader 0' is present, the menu entry appears as 'Multiple 

@@ -2348,7 +2348,7 @@ int CMultiGridTasks::StartGridRuns(int LMneedsLD, int MMMneedsLD, int finalNeeds
   int err, grid, ind, numAcq, numTS, acqType, numFail = 0, numDark = 0;
   int magInd, camera, ldArea, numPoly, jnd, numMSparam = 0, maxStamp, minStamp;
   int numXformed = 0, paramXformable = 0, curSetXformable = 0, backXformable = 0;
-  int backXfStamp, subXfStamp;
+  int backXfStamp, subXfStamp, numCanShift, totCanShift = 0, numGridCanShift = 0;
   float halfx, halfy, size;
   double dists[3], avgDist, angle;
   FloatVec msDists, msAngles;
@@ -2377,11 +2377,13 @@ int CMultiGridTasks::StartGridRuns(int LMneedsLD, int MMMneedsLD, int finalNeeds
   MapItemArray *itemArray;
   BOOL LDforZbyG, usingView;
   bool noFrameSubs, movable, doRefine, doPolyMonts, fpMultiShot, sameXform;
+  bool usingRealiToItem;
   bool apForLMM = false;
   bool stateForLMM = false;
   bool stateForMMM = false;
   bool stateForAcq = false;
   bool needForget = false;
+  BaseMarkerShift baseShift;
   BOOL mapLacksMarkerShift = mParams.acquireLMMs;
   bool didLMMforGrid = false, didMMMforGrid = false, didAcqForGrid = false;
   bool lastMMMforGrid = false, lastAcqForGrid = false;
@@ -2400,6 +2402,7 @@ int CMultiGridTasks::StartGridRuns(int LMneedsLD, int MMMneedsLD, int finalNeeds
   mReinsertObjAp = false;
   mRestoreCondAp = 0;
   mNoMarkerShifts = false;
+  mApplyFinalMarkerShifts = false;
   mSavedLowDose = mWinApp->LowDoseMode();
 
   // Get the various setup parameters and lock them in
@@ -2436,6 +2439,7 @@ int CMultiGridTasks::StartGridRuns(int LMneedsLD, int MMMneedsLD, int finalNeeds
     return 0;
 
   mActiveCameraList = mWinApp->GetActiveCameraList();
+  CLEAR_RESIZE(mMagsForFinalShifts, short, mNumGridsToRun);
 
   // Get state of apertures if they are to be changed and error out if bad
   if (GetInitialApertureStates(str, ind)) {
@@ -2696,6 +2700,9 @@ int CMultiGridTasks::StartGridRuns(int LMneedsLD, int MMMneedsLD, int finalNeeds
       if (err)
         return 1;
 
+      if (!mParams.acquireMMMs)
+        usingRealiToItem = (testActions[NAACT_REALIGN_ITEM].flags & NAA_FLAG_RUN_IT) != 0;
+
       // try to assess Z by G cal
       if ((testActions[NAACT_EUCEN_BY_FOCUS].flags & NAA_FLAG_RUN_IT) != 0) {
         magInd = mScope->GetMagIndex();
@@ -2761,6 +2768,38 @@ int CMultiGridTasks::StartGridRuns(int LMneedsLD, int MMMneedsLD, int finalNeeds
           return 1;
         }
       }
+
+      // Check for unshifted final acquire points on unshifted maps that could be shifted
+      if (mParams.runFinalAcq && !mParams.acquireMMMs && !usingRealiToItem && 
+        mSkipGridRealign) {
+        numCanShift = 0;
+        itemArray = mNavigator->GetItemArray();
+        for (ind = 0; ind < (int)itemArray->GetSize(); ind++) {
+          item = itemArray->GetAt(ind);
+          if (item->IsPoint() && item->mAcquire && !item->mShiftCohortID &&
+            item->mMarkerShiftX < EXTRA_VALUE_TEST && item->mDrawnOnMapID) {
+            mapItem = mNavigator->FindItemWithMapID(item->mDrawnOnMapID);
+            if (mapItem && !mapItem->mShiftCohortID &&
+              mapItem->mMarkerShiftX < EXTRA_VALUE_TEST &&
+              MarkerShiftIndexForMag(mapItem->mMapMagInd, baseShift) >= 0) {
+              numCanShift++;
+              mMagsForFinalShifts[grid] = mapItem->mMapMagInd;
+            }
+          }
+        }
+        if (numCanShift)
+          numGridCanShift++;
+        totCanShift += numCanShift;
+      }
+    }
+
+    // Find out if user wants them shifted
+    if (numGridCanShift) {
+      str.Format("%d points on %d grids are unshifted and there is a\n"
+        "marker shift that could be applied before final acquisition.\n\n"
+        "Do you want to apply the marker shift for those points?", totCanShift,
+        numGridCanShift);
+      mApplyFinalMarkerShifts = AfxMessageBox(str, MB_QUESTION) == IDYES;
     }
   }
 
@@ -4244,6 +4283,20 @@ void CMultiGridTasks::DoNextSequenceAction(int resume)
       PrintfToLog("Applied marker shift of %.2f, %.2f to Navigator items for grid %d",
         baseShift.shiftX, baseShift.shiftY, jcd.id);
     }
+
+    // Check for second-round final acq marker shift
+    if (mParams.runFinalAcq && !mParams.acquireLMMs && !mParams.acquireMMMs &&
+      mApplyFinalMarkerShifts && mMagsForFinalShifts[mCurrentGrid] > 0) {
+      if (MarkerShiftIndexForMag(mMagsForFinalShifts[mCurrentGrid], baseShift) >= 0) {
+        mNavigator->ShiftCohortOfItems(baseShift.shiftX, baseShift.shiftY, 
+          item->mRegistration, baseShift.fromMagInd, mNavigator->MakeUniqueID(), false, 
+          false, 0);
+        PrintfToLog("Applied marker shift of %.2f, %.2f to unshifted Navigator items "
+          "mapped at %dx for grid %d", baseShift.shiftX, baseShift.shiftY, 
+          MagForCamera(mWinApp->GetCurrentCamera(), baseShift.fromMagInd), jcd.id);
+      }
+    }
+
     break;
 
     // Start setting up MM map file(s)
