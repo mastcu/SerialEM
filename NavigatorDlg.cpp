@@ -4323,7 +4323,7 @@ MapItemArray *CNavigatorDlg::GetMapDrawItems(
       mItem->mNumPoints == 1 && mItem->mDraw));
   curIsAcquire = mItem && (mItem->mAcquire || mItem->mTSparamIndex >= 0 || groupEllipse);
   mShowingLDareas = (curIsAcquire || m_bShowAcquireArea) && m_bEditFocus &&
-    mEditFocusEnabled && mLowDoseDlg->ViewImageOKForEditingFocus(imBuf);
+    mEditFocusEnabled && mLowDoseDlg->SearchOrViewImageOKForEditingFocus(imBuf);
   drawParTSEllipses = (curIsAcquire && mItem->mParallelTSIndex >= 0) || parTSgroupID > 0;
 
   // Showing low dose area in edit mode: just provide a copy of current item

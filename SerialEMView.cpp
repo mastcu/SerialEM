@@ -2293,8 +2293,8 @@ void CSerialEMView::DrawLowDoseAreas(CDC &cdc, CRect &rect, EMimageBuffer *imBuf
     mWinApp->mNavHelper->FindFocusPosForCurrentItem(state, !mDrewLDAreasAtNavPt,
       imBuf->mRegistration, curInd);
   for (int type = (recOnly >= 0 ? 1 : 0); type < 2; type++) {
-    int area = mWinApp->mLowDoseDlg.DrawAreaOnView(type + (recOnly >= 0 ? 1 : 0), imBuf,
-      state, cornerX, cornerY, cenX, cenY, radius, trueRad);
+    int area = mWinApp->mLowDoseDlg.DrawAreaOnViewOrSearch(type + (recOnly >= 0 ? 1 : 0), 
+      imBuf, state, cornerX, cornerY, cenX, cenY, radius, trueRad);
     if (area) {
       CPen pnSolidPen(useDash ? PS_DASHDOT : PS_SOLID, mDrewLDAreasAtNavPt ? 1 : thick,
         areaColors[(recOnly >= 0 ? recOnly : 0) + area - 1]);

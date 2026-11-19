@@ -204,10 +204,12 @@ private:
 
 public:
   GetMember(BOOL, TrulyLowDose);
-  int DrawAreaOnView(int type, EMimageBuffer *imBuf, StateParams &state, float * cornerX,
-    float * cornerY, float & cenX, float & cenY, float &radius, float &trueRad);
-  void AreaAcqCoordToView(int inArea, int binning, int sizeX, int sizeY, ScaleMat aMat,
-    ScaleMat vMat, int acqX, int acqY, StateParams &state, float & imX, float & imY);
+  int DrawAreaOnViewOrSearch(int type, EMimageBuffer *imBuf, StateParams &state, 
+    float * cornerX, float * cornerY, float & cenX, float & cenY, float &radius, 
+    float &trueRad);
+  void AreaAcqCoordToViewOrSearch(int inArea, int binning, int sizeX, int sizeY, ScaleMat aMat,
+    ScaleMat vMat, int acqX, int acqY, StateParams &state, float & imX, float & imY,
+    int drawnOnArea = VIEW_CONSET);
   void ManageDefines(int area);
   CButton m_butBlankBeam;
   void ToggleBlankWhenDown(void);
@@ -260,8 +262,8 @@ public:
   CMyButton m_butGotoSearch;
   CMyButton m_butGotoRecord;
   void SetBeamShiftButton(BOOL state);
-  bool UsableDefineImageInAOrView(EMimageBuffer *imBuf);
-  bool ViewImageOKForEditingFocus(EMimageBuffer * imBuf);
+  bool UsableDefineImageInAOrViewOrSearch(EMimageBuffer *imBuf);
+  bool SearchOrViewImageOKForEditingFocus(EMimageBuffer * imBuf);
   void DoCopyArea(int from, int area);
   int m_iGoToArea;
   CSpinButtonCtrl m_sbcSearchDefocus;
