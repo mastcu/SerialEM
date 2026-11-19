@@ -3,6 +3,8 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+11/19/26: Enabled defining and editing the focus position on Search images.
+
 11/18/26: Removed property VibrationManagerErrorsOK (it was already allowing
 one error message) and made it allow error with second failure message.
 
