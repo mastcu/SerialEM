@@ -11181,7 +11181,7 @@ int CEMscope::LongOperationBusy(int index)
           (mLongOpData[thread].errString.Find(errStringsOK[longOp]) >= 0 || (prepNoVib &&
             mLongOpData[thread].errString.Find("Preparing temperature failed") >= 0))) {
             mWinApp->AppendToLog("Call for " + CString(longOpDescription[longOp]) +
-              CString(prepNoVib ? "may have" : "probably") + 
+              CString(prepNoVib ? " may have" : " probably") + 
               " finished successfully with misleading error message:\r\n     " +
               mLongOpData[thread].errString);
             mLongOpData[thread].finished[op] = true;
