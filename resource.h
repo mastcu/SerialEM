@@ -3414,17 +3414,19 @@
 #define ID_DELETECOMAVSISCAL            33652
 #define ID_AUTOFOCUSFOCUS_DELETECOMAVSISCAL 33653
 #define ID_STATEMENU_SAVE               33654
-#define ID_STATEMENU_SAVEAS                  33655
-#define ID_STATEMENU_LOAD                    33656
-#define ID_STATEMENU_SHOWINDEXES             33657
+#define ID_STATEMENU_SAVEAS             33655
+#define ID_STATEMENU_LOAD               33656
+#define ID_STATEMENU_SHOWINDEXES        33657
+#define ID_FILE_IMPORTFILE              33658
+#define ID_FILE_IMPORTMERGE             33659
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_3D_CONTROLS                1
+#define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        304
-#define _APS_NEXT_COMMAND_VALUE         33658
+#define _APS_NEXT_COMMAND_VALUE         33660
 #define _APS_NEXT_CONTROL_VALUE         3796
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
