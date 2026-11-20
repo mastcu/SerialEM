@@ -13426,11 +13426,13 @@ float CNavigatorDlg::RotationFromStageMatrices(ScaleMat curMat, ScaleMat mapMat,
   double xtheta, ytheta, ydtheta;
 
   // Get the transformation from the map's current matrix to the defined stage to camera
-  // one as the inverse of the map transform times the stage to camera transform
+  // one as the stage to camera transform times the inverse of the map transform
+  // (which is the inverse of the original transform times the map's previous stage to
+  // camera, equals the inverse of previous stage to camera times original transform)
   // But get the map transform back to right handed coordinates by inverting terms
   mapMat.ypx *= -1.;
   mapMat.ypy *= -1.;
-  aProd = MatMul(MatInv(mapMat), curMat);
+  aProd = MatMul(curMat, MatInv(mapMat));
   xtheta = atan2(aProd.ypx, aProd.xpx) / DTOR;
   ytheta = atan2(-aProd.xpy, aProd.ypy) / DTOR;
   ydtheta = UtilGoodAngle(ytheta - xtheta);
