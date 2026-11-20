@@ -6,17 +6,17 @@ significance, for the stable release version
 11/20/26: Fixed error in computing amount to rotate transformed map for
 display and for realign to item (In 4.2).
 
-11/19/26: Added imaging state dialog to the dialogs that can be opened with the 
-OpenDialog script command, and updated the help for that script command which
-was missing Autocontouring and Hole Combiner. 
+11/19/26: Added imaging state dialog to the dialogs that can be opened with
+the OpenDialog script command, and updated the help for that script command
+which was missing Autocontouring and Hole Combiner. 
 
 11/19/26: Enabled defining and editing the focus position on Search images.
 
 11/18/26: Removed property VibrationManagerErrorsOK (it was already allowing
 one error message) and made it allow error with second failure message.
 
-11/17/26: Multigrid can do a higher magnification shift to marker before final
-acquisition under specific conditions.
+* 11/17/26: Multigrid can do a higher magnification shift to marker before
+final acquisition under specific conditions.
 
 11/17/26: Added property VibrationManagerErrorsOK to allow ignoring an error
 preparing to avoid vibrations if the error is 'Preparing temperature failed'.
@@ -24,7 +24,7 @@ preparing to avoid vibrations if the error is 'Preparing temperature failed'.
 11/16/26: Enabled scripts to have trailing whitespace after backslash
 separators, which previously caused errors.
 
-11/16/26: Enabled the backpace key to delete multiple selected navigator 
+* 11/16/26: Enabled the backpace key to delete multiple selected navigator 
 items in edit mode.
 
 11/15/26: Fixed file name/path truncations and some other places where text
@@ -38,10 +38,10 @@ by clicking in the title bar.
 
 11/15/26: Fixed crash from actions after New2DArray gives an error (In 4.2).
 
-11/12/26: Added option to Navigator Acquire to sample a subset of the items
+* 11/12/26: Added option to Navigator Acquire to sample a subset of the items
 marked for acquisition from a subset of maps.
 
-11/9/26: Made imaging states save to a separate file, similar to scripts.
+* 11/9/26: Made imaging states save to a separate file, similar to scripts.
 
 11/5/26: Added property UtapiSTEMMagScaling to fix mag values returned by
 UTAPI (needs new plugin).
@@ -51,8 +51,8 @@ UTAPI (needs new plugin).
 11/5/26: Fixed camera timing calibration with UTAPI STEM to not do partial
 scans.
 
-11/2/26: Added an option to set the max image shift distance drawn around the 
-center target during parallel tilt series setup.
+* 11/2/26: Added an option to set the max image shift distance drawn around
+the center target during parallel tilt series setup.
 
 10/31/26:  SEM_4-3-0beta15
 10/30/26: Changes to use new UTAPI function for getting rotation center in
@@ -62,9 +62,9 @@ radians for beam tilt; defaulted UseImageBeamTilt to 0 if available.
 set the "added binning" for live mode; added property FEINoLiveAddedBinning to
 keep it from setting this if necessary.
 
-10/26/26: Added the ability to create parallel tilt series items from regular 
-multishot patterns with no center point by adding a synthetic target at zero
-image shift and skipping frame saving at that target. 
+* 10/26/26: Added the ability to create parallel tilt series items from
+regular multishot patterns with no center point by adding a synthetic target
+at zero image shift and skipping frame saving at that target. 
 
 10/26/26: Added ways to make SetItemImShiftTargets store IS targets for all
 but the first point and to delete the Navigator points for the IS targets
@@ -80,24 +80,24 @@ Acquire is turned off if this is being run from multigrid.
 10/23/26: Enabled the checkbox for rotating Low Dose inter-area axis when Edit
 focus mode is turned on (In 4.2).
 
-10/23/26: Added the capability to set the measurement vector endpoints in the 
-coma vs. IS calibration setup dialog with Shift + Middle click.
+* 10/23/26: Added the capability to set the measurement vector endpoints in
+the coma vs. IS calibration setup dialog with Shift + Middle click.
 
-10/23/26: Added an option to the coma vs. IS calibration dialog to take extra
+* 10/23/26: Added an option to the coma vs. IS calibration dialog to take extra
 conditioning shots at each position before coma measurement.
 
 10/23/16: Added a menu item to delete one coma vs. IS calibration.
 
-10/23/26: Added the capability to read and write coma vs. IS calibrations to 
+* 10/23/26: Added the capability to read and write coma vs. IS calibrations to 
 either the settings file or the calibrations file, and a menu option to
 specify which file coma vs. IS calibrations are read from.
 
-10/23/26: Added the capability to store multiple coma vs. IS calibrations 
+* 10/23/26: Added the capability to store multiple coma vs. IS calibrations 
 for different illumination conditions, and interpolate/extrapolate calibration
 matrices across intensity values. 
 
-10/22/26: Simplified the parallel tilt series setup dialog process for creating
-parallel tilt series items with regular patterns.
+* 10/22/26: Simplified the parallel tilt series setup dialog process for
+creating parallel tilt series items with regular patterns.
 
 10/16/26: Added script command for converting an image shift value obtained
 in a defocused View or Search area to apply at a higher mag close to focus.
@@ -131,7 +131,7 @@ tilt series.
 9/30/26: Fixed crash taking image from plugin camera after re-entering
 low dose area on startup.
 
-9/30/26: Added options to Image Level panel for ignoring dark or light areas
+* 9/30/26: Added options to Image Level panel for ignoring dark or light areas
 (e.g., grid bars or empty areas) when setting black/white levels.
 
 9/30/26: Fixed Navigator deletion with Shift D taking many seconds for large
@@ -148,15 +148,15 @@ clicking Navigator point or using LoadPieceAtNavPoint (In 4.2).
 9/24/26: Made SetupWaffleMontage adjust camera coordinates so that montage is
 not defined with a larger size than the images will be (In 4.2).
 
-9/17/26: Added the capability to delete individual image shift targets in a 
+* 9/17/26: Added the capability to delete individual image shift targets in a 
 parallel tilt series item when in Navigator edit mode.
 
 9/15/26: Autocontrast button also resets brightness and contrast.
 
-9/11/26: Made it keep existing Black/White values when reading maps with
+* 9/11/26: Made it keep existing Black/White values when reading maps with
 Autocontrast turned off.
 
-9/10/26: Tips now pop up next to menu items in both the main program menu and
+* 9/10/26: Tips now pop up next to menu items in both the main program menu and
 the Navigator window menu.
 
 9/8/26: Renamed the option in Hole Finder Dialog that centers manually added
@@ -175,7 +175,7 @@ positions in FEIScopePlugin.
 
 9/3/26: Added a property to scale the illuminated area when displayed.
 
-9/3/26: Added option to Settings menu to reopen dialogs on startup.
+* 9/3/26: Added option to Settings menu to reopen dialogs on startup.
 
 9/3/26: Added field of view in microns to the bottom left of the buffer window
 
@@ -190,7 +190,7 @@ too many targets for allowed number of files.
 8/30/26: Printed message and turned off Acquire for a non-polygon item
 when multiple polygon files are being opened for multigrid (In 4.2).
 
-8/27/26: One-line script window saves history of executed lines, and has a 
+* 8/27/26: One-line script window saves history of executed lines, and has a 
 functionality to keyword-search lines in the history.
 
 8/25/26: SEM_4-3-0beta14
@@ -202,8 +202,8 @@ normalize of all lenses at the end on Thermo/FEI scopes.
 8/25/26: Made it skip the UTAPI normalization service if the version is too
 low, one that normalizes all lenses sequentially (In 4.2).
 
-8/24/26: Added "Auto" button and "Autocontrast" and "Log Scale" checkboxes to 
-image display control panel.
+* 8/24/26: Added "Auto" button and "Autocontrast" and "Log Scale" checkboxes
+to image display control panel.
 
 8/24/26: Replaced "Skip Antialias" in the image display control panel with 
 "Antialias during Acquire" in the Navigator Options submenu.
@@ -224,19 +224,19 @@ it considers the vectors to apply at the mag of that image if they were the
 last points added.
 
 8/14/26: SEM_4-3-0beta13
-8/13/26: Added menu option to display beam ellipses on all items in the
+* 8/13/26: Added menu option to display beam ellipses on all items in the
 current Navigator group based on parallel tilt series parameters.  Fixed some
 problems with Acquire area displays.
 
 8/12/26: Made it skip backlash adjustment for low-tilt map taken at start of
 tilt series (In 4.2).
 
-8/12/26: Added field of view limit to beam autocenter setup dialog, and
+* 8/12/26: Added field of view limit to beam autocenter setup dialog, and
 expanded the max shift argument in the AutoCenterBeam script command to
 include this.
 
-8/12/26: Added ability to do early returns from Falcon 4 running through UTAPI
-and from DE cameras connected with API 2.
+* 8/12/26: Added ability to do early returns from Falcon 4 running through
+UTAPI and from DE cameras connected with API 2.
 
 8/11/26: Added option to Navigator Window Options menu to skip blanking
 between shots in Low Dose mode when doing Navigator Acquire.
@@ -249,7 +249,7 @@ instead of through Focus Ramper.
 8/8/26: Possibly fixed using RamperBlankAtEnd when running ramp through UTAPI
 rather than Focus Ramper (In 4.2).
 
-8/6/26: Parallel tilt series, an implementation of PACEtomo, added to
+* 8/6/26: Parallel tilt series, an implementation of PACEtomo, added to
 SerialEM.
 
 8/6/26: Increased timeout for load or unload in multigrid to 15 min (In 4.2).
@@ -267,7 +267,7 @@ to make sure large scripts get written.
 is supported; prevented FEG beam current from being read for .mdoc entries
 within 5 minutes after a flash through UTAPI (In 4.2).
 
-7/28/26: Made LoadCartridge for UTAPI doan unload call unconditionally before
+7/28/26: Made LoadCartridge for UTAPI do an unload call unconditionally before
 trying to load because Autoloader X does not unload automatically (In 4.2).
 
 7/27/26: Increased timeout for FEG flashing in UTAPI to 20 minutes (In 4.2).
@@ -298,8 +298,8 @@ point after changing the Treat as very Sloppy option (In 4.2).
 
 7/23/26: Fixed crash in multigrid setting up name of frames directory.
 
-7/10/26: Added a "zoomed overview" window for use in setting up parallel tilt
-series and add script commands to manipulate it.
+* 7/10/26: Added a "zoomed overview" window for use in setting up parallel tilt
+series and added script commands to manipulate it.
 
 7/9/26: When using Nav Pts to make IS vectors with points drawn on a map, it
 considers the vectors to apply at the map mag instead of the current mag
@@ -308,7 +308,7 @@ considers the vectors to apply at the map mag instead of the current mag
 7/5/26: Added properties to skip scope updates and reduce calls to scope for
 updates during tasks.
 
-7/4/26: Added menus to Navigator window, moved many commands from main
+* 7/4/26: Added menus to Navigator window, moved many commands from main
 Navigator menu into them and moved all commands from Montaging & Grids into
 the main menu.  Moved "Open Imaging states" to Tasks menu.  For help to work,
 replace SerialEM.chm also.
@@ -316,7 +316,7 @@ replace SerialEM.chm also.
 7/1/26: SEM_4-3-0beta12
 7/1/26: Added script command to report which grid/slot is loaded on stage.
 
-7/1/26: Added script command to list UTAPI serveices being used or ones being
+7/1/26: Added script command to list UTAPI services being used or ones being
 skipped.
 
 6/27/26: Added ability to save multiple transforms with different starting
@@ -347,7 +347,7 @@ maximum FPS values, with a property setting that enables the maximum FPS to be
 determined on the fly and properly taken into account, and different FPS
 values to be set for different camera parameter sets.
 
-6/12/26: For De cameras, it now checks the system status before inserting the
+6/12/26: For DE cameras, it now checks the system status before inserting the
 camera or taking an image and disallows the action if inappropriate.
 
 6/10/26: Added call to restore JEOL stage speed on exit or crash (In 4.2).
@@ -355,7 +355,7 @@ camera or taking an image and disallows the action if inappropriate.
 6/9/26: Added script commands for reporting frame-saving variables and
 continuous mode and processing type for a camera parameter set.
 
-6/7/26: Parallel tilt series capability added to tilt series controller.
+* 6/7/26: Parallel tilt series capability added to tilt series controller.
 
 6/7/26: Added a reverse tilt step to tilt series if walkup is being done with
 a Trial area that is not big enough to handle a tilt backlash.
@@ -393,7 +393,7 @@ uses Preview for second round, broken 3/12 (In 4.2).
 5/27/26: Fixed and clarified camera number passed by TransformToOtherMag
 (In 4.2).
 
-5/2/526: Added colored borders to multigrid dialog acquisition sections.
+5/25/26: Added colored borders to multigrid dialog acquisition sections.
 
 5/23/26: Made installer stop removing some DLL's needed by Dectris plugin
 (In 4.2).
@@ -426,7 +426,7 @@ autoloader turbo if appropriate when it triggers or sees filling.
 5/17/26: Saved previous hole vectors before finding and centering one hole and
 restored afterwards, so that Use Last Hole Vectors has correct data (In 4.2).
 
-5/16/26: Fixed a problem with using vibration manager for dewar and vacuum
+* 5/16/26: Fixed a problem with using vibration manager for dewar and vacuum
 management and added options to check for vibrations separately from checking
 for filling.
 
@@ -437,7 +437,7 @@ for filling.
 5/14/26: Fixed using spot beam shifts on JEOL along with Normalize through
 View (In 4.2).
 
-5/13/26: Added Locator window, opened from WIndow menu, for seeing and
+* 5/13/26: Added Locator window, opened from WIndow menu, for seeing and
 manipulating subarea displayed in an associated image window.
 
 5/11/26: Added script command to read in a basic mode file and turn basic mode
@@ -472,7 +472,7 @@ STEM through UTAPI.
 4/20/26: Fixed uninitialized variable probably giving inappropriate attempts
 to access aperture state.
 
-4/20/26: Prevented spurious objections to hole spacing when using the finad
+4/20/26: Prevented spurious objections to hole spacing when using the find
 and center one hole procedure.
 
 4/20/26: SEM_4-2-21
@@ -543,8 +543,8 @@ changing between diffraction and imaging at the same time as an EFTEM change.
 3/16/26: Moved aperture status monitoring to a thread in attempt to solve menu
 hanging problem.
 
-3/15/26: Added script commands for setting color of a Script Toolbar button or
-of an outline around one.
+* 3/15/26: Added script commands for setting color of a Script Toolbar button
+or of an outline around one.
 
 3/13/26: Fixed multigrid problems and potential crash reopening log (In 4.2).
 
@@ -576,8 +576,8 @@ server and a long operation for sensor maintenance.
 
 2/25/26: Added a script command to center on a hole at a navigator item.
 
-2/25/26: Added an option to center on holes instead of aligning to template in
-the Navigator Realign dialog.
+* 2/25/26: Added an option to center on holes instead of aligning to template
+in the Navigator Realign dialog.
 
 2/24/26: SEM_4-2-17
 2/24/26: Made TIFF images be saved with pixel size readable by
@@ -588,7 +588,7 @@ DigitalMicrograph (In 4.2).
 2/23/26: Added script command to enable passing all arguments to functions as
 strings instead of numbers.
 
-2/23/26: Added ability to recover from abnormal termination while in a Low
+* 2/23/26: Added ability to recover from abnormal termination while in a Low
 Dose area by setting the program state to be in the area after startup.
 
 2/19/26: Stopped continuous view in DM if it is active before acquiring; this
@@ -611,10 +611,10 @@ All versions between Jan. 27 and this should be replaced and this version
 should be run to rewrite the settings before trying to run a version before
 Jan 27.
 
-2/16/26: Started showing dashed circles with estimated beam size, if
+* 2/16/26: Started showing dashed circles with estimated beam size, if
 available, when defining Low Dose Focus/Trial position.
 
-2/16/26: Added script command for storing image shift vectors in an individual
+* 2/16/26: Added script command for storing image shift vectors in an individual
 Navigator item and made Multiple Records able to acquire from item-specific
 locations.
 
@@ -629,13 +629,13 @@ to skip realignment is set (In 4.2).
 
 2/11/26: Fixed crash turning on Edit Focus with no image in display (In 4.2).
 
-2/10/26: Made display of beam circles in multishot display work with beam size
-from calibrations on non-Titan scopes.
+* 2/10/26: Made display of beam circles in multishot display work with beam
+size from calibrations on non-Titan scopes.
 
 2/10/26: SEM_4-3-0beta4
-2/10/26: Allowed multigrid to do grid map and medium mag maps in same run if a
-script is set to run after the grid map is made, and final acquisition in the
-same run as mapping if a script is set to run after mapping.
+* 2/10/26: Allowed multigrid to do grid map and medium mag maps in same run if
+a script is set to run after the grid map is made, and final acquisition in
+the same run as mapping if a script is set to run after mapping.
 
 2/10/26: SEM_4-2-16
 2/10/26: Made autocontouring dialog remember group selections between openings
@@ -658,7 +658,7 @@ visible, so changes through TUI should be found in the update.
 
 2/9/26: Added argument to MakePolygonsAtSquares to set them as Acquire.
 
-2/9/26: Added calibration of beam size for non-Titan scopes and script
+* 2/9/26: Added calibration of beam size for non-Titan scopes and script
 commands to report size computed from calibration and to set beam size.
 
 2/9/26: Made Script-Edit menu show all scripts with names.
@@ -670,7 +670,7 @@ Falcon camera through UTAPI (In 4.2).
 1/29/26: Added script command to return coordinates of all positions found by
 Hole Finder into array variables.
 
-1/27/26: Added aperture settings to states and navigator maps; the state
+* 1/27/26: Added aperture settings to states and navigator maps; the state
 dialog has an option to specify if apertures should be set when setting a
 state; and apertures will be set when going to a map acquire state (e.g., for
 Realign to Item) in restricted cases.
@@ -692,17 +692,17 @@ aperture for LM map, broken 12/31/25.
 1/20/26: Fixed setting aperture size on JEOL when there are ApertureSizes
 properties, broken 12/2/25 (In 4.2).
 
-1/19/25: Added optional line to Scope Status panel to show the condenser and
+* 1/19/25: Added optional line to Scope Status panel to show the condenser and
 objective apertures, enabled by property ShowApertureStatus.
 
-1/19/25: Added script command to find the nearest navigator item with a
+1/19/25: Added script command to find the nearest Navigator item with a
 given label or note.
 
-1/16/26: In the routine to refine grid map alignment, accessed from multigrid
+* 1/16/26: In the routine to refine grid map alignment, accessed from multigrid
 dialog and RefineGridMapAlignment, added the ability to specify a polygon or
 point to realign at, aligning to the map that item is drawn on.
 
-1/13/26: Added EDM percent line to Low Dose panel.
+* 1/13/26: Added EDM percent line to Low Dose panel.
 
 1/13/26: Added argument to SetHoleFinderParams to specify using a boundary
 polygon and added array variable arguments to FindHoles to specify boundary
@@ -712,7 +712,7 @@ coordinates directly.
 adjusts values in the same range and gives warnings in log in each new mag
 range.
 
-1/9/26: Added options to the file options dialog to include magnification in 
+* 1/9/26: Added options to the file options dialog to include magnification in 
 the folder and/or file name.
 
 1/8/26: Allowed entry of 0 to SetStatusLine to use first free line.
@@ -733,7 +733,7 @@ multigrid session directory, provided that is on the storage server.
 12/31/25: Made multigrid get the grid loaded on stage from the scope if
 connecting through UTAPI, instead of asking for an entry.
 
-12/31/25: Made Realign Map button in multigrid change and restore apertures
+* 12/31/25: Made Realign Map button in multigrid change and restore apertures
 just as when running grids.
 
 12/28/25: SEM_4-2-14
@@ -747,8 +747,8 @@ the LMM is acquired (In 4.2).
 12/28/25: Added property SaveK3CountingGainAsTiff to make the binned counting
 reference for K3 saved by SEMCCD be a TIFF file instead of MRC.
 
-12/28/25: Finalized support for using Vibration Manager in UTAPI for dewar and
-vacuum management process.
+* 12/28/25: Finalized support for using Vibration Manager in UTAPI for dewar
+and vacuum management process.
 
 12/28/25: Made it stop trying to get names from autoloader on Thermo scopes if
 it fails once.
@@ -765,20 +765,20 @@ connecting with UTAPI scripting.
 12/23/25: Enabled opening Hole Finder and Coma VS IS Calibration dialogs with
 OpenDialog script command.
 
-12/23/25: Navigator is automatically opened when opening hole finder, 
+* 12/23/25: Navigator is automatically opened when opening hole finder, 
 multigrid, setup full montage, autocontouring, and setup align/realign 
 dialogs.
 
-12/18/25: Added ability to resize or move drawn line or box with left mouse
+* 12/18/25: Added ability to resize or move drawn line or box with left mouse
 button; the cursor changes to indicate what action is available.
 
 12/18/25: Fixed crash if variable not defined in FindSubstring (In 4.2).
 
-12/16/25: Added option to expand or shrink contours found by Autocontouring
+* 12/16/25: Added option to expand or shrink contours found by Autocontouring
 by a given distance.
 
 12/13/25: Made the routine for realigning to a reloaded grid not try to align
-to pieces that could rotate or shift to stage coordinates  out of range.
+to pieces that could rotate or shift to stage coordinates out of range.
 
 12/13/25: Added note when loading settings and starting Nav Acquire about
 whether erasing of periodic peaks is on.
@@ -791,23 +791,23 @@ backlash (In 4.2).
 12/8/25: Made "OpenDialog Multigrid" open Navigator and avoid crash (In 4.2).
 
 12/8/25: Added property for extra timeout on the first shot from a STEM
-camera; improved way that detector chanegs are handled with Jeol STEM; and
+camera; improved way that detector changes are handled with Jeol STEM; and
 retained camera/STEM objects in JEOL-SEMcamServer between runs of SerialEM
 to avoid problems when restarting SerialEM.
 
-12/5/25: Made sliders have colored bars in Hole Finder and Autocontouring
-dialogs, rearranged sliders in the Autocontouring.
+* 12/5/25: Made sliders have colored bars in Hole Finder and Autocontouring
+dialogs, rearranged sliders in Autocontouring.
 
 12/4/25: Fixed min size slider's text box in Autocontouring dialog (In 4.2).
 
 12/4/25: Prevented trying to create frame directory when SerialEM is not
 running on DE server computer (In 4.2).
 
-12/4/25 Added option to use EDM dose percentage instead of beam intensity in
+* 12/4/25 Added option to use EDM dose percentage instead of beam intensity in
 tilt series.
 
-12/4/25: Fixed a bug where SetDoseRate using an EDM did not use the correct dose 
-percentage stored in low dose parameters.
+12/4/25: Fixed a bug where SetDoseRate using an EDM did not use the correct
+dose percentage stored in low dose parameters.
 
 12/4/25: In multigrid, made it retry loading the grid on JEOL if it is not
 actually on the stage or if load ends with error.
@@ -834,16 +834,16 @@ a larger map.
 11/26/25: Added script command to get all parameters for a low dose area into
 an array variable.
 
-11/25/25: Added ability to show STEM channels in multiple, separate windows to
-the right of the main window, similar to the side-by-side FFT display.  This
-is controlled from a dialog opened from the Window menu.
+* 11/25/25: Added ability to show STEM channels in multiple, separate windows
+to the right of the main window, similar to the side-by-side FFT display.
+This is controlled from a dialog opened from the Window menu.
 
-11/21/25: Added support for Dark mode for K3 cameras.
+* 11/21/25: Added support for Dark mode for K3 cameras.
 
 11/21/25: Fixed frame alignment for DE cameras to account for frames now being
 saved at requested subarea size and binning instead of full-sized.
 
-11/21/25: Added support for HDR Counting in DE cameras.
+* 11/21/25: Added support for HDR Counting in DE cameras.
 
 11/20/25: Made it request insertion only once for Gatan cameras and then wait
 until inserted; repeated requests wasted time and caused timeouts with K3.
@@ -866,12 +866,12 @@ the only one in the group (In 4.2).
 index.
 
 11/12/25: SEM_4-3-0beta2
-11/12/25: Added EDM dose percentage to imaging states.
+* 11/12/25: Added EDM dose percentage to imaging states.
 
 11/11/25: Added property to set magnification below which "autofocus" will set
 standard focus instead of autofocusing, even when calibrated.
 
-11/11/25: Implemented frame saving and aligning for JEOL cameras.
+* 11/11/25: Implemented frame saving and aligning for JEOL cameras.
 
 11/11/25: SEM_4-2-12
 11/11/25: Fixed ability to enter -1 for compression options to SetFileOptions
@@ -879,20 +879,20 @@ standard focus instead of autofocusing, even when calibrated.
 
 11/11/25: Fixed crash if camera plugin cannot load, broken 10/13/25. (In 4.2).
 
-11/9/25: Added the ability to take subareas of arbitrary size and centering
+* 11/9/25: Added the ability to take subareas of arbitrary size and centering
 from Falcon and Ceta cameras.  Binning 8 now works on all Falcons and can be
 added to the camera properties.
 
 11/7/25: Fixed camera setup to show only 3 size buttons for Ceta (In 4.2).
 
-11/6/25: Added buttons to scope control panel to adjust EDM dose percentage if
-there is an EDM.
+* 11/6/25: Added buttons to scope control panel to adjust EDM dose percentage
+if there is an EDM.
 
 11/6/25: Added an optional argument to SetDoseRate script command which is a 
 flag to use an EDM to modify the dose rate.
 
-11/6/25: Added "Set Dose Rate with EDM" item to Tasks menu, which sets the dose
-rate by modifying the EDM dose percentage.  
+* 11/6/25: Added "Set Dose Rate with EDM" item to Tasks menu, which sets the
+dose rate by modifying the EDM dose percentage.  
 
 11/6/25: Fixed index numbers in Navigator when items are deleted (In 4.2).
 
@@ -913,11 +913,9 @@ Navigator is not open.
 
 10/23/25: Fixed crash doing cassette inventory on JEOL (In 4.2).
 
-10/21/25: Made the routine for refining grid alignment able to take a montage
-at each corner to get the required FOV, and improved corrdinate handling and
+* 10/21/25: Made the routine for refining grid alignment able to take a montage
+at each corner to get the required FOV, and improved coordinate handling and
 picking of corner positions.
-
-10/16/25: Fixed crash aligning lower mag to higher mag image with the latter 
 
 10/21/25: Made AlignBetweenMags more flexible when images being aligned are
 close to the same size in microns.
@@ -940,8 +938,8 @@ procedure manually, broken 10/30/24 (In 4.2).
 10/12/25: Fixed bad stage positions (particularly Z) being recorded on JEOL at
 the end of stage movements, broken 8/19/25 (In 4.2).
 
-10/6/2025: Multi-Hole combiner automatically sorts combined items into a more 
-optimized path to reduce distance traveled during acquisition.
+* 10/6/2025: Multi-Hole combiner automatically sorts combined items into a
+more optimized path to reduce distance traveled during acquisition.
 
 10/3/25: Fixed hang setting screen position on a JEOL F200 at start of Low
 Dose tilt series using JEOL STEM (In 4.2).
@@ -970,7 +968,7 @@ proportionally for a change in convergence angle.
 
 9/17/25: Added property to set extra timeout for STEM images.
 
-9/17/25: For DE cameras, the "Set Folder" button in the camera setup dialog
+* 9/17/25: For DE cameras, the "Set Folder" button in the camera setup dialog
 opens a folder selection dialog if the camera server is 1.0.943 or newer 
 and running locally.  
 
@@ -989,7 +987,7 @@ menu, and IS offsets are listed when running ListAllCalibrations.
 
 9/3/25: Fixed getting names from autoloader before inventory is done (In 4.2).
 
-8/26/25: Added ability to run a script continuously in the background.
+* 8/26/25: Added ability to run a script continuously in the background.
 
 8/22/25: SEM_4-2-7
 8/21/25: Fixed Advanced scripting getting stuck with failures to acquire mutex
@@ -1005,7 +1003,7 @@ filter (In 4.2).
 
 8/18/25: Print beam tilt values in Align Coma by CTF.
 
-8/13/25: Initial addition of explicit support for DECTRIS cameras.
+* 8/13/25: Initial addition of explicit support for DECTRIS cameras.
 
 8/13/25: Prevented out of range values from being loaded into CTF Acquire
 Params dialog (In 4.2).
@@ -1022,7 +1020,8 @@ defocus from the center defocus is below this tolerance.
 8/6/25: Added property SuppressJobObjectWarning to suppress warning on error
 assigning Python process to job object (In 4.2).
 
-8/5/25: Added script command to create a customizable dialog with many options.
+* 8/5/25: Added script command to create a customizable dialog with many
+options.
 
 8/4/25: Restored function to "BLANK BEAM when screen down" in low dose panel,
 broken February 2024 (In 4.2).
@@ -1047,11 +1046,11 @@ in the Image Alignment & Focus control panel.
 of beam movement on the screen in EFTEM mode with the screen down match the
 direction of arrow keys or buttons pressed.
 
-7/10/25: On Hitachi scopes, added support for gun valve and a script command
+* 7/10/25: On Hitachi scopes, added support for gun valve and a script command
 to set the high voltage on, off, or to a specific value.
 
-7/10/25: Added ability to refresh multigrid table on JEOL after replacing some
-of the grids, retaining information on the grids that are the same.
+* 7/10/25: Added ability to refresh multigrid table on JEOL after replacing
+some of the grids, retaining information on the grids that are the same.
 
 7/10/25: For multigrid, fixed potential crash from uninitialized variable and
 disabled low dose area radio buttons in montage setup (In 4.2).
@@ -1130,7 +1129,7 @@ script and setting repVal1 (In 4.2).
 6/6/25: Added options to FindMultiMapHoles script command to autocontour the
 mesh opening also.
 
-6/6/25: Moved Specialized Options from Tasks to Settings.
+* 6/6/25: Moved Specialized Options from Tasks to Settings.
 
 6/6/25: Added second shot when aligning image after right double click shifts
 too much of the image out of the field.
@@ -1157,7 +1156,7 @@ loader slot status (In 4.2).
 5/27/25: If the property GridReloadMaxRotation is 0, the routine for
 realigning to a reloaded grid will not solve for any rotation (In 4.2).
 
-5/27/25: Double-clicking with the right mouse button in A, or in B with
+* 5/27/25: Double-clicking with the right mouse button in A, or in B with
 a montage overview, will acquire an image at the clicked point.
 
 5/25/25: Fixed checking of "extra" script in Acquire at Items when it is not
