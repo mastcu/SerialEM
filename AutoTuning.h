@@ -250,6 +250,8 @@ private:
   bool mComaVsIScalFromSettings;
   bool mComaVsIScalToSettings;
   int mNumShotsBeforeCal;
+  bool mSideBySideFFTRestore;     // Flag for restoring the side by side FFT state
+  bool mFFTWindowRestore;         // Flag for restoring the state of the FFT window
 
 public:
   void CalibrateAstigmatism(void);

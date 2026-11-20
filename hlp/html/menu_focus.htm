@@ -386,7 +386,7 @@
       routine over with the other module.</p>
     <p>You should verify that the CTF fitting is reasonably accurate with the
       acquisition parameters and defocus being used by turning on
-         <a href="menu_process.htm#hid_process_doctffindfitonclick"Do CTF Fit On Click</a>
+         <a href="menu_process.htm#hid_process_doctffindfitonclick">Do CTF Fit On Click</a>
       and checking that the fits work when clicking, and that the defocus varies by
       only about 3-10 nm between successive images (e.g., for focus near -2 microns).&nbsp;
       Larger variations will occur at lower magnifications and higher defocus,
@@ -400,14 +400,15 @@
     <p>If you are fitting with Ctffind, it will be done with the slower 2D search, which may not be turned on when
       clicking in an image.&nbsp; If you see bad fits when running these routines, you
       should make sure the 2D search is enabled when clicking with the
-        <a href="menu_process.htm#hid_process_setctffindoptions"Set CTF Fit Options</a>
+        <a href="menu_process.htm#hid_process_setctffindoptions">Set CTF Fit Options</a>
       command, and adjust parameters until fitting works when clicking in an image.&nbsp; 
       Alternatively, try Ctfplotter instead.</p>
     <p>If there are few Thon rings and they do not extend out very far, the fitting
       may fail because the resolution range for fitting is set too high.&nbsp; Two alternative
       solutions for this are to increase the limit on the maximum resolution for fitting
         with
-         <a href="menu_process.htm#hid_process_setctffindoptions"Set CTF Fit Options</a> or  to bin the images so that the Thon rings extend
+         <a href="menu_process.htm#hid_process_setctffindoptions">Set CTF Fit Options</a> 
+        or  to bin the images so that the Thon rings extend
       to a higher frequency (in reciprocal pixels) in the image.</p>
     <p>The CTF autotuning routines will zero out the image shift, giving a zero
       reading of IS or PLA in the Microscope Status panel..</p>
@@ -416,7 +417,7 @@
       and correct the astigmatism.&nbsp; If the change in stigmators is above a
       threshold, it will take another image and refine the correction.&nbsp; You can
       check the result by taking an image and clicking near the first zero with
-        <a href="menu_process.htm#hid_process_doctffindfitonclick"Do CTF Fit On Click</a>
+        <a href="menu_process.htm#hid_process_doctffindfitonclick">Do CTF Fit On Click</a>
       enabled.</p>
     <p>Technically, if you are going to correct coma as well, you should correct that
       first, then astigmatism. In practice, this matters only if the the beam tilt

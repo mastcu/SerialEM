@@ -98,6 +98,8 @@ CAutoTuning::CAutoTuning(void)
   mComaVsIScalFromSettings = true;
   mComaVsIScalToSettings = true;
   mNumShotsBeforeCal = 0;
+  mSideBySideFFTRestore = false;
+  mFFTWindowRestore = false;
 }
 
 
@@ -1087,6 +1089,9 @@ int CAutoTuning::CtfBasedAstigmatismComa(int comaFree, bool calibrate, int actio
   mCtfCal.comaType = comaFree > 0;
   mCtfCal.amplitude = mAstigToApply;
   mDoingCTFfallover = false;
+  mSideBySideFFTRestore = mWinApp->mProcessImage->GetSideBySideFFT();
+  mWinApp->mProcessImage->SetSideBySideFFT(true);
+  mFFTWindowRestore = mWinApp->mFFTView != NULL;
 
   if (comaFree)
     mLastXTiltNeeded = mLastYTiltNeeded = 0.;
@@ -1817,8 +1822,12 @@ void CAutoTuning::StopCtfBased(bool restore, bool failed)
   if (!mDoingCtfBased)
     return;
   mScope->SetDefocus(mSavedDefocus);
-  if (mCtfComaFree && restore)
+  if (mCtfComaFree && restore) {
     mScope->SetBeamTilt(mBaseBeamTiltX, mBaseBeamTiltY);
+    mWinApp->mProcessImage->SetSideBySideFFT(mSideBySideFFTRestore);
+    if (!mFFTWindowRestore && mWinApp->mFFTView)
+      mWinApp->mFFTView->CloseFrame();
+  }
   else if (mCtfCalibrating && restore)
     mScope->SetObjectiveStigmator(mSavedAstigX, mSavedAstigY);
   *recSet = mSavedRecSet;
