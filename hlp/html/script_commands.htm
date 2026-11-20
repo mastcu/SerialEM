@@ -441,7 +441,7 @@
           <TD>Removes all non-persistent variables that have been defined, except loop index
              variables.&nbsp; This command is important to use when controlling the program
              remotely (e.g., from an external Python script) because variables are cleared
-            only when such a script relinquishes control.&nbsp; Command added in 4.2, 1-Nov-24.
+            only when such a script relinquishes control.&nbsp; 
           </TD>
         </TR>
         <TR>
@@ -661,7 +661,7 @@
           <TD>Prevents control panels from being updated for new settings when 
             'SetUserSetting' is run; the update will occur before the next command that is 
             not 'SetUserSetting'.&nbsp; Use this before doing a consecutive series of settings
-             changes.&nbsp; Command added in 4.2, 19-Feb-24.</TD>
+             changes.&nbsp; </TD>
         </TR>
         <TR>
           <TD class="scriptcommand">ErrorsToLog [#]</TD>
@@ -836,7 +836,7 @@
             common forms of color blindness, so green and brown should be avoided except for local use.&nbsp; The
             color and style will apply to one of the echo statements or to the first line put out by some other 
             operation.&nbsp; If the next output to the log contains multiple lines, they will all be 
-            modified.&nbsp; Command added in 4.2, 5-Feb-24.</TD>
+            modified.&nbsp; </TD>
         </TR>
         <TR>
           <TD class="scriptcommand">Pause [text]</TD>
@@ -940,7 +940,7 @@
           <TD>Opens a file chooser for a user to select an existing text file if <b>#</b> is 0, or a new text file if <b>#</b>
             is 1.&nbsp; The filename is returned in <i>reportedValue1</i> and assigned to an optional variable after
              <b>#</b>; 'NONE' is returned if the user cancels.&nbsp; If a new file already exists, the user has confirmed
-            replacing it, so you should use 'AllowFileOverwrite' before opening the file.&nbsp; Command added in 4.2, 15-Feb-24.
+            replacing it, so you should use 'AllowFileOverwrite' before opening the file.&nbsp; 
           </TD>
         </TR>
         <TR>
@@ -1107,7 +1107,7 @@
             fails to transfer the whole image.&nbsp; Setting this timeout (e.g., to 2 seconds) allows the 
             Python module to break out of the hang and generate an exception.&nbsp; The exception can be 
             caught and the transfer will likely succeed if it is tried again.&nbsp; The timeout is set
-             only when expecting to receive more than 1024 bytes.&nbsp; Command added in 4.2, 29-Nov-24.
+             only when expecting to receive more than 1024 bytes.&nbsp; 
           </TD>
         </TR>
         <TR>
@@ -1117,25 +1117,25 @@
             optional <b>#</b>, or with a value of 0, the effect is equivalent to using 'NoMessageBoxOnError'.&nbsp; With
             <B>#</B> non-zero, the error message to the log is suppressed, similar to using 'Try 1' in SerialEM
             scripting.&nbsp; Multiple levels of StartTry - EndTry can be used, with the argument for whether to 
-            suppress messages kept track of separately for each level.&nbsp; Command added in 4.2, 17-Feb-25.
+            suppress messages kept track of separately for each level.&nbsp; 
           </TD>
         </TR>
         <TR>
           <TD class="scriptcommand">PluginAllDoubles(name, func, [,#D, #D, #D, #D, #D, #D, #D]</TD> 
           <TD>Calls the function <b>func</b> in the plugin named <b>name</b> with up to 7 optional 
             floating point values.&nbsp; <b>func</b> and <b>name</b> are string arguments and <b>name</b>
-            can be ':' to use the last plugin called.&nbsp; Command added in 4.2, 19-Apr-24.
+            can be ':' to use the last plugin called.&nbsp; 
           </TD>
         </TR>
         <TR>
           <TD class="scriptcommand">PluginString(name, func, text)</TD>
           <TD>Calls the function <b>func</b> in the plugin named <b>name</b> with the string in
-            <b>text</b>.&nbsp; Command added in 4.2, 19-Apr-24.</TD>
+            <b>text</b>.&nbsp; </TD>
         </TR>
         <TR>
           <TD class="scriptcommand">PluginDoubleString(name, func, #D, text)</TD>
           <TD>Calls the function <b>func</b> in the plugin named <b>name</b> with the floating point value
-             in <b>#D</b> and the string in <b>text</b>.&nbsp; Command added in 4.2, 19-Apr-24.</TD>
+             in <b>#D</b> and the string in <b>text</b>.&nbsp; </TD>
         </TR>
         <TR>
           <TD class="scriptcommand">ConnectToSEM([#P, IP])</TD>
@@ -1253,7 +1253,7 @@
         <TR>
           <TD class="scriptcommand">PrescanWithPreview</TD>
           <TD>In Low Dose mode, acquires a 3x3 Prescan montage with Preview parameters, 
-            automatically opening a temporary montage file and closing it at the end.&nbsp; Command added in 4.2, 29-Oct-24.</TD>
+            automatically opening a temporary montage file and closing it at the end.&nbsp; </TD>
         </TR>
         <TR>
           <TD class="scriptcommand">PreCookMontage #D [#P] [#C] [#S]</TD>
@@ -1988,7 +1988,7 @@
              <i>reportedValue1</i> to -1.&nbsp; The command and the next two will work on a Thermo/FEI scope
             when running through FocusRamper or when running directly from SerialEM with UTAPI
             or with the SkipFocusRamper property set, and may work on a JEOL.&nbsp; Values can
-             be assigned to variables at end of command.&nbsp; Command added in 4.2, 24-May-24.
+             be assigned to variables at end of command.&nbsp; 
           </TD>
         </TR>
         <TR>
@@ -2002,14 +2002,14 @@
              with backlash and a delay set by property 'InitialDynamicFocusDelay'.&nbsp; If running through
             FocusRamper, the FocusRamper object
             must already have been created by taking at least one STEM image through SerialEM with dynamic
-             focus.&nbsp; Command added in 4.2, 24-May-24.
+             focus.&nbsp; 
           </TD>
         </TR>
         <TR>
           <TD class="scriptcommand">FinishFocusRamp</TD>
           <TD>Makes sure the FocusRamper has finished and kills the thread if necesssary after a 3 second
             timeout, collects statistics that can be output with Debug Output set to 1, and restores focus to
-            the initial value.&nbsp; Command added in 4.2, 24-May-24.</TD>
+            the initial value.&nbsp; </TD>
         </TR>
 
         <TR>
@@ -2043,7 +2043,7 @@
             Image acquisitions and other actions can be taken.  When an acquisition is done, it will 
             continue toggling until the minimum count is reached before processing the image.  If the
              buffer being toggled to is in the last rolling buffer, an acquisition will be delayed until the
-            minimum count is reached.&nbsp; Command added in 4.2, 15-Mar-25.
+            minimum count is reached.&nbsp; 
           </TD>
         </TR>
         <TR>
@@ -2067,7 +2067,7 @@
           <TD class="scriptcommand">SetBufZoomAndCenter buf #Z [#X #Y]</TD>
           <TD>Displays the buffer <B>buf</B>, sets its zoom to #Z, and optionally centers the display on 
             image coordinate <b>#X</b>, <b>#Y</b>, or as close as possible to that point.&nbsp; Enter
-            -1 for <b>#X</b> or <b>#Y</b> to center the image in that dimension.&nbsp; Command added in 4.2, 18-Sep-24.</TD>
+            -1 for <b>#X</b> or <b>#Y</b> to center the image in that dimension.&nbsp; </TD>
         </TR>
         <TR>
           <TD class="scriptcommand">AddBufToStackWindow buf #M #S [#B] [#O] [title]</TD>
@@ -2080,12 +2080,12 @@
              replace the image at index 1).&nbsp; Set optional <b>#B</b> non-zero to convert the image
              to bytes, and <b>#O</b> to 1 or -1 to maintain the stack in order or reverse order
              by tilt angle.&nbsp; The rest of the text on the line is an optional window title, 
-            replacing the default title 'Script Stack'.&nbsp; Command added in 4.2, 18-Sep-24.
+            replacing the default title 'Script Stack'.&nbsp; 
           </TD>
         </TR>
         <TR>
           <TD class="scriptcommand">CloseStackWindow</TD>
-          <TD>Closes the stack window if it is open.&nbsp; Command added in 4.2, 18-Sep-24.</TD>
+          <TD>Closes the stack window if it is open.&nbsp; </TD>
         </TR>
         <TR>
           <TD class="scriptcommand">CopyToZoomedOverview buf #S</TD>
@@ -2219,7 +2219,7 @@
             those intensities exceeding <b>#M</b>, and the fraction of intensity ranges exceeding <b>#R</b>.
             &nbsp; For 1% limits and patches of ~50-100 pixels, and values of <B>#M</B> and <B>#R</B> around
              0.33 and 0.45 of the maximum intensity, these fractions will reflect what fraction of the image
-            is unusably dark.&nbsp; Command added in 4.2, 24-May-24.
+            is unusably dark.&nbsp; 
           </TD>
         </TR>
         <TR>
@@ -2358,7 +2358,7 @@
             optional <b>#CX</b> and <b>#CY</b> to set the center of the operation, or -1 and -1 for the
             default, the center of the image.&nbsp; Enter <b>#XS</b> and <b>#YS</b> to set the size of the transformed
             image, or -1 to use the default size in a dimension, which is the full scaled down size when scaling down,
-            or the size of a camera frame for the other buffer.&nbsp; Command added in 4.2, 19-Jan-24.
+            or the size of a camera frame for the other buffer.&nbsp; 
           </TD>
         </TR>
         <TR>
@@ -2366,7 +2366,7 @@
           <TD>Scales and rotates the image in buffer <b>buf</b> to match the pixel size at magnification index
             <b>#M</b>.&nbsp; This command is similar to 'TransformtoMatchBuffer' except that the binning and
             active camera number (numbered from 1) to match are optionally specified with <b>#B</b> and <b>#C</b>
-             (-1 for the same as the image in <b>buf</b>).&nbsp; Command added in 4.2, 19-Jan-24.
+             (-1 for the same as the image in <b>buf</b>).&nbsp; 
           </TD>
         </TR>
         <TR>
@@ -2721,7 +2721,7 @@
           <TD>Reports the main file options if <b>#</b> is zero and the options used in 
             Save To Other/Save Single otherwise; the main ones are initialized from properties and the other ones
             are saved in settings between sessions. &nbsp;The 10 values printed out are listed next in
-             'SetFileOptions'; <I>reportedValues</I> are set from the first 6.&nbsp; Command added in 4.2, 17-Oct-24.</TD>
+             'SetFileOptions'; <I>reportedValues</I> are set from the first 6.&nbsp; </TD>
         </TR>
        <TR>
           <TD class="scriptcommand">SetFileOptions #O #K [#T] [#D] [#U] [#M] [#L] [#H] [TC] [HC] [MT] [MM]</TD>
@@ -2747,7 +2747,7 @@
             <b>#MM</b> set to 1 to write an '.mdoc' file for a montaged MRC file, 0 not to.<br />
             There are error checks or limits applied on individual entries, but no check for conflicting or 
             irrelevant options, which generally would correspond to grayed out items in the dialog.
-              &nbsp; Command added in 4.2, 17-Oct-24.</TD>
+              &nbsp; </TD>
         </TR>
         <TR>
           <TD class="scriptcommand">OpenNewFile file</TD>
@@ -2847,12 +2847,12 @@
         </TR>
         <TR>
           <TD class="scriptcommand">ReportNumOpenFiles</TD>
-          <TD>Reports the number of open image files.&nbsp; Command added in 4.2, 30-Jan-24.</TD>
+          <TD>Reports the number of open image files.&nbsp; </TD>
         </TR>
         <TR>
           <TD class="scriptcommand">IsImageFileOpen name</TD>
           <TD>Reports whether the file given by <b>name</b> is open; a full or relative path must be used
-            if the file is not in the current directory.&nbsp; Command added in 4.2, 30-Jan-24.</TD>
+            if the file is not in the current directory.&nbsp; </TD>
         </TR>
         <TR>
           <TD class="scriptcommand">ReportFileZsize</TD>
@@ -2871,7 +2871,7 @@
         <TR>
           <TD class="scriptcommand">ReportOpenImageFile #F [#P]</TD>
           <TD>Like 'ReportCurrentFilename', but reports the name of the file whose index is <b>#F</b> (numbered
-            from 1) and reporting parts of the name if <b>#P</b> is non-zero.&nbsp; Command added in 4.2, 30-Jan-24.</TD>
+            from 1) and reporting parts of the name if <b>#P</b> is non-zero.&nbsp; </TD>
         </TR>
         <TR>
           <TD class="scriptcommand">AddTitleToFile #F title</TD>
@@ -2922,7 +2922,7 @@
             0x1000:  Use hole and position in hole when doing Multiple Records<br />
               0x2000: Use the magnification in the file name<br />
               0x4000: Use the magnification in the folder name<br />
-          Command added in 4.2, 18-Apr-24.</TD>
+          </TD>
         </TR>
        <TR>
           <TD class="scriptcommand">SetFrameNameFormat #K #S #B</TD>
@@ -2932,7 +2932,7 @@
               0 to clear them, or -1 to set the format variable to just what is given in <B>#B</B> (such
                as if restoring a value saved from 'ReportFrameNameFormat').&nbsp; <B>#B</B> can be entered as a single hex
               number starting with 0x as above, or as a sum of hex numbers (as can any integer 
-              entry).&nbsp; Command added in 4.2, 18-Apr-24.</b></TD>
+              entry).&nbsp; </b></TD>
         </TR>
        <TR>
           <TD class="scriptcommand">ReportFrameSavingPath</TD>
@@ -3405,7 +3405,7 @@
         <TR>
           <TD class="scriptcommand">ReportObjectiveStrength</TD>
           <TD>Reports the objective strength value (between 0 and 1) shown in the 
-            microscope control panel.&nbsp; Command added in 4.2, 7-Feb-25.</TD>
+            microscope control panel.&nbsp; </TD>
         </TR>
         <TR>
           <TD class="scriptcommand">SetEucentricFocus [#]</TD>
@@ -3553,7 +3553,7 @@
           <TD>Reports the stored value for the C2 aperture size in microns that is used to 
             scale intensity values in various calibrations when the aperture size changes on 
             a Titan, or to adjust for a change in aperture size when using the beam size 
-            calibration..&nbsp; Command added in 4.2, 5-Feb-25.</TD>
+            calibration..&nbsp; </TD>
         </TR>
         <TR>
           <TD class="scriptcommand">SetC2ApSizeForScaling #</TD>
@@ -3563,7 +3563,7 @@
              the Tasks menu.&nbsp If there is a change in aperture size,
              intensity values in various calibrations will be scaled on a Titan.&nbsp; Also, if run in the
              same script, the 'CalibrateHighFocusMag' and 'CalibrateHighFocusIS' commands will run
-             without requesting an aperture size.&nbsp; Command added in 4.2, 5-Feb-25.
+             without requesting an aperture size.&nbsp; 
           </TD>
         </TR>
         <TR>
@@ -3622,7 +3622,7 @@
             mode (on Thermo/FEI scopes) or alpha (on JEOL scopes).&nbsp; Sets <i>reportedValue1</i> to 1 if no
               calibration is available or 0 if one is, and <i>reportedValue2</i> to the intensity value or
             -1 if none is available.&nbsp; Values may be assigned to variables after the command.&nbsp; 
-            Command added in 4.2, 23-Mar-25.
+            
           </TD>
         </TR>
         <TR>
@@ -3791,7 +3791,7 @@
             that test against this limit, and for a JEOL scope, the maximum image shift that 
             can be applied without reaching the deflector limit, with neutral values and other offsets taken 
             into account (or sets <i>reportedValue2</i> 0 for a non-JEOL scope).&nbsp; Values are in 
-            microns.&nbsp; Command added in 4.2, 02-Jan-24.</TD>
+            microns.&nbsp; </TD>
         </TR>
         <TR>
           <TD colspan="2"><A name="misc_scope"></A><B>Miscellaneous Scope Commands</B></TD>
@@ -3838,12 +3838,12 @@
         <TR>
           <TD class="scriptcommand">SetDiffractionStigmator #X #Y</TD>
           <TD>Sets the diffraction lens (IL on a JEOL) stigmator to the given values (between -1 
-            and 1).&nbsp; Command added in 4.2, 21-Apr-24.</TD>
+            and 1).&nbsp; </TD>
         </TR>
         <TR>
           <TD class="scriptcommand">ReportDiffractionStigmator</TD>
           <TD>Reports the X and Y values of the diffraction stigmator, between -1 and 
-            1.&nbsp; Command added in 4.2, 21-Apr-24.</TD>
+            1.&nbsp; </TD>
         </TR>
         <TR>
           <TD class="scriptcommand">SetBeamBlank #</TD>
@@ -3961,7 +3961,7 @@
             abbreviated <b>name</b> with the values <b>#X</b> and <b>#Y</b>, with rounding indicated by the increment in <b>#I</b>&nbsp; The range of values is -1 to 1.&nbsp; Allowed <b>name</b>s are 'GH', 'GT', 'CS', 'BH', 'BT',
             'OS', 'ISF', 'IA', and 'PA'.&nbsp; Increments are set to 1 in the plugin for 'BH' and 'ISF',
             and 1024 for all others used there ('CS' is not used).&nbsp; The actual increment needed on
-            newer interfaces or scopes is unknown; try setting with smaller increments and see if a change occurs or not.&nbsp; An integer increment of 1 corresponds to an increment of 0.000005 in the value.&nbsp; Command added in 4.2, 15-Mar-23.
+            newer interfaces or scopes is unknown; try setting with smaller increments and see if a change occurs or not.&nbsp; An integer increment of 1 corresponds to an increment of 0.000005 in the value.&nbsp; 
           </TD>
         </TR>
         <TR>
@@ -4102,13 +4102,12 @@
             commands are all available if connected to UTAPI scripting.&nbsp; If not, the adatl module
              must be registered and the environment variable
             SEM_USE_ADATL must be set to any value on the microscope, and XL mode must be
-            turned on in the microscope interface.&nbsp; Command added in 4.2, 
-            5-Feb-25.</TD>
+            turned on in the microscope interface.&nbsp; </TD>
         </TR>
         <TR>
           <TD class="scriptcommand">SetXLensMode #</TD>
           <TD>Sets the X Lens mode on if <b>#</b> is non-zero or off if it is 0.&nbsp; 
-            Command added in 4.2, 5-Feb-25.</TD>
+            </TD>
         </TR>
         <TR>
           <TD class="scriptcommand">ReportXLensDeflector #D</TD>
@@ -4498,7 +4497,7 @@
             is scaled down and an area of the lower mag image is cropped out, with the center determined by 
             <b>#CX</b> and <b>#CY</b> and the size by <b>#M</b> as described for the other method.  A and B end up with
             the two images being aligned; the original image from A is left in C and the reference is left in D if
-            it came from a rolling buffer and there are at least 4 rolling buffers.&nbsp; Command added in 4.2, 19-Jan-24.
+            it came from a rolling buffer and there are at least 4 rolling buffers.&nbsp; 
           </TD>
         </TR>
         <TR>
@@ -4848,13 +4847,13 @@
         <TR>
           <TD class="scriptcommand">ReportLDDefocusOffset area</TD>
           <TD>Reports the defocus offset for the given <b>area</b>: 'V' for View or 'S' for Search.
-            &nbsp; Command added in 4.2, 17-Aug-24.
+            &nbsp; 
           </TD>
         </TR>
         <TR>
           <TD class="scriptcommand">SetLDDefocusOffset area #O</TD>
           <TD>Sets the defocus offset to <b>#O</b> in microns for the given <b>area</b>: 
-            'V' for View or 'S' for Search.&nbsp; Command added in 4.2, 17-Aug-24.</TD>
+            'V' for View or 'S' for Search.&nbsp; </TD>
         </TR>
         <TR>
           <TD class="scriptcommand">CurrentSettingsToLDArea area</TD>
@@ -4879,24 +4878,24 @@
             limit may be needed if there are periodic features like holes.&nbsp; The maximum percent size
              change and rotation angle to be searched can be entered with <b>#S</b> and <B>#A</B>; otherwise the
             values set in <B>Setup Auto Shift</B> are used (enter -1 for <b>#S</b> to use a value set 
-            there and enter a specific value for <b>#A</b>.&nbsp; Command added in 4.2, 16-Feb-24.
+            there and enter a specific value for <b>#A</b>.&nbsp; 
           </TD>
         </TR>
         <TR>
           <TD class="scriptcommand">RevertAutoLDShiftOffset</TD>
           <TD>Restores a Low Dose shift offset to the value it had before the last use of 
-            'FindLowDoseShiftOffset'.&nbsp; Command added in 4.2, 16-Feb-24.</TD>
+            'FindLowDoseShiftOffset'.&nbsp; </TD>
         </TR>
         <TR>
           <TD class="scriptcommand">ReportLDShiftOffset #</TD>
           <TD>Reports the View shift offset if <b>#</b> is 0, the Search offset if <b>#</b> is 1,
             or the <I>change</I> in shift offset in the last use of 
-            'FindLowDoseShiftOffset' if <b>#</b> is negative.&nbsp; Command added in 4.2, 16-Feb-24.</TD>
+            'FindLowDoseShiftOffset' if <b>#</b> is negative.&nbsp; </TD>
         </TR>
         <TR>
           <TD class="scriptcommand">SetLowDoseShiftOffset #</TD>
           <TD>Sets the View shift offset if <b>#</b> is 0 or the Search offset if <b>#</b> is 
-            1.&nbsp; Command added in 4.2, 16-Feb-24.</TD>
+            1.&nbsp; </TD>
         </TR>
         <TR>
           <TD colspan="2"><A name="multi_shot"></A><B>Multiple Record-Related Commands</B></TD>
@@ -4947,7 +4946,7 @@
             13-14) <b>#X</b> and <b>#Y</b> with the number of shots in X and Y for a rectangular pattern,
             or with the number of rings and -1 for a hexagonal array <br />
             15) Additional delay when moving between holes. <br />
-            Enter -9 for any parameter to skip setting it.&nbsp; Command added in 4.2, 18-Jan-24.
+            Enter -9 for any parameter to skip setting it.&nbsp; 
           </TD>
         </TR>
         <TR>
@@ -4956,7 +4955,7 @@
              holes to skip stored in the current Navigator item, or the item indicated by the optional <b>#</b>, which can be 0 for the current item, an 
             index greater than 0 for the item with that index in the table; or a value less 
             than 0 to count back from the end of the table, where -1 is the last item.&nbsp; This command has no
-             effect if the Multiple Records are taken by the Navigator during Acquire at Items.&nbsp; Command added in 4.2, 3-Sep-24.</TD>
+             effect if the Multiple Records are taken by the Navigator during Acquire at Items.&nbsp; </TD>
         </TR>
         <TR>
           <TD class="scriptcommand">ReportMultishotParams #</TD>
@@ -4970,7 +4969,7 @@
             4) 1 to 
             save Records or 0 not to; 5) 0-3 for controlling early returns; 6) number of frames in early return. <br />
             With <b>#</b> set to 3: 1) extra delay after image shift; 2) extra delay when moving between holes.
-            &nbsp; Command added in 4.2, 18-Jan-24.</TD>
+            &nbsp; </TD>
         </TR>
         <TR>
           <TD class="scriptcommand">TestNextMultiShot #</TD>
@@ -5036,7 +5035,7 @@
             optional <b>#S</b> to the maximum shift as a fraction of the hole size.&nbsp; Enter -1 for
             any of these to use the value in the 
             <a href="hidd_step_and_adjust_is.htm">Step To and Adjust IS Setup</a> dialog.&nbsp; Other parameters
-            are taken from existing settings for Multiple Records and Hole Finder.&nbsp; Command added in 4.2, 29-Oct-24.
+            are taken from existing settings for Multiple Records and Hole Finder.&nbsp; 
           </TD>
         </TR>
         <TR>
@@ -5141,7 +5140,7 @@
             conditions, or 0 if not.&nbsp; Set optional <b>#L</b> to 1 for Low Dose mode, <b>#M</b> to the magnification
             index, <b>#S</b> to the spot size, and <b>#P</b> to the probe mode (0 for nP, 1 for uP) on
             a Thermo/FEI scope or the alpha value on a JEOL with alpha.&nbsp; The latter 3 entries are ignored
-            in Low Dose mode; enter -1 for any entry to use the current value of the item.&nbsp; Command added in 4.2, 27-Nov-24.
+            in Low Dose mode; enter -1 for any entry to use the current value of the item.&nbsp; 
           </TD>
         </TR>
         <TR>
@@ -5280,7 +5279,7 @@
             if an error is encountered or if the calibration is not accepted as good.&nbsp; Sets 
             <I>reportedValue1</I> and <I>reportedValue2</I> with scale and rotation stored in the 
             calibration.&nbsp; Images must already exist in buffer A and the autoalign
-             buffer.  &nbsp; Command added in 4.2, 27-Apr-24.</TD>
+             buffer.  &nbsp; </TD>
         </TR>
         <TR>
           <TD class="scriptcommand">FindPixelSize</TD>
@@ -5432,7 +5431,7 @@
           <TD class="scriptcommand">NavGoToMarker</TD>
           <TD>Moves the stage to the position of the marker point in the active image.  The Navigator
              must be open, there must be a marker point, and other conditions required to enable
-             Go To Marker in the Navigator window must be satisfied.&nbsp; Command added in 4.2, 7-Aug-24.</TD>
+             Go To Marker in the Navigator window must be satisfied.&nbsp; </TD>
         </TR>
         <TR>
           <TD class="scriptcommand">UpdateItemZ [#]</TD>
@@ -5470,7 +5469,7 @@
             the item whose index in the table is <B>#</B> if <B>#</B> is positive, or that number of items
              from the end if it is negative.&nbsp; The program will access only the map that the point was drawn on;
             if it is not a montage,
-            the single image will be loaded.&nbsp; The image will be in buffer A.&nbsp; Command added in 4.2, 2-Apr-25.
+            the single image will be loaded.&nbsp; The image will be in buffer A.&nbsp; 
           </TD>
         </TR>
         <TR>
@@ -5484,7 +5483,7 @@
             navigator file at the lowest magnification and load them, as long as they were 
             taken in LM mode.  See the menu item 
             <A HREF="menu_navigator.htm#hid_montaginggrids_loadallgridmaps">Load All Grid Maps</A>
-            &nbsp; Command added in 4.2, 7-Aug-24.
+            &nbsp; 
           </TD>
         </TR>
         <TR>
@@ -5534,7 +5533,7 @@
           <TD class="scriptcommand">SetSelectedNavItem #I [#D]</TD>
           <TD>Makes Navigator item <b>#I</b> (numbered from 1) be the current item in the Navigator table
             and the only selected item; set optional <b>#D</b> non-zero to suppress redrawing the 
-            display.&nbsp; Command added in 4.2, 15-Feb-24.</TD>
+            display.&nbsp; </TD>
         </TR>
         <TR>
           <TD class="scriptcommand">FindItemWithLabelOrNote #N text [#X] [#Y]</TD>
@@ -5560,7 +5559,7 @@
           <TD>Fills the variables <b>xvar</b> and <b>yvar</b> with the X and Y stage coordinates in the
             point array for the current Navigator item or the one being acquired if <b>#I</b> is 0, or for
             the item whose index in the table is <B>#I</B> if <B>#I</B> is positive, or that number of items
-             from the end if it is negative.&nbsp; Command added in 4.2, 30-Jan-24.</TD>
+             from the end if it is negative.&nbsp; </TD>
         </TR>
         <TR>
           <TD class="scriptcommand">GetNavGroupStageCoords #I xvar yvar [zvar]</TD>
@@ -5652,7 +5651,7 @@
             2 for more than one matching name, 3 for a number out of range, 4 if a map acquire state is already set,
             5 if the camera that the state is defined for is not available, 6 if it is a Low Dose state and there
             is already a state set with a different camera number, 7 if the Multiple Grid Operations dialog is open,
-            or 8 if the specified state does not match the currently set state.&nbsp; Command added in 4.2, 7-Feb-24.</TD>
+            or 8 if the specified state does not match the currently set state.&nbsp; </TD>
         </TR>
         <TR>
            <TD class="scriptcommand">RestoreState [#]</TD>
@@ -5677,7 +5676,7 @@
            otherwise.&nbsp; For a valid state, <i>reportedValues 2-6</i> are set with the state number, the type 
            of state, the active camera number or 0 if the camera is not available, the magnification index, and 
            the name.&nbsp; The type is 0-5 for Low Dose V, F, T, R, S, or R using Mont-Map parameters, or -1 or -2
-            for a non-Low Dose Record or Mont-Map state.&nbsp; Command added in 4.2, 8-Feb-24.
+            for a non-Low Dose Record or Mont-Map state.&nbsp; 
           </TD>
         </TR>
         <TR>
@@ -6017,7 +6016,7 @@
             default), or 2 to not transform if the residual error of the fit to the shifts exceeds a limit 
             controlled by the property 'GridXformResidualLimit', or the transformation exceeds the shift and 
             rotation limits controlled by properties 'GridXformShiftLimit' anf 'GridXformRotationLimit'.&nbsp; The transformation is kept track of so the procedure can be run repeatedly.&nbsp;
-               The routine has not yet been tested with large (i.e., 90 degree) rotations.&nbsp; Command added in 4.2, 16-Apr-24.
+               The routine has not yet been tested with large (i.e., 90 degree) rotations.&nbsp; 
  
                         </TD>
         </TR>
@@ -6041,7 +6040,7 @@
             default position.<br />
             <b>#PX</b> and <b>#PY</b> optionally set the number of pieces in X and Y if a montage is 
             needed at each corner.&nbsp; Stage movement will be used if the property MulGridRefineStageMont
-             is set.&nbsp; Command added in 4.2, 30-Dec-24; montage added in 4.3, 21-Oct-25.
+             is set.&nbsp; montage added in 4.3, 21-Oct-25.
           </TD>
         </TR>
         <TR>
@@ -6263,7 +6262,7 @@
           <TD class="scriptcommand">ReportCurrentMulGridID</TD>
           <TD>Reports the current grid ID and a time stamp for the start of the current run if
             Multiple Grid Operations is either running or suspended, thus allowing a script to detect
-            when a new grid has been started.&nbsp; Command added in 4.2, 23-Mar-25.
+            when a new grid has been started.&nbsp; 
           </TD>
         </TR>
 
@@ -6378,7 +6377,7 @@
             (in brief, reduction target, histogram-based threshold, absolute threshold, smallest and largest 
             sizes, and distance to expand or shrink contours).&nbsp; Reduction to 100-200 pixels is useful to avoid a very ragged contour when 
             contouring a single grid square.
-          &nbsp; Command added in 4.2, 7-Aug-24; autocontouring added in 4.3, 6-Jun-25.</TD>
+          &nbsp;  autocontouring added in 4.3, 6-Jun-25.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">FindAndCenterOneHole buf #D [#C] [#S] [#X] [#Y] [#K] [#E] [#H]</TD>
@@ -6398,7 +6397,7 @@
             specify whether the hole geometry is rectangular or hexagonal, respectively, or negative to use a 
             default.&nbsp;The default values for <strong>#E</strong> and <strong>#H</strong> will be obtained 
             from a corresponding map if it exists; otherwise they will be taken from the hole finder parameters. 
-            Command added in 4.2, 29-Oct-24.
+            
           </TD>
         </TR>
         <TR>
@@ -6782,7 +6781,7 @@
           <TD class="scriptcommand">BinningForCameraMatrix #</TD>
           <td>Sets the binning to which one of the 6 matrices involving &#39;camera&#39; will be 
             scaled, so that the matrix applies to coordinates in an image of that binning.&nbsp; 
-            Enter 0 for <b>#</b> to disable the scaling.&nbsp; Command added in 4.2, 30-Sep-24.</td>
+            Enter 0 for <b>#</b> to disable the scaling.&nbsp; </td>
         </TR>
          <TR>
           <TD colspan="2"><A name="process_running"></A><B>Process-Running Commands</B></TD>
@@ -6858,7 +6857,7 @@
              is none (in which case the variable is not set).&nbsp; If there are multiple lines of
             output, the variable will contain an array of strings.&nbsp; The process arguments cannot
              include redirection to a file with '>'.&nbsp; This command has no effect with 'CreateProcess'
-            or 'RunExternalTool'.&nbsp; Command added in 4.2, 17-Nov-24.
+            or 'RunExternalTool'.&nbsp; 
           </TD>
         </TR>
         <TR>
@@ -6985,12 +6984,12 @@
         </TR>
          <TR>
           <TD class="scriptcommand">ReportEDMDutyPercent</TD>
-          <TD>Reports the current duty percent setting of an IDES dose modulator.&nbsp; Command added in 4.2, 16-Nov-24.</TD>
+          <TD>Reports the current duty percent setting of an IDES dose modulator.&nbsp; </TD>
         </TR>
          <TR>
           <TD class="scriptcommand">SetEDMDutyPercent #</TD>
           <TD>Sets the duty percent setting of an IDES dose modulator to <b>#</b>.&nbsp; If <b>Continuous update</b>
-            is on in the Low Dose control panel, the current area will be set to this value.&nbsp; Command added in 4.2, 16-Nov-24.
+            is on in the Low Dose control panel, the current area will be set to this value.&nbsp; 
           </TD>
         </TR>
        <TR>
@@ -7051,7 +7050,7 @@
         </TR>
         <TR>
           <TD class="scriptcommand">SetDebugOutput keys</TD>
-          <TD>Set the debug output string with the letters in <b>keys</b>.&nbsp; Command added in 4.2, 11-Jun-24.</TD>
+          <TD>Set the debug output string with the letters in <b>keys</b>.&nbsp; </TD>
         </TR>
         <TR>
           <TD class="scriptcommand">ReportProperty name [var]</TD>
