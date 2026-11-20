@@ -9836,7 +9836,7 @@ int CMacCmd::ReportLDDefocusOffset()
 
   float offset = mScope->GetLDViewDefocus(index == SEARCH_AREA ? 1 : 0);
   mLogRpt.Format("Defocus offset of %s area is %.1f microns",
-    mItemInt[1] ? "Search" : "View", offset);
+    index ? "Search" : "View", offset);
   SetRepValsAndVars(2, offset);
   return 0;
 }
