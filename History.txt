@@ -3,6 +3,9 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance, for the stable release version
 ============================================================================
+11/20/26: Side-by-side FFT window automatically opens during CTF-based coma
+free alignment. 
+
 11/19/26: Added imaging state dialog to the dialogs that can be opened with the 
 OpenDialog script command, and updated the help for that script command which
 was missing Autocontouring and Hole Combiner. 
