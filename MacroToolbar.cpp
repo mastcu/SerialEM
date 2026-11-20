@@ -235,6 +235,7 @@ void CMacroToolbar::SetLength(int num, int butHeight)
       maxExtent = B3DMAX(maxExtent, (int)ceil(scaling * size.cx));
     }
   }
+  deltaForBut = mWinApp->ScaleValueForDPI(deltaForBut);
 
   // Resize window first
   width = B3DMAX(maxExtent + deltaForBut + deltaForWin, mWinWidthOrig);
