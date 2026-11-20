@@ -11026,7 +11026,7 @@ int CMacCmd::ReportDoseFracParams()
     set.sumK2OrDeCntFrames, set.frameTime);
   mLogRpt.Format("%s: dose frac %d  save %d  align %d  framealign %d  %s %d  frame %.4f",
     mModeNames[index], set.doseFrac, set.saveFrames, set.alignFrames, set.useFrameAlign,
-    !mCamParams->K2Type ? "DE counting sum %d" : "K2/K3 summing",
+    !mCamParams->K2Type ? "DE counting sum" : "K2/K3 summing",
     set.sumK2OrDeCntFrames, set.frameTime);
   return 0;
 }
